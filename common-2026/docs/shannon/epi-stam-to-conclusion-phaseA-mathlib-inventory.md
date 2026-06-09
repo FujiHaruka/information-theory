@@ -1,6 +1,12 @@
 # EPI-Stam-to-Conclusion Phase A Mathlib API inventory
 
-> **親 plan**: [`docs/shannon/epi-stam-to-conclusion-phaseA-plan.md`](epi-stam-to-conclusion-phaseA-plan.md)
+> **⚠ SUPERSEDED (2026-06-09)**: 本 inventory は親 phaseA-plan の **Csiszár-scaling route** 着手前在庫で、
+> その route は 3-noise lift + two-time route に supersede 済 (親 `epi-stam-to-conclusion-plan.md` 判断ログ #5)。
+> 「致命的 MISS (a) standard normal pair の任意空間 noise extension」が要求した richness predicate
+> `IsStamScalingNoiseHyp` は **削除済** (commit `4cd6b12`) — 実装は base `(Ω,P)` を拡張せず lift 空間
+> `Ω×ℝ×ℝ×ℝ` を構成し座標射影を witness にする経路を採った。現 Phase A の実態 = 親 plan §Phase A (CLOSED 要約)。
+>
+> **親 plan**: [`docs/shannon/epi-stam-to-conclusion-phaseA-plan.md`](epi-stam-to-conclusion-phaseA-plan.md) (SUPERSEDED)
 > Phase A 着手前の M0 在庫照合 (Brief A 仕様)。
 > **Generated**: 2026-05-25 (Phase A 着手直前)
 > **規律**: CLAUDE.md `Subagent Inventory of Mathlib Lemmas` — `file:line` + 完全

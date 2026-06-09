@@ -40,7 +40,7 @@ proof-log: Phase 2/3/4/5 は完了時に `docs/shannon/proof-log-epi-case1-g3-ph
 `csiszarGap_antitoneOn_Icc_zero_one` (`EPIStamToBridge.lean:1270`, sorry) は genuine ratio antitone `csiszarLogRatioGap_antitoneOn_Ici_zero` (`:1085`, **sorryAx-free body**) を carrier 引数に取る。その sorry body は ratio antitone (Ici 0) を `csiszarGap_eq_one_source_via_rescale` (`EPIL3Integration.lean:1482`, genuine 等式) で 2-source difference antitone (Icc 0 1) に持ち上げる純粋 assembly。Mathlib 壁なし。
 
 **柱 B: joint-indep `hXYZXY` は under-hyp (signature 問題) であって Mathlib 壁でない。**
-`IndepFun (X+Y) (Z_X+Z_Y) P` は `IsStamScalingNoiseHyp` の pairwise (`X⊥Z_X`, `Y⊥Z_Y`, `Z_X⊥Z_Y`) からは出ない (4-tuple joint が要る)。Mathlib に `iIndepFun.indepFun_add_add` が存在する見込み (Phase 0 で verbatim 確認) → 4-tuple `iIndepFun [X, Y, Z_X, Z_Y]` を richness が供給すれば in-place 導出可能。代替は lift route-B B2 (`indepFun_add_add_on_lift`, genuine on `Ω×ℝ×ℝ`)。Phase 2 で 2 ルートの blast radius を比較し軽い方を採る。
+`IndepFun (X+Y) (Z_X+Z_Y) P` は pairwise (`X⊥Z_X`, `Y⊥Z_Y`, `Z_X⊥Z_Y`) からは出ない (4-tuple joint が要る)。**2026-06-09 実態**: `iIndepFun.indepFun_add_add` は現 Mathlib 不在と確定 (決定ログ 5)、`IsStamScalingNoiseHyp` richness predicate は削除済 → 解決は **`hXYZXY` を threaded hypothesis 化** (`ToBridge.lean:240`)、供給は caller が 4-tuple/5-tuple `iIndepFun` を product 構造から構成し `indepFun_prodMk_prodMk`+`comp` で group 和の独立を自己導出 (決定ログ 5 の機構、`EPIDensityForm` の 3-noise lift で実装)。lift route-B B2 (`indepFun_add_add_on_lift`) は DEAD (decl 削除)。
 
 **柱 C: honest precondition は `hpX_mom` (有限分散) + `hpX_ent` (有限エントロピー) のみを thread。**
 `IsHeatFlowEndpointRegular` (`EPIG2HeatFlowContinuity.lean:488`) の 8 density-witness field のうち、`pX`/`hpX_nn`/`hpX_meas`/`hpX_law`/`hpX_int`/`hpX_mass` の 6 field は **a.c. + 確率測度から R-N 自動** (case 1 の a.c. 前提で導出可能)。残 2 field `hpX_mom`/`hpX_ent` は a.c. から出ない (方針 X の honest precondition)。これを caller 供給 regularity precondition として signature に thread する。**load-bearing bundling 禁止** — Stam core は producer 側 genuine、consumer は regularity precondition のみ。
@@ -91,10 +91,9 @@ density-witness 8 field: `pX : ℝ → ℝ`, `hpX_nn`, `hpX_meas`, `hpX_law : P.
 `isBlachmanConvReady_convDensityAdd_gaussian` (`EPIBlachmanGeneralDensity.lean:224`):
 入力 = pX/pY の regularity (nonneg / Measurable / Integrable / `0 < mass` / `mass = 1`)、`[...]` 型クラス前提無し。結論 = `IsBlachmanConvReady (convDensityAdd pX g_t) (convDensityAdd pY g_t)`。19/19 field genuine、sorryAx-free。F1 の per-`t` bundle の `IsBlachmanConvReady` field を供給する。
 
-### F5 — joint-indep lift 後継 (route-B B2)
+### ~~F5 — joint-indep lift 後継 (route-B B2)~~ DEAD (2026-06-09)
 
-`indepFun_add_add_on_lift` (`EPINoiseExtension.lean:122`, `@audit:ok`):
-`IndepFun (fun p => X p.1 + Y p.1) (fun p => p.2.1 + p.2.2) (liftMeasure P)`。lift 空間 `Ω×ℝ×ℝ` 上で 和 vs 和の独立性を genuine 供給。base への張替は `entropy_power_inequality_via_lift` (`:145`, `@audit:ok`)。
+~~`indepFun_add_add_on_lift` / `entropy_power_inequality_via_lift` (2-noise lift `Ω×ℝ×ℝ`)~~ — **削除済** (commit `4cd6b12`、external consumer 0)。route-B B2 は不採用 (決定ログ 5 でルート I = in-place 自己導出に確定)。現 3-noise route (`EPIDensityForm`) は base への張替を `entropy_power_inequality_via_lift3` で行い、和 vs 和の独立性は body 内 5-tuple `iIndepFun` から `indepFun_prodMk`/`indepFun_prodMk_prodMk` で抽出 (lift helper 不要)。
 
 ### F6 — Mathlib joint-indep lemma (index hit、要 implementer verbatim 確認)
 
@@ -109,7 +108,7 @@ proof-log: no。コード非編集、verbatim 照合のみ。
 - [ ] **0-a**: F6 の `iIndepFun.indepFun_add_add` を **現 Mathlib source で verbatim 確認** (`rg` で declaration を探し、signature + `[...]` 前提を抽出)。見つからなければ近傍 (`iIndepFun.indepFun_add_left/right`, `indepFun_add_add`) を loogle + Read で代替候補化。
 - [ ] **0-b**: 6 AC/integrability (F2) の供給元在庫: a.c. 入力 `P.map X ≪ volume` + Gaussian smoothing から `P.map (X + √r·Z) ≪ volume` を出す in-house lemma の有無 (`EPIConvDensity*` / `FisherInfoV2DeBruijn` 系)。`density_t_eq` (`FisherInfoV2DeBruijn.lean:259-260` 付近、`density_t` = `convDensityAdd pX gaussian` pin) が ≪ + negMulLog-integrable を per-`t` 供給するか確認。
 - [ ] **0-c**: `IsHeatFlowEndpointRegular` の 6 regularity field が a.c. + 確率測度から自動導出可能か (R-N witness 構成: `Measure.rnDeriv` + `withDensity_rnDeriv_eq` 系)。`hpX_mom`/`hpX_ent` が a.c. のみから **出ない** ことを反例 (heavy-tail a.c. 密度) で再確認 (方針 X precondition の正当化)。
-- [ ] **0-d**: `IsStamScalingNoiseHyp` (`EPIStamToBridge.lean:362`) を 4-tuple `iIndepFun` を含む形に強化する余地 / それを供給する richness lemma (`stamScalingNoise_exists_on_lift` 等) の在庫。
+- [x] **0-d** (moot 2026-06-09): ~~`IsStamScalingNoiseHyp` を 4-tuple `iIndepFun` 形に強化 / richness lemma `stamScalingNoise_exists_on_lift` の在庫~~ — predicate + richness lemma 共に削除済。実際の供給は caller 側 inline 自己導出 (決定ログ 5、`EPIDensityForm` 3-noise lift)。
 
 撤退ライン: 0-a で `iIndepFun.indepFun_add_add` が現 Mathlib に **不在** と確定し、かつ近傍 lemma での in-place 導出も infeasible なら、Phase 2 は **lift route-B B2 一択** に確定 (撤退でなく分岐確定)。
 
@@ -132,25 +131,34 @@ honesty 判定の言明 (本 plan の不変条件): **Stam core 不等式 (`1/J_
 
 ---
 
-## Phase 2 — joint-indep `hXYZXY` 閉鎖 📋
+## Phase 2 — joint-indep `hXYZXY` 閉鎖 ✅ 実態整合 (2026-06-09)
 
 proof-log: yes (`proof-log-epi-case1-g3-phase-2.md`)。
 
-対象: `isStamToEPIScalingHyp_of_stam_debruijn` body の `hXYZXY : IndepFun (X+Y) (Z_X+Z_Y) P` sorry (`EPIStamToBridge.lean:1394`)。Phase 0-a の verdict で 2 ルートのいずれかに確定:
+> **2026-06-09 整合済 — 両ルートの decl は削除、`hXYZXY` は threaded hypothesis 化**:
+> 下記 ルート I/II の判定 (Phase 0-a) は **決定ログ 5 で ルート I (in-place 自己導出) に確定**したが、
+> その後の two-time route 載せ替えで実装が分岐した結果:
+> - **`hXYZXY` は sorry でなく threaded hypothesis** になった (`ToBridge.lean:240` 等で
+>   `(hXYZXY : IndepFun (X+Y) (Z_X+Z_Y) P)` を引数で受ける honest independence precondition)。
+> - **richness predicate `IsStamScalingNoiseHyp` は削除済** (commit `4cd6b12`、code 内残存は削除履歴の
+>   docstring 2 件のみ) → ルート I の「predicate 強化」案は moot。
+> - **ルート II (lift route-B B2) は DEAD**: `indepFun_add_add_on_lift` / `entropy_power_inequality_via_lift`
+>   削除済、`epi-richness-route-b-plan` は CLOSED stub。
+> - **live な供給機構 = 決定ログ 5 の自己導出**: caller (例 `EPIDensityForm.entropy_power_inequality_of_density`
+>   の 3-noise lift) が 5-tuple `iIndepFun` を product 構造から inline 構成 (`Measure.pi_eq`) し、
+>   `indepFun_prodMk_prodMk` + `indepFun_prodMk` で group 独立を抽出して `hXYZXY` 相当 (sum vs noise) を
+>   genuine に供給する。`iIndepFun.indepFun_add_add` は現 Mathlib 不在 (決定ログ 5) ゆえ grouping 経由。
 
-### ルート I — in-place under-hyp 修正 (Phase 0-a で `iIndepFun.indepFun_add_add` 実在の場合)
+下記は当時のルート判定 (履歴、新規着手では上記実態を参照):
 
-- [ ] **2-I-a**: `IsStamScalingNoiseHyp` を 4-tuple `iIndepFun ![X, Y, Z_X, Z_Y] P` を含む形に強化 (現 pairwise 3 件を joint に置換 or 追加)。
-- [ ] **2-I-b**: `hXYZXY` を `iIndepFun.indepFun_add_add` で genuine 導出 (sorry 除去)。
-- [ ] **2-I-c**: 強化した `IsStamScalingNoiseHyp` の producer (richness、`stamScalingNoise_exists_on_lift` 系) が 4-tuple joint を供給することを確認・配線。
+### ~~ルート I — in-place under-hyp 修正~~ (decl 削除で moot、自己導出機構のみ live)
 
-blast radius: `IsStamScalingNoiseHyp` consumer 全件 (`rg "IsStamScalingNoiseHyp"`)。強化は predicate 強化なので consumer の obtain パターンが pairwise → joint に変わる箇所を列挙して修正。
+- ~~2-I-a/b/c: `IsStamScalingNoiseHyp` 4-tuple 強化 + `iIndepFun.indepFun_add_add` 導出~~ — predicate 削除済。
+  自己導出 (`indepFun_prodMk_prodMk`+`comp`、決定ログ 5) は caller 側 inline で live。
 
-### ルート II — lift route-B B2 再配線 (Phase 0-a で不在の場合)
+### ~~ルート II — lift route-B B2 再配線~~ (DEAD、decl 削除)
 
-- [ ] **2-II-a**: `indepFun_add_add_on_lift` (F5) を base へ張替えるルート (`entropy_power_inequality_via_lift` 経由)。headline 全体を lift 空間で組み、最後に base に transport する形に再配線。
-- [ ] **2-II-b**: route-B plan (`epi-richness-route-b-plan` Phase B2) の trigger は発火済 (G2 全 CLOSED、判断ログ 3 参照) → B2 設計を本 plan に取り込む。
-- [ ] **2-II-c**: 偽 in-place W2 (`stamScalingNoise_exists`、atomic measure で false-statement) を完全除去 (route-B B2 の元来の目的)。
+- ~~2-II-a/b/c~~ — `indepFun_add_add_on_lift` / `entropy_power_inequality_via_lift` 削除済、route-B plan CLOSED。
 
 blast radius: lift 空間配線は headline chain 全体に波及 (大)。ルート I が成立するなら I を優先。
 

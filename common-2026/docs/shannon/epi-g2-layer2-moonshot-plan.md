@@ -441,10 +441,12 @@ structure IsHeatFlowEndpointRegular (X Z : Ω → ℝ) (P : Measure Ω) [IsProba
   密度 `p_{X+Y}` = **`convDensityAdd pX pY`** の同定要 (下記)。
 
 **新規に上流で要供給する precondition (= 本 Phase が確定する EPI precondition 追加)**:
-1. **`pX` / `pY`** (X, Y の Real 密度 witness + `nn/meas/law/int/mass/mom`)。`IsStamScalingNoiseHyp` /
-   その上流 (`stamScalingNoise_exists` の所在 = Stam-to-conclusion line) に密度 witness を追加する。
-   これは EPI の **正当な precondition** (入力 X, Y が密度を持つ = de Bruijn / EPI の標準仮定)。上流追加は
-   honesty OK (orchestrator brief 確認)。
+1. **`pX` / `pY`** (X, Y の Real 密度 witness + `nn/meas/law/int/mass/mom`)。これは EPI の **正当な
+   precondition** (入力 X, Y が密度を持つ = de Bruijn / EPI の標準仮定)。上流追加は honesty OK。
+   **2026-06-09 実態**: かつて `IsStamScalingNoiseHyp` / `stamScalingNoise_exists` に witness を追加する想定だったが
+   両 decl は削除済 (3-noise route 載せ替え)。現実装 `EPIDensityForm.entropy_power_inequality_of_density` は
+   X/Y/sum × 密度正則性 (Fisher 有限/IsRegularDensityV2/normalization/IsBlachmanConvReady/entropy 有限) を
+   honest precondition として直接 signature に取る形で実現済。
 2. **`p_{X+Y} = convDensityAdd pX pY`** の同定。和 instance の密度 witness。`X ⊥ Y` 下で
    sum の密度 = 畳込み `convDensityAdd pX pY` は標準事実。**この同定補題が在庫にあるか要確認**
    (Phase 5-C): `pPath_eq_convDensityAdd` の `s→0` 類比、または `IndepFun.map_add_eq_map_conv_map`

@@ -1,5 +1,12 @@
 # 無条件 EPI Phase 3 case-1 (両 a.c.) 隠れ壁調査 — density-witness 在庫
 
+> **2026-06-09 注**: 下記 assembly target signature 中の `IsStamScalingNoiseHyp` predicate は **削除済**
+> (commit `4cd6b12`)、joint-indep は threaded hypothesis + caller 自己導出に。ただし本 inventory の核心
+> (density-witness 8 field のうち `hpX_mom`/`hpX_ent` が a.c. のみから出ない = verdict (b) 有限分散等の
+> 追加 regularity が必要) は **実装で validated** — 現 `EPIDensityForm.entropy_power_inequality_of_density`
+> は X/Y/sum × (Fisher 有限/IsRegularDensityV2/normalization/IsBlachmanConvReady/entropy 有限) を honest
+> precondition に取る (load-bearing でない)。density-witness regularity 分析は今も有効。
+>
 > 親計画: `docs/shannon/` 系 EPI 無条件化 line。assembly 対象は
 > `isStamToEPIScalingHyp_of_stam_debruijn` (`InformationTheory/Shannon/EPIStamToBridge.lean:1324`)。
 > 本ファイルは inventory のみ (read-only 調査、コード編集なし)。

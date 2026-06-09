@@ -1,5 +1,11 @@
-# EPI-Stam Cluster C — true sorry-based migration plan (Path 1)
+# EPI-Stam Cluster C — true sorry-based migration plan (Path 1) ✅ COMPLETED
 
+> **2026-06-09 注 (後続削除)**: 本 plan は全 Phase 完了済 (Phase V audit 2026-05-28)。ただし migrate 対象の
+> 一部 predicate はその後 **3-noise + two-time route 載せ替えで削除済**: #5 `IsStamScalingNoiseHyp`
+> (`:459`) / Stam-scaling lift 系 (`stamScalingNoise_exists_on_lift` / `indepFun_add_add_on_lift` /
+> `entropy_power_inequality_via_lift` / `liftMeasure`) は commit `4cd6b12` で external consumer 0 確認後
+> 純削除 (`epi-richness-route-b-plan` CLOSED)。下記の移行テーブル中それらの file:line 参照は当時の記録 (stale)。
+>
 > **Parent**: [`epi-moonshot-plan.md`](epi-moonshot-plan.md)
 > + [`epi-stam-to-conclusion-plan.md`](epi-stam-to-conclusion-plan.md)
 > + [`epi-stam-to-conclusion-phaseA-plan.md`](epi-stam-to-conclusion-phaseA-plan.md)

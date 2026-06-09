@@ -1,10 +1,16 @@
 # EPI richness 壁 (G4/W2) — noise-extension Mathlib 在庫調査
 
+> **✅ RESOLVED (2026-06-09) — 本 inventory の lift 経路予測が実装で validated**: 調査対象 declaration
+> `IsStamScalingNoiseHyp` / `stamScalingNoise_exists` は **削除済** (commit `4cd6b12`)。本 inventory の核心 verdict
+> 「base `(Ω,P)` を拡張する API は不在だが、別空間 `Ω×ℝ²`(product / `Measure.pi`)を構成し座標射影を witness に
+> すれば genuine」は正しく、実装は **3-noise lift `Ω×ℝ×ℝ×ℝ`** で `Measure.pi_eq` + `indepFun_prodMk_prodMk` に
+> より closure (`EPIDensityForm.lean`、sorryAx-free)。in-place 経路 (経路 A) は採らず lift 経路 (経路 B) を採った。
+> 下記 declaration 参照は削除済 (`:358`/`:388`/`:1360`) だが、product-measure 構成 API の在庫分析は今も有効。
+>
 > 親計画: [`docs/shannon/epi-stam-to-conclusion-plan.md`](epi-stam-to-conclusion-plan.md)
 > §re-assessment 表 G4/W2 行 + 撤退ライン L-Concl-A-richness / L-Concl-A-γ。
-> 調査対象 declaration: `IsStamScalingNoiseHyp` / `stamScalingNoise_exists`
-> (`InformationTheory/Shannon/EPIStamToBridge.lean:358` / `:388`)、
-> G4 joint indep `sorry` (`EPIStamToBridge.lean:1360`)。
+> 調査対象 declaration: `IsStamScalingNoiseHyp` / `stamScalingNoise_exists` (**削除済**)、
+> G4 joint indep `sorry` (**threaded hypothesis 化**)。
 > 形式参照点: [`shannon-mathlib-inventory.md`](shannon-mathlib-inventory.md)。
 
 ---

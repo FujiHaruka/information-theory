@@ -18,7 +18,7 @@
 - [ ] C-5 (A) 群 discharge: `varX/Y/S` variance bound (`h_var_bound`) 📋
 - [ ] C-6 de Bruijn 群 thread (B群、honest precondition、cross-link) 📋
 - [ ] C-7 独立 honesty 監査 (新規 `sorry` 1 件想定) 📋
-- [ ] C-8 (別 sub-phase) Phase C 結線: lift route-B 経由 dispatch case-1 / `stamToEPIBridge_holds` への配線 📋
+- [~] C-8 (別 sub-phase) Phase C 結線: ~~lift route-B 経由~~ → **3-noise route で実装済** (`EPIDensityForm`、§結線の核 参照)。dispatch case-1 は無条件 ℝ≥0∞ route で別途達成 📋
 
 ## ゴール / Approach
 
@@ -371,30 +371,30 @@ sorry を持たせない — thread するだけ)。
 は現在 `:= sorry` (shared wall、`@residual(plan:epi-stam-to-conclusion-plan)`)。これは
 bare `X,Y` (noise なし) の `IsStamToEPIBridge`。
 
-### 結線の核 — noise 導入の lift (route-B)
+### 結線の核 — noise 導入の lift (~~route-B (2-noise)~~ → 3-noise route で実装)
+
+> **⚠ 2026-06-09 整合済**: 下記 route-B (2-noise lift) の decl は **削除済** —
+> `IsStamScalingNoiseHyp` (`@audit:defect(false-statement)`) / `stamScalingNoise_exists_on_lift` /
+> `entropy_power_inequality_via_lift` / `liftMeasure` 全て削除 (commit `4cd6b12`)、`epi-richness-route-b-plan`
+> は CLOSED stub。さらに methodX wrapper 自体が Phase A では **two-time route に supersede** 済 (sum-instance
+> 𝒩(0,2) の uninhabitable 構造制約、親 `epi-stam-to-conclusion-plan` 判断ログ #5)。**実装された結線** = 3-noise
+> lift `Ω×ℝ×ℝ×ℝ` (`liftMeasure3`) + two-time terminal で `EPIDensityForm.entropy_power_inequality_of_density`
+> (sorryAx-free)、base 張替は `entropy_power_inequality_via_lift3`。下記 route-B 記述は当時の設計案 (履歴)。
 
 本 wrapper は `Z_X, Z_Y` (Gaussian noise) を **存在として要求** する。bare `X,Y` に
-noise を同一確率空間上で導入する in-place 存在主張 (`IsStamScalingNoiseHyp`、
-`EPIStamToBridge.lean:402`) は **atomic 空間で偽** (`@audit:defect(false-statement)`)。
-honest 後継は **lift route-B**:
-`EPINoiseExtension.stamScalingNoise_exists_on_lift` が lift 空間 `Ω × ℝ × ℝ`
-(`liftMeasure P = P.prod ((gaussianReal 0 1).prod (gaussianReal 0 1))`) 上で coordinate
-projection witness を genuine 構成 (0 sorry)。`entropyPower` の law-only 性 +
-`IsStamInequalityResidual` の carrier-free defeq で lift から `(Ω,P)` へ EPI を transport
-(`entropy_power_inequality_via_lift`)。詳細 → `epi-richness-route-b-plan`。
+noise を同一確率空間上で導入する in-place 存在主張は atomic 空間で偽だった。当時の honest 後継案 = lift route-B
+(2-noise lift で coordinate projection witness を genuine 構成、lift から `(Ω,P)` へ EPI transport) だったが、
+two-time route が sum 用に第3独立 unit noise を要するため **3-noise lift** が実装された。3-noise route では
+雑音 law/独立性を body 内 5-tuple `iIndepFun` (`Measure.pi_eq` + 座標射影) から供給 (lift helper 不要)。
 
-**依存順 (Phase C 結線)**:
-1. (本 plan §A-D) wrapper `entropyPower_add_ge_case1_of_methodX` 完成 (de Bruijn 群 thread)。
-2. lift 空間で wrapper を呼ぶ (coordinate projection が方針X precondition を満たす:
-   2 番目/3 番目座標が standard normal で独立、1 番目座標が input)。lift 上で
-   `iIndepFun ![X∘fst, Y∘fst, Z_X, Z_Y]` を product-measure API で供給。
-   ⚠ ただし lift 上でも de Bruijn 群 (#10-#12) は依然 thread (供給不能) — Phase C 結線は
-   de Bruijn 壁を消さない、richness を解くだけ。
-3. `entropy_power_inequality_via_lift` で lift → `(Ω,P)` transport。
-4. dispatch case-1 / `stamToEPIBridge_holds` に配線 (`entropyPowerExt = entropyPower`
-   bridge を a.c. 下で挟む)。
-
-この結線は **本 plan の主 scope (§A-D) とは別 sub-phase** (C-8)。§A-D 完成後に着手。
+**実装された結線 (3-noise route)**:
+1. caller `EPIDensityForm.entropy_power_inequality_of_density` が `entropy_power_inequality_via_lift3` で
+   base → 3-noise lift に帰着。
+2. lift 上で `iIndepFun ![X∘fst, Y∘fst, Z_X, Z_Y, Z]` を product-measure API (`Measure.pi_eq`) で inline 供給。
+3. two-time terminal `entropyPower_add_ge_case1_of_regular_twotime` に de Bruijn 群 (producer 経由、3 instance とも
+   unit noise で genuine) + endpoint + scale + `h_stam_supply` を供給。
+4. `entropy_power_inequality_via_lift3` で lift → `(Ω,P)` transport。dispatch case-1 / `stamToEPIBridge_holds`
+   への配線は無条件 EPI の ℝ≥0∞ route (`entropyPowerExt_add_ge_unconditional`) で別途達成済 (facts 台帳)。
 lift の具体構成は `epi-richness-route-b-plan` 側が SoT。
 
 ---

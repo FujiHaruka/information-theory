@@ -1,8 +1,15 @@
 # EPI Stam → conclusion Phase A: Stam + de Bruijn 合流 (Csiszár scaling) サブ計画
 
-> **Parent**: [`epi-stam-to-conclusion-plan.md`](epi-stam-to-conclusion-plan.md) §Phase A (line 467-547)
+> **⚠ SUPERSEDED (2026-06-09) — 本 plan の Csiszár-scaling route は親の現 Phase A route ではない**:
+> 本 sub-plan が 2026-05-27 に COMPLETED した A-1〜A-V は **difference-form / Csiszár-scaling route 固有**で、
+> 親 `epi-stam-to-conclusion-plan.md` は判断ログ #5 で **3-noise lift + two-time route** (`EPIDensityForm.lean`)
+> に載せ替え済 (sum-instance 𝒩(0,2) の uninhabitable 構造制約)。本 plan が A-1 で staged した richness predicate
+> **`IsStamScalingNoiseHyp` は削除済** (commit `4cd6b12`)、joint-indep は caller 側 5-tuple `iIndepFun` inline 自己導出に。
+> 現 Phase A の実態 = 親 plan §Phase A (CLOSED 要約) を参照。本 plan は当時の Csiszár-scaling route の履歴記録。
+>
+> **Parent**: [`epi-stam-to-conclusion-plan.md`](epi-stam-to-conclusion-plan.md) §Phase A (CLOSED 要約)
 > **Created**: 2026-05-25 (Phase D 合流 commit `c0edbe1` 直後)
-> **Status**: **Phase A COMPLETED** (2026-05-27、A-1〜A-V 全 step)
+> **Status**: **Phase A COMPLETED** (2026-05-27、A-1〜A-V 全 step) — ただし route superseded (上記)
 >   - A-1 ✓ `IsStamScalingNoiseHyp` staged (commit `8e23d94`)
 >   - A-0' ✓ (commit `c0edbe1`)
 >   - A-2 ✓ `csiszarGap1Source_hasDerivAt`
