@@ -111,6 +111,13 @@ delegate (threaded `hX_ent`/`hY_ent` を再利用)。
 するのみ、case 1 は named wall に delegation)。新 finite-entropy 前提 4 本は honest regularity
 precondition (load-bearing でない)。dispatch 自身は own sorry 0、case-1 無限分散枝が route T で
 genuine closure 済 (2026-06-07) ゆえ **transitive sorry も 0 (proof-done)**。
+
+**@audit:superseded-by(entropyPowerExt_add_ge_unconditional)**: 本 skeleton は 21 precondition
+(case2/2symm 用 16 integrability + case-1/case2 用 5 finite-entropy) を取るが、2026-06-08 Phase 5
+endgame で method-Y gateway 経由の完全無条件版 `entropyPowerExt_add_ge_unconditional`
+(`EPIUncondDispatchFull.lean`、`hX hY hXY` のみ、precondition 0、sorryAx-free、独立監査 all-OK) が
+別建てされ canonical headline となった。本 skeleton は proof-done の consumer 0 leaf として残置
+(削除しないが新規利用は無条件版を推奨)。
 @audit:ok -/
 theorem entropyPowerExt_add_ge_dispatch_skeleton
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]

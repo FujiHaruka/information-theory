@@ -304,7 +304,49 @@ so the de Bruijn producers (`isDeBruijnRegularityHyp_of_methodX_unitnoise`) — 
 threaded `IsDeBruijnRegularityHyp` group (previously vacuous for `v_X ≠ 1`). The body
 re-introduces `v_X v_Y := (1 : ℝ≥0)` existentially to keep the `_of_regular` plumbing
 (general `v_B` on the §4 saturation side) unchanged.
-@audit:ok -/
+
+@audit-note: independent honesty audit (2026-06-05, fresh auditor, commit c0cd760).
+PB-1 restate VERIFIED to genuinely resolve the latent vacuity defect. The old signature
+took arbitrary nonzero `v_X v_Y` while threading `IsDeBruijnRegularityHyp X Z_X P`, whose
+`reg_at t ht .Z_law` (= `IsRegularDeBruijnHypV2.Z_law`, `FisherInfoV2DeBruijn.lean:210`)
+hardcodes `P.map Z_X = gaussianReal 0 1` — so for `v_X ≠ 1` the hypotheses `hZX_law` and
+`Z_law` were mutually unsatisfiable, making the theorem vacuously true (premises never
+jointly inhabitable). Fixing `hZX_law : P.map Z_X = gaussianReal 0 1` removes the
+contradiction. The body's `obtain ⟨v_X, hv_X, hZX_law⟩ : ∃ v, v≠0 ∧ … := ⟨1, one_ne_zero,
+hZX_law⟩` is HONEST (not circular `:= h`, not `:True`): it locally re-derives the
+`∃ v ≠ 0` shape the `_of_regular` plumbing expects, instantiated at the genuine witness
+`v = 1` carried by the unit hypothesis. The conclusion `N(X+Y) ≥ N(X)+N(Y)` is unchanged and
+not weakened; the noise is genuinely auxiliary (absent from the conclusion) so the unit
+restriction loses no generality. Wrapper itself sorryAx-free (orchestrator-confirmed); the
+threaded `IsDeBruijnRegularityHyp` / `h_reg_*` are honest preconditions (residuals live in
+the producer's `integrable_deriv`, see `isDeBruijnRegularityHyp_of_methodX_unitnoise`). Not
+`@audit:ok` only because it threads residual-carrying regularity hyps (type-check done, not
+proof done).
+
+This wrapper discharges the supply-able preconditions of
+`entropyPower_add_ge_case1_of_regular` from clean method-X data:
+* noise a.c. (`hZX_ac`/`hZY_ac`/`hZXZY_ac`) via `gaussianReal_absolutelyContinuous`
+  + `map_add_absolutelyContinuous`;
+* the four individual independences from the single 4-tuple
+  `iIndepFun ![X,Y,Z_X,Z_Y] P` (pairwise via `iIndepFun.indepFun`, joint via
+  `iIndepFun.indepFun_prodMk_prodMk` + `IndepFun.comp`);
+* the three `IsRescaledPathRegular` bundles via `isRescaledPathRegular_of_methodX`;
+* the per-`t` scaling regularity (`h_scale_*`) via the B(i)-identical density-witness
+  plumbing (`rescaledInput_density_witness` + `pPath_eq_convDensityAdd` +
+  `convDensityAdd_negMulLog_integrable_pub`);
+* the variance bounds (`varX/Y/S := Var[·;P]`) via `IndepFun.variance_fun_add` +
+  variance scaling, which hold with equality.
+
+The **de Bruijn per-time regularity group** (`h_reg_*'` / `h_endpt_*` / `h_pos_stam`)
+is **not supplied from method-X** (it depends on the moonshot
+`epi-debruijn-pertime-closure`) and is threaded as an honest precondition.
+
+**@audit:superseded-by(entropyPowerExt_add_ge_unconditional)** (2026-06-08): 本 method-X case-1 EPI
+wrapper は consumer 0、かつ未解消 de Bruijn per-time 残壁 (`@residual` 下記) を抱える。無条件 EPI は
+route T で case-1 を閉じた (`entropyPowerExt_add_ge_unconditional`) ため、この de Bruijn EPI 経路は EPI
+用途では不要 = retract 候補。ただし de Bruijn 恒等式 closure 計画 `epi-debruijn-pertime-closure` 自体は
+EPI と独立の standalone goal として有効 (本 wrapper の supersede は de Bruijn 計画の中止を意味しない)。
+@residual(plan:epi-debruijn-pertime-closure) -/
 theorem entropyPower_add_ge_case1_of_methodX
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y)
