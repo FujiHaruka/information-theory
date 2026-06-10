@@ -204,12 +204,21 @@ sum 形・finiteness-free 持ち上げが本体。
 
 ⚠ 2026-06-08 更新: finiteness-free 版は (☆) per-fibre 恒等式の mass 相殺依存により本ルートでは証明
 不能と確定 (`ℝ≥0∞` に減算が無く step b' が fibre 有限性必須)。genuine な finite-entropy 版は
-`differentialEntropyExt_eq_condEntExt_add_klDiv_of_finite` (`:262`、`@audit:ok`、独立監査 2026-06-08
-PASS、step a'/b'/c' + EReal balance helper 結線、sorryAx-free)。本無条件版の residual は truncation+LSC
-route β' (有限エントロピー近似の極限) で別途攻略。下記旧 sufficiency 解析 (2026-06-07) は循環論法を
-含み (枝閉じ `I=∞⟹h(X)=⊤` / conditioning 単調 `h(X|Z)≤h(X)` が ② = chain rule 自身に依存) stale =
-参考情報。`@residual(plan:...)` 分類は statement が真 (proof が hard) で無条件版が route β' で生きるため
-維持。
+`differentialEntropyExt_eq_condEntExt_add_klDiv_of_finite` (`:266`、`@audit:ok`、独立監査 2026-06-08
+PASS、step a'/b'/c' + EReal balance helper 結線、sorryAx-free)。
+
+⚠⚠ **2026-06-10 retract-candidate 化 (orphan 確定)**: 当初想定した「本無条件版を truncation+LSC route β'
+で攻略」は実現されず、route β' (`epi-uncond-truncation-lsc-plan`、`TruncationLimit/Limit.lean` の
+`_unconditional` 版群) は **本 chain rule を非継承で bypass** して無条件 EPI を達成した
+(epi-facts.md 行 27「truncation 近似が無条件版②を genuine 迂回」「(i-a) 非継承」、機械確認済)。
+結果、本 sorry + その全 consumer (`Monotone.lean` の `differentialEntropyExt_indep_add_eq_add_klDiv` /
+`_mono_add` / `_top_of_indep_add` / `entropyPowerExt_mono_add` の 4 decl) は **route β' の `_unconditional`
+版に supersede された consumer-0 の dead orphan 島** (頂点 `entropyPowerExt_mono_add` は dep_consumers
+で direct/transitive 共に 0 を機械確認)。よって旧記述「statement が真で route β' で生きるため維持」は
+**stale** で、本 sorry は closure 対象ではなく **削除候補**。physical 削除 (Monotone.lean 全体 +
+本 decl + 4 file の vestigial import 掃除) は別タスク。`differentialEntropyExt_eq_condEntExt_add_klDiv_of_finite`
+(genuine だが同じく consumer-0 orphan) も同時に整理対象。下記旧 sufficiency 解析 (2026-06-07) は循環論法を
+含み (枝閉じ `I=∞⟹h(X)=⊤` / conditioning 単調 `h(X|Z)≤h(X)` が ② = chain rule 自身に依存) stale = 参考情報。
 
 旧 honesty audit 2026-06-07 (crux ②、stale 注記済、参考情報): **honest_residual** (tier 2)。4-check:
 (1) 非循環 — 結論 = entropy 分解恒等式、いずれの仮説型 (Measurable/≪/≠⊥) とも非同型、body は素の sorry。
@@ -235,7 +244,9 @@ chain rule bridge、共に `@audit:ok`)、残務 = それらの EReal 版 self-b
 finiteness-free KL chain rule `klDiv_compProd_eq_add` は Mathlib 存在 (無仮定、機械確認)、道 A は既存 Real 資産の
 EReal lift で回避可。conclusion-shape 反証義務充足 (足掛かり部品 genuine 在庫)。
 
-@residual(plan:epi-uncond-deffix-monotone-plan) -/
+@residual(plan:epi-uncond-deffix-monotone-plan)
+@audit:superseded-by(epi-uncond-truncation-lsc-plan)
+@audit:retract-candidate(superseded-by-full-discharge) -/
 theorem differentialEntropyExt_eq_condEntExt_add_klDiv
     {Ω α : Type*} [MeasurableSpace Ω] [MeasurableSpace α]
     (X : Ω → ℝ) (Z : Ω → α) (μ : Measure Ω) [IsProbabilityMeasure μ]
