@@ -122,44 +122,34 @@ infinite product, closure deferred to `cramer-lc2-discharge-moonshot-plan`
 (Phase B/C). Transitive `sorry` upstream via `cramer_lower` (Phase 2.1 of the
 Cramér sorry-migration sweep).
 
-AUDIT 2026-06-10 (independent honesty audit, false-statement DEFECT root #1):
-the `sorry` body MASKS a false signature (same defect as the general-IID root
-`cramer_lower` in `Cramer.lean`, this is the canonical i.i.d. product
-specialization). As stated this is UNDER-HYPOTHESIZED and **false for general
-`a`**: hypotheses are `0 ≤ lam` + `h_coboundedBelow` only, with NO constraint
-relating `a` and `lam`. Counterexample (independently re-derived): `μ₀ =
-Bernoulli(1/2)`, `Y(0)=0, Y(1)=1`, `lam=0`, `a=0.9`. Then
-`cgf (Y∘·0) (infinitePi μ₀) 0 = log 1 = 0`, so LHS `= -(0·0.9 − 0) = 0`, while
-`liminf (1/n) log P[S_n ≥ 0.9n] = -D(0.9‖0.5) = -0.368… < 0`. The claimed
-`0 ≤ -0.368…` is FALSE; `h_coboundedBelow` does not rescue (liminf is finite).
-TRUE only at the optimal tilt `a = deriv (cgf (Y∘·0) (infinitePi μ₀)) lam`. The
-successor plan `cramer-lc2-discharge-moonshot-plan` (lines 43/85/463/490) AND
-`cramer-chernoff-clt-closure-moonshot-plan` (lines 46-48/72/125) BOTH add the
-hypothesis `(h_deriv : deriv (cgf (X 0) μ) lam = a)` to their own target
-theorems — i.e. the plans themselves recognize general-`a` does not close. So
-the existing `@residual(plan:cramer-lc2-discharge-moonshot-plan)` OVER-PROMISES.
+DEF-FIX 2026-06-11 (false-statement defect repaired, canonical i.i.d. product
+specialization of the general-IID `cramer_lower` in `Cramer.lean`). The
+optimal-tilt hypothesis `(h_deriv : deriv (cgf (Y∘·0) (infinitePi μ₀)) lam = a)`
+is now part of the signature, so the statement is TRUE-as-stated. Background:
+WITHOUT `h_deriv` the per-`lam` bound is false for general `a` (counterexample
+`μ₀ = Bernoulli(1/2)`, `Y(0)=0, Y(1)=1`, `lam=0`, `a=0.9`: LHS `= 0` but
+`liminf (1/n) log P[S_n ≥ 0.9n] = -D(0.9‖0.5) = -0.368… < 0`); it is tight
+precisely at the optimal tilt `a = deriv cgf lam`, where
+`lam·a − Λ(lam) = cramerRate a`. The def-fix threads `h_deriv` through
+`cramer_lower_legendre_phaseC_partial_discharge`, the `@[entry_point]`
+`cramer_tendsto_phaseC_partial_discharge`, and `cramer_lower_phaseC_residual_discharge`
+(`InfinitePiTiltedChangeOfMeasure.lean`).
 
-(a) FALSE for general `a`; TRUE only at the optimal tilt `a = deriv (cgf) lam`.
-(b) FIRST choice (def-fix = add `(h_deriv : deriv (cgf …) lam = a)`) was NOT done
-    this session: it ripples to `cramer_lower_legendre_phaseC_partial_discharge`
-    (:175), the `@[entry_point]` `cramer_tendsto_phaseC_partial_discharge` (:208,
-    transitive sorryAx), and `cramer_lower_phaseC_residual_discharge`
-    (`InfinitePiTiltedChangeOfMeasure.lean:380`); provisional tier-5 marker only.
-(c) Even after restricting to `a = deriv cgf lam`, closure still needs the
-    genuine CLT-boundary wall (`cramer-chernoff-clt-closure-moonshot-plan`
-    Phase 1-6, all unstarted, boundary producer absent). IMPORT-CYCLE note: the
-    change-of-measure producer machinery lives in
-    `InfinitePiTiltedChangeOfMeasure.lean`, which IMPORTS this file — so the
-    producer cannot be wired back into this upstream wrapper by plumbing (it is
-    a downstream consumer, not an upstream supplier). This is the structural
-    reason the gap cannot be closed by "wiring" alone.
+The remaining `sorry` is the genuine CLT-boundary wall, tracked by the successor
+plan below (which targets exactly `a = deriv cgf lam`, so the residual is now
+ACCURATELY matched — no over-promise). IMPORT-CYCLE note (why the gap cannot be
+closed by "wiring" alone here): the change-of-measure producer machinery lives in
+`InfinitePiTiltedChangeOfMeasure.lean`, which IMPORTS this file — it is a
+downstream consumer, not an upstream supplier; closure must come from the new
+boundary-CLT file in the successor plan.
 
-`@audit:defect(false-statement)`
-`@audit:closed-by-successor(cramer-chernoff-clt-closure-moonshot-plan)` -/
+`@residual(plan:cramer-chernoff-clt-closure-moonshot-plan)` -/
 theorem cramer_lower_phaseC_partial_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
     (a lam : ℝ) (hlam : 0 ≤ lam)
+    (_h_deriv : deriv (cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
+        (Measure.infinitePi (fun _ : ℕ => μ₀))) lam = a)
     (h_coboundedBelow : Filter.IsCoboundedUnder (· ≥ ·) atTop
       (fun n : ℕ =>
         (1 / (n : ℝ)) * Real.log
@@ -181,11 +171,12 @@ Transitive `sorry` upstream via `cramer_lower_phaseC_partial_discharge`
 (n-letter RN-deriv identification, load-bearing gap in the parent
 `cramer-lc2-discharge-moonshot-plan`).
 
-AUDIT 2026-06-10: FALSE-INHERITING. The root
-`cramer_lower_phaseC_partial_discharge` is `@audit:defect(false-statement)`
-(false for general `a`); this wrapper passes general `a`/`lam` through (note:
-the `hlam_opt` Legendre-attainment hypothesis is NOT the optimal-tilt constraint
-`a = deriv cgf lam`, so it does not repair the root). Defect tag on root only. -/
+DEF-FIX 2026-06-11: honest-inheriting. The root
+`cramer_lower_phaseC_partial_discharge` now carries the optimal-tilt hypothesis
+`(h_deriv : deriv (cgf …) lam = a)` (true-as-stated); this wrapper threads
+`h_deriv` through alongside the `hlam_opt` Legendre-attainment hypothesis (the
+two are distinct regularity preconditions: `hlam_opt` bridges the conclusion to
+`cramerRate`, `h_deriv` pins the optimal tilt). Residual lives on the root. -/
 theorem cramer_lower_legendre_phaseC_partial_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
@@ -196,6 +187,8 @@ theorem cramer_lower_legendre_phaseC_partial_discharge
               (Measure.infinitePi (fun _ : ℕ => μ₀)) lam
         = cramerRate (fun ω : ℕ → Ω₀ => Y (ω 0))
             (Measure.infinitePi (fun _ : ℕ => μ₀)) a)
+    (h_deriv : deriv (cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
+        (Measure.infinitePi (fun _ : ℕ => μ₀))) lam = a)
     (h_coboundedBelow : Filter.IsCoboundedUnder (· ≥ ·) atTop
       (fun n : ℕ =>
         (1 / (n : ℝ)) * Real.log
@@ -208,7 +201,7 @@ theorem cramer_lower_legendre_phaseC_partial_discharge
             ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
               {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop := by
   have h := cramer_lower_phaseC_partial_discharge
-    (μ₀ := μ₀) hY_meas h_bdd a lam hlam h_coboundedBelow
+    (μ₀ := μ₀) hY_meas h_bdd a lam hlam h_deriv h_coboundedBelow
   rw [← hlam_opt]; exact h
 
 /-- **Cramér's theorem (`Tendsto` form), Phase C partial discharge**.
@@ -219,10 +212,11 @@ Sandwich of `cramer_upper_legendre` (constructive) and
 `cramer_lower_phaseC_partial_discharge`, n-letter RN-deriv identification
 gap in `cramer-lc2-discharge-moonshot-plan`).
 
-AUDIT 2026-06-10: FALSE-INHERITING (`@[entry_point]`, depends on sorryAx). The
-lower-bound leg inherits the root `cramer_lower_phaseC_partial_discharge`
-`@audit:defect(false-statement)` (false for general `a`); general `a`/`lam` is
-passed through. Defect tag on root only. -/
+DEF-FIX 2026-06-11: honest-inheriting (`@[entry_point]`, transitive sorryAx via
+the root). The lower-bound leg inherits the root
+`cramer_lower_phaseC_partial_discharge`, now true-as-stated under the optimal-tilt
+hypothesis `(h_deriv : deriv (cgf …) lam = a)` which is threaded through here.
+Residual lives on the root. -/
 @[entry_point]
 theorem cramer_tendsto_phaseC_partial_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
@@ -234,6 +228,8 @@ theorem cramer_tendsto_phaseC_partial_discharge
               (Measure.infinitePi (fun _ : ℕ => μ₀)) lam
         = cramerRate (fun ω : ℕ → Ω₀ => Y (ω 0))
             (Measure.infinitePi (fun _ : ℕ => μ₀)) a)
+    (h_deriv : deriv (cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
+        (Measure.infinitePi (fun _ : ℕ => μ₀))) lam = a)
     (h_pos : ∀ᶠ n : ℕ in atTop,
       0 < (Measure.infinitePi (fun _ : ℕ => μ₀)).real
             {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})
@@ -296,7 +292,7 @@ theorem cramer_tendsto_phaseC_partial_discharge
               ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
                 {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop :=
     cramer_lower_legendre_phaseC_partial_discharge
-      (μ₀ := μ₀) hY_meas h_bdd a lam hlam hlam_opt h_coboundedBelow
+      (μ₀ := μ₀) hY_meas h_bdd a lam hlam hlam_opt h_deriv h_coboundedBelow
   exact tendsto_of_le_liminf_of_limsup_le h_lower h_upper h_bdd_above h_bdd_below
 
 /-! ## Phase C-4 — sanity corollary: predicate triviality cases

@@ -375,13 +375,13 @@ this wrapper no longer "closes" anything constructively — closure responsibili
 now belongs entirely to the upstream `cramer_lower_phaseC_partial_discharge`
 (`@residual(plan:cramer-lc2-discharge-moonshot-plan)`).
 
-AUDIT 2026-06-10: FALSE-INHERITING. The upstream
-`cramer_lower_phaseC_partial_discharge` is `@audit:defect(false-statement)`
-(false for general `a`, true only at the optimal tilt `a = deriv cgf lam`); this
-wrapper passes general `a`/`lam` straight through (and `_h_res` is load-bearing
-in name only, see above). So this `@audit:closed-by-successor` target plan is the
-correct successor: it closes the boundary case `a = deriv cgf lam` only. Defect
-tag on the root only.
+DEF-FIX 2026-06-11: honest-inheriting. The upstream
+`cramer_lower_phaseC_partial_discharge` now carries the optimal-tilt hypothesis
+`(h_deriv : deriv (cgf …) lam = a)` (true-as-stated, residual = genuine
+CLT-boundary wall); this wrapper threads `h_deriv` through. `_h_res` remains
+load-bearing in name only (see above). The successor plan closes exactly the
+boundary case `a = deriv cgf lam`, now accurately matched by the threaded
+signature.
 
 `@audit:closed-by-successor(cramer-chernoff-clt-closure-moonshot-plan)` -/
 @[entry_point]
@@ -389,6 +389,8 @@ theorem cramer_lower_phaseC_residual_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
     (a lam : ℝ) (hlam : 0 ≤ lam)
+    (h_deriv : deriv (cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
+        (Measure.infinitePi (fun _ : ℕ => μ₀))) lam = a)
     (h_coboundedBelow : Filter.IsCoboundedUnder (· ≥ ·) atTop
       (fun n : ℕ =>
         (1 / (n : ℝ)) * Real.log
@@ -405,7 +407,7 @@ theorem cramer_lower_phaseC_residual_discharge
   -- Sorry-migration sweep (2026-05-25): `cramer_lower_phaseC_partial_discharge`
   -- no longer takes the `h_pred` hypothesis; the call now collapses to a
   -- transitive `sorry` carried by the upstream wrapper.
-  cramer_lower_phaseC_partial_discharge hY_meas h_bdd a lam hlam h_coboundedBelow
+  cramer_lower_phaseC_partial_discharge hY_meas h_bdd a lam hlam h_deriv h_coboundedBelow
 
 /-! ## Per-instance window largeness from interior of the tilted mean -/
 
