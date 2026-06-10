@@ -250,12 +250,26 @@ omit [DecidableEq α] in
 /-- **Bridge (Lagrange ⇒ interior minimizer) — textbook L-H4-FS interior**: the
 tilt at parameter `lam` is the wave7 `IsHoeffdingInteriorMinimizer`.
 
-`@residual(plan:hoeffding-tradeoff-moonshot-plan)` — the previously bundled
-`IsHoeffdingLagrangeHyp` hypothesis is retreated; the IVT constraint-match and
-infimum-attainment discharges are deferred to
-`hoeffding-tradeoff-moonshot-plan` Phase B. Full support is constructive
-(`hoeffdingTilt_pos`) and lives in `IsHoeffdingMinimizerFullSupport.of_pos`
-elsewhere. -/
+⚠ FALSE STATEMENT (2026-06-11 dead 掃除, judgment #19「statement-too-strong 偽の疑い」を確証):
+the conclusion `IsHoeffdingInteriorMinimizer P₁ P₂ alpha (hoeffdingTilt P₁ P₂ lam)`
+is asserted for ARBITRARY `{alpha lam}` with **no constraint linking `alpha` to
+`lam`**. But `IsHoeffdingInteriorMinimizer.mem` demands `tilt lam ∈ K(alpha)`
+(i.e. `klDivPmf (tilt lam) P₁ ≤ alpha`) and `.realises` demands
+`hoeffdingE2 P₁ P₂ alpha = klDivPmf (tilt lam) P₂`. Degenerate-boundary refutation:
+take `P₁` a positive pmf and `alpha = 0`; then `K(0) = {P₁}` (Gibbs: `klDivPmf · P₁ ≥ 0`,
+`= 0` iff `· = P₁`), so `mem` forces `tilt lam = P₁`, false for any `lam` with
+`tilt lam ≠ P₁`. Structural confirmation: the genuine wrappers
+`isHoeffdingInteriorMinimizer_of_ivt` (`HoeffdingLagrangeIVTBody.lean`) /
+`isHoeffdingInteriorMinimizer_of_constraint_eq` (`HoeffdingMinimizerAttainment.lean`)
+take exactly the missing `klDivPmf (tilt lam) P₁ = alpha` as a hypothesis — yet
+their bodies delegate to THIS lemma, ignoring it. So `@residual(plan:...)` over-promised
+(no plan closes a false statement as-stated; closure needs the linking hypothesis added).
+
+DEAD ISLAND: anchor + 3 consumers (`isHoeffdingInteriorMinimizer_exists_of_lagrange`
+same-file, plus the 2 cross-file wrappers above) form a consumer-0 dead island —
+`hoeffding_tradeoff_exp` (sorryAx-free) bypasses interior body entirely. 物理削除時は
+4 decl を co-delete (2 wrapper は honest 直 sorry へ rewire or 削除)。
+@audit:defect(false-statement) @audit:retract-candidate(false-hypothesis) -/
 @[entry_point]
 theorem isHoeffdingInteriorMinimizer_of_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -303,9 +317,16 @@ omit [DecidableEq α] in
 infimum `hoeffdingE2 P₁ P₂ alpha` is realised at the full-support tilt witness
 lying in `K(α)`.
 
-`@residual(plan:hoeffding-tradeoff-moonshot-plan)` — the IVT constraint-match
-+ infimum-attainment content was previously bundled as
-`IsHoeffdingLagrangeHyp` and is now retreated. -/
+⚠ FALSE STATEMENT (2026-06-11 dead 掃除): the conclusion
+`∃ Qstar ∈ hoeffdingConstraintSet P₁ alpha, hoeffdingE2 P₁ P₂ alpha = klDivPmf Qstar P₂ ∧ …`
+is asserted for ARBITRARY `{alpha lam}` (`lam` is unused in the conclusion — it is the
+attainment-existence claim at `alpha`). Degenerate-boundary refutation: take `P₁` a
+positive pmf and `alpha < 0`; then `K(alpha)` is empty (Gibbs: `klDivPmf · P₁ ≥ 0 > alpha`),
+so `∃ Qstar ∈ ∅, …` is false. The genuine attainment result needs `0 ≤ alpha` (and the
+infimum-attainment proof); the as-stated form drops it. `@residual(plan:...)` over-promised.
+consumer-0 (`dep_consumers --transitive` 推移閉包 0); `hoeffding_tradeoff_exp` (sorryAx-free) が
+interior body を bypass。
+@audit:defect(false-statement) @audit:retract-candidate(false-hypothesis) -/
 @[entry_point]
 theorem hoeffdingE2_interior_minimizer_via_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -322,8 +343,17 @@ omit [DecidableEq α] in
 tilt minimizer, the Pythagorean inequality holds against any other
 full-support `P ∈ K(α)`.
 
-`@residual(plan:hoeffding-tradeoff-moonshot-plan)` — depends on the retreated
-`isHoeffdingInteriorMinimizer_of_lagrange` (the tilt-realises-infimum step). -/
+⚠ FALSE STATEMENT (2026-06-11 dead 掃除): the Pythagorean inequality
+`klDivPmf P P₂ ≥ klDivPmf P (tilt lam) + klDivPmf (tilt lam) P₂` holds only when
+`tilt lam` is the I-projection (minimizer of `klDivPmf · P₂` onto `K(alpha)`). It is
+asserted for ARBITRARY `{alpha lam}` with no linking constraint, so `tilt lam` is
+generally not that minimizer. Refutation: `P₁ ≠ P₂` positive pmfs, `lam = 0`
+(`tilt 0 = P₁`), `P = P₂` with `alpha ≥ klDivPmf P₂ P₁` (so `P₂ ∈ K(alpha)`); then
+LHS `= klDivPmf P₂ P₂ = 0` but RHS `= klDivPmf P₂ P₁ + klDivPmf P₁ P₂ > 0`. Also
+transitively false-premised via the FALSE `isHoeffdingInteriorMinimizer_of_lagrange`.
+`@residual(plan:...)` over-promised. consumer-0; `hoeffding_tradeoff_exp` (sorryAx-free) が
+interior body を bypass。
+@audit:defect(false-statement) @audit:retract-candidate(false-hypothesis) -/
 @[entry_point]
 theorem csiszar_pythagoras_at_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)

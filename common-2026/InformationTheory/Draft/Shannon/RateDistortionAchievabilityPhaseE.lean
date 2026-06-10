@@ -95,6 +95,13 @@ distortion-compatibility / slack hypotheses remain. Body retreated to `sorry`.
 
 `@residual(plan:rate-distortion-achievability-phase-e-strong-plan)`
 
+DEAD (2026-06-11 dead 掃除, judgment #19/#22 確認): consumer-0 (`dep_consumers
+--transitive` 推移閉包 0) + production headline `rate_distortion_achievability`
+(`RateDistortion/AchievabilityPhaseEStrongFinal.lean`、`#print axioms` で
+sorryAx-free 機械確認) が strong-typicality 形で同結論を supersede。本 pre-strong
+witness-form は wire-in されない dead 残置。
+@audit:retract-candidate(superseded-by-full-discharge)
+
 -/
 @[entry_point]
 theorem rate_distortion_achievability_witness_form

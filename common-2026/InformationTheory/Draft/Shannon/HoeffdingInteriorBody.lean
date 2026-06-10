@@ -221,7 +221,14 @@ interior regime.
 `@residual(plan:hoeffding-tradeoff-moonshot-plan)` — the predicate-form
 `IsHoeffdingInteriorGradient` hypothesis was previously bundled and is now
 retreated; the genuine `HasDerivAt` / Lagrangian-tilt discharge is deferred to
-`hoeffding-tradeoff-moonshot-plan` Phase B. -/
+`hoeffding-tradeoff-moonshot-plan` Phase B.
+
+DEAD (2026-06-11 dead 掃除, judgment #19/#22 確認): consumer-0 (`dep_consumers
+--transitive` 推移閉包 0)。production `hoeffding_tradeoff_exp`
+(`Hoeffding/TradeoffExp.lean`、`#print axioms` sorryAx-free) が IVT+exp-family
+Pythagorean bypass で完成済 — 本 interior-minimizer existence 補題を一切経由しない。
+statement 自体は TRUE (`0 ≤ alpha` 付き) だが dead 残置。
+@audit:retract-candidate(superseded-by-full-discharge) -/
 @[entry_point]
 theorem isHoeffdingInteriorMinimizer_of_gradient
     (P₁ P₂ : α → ℝ)
@@ -298,7 +305,13 @@ extraction, mirroring `hoeffdingE2_minimizer_at_boundary_alpha_ge_kl`
 
 `@residual(plan:hoeffding-tradeoff-moonshot-plan)` — the predicate-form
 `IsHoeffdingInteriorGradient` hypothesis was previously bundled and is now
-retreated. -/
+retreated.
+
+DEAD (2026-06-11 dead 掃除, judgment #19/#22 確認): consumer-0 (`dep_consumers
+--transitive` 推移閉包 0)。production `hoeffding_tradeoff_exp`
+(`Hoeffding/TradeoffExp.lean`、sorryAx-free) が interior body を bypass。
+statement 自体は TRUE (`0 ≤ alpha` 付き) だが dead 残置。
+@audit:retract-candidate(superseded-by-full-discharge) -/
 @[entry_point]
 theorem hoeffdingE2_interior_minimizer_via_predicates
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)

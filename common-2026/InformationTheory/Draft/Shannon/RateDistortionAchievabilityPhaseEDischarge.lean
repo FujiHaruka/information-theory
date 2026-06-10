@@ -294,6 +294,12 @@ because this wrapper is itself an independently published statement.
 
 `@residual(plan:rate-distortion-achievability-phase-e-strong-plan)`
 
+DEAD (2026-06-11 dead 掃除, judgment #19/#22 確認): consumer-0 (`dep_consumers
+--transitive` 推移閉包 0) + genuine 後継 `rate_distortion_achievability_partial_discharge_strong`
+(`AchievabilityPhaseEStrongFinal.lean`、production headline が呼ぶ 0 sorry 形) が
+supersede。本 partial-discharge wrapper は pre-strong 形の dead 残置。
+@audit:retract-candidate(superseded-by-full-discharge)
+
 -/
 @[entry_point]
 theorem rate_distortion_achievability_partial_discharge

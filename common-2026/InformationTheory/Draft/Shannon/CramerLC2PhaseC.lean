@@ -112,9 +112,20 @@ def IsMeasureInfinitePiTiltedEq (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam
 setting `X i ω := Y (ω i)`, the parent `h_tilted_lower`-shape Chernoff lower
 bound on the un-tilted infinite product follows from the (currently missing)
 n-letter Radon–Nikodym derivative identification of the tilted infinite
-product. Closure deferred to `cramer-lc2-discharge-moonshot-plan` (Phase B/C).
+product.
 
-`@residual(plan:cramer-lc2-discharge-moonshot-plan)` -/
+⚠ FALSE STATEMENT (2026-06-11 dead 掃除: #19「consumer-0 dead」を訂正 — dead **かつ**
+false-as-stated)。hypotheses are `Measurable Y` + `∃ M, |Y| ≤ M` only, with NO constraint
+linking `a` to `lam` (same defect family as the sibling
+`cramer_lower_phaseC_partial_discharge` :184, audit 2026-06-10). Degenerate-boundary
+refutation: take `a = M + 1` (so `Y ω ≤ M < a` ∀ω); then `∑_{i<n} Y(ω i) ≤ nM < a·n`, so
+the event `{ω | a·n ≤ ∑ Y(ω i)} = ∅` and its `.real` measure is `0` for all `n`. The
+conclusion then needs `∃ C > 0, ∀ᶠ n, C·exp(…) ≤ 0`, impossible since `C·exp(…) > 0`.
+TRUE only at the optimal tilt `a = deriv (cgf …) lam` (the successor plans add exactly that
+hypothesis). So `@residual(plan:cramer-lc2-discharge-moonshot-plan)` OVER-PROMISED.
+consumer-0 (`dep_consumers --transitive` 推移閉包 0、production path は `cramer_lower` 系を
+通り本 orphan reduction を経由しない)。
+@audit:defect(false-statement) @audit:retract-candidate(false-hypothesis) -/
 @[entry_point]
 lemma tilted_lower_from_predicate
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
