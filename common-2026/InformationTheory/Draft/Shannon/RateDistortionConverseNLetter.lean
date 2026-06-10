@@ -440,6 +440,10 @@ analogue of subadditivity, obtained from the conditional chain rule
 dropping the extra conditioners `(X̂^n, X^{<i})` down to `X̂_i` via
 `condEntropy_le_condEntropy_of_pair` (conditioning on a superset can only lower
 conditional entropy). -/
+-- @audit:ok — independent honesty audit 2026-06-10. Encoder/decoder- and
+-- independence-agnostic; the conditioner reshape (MeasurableEquiv) + chain rule +
+-- `condEntropy_le_condEntropy_of_pair` are genuine, no load-bearing hyp.
+-- sorryAx-free (machine-confirmed).
 lemma condEntropy_pi_le_sum_condEntropy_per_letter
     {n : ℕ}
     {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
@@ -554,7 +558,15 @@ I(X^n; X̂^n) = H(X^n) - H(X^n | X̂^n)
 ```
 This is the same family as the "D-1 wall" in `ParallelGaussianPerCoord.lean`, but
 it is **not** a Mathlib wall: it wires the existing in-project entropy assets
-(independent-source entropy additivity + the conditional-entropy chain rule). -/
+(independent-source entropy additivity + the conditional-entropy chain rule).
+
+@audit:ok — independent honesty audit 2026-06-10. `hindep` is genuinely
+load-bearing in the *mathematical* sense (a true precondition, NOT bundled core):
+it is consumed only inside `entropy_pi_eq_sum_of_indep` to collapse `H(X^n)` to
+`∑ H(Xᵢ)`. Dropping it makes the claim FALSE (X₁=X₂ ⇒ `∑I > I_joint`), so the
+hypothesis is necessary and the inequality follows semantically. The hard step
+(superadditivity) is built in the body from genuine bridge/chain-rule lemmas, not
+asserted by a hypothesis. sorryAx-free (machine-confirmed). -/
 lemma mutualInfo_superadditive_of_indep
     {n : ℕ}
     {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
@@ -648,7 +660,15 @@ dependent gives `R = log 2 > (1/2)log 2`). The repair adds, as genuine
 * `hindep : iIndepFun (fun i => Xs i) μ` + `hXs_law` — the i.i.d. memoryless
   source assumption (this is what makes MI superadditivity hold).
 The finiteness preconditions `h_MI_block_finite` / `h_MI_perletter_finite` are
-regularity (needed for the `ENNReal.toReal` monotonicity steps). -/
+regularity (needed for the `ENNReal.toReal` monotonicity steps).
+
+@audit:ok — independent honesty audit 2026-06-10 (commit `e73513c`): all
+preconditions (`hD`/`hindep`/`hXs_law`/`[Nonempty β]`/MI-finiteness) are genuine
+regularity, not load-bearing core bundling; the superadditivity + n-way Jensen
+core is self-built in the body. Sufficiency confirmed: both cited
+degenerate-boundary counterexamples (D-free, X₁=X₂ dependent) are closed by `hD`
+and `hindep` respectively. `#print axioms` = `[propext, Classical.choice,
+Quot.sound]` (sorryAx-free, machine-reconfirmed). -/
 @[entry_point]
 theorem rate_distortion_converse_n_letter_singleLetter
     [Fintype α] [Nonempty α] [MeasurableSingletonClass α]
