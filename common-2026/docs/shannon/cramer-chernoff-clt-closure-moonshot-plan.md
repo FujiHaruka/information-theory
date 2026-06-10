@@ -31,14 +31,14 @@
 > **在庫 (verdict GO)**: [`cramer-chernoff-clt-closure-mathlib-inventory.md`](cramer-chernoff-clt-closure-mathlib-inventory.md)
 > (~120-210 行、piece 別難度・鍵 lemma・file:line 済)
 >
-> **Predecessors (publish 済、変更なしで再利用)**:
-> - `InformationTheory/Shannon/InfinitePiTiltedChangeOfMeasure.lean` (530 行, 0 sorry):
+> **Predecessors (publish 済、変更なしで再利用)** — ⚠️ 実パス (2026-06-11 `1a19915` で確認、`fdd68a3` 昇格後):
+> - `InformationTheory/Draft/Shannon/InfinitePiTiltedChangeOfMeasure.lean` (0 sorry):
 >   `IsTiltedWindowEventuallyLarge`, `isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge`,
 >   `tiltedMean_eq_deriv_cgf`, `tiltedWindow_eventually_large_of_interior`,
 >   `tiltedWindow_eventually_large_of_cgfDeriv_interior`, `cramer_lower_phaseC_residual_discharge`
-> - `InformationTheory/Shannon/CramerLC2Discharge.lean` (171 行): `iIndepFun_tilted_ambient`,
->   `identDistrib_tilted_ambient`, `bounded_eval_family`
-> - `InformationTheory/Shannon/CramerLC2DischargeExt.lean` (257 行): `tilted_lln_in_probability_real`,
+> - `InformationTheory/Shannon/Cramer/LC2Discharge.lean`: `iIndepFun_tilted_ambient`,
+>   `identDistrib_tilted_ambient`, `bounded_eval_family` (full name `InformationTheory.Shannon.Cramer.Discharge.bounded_eval_family`)
+> - `InformationTheory/Shannon/Cramer/LC2DischargeExt.lean`: `tilted_lln_in_probability_real`,
 >   `isProbabilityMeasure_infinitePi_tilted_of_bounded`
 >
 > **Status (2026-05-20)**: 着手前。親 W-3 は **既に発動済** (現状コードは
@@ -50,7 +50,7 @@
 ## 進捗
 
 - [ ] Phase 0 — Mathlib + 既存足場 signature 再確認 (在庫転記の verbatim 固定) 📋 → [inventory](cramer-chernoff-clt-closure-mathlib-inventory.md)
-- [ ] Phase 1 — `gaussianReal_Ici_eq_half` (Gaussian median、唯一の「一から」) 📋
+- [x] Phase 1 — `gaussianReal_Ici_eq_half` (Gaussian median、唯一の「一から」) ✅ **CLOSED** (sorryAx-free, `1a19915`, `InformationTheory/Shannon/CramerCltBoundaryClosure.lean`, ~62 行)
 - [ ] Phase 2 — portmanteau half-line bridge (frontier null + 適用) 📋
 - [ ] Phase 3 — CLT を tilted ambient へ適用 (witness 構築 + 既存 plumbing 注入) 📋
 - [ ] Phase 4 — 窓質量 → 1/2 (集合書換 + LLN 引き算) + `tiltedWindow_eventually_large_of_boundary` 📋
@@ -189,7 +189,7 @@ lemma gaussianReal_map_neg : (gaussianReal μ v).map (fun x ↦ -x) = gaussianRe
 **MemLp from bounded** (`Mathlib/.../LpSeminorm/Basic.lean:557`): `memLp_of_bounded`
 (要 `[IsFiniteMeasure P]`、確率測度で充足)。
 
-**既存 plumbing** (字面一致で CLT 引数に注入可、`CramerLC2Discharge.lean`):
+**既存 plumbing** (字面一致で CLT 引数に注入可、`InformationTheory/Shannon/Cramer/LC2Discharge.lean`):
 ```lean
 lemma iIndepFun_tilted_ambient (hY_meas) (h_bdd) (lam) :          -- :85
     iIndepFun (fun (i : ℕ) (ω : ℕ → Ω₀) => Y (ω i))
@@ -198,7 +198,7 @@ lemma identDistrib_tilted_ambient (hY_meas) (h_bdd) (lam) (i : ℕ) :  -- :98
     IdentDistrib (fun ω : ℕ → Ω₀ => Y (ω i)) (fun ω : ℕ → Ω₀ => Y (ω 0)) P P
 ```
 
-**既存 tilted bridge / LLN** (`InfinitePiTiltedChangeOfMeasure.lean` / `CramerLC2DischargeExt.lean`):
+**既存 tilted bridge / LLN** (`Draft/Shannon/InfinitePiTiltedChangeOfMeasure.lean` / `Shannon/Cramer/LC2DischargeExt.lean`):
 ```lean
 theorem tiltedMean_eq_deriv_cgf (hY) (h_bdd) (lam) :    -- :489
     ∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)) = deriv (cgf Y μ₀) lam
@@ -421,11 +421,13 @@ proof-log: no
 ## ファイル構成
 
 ```
+InformationTheory/Draft/Shannon/
+  InfinitePiTiltedChangeOfMeasure.lean   ← 既存 (0 sorry, 変更なし)
+InformationTheory/Shannon/Cramer/
+  LC2Discharge.lean                      ← 既存 (変更なし、plumbing 利用)
+  LC2DischargeExt.lean                   ← 既存 (変更なし、LLN + IsProbabilityMeasure 利用)
 InformationTheory/Shannon/
-  InfinitePiTiltedChangeOfMeasure.lean   ← 既存 (530 行, 0 sorry, 変更なし)
-  CramerLC2Discharge.lean                ← 既存 (171 行, 変更なし、plumbing 利用)
-  CramerLC2DischargeExt.lean             ← 既存 (257 行, 変更なし、LLN + IsProbabilityMeasure 利用)
-  CramerCltBoundaryClosure.lean          ← 新規 (~135-250 行, 0 sorry, 本 plan の publish 場所)
+  CramerCltBoundaryClosure.lean          ← Phase 1 で新規作成済 (62 行, 0 sorry); Phase 2-6 を追記
 InformationTheory.lean                          ← import 1 行追記
 docs/shannon/
   cramer-chernoff-clt-closure-mathlib-inventory.md  ← 既存 (predecessor、verdict GO)
@@ -482,3 +484,16 @@ Mathlib PR-candidate として価値があり、後退ゼロ。
    **本体 (Phase 1 median + Phase 3 CLT witness) は依然未着手**、規模見積 ~135-250 行・二大難所
    (median「一から」+ CLT witness `.toNNReal`) は変わらず。着手時は gateway-atom-first (Phase 1 median 単独閉じ)
    で tractability 確認してから full closure へ。
+
+3. **2026-06-11 Phase 1 gateway CLOSED → 継続 GO** (`1a19915`):
+   `gaussianReal_Ici_eq_half` を `InformationTheory/Shannon/CramerCltBoundaryClosure.lean` に
+   symmetry-by-map (`gaussianReal_map_neg` μ=0 固定点 + `Measure.map_apply` → `μ(Ici 0)=μ(Iic 0)`、
+   `measure_union_add_inter` で `1+0=2·μ(Ici 0)`、`ENNReal.eq_div_iff` で `=1/2`) で **0 sorry / sorryAx-free**
+   閉じた (62 行、自作補題ゼロ、全て既存 Mathlib 組立)。落とし穴 3 点 (ℝ≥0∞ 算術 / map 引戻し / 集合計算) は
+   `ENNReal.eq_div_iff` + `fun_prop` + `Set.Iic_union_Ici`/`Set.Ici_inter_Iic` で無痛。二大難所の片方が割れ
+   **撤退ライン L-CLT1 (最悪ケース) 回避済**。
+   **plumbing 実在 再確認 (継続判断の前提)**: 実装 agent が「predecessor 3 file 不在」と 気づき を上げたが
+   **誤報** — `fdd68a3` の昇格 refactor で `Shannon/CramerLC2Discharge.lean` → `Shannon/Cramer/LC2Discharge.lean`
+   等にパス移動しただけ。plan 依存 11 シンボル (`iIndepFun_tilted_ambient` … `cramer_lower_phaseC_residual_discharge`)
+   を補題名 grep で全て実機確認 = **plumbing 健在**。stale パスは本 plan 上で訂正済 (上記 Predecessors / file 構成)。
+   → 継続 GO。次 = Phase 2-6 full closure (CLT witness `.toNNReal` が残る二大難所、~70-180 行)。
