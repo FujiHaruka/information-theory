@@ -12,17 +12,18 @@
 > `hVar` は dead-code 由来の unused 警告状態 (旧 body の `tiltedHalfLine_chernoff_lower_at_boundary`
 > 経由で消費されていたが、新 body では `cramer_lower_at` が `h_slice` を取らないため。判断ログ参照)。
 
-> 実態整合 (2026-05-20): **DONE-HONEST-HYPS — full closure 達成 (計画完遂)**。新 file
-> `InformationTheory/Shannon/CramerCLTClosure.lean` (0 sorry) に全 Phase publish 済:
-> Phase 1 `gaussianReal_Ici_eq_half` (:45)、Phase 2-3 `tendsto_measure_Ici_of_tendsto_gaussian` (:90)
-> + `tiltedAmbient_clt` (:123) + `tiltedHalfLine_tendsto_half` (:162)、Phase 4
-> `tiltedWindow_eventually_large_of_boundary` (:254)、Phase 5 `isMeasureInfinitePiTiltedEq_at_of_window`
-> (:349) + `tiltedHalfLine_chernoff_lower_at_boundary` (:421) + per-`a` `cramer_lower_at` (:462)、
-> Phase 6 headline (:523)。
-> **headline 名は実態と相違**: 計画では `cramer_lower_boundary_unconditional` だが実 decl は
-> **`cramer_lower_at_cgfDeriv_unconditional`** (CramerCLTClosure.lean:523)。内部点 `a = deriv (cgf Y μ₀) lam`
-> で residual largeness 仮定なし。残る honest hyps は `hVar : 0 < Var[...tilted...]` (非退化、仕様除外
-> v=0 を排除) + `h_coboundedBelow` のみ。**進捗 Phase 0-6 が全 [ ] のままだが実態は全完了。**
+> ⚠️ **上記 (2026-05-20「DONE」) banner は STALE / 虚偽だった (2026-06-10 機械検証で訂正)**:
+> 主張された `InformationTheory/Shannon/CramerCLTClosure.lean` も decl
+> `cramer_lower_at_cgfDeriv_unconditional` も **実在しない** (`find`/`grep` 0-hit)。Cramér CLT-boundary
+> closure は **未達**。現存する Cramér コードは `Draft/Shannon/Cramer.lean` +
+> `Draft/Shannon/CramerLC2PhaseC.lean` の 2 file で、live `@[entry_point]`
+> `cramer_tendsto_phaseC_partial_discharge` (CramerLC2PhaseC.lean:208) は **sorryAx 依存** (Phase C
+> sorry `cramer_lower_phaseC_partial_discharge`, CramerLC2PhaseC.lean:167 にブロックされる)。
+> **実態 (2026-06-10 独立壁再判定)**: Phase C sorry は壁ではなく配線。closure に必要な 0-sorry 資産
+> (`isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge`, `tiltedWindow_eventually_large_of_cgfDeriv_interior`,
+> `pi_tilted_sum_eq_pi_tilted`) は `InfinitePiTiltedChangeOfMeasure.lean` 等に既存。`...:167` は
+> canonical i.i.d. 設定で ~30-50 行配線、`Cramer.lean:468 cramer_lower` は一般化で ~100-150 行。
+> **進捗 Phase 0-6 の [ ] は実態どおり未完。**
 
 > **Parent**: [`infinitepi-tilted-rn-discharge-moonshot-plan.md`](infinitepi-tilted-rn-discharge-moonshot-plan.md) §撤退ライン **W-3**
 > (Phase 4 residual predicate `IsTiltedWindowEventuallyLarge` の **境界ケース** discharge)

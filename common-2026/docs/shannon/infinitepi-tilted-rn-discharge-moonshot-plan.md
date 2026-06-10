@@ -10,9 +10,11 @@
 > - Phase 4 ✅ residual predicate `IsTiltedWindowEventuallyLarge` (:282) + reduction
 >   `isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge` (:293) + `cramer_lower_phaseC_residual_discharge`
 >   (:361)。interior ケースは `tiltedWindow_eventually_large_of_interior` (:463) で discharge。W-3 撤退
->   (residual 縮約) どおり着地し、**boundary ケースは後継 `cramer-chernoff-clt-closure` plan で CLT closure 済**。
-> - `CramerLC2PhaseC.lean` の `IsMeasureInfinitePiTiltedEq` (:84) + `cramer_lower_phaseC_partial_discharge`
->   (:142) も 0 sorry。全関連 file 0 sorry。
+>   (residual 縮約) どおり着地。**boundary ケースの CLT closure は未達 (2026-06-10 訂正)**: 後継
+>   `cramer-chernoff-clt-closure` plan が主張した `CramerCLTClosure.lean` は実在せず、closure は未完。
+> - ⚠️ **`CramerLC2PhaseC.lean` の `cramer_lower_phaseC_partial_discharge` (:167) は sorry** (2026-06-10
+>   機械検証)。これに依存する `@[entry_point] cramer_tendsto_phaseC_partial_discharge` (:208) は sorryAx
+>   依存。「全関連 file 0 sorry」は誤り。残作業 = Phase C sorry の配線 (~30-50 行、独立壁再判定で wiring 確認済)。
 
 <!--
 雛形メモ (moonshot-plan-template.md より):
