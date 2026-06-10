@@ -207,7 +207,27 @@ theorem tilted_halfline_tendsto_half
             (∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω))) * n
               ≤ ∑ i ∈ Finset.range n, Y (ω i)})
       atTop (𝓝 (1 / 2)) := by
-  sorry
+  set v : ℝ := Var[fun ω : ℕ → Ω₀ => Y (ω 0);
+    Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))] with hvdef
+  -- The Gaussian half-line mass is exactly `1/2` (Phase 1, `Ici 0 = {x | 0 ≤ x}`).
+  have hmedian : gaussianReal 0 v.toNNReal (Set.Ici (0 : ℝ)) = 1 / 2 := by
+    have hset : Set.Ici (0 : ℝ) = {x : ℝ | (0 : ℝ) ≤ x} := by
+      ext x; simp [Set.mem_Ici]
+    rw [hset]
+    exact gaussianReal_Ici_eq_half (by
+      rw [hvdef] at hVar
+      exact (Real.toNNReal_pos).2 hVar |>.ne')
+  -- ℝ≥0∞ → ℝ via `toReal`, limit `(1/2 : ℝ≥0∞).toReal = 1/2`.
+  have hgauss := tilted_halfline_tendsto_gaussian hY h_bdd lam hVar
+  rw [← hvdef] at hgauss
+  have htoReal := (ENNReal.tendsto_toReal (a := gaussianReal 0 v.toNNReal (Set.Ici (0 : ℝ)))
+    (by rw [hmedian]; exact (by norm_num : (1 / 2 : ℝ≥0∞) ≠ ⊤))).comp hgauss
+  rw [hmedian] at htoReal
+  have hlim : ((1 : ℝ≥0∞) / 2).toReal = (1 / 2 : ℝ) := by
+    rw [ENNReal.toReal_div]; norm_num
+  rw [hlim] at htoReal
+  -- `Measure.real s = (μ s).toReal`, so the two functions agree.
+  exact htoReal
 
 /-! ## Phase 4 — window mass eventually `≥ 1/4` at the boundary -/
 
@@ -228,7 +248,71 @@ theorem tiltedWindow_eventually_large_of_boundary
             (∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω))) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)
             ∧ ∑ i ∈ Finset.range n, Y (ω i)
                 < ((∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω))) + ε) * n} := by
-  sorry
+  haveI hP : IsProbabilityMeasure
+      (Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))) :=
+    Cramer.Discharge.isProbabilityMeasure_infinitePi_tilted_of_bounded hY h_bdd lam
+  set P : Measure (ℕ → Ω₀) :=
+    Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω)) with hPdef
+  set m : ℝ := ∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)) with hmdef
+  -- Lower half-line, upper half-line, window events.
+  set L : ℕ → Set (ℕ → Ω₀) := fun n =>
+    {ω : ℕ → Ω₀ | m * n ≤ ∑ i ∈ Finset.range n, Y (ω i)} with hLdef
+  set U : ℕ → Set (ℕ → Ω₀) := fun n =>
+    {ω : ℕ → Ω₀ | (m + ε) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)} with hUdef
+  set W : ℕ → Set (ℕ → Ω₀) := fun n =>
+    {ω : ℕ → Ω₀ | m * n ≤ ∑ i ∈ Finset.range n, Y (ω i)
+      ∧ ∑ i ∈ Finset.range n, Y (ω i) < (m + ε) * n} with hWdef
+  -- Measurability of the partial-sum events.
+  have hsum_meas : ∀ n : ℕ, Measurable (fun ω : ℕ → Ω₀ => ∑ i ∈ Finset.range n, Y (ω i)) :=
+    fun n => Finset.measurable_sum _ (fun i _ => hY.comp (measurable_pi_apply i))
+  have hL_meas : ∀ n, MeasurableSet (L n) := fun n =>
+    measurableSet_le measurable_const (hsum_meas n)
+  have hU_meas : ∀ n, MeasurableSet (U n) := fun n =>
+    measurableSet_le measurable_const (hsum_meas n)
+  -- Lower half-line mass → 1/2.
+  have hlower : Tendsto (fun n : ℕ => P.real (L n)) atTop (𝓝 (1 / 2)) :=
+    tilted_halfline_tendsto_half hY h_bdd lam hVar
+  -- Upper half-line mass → 0, dominated by the LLN bad set `{ε ≤ |S̄_n − m|}`.
+  have hupper : Tendsto (fun n : ℕ => P.real (U n)) atTop (𝓝 0) := by
+    have hbad := Cramer.Discharge.tilted_lln_in_probability_real
+      (μ₀ := μ₀) hY h_bdd lam (ε := ε) hε
+    rw [← hPdef, ← hmdef] at hbad
+    refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hbad ?_ ?_
+    · exact Eventually.of_forall (fun n => measureReal_nonneg)
+    · -- `U n ⊆ {ε ≤ |S̄_n − m|}` for `n ≥ 1`.
+      filter_upwards [eventually_ge_atTop 1] with n hn
+      apply measureReal_mono _ (measure_ne_top _ _)
+      intro ω hω
+      simp only [hUdef, Set.mem_setOf_eq] at hω
+      simp only [Set.mem_setOf_eq]
+      have hnpos : (0 : ℝ) < n := by exact_mod_cast hn
+      have hge : m + ε ≤ (∑ i ∈ Finset.range n, Y (ω i)) / n := (le_div_iff₀ hnpos).mpr hω
+      rw [le_abs]
+      left; linarith [hge]
+  -- Window mass = lower mass − upper mass (since `U n ⊆ L n`).
+  have hWeq : ∀ n, P.real (W n) = P.real (L n) - P.real (U n) := by
+    intro n
+    have hsub : U n ⊆ L n := by
+      intro ω hω
+      simp only [hUdef, Set.mem_setOf_eq] at hω
+      simp only [hLdef, Set.mem_setOf_eq]
+      have : m * n ≤ (m + ε) * n := by
+        rcases Nat.eq_zero_or_pos n with hn | hn
+        · subst hn; simp
+        · have hnpos : (0 : ℝ) ≤ n := by positivity
+          nlinarith [hε.le, hnpos]
+      linarith [hω, this]
+    have hWLU : W n = L n \ U n := by
+      ext ω
+      simp only [hWdef, hLdef, hUdef, Set.mem_setOf_eq, Set.mem_diff, not_le]
+    rw [hWLU, measureReal_diff hsub (hU_meas n) (measure_ne_top _ _)]
+  -- Window mass → 1/2 − 0 = 1/2.
+  have hwindow : Tendsto (fun n : ℕ => P.real (W n)) atTop (𝓝 (1 / 2)) := by
+    have h := hlower.sub hupper
+    rw [sub_zero] at h
+    exact h.congr (fun n => (hWeq n).symm)
+  -- Eventually `≥ 1/4`.
+  exact hwindow.eventually_const_le (by norm_num)
 
 /-! ## Phase 5 — relaxed window predicate + boundary discharge -/
 
