@@ -470,3 +470,15 @@ Mathlib PR-candidate として価値があり、後退ゼロ。
    `CramerLC2DischargeExt`) は **変更せず**、緩和 predicate と reduction は本 file に新規追加
    (predecessor への breaking change 回避)。median (Phase 1) を最初に閉じて撤退ライン L-CLT1 を
    即回避する着手順を採用。
+
+2. **2026-06-11 consumer def-fix 完了 (前提整備、本 plan Phase 0-6 は未着手のまま)** (`f62be91`、判断ログ #24 / roadmap):
+   本 plan が closure する **下流 consumer 2 root** (`cramer_lower` / `cramer_lower_phaseC_partial_discharge`) は
+   #19 で false-statement (一般 `a` で偽) と判明していた。今回 `(h_deriv : deriv (cgf (X 0) μ) lam = a)` を
+   signature に追加し true-as-stated 化 (`@audit:defect(false-statement)` → `@residual(plan:` 本 plan `)`、
+   独立監査 PASS)。**効果**: 本 plan の closure target (Phase 6 `cramer_lower_boundary_unconditional`、
+   内部点 `a = deriv (cgf Y μ₀) lam`) が consumer root の signature と **字面一致** — 以前の
+   「plan が `a=deriv cgf lam` を狙うのに root は一般 `a` で over-promise」状態が解消。Phase 6 で
+   `h_deriv` を `tiltedMean_eq_deriv_cgf` (`a = m = deriv cgf lam`) から供給する配線が直結になった。
+   **本体 (Phase 1 median + Phase 3 CLT witness) は依然未着手**、規模見積 ~135-250 行・二大難所
+   (median「一から」+ CLT witness `.toNNReal`) は変わらず。着手時は gateway-atom-first (Phase 1 median 単独閉じ)
+   で tractability 確認してから full closure へ。

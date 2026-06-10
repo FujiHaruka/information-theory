@@ -32,7 +32,10 @@
 > - [`cramer-lc2-ext-moonshot-plan.md`](cramer-lc2-ext-moonshot-plan.md) §Approach (tilted LLN B-1/B-3 publish 済)
 > - [`chernoff-converse-moonshot-plan.md`](chernoff-converse-moonshot-plan.md) (Chernoff 側 `IsBayesErrorPerTiltLowerBound`)
 >
-> **対象 gap (frontier 最深)**: `InformationTheory/Shannon/CramerLC2PhaseC.lean:84` の pass-through 述語
+> **Sub-plan (後継 / 子)**:
+> - [`cramer-chernoff-clt-closure-moonshot-plan.md`](cramer-chernoff-clt-closure-moonshot-plan.md) §撤退ライン W-3 boundary CLT closure (residual predicate の境界ケース `a = m = deriv cgf lam` を CLT で実証する上振れ復帰 plan。consumer root の def-fix は 2026-06-11 完了 = 判断ログ #24)
+>
+> **対象 gap (frontier 最深)**: `InformationTheory/Draft/Shannon/CramerLC2PhaseC.lean:102` の pass-through 述語
 >
 > ```lean
 > def IsMeasureInfinitePiTiltedEq (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam : ℝ) : Prop :=
