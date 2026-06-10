@@ -300,30 +300,4 @@ theorem exists_isHoeffdingLagrangeHyp_interior
   exact isHoeffdingLagrangeHyp_of_constraint_eq P₁ P₂ hP₁_pos hP₂_pos hP₁_sum hP₂_sum
     h_lam_pos hlam_mem.2 hlam_kl
 
-/-! ## Phase 8 — Interior minimizer, re-published with minimality discharged -/
-
-omit [DecidableEq α] in
-/-- **Interior minimizer at the IVT constraint-match parameter** (textbook
-L-H4-FS interior): the tilt at `λ ∈ (0,1]` matching the constraint is a wave7
-`IsHoeffdingInteriorMinimizer`.
-
-Transitive `sorry` via `isHoeffdingInteriorMinimizer_of_lagrange` (Phase 2
-retreat, see `hoeffding-sorry-migration-plan`). No `@residual` tag is attached
-to this declaration — the `sorry` is detected by Lean's type system through
-the dependency, and the closure responsibility belongs to the upstream
-declaration's `@residual(plan:hoeffding-tradeoff-moonshot-plan)`. The IVT
-constraint-match + I-projection minimality halves are themselves constructive
-(`isHoeffdingLagrangeHyp_of_constraint_eq`); only the bridge into the wave7
-predicate is currently retreated. The hypothesis signature is preserved so
-callers continue to compile. -/
-@[entry_point]
-theorem isHoeffdingInteriorMinimizer_of_constraint_eq
-    (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (_hP₁_sum : ∑ a, P₁ a = 1) (_hP₂_sum : ∑ a, P₂ a = 1)
-    {alpha lam : ℝ} (_h_lam_pos : 0 < lam) (_h_lam_le : lam ≤ 1)
-    (_h_kl : klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁ = alpha) :
-    IsHoeffdingInteriorMinimizer P₁ P₂ alpha (hoeffdingTilt P₁ P₂ lam) := by
-  classical
-  exact isHoeffdingInteriorMinimizer_of_lagrange P₁ P₂ hP₁_pos hP₂_pos
-
 end InformationTheory.Shannon.HoeffdingMinimizerAttainment

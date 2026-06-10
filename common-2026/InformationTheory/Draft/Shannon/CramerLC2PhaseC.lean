@@ -42,11 +42,11 @@ parent `h_tilted_lower` hypothesis form, and threaded through the existing
   the cylinder-restricted tilt of the un-tilted product measure with the sum
   exponent `∑ i ∈ Finset.range n, lam · Y (ω i) − n · Λ(lam)`.
 
-### Phase C-2 — `h_tilted_lower` reduction
+### Phase C-2 — (removed)
 
-* `tilted_lower_from_predicate` — given the predicate + the in-probability LLN
-  on the tilted ambient + bounded RV hypotheses, construct the
-  `h_tilted_lower`-shape Chernoff lower bound on the un-tilted infinite product.
+* `tilted_lower_from_predicate` was **deleted 2026-06-11** (dead-cleanup sweep):
+  false-as-stated (no constraint linking `a` to `lam`; refuted at `a = M + 1`,
+  empty event) and consumer-0 (the production path runs through `cramer_lower`).
 
 ### Phase C-3 — main discharged wrappers
 
@@ -105,42 +105,6 @@ def IsMeasureInfinitePiTiltedEq (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam
       C * Real.exp (-(n : ℝ) * (lam * a - cgf Y μ₀ lam + lam * ε))
         ≤ (Measure.infinitePi (fun _ : ℕ => μ₀)).real
             {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)}
-
-/-! ## Phase C-2 — `h_tilted_lower` reduction -/
-
-/-- **`h_tilted_lower` reduction**: in the canonical i.i.d. product-measure
-setting `X i ω := Y (ω i)`, the parent `h_tilted_lower`-shape Chernoff lower
-bound on the un-tilted infinite product follows from the (currently missing)
-n-letter Radon–Nikodym derivative identification of the tilted infinite
-product.
-
-⚠ FALSE STATEMENT (2026-06-11 dead 掃除: #19「consumer-0 dead」を訂正 — dead **かつ**
-false-as-stated)。hypotheses are `Measurable Y` + `∃ M, |Y| ≤ M` only, with NO constraint
-linking `a` to `lam` (same defect family as the sibling
-`cramer_lower_phaseC_partial_discharge` :184, audit 2026-06-10). Degenerate-boundary
-refutation: take `a = M + 1` (so `Y ω ≤ M < a` ∀ω); then `∑_{i<n} Y(ω i) ≤ nM < a·n`, so
-the event `{ω | a·n ≤ ∑ Y(ω i)} = ∅` and its `.real` measure is `0` for all `n`. The
-conclusion then needs `∃ C > 0, ∀ᶠ n, C·exp(…) ≤ 0`, impossible since `C·exp(…) > 0`.
-TRUE only at the optimal tilt `a = deriv (cgf …) lam` (the successor plans add exactly that
-hypothesis). So `@residual(plan:cramer-lc2-discharge-moonshot-plan)` OVER-PROMISED.
-consumer-0 (`dep_consumers --transitive` 推移閉包 0、production path は `cramer_lower` 系を
-通り本 orphan reduction を経由しない)。
-@audit:defect(false-statement) @audit:retract-candidate(false-hypothesis) -/
-@[entry_point]
-lemma tilted_lower_from_predicate
-    {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
-    {Y : Ω₀ → ℝ}
-    (_hY_meas : Measurable Y) (_h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
-    (a lam : ℝ) :
-    ∀ ε > 0, ∃ C > 0, ∀ᶠ n : ℕ in atTop,
-      C * Real.exp (-(n : ℝ) *
-          (lam * a
-            - cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
-                (Measure.infinitePi (fun _ : ℕ => μ₀)) lam
-            + lam * ε))
-        ≤ (Measure.infinitePi (fun _ : ℕ => μ₀)).real
-            {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)} := by
-  sorry
 
 /-! ## Phase C-3 — discharged wrappers -/
 

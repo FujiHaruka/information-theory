@@ -271,30 +271,4 @@ theorem exists_isHoeffdingLagrangeHyp_of_minimal
   exact isHoeffdingLagrangeHyp_of_minimal P₁ P₂ hP₁_pos hP₂_pos hlam_kl
     (h_min lam hlam_mem hlam_kl)
 
-/-! ## Phase 7 — Re-published interior bridges with `mem` discharged -/
-
-/-- **Interior minimizer with constructive `mem`**: from an IVT constraint-match
-and the minimality primitive, the tilt is a wave7 `IsHoeffdingInteriorMinimizer`.
-Re-publishes `isHoeffdingInteriorMinimizer_of_lagrange` with `mem` now supplied
-by IVT rather than assumed.
-
-Note: the conclusion type `IsHoeffdingInteriorMinimizer` is itself slated for
-`@audit:retract-candidate(load-bearing-predicate)` in Phase 2 of the
-`hoeffding-sorry-migration-plan`. Once Phase 2 lands, this wrapper becomes a
-"returns a retract-candidate predicate" function and should be reviewed for
-whether (a) it is still needed by a constructive caller, or (b) it can be
-inlined / removed alongside the predicate. The two `IsHoeffdingTiltMinimal`
-sub-bridges (`isHoeffdingTiltMinimal_realises` /
-`isHoeffdingLagrangeHyp_of_minimal`) are unaffected — they target a primitive
-discharged in `HoeffdingMinimizerAttainment.lean`. -/
-@[entry_point]
-theorem isHoeffdingInteriorMinimizer_of_ivt
-    (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    {alpha lam : ℝ}
-    (_h_kl : klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁ = alpha)
-    (_h_min : IsHoeffdingTiltMinimal P₁ P₂ alpha lam) :
-    IsHoeffdingInteriorMinimizer P₁ P₂ alpha (hoeffdingTilt P₁ P₂ lam) := by
-  classical
-  exact isHoeffdingInteriorMinimizer_of_lagrange P₁ P₂ hP₁_pos hP₂_pos
-
 end InformationTheory.Shannon.HoeffdingLagrangeIVTBody

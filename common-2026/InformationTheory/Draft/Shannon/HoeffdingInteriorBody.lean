@@ -139,12 +139,12 @@ Phase 2. Five extract-only consumers remain (pass-through, no load-bearing
 claim injected): `IsHoeffdingInteriorMinimizer.pos` /
 `isHoeffdingMinimizerFullSupport_of_interior` /
 `IsHoeffdingInteriorMinimizer.isMinOn` / `csiszar_pythagoras_at_interior` /
-`hoeffding_minimizer_ge_at_interior`. Producer-side constructors
-(`isHoeffdingInteriorMinimizer_of_lagrange`,
-`isHoeffdingInteriorMinimizer_of_constraint_eq`,
-`isHoeffdingInteriorMinimizer_of_ivt`) remain but their bodies depend
-transitively on `isHoeffdingInteriorMinimizer_of_lagrange` which is now a
-`sorry` retreat. -/
+`hoeffding_minimizer_ge_at_interior`. The producer-side constructors
+(`isHoeffdingInteriorMinimizer_of_lagrange` + `…_of_constraint_eq` /
+`…_of_ivt` wrappers) were **deleted 2026-06-11** (dead-cleanup sweep): they were
+false-as-stated (interior minimizer asserted for arbitrary `{alpha lam}` with no
+linking constraint) and consumer-0. No constructor for this predicate remains;
+the production path `hoeffding_tradeoff_exp` (sorryAx-free) bypasses it. -/
 structure IsHoeffdingInteriorMinimizer
     (P₁ P₂ : α → ℝ) (alpha : ℝ) (Qstar : α → ℝ) : Prop where
   /-- `Qstar` lies in the constraint set `K(α)`. -/
