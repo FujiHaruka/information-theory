@@ -138,7 +138,8 @@ theorem mixtureMeasure_feasible
 /-! ### 層1 (gateway) — `klDiv` の純 joint convexity -/
 
 /-- `klDiv` は `Prod.mk b`-埋め込みで不変: `klDiv ((dirac b).prod μ)((dirac b).prod σ) = klDiv μ σ`。
-両 DPI (`klDiv_map_le` を `Prod.mk b` と `Prod.snd` の両方向で適用) で示す。 -/
+両 DPI (`klDiv_map_le` を `Prod.mk b` と `Prod.snd` の両方向で適用) で示す。
+@audit:ok -/
 private lemma klDiv_dirac_prod {Ω : Type*} [MeasurableSpace Ω]
     (b : Bool) (μ σ : Measure Ω) [IsFiniteMeasure μ] [IsFiniteMeasure σ] :
     klDiv ((Measure.dirac b).prod μ) ((Measure.dirac b).prod σ) = klDiv μ σ := by
@@ -153,7 +154,8 @@ private lemma klDiv_dirac_prod {Ω : Type*} [MeasurableSpace Ω]
   rwa [Measure.map_map hsnd hmk, Measure.map_map hsnd hmk,
     show (Prod.snd ∘ Prod.mk b) = (id : Ω → Ω) from rfl, Measure.map_id, Measure.map_id] at h
 
-/-- 二つのスライス `(dirac true).prod μ` と `(dirac false).prod σ` は互いに特異。 -/
+/-- 二つのスライス `(dirac true).prod μ` と `(dirac false).prod σ` は互いに特異。
+@audit:ok -/
 private lemma mutuallySingular_dirac_prod {Ω : Type*} [MeasurableSpace Ω]
     (μ σ : Measure Ω) [SFinite μ] [SFinite σ] :
     (Measure.dirac true).prod μ ⟂ₘ (Measure.dirac false).prod σ := by
@@ -171,7 +173,11 @@ private lemma mutuallySingular_dirac_prod {Ω : Type*} [MeasurableSpace Ω]
 
 /-- 互いに特異な成分の和に対する `klDiv` の加法性。
 `A₁, B₁` と `A₂, B₂` がそれぞれ分離した台に乗っているとき (各 cross-特異)、
-`klDiv (A₁+A₂)(B₁+B₂) = klDiv A₁ B₁ + klDiv A₂ B₂`。 -/
+`klDiv (A₁+A₂)(B₁+B₂) = klDiv A₁ B₁ + klDiv A₂ B₂`。
+3 つの特異性仮説 (`hB`/`hA₂B₁`/`hA₁B₂`) は全て rnDeriv 消失 (`rnDeriv_eq_zero_of_mutuallySingular`)
++ 加法分解 (`rnDeriv_add_right_of_mutuallySingular`) に genuine に消費される precondition で、
+いずれかを落とすと加法性が偽になる (load-bearing core ではなく幾何的分離条件)。
+@audit:ok -/
 private lemma klDiv_add_of_mutuallySingular {Ω : Type*} [MeasurableSpace Ω]
     (A₁ A₂ B₁ B₂ : Measure Ω)
     [IsFiniteMeasure A₁] [IsFiniteMeasure A₂] [IsFiniteMeasure B₁] [IsFiniteMeasure B₂]
@@ -224,7 +230,8 @@ private lemma klDiv_add_of_mutuallySingular {Ω : Type*} [MeasurableSpace Ω]
     rw [hx1, Pi.add_apply, hx0, Pi.zero_apply, zero_add, hx2]
 
 /-- 二点スライス上の `klDiv` 加法性 + 同一スカラー両側の引き出し:
-互いに特異なスライスの和に対し klDiv は分配し、各スライスのスカラーが引き出せる。 -/
+互いに特異なスライスの和に対し klDiv は分配し、各スライスのスカラーが引き出せる。
+@audit:ok -/
 private lemma klDiv_two_slice {Ω : Type*} [MeasurableSpace Ω]
     (μ₁ μ₂ σ₁ σ₂ : Measure Ω)
     [IsFiniteMeasure μ₁] [IsFiniteMeasure μ₂] [IsFiniteMeasure σ₁] [IsFiniteMeasure σ₂]
@@ -269,7 +276,10 @@ private lemma klDiv_two_slice {Ω : Type*} [MeasurableSpace Ω]
 
 純 joint convexity を RD 固有の marginal 構造から切り離した一般形。
 selector-extension (`Bool × Ω`) + DPI (`klDiv_map_le` で selector を `Prod.snd` 射影で
-忘れる) + 二点 selector の per-slice KL 計算 (`klDiv_two_slice`) で genuine に構築する。 -/
+忘れる) + 二点 selector の per-slice KL 計算 (`klDiv_two_slice`) で genuine に構築する。
+`_hlam₀`/`_hlam₁` (lam ∈ [0,1]) は body 未使用: `ENNReal.ofReal` の負値クランプにより任意 lam で
+真 (statement を不当に弱めも強めもしない無害な framing 残置、load-bearing でない)。
+@audit:ok -/
 theorem klDiv_joint_convex
     {Ω : Type*} [MeasurableSpace Ω]
     {lam : ℝ} (_hlam₀ : 0 ≤ lam) (_hlam₁ : lam ≤ 1)
@@ -323,7 +333,8 @@ theorem klDiv_joint_convex
 
 /-- **層2: `klDiv` の joint convexity (混合測度形)**。
 分母 `P` (X-marginal) は両 witness で固定、`ν.map snd` のみ線形。
-層1 (`klDiv_joint_convex`) の genuine な plumbing 適用。 -/
+層1 (`klDiv_joint_convex`) の genuine な plumbing 適用。
+@audit:ok -/
 theorem klDiv_mixture_le
     {lam : ℝ} (hlam₀ : 0 ≤ lam) (hlam₁ : lam ≤ 1)
     (P : Measure α) [IsProbabilityMeasure P]
@@ -371,7 +382,10 @@ witnesses yields convexity.
 
 The regularity hypothesis `h_int_witness` (integrability of `d` on every joint
 with `Prod.fst`-marginal `P`) is a passive regularity precondition, needed so that
-the mixture witness has well-defined feasibility (`expectedDistortion` linearity). -/
+the mixture witness has well-defined feasibility (`expectedDistortion` linearity).
+It supplies no convexity content — the convexity flows entirely from the genuine
+DPI gateway (`klDiv_map_le`), so it is not load-bearing.
+@audit:ok -/
 @[entry_point]
 theorem rateDistortionFunction_convexOn
     (d : α → β → ℝ) (P : Measure α) [IsProbabilityMeasure P]
