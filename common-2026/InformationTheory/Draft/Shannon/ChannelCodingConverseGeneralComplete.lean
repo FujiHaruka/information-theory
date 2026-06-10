@@ -372,7 +372,14 @@ Because the Markov-chain manipulations (left post-processing, middle augmentatio
 the `condMutualInfo` reshape lemma are not yet in `CondMutualInfo.lean`, this lemma
 takes them as hypotheses. Phase D's wiring is independent of how these are obtained.
 
-@residual(plan:channel-coding-shannon-theorem-full-plan) -/
+**DEAD + SUPERSEDED (2026-06-10 機械検証)**: consumer-0。この per-summand 路 (D-2') は
+`h_yother_zero` が encoder 任意で偽のため放棄され、production の Strong route
+(`channel_coding_converse_general_memoryless_strong`, encoder-agnostic entropy
+subadditivity) に置換済。sorry 削除候補。
+
+@residual(plan:channel-coding-shannon-theorem-full-plan)
+@audit:superseded-by(channel_coding_converse_general_memoryless_strong)
+@audit:retract-candidate(superseded-by-full-discharge) -/
 @[entry_point]
 theorem memoryless_per_summand_bound
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -420,7 +427,15 @@ The Phase C lemma in its current form takes three derived facts as hypotheses
    finite-sum monotonicity.
 3. `linarith` to finish (Fano terms identical on both sides).
 
-@residual(plan:channel-coding-shannon-theorem-full-plan) -/
+**DEAD + SUPERSEDED (2026-06-10 機械検証)**: この Draft theorem は consumer-0、かつ
+production `channel_coding_converse_general_memoryless_pure`
+(`Shannon/ChannelCoding/ConverseMemorylessPure.lean`) が **結論完全一致 + sorryAx-free**
+で同じ converse を達成済 (Strong route = entropy subadditivity 経由)。Draft の Phase C/D
+路は不要 (sorry 削除候補)。
+
+@residual(plan:channel-coding-shannon-theorem-full-plan)
+@audit:superseded-by(channel_coding_converse_general_memoryless_pure)
+@audit:retract-candidate(superseded-by-full-discharge) -/
 @[entry_point]
 theorem channel_coding_converse_general_memoryless
     (μ : Measure Ω) [IsProbabilityMeasure μ]
