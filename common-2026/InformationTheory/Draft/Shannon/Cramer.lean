@@ -451,7 +451,39 @@ identification of the tilted infinite-product measure with the cylinder-
 restricted tilt of the un-tilted product measure (closure deferred to follow-up
 plan in `cramer-moonshot-plan` Phase C).
 
-`@residual(plan:cramer-moonshot-plan)` -/
+AUDIT 2026-06-10 (independent honesty audit, false-statement DEFECT root #2):
+the `sorry` body MASKS a false signature. As stated this is UNDER-HYPOTHESIZED
+and **false for general `a`**: with no constraint relating `a` and `lam`, the
+per-`lam` Chernoff lower bound `-(lam·a − Λ(lam))` is NOT a lower bound for the
+tail rate `liminf (1/n) log P[a·n ≤ S_n]`. Counterexample (independently
+re-derived): `μ₀ = Bernoulli(1/2)`, `Y(0)=0, Y(1)=1`, `lam=0`, `a=0.9`. Then
+`cgf (X 0) μ 0 = log 1 = 0` so LHS `= -(0·0.9 − 0) = 0`, while
+`liminf (1/n) log P[S_n ≥ 0.9n] = -D(0.9‖0.5) = -0.368… < 0`
+(`D(0.9‖0.5) = 0.9 log(0.9/0.5) + 0.1 log(0.1/0.5) > 0`). The claimed
+`0 ≤ -0.368…` is FALSE. `h_coboundedBelow` does NOT rescue it (the liminf is
+finite and well-behaved). The statement is TRUE only at the **optimal tilt**
+`a = deriv (cgf (X 0) μ) lam` (verified: at `lam* = logit(0.9) = 2.197…`,
+`lam*·a − Λ(lam*) = 0.368… = D` exactly), i.e. the per-`lam` bound is tight
+precisely when `lam` is the optimal tilt for threshold `a`. The successor plan
+`cramer-lc2-discharge-moonshot-plan` (lines 43/85/463/490) AND
+`cramer-chernoff-clt-closure-moonshot-plan` (lines 46-48/72/125) BOTH require the
+extra hypothesis `(h_deriv : deriv (cgf (X 0) μ) lam = a)` — i.e. the plans
+themselves recognize general-`a` does not close. So the existing
+`@residual(plan:cramer-moonshot-plan)` OVER-PROMISES (the plan closes only the
+constrained version, not this signature).
+
+(a) FALSE for general `a`; TRUE only at the optimal tilt `a = deriv (cgf) lam`.
+(b) FIRST choice (def-fix = add `(h_deriv : deriv (cgf (X 0) μ) lam = a)` so the
+    signature becomes true) was NOT done this session: it ripples to
+    `cramer_lower_legendre` / `cramer_tendsto` (Cramer.lean) and is a sibling of
+    the same gap in `cramer_lower_phaseC_partial_discharge` + entry_point
+    `cramer_tendsto_phaseC_partial_discharge`; provisional tier-5 marker only.
+(c) Even after restricting to `a = deriv cgf lam`, closure still needs the
+    genuine CLT-boundary wall (`cramer-chernoff-clt-closure-moonshot-plan`
+    Phase 1-6, all unstarted, boundary producer absent).
+
+`@audit:defect(false-statement)`
+`@audit:closed-by-successor(cramer-chernoff-clt-closure-moonshot-plan)` -/
 theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (_h_indep : iIndepFun X μ) (_h_meas : ∀ i, Measurable (X i))
     (_h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)

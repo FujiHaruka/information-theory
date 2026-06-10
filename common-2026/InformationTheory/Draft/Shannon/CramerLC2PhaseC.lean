@@ -147,7 +147,40 @@ infinite product, closure deferred to `cramer-lc2-discharge-moonshot-plan`
 (Phase B/C). Transitive `sorry` upstream via `cramer_lower` (Phase 2.1 of the
 Cramér sorry-migration sweep).
 
-`@residual(plan:cramer-lc2-discharge-moonshot-plan)` -/
+AUDIT 2026-06-10 (independent honesty audit, false-statement DEFECT root #1):
+the `sorry` body MASKS a false signature (same defect as the general-IID root
+`cramer_lower` in `Cramer.lean`, this is the canonical i.i.d. product
+specialization). As stated this is UNDER-HYPOTHESIZED and **false for general
+`a`**: hypotheses are `0 ≤ lam` + `h_coboundedBelow` only, with NO constraint
+relating `a` and `lam`. Counterexample (independently re-derived): `μ₀ =
+Bernoulli(1/2)`, `Y(0)=0, Y(1)=1`, `lam=0`, `a=0.9`. Then
+`cgf (Y∘·0) (infinitePi μ₀) 0 = log 1 = 0`, so LHS `= -(0·0.9 − 0) = 0`, while
+`liminf (1/n) log P[S_n ≥ 0.9n] = -D(0.9‖0.5) = -0.368… < 0`. The claimed
+`0 ≤ -0.368…` is FALSE; `h_coboundedBelow` does not rescue (liminf is finite).
+TRUE only at the optimal tilt `a = deriv (cgf (Y∘·0) (infinitePi μ₀)) lam`. The
+successor plan `cramer-lc2-discharge-moonshot-plan` (lines 43/85/463/490) AND
+`cramer-chernoff-clt-closure-moonshot-plan` (lines 46-48/72/125) BOTH add the
+hypothesis `(h_deriv : deriv (cgf (X 0) μ) lam = a)` to their own target
+theorems — i.e. the plans themselves recognize general-`a` does not close. So
+the existing `@residual(plan:cramer-lc2-discharge-moonshot-plan)` OVER-PROMISES.
+
+(a) FALSE for general `a`; TRUE only at the optimal tilt `a = deriv (cgf) lam`.
+(b) FIRST choice (def-fix = add `(h_deriv : deriv (cgf …) lam = a)`) was NOT done
+    this session: it ripples to `cramer_lower_legendre_phaseC_partial_discharge`
+    (:175), the `@[entry_point]` `cramer_tendsto_phaseC_partial_discharge` (:208,
+    transitive sorryAx), and `cramer_lower_phaseC_residual_discharge`
+    (`InfinitePiTiltedChangeOfMeasure.lean:380`); provisional tier-5 marker only.
+(c) Even after restricting to `a = deriv cgf lam`, closure still needs the
+    genuine CLT-boundary wall (`cramer-chernoff-clt-closure-moonshot-plan`
+    Phase 1-6, all unstarted, boundary producer absent). IMPORT-CYCLE note: the
+    change-of-measure producer machinery lives in
+    `InfinitePiTiltedChangeOfMeasure.lean`, which IMPORTS this file — so the
+    producer cannot be wired back into this upstream wrapper by plumbing (it is
+    a downstream consumer, not an upstream supplier). This is the structural
+    reason the gap cannot be closed by "wiring" alone.
+
+`@audit:defect(false-statement)`
+`@audit:closed-by-successor(cramer-chernoff-clt-closure-moonshot-plan)` -/
 theorem cramer_lower_phaseC_partial_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
@@ -171,7 +204,13 @@ theorem cramer_lower_phaseC_partial_discharge
 L-MIG-1: `hlam_opt` restored as regularity precondition (audit-2 verdict).
 Transitive `sorry` upstream via `cramer_lower_phaseC_partial_discharge`
 (n-letter RN-deriv identification, load-bearing gap in the parent
-`cramer-lc2-discharge-moonshot-plan`). -/
+`cramer-lc2-discharge-moonshot-plan`).
+
+AUDIT 2026-06-10: FALSE-INHERITING. The root
+`cramer_lower_phaseC_partial_discharge` is `@audit:defect(false-statement)`
+(false for general `a`); this wrapper passes general `a`/`lam` through (note:
+the `hlam_opt` Legendre-attainment hypothesis is NOT the optimal-tilt constraint
+`a = deriv cgf lam`, so it does not repair the root). Defect tag on root only. -/
 theorem cramer_lower_legendre_phaseC_partial_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
@@ -203,7 +242,12 @@ L-MIG-1: `hlam_opt` restored as regularity precondition (audit-2 verdict).
 Sandwich of `cramer_upper_legendre` (constructive) and
 `cramer_lower_legendre_phaseC_partial_discharge` (transitive sorry via
 `cramer_lower_phaseC_partial_discharge`, n-letter RN-deriv identification
-gap in `cramer-lc2-discharge-moonshot-plan`). -/
+gap in `cramer-lc2-discharge-moonshot-plan`).
+
+AUDIT 2026-06-10: FALSE-INHERITING (`@[entry_point]`, depends on sorryAx). The
+lower-bound leg inherits the root `cramer_lower_phaseC_partial_discharge`
+`@audit:defect(false-statement)` (false for general `a`); general `a`/`lam` is
+passed through. Defect tag on root only. -/
 @[entry_point]
 theorem cramer_tendsto_phaseC_partial_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]

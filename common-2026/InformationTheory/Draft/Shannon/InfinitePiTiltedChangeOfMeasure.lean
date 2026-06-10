@@ -375,6 +375,14 @@ this wrapper no longer "closes" anything constructively — closure responsibili
 now belongs entirely to the upstream `cramer_lower_phaseC_partial_discharge`
 (`@residual(plan:cramer-lc2-discharge-moonshot-plan)`).
 
+AUDIT 2026-06-10: FALSE-INHERITING. The upstream
+`cramer_lower_phaseC_partial_discharge` is `@audit:defect(false-statement)`
+(false for general `a`, true only at the optimal tilt `a = deriv cgf lam`); this
+wrapper passes general `a`/`lam` straight through (and `_h_res` is load-bearing
+in name only, see above). So this `@audit:closed-by-successor` target plan is the
+correct successor: it closes the boundary case `a = deriv cgf lam` only. Defect
+tag on the root only.
+
 `@audit:closed-by-successor(cramer-chernoff-clt-closure-moonshot-plan)` -/
 @[entry_point]
 theorem cramer_lower_phaseC_residual_discharge
