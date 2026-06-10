@@ -270,6 +270,34 @@ identity, on toReal) have been removed; both are mathematically substantial
 Mathlib-gap content that must be closed by the converse plan, not absorbed
 into a precondition. Body retreated to `sorry`.
 
+Under-hypothesized fix (2026-06-10): the previous signature took `{D : ℝ}` as a
+free variable and assumed nothing about the joint law of `Xs`, which makes the
+claimed conclusion **false** as framed. Two degenerate-boundary counterexamples:
+* **Missing operating-point constraint**: take `n = 1`, `M = 2`, `|α| = 4`
+  uniform, Hamming distortion, `D = 0`. Every feasible joint `ν` is then forced
+  onto the diagonal (`d ≥ 0` and `expectedDistortion ≤ 0` ⟹ `X̂ = X` a.s.), so
+  `R(P_X, 0) = I(X; X) = H(X) = log 4 ≈ 1.386`, exceeding the RHS
+  `(1/1)·log 2 ≈ 0.693`. False.
+* **Missing source independence** (even with the operating-point constraint):
+  take `n = 2`, fully dependent `X₁ = X₂`, `P_X` uniform on `{0,1}`, `M = 2`,
+  `D = 0`. Then `R(P_X, 0) = log 2`, which exceeds the RHS `(1/2)·log 2`. False.
+Both gaps are genuine preconditions (not over-hypothesizing). They are repaired
+by adding, as regularity preconditions:
+* `hD : c.expectedBlockDistortion P_X d ≤ D` — the operating point. Stage 1
+  (`rate_distortion_converse_n_letter_block`) already carries this exact `hD`.
+* `hindep : iIndepFun (fun i => Xs i) μ` — the memoryless source assumption;
+  combined with `hXs_law` (identical marginals) this gives an i.i.d. source.
+These are preconditions, **not** the proof core, and are deliberately kept as
+plain hypotheses rather than bundled into a `*Hypothesis` predicate.
+
+The genuine remaining wall (`sorry` core) is the MI superadditivity /
+tensorization step `∑ I(Xᵢ; X̂ᵢ) ≤ I(X^n; X̂^n)`, which holds for an independent
+source but is unavailable in Mathlib (same family as the "D-1 wall" in
+`ParallelGaussianPerCoord.lean`). The single-letterization route consumes this
+together with the existing genuine assets — Stage 1
+`rate_distortion_converse_n_letter_block` and convexity
+`rateDistortionFunction_convexOn` (both currently sorryAx-free).
+
 `@residual(plan:rate-distortion-converse-plan)`
 
 -/
@@ -283,6 +311,7 @@ theorem rate_distortion_converse_n_letter_singleLetter
     (d : DistortionFn α β)
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (hindep : iIndepFun (fun i => Xs i) μ)
     (P_X : Measure α) [IsProbabilityMeasure P_X]
     (hXs_law : ∀ i, μ.map (Xs i) = P_X)
     -- ω ↦ X^n(ω) := (Xs 0 ω, …, Xs (n-1) ω); Xh i ω := (decoder (encoder X^n(ω))) i.
@@ -292,7 +321,8 @@ theorem rate_distortion_converse_n_letter_singleLetter
     (h_MI_perletter_finite :
       ∀ i, mutualInfo μ (Xs i)
         (fun ω => c.decoder (c.encoder (fun j => Xs j ω)) i) ≠ ∞)
-    {D : ℝ} :
+    {D : ℝ}
+    (hD : c.expectedBlockDistortion P_X d ≤ D) :
     (rateDistortionFunction (fun a b => ((d a b : NNReal) : ℝ)) P_X D).toReal
       ≤ (1 / (n : ℝ)) * Real.log (Fintype.card (Fin M)) := by
   sorry
