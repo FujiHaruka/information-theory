@@ -1,10 +1,14 @@
 # Rate-distortion converse (single-shot) ムーンショット計画 🌙
 
-> 実態整合 (2026-05-20): DONE-UNCOND (single-shot) — headline `rate_distortion_converse_single_shot`
-> (`InformationTheory/Shannon/RateDistortionConverse.lean:133`) は DPI + Fano + max-entropy 連鎖の実証明 (0 sorry) で publish、
-> 副条件は `hMI_W_finite` (MI 有限性) のみで honest。E-4' `rate_distortion_converse_single_shot_specified` +
-> `rateDistortionFunction_antitone` (`RateDistortionConverseMonotone.lean:65,37`) も完了。
-> 後継 E-4'' (convexity + n-letter) は `rate-distortion-convexity-plan.md` 側に landing 済。
+> 実態整合 (2026-06-10): DONE-UNCOND (single-shot) — headline `rate_distortion_converse_single_shot`
+> (`InformationTheory/Shannon/RateDistortion/Converse.lean:135`) は DPI + Fano + max-entropy 連鎖の実証明 (0 sorry) で publish、
+> 副条件は `hMI_W_finite` (MI 有限性) のみで honest。E-4' `rate_distortion_converse_single_shot_specified`
+> (`InformationTheory/Shannon/RateDistortion/ConverseMonotone.lean:68`) +
+> `rateDistortionFunction_antitone` (`...ConverseMonotone.lean:39`) も完了。
+> 後継 E-4'' (convexity + n-letter): 凸性 `rateDistortionFunction_convexOn`
+> (`InformationTheory/Draft/Shannon/RateDistortionConvexity.lean:390`) は **genuine proof done**
+> (`rate-distortion-convexity-plan.md`)。n-letter converse は本 plan E-4-C で attack 中
+> (Stage 1 `_block` genuine、Stage 2 `_singleLetter` は true-as-framed 化済 + sorry 据置、下記)。
 
 E-4 シードカード ([`docs/moonshot-seeds.md`](../moonshot-seeds.md))。
 Cover-Thomas 10.4 — レート歪み関数 `R(D)` を達成可能 rate の下界として定式化する
@@ -28,12 +32,16 @@ E-3 (achievability) は plan-only で並走。R(D) 定義 + distortion 定義は
   - `rateDistortionFunction_antitone`: `D₁ ≤ D₂ ⟹ R(D₂) ≤ R(D₁)` (feasible set monotone)
   - `rate_distortion_converse_single_shot_specified`: `D̃ ≤ D ⟹ R(D).toReal ≤ log|M|`
     (親 single-shot 形 + monotonicity 合成)
-- [ ] 後継 `E-4''` (deferred) — R(D) convexity + n-letter chain rule 経由の
-      `rate ≥ R(D)` (Jensen)、Mathlib MI concavity gap で ~500-1000 行
+- [x] 後継 `E-4''` 凸性 — R(D) convexity ✅ **genuine proof done** (`rate-distortion-convexity-plan.md`、
+      `RateDistortionConvexity.lean:390`、DPI 経路、sorryAx 非依存)
+- [🚧] `E-4-C` n-letter chain rule converse — `RateDistortionConverseNLetter.lean`。
+      Stage 1 `_block` (`:72`) genuine、Stage 2 `_singleLetter` (`:305`) は true-as-framed 化済
+      (hD+hindep 追加) + sorry 据置 (`:328`、`@residual(plan:rate-distortion-converse-plan)`)。
+      **残壁 = MI superadditivity `∑I(Xᵢ;X̂ᵢ) ≤ I(X^n;X̂^n)` (独立 source)** (下記 E-4-C)
 
 ## 実装完了
 
-**実装ファイル**: [`InformationTheory/Shannon/RateDistortionConverse.lean`](../../InformationTheory/Shannon/RateDistortionConverse.lean) (213 行)
+**実装ファイル**: [`InformationTheory/Shannon/RateDistortion/Converse.lean`](../../InformationTheory/Shannon/RateDistortion/Converse.lean)
 
 **主要 def + theorem**:
 - `expectedDistortion d ν`: 期待歪み (joint 上の積分)
@@ -228,13 +236,47 @@ Step 4 詳細:
 
 ## Mathlib gap
 
-なし。すべて既存 `InformationTheory/Shannon/` 資産で press できる見込み。
-新規補題は plan 内記載 4 個 (Phase A/B/C).
+- **single-shot (E-4)**: なし。既存 `InformationTheory/Shannon/` 資産で press 済 (0 sorry)。
+- **n-letter (E-4-C)**: MI superadditivity `∑ I(Xᵢ; X̂ᵢ) ≤ I(X^n; X̂^n)` (独立 source) が
+  project 内 wall。Stage 2 `_singleLetter` の唯一の残 sorry。額面の壁扱いは未確定 (gateway-atom
+  で再判定、上記 E-4-C)。
 
-## 後継 (deferred)
+## 後継
 
-- **E-4-A** R(D) 単調性 `D₁ ≤ D₂ ⇒ R(D₁) ≥ R(D₂)` — feasible set 包含 + iInf_mono、~20 行
-- **E-4-B** R(D) 凸性 — `λν₁ + (1-λ)ν₂` も feasible (歪みは凸結合)、MI は凸関数 ⇒ Jensen
-- **E-4-C** n-letter chain rule converse — `MIChainRule.lean` + i.i.d. source +
-  Jensen on R(D) で `rate ≥ R(D)`
-- **E-4-D** R(D) 連続性 (continuity of `D ↦ R(D)` on `[0, D_max)`)
+- **E-4-A** ✅ R(D) 単調性 `D₁ ≤ D₂ ⇒ R(D₁) ≥ R(D₂)` — `rateDistortionFunction_antitone`
+  (`ConverseMonotone.lean:39`、genuine)。
+- **E-4-B** ✅ R(D) 凸性 — `rateDistortionFunction_convexOn`
+  (`RateDistortionConvexity.lean:390`、**genuine proof done**、DPI selector-forget 経路、
+  sorryAx 非依存)。詳細 → `rate-distortion-convexity-plan.md`。
+- **E-4-C** 🚧 n-letter chain rule converse — `RateDistortionConverseNLetter.lean`。下記。
+- **E-4-D** R(D) 連続性 (continuity of `D ↦ R(D)` on `[0, D_max)`) — deferred。
+
+## E-4-C — n-letter single-letterization converse 🚧
+
+> 前提資産 (全て genuine / sorryAx 非依存):
+> - Stage 1 `rate_distortion_converse_n_letter_block` (`RateDistortionConverseNLetter.lean:72`) —
+>   block-level 形 `R_block(P_X^n, D).toReal ≤ log M`。single-shot specified を
+>   `(α := Fin n → α, β := Fin n → β, M := Fin M)` で直接 instantiate。
+> - 凸性 `rateDistortionFunction_convexOn` (`RateDistortionConvexity.lean:390`、E-4-B)。
+
+**現状** (Stage 2 `rate_distortion_converse_n_letter_singleLetter`, `:305`、sorry 据置 `:328`、
+`@residual(plan:rate-distortion-converse-plan)`):
+
+- **true-as-framed 化済** (今セッション、commit `06b1435`)。migration が load-bearing
+  `h_jensen_antitone` を除去した際に regularity precondition (`expectedBlockDistortion ≤ D` +
+  独立性) を分離せず落とし、**under-hypothesized = 偽**になっていた。反例:
+  - n=1, M=2, |α|=4, D=0 → `R = log4 > log2 = RHS` (operating-point 欠落)
+  - n=2, X₁=X₂ (full dep), uniform `{0,1}`, M=2, D=0 → `log2 > (1/2)log2 = RHS` (独立性欠落)
+- `hD : c.expectedBlockDistortion P_X d ≤ D` + `hindep : iIndepFun (fun i => Xs i) μ` を
+  precondition 追加して **true-as-framed** 化。両者は regularity precondition (Stage 1 が同じ
+  `hD` を既に持つ)、`*Hypothesis` predicate に bundle せず plain hyp。独立監査 honest_residual、
+  0 consumer。
+
+**残壁 = MI superadditivity / tensorization** `∑ I(Xᵢ; X̂ᵢ) ≤ I(X^n; X̂^n)` (独立 source)。
+project 内 wall 扱い (`ParallelGaussianPerCoord.lean` の "n" family と同根、逆向き lemma
+`mutualInfo_le_sum_per_letter_of_memoryless_strong` は閉じない)。これが genuine 化すれば
+凸性 (E-4-B ✅) + Stage 1 (genuine) + tensorization で single-letterization が閉じる。
+
+**次の一手**: MI superadditivity を **gateway-atom で判定** (壁を額面で受けず、atom 1 本を
+着手して self-buildable か / 真の Mathlib 壁かを確認 — Cramér 前例で「not-a-wall verdict は
+gateway-atom 確認後に記録」)。退化境界 verify (独立 source の縮退ケース) も併せて。
