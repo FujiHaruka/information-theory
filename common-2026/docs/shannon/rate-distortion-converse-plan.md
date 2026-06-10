@@ -7,8 +7,10 @@
 > `rateDistortionFunction_antitone` (`...ConverseMonotone.lean:39`) も完了。
 > 後継 E-4'' (convexity + n-letter): 凸性 `rateDistortionFunction_convexOn`
 > (`InformationTheory/Draft/Shannon/RateDistortionConvexity.lean:390`) は **genuine proof done**
-> (`rate-distortion-convexity-plan.md`)。n-letter converse は本 plan E-4-C で attack 中
-> (Stage 1 `_block` genuine、Stage 2 `_singleLetter` は true-as-framed 化済 + sorry 据置、下記)。
+> (`rate-distortion-convexity-plan.md`)。n-letter converse `rate_distortion_converse_n_letter_singleLetter`
+> (`InformationTheory/Draft/Shannon/RateDistortionConverseNLetter.lean:673`) も **genuine proof done**
+> (Stage 1 `_block` + Stage 2 `_singleLetter` 共に 0 sorry / 0 residual、sorryAx 非依存、独立監査
+> 10 decl `@audit:ok`、下記 E-4-C)。
 
 E-4 シードカード ([`docs/moonshot-seeds.md`](../moonshot-seeds.md))。
 Cover-Thomas 10.4 — レート歪み関数 `R(D)` を達成可能 rate の下界として定式化する
@@ -34,10 +36,10 @@ E-3 (achievability) は plan-only で並走。R(D) 定義 + distortion 定義は
     (親 single-shot 形 + monotonicity 合成)
 - [x] 後継 `E-4''` 凸性 — R(D) convexity ✅ **genuine proof done** (`rate-distortion-convexity-plan.md`、
       `RateDistortionConvexity.lean:390`、DPI 経路、sorryAx 非依存)
-- [🚧] `E-4-C` n-letter chain rule converse — `RateDistortionConverseNLetter.lean`。
-      Stage 1 `_block` (`:72`) genuine、Stage 2 `_singleLetter` (`:305`) は true-as-framed 化済
-      (hD+hindep 追加) + sorry 据置 (`:328`、`@residual(plan:rate-distortion-converse-plan)`)。
-      **残壁 = MI superadditivity `∑I(Xᵢ;X̂ᵢ) ≤ I(X^n;X̂^n)` (独立 source)** (下記 E-4-C)
+- [x] `E-4-C` n-letter chain rule converse ✅ **genuine proof done** — `RateDistortionConverseNLetter.lean`。
+      Stage 1 `_block` (`:72`) + Stage 2 `_singleLetter` (`:673`) 共に 0 sorry / 0 residual、
+      sorryAx 非依存、独立監査 10 decl `@audit:ok` (commit `e73513c` + 監査 `cc18726`)。
+      MI superadditivity 壁は self-build で closure (下記 E-4-C)
 
 ## 実装完了
 
@@ -237,9 +239,9 @@ Step 4 詳細:
 ## Mathlib gap
 
 - **single-shot (E-4)**: なし。既存 `InformationTheory/Shannon/` 資産で press 済 (0 sorry)。
-- **n-letter (E-4-C)**: MI superadditivity `∑ I(Xᵢ; X̂ᵢ) ≤ I(X^n; X̂^n)` (独立 source) が
-  project 内 wall。Stage 2 `_singleLetter` の唯一の残 sorry。額面の壁扱いは未確定 (gateway-atom
-  で再判定、上記 E-4-C)。
+- **n-letter (E-4-C)**: なし。MI superadditivity `∑ I(Xᵢ; X̂ᵢ) ≤ I(X^n; X̂^n)` (独立 source) は
+  当初 project 内 wall 扱いだったが gateway 評価で **self-buildable** と判明し、既存 entropy
+  machinery への配線で genuine closure 済 (上記 E-4-C)。
 
 ## 後継
 
@@ -248,10 +250,10 @@ Step 4 詳細:
 - **E-4-B** ✅ R(D) 凸性 — `rateDistortionFunction_convexOn`
   (`RateDistortionConvexity.lean:390`、**genuine proof done**、DPI selector-forget 経路、
   sorryAx 非依存)。詳細 → `rate-distortion-convexity-plan.md`。
-- **E-4-C** 🚧 n-letter chain rule converse — `RateDistortionConverseNLetter.lean`。下記。
+- **E-4-C** ✅ n-letter chain rule converse — `RateDistortionConverseNLetter.lean`、**genuine proof done**。下記。
 - **E-4-D** R(D) 連続性 (continuity of `D ↦ R(D)` on `[0, D_max)`) — deferred。
 
-## E-4-C — n-letter single-letterization converse 🚧
+## E-4-C — n-letter single-letterization converse ✅ (genuine proof done)
 
 > 前提資産 (全て genuine / sorryAx 非依存):
 > - Stage 1 `rate_distortion_converse_n_letter_block` (`RateDistortionConverseNLetter.lean:72`) —
@@ -259,24 +261,29 @@ Step 4 詳細:
 >   `(α := Fin n → α, β := Fin n → β, M := Fin M)` で直接 instantiate。
 > - 凸性 `rateDistortionFunction_convexOn` (`RateDistortionConvexity.lean:390`、E-4-B)。
 
-**現状** (Stage 2 `rate_distortion_converse_n_letter_singleLetter`, `:305`、sorry 据置 `:328`、
-`@residual(plan:rate-distortion-converse-plan)`):
+**完了** (commit `e73513c` + 独立監査 `cc18726`)。Stage 2
+`rate_distortion_converse_n_letter_singleLetter` (`:673`) は **proof done** = 0 sorry / 0 residual、
+`#print axioms` で sorryAx 非依存、独立監査 10 decl `@audit:ok`。`hD`/`hindep`/`[Nonempty β]`
+(regularity instance、0 consumer) は plain precondition (`*Hypothesis` predicate bundle せず)。
 
-- **true-as-framed 化済** (今セッション、commit `06b1435`)。migration が load-bearing
-  `h_jensen_antitone` を除去した際に regularity precondition (`expectedBlockDistortion ≤ D` +
-  独立性) を分離せず落とし、**under-hypothesized = 偽**になっていた。反例:
-  - n=1, M=2, |α|=4, D=0 → `R = log4 > log2 = RHS` (operating-point 欠落)
-  - n=2, X₁=X₂ (full dep), uniform `{0,1}`, M=2, D=0 → `log2 > (1/2)log2 = RHS` (独立性欠落)
-- `hD : c.expectedBlockDistortion P_X d ≤ D` + `hindep : iIndepFun (fun i => Xs i) μ` を
-  precondition 追加して **true-as-framed** 化。両者は regularity precondition (Stage 1 が同じ
-  `hD` を既に持つ)、`*Hypothesis` predicate に bundle せず plain hyp。独立監査 honest_residual、
-  0 consumer。
+**closure 経路 (6 段、全て in-project genuine asset)**:
+1. block-distortion identity `(1/n) ∑ᵢ Dᵢ = expectedBlockDistortion` (product 法 `μ.map X^n =
+   Measure.pi`)
+2. antitone `R(P_X, D) ≤ R(P_X, (1/n)∑Dᵢ)` (`hD` で `(1/n)∑Dᵢ ≤ D`)
+3. n-way Jensen `rateDistortionFunction_jensen_uniform` (`:277`、binary 凸性 E-4-B から running-average
+   帰納で構築)
+4. per-letter feasibility `R(P_X, Dᵢ) ≤ I(Xᵢ; X̂ᵢ)`
+5. **MI superadditivity** `mutualInfo_superadditive_of_indep` (`:570`、独立 source) —
+   下記参照
+6. block MI bound `I(X^n; X̂^n).toReal ≤ log M`
 
-**残壁 = MI superadditivity / tensorization** `∑ I(Xᵢ; X̂ᵢ) ≤ I(X^n; X̂^n)` (独立 source)。
-project 内 wall 扱い (`ParallelGaussianPerCoord.lean` の "n" family と同根、逆向き lemma
-`mutualInfo_le_sum_per_letter_of_memoryless_strong` は閉じない)。これが genuine 化すれば
-凸性 (E-4-B ✅) + Stage 1 (genuine) + tensorization で single-letterization が閉じる。
-
-**次の一手**: MI superadditivity を **gateway-atom で判定** (壁を額面で受けず、atom 1 本を
-着手して self-buildable か / 真の Mathlib 壁かを確認 — Cramér 前例で「not-a-wall verdict は
-gateway-atom 確認後に記録」)。退化境界 verify (独立 source の縮退ケース) も併せて。
+**MI superadditivity 壁の覆し**: `∑ I(Xᵢ; X̂ᵢ) ≤ I(X^n; X̂^n)` (独立 source) は当初
+「`ParallelGaussianPerCoord.lean` の "D-1 wall" family と同根の project 内 wall」と判定されていたが、
+gateway 評価で **self-buildable** と判明した over-estimation (analogy による誤継承)。逆向き
+(独立 source の superadditivity) は entropy ブロックが全て in-project に実在 — gateway piece
+`condEntropy_pi_le_sum_condEntropy_per_letter` (`:447`、`H(X^n|X̂^n) ≤ ∑H(Xᵢ|X̂ᵢ)`、初回で通った) +
+`entropy_pi_eq_sum_of_indep` (独立 source `H(X^n)=∑H(Xᵢ)`) + MI↔entropy bridge
+`mutualInfo_eq_entropy_sub_condEntropy`。逆向き lemma
+`mutualInfo_le_sum_per_letter_of_memoryless_strong` (memoryless channel の subadditivity) と
+direction が違うだけで同ブロックで閉じた。**教訓: sibling の wall tag を継承する前に、in-project
+entropy machinery で transposed direction を grep せよ** (逆向きが既に証明済なら同ブロックで閉じうる)。
