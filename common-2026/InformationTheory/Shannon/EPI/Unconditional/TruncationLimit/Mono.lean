@@ -1,6 +1,4 @@
 import InformationTheory.Shannon.EntropyPower.Ext
-import InformationTheory.Shannon.EPI.Unconditional.CondEntropyExt
-import InformationTheory.Shannon.EPI.Unconditional.Monotone
 import Mathlib.Probability.ConditionalProbability
 import Mathlib.Probability.Independence.Basic
 import Mathlib.MeasureTheory.Integral.Lebesgue.Add
