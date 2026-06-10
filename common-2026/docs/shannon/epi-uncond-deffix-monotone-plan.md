@@ -2,7 +2,8 @@
 
 > **親**: [`epi-unconditional-moonshot-plan.md`](epi-unconditional-moonshot-plan.md) (傘 moonshot)。本 plan は傘の **Phase 1 (S1 retype) の defect 訂正 + Phase 5 dispatch 再構成** を担う。
 > **slug**: `epi-uncond-deffix-monotone-plan`。
-> **status**: 2026-06-06 起草 (def-fix campaign P1-P5 done)。**2026-06-07 更新**: W-Y1 gateway atom 着手 + machine 再評価で +∞ 伝播の攻略を §7 に再設計 (route α = EReal-conditioning primary、当初「plumbing」見積り訂正、multi-session moonshot 規模)。次 session で §7 着手。
+> **status**: 🪦 **SUPERSEDED + DEAD (2026-06-11、判断ログ #23)**。本 plan が攻略対象とした route α-ii (crux i-a `differentialEntropyExt_indep_add_eq_add_klDiv` の EReal chain rule self-build = `Monotone.lean` / `CondEntropyExt.lean`) は **route β' (`epi-uncond-truncation-lsc-plan`、truncation+monotone-limit) が (i-a) 非継承で完全 supersede** し、方針 Y gateway (`entropyPowerExt_mono_add_unconditional` 他) は route β' 経由で proof-done 済 (親 S5 行 / epi-facts.md 行27/28)。よって route α-ii の 2 file (consumer-0 dead island) は物理削除済、§7 以降の攻略計画は **dead** (以下は履歴参照のみ)。
+> **【旧 status、履歴】** 2026-06-06 起草 (def-fix campaign P1-P5 done)。2026-06-07 更新: W-Y1 gateway atom 着手 + +∞ 伝播の攻略を §7 に再設計 (route α = EReal-conditioning primary、multi-session moonshot 規模)。
 
 ## 0. 発見 (機械検証済、linchpin)
 
