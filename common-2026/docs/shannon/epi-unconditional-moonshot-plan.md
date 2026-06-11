@@ -1,6 +1,8 @@
 # EPI 無条件化 — entropyPower 再型付け + 3-case 分岐 ムーンショット計画 🌙
 
-> **目標**: 主定理 `entropy_power_inequality` を **全仮説除去した無条件形**にする。
+> **✅ 達成 + 2026-06-11 後片付け**: 無条件 EPI は `entropyPowerExt_add_ge_unconditional` (ℝ≥0∞、precondition 0、sorryAx-free) で達成済 (2026-06-08)。下記「目標」の主定理 `entropy_power_inequality` (Real + `h_stam` 形) と legacy Stam-bridge route (`stamToEPIBridge_holds` 系 sorry + 露出 28 decl) は **2026-06-11 物理削除済** — route-T 後継 (`_unconditional` / `_of_ac` / `_of_density`) が完全 supersede。子 plan `epi-stam-to-conclusion-plan` は OBSOLETE 化済。本文中の `entropy_power_inequality:289` / `stamToEPIBridge_holds` 参照は全て履歴 (削除済を指す)。
+>
+> **目標 (達成済、原文は履歴)**: 主定理 `entropy_power_inequality` を **全仮説除去した無条件形**にする。
 > 現状 (`EntropyPowerInequality.lean:289`) は `(hX hY : Measurable) (hXY : IndepFun X Y P)
 > (h_stam : IsStamInequalityResidual X Y P)` を取るが、`h_stam` も密度 regularity も無い、
 > **独立性 + 可測性のみ**からの EPI を達成する。
