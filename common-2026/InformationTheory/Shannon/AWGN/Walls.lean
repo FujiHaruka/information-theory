@@ -873,6 +873,115 @@ private lemma fibre_log_proxy_integral
   filter_upwards [blockProxy_ae hN c m] with y hy
   rw [hy]
 
+/-- Per-Gaussian log-density integrability (mirror of
+`ParallelGaussian.gaussianReal_logRnDeriv_integrable`, inaccessible downstream). -/
+private lemma gaussianReal_logRnDeriv_integrable_inline (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
+    Integrable (fun y => Real.log ((gaussianReal m v).rnDeriv volume y).toReal)
+      (gaussianReal m v) := by
+  have h_memLp : MemLp (fun y : ℝ => y - m) 2 (gaussianReal m v) :=
+    (memLp_id_gaussianReal 2).sub (memLp_const m)
+  have h_sq_int : Integrable (fun y => (y - m) ^ 2) (gaussianReal m v) := h_memLp.integrable_sq
+  have h_rn : ∀ᵐ y ∂(gaussianReal m v),
+      Real.log ((gaussianReal m v).rnDeriv volume y).toReal
+        = -(1/2) * Real.log (2 * Real.pi * v) - (y - m) ^ 2 / (2 * v) := by
+    have h_ac : gaussianReal m v ≪ volume := gaussianReal_absolutelyContinuous m hv
+    filter_upwards [h_ac.ae_le (rnDeriv_gaussianReal m v)] with y hy
+    rw [hy, toReal_gaussianPDF, log_gaussianPDFReal_eq m hv y]
+  have h_affine_int : Integrable
+      (fun y => -(1/2) * Real.log (2 * Real.pi * v) - (y - m) ^ 2 / (2 * v))
+      (gaussianReal m v) :=
+    (integrable_const _).sub (h_sq_int.div_const (2 * v))
+  refine h_affine_int.congr ?_
+  filter_upwards [h_rn] with y hy
+  exact hy.symm
+
+/-- Product entropy additivity (mirror of `ParallelGaussian.jointDifferentialEntropyPi_pi_eq_sum`,
+inaccessible downstream): `h(∏ᵢ νᵢ) = ∑ᵢ h(νᵢ)` for component-`≪ volume`, log-density-integrable
+factors. -/
+private lemma jointDifferentialEntropyPi_pi_eq_sum_inline {n : ℕ} (μ : Fin n → Measure ℝ)
+    [∀ i, IsProbabilityMeasure (μ i)] (h_ac : ∀ i, μ i ≪ (volume : Measure ℝ))
+    (h_int : ∀ i, Integrable (fun y => Real.log ((μ i).rnDeriv volume y).toReal) (μ i)) :
+    InformationTheory.Shannon.jointDifferentialEntropyPi (Measure.pi μ)
+      = ∑ i, InformationTheory.Shannon.differentialEntropy (μ i) := by
+  classical
+  set Pm := Measure.pi μ with hP
+  set a : Fin n → ℝ → ℝ≥0∞ := fun i => (μ i).rnDeriv volume with ha_def
+  have ha_meas : ∀ i, Measurable (a i) := fun i => Measure.measurable_rnDeriv (μ i) volume
+  have hP_ac : Pm ≪ (volume : Measure (Fin n → ℝ)) := by
+    have h_eq : ∀ i, (volume : Measure ℝ).withDensity (a i) = μ i :=
+      fun i => Measure.withDensity_rnDeriv_eq (μ i) volume (h_ac i)
+    haveI : ∀ i, SigmaFinite ((volume : Measure ℝ).withDensity (a i)) := by
+      intro i; rw [h_eq i]; infer_instance
+    have h_pi_eq : Measure.pi μ
+        = (Measure.pi (fun _ : Fin n => (volume : Measure ℝ))).withDensity
+            (fun z => ∏ i, a i (z i)) := by
+      rw [← (funext h_eq : (fun i => (volume : Measure ℝ).withDensity (a i)) = μ)]
+      exact InformationTheory.Shannon.pi_withDensity_fin (fun _ : Fin n => (volume : Measure ℝ)) ha_meas
+    rw [hP, h_pi_eq, volume_pi]
+    exact withDensity_absolutelyContinuous _ _
+  have h_step1 : InformationTheory.Shannon.jointDifferentialEntropyPi Pm
+      = -∫ z, Real.log ((Pm.rnDeriv volume z).toReal) ∂Pm := by
+    rw [InformationTheory.Shannon.integral_log_rnDeriv_self_eq_neg hP_ac, neg_neg]; rfl
+  have h_rn_pi : (Pm.rnDeriv volume) =ᵐ[Pm] fun z => ∏ i, a i (z i) := by
+    have h_eq : ∀ i, (volume : Measure ℝ).withDensity (a i) = μ i :=
+      fun i => Measure.withDensity_rnDeriv_eq (μ i) volume (h_ac i)
+    haveI : ∀ i, SigmaFinite ((volume : Measure ℝ).withDensity (a i)) := by
+      intro i; rw [h_eq i]; infer_instance
+    have h_pi_wd : Pm = (volume : Measure (Fin n → ℝ)).withDensity (fun z => ∏ i, a i (z i)) := by
+      rw [hP, ← (funext h_eq : (fun i => (volume : Measure ℝ).withDensity (a i)) = μ)]
+      rw [InformationTheory.Shannon.pi_withDensity_fin (fun _ : Fin n => (volume : Measure ℝ)) ha_meas,
+        volume_pi]
+    have h_prod_meas : Measurable (fun z : Fin n → ℝ => ∏ i, a i (z i)) :=
+      Finset.measurable_prod _ (fun i _ => (ha_meas i).comp (measurable_pi_apply i))
+    have h_rn_vol : (Pm.rnDeriv volume) =ᵐ[volume] fun z => ∏ i, a i (z i) := by
+      conv_lhs => rw [h_pi_wd]
+      exact Measure.rnDeriv_withDensity volume h_prod_meas
+    exact hP_ac.ae_le h_rn_vol
+  have h_pos : ∀ i, ∀ᵐ z ∂Pm, 0 < a i (z i) := by
+    intro i
+    have h1d : ∀ᵐ y ∂(μ i), 0 < a i y := Measure.rnDeriv_pos (h_ac i)
+    exact (Measure.quasiMeasurePreserving_eval (μ := μ) i).ae h1d
+  have h_lt : ∀ i, ∀ᵐ z ∂Pm, a i (z i) < ∞ := by
+    intro i
+    have h1d : ∀ᵐ y ∂(μ i), a i y < ∞ := (h_ac i).ae_le (Measure.rnDeriv_lt_top (μ i) volume)
+    exact (Measure.quasiMeasurePreserving_eval (μ := μ) i).ae h1d
+  have h_log_split : (fun z => Real.log ((Pm.rnDeriv volume z).toReal))
+      =ᵐ[Pm] fun z => ∑ i, Real.log ((a i (z i)).toReal) := by
+    filter_upwards [h_rn_pi, eventually_countable_forall.mpr h_pos,
+      eventually_countable_forall.mpr h_lt] with z hz hpos hlt
+    rw [hz, ENNReal.toReal_prod, Real.log_prod]
+    intro i _
+    have : (0 : ℝ) < (a i (z i)).toReal := ENNReal.toReal_pos (hpos i).ne' (hlt i).ne
+    exact this.ne'
+  have h_int_P : ∀ i, Integrable (fun z => Real.log ((a i (z i)).toReal)) Pm := by
+    intro i
+    have hmp : MeasurePreserving (Function.eval i) Pm (μ i) := by
+      rw [hP]; exact MeasureTheory.measurePreserving_eval μ i
+    have hcomp : (fun z : Fin n → ℝ => Real.log ((a i (z i)).toReal))
+        = (fun y => Real.log ((a i y).toReal)) ∘ (Function.eval i) := rfl
+    rw [hcomp]
+    exact (hmp.integrable_comp
+      ((((ha_meas i).ennreal_toReal.log).aestronglyMeasurable))).mpr (h_int i)
+  have h_marg : ∀ i, (∫ z, Real.log ((a i (z i)).toReal) ∂Pm)
+      = -InformationTheory.Shannon.differentialEntropy (μ i) := by
+    intro i
+    have hmp : MeasurePreserving (Function.eval i) Pm (μ i) := by
+      rw [hP]; exact MeasureTheory.measurePreserving_eval μ i
+    have hGmeas : AEStronglyMeasurable (fun y => Real.log ((a i y).toReal)) (μ i) :=
+      ((ha_meas i).ennreal_toReal.log).aestronglyMeasurable
+    have h_map : (∫ z, Real.log ((a i (z i)).toReal) ∂Pm)
+        = ∫ y, Real.log ((a i y).toReal) ∂(μ i) := by
+      rw [← hmp.map_eq]
+      exact (MeasureTheory.integral_map (measurable_pi_apply i).aemeasurable
+        (by rw [hmp.map_eq]; exact hGmeas)).symm
+    rw [h_map, ha_def, InformationTheory.Shannon.integral_log_rnDeriv_self_eq_neg (h_ac i)]
+    rfl
+  rw [h_step1, integral_congr_ae h_log_split, integral_finsetSum _ (fun i _ => h_int_P i)]
+  rw [show (∑ i, ∫ z, Real.log ((a i (z i)).toReal) ∂Pm)
+        = ∑ i, -InformationTheory.Shannon.differentialEntropy (μ i) from
+    Finset.sum_congr rfl (fun i _ => h_marg i)]
+  rw [Finset.sum_neg_distrib, neg_neg]
+
 /-- Fibre neg-entropy value: `∫ y, log (rnDeriv (blockKernelInline m) vol) ∂(blockKernelInline m)
 = -n·h(gaussianReal 0 N)`. -/
 private lemma fibre_neg_entropy
