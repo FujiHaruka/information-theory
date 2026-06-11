@@ -804,7 +804,11 @@ private lemma blockComponentInline_ac_blockYLaw
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (m : Fin M) :
     Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N) ≪ blockYLawInline h_meas c := by
-  sorry
+  have h1 : Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N)
+      ≪ (MeasureTheory.volume : Measure (Fin n → ℝ)) := by
+    rw [blockComponentInline_withDensity hN c m]
+    exact MeasureTheory.withDensity_absolutelyContinuous _ _
+  exact h1.trans (volume_ac_blockYLawInline hN h_meas c)
 
 /-- Per-component output log-density integrability (n-dim) against the m-th product-Gaussian
 fibre `pi (gaussianReal (encoder m i) N)`. -/
