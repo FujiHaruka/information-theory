@@ -52,6 +52,7 @@ import InformationTheory.Shannon.Pinsker.Basic
 import InformationTheory.Shannon.Pinsker.Sharp
 import InformationTheory.Shannon.MIChainRule
 import InformationTheory.Shannon.ChannelCoding.Basic
+import InformationTheory.Shannon.ChannelCoding.MIDecomp
 import InformationTheory.Shannon.IIDProductInput.Basic
 import InformationTheory.Shannon.IIDProductInput.Joint
 import InformationTheory.Shannon.ChannelCoding.Achievability.Core
