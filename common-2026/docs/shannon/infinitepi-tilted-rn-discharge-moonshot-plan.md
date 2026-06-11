@@ -14,11 +14,11 @@
 >   `cramer-chernoff-clt-closure` plan が `InformationTheory/Shannon/CramerCltBoundaryClosure.lean`
 >   (0 sorry, sorryAx-free, 監査 PASS) に headline `cramer_lower_boundary_unconditional` を publish
 >   (内部最適 tilt `a = deriv cgf lam` で residual largeness hyp 除去)。子判断ログ #4 / `05ed225`。
-> - ⚠️ **`CramerLC2PhaseC.lean` の `cramer_lower_phaseC_partial_discharge` (:165) は依然 sorry**: 上の
->   closure asset がその穴を埋める genuine 資産 (結論形 verbatim 一致) だが、**import cycle**
->   (`CramerLC2PhaseC` を `InfinitePiTiltedChangeOfMeasure` が import、closure file も同 file を import) で
->   root を in-place 書換不可。root の `sorry + @residual(plan:cramer-chernoff-clt-closure-moonshot-plan)` は
->   「閉じた closure を指す live residual」として残置 (後続が「未達」と誤読しないこと、子 plan 冒頭バナー参照)。
+> - ✅ **配線完了 (2026-06-11, 判断ログ #26 / 子 `cramer-root-wiring-plan.md`)**: 上の closed-but-unwired
+>   状態を解消。`cramer_lower_phaseC_partial_discharge` (root A) は 8 decl を新上流 `CramerBoundaryUpstream.lean`
+>   へ hoist して import cycle を解消 → `exact cramer_lower_boundary_unconditional` で discharge。一般 iid
+>   `cramer_lower` (root B) は新下流 `CramerGeneralLower.lean` へ移設 → iid joint law transport で headline へ
+>   落として discharge。両 root **sorryAx-free** (独立監査 `@audit:ok`、`8a8a001`)。project 実 sorry 17→15。
 
 <!--
 雛形メモ (moonshot-plan-template.md より):

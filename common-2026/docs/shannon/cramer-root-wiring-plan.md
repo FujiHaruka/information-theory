@@ -7,7 +7,7 @@
 
 ## 進捗
 
-- [ ] Phase M0 — 配線対象 signature + cycle edge + 逆依存の最終 verbatim 固定 📋 → [inventory](cramer-root-wiring-inventory.md)
+- [x] Phase M0 — 配線対象 signature + cycle edge + 逆依存の最終 verbatim 固定 ✅ (Phase A 着手時 inline 確認、引数順 first-try 一致) → [inventory](cramer-root-wiring-inventory.md)
 - [x] Phase A — root A cycle-break + `hVar` thread + headline discharge ✅ (`7e4f05a`、sorryAx-free)
 - [x] Phase B — root B chain を**下流新モジュール `CramerGeneralLower.lean` へ移設**してから transport reduction + `hVar` 追加で discharge ✅ (sorryAx-free)
 
