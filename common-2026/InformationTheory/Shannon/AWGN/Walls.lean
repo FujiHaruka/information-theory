@@ -810,15 +810,165 @@ private lemma blockComponentInline_ac_blockYLaw
     exact MeasureTheory.withDensity_absolutelyContinuous _ _
   exact h1.trans (volume_ac_blockYLawInline hN h_meas c)
 
+/-- Per-component lower bound:
+`blockRealDensityInline y ≥ M⁻¹ · ∏ᵢ gaussianPDFReal (encoder m i) N (yᵢ)`. -/
+private lemma blockRealDensityInline_ge_component
+    {P : ℝ} {N : ℝ≥0} {M n : ℕ} (c : AwgnCode M n P) (m : Fin M) (y : Fin n → ℝ) :
+    (1 / (M : ℝ)) * ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i)
+      ≤ blockRealDensityInline N c y := by
+  unfold blockRealDensityInline
+  apply mul_le_mul_of_nonneg_left _ (by positivity)
+  refine Finset.single_le_sum
+    (f := fun m => ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i))
+    (fun m _ => Finset.prod_nonneg (fun i _ => gaussianPDFReal_nonneg _ _ _))
+    (Finset.mem_univ m)
+
+/-- Sup upper bound: `blockRealDensityInline y ≤ ∏ᵢ (√(2πN))⁻¹`. -/
+private lemma blockRealDensityInline_le_sup
+    {P : ℝ} {N : ℝ≥0} {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (y : Fin n → ℝ) :
+    blockRealDensityInline N c y ≤ ∏ _i : Fin n, (Real.sqrt (2 * Real.pi * N))⁻¹ := by
+  classical
+  unfold blockRealDensityInline
+  set Bpeak : ℝ := (Real.sqrt (2 * Real.pi * N))⁻¹ with hBpeak
+  have hBpeak_nonneg : (0 : ℝ) ≤ Bpeak := by rw [hBpeak]; positivity
+  have h_comp_le : ∀ (a x : ℝ), gaussianPDFReal a N x ≤ Bpeak := by
+    intro a x
+    rw [gaussianPDFReal, hBpeak]
+    have h_exp_le_one : Real.exp (-(x - a) ^ 2 / (2 * N)) ≤ 1 := by
+      rw [Real.exp_le_one_iff, neg_div]
+      have : 0 ≤ (x - a) ^ 2 / (2 * (N : ℝ)) := by positivity
+      linarith
+    calc (Real.sqrt (2 * Real.pi * N))⁻¹ * Real.exp (-(x - a) ^ 2 / (2 * N))
+        ≤ (Real.sqrt (2 * Real.pi * N))⁻¹ * 1 :=
+          mul_le_mul_of_nonneg_left h_exp_le_one (by positivity)
+      _ = (Real.sqrt (2 * Real.pi * N))⁻¹ := mul_one _
+  have h_prod_le : ∀ m : Fin M,
+      (∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i)) ≤ ∏ _i : Fin n, Bpeak := by
+    intro m
+    refine Finset.prod_le_prod (fun i _ => gaussianPDFReal_nonneg _ _ _) (fun i _ => ?_)
+    exact h_comp_le (c.encoder m i) (y i)
+  calc (1 / (M : ℝ)) * ∑ m : Fin M, ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i)
+      ≤ (1 / (M : ℝ)) * ∑ _m : Fin M, ∏ _i : Fin n, Bpeak := by
+        apply mul_le_mul_of_nonneg_left _ (by positivity)
+        exact Finset.sum_le_sum (fun m _ => h_prod_le m)
+    _ = (1 / (M : ℝ)) * ((M : ℝ) * ∏ _i : Fin n, Bpeak) := by
+        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+    _ = ∏ _i : Fin n, Bpeak := by
+        have : (M : ℝ) ≠ 0 := by exact_mod_cast (NeZero.ne M)
+        field_simp
+
 /-- Per-component output log-density integrability (n-dim) against the m-th product-Gaussian
-fibre `pi (gaussianReal (encoder m i) N)`. -/
+fibre `pi (gaussianReal (encoder m i) N)`. Mirror of
+`AWGNConverseDischarge.integrable_log_blockYLaw_on_component`. -/
 private lemma integrable_log_blockYLawInline_on_component
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (m : Fin M) :
     Integrable
       (fun y => Real.log ((blockYLawInline h_meas c).rnDeriv MeasureTheory.volume y).toReal)
       (Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N)) := by
-  sorry
+  classical
+  set q := blockYLawInline h_meas c with hq_def
+  set νm := Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N) with hνm_def
+  have hM_pos : 0 < M := Nat.pos_of_ne_zero (NeZero.ne M)
+  haveI : ∀ i, IsProbabilityMeasure (gaussianReal (c.encoder m i) N) := fun i => inferInstance
+  haveI hνm_prob : IsProbabilityMeasure νm := by rw [hνm_def]; infer_instance
+  have hq_wd : q = (MeasureTheory.volume : Measure (Fin n → ℝ)).withDensity
+      (fun y => ENNReal.ofReal (blockRealDensityInline N c y)) := by
+    rw [hq_def]; exact blockYLawInline_withDensity_real hN h_meas c
+  have hDR_meas : Measurable (fun y => ENNReal.ofReal (blockRealDensityInline N c y)) :=
+    ENNReal.measurable_ofReal.comp (blockRealDensityInline_measurable c)
+  have hνm_ac : νm ≪ (MeasureTheory.volume : Measure (Fin n → ℝ)) := by
+    rw [hνm_def, blockComponentInline_withDensity hN c m]
+    exact MeasureTheory.withDensity_absolutelyContinuous _ _
+  have h_rn_vol : q.rnDeriv (MeasureTheory.volume : Measure (Fin n → ℝ))
+      =ᵐ[(MeasureTheory.volume : Measure (Fin n → ℝ))]
+      (fun y => ENNReal.ofReal (blockRealDensityInline N c y)) := by
+    rw [hq_wd]; exact Measure.rnDeriv_withDensity _ hDR_meas
+  have h_rn_νm : q.rnDeriv (MeasureTheory.volume : Measure (Fin n → ℝ))
+      =ᵐ[νm] (fun y => ENNReal.ofReal (blockRealDensityInline N c y)) :=
+    hνm_ac.ae_le h_rn_vol
+  have h_log_ae : (fun y => Real.log (q.rnDeriv MeasureTheory.volume y).toReal)
+      =ᵐ[νm] (fun y => Real.log (blockRealDensityInline N c y)) := by
+    filter_upwards [h_rn_νm] with y hy
+    rw [hy, ENNReal.toReal_ofReal (blockRealDensityInline_pos hN c y).le]
+  refine (Integrable.congr ?_ h_log_ae.symm)
+  set Bpeak : ℝ := (Real.sqrt (2 * Real.pi * N))⁻¹ with hBpeak
+  have hBpeak_pos : 0 < Bpeak := by rw [hBpeak]; positivity
+  have hD_le : ∀ y, blockRealDensityInline N c y ≤ ∏ _i : Fin n, Bpeak :=
+    blockRealDensityInline_le_sup c
+  have hD_ge : ∀ y, (1 / (M : ℝ)) * ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i)
+      ≤ blockRealDensityInline N c y := fun y => blockRealDensityInline_ge_component c m y
+  set c₀ : ℝ := -(1 / 2) * Real.log (2 * Real.pi * N) with hc₀
+  set c₁ : ℝ := -(1 / (2 * (N : ℝ))) with hc₁
+  set Aconst : ℝ := |Real.log (∏ _i : Fin n, Bpeak)|
+      + |Real.log (1 / (M : ℝ)) + (n : ℝ) * c₀| with hAconst
+  set Bcoef : ℝ := |c₁| with hBcoef
+  have h_dom : Integrable
+      (fun y : Fin n → ℝ => Aconst + Bcoef * ∑ i : Fin n, (y i - c.encoder m i) ^ 2) νm := by
+    refine (integrable_const Aconst).add (Integrable.const_mul ?_ Bcoef)
+    rw [hνm_def]
+    refine integrable_finsetSum _ (fun i _ => ?_)
+    have h_1d : Integrable (fun y : ℝ => (y - c.encoder m i) ^ 2)
+        (gaussianReal (c.encoder m i) N) := by
+      have h_id : Integrable (fun y : ℝ => y) (gaussianReal (c.encoder m i) N) := by
+        simpa using (memLp_id_gaussianReal (μ := c.encoder m i) (v := N) 1).integrable (by norm_num)
+      have h_sq : Integrable (fun y : ℝ => y ^ 2) (gaussianReal (c.encoder m i) N) :=
+        (memLp_id_gaussianReal (μ := c.encoder m i) (v := N) 2).integrable_sq
+      have hrw : (fun y : ℝ => (y - c.encoder m i) ^ 2)
+          = fun y => y ^ 2 - 2 * (c.encoder m i) * y + (c.encoder m i) ^ 2 := by funext y; ring
+      rw [hrw]
+      exact ((h_sq.sub (h_id.const_mul (2 * c.encoder m i))).add
+        (integrable_const ((c.encoder m i) ^ 2)))
+    exact integrable_comp_eval (μ := fun i : Fin n => gaussianReal (c.encoder m i) N)
+      (i := i) h_1d
+  refine Integrable.mono' h_dom ?_ ?_
+  · exact (Real.measurable_log.comp (blockRealDensityInline_measurable c)).aestronglyMeasurable
+  · filter_upwards with y
+    have hDy_pos : 0 < blockRealDensityInline N c y := blockRealDensityInline_pos hN c y
+    set S : ℝ := ∑ i : Fin n, (y i - c.encoder m i) ^ 2 with hS
+    have hS_nonneg : 0 ≤ S := Finset.sum_nonneg (fun i _ => sq_nonneg _)
+    have hc₁_nonpos : c₁ ≤ 0 := by rw [hc₁]; simp only [neg_nonpos]; positivity
+    have h_upper : Real.log (blockRealDensityInline N c y) ≤ Real.log (∏ _i : Fin n, Bpeak) :=
+      Real.log_le_log hDy_pos (hD_le y)
+    have h_lower : Real.log (1 / (M : ℝ)) + (n : ℝ) * c₀ + c₁ * S
+        ≤ Real.log (blockRealDensityInline N c y) := by
+      have hMinv_pos : (0 : ℝ) < 1 / (M : ℝ) := by positivity
+      have hprod_pos : (0 : ℝ) < ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i) :=
+        Finset.prod_pos (fun i _ => gaussianPDFReal_pos _ _ _ hN)
+      have h_log_prod : Real.log ((1 / (M : ℝ)) * ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i))
+          = Real.log (1 / (M : ℝ)) + (n : ℝ) * c₀ + c₁ * S := by
+        rw [Real.log_mul hMinv_pos.ne' hprod_pos.ne', Real.log_prod (fun i _ =>
+          (gaussianPDFReal_pos (c.encoder m i) N (y i) hN).ne')]
+        have h_each : ∀ i : Fin n, Real.log (gaussianPDFReal (c.encoder m i) N (y i))
+            = c₀ + c₁ * (y i - c.encoder m i) ^ 2 := by
+          intro i
+          rw [InformationTheory.Shannon.log_gaussianPDFReal_eq (c.encoder m i) hN (y i), hc₀, hc₁]
+          ring
+        rw [Finset.sum_congr rfl (fun i _ => h_each i), hS, Finset.sum_add_distrib,
+          Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul, ← Finset.mul_sum]
+        ring
+      calc Real.log (1 / (M : ℝ)) + (n : ℝ) * c₀ + c₁ * S
+          = Real.log ((1 / (M : ℝ)) * ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i)) :=
+            h_log_prod.symm
+        _ ≤ Real.log (blockRealDensityInline N c y) :=
+            Real.log_le_log (mul_pos hMinv_pos hprod_pos) (hD_ge y)
+    rw [Real.norm_eq_abs, abs_le]
+    refine ⟨?_, ?_⟩
+    · have hc₁S : c₁ * S = -(Bcoef * S) := by rw [hBcoef, abs_of_nonpos hc₁_nonpos]; ring
+      have hlb : -(Aconst + Bcoef * S)
+          ≤ Real.log (1 / (M : ℝ)) + (n : ℝ) * c₀ + c₁ * S := by
+        rw [hAconst, hc₁S]
+        have h1 := neg_abs_le (Real.log (1 / (M : ℝ)) + (n : ℝ) * c₀)
+        have h2 := abs_nonneg (Real.log (∏ _i : Fin n, Bpeak))
+        linarith
+      exact le_trans hlb h_lower
+    · have hub : Real.log (∏ _i : Fin n, Bpeak) ≤ Aconst + Bcoef * S := by
+        rw [hAconst]
+        have h1 := le_abs_self (Real.log (∏ _i : Fin n, Bpeak))
+        have h2 := abs_nonneg (Real.log (1 / (M : ℝ)) + (n : ℝ) * c₀)
+        have h3 : 0 ≤ Bcoef * S := mul_nonneg (abs_nonneg _) hS_nonneg
+        linarith
+      exact le_trans h_upper hub
 
 /-- The proxy density `g z := ∏ᵢ gaussianPDF (encoder z.1 i) N (z.2 i)`, jointly measurable. -/
 private noncomputable def blockProxy
