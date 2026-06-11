@@ -5,13 +5,11 @@
 > `cramer_lower_boundary_unconditional` (内部最適 tilt `a = deriv (cgf (Y∘eval 0) (infinitePi μ₀)) lam`
 > で residual largeness hypothesis を除去した Cramér 下界) を含む 10 decl を publish。独立 honesty 監査
 > (`@audit:ok` 全 10 件、`h_coboundedBelow` 非 vacuous 性まで機械検証) **PASS**。判断ログ #4 / commit `05ed225`。
-> **未配線の残件**: consumer root `Cramer.Discharge.cramer_lower_phaseC_partial_discharge`
-> (`Draft/Shannon/CramerLC2PhaseC.lean:165`) は **import cycle** (その file を `InfinitePiTiltedChangeOfMeasure`
-> が import、本 closure file も同 file を import) で in-place 書換不可 → root の `sorry + @residual(plan:本 plan)`
-> は「**閉じた closure asset (本 file headline) を指す live residual**」として残置 (字面一致は監査 verbatim 確認済)。
-> 後続が root sorry を「未達」と誤読しないよう注記 (下記判断ログ #4)。
-> **この未配線残件 (root A + root B の sorry 配線) の closure は子 plan
-> [`cramer-root-wiring-plan.md`](cramer-root-wiring-plan.md) が担当**(cycle-break + `hVar` thread + root B transport、下記 Sub-plan 一覧)。
+> **未配線残件 = 配線完了 (2026-06-11)**: 子 plan [`cramer-root-wiring-plan.md`](cramer-root-wiring-plan.md) が
+> root A (`cramer_lower_phaseC_partial_discharge`、`7e4f05a` cycle-break + `hVar` thread) と root B
+> (`cramer_lower` / `cramer_lower_legendre` / `cramer_tendsto`、下流新モジュール `CramerGeneralLower.lean` 移設 +
+> transport) を **両方 sorryAx-free で discharge 完了**。両 root とも `#print axioms` =
+> `[propext, Classical.choice, Quot.sound]`。headline + consumer chain end-to-end で sorryAx-free。
 
 > **sorry-based 移行完了 (2026-05-25、partial)** — `docs/shannon/cramer-sorry-migration-plan.md`
 > に従い、本 plan に属する 1 件の `@audit:suspect(cramer-chernoff-clt-closure-moonshot-plan)`
@@ -74,7 +72,7 @@
 
 | 子 plan | 担当 | 状態 |
 |---|---|---|
-| [`cramer-root-wiring-plan.md`](cramer-root-wiring-plan.md) | 未配線残件 = headline で上流 root sorry 2 件 (`cramer_lower_phaseC_partial_discharge` / `cramer_lower`) を discharge。cycle-break (8 decl hoist) + `hVar` precondition thread + root B transport | 📋 起草済・未着手 |
+| [`cramer-root-wiring-plan.md`](cramer-root-wiring-plan.md) | 未配線残件 = headline で上流 root sorry 2 件 (`cramer_lower_phaseC_partial_discharge` / `cramer_lower`) を discharge。cycle-break (8 decl hoist) + `hVar` precondition thread + root B 下流移設 (`CramerGeneralLower.lean`) + transport | ✅ Phase A (`7e4f05a`) + Phase B 完了、両 root sorryAx-free |
 
 ## ゴール / Approach
 

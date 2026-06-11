@@ -115,6 +115,7 @@ import InformationTheory.Shannon.Cramer.LC2Discharge
 import InformationTheory.Shannon.Cramer.LC2DischargeExt
 import InformationTheory.Shannon.CramerBoundaryUpstream
 import InformationTheory.Shannon.CramerCltBoundaryClosure
+import InformationTheory.Shannon.CramerGeneralLower
 import InformationTheory.Shannon.Hoeffding.Tradeoff
 import InformationTheory.Shannon.Hoeffding.Sandwich
 import InformationTheory.Shannon.DifferentialEntropy
