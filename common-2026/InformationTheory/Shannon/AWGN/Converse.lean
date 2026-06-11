@@ -544,7 +544,8 @@ private lemma integrable_log_rnDeriv_perLetterYLaw
 Closes `awgn-mi-bridge-plan`: the per-letter mutual information equals output
 differential entropy minus the (input-independent) noise entropy, via the generic
 continuous-channel MI chain rule asset and the AWGN translation-invariance of
-fibre entropy. -/
+fibre entropy.
+@audit:ok -/
 theorem awgn_per_letter_mi_bridge_genuine
     {P : ℝ} {N : ℝ≥0} (hN : (N : ℝ) ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
