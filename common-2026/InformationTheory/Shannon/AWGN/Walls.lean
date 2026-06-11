@@ -1428,6 +1428,52 @@ private lemma perLetter_map_eq_compProd
     rw [h_prod_one, one_smul, awgnChannel_apply]
   rw [Finset.sum_congr rfl (fun m _ => h_per m), Fintype.card_fin]
 
+/-- Positivity of the per-letter mixture density (single full-support component suffices). -/
+private lemma perLetterMixtureDensity_pos
+    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) {M n : ℕ} [NeZero M] (c : AwgnCode M n P)
+    (i : Fin n) (y : ℝ) :
+    0 < (perLetterMixtureDensity N c i y).toReal := by
+  classical
+  obtain ⟨m₀⟩ : Nonempty (Fin M) := ⟨⟨0, Nat.pos_of_ne_zero (NeZero.ne M)⟩⟩
+  have hM_pos : 0 < M := Nat.pos_of_ne_zero (NeZero.ne M)
+  have h_ne_top : perLetterMixtureDensity N c i y ≠ ⊤ :=
+    ne_top_of_le_ne_top ENNReal.ofReal_ne_top (perLetterMixtureDensity_le_sup N c i hM_pos y)
+  rw [ENNReal.toReal_pos_iff]
+  refine ⟨?_, lt_of_le_of_ne le_top h_ne_top⟩
+  unfold perLetterMixtureDensity
+  refine ENNReal.mul_pos ?_ ?_
+  · simp only [ne_eq, ENNReal.inv_eq_zero]
+    exact ENNReal.natCast_ne_top M
+  · -- `∑ₘ gaussianPDF ... ≠ 0` (single component positive)
+    have h_comp_pos : 0 < gaussianPDF (c.encoder m₀ i) N y := by
+      rw [gaussianPDF, ENNReal.ofReal_pos]
+      exact gaussianPDFReal_pos (c.encoder m₀ i) N y hN
+    refine (lt_of_lt_of_le h_comp_pos (Finset.single_le_sum
+      (f := fun m => gaussianPDF (c.encoder m i) N y) (fun m _ => zero_le')
+      (Finset.mem_univ m₀))).ne'
+
+/-- `perLetterYLaw_i ≪ volume` (mixture of full-support Gaussians). -/
+private lemma perLetterLaw_ac_volume
+    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
+    (converseJointInline h_meas c).map (fun ω => ω.2 i) ≪ (volume : Measure ℝ) := by
+  rw [perLetterLaw_withDensity h_meas c i (Nat.pos_of_ne_zero (NeZero.ne M)) hN]
+  exact MeasureTheory.withDensity_absolutelyContinuous _ _
+
+/-- `volume ≪ perLetterYLaw_i` (mixture density everywhere positive). -/
+private lemma volume_ac_perLetterLaw
+    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
+    (volume : Measure ℝ) ≪ (converseJointInline h_meas c).map (fun ω => ω.2 i) := by
+  rw [perLetterLaw_withDensity h_meas c i (Nat.pos_of_ne_zero (NeZero.ne M)) hN]
+  refine withDensity_absolutelyContinuous'
+    (perLetterMixtureDensity_measurable N c i).aemeasurable ?_
+  refine Filter.Eventually.of_forall (fun y => ?_)
+  have := perLetterMixtureDensity_pos hN c i y
+  simp only [ne_eq]
+  intro h0
+  rw [h0] at this; simp at this
+
 /-- **Marginal identification**: `blockYLawInline.map (· i) = (converseJointInline).map (·.2 i)`
 = the per-letter law `Y_i`. -/
 private lemma blockYLawInline_map_eval
@@ -1439,6 +1485,135 @@ private lemma blockYLawInline_map_eval
       = (converseJointInline h_meas c).map (fun ω => ω.2 i)
   rw [Measure.map_map (measurable_pi_apply i) measurable_snd]
   rfl
+
+/-- Per-letter MI = channel MI: `mutualInfo μ X_i Y_i = mutualInfoOfChannel inputLaw_i awgn`. -/
+private lemma perLetterMI_eq_channel
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
+    mutualInfo (converseJointInline h_meas c)
+        (fun ω => c.encoder ω.1 i) (fun ω => ω.2 i)
+      = ChannelCoding.mutualInfoOfChannel (perLetterInputLaw h_meas c i) (awgnChannel N h_meas) := by
+  classical
+  set μ := converseJointInline h_meas c with hμ
+  set p := perLetterInputLaw h_meas c i with hp
+  set W := awgnChannel N h_meas with hW
+  have hX_meas : Measurable (fun ω : Fin M × (Fin n → ℝ) => c.encoder ω.1 i) :=
+    (measurable_of_countable (fun m : Fin M => c.encoder m i)).comp measurable_fst
+  have hY_meas : Measurable (fun ω : Fin M × (Fin n → ℝ) => ω.2 i) :=
+    (measurable_pi_apply i).comp measurable_snd
+  have hpair_meas : Measurable (fun ω : Fin M × (Fin n → ℝ) => (c.encoder ω.1 i, ω.2 i)) :=
+    hX_meas.prodMk hY_meas
+  -- `mutualInfoOfChannel = klDiv (p ⊗ₘ W) (p.prod (outputDistribution p W))`
+  rw [ChannelCoding.mutualInfoOfChannel_def, ChannelCoding.jointDistribution_def]
+  -- `mutualInfo μ X_i Y_i = klDiv (μ.map (X_i,Y_i)) ((μ.map X_i).prod (μ.map Y_i))`
+  unfold mutualInfo
+  -- joint: `μ.map (X_i,Y_i) = p ⊗ₘ W`
+  have h_joint : μ.map (fun ω => (c.encoder ω.1 i, ω.2 i)) = p ⊗ₘ W := by
+    rw [hμ, hp, hW]; exact perLetter_map_eq_compProd h_meas c i
+  -- input marginal: `μ.map X_i = p`
+  have h_in : μ.map (fun ω => c.encoder ω.1 i) = p := by rw [hp, perLetterInputLaw]
+  -- output marginal: `μ.map Y_i = outputDistribution p W`
+  have h_out : μ.map (fun ω => ω.2 i) = ChannelCoding.outputDistribution p W := by
+    show μ.map (fun ω => ω.2 i) = (p ⊗ₘ W).map Prod.snd
+    rw [← h_joint, Measure.map_map measurable_snd hpair_meas]
+    rfl
+  rw [h_joint, h_in, h_out]
+
+/-- **Per-letter MI decomposition**: `I(X_i;Y_i).toReal = h(Y_i) − h(noise)`. -/
+private lemma perLetterMI_decomp
+    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
+    (mutualInfo (converseJointInline h_meas c)
+        (fun ω => c.encoder ω.1 i) (fun ω => ω.2 i)).toReal
+      = InformationTheory.Shannon.differentialEntropy
+          ((converseJointInline h_meas c).map (fun ω => ω.2 i))
+        - InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N) := by
+  classical
+  have hM_pos : 0 < M := Nat.pos_of_ne_zero (NeZero.ne M)
+  set p := perLetterInputLaw h_meas c i with hp
+  set W := awgnChannel N h_meas with hW
+  have hpair_meas : Measurable (fun ω : Fin M × (Fin n → ℝ) => (c.encoder ω.1 i, ω.2 i)) :=
+    ((measurable_of_countable (fun m : Fin M => c.encoder m i)).comp measurable_fst).prodMk
+      ((measurable_pi_apply i).comp measurable_snd)
+  -- output distribution `q = perLetterYLaw_i`
+  have hq_eq : ChannelCoding.outputDistribution p W
+      = (converseJointInline h_meas c).map (fun ω => ω.2 i) := by
+    show ((p ⊗ₘ W).map Prod.snd) = _
+    rw [hp, hW, ← perLetter_map_eq_compProd h_meas c i]
+    rw [Measure.map_map measurable_snd hpair_meas]
+    rfl
+  -- regularity
+  have hW_ac : ∀ x, W x ≪ (volume : Measure ℝ) := by
+    intro x; rw [hW, awgnChannel_apply]; exact gaussianReal_absolutelyContinuous x hN
+  have hq_ac : ChannelCoding.outputDistribution p W ≪ (volume : Measure ℝ) := by
+    rw [hq_eq]; exact perLetterLaw_ac_volume hN h_meas c i
+  have hvol_ac_q : (volume : Measure ℝ) ≪ ChannelCoding.outputDistribution p W := by
+    rw [hq_eq]; exact volume_ac_perLetterLaw hN h_meas c i
+  have hWx_q : ∀ x, W x ≪ ChannelCoding.outputDistribution p W :=
+    fun x => (hW_ac x).trans hvol_ac_q
+  have h_joint_ac : (p ⊗ₘ W) ≪ p.prod (ChannelCoding.outputDistribution p W) := by
+    rw [← Measure.compProd_const]
+    refine Measure.AbsolutelyContinuous.compProd_right ?_
+    exact Filter.Eventually.of_forall (fun x => by
+      simpa only [Kernel.const_apply] using hWx_q x)
+  -- proxy `g (x, y) := gaussianPDF x N y`
+  set g : ℝ × ℝ → ℝ≥0∞ := fun z => gaussianPDF z.1 N z.2 with hg
+  have hg_meas : Measurable g := gaussianPDF_joint_measurable N
+  have hg_ae : ∀ x, (fun y => (W x).rnDeriv volume y) =ᵐ[W x] fun y => g (x, y) := by
+    intro x
+    rw [hW, awgnChannel_apply]
+    filter_upwards [(gaussianReal_absolutelyContinuous x hN).ae_le (rnDeriv_gaussianReal x N)]
+      with y hy
+    rw [hy]
+  -- per-fibre log-density integrability against `W x = gaussian x N`
+  have h_int_fibre_self : ∀ x, Integrable (fun y => Real.log (g (x, y)).toReal) (W x) := by
+    intro x
+    have hint := gaussianReal_logRnDeriv_integrable_inline x hN
+    have hWx : W x = gaussianReal x N := by rw [hW, awgnChannel_apply]
+    rw [hWx]
+    refine hint.congr ?_
+    filter_upwards [(gaussianReal_absolutelyContinuous x hN).ae_le (rnDeriv_gaussianReal x N)]
+      with y hy
+    rw [hg]; simp only; rw [hy]
+  -- `h_fibre_self` (proxy integral = rnDeriv integral, per fibre)
+  have h_fibre_self : ∀ x, ∫ y, Real.log (g (x, y)).toReal ∂(W x)
+      = ∫ y, Real.log ((W x).rnDeriv volume y).toReal ∂(W x) := by
+    intro x
+    refine integral_congr_ae ?_
+    filter_upwards [hg_ae x] with y hy
+    rw [← hy]
+  -- output log-density integrability against q (= perLetterYLaw_i)
+  have h_out_self : Integrable
+      (fun y => Real.log ((ChannelCoding.outputDistribution p W).rnDeriv volume y).toReal)
+      (ChannelCoding.outputDistribution p W) := by
+    rw [hq_eq]
+    -- transport `awgnPerLetterIntegrability`? we need log(rnDeriv) integrable against the law.
+    sorry
+  -- compProd-level integrabilities
+  have h_int_fibre : Integrable (fun z : ℝ × ℝ => Real.log (g z).toReal) (p ⊗ₘ W) := by
+    rw [Measure.integrable_compProd_iff
+      ((hg_meas.ennreal_toReal.log).aestronglyMeasurable)]
+    refine ⟨Filter.Eventually.of_forall (fun x => h_int_fibre_self x), ?_⟩
+    -- input space `ℝ` but `p` is discrete (finite support); ∫ ‖log(g(x,·))‖ ∂(W x) integrable over p
+    sorry
+  have h_int_out : Integrable
+      (fun z : ℝ × ℝ => Real.log
+          ((ChannelCoding.outputDistribution p W).rnDeriv volume z.2).toReal) (p ⊗ₘ W) := by
+    sorry
+  -- apply the generic 1-D decomposition
+  rw [perLetterMI_eq_channel h_meas c i]
+  rw [ChannelCoding.mutualInfoOfChannel_toReal_eq_diffEntropy_sub
+    hW_ac hWx_q hq_ac h_joint_ac g hg_meas hg_ae h_int_fibre h_int_out]
+  rw [hq_eq]
+  -- fibre term: `∫ x, h(W x) ∂p = ∫ x, h(gaussian 0 N) ∂p = h(gaussian 0 N)`
+  have h_fibre_ent : ∀ x, InformationTheory.Shannon.differentialEntropy (W x)
+      = InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N) := by
+    intro x
+    rw [hW, awgnChannel_apply,
+      InformationTheory.Shannon.differentialEntropy_gaussianReal x hN,
+      InformationTheory.Shannon.differentialEntropy_gaussianReal 0 hN]
+  rw [integral_congr_ae (Filter.Eventually.of_forall h_fibre_ent), integral_const,
+    probReal_univ, one_smul]
 
 /-- **n-D subadditivity for the block output law**: `h(Y^n) ≤ ∑ᵢ h(Y_i)`. -/
 private lemma jointDifferentialEntropyPi_blockYLawInline_le_sum
