@@ -147,20 +147,13 @@ import cycle (`cramer-root-wiring-plan` Phase A a1):
 
 /-! ## Phase 4 — end-to-end Cramér lower bound from the residual predicate -/
 
-/-- **Cramér lower bound, residual discharge**. The `h_pred`
-(`IsMeasureInfinitePiTiltedEq`) hypothesis of `cramer_lower_phaseC_partial_discharge`
-is replaced by the strictly smaller residual window predicate
-`IsTiltedWindowEventuallyLarge`. The full change-of-measure machinery (Phases
-1–3 of `infinitepi-tilted-rn-discharge`) is discharged here; the only remaining
-input is the eventual `≥ 1/2` largeness of the tilted-side window mass, which is
-a one-sided LLN/boundary statement (`∫ Y ∂μ₀.tilted ∈ [a, a+ε)`).
-
-NOTE: `cramer_lower_phaseC_partial_discharge` does not accept the
-`h_pred : IsMeasureInfinitePiTiltedEq` hypothesis; the producer call into
-`isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge` was removed in the 2026-05-25
-sweep. **The `_h_res` parameter is load-bearing in name only** (signature
-retained for caller-API stability); the body is a single pass-through to the
-upstream wrapper.
+/-- **Cramér lower bound, end-to-end from cgf-derivative + cobounded inputs**.
+Discharges the full change-of-measure machinery (Phases 1–3 of
+`infinitepi-tilted-rn-discharge`) down to the CLT-boundary headline, yielding the
+liminf lower bound `-(lam·a − Λ(lam)) ≤ liminf (1/n) log P[S_n ≥ a·n]` from the
+optimal-tilt inputs (`h_deriv : deriv (cgf …) lam = a`, non-degeneracy `hVar`,
+and the cobounded-below regularity `h_coboundedBelow`); the body is a single
+pass-through to `cramer_lower_phaseC_partial_discharge`.
 
 WIRED 2026-06-11 (`cramer-root-wiring-plan` Phase A): the upstream
 `cramer_lower_phaseC_partial_discharge` is now discharged by the sorryAx-free
@@ -169,17 +162,18 @@ CLT-boundary headline, so this wrapper is sorryAx-free too (verified
 non-degeneracy precondition `hVar` is threaded through here as a regularity
 precondition.
 
-@audit:ok (2026-06-11 independent honesty audit, migrated from legacy
-`@audit:closed-by-successor`: sorryAx-free `[propext, Classical.choice, Quot.sound]`
-machine-confirmed. NOT a tier-5 load-bearing defect: `_h_res`
-(`IsTiltedWindowEventuallyLarge`) is **provably unused** — the body passes ONLY
-`hY_meas h_bdd a lam hlam h_deriv hVar h_coboundedBelow` to
-`cramer_lower_phaseC_partial_discharge` and never references `_h_res`, so it cannot
-carry the proof's core (the window-mass core is supplied internally by the headline
-CLT). An ignored predicate argument strengthens the precondition unnecessarily but
-does not make the statement dishonest or vacuous — the theorem is fully proved as
-stated. COSMETIC follow-up (not a closure blocker): `_h_res` can be dropped in a
-later API-cleanup signature change to drop the unneeded hypothesis.) -/
+API-CLEANUP 2026-06-11: the formerly-retained
+`_h_res : IsTiltedWindowEventuallyLarge μ₀ Y lam` parameter — audited as a
+genuine unused argument (the body passes ONLY
+`hY_meas h_bdd a lam hlam h_deriv hVar h_coboundedBelow` and never references it,
+the window-mass core being supplied internally by the headline CLT) — was dropped
+from the signature; `dep_consumers.sh` confirmed 0 term-level consumers first.
+
+@audit:ok (2026-06-11 independent honesty audit: sorryAx-free
+`[propext, Classical.choice, Quot.sound]` machine-confirmed; fully proved as
+stated, no load-bearing hypothesis. The dropped `_h_res` only strengthened the
+precondition unnecessarily and was provably unused, so removing it weakens the
+hypotheses — strictly honesty-preserving.) -/
 @[entry_point]
 theorem cramer_lower_phaseC_residual_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
@@ -193,8 +187,7 @@ theorem cramer_lower_phaseC_residual_discharge
       (fun n : ℕ =>
         (1 / (n : ℝ)) * Real.log
           ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
-            {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})))
-    (_h_res : IsTiltedWindowEventuallyLarge μ₀ Y lam) :
+            {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)}))) :
     -(lam * a
         - cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
             (Measure.infinitePi (fun _ : ℕ => μ₀)) lam)
