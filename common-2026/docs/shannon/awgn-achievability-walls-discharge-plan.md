@@ -10,7 +10,7 @@
 - [ ] Phase 1 — Wall 1 (i) joint mass: engine wiring 📋
 - [ ] Phase 2 — Wall 1 (iii) indep-pair: klDiv 積分解 📋
 - [ ] Phase 3 — Wall 1 (ii) statement-fix: `klDiv`-to-`volume` → joint `differentialEntropy` 形 📋
-- [ ] Phase 4 — Wall 2 (random-coding union bound) 📋
+- [ ] Phase 4 — Wall 2 statement-fix (`∀decoder` → `jointTypicalDecoder A` 再結合) + discharge 📋
 - [ ] Phase 5 — Wall 3 statement-fix (expurgation 形) + consumer restructure 📋
 - [ ] Phase V — verify + 親 plan / facts ledger 同期 + 独立 honesty 監査 📋
 
@@ -25,8 +25,15 @@
 sorryAx-free にする。converse は既に genuine 完了済 (`awgn_converse`)。本 plan 完走で AWGN
 channel coding theorem 全体 (achievability + converse) が genuine。
 
-3 補題のうち 2 つ (Wall 1 (ii) / Wall 3) は **false statement** と判明済 (壁ではない、`@audit:retract-candidate(false-statement)`)。よって本 plan は純粋な discharge ではなく
-**discharge + statement-fix の混合**。
+**⚠️ ORCHESTRATOR UPDATE (2026-06-12、Phase 4 起草後の追加発見)**: 3 補題の **3 つすべて**が
+false/mis-stated と判明 (Wall 1 (ii) klDiv-to-volume 退化 / Wall 2 `∀decoder` 過大 / Wall 3
+`∀m` 指数 rate、各 `@audit:retract-candidate(false-statement)`)。加えて **consumer は Wall 1 の
+3 sub-bound を全て破棄** (`AchievabilityDischarge.lean:486`/`:934`、可測 A のみ使用)。よって
+現 staged decomposition は genuine proof に組成せず、本 plan は「3 壁 discharge」から
+**「decomposition 再設計 + statement-fix」へ escalation**。正しい true-statement 集合と path は
+[`awgn-facts.md`](awgn-facts.md)「achievability staged decomposition の健全性所見」参照。
+genuine な核 = (a) 質量集中エンジン (✅ done) + (b) jointTypicalDecoder 結合の正しい誤差限界 +
+(c) expurgation 形 power 制約。**Phase 1-5 着手前に M0 で decomposition 全体の正しい形を確定すること。**
 
 ### Approach (overall strategy / shape of solution)
 
