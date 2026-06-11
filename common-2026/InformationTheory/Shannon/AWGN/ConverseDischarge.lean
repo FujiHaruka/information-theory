@@ -921,8 +921,14 @@ integrability は substantial plumbing beyond scope」「ENNReal chain rule が 
 `X^n` (encoder∘fst, finite-valued) のため joint は有限個の codeword 上の n 次元積
 Gaussian mixture、各成分 `klDiv νₘ blockYLaw < ∞` を sup 上界 + 同一成分下界で genuine 化
 (parallel-gaussian `parallelOutput_joint_logDensity_integrable` 手法の finite-codebook
-特化形)。`N = 0` は退化 (joint が対角 graph 上 singular → klDiv=∞ で偽) のため
-`hN : N ≠ 0` を guard として追加。 -/
+特化形)。`hN : N ≠ 0` は regularity precondition: `N = 0` で `gaussianReal _ 0 = Dirac`
+となり各成分が Lebesgue density を失う (`gaussianReal_of_var_ne_zero` が呼べず density-route
+が崩壊) ため必要。core を bundle する load-bearing hyp ではなく、density 機構の前提条件。
+(独立 honesty audit 2026-06-12: `hN` の動機が「N=0 で命題が偽」ではなく「density-route の
+退化境界除外」である点を訂正 — discrete-W では N=0 でも joint は有限 atomic で klDiv 有限、
+命題自体は N=0 でも真。但し本証明 route は density を要するため `hN` は正当な precondition。)
+
+@audit:ok -/
 private lemma awgnConverseJoint_pair_mi_ne_top
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
@@ -962,7 +968,9 @@ private lemma awgnConverseJoint_pair_mi_ne_top
 /-- AWGN converse の `mutualInfo` finiteness: `mutualInfo (awgnConverseJoint c) Prod.fst Prod.snd ≠ ∞`。
 
 `awgnConverseJoint_pair_mi_ne_top` 経由 (共有 wall lemma の `.1`)。本 declaration
-は **0-sorry / 0-@residual**、wall 自体は shared lemma に集約。 -/
+は **0-sorry / 0-@residual**、wall 自体は shared lemma に集約。
+
+@audit:ok -/
 private lemma awgnConverseJoint_mutualInfo_ne_top
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
@@ -1745,7 +1753,9 @@ theorem awgn_sum_per_letter_mi_le_n_capacity
 
 `I(W; Y^n) ≤ I(X^n; Y^n) ≤ ∑ᵢ I(X_i; Y_i) ≤ n · (1/2) log(1+P/N) < ∞` で両 MI が ≠ ∞。
 sibling helpers `awgnConverseJoint_mutualInfo_ne_top` / `awgn_dpi` 内 `(jointMIXnYn).≠ ∞`
-の二つ共通の MI-finiteness wall を一括 discharge。 -/
+の二つ共通の MI-finiteness wall を一括 discharge。
+
+@audit:ok -/
 @[entry_point]
 theorem awgnConverseJoint_mutualInfo_ne_top_via_chain
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
