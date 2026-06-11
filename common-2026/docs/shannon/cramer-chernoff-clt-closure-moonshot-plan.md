@@ -537,3 +537,6 @@ Mathlib PR-candidate として価値があり、後退ゼロ。
      (`Draft/Shannon/CramerLC2PhaseC.lean:165`) は import cycle で in-place 書換不可。root の sorry は本 closure を指す
      live residual として残置 (冒頭バナー)。`InformationTheory.lean` import 済 (`lake build` 2972 jobs clean)。
    **moonshot CLOSED。** 後続候補: root residual の差し替え経路 (import cycle 解消 or 別 entry_point 化) は別 plan。
+
+5. **2026-06-11 配線残件 (上記「後続候補」) も closure — 子 `cramer-root-wiring-plan.md` 完了** (roadmap 判断ログ #26、`7e4f05a`/`184affa`/`8a8a001`):
+   #4 で「別 plan」とした closed-but-unwired 2 root を子 plan で解消。root A は 8 decl 上流 hoist の cycle-break で `exact headline`、root B (`cramer_lower`) は下流 `CramerGeneralLower.lean` へ移設し iid joint law transport で discharge。両 root sorryAx-free、独立監査 `@audit:ok` 12 件。project 実 sorry 17→15。**Cramér CLT-boundary は headline + 上流両 root とも完全 closure。**
