@@ -5,8 +5,11 @@ import InformationTheory.Shannon.Converse
 import InformationTheory.Shannon.CondMutualInfo
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.ChannelCoding.Basic
+import InformationTheory.Shannon.ChannelCoding.MIDecomp
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.Probability.Distributions.Gaussian.Real
+import Mathlib.InformationTheory.KullbackLeibler.ChainRule
+import InformationTheory.Draft.Shannon.MultivariateDiffEntropy
 
 /-! # AWGN F-3 converse — analytic body discharge
 
@@ -317,53 +320,656 @@ private lemma awgn_errorProb_eq_fano_errorProb
   -- `errorProbAt c.toCode W m = Measure.pi (W (c.encoder m i)) (errorEvent m)`.
   rfl
 
-/-- **Shared wall: AWGN converse MI finiteness** (`wall:multivariate-mi`).
+/-! ## Block-mixture output density (n-dim, finite codebook mixture)
+
+`I(W; Y^n) ≠ ∞` / `I(X^n; Y^n) ≠ ∞` の genuine 化に必要な n 次元 mixture density 機構。
+parallel-gaussian の `parallelOutputMixtureDensity*` を **finite codebook** 特化形に
+lift (import cycle のため再利用不可、self-build)。block output `blockYLaw` は有限個の
+codeword 上の n 次元積 Gaussian の mixture なので、concentration-box は不要 — sup 上界 +
+**同一成分** 下界 (`blockDensity ≥ M⁻¹ · 成分 m の密度`) で `|log density|` を成分 m
+中心の 2 次モーメント envelope に dominate できる (1-D `integrable_log_rnDeriv_perLetterYLaw`
+の構造そのままの n 次元版)。 -/
+
+/-- **Block output law** `I(·; Y^n)` の 2 番目周辺 `(awgnConverseJoint).map Prod.snd`。 -/
+private noncomputable def blockYLaw
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} (c : AwgnCode M n P) : Measure (Fin n → ℝ) :=
+  (awgnConverseJoint h_meas c).map Prod.snd
+
+/-- Real-valued block mixture density `M⁻¹ ∑ₘ ∏ᵢ gaussianPDFReal (encoder m i) N (yᵢ)`. -/
+private noncomputable def blockRealDensity
+    {P : ℝ} (N : ℝ≥0) {M n : ℕ} (c : AwgnCode M n P) (y : Fin n → ℝ) : ℝ :=
+  (1 / (M : ℝ)) * ∑ m : Fin M, ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i)
+
+/-- `blockYLaw = M⁻¹ • ∑ₘ pi (gaussianReal (encoder m i) N)` (closed mixture form). -/
+private lemma blockYLaw_eq_mixture
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
+    blockYLaw h_meas c
+      = (Fintype.card (Fin M) : ℝ≥0∞)⁻¹ •
+          ∑ m : Fin M, Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N) := by
+  classical
+  unfold blockYLaw awgnConverseJoint
+  have h_meas_snd :
+      Measurable (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) := measurable_snd
+  rw [Measure.map_smul,
+    Measure.map_finset_sum (s := Finset.univ)
+      (m := fun m => (Measure.dirac m).prod
+        (Measure.pi (fun j : Fin n => awgnChannel N h_meas (c.encoder m j))))
+      h_meas_snd.aemeasurable]
+  congr 1
+  refine Finset.sum_congr rfl ?_
+  intro m _
+  -- `((dirac m).prod ν).map Prod.snd = (dirac m univ) • ν = ν`, then `awgnChannel = gaussianReal`.
+  rw [Measure.map_snd_prod, measure_univ, one_smul]
+  refine congrArg (Measure.pi) ?_
+  funext i
+  rw [awgnChannel_apply]
+
+/-- Each block mixture component `pi (gaussianReal (encoder m i) N)` equals
+`volume.withDensity (∏ᵢ gaussianPDF (encoder m i) N (·ᵢ))`. -/
+private lemma blockComponent_withDensity
+    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0)
+    {M n : ℕ} (c : AwgnCode M n P) (m : Fin M) :
+    Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N)
+      = (MeasureTheory.volume : Measure (Fin n → ℝ)).withDensity
+          (fun y => ∏ i : Fin n, gaussianPDF (c.encoder m i) N (y i)) := by
+  have h_each : ∀ i, gaussianReal (c.encoder m i) N
+      = (MeasureTheory.volume : Measure ℝ).withDensity (gaussianPDF (c.encoder m i) N) :=
+    fun i => gaussianReal_of_var_ne_zero (c.encoder m i) hN
+  haveI : ∀ i, SigmaFinite ((MeasureTheory.volume : Measure ℝ).withDensity
+      (gaussianPDF (c.encoder m i) N)) := by
+    intro i; rw [← h_each i]; infer_instance
+  rw [show (fun i : Fin n => gaussianReal (c.encoder m i) N)
+        = (fun i => (MeasureTheory.volume : Measure ℝ).withDensity
+            (gaussianPDF (c.encoder m i) N)) from funext h_each,
+    InformationTheory.Shannon.pi_withDensity_fin (fun _ => (MeasureTheory.volume : Measure ℝ))
+      (fun i => measurable_gaussianPDF (c.encoder m i) N), ← volume_pi]
+
+/-- `blockYLaw = volume.withDensity (ofReal ∘ blockRealDensity)`. -/
+private lemma blockYLaw_withDensity_real
+    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
+    blockYLaw h_meas c
+      = (MeasureTheory.volume : Measure (Fin n → ℝ)).withDensity
+          (fun y => ENNReal.ofReal (blockRealDensity N c y)) := by
+  classical
+  rw [blockYLaw_eq_mixture h_meas c]
+  -- each component `pi (gaussianReal …) = volume.withDensity (∏ᵢ gaussianPDF …)`
+  have h_comp := fun m : Fin M => blockComponent_withDensity hN c m
+  -- distribute the finset sum over `withDensity`
+  have h_sum : ∀ s : Finset (Fin M),
+      (∑ m ∈ s, Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N))
+        = (MeasureTheory.volume : Measure (Fin n → ℝ)).withDensity
+            (fun y => ∑ m ∈ s, ∏ i : Fin n, gaussianPDF (c.encoder m i) N (y i)) := by
+    intro s
+    induction s using Finset.induction with
+    | empty => simp
+    | insert m s hms ih =>
+        have h_density_eq :
+            (fun y : Fin n → ℝ => ∑ m' ∈ insert m s, ∏ i : Fin n, gaussianPDF (c.encoder m' i) N (y i))
+              = (fun y : Fin n → ℝ => ∏ i : Fin n, gaussianPDF (c.encoder m i) N (y i))
+                + (fun y : Fin n → ℝ => ∑ m' ∈ s, ∏ i : Fin n, gaussianPDF (c.encoder m' i) N (y i)) := by
+          funext y; simp only [Pi.add_apply]; rw [Finset.sum_insert hms]
+        rw [Finset.sum_insert hms, ih, h_comp m, h_density_eq]
+        rw [withDensity_add_left
+            (μ := (MeasureTheory.volume : Measure (Fin n → ℝ)))
+            (f := fun y : Fin n → ℝ => ∏ i : Fin n, gaussianPDF (c.encoder m i) N (y i))
+            (Finset.measurable_prod _ (fun i _ =>
+              (measurable_gaussianPDF (c.encoder m i) N).comp (measurable_pi_apply i)))
+            (fun y : Fin n → ℝ => ∑ m' ∈ s, ∏ i : Fin n, gaussianPDF (c.encoder m' i) N (y i))]
+  rw [h_sum Finset.univ]
+  have hM_inv_ne_top : (Fintype.card (Fin M) : ℝ≥0∞)⁻¹ ≠ ∞ := by
+    rw [Fintype.card_fin]; simp; exact_mod_cast (NeZero.ne M)
+  rw [← withDensity_smul' _ _ hM_inv_ne_top]
+  congr 1
+  funext y
+  -- `M⁻¹ • (∑ₘ ∏ᵢ gaussianPDF) y = ofReal (M⁻¹ · ∑ₘ ∏ᵢ gaussianPDFReal)`
+  simp only [Pi.smul_apply, smul_eq_mul, blockRealDensity, Fintype.card_fin]
+  rw [ENNReal.ofReal_mul (by positivity)]
+  congr 1
+  · rw [one_div, ENNReal.ofReal_inv_of_pos (by exact_mod_cast Nat.pos_of_ne_zero (NeZero.ne M)),
+      ENNReal.ofReal_natCast]
+  · rw [ENNReal.ofReal_sum_of_nonneg
+          (fun m _ => Finset.prod_nonneg (fun i _ => gaussianPDFReal_nonneg _ _ _))]
+    refine Finset.sum_congr rfl (fun m _ => ?_)
+    rw [ENNReal.ofReal_prod_of_nonneg (fun i _ => gaussianPDFReal_nonneg _ _ _)]
+    refine Finset.prod_congr rfl (fun i _ => ?_)
+    rw [gaussianPDF]
+
+/-- `blockYLaw ≪ volume`. -/
+private lemma blockYLaw_ac_volume
+    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
+    blockYLaw h_meas c ≪ (MeasureTheory.volume : Measure (Fin n → ℝ)) := by
+  rw [blockYLaw_withDensity_real hN h_meas c]
+  exact MeasureTheory.withDensity_absolutelyContinuous _ _
+
+/-- `blockYLaw` is a probability measure. -/
+private instance blockYLaw_isProbabilityMeasure
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
+    IsProbabilityMeasure (blockYLaw h_meas c) := by
+  unfold blockYLaw
+  exact Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+
+/-- Positivity of `blockRealDensity` (sum of positive products). -/
+private lemma blockRealDensity_pos
+    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (y : Fin n → ℝ) :
+    0 < blockRealDensity N c y := by
+  classical
+  obtain ⟨m₀⟩ : Nonempty (Fin M) := ⟨⟨0, Nat.pos_of_ne_zero (NeZero.ne M)⟩⟩
+  have hM_pos : (0 : ℝ) < (M : ℝ) := by exact_mod_cast Nat.pos_of_ne_zero (NeZero.ne M)
+  unfold blockRealDensity
+  refine mul_pos (by positivity) ?_
+  refine Finset.sum_pos (fun m _ => Finset.prod_pos (fun i _ => gaussianPDFReal_pos _ _ _ hN)) ?_
+  exact ⟨m₀, Finset.mem_univ m₀⟩
+
+/-- Measurability of `blockRealDensity`. -/
+private lemma blockRealDensity_measurable
+    {P : ℝ} {N : ℝ≥0} {M n : ℕ} (c : AwgnCode M n P) :
+    Measurable (blockRealDensity N c) := by
+  unfold blockRealDensity
+  refine measurable_const.mul ?_
+  refine Finset.measurable_sum _ (fun m _ => ?_)
+  exact Finset.measurable_prod _ (fun i _ =>
+    (measurable_gaussianPDFReal (c.encoder m i) N).comp (measurable_pi_apply i))
+
+/-- Per-component lower bound: `blockRealDensity y ≥ M⁻¹ · ∏ᵢ gaussianPDFReal (encoder m i) N (yᵢ)`. -/
+private lemma blockRealDensity_ge_component
+    {P : ℝ} {N : ℝ≥0} {M n : ℕ} (c : AwgnCode M n P) (m : Fin M) (y : Fin n → ℝ) :
+    (1 / (M : ℝ)) * ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i)
+      ≤ blockRealDensity N c y := by
+  unfold blockRealDensity
+  apply mul_le_mul_of_nonneg_left _ (by positivity)
+  refine Finset.single_le_sum
+    (f := fun m => ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i))
+    (fun m _ => Finset.prod_nonneg (fun i _ => gaussianPDFReal_nonneg _ _ _))
+    (Finset.mem_univ m)
+
+/-- Sup upper bound: `blockRealDensity y ≤ ∏ᵢ (√(2πN))⁻¹` (each Gaussian ≤ its peak). -/
+private lemma blockRealDensity_le_sup
+    {P : ℝ} {N : ℝ≥0} {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (y : Fin n → ℝ) :
+    blockRealDensity N c y ≤ ∏ _i : Fin n, (Real.sqrt (2 * Real.pi * N))⁻¹ := by
+  classical
+  unfold blockRealDensity
+  set Bpeak : ℝ := (Real.sqrt (2 * Real.pi * N))⁻¹ with hBpeak
+  have hBpeak_nonneg : (0 : ℝ) ≤ Bpeak := by rw [hBpeak]; positivity
+  -- each coordinate Gaussian `gaussianPDFReal a N (y i) ≤ Bpeak`
+  have h_comp_le : ∀ (a x : ℝ), gaussianPDFReal a N x ≤ Bpeak := by
+    intro a x
+    rw [gaussianPDFReal, hBpeak]
+    have h_exp_le_one : Real.exp (-(x - a) ^ 2 / (2 * N)) ≤ 1 := by
+      rw [Real.exp_le_one_iff, neg_div]
+      have : 0 ≤ (x - a) ^ 2 / (2 * (N : ℝ)) := by positivity
+      linarith
+    calc (Real.sqrt (2 * Real.pi * N))⁻¹ * Real.exp (-(x - a) ^ 2 / (2 * N))
+        ≤ (Real.sqrt (2 * Real.pi * N))⁻¹ * 1 :=
+          mul_le_mul_of_nonneg_left h_exp_le_one (by positivity)
+      _ = (Real.sqrt (2 * Real.pi * N))⁻¹ := mul_one _
+  -- each product `∏ᵢ gaussianPDFReal ≤ ∏ᵢ Bpeak`
+  have h_prod_le : ∀ m : Fin M,
+      (∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i)) ≤ ∏ _i : Fin n, Bpeak := by
+    intro m
+    refine Finset.prod_le_prod (fun i _ => gaussianPDFReal_nonneg _ _ _) (fun i _ => ?_)
+    exact h_comp_le (c.encoder m i) (y i)
+  -- mixture average of `M` terms each `≤ ∏ᵢ Bpeak`
+  calc (1 / (M : ℝ)) * ∑ m : Fin M, ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i)
+      ≤ (1 / (M : ℝ)) * ∑ _m : Fin M, ∏ _i : Fin n, Bpeak := by
+        apply mul_le_mul_of_nonneg_left _ (by positivity)
+        exact Finset.sum_le_sum (fun m _ => h_prod_le m)
+    _ = (1 / (M : ℝ)) * ((M : ℝ) * ∏ _i : Fin n, Bpeak) := by
+        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+    _ = ∏ _i : Fin n, Bpeak := by
+        rcases Nat.eq_zero_or_pos M with hM0 | hMpos
+        · exact absurd hM0 (NeZero.ne M)
+        · have : (M : ℝ) ≠ 0 := by exact_mod_cast hMpos.ne'
+          field_simp
+
+/-- **Per-component output log-density integrability (n-dim).** For each codeword index
+`m`, `log (blockYLaw.rnDeriv volume y)` is integrable against the m-th block component
+`pi (gaussianReal (encoder m i) N)`. The mixture density is bounded above by the Gaussian
+peak (so `log ≤ const`) and below by component `m` (so `-log ≤ ∑ᵢ (yᵢ − encoder m i)²/(2N)
++ const`); both sides are dominated by a finite-second-moment quadratic on the n-dim
+Gaussian component. Lift of the 1-D `integrable_log_rnDeriv_perLetterYLaw`. -/
+private lemma integrable_log_blockYLaw_on_component
+    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (m : Fin M) :
+    Integrable
+      (fun y => Real.log ((blockYLaw h_meas c).rnDeriv MeasureTheory.volume y).toReal)
+      (Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N)) := by
+  classical
+  set q := blockYLaw h_meas c with hq_def
+  set νm := Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N) with hνm_def
+  have hM_pos : 0 < M := Nat.pos_of_ne_zero (NeZero.ne M)
+  have hM_real_pos : (0 : ℝ) < (M : ℝ) := by exact_mod_cast hM_pos
+  haveI : ∀ i, IsProbabilityMeasure (gaussianReal (c.encoder m i) N) := fun i => inferInstance
+  haveI hνm_prob : IsProbabilityMeasure νm := by rw [hνm_def]; infer_instance
+  -- density form: `q = vol.withDensity (ofReal ∘ blockRealDensity)`
+  have hq_wd : q = (MeasureTheory.volume : Measure (Fin n → ℝ)).withDensity
+      (fun y => ENNReal.ofReal (blockRealDensity N c y)) := by
+    rw [hq_def]; exact blockYLaw_withDensity_real hN h_meas c
+  have hDR_meas : Measurable (fun y => ENNReal.ofReal (blockRealDensity N c y)) :=
+    ENNReal.measurable_ofReal.comp (blockRealDensity_measurable c)
+  -- `νm ≪ vol` (product of full-support Gaussians = withDensity of vol)
+  have hνm_ac : νm ≪ (MeasureTheory.volume : Measure (Fin n → ℝ)) := by
+    rw [hνm_def, blockComponent_withDensity hN c m]
+    exact MeasureTheory.withDensity_absolutelyContinuous _ _
+  -- `q.rnDeriv vol =ᵐ[vol] ofReal ∘ blockRealDensity`, transport to `=ᵐ[νm]`
+  have h_rn_vol : q.rnDeriv (MeasureTheory.volume : Measure (Fin n → ℝ))
+      =ᵐ[(MeasureTheory.volume : Measure (Fin n → ℝ))]
+      (fun y => ENNReal.ofReal (blockRealDensity N c y)) := by
+    rw [hq_wd]; exact Measure.rnDeriv_withDensity _ hDR_meas
+  have h_rn_νm : q.rnDeriv (MeasureTheory.volume : Measure (Fin n → ℝ))
+      =ᵐ[νm] (fun y => ENNReal.ofReal (blockRealDensity N c y)) :=
+    hνm_ac.ae_le h_rn_vol
+  -- target integrand agrees a.e. with `log (blockRealDensity y)`
+  have h_log_ae : (fun y => Real.log (q.rnDeriv MeasureTheory.volume y).toReal)
+      =ᵐ[νm] (fun y => Real.log (blockRealDensity N c y)) := by
+    filter_upwards [h_rn_νm] with y hy
+    rw [hy, ENNReal.toReal_ofReal (blockRealDensity_pos hN c y).le]
+  refine (Integrable.congr ?_ h_log_ae.symm)
+  -- dominate `|log (blockRealDensity y)|` by `A + Bcoef · ∑ᵢ (yᵢ - encoder m i)²`
+  set Bpeak : ℝ := (Real.sqrt (2 * Real.pi * N))⁻¹ with hBpeak
+  have hBpeak_pos : 0 < Bpeak := by rw [hBpeak]; positivity
+  -- upper: blockRealDensity y ≤ ∏ᵢ Bpeak
+  have hD_le : ∀ y, blockRealDensity N c y ≤ ∏ _i : Fin n, Bpeak := blockRealDensity_le_sup c
+  -- lower: blockRealDensity y ≥ M⁻¹ · ∏ᵢ gaussianPDFReal (encoder m i) N (yᵢ)
+  have hD_ge : ∀ y, (1 / (M : ℝ)) * ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i)
+      ≤ blockRealDensity N c y := fun y => blockRealDensity_ge_component c m y
+  -- the dominating function (n-dim quadratic), integrable against νm
+  set c₀ : ℝ := -(1 / 2) * Real.log (2 * Real.pi * N) with hc₀
+  set c₁ : ℝ := -(1 / (2 * (N : ℝ))) with hc₁
+  set Aconst : ℝ := |Real.log (∏ _i : Fin n, Bpeak)|
+      + |Real.log (1 / (M : ℝ)) + (n : ℝ) * c₀| with hAconst
+  set Bcoef : ℝ := |c₁| with hBcoef
+  have h_dom : Integrable
+      (fun y : Fin n → ℝ => Aconst + Bcoef * ∑ i : Fin n, (y i - c.encoder m i) ^ 2) νm := by
+    refine (integrable_const Aconst).add (Integrable.const_mul ?_ Bcoef)
+    -- `∑ᵢ (yᵢ - encoder m i)²` integrable against the product Gaussian νm
+    rw [hνm_def]
+    refine integrable_finsetSum _ (fun i _ => ?_)
+    -- coordinate `i` integrable: lift the 1-D second-moment integrability via `integrable_comp_eval`
+    have h_1d : Integrable (fun y : ℝ => (y - c.encoder m i) ^ 2)
+        (gaussianReal (c.encoder m i) N) := by
+      have h_id : Integrable (fun y : ℝ => y) (gaussianReal (c.encoder m i) N) := by
+        simpa using (memLp_id_gaussianReal (μ := c.encoder m i) (v := N) 1).integrable (by norm_num)
+      have h_sq : Integrable (fun y : ℝ => y ^ 2) (gaussianReal (c.encoder m i) N) :=
+        (memLp_id_gaussianReal (μ := c.encoder m i) (v := N) 2).integrable_sq
+      have hrw : (fun y : ℝ => (y - c.encoder m i) ^ 2)
+          = fun y => y ^ 2 - 2 * (c.encoder m i) * y + (c.encoder m i) ^ 2 := by funext y; ring
+      rw [hrw]
+      exact ((h_sq.sub (h_id.const_mul (2 * c.encoder m i))).add
+        (integrable_const ((c.encoder m i) ^ 2)))
+    exact integrable_comp_eval (μ := fun i : Fin n => gaussianReal (c.encoder m i) N)
+      (i := i) h_1d
+  refine Integrable.mono' h_dom ?_ ?_
+  · exact (Real.measurable_log.comp (blockRealDensity_measurable c)).aestronglyMeasurable
+  · filter_upwards with y
+    have hDy_pos : 0 < blockRealDensity N c y := blockRealDensity_pos hN c y
+    set S : ℝ := ∑ i : Fin n, (y i - c.encoder m i) ^ 2 with hS
+    have hS_nonneg : 0 ≤ S := Finset.sum_nonneg (fun i _ => sq_nonneg _)
+    have hc₁_nonpos : c₁ ≤ 0 := by rw [hc₁]; simp only [neg_nonpos]; positivity
+    -- upper: log (blockRealDensity y) ≤ log (∏ᵢ Bpeak)
+    have h_upper : Real.log (blockRealDensity N c y) ≤ Real.log (∏ _i : Fin n, Bpeak) := by
+      have h_prod_pos : (0 : ℝ) < ∏ _i : Fin n, Bpeak := Finset.prod_pos (fun _ _ => hBpeak_pos)
+      exact Real.log_le_log hDy_pos (hD_le y)
+    -- lower: log (blockRealDensity y) ≥ log (M⁻¹) + n·c₀ + c₁·S
+    have h_lower : Real.log (1 / (M : ℝ)) + (n : ℝ) * c₀ + c₁ * S
+        ≤ Real.log (blockRealDensity N c y) := by
+      have hMinv_pos : (0 : ℝ) < 1 / (M : ℝ) := by positivity
+      have hprod_pos : (0 : ℝ) < ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i) :=
+        Finset.prod_pos (fun i _ => gaussianPDFReal_pos _ _ _ hN)
+      have h_log_prod : Real.log ((1 / (M : ℝ)) * ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i))
+          = Real.log (1 / (M : ℝ)) + (n : ℝ) * c₀ + c₁ * S := by
+        rw [Real.log_mul hMinv_pos.ne' hprod_pos.ne', Real.log_prod (fun i _ =>
+          (gaussianPDFReal_pos (c.encoder m i) N (y i) hN).ne')]
+        have h_each : ∀ i : Fin n, Real.log (gaussianPDFReal (c.encoder m i) N (y i))
+            = c₀ + c₁ * (y i - c.encoder m i) ^ 2 := by
+          intro i
+          rw [InformationTheory.Shannon.log_gaussianPDFReal_eq (c.encoder m i) hN (y i), hc₀, hc₁]
+          ring
+        rw [Finset.sum_congr rfl (fun i _ => h_each i), hS, Finset.sum_add_distrib,
+          Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul, ← Finset.mul_sum]
+        ring
+      calc Real.log (1 / (M : ℝ)) + (n : ℝ) * c₀ + c₁ * S
+          = Real.log ((1 / (M : ℝ)) * ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i)) :=
+            h_log_prod.symm
+        _ ≤ Real.log (blockRealDensity N c y) :=
+            Real.log_le_log (mul_pos hMinv_pos hprod_pos) (hD_ge y)
+    -- combine: |log| ≤ Aconst + Bcoef·S
+    rw [Real.norm_eq_abs, abs_le]
+    refine ⟨?_, ?_⟩
+    · -- lower side: -(Aconst + Bcoef·S) ≤ log (blockRealDensity y)
+      have hc₁S : c₁ * S = -(Bcoef * S) := by rw [hBcoef, abs_of_nonpos hc₁_nonpos]; ring
+      have hlb : -(Aconst + Bcoef * S)
+          ≤ Real.log (1 / (M : ℝ)) + (n : ℝ) * c₀ + c₁ * S := by
+        rw [hAconst, hc₁S]
+        have h1 := neg_abs_le (Real.log (1 / (M : ℝ)) + (n : ℝ) * c₀)
+        have h2 := abs_nonneg (Real.log (∏ _i : Fin n, Bpeak))
+        linarith
+      exact le_trans hlb h_lower
+    · -- upper side: log (blockRealDensity y) ≤ Aconst + Bcoef·S
+      have hub : Real.log (∏ _i : Fin n, Bpeak) ≤ Aconst + Bcoef * S := by
+        rw [hAconst]
+        have h1 := le_abs_self (Real.log (∏ _i : Fin n, Bpeak))
+        have h2 := abs_nonneg (Real.log (1 / (M : ℝ)) + (n : ℝ) * c₀)
+        have h3 : 0 ≤ Bcoef * S := mul_nonneg (abs_nonneg _) hS_nonneg
+        linarith
+      exact le_trans h_upper hub
+
+/-! ### I(W; Y^n) finiteness via the discrete-input compProd chain rule
+
+`W = Fin M` (discrete) のため joint は `(M⁻¹•count) ⊗ₘ K` (K m := n 次元 block component),
+marginal 積は `(M⁻¹•count) ⊗ₘ const blockY`。`klDiv_ne_top_iff` (AC + integrable llr) を
+`absolutelyContinuous_compProd_iff` + `integrable_llr_compProd_iff` で per-fibre に落とし、
+fibre 部 = 各成分の output log-density integrability (`integrable_log_blockYLaw_on_component`)
++ Gaussian fibre log-density integrability で genuine に閉じる。 -/
+
+/-- Discrete-input block kernel `K m := pi (gaussianReal (encoder m i) N)` (Fin M → Y^n)。 -/
+private noncomputable def blockKernel
+    {P : ℝ} (N : ℝ≥0) {M n : ℕ} (c : AwgnCode M n P) :
+    Kernel (Fin M) (Fin n → ℝ) :=
+  { toFun := fun m => Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N)
+    measurable' := measurable_of_countable _ }
+
+private instance blockKernel_isMarkov
+    {P : ℝ} {N : ℝ≥0} {M n : ℕ} (c : AwgnCode M n P) :
+    IsMarkovKernel (blockKernel N c) :=
+  ⟨fun m => by
+    show IsProbabilityMeasure (Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N))
+    infer_instance⟩
+
+/-- Discrete message marginal `ν_W := (M⁻¹ : ℝ≥0∞) • count`. -/
+private noncomputable def msgLaw (M : ℕ) : Measure (Fin M) :=
+  (Fintype.card (Fin M) : ℝ≥0∞)⁻¹ • Measure.count
+
+private instance msgLaw_isFinite (M : ℕ) [NeZero M] : IsFiniteMeasure (msgLaw M) := by
+  unfold msgLaw
+  haveI : IsFiniteMeasure (Measure.count : Measure (Fin M)) := Measure.count.isFiniteMeasure
+  refine Measure.smul_finite _ ?_
+  rw [Fintype.card_fin]; simp; exact_mod_cast NeZero.ne M
+
+/-- `awgnConverseJoint = msgLaw ⊗ₘ blockKernel`. -/
+private lemma awgnConverseJoint_eq_compProd
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
+    awgnConverseJoint h_meas c = msgLaw M ⊗ₘ blockKernel N c := by
+  classical
+  unfold awgnConverseJoint msgLaw
+  rw [Measure.compProd_smul_left]
+  congr 1
+  -- goal: `∑ₘ (δ_m).prod νₘ = count ⊗ₘ K` (after `congr 1`)
+  rw [count_eq_finset_sum_dirac (Fin M), ← Measure.sum_fintype
+        (fun a : Fin M => Measure.dirac a),
+    Measure.compProd_sum_left, Measure.sum_fintype]
+  symm
+  refine Finset.sum_congr rfl (fun m _ => ?_)
+  -- `(δ_m) ⊗ₘ K = (δ_m).prod (K m) = (δ_m).prod νₘ` (`K m = νₘ`, `awgnChannel = gaussianReal` defeq)
+  rw [show (Measure.dirac m) ⊗ₘ blockKernel N c
+        = (Measure.dirac m).prod (blockKernel N c m) by
+      ext s hs
+      rw [Measure.dirac_compProd_apply hs, Measure.dirac_prod,
+        Measure.map_apply measurable_prodMk_left hs]]
+  refine congrArg ((Measure.dirac m).prod) ?_
+  show Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))
+      = Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N)
+  refine congrArg Measure.pi ?_
+  funext i
+  rw [awgnChannel_apply]
+
+/-- `(awgnConverseJoint.map fst).prod (awgnConverseJoint.map snd) = msgLaw ⊗ₘ const blockYLaw`. -/
+private lemma awgnConverseJoint_prod_marginals_eq
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
+    ((awgnConverseJoint h_meas c).map Prod.fst).prod ((awgnConverseJoint h_meas c).map Prod.snd)
+      = msgLaw M ⊗ₘ Kernel.const (Fin M) (blockYLaw h_meas c) := by
+  rw [awgnConverseJoint_map_fst h_meas c,
+    show (awgnConverseJoint h_meas c).map Prod.snd = blockYLaw h_meas c from rfl,
+    show ((Fintype.card (Fin M) : ℝ≥0∞)⁻¹ • Measure.count) = msgLaw M from rfl,
+    Measure.compProd_const]
+
+/-- Block component `νₘ := pi (gaussianReal (encoder m i) N) ≪ blockYLaw` (mixture dominates
+each component, via `νₘ ≪ vol ≪ blockYLaw`). -/
+private lemma blockComponent_ac_blockYLaw
+    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (m : Fin M) :
+    Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N) ≪ blockYLaw h_meas c := by
+  -- `νₘ ≪ vol ≪ blockYLaw`
+  have h1 : Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N)
+      ≪ (MeasureTheory.volume : Measure (Fin n → ℝ)) := by
+    rw [blockComponent_withDensity hN c m]
+    exact MeasureTheory.withDensity_absolutelyContinuous _ _
+  have h2 : (MeasureTheory.volume : Measure (Fin n → ℝ)) ≪ blockYLaw h_meas c := by
+    rw [blockYLaw_withDensity_real hN h_meas c]
+    refine withDensity_absolutelyContinuous'
+      (ENNReal.measurable_ofReal.comp (blockRealDensity_measurable c)).aemeasurable ?_
+    refine Filter.Eventually.of_forall (fun y => ?_)
+    simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]
+    exact blockRealDensity_pos hN c y
+  exact h1.trans h2
+
+/-- Per-fibre log-likelihood-ratio integrability: `log (νₘ.rnDeriv blockYLaw)` is integrable
+against the block component `νₘ`. Chain rule `log(νₘ/blockY) = log(νₘ/vol) − log(blockY/vol)`:
+the first term is the product-Gaussian log-density (quadratic, integrable) and the second is
+`integrable_log_blockYLaw_on_component`. -/
+private lemma integrable_log_component_rnDeriv_blockYLaw
+    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (m : Fin M) :
+    Integrable
+      (fun y => Real.log
+        ((Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N)).rnDeriv
+          (blockYLaw h_meas c) y).toReal)
+      (Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N)) := by
+  classical
+  set νm := Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N) with hνm
+  set q := blockYLaw h_meas c with hq
+  haveI : ∀ i, IsProbabilityMeasure (gaussianReal (c.encoder m i) N) := fun i => inferInstance
+  haveI hνm_prob : IsProbabilityMeasure νm := by rw [hνm]; infer_instance
+  haveI hq_prob : IsProbabilityMeasure q := by rw [hq]; infer_instance
+  have hνm_q : νm ≪ q := blockComponent_ac_blockYLaw hN h_meas c m
+  have hq_vol : q ≪ (MeasureTheory.volume : Measure (Fin n → ℝ)) := blockYLaw_ac_volume hN h_meas c
+  have hνm_vol : νm ≪ (MeasureTheory.volume : Measure (Fin n → ℝ)) := by
+    rw [hνm, blockComponent_withDensity hN c m]
+    exact MeasureTheory.withDensity_absolutelyContinuous _ _
+  -- (A) `log (νm.rnDeriv vol y)` integrable against νm: product-Gaussian log-density (quadratic).
+  -- `νm.rnDeriv vol =ᵐ[νm] (∏ᵢ gaussianPDF)`, so the log equals `∑ᵢ log gaussianPDFReal`.
+  have h_rn_νm_vol : νm.rnDeriv (MeasureTheory.volume : Measure (Fin n → ℝ))
+      =ᵐ[νm] (fun y => ∏ i : Fin n, gaussianPDF (c.encoder m i) N (y i)) := by
+    have h_wd : νm = (MeasureTheory.volume : Measure (Fin n → ℝ)).withDensity
+        (fun y => ∏ i : Fin n, gaussianPDF (c.encoder m i) N (y i)) := by
+      rw [hνm]; exact blockComponent_withDensity hN c m
+    have h_meas_dens : Measurable (fun y : Fin n → ℝ => ∏ i : Fin n, gaussianPDF (c.encoder m i) N (y i)) :=
+      Finset.measurable_prod _ (fun i _ =>
+        (measurable_gaussianPDF (c.encoder m i) N).comp (measurable_pi_apply i))
+    exact hνm_vol.ae_le (by rw [h_wd]; exact Measure.rnDeriv_withDensity _ h_meas_dens)
+  have h_log_νm_vol_ae : (fun y => Real.log (νm.rnDeriv (MeasureTheory.volume) y).toReal)
+      =ᵐ[νm] (fun y => ∑ i : Fin n,
+          (-(1 / 2) * Real.log (2 * Real.pi * N) - (y i - c.encoder m i) ^ 2 / (2 * (N : ℝ)))) := by
+    filter_upwards [h_rn_νm_vol] with y hy
+    rw [hy, ENNReal.toReal_prod]
+    simp_rw [toReal_gaussianPDF]
+    rw [Real.log_prod (fun i _ => (gaussianPDFReal_pos (c.encoder m i) N (y i) hN).ne')]
+    refine Finset.sum_congr rfl (fun i _ => ?_)
+    rw [InformationTheory.Shannon.log_gaussianPDFReal_eq (c.encoder m i) hN (y i)]
+  have h_int_νm_vol : Integrable
+      (fun y => Real.log (νm.rnDeriv (MeasureTheory.volume) y).toReal) νm := by
+    refine Integrable.congr ?_ h_log_νm_vol_ae.symm
+    refine integrable_finsetSum _ (fun i _ => ?_)
+    -- each `(-(1/2)log(2πN) - (yᵢ - encoder m i)²/(2N))` integrable against νm
+    refine (integrable_const _).sub ?_
+    have h_1d : Integrable (fun y : ℝ => (y - c.encoder m i) ^ 2 / (2 * (N : ℝ)))
+        (gaussianReal (c.encoder m i) N) := by
+      have h_id : Integrable (fun y : ℝ => y) (gaussianReal (c.encoder m i) N) := by
+        simpa using (memLp_id_gaussianReal (μ := c.encoder m i) (v := N) 1).integrable (by norm_num)
+      have h_sq : Integrable (fun y : ℝ => y ^ 2) (gaussianReal (c.encoder m i) N) :=
+        (memLp_id_gaussianReal (μ := c.encoder m i) (v := N) 2).integrable_sq
+      have hrw : (fun y : ℝ => (y - c.encoder m i) ^ 2 / (2 * (N : ℝ)))
+          = fun y => (y ^ 2 - 2 * (c.encoder m i) * y + (c.encoder m i) ^ 2) / (2 * (N : ℝ)) := by
+        funext y; ring
+      rw [hrw]
+      exact (((h_sq.sub (h_id.const_mul (2 * c.encoder m i))).add
+        (integrable_const ((c.encoder m i) ^ 2))).div_const _)
+    rw [hνm]
+    exact integrable_comp_eval (μ := fun i : Fin n => gaussianReal (c.encoder m i) N) (i := i) h_1d
+  -- (B) `log (q.rnDeriv vol)` integrable against νm: `integrable_log_blockYLaw_on_component`.
+  have h_int_q_vol : Integrable
+      (fun y => Real.log (q.rnDeriv (MeasureTheory.volume) y).toReal) νm := by
+    rw [hq, hνm]; exact integrable_log_blockYLaw_on_component hN h_meas c m
+  -- chain rule split: `log (νm.rnDeriv q) =ᵐ[νm] log(νm.rnDeriv vol) − log(q.rnDeriv vol)`
+  have h_split : (fun y => Real.log (νm.rnDeriv q y).toReal)
+      =ᵐ[νm] (fun y => Real.log (νm.rnDeriv (MeasureTheory.volume) y).toReal
+                - Real.log (q.rnDeriv (MeasureTheory.volume) y).toReal) := by
+    have h_chain : (fun y => νm.rnDeriv q y * q.rnDeriv (MeasureTheory.volume) y)
+        =ᵐ[νm] νm.rnDeriv (MeasureTheory.volume) :=
+      hνm_q.ae_le (Measure.rnDeriv_mul_rnDeriv' (μ := νm) (ν := q)
+        (κ := (MeasureTheory.volume : Measure (Fin n → ℝ))) hq_vol)
+    have h_pos_νq : ∀ᵐ y ∂νm, 0 < νm.rnDeriv q y := Measure.rnDeriv_pos hνm_q
+    have h_lt_νq : ∀ᵐ y ∂νm, νm.rnDeriv q y < ∞ := hνm_q.ae_le (Measure.rnDeriv_lt_top νm q)
+    have h_pos_q : ∀ᵐ y ∂νm, 0 < q.rnDeriv (MeasureTheory.volume) y :=
+      hνm_q.ae_le (Measure.rnDeriv_pos hq_vol)
+    have h_lt_q : ∀ᵐ y ∂νm, q.rnDeriv (MeasureTheory.volume) y < ∞ :=
+      hνm_q.ae_le (hq_vol.ae_le (Measure.rnDeriv_lt_top q (MeasureTheory.volume)))
+    filter_upwards [h_chain, h_pos_νq, h_lt_νq, h_pos_q, h_lt_q]
+      with y hy hpos1 hlt1 hpos2 hlt2
+    have hne1 : ((νm.rnDeriv q y).toReal) ≠ 0 :=
+      (ENNReal.toReal_pos hpos1.ne' hlt1.ne).ne'
+    have hne2 : ((q.rnDeriv (MeasureTheory.volume) y).toReal) ≠ 0 :=
+      (ENNReal.toReal_pos hpos2.ne' hlt2.ne).ne'
+    rw [← hy, ENNReal.toReal_mul, Real.log_mul hne1 hne2]
+    ring
+  exact (h_int_νm_vol.sub h_int_q_vol).congr h_split.symm
+
+/-- **I(W; Y^n) finiteness (genuine).** -/
+private lemma awgnConverseJoint_mi_W_ne_top
+    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
+    mutualInfo (awgnConverseJoint h_meas c)
+        (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
+        (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) ≠ ∞ := by
+  classical
+  -- `mutualInfo = klDiv (μ.map (fst,snd)) ((μ.map fst).prod (μ.map snd))`, and
+  -- `μ.map (fst,snd) = μ = msgLaw ⊗ₘ K`, product of marginals = msgLaw ⊗ₘ const blockY.
+  rw [mutualInfo]
+  have h_joint : (awgnConverseJoint h_meas c).map
+      (fun ω : Fin M × (Fin n → ℝ) => (ω.1, ω.2)) = msgLaw M ⊗ₘ blockKernel N c := by
+    rw [show (fun ω : Fin M × (Fin n → ℝ) => (ω.1, ω.2)) = id from rfl, Measure.map_id]
+    exact awgnConverseJoint_eq_compProd h_meas c
+  rw [h_joint, awgnConverseJoint_prod_marginals_eq h_meas c]
+  -- finiteness via `klDiv_ne_top_iff`: AC + integrable llr on the compProd
+  refine klDiv_ne_top ?_ ?_
+  · -- AC: msgLaw ⊗ₘ K ≪ msgLaw ⊗ₘ const blockY (per-fibre `K m ≪ blockY`)
+    refine Measure.AbsolutelyContinuous.compProd_right ?_
+    filter_upwards with m
+    exact blockComponent_ac_blockYLaw hN h_meas c m
+  · -- integrable llr via `Measure.integrable_compProd_iff` (per-fibre + finite-sum L¹ norm)
+    set K := blockKernel N c with hK
+    set ηc := Kernel.const (Fin M) (blockYLaw h_meas c) with hηc
+    -- AC of the compProd (same as the AC branch above)
+    have h_ac : msgLaw M ⊗ₘ K ≪ msgLaw M ⊗ₘ ηc := by
+      refine Measure.AbsolutelyContinuous.compProd_right ?_
+      filter_upwards with m
+      rw [hηc]; exact blockComponent_ac_blockYLaw hN h_meas c m
+    -- the joint llr agrees a.e. with the jointly-measurable kernel rnDeriv log.
+    have h_llr_ae : (fun p => llr (msgLaw M ⊗ₘ K) (msgLaw M ⊗ₘ ηc) p)
+        =ᵐ[msgLaw M ⊗ₘ K]
+        (fun p : Fin M × (Fin n → ℝ) => Real.log ((K.rnDeriv ηc p.1 p.2)).toReal) := by
+      -- linchpin: joint rnDeriv =ᵐ[μ⊗ₘη] fibre kernel rnDeriv; transport to a.e. on the joint
+      have h1 : (msgLaw M ⊗ₘ K).rnDeriv (msgLaw M ⊗ₘ ηc)
+          =ᵐ[msgLaw M ⊗ₘ K] fun p => K.rnDeriv ηc p.1 p.2 :=
+        h_ac.ae_le
+          (InformationTheory.Shannon.ChannelCoding.rnDeriv_compProd_fibre h_ac)
+      simp only [llr_def]
+      filter_upwards [h1] with p hp1
+      rw [hp1]
+    -- prove integrability of the kernel-rnDeriv log function, then `congr` back to llr.
+    refine Integrable.congr ?_ h_llr_ae.symm
+    refine (Measure.integrable_compProd_iff ?_).mpr ⟨?_, ?_⟩
+    · -- AEStronglyMeasurable of `fun p => log(K.rnDeriv ηc p.1 p.2)` (jointly measurable).
+      exact ((Kernel.measurable_rnDeriv K ηc).ennreal_toReal.log).aestronglyMeasurable
+    · -- per-fibre integrability: `log(K.rnDeriv ηc m y) =ᵐ[K m] log((K m).rnDeriv blockY y)`.
+      filter_upwards with m
+      have h_fibre_ae : (fun y => Real.log ((K.rnDeriv ηc m y)).toReal)
+          =ᵐ[K m] (fun y => Real.log (((K m).rnDeriv (blockYLaw h_meas c) y)).toReal) := by
+        have hKm_blockY : K m ≪ blockYLaw h_meas c := by
+          show Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N) ≪ blockYLaw h_meas c
+          exact blockComponent_ac_blockYLaw hN h_meas c m
+        have h_meas_eq : K m ≪ ηc m := by rw [hηc, Kernel.const_apply]; exact hKm_blockY
+        filter_upwards [h_meas_eq.ae_le
+          (Kernel.rnDeriv_eq_rnDeriv_measure (κ := K) (η := ηc) (a := m))] with y hy
+        rw [hy]; simp only [hηc, Kernel.const_apply]
+      refine Integrable.congr ?_ h_fibre_ae.symm
+      show Integrable
+        (fun y => Real.log
+          ((Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N)).rnDeriv
+            (blockYLaw h_meas c) y).toReal)
+        (Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N))
+      exact integrable_log_component_rnDeriv_blockYLaw hN h_meas c m
+    · -- L¹-norm-over-fibre integral integrable over the finite message measure
+      exact Integrable.of_finite
+
+/-- **AWGN converse MI finiteness (genuine, formerly `wall:multivariate-mi`)**.
 
 `I(W; Y^n) ≠ ∞` ∧ `I(X^n; Y^n) ≠ ∞` on the AWGN converse canonical joint.
 
-Both require the analytic content of (a) joint AC w.r.t. product of marginals
-when `Y = Fin n → ℝ` is continuous, and (b) llr integrability at n-dim — which is
-the classical Mathlib wall for continuous-Y mutual information finiteness.
-InformationTheory 既存 `mutualInfo_ne_top` (`MutualInfo.lean:197`) は **両側 `[Fintype]`
-要求** で AWGN converse `Y := Fin n → ℝ` (continuous) で reuse 不可。
-
-The per-letter `klDiv_ne_top` (`Mathlib InformationTheory.klDiv_ne_top`) route via
-`mutualInfo` def unfold requires per-letter joint AC + integrable llr at AWGN 1-d
-(joint X_i Y_i 上の log-likelihood ratio integrability) which is substantial
-analytic plumbing beyond this mini-plan's scope. The ENNReal-form chain rule
-needed for `jointMIXnYn` propagation cannot be derived from the Real-form chain
-rule (`awgnContinuousMIChainRule_holds`, `AwgnWalls.lean`): `toReal_le_toReal`
-requires both sides ne_top → circular argument (plan §M2 観察 verbatim 確認).
-
-Concentrated here per `audit-tags.md`「共有 Mathlib 壁」pattern (T-MIF-fallback,
-mini-plan `awgn-converse-c5-mi-finite-bridge`): the 3 downstream sites
-(`awgnConverseJoint_mutualInfo_ne_top`, `awgn_dpi` inline `h_finite`,
-`awgnConverseJoint_mutualInfo_ne_top_via_chain`) become 0-sorry / 0-@residual
-themselves by delegating to this shared lemma. The single residual `sorry` is
-correctly classified as `wall:multivariate-mi` (reclassified from
-`plan:awgn-converse-aux-plan`).
-
-@residual(wall:multivariate-mi) -/
+**2026-06-12 genuine 化 (false wall 反証, `cause:loogle-blind` + `cause:single-route`)**:
+旧 docstring の「continuous-Y llr
+integrability は substantial plumbing beyond scope」「ENNReal chain rule が circular」
+は **Real-form chain rule から ne_top を導こうとした場合の話**。本実装は直接
+`klDiv_ne_top` (AC + integrable llr 直構築) ルートで循環を回避。`W` (Fin M, discrete) /
+`X^n` (encoder∘fst, finite-valued) のため joint は有限個の codeword 上の n 次元積
+Gaussian mixture、各成分 `klDiv νₘ blockYLaw < ∞` を sup 上界 + 同一成分下界で genuine 化
+(parallel-gaussian `parallelOutput_joint_logDensity_integrable` 手法の finite-codebook
+特化形)。`N = 0` は退化 (joint が対角 graph 上 singular → klDiv=∞ で偽) のため
+`hN : N ≠ 0` を guard として追加。 -/
 private lemma awgnConverseJoint_pair_mi_ne_top
-    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
     mutualInfo (awgnConverseJoint h_meas c)
         (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
         (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) ≠ ∞
       ∧ jointMIXnYn h_meas c ≠ ∞ := by
-  sorry -- @residual(wall:multivariate-mi)
+  -- W side: genuine compProd-chain-rule finiteness.
+  have h_W : mutualInfo (awgnConverseJoint h_meas c)
+      (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
+      (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) ≠ ∞ :=
+    awgnConverseJoint_mi_W_ne_top hN h_meas c
+  refine ⟨h_W, ?_⟩
+  -- X^n side: `X^n = encoder ∘ W` is a post-processing of `W`, so DPI gives
+  -- `I(X^n; Y^n) ≤ I(W; Y^n) < ∞`.
+  have hfst : Measurable (Prod.fst : Fin M × (Fin n → ℝ) → Fin M) := measurable_fst
+  have hsnd : Measurable (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) := measurable_snd
+  have henc : Measurable (c.encoder : Fin M → Fin n → ℝ) := measurable_of_countable _
+  -- `mutualInfo μ (encoder∘fst) snd = mutualInfo μ snd (encoder∘fst)` (comm)
+  --   ≤ `mutualInfo μ snd fst` (postprocess the 2nd arg by `encoder`)
+  --   = `mutualInfo μ fst snd` (comm)
+  have h_le : jointMIXnYn h_meas c
+      ≤ mutualInfo (awgnConverseJoint h_meas c) Prod.fst Prod.snd := by
+    unfold jointMIXnYn
+    rw [mutualInfo_comm (awgnConverseJoint h_meas c)
+        (fun ω : Fin M × (Fin n → ℝ) => c.encoder ω.1) Prod.snd (henc.comp hfst) hsnd]
+    have h_pp :
+        mutualInfo (awgnConverseJoint h_meas c) Prod.snd (c.encoder ∘ Prod.fst)
+          ≤ mutualInfo (awgnConverseJoint h_meas c) Prod.snd Prod.fst :=
+      mutualInfo_le_of_postprocess (awgnConverseJoint h_meas c) Prod.snd Prod.fst hsnd hfst henc
+    rw [show (fun ω : Fin M × (Fin n → ℝ) => c.encoder ω.1)
+          = c.encoder ∘ Prod.fst from rfl]
+    refine h_pp.trans ?_
+    rw [mutualInfo_comm (awgnConverseJoint h_meas c) Prod.snd Prod.fst hsnd hfst]
+  exact ne_top_of_le_ne_top h_W h_le
 
 /-- AWGN converse の `mutualInfo` finiteness: `mutualInfo (awgnConverseJoint c) Prod.fst Prod.snd ≠ ∞`。
 
 `awgnConverseJoint_pair_mi_ne_top` 経由 (共有 wall lemma の `.1`)。本 declaration
 は **0-sorry / 0-@residual**、wall 自体は shared lemma に集約。 -/
 private lemma awgnConverseJoint_mutualInfo_ne_top
-    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
     mutualInfo (awgnConverseJoint h_meas c)
         (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
         (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) ≠ ∞ :=
-  (awgnConverseJoint_pair_mi_ne_top h_meas c).1
+  (awgnConverseJoint_pair_mi_ne_top hN h_meas c).1
 
 /-- **Phase B-Fano**: Fano + DPI postprocess + entropy chain + `H(W) = log M` を
 `shannon_converse_single_shot` 1 行呼出で集約。
@@ -375,7 +981,7 @@ Pe bridge (T-FFC-5、`errorProbAt` ↔ Fano `errorProb` の同値性、private h
 `awgnConverseJoint_mutualInfo_ne_top` に切出し) を経由。 -/
 @[entry_point]
 theorem awgn_converse_single_shot_call
-    (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
+    (P : ℝ) (N : ℝ≥0) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (hM : 2 ≤ M) (c : AwgnCode M n P)
     (Pe : ℝ) (hPe : Pe = ((1 / M : ℝ) * ∑ m : Fin M,
         (c.toCode.errorProbAt (awgnChannel N h_meas) m).toReal)) :
@@ -400,7 +1006,7 @@ theorem awgn_converse_single_shot_call
       mutualInfo (awgnConverseJoint h_meas c)
           (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
           (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) ≠ ∞ :=
-    awgnConverseJoint_mutualInfo_ne_top h_meas c
+    awgnConverseJoint_mutualInfo_ne_top hN h_meas c
   -- Apply `shannon_converse_single_shot`.
   have h_shannon :=
     InformationTheory.Shannon.shannon_converse_single_shot
@@ -444,7 +1050,7 @@ Markov factorization は genuine 補題 `awgnConverseMarkov_holds`
 で接続)。 -/
 @[entry_point]
 theorem awgn_dpi
-    (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
+    (P : ℝ) (N : ℝ≥0) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
     (jointMIWYn h_meas c).toReal ≤ (jointMIXnYn h_meas c).toReal := by
   -- Markov chain `W → X^n → Y^n` (γ-form) ⇒ ENNReal DPI
@@ -480,7 +1086,7 @@ theorem awgn_dpi
   -- AWGN-side MI finiteness wall (T-FFC-2/T-FFC-3 family, sibling of
   -- `awgnConverseJoint_mutualInfo_ne_top` but for `X^n`).
   have h_finite : (jointMIXnYn h_meas c) ≠ ∞ :=
-    (awgnConverseJoint_pair_mi_ne_top h_meas c).2
+    (awgnConverseJoint_pair_mi_ne_top hN h_meas c).2
   -- Unfold `jointMIWYn` / `jointMIXnYn` to match the ENNReal inequality, apply
   -- `ENNReal.toReal_mono`.
   show (jointMIWYn h_meas c).toReal ≤ (jointMIXnYn h_meas c).toReal
@@ -1149,7 +1755,8 @@ theorem awgnConverseJoint_mutualInfo_ne_top_via_chain
         (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
         (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) ≠ ∞
       ∧ jointMIXnYn h_meas c ≠ ∞ :=
-  awgnConverseJoint_pair_mi_ne_top h_meas c
+  awgnConverseJoint_pair_mi_ne_top
+    (by intro h; exact hN (by rw [h]; norm_num)) h_meas c
 
 /-! ## Phase C — converse discharger + `awgn_converse_F3_discharged` wrapper -/
 
@@ -1189,11 +1796,12 @@ theorem isAwgnConverseFeasible_discharger
     Real.log M
       ≤ (n : ℝ) * ((1 / 2) * Real.log (1 + P / (N : ℝ)))
         + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1) := by
+  have hN_nnreal : N ≠ 0 := by intro h; exact hN (by rw [h]; norm_num)
   -- Step (a)+(b)+(e) — B-Fano: `log M ≤ I(W; Y^n).toReal + binEntropy(Pe) + Pe · log(M-1)`.
-  have h_fano := awgn_converse_single_shot_call P N h_meas hM c Pe hPe
+  have h_fano := awgn_converse_single_shot_call P N hN_nnreal h_meas hM c Pe hPe
   -- Step (c-DPI) — B-DPI: `I(W; Y^n).toReal ≤ I(X^n; Y^n).toReal`
   -- (Markov factorization via `awgnConverseMarkov_holds`, genuine `@audit:ok`).
-  have h_dpi := awgn_dpi P N h_meas c
+  have h_dpi := awgn_dpi P N hN_nnreal h_meas c
   -- Step (c-chain) — B-chain: `I(X^n; Y^n).toReal ≤ ∑ᵢ I(X_i; Y_i).toReal`
   -- (chain rule via `awgnContinuousMIChainRule_holds` shared sorry 補題).
   have h_chain_le := awgn_chain_rule P N h_meas c
