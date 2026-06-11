@@ -1332,16 +1332,101 @@ private lemma blockMI_decomp
         - (n : ℝ) * InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N) := by
   sorry
 
-/-- **Per-letter MI decomposition**: `I(X_i;Y_i).toReal = h(Y_i) − h(noise)`. -/
-private lemma perLetterMI_decomp
-    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
+/-- Joint measurability of `(x, y) ↦ gaussianPDF x N y` (mean × point). -/
+private lemma gaussianPDF_joint_measurable (N : ℝ≥0) :
+    Measurable (fun p : ℝ × ℝ => gaussianPDF p.1 N p.2) := by
+  unfold gaussianPDF
+  refine ENNReal.measurable_ofReal.comp ?_
+  unfold gaussianPDFReal
+  refine Measurable.mul measurable_const ?_
+  refine Real.measurable_exp.comp ?_
+  refine Measurable.div ?_ measurable_const
+  refine (Measurable.pow ?_ measurable_const).neg
+  exact (measurable_snd.sub measurable_fst)
+
+/-- Per-letter input law `μ.map (encoder · i)` (discrete, real-valued). -/
+private noncomputable def perLetterInputLaw
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} (c : AwgnCode M n P) (i : Fin n) : Measure ℝ :=
+  (converseJointInline h_meas c).map (fun ω => c.encoder ω.1 i)
+
+private instance perLetterInputLaw_isProb
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
-    (mutualInfo (converseJointInline h_meas c)
-        (fun ω => c.encoder ω.1 i) (fun ω => ω.2 i)).toReal
-      = InformationTheory.Shannon.differentialEntropy
-          ((converseJointInline h_meas c).map (fun ω => ω.2 i))
-        - InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N) := by
-  sorry
+    IsProbabilityMeasure (perLetterInputLaw h_meas c i) := by
+  rw [perLetterInputLaw]
+  exact Measure.isProbabilityMeasure_map
+    (((measurable_of_countable (fun m : Fin M => c.encoder m i)).comp measurable_fst).aemeasurable)
+
+/-- `perLetterInputLaw_i = (1/M) • ∑ₘ δ_{encoder m i}` (mixture-of-diracs form). -/
+private lemma perLetterInputLaw_eq_mixture
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
+    perLetterInputLaw h_meas c i
+      = (Fintype.card (Fin M) : ℝ≥0∞)⁻¹ • ∑ m : Fin M, Measure.dirac (c.encoder m i) := by
+  classical
+  unfold perLetterInputLaw converseJointInline
+  have henc_i : Measurable (fun ω : Fin M × (Fin n → ℝ) => c.encoder ω.1 i) :=
+    (measurable_of_countable (fun m : Fin M => c.encoder m i)).comp measurable_fst
+  rw [Measure.map_smul, Measure.map_finset_sum (s := Finset.univ)
+      (m := fun m => (Measure.dirac m).prod
+        (Measure.pi (fun j : Fin n => awgnChannel N h_meas (c.encoder m j))))
+      henc_i.aemeasurable]
+  congr 1
+  refine Finset.sum_congr rfl (fun m _ => ?_)
+  -- `((δ_m).prod ν).map (fun ω => encoder ω.1 i) = (δ_m).map (encoder · i) = δ_{encoder m i}`
+  rw [show (fun ω : Fin M × (Fin n → ℝ) => c.encoder ω.1 i)
+        = (fun a : Fin M => c.encoder a i) ∘ Prod.fst from rfl,
+    ← Measure.map_map (measurable_of_countable _) measurable_fst,
+    Measure.map_fst_prod, measure_univ, one_smul, MeasureTheory.Measure.map_dirac' (measurable_of_countable _)]
+
+/-- **Per-letter X-input factorization** (mixture-of-diracs, holds with collisions):
+`μ.map (fun ω => (encoder ω.1 i, ω.2 i)) = perLetterInputLaw_i ⊗ₘ awgnChannel`. -/
+private lemma perLetter_map_eq_compProd
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
+    (converseJointInline h_meas c).map (fun ω : Fin M × (Fin n → ℝ) => (c.encoder ω.1 i, ω.2 i))
+      = perLetterInputLaw h_meas c i ⊗ₘ awgnChannel N h_meas := by
+  classical
+  -- RHS: explicit mixture of diracs ⊗ₘ awgnChannel = (1/M) ∑ₘ δ_{encoder m i} ⊗ awgn
+  rw [perLetterInputLaw_eq_mixture h_meas c i, Measure.compProd_smul_left]
+  rw [← Measure.sum_fintype (fun m : Fin M => Measure.dirac (c.encoder m i)),
+    Measure.compProd_sum_left, Measure.sum_fintype, Fintype.card_fin]
+  -- LHS: distribute the map over the mixture
+  unfold converseJointInline
+  have hmap_fn : Measurable (fun ω : Fin M × (Fin n → ℝ) => (c.encoder ω.1 i, ω.2 i)) :=
+    ((measurable_of_countable (fun m : Fin M => c.encoder m i)).comp measurable_fst).prodMk
+      ((measurable_pi_apply i).comp measurable_snd)
+  rw [Measure.map_smul, Measure.map_finset_sum (s := Finset.univ)
+      (m := fun m => (Measure.dirac m).prod
+        (Measure.pi (fun j : Fin n => awgnChannel N h_meas (c.encoder m j))))
+      hmap_fn.aemeasurable]
+  have h_per : ∀ m : Fin M,
+      ((Measure.dirac m).prod
+          (Measure.pi (fun j : Fin n => awgnChannel N h_meas (c.encoder m j)))).map
+            (fun ω : Fin M × (Fin n → ℝ) => (c.encoder ω.1 i, ω.2 i))
+        = (Measure.dirac (c.encoder m i)) ⊗ₘ awgnChannel N h_meas := by
+    intro m
+    -- per-message: `((δ_m).prod (pi gaussian)).map (encoder·i, ·.2 i) = δ_{encoder m i} ⊗ₘ awgn`
+    rw [show (Measure.dirac (c.encoder m i)) ⊗ₘ awgnChannel N h_meas
+          = (Measure.dirac (c.encoder m i)).prod (awgnChannel N h_meas (c.encoder m i)) by
+        ext s hs
+        rw [Measure.dirac_compProd_apply hs, Measure.dirac_prod,
+          Measure.map_apply measurable_prodMk_left hs]]
+    -- LHS per-message
+    rw [show (fun ω : Fin M × (Fin n → ℝ) => (c.encoder ω.1 i, ω.2 i))
+          = Prod.map (fun a : Fin M => c.encoder a i) (fun y : Fin n → ℝ => y i) from rfl]
+    rw [← Measure.map_prod_map _ _ (measurable_of_countable _) (measurable_pi_apply i)]
+    rw [MeasureTheory.Measure.map_dirac' (measurable_of_countable _)]
+    congr 1
+    -- `(pi (gaussian (encoder m j))).map (·i) = gaussian (encoder m i) = awgnChannel (encoder m i)`
+    rw [Measure.pi_map_eval]
+    have h_prod_one : (∏ j ∈ Finset.univ.erase i,
+        (awgnChannel N h_meas (c.encoder m j)) Set.univ) = 1 := by
+      refine Finset.prod_eq_one (fun j _ => ?_)
+      rw [awgnChannel_apply]; exact measure_univ
+    rw [h_prod_one, one_smul, awgnChannel_apply]
+  rw [Finset.sum_congr rfl (fun m _ => h_per m), Fintype.card_fin]
 
 /-- **Marginal identification**: `blockYLawInline.map (· i) = (converseJointInline).map (·.2 i)`
 = the per-letter law `Y_i`. -/
