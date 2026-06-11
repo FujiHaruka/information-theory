@@ -25,7 +25,7 @@
 
 - [x] Phase 0 — Mathlib + InformationTheory API 在庫 ✅ → [`awgn-mathlib-inventory.md`](awgn-mathlib-inventory.md)
 - [x] Phase A — `awgnChannel` kernel + `AwgnCode` + `mutualInfo` closed-form bridge + `awgnCapacity` 定義 + 等号 ✅
-- [x] Phase B — Achievability ✅ (`AWGN/Achievability.lean`) — body は typicality F-1 を park (`sorry + @residual(plan:awgn-achievability-typicality-plan)`)
+- [x] Phase B — Achievability ✅ (`AWGN/Achievability.lean`) — body は typicality F-1 を park (`sorry + @residual(plan:awgn-achievability-typicality-plan)`)。achievability 側 3 shared 壁の genuine discharge + statement-fix は → [`awgn-achievability-walls-discharge-plan.md`](awgn-achievability-walls-discharge-plan.md) 📋 (2 件は false-statement 判明 → statement-fix)
 - [x] Phase C — **Converse genuine closed** ✅ (`AWGN/Converse.lean`、`awgn_converse` transitively sorryAx-free)。converse 3 Mathlib 壁すべて false-wall overturn で genuine closure (mi-bridge / multivariate-mi / continuous-mi-chain-rule)。詳細 → [`awgn-facts.md`](awgn-facts.md)
 - [x] Phase D — 主定理 wrapper (`awgn_channel_coding_theorem`) ✅ (`AWGN/Main.lean`)
 - [x] Phase V — verify ✅
@@ -116,7 +116,10 @@ MI bridge `I = h(P+N) - h(N)` は F-2 hypothesis pass-through (Stein/Cramér/Che
 全採用済 (slug は他 doc / code から参照されるので保持):
 
 - **F-1** `IsAwgnTypicalityHypothesis` (Phase B): sphere packing / continuous AEP。現状は
-  `awgn_achievability` body の `sorry + @residual(plan:awgn-achievability-typicality-plan)` で park (achievability 側、未完)
+  `awgn_achievability` body の `sorry + @residual(plan:awgn-achievability-typicality-plan)` で park (achievability 側、未完)。
+  achievability 側 3 shared 壁 (`AWGN/Walls.lean`) の genuine discharge + statement-fix は
+  → [`awgn-achievability-walls-discharge-plan.md`](awgn-achievability-walls-discharge-plan.md)。
+  Wall 1 (i) engine done / (iii) sound、Wall 1 (ii) + Wall 3 は false-statement 判明で statement-fix 要 (詳細 → [`awgn-facts.md`](awgn-facts.md))
 - **F-2** `h_mi_bridge` (Phase A converse 側): per-letter MI bridge `I = h(Y) - h(Z)`。
   **closed (genuine、`awgn-mi-bridge-plan`)** — `awgn_per_letter_mi_bridge_genuine`
 - **F-3** `IsAwgnConverseHypothesis` (Phase C): converse 全体 (Fano + DPI + chain + per-letter)。
