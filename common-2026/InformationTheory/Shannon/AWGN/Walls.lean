@@ -1045,6 +1045,67 @@ private lemma gaussianReal_logRnDeriv_integrable_inline (m : ℝ) {v : ℝ≥0} 
   filter_upwards [h_rn] with y hy
   exact hy.symm
 
+/-- Per-fibre log-density integrability: `log (rnDeriv (blockKernelInline m) vol)` is
+integrable against the m-th product-Gaussian fibre `blockKernelInline m`. -/
+private lemma integrable_log_fibre_rnDeriv
+    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) {M n : ℕ} (c : AwgnCode M n P) (m : Fin M) :
+    Integrable
+      (fun y => Real.log (((blockKernelInline N c) m).rnDeriv MeasureTheory.volume y).toReal)
+      ((blockKernelInline N c) m) := by
+  classical
+  set νp := Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N) with hνp
+  have hfibre : (blockKernelInline N c) m = νp := rfl
+  rw [hfibre]
+  haveI : IsProbabilityMeasure νp := by rw [hνp]; infer_instance
+  haveI : ∀ i, IsProbabilityMeasure (gaussianReal (c.encoder m i) N) := fun i => inferInstance
+  -- `log (rnDeriv νp vol) =ᵐ[νp] ∑ᵢ log gaussianPDFReal (encoder m i) (·i)`
+  set a : Fin n → ℝ → ℝ≥0∞ := fun i => (gaussianReal (c.encoder m i) N).rnDeriv volume with ha
+  have ha_meas : ∀ i, Measurable (a i) := fun i => Measure.measurable_rnDeriv _ _
+  have hac : ∀ i, gaussianReal (c.encoder m i) N ≪ (volume : Measure ℝ) :=
+    fun i => gaussianReal_absolutelyContinuous (c.encoder m i) hN
+  have hνp_ac : νp ≪ (volume : Measure (Fin n → ℝ)) := by
+    rw [hνp, blockComponentInline_withDensity hN c m]
+    exact MeasureTheory.withDensity_absolutelyContinuous _ _
+  have h_rn_pi : (νp.rnDeriv volume) =ᵐ[νp] fun z => ∏ i, a i (z i) := by
+    have h_eq : ∀ i, (volume : Measure ℝ).withDensity (a i) = gaussianReal (c.encoder m i) N :=
+      fun i => Measure.withDensity_rnDeriv_eq _ volume (hac i)
+    haveI : ∀ i, SigmaFinite ((volume : Measure ℝ).withDensity (a i)) := by
+      intro i; rw [h_eq i]; infer_instance
+    have h_pi_wd : νp = (volume : Measure (Fin n → ℝ)).withDensity (fun z => ∏ i, a i (z i)) := by
+      rw [hνp, ← (funext h_eq : (fun i => (volume : Measure ℝ).withDensity (a i))
+          = fun i => gaussianReal (c.encoder m i) N)]
+      rw [InformationTheory.Shannon.pi_withDensity_fin (fun _ : Fin n => (volume : Measure ℝ)) ha_meas,
+        volume_pi]
+    have h_prod_meas : Measurable (fun z : Fin n → ℝ => ∏ i, a i (z i)) :=
+      Finset.measurable_prod _ (fun i _ => (ha_meas i).comp (measurable_pi_apply i))
+    have h_rn_vol : (νp.rnDeriv volume) =ᵐ[volume] fun z => ∏ i, a i (z i) := by
+      conv_lhs => rw [h_pi_wd]
+      exact Measure.rnDeriv_withDensity volume h_prod_meas
+    exact hνp_ac.ae_le h_rn_vol
+  have h_pos : ∀ i, ∀ᵐ z ∂νp, 0 < a i (z i) := by
+    intro i
+    have h1d : ∀ᵐ y ∂(gaussianReal (c.encoder m i) N), 0 < a i y := Measure.rnDeriv_pos (hac i)
+    exact (Measure.quasiMeasurePreserving_eval (μ := fun i => gaussianReal (c.encoder m i) N) i).ae h1d
+  have h_lt : ∀ i, ∀ᵐ z ∂νp, a i (z i) < ∞ := by
+    intro i
+    have h1d : ∀ᵐ y ∂(gaussianReal (c.encoder m i) N), a i y < ∞ :=
+      (hac i).ae_le (Measure.rnDeriv_lt_top _ volume)
+    exact (Measure.quasiMeasurePreserving_eval (μ := fun i => gaussianReal (c.encoder m i) N) i).ae h1d
+  have h_log_split : (fun z => Real.log ((νp.rnDeriv volume z).toReal))
+      =ᵐ[νp] fun z => ∑ i, Real.log ((a i (z i)).toReal) := by
+    filter_upwards [h_rn_pi, eventually_countable_forall.mpr h_pos,
+      eventually_countable_forall.mpr h_lt] with z hz hpos hlt
+    rw [hz, ENNReal.toReal_prod, Real.log_prod]
+    intro i _
+    exact (ENNReal.toReal_pos (hpos i).ne' (hlt i).ne).ne'
+  refine (Integrable.congr ?_ h_log_split.symm)
+  refine integrable_finsetSum _ (fun i _ => ?_)
+  -- each `log (a i (z i))` integrable against νp = pi gaussian via `integrable_comp_eval`
+  have h_1d : Integrable (fun y => Real.log ((a i y).toReal)) (gaussianReal (c.encoder m i) N) :=
+    gaussianReal_logRnDeriv_integrable_inline (c.encoder m i) hN
+  rw [hνp]
+  exact integrable_comp_eval (μ := fun i : Fin n => gaussianReal (c.encoder m i) N) (i := i) h_1d
+
 /-- Product entropy additivity (mirror of `ParallelGaussian.jointDifferentialEntropyPi_pi_eq_sum`,
 inaccessible downstream): `h(∏ᵢ νᵢ) = ∑ᵢ h(νᵢ)` for component-`≪ volume`, log-density-integrable
 factors. -/
