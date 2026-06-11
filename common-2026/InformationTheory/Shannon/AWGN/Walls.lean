@@ -1330,7 +1330,99 @@ private lemma blockMI_decomp
     (mutualInfo (converseJointInline h_meas c) Prod.fst Prod.snd).toReal
       = InformationTheory.Shannon.jointDifferentialEntropyPi (blockYLawInline h_meas c)
         - (n : ℝ) * InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N) := by
-  sorry
+  classical
+  set p := msgLawInline M with hp
+  set W := blockKernelInline N c with hW
+  -- output distribution identification
+  have hq_eq : ChannelCoding.outputDistribution p W = blockYLawInline h_meas c :=
+    outputDistribution_msgLawInline_eq h_meas c
+  -- regularity (in the generic decomp's `outputDistribution` form)
+  have hWx_q : ∀ m, W m ≪ ChannelCoding.outputDistribution p W := by
+    intro m; rw [hq_eq]
+    exact blockComponentInline_ac_blockYLaw hN h_meas c m
+  have hq_ref : ChannelCoding.outputDistribution p W ≪ (volume : Measure (Fin n → ℝ)) := by
+    rw [hq_eq]; exact blockYLawInline_ac_volume hN h_meas c
+  haveI : (ChannelCoding.outputDistribution p W).HaveLebesgueDecomposition
+      (volume : Measure (Fin n → ℝ)) := by infer_instance
+  have h_joint_ac : (p ⊗ₘ W) ≪ p.prod (ChannelCoding.outputDistribution p W) := by
+    rw [← Measure.compProd_const]
+    refine Measure.AbsolutelyContinuous.compProd_right ?_
+    exact Filter.Eventually.of_forall (fun m => by
+      simpa only [Kernel.const_apply] using hWx_q m)
+  -- proxy
+  set g : (Fin M) × (Fin n → ℝ) → ℝ≥0∞ := blockProxy N c with hg
+  have hg_meas : Measurable g := blockProxy_measurable N c
+  have hg_ae : ∀ m, (fun y => (W m).rnDeriv volume y) =ᵐ[W m] fun y => g (m, y) :=
+    fun m => blockProxy_ae hN c m
+  -- compProd-level integrabilities (msgLaw is finite-support → norm-integrability free)
+  have h_int_fibre_self : ∀ m, Integrable (fun y => Real.log (g (m, y)).toReal) (W m) := by
+    intro m
+    refine (integrable_log_fibre_rnDeriv hN c m).congr ?_
+    filter_upwards [hg_ae m] with y hy
+    rw [hy]
+  have h_int_fibre : Integrable (fun z : (Fin M) × (Fin n → ℝ) => Real.log (g z).toReal) (p ⊗ₘ W) := by
+    rw [Measure.integrable_compProd_iff ((hg_meas.ennreal_toReal.log).aestronglyMeasurable)]
+    refine ⟨Filter.Eventually.of_forall (fun m => h_int_fibre_self m), ?_⟩
+    -- `p = msgLaw` is a finite measure on the finite type `Fin M` → integrable for free
+    exact Integrable.of_finite
+  have h_out_self : Integrable
+      (fun y => Real.log ((ChannelCoding.outputDistribution p W).rnDeriv volume y).toReal)
+      (ChannelCoding.outputDistribution p W) := by
+    rw [hq_eq]
+    -- integrate the fixed function against the mixture measure (rewrite only the measure)
+    set F : (Fin n → ℝ) → ℝ :=
+      fun y => Real.log ((blockYLawInline h_meas c).rnDeriv volume y).toReal with hF
+    have h_mix : blockYLawInline h_meas c
+        = (Fintype.card (Fin M) : ℝ≥0∞)⁻¹ •
+            ∑ m : Fin M, Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N) :=
+      blockYLawInline_eq_mixture h_meas c
+    rw [h_mix]
+    have hM_inv_ne_top : (Fintype.card (Fin M) : ℝ≥0∞)⁻¹ ≠ ∞ := by
+      rw [Fintype.card_fin]; simp; exact_mod_cast (NeZero.ne M)
+    refine Integrable.smul_measure ?_ hM_inv_ne_top
+    refine integrable_finsetSum_measure.mpr (fun m _ => ?_)
+    exact integrable_log_blockYLawInline_on_component hN h_meas c m
+  have h_int_out : Integrable
+      (fun z : (Fin M) × (Fin n → ℝ) => Real.log
+          ((ChannelCoding.outputDistribution p W).rnDeriv volume z.2).toReal) (p ⊗ₘ W) := by
+    set ψ : (Fin n → ℝ) → ℝ := fun y => Real.log
+      ((ChannelCoding.outputDistribution p W).rnDeriv volume y).toReal with hψ
+    have hψ_meas : Measurable ψ :=
+      (Real.measurable_log.comp (Measure.measurable_rnDeriv _ _).ennreal_toReal)
+    show Integrable (fun z : (Fin M) × (Fin n → ℝ) => ψ z.2) (p ⊗ₘ W)
+    rw [Measure.integrable_compProd_iff
+      (f := fun z : (Fin M) × (Fin n → ℝ) => ψ z.2)
+      ((hψ_meas.comp measurable_snd).aestronglyMeasurable)]
+    refine ⟨Filter.Eventually.of_forall (fun m => ?_), ?_⟩
+    · -- per-fibre: `ψ` integrable against `W m = pi gaussian`; via output id + on-component
+      have : Integrable
+          (fun y => Real.log ((blockYLawInline h_meas c).rnDeriv volume y).toReal) (W m) :=
+        integrable_log_blockYLawInline_on_component hN h_meas c m
+      refine this.congr ?_
+      filter_upwards with y; rw [hψ, hq_eq]
+    · exact Integrable.of_finite
+  have h_fibre_self : ∀ m, ∫ y, Real.log (g (m, y)).toReal ∂(W m)
+      = ∫ y, Real.log ((W m).rnDeriv volume y).toReal ∂(W m) := fun m => fibre_log_proxy_integral hN c m
+  -- apply the generic decomposition
+  rw [mutualInfo_fst_snd_eq_channel h_meas c]
+  rw [ChannelCoding.mutualInfoOfChannel_toReal_eq_log_density_sub
+    (volume : Measure (Fin n → ℝ)) hWx_q hq_ref h_joint_ac g hg_meas hg_ae
+    h_int_fibre h_int_out h_fibre_self h_out_self]
+  -- fibre term: `∫ m, (∫ y, log(rnDeriv (W m) vol) ∂(W m)) ∂msgLaw = -n·h(noise)`
+  have h_fibre_val : (∫ m, (∫ y, Real.log ((W m).rnDeriv volume y).toReal ∂(W m)) ∂p)
+      = -((n : ℝ) * InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N)) := by
+    rw [integral_congr_ae (Filter.Eventually.of_forall (fun m => fibre_neg_entropy hN c m)),
+      integral_const, probReal_univ, one_smul]
+  -- output term: `∫ y, log(rnDeriv blockYLaw vol) ∂blockYLaw = -jointDiff`
+  have h_out_val : (∫ y, Real.log
+        ((ChannelCoding.outputDistribution p W).rnDeriv volume y).toReal
+        ∂(ChannelCoding.outputDistribution p W))
+      = -InformationTheory.Shannon.jointDifferentialEntropyPi (blockYLawInline h_meas c) := by
+    rw [hq_eq, InformationTheory.Shannon.integral_log_rnDeriv_self_eq_neg
+      (blockYLawInline_ac_volume hN h_meas c)]
+    rfl
+  rw [h_fibre_val, h_out_val]
+  ring
 
 /-- Joint measurability of `(x, y) ↦ gaussianPDF x N y` (mean × point). -/
 private lemma gaussianPDF_joint_measurable (N : ℝ≥0) :
