@@ -113,6 +113,7 @@ import InformationTheory.Shannon.Chernoff.NLetterZSum
 import InformationTheory.Draft.Shannon.Cramer
 import InformationTheory.Shannon.Cramer.LC2Discharge
 import InformationTheory.Shannon.Cramer.LC2DischargeExt
+import InformationTheory.Shannon.CramerCltBoundaryClosure
 import InformationTheory.Shannon.Hoeffding.Tradeoff
 import InformationTheory.Shannon.Hoeffding.Sandwich
 import InformationTheory.Shannon.DifferentialEntropy

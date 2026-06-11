@@ -1,5 +1,16 @@
 # Cramér / Chernoff CLT-boundary closure ムーンショット計画 🌙
 
+> ✅ **CLOSED (2026-06-11)** — Phase 1-6 full closure 達成。`InformationTheory/Shannon/CramerCltBoundaryClosure.lean`
+> (586 行, 0 sorry / 0 @residual, sorryAx-free, `InformationTheory.lean` import 済) に headline
+> `cramer_lower_boundary_unconditional` (内部最適 tilt `a = deriv (cgf (Y∘eval 0) (infinitePi μ₀)) lam`
+> で residual largeness hypothesis を除去した Cramér 下界) を含む 10 decl を publish。独立 honesty 監査
+> (`@audit:ok` 全 10 件、`h_coboundedBelow` 非 vacuous 性まで機械検証) **PASS**。判断ログ #4 / commit `05ed225`。
+> **未配線の残件**: consumer root `Cramer.Discharge.cramer_lower_phaseC_partial_discharge`
+> (`Draft/Shannon/CramerLC2PhaseC.lean:165`) は **import cycle** (その file を `InfinitePiTiltedChangeOfMeasure`
+> が import、本 closure file も同 file を import) で in-place 書換不可 → root の `sorry + @residual(plan:本 plan)`
+> は「**閉じた closure asset (本 file headline) を指す live residual**」として残置 (字面一致は監査 verbatim 確認済)。
+> 後続が root sorry を「未達」と誤読しないよう注記 (下記判断ログ #4)。
+
 > **sorry-based 移行完了 (2026-05-25、partial)** — `docs/shannon/cramer-sorry-migration-plan.md`
 > に従い、本 plan に属する 1 件の `@audit:suspect(cramer-chernoff-clt-closure-moonshot-plan)`
 > を `sorry + @residual(plan:cramer-chernoff-clt-closure-moonshot-plan)` に書換: 対象は
@@ -51,11 +62,11 @@
 
 - [ ] Phase 0 — Mathlib + 既存足場 signature 再確認 (在庫転記の verbatim 固定) 📋 → [inventory](cramer-chernoff-clt-closure-mathlib-inventory.md)
 - [x] Phase 1 — `gaussianReal_Ici_eq_half` (Gaussian median、唯一の「一から」) ✅ **CLOSED** (sorryAx-free, `1a19915`, `InformationTheory/Shannon/CramerCltBoundaryClosure.lean`, ~62 行)
-- [ ] Phase 2 — portmanteau half-line bridge (frontier null + 適用) 📋
-- [ ] Phase 3 — CLT を tilted ambient へ適用 (witness 構築 + 既存 plumbing 注入) 📋
-- [ ] Phase 4 — 窓質量 → 1/2 (集合書換 + LLN 引き算) + `tiltedWindow_eventually_large_of_boundary` 📋
-- [ ] Phase 5 — residual predicate 緩和 (`1/2 → ∃C>0`) + boundary discharge 📋
-- [ ] Phase 6 — Cramér end-to-end (a = m = deriv cgf で hypothesis なし化) + verify + 親反映 📋
+- [x] Phase 2 — portmanteau half-line bridge (frontier null + 適用) ✅ `tilted_halfline_tendsto_half` (`05ed225`)
+- [x] Phase 3 — CLT を tilted ambient へ適用 (witness 構築 + 既存 plumbing 注入) ✅ `tilted_halfline_tendsto_gaussian` + `gaussianReal_hasLaw_id` (`05ed225`)
+- [x] Phase 4 — 窓質量 → 1/2 (集合書換 + LLN 引き算) + `tiltedWindow_eventually_large_of_boundary` ✅ (`05ed225`)
+- [x] Phase 5 — residual predicate 緩和 (`1/2 → ∃C>0`) + boundary discharge ✅ `tilted_window_lower_to_halfline` + 緩和 reduction (`05ed225`)
+- [x] Phase 6 — Cramér end-to-end ✅ `cramer_lower_boundary_unconditional` (`05ed225`)、独立監査 PASS
 
 ## ゴール / Approach
 
@@ -497,3 +508,26 @@ Mathlib PR-candidate として価値があり、後退ゼロ。
    等にパス移動しただけ。plan 依存 11 シンボル (`iIndepFun_tilted_ambient` … `cramer_lower_phaseC_residual_discharge`)
    を補題名 grep で全て実機確認 = **plumbing 健在**。stale パスは本 plan 上で訂正済 (上記 Predecessors / file 構成)。
    → 継続 GO。次 = Phase 2-6 full closure (CLT witness `.toNNReal` が残る二大難所、~70-180 行)。
+
+4. **2026-06-11 Phase 2-6 full closure 達成 + 独立監査 PASS** (`05ed225`):
+   Phase 2-6 を 1 セッションで全閉。`CramerCltBoundaryClosure.lean` (586 行, 0 sorry / 0 @residual, sorryAx-free)。
+   - **Phase 3 (二大難所)**: `tilted_halfline_tendsto_gaussian` — Mathlib CLT を tilted ambient に適用、witness
+     `gaussianReal_hasLaw_id` (`HasLaw id (gaussianReal 0 w) (gaussianReal 0 w)` を `Measure.map_id` で自作) +
+     portmanteau (`frontier (Ici 0) = {0}` null by `noAtoms`) + scaling preimage 同一視
+     `{m·n ≤ ∑Y} = S_n⁻¹'(Ici 0)` (`mul_nonneg_iff_of_pos_left`)。
+   - **Phase 5 設計判断 (honesty)**: plan が想定した `∀a∀ε` 緩和 predicate `IsTiltedWindowEventuallyLargeC` は
+     **false-as-framed** (a が tilted mean から遠いと窓質量消失、predecessor 自認)。これを「証明済」とせず
+     **reduction tool (true implication、predicate を hypothesis に取る)** に留め、Phase 6 は `∀a` predicate を
+     **bypass** して per-`(a,ε)` core `tilted_window_lower_to_halfline` を `a=m` で直接呼ぶ。headline の証明経路に
+     false predicate は **乗らない** (監査 term 依存確認済)。
+   - **Phase 6 headline `cramer_lower_boundary_unconditional`**: 仮説は全て precondition
+     (`hY`/`h_bdd`/`hlam`/`h_deriv`(最適 tilt 位置, def-fix #24 と同型)/`hVar`(非退化)/`h_coboundedBelow`(liminf 正則性,
+     `cramer_lower` 継承))。CLT 窓質量は内部供給 = load-bearing bundling なし。`ε→0⁺` collapse (`le_of_forall_sub_le`)
+     で sharp exponent `-(λm − Λ)`。
+   - **独立 honesty 監査 PASS** (honesty-auditor, `@audit:ok` 全 10): under-hyp / load-bearing / false-predicate 隔離 /
+     degenerate 濫用 / consumer 字面一致 / sorryAx-free を機械裏取り。特に `h_coboundedBelow` の **非 vacuous 性**
+     (`P≤1 ⇒ log≤0` で上有界 → `b=0` 充足) を別ファイルで検証。
+   - **残件 (未達でなく配線制約)**: consumer root `cramer_lower_phaseC_partial_discharge`
+     (`Draft/Shannon/CramerLC2PhaseC.lean:165`) は import cycle で in-place 書換不可。root の sorry は本 closure を指す
+     live residual として残置 (冒頭バナー)。`InformationTheory.lean` import 済 (`lake build` 2972 jobs clean)。
+   **moonshot CLOSED。** 後続候補: root residual の差し替え経路 (import cycle 解消 or 別 entry_point 化) は別 plan。

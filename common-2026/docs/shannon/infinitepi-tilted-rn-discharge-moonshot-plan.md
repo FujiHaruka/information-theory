@@ -10,11 +10,15 @@
 > - Phase 4 ✅ residual predicate `IsTiltedWindowEventuallyLarge` (:282) + reduction
 >   `isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge` (:293) + `cramer_lower_phaseC_residual_discharge`
 >   (:361)。interior ケースは `tiltedWindow_eventually_large_of_interior` (:463) で discharge。W-3 撤退
->   (residual 縮約) どおり着地。**boundary ケースの CLT closure は未達 (2026-06-10 訂正)**: 後継
->   `cramer-chernoff-clt-closure` plan が主張した `CramerCLTClosure.lean` は実在せず、closure は未完。
-> - ⚠️ **`CramerLC2PhaseC.lean` の `cramer_lower_phaseC_partial_discharge` (:167) は sorry** (2026-06-10
->   機械検証)。これに依存する `@[entry_point] cramer_tendsto_phaseC_partial_discharge` (:208) は sorryAx
->   依存。「全関連 file 0 sorry」は誤り。残作業 = Phase C sorry の配線 (~30-50 行、独立壁再判定で wiring 確認済)。
+>   (residual 縮約) どおり着地。**boundary ケースの CLT closure は ✅ 達成 (2026-06-11)**: 子
+>   `cramer-chernoff-clt-closure` plan が `InformationTheory/Shannon/CramerCltBoundaryClosure.lean`
+>   (0 sorry, sorryAx-free, 監査 PASS) に headline `cramer_lower_boundary_unconditional` を publish
+>   (内部最適 tilt `a = deriv cgf lam` で residual largeness hyp 除去)。子判断ログ #4 / `05ed225`。
+> - ⚠️ **`CramerLC2PhaseC.lean` の `cramer_lower_phaseC_partial_discharge` (:165) は依然 sorry**: 上の
+>   closure asset がその穴を埋める genuine 資産 (結論形 verbatim 一致) だが、**import cycle**
+>   (`CramerLC2PhaseC` を `InfinitePiTiltedChangeOfMeasure` が import、closure file も同 file を import) で
+>   root を in-place 書換不可。root の `sorry + @residual(plan:cramer-chernoff-clt-closure-moonshot-plan)` は
+>   「閉じた closure を指す live residual」として残置 (後続が「未達」と誤読しないこと、子 plan 冒頭バナー参照)。
 
 <!--
 雛形メモ (moonshot-plan-template.md より):
