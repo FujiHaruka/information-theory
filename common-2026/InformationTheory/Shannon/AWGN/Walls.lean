@@ -157,7 +157,23 @@ Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal))` definitionally
 (`AWGNAchievabilityDischarge.lean:62`); the body is written in the 2-stage
 `Measure.pi` form to avoid importing `AWGNAchievabilityDischarge`.
 
-@residual(wall:awgn-random-coding-bound) -/
+**⚠️ FALSE-STATEMENT FINDING (2026-06-12) — the `∀ decoder` abstraction is too strong.**
+The docstring's "**any** measurable decoder family" over-generalised the 旧 predicate's
+fixed `decoder := jointTypicalDecoder A codebook` into a **false statement**: the bound
+`∀ ⦃decoder⦄, Measurable … → ∀ m, ∫⁻ codebook, (…) {y | decoder codebook y ≠ m} ≤ 2ε`
+fails for a trivial decoder. **Counterexample**: take the constant `decoder := fun _ _ ↦ m₀`
+(measurable). For any `m ≠ m₀`, `{y | decoder codebook y ≠ m} = {y | m₀ ≠ m} = univ`, so the
+inner measure is `(Measure.pi (awgnChannel …)) univ = 1` (a probability measure), giving
+`∫⁻ codebook, 1 = 1 > ENNReal.ofReal (2ε)` for `ε < 1/2`. The error decay only holds for the
+**joint-typical** decoder built from the typical set `A` (which encodes the AEP). Exposing
+`decoder` as a free `∀` parameter discards exactly that hypothesis. Fix: re-tie the statement
+to the specific joint-typical decoder (re-import / inline `jointTypicalDecoder A codebook`),
+or add a hypothesis pinning the decoder to `A`. (Confidence: counterexample-level; machine
+re-confirmation deferred to the discharge plan's Wall-2 phase.)
+
+@residual(wall:awgn-random-coding-bound)
+@audit:retract-candidate(false-statement) reason=∀decoder-too-strong-const-decoder-counterexample
+  successor=re-tie-to-jointTypicalDecoder-A (see awgn-achievability-walls-discharge-plan.md) -/
 theorem awgnRandomCodingBound_holds (P : ℝ) (N : ℝ≥0)
     (h_meas : IsAwgnChannelMeasurable N) :
     ∀ ⦃ε : ℝ⦄, 0 < ε → ∀ ⦃R : ℝ⦄, 0 < R → R < (1/2) * Real.log (1 + P / (N : ℝ)) →
