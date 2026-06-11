@@ -829,14 +829,37 @@ private noncomputable def blockProxy
 private lemma blockProxy_measurable
     {P : ℝ} (N : ℝ≥0) {M n : ℕ} (c : AwgnCode M n P) :
     Measurable (blockProxy N c) := by
-  sorry
+  -- `Fin M` (input) is countable: measurability reduces to measurability in `y` for each `m`.
+  refine measurable_from_prod_countable_right (fun m => ?_)
+  show Measurable (fun y : Fin n → ℝ => ∏ i : Fin n, gaussianPDF (c.encoder m i) N (y i))
+  exact Finset.measurable_prod _ (fun i _ =>
+    (measurable_gaussianPDF (c.encoder m i) N).comp (measurable_pi_apply i))
 
 /-- Per-fibre a.e. agreement: `(blockKernelInline m).rnDeriv volume =ᵐ blockProxy (m, ·)`. -/
 private lemma blockProxy_ae
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) {M n : ℕ} (c : AwgnCode M n P) (m : Fin M) :
     (fun y => ((blockKernelInline N c) m).rnDeriv MeasureTheory.volume y)
       =ᵐ[(blockKernelInline N c) m] fun y => blockProxy N c (m, y) := by
-  sorry
+  -- `blockKernelInline m = vol.withDensity (∏ᵢ gaussianPDF (encoder m i)(·i))`, so its
+  -- rnDeriv =ᵐ[vol] that density; transport to `=ᵐ[blockKernelInline m]` since fibre ≪ vol.
+  have hfibre_eq : (blockKernelInline N c) m
+      = (MeasureTheory.volume : Measure (Fin n → ℝ)).withDensity
+          (fun y => ∏ i : Fin n, gaussianPDF (c.encoder m i) N (y i)) := by
+    show Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N) = _
+    exact blockComponentInline_withDensity hN c m
+  have h_dens_meas : Measurable (fun y : Fin n → ℝ =>
+      ∏ i : Fin n, gaussianPDF (c.encoder m i) N (y i)) :=
+    Finset.measurable_prod _ (fun i _ =>
+      (measurable_gaussianPDF (c.encoder m i) N).comp (measurable_pi_apply i))
+  have h_fibre_ac : (blockKernelInline N c) m ≪ (MeasureTheory.volume : Measure (Fin n → ℝ)) := by
+    rw [hfibre_eq]; exact MeasureTheory.withDensity_absolutelyContinuous _ _
+  have h_rn_vol : ((blockKernelInline N c) m).rnDeriv (MeasureTheory.volume : Measure (Fin n → ℝ))
+      =ᵐ[(MeasureTheory.volume : Measure (Fin n → ℝ))]
+      (fun y => ∏ i : Fin n, gaussianPDF (c.encoder m i) N (y i)) := by
+    conv_lhs => rw [hfibre_eq]
+    exact Measure.rnDeriv_withDensity _ h_dens_meas
+  filter_upwards [h_fibre_ac.ae_le h_rn_vol] with y hy
+  simpa [blockProxy] using hy
 
 /-- Fibre log-density integral identity: the proxy log-density integrates the same as the
 rnDeriv log-density against the m-th fibre (used to feed `h_fibre_self`). -/
@@ -846,7 +869,9 @@ private lemma fibre_log_proxy_integral
       = ∫ y, Real.log
           (((blockKernelInline N c) m).rnDeriv MeasureTheory.volume y).toReal
           ∂((blockKernelInline N c) m) := by
-  sorry
+  refine integral_congr_ae ?_
+  filter_upwards [blockProxy_ae hN c m] with y hy
+  rw [hy]
 
 /-- Fibre neg-entropy value: `∫ y, log (rnDeriv (blockKernelInline m) vol) ∂(blockKernelInline m)
 = -n·h(gaussianReal 0 N)`. -/
