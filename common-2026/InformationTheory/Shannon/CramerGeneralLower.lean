@@ -65,7 +65,19 @@ under `infinitePi (fun _ => μ)`, via `iIndepFun_iff_map_fun_eq_infinitePi_map`
 and `IdentDistrib.map_eq`; the partial-sum event masses agree by pullback through
 the two joint maps.  `hVar` is a precondition, not a load-bearing core — the
 window-mass core is supplied internally by the CLT inside the headline; root B
-only transports + `exact`. -/
+only transports + `exact`.
+
+@audit:ok (2026-06-11 independent honesty audit: sorryAx-free `[propext,
+Classical.choice, Quot.sound]` machine-confirmed. Transport is a GENUINE reduction
+(not a false implication): both the general-iid joint law `μ.map g` and the
+canonical copy `P.map g₀` push forward to the SAME `infinitePi (μ.map (X 0))` —
+`h_indep` is genuinely consumed by `iIndepFun_iff_map_fun_eq_infinitePi_map` and
+`h_ident` by `IdentDistrib.map_eq` to factor the marginals; the partial-sum event
+masses then agree by double pullback (`hpreB`/`hpre0` correct). `h_bdd0` correctly
+specializes `h_bdd` to `X 0` (i=0 instance); `h_deriv'` is a sound rewrite of
+`h_deriv` through the cgf bridge `cgf_eval_eq_cgf_base`; `hVar` is passed verbatim
+to the headline (matching form, no under-hypothesization) and is a precondition
+(non-degeneracy), not load-bearing.) -/
 theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
     (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
@@ -171,7 +183,11 @@ theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
   exact CramerCltBoundary.cramer_lower_boundary_unconditional
     (μ₀ := μ) (Y := X 0) (h_meas 0) h_bdd0 a lam hlam h_deriv' hVar h_coboundedBelow
 
-/-- **Cramér lower bound, Legendre form**. Threads `hVar` to `cramer_lower`. -/
+/-- **Cramér lower bound, Legendre form**. Threads `hVar` to `cramer_lower`.
+
+@audit:ok (2026-06-11 independent honesty audit: sorryAx-free; rewrites conclusion
+via the `hlam_opt` Legendre-attainment precondition, all hypotheses are regularity
+preconditions threaded to `cramer_lower`.) -/
 theorem cramer_lower_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
     (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
@@ -195,7 +211,12 @@ theorem cramer_lower_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
 
 /-- **Cramér's theorem (`Tendsto` form)** (Cover-Thomas 11.4.1). Sandwich of
 `cramer_upper_legendre` (Phase B) and `cramer_lower_legendre` (Phase C). Threads
-`hVar` to the lower-bound side. -/
+`hVar` to the lower-bound side.
+
+@audit:ok (2026-06-11 independent honesty audit: sorryAx-free `[propext,
+Classical.choice, Quot.sound]` machine-confirmed; genuine sandwich of the
+constructive upper bound and the headline-backed lower bound. All hypotheses are
+regularity preconditions / cobounded-bounded side-conditions.) -/
 @[entry_point]
 theorem cramer_tendsto [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))

@@ -127,7 +127,11 @@ For `lam ≥ 0`, on the window `W_n := {x | a·n ≤ ∑ Y(x i) < (a+ε)·n}` th
 un-tilted product mass of the half-line event `E_n := {x | a·n ≤ ∑ Y(x i)}` is
 bounded below by `exp(-n·(lam·a − Λ + lam·ε))` times the tilted product mass of
 `W_n`, where `Λ = cgf Y μ₀ lam`. The density `d(pi μ₀)/d(pi μ_tilt)` is
-`exp(−lam·∑Y + n·Λ)`, bounded below on `W_n` by `exp(−lam(a+ε)n + nΛ)`. -/
+`exp(−lam·∑Y + n·Λ)`, bounded below on `W_n` by `exp(−lam(a+ε)n + nΛ)`.
+
+@audit:ok (2026-06-11 independent honesty audit: sorryAx-free machine-confirmed;
+signature verbatim-identical to the pre-hoist version, genuine density-bound proof,
+honesty-neutral relocation.) -/
 theorem change_of_measure_lower_bound_pi {n : ℕ} {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
     (a ε lam : ℝ) (hlam : 0 ≤ lam) :
@@ -231,7 +235,13 @@ def IsTiltedWindowEventuallyLarge (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (l
 /-- **W-3 residual reduction**: the residual window predicate implies the full
 n-letter RN-deriv predicate `IsMeasureInfinitePiTiltedEq`. The change-of-measure
 lower bound (Phase 3) plus the cylinder lift (Phase 2) reduce the predicate to
-the eventual largeness of the tilted window mass, discharged here with `C = 1/2`. -/
+the eventual largeness of the tilted window mass, discharged here with `C = 1/2`.
+
+@audit:ok (2026-06-11 independent honesty audit: sorryAx-free `[propext,
+Classical.choice, Quot.sound]` machine-confirmed; signature matches the pre-hoist
+version verbatim (honesty-neutral relocation). `h_res` is genuinely consumed
+(`filter_upwards [h_res a ε hε]`) to supply the window-mass input, not a vacuous
+bundle.) -/
 @[entry_point]
 theorem isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
@@ -399,7 +409,10 @@ This is Mathlib's `ProbabilityTheory.integral_tilted_mul_self`, whose interior
 side condition `lam ∈ interior (integrableExpSet Y μ₀)` is discharged for free
 here: boundedness of `Y` makes `exp (t·Y)` integrable for *every* `t`
 (`Cramer.integrable_exp_mul_of_bounded`), so `integrableExpSet Y μ₀ = Set.univ`
-and its interior is again `Set.univ`. -/
+and its interior is again `Set.univ`.
+
+@audit:ok (2026-06-11 independent honesty audit: sorryAx-free machine-confirmed;
+signature verbatim-identical to the pre-hoist version, honesty-neutral relocation.) -/
 theorem tiltedMean_eq_deriv_cgf
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) :

@@ -113,7 +113,18 @@ and can be imported here. The headline requires the non-degeneracy precondition
 this signature as a regularity precondition (NOT load-bearing core: the window
 mass is supplied internally by the CLT inside the headline; `hVar` only excludes
 the degenerate constant-RV case where the Gaussian-median / window-mass argument
-breaks). `_h_deriv` is activated (`h_deriv`) to pin the optimal tilt. -/
+breaks). `_h_deriv` is activated (`h_deriv`) to pin the optimal tilt.
+
+@audit:ok (2026-06-11 independent honesty audit: sorryAx-free `[propext,
+Classical.choice, Quot.sound]` machine-confirmed; body is a verbatim `exact` of
+the `@audit:ok` headline `cramer_lower_boundary_unconditional` with matching
+argument order. `hVar` is a precondition, NOT load-bearing — decisive check: the
+window-mass `≥ 1/4` core is derived inside `tiltedWindow_eventually_large_of_boundary`
+via the CLT (`tilted_halfline_tendsto_half`), where `hVar` is consumed only as the
+non-degeneracy input that keeps the CLT non-trivial; at `Var = 0` the tilted sum is
+a.e. constant and the half-line→1/2 claim collapses. Granting `hVar` alone does not
+hand over the conclusion. `h_deriv` pins `a = ∫Y∂tilted` (def-fix #24); `h_coboundedBelow`
+is the standard `liminf_le_liminf` side-condition.) -/
 theorem cramer_lower_phaseC_partial_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
@@ -153,7 +164,12 @@ two are distinct regularity preconditions: `hlam_opt` bridges the conclusion to
 WIRED 2026-06-11 (`cramer-root-wiring-plan` Phase A a3): the root now also
 requires the non-degeneracy precondition `hVar`; it is threaded through here as a
 regularity precondition (not load-bearing, see the root docstring). The root is
-now sorryAx-free, so this wrapper is too. -/
+now sorryAx-free, so this wrapper is too.
+
+@audit:ok (2026-06-11 independent honesty audit: sorryAx-free machine-confirmed;
+threads root preconditions through and rewrites the conclusion via the
+`hlam_opt` Legendre-attainment precondition. `hVar`/`h_deriv`/`hlam_opt` are all
+regularity preconditions, no load-bearing core.) -/
 theorem cramer_lower_legendre_phaseC_partial_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
@@ -193,7 +209,12 @@ CLT-boundary headline through `cramer_lower_phaseC_partial_discharge`).
 WIRED 2026-06-11 (`cramer-root-wiring-plan` Phase A): the lower-bound leg now
 runs through the sorryAx-free root (discharged by the CLT-boundary headline);
 this `@[entry_point]` is therefore now sorryAx-free. The root's non-degeneracy
-precondition `hVar` is threaded through here as a regularity precondition. -/
+precondition `hVar` is threaded through here as a regularity precondition.
+
+@audit:ok (2026-06-11 independent honesty audit: sorryAx-free machine-confirmed;
+genuine `le_antisymm`-style sandwich of `cramer_upper_legendre` (constructive)
+and `cramer_lower_legendre_phaseC_partial_discharge` (headline-backed). All
+hypotheses are regularity preconditions / cobounded side-conditions.) -/
 @[entry_point]
 theorem cramer_tendsto_phaseC_partial_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]

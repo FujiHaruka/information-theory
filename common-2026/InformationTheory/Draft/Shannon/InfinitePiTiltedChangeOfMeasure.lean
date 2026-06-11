@@ -167,9 +167,19 @@ WIRED 2026-06-11 (`cramer-root-wiring-plan` Phase A): the upstream
 CLT-boundary headline, so this wrapper is sorryAx-free too (verified
 `#print axioms` = `[propext, Classical.choice, Quot.sound]`). The root's
 non-degeneracy precondition `hVar` is threaded through here as a regularity
-precondition. `_h_res` remains load-bearing in name only (see above).
+precondition.
 
-`@audit:closed-by-successor(cramer-chernoff-clt-closure-moonshot-plan)` -/
+@audit:ok (2026-06-11 independent honesty audit, migrated from legacy
+`@audit:closed-by-successor`: sorryAx-free `[propext, Classical.choice, Quot.sound]`
+machine-confirmed. NOT a tier-5 load-bearing defect: `_h_res`
+(`IsTiltedWindowEventuallyLarge`) is **provably unused** — the body passes ONLY
+`hY_meas h_bdd a lam hlam h_deriv hVar h_coboundedBelow` to
+`cramer_lower_phaseC_partial_discharge` and never references `_h_res`, so it cannot
+carry the proof's core (the window-mass core is supplied internally by the headline
+CLT). An ignored predicate argument strengthens the precondition unnecessarily but
+does not make the statement dishonest or vacuous — the theorem is fully proved as
+stated. COSMETIC follow-up (not a closure blocker): `_h_res` can be dropped in a
+later API-cleanup signature change to drop the unneeded hypothesis.) -/
 @[entry_point]
 theorem cramer_lower_phaseC_residual_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
