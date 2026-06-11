@@ -84,12 +84,31 @@ satisfying the 3 AEP sub-bounds:
 * **(ii) typical-set volume bound** (via `klDiv` form, judgement #3 in inventory);
 * **(iii) independent-pair upper bound** (`X'` independent of `Y`).
 
-Mathlib gap: continuous SMB (Shannon–McMillan–Breiman) + n-dim `differentialEntropy`
-absent in Mathlib. Wall promote: `audit-tags.md` Wall name register entry
-`awgn-continuous-aep-gaussian` (specialization of generic `continuous-aep` with the
-concrete 3-sub-bound `klDiv` shape required by AWGN achievability core).
+**STATUS (2026-06-12) — wall partially overturned, sub-bound (ii) needs a STATEMENT-FIX.**
 
-@residual(wall:awgn-continuous-aep-gaussian) -/
+* **(i) is a FALSE WALL (engine genuine):** the inventory's `wall` verdict ("continuous
+  SMB / a.s.-convergence SLLN needs an infinite product measure ⇒ 200-400 lines") was a
+  *category-(b) scope* call, not a hard gap. The AEP mass concentration needs only a
+  **finite-`n` Chebyshev weak law** (no infinite product), now genuine + sorryAx-free in
+  `AchievabilityAEP.lean` (`pi_empirical_mean_concentration` / `pi_empirical_mean_typical_mass`).
+  Wiring those to the joint AWGN log-density discharges (i).
+* **(ii) is MIS-STATED (semantic bug in judgement #3's `klDiv` form):** the term
+  `klDiv (pi (gaussianReal 0 (P+N))) volume` does **not** compute the differential entropy.
+  `klDiv μ ν = ofReal (∫ llr ∂μ + ν.real univ − μ.real univ)` (`KullbackLeibler/Basic.lean:57`),
+  and for the **infinite** reference `ν = volume`, `volume univ = ⊤ ⇒ ν.real univ = 0`
+  (machine-checked). So `klDiv (pi gaussian) volume = ofReal(−n·h − 1)`, which **clamps to 0**
+  whenever `h(P+N) > 0` (i.e. `P+N ≥ 1/(2πe)`, essentially always). Then (ii) reads
+  `volume A ≤ exp(n·ε)` — **incompatible with (i)** (mass `≥ 1−ε` forces `volume A ≳ exp(+n·h)`).
+  The bound is therefore unsatisfiable for the same `A`; this is a **false statement**, not a
+  Mathlib gap. Fix: restate (ii) with the genuine joint `differentialEntropy h(X,Y)` (or a
+  `klDiv` to a *probability* reference), not `klDiv`-to-`volume`.
+* **(iii) is SOUND:** here both arguments of `klDiv` are *probability* measures (joint law vs
+  product of marginals), so it is the true mutual information `n·I(X;Y) ≥ 0` — the correct AEP
+  independent-pair bound. Dischargeable via `klDiv` product factorization + the Chebyshev engine.
+
+@residual(wall:awgn-continuous-aep-gaussian)
+@audit:retract-candidate(false-statement) reason=sub-bound-(ii)-klDiv-to-volume-degenerates-to-0
+  successor=statement-fix-(ii)-to-differentialEntropy-form;(i)-engine-done;(iii)-sound -/
 theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
     ∀ ⦃ε : ℝ⦄, 0 < ε → ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n →
       ∃ A : Set ((Fin n → ℝ) × (Fin n → ℝ)),
