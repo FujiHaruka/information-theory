@@ -1,7 +1,7 @@
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.CentralLimitTheorem
 import Mathlib.MeasureTheory.Measure.Portmanteau
-import InformationTheory.Draft.Shannon.InfinitePiTiltedChangeOfMeasure
+import InformationTheory.Shannon.CramerBoundaryUpstream
 
 /-!
 # Cramér / Chernoff CLT-boundary closure
