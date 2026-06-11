@@ -482,8 +482,8 @@ theorem awgn_avg_error_union_bound
   refine ⟨max N_aep N_rand, ?_⟩
   intro n hn M hM_pos hM_le
   haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
-  -- AEP supplies the typical set A with the 3 bounds; we forward (Measurable A).
-  obtain ⟨A, hA_meas, _, _, _⟩ :=
+  -- AEP supplies the typical set A with the 2 bounds; we forward (Measurable A).
+  obtain ⟨A, hA_meas, _, _⟩ :=
     hN_aep (le_of_max_le_left hn : N_aep ≤ n)
   refine ⟨A, hA_meas, ?_⟩
   intro m
@@ -931,7 +931,7 @@ theorem isAwgnTypicalityHypothesis
   haveI : NeZero M := ⟨hM_pos.ne'⟩
   haveI : NeZero M_target := ⟨hM_target_pos.ne'⟩
   -- (1) typical set + measurability from AEP at parameters `(P', N, ε_rand, n)`.
-  obtain ⟨A, hA_meas, _hA_prob, _hA_vol, _hA_indep⟩ := hN_aep hn_aep
+  obtain ⟨A, hA_meas, _hA_mass, _hA_indep⟩ := hN_aep hn_aep
   -- (2) per-m average error bound from h_rand' at rate R'' (size M = ⌈exp(n·R'')⌉),
   --     codebook drawn from the P'-variance Gaussian product.
   have hM_le_ceil_R'' : M ≤ Nat.ceil (Real.exp ((n : ℝ) * R'')) := le_rfl

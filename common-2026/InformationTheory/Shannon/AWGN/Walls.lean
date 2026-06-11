@@ -1,7 +1,10 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.AWGN.Basic
+import InformationTheory.Shannon.AWGN.AchievabilityAEP
 import InformationTheory.Shannon.BlockwiseChannel
 import InformationTheory.Shannon.ChannelCoding.MIDecomp
+import InformationTheory.Shannon.MIChainRule
+import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Draft.Shannon.MultivariateDiffEntropy
 import Mathlib.Probability.Distributions.Gaussian.Real
 
@@ -77,38 +80,45 @@ walls (all achievability-side): 1 `awgn-continuous-aep-gaussian`, 2
 
 Given `P : ℝ`, `N : ℝ≥0` and tolerance `ε > 0`, there exists a threshold `N₀` such that
 for every `n ≥ N₀`, a measurable typical set `A ⊆ (Fin n → ℝ) × (Fin n → ℝ)` exists
-satisfying the 3 AEP sub-bounds:
+satisfying the 2 AEP sub-bounds:
 
 * **(i) joint codebook+noise mass `≥ 1 - ε`**: under the joint law of `(X, Y)` with
   `X ∼ N(0,P)` i.i.d. and `Y = X + Z`, `Z ∼ N(0,N)` i.i.d.;
-* **(ii) typical-set volume bound** (via `klDiv` form, judgement #3 in inventory);
-* **(iii) independent-pair upper bound** (`X'` independent of `Y`).
+* **(iii) independent-pair upper bound** (`X'` independent of `Y`): under the product
+  of marginals, `A` has mass `≤ exp(−n(I − 3ε))`.
 
-**STATUS (2026-06-12) — wall partially overturned, sub-bound (ii) needs a STATEMENT-FIX.**
+**STATUS (2026-06-12) — sub-bound (ii) DELETED, (i)/(iii) being genuine-closed in this Phase.**
 
-* **(i) is a FALSE WALL (engine genuine):** the inventory's `wall` verdict ("continuous
-  SMB / a.s.-convergence SLLN needs an infinite product measure ⇒ 200-400 lines") was a
-  *category-(b) scope* call, not a hard gap. The AEP mass concentration needs only a
-  **finite-`n` Chebyshev weak law** (no infinite product), now genuine + sorryAx-free in
-  `AchievabilityAEP.lean` (`pi_empirical_mean_concentration` / `pi_empirical_mean_typical_mass`).
-  Wiring those to the joint AWGN log-density discharges (i).
-* **(ii) is MIS-STATED (semantic bug in judgement #3's `klDiv` form):** the term
-  `klDiv (pi (gaussianReal 0 (P+N))) volume` does **not** compute the differential entropy.
-  `klDiv μ ν = ofReal (∫ llr ∂μ + ν.real univ − μ.real univ)` (`KullbackLeibler/Basic.lean:57`),
-  and for the **infinite** reference `ν = volume`, `volume univ = ⊤ ⇒ ν.real univ = 0`
-  (machine-checked). So `klDiv (pi gaussian) volume = ofReal(−n·h − 1)`, which **clamps to 0**
-  whenever `h(P+N) > 0` (i.e. `P+N ≥ 1/(2πe)`, essentially always). Then (ii) reads
-  `volume A ≤ exp(n·ε)` — **incompatible with (i)** (mass `≥ 1−ε` forces `volume A ≳ exp(+n·h)`).
-  The bound is therefore unsatisfiable for the same `A`; this is a **false statement**, not a
-  Mathlib gap. Fix: restate (ii) with the genuine joint `differentialEntropy h(X,Y)` (or a
-  `klDiv` to a *probability* reference), not `klDiv`-to-`volume`.
-* **(iii) is SOUND:** here both arguments of `klDiv` are *probability* measures (joint law vs
-  product of marginals), so it is the true mutual information `n·I(X;Y) ≥ 0` — the correct AEP
-  independent-pair bound. Dischargeable via `klDiv` product factorization + the Chebyshev engine.
+* **(ii) volume bound REMOVED (false statement excised):** the old (ii) read
+  `volume A ≤ exp(n·(klDiv (pi gaussian) volume).toReal + n·ε)`; for the *infinite*
+  reference `ν = volume`, `volume univ = ⊤ ⇒ ν.real univ = 0` (machine-checked), so the
+  `klDiv`-to-`volume` term clamps to 0 and the bound becomes unsatisfiable jointly with (i).
+  It was a **false statement**, not a Mathlib gap. The consumer discarded `_hA_vol`, and the
+  union-bound's second-term mass is supplied by (iii) (a different axis from volume counting),
+  so (ii) was **not load-bearing**. Removed entirely (not statement-fixed).
+* **(i) is genuine (engine):** the AEP mass concentration needs only a **finite-`n` Chebyshev
+  weak law** (no infinite product), genuine + sorryAx-free in `AchievabilityAEP.lean`
+  (`pi_empirical_mean_concentration` / `pi_empirical_mean_typical_mass`). Wiring those to the
+  joint AWGN log-density discharges (i).
+* **(iii) ⚠ FALSE-AS-WRITTEN (verbatim-confirmed 2026-06-12, n DOUBLE-COUNTED in the
+  exponent):** the `klDiv` of the two *probability* measures (joint law vs product of
+  marginals) is the n-letter KL `klDiv_n = n · I` (per-letter `I`, by `klDiv_pi_eq_sum`
+  additivity over the `n` coordinates). The exponent as written is
+  `−n · (klDiv_n − 3ε) = −n · (n·I − 3ε) = −n²·I + 3nε`. The *true* product-measure mass of
+  the typical set is `≈ exp(−n·I)` (standard AEP independent-pair bound:
+  `product(A) = ∫_A exp(−∑φ) d(joint) ≤ exp(−(klDiv_n − nε)) = exp(−n(I−ε))`). Since for
+  `I > 0, n ≥ 2` we have `exp(−n·I) > exp(−n²·I + 3nε)`, the written bound is **false** (it
+  over-counts one factor of `n`: the `klDiv_n` inside the `−n·(…)` should be the per-letter
+  `klDiv_n / n = I`, i.e. the exponent should read `−(klDiv_n − n·3ε)` or `−n·(I − 3ε)`).
+  This is the **same class of mis-statement as the deleted (ii)** (a mis-scaled `klDiv`
+  form), NOT a Mathlib gap. The brief's "(iii) sound, keep verbatim" premise is therefore
+  wrong; (iii) needs a STATEMENT-FIX (normalize the `klDiv` by `n`) before it can be
+  genuine-closed. Left as `sorry` (kept verbatim per the brief's scope, but flagged) — the
+  consumer currently discards this bound (`_hA_indep`), so the false form is not yet
+  load-bearing; Phase 4's D2 union-bound is the first real consumer and must use the
+  corrected exponent.
 
-@residual(wall:awgn-continuous-aep-gaussian)
-@audit:retract-candidate(false-statement) reason=sub-bound-(ii)-klDiv-to-volume-degenerates-to-0
-  successor=statement-fix-(ii)-to-differentialEntropy-form;(i)-engine-done;(iii)-sound -/
+@residual(wall:awgn-continuous-aep-gaussian) -/
 theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
     ∀ ⦃ε : ℝ⦄, 0 < ε → ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n →
       ∃ A : Set ((Fin n → ℝ) × (Fin n → ℝ)),
@@ -118,11 +128,6 @@ theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
               (fun p : (Fin n → ℝ) × (Fin n → ℝ) =>
                   (p.1, fun i => p.1 i + p.2 i))) A
             ≥ ENNReal.ofReal (1 - ε)
-        ∧ volume A
-            ≤ ENNReal.ofReal (Real.exp ((n : ℝ) *
-                ((klDiv
-                    (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N)))
-                    (volume : Measure (Fin n → ℝ))).toReal + ε)))
         ∧ ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
               (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N)))) A
             ≤ ENNReal.ofReal (Real.exp (-(n : ℝ) *
