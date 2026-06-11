@@ -1519,6 +1519,57 @@ private lemma perLetterMI_eq_channel
     rfl
   rw [h_joint, h_in, h_out]
 
+/-- Any measurable real function is integrable against the finite-support `perLetterInputLaw`
+(a `(1/M)`-weighted sum of `M` Diracs). -/
+private lemma integrable_of_perLetterInputLaw
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n)
+    {f : ℝ → ℝ} (hf : Measurable f) :
+    Integrable f (perLetterInputLaw h_meas c i) := by
+  classical
+  rw [perLetterInputLaw_eq_mixture h_meas c i]
+  have hM_ne_top : (Fintype.card (Fin M) : ℝ≥0∞)⁻¹ ≠ ∞ := by
+    rw [Fintype.card_fin]; simp; exact_mod_cast (NeZero.ne M)
+  refine Integrable.smul_measure ?_ hM_ne_top
+  refine integrable_finsetSum_measure.mpr (fun m _ => ?_)
+  exact integrable_dirac (enorm_lt_top)
+
+/-- Per-fibre output log-density integrability (1-D): `log (rnDeriv perLetterYLaw_i vol)`
+integrable against each Gaussian fibre `gaussian x N`. -/
+private lemma integrable_log_perLetterLaw_on_fibre
+    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) (x : ℝ) :
+    Integrable
+      (fun y => Real.log
+        (((converseJointInline h_meas c).map (fun ω => ω.2 i)).rnDeriv volume y).toReal)
+      (gaussianReal x N) := by
+  classical
+  have hM_pos : 0 < M := Nat.pos_of_ne_zero (NeZero.ne M)
+  set q := (converseJointInline h_meas c).map (fun ω => ω.2 i) with hq
+  set f : ℝ → ℝ≥0∞ := perLetterMixtureDensity N c i with hf_def
+  have hf_meas : Measurable f := perLetterMixtureDensity_measurable N c i
+  have hq_wd : q = volume.withDensity f := by
+    rw [hq, hf_def]; exact perLetterLaw_withDensity h_meas c i hM_pos hN
+  have hgx_ac : gaussianReal x N ≪ (volume : Measure ℝ) := gaussianReal_absolutelyContinuous x hN
+  have h_rn_vol : q.rnDeriv volume =ᵐ[volume] f := by
+    rw [hq_wd]; exact Measure.rnDeriv_withDensity volume hf_meas
+  have h_log_ae : (fun y => Real.log (q.rnDeriv volume y).toReal)
+      =ᵐ[gaussianReal x N] (fun y => Real.log ((perLetterMixtureDensity N c i y).toReal)) := by
+    filter_upwards [hgx_ac.ae_le h_rn_vol] with y hy
+    rw [hy]
+  refine (Integrable.congr ?_ h_log_ae.symm)
+  obtain ⟨c₀, c₁, hc₁, h_abs⟩ := perLetterMixtureDensity_log_abs_le N c i hM_pos hN
+  have h_sq_int : Integrable (fun y : ℝ => y ^ 2) (gaussianReal x N) :=
+    (memLp_id_gaussianReal (μ := x) (v := N) 2).integrable_sq
+  have h_dom : Integrable (fun y : ℝ => c₀ + c₁ * y ^ 2) (gaussianReal x N) :=
+    (integrable_const c₀).add (h_sq_int.const_mul c₁)
+  refine Integrable.mono' h_dom ?_ ?_
+  · exact (Real.measurable_log.comp
+      (perLetterMixtureDensity_measurable N c i).ennreal_toReal).aestronglyMeasurable
+  · filter_upwards with y
+    rw [Real.norm_eq_abs]
+    exact h_abs y
+
 /-- **Per-letter MI decomposition**: `I(X_i;Y_i).toReal = h(Y_i) − h(noise)`. -/
 private lemma perLetterMI_decomp
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
@@ -1587,19 +1638,73 @@ private lemma perLetterMI_decomp
       (fun y => Real.log ((ChannelCoding.outputDistribution p W).rnDeriv volume y).toReal)
       (ChannelCoding.outputDistribution p W) := by
     rw [hq_eq]
-    -- transport `awgnPerLetterIntegrability`? we need log(rnDeriv) integrable against the law.
-    sorry
-  -- compProd-level integrabilities
+    set ν : Measure ℝ := (converseJointInline h_meas c).map (fun ω => ω.2 i) with hν
+    haveI hν_prob : IsProbabilityMeasure ν := by
+      rw [hν]
+      exact Measure.isProbabilityMeasure_map
+        (((measurable_pi_apply i).comp measurable_snd).aemeasurable)
+    set f : ℝ → ℝ≥0∞ := perLetterMixtureDensity N c i with hf_def
+    have hf_meas : Measurable f := perLetterMixtureDensity_measurable N c i
+    have hν_wd : ν = volume.withDensity f := by
+      rw [hν, hf_def]; exact perLetterLaw_withDensity h_meas c i hM_pos hN
+    have hν_ac : ν ≪ (volume : Measure ℝ) := by
+      rw [hν_wd]; exact MeasureTheory.withDensity_absolutelyContinuous _ _
+    have h_rn_vol : ν.rnDeriv volume =ᵐ[volume] f := by
+      conv_lhs => rw [hν_wd]
+      exact Measure.rnDeriv_withDensity volume hf_meas
+    have h_log_ae : (fun y => Real.log (ν.rnDeriv volume y).toReal)
+        =ᵐ[ν] (fun y => Real.log ((perLetterMixtureDensity N c i y).toReal)) := by
+      filter_upwards [hν_ac.ae_le h_rn_vol] with y hy
+      rw [hy]
+    refine (Integrable.congr ?_ h_log_ae.symm)
+    obtain ⟨c₀, c₁, hc₁, h_abs⟩ := perLetterMixtureDensity_log_abs_le N c i hM_pos hN
+    have h_dom : Integrable (fun y : ℝ => c₀ + c₁ * y ^ 2) ν :=
+      (integrable_const c₀).add (((by rw [hν]; exact perLetterLaw_sq_integrable h_meas c i hM_pos hN)
+        : Integrable (fun y : ℝ => y ^ 2) ν).const_mul c₁)
+    refine Integrable.mono' h_dom ?_ ?_
+    · exact (Real.measurable_log.comp
+        (perLetterMixtureDensity_measurable N c i).ennreal_toReal).aestronglyMeasurable
+    · filter_upwards with y
+      rw [Real.norm_eq_abs]
+      exact h_abs y
+  -- compProd-level integrabilities (the `p`-norm-integrability is free: `p` is finite-support)
   have h_int_fibre : Integrable (fun z : ℝ × ℝ => Real.log (g z).toReal) (p ⊗ₘ W) := by
     rw [Measure.integrable_compProd_iff
       ((hg_meas.ennreal_toReal.log).aestronglyMeasurable)]
     refine ⟨Filter.Eventually.of_forall (fun x => h_int_fibre_self x), ?_⟩
-    -- input space `ℝ` but `p` is discrete (finite support); ∫ ‖log(g(x,·))‖ ∂(W x) integrable over p
-    sorry
+    rw [hp]
+    refine integrable_of_perLetterInputLaw h_meas c i ?_
+    -- measurability of `x ↦ ∫ y, ‖log g(x,y)‖ ∂(W x)`
+    have : StronglyMeasurable
+        (fun x => ∫ y, ‖Real.log (g (x, y)).toReal‖ ∂(W x)) :=
+      (StronglyMeasurable.integral_kernel_prod_right' (κ := W)
+        (f := fun z : ℝ × ℝ => ‖Real.log (g z).toReal‖)
+        (hg_meas.ennreal_toReal.log.norm.stronglyMeasurable))
+    exact this.measurable
   have h_int_out : Integrable
       (fun z : ℝ × ℝ => Real.log
           ((ChannelCoding.outputDistribution p W).rnDeriv volume z.2).toReal) (p ⊗ₘ W) := by
-    sorry
+    rw [hq_eq]
+    set ψ : ℝ → ℝ := fun y => Real.log
+      (((converseJointInline h_meas c).map (fun ω => ω.2 i)).rnDeriv volume y).toReal with hψ
+    have hψ_meas : Measurable ψ :=
+      (Real.measurable_log.comp (Measure.measurable_rnDeriv _ _).ennreal_toReal)
+    show Integrable (fun z : ℝ × ℝ => ψ z.2) (p ⊗ₘ W)
+    rw [Measure.integrable_compProd_iff
+      (f := fun z : ℝ × ℝ => ψ z.2) ((hψ_meas.comp measurable_snd).aestronglyMeasurable)]
+    refine ⟨Filter.Eventually.of_forall (fun x => ?_), ?_⟩
+    · -- per-fibre: `ψ` integrable against `W x = gaussian x N`
+      have hWx : W x = gaussianReal x N := by rw [hW, awgnChannel_apply]
+      rw [hWx]
+      exact integrable_log_perLetterLaw_on_fibre hN h_meas c i x
+    · -- `p`-norm-integrability (finite support)
+      rw [hp]
+      refine integrable_of_perLetterInputLaw h_meas c i ?_
+      have : StronglyMeasurable (fun x => ∫ y, ‖ψ y‖ ∂(W x)) :=
+        (StronglyMeasurable.integral_kernel_prod_right' (κ := W)
+          (f := fun z : ℝ × ℝ => ‖ψ z.2‖)
+          ((hψ_meas.comp measurable_snd).norm.stronglyMeasurable))
+      exact this.measurable
   -- apply the generic 1-D decomposition
   rw [perLetterMI_eq_channel h_meas c i]
   rw [ChannelCoding.mutualInfoOfChannel_toReal_eq_diffEntropy_sub
