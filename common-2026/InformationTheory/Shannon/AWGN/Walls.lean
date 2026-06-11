@@ -176,7 +176,31 @@ Signature note: `gaussianCodebook M n P_cb.toNNReal` is unfolded into the 2-stag
 `P_cb < P_target` slack is required (the `P_cb = P_target` case is unsatisfiable —
 the v1 false statement; see `AWGNAchievabilityDischarge.lean` Retraction log).
 
-@residual(wall:awgn-power-constraint-honest) -/
+**⚠️ FALSE-STATEMENT FINDING (2026-06-12) — this `wall` slug is a MISCLASSIFICATION.**
+The current `∀ m, …` formulation is **not satisfiable** for `R` near `capacity(P_target)`,
+so the `@residual(wall:…)` (which asserts an *analytic Mathlib gap*) is wrong: this is a
+**false statement**, unprovable even with all of Mathlib. Argument: the `M` codewords are
+independent, so the mass `= q^M` with `q = P(∑ᵢ Xᵢ² ≤ n·P_target)` for one codeword
+(`Xᵢ ∼ N(0,P_cb)` i.i.d.). The complementary upper tail `1 - q = P(∑ᵢ Xᵢ² > n·P_target)`
+decays at the chi-square large-deviation rate `ψ(P_cb,P_target) > 0` (fixed by `P_cb,P_target`).
+With `M ≤ ⌈exp(n·R)⌉`, `q^M ≈ exp(-exp(n(R-ψ)))`, which `→ 0` whenever `R > ψ`. Since
+`ψ(P_cb,P_target) → 0` as `P_cb → P_target` while `capacity(P_target)` stays bounded away
+from 0, for the consumer's choice `P_cb = P' = (N(exp 2R - 1)+P)/2` (`→ P_target` as
+`R → capacity`) one gets `ψ ≪ R`. Numeric refutation: `N=1, P_target=3, R=0.5 ⇒ P'≈2.359,
+ψ≈0.016 ≪ 0.5`, mass `→ 0`.
+
+The fix is a **statement-fix** (def-fix), not a proof: the standard Cover–Thomas argument
+handles power via **expurgation** (delete power-violating codewords together with the
+worst-half error step), needing only the *expected fraction of violators* `→ 0` (per-codeword
+`1 - q → 0`, a WLLN/Markov fact, no exponential rate). The honest replacement is a
+codebook-average / expected-fraction form (cf. `awgnRandomCodingBound_holds`'s
+`∫ codebook, …` shape) plus a consumer-side expurgation that incorporates power-violators.
+This is judgment #7's blind spot: the `P_cb < P_target` fix only patched the `P_cb = P_target`
+(0.5 per-codeword) degeneracy and missed the `∀ m`-over-`exp(nR)` exponential-rate obstruction.
+
+@residual(wall:awgn-power-constraint-honest)
+@audit:retract-candidate(false-statement) reason=∀m-form-unsatisfiable-for-R-near-capacity
+  successor=statement-fix-to-expected-fraction-expurgation-form (see facts ledger awgn-facts.md) -/
 theorem awgnPowerConstraintHonest_holds
     (P_cb P_target : ℝ) (_hP_slack : P_cb < P_target) (N : ℝ≥0) :
     ∀ ⦃ε : ℝ⦄, 0 < ε → ∀ ⦃R : ℝ⦄, 0 < R →

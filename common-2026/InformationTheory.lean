@@ -132,6 +132,7 @@ import InformationTheory.Shannon.AWGN.F1Discharge
 import InformationTheory.Shannon.AWGN.AchievabilityDischarge
 import InformationTheory.Shannon.AWGN.ConverseDischarge
 import InformationTheory.Shannon.AWGN.Walls
+import InformationTheory.Shannon.AWGN.AchievabilityAEP
 import InformationTheory.Shannon.ParallelGaussian.Basic
 import InformationTheory.Shannon.ParallelGaussian.L_PG0Discharge
 import InformationTheory.Shannon.EntropyPower.Ext
