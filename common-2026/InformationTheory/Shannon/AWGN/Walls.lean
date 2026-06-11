@@ -60,14 +60,18 @@ open scoped ENNReal NNReal BigOperators Topology
 chain rule `I(X;Y) = h(Y) − h(Y|X)` — was **closed 2026-05-28**: it is now assembled
 genuinely from local helpers in
 `InformationTheory.Draft.Shannon.ContChannelMIDecomp.mutualInfoOfChannel_toReal_eq_diffEntropy_sub`
-(0 sorry), so no shared wall is needed. This file's active wall count is now **4**:
+(0 sorry), so no shared wall is needed. This file's active wall count is now **3**:
 Wall 6 `awgn-converse-markov-regularity` was **genuine-closed 2026-06-04**
 (`awgnConverseMarkov_holds` is sorryAx-free, see its docstring); Wall 4
 `awgn-per-letter-integrability` was **genuine-closed 2026-06-10**
 (`awgnPerLetterIntegrability_holds` is sorryAx-free — the wall verdict over-claimed:
-the per-letter law is a finite 1-D Gaussian mixture, no SMB needed). Remaining active
-walls: 1 `awgn-continuous-aep-gaussian`, 2 `awgn-random-coding-bound`, 3
-`awgn-power-constraint-honest`, 5 `awgn-continuous-mi-chain-rule`.) -/
+the per-letter law is a finite 1-D Gaussian mixture, no SMB needed); Wall 5
+`awgn-continuous-mi-chain-rule` was **genuine-closed 2026-06-12**
+(`awgnContinuousMIChainRule_holds` is sorryAx-free — W-input route: deterministic DPI +
+generic n-D channel MI decomposition + n-D subadditivity + per-letter 1-D decomposition;
+the wall verdict over-claimed continuous-output MI chain machinery). Remaining active
+walls (all achievability-side): 1 `awgn-continuous-aep-gaussian`, 2
+`awgn-random-coding-bound`, 3 `awgn-power-constraint-honest`.) -/
 
 /-- **Continuous AEP for n-dim Gaussian** (Phase B-0 wall, 旧 `IsContinuousAEPGaussian`).
 
@@ -220,8 +224,8 @@ Gaussian moment integrand で dominate して genuine 化 (`awgnPerLetterIntegra
 だが、有限混合ゆえ Chebyshev 集中不要 (lower bound は単一成分で出る)。cause:single-route
 (壁判定が 1 ルート = SMB のみ想定で、1-D 混合密度の直接 domination ルートを見落とした)。
 
-よって converse-side の active wall は **3 件** (Wall 1/2/3 = achievability 系、Wall 5 =
-MI chain rule)、Markov と per-letter integrability は genuine。 -/
+よって converse-side の active wall は **0 件** (Wall 1/2/3 = achievability 系のみ残存)、
+Markov / per-letter integrability / MI chain rule (Wall 5) は全て genuine。 -/
 
 /-- Mirror of `awgnConverseJoint` (`AWGNConverseDischarge.lean:65`) body, inlined here
 to break the would-be import cycle. Defeq to `awgnConverseJoint h_meas c` (both `def`s
@@ -2053,7 +2057,9 @@ Consumer-side `unfold jointMIXnYn perLetterMI awgnConverseJoint` で defeq.
 (full-support Gaussian fibres ⇒ blockYLaw absolutely continuous) are **regularity
 preconditions**, both supplied by the converse consumer `isAwgnConverseFeasible_discharger`
 (`2 ≤ M` ⇒ `NeZero M`, and `hN : (N:ℝ) ≠ 0`). Not load-bearing: the MI inequality is
-proved genuinely from the entropy chain, not encoded in the hypotheses. -/
+proved genuinely from the entropy chain, not encoded in the hypotheses.
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free).
+@audit:ok -/
 @[entry_point]
 theorem awgnContinuousMIChainRule_holds
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)

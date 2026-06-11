@@ -445,7 +445,8 @@ theorem llr_compProd_prod_split_gen
 
 i.e. `I = (−h(Y|X)) − (−h(Y)) = h(Y) − h(Y|X)` once each integral is identified with the
 relevant neg-entropy by `integral_log_rnDeriv_self_eq_neg`. Genuine, mirrors the 1-D body
-`mutualInfoOfChannel_toReal_eq_diffEntropy_sub`. -/
+`mutualInfoOfChannel_toReal_eq_diffEntropy_sub`.
+@audit:ok -/
 theorem mutualInfoOfChannel_toReal_eq_log_density_sub
     [MeasurableSpace.CountableOrCountablyGenerated α β]
     {p : Measure α} [IsProbabilityMeasure p]
