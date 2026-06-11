@@ -10,6 +10,8 @@
 > が import、本 closure file も同 file を import) で in-place 書換不可 → root の `sorry + @residual(plan:本 plan)`
 > は「**閉じた closure asset (本 file headline) を指す live residual**」として残置 (字面一致は監査 verbatim 確認済)。
 > 後続が root sorry を「未達」と誤読しないよう注記 (下記判断ログ #4)。
+> **この未配線残件 (root A + root B の sorry 配線) の closure は子 plan
+> [`cramer-root-wiring-plan.md`](cramer-root-wiring-plan.md) が担当**(cycle-break + `hVar` thread + root B transport、下記 Sub-plan 一覧)。
 
 > **sorry-based 移行完了 (2026-05-25、partial)** — `docs/shannon/cramer-sorry-migration-plan.md`
 > に従い、本 plan に属する 1 件の `@audit:suspect(cramer-chernoff-clt-closure-moonshot-plan)`
@@ -67,6 +69,12 @@
 - [x] Phase 4 — 窓質量 → 1/2 (集合書換 + LLN 引き算) + `tiltedWindow_eventually_large_of_boundary` ✅ (`05ed225`)
 - [x] Phase 5 — residual predicate 緩和 (`1/2 → ∃C>0`) + boundary discharge ✅ `tilted_window_lower_to_halfline` + 緩和 reduction (`05ed225`)
 - [x] Phase 6 — Cramér end-to-end ✅ `cramer_lower_boundary_unconditional` (`05ed225`)、独立監査 PASS
+
+## Sub-plan 一覧
+
+| 子 plan | 担当 | 状態 |
+|---|---|---|
+| [`cramer-root-wiring-plan.md`](cramer-root-wiring-plan.md) | 未配線残件 = headline で上流 root sorry 2 件 (`cramer_lower_phaseC_partial_discharge` / `cramer_lower`) を discharge。cycle-break (8 decl hoist) + `hVar` precondition thread + root B transport | 📋 起草済・未着手 |
 
 ## ゴール / Approach
 
