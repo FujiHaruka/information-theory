@@ -990,7 +990,75 @@ private lemma fibre_neg_entropy
         (((blockKernelInline N c) m).rnDeriv MeasureTheory.volume y).toReal
         ∂((blockKernelInline N c) m)
       = -((n : ℝ) * InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N)) := by
-  sorry
+  -- the m-th fibre is the product Gaussian `pi (gaussianReal (encoder m i) N)`
+  have hfibre : (blockKernelInline N c) m
+      = Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N) := rfl
+  rw [hfibre]
+  set νp := Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N) with hνp
+  haveI : IsProbabilityMeasure νp := by rw [hνp]; infer_instance
+  have h_ac : νp ≪ (volume : Measure (Fin n → ℝ)) := by
+    rw [hνp, blockComponentInline_withDensity hN c m]
+    exact MeasureTheory.withDensity_absolutelyContinuous _ _
+  -- `jointDifferentialEntropyPi νp = ∑ᵢ h(gaussian (encoder m i) N) = n·h(gaussian 0 N)`
+  have h_sum : InformationTheory.Shannon.jointDifferentialEntropyPi νp
+      = ∑ i : Fin n, InformationTheory.Shannon.differentialEntropy
+          (gaussianReal (c.encoder m i) N) := by
+    rw [hνp]
+    exact jointDifferentialEntropyPi_pi_eq_sum_inline
+      (fun i => gaussianReal (c.encoder m i) N)
+      (fun i => gaussianReal_absolutelyContinuous (c.encoder m i) hN)
+      (fun i => gaussianReal_logRnDeriv_integrable_inline (c.encoder m i) hN)
+  have h_inv : ∀ i : Fin n,
+      InformationTheory.Shannon.differentialEntropy (gaussianReal (c.encoder m i) N)
+        = InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N) := by
+    intro i
+    rw [InformationTheory.Shannon.differentialEntropy_gaussianReal (c.encoder m i) hN,
+      InformationTheory.Shannon.differentialEntropy_gaussianReal 0 hN]
+  rw [show (∫ y, Real.log (νp.rnDeriv volume y).toReal ∂νp)
+        = -InformationTheory.Shannon.jointDifferentialEntropyPi νp from by
+    rw [InformationTheory.Shannon.integral_log_rnDeriv_self_eq_neg h_ac]; rfl]
+  rw [h_sum, Finset.sum_congr rfl (fun i _ => h_inv i), Finset.sum_const, Finset.card_univ,
+    Fintype.card_fin, nsmul_eq_mul]
+
+/-- `count = ∑ₐ dirac a` on a `Fintype` (mirror of `count_eq_finset_sum_dirac`). -/
+private lemma count_eq_finset_sum_dirac_inline (α : Type*) [Fintype α]
+    [MeasurableSpace α] [MeasurableSingletonClass α] :
+    (Measure.count : Measure α) = ∑ a : α, Measure.dirac a := by
+  have h_one : ∀ a : α, (Measure.count : Measure α) {a} = 1 := fun a =>
+    Measure.count_singleton a
+  have h_sum : Measure.sum (fun a : α => Measure.dirac a)
+      = (Measure.count : Measure α) := by
+    have h := Measure.sum_smul_dirac (μ := (Measure.count : Measure α))
+    simp_rw [h_one, one_smul] at h
+    exact h
+  rw [← h_sum, Measure.sum_fintype]
+
+/-- **Elementary discrete-input factorization** (mixture-of-diracs):
+`converseJointInline = msgLawInline ⊗ₘ blockKernelInline`. -/
+private lemma converseJointInline_eq_compProd
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
+    converseJointInline h_meas c = msgLawInline M ⊗ₘ blockKernelInline N c := by
+  classical
+  unfold converseJointInline msgLawInline
+  rw [Measure.compProd_smul_left]
+  congr 1
+  rw [count_eq_finset_sum_dirac_inline (Fin M), ← Measure.sum_fintype
+        (fun a : Fin M => Measure.dirac a),
+    Measure.compProd_sum_left, Measure.sum_fintype]
+  symm
+  refine Finset.sum_congr rfl (fun m _ => ?_)
+  rw [show (Measure.dirac m) ⊗ₘ blockKernelInline N c
+        = (Measure.dirac m).prod (blockKernelInline N c m) by
+      ext s hs
+      rw [Measure.dirac_compProd_apply hs, Measure.dirac_prod,
+        Measure.map_apply measurable_prodMk_left hs]]
+  refine congrArg ((Measure.dirac m).prod) ?_
+  show Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))
+      = Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N)
+  refine congrArg Measure.pi ?_
+  funext i
+  rw [awgnChannel_apply]
 
 /-- **Output law identification**: `outputDistribution msgLawInline blockKernelInline
 = blockYLawInline`. -/
@@ -999,15 +1067,10 @@ private lemma outputDistribution_msgLawInline_eq
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
     ChannelCoding.outputDistribution (msgLawInline M) (blockKernelInline N c)
       = blockYLawInline h_meas c := by
-  sorry
-
-/-- **Elementary discrete-input factorization** (mixture-of-diracs):
-`μ.map (fun ω => (ω.1, ω.2)) = converseJointInline = msgLawInline ⊗ₘ blockKernelInline`. -/
-private lemma converseJointInline_eq_compProd
-    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
-    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
-    converseJointInline h_meas c = msgLawInline M ⊗ₘ blockKernelInline N c := by
-  sorry
+  -- `outputDistribution p W = (p ⊗ₘ W).snd = (p ⊗ₘ W).map snd`
+  show (msgLawInline M ⊗ₘ blockKernelInline N c).map Prod.snd = blockYLawInline h_meas c
+  rw [← converseJointInline_eq_compProd h_meas c]
+  rfl
 
 /-- `mutualInfo μ fst snd = mutualInfoOfChannel msgLawInline blockKernelInline`. -/
 private lemma mutualInfo_fst_snd_eq_channel
