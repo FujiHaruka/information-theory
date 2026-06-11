@@ -2059,6 +2059,16 @@ preconditions**, both supplied by the converse consumer `isAwgnConverseFeasible_
 (`2 ≤ M` ⇒ `NeZero M`, and `hN : (N:ℝ) ≠ 0`). Not load-bearing: the MI inequality is
 proved genuinely from the entropy chain, not encoded in the hypotheses.
 `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free).
+
+Independent honesty audit 2026-06-12 PASS (4-check): non-circular / non-bundled
+(all helpers `mutualInfo_encoder_le_fst` (real DPI `mutualInfo_le_of_postprocess`),
+`blockMI_decomp` / `perLetterMI_decomp` (genuine gateway-atom applications, all-regularity
+hyps discharged locally), `jointDifferentialEntropyPi_blockYLawInline_le_sum` (KL≥0
+subadditivity) carry regularity, not the claim) / non-degenerate / sufficiency
+(degenerate boundary N=0 ⇒ Gaussian fibres collapse to Diracs, breaking only the
+density route — the MI inequality itself stays true (KL≥0-backed), so `hN`/`NeZero M`
+are density-route regularity, not false-statement constraints). `#print axioms` re-confirmed
+sorryAx-free with refreshed oleans.
 @audit:ok -/
 @[entry_point]
 theorem awgnContinuousMIChainRule_holds

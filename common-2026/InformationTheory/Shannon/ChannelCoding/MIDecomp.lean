@@ -446,6 +446,13 @@ theorem llr_compProd_prod_split_gen
 i.e. `I = (−h(Y|X)) − (−h(Y)) = h(Y) − h(Y|X)` once each integral is identified with the
 relevant neg-entropy by `integral_log_rnDeriv_self_eq_neg`. Genuine, mirrors the 1-D body
 `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`.
+
+Independent honesty audit 2026-06-12 PASS: hypothesis bundle is all-regularity
+(AC chain `hWx_q`/`hq_ref`/`h_joint_ac`, measurable proxy `g` + a.e.-identity `hg_ae`,
+compProd-level integrabilities, fibre/output integral-equality `h_fibre_self`/`h_out_self`)
+— same shape as the already-audited 1-D `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`,
+none encode the decomposition. Core (KL→llr→Bayes split→Fubini) lives in the body via
+`llr_compProd_prod_split_gen` (genuine). sorryAx-free (`#print axioms` re-confirmed).
 @audit:ok -/
 theorem mutualInfoOfChannel_toReal_eq_log_density_sub
     [MeasurableSpace.CountableOrCountablyGenerated α β]
