@@ -1078,7 +1078,10 @@ private lemma mutualInfo_fst_snd_eq_channel
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
     mutualInfo (converseJointInline h_meas c) Prod.fst Prod.snd
       = ChannelCoding.mutualInfoOfChannel (msgLawInline M) (blockKernelInline N c) := by
-  sorry
+  rw [ChannelCoding.mutualInfoOfChannel_eq_mutualInfo_prod]
+  -- `jointDistribution msgLaw blockKernel = msgLaw ⊗ₘ blockKernel = converseJointInline`
+  congr 1
+  rw [ChannelCoding.jointDistribution_def, ← converseJointInline_eq_compProd h_meas c]
 
 /-- **Deterministic DPI**: `I(X^n;Y^n) ≤ I(W;Y^n)` (`X^n = encoder ∘ fst` is a
 post-processing of `W = fst`). -/
@@ -1087,7 +1090,20 @@ private lemma mutualInfo_encoder_le_fst
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
     mutualInfo (converseJointInline h_meas c) (fun ω => c.encoder ω.1) Prod.snd
       ≤ mutualInfo (converseJointInline h_meas c) Prod.fst Prod.snd := by
-  sorry
+  set μ := converseJointInline h_meas c with hμ
+  have hfst : Measurable (Prod.fst : Fin M × (Fin n → ℝ) → Fin M) := measurable_fst
+  have hsnd : Measurable (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) := measurable_snd
+  have henc : Measurable (fun ω : Fin M × (Fin n → ℝ) => c.encoder ω.1) :=
+    (measurable_of_countable c.encoder).comp measurable_fst
+  -- `encoder ∘ fst = encoder ∘ (id) ∘ fst`; post-process the FIRST argument via comm + 2nd DPI.
+  rw [mutualInfo_comm μ (fun ω => c.encoder ω.1) Prod.snd henc hsnd,
+    mutualInfo_comm μ Prod.fst Prod.snd hfst hsnd]
+  -- now: `I(Y; encoder∘fst) ≤ I(Y; fst)`; `encoder∘fst = encoder ∘ fst`
+  have h_comp : (fun ω : Fin M × (Fin n → ℝ) => c.encoder ω.1)
+      = c.encoder ∘ (Prod.fst : Fin M × (Fin n → ℝ) → Fin M) := rfl
+  rw [h_comp]
+  exact mutualInfo_le_of_postprocess μ Prod.snd Prod.fst hsnd hfst
+    (measurable_of_countable c.encoder)
 
 /-- `I(W;Y^n) ≠ ∞` (finiteness, so `.toReal` is monotone). -/
 private lemma mutualInfo_fst_snd_ne_top
@@ -1123,7 +1139,10 @@ private lemma blockYLawInline_map_eval
     {M n : ℕ} (c : AwgnCode M n P) (i : Fin n) :
     (blockYLawInline h_meas c).map (fun y => y i)
       = (converseJointInline h_meas c).map (fun ω => ω.2 i) := by
-  sorry
+  show ((converseJointInline h_meas c).map Prod.snd).map (fun y => y i)
+      = (converseJointInline h_meas c).map (fun ω => ω.2 i)
+  rw [Measure.map_map (measurable_pi_apply i) measurable_snd]
+  rfl
 
 /-- **n-D subadditivity for the block output law**: `h(Y^n) ≤ ∑ᵢ h(Y_i)`. -/
 private lemma jointDifferentialEntropyPi_blockYLawInline_le_sum
