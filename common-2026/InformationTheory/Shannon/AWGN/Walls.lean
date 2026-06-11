@@ -1812,6 +1812,49 @@ private lemma perLetterMI_decomp
   rw [integral_congr_ae (Filter.Eventually.of_forall h_fibre_ent), integral_const,
     probReal_univ, one_smul]
 
+/-- `log(blockYLaw.rnDeriv vol)` integrable against `blockYLaw` itself (mixture of components). -/
+private lemma integrable_log_blockYLawInline_self
+    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
+    Integrable
+      (fun y => Real.log ((blockYLawInline h_meas c).rnDeriv volume y).toReal)
+      (blockYLawInline h_meas c) := by
+  classical
+  set F : (Fin n → ℝ) → ℝ :=
+    fun y => Real.log ((blockYLawInline h_meas c).rnDeriv volume y).toReal with hF
+  rw [blockYLawInline_eq_mixture h_meas c]
+  have hM_inv_ne_top : (Fintype.card (Fin M) : ℝ≥0∞)⁻¹ ≠ ∞ := by
+    rw [Fintype.card_fin]; simp; exact_mod_cast (NeZero.ne M)
+  refine Integrable.smul_measure ?_ hM_inv_ne_top
+  refine integrable_finsetSum_measure.mpr (fun m _ => ?_)
+  exact integrable_log_blockYLawInline_on_component hN h_meas c m
+
+/-- `log(perLetterYLaw_i.rnDeriv vol (y i))` integrable against `blockYLaw` (per-coord marginal
+log-density against the joint). -/
+private lemma integrable_log_marg_on_blockYLawInline
+    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
+    Integrable
+      (fun y => Real.log
+        ((((converseJointInline h_meas c).map (fun ω => ω.2 i))).rnDeriv volume (y i)).toReal)
+      (blockYLawInline h_meas c) := by
+  classical
+  set F : (Fin n → ℝ) → ℝ := fun y => Real.log
+      ((((converseJointInline h_meas c).map (fun ω => ω.2 i))).rnDeriv volume (y i)).toReal with hF
+  rw [blockYLawInline_eq_mixture h_meas c]
+  have hM_inv_ne_top : (Fintype.card (Fin M) : ℝ≥0∞)⁻¹ ≠ ∞ := by
+    rw [Fintype.card_fin]; simp; exact_mod_cast (NeZero.ne M)
+  refine Integrable.smul_measure ?_ hM_inv_ne_top
+  refine integrable_finsetSum_measure.mpr (fun m _ => ?_)
+  -- `F y = (ψ ∘ eval i) y` where `ψ = log(perLetterYLaw_i.rnDeriv vol)`, integrable against the
+  -- i-th 1-D Gaussian factor via `integrable_comp_eval`
+  rw [hF]
+  show Integrable (fun y : Fin n → ℝ => Real.log
+      (((converseJointInline h_meas c).map (fun ω => ω.2 i)).rnDeriv volume (y i)).toReal)
+    (Measure.pi (fun j : Fin n => gaussianReal (c.encoder m j) N))
+  exact integrable_comp_eval (μ := fun j : Fin n => gaussianReal (c.encoder m j) N) (i := i)
+    (integrable_log_perLetterLaw_on_fibre hN h_meas c i (c.encoder m i))
+
 /-- **n-D subadditivity for the block output law**: `h(Y^n) ≤ ∑ᵢ h(Y_i)`. -/
 private lemma jointDifferentialEntropyPi_blockYLawInline_le_sum
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
@@ -1819,7 +1862,68 @@ private lemma jointDifferentialEntropyPi_blockYLawInline_le_sum
     InformationTheory.Shannon.jointDifferentialEntropyPi (blockYLawInline h_meas c)
       ≤ ∑ i : Fin n, InformationTheory.Shannon.differentialEntropy
           ((converseJointInline h_meas c).map (fun ω => ω.2 i)) := by
-  sorry
+  classical
+  set q := blockYLawInline h_meas c with hq
+  haveI : IsProbabilityMeasure q := by rw [hq]; infer_instance
+  -- marginal identification: `q.map (·i) = perLetterYLaw_i`
+  have h_marg_eq : ∀ i, q.map (fun y => y i) = (converseJointInline h_meas c).map (fun ω => ω.2 i) :=
+    fun i => blockYLawInline_map_eval h_meas c i
+  haveI : ∀ i, IsProbabilityMeasure (q.map (fun z => z i)) := by
+    intro i; rw [h_marg_eq i]
+    exact Measure.isProbabilityMeasure_map (((measurable_pi_apply i).comp measurable_snd).aemeasurable)
+  have h_marg_ac : ∀ i, (q.map (fun z => z i)) ≪ (volume : Measure ℝ) := by
+    intro i; rw [h_marg_eq i]; exact perLetterLaw_ac_volume hN h_meas c i
+  have hμ_ac : q ≪ (volume : Measure (Fin n → ℝ)) := by rw [hq]; exact blockYLawInline_ac_volume hN h_meas c
+  -- `q ≪ pi(marginals)` via `q ≪ vol` and `vol ≪ pi(marginals)`
+  have hvol_ac_pi : (volume : Measure (Fin n → ℝ)) ≪ Measure.pi (fun i => q.map (fun z => z i)) := by
+    have h_rev : ∀ i, (volume : Measure ℝ) ≪ q.map (fun z => z i) := by
+      intro i; rw [h_marg_eq i]; exact volume_ac_perLetterLaw hN h_meas c i
+    -- mirror of `pi_absolutelyContinuous_reverse`
+    set f : Fin n → ℝ → ℝ≥0∞ := fun i => (q.map (fun z => z i)).rnDeriv volume with hf_def
+    have hf_meas : ∀ i, Measurable (f i) := fun i => Measure.measurable_rnDeriv _ _
+    have h_eq : ∀ i, (volume : Measure ℝ).withDensity (f i) = q.map (fun z => z i) :=
+      fun i => Measure.withDensity_rnDeriv_eq _ volume (h_marg_ac i)
+    haveI : ∀ i, SigmaFinite ((volume : Measure ℝ).withDensity (f i)) := by
+      intro i; rw [h_eq i]; infer_instance
+    have h_pi_eq : Measure.pi (fun i => q.map (fun z => z i))
+        = (Measure.pi (fun _ : Fin n => (volume : Measure ℝ))).withDensity
+            (fun z => ∏ i, f i (z i)) := by
+      rw [← (funext h_eq : (fun i => (volume : Measure ℝ).withDensity (f i))
+          = fun i => q.map (fun z => z i))]
+      exact InformationTheory.Shannon.pi_withDensity_fin (fun _ : Fin n => (volume : Measure ℝ)) hf_meas
+    rw [h_pi_eq, ← volume_pi]
+    refine withDensity_absolutelyContinuous' ?_ ?_
+    · exact (Finset.measurable_prod _ (fun i _ => (hf_meas i).comp (measurable_pi_apply i))).aemeasurable
+    · -- each `f i (z i)` a.e.-positive on `volume` (from `volume ≪ q.map(·i)`)
+      have h_pos : ∀ i, ∀ᵐ y ∂(volume : Measure ℝ), f i y ≠ 0 := by
+        intro i
+        have := Measure.rnDeriv_pos' (h_rev i)
+        filter_upwards [this] with y hy using hy.ne'
+      filter_upwards [eventually_countable_forall.mpr
+        (fun i => (Measure.quasiMeasurePreserving_eval
+          (μ := fun _ : Fin n => (volume : Measure ℝ)) i).ae (h_pos i))] with z hz
+      simp only [ne_eq, Finset.prod_eq_zero_iff, not_exists, not_and]
+      intro i _
+      exact hz i
+  have h_joint_ac : q ≪ Measure.pi (fun i => q.map (fun z => z i)) := hμ_ac.trans hvol_ac_pi
+  -- integrability
+  have h_int_joint : Integrable (fun z => Real.log ((q.rnDeriv volume z).toReal)) q := by
+    rw [hq]; exact integrable_log_blockYLawInline_self hN h_meas c
+  have h_int_marg : ∀ i, Integrable
+      (fun z => Real.log (((q.map (fun z => z i)).rnDeriv volume (z i)).toReal)) q := by
+    intro i
+    have h_eq : (fun z : Fin n → ℝ => Real.log (((q.map (fun z => z i)).rnDeriv volume (z i)).toReal))
+        = (fun z => Real.log
+            ((((converseJointInline h_meas c).map (fun ω => ω.2 i)).rnDeriv volume (z i)).toReal)) := by
+      funext z; rw [h_marg_eq i]
+    rw [h_eq, hq]
+    exact integrable_log_marg_on_blockYLawInline hN h_meas c i
+  -- apply the n-D subadditivity bridge, then rewrite marginals
+  have h_sub := InformationTheory.Shannon.jointDifferentialEntropyPi_le_sum
+    (μ := q) h_marg_ac hμ_ac h_joint_ac h_int_joint h_int_marg
+  rw [Finset.sum_congr rfl (fun i _ => congrArg InformationTheory.Shannon.differentialEntropy
+    (h_marg_eq i))] at h_sub
+  exact h_sub
 
 /-- **Memoryless AWGN continuous MI chain rule** (旧 `ContinuousMIChainRuleForConverse`).
 
