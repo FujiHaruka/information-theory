@@ -332,4 +332,171 @@ theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub
   rw [h_fibre, h_out]
   ring
 
+/-! ## Generic (output type `β` + reference measure `ref`) MI chain rule
+
+The 1-D body `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` above is specialized to
+`Channel ℝ ℝ` with the Lebesgue reference `volume : Measure ℝ`. The block AWGN converse
+needs the **n-dimensional output** form (`β := Fin n → ℝ`, `ref := volume`), so we
+re-derive the same chain identity for an arbitrary input type `α`, output type `β`, and
+reference measure `ref : Measure β`, stated in **log-density-integral form**
+(`∫ log (rnDeriv · ref)`) rather than `differentialEntropy`, so the consumer is free to
+identify each integral with whatever entropy notion it uses (`jointDifferentialEntropyPi`
+for the AWGN block). The proof mirrors the 1-D one step for step; only the helper lemmas
+are re-stated generically. -/
+
+section Generic
+
+variable {α : Type*} {mα : MeasurableSpace α} {β : Type*} {mβ : MeasurableSpace β}
+
+/-- **Generic marginal identification.** For a `ref`-integrable observable `g : β → ℝ`,
+the joint integral of `g ∘ snd` against `p ⊗ₘ W` equals the integral of `g` against the
+output marginal `outputDistribution p W = (p ⊗ₘ W).snd`. Generic in `α, β`. -/
+theorem integral_snd_outputDistribution_gen
+    {p : Measure α} {W : Channel α β}
+    (g : β → ℝ) (hg : Integrable g (outputDistribution p W)) :
+    ∫ z, g z.2 ∂(p ⊗ₘ W) = ∫ y, g y ∂(outputDistribution p W) := by
+  have h_eq : outputDistribution p W = (p ⊗ₘ W).map Prod.snd := rfl
+  have hg' : AEStronglyMeasurable g ((p ⊗ₘ W).map Prod.snd) := by
+    rw [← h_eq]; exact hg.aestronglyMeasurable
+  rw [h_eq, MeasureTheory.integral_map measurable_snd.aemeasurable hg']
+
+/-- **Generic per-measure log-density split** (Bayes step). For `ν ≪ q ≪ ref` all
+`σ`-finite (with `ν.HaveLebesgueDecomposition q`, `q.HaveLebesgueDecomposition ref`),
+`log (dν/dq y) = log (dν/dref y) − log (dq/dref y)`, `ν`-a.e. Generic reference `ref`. -/
+theorem log_rnDeriv_split_gen
+    {ν q ref : Measure β} [SigmaFinite ν] [SigmaFinite q] [SigmaFinite ref]
+    [ν.HaveLebesgueDecomposition q] [q.HaveLebesgueDecomposition ref]
+    [ν.HaveLebesgueDecomposition ref]
+    (hνq : ν ≪ q) (hq_ref : q ≪ ref) :
+    (fun y => Real.log ((ν.rnDeriv q y).toReal))
+      =ᵐ[ν]
+    (fun y => Real.log ((ν.rnDeriv ref y).toReal)
+                - Real.log ((q.rnDeriv ref y).toReal)) := by
+  have h_chain : (fun y => ν.rnDeriv q y * q.rnDeriv ref y)
+      =ᵐ[ν] ν.rnDeriv ref :=
+    hνq.ae_le (Measure.rnDeriv_mul_rnDeriv' (μ := ν) (ν := q) (κ := ref) hq_ref)
+  have h_pos_νq : ∀ᵐ y ∂ν, 0 < ν.rnDeriv q y := Measure.rnDeriv_pos hνq
+  have h_lt_νq : ∀ᵐ y ∂ν, ν.rnDeriv q y < ∞ := hνq.ae_le (Measure.rnDeriv_lt_top ν q)
+  have h_pos_q : ∀ᵐ y ∂ν, 0 < q.rnDeriv ref y := hνq.ae_le (Measure.rnDeriv_pos hq_ref)
+  have h_lt_q : ∀ᵐ y ∂ν, q.rnDeriv ref y < ∞ :=
+    hνq.ae_le (hq_ref.ae_le (Measure.rnDeriv_lt_top q ref))
+  filter_upwards [h_chain, h_pos_νq, h_lt_νq, h_pos_q, h_lt_q]
+    with y hy hpos1 hlt1 hpos2 hlt2
+  have hne1 : ((ν.rnDeriv q y).toReal) ≠ 0 :=
+    (ENNReal.toReal_pos hpos1.ne' hlt1.ne).ne'
+  have hne2 : ((q.rnDeriv ref y).toReal) ≠ 0 :=
+    (ENNReal.toReal_pos hpos2.ne' hlt2.ne).ne'
+  rw [← hy, ENNReal.toReal_mul, Real.log_mul hne1 hne2]
+  ring
+
+/-- **★ Generic Bayes density split of the joint llr.** For input law `p`, Markov
+channel `W : Channel α β`, output `q := outputDistribution p W`, with each fibre
+`≪ q ≪ ref` and joint `≪ p.prod q`, the log-likelihood ratio of the joint against the
+product factorizes into fibre/output log-densities. Generic in `α, β, ref`. -/
+theorem llr_compProd_prod_split_gen
+    [MeasurableSpace.CountableOrCountablyGenerated α β]
+    {p : Measure α} [IsProbabilityMeasure p]
+    {W : Channel α β} [IsMarkovKernel W]
+    (q ref : Measure β) [IsProbabilityMeasure q] [SigmaFinite ref]
+    [q.HaveLebesgueDecomposition ref]
+    (hWx_q : ∀ x, W x ≪ q) (hq_ref : q ≪ ref)
+    (h_joint_ac : (p ⊗ₘ W) ≪ p.prod q)
+    (g : α × β → ℝ≥0∞) (hg_meas : Measurable g)
+    (hg_ae : ∀ x, (fun y => (W x).rnDeriv ref y) =ᵐ[W x] fun y => g (x, y)) :
+    (fun z => llr (p ⊗ₘ W) (p.prod q) z)
+      =ᵐ[p ⊗ₘ W]
+    (fun z => Real.log (g z).toReal
+                - Real.log (q.rnDeriv ref z.2).toReal) := by
+  have h_prod : p.prod q = p ⊗ₘ (Kernel.const α q) := (Measure.compProd_const).symm
+  have h_ac' : (p ⊗ₘ W) ≪ p ⊗ₘ (Kernel.const α q) := by rwa [h_prod] at h_joint_ac
+  have h1 : (p ⊗ₘ W).rnDeriv (p.prod q)
+      =ᵐ[p ⊗ₘ W] fun z => Kernel.rnDeriv W (Kernel.const α q) z.1 z.2 := by
+    rw [h_prod]
+    exact h_ac'.ae_le (rnDeriv_compProd_fibre h_ac')
+  have h_split : (fun z => Real.log ((Kernel.rnDeriv W (Kernel.const α q) z.1 z.2)).toReal)
+      =ᵐ[p ⊗ₘ W] fun z => Real.log (g z).toReal
+                  - Real.log (q.rnDeriv ref z.2).toReal := by
+    refine Measure.ae_compProd_of_ae_ae ?_ ?_
+    · refine measurableSet_eq_fun ?_ ?_
+      · exact (Kernel.measurable_rnDeriv W (Kernel.const α q)).ennreal_toReal.log
+      · exact (hg_meas.ennreal_toReal.log).sub
+          (((Measure.measurable_rnDeriv q ref).comp measurable_snd).ennreal_toReal.log)
+    · filter_upwards with a
+      have hker : (fun b => Kernel.rnDeriv W (Kernel.const α q) a b)
+          =ᵐ[W a] fun b => (W a).rnDeriv q b := by
+        have := (hWx_q a).ae_le
+          (Kernel.rnDeriv_eq_rnDeriv_measure (κ := W) (η := Kernel.const α q) (a := a))
+        simpa only [Kernel.const_apply] using this
+      filter_upwards [hker, log_rnDeriv_split_gen (hWx_q a) hq_ref, hg_ae a]
+        with b hb hb_split hg_b
+      rw [hb, hb_split, hg_b]
+  have h_llr_eq : (fun z => llr (p ⊗ₘ W) (p.prod q) z)
+      =ᵐ[p ⊗ₘ W]
+      fun z => Real.log ((Kernel.rnDeriv W (Kernel.const α q) z.1 z.2)).toReal := by
+    simp only [llr_def]
+    filter_upwards [h1] with z hz1
+    rw [hz1]
+  exact h_llr_eq.trans h_split
+
+/-- **★ Generic continuous-channel MI chain rule body** (output type `β`, reference
+`ref`), in **log-density-integral form**:
+
+`I.toReal = (∫ x, ∫ y, log(d(W x)/d ref y) ∂(W x) ∂p) − (∫ y, log(dq/d ref y) ∂q)`,
+
+i.e. `I = (−h(Y|X)) − (−h(Y)) = h(Y) − h(Y|X)` once each integral is identified with the
+relevant neg-entropy by `integral_log_rnDeriv_self_eq_neg`. Genuine, mirrors the 1-D body
+`mutualInfoOfChannel_toReal_eq_diffEntropy_sub`. -/
+theorem mutualInfoOfChannel_toReal_eq_log_density_sub
+    [MeasurableSpace.CountableOrCountablyGenerated α β]
+    {p : Measure α} [IsProbabilityMeasure p]
+    {W : Channel α β} [IsMarkovKernel W]
+    (ref : Measure β) [SigmaFinite ref]
+    [(outputDistribution p W).HaveLebesgueDecomposition ref]
+    (hWx_q : ∀ x, W x ≪ outputDistribution p W)
+    (hq_ref : outputDistribution p W ≪ ref)
+    (h_joint_ac : (p ⊗ₘ W) ≪ p.prod (outputDistribution p W))
+    (g : α × β → ℝ≥0∞) (hg_meas : Measurable g)
+    (hg_ae : ∀ x, (fun y => (W x).rnDeriv ref y) =ᵐ[W x] fun y => g (x, y))
+    (h_int_fibre : Integrable (fun z : α × β => Real.log (g z).toReal) (p ⊗ₘ W))
+    (h_int_out : Integrable
+        (fun z : α × β => Real.log
+            ((outputDistribution p W).rnDeriv ref z.2).toReal) (p ⊗ₘ W))
+    (h_fibre_self : ∀ x, ∫ y, Real.log (g (x, y)).toReal ∂(W x)
+        = ∫ y, Real.log ((W x).rnDeriv ref y).toReal ∂(W x))
+    (h_out_self : Integrable
+        (fun y => Real.log ((outputDistribution p W).rnDeriv ref y).toReal)
+        (outputDistribution p W)) :
+    (mutualInfoOfChannel p W).toReal
+      = (∫ x, (∫ y, Real.log ((W x).rnDeriv ref y).toReal ∂(W x)) ∂p)
+        - (∫ y, Real.log ((outputDistribution p W).rnDeriv ref y).toReal
+              ∂(outputDistribution p W)) := by
+  set q := outputDistribution p W with hq_def
+  have h_kl :
+      (mutualInfoOfChannel p W).toReal
+        = ∫ z, llr (p ⊗ₘ W) (p.prod q) z ∂(p ⊗ₘ W) := by
+    rw [mutualInfoOfChannel_def, jointDistribution_def]
+    refine toReal_klDiv_of_measure_eq h_joint_ac ?_
+    rw [measure_univ, measure_univ]
+  rw [h_kl]
+  rw [integral_congr_ae
+        (llr_compProd_prod_split_gen (p := p) (W := W) q ref hWx_q hq_ref h_joint_ac
+          g hg_meas hg_ae)]
+  rw [integral_sub h_int_fibre h_int_out]
+  -- fibre term
+  have h_fibre :
+      (∫ z, Real.log (g z).toReal ∂(p ⊗ₘ W))
+        = ∫ x, (∫ y, Real.log ((W x).rnDeriv ref y).toReal ∂(W x)) ∂p := by
+    rw [Measure.integral_compProd h_int_fibre]
+    refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+    exact h_fibre_self x
+  -- output term
+  have h_out :
+      (∫ z, Real.log (q.rnDeriv ref z.2).toReal ∂(p ⊗ₘ W))
+        = ∫ y, Real.log (q.rnDeriv ref y).toReal ∂q := by
+    rw [integral_snd_outputDistribution_gen
+          (fun y => Real.log (q.rnDeriv ref y).toReal) (by rw [← hq_def]; exact h_out_self)]
+  rw [h_fibre, h_out]
+
+end Generic
+
 end InformationTheory.Shannon.ChannelCoding
