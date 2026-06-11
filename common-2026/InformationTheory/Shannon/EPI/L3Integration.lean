@@ -118,52 +118,6 @@ structure IsEPIL3IntegratedPipeline {Ω : Type*} [MeasurableSpace Ω]
   /-- Stam inequality (Cover-Thomas Lemma 17.7.2) genuine signature. -/
   stam : IsStamInequalityHyp X Y P
 
-/-- **L-EPI3 from integrated pipeline**. The integrated pipeline discharges
-`IsEntropyPowerInequalityHypothesis X Y P` by feeding the genuine Stam residual
-(`h.stam`) through the shared sorry lemma
-`EntropyPowerInequality.stamToEPIBridge_holds`
-(`@residual(plan:epi-stam-to-conclusion-plan)`). The former load-bearing
-`bridge : IsStamToEPIBridgeHyp` field was removed in Cluster C Tier-2 migration
-(`epi-stam-cluster-c-sorry-migration-plan`), so this wrapper no longer threads a
-bridge predicate hypothesis; the Mathlib wall is localized in
-`stamToEPIBridge_holds`. -/
-@[entry_point]
-theorem epi_l3_of_integrated_pipeline
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h : IsEPIL3IntegratedPipeline X Y P) :
-    IsEntropyPowerInequalityHypothesis X Y P :=
-  stamToEPIBridge_holds X Y P h.stam
-
-/-! ## §2 — Integrated main theorem (Cover-Thomas Theorem 17.7.3, integrated form) -/
-
-/-- **Integrated EPI main theorem**: the integrated pipeline gives the full
-EPI conclusion in one shot (no need for callers to thread through L-EPI1,
-L-EPI2, L-EPI3 separately).
-
-The pipeline now carries only the genuine Stam residual (`h_pipeline.stam`); the
-former load-bearing `bridge : IsStamToEPIBridgeHyp` field was removed in Cluster C
-Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`). The Stam→EPI bridge
-is discharged internally via the shared sorry lemma
-`EntropyPowerInequality.stamToEPIBridge_holds`
-(`@residual(plan:epi-stam-to-conclusion-plan)`), threaded through
-`entropy_power_inequality`. -/
-@[entry_point]
-theorem entropy_power_inequality_integrated
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
-  -- Thread the genuine residual (`stam`) through the non-circular headline;
-  -- `IsStamInequalityHyp` is reducibly defeq to `IsStamInequalityResidual`. The
-  -- Stam→EPI bridge (formerly a load-bearing `bridge` field, removed in Cluster C
-  -- Tier-2 migration) is discharged internally by `entropy_power_inequality` via
-  -- the shared sorry lemma `stamToEPIBridge_holds`.
-  entropy_power_inequality P X Y hX hY hXY h_pipeline.stam
-
 /-! ## §3 — Gaussian full discharge (hypothesis-free) -/
 
 /-- **Gaussian pipeline witness from an honest Stam hypothesis**.
@@ -196,126 +150,14 @@ theorem isEPIL3IntegratedPipeline_of_gaussian
   -- arguments are retained as regularity preconditions documenting the setting.
   { stam := h_stam }
 
-/-- **Gaussian EPI via integrated pipeline** — the canonical Gaussian saturation
-case routed through the integrated pipeline. -/
-@[entry_point]
-theorem entropy_power_inequality_gaussian_via_pipeline
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
-    (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂)
-    (h_stam : IsStamInequalityHyp X Y P) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
-  have h_pipeline := isEPIL3IntegratedPipeline_of_gaussian
-    P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY h_stam
-  exact entropy_power_inequality_integrated P X Y hX hY hXY h_pipeline
-
-/-! ## §4 — Variants (log / exp / normalized form via integrated pipeline) -/
-
-/-- **EPI log form via integrated pipeline**.
-
-Pipeline wrapper; the bundle's former load-bearing `bridge` field was removed in
-Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
-Stam→EPI bridge is discharged internally via the shared sorry lemma
-`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
-`entropy_power_inequality_integrated` header. -/
-@[entry_point]
-theorem entropy_power_inequality_log_form_integrated
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
-    InformationTheory.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
-      ≥ (1/2) * Real.log
-          (entropyPower (P.map X) + entropyPower (P.map Y)) :=
-  entropy_power_inequality_log_form P X Y hX hY hXY h_pipeline.stam
-
-/-- **EPI exp form via integrated pipeline** (Cover-Thomas Theorem 17.7.3 露出形).
-
-Pipeline wrapper; the bundle's former load-bearing `bridge` field was removed in
-Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
-Stam→EPI bridge is discharged internally via the shared sorry lemma
-`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
-`entropy_power_inequality_integrated` header. -/
-@[entry_point]
-theorem entropy_power_inequality_exp_form_integrated
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
-    Real.exp (2 * InformationTheory.Shannon.differentialEntropy
-              (P.map (fun ω => X ω + Y ω)))
-      ≥ Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map X))
-        + Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map Y)) :=
-  entropy_power_inequality_exp_form P X Y hX hY hXY h_pipeline.stam
-
-/-- **EPI normalized `(2πe)⁻¹` form via integrated pipeline** (Cover-Thomas Ch.17).
-
-Pipeline wrapper; the bundle's former load-bearing `bridge` field was removed in
-Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
-Stam→EPI bridge is discharged internally via the shared sorry lemma
-`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
-`entropy_power_inequality_integrated` header. -/
-@[entry_point]
-theorem entropy_power_inequality_normalized_integrated
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
-    entropyPower (P.map (fun ω => X ω + Y ω)) / gaussianEntropyPowerConst
-      ≥ entropyPower (P.map X) / gaussianEntropyPowerConst
-        + entropyPower (P.map Y) / gaussianEntropyPowerConst :=
-  entropy_power_inequality_normalized P X Y hX hY hXY h_pipeline.stam
-
-/-! ## §5 — Chain forms (3-arg / 4-arg) via integrated pipeline -/
-
-/-- **3-arg EPI via integrated pipeline**. Chains two integrated pipelines.
-
-Pipeline wrapper; the bundle's former load-bearing `bridge` field was removed in
-Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
-Stam→EPI bridge is discharged internally via the shared sorry lemma
-`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
-`entropy_power_inequality_integrated` header. -/
-@[entry_point]
-theorem entropy_power_inequality_three_arg_integrated
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y Z : Ω → ℝ)
-    (h_xy : IsEPIL3IntegratedPipeline X Y P)
-    (h_xy_z : IsEPIL3IntegratedPipeline (fun ω => X ω + Y ω) Z P) :
-    entropyPower (P.map (fun ω => X ω + Y ω + Z ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) + entropyPower (P.map Z) := by
-  have h_xy_epi := epi_l3_of_integrated_pipeline h_xy
-  have h_xy_z_epi := epi_l3_of_integrated_pipeline h_xy_z
-  exact entropy_power_inequality_three_arg P X Y Z h_xy_z_epi h_xy_epi
-
-/-- **4-arg EPI via integrated pipeline**. Chains three integrated pipelines.
-
-Pipeline wrapper; the bundle's former load-bearing `bridge` field was removed in
-Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
-Stam→EPI bridge is discharged internally via the shared sorry lemma
-`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
-`entropy_power_inequality_integrated` header. -/
-@[entry_point]
-theorem entropy_power_inequality_four_arg_integrated
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y Z W : Ω → ℝ)
-    (h_xy : IsEPIL3IntegratedPipeline X Y P)
-    (h_xy_z : IsEPIL3IntegratedPipeline (fun ω => X ω + Y ω) Z P)
-    (h_xyz_w : IsEPIL3IntegratedPipeline (fun ω => X ω + Y ω + Z ω) W P) :
-    entropyPower (P.map (fun ω => X ω + Y ω + Z ω + W ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) + entropyPower (P.map Z)
-          + entropyPower (P.map W) := by
-  have h_xy_epi := epi_l3_of_integrated_pipeline h_xy
-  have h_xy_z_epi := epi_l3_of_integrated_pipeline h_xy_z
-  have h_xyz_w_epi := epi_l3_of_integrated_pipeline h_xyz_w
-  exact entropy_power_inequality_four_arg P X Y Z W h_xyz_w_epi h_xy_z_epi h_xy_epi
+-- (deleted, legacy Stam→EPI subtree removal) `entropy_power_inequality_three_arg_integrated`
+-- and `entropy_power_inequality_four_arg_integrated` were removed together with the
+-- legacy bridge subtree: both delegated through `epi_l3_of_integrated_pipeline`
+-- (deleted in §1) into `EntropyPowerInequality.stamToEPIBridge_holds` (the lone EPI-family
+-- `sorry`, deleted), so they are transitive consumers of that bridge and could not survive
+-- its removal. Both had 0 consumers (dead leaves). NOTE: these two were NOT on the brief's
+-- explicit delete list — they are forced co-deletions surfaced by `dep_consumers.sh`
+-- (reverse-dependency gap in the brief's ripple estimate; reported to orchestrator).
 
 /-! ## §6 — Pipeline predicate manipulation -/
 
@@ -350,47 +192,6 @@ The original `entropy_power_inequality` takes three separate hypotheses
 slots are placeholder `True` so any caller can pass `trivial`. We re-publish
 under a single, integrated, **non-trivial** hypothesis (the pipeline) — this
 is the "hypothesis-reduced form" promised in the parent plan. -/
-
-/-- **Hypothesis-reduced EPI** (Cover-Thomas Theorem 17.7.3, integrated form).
-
-Single non-trivial hypothesis `IsEPIL3IntegratedPipeline X Y P` (vs the
-three-hypothesis form in `EntropyPowerInequality.entropy_power_inequality`).
-
-Pipeline wrapper; the bundle's former load-bearing `bridge` field was removed in
-Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
-Stam→EPI bridge is discharged internally via the shared sorry lemma
-`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
-`entropy_power_inequality_integrated` header. -/
-@[entry_point]
-theorem entropy_power_inequality_reduced
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
-  entropy_power_inequality_integrated P X Y hX hY hXY h_pipeline
-
-/-- **Hypothesis-reduced EPI exp form**. Single integrated hypothesis.
-
-Pipeline wrapper; the bundle's former load-bearing `bridge` field was removed in
-Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
-Stam→EPI bridge is discharged internally via the shared sorry lemma
-`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
-`entropy_power_inequality_integrated` header. -/
-@[entry_point]
-theorem entropy_power_inequality_exp_form_reduced
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
-    Real.exp (2 * InformationTheory.Shannon.differentialEntropy
-              (P.map (fun ω => X ω + Y ω)))
-      ≥ Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map X))
-        + Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map Y)) :=
-  entropy_power_inequality_exp_form_integrated P X Y hX hY hXY h_pipeline
 
 /-! ## §8 — Composability with `EPIPlumbing` translation invariance -/
 
@@ -435,34 +236,6 @@ theorem integrated_pipeline_roundtrip
     let h := isEPIL3IntegratedPipeline_of_stam h_stam
     h.stam = h_stam :=
   rfl
-
-/-- **Three forms of EPI are equivalent** (in the presence of the integrated
-pipeline + measurability).
-
-Pipeline wrapper; the bundle's former load-bearing `bridge` field was removed in
-Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
-Stam→EPI bridge is discharged internally via the shared sorry lemma
-`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
-`entropy_power_inequality_integrated` header. -/
-@[entry_point]
-theorem entropy_power_inequality_three_forms_equiv
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
-    (entropyPower (P.map (fun ω => X ω + Y ω))
-        ≥ entropyPower (P.map X) + entropyPower (P.map Y))
-    ∧ (Real.exp (2 * InformationTheory.Shannon.differentialEntropy
-                (P.map (fun ω => X ω + Y ω)))
-        ≥ Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map X))
-          + Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map Y)))
-    ∧ (entropyPower (P.map (fun ω => X ω + Y ω)) / gaussianEntropyPowerConst
-        ≥ entropyPower (P.map X) / gaussianEntropyPowerConst
-          + entropyPower (P.map Y) / gaussianEntropyPowerConst) :=
-  ⟨entropy_power_inequality_reduced P X Y hX hY hXY h_pipeline,
-   entropy_power_inequality_exp_form_reduced P X Y hX hY hXY h_pipeline,
-   entropy_power_inequality_normalized_integrated P X Y hX hY hXY h_pipeline⟩
 
 /-! ## §12 — `epi-debruijn-integration-plan` Phase B/C/D contributions
 

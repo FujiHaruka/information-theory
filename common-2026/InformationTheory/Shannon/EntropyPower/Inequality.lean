@@ -161,176 +161,22 @@ theorem entropyPower_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
 
     `entropyPower (P.map (X+Y)) ≥ entropyPower (P.map X) + entropyPower (P.map Y)`
 
-を `Prop` として名付けたもの。**これは主定理の結論そのもの**であり、主定理の
-hypothesis としては使わない (使うと `theorem epi (h : EPI) : EPI := h` の循環に
-なる)。Gaussian saturation の出力 (§D) や下流 pipeline の中間結果に名前を付ける
-ためだけに保持する。主定理は genuine な非循環 residual `IsStamInequalityResidual`
-+ bridge `IsStamToEPIBridge` から `IsEntropyPowerInequalityHypothesis` を**導出**
-する。 -/
+を `Prop` として名付けたもの。**これは EPI 結論そのもの**であり、hypothesis として
+は使わない (使うと `theorem epi (h : EPI) : EPI := h` の循環になる)。Gaussian
+saturation の出力 (§D) や下流 pipeline の中間結果に名前を付けるために保持する。 -/
 def IsEntropyPowerInequalityHypothesis {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   entropyPower (P.map (fun ω => X ω + Y ω))
     ≥ entropyPower (P.map X) + entropyPower (P.map Y)
 
-/-- **Stam inequality residual** (Cover-Thomas Lemma 17.7.2, V2 density-keyed 真 signature).
-
-For independent `X, Y` with finite Fisher information `J` (genuine V2 score-based
-Fisher info `fisherInfoOfDensityReal`, keyed on the density witnesses of the three
-mapped measures),
-
-    `1 / J(X + Y) ≥ 1 / J(X) + 1 / J(Y)`.
-
-This is the genuine, **non-circular** residual driving EPI: its type is the Stam
-harmonic-mean inequality, which is *not* the EPI conclusion. Mathlib has neither
-Fisher-info convolution nor the inverse-triangle inequality (`rg "Stam" → 0 hit`),
-so this is the real analytic wall, discharged downstream
-(`EPIStamInequalityBody.lean` Cauchy-Schwarz + λ-optimization body).
-
-Quantified over abstract positive reals matching the V2 Fisher info of the three
-density witnesses; this is the predicate the EPI derivation actually consumes.
-(Density-keyed `fisherInfoOfDensityReal` is used here rather than the measure-keyed
-`fisherInfoOfMeasureV2` to keep this base file free of an import cycle through
-`FisherInfoV2DeBruijn`; the two agree by `fisherInfoOfMeasureV2_def`.)
-
-Audit 2026-05-31 (owner-level pivot, epi-wall-reattack-plan): sound Prop statement.
-The injected hyps (`IsRegularDensityV2 fX/fY`, `∫fX=1`, `∫fY=1`, the *pointwise*
-convolution identity `∀ x, fXY x = convDensityAdd fX fY x`, and the
-`IsBlachmanConvReady fX fY` bundle) are jointly satisfiable (Gaussian witness,
-NON-vacuous); the pointwise `hconv` ties `fXY` to the convolution so the conclusion
-`1/J_sum ≥ 1/J_X + 1/J_Y` is the genuine Stam bound, not universally false. These are
-regularity preconditions, not the core (the core is genuinely closed in
-`stam_step2_density_wall` via `convex_fisher_bound_of_ready`). Pivoted in lockstep with
-`IsStamInequalityHyp` (defeq chain via `fisherInfoOfMeasureV2_def`).
-@audit:ok -/
-def IsStamInequalityResidual {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
-  ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
-    J_X = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal fX →
-    J_Y = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal fY →
-    J_sum = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal fXY →
-    InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fX →
-    InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fY →
-    (∫ x, fX x ∂MeasureTheory.volume = 1) →
-    (∫ x, fY x ∂MeasureTheory.volume = 1) →
-    (∀ x, fXY x =
-      InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY x) →
-    InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady fX fY →
-    1 / J_sum ≥ 1 / J_X + 1 / J_Y
-
-/-- **Stam-to-EPI bridge** (Cover-Thomas Lemma 17.7.3 coupling argument).
-
-The genuine, **non-circular** discharge route: from the Stam inequality residual
-derive the EPI conclusion via the Csiszár scaling-path / de Bruijn integration
-argument. Phrased as `IsStamInequalityResidual → IsEntropyPowerInequalityHypothesis`,
-so its type is *not* the EPI conclusion. The bridge is the deepest analytic
-primitive (path-integral coupling); discharged downstream and, for the Gaussian
-case, by saturation (§D). -/
-def IsStamToEPIBridge {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
-  IsStamInequalityResidual X Y P → IsEntropyPowerInequalityHypothesis X Y P
-
-/-- **Stam → EPI bridge — shared sorry 補題**.
-
-`IsStamInequalityResidual → IsEntropyPowerInequalityHypothesis` の coupling 引数
-(Cover-Thomas Lemma 17.7.3 path-integral coupling, Csiszár scaling-path / de Bruijn
-integration) は Mathlib 未収録の解析的 primitive。
-
-**EPI の結論そのもの (textbook goal) は proof-done な後継で達成済** (2026-06-08、
-`epi-unconditional-moonshot-plan` 完了): `entropyPowerExt_add_ge_unconditional`
-(`EPI/Unconditional/DispatchFull.lean`、完全無条件 ℝ≥0∞ 版、precondition 0、sorryAx-free、
-`@audit:ok`) + `entropy_power_inequality_of_ac` (実数 a.c.+有限版、sorryAx-free) が **別ルート
-(3-case dispatch + route T)** で EPI を genuine に出す。本 bridge sorry はその後継に **supersede
-された legacy** であり、Cover-Thomas の `h_stam` 仮説形 (`entropy_power_inequality`) を保つためだけに
-残置 (live consumer あり、取り消し線化しない)。個別 closure は `epi-stam-to-conclusion-plan`
-Route B (ratio 形) が所有するが result が done のため低優先。
-
-migration 前は consumer (`entropy_power_inequality` 等) が `(h_bridge : IsStamToEPIBridge X Y P)`
-を load-bearing hypothesis として取っていたが、これは tier 5 honesty defect (核を仮説束に
-押し付け)。本補題に `sorry` を集約し、consumer は `stamToEPIBridge_holds X Y P h_stam` で
-discharge する。
-
-`@residual(plan:epi-stam-to-conclusion-plan)`
-`@audit:superseded-by(epi-unconditional-moonshot-plan)` -/
-theorem stamToEPIBridge_holds {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω) :
-    IsStamToEPIBridge X Y P := by
-  sorry
-
-/-! ## §C — 主定理 (Cover-Thomas Theorem 17.7.3, non-circular Stam-bridge 形) -/
-
-/-- **Entropy Power Inequality** (Cover-Thomas Theorem 17.7.3).
-
-独立な実値確率変数 `X, Y` に対し
-
-    `entropyPower (P.map (X+Y)) ≥ entropyPower (P.map X) + entropyPower (P.map Y)`,
-
-すなわち `exp(2 h(X+Y)) ≥ exp(2 h(X)) + exp(2 h(Y))`。
-
-**非循環 residual から導出**: 主定理は EPI 結論そのものを hypothesis に取らず
-(それは循環)、genuine な residual
-
-* `h_stam` (L-EPI1, Cover-Thomas Lemma 17.7.2): Stam の inverse harmonic-mean
-  inequality `1/J(X+Y) ≥ 1/J(X) + 1/J(Y)` — **EPI 結論とは別の `Prop`**。
-* (旧) `h_bridge` (Cover-Thomas Lemma 17.7.3): Stam → EPI coupling — load-bearing
-  hypothesis として渡していた tier 5 defect 形は廃止。bridge は shared sorry 補題
-  `stamToEPIBridge_holds` 内部 discharge に集約され、consumer に露出しない。
-
-から `stamToEPIBridge_holds X Y P h_stam` で EPI を**導出**する。`h_stam` は
-結論と defeq でない genuine residual、本体は `:= h` 循環ではない。bridge の
-discharge (真の Mathlib 壁) は shared sorry 補題で集中管理、closure plan
-`epi-stam-to-conclusion-plan.md` で進行、Gaussian case は §D で full discharge。
-
-shared sorry 補題 (`stamToEPIBridge_holds`) の consumer であり、当該 wrapper
-自身は 0 local sorry だが、transitive に `stamToEPIBridge_holds`
-(`@residual(plan:epi-stam-to-conclusion-plan)`, `:223`) の `sorry` を消費する
-(`#print axioms` で `sorryAx` 依存を確認、2026-05-30 audit)。よって proof-done
-ではなく、以前の `@audit:ok` は tier-1 誤付与だった (file-local `rg sorry` が
-transitive sorry を見逃した)。reduction 自体は honest: bridge を所与とした正しい
-変形 (body `:= stamToEPIBridge_holds X Y P h_stam`)。local sorry を持たない
-transitive consumer なので `@residual` は付けない (sorry は被呼出 wall が保持)。
-
-**proof-done 後継 (2026-06-08、`epi-unconditional-moonshot-plan` 完了)**: 本 headline は
-`h_stam` (= Cover-Thomas Stam 形、未証明橋経由) を取るため proof-done でない。無条件化
-moonshot の完了により、proof-done な後継 2 本が in-tree に存在する:
-* 実数版 — `entropy_power_inequality_of_ac` (`EPIUncondDispatch.lean`、`entropyPower :
-  Measure ℝ → ℝ`、a.c. + 有限微分エントロピー前提、sorryAx-free、`@audit:ok`)。`h_stam` を
-  a.c.+有限の regularity precondition に置換した honest 形。
-* 完全無条件版 — `entropyPowerExt_add_ge_unconditional` (`EPIUncondDispatchFull.lean`、
-  ℝ≥0∞ 値 `entropyPowerExt`、`hX hY hXY` のみ = precondition ゼロ、sorryAx-free、`@audit:ok`)。
-**実数版は完全無条件化できない** (型壁: `h=±∞` を ℝ で表現不可、`EReal.exp_coe` 変換に
-a.c.+有限を要する) ため、a.c.+有限版が実数 headline の honest 限界。本 headline は Cover-Thomas
-の Stam-bridge 形を保つ legacy 露出として残置 (live consumer あり、取り消し線化しない)。
-
-`@audit:superseded-by(epi-unconditional-moonshot-plan)` -/
-@[entry_point]
-theorem entropy_power_inequality {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_stam : IsStamInequalityResidual X Y P) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
-  stamToEPIBridge_holds X Y P h_stam
-
-/-- **EPI in `Real.exp (2 · ...)` form** (Cover-Thomas 露出形).
-
-`entropy_power_inequality` を経由するため transitive に
-`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`, `:223`)
-の `sorry` を消費 (`#print axioms` で `sorryAx` 依存を確認、2026-05-30 audit)。
-proof-done でなく、以前の `@audit:ok` は tier-1 誤付与だった。reduction (exp 形へ
-の simp 変形) は honest。transitive consumer のため `@residual` は付けない。 -/
-@[entry_point]
-theorem entropy_power_inequality_exp_form {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_stam : IsStamInequalityResidual X Y P) :
-    Real.exp (2 * InformationTheory.Shannon.differentialEntropy
-              (P.map (fun ω => X ω + Y ω)))
-      ≥ Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map X))
-        + Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map Y)) := by
-  have h := entropy_power_inequality P X Y hX hY hXY h_stam
-  simpa [entropyPower] using h
+-- (deleted 2026-06-11, legacy Stam→EPI subtree removal) The Stam residual
+-- `IsStamInequalityResidual` (Cover-Thomas Lemma 17.7.2 V2 density-keyed Prop) was
+-- removed: after deleting the legacy bridge (`IsStamToEPIBridge` /
+-- `stamToEPIBridge_holds`) and all its consumers (`entropy_power_inequality` and the
+-- exp/log/normalized/integrated/via-stam wrappers), it had 0 remaining references
+-- (verified by `scripts/dep_consumers.sh`). It was a sorryAx-free Prop, so its
+-- removal is harmless. The genuine Stam residual still consumed by the live
+-- (non-legacy) pipeline is `EPIStamDischarge.IsStamInequalityHyp`.
 
 /-! ## §D — Gaussian saturation case (Cover-Thomas Theorem 17.7.3 等号成立、FULL DISCHARGE) -/
 
@@ -419,44 +265,6 @@ theorem entropyPower_map_add_const {μ : Measure ℝ} (hμ : μ ≪ volume)
     entropyPower (μ.map (· + a)) = entropyPower μ := by
   unfold entropyPower
   rw [InformationTheory.Shannon.differentialEntropy_map_add_const hμ]
-
-/-- **EPI in log form** (Cover-Thomas Ch.17 alternative signature).
-
-For independent `X, Y`, `h(X+Y) ≥ (1/2) · log (exp(2 h(X)) + exp(2 h(Y)))`.
-
-`entropy_power_inequality` を経由するため transitive に
-`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`, `:223`)
-の `sorry` を消費 (`#print axioms` で `sorryAx` 依存を確認、2026-05-30 audit)。
-proof-done でなく、以前の `@audit:ok` は tier-1 誤付与だった。log 形への monotone
-変形は honest。transitive consumer のため `@residual` は付けない。 -/
-@[entry_point]
-theorem entropy_power_inequality_log_form {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_stam : IsStamInequalityResidual X Y P) :
-    InformationTheory.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
-      ≥ (1/2) * Real.log
-          (entropyPower (P.map X) + entropyPower (P.map Y)) := by
-  -- The EPI core inequality.
-  have h_epi' : entropyPower (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
-    entropy_power_inequality P X Y hX hY hXY h_stam
-  -- RHS of `≥` is positive (sum of two positive `entropyPower`s).
-  have h_rhs_pos : 0 < entropyPower (P.map X) + entropyPower (P.map Y) :=
-    add_pos (entropyPower_pos _) (entropyPower_pos _)
-  -- Take `Real.log` of both sides (monotone on `(0, ∞)`).
-  have h_log : Real.log (entropyPower (P.map (fun ω => X ω + Y ω)))
-      ≥ Real.log (entropyPower (P.map X) + entropyPower (P.map Y)) :=
-    Real.log_le_log h_rhs_pos h_epi'
-  -- LHS log = 2 * h(X+Y) (from `log_exp`).
-  have h_lhs_log :
-      Real.log (entropyPower (P.map (fun ω => X ω + Y ω)))
-        = 2 * InformationTheory.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω)) := by
-    unfold entropyPower
-    rw [Real.log_exp]
-  rw [h_lhs_log] at h_log
-  linarith
 
 /-- **3-arg EPI pass-through**: 3 つの独立変数 `X, Y, Z` に対し EPI を
 chain することで `exp(2 h(X+Y+Z)) ≥ exp(2 h(X)) + exp(2 h(Y)) + exp(2 h(Z))`.

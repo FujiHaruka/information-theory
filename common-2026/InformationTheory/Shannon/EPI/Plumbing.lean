@@ -174,37 +174,6 @@ theorem entropyPower_map_affine
   rw [h_log]
   ring
 
-/-! ## §5 — `(2πe)⁻¹`-normalized EPI form (Cover-Thomas Ch.17 流儀) -/
-
-/-- **EPI in `(2πe)⁻¹`-normalized form** (Cover-Thomas Theorem 17.7.3 alt signature).
-
-Defining `N(μ) := entropyPower μ / (2πe)`, the EPI
-
-    `N(X + Y) ≥ N(X) + N(Y)`
-
-is equivalent to the un-normalized form. L-EPI3 hypothesis pass-through. -/
-@[entry_point]
-theorem entropy_power_inequality_normalized
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_stam : IsStamInequalityResidual X Y P) :
-    entropyPower (P.map (fun ω => X ω + Y ω)) / gaussianEntropyPowerConst
-      ≥ entropyPower (P.map X) / gaussianEntropyPowerConst
-        + entropyPower (P.map Y) / gaussianEntropyPowerConst := by
-  have h := entropy_power_inequality P X Y hX hY hXY h_stam
-  -- Divide both sides by the positive constant `2πe`.
-  have hc_pos : 0 < gaussianEntropyPowerConst := gaussianEntropyPowerConst_pos
-  have h_sum_div :
-      entropyPower (P.map X) / gaussianEntropyPowerConst
-        + entropyPower (P.map Y) / gaussianEntropyPowerConst
-      = (entropyPower (P.map X) + entropyPower (P.map Y))
-          / gaussianEntropyPowerConst := by
-    field_simp
-  rw [ge_iff_le, h_sum_div]
-  exact div_le_div_of_nonneg_right h hc_pos.le
-
 /-! ## §6 — 4-arg EPI chain (L-EPI3 pass-through を 3 回適用) -/
 
 /-- **4-arg EPI pass-through**: for independent `X, Y, Z, W` with the appropriate
@@ -253,30 +222,6 @@ theorem entropy_power_inequality_four_arg {Ω : Type*} {mΩ : MeasurableSpace Ω
   linarith
 
 /-! ## §7 — Misc. corollaries -/
-
-/-- Log-form of EPI: `2 h(X+Y) ≥ log (entropyPower X + entropyPower Y)`.
-
-Derived from `entropy_power_inequality` by applying `Real.log` (the inequality
-direction is preserved since `Real.log` is monotone on `(0, ∞)`). -/
-@[entry_point]
-theorem two_differentialEntropy_ge_log_sum
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_stam : IsStamInequalityResidual X Y P) :
-    2 * InformationTheory.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
-      ≥ Real.log (entropyPower (P.map X) + entropyPower (P.map Y)) := by
-  have h_epi' : entropyPower (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
-    entropy_power_inequality P X Y hX hY hXY h_stam
-  have h_rhs_pos : 0 < entropyPower (P.map X) + entropyPower (P.map Y) :=
-    add_pos (entropyPower_pos _) (entropyPower_pos _)
-  have h_log : Real.log (entropyPower (P.map (fun ω => X ω + Y ω)))
-      ≥ Real.log (entropyPower (P.map X) + entropyPower (P.map Y)) :=
-    Real.log_le_log h_rhs_pos h_epi'
-  rw [log_entropyPower] at h_log
-  exact h_log
 
 /-- L-EPI3 hypothesis is symmetric in `X` and `Y` (when the sum is reordered). -/
 theorem isEntropyPowerInequalityHypothesis_symm

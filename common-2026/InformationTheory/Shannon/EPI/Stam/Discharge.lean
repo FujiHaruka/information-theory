@@ -469,34 +469,6 @@ theorem epi_via_stam
     IsEntropyPowerInequalityHypothesis X Y P :=
   h_bridge h_stam
 
-/-- **Variant of `epi_via_stam`** routed through the EntropyPowerInequality
-main theorem `entropy_power_inequality`. Returns the EPI directly.
-
-NOTE (2026-05-30 audit): body は `entropy_power_inequality` を呼び `_h_bridge`
-を無視するため、transitive に `stamToEPIBridge_holds`
-(`@residual(plan:epi-stam-to-conclusion-plan)`,
-`EntropyPowerInequality.lean:223`) の `sorry` を消費する (`#print axioms` で
-`sorryAx` 依存を確認)。proof-done でなく、以前の `@audit:ok` は tier-1 誤付与だった
-(sibling `epi_via_stam` は `h_bridge h_stam` で genuine に conditional 適用するため
-sorryAx 非依存; こちらは headline 経由で bridge を内部 discharge してしまう点が違い)。
-reduction 自体は honest。transitive consumer のため `@residual` は付けない。 -/
-@[entry_point]
-theorem epi_via_stam_main
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y Z : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_stam : IsStamInequalityHyp X Y P)
-    (_h_bridge : IsStamToEPIBridgeHyp X Y P) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
-  -- `IsStamInequalityHyp` is reducibly defeq to `IsStamInequalityResidual` (both
-  -- are Fisher-info inverse-triangle predicates), so it threads into the
-  -- non-circular `entropy_power_inequality` headline directly. The Stam→EPI
-  -- bridge `_h_bridge` is now internally discharged via the shared sorry lemma
-  -- `stamToEPIBridge_holds`, so the argument is unused at this wrapper.
-  entropy_power_inequality P X Y hX hY hXY h_stam
-
 /-! ## §7 — Gaussian full discharge (`epi_via_stam_gaussian`) -/
 
 /-- **Gaussian full discharge**: for independent Gaussian `X, Y` with non-zero
@@ -677,23 +649,6 @@ theorem isStamToEPIBridgeHyp_const
 
 /-! ## §13 — Gaussian saturation corollaries -/
 
-/-- **Gaussian saturation via Stam pipeline**: when both `P.map X` and
-`P.map Y` are Gaussian with non-zero variance, the EPI follows through the
-§6 wrapper (`epi_via_stam_main`) via the Gaussian-discharged bridge. -/
-@[entry_point]
-theorem entropy_power_inequality_via_stam_gaussian
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y Z : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
-    (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂)
-    (h_stam : IsStamInequalityHyp X Y P) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
-  have h_bridge : IsStamToEPIBridgeHyp X Y P :=
-    isStamToEPIBridgeHyp_of_gaussian P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
-  exact epi_via_stam_main P X Y Z hX hY hXY h_stam h_bridge
-
 /-- **Variance-additive form of Gaussian saturation**: the entropy power of
 the Gaussian sum equals `2πe (v₁ + v₂) = 2πe v₁ + 2πe v₂`, matching the
 EPI inequality with equality. -/
@@ -708,74 +663,6 @@ theorem entropyPower_gaussian_sum_eq
       = entropyPower (P.map X) + entropyPower (P.map Y) :=
   entropyPower_gaussian_additivity P X Y hX hY hXY m₁ m₂ v₁ v₂
     hv₁ hv₂ hLawX hLawY
-
-/-! ## §14 — Log-form / Cover-Thomas alternative signatures via Stam pipeline -/
-
-/-- **Log-form EPI via Stam pipeline**: combines `epi_via_stam_main` with
-`entropy_power_inequality_log_form` from `EntropyPowerInequality.lean`.
-
-NOTE (2026-05-30 audit): body は `entropy_power_inequality_log_form` を呼ぶため
-transitive に `stamToEPIBridge_holds`
-(`@residual(plan:epi-stam-to-conclusion-plan)`, `EntropyPowerInequality.lean:223`)
-の `sorry` を消費する (`#print axioms` で `sorryAx` 依存を確認)。proof-done でなく、
-以前の `@audit:ok` は tier-1 誤付与だった。reduction は honest。transitive consumer
-のため `@residual` は付けない。 -/
-@[entry_point]
-theorem entropy_log_form_via_stam
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y Z : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_stam : IsStamInequalityHyp X Y P)
-    (_h_bridge : IsStamToEPIBridgeHyp X Y P) :
-    InformationTheory.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
-      ≥ (1/2) * Real.log
-          (entropyPower (P.map X) + entropyPower (P.map Y)) :=
-  entropy_power_inequality_log_form P X Y hX hY hXY h_stam
-
-/-- **Exp-form EPI via Stam pipeline**: Cover-Thomas Theorem 17.7.3 露出形.
-
-NOTE (2026-05-30 audit): body は `entropy_power_inequality_exp_form` を呼ぶため
-transitive に `stamToEPIBridge_holds`
-(`@residual(plan:epi-stam-to-conclusion-plan)`, `EntropyPowerInequality.lean:223`)
-の `sorry` を消費する (`#print axioms` で `sorryAx` 依存を確認)。proof-done でなく、
-以前の `@audit:ok` は tier-1 誤付与だった。reduction は honest。transitive consumer
-のため `@residual` は付けない。 -/
-@[entry_point]
-theorem entropy_exp_form_via_stam
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y Z : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_stam : IsStamInequalityHyp X Y P)
-    (_h_bridge : IsStamToEPIBridgeHyp X Y P) :
-    Real.exp (2 * InformationTheory.Shannon.differentialEntropy
-              (P.map (fun ω => X ω + Y ω)))
-      ≥ Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map X))
-        + Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map Y)) :=
-  entropy_power_inequality_exp_form P X Y hX hY hXY h_stam
-
-/-- **Normalized `(2πe)⁻¹` form via Stam pipeline**: Cover-Thomas Ch.17 流儀
-`N(X+Y) ≥ N(X) + N(Y)`.
-
-NOTE (2026-05-30 audit): body は `entropy_power_inequality_normalized` を呼ぶため
-transitive に `stamToEPIBridge_holds`
-(`@residual(plan:epi-stam-to-conclusion-plan)`, `EntropyPowerInequality.lean:223`)
-の `sorry` を消費する (`#print axioms` で `sorryAx` 依存を確認)。proof-done でなく、
-以前の `@audit:ok` は tier-1 誤付与だった。reduction は honest。transitive consumer
-のため `@residual` は付けない。 -/
-@[entry_point]
-theorem entropy_normalized_form_via_stam
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y Z : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_stam : IsStamInequalityHyp X Y P)
-    (_h_bridge : IsStamToEPIBridgeHyp X Y P) :
-    entropyPower (P.map (fun ω => X ω + Y ω)) / gaussianEntropyPowerConst
-      ≥ entropyPower (P.map X) / gaussianEntropyPowerConst
-        + entropyPower (P.map Y) / gaussianEntropyPowerConst :=
-  entropy_power_inequality_normalized P X Y hX hY hXY h_stam
 
 /-! ## §15 — 4-arg EPI chain via Stam pipeline -/
 
@@ -860,29 +747,6 @@ theorem epi_via_stam_three_arg_normalized
   exact div_le_div_of_nonneg_right h_3arg hc_pos.le
 
 /-! ## §17 — Sanity check / regression theorems -/
-
-/-- **Sanity check**: the Stam pipeline composed with the EntropyPowerInequality
-top-level theorem recovers the exact main statement signature.
-
-NOTE (2026-05-30 audit): body は `entropy_power_inequality` を呼び `_h_bridge`
-を無視するため、transitive に `stamToEPIBridge_holds`
-(`@residual(plan:epi-stam-to-conclusion-plan)`, `EntropyPowerInequality.lean:223`)
-の `sorry` を消費する (`#print axioms` で `sorryAx` 依存を確認)。proof-done でなく、
-以前の `@audit:ok` は tier-1 誤付与だった。reduction は honest。transitive consumer
-のため `@residual` は付けない。 -/
-@[entry_point]
-theorem epi_via_stam_main_eq
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_stam : IsStamInequalityHyp X Y P)
-    (_h_bridge : IsStamToEPIBridgeHyp X Y P) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
-  -- (Phase 3 Wave 2, 2026-05-27) `_h_db : IsDeBruijnIntegrationHypothesis` argument
-  -- was removed: the placeholder def was retracted; the body never used `_h_db`.
-  entropy_power_inequality P X Y hX hY hXY h_stam
 
 /-- **Round trip**: if we have the Stam-derived EPI, the EntropyPowerInequality
 predicate is exactly the result of the bridge applied to Stam.

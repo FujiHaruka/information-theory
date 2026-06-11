@@ -571,46 +571,13 @@ theorem isStamInequalityHyp_via_body_to_pipeline
     InformationTheory.Shannon.EPIL3Integration.IsEPIL3IntegratedPipeline X Y P :=
   { stam := isStamInequalityHyp_via_body h_cs_opt }
 
-/-- **End-to-end EPI via body discharge** (composes §4 + §6 + EPIL3 pipeline).
-
-The former load-bearing Step-2 hypothesis `(h_cs_opt : IsStamCauchySchwarzOptimal
-X Y P)` (a tier-5 honesty defect — Step 2 was *assumed*) has been removed: the
-optimal Cauchy-Schwarz / convex Fisher bound is now supplied internally by the
-genuine (sorryAx-free) lemma `stam_step2_density_wall` (`wall:stam-step2-density`
-is [CLOSED 2026-06-04]).
-The Step-1 score-convolution predicate is constructed unconditionally via
-`isStamScoreConvolution_intro` (cosmetic slot). The public signature therefore
-carries **no** load-bearing Step-2 analytic hypothesis — only regularity
-(measurability / independence / probability measure) — with the Step-2 obligation
-localized to (and genuinely discharged by) `stam_step2_density_wall`.
-
-Update 2026-05-31 (owner-level pivot, epi-wall-reattack-plan): `stam_step2_density_wall`
-**and** `isStamInequalityHyp_via_body` are now **both genuinely closed** (0-sorry,
-`#print axioms` sorryAx-free). The published `IsStamInequalityHyp` was pivoted in lockstep
-with `IsStamInequalityResidual` to carry the pointwise convolution constraint +
-`IsBlachmanConvReady` bundle, so the former regularity-precondition signature gap is
-resolved — the Stam half of the pipeline (`h_stam`) is now sorryAx-free.
-
-The remaining `h_bridge : IsStamToEPIBridgeHyp` argument is **not** load-bearing
-at this wrapper: `epi_via_stam_main` ignores it (`_h_bridge`), discharging the
-Stam→EPI bridge internally via the separate shared sorry lemma
-`stamToEPIBridge_holds`. It is retained only as a cosmetic interface slot.
-
-This wrapper is **not** proof done: it depends transitively on `sorryAx` solely via
-`EntropyPowerInequality.stamToEPIBridge_holds` (Stam→EPI bridge wall,
-`@residual(plan:epi-stam-to-conclusion-plan)`). The Stam-inequality half is now genuine.
-No `@audit:ok`. -/
-@[entry_point]
-theorem entropy_power_inequality_via_body
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (h_bridge : IsStamToEPIBridgeHyp X Y P) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
-  have h_cs_opt := stam_step2_density_wall P X Y hX hY hXY
-  have h_stam := isStamInequalityHyp_via_body h_cs_opt
-  exact epi_via_stam_main P X Y X hX hY hXY h_stam h_bridge
+-- (deleted 2026-06-11, legacy Stam→EPI subtree removal)
+-- `entropy_power_inequality_via_body` (end-to-end EPI via body discharge, routed
+-- through `epi_via_stam_main` → `entropy_power_inequality` →
+-- `EntropyPowerInequality.stamToEPIBridge_holds`) was removed together with that
+-- bridge subtree; it had 0 consumers. The genuine Stam-inequality half
+-- (`isStamInequalityHyp_via_body` / `stam_step2_density_wall`) is unchanged and
+-- remains available; only the legacy bridge-consuming wrapper is gone.
 
 /-! ## §11 — Sanity check / regression theorems -/
 

@@ -19,12 +19,14 @@
 
 再検証レシピ + 最後に通った commit は **`epi-facts.md` 行 25/27/28/29 が SoT** (本ファイルにキャッシュしない)。
 
-> ⚠ **2026-06-10 注記**: 下記「frontier = 一般 EPI headline closure のみ」「残作業 Route A/B」「active 独立壁」
-> の各節は **2026-06-06 時点 (無条件化完成前) の記述で obsolete**。一般 EPI は上記の通り別ルート (無条件
-> dispatch + route T) で closure 済み — Stam-bridge `stamToEPIBridge_holds` を closure する Route A/B は
-> **textbook goal の達成には不要**になった。`stamToEPIBridge_holds` は legacy Cover-Thomas 露出
-> `entropy_power_inequality` (実数・`h_stam` 仮説形) を保つためだけに残る 1 sorry で、コード側は
-> `@audit:superseded-by(epi-unconditional-moonshot-plan)` 付与済。以下の旧記述は履歴として残置 (参照しない)。
+> ⚠ **2026-06-11 注記 (legacy route 物理削除)**: `stamToEPIBridge_holds` (唯一の EPI sorry) + legacy
+> Cover-Thomas Stam-bridge 露出 (`entropy_power_inequality` / log・exp form / `epi_via_stam_main` 系 /
+> L3Integration integrated pipeline 等、計 28 decl) を **物理削除済**。blast radius は EPI family 内に完全
+> 隔離されており (route-T 後継 = `entropyPowerExt_add_ge_unconditional` / `entropy_power_inequality_of_ac` /
+> `_of_density` は非依存)、削除後 full build clean (3480 jobs) + route-T headline は `[propext, Classical.choice,
+> Quot.sound]` 維持。**EPI family の実 sorry = 0**。`IsStamInequalityResidual` は consumer 0 で co-delete、
+> `IsEntropyPowerInequalityHypothesis` (Gaussian-saturation 系 16 consumer) は KEEP。下記「Route A/B」「active
+> 独立壁」「唯一の active 残壁」の各節は **削除前 (2026-06-06) の記述で obsolete**、履歴として残置 (参照しない)。
 
 ## proof-done (genuine, sorryAx-free)
 
@@ -48,7 +50,7 @@ Gaussian additivity 系のみ)。
 
 | slug | 性質 | 状態 (2026-06-06) |
 |---|---|---|
-| `plan:epi-stam-to-conclusion-plan` (`stamToEPIBridge_holds`) | Stam→EPI bridge | **唯一の active 残壁** (sorry)。旧 closure route = difference 形 (G1/G3 + de Bruijn bridge) は判断 #8 で削除済。生存 route = ratio 形 + two-time |
+| ~~`plan:epi-stam-to-conclusion-plan` (`stamToEPIBridge_holds`)~~ | Stam→EPI bridge | **2026-06-11 物理削除済** — route-T 後継が supersede、closure 不要に。legacy 露出 28 decl ごと削除し EPI sorry = 0 |
 | `wall:stam-blachman` | score の condExp 表現 = Blachman 恒等式 | **CLOSED** (Stam 側に吸収、`isStamInequalityHyp_of_primitives:176` が sorryAx-free。旧「最深・未確定」は obsolete) |
 | `wall:heatflow-continuity` / `approx-identity-L1` (G2) | heat-flow path 連続性 √t→0⁺ | **CLOSED** (2026-06-05、`heatFlowEntropyPower_continuousWithinAt_zero:583` sorryAx-free。plan の「真 Mathlib 壁 2026-06-03」は stale) |
 | `wall:debruijn-integration` / `plan:epi-debruijn-pertime-closure` | per-time de Bruijn | 大半 genuine。ただし `isDeBruijnRegularityHyp_of_methodX_unitnoise` (`EPICase1RatioLimit.lean`) は **sorryAx-present** (t-可測性 residual `:2041`)。bridge closure の上流前提として要評価 |

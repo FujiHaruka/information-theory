@@ -192,37 +192,13 @@ removed in the wall-consolidation pass. They were an isolated island (zero
 cross-file consumers; the public main theorem `entropy_power_inequality`
 actually runs via `EntropyPowerInequality.stamToEPIBridge_holds`, verified by the
 forward dep graph 2026-06-09), and their load-bearing predicate content is now
-localized to the shared `stam_step2_density_wall`. -/
+localized to the shared `stam_step2_density_wall`.
 
-/-- **EPI conclusion from regularity preconditions** (via the shared wall).
-
-Produces the EPI conclusion from measurability / independence / probability
-measure alone, deriving the Stam inequality via the shared wall and feeding it
-through the integrated pipeline. Carries **no** load-bearing analytic hypothesis.
-
-This wrapper is **not** proof done: it depends transitively on `sorryAx`. Update
-2026-06-04 (audit): the Stam side is now fully genuine —
-`isStamInequalityHyp_of_primitives` is sorryAx-free (`stam_step2_density_wall` /
-`wall:stam-step2-density` is [CLOSED 2026-06-04] via
-`convex_fisher_bound_of_ready`). The remaining transitive `sorry` does **not**
-come from the Stam wall; it comes from the Stam→EPI bridge
-`entropy_power_inequality_integrated` → `entropy_power_inequality` →
-`EntropyPowerInequality.stamToEPIBridge_holds`
-(`@residual(plan:epi-stam-to-conclusion-plan)`). `IsStamCauchySchwarzOptimal` is a
-provable (non-false) Prop; the prior "false-statement defect / universally FALSE"
-note is obsolete. Transitive consumer (no local `sorry`), so no active `@residual`
-here. -/
-@[entry_point]
-theorem entropy_power_inequality_via_stamDeBruijn
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
-  have h_int : IsEPIL3IntegratedPipeline X Y P :=
-    { stam := isStamInequalityHyp_of_primitives P X Y hX hY hXY }
-  exact entropy_power_inequality_integrated P X Y hX hY hXY h_int
+(deleted 2026-06-11, legacy Stam→EPI subtree removal) The wrapper
+`entropy_power_inequality_via_stamDeBruijn` (EPI conclusion from regularity
+preconditions, routed through `entropy_power_inequality_integrated` →
+`EntropyPowerInequality.stamToEPIBridge_holds`) was removed together with that
+bridge subtree; it had 0 consumers. -/
 
 /-! ## §5 — Gaussian EPI (genuine, via saturation)
 

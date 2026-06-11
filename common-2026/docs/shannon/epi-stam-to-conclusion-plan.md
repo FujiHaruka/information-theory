@@ -1,5 +1,7 @@
 # EPI Stam → EPI conclusion — B-wire honest discharge plan
 
+> **🗑 OBSOLETE (2026-06-11)**: 本 plan が closure 対象としていた `stamToEPIBridge_holds` (legacy Stam-bridge sorry) + 露出 28 decl は **物理削除済** (route-T 後継が完全 supersede、EPI family の実 sorry = 0)。Phase B は実装対象を喪失。Phase A (`entropy_power_inequality_of_density`、CLOSED) は別 file (`EPIDensityForm.lean`) に生存。本 plan は履歴として残置 (新規参照しない)。詳細 SoT → `ch17-inequalities-status.md` 冒頭 2026-06-11 注記。
+>
 > **Parent**: [`epi-unconditional-moonshot-plan.md`](epi-unconditional-moonshot-plan.md) (無条件 EPI moonshot の最終 wall "B-wire")
 > **Status (2026-06-10 更新)**: **Phase B は SUPERSEDED** — 親 moonshot `epi-unconditional-moonshot-plan` が **無条件 dispatch + route T** で一般 EPI を別ルート closure 済 (`entropyPowerExt_add_ge_unconditional` sorryAx-free、2026-06-08)。本 plan の Phase B (legacy 実数 `entropy_power_inequality` を Stam-bridge 経由で sorryAx-free 化) は **textbook goal 達成には不要**になった。`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`) は唯一の残 sorry だが、コード側で `@audit:superseded-by(epi-unconditional-moonshot-plan)` 付与済 = legacy Cover-Thomas 露出の局所 residual。Phase A (`entropy_power_inequality_of_density`) は **CLOSED** のまま (sorryAx-free)。W2 cluster も CLOSED。
 > **2026-06-06 全面 destale + 2-phase 再構成**: 旧 difference-form route (G1-G4/W0-W2 表、ratio 再frame route B、Phase A skeleton/A-close 等) は **すべて履歴**。W2-cluster CLOSED + assembly 部品が genuine 着地したのを受け、本 plan を **Phase A (密度あり標準形) + Phase B (完全一般形)** の 2-phase に再構成する。旧記述は本ファイル末尾「## 旧記述 (履歴、参照しない)」へ退避。
