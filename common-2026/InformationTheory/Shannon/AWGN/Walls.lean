@@ -1316,12 +1316,128 @@ private lemma mutualInfo_encoder_le_fst
   exact mutualInfo_le_of_postprocess μ Prod.snd Prod.fst hsnd hfst
     (measurable_of_countable c.encoder)
 
+/-- `converseJointInline.map fst = msgLawInline` (uniform message marginal). -/
+private lemma converseJointInline_map_fst_eq_msgLaw
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
+    (converseJointInline h_meas c).map (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
+      = msgLawInline M := by
+  classical
+  unfold converseJointInline msgLawInline
+  rw [Measure.map_smul, Measure.map_finset_sum (s := Finset.univ)
+      (m := fun m => (Measure.dirac m).prod
+        (Measure.pi (fun j : Fin n => awgnChannel N h_meas (c.encoder m j))))
+      measurable_fst.aemeasurable]
+  rw [count_eq_finset_sum_dirac_inline (Fin M)]
+  congr 1
+  refine Finset.sum_congr rfl (fun m _ => ?_)
+  rw [Measure.map_fst_prod, measure_univ, one_smul]
+
+/-- Marginals product `(μ.map fst).prod (μ.map snd) = msgLaw ⊗ₘ const blockYLaw`. -/
+private lemma converseJointInline_prod_marginals_eq
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
+    ((converseJointInline h_meas c).map Prod.fst).prod ((converseJointInline h_meas c).map Prod.snd)
+      = msgLawInline M ⊗ₘ Kernel.const (Fin M) (blockYLawInline h_meas c) := by
+  rw [converseJointInline_map_fst_eq_msgLaw h_meas c,
+    show (converseJointInline h_meas c).map Prod.snd = blockYLawInline h_meas c from rfl,
+    Measure.compProd_const]
+
+/-- Per-fibre log-likelihood-ratio integrability:
+`log (νₘ.rnDeriv blockYLaw)` integrable against the m-th block component `νₘ`. -/
+private lemma integrable_log_component_rnDeriv_blockYLawInline
+    {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (m : Fin M) :
+    Integrable
+      (fun y => Real.log
+        ((Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N)).rnDeriv
+          (blockYLawInline h_meas c) y).toReal)
+      (Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N)) := by
+  classical
+  set νm := Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N) with hνm
+  set q := blockYLawInline h_meas c with hq
+  haveI : ∀ i, IsProbabilityMeasure (gaussianReal (c.encoder m i) N) := fun i => inferInstance
+  haveI hνm_prob : IsProbabilityMeasure νm := by rw [hνm]; infer_instance
+  haveI hq_prob : IsProbabilityMeasure q := by rw [hq]; infer_instance
+  have hνm_q : νm ≪ q := by rw [hνm, hq]; exact blockComponentInline_ac_blockYLaw hN h_meas c m
+  have hq_vol : q ≪ (volume : Measure (Fin n → ℝ)) := by rw [hq]; exact blockYLawInline_ac_volume hN h_meas c
+  have hνm_vol : νm ≪ (volume : Measure (Fin n → ℝ)) := by
+    rw [hνm, blockComponentInline_withDensity hN c m]
+    exact MeasureTheory.withDensity_absolutelyContinuous _ _
+  -- `log(νₘ/q) =ᵐ[νₘ] log(νₘ/vol) − log(q/vol)`; both terms integrable.
+  have h_split : (fun y => Real.log ((νm.rnDeriv q y).toReal))
+      =ᵐ[νm] (fun y => Real.log ((νm.rnDeriv volume y).toReal)
+                - Real.log ((q.rnDeriv volume y).toReal)) :=
+    ChannelCoding.log_rnDeriv_split_gen hνm_q hq_vol
+  refine Integrable.congr ?_ h_split.symm
+  -- term A: `log(νₘ.rnDeriv vol)` integrable against νₘ (product-Gaussian log-density)
+  have hA : Integrable (fun y => Real.log ((νm.rnDeriv volume y).toReal)) νm := by
+    rw [hνm]; exact integrable_log_fibre_rnDeriv hN c m
+  -- term B: `log(q.rnDeriv vol)` integrable against νₘ (= component output log-density)
+  have hB : Integrable (fun y => Real.log ((q.rnDeriv volume y).toReal)) νm := by
+    rw [hνm, hq]; exact integrable_log_blockYLawInline_on_component hN h_meas c m
+  exact hA.sub hB
+
 /-- `I(W;Y^n) ≠ ∞` (finiteness, so `.toReal` is monotone). -/
 private lemma mutualInfo_fst_snd_ne_top
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
     mutualInfo (converseJointInline h_meas c) Prod.fst Prod.snd ≠ ∞ := by
-  sorry
+  classical
+  rw [mutualInfo]
+  have h_joint : (converseJointInline h_meas c).map
+      (fun ω : Fin M × (Fin n → ℝ) => (ω.1, ω.2)) = msgLawInline M ⊗ₘ blockKernelInline N c := by
+    rw [show (fun ω : Fin M × (Fin n → ℝ) => (ω.1, ω.2)) = id from rfl, Measure.map_id]
+    exact converseJointInline_eq_compProd h_meas c
+  rw [h_joint, converseJointInline_prod_marginals_eq h_meas c]
+  refine klDiv_ne_top ?_ ?_
+  · -- AC: msgLaw ⊗ₘ K ≪ msgLaw ⊗ₘ const blockY
+    refine Measure.AbsolutelyContinuous.compProd_right ?_
+    filter_upwards with m
+    show blockKernelInline N c m ≪ (Kernel.const (Fin M) (blockYLawInline h_meas c)) m
+    rw [Kernel.const_apply]
+    show Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N) ≪ blockYLawInline h_meas c
+    exact blockComponentInline_ac_blockYLaw hN h_meas c m
+  · -- integrable llr
+    set K := blockKernelInline N c with hK
+    set ηc := Kernel.const (Fin M) (blockYLawInline h_meas c) with hηc
+    have h_ac : msgLawInline M ⊗ₘ K ≪ msgLawInline M ⊗ₘ ηc := by
+      refine Measure.AbsolutelyContinuous.compProd_right ?_
+      filter_upwards with m
+      rw [hηc, Kernel.const_apply]
+      show Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N) ≪ blockYLawInline h_meas c
+      exact blockComponentInline_ac_blockYLaw hN h_meas c m
+    have h_llr_ae : (fun p => llr (msgLawInline M ⊗ₘ K) (msgLawInline M ⊗ₘ ηc) p)
+        =ᵐ[msgLawInline M ⊗ₘ K]
+        (fun p : Fin M × (Fin n → ℝ) => Real.log ((K.rnDeriv ηc p.1 p.2)).toReal) := by
+      have h1 : (msgLawInline M ⊗ₘ K).rnDeriv (msgLawInline M ⊗ₘ ηc)
+          =ᵐ[msgLawInline M ⊗ₘ K] fun p => K.rnDeriv ηc p.1 p.2 :=
+        h_ac.ae_le (ChannelCoding.rnDeriv_compProd_fibre h_ac)
+      simp only [llr_def]
+      filter_upwards [h1] with p hp1
+      rw [hp1]
+    refine Integrable.congr ?_ h_llr_ae.symm
+    refine (Measure.integrable_compProd_iff ?_).mpr ⟨?_, ?_⟩
+    · exact ((Kernel.measurable_rnDeriv K ηc).ennreal_toReal.log).aestronglyMeasurable
+    · filter_upwards with m
+      have h_fibre_ae : (fun y => Real.log ((K.rnDeriv ηc m y)).toReal)
+          =ᵐ[K m] (fun y => Real.log (((K m).rnDeriv (blockYLawInline h_meas c) y)).toReal) := by
+        have hKm_blockY : K m ≪ blockYLawInline h_meas c := by
+          rw [hK]
+          show Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N) ≪ blockYLawInline h_meas c
+          exact blockComponentInline_ac_blockYLaw hN h_meas c m
+        have h_meas_eq : K m ≪ ηc m := by rw [hηc, Kernel.const_apply]; exact hKm_blockY
+        filter_upwards [h_meas_eq.ae_le
+          (Kernel.rnDeriv_eq_rnDeriv_measure (κ := K) (η := ηc) (a := m))] with y hy
+        rw [hy]; simp only [hηc, Kernel.const_apply]
+      refine Integrable.congr ?_ h_fibre_ae.symm
+      show Integrable
+        (fun y => Real.log
+          ((Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N)).rnDeriv
+            (blockYLawInline h_meas c) y).toReal)
+        (Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N))
+      exact integrable_log_component_rnDeriv_blockYLawInline hN h_meas c m
+    · exact Integrable.of_finite
 
 /-- **Block MI decomposition**: `I(W;Y^n).toReal = h(Y^n) − n·h(noise)`. -/
 private lemma blockMI_decomp
