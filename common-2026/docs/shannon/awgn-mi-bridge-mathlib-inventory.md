@@ -4,9 +4,14 @@
 > 対象 sorry: `InformationTheory/Shannon/AWGNConverse.lean:86-93` の `awgn_converse` body 内 `h_mi_bridge_per_letter`（`@residual(plan:awgn-mi-bridge-plan)`）。
 > Created: 2026-05-28。
 
+> **後日訂正 (2026-06-11)**: 下の「連続版 MI = h(Y) − h(Y|X) は Mathlib 不在で唯一の真の壁」は
+> **false wall だった**。generic continuous-channel MI chain rule asset を上流に relocate して genuine
+> 化し、per-letter bridge `awgn_per_letter_mi_bridge_genuine` (`AWGN/Converse.lean:549`、`@audit:ok`)
+> で closed。settled-facts → [`awgn-facts.md`](awgn-facts.md)。以下は当時の調査結果として保存。
+
 ## 一行サマリ
 
-**bridge を構成する道具のうち実体（Bochner 積分・klDiv chain rule・rnDeriv・Gaussian PDF）はほぼ 100% Mathlib + InformationTheory 既存。だが「連続版 MI = `h(Y) − h(Y|X)`（density-level chain rule）」という結論形そのものは Mathlib 不在で、これが唯一の真の壁（既存率: 部品 ~90% / 結論形 0%）。** 自作必要は実質 1 件（連続 MI chain rule 補題）＋ per-letter mixture を `compProd` 形に乗せる橋渡し 1 件。撤退ライン発動: **No**（既存 `wall:awgn-mi-decomp` の枠内）。**最大の surprise: この壁は本 task 専用ではなく、`AWGNMIDecompBody.lean` の `IsContChannelMIDecompHyp`（load-bearing predicate、tier 4）として既に別経路で「Mathlib 不在」と判定済み — shared sorry 補題への集約が強く推奨される。**
+**bridge を構成する道具のうち実体（Bochner 積分・klDiv chain rule・rnDeriv・Gaussian PDF）はほぼ 100% Mathlib + InformationTheory 既存。「連続版 MI = `h(Y) − h(Y|X)`（density-level chain rule）」の結論形は当時 Mathlib 不在と判定したが、後に self-build で genuine 化 (false wall)。** 自作必要は実質 1 件（連続 MI chain rule 補題）＋ per-letter mixture を `compProd` 形に乗せる橋渡し 1 件 — いずれも完了済。撤退ライン発動: **No**。
 
 ---
 

@@ -1,19 +1,17 @@
 # AWGN MI bridge — `mutualInfoOfChannel` ↔ `h(Y) − h(Y|X)` plan (stub)
 
-> **Status (2026-05-28)**: density chain-rule (per-channel decomposition) 壁が shared sorry
-> `contChannelMIDecomp_holds` (`AwgnWalls.lean`、`@residual(wall:awgn-mi-decomp)`) **1 本に集約済**
-> (commit `9ccbb67`)。`docs/audit/audit-tags.md` Wall name register に `awgn-mi-decomp` 追記済。
-> ②③ (`IsContChannelMIDecompHyp` / `IsAwgnMIDecomp`) は genuine discharge 確認済。
-> **残**: ① per-letter bridge (`AWGNConverse.lean` `h_mi_bridge_per_letter`、
-> `@residual(plan:awgn-mi-bridge-plan)`) は mixture→compProd 因子分解 plumbing 待ちで残置。
-> honesty audit (commit `5c5d94d`) で `mutualInfoOfChannel_gaussianInput_closed_form` がまだ
-> `h_bridge` load-bearing と判明 (incidental-migration follow-up、本 plan に未折込)。
+> **Status (2026-06-11)**: **CLOSED (genuine)**。① per-letter bridge は
+> `awgn_per_letter_mi_bridge_genuine` (`AWGN/Converse.lean:549`、`@audit:ok`) で genuine 化済
+> (mixture→compProd 因子分解 + generic continuous-channel MI chain rule asset + 混合 log-density
+> 可積分性 + fibre entropy 平行移動不変)。`awgn_converse` body はその呼出に置換され、
+> file scope 0 sorry。②③ (density chain-rule) も genuine discharge 済。
+> → settled-facts は [`awgn-facts.md`](awgn-facts.md) を SoT とする。
 > **Created**: 2026-05-24 (orphan suspect cleanup, defect-inventory-2026-05-24.md Wave 0)。
 
 ## Position
 
-- 対象定理: `InformationTheory/Shannon/AWGN.lean:123` `theorem mutualInfoOfChannel_gaussianInput_closed_form`
-- 当該 tag: `@audit:suspect(awgn-mi-bridge-plan)` (line 122)
+- 対象定理 (closure 済): per-letter bridge `awgn_per_letter_mi_bridge_genuine` (`InformationTheory/Shannon/AWGN/Converse.lean:549`、`@audit:ok`)
+- 残作業 (converse とは独立): closed-form MI bridge `mutualInfoOfChannel_gaussianInput_closed_form'` (`InformationTheory/Shannon/AWGN/MIClosedForm.lean`) の `h_bridge` load-bearing 解消。旧 bare 形 `mutualInfoOfChannel_gaussianInput_closed_form` (旧 `AWGN.lean`) は retire 済
 - 親 moonshot: [`awgn-moonshot-plan.md`](./awgn-moonshot-plan.md)
 - 関連 plan: `awgn-mi-decomp-plan.md` (隣接 MI 分解), `awgn-converse-aux-plan.md`
 
@@ -47,19 +45,17 @@
 
 ## Closure criteria
 
-- ② ③ (per-channel decomposition / density chain-rule): **達成済** — `contChannelMIDecomp_holds`
-  (`AwgnWalls.lean`、`@residual(wall:awgn-mi-decomp)`) に集約、`IsContChannelMIDecompHyp` /
-  `IsAwgnMIDecomp` は genuine discharge。
-- ① per-letter bridge: `h_mi_bridge_per_letter` 引数を `AWGNConverse.lean` から削除
-  (genuine discharge)、mixture→compProd 因子分解 plumbing が必要。`@residual(plan:awgn-mi-bridge-plan)`
-  の closure 担当。
-- `mutualInfoOfChannel_gaussianInput_closed_form` の `h_bridge` 引数を削除 (incidental-migration
-  follow-up、honesty audit `5c5d94d` で load-bearing と確認、本 plan に未折込)。
+- ② ③ (per-channel decomposition / density chain-rule): **達成済 (genuine)** —
+  `IsContChannelMIDecompHyp` / `IsAwgnMIDecomp` は genuine discharge。
+- ① per-letter bridge: **達成済 (genuine)** — `awgn_per_letter_mi_bridge_genuine`
+  (`AWGN/Converse.lean:549`、`@audit:ok`)。`h_mi_bridge_per_letter` は `awgn_converse`
+  signature から落ち、body はその genuine bridge 呼出に置換。
+- `mutualInfoOfChannel_gaussianInput_closed_form` の `h_bridge` (closed-form MI bridge、
+  achievability/headline 側): converse closure とは独立の残作業。
 
 ## TODO
 
-- [x] density chain-rule 壁を shared sorry `contChannelMIDecomp_holds` に集約 (`9ccbb67`)、
-      `awgn-mi-decomp` register 追記済
-- [ ] ① per-letter bridge の mixture→compProd 因子分解 plumbing
+- [x] density chain-rule (②③) genuine discharge
+- [x] ① per-letter bridge genuine 化 (`awgn_per_letter_mi_bridge_genuine`、commit `9d5edf1` + 監査 `34e58e7`)
 - [ ] `mutualInfoOfChannel_gaussianInput_closed_form` の `h_bridge` load-bearing 解消
-      (incidental-migration follow-up)
+      (incidental-migration follow-up、converse とは独立)

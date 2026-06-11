@@ -20,15 +20,16 @@ F-1 / F-3 は `IsAwgnTypicalityHypothesis` / `IsAwgnConverseHypothesis` predicat
 `sorry + @residual(plan:awgn-achievability-typicality-plan)` として独立 publish。
 F-3 (converse) は `awgn_converse` body を `awgn_converse_F3_discharged` への
 1 行 `exact` wrapper として discharge 済 (2026-05-27 `awgn-main-converse-wiring`
-mini-plan)、file scope では 0 sorry、transitive Mathlib 壁
-`@residual(wall:multivariate-mi)` のみが `AWGNConverseDischarge.lean:405` の
-private lemma `awgnConverseJoint_pair_mi_ne_top` に集約残置。
+mini-plan)。converse 経路の 3 Mathlib 壁 (mi-bridge / multivariate-mi /
+continuous-mi-chain-rule) はすべて false-wall overturn で genuine closure し、
+`awgn_converse` は **完全 transitively sorryAx-free**
+(`#print axioms InformationTheory.Shannon.AWGN.awgn_converse` で再確認可能)。
 
-それぞれの discharge は別 plan に defer:
+それぞれの discharge plan:
 * F-4 → `awgn-kernel-measurability-plan.md`
 * F-1 (achievability) → `awgn-achievability-typicality-plan.md`
-* F-2 → `awgn-mi-bridge-plan.md`
-* F-3 (converse) → `awgn-converse-aux-plan.md`
+* F-2 (converse 壁) → closed (`awgn-mi-bridge-plan`)
+* F-3 (converse) → closed (3 壁すべて genuine、`awgn-converse-aux-plan`)
 
 判断ログ #2 (3 ファイル分離戦略) より、主定理 wrapper は AWGN.lean 末尾ではなく
 本 file (`AWGNMain.lean`) に置く: AWGNAchievability + AWGNConverse を import
@@ -68,8 +69,9 @@ peer migration removed `IsAwgnTypicalityHypothesis` /
   (`awgn_achievability` body は `sorry` + `@residual(plan:...)`)
 * F-2 (`h_mi_bridge`) → `awgn-mi-bridge-plan.md`
 * F-3 (converse body) → `awgn-converse-aux-plan.md` (`awgn_converse` body は
-  `awgn_converse_F3_discharged` 経由で discharge 済、wall residual のみ
-  upstream に残置 — `awgn-main-converse-wiring` mini-plan で完了)
+  `awgn_converse_F3_discharged` 経由で discharge 済。converse の 3 Mathlib 壁
+  すべて genuine closure 済のため `awgn_converse` は transitively sorryAx-free —
+  `awgn-main-converse-wiring` mini-plan で完了)
 
 `@audit:closed-by-successor(awgn-moonshot-plan)` -/
 @[entry_point]

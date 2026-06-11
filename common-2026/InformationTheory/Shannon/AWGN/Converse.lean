@@ -34,11 +34,14 @@ import 方向は `AWGNConverse → AWGNConverseDischarge` に flip (循環解消
 **2026-05-28 Phase 3-α sorry-based migration (`awgn-m5-sorry-migration-plan.md`)**:
 旧 load-bearing 引数 2 件 (`h_feasible : IsAwgnConverseFeasible …` + per-letter MI
 bridge `h_mi_bridge_per_letter`) を `awgn_converse` signature から除去。
-`h_feasible` の analytic content は `AwgnWalls.lean` shared sorry 補題に移管済。
-残る `h_mi_bridge_per_letter` (per-letter MI = `h(Y_i) - h(Z)` bridge、F-2 closure
-待ち、`awgn-mi-bridge-plan.md`) は published signature から落とし、body 内で
-`sorry` (`@residual(plan:awgn-mi-bridge-plan)`) で witness を作って delegate。
-本 file は signature が genuine conclusion を直接 statement、sorry 1 件 (Tier 2)。
+`h_feasible` の analytic content は `AWGN/Walls.lean` shared sorry 補題に移管済。
+
+**2026-06-11 per-letter MI bridge genuine closure (`awgn-mi-bridge-plan`)**:
+`h_mi_bridge_per_letter` (per-letter MI = `h(Y_i) - h(Z)` bridge) は本 file 上流の
+`awgn_per_letter_mi_bridge_genuine` で genuine に閉じ、`awgn_converse` body は
+その genuine bridge 呼出に置換。本 file scope は 0 sorry、signature は genuine
+conclusion を直接 statement。converse の 3 Mathlib 壁すべて closed のため
+`awgn_converse` は transitively sorryAx-free。
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -648,7 +651,7 @@ For every code with `M ≥ 2` messages, block length `n`, output power constrain
 conclusion (`log M ≤ n·(1/2) log(1+P/N) + binEntropy(Pe) + Pe·log(M-1)`) を直接
 statement とし、旧 load-bearing 引数 2 件 (`h_feasible` bundle + per-letter MI
 bridge `h_mi_bridge_per_letter`) を除去。`h_feasible` の analytic content は
-`AwgnWalls.lean` shared sorry 補題 (`awgnPerLetterIntegrability_holds` /
+`AWGN/Walls.lean` shared sorry 補題 (`awgnPerLetterIntegrability_holds` /
 `awgnContinuousMIChainRule_holds` / `awgnConverseMarkov_holds`) に移管済 (本 file は
 それらの呼出を `awgn_converse_F3_discharged` 内部で間接利用)。
 
@@ -661,11 +664,13 @@ rule asset `ChannelCoding.mutualInfoOfChannel_toReal_eq_diffEntropy_sub`
 `integrable_log_rnDeriv_perLetterYLaw` + fibre entropy 平行移動不変)。`awgn_converse` body
 は genuine bridge 呼出に置換し、本 file scope の `sorry` は **0** になった。
 
-This declaration is `sorry`-free in its own file. Transitive `sorry` remains only in
-the upstream Mathlib walls `wall:multivariate-mi` (`AWGNConverseDischarge.lean`,
+This declaration is `sorry`-free in its own file, and now also **transitively
+sorryAx-free**: all three converse Mathlib walls have been closed (false-wall
+overturns). `wall:multivariate-mi` (`AWGN/ConverseDischarge.lean`,
 `awgnConverseJoint_pair_mi_ne_top`) and `wall:awgn-continuous-mi-chain-rule`
-(`AwgnWalls.lean`, `awgnContinuousMIChainRule_holds`) — both unrelated to the
-per-letter MI bridge target. -/
+(`AWGN/Walls.lean`, `awgnContinuousMIChainRule_holds`) are both genuinely closed.
+Re-verify with `#print axioms InformationTheory.Shannon.AWGN.awgn_converse`
+(expect `[propext, Classical.choice, Quot.sound]`). -/
 @[entry_point]
 theorem awgn_converse
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)

@@ -1,30 +1,34 @@
 # AWGN Channel Capacity ムーンショット計画 🌙 (T2-A)
 
-> **Status (2026-05-20)**: DONE-HONEST-HYPS。headline `awgn_channel_coding_theorem`
-> (`AWGNMain.lean:59`) は F-1 (`IsAwgnTypicalityHypothesis`、`AWGNAchievability.lean:39`) +
-> F-2 (MI bridge) + F-3 (`IsAwgnConverseHypothesis`、`AWGNConverse.lean:56`) を honest
-> pass-through hyp で publish (0 sorry、非自明 Prop)。F-1 kernel measurability のみ
-> `AWGNF1Discharge.lean:60` で完全 discharge 済。
+> **Status (2026-06-12)**: **CONVERSE MAINLINE DONE (genuine, sorryAx-free)**。
+> converse 経路 `awgn_converse` (`AWGN/Converse.lean`) は **完全 transitively
+> sorryAx-free** (`#print axioms InformationTheory.Shannon.AWGN.awgn_converse` →
+> `[propext, Classical.choice, Quot.sound]`)。converse の 3 Mathlib 壁 (mi-bridge /
+> multivariate-mi / continuous-mi-chain-rule) はすべて false-wall overturn で
+> genuine closure 済 (詳細 → [`awgn-facts.md`](awgn-facts.md))。残る AWGN 壁は
+> achievability 側 (`AWGN/Walls.lean` の 3 shared sorry 補題) + kernel-measurability
+> gap (`IsParallelGaussianKernelMeasurable`、X-input route 真の Mathlib gap、W-input で回避) のみ。
 >
-> **注意**: `AWGNF2F3Discharge.lean` の `awgn_theorem_of_F2F3_hypotheses` は F-2/F-3 の
-> 実 discharge **ではない** — alias (id-like reduction) + `IsAwgnF3PerLetterHypothesis`
-> (line 229) は `:= ... True` placeholder。F-2/F-3 実体は未着手。
+> headline `awgn_channel_coding_theorem` (`AWGN/Main.lean`) は achievability 側の F-1
+> (typicality) を `awgn_achievability` body の `sorry + @residual(plan:...)` で park。
+> converse 側は genuine closed。
 >
 > **Parent**: [`textbook-roadmap.md`](../textbook-roadmap.md) §T2-A /
-> **Inventory**: [`awgn-mathlib-inventory.md`](awgn-mathlib-inventory.md)
+> **Inventory**: [`awgn-mathlib-inventory.md`](awgn-mathlib-inventory.md) /
+> **Facts ledger**: [`awgn-facts.md`](awgn-facts.md)
 >
 > **Goal**: Cover-Thomas 9.1.1 + 9.1.2 (AWGN capacity `C = (1/2) log(1+P/N)`、closed form +
-> achievability + converse) を hypothesis pass-through 形で publish。
-> **撤退ライン**: F-1 (typicality) / F-2 (MI bridge) / F-3 (per-letter aux) — §撤退ライン。
+> achievability + converse) を genuine publish。
+> **残作業**: achievability 側 typicality (F-1) + kernel-measurability gap。converse は完了。
 
 ## 進捗
 
 - [x] Phase 0 — Mathlib + InformationTheory API 在庫 ✅ → [`awgn-mathlib-inventory.md`](awgn-mathlib-inventory.md)
-- [x] Phase A — `awgnChannel` kernel + `AwgnCode` + `mutualInfo` closed-form bridge + `awgnCapacity` 定義 + 等号 ✅ (`AWGN.lean`, 275 行, F-2 + F-4 採用)
-- [x] Phase B — Achievability (F-1 hypothesis pass-through 形) ✅ (`AWGNAchievability.lean`, 72 行)
-- [x] Phase C — Converse (F-3 hypothesis pass-through 形) ✅ (`AWGNConverse.lean`, 94 行)
-- [x] Phase D — 主定理 wrapper (`awgn_channel_coding_theorem`) ✅ (`AWGNMain.lean` 新規, 107 行) — 判断 #4 で `AWGN.lean` 末尾から `AWGNMain.lean` へ移動
-- [x] Phase V — verify (4 ファイル `lake env lean` clean、0 sorry / 0 errors) ✅ (InformationTheory.lean 編入はオーケストレータが実施)
+- [x] Phase A — `awgnChannel` kernel + `AwgnCode` + `mutualInfo` closed-form bridge + `awgnCapacity` 定義 + 等号 ✅
+- [x] Phase B — Achievability ✅ (`AWGN/Achievability.lean`) — body は typicality F-1 を park (`sorry + @residual(plan:awgn-achievability-typicality-plan)`)
+- [x] Phase C — **Converse genuine closed** ✅ (`AWGN/Converse.lean`、`awgn_converse` transitively sorryAx-free)。converse 3 Mathlib 壁すべて false-wall overturn で genuine closure (mi-bridge / multivariate-mi / continuous-mi-chain-rule)。詳細 → [`awgn-facts.md`](awgn-facts.md)
+- [x] Phase D — 主定理 wrapper (`awgn_channel_coding_theorem`) ✅ (`AWGN/Main.lean`)
+- [x] Phase V — verify ✅
 
 ## ゴール / Approach
 
@@ -111,12 +115,12 @@ MI bridge `I = h(P+N) - h(N)` は F-2 hypothesis pass-through (Stein/Cramér/Che
 
 全採用済 (slug は他 doc / code から参照されるので保持):
 
-- **F-1** `IsAwgnTypicalityHypothesis` (Phase B): sphere packing / continuous AEP を hyp 外出し →
-  別 plan `awgn-achievability-typicality-plan.md` に defer
-- **F-2** `h_mi_bridge` (Phase A): `I = h(Y) - h(Y|X)` bridge を hyp 外出し → 別 plan
-  `awgn-mi-bridge-plan.md` に defer (Mathlib-shape-driven レッドフラグ回避)
-- **F-3** `IsAwgnConverseHypothesis` (Phase C): per-letter max-entropy `h_ent_int` を hyp
-  外出し → 別 plan `awgn-converse-aux-plan.md` に defer
+- **F-1** `IsAwgnTypicalityHypothesis` (Phase B): sphere packing / continuous AEP。現状は
+  `awgn_achievability` body の `sorry + @residual(plan:awgn-achievability-typicality-plan)` で park (achievability 側、未完)
+- **F-2** `h_mi_bridge` (Phase A converse 側): per-letter MI bridge `I = h(Y) - h(Z)`。
+  **closed (genuine、`awgn-mi-bridge-plan`)** — `awgn_per_letter_mi_bridge_genuine`
+- **F-3** `IsAwgnConverseHypothesis` (Phase C): converse 全体 (Fano + DPI + chain + per-letter)。
+  **closed (genuine、`awgn-converse-aux-plan`)** — converse 3 壁すべて closed、`awgn_converse` sorryAx-free
 - **F-4** (実装中追加) `IsAwgnChannelMeasurable` (Phase A): `awgnChannel.measurable'` を
   hyp 外出し → 後続 plan `awgn-f1-discharge-moonshot-plan.md` で完全 discharge 済
   (`AWGNF1Discharge.lean:60` `isAwgnChannelMeasurable`)
