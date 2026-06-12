@@ -6,9 +6,9 @@
 > (`InformationTheory/Shannon/RateDistortion/ConverseMonotone.lean:68`) +
 > `rateDistortionFunction_antitone` (`...ConverseMonotone.lean:39`) も完了。
 > 後継 E-4'' (convexity + n-letter): 凸性 `rateDistortionFunction_convexOn`
-> (`InformationTheory/Draft/Shannon/RateDistortionConvexity.lean:390`) は **genuine proof done**
+> (`InformationTheory/Shannon/RateDistortion/Convexity.lean:390`) は **genuine proof done**
 > (`rate-distortion-convexity-plan.md`)。n-letter converse `rate_distortion_converse_n_letter_singleLetter`
-> (`InformationTheory/Draft/Shannon/RateDistortionConverseNLetter.lean:673`) も **genuine proof done**
+> (`InformationTheory/Shannon/RateDistortion/ConverseNLetter.lean:673`) も **genuine proof done**
 > (Stage 1 `_block` + Stage 2 `_singleLetter` 共に 0 sorry / 0 residual、sorryAx 非依存、独立監査
 > 10 decl `@audit:ok`、下記 E-4-C)。
 

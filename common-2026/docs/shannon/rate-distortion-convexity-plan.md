@@ -1,7 +1,7 @@
 # Rate-distortion convexity + n-letter regulated-distortion form (E-4'' deferred)
 
 > 実態整合 (2026-06-10): **genuine proof done** — `rateDistortionFunction_convexOn`
-> (`InformationTheory/Draft/Shannon/RateDistortionConvexity.lean:390`) は
+> (`InformationTheory/Shannon/RateDistortion/Convexity.lean:390`) は
 > **DPI selector-forget 経路で genuine に閉じた** (一般 Measure 形、有限アルファベット仮定なし)。
 > `#print axioms` で `[propext, Classical.choice, Quot.sound]` (sorryAx 非依存)、独立監査 7 decl
 > `@audit:ok` (commit `96fd6a2`)。経路 = 既存 `klDiv_map_le` (一般 pushforward DPI) 再利用 +
@@ -226,7 +226,7 @@ theorem rateDistortionFunction_convexOn
         ≤ ENNReal.ofReal λ * rateDistortionFunction d P D₁
           + ENNReal.ofReal (1 - λ) * rateDistortionFunction d P D₂
 ```
-（有限アルファベット仮定なし。`InformationTheory/Draft/Shannon/RateDistortionConvexity.lean:390`。）
+（有限アルファベット仮定なし。`InformationTheory/Shannon/RateDistortion/Convexity.lean:390`。）
 
 ### B.3 antitone vs convex compatibility
 
@@ -306,7 +306,7 @@ E-3' (~1800 行) と E-4' (~151 行) の中間 scale、`CsiszarProjection.lean` 
 ### 採用経路 — DPI selector-forget (genuine、一般 Measure 形)
 
 - **Phase A + B core genuine 完成**, **Phase C deferred**, **Phase B specialization 不要化**。
-  `InformationTheory/Draft/Shannon/RateDistortionConvexity.lean`、`#print axioms` sorryAx 非依存、
+  `InformationTheory/Shannon/RateDistortion/Convexity.lean`、`#print axioms` sorryAx 非依存、
   独立監査 7 decl `@audit:ok` (commit `96fd6a2`)。
 - **Phase A** (`mixtureMeasure` + marginal / distortion / feasibility 保存): 5 補題、
   `Measure.map_add` / `Measure.map_smul` / `integral_add_measure` / `integral_smul_measure`
