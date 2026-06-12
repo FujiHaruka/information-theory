@@ -1,20 +1,19 @@
 # AWGN Channel Capacity ムーンショット計画 🌙 (T2-A)
 
-> **Status (2026-06-12)**: **CONVERSE + ACHIEVABILITY 解析核 DONE (genuine, sorryAx-free)**。
-> converse 経路 `awgn_converse` (`AWGN/Converse.lean`) は **完全 transitively
-> sorryAx-free** (`#print axioms InformationTheory.Shannon.AWGN.awgn_converse` →
-> `[propext, Classical.choice, Quot.sound]`)。converse の 3 Mathlib 壁 (mi-bridge /
-> multivariate-mi / continuous-mi-chain-rule) はすべて false-wall overturn で
-> genuine closure 済 (詳細 → [`awgn-facts.md`](awgn-facts.md))。**achievability 側の
-> 3 shared sorry 補題 (`AWGN/Walls.lean`) も全 deep atom 閉鎖で sorryAx-free**
-> (`isAwgnTypicalityHypothesis` / 主要 wrapper まで genuine、
-> [`awgn-achievability-walls-discharge-plan.md`](awgn-achievability-walls-discharge-plan.md)
-> CLOSED、計 6 件の false-statement を honest 化)。残る AWGN 壁は kernel-measurability
-> gap (`IsParallelGaussianKernelMeasurable`、X-input route 真の Mathlib gap、W-input で回避) のみ。
+> **Status (2026-06-12)**: **CONVERSE + ACHIEVABILITY 解析核 DONE (genuine closure)**。
+> converse 経路 `awgn_converse` (`AWGN/Converse.lean`) は **完全 transitively genuine closed**
+> (converse の 3 Mathlib 壁 mi-bridge / multivariate-mi / continuous-mi-chain-rule はすべて
+> false-wall overturn で genuine closure 済)。**achievability 側の 3 shared sorry 補題
+> (`AWGN/Walls.lean`) も全 deep atom 閉鎖で genuine** (`isAwgnTypicalityHypothesis` / 主要 wrapper まで
+> genuine、[`awgn-achievability-walls-discharge-plan.md`](awgn-achievability-walls-discharge-plan.md)
+> CLOSED、計 6 件の false-statement を honest 化)。**両 line の機械検証状態 (sorryAx 依存 +
+> 再検証コマンド) は [`awgn-facts.md`](awgn-facts.md) 達成テーブルが SoT** (prose にキャッシュしない)。
+> 残る AWGN 壁は kernel-measurability gap (`IsParallelGaussianKernelMeasurable`、X-input route 真の
+> Mathlib gap、W-input で回避) のみ。
 >
 > headline `awgn_channel_coding_theorem` (`AWGN/Main.lean`) は achievability 側の F-1
 > (typicality) を `awgn_achievability` body で park 中だが、その discharge に必要な解析核
-> (3 shared 補題 + union-bound lemma) は genuine sorryAx-free 完了済。最終 wiring (body の
+> (3 shared 補題 + union-bound lemma) は genuine closure 済。最終 wiring (body の
 > `sorry + @residual(plan:...)` 解消) のみ残。converse 側は genuine closed。
 >
 > **Parent**: [`textbook-roadmap.md`](../textbook-roadmap.md) §T2-A /
@@ -30,8 +29,8 @@
 
 - [x] Phase 0 — Mathlib + InformationTheory API 在庫 ✅ → [`awgn-mathlib-inventory.md`](awgn-mathlib-inventory.md)
 - [x] Phase A — `awgnChannel` kernel + `AwgnCode` + `mutualInfo` closed-form bridge + `awgnCapacity` 定義 + 等号 ✅
-- [x] Phase B — Achievability ✅ (`AWGN/Achievability.lean`) — body は typicality F-1 を park (`sorry + @residual(plan:awgn-achievability-typicality-plan)`)。achievability 側 3 shared 壁の genuine discharge + statement-fix は → [`awgn-achievability-walls-discharge-plan.md`](awgn-achievability-walls-discharge-plan.md) ✅ **CLOSED** (全 deep atom 閉鎖、解析核 sorryAx-free、計 6 件 false-statement honest 化)
-- [x] Phase C — **Converse genuine closed** ✅ (`AWGN/Converse.lean`、`awgn_converse` transitively sorryAx-free)。converse 3 Mathlib 壁すべて false-wall overturn で genuine closure (mi-bridge / multivariate-mi / continuous-mi-chain-rule)。詳細 → [`awgn-facts.md`](awgn-facts.md)
+- [x] Phase B — Achievability ✅ (`AWGN/Achievability.lean`) — body は typicality F-1 を park (`sorry + @residual(plan:awgn-achievability-typicality-plan)`)。achievability 側 3 shared 壁の genuine discharge + statement-fix は → [`awgn-achievability-walls-discharge-plan.md`](awgn-achievability-walls-discharge-plan.md) ✅ **CLOSED** (全 deep atom 閉鎖、解析核 genuine、計 6 件 false-statement honest 化。機械検証状態 → [`awgn-facts.md`](awgn-facts.md))
+- [x] Phase C — **Converse genuine closed** ✅ (`AWGN/Converse.lean`、`awgn_converse` transitively genuine)。converse 3 Mathlib 壁すべて false-wall overturn で genuine closure (mi-bridge / multivariate-mi / continuous-mi-chain-rule)。詳細 + 機械検証状態 → [`awgn-facts.md`](awgn-facts.md)
 - [x] Phase D — 主定理 wrapper (`awgn_channel_coding_theorem`) ✅ (`AWGN/Main.lean`)
 - [x] Phase V — verify ✅
 
@@ -126,12 +125,13 @@ MI bridge `I = h(P+N) - h(N)` は F-2 hypothesis pass-through (Stein/Cramér/Che
   の genuine discharge + statement-fix は
   → [`awgn-achievability-walls-discharge-plan.md`](awgn-achievability-walls-discharge-plan.md) **CLOSED**:
   全 deep atom 閉鎖で 3 shared 補題 + union-bound lemma + consumer (`isAwgnTypicalityHypothesis`)
-  まで sorryAx-free。計 6 件の false-statement (Wall1 (ii)/(iii) / D2 term2 #5 / degenerate corner #6)
-  を honest 化 (詳細 → [`awgn-facts.md`](awgn-facts.md))
+  まで genuine。計 6 件の false-statement (Wall1 (ii)/(iii) / D2 term2 #5 / degenerate corner #6)
+  を honest 化 (詳細 + 機械検証状態 → [`awgn-facts.md`](awgn-facts.md))
 - **F-2** `h_mi_bridge` (Phase A converse 側): per-letter MI bridge `I = h(Y) - h(Z)`。
   **closed (genuine、`awgn-mi-bridge-plan`)** — `awgn_per_letter_mi_bridge_genuine`
 - **F-3** `IsAwgnConverseHypothesis` (Phase C): converse 全体 (Fano + DPI + chain + per-letter)。
-  **closed (genuine、`awgn-converse-aux-plan`)** — converse 3 壁すべて closed、`awgn_converse` sorryAx-free
+  **closed (genuine、`awgn-converse-aux-plan`)** — converse 3 壁すべて closed、`awgn_converse` genuine
+  (機械検証状態 → [`awgn-facts.md`](awgn-facts.md))
 - **F-4** (実装中追加) `IsAwgnChannelMeasurable` (Phase A): `awgnChannel.measurable'` を
   hyp 外出し → 後続 plan `awgn-f1-discharge-moonshot-plan.md` で完全 discharge 済
   (`AWGNF1Discharge.lean:60` `isAwgnChannelMeasurable`)
@@ -170,7 +170,8 @@ append-only。
 ### 確定済 (2026-05-19, Phase A-D 一括実装)
 
 1. **F-1 + F-2 + F-3 + F-4 全採用確定**: 実装中に **新規 F-4** 発見 (`gaussianReal` の
-   `m`-measurability 直接 lemma が Mathlib 不在、loogle Found 0)。Tier 0 規模膨張回避のため
+   `m`-measurability 直接 lemma が Mathlib 不在、loogle で再確認 — loogle-neg 状態は
+   [`awgn-facts.md`](awgn-facts.md) 残存壁テーブルが SoT)。Tier 0 規模膨張回避のため
    `IsAwgnChannelMeasurable N` を hyp 外出し → 別 plan defer。
 2. **3 → 4 ファイル拡張**: `awgn_channel_coding_theorem` sandwich を `AWGN.lean` 末尾に置くと
    `AWGN ↔ AWGNAchievability` 循環依存。**`AWGNMain.lean`** 新規分離 (107 行)。
