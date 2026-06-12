@@ -1,7 +1,7 @@
 # Rate-distortion 関数の凸性 — Mathlib / プロジェクト API 在庫調査
 
 > 対象 sorry: `rateDistortionFunction_convexOn`
-> (`InformationTheory/Draft/Shannon/RateDistortionConvexity.lean:161`)。
+> (`InformationTheory/Shannon/RateDistortion/Convexity.lean:161`)。
 > 親計画: [`docs/shannon/rate-distortion-convexity-plan.md`](rate-distortion-convexity-plan.md)。
 > **本ファイルは在庫調査のみ**。route 推奨は書かない (pivot-advisor / orchestrator が判断)。
 
@@ -13,7 +13,7 @@
 
 ## 主定理の最終形 (再掲, code verbatim)
 
-`InformationTheory/Draft/Shannon/RateDistortionConvexity.lean:151-161`:
+`InformationTheory/Shannon/RateDistortion/Convexity.lean:151-161`:
 
 ```lean
 @[entry_point]
@@ -279,7 +279,7 @@ chain rule で `klDiv μ̃ ((..)分母) = klDiv(selector 周辺) + Σ λᵢ klDi
 
 ## 着手のための skeleton
 
-`InformationTheory/Draft/Shannon/RateDistortionConvexity.lean` は既存 (上記 sorry が live)。**核補題を 1 本足す形**で着手する skeleton (DPI 経路):
+`InformationTheory/Shannon/RateDistortion/Convexity.lean` は既存 (上記 sorry が live)。**核補題を 1 本足す形**で着手する skeleton (DPI 経路):
 
 ```lean
 -- 既存 import に追加不要 (ConverseMonotone 経由で DPI / klDiv 系は推移的に入る)。

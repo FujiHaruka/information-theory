@@ -96,7 +96,7 @@ variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]
 **in-tree port (mean 軸 joint、variance 軸ではない — 落とし穴 P-1)**:
 | lemma | file:line | 完全 signature | 結論形 verbatim |
 |---|---|---|---|
-| `measurable_gaussianPDFReal_uncurry` | `InformationTheory/Draft/Shannon/ContChannelMIDecomp.lean:378` | `(N : ℝ≥0) :` | `Measurable (fun z : ℝ × ℝ => gaussianPDFReal z.1 N z.2)` (**joint = (mean, point)、variance N は固定引数**) |
+| `measurable_gaussianPDFReal_uncurry` | `InformationTheory/Shannon/AWGN/ContChannelMIDecomp.lean:378` | `(N : ℝ≥0) :` | `Measurable (fun z : ℝ × ℝ => gaussianPDFReal z.1 N z.2)` (**joint = (mean, point)、variance N は固定引数**) |
 | `measurable_gaussianPDF_uncurry` (ℝ≥0∞版) | `:370` | `(N : ℝ≥0) :` | `Measurable (fun z : ℝ × ℝ => gaussianPDF z.1 N z.2)` |
 
 両 port とも証明は `simp only [gaussianPDFReal]; fun_prop`。**我々が要る軸は (variance, point) = `(t.toNNReal, x)`** で port は流用不可。ただし: `gaussianPDFReal 0 v x = (√(2πv))⁻¹·exp(-x²/(2v))` で `v` は `√v` / `1/(2v)` 経由で連続/可測に入る。`Real.toNNReal` 可測 (`continuous_real_toNNReal` `Mathlib/Topology/Instances/NNReal/Lemmas.lean:58`, `Continuous Real.toNNReal`) + `NNReal.coe` 可測。**新規 brick `measurable_gaussianPDFReal_var_uncurry : Measurable (fun p : ℝ × ℝ => gaussianPDFReal 0 p.1.toNNReal p.2)` を自作 (~10-20 行、`fun_prop` 主体、ただし `v=0` での `(2v)⁻¹` 0割は `gaussianPDFReal_zero_var` で吸収済なので可測性は保たれる)**。loogle で (variance,point) 軸 joint 可測の既存確認 → Found 0 (下記)。

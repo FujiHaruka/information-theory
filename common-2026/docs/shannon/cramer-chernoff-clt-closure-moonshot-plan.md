@@ -28,8 +28,8 @@
 > ⚠️ **上記 (2026-05-20「DONE」) banner は STALE / 虚偽だった (2026-06-10 機械検証で訂正)**:
 > 主張された `InformationTheory/Shannon/CramerCLTClosure.lean` も decl
 > `cramer_lower_at_cgfDeriv_unconditional` も **実在しない** (`find`/`grep` 0-hit)。Cramér CLT-boundary
-> closure は **未達**。現存する Cramér コードは `Draft/Shannon/Cramer.lean` +
-> `Draft/Shannon/CramerLC2PhaseC.lean` の 2 file で、live `@[entry_point]`
+> closure は **未達**。現存する Cramér コードは `Shannon/Cramer/Cramer.lean` +
+> `Shannon/Cramer/LC2PhaseC.lean` の 2 file で、live `@[entry_point]`
 > `cramer_tendsto_phaseC_partial_discharge` (CramerLC2PhaseC.lean:208) は **sorryAx 依存** (Phase C
 > sorry `cramer_lower_phaseC_partial_discharge`, CramerLC2PhaseC.lean:167 にブロックされる)。
 > **実態 (2026-06-10 独立壁再判定)**: Phase C sorry は壁ではなく配線。closure に必要な 0-sorry 資産
@@ -45,7 +45,7 @@
 > (~120-210 行、piece 別難度・鍵 lemma・file:line 済)
 >
 > **Predecessors (publish 済、変更なしで再利用)** — ⚠️ 実パス (2026-06-11 `1a19915` で確認、`fdd68a3` 昇格後):
-> - `InformationTheory/Draft/Shannon/InfinitePiTiltedChangeOfMeasure.lean` (0 sorry):
+> - `InformationTheory/Shannon/Cramer/InfinitePiTiltedChangeOfMeasure.lean` (0 sorry):
 >   `IsTiltedWindowEventuallyLarge`, `isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge`,
 >   `tiltedMean_eq_deriv_cgf`, `tiltedWindow_eventually_large_of_interior`,
 >   `tiltedWindow_eventually_large_of_cgfDeriv_interior`, `cramer_lower_phaseC_residual_discharge`
@@ -217,7 +217,7 @@ lemma identDistrib_tilted_ambient (hY_meas) (h_bdd) (lam) (i : ℕ) :  -- :98
     IdentDistrib (fun ω : ℕ → Ω₀ => Y (ω i)) (fun ω : ℕ → Ω₀ => Y (ω 0)) P P
 ```
 
-**既存 tilted bridge / LLN** (`Draft/Shannon/InfinitePiTiltedChangeOfMeasure.lean` / `Shannon/Cramer/LC2DischargeExt.lean`):
+**既存 tilted bridge / LLN** (`Shannon/Cramer/InfinitePiTiltedChangeOfMeasure.lean` / `Shannon/Cramer/LC2DischargeExt.lean`):
 ```lean
 theorem tiltedMean_eq_deriv_cgf (hY) (h_bdd) (lam) :    -- :489
     ∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)) = deriv (cgf Y μ₀) lam
@@ -536,7 +536,7 @@ Mathlib PR-candidate として価値があり、後退ゼロ。
      degenerate 濫用 / consumer 字面一致 / sorryAx-free を機械裏取り。特に `h_coboundedBelow` の **非 vacuous 性**
      (`P≤1 ⇒ log≤0` で上有界 → `b=0` 充足) を別ファイルで検証。
    - **残件 (未達でなく配線制約)**: consumer root `cramer_lower_phaseC_partial_discharge`
-     (`Draft/Shannon/CramerLC2PhaseC.lean:165`) は import cycle で in-place 書換不可。root の sorry は本 closure を指す
+     (`Shannon/Cramer/LC2PhaseC.lean:165`) は import cycle で in-place 書換不可。root の sorry は本 closure を指す
      live residual として残置 (冒頭バナー)。`InformationTheory.lean` import 済 (`lake build` 2972 jobs clean)。
    **moonshot CLOSED。** 後続候補: root residual の差し替え経路 (import cycle 解消 or 別 entry_point 化) は別 plan。
 

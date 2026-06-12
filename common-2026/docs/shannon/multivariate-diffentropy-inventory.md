@@ -410,7 +410,7 @@ lemma _root_.MeasurableEmbedding.map_withDensity_rnDeriv (hf : MeasurableEmbeddi
 ### 着手 skeleton
 
 ```lean
--- InformationTheory/Draft/Shannon/MultivariateDiffEntropy.lean (既存 file 拡張)
+-- InformationTheory/Shannon/MultivariateDiffEntropy.lean (既存 file 拡張)
 -- 既存 imports (L1-11) に追加不要 (Map / WithDensity / Pi / RadonNikodym 既存)
 
 namespace InformationTheory.Shannon

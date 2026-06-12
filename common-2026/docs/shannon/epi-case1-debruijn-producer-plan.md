@@ -92,7 +92,7 @@ density witness で供給 (regularity precondition、load-bearing でない)。`
 - **L-Prod-meas** (PB-3、active): `:2041` parameter-measurability の 3 層分解 (implementer 撤退診断):
   - **Layer A** `measurable_convDensityAdd_gaussian_uncurry`: `Measurable (fun p:ℝ×ℝ => convDensityAdd pX
     (gaussianPDFReal 0 p.1.toNNReal) p.2)`。`Measurable pX` + `gaussianPDFReal` joint 可測 (port 元
-    `Draft/Shannon/ContChannelMIDecomp.lean:378 measurable_gaussianPDFReal_uncurry`) +
+    `Shannon/AWGN/ContChannelMIDecomp.lean:378 measurable_gaussianPDFReal_uncurry`) +
     `StronglyMeasurable.integral_prod_right` (`Integral/Prod.lean:76`)。**genuine 可能 ~40-60 行**。
   - **Layer B** lintegral param-measurability: `Measurable.lintegral_prod_right` (`Measure/Prod.lean:145`,
     `[SFinite ν]`) + `.toReal`。Layer A+C が揃えば genuine。

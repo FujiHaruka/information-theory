@@ -1,7 +1,7 @@
 # AWGN single-letter capacity converse (max-entropy 壁) — Mathlib API 在庫調査
 
 > 対象 wall: `@residual(wall:awgn-capacity-converse-maxent)`
-> (`docs/audit/audit-tags.md` Wall name register、`InformationTheory/Draft/Shannon/ContChannelMIDecomp.lean:670` `awgn_capacity_closed_form_of_out` body 内 `h_max_ent` の `sorry`)
+> (`docs/audit/audit-tags.md` Wall name register、`InformationTheory/Shannon/AWGN/ContChannelMIDecomp.lean:670` `awgn_capacity_closed_form_of_out` body 内 `h_max_ent` の `sorry`)
 > 親計画: `docs/shannon/awgn-moonshot-plan.md` (撤退ライン F-3) / 隣接 `docs/shannon/awgn-converse-c1b-gaussian-maxent-mini-plan.md`
 > 同種文書: `docs/shannon/awgn-mi-decomp-inventory.md` / `docs/shannon/awgn-converse-aux-mathlib-inventory.md`
 
@@ -15,7 +15,7 @@
 
 ## 主定理の最終形 (再掲)
 
-`InformationTheory/Draft/Shannon/ContChannelMIDecomp.lean:670-702` `awgn_capacity_closed_form_of_out`、その body 内の唯一の `sorry` (L692) が本壁:
+`InformationTheory/Shannon/AWGN/ContChannelMIDecomp.lean:670-702` `awgn_capacity_closed_form_of_out`、その body 内の唯一の `sorry` (L692) が本壁:
 
 ```lean
 -- h_max_ent (closed form converse の核): ∀ 確率測度 p with ∫x²∂p ≤ P,
@@ -97,7 +97,7 @@ theorem rnDeriv_mconv [SFinite μ] {ν₁ ν₂ : Measure G} [IsFiniteMeasure ν
 | 可積分性の優関数比較 | `MeasureTheory.Integrable.mono` | `Mathlib/MeasureTheory/Function/L1Space/Integrable.lean` | ✅ 既存 | `|log f| ≤ (二次式)` で押さえる |
 | 可積分性の優関数比較 (norm 形) | `MeasureTheory.Integrable.mono'` | `L1Space/Integrable.lean` | ✅ 既存 | 同上 |
 | 有界 × 可積分 = 可積分 | `MeasureTheory.Integrable.bdd_mul` / `.bdd_mul'` | `L1Space/Integrable.lean` | ✅ 既存 | 補助 |
-| Gaussian log-pdf は Gaussian 法則で可積分 (in-tree) | `integrable_log_gaussianPDFReal_gaussianReal` | `InformationTheory/Draft/Shannon/ContChannelMIDecomp.lean:404` | ✅ 既存 (genuine) | **fibre 側 `h_int_fibre` を供給** (AWGN fibre `W x = 𝒩(x,N)`)。output 側 `h_int_out` には直接使えない (mixture) |
+| Gaussian log-pdf は Gaussian 法則で可積分 (in-tree) | `integrable_log_gaussianPDFReal_gaussianReal` | `InformationTheory/Shannon/AWGN/ContChannelMIDecomp.lean:404` | ✅ 既存 (genuine) | **fibre 側 `h_int_fibre` を供給** (AWGN fibre `W x = 𝒩(x,N)`)。output 側 `h_int_out` には直接使えない (mixture) |
 | 二次差分 `(y−m)²` は Gaussian 法則で可積分 (in-tree) | `integrable_sq_sub_gaussianReal` | `ContChannelMIDecomp.lean:387` | ✅ 既存 (genuine) | `h_var_int` 系・log の二次優関数の素材 |
 
 **重要 (上界・下界の符号)**:
@@ -244,7 +244,7 @@ import 追加 (上記自作で新規に要るもの): `Mathlib.MeasureTheory.Mea
 
 ## 着手 skeleton
 
-`InformationTheory/Draft/Shannon/AwgnCapacityConverseMaxent.lean` の出だし (新規 file 想定。既存 `ContChannelMIDecomp.lean` 内 helper として書く案もある):
+`InformationTheory/Shannon/AWGN/CapacityConverseMaxent.lean` の出だし (新規 file 想定。既存 `ContChannelMIDecomp.lean` 内 helper として書く案もある):
 
 ```lean
 import Mathlib.MeasureTheory.Group.Convolution
@@ -256,7 +256,7 @@ import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.ChannelCoding
 import InformationTheory.Shannon.AWGN
 import InformationTheory.Shannon.AWGNBindConvBody
-import InformationTheory.Draft.Shannon.ContChannelMIDecomp
+import InformationTheory.Shannon.AWGN.ContChannelMIDecomp
 
 namespace InformationTheory.Shannon.AWGN
 

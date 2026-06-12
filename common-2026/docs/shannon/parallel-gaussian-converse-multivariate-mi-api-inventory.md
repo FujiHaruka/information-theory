@@ -116,7 +116,7 @@ theorem lintegral_mconv {M : Type*} [Monoid M] [MeasurableSpace M] [MeasurableMu
 | lconvolution def | `MeasureTheory.lconvolution` (= `mlconvolution` to_additive、`⋆ₗ[μ]` 記法) | `Mathlib/Analysis/LConvolution.lean:50` (mult `mlconvolution`) | ✅ 既存 | mixture density の被積分形 |
 | lconvolution 展開 | `MeasureTheory.lconvolution_def` | `LConvolution.lean:68` (mult `mlconvolution_def`) | ✅ 既存 | `(f ⋆ₗ[μ] g) x = ∫⁻ y, f y · g(−y+x) ∂μ`（= 多変量 mixture 積分） |
 | lconvolution の可測性 | `MeasureTheory.measurable_lconvolution` | `LConvolution.lean` | ✅ 既存 | mixture density 可測 |
-| `Fin n → ℝ` product withDensity | `InformationTheory pi_withDensity_fin` | `InformationTheory/Draft/Shannon/MultivariateDiffEntropy.lean:260` | ✅ 自作既存 | `∏ gaussianPDF = rnDeriv (Measure.pi 𝒩)` |
+| `Fin n → ℝ` product withDensity | `InformationTheory pi_withDensity_fin` | `InformationTheory/Shannon/MultivariateDiffEntropy.lean:260` | ✅ 自作既存 | `∏ gaussianPDF = rnDeriv (Measure.pi 𝒩)` |
 
 **完全 signature（additive、`#check` で verbatim 取得済）:**
 
@@ -258,7 +258,7 @@ theorem Measure.rnDeriv_withDensity {α : Type*} {m : MeasurableSpace α} (ν : 
 | `measurable_gaussianPDF` | `ProbabilityTheory.measurable_gaussianPDF` | `Gaussian/Real.lean`（loogle 確認） | ✅ 既存 | mixture density 可測 |
 | `gaussianReal_of_var_ne_zero`（= withDensity 表現） | `ProbabilityTheory.gaussianReal_of_var_ne_zero` | `Gaussian/Real.lean:203` | ✅ 既存 | noise = withDensity（`:241` 使用） |
 | `gaussianReal_absolutelyContinuous` | `ProbabilityTheory.gaussianReal_absolutelyContinuous` | `Gaussian/Real.lean:228` | ✅ 既存 | noise ≪ volume |
-| **`gaussianPDFReal_le_sup`（上界 `≤(√2πv)⁻¹`）** | `InformationTheory (AWGN)` | `InformationTheory/Draft/Shannon/AwgnCapacityConverseMaxent.lean:65` | ✅ 自作既存（1-D） | log 上界、座標ごとに適用 |
+| **`gaussianPDFReal_le_sup`（上界 `≤(√2πv)⁻¹`）** | `InformationTheory (AWGN)` | `InformationTheory/Shannon/AWGN/CapacityConverseMaxent.lean:65` | ✅ 自作既存（1-D） | log 上界、座標ごとに適用 |
 
 **Mathlib gap 判定:** 1-D Gaussian primitive は完全。多変量 product の
 jointly-measurable / 上下界は **既存 1-D を座標で組むだけ**（`Finset.prod` + `gaussianPDFReal_le_sup` /
