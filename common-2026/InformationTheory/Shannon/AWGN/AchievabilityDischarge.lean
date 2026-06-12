@@ -509,7 +509,24 @@ The 2026-06-12 audit's refutation missed it (only `δ→0⁺`/`R→cap`). Closin
 `(hP : 0 < P)` / `(hN : (N:ℝ) ≠ 0)` added to the signature (both consumers already carry
 these at their call sites). See the in-body comment at the degenerate `by_cases` branch.
 
-@residual(plan:awgn-achievability-walls-discharge-plan) -/
+**AUDIT 2026-06-12 (independent, honesty-auditor)**: VERDICT = `false_statement` (tier 5).
+The remaining `:1182` sorry is NOT a plumbing residual — the conclusion is genuinely
+false-as-framed in the admissible degenerate corner `1 + P/N < 0` (`P < −N`). Verified:
+(a) `Real.log_abs`/`Real.log_neg_eq_log` (Mathlib, `Log/Basic.lean:114/120`) confirm
+`hslack` is satisfiable with `1+P/N < 0` (witness `N=1, P=−3, R=0.1, δ=0.01` ⇒
+`(1/2)log|−2| ≈ 0.347 > 0.13`); (b) there `P.toNNReal = 0`, `gaussianReal 0 0 = dirac 0`,
+`J = Q`, `klDiv J Q = 0` (`klDiv_self`), so `hA_indep` gives only `Q A ≤ exp(n·3δ) ≥ 1`
+(no decay) and `(M−1)·Q A ≤ ε` fails for large `M`, `Q A → 1`. The genuine branches
+(term1 / N₀ pin / term2 nondegenerate) ARE honest (sorryAx-free where closed, no
+circular `:= h` / `:True` / load-bearing bundling; `N₀ = ⌈log(2/ε)/g⌉` is finite, not
+vacuous). FIX REQUIRED (orchestrator, signature change — out of auditor edit scope):
+add `(hP : 0 < P)` and `(hN : (N:ℝ) ≠ 0)`; both consumers (`awgn_avg_error_union_bound`
+`:1209`, `isAwgnTypicalityHypothesis` via `P' > 0` `:1577`) already supply them, so the
+ripple is 1-line at each call site. After the signature fix the `:1182` sorry becomes a
+genuine plumbing residual closable by the plan (the `klDiv` bridges already require these
+preconditions). Precedent: false-statement #5 (2026-06-12, Fix B) resolved within-session.
+
+@residual(plan:awgn-achievability-walls-discharge-plan) @audit:defect(false-statement) -/
 theorem awgn_random_coding_union_bound
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
     {ε δ R : ℝ} (hε : 0 < ε) (hδ : 0 < δ) (hR_pos : 0 < R)

@@ -455,7 +455,13 @@ per-letter capacity `(1/2) log(1 + P/N)` (nondegenerate `P > 0`, `N ≠ 0`). Rou
 conditional-KL integral (`klDiv_compProd_const_toReal_integral`) + the 1-D Gaussian KL closed
 form (`klDiv_gaussianReal_gaussianReal_eq`), integrating the per-fibre quadratic against the
 mean-0 variance-`P'` input — deliberately **avoiding `mutualInfoOfChannel` / `MIClosedForm`**
-(import cycle `Walls → MIClosedForm → ContChannelMIDecomp → Walls`). -/
+(import cycle `Walls → MIClosedForm → ContChannelMIDecomp → Walls`).
+
+Independently audited 2026-06-12: sorryAx-free (`#print axioms` =
+`[propext, Classical.choice, Quot.sound]`); signature carries the genuine preconditions
+`0 < P` / `(N:ℝ) ≠ 0` (the union-bound consumer derives both before invoking); no
+circularity / bundling / degenerate-def.
+@audit:ok -/
 theorem klDiv_perLetter_eq_capacity
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0) :
     (klDiv
@@ -645,7 +651,13 @@ theorem klDiv_perLetter_eq_capacity
 `klDiv(J_n, Q_n).toReal = n · klDiv(J₁, Q₁).toReal`, where `J_n`/`Q_n` are the verbatim
 n-letter joint/product measures from the `continuousAepGaussian_holds` signature. Via
 `arrowProdEquivProdArrow` reshape (`klDiv_map_measurableEquiv`) + `klDiv_pi_eq_sum`
-+ i.i.d. `Finset.sum_const`. -/
++ i.i.d. `Finset.sum_const`.
+
+Independently audited 2026-06-12: sorryAx-free (`#print axioms` =
+`[propext, Classical.choice, Quot.sound]`); unconditional measure identity (no `P`/`N`
+precondition — holds even in the degenerate cases, both sides equal); no circularity /
+bundling / degenerate-def.
+@audit:ok -/
 theorem klDiv_nFold_eq_nsmul (P : ℝ) (N : ℝ≥0) {n : ℕ} :
     (klDiv
         (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
@@ -764,7 +776,15 @@ change-of-measure) now genuinely discharged.
   `awgn_perLetter_klDiv_degenerate`: `P'=0` ⇒ `J₁ = Q₁` (shear identity on `{0}×ℝ`,
   `klDiv_self`); `N=0 ∧ P'≠0` ⇒ `J₁` on the diagonal `{(x,x)}` (`Q₁`-null since `μX` atomless)
   ⇒ `¬J₁≪Q₁` ⇒ `klDiv = ⊤` ⇒ `toReal = 0`. The exponent `−(0 − n·3δ) = n·3δ ≥ 0` makes the
-  bound `exp(n·3δ) ≥ 1 ≥ Qn univ`. -/
+  bound `exp(n·3δ) ≥ 1 ≥ Qn univ`.
+
+Independently audited 2026-06-12: sorryAx-free (`#print axioms` =
+`[propext, Classical.choice, Quot.sound]`); degenerate `A := Set.univ` branch is an
+honest witness of the existential (not vacuity-abuse — the bound (iii) is a concentration
+upper bound that is genuinely loose, RHS `≥ 1`, when `klDiv = 0`, and `klDiv_n = 0` is
+machine-proved, not asserted); signatures of the consumed shared bridges carry the correct
+nondegenerate preconditions. No circularity / bundling / degenerate-def.
+@audit:ok -/
 theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
     ∀ ⦃δ ε : ℝ⦄, 0 < δ → 0 < ε → ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n →
       ∃ A : Set ((Fin n → ℝ) × (Fin n → ℝ)),
