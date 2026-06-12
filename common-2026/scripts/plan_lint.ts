@@ -256,8 +256,10 @@ async function lintGraph(
   }
 
   // 親子整合 (子の Parent ヘッダ起点)。親 file 消失は上の (c) が STALE で拾う。
+  // CLOSED (historical) plans are out of the active DAG drift check — skip backlink/drift SUSPECT
+  const isClosed = /\*\*(?:Status|状態)\*\*\s*[:：]\s*CLOSED\b/i.test(text);
   const parent = declaredParent.get(plan);
-  if (parent) {
+  if (parent && !isClosed) {
     const ptext = planTexts.get(parent);
     if (ptext !== undefined) {
       // backlink: 親が子の slug を本文 (sub-plan テーブル等) で参照しているか
