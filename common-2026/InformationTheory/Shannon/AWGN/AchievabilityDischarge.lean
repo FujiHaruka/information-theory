@@ -14,16 +14,18 @@ import Mathlib.MeasureTheory.Constructions.Pi
 
 Cover-Thomas 9.2 (Theorem 9.1.1 achievability) の Lean 化。親 plan
 `docs/shannon/awgn-achievability-typicality-plan.md` の Phase A-E をこの 1 file に
-集約する。本 commit は **Phase A 全体 + Phase B-0 (predicate def)** を埋め、
-Phase C / D / E は `sorry` skeleton で頭出しする。
+集約する。**全 Phase 埋め済 + sorryAx-free** (2026-06-12 false-statement #6 fix で
+最後の degenerate-corner sorry を `hP`/`hN` 追加で解消)。
 
-## Phase 構成
+## Phase 構成 (all genuine, 0 sorry in this file)
 
-* Phase A — `gaussianCodebook` 測度 + IndepFun + marginal lemma (本 file で完成)
-* Phase B-0 — `IsContinuousAEPGaussian` predicate def (Mathlib gap、staged)
-* Phase C — joint typical decoder + union bound (skeleton sorry)
-* Phase D — expurgation + AwgnCode 抽出 (skeleton sorry)
-* Phase E — `isAwgnTypicalityHypothesis` 統合 + main wrapper (skeleton sorry)
+* Phase A — `gaussianCodebook` 測度 + IndepFun + marginal lemma
+* Phase B-0 — continuous AEP は shared sorry 補題 `continuousAepGaussian_holds`
+  (`Walls.lean`、現在 sorryAx-free) に移管、本 file は直接呼出す
+* Phase C — joint typical decoder + δ-separated union bound
+  (`awgn_random_coding_union_bound`、term1 / term2 / N₀ 全 genuine)
+* Phase D — expurgation + AwgnCode 抽出
+* Phase E — `isAwgnTypicalityHypothesis` 統合 + main wrapper (sorryAx-free)
 
 ## 判断確定 (`docs/shannon/awgn-achievability-typicality-mathlib-inventory.md`)
 
@@ -111,10 +113,11 @@ theorem gaussianCodebook_indepFun_codewords (M n : ℕ) (σsq : ℝ≥0)
 
 The load-bearing predicate `IsContinuousAEPGaussian` was **removed** in the
 AWGN M5 Tier 3 → Tier 2 sorry-based migration (Phase 3-β, plan
-`docs/shannon/awgn-m5-sorry-migration-plan.md`). Its analytic content is now the
-shared sorry 補題 `continuousAepGaussian_holds` in `InformationTheory/Shannon/AwgnWalls.lean`
-(`@residual(wall:awgn-continuous-aep-gaussian)`). Consumers in this file call that
-lemma directly instead of taking a predicate hypothesis. -/
+`docs/shannon/awgn-m5-sorry-migration-plan.md`). Its analytic content moved to the
+lemma `continuousAepGaussian_holds` in `InformationTheory/Shannon/AWGN/Walls.lean`
+(machine-verified sorryAx-free as of 2026-06-12; re-check with `#print axioms`).
+Consumers in this file call that lemma directly instead of taking a predicate
+hypothesis. -/
 
 /-! ## Phase C — Joint typical decoder + union bound -/
 
@@ -482,53 +485,23 @@ no `*Hypothesis` predicate encodes the proof core, so this is **not** load-beari
 hypothesis bundling. `hslack` is a genuine regularity precondition (the
 typicality-margin condition `R + 3δ < I`), not a bundled core.
 
-**INDEPENDENT AUDIT (2026-06-12, honesty-auditor) — false-statement RESOLVED.** Under
-the new `{ε δ R}` + `hslack : R + 3δ < (1/2)log(1+P/N)` signature the term2 goal is
-TRUE (closable), not relocated: `(M−1)·Q(A) ≤ ⌈exp(nR)⌉·exp(−(klDiv_n−3nδ))` with
-`klDiv_n = n·I`, `I = (1/2)log(1+P/N)` gives `exp(−n·g)·(…)`, margin `g = I−R−3δ > 0`
-from `hslack`, so it `→ 0` and is `≤ ε` past `N₀`. `N₀` is an honest unpinned
-`?N₀`-sorry (the alias-decay threshold) coupled to the term2 sorry — NOT a vacuity
-escape (`∀ n ≥ N₀` is never vacuous). `hslack` is a genuine precondition (the consumer
-`isAwgnTypicalityHypothesis` discharges it via `δ := (C−R)/12`), not a load-bearing
-bundle. Refutation tried: `δ→0⁺` / `R→cap` keep `g > 0` for admissible `R < I`; the
-statement stays alive on every boundary. Verdict: honest_residual (all 5 sorries
-`plan:`, no defect). type-check: 0 errors.
-
-**UPDATE (deep atoms c+e closure): N₀ pinned + term2 genuine for the nondegenerate
-regime.** `N₀ = ⌈log(2/ε)/g⌉` with margin `g = (1/2)log(1+P/N) − R − 3δ > 0`. The term2
-alias bound is now genuine: Q-marginal collapse (`gaussianCodebook_indepFun_codewords`
-+ `indepFun_iff_map_prod_eq_prod_map_map` + the n-fold output law
-`(μXn.prod μZn).map Σ = μYn` via `arrowProdEquivProdArrow` + `gaussianReal_conv_gaussianReal`)
-gives each summand `= Q A`, then `(M−1)·Q A ≤ 2·exp(nR)·exp(−(klDiv_n − n·3δ))` and the
-bridges `klDiv_nFold_eq_nsmul` + `klDiv_perLetter_eq_capacity` give `klDiv_n = n·I` so
-`≤ 2·exp(−n·g) ≤ ε` for `n ≥ N₀`. **ONE residual sorry remains** (the degenerate corner
-`1 + P/N < 0` ⇔ `P < −N`): there `P.toNNReal = 0`, `J = Q`, `klDiv = 0`, so `hA_indep`
-is trivial and term2 is FALSE-AS-FRAMED. This corner is admissible under the current
-signature (Mathlib's `log x = log|x|` lets `(1/2)log|1+P/N| > R+3δ` hold with `1+P/N<0`).
-The 2026-06-12 audit's refutation missed it (only `δ→0⁺`/`R→cap`). Closing it needs
-`(hP : 0 < P)` / `(hN : (N:ℝ) ≠ 0)` added to the signature (both consumers already carry
-these at their call sites). See the in-body comment at the degenerate `by_cases` branch.
-
-**AUDIT 2026-06-12 (independent, honesty-auditor)**: VERDICT = `false_statement` (tier 5).
-The remaining `:1182` sorry is NOT a plumbing residual — the conclusion is genuinely
-false-as-framed in the admissible degenerate corner `1 + P/N < 0` (`P < −N`). Verified:
-(a) `Real.log_abs`/`Real.log_neg_eq_log` (Mathlib, `Log/Basic.lean:114/120`) confirm
-`hslack` is satisfiable with `1+P/N < 0` (witness `N=1, P=−3, R=0.1, δ=0.01` ⇒
-`(1/2)log|−2| ≈ 0.347 > 0.13`); (b) there `P.toNNReal = 0`, `gaussianReal 0 0 = dirac 0`,
-`J = Q`, `klDiv J Q = 0` (`klDiv_self`), so `hA_indep` gives only `Q A ≤ exp(n·3δ) ≥ 1`
-(no decay) and `(M−1)·Q A ≤ ε` fails for large `M`, `Q A → 1`. The genuine branches
-(term1 / N₀ pin / term2 nondegenerate) ARE honest (sorryAx-free where closed, no
-circular `:= h` / `:True` / load-bearing bundling; `N₀ = ⌈log(2/ε)/g⌉` is finite, not
-vacuous). FIX REQUIRED (orchestrator, signature change — out of auditor edit scope):
-add `(hP : 0 < P)` and `(hN : (N:ℝ) ≠ 0)`; both consumers (`awgn_avg_error_union_bound`
-`:1209`, `isAwgnTypicalityHypothesis` via `P' > 0` `:1577`) already supply them, so the
-ripple is 1-line at each call site. After the signature fix the `:1182` sorry becomes a
-genuine plumbing residual closable by the plan (the `klDiv` bridges already require these
-preconditions). Precedent: false-statement #5 (2026-06-12, Fix B) resolved within-session.
-
-@residual(plan:awgn-achievability-walls-discharge-plan) @audit:defect(false-statement) -/
+**false-statement #6 RESOLVED (2026-06-12, signature fix).** The preconditions
+`hP : 0 < P` and `hN : (N:ℝ) ≠ 0` were added to exclude the degenerate corner
+`1 + P/N < 0` (`P < −N`). In that corner `P.toNNReal = 0`, `J = Q`, `klDiv J Q = 0`,
+so the alias term2 did not decay and was false-as-framed; it was satisfiable under
+the old `{ε δ R}` signature because `hslack` uses Mathlib's `Real.log x = log|x|`
+convention (so `(1/2)log|1+P/N| > R+3δ` could hold with `1+P/N < 0`). With `0 < P`
+and `0 < N` we get `P/N > 0`, hence `1 + P/N > 1 > 0`, and the `by_cases` corner
+branch is discharged by contradiction. Both consumers (`awgn_avg_error_union_bound`,
+`isAwgnTypicalityHypothesis` via the strict witness `P' > 0`) already supply these
+at their call sites. The whole declaration is now genuine: term1 (J-marginal mass),
+N₀ pin (`N₀ = ⌈log(2/ε)/g⌉`, `g = I − R − 3δ > 0`), and term2 (Q-marginal collapse +
+decay via `klDiv_perLetter_eq_capacity` / `klDiv_nFold_eq_nsmul` giving `klDiv_n = n·I`)
+are all sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`).
+Precedent: false-statement #5 (2026-06-12, Fix B) resolved within-session. -/
 theorem awgn_random_coding_union_bound
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
+    (hP : 0 < P) (hN : (N : ℝ) ≠ 0)
     {ε δ R : ℝ} (hε : 0 < ε) (hδ : 0 < δ) (hR_pos : 0 < R)
     (hslack : R + 3 * δ < (1/2) * Real.log (1 + P / (N : ℝ))) :
     ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n → ∀ ⦃M : ℕ⦄ (hM_pos : 0 < M),
@@ -879,14 +852,15 @@ theorem awgn_random_coding_union_bound
     rw [hint_eq]
     exact hmass
   -- ── Atom 3: second (alias) term `∑_{m'≠m} ∫ Wch(E2 m') = (M−1)·Q A ≤ ε`. ──
-  -- The remaining content is (a) the **Q-marginal collapse** `∑_{m'≠m} ∫ Wch(E2 m')
-  -- = (M−1)·Q A` (m'≠m ⟹ codebook m' ⊥ codebook m, the product law `Q`; same
-  -- plumbing as term1's J-marginal), and (b) the **N₀-decay** `(M−1)·Q A ≤
-  -- (M−1)·exp(−(klDiv_n − n·3δ)) ≤ ⌈exp(nR)⌉·exp(−n(I−3δ)) ≤ ε` from `hA_indep`,
-  -- `hM_le`, and `hslack` (margin `g = I − R − 3δ > 0`, needing `klDiv_n = n·I`).
-  -- Both are deferred together with the opaque threshold `N₀` (above): the decay
-  -- is what `N₀` is chosen for, so this is a single honest sorry coupled to `?N₀`.
-  -- @residual(plan:awgn-achievability-walls-discharge-plan)
+  -- GENUINE (false-statement #6 fix, 2026-06-12): both sub-steps are now discharged
+  -- in this body. (a) **Q-marginal collapse** `∑_{m'≠m} ∫ Wch(E2 m') = (M−1)·Q A`
+  -- (m'≠m ⟹ codebook m' ⊥ codebook m, the product law `Q`; same plumbing as term1's
+  -- J-marginal). (b) **N₀-decay** `(M−1)·Q A ≤ (M−1)·exp(−(klDiv_n − n·3δ)) ≤
+  -- ⌈exp(nR)⌉·exp(−n(I−3δ)) ≤ ε` from `hA_indep`, `hM_le`, and `hslack` (margin
+  -- `g = I − R − 3δ > 0`, needing `klDiv_n = n·I` via `klDiv_perLetter_eq_capacity`
+  -- and `klDiv_nFold_eq_nsmul`). `N₀ = ⌈log(2/ε)/g⌉` is the pinned decay threshold.
+  -- The closed-form `klDiv_n = n·I` needs `0 < P` (precondition `hP`), which also
+  -- excludes the former degenerate corner `1 + P/N < 0`. sorryAx-free.
   have h_term2 :
       ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
           ∫⁻ codebook, (Wch codebook) (E2 codebook m')
@@ -1088,19 +1062,11 @@ theorem awgn_random_coding_union_bound
       linarith
     have hN_pos : (0 : ℝ) < N := lt_of_le_of_ne N.coe_nonneg (fun h => hN_ne h.symm)
     -- The per-letter capacity `I = (1/2)log(1+P/N)`, which `hslack` lower-bounds.
-    -- For the closed form `klDiv(J₁,Q₁).toReal = I` we need `0 < P`. In the
-    -- admissible (nondegenerate) regime `0 ≤ 1 + P/N` this is forced by `hslack`.
+    -- For the closed form `klDiv(J₁,Q₁).toReal = I` we need `0 < P` (now a direct
+    -- precondition `hP`). The degenerate corner `1 + P/N < 0` (`P < −N`) is excluded
+    -- by `0 < P` and `0 < N`: `P/N > 0`, so `1 + P/N > 1 > 0`.
     by_cases hPN_nonneg : 0 ≤ 1 + P / (N : ℝ)
-    · -- `0 < P`: else `P ≤ 0 ⇒ 1 + P/N ≤ 1 ⇒ log ≤ 0 < R+3δ`.
-      have hP_pos : 0 < P := by
-        by_contra hP_le
-        rw [not_lt] at hP_le
-        have hPN_le_one : 1 + P / (N : ℝ) ≤ 1 := by
-          have : P / (N : ℝ) ≤ 0 := div_nonpos_of_nonpos_of_nonneg hP_le hN_pos.le
-          linarith
-        have hlog_le : Real.log (1 + P / (N : ℝ)) ≤ 0 :=
-          Real.log_nonpos hPN_nonneg hPN_le_one
-        nlinarith [hslack]
+    · have hP_pos : 0 < P := hP
       -- bridges: `klDiv_n.toReal = n · klDiv(J₁,Q₁).toReal = n · I`.
       have hI : (klDiv
             (((gaussianReal 0 P.toNNReal).prod (gaussianReal 0 N)).map
@@ -1179,24 +1145,14 @@ theorem awgn_random_coding_union_bound
               * Real.exp (-((klDiv J Q).toReal - (n : ℝ) * (3 * δ)))) := by
             rw [← ENNReal.ofReal_mul (by positivity)]
         _ ≤ ENNReal.ofReal ε := ENNReal.ofReal_le_ofReal hreal_decay
-    · -- DEGENERATE CORNER `1 + P/N < 0` (i.e. `P < −N`, so `P.toNNReal = 0`): here
-      -- `μXn = pi (gaussianReal 0 0) = pi (dirac 0)`, `μYn = pi (gaussianReal 0 N) = μZn`,
-      -- and `J = (μXn.prod μZn).map Φ = μXn.prod μZn = Q` (the input is a.s. 0), hence
-      -- `klDiv J Q = klDiv_self = 0`. Then the supplied `hA_indep` is only the trivial
-      -- bound `Q A ≤ ofReal(exp(n·3δ)) ≥ 1`, so `(M−1)·Q A` does NOT decay and the term2
-      -- goal is **FALSE-AS-FRAMED** here (e.g. `Q A ≥ 1−ε` is consistent, making term2
-      -- ≥ `(M−1)(1−ε) ≫ ε`). This corner is satisfiable under the *current* signature
-      -- because `hslack` uses Mathlib's `Real.log x = log|x|` convention, so
-      -- `(1/2)log|1+P/N|` can exceed `R+3δ` even with `1+P/N < 0`. Closing it honestly
-      -- is impossible without strengthening the signature with `(hP : 0 < P)` and
-      -- `(hN : (N:ℝ) ≠ 0)` (excludes this corner; ripples to the 2 consumers
-      -- `awgn_avg_error_union_bound` / `isAwgnTypicalityHypothesis`, both of which already
-      -- carry `hP`/`hN` at their call sites). Left as an honest sorry: the body cannot be
-      -- discharged as the conclusion is false in this regime. NOTE FOR ORCHESTRATOR: this
-      -- is a residual false-statement in the *existing* signature (the 2026-06-12 audit's
-      -- refutation tried only `δ→0⁺`/`R→cap`, missing the `1+P/N<0` abs-convention corner).
-      -- @residual(plan:awgn-achievability-walls-discharge-plan)
-      sorry
+    · -- The degenerate corner `1 + P/N < 0` (`P < −N`) is now UNREACHABLE: the
+      -- signature precondition `hP : 0 < P` together with `hN_pos : 0 < N` gives
+      -- `P/N > 0`, hence `1 + P/N > 1 > 0`, contradicting `hPN_nonneg : ¬ 0 ≤ 1+P/N`.
+      -- (Fix for false-statement #6: previously `hslack` was satisfiable in this
+      -- corner via Mathlib's `Real.log x = log|x|` convention with `1+P/N < 0`, where
+      -- `klDiv J Q = 0` made term2 false-as-framed. Adding `hP`/`hN` excludes it.)
+      have hPN_pos : (0 : ℝ) < P / (N : ℝ) := div_pos hP hN_pos
+      exact absurd (by linarith : (0 : ℝ) ≤ 1 + P / (N : ℝ)) hPN_nonneg
   -- ── Combine: `≤ ε + ε = 2ε`. ──
   calc ∫⁻ codebook, _ ∂_
       ≤ (∫⁻ codebook, (Wch codebook) (E1 codebook)
@@ -1244,7 +1200,7 @@ theorem awgn_avg_error_union_bound
   -- AEP threshold (typical-set existence at slack `δ`) + union-bound threshold.
   obtain ⟨N_aep, hN_aep⟩ := continuousAepGaussian_holds P N hδ hε
   obtain ⟨N_rand, hN_rand⟩ :=
-    awgn_random_coding_union_bound P N h_meas hε hδ hR_pos hslack
+    awgn_random_coding_union_bound P N h_meas hP hN hε hδ hR_pos hslack
   refine ⟨max N_aep N_rand, ?_⟩
   intro n hn M hM_pos hM_le
   haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
@@ -1494,13 +1450,12 @@ is preserved; the barrier is now `g c := ∑_m (Pe c m + 𝟙_{violate m}(c))` s
 power constraint is enforced per-codeword (matching `awgnPowerConstraintPerCodeword_holds`).
 
 **Honesty**: the assembly body is GENUINE (no degenerate/circular/laundering);
-0 sorry / 0 `@residual` **in this declaration**. It transitively consumes the
-honest sorries in `awgn_random_coding_union_bound` (term1 J-marginal collapse,
-term2 alias-decay + N₀, all `@residual(plan:awgn-achievability-walls-discharge-plan)`)
-and `continuousAepGaussian_holds` (MemLp + change-of-measure). It is therefore
-not yet proof-done; the `@audit:ok` tag is retracted pending those deep atoms.
-
-@residual(plan:awgn-achievability-walls-discharge-plan) -/
+0 sorry / 0 `@residual` **in this declaration**, and all transitively consumed
+lemmas are now sorryAx-free: `awgn_random_coding_union_bound` (false-statement #6
+fix, term1 + term2 + N₀ all genuine), `continuousAepGaussian_holds` (`Walls.lean`),
+and `awgnPowerConstraintPerCodeword_holds` (`Walls.lean`). `#print axioms
+isAwgnTypicalityHypothesis` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free,
+machine-verified 2026-06-12); proof-done pending independent honesty audit. -/
 @[entry_point]
 theorem isAwgnTypicalityHypothesis
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -1591,7 +1546,7 @@ theorem isAwgnTypicalityHypothesis
   -- power (`h_power'`) per-codeword at variance `P'`, target `P`, mass-fail `ε_pow`.
   obtain ⟨N_aep,  hN_aep⟩  := h_aep' hδ_pos hε_rand_pos
   obtain ⟨N_rand, hN_rand⟩ :=
-    awgn_random_coding_union_bound P' N h_meas hε_rand_pos hδ_pos hR''_pos hslack''
+    awgn_random_coding_union_bound P' N h_meas hP'_pos hN hε_rand_pos hδ_pos hR''_pos hslack''
   obtain ⟨N_pow,  hN_pow⟩  := h_power' hε_pow_pos
   -- `N_doubling`: smallest `n ≥ 1` such that `2 * ⌈exp(nR)⌉ ≤ ⌈exp(n·R'')⌉`.
   -- Existence: `exp(nR'')/exp(nR) = exp(n(R''-R)) → ∞`, so for n large
@@ -2109,17 +2064,16 @@ theorem isAwgnTypicalityHypothesis
 shared sorry 補題 (`AwgnWalls.lean`) + `awgnPowerWitness_exists` を内部で
 呼ぶ形になったため、本 wrapper の `h_feasible` 引数も消失)。
 
-**Residual status (2026-06-12 δ-separation + D4)**: this wrapper no longer carries
-a bundled feasibility hypothesis. It is a 1-line pass-through of
-`isAwgnTypicalityHypothesis`, which now transitively consumes the deep-atom
-sorries in `awgn_random_coding_union_bound` (term1 / term2 / N₀) and
-`continuousAepGaussian_holds` (MemLp / change-of-measure). The wrapper introduces
-no new residual but inherits these via its body.
+**Residual status (2026-06-12 false-statement #6 fix)**: this wrapper no longer
+carries a bundled feasibility hypothesis. It is a 1-line pass-through of
+`isAwgnTypicalityHypothesis`, which is now sorryAx-free (its transitively consumed
+lemmas `awgn_random_coding_union_bound` / `continuousAepGaussian_holds` /
+`awgnPowerConstraintPerCodeword_holds` are all genuine). `#print axioms
+awgn_achievability_F1_via_staged_hyps` = `[propext, Classical.choice, Quot.sound]`
+(sorryAx-free, machine-verified 2026-06-12).
 
 **Naming (historical artefact)**: theorem name is `_via_staged_hyps` (plural
-artefact of the pre-pivot 3-hyp form); the staged content is now in the walls.
-
-@residual(plan:awgn-achievability-walls-discharge-plan) -/
+artefact of the pre-pivot 3-hyp form); the staged content is now in the walls. -/
 @[entry_point]
 theorem awgn_achievability_F1_via_staged_hyps
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -2137,8 +2091,8 @@ theorem awgn_achievability_F1_via_staged_hyps
 genuine assembly) 経由で再 publish (Phase 2 pivot 2026-05-24 / 2026-05-27
 F-1/F-3 peer migration / 2026-05-28 AWGN M5 Phase 3-β: bundle hyp
 `IsAwgnRandomCodingFeasible` 削除に伴い `h_feasible` 引数が消失、achievability
-residual は `AwgnWalls.lean` の 3 shared sorry 補題 +
-`awgnPowerWitness_exists` に移動)。
+の内容は `Walls.lean` の AEP/power 補題 + `awgnPowerWitness_exists` + 本 file の
+union bound に分散、いずれも現在 sorryAx-free)。
 
 **残 hyp** (docstring に明示、CORE doctrine 透明性):
 - `h_mi_bridge` (F-2、mutual info bridge、未起草 plan) — 本 wrapper body では
@@ -2157,10 +2111,13 @@ the achievability decomposition (`awgn_random_coding_union_bound` /
 `awgnPowerConstraintPerCodeword_holds` / `continuousAepGaussian_holds`) rather
 than a bundle hyp on this wrapper.
 
-**Residual status (2026-06-12)**: 1-line pass-through of `isAwgnTypicalityHypothesis`;
-inherits its deep-atom sorries transitively (no new residual introduced here).
-
-@residual(plan:awgn-achievability-walls-discharge-plan) -/
+**Residual status (2026-06-12 false-statement #6 fix)**: 1-line pass-through of
+`isAwgnTypicalityHypothesis`, which is now sorryAx-free; this wrapper inherits no
+residual. `#print axioms awgn_theorem_F4_discharged_F1_via_staged` = `[propext,
+Classical.choice, Quot.sound]` (machine-verified 2026-06-12). The unused
+`h_mi_bridge` is an F-2 wiring artefact (kept for `awgn_channel_coding_theorem`
+signature consistency, not load-bearing — the body does not use it). The
+achievability half is genuine; the F-3 converse remains on its own plan (below). -/
 @[entry_point]
 theorem awgn_theorem_F4_discharged_F1_via_staged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
