@@ -192,12 +192,16 @@ Classical.choice, Quot.sound]`. The unused `h_mi_bridge` is an F-2 wiring artefa
 (kept for `awgn_channel_coding_theorem` signature consistency, not load-bearing —
 the body does not use it).
 
-@audit:ok (independent honesty audit 2026-06-12, commit f69cfea: pass-through of the
-discharged headline `awgn_achievability`. `h_mi_bridge` verified NON-load-bearing —
-never referenced in the body (pure pass-through), so it carries no proof load (an
-unused hypothesis only weakens the signature, never strengthens it dishonestly).
-The F-3 converse residual lives in `awgn_converse`, a separate declaration, out of
-scope.) -/
+@audit:ok (independent honesty audit 2026-06-12, commit c44be72: body re-wired in
+this commit from the old `isAwgnTypicalityHypothesis ... (isAwgnChannelMeasurable N)`
+call to the equivalent `awgn_achievability ... (isAwgnChannelMeasurable N)` pass-through
+(the headline's body is that very `isAwgnTypicalityHypothesis` call, so the rewiring is
+definitionally equivalent). `h_mi_bridge` re-verified NON-load-bearing — never
+referenced in the body (pure pass-through), so it carries no proof load (an unused
+hypothesis only weakens the signature, never strengthens it dishonestly). `#print
+axioms awgn_theorem_F4_discharged_F1_via_staged` = `[propext, Classical.choice,
+Quot.sound]` re-confirmed by this audit. The F-3 converse residual lives in
+`awgn_converse`, a separate declaration, out of scope.) -/
 @[entry_point]
 theorem awgn_theorem_F4_discharged_F1_via_staged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)

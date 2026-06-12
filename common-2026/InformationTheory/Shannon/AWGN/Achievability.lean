@@ -43,7 +43,22 @@ messages whose per-message error probability is below `ε`.
 bounds / union bound) を successor plan `awgn-achievability-typicality-plan.md` に
 defer していた。successor 側 assembly が完成 (sorryAx-free) した今、import 方向を
 反転して本 file が `AchievabilityDischarge` を import する形にし、headline を genuine
-assembly の直接呼出しで閉じた。 -/
+assembly の直接呼出しで閉じた。
+
+@audit:ok (independent honesty audit 2026-06-12, commit c44be72: discharged from
+`by sorry` to `isAwgnTypicalityHypothesis P hP N hN h_meas hR_pos hR hε`. Signature
+UNCHANGED vs the parent `39677f9` Tier-2 sorry form (verified by `git diff`: only the
+body, docstring, and the added import changed). The callee's conclusion matches this
+headline's modulo currying — `isAwgnTypicalityHypothesis` returns the same `∃ N₀, ...`
+body with `awgnChannel N h_meas`, and the curried `{R}`/`hR_pos`/`hR`/`{ε}`/`hε`
+arguments recover this signature's binders exactly. The callee is a 580-line genuine
+assembly whose only hypotheses are regularity preconditions (`0 < P`, `(N:ℝ) ≠ 0`,
+measurability) — no load-bearing `*Hypothesis` predicate is passed (the name
+`isAwgnTypicalityHypothesis` is a historical artefact, not a bundled-conclusion arg).
+`#print axioms awgn_achievability` = `[propext, Classical.choice, Quot.sound]`
+(sorryAx-free, machine-verified by this audit). The old `@residual(plan:...)` /
+`@audit:closed-by-successor(...)` tags were removed; the prose above records the
+closure provenance honestly.) -/
 theorem awgn_achievability
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
