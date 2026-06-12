@@ -171,60 +171,6 @@ removed together with its underlying `IsAwgnConverseHypothesis` predicate
 aggregation lives inside the analytic `awgn-converse-aux-plan.md` successor. -/
 
 
-/-! ## Phase D — `awgn_theorem_of_F2F3_hypotheses` re-publish (⚠️ F-2/F-3 OPEN) -/
-
-/-- **AWGN channel coding theorem — F-2/F-3 hypotheses removed (2026-05-27 peer migration).**
-
-2026-05-27 F-1/F-3 peer migration: previously this wrapper consumed two
-load-bearing aliases (`IsAwgnF2DecodingHypothesis` ≡ `IsAwgnTypicalityHypothesis`
-and `IsAwgnF3ChainHypothesis` ≡ `IsAwgnConverseHypothesis`) which have been
-deleted. 2026-05-28: the vestigial per-letter `:= True` placeholder predicate +
-its unused parameter (never referenced in the body) were retracted; the genuine
-F-3 per-letter obligation lives in the converse files
-(`AWGNConverseDischarge.lean`). The wrapper now matches
-`awgn_theorem_F1_discharged` exactly (F-1 / F-3 are absent as predicate hyps;
-their bodies live as `sorry + @residual` inside `awgn_achievability` /
-`awgn_converse`).
-
-⚠️ NOT a full discharge: F-1 achievability body and F-3 converse body remain
-OPEN. F-4 (kernel measurability) のみ `awgn_theorem_F1_discharged` 経由で genuine
-discharge 済。F-2 MI bridge は body 未参照の dead hyp だったため 2026-06-12 cleanup
-で signature から除去 (F-2 自体は genuine closure 済、`awgn-mi-bridge-plan` closed)。
-decl 名の `F2F3` は historical artefact (F-2/F-3 predicate hyp はもはや取らない)。
-
-実体 discharge は別 plan へ:
-
-* F-1 (achievability) → `awgn-achievability-typicality-plan.md`
-* F-3 (converse)     → `awgn-converse-aux-plan.md`
-
-`@audit:superseded-by(awgn_achievability)` — 2026-06-12 h_mi_bridge cleanup 後、
-本 wrapper の statement は `awgn_theorem_F1_discharged` (ないし headline
-`awgn_achievability` + `isAwgnChannelMeasurable`) と内容重複。削除候補だが
-歴史的 entry point として残置。
-
-`@audit:closed-by-successor(awgn-achievability-typicality-plan)`
-
-@audit:ok (independent honesty audit 2026-06-12, commit e728ebf: `h_mi_bridge`
-removed. Pure strengthening — body delegates to `awgn_theorem_F1_discharged`
-(sorryAx-free chain to `awgn_achievability`), which no longer takes `h_mi_bridge`.
-The `F2F3` name is a historical artefact: no F-2/F-3 predicate hypothesis is taken,
-so the name over-claims nothing (signature = `awgn_theorem_F1_discharged`).
-`@audit:superseded-by(awgn_achievability)` co-tag correct (statement subsumed).
-`#print axioms awgn_theorem_of_F2F3_hypotheses` = `[propext, Classical.choice,
-Quot.sound]` re-confirmed by this audit.) -/
-@[entry_point]
-theorem awgn_theorem_of_F2F3_hypotheses
-    (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
-    {R : ℝ} (hR_pos : 0 < R) (hR_lt_C : R < (1/2) * Real.log (1 + P / (N : ℝ)))
-    {ε : ℝ} (hε : 0 < ε) :
-    ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →
-      ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
-        (c : AwgnCode M n P),
-          ∀ m, (c.toCode.errorProbAt
-                  (awgnChannel N (isAwgnChannelMeasurable N)) m).toReal < ε :=
-  awgn_theorem_F1_discharged P hP N hN
-    hR_pos hR_lt_C hε
-
 /-! ## Phase E — Capacity closed form re-publish (F-1 + F-2-MI-bridge) -/
 
 /-- **AWGN capacity closed form — F-1 discharged, max-entropy/bddAbove taken as

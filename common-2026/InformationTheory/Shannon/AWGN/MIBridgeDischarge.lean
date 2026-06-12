@@ -119,45 +119,6 @@ theorem awgn_output_gaussian_of_bind_eq_conv
 
 /-! ## Phase D — Combined body discharge re-publish -/
 
-/-- **AWGN channel coding theorem — achievability via the sorryAx-free chain,
-with vestigial bind/conv + MI-decomp pass-through hypotheses.**
-
-Post-cleanup (2026-06-12 `h_mi_bridge` removal): the achievability conclusion here
-is genuinely closed via the sorryAx-free chain (`awgn_theorem_F2_discharged` →
-`awgn_theorem_F1_discharged` → `awgn_achievability`) and **no longer depends on**
-`h_bridge` / `h_decomp`. The two hypotheses are under-consumed vestigial
-pass-throughs retained for downstream signature compatibility — an
-over-hypothesized (strictly weaker) signature, honesty-safe, NOT load-bearing.
-Historically this wrapper reduced the output-Gaussian fact to the bind/conv
-primitive `IsAwgnBindEqConv` (discharged in `AWGNBindConvBody.lean`); that
-construction lost its sink when the chain dropped `h_mi_bridge`.
-
-`@audit:closed-by-successor(awgn-mi-decomp-plan)`
-
-@audit:ok (independent honesty audit 2026-06-12, commit e728ebf scope — this decl was
-NOT edited by that commit but is a downstream ripple of the `h_mi_bridge` cleanup.
-`#print axioms awgn_theorem_of_typicality_converse_bindconv` = `[propext,
-Classical.choice, Quot.sound]` (sorryAx-free, re-confirmed by this audit). The
-under-consumed `h_bridge`/`h_decomp` are an honest weaker signature, not a defect.
-Stale "NOT a full discharge / remain OPEN" prose flagged by this audit was rewritten
-in the audit sign-off commit.) -/
-@[entry_point]
-theorem awgn_theorem_of_typicality_converse_bindconv
-    (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
-    (h_bridge : IsAwgnBindEqConv P N (isAwgnChannelMeasurable N))
-    (h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N))
-    {R : ℝ} (hR_pos : 0 < R) (hR_lt_C : R < (1/2) * Real.log (1 + P / (N : ℝ)))
-    {ε : ℝ} (hε : 0 < ε) :
-    ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →
-      ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
-        (c : AwgnCode M n P),
-          ∀ m, (c.toCode.errorProbAt
-                  (awgnChannel N (isAwgnChannelMeasurable N)) m).toReal < ε := by
-  have h_out : IsAwgnOutputGaussian P N (isAwgnChannelMeasurable N) :=
-    awgn_output_gaussian_of_bind_eq_conv P N (isAwgnChannelMeasurable N) h_bridge
-  exact awgn_theorem_F2_discharged P hP N hN
-    h_out h_decomp hR_pos hR_lt_C hε
-
 /-- **AWGN capacity closed form — output-Gaussian reduced to bind/conv,
 MI-decomp/bddAbove/max-entropy taken as hypotheses.**
 

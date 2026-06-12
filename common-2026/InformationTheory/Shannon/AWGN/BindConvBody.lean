@@ -110,34 +110,6 @@ theorem isAwgnBindEqConv_discharged
   rw [awgnChannel_apply]
   exact gaussianReal_eq_map_const_add N x
 
-/-- **AWGN channel coding theorem — output-Gaussian (bind/conv) genuinely closed,
-typicality/MI-decomp/converse taken as hypotheses.**
-
-⚠️ NOT a full discharge: F-2 typicality (`h_typicality`), the MI decomposition
-(`h_decomp`) and F-3 converse (`h_converse`) remain OPEN — taken as hypotheses.
-The genuine proofs need continuous AEP / sphere-shell volume (typicality), the
-density-level continuous MI chain rule (MI-decomp) and chain rule + Fano +
-Gaussian max-entropy (converse), absent from Mathlib. What is genuinely closed
-here (beyond F-1): the output-Gaussian fact via the now-proved bind/conv bridge
-`isAwgnBindEqConv_discharged`, so `IsAwgnBindEqConv` is dispatched automatically.
-
-`@audit:closed-by-successor(awgn-moonshot-plan)` -/
-@[entry_point]
-theorem awgn_theorem_of_typicality_converse_bindconv_discharged
-    (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
-    (h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N))
-    {R : ℝ} (hR_pos : 0 < R) (hR_lt_C : R < (1/2) * Real.log (1 + P / (N : ℝ)))
-    {ε : ℝ} (hε : 0 < ε) :
-    ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →
-      ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
-        (c : AwgnCode M n P),
-          ∀ m, (c.toCode.errorProbAt
-                  (awgnChannel N (isAwgnChannelMeasurable N)) m).toReal < ε := by
-  have h_bridge : IsAwgnBindEqConv P N (isAwgnChannelMeasurable N) :=
-    isAwgnBindEqConv_discharged P N (isAwgnChannelMeasurable N)
-  exact awgn_theorem_of_typicality_converse_bindconv P hP N hN
-    h_bridge h_decomp hR_pos hR_lt_C hε
-
 /-- **AWGN capacity closed form — output-Gaussian (bind/conv) genuinely closed,
 MI-decomp/bddAbove/max-entropy taken as hypotheses.**
 
