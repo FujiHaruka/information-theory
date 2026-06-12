@@ -1,10 +1,10 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.ParallelGaussian.Basic
-import InformationTheory.Draft.Shannon.ParallelGaussianPerCoord
-import InformationTheory.Draft.Shannon.ContChannelMIDecomp
-import InformationTheory.Draft.Shannon.MultivariateDiffEntropy
+import InformationTheory.Shannon.ParallelGaussian.PerCoord
+import InformationTheory.Shannon.AWGN.ContChannelMIDecomp
+import InformationTheory.Shannon.MultivariateDiffEntropy
 import InformationTheory.Shannon.DifferentialEntropy
-import InformationTheory.Draft.Shannon.AwgnCapacityConverseMaxent
+import InformationTheory.Shannon.AWGN.CapacityConverseMaxent
 import Mathlib.MeasureTheory.Constructions.Pi
 import InformationTheory.Shannon.ParallelGaussian.Converse.Core
 import InformationTheory.Shannon.ParallelGaussian.Converse.Regularity

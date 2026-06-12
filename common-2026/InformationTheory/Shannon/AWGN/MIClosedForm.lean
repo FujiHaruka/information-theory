@@ -1,5 +1,5 @@
 import InformationTheory.Shannon.AWGN.BindConvBody
-import InformationTheory.Draft.Shannon.ContChannelMIDecomp
+import InformationTheory.Shannon.AWGN.ContChannelMIDecomp
 
 /-!
 # AWGN Gaussian-input MI closed form — hypothesis-free successor

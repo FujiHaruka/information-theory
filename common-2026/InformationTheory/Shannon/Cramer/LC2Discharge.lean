@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Draft.Shannon.Cramer
+import InformationTheory.Shannon.Cramer.Cramer
 import Mathlib.Probability.StrongLaw
 import Mathlib.Probability.Independence.InfinitePi
 import Mathlib.Probability.ProductMeasure

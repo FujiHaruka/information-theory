@@ -6,7 +6,7 @@ import InformationTheory.Shannon.ChannelCoding.MIDecomp
 import InformationTheory.Shannon.MIChainRule
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.CondKLIntegral
-import InformationTheory.Draft.Shannon.MultivariateDiffEntropy
+import InformationTheory.Shannon.MultivariateDiffEntropy
 import Mathlib.Probability.Distributions.Gaussian.Real
 
 /-!
@@ -60,7 +60,7 @@ open scoped ENNReal NNReal BigOperators Topology
 (Note: the former Wall 0 `contChannelMIDecomp_holds` — the continuous-channel MI
 chain rule `I(X;Y) = h(Y) − h(Y|X)` — was **closed 2026-05-28**: it is now assembled
 genuinely from local helpers in
-`InformationTheory.Draft.Shannon.ContChannelMIDecomp.mutualInfoOfChannel_toReal_eq_diffEntropy_sub`
+`InformationTheory.Shannon.AWGN.ContChannelMIDecomp.mutualInfoOfChannel_toReal_eq_diffEntropy_sub`
 (0 sorry), so no shared wall is needed. This file's active wall count is now **3**:
 Wall 6 `awgn-converse-markov-regularity` was **genuine-closed 2026-06-04**
 (`awgnConverseMarkov_holds` is sorryAx-free, see its docstring); Wall 4

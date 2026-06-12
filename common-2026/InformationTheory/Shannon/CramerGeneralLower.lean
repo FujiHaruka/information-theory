@@ -1,5 +1,5 @@
 import InformationTheory.Shannon.CramerCltBoundaryClosure
-import InformationTheory.Draft.Shannon.Cramer
+import InformationTheory.Shannon.Cramer.Cramer
 
 /-!
 # Cramér lower bound — general i.i.d. wiring (root B)

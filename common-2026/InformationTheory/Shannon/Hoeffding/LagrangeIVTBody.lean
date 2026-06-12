@@ -1,4 +1,4 @@
-import InformationTheory.Draft.Shannon.HoeffdingInteriorGradientBody
+import InformationTheory.Shannon.Hoeffding.InteriorGradientBody
 import InformationTheory.Meta.EntryPoint
 import Mathlib.Topology.Order.IntermediateValue
 

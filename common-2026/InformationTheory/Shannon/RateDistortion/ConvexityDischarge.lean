@@ -1,4 +1,4 @@
-import InformationTheory.Draft.Shannon.RateDistortionConvexity
+import InformationTheory.Shannon.RateDistortion.Convexity
 import InformationTheory.Shannon.Sanov.Basic
 import Mathlib.InformationTheory.KullbackLeibler.KLFun
 

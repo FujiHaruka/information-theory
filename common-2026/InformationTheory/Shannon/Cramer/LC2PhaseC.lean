@@ -1,4 +1,4 @@
-import InformationTheory.Draft.Shannon.Cramer
+import InformationTheory.Shannon.Cramer.Cramer
 import InformationTheory.Shannon.Cramer.LC2Discharge
 import InformationTheory.Shannon.Cramer.LC2DischargeExt
 import InformationTheory.Shannon.CramerBoundaryUpstream

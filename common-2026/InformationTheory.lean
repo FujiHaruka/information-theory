@@ -80,7 +80,7 @@ import InformationTheory.Shannon.BlockwiseChannel
 import InformationTheory.Shannon.GeneralDMC.Basic
 import InformationTheory.Shannon.RateDistortion.Converse
 import InformationTheory.Shannon.RateDistortion.ConverseMonotone
-import InformationTheory.Draft.Shannon.RateDistortionConvexity
+import InformationTheory.Shannon.RateDistortion.Convexity
 import InformationTheory.Shannon.RateDistortion.ConvexityDischarge
 import InformationTheory.Shannon.RateDistortion.Achievability
 import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseB
@@ -89,7 +89,7 @@ import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseD
 import InformationTheory.Draft.Shannon.RateDistortionAchievabilityPhaseE
 import InformationTheory.Draft.Shannon.RateDistortionAchievabilityPhaseEDischarge
 import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseEStrong
-import InformationTheory.Draft.Shannon.RateDistortionConverseNLetter
+import InformationTheory.Shannon.RateDistortion.ConverseNLetter
 import InformationTheory.Shannon.Sanov.Basic
 import InformationTheory.Shannon.Sanov.LDP
 import InformationTheory.Shannon.KLDivContinuous
@@ -111,7 +111,7 @@ import InformationTheory.Shannon.Huffman.T1APPrimePartial
 import InformationTheory.Shannon.CsiszarProjection
 import InformationTheory.Shannon.Chernoff.Basic
 import InformationTheory.Shannon.Chernoff.NLetterZSum
-import InformationTheory.Draft.Shannon.Cramer
+import InformationTheory.Shannon.Cramer.Cramer
 import InformationTheory.Shannon.Cramer.LC2Discharge
 import InformationTheory.Shannon.Cramer.LC2DischargeExt
 import InformationTheory.Shannon.CramerBoundaryUpstream
@@ -180,9 +180,9 @@ import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnGenuine
 import InformationTheory.Shannon.AWGN.F2F3Discharge
 -- Wave5 gap-close
-import InformationTheory.Draft.Shannon.CramerLC2PhaseC
+import InformationTheory.Shannon.Cramer.LC2PhaseC
 import InformationTheory.Shannon.MeasurePiTiltedFactorization
-import InformationTheory.Draft.Shannon.InfinitePiTiltedChangeOfMeasure
+import InformationTheory.Shannon.Cramer.InfinitePiTiltedChangeOfMeasure
 -- Wave6 parallel-10 body discharge
 import InformationTheory.Shannon.AWGN.MIBridge
 import InformationTheory.Shannon.ParallelGaussian.KKT
@@ -215,14 +215,14 @@ import InformationTheory.Shannon.EPI.Stam.Step3Body
 import InformationTheory.Shannon.FisherInfo.V2HeatFlowBody
 import InformationTheory.Shannon.LZ78.GreedyParsingImpl
 import InformationTheory.Shannon.LZ78.GreedyLongestPrefix
-import InformationTheory.Draft.Shannon.HoeffdingInteriorGradientBody
+import InformationTheory.Shannon.Hoeffding.InteriorGradientBody
 import InformationTheory.Shannon.Huffman.SwapStepChainBody
 import InformationTheory.Shannon.AWGN.MIDecompBody
-import InformationTheory.Draft.Shannon.ContChannelMIDecomp
-import InformationTheory.Draft.Shannon.AwgnCapacityConverseMaxent
+import InformationTheory.Shannon.AWGN.ContChannelMIDecomp
+import InformationTheory.Shannon.AWGN.CapacityConverseMaxent
 import InformationTheory.Shannon.AWGN.MIClosedForm
 import InformationTheory.Shannon.ParallelGaussian.WFCertBody
-import InformationTheory.Draft.Shannon.HoeffdingLagrangeIVTBody
+import InformationTheory.Shannon.Hoeffding.LagrangeIVTBody
 import InformationTheory.Shannon.ParallelGaussian.WFStationarityBody
 import InformationTheory.Shannon.LZ78.PhraseCountAsymptoticBody
 import InformationTheory.Shannon.LZ78.ZivCountingBody
@@ -230,7 +230,7 @@ import InformationTheory.Shannon.Huffman.MergedIdentBody
 import InformationTheory.Shannon.WynerZiv.ObjectiveConvexityBody
 import InformationTheory.Shannon.GaussianPDFVarianceDerivBody
 import InformationTheory.Shannon.FisherDeBruijnGaussianWitness
-import InformationTheory.Draft.Shannon.HoeffdingMinimizerAttainment
+import InformationTheory.Shannon.Hoeffding.MinimizerAttainment
 import InformationTheory.Shannon.Hoeffding.SandwichDischarge
 import InformationTheory.Shannon.Hoeffding.TradeoffExp
 import InformationTheory.Shannon.LZ78.ZivEntropyBridge
@@ -238,8 +238,8 @@ import InformationTheory.Shannon.Stationary.Kernel
 import InformationTheory.Shannon.LZ78.ConverseUDObject
 import InformationTheory.Shannon.EPI.Stam.DeBruijnConclusion
 import InformationTheory.Shannon.WynerZiv.CondEntDiffConvexBody
-import InformationTheory.Draft.Shannon.MultivariateDiffEntropy
-import InformationTheory.Draft.Shannon.ParallelGaussianPerCoord
+import InformationTheory.Shannon.MultivariateDiffEntropy
+import InformationTheory.Shannon.ParallelGaussian.PerCoord
 import InformationTheory.Shannon.ParallelGaussian.Converse.Core
 import InformationTheory.Shannon.ParallelGaussian.Converse.Regularity
 import InformationTheory.Shannon.ParallelGaussian.Converse.MixtureDensity

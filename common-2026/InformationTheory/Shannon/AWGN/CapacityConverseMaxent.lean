@@ -8,7 +8,7 @@ import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.ChannelCoding.Basic
 import InformationTheory.Shannon.AWGN.Basic
 import InformationTheory.Shannon.AWGN.BindConvBody
-import InformationTheory.Draft.Shannon.ContChannelMIDecomp
+import InformationTheory.Shannon.AWGN.ContChannelMIDecomp
 
 /-!
 # AWGN single-letter capacity converse (Gaussian max-entropy wall)

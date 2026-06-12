@@ -1,4 +1,4 @@
-import InformationTheory.Draft.Shannon.HoeffdingLagrangeIVTBody
+import InformationTheory.Shannon.Hoeffding.LagrangeIVTBody
 import InformationTheory.Meta.EntryPoint
 
 /-!

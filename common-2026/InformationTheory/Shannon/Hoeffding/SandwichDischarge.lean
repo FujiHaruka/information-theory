@@ -3,8 +3,8 @@ import InformationTheory.Shannon.Hoeffding.Tradeoff
 import InformationTheory.Shannon.Hoeffding.Sandwich
 import InformationTheory.Shannon.Hoeffding.SandwichBody
 import InformationTheory.Draft.Shannon.HoeffdingInteriorBody
-import InformationTheory.Draft.Shannon.HoeffdingInteriorGradientBody
-import InformationTheory.Draft.Shannon.HoeffdingMinimizerAttainment
+import InformationTheory.Shannon.Hoeffding.InteriorGradientBody
+import InformationTheory.Shannon.Hoeffding.MinimizerAttainment
 import InformationTheory.Shannon.Chernoff.Basic
 import InformationTheory.Shannon.CsiszarProjection
 import InformationTheory.Shannon.Sanov.LDPEquality

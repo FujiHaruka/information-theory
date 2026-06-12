@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.RateDistortion.Achievability
-import InformationTheory.Draft.Shannon.RateDistortionConverseNLetter
+import InformationTheory.Shannon.RateDistortion.ConverseNLetter
 
 /-!
 # Wyner–Ziv lossy distributed coding (T3-D Phase A — definitions)

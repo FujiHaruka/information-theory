@@ -9,7 +9,7 @@ import InformationTheory.Shannon.ChannelCoding.MIDecomp
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.InformationTheory.KullbackLeibler.ChainRule
-import InformationTheory.Draft.Shannon.MultivariateDiffEntropy
+import InformationTheory.Shannon.MultivariateDiffEntropy
 
 /-! # AWGN F-3 converse — analytic body discharge
 
