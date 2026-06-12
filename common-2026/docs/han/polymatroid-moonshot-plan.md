@@ -1,5 +1,7 @@
 # Polymatroid Axioms (Submodularity of Entropy) ムーンショット計画 🌙
 
+**Status**: CLOSED ✅ — done (Ch.17 Polymatroid; Phase A–C 3 axioms proof done, 0 sorry; Phase D structure-ification split off to `polymatroid-structure-plan.md`).
+
 > 実態整合 (2026-05-20): DONE-UNCOND — `jointEntropySubset_submodular` (`InformationTheory/Shannon/Polymatroid.lean:192`、3-piece disjoint 分解 + `condEntropy_le_condEntropy_of_pair` で実証、標準 binder のみ) + `jointEntropySubset_empty` / `jointEntropySubset_mono`。`lake env lean InformationTheory/Shannon/Polymatroid.lean` silent、0 sorry。Phase D は (D-b) で別 plan ([polymatroid-structure-plan.md](polymatroid-structure-plan.md)) 化済で実態一致。
 > **Status (2026-05-11): Phase A〜C 完了 ✅ (288 行 / 0 sorry)。** Phase D は
 > 計画通り (D-b) **別 plan に切り出し** (本 plan は 3 性質単発 theorem で close)。

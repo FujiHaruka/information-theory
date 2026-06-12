@@ -1,5 +1,7 @@
 # Polymatroid Structure 化 ムーンショット計画 🌙
 
+**Status**: CLOSED ✅ — done (Ch.17 Polymatroid; `structure Polymatroid` + `entropyPolymatroid` registered, core DoD met; optional Phase C API helpers left unstarted).
+
 > 実態整合 (2026-05-20): DONE-UNCOND — Phase A/B 共に完了済 (進捗欄の 📋 は STALE)。`structure Polymatroid` は `InformationTheory/Polymatroid/Basic.lean:34` に存在 (`[DecidableEq ι]` のみ、`rank`/`rank_empty`/`rank_mono`/`rank_submodular`)、`entropyPolymatroid : Combinatorics.Polymatroid (Fin n)` は `InformationTheory/Shannon/Polymatroid.lean:268` で 4 field を既存主定理に wrap (新証明なし)。両ファイル `lake env lean` silent、0 sorry。Phase C はオプションで未着手だが本体 DoD は達成。
 > **Status (2026-05-11): 起草。** Polymatroid 主 plan
 > ([`polymatroid-moonshot-plan.md`](polymatroid-moonshot-plan.md)) Phase D

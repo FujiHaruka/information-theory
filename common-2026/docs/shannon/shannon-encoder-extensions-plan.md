@@ -1,5 +1,7 @@
 # Shannon converse encoder 版補完計画 (Phase 4-δ)
 
+**Status**: CLOSED ✅ — done (Ch.7 channel capacity; encoder-version converse extensions landed — Markov-chain encoder converse `shannon_converse_single_shot_markov_encoder` + `CondMutualInfo.lean` machinery, 0 sorry). NOTE: this is the encoder-extension completion plan, NOT the separate "strong converse asymptotic (Pe → 1, R > C)" future-work tracked in `textbook-roadmap.md`.
+
 > **Parent**: [`shannon-moonshot-plan.md`](shannon-moonshot-plan.md) Phase 4-γ 結果セクションで deferred とした「encoder 付き版」を 2 形式で完成させるサブ計画。
 > **Status (2026-05-10)**: Phase 4-δ-(a) **完了** (commit d4bec7c)。Phase 4-δ-(b) は inventory 完了 (`docs/shannon/shannon-condmi-inventory.md`)、skeleton 着手前。
 

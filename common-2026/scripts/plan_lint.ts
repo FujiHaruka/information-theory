@@ -39,6 +39,12 @@ for (let i = 0; i < argv.length; i++) {
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
+// CLOSED (historical / frozen) plan 検出。ACTIVE plan のみ freshness drift を SUSPECT 化する。
+const CLOSED_RE = /\*\*(?:Status|状態)\*\*\s*[:：]\s*CLOSED\b/i;
+function isClosedText(t: string): boolean {
+  return CLOSED_RE.test(t);
+}
+
 async function git(args: string[]): Promise<string> {
   try {
     const p = new Deno.Command("git", { args, stdout: "piped", stderr: "null" });
@@ -161,6 +167,10 @@ async function lintPlan(
     return [{ kind: "STALE", msg: `plan を読めない` }];
   }
 
+  // CLOSED (historical / frozen) plan は freshness drift (行ドリフト / sync 要レビュー) を免除。
+  // STALE (file 消失 / wall slug) と BUDGET は CLOSED でも引き続き検査する。
+  const isClosed = isClosedText(text);
+
   // (b) wall slug 照合 (フォーマット例の placeholder は除外)
   const IGNORE_SLUGS = new Set(["slug", "foo", "name", "x", "example", "bar"]);
   for (const w of new Set([...text.matchAll(/\bwall:([\w-]+)/g)].map((m) => m[1].toLowerCase()))) {
@@ -185,14 +195,14 @@ async function lintPlan(
     }
     const lc = await lineCount(file);
     const lref = parseInt(m[1], 10);
-    if (lc > 0 && lref > lc) {
+    if (!isClosed && lc > 0 && lref > lc) {
       findings.push({ kind: "SUSPECT", msg: `'${full}' は ${file} の ${lc} 行を超える (行ドリフト)` });
     }
   }
 
-  // git staleness: 参照コードが plan より新しい
+  // git staleness: 参照コードが plan より新しい (CLOSED plan は免除)
   const planT = await gitTime(plan);
-  if (planT !== null) {
+  if (!isClosed && planT !== null) {
     let newest: { file: string; t: number } | null = null;
     for (const f of refFiles) {
       if (!(await fileExists(f))) continue;
@@ -257,7 +267,7 @@ async function lintGraph(
 
   // 親子整合 (子の Parent ヘッダ起点)。親 file 消失は上の (c) が STALE で拾う。
   // CLOSED (historical) plans are out of the active DAG drift check — skip backlink/drift SUSPECT
-  const isClosed = /\*\*(?:Status|状態)\*\*\s*[:：]\s*CLOSED\b/i.test(text);
+  const isClosed = isClosedText(text);
   const parent = declaredParent.get(plan);
   if (parent && !isClosed) {
     const ptext = planTexts.get(parent);

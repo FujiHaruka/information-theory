@@ -1,5 +1,7 @@
 # Slepian–Wolf 単発 converse ムーンショット計画 🌙
 
+**Status**: CLOSED ✅ — done (Ch.15 Slepian-Wolf; 3-bound single-shot converse `slepian_wolf_converse_single_shot` implemented, 0 sorry, honest i.i.d. hypotheses only).
+
 > **Seed**: [`docs/moonshot-seeds.md`](../moonshot-seeds.md) Seed 3
 >
 > **Status (2026-05-10):** 起草。`InformationTheory/Shannon/{Converse, Bridge, Entropy, CondMutualInfo, DPI}.lean` + `InformationTheory/Fano/Measure.lean` 完成済を起点に、distributed source coding (Slepian–Wolf) の single-shot converse を分散版として組む。

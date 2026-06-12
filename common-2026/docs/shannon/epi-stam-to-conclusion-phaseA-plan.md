@@ -1,5 +1,7 @@
 # EPI Stam → conclusion Phase A: Stam + de Bruijn 合流 (Csiszár scaling) サブ計画
 
+**Status**: CLOSED ✅ — superseded by the parent's 3-noise-lift / two-time route (`EPIDensityForm.lean`); this sub-plan records the now-abandoned Csiszár-scaling route (Phase A COMPLETED 2026-05-27). Ch.17 EPI family is done (general EPI unconditional closed 2026-06-08).
+
 > **⚠ SUPERSEDED (2026-06-09) — 本 plan の Csiszár-scaling route は親の現 Phase A route ではない**:
 > 本 sub-plan が 2026-05-27 に COMPLETED した A-1〜A-V は **difference-form / Csiszár-scaling route 固有**で、
 > 親 `epi-stam-to-conclusion-plan.md` は判断ログ #5 で **3-noise lift + two-time route** (`EPIDensityForm.lean`)

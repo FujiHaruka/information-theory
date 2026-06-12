@@ -1,5 +1,7 @@
 # Strong Stein ムーンショット計画 🌙
 
+**Status**: CLOSED ✅ — done (Ch.11 StrongStein; `stein_strong_lemma` strict `Tendsto` form proof done, 0 sorry, honest i.i.d. hypotheses only).
+
 (B-4 / moonshot-seeds.md, 2026-05-12 起草)
 
 > **実態整合 (2026-05-20): DONE-UNCOND** — Phase A〜C すべて完了。`InformationTheory/Shannon/StrongStein.lean:498` の `stein_strong_lemma` が strict `Tendsto (… → 𝓝 (klDiv P Q).toReal)` を std binders (`hMapJoint` 等は honest i.i.d. joint-law 仮定、pass-through なし) で discharge。`StrongStein.lean` 全体 0 sorry / 0 `:=True`。

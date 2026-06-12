@@ -1,5 +1,7 @@
 # Stein の補題 ムーンショット計画 🌙
 
+**Status**: CLOSED ✅ — done (Ch.11 Stein; `stein_lemma` sandwich form proof done, 0 sorry; Phase C/D implemented in child `stein-converse-plan.md`, strict form in `strong-stein-moonshot-plan.md`).
+
 <!--
 雛形メモ:
 - 進捗ブロック: `- [ ] Phase 名 — 短い説明 状態絵文字 (関連ファイルへのリンク)` の形式

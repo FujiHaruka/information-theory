@@ -1,5 +1,7 @@
 # Strong typicality (E-7) ムーンショット計画 🌙
 
+**Status**: CLOSED ✅ — done (Ch.3 strong typicality; 3 headlines proof done, 0 sorry, i.i.d. hypotheses only; joint version scope-deferred by original plan).
+
 > 実態整合 (2026-05-20): DONE-HONEST-HYPS — 3 headline 完成済、0 sorry。
 > `stronglyTypicalSet_prob_tendsto_one` (`InformationTheory/Shannon/StrongTypicality.lean:212`)、
 > `stronglyTypicalSet_card_le` (:456、size 上界)、`stronglyTypicalSet_card_ge_eventually`

@@ -1,5 +1,7 @@
 # Loomis–Whitney ムーンショット計画 🌙
 
+**Status**: CLOSED ✅ — done (Ch.17 LoomisWhitney; main theorem `loomis_whitney` proof done, 0 sorry, unconditional combinatorial inequality via Shearer engine).
+
 > **Status (2026-05-10): 起草。** Han Phase D 完了 (`InformationTheory/Shannon/HanD*.lean` の 8
 > 主定理が 0 sorry) と `InformationTheory/Shannon/Pi.lean` 切り出し直後の最初のムーンショット。
 > Seed カード ([`docs/moonshot-seeds.md` Seed 1](../moonshot-seeds.md)) を母体に Phase 分解した。
