@@ -129,7 +129,9 @@ MI bridge `I = h(P+N) - h(N)` は F-2 hypothesis pass-through (Stein/Cramér/Che
   まで genuine。計 6 件の false-statement (Wall1 (ii)/(iii) / D2 term2 #5 / degenerate corner #6)
   を honest 化 (詳細 + 機械検証状態 → [`awgn-facts.md`](awgn-facts.md))
 - **F-2** `h_mi_bridge` (Phase A converse 側): per-letter MI bridge `I = h(Y) - h(Z)`。
-  **closed (genuine、`awgn-mi-bridge-plan`)** — `awgn_per_letter_mi_bridge_genuine`
+  **closed (genuine、`awgn-mi-bridge-plan`)** — `awgn_per_letter_mi_bridge_genuine`。
+  achievability chain が取っていた `h_mi_bridge` hyp は body 未参照の dead hyp と判明し、
+  2026-06-12 cleanup で主定理 chain 4 decl の signature から除去 (e728ebf、監査 sign-off 済)
 - **F-3** `IsAwgnConverseHypothesis` (Phase C): converse 全体 (Fano + DPI + chain + per-letter)。
   **closed (genuine、`awgn-converse-aux-plan`)** — converse 3 壁すべて closed、`awgn_converse` genuine
   (機械検証状態 → [`awgn-facts.md`](awgn-facts.md))
