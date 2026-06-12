@@ -498,7 +498,13 @@ at their call sites. The whole declaration is now genuine: term1 (J-marginal mas
 N₀ pin (`N₀ = ⌈log(2/ε)/g⌉`, `g = I − R − 3δ > 0`), and term2 (Q-marginal collapse +
 decay via `klDiv_perLetter_eq_capacity` / `klDiv_nFold_eq_nsmul` giving `klDiv_n = n·I`)
 are all sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`).
-Precedent: false-statement #5 (2026-06-12, Fix B) resolved within-session. -/
+Precedent: false-statement #5 (2026-06-12, Fix B) resolved within-session.
+
+@audit:ok (independent honesty audit 2026-06-12, commit f69cfea: false-statement #6
+RESOLVED. `hP`/`hN` are regularity preconditions excluding the false corner `1+P/N<0`,
+NOT load-bearing bundling; corner discharged by a genuine contradiction
+`absurd (0 ≤ 1+P/N) hPN_nonneg` via `div_pos hP hN_pos`. 0 sorry / 0 residual,
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` re-confirmed.) -/
 theorem awgn_random_coding_union_bound
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
     (hP : 0 < P) (hN : (N : ℝ) ≠ 0)
@@ -1176,7 +1182,12 @@ parameter from the error target `ε` (the old `δ ≡ ε` coupling made the alia
 term false-as-framed when `3ε ≥ I`). The body takes the typical set `A` (with its
 two AEP bounds at slack `δ`) from `continuousAepGaussian_holds P N hδ hε` and the
 union-bound threshold from `awgn_random_coding_union_bound P N h_meas hε hδ hR_pos
-hslack`, threading `A`'s two bounds into the union bound. -/
+hslack`, threading `A`'s two bounds into the union bound.
+
+@audit:ok (independent honesty audit 2026-06-12, commit f69cfea: genuine modular
+composition of `continuousAepGaussian_holds` + `awgn_random_coding_union_bound`; own
+`hP`/`hN` passed through to the union bound at the call site, 0 sorry / 0 residual,
+`#print axioms` = `[propext, Classical.choice, Quot.sound]`.) -/
 @[entry_point]
 theorem awgn_avg_error_union_bound
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -1455,7 +1466,13 @@ lemmas are now sorryAx-free: `awgn_random_coding_union_bound` (false-statement #
 fix, term1 + term2 + N₀ all genuine), `continuousAepGaussian_holds` (`Walls.lean`),
 and `awgnPowerConstraintPerCodeword_holds` (`Walls.lean`). `#print axioms
 isAwgnTypicalityHypothesis` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free,
-machine-verified 2026-06-12); proof-done pending independent honesty audit. -/
+machine-verified 2026-06-12).
+
+@audit:ok (independent honesty audit 2026-06-12, commit f69cfea: proof-done CONFIRMED.
+The strict witness `hP'_pos : 0 < P'` (from `awgnPowerWitness_exists`) + `hN` are
+genuinely supplied to `awgn_random_coding_union_bound`, not fabricated from `≤`.
+0 sorry / 0 residual, `#print axioms` = `[propext, Classical.choice, Quot.sound]`
+re-confirmed by this audit.) -/
 @[entry_point]
 theorem isAwgnTypicalityHypothesis
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -2073,7 +2090,13 @@ awgn_achievability_F1_via_staged_hyps` = `[propext, Classical.choice, Quot.sound
 (sorryAx-free, machine-verified 2026-06-12).
 
 **Naming (historical artefact)**: theorem name is `_via_staged_hyps` (plural
-artefact of the pre-pivot 3-hyp form); the staged content is now in the walls. -/
+artefact of the pre-pivot 3-hyp form); the staged content is now in the walls.
+
+@audit:ok (independent honesty audit 2026-06-12, commit f69cfea: 1-line pass-through
+of `isAwgnTypicalityHypothesis`; achievability half genuine + sorryAx-free,
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` re-confirmed. Name is
+not laundering — the achievability half IS discharged via the now-genuine staged
+decomposition.) -/
 @[entry_point]
 theorem awgn_achievability_F1_via_staged_hyps
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -2117,7 +2140,15 @@ residual. `#print axioms awgn_theorem_F4_discharged_F1_via_staged` = `[propext,
 Classical.choice, Quot.sound]` (machine-verified 2026-06-12). The unused
 `h_mi_bridge` is an F-2 wiring artefact (kept for `awgn_channel_coding_theorem`
 signature consistency, not load-bearing — the body does not use it). The
-achievability half is genuine; the F-3 converse remains on its own plan (below). -/
+achievability half is genuine; the F-3 converse remains on its own plan (below).
+
+@audit:ok (independent honesty audit 2026-06-12, commit f69cfea: 1-line pass-through
+of `isAwgnTypicalityHypothesis`. `h_mi_bridge` verified NON-load-bearing — never
+referenced in the body (pure pass-through), so it carries no proof load (an unused
+hypothesis only weakens the signature, never strengthens it dishonestly).
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` re-confirmed. The F-3
+converse residual at :2102 (`plan:awgn-converse-aux-plan`) lives in `awgn_converse`,
+a separate declaration, and is out of scope for this audit.) -/
 @[entry_point]
 theorem awgn_theorem_F4_discharged_F1_via_staged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
