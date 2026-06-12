@@ -494,6 +494,21 @@ bundle. Refutation tried: `δ→0⁺` / `R→cap` keep `g > 0` for admissible `R
 statement stays alive on every boundary. Verdict: honest_residual (all 5 sorries
 `plan:`, no defect). type-check: 0 errors.
 
+**UPDATE (deep atoms c+e closure): N₀ pinned + term2 genuine for the nondegenerate
+regime.** `N₀ = ⌈log(2/ε)/g⌉` with margin `g = (1/2)log(1+P/N) − R − 3δ > 0`. The term2
+alias bound is now genuine: Q-marginal collapse (`gaussianCodebook_indepFun_codewords`
++ `indepFun_iff_map_prod_eq_prod_map_map` + the n-fold output law
+`(μXn.prod μZn).map Σ = μYn` via `arrowProdEquivProdArrow` + `gaussianReal_conv_gaussianReal`)
+gives each summand `= Q A`, then `(M−1)·Q A ≤ 2·exp(nR)·exp(−(klDiv_n − n·3δ))` and the
+bridges `klDiv_nFold_eq_nsmul` + `klDiv_perLetter_eq_capacity` give `klDiv_n = n·I` so
+`≤ 2·exp(−n·g) ≤ ε` for `n ≥ N₀`. **ONE residual sorry remains** (the degenerate corner
+`1 + P/N < 0` ⇔ `P < −N`): there `P.toNNReal = 0`, `J = Q`, `klDiv = 0`, so `hA_indep`
+is trivial and term2 is FALSE-AS-FRAMED. This corner is admissible under the current
+signature (Mathlib's `log x = log|x|` lets `(1/2)log|1+P/N| > R+3δ` hold with `1+P/N<0`).
+The 2026-06-12 audit's refutation missed it (only `δ→0⁺`/`R→cap`). Closing it needs
+`(hP : 0 < P)` / `(hN : (N:ℝ) ≠ 0)` added to the signature (both consumers already carry
+these at their call sites). See the in-body comment at the degenerate `by_cases` branch.
+
 @residual(plan:awgn-achievability-walls-discharge-plan) -/
 theorem awgn_random_coding_union_bound
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
@@ -529,15 +544,12 @@ theorem awgn_random_coding_union_bound
             ≤ ENNReal.ofReal (2 * ε) := by
   classical
   -- The threshold `N₀` is the alias-term decay threshold (depends only on
-  -- `ε, δ, R, N, P`). It is left as an honest existential placeholder together
-  -- with the alias-term bound (term2), since the genuine `klDiv_n = n·I`
-  -- identification + exp-decay construction is the remaining deep atom; pinning
-  -- `N₀` to a concrete value here would make term2 a false goal.
-  -- @residual(plan:awgn-achievability-walls-discharge-plan)
-  refine ⟨?N₀, ?_⟩
-  case N₀ =>
-    -- @residual(plan:awgn-achievability-walls-discharge-plan)
-    sorry
+  -- `ε, δ, R, N, P`). It is pinned to the value that closes the term2 decay:
+  -- the typicality margin `g = (1/2)log(1+P/N) − R − 3δ > 0` (from `hslack`),
+  -- and `N₀ = ⌈log(2/ε)/g⌉` so that `2·exp(−n·g) ≤ ε` for `n ≥ N₀`.
+  set g : ℝ := (1/2) * Real.log (1 + P / (N : ℝ)) - R - 3 * δ with hg_def
+  have hg_pos : 0 < g := by rw [hg_def]; linarith
+  refine ⟨Nat.ceil (Real.log (2 / ε) / g), ?_⟩
   intro n hn M hM_pos hM_le A hA_meas hA_mass hA_indep
   haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
   intro m
@@ -863,8 +875,311 @@ theorem awgn_random_coding_union_bound
           ∫⁻ codebook, (Wch codebook) (E2 codebook m')
             ∂(gaussianCodebook M n P.toNNReal)
         ≤ ENNReal.ofReal ε := by
-    -- @residual(plan:awgn-achievability-walls-discharge-plan)
-    sorry
+    -- per-letter marginals
+    set μXn : Measure (Fin n → ℝ) :=
+      Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal) with hμXn_def
+    set μZn : Measure (Fin n → ℝ) :=
+      Measure.pi (fun _ : Fin n => gaussianReal 0 N) with hμZn_def
+    set μYn : Measure (Fin n → ℝ) :=
+      Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N)) with hμYn_def
+    haveI : IsProbabilityMeasure μXn := by rw [hμXn_def]; infer_instance
+    haveI : IsProbabilityMeasure μZn := by rw [hμZn_def]; infer_instance
+    haveI : IsProbabilityMeasure μYn := by rw [hμYn_def]; infer_instance
+    -- ── Step O (output-marginal identity): for any measurable `B`,
+    -- `∫⁻ x, (channel x) B ∂μXn = μYn B` (the n-fold law of `X + Z`). ──
+    -- The n-fold output law `(μXn.prod μZn).map Σ = μYn`, `Σ p = fun i => p.1 i + p.2 i`,
+    -- via `arrowProdEquivProdArrow` reshape + per-coordinate Gaussian sum.
+    have hsumlaw :
+        ((μXn.prod μZn).map (fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i))
+          = μYn := by
+      set e : (Fin n → ℝ × ℝ) ≃ᵐ (Fin n → ℝ) × (Fin n → ℝ) :=
+        MeasurableEquiv.arrowProdEquivProdArrow ℝ ℝ (Fin n) with he_def
+      -- per-letter sum measure: `(gauss 0 P').prod (gauss 0 N)` pushed by `+`.
+      have hperletter : ∀ _ : Fin n,
+          ((gaussianReal 0 P.toNNReal).prod (gaussianReal 0 N)).map
+              (fun p : ℝ × ℝ => p.1 + p.2)
+            = gaussianReal 0 (P.toNNReal + N) := by
+        intro _
+        have := gaussianReal_conv_gaussianReal (m₁ := 0) (m₂ := 0)
+          (v₁ := P.toNNReal) (v₂ := N)
+        rw [zero_add] at this
+        exact this
+      -- reshape `μXn.prod μZn = (pi (gauss×gauss)).map e`.
+      have hmp := measurePreserving_arrowProdEquivProdArrow ℝ ℝ (Fin n)
+        (fun _ : Fin n => gaussianReal 0 P.toNNReal) (fun _ : Fin n => gaussianReal 0 N)
+      have hreshape :
+          μXn.prod μZn
+            = (Measure.pi (fun _ : Fin n =>
+                (gaussianReal 0 P.toNNReal).prod (gaussianReal 0 N))).map e := by
+        rw [hμXn_def, hμZn_def, he_def, ← hmp.map_eq]
+      have hsum_meas : Measurable
+          (fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i) :=
+        measurable_pi_lambda _ (fun i =>
+          ((measurable_pi_apply i).comp measurable_fst).add
+            ((measurable_pi_apply i).comp measurable_snd))
+      have hcoord_meas : Measurable (fun p : ℝ × ℝ => p.1 + p.2) :=
+        measurable_fst.add measurable_snd
+      rw [hreshape, Measure.map_map hsum_meas e.measurable]
+      -- `Σ ∘ e = fun w i => (w i).1 + (w i).2`, which `pi_map_pi` factorizes.
+      have hcomp :
+          ((fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i) ∘ e)
+            = (fun (w : Fin n → ℝ × ℝ) (i : Fin n) => (w i).1 + (w i).2) := by
+        funext w; rfl
+      rw [hcomp]
+      haveI : ∀ _ : Fin n, SigmaFinite
+          (((gaussianReal 0 P.toNNReal).prod (gaussianReal 0 N)).map
+            (fun p : ℝ × ℝ => p.1 + p.2)) := by
+        intro i; rw [hperletter i]; infer_instance
+      rw [Measure.pi_map_pi (μ := fun _ : Fin n =>
+          (gaussianReal 0 P.toNNReal).prod (gaussianReal 0 N))
+          (f := fun _ : Fin n => (fun p : ℝ × ℝ => p.1 + p.2))
+          (fun _ => hcoord_meas.aemeasurable)]
+      rw [hμYn_def]
+      congr 1
+      funext i
+      exact hperletter i
+    have houtput : ∀ B : Set (Fin n → ℝ), MeasurableSet B →
+        (∫⁻ x, (Measure.pi (fun i => awgnChannel N h_meas (x i))) B ∂μXn) = μYn B := by
+      intro B hB
+      -- per-vector channel collapse `chan x = μZn.map (x + ·)` (same as term1's `hchan`).
+      have hchan : ∀ x : Fin n → ℝ,
+          Measure.pi (fun i => awgnChannel N h_meas (x i))
+            = μZn.map (fun z i => x i + z i) := by
+        intro x
+        have hfib : ∀ i : Fin n,
+            (awgnChannel N h_meas (x i) : Measure ℝ)
+              = (gaussianReal 0 N).map (x i + ·) := by
+          intro i; rw [awgnChannel_apply, gaussianReal_map_const_add, zero_add]
+        have haem : ∀ i : Fin n, AEMeasurable (x i + · : ℝ → ℝ) (gaussianReal 0 N) :=
+          fun i => (measurable_const.add measurable_id).aemeasurable
+        haveI hσ : ∀ i : Fin n, SigmaFinite ((gaussianReal 0 N).map (x i + ·)) := by
+          intro i; rw [gaussianReal_map_const_add, zero_add]; infer_instance
+        rw [hμZn_def, Measure.pi_map_pi (μ := fun _ : Fin n => gaussianReal 0 N)
+          (f := fun i => (x i + ·)) haem]
+        congr 1; funext i; rw [hfib i]
+      -- `(chan x) B = μZn {z | (fun i => x i + z i) ∈ B}`.
+      have hshift : ∀ x : Fin n → ℝ, Measurable (fun z : Fin n → ℝ => fun i => x i + z i) := by
+        intro x; exact measurable_pi_lambda _ (fun i => measurable_const.add (measurable_pi_apply i))
+      have hchanB : ∀ x : Fin n → ℝ,
+          (Measure.pi (fun i => awgnChannel N h_meas (x i))) B
+            = μZn ((fun z : Fin n → ℝ => fun i => x i + z i) ⁻¹' B) := by
+        intro x; rw [hchan x, Measure.map_apply (hshift x) hB]
+      -- integrate over `x ~ μXn`, fold into the prod, then push by `Σ`.
+      rw [lintegral_congr hchanB]
+      have hsum_meas : Measurable
+          (fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i) :=
+        measurable_pi_lambda _ (fun i =>
+          ((measurable_pi_apply i).comp measurable_fst).add
+            ((measurable_pi_apply i).comp measurable_snd))
+      -- `∫⁻ x, μZn (section x) ∂μXn = (μXn.prod μZn) (Σ ⁻¹' B) = (map Σ) B = μYn B`.
+      have hsec_eq : ∀ x : Fin n → ℝ,
+          (fun z : Fin n → ℝ => fun i => x i + z i) ⁻¹' B
+            = Prod.mk x ⁻¹' ((fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i) ⁻¹' B) := by
+        intro x; rfl
+      rw [lintegral_congr (fun x => by rw [hsec_eq x]),
+        ← Measure.prod_apply (hsum_meas hB),
+        ← Measure.map_apply hsum_meas hB, hsumlaw]
+    -- ── Step A (2-coordinate collapse): each summand `= Q A`. ──
+    have hsummand : ∀ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
+        (∫⁻ codebook, (Wch codebook) (E2 codebook m')
+            ∂(gaussianCodebook M n P.toNNReal)) = Q A := by
+      intro m' hm'
+      have hm'_ne : m' ≠ m := (Finset.mem_erase.mp hm').1
+      -- The channel kernel `K x = Measure.pi (awgnChannel·(x i))`.
+      have hk : Measurable (fun x : Fin n → ℝ =>
+          (Measure.pi (fun i => awgnChannel N h_meas (x i)) : Measure (Fin n → ℝ))) := by
+        haveI : IsMarkovKernel (awgnChannel N h_meas) := awgnChannel.instIsMarkovKernel N h_meas
+        haveI : ∀ x : Fin n → ℝ,
+            IsProbabilityMeasure (Measure.pi (fun i => awgnChannel N h_meas (x i))) :=
+          fun x => by infer_instance
+        refine Measurable.measure_of_isPiSystem_of_isProbabilityMeasure
+          (S := Set.pi Set.univ '' Set.pi Set.univ
+                  (fun _ : Fin n => {s : Set ℝ | MeasurableSet s}))
+          (hgen := generateFrom_pi.symm) (hpi := isPiSystem_pi) ?_
+        rintro s ⟨t, ht, rfl⟩
+        simp_rw [Measure.pi_pi]
+        refine Finset.measurable_prod _ (fun i _ => ?_)
+        have hti : MeasurableSet (t i) := ht i (Set.mem_univ i)
+        exact (Kernel.measurable_coe _ hti).comp (measurable_pi_apply i)
+      let K : Kernel (Fin n → ℝ) (Fin n → ℝ) :=
+        { toFun := fun x => Measure.pi (fun i => awgnChannel N h_meas (x i))
+          measurable' := hk }
+      haveI hKmarkov : IsMarkovKernel K := by
+        refine ⟨fun x => ?_⟩
+        show IsProbabilityMeasure (Measure.pi (fun i => awgnChannel N h_meas (x i)))
+        haveI : IsMarkovKernel (awgnChannel N h_meas) := awgnChannel.instIsMarkovKernel N h_meas
+        infer_instance
+      -- 2-coordinate integrand `g2 p = (chan p.1) {y | (p.2, y) ∈ A}`.
+      set g2 : (Fin n → ℝ) × (Fin n → ℝ) → ℝ≥0∞ := fun p =>
+        (Measure.pi (fun i => awgnChannel N h_meas (p.1 i))) {y | (p.2, y) ∈ A} with hg2_def
+      -- the joint section `T = {q | (q.1.2, q.2) ∈ A}` on `((x,x'), y)`.
+      let K' : Kernel ((Fin n → ℝ) × (Fin n → ℝ)) (Fin n → ℝ) :=
+        K.comap Prod.fst measurable_fst
+      have hg2_meas : Measurable g2 := by
+        set T : Set (((Fin n → ℝ) × (Fin n → ℝ)) × (Fin n → ℝ)) :=
+          {q | (q.1.2, q.2) ∈ A} with hT_def
+        have hT_meas : MeasurableSet T := by
+          have hpair : Measurable
+              (fun q : ((Fin n → ℝ) × (Fin n → ℝ)) × (Fin n → ℝ) => (q.1.2, q.2)) :=
+            (measurable_snd.comp measurable_fst).prodMk measurable_snd
+          exact hpair hA_meas
+        -- `g2 p = K' p (Prod.mk p ⁻¹' T)`.
+        have hEq : g2 = (fun p : (Fin n → ℝ) × (Fin n → ℝ) =>
+            K' p (Prod.mk p ⁻¹' T)) := by
+          funext p; rfl
+        rw [hEq]
+        exact Kernel.measurable_kernel_prodMk_left hT_meas
+      -- Step 3: push `gaussianCodebook` forward by `c ↦ (c m, c m')` = `μXn.prod μXn`.
+      have hmap2 : (gaussianCodebook M n P.toNNReal).map
+          (fun c : Fin M → Fin n → ℝ => (c m, c m')) = μXn.prod μXn := by
+        have hindep := gaussianCodebook_indepFun_codewords M n P.toNNReal hm'_ne.symm
+        have haem_m : AEMeasurable (fun c : Fin M → Fin n → ℝ => c m)
+            (gaussianCodebook M n P.toNNReal) := (measurable_pi_apply m).aemeasurable
+        have haem_m' : AEMeasurable (fun c : Fin M → Fin n → ℝ => c m')
+            (gaussianCodebook M n P.toNNReal) := (measurable_pi_apply m').aemeasurable
+        rw [(indepFun_iff_map_prod_eq_prod_map_map haem_m haem_m').mp hindep,
+          gaussianCodebook_codeword_law M n P.toNNReal m,
+          gaussianCodebook_codeword_law M n P.toNNReal m', hμXn_def]
+      -- Step 4: collapse the codebook integral to the 2-coordinate marginal.
+      have hcollapse : (∫⁻ codebook, (Wch codebook) (E2 codebook m')
+            ∂(gaussianCodebook M n P.toNNReal))
+          = ∫⁻ p, g2 p ∂(μXn.prod μXn) := by
+        rw [← hmap2, lintegral_map hg2_meas
+          ((measurable_pi_apply m).prodMk (measurable_pi_apply m'))]
+      rw [hcollapse]
+      -- Step 5: Fubini (integrate channel input `x` first) + `houtput` + `prod_apply`.
+      rw [lintegral_prod_symm g2 hg2_meas.aemeasurable]
+      -- inner `∫⁻ x, g2 (x, x') ∂μXn = μYn {y | (x', y) ∈ A}` by `houtput`.
+      have hinner : ∀ x' : Fin n → ℝ,
+          (∫⁻ x, g2 (x, x') ∂μXn) = μYn {y | (x', y) ∈ A} := by
+        intro x'
+        have hBmeas : MeasurableSet {y : Fin n → ℝ | (x', y) ∈ A} :=
+          (measurable_const.prodMk measurable_id) hA_meas
+        exact houtput {y | (x', y) ∈ A} hBmeas
+      rw [lintegral_congr hinner]
+      -- outer `∫⁻ x', μYn {y | (x', y) ∈ A} ∂μXn = (μXn.prod μYn) A = Q A`.
+      rw [hQ_def]
+      exact (Measure.prod_apply hA_meas).symm
+    -- ── Step B (count): `∑ = (M − 1) • Q A`. ──
+    rw [Finset.sum_congr rfl hsummand, Finset.sum_const,
+      Finset.card_erase_of_mem (Finset.mem_univ m), Finset.card_univ, Fintype.card_fin]
+    -- ── Step C (decay): `(M − 1) • Q A ≤ ofReal ε`. ──
+    -- First, the nondegeneracy `(N : ℝ) ≠ 0` (else `1 + P/N = 1`, `log 1 = 0 < R + 3δ`).
+    have hN_ne : (N : ℝ) ≠ 0 := by
+      intro hN0
+      rw [hN0, div_zero, add_zero, Real.log_one, mul_zero] at hslack
+      linarith
+    have hN_pos : (0 : ℝ) < N := lt_of_le_of_ne N.coe_nonneg (fun h => hN_ne h.symm)
+    -- The per-letter capacity `I = (1/2)log(1+P/N)`, which `hslack` lower-bounds.
+    -- For the closed form `klDiv(J₁,Q₁).toReal = I` we need `0 < P`. In the
+    -- admissible (nondegenerate) regime `0 ≤ 1 + P/N` this is forced by `hslack`.
+    by_cases hPN_nonneg : 0 ≤ 1 + P / (N : ℝ)
+    · -- `0 < P`: else `P ≤ 0 ⇒ 1 + P/N ≤ 1 ⇒ log ≤ 0 < R+3δ`.
+      have hP_pos : 0 < P := by
+        by_contra hP_le
+        rw [not_lt] at hP_le
+        have hPN_le_one : 1 + P / (N : ℝ) ≤ 1 := by
+          have : P / (N : ℝ) ≤ 0 := div_nonpos_of_nonpos_of_nonneg hP_le hN_pos.le
+          linarith
+        have hlog_le : Real.log (1 + P / (N : ℝ)) ≤ 0 :=
+          Real.log_nonpos hPN_nonneg hPN_le_one
+        nlinarith [hslack]
+      -- bridges: `klDiv_n.toReal = n · klDiv(J₁,Q₁).toReal = n · I`.
+      have hI : (klDiv
+            (((gaussianReal 0 P.toNNReal).prod (gaussianReal 0 N)).map
+                (fun p : ℝ × ℝ => (p.1, p.1 + p.2)))
+            ((gaussianReal 0 P.toNNReal).prod
+              (gaussianReal 0 (P.toNNReal + N)))).toReal
+          = (1/2) * Real.log (1 + P / (N : ℝ)) :=
+        klDiv_perLetter_eq_capacity P hP_pos N hN_ne
+      have hnfold := klDiv_nFold_eq_nsmul P N (n := n)
+      -- `klDiv_n.toReal = n · I` (fold the `set J`/`set Q` literals).
+      have hkl_n : (klDiv J Q).toReal = (n : ℝ) * ((1/2) * Real.log (1 + P / (N : ℝ))) := by
+        rw [hJ_def, hQ_def, hnfold, hI]
+      -- exponent: `klDiv_n.toReal − n·3δ = n·I − n·3δ`.
+      -- `Q A ≤ ofReal(exp(−(n·I − n·3δ)))`.
+      -- numeric decay: `(M−1)·Q A ≤ exp(n·R)·exp(−(n·I−n·3δ)) = exp(−n·g) ≤ ε/2·… ≤ ε`.
+      -- `M − 1 ≤ M ≤ ⌈exp(nR)⌉ ≤ exp(nR)+1 ≤ 2·exp(nR)`.
+      have hexp_pos : (0 : ℝ) < Real.exp ((n : ℝ) * R) := Real.exp_pos _
+      have hM1_le : (M : ℝ) ≤ 2 * Real.exp ((n : ℝ) * R) := by
+        have hMle : (M : ℝ) ≤ Real.exp ((n : ℝ) * R) + 1 := by
+          have h1 : (M : ℝ) ≤ (Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) := by exact_mod_cast hM_le
+          have h2 : (Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) ≤ Real.exp ((n : ℝ) * R) + 1 :=
+            (Nat.ceil_lt_add_one hexp_pos.le).le
+          linarith
+        have h1le : (1 : ℝ) ≤ Real.exp ((n : ℝ) * R) := Real.one_le_exp (by positivity)
+        linarith
+      -- The real-number decay bound `(M−1)·exp(−(n·I−n·3δ)) ≤ ε`.
+      have hg_n : (n : ℝ) * g ≥ Real.log (2 / ε) := by
+        have h_cast : (Nat.ceil (Real.log (2 / ε) / g) : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn
+        have h_le_ceil : Real.log (2 / ε) / g ≤ (Nat.ceil (Real.log (2 / ε) / g) : ℝ) :=
+          Nat.le_ceil _
+        have hle : Real.log (2 / ε) / g ≤ (n : ℝ) := le_trans h_le_ceil h_cast
+        have := (div_le_iff₀ hg_pos).mp hle
+        linarith [this]
+      -- conclude: `(M−1) • Q A ≤ ofReal ε`.
+      -- The exp bound in `hA_indep` (after `set J`/`set Q`) is in terms of `klDiv J Q`.
+      have hbound : Q A ≤ ENNReal.ofReal
+          (Real.exp (-((klDiv J Q).toReal - (n : ℝ) * (3 * δ)))) := hA_indep
+      -- Real-number decay: `2·exp(nR)·exp(−(n·I − n·3δ)) ≤ ε`.
+      have hreal_decay :
+          2 * Real.exp ((n : ℝ) * R)
+              * Real.exp (-((klDiv J Q).toReal - (n : ℝ) * (3 * δ))) ≤ ε := by
+        rw [hkl_n]
+        -- combine the two exponentials: `exp(nR)·exp(−(n·I−n·3δ)) = exp(−n·g)`.
+        have hcombine :
+            Real.exp ((n : ℝ) * R)
+                * Real.exp (-((n : ℝ) * ((1/2) * Real.log (1 + P / (N : ℝ)))
+                    - (n : ℝ) * (3 * δ)))
+              = Real.exp (-((n : ℝ) * g)) := by
+          rw [← Real.exp_add]; congr 1; rw [hg_def]; ring
+        rw [mul_assoc, hcombine]
+        -- `2·exp(−n·g) ≤ ε ⟺ exp(−n·g) ≤ ε/2 ⟺ −n·g ≤ log(ε/2)`.
+        have hng : -((n : ℝ) * g) ≤ Real.log (ε / 2) := by
+          have hlog_eq : Real.log (2 / ε) = -Real.log (ε / 2) := by
+            rw [← Real.log_inv]; congr 1; rw [inv_div]
+          rw [hlog_eq] at hg_n
+          linarith [hg_n]
+        have hexp_le : Real.exp (-((n : ℝ) * g)) ≤ ε / 2 := by
+          have := Real.exp_le_exp.mpr hng
+          rwa [Real.exp_log (by positivity)] at this
+        nlinarith [hexp_le, Real.exp_pos (-((n : ℝ) * g))]
+      -- ENNReal: `(M−1) • Q A = ↑(M−1) * Q A ≤ ofReal(2·exp(nR)) * ofReal(exp(...)) ≤ ofReal ε`.
+      calc (M - 1) • Q A
+          = ((M - 1 : ℕ) : ℝ≥0∞) * Q A := by rw [nsmul_eq_mul]
+        _ ≤ ENNReal.ofReal (2 * Real.exp ((n : ℝ) * R)) * Q A := by
+            gcongr
+            calc ((M - 1 : ℕ) : ℝ≥0∞) ≤ ((M : ℕ) : ℝ≥0∞) := by
+                  exact_mod_cast Nat.sub_le M 1
+              _ = ENNReal.ofReal (M : ℝ) := by rw [ENNReal.ofReal_natCast]
+              _ ≤ ENNReal.ofReal (2 * Real.exp ((n : ℝ) * R)) := by
+                  apply ENNReal.ofReal_le_ofReal
+                  linarith [hM1_le]
+        _ ≤ ENNReal.ofReal (2 * Real.exp ((n : ℝ) * R))
+              * ENNReal.ofReal (Real.exp (-((klDiv J Q).toReal - (n : ℝ) * (3 * δ)))) := by
+            gcongr
+        _ = ENNReal.ofReal (2 * Real.exp ((n : ℝ) * R)
+              * Real.exp (-((klDiv J Q).toReal - (n : ℝ) * (3 * δ)))) := by
+            rw [← ENNReal.ofReal_mul (by positivity)]
+        _ ≤ ENNReal.ofReal ε := ENNReal.ofReal_le_ofReal hreal_decay
+    · -- DEGENERATE CORNER `1 + P/N < 0` (i.e. `P < −N`, so `P.toNNReal = 0`): here
+      -- `μXn = pi (gaussianReal 0 0) = pi (dirac 0)`, `μYn = pi (gaussianReal 0 N) = μZn`,
+      -- and `J = (μXn.prod μZn).map Φ = μXn.prod μZn = Q` (the input is a.s. 0), hence
+      -- `klDiv J Q = klDiv_self = 0`. Then the supplied `hA_indep` is only the trivial
+      -- bound `Q A ≤ ofReal(exp(n·3δ)) ≥ 1`, so `(M−1)·Q A` does NOT decay and the term2
+      -- goal is **FALSE-AS-FRAMED** here (e.g. `Q A ≥ 1−ε` is consistent, making term2
+      -- ≥ `(M−1)(1−ε) ≫ ε`). This corner is satisfiable under the *current* signature
+      -- because `hslack` uses Mathlib's `Real.log x = log|x|` convention, so
+      -- `(1/2)log|1+P/N|` can exceed `R+3δ` even with `1+P/N < 0`. Closing it honestly
+      -- is impossible without strengthening the signature with `(hP : 0 < P)` and
+      -- `(hN : (N:ℝ) ≠ 0)` (excludes this corner; ripples to the 2 consumers
+      -- `awgn_avg_error_union_bound` / `isAwgnTypicalityHypothesis`, both of which already
+      -- carry `hP`/`hN` at their call sites). Left as an honest sorry: the body cannot be
+      -- discharged as the conclusion is false in this regime. NOTE FOR ORCHESTRATOR: this
+      -- is a residual false-statement in the *existing* signature (the 2026-06-12 audit's
+      -- refutation tried only `δ→0⁺`/`R→cap`, missing the `1+P/N<0` abs-convention corner).
+      -- @residual(plan:awgn-achievability-walls-discharge-plan)
+      sorry
   -- ── Combine: `≤ ε + ε = 2ε`. ──
   calc ∫⁻ codebook, _ ∂_
       ≤ (∫⁻ codebook, (Wch codebook) (E1 codebook)
