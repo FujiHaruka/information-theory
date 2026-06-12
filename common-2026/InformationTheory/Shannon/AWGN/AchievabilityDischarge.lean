@@ -1,9 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.AWGN.Basic
 import InformationTheory.Shannon.AWGN.Walls
-import InformationTheory.Shannon.AWGN.Achievability
-import InformationTheory.Shannon.AWGN.Main
-import InformationTheory.Shannon.AWGN.F1Discharge
 import InformationTheory.Shannon.DifferentialEntropy
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic
@@ -17,6 +14,15 @@ Cover-Thomas 9.2 (Theorem 9.1.1 achievability) の Lean 化。親 plan
 集約する。**全 Phase 埋め済 + sorryAx-free** (2026-06-12 false-statement #6 fix で
 最後の degenerate-corner sorry を `hP`/`hN` 追加で解消)。
 
+**2026-06-12 import 反転 wiring**: headline `awgn_achievability`
+(`Achievability.lean`) が本 file の `isAwgnTypicalityHypothesis` を直接呼ぶ形に
+なったため (Achievability が本 file を import する向きへ反転)、本 file は上流
+(Achievability / Main / F1Discharge) を import しなくなった。旧 F-1 wrapper
+`awgn_achievability_F1_via_staged_hyps` は headline discharge により superseded で
+**削除** (git 履歴に残存)、`awgn_theorem_F4_discharged_F1_via_staged` は
+`F1Discharge.lean` へ移設 (body を discharge 済 headline `awgn_achievability` 呼出し
+に再配線)。本 file の publish 対象は `isAwgnTypicalityHypothesis` (genuine assembly)。
+
 ## Phase 構成 (all genuine, 0 sorry in this file)
 
 * Phase A — `gaussianCodebook` 測度 + IndepFun + marginal lemma
@@ -25,7 +31,8 @@ Cover-Thomas 9.2 (Theorem 9.1.1 achievability) の Lean 化。親 plan
 * Phase C — joint typical decoder + δ-separated union bound
   (`awgn_random_coding_union_bound`、term1 / term2 / N₀ 全 genuine)
 * Phase D — expurgation + AwgnCode 抽出
-* Phase E — `isAwgnTypicalityHypothesis` 統合 + main wrapper (sorryAx-free)
+* Phase E — `isAwgnTypicalityHypothesis` 統合 (sorryAx-free)。旧 main wrapper 2 本は
+  2026-06-12 import 反転で削除 / `F1Discharge.lean` へ移設 (上記参照)
 
 ## 判断確定 (`docs/shannon/awgn-achievability-typicality-mathlib-inventory.md`)
 
@@ -2073,100 +2080,5 @@ theorem isAwgnTypicalityHypothesis
   have h5 : 5 * ε_d2 = ε₁ := by
     show 5 * (ε₁ / 5) = ε₁; ring
   linarith [h_awg, hε₁_le_ε]
-
-/-- **`awgn_achievability` F-1 wrapper** — `isAwgnTypicalityHypothesis`
-(580-line genuine assembly) を直接呼出す F-1 discharge wrapper (Phase E-2 /
-2026-05-27 F-1/F-3 peer migration / 2026-05-28 AWGN M5 Phase 3-β: bundle hyp
-`IsAwgnRandomCodingFeasible` が削除され、`isAwgnTypicalityHypothesis` が
-shared sorry 補題 (`AwgnWalls.lean`) + `awgnPowerWitness_exists` を内部で
-呼ぶ形になったため、本 wrapper の `h_feasible` 引数も消失)。
-
-**Residual status (2026-06-12 false-statement #6 fix)**: this wrapper no longer
-carries a bundled feasibility hypothesis. It is a 1-line pass-through of
-`isAwgnTypicalityHypothesis`, which is now sorryAx-free (its transitively consumed
-lemmas `awgn_random_coding_union_bound` / `continuousAepGaussian_holds` /
-`awgnPowerConstraintPerCodeword_holds` are all genuine). `#print axioms
-awgn_achievability_F1_via_staged_hyps` = `[propext, Classical.choice, Quot.sound]`
-(sorryAx-free, machine-verified 2026-06-12).
-
-**Naming (historical artefact)**: theorem name is `_via_staged_hyps` (plural
-artefact of the pre-pivot 3-hyp form); the staged content is now in the walls.
-
-@audit:ok (independent honesty audit 2026-06-12, commit f69cfea: 1-line pass-through
-of `isAwgnTypicalityHypothesis`; achievability half genuine + sorryAx-free,
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` re-confirmed. Name is
-not laundering — the achievability half IS discharged via the now-genuine staged
-decomposition.) -/
-@[entry_point]
-theorem awgn_achievability_F1_via_staged_hyps
-    (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
-    (h_meas : IsAwgnChannelMeasurable N)
-    {R : ℝ} (hR_pos : 0 < R) (hR : R < (1/2) * Real.log (1 + P / (N : ℝ)))
-    {ε : ℝ} (hε : 0 < ε) :
-    ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →
-      ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M) (c : AwgnCode M n P),
-        ∀ m, (c.toCode.errorProbAt (awgnChannel N h_meas) m).toReal < ε :=
-  isAwgnTypicalityHypothesis P hP N hN h_meas hR_pos hR hε
-
-/-- **Main theorem F-4 discharged, F-1 wrapper** —
-`awgn_channel_coding_theorem` の `h_meas` (F-4 / `isAwgnChannelMeasurable`) を
-**genuinely 埋め**、F-1 achievability を `isAwgnTypicalityHypothesis` (580-line
-genuine assembly) 経由で再 publish (Phase 2 pivot 2026-05-24 / 2026-05-27
-F-1/F-3 peer migration / 2026-05-28 AWGN M5 Phase 3-β: bundle hyp
-`IsAwgnRandomCodingFeasible` 削除に伴い `h_feasible` 引数が消失、achievability
-の内容は `Walls.lean` の AEP/power 補題 + `awgnPowerWitness_exists` + 本 file の
-union bound に分散、いずれも現在 sorryAx-free)。
-
-**残 hyp** (docstring に明示、CORE doctrine 透明性):
-- `h_mi_bridge` (F-2、mutual info bridge、未起草 plan) — 本 wrapper body では
-  未使用だが、`awgn_channel_coding_theorem` の F-2 wiring 整合のため signature
-  に残置 (`set_option linter.unusedVariables false`)。
-
-F-3 converse は `awgn_converse` 内の `sorry + @residual(plan:awgn-converse-aux-plan)`
-に defer。本 wrapper の signature には現れないが、`awgn_channel_coding_theorem`
-は achievability half のみを述べるため converse 側は別経路 (`awgn_converse`) で
-独立に publish される構造に変更なし。
-
-**Naming (historical artefact)**: theorem name is
-`awgn_theorem_F4_discharged_F1_via_staged`. F-4 genuinely discharged
-(`isAwgnChannelMeasurable N` is concrete); the F-1 staged content now lives in
-the achievability decomposition (`awgn_random_coding_union_bound` /
-`awgnPowerConstraintPerCodeword_holds` / `continuousAepGaussian_holds`) rather
-than a bundle hyp on this wrapper.
-
-**Residual status (2026-06-12 false-statement #6 fix)**: 1-line pass-through of
-`isAwgnTypicalityHypothesis`, which is now sorryAx-free; this wrapper inherits no
-residual. `#print axioms awgn_theorem_F4_discharged_F1_via_staged` = `[propext,
-Classical.choice, Quot.sound]` (machine-verified 2026-06-12). The unused
-`h_mi_bridge` is an F-2 wiring artefact (kept for `awgn_channel_coding_theorem`
-signature consistency, not load-bearing — the body does not use it). The
-achievability half is genuine; the F-3 converse remains on its own plan (below).
-
-@audit:ok (independent honesty audit 2026-06-12, commit f69cfea: 1-line pass-through
-of `isAwgnTypicalityHypothesis`. `h_mi_bridge` verified NON-load-bearing — never
-referenced in the body (pure pass-through), so it carries no proof load (an unused
-hypothesis only weakens the signature, never strengthens it dishonestly).
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` re-confirmed. The F-3
-converse residual at :2102 (`plan:awgn-converse-aux-plan`) lives in `awgn_converse`,
-a separate declaration, and is out of scope for this audit.) -/
-@[entry_point]
-theorem awgn_theorem_F4_discharged_F1_via_staged
-    (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
-    (h_mi_bridge :
-        (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
-            (gaussianReal 0 P.toNNReal)
-            (awgnChannel N (isAwgnChannelMeasurable N))).toReal
-          = InformationTheory.Shannon.differentialEntropy
-              (gaussianReal 0 (P.toNNReal + N))
-            - InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N))
-    {R : ℝ} (hR_pos : 0 < R) (hR_lt_C : R < (1/2) * Real.log (1 + P / (N : ℝ)))
-    {ε : ℝ} (hε : 0 < ε) :
-    ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →
-      ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
-        (c : AwgnCode M n P),
-          ∀ m, (c.toCode.errorProbAt
-                  (awgnChannel N (isAwgnChannelMeasurable N)) m).toReal < ε :=
-  isAwgnTypicalityHypothesis P hP N hN (isAwgnChannelMeasurable N)
-    hR_pos hR_lt_C hε
 
 end InformationTheory.Shannon.AWGN

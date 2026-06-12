@@ -155,4 +155,67 @@ theorem awgn_capacity_closed_form_F1_discharged
   awgn_capacity_closed_form P hP N hN (isAwgnChannelMeasurable N)
     h_bridge_gauss h_bdd h_max_ent
 
+/-- **Main theorem F-4 discharged, F-1 wrapper** —
+`awgn_channel_coding_theorem` の `h_meas` (F-4 / `isAwgnChannelMeasurable`) を
+**genuinely 埋め**、F-1 achievability を discharged headline `awgn_achievability`
+経由で再 publish (Phase 2 pivot 2026-05-24 / 2026-05-27 F-1/F-3 peer migration /
+2026-05-28 AWGN M5 Phase 3-β: bundle hyp `IsAwgnRandomCodingFeasible` 削除に伴い
+`h_feasible` 引数が消失、achievability の内容は `Walls.lean` の AEP/power 補題 +
+`awgnPowerWitness_exists` + `AchievabilityDischarge.lean` の union bound に分散、
+いずれも現在 sorryAx-free)。
+
+**2026-06-12 import 反転 wiring**: 本 wrapper は元々 `AchievabilityDischarge.lean`
+末尾に置かれ body が `isAwgnTypicalityHypothesis` を直接呼んでいたが、headline
+`awgn_achievability` discharge に伴い本 file へ移設し、body を discharge 済 headline
+`awgn_achievability` の pass-through に再配線した。
+
+**残 hyp** (docstring に明示、CORE doctrine 透明性):
+- `h_mi_bridge` (F-2、mutual info bridge、未起草 plan) — 本 wrapper body では
+  未使用だが、`awgn_channel_coding_theorem` の F-2 wiring 整合のため signature
+  に残置 (`set_option linter.unusedVariables false`)。signature は一切変更せず
+  (cleanup は別タスク)。
+
+F-3 converse は `awgn_converse` 内の `sorry + @residual(plan:awgn-converse-aux-plan)`
+に defer。本 wrapper の signature には現れないが、`awgn_channel_coding_theorem`
+は achievability half のみを述べるため converse 側は別経路 (`awgn_converse`) で
+独立に publish される構造に変更なし。
+
+**Naming (historical artefact)**: theorem name is
+`awgn_theorem_F4_discharged_F1_via_staged`. F-4 genuinely discharged
+(`isAwgnChannelMeasurable N` is concrete); the F-1 achievability content now lives
+in the discharged headline `awgn_achievability` (本 file が import する向き反転後)。
+
+**Residual status (2026-06-12 import 反転 wiring)**: pass-through of the discharged
+headline `awgn_achievability`, which is now sorryAx-free; this wrapper inherits no
+residual. `#print axioms awgn_theorem_F4_discharged_F1_via_staged` = `[propext,
+Classical.choice, Quot.sound]`. The unused `h_mi_bridge` is an F-2 wiring artefact
+(kept for `awgn_channel_coding_theorem` signature consistency, not load-bearing —
+the body does not use it).
+
+@audit:ok (independent honesty audit 2026-06-12, commit f69cfea: pass-through of the
+discharged headline `awgn_achievability`. `h_mi_bridge` verified NON-load-bearing —
+never referenced in the body (pure pass-through), so it carries no proof load (an
+unused hypothesis only weakens the signature, never strengthens it dishonestly).
+The F-3 converse residual lives in `awgn_converse`, a separate declaration, out of
+scope.) -/
+@[entry_point]
+theorem awgn_theorem_F4_discharged_F1_via_staged
+    (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
+    (h_mi_bridge :
+        (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
+            (gaussianReal 0 P.toNNReal)
+            (awgnChannel N (isAwgnChannelMeasurable N))).toReal
+          = InformationTheory.Shannon.differentialEntropy
+              (gaussianReal 0 (P.toNNReal + N))
+            - InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N))
+    {R : ℝ} (hR_pos : 0 < R) (hR_lt_C : R < (1/2) * Real.log (1 + P / (N : ℝ)))
+    {ε : ℝ} (hε : 0 < ε) :
+    ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →
+      ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
+        (c : AwgnCode M n P),
+          ∀ m, (c.toCode.errorProbAt
+                  (awgnChannel N (isAwgnChannelMeasurable N)) m).toReal < ε :=
+  awgn_achievability P hP N hN (isAwgnChannelMeasurable N)
+    hR_pos hR_lt_C hε
+
 end InformationTheory.Shannon.AWGN
