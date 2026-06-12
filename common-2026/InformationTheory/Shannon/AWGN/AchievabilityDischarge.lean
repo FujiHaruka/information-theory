@@ -773,8 +773,82 @@ theorem awgn_random_coding_union_bound
     rw [hpt, ← lintegral_map hf1_meas (measurable_pi_apply m),
       gaussianCodebook_codeword_law M n P.toNNReal m]
     -- Remaining: the joint marginal identity `∫ f1 dμX = J Aᶜ ≤ ε`.
-    -- @residual(plan:awgn-achievability-walls-discharge-plan)
-    sorry
+    -- ── Abbreviations for the marginals and the joint map `Φ`. ──
+    set μX : Measure (Fin n → ℝ) := Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)
+      with hμX_def
+    set μZ : Measure (Fin n → ℝ) := Measure.pi (fun _ : Fin n => gaussianReal 0 N)
+      with hμZ_def
+    set Φ : (Fin n → ℝ) × (Fin n → ℝ) → (Fin n → ℝ) × (Fin n → ℝ) :=
+      fun p => (p.1, fun i => p.1 i + p.2 i) with hΦ_def
+    -- `Φ` is measurable.
+    have hΦ_meas : Measurable Φ := by
+      rw [hΦ_def]
+      refine Measurable.prodMk measurable_fst ?_
+      refine measurable_pi_lambda _ (fun i => ?_)
+      exact ((measurable_pi_apply i).comp measurable_fst).add
+        ((measurable_pi_apply i).comp measurable_snd)
+    -- The section set `{y | (x, y) ∉ A} = Prod.mk x ⁻¹' Aᶜ`.
+    have hsec : ∀ x : Fin n → ℝ, {y : Fin n → ℝ | (x, y) ∉ A} = Prod.mk x ⁻¹' Aᶜ := by
+      intro x
+      ext y
+      simp [Set.mem_preimage, Set.mem_compl_iff]
+    -- Per-vector channel collapse: `Measure.pi (awgnChannel · (x i)) = μZ.map (x + ·)`.
+    have hchan : ∀ x : Fin n → ℝ,
+        Measure.pi (fun i => awgnChannel N h_meas (x i))
+          = μZ.map (fun z i => x i + z i) := by
+      intro x
+      -- Each fibre: `awgnChannel · (x i) = gaussianReal (x i) N = (gaussianReal 0 N).map (x i + ·)`.
+      have hfib : ∀ i : Fin n,
+          (awgnChannel N h_meas (x i) : Measure ℝ)
+            = (gaussianReal 0 N).map (x i + ·) := by
+        intro i
+        rw [awgnChannel_apply, gaussianReal_map_const_add, zero_add]
+      -- AEMeasurable of each shift map.
+      have haem : ∀ i : Fin n, AEMeasurable (x i + · : ℝ → ℝ) (gaussianReal 0 N) :=
+        fun i => (measurable_const.add measurable_id).aemeasurable
+      -- SigmaFinite of each pushforward (it equals `gaussianReal (x i) N`, a prob measure).
+      haveI hσ : ∀ i : Fin n, SigmaFinite ((gaussianReal 0 N).map (x i + ·)) := by
+        intro i
+        rw [gaussianReal_map_const_add, zero_add]
+        infer_instance
+      rw [hμZ_def, Measure.pi_map_pi (μ := fun _ : Fin n => gaussianReal 0 N)
+        (f := fun i => (x i + ·)) haem]
+      congr 1
+      funext i
+      rw [hfib i]
+    -- Pointwise: `f1 x = μZ (Prod.mk x ⁻¹' (Φ ⁻¹' Aᶜ))`.
+    have hf1_eq : ∀ x : Fin n → ℝ,
+        f1 x = μZ (Prod.mk x ⁻¹' (Φ ⁻¹' Aᶜ)) := by
+      intro x
+      show (Measure.pi (fun i => awgnChannel N h_meas (x i))) {y | (x, y) ∉ A}
+        = μZ (Prod.mk x ⁻¹' (Φ ⁻¹' Aᶜ))
+      rw [hsec x, hchan x]
+      have hshift : Measurable (fun z : Fin n → ℝ => fun i => x i + z i) := by
+        refine measurable_pi_lambda _ (fun i => ?_)
+        exact (measurable_const).add ((measurable_pi_apply i))
+      rw [Measure.map_apply hshift (hA_meas.compl.preimage measurable_prodMk_left)]
+      -- Section sets coincide.
+      rfl
+    -- The integral identity: `∫⁻ x, f1 x ∂μX = J Aᶜ`.
+    have hint_eq : (∫⁻ x, f1 x ∂μX) = J Aᶜ := by
+      have hΦA_meas : MeasurableSet (Φ ⁻¹' Aᶜ) := hΦ_meas hA_meas.compl
+      rw [lintegral_congr hf1_eq, hJ_def,
+        Measure.map_apply hΦ_meas hA_meas.compl, Measure.prod_apply hΦA_meas]
+    -- The mass bound: `J Aᶜ ≤ ENNReal.ofReal ε`.
+    have hmass : J Aᶜ ≤ ENNReal.ofReal ε := by
+      -- `J` is a probability measure (pushforward of a product of prob measures).
+      haveI hJ_prob : IsProbabilityMeasure J := by
+        rw [hJ_def]
+        exact Measure.isProbabilityMeasure_map hΦ_meas.aemeasurable
+      calc J Aᶜ = 1 - J A := prob_compl_eq_one_sub hA_meas
+        _ ≤ 1 - ENNReal.ofReal (1 - ε) := tsub_le_tsub_left hA_mass 1
+        _ ≤ ENNReal.ofReal ε := by
+            rw [tsub_le_iff_left]
+            calc (1 : ℝ≥0∞) = ENNReal.ofReal ((1 - ε) + ε) := by
+                  rw [sub_add_cancel, ENNReal.ofReal_one]
+              _ ≤ ENNReal.ofReal (1 - ε) + ENNReal.ofReal ε := ENNReal.ofReal_add_le
+    rw [hint_eq]
+    exact hmass
   -- ── Atom 3: second (alias) term `∑_{m'≠m} ∫ Wch(E2 m') = (M−1)·Q A ≤ ε`. ──
   -- The remaining content is (a) the **Q-marginal collapse** `∑_{m'≠m} ∫ Wch(E2 m')
   -- = (M−1)·Q A` (m'≠m ⟹ codebook m' ⊥ codebook m, the product law `Q`; same
