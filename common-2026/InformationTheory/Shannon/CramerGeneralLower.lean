@@ -9,7 +9,7 @@ This module relocates the **root B** Cramér lower-bound chain
 CLT-boundary headline `cramer_lower_boundary_unconditional`
 (`CramerCltBoundaryClosure.lean`, sorryAx-free).
 
-The chain previously lived in `InformationTheory/Draft/Shannon/Cramer.lean`,
+The chain previously lived in `InformationTheory/Shannon/Cramer/Cramer.lean`,
 upstream of the headline.  Discharging `cramer_lower` against the headline there
 is impossible: the transitive import
 `CramerCltBoundaryClosure → CramerBoundaryUpstream → LC2DischargeExt →

@@ -18,7 +18,7 @@ differential entropies. The identity is **not AWGN-specific**: it holds for any
 Markov channel `W : Channel ℝ ℝ` and input law `p`.
 
 This is the AWGN-independent generic core, relocated here (2026-06-11) from
-`InformationTheory/Draft/Shannon/ContChannelMIDecomp.lean` so that it lives
+`InformationTheory/Shannon/AWGN/ContChannelMIDecomp.lean` so that it lives
 **upstream** of the AWGN converse chain (`AWGN.Converse`), breaking the import cycle
 that previously prevented the per-letter MI bridge
 (`awgn_per_letter_mi_bridge_genuine`) from reusing it. The original file imports this

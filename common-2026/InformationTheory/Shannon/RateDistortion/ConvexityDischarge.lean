@@ -13,7 +13,7 @@ import Mathlib.InformationTheory.KullbackLeibler.KLFun
 
 Step A〜E の補題群および主定理 `rateDistortionFunction_convexOn_pmf` は
 すべて非参照だったため orphan として削除された。実体の凸性主定理は
-`InformationTheory/Draft/Shannon/RateDistortionConvexity.lean` 側の
+`InformationTheory/Shannon/RateDistortion/Convexity.lean` 側の
 `rateDistortionFunction_convexOn` を参照のこと。
 -/
 

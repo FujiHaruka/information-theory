@@ -57,7 +57,7 @@ open scoped ENNReal NNReal BigOperators Topology
 `(perLetterMI h_meas c i).toReal = h(Y_i) − h(𝒩(0,N))` を、generic continuous-channel
 MI chain rule の genuine asset
 `ChannelCoding.mutualInfoOfChannel_toReal_eq_diffEntropy_sub`
-(`InformationTheory/Draft/Shannon/ContChannelMIDecomp.lean`、2026-05-28 genuine、
+(`InformationTheory/Shannon/AWGN/ContChannelMIDecomp.lean`、2026-05-28 genuine、
 旧 `wall:awgn-mi-decomp` CLOSED) に乗せて閉じる。
 
 経路:

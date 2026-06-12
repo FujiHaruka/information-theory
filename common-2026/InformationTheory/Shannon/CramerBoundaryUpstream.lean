@@ -7,9 +7,9 @@ import InformationTheory.Meta.EntryPoint
 # Cramér boundary-closure upstream module (cycle-break hoist target)
 
 This file hoists the `IsMeasureInfinitePiTiltedEq` predicate (formerly in
-`InformationTheory/Draft/Shannon/CramerLC2PhaseC.lean`) together with the seven
+`InformationTheory/Shannon/Cramer/LC2PhaseC.lean`) together with the seven
 Phase-2/3/4 change-of-measure / tilted-LLN-window theorems (formerly in
-`InformationTheory/Draft/Shannon/InfinitePiTiltedChangeOfMeasure.lean`) into a
+`InformationTheory/Shannon/Cramer/InfinitePiTiltedChangeOfMeasure.lean`) into a
 single **upstream** module that does NOT import `CramerLC2PhaseC.lean`.
 
 ## Why this module exists (import-cycle break)
