@@ -130,7 +130,105 @@ theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
                     ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
                       (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))))).toReal
                   - (n : ℝ) * (3 * ε)))) := by
-  sorry
+  intro ε hε
+  classical
+  -- Per-letter measures (abbreviating `P' := P.toNNReal`).
+  set μX : Measure ℝ := gaussianReal 0 P.toNNReal with hμX_def
+  set μZ : Measure ℝ := gaussianReal 0 N with hμZ_def
+  set μY : Measure ℝ := gaussianReal 0 (P.toNNReal + N) with hμY_def
+  -- per-letter joint law of `(X, X+Z)` and product of marginals
+  set J₁ : Measure (ℝ × ℝ) := (μX.prod μZ).map (fun p => (p.1, p.1 + p.2)) with hJ₁_def
+  set Q₁ : Measure (ℝ × ℝ) := μX.prod μY with hQ₁_def
+  -- per-letter info density `φ = log dJ₁/dQ₁` (= `llr J₁ Q₁`)
+  set φ : ℝ × ℝ → ℝ := fun p => Real.log ((J₁.rnDeriv Q₁ p).toReal) with hφ_def
+  haveI : IsProbabilityMeasure J₁ := by
+    rw [hJ₁_def]
+    exact Measure.isProbabilityMeasure_map
+      (measurable_fst.prodMk (measurable_fst.add measurable_snd)).aemeasurable
+  haveI : IsProbabilityMeasure Q₁ := by rw [hQ₁_def]; infer_instance
+  -- `MemLp φ 2 J₁`: the info density is a quadratic polynomial in `(x, y)` (the
+  -- difference of two Gaussian log-densities, nondegenerate case `P', N > 0`; in the
+  -- degenerate case `J₁ ⊀ Q₁` so `φ = 0` a.e.), hence lies in L² of the joint law.
+  -- @residual(plan:awgn-achievability-walls-discharge-plan)
+  have hφ_memLp : MemLp φ 2 J₁ := by
+    sorry
+  -- Engine: choose `N₀` so the empirical-mean typical set has mass `≥ 1 - ε`.
+  obtain ⟨N₀, hN₀⟩ :=
+    pi_empirical_mean_typical_mass J₁ hφ_memLp (ε := ε) (η := ε) hε hε
+  refine ⟨max N₀ 1, fun n hn => ?_⟩
+  have hn0 : 0 < n := lt_of_lt_of_le Nat.one_pos (le_of_max_le_right hn)
+  -- The reshaping equiv `(Fin n → ℝ × ℝ) ≃ᵐ (Fin n → ℝ) × (Fin n → ℝ)`.
+  set e : (Fin n → ℝ × ℝ) ≃ᵐ (Fin n → ℝ) × (Fin n → ℝ) :=
+    MeasurableEquiv.arrowProdEquivProdArrow ℝ ℝ (Fin n) with he_def
+  -- Engine typical set on `Fin n → ℝ × ℝ`.
+  set B : Set (Fin n → ℝ × ℝ) :=
+    {w : Fin n → ℝ × ℝ | |(∑ i, φ (w i)) / (n : ℝ) - J₁[φ]| < ε} with hB_def
+  -- The signature's set `A` is `B` pulled back through `e.symm`.
+  -- `φ` is measurable (log ∘ toReal ∘ rnDeriv), hence `B` is measurable.
+  have hφ_meas : Measurable φ := by
+    rw [hφ_def]
+    exact Real.measurable_log.comp (Measure.measurable_rnDeriv J₁ Q₁).ennreal_toReal
+  have hB_meas : MeasurableSet B := by
+    rw [hB_def]
+    have hsum : Measurable (fun w : Fin n → ℝ × ℝ => (∑ i, φ (w i)) / (n : ℝ) - J₁[φ]) :=
+      ((Finset.measurable_sum _
+        (fun i _ => hφ_meas.comp (measurable_pi_apply i))).div_const _).sub_const _
+    have hT : MeasurableSet {r : ℝ | |r| < ε} :=
+      measurableSet_lt (measurable_norm.comp measurable_id) measurable_const
+    exact hsum hT
+  -- **Joint measure-identity**: the signature's joint law equals `(Measure.pi J₁).map e`.
+  -- `g ∘ e = e ∘ H` where `g (x,z) = (x, x+z)` (the AWGN map) and `H` applies
+  -- `(a,b) ↦ (a, a+b)` componentwise; reshape via `arrowProdEquivProdArrow` + `pi_map_pi`.
+  set g : (Fin n → ℝ) × (Fin n → ℝ) → (Fin n → ℝ) × (Fin n → ℝ) :=
+    fun p => (p.1, fun i => p.1 i + p.2 i) with hg_def
+  set h₁ : ℝ × ℝ → ℝ × ℝ := fun p => (p.1, p.1 + p.2) with hh₁_def
+  set H : (Fin n → ℝ × ℝ) → (Fin n → ℝ × ℝ) := fun w i => h₁ (w i) with hH_def
+  have hg_meas : Measurable g := by
+    rw [hg_def]; exact measurable_fst.prodMk (measurable_pi_lambda _
+      (fun i => (measurable_pi_apply i).comp measurable_fst |>.add
+        ((measurable_pi_apply i).comp measurable_snd)))
+  have hh₁_meas : Measurable h₁ := by
+    rw [hh₁_def]; exact measurable_fst.prodMk (measurable_fst.add measurable_snd)
+  have hH_meas : Measurable H :=
+    measurable_pi_lambda _ (fun i => hh₁_meas.comp (measurable_pi_apply i))
+  have hJ_eq :
+      ((Measure.pi (fun _ : Fin n => μX)).prod (Measure.pi (fun _ : Fin n => μZ))).map g
+        = (Measure.pi (fun _ : Fin n => J₁)).map e := by
+    -- reshape `(pi μX).prod (pi μZ) = (pi (μX × μZ)).map e`
+    have hmp := measurePreserving_arrowProdEquivProdArrow ℝ ℝ (Fin n)
+      (fun _ : Fin n => μX) (fun _ : Fin n => μZ)
+    have hprod_reshape :
+        (Measure.pi (fun _ : Fin n => μX)).prod (Measure.pi (fun _ : Fin n => μZ))
+          = (Measure.pi (fun _ : Fin n => μX.prod μZ)).map e := by
+      rw [he_def, ← hmp.map_eq]
+    -- `pi J₁ = (pi (μX × μZ)).map H` via `pi_map_pi`
+    have hpiJ₁ :
+        Measure.pi (fun _ : Fin n => J₁)
+          = (Measure.pi (fun _ : Fin n => μX.prod μZ)).map H := by
+      rw [hH_def, hJ₁_def]
+      rw [Measure.pi_map_pi (f := fun _ : Fin n => h₁) (fun _ => hh₁_meas.aemeasurable)]
+    rw [hprod_reshape, hpiJ₁, Measure.map_map hg_meas e.measurable,
+      Measure.map_map e.measurable hH_meas]
+    -- `g ∘ e = e ∘ H` pointwise (the two pushforward maps coincide)
+    rfl
+  refine ⟨e.symm ⁻¹' B, ?_, ?_, ?_⟩
+  · -- measurability of `A`
+    exact e.symm.measurable hB_meas
+  · -- (i) joint mass `≥ 1 - ε` via the engine + the joint measure-identity
+    rw [hJ_eq, Measure.map_apply e.measurable (e.symm.measurable hB_meas)]
+    have he_preim : e ⁻¹' (e.symm ⁻¹' B) = B := by
+      ext w; simp [Set.mem_preimage, MeasurableEquiv.symm_apply_apply]
+    rw [he_preim]
+    exact hN₀ (le_of_max_le_left hn)
+  · -- (iii) product mass `≤ exp(−(klDiv_n − n·3ε))` via change of measure.
+    -- On `A`, `∑φ > n(J₁[φ] − ε)`; the tensorized RN-derivative `dJ/dQ = exp(∑φ)`
+    -- gives `Q(A) = ∫_A exp(−∑φ) dJ ≤ exp(−n(J₁[φ] − ε)) · J(A) ≤ exp(−(klDiv_n − n·3ε))`,
+    -- using `J₁[φ] = (klDiv J₁ Q₁).toReal` and `klDiv_n = n · klDiv(J₁,Q₁)` (the latter from
+    -- `klDiv_pi_eq_sum` / `klDiv_prod_eq_add` after the `arrowProdEquivProdArrow` reshape, both
+    -- probability measures). The RN-derivative tensorization + `setLIntegral` change of measure
+    -- is the genuine Mathlib-absent wiring core.
+    -- @residual(plan:awgn-achievability-walls-discharge-plan)
+    sorry
 
 /-! ## Wall 2 — `awgn-random-coding-bound` -/
 
