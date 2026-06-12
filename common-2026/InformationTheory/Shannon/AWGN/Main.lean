@@ -10,10 +10,14 @@ Cover-Thomas Ch.9 (Theorem 9.1.1 + 9.1.2) AWGN noisy channel coding theorem の
 統合 publish。Achievability + Converse + closed-form capacity の sandwich を
 1 つの signature に集約。
 
-撤退ライン F-2 + F-4 hypothesis pass-through 2 本 (2026-05-27 F-1/F-3 peer
-migration 後):
+撤退ライン F-4 hypothesis pass-through 1 本 (2026-05-27 F-1/F-3 peer
+migration 後、2026-06-12 dead `h_mi_bridge` cleanup 後):
 * `h_meas : IsAwgnChannelMeasurable N` — F-4: kernel measurability の外出し
-* `h_mi_bridge` — F-2: MI closed-form bridge
+
+F-2 (MI closed-form bridge) は genuine closure 済 (`awgn-mi-bridge-plan`
+closed)。本 achievability chain が取っていた `h_mi_bridge` hypothesis は body
+未参照の dead hyp だったため、2026-06-12 cleanup で signature から除去
+(achievability の結論は `awgn_achievability` から得られ MI bridge に依存しない)。
 
 F-1 / F-3 は `IsAwgnTypicalityHypothesis` / `IsAwgnConverseHypothesis` predicate
 削除に伴い signature から除去。F-1 (achievability) は `awgn_achievability` の
@@ -58,16 +62,19 @@ output power constraint `E[X²] ≤ P`:
 This is the **achievability half** statement, with converse available
 separately via `awgn_converse` (now wired to `awgn_converse_F3_discharged`,
 2026-05-27 `awgn-main-converse-wiring` mini-plan). The remaining 撤退ライン
-hypotheses (`h_meas`, `h_mi_bridge`) expose the F-2 / F-4 撤退ライン structure;
+hypothesis (`h_meas`) exposes the F-4 撤退ライン structure;
 F-1 / F-3 are no longer signaled by predicate hyps (2026-05-27 F-1/F-3
 peer migration removed `IsAwgnTypicalityHypothesis` /
-`IsAwgnConverseHypothesis`).
+`IsAwgnConverseHypothesis`). The F-2 `h_mi_bridge` hypothesis was a dead
+pass-through (never used in the body) and was removed in the 2026-06-12 cleanup
+(F-2 itself is genuinely closed via `awgn-mi-bridge-plan`).
 
 撤退ライン discharge plans:
 * F-4 (`h_meas`) → `awgn-kernel-measurability-plan.md`
 * F-1 (achievability body) → `awgn-achievability-typicality-plan.md`
   (`awgn_achievability` body は `sorry` + `@residual(plan:...)`)
-* F-2 (`h_mi_bridge`) → `awgn-mi-bridge-plan.md`
+* F-2 → genuine closure 済 (`awgn-mi-bridge-plan` closed)。dead だった
+  `h_mi_bridge` hyp は 2026-06-12 cleanup で本 chain の signature から除去。
 * F-3 (converse body) → `awgn-converse-aux-plan.md` (`awgn_converse` body は
   `awgn_converse_F3_discharged` 経由で discharge 済。converse の 3 Mathlib 壁
   すべて genuine closure 済のため `awgn_converse` は transitively sorryAx-free —
@@ -78,12 +85,6 @@ peer migration removed `IsAwgnTypicalityHypothesis` /
 theorem awgn_channel_coding_theorem
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
-    (h_mi_bridge :
-        (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
-            (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas)).toReal
-          = InformationTheory.Shannon.differentialEntropy
-              (gaussianReal 0 (P.toNNReal + N))
-            - InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N))
     {R : ℝ} (hR_pos : 0 < R) (hR_lt_C : R < (1/2) * Real.log (1 + P / (N : ℝ)))
     {ε : ℝ} (hε : 0 < ε) :
     ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →

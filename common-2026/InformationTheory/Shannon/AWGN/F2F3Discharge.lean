@@ -40,7 +40,9 @@ name-laundering 撤回 + vestigial `True` placeholder の retraction)。現在 f
 * `AWGNJointlyTypicalSet` 定義 + structural lemmas
   (`AWGNJointlyTypicalSet_subset_of_le_ε`、`AWGNJointlyTypicalSet_measurable`)。
 * `awgn_theorem_of_F2F3_hypotheses` — `AWGNF1Discharge.awgn_theorem_F1_discharged`
-  の薄い re-publish (F-4 kernel measurability + F-2 MI bridge を hypothesis に取る)。
+  の薄い re-publish (F-4 kernel measurability は genuine 埋め込み済)。dead だった
+  F-2 MI bridge hypothesis は 2026-06-12 cleanup で除去。decl 名の `F2F3` は
+  historical artefact (F-2/F-3 predicate hyp はもはや取らない)。
 * `awgn_capacity_closed_form_of_maxent_hypotheses` — capacity closed form の
   re-publish (max-entropy / bddAbove を hypothesis に取る)。
 
@@ -185,26 +187,25 @@ their bodies live as `sorry + @residual` inside `awgn_achievability` /
 `awgn_converse`).
 
 ⚠️ NOT a full discharge: F-1 achievability body and F-3 converse body remain
-OPEN. Only F-4 (kernel measurability) + F-2 MI bridge (via
-`awgn_theorem_F1_discharged` ⟶ `awgn_channel_coding_theorem`) are exposed as
-concrete hypotheses.
+OPEN. F-4 (kernel measurability) のみ `awgn_theorem_F1_discharged` 経由で genuine
+discharge 済。F-2 MI bridge は body 未参照の dead hyp だったため 2026-06-12 cleanup
+で signature から除去 (F-2 自体は genuine closure 済、`awgn-mi-bridge-plan` closed)。
+decl 名の `F2F3` は historical artefact (F-2/F-3 predicate hyp はもはや取らない)。
 
 実体 discharge は別 plan へ:
 
 * F-1 (achievability) → `awgn-achievability-typicality-plan.md`
 * F-3 (converse)     → `awgn-converse-aux-plan.md`
 
+`@audit:superseded-by(awgn_achievability)` — 2026-06-12 h_mi_bridge cleanup 後、
+本 wrapper の statement は `awgn_theorem_F1_discharged` (ないし headline
+`awgn_achievability` + `isAwgnChannelMeasurable`) と内容重複。削除候補だが
+歴史的 entry point として残置。
+
 `@audit:closed-by-successor(awgn-achievability-typicality-plan)` -/
 @[entry_point]
 theorem awgn_theorem_of_F2F3_hypotheses
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
-    (h_mi_bridge :
-        (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
-            (gaussianReal 0 P.toNNReal)
-            (awgnChannel N (isAwgnChannelMeasurable N))).toReal
-          = InformationTheory.Shannon.differentialEntropy
-              (gaussianReal 0 (P.toNNReal + N))
-            - InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N))
     {R : ℝ} (hR_pos : 0 < R) (hR_lt_C : R < (1/2) * Real.log (1 + P / (N : ℝ)))
     {ε : ℝ} (hε : 0 < ε) :
     ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →
@@ -213,7 +214,6 @@ theorem awgn_theorem_of_F2F3_hypotheses
           ∀ m, (c.toCode.errorProbAt
                   (awgnChannel N (isAwgnChannelMeasurable N)) m).toReal < ε :=
   awgn_theorem_F1_discharged P hP N hN
-    h_mi_bridge
     hR_pos hR_lt_C hε
 
 /-! ## Phase E — Capacity closed form re-publish (F-1 + F-2-MI-bridge) -/

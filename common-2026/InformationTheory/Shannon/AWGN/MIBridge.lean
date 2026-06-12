@@ -213,15 +213,23 @@ theorem awgn_mi_bridge_of_primitives
 
 /-- **AWGN channel coding theorem** (F-1 + F-2 partially discharged form).
 
-`AWGNF1Discharge.awgn_theorem_F1_discharged` の `h_mi_bridge` 引数を、本 file
-の 3 個の primitive predicate (`IsAwgnOutputGaussian`,
-`IsAwgnMIDecomp`, `IsAwgnCondEntropyEqNoise`) **の組** に縮減した形で再 publish。
+元々は `AWGNF1Discharge.awgn_theorem_F1_discharged` の `h_mi_bridge` 引数を、本 file
+の 3 個の primitive predicate (`IsAwgnOutputGaussian`, `IsAwgnMIDecomp`,
+`IsAwgnCondEntropyEqNoise`) **の組** に縮減して埋める wrapper だった。
 
-`IsAwgnCondEntropyEqNoise` は `awgn_cond_entropy_eq_noise_entropy_of_const`
-で完全 discharge 済みなので、実質 2 primitives の hypothesis に縮減される。
+**2026-06-12 h_mi_bridge cleanup**: `awgn_theorem_F1_discharged` から dead
+`h_mi_bridge` 引数が除去されたため、本 wrapper の body から primitives → bridge
+構築 (`awgn_cond_entropy_eq_noise_entropy_of_const` + `awgn_mi_bridge_of_primitives`
+経由) を削除し、`awgn_theorem_F1_discharged` への単純 pass-through にした。
+`h_out` / `h_decomp` primitives hypothesis は signature に残置 — body 未消費の
+**under-consumption** (load-bearing の逆: 仮説が結論を弱めも強めもしない) だが、
+削除すると consumer `MIBridgeDischarge.awgn_theorem_of_typicality_converse_bindconv`
+へ波及するため本 cleanup の scope 外とした。`awgn_mi_bridge_of_primitives` 補題
+自体は genuine な MI bridge discharge として残置 (他用途あり)。
 
-残りの撤退ライン hypothesis (F-1 typicality / F-3 converse) はそのまま
-pass-through。
+`@audit:superseded-by(awgn_achievability)` — cleanup 後、本 wrapper の statement は
+`awgn_theorem_F1_discharged` (ないし headline `awgn_achievability` +
+`isAwgnChannelMeasurable`) と内容重複。削除候補だが歴史的 entry point として残置。
 
 `@audit:closed-by-successor(awgn-mi-decomp-plan)` -/
 @[entry_point]
@@ -235,17 +243,13 @@ theorem awgn_theorem_F2_discharged
       ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
         (c : AwgnCode M n P),
           ∀ m, (c.toCode.errorProbAt
-                  (awgnChannel N (isAwgnChannelMeasurable N)) m).toReal < ε := by
-  have hN_NN : N ≠ 0 := fun h => hN (by exact_mod_cast (congrArg (fun x : ℝ≥0 => (x : ℝ)) h))
-  -- Discharge `IsAwgnCondEntropyEqNoise` automatically.
-  have h_cond : IsAwgnCondEntropyEqNoise P N (isAwgnChannelMeasurable N) :=
-    awgn_cond_entropy_eq_noise_entropy_of_const P N hN_NN (isAwgnChannelMeasurable N)
-  -- Combine 3 primitives into the MI bridge.
-  have h_mi_bridge :=
-    awgn_mi_bridge_of_primitives P N (isAwgnChannelMeasurable N) h_out h_decomp h_cond
-  -- Hand off to AWGNF1Discharge.
-  exact awgn_theorem_F1_discharged P hP N hN
-    h_mi_bridge hR_pos hR_lt_C hε
+                  (awgnChannel N (isAwgnChannelMeasurable N)) m).toReal < ε :=
+  -- 2026-06-12 cleanup: `awgn_theorem_F1_discharged` から dead `h_mi_bridge` 引数が
+  -- 除去されたため、本 wrapper の primitives → bridge 構築 (旧
+  -- `awgn_mi_bridge_of_primitives` 経由) は消費先を失い削除。`h_out` / `h_decomp`
+  -- は signature 互換性のため残置 (under-consumption、`set_option
+  -- linter.unusedVariables false`)。achievability の結論は MI bridge に依存しない。
+  awgn_theorem_F1_discharged P hP N hN hR_pos hR_lt_C hε
 
 /-! ## Phase F — Capacity closed form (3-primitive form) -/
 
