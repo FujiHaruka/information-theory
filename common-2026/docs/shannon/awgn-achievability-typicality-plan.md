@@ -2,7 +2,10 @@
 
 > **Parent**: [`awgn-moonshot-plan.md`](awgn-moonshot-plan.md) F-1。
 > **Sibling**: [`awgn-f1-discharge-moonshot-plan.md`](awgn-f1-discharge-moonshot-plan.md) (F-4, done) / `awgn-mi-bridge-plan.md` (F-2, 未起草) / `awgn-converse-aux-plan.md` (F-3, 未起草)。
-> **Status**: **完走 (2026-05-24)** — `AWGNAchievabilityDischarge.lean` 1641 行 / 0 sorry / silent / 2 honest staged hyps (continuous-aep-gaussian + awgn-random-coding-feasible bundle)。
+> **Status**: **CLOSED (2026-06-12)** — 完走 (2026-05-24、`AWGNAchievabilityDischarge.lean` / 0 sorry / silent) の後、
+> 後続 walls-discharge plan で解析核 sorryAx-free 化、最後に headline `awgn_achievability` の最終 wiring を
+> import 反転で discharge (`c44be72`、独立監査 `cb1af3c`)。本 plan slug を指す `@residual` は code から消滅。
+> 機械検証状態 → [`awgn-facts.md`](awgn-facts.md) 達成テーブル。
 
 ## 進捗 ✅
 
