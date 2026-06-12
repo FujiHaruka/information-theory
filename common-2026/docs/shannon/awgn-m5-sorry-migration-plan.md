@@ -1,6 +1,6 @@
 # AWGN M5 — true sorry-based migration plan (Path 1)
 
-**Status**: CLOSED ✅ — 10 件の load-bearing predicate を Tier 3 bookkeeping から Tier 2 (`sorry` + `@residual`) へ格上げ完了。achievability 側は完全 proof done (0 sorry / `@audit:ok`)、converse 側も shared sorry 補題化で honest 撤退口に揃え、AWGN 形式化ラインは CLOSED。
+**Status**: CLOSED ✅ — 10 件の load-bearing predicate を Tier 3 bookkeeping から Tier 2 (`sorry` + `@residual`) へ格上げ完了。achievability 側は完全 proof done (`@audit:ok`)、converse 側も shared sorry 補題化で honest 撤退口に揃え、AWGN 形式化ラインは CLOSED。機械検証状態は SoT 参照。
 **SoT**: `docs/shannon/awgn-facts.md` (achievement table) + `docs/textbook-roadmap.md` Ch.9。詳細履歴は git。
 
 > **Parent**: [`awgn-moonshot-plan.md`](awgn-moonshot-plan.md)

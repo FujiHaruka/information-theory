@@ -1,6 +1,6 @@
 # 連続チャネル MI 分解 bridge discharge ムーンショット計画 🌙 (T2-A follow-up)
 
-**Status**: CLOSED ✅ — 連続チャネル MI chain rule `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` を genuine に証明完成 (0 sorry, `@audit:ok`)。AWGN instance の `IsContChannelMIDecompHyp` を Gaussian 事実で全引数 discharge、共有壁は retire。AWGN(#5) / Parallel Gaussian(#6) 共有の foundational brick が genuine 着地し、AWGN 形式化ラインは CLOSED (残 MI sorry は capacity 側のみ、別件)。
+**Status**: CLOSED ✅ — 連続チャネル MI chain rule `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` を genuine に証明完成 (`@audit:ok`)。AWGN instance の `IsContChannelMIDecompHyp` を Gaussian 事実で全引数 discharge、共有壁は retire。AWGN(#5) / Parallel Gaussian(#6) 共有の foundational brick が genuine 着地し、AWGN 形式化ラインは CLOSED (残 MI 撤退口は capacity 側のみ、別件)。機械検証状態は SoT 参照。
 **SoT**: `docs/shannon/awgn-facts.md` (achievement table) + `docs/textbook-roadmap.md` Ch.9。詳細履歴は git。
 
 > **Parent**: [`awgn-moonshot-plan.md`](awgn-moonshot-plan.md) §撤退ライン **F-2** (MI bridge hypothesis 外出し)

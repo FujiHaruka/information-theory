@@ -1,6 +1,6 @@
 # AWGN converse: C-1c Jensen affine substitution mini-plan
 
-**Status**: CLOSED ✅ — `sum_log_one_add_le_n_log_one_add_avg` を 0 sorry / 0 residual 化 (`Real.log(1+x/N)` concavity の Jensen 適用)。
+**Status**: CLOSED ✅ — `sum_log_one_add_le_n_log_one_add_avg` を genuine closure (`Real.log(1+x/N)` concavity の Jensen 適用)。機械検証状態は SoT 参照。
 **SoT**: `docs/shannon/awgn-facts.md` (achievement table) + `docs/textbook-roadmap.md` Ch.9。詳細履歴は git。
 
 > **Parent**: [`awgn-converse-aux-plan.md`](awgn-converse-aux-plan.md) §「Phase C」C-1c 項

@@ -1,6 +1,6 @@
 # AWGN converse C-1b — per-letter Gaussian max-entropy 4 hyp 充足 mini 計画
 
-**Status**: CLOSED ✅ — `awgn_per_letter_mi_le_log_var` を 0 sorry / 0 residual 化 (per-letter Gaussian max-entropy 4 hyp 充足)。
+**Status**: CLOSED ✅ — `awgn_per_letter_mi_le_log_var` を genuine closure (per-letter Gaussian max-entropy 4 hyp 充足)。機械検証状態は SoT 参照。
 **SoT**: `docs/shannon/awgn-facts.md` (achievement table) + `docs/textbook-roadmap.md` Ch.9。詳細履歴は git。
 
 > **Parent**: [`awgn-converse-aux-plan.md`](awgn-converse-aux-plan.md) §「Phase C」 C-1b 項
