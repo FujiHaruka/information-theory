@@ -5,6 +5,7 @@ import InformationTheory.Shannon.BlockwiseChannel
 import InformationTheory.Shannon.ChannelCoding.MIDecomp
 import InformationTheory.Shannon.MIChainRule
 import InformationTheory.Shannon.DifferentialEntropy
+import InformationTheory.Shannon.CondKLIntegral
 import InformationTheory.Draft.Shannon.MultivariateDiffEntropy
 import Mathlib.Probability.Distributions.Gaussian.Real
 
@@ -25,7 +26,9 @@ Phase 2 = shared sorry 補題の signature + body sorry 残置のみ (Phase 3 �
 
 | 補題名 | 状態 | 備考 |
 |---|---|---|
-| `continuousAepGaussian_holds` | δ-separated, 2 deep-atom sorry (`@residual(plan:awgn-achievability-walls-discharge-plan)`) | (ii) 削除済 / (iii) δ-exponent。残: `hφ_memLp` + (iii) change-of-measure |
+| `klDiv_perLetter_eq_capacity` | genuine, sorryAx-free | bridge ① 1a: per-letter KL = `(1/2)log(1+P/N)` (compProd 経路、MIClosedForm cycle 回避) |
+| `klDiv_nFold_eq_nsmul` | genuine, sorryAx-free | bridge ① 1b: `klDiv(J_n,Q_n).toReal = n·klDiv(J₁,Q₁).toReal` (reshape + `klDiv_pi_eq_sum`) |
+| `continuousAepGaussian_holds` | δ-separated, 2 deep-atom sorry (`@residual(plan:awgn-achievability-walls-discharge-plan)`) | (ii) 削除済 / (iii) δ-exponent。残: degenerate `hkl0` + (iii) change-of-measure core (n-fold rnDeriv tensorize, G-2)。`hφ_memLp` は closed |
 | `awgnPowerConstraintPerCodeword_holds` | genuine, sorryAx-free | per-codeword expurgation 形 (false `∀m`-form の置換) |
 
 **RETIRED (2026-06-12, D4)**: false `awgnRandomCodingBound_holds` (`∀decoder` 過大) +
@@ -99,6 +102,364 @@ private lemma map_shear_withDensity (ρ : ℝ × ℝ → ℝ≥0∞) (hρ : Meas
   refine setLIntegral_congr_fun (hg_meas hs) (fun p _ => ?_)
   -- `ρ'(g p) = ρ(p.1, (p.1 + p.2) − p.1) = ρ p`
   simp only [hρ'_def, hg_def, add_sub_cancel_left]
+
+/-! ### Bridge ① — per-letter AWGN KL closed form + n-fold identity (shared)
+
+Two shared lemmas consumed by the achievability deep atoms (`continuousAepGaussian_holds`
+(iii) below and the `awgn_random_coding_union_bound` term2 in `AchievabilityDischarge.lean`).
+
+* `klDiv_perLetter_eq_capacity` (1a): the per-letter joint `J₁`/product `Q₁` KL equals the
+  AWGN capacity `(1/2) log(1 + P/N)`. Routed through the conditional-KL integral
+  (`klDiv_compProd_const_toReal_integral`, `CondKLIntegral.lean`) + the 1-D Gaussian KL
+  closed form (`klDiv_gaussianReal_gaussianReal_eq`, `DifferentialEntropy.lean`), **avoiding
+  `mutualInfoOfChannel` / `MIClosedForm.lean`** which would create the import cycle
+  `Walls → MIClosedForm → ContChannelMIDecomp → Walls`.
+* `klDiv_nFold_eq_nsmul` (1b): `klDiv(J_n,Q_n).toReal = n · klDiv(J₁,Q₁).toReal`, via the
+  `arrowProdEquivProdArrow` reshape (`klDiv_map_measurableEquiv`) + `klDiv_pi_eq_sum`
+  + i.i.d. `Finset.sum_const` collapse. -/
+
+/-- **Integrability of the 1-D Gaussian log-likelihood ratio**: for nondegenerate variances
+`v₁, v₂ ≠ 0`, `llr (gaussianReal m₁ v₁) (gaussianReal m₂ v₂)` is integrable against
+`gaussianReal m₁ v₁`. The llr is a.e. a quadratic in `x` (the difference of two Gaussian
+log-densities), and quadratics are integrable against a Gaussian. -/
+private lemma gaussianReal_llr_integrable
+    (m₁ m₂ : ℝ) {v₁ v₂ : ℝ≥0} (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0) :
+    Integrable (llr (gaussianReal m₁ v₁) (gaussianReal m₂ v₂)) (gaussianReal m₁ v₁) := by
+  set ν₁ : Measure ℝ := gaussianReal m₁ v₁ with hν₁_def
+  set ν₂ : Measure ℝ := gaussianReal m₂ v₂ with hν₂_def
+  have hν₁_ac : ν₁ ≪ volume := by rw [hν₁_def]; exact gaussianReal_absolutelyContinuous m₁ hv₁
+  have hμν : ν₁ ≪ ν₂ := hν₁_ac.trans (gaussianReal_absolutelyContinuous' m₂ hv₂)
+  -- llr decomp: `llr ν₁ ν₂ x =ᵐ[ν₁] log g₁(x) - log g₂(x)` (two Gaussian log-densities).
+  have h_rn_chain_vol : ν₁.rnDeriv ν₂ * ν₂.rnDeriv volume =ᵐ[volume] ν₁.rnDeriv volume :=
+    Measure.rnDeriv_mul_rnDeriv hμν
+  have h_rn_chain_ν₁ : ν₁.rnDeriv ν₂ * ν₂.rnDeriv volume =ᵐ[ν₁] ν₁.rnDeriv volume :=
+    hν₁_ac.ae_le h_rn_chain_vol
+  have h_rn_g₁_ν₁ : ν₁.rnDeriv volume =ᵐ[ν₁] gaussianPDF m₁ v₁ :=
+    hν₁_ac.ae_le (by rw [hν₁_def]; exact rnDeriv_gaussianReal m₁ v₁)
+  have h_rn_g₂_ν₁ : ν₂.rnDeriv volume =ᵐ[ν₁] gaussianPDF m₂ v₂ :=
+    hν₁_ac.ae_le (by rw [hν₂_def]; exact rnDeriv_gaussianReal m₂ v₂)
+  have h_rn_ν₁ν₂_pos : ∀ᵐ x ∂ν₁, 0 < ν₁.rnDeriv ν₂ x := Measure.rnDeriv_pos hμν
+  have h_rn_ν₁ν₂_lt_top : ∀ᵐ x ∂ν₁, ν₁.rnDeriv ν₂ x < ∞ :=
+    hμν.ae_le (Measure.rnDeriv_lt_top ν₁ ν₂)
+  have h_llr_decomp : ∀ᵐ x ∂ν₁,
+      llr ν₁ ν₂ x = Real.log (gaussianPDFReal m₁ v₁ x)
+        - Real.log (gaussianPDFReal m₂ v₂ x) := by
+    filter_upwards [h_rn_chain_ν₁, h_rn_g₁_ν₁, h_rn_g₂_ν₁, h_rn_ν₁ν₂_pos, h_rn_ν₁ν₂_lt_top]
+      with x h_chain h_g₁ h_g₂ h_pos h_lt_top
+    have hg₁_pos : 0 < gaussianPDFReal m₁ v₁ x := gaussianPDFReal_pos m₁ v₁ x hv₁
+    have hg₂_pos : 0 < gaussianPDFReal m₂ v₂ x := gaussianPDFReal_pos m₂ v₂ x hv₂
+    have hν₁ν₂_real_pos : 0 < (ν₁.rnDeriv ν₂ x).toReal :=
+      ENNReal.toReal_pos h_pos.ne' h_lt_top.ne
+    have h_combine : (gaussianPDF m₁ v₁ x : ℝ≥0∞)
+        = ν₁.rnDeriv ν₂ x * gaussianPDF m₂ v₂ x := by
+      rw [← h_g₁, ← h_chain, Pi.mul_apply, h_g₂]
+    show Real.log ((ν₁.rnDeriv ν₂ x).toReal)
+        = Real.log (gaussianPDFReal m₁ v₁ x) - Real.log (gaussianPDFReal m₂ v₂ x)
+    have h_real_combine : gaussianPDFReal m₁ v₁ x
+        = (ν₁.rnDeriv ν₂ x).toReal * gaussianPDFReal m₂ v₂ x := by
+      have := congrArg ENNReal.toReal h_combine
+      rwa [toReal_gaussianPDF, ENNReal.toReal_mul, toReal_gaussianPDF] at this
+    rw [h_real_combine, Real.log_mul hν₁ν₂_real_pos.ne' hg₂_pos.ne']
+    ring
+  -- each `log gᵢ(x) = cᵢ - (x-mᵢ)²/(2vᵢ)` is integrable against ν₁ (quadratic moment).
+  have hv₁_pos : (0 : ℝ) < v₁ := lt_of_le_of_ne v₁.coe_nonneg (fun h => hv₁ (by exact_mod_cast h.symm))
+  have hv₂_pos : (0 : ℝ) < v₂ := lt_of_le_of_ne v₂.coe_nonneg (fun h => hv₂ (by exact_mod_cast h.symm))
+  have h_int_x2 : Integrable (fun x : ℝ => x ^ 2) ν₁ := by
+    have h_memLp : MemLp (fun x : ℝ => x) 2 ν₁ := by rw [hν₁_def]; exact memLp_id_gaussianReal' 2 (by simp)
+    have := h_memLp.integrable_sq; simpa [sq] using this
+  have h_int_x1 : Integrable (fun x : ℝ => x) ν₁ := by
+    have h_memLp : MemLp (fun x : ℝ => x) 1 ν₁ := by rw [hν₁_def]; exact memLp_id_gaussianReal' 1 (by simp)
+    exact h_memLp.integrable (by norm_num)
+  have h_int_logg : ∀ (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) (hvp : (0:ℝ) < v),
+      Integrable (fun x : ℝ => Real.log (gaussianPDFReal m v x)) ν₁ := by
+    intro m v hv hvp
+    have h_eq : (fun x : ℝ => Real.log (gaussianPDFReal m v x))
+        = fun x : ℝ => (-(1/2) * Real.log (2 * Real.pi * v)) - (x - m) ^ 2 / (2 * v) := by
+      funext x
+      rw [gaussianPDFReal, Real.log_mul (by positivity) (Real.exp_pos _).ne',
+        Real.log_inv, Real.log_sqrt (by positivity), Real.log_exp]
+      ring
+    rw [h_eq]
+    apply Integrable.sub (integrable_const _)
+    have h_expand : (fun x : ℝ => (x - m) ^ 2 / (2 * (v:ℝ)))
+        = fun x : ℝ => (1 / (2 * (v:ℝ))) * (x ^ 2 - 2 * m * x + m ^ 2) := by
+      funext x; ring
+    rw [h_expand]
+    apply Integrable.const_mul
+    exact ((h_int_x2.sub ((h_int_x1.const_mul (2 * m)))).add (integrable_const _))
+  refine (Integrable.sub (h_int_logg m₁ hv₁ hv₁_pos) (h_int_logg m₂ hv₂ hv₂_pos)).congr ?_
+  filter_upwards [h_llr_decomp] with x hx using hx.symm
+
+/-- **bridge ① per-letter closed form** (genuine, sorryAx-free): per-letter joint
+`J₁ = law(X, X+Z)` and product of marginals `Q₁ = μX ⊗ μY` have KL equal to the AWGN
+per-letter capacity `(1/2) log(1 + P/N)` (nondegenerate `P > 0`, `N ≠ 0`). Routed through the
+conditional-KL integral (`klDiv_compProd_const_toReal_integral`) + the 1-D Gaussian KL closed
+form (`klDiv_gaussianReal_gaussianReal_eq`), integrating the per-fibre quadratic against the
+mean-0 variance-`P'` input — deliberately **avoiding `mutualInfoOfChannel` / `MIClosedForm`**
+(import cycle `Walls → MIClosedForm → ContChannelMIDecomp → Walls`). -/
+theorem klDiv_perLetter_eq_capacity
+    (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0) :
+    (klDiv
+        (((gaussianReal 0 P.toNNReal).prod (gaussianReal 0 N)).map
+            (fun p : ℝ × ℝ => (p.1, p.1 + p.2)))
+        ((gaussianReal 0 P.toNNReal).prod (gaussianReal 0 (P.toNNReal + N)))).toReal
+      = (1/2) * Real.log (1 + P / (N : ℝ)) := by
+  classical
+  set P' : ℝ≥0 := P.toNNReal with hP'_def
+  have hP'_ne : P' ≠ 0 := by
+    rw [hP'_def]; exact ne_of_gt (Real.toNNReal_pos.mpr hP)
+  have hP'_coe : (P' : ℝ) = P := by rw [hP'_def]; exact Real.coe_toNNReal P hP.le
+  have hN_nn : N ≠ 0 := fun h => hN (by rw [h]; simp)
+  have hPN_ne : P' + N ≠ 0 := fun h => hN (by exact_mod_cast (add_eq_zero.mp h).2)
+  have hN_pos : (0 : ℝ) < N := lt_of_le_of_ne N.coe_nonneg (fun h => hN h.symm)
+  have hP'_pos : (0 : ℝ) < P' := by rw [hP'_coe]; exact hP
+  have hPN_pos : (0 : ℝ) < (P' + N : ℝ≥0) := by
+    rw [NNReal.coe_add]; positivity
+  set μX : Measure ℝ := gaussianReal 0 P' with hμX_def
+  set μZ : Measure ℝ := gaussianReal 0 N with hμZ_def
+  set μY : Measure ℝ := gaussianReal 0 (P' + N) with hμY_def
+  haveI : IsProbabilityMeasure μX := by rw [hμX_def]; infer_instance
+  haveI : IsProbabilityMeasure μZ := by rw [hμZ_def]; infer_instance
+  haveI : IsProbabilityMeasure μY := by rw [hμY_def]; infer_instance
+  -- **AWGN channel kernel** `κ x = gaussianReal x N` (measurable, Markov).
+  have hκ_meas : Measurable (fun x : ℝ => gaussianReal x N) := by
+    have h_fun_eq : (fun x : ℝ => gaussianReal x N)
+        = (fun x : ℝ => (gaussianReal 0 N).map (fun z => x + z)) := by
+      funext x; rw [gaussianReal_map_const_add]; simp
+    rw [h_fun_eq]
+    refine Measure.measurable_of_measurable_coe _ (fun s hs => ?_)
+    have h_apply_eq : (fun x : ℝ => ((gaussianReal 0 N).map (fun z => x + z)) s)
+        = fun x : ℝ => (gaussianReal 0 N) (Prod.mk x ⁻¹' {p : ℝ × ℝ | p.1 + p.2 ∈ s}) := by
+      funext x
+      rw [Measure.map_apply (by fun_prop) hs]; rfl
+    rw [h_apply_eq]
+    exact measurable_measure_prodMk_left ((measurable_fst.add measurable_snd) hs)
+  set κ : Kernel ℝ ℝ := { toFun := fun x => gaussianReal x N, measurable' := hκ_meas } with hκ_def
+  have hκ_apply : ∀ x, κ x = gaussianReal x N := fun x => rfl
+  haveI : IsMarkovKernel κ := ⟨fun x => by rw [hκ_apply]; infer_instance⟩
+  -- `J₁ = μX ⊗ₘ κ`: both agree on rectangles (`compProd_apply` vs `map`/`prod`).
+  set J₁ : Measure (ℝ × ℝ) := (μX.prod μZ).map (fun p => (p.1, p.1 + p.2)) with hJ₁_def
+  set Q₁ : Measure (ℝ × ℝ) := μX.prod μY with hQ₁_def
+  have hh₁_meas : Measurable (fun p : ℝ × ℝ => (p.1, p.1 + p.2)) :=
+    measurable_fst.prodMk (measurable_fst.add measurable_snd)
+  have hJ_compProd : J₁ = μX ⊗ₘ κ := by
+    rw [hJ₁_def]
+    ext s hs
+    rw [Measure.map_apply hh₁_meas hs, Measure.compProd_apply hs, Measure.prod_apply
+      (hh₁_meas hs)]
+    refine lintegral_congr fun x => ?_
+    rw [hκ_apply]
+    -- `(gaussianReal x N) (Prod.mk x ⁻¹' s) = μZ ((fun z => x+z) ⁻¹' (Prod.mk x ⁻¹' s))`
+    have hxN : gaussianReal x N = (gaussianReal 0 N).map (fun z => x + z) := by
+      rw [gaussianReal_map_const_add]; simp
+    rw [hxN, Measure.map_apply (by fun_prop) (measurable_prodMk_left hs), hμZ_def]
+    congr 1
+  -- `Q₁ = μX ⊗ₘ (Kernel.const _ μY)`.
+  have hQ_compProd : Q₁ = μX ⊗ₘ (Kernel.const ℝ μY) := by
+    rw [hQ₁_def, Measure.compProd_const]
+  -- **Fibrewise AC + AC of the joint**: `κ x = gaussianReal x N ≪ μY = gaussianReal 0 (P'+N)`.
+  have hfib_ac : ∀ x, κ x ≪ Kernel.const ℝ μY x := by
+    intro x
+    rw [hκ_apply, Kernel.const_apply, hμY_def]
+    exact (gaussianReal_absolutelyContinuous x hN_nn).trans
+      (gaussianReal_absolutelyContinuous' 0 hPN_ne)
+  have hJ_ac : J₁ ≪ Q₁ := by
+    rw [hJ_compProd, hQ_compProd]
+    exact Measure.absolutelyContinuous_compProd_right_iff.mpr
+      (Filter.Eventually.of_forall hfib_ac)
+  -- **Per-fibre KL finiteness + closed form** (`gaussianReal x N ≪ gaussianReal 0 (P'+N)`,
+  -- both with integrable llr): `klDiv (κ x) μY ≠ ⊤`.
+  have hfib_int : ∀ x : ℝ, Integrable (llr (κ x) μY) (κ x) := by
+    intro x
+    rw [hκ_apply, hμY_def]
+    exact gaussianReal_llr_integrable x 0 hN_nn hPN_ne
+  have hfib_ne_top : ∀ x : ℝ, klDiv (κ x) μY ≠ ⊤ := by
+    intro x
+    exact klDiv_ne_top (hfib_ac x |>.trans (by rw [Kernel.const_apply])) (hfib_int x)
+  -- **Joint KL finiteness via the lintegral form** (`klDiv_compProd_lintegral`): the integral
+  -- of the per-fibre KL (a quadratic in `x`) against the Gaussian `μX` is finite.
+  have hjoint_lint : klDiv (μX ⊗ₘ κ) (μX ⊗ₘ (Kernel.const ℝ μY))
+      = ∫⁻ x, klDiv (κ x) (Kernel.const ℝ μY x) ∂μX :=
+    klDiv_compProd_lintegral (by rw [← hJ_compProd, ← hQ_compProd]; exact hJ_ac)
+  -- the per-fibre KL `.toReal` is the quadratic; `klDiv (κ x) μY = ofReal (quadratic)`.
+  have hfib_klDiv_real : ∀ x : ℝ, (klDiv (κ x) (Kernel.const ℝ μY x)).toReal
+      = (1/2) * (Real.log ((P' + N : ℝ≥0) / N) + (N : ℝ) / (P' + N : ℝ≥0)
+                  + x ^ 2 / (P' + N : ℝ≥0) - 1) := by
+    intro x
+    rw [Kernel.const_apply, hκ_apply, hμY_def, klDiv_gaussianReal_gaussianReal_eq x 0 hN_nn hPN_ne]
+    ring_nf
+  have hfib_ofReal : ∀ x : ℝ, klDiv (κ x) (Kernel.const ℝ μY x)
+      = ENNReal.ofReal ((1/2) * (Real.log ((P' + N : ℝ≥0) / N) + (N : ℝ) / (P' + N : ℝ≥0)
+                  + x ^ 2 / (P' + N : ℝ≥0) - 1)) := by
+    intro x
+    rw [← hfib_klDiv_real x, ENNReal.ofReal_toReal]
+    rw [Kernel.const_apply]
+    exact hfib_ne_top x
+  have hX_memLp' : MemLp (fun x : ℝ => x) 2 μX := by
+    rw [hμX_def]; exact memLp_id_gaussianReal' 2 (by simp)
+  have hsq_int' : Integrable (fun x : ℝ => x ^ 2) μX := by
+    have := hX_memLp'.integrable_sq; simpa [sq] using this
+  -- the quadratic is integrable, so its lintegral (of `ofReal`) is finite.
+  have h_quad_int : Integrable (fun x : ℝ =>
+      (1/2) * (Real.log ((P' + N : ℝ≥0) / N) + (N : ℝ) / (P' + N : ℝ≥0)
+                  + x ^ 2 / (P' + N : ℝ≥0) - 1)) μX := by
+    apply Integrable.const_mul
+    apply Integrable.sub _ (integrable_const _)
+    apply Integrable.add (integrable_const _)
+    exact hsq_int'.div_const _
+  have hjoint_ne_top : klDiv (μX ⊗ₘ κ) (μX ⊗ₘ (Kernel.const ℝ μY)) ≠ ⊤ := by
+    rw [hjoint_lint]
+    simp only [hfib_ofReal]
+    -- `∫⁻ ofReal (quadratic) < ⊤` because the quadratic is integrable.
+    refine ne_of_lt ?_
+    have h_ae_nonneg : 0 ≤ᵐ[μX] (fun x : ℝ =>
+        (1/2) * (Real.log ((P' + N : ℝ≥0) / N) + (N : ℝ) / (P' + N : ℝ≥0)
+                  + x ^ 2 / (P' + N : ℝ≥0) - 1)) := by
+      filter_upwards with x
+      have := hfib_klDiv_real x
+      have hnn : (0 : ℝ) ≤ (klDiv (κ x) (Kernel.const ℝ μY x)).toReal := ENNReal.toReal_nonneg
+      rw [this] at hnn; exact hnn
+    rw [← ofReal_integral_eq_lintegral_ofReal h_quad_int h_ae_nonneg]
+    exact ENNReal.ofReal_lt_top
+  have h_int : Integrable (llr (μX ⊗ₘ κ) (μX ⊗ₘ (Kernel.const ℝ μY))) (μX ⊗ₘ κ) :=
+    (klDiv_ne_top_iff.mp hjoint_ne_top).2
+  rw [hJ_compProd, hQ_compProd,
+    klDiv_compProd_const_toReal_integral
+      (by rw [← hJ_compProd, ← hQ_compProd]; exact hJ_ac) h_int]
+  -- per-fibre closed form: `klDiv (gaussianReal x N) μY = (1/2)(log((P'+N)/N) + N/(P'+N)
+  --   + x²/(P'+N) - 1)`.
+  have hfib_kl : ∀ x : ℝ, (klDiv (κ x) μY).toReal
+      = (1/2) * (Real.log ((P' + N : ℝ≥0) / N) + (N : ℝ) / (P' + N : ℝ≥0)
+                  + x ^ 2 / (P' + N : ℝ≥0) - 1) := by
+    intro x
+    rw [hκ_apply, hμY_def, klDiv_gaussianReal_gaussianReal_eq x 0 hN_nn hPN_ne]
+    ring_nf
+  simp only [hfib_kl]
+  -- integrate the per-fibre closed form over `μX` (mean 0, variance `P'`).
+  rw [integral_const_mul]
+  -- `∫ x² ∂μX = P'` (variance with mean 0), the other terms are constants.
+  have hX_memLp : MemLp (fun x : ℝ => x) 2 μX := by
+    rw [hμX_def]; exact memLp_id_gaussianReal' 2 (by simp)
+  have hsq_int : Integrable (fun x : ℝ => x ^ 2) μX := by
+    have := hX_memLp.integrable_sq
+    simpa [sq] using this
+  have hmean : ∫ x, x ∂μX = 0 := by
+    rw [hμX_def]; exact integral_id_gaussianReal (μ := (0:ℝ)) (v := P')
+  have hvar : ∫ x, x ^ 2 ∂μX = (P' : ℝ) := by
+    have hv := variance_eq_sub (μ := μX) (X := fun x : ℝ => x) hX_memLp
+    rw [variance_fun_id_gaussianReal] at hv
+    simp only [Pi.pow_apply, hmean] at hv
+    -- `hv : P' = ∫ x², - 0²`
+    rw [hv]; ring
+  -- assemble the integral: integrand `= (c - 1) + x²/(P'+N)` with `c` constant.
+  set c : ℝ := Real.log ((P' + N : ℝ≥0) / N) + (N : ℝ) / (P' + N : ℝ≥0) with hc_def
+  have hrw : (fun x : ℝ =>
+        Real.log ((P' + N : ℝ≥0) / N) + (N : ℝ) / (P' + N : ℝ≥0)
+          + x ^ 2 / (P' + N : ℝ≥0) - 1)
+      = fun x : ℝ => (c - 1) + (1 / (P' + N : ℝ≥0)) * x ^ 2 := by
+    funext x; rw [hc_def]; ring
+  rw [hrw,
+    integral_add (integrable_const _) ((hsq_int.const_mul _)),
+    integral_const, integral_const_mul, hvar]
+  simp only [probReal_univ, smul_eq_mul, one_mul]
+  -- finish: `(1/2)((c - 1) + P'/(P'+N)) = (1/2) log(1 + P/N)`.
+  have hPN_coe_pos : (0 : ℝ) < ((P' + N : ℝ≥0) : ℝ) := hPN_pos
+  have hsum : (N : ℝ) / (P' + N : ℝ≥0) + (P' : ℝ) / (P' + N : ℝ≥0) = 1 := by
+    field_simp
+    rw [NNReal.coe_add]; ring
+  have hlog : Real.log (((P' + N : ℝ≥0) : ℝ) / (N : ℝ)) = Real.log (1 + P / (N : ℝ)) := by
+    congr 1
+    rw [NNReal.coe_add, hP'_coe]
+    field_simp
+    ring
+  rw [hc_def, hlog]
+  have hfin : Real.log (1 + P / (N : ℝ)) + (N : ℝ) / (P' + N : ℝ≥0) - 1
+        + 1 / (P' + N : ℝ≥0) * (P' : ℝ) = Real.log (1 + P / (N : ℝ)) := by
+    have : 1 / (P' + N : ℝ≥0) * (P' : ℝ) = (P' : ℝ) / (P' + N : ℝ≥0) := by ring
+    rw [this]
+    have : (N : ℝ) / (P' + N : ℝ≥0) - 1 + (P' : ℝ) / (P' + N : ℝ≥0)
+        = ((N : ℝ) / (P' + N : ℝ≥0) + (P' : ℝ) / (P' + N : ℝ≥0)) - 1 := by ring
+    rw [add_sub_assoc, add_assoc, this, hsum]; ring
+  rw [hfin]
+
+/-- **bridge ① n-fold identity** (genuine, sorryAx-free):
+`klDiv(J_n, Q_n).toReal = n · klDiv(J₁, Q₁).toReal`, where `J_n`/`Q_n` are the verbatim
+n-letter joint/product measures from the `continuousAepGaussian_holds` signature. Via
+`arrowProdEquivProdArrow` reshape (`klDiv_map_measurableEquiv`) + `klDiv_pi_eq_sum`
++ i.i.d. `Finset.sum_const`. -/
+theorem klDiv_nFold_eq_nsmul (P : ℝ) (N : ℝ≥0) {n : ℕ} :
+    (klDiv
+        (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+            (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
+          (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i)))
+        ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+          (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))))).toReal
+      = (n : ℝ) *
+        (klDiv
+            (((gaussianReal 0 P.toNNReal).prod (gaussianReal 0 N)).map
+                (fun p : ℝ × ℝ => (p.1, p.1 + p.2)))
+            ((gaussianReal 0 P.toNNReal).prod
+              (gaussianReal 0 (P.toNNReal + N)))).toReal := by
+  -- per-letter measures + the reshape equiv
+  set μX : Measure ℝ := gaussianReal 0 P.toNNReal with hμX_def
+  set μZ : Measure ℝ := gaussianReal 0 N with hμZ_def
+  set μY : Measure ℝ := gaussianReal 0 (P.toNNReal + N) with hμY_def
+  set J₁ : Measure (ℝ × ℝ) := (μX.prod μZ).map (fun p => (p.1, p.1 + p.2)) with hJ₁_def
+  set Q₁ : Measure (ℝ × ℝ) := μX.prod μY with hQ₁_def
+  set e : (Fin n → ℝ × ℝ) ≃ᵐ (Fin n → ℝ) × (Fin n → ℝ) :=
+    MeasurableEquiv.arrowProdEquivProdArrow ℝ ℝ (Fin n) with he_def
+  -- per-letter probability-measure instances
+  have hh₁_meas : Measurable (fun p : ℝ × ℝ => (p.1, p.1 + p.2)) :=
+    measurable_fst.prodMk (measurable_fst.add measurable_snd)
+  haveI : IsProbabilityMeasure J₁ := by
+    rw [hJ₁_def]; exact Measure.isProbabilityMeasure_map hh₁_meas.aemeasurable
+  haveI : IsProbabilityMeasure Q₁ := by rw [hQ₁_def]; infer_instance
+  -- the n-fold maps
+  set g : (Fin n → ℝ) × (Fin n → ℝ) → (Fin n → ℝ) × (Fin n → ℝ) :=
+    fun p => (p.1, fun i => p.1 i + p.2 i) with hg_def
+  set H : (Fin n → ℝ × ℝ) → (Fin n → ℝ × ℝ) := fun w i => (fun p : ℝ × ℝ => (p.1, p.1 + p.2)) (w i)
+    with hH_def
+  have hg_meas : Measurable g := by
+    rw [hg_def]; exact measurable_fst.prodMk (measurable_pi_lambda _
+      (fun i => (measurable_pi_apply i).comp measurable_fst |>.add
+        ((measurable_pi_apply i).comp measurable_snd)))
+  have hH_meas : Measurable H :=
+    measurable_pi_lambda _ (fun i => hh₁_meas.comp (measurable_pi_apply i))
+  -- `J_n = (pi J₁).map e` (same reshape as the engine's `hJ_eq`)
+  have hJ_eq :
+      ((Measure.pi (fun _ : Fin n => μX)).prod (Measure.pi (fun _ : Fin n => μZ))).map g
+        = (Measure.pi (fun _ : Fin n => J₁)).map e := by
+    have hmp := measurePreserving_arrowProdEquivProdArrow ℝ ℝ (Fin n)
+      (fun _ : Fin n => μX) (fun _ : Fin n => μZ)
+    have hprod_reshape :
+        (Measure.pi (fun _ : Fin n => μX)).prod (Measure.pi (fun _ : Fin n => μZ))
+          = (Measure.pi (fun _ : Fin n => μX.prod μZ)).map e := by
+      rw [he_def, ← hmp.map_eq]
+    have hpiJ₁ :
+        Measure.pi (fun _ : Fin n => J₁)
+          = (Measure.pi (fun _ : Fin n => μX.prod μZ)).map H := by
+      rw [hH_def, hJ₁_def]
+      rw [Measure.pi_map_pi (f := fun _ : Fin n => (fun p : ℝ × ℝ => (p.1, p.1 + p.2)))
+        (fun _ => hh₁_meas.aemeasurable)]
+    rw [hprod_reshape, hpiJ₁, Measure.map_map hg_meas e.measurable,
+      Measure.map_map e.measurable hH_meas]
+    rfl
+  -- `Q_n = (pi Q₁).map e` (no inner map — a plain product reshape)
+  have hQ_eq :
+      (Measure.pi (fun _ : Fin n => μX)).prod (Measure.pi (fun _ : Fin n => μY))
+        = (Measure.pi (fun _ : Fin n => Q₁)).map e := by
+    have hmp := measurePreserving_arrowProdEquivProdArrow ℝ ℝ (Fin n)
+      (fun _ : Fin n => μX) (fun _ : Fin n => μY)
+    rw [hQ₁_def, he_def, ← hmp.map_eq]
+  -- assemble: `klDiv J_n Q_n = klDiv (pi J₁) (pi Q₁) = ∑ klDiv J₁ Q₁ = n • klDiv J₁ Q₁`
+  rw [show (((Measure.pi (fun _ : Fin n => μX)).prod
+        (Measure.pi (fun _ : Fin n => μZ))).map g) = (Measure.pi (fun _ : Fin n => J₁)).map e
+      from hJ_eq, hQ_eq,
+    klDiv_map_measurableEquiv e (Measure.pi (fun _ : Fin n => J₁))
+      (Measure.pi (fun _ : Fin n => Q₁)),
+    klDiv_pi_eq_sum (fun _ : Fin n => J₁) (fun _ : Fin n => Q₁),
+    Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul,
+    ENNReal.toReal_mul, ENNReal.toReal_natCast]
 
 /-- **Continuous AEP for n-dim Gaussian** (Phase B-0 wall, 旧 `IsContinuousAEPGaussian`).
 
@@ -501,13 +862,42 @@ theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
     rw [he_preim]
     exact hN₀ (le_of_max_le_left hn)
   · -- (iii) product mass `≤ exp(−(klDiv_n − n·3δ))` via change of measure.
-    -- On `A`, `∑φ > n(J₁[φ] − δ)` (typicality slack `δ`, decoupled from the error
-    -- target `ε`); the tensorized RN-derivative `dJ/dQ = exp(∑φ)` gives
-    -- `Q(A) = ∫_A exp(−∑φ) dJ ≤ exp(−n(J₁[φ] − δ)) · J(A) ≤ exp(−(klDiv_n − n·3δ))`,
-    -- using `J₁[φ] = (klDiv J₁ Q₁).toReal` and `klDiv_n = n · klDiv(J₁,Q₁)` (the latter from
-    -- `klDiv_pi_eq_sum` / `klDiv_prod_eq_add` after the `arrowProdEquivProdArrow` reshape, both
-    -- probability measures). The RN-derivative tensorization + `setLIntegral` change of measure
-    -- is the genuine Mathlib-absent wiring core.
+    -- **Reduction wiring (sorryAx-free):** the n-letter KL exponent is normalized to
+    -- `n·(klDiv J₁ Q₁).toReal` via the shared `klDiv_nFold_eq_nsmul`, and the signature's
+    -- product law `Q_n (e.symm ⁻¹' B)` is reshaped to `(Measure.pi Q₁) B` exactly as the
+    -- joint identity `hJ_eq` (Q side has no inner map). The remaining **change-of-measure
+    -- core** (the n-fold RN-derivative tensorization `d(pi Q₁)/d(pi J₁) =ᵐ exp(−∑φ)`, then
+    -- `(pi Q₁) B = ∫_B exp(−∑φ) d(pi J₁) ≤ exp(−n(J₁[φ]−δ))`) is the genuine Mathlib-absent
+    -- atom (loogle `rnDeriv (pi _) (pi _)` → Found 0 in all forms; G-2 of
+    -- `awgn-deep-atoms-bridge1-kldiv-inventory.md`), isolated below.
+    -- the n-fold KL `.toReal` is `n · (klDiv J₁ Q₁).toReal`.
+    have hkl_n : (klDiv
+            (((Measure.pi (fun _ : Fin n => μX)).prod (Measure.pi (fun _ : Fin n => μZ))).map
+              (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i)))
+            ((Measure.pi (fun _ : Fin n => μX)).prod
+              (Measure.pi (fun _ : Fin n => μY)))).toReal
+        = (n : ℝ) * (klDiv J₁ Q₁).toReal := by
+      rw [hμX_def, hμZ_def, hμY_def, hJ₁_def, hQ₁_def, hμX_def, hμY_def]
+      exact klDiv_nFold_eq_nsmul P N
+    -- reshape the signature's product law to `(Measure.pi Q₁).map e`.
+    have hQ_eq :
+        (Measure.pi (fun _ : Fin n => μX)).prod (Measure.pi (fun _ : Fin n => μY))
+          = (Measure.pi (fun _ : Fin n => Q₁)).map e := by
+      have hmp := measurePreserving_arrowProdEquivProdArrow ℝ ℝ (Fin n)
+        (fun _ : Fin n => μX) (fun _ : Fin n => μY)
+      rw [hQ₁_def, he_def, ← hmp.map_eq]
+    -- rewrite the exponent (klDiv) first, then reshape the product-law application.
+    rw [hkl_n, hQ_eq, Measure.map_apply e.measurable (e.symm.measurable hB_meas)]
+    have he_preim : e ⁻¹' (e.symm ⁻¹' B) = B := by
+      ext w; simp [Set.mem_preimage, MeasurableEquiv.symm_apply_apply]
+    rw [he_preim]
+    -- **change-of-measure core** (G-2, n-fold RN-derivative tensorize): on `B`,
+    -- `∑φ > n(J₁[φ]−δ)`, so `(pi Q₁) B = ∫_B exp(−∑φ) d(pi J₁) ≤ exp(−n(J₁[φ]−δ)) ≤
+    --  exp(−(n·(klDiv J₁ Q₁).toReal − n·3δ))` (since `J₁[φ] = (klDiv J₁ Q₁).toReal` and
+    -- `δ ≤ 3δ`). The n-fold `rnDeriv (pi Q₁) (pi J₁)` tensorize is Mathlib-absent.
+    -- Residual goal (reduction wiring above is sorryAx-free):
+    --   `(Measure.pi Q₁) B ≤ ofReal (exp (−(n·(klDiv J₁ Q₁).toReal − n·3δ)))`
+    --   with `B = {w | |(∑ φ(wᵢ))/n − J₁[φ]| < δ}`.
     -- @residual(plan:awgn-achievability-walls-discharge-plan)
     sorry
 
