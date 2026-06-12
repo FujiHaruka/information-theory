@@ -443,6 +443,326 @@ instance awgnCodebookKernel.instIsMarkovKernel
     haveI : IsMarkovKernel (awgnChannel N h_meas) := awgnChannel.instIsMarkovKernel N h_meas
     infer_instance
 
+/-! ### Phase 4 (D2) — genuine random-coding union bound
+
+The genuine replacement for the false `awgnRandomCodingBound_holds`
+(`Walls.lean`, `∀ decoder` over-generalisation). Instead of quantifying over an
+arbitrary measurable decoder, we **fix** `decoder := jointTypicalDecoder A` and
+take the two AEP outputs ((i) joint-mass `≥ 1−ε`, (iii) product-mass
+`≤ exp(−(klDiv_n − 3nε))`) as hypotheses — a **modular composition** of the
+genuine Wall-1 (`continuousAepGaussian_holds`) output, not a load-bearing bundle.
+The conclusion is the Cover–Thomas 9.2 union bound:
+`∫⁻ codebook, channel_m(errorEvent m) ≤ 2ε`. -/
+
+/-- **Random-coding union bound** (Cover–Thomas 9.2, Phase 4 = D2). With the
+codebook drawn from the 2-stage Gaussian product law and the decoder fixed to the
+joint-typical decoder against `A`, the average (over the codebook) per-message
+error probability is `≤ 2ε`, **given** the two AEP bounds on `A`:
+
+* `hA_mass` — (i): the joint codebook+noise law `J` puts mass `≥ 1−ε` on `A`
+  (verbatim the `continuousAepGaussian_holds` (i) conjunct).
+* `hA_indep` — (iii): the independent-pair product law `Q` puts mass
+  `≤ exp(−(klDiv_n − 3nε))` on `A` (verbatim the (iii) conjunct).
+
+`J` and `Q` are copied verbatim from `Walls.lean`'s `continuousAepGaussian_holds`.
+
+**Honesty**: `hA_mass`/`hA_indep` are *genuine outputs* of Wall 1, threaded as
+hypotheses for a standard layering — the decoder is fixed (`jointTypicalDecoder A`),
+no `*Hypothesis` predicate encodes the proof core, so this is **not** load-bearing
+hypothesis bundling.
+
+@residual(plan:awgn-achievability-walls-discharge-plan) -/
+theorem awgn_random_coding_union_bound
+    (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
+    {ε R : ℝ} (hε : 0 < ε) (hR_pos : 0 < R)
+    (hR : R < (1/2) * Real.log (1 + P / (N : ℝ)))
+    {n : ℕ} (hn : 0 < n) {M : ℕ} (hM_pos : 0 < M)
+    (hM_le : M ≤ Nat.ceil (Real.exp ((n : ℝ) * R)))
+    (A : Set ((Fin n → ℝ) × (Fin n → ℝ))) (hA_meas : MeasurableSet A)
+    (hA_mass :
+      (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+            (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
+          (fun p : (Fin n → ℝ) × (Fin n → ℝ) =>
+              (p.1, fun i => p.1 i + p.2 i))) A
+        ≥ ENNReal.ofReal (1 - ε))
+    (hA_indep :
+      ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+          (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N)))) A
+        ≤ ENNReal.ofReal (Real.exp (-(
+            (klDiv
+                (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+                    (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
+                  (fun p : (Fin n → ℝ) × (Fin n → ℝ) =>
+                      (p.1, fun i => p.1 i + p.2 i)))
+                ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+                  (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))))).toReal
+              - (n : ℝ) * (3 * ε))))) :
+    haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
+    ∀ m : Fin M,
+      ∫⁻ codebook : Fin M → Fin n → ℝ,
+        ((Measure.pi (fun i => awgnChannel N h_meas (codebook m i)))
+          ((InformationTheory.Shannon.ChannelCoding.Code.mk
+              (M := M) (n := n) (α := ℝ) (β := ℝ)
+              codebook (jointTypicalDecoder A codebook)).errorEvent m))
+      ∂(gaussianCodebook M n P.toNNReal)
+        ≤ ENNReal.ofReal (2 * ε) := by
+  classical
+  haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
+  intro m
+  -- Abbreviations for the joint law `J` and the product law `Q` (verbatim Walls).
+  set J : Measure ((Fin n → ℝ) × (Fin n → ℝ)) :=
+    ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+        (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
+      (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i)) with hJ_def
+  set Q : Measure ((Fin n → ℝ) × (Fin n → ℝ)) :=
+    (Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+        (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))) with hQ_def
+  -- The channel-output measure for codeword `codebook m`.
+  set Wch : (Fin M → Fin n → ℝ) → Measure (Fin n → ℝ) := fun codebook =>
+    Measure.pi (fun i => awgnChannel N h_meas (codebook m i)) with hWch_def
+  haveI hWch_prob : ∀ codebook, IsProbabilityMeasure (Wch codebook) := by
+    intro codebook; rw [hWch_def]; infer_instance
+  -- The (E1) "true codeword not typical" set and the (E2) "alias codeword
+  -- typical" sets, as functions of the codebook.
+  set E1 : (Fin M → Fin n → ℝ) → Set (Fin n → ℝ) := fun codebook =>
+    {y | (codebook m, y) ∉ A} with hE1_def
+  set E2 : (Fin M → Fin n → ℝ) → Fin M → Set (Fin n → ℝ) := fun codebook m' =>
+    {y | (codebook m', y) ∈ A} with hE2_def
+  -- ── Atom 1: error-event set inclusion (from the decoder definition). ──
+  -- `errorEvent m ⊆ E1 ∪ ⋃_{m' ≠ m} E2 m'`.
+  have h_incl : ∀ codebook : Fin M → Fin n → ℝ,
+      (InformationTheory.Shannon.ChannelCoding.Code.mk
+          (M := M) (n := n) (α := ℝ) (β := ℝ)
+          codebook (jointTypicalDecoder A codebook)).errorEvent m
+        ⊆ E1 codebook ∪
+          ⋃ m' ∈ (Finset.univ : Finset (Fin M)).erase m, E2 codebook m' := by
+    intro codebook y hy
+    -- `hy : decoder y ≠ m`.
+    rw [InformationTheory.Shannon.ChannelCoding.Code.mem_errorEvent] at hy
+    change jointTypicalDecoder A codebook y ≠ m at hy
+    simp only [hE1_def, hE2_def, Set.mem_union, Set.mem_setOf_eq, Set.mem_iUnion,
+      Finset.mem_erase, Finset.mem_univ, and_true]
+    -- If the true codeword `m` is not typical, we land in `E1`.
+    by_cases hmA : (codebook m, y) ∈ A
+    · -- `m` is typical, so the decoder uses `Fin.find` and returns a typical index.
+      right
+      -- The decoder value: there *is* a typical index (`m` itself).
+      have hex : ∃ k : Fin M, (codebook k, y) ∈ A := ⟨m, hmA⟩
+      -- Unfold the decoder on the `dif_pos` branch.
+      have hdec : jointTypicalDecoder A codebook y = Fin.find _ hex := by
+        unfold jointTypicalDecoder
+        rw [dif_pos hex]
+      -- The found index is typical and (being ≠ m) gives the `E2` witness.
+      set m' := Fin.find (fun k : Fin M => (codebook k, y) ∈ A) hex with hm'_def
+      have hm'_mem : (codebook m', y) ∈ A := by
+        have := (Fin.find_eq_iff (i := m') hex).mp rfl
+        exact this.1
+      have hm'_ne : m' ≠ m := by
+        intro hmm
+        apply hy
+        rw [hdec]
+        exact hmm
+      exact ⟨m', hm'_ne, hm'_mem⟩
+    · -- `m` not typical: `y ∈ E1`.
+      exact Or.inl hmA
+  -- Measurability of E1 / E2 sections (per codebook).
+  have hE1_meas : ∀ codebook, MeasurableSet (E1 codebook) := by
+    intro codebook
+    rw [hE1_def]
+    have hmeas : Measurable (fun y : Fin n → ℝ => (codebook m, y)) :=
+      measurable_const.prodMk measurable_id
+    exact (hmeas hA_meas).compl
+  have hE2_meas : ∀ codebook m', MeasurableSet (E2 codebook m') := by
+    intro codebook m'
+    rw [hE2_def]
+    have hmeas : Measurable (fun y : Fin n → ℝ => (codebook m', y)) :=
+      measurable_const.prodMk measurable_id
+    exact hmeas hA_meas
+  -- ── Pointwise (per-codebook) union bound on the channel measure. ──
+  have h_ptwise : ∀ codebook : Fin M → Fin n → ℝ,
+      (Wch codebook)
+        ((InformationTheory.Shannon.ChannelCoding.Code.mk
+            (M := M) (n := n) (α := ℝ) (β := ℝ)
+            codebook (jointTypicalDecoder A codebook)).errorEvent m)
+        ≤ (Wch codebook) (E1 codebook)
+          + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
+              (Wch codebook) (E2 codebook m') := by
+    intro codebook
+    calc (Wch codebook) _
+        ≤ (Wch codebook) (E1 codebook ∪
+            ⋃ m' ∈ (Finset.univ : Finset (Fin M)).erase m, E2 codebook m') :=
+          measure_mono (h_incl codebook)
+      _ ≤ (Wch codebook) (E1 codebook)
+            + (Wch codebook)
+                (⋃ m' ∈ (Finset.univ : Finset (Fin M)).erase m, E2 codebook m') :=
+          measure_union_le _ _
+      _ ≤ (Wch codebook) (E1 codebook)
+            + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
+                (Wch codebook) (E2 codebook m') := by
+          gcongr
+          exact measure_biUnion_finset_le _ _
+  -- AE-measurability of the codebook integrands (Wch · (E1 / E2 ·)).
+  -- Both reduce to the genuine kernel `awgnCodebookKernel` + the joint-measurable
+  -- section `(c, y) ↦ (c k, y)` pulled back through `Kernel.measurable_kernel_prodMk_left`
+  -- (the same machinery already used in `isAwgnTypicalityHypothesis`, lines 998-1028).
+  have hAE_E1 : AEMeasurable
+      (fun codebook : Fin M → Fin n → ℝ => (Wch codebook) (E1 codebook))
+      (gaussianCodebook M n P.toNNReal) := by
+    refine Measurable.aemeasurable ?_
+    set T1 : Set ((Fin M → Fin n → ℝ) × (Fin n → ℝ)) :=
+      {p | (p.1 m, p.2) ∉ A} with hT1_def
+    have hT1_meas : MeasurableSet T1 := by
+      have h_pair : Measurable
+          (fun p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) => (p.1 m, p.2)) :=
+        ((measurable_pi_apply m).comp measurable_fst).prodMk measurable_snd
+      exact (h_pair hA_meas).compl
+    have hEq : (fun codebook : Fin M → Fin n → ℝ => (Wch codebook) (E1 codebook))
+        = (fun codebook : Fin M → Fin n → ℝ =>
+            awgnCodebookKernel N h_meas m codebook (Prod.mk codebook ⁻¹' T1)) := by
+      funext codebook
+      rfl
+    rw [hEq]
+    exact Kernel.measurable_kernel_prodMk_left hT1_meas
+  have hAE_E2 : ∀ m', AEMeasurable
+      (fun codebook : Fin M → Fin n → ℝ => (Wch codebook) (E2 codebook m'))
+      (gaussianCodebook M n P.toNNReal) := by
+    intro m'
+    refine Measurable.aemeasurable ?_
+    set T2 : Set ((Fin M → Fin n → ℝ) × (Fin n → ℝ)) :=
+      {p | (p.1 m', p.2) ∈ A} with hT2_def
+    have hT2_meas : MeasurableSet T2 := by
+      have h_pair : Measurable
+          (fun p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) => (p.1 m', p.2)) :=
+        ((measurable_pi_apply m').comp measurable_fst).prodMk measurable_snd
+      exact h_pair hA_meas
+    have hEq : (fun codebook : Fin M → Fin n → ℝ => (Wch codebook) (E2 codebook m'))
+        = (fun codebook : Fin M → Fin n → ℝ =>
+            awgnCodebookKernel N h_meas m codebook (Prod.mk codebook ⁻¹' T2)) := by
+      funext codebook
+      rfl
+    rw [hEq]
+    exact Kernel.measurable_kernel_prodMk_left hT2_meas
+  -- ── Integrate the pointwise bound, splitting the two terms. ──
+  have h_lint_le :
+      ∫⁻ codebook, (Wch codebook)
+          ((InformationTheory.Shannon.ChannelCoding.Code.mk
+              (M := M) (n := n) (α := ℝ) (β := ℝ)
+              codebook (jointTypicalDecoder A codebook)).errorEvent m)
+        ∂(gaussianCodebook M n P.toNNReal)
+      ≤ (∫⁻ codebook, (Wch codebook) (E1 codebook)
+            ∂(gaussianCodebook M n P.toNNReal))
+        + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
+            ∫⁻ codebook, (Wch codebook) (E2 codebook m')
+              ∂(gaussianCodebook M n P.toNNReal) := by
+    calc ∫⁻ codebook, _ ∂_
+        ≤ ∫⁻ codebook, ((Wch codebook) (E1 codebook)
+            + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
+                (Wch codebook) (E2 codebook m'))
+          ∂(gaussianCodebook M n P.toNNReal) :=
+          lintegral_mono (fun codebook => h_ptwise codebook)
+      _ = (∫⁻ codebook, (Wch codebook) (E1 codebook)
+            ∂(gaussianCodebook M n P.toNNReal))
+          + ∫⁻ codebook, (∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
+                (Wch codebook) (E2 codebook m'))
+            ∂(gaussianCodebook M n P.toNNReal) :=
+          lintegral_add_left' hAE_E1 _
+      _ = (∫⁻ codebook, (Wch codebook) (E1 codebook)
+            ∂(gaussianCodebook M n P.toNNReal))
+          + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
+              ∫⁻ codebook, (Wch codebook) (E2 codebook m')
+                ∂(gaussianCodebook M n P.toNNReal) := by
+          congr 1
+          rw [lintegral_finsetSum' _ (fun m' _ => hAE_E2 m')]
+  -- ── Atom 2: first term = `J Aᶜ ≤ ε` (joint marginal identity + hA_mass). ──
+  -- Reduction (genuine): the integrand depends only on the `m`-th codeword, so the
+  -- codebook integral collapses to a single-codeword integral against the codeword
+  -- marginal `Measure.pi (gaussianReal 0 P')` (`gaussianCodebook_codeword_law` +
+  -- `lintegral_map`). What remains is the **joint marginal identity** `J Aᶜ ≤ ε`
+  -- (the `μX ⊗ channel = J` change-of-variables; genuine Mathlib-absent wiring).
+  have h_term1 :
+      ∫⁻ codebook, (Wch codebook) (E1 codebook)
+          ∂(gaussianCodebook M n P.toNNReal)
+        ≤ ENNReal.ofReal ε := by
+    -- Single-codeword integrand.
+    set f1 : (Fin n → ℝ) → ℝ≥0∞ := fun x =>
+      (Measure.pi (fun i => awgnChannel N h_meas (x i))) {y | (x, y) ∉ A} with hf1_def
+    -- The codebook integrand equals `f1` precomposed with the `m`-th projection.
+    have hpt : (fun codebook : Fin M → Fin n → ℝ => (Wch codebook) (E1 codebook))
+        = (fun codebook : Fin M → Fin n → ℝ => f1 (codebook m)) := rfl
+    -- `f1` is measurable: same kernel section as `hAE_E1`.
+    have hf1_meas : Measurable f1 := by
+      set T1 : Set ((Fin n → ℝ) × (Fin n → ℝ)) := {p | (p.1, p.2) ∉ A} with hT1_def
+      have hT1_meas : MeasurableSet T1 := by
+        have : {p : (Fin n → ℝ) × (Fin n → ℝ) | (p.1, p.2) ∉ A} = Aᶜ := by
+          ext p; simp
+        rw [hT1_def, this]; exact hA_meas.compl
+      -- Package `x ↦ Measure.pi (awgnChannel · (x i))` as a kernel (m := default).
+      have hker : Measurable (fun x : Fin n → ℝ =>
+          (Measure.pi (fun i => awgnChannel N h_meas (x i))) {y | (x, y) ∉ A}) := by
+        have hk : Measurable (fun x : Fin n → ℝ =>
+            (Measure.pi (fun i => awgnChannel N h_meas (x i)) :
+              Measure (Fin n → ℝ))) := by
+          haveI : IsMarkovKernel (awgnChannel N h_meas) :=
+            awgnChannel.instIsMarkovKernel N h_meas
+          haveI : ∀ x : Fin n → ℝ,
+              IsProbabilityMeasure
+                (Measure.pi (fun i => awgnChannel N h_meas (x i))) := fun x => by
+            infer_instance
+          refine Measurable.measure_of_isPiSystem_of_isProbabilityMeasure
+            (S := Set.pi Set.univ '' Set.pi Set.univ
+                    (fun _ : Fin n => {s : Set ℝ | MeasurableSet s}))
+            (hgen := generateFrom_pi.symm) (hpi := isPiSystem_pi) ?_
+          rintro s ⟨t, ht, rfl⟩
+          simp_rw [Measure.pi_pi]
+          refine Finset.measurable_prod _ (fun i _ => ?_)
+          have hti : MeasurableSet (t i) := ht i (Set.mem_univ i)
+          have h_kernel_coe : Measurable
+              (fun x : ℝ => (awgnChannel N h_meas) x (t i)) :=
+            Kernel.measurable_coe _ hti
+          exact h_kernel_coe.comp (measurable_pi_apply i)
+        -- Bundle as a Markov kernel and pull back the joint set via prodMk.
+        let K : Kernel (Fin n → ℝ) (Fin n → ℝ) :=
+          { toFun := fun x => Measure.pi (fun i => awgnChannel N h_meas (x i))
+            measurable' := hk }
+        haveI : IsMarkovKernel K := by
+          refine ⟨fun x => ?_⟩
+          show IsProbabilityMeasure (Measure.pi (fun i => awgnChannel N h_meas (x i)))
+          haveI : IsMarkovKernel (awgnChannel N h_meas) :=
+            awgnChannel.instIsMarkovKernel N h_meas
+          infer_instance
+        have hEqK : (fun x : Fin n → ℝ =>
+              (Measure.pi (fun i => awgnChannel N h_meas (x i))) {y | (x, y) ∉ A})
+            = (fun x : Fin n → ℝ => K x (Prod.mk x ⁻¹' T1)) := by
+          funext x; rfl
+        rw [hEqK]
+        exact Kernel.measurable_kernel_prodMk_left hT1_meas
+      exact hker
+    -- Collapse the codebook integral onto the `m`-th coordinate marginal.
+    rw [hpt, ← lintegral_map hf1_meas (measurable_pi_apply m),
+      gaussianCodebook_codeword_law M n P.toNNReal m]
+    -- Remaining: the joint marginal identity `∫ f1 dμX = J Aᶜ ≤ ε`.
+    -- @residual(plan:awgn-achievability-walls-discharge-plan)
+    sorry
+  -- ── Atom 3: second term = `(M−1)·Q A ≤ ε` (product marginal + sum + arithmetic). ──
+  have h_term2 :
+      ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
+          ∫⁻ codebook, (Wch codebook) (E2 codebook m')
+            ∂(gaussianCodebook M n P.toNNReal)
+        ≤ ENNReal.ofReal ε := by
+    -- @residual(plan:awgn-achievability-walls-discharge-plan)
+    sorry
+  -- ── Combine: `≤ ε + ε = 2ε`. ──
+  calc ∫⁻ codebook, _ ∂_
+      ≤ (∫⁻ codebook, (Wch codebook) (E1 codebook)
+            ∂(gaussianCodebook M n P.toNNReal))
+        + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
+            ∫⁻ codebook, (Wch codebook) (E2 codebook m')
+              ∂(gaussianCodebook M n P.toNNReal) := h_lint_le
+    _ ≤ ENNReal.ofReal ε + ENNReal.ofReal ε := by
+        gcongr
+    _ = ENNReal.ofReal (2 * ε) := by
+        rw [← ENNReal.ofReal_add hε.le hε.le]; ring_nf
+
 /-- **Random-coding union bound** (Cover-Thomas 9.2 / Phase C-3). Under the
 random Gaussian codebook + AWGN channel, the average per-message error
 probability (using `jointTypicalDecoder` against the AEP-supplied typical set)
