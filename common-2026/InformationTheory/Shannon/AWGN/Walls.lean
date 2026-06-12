@@ -145,8 +145,25 @@ n-normalized); (i)/(iii) targeted for genuine closure via engine + change-of-mea
 exponent uses the typicality slack `δ` (not the error target `ε`); the engine's
 ε-slot receives `δ` and η-slot receives `ε` (`pi_empirical_mean_typical_mass … (ε := δ)
 (η := ε)`), so (i)/(iii) are decoupled exactly as the consumer's margin `R + 3δ < I`
-needs. Both sorries (`hφ_memLp` :157, (iii) change-of-measure :237) are deep-atom
-plumbing, correctly `@residual(plan:…)` (not `wall:`). Verdict: honest_residual.
+needs. Both sorries are deep-atom plumbing, correctly `@residual(plan:…)` (not `wall:`).
+
+**INDEPENDENT AUDIT (2026-06-12, honesty-auditor, commit `cd5419c`) — honest_residual.**
+Signature UNCHANGED (degenerate split is a body-internal `by_cases`, no hypothesis
+added). (a) **`hkl0 : klDiv(Jn,Qn).toReal = 0` (new sorry, degenerate branch)
+SUFFICIENCY-CHECKED TRUE in all sub-cases**: `P'=0` ⇒ `Jn = Qn` (`klDiv_self = 0`);
+`N=0 ∧ P'≠0` ⇒ `Jn` on the diagonal, `Qn`-null ⇒ `¬Jn≪Qn` ⇒ `klDiv = ⊤`,
+`toReal_top = 0`; `P'=0 ∧ N=0` ⇒ `Jn = Qn = δ₀ⁿ⊗δ₀ⁿ` (`klDiv_self`). All three land
+`= 0`, so `exp(n·3δ) ≥ 1 ≥ Qn univ` is genuinely true — NOT degenerate-abuse (it is a
+real property of the `klDiv`/`ℝ≥0∞.toReal` convention). The degenerate-bridge
+(`pi(dirac) = dirac(const)` / diagonal mutual-singularity) is Mathlib-absent (loogle
+Found 0), so `@residual(plan:…)` deferral is honest (closeable plumbing, not `wall:`).
+(b) **`hφ_memLp` GENUINELY CLOSED** (was a deep-atom sorry, now 0 sorry): self-built
+`map_shear_withDensity` is sorryAx-free (`[propext, Classical.choice, Quot.sound]`,
+no measure-zero vacuity); the L² membership is a real Gaussian-4th-moment Hölder
+argument (`f_X` cancels in the RN-derivative ratio, no circular / `:True` / bundling).
+(c) :495 (iii) change-of-measure retains its `@residual` comment. Both remaining sorries
+(`hkl0` :221, (iii) change-of-measure :495) `@residual(plan:…)` correct. Verdict:
+honest_residual.
 
 @residual(plan:awgn-achievability-walls-discharge-plan) -/
 theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
