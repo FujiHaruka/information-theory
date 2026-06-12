@@ -118,7 +118,24 @@ satisfying the 2 AEP sub-bounds:
   load-bearing; Phase 4's D2 union-bound is the first real consumer and must use the
   corrected exponent.
 
-@residual(wall:awgn-continuous-aep-gaussian) -/
+**AUDIT (2026-06-12, independent auditor) — (iii) false-statement finding CONFIRMED.**
+Verified independently: `klDiv_n = n·I` (both measures are probability measures, so
+`klDiv_pi_eq_sum` / `klDiv_prod_eq_add` additivity over the `n` coordinates applies after
+the `arrowProdEquivProdArrow` reshape, exactly as in `mutualInfo_pi_eq_sum`). Hence the
+written `−n·(klDiv_n − 3ε) = −n²·I + 3nε`, contradicting the true independent-pair AEP
+lower bound `product(A) ≳ exp(−n(I+ε))` for any `A` with joint mass `≥ 1−ε` (change of
+measure: `dR/dJ ≈ exp(−n·I)` on the typical set). Counterexample regime `I>0, n≥2` is
+non-empty and inside the `∀ n ≥ N₀` quantifier; degenerate checks consistent (n=1 hides it
+since `n²=n`; `I=0` makes it vacuous). The (iii) conjunct is therefore false-as-written
+and needs a SIGNATURE-FIX (normalize `klDiv_n` by `n`). (ii)-removal is honest (consumer
+type-checks silently with the new 4-tuple arity; (ii) was non-load-bearing). The wall slug
+over-claims: (i) is engine-closable (`pi_empirical_mean_typical_mass`, sorryAx-free) and
+(iii) is statement-fixable — neither is a true Mathlib gap. Corrected (iii) exponent (for
+the follow-up fix, matches plan §D1): `exp(−n·(I − 3ε))` i.e. argument `−(klDiv_n.toReal −
+(n:ℝ)·3ε)` (single factor of `n`).
+
+@residual(plan:awgn-achievability-walls-discharge-plan)
+@audit:defect(false-statement) @audit:closed-by-successor(awgn-achievability-walls-discharge-plan) -/
 theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
     ∀ ⦃ε : ℝ⦄, 0 < ε → ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n →
       ∃ A : Set ((Fin n → ℝ) × (Fin n → ℝ)),
