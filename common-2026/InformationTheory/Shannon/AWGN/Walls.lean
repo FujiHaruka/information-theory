@@ -85,57 +85,31 @@ satisfying the 2 AEP sub-bounds:
 * **(i) joint codebook+noise mass `≥ 1 - ε`**: under the joint law of `(X, Y)` with
   `X ∼ N(0,P)` i.i.d. and `Y = X + Z`, `Z ∼ N(0,N)` i.i.d.;
 * **(iii) independent-pair upper bound** (`X'` independent of `Y`): under the product
-  of marginals, `A` has mass `≤ exp(−n(I − 3ε))`.
+  of marginals, `A` has mass `≤ exp(−(klDiv_n − n·3ε)) = exp(−n(I − 3ε))`, where
+  `klDiv_n = klDiv(joint, product) = n·I` is the n-letter KL (per-letter MI `I`).
 
-**STATUS (2026-06-12) — sub-bound (ii) DELETED, (i)/(iii) being genuine-closed in this Phase.**
+**STATUS (2026-06-12) — sub-bound (ii) DELETED; (iii) STATEMENT-FIXED (exponent
+n-normalized); (i)/(iii) targeted for genuine closure via engine + change-of-measure.**
 
-* **(ii) volume bound REMOVED (false statement excised):** the old (ii) read
-  `volume A ≤ exp(n·(klDiv (pi gaussian) volume).toReal + n·ε)`; for the *infinite*
-  reference `ν = volume`, `volume univ = ⊤ ⇒ ν.real univ = 0` (machine-checked), so the
-  `klDiv`-to-`volume` term clamps to 0 and the bound becomes unsatisfiable jointly with (i).
-  It was a **false statement**, not a Mathlib gap. The consumer discarded `_hA_vol`, and the
-  union-bound's second-term mass is supplied by (iii) (a different axis from volume counting),
-  so (ii) was **not load-bearing**. Removed entirely (not statement-fixed).
-* **(i) is genuine (engine):** the AEP mass concentration needs only a **finite-`n` Chebyshev
-  weak law** (no infinite product), genuine + sorryAx-free in `AchievabilityAEP.lean`
-  (`pi_empirical_mean_concentration` / `pi_empirical_mean_typical_mass`). Wiring those to the
-  joint AWGN log-density discharges (i).
-* **(iii) ⚠ FALSE-AS-WRITTEN (verbatim-confirmed 2026-06-12, n DOUBLE-COUNTED in the
-  exponent):** the `klDiv` of the two *probability* measures (joint law vs product of
-  marginals) is the n-letter KL `klDiv_n = n · I` (per-letter `I`, by `klDiv_pi_eq_sum`
-  additivity over the `n` coordinates). The exponent as written is
-  `−n · (klDiv_n − 3ε) = −n · (n·I − 3ε) = −n²·I + 3nε`. The *true* product-measure mass of
-  the typical set is `≈ exp(−n·I)` (standard AEP independent-pair bound:
-  `product(A) = ∫_A exp(−∑φ) d(joint) ≤ exp(−(klDiv_n − nε)) = exp(−n(I−ε))`). Since for
-  `I > 0, n ≥ 2` we have `exp(−n·I) > exp(−n²·I + 3nε)`, the written bound is **false** (it
-  over-counts one factor of `n`: the `klDiv_n` inside the `−n·(…)` should be the per-letter
-  `klDiv_n / n = I`, i.e. the exponent should read `−(klDiv_n − n·3ε)` or `−n·(I − 3ε)`).
-  This is the **same class of mis-statement as the deleted (ii)** (a mis-scaled `klDiv`
-  form), NOT a Mathlib gap. The brief's "(iii) sound, keep verbatim" premise is therefore
-  wrong; (iii) needs a STATEMENT-FIX (normalize the `klDiv` by `n`) before it can be
-  genuine-closed. Left as `sorry` (kept verbatim per the brief's scope, but flagged) — the
-  consumer currently discards this bound (`_hA_indep`), so the false form is not yet
-  load-bearing; Phase 4's D2 union-bound is the first real consumer and must use the
-  corrected exponent.
+* **(ii) volume bound REMOVED (earlier phase):** the old (ii) `klDiv`-to-`volume` form was
+  a false statement (`volume univ = ⊤ ⇒ ν.real univ = 0` clamps the term to 0), not a
+  Mathlib gap. The consumer discarded it and the union-bound's second-term mass is supplied
+  by (iii), so (ii) was non-load-bearing. Excised (not statement-fixed).
+* **(i) genuine (engine):** the AEP mass concentration needs only a finite-`n` Chebyshev
+  weak law (`pi_empirical_mean_concentration` / `pi_empirical_mean_typical_mass`,
+  `AchievabilityAEP.lean`, sorryAx-free). The typical set `A` is built from the per-letter
+  joint info-density `φ(x,y) = log dJ₁/dQ₁`, wired into the engine's abstract `μ`/`φ`.
+* **(iii) STATEMENT-FIXED (exponent n-normalized):** the previous form double-counted `n`
+  (`−n·(klDiv_n − 3ε) = −n²·I + 3nε`, false because `klDiv_n = n·I` already carries one
+  factor of `n`). The corrected exponent is `−(klDiv_n − n·3ε) = −n·(I − 3ε)` — a single
+  factor of `n`, matching the standard independent-pair AEP change-of-measure bound
+  `product(A) = ∫_A exp(−∑φ) d(joint) ≤ exp(−(klDiv_n − n·ε'))`. `klDiv_n = n·I` follows
+  from `klDiv_pi_eq_sum` / `klDiv_prod_eq_add` after the `arrowProdEquivProdArrow` reshape
+  (both measures are probability measures), exactly as in `mutualInfo_pi_eq_sum`. The
+  consumer (`AchievabilityDischarge.lean`) currently discards this bound; Phase 4's D2
+  union-bound is the first real consumer.
 
-**AUDIT (2026-06-12, independent auditor) — (iii) false-statement finding CONFIRMED.**
-Verified independently: `klDiv_n = n·I` (both measures are probability measures, so
-`klDiv_pi_eq_sum` / `klDiv_prod_eq_add` additivity over the `n` coordinates applies after
-the `arrowProdEquivProdArrow` reshape, exactly as in `mutualInfo_pi_eq_sum`). Hence the
-written `−n·(klDiv_n − 3ε) = −n²·I + 3nε`, contradicting the true independent-pair AEP
-lower bound `product(A) ≳ exp(−n(I+ε))` for any `A` with joint mass `≥ 1−ε` (change of
-measure: `dR/dJ ≈ exp(−n·I)` on the typical set). Counterexample regime `I>0, n≥2` is
-non-empty and inside the `∀ n ≥ N₀` quantifier; degenerate checks consistent (n=1 hides it
-since `n²=n`; `I=0` makes it vacuous). The (iii) conjunct is therefore false-as-written
-and needs a SIGNATURE-FIX (normalize `klDiv_n` by `n`). (ii)-removal is honest (consumer
-type-checks silently with the new 4-tuple arity; (ii) was non-load-bearing). The wall slug
-over-claims: (i) is engine-closable (`pi_empirical_mean_typical_mass`, sorryAx-free) and
-(iii) is statement-fixable — neither is a true Mathlib gap. Corrected (iii) exponent (for
-the follow-up fix, matches plan §D1): `exp(−n·(I − 3ε))` i.e. argument `−(klDiv_n.toReal −
-(n:ℝ)·3ε)` (single factor of `n`).
-
-@residual(plan:awgn-achievability-walls-discharge-plan)
-@audit:defect(false-statement) @audit:closed-by-successor(awgn-achievability-walls-discharge-plan) -/
+@residual(plan:awgn-achievability-walls-discharge-plan) -/
 theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
     ∀ ⦃ε : ℝ⦄, 0 < ε → ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n →
       ∃ A : Set ((Fin n → ℝ) × (Fin n → ℝ)),
@@ -147,15 +121,15 @@ theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
             ≥ ENNReal.ofReal (1 - ε)
         ∧ ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
               (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N)))) A
-            ≤ ENNReal.ofReal (Real.exp (-(n : ℝ) *
-                ((klDiv
+            ≤ ENNReal.ofReal (Real.exp (-(
+                (klDiv
                     (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
                         (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
                       (fun p : (Fin n → ℝ) × (Fin n → ℝ) =>
                           (p.1, fun i => p.1 i + p.2 i)))
                     ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
                       (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))))).toReal
-                  - 3 * ε))) := by
+                  - (n : ℝ) * (3 * ε)))) := by
   sorry
 
 /-! ## Wall 2 — `awgn-random-coding-bound` -/
