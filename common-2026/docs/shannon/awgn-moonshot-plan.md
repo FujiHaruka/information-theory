@@ -14,7 +14,8 @@
 > headline `awgn_achievability` の最終 wiring も **閉鎖済** (import 反転 wiring、`c44be72`、
 > 独立 honesty 監査 all OK `cb1af3c`): `AchievabilityDischarge` の上流 import 3 本を除去して
 > `Achievability` が Discharge を import する向きに反転、body = `isAwgnTypicalityHypothesis`
-> 直呼び。`awgn_channel_coding_theorem` (`AWGN/Main.lean`) も transitively sorryAx-free。
+> 直呼び。`awgn_channel_coding_theorem` (`AWGN/Main.lean`) 含む機械検証状態 →
+> [`awgn-facts.md`](awgn-facts.md) 達成テーブル (prose にキャッシュしない)。
 >
 > **Parent**: [`textbook-roadmap.md`](../textbook-roadmap.md) §T2-A /
 > **Inventory**: [`awgn-mathlib-inventory.md`](awgn-mathlib-inventory.md) /
