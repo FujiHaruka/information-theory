@@ -112,6 +112,13 @@ n-normalized); (i)/(iii) targeted for genuine closure via engine + change-of-mea
   consumer (`AchievabilityDischarge.lean`) currently discards this bound; Phase 4's D2
   union-bound is the first real consumer.
 
+**INDEPENDENT AUDIT (2026-06-12, honesty-auditor) — δ-separation honest.** The (iii)
+exponent uses the typicality slack `δ` (not the error target `ε`); the engine's
+ε-slot receives `δ` and η-slot receives `ε` (`pi_empirical_mean_typical_mass … (ε := δ)
+(η := ε)`), so (i)/(iii) are decoupled exactly as the consumer's margin `R + 3δ < I`
+needs. Both sorries (`hφ_memLp` :157, (iii) change-of-measure :237) are deep-atom
+plumbing, correctly `@residual(plan:…)` (not `wall:`). Verdict: honest_residual.
+
 @residual(plan:awgn-achievability-walls-discharge-plan) -/
 theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
     ∀ ⦃δ ε : ℝ⦄, 0 < δ → 0 < ε → ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n →

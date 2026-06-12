@@ -482,6 +482,18 @@ no `*Hypothesis` predicate encodes the proof core, so this is **not** load-beari
 hypothesis bundling. `hslack` is a genuine regularity precondition (the
 typicality-margin condition `R + 3δ < I`), not a bundled core.
 
+**INDEPENDENT AUDIT (2026-06-12, honesty-auditor) — false-statement RESOLVED.** Under
+the new `{ε δ R}` + `hslack : R + 3δ < (1/2)log(1+P/N)` signature the term2 goal is
+TRUE (closable), not relocated: `(M−1)·Q(A) ≤ ⌈exp(nR)⌉·exp(−(klDiv_n−3nδ))` with
+`klDiv_n = n·I`, `I = (1/2)log(1+P/N)` gives `exp(−n·g)·(…)`, margin `g = I−R−3δ > 0`
+from `hslack`, so it `→ 0` and is `≤ ε` past `N₀`. `N₀` is an honest unpinned
+`?N₀`-sorry (the alias-decay threshold) coupled to the term2 sorry — NOT a vacuity
+escape (`∀ n ≥ N₀` is never vacuous). `hslack` is a genuine precondition (the consumer
+`isAwgnTypicalityHypothesis` discharges it via `δ := (C−R)/12`), not a load-bearing
+bundle. Refutation tried: `δ→0⁺` / `R→cap` keep `g > 0` for admissible `R < I`; the
+statement stays alive on every boundary. Verdict: honest_residual (all 5 sorries
+`plan:`, no defect). type-check: 0 errors.
+
 @residual(plan:awgn-achievability-walls-discharge-plan) -/
 theorem awgn_random_coding_union_bound
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
