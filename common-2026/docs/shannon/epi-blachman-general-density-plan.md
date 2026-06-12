@@ -1,5 +1,7 @@
 # EPI A-5 caller-supplied precondition closure: general-density Blachman producers サブ計画
 
+**Status**: CLOSED ✅ — done (G/P1/P2/P3/P4 全 producer landing 完了 2026-06-01、4 precondition に genuine producer 充足)。一般 EPI 自体は別ルート (route T) で 2026-06-08 無条件 closure 済 (`epi-unconditional-moonshot-plan`)、本サブ計画が支えた Stam-bridge route は superseded。
+
 > **Parent**: [`epi-stam-to-conclusion-phaseA-plan.md`](epi-stam-to-conclusion-phaseA-plan.md) §A-5
 >   (`isStamToEPIBridgeHyp_of_stam_debruijn` / `EPIStamToBridge.lean:1287-1322`)
 > **Spec (SoT)**: [`epi-blachman-general-density-inventory.md`](epi-blachman-general-density-inventory.md)

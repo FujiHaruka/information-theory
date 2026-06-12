@@ -1,5 +1,7 @@
 # Shannon: Wyner–Ziv legacy-tag → sorry-based migration plan
 
+**Status**: CLOSED ✅ — superseded (legacy tag-migration tracking)。プロジェクトに active な `@audit:suspect(`/`@audit:staged(`/`🟢ʰ` declaration タグは 0 件 = sorry-based code が SoT (roadmap judgment #72)。Round 4 closure (2026-05-26) で境界判定 2 件も proof done 到達済。
+
 > **Parent**: [`wyner-ziv-moonshot-plan.md`](wyner-ziv-moonshot-plan.md)
 > 関連 [`wyner-ziv-convexity-discharge-moonshot-plan.md`](wyner-ziv-convexity-discharge-moonshot-plan.md) /
 > [`wyner-ziv-discharge-moonshot-plan.md`](wyner-ziv-discharge-moonshot-plan.md) /

@@ -1,5 +1,7 @@
 # Cramér / Chernoff CLT-boundary closure ムーンショット計画 🌙
 
+**Status**: CLOSED ✅ — done (Phase 1-6 full closure 2026-06-11、headline `cramer_lower_boundary_unconditional` + 上流両 root sorryAx-free、独立監査 PASS)。
+
 > ✅ **CLOSED (2026-06-11)** — Phase 1-6 full closure 達成。`InformationTheory/Shannon/CramerCltBoundaryClosure.lean`
 > (586 行, 0 sorry / 0 @residual, sorryAx-free, `InformationTheory.lean` import 済) に headline
 > `cramer_lower_boundary_unconditional` (内部最適 tilt `a = deriv (cgf (Y∘eval 0) (infinitePi μ₀)) lam`

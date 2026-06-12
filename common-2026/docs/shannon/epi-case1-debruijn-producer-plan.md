@@ -1,5 +1,7 @@
 # Shannon EPI: case-1 de Bruijn regularity **producer** サブ計画
 
+**Status**: CLOSED ✅ — done (producer `isDeBruijnRegularityHyp_of_methodX_unitnoise` は transitively sorryAx-free に着地、`:2041` measurability sorry 解消済、コード側 `@residual(plan:epi-case1-debruijn-producer-plan)` retired)。一般 EPI 自体は別ルート (route T) で 2026-06-08 無条件 closure 済。進捗ブロックの PB-2/4/5/6 `[ ]` は stale。
+
 > **Parent**: [`epi-case1-ratio-limit-plan.md`](epi-case1-ratio-limit-plan.md) + [`epi-case1-phaseC-methodx-wrapper-plan.md`](epi-case1-phaseC-methodx-wrapper-plan.md)
 > **Status**: 📋 draft (案B、PB-1 done / PB-3 active、実装は `lean-implementer` dispatch)
 > **撤退口 slug**: `@residual(plan:epi-case1-debruijn-producer-plan)`

@@ -1,5 +1,7 @@
 # EPI convolution-density foundational brick サブ計画
 
+**Status**: CLOSED ✅ — done (全 Phase 完了、`EPIConvolutionDensity.lean` 0 sorry に publish 済、Phase 2 riskiest も L-Conv-2 へ撤退せず無条件 discharge)。一般 EPI 自体は別ルート (route T) で 2026-06-08 無条件 closure 済、Blachman/Stam route は superseded。
+
 > **Parent**: [`epi-moonshot-plan.md`](epi-moonshot-plan.md) (Blachman/Stam route to EPI)
 > — この brick は **`IsStamScoreConvolution` (`EPIStamInequalityBody.lean:104`, 現状 `:= True`)
 > を実体化する前段の foundational helper**。EPI 本体は discharge しない。

@@ -1,5 +1,7 @@
 # Shannon: Huffman `HuffmanChainWalls.lean` 分離による上流 wrapper 完全 Tier 2 化計画
 
+**Status**: CLOSED ✅ — superseded (`HuffmanChainWalls.lean` 分離は未実装、Huffman optimality は cost-level pivot で別途 closure)。本 plan が対象とした 21 load-bearing predicate wrapper / merged-identity walls は FALSE-statement と判明 (roadmap judgment #14b、consumer 0・伝播ゼロ) し、code 側で `@audit:defect(false-statement)`/`@audit:retract-candidate` に処理済 = sorry-based code が SoT。
+
 > **Parent**: [`huffman-sorry-migration-plan.md`](huffman-sorry-migration-plan.md)
 > 判断ログ #2-#4 (L-MIG-4 拡張発動、import cycle 回避で全 21 wrapper の signature 改変断念) の **構造的 fix**。
 > 親 plan は **type-check done** を達成済 (load-bearing predicate hypothesis 21 件残置 + slug 統一)。

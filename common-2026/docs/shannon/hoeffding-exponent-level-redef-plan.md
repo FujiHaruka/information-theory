@@ -1,5 +1,7 @@
 # Hoeffding tradeoff: 指数 level 再定義による full genuine closure 計画 🌙
 
+**Status**: CLOSED ✅ — superseded (headline `hoeffding_tradeoff_exp` は `Hoeffding/TradeoffExp.lean` に sorryAx-free で landing 済、ただし本 plan の interior-body 再定義経路ではなく IVT+exp-family Pythagorean bypass 経由)。本 plan が target した interior body は dead と判明 (roadmap judgment #20)。Ch.11 Hoeffding interior は roadmap で scope-out。
+
 > **Parent**: [`hoeffding-tradeoff-moonshot-plan.md`](hoeffding-tradeoff-moonshot-plan.md) §Phase C/D /
 > [`hoeffding-tradeoff-sandwich-plan.md`](hoeffding-tradeoff-sandwich-plan.md) 判断ログ #4 (DEF-FLAW)
 > **在庫**: [`hoeffding-sandwich-discharge-inventory.md`](hoeffding-sandwich-discharge-inventory.md),

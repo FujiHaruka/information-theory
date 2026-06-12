@@ -1,5 +1,7 @@
 # Cramér L-C2 extension ムーンショット計画 🌙 (T1-C follow-up extension)
 
+**Status**: CLOSED ✅ — done (Phase A'+B-1+B-3 完遂、`CramerLC2DischargeExt.lean` 0 sorry に全 publish 済)。Phase C (change-of-measure) は予告どおり scope 外で後継 `infinitepi-tilted` plan が discharge 済。
+
 > 実態整合 (2026-05-20): **DONE-HONEST-HYPS (Phase A'+B-1+B-3 完遂)** — 計画通り完了。
 > `InformationTheory/Shannon/CramerLC2DischargeExt.lean` (0 sorry) に全 publish 済: Phase A' bypass 補題
 > `isProbabilityMeasure_infinitePi_tilted_of_bounded` (:85) / `pairwise_indepFun_tilted_ambient` (:99) /

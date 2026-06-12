@@ -1,5 +1,7 @@
 # Shannon: Huffman `@audit:staged` → sorry-based migration plan
 
+**Status**: CLOSED ✅ — superseded (legacy tag-migration tracking)。プロジェクトに active な `@audit:staged(`/`@audit:suspect(` declaration タグは 0 件 = sorry-based code が SoT (roadmap judgment #72)。Huffman merged-identity walls は FALSE-statement と確定し別途処理済 (judgment #14b)。
+
 > **Parent**: [`huffman-moonshot-plan.md`](huffman-moonshot-plan.md) (T1-A Phase 4-5 scope-out)
 > + 関連 [`huffman-2hyp-vertical-reduction-plan.md`](huffman-2hyp-vertical-reduction-plan.md) /
 > [`huffman-optimality-t1apprime-moonshot-plan.md`](huffman-optimality-t1apprime-moonshot-plan.md) /

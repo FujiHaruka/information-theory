@@ -1,5 +1,7 @@
 # Chernoff converse (L-Ch1) discharge ムーンショット計画 🌙 (T1-B follow-up)
 
+**Status**: CLOSED ✅ — done (per-tilt 縮減形 L-CC2 着地、`ChernoffConverse.lean` 0 sorry に全 publish 済)。完全 discharge (Sanov LDP per-tilt 起動) は別 plan scope。Ch.11 Chernoff converse 自体は roadmap で scope-out (C&T `≐` heuristic)。
+
 > 実態整合 (2026-05-20): **DONE-HONEST-HYPS (per-tilt 縮減形、L-CC2 着地)** — 計画通り完了。
 > `InformationTheory/Shannon/ChernoffConverse.lean` (0 sorry) に `chernoffMediator` (:101) +
 > `chernoff_rate_isBoundedUnder_le` (:149, internal discharge) + `chernoff_converse_from_per_tilt`

@@ -1,5 +1,7 @@
 # EPI richness 壁 (G4/W2) — route B (lift-and-transport) genuine closure サブ計画 ✅ CLOSED + 撤去
 
+**Status**: CLOSED ✅ — done then superseded (route B 2-noise lift 機材は genuine closure 後、two-time case-1 が要する 3-noise lift へ superseded され撤去済、現役後継は `NoiseExtension.lean` の lift3 系)。
+
 > **Parent**: [`epi-stam-to-conclusion-plan.md`](epi-stam-to-conclusion-plan.md)
 >   §Phase A-close G4/W2 行 + 撤退ライン L-Concl-A-richness / L-Concl-A-γ。
 > **slug**: `epi-richness-route-b-plan` (frozen — 他 doc が closure 経緯を参照するため slug は残す)。
