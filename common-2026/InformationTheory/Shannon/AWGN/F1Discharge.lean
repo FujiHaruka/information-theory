@@ -106,7 +106,15 @@ F-2 MI bridge (`h_mi_bridge`) hypothesis は body 未参照の dead hyp だっ�
 として `awgn-achievability-typicality-plan` / `awgn-converse-aux-plan` に
 defer)。
 
-`@audit:closed-by-successor(awgn-moonshot-plan)` -/
+`@audit:closed-by-successor(awgn-moonshot-plan)`
+
+@audit:ok (independent honesty audit 2026-06-12, commit e728ebf: `h_mi_bridge`
+removed from signature. Pure strengthening — the parent `awgn_channel_coding_theorem`
+never consumed `h_mi_bridge` in its body, so this wrapper's old `h_mi_bridge`
+pass-through was dead. Post-removal body delegates to `awgn_channel_coding_theorem`
+(itself a sorryAx-free pass-through of `awgn_achievability`); conclusion follows
+verbatim. `#print axioms awgn_theorem_F1_discharged` = `[propext, Classical.choice,
+Quot.sound]` re-confirmed by this audit.) -/
 @[entry_point]
 theorem awgn_theorem_F1_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -202,7 +210,14 @@ hypothesis only weakens the signature, never strengthens it dishonestly); 2026-0
 cleanup で同 hyp は signature から除去済. `#print
 axioms awgn_theorem_F4_discharged_F1_via_staged` = `[propext, Classical.choice,
 Quot.sound]` re-confirmed by this audit. The F-3 converse residual lives in
-`awgn_converse`, a separate declaration, out of scope.) -/
+`awgn_converse`, a separate declaration, out of scope.)
+
+@audit:ok re-confirmed (independent honesty audit 2026-06-12, commit e728ebf:
+`h_mi_bridge` cleanup verified — it was an unused pass-through, its removal only
+strengthens the signature. `@audit:superseded-by(awgn_achievability)` co-tag is
+correct tier-3 bookkeeping (statement = `awgn_achievability` modulo
+`h_meas := isAwgnChannelMeasurable N`). `#print axioms` = `[propext,
+Classical.choice, Quot.sound]` re-verified on fresh oleans.) -/
 @[entry_point]
 theorem awgn_theorem_F4_discharged_F1_via_staged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)

@@ -119,20 +119,28 @@ theorem awgn_output_gaussian_of_bind_eq_conv
 
 /-! ## Phase D — Combined body discharge re-publish -/
 
-/-- **AWGN channel coding theorem — output-Gaussian reduced to bind/conv,
-typicality/MI-decomp/converse taken as hypotheses.**
+/-- **AWGN channel coding theorem — achievability via the sorryAx-free chain,
+with vestigial bind/conv + MI-decomp pass-through hypotheses.**
 
-⚠️ NOT a full discharge: F-2 typicality (`h_typicality`), the MI decomposition
-(`h_decomp : IsAwgnMIDecomp`) and F-3 converse (`h_converse`) remain OPEN — they
-are taken as hypotheses here. The genuine proofs need continuous AEP /
-sphere-shell volume (typicality), the density-level continuous MI chain rule
-(MI-decomp) and chain rule + Fano + Gaussian max-entropy (converse), all absent
-from Mathlib. What IS genuinely closed: the output-Gaussian fact, reduced to the
-smaller bind/conv bridge primitive `IsAwgnBindEqConv` (itself discharged in
-`AWGNBindConvBody.lean`), and the conditional-entropy primitive (dispatched by the
-underlying `awgn_theorem_F2_discharged`).
+Post-cleanup (2026-06-12 `h_mi_bridge` removal): the achievability conclusion here
+is genuinely closed via the sorryAx-free chain (`awgn_theorem_F2_discharged` →
+`awgn_theorem_F1_discharged` → `awgn_achievability`) and **no longer depends on**
+`h_bridge` / `h_decomp`. The two hypotheses are under-consumed vestigial
+pass-throughs retained for downstream signature compatibility — an
+over-hypothesized (strictly weaker) signature, honesty-safe, NOT load-bearing.
+Historically this wrapper reduced the output-Gaussian fact to the bind/conv
+primitive `IsAwgnBindEqConv` (discharged in `AWGNBindConvBody.lean`); that
+construction lost its sink when the chain dropped `h_mi_bridge`.
 
-`@audit:closed-by-successor(awgn-mi-decomp-plan)` -/
+`@audit:closed-by-successor(awgn-mi-decomp-plan)`
+
+@audit:ok (independent honesty audit 2026-06-12, commit e728ebf scope — this decl was
+NOT edited by that commit but is a downstream ripple of the `h_mi_bridge` cleanup.
+`#print axioms awgn_theorem_of_typicality_converse_bindconv` = `[propext,
+Classical.choice, Quot.sound]` (sorryAx-free, re-confirmed by this audit). The
+under-consumed `h_bridge`/`h_decomp` are an honest weaker signature, not a defect.
+Stale "NOT a full discharge / remain OPEN" prose flagged by this audit was rewritten
+in the audit sign-off commit.) -/
 @[entry_point]
 theorem awgn_theorem_of_typicality_converse_bindconv
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)

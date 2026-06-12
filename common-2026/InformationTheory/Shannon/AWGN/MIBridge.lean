@@ -231,7 +231,22 @@ theorem awgn_mi_bridge_of_primitives
 `awgn_theorem_F1_discharged` (ないし headline `awgn_achievability` +
 `isAwgnChannelMeasurable`) と内容重複。削除候補だが歴史的 entry point として残置。
 
-`@audit:closed-by-successor(awgn-mi-decomp-plan)` -/
+`@audit:closed-by-successor(awgn-mi-decomp-plan)`
+
+@audit:ok (independent honesty audit 2026-06-12, commit e728ebf: body rewired to a
+direct pass-through of `awgn_theorem_F1_discharged` (sorryAx-free chain to
+`awgn_achievability`). The under-consumed `h_out` / `h_decomp` claim is VALID and
+NOT a defect: taking unused hypotheses only WEAKENS the signature (the conclusion
+follows a fortiori with them present), never strengthens it dishonestly — the
+opposite of load-bearing. Their removal is correctly scoped out because the consumer
+`MIBridgeDischarge.awgn_theorem_of_typicality_converse_bindconv` (:150) passes both
+(verified). The pre-refactor body genuinely consumed them via
+`awgn_mi_bridge_of_primitives` to build `h_mi_bridge` (confirmed by `git show
+e728ebf^`); that construction lost its sink when `awgn_theorem_F1_discharged` dropped
+`h_mi_bridge`, hence the now-dead build was removed. `@audit:superseded-by(awgn_achievability)`
+co-tag correct (statement = `awgn_achievability` plus two unused hyps = strictly weaker,
+subsumed). `#print axioms awgn_theorem_F2_discharged` = `[propext, Classical.choice,
+Quot.sound]` re-confirmed by this audit.) -/
 @[entry_point]
 theorem awgn_theorem_F2_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
