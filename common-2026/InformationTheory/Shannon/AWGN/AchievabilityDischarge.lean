@@ -454,59 +454,79 @@ genuine Wall-1 (`continuousAepGaussian_holds`) output, not a load-bearing bundle
 The conclusion is the Cover–Thomas 9.2 union bound:
 `∫⁻ codebook, channel_m(errorEvent m) ≤ 2ε`. -/
 
-/-- **Random-coding union bound** (Cover–Thomas 9.2, Phase 4 = D2). With the
-codebook drawn from the 2-stage Gaussian product law and the decoder fixed to the
-joint-typical decoder against `A`, the average (over the codebook) per-message
-error probability is `≤ 2ε`, **given** the two AEP bounds on `A`:
+/-- **Random-coding union bound** (Cover–Thomas 9.2, Phase 4 = D2, δ-separated).
+With the codebook drawn from the 2-stage Gaussian product law and the decoder
+fixed to the joint-typical decoder against `A`, there is a threshold `N₀` such
+that for every `n ≥ N₀`, every codebook size `M ≤ ⌈exp(nR)⌉`, and every
+measurable typical set `A` satisfying the two AEP bounds (with **typicality slack
+`δ`**), the average (over the codebook) per-message error probability is `≤ 2ε`:
 
 * `hA_mass` — (i): the joint codebook+noise law `J` puts mass `≥ 1−ε` on `A`
   (verbatim the `continuousAepGaussian_holds` (i) conjunct).
 * `hA_indep` — (iii): the independent-pair product law `Q` puts mass
-  `≤ exp(−(klDiv_n − 3nε))` on `A` (verbatim the (iii) conjunct).
+  `≤ exp(−(klDiv_n − 3nδ))` on `A` (verbatim the (iii) conjunct, slack `δ`).
+
+The **slack assumption** `hslack : R + 3δ < (1/2) log(1 + P/N)` is what makes the
+second (alias) term honestly decay: with the typicality margin `g = I − R − 3δ > 0`
+and `klDiv_n = n·I`, the alias mass `(M−1)·exp(−(klDiv_n − 3nδ)) ≤ ⌈exp(nR)⌉·
+exp(−n(I − 3δ)) = exp(−ng)·(...) → 0`, so it is `≤ ε` past a threshold `N₀`
+(depending only on `ε, δ, R, N, P`, not on `M` or `A`). The previous `δ ≡ ε`
+coupling made this term false-as-framed whenever `3ε ≥ I` (e.g. `P=N=1, R=0.1,
+ε=0.2, n=1, M=2`: alias term `= 1 > ε`).
 
 `J` and `Q` are copied verbatim from `Walls.lean`'s `continuousAepGaussian_holds`.
 
 **Honesty**: `hA_mass`/`hA_indep` are *genuine outputs* of Wall 1, threaded as
 hypotheses for a standard layering — the decoder is fixed (`jointTypicalDecoder A`),
 no `*Hypothesis` predicate encodes the proof core, so this is **not** load-bearing
-hypothesis bundling.
+hypothesis bundling. `hslack` is a genuine regularity precondition (the
+typicality-margin condition `R + 3δ < I`), not a bundled core.
 
 @residual(plan:awgn-achievability-walls-discharge-plan) -/
 theorem awgn_random_coding_union_bound
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
-    {ε R : ℝ} (hε : 0 < ε) (hR_pos : 0 < R)
-    (hR : R < (1/2) * Real.log (1 + P / (N : ℝ)))
-    {n : ℕ} (hn : 0 < n) {M : ℕ} (hM_pos : 0 < M)
-    (hM_le : M ≤ Nat.ceil (Real.exp ((n : ℝ) * R)))
-    (A : Set ((Fin n → ℝ) × (Fin n → ℝ))) (hA_meas : MeasurableSet A)
-    (hA_mass :
-      (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-            (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
-          (fun p : (Fin n → ℝ) × (Fin n → ℝ) =>
-              (p.1, fun i => p.1 i + p.2 i))) A
-        ≥ ENNReal.ofReal (1 - ε))
-    (hA_indep :
-      ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-          (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N)))) A
-        ≤ ENNReal.ofReal (Real.exp (-(
-            (klDiv
-                (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-                    (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
-                  (fun p : (Fin n → ℝ) × (Fin n → ℝ) =>
-                      (p.1, fun i => p.1 i + p.2 i)))
-                ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-                  (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))))).toReal
-              - (n : ℝ) * (3 * ε))))) :
-    haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
-    ∀ m : Fin M,
-      ∫⁻ codebook : Fin M → Fin n → ℝ,
-        ((Measure.pi (fun i => awgnChannel N h_meas (codebook m i)))
-          ((InformationTheory.Shannon.ChannelCoding.Code.mk
-              (M := M) (n := n) (α := ℝ) (β := ℝ)
-              codebook (jointTypicalDecoder A codebook)).errorEvent m))
-      ∂(gaussianCodebook M n P.toNNReal)
-        ≤ ENNReal.ofReal (2 * ε) := by
+    {ε δ R : ℝ} (hε : 0 < ε) (hδ : 0 < δ) (hR_pos : 0 < R)
+    (hslack : R + 3 * δ < (1/2) * Real.log (1 + P / (N : ℝ))) :
+    ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n → ∀ ⦃M : ℕ⦄ (hM_pos : 0 < M),
+      M ≤ Nat.ceil (Real.exp ((n : ℝ) * R)) →
+      ∀ (A : Set ((Fin n → ℝ) × (Fin n → ℝ))), MeasurableSet A →
+        (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+              (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
+            (fun p : (Fin n → ℝ) × (Fin n → ℝ) =>
+                (p.1, fun i => p.1 i + p.2 i))) A
+          ≥ ENNReal.ofReal (1 - ε) →
+        ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+            (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N)))) A
+          ≤ ENNReal.ofReal (Real.exp (-(
+              (klDiv
+                  (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+                      (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
+                    (fun p : (Fin n → ℝ) × (Fin n → ℝ) =>
+                        (p.1, fun i => p.1 i + p.2 i)))
+                  ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+                    (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))))).toReal
+                - (n : ℝ) * (3 * δ)))) →
+        haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
+        ∀ m : Fin M,
+          ∫⁻ codebook : Fin M → Fin n → ℝ,
+            ((Measure.pi (fun i => awgnChannel N h_meas (codebook m i)))
+              ((InformationTheory.Shannon.ChannelCoding.Code.mk
+                  (M := M) (n := n) (α := ℝ) (β := ℝ)
+                  codebook (jointTypicalDecoder A codebook)).errorEvent m))
+          ∂(gaussianCodebook M n P.toNNReal)
+            ≤ ENNReal.ofReal (2 * ε) := by
   classical
+  -- The threshold `N₀` is the alias-term decay threshold (depends only on
+  -- `ε, δ, R, N, P`). It is left as an honest existential placeholder together
+  -- with the alias-term bound (term2), since the genuine `klDiv_n = n·I`
+  -- identification + exp-decay construction is the remaining deep atom; pinning
+  -- `N₀` to a concrete value here would make term2 a false goal.
+  -- @residual(plan:awgn-achievability-walls-discharge-plan)
+  refine ⟨?N₀, ?_⟩
+  case N₀ =>
+    -- @residual(plan:awgn-achievability-walls-discharge-plan)
+    sorry
+  intro n hn M hM_pos hM_le A hA_meas hA_mass hA_indep
   haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
   intro m
   -- Abbreviations for the joint law `J` and the product law `Q` (verbatim Walls).
@@ -743,7 +763,15 @@ theorem awgn_random_coding_union_bound
     -- Remaining: the joint marginal identity `∫ f1 dμX = J Aᶜ ≤ ε`.
     -- @residual(plan:awgn-achievability-walls-discharge-plan)
     sorry
-  -- ── Atom 3: second term = `(M−1)·Q A ≤ ε` (product marginal + sum + arithmetic). ──
+  -- ── Atom 3: second (alias) term `∑_{m'≠m} ∫ Wch(E2 m') = (M−1)·Q A ≤ ε`. ──
+  -- The remaining content is (a) the **Q-marginal collapse** `∑_{m'≠m} ∫ Wch(E2 m')
+  -- = (M−1)·Q A` (m'≠m ⟹ codebook m' ⊥ codebook m, the product law `Q`; same
+  -- plumbing as term1's J-marginal), and (b) the **N₀-decay** `(M−1)·Q A ≤
+  -- (M−1)·exp(−(klDiv_n − n·3δ)) ≤ ⌈exp(nR)⌉·exp(−n(I−3δ)) ≤ ε` from `hA_indep`,
+  -- `hM_le`, and `hslack` (margin `g = I − R − 3δ > 0`, needing `klDiv_n = n·I`).
+  -- Both are deferred together with the opaque threshold `N₀` (above): the decay
+  -- is what `N₀` is chosen for, so this is a single honest sorry coupled to `?N₀`.
+  -- @residual(plan:awgn-achievability-walls-discharge-plan)
   have h_term2 :
       ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
           ∫⁻ codebook, (Wch codebook) (E2 codebook m')
@@ -763,26 +791,24 @@ theorem awgn_random_coding_union_bound
     _ = ENNReal.ofReal (2 * ε) := by
         rw [← ENNReal.ofReal_add hε.le hε.le]; ring_nf
 
-/-- **Random-coding union bound** (Cover-Thomas 9.2 / Phase C-3). Under the
-random Gaussian codebook + AWGN channel, the average per-message error
+/-- **Random-coding union bound** (Cover-Thomas 9.2 / Phase C-3, δ-separated). Under
+the random Gaussian codebook + AWGN channel, the average per-message error
 probability (using `jointTypicalDecoder` against the AEP-supplied typical set)
-is `≤ 2ε` for all `M ≤ ⌈exp(n R)⌉` once `n` is large enough.
+is `≤ 2ε` for all `M ≤ ⌈exp(n R)⌉` once `n` is large enough, given the typicality
+margin `R + 3δ < (1/2) log(1 + P/N)`.
 
-**AWGN M5 migration (Phase 3-β)**: the two load-bearing predicate hypotheses
-`h_aep : IsContinuousAEPGaussian P N` / `h_rand : IsAwgnRandomCodingBound P N
-h_meas` were removed. The body now calls the shared sorry 補題
-`continuousAepGaussian_holds P N` (typical-set existence) and
-`awgnRandomCodingBound_holds P N h_meas` (integral bound) in
-`InformationTheory/Shannon/AwgnWalls.lean`. The latter is stated for an abstract
-measurable `decoder`; here we instantiate it at `jointTypicalDecoder A` and
-bridge the set shape `errorEvent ≡ {y | decoder y ≠ m}` and the measure shape
-`gaussianCodebook ≡ Measure.pi (Measure.pi ...)`. This theorem is therefore a
-genuine consumer of the two walls (no residual in this declaration). -/
+**δ-separation (2026-06-12)**: the typicality slack `δ` is now an independent
+parameter from the error target `ε` (the old `δ ≡ ε` coupling made the alias
+term false-as-framed when `3ε ≥ I`). The body takes the typical set `A` (with its
+two AEP bounds at slack `δ`) from `continuousAepGaussian_holds P N hδ hε` and the
+union-bound threshold from `awgn_random_coding_union_bound P N h_meas hε hδ hR_pos
+hslack`, threading `A`'s two bounds into the union bound. -/
 @[entry_point]
 theorem awgn_avg_error_union_bound
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
-    {R ε : ℝ} (hR_pos : 0 < R) (hR : R < (1/2) * Real.log (1 + P / (N : ℝ)))
+    {R ε δ : ℝ} (hR_pos : 0 < R) (hδ : 0 < δ)
+    (hslack : R + 3 * δ < (1/2) * Real.log (1 + P / (N : ℝ)))
     (hε : 0 < ε) :
     ∃ N₀ : ℕ, ∀ n, N₀ ≤ n → ∀ M (hM_pos : 0 < M),
       M ≤ Nat.ceil (Real.exp ((n : ℝ) * R)) →
@@ -796,27 +822,19 @@ theorem awgn_avg_error_union_bound
                   codebook (jointTypicalDecoder A codebook)).errorEvent m))
           ∂(gaussianCodebook M n P.toNNReal)
             ≤ ENNReal.ofReal (2 * ε) := by
-  -- Both walls provide an N₀; we take the maximum.
-  obtain ⟨N_aep, hN_aep⟩ := continuousAepGaussian_holds P N hε
-  obtain ⟨N_rand, hN_rand⟩ := awgnRandomCodingBound_holds P N h_meas hε hR_pos hR
+  have hR_pos' : 0 < R := hR_pos
+  -- AEP threshold (typical-set existence at slack `δ`) + union-bound threshold.
+  obtain ⟨N_aep, hN_aep⟩ := continuousAepGaussian_holds P N hδ hε
+  obtain ⟨N_rand, hN_rand⟩ :=
+    awgn_random_coding_union_bound P N h_meas hε hδ hR_pos hslack
   refine ⟨max N_aep N_rand, ?_⟩
   intro n hn M hM_pos hM_le
   haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
-  -- AEP supplies the typical set A with the 2 bounds; we forward (Measurable A).
-  obtain ⟨A, hA_meas, _, _⟩ :=
+  -- AEP supplies the typical set A with the 2 bounds; thread them into the union bound.
+  obtain ⟨A, hA_meas, hA_mass, hA_indep⟩ :=
     hN_aep (le_of_max_le_left hn : N_aep ≤ n)
   refine ⟨A, hA_meas, ?_⟩
-  intro m
-  -- The wall gives the bound for the abstract decoder; instantiate at
-  -- `jointTypicalDecoder A` and bridge `errorEvent ≡ {y | decoder y ≠ m}`.
-  have h_dec_meas : Measurable
-      (Function.uncurry (fun (c : Fin M → Fin n → ℝ) => jointTypicalDecoder A c)) :=
-    jointTypicalDecoder_joint_measurable A hA_meas
-  have h_wall := hN_rand (le_of_max_le_right hn : N_rand ≤ n) hM_pos hM_le hA_meas
-    h_dec_meas m
-  -- `errorEvent ... m = {y | jointTypicalDecoder A codebook y ≠ m}` and
-  -- `gaussianCodebook ≡ Measure.pi (Measure.pi ...)` are both definitional.
-  exact h_wall
+  exact hN_rand (le_of_max_le_right hn : N_rand ≤ n) hM_pos hM_le A hA_meas hA_mass hA_indep
 
 /-! ## Phase D — Expurgation -/
 
@@ -908,23 +926,23 @@ The load-bearing predicate `IsAwgnPowerConstraintHonest` and the bundle
 sorry-based migration (Phase 3-β, plan
 `docs/shannon/awgn-m5-sorry-migration-plan.md`).
 
-* The power-constraint analytic content (chi-square SLLN on `gaussianCodebook`,
-  `P_cb < P_target` slack ⇒ mass `≥ 1 - ε`) is now the shared sorry 補題
-  `awgnPowerConstraintHonest_holds` in `InformationTheory/Shannon/AwgnWalls.lean`
-  (`@residual(wall:awgn-power-constraint-honest)`).
+* The power-constraint analytic content is now the per-codeword expurgation bound
+  `awgnPowerConstraintPerCodeword_holds` in
+  `InformationTheory/Shannon/AwgnWalls.lean` (genuine, sorryAx-free); the false
+  `∀m`-form `awgnPowerConstraintHonest_holds` was retired (D4).
 * The bundle's only genuine (non-wall) content was the shared slack witness
-  `∃ P' ∈ (0, P]` with `R < capacity(P')`. The 3 sub-bounds at `P'` are now
-  supplied directly by the 3 walls, and the slack witness is provided by the
+  `∃ P' ∈ (0, P)` with `R < capacity(P')`. The sub-bounds at `P'` are now supplied
+  by the achievability decomposition, and the slack witness is provided by the
   genuine helper `awgnPowerWitness_exists` below (which returns a **strict**
-  `P' < P`, as required by `awgnPowerConstraintHonest_holds`). -/
+  `P' < P`, needed for the variance-level slack `(P'.toNNReal : ℝ) < P`). -/
 
-/-- **Power-constraint slack witness** (AWGN M5 Phase 3-β helper, genuine).
+/-- **Power-constraint slack witness** (genuine helper).
 
 Given `R < capacity(P) = (1/2) log(1 + P/N)`, produce a strictly smaller variance
 `P' ∈ (0, P)` for which the rate `R` is still below `capacity(P')`. The strict
-`P' < P` is genuinely required by `awgnPowerConstraintHonest_holds` (its
-`_hP_slack : P_cb < P_target` argument); the witness must therefore deliver a
-true strict inequality, never a non-strict one fabricated from `≤`.
+`P' < P` is genuinely required by `awgnPowerConstraintPerCodeword_holds` (its
+`(P_cb.toNNReal : ℝ) < P_target` slack argument); the witness must therefore
+deliver a true strict inequality, never a non-strict one fabricated from `≤`.
 
 Construction: `capacity` is continuous and strictly increasing in the variance;
 `R < capacity(P)` lies strictly below the value at `P`, so by continuity there is
@@ -1037,29 +1055,34 @@ theorem awgn_extract_AwgnCode
 predicate-hypothesis-free.
 
 History: the bundle hyp `h_feasible : IsAwgnRandomCodingFeasible P N h_meas`
-(Phase 2 pivot 2026-05-24) was **removed** by AWGN M5 Phase 3-β (2026-05-28,
-Tier 3 → Tier 2 sorry-based migration). The 3 analytic Mathlib gaps the bundle
-used to package (continuous SMB / n-d `differentialEntropy` / chi-square SLLN)
-are now honest shared sorry 補題 in `AwgnWalls.lean`
-(`continuousAepGaussian_holds` / `awgnRandomCodingBound_holds` /
-`awgnPowerConstraintHonest_holds`, each `@residual(wall:awgn-*)`).
+(Phase 2 pivot 2024-05-24) was **removed** by AWGN M5 Phase 3-β (2026-05-28).
+The 2026-06-12 **δ-separation + D4 rewire** then re-wired the achievability core
+to the new honest decomposition: the typical set (with its two AEP bounds at
+slack `δ`) comes from `continuousAepGaussian_holds P' N`, the per-message error
+bound from the **δ-separated genuine union bound**
+`awgn_random_coding_union_bound P' N h_meas` (this file, Phase 4 = D2), and the
+power constraint from the **per-codeword expurgation bound**
+`awgnPowerConstraintPerCodeword_holds P' P N` (`Walls.lean`, Phase 5a = D3,
+sorryAx-free). The old false walls `awgnRandomCodingBound_holds` (`∀decoder`
+over-strong) and `awgnPowerConstraintHonest_holds` (`∀m` exponential-rate
+unsatisfiable) are **retired** (deleted).
 
-**Body structure (Phase 3-β)**: the shared slack variance `P'` (now a **strict**
-`P' < P`) comes from the genuine helper `awgnPowerWitness_exists` (this file).
-The 3 sub-bounds at `P'` come from the `AwgnWalls.lean` walls; the random-coding
-wall is reshaped into the old `errorEvent`/`gaussianCodebook` predicate form via
-defeq + `jointTypicalDecoder` injection. The 580-line F-1 assembly (rate
-inflation, doubling, barrier construction, D-1 extraction, power-OK
-contradiction, D-2 worst-half, monotonic reindex, sub⊆full inclusion, D-3
-bridge) is preserved verbatim and consumes `h_aep' / h_rand' / h_power'` exactly
-as the old bundle destructure did. `awgnPowerConstraintHonest_holds P' P N`
-consumes the *original* P-capacity rate bound (via `P' < P` log-monotonicity).
+**Body structure (Phase 3 rewire)**: the shared slack variance `P'` (strict
+`P' < P`) comes from `awgnPowerWitness_exists`. A typicality slack `δ := (C−R)/12`
+is introduced so the union-bound margin `R'' + 3δ < C` holds. The 580-line F-1
+assembly (rate inflation, doubling, **per-codeword combined-penalty barrier**,
+D-1 extraction, worst-half, monotonic reindex, sub⊆full inclusion, D-3 bridge)
+is preserved; the barrier is now `g c := ∑_m (Pe c m + 𝟙_{violate m}(c))` so the
+power constraint is enforced per-codeword (matching `awgnPowerConstraintPerCodeword_holds`).
 
 **Honesty**: the assembly body is GENUINE (no degenerate/circular/laundering);
-0 sorry / 0 `@residual` in this file. The only honest residuals are the named
-shared walls in `AwgnWalls.lean`, audited 2026-05-28.
+0 sorry / 0 `@residual` **in this declaration**. It transitively consumes the
+honest sorries in `awgn_random_coding_union_bound` (term1 J-marginal collapse,
+term2 alias-decay + N₀, all `@residual(plan:awgn-achievability-walls-discharge-plan)`)
+and `continuousAepGaussian_holds` (MemLp + change-of-measure). It is therefore
+not yet proof-done; the `@audit:ok` tag is retracted pending those deep atoms.
 
-`@audit:ok` -/
+@residual(plan:awgn-achievability-walls-discharge-plan) -/
 @[entry_point]
 theorem isAwgnTypicalityHypothesis
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -1082,41 +1105,16 @@ theorem isAwgnTypicalityHypothesis
     awgnPowerWitness_exists P hP N hN hR_pos hR
   -- Non-strict slack kept under the original name for the verbatim assembly.
   have hP'_lt_P : P' ≤ P := le_of_lt hP'_lt_P_strict
-  -- (i) AEP at `P'` (typical-set existence + 3 bounds) — wall 1.
+  -- (i) AEP at `P'` (typical-set existence + 2 bounds at slack `δ`) — wall 1.
   have h_aep' := continuousAepGaussian_holds P' N
-  -- (ii) random-coding integral bound at `P'`, specialised to the joint typical
-  -- decoder against the AEP set. Reconstruct the old predicate shape (errorEvent
-  -- over `gaussianCodebook`) from the abstract-decoder wall.
-  have h_rand' : ∀ ⦃ε : ℝ⦄, 0 < ε → ∀ ⦃R : ℝ⦄, 0 < R →
-      R < (1/2) * Real.log (1 + P' / (N : ℝ)) →
-      ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n → ∀ ⦃M : ℕ⦄ (hM_pos : 0 < M),
-        M ≤ Nat.ceil (Real.exp ((n : ℝ) * R)) →
-        ∀ ⦃A : Set ((Fin n → ℝ) × (Fin n → ℝ))⦄, MeasurableSet A →
-          haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
-          ∀ m : Fin M,
-            ∫⁻ codebook : Fin M → Fin n → ℝ,
-              ((Measure.pi (fun i => awgnChannel N h_meas (codebook m i)))
-                ((InformationTheory.Shannon.ChannelCoding.Code.mk
-                    (M := M) (n := n) (α := ℝ) (β := ℝ)
-                    codebook (jointTypicalDecoder A codebook)).errorEvent m))
-            ∂(gaussianCodebook M n P'.toNNReal)
-              ≤ ENNReal.ofReal (2 * ε) := by
-    intro ε' hε' R' hR'_pos hR'_lt
-    obtain ⟨N₀, hN₀⟩ := awgnRandomCodingBound_holds P' N h_meas hε' hR'_pos hR'_lt
-    refine ⟨N₀, ?_⟩
-    intro n hn M hM_pos hM_le A hA_meas
-    haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
-    intro m
-    have h_dec_meas : Measurable
-        (Function.uncurry (fun (c : Fin M → Fin n → ℝ) => jointTypicalDecoder A c)) :=
-      jointTypicalDecoder_joint_measurable A hA_meas
-    have h_wall := hN₀ hn hM_pos hM_le hA_meas h_dec_meas m
-    -- `errorEvent ... m = {y | jointTypicalDecoder A codebook y ≠ m}` and
-    -- `gaussianCodebook ≡ Measure.pi (Measure.pi ...)` are both definitional.
-    exact h_wall
-  -- (iii) power-constraint honest mass bound — wall 3. The genuine strict slack
-  -- `P' < P` is required by the wall's `_hP_slack` argument.
-  have h_power' := awgnPowerConstraintHonest_holds P' P hP'_lt_P_strict N
+  -- (iii) per-codeword power-constraint expurgation bound — wall 3 (Phase 5a
+  -- genuine, sorryAx-free). Needs the variance-level slack
+  -- `(P'.toNNReal : ℝ) < P`; from `0 < P' < P` and `(P'.toNNReal : ℝ) = P'`
+  -- (since `P' > 0`).
+  have hP'_toNNReal_eq : (P'.toNNReal : ℝ) = P' := by
+    rw [Real.coe_toNNReal']; exact max_eq_left hP'_pos.le
+  have hP'slack : (P'.toNNReal : ℝ) < P := by rw [hP'_toNNReal_eq]; exact hP'_lt_P_strict
+  have h_power' := awgnPowerConstraintPerCodeword_holds P' P hP'slack N
   -- WLOG `ε ≤ 1` via `ε₁ := min ε 1`; conclusion `< ε₁` ⟹ `< ε`.
   set ε₁ : ℝ := min ε 1 with hε₁_def
   have hε₁_pos : 0 < ε₁ := lt_min hε one_pos
@@ -1142,6 +1140,13 @@ theorem isAwgnTypicalityHypothesis
     linarith
   have hR''_lt_C : R'' < C := by linarith
   have hR_lt_R'' : R < R'' := by linarith
+  -- **Typicality slack `δ`** (δ-separation): pick `δ := (C − R)/12 > 0` so that
+  -- `R'' + 3δ < C` (the margin condition the δ-separated union bound consumes).
+  -- `3δ = (C − R)/4` and `R'' = C − (C − R)/2`, so `R'' + 3δ = C − (C − R)/4 < C`.
+  set δ : ℝ := (C - R) / 12 with hδ_def
+  have hδ_pos : 0 < δ := by rw [hδ_def]; linarith [hR_lt_C]
+  have hslack'' : R'' + 3 * δ < C := by
+    rw [hδ_def, hR''_def]; linarith
   -- Derive `R'' < (1/2) * log(1 + P / N)` (the *original*-P capacity bound)
   -- from `R'' < C = (1/2) * log(1 + P'/N)` via monotonicity in P'≤P.
   have hN_pos : (0 : ℝ) < (N : ℝ) := by
@@ -1162,12 +1167,14 @@ theorem isAwgnTypicalityHypothesis
       have h_half_pos : (0 : ℝ) < 1 / 2 := by norm_num
       exact mul_le_mul_of_nonneg_left h_log_le (le_of_lt h_half_pos)
     exact lt_of_lt_of_le hR''_lt_C h_C_le
-  -- Extract three N₀ from the destructured sub-bounds.
-  -- `h_aep'`, `h_rand'` evaluated at the slack `P'` (capacity `C`);
-  -- `h_power'` evaluated at the original `P` capacity (target `n · P`).
-  obtain ⟨N_aep,  hN_aep⟩  := h_aep'   hε_rand_pos
-  obtain ⟨N_rand, hN_rand⟩ := h_rand'  hε_rand_pos hR''_pos hR''_lt_C
-  obtain ⟨N_pow,  hN_pow⟩  := h_power' hε_pow_pos  hR''_pos hR''_lt_PC
+  -- Extract three N₀ from the sub-bounds.
+  -- AEP (`h_aep'`) at slack variance `P'`, typicality slack `δ`, mass-fail `ε_rand`;
+  -- union bound (`awgn_random_coding_union_bound`) at `P'`, rate `R''`, slack `δ`;
+  -- power (`h_power'`) per-codeword at variance `P'`, target `P`, mass-fail `ε_pow`.
+  obtain ⟨N_aep,  hN_aep⟩  := h_aep' hδ_pos hε_rand_pos
+  obtain ⟨N_rand, hN_rand⟩ :=
+    awgn_random_coding_union_bound P' N h_meas hε_rand_pos hδ_pos hR''_pos hslack''
+  obtain ⟨N_pow,  hN_pow⟩  := h_power' hε_pow_pos
   -- `N_doubling`: smallest `n ≥ 1` such that `2 * ⌈exp(nR)⌉ ≤ ⌈exp(n·R'')⌉`.
   -- Existence: `exp(nR'')/exp(nR) = exp(n(R''-R)) → ∞`, so for n large
   -- `exp(n·R'') ≥ 2 * exp(nR) + 2`, which forces the Nat.ceil inequality.
@@ -1179,24 +1186,24 @@ theorem isAwgnTypicalityHypothesis
     -- `exp(n(R''-R)) ≥ 4`, hence `exp(n R'') ≥ 4 * exp(n R)`. Then
     -- `2 * ⌈exp(n R)⌉ ≤ 2 * (exp(n R) + 1) ≤ 4 * exp(n R) ≤ exp(n R'') ≤ ⌈exp(n R'')⌉`
     -- holds provided `2 * exp(n R) ≥ 2` (i.e., `exp(n R) ≥ 1`, true for n ≥ 0).
-    set δ : ℝ := R'' - R with hδ_def
-    have hδ_pos : 0 < δ := by linarith
-    -- Need `n * δ ≥ log 4`, i.e., `n ≥ log 4 / δ`.
-    set N₀ : ℕ := Nat.ceil (Real.log 4 / δ) with hN₀_def
+    set δd : ℝ := R'' - R with hδd_def
+    have hδd_pos : 0 < δd := by linarith
+    -- Need `n * δd ≥ log 4`, i.e., `n ≥ log 4 / δd`.
+    set N₀ : ℕ := Nat.ceil (Real.log 4 / δd) with hN₀_def
     refine ⟨N₀, fun n hn => ?_⟩
     -- Cast `(N₀ : ℝ) ≤ (n : ℝ)`.
-    have h_ndelta : Real.log 4 / δ ≤ (n : ℝ) := by
+    have h_ndelta : Real.log 4 / δd ≤ (n : ℝ) := by
       have h_cast : ((N₀ : ℕ) : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn
-      calc Real.log 4 / δ ≤ (Nat.ceil (Real.log 4 / δ) : ℝ) := Nat.le_ceil _
+      calc Real.log 4 / δd ≤ (Nat.ceil (Real.log 4 / δd) : ℝ) := Nat.le_ceil _
         _ = (N₀ : ℝ) := by rfl
         _ ≤ (n : ℝ) := h_cast
-    have h_exp_n_delta_ge_4 : (4 : ℝ) ≤ Real.exp ((n : ℝ) * δ) := by
-      have h_n_delta : Real.log 4 ≤ (n : ℝ) * δ := by
-        have := (div_le_iff₀ hδ_pos).mp h_ndelta
+    have h_exp_n_delta_ge_4 : (4 : ℝ) ≤ Real.exp ((n : ℝ) * δd) := by
+      have h_n_delta : Real.log 4 ≤ (n : ℝ) * δd := by
+        have := (div_le_iff₀ hδd_pos).mp h_ndelta
         linarith
       have := Real.exp_le_exp.mpr h_n_delta
       rwa [Real.exp_log (by norm_num : (0 : ℝ) < 4)] at this
-    have h_exp_R''_ge : Real.exp ((n : ℝ) * R'') = Real.exp ((n : ℝ) * R) * Real.exp ((n : ℝ) * δ) := by
+    have h_exp_R''_ge : Real.exp ((n : ℝ) * R'') = Real.exp ((n : ℝ) * R) * Real.exp ((n : ℝ) * δd) := by
       rw [← Real.exp_add]; congr 1; ring
     have h_exp_R_pos : 0 < Real.exp ((n : ℝ) * R) := Real.exp_pos _
     have h_exp_R_ge_one : 1 ≤ Real.exp ((n : ℝ) * R) := by
@@ -1218,9 +1225,9 @@ theorem isAwgnTypicalityHypothesis
     have h_4_le_R'' : (4 : ℝ) * Real.exp ((n : ℝ) * R) ≤ Real.exp ((n : ℝ) * R'') := by
       rw [h_exp_R''_ge]
       have : (4 : ℝ) * Real.exp ((n : ℝ) * R)
-          ≤ Real.exp ((n : ℝ) * δ) * Real.exp ((n : ℝ) * R) := by
+          ≤ Real.exp ((n : ℝ) * δd) * Real.exp ((n : ℝ) * R) := by
         nlinarith [h_exp_R_pos]
-      linarith [this, mul_comm (Real.exp ((n : ℝ) * R)) (Real.exp ((n : ℝ) * δ))]
+      linarith [this, mul_comm (Real.exp ((n : ℝ) * R)) (Real.exp ((n : ℝ) * δd))]
     have h_le_R'' : (2 * Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ)
         ≤ Real.exp ((n : ℝ) * R'') := le_trans h_two_ceil_R_le h_4_le_R''
     -- Conclude via Nat.le_ceil.
@@ -1250,10 +1257,13 @@ theorem isAwgnTypicalityHypothesis
   have hM_ge_two : 2 ≤ M := by have := hM_target_pos; omega
   haveI : NeZero M := ⟨hM_pos.ne'⟩
   haveI : NeZero M_target := ⟨hM_target_pos.ne'⟩
-  -- (1) typical set + measurability from AEP at parameters `(P', N, ε_rand, n)`.
-  obtain ⟨A, hA_meas, _hA_mass, _hA_indep⟩ := hN_aep hn_aep
-  -- (2) per-m average error bound from h_rand' at rate R'' (size M = ⌈exp(n·R'')⌉),
-  --     codebook drawn from the P'-variance Gaussian product.
+  -- (1) typical set + measurability from AEP at parameters `(P', N, δ, ε_rand, n)`,
+  --     **keeping** the two AEP bounds (mass `≥ 1−ε_rand`, indep-pair `≤ exp(...)`)
+  --     to thread into the δ-separated union bound.
+  obtain ⟨A, hA_meas, hA_mass, hA_indep⟩ := hN_aep hn_aep
+  -- (2) per-m average error bound from the δ-separated union bound at rate R''
+  --     (size M = ⌈exp(n·R'')⌉), codebook drawn from the P'-variance Gaussian
+  --     product. The two AEP bounds on `A` are now threaded as arguments.
   have hM_le_ceil_R'' : M ≤ Nat.ceil (Real.exp ((n : ℝ) * R'')) := le_rfl
   have h_per_m : ∀ m : Fin M,
       ∫⁻ codebook : Fin M → Fin n → ℝ,
@@ -1264,14 +1274,16 @@ theorem isAwgnTypicalityHypothesis
       ∂(gaussianCodebook M n P'.toNNReal)
         ≤ ENNReal.ofReal (2 * ε_rand) := by
     intro m
-    exact hN_rand hn_rand hM_pos hM_le_ceil_R'' hA_meas m
-  -- (3) power-OK set mass bound from h_power'. Codebook drawn at P', target n · P
-  --     (SLLN slack `P − P' > 0` carries the bound).
-  have h_power_mass :
+    exact hN_rand hn_rand hM_pos hM_le_ceil_R'' A hA_meas hA_mass hA_indep m
+  -- (3) per-codeword power-violation mass bound from h_power' (per-codeword form).
+  --     Each codeword `m` violates `∑ᵢ (c m i)² > n·P` on a set of mass ≤ ε_pow.
+  --     Codebook drawn at variance P', target `n · P` (slack `P' < P`).
+  have h_viol_mass : ∀ m : Fin M,
       (gaussianCodebook M n P'.toNNReal)
-          {c : Fin M → Fin n → ℝ | ∀ m, (∑ i, (c m i)^2) ≤ (n : ℝ) * P}
-        ≥ ENNReal.ofReal (1 - ε_pow) :=
-    hN_pow hn_pow hM_pos hM_le_ceil_R''
+          {c : Fin M → Fin n → ℝ | (n : ℝ) * P < ∑ i, (c m i) ^ 2}
+        ≤ ENNReal.ofReal ε_pow := by
+    intro m
+    exact hN_pow hn_pow hM_pos m
   -- (4) sum-and-barrier integrand. Define
   --   `Pe c m := (Measure.pi (...)) (errorEvent ...)` (ℝ≥0∞-valued)
   --   `g c := ∑_m Pe c m + M · 𝟙_{¬power}(c)`.
@@ -1289,29 +1301,32 @@ theorem isAwgnTypicalityHypothesis
         (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c m i))) := by
       infer_instance
     exact prob_le_one
-  -- Power-OK set, its complement, and its measurability. **Note**: the
-  -- constraint target is `n · P` (the original power budget), even though the
-  -- codebook is drawn from the slack-variance `P'` Gaussian; this asymmetry is
-  -- what `IsAwgnPowerConstraintHonest P' P N` encodes.
-  set PowSet : Set (Fin M → Fin n → ℝ) :=
-    {c : Fin M → Fin n → ℝ | ∀ m, (∑ i, (c m i)^2) ≤ (n : ℝ) * P} with hPowSet_def
-  have hPowSet_meas : MeasurableSet PowSet := by
-    -- PowSet = ⋂ m, {c | ∑ i, (c m i)^2 ≤ n*P}.
-    show MeasurableSet {c : Fin M → Fin n → ℝ | ∀ m, (∑ i, (c m i)^2) ≤ (n : ℝ) * P}
-    rw [show {c : Fin M → Fin n → ℝ | ∀ m, (∑ i, (c m i)^2) ≤ (n : ℝ) * P}
-          = ⋂ m : Fin M, {c | (∑ i, (c m i)^2) ≤ (n : ℝ) * P} by
-        ext c; simp]
-    refine MeasurableSet.iInter (fun m => ?_)
-    -- Function `c ↦ ∑ i, (c m i)^2` is measurable.
-    have h_meas_fun : Measurable
-        (fun c : Fin M → Fin n → ℝ => ∑ i, (c m i)^2) := by
-      refine Finset.measurable_sum _ (fun i _ => ?_)
-      -- c ↦ c m i is the projection (composition of two pi-projections).
-      have h_proj : Measurable (fun c : Fin M → Fin n → ℝ => c m i) :=
-        (measurable_pi_apply i).comp (measurable_pi_apply m)
-      exact h_proj.pow_const 2
-    exact h_meas_fun measurableSet_Iic
-  have hPowComp_meas : MeasurableSet PowSetᶜ := hPowSet_meas.compl
+  -- **Per-codeword violation set** `ViolSet m = {c | n·P < ∑ᵢ (c m i)²}` and its
+  -- indicator `Viol c m`. The constraint target is `n · P` (the original power
+  -- budget), even though the codebook is drawn from the slack-variance `P'`
+  -- Gaussian. This replaces the old all-or-nothing `M · 𝟙_{∃m violate}` barrier
+  -- with a **per-codeword** penalty so each `m` is handled independently (matching
+  -- the per-codeword power bound `h_viol_mass`).
+  set ViolSet : Fin M → Set (Fin M → Fin n → ℝ) := fun m =>
+    {c : Fin M → Fin n → ℝ | (n : ℝ) * P < ∑ i, (c m i) ^ 2} with hViolSet_def
+  have hViolSet_meas : ∀ m, MeasurableSet (ViolSet m) := by
+    intro m
+    rw [hViolSet_def]
+    apply measurableSet_lt measurable_const
+    refine Finset.measurable_sum _ (fun i _ => ?_)
+    have h_proj : Measurable (fun c : Fin M → Fin n → ℝ => c m i) :=
+      (measurable_pi_apply i).comp (measurable_pi_apply m)
+    exact h_proj.pow_const 2
+  set Viol : (Fin M → Fin n → ℝ) → Fin M → ℝ≥0∞ := fun c m =>
+    (ViolSet m).indicator (fun _ => (1 : ℝ≥0∞)) c with hViol_def
+  have hViol_le_one : ∀ c m, Viol c m ≤ 1 := by
+    intro c m
+    rw [hViol_def]
+    exact Set.indicator_le_self' (fun _ _ => zero_le_one) c
+  have hViol_meas : ∀ m, Measurable (fun c => Viol c m) := by
+    intro m
+    rw [hViol_def]
+    exact measurable_const.indicator (hViolSet_meas m)
   -- AEMeasurable Pe c m as a function of c (for `lintegral_finsetSum'`).
   -- Discharged via the three private helpers `jointTypicalDecoder_joint_measurable`
   -- + `awgnCodebookKernel` + `Kernel.measurable_kernel_prodMk_left`.
@@ -1346,161 +1361,85 @@ theorem isAwgnTypicalityHypothesis
       rfl
     rw [hPe_eq]
     exact Kernel.measurable_kernel_prodMk_left hT_meas
-  -- Sum integrand AE-measurable.
-  have hSum_meas : AEMeasurable (fun c => ∑ m, Pe c m)
+  -- The combined per-codeword integrand `Pe c m + Viol c m` is AE-measurable.
+  have hPV_meas : ∀ m, AEMeasurable (fun c => Pe c m + Viol c m)
+      (gaussianCodebook M n P'.toNNReal) := by
+    intro m
+    exact (hPe_meas m).add (hViol_meas m).aemeasurable
+  -- Barrier `g c := ∑_m (Pe c m + Viol c m)` is AE-measurable.
+  have hG_aemeas : AEMeasurable (fun c => ∑ m, (Pe c m + Viol c m))
       (gaussianCodebook M n P'.toNNReal) := by
     have h := Finset.aemeasurable_sum (s := (Finset.univ : Finset (Fin M)))
       (μ := gaussianCodebook M n P'.toNNReal)
-      (f := fun m c => Pe c m) (fun m _ => hPe_meas m)
-    -- `∑ x ∈ univ, (fun c => Pe c x)` and `fun c => ∑ x, Pe c x` are equal by `Finset.sum_fn`.
-    rw [show (fun c => ∑ m, Pe c m) =
-          (∑ m ∈ (Finset.univ : Finset (Fin M)), fun c => Pe c m) from
+      (f := fun m c => Pe c m + Viol c m) (fun m _ => hPV_meas m)
+    rw [show (fun c => ∑ m, (Pe c m + Viol c m)) =
+          (∑ m ∈ (Finset.univ : Finset (Fin M)), fun c => Pe c m + Viol c m) from
         (Finset.sum_fn _ _).symm]
     exact h
-  -- Integral of the sum across `Fin M`.
-  have h_int_sum :
-      ∫⁻ c, (∑ m, Pe c m) ∂(gaussianCodebook M n P'.toNNReal)
-        ≤ (M : ℝ≥0∞) * ENNReal.ofReal (2 * ε_rand) := by
-    have h_eq :
-        ∫⁻ c, (∑ m, Pe c m) ∂(gaussianCodebook M n P'.toNNReal)
-          = ∑ m, ∫⁻ c, Pe c m ∂(gaussianCodebook M n P'.toNNReal) :=
-      lintegral_finsetSum' Finset.univ (fun m _ => hPe_meas m)
-    rw [h_eq]
-    have h_le : ∑ m : Fin M, ∫⁻ c, Pe c m ∂(gaussianCodebook M n P'.toNNReal)
-        ≤ ∑ _m : Fin M, ENNReal.ofReal (2 * ε_rand) := by
-      apply Finset.sum_le_sum
-      intro m _
-      exact h_per_m m
-    refine h_le.trans ?_
-    rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]
-    -- M • ENNReal.ofReal _ = (M : ℝ≥0∞) * ENNReal.ofReal _
-    rw [nsmul_eq_mul]
-  -- Integral of the barrier `M · 𝟙_{¬power}`.
-  have h_int_barrier :
-      ∫⁻ c, (M : ℝ≥0∞) * (PowSetᶜ).indicator (fun _ => (1 : ℝ≥0∞)) c
-        ∂(gaussianCodebook M n P'.toNNReal)
-          ≤ (M : ℝ≥0∞) * ENNReal.ofReal ε_pow := by
-    -- ∫⁻ M * 𝟙_S = M * ∫⁻ 𝟙_S = M * μ S.
-    rw [lintegral_const_mul _ (measurable_const.indicator hPowComp_meas)]
-    rw [lintegral_indicator_const hPowComp_meas]
-    rw [one_mul]
-    gcongr
-    -- μ(PowSetᶜ) = 1 - μ(PowSet); μ(PowSet) ≥ 1 - ε_pow ⟹ μ(PowSetᶜ) ≤ ε_pow.
-    rw [prob_compl_eq_one_sub hPowSet_meas]
-    -- 1 - μ(PowSet) ≤ 1 - (1 - ε_pow) = ε_pow (in ℝ≥0∞ truncated subtraction).
-    have h_le_one : (1 : ℝ≥0∞)
-        ≤ (gaussianCodebook M n P'.toNNReal) PowSet + ENNReal.ofReal ε_pow := by
-      calc (1 : ℝ≥0∞)
-          = ENNReal.ofReal (1 - ε_pow) + ENNReal.ofReal ε_pow := by
-            rw [← ENNReal.ofReal_add (by linarith) (le_of_lt hε_pow_pos)]
-            simp [sub_add_cancel]
-        _ ≤ (gaussianCodebook M n P'.toNNReal) PowSet + ENNReal.ofReal ε_pow := by
-            gcongr
-    exact tsub_le_iff_left.mpr h_le_one
-  -- Sum of the two.
+  -- Per-codeword integral bound: `∫⁻ (Pe c m + Viol c m) ≤ ofReal(2ε_rand) + ofReal(ε_pow)`.
+  have h_per_int : ∀ m,
+      ∫⁻ c, (Pe c m + Viol c m) ∂(gaussianCodebook M n P'.toNNReal)
+        ≤ ENNReal.ofReal (2 * ε_rand) + ENNReal.ofReal ε_pow := by
+    intro m
+    rw [lintegral_add_left' (hPe_meas m)]
+    refine add_le_add (h_per_m m) ?_
+    -- ∫⁻ Viol c m = μ (ViolSet m) ≤ ε_pow (from h_viol_mass).
+    have h_viol_int : ∫⁻ c, Viol c m ∂(gaussianCodebook M n P'.toNNReal)
+        = (gaussianCodebook M n P'.toNNReal) (ViolSet m) := by
+      rw [hViol_def]
+      exact lintegral_indicator_const (hViolSet_meas m) _ |>.trans (by rw [one_mul])
+    rw [h_viol_int]
+    exact h_viol_mass m
+  -- Integral of the barrier `g`.
   have hsum_total :
-      ∫⁻ c, ((∑ m, Pe c m)
-        + (M : ℝ≥0∞) * (PowSetᶜ).indicator (fun _ => (1 : ℝ≥0∞)) c)
-        ∂(gaussianCodebook M n P'.toNNReal)
-          ≤ (M : ℝ≥0∞) * (ENNReal.ofReal (2 * ε_rand) + ENNReal.ofReal ε_pow) := by
-    -- Split the integral via `lintegral_add_left'` then sum the two bounds.
-    rw [lintegral_add_left' hSum_meas]
-    rw [mul_add]
-    exact add_le_add h_int_sum h_int_barrier
-  -- Bridge: combine to get a bound by ENNReal.ofReal ((M : ℝ) * 2 * ε_d2).
+      ∫⁻ c, (∑ m, (Pe c m + Viol c m)) ∂(gaussianCodebook M n P'.toNNReal)
+        ≤ (M : ℝ≥0∞) * (ENNReal.ofReal (2 * ε_rand) + ENNReal.ofReal ε_pow) := by
+    rw [lintegral_finsetSum' Finset.univ (fun m _ => hPV_meas m)]
+    refine le_trans (Finset.sum_le_sum (fun m _ => h_per_int m)) ?_
+    rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+  -- Bridge: `M · (ofReal(2ε_rand) + ofReal(ε_pow)) = M · ofReal(2ε_d2)`.
   have hbound_eq :
       (M : ℝ≥0∞) * (ENNReal.ofReal (2 * ε_rand) + ENNReal.ofReal ε_pow)
         = (M : ℝ≥0∞) * ENNReal.ofReal (2 * ε_d2) := by
     congr 1
     rw [← ENNReal.ofReal_add (by positivity) (le_of_lt hε_pow_pos)]
     congr 1
-    -- 2 * (ε₁/10) + ε₁/5 = 2 * (ε₁/5)
     show 2 * (ε₁ / 10) + ε₁ / 5 = 2 * (ε₁ / 5)
     ring
-  -- (5) D-1: extract a specific codebook with the barrier-augmented bound.
-  have hG_aemeas : AEMeasurable
-      (fun c => (∑ m, Pe c m)
-        + (M : ℝ≥0∞) * (PowSetᶜ).indicator (fun _ => (1 : ℝ≥0∞)) c)
-      (gaussianCodebook M n P'.toNNReal) := by
-    refine hSum_meas.add ?_
-    refine AEMeasurable.const_mul ?_ _
-    refine (Measurable.indicator measurable_const hPowComp_meas).aemeasurable
+  -- (5) D-1: extract a specific codebook `c_full` with `g(c_full) ≤ M·ofReal(2ε_d2)`.
   obtain ⟨c_full, hc_full_bound⟩ :=
     awgn_exists_codebook_le_avg (M := M) (n := n) (σsq := P'.toNNReal)
-      (Pe := fun c => (∑ m, Pe c m)
-        + (M : ℝ≥0∞) * (PowSetᶜ).indicator (fun _ => (1 : ℝ≥0∞)) c)
+      (Pe := fun c => ∑ m, (Pe c m + Viol c m))
       hG_aemeas (B := (M : ℝ≥0∞) * ENNReal.ofReal (2 * ε_d2))
       (hsum_total.trans hbound_eq.le)
-  -- (6) c_full is power-OK (contradiction otherwise).
-  have hc_full_power : c_full ∈ PowSet := by
-    by_contra h_not
-    -- If c_full ∉ PowSet, then `indicator = 1` and `g(c_full) ≥ M`.
-    have h_indic_one :
-        (PowSetᶜ).indicator (fun _ => (1 : ℝ≥0∞)) c_full = 1 := by
-      rw [Set.indicator_of_mem h_not]
-    -- So `g(c_full) ≥ M`, but `g(c_full) ≤ M · ENNReal.ofReal (2 * ε_d2)`.
-    have h_lower : (M : ℝ≥0∞) ≤ (∑ m, Pe c_full m)
-        + (M : ℝ≥0∞) * (PowSetᶜ).indicator (fun _ => (1 : ℝ≥0∞)) c_full := by
-      rw [h_indic_one, mul_one]
-      exact le_add_self
-    have h_upper := hc_full_bound
-    -- Combine: `M ≤ M · ENNReal.ofReal (2 * ε_d2)`, i.e., `1 ≤ ENNReal.ofReal (2 * ε_d2)`.
-    -- But `ENNReal.ofReal (2 * ε_d2) < 1` since `2 * ε_d2 < 1`.
-    have h_chain : (M : ℝ≥0∞) ≤ (M : ℝ≥0∞) * ENNReal.ofReal (2 * ε_d2) :=
-      h_lower.trans h_upper
-    have hM_ne_zero : (M : ℝ≥0∞) ≠ 0 := by
-      simp [hM_pos.ne']
-    have hM_ne_top : (M : ℝ≥0∞) ≠ ⊤ := ENNReal.natCast_ne_top _
-    -- Divide both sides by M: `1 ≤ ENNReal.ofReal (2 * ε_d2)`.
-    have h_one_le : (1 : ℝ≥0∞) ≤ ENNReal.ofReal (2 * ε_d2) := by
-      have h_cancel : (M : ℝ≥0∞) * ENNReal.ofReal (2 * ε_d2) / (M : ℝ≥0∞)
-          = ENNReal.ofReal (2 * ε_d2) := by
-        rw [mul_comm, ENNReal.mul_div_cancel_right hM_ne_zero hM_ne_top]
-      have := ENNReal.div_le_div_right h_chain (M : ℝ≥0∞)
-      rw [ENNReal.div_self hM_ne_zero hM_ne_top, h_cancel] at this
-      exact this
-    -- Contradict `2 * ε_d2 < 1` (we showed `ε_d2 < 1/2`).
-    have h_real_lt : 2 * ε_d2 < 1 := by linarith
-    have h_real_nonneg : (0 : ℝ) ≤ 2 * ε_d2 := by positivity
-    rw [show (1 : ℝ≥0∞) = ENNReal.ofReal 1 by simp,
-        ENNReal.ofReal_le_ofReal_iff h_real_nonneg] at h_one_le
-    linarith
-  have hc_full_indic_zero :
-      (PowSetᶜ).indicator (fun _ => (1 : ℝ≥0∞)) c_full = 0 := by
-    rw [Set.indicator_of_notMem]
-    exact fun hmem => hmem hc_full_power
-  -- So `∑_m Pe c_full m ≤ M · ENNReal.ofReal (2 · ε_d2)` (drop the zero barrier).
-  have hc_full_sum :
-      (∑ m, Pe c_full m) ≤ (M : ℝ≥0∞) * ENNReal.ofReal (2 * ε_d2) := by
-    have := hc_full_bound
-    rw [hc_full_indic_zero, mul_zero, add_zero] at this
-    exact this
-  -- (7) Convert to ℝ-side sum. Each `Pe c_full m ≤ 1` is finite; sum ≠ ⊤.
-  set Pe_real : Fin M → ℝ := fun m => (Pe c_full m).toReal with hPe_real_def
-  have hPe_real_nn : ∀ m, 0 ≤ Pe_real m := fun m => ENNReal.toReal_nonneg
+  -- (6) Each `Pe c_full m ≤ 1` and `Viol c_full m ≤ 1` are finite.
   have hPe_ne_top : ∀ m, Pe c_full m ≠ ⊤ := fun m =>
     (hPe_le_one c_full m).trans_lt (by norm_num : (1 : ℝ≥0∞) < ⊤) |>.ne
-  have hsum_ne_top : (∑ m, Pe c_full m) ≠ ⊤ := by
-    apply ENNReal.sum_ne_top.mpr
-    exact fun m _ => hPe_ne_top m
+  have hViol_ne_top : ∀ m, Viol c_full m ≠ ⊤ := fun m =>
+    (hViol_le_one c_full m).trans_lt (by norm_num : (1 : ℝ≥0∞) < ⊤) |>.ne
+  -- (7) Convert to ℝ-side **combined** penalty `Comb m := (Pe).toReal + (Viol).toReal`.
+  set Comb : Fin M → ℝ := fun m => (Pe c_full m).toReal + (Viol c_full m).toReal
+    with hComb_def
+  have hComb_nn : ∀ m, 0 ≤ Comb m := fun m => by
+    rw [hComb_def]; positivity
   have h_real_sum :
-      (∑ m, Pe_real m) ≤ (M : ℝ) * (2 * ε_d2) := by
-    -- ∑ m, (Pe c_full m).toReal = (∑ m, Pe c_full m).toReal (since each is finite).
-    have h_toReal_sum : (∑ m, Pe_real m) = (∑ m, Pe c_full m).toReal := by
-      show (∑ m, (Pe c_full m).toReal) = (∑ m, Pe c_full m).toReal
-      rw [ENNReal.toReal_sum (fun m _ => hPe_ne_top m)]
+      (∑ m, Comb m) ≤ (M : ℝ) * (2 * ε_d2) := by
+    -- ∑ Comb m = (∑ m, (Pe c_full m + Viol c_full m)).toReal (each term finite).
+    have h_toReal_sum : (∑ m, Comb m)
+        = (∑ m, (Pe c_full m + Viol c_full m)).toReal := by
+      rw [ENNReal.toReal_sum (fun m _ => ENNReal.add_ne_top.mpr ⟨hPe_ne_top m, hViol_ne_top m⟩)]
+      refine Finset.sum_congr rfl (fun m _ => ?_)
+      rw [hComb_def, ENNReal.toReal_add (hPe_ne_top m) (hViol_ne_top m)]
     rw [h_toReal_sum]
-    -- (∑ m, Pe c_full m).toReal ≤ (M * ENNReal.ofReal (2 * ε_d2)).toReal
-    --   = M * (2 * ε_d2) (since both finite).
-    have h_M_finite_ne : (M : ℝ≥0∞) * ENNReal.ofReal (2 * ε_d2) ≠ ⊤ := by
-      exact ENNReal.mul_ne_top (ENNReal.natCast_ne_top M) ENNReal.ofReal_ne_top
-    have h_mono := ENNReal.toReal_mono h_M_finite_ne hc_full_sum
+    have h_M_finite_ne : (M : ℝ≥0∞) * ENNReal.ofReal (2 * ε_d2) ≠ ⊤ :=
+      ENNReal.mul_ne_top (ENNReal.natCast_ne_top M) ENNReal.ofReal_ne_top
+    have h_mono := ENNReal.toReal_mono h_M_finite_ne hc_full_bound
     rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal (by positivity : (0 : ℝ) ≤ 2 * ε_d2),
         ENNReal.toReal_natCast] at h_mono
     exact h_mono
-  -- (8) D-2: worst-half throw-away ⇒ S ⊆ Fin M with |S| ≥ M/2 and Pe_real ≤ 4ε_d2.
+  -- (8) D-2: worst-half throw-away ⇒ S ⊆ Fin M with |S| ≥ M/2 and Comb ≤ 4ε_d2.
   obtain ⟨S, hS_card, hS_pe⟩ :=
-    awgn_expurgate_worst_half (M := M) hM_ge_two Pe_real hPe_real_nn
+    awgn_expurgate_worst_half (M := M) hM_ge_two Comb hComb_nn
       hε_d2_pos h_real_sum
   -- (9) Reindex: |S| ≥ M/2 ≥ M_target (since 2 * M_target ≤ M).
   have hM_target_le_half : M_target ≤ M / 2 :=
@@ -1525,13 +1464,40 @@ theorem isAwgnTypicalityHypothesis
   have hreindex_inj : Function.Injective reindex := hreindex_strictMono.injective
   set subcodebook : Fin M_target → Fin n → ℝ := fun i => c_full (reindex i)
     with hsubcodebook_def
-  -- (10) Power constraint on subcodebook (inherited from c_full ∈ PowSet).
+  -- (10) Power constraint on subcodebook. **Now derived per-codeword** from the
+  --      combined penalty: `reindex j ∈ S` ⟹ `Comb (reindex j) ≤ 4ε_d2 < 1`
+  --      (since `ε_d2 = ε₁/5 ≤ 1/5`), so the violation indicator must be 0, i.e.
+  --      `reindex j ∉ ViolSet (reindex j)`, i.e. `∑ᵢ (c_full(reindex j) i)² ≤ n·P`.
   --      The constraint target `n · P` is the original budget, not `n · P'`.
   have h_sub_power : ∀ j : Fin M_target,
       (∑ i, (subcodebook j i)^2) ≤ (n : ℝ) * P := by
     intro j
     show (∑ i, (c_full (reindex j) i)^2) ≤ (n : ℝ) * P
-    exact hc_full_power (reindex j)
+    -- Combined penalty at `reindex j` is `≤ 4ε_d2 < 1`.
+    have h_comb_lt_one : Comb (reindex j) < 1 := by
+      have h_le := hS_pe (reindex j) (h_reindex_mem j)
+      have h4 : 4 * ε_d2 < 1 := by
+        have : ε_d2 ≤ 1 / 5 := by rw [hε_d2_def]; linarith [hε₁_le_one]
+        linarith
+      linarith
+    -- The violation indicator's toReal is ≤ Comb (reindex j) < 1, forcing it to 0.
+    have h_viol_lt_one : (Viol c_full (reindex j)).toReal < 1 := by
+      have h_pe_nn : (0 : ℝ) ≤ (Pe c_full (reindex j)).toReal := ENNReal.toReal_nonneg
+      have : (Viol c_full (reindex j)).toReal ≤ Comb (reindex j) := by
+        rw [hComb_def]; linarith
+      linarith
+    -- `Viol c_full (reindex j) = 0` (an indicator that is 0 or 1; toReal < 1 ⟹ 0).
+    -- `Viol c m = (ViolSet m).indicator (fun _ => 1) c` definitionally.
+    have hViol_unfold : Viol c_full (reindex j)
+        = (ViolSet (reindex j)).indicator (fun _ => (1 : ℝ≥0∞)) c_full := rfl
+    -- The membership is decided; show `c_full ∉ ViolSet (reindex j)` directly.
+    have h_notmem : c_full ∉ ViolSet (reindex j) := by
+      intro h_mem
+      rw [hViol_unfold, Set.indicator_of_mem h_mem] at h_viol_lt_one
+      simp at h_viol_lt_one
+    rw [hViolSet_def] at h_notmem
+    simp only [Set.mem_setOf_eq, not_lt] at h_notmem
+    exact h_notmem
   -- (11) Sub-decoder error event ⊆ full-decoder error event at reindex j.
   -- This is the *key inclusion* enabled by `reindex` being strictly monotonic:
   -- - `errorEvent_sub j` triggers on `(subcodebook j, y) ∉ A` OR
@@ -1692,9 +1658,13 @@ theorem isAwgnTypicalityHypothesis
     -- Refold μ_y.measureOf into μ_y application to match `h_full_eq` shape.
     change μ_y _ ≤ μ_y _ at h_meas_le
     rw [h_full_eq] at h_meas_le
-    -- (Pe c_full (reindex j)).toReal = Pe_real (reindex j) ≤ 4 * ε_d2 from `hS_pe`.
-    have h_real_bound : (Pe c_full (reindex j)).toReal ≤ 4 * ε_d2 :=
-      hS_pe (reindex j) (h_reindex_mem j)
+    -- (Pe c_full (reindex j)).toReal ≤ Comb (reindex j) ≤ 4 * ε_d2 (the Pe
+    --  component of the combined penalty, the Viol component being ≥ 0).
+    have h_real_bound : (Pe c_full (reindex j)).toReal ≤ 4 * ε_d2 := by
+      have h_comb := hS_pe (reindex j) (h_reindex_mem j)
+      have h_viol_nn : (0 : ℝ) ≤ (Viol c_full (reindex j)).toReal := ENNReal.toReal_nonneg
+      rw [hComb_def] at h_comb
+      linarith
     -- Pe c_full (reindex j) ≤ ENNReal.ofReal (4 * ε_d2).
     have h_ennreal_bound : Pe c_full (reindex j) ≤ ENNReal.ofReal (4 * ε_d2) := by
       have h_ne_top : Pe c_full (reindex j) ≠ ⊤ := hPe_ne_top (reindex j)
@@ -1721,16 +1691,17 @@ theorem isAwgnTypicalityHypothesis
 shared sorry 補題 (`AwgnWalls.lean`) + `awgnPowerWitness_exists` を内部で
 呼ぶ形になったため、本 wrapper の `h_feasible` 引数も消失)。
 
-**Residual status (AWGN M5 Phase 3-β)**: this wrapper no longer carries a
-bundled feasibility hypothesis. The achievability residuals now live as
-`sorry` + `@residual(wall:awgn-*)` in the 3 shared walls of `AwgnWalls.lean`
-(continuous AEP / random-coding bound / power-constraint honest) plus the
-`awgnPowerWitness_exists` helper. The wrapper itself contains no residual.
+**Residual status (2026-06-12 δ-separation + D4)**: this wrapper no longer carries
+a bundled feasibility hypothesis. It is a 1-line pass-through of
+`isAwgnTypicalityHypothesis`, which now transitively consumes the deep-atom
+sorries in `awgn_random_coding_union_bound` (term1 / term2 / N₀) and
+`continuousAepGaussian_holds` (MemLp / change-of-measure). The wrapper introduces
+no new residual but inherits these via its body.
 
 **Naming (historical artefact)**: theorem name is `_via_staged_hyps` (plural
 artefact of the pre-pivot 3-hyp form); the staged content is now in the walls.
 
-`@audit:ok` -/
+@residual(plan:awgn-achievability-walls-discharge-plan) -/
 @[entry_point]
 theorem awgn_achievability_F1_via_staged_hyps
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -1764,9 +1735,14 @@ F-3 converse は `awgn_converse` 内の `sorry + @residual(plan:awgn-converse-au
 **Naming (historical artefact)**: theorem name is
 `awgn_theorem_F4_discharged_F1_via_staged`. F-4 genuinely discharged
 (`isAwgnChannelMeasurable N` is concrete); the F-1 staged content now lives in
-the `AwgnWalls.lean` walls rather than a bundle hyp on this wrapper.
+the achievability decomposition (`awgn_random_coding_union_bound` /
+`awgnPowerConstraintPerCodeword_holds` / `continuousAepGaussian_holds`) rather
+than a bundle hyp on this wrapper.
 
-`@audit:ok` -/
+**Residual status (2026-06-12)**: 1-line pass-through of `isAwgnTypicalityHypothesis`;
+inherits its deep-atom sorries transitively (no new residual introduced here).
+
+@residual(plan:awgn-achievability-walls-discharge-plan) -/
 @[entry_point]
 theorem awgn_theorem_F4_discharged_F1_via_staged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
