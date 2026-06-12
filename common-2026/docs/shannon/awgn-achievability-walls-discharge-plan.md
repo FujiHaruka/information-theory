@@ -3,57 +3,37 @@
 > **Parent**: [`awgn-moonshot-plan.md`](awgn-moonshot-plan.md) F-1 (achievability typicality)。
 > **Sibling (history)**: [`awgn-achievability-typicality-plan.md`](awgn-achievability-typicality-plan.md) (DONE、3 壁を staged/shared sorry 化した元 plan) / [`awgn-power-constraint-realizable-pivot-plan.md`](awgn-power-constraint-realizable-pivot-plan.md) (judgment #7 = 1 回目の power-constraint pivot)。
 > **Facts ledger**: [`awgn-facts.md`](awgn-facts.md) (壁 overturn / 残存壁 / 確定事実の SoT)。
+>
+> **Status (2026-06-12)**: **CLOSED — achievability stack 全体 proof done / sorryAx-free**。
+> deep atoms 5 件 + degenerate 残件すべて閉鎖、3 壁の honest 後継 2 本 + 縮小 Wall 1 が
+> genuine、consumer (`isAwgnTypicalityHypothesis` / 主要 wrapper 2 本) も sorryAx-free。
+> 計 6 件の false-statement (Wall1 (ii)/(iii)、D2 term2 #5 Fix B、degenerate corner #6) を
+> いずれも honest 化済。再検証コマンドは facts ledger の達成テーブル参照。
 
 ## 進捗
 
 - [x] M0 — decomposition 再設計の feasible 確定 (D1-D4、2 subagent 独立検証) ✅
-- [x] Phase 1 — Wall 1 (D1): (ii)/(iii) statement-fix (4件目 false-statement 発見) + (i)/(iii)/joint measure-identity genuine、**type-check done、deep atom 2 件 deferred** 🚧 (commit eab36aa)
-- [x] Phase 4 — Wall 2 (D2): 新 lemma `awgn_random_coding_union_bound` 新設 (AEP thread)、**gateway 達成 + 監査 all-OK、type-check done、5/7 atom genuine、measure-identity sorry 2 件** 🚧 (commit 7c26322)
-- [x] Phase 5a — Wall 3 (D3): 新 lemma `awgnPowerConstraintPerCodeword_holds` (per-codeword 形) **proof done (sorryAx-free)** + slack form 修正 ✅
-- [ ] D4 — consumer rewire: 旧 Wall2/3 retire + consumer を新 lemma 2 本に rewire + per-codeword barrier 再構築 📋
-- [ ] deep atoms — Wall1 MemLp / Wall1 change-of-measure / Wall2 term1 / Wall2 term2 (全 plan: plumbing、各 ~50行) 📋
-- [ ] Phase V — verify + 親 plan / facts ledger 同期 + 独立 honesty 監査 📋
+- [x] Phase 1 — Wall 1 (D1): (ii) 削除 + (iii) statement-fix + change-of-measure/`hφ_memLp` genuine、`continuousAepGaussian_holds` sorryAx-free ✅ (commits eab36aa→cd5419c→2036bfa→ce9d1bf)
+- [x] Phase 4 — Wall 2 (D2): 新 lemma `awgn_random_coding_union_bound` genuine + term1/term2 collapse + Fix B (#5) + Fix #6 → sorryAx-free ✅ (commits 7c26322→e4587aa→b6d0089→8405696→c543ae3→f69cfea)
+- [x] Phase 5a — Wall 3 (D3): 新 lemma `awgnPowerConstraintPerCodeword_holds` proof done sorryAx-free ✅ (commit e4587aa)
+- [x] D4 — consumer rewire: 旧 Wall2/3 retire + per-codeword barrier 再構築、`isAwgnTypicalityHypothesis` sorryAx-free ✅ (commit b6d0089)
+- [x] deep atoms — 5 件 (Wall1 `hφ_memLp` / Wall1 (iii) change-of-measure / Wall2 term1 / Wall2 term2 / N₀ pin) + degenerate corner 全閉鎖 ✅ (commits cd5419c / 8405696 / c543ae3 / ce9d1bf / f69cfea)
+- [x] Phase V — verify + 親 plan / facts ledger 同期 + 独立 honesty 監査 ✅ (本同期セッション)
 
-> 旧 Phase 2 (Wall 1 (iii) 単独) は Phase 1 に統合。旧 Phase 3 (Wall 1 (ii) statement-fix to `jointDifferentialEntropyPi`) は **削除** に置換 (consumer が破棄済 + 第2項 mass は (iii) が担当ゆえ load-bearing でない、§Approach D1 参照)。
-> Phase 5 (旧 Wall 3 + D4 一体) は **Phase 5a (D3 = 新 lemma genuine、commit e4587aa)** と **D4 (consumer rewire、pending)** に分割。新 lemma 2 本 (Wall2/3) は旧 false 補題と **並存**、retire は D4 で一括実施。
+## ゴール / Approach (達成)
 
-## ゴール / Approach
+### Goal (達成)
 
-### Goal
+`AWGN/Walls.lean` の achievability 側 3 shared sorry 補題を **genuine closure** し、親 plan F-1 の
+headline 系 (`AchievabilityDischarge.lean` の `isAwgnTypicalityHypothesis` + 主要 wrapper) を
+transitively sorryAx-free にする。**達成**: deep atoms 全閉鎖後、achievability stack 全体が
+sorryAx-free。converse は既に genuine 完了済 (`awgn_converse`)。本 plan 完走で AWGN channel
+coding theorem の achievability 解析核が genuine。
 
-`AWGN/Walls.lean` の achievability 側 3 shared sorry 補題 (`continuousAepGaussian_holds` /
-`awgnRandomCodingBound_holds` / `awgnPowerConstraintHonest_holds`) を **genuine closure** し、
-親 plan F-1 の headline `awgn_achievability_F1_via_staged_hyps` /
-`awgn_theorem_F4_discharged_F1_via_staged` (`AchievabilityDischarge.lean`) を transitively
-sorryAx-free にする。converse は既に genuine 完了済 (`awgn_converse`)。本 plan 完走で AWGN
-channel coding theorem 全体 (achievability + converse) が genuine。
+### Approach (採用した解の形 — 完了)
 
-**✅ ORCHESTRATOR UPDATE (2026-06-12、Phase 1/4/5a 実装後)**: 3 補題の **3 つすべて**が
-false/mis-stated と判明 (Wall 1 (ii) klDiv-to-volume 退化 / Wall 2 `∀decoder` 過大 / Wall 3
-`∀m` 指数 rate、各 `@audit:retract-candidate(false-statement)`) → 本 plan は「3 壁 discharge」から
-**「decomposition 再設計 + statement-fix」へ escalation 済**。その再設計 (D1-D4) を M0 で
-2 subagent の独立検証により feasible 確定 (NO-GO なし)、**Phase 1/4/5a を実装済**:
-- **Phase 1 (D1) = type-check done** (commit eab36aa): (ii) 削除に加え **(iii) も false-statement と
-  判明し statement-fix 済 (4件目の false-statement、指数 `−n²I+3nε` → `−n(I−3ε)` に修正)**。
-  (i)/(iii)/joint measure-identity は genuine、残 2 deep atom (`hφ_memLp` / (iii) change-of-measure) を
-  honest sorry で deferred。
-- **Phase 4 (D2) = type-check done + gateway 達成 + 監査 all-OK** (commit 7c26322): 新 lemma
-  `awgn_random_coding_union_bound` (`AchievabilityDischarge.lean:475`)、union bound が壁でなく
-  (i)/(iii) から組み上がることを type-check で確証。AEP thread = modular composition (監査確定)。
-  5/7 atom genuine、残 2 measure-identity sorry。
-- **Phase 5a (D3) = proof done (sorryAx-free)** (commit e4587aa): 新 lemma
-  `awgnPowerConstraintPerCodeword_holds` (`Walls.lean:370`)、engine φ=x² で genuine。slack form 修正
-  (`(P_cb.toNNReal:ℝ) < P_target` = 分散値ベースが honest)。
-
-genuine な核 = (a) 質量集中エンジン (✅) + (b) jointTypicalDecoder 結合の正しい union bound (D2、新
-lemma type-check done) + (c) per-codeword expurgation 形 power 制約 (D3、✅ sorryAx-free)。残 = D4
-consumer rewire + deep atom 4 件 (全 plumbing) + Phase V。Wall 1 (ii) volume bound は **削除**、
-新 lemma 2 本は旧 false 補題と並存 (retire は D4)。
-
-### Approach (overall strategy / shape of solution)
-
-**全体の形**: 3 壁を「個別に discharge」するのではなく、AEP engine を最上流に置いた **modular
-decomposition (D1-D4)** に組み替える。確定した依存鎖 (M0 で import cycle 不在を検証済):
+3 壁を「個別 discharge」でなく AEP engine を最上流に置いた **modular decomposition (D1-D4)** に
+組み替えた。確定した依存鎖 (import cycle 不在、検証済):
 
 ```
 AchievabilityAEP.lean (engine、Mathlib のみ依存、AWGN 依存ゼロ)
@@ -61,296 +41,128 @@ AchievabilityAEP.lean (engine、Mathlib のみ依存、AWGN 依存ゼロ)
        └→ AchievabilityDischarge.lean (D2 union-bound lemma + D4 consumer、kernel/decoder が local)
 ```
 
-`Walls.lean` に `import InformationTheory.Shannon.AWGN.AchievabilityAEP` を追加可 (cycle なし、検証済)。
-`awgnCodebookKernel` / `jointTypicalDecoder` / `gaussianCodebook` は **下流 `AchievabilityDischarge.lean`**
-にあるため、kernel/decoder を参照する新 lemma (D2) は relocate 不要でそこに置く。
+- **D1 (Wall 1 `continuousAepGaussian_holds`)** = ∃可測A + **2 bounds のみ** ((i)mass + (iii)indep-pair) に縮小。**(ii) volume bound は削除** (false klDiv-to-volume、consumer 破棄済 + 第2項 mass は (iii) 担当ゆえ load-bearing でない)。(iii) は klDiv 積分解 (`klDiv_perLetter_eq_capacity` + `klDiv_nFold_eq_nsmul`、新設 bridge ①) + G-2 tensorize change-of-measure + 退化 `hkl0` で genuine。`hφ_memLp` は 1-D Gaussian 密度の比への因子化 (f_X 相殺) で genuine。
+- **D2 (Wall 2)** = `AchievabilityDischarge.lean` の新 genuine lemma `awgn_random_coding_union_bound`。decoder = `jointTypicalDecoder A` 固定、AEP output (i)(iii) を hyp に thread (modular composition、load-bearing bundle 非該当)。term1 = J marginal collapse / term2 = Q marginal collapse + exp 算術で genuine。Fix B (δ-separation) + Fix #6 (`hP`/`hN` で degenerate corner 排除) で honest。
+- **D3 (Wall 3)** = `awgnPowerConstraintPerCodeword_holds` (per-codeword expurgation 形、engine φ=x²、proof done sorryAx-free)。
+- **D4 (consumer)** = `isAwgnTypicalityHypothesis` を新 decomposition に rewire、per-codeword 合算 barrier 再構築、旧 false 補題 retire。consumer body sorryAx-free。
 
-#### D1 — Wall 1 `continuousAepGaussian_holds` (Walls.lean に残す)
+#### bridge ① 共有 lemma 2 本 (Phase 1 で新設、sorryAx-free)
 
-`∃` 可測 A + **2 bounds のみ**に縮小:
+D1 (iii) の klDiv 積分解の核を `Walls.lean` の 2 shared lemma に切り出した:
 
-- **(i) joint codebook+noise mass `≥ 1−ε`** = engine `pi_empirical_mean_typical_mass` で genuine。
-  joint AWGN i.i.d. 法則 + per-letter log-density `φ` を engine の abstract `μ`/`φ` に wiring、
-  `MemLp φ 2` を確認 (Gaussian 有限モーメント)。
-- **(iii) indep-pair product-mass `≤ exp(−n(I−3ε))`** = sound (両 prob measure ゆえ真 MI)。
-  `klDiv_pi_eq_sum` / `klDiv_prod_eq_add` / `klDiv_gaussianReal_gaussianReal_eq` で per-letter MI を
-  積分解、engine + `ENNReal.toReal_nonneg`。
-- **(ii) volume bound は削除** (statement-fix でなく **削除**)。理由: ① consumer が `_hA_vol` で
-  破棄済 + ② **Wall 2 第2項 mass は (iii) から出る** (volume counting とは別軸) ゆえ (ii) は
-  **load-bearing でない**。false klDiv-to-volume statement を「削除」で honest 化する。
-  **結果として `jointDifferentialEntropyPi` 系資産は achievability では不要** (これらは (ii)
-  statement-fix 専用だった、converse 側資産)。
+- `klDiv_perLetter_eq_capacity` (`Walls.lean:465`、`0 < P` / `(N:ℝ)≠0` 前提): per-letter KL = `(1/2)log(1+P/N)` (capacity 閉形式)。compProd 経路 (`klDiv_compProd_const_toReal_integral` (`CondKLIntegral.lean`) + `klDiv_gaussianReal_gaussianReal_eq` (`DifferentialEntropy.lean`)) で MIClosedForm import cycle を回避。
+- `klDiv_nFold_eq_nsmul` (`Walls.lean` :649 付近、無条件): `klDiv(J_n,Q_n).toReal = n·klDiv(J₁,Q₁).toReal` (reshape + `klDiv_pi_eq_sum`)。
 
-#### D2 — Wall 2 = AchievabilityDischarge.lean に置く genuine lemma
+import cycle 回避: G-1 (Walls→MIClosedForm→ContChannelMIDecomp→Walls) を上記 compProd 経路 + `import InformationTheory.Shannon.CondKLIntegral` 追加で解消 (commit 2036bfa)。
 
-Walls の false `awgnRandomCodingBound_holds` は **retire/削除**。新 lemma (仮称
-`awgn_random_coding_union_bound`) を **AchievabilityDischarge.lean** に置く (kernel/decoder が local
-ゆえ relocate 不要):
-
-- **signature**: A + (i)mass + (iii)indep-pair を **hypothesis として受け取り**、decoder =
-  `jointTypicalDecoder A` 固定、`∫⁻ codebook, Pe(jointTypicalDecoder A, m) ≤ 2ε` を結論。
-- **Cover-Thomas 9.2 union bound**: `P(error|m) ≤ P((X(m),Y)∉A) + ∑_{m'≠m} P((X(m'),Y)∈A)`、
-  第1項 ≤ ε は (i)、第2項は `X(m')⊥Y` で product-mass ≤ (iii) bound、`M≈exp(nR)` 個和 ≤ ε (R<I)。
-- **honesty**: AEP bounds を hypothesis に thread するのは genuine な Wall 1 (D1) output の
-  **modular composition** であり、**load-bearing bundling 非該当** (証明の核を `*Hypothesis`
-  predicate に encode していない。条件: (i)(iii) が sorryAx-free で閉じてから thread。閉じる前でも
-  sorry が compiler-visible に残るので tier 2 honest)。AEP の (i)/(iii) は **regularity precondition
-  でなく Wall 1 の証明済 output** であり、それを別 lemma が consume する標準的な layering。
-- **kernel 可測性は壁でない**: 残存壁 `IsParallelGaussianKernelMeasurable` (location-varying
-  Gaussian mean の x-可測性) とは別物。Wall 2 の `c ↦ Measure.pi (awgnChannel N (c m i))` 可測性は
-  既存 `awgnCodebookKernel` + `Kernel.measurable_kernel_prodMk_left` で discharge 済 (consumer
-  `AchievabilityDischarge.lean:998-1028` で既にコンパイル通過)。
-
-#### D3 — Wall 3 `awgnPowerConstraintHonest_holds` (Walls.lean に残す)
-
-`mass{∀m power-OK} ≥ 1−ε` (false `∀m` 形) から **per-codeword expurgation 形**に再 state:
-
-- `∀m, mass{c | ∑ᵢ (c m i)² > nP} ≤ ε` (各 codeword 周辺の chi-square 上裾、engine を `φ=x²` で
-  適用、`P'<P` slack で4次モーメント有限ゆえ WLLN/Markov、**指数 rate 不要**)。
-- 2-stage `Measure.pi` 形を維持 (`gaussianCodebook` def を参照しない) ゆえ Walls.lean に残せる。
-- `φ=x²` は4次モーメント有限で素直 (Wall 1 (i) の log-density `φ` より bottleneck 軽い)。
-
-#### D4 — consumer restructure (`AchievabilityDischarge.lean` の `awgn_avg_error_union_bound:462` + `isAwgnTypicalityHypothesis:744`)
-
-- **Wall 1 destructure** を (i)mass + (iii)indep-pair **保持**に変更 (現 `⟨A,hA_meas,_,_,_⟩` →
-  `⟨A,hA_meas,hA_mass,hA_indep⟩`)、新 union-bound lemma (D2) に渡す。
-- **barrier 再構築**: `g c := ∑_m Pe + M·𝟙_{∃m violate}` (all-or-nothing、`∀m` mass に直結) から
-  `g c := ∑_m (Pe c m + 𝟙_{violate m}(c))` (per-codeword 合算) に再構築。`lintegral_finsetSum'` /
-  `Finset.sum_le_sum` (既使用) で各 m 独立。
-- **worst-half**: combined penalty `≤ 4ε_d2 < 1` が同一 m で `𝟙_violate=0` (power-OK) ∧
-  `Pe≤4ε_d2` (error小) を強制。`awgn_expurgate_worst_half` (`:526`) は signature 不変で combined
-  penalty を ℝ 化して渡せば再利用可。reindex 機構不変。
-
-**Phase 依存順** (D1 engine+klDiv → D2 union-bound → D3+D4 power+consumer): D1 で engine wiring +
-klDiv 積分解を確立すると D2 がその output を thread でき、D3 は同じ engine を `φ=x²` で再利用、
-D4 は D2/D3 を consumer に配線する。Phase V で verify + 親同期 + 監査。
-
-## 既存資産インベントリ (M0 で再確認、file:line)
-
-新規 inventory は不要。本 plan が依拠する現存資産:
+## 既存資産インベントリ (file:line)
 
 | 資産 | file:line | 用途 | sorryAx 状態 |
 |---|---|---|---|
 | `pi_empirical_mean_concentration` | `AWGN/AchievabilityAEP.lean:38` | (i)/(D3) engine: 有限-n Chebyshev 集中 (abstract μ+φ) | sorryAx-free (facts ledger) |
 | `pi_empirical_mean_typical_mass` | `AWGN/AchievabilityAEP.lean:130` | (i)/(D3) engine: ∃N₀ で mass `≥ 1−η` の存在形 | sorryAx-free |
-| `klDiv_pi_eq_sum` | `Shannon/MIChainRule.lean:249` | (iii): `klDiv (pi P) (pi Q) = ∑ klDiv P Q` (型クラス前提 = `IsProbabilityMeasure` のみ、M0 確認) | sorryAx-free (M0 確認) |
-| `klDiv_prod_eq_add` | `Shannon/MIChainRule.lean:230` | (iii): prod の KL 加法分解 (型クラス前提 = `IsProbabilityMeasure` のみ、M0 確認) | sorryAx-free (M0 確認) |
-| `klDiv_gaussianReal_gaussianReal_eq` | `Shannon/DifferentialEntropy.lean:672` | 1-D Gaussian KL closed form | (既存) |
-| `awgnCodebookKernel` (+ `Kernel.measurable_kernel_prodMk_left`) | `AWGN/AchievabilityDischarge.lean:998-1028` | D2: `c ↦ Measure.pi (awgnChannel N (c m i))` の x-可測性 (壁でない、既コンパイル通過) | (既存、通過済) |
-| `jointTypicalDecoder` (def) | `AWGN/AchievabilityDischarge.lean` (local) | D2: union-bound lemma が固定する decoder | (既存) |
-| `awgn_expurgate_worst_half` | `AWGN/AchievabilityDischarge.lean:526` | D4: 既存 worst-half throwaway (`∑ Pe ≤ M·2ε ⇒ M/2 個が ≤ 4ε`)、signature 不変で combined penalty に再利用 | `@audit:ok` |
-| `awgn_exists_codebook_le_avg` | `AWGN/AchievabilityDischarge.lean:509` | D4: codebook-average → ∃ codebook 抽出 | (既存) |
+| `klDiv_pi_eq_sum` | `Shannon/MIChainRule.lean:249` | (iii)/1b: `klDiv (pi P) (pi Q) = ∑ klDiv P Q` (型前提 = `IsProbabilityMeasure` のみ) | sorryAx-free |
+| `klDiv_prod_eq_add` | `Shannon/MIChainRule.lean:230` | (iii): prod の KL 加法分解 | sorryAx-free |
+| `klDiv_compProd_const_toReal_integral` | `Shannon/CondKLIntegral.lean` | bridge ① 1a: compProd 経路で MIClosedForm cycle 回避 | (既存) |
+| `klDiv_gaussianReal_gaussianReal_eq` | `Shannon/DifferentialEntropy.lean:672` | bridge ① 1a: 1-D Gaussian KL closed form | (既存) |
+| `awgnCodebookKernel` (+ `Kernel.measurable_kernel_prodMk_left`) | `AWGN/AchievabilityDischarge.lean:998-1028` | D2: codebook-kernel x-可測性 (壁でない、既コンパイル通過) | (既存、通過済) |
+| `awgn_expurgate_worst_half` | `AWGN/AchievabilityDischarge.lean:526` | D4: worst-half throwaway、signature 不変で combined penalty に再利用 | `@audit:ok` |
 | `awgnPowerWitness_exists` | `AWGN/AchievabilityDischarge.lean:614` | D3: strict slack `P' < P` witness (4次モーメント有限) | `@audit:ok` |
 
 > **converse 側資産 (achievability では不要)**: `jointDifferentialEntropyPi` 系
-> (`Draft/Shannon/MultivariateDiffEntropy.lean:77`/`:542`/`:467`、`ParallelGaussian/Converse/Core.lean:145`)
-> は旧 Phase 3 = Wall 1 (ii) statement-fix 専用だった。**D1 で (ii) を削除したため achievability
-> では参照不要**。これらは converse line の資産として維持 (削除しない)。
-
-**M0 で確定済 numeric/型予測** (verbatim 検証済 → facts ledger に再検証コマンド付きで記録):
-
-- `jointDifferentialEntropyPi_pi_eq_sum` 結論形 = heterogeneous `∑ i, differentialEntropy (μ i)`
-  (i.i.d. 特殊形でない)、sorryAx-free。**ただし (ii) 削除により achievability では不要化**。
-- `klDiv_pi_eq_sum` / `klDiv_prod_eq_add` の型クラス前提 = `IsProbabilityMeasure` のみ
-  (SigmaFinite/IsFiniteMeasure 不要)、両者 sorryAx-free → engine の `IsProbabilityMeasure` 維持要件と整合。
-- (i) の `φ` = per-letter log-density の `MemLp φ 2`: Mathlib 直接補題なし (`memLp_id_gaussianReal`
-  は id のみ)。in-project `integrable_density_log_density_of_gaussian`
-  (`DifferentialEntropy.lean:86`) の二次多項式分解スタイルで自家製 wiring 要 = **Phase 1 (i) の
-  bottleneck**。Wall 3 (D3) の `φ=x²` は4次モーメント有限で素直。
-- 退化境界: `P=0` (Dirac) は `≪volume` を破る、`N=0` は `hv₂≠0` (klDiv closed form) を破る。両方とも
-  既存 precondition (`hN:(N:ℝ)≠0` / `P>0`、`awgnPowerWitness_exists`) で吸収済。
+> (`Draft/Shannon/MultivariateDiffEntropy.lean` / `ParallelGaussian/Converse/Core.lean:145`)
+> は旧 Wall 1 (ii) statement-fix 専用だった。D1 で (ii) を削除したため achievability では参照不要
+> (converse line の資産として維持)。
 
 ## consumer restructure の影響範囲 (blast radius、`scripts/dep_consumers.sh` 実測)
 
-3 壁すべて consumer は **`AchievabilityDischarge.lean` 1 file のみ**。`--transitive` で full blast
-radius も 1 file 内 3 decl (他 family / lineage への波及なし)。主たる touch 先 = D4 の 2 consumer
-`awgn_avg_error_union_bound:462` + `isAwgnTypicalityHypothesis:744`、wrapper
-`awgn_achievability_F1_via_staged_hyps` → `awgn_theorem_F4_discharged_F1_via_staged` は signature
-不変なら 1 行 pass-through で自動追従。
-
-**重要な consumer 構造所見** (D1 (ii) 削除 / D2 retire / D3 再 state の波及を de-risk):
-
-1. **Wall 1 (ii)/(iii) は現状 consumer で discard 済**。call site は AEP を
-   `obtain ⟨A, hA_meas, _, _, _⟩` で destructure し (ii)/(iii) を捨てている。D4 では destructure を
-   **(i)mass + (iii)indep-pair 保持**に変更 (`⟨A,hA_meas,hA_mass,hA_indep⟩`) し、新 union-bound
-   lemma (D2) に渡す。**(ii) 削除は consumer 証明義務に波及しない** (もともと破棄されており、
-   union bound 第2項 mass は (iii) が担うため)。
-2. **Wall 2 (`awgnRandomCodingBound_holds`) は false ゆえ retire**。union bound の analytic content は
-   D2 の新 genuine lemma `awgn_random_coding_union_bound` (AchievabilityDischarge.lean に新設) が
-   担う。consumer は false lemma 呼出を新 lemma 呼出に差し替え。
-3. **Wall 3 の barrier 再構築**。現状 consumer は power-OK mass を
-   `g c := ∑_m Pe + M·𝟙_{∃m violate}` (all-or-nothing barrier) に畳んでいるが、D3 の per-codeword
-   再 state に合わせて `g c := ∑_m (Pe c m + 𝟙_{violate m}(c))` (per-codeword 合算) に再構築。
-   `lintegral_finsetSum'` / `Finset.sum_le_sum` (既使用) で各 m 独立、`awgn_expurgate_worst_half`
-   (`:526`) は signature 不変で combined penalty を ℝ 化して渡せば再利用、reindex 機構不変。
-
-**工数感**: 主たる実 touch は D4 = `isAwgnTypicalityHypothesis:744` の destructure 更新 + barrier
-再構築 (Phase 5)、+ D2 新 lemma の新設 (Phase 4)。blast radius が 1 file 3 decl に限定 + worst-half
-/ reindex 機構は不変ゆえ既存資産再利用が効く。
+3 壁すべて consumer は **`AchievabilityDischarge.lean` 1 file のみ**、`--transitive` でも 1 file 内
+3 decl (他 family / lineage への波及なし)。主たる touch 先 = D4 の 2 consumer
+(`awgn_avg_error_union_bound` + `isAwgnTypicalityHypothesis`)、wrapper
+`awgn_achievability_F1_via_staged_hyps` → `awgn_theorem_F4_discharged_F1_via_staged` は
+signature 不変で 1 行 pass-through 自動追従。D4 rewire 完了済 (commit b6d0089)。
 
 ## Phase 詳細
 
-### M0 — decomposition 再設計の feasible 確定 ✅ (proof-log: no)
+### M0 — decomposition 再設計の feasible 確定 ✅ (commit M0、proof-log: no)
 
-**完了済 (2026-06-12、2 subagent 独立検証で feasible 確定、NO-GO なし)**:
+2 subagent 独立検証で D1-D4 feasible 確定 (NO-GO なし)。import 構造 cycle 不在 + numeric/型予測の
+verbatim 検証 + 退化境界吸収を確認 → facts ledger に記録。
 
-- [x] import 構造の検証: `AchievabilityAEP` (AWGN 依存ゼロ) → `Walls.lean` → `AchievabilityDischarge.lean`、
-      `Walls.lean` に `import ...AchievabilityAEP` を追加可 (cycle なし)
-- [x] decomposition D1-D4 の確定 (Approach §D1-D4)、各要素の honesty (D2 thread = modular composition、
-      bundle 非該当) を確認
-- [x] M0 numeric/型予測の verbatim 確認 (`klDiv_*` 型クラス前提 = `IsProbabilityMeasure` のみ /
-      `jointDifferentialEntropyPi_pi_eq_sum` 結論形 = heterogeneous sum (achievability では不要) /
-      `MemLp φ 2` の自家製 wiring 要 = Phase 1 bottleneck / 退化境界 `P=0`/`N=0` は既存 precondition で吸収)
-      → facts ledger に再検証コマンド付きで記録
-- 撤退ライン: なし (確定済)
+### Phase 1 — Wall 1 (D1): engine mass (i) + klDiv indep-pair (iii)、(ii) 削除 ✅ sorryAx-free (proof-log: yes)
 
-### Phase 1 — Wall 1 (D1): engine mass (i) + klDiv indep-pair (iii)、(ii) 削除 🚧 type-check done (commit eab36aa) (proof-log: yes)
+`continuousAepGaussian_holds` (`Walls.lean`) を **∃可測A + 2 bounds** に縮小、(ii) volume bound 削除、
+(iii) を statement-fix (4 件目 false-statement、指数 `−n²I+3nε` → `−n(I−3ε)`)。bridge ① 2 本
+(`klDiv_perLetter_eq_capacity` / `klDiv_nFold_eq_nsmul`、sorryAx-free) を新設して (iii) を klDiv
+積分解、G-2 tensorize change-of-measure (`pi_withDensity` + `lintegral_pi_prod_eq_prod`) + 退化
+`hkl0` (`awgn_perLetter_klDiv_degenerate`) で closure。deep atom `hφ_memLp` (`MemLp φ 2`) は
+1-D Gaussian 密度の比への因子化 (f_X 相殺、`integrable_density_log_density_of_gaussian` 風二次多項式
+分解) で genuine 化。**全 deep atom 閉鎖、`continuousAepGaussian_holds` sorryAx-free**
+(commits eab36aa / cd5419c / 2036bfa / ce9d1bf)。
 
-**状態 (type-check done、deep atom 2 件 deferred)**:
+### Phase 4 — Wall 2 (D2): genuine union-bound lemma ✅ sorryAx-free (proof-log: yes)
 
-- [x] `Walls.lean` に `import InformationTheory.Shannon.AWGN.AchievabilityAEP` を追加
-- [x] `continuousAepGaussian_holds` を **∃可測A + bounds** に縮小、**(ii) volume bound を削除**。
-      **加えて (iii) も false-statement と判明し statement-fix 済**: 旧指数 `−n·(klDiv_n−3ε)` が
-      n を二重計上 `−n²I+3nε` になっていた → 監査確定の正しい形 `−(klDiv_n−n·3ε)=exp(−n(I−3ε))`
-      に修正。これが本 line の **4 件目の false-statement 発見** (独立 honesty 監査 PASS、
-      `@audit:retract-candidate(false-statement)` は fix で除去済、`wall:` → `plan:` 再分類済)。
-- [x] genuine 済: `MeasurableSet A` / joint measure-identity (`arrowProdEquivProdArrow` + `pi_map_pi`) /
-      (i) joint-mass (engine、`MemLp` 依存)。(iii) も engine + klDiv 積分解で結線。
-- [ ] **deep atom ① `hφ_memLp`** (`MemLp φ 2`、honest sorry + `@residual(plan:awgn-achievability-walls-discharge-plan)`):
-      **insight = dJ₁/dQ₁ = f_Z(y−x)/f_Y(y) で f_X が相殺 → φ は 1-D Gaussian 密度の比 (log)、
-      2-D Gaussian 不要**。`integrable_density_log_density_of_gaussian` 風の二次多項式分解で閉じる見込み。
-- [ ] **deep atom ② (iii) change-of-measure** (RN-deriv tensorize + setLIntegral、honest sorry +
-      `@residual(plan:awgn-achievability-walls-discharge-plan)`)。
-- 退化 (P=0/N=0) は **内部 branch (φ=0 a.e.) で処理**、precondition 不要 (M0 の「既存 precondition で
-      吸収」より honest)。
-- 撤退ライン (達成済): deep atom 2 件は `sorry + @residual(plan:awgn-achievability-walls-discharge-plan)`
-      で deferred。engine は genuine、(i)/(iii) は `*Hypothesis` に bundle せず engine の abstract 形を維持
-      (監査 PASS)。(ii)/(iii) の false-statement 除去は完遂済。
+新 lemma `awgn_random_coding_union_bound` (`AchievabilityDischarge.lean:502`) を新設、Wall 1 (i)/(iii)
+を hyp に thread (decoder = `jointTypicalDecoder A` 固定)、union bound `∫⁻ Pe ≤ 2ε`。term1 (J marginal
+collapse、commit 8405696) / term2 (Q marginal collapse + 和 + exp 算術、commit c543ae3) を genuine
+closure。**Fix B (#5、commit b6d0089)**: 初版が under-hypothesized で term2 false-statement → typicality
+slack δ を error 目標 ε と分離 (`hslack: R+3δ<(1/2)log(1+P/N)` precondition + `∃N₀` 量化子) し honest 化。
+**Fix #6 (commit f69cfea)**: degenerate corner (`1+P/N<0`、abs 規約で term2 偽) を `(hP : 0 < P)
+(hN : (N:ℝ)≠0)` 追加で矛盾 discharge、consumer 2 件 rewire。**sorryAx-free** (false-statement #5/#6
+解消、独立 honesty 監査 PASS)。
 
-### Phase 4 — Wall 2 (D2): genuine union-bound lemma を AchievabilityDischarge に新設 🚧 gateway 達成 + 監査 all-OK + type-check done (commit 7c26322) (proof-log: yes)
+### Phase 5a — Wall 3 (D3): per-codeword expurgation 形 ✅ proof done / sorryAx-free (commit e4587aa、proof-log: yes)
 
-**状態 (gateway 達成、新 lemma genuine、measure-identity sorry 2 件)**:
+新 lemma `awgnPowerConstraintPerCodeword_holds` (`Walls.lean:370`) を genuine sorryAx-free で追加。
+per-codeword 形 `∀m, mass{c | n·P_target < ∑ᵢ(c m i)²} ≤ ε`、engine φ=x² (MemLp 4次モーメント素直、
+`memLp_id_gaussianReal' 4`) + per-codeword marginal 同定 (`measurePreserving_eval`) + variance 同定。
+slack form = `(P_cb.toNNReal:ℝ) < P_target` (分散値ベース)。
 
-- [x] **gateway-atom-first 達成**: codebook-kernel 可測性は `awgnCodebookKernel` +
-      `Kernel.measurable_kernel_prodMk_left` で discharge 済 (壁でない、consumer `:998-1028` 通過済)。
-      **union bound 自体が壁でなく (i)/(iii) から組み上がることを type-check で確証** (gateway)。
-- [x] 新 lemma `awgn_random_coding_union_bound` を **`AchievabilityDischarge.lean:475`** に新設:
-      Wall 1 (i)/(iii) を hypothesis に thread + decoder = `jointTypicalDecoder A` 固定、
-      union bound `∫⁻ Pe ≤ 2ε`。
-- [x] **独立 honesty 監査 all-OK**: (i)/(iii)-as-hypotheses は **modular composition** (Wall1 conjunct と
-      逐語一致の bare measure 不等式、core は body 側、load-bearing bundle 非該当)。
-- [x] 5/7 atom genuine。
-- [ ] **残 2 sorry** (`@residual(plan:awgn-achievability-walls-discharge-plan)`、各 ~50行 plumbing、
-      監査が wall でなく plan と確認): **term1** (J marginal `J(Aᶜ)≤ε`、μX⊗channel=J) / **term2**
-      (Q marginal + 和 + exp 算術)。
-- [ ] 旧 false `awgnRandomCodingBound_holds` (Walls.lean) の retire は **D4 に繰延** (現状 並存)。
-- 撤退ライン (達成済): union bound の measure-identity 2 件は `sorry +
-      @residual(plan:awgn-achievability-walls-discharge-plan)` で deferred。**AEP thread は load-bearing
-      bundle でない** (監査確定の modular composition、decoder は `jointTypicalDecoder A` 固定で
-      `*Hypothesis` 化しない)。
+### D4 — consumer rewire ✅ (commit b6d0089、proof-log: yes)
 
-### Phase 5a — Wall 3 (D3): per-codeword expurgation 形を新 lemma で genuine ✅ proof done / sorryAx-free (commit e4587aa) (proof-log: yes)
+旧 false `awgnRandomCodingBound_holds` (`∀decoder` 過大) + `awgnPowerConstraintHonest_holds`
+(`∀m` 指数 rate) を retire/削除、consumer を新 lemma 2 本に rewire。`isAwgnTypicalityHypothesis`
+の Wall 1 destructure を (i)(iii) 保持に変更、all-or-nothing barrier
+`g c := ∑_m Pe + M·𝟙_{∃m violate}` → per-codeword 合算 `g c := ∑_m (Pe c m + Viol c m)` に再構築、
+worst-half を combined penalty に適用。reindex/inclusion 機構は signature 不変で再利用。
+**consumer body sorryAx-free**、wrapper pass-through 自動追従。
 
-**状態 (proof done、sorryAx-free)**:
+### deep atoms ✅ 全閉鎖 (proof-log: yes)
 
-- [x] 新 lemma `awgnPowerConstraintPerCodeword_holds` (`Walls.lean:370`) を **genuine sorryAx-free** で追加:
-      per-codeword 形 `∀m, mass{c | n·P_target < ∑ᵢ(c m i)²} ≤ ε`、engine φ=x² (MemLp 4次モーメント素直)
-      + per-codeword marginal 同定 (`measurePreserving_eval`) + variance 同定。
-- [x] **slack form 修正**: `P_cb<P_target` → **`(P_cb.toNNReal:ℝ)<P_target`** (分散値ベースが honest、
-      D4 で `awgnPowerWitness_exists` の `0<P'<P` から導出可)。
-- [x] 旧 false `awgnPowerConstraintHonest_holds` は **未 retire** (現状 並存、retire は D4)。
+| atom | 内容 | commit |
+|---|---|---|
+| a | Wall1 `hφ_memLp` (`MemLp φ 2`、1-D Gaussian 密度の比に因子化、f_X 相殺) | cd5419c |
+| (iii) cm | Wall1 (iii) change-of-measure (G-2 RN-deriv tensorize + setLIntegral) | 2036bfa / ce9d1bf |
+| d | Wall2 term1 (J marginal collapse `J(Aᶜ)≤ε`、genuine change-of-variables) | 8405696 |
+| e | Wall2 term2 (Q marginal collapse + 和 + exp 算術、nondegenerate regime genuine) | c543ae3 |
+| c | N₀ を `⌈log(2/ε)/g⌉` に pin (`g = cap − R − 3δ`) | c543ae3 |
+| corner | degenerate corner (`1+P/N<0`) を `hP`/`hN` で矛盾 discharge (#6 解消) | f69cfea |
 
-### D4 — consumer rewire (proof-log: yes)
+### Phase V — verify + 同期 + 監査 ✅ (proof-log: no)
 
-旧 Wall2/3 (false) を retire + consumer を新 lemma 2 本に rewire + per-codeword barrier 再構築。
-完了で headline が新 honest decomposition のみ依存。
-
-- [ ] 旧 false `awgnRandomCodingBound_holds` (Walls.lean) + `awgnPowerConstraintHonest_holds` (Walls.lean)
-      を **retire/削除**、consumer 呼出を新 lemma 2 本 (`awgn_random_coding_union_bound` /
-      `awgnPowerConstraintPerCodeword_holds`) に差替
-- [ ] **Wall 1 destructure** を (i)mass + (iii)indep-pair **保持**に変更 (`⟨A,hA_meas,_,_,_⟩` →
-      `⟨A,hA_meas,hA_mass,hA_indep⟩`)、`awgn_random_coding_union_bound` に渡す
-      (`AchievabilityDischarge.lean` の `awgn_avg_error_union_bound:462` + `isAwgnTypicalityHypothesis:744`)
-- [ ] **per-codeword barrier 再構築** (`isAwgnTypicalityHypothesis:744` body): all-or-nothing
-      barrier `g c := ∑_m Pe + M·𝟙_{∃m violate}` を per-codeword 合算 `g c := ∑_m (Pe c m + 𝟙_{violate m}(c))`
-      に再構築。`lintegral_finsetSum'` / `Finset.sum_le_sum` (既使用) で各 m 独立
-- [ ] worst-half: combined penalty `≤ 4ε_d2 < 1` が同一 m で power-OK ∧ error小 を強制。
-      `awgn_expurgate_worst_half` (`:526`) は signature 不変で combined penalty を ℝ 化して渡す (reindex 機構不変)
-- [ ] wrapper `awgn_achievability_F1_via_staged_hyps` / `awgn_theorem_F4_discharged_F1_via_staged` が
-      signature 不変で自動追従することを確認 (pass-through 1 行)
-- 撤退ライン: per-codeword barrier 再構築 / 旧 false 補題 retire は完遂必須 (false-statement 解消)。
-      barrier 再構築 / consumer wiring が詰まる場合、consumer body のみ
-      `sorry + @residual(plan:awgn-achievability-walls-discharge-plan)`。**旧 `∀m`/`∀decoder` false
-      statement を残さない** (新 lemma が genuine output を供給済)。
-
-### deep atoms — Phase 1/4 で deferred した plumbing sorry 4 件 (proof-log: yes)
-
-全 `@residual(plan:awgn-achievability-walls-discharge-plan)`、各 ~50行 plumbing (監査が wall でなく plan と確認):
-
-- [ ] Wall1 `hφ_memLp` (`MemLp φ 2`、insight = 1-D Gaussian 密度の比に因子化、f_X 相殺)
-- [ ] Wall1 (iii) change-of-measure (RN-deriv tensorize + setLIntegral)
-- [ ] Wall2 term1 (J marginal `J(Aᶜ)≤ε`、μX⊗channel=J)
-- [ ] Wall2 term2 (Q marginal + 和 + exp 算術)
-
-### Phase V — verify + 同期 + 監査 (proof-log: no)
-
-- [ ] `lake env lean InformationTheory/Shannon/AWGN/Walls.lean` + `AchievabilityDischarge.lean` silent
-- [ ] `#print axioms` で `awgn_achievability_F1_via_staged_hyps` / `awgn_theorem_F4_discharged_F1_via_staged`
-      が sorryAx-free (= `[propext, Classical.choice, Quot.sound]`) を確認
-- [ ] 親 `awgn-moonshot-plan.md` の進捗ブロック (Phase B / F-1 撤退ライン) の DAG/sub-plan 状態を
-      更新 (本 Phase でのみ親に触れる、child SoT) + facts ledger 残存壁テーブルを更新
-      (3 壁 → genuine: D1 (ii) 削除 / D2 false lemma retire / D3 per-codeword 再 state の経緯を 1 行ずつ)。
-      **親子 co-stage** (pre-commit WARN)
-- [ ] 独立 honesty 監査 (`honesty-auditor`): D1 (ii)削除 + (iii) statement-fix 後の縮小 signature が
-      honest (4件目 false-statement 除去 + 残 bounds が真) + D2 新 lemma の AEP thread が load-bearing
-      bundle 非該当 (modular composition、Phase 4 で all-OK 済 → deep atom closure 後の再確認) + D3 新
-      lemma の honest 性 (Phase 5a で sorryAx-free) + `@residual` 分類正当性 + D4 consumer barrier
-      再構築の sufficiency を検査
+- `#print axioms` で achievability stack の headline 系 (`isAwgnTypicalityHypothesis` / 主要 wrapper 2 本) が sorryAx-free (= `[propext, Classical.choice, Quot.sound]`) を確認 (再検証コマンド → facts ledger 達成テーブル)。
+- 親 `awgn-moonshot-plan.md` の F-1 撤退ライン + 進捗ブロックを本子の状態に同期 (child SoT)、facts ledger に achievability stack sorryAx-free + false-statement #6 + bridge ① 2 本 + 教訓行を追記。
+- 独立 honesty 監査: Walls 側 3 宣言 (`continuousAepGaussian_holds` / `klDiv_perLetter_eq_capacity` / `klDiv_nFold_eq_nsmul`) `@audit:ok` (cd016ec)、f69cfea の最終監査は並行実行 (sign-off は別 commit)。
 
 ## 判断ログ
 
 書く頻度: 方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。決着済 entry は削除 (git が履歴)。
 
-### #4 (2026-06-12) Phase 1-5a の実装所見
+### #5 (2026-06-12) false-statement #6 = degenerate corner / abs 規約
 
-- **(iii) indep-pair も false-statement (4 件目)**: M0 では (iii) を sound と判断していたが、実装時に
-  指数 `−n·(klDiv_n−3ε)` が n を二重計上して `−n²I+3nε` になっていたと判明 → 監査確定の正しい形
-  `exp(−n(I−3ε))` に statement-fix。**consumer に消費されない bound は型圧 (downstream type pressure)
-  が不在ゆえ scaling error が生存し続けた** (achievability 3 補題が staged migration で個別検証されな
-  かった足場であることの 4 件目の現れ)。これで Wall 1 由来の false-statement = (ii)/(iii) の 2 件。
-- **Wall 2 = gateway 達成 (壁でなく plumbing)**: union bound は (i)/(iii) から組み上がり、kernel 可測性も
-  既存 `awgnCodebookKernel` で discharge 済。新 lemma `awgn_random_coding_union_bound`
-  (`AchievabilityDischarge.lean:475`) を type-check done で確証、AEP thread = modular composition (監査
-  all-OK)。残 2 measure-identity sorry は wall でなく plan plumbing (各 ~50行)。
-- **Wall 3 = genuine (sorryAx-free)**: 新 lemma `awgnPowerConstraintPerCodeword_holds` (`Walls.lean:370`)
-  は engine φ=x² で素直に閉じた。
-- **slack form 修正**: `P_cb<P_target` → `(P_cb.toNNReal:ℝ)<P_target` (分散値ベースが honest)。
-- 新 lemma 2 本は旧 false 補題と **並存**、retire は D4 で一括。
+D2 union-bound の最後の sorry = degenerate corner (`1+P/N<0`) が **false-statement (6 件目)**。
+`Real.log x = log|x|` の abs 規約により `1+P/N<0` でも `hslack` (= `R+3δ < (1/2)log(1+P/N)`) が
+充足可能 → その corner で `J=Q`、`klDiv=0`、decay 消失、term2 偽 (witness: N=1, P=−3, R=0.1, δ=0.01)。
+**fix**: `awgn_random_coding_union_bound` に `(hP : 0 < P) (hN : (N:ℝ)≠0)` を追加し corner を矛盾で
+discharge、consumer 2 件 rewire (commit f69cfea)。**教訓**: hypothesis に positivity guard なしの
+`Real.log (1 + ·)` が現れたら負値代入の refutation probe を標準にする (abs 規約 corner は型圧で
+拾えない)。
 
-### #3 (2026-06-12) M0 で decomposition 再設計を feasible 確定 (NO-GO なし)
+### #4 (2026-06-12) Fix B = δ-separation で term2 #5 解消
 
-2 subagent の独立検証で D1-D4 が feasible と確定。確定した 4 つの要:
-
-- **(ii) volume bound は削除** (statement-fix でなく削除)。consumer が破棄済 + **union bound 第2項
-  mass は (iii) が担当** (volume counting とは別軸) ゆえ load-bearing でない。
-  `jointDifferentialEntropyPi` 系資産は achievability では不要化 (converse 側資産)。
-- **Wall 2 は壁でない**。kernel 可測性 (`c ↦ Measure.pi (awgnChannel N (c m i))`) は既存
-  `awgnCodebookKernel` + `Kernel.measurable_kernel_prodMk_left` で discharge 済 (consumer `:998-1028`
-  で通過済)。残存壁 `IsParallelGaussianKernelMeasurable` (x-可測性) とは別物。genuine union-bound
-  lemma を AchievabilityDischarge に新設し、AEP output を thread (modular composition、bundle 非該当)。
-- **Wall 3 = per-codeword expurgation**。`∀m`-mass false 形 → `∀m, mass{∑ᵢ(c m i)²>nP}≤ε`、engine を
-  `φ=x²` で適用 (4次モーメント有限、指数 rate 不要)。
-- **per-codeword barrier は既存機構の微修正**。all-or-nothing → per-codeword 合算 barrier、worst-half
-  / reindex 機構は signature 不変で再利用。
-
-import 構造 (`AchievabilityAEP` → `Walls.lean` → `AchievabilityDischarge.lean`、cycle なし) +
-退化境界 (`P=0`/`N=0` は既存 precondition で吸収) も verbatim 検証済 → facts ledger に確定事実記録。
-
-### #2 (起草) judgment #3 / #7 の盲点を継承しない
-
-judgment #3 (typicality plan、`klDiv` 形採用) は (ii) を `klDiv`-to-`volume` で書いたが、無限参照
-`volume` の `ν.real univ = 0` 退化を見落とした (false statement)。judgment #7 (power-constraint
-realizable pivot) は `P_cb < P_target` slack で `P_cb = P_target` 退化のみ patch し、
-`∀m`-over-`exp(nR)` の指数 rate 障害を見落とした (false statement)。本 plan の statement-fix は
-両盲点を解消する形 ((ii) = 真の `jointDifferentialEntropyPi` / Wall 3 = expected-fraction
-expurgation) を採り、honest signature に置換する。
+D2 初版 union-bound が under-hypothesized で term2 false-statement (5 件目): signature が `hR: R<I` と
+`hn: 0<n` のみで `∃N₀` 閾値と rate-slack を欠き、term2 が小 n / capacity 近傍 R で偽 (反例 P=N=1,
+R=0.1, ε=0.2, n=1, M=2)。**Fix B**: typicality slack δ を error 目標 ε と分離 (`hslack: R+3δ<(1/2)log(1+P/N)`
+precondition + `∃N₀,∀n≥N₀,...`)。`hslack` は precondition (consumer が `δ:=(C−R)/12` で自前導出 =
+bundle でない決定的証拠)。**教訓**: sub-lemma 切り出しで consumer 側の量化子構造 (`∃N₀`+rate-slack) を
+内側に保たないと未消費 bound に型圧がかからず false-statement が生存。
