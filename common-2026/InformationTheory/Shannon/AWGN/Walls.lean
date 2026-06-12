@@ -71,6 +71,35 @@ the wall verdict over-claimed continuous-output MI chain machinery). Remaining a
 walls (all achievability-side): 1 `awgn-continuous-aep-gaussian`, 2
 `awgn-random-coding-bound`, 3 `awgn-power-constraint-honest`.) -/
 
+/-- **Shear pushforward of a density** (linchpin for the `J₁` density identity, absent
+from Mathlib): pushing a `volume.prod volume`-density `ρ` through the measure-preserving
+shear `h₁(x,z) = (x, x+z)` gives the density `(x,y) ↦ ρ(x, y−x)` (the inverse shear).
+Proof: `h₁` is a measurable equiv preserving `volume.prod volume`
+(`measurePreserving_prod_add`); `map (withDensity ρ) h₁` is computed via `ext`/`map_apply`
++ `setLIntegral` change of variables through the equiv. -/
+private lemma map_shear_withDensity (ρ : ℝ × ℝ → ℝ≥0∞) (hρ : Measurable ρ) :
+    ((volume.prod volume : Measure (ℝ × ℝ)).withDensity ρ).map (fun p => (p.1, p.1 + p.2))
+      = (volume.prod volume : Measure (ℝ × ℝ)).withDensity (fun p => ρ (p.1, p.2 - p.1)) := by
+  -- the shear `g(x,z) = (x, x+z)` is measure-preserving on `volume.prod volume`
+  set g : ℝ × ℝ → ℝ × ℝ := fun p => (p.1, p.1 + p.2) with hg_def
+  have hg_meas : Measurable g :=
+    measurable_fst.prodMk (measurable_fst.add measurable_snd)
+  have hmp : MeasurePreserving g (volume.prod volume) (volume.prod volume) :=
+    measurePreserving_prod_add (volume : Measure ℝ) (volume : Measure ℝ)
+  -- the pushed density `ρ'(x,y) = ρ(x, y−x)`
+  set ρ' : ℝ × ℝ → ℝ≥0∞ := fun p => ρ (p.1, p.2 - p.1) with hρ'_def
+  have hρ'_meas : Measurable ρ' :=
+    hρ.comp (measurable_fst.prodMk (measurable_snd.sub measurable_fst))
+  ext s hs
+  rw [Measure.map_apply hg_meas hs, withDensity_apply _ (hg_meas hs),
+    withDensity_apply _ hs]
+  -- change of variables through the measure-preserving shear:
+  -- `∫⁻ p in g⁻¹' s, ρ p = ∫⁻ q in s, ρ(q.1, q.2 − q.1)`
+  rw [← hmp.setLIntegral_comp_preimage hs hρ'_meas]
+  refine setLIntegral_congr_fun (hg_meas hs) (fun p _ => ?_)
+  -- `ρ'(g p) = ρ(p.1, (p.1 + p.2) − p.1) = ρ p`
+  simp only [hρ'_def, hg_def, add_sub_cancel_left]
+
 /-- **Continuous AEP for n-dim Gaussian** (Phase B-0 wall, 旧 `IsContinuousAEPGaussian`).
 
 Given `P : ℝ`, `N : ℝ≥0`, a **typicality slack** `δ > 0` and an **error tolerance**
@@ -142,6 +171,65 @@ theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
                   - (n : ℝ) * (3 * δ)))) := by
   intro δ ε hδ hε
   classical
+  -- **Degenerate-boundary split** (the theorem signature carries no positivity on
+  -- `P`/`N`). In the degenerate cases `P.toNNReal = 0` (`μX = Dirac 0`) or `N = 0`
+  -- (`μZ = Dirac 0`, joint concentrated on the diagonal `{(x,x)}`), the engine route is
+  -- unavailable: when `N = 0` the joint law `Jₙ` is mutually singular w.r.t. `Qₙ` so
+  -- `Jₙ ⊀ Qₙ` and `φ = log dJₙ/dQₙ` is not controlled on `Qₙ`-null sets — `MemLp φ 2 Jₙ`
+  -- is neither provable nor refutable as placed. Both degenerate cases are handled
+  -- directly with the trivial typical set `A := Set.univ`: (i) `Jₙ univ = 1 ≥ 1 - ε`
+  -- (probability measure), and (iii) `klDiv(Jₙ,Qₙ).toReal = 0` (either `klDiv_self` when
+  -- `Jₙ = Qₙ`, or `klDiv_of_not_ac` `= ⊤` ↦ `toReal = 0`), so the exponent
+  -- `−(0 − n·3δ) = n·3δ ≥ 0` makes the bound `exp(n·3δ) ≥ 1 ≥ Qₙ univ`.
+  by_cases hdeg : P.toNNReal = 0 ∨ N = 0
+  · -- Degenerate branch: `A := Set.univ` for all `n` (no engine).
+    refine ⟨1, fun n _hn => ⟨Set.univ, MeasurableSet.univ, ?_, ?_⟩⟩
+    · -- (i) `Jₙ univ = 1 ≥ ofReal (1 - ε)`.
+      rw [show ((((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+            (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
+            (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i)))
+            Set.univ) = 1 from ?_]
+      · exact le_trans (ENNReal.ofReal_le_one.mpr (by linarith)) (le_refl 1)
+      · -- mass of `univ` under a probability measure is `1`
+        have hg_meas : Measurable
+            (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i)) :=
+          measurable_fst.prodMk (measurable_pi_lambda _ (fun i =>
+            ((measurable_pi_apply i).comp measurable_fst).add
+              ((measurable_pi_apply i).comp measurable_snd)))
+        haveI : IsProbabilityMeasure
+            (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+              (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
+              (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i))) :=
+          Measure.isProbabilityMeasure_map hg_meas.aemeasurable
+        exact measure_univ
+    · -- (iii) `Qₙ univ ≤ ofReal (exp (−(klDiv_n.toReal − n·3δ)))`, via `klDiv_n.toReal = 0`.
+      set Jn : Measure ((Fin n → ℝ) × (Fin n → ℝ)) :=
+        ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+            (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
+          (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i)) with hJn_def
+      set Qn : Measure ((Fin n → ℝ) × (Fin n → ℝ)) :=
+        (Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+          (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))) with hQn_def
+      haveI : IsProbabilityMeasure Qn := by rw [hQn_def]; infer_instance
+      -- `klDiv Jn Qn .toReal = 0` in both degenerate cases (`P.toNNReal = 0` ⇒ `Jn = Qn`
+      -- ⇒ `klDiv_self = 0`; `N = 0` ⇒ `Jn` is concentrated on the diagonal, `Qn`-null,
+      -- so `¬ Jn ≪ Qn` ⇒ `klDiv = ⊤` ⇒ `toReal = 0`). Both sub-cases need bridges absent
+      -- from Mathlib (`pi (dirac) = dirac (const)`, resp. the diagonal mutual-singularity),
+      -- left as a deep atom alongside the (iii) change-of-measure.
+      -- @residual(plan:awgn-achievability-walls-discharge-plan)
+      have hkl0 : (klDiv Jn Qn).toReal = 0 := by
+        sorry
+      -- the exponent is `≥ 0`, so the bound is `≥ 1 ≥ Qn univ` (genuine, modulo `hkl0`).
+      rw [hkl0]
+      refine le_trans (prob_le_one : Qn Set.univ ≤ 1) ?_
+      rw [zero_sub, neg_neg]
+      refine ENNReal.one_le_ofReal.mpr ?_
+      have hnn : (0 : ℝ) ≤ (n : ℝ) * (3 * δ) := by positivity
+      calc (1 : ℝ) = Real.exp 0 := (Real.exp_zero).symm
+        _ ≤ Real.exp ((n : ℝ) * (3 * δ)) := Real.exp_le_exp.mpr hnn
+  -- Non-degenerate branch (second goal of `by_cases`): `P.toNNReal ≠ 0 ∧ N ≠ 0`.
+  simp only [not_or] at hdeg
+  obtain ⟨hP_ne, hN_ne⟩ := hdeg
   -- Per-letter measures (abbreviating `P' := P.toNNReal`).
   set μX : Measure ℝ := gaussianReal 0 P.toNNReal with hμX_def
   set μZ : Measure ℝ := gaussianReal 0 N with hμZ_def
@@ -156,12 +244,175 @@ theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
     exact Measure.isProbabilityMeasure_map
       (measurable_fst.prodMk (measurable_fst.add measurable_snd)).aemeasurable
   haveI : IsProbabilityMeasure Q₁ := by rw [hQ₁_def]; infer_instance
-  -- `MemLp φ 2 J₁`: the info density is a quadratic polynomial in `(x, y)` (the
-  -- difference of two Gaussian log-densities, nondegenerate case `P', N > 0`; in the
-  -- degenerate case `J₁ ⊀ Q₁` so `φ = 0` a.e.), hence lies in L² of the joint law.
-  -- @residual(plan:awgn-achievability-walls-discharge-plan)
+  -- `MemLp φ 2 J₁` (GENUINE, nondegenerate `P', N > 0`): the info density `φ = log dJ₁/dQ₁`
+  -- is a.e. equal to a quadratic polynomial in `(x, y)` — the difference of two Gaussian
+  -- log-densities (the `f_X` factor cancels in the RN-derivative ratio
+  -- `dJ₁/dQ₁ = f_N(y−x)/f_Y(y)`) — hence lies in L² of the joint law (Gaussian 4th moments).
   have hφ_memLp : MemLp φ 2 J₁ := by
-    sorry
+    -- abbreviate the variances
+    set P' : ℝ≥0 := P.toNNReal with hP'_def
+    have hPN_ne : P' + N ≠ 0 := by
+      intro h
+      exact hN_ne (by simpa using (add_eq_zero.mp h).2)
+    -- per-coordinate Gaussian densities (positive everywhere)
+    set fX : ℝ → ℝ := gaussianPDFReal 0 P' with hfX_def
+    set fN : ℝ → ℝ := gaussianPDFReal 0 N with hfN_def
+    set fY : ℝ → ℝ := gaussianPDFReal 0 (P' + N) with hfY_def
+    -- the joint / product densities w.r.t. `volume.prod volume`
+    set qden : ℝ × ℝ → ℝ≥0∞ :=
+      fun p => gaussianPDF 0 P' p.1 * gaussianPDF 0 (P' + N) p.2 with hqden_def
+    set jden : ℝ × ℝ → ℝ≥0∞ :=
+      fun p => gaussianPDF 0 P' p.1 * gaussianPDF 0 N (p.2 - p.1) with hjden_def
+    have hqden_meas : Measurable qden :=
+      (measurable_gaussianPDF 0 P').comp measurable_fst |>.mul
+        ((measurable_gaussianPDF 0 (P' + N)).comp measurable_snd)
+    have hjden_meas : Measurable jden :=
+      (measurable_gaussianPDF 0 P').comp measurable_fst |>.mul
+        ((measurable_gaussianPDF 0 N).comp (measurable_snd.sub measurable_fst))
+    -- `Q₁ = (vol×vol).withDensity qden`
+    have hQ₁_wd : Q₁ = (volume.prod volume).withDensity qden := by
+      rw [hQ₁_def, hμX_def, hμY_def,
+        gaussianReal_of_var_ne_zero 0 hP_ne, gaussianReal_of_var_ne_zero 0 hPN_ne,
+        prod_withDensity (measurable_gaussianPDF 0 P') (measurable_gaussianPDF 0 (P' + N))]
+    -- `J₁ = (vol×vol).withDensity jden` (shear of the product density)
+    have hJ₁_wd : J₁ = (volume.prod volume).withDensity jden := by
+      rw [hJ₁_def, hμX_def, hμZ_def,
+        gaussianReal_of_var_ne_zero 0 hP_ne, gaussianReal_of_var_ne_zero 0 hN_ne,
+        prod_withDensity (measurable_gaussianPDF 0 P') (measurable_gaussianPDF 0 N),
+        map_shear_withDensity (fun z => gaussianPDF 0 P' z.1 * gaussianPDF 0 N z.2)
+          ((measurable_gaussianPDF 0 P').comp measurable_fst |>.mul
+            ((measurable_gaussianPDF 0 N).comp measurable_snd))]
+    -- `qden` is positive and finite everywhere (Gaussian densities), needed for
+    -- `rnDeriv_withDensity_right`.
+    have hqden_ne_zero : ∀ᵐ p ∂(volume.prod volume : Measure (ℝ × ℝ)), qden p ≠ 0 :=
+      Filter.Eventually.of_forall fun p => by
+        rw [hqden_def]
+        exact mul_ne_zero (gaussianPDF_pos 0 hP_ne p.1).ne' (gaussianPDF_pos 0 hPN_ne p.2).ne'
+    have hqden_ne_top : ∀ᵐ p ∂(volume.prod volume : Measure (ℝ × ℝ)), qden p ≠ ∞ :=
+      Filter.Eventually.of_forall fun p => by
+        rw [hqden_def]
+        exact ENNReal.mul_ne_top gaussianPDF_ne_top gaussianPDF_ne_top
+    -- `rnDeriv J₁ (vol×vol) =ᵐ jden`
+    have hrnJ : J₁.rnDeriv (volume.prod volume) =ᵐ[volume.prod volume] jden := by
+      rw [hJ₁_wd]; exact Measure.rnDeriv_withDensity _ hjden_meas
+    -- `rnDeriv J₁ Q₁ =ᵐ qden⁻¹ * rnDeriv J₁ (vol×vol) =ᵐ qden⁻¹ * jden`
+    have hrnQ : J₁.rnDeriv Q₁
+        =ᵐ[volume.prod volume] fun p => (qden p)⁻¹ * jden p := by
+      have h1 : J₁.rnDeriv Q₁
+          =ᵐ[volume.prod volume] fun p => (qden p)⁻¹ * J₁.rnDeriv (volume.prod volume) p := by
+        rw [hQ₁_wd]
+        exact Measure.rnDeriv_withDensity_right J₁ (volume.prod volume)
+          hqden_meas.aemeasurable hqden_ne_zero hqden_ne_top
+      filter_upwards [h1, hrnJ] with p hp1 hpJ
+      rw [hp1, hpJ]
+    -- transfer the rnDeriv identity to `J₁`-a.e. (`J₁ ≪ vol×vol`)
+    have hJ₁_ac : J₁ ≪ (volume.prod volume) := by
+      rw [hJ₁_wd]; exact withDensity_absolutelyContinuous _ _
+    have hrnQ_J : J₁.rnDeriv Q₁ =ᵐ[J₁] fun p => (qden p)⁻¹ * jden p := hJ₁_ac.ae_le hrnQ
+    -- the explicit quadratic `q(x,y) = log fN(y−x) − log fY(y)` (the `fX` factor cancels),
+    -- which equals a quadratic polynomial via the Gaussian log-density decomposition
+    -- `log (gaussianPDFReal m v t) = −(1/2)log(2πv) − (t−m)²/(2v)`.
+    set cN : ℝ := -(1/2) * Real.log (2 * Real.pi * N) with hcN_def
+    set cY : ℝ := -(1/2) * Real.log (2 * Real.pi * (P' + N)) with hcY_def
+    set q : ℝ × ℝ → ℝ :=
+      fun p => (cN - (p.2 - p.1) ^ 2 / (2 * N)) - (cY - p.2 ^ 2 / (2 * (P' + N)))
+      with hq_def
+    -- `φ =ᵐ[J₁] q`: simplify the rnDeriv ratio to a real Gaussian-density ratio, then
+    -- take logs (the `fX` factor cancels since it is positive and finite).
+    have hN_pos : (0 : ℝ) < N := lt_of_le_of_ne N.coe_nonneg
+      (fun h => hN_ne (by exact_mod_cast h.symm))
+    have hPN_pos : (0 : ℝ) < (P' + N : ℝ≥0) := lt_of_le_of_ne (P' + N).coe_nonneg
+      (fun h => hPN_ne (by exact_mod_cast h.symm))
+    have hφ_eq : φ =ᵐ[J₁] q := by
+      filter_upwards [hrnQ_J] with p hp
+      rw [hφ_def]
+      simp only [hp]
+      -- `((qden p)⁻¹ * jden p).toReal = fN(y−x) / fY(y)`
+      rw [hqden_def, hjden_def]
+      simp only [gaussianPDF]
+      -- compute the `.toReal` of the ENNReal ratio
+      have hfX_pos : 0 < gaussianPDFReal 0 P' p.1 := gaussianPDFReal_pos 0 P' p.1 hP_ne
+      have hfN_pos : 0 < gaussianPDFReal 0 N (p.2 - p.1) :=
+        gaussianPDFReal_pos 0 N (p.2 - p.1) hN_ne
+      have hfY_pos : 0 < gaussianPDFReal 0 (P' + N) p.2 :=
+        gaussianPDFReal_pos 0 (P' + N) p.2 hPN_ne
+      -- rewrite the ENNReal ratio as `ofReal (fN(y−x) / fY(y))` (the `fX` factor cancels)
+      have hratio : ((ENNReal.ofReal (gaussianPDFReal 0 P' p.1)
+              * ENNReal.ofReal (gaussianPDFReal 0 (P' + N) p.2))⁻¹
+            * (ENNReal.ofReal (gaussianPDFReal 0 P' p.1)
+              * ENNReal.ofReal (gaussianPDFReal 0 N (p.2 - p.1)))).toReal
+          = gaussianPDFReal 0 N (p.2 - p.1) / gaussianPDFReal 0 (P' + N) p.2 := by
+        rw [← ENNReal.ofReal_mul hfX_pos.le, ← ENNReal.ofReal_mul hfX_pos.le,
+          ← ENNReal.ofReal_inv_of_pos (by positivity), ← ENNReal.ofReal_mul (by positivity),
+          ENNReal.toReal_ofReal (by positivity)]
+        field_simp
+      rw [hratio]
+      -- now take the log and split via the Gaussian log-density decomposition
+      rw [Real.log_div hfN_pos.ne' hfY_pos.ne']
+      rw [hq_def]
+      -- `log fY(y) = cY − y²/(2(P'+N))`, `log fN(y−x) = cN − (y−x)²/(2N)`
+      have hlogN : Real.log (gaussianPDFReal 0 N (p.2 - p.1))
+          = cN - (p.2 - p.1) ^ 2 / (2 * N) := by
+        rw [gaussianPDFReal, Real.log_mul (by positivity) (Real.exp_pos _).ne',
+          Real.log_inv, Real.log_sqrt (by positivity), Real.log_exp, hcN_def]
+        ring
+      have hlogY : Real.log (gaussianPDFReal 0 (P' + N) p.2)
+          = cY - p.2 ^ 2 / (2 * (P' + N)) := by
+        rw [gaussianPDFReal, Real.log_mul (by positivity) (Real.exp_pos _).ne',
+          Real.log_inv, Real.log_sqrt (by positivity), Real.log_exp, hcY_def]
+        push_cast; ring
+      rw [hlogN, hlogY]
+    -- `MemLp q 2 J₁` via pullback to the product measure `μX.prod μZ` through the shear.
+    have hq_memLp : MemLp q 2 J₁ := by
+      -- product law of `(X, Z)` is a probability measure with all finite moments
+      haveI : IsProbabilityMeasure μX := by rw [hμX_def]; infer_instance
+      haveI : IsProbabilityMeasure μZ := by rw [hμZ_def]; infer_instance
+      have hHT : (4 : ℝ≥0∞)⁻¹ + 4⁻¹ = 2⁻¹ := by
+        rw [← ENNReal.ofReal_ofNat 4, ← ENNReal.ofReal_ofNat 2,
+          ← ENNReal.ofReal_inv_of_pos (by norm_num),
+          ← ENNReal.ofReal_inv_of_pos (by norm_num),
+          ← ENNReal.ofReal_add (by norm_num) (by norm_num)]
+        norm_num
+      haveI : ENNReal.HolderTriple (4 : ℝ≥0∞) 4 2 := ⟨hHT⟩
+      have hh₁_meas : Measurable (fun p : ℝ × ℝ => (p.1, p.1 + p.2)) :=
+        measurable_fst.prodMk (measurable_fst.add measurable_snd)
+      -- `q` is measurable
+      have hq_meas : Measurable q := by rw [hq_def]; fun_prop
+      -- reduce to `MemLp (q ∘ h₁) 2 (μX.prod μZ)`
+      rw [hJ₁_def,
+        memLp_map_measure_iff hq_meas.aestronglyMeasurable hh₁_meas.aemeasurable]
+      -- the L⁴ coordinate facts on the product measure
+      have hX4 : MemLp (fun p : ℝ × ℝ => p.1) 4 (μX.prod μZ) := by
+        have h := (memLp_id_gaussianReal' (μ := (0 : ℝ)) (v := P') 4 (by simp)
+          ).comp_measurePreserving (measurePreserving_fst (μ := μX) (ν := μZ))
+        rw [hμX_def]; exact h
+      have hZ4 : MemLp (fun p : ℝ × ℝ => p.2) 4 (μX.prod μZ) := by
+        have h := (memLp_id_gaussianReal' (μ := (0 : ℝ)) (v := N) 4 (by simp)
+          ).comp_measurePreserving (measurePreserving_snd (μ := μX) (ν := μZ))
+        rw [hμZ_def]; exact h
+      have hXZ4 : MemLp (fun p : ℝ × ℝ => p.1 + p.2) 4 (μX.prod μZ) := hX4.add hZ4
+      -- squares are L² (Hölder `4·4 → 2`)
+      have hZ2 : MemLp (fun p : ℝ × ℝ => p.2 ^ 2) 2 (μX.prod μZ) := by
+        have h : MemLp (fun p : ℝ × ℝ => p.2 * p.2) 2 (μX.prod μZ) := hZ4.mul' hZ4
+        simpa [sq] using h
+      have hXZ2 : MemLp (fun p : ℝ × ℝ => (p.1 + p.2) ^ 2) 2 (μX.prod μZ) := by
+        have h : MemLp (fun p : ℝ × ℝ => (p.1 + p.2) * (p.1 + p.2)) 2 (μX.prod μZ) :=
+          hXZ4.mul' hXZ4
+        simpa [sq] using h
+      -- assemble `q ∘ h₁ (x,z) = (cN − z²/(2N)) − (cY − (x+z)²/(2(P'+N)))`
+      have hterm1 : MemLp (fun p : ℝ × ℝ => cN - p.2 ^ 2 / (2 * N)) 2 (μX.prod μZ) :=
+        (memLp_const cN).sub (MemLp.ae_eq
+          (Filter.Eventually.of_forall fun p => by ring)
+          (hZ2.const_mul (1 / (2 * (N : ℝ)))))
+      have hterm2 : MemLp (fun p : ℝ × ℝ => cY - (p.1 + p.2) ^ 2 / (2 * (P' + N))) 2
+          (μX.prod μZ) :=
+        (memLp_const cY).sub (MemLp.ae_eq
+          (Filter.Eventually.of_forall fun p => by push_cast; ring)
+          (hXZ2.const_mul (1 / (2 * ((P' : ℝ) + N)))))
+      refine MemLp.ae_eq (Filter.Eventually.of_forall fun p => ?_) (hterm1.sub hterm2)
+      simp only [Function.comp, hq_def, Pi.sub_apply]
+      ring
+    exact MemLp.ae_eq hφ_eq.symm hq_memLp
   -- Engine: choose `N₀` so the empirical-mean typical set (slack `δ`) has mass
   -- `≥ 1 - ε` (the engine's `ε`-slot = our typicality slack `δ`, `η`-slot = error
   -- target `ε`, separated so the (iii) exponent uses `δ` independently of `ε`).
