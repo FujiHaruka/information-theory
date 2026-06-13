@@ -17,7 +17,16 @@ Mathlib のドキュメント規約（<https://leanprover-community.github.io/co
 
 ## 宣言 docstring (`/-- … -/`) の目標形
 
-1. **付ける対象**: すべての def と主要 theorem に必須。補題にも推奨（特に数学的内容 / ファイル跨ぎで使うもの）。
+1. **付ける対象（Mathlib docBlame 非対称）**: docstring を**必須**とするのは
+   `def` / `abbrev` / `structure` / `class` / `inductive` と、headline 定理
+   （`@[entry_point]` / module doc の *Main results* に挙がるもの）。
+   **内部の補助 theorem / lemma には原則付けない** — 名前で statement を語らせる
+   （Mathlib は補助補題をほぼ裸にしており、文書化率は宣言全体の ~17–20%）。
+   - **name-adequacy gate**: 名前が statement を語れない補題だけ、最小 1 行の数学的 docstring を付ける
+     （本来は語れる名前へ rename するのが筋だが dep graph に波及するので別 pass）。
+   - `@residual(...)` / `@audit:*` を持つ宣言は docstring を**保持**する（散文は削ってタグだけ残してよい）。
+   - 背景の実測と移行計画 → [`../mathlib-conventions-gap.md`](../mathlib-conventions-gap.md) §1.4 /
+     [`../docstring-tidyup-plan.md`](../docstring-tidyup-plan.md)。
 2. **数学的意味を述べる**完全な文で始める。「実装について多少 *嘘をついてよい*」（意味を伝えることが優先、実装の細部より）。
 3. 完全文なら **末尾ピリオド**。
 4. Lean 識別子は **バッククォート** `` `DotEq` ``。完全修飾名 `` `Real.log_mul` `` はオンライン doc でリンクになる。
@@ -43,12 +52,21 @@ Mathlib のドキュメント規約（<https://leanprover-community.github.io/co
 
 本文は日本語で可（本プロジェクトの実態。識別子は英語のまま）。
 
+**プロセス語彙を永続記録に書かない**: `Phase A/B`・`Wall N`・`判断 #X`・`Retraction log`・`撤退ライン`
+といった**開発プロセス / control state / 決定履歴**は module doc にも宣言 docstring にも書かない
+（Mathlib の永続ドキュメントは数学だけを語る）。これらの置き場所は plan / handoff
+（`docs/**/*-plan.md` / `.claude/handoff.md`）。コードに残すのは**数学的・構造的な設計判断のみ**
+（型クラス選択・simp 正規形・定義形を選んだ理由）で、*Implementation notes* に書く。
+honesty タグ（`@residual` / `@audit:*`）はプロセス語彙ではなく**残す**（下記「プロジェクト固有タグとの同居」）。
+
 ## 本リポジトリの乖離点とあるべき形
 
 | 乖離点（独自進化） | Mathlib のあるべき形 | 対応 |
 |---|---|---|
 | **宣言 docstring の継続行を 2 スペース字下げ** | 宣言 `/--` の継続行は開始 `/--` のカラムに揃える（トップレベルは字下げしない、フィールドはフィールド列に揃う）。2 スペース字下げは module `/-!` だけ | ✅ トップレベル分は一括除去済（11 ファイル）。フィールド docstring は既に `/--` 列に揃っており対象外。新規も字下げしない |
 | **ほぼ全 docstring を `**ラベル**:` で太字始まり** | 太字は **named theorem に限る**。通常の topic ラベルは太字にしない（地の文で書く） | 新規は太字を named theorem に限定。既存は無理に剥がさない（無害） |
+| **補助補題までほぼ全部 docstring（~94%）** | 補助補題は裸（Mathlib ~17–20%）。文書化は API 表面（def + headline）のみ | 🔧 [`../docstring-tidyup-plan.md`](../docstring-tidyup-plan.md) で内部補助補題の散文を選別削除中。新規は付けない（name-adequacy gate） |
+| **docstring / module doc にプロセス語彙**（Phase/Wall/判断/Retraction/撤退） | 永続記録は数学のみ。プロセスは plan / handoff へ | 🔧 同 plan で除去/移設。数学的・構造的な設計判断のみ *Implementation notes* に残す |
 | **末尾ピリオド無し**（特に日本語終わり） | 完全文なら末尾ピリオド | 新規は付ける。日本語文末は「。」で可 |
 | 散文が日本語 | Mathlib は英語のみ | **本プロジェクトでは散文は日本語可**（[`README.md`](README.md) のとおり。識別子は英語） |
 
