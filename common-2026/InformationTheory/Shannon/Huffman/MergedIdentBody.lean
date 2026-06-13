@@ -124,10 +124,9 @@ a,b first-merged** でも x=0 で恒等式失敗 (merged depth 2 vs 期待 `huff
 
 independent audit (2026-05-30): 反例独立再現 (script 再実行 + 手計算) + simulator↔Lean 定義
 (`groupKey`/`huffmanStep`/`huffmanLengthAux`) 忠実性照合済 → false-statement 確定。本 predicate def
-は機械検証可能に FALSE な universal statement のため、tag を wall lemma 側
-(`HuffmanWalls.merged_huffman_aux_ident_hypothesis_holds`) と整合する `false-hypothesis` reason に統一
-(旧 `load-bearing-predicate` は「true だが closure 待ち」を含意するため不正確)。closure 責任は後続
-plan `huffman-strong-form-completion` (consumer 設計を cost-level identity に pivot)。
+は機械検証可能に FALSE な universal statement のため、retract reason を `false-hypothesis` に統一
+(旧 `load-bearing-predicate` は「true だが closure 待ち」を含意するため不正確)。consumer 設計は
+cost-level identity へ pivot 済 (`huffman-cost-level-optimality`)、textbook 付き合わせは GitHub issue #4。
 @audit:defect(false-statement) @audit:retract-candidate(false-hypothesis) @audit:closed-by-successor(huffman-cost-level-optimality) -/
 abbrev MergedHuffmanAuxIdentHypothesis : Prop :=
   ∀ {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
@@ -149,11 +148,10 @@ abbrev MergedHuffmanAuxIdentHypothesis : Prop :=
 `initMultiset_mergedMeasure_eq` + `huffmanLength` の defeq 展開で完全に discharge.
 
 注: `h_aux` は load-bearing hypothesis として消費されるが、body は constructive (`rw +
-exact`)。本含意自体は genuine な reduction で sorry なし。consumer 側で
-`HuffmanWalls.merged_huffman_aux_ident_hypothesis_holds` を渡せば
-`HuffmanMergedIdentificationHypothesis` が transitive に得られる。closure 責任は
-`HuffmanWalls.merged_huffman_aux_ident_hypothesis_holds` の
-`@residual(plan:huffman-strong-form-completion)` が保有。 -/
+exact`)。本含意自体は genuine な reduction で sorry なし。ただし `h_aux`
+(`MergedHuffmanAuxIdentHypothesis`) は FALSE statement なので本 reduction は vacuous (供給元なし)。
+本物の最適性は cost-level pivot の無引数 `huffmanLength_optimal` が与える (本 API は後方互換のための
+dead wrapper、retract-candidate)。 -/
 @[entry_point]
 theorem huffmanMergedIdentification_of_aux
     (h_aux : MergedHuffmanAuxIdentHypothesis.{u}) :

@@ -248,7 +248,6 @@ import InformationTheory.Shannon.ParallelGaussian.PerCoordRegularity
 import InformationTheory.Shannon.Huffman.SwapNormProof
 import InformationTheory.Shannon.Huffman.SwapNormCompletion
 import InformationTheory.Shannon.Huffman.StrongForm
-import InformationTheory.Draft.Shannon.HuffmanWalls
 import InformationTheory.Shannon.Huffman.MergedAuxIdent
 import InformationTheory.Shannon.Huffman.ColexDeterminism
 import InformationTheory.Shannon.Huffman.FirstStepProbe

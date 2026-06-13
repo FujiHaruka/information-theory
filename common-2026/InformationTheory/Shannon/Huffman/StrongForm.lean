@@ -29,10 +29,9 @@ disjunctive 形に弱められているが、その下層 `huffmanStep_initMulti
 (弱化された前提を「実際に供給可能 & 必要」な形に戻す) であり、本 file の docstring に
 load-bearing 性を明示する。
 
-注 (2026-05-25 sorry-based migration): published weak-form `SwapNormalizationHypothesis`
-は `HuffmanWalls.swap_normalization_hypothesis_holds` で `swap_normalization_proof` を経由
-した direct alias として **genuine discharge 済** (sorry なし)。本 `swap_normalization_strong`
-が constructive core を提供している。
+注: `swap_normalization_strong` が Hyp1 の constructive core (`swap_normalization_proof`) を
+提供している。旧 weak-form alias を集約していた `HuffmanWalls.lean` は偽述語スキャフォールドの
+一部として削除済 (cost-level pivot で supersede、GitHub issue #4)。
 
 ## Approach (3 段, 全 genuine)
 
@@ -176,10 +175,6 @@ Hyp1 (swap normalization) は `swap_normalization_proof` で無条件に genuine
 = (if x.val = a then huffmanLength Q a - 1 else huffmanLength Q x.val)`」 — Huffman 再帰を
 2 carrier (`β` と `{y // y ≠ b}`) 間で関連付ける genuine な combinatorial 恒等式)。
 
-本来は `HuffmanWalls.merged_huffman_aux_ident_hypothesis_holds` を呼ぶ形に書換べきだが、
-`HuffmanWalls.lean → HuffmanStrongForm.lean` の import chain で循環するため signature 不変
-(`huffman-sorry-migration-plan.md` 判断ログ #3 L-MIG-4 拡張発動)。consumer 側で
-`HuffmanWalls.merged_huffman_aux_ident_hypothesis_holds` を渡せば transitive に閉じる。
 **Superseded (2026-05-30)**: cost-level pivot (`huffman-cost-level-optimality`) で帰納核から
 `h_aux`/`h_ident` 依存を除去した無引数 genuine 後継 `huffmanLength_optimal` (本 file:225、
 `@audit:ok`、`#print axioms` sorryAx 非依存) が同結論を hypothesis なしで与える。本 wrapper は

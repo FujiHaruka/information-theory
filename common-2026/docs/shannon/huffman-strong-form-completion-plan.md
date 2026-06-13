@@ -1,5 +1,7 @@
 # T1-A'' Huffman 最適性 — 強形完遂計画 (2 hypothesis genuine discharge) 🌙
 
+**Status**: CLOSED ✅ — Huffman 強形最適性 (`huffmanLength_optimal`, Cover-Thomas 5.8.1) は cost-level pivot (`huffman-cost-level-optimality-plan.md`) で genuine 達成済 (状態は roadmap Ch.5 + 当該 plan が SoT)。本 plan が discharge target とした per-symbol depth identity (`MergedHuffmanAuxIdentHypothesis`) は **FALSE statement** と機械確定し (反例 `docs/shannon/verify/merged_huffman_aux_ident_counterexample.py`、textbook 付き合わせ調査 = GitHub issue #4)、別経路で closure。偽述語の sorry honest marker を集約していた `HuffmanWalls.lean` は削除済。本文の「残 frontier = Hyp2」記述は当時のもの (historical)。
+
 > **Parent**:
 > - [`textbook-roadmap.md`](../textbook-roadmap.md) §「Tier 1 — T1-A''. Huffman 最適性」
 > - 前任 (T1-A' weak form publish 済): [`huffman-optimality-moonshot-plan.md`](./huffman-optimality-moonshot-plan.md)

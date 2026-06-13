@@ -180,8 +180,8 @@ theorem expectedLength_perm_invariant_when_l_eq
 
 independent audit (2026-05-30): 第 2 conjunct `HuffmanMergedIdentificationHypothesis` が
 機械検証可能に FALSE (反例独立再現済) のため、本 conjunction (∧) も **universally false**。
-`HuffmanWalls.huffman_combined_hypothesis_holds` は transitively false-premised wall
-(`@audit:defect(false-statement)`)。retract reason は `load-bearing-predicate` ではなく正規 vocab
+本 conjunction の wall lemma (旧 `HuffmanWalls.lean`、偽述語スキャフォールドとして削除済、issue #4)
+は transitively false-premised。retract reason は `load-bearing-predicate` ではなく正規 vocab
 `false-hypothesis` に確定 (conjunction の片側が false-statement なので全体が false)。consumer
 wrapper (`huffmanLength_optimal_with_combined` / `_terminal` ほか) は hypothesis 形のまま残るが
 false premise を渡す vacuously-true wrapper。closure は cost-level pivot 完遂時。

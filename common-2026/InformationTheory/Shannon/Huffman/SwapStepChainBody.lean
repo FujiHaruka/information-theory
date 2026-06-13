@@ -261,8 +261,8 @@ theorem swapStepLeChainHypothesis_holds_via_subpredicates :
 
 independent audit (2026-05-30): 第 2 conjunct `HuffmanMergedIdentificationHypothesis` が機械検証
 可能に FALSE (反例独立再現済) のため、本 triple conjunction も **universally false** (chain conjunct
-が常成立でも ∧ の片側 false で全体 false)。`HuffmanWalls.huffman_chain_combined_hypothesis_holds`
-は transitively false-premised wall (`@audit:defect(false-statement)`)。retract reason は正規 vocab
+が常成立でも ∧ の片側 false で全体 false)。本 triple の wall lemma (旧 `HuffmanWalls.lean`、
+偽述語スキャフォールドとして削除済、issue #4) は transitively false-premised。retract reason は正規 vocab
 `false-hypothesis` に確定。consumer wrapper (`huffmanLength_optimal_with_chain_combined` /
 `_via_chain_lift`) は hypothesis 形のまま残るが false premise を渡す vacuously-true wrapper。
 @audit:defect(false-statement) @audit:retract-candidate(false-hypothesis) @audit:closed-by-successor(huffman-strong-form-completion) -/
@@ -298,9 +298,9 @@ theorem huffmanChainCombined_iff :
 
 Transitive `sorry` via `huffmanLength_optimal_with_hypotheses` (Phase 2 wall 経由
 書換時、本 wrapper は `HuffmanCombinedHypothesis` consumer に reduce してから呼ぶ chain)。
-本 wrapper には `@residual` タグを付与しない — closure 責任は
-`HuffmanWalls.huffman_merged_identification_hypothesis_holds`
-(`@residual(plan:huffman-2hyp-vertical-reduction)`) が保有。 -/
+本 wrapper には `@residual` タグを付与しない — 取る premise は FALSE
+`MergedHuffmanAuxIdentHypothesis` なので closure 対象の sorry は無く、本物は cost-level pivot の
+`huffmanLength_optimal` (本 wrapper は後方互換のための dead wrapper)。 -/
 @[entry_point]
 theorem huffmanLength_optimal_with_chain_combined
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
@@ -320,8 +320,8 @@ theorem huffmanLength_optimal_with_chain_combined
 Transitive `sorry` via `huffmanLength_optimal_with_hypotheses` (chain hypothesis は常成立
 `swapStepLeChainHypothesis_holds` で trivial に補完できるため、本 wrapper の core residual は
 `HuffmanCombinedHypothesis` consumer の transitive)。本 wrapper には `@residual` タグを付与
-しない — closure 責任は `HuffmanWalls.huffman_merged_identification_hypothesis_holds`
-(`@residual(plan:huffman-2hyp-vertical-reduction)`) が保有。 -/
+しない — 取る premise は FALSE なので closure 対象の sorry は無く、本物は cost-level pivot の
+`huffmanLength_optimal` (本 wrapper は後方互換のための dead wrapper)。 -/
 @[entry_point]
 theorem huffmanLength_optimal_via_chain_lift
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
