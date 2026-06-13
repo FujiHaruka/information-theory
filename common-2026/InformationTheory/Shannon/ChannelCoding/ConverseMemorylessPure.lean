@@ -474,10 +474,11 @@ private lemma isMarkovChain_map_conditioner_measurableEquiv
 
 end GraphoidHelpers
 
-/-! ## Phase A.1 — per-letter Markov chain from memoryless
+/-! ## Strong-axiom derivations from memoryless
 
-This is the easier of the two strong-axiom derivations. The harder one
-(`outputs_cond_indep`) requires graphoid weak union and is deferred. -/
+The per-letter Markov chain (`per_letter_markov`) is the simpler of the two
+strong-axiom derivations; the harder `outputs_cond_indep` derivation requires the
+graphoid weak union axiom. -/
 
 section BridgeMain
 

@@ -103,13 +103,13 @@ theorem mutualInfoOfChannel_eq_mutualInfo_prod
   have h_snd : (jointDistribution p W).map Prod.snd = outputDistribution p W := rfl
   rw [h_id, h_fst, h_snd]
 
-/-- **Entropy ↔ mutual-information bridge for the channel (B-3'' Phase D-(b) bridge).**
+/-- **Entropy ↔ mutual-information bridge for the channel.**
 The channel mutual information equals the three-term form
 `H(X) + H(Y) − H(X, Y)` on the joint distribution `p ⊗ₘ W`, where `H` is the
 discrete Shannon entropy and `H(X, Y) := entropy (p ⊗ₘ W) id` is the joint entropy
 on `α × β`.
 
-Composing this with `entropy_eq_of_identDistrib` lets the Phase D-(b) consumer
+Composing this with `entropy_eq_of_identDistrib` lets the achievability consumer
 rewrite the joint-AEP exponent
 `H(jointSeq Xs Ys 0) − H(Xs 0) − H(Ys 0) = −(mutualInfoOfChannel p W).toReal`
 once the i.i.d. ambient `μ := Measure.infinitePi (jointDistribution p W)` is plumbed
@@ -231,14 +231,13 @@ theorem averageErrorProb_le_one
 
 end Code
 
-/-! ## Phase B — Jointly typical set (definitions + bounds (a), (b))
+/-! ## Jointly typical set (definitions + bounds (a), (b), (c))
 
 Cover-Thomas Theorem 7.6.1. The jointly typical set is the intersection of three
 single-axis typical conditions (X, Y, and (X, Y) jointly). Bounds (a) and (b) follow
-directly from the existing AEP single-axis theorems (`typicalSet_prob_tendsto_one` and
+directly from the AEP single-axis theorems (`typicalSet_prob_tendsto_one` and
 `typicalSet_card_le`) applied to the joint sequence `i ↦ (Xs i, Ys i)`. The
-"independent-pair" bound (c) is the genuinely new ingredient and is deferred to a
-subsequent commit.
+"independent-pair" bound (c) is the genuinely new ingredient.
 
 The "marginal sequence" formulation `Xs : ℕ → Ω → α`, `Ys : ℕ → Ω → β` matches the
 AEP plumbing in `AEP.lean`. The joint sequence is `Zs i ω := (Xs i ω, Ys i ω)`. -/
@@ -547,8 +546,8 @@ for the cardinality of the joint typical set.
 
 Mutual independence (`iIndepFun`) along **each** of the `X` and `Y` axes is required
 to factorise the block laws `μ.map (jointRV Xs n) = Measure.pi (μ.map (Xs ·))`. The
-joint axis identification (`hidentZ`) is **not** required for this bound (it would
-be required only for Phase C / D, downstream of this lemma). -/
+joint axis identification (`hidentZ`) is **not** required for this bound (it is
+required only by the random-codebook average downstream of this lemma). -/
 @[entry_point]
 theorem jointlyTypicalSet_indep_prob_le
     [Nonempty α] [Nonempty β]

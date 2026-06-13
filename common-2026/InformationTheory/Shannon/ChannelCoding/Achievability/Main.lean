@@ -8,13 +8,12 @@ import InformationTheory.Shannon.ChannelCoding.Achievability.Core
 import InformationTheory.Shannon.ChannelCoding.Achievability.RandomCodebook
 
 /-!
-# Channel coding achievability — pigeonhole + main theorem (Phase C-(d) / D)
+# Channel coding achievability — pigeonhole + main theorem
 
 Part of the longFile split of `Achievability.lean`. This part holds the
-probabilistic-method pigeonhole `exists_codebook_le_avg` (Phase C-(d)) and the
-headline theorem `channel_coding_achievability` (Phase D), which combines the
-random-codebook average bound from `...Achievability.RandomCodebook` with the
-pigeonhole.
+probabilistic-method pigeonhole `exists_codebook_le_avg` and the headline theorem
+`channel_coding_achievability`, which combines the random-codebook average bound
+from `...Achievability.RandomCodebook` with the pigeonhole.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
@@ -27,15 +26,14 @@ variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 variable [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β]
 
-/-! ### Phase C-(d) — Pigeonhole (probabilistic-method form)
+/-! ### Pigeonhole (probabilistic-method form)
 
-Restated to match the probabilistic-method shape of Phase C-(c): instead of a
-uniform average over `Codebook M n α`, we draw codebooks from
-`codebookMeasure p M n`. The pigeonhole is unchanged in spirit — if the
-expectation `∑ codebook, μ_codebook · f(codebook) ≤ B`, then some `codebook` in
-the support has `f(codebook) ≤ B`. The proof uses the fact that the codebook
-measure is a probability measure (mass sums to `1` over the finite space) so the
-weighted average is a convex combination. -/
+Codebooks are drawn from `codebookMeasure p M n` rather than uniformly over
+`Codebook M n α`. The pigeonhole: if the expectation
+`∑ codebook, μ_codebook · f(codebook) ≤ B`, then some `codebook` in the support
+has `f(codebook) ≤ B`. The proof uses the fact that the codebook measure is a
+probability measure (mass sums to `1` over the finite space) so the weighted
+average is a convex combination. -/
 
 omit [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β]
   [MeasurableSingletonClass β] in
@@ -130,33 +128,28 @@ theorem exists_codebook_le_avg
           exact Finset.sum_lt_sum (fun i _ => h_each i) ⟨c₀, Finset.mem_univ _, h_strict⟩
   exact (lt_irrefl _) (lt_of_le_of_lt h_avg h_contra)
 
-/-! ### Phase D-(a) — Existence of a low-error codebook for large `n`
+/-! ### Existence of a low-error codebook for large `n`
 
-The "eventual smallness of random-codebook average" helper is folded into the
-main theorem's proof; this section deliberately exposes no extra public lemma.
-Subagent fills the proof of `channel_coding_achievability` below by combining
-`random_codebook_average_le` (Phase C-(c)), `exists_codebook_le_avg`
-(Phase C-(d)), and the rate-slack analysis. -/
-
-/-! ### Phase D-(a) — i.i.d. ambient + entropy-MI bridge (TBD)
+The "eventual smallness of random-codebook average" step is folded into the main
+theorem's proof; this section deliberately exposes no extra public lemma.
+`channel_coding_achievability` combines `random_codebook_average_le`,
+`exists_codebook_le_avg`, and the rate-slack analysis.
 
 The main theorem instantiates `random_codebook_average_le` with the i.i.d. extension
-of `(p, W)` on `Ω := ℕ → α × β`, `μ := Measure.infinitePi (jointDistribution p W)`,
-`Xs i ω := (ω i).1`, `Ys i ω := (ω i).2`. The bridges to the abstract Phase B / C
-formulation are:
+of `(p, W)` on `Ω := ℕ → α × β`, `μ := iidAmbientMeasure p W`,
+`Xs i ω := (ω i).1`, `Ys i ω := (ω i).2`. The bridges to the abstract formulation are:
 
 * `iIndepFun (Xs/Ys) μ` from `iIndepFun_infinitePi` + composition with `Prod.fst/.snd`.
 * `IdentDistrib (Xs i) (Xs 0) μ μ` from `infinitePi_map_eval` (identical marginals).
 * `μ.map (Xs 0) = p`, `μ.map (Ys 0) = outputDistribution p W`,
   `μ.map (jointSequence Xs Ys 0) = jointDistribution p W`.
-* `hposY` / `hposZ` need a "channel positivity" hypothesis (not currently part of the
-  theorem signature). They are discharged by `sorry` until that hypothesis is added.
+* `hposX` / `hposY` / `hposZ` (singleton positivity of the block marginals) follow
+  from the channel-positivity hypotheses `hp_pos` / `hW_pos`.
 * The exponent `entropy μ (jointSequence ...) − entropy μ (Xs 0) − entropy μ (Ys 0)
-  = −(mutualInfoOfChannel p W).toReal` requires
-  `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy` (chain rule + commutativity),
-  which is not yet exposed in the project and is also discharged by `sorry`. -/
+  = −(mutualInfoOfChannel p W).toReal` is the entropy-MI three-term identity
+  `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ` (chain rule + commutativity). -/
 
-/-! ### Phase D-(b) — Main theorem -/
+/-! ### Main theorem -/
 
 omit [DecidableEq α] [DecidableEq β] in
 /-- **Channel coding achievability (Cover-Thomas 7.7.1, achievability half).**
@@ -164,8 +157,8 @@ For any rate `R < I(p; W)` and target error probability `ε' > 0`, there exists
 `N` such that for all `n ≥ N` there is a block code of length `n` with at least
 `exp (n · R)` messages whose average error probability is `< ε'`.
 
-The proof instantiates the abstract Phase C result `random_codebook_average_le`
-on the concrete i.i.d. ambient `Ω := ℕ → α × β`,
+The proof instantiates the abstract random-codebook average bound
+`random_codebook_average_le` on the concrete i.i.d. ambient `Ω := ℕ → α × β`,
 `μ := iidAmbientMeasure p W`, then runs `exists_codebook_le_avg` to extract a
 single codebook from the codebook average bound. The rate slack
 `ε := (I - R)/6` ensures both the E1 term (joint AEP) and the E2 term
@@ -276,7 +269,7 @@ theorem channel_coding_achievability
     have hMI := mutualInfoOfChannel_eq_HX_add_HY_sub_HZ p W
     rw [← hI_def] at hMI
     linarith
-  -- Step 4-5: AEP closed-form `N₁` via Phase A (`jointlyTypicalSet_prob_ge_of_rate`).
+  -- Step 4-5: AEP closed-form `N₁` via `jointlyTypicalSet_prob_ge_of_rate`.
   -- Gives `1 - ε'/2 ≤ (μ {good n}).toReal` for all `n ≥ N₁`.
   have hε'_half : 0 < ε' / 2 := by linarith
   obtain ⟨N₁, hN₁⟩ :=

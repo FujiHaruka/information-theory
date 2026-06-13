@@ -6,13 +6,12 @@ import Mathlib.Probability.ProductMeasure
 import Mathlib.Probability.Independence.InfinitePi
 
 /-!
-# Channel coding achievability — Phase 0 / C-(a) / C-(b) / C-(c) core definitions
+# Channel coding achievability — core definitions
 
 Part of the longFile split of `Achievability.lean`. This part holds the i.i.d.
-input × channel plumbing (Phase 0), the codebook + joint-typical decoder (Phase
-C-(a)), the per-codeword error decomposition (Phase C-(b)), and the random
-codebook measure (Phase C-(c) definitions). The Fubini swap helpers and the
-random-codebook average bound live in `...Achievability.RandomCodebook`; the
+input × channel plumbing, the codebook + joint-typical decoder, the per-codeword
+error decomposition, and the random codebook measure. The Fubini swap helpers and
+the random-codebook average bound live in `...Achievability.RandomCodebook`; the
 pigeonhole and main theorem live in `...Achievability.Main`.
 -/
 
@@ -23,7 +22,7 @@ open scoped ENNReal NNReal BigOperators Topology
 
 variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 
-/-! ### Phase 0 — i.i.d. input × channel plumbing -/
+/-! ### i.i.d. input × channel plumbing -/
 
 section IIDInput
 
@@ -42,7 +41,7 @@ instance iidJointMeasure.instIsProbabilityMeasure
 
 end IIDInput
 
-/-! ### Phase C-(a) — Codebook + joint-typical decoder -/
+/-! ### Codebook + joint-typical decoder -/
 
 variable [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β]
@@ -74,7 +73,7 @@ noncomputable def codebookToCode
   encoder := codebook
   decoder := jointTypicalDecoder μ Xs Ys hM ε codebook
 
-/-! ### Phase C-(b) — Per-codeword error decomposition -/
+/-! ### Per-codeword error decomposition -/
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] [DecidableEq β]
   [Nonempty β] in
@@ -197,24 +196,20 @@ theorem errorProbAt_le_E1_plus_E2
     _ ≤ ν.real E1 + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, ν.real (E2_indiv m') := by
         gcongr
 
-/-! ### Phase C-(c) — Random codebook average bound (probabilistic-method form)
+/-! ### Random codebook average bound (probabilistic-method form)
 
-The originally-drafted statement averaged over a **uniform** distribution on
-`Codebook M n α := Fin M → (Fin n → α)`. That form is intrinsically inconsistent
-with the Phase B-(a) / B-(c) bounds, which speak about a **`p`-i.i.d.** law on
-the input alphabet. When `p` is not the uniform on `α`, the uniform-on-codebook
-expectation does *not* equal any `p`-derived quantity.
-
-We restate Phase C-(c) in the standard Cover-Thomas form: average over the
-product law `p^{Mn}` on `Codebook M n α`. Concretely, the codebook law is
+The random codebook is drawn from the standard Cover-Thomas product law `p^{Mn}`
+on `Codebook M n α := Fin M → (Fin n → α)`: average over each codeword being
+`p`-i.i.d. on the input alphabet. The codebook law is
 `codebookMeasure p M n := Measure.pi (fun _ : Fin M => Measure.pi (fun _ : Fin n => p))`.
 Because `α` is finite, this `Measure.pi` is determined by its values on singletons
 `{codebook}`, namely the product `∏ m i, p.real {codebook m i}`; the codebook
 average is then a finite weighted sum.
 
-The proof itself remains a placeholder (`sorry`) until the Fubini swap between
-"codebook expectation" and "i.i.d. expectation over `(X^n, Y^n)`" is built out.
-Both sides of the inequality are well-typed and compile. -/
+The alternative of averaging over a **uniform** distribution on `Codebook M n α`
+is inconsistent with the joint-typicality bounds, which speak about a `p`-i.i.d.
+law: when `p` is not uniform on `α`, the uniform-on-codebook expectation does not
+equal any `p`-derived quantity. -/
 
 /-- Product law `p^{Mn}` on the codebook space. -/
 noncomputable def codebookMeasure

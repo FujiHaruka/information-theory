@@ -10,19 +10,16 @@ import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
 /-!
 # Continuous-channel mutual-information chain rule (generic body)
 
-[awgn-mi-decomp-plan.md](../../../docs/shannon/awgn-mi-decomp-plan.md).
-
-This file genuinely discharges the **continuous-channel MI chain rule**
+This file establishes the **continuous-channel MI chain rule**
 `I(X;Y) = h(Y) − h(Y|X)`, with `h(Y|X)` realized as the integral of fibrewise
 differential entropies. The identity is **not AWGN-specific**: it holds for any
 Markov channel `W : Channel ℝ ℝ` and input law `p`.
 
-This is the AWGN-independent generic core, relocated here (2026-06-11) from
-`InformationTheory/Shannon/AWGN/ContChannelMIDecomp.lean` so that it lives
-**upstream** of the AWGN converse chain (`AWGN.Converse`), breaking the import cycle
-that previously prevented the per-letter MI bridge
-(`awgn_per_letter_mi_bridge_genuine`) from reusing it. The original file imports this
-one and re-exports these declarations under their unchanged fully-qualified names
+This is the AWGN-independent generic core, living **upstream** of the AWGN converse
+chain (`AWGN.Converse`) so that the per-letter MI bridge
+(`awgn_per_letter_mi_bridge_genuine`) can reuse it without an import cycle.
+`InformationTheory/Shannon/AWGN/ContChannelMIDecomp.lean` imports this file and
+re-exports these declarations under their unchanged fully-qualified names
 (`InformationTheory.Shannon.ChannelCoding.*`), so downstream consumers (ParallelGaussian,
 AwgnCapacityConverseMaxent) are unaffected.
 
@@ -41,13 +38,11 @@ I = ∫_z llr (p⊗ₘW) (p.prod q) z ∂(p⊗ₘW)          -- toReal_klDiv_of_
 
 The KL→integral expansion, the Fubini split (`integral_compProd`), the output
 marginal identification (`outputDistribution = (p⊗ₘW).snd`) and the
-differential-entropy density form (`differentialEntropy_eq_integral_density`) are
-all genuinely discharged here. The single step **(★)** — the Bayes density split of
-the joint log-likelihood ratio into fibre/output log densities — is the
-conditional-rnDeriv-to-fibre identification supplied **genuinely** by the linchpin
+differential-entropy density form (`differentialEntropy_eq_integral_density`)
+assemble the chain. The single step **(★)** — the Bayes density split of the joint
+log-likelihood ratio into fibre/output log densities — is the
+conditional-rnDeriv-to-fibre identification provided by the linchpin
 `rnDeriv_compProd_fibre` (withDensity route), assembled by `llr_compProd_prod_split`.
-The body `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` is **fully genuine (0 sorry,
-no shared wall)**.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
@@ -259,8 +254,8 @@ theorem llr_compProd_prod_split
 `(mutualInfoOfChannel p W).toReal = h(Y) − ∫ h(Y|X=x) dp(x)`, the density-level
 analogue of the discrete `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy`.
 
-This is assembled **genuinely (0 sorry)** from the local helpers — no external
-density-level wall. The proof opens `mutualInfoOfChannel = klDiv (p⊗ₘW) (p.prod q)`
+Assembled from the local helpers. The proof opens
+`mutualInfoOfChannel = klDiv (p⊗ₘW) (p.prod q)`
 (`q := outputDistribution p W`) via `toReal_klDiv_of_measure_eq` (both factors are
 probability measures, so the univ-mass condition is automatic), rewrites the joint
 log-likelihood ratio by the Bayes density split `llr_compProd_prod_split`, splits the
@@ -286,7 +281,7 @@ theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub
   set q := outputDistribution p W with hq_def
   -- `p.prod q` is a probability measure (product of two probability measures)
   have hq_vol : q ≪ volume := hq_ac
-  -- Phase 1: open `mutualInfoOfChannel` to an llr integral against the joint.
+  -- Step 1: open `mutualInfoOfChannel` to an llr integral against the joint.
   have h_kl :
       (mutualInfoOfChannel p W).toReal
         = ∫ z, llr (p ⊗ₘ W) (p.prod q) z ∂(p ⊗ₘ W) := by
@@ -294,12 +289,12 @@ theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub
     refine toReal_klDiv_of_measure_eq h_joint_ac ?_
     rw [measure_univ, measure_univ]
   rw [h_kl]
-  -- Phase 3: rewrite the integrand by the Bayes density split (a.e. on the joint).
+  -- Step 2: rewrite the integrand by the Bayes density split (a.e. on the joint).
   rw [integral_congr_ae
         (llr_compProd_prod_split (p := p) (W := W) q hWx_q hq_vol h_joint_ac g hg_meas hg_ae)]
   -- split the integral of the difference into two integrals
   rw [integral_sub h_int_fibre h_int_out]
-  -- Phase 4: fibre term `∫ z, log (g z).toReal ∂(p⊗ₘW) = -∫ x, h(W x) ∂p`.
+  -- Step 3: fibre term `∫ z, log (g z).toReal ∂(p⊗ₘW) = -∫ x, h(W x) ∂p`.
   have h_fibre :
       (∫ z, Real.log (g z).toReal ∂(p ⊗ₘ W))
         = -(∫ x, InformationTheory.Shannon.differentialEntropy (W x) ∂p) := by
@@ -307,7 +302,7 @@ theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub
     rw [← integral_neg]
     refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
     exact integral_log_proxy_fibre x (hW_ac x) (hg_ae x)
-  -- Phase 5: output term `∫ z, log f_q(z.2) ∂(p⊗ₘW) = -h(q)`.
+  -- Step 4: output term `∫ z, log f_q(z.2) ∂(p⊗ₘW) = -h(q)`.
   have h_out :
       (∫ z, Real.log (q.rnDeriv volume z.2).toReal ∂(p ⊗ₘ W))
         = -InformationTheory.Shannon.differentialEntropy q := by
@@ -328,7 +323,7 @@ theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub
           (fun y => Real.log (q.rnDeriv volume y).toReal) (by rw [← hq_def]; exact h_int_out_marg)]
     rw [← hq_def]
     exact integral_log_rnDeriv_eq_neg_diffEntropy q hq_vol
-  -- Phase 6: combine.
+  -- Step 5: combine.
   rw [h_fibre, h_out]
   ring
 
@@ -444,15 +439,12 @@ theorem llr_compProd_prod_split_gen
 `I.toReal = (∫ x, ∫ y, log(d(W x)/d ref y) ∂(W x) ∂p) − (∫ y, log(dq/d ref y) ∂q)`,
 
 i.e. `I = (−h(Y|X)) − (−h(Y)) = h(Y) − h(Y|X)` once each integral is identified with the
-relevant neg-entropy by `integral_log_rnDeriv_self_eq_neg`. Genuine, mirrors the 1-D body
-`mutualInfoOfChannel_toReal_eq_diffEntropy_sub`.
-
-Independent honesty audit 2026-06-12 PASS: hypothesis bundle is all-regularity
-(AC chain `hWx_q`/`hq_ref`/`h_joint_ac`, measurable proxy `g` + a.e.-identity `hg_ae`,
-compProd-level integrabilities, fibre/output integral-equality `h_fibre_self`/`h_out_self`)
-— same shape as the already-audited 1-D `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`,
-none encode the decomposition. Core (KL→llr→Bayes split→Fubini) lives in the body via
-`llr_compProd_prod_split_gen` (genuine). sorryAx-free (`#print axioms` re-confirmed).
+relevant neg-entropy by `integral_log_rnDeriv_self_eq_neg`. Mirrors the 1-D body
+`mutualInfoOfChannel_toReal_eq_diffEntropy_sub`. The hypothesis bundle is
+all-regularity (AC chain `hWx_q`/`hq_ref`/`h_joint_ac`, measurable proxy `g` +
+a.e.-identity `hg_ae`, compProd-level integrabilities, fibre/output integral-equality
+`h_fibre_self`/`h_out_self`); the core (KL→llr→Bayes split→Fubini) lives in the body
+via `llr_compProd_prod_split_gen`.
 @audit:ok -/
 theorem mutualInfoOfChannel_toReal_eq_log_density_sub
     [MeasurableSpace.CountableOrCountablyGenerated α β]

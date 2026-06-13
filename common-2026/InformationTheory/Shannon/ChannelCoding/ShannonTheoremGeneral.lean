@@ -296,7 +296,7 @@ lemma continuous_mutualInfoOfChannel_right_smooth
     · exact continuous_id.mul continuous_const
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Phase B.2**: From `R < capacity W`, extract `δ₀ ∈ (0, 1]` and `p₀ ∈ stdSimplex` with
+/-- From `R < capacity W`, extract `δ₀ ∈ (0, 1]` and `p₀ ∈ stdSimplex` with
 `R < (mutualInfoOfChannel (pmfToMeasure p₀) (Channel.smooth W δ₀)).toReal`. -/
 private lemma exists_smooth_capacity_gt
     (W : Channel α β) [IsMarkovKernel W]
@@ -344,10 +344,10 @@ private lemma exists_smooth_capacity_gt
   refine ⟨p₀, hp₀_mem, δ₀, hδ₀_pos, hδ₀_le_1, ?_⟩
   exact lt_trans hR_lt_R₁ hf_δ₀
 
-/-! ## Phase C — TV bound -/
+/-! ## TV bound -/
 
 omit [DecidableEq α] [Nonempty α] [DecidableEq β] in
-/-- **C.2.1**: For `δ ∈ [0,1]`, `∑_b |(W a).real {b} - (W_smooth δ a).real {b}| ≤ 2 δ`. -/
+/-- For `δ ∈ [0,1]`, `∑_b |(W a).real {b} - (W_smooth δ a).real {b}| ≤ 2 δ`. -/
 private lemma Channel.smooth_TV_bound
     (W : Channel α β) [IsMarkovKernel W] {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ ≤ 1) (a : α) :
     ∑ b : β, |(W a).real {b} - (Channel.smooth W δ a).real {b}| ≤ 2 * δ := by
@@ -541,7 +541,7 @@ private lemma sum_prod_diff_abs_le_aux : ∀ {n : ℕ} (a b : Fin n → β → �
     linarith
 
 omit [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β] in
-/-- **C.2.2**: TV bound on `Measure.pi`. For finite types and (per-coord) probability
+/-- TV bound on `Measure.pi`. For finite types and (per-coord) probability
 measures `μ_i, μ'_i`, and any event `E ⊆ Fin n → β`,
 `|(Measure.pi μ_·).real E - (Measure.pi μ'_·).real E| ≤ ∑_i ∑_b |μ_i.real{b} - μ'_i.real{b}|`. -/
 private lemma Measure_pi_real_event_diff_le
@@ -602,7 +602,7 @@ private lemma Measure_pi_real_event_diff_le
 
 
 omit [DecidableEq α] [Nonempty α] [DecidableEq β] in
-/-- **C.2.3**: For `δ ∈ [0,1]`, the difference between `errorProbAt` under `W` and `W_smooth δ`
+/-- For `δ ∈ [0,1]`, the difference between `errorProbAt` under `W` and `W_smooth δ`
 is bounded by `2 n δ`. -/
 @[entry_point]
 lemma errorProbAt_smooth_TV

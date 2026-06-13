@@ -7,7 +7,7 @@ import Mathlib.Probability.Independence.InfinitePi
 import InformationTheory.Shannon.ChannelCoding.Achievability.Core
 
 /-!
-# Channel coding achievability — random codebook average bound (Phase C-(c))
+# Channel coding achievability — random codebook average bound
 
 Part of the longFile split of `Achievability.lean`. This part holds the
 Fubini-style swap helpers (private lemmas `block_law_X_eq_pi_p`,
@@ -1003,13 +1003,12 @@ omit [DecidableEq α] [DecidableEq β] in
 /-- **Random codebook average (probabilistic-method form).** With each codeword
 drawn i.i.d. from `p^n` (so the codebook law is `codebookMeasure p M n`), the
 codebook-average of the (uniform-over-message) error probability decomposes via
-Fubini into the Phase B-(a) "joint typical event probability" plus
-`(M - 1) ·` the Phase B-(c) independent-pair bound.
+Fubini into the "joint typical event probability" (E1) plus `(M - 1) ·` the
+independent-pair bound (E2).
 
 The structural backbone (per-codebook bound via `errorProbAt_le_E1_plus_E2`,
-sum / swap arithmetic) is fully proved here. The two genuine Fubini swap
-ingredients — `random_codebook_E1_swap` and `random_codebook_E2_swap` — are
-private lemmas above whose bodies remain `sorry`. -/
+sum / swap arithmetic) is assembled here from the two Fubini swap ingredients
+`random_codebook_E1_swap` and `random_codebook_E2_swap` (private lemmas above). -/
 theorem random_codebook_average_le
     (W : Channel α β) [IsMarkovKernel W]
     (p : Measure α) [IsProbabilityMeasure p]

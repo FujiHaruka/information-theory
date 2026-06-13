@@ -38,8 +38,8 @@ For any `R < capacity W` and `ε > 0`, we build an `N₀` such that for every
 
 The construction:
 
-1. Phase D.0' gives `p_full := pSmooth p₀ δ_p` (full support) with `R < I_lb <
-   I(p_full; W_smooth δ)` for all `δ ∈ (0, δ_B]`.
+1. The uniform smooth-capacity bound gives `p_full := pSmooth p₀ δ_p` (full support)
+   with `R < I_lb < I(p_full; W_smooth δ)` for all `δ ∈ (0, δ_B]`.
 2. Choose an interior rate `R' := (R + I_lb)/2 < I_lb` for the closed-form
    average-error code; we then upgrade to max-error at rate `R` via the
    subcode trick (giving `max-error ≤ 2 · avg < ε/2`).
@@ -134,7 +134,7 @@ theorem exists_N_for_smooth_achievability_uniform
           (c : Code M n α β),
           ∀ m, (c.errorProbAt (Channel.smooth W δ) m).toReal < ε / 2 := by
   classical
-  -- Step 1: Phase D.0' to extract uniform smooth capacity.
+  -- Step 1: extract uniform smooth capacity.
   obtain ⟨p₀, hp₀_mem, δ_p, δ_B, hδ_p_pos, hδ_p_le, hδ_B_pos, hδ_B_le,
           I_lb, hR_lt_I_lb, hp_full_pos, hp_full_mem, h_MI_uniform⟩ :=
     pSmooth_smooth_capacity_gt_uniform W hR
