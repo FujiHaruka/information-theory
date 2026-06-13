@@ -8,30 +8,30 @@ import Mathlib.Order.ConditionallyCompleteLattice.Basic
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 
 /-!
-# Shannon noisy channel coding theorem (D-1) — full form
+# Shannon noisy channel coding theorem — full form (Cover-Thomas 7.7.1)
 
-[D-1 ムーンショット plan](../../../docs/shannon/channel-coding-shannon-theorem-plan.md)
-の Phase A-D を統合し、Cover-Thomas 7.7.1 完全形に到達する file。
+Integrates input distribution maximization, expurgation (average → max error),
+and the main achievability argument.
 
-**主定理 (Phase D)**:
+## Main definitions
 
-```
-shannon_noisy_channel_coding_theorem :
-  (W : Channel α β) [IsMarkovKernel W]
-  {R : ℝ} (hR_pos : 0 < R) (hR : R < capacity W)
-  {ε : ℝ} (hε : 0 < ε) :
-  ∃ N : ℕ, ∀ n, N ≤ n →
-    ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
-      (c : Code M n α β),
-      ∀ m, (c.errorProbAt W m).toReal < ε
-```
+* `pmfToMeasure` — lifts a pmf vector `p : α → ℝ` to a `Measure α`.
+* `capacity` — channel capacity `sup { I(p; W).toReal | p ∈ stdSimplex }`.
+* `Code.subcode` — restricts a code to a sub-message set.
+* `pSmooth` — smoothed input `(1-δ) • p₀ + δ • uniform`.
+* `Code_lift_from_subtype` — lifts a code on the support subtype to the full alphabet.
 
-既存 `channel_coding_achievability` (固定 `p`, average error, full-support `hp_pos + hW_pos`)
-を出発点に、(A) 入力分布最大化、(B) expurgation で average → max、(C) full-support 仮定の
-sub-channel 切り出しで除去、(D) 主定理を統合する。
+## Main statements
 
-本ファイルは Phase A (入力分布最大化) を完成 + Phase B-D は skeleton (`:= by sorry`)。
-後続コミットで Phase B-D を順次埋める。
+* `capacity_nonneg` — `capacity W ≥ 0`.
+* `exists_capacity_achiever` — capacity is attained by some `p ∈ stdSimplex`.
+* `capacity_lt_implies_exists_pmf` — `R < capacity W` implies some `p` with `R < I(p; W)`.
+* `continuous_mutualInfoOfChannel_left` — `p ↦ I(pmfToMeasure p; W).toReal` is continuous
+  on `stdSimplex`.
+* `channel_coding_achievability_max_error` — average error → max error via expurgation.
+* `mutualInfoOfChannel_restrict_to_support` — MI is invariant under restriction to support.
+* `shannon_noisy_channel_coding_theorem` — for any `R < capacity W` and `ε > 0`,
+  there exists `N` such that for all `n ≥ N`, a code of size `≥ exp(n R)` with max error `< ε`.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
@@ -43,20 +43,14 @@ variable {α β : Type*}
   [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β]
 
-/-! ## Phase A — 入力分布最大化
+/-! ## Input distribution maximization -/
 
-### A.1 — `pmfToMeasure` helper + `capacity` 定義 -/
-
-/-- 有限 alphabet 上の pmf vector `p : α → ℝ` を `Measure α` に持ち上げる:
-`pmfToMeasure p = ∑ a, ENNReal.ofReal (p a) • Measure.dirac a`。
-
-`p ∈ stdSimplex ℝ α` のとき `IsProbabilityMeasure (pmfToMeasure p)` (下記 instance 候補)、
-任意 `s ⊆ α` で `(pmfToMeasure p) s = ∑ a ∈ s, ENNReal.ofReal (p a)` (atom 評価)。 -/
+/-- **Lift a pmf vector to a measure**: `pmfToMeasure p = ∑ a, ENNReal.ofReal (p a) • Measure.dirac a`. -/
 noncomputable def pmfToMeasure (p : α → ℝ) : Measure α :=
   ∑ a : α, ENNReal.ofReal (p a) • Measure.dirac a
 
 omit [DecidableEq α] [Nonempty α] in
-/-- Atom 評価: `(pmfToMeasure p) {a} = ENNReal.ofReal (p a)` (singleton). -/
+/-- Atom evaluation: `(pmfToMeasure p) {a} = ENNReal.ofReal (p a)`. -/
 lemma pmfToMeasure_apply_singleton (p : α → ℝ) (a : α) :
     (pmfToMeasure p) ({a} : Set α) = ENNReal.ofReal (p a) := by
   unfold pmfToMeasure
@@ -71,7 +65,7 @@ lemma pmfToMeasure_apply_singleton (p : α → ℝ) (a : α) :
     exact (h (Finset.mem_univ a)).elim
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- `p ∈ stdSimplex ℝ α` のとき `pmfToMeasure p` は probability measure。 -/
+/-- `pmfToMeasure p` is a probability measure when `p ∈ stdSimplex ℝ α`. -/
 lemma pmfToMeasure_isProbabilityMeasure
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α) :
     IsProbabilityMeasure (pmfToMeasure p) := by
@@ -90,7 +84,7 @@ lemma pmfToMeasure_isProbabilityMeasure
   rw [← ENNReal.ofReal_sum_of_nonneg (fun a _ => hnn a), hsum, ENNReal.ofReal_one]
 
 omit [DecidableEq α] [Nonempty α] in
-/-- `pmfToMeasure p` の `.real {a}` 評価: `p a` 自身に等しい (`p ∈ stdSimplex` で `p a ≥ 0`)。 -/
+/-- `(pmfToMeasure p).real {a} = p a` when `p ∈ stdSimplex`. -/
 lemma pmfToMeasure_real_singleton
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α) (a : α) :
     (pmfToMeasure p).real {a} = p a := by
@@ -99,14 +93,14 @@ lemma pmfToMeasure_real_singleton
   exact ENNReal.toReal_ofReal (hp.1 a)
 
 /-- **Channel capacity** (Cover-Thomas 7.5):
-`capacity W := sup { I(p; W).toReal | p ∈ stdSimplex }`。 -/
+`capacity W := sup { I(p; W).toReal | p ∈ stdSimplex }`. -/
 noncomputable def capacity (W : Channel α β) : ℝ :=
   sSup ((fun p : α → ℝ => (mutualInfoOfChannel (pmfToMeasure p) W).toReal) ''
         stdSimplex ℝ α)
 
 omit [DecidableEq α] [MeasurableSingletonClass α] [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSingletonClass β] in
-/-- `capacity` value set は非空 (`Pi.single` Dirac で). -/
+/-- The capacity image set is nonempty (witnessed by a `Pi.single` Dirac input). -/
 lemma capacity_image_nonempty (W : Channel α β) :
     ((fun p : α → ℝ => (mutualInfoOfChannel (pmfToMeasure p) W).toReal) ''
       stdSimplex ℝ α).Nonempty := by
@@ -152,7 +146,7 @@ theorem capacity_nonneg (W : Channel α β) [IsMarkovKernel W] : 0 ≤ capacity 
   rw [← hp_eq]
   exact ENNReal.toReal_nonneg
 
-/-! ### A.2 — `I(p; W).toReal` の連続性 (in p) -/
+/-! ### Continuity of `I(p; W).toReal` in p -/
 
 omit [Nonempty α] [DecidableEq α] [Fintype β] [DecidableEq β] [Nonempty β] in
 /-- For `p ∈ stdSimplex`, the output marginal `(p ⊗ₘ W).snd` real-value on `{b}` is
@@ -286,8 +280,7 @@ private lemma mutualInfoOfChannel_toReal_eq_of_stdSimplex
     rw [jointMap_id_real_singleton_of_stdSimplex hp W ab.1 ab.2]
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Phase A.2**: `(p : α → ℝ) ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal`
-は `stdSimplex ℝ α` 上連続。3-entropy 形 + `Real.continuous_negMulLog` 経由。 -/
+/-- `p ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal` is continuous on `stdSimplex ℝ α`. -/
 theorem continuous_mutualInfoOfChannel_left (W : Channel α β) [IsMarkovKernel W] :
     ContinuousOn (fun p : α → ℝ => (mutualInfoOfChannel (pmfToMeasure p) W).toReal)
       (stdSimplex ℝ α) := by
@@ -319,12 +312,8 @@ theorem continuous_mutualInfoOfChannel_left (W : Channel α β) [IsMarkovKernel 
     refine Real.continuous_negMulLog.comp ?_
     exact (continuous_apply ab.1).mul continuous_const
 
-/-! ### A.3 — capacity 達成元 (documentation) -/
-
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Phase A.3 (documentation)**: `IsCompact.exists_isMaxOn` 経由で
-capacity 達成元 `p* ∈ stdSimplex` の存在。主定理 (Phase D) は `capacity_lt_implies_exists_pmf`
-だけで通るので documentation 用。 -/
+/-- Capacity is attained: there exists `p ∈ stdSimplex` maximizing `I(pmfToMeasure p; W)`. -/
 @[entry_point]
 theorem exists_capacity_achiever (W : Channel α β) [IsMarkovKernel W] :
     ∃ p ∈ stdSimplex ℝ α, IsMaxOn
@@ -335,11 +324,8 @@ theorem exists_capacity_achiever (W : Channel α β) [IsMarkovKernel W] :
     (continuous_mutualInfoOfChannel_left W)
   exact ⟨_, single_mem_stdSimplex ℝ (Classical.arbitrary α)⟩
 
-/-! ### A.4 — `R < C ⟹ ∃ p, R < I(p; W)` (Phase A 主補題) -/
-
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Phase A.4 (key)**: `R < capacity W` から `R < I(p; W).toReal` を満たす `p ∈ stdSimplex` を
-直接取り出す。`lt_csSup_iff` (`BddAbove` + `Nonempty`) を適用。 -/
+/-- `R < capacity W` implies there exists `p ∈ stdSimplex` with `R < I(pmfToMeasure p; W).toReal`. -/
 theorem capacity_lt_implies_exists_pmf
     (W : Channel α β) [IsMarkovKernel W]
     {R : ℝ} (hR : R < capacity W) :
@@ -356,14 +342,10 @@ theorem capacity_lt_implies_exists_pmf
   rw [hp_eq]
   exact hv_lt
 
-/-! ## Phase B — Expurgation (skeleton)
-
-Average → max error 化。Markov inequality on Finset で「`errorProbAt > 2·avg` な m の数 ≤ M/2」
-→ 上位半分の messages を取って sub-code 化 → max error ≤ 2·avg。-/
+/-! ## Expurgation (average → max error) -/
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
-/-- **Phase B.1**: Markov inequality on Finset で
-`errorProbAt > K · avg` を満たす m の個数 ≤ M / K。 -/
+/-- Markov inequality: the number of `m` with `errorProbAt > K · avg` is at most `M / K`. -/
 theorem errorProbAt_filter_card_bound
     {M n : ℕ} (c : Code M n α β) (W : Channel α β) [IsMarkovKernel W]
     {K : ℝ} (hK : 1 < K) :
@@ -439,13 +421,11 @@ theorem errorProbAt_filter_card_bound
       rw [h_rewrite] at h_card_le_M_avg
       exact (mul_le_mul_iff_of_pos_right h_avg_pos).mp h_card_le_M_avg
 
-/-- **Phase B.2 (skeleton)**: sub-code 構築。`S : Finset (Fin M)` で encoder を S に restrict、
-decoder は外を任意の固定 message に decode。`Fin S.card ≃ S` 経由。 -/
+/-- **Sub-code** restricted to a message subset `S`: encoder restricts to `S`, decoder maps
+outside `S` to a fixed fallback message. -/
 noncomputable def Code.subcode
     {M n : ℕ} (c : Code M n α β) (S : Finset (Fin M)) (hS : 0 < S.card) :
     Code S.card n α β :=
-  -- 一旦 placeholder: encoder = S 内 message を順番に並べる、decoder は c.decoder の像を S
-  -- に絞り込み、外なら ⟨0, hS⟩。
   { encoder := fun m' => c.encoder (S.equivFin.symm ⟨m', by simp⟩).val
     decoder := fun y =>
       let m := c.decoder y
@@ -454,7 +434,7 @@ noncomputable def Code.subcode
       else ⟨0, hS⟩ }
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
-/-- **Phase B.2**: sub-code error は元 code の errorProbAt で上から抑えられる。 -/
+/-- Sub-code error probability is bounded above by the original code's `errorProbAt`. -/
 theorem Code.subcode_errorProbAt_le
     {M n : ℕ} (c : Code M n α β) (W : Channel α β) [IsMarkovKernel W]
     (S : Finset (Fin M)) (hS : 0 < S.card) (m' : Fin S.card) :
@@ -591,7 +571,7 @@ lemma exists_N_two_ceil_exp_le
   exact_mod_cast h_combined
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Phase B.4**: Average error achievability → max error achievability。 -/
+/-- **Expurgation**: average error achievability implies max error achievability. -/
 @[entry_point]
 theorem channel_coding_achievability_max_error
     (W : Channel α β) [IsMarkovKernel W]
@@ -709,23 +689,10 @@ theorem channel_coding_achievability_max_error
     _ = ε / 2 := by rw [hε'_def]; ring
     _ < ε := by linarith
 
-/-! ## Phase C — Full support 仮定除去 (skeleton)
+/-! ## Full-support assumption removal
 
-`p` 側 `hp_pos` を sub-channel 切り出しで vacuous 化。`α_supp := {a | 0 < p {a}}` 上で
-restrict した sub-channel での MI が元の MI と一致。 -/
-
-/-! ### Helpers for `mutualInfoOfChannel_restrict_to_support` (Phase C.1)
-
-**Strategy**: route via `klDiv` invariance under `MeasurableEmbedding`-pushforward.
-1. `Subtype.val : α_supp → α` (with `α_supp := {a | 0 < p.real {a}}`) is a
-   `MeasurableEmbedding` (`α` is `Fintype` so `α_supp` is measurable).
-2. `(p.comap Subtype.val).map Subtype.val = p` (via `MeasurableEmbedding.map_comap` +
-   `p` concentrates on its support).
-3. The joint `(p ⊗ₘ W)` and product `p.prod q` are pushforwards via `Prod.map Subtype.val id`
-   of the corresponding subtype-side joint/product.
-4. `klDiv` is invariant under `MeasurableEmbedding`-pushforward of both arguments
-   (derived here from `klDiv_eq_lintegral_klFun_of_ac` + `MeasurableEmbedding.rnDeriv_map` +
-   `MeasurableEmbedding.lintegral_map`). -/
+MI is invariant under restriction to the support `{a | 0 < p.real {a}}` via `klDiv`
+invariance under `MeasurableEmbedding`-pushforward. -/
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
@@ -913,9 +880,8 @@ theorem mutualInfoOfChannel_restrict_to_support
   rw [← h_joint_map, ← h_prod_map]
   exact klDiv_map_measurableEmbedding (hj_emb.prodMap MeasurableEmbedding.id) _ _
 
-/-- **Phase C.2**: `Code` の subtype lift。`Code M n {a // 0 < p.real {a}} β` から
-`Code M n α β` への injection。encoder の codomain を `Subtype → α` で expansion、`errorProbAt`
-は不変 (`Code_lift_errorProbAt_eq` 参照)。 -/
+/-- **Lift a code** from the support subtype to the full alphabet by composing the encoder
+with `Subtype.val`. -/
 @[entry_point]
 noncomputable def Code_lift_from_subtype
     {M n : ℕ} (p : Measure α)
@@ -923,7 +889,7 @@ noncomputable def Code_lift_from_subtype
   { encoder := fun m i => (c.encoder m i).val
     decoder := c.decoder }
 
-/-! ## Phase D — 主定理 -/
+/-! ## Main theorem -/
 
 /-- Uniform input distribution `unif a := 1/|α|`, used as a smoothing target. -/
 noncomputable def uniformInput (α : Type*) [Fintype α] : α → ℝ :=
@@ -998,20 +964,12 @@ lemma continuous_pSmooth (p₀ : α → ℝ) : Continuous (fun δ : ℝ => pSmoo
     |>.add (continuous_id.mul continuous_const)
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **D-1 主定理 (Cover-Thomas 7.7.1 完全形)**: 任意 `R < capacity W` と任意 `ε > 0` で
-十分大きい block 長 `n` で max error < ε を達成する `M ≥ exp(n R)` 個の符号が存在。
+/-- **Shannon noisy channel coding theorem** (Cover-Thomas 7.7.1): for any `R < capacity W`
+and `ε > 0`, there exists `N` such that for all `n ≥ N` there is a code of size `≥ exp(n R)`
+achieving max error probability `< ε`.
 
-Proof shape:
-1. Phase A.4 で `R < capacity W ⟹ ∃ p₀ ∈ stdSimplex, R < I(p₀; W).toReal`。
-2. `pSmooth p₀ δ := (1-δ) p₀ + δ · uniform` を考え、A.2 連続性で
-   `δ → 0⁺` のとき `I(pSmooth p₀ δ; W).toReal → I(p₀; W).toReal`。
-3. 連続性から `R < (R + I)/2 < I(pSmooth p₀ δ₀; W).toReal` を満たす
-   小さな `δ₀ > 0` を取る。
-4. `pSmooth p₀ δ₀` は各成分が `0 < δ₀ · 1/|α|` 以上で full support。
-5. Phase B.4 (average → max wrap) を `(pmfToMeasure (pSmooth p₀ δ₀), W)` で call。
-
-`hW_pos`: 本 MVP では `W` の full-support を追加仮定として要求。完全形 (sub-channel 切り出し
-での除去) は Phase C.1/C.2 deferred を参照。 -/
+Proof: extract `p₀` with `R < I(p₀; W)`, smooth to `pSmooth p₀ δ₀` to get full support,
+then apply the expurgation wrapper `channel_coding_achievability_max_error`. -/
 @[entry_point]
 theorem shannon_noisy_channel_coding_theorem
     (W : Channel α β) [IsMarkovKernel W]

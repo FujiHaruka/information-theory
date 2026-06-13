@@ -6,33 +6,24 @@ import Mathlib.Probability.Kernel.Basic
 import Mathlib.Probability.Kernel.Composition.MeasureCompProd
 
 /-!
-# Channel coding theorem — achievability (B-3 Phase A)
+# Channel coding theorem — primitive definitions
 
-[B-3 ムーンショット plan](../../../docs/shannon/channel-coding-achievability-plan.md) の
-Phase A: 通信路符号化定理 (achievability 半分) のためのプリミティブ定義。
+## Main definitions
 
-## Phase A スコープ
+* `Channel α β := Kernel α β` (DMC, one-symbol).
+* `Code M n α β`: encoder–decoder bundle for a block code of length `n` with `M` codewords.
+* `Code.errorProbAt`: point-wise error probability for message `m`.
+* `Code.averageErrorProb`: average error probability under a uniform message distribution.
+* `mutualInfoOfChannel`: mutual information `I(X; Y)` under input distribution `p` and channel `W`.
+* Jointly typical set definitions and associated probability bounds.
 
-* `Channel α β := Kernel α β` (DMC 1-symbol). `[IsMarkovKernel W]` で probability kernel 性。
-* `Code (M n : ℕ) (α β : Type*)`: encoder + decoder の bundle (有限 alphabet 上、measurability は自動)
-* `Code.errorProbAt`: メッセージ `m : Fin M` を送ったときの誤り確率 (point-wise)
-* `Code.averageErrorProb`: 一様な入力メッセージに対する平均誤り確率
-* `mutualInfoOfChannel`: 入力分布 + channel から `I(X; Y)` を計算
+## Implementation notes
 
-主定理 (`channel_coding_achievability`) は本ファイルの Phase D で扱う。Phase B (jointly
-typical set + 3 joint AEP bounds) と Phase C (random codebook averaging) は本シードの
-後続コミット (もしくは別 deferred plan) で順次追加。
-
-## 設計判断
-
-* **Channel = `Kernel α β`** (`ProbabilityTheory.Kernel`) を採用 (plan #1)。Mathlib の
-  `klDiv_compProd_*` API がそのまま channel coding analysis に流れ込み、ad-hoc な
-  `α → Measure β` 形は避ける。
-* **Joint distribution = `p ⊗ₘ W`**: 入力分布 `p` と channel `W` から
-  `MeasureTheory.Measure.compProd` で joint を構成。`(X, Y) ∼ p ⊗ₘ W`.
-* **errorProb は `μ.real {…}` 形** (`MeasureFano.errorProb` と統一)。
-* **Block channel `W^n` は明示構築せず**、joint product 形 `Measure.pi (i ↦ p ⊗ₘ W)` を
-  reshape で `(Fin n → α) × (Fin n → β)` 上の分布として書く方針。`Kernel.pi` は Mathlib 不在。
+* `Channel = Kernel α β` (`ProbabilityTheory.Kernel`) allows direct use of Mathlib's
+  `klDiv_compProd_*` API.
+* Joint distribution is `p ⊗ₘ W` (`MeasureTheory.Measure.compProd`), so `(X, Y) ∼ p ⊗ₘ W`.
+* The block channel `W^n` is not constructed explicitly; the i.i.d. product is expressed as
+  `Measure.pi (fun _ => jointDistribution p W)` reshaped to `(Fin n → α) × (Fin n → β)`.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding

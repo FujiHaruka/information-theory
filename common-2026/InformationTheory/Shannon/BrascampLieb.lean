@@ -2,31 +2,30 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.LoomisWhitney
 
 /-!
-# Brascamp–Lieb 不等式 (組合せ形) + Hypercube product projection bound
+# Brascamp–Lieb inequality (combinatorial form) and hypercube product projection bound
 
-Han Phase D の `shearer_inequality` を engine として、任意の cover ファミリ
-`S : ι → Finset (Fin n)` (各 `j : Fin n` を `k` 回以上覆う) に対する一般化
-Loomis–Whitney 形:
+Generalizes the Loomis–Whitney inequality (`LoomisWhitney.lean`) to an arbitrary cover family
+`S : ι → Finset (Fin n)` where each `j : Fin n` is covered at least `k` times:
 $$|A|^k \le \prod_{i : \iota} |\pi_{S_i}(A)|.$$
 
-`InformationTheory/Shannon/LoomisWhitney.lean` の Shearer 応用パターンを **cover 非依存** に
-拡張し、Loomis–Whitney (cover `S i = univ.erase i`) と Hypercube product projection
-bound (singleton cover `S i = {i}`) の両方を corollary に持つ統一形を与える。
+## Main definitions
 
-## 主定義・主定理
+* `projectionSubset S A` — restriction of `A : Finset (Fin n → α)` to a subset `S : Finset (Fin n)`
+  of coordinates, returning a `Finset (↥S → α)`.
 
-* `projectionSubset S A` — `S` 制限射影像。`(↥S → α)` 値の Finset。
-* `jointEntropySubset_le_log_projectionSubset_card` — 任意 `S` 上の subset-entropy ≤ projection log 濃度。
-* `brascamp_lieb_finset` — Brascamp–Lieb 不等式 (組合せ形)。
-* `hypercube_product_projection_bound` — singleton cover で `|A| ≤ ∏ i, |π_{{i}}(A)|`。
+## Main statements
 
-## 既存 `LoomisWhitney.lean` との関係
+* `brascamp_lieb_finset` — Brascamp–Lieb inequality for arbitrary cover families.
+* `hypercube_product_projection_bound` — singleton-cover corollary: `|A| ≤ ∏ i, |π_{{i}}(A)|`.
 
-LW (`loomis_whitney`) は `S i := univ.filter (· ≠ i)` の特殊形として理論的に
-`brascamp_lieb_finset` の corollary だが、**既存ファイルの shape を維持** (定義
-`projectionExcept` / 主定理 `loomis_whitney` 両方そのまま) する判断。新規
-`BrascampLieb.lean` は独立に書き、`LoomisWhitney.lean` の `entropy_le_log_image_card`
-+ `entropy_uniformOn_eq_log_card` を再利用するだけ。
+## Implementation notes
+
+The proof routes through `shearer_inequality` from `LoomisWhitney.lean` as the entropic engine,
+then peels off the logarithm via `Real.log_le_log_iff`.
+
+Loomis–Whitney (`loomis_whitney`) is the special case `S i := univ.filter (· ≠ i)` (each `j`
+covered `n-1` times), but the existing `LoomisWhitney.lean` shape is preserved to avoid
+changing `projectionExcept` and `loomis_whitney`.
 -/
 
 namespace InformationTheory.Shannon
@@ -34,22 +33,16 @@ namespace InformationTheory.Shannon
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal
 
-/-! ## Phase A — 任意 `S` 上の射影 plumbing -/
+/-! ## Projection onto a coordinate subset -/
 
-/-- 任意の `S : Finset (Fin n)` 上の射影像。
-`A : Finset (Fin n → α)` を `(↥S → α)` 値の Finset に落とす。 -/
+/-- The image of `A : Finset (Fin n → α)` under restriction to coordinates in `S : Finset (Fin n)`. -/
 def projectionSubset {n : ℕ} {α : Type*} [DecidableEq α]
     (S : Finset (Fin n)) (A : Finset (Fin n → α)) :
     Finset (↥S → α) :=
   A.image (fun (x : Fin n → α) (j : ↥S) => x j.val)
 
-/-- 任意 `S` 上の subset-entropy は射影像の log 濃度を超えない。
-
-`μ = uniformOn (A : Set (Fin n → α))` のもとで、`Xs i ω := ω i` に対して
-`jointEntropySubset μ Xs S = entropy μ (fun ω (j : ↥S) => ω j.val)`、これは
-そのまま `entropy_le_log_image_card` の形なので、`f := (fun x j => x j.val)`
-で適用する。LW の `jointEntropySubset_le_log_projectionExcept_card` の
-**任意 cover 版** (索引型を `↥S` のまま使う simpler 版)。 -/
+/-- For `A` equipped with the uniform measure, the joint entropy over coordinates `S`
+is bounded by `log |projectionSubset S A|`. -/
 theorem jointEntropySubset_le_log_projectionSubset_card
     {n : ℕ} {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -77,17 +70,16 @@ theorem jointEntropySubset_le_log_projectionSubset_card
       ≤ Real.log (projectionSubset S A).card
   exact h_le
 
-/-! ## Phase B — Brascamp–Lieb 主定理 -/
+/-! ## Brascamp–Lieb inequality -/
 
-/-- Brascamp–Lieb 不等式 (組合せ形)。
+/-- Brascamp–Lieb inequality (combinatorial form).
 
-`S : ι → Finset (Fin n)` が各 `j : Fin n` を少なくとも `k` 回被覆するとき、
-任意の有限部分集合 `A : Finset (Fin n → α)` (`A.Nonempty`) で:
+If `S : ι → Finset (Fin n)` is a cover family such that each `j : Fin n` is covered
+at least `k` times, then for any nonempty finite set `A : Finset (Fin n → α)`:
 $$|A|^k \le \prod_{i : \iota} |\pi_{S_i}(A)|.$$
 
-ここで `\pi_{S_i}(A) = projectionSubset (S i) A`。
-Loomis–Whitney は `S i := univ.filter (· ≠ i)` (各 `j` を `n-1` 回 cover) の特殊形。
-Hypercube product projection bound は `S i := {i}` (各 `j` を 1 回 cover) の特殊形。 -/
+Loomis–Whitney is the special case `S i := univ.filter (· ≠ i)` with `k = n - 1`.
+The hypercube product projection bound is the special case `S i := {i}` with `k = 1`. -/
 @[entry_point]
 theorem brascamp_lieb_finset
     {n k : ℕ} {ι : Type*} [Fintype ι]
@@ -165,15 +157,13 @@ theorem brascamp_lieb_finset
     exact h_pow_le
   exact_mod_cast h_cast
 
-/-! ## Phase C — Hypercube product projection bound (singleton cover corollary) -/
+/-! ## Hypercube product projection bound -/
 
-/-- Singleton-cover 系の corollary: 各 `i : Fin n` を cover が単独 `{i}` で 1 回ずつ覆うと、
-任意の `A : Finset (Fin n → α)` (`A.Nonempty`) で
-$$|A| \le \prod_{i : \text{Fin}\,n} |\pi_{\{i\}}(A)|.$$
+/-- Singleton-cover corollary: for any nonempty `A : Finset (Fin n → α)`,
+`|A| ≤ ∏ i, |π_{{i}}(A)|`.
 
-これは Brascamp–Lieb で `S i := {i}`, `k := 1` を取った特殊形。
-`α = Bool` を渡せば Boolean cube 上で `|π_{{i}}(A)| ≤ 2` から `|A| ≤ 2^n` を回復。
-Han-Bregman 流の hypercube isoperimetric inequality の基本形。 -/
+This is `brascamp_lieb_finset` with `S i := {i}` and `k := 1`. Setting `α = Bool` recovers
+`|A| ≤ 2^n` since each singleton projection has cardinality at most 2. -/
 @[entry_point]
 theorem hypercube_product_projection_bound
     {n : ℕ} {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]

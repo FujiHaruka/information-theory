@@ -9,24 +9,21 @@ import Mathlib.Probability.Kernel.Composition.RadonNikodym
 import Mathlib.Probability.Kernel.RadonNikodym
 
 /-!
-# Bridge: mutualInfo (KL form) ↔ Phase 3 condEntropy (Phase 4-β skeleton)
+# Bridge: mutual information (KL form) ↔ conditional entropy
 
-Shannon ムーンショット ([`docs/shannon/shannon-moonshot-plan.md`](../../../docs/shannon/shannon-moonshot-plan.md)) の
-Phase 4-β: Phase 4-α `mutualInfo` (KL 値) と Phase 3 `condEntropy` (∫ Σ negMulLog) を、
-`X : Fintype` + `IsProbabilityMeasure μ` のもとで `H(X) - H(X|Y)` で結ぶ。
+For a finite alphabet `X` and a probability measure `μ`,
+`(mutualInfo μ Xs Yo).toReal = entropy μ Xs - condEntropy μ Xs Yo`.
 
-## 主定理
+## Main statements
 
-```
-(mutualInfo μ Xs Yo).toReal = entropy μ Xs - condEntropy μ Xs Yo
-```
+* `mutualInfo_eq_entropy_sub_condEntropy` — the bridge identity.
 
-## 戦略
+## Implementation notes
 
-1. `(μ.map (Xs, Yo)) ≪ (μ.map Xs).prod (μ.map Yo)` を示す (X Fintype + 確率測度)
-2. `toReal_klDiv_eq_integral_klFun` で KL を Real の積分形に翻訳
-3. Fintype 上の有限和に分解し `log(P(x|y) / P(x))` の点和に整理
-4. 線形性で `H(X) - H(X|Y)` の差に分離
+The proof establishes `(μ.map (Xs, Yo)) ≪ (μ.map Xs).prod (μ.map Yo)` on a
+finite alphabet, translates the KL divergence to a Bochner integral via
+`toReal_klDiv_of_measure_eq`, decomposes over the finite alphabet, and separates
+into `H(X) - H(X|Y)` by linearity.
 -/
 
 namespace InformationTheory.Shannon
@@ -44,7 +41,6 @@ noncomputable def entropy (μ : Measure Ω) (Xs : Ω → X) : ℝ :=
   ∑ x : X, Real.negMulLog ((μ.map Xs).real {x})
 
 omit [DecidableEq X] [Nonempty X] [MeasurableSingletonClass X] in
-/-- Entropy is nonnegative: each term `negMulLog p` is nonneg for `p ∈ [0, 1]`. -/
 lemma entropy_nonneg (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (hXs : Measurable Xs) : 0 ≤ entropy μ Xs := by
   have _ : IsProbabilityMeasure (μ.map Xs) :=
@@ -54,9 +50,6 @@ lemma entropy_nonneg (μ : Measure Ω) [IsProbabilityMeasure μ]
     Real.negMulLog_nonneg measureReal_nonneg measureReal_le_one
 
 omit [DecidableEq X] [Nonempty X] in
-/-- Phase 4-α `mutualInfo` is finite when `X` is a finite alphabet and `μ` a probability
-measure: the joint distribution is absolutely continuous w.r.t. the product of the
-marginals (always true on a discrete `X` factor). Used to legally `toReal` the KL value. -/
 private theorem absolutelyContinuous_joint_prod_marginals
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y)
@@ -68,7 +61,7 @@ private theorem absolutelyContinuous_joint_prod_marginals
   have _ : IsProbabilityMeasure (μ.map Xs) :=
     Measure.isProbabilityMeasure_map hXs.aemeasurable
   refine Measure.AbsolutelyContinuous.mk fun A hA hA0 => ?_
-  -- 1. 積測度 0 を Tonelli + Fintype 和に展開
+  -- 1. Expand the product-measure 0 via Tonelli + Fintype sum
   rw [Measure.prod_apply hA, lintegral_fintype] at hA0
   have hzero : ∀ x : X,
       (μ.map Yo) (Prod.mk x ⁻¹' A) * (μ.map Xs) {x} = 0 := by
@@ -76,7 +69,7 @@ private theorem absolutelyContinuous_joint_prod_marginals
     have hsum := (Finset.sum_eq_zero_iff (s := (Finset.univ : Finset X))
         (f := fun x => (μ.map Yo) (Prod.mk x ⁻¹' A) * (μ.map Xs) {x})).mp hA0
     exact hsum x (Finset.mem_univ _)
-  -- 2. 結合測度を Xs スライス上の有限 union として書き直し、各スライスが 0 を示す
+  -- 2. Rewrite the joint measure as a finite union over Xs slices and show each slice is 0
   rw [Measure.map_apply hpair hA]
   have hslice : (fun ω => (Xs ω, Yo ω)) ⁻¹' A
       = ⋃ x : X, (Xs ⁻¹' {x}) ∩ (Yo ⁻¹' (Prod.mk x ⁻¹' A)) := by
@@ -114,10 +107,6 @@ The bridge proof goes via three independent helpers:
   `∫ y, (condDistrib Xs Yo μ y).real {x} d(μ.map Yo) = (μ.map Xs).real {x}`.
 -/
 
-/-- Joint identification of the compProd Radon-Nikodym derivative with the
-kernel-side rnDeriv (jointly measurable form). Adapts the model proof of
-`rnDeriv_measure_compProd_left_of_ac` (`Probability/Kernel/Composition/RadonNikodym.lean:45`)
-via π-system induction on measurable rectangles. -/
 private lemma rnDeriv_compProd_ae_eq_kernel_rnDeriv
     {α β : Type*} {_mα : MeasurableSpace α} {_mβ : MeasurableSpace β}
     [MeasurableSpace.CountableOrCountablyGenerated α β]
@@ -157,10 +146,6 @@ private lemma rnDeriv_compProd_ae_eq_kernel_rnDeriv
     congr with i
     exact hf_eq i
 
-/-- Fiberwise KL chain rule for a constant right kernel: when the right
-compProd uses `Kernel.const α ν`, the KL splits as the `μ`-integral of fiberwise
-KLs `klDiv (κ x) ν`. AC case is established directly; non-AC case is left to the
-caller via `klDiv_compProd_const_eq_lintegral_of_ac` below. -/
 private lemma klDiv_compProd_const_eq_lintegral_of_ac
     {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
     [MeasurableSpace.CountableOrCountablyGenerated α β]
@@ -209,11 +194,6 @@ private lemma klDiv_compProd_const_eq_lintegral_of_ac
 
 
 omit [DecidableEq X] [Nonempty X] in
-/-- Discrete `(klDiv Q P).toReal` formula on a finite alphabet under
-absolute continuity. Direct route via `toReal_klDiv_of_measure_eq` + Bochner
-`integral_fintype`, with the rnDeriv identification
-`(Q.rnDeriv P x) * P{x} = Q{x}` (from `withDensity_rnDeriv_eq` + `withDensity_apply`
-+ `lintegral_singleton`) bridging the per-point logarithm. -/
 private lemma klDiv_discrete_toReal_eq_sum
     (Q P : Measure X) [IsProbabilityMeasure Q] [IsProbabilityMeasure P]
     (hQP : Q ≪ P) :
@@ -271,7 +251,6 @@ private lemma klDiv_discrete_toReal_eq_sum
   rw [h_rnD_div, Real.log_div hQx_pos.ne' hPx_pos.ne']
 
 omit [DecidableEq X] in
-/-- Marginal recovery (lintegral form). -/
 private lemma lintegral_condDistrib_singleton_eq
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y)
@@ -293,8 +272,6 @@ private lemma lintegral_condDistrib_singleton_eq
   simp
 
 omit [DecidableEq X] in
-/-- Marginal recovery: integrating the conditional probability mass at `x` over
-the `Y`-marginal returns the `X`-marginal mass at `x`. -/
 private lemma integral_condDistrib_real_singleton_eq
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y)
@@ -316,18 +293,6 @@ private lemma integral_condDistrib_real_singleton_eq
   rfl
 
 omit [DecidableEq X] in
-/-- Per-fibre AC of `condDistrib Xs Yo μ y` w.r.t. `μ.map Xs`. On a finite
-alphabet `X`, AC reduces to per-singleton vanishing.
-
-Strategy:
-1. For each `x : X` with `(μ.map Xs) {x} = 0`, `condDistrib y {x} = 0` ae over
-   `μ.map Yo`. This follows from `compProd_map_condDistrib`: the joint
-   `μ.map (Yo, Xs)` has zero mass on `univ × {x}`, and `compProd_apply_prod`
-   converts that to `∫⁻ y, condDistrib y {x} ∂(μ.map Yo) = 0`.
-2. Take the finite intersection over `x : X` (via `ae_all_iff`).
-3. Conclude `condDistrib y ≪ μ.map Xs`: for any `A : Set X` with `(μ.map Xs) A = 0`,
-   each `x ∈ A` has `(μ.map Xs) {x} = 0` (monotonicity), hence `condDistrib y {x} = 0`,
-   and summing over the finite `A` gives `condDistrib y A = 0`. -/
 private lemma condDistrib_ae_absolutelyContinuous_map
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y)
@@ -385,30 +350,6 @@ private lemma condDistrib_ae_absolutelyContinuous_map
   exact Finset.sum_eq_zero fun x hx => hy x (hP_each x hx)
 
 omit [DecidableEq X] in
-/-- Discrete-fiber expansion of the KL divergence appearing in `mutualInfo`.
-For a finite alphabet `X` we may rewrite the joint integral as
-`∑_{x : X} ∫_y …` and pull the discrete log decomposition through.
-
-Plan to combine the three helpers:
-1. `mutualInfo_comm` to swap to `(Yo, Xs)` form so the conditional that appears
-   matches `condDistrib Xs Yo μ` (the `X|Y` direction used by `condEntropy`).
-2. `compProd_map_condDistrib hXs.aemeasurable` rewrites
-   `μ.map (Yo, Xs) = (μ.map Yo) ⊗ₘ condDistrib Xs Yo μ`.
-3. `Measure.compProd_const` rewrites
-   `(μ.map Yo).prod (μ.map Xs) = (μ.map Yo) ⊗ₘ Kernel.const Y (μ.map Xs)`.
-4. `klDiv_compProd_const_eq_lintegral` (Helper 1) reduces to
-   `∫⁻ y, klDiv (condDistrib Xs Yo μ y) (μ.map Xs) ∂(μ.map Yo)`.
-5. Take `.toReal`, swap with `∫` via `integral_toReal` (need ae finite + integrable):
-   `= ∫ y, (klDiv (condDistrib Xs Yo μ y) (μ.map Xs)).toReal d(μ.map Yo)`.
-6. For each `y`, `klDiv_discrete_toReal_eq_sum` (Helper 5) expands the inner KL:
-   `= ∑ x, Q_y.real{x} * (log Q_y.real{x} - log P_X.real{x})`
-   `= -∑ x, negMulLog Q_y.real{x} - ∑ x, Q_y.real{x} * log P_X.real{x}`.
-7. Integrate over `y`:
-   - First sum integrates to `condEntropy μ Xs Yo` (definitionally).
-   - Second sum: pull out `log P_X.real{x}`, get `∑ x, [∫ y, Q_y.real{x} dP_Y] * log P_X.real{x}`,
-     apply `integral_condDistrib_real_singleton_eq` (Helper 3) to get
-     `∑ x, P_X.real{x} * log P_X.real{x} = -∑ x, negMulLog P_X.real{x} = -entropy μ Xs`.
-8. Combine: `mutualInfo.toReal = -condEntropy + entropy = entropy - condEntropy`. -/
 private theorem klDiv_joint_prod_marginals_toReal
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y)
@@ -589,9 +530,7 @@ private theorem klDiv_joint_prod_marginals_toReal
   ring
 
 omit [DecidableEq X] in
-/-- The MI / condEntropy bridge: for a finite-alphabet source `X`, the Phase 4-α
-KL-based mutual information equals `H(X) - H(X | Y)` where `H` is the Phase 3
-measure-theoretic Shannon entropy / conditional entropy. -/
+/-- For a finite-alphabet source `X`, `(mutualInfo μ Xs Yo).toReal = entropy μ Xs - condEntropy μ Xs Yo`. -/
 theorem mutualInfo_eq_entropy_sub_condEntropy
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y)

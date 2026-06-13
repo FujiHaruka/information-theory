@@ -9,33 +9,48 @@ import InformationTheory.Shannon.DifferentialEntropy
 import Mathlib.InformationTheory.KullbackLeibler.Basic
 
 /-!
-# Typed Random Variable API (I-1)
+# Typed random variable API
 
-教科書 (Cover & Thomas) の `H(X)`, `H(X|Y)`, `I(X;Y)`, `I(X;Y|Z)`, `D(X‖Y)` を
-そのまま書けるようにする、opt-in な notation + 薄い alias 層。
+An opt-in notation layer that allows writing `H(μ; X)`, `H(μ; X | Y)`, `I(μ; X ; Y)`,
+`I(μ; X ; Y | Z)`, and `D(μ; X ∥ Y)` directly in the style of Cover–Thomas.
 
-設計判断 (詳細は `docs/api/typed-rv-plan.md` §C):
+## Main definitions
 
-- internal 表現は変えない (`entropy`, `mutualInfo`, `condMutualInfo`,
-  `MeasureFano.condEntropy`, `differentialEntropy`, `klDiv` はそのまま)
-- 新規 `def` は 2 個 (`klDivRV`, `differentialEntropyRV`)、新規 `abbrev` は 1 個
-  (`condEntropy` を `MeasureFano` → `Shannon` namespace へ再エクスポート)、
-  新規 `lemma` は 2 個 (`*_def`、いずれも `rfl`)、notation は 5 個
-- notation は `scoped[InformationTheory.Shannon]` 限定。Mathlib `IndepFun` の
-  `⟂ᵢ[μ]` notation precedent に倣う
-- `klDivRV` は **1 測度版のみ**採用 (`klDiv (μ.map X) (μ.map Y)`)
+* `condEntropy` — re-export of `MeasureFano.condEntropy` into the `Shannon` namespace.
+* `klDivRV` — KL divergence between two random variables: `klDiv (μ.map X) (μ.map Y)`.
+* `differentialEntropyRV` — differential entropy of a real-valued random variable.
 
-**型クラス制約 (notation 経由で要求される)**:
+## Main statements
 
-- `H(X)` / `H(X|Y)` は値域 `α` に `[Fintype α] [DecidableEq α] [Nonempty α]
-  [MeasurableSpace α] [MeasurableSingletonClass α]` を要求
-- `I(X;Y)` は `[MeasurableSpace α] [MeasurableSpace β]` のみ
-- `I(X;Y|Z)` は追加で `[StandardBorelSpace α] [Nonempty α] [StandardBorelSpace β]
-  [Nonempty β]` を要求
-- `D(X‖Y)` は `[MeasurableSpace α]` のみ
+* `klDivRV_def` — `klDivRV μ X Y = klDiv (μ.map X) (μ.map Y)` (by `rfl`).
+* `entropy_nonneg_rv` — `0 ≤ entropy μ X`.
+* `mutualInfo_comm_rv` — `I(X; Y) = I(Y; X)`.
+* `mutualInfo_le_of_postprocess_rv` — data processing inequality.
 
-callsite migration は本タスクの範囲外。後続 seed が `open InformationTheory.Shannon`
-で取り込む。
+## Implementation notes
+
+The internal representations (`entropy`, `mutualInfo`, `condMutualInfo`,
+`MeasureFano.condEntropy`, `differentialEntropy`, `klDiv`) are unchanged; only thin alias
+definitions and notation are added.
+
+Notation is `scoped[InformationTheory.Shannon]` so that only call sites that `open scoped
+InformationTheory.Shannon` can see it.
+
+The notation uses `H(μ; X)` / `I(μ; X ; Y)` forms with explicit `μ` because the
+`_` anonymous-placeholder approach cannot synthesize `μ` from context at `notation3`
+body evaluation time. Precedence `:max` makes each notation an atomic high-precedence
+term, avoiding parse errors in expressions like `0 ≤ H(μ; X)`.
+
+The separator in `D(μ; X ∥ Y)` is `∥` (U+2225 PARALLEL TO), distinct from the norm
+delimiter `‖` (U+2016 DOUBLE VERTICAL LINE), to avoid token conflicts.
+
+Type-class constraints required by each notation propagate to the call site:
+* `H(μ; X)` / `H(μ; X | Y)` require `[Fintype α] [DecidableEq α] [Nonempty α]
+  [MeasurableSpace α] [MeasurableSingletonClass α]`.
+* `I(μ; X ; Y)` requires `[MeasurableSpace α] [MeasurableSpace β]`.
+* `I(μ; X ; Y | Z)` additionally requires `[StandardBorelSpace α] [Nonempty α]
+  [StandardBorelSpace β] [Nonempty β]`.
+* `D(μ; X ∥ Y)` requires `[MeasurableSpace α]`.
 -/
 
 namespace InformationTheory.Shannon
@@ -62,8 +77,8 @@ Internal definition is unchanged. -/
 /-- KL divergence between two random variables on a common ambient measure `μ`:
 `klDivRV μ X Y := klDiv (μ.map X) (μ.map Y)`.
 
-教科書 `D(X‖Y)` の 1 測度版。2 測度版 (`klDiv (μ.map X) (ν.map Y)`) は採用しない
-(`docs/api/typed-rv-plan.md` §C-1)。 -/
+This is the 1-measure form of the textbook `D(X ‖ Y)`. The 2-measure form
+(`klDiv (μ.map X) (ν.map Y)`) is not provided here. -/
 @[entry_point]
 noncomputable def klDivRV
     {Ω : Type*} [MeasurableSpace Ω]
@@ -71,7 +86,7 @@ noncomputable def klDivRV
     (μ : Measure Ω) (X Y : Ω → α) : ℝ≥0∞ :=
   klDiv (μ.map X) (μ.map Y)
 
-/-- `klDivRV` は定義通り `klDiv (μ.map X) (μ.map Y)` に展開できる。 -/
+/-- `klDivRV μ X Y = klDiv (μ.map X) (μ.map Y)` by definition. -/
 @[entry_point]
 lemma klDivRV_def
     {Ω : Type*} [MeasurableSpace Ω]
@@ -89,32 +104,7 @@ noncomputable def differentialEntropyRV
     (μ : Measure Ω) (X : Ω → ℝ) : ℝ :=
   InformationTheory.Shannon.differentialEntropy (μ.map X)
 
-/-! ## Notation
-
-教科書 (Cover & Thomas) の `H(X)`, `H(X | Y)`, `I(X ; Y)`, `I(X ; Y | Z)`,
-`D(X ‖ Y)` に **`μ` 明示** 1 つだけ縮退した形 `H(μ; X)` / `H(μ; X | Y)` /
-`I(μ; X ; Y)` / `I(μ; X ; Y | Z)` / `D(μ; X ‖ Y)` を採用する。すべて
-`scoped[InformationTheory.Shannon]` で限定し、`open scoped InformationTheory.Shannon`
-した callsite だけが見る。
-
-**設計判断の履歴** (`docs/api/typed-rv-plan.md` 判断ログ参照):
-
-- **precedence `:max`** — 当初は Mathlib `IndepFun` の `⟂ᵢ[μ]` precedent (50) に倣う
-  計画だったが、50 だと `0 ≤ H(...)` のように `≤` (precedence 50) の右辺で notation を
-  使うと「unexpected token at this precedence level」エラーになる。`:max` で atomic
-  な高 precedence term として扱う (Mathlib 内も `Norm.norm` 等で採用)
-- **`μ` 明示** — 当初は `notation3` の anonymous placeholder `_` で `μ` を隠せると
-  推定 (`H(X)` 形) だったが、実機確認で **`_` placeholder は body 評価時に context
-  推論できない** ことが判明 (`don't know how to synthesize placeholder for argument
-  μ`)。撤退ライン §H-3 に従い `μ` 明示形に縮退。Mathlib `IndepFun` の `X ⟂ᵢ[μ] Y` と
-  同じ流儀
-- **丸括弧 `( )`** — `[X]` 系は `arr[i]` array index と token 衝突可能性があるが、
-  `:max` precedence と `(` 開始リテラルで衝突を回避できる (実機確認済み)
-
-各 notation を展開した結果が要求する型クラス制約はそのまま呼び出し元に伝搬する
-(notation は型クラスを「忘れる」のではなく「展開後に必要なものを要求する」)。
-特に `I(μ; X ; Y | Z)` は `[StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Y]
-[Nonempty Y]` を必要とする。 -/
+/-! ## Notation -/
 
 scoped[InformationTheory.Shannon] notation3:max "H(" μ "; " X ")" =>
   entropy μ X
@@ -127,16 +117,9 @@ scoped[InformationTheory.Shannon] notation3:max
   condMutualInfo μ X Y Z
 scoped[InformationTheory.Shannon] notation3:max "D(" μ "; " X " ∥ " Y ")" =>
   klDivRV μ X Y
--- 補足: `D(μ; X ∥ Y)` の中央セパレータは **`∥` (U+2225 Parallel To)** であり、
--- norm 記法 `‖x‖` で使う **`‖` (U+2016 Double Vertical Line)** とは別文字 (norm token
--- との衝突回避のため)。Lean editor 上では見分けがつきにくいが、教科書 `D(X‖Y)` の意味は
--- 完全に保存されている。
+-- Note: `D(μ; X ∥ Y)` uses `∥` (U+2225 PARALLEL TO), not `‖` (U+2016 DOUBLE VERTICAL LINE).
 
-/-! ## Sanity examples
-
-5 つの notation が elaborate に通ることを示す。internal 表現に降りる補題
-(`entropy_nonneg`, `mutualInfo_nonneg`, `condMutualInfo_nonneg`) を notation 経由で
-直接呼び出せることを確認する。 -/
+/-! ## Sanity examples -/
 
 section Examples
 
@@ -180,11 +163,10 @@ example {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω)
 
 end Examples
 
-/-! ## Phase 5 — Typed-form main lemmas
+/-! ## Typed-form main lemmas
 
-教科書本文と一対一対応する RV-form 主補題層 (`docs/api/typed-rv-plan.md` 判断ログ #5)。
-全て既存 measure-form 補題への 1 行 alias (新数学ゼロ)。`_rv` suffix で既存無印名との
-衝突を回避。 -/
+One-line aliases of the measure-form lemmas. The `_rv` suffix avoids name conflicts
+with the bare names. -/
 
 section MainLemmasRV
 
@@ -192,7 +174,7 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 
 /-! ### Entropy -/
 
-/-- `H(X) ≥ 0` (typed RV form): `entropy_nonneg` の RV-form alias. -/
+/-- `H(X) ≥ 0`. -/
 @[entry_point]
 theorem entropy_nonneg_rv
     {α : Type*} [Fintype α] [Nonempty α]
@@ -204,9 +186,7 @@ theorem entropy_nonneg_rv
 
 /-! ### Mutual information -/
 
-/-- `I(X; Y) = I(Y; X)` (typed RV form): `mutualInfo_comm` の RV-form alias.
-
-Cover-Thomas (2.4.1) "Mutual information is symmetric." -/
+/-- `I(X; Y) = I(Y; X)` (Cover–Thomas 2.4.1). -/
 @[entry_point]
 theorem mutualInfo_comm_rv
     {α : Type*} [MeasurableSpace α]
@@ -219,10 +199,8 @@ theorem mutualInfo_comm_rv
 
 /-! ### Data processing inequality -/
 
-/-- Data processing inequality (typed RV form):
-post-processing `Y ↦ f(Y)` cannot increase mutual information.
-
-`I(X; f(Y)) ≤ I(X; Y)` — Cover-Thomas (2.8.1). -/
+/-- Data processing inequality: post-processing cannot increase mutual information.
+`I(X; f(Y)) ≤ I(X; Y)` — Cover–Thomas 2.8.1. -/
 @[entry_point]
 theorem mutualInfo_le_of_postprocess_rv
     {α : Type*} [MeasurableSpace α]
@@ -236,13 +214,12 @@ theorem mutualInfo_le_of_postprocess_rv
 
 end MainLemmasRV
 
-/-! ## Phase 5 — Sanity examples for typed-form main lemmas -/
+/-! ## Sanity examples for typed-form main lemmas -/
 
 section MainLemmasExamples
 
 open scoped InformationTheory.Shannon
 
-/-- Notation `H(μ; X) ≥ 0` 経由で `entropy_nonneg_rv` を呼び出せる。 -/
 example {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
     {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -250,7 +227,6 @@ example {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasur
     0 ≤ H(μ; X) :=
   entropy_nonneg_rv μ X hX
 
-/-- Notation `I(μ; X ; Y) = I(μ; Y ; X)` 経由で `mutualInfo_comm_rv` を呼び出せる。 -/
 example {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsFiniteMeasure μ]
     {α : Type*} [MeasurableSpace α]
     {β : Type*} [MeasurableSpace β]

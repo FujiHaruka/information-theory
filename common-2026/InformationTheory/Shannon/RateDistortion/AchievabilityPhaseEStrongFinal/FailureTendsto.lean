@@ -39,24 +39,14 @@ variable [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass �
 
 Hypotheses:
 
-* `hqStar_pos : ∀ p, 0 < qStar p` — strict positivity of `qStar` on `α × β`.
-  Required by `conditionalStronglyTypicalSlice_mass_ge`. The unconditional
-  theorem requires a perturbation argument (out of scope this round).
-
-* Slack parameters `ε_X, ε_join, δ_kl` and slack-budget hypotheses
-  `h_rate_gap` (strict rate over mutualInfoPmf + slacks) and the bridge slacks
+* `hqStar_pos : ∀ p, 0 < qStar p` — strict positivity of `qStar` on `α × β`,
+  required by `conditionalStronglyTypicalSlice_mass_ge`.
+* Slack parameters `ε_X, ε_join, δ_kl` and the slack-budget hypotheses
+  `h_rate_gap` (strict rate over `mutualInfoPmf` + slacks) and the bridge slacks
   for `jointStronglyTypicalSet ⊆ distortionTypicalSet`.
 
-Hypothesis classification (per migration plan
-`ratedistortion-pgpc-sorry-migration-plan` Phase 2.RD.5 default judgement):
-
-* `hqStar_pos` = regularity (perturbation work deferred, passive).
-* `h_jts_subset_dts` = caller-supplied bridge (default-V; auditor may flag P).
-* `h_rate_gap` / `hδ_kl_dominates` = caller-supplied bound (passive).
-
-Body is ~870 lines of genuine probabilistic analysis (conditional
-method-of-types AEP + joint strong typicality). No new `sorry` introduced
-in this migration step. -/
+The proof is a conditional method-of-types AEP combined with joint strong
+typicality. -/
 theorem codebookAvgFailureStrong_tendsto_zero
     (qStar : α × β → ℝ) (hqStar_simp : qStar ∈ stdSimplex ℝ (α × β))
     (hqStar_pos : ∀ p : α × β, 0 < qStar p)

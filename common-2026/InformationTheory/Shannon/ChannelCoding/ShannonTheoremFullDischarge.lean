@@ -12,18 +12,21 @@ import Mathlib.Topology.Order.Compact
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 
 /-!
-# D-1'' Phase D — parent surgery (umbrella)
+# Shannon noisy channel coding theorem — fully discharged (umbrella)
 
-[D-1'' ムーンショット plan](../../../docs/shannon/channel-coding-shannon-theorem-general-plan.md)
-の parent surgery 全体の umbrella モジュール。本体補題群は part ファイルへ分割済:
+Umbrella module for the fully-discharged Shannon noisy channel coding theorem.
+Supporting lemmas are split into part files:
 
-* `ShannonTheoremFullDischarge/SeedLemmas.lean` — Phase D.0 / D.0'
-* `ShannonTheoremFullDischarge/PmfLogBounds.lean` — Phase D.1
-* `ShannonTheoremFullDischarge/SmoothInstantiation.lean` — Phase D.2
-* `ShannonTheoremFullDischarge/OuterN.lean` — Phase D.3
+* `ShannonTheoremFullDischarge/SeedLemmas.lean` — smooth input distribution and
+  capacity lower bound construction.
+* `ShannonTheoremFullDischarge/PmfLogBounds.lean` — closed-form pmfLog variance bounds.
+* `ShannonTheoremFullDischarge/SmoothInstantiation.lean` — achievability at the smooth
+  channel with explicit `N` formula.
+* `ShannonTheoremFullDischarge/OuterN.lean` — outer `N` construction combining TV bound
+  and smooth achievability.
 
-本ファイルには Phase D.4 の主定理
-`shannon_noisy_channel_coding_theorem_general_full` のみを残す。
+This file contains only the main theorem
+`shannon_noisy_channel_coding_theorem_general_full`.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
@@ -35,12 +38,12 @@ variable {α β : Type*}
   [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β]
 
-/-! ## Phase D.4 — main theorem (Shannon noisy channel coding, fully discharged) -/
+/-! ## Main theorem -/
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **D-1'' Phase D 主定理 (full discharge)**: `R < capacity W` で任意 `ε > 0` に対し
-十分大きい `n` で max-error < ε を達成する `M ≥ ⌈exp(nR)⌉` 個の符号が存在。
-`hW_pos` 完全除去版。 -/
+/-- **Shannon noisy channel coding theorem (fully discharged)**: for `R < capacity W`
+and any `ε > 0`, there exists `N` such that for all `n ≥ N` there is a code with
+`M ≥ ⌈exp(nR)⌉` codewords achieving max-error less than `ε`. -/
 @[entry_point]
 theorem shannon_noisy_channel_coding_theorem_general_full
     (W : Channel α β) [IsMarkovKernel W]

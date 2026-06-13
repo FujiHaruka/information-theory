@@ -9,12 +9,11 @@ import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseEStrongFinal.S
 import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseEStrongFinal.FailureTendsto
 
 /-!
-# Rate-distortion achievability — final discharge of `codebookAvgFailure_tendsto_zero`
+# Rate-distortion achievability — final assembly (strong-typicality variant)
 
-This file closes the random-coding failure-sequence sorry left in
-`RateDistortionAchievabilityPhaseEStrong.lean` by leveraging
-`conditionalStronglyTypicalSlice_mass_ge`
-(`ConditionalMethodOfTypes.lean`) — the Cover-Thomas 10.6.1 strong-typicality
+The full rate-distortion achievability theorem, assembled from the
+strong-encoder random-coding chain via `conditionalStronglyTypicalSlice_mass_ge`
+(`ConditionalMethodOfTypes.lean`), the Cover–Thomas 10.6.1 strong-typicality
 conditional slice mass lower bound.
 
 ## Architectural note
@@ -54,12 +53,10 @@ encoder-agnostic — only `blockDistortion_le_distortionMax` and
 ## Positivity caveat
 
 `conditionalStronglyTypicalSlice_mass_ge` requires the joint pmf `qStar` to
-have **strictly positive** mass on every `(a, b) ∈ α × β`. This is a real
-restriction; the unconditional `rate_distortion_achievability` would require
-a perturbation argument (pass `qStar` through `qStar_ε := (1-ε)·qStar + ε·uniform`,
-take `ε → 0`, use continuity of the distortion bound). That perturbation is
-left for a future round; the present theorem carries `(hqStar_pos : ∀ p, 0 < qStar p)`
-as an additional hypothesis.
+have strictly positive mass on every `(a, b) ∈ α × β`, so the present theorem
+carries `(hqStar_pos : ∀ p, 0 < qStar p)` as an additional hypothesis. An
+unconditional form would require a perturbation argument (passing `qStar`
+through `qStar_ε := (1-ε)·qStar + ε·uniform` and taking `ε → 0`).
 -/
 
 namespace InformationTheory.Shannon
@@ -96,8 +93,7 @@ caller can choose them in any consistent way.
 **Restriction**: `hqStar_pos : ∀ p, 0 < qStar p` is required by
 `conditionalStronglyTypicalSlice_mass_ge`. The unconditional formulation
 requires a perturbation argument (passing through `qStar_τ := (1-τ)·qStar + τ·uniform`,
-exploiting continuity of `mutualInfoPmf` and `expectedDistortionPmf`) — left
-for a separate round. -/
+exploiting continuity of `mutualInfoPmf` and `expectedDistortionPmf`). -/
 @[entry_point]
 theorem rate_distortion_achievability_strong
     (P_X_pmf : α → ℝ) (d : DistortionFn α β) {D : ℝ}
@@ -179,14 +175,10 @@ theorem rate_distortion_achievability_strong
     (h_codebook_avg_failure := h_codebook_avg_failure)
     (h_slack := h_slack)
 
-/-- **Rate-distortion achievability** — public alias for the
-strong-typicality form. The unconditional (no `hqStar_pos`) form requires a
-perturbation argument that is out of scope here; the conditional form below
-discharges the entire random-coding chain (0 `sorry`, 0 user-axiom).
-
-Wrapper alias: body delegates verbatim to `rate_distortion_achievability_strong`
-(genuine, 0 `sorry`). All hypotheses are pass-through, none are load-bearing;
-honesty status is inherited from `_strong`. -/
+/-- **Rate-distortion achievability** — public alias for the strong-typicality
+form `rate_distortion_achievability_strong`, to which the body delegates
+verbatim. The unconditional (no `hqStar_pos`) form requires a perturbation
+argument. -/
 @[entry_point]
 theorem rate_distortion_achievability
     (P_X_pmf : α → ℝ) (d : DistortionFn α β) {D : ℝ}

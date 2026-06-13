@@ -3,36 +3,24 @@ import InformationTheory.Shannon.Stein
 import Mathlib.Topology.Order.LiminfLimsup
 
 /-!
-# Strong Stein の補題 — `Tendsto → K` strict 形
+# Strong Stein's lemma — convergence to KL divergence
 
-シードカード B-4 ([`docs/shannon/strong-stein-moonshot-plan.md`](../../docs/shannon/strong-stein-moonshot-plan.md))。
+The strong converse for binary hypothesis testing (Cover–Thomas, Theorem 11.8.3):
+for any `ε ∈ (0, 1)`,
+`-(1/n) * log (steinOptimalBeta P Q n ε)` converges to `(klDiv P Q).toReal` as `n → ∞`.
 
-現行 `stein_lemma` (Stein.lean:1390) は `K ≤ liminf ≤ limsup ≤ K/(1-ε)` の
-sandwich 止まり。本ファイルはその `1/(1-ε)` 補正を消した
+## Main statements
 
-```
-Tendsto (fun n => -(1/n) * log (steinOptimalBeta P Q n ε)) atTop (𝓝 (klDiv P Q).toReal)
-```
+* `steinOptimalBeta_log_le_of_strong_converse` — the limsup bound,
+  `-(1/n) log β*(n, ε) ≤ K + δ + o(1)` (eventually for each `δ > 0`).
 
-を **任意 ε ∈ (0,1)** で証明する (Cover-Thomas Theorem 11.8.3 strong converse 形)。
+## Implementation notes
 
-## 経路
-
-LLR-typicality 経由 (Pinsker / Sanov / information spectrum 不要):
-
-* **Phase A** — `Q^n` 側 lower bound on typical set:
-  * `steinTypicalSet_Q_prob_ge`: `Q^n(T_n^δ) ≥ exp(-n(K+δ)) · P^n(T_n^δ)`
-    (既存 `steinTypicalSet_Q_prob_le` の symmetric 対形、LLR 上側を使用)。
-* **Phase B** — 任意 α-level test の strong-converse 形:
-  * `steinAlphaTest_Q_prob_ge`: `Q^n(s) ≥ exp(-n(K+δ)) · P^n(s ∩ T_n^δ)`.
-  * `steinOptimalBeta_log_le_strong`: `-(1/n) log β* ≤ K + δ + o(1)` (eventually).
-* **Phase C** — 主定理:
-  * `stein_strong_lemma`: `Tendsto → K`、既存 achievability + 新 strong converse の sandwich。
-
-## 設計メモ
-
-* 既存 `Stein.lean` 改変なし、API として新規 file で並立。
-* 既存 `steinTypicalSet`、`steinOptimalBeta` 等は再利用 (open `InformationTheory.Shannon`)。
+The proof uses an LLR-typicality route (no Pinsker/Sanov). The key step is a
+lower bound `Q^n(s) ≥ exp(-n(K+δ)) · (P^n(T_n^δ) - ε)` for any α-level test `s`,
+derived by restricting to the Stein-typical set. Together with the existing achievability
+upper bound, this sandwiches the limit. The existing `Stein.lean` API is reused without
+modification.
 -/
 
 namespace InformationTheory.Shannon.StrongStein
@@ -45,15 +33,11 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ### Phase A — `Q^n` 側 lower bound on the Stein-typical set -/
+/-! ### `Q^n` lower bound on the Stein-typical set -/
 
-/-! ### Phase B — 任意 α-level test の strong-converse 形 -/
+/-! ### Strong-converse lower bound for any α-level test -/
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Q-side lower bound on any subset of the Stein-typical set**:
-For any set `A ⊆ T_n^δ`, `Q^n(A) ≥ exp(-n(K+δ)) · P^n(A)`.
-
-Mirrors `steinTypicalSet_Q_prob_ge` but with the sum restricted to `A`. -/
 theorem steinTypicalSubset_Q_prob_ge
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (hPpos : ∀ x : α, 0 < P.real {x})
@@ -174,11 +158,8 @@ theorem steinTypicalSubset_Q_prob_ge
         Finset.sum_le_sum h_per_point
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Strong converse lower bound on Q^n(s) for any α-level test**:
-for any measurable `s` with `P^n(sᶜ).toReal ≤ ε`,
-`Q^n(s) ≥ exp(-n(K+δ)) · (P^n(T_n^δ) - ε)`.
-
-Proof: `Q^n(s) ≥ Q^n(s ∩ T_n^δ) ≥ exp(-n(K+δ)) · P^n(s ∩ T_n^δ) ≥ exp(-n(K+δ)) · (P^n(T_n^δ) - ε)`. -/
+/-- For any measurable `s` with `P^n(sᶜ).toReal ≤ ε`,
+`Q^n(s) ≥ exp(-n(K+δ)) · (P^n(T_n^δ) - ε)`. -/
 theorem steinAlphaTest_Q_prob_ge
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (hPpos : ∀ x : α, 0 < P.real {x})
@@ -240,13 +221,9 @@ theorem steinAlphaTest_Q_prob_ge
     _ ≤ (Qn A).toReal := h_A
     _ ≤ (Qn s).toReal := h_Q_mono
 
-/-! ### Phase C — `Tendsto → K` 主定理 -/
+/-! ### Main theorem: `Tendsto → K` -/
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Strong-converse lower bound on `steinOptimalBeta`**: For any `δ > 0`,
-`β*(n, ε) ≥ exp(-n(K+δ)) · (P^n(T_n^δ) - ε)`.
-
-Taking `inf` over the α-level test set preserves the lower bound from `steinAlphaTest_Q_prob_ge`. -/
 theorem exp_le_steinOptimalBeta_strong
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (hPpos : ∀ x : α, 0 < P.real {x})
@@ -260,12 +237,7 @@ theorem exp_le_steinOptimalBeta_strong
   exact steinAlphaTest_Q_prob_ge P Q hPpos hQpos s hs_meas hs_alpha
 
 omit [DecidableEq α] in
-/-- **Strong converse: limsup bound** (eventually).
-
-For any `δ > 0`, eventually `-(1/n) log β*(n, ε) ≤ K + δ + (1/n) log [1/(P^n(T_n^δ) - ε)]`.
-The last term tends to 0 since `P^n(T_n^δ) → 1 > ε`.
-
-This is the strong-converse counterpart to `steinOptimalBeta_log_ge_of_achievability`. -/
+/-- For any `δ > 0`, eventually `-(1/n) log β*(n, ε) ≤ (klDiv P Q).toReal + δ + o(1)`. -/
 @[entry_point]
 theorem steinOptimalBeta_log_le_of_strong_converse
     (μ : Measure Ω) [IsProbabilityMeasure μ]

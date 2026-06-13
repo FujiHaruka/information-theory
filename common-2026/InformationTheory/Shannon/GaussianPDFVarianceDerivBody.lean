@@ -11,44 +11,29 @@ import InformationTheory.Shannon.FisherInfo.V2DeBruijnBody
 import InformationTheory.Shannon.FisherInfo.V2HeatFlowBody
 
 /-!
-# Gaussian PDF variance (time) derivative — de Bruijn FTC core (W10-S10)
+# Gaussian PDF variance (time) derivative — de Bruijn FTC core
 
-The **time-derivative half** of the de Bruijn identity machinery: the heat
-equation `∂_t p = (1/2) Δ_x p` for the Gaussian heat kernel.
+The time-derivative half of the de Bruijn identity machinery: the heat equation
+`∂_t p = (1/2) Δ_x p` for the Gaussian heat kernel.
 
-The wave-9 file `FisherInfoV2HeatFlowBody.lean` discharged the **spatial** half
-(`isHeatSpatialDerivHyp_gaussian`: `∂²_x g_t = (x²/t² − 1/t)·g_t`) but left the
-time-derivative sub-predicate `IsHeatTimeDerivHyp` as a pass-through, because the
-**variance-derivative of `gaussianPDFReal` is not in Mathlib** (the known gap).
+The variance-derivative of `gaussianPDFReal` is not in Mathlib. This file
+builds it from scratch via the `Real.exp` / `Real.sqrt` chain rule and assembles
+the full heat equation for the Gaussian kernel.
 
-This file closes that gap. The high-leverage move is to build the reusable
-variance (= time) derivative lemma first, then assemble the heat equation.
+## Main definitions
 
-## Mathlib gap closed
+* `gaussianPDFRealVar` — real-variance Gaussian density
+  `(√(2πv))⁻¹ · exp(−(x−m)²/(2v))`.
 
-`gaussianPDFRealVar m v x := (√(2πv))⁻¹ · exp(−(x−m)²/(2v))` is the
-real-variance form of `gaussianPDFReal` (which takes `v : ℝ≥0`). Its derivative
-**in the variance `v`** is:
+## Main statements
 
-`∂_v gaussianPDFRealVar m v x = ((x−m)²/(2v²) − 1/(2v)) · gaussianPDFRealVar m v x`
-
-proven from scratch via the `Real.exp` / `Real.sqrt` chain rule
-(`HasDerivAt.exp`, `HasDerivAt.inv`, `HasDerivAt.sqrt`). This is genuine reusable
-infrastructure — Mathlib has the **spatial** derivative of `gaussianPDFReal`
-(through `deriv_gaussianPDFReal`) but not the **variance** derivative.
-
-## 内容
-
-* `gaussianPDFRealVar` — real-variance Gaussian density.
-* `gaussianPDFRealVar_eq_gaussianPDFReal` — for `v > 0`, agrees with
-  `gaussianPDFReal m ⟨v, _⟩`.
-* `hasDerivAt_gaussianPDFRealVar_variance` — **the variance-derivative lemma**
-  (the Mathlib-gap closure). **(full internal discharge)**
-* `hasDerivAt_heatKernel_time` — `m = 0` time-derivative of the heat kernel:
-  `∂_t g_t x = (1/2)(x²/t² − 1/t)·g_t x = (1/2) Δ_x g_t x`. **(full discharge)**
-* `isHeatTimeDerivHyp_gaussian` — **discharge of `IsHeatTimeDerivHyp`** for the
-  Gaussian heat kernel with `Δp = spatialLaplacianHeatKernel`. **(full
-  discharge — the seed target)**
+* `gaussianPDFRealVar_eq_gaussianPDFReal` — for `v > 0`, agrees with `gaussianPDFReal m ⟨v, _⟩`.
+* `hasDerivAt_gaussianPDFRealVar_variance` — variance-derivative:
+  `∂_v gaussianPDFRealVar m v x = ((x−m)²/(2v²) − 1/(2v)) · gaussianPDFRealVar m v x`.
+* `hasDerivAt_heatKernel_time` — time-derivative of the heat kernel:
+  `∂_t g_t x = (1/2)(x²/t² − 1/t)·g_t x`.
+* `isHeatTimeDerivHyp_gaussian` — `IsHeatTimeDerivHyp` for the Gaussian heat kernel
+  with `Δp = spatialLaplacianHeatKernel`.
 -/
 
 namespace InformationTheory.Shannon
@@ -188,10 +173,8 @@ theorem hasDerivAt_heatKernel_time {t : ℝ} (ht : 0 < t) (x : ℝ) :
 
 /-- **Gaussian heat kernel satisfies the time-derivative sub-predicate.**
 
-With `Δp t x := spatialLaplacianHeatKernel t x`, the heat kernel discharges
-`IsHeatTimeDerivHyp` internally. This is the **L-FV2HF-B discharge** — the
-time-derivative half of the de Bruijn machinery, closing the wave-9
-pass-through. -/
+`IsHeatTimeDerivHyp` for the Gaussian heat kernel with
+`Δp t x := spatialLaplacianHeatKernel t x`. -/
 @[entry_point]
 theorem isHeatTimeDerivHyp_gaussian :
     InformationTheory.Shannon.FisherInfoV2.IsHeatTimeDerivHyp

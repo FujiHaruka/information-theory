@@ -5,35 +5,25 @@ import InformationTheory.Shannon.MIChainRule
 import InformationTheory.Shannon.MutualInfo
 
 /-!
-# Feedback channel coding converse — memoryless 完全形 (E-10')
+# Feedback channel coding converse — memoryless complete form
 
-[E-10' ムーンショット plan](../../../docs/shannon/dmc-feedback-per-letter-bound-plan.md)
-の本体。親 file `ChannelCodingFeedback.lean` の `channel_coding_feedback_converse` は
-per-letter inequality `I(Msg; Y_i | Y^{<i}) ≤ I(X_i; Y_i)` を `h_per_letter` 仮定形に
-していたが、本 file はこれを **memoryless 性 + 因果性** から導出して剥がす。
+## Main definitions
 
-## MVP scope (本 file)
+* `IsMemorylessFeedback`: Per-time-step Markov chain property formalizing a memoryless
+  DMC with causal feedback encoder.
 
-1. `IsMemorylessFeedback` 述語: 各時刻 `i` で Markov chain `(Y^{<i}, Msg) → X_i → Y_i`
-   が成り立つ。
-2. `feedback_per_letter_bound` (Phase C): 上記述語下で per-letter inequality
-   `I(Msg; Y_i | Y^{<i}) ≤ I(X_i; Y_i)` を 0 sorry で publish。
-3. `channel_coding_feedback_converse_memoryless` (Phase D): 上を `h_per_letter` に
-   流し込んで親 `channel_coding_feedback_converse` の memoryless 完全形に。
+## Main statements
 
-## 判断ログ
+* `feedback_per_letter_bound`: Under `IsMemorylessFeedback`, the per-letter inequality
+  `I(Msg; Y_i | Y^{<i}) ≤ I(X_i; Y_i)` holds for all `i`.
+* `channel_coding_feedback_converse_memoryless`: Variant of `channel_coding_feedback_converse`
+  with `h_per_letter` replaced by `IsMemorylessFeedback`.
 
-* **Phase A `IsMemorylessFeedback` の RV 順を `(Y^{<i}, Msg)` 採用**:
-  既存 `mutualInfo_chain_rule` (`CondMutualInfo.lean:219`) は左 RV を
-  `fun ω => (Zc ω, Xs ω)` 形にする。`Zc := Y^{<i}, Xs := Msg, Yo := Y_i` で
-  chain rule 左辺 = `mutualInfo μ (Y^{<i}, Msg) Y_i` = `mutualInfo_le_of_markov` で
-  bound する LHS と一致する形を採るため、Phase A の Markov chain 左 RV も
-  `(Y^{<i}, Msg)` 順に揃える。plan の Phase A 案 `(Msg, Y^{<i})` 順から変更、Step 3
-  swap (`mutualInfo_map_left_measurableEquiv` 経由) を 0 行に削減。
+## Implementation notes
 
-* **Phase B 0 行で完走**:
-  既存 `mutualInfo_le_of_markov` + `mutualInfo_chain_rule` + `mutualInfo_nonneg` で
-  per-letter bound に必要十分。新規補題 0 行。
+The left RV in `IsMemorylessFeedback` is `(Y^{<i}, Msg)` (prefix first, message second),
+aligning with the chain rule shape `mutualInfo μ (fun ω => (Zc ω, Xs ω)) Yo`. This
+avoids a swap step via `mutualInfo_map_left_measurableEquiv`.
 -/
 
 namespace InformationTheory.Shannon.ChannelCodingFeedback
@@ -43,7 +33,7 @@ open scoped ENNReal NNReal BigOperators
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-! ## Phase A — memoryless 性の formal 定式化 -/
+/-! ## Memoryless feedback formalization -/
 
 section Memoryless
 
@@ -84,7 +74,7 @@ lemma IsMemorylessFeedback.markovChain {n : ℕ} (μ : Measure Ω) [IsFiniteMeas
 
 end Memoryless
 
-/-! ## Phase C — per-letter bound 本体 -/
+/-! ## Per-letter bound -/
 
 section PerLetter
 
@@ -92,28 +82,8 @@ variable {M : Type*} [MeasurableSpace M] [Nonempty M] [StandardBorelSpace M]
 variable {α : Type*} [MeasurableSpace α]
 variable {β : Type*} [MeasurableSpace β] [Nonempty β] [StandardBorelSpace β]
 
-/-- **Per-letter bound (E-10' main, Phase C)**.
-
-Under memoryless + causal feedback (`IsMemorylessFeedback`), the per-letter
-inequality
-
-```
-I(Msg; Y_i | Y^{<i}) ≤ I(X_i; Y_i)
-```
-
-holds for every `i : Fin n`. This is the **internal proof** of the `h_per_letter`
-hypothesis used in `channel_coding_feedback_converse`.
-
-### Strategy (Step 1-3)
-
-Fix `i`. Let `L ω := (Y^{<i} ω, Msg ω)` (the joint of prefix and message).
-
-* **Step 1**: From `IsMemorylessFeedback` we have Markov chain
-  `L → X_i → Y_i`. Apply `mutualInfo_le_of_markov`:
-  `I(L; Y_i) ≤ I(X_i; Y_i)`.
-* **Step 2**: Chain rule `I(L; Y_i) = I(Y^{<i}; Y_i) + I(Msg; Y_i | Y^{<i})`.
-* **Step 3**: `mutualInfo_nonneg` gives `I(Y^{<i}; Y_i) ≥ 0`, so
-  `I(Msg; Y_i | Y^{<i}) ≤ I(L; Y_i)`. Combine with Step 1. -/
+/-- **Per-letter bound**: under `IsMemorylessFeedback`,
+`I(Msg; Y_i | Y^{<i}) ≤ I(X_i; Y_i)` for every `i : Fin n`. -/
 theorem feedback_per_letter_bound
     {n : ℕ} (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Msg : Ω → M) (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
@@ -154,7 +124,7 @@ theorem feedback_per_letter_bound
 
 end PerLetter
 
-/-! ## Phase D — 主定理 `channel_coding_feedback_converse_memoryless` -/
+/-! ## Main converse theorem -/
 
 section MainConverse
 
@@ -165,11 +135,11 @@ variable {β : Type*} [Fintype β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
 omit [DecidableEq M] in
-/-- **Feedback channel coding converse — memoryless 完全形 (Cover-Thomas Thm 7.12)**.
+/-- **Feedback channel coding converse, memoryless form (Cover-Thomas Thm. 7.12)**.
 
-Variant of `channel_coding_feedback_converse` with `h_per_letter` replaced by the
-**memoryless feedback assumption** `IsMemorylessFeedback`. The per-letter inequality
-is derived internally via `feedback_per_letter_bound` (Phase C). -/
+Variant of `channel_coding_feedback_converse` with `h_per_letter` replaced by
+`IsMemorylessFeedback`. The per-letter inequality is discharged internally via
+`feedback_per_letter_bound`. -/
 @[entry_point]
 theorem channel_coding_feedback_converse_memoryless
     {n : ℕ} (C : ℝ≥0∞) (hC_finite : C ≠ ∞)

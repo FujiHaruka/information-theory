@@ -12,55 +12,39 @@ import Mathlib.MeasureTheory.Integral.Pi
 import Mathlib.Probability.Distributions.Gaussian.Real
 
 /-!
-# L-PG1 genuine discharge — parallel Gaussian capacity = water-filling sum
+# Parallel Gaussian capacity equals the water-filling sum
 
-[parallel-gaussian-chain-rule-plan.md](../../../docs/shannon/parallel-gaussian-chain-rule-plan.md).
+The per-coordinate water-filling reduction: the parallel Gaussian information capacity
+`parallelGaussianCapacity P N` equals the per-coordinate water-filling sum, evaluated as a
+sup-sandwich mirroring the single-coordinate `AWGN.awgnCapacity_eq`.
 
-This file discharges the per-coordinate water-filling reduction **L-PG1**
-(`ParallelGaussian.IsParallelGaussianPerCoordReduction`) from a hypothesis
-pass-through (`:= h_per_coord`, the conclusion taken as its own hypothesis) into a
-genuine **sup-sandwich** mirroring the single-coordinate `AWGN.awgnCapacity_eq`.
+## Main definitions
 
-## Why a sup-sandwich, and what stays honest (D-1 staged landing)
+* `miImage P N` — the mutual-information image whose `sSup` is the capacity.
+* `gaussianProductInput Q` — the independent-Gaussian product input with per-coordinate
+  power `Q i`, used as the achiever.
+* `IsParallelGaussianPerCoordRegularity P N Q` — the analytic regularity bundle the
+  sup-sandwich consumes (boundedness, achiever MI value, correlated-input max-entropy
+  bound), mirroring the residual hypotheses of the 1-D `awgnCapacity_eq`.
 
-`parallelGaussianCapacity` is the **information capacity** (`sSup` of mutual
-information over power-constrained inputs), *not* an operational coding theorem; so
-no continuous AEP is needed (judgement #1 of the plan). The capacity is evaluated by
-`Real.le_antisymm` of two bounds, exactly as the 1-D `awgnCapacity_eq` does:
+## Main statements
 
-* **lower (≥)** : the independent-Gaussian product input is feasible and achieves
-  `∑ᵢ (1/2) log(1 + Pᵢ*/Nᵢ)` (genuine feasibility via `integral_eval` + Gaussian
-  variance; `le_csSup`).
-* **upper (≤)** : every constrained input has MI `≤ ∑ᵢ (1/2) log(1 + Pᵢ*/Nᵢ)`
-  (`csSup_le`).
+* `parallel_gaussian_capacity_formula` — the capacity equals the water-filling sum
+  (Cover–Thomas, Theorem 9.4.1), derived as `le_antisymm` of the achiever lower bound
+  `parallelGaussianCapacity_ge_sum` and the max-entropy upper bound
+  `parallelGaussianCapacity_le_sum`.
+* `parallelGaussianCapacity_achiever_mi` — the product-Gaussian achiever attains the
+  per-coordinate sum, via the per-channel mutual-information decomposition
+  `parallelGaussian_achiever_mi_eq_sum_perChannel` and the per-coordinate AWGN closed form.
+* `lintegral_fin_nat_prod_eq_prod` — the `ℝ≥0∞` analogue of `n`-variate Fubini.
 
-The genuine content delivered here over the previous full pass-through:
+## Implementation notes
 
-1. the sup-sandwich *structure* (`le_antisymm` of `csSup_le` / `le_csSup`) — the
-   monolithic L-PG1 `Prop` is split into the two sup bounds;
-2. **achiever feasibility** — the product Gaussian lies in the constraint set
-   `∑ᵢ ∫ xᵢ² ∂p ≤ P` (genuine, via `MeasureTheory.integral_eval` +
-   `variance_fun_id_gaussianReal`);
-3. **water-filling combination** — the genuine L-WF1 (`exists_waterFillingKKT_of_pos`,
-   IVT) + L-WF2 (`IsWaterFillingOptimal`) feed the upper bound.
-
-What stays **honest** (🟢ʰ, bundled in `IsParallelGaussianPerCoordRegularity`),
-matching the residual honest hypotheses of the 1-D `awgnCapacity_eq`
-(`h_bdd` / `h_bridge_gauss` / `h_max_ent`):
-
-* `bddAbove` of the MI image (needed for `le_csSup`);
-* the **achiever MI value** `I(product-Gaussian) = ∑ᵢ (1/2) log(1 + Pᵢ*/Nᵢ)` (the
-  parallel `h_bridge_gauss`; genuinely it is `mutualInfo_pi_eq_sum` + per-coord MI
-  bridge, the latter requiring a multivariate channel↔RV translation absent from
-  Mathlib);
-* the per-coord **max-entropy upper bound** for *arbitrary correlated* inputs (the
-  MI superadditivity `I(Xⁿ;Yⁿ) ≤ ∑ I(Xᵢ;Yᵢ)`, whose continuous form needs a
-  multivariate differential entropy + subadditivity not present in `DifferentialEntropy`).
-
-The last is the planned **D-1 wall**: differential-entropy subadditivity for
-`Fin (n+1)`-dimensional outputs is absent from both Mathlib and InformationTheory
-(`DifferentialEntropy.differentialEntropy : Measure ℝ → ℝ` is 1-D only), so the
-correlated-input upper bound is exposed as a named honest hypothesis. No `sorry`.
+The capacity is an information capacity (a `sSup` of mutual information), so it is evaluated
+directly by `le_antisymm`: the achiever lower bound uses `le_csSup`, the upper bound uses
+`csSup_le`. The achiever MI decomposition rests on the `compProd`-of-`Measure.pi`
+factorization `gaussianProductInput_compProd_parallelGaussianChannel_eq_pi`, self-built via
+`Measure.pi_eq` and the multivariate Tonelli lemma `lintegral_fin_nat_prod_eq_prod`.
 -/
 
 namespace InformationTheory.Shannon.ParallelGaussian
@@ -86,12 +70,7 @@ lemma parallelGaussianCapacity_eq_sSup_miImage {n : ℕ} (P : ℝ)
     parallelGaussianCapacity P N h_meas h_parallel_meas
       = sSup (miImage P N h_meas h_parallel_meas) := rfl
 
-/-! ## Achiever — independent Gaussian product input
-
-For a power split `Q : Fin n → ℝ≥0`, the product input
-`Measure.pi (fun i => gaussianReal 0 (Q i))` is the independent-Gaussian achiever.
-Its second-moment vector is `∫ xᵢ² ∂p* = (Q i : ℝ)` (genuine, via `integral_eval`
-applied to `x ↦ x²` against the i-th Gaussian factor). -/
+/-! ## Achiever: the independent Gaussian product input -/
 
 /-- The independent-Gaussian product input with per-coordinate power `Q i`. -/
 noncomputable def gaussianProductInput {n : ℕ} (Q : Fin n → ℝ≥0) :
@@ -102,7 +81,7 @@ instance gaussianProductInput.instIsProbabilityMeasure {n : ℕ} (Q : Fin n → 
     IsProbabilityMeasure (gaussianProductInput Q) := by
   unfold gaussianProductInput; infer_instance
 
-/-- **Achiever per-coordinate second moment (genuine).** `∫ xᵢ² ∂p* = Q i`. -/
+/-- The achiever's per-coordinate second moment: `∫ xᵢ² ∂(gaussianProductInput Q) = Q i`. -/
 lemma integral_sq_gaussianProductInput {n : ℕ} (Q : Fin n → ℝ≥0) (i : Fin n) :
     ∫ x : Fin n → ℝ, (x i)^2 ∂(gaussianProductInput Q) = (Q i : ℝ) := by
   unfold gaussianProductInput
@@ -131,13 +110,9 @@ lemma integral_sq_gaussianProductInput {n : ℕ} (Q : Fin n → ℝ≥0) (i : Fi
       = ∫ x, (x - (0 : ℝ)) ^ 2 ∂(gaussianReal 0 (Q i)) := by simp
     _ = (Q i : ℝ) := by rw [h_var_eq, h_var]
 
-/-- **Achiever feasibility (genuine).** If `∑ᵢ Q i ≤ P` then the product Gaussian
-input lies in the (lintegral form) power-constrained set
-`parallelGaussianPowerConstraintSet P`. Re-proved against the lintegral constraint:
-`∑ᵢ ∫⁻ ofReal((x i)²) = ∑ᵢ ofReal(∫ (x i)²) = ∑ᵢ ofReal(Q i) = ofReal(∑ Q i) ≤ ofReal P`,
-the sum-version of the 1-D `AWGN.gaussianInput_mem_constraintSet`. Per-coordinate
-integrability of `(x i)²` is genuine via `MeasureTheory.integrable_comp_eval` applied
-to `(memLp_id_gaussianReal 2).integrable_sq`.
+/-- Achiever feasibility: if `∑ᵢ Q i ≤ P` then the product Gaussian input lies in
+`parallelGaussianPowerConstraintSet P`.
+
 @audit:ok -/
 lemma gaussianProductInput_mem_constraintSet {n : ℕ} (P : ℝ) (Q : Fin n → ℝ≥0)
     (hQ : ∑ i : Fin n, (Q i : ℝ) ≤ P) :
@@ -170,33 +145,25 @@ lemma gaussianProductInput_mem_constraintSet {n : ℕ} (P : ℝ) (Q : Fin n → 
         (ENNReal.ofReal_sum_of_nonneg (fun i _ => (Q i).coe_nonneg)).symm
     _ ≤ ENNReal.ofReal P := ENNReal.ofReal_le_ofReal hQ
 
-/-! ## Honest regularity bundle (🟢ʰ)
+/-! ## Regularity bundle -/
 
-The residual honest analytic hypotheses, parameterized by the water-filling
-power vector `Q` (= `(waterFillingPower ν N i).toNNReal`). Mirrors the 1-D
-`awgnCapacity_eq` residuals `h_bdd` / `h_bridge_gauss` / `h_max_ent`. -/
-
-/-- **Per-coordinate Gaussian regularity (honest, 🟢ʰ).** Bundles the three residual
-analytic facts the sup-sandwich consumes, exactly mirroring the single-coordinate
-`AWGN.awgnCapacity_eq` residuals. `Q` is the achiever power split. -/
+/-- The analytic regularity bundle the sup-sandwich consumes, parameterized by the
+achiever power split `Q`, mirroring the single-coordinate `AWGN.awgnCapacity_eq`
+residuals. -/
 structure IsParallelGaussianPerCoordRegularity {n : ℕ} (P : ℝ)
     (N : Fin n → ℝ≥0) (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N) (Q : Fin n → ℝ≥0) :
     Prop where
   /-- The MI image is bounded above (needed for `le_csSup`). -/
   bddAbove : BddAbove (miImage P N h_meas h_parallel_meas)
-  /-- The achiever MI value: independent Gaussian input attains the per-coord sum
-  `∑ᵢ (1/2) log(1 + Q i / Nᵢ)`. (Genuinely `mutualInfo_pi_eq_sum` + per-coord MI
-  bridge; the multivariate channel↔RV translation is absent from Mathlib.) -/
+  /-- The achiever MI value: the independent Gaussian input attains the per-coordinate
+  sum `∑ᵢ (1/2) log(1 + Q i / Nᵢ)`. -/
   achiever_mi :
     (mutualInfoOfChannel (gaussianProductInput Q)
         (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
       = ∑ i : Fin n, (1/2) * Real.log (1 + (Q i : ℝ) / (N i : ℝ))
   /-- The correlated-input max-entropy upper bound: every constrained input has MI
-  bounded by the *free*-allocation per-coord sum, evaluated at any feasible split
-  `P'`. This is the D-1 wall (MI superadditivity + per-coord max-entropy + per-coord
-  variance allocation), honest because multivariate differential-entropy
-  subadditivity is absent from Mathlib/InformationTheory. -/
+  bounded by the per-coordinate sum evaluated at some feasible split `P'`. -/
   max_ent :
     ∀ p ∈ parallelGaussianPowerConstraintSet P,
       ∃ P' : Fin n → ℝ, (∀ i, 0 ≤ P' i) ∧ (∑ i : Fin n, P' i ≤ P) ∧
@@ -205,13 +172,9 @@ structure IsParallelGaussianPerCoordRegularity {n : ℕ} (P : ℝ)
 
 /-! ## Sup-sandwich -/
 
-/-- **Lower bound (≥, achiever).** The independent Gaussian product input is
-feasible and achieves the per-coord sum, so the capacity is at least that sum.
-Genuine, modulo the honest `bddAbove` + `achiever_mi`.
-
-Closure: hypothesis-minimal successor `parallel_gaussian_capacity_formula_minimal`
-in `ParallelGaussianPerCoordRegularity.lean` (L-PG1 discharge, completed
-2026-05-25). -/
+/-- **Lower bound (achiever).** The independent Gaussian product input is feasible and
+achieves the per-coordinate sum, so the capacity is at least that sum (modulo the
+`bddAbove` and `achiever_mi` fields of the regularity bundle). -/
 theorem parallelGaussianCapacity_ge_sum {n : ℕ} (P : ℝ)
     (N : Fin n → ℝ≥0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -227,13 +190,9 @@ theorem parallelGaussianCapacity_ge_sum {n : ℕ} (P : ℝ)
   refine le_csSup h_reg.bddAbove ?_
   exact ⟨gaussianProductInput Q, h_mem, rfl⟩
 
-/-- **Upper bound (≤, max-entropy + water-filling).** Every constrained input has MI
-bounded by the water-filling sum, via the honest per-coord max-entropy bound followed
-by the genuine L-WF2 optimality. Genuine sup-evaluation modulo the honest `max_ent`.
-
-Closure: hypothesis-minimal successor `parallel_gaussian_capacity_formula_minimal`
-in `ParallelGaussianPerCoordRegularity.lean` (L-PG1 discharge, completed
-2026-05-25). -/
+/-- **Upper bound (max-entropy and water-filling).** Every constrained input has MI bounded
+by the water-filling sum, via the per-coordinate max-entropy bound (`max_ent` field)
+followed by water-filling optimality (`h_opt`). -/
 theorem parallelGaussianCapacity_le_sum {n : ℕ} (P : ℝ)
     (N : Fin n → ℝ≥0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -260,31 +219,13 @@ theorem parallelGaussianCapacity_le_sum {n : ℕ} (P : ℝ)
     rw [h_RHS_wf]
     exact h_opt P' hP'_nn hP'_sum
 
-/-! ## `max_ent` reduction via genuine output-entropy subadditivity
-
-The honest `IsParallelGaussianPerCoordRegularity.max_ent` previously bundled
-*three* facts on faith: (a) MI superadditivity (= output differential-entropy
-subadditivity `h(Yⁿ) ≤ ∑ h(Yᵢ)`), (b) per-coord max-entropy, (c) variance
-allocation. With `InformationTheory.Shannon.jointDifferentialEntropyPi_le_sum` now
-**genuine**, (a) is no longer a hypothesis. The lemma below derives the `max_ent`
-bound from genuine subadditivity plus the *isolated, smaller* honest pieces — the
-channel↔RV multivariate MI decomposition and the per-coord
-`h(Yᵢ) − h(Yᵢ|Xᵢ) ≤ (1/2) log(1 + P'ᵢ/Nᵢ)` bound — neither of which is the
-subadditivity that this foundation now supplies. -/
+/-! ## `max_ent` via output-entropy subadditivity -/
 
 open InformationTheory.Shannon in
-/-- **`max_ent` from genuine subadditivity.** Let `μ_Y := outputDistribution`-style
-joint output law on `Fin n → ℝ`, `μᵢ := μ_Y.map (· i)` its coordinate marginals, and
-write the channel MI as `h(Yⁿ) − condTerm` (the honest multivariate channel↔RV
-decomposition, supplied as `h_decomp`). If subadditivity's honest hypotheses hold for
-`μ_Y` and the per-coord pieces meet the water-filling allocation bound `h_perCoord`,
-then the channel MI is bounded by `∑ᵢ (1/2) log(1 + P'ᵢ/Nᵢ)`. The output-entropy
-subadditivity step is `jointDifferentialEntropyPi_le_sum` (genuine); only the
-decomposition and per-coord bound stay honest.
-
-Closure: hypothesis-minimal successor `parallel_gaussian_capacity_formula_minimal`
-in `ParallelGaussianPerCoordRegularity.lean` (L-PG1 discharge, completed
-2026-05-25). -/
+/-- **`max_ent` from subadditivity.** With the channel MI written as `h(Yⁿ) - condTerm`
+(`h_decomp`), output-entropy subadditivity `h(Yⁿ) ≤ ∑ h(Yᵢ)`
+(`jointDifferentialEntropyPi_le_sum`) and the per-coordinate water-filling allocation
+bound `h_perCoord` give `I ≤ ∑ᵢ (1/2) log(1 + P'ᵢ/Nᵢ)`. -/
 theorem parallelGaussian_max_ent_le_of_subadditivity {n : ℕ}
     (μY : Measure (Fin n → ℝ)) [IsProbabilityMeasure μY]
     [∀ i, IsProbabilityMeasure (μY.map (fun z => z i))]
@@ -305,15 +246,7 @@ theorem parallelGaussian_max_ent_le_of_subadditivity {n : ℕ}
       (∑ i, differentialEntropy (μY.map (fun z => z i))) - condTerm
         ≤ ∑ i, (1/2) * Real.log (1 + P' i / (N i : ℝ))) :
     miReal ≤ ∑ i, (1/2) * Real.log (1 + P' i / (N i : ℝ)) := by
-  -- ★ genuine output-entropy subadditivity: h(Yⁿ) ≤ ∑ᵢ h(Yᵢ)
-  -- The subadditivity is now fully genuine (Phase 2, completed 2026-05-29:
-  -- 0 sorry / 0 residual in MultivariateDiffEntropy.lean). It is derived from
-  -- `KL ≥ 0` + the genuine bridge `klDiv_pi_marginals_toReal_eq_sum_sub_joint`,
-  -- whose Bayes density split is discharged in-tree. The wrapper's only residual
-  -- hypotheses are regularity + integrability (`h_marg_ac` / `hμ_ac` /
-  -- `h_joint_ac` / `h_int_joint` / `h_int_marg`), all genuinely consumed here.
-  -- (The Bayes density split / marginal identity formerly threaded through are
-  -- now internalized in the genuine subadditivity foundation.)
+  -- output-entropy subadditivity: h(Yⁿ) ≤ ∑ᵢ h(Yᵢ)
   have h_subadd : jointDifferentialEntropyPi μY
       ≤ ∑ i, differentialEntropy (μY.map (fun z => z i)) :=
     jointDifferentialEntropyPi_le_sum h_marg_ac hμ_ac h_joint_ac h_int_joint h_int_marg
@@ -322,15 +255,11 @@ theorem parallelGaussian_max_ent_le_of_subadditivity {n : ℕ}
   refine le_trans ?_ h_perCoord
   linarith [h_subadd]
 
-/-! ## L-PG1 genuine discharge (段 1) -/
+/-! ## Per-coordinate reduction -/
 
-/-- **★ L-PG1 genuine discharge.** The information capacity equals the per-coord
-water-filling sum (honest analytic hypotheses bundled in
-`IsParallelGaussianPerCoordRegularity`). Genuine sup-sandwich.
-
-Closure: hypothesis-minimal successor `parallel_gaussian_capacity_formula_minimal`
-in `ParallelGaussianPerCoordRegularity.lean` (L-PG1 discharge, completed
-2026-05-25). -/
+/-- The capacity equals the per-coordinate water-filling sum (the analytic regularity
+hypotheses bundled in `IsParallelGaussianPerCoordRegularity`), as a `le_antisymm`
+sup-sandwich. Inhabits `IsParallelGaussianPerCoordReduction P N h_meas h_parallel_meas ν`. -/
 theorem isParallelGaussianPerCoordReduction_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -339,9 +268,7 @@ theorem isParallelGaussianPerCoordReduction_discharged {n : ℕ}
     (h_reg : IsParallelGaussianPerCoordRegularity P N h_meas h_parallel_meas
               (fun i => (waterFillingPower ν N i).toNNReal)) :
     IsParallelGaussianPerCoordReduction P N h_meas h_parallel_meas ν := by
-  -- L-WF2: water-filling optimality, derived internally from the KKT water level
-  -- via the genuine (sorryAx-free, @audit:ok) `isWaterFillingOptimal_of_kkt`, no
-  -- longer a load-bearing hypothesis.
+  -- water-filling optimality, derived from the KKT water level
   have h_opt : IsWaterFillingOptimal P N ν := isWaterFillingOptimal_of_kkt P hP N hN ν h_kkt
   set Q : Fin (n + 1) → ℝ≥0 := fun i => (waterFillingPower ν N i).toNNReal with hQ_def
   -- `(Q i : ℝ) = waterFillingPower ν N i` since the power is nonnegative
@@ -365,46 +292,18 @@ theorem isParallelGaussianPerCoordReduction_discharged {n : ℕ}
       h_Q_eq h_reg
   · exact parallelGaussianCapacity_ge_sum P N h_meas h_parallel_meas Q hQ_sum h_reg
 
-/-! ## Headline (段 2) — genuine de-circularized capacity formula -/
+/-! ## Headline capacity formula -/
 
-/-- **★ Parallel Gaussian capacity formula** (Cover-Thomas Theorem 9.4.1), the
-genuine, **non-circular** published headline.
+/-- **Parallel Gaussian capacity formula** (Cover–Thomas, Theorem 9.4.1). For parallel AWGN
+channels `Y_i = X_i + Z_i`, `Z_i ∼ 𝒩(0, N_i)` (`i : Fin (n+1)`) under the total power
+constraint `∑_i E[X_i²] ≤ P`, the information capacity equals the water-filling sum
 
-For parallel AWGN channels `Y_i = X_i + Z_i`, `Z_i ∼ 𝒩(0, N_i)` (`i : Fin (n+1)`)
-with total power constraint `∑_i E[X_i²] ≤ P`, the information capacity equals the
-water-filling sum
+`C = ∑_i (1/2) log(1 + max(0, ν - N_i) / N_i)`
 
-`C = ∑_i (1/2) log(1 + max(0, ν* - N_i) / N_i)`
-
-at the KKT water level `ν*`.
-
-This **replaces** the conclusion-as-hypothesis reduction
-`ParallelGaussian.parallel_gaussian_capacity_formula_of_perCoordReduction`
-(whose body was `:= h_per_coord`). Here the equality is *derived*, via
-`isParallelGaussianPerCoordReduction_discharged` — a genuine **sup-sandwich**
-(`le_antisymm` of `parallelGaussianCapacity_le_sum` / `parallelGaussianCapacity_ge_sum`,
-i.e. `csSup_le` max-entropy upper bound + `le_csSup` achiever lower bound). The
-hypotheses are:
-
-* `h_kkt` (L-WF1): water level uses up the budget `∑ max(0, ν - N_i) = P` (genuine,
-IVT-dischargeable via `exists_waterFillingKKT_of_pos`);
-* `h_reg` (🟢ʰ): the residual analytic regularity bundle
-`IsParallelGaussianPerCoordRegularity` — `bddAbove` + achiever-MI value +
-correlated-input max-entropy bound — **none of which is the conclusion equality**;
-they mirror the 1-D `AWGN.awgnCapacity_eq` residuals.
-
-L-WF2 (water-filling optimality, `IsWaterFillingOptimal`) is **no longer a
-hypothesis**: it is derived internally from `h_kkt` via the genuine, sorryAx-free,
-independently-audited (`@audit:ok`) `isWaterFillingOptimal_of_kkt` (KKT.lean). So
-this theorem is unconditional in L-WF2 and carries no L-WF2 residual — its only
-remaining input is the genuine `h_kkt` precondition.
-
-No `h_per_coord : IsParallelGaussianPerCoordReduction` argument (the conclusion) is
-taken; the body is a real `le_antisymm` derivation, never `:= h_per_coord`.
-
-Closure: hypothesis-minimal successor `parallel_gaussian_capacity_formula_minimal`
-in `ParallelGaussianPerCoordRegularity.lean` (L-PG1 discharge, completed
-2026-05-25). -/
+at the KKT water level `ν`. The equality is derived via
+`isParallelGaussianPerCoordReduction_discharged` (a `le_antisymm` sup-sandwich); the
+hypotheses are the KKT budget condition `h_kkt` and the analytic regularity bundle
+`h_reg`. Water-filling optimality is obtained internally from `h_kkt` rather than assumed. -/
 theorem parallel_gaussian_capacity_formula {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -418,52 +317,13 @@ theorem parallel_gaussian_capacity_formula {n : ℕ}
   isParallelGaussianPerCoordReduction_discharged P hP N hN h_meas h_parallel_meas
     ν h_kkt h_reg
 
-/-! ## `achiever_mi` genuine reduction (L-PG1 Phase 2)
+/-! ## Achiever mutual-information decomposition -/
 
-The achiever MI value `I(productGaussian; parallelOutput) = ∑ᵢ (1/2)log(1 + Qᵢ/Nᵢ)`
-is split into two isolated pieces:
+/-- The `ℝ≥0∞` analogue of `n`-variate Fubini: for a product measure `Measure.pi μ` over
+`Fin n`, the integral of a product of single-coordinate functions equals the product of the
+per-coordinate integrals (the `ℝ≥0∞` form of
+`MeasureTheory.integral_fin_nat_prod_eq_prod`).
 
-* the **per-channel decomposition** (structural, **genuine** as of 2026-05-29):
-  `I(productGaussian; parallelChannel) = ∑ᵢ I(gaussian Qᵢ; awgnChannel Nᵢ)`.
-  This is `mutualInfo_pi_eq_sum` after converting both sides to the RV form via
-  `mutualInfoOfChannel_eq_mutualInfo_prod`; the three i.i.d. factorization
-  hypotheses reduce to the claim that the channel joint
-  `gaussianProductInput Q ⊗ₘ parallelGaussianChannel N` factors as a
-  `Measure.pi` of the per-coordinate joints. That `compProd`-of-`Measure.pi`
-  factorization (`gaussianProductInput_compProd_parallelGaussianChannel_eq_pi`)
-  is absent from Mathlib but **self-built genuinely** below via `Measure.pi_eq`
-  box universality + the `lintegral` n-variate Fubini
-  `lintegral_fin_nat_prod_eq_prod`. The ENNReal additivity
-  `parallelGaussian_achiever_mi_eq_sum_perChannel_enn` is `sorryAx`-free
-  (`wall:multivariate-mi` closed). The `.toReal` form
-  `parallelGaussian_achiever_mi_eq_sum_perChannel` is now genuine (0 sorry) too:
-  the per-coordinate AWGN MI finiteness `awgn_mutualInfoOfChannel_ne_top` is
-  discharged from the AWGN density facts and requires `N i ≠ 0` (threaded down
-  from the headline's `∀ i, (N i : ℝ) ≠ 0`).
-
-* the **per-coordinate AWGN closed form** (analytic, reusable):
-  `I(gaussian Qᵢ; awgnChannel Nᵢ) = (1/2)log(1 + Qᵢ/Nᵢ)`, supplied as the
-  hypothesis `h_perCoordMI`. For active coordinates this is genuinely
-  `AWGNMIBridge.awgn_mi_gaussian_closed_form_of_primitives` (modulo the AWGN
-  output-Gaussian / MI-decomposition residuals shared with the AWGN-MI plan);
-  for an inactive coordinate `Q i = 0` the Dirac input gives MI 0 = `(1/2)log 1`.
-  Threading it per-coordinate (rather than the bundled sum) keeps the achiever
-  bridge hypothesis-minimal and the structural step genuine.
--/
-
-/-! ## Multivariate Tonelli + compProd-of-pi factorization (genuine self-build)
-
-The `wall:multivariate-mi` is closed by self-building the single missing
-ingredient — the `compProd`-of-`Measure.pi` factorization of the channel joint —
-on top of the genuine `mutualInfo_pi_eq_sum`. The factorization needs a `lintegral`
-version of `n`-variate Fubini (`lintegral_fin_nat_prod_eq_prod`), which is the
-`ℝ≥0∞` analogue of Mathlib's `integral_fin_nat_prod_eq_prod`. -/
-
-/-- **`lintegral` version of `n`-variate Fubini.** For a product measure
-`Measure.pi μ` over `Fin n`, the integral of a product of single-coordinate
-functions equals the product of the per-coordinate integrals. This is the
-`ℝ≥0∞` analogue of Mathlib's `MeasureTheory.integral_fin_nat_prod_eq_prod`,
-proved by the same `measurePreserving_piFinSuccAbove` induction.
 @audit:ok -/
 theorem lintegral_fin_nat_prod_eq_prod {n : ℕ} {E : Fin n → Type*}
     {mE : ∀ i, MeasurableSpace (E i)} (μ : (i : Fin n) → Measure (E i))
@@ -500,11 +360,11 @@ theorem lintegral_fin_nat_prod_eq_prod {n : ℕ} {E : Fin n → Type*}
         _ = ∏ i, ∫⁻ x, f i x ∂(μ i) := by rw [Fin.prod_univ_succ]
 
 open InformationTheory.Shannon InformationTheory.Shannon.AWGN in
-/-- **compProd-of-`Measure.pi` factorization (genuine, `wall:multivariate-mi` core).**
-The channel joint `gaussianProductInput Q ⊗ₘ parallelGaussianChannel N` factors as
-the `Measure.pi` of the per-coordinate joints `gaussianReal 0 (Qᵢ) ⊗ₘ awgnChannel Nᵢ`,
-reshaped by `arrowProdEquivProdArrow`. Proved on boxes via `Measure.pi_eq`,
-`compProd_apply_prod`, `pi_pi`, and the `lintegral` Fubini above.
+/-- **compProd-of-`Measure.pi` factorization.** The channel joint
+`gaussianProductInput Q ⊗ₘ parallelGaussianChannel N` factors as the `Measure.pi` of the
+per-coordinate joints `gaussianReal 0 (Qᵢ) ⊗ₘ awgnChannel Nᵢ`, reshaped by
+`arrowProdEquivProdArrow`.
+
 @audit:ok -/
 theorem gaussianProductInput_compProd_parallelGaussianChannel_eq_pi {n : ℕ}
     (Q : Fin n → ℝ≥0) (N : Fin n → ℝ≥0)
@@ -579,16 +439,10 @@ theorem gaussianProductInput_compProd_parallelGaussianChannel_eq_pi {n : ℕ}
   simp
 
 open InformationTheory.Shannon InformationTheory.Shannon.AWGN in
-/-- **Per-channel MI decomposition of the product achiever (genuine).**
-The channel mutual information of the independent-Gaussian product input through
-the parallel Gaussian channel equals the sum of the per-coordinate single-channel
-mutual informations.
+/-- **Per-channel MI decomposition of the product achiever.** The channel mutual
+information of the independent-Gaussian product input through the parallel Gaussian channel
+equals the sum of the per-coordinate single-channel mutual informations.
 
-Genuine content: `mutualInfo_pi_eq_sum` (genuine) applied to the RV form of both
-sides, with the `compProd`-of-`Measure.pi` factorization
-`gaussianProductInput_compProd_parallelGaussianChannel_eq_pi` (self-built above,
-multivariate Tonelli via `lintegral_fin_nat_prod_eq_prod`) supplying the three
-i.i.d. factorization hypotheses.
 @audit:ok -/
 theorem parallelGaussian_achiever_mi_eq_sum_perChannel_enn {n : ℕ}
     (Q : Fin n → ℝ≥0) (N : Fin n → ℝ≥0)
@@ -690,34 +544,14 @@ theorem parallelGaussian_achiever_mi_eq_sum_perChannel_enn {n : ℕ}
     rw [this, Measure.map_id]
 
 open InformationTheory.Shannon InformationTheory.Shannon.AWGN in
-/-- **AWGN single-channel mutual information is finite.** The channel MI of the
-Gaussian input through a single AWGN channel is a finite ENNReal (`≠ ⊤`).
+/-- **AWGN single-channel mutual information is finite.** The channel MI of the Gaussian
+input through a single AWGN channel is a finite `ENNReal` (`≠ ⊤`), via `klDiv_ne_top`
+applied to the joint `gaussianReal 0 P ⊗ₘ awgnChannel N` against the product of its
+marginals (joint absolute continuity plus llr integrability via the Bayes split).
 
-This is `klDiv_ne_top` applied to the Gaussian-through-AWGN joint
-`gaussianReal 0 P ⊗ₘ awgnChannel N` against the product of its marginals. By
-`InformationTheory.klDiv_ne_top_iff` this needs `jointDistribution ≪ p.prod
-(outputDistribution …)` AND `Integrable (llr …) jointDistribution` — finiteness of
-probability measures alone is NOT enough, the llr integrability is genuine analytic
-content.
-
-**Genuine, 0 sorry — requires `N ≠ 0`.** Discharged by re-using the AWGN density
-facts already proved in `ContChannelMIDecomp` — the same assembly as
-`isContChannelMIDecompHyp_awgn`, but fed into `klDiv_ne_top` instead of the `.toReal`
-chain rule. The joint absolute continuity is built from
-`absolutelyContinuous_compProd_right_iff` + the fibre-vs-output Gaussian AC; the llr
-integrability is the Bayes split `llr_compProd_prod_split` followed by `.sub` of the
-fibre log-density integrability (`integrable_log_proxy_fibre_compProd`, Route B proxy)
-and the output log-density integrability (`integrable_log_rnDeriv_gaussianReal` lifted
-to the joint). The output-Gaussian fact `q = gaussianReal 0 (P+N)` is discharged
-unconditionally via `awgn_output_gaussian_of_bind_eq_conv` + `isAwgnBindEqConv_discharged`.
-The earlier audit worry (the `.toReal` capacity route never establishes `klDiv ≠ ⊤`,
-since `(⊤).toReal = 0`) is moot here: this proof works at the `klDiv` level directly.
-
-The `N ≠ 0` hypothesis is genuinely required: for `N = 0` the channel is deterministic
-(`W x = dirac x`), the joint lives on the diagonal graph (`p.prod q`-null for a
-continuous input `P ≠ 0`), and `klDiv = ⊤` — i.e. the claim is *false* there. Adding
-`N ≠ 0` is the honest fix of that false-statement edge; the caller chain up to
-`parallel_gaussian_capacity_formula_minimal` already carries `∀ i, (N i : ℝ) ≠ 0`. -/
+The `N ≠ 0` hypothesis is required: for `N = 0` the channel is deterministic
+(`W x = dirac x`), the joint lives on the diagonal graph (`p.prod q`-null for a continuous
+input `P ≠ 0`), and `klDiv = ⊤` — the claim is false there. -/
 theorem awgn_mutualInfoOfChannel_ne_top (N : ℝ≥0) (hN : N ≠ 0)
     (h_meas : InformationTheory.Shannon.AWGN.IsAwgnChannelMeasurable N) (P : ℝ≥0) :
     mutualInfoOfChannel (gaussianReal 0 P) (awgnChannel N h_meas) ≠ ⊤ := by
@@ -786,12 +620,9 @@ theorem awgn_mutualInfoOfChannel_ne_top (N : ℝ≥0) (hN : N ≠ 0)
   exact (h_llr_split).symm
 
 open InformationTheory.Shannon InformationTheory.Shannon.AWGN in
-/-- **Per-channel MI decomposition of the product achiever (`.toReal` form).**
-`.toReal` of the genuine ENNReal additivity
-`parallelGaussian_achiever_mi_eq_sum_perChannel_enn` (the multivariate decomposition
-is genuine, 0 sorry). The per-coordinate finiteness used for the `.toReal`/`∑`
-exchange comes from `awgn_mutualInfoOfChannel_ne_top`, which needs `N i ≠ 0`
-(genuine, 0 sorry). -/
+/-- Per-channel MI decomposition of the product achiever, in `.toReal` form. The
+per-coordinate finiteness used for the `.toReal`/`∑` exchange comes from
+`awgn_mutualInfoOfChannel_ne_top`, which needs `N i ≠ 0`. -/
 theorem parallelGaussian_achiever_mi_eq_sum_perChannel {n : ℕ}
     (Q : Fin n → ℝ≥0) (N : Fin n → ℝ≥0) (hN : ∀ i, N i ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -804,16 +635,10 @@ theorem parallelGaussian_achiever_mi_eq_sum_perChannel {n : ℕ}
   rw [ENNReal.toReal_sum (fun i _ => awgn_mutualInfoOfChannel_ne_top (N i) (hN i) (h_meas i) (Q i))]
 
 open InformationTheory.Shannon InformationTheory.Shannon.AWGN in
-/-- **Per-coordinate AWGN MI closed form (genuine, all variances).** For a single
-AWGN sub-channel, the Gaussian-input mutual information equals
-`(1/2)·log(1 + Q/N)`, with no positivity hypothesis on the input variance `Q`.
-
-* `Q ≠ 0` branch: delegates to the hypothesis-free, sorryAx-free closed form
-`AWGN.mutualInfoOfChannel_gaussianInput_closed_form'` (cast `Q : ℝ≥0` through
-`Real.toNNReal_coe`).
-* `Q = 0` branch (deterministic input `gaussianReal 0 0 = dirac 0`): the joint
-`dirac 0 ⊗ₘ W` coincides with the product `(dirac 0) ×ₘ output`, so `klDiv_self`
-gives MI `= 0`; the RHS is `(1/2)·log(1 + 0/N) = (1/2)·log 1 = 0`. Genuine. -/
+/-- **Per-coordinate AWGN MI closed form** (all variances). For a single AWGN sub-channel,
+the Gaussian-input mutual information equals `(1/2)·log(1 + Q/N)`, with no positivity
+hypothesis on the input variance `Q`. The `Q = 0` branch (deterministic input
+`gaussianReal 0 0 = dirac 0`) gives MI `= 0 = (1/2)·log 1` via `klDiv_self`. -/
 theorem awgn_perCoord_mi_closed_form (Q N : ℝ≥0) (hN : N ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N) :
     (mutualInfoOfChannel (gaussianReal 0 Q) (awgnChannel N h_meas)).toReal
@@ -854,17 +679,10 @@ theorem awgn_perCoord_mi_closed_form (Q N : ℝ≥0) (hN : N ≠ 0)
     exact h
 
 open InformationTheory.Shannon InformationTheory.Shannon.AWGN in
-/-- **`achiever_mi` genuine reduction (L-PG1 Phase 2).** The achiever MI value
-equals the per-coordinate water-filling sum, assembled from the genuine
-structural per-channel decomposition `parallelGaussian_achiever_mi_eq_sum_perChannel`
-(shared `wall:multivariate-mi`) and the per-coordinate AWGN closed form
-`awgn_perCoord_mi_closed_form` (discharged in-body via the hypothesis-free closed
-form `AWGN.mutualInfoOfChannel_gaussianInput_closed_form'`, no load-bearing hyp).
-
-This discharges `IsParallelGaussianPerCoordRegularity.achiever_mi` from honest
-per-coordinate pieces rather than the bundled sum equality. Fully genuine
-(0 sorry / 0 @residual on the achiever side; only the `bddAbove` / `max_ent`
-fields retain `wall:multivariate-mi`). -/
+/-- The achiever MI value equals the per-coordinate water-filling sum, from the per-channel
+decomposition `parallelGaussian_achiever_mi_eq_sum_perChannel` and the per-coordinate AWGN
+closed form `awgn_perCoord_mi_closed_form`. Inhabits the `achiever_mi` field of
+`IsParallelGaussianPerCoordRegularity`. -/
 theorem parallelGaussianCapacity_achiever_mi {n : ℕ}
     (Q : Fin n → ℝ≥0) (N : Fin n → ℝ≥0) (hN : ∀ i, N i ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -876,10 +694,7 @@ theorem parallelGaussianCapacity_achiever_mi {n : ℕ}
   exact Finset.sum_congr rfl
     (fun i _ => awgn_perCoord_mi_closed_form (Q i) (N i) (hN i) (h_meas i))
 
-/-- Backward-compatible alias for the genuine headline
-`parallel_gaussian_capacity_formula` (was the `_discharged` re-publish name).
-
--/
+/-- Deprecated alias for `parallel_gaussian_capacity_formula`. -/
 @[entry_point, deprecated parallel_gaussian_capacity_formula (since := "2026-05-21")]
 theorem parallel_gaussian_capacity_formula_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)

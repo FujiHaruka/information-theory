@@ -7,25 +7,25 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Analysis.SpecialFunctions.Pow.NNReal
 
 /-!
-# Shannon コード Kraft 逆向き (prefix code 存在構成)
+# Kraft inequality converse: existence of prefix codes
 
-B-8' ムーンショット ([`docs/shannon/shannon-code-kraft-reverse-plan.md`](../../docs/shannon/shannon-code-kraft-reverse-plan.md))。
-Cover-Thomas 5.2.1 reverse direction / McMillan の逆形。
+Converse direction of Cover–Thomas 5.2.1 (McMillan converse): if a length function
+`l : α → ℕ` satisfies the Kraft inequality `∑_a D^{−l(a)} ≤ 1`, then there exists
+a prefix-free code `c : α → List (Fin D)` with `(c a).length = l a` for all `a`.
 
-任意の正整数列 `l : α → ℕ` が Kraft 不等式 `Σ_a D^{-l(a)} ≤ 1` を充足するとき、
-長さ `l(a)` の **prefix code** が存在する。
+## Main statements
 
-## 主定理
+* `exists_prefix_code_of_kraft` — Kraft-feasible lengths (`D ≥ 2`, `0 < l a`)
+  yield an injective prefix-free code with the prescribed lengths.
 
-* `exists_prefix_code_of_kraft` — `Σ_a D^{-l(a)} ≤ 1` (`D ≥ 2`, `0 < l a`) ⟹
-  ∃ `c : α → List (Fin D)` injective かつ prefix-free で `(c a).length = l a`.
+## Implementation notes
 
-## 設計メモ
-
-- **D-進数エンコーダ `toBaseDLen`**: most-significant-first 固定長 `List (Fin D)`。
-- **Greedy 構成**: `Finset.univ.toList` を `l` の昇順に `List.mergeSort` で並べ替え、累積和
-  `slotStart k := Σ_{j < k} D^(L - l (as[j]))` を取り、各 `as[k]` の code-word を
-  `toBaseDLen D (l (as[k])) (slotStart k / D^(L - l (as[k])))` で定義。
+The proof uses a greedy (Shannon–Fano) construction: sort `α` by `l` in ascending order
+(`sortedByLen`), compute a cumulative slot offset
+`slotStart k := ∑_{j < k} D^(L − l (as[j]))` at a common depth `L = sup l`,
+and define `c(a) := toBaseDLen D (l a) (slotStart (idx a) / D^(L − l a))`.
+Here `toBaseDLen D L n` is the MSB-first length-`L` base-`D` digit expansion of `n`.
+Prefix-freeness follows from a gap argument on `slotStart`.
 -/
 
 namespace InformationTheory.Shannon.ShannonCodeKraftReverse
@@ -34,7 +34,7 @@ open scoped BigOperators
 
 variable {α : Type*} [Fintype α] [DecidableEq α]
 
-/-! ### Phase A — 定義 -/
+/-! ### Definitions -/
 
 /-- **MSB-first base-`D` digit expansion of length `L` of `n`**.
 
@@ -44,42 +44,42 @@ def toBaseDLen (D : ℕ) [NeZero D] (L n : ℕ) : List (Fin D) :=
     ⟨(n / D ^ (L - 1 - (i : ℕ))) % D,
       Nat.mod_lt _ (Nat.pos_of_neZero D)⟩
 
-/-- **Prefix-free 述語**: 異なる `a, b` で `c a` が `c b` の prefix にならない. -/
+/-- Predicate asserting that `c` is prefix-free: no codeword is a proper prefix of another. -/
 def IsPrefixFree {D : ℕ} (c : α → List (Fin D)) : Prop :=
   ∀ a b : α, a ≠ b → ¬ c a <+: c b
 
-/-! ### Phase B — `toBaseDLen` 補助補題 -/
+/-! ### Properties of `toBaseDLen` -/
 
-/-- 長さは `L`. -/
+/-- Length of `toBaseDLen D L n` is `L`. -/
 @[simp] lemma toBaseDLen_length (D : ℕ) [NeZero D] (L n : ℕ) :
     (toBaseDLen D L n).length = L := by
   unfold toBaseDLen
   exact List.length_ofFn
 
-/-- **核補題**: `L₁ ≤ L₂` のとき `(toBaseDLen D L₂ n).take L₁ = toBaseDLen D L₁ (n / D^(L₂ - L₁))`.
-MSB-first 表現の特徴: 上位 `L₁` digit は `n / D^(L₂ - L₁)` の `L₁` digit と一致. -/
+/-- The top-`L₁` digits of `toBaseDLen D L₂ n` equal `toBaseDLen D L₁ (n / D^(L₂ − L₁))`
+when `L₁ ≤ L₂` (MSB-first prefix property). -/
 lemma toBaseDLen_take (D : ℕ) [NeZero D] {L₁ L₂ : ℕ} (h : L₁ ≤ L₂) (n : ℕ) :
     (toBaseDLen D L₂ n).take L₁ = toBaseDLen D L₁ (n / D ^ (L₂ - L₁)) := by
   apply List.ext_getElem
-  · -- 長さ一致: min L₁ L₂ = L₁ ↔ L₁ ≤ L₂
+  · -- length: min L₁ L₂ = L₁ since L₁ ≤ L₂
     rw [List.length_take, toBaseDLen_length, toBaseDLen_length, min_eq_left h]
-  · -- 各 i < L₁ で要素一致
+  · -- elements agree at each i < L₁
     intro i hi₁ _
     rw [List.length_take, toBaseDLen_length, min_eq_left h] at hi₁
     rw [List.getElem_take]
-    -- toBaseDLen D L₂ n の i-th = ⟨(n / D^(L₂-1-i)) % D, _⟩
+    -- i-th digit of toBaseDLen D L₂ n is ⟨(n / D^(L₂−1−i)) % D, _⟩
     unfold toBaseDLen
     rw [List.getElem_ofFn, List.getElem_ofFn]
     -- (n / D^(L₂ - 1 - i)) % D = ((n / D^(L₂ - L₁)) / D^(L₁ - 1 - i)) % D
     apply Fin.ext
     simp only
-    -- 算術: (n / D^(L₂ - L₁)) / D^(L₁ - 1 - i) = n / D^(L₂ - 1 - i)
+    -- arithmetic: (n / D^(L₂ − L₁)) / D^(L₁ − 1 − i) = n / D^(L₂ − 1 − i)
     rw [Nat.div_div_eq_div_mul, ← pow_add]
     have : L₂ - L₁ + (L₁ - 1 - i) = L₂ - 1 - i := by omega
     rw [this]
 
-/-- `IsPrefix` 特徴づけ (forward direction): codewords are prefixes ⟹
-`toBaseDLen D L₁ n₁ = toBaseDLen D L₁ (n₂ / D^(L₂-L₁))`. -/
+/-- If `toBaseDLen D L₁ n₁` is a prefix of `toBaseDLen D L₂ n₂` and `L₁ ≤ L₂`, then
+`toBaseDLen D L₁ n₁ = toBaseDLen D L₁ (n₂ / D ^ (L₂ − L₁))`. -/
 lemma toBaseDLen_eq_of_isPrefix (D : ℕ) [NeZero D] {L₁ L₂ : ℕ}
     (h : L₁ ≤ L₂) {n₁ n₂ : ℕ}
     (hpref : toBaseDLen D L₁ n₁ <+: toBaseDLen D L₂ n₂) :
@@ -97,14 +97,14 @@ lemma toBaseDLen_injOn_lt (D : ℕ) [NeZero D] (L : ℕ) {n₁ n₂ : ℕ}
     (h₁ : n₁ < D ^ L) (h₂ : n₂ < D ^ L)
     (heq : toBaseDLen D L n₁ = toBaseDLen D L n₂) :
     n₁ = n₂ := by
-  -- 帰納 `∀ k ≤ L, n₁ % D^k = n₂ % D^k`、k = L で `n₁ = n₂` (両方 < D^L).
+  -- induction: ∀ k ≤ L, n₁ % D^k = n₂ % D^k; at k = L gives n₁ = n₂ (both < D^L)
   have key : ∀ k, k ≤ L → n₁ % D ^ k = n₂ % D ^ k := by
     intro k hk
     induction k with
     | zero => simp [pow_zero, Nat.mod_one]
     | succ k ih =>
       have ihk : n₁ % D ^ k = n₂ % D ^ k := ih (Nat.le_of_succ_le hk)
-      -- digit-by-digit 一致: (n / D^k) % D は MSB-first 表現の (L-1-k)-th index
+      -- digit-by-digit: (n / D^k) % D is the (L−1−k)-th digit in MSB-first order
       have hi_canc : L - 1 - (L - 1 - k) = k := by omega
       have h_idx_lt : L - 1 - k < L := by omega
       have h_dig : (n₁ / D ^ k) % D = (n₂ / D ^ k) % D := by
@@ -127,9 +127,9 @@ lemma toBaseDLen_injOn_lt (D : ℕ) [NeZero D] (L : ℕ) {n₁ n₂ : ℕ}
   rw [Nat.mod_eq_of_lt h₁, Nat.mod_eq_of_lt h₂] at hL
   exact hL
 
-/-! ### Phase C — Greedy 構成 -/
+/-! ### Greedy construction -/
 
-/-- `α` 上の `l` 昇順 sort. -/
+/-- Elements of `α` sorted by `l` in ascending order. -/
 noncomputable def sortedByLen (l : α → ℕ) : List α :=
   List.mergeSort (Finset.univ : Finset α).toList (fun a b => decide (l a ≤ l b))
 
@@ -163,14 +163,14 @@ lemma sortedByLen_pairwise_le (l : α → ℕ) :
   intro a b hab
   simpa using hab
 
-/-- 累積和 `slotStart k`: `take k` で取った sorted-list 先頭 `k` 個 element の `D^(L - l a)` の和.
-`k ≥ |α|` のときは全体和に飽和. -/
+/-- Cumulative slot offset: `slotStart D l L k = ∑_{j < k} D^(L − l (sortedByLen l)[j])`.
+Saturates to the full sum for `k ≥ |α|`. -/
 noncomputable def slotStart (D : ℕ) (l : α → ℕ) (L : ℕ) (k : ℕ) : ℕ :=
   ((sortedByLen l).take k).map (fun a => D ^ (L - l a)) |>.sum
 
 
 omit [DecidableEq α] in
-/-- 単調性. -/
+/-- `slotStart` is monotone in `k`. -/
 lemma slotStart_mono (D : ℕ) (l : α → ℕ) (L : ℕ) {k₁ k₂ : ℕ} (h : k₁ ≤ k₂) :
     slotStart D l L k₁ ≤ slotStart D l L k₂ := by
   unfold slotStart
@@ -192,7 +192,7 @@ lemma slotStart_succ (D : ℕ) (l : α → ℕ) (L : ℕ) {k : ℕ}
   simp
 
 omit [DecidableEq α] in
-/-- 不要 case (`k ≥ length`). -/
+/-- `slotStart` stabilizes when `k ≥ (sortedByLen l).length`. -/
 lemma slotStart_of_ge (D : ℕ) (l : α → ℕ) (L : ℕ) {k : ℕ}
     (hk : (sortedByLen l).length ≤ k) :
     slotStart D l L k = slotStart D l L (sortedByLen l).length := by
@@ -200,10 +200,10 @@ lemma slotStart_of_ge (D : ℕ) (l : α → ℕ) (L : ℕ) {k : ℕ}
   rw [List.take_of_length_le hk, List.take_length]
 
 omit [DecidableEq α] in
-/-- 全体合計 (Σ over α 形と一致). -/
+/-- `slotStart` at `Fintype.card α` equals the full sum `∑ a : α, D ^ (L − l a)`. -/
 lemma slotStart_card_eq_sum (D : ℕ) (l : α → ℕ) (L : ℕ) :
     slotStart D l L (Fintype.card α) = ∑ a : α, D ^ (L - l a) := by
-  -- |α| = (sortedByLen l).length なので take = id.
+  -- |α| = (sortedByLen l).length, so take = id
   rw [slotStart_of_ge D l L (by rw [sortedByLen_length])]
   unfold slotStart
   rw [List.take_length]
@@ -220,11 +220,10 @@ lemma slotStart_card_eq_sum (D : ℕ) (l : α → ℕ) (L : ℕ) :
   rw [← Finset.sum_map_val]
   simp [Finset.toList]
 
-/-! ### Phase D — Kraft 仮定からの slot 上界 -/
+/-! ### Slot upper bound from the Kraft condition -/
 
 omit [DecidableEq α] in
-/-- Kraft 充足を `Nat` 形に: `Σ_a D^(L - l(a)) ≤ D^L`.
-鍵: `Σ_a (D : ℝ)^(L - l a) = (D : ℝ)^L · Σ_a (D : ℝ)^(-(l a : ℤ)) ≤ D^L`. -/
+/-- The Kraft condition implies `∑_a D^(L − l(a)) ≤ D^L` as a natural number inequality. -/
 lemma kraft_sum_nat_le_of_real
     {D : ℕ} (hD : 2 ≤ D) (l : α → ℕ) (L : ℕ) (hL : ∀ a, l a ≤ L)
     (hk : ∑ a : α, ((D : ℝ)) ^ (-(l a : ℤ)) ≤ 1) :
@@ -258,13 +257,13 @@ lemma kraft_sum_nat_le_of_real
   exact_mod_cast h_real_bound
 
 omit [DecidableEq α] in
-/-- `slotStart` の上界. -/
+/-- `slotStart D l L k ≤ D ^ L` for all `k`. -/
 lemma slotStart_le_pow
     {D : ℕ} (hD : 2 ≤ D) (l : α → ℕ) (L : ℕ) (hL : ∀ a, l a ≤ L)
     (hk : ∑ a : α, ((D : ℝ)) ^ (-(l a : ℤ)) ≤ 1)
     (k : ℕ) :
     slotStart D l L k ≤ D ^ L := by
-  -- slotStart は monotone, so slotStart k ≤ slotStart (Fintype.card α) = Σ_a D^(L - l a) ≤ D^L.
+  -- slotStart is monotone, so slotStart k ≤ slotStart |α| = ∑ D^(L − l a) ≤ D^L
   calc slotStart D l L k
       ≤ slotStart D l L (Fintype.card α) := by
         rcases le_or_gt k (Fintype.card α) with hk' | hk'
@@ -274,9 +273,9 @@ lemma slotStart_le_pow
     _ = ∑ a : α, D ^ (L - l a) := slotStart_card_eq_sum D l L
     _ ≤ D ^ L := kraft_sum_nat_le_of_real hD l L hL hk
 
-/-! ### Phase E — code の構成と主定理 -/
+/-! ### Code construction and main theorem -/
 
-/-- α における sort 後の位置. -/
+/-- Position of `a` in `sortedByLen l`. -/
 noncomputable def sortedIndex (l : α → ℕ) (a : α) : ℕ :=
   (sortedByLen l).idxOf a
 
@@ -299,14 +298,14 @@ lemma sortedIndex_injective (l : α → ℕ) :
     getElem_sortedByLen_sortedIndex l a
   have hb : (sortedByLen l)[sortedIndex l b]'(sortedIndex_lt l b) = b :=
     getElem_sortedByLen_sortedIndex l b
-  -- index 等しい ⇒ getElem 等しい ⇒ a = b
+  -- equal indices ⇒ equal elements ⇒ a = b
   have : (sortedByLen l)[sortedIndex l a]'(sortedIndex_lt l a)
        = (sortedByLen l)[sortedIndex l b]'(sortedIndex_lt l b) := by
     congr 1
   rw [ha, hb] at this
   exact this
 
-/-- 主 code 構成. -/
+/-- Main code construction: the Shannon–Fano codeword for `a`. -/
 noncomputable def shannonFanoCode {D : ℕ} [NeZero D] (l : α → ℕ) (L : ℕ) (a : α) :
     List (Fin D) :=
   toBaseDLen D (l a) (slotStart D l L (sortedIndex l a) / D ^ (L - l a))
@@ -317,7 +316,7 @@ noncomputable def shannonFanoCode {D : ℕ} [NeZero D] (l : α → ℕ) (L : ℕ
   exact toBaseDLen_length _ _ _
 
 omit [DecidableEq α] in
-/-- **Phase D の鍵不等式**: `j < k` (in sortedByLen) で `slotStart j + D^(L - l (as[j])) ≤ slotStart k`. -/
+/-- For `j < k ≤ |sortedByLen l|`, `slotStart j + D^(L − l (as[j])) ≤ slotStart k`. -/
 lemma slotStart_gap
     (D : ℕ) (l : α → ℕ) (L : ℕ) {j k : ℕ}
     (hjk : j < k) (hk : k ≤ (sortedByLen l).length) :
@@ -330,7 +329,7 @@ lemma slotStart_gap
   exact h1
 
 omit [DecidableEq α] in
-/-- 補助: `slotStart j` の strict 上界. -/
+/-- `slotStart D l L j < D ^ L` for `j < (sortedByLen l).length`. -/
 lemma slotStart_lt_pow_of_lt
     {D : ℕ} (hD : 2 ≤ D) (l : α → ℕ)
     (L : ℕ) (hL : ∀ a, l a ≤ L)
@@ -344,8 +343,8 @@ lemma slotStart_lt_pow_of_lt
     Nat.pow_pos (Nat.lt_of_lt_of_le (by norm_num) hD)
   omega
 
-/-- 補助: index 小 → index 大 で `c (small) <+: c (big)` を不可能と示す.
-ここで `small`, `big` の sortedIndex は `j < k` で固定する. -/
+/-- When `sortedIndex l x < sortedIndex l y` and `l x ≤ l y`, the code of `x` is not
+a prefix of the code of `y`. -/
 lemma not_isPrefix_of_sortedIndex_lt
     {D : ℕ} [NeZero D] (hD : 2 ≤ D)
     (l : α → ℕ)
@@ -356,7 +355,7 @@ lemma not_isPrefix_of_sortedIndex_lt
     (h_len_le : l x ≤ l y) :
     ¬ shannonFanoCode (D := D) l L x <+: shannonFanoCode l L y := by
   intro hpref
-  -- slotStart_gap で `slotStart (idx x) + D^(L - l x) ≤ slotStart (idx y)`
+  -- slotStart_gap: slotStart (idx x) + D^(L − l x) ≤ slotStart (idx y)
   have hk_le : sortedIndex l y ≤ (sortedByLen l).length := Nat.le_of_lt (sortedIndex_lt l y)
   have h_x_at_j : (sortedByLen l)[sortedIndex l x]'(sortedIndex_lt l x) = x :=
     getElem_sortedByLen_sortedIndex l x
@@ -397,7 +396,7 @@ lemma not_isPrefix_of_sortedIndex_lt
       _ = D ^ l x * D ^ (L - l x) := by
           rw [← pow_add]; congr 1; omega
   have h_eq_div := toBaseDLen_injOn_lt D (l x) h_lt_x h_lt_y h_eq_take
-  -- 矛盾
+  -- contradiction
   have h_step :
       slotStart D l L (sortedIndex l x) / D ^ (L - l x) + 1 ≤
       slotStart D l L (sortedIndex l y) / D ^ (L - l x) := by
@@ -409,7 +408,8 @@ lemma not_isPrefix_of_sortedIndex_lt
     exact h_div_mono
   omega
 
-/-- prefix-free 性. (`hl : 0 < l a` 仮定は `hk` から redundant だが、API 整合のため受ける.) -/
+/-- `shannonFanoCode` is prefix-free. (The hypothesis `hl : 0 < l a` is redundant given `hk`
+but is kept for API uniformity.) -/
 lemma shannonFanoCode_prefixFree
     {D : ℕ} [NeZero D] (hD : 2 ≤ D)
     (l : α → ℕ) (_hl : ∀ a, 0 < l a)
@@ -437,18 +437,18 @@ lemma shannonFanoCode_prefixFree
       rw [hb_idx, ha_idx] at h
       exact h
     have h_la_eq_lb : l a = l b := le_antisymm h_len_le h_lb_le_la
-    -- 同長 prefix ⟹ 等しい code
+    -- equal-length prefix ⟹ equal codewords
     have h_eq_codes :
         shannonFanoCode (D := D) l L a = shannonFanoCode (D := D) l L b := by
       apply hpref.eq_of_length_le
       rw [shannonFanoCode_length, shannonFanoCode_length]; omega
-    -- 等しい code から `c b <+: c a` (in fact equal both ways)
+    -- equal codes: c b <+: c a (in fact equal both ways)
     have hpref' : shannonFanoCode (D := D) l L b <+: shannonFanoCode l L a := by
       rw [h_eq_codes]
-    -- これで forward direction で矛盾 (idx b < idx a, l b ≤ l a)
+    -- contradiction via forward direction (idx b < idx a, l b ≤ l a)
     exact not_isPrefix_of_sortedIndex_lt hD l L hL hk h_idx_gt h_lb_le_la hpref'
 
-/-- injective. -/
+/-- `shannonFanoCode` is injective. -/
 lemma shannonFanoCode_injective
     {D : ℕ} [NeZero D] (hD : 2 ≤ D)
     (l : α → ℕ) (hl : ∀ a, 0 < l a)
@@ -462,7 +462,7 @@ lemma shannonFanoCode_injective
   apply hpf
   rw [hab]
 
-/-- 共通深度 `L`: 全 `l a` の sup. -/
+/-- Common depth: `sup_{a} l a`, the maximum codeword length. -/
 noncomputable def commonDepth (l : α → ℕ) : ℕ := Finset.univ.sup l
 
 omit [DecidableEq α] in
@@ -470,7 +470,7 @@ lemma le_commonDepth (l : α → ℕ) (a : α) : l a ≤ commonDepth l :=
   Finset.le_sup (Finset.mem_univ a)
 
 omit [DecidableEq α] in
-/-- **主定理**: Kraft 充足 ⟹ prefix code 存在. -/
+/-- **Kraft converse**: Kraft-feasible positive lengths yield a prefix-free code. -/
 @[entry_point]
 theorem exists_prefix_code_of_kraft
     {D : ℕ} (hD : 2 ≤ D)

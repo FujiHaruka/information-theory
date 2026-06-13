@@ -3,28 +3,27 @@ import InformationTheory.Polymatroid.Basic
 import InformationTheory.Shannon.Han.D
 
 /-!
-# Polymatroid axioms for joint entropy (Phase A〜C skeleton)
+# Polymatroid axioms for joint entropy
 
-Polymatroid moonshot ([`docs/han/polymatroid-moonshot-plan.md`](../../../docs/han/polymatroid-moonshot-plan.md))
-の Phase A skeleton。Han Phase D の `jointEntropySubset` (`HanD.lean:114`) が
-**polymatroid rank function の 3 性質** を満たすことを示す:
+`jointEntropySubset` (from `HanD.lean`) satisfies the three polymatroid rank
+function axioms:
 
-* Phase A — `jointEntropySubset_empty`     : `H(X_∅) = 0`
-* Phase B — `jointEntropySubset_mono`      : `S ⊆ T ⟹ H(X_S) ≤ H(X_T)`
-* Phase C — `jointEntropySubset_submodular`:
-  `H(X_{S∪T}) + H(X_{S∩T}) ≤ H(X_S) + H(X_T)`
+* `jointEntropySubset_empty` — `H(X_∅) = 0`.
+* `jointEntropySubset_mono` — `S ⊆ T ⟹ H(X_S) ≤ H(X_T)`.
+* `jointEntropySubset_submodular` — `H(X_{S∪T}) + H(X_{S∩T}) ≤ H(X_S) + H(X_T)`.
 
-## 戦略 (inventory より)
+## Main statements
 
-* Phase A — `Pi.uniqueOfIsEmpty` で `(↥(∅ : Finset (Fin n)) → α)` が `Unique`、
-  HanD chain rule base case (`Han.lean:64-85`) と同じパターン。
-* Phase B — `MeasurableEquiv.piFinsetUnion`
-  (`Mathlib/MeasureTheory/MeasurableSpace/Embedding.lean:612`) で
-  `T = S ⊔ (T\S)` を pair `((↥S → α) × (↥(T\S) → α))` に reshape、
-  Phase A `entropy_pair_eq_entropy_add_condEntropy` + `condEntropy ≥ 0` で結ぶ。
-* Phase C — 3 ピース disjoint 分解 `S ∪ T = I ⊔ A ⊔ B`
-  (`I := S ∩ T`, `A := S \ T`, `B := T \ S`)。各 entropy を chain rule で展開し、
-  `condEntropy_le_condEntropy_of_pair` で `H(X_B | X_I, X_A) ≤ H(X_B | X_I)` を効かせる。
+* `jointEntropySubset_empty`, `jointEntropySubset_mono`,
+  `jointEntropySubset_submodular` — the three polymatroid axioms.
+* `entropyPolymatroid` — joint entropy as a `Combinatorics.Polymatroid` term.
+
+## Implementation notes
+
+Monotonicity uses `MeasurableEquiv.piFinsetUnion` to reshape `T = S ⊔ (T\S)` as
+a pair, then applies the pair chain rule and `condEntropy ≥ 0`. Submodularity uses
+the three-piece disjoint decomposition `S ∪ T = I ⊔ A ⊔ B` (`I := S∩T`, `A := S\T`,
+`B := T\S`) and `condEntropy_le_condEntropy_of_pair`.
 -/
 
 namespace InformationTheory.Shannon
@@ -37,7 +36,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-! ## Phase A — empty subset entropy -/
+/-! ## Empty subset entropy -/
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- Polymatroid axiom (i): empty subset entropy is zero.
@@ -66,7 +65,7 @@ theorem jointEntropySubset_empty
     rw [huniv, measureReal_def, measure_univ, ENNReal.toReal_one]
   rw [hsingle, Real.negMulLog_one]
 
-/-! ## Phase B — monotonicity -/
+/-! ## Monotonicity -/
 
 omit [DecidableEq α] in
 /-- Polymatroid axiom (ii): monotonicity in `S`.
@@ -191,7 +190,7 @@ theorem condEntropy_reshape_disjoint_union
   exact condEntropy_measurableEquiv_comp μ Xc hXc
     (fun ω => (XS ω, XT ω)) (hXS_meas.prodMk hXT_meas) e
 
-/-! ## Phase C — submodularity -/
+/-! ## Submodularity -/
 
 omit [DecidableEq α] in
 /-- Polymatroid axiom (iii): submodularity.

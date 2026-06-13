@@ -2,37 +2,36 @@ import InformationTheory.Meta.EntryPoint
 import Mathlib.InformationTheory.KullbackLeibler.Basic
 
 /-!
-# Sanov の定理 — Phase A 形 (probability upper bound on type classes)
+# Sanov's theorem — type class probability upper bound (A form)
 
-シードカード B-1 ([`docs/shannon/sanov-moonshot-plan.md`](../../docs/shannon/sanov-moonshot-plan.md))。
-Cover-Thomas Theorem 11.1.4 (method of types, probability of a type class):
+Cover-Thomas Theorem 11.1.4 (method of types):
 
-  `Q^n(T(P)) ≤ exp(-n · D(P‖Q))`
+```
+Q^n(T(P)) ≤ exp(-n · D(P‖Q))
+```
 
-ここで `T(P) := { x : Fin n → α | ∀ a, #{i | x i = a} = n · P(a) }`
-(empirical 分布が `P` に完全一致する系列の集合 = "type class")。
+where `T(P) := { x : Fin n → α | ∀ a, #{i | x i = a} = n · P(a) }`.
 
-## 構成
+## Main definitions
 
-* **Phase A** — type class 定義 + point-wise plumbing:
-  * `typeCount x a := #{i : Fin n | x i = a}`
-  * `typeClass P n : Set (Fin n → α)` (empirical = P)
-  * `measurableSet_typeClass`, `typeClass_pi_singleton_eq` (`Q^n({x}) = ∏ Q(x_i)`)
-  * `typeClass_log_ratio_eq`: `x ∈ T(P)` ⇒ `∑ log(Q/P)(x_i) = -n · klDivSumForm P Q`
-* **Phase B** — Sanov A 主定理:
-  * `klDivSumForm P Q := ∑ a, P(a) · (log P(a) - log Q(a))`
-  * `typeClass_Qn_le` — `Q^n(T(P)) ≤ exp(-n · klDivSumForm P Q)`
-  * `klDivSumForm_eq_toReal_klDiv` — `klDivSumForm = (klDiv P Q).toReal` (Bochner 形)
-  * `typeClass_Qn_le_klDiv` — `.toReal` 形 corollary
+* `typeCount x a` — number of occurrences of `a` in sequence `x : Fin n → α`.
+* `typeClass P n` — type class: sequences whose empirical distribution equals `P`.
+* `klDivSumForm P Q` — finite-alphabet KL sum form:
+  `∑ a, P(a) · (log P(a) - log Q(a))`.
 
-## 設計メモ
+## Main statements
 
-* **Stein converse の特化版**: `steinTypicalSet_Q_prob_le` (Stein.lean:341) のロジックを
-  「片側 inequality `S/n - K < ε`」→「両側 equality `S/n = K`」に置換しただけ。
-  textbook の「`|T(P)| ≤ exp(n·H(P))` + `Q^n({x}) = exp(-n(H+D))`」二段論法を回避し、
-  `Q^n(T) = exp(-n·D) · P^n(T) ≤ exp(-n·D)` で直接結ぶ。
-* `klDivSumForm` (Real-valued finite-alphabet KL 展開) を主定理 LHS の指数に使い、
-  `klDiv.toReal` 形は MaxEntropy.lean:123 のテンプレで等値性を別補題に分離。
+* `typeClass_Qn_le` — `Q^n(T(P)) ≤ exp(-n · klDivSumForm P Q)`.
+* `klDivSumForm_eq_toReal_klDiv` — `klDivSumForm P Q = (klDiv P Q).toReal`
+  (under absolute continuity).
+* `typeClass_Qn_le_klDiv` — corollary with `(klDiv P Q).toReal` exponent.
+
+## Implementation notes
+
+* The proof avoids the two-step `|T(P)| ≤ exp(n H(P))` + `Q^n({x}) = exp(-n(H+D))`:
+  it goes directly via `Q^n(T) = exp(-n D) · P^n(T) ≤ exp(-n D)`.
+* `klDivSumForm` is used in the main bound; the equality to `(klDiv P Q).toReal`
+  is separated into `klDivSumForm_eq_toReal_klDiv`.
 -/
 
 namespace InformationTheory.Shannon
@@ -45,31 +44,25 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
 /-! ### Phase A — type class definition + plumbing -/
 
-/-- 系列 `x : Fin n → α` における letter `a` の出現回数 (= "type count")。 -/
+/-- Number of occurrences of letter `a` in sequence `x : Fin n → α`. -/
 noncomputable def typeCount {n : ℕ} (x : Fin n → α) (a : α) : ℕ :=
   (Finset.univ.filter (fun i : Fin n => x i = a)).card
 
-/-- **Type class** `T(P)` — 系列のうち empirical 分布が `P` に完全一致するもの:
-`x ∈ typeClass P n ↔ ∀ a, (typeCount x a : ℝ) = n · P.real {a}`. -/
+/-- **Type class** `T(P)`: sequences `x : Fin n → α` whose empirical distribution equals `P`,
+i.e., `∀ a, (typeCount x a : ℝ) = n · P.real {a}`. -/
 noncomputable def typeClass (P : Measure α) (n : ℕ) : Set (Fin n → α) :=
   { x | ∀ a : α, (typeCount x a : ℝ) = (n : ℝ) * P.real {a} }
 
 
 /-- **Finite-alphabet KL sum form**:
-`klDivSumForm P Q := ∑ a, P(a) · (log P(a) − log Q(a))`。
+`klDivSumForm P Q := ∑ a, P(a) · (log P(a) - log Q(a))`.
 
-Mathlib の `klDiv` を avoid して finite-alphabet 上の textbook 定義で
-Sanov の指数を直接書くための shorthand。等値性 `klDivSumForm = (klDiv P Q).toReal`
-は support 一致 (`P ≪ Q` + 両方 prob) のもとで別補題 `klDivSumForm_eq_toReal_klDiv` で証明。 -/
+Shorthand for the Sanov exponent; equals `(klDiv P Q).toReal` under `P ≪ Q`
+(see `klDivSumForm_eq_toReal_klDiv`). -/
 noncomputable def klDivSumForm (P Q : Measure α) : ℝ :=
   ∑ a : α, P.real {a} * (Real.log (P.real {a}) - Real.log (Q.real {a}))
 
 omit [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Aggregation lemma** (Phase A の core): `x ∈ typeClass P n` ⇒
-`∑ i : Fin n, (log P(x_i) - log Q(x_i)) = n · klDivSumForm P Q`.
-
-証明: `prod_fiberwise_of_maps_to'` (Mathlib) で `∑ i, f (x i) = ∑ a, (typeCount x a) · f a`
-に集約 → `typeClass` 仮定で `typeCount x a = n · P(a)` を代入。 -/
 lemma sum_llrPmf_eq_of_mem_typeClass
     (P Q : Measure α) {n : ℕ} {x : Fin n → α}
     (hx : x ∈ typeClass P n) :
@@ -108,10 +101,8 @@ lemma sum_llrPmf_eq_of_mem_typeClass
   rfl
 
 omit [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Per-point ratio identity**: `x ∈ typeClass P n` ⇒
-`∏ i, Q.real {x i} = (∏ i, P.real {x i}) · exp(-n · klDivSumForm P Q)`.
-
-`P(a) > 0, Q(a) > 0` を要件として log/exp の往復を踏む。 -/
+/-- **Per-point ratio identity**: `x ∈ typeClass P n` implies
+`∏ i, Q.real {x i} = (∏ i, P.real {x i}) · exp(-n · klDivSumForm P Q)`. -/
 lemma typeClass_prod_ratio
     (P Q : Measure α)
     (hPpos : ∀ a : α, 0 < P.real {a})
@@ -147,19 +138,11 @@ lemma typeClass_prod_ratio
   rw [h_split, h_prod_ratio]
   ring
 
-/-! ### Phase B — Sanov A 主定理 -/
+/-! ### Phase B — Sanov A main theorem -/
 
 set_option linter.unusedSectionVars false in
-/-- **Sanov A 形 (probability upper bound on type classes)**:
-`Q^n(T(P)) ≤ exp(-n · klDivSumForm P Q)`.
-
-Cover-Thomas Theorem 11.1.4 の `klDivSumForm` 形式。`.toReal (klDiv P Q)` 形は
-`klDivSumForm_eq_toReal_klDiv` + `typeClass_Qn_le_klDiv` 経由。
-
-証明: Stein.lean:341 `steinTypicalSet_Q_prob_le` の特化:
-  `Q^n(T) = ∑_{x∈T} Q^n({x}) = ∑_{x∈T} (∏ P(x_i)) · exp(-n·D)` (typeClass_prod_ratio)
-        `= exp(-n·D) · ∑_{x∈T} ∏ P(x_i)`
-        `≤ exp(-n·D) · ∑_{x : Fin n → α} ∏ P(x_i) = exp(-n·D) · 1`. -/
+/-- **Sanov A form** (Cover-Thomas Theorem 11.1.4):
+`Q^n(T(P)) ≤ exp(-n · klDivSumForm P Q)`. -/
 @[entry_point]
 theorem typeClass_Qn_le
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
@@ -233,14 +216,10 @@ theorem typeClass_Qn_le
             _ = 1 := h_total
     _ = Real.exp (-((n : ℝ) * D)) := one_mul _
 
-/-! ### Phase B (corollary) — `.toReal (klDiv P Q)` 形 -/
+/-! ### Phase B (corollary) — `(klDiv P Q).toReal` form -/
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **`klDivSumForm` = `(klDiv P Q).toReal`** (finite alphabet support 一致).
-
-MaxEntropy.lean:123 `klDiv_uniformOn_univ_toReal_eq` のテンプレ:
-`toReal_klDiv_of_measure_eq` で `(klDiv P Q).toReal = ∫ a, llr P Q a ∂P`、
-`integral_fintype` で Bochner ⇒ finite sum、`llr` を point-wise log で展開。 -/
+/-- `klDivSumForm P Q = (klDiv P Q).toReal` when `P ≪ Q` (both probability measures). -/
 @[entry_point]
 theorem klDivSumForm_eq_toReal_klDiv
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
@@ -293,7 +272,7 @@ theorem klDivSumForm_eq_toReal_klDiv
   rw [h_llr, smul_eq_mul]
 
 set_option linter.unusedSectionVars false in
-/-- **Sanov A 形 `.toReal (klDiv P Q)` 形 corollary**:
+/-- **Sanov A form, `klDiv` exponent** (corollary of `typeClass_Qn_le`):
 `Q^n(T(P)) ≤ exp(-n · (klDiv P Q).toReal)`. -/
 @[entry_point]
 theorem typeClass_Qn_le_klDiv

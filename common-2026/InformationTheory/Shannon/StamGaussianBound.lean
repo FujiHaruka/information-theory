@@ -5,35 +5,23 @@ import Mathlib.Probability.Independence.Basic
 import Mathlib.Tactic.Positivity
 
 /-!
-# Stam convex Fisher bound — non-vacuous Gaussian instance (L-S12-C′)
+# Stam convex Fisher bound — Gaussian instance
 
-InformationTheory EPI (Ch.17) follow-up to the Stam inequality core
-`J(X+Y) ≤ λ² J(X) + (1-λ)² J(Y)`.
+EPI (Ch.17) follow-up to the Stam inequality core `J(X+Y) ≤ λ² J(X) + (1-λ)² J(Y)`.
 
-The pre-existing Gaussian discharge `isStamCondExpCSHyp_of_gaussian_fisherInfo_zero`
-(`InformationTheory/Shannon/EPIStamStep12Body.lean:327`) is **vacuous**: it exploits the
-V1 representative-dependence bug under which `fisherInfo` degenerates to `0` on a
-Gaussian law, so the precondition `0 < J_X` is contradicted and the ∀λ bound holds
-for no informative reason. It asserts *nothing* about Stam actually holding for
-Gaussians.
+Keyed on the V2 Fisher information `fisherInfoOfMeasureV2`, which evaluates to the
+closed form `1/v` for a Gaussian with variance `v`. The proof reduces the convex
+Fisher bound to the arithmetic kernel `1/(a+b) ≤ λ²/a + (1-λ)²/b`, with equality
+at `λ* = a/(a+b)`.
 
-This file replaces that vacuous discharge with the **correct, non-vacuous Gaussian
-instance**, keyed on the V2 Fisher information `fisherInfoOfMeasureV2`
-(`InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:124`) which evaluates to the true
-closed form `1/v` rather than the V1 `0` ghost. The proof reduces the convex Fisher
-bound to a pure real-arithmetic kernel
-`1/(a+b) ≤ λ²/a + (1-λ)²/b` whose equality is saturated at `λ* = a/(a+b)`
-(matching the textbook Stam optimum).
+Scope: only the Gaussian instance. The general case (heat-flow + de Bruijn) is
+out of scope here.
 
-**Scope.** This publishes only the *Gaussian* instance of the convex Fisher bound.
-The discharge for general `X, Y` is a separate, PR-scale effort (heat-flow + de
-Bruijn machinery) and is deliberately out of scope here.
+## Main statements
 
-## 主シグネチャ
-
-* `stam_fisher_arith` — pure real arithmetic kernel `1/(a+b) ≤ λ²/a + (1-λ)²/b`
-* `stam_fisher_arith_eq_at_opt` — saturation: equality at `λ* = a/(a+b)`
-* `stam_convex_fisher_bound_gaussian` — V2-keyed Gaussian convex Fisher bound (closed form)
+* `stam_fisher_arith` — arithmetic kernel `1/(a+b) ≤ λ²/a + (1-λ)²/b`
+* `stam_fisher_arith_eq_at_opt` — equality at `λ* = a/(a+b)`
+* `stam_convex_fisher_bound_gaussian` — Gaussian convex Fisher bound (closed form)
 * `stam_convex_fisher_bound_gaussian_indep` — independent-RV form via
   `gaussianReal_add_gaussianReal_of_indepFun`
 -/
@@ -67,12 +55,8 @@ theorem stam_fisher_arith (a b lam : ℝ) (ha : 0 < a) (hb : 0 < b)
 
 /-- **Gaussian Stam convex Fisher bound.** For Gaussian laws `𝒩(m₁,v₁)`, `𝒩(m₂,v₂)`
 with `v₁, v₂ ≠ 0`, the V2 Fisher information of the sum law `𝒩(m₁+m₂, v₁+v₂)`
-satisfies the Stam convex bound
-`J(X+Y) ≤ λ² J(X) + (1-λ)² J(Y)`
-for every `λ ∈ [0,1]`. Each Fisher info evaluates to the true closed form `1/v`
-(via `fisherInfoOfMeasureV2_gaussianReal`), so this is the **non-vacuous** Gaussian
-instance — contrast `isStamCondExpCSHyp_of_gaussian_fisherInfo_zero` which is
-vacuous under the V1 `0` artefact. -/
+satisfies `J(X+Y) ≤ λ² J(X) + (1-λ)² J(Y)` for every `λ ∈ [0,1]`.
+Each Fisher info evaluates to the closed form `1/v` via `fisherInfoOfMeasureV2_gaussianReal`. -/
 @[entry_point]
 theorem stam_convex_fisher_bound_gaussian
     (m₁ m₂ : ℝ) {v₁ v₂ : ℝ≥0} (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)

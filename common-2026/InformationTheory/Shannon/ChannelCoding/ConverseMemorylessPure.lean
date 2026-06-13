@@ -2,27 +2,21 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.ChannelCoding.ConverseGeneralStrong
 
 /-!
-# Channel coding converse — pure `IsMemorylessChannel` form (D-2'' γ-chain bridge)
+# Channel coding converse — pure `IsMemorylessChannel` form
 
-[D-2'' subplan](../../../docs/shannon/channel-coding-converse-memoryless-ychain-plan.md).
+Bridge lemmas deriving both `IsMemorylessChannelStrong` Markov axioms from
+`IsMemorylessChannel` (γ-form: single Markov chain `(X^{≠i}, Y^{≠i}) → X_i → Y_i`).
 
-`IsMemorylessChannel` (γ-form single Markov chain `(X^{≠i}, Y^{≠i}) → X_i → Y_i`) から、
-`IsMemorylessChannelStrong` の両 Markov axiom を構成する bridge 補題を提供し、
-完全 pure 形 (両 axiom を `IsMemorylessChannel` のみから派生) の channel-coding-converse
-を提供する。
+## Main definitions
 
-## Status
+* `per_letter_markov_of_memoryless` — derives per-letter Markov chain from `IsMemorylessChannel`.
+* `outputs_cond_indep_of_memoryless` — derives outputs conditional independence via the graphoid
+  weak union lemma `isMarkovChain_weakUnion_left_to_conditioner` and conditioner reshape.
 
-* **A.1 `per_letter_markov_of_memoryless`** (publicly exposed): proved via bundle + reshape.
-* **A.2 `outputs_cond_indep_of_memoryless`** (publicly exposed): proved via the graphoid
-  weak union lemma `isMarkovChain_weakUnion_left_to_conditioner` (γ-form direct disintegration)
-  combined with a conditioner reshape via `measurableEquivExtract`.
+## Main statements
 
-## Phase B — pure main theorem
-
-`channel_coding_converse_general_memoryless_pure` は `h_memo : IsMemorylessChannel μ Xs Ys`
-だけから両 Markov axiom を自動派生し、`channel_coding_converse_general_memoryless_strong`
-を呼ぶ。
+* `channel_coding_converse_general_memoryless_pure` — channel coding converse under
+  `IsMemorylessChannel` alone (both axioms auto-derived).
 -/
 
 namespace InformationTheory.Shannon.ChannelCodingConverseGeneral
@@ -32,7 +26,7 @@ open scoped ENNReal NNReal BigOperators
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-! ## Phase A.0 — graphoid 補助補題 (file-scoped private) -/
+/-! ## Graphoid helper lemmas (file-scoped) -/
 
 section GraphoidHelpers
 
@@ -388,12 +382,7 @@ private lemma cond_reshape_kernel_lemma {X' Z Z' : Type*}
   simp [Prod.map]
 
 /-- **Markov chain conditioner reshape via measurable equiv**: if `Markov μ Xs (e ∘ Z') Yo`
-and `e : Z' ≃ᵐ Z`, then `Markov μ Xs Z' Yo`.
-
-戦略 (短縮版): γ-form `μ.map (e ∘ Z', X, Y) = (μ.map (e ∘ Z')) ⊗ₘ (K_Xe ×ₖ K_Ye)` の両辺を
-`Prod.map e.symm id` で pushforward。LHS は `Measure.map_map` で `μ.map (Z', X, Y)`、
-RHS は `Measure.compProd_congr` を経由して `compProd` の構造を保ったまま測度・kernel をそれぞれ
-`e.symm` で comap し、condDistrib uniqueness で `condDistrib Xs Zc' μ` 等と同一視する。 -/
+and `e : Z' ≃ᵐ Z`, then `Markov μ Xs Z' Yo`. -/
 private lemma isMarkovChain_map_conditioner_measurableEquiv
     {X Z Z' : Type*}
     [MeasurableSpace X] [StandardBorelSpace X] [Nonempty X]
@@ -619,12 +608,7 @@ theorem outputs_cond_indep_of_memoryless
 
 end BridgeMain
 
-/-! ## Phase B — semi-pure 主定理
-
-`channel_coding_converse_general_memoryless_pure` は `IsMemorylessChannel` (per-letter
-Markov axiom を自動派生) と `outputs_cond_indep_axiom` (外部仮説、graphoid weak union 経由
-要のため scope-deferred) を取り、既存 strong wrapper を呼ぶ。
--/
+/-! ## Semi-pure main converse theorem -/
 
 section MainConversePure
 
@@ -637,18 +621,11 @@ variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
 omit [DecidableEq M] [DecidableEq α] [DecidableEq β] in
-/-- **Channel coding converse, semi-pure memoryless DMC version (D-2'' γ-chain, partial)**.
+/-- **Channel coding converse, pure memoryless DMC form**.
 
-`IsMemorylessChannel` 仮定下で per-letter Markov chain `X^n → X_i → Y_i` を自動派生し
-(`per_letter_markov_of_memoryless`)、outputs conditional independence
-`Y^{≠i} → X^n → Y_i` は外部仮説として受け取る (deferred bridge への暫定 workaround)。
-
-完全 pure 形 (`IsMemorylessChannel` のみから両 axiom 派生) は graphoid weak union γ-form
-直接導出 (`condKernel` 分解 100+ 行) のため deferred。`outputs_cond_indep_axiom` の手動
-構成は、典型的 use case では caller の側で iid-encoder / product-channel 仮定から直接示せる。
-
-D-2' hypothesis-form の `h_yother_zero` は encoder 任意で偽のため本定理は経由しない
-(Strong 経路は encoder-agnostic な entropy subadditivity に基づく)。 -/
+Under `h_memo : IsMemorylessChannel μ Xs Ys`, auto-derives the per-letter Markov chain
+`X^n → X_i → Y_i` and outputs conditional independence `Y^{≠i} → X^n → Y_i`, then
+delegates to `channel_coding_converse_general_memoryless_strong`. -/
 @[entry_point]
 theorem channel_coding_converse_general_memoryless_pure
     (μ : Measure Ω) [IsProbabilityMeasure μ]

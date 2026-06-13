@@ -13,9 +13,7 @@ import InformationTheory.Meta.EntryPoint
 For positive-definite matrices `A, B : Matrix n n ℝ`,
 `det(A + B)^(1/n) ≥ det A^(1/n) + det B^(1/n)`.
 
-Genuinely proved (no `sorry`) by simultaneous diagonalization / congruence
-reduction. Mathlib does not provide this inequality directly (verbatim-confirmed
-in `docs/shannon/chapter-17-minkowski-inventory.md`), so the proof is assembled
+Proved by simultaneous diagonalization / congruence reduction. The proof is assembled
 from the matrix square root (`CFC.sqrt`), congruence PosDef preservation, the
 eigenvalue-shift determinant identity `det (1 + S) = ∏ (1 + eigenvalues S i)`
 (`det_one_add_eq_prod_one_add_eigenvalues`), and the scalar geometric-mean
@@ -34,9 +32,9 @@ For a positive-definite `A : Matrix n n ℝ`, the `n`-th root of the determinant
 bounded above by the arithmetic mean of its eigenvalues:
 `(det A)^(1/n) ≤ (1/n) ∑ᵢ λᵢ(A)`.
 
-This is the genuine building block for the Minkowski determinant inequality
-(Cover-Thomas 17.9.1): it is the `p = 1/n ≤ 1` direction of weighted AM-GM applied
-to the eigenvalues, using `det A = ∏ᵢ λᵢ(A)`. Fully proved (no `sorry`).
+Building block for the Minkowski determinant inequality (Cover-Thomas 17.9.1):
+`p = 1/n ≤ 1` direction of weighted AM-GM applied to the eigenvalues,
+using `det A = ∏ᵢ λᵢ(A)`.
 @audit:ok -/
 @[entry_point]
 theorem det_rpow_le_arith_mean_eigenvalues
@@ -78,10 +76,8 @@ theorem det_rpow_le_arith_mean_eigenvalues
 For nonnegative reals `a i, b i` with `a i + b i > 0`,
 `(∏ a i)^(1/n) + (∏ b i)^(1/n) ≤ (∏ (a i + b i))^(1/n)`.
 
-This is the scalar core of the Minkowski determinant inequality. It follows from
-weighted AM-GM applied to the normalized weights `a i / (a i + b i)` (and its
-complement), exactly the construction used in `det_rpow_le_arith_mean_eigenvalues`.
-Fully proved (no `sorry`); reusable.
+Scalar core of the Minkowski determinant inequality. Follows from weighted AM-GM
+applied to the normalized weights `a i / (a i + b i)` and its complement.
 @audit:ok -/
 theorem geom_mean_superadditive
     {n : Type*} [Fintype n] [Nonempty n]
@@ -144,8 +140,8 @@ theorem geom_mean_superadditive
   rw [hN] at hkey ⊢
   exact hkey
 
--- `[DecidableEq n]` は結論型 `(CFC.sqrt A).PosDef` (CFC.sqrt の定義) が要求するため必須。
--- linter は "outside of proofs" 偽陽性を出すので局所的に無効化する。
+-- `[DecidableEq n]` is required by the conclusion type `(CFC.sqrt A).PosDef` (the definition of CFC.sqrt).
+-- Suppress the linter's "outside of proofs" false positive locally.
 set_option linter.unusedDecidableInType false in
 /-- The CFC square root of a positive-definite matrix is positive definite.
 @audit:ok -/

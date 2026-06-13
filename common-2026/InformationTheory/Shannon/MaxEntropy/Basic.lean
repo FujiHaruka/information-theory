@@ -6,37 +6,29 @@ import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import Mathlib.MeasureTheory.Measure.Dirac
 
 /-!
-# 最大エントロピー (Gibbs 不等式)
+# Maximum entropy (Gibbs inequality)
 
-InformationTheory B-6 ムーンショット ([`docs/shannon/max-entropy-moonshot-plan.md`])。
+For a finite-alphabet random variable `X : Ω → α`,
+`entropy μ X ≤ Real.log (Fintype.card α)`,
+with equality if and only if `μ.map X = uniformOn Set.univ`.
 
-有限アルファベット `α` 上の確率変数 `X : Ω → α` について、
-`entropy μ X ≤ Real.log (Fintype.card α)`、
-等号は `μ.map X = uniformOn Set.univ` のとき。
+## Main definitions
 
-## 主定理
+## Main statements
 
-* `entropy_le_log_card` — 主定理: `entropy μ X ≤ log |α|`
-* `entropy_eq_log_card_iff` — 等号条件: `entropy μ X = log |α| ↔ μ.map X = uniformOn univ`
-* `klDiv_uniformOn_univ_toReal_eq` — 相対エントロピー経由の identity (副次結果):
-  `(klDiv (μ.map X) (uniformOn univ)).toReal = log |α| - entropy μ X`
+* `klDiv_uniformOn_univ_toReal_eq` — KL-divergence identity:
+  `(klDiv (μ.map X) (uniformOn univ)).toReal = log |α| − entropy μ X`.
+* `entropy_le_log_card` — Shannon entropy is at most `log |α|`.
+* `entropy_eq_log_card_iff` — equality holds if and only if `μ.map X = uniformOn univ`.
 
-## 戦略 (Jensen ルート)
+## Implementation notes
 
-主定理・等号条件は `negMulLog` の凹性に対する有限和 Jensen から直接導く。
-`P := μ.map X` とおくと、エントロピーは定義上 `entropy μ X = ∑ x, negMulLog (P.real {x})`
-という有限和 (α は Fintype)。`negMulLog` は `Set.Ici 0` (0 込み) で (狭義) 凹なので:
-1. **不等式** `ConcaveOn.le_map_sum`: 一様重み `1/N` (`N = |α|`)・各点 `P.real {x} ≥ 0` で
-   `∑ (1/N)·negMulLog(P{x}) ≤ negMulLog(∑ (1/N)·P{x}) = negMulLog(1/N) = (1/N) log N`。
-   両辺 `×N` で `entropy ≤ log N`。台 (support) のはみ出し処理は不要。
-2. **等号条件** `StrictConcaveOn.map_sum_eq_iff`: 等号 ⟺ 全 singleton 質量が `1/N` で一定
-   ⟺ (`Measure.ext_of_singleton`) 一様分布 `μ.map X = uniformOn univ`。
-
-底にある解析的事実は `negMulLog` の凹性 (= `log t ≤ t-1`) のみ。`klDiv` (相対エントロピー)
-には依存しない。`klDiv_uniformOn_univ_toReal_eq` は同じ内容を相対エントロピー経由で述べた
-副次的な identity として残してある。
-
-LoomisWhitney の `entropy_le_log_image_card` (uniformOn-specific) の一般 measure 版。
+The main results follow directly from concavity of `negMulLog` on `Set.Ici 0` via the
+finite-sum Jensen inequality (`ConcaveOn.le_map_sum` and
+`StrictConcaveOn.map_sum_eq_iff`), with uniform weights `1/N` (`N = |α|`).
+No KL-divergence machinery is needed; `klDiv_uniformOn_univ_toReal_eq` is a secondary
+identity derived from the same computation. This is the general-measure analogue of
+`LoomisWhitney.entropy_le_log_image_card`.
 -/
 
 namespace InformationTheory.Shannon.MaxEntropy
@@ -49,7 +41,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 variable {Ω : Type*} [MeasurableSpace Ω]
 
 omit [DecidableEq α] [Nonempty α] in
-/-- `uniformOn (univ : Set α)` における singleton の ENNReal mass は `1/|α|`。 -/
+/-- The ENNReal singleton mass of `uniformOn (univ : Set α)` is `1 / |α|`. -/
 private lemma uniformOn_univ_apply_singleton (x : α) :
     (uniformOn (Set.univ : Set α)) ({x} : Set α) = 1 / (Fintype.card α : ℝ≥0∞) := by
   classical
@@ -61,7 +53,7 @@ private lemma uniformOn_univ_apply_singleton (x : α) :
       Finset.card_univ, Nat.cast_one]
 
 omit [DecidableEq α] [Nonempty α] in
-/-- `uniformOn (univ : Set α)` における singleton の measureReal は `1/|α|`。 -/
+/-- The `measureReal` singleton mass of `uniformOn (univ : Set α)` is `1 / |α|`. -/
 private lemma uniformOn_univ_real_singleton (x : α) :
     (uniformOn (Set.univ : Set α)).real ({x} : Set α) = (1 : ℝ) / Fintype.card α := by
   rw [Measure.real, uniformOn_univ_apply_singleton x,
@@ -69,15 +61,13 @@ private lemma uniformOn_univ_real_singleton (x : α) :
   rfl
 
 omit [DecidableEq α] [Nonempty α] in
-/-- 任意の `μ.map X` は `uniformOn univ` に絶対連続。
-`uniformOn univ` は各 singleton に `1/|α| > 0` を割り当てるので、`U A = 0 ⟹ A` は (有限なので)
-空、ゆえに `P A = 0`。 -/
+/-- Any pushforward `μ.map X` is absolutely continuous with respect to `uniformOn univ`. -/
 private lemma map_absolutelyContinuous_uniformOn_univ
     (μ : Measure Ω) (X : Ω → α) :
     (μ.map X) ≪ uniformOn (Set.univ : Set α) := by
   classical
   refine Measure.AbsolutelyContinuous.mk fun A hA hA0 => ?_
-  -- A = ⋃ x ∈ A.toFinset (= univ.filter (· ∈ A)), {x} で分解
+  -- decompose A = ⋃ x ∈ univ.filter (· ∈ A), {x}
   set s : Finset α := Finset.univ.filter (fun x => x ∈ A)
   have hA_decomp : A = ⋃ x ∈ s, ({x} : Set α) := by
     ext z
@@ -86,7 +76,7 @@ private lemma map_absolutelyContinuous_uniformOn_univ
     fun x _ => measurableSet_singleton x
   have h_pwd : Set.PairwiseDisjoint (↑s) (fun x : α => ({x} : Set α)) :=
     fun a _ b _ hne => Set.disjoint_singleton.mpr hne
-  -- Phase 1: U A = 0 ⟹ s = ∅ (each singleton has positive mass)
+  -- U A = 0 ⟹ s = ∅ (each singleton has positive mass)
   have hU_each_pos : ∀ x : α,
       (uniformOn (Set.univ : Set α)) ({x} : Set α) ≠ 0 := by
     intro x
@@ -106,12 +96,12 @@ private lemma map_absolutelyContinuous_uniformOn_univ
       rw [← hA0]
       exact measure_mono hxA
     exact hU_each_pos x (le_antisymm hle bot_le)
-  -- Phase 2: μ.map X (A) = sum over s = 0
+  -- μ.map X (A) = sum over s = 0
   rw [hA_decomp, measure_biUnion_finset h_pwd h_meas, h_s_empty]
   simp
 
 omit [DecidableEq α] [Nonempty α] in
-/-- AC + identity ⟹ klDiv finite。 -/
+/-- Absolute continuity and integrability of `llr` imply `klDiv` is finite. -/
 private lemma klDiv_map_uniformOn_univ_ne_top
     (μ : Measure Ω) [IsProbabilityMeasure μ] (X : Ω → α) (hX : Measurable X) :
     klDiv (μ.map X) (uniformOn (Set.univ : Set α)) ≠ ∞ := by
@@ -127,10 +117,10 @@ private lemma klDiv_map_uniformOn_univ_ne_top
       ENNReal.mul_lt_top ENNReal.coe_lt_top (measure_lt_top _ _)
   exact klDiv_ne_top hac h_int
 
-/-! ## Phase A — identity -/
+/-! ## KL-divergence identity -/
 
 omit [DecidableEq α] in
-/-- `klDiv (μ.map X) (uniformOn univ) = log |α| - entropy μ X` (Real 形)。 -/
+/-- `(klDiv (μ.map X) (uniformOn univ)).toReal = log |α| - entropy μ X`. -/
 @[entry_point]
 theorem klDiv_uniformOn_univ_toReal_eq
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -234,20 +224,11 @@ theorem klDiv_uniformOn_univ_toReal_eq
     = Real.log N - entropy μ X
   rfl
 
-/-! ## Phase B — 主定理 (Jensen ルート)
-
-主定理と等号条件は、相対エントロピー (`klDiv`) を経由せず、`negMulLog` の凹性に対する
-有限和 Jensen の不等式から直接導く。エントロピーは定義上 `∑ x, negMulLog (P.real {x})`
-(`P = μ.map X`) という有限和なので、一様重み `1/N` (`N = |α|`)・各点を確率質量
-`P.real {x} ≥ 0` として `ConcaveOn.le_map_sum` を一発適用できる。`negMulLog` は `Ici 0`
-(0 込み) で凹なので、質量 0 の記号を除外する台処理は不要。底にある解析的事実は
-`negMulLog` の凹性のみ (= `log t ≤ t-1`)。
--/
+/-! ## Main theorem via Jensen's inequality -/
 
 omit [DecidableEq α] in
-/-- **最大エントロピー (Gibbs 不等式)**: 有限アルファベット上の確率変数の Shannon
-エントロピーは `log |α|` を超えない。`negMulLog` の凹性に対する有限和 Jensen
-(`ConcaveOn.le_map_sum`) を一様重み `1/N` で適用する。 -/
+/-- **Maximum entropy**: the Shannon entropy of a finite-alphabet random variable is at most
+`log |α|`. Proved by `ConcaveOn.le_map_sum` applied to `negMulLog` with uniform weights `1/N`. -/
 @[entry_point]
 theorem entropy_le_log_card
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -266,7 +247,7 @@ theorem entropy_le_log_card
         sum_measureReal_singleton]
     rw [show ((Finset.univ : Finset α) : Set α) = Set.univ from Finset.coe_univ]
     simp [measureReal_def, measure_univ]
-  -- 有限和 Jensen: 一様重み 1/N, 各点 P.real {x} ∈ Ici 0
+  -- finite-sum Jensen: uniform weights 1/N, each point P.real {x} ∈ Ici 0
   have hw0 : ∀ i ∈ (Finset.univ : Finset α), (0 : ℝ) ≤ 1 / N := fun _ _ => by positivity
   have hw1 : ∑ _i ∈ (Finset.univ : Finset α), (1 : ℝ) / N = 1 := by
     rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, mul_one_div, div_self hN_ne_R]
@@ -283,12 +264,11 @@ theorem entropy_le_log_card
   rw [hneg] at hJ
   exact le_of_mul_le_mul_left hJ (by positivity)
 
-/-! ## Phase C — 等号条件 (Jensen 等号ケース) -/
+/-! ## Equality condition -/
 
 omit [DecidableEq α] in
-/-- 等号条件: エントロピー = `log |α|` ⟺ 像分布 `μ.map X` が一様。狭義凹の Jensen
-等号ケース (`StrictConcaveOn.map_sum_eq_iff`) から、等号 ⟺ 全 singleton 質量が
-`1/N` で一定 ⟺ 一様分布、を得る。 -/
+/-- **Equality condition**: `entropy μ X = log |α|` if and only if `μ.map X = uniformOn univ`,
+via the strict-concave Jensen equality case `StrictConcaveOn.map_sum_eq_iff`. -/
 @[entry_point]
 theorem entropy_eq_log_card_iff
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -313,7 +293,7 @@ theorem entropy_eq_log_card_iff
     rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, mul_one_div, div_self hN_ne_R]
   have hmem : ∀ i ∈ (Finset.univ : Finset α), P.real {i} ∈ Set.Ici (0 : ℝ) :=
     fun _ _ => Set.mem_Ici.mpr measureReal_nonneg
-  -- 狭義凹 Jensen の等号ケース (正重み 1/N)
+  -- strict-concave Jensen equality case (positive weights 1/N)
   have hJiff := Real.strictConcaveOn_negMulLog.map_sum_eq_iff
       (t := (Finset.univ : Finset α)) (w := fun _ => (1 : ℝ) / N)
       (p := fun i => P.real {i}) hw0 hw1 hmem
@@ -323,14 +303,14 @@ theorem entropy_eq_log_card_iff
     rw [Real.negMulLog, one_div, Real.log_inv]; ring
   rw [hneg] at hJiff
   -- hJiff : (1/N) * log N = (1/N) * entropy μ X ↔ ∀ j ∈ univ, P.real {j} = 1/N
-  -- bridge1: 1/N を cancel して entropy = log N に
+  -- bridge1: cancel 1/N to get entropy = log N
   have hbridge1 : (entropy μ X = Real.log N)
       ↔ ((1 : ℝ) / N * Real.log N = 1 / N * entropy μ X) := by
     constructor
     · intro h; rw [h]
     · intro h
       exact (mul_left_cancel₀ (by positivity : (1 : ℝ) / N ≠ 0) h).symm
-  -- bridge2: 全 singleton 質量 = 1/N ⟺ P = uniformOn univ (singleton 一致から ext)
+  -- bridge2: all singleton masses equal 1/N ↔ P = uniformOn univ (by singleton ext)
   have hbridge2 : (∀ j ∈ (Finset.univ : Finset α), P.real {j} = 1 / N)
       ↔ P = uniformOn (Set.univ : Set α) := by
     constructor

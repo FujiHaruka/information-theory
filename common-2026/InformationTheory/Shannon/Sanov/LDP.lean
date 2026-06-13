@@ -4,39 +4,39 @@ import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Analysis.Asymptotics.Lemmas
 
 /-!
-# Sanov の定理 — LDP B 形 (upper bound)
+# Sanov's theorem — LDP upper bound (B form)
 
-シードカード B-1' ([`docs/shannon/sanov-ldp-b-plan.md`](../../docs/shannon/sanov-ldp-b-plan.md))。
-Cover-Thomas Theorem 11.4.1 (Sanov の定理) の **upper bound 形**:
+Cover-Thomas Theorem 11.4.1: for any family `E n ⊆ TypeCountIndex α n`,
 
-  `(1/n) log Q^n({x | typeIndex x ∈ E n}) ≤ -inf_{c ∈ E n} klDivIndex c n Q + o(1)`
+```
+(1/n) log Q^n({x | typeCount x ∈ E n}) ≤ -D* + ε   (eventually)
+```
 
-ここで `typeIndex x : α → ℕ` は系列 `x : Fin n → α` の `typeCount`、
-`klDivIndex c n Q := ∑ a, (c a / n) * (log (c a / n) - log Q.real{a})` は
-`c/n` (有理分布) と `Q` の finite-alphabet KL。
+where `D* = inf_{c ∈ E n} klDivIndex c n Q`.
 
-## 構成
+## Main definitions
 
-* **Phase A** — `TypeCountIndex` (= `α → Fin (n+1)`) + polynomial bound `|·| ≤ (n+1)^|α|`。
-* **Phase B** — index 形 type class `typeClassByCount` + 既存 A 形 `typeClass_Qn_le` の reuse
-  経由で `Q^n(typeClassByCount c) ≤ exp(-n · klDivIndex c n Q)`。
-* **Phase C** — 任意の `E : Set (α → ℕ)` ($\equiv$ `Set (TypeCountIndex α n)`) に対する
-  union form + log + `(log(n+1)·|α|)/n → 0` で
-  `(1/n) log Q^n({x | typeCount x ∈ E}) ≤ -inf D + ε` (eventually) を publish。
+* `TypeCountIndex α n` — abbreviation for `α → Fin (n+1)`, the type used to index
+  empirical count vectors.
+* `typeClassByCount c` — the type class `{x | ∀ a, typeCount x a = c a}`.
+* `klDivIndex c n Q` — KL divergence of the rational distribution `c/n` from `Q`,
+  defined as `∑ a, (c a / n) * (log (c a / n) - log Q.real {a})`.
 
-## 設計メモ
+## Main statements
 
-* 既存 `Sanov.lean` (319 行、A 形) は touch せず import で再利用。
-* `typeClassByCount c` の Q^n upper bound は **既存 A 形を直接呼ぶ** (`P_c`-測度を構築):
-  `P_c := ∑ a, (c a / n) • Measure.dirac a` の有限和で「定義上の」確率測度を作り、
-  `typeClass P_c n` と `typeClassByCount c` が一致する条件下で reuse する。
-  ただし empirical = 0 の letter があると `P_c` が full-support でなく
-  `hPpos : ∀ a, 0 < P.real {a}` を満たさないため、A 形を **直接 self-contained に
-  index 形で書き直す** 経路を採用 (~80 行)。
-* `log =o[atTop] id` (Mathlib `Real.isLittleO_log_id_atTop`) で
-  `(|α| log(n+1))/n → 0` を取り、任意 `ε > 0` で eventually に圧縮。
-* lower bound + equality 形 (`Tendsto`) は B-1'' で別 plan に分離 — `Continuous klDiv`
-  Mathlib 不在 + achievable type sequence 構築 + 多項係数 lower bound、合計 ~500-650 行。
+* `typeCountIndex_card` — `|TypeCountIndex α n| = (n+1)^|α|` (polynomial cardinality bound).
+* `typeClassByCount_Qn_le` — `Q^n(typeClassByCount c) ≤ exp(-n · klDivIndex c n Q)`.
+* `typeClassByCount_union_Qn_le_inf` — union-form bound:
+  `Q^n(⋃ c ∈ F, T_c) ≤ |F| · exp(-n · D*)`.
+* `sanov_ldp_upper_bound` — LDP upper bound with `o(1)` slack via `|α| log(n+1)/n → 0`.
+
+## Implementation notes
+
+* The bound on `typeClassByCount c` is proved self-containedly (index form) rather than
+  by reducing to the A-form `typeClass_Qn_le`, because the rational distribution `c/n` may
+  have zero components when `c a = 0`, violating the full-support hypothesis.
+* The polynomial slack `(|α| log(n+1))/n → 0` is extracted from
+  `Real.isLittleO_log_id_atTop`.
 -/
 
 namespace InformationTheory.Shannon
@@ -49,10 +49,8 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
 /-! ### Phase A — type-count index + polynomial bound -/
 
-/-- **Type-count index**: 系列 `x : Fin n → α` の `typeCount x : α → ℕ`
-(各 letter `a` の出現回数) を取る関数の値域は、`α → Fin (n+1)` の subset。
-本実装では制約条件 (∑ = n) を緩めて `α → Fin (n+1)` 全体を index とする — 制約不一致の
-index に対する type class は空になる (`typeClassByCount_eq_empty_of_sum_ne`)。 -/
+/-- Type-count index: `α → Fin (n+1)`, indexing empirical count vectors.
+Inconsistent indices (∑ ≠ n) yield an empty type class. -/
 abbrev TypeCountIndex (α : Type*) [Fintype α] (n : ℕ) : Type _ := α → Fin (n+1)
 
 instance [Fintype α] (n : ℕ) : Fintype (TypeCountIndex α n) := by
@@ -70,7 +68,7 @@ lemma typeCountIndex_card (n : ℕ) :
   exact (Fintype.card_fin _).symm
 
 
-/-! ### Phase B — index 形 type class + Sanov A 形 reuse -/
+/-! ### Phase B — type class by integer counts + Sanov bound -/
 
 /-- **Type class by integer counts** `T(c) := {x | ∀ a, typeCount x a = c a}`. -/
 def typeClassByCount {n : ℕ} (c : α → ℕ) : Set (Fin n → α) :=
@@ -83,9 +81,6 @@ noncomputable def klDivIndex (c : α → ℕ) (n : ℕ) (Q : Measure α) : ℝ :
   ∑ a : α, ((c a : ℝ) / n) * (Real.log ((c a : ℝ) / n) - Real.log (Q.real {a}))
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **Sum-aggregation for type class by count**: `x ∈ typeClassByCount c` ⇒
-`∑ i, f(x_i) = ∑ a, (c a) · f a` for any `f : α → ℝ`.
-(`Finset.sum_fiberwise_of_maps_to'` + count substitution.) -/
 lemma sum_const_aggr_of_mem_typeClassByCount
     {n : ℕ} {c : α → ℕ} {x : Fin n → α} (hx : x ∈ typeClassByCount c) (f : α → ℝ) :
     (∑ i : Fin n, f (x i)) = ∑ a : α, (c a : ℝ) * f a := by
@@ -103,11 +98,8 @@ lemma sum_const_aggr_of_mem_typeClassByCount
   rw [show ((Finset.univ.filter fun j : Fin n => x j = a).card : ℝ) = (c a : ℝ) by exact_mod_cast h_count]
 
 omit [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Per-point identity** (index form): `x ∈ typeClassByCount c` ⇒
-`∏ i, Q.real {x i} = (∏ a, ((c a : ℝ)/n)^(c a)) · exp(-n · klDivIndex c n Q)`.
-
-ここで convention `0^0 = 1` (`Real.zero_pow` 排除のため `c a > 0` のみ実質寄与)。
-鍵: `c (x_i) > 0` (∵ `x_i` itself contributes to `typeCount x (x_i)`), 各点で log/exp 往復可能。 -/
+/-- **Per-point identity** (index form): `x ∈ typeClassByCount c` implies
+`∏ i, Q.real {x i} = (∏ a, ((c a : ℝ)/n)^(c a)) · exp(-n · klDivIndex c n Q)`. -/
 lemma typeClassByCount_prod_eq
     (Q : Measure α)
     (hQpos : ∀ a : α, 0 < Q.real {a})
@@ -197,10 +189,8 @@ lemma typeClassByCount_prod_eq
   ring
 
 set_option linter.unusedSectionVars false in
-/-- **Sanov A 形, index バージョン**: `c : α → ℕ` (with `∑ c a = n`) に対し
-`Q^n(typeClassByCount c) ≤ exp(-n · klDivIndex c n Q)`.
-
-A 形 `typeClass_Qn_le` (`Sanov.lean:172`) と同じ Stein 経路、`P` を `c/n` の有理分布で読む形。 -/
+/-- **Sanov upper bound (index form)**: for `c : α → ℕ` with `∑ c a = n`,
+`Q^n(typeClassByCount c) ≤ exp(-n · klDivIndex c n Q)`. -/
 @[entry_point]
 theorem typeClassByCount_Qn_le
     (Q : Measure α) [IsProbabilityMeasure Q]
@@ -306,7 +296,7 @@ theorem typeClassByCount_Qn_le
 /-! ### Phase C — union form upper bound + LDP main statement -/
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **Empty type-class for inconsistent counts**: if `∑ c a ≠ n` then `typeClassByCount c = ∅`. -/
+/-- If `∑ c a ≠ n` then `typeClassByCount c = ∅`. -/
 lemma typeClassByCount_empty_of_sum_ne {n : ℕ} {c : α → ℕ} (h : (∑ a, c a) ≠ n) :
     (typeClassByCount (α := α) (n := n) c) = ∅ := by
   classical
@@ -338,13 +328,8 @@ lemma typeClassByCount_empty_of_sum_ne {n : ℕ} {c : α → ℕ} (h : (∑ a, c
   refine Finset.sum_congr rfl fun a _ => ?_
   exact (hx a).symm
 
-/-- **Union form upper bound** (前段補題):
-任意の `F : Finset (TypeCountIndex α n)` で
-`Q^n(⋃ c ∈ F, typeClassByCount c) ≤ ∑ c ∈ F, exp(-n · klDivIndex c n Q)`。
-
-`measureReal_biUnion_finset_le` (Mathlib `MeasureTheory.Measure.Real`) + 各項 A 形。
-`∑ c a ≠ n` のものは `typeClassByCount c = ∅` で 0 寄与なので、`exp(-n · klDivIndex)` の
-nonneg で上限。 -/
+/-- Union form upper bound: for any `F : Finset (TypeCountIndex α n)`,
+`Q^n(⋃ c ∈ F, typeClassByCount c) ≤ ∑ c ∈ F, exp(-n · klDivIndex c n Q)`. -/
 theorem typeClassByCount_union_Qn_le
     (Q : Measure α) [IsProbabilityMeasure Q]
     (hQpos : ∀ a : α, 0 < Q.real {a})
@@ -376,9 +361,8 @@ theorem typeClassByCount_union_Qn_le
     rw [typeClassByCount_empty_of_sum_ne h_sum]
     simp [Real.exp_nonneg]
 
-/-- **inf-form upper bound** (Phase C 中核): 各 `c ∈ F` で
-`klDivIndex c n Q ≥ D*` が成り立つとき
-`Q^n(⋃ c ∈ F, typeClassByCount c) ≤ |F| · exp(-n · D*)`。 -/
+/-- **inf-form upper bound**: if `∀ c ∈ F, D ≤ klDivIndex c n Q` then
+`Q^n(⋃ c ∈ F, typeClassByCount c) ≤ |F| · exp(-n · D)`. -/
 @[entry_point]
 theorem typeClassByCount_union_Qn_le_inf
     (Q : Measure α) [IsProbabilityMeasure Q]
@@ -402,10 +386,7 @@ theorem typeClassByCount_union_Qn_le_inf
     _ = (F.card : ℝ) * Real.exp (-((n : ℝ) * D)) := by
         rw [Finset.sum_const, nsmul_eq_mul]
 
-/-- **log slack term**: `log(n+1)/n → 0` (as `n → ∞`).
-
-`Real.isLittleO_log_id_atTop : log =o[atTop] id` から real-valued `Tendsto` を取り
-nat への compose。 -/
+/-- `Real.log (n+1) / n → 0` as `n → ∞`. -/
 lemma log_succ_div_tendsto_zero :
     Tendsto (fun n : ℕ => Real.log ((n : ℝ) + 1) / (n : ℝ)) atTop (𝓝 0) := by
   -- Strategy: log(n+1)/n = (log(n+1)/(n+1)) * ((n+1)/n) → 0 * 1 = 0.
@@ -448,13 +429,11 @@ lemma log_succ_div_tendsto_zero :
   have hn1_pos : (0 : ℝ) < (n : ℝ) + 1 := by linarith
   field_simp
 
-/-- **Sanov LDP B 形 upper bound** (Cover-Thomas Theorem 11.4.1).
+/-- **Sanov LDP upper bound** (Cover-Thomas Theorem 11.4.1):
+`(1/n) log Q^n({x | typeCount x ∈ E n}) ≤ -D + ε` for all large `n`,
+provided every `c ∈ E n` satisfies `D ≤ klDivIndex c n Q`.
 
-`(1/n) log Q^n({x | typeCount x ∈ E n}) ≤ -D* + ε` for `n` large enough,
-provided every `c ∈ E n` satisfies `klDivIndex c n Q ≥ D*`.
-
-形は `polynomial type 数 · exp(-n D*)` の `(1/n) log` を取り、polynomial の `log` 部分が
-`o(n)` で消えるという standard LDP plumbing。 -/
+The bound follows from `polynomial type count · exp(-n D)` via `(|α| log(n+1))/n → 0`. -/
 @[entry_point]
 theorem sanov_ldp_upper_bound
     (Q : Measure α) [IsProbabilityMeasure Q]

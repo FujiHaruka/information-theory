@@ -9,28 +9,27 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.Huffman.Basic
 
 /-!
-# Huffman 最適性 主定理 (T1-A' Cover-Thomas Theorem 5.8.1)
+# Huffman optimality — Cover–Thomas Theorem 5.8.1
 
-T1-A (`InformationTheory/Shannon/Huffman.lean`) で publish された `huffmanLength` の **最適性**
-(任意 Kraft-feasible 語長関数 `l` との比較形) を、sibling property + n → n-1 induction で
-証明する。
+Proves that `huffmanLength` minimizes expected codeword length among all Kraft-feasible
+length functions, via the sibling property and `n → n-1` strong induction.
 
-## Approach
+## Main statements
 
-設計判断は `docs/shannon/huffman-optimality-moonshot-plan.md` §設計判断 (C-1〜C-4) で確定済:
+* `exists_deepest_leaf` — a deepest leaf of `huffmanLength P` always exists.
+* `exists_sibling_min_pair` — the two minimum-probability elements have equal Huffman length
+  (Cover–Thomas Lemma 5.8.1, sibling property).
+* `huffmanLength_optimal_aux` — induction motor: `huffmanLength P` is optimal among
+  Kraft-feasible length functions, given swap normalization as a hypothesis.
 
-* **C-1**: ハイブリッド設計 — Subtype `α' := { x : α // x ≠ b }` + `α` 型不変 induction +
-  `Nat.strong_induction_on` の組み合わせ。Quotient 経路は採用しない。
-* **C-2**: sibling property は統合形 (`exists_sibling_min_pair`) で publish、内部分解は private.
-* **C-3**: merged measure は point-mass 直接構成 (`Measure.map` / `restrict` 経由しない).
-* **C-4**: 撤退ライン発動の事前枠を判断ログ #0 で予約済.
+## Implementation notes
 
-## Phase 0 結果 (skeleton 起動時)
-
-`Subtype.instMeasurableSingletonClass`
-(`Mathlib/MeasureTheory/MeasurableSpace/Constructions.lean:196`) が auto-derive
-で `α' := { x : α // x ≠ b }` に継承される。撤退ライン §G-2 (`MeasurableSingletonClass α'`
-自前付与必要) は **発動しない**。
+The proof uses a hybrid design: the merged alphabet is `α' := { x : α // x ≠ b }` (a Subtype),
+and `mergedMeasure` assigns probability `P{a} + P{b}` to the merged element and `P{x}` elsewhere.
+`mergedMeasure` is constructed as `Measure.sum (fun x => f x • Measure.dirac x)` so that
+`Measure.sum_smul_dirac_singleton` applies directly.
+The induction step avoids a per-symbol depth identity (which would be false for a general
+Huffman tree) by routing through `expectedLength_merged_cost_bridge`, a cost-level equality.
 -/
 
 namespace InformationTheory.Shannon.Huffman
@@ -41,11 +40,10 @@ open scoped BigOperators ENNReal
 variable {α : Type*} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ### Phase 1 helpers — Phase 2 (sibling property) 用 -/
+/-! ### Deepest leaf and sibling property helpers -/
 
 omit [MeasurableSingletonClass α] in
-/-- **Helper (Phase 2.1)**: `huffmanLength P` の最深 leaf が取れる. `Fintype.card α ≥ 1` から
-`Finset.univ.Nonempty` で `Finset.exists_max_image` を起動. -/
+/-- A deepest leaf of `huffmanLength P` exists when `Fintype.card α ≥ 1`. -/
 @[entry_point]
 theorem exists_deepest_leaf (P : Measure α) (_h_card : 1 ≤ Fintype.card α) :
     ∃ a : α, ∀ c : α, huffmanLength P c ≤ huffmanLength P a := by
@@ -56,15 +54,6 @@ theorem exists_deepest_leaf (P : Measure α) (_h_card : 1 ≤ Fintype.card α) :
   exact ⟨a, fun c => ha c (Finset.mem_univ _)⟩
 
 omit [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Helper (Phase 2.2-2.4)**: `initMultiset P` の `huffmanStep` で取り出される
-`(x1, x2)` ペアは singleton group `({a}, P.real {a})`, `({b}, P.real {b})` の形を持つ.
-さらに以下を満たす:
-
-* `a ≠ b`
-* `huffmanLength P a = huffmanLength P b` (両者 merged group に属し const-on-group で同値)
-* `P.real {a}, P.real {b}` は **`Multiset.exists_min_image` で取り出された最小 2 個**.
-
-これにより plan §2.2-2.4 (Cover-Thomas Lemma 5.8.1 (ii)) を `huffmanStep` 構成から直接展開. -/
 private theorem huffmanStep_initMultiset_sibling
     (P : Measure α) (h_card : 2 ≤ Fintype.card α) :
     ∃ a b : α, a ≠ b ∧ huffmanLength P a = huffmanLength P b ∧
@@ -76,7 +65,6 @@ private theorem huffmanStep_initMultiset_sibling
     unfold initMultiset; rw [Multiset.card_map]; rfl
   have h_init_card : 2 ≤ (initMultiset P).card := by rw [hcard_init]; exact h_card
   have h_init_grouping : HuffmanGrouping (initMultiset P) := initMultiset_huffmanGrouping P
-  -- huffmanStep 適用
   set step := (huffmanStep (initMultiset P) h_init_card h_init_grouping).val with hstep_def
   obtain ⟨hx1_mem, hx2_mem, hshape, hg''⟩ :=
     huffmanStep_spec (initMultiset P) h_init_card h_init_grouping
@@ -104,15 +92,12 @@ private theorem huffmanStep_initMultiset_sibling
     intro heq
     apply hx12_ne
     rw [hx1_eq, hx2_eq, heq]
-  -- 最小性: 決定化後は publish 済 accessor (`huffmanStep_min_fst/_min_snd`、
-  -- groupKey min の第 1 キー射影で確率 `≤` を返す) から取り出す. statement 不変.
   have hmin1 : ∀ z ∈ initMultiset P, step.1.2 ≤ z.2 :=
     huffmanStep_min_fst (initMultiset P) h_init_card h_init_grouping
   have hmin2 : ∀ z ∈ (initMultiset P).erase step.1, step.2.1.2 ≤ z.2 :=
     huffmanStep_min_snd (initMultiset P) h_init_card h_init_grouping
   refine ⟨a, b, hab, ?_, ?_, ?_⟩
   · -- huffmanLength P a = huffmanLength P b
-    -- 両者 ∈ step.1.1 ∪ step.2.1.1 (a ∈ step.1.1 = {a}, b ∈ step.2.1.1 = {b})
     have ha_AB : a ∈ step.1.1 ∨ a ∈ step.2.1.1 := by
       left; rw [hx1_eq]; exact Finset.mem_singleton.mpr rfl
     have hb_AB : b ∈ step.1.1 ∨ b ∈ step.2.1.1 := by
@@ -120,8 +105,6 @@ private theorem huffmanStep_initMultiset_sibling
     unfold huffmanLength
     rw [huffmanLengthAux_step_merged (initMultiset P) h_init_card h_init_grouping ha_AB,
         huffmanLengthAux_step_merged (initMultiset P) h_init_card h_init_grouping hb_AB]
-    -- 残: huffmanLengthAux step.2.2 a = huffmanLengthAux step.2.2 b
-    -- merged group ∈ step.2.2, a, b ∈ merged.1 = step.1.1 ∪ step.2.1.1
     have hmerged_in : (step.1.1 ∪ step.2.1.1, step.1.2 + step.2.1.2) ∈ step.2.2 := by
       rw [hshape]; exact Multiset.mem_cons_self _ _
     have ha_merged : a ∈ (step.1.1 ∪ step.2.1.1, step.1.2 + step.2.1.2).1 := by
@@ -165,12 +148,6 @@ private theorem huffmanStep_initMultiset_sibling
     exact this
 
 omit [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Helper (Phase 2.5)**: 最小 2 確率ペアが存在し、Huffman 語長が等しいことの bridge.
-`exists_sibling_min_pair` 本体で使用.
-
-**strong 形**: `a` が global-min (`∀ c, P{a} ≤ P{c}`) かつ `b` が残りの min
-(`∀ c, c ≠ a → P{b} ≤ P{c}`). これは `huffmanStep_initMultiset_sibling` が返す情報を
-そのまま伝播する (T1-A'' interface refactor で disjunctive 形から強化). -/
 theorem huffmanLength_eq_of_min_prob_pair
     (P : Measure α) [IsProbabilityMeasure P] (_hP : ∀ a, 0 < P.real {a})
     (h_card : 2 ≤ Fintype.card α) :
@@ -182,17 +159,8 @@ theorem huffmanLength_eq_of_min_prob_pair
 /-! ### Sibling property (Cover-Thomas Lemma 5.8.1) -/
 
 omit [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Sibling property (Cover-Thomas Lemma 5.8.1)** — intermediate lemma (案 B pivot).
-
-最小 2 確率 element の Huffman 語長が等しい. 最深性条項 `(∀ c, huffmanLength P c ≤
-huffmanLength P a)` は本 signature には含めず、Phase 4 主定理側で `exists_deepest_leaf`
-を別途呼ぶ. Cover-Thomas Lemma 5.8.1 (i) の standard 証明 (`l` 側 swap normalization)
-と整合する形.
-
-**strong 形** (T1-A'' interface refactor): `a` = global-min, `b` = rest-min を返す.
-旧 disjunctive 形 (`∀ c, P{a} ≤ P{c} ∨ P{b} ≤ P{c}`) は swap 論法を閉じられず
-強形 `huffmanLength_optimal` に到達できないため、call site が実際に供給する情報
-(`huffmanStep_initMultiset_sibling`) をそのまま publish する. -/
+/-- Cover–Thomas Lemma 5.8.1: the two minimum-probability elements have equal `huffmanLength`.
+Returns `a` = global-min probability and `b` = second-min probability. -/
 @[entry_point]
 theorem exists_sibling_min_pair
     (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
@@ -202,23 +170,16 @@ theorem exists_sibling_min_pair
       (∀ c, c ≠ a → P.real {b} ≤ P.real {c}) :=
   huffmanLength_eq_of_min_prob_pair P hP h_card
 
-/-! ### Phase 3 helpers — Subtype `α'` lift bridges -/
+/-! ### Merged measure on the reduced alphabet -/
 
-/-- **Helper (Phase 3.2)**: merged measure `P'` on `α' := { x : α // x ≠ b }`.
-
-C-3: point-mass 直接構成 (`Measure.map` / `Measure.restrict` 経由しない). 各 singleton
-`{⟨x, hx⟩}` への measure 値は `if x = a then P.real {a} + P.real {b} else P.real {x}`.
-
-設計 (Mathlib-shape-driven): `Measure.sum_smul_dirac_singleton`
-(`Mathlib/MeasureTheory/Measure/Dirac.lean:140`) を結論形に取れるよう、
-`Measure.sum (fun x => f x • Measure.dirac x)` の正準形で構成. -/
+/-- Merged probability measure on `α' := { x : α // x ≠ b }`: assigns `P{a} + P{b}` to
+the merged element and `P{x}` to all other elements. -/
 noncomputable def mergedMeasure (P : Measure α) (a b : α) (_hab : a ≠ b) :
     Measure { x : α // x ≠ b } :=
   Measure.sum (fun x : { x : α // x ≠ b } =>
     (if x.val = a then P {a} + P {b} else P {x.val}) • Measure.dirac x)
 
 omit [Fintype α] [LinearOrder α] [Nonempty α] in
-/-- **Helper (Phase 3.2.2)**: `mergedMeasure` の `Measure.real` 形式. -/
 lemma mergedMeasure_real (P : Measure α) [IsFiniteMeasure P] (a b : α) (hab : a ≠ b)
     (x : { x : α // x ≠ b }) :
     (mergedMeasure P a b hab).real {x} =
@@ -237,14 +198,6 @@ lemma mergedMeasure_real (P : Measure α) [IsFiniteMeasure P] (a b : α) (hab : 
   · simp only [hxa, if_false]
 
 omit [LinearOrder α] [Nonempty α] in
-/-- **Helper (Phase 3.4) — Bridge R (鍵 lemma、proof-pivot-advisor (A))**: 任意 `l` 側の
-expected length が merged 側 + `(P {a} + P {b})` の上から bound される不等式.
-
-proof-pivot-advisor 推奨 (A) で `0 < l' x` clause を削除 (IH 適用に不要、Kraft + expectedLength
-ineq のみで主定理 induction を回せる).
-
-`liftL l a b : { x : α // x ≠ b } → ℕ` は `if x.val = a then l a - 1 else l x.val`
-(+1 ペナルティ吸収) として helper 内で定義. sibling property で正規化済 `l a = l b` を使う. -/
 lemma expectedLength_bridge_R
     (P : Measure α) [IsProbabilityMeasure P]
     (l : α → ℕ) (hl_pos : ∀ a, 0 < l a)
@@ -260,9 +213,8 @@ lemma expectedLength_bridge_R
             (mergedMeasure P a b hab) l'
           + (P.real {a} + P.real {b}) := by
   classical
-  -- l' の定義
   refine ⟨fun x => if x.val = a then l a - 1 else l x.val, ?_, ?_, ?_⟩
-  · -- positivity: x.val = a 側は l a - 1 ≥ 1; otherwise hl_pos.
+  · -- positivity: l a - 1 ≥ 1 when x.val = a; otherwise hl_pos
     intro x
     by_cases hxa : x.val = a
     · simp only [hxa, if_true]; omega
@@ -289,7 +241,7 @@ lemma expectedLength_bridge_R
       rw [show -((l a : ℤ) - 1) = 1 + -(l a : ℤ) by ring,
           zpow_add₀ (by norm_num : (2 : ℝ) ≠ 0)]
       simp
-    -- ∑_{x:α'} 2^{-l'(x)} の展開
+    -- expand ∑_{x:α'} 2^{-l'(x)}
     have h_sum_lhs :
         (∑ x : { x : α // x ≠ b }, ((2 : ℝ)) ^ (-(l' x : ℤ)))
           = ((2 : ℝ)) ^ (-((l a - 1 : ℕ) : ℤ))
@@ -302,7 +254,7 @@ lemma expectedLength_bridge_R
       have hx_ne : x ≠ a' := Finset.ne_of_mem_erase hx
       rw [hl'_other x hx_ne]
     rw [h_sum_lhs, hpow_succ]
-    -- ∑_{x:α} 2^{-l(x)} の方を展開: b の項を分離、ついで a の項を分離
+    -- expand ∑_{x:α} 2^{-l(x)}: separate b term, then a term
     have h_erase_iff : ∀ x : α, x ∈ (Finset.univ : Finset α).erase b ↔ x ≠ b := by
       intro x; simp [Finset.mem_erase]
     have h_sum_α_split :
@@ -312,7 +264,7 @@ lemma expectedLength_bridge_R
       rw [← Finset.add_sum_erase _ _ (Finset.mem_univ b),
           Finset.sum_subtype (Finset.univ.erase b) h_erase_iff
             (fun x => ((2 : ℝ)) ^ (-(l x : ℤ)))]
-    -- ∑_{x:α'} 2^{-l(x.val)} の中で a' の項を更に分離
+    -- separate a' term in ∑_{x:α'} 2^{-l(x.val)}
     have h_sum_α'_split :
         (∑ x : { y : α // y ≠ b }, ((2 : ℝ)) ^ (-(l x.val : ℤ)))
           = ((2 : ℝ)) ^ (-(l a : ℤ))
@@ -320,9 +272,7 @@ lemma expectedLength_bridge_R
                 ((2 : ℝ)) ^ (-(l x.val : ℤ)) := by
       rw [← Finset.add_sum_erase _ _ ha'_mem]
     rw [h_sum_α'_split] at h_sum_α_split
-    -- ∑_{x:α} = 2^{-l b} + 2^{-l a} + ∑_erase
-    -- l a = l b なので: = 2 * 2^{-l a} + ∑_erase
-    -- LHS: 2 * 2^{-l a} + ∑_erase ≤ 1 (= hl_kraft after rewrite)
+    -- since l a = l b: ∑_α = 2 * 2^{-l a} + ∑_erase ≤ 1
     have h_lb_la : ((2 : ℝ)) ^ (-(l b : ℤ)) = ((2 : ℝ)) ^ (-(l a : ℤ)) := by
       rw [h_lab]
     rw [h_lb_la] at h_sum_α_split
@@ -343,7 +293,7 @@ lemma expectedLength_bridge_R
     have hla_cast : ((l a - 1 : ℕ) : ℝ) = (l a : ℝ) - 1 := by
       rw [Nat.cast_sub hla_ge_one]; norm_num
     unfold InformationTheory.Shannon.ShannonCode.expectedLength
-    -- LHS: b の項を分離 + Subtype 化
+    -- separate b term and convert to Subtype sum
     have h_erase_iff : ∀ x : α, x ∈ (Finset.univ : Finset α).erase b ↔ x ≠ b := by
       intro x; simp [Finset.mem_erase]
     have hLHS_split :
@@ -377,7 +327,7 @@ lemma expectedLength_bridge_R
       have hxv_ne_a : x.val ≠ a := by
         intro h; apply hx; apply Subtype.ext; exact h
       simp [hxv_ne_a]
-    -- RHS: a' の項を分離
+    -- separate a' term on RHS
     have hRHS_split :
         (∑ x : { y : α // y ≠ b }, (mergedMeasure P a b hab).real {x} * (l' x : ℝ))
           = (mergedMeasure P a b hab).real {a'} * (l' a' : ℝ)
@@ -385,7 +335,7 @@ lemma expectedLength_bridge_R
                 (mergedMeasure P a b hab).real {x} * (l' x : ℝ) := by
       rw [← Finset.add_sum_erase _ _ ha'_mem]
     rw [hRHS_split, h_merged_a', hl'_a', hla_cast]
-    -- erase 内 sum: l' = l, merged = P
+    -- on the erase sum: l' = l and merged = P
     have h_sum_erase :
         (∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
             (mergedMeasure P a b hab).real {x} * (l' x : ℝ))
@@ -396,7 +346,7 @@ lemma expectedLength_bridge_R
       have hx_ne : x ≠ a' := Finset.ne_of_mem_erase hx
       rw [h_merged_other x hx_ne, hl'_other x hx_ne]
     rw [h_sum_erase]
-    -- LHS の Subtype sum も a' で分離
+    -- separate a' term in the LHS Subtype sum
     have hLHS_subtype_split :
         (∑ x : { y : α // y ≠ b }, P.real {x.val} * (l x.val : ℝ))
           = P.real {a} * (l a : ℝ)
@@ -406,8 +356,7 @@ lemma expectedLength_bridge_R
     rw [hLHS_subtype_split]
     ring
 
-/-! ### Phase 4 helpers — `mergedMeasure` instance + swap normalization +
-`huffmanLength = L'` identification -/
+/-! ### Probability measure instances for `mergedMeasure` -/
 
 omit [LinearOrder α] [Nonempty α] in
 /-- **Phase 4 helper**: `mergedMeasure P a b hab` is a probability measure (since
@@ -437,7 +386,7 @@ lemma mergedMeasure_isProbabilityMeasure
       (if a'.val = a then P {a} + P {b} else P {a'.val})
         = P {a} + P {b} := by simp [ha'_def]
   rw [hif_a']
-  -- Erase 上の sum: x ≠ a' なので x.val ≠ a なので if = P {x.val}
+  -- on the erase sum: x ≠ a', so x.val ≠ a, so if-branch = P {x.val}
   have h_sum_erase :
       (∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
           (if x.val = a then P {a} + P {b} else P {x.val}))
@@ -450,19 +399,13 @@ lemma mergedMeasure_isProbabilityMeasure
       intro h; apply hx_ne; apply Subtype.ext; exact h
     simp [hxv_ne_a]
   rw [h_sum_erase]
-  -- ∑ x ∈ erase a' = ∑ x : α', x ≠ a' = ∑ y : α, y ≠ a, y ≠ b
-  -- これと P{a} + P{b} を加えて P univ = 1 にする
-  -- α 側の sum: ∑ y : α, P{y} = P univ = 1
+  -- add P{a} + P{b} to the erase sum and reduce to P univ = 1
   have h_total : (∑ y : α, P {y} : ℝ≥0∞) = 1 := by
     rw [MeasureTheory.sum_measure_singleton, Finset.coe_univ]
     exact measure_univ
-  -- ∑ y : α = (P{a} + P{b}) + ∑ y ≠ a, y ≠ b, P{y}
-  -- ここで RHS の最終形を計算で reduce.
-  -- まず: ∑ y : α P{y} = P{b} + ∑ y ≠ b, P{y}
   have h_split_b : (∑ y : α, P {y} : ℝ≥0∞)
       = P {b} + ∑ y ∈ (Finset.univ : Finset α).erase b, P {y} := by
     rw [← Finset.add_sum_erase _ _ (Finset.mem_univ b)]
-  -- ∑ y ≠ b = ∑ x : α', P {x.val}
   have h_erase_iff : ∀ x : α, x ∈ (Finset.univ : Finset α).erase b ↔ x ≠ b := by
     intro x; simp [Finset.mem_erase]
   have h_subtype :
@@ -471,15 +414,12 @@ lemma mergedMeasure_isProbabilityMeasure
     rw [Finset.sum_subtype (Finset.univ.erase b) h_erase_iff
       (fun y => P {y})]
   rw [h_subtype] at h_split_b
-  -- ∑ x : α' P{x.val} = P{a} + ∑ x ∈ erase a', P{x.val}
   have h_split_a' :
       (∑ x : { y : α // y ≠ b }, P {x.val} : ℝ≥0∞)
         = P {a} + ∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
             P {x.val} := by
     rw [← Finset.add_sum_erase _ _ ha'_mem]
   rw [h_split_a'] at h_split_b
-  -- h_split_b: ∑ y : α P{y} = P{b} + (P{a} + ∑ erase a' P{x.val})
-  -- ゴール: P{a} + P{b} + ∑ erase a' P{x.val} = 1
   rw [← h_total]
   rw [h_split_b]
   ring
@@ -509,9 +449,6 @@ private lemma fintype_card_subtype_ne (b : α) :
   rfl
 
 omit [LinearOrder α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Phase 4 sub-helper — single swap step**: `Equiv.swap a m` で `l` を入れ替えると、
-`l a ≤ l m` ∧ `P.real {a} ≤ P.real {m}` の下で expected length が非増加, Kraft 和は不変.
-さらに `(l ∘ Equiv.swap a m) a = l m`, `(l ∘ Equiv.swap a m) m = l a`. -/
 lemma swap_step_le
     (P : Measure α) [IsProbabilityMeasure P]
     (l : α → ℕ) (hl_pos : ∀ x, 0 < l x)
@@ -606,30 +543,15 @@ lemma swap_step_le
       nlinarith [hprod]
   exact ⟨hl'_pos, hkraft', hexpL', hl'_a, hl'_m⟩
 
-/-! ### swap normalization 補助述語
-
-cost-level motor `huffmanLength_optimal_aux` は swap normalization ステップを
-`SwapNormalizationHypothesis` として引数で受け取り、headline `huffmanLength_optimal`
-が `swap_normalization_proof` (genuine, sorry なし) を供給して無条件化する。
-本述語はその interface typing 用. -/
+/-! ### Swap normalization hypothesis -/
 
 universe u
 
-/-- **Weak form hypothesis 1**: swap normalization — 任意 Kraft-feasible `l` を
-`l_norm a = l_norm b` 形に変換可能 (expected length 非増加 + Kraft 維持).
-
-**strong precondition** (T1-A'' interface refactor): least-prob 対 `(a, b)` について
-`a` = global-min (`_h_a_min`), `b` = rest-min (`_h_b_min`). 旧 disjunctive 形
-`∀ c, Q{a} ≤ Q{c} ∨ Q{b} ≤ Q{c}` は `a` が global-min なだけで `b` は任意でよく、
-Cover-Thomas swap 論法 (least-2 leaf を最長 2 leaf へ swap) が閉じない。call site
-(`huffmanLength_optimal_aux` の step case) は `exists_sibling_min_pair`
-経由で strong 形を実際に供給するため、これは weak 化ではなく mis-statement の修正.
-
-constructive core は `StrongForm.lean` `swap_normalization_proof` (genuine、sorry なし) で
-無条件 discharge 済。headline `huffmanLength_optimal` がこれを供給し、cost-level motor
-`huffmanLength_optimal_aux` が本述語を引数で消費する legitimate interface predicate
-(precondition であって load-bearing-in-defect ではない)。FALSE 述語に依存していた weak-form
-wrapper 群は issue #4 で retract 済. -/
+/-- Interface predicate for the swap normalization step used by `huffmanLength_optimal_aux`.
+Given least-prob pair `(a, b)` with `a` = global-min and `b` = second-min, any
+Kraft-feasible `ll` can be normalized to `l_norm` with `l_norm a = l_norm b`,
+non-increasing expected length, and Kraft ≤ 1.
+The constructive proof is `swap_normalization_proof` in `StrongForm.lean`. -/
 abbrev SwapNormalizationHypothesis : Prop :=
   ∀ {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -649,18 +571,10 @@ abbrev SwapNormalizationHypothesis : Prop :=
 
 
 
-/-! ### cost-level bridge L (T1-A'' pivot — per-symbol depth identity を経由しない) -/
+/-! ### Cost-level bridge -/
 
 omit [Nonempty α] in
-/-- **C4 — cost-level bridge L**: sibling pair 分解 (旧 `huffmanLength_bridge_L`、削除済) の cost 版を per-symbol depth
-identity (FALSE) を経由せず立てる. `(a, b)` は確率最小 2 個 (`h_a_min` / `h_b_min`).
-
-論証 chain (carrier-crossing を sum-level で回避):
-`expectedLength P (huffmanLength P)` =[C1-b]= `huffmanCost (initMultiset P)`
-=[`huffmanCost_step`]= `huffmanCost s'' + (xs1.2 + xs2.2)`
-=[`huffmanCost_eq_of_prob_multiset` + min 同定]=
-`huffmanCost (initMultiset (mergedMeasure ...)) + (P{a}+P{b})`
-=[C1-b 逆]= `expectedLength (mergedMeasure ...) (huffmanLength (mergedMeasure ...)) + (P{a}+P{b})`.
+/-- Cost-level bridge: `expectedLength P (huffmanLength P) = expectedLength (mergedMeasure P a b hab) (huffmanLength (mergedMeasure P a b hab)) + (P.real {a} + P.real {b})`.
 @audit:ok -/
 lemma expectedLength_merged_cost_bridge
     (P : Measure α) [IsProbabilityMeasure P] (_hP : ∀ a, 0 < P.real {a})
@@ -832,15 +746,9 @@ lemma expectedLength_merged_cost_bridge
       huffmanCost_step (initMultiset P) h2 hg, ← hxs1, ← hxs2, ← hs'',
       hcost_s'', hmerged_C1b, hpen]
 
-/-- **Phase M — cost-level 帰納核 (h_ident 引数なし)**: FALSE な identification
-hypothesis (`MergedHuffmanAuxIdentHypothesis` 系、issue #4 で retract 済) を一切取らず、
-swap normalization (`h_swap`, genuine) のみを引数に取る strong-induction motor.
-
-step case の per-symbol bridge (`h_L'_link` + 旧 bridge-L 補題、削除済) を
-**cost-level bridge** `expectedLength_merged_cost_bridge` (per-symbol depth identity 不要)
-に差し替えた以外は元 motor と同一. `h_swap` (Hyp1, genuine) は引数で残す.
-無引数 headline `huffmanLength_optimal` は `HuffmanStrongForm.lean` で
-`swap_normalization_proof` を渡して publish する (import 向き: 後者が前者を import).
+/-- Strong-induction motor for Huffman optimality.
+Takes `h_swap : SwapNormalizationHypothesis` as an argument; the headline `huffmanLength_optimal`
+in `StrongForm.lean` supplies `swap_normalization_proof` to discharge it unconditionally.
 @audit:ok -/
 theorem huffmanLength_optimal_aux (n : ℕ)
     (h_swap : SwapNormalizationHypothesis.{u})
@@ -856,7 +764,7 @@ theorem huffmanLength_optimal_aux (n : ℕ)
   | _ n IH =>
     classical
     by_cases h_card : Fintype.card α ≤ 2
-    · -- base case: n ≤ 2 (元 motor と同一論証)
+    · -- base case: n ≤ 2
       unfold InformationTheory.Shannon.ShannonCode.expectedLength
       apply Finset.sum_le_sum
       intro x _
@@ -1017,7 +925,6 @@ theorem huffmanLength_optimal_aux (n : ℕ)
             ≤ InformationTheory.Shannon.ShannonCode.expectedLength
               (mergedMeasure P a b hab) l' :=
         IH _ h_card_α'_lt (mergedMeasure P a b hab) hP'_pos l' hl'_pos hl'_kraft rfl
-      -- **cost-level bridge L** (per-symbol depth identity 不要)
       have h_BL := expectedLength_merged_cost_bridge P hP h_card_ge_2 a b hab h_a_min h_b_min
       calc InformationTheory.Shannon.ShannonCode.expectedLength P (huffmanLength P)
           = InformationTheory.Shannon.ShannonCode.expectedLength

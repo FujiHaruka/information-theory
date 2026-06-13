@@ -4,43 +4,27 @@ import InformationTheory.Shannon.Huffman.SwapNormCompletion
 import InformationTheory.Shannon.Huffman.SwapNormProof
 
 /-!
-# T1-A'' — Hyp1 (swap normalization) genuine discharge, strong-precondition core
+# Swap normalization and Huffman optimality (Cover–Thomas Theorem 5.8.1)
 
-`SwapNormalizationHypothesis` (`HuffmanOptimality.lean:759`) を genuine に閉じる中核。
+Provides the constructive proof that `SwapNormalizationHypothesis` holds
+(`swap_normalization_proof`), and thereby establishes the unconditional optimality theorem
+`huffmanLength_optimal`.
 
-## 重要な honesty 所見 (実装中に発見)
+## Main statements
 
-`SwapNormalizationHypothesis` の前提 `_h_min` は **disjunctive 形**
-`∀ c, Q{a} ≤ Q{c} ∨ Q{b} ≤ Q{c}` で、これは「`a` が global-min」だけを含意し、`b` は
-任意でよい (反例: probs `a=0.1, b=0.5, c=0.2, d=0.2` で `_h_min` 成立だが `b` は最大)。
-swap 論法 (least-2 leaf を最長 2 leaf へ) には **`a, b` が確率最小 2 個** が必要なので、
-disjunctive 形のままでは Cover–Thomas swap 論法が回らない。
+* `swap_normalization_strong` — given a Kraft-feasible `ll` and the two minimum-probability
+  elements `(a, b)` (a = global-min, b = second-min), there exists `l_norm` with
+  `l_norm a = l_norm b`, Kraft ≤ 1, and expected length ≤ that of `ll`.
+* `swap_normalization_proof` — discharges `SwapNormalizationHypothesis` unconditionally.
+* `huffmanLength_optimal` — Cover–Thomas Theorem 5.8.1: `huffmanLength P` is optimal among
+  all Kraft-feasible length functions.
 
-実際の call site (`HuffmanOptimality.lean:919`) では `exists_sibling_min_pair` を経由して
-disjunctive 形に弱められているが、その下層 `huffmanStep_initMultiset_sibling`
-(`:66`) は **strong 形** `(∀ c, Q{a} ≤ Q{c}) ∧ (∀ c, c ≠ a → Q{b} ≤ Q{c})` を返す
-(= `a` global-min かつ `b` は残りの min)。よって strong 形は call site で供給可能。
+## Implementation notes
 
-本 file は **strong precondition** 下で swap normalization を genuine に証明する
-(`swap_normalization_strong`)。これにより Hyp1 の数学的 core は閉じる。残るのは
-`SwapNormalizationHypothesis` predicate の前提を strong 形へ揃える interface 整合
-(call site 含む `HuffmanOptimality.lean` 編集) のみ。これは honest な refactor
-(弱化された前提を「実際に供給可能 & 必要」な形に戻す) であり、本 file の docstring に
-load-bearing 性を明示する。
-
-注: `swap_normalization_strong` が Hyp1 の constructive core (`swap_normalization_proof`) を
-提供している。旧 weak-form alias を集約していた `HuffmanWalls.lean` は偽述語スキャフォールドの
-一部として削除済 (cost-level pivot で supersede、GitHub issue #4)。
-
-## Approach (3 段, 全 genuine)
-
-1. shorten-to-Kraft=1: `shorten_to_kraft_one` (本 plan H1-a, 証明済) で feasible `ll` を
-   各点で短い完全符号 `l1` (Kraft=1) へ。`l1 ≤ ll` から E 非増加。
-2. keystone `exists_two_equal_longest` (`HuffmanSwapNormProof.lean:110`, 証明済) で `l1` の
-   最長 2 leaf `c₁ ≠ c₂` を等長で取得。
-3. strong precondition の下で `a` (global-min) を `c₁` へ、`b` (rest-min) を `c₂` へ
-   `swap_step_le` (`HuffmanOptimality.lean:650`, 証明済) で 2 回 swap。各 swap の確率条件は
-   strong precondition から、語長条件は keystone の最長性から従う。結果 `l_norm a = l_norm b = L`。
+The swap normalization proof proceeds in three steps:
+1. Shorten `ll` to a complete code `l1` (Kraft = 1) via `shorten_to_kraft_one`.
+2. Find two equal-longest leaves `c₁ ≠ c₂` of `l1` via `exists_two_equal_longest`.
+3. Swap `a ↔ c₁` then `b ↔ c₂` using `swap_step_le`, so that `l_norm a = l_norm b = L`.
 -/
 
 namespace InformationTheory.Shannon.Huffman
@@ -50,12 +34,9 @@ open scoped BigOperators
 
 universe u
 
-/-- **Hyp1 の数学的 core (strong precondition)**: feasible `ll` と確率最小 2 個
-`(a, b)` (`a` = global-min, `b` = rest-min) に対し、`l_norm a = l_norm b` かつ Kraft ≤ 1 /
-E 非増加 / 正値 の `l_norm` が存在する。
-
-**load-bearing precondition**: `h_a_min` / `h_b_min` (strong 形)。published weak-form
-`SwapNormalizationHypothesis` の disjunctive `_h_min` より強い。docstring 参照. -/
+/-- Constructive core of swap normalization: given Kraft-feasible `ll` and minimum-probability
+pair `(a, b)` (`a` = global-min, `b` = second-min), produces `l_norm` satisfying
+`l_norm a = l_norm b`, Kraft ≤ 1, positive, and `expectedLength Q l_norm ≤ expectedLength Q ll`. -/
 @[entry_point]
 theorem swap_normalization_strong
     {β : Type u} [Fintype β] [LinearOrder β] [Nonempty β]
@@ -139,33 +120,14 @@ theorem swap_normalization_strong
     _ ≤ InformationTheory.Shannon.ShannonCode.expectedLength Q l1 := hlA_E_le
     _ ≤ InformationTheory.Shannon.ShannonCode.expectedLength Q ll := hE_l1_le_ll
 
-/-! ### Hyp1 (SwapNormalizationHypothesis) genuine discharge -/
-
-/-- **Hyp1 discharge (Cover–Thomas Lemma 5.8.1 (i))** — `SwapNormalizationHypothesis`
-を引数 hypothesis なしで証明. predicate の strong precondition
-(`_h_a_min` = `a` global-min, `_h_b_min` = `b` rest-min) が `swap_normalization_strong`
-の `h_a_min` / `h_b_min` にそのまま一致するため、core を直接適用するだけ. genuine
-(`:= h` 循環ではない: `swap_normalization_strong` は shorten + keystone + 2-swap の
-実証明). -/
+/-! ### Unconditional Huffman optimality -/
 @[entry_point]
 theorem swap_normalization_proof : SwapNormalizationHypothesis.{u} := by
   intro β _ _ _ _ _ _ Q _ ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
   exact swap_normalization_strong Q ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
 
-/-! ### T1-A'' — 無条件 strong form (cost-level pivot) -/
-
-/-- **Cover–Thomas Theorem 5.8.1 (strong form) — hypothesis 引数なし**.
-
-Huffman 語長は任意の Kraft-feasible 語長関数 `l` より期待長が小さい。**無条件**
-(swap normalization は `swap_normalization_proof` で genuine discharge 済、
-merged-carrier の bridge は cost-level
-(`expectedLength_merged_cost_bridge`、per-symbol depth identity FALSE を経由しない)
-で閉じている)。
-
-本定理は cost-level pivot (`docs/shannon/huffman-cost-level-optimality-plan.md`) で
-帰納核から `h_ident` 依存を除去した motor `huffmanLength_optimal_aux` を経由するため、
-FALSE predicate (`MergedHuffmanAuxIdentHypothesis` 系、issue #4 で retract 済) を
-**一切経由しない**。
+/-- **Cover–Thomas Theorem 5.8.1**: `huffmanLength P` minimizes expected codeword length
+among all positive Kraft-feasible length functions.
 @audit:ok -/
 @[entry_point]
 theorem huffmanLength_optimal

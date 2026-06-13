@@ -8,10 +8,10 @@ import Mathlib.Topology.Order.Compact
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 
 /-!
-# D-1'' Phase D.2 — parent achievability instantiated at the smooth channel
+# Achievability at the smooth channel — closed-form N
 
-`ShannonTheoremFullDischarge` から分割した part ファイル。
-詳細は冒頭の `Phase D.2` セクション docstring を参照。
+Part file split from `ShannonTheoremFullDischarge`. Instantiates
+`channel_coding_achievability` at the smooth channel with an explicit `N` formula.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
@@ -23,38 +23,18 @@ variable {α β : Type*}
   [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β]
 
-/-! ## Phase D.2 — parent achievability instantiated at `(pSmooth p₀ δ_p, Channel.smooth W δ)`
+/-! ## Smooth achievability with closed-form N
 
-`channel_coding_achievability` を `p := pmfToMeasure (pSmooth p₀ δ_p)`、
-`W := Channel.smooth W δ` で呼び出す wrapper。`hp_pos`/`hW_pos` を内部で導出する。
+`channel_coding_achievability` instantiated at `p := pmfToMeasure (pSmooth p₀ δ_p)` and
+`W := Channel.smooth W δ`. The instances `hp_pos`/`hW_pos` are derived internally via
+`pSmooth_pos` and `Channel.smooth_pos`. The existential `∃ N` is collapsed to the
+closed-form `channelCodingSmoothMinN V_X V_Y V_Z I_lb R ε'` using the AEPRate lemmas. -/
 
-* `IsMarkovKernel (Channel.smooth W δ)` は `Channel.smooth_isMarkovKernel`。
-* `IsProbabilityMeasure (pmfToMeasure (pSmooth p₀ δ_p))` は
-  `pmfToMeasure_isProbabilityMeasure ∘ pSmooth_mem_stdSimplex`。
-* `hp_pos`: `(pmfToMeasure (pSmooth p₀ δ_p)).real {a} = pSmooth p₀ δ_p a > 0`
-  (`pmfToMeasure_real_singleton` + `pSmooth_pos`).
-* `hW_pos`: `0 < (Channel.smooth W δ a).real {b}` は `Channel.smooth_pos`.
+/-- Closed-form `N(V_X, V_Y, V_Z, I_lb, R, ε')` for the smooth achievability theorem.
 
-N(δ) closed-form 化は後段 Phase D.3 に委譲し、本 wrapper は既存 `∃ N` 形を保つ。 -/
-
-/-! ## Phase D.2 (closed-form N) — parent achievability with explicit `N` formula
-
-Phase D.3 needs `N` exposed as a closed-form function of the inputs (so that
-substituting `δ_n := ε/(8(n+1))` can be verified to satisfy `N(δ_n) ≤ n` via
-`exists_N_log_sq_le_n`). This section publishes a variant of Phase D.2 where
-the existential `∃ N` is collapsed to `channelCodingSmoothMinN V_X V_Y V_Z I_lb R ε'`
-— directly using the AEPRate closed-form lemmas. -/
-
-/-- Closed-form `N(V_X, V_Y, V_Z, I_lb, R, ε')` for the smooth achievability
-theorem. The construction matches the parent body's `max (max N₁ N₂) 1` form:
-
-* `N₁` = `jointlyTypicalSetMinN V_X V_Y V_Z (ε'/2) ((I_lb - R)/6)` (joint AEP).
-* `N₂` = `expNegMulMinN ((I_lb - R)/2) (ε'/2)` (E2 exponential decay).
-* `1` to ensure `0 < M`.
-
-Note: we use the lower bound `I_lb` of the mutual information; the parent's
-gap `g = I - R - 3·(I-R)/6 = (I - R)/2` becomes `g ≥ (I_lb - R)/2`, which only
-makes `N₂` larger (safe upper bound). -/
+`max (max N₁ N₂) 1` where `N₁ = jointlyTypicalSetMinN V_X V_Y V_Z (ε'/2) ((I_lb - R)/6)`
+and `N₂ = expNegMulMinN ((I_lb - R)/2) (ε'/2)`. Uses a mutual information lower bound
+`I_lb` so that `N₂` is a safe upper bound. -/
 noncomputable def channelCodingSmoothMinN
     (V_X V_Y V_Z I_lb R ε' : ℝ) : ℕ :=
   max (max
@@ -63,12 +43,11 @@ noncomputable def channelCodingSmoothMinN
       1
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Phase D.2 (closed-form N)** — `channel_coding_achievability` with the
+/-- **Smooth achievability with closed-form N**: `channel_coding_achievability` with the
 existential `N` replaced by `channelCodingSmoothMinN V_X V_Y V_Z I_lb R ε'`.
 
-Caller supplies axis-wise variance upper bounds `V_X, V_Y, V_Z` (which will
-typically be `pmfLogBound²` from Phase D.1) and a mutual-information lower
-bound `I_lb` (from Phase D.0'). -/
+The caller supplies axis-wise variance upper bounds `V_X, V_Y, V_Z` and a
+mutual-information lower bound `I_lb`. -/
 theorem channel_coding_achievability_smooth_at_N_le
     (W : Channel α β) [IsMarkovKernel W]
     (p₀ : α → ℝ) (hp₀_mem : p₀ ∈ stdSimplex ℝ α)

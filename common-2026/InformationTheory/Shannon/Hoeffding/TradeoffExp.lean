@@ -384,7 +384,7 @@ The Sanov two-sided collapse (`sanov_ldp_equality`), the minimizer premise
 (`hoeffding_exp_minimizer`), the KL bridges, the `Qstar` extraction
 (`exists_hoeffding_minimizer_full_support`) and the sign flip are all genuine and
 discharged below. The single residual gap is **L-EXP-IN** (plan judgement log #1,
-Phase 2 §撤退条件): the interior minimizer `Qstar` lies on the *active* boundary
+Phase 2 (retreat condition): the interior minimizer `Qstar` lies on the *active* boundary
 `klDivPmf Qstar P₁ = r` (the tilt's constraint is an equality, see
 `HoeffdingLagrangeIVTBody.lean:161`), so the rounded type
 `roundedTypeIndex Qstar n` converges to the closed-sublevel *boundary* and is not

@@ -18,7 +18,7 @@ Eq. 13.124, the Ziv-counting asymptotic) is exposed as a hypothesis
 pass-through `IsLZ78PhraseCountAsymptotic` that future discharges can
 plug into the `IsZivInequalityPassthrough` slot.
 
-## Scope (撤退ライン)
+## Scope
 
 * **L-LZ2-asym-A** (engaged) — `IsLZ78PhraseCountAsymptotic` predicate
   shaped on `Asymptotics.IsBigO atTop`, plus a `.trivial` constructor.

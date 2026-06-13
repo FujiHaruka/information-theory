@@ -7,12 +7,12 @@ import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseD
 import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseEStrong
 
 /-!
-# Rate-distortion achievability (strong final) — Setup part
+# Rate-distortion achievability (strong-typicality variant) — supporting layer
 
-Steps A/B, generic Phase D bound, strong lossy-code bundle, witness-form +
-partial-discharge wrappers, `codebookAvgFailureStrong` and the `rdAmbient`
-entropy/block-law bridges. Split out from `AchievabilityPhaseEStrongFinal.lean`
-for the 1500-line-per-file convention; proofs are unchanged.
+The per-source match-probability and encoder-failure bounds, the
+generic-encoder distortion decomposition, the strong lossy-code bundle, the
+witness-form and partial-discharge wrappers, `codebookAvgFailureStrong`, and the
+`rdAmbient` entropy / block-law bridges.
 -/
 
 namespace InformationTheory.Shannon
@@ -191,11 +191,12 @@ theorem encoder_strong_failure_prob_le
     nlinarith [h_lower_target]
   exact le_trans h_one_sub_pow h_exp_mono
 
-/-! ## Generic-encoder Phase D bound (mirror of `source_avg_distortion_le_simpler`) -/
+/-! ## Generic-encoder distortion decomposition -/
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- Generic-encoder Phase D.5. Verbatim mirror of `source_avg_distortion_le_simpler`
-with the joint-typical encoder replaced by an arbitrary encoder function. -/
+/-- Generic-encoder distortion decomposition, the analogue of
+`source_avg_distortion_le_simpler` with the joint-typical encoder replaced by an
+arbitrary encoder function. -/
 theorem source_avg_distortion_le_simpler_generic
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (d : DistortionFn α β) {M n : ℕ} (ε : ℝ) {δ : ℝ} (hδ : 0 ≤ δ)
@@ -341,10 +342,10 @@ noncomputable def lossyCodeOfCodebookStrong
 
 /-! ## Witness-form rate-distortion achievability (strong-encoder variant)
 
-Verbatim mirror of `rate_distortion_achievability_witness_form`, with the
-weak `jointTypicalLossyEncoder` replaced by `jointStronglyTypicalLossyEncoder`.
-The proof structure is identical: per-codebook Phase D.5 bound (via the
-generic `source_avg_distortion_le_simpler_generic`), weighted sum, pigeonhole. -/
+The strong-encoder analogue of `rate_distortion_achievability_witness_form`,
+with `jointTypicalLossyEncoder` replaced by `jointStronglyTypicalLossyEncoder`.
+The argument composes the per-codebook distortion decomposition (the generic
+`source_avg_distortion_le_simpler_generic`), a weighted sum, and pigeonhole. -/
 theorem rate_distortion_achievability_witness_form_strong
     (P_X_pmf : α → ℝ) (d : DistortionFn α β) {D : ℝ}
     (qStar : α × β → ℝ) (hqStar_mem : qStar ∈ RDConstraint P_X_pmf d D)
@@ -509,8 +510,8 @@ theorem rate_distortion_achievability_witness_form_strong
 /-! ## Partial-discharge wrapper (strong-encoder variant) -/
 
 /-- **Rate-distortion achievability — partial discharge form (strong-encoder variant).**
-Verbatim mirror of `rate_distortion_achievability_partial_discharge`, with the
-weak encoder swapped for `jointStronglyTypicalLossyEncoder`. -/
+The strong-encoder analogue of `rate_distortion_achievability_partial_discharge`,
+with `jointStronglyTypicalLossyEncoder` as the encoder. -/
 theorem rate_distortion_achievability_partial_discharge_strong
     (P_X_pmf : α → ℝ) (d : DistortionFn α β) {D : ℝ}
     (qStar : α × β → ℝ) (hqStar_mem : qStar ∈ RDConstraint P_X_pmf d D)

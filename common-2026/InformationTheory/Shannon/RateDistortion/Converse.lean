@@ -7,11 +7,11 @@ import InformationTheory.Shannon.MutualInfo
 import InformationTheory.Shannon.Pi
 
 /-!
-# Rate-distortion converse (single-shot, E-4)
+# Rate-distortion converse (single-shot)
 
-[`docs/shannon/rate-distortion-converse-plan.md`](../../../docs/shannon/rate-distortion-converse-plan.md)
-の本体。Cover-Thomas 10.4 の **single-shot 形** rate-distortion converse:
-
+The single-shot form of the rate-distortion converse (Cover–Thomas 10.4):
+`R(D̃) ≤ log M` for the achieved distortion `D̃ := 𝔼 d(X, decoder(encoder X))`,
+obtained from the chain
 ```
 Real.log M ≥ entropy μ W                    -- entropy_le_log_card
           ≥ (mutualInfo μ X W).toReal       -- I = H - H|... ≤ H (condEntropy nonneg)
@@ -20,17 +20,19 @@ Real.log M ≥ entropy μ W                    -- entropy_le_log_card
                                             -- iInf ≤ value at the joint ν := μ.map (X, X̂)
 ```
 
-## 主定理
+## Main definitions
 
-- `rate_distortion_converse_single_shot`:
-    `R(D̃) ≤ log M` for `D̃ := 𝔼 d(X, decoder(encoder X))`.
+* `expectedDistortion` — average distortion of a joint distribution.
+* `rateDistortionFunction` — the KL-form rate-distortion function.
 
-## 設計判断 (plan 判断ログより)
+## Main statements
 
-- **single-shot scope**. n-letter form は R(D) の convexity を要し deferred。
-- **`R(D̃)`** (実測歪み) で publish。R(D) 単調性は deferred。
-- **MI 有限性は仮定**。
-- distortion measure `d : α → β → ℝ` (non-negativity 不要)。
+* `rate_distortion_converse_single_shot` — `R(D̃) ≤ log M`.
+
+## Implementation notes
+
+The distortion measure is `d : α → β → ℝ` with no non-negativity assumption.
+Finiteness of the mutual information is taken as a hypothesis.
 -/
 
 namespace InformationTheory.Shannon
@@ -41,7 +43,7 @@ open scoped ENNReal NNReal BigOperators
 variable {Ω : Type*} [MeasurableSpace Ω]
 variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 
-/-! ## Phase A — definitions -/
+/-! ## Definitions -/
 
 /-- Expected distortion of a joint distribution `ν : Measure (α × β)` under a
 distortion measure `d : α → β → ℝ`. -/
@@ -64,7 +66,7 @@ noncomputable def rateDistortionFunction
     (_ : expectedDistortion d ν ≤ D),
       klDiv ν ((ν.map Prod.fst).prod (ν.map Prod.snd))
 
-/-! ## Phase B — basic properties -/
+/-! ## Basic properties -/
 
 /-- Feasible point ⇒ `R(D)` ≤ value: exhibiting a feasible joint `ν` gives an
 upper bound on the rate-distortion function. -/
@@ -78,7 +80,7 @@ theorem rateDistortionFunction_le_of_feasible
   unfold rateDistortionFunction
   exact iInf_le_of_le ν (iInf_le_of_le hν_marg (iInf_le _ hν_dist))
 
-/-! ## Phase C — single-shot converse 主定理 -/
+/-! ## Single-shot converse -/
 
 /-- Marginal of the joint `μ.map (X, Xh)` is `μ.map X` (left projection). -/
 private lemma map_fst_joint
@@ -120,7 +122,7 @@ private lemma expectedDistortion_map
   unfold expectedDistortion
   rw [integral_map (hX.prodMk hXh).aemeasurable hd.aestronglyMeasurable]
 
-/-- **Single-shot rate-distortion converse (E-4 主定理)**.
+/-- **Single-shot rate-distortion converse**.
 
 For any single-shot lossy code `(encoder, decoder)` with image alphabet `M` and
 source random variable `X : Ω → α`, the rate-distortion function evaluated at
@@ -129,8 +131,7 @@ the achieved distortion `D̃ := 𝔼 d(X, decoder(encoder X))` is bounded above 
 ```
 (rateDistortionFunction d P_X D̃).toReal ≤ Real.log |M|.
 ```
-This is the single-shot form of Cover-Thomas 10.4. The `n`-letter form
-`rate ≥ R(D)` requires `R(D)` convexity (Jensen) and is deferred. -/
+This is the single-shot form of Cover–Thomas 10.4. -/
 @[entry_point]
 theorem rate_distortion_converse_single_shot
     [Fintype α] [Nonempty α] [MeasurableSingletonClass α]

@@ -4,45 +4,37 @@ import InformationTheory.Shannon.IIDProductInput.Joint
 import InformationTheory.Draft.Shannon.RateDistortionAchievabilityPhaseEDischarge
 
 /-!
-# Rate-distortion achievability — Phase E (strong-typicality variant), Phases α–γ
+# Rate-distortion achievability — joint strong-typicality apparatus
 
-[`docs/shannon/rate-distortion-achievability-plan.md`](../../../docs/shannon/rate-distortion-achievability-plan.md)
+The joint strongly-typical apparatus for the strong-typicality variant of the
+rate-distortion achievability theorem. The construction reuses the single-axis
+strong typicality machinery of `StrongTypicality.lean` instantiated on the
+product alphabet `α × β`, with the joint sequence
+`jointSequence Xs Ys i ω = (Xs i ω, Ys i ω)`.
 
-This file develops the **joint strongly-typical** apparatus that is used in the
-strong-typicality variant of the rate-distortion achievability theorem (E-3''').
-The construction reuses the single-axis strong typicality machinery from
-`StrongTypicality.lean` instantiated on the product alphabet `α × β`, with the
-joint sequence `jointSequence Xs Ys i ω = (Xs i ω, Ys i ω)`.
+## Main definitions
 
-## Phases scope
+* `jointStronglyTypicalSet` — the joint strongly-typical set over `α × β`.
+* `jointStronglyTypicalLossyEncoder` — a strong-JTS lossy encoder.
+* `conditionalStronglyTypicalSlice` — the Y-fiber of the joint strongly-typical
+  set at a fixed X-block.
 
-This commit covers **Phases α–γ**:
+## Main statements
 
-* **Phase α** — `jointStronglyTypicalSet` definition and basic structure lemmas
-  (membership-iff, measurability, finiteness, subset relation to
-  `jointlyTypicalSet`).
-* **Phase β** — joint strong-typicality probability tends to one
-  (direct corollary of `stronglyTypicalSet_prob_tendsto_one` applied to the
-  joint sequence over `α × β`).
-* **Phase γ** — distortion bridge: for any pair `(x, y)` strongly jointly
-  typical at level `ε`, the empirical block distortion is `ε · D_max`-close
-  to the pmf-form expected distortion, hence inside `distortionTypicalSet`
-  for an appropriate `δ`.
+* `typeCount_joint_sum_snd` / `typeCount_joint_sum_fst` — marginalisation of the
+  joint type-count recovers the X- / Y-type-count.
+* `jointStronglyTypicalSet_implies_X_stronglyTypical` /
+  `jointStronglyTypicalSet_implies_Y_stronglyTypical` — joint strong typicality
+  implies axis strong typicality with widened slack.
+* `jointStronglyTypicalSet_indep_prob_ge` — strong-typical independent
+  probability lower bound.
 
-Phases δ–η (witness-form achievability, random-coding entropy bound,
-δ → 0 limit) will follow in subsequent commits.
+## Implementation notes
 
-## Design notes
-
-* The joint sequence i.i.d. infrastructure (`iidAmbientJoint_iIndepFun_joint`,
-  `iidAmbientJoint_identDistrib_joint`) lives in `IIDProductInputJoint.lean`.
-  We hypothesise the pair / ident-distrib of the joint sequence at the
-  statement level to stay abstract.
-* `expectedDistortionPmf d qStar` is the pmf-form expectation
-  `∑_{a,b} qStar(a,b) · d(a,b)`. The strong-typicality bound says
-  `|blockDistortion - expectedDistortionPmf d (pmf of joint at index 0)|
-   ≤ ε · ∑_{a,b} d(a,b)`. When `expectedDistortionPmf d qStar ≤ D`, this
-  gives the rate-distortion bound at `δ := ε · ∑_{a,b} d(a,b)` slack.
+* The joint-sequence i.i.d. infrastructure (`iidAmbientJoint_iIndepFun_joint`,
+  `iidAmbientJoint_identDistrib_joint`) lives in `IIDProductInputJoint.lean`;
+  pairwise / ident-distrib of the joint sequence are taken at the statement
+  level to keep the development abstract.
 -/
 
 namespace InformationTheory.Shannon
@@ -62,7 +54,7 @@ variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 variable [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
 variable [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β]
 
-/-! ## Phase α — Joint strongly typical set -/
+/-! ## Joint strongly typical set -/
 
 /-- **Joint strongly typical set** over the product alphabet `α × β`. A pair
 `(x, y) : (Fin n → α) × (Fin n → β)` is in the set iff the "reshape"
@@ -97,15 +89,9 @@ lemma jointStronglyTypicalSet_finite
     (jointStronglyTypicalSet μ Xs Ys n ε).Finite := Set.toFinite _
 
 
-/-! ## Phase β — Joint strong typicality probability tends to one -/
+/-! ## Strong-typical independent probability lower bound -/
 
-
-/-! ## Phase γ — Distortion bridge -/
-
-
-/-! ## Phase δ — Strong-typical independent probability lower bound -/
-
-/-! ### δ.1 — Marginalisation of `typeCount` over the second/first coordinate -/
+/-! ### Marginalisation of `typeCount` over a coordinate -/
 
 omit [Fintype α] [MeasurableSingletonClass α] [MeasurableSingletonClass β] in
 /-- **Marginalising the joint type-count over `β` recovers the X type-count**:
@@ -170,7 +156,7 @@ lemma typeCount_joint_sum_fst
   simp only [Finset.mem_biUnion, Finset.mem_filter, Finset.mem_univ, true_and]
   refine ⟨fun ⟨_, _, hyb⟩ => hyb, fun hyb => ⟨x i, ⟨rfl, hyb⟩⟩⟩
 
-/-! ### δ.2 — Strong joint ⟹ Strong X and Strong Y typicality (with widened slack) -/
+/-! ### Strong joint ⟹ strong X- and Y-typicality (with widened slack) -/
 
 /-- **Strong joint typicality ⟹ Strong X-typicality (slack widened by `|β|`)**.
 Given `(fun i => (x i, y i)) ∈ stronglyTypicalSet μ (jointSequence Xs Ys) n ε` and
@@ -338,7 +324,7 @@ lemma jointStronglyTypicalSet_implies_Y_stronglyTypical
     _ = (Fintype.card α : ℝ) * ε := by
         rw [Finset.sum_const, nsmul_eq_mul, Finset.card_univ]
 
-/-! ### δ.3 — Main theorem: strong joint typicality probability lower bound -/
+/-! ### Strong joint typicality probability lower bound -/
 
 /-- **Strong-typical independent probability lower bound** (mirror of
 `jointlyTypicalSet_indep_prob_ge` for the strong-typicality version).
@@ -579,7 +565,7 @@ theorem jointStronglyTypicalSet_indep_prob_ge
     _ ≤ ∑ p ∈ Afin, μXn.real {p.1} * μYn.real {p.2} := h_sum_ge
     _ = (μXn.prod μYn).real A := h_sum_eq
 
-/-! ## Phase B' — Strong-JTS lossy encoder (parallel to weak `jointTypicalLossyEncoder`) -/
+/-! ## Strong-JTS lossy encoder -/
 
 /-- **Strong-JTS lossy encoder**. Parallel to `jointTypicalLossyEncoder` but targets
 `jointStronglyTypicalSet`. Given a codebook `c`, returns some index `m` with
@@ -607,36 +593,17 @@ theorem jointStronglyTypicalLossyEncoder_spec_of_exists
   exact Classical.choose_spec h
 
 
-/-! ## Phase S3 — `jointStronglyTypicalSet ⊆ jointlyTypicalSet (widened)` and bridge -/
+/-! ## Conditional strong-typical slice
 
-
-/-! ## Phase S1 — Conditional strong-typical slice + size lower bound
-
-The **dual** of `SlepianWolfConditionalTypicalSlice.conditionalTypicalSlice_card_le`
-(an upper bound on the X-fiber of `jointlyTypicalSet`) in the strong-typicality
-regime. Here we lower-bound the Y-fiber **mass** of the joint strongly-typical
-set under the product measure `μ_Y^n`:
-
-For `x ∈ stronglyTypicalSet μ Xs n ε_X` (X-axis strong typicality at slack ε_X),
-`(μ.map (jointRV Ys n)).real {y | (x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε}
-   ≥ exp(-n · (entropy μ Z₀ - entropy μ X₀ + slack))`,
-
-where `entropy μ Z₀ - entropy μ X₀ = H(Y|X) ≤ H(Y)` is the conditional entropy.
-The mutual-information form `I(X;Y) = H(Y) - H(Y|X)` then gives
-`exp(-n(H(Y|X) + ...)) = exp(n(I(X;Y) - H(Y) + ...))` and combined with the
-total Y-mass identity yields the per-source-typical match probability
-lower bound `exp(-n(I(X;Y) + δ(ε)))` used in Cover-Thomas 10.6.1.
-
-This is the key new inventory piece for the strong-typicality random-coding
-chain. The proof mirrors the upper-bound proof in
-`SlepianWolfConditionalTypicalSlice` but in the **reverse** direction: instead
-of lower-bounding individual fiber masses to upper-bound the cardinality, we
-lower-bound the cardinality (via `stronglyTypicalSet_card_ge_eventually` on Z)
-and upper-bound individual fiber masses (via `typicalSet_prob_le` on Y).
-
-Status: **inventory published** (this round). Final `tendsto_zero` assembly
-still requires the wiring lemma `per_source_typical_match_prob_strong_ge` (S2)
-plus the encoder pivot machinery — both deferred to the next session. -/
+The Y-fiber mass of the joint strongly-typical set under the product measure
+`μ_Y^n` is lower-bounded for `x` X-axis strongly typical: this is the
+strong-typicality dual of
+`SlepianWolfConditionalTypicalSlice.conditionalTypicalSlice_card_le` (an upper
+bound on the X-fiber of `jointlyTypicalSet`). The cardinality is lower-bounded
+via `stronglyTypicalSet_card_ge_eventually` on `Z` and the individual fiber
+masses upper-bounded via `typicalSet_prob_le` on `Y`, yielding the
+per-source-typical match-probability lower bound `exp(-n(I(X;Y) + δ(ε)))` of
+Cover–Thomas 10.6.1. -/
 
 /-- **Conditional strong-typical slice.** For a fixed X-block `x : Fin n → α`,
 the Y-fiber of the joint strongly-typical set at `x`. -/
@@ -653,28 +620,10 @@ lemma mem_conditionalStronglyTypicalSlice_iff
       (x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε := Iff.rfl
 
 
-/-! ## Phase ε — Codebook-averaged source-failure sequence
-
-We define `codebookAvgFailure` as the codebook-averaged source-failure probability
-at the canonical codebook size `M_n := ⌈exp(n·R)⌉`. The hypothesis form expected
-by `rate_distortion_achievability_partial_discharge` is then satisfied by
-`le_refl`, and the `tendsto_zero` half is delivered by
-`codebookAvgFailure_tendsto_zero`.
-
-The `tendsto_zero` proof requires the strong-typicality cardinality bound
-(`stronglyTypicalSet_card_ge_eventually` applied to the joint sequence) combined
-with the per-source-typical-word match-probability exponential decay via
-`one_sub_pow_le_exp_neg_mul`. The detailed combinatorial proof reuses
-machinery from Phases C/D — the wiring is left as a single isolated `sorry`
-inside `codebookAvgFailure_tendsto_zero` (see comment in the proof). -/
-
-
-/-! The weak-encoder `codebookAvgFailure_tendsto_zero` is mathematically blocked
-without the conditional-strong-typicality slice mass bound (Cover–Thomas 10.6.1).
-The full rate-distortion theorem is therefore assembled in
-`RateDistortionAchievabilityPhaseEStrongFinal.lean` via the strong-encoder track
+/-! The full rate-distortion achievability theorem is assembled in
+`AchievabilityPhaseEStrongFinal.lean` via the strong-encoder track
 (`codebookAvgFailureStrong_tendsto_zero` + `rate_distortion_achievability_strong`),
-which uses the conditional method-of-types directly. The public theorem
+which uses the conditional method-of-types directly; the public theorem
 `rate_distortion_achievability` lives in that file. -/
 
 end InformationTheory.Shannon

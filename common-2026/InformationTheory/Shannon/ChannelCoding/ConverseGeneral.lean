@@ -3,39 +3,22 @@ import InformationTheory.Shannon.Converse
 import InformationTheory.Shannon.MIChainRule
 
 /-!
-# Channel coding converse — general input form, chain-rule decomposition (D-2)
+# Channel coding converse — general input form, chain-rule decomposition
 
-[D-2 ムーンショット plan](../../../docs/shannon/channel-coding-converse-general-plan.md) の
-第一歩。既存 `channel_coding_converse_iid` (`ChannelCodingConverse.lean`) は **i.i.d. 入力**
-仮定下で `I(X^n; Y^n)` を `n · I(X_0; Y_0)` に圧縮する形だが、本ファイルでは **iid 仮定を完全に
-外し**、代わりに `mutualInfo_chain_rule_fin` で `I(X^n; Y^n)` を per-i conditional MI の和に
-分解した形を publish する。
+## Main statements
 
-### 主張
+* `channel_coding_converse_general_chainRule`: Without the i.i.d. assumption, the
+  log-cardinality of the message set is bounded by the chain-rule decomposition
+  `∑ i, I(X_i; Y^n | X^{<i}).toReal + h(Pe) + Pe · log(|M| - 1)`.
 
-`Msg : Ω → M` を一様分布、`encoder : M → (Fin n → α)`、`Ys : Fin n → Ω → β` を通信路出力、
-`decoder : (Fin n → β) → M` とする。Markov chain `Msg → encoder ∘ Msg → Y^n` 仮定下で:
+## Implementation notes
 
-```
-log |M| ≤ ∑ i, I(X_i; Y^n | X^{<i}).toReal + h(Pe) + Pe · log(|M| − 1)
-```
-
-ここで `X_i ω := encoder (Msg ω) i`、`Y^n ω := fun i => Ys i ω`、`Pe := errorProb`、
-`X^{<i}` は先頭 `i` 個の入力記号 (prefix RV)。
-
-### 構成 (3 step、bridge ゼロ)
-
-1. `shannon_converse_single_shot_markov_encoder` で `log|M| ≤ I(X^n; Y^n).toReal + Fano`。
-2. `mutualInfo_chain_rule_fin` で `I(X^n; Y^n) = ∑ I(X_i; Y^n | X^{<i})` (ENNReal 等式)。
-3. `ENNReal.toReal_sum` で和の `.toReal` 分配 (per-i `condMutualInfo_ne_top` で summand 有限)。
-
-### iid 版との関係
-
-iid 仮定下では `mutualInfo_iid_eq_nsmul` で chain rule を経由せず `n · I(X_0; Y_0)` に直接
-圧縮できる (既存 `channel_coding_converse_iid` 採用経路)。本形は **iid を外した代わりに** 和を
-そのまま残したもの。次の段で memoryless channel property を加えれば per-summand
-`I(X_i; Y^n | X^{<i}) ≤ I(X_i; Y_i)` が出て Cover-Thomas 7.9 完全形に到達するが、本セッションの
-scope 外 (deferred)。
+Compared to `channel_coding_converse_iid` (which collapses `I(X^n; Y^n)` to
+`n · I(X_0; Y_0)` under the i.i.d. assumption), this form removes the i.i.d.
+hypothesis and instead decomposes `I(X^n; Y^n)` via `mutualInfo_chain_rule_fin`.
+A subsequent per-summand bound `I(X_i; Y^n | X^{<i}) ≤ I(X_i; Y_i)` (from
+memoryless channel properties) would yield Cover-Thomas 7.9, but that step is
+handled in `ConverseMemorylessPure`.
 -/
 
 namespace InformationTheory.Shannon
@@ -53,24 +36,16 @@ variable {α β : Type*}
   [MeasurableSpace β] [MeasurableSingletonClass β]
 
 omit [DecidableEq M] [DecidableEq α] [DecidableEq β] in
-/-- Channel coding converse, **general input** form (Markov encoder, chain-rule decomposition).
+/-- Channel coding converse, general input form (Markov encoder, chain-rule decomposition).
 
-`Msg : Ω → M` 一様、`encoder : M → (Fin n → α)`、`Ys : Fin n → Ω → β`、
-`decoder : (Fin n → β) → M`。Markov chain `Msg → encoder ∘ Msg → Y^n` 仮定下で:
+Under a Markov chain `Msg → encoder ∘ Msg → Y^n` (without any i.i.d. assumption):
 
 ```
-log |M| ≤ ∑ i, I(X_i; Y^n | X^{<i}).toReal + h(Pe) + Pe · log(|M| − 1)
+log |M| ≤ ∑ i, I(X_i; Y^n | X^{<i}).toReal + h(Pe) + Pe · log(|M| - 1)
 ```
 
-ここで:
-* `X_i ω := encoder (Msg ω) i`
-* `Y^n ω := fun i => Ys i ω`
-* `X^{<i} ω := fun (j : Fin i.val) => encoder (Msg ω) ⟨j.val, ...⟩` (prefix RV)
-* `Pe := errorProb μ Msg Y^n decoder`
-
-iid 仮定を要しない (既存 `channel_coding_converse_iid` との違い)。memoryless channel property に
-基づく per-summand bound `I(X_i; Y^n | X^{<i}) ≤ I(X_i; Y_i)` は deferred、本定理 RHS は
-chain rule で分解した形を残す。 -/
+where `X_i ω := encoder (Msg ω) i`, `X^{<i}` is the prefix RV, and
+`Pe := errorProb μ Msg Y^n decoder`. -/
 @[entry_point]
 theorem channel_coding_converse_general_chainRule
     {n : ℕ}

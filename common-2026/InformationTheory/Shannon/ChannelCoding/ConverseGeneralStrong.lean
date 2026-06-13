@@ -4,36 +4,29 @@ import InformationTheory.Shannon.CondEntropyMemoryless
 import Mathlib.MeasureTheory.MeasurableSpace.Embedding
 
 /-!
-# Channel coding converse (general input) — strong memoryless variant (D-2'')
+# Channel coding converse — strong memoryless DMC variant
 
-[D-2'' ムーンショット plan](../../../docs/shannon/channel-coding-converse-general-d2-double-prime-plan.md)
-の Phase B。`channel_coding_converse_general_memoryless_strong` は **Cover-Thomas Thm 7.9
-のエントロピー劣加法経路** (`InformationTheory/Shannon/CondEntropyMemoryless.lean`) を通じて
-`IsMemorylessChannelStrong` から直接導出する。D-2' hypothesis-form (3 仮説経由) は
-`h_yother_zero` が encoder 任意では偽 (反例: `X_1 := X_0`) のため、Cover-Thomas の
-劣加法 (`H(Y^n) ≤ ∑ H(Y_i)`) ＋ 強 memoryless `H(Y^n|X^n) = ∑ H(Y_i|X_i)` 経路に切り替えた。
+## Main definitions
 
-## Scope
+* `IsMemorylessChannelStrong`: two Markov axioms characterizing a strongly memoryless DMC:
+  per-letter `X^n → X_i → Y_i` and output conditional independence `Y^{≠i} → X^n → Y_i`.
+* `measurableEquivExtract i`: measurable equivalence `Fin n → β ≃ᵐ β × ({j // j ≠ i} → β)`.
 
-* `IsMemorylessChannelStrong` (Option C, structure 形): 2 つの Markov axiom
-  - per-letter:  `X^n → X_i → Y_i`
-  - outputs cond. indep.: `Y^{≠i} → X^n → Y_i`
-* `MeasurableEquiv` plumbing: `Fin n → β ≃ᵐ β × ({j // j ≠ i} → β)`
-  (`piEquivPiSubtypeProd` + `funUnique` の合成)
-* `h_markov_xprefix_of_strong`, `h_split_of_strong`: D-2' hypothesis-form 用の
-  helper だが、新しい主定理経路 (Cover-Thomas) では呼ばれない **dead code**。歴史的記録
-  および将来 D-2' hypothesis-form を再利用する場合のため残置。
-* `channel_coding_converse_general_memoryless_strong` (主定理): single-shot Markov-encoder
-  converse + `mutualInfo_le_sum_per_letter_of_memoryless_strong` (Cover-Thomas Thm 7.9
-  encoder-agnostic chain) で証明。
+## Main statements
 
-**Architectural note**: An earlier session attempted to derive the D-2' hypothesis
-`h_yother_zero` from `IsMemorylessChannelStrong`, but a counterexample (n = 2, i = 0,
-X_1 := X_0 degenerate encoder + iid Bernoulli(1/4) noise) showed the claim is
-*mathematically false* under arbitrary encoders. The fix is the entropy-subadditivity
-route of Cover-Thomas Thm 7.9, which bypasses `h_yother_zero` entirely. See
-`CondEntropyMemoryless.lean` for the supporting infrastructure (entropy subadditivity,
-n-var conditional chain rule, Markov-drop-irrelevant, conditional factorization). -/
+* `h_markov_xprefix_of_strong`: augmented prefix Markov chain from `IsMemorylessChannelStrong`.
+* `h_split_of_strong`: conditional mutual information two-variable chain rule reshape.
+* `channel_coding_converse_general_memoryless_strong`: Cover-Thomas Thm 7.9 converse
+  via entropy subadditivity, yielding `log |M| ≤ ∑ I(X_i; Y_i).toReal + Fano`.
+
+## Implementation notes
+
+The D-2' hypothesis `h_yother_zero : condMI X_i Y^{≠i} (Xprefix, Y_i) = 0` fails for
+arbitrary encoders (counterexample: n = 2, i = 0, `X_1 := X_0`). The proof therefore
+takes the entropy-subadditivity route (`mutualInfo_le_sum_per_letter_of_memoryless_strong`),
+which holds for any encoder and bypasses `h_yother_zero`. The lemmas `h_markov_xprefix_of_strong`
+and `h_split_of_strong` are not called in the main proof but are retained for potential future use.
+-/
 
 namespace InformationTheory.Shannon.ChannelCodingConverseGeneral
 
@@ -42,7 +35,7 @@ open scoped ENNReal NNReal BigOperators
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-! ## Strong memoryless 述語 -/
+/-! ## Strong memoryless predicate -/
 
 section StrongMemoryless
 
@@ -50,19 +43,11 @@ variable {n : ℕ}
 variable {α : Type*} [MeasurableSpace α] [Nonempty α] [StandardBorelSpace α]
 variable {β : Type*} [MeasurableSpace β] [Nonempty β] [StandardBorelSpace β]
 
-/-- **Strong memoryless DMC predicate** (Option C, structure 形, 2 Markov axioms).
+/-- **Strong memoryless DMC predicate** (two Markov axioms):
 
-`IsMemorylessChannel` (D-2') が `(X^{≠i}, Y^{≠i}) → X_i → Y_i` を 1 つの Markov 公理にまとめて
-いたのに対し、本述語は 2 つに分解する:
-
-* `per_letter_markov`: 各 `i` で `(X^n) → X_i → Y_i`、すなわち `Y_i` は他の入力 `X^{≠i}` に
-依存しない (per-letter チャネル性)。
-* `outputs_cond_indep`: 各 `i` で `Y^{≠i} → X^n → Y_i`、すなわち入力全体を condition すれば
-`Y_i` は他の出力 `Y^{≠i}` と独立 (出力の条件付き独立性)。
-
-(旧 D-2' 路は 3 仮説 `h_yother_zero`/`h_split`/`h_markov_xprefix` を
-`channel_coding_converse_general_memoryless` に渡す形だったが、`h_yother_zero` が encoder
-任意で偽のため放棄・削除済。本 file は entropy 劣加法の `_strong` 路を採る。) -/
+* `per_letter_markov`: for each `i`, `X^n → X_i → Y_i` (per-letter channel).
+* `outputs_cond_indep`: for each `i`, `Y^{≠i} → X^n → Y_i` (outputs conditionally
+  independent given the full input). -/
 structure IsMemorylessChannelStrong (μ : Measure Ω) [IsFiniteMeasure μ]
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β) : Prop where
   /-- Per-letter Markov: `Y_i` depends on `X^n` only through `X_i`. -/
@@ -84,11 +69,11 @@ section MeasurableEquivPlumbing
 variable {n : ℕ}
 variable {β : Type*} [MeasurableSpace β]
 
-/-- `Fin n → β ≃ᵐ β × ({j : Fin n // j ≠ i} → β)`: 第 `i` 成分を取り出して残りと積に分解。
+/-- `Fin n → β ≃ᵐ β × ({j : Fin n // j ≠ i} → β)`: extracts the `i`-th component
+and pairs it with the rest.
 
-戦略: `MeasurableEquiv.piEquivPiSubtypeProd` で `(∀ j, β) ≃ᵐ ({j // j = i} → β)
-× ({j // j ≠ i} → β)` を作り、第 1 因子の `{j // j = i} → β` を `MeasurableEquiv.funUnique`
-で `β` に潰す (Mathlib `Unique.subtypeEq` インスタンス由来)。-/
+Uses `MeasurableEquiv.piEquivPiSubtypeProd` followed by `MeasurableEquiv.funUnique`
+to collapse `{j // j = i} → β` to `β`. -/
 noncomputable def measurableEquivExtract (i : Fin n) :
     (Fin n → β) ≃ᵐ β × ({j : Fin n // j ≠ i} → β) :=
   -- (∀ j, β) ≃ᵐ ({j // j = i} → β) × ({j // j ≠ i} → β)
@@ -106,12 +91,8 @@ variable {n : ℕ}
 variable {α : Type*} [MeasurableSpace α] [Nonempty α] [StandardBorelSpace α]
 variable {β : Type*} [MeasurableSpace β] [Nonempty β] [StandardBorelSpace β]
 
-/-- **`h_markov_xprefix` discharge from `IsMemorylessChannelStrong`**.
-
-The augmented Markov chain `(X^{<i}, X_i) → X_i → Y_i` is obtained from `per_letter_markov i`
-(`(fun ω j => Xs j ω) → Xs i → Ys i`) by left post-processing with
-`f := fun (x : Fin n → α) => ((fun j : Fin i.val => x ⟨j.val, j.isLt.trans i.isLt⟩), x i)`,
-applying `isMarkovChain_map_left`. -/
+/-- Augmented prefix Markov chain `(X^{<i}, X_i) → X_i → Y_i` derived from
+`IsMemorylessChannelStrong.per_letter_markov` via `isMarkovChain_map_left`. -/
 @[entry_point]
 lemma h_markov_xprefix_of_strong
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -136,19 +117,11 @@ lemma h_markov_xprefix_of_strong
     μ (fun ω j => Xs j ω) (Xs i) (Ys i)
     h_full_meas (hXs i) (hYs i) hf (h_strong.per_letter_markov i)
 
-/-- **`h_split` discharge from `IsMemorylessChannelStrong`** (independent of memoryless;
-purely a `condMutualInfo` reshape + 2-var chain rule).
+/-- Conditional mutual information reshape (independent of memorylessness):
+`condMI X_i Y^n Xprefix = condMI X_i Y_i Xprefix + condMI X_i Y^{≠i} (Xprefix, Y_i)`.
 
-```
-condMI X_i Y^n Xprefix
-= condMI X_i Y_i Xprefix + condMI X_i Y^{≠i} (Xprefix, Y_i)
-```
-
-戦略:
-1. `condMutualInfo_map_middle_measurableEquiv` で `Y^n` を `(Y_i, Y^{≠i})` に reshape。
-2. `condMutualInfo_chain_rule_Y_2var` で `(Y_i, Y^{≠i})` を分解。
-
-`I(Xprefix; X_i) ≠ ∞` の有限性は finite-alphabet 仮定から `mutualInfo_ne_top` で得る。 -/
+Reshapes `Y^n` to `(Y_i, Y^{≠i})` via `condMutualInfo_map_middle_measurableEquiv`,
+then applies `condMutualInfo_chain_rule_Y_2var`. -/
 @[entry_point]
 lemma h_split_of_strong
     [Fintype α] [MeasurableSingletonClass α]
@@ -244,7 +217,7 @@ backed by `InformationTheory/Shannon/CondEntropyMemoryless.lean`), which bypasse
 
 end Discharge
 
-/-! ## 主定理: 強 memoryless 版 channel coding converse -/
+/-! ## Main converse theorem — strong memoryless form -/
 
 section MainConverseStrong
 
@@ -257,23 +230,14 @@ variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
 omit [DecidableEq M] [DecidableEq α] [DecidableEq β] in
-/-- **Channel coding converse, strong memoryless DMC version (D-2'')**.
+/-- **Channel coding converse, strong memoryless DMC (Cover-Thomas Thm 7.9)**:
+under `IsMemorylessChannelStrong`,
+`log |M| ≤ ∑ I(X_i; Y_i).toReal + h(Pe) + Pe · log(|M| - 1)`.
 
-`IsMemorylessChannelStrong` 仮定下で per-letter mutual information の和に減衰する形。
-Cover-Thomas Thm 7.9 のエントロピー劣加法経路を辿る:
-
-```
-log |M| ≤ I(X^n; Y^n).toReal + Fano                              -- single-shot Markov encoder
-        ≤ ∑ I(X_i; Y_i).toReal + Fano                            -- mutualInfo_le_sum_per_letter_of_memoryless_strong
-```
-
-D-2' hypothesis-form (`channel_coding_converse_general_memoryless`) は 3 仮説の中に
-`h_yother_zero` を含むが、これは encoder 任意では数学的に偽である (反例: `X_1 := X_0`)
-ため、本定理はこれを **経由しない**。代わりに `mutualInfo_le_sum_per_letter_of_memoryless_strong`
-は subadditivity (encoder-agnostic) + 強 memoryless `H(Y^n|X^n) = ∑ H(Y_i|X_i)` のみを使う。
-
-引数 `h_memo : IsMemorylessChannel` は historical reasons (D-2' 互換) で残しているが、
-新しい証明経路では使われない。 -/
+The proof combines the single-shot Markov-encoder converse with
+`mutualInfo_le_sum_per_letter_of_memoryless_strong` (entropy subadditivity route).
+The argument `_h_memo : IsMemorylessChannel` is unused in the current proof but
+retained for API compatibility. -/
 @[entry_point]
 theorem channel_coding_converse_general_memoryless_strong
     (μ : Measure Ω) [IsProbabilityMeasure μ]

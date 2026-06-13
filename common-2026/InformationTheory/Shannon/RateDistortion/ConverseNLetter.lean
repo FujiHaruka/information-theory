@@ -8,51 +8,35 @@ import InformationTheory.Shannon.Bridge
 import InformationTheory.Shannon.Entropy
 
 /-!
-# Rate-distortion converse (n-letter form, E-4''C MVP)
+# Rate-distortion converse (n-letter form)
 
-[`docs/moonshot-seeds.md`](../../../docs/moonshot-seeds.md) の **E-4''C** カード:
-n-letter ブロック lossy code に対する converse:
-
+The converse for an n-letter block lossy code with an i.i.d. source:
 ```
 ∀ block lossy code (encoder, decoder),  i.i.d. source P_X^n,
   c.expectedBlockDistortion P_X d ≤ D ⟹
     (1/n) · (rateDistortionFunction d P_X D).toReal ≤ (1/n) · Real.log M.
 ```
 
-## Stage 構成
+## Main statements
 
-* **Stage 1 — block-level n-letter converse**: 既存 `rate_distortion_converse_single_shot_specified`
-  を `(α := Fin n → α, β := Fin n → β, M := Fin M)` で **直接 instantiate**。
-  block distortion `blockDistortion d n` を distortion measure として渡し、
-  `c.expectedBlockDistortion P_X d ≤ D` を hypothesis に取る。
-  結論: `(rateDistortionFunction (blockDistortion d n) (P_X^n) D).toReal ≤ Real.log M`。
-* **Stage 2 — single-letterized form (genuine, no hypothesis pass-through)**:
-  per-letter feasibility `R(Dt) ≤ I(X_i; X̂_i)` + MI superadditivity
-  `∑ I(X_i; X̂_i) ≤ I(X^n; X̂^n)` (self-built, **not** a Mathlib wall) + n-way
-  Jensen (built by induction from binary `rateDistortionFunction_convexOn`) +
-  block-distortion identity (`expectedBlockDistortion = (1/n) ∑ Dt`, via the i.i.d.
-  product law) + antitonicity で
-  `(R(D) over per-letter P_X).toReal ≤ (1/n) · log M` を導く。proof done (0 sorry
-  / 0 residual、`#print axioms` で sorryAx-free)。
+* `rate_distortion_converse_n_letter_block` — the block-level distortion form, a
+  direct `(α := Fin n → α, β := Fin n → β, M := Fin M)` instantiation of
+  `rate_distortion_converse_single_shot_specified` with `blockDistortion d n` as
+  the distortion measure.
+* `rate_distortion_converse_n_letter_singleLetter` — the single-letterized form.
 
-## 設計判断
+## Implementation notes
 
-* **i.i.d. source の precondition 化**: 旧 MVP では「n-way Jensen / block-distortion
-  Fubini identity / MI tensorization」を仮説 pass-through で受けていたが、これらは
-  全て genuine に閉じた。MI superadditivity は独立 source 前提
-  (`hindep : iIndepFun` + `hXs_law`) の下で in-project entropy 資産
-  (`entropy_pi_eq_sum_of_indep` + gateway `condEntropy_pi_le_sum_condEntropy_per_letter`
-  + bridge `mutualInfo_eq_entropy_sub_condEntropy`) を配線して self-build。`hindep`
-  / `hXs_law` / `hD` は core を載せ替える load-bearing predicate ではなく、結論が
-  成立するための genuine な precondition (独立性が無いと反例: `n=2, X₁=X₂`)。
-* **既存ファイル不変**: 新規 import (`CondEntropyMemoryless` / `AEP.Basic.Converse`
-  / `Bridge` / `Entropy`) のみ追加、`RateDistortionConverse.lean` 等の既存 file は
-  編集しない (downstream 影響回避)。
-
-## 主定理
-
-* `rate_distortion_converse_n_letter_block`: Stage 1。block-level distortion form。
-* `rate_distortion_converse_n_letter_singleLetter`: Stage 2。single-letterized form。
+The single-letterized form composes per-letter feasibility `R(Dᵢ) ≤ I(Xᵢ; X̂ᵢ)`,
+mutual-information superadditivity `∑ I(Xᵢ; X̂ᵢ) ≤ I(Xⁿ; X̂ⁿ)`, an n-way Jensen
+bound built by induction from the binary convexity
+`rateDistortionFunction_convexOn`, the block-distortion identity
+`expectedBlockDistortion = (1/n) ∑ Dᵢ` (via the i.i.d. product law), and
+antitonicity. The superadditivity step is built in-project from
+`entropy_pi_eq_sum_of_indep`, the gateway
+`condEntropy_pi_le_sum_condEntropy_per_letter`, and the MI↔entropy bridge
+`mutualInfo_eq_entropy_sub_condEntropy`; the independence of the source is a
+genuine precondition (a counterexample arises at `n = 2, X₁ = X₂`).
 -/
 
 namespace InformationTheory.Shannon
@@ -63,7 +47,7 @@ open scoped ENNReal NNReal BigOperators
 variable {Ω : Type*} [MeasurableSpace Ω]
 variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 
-/-! ## Stage 1 — block-level n-letter converse -/
+/-! ## Block-level n-letter converse -/
 
 /-- **Stage 1 — block-level n-letter rate-distortion converse**.
 
@@ -154,7 +138,7 @@ theorem rate_distortion_converse_n_letter_block
       measurable_id hencoder hdecoder d_block hd_block_meas hMI' hD'
   simpa using h_main
 
-/-! ## Block-level MI ≤ log M (Stage 2 補助) -/
+/-! ## Block-level MI ≤ log M -/
 
 /-- **Block-level MI ≤ log M**. For any block lossy code `c : LossyCode M n α β`
 and i.i.d. source `μ` on `Ω` with X^n-projection `Xs_block : Ω → (Fin n → α)`,
@@ -213,14 +197,12 @@ lemma mutualInfo_block_le_log_card
     ENNReal.toReal_mono hMI_W_finite h_dpi
   linarith
 
-/-! ## Stage 2 — single-letterized form (hypothesis pass-through) -/
+/-! ## Single-letterized form -/
 
-/-- **Per-letter feasible feed**: for fixed `i`, the joint `ν_i := μ.map (Xs i, X̂s i)`
-is feasible for the per-letter `R(Dt)` at threshold
-`Dt := ∫ d(Xs i ω) (X̂s i ω) ∂μ`. Hence
-`R(Dt) ≤ klDiv ν_i ((ν_i.map fst).prod (ν_i.map snd)) = mutualInfo μ (Xs i) (X̂s i)`.
-
-This is the per-letter analogue of the chain used in `rate_distortion_converse_single_shot`. -/
+/-- **Per-letter feasible feed**: for fixed `i`, the joint `νᵢ := μ.map (Xs i, X̂s i)`
+is feasible for the per-letter `R(Dᵢ)` at threshold
+`Dᵢ := ∫ d(Xs i ω) (X̂s i ω) ∂μ`, so
+`R(Dᵢ) ≤ klDiv νᵢ ((νᵢ.map fst).prod (νᵢ.map snd)) = mutualInfo μ (Xs i) (X̂s i)`. -/
 @[entry_point]
 lemma rateDistortionFunction_le_mutualInfo_perLetter
     {α' β' : Type*} [MeasurableSpace α'] [MeasurableSpace β']
@@ -254,7 +236,7 @@ lemma rateDistortionFunction_le_mutualInfo_perLetter
         rateDistortionFunction_le_of_feasible d (μ.map X) _ ν hν_marg hν_dist
     _ = mutualInfo μ X Xh := h_kl_eq
 
-/-! ## Stage 2 core — n-way Jensen for `R(D)` from binary convexity -/
+/-! ## n-way Jensen for `R(D)` from binary convexity -/
 
 /-- **Finite-alphabet integrability witness**: on finite alphabets any
 `d : α → β → ℝ` is integrable against any finite measure on `α × β`. Discharges the
@@ -365,7 +347,7 @@ private lemma rateDistortionFunction_jensen_uniform
             · -- last term: ofReal (1-lam) * R(Dlast) = ofReal (1/N) * R(Dvals (last)).
               rw [h1mlam, hDlast_def]
 
-/-! ## Stage 2 core — MI superadditivity for an independent source -/
+/-! ## MI superadditivity for an independent source -/
 
 /-- **Prefix independence on `Fin n` from `iIndepFun`**: for a mutually independent
 family `Xs : Fin n → Ω → α`, each `Xs i` is independent of its prefix
@@ -439,11 +421,9 @@ analogue of subadditivity, obtained from the conditional chain rule
 `condEntropy_pi_chain_rule` (`H(X^n | X̂^n) = ∑ H(X_i | X̂^n, X^{<i})`) followed by
 dropping the extra conditioners `(X̂^n, X^{<i})` down to `X̂_i` via
 `condEntropy_le_condEntropy_of_pair` (conditioning on a superset can only lower
-conditional entropy). -/
--- @audit:ok — independent honesty audit 2026-06-10. Encoder/decoder- and
--- independence-agnostic; the conditioner reshape (MeasurableEquiv) + chain rule +
--- `condEntropy_le_condEntropy_of_pair` are genuine, no load-bearing hyp.
--- sorryAx-free (machine-confirmed).
+conditional entropy).
+
+@audit:ok -/
 lemma condEntropy_pi_le_sum_condEntropy_per_letter
     {n : ℕ}
     {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
@@ -556,17 +536,11 @@ I(X^n; X̂^n) = H(X^n) - H(X^n | X̂^n)
             ≥ ∑ H(X_i) - ∑ H(X_i | X̂_i)           -- gateway (b)
             = ∑ (H(X_i) - H(X_i | X̂_i)) = ∑ I(X_i; X̂_i).
 ```
-This is the same family as the "D-1 wall" in `ParallelGaussianPerCoord.lean`, but
-it is **not** a Mathlib wall: it wires the existing in-project entropy assets
-(independent-source entropy additivity + the conditional-entropy chain rule).
+The independence hypothesis `hindep` is a genuine precondition: it is consumed
+inside `entropy_pi_eq_sum_of_indep` to collapse `H(X^n)` to `∑ H(Xᵢ)`, and
+dropping it makes the claim false (`X₁ = X₂ ⇒ ∑ I > I_joint`).
 
-@audit:ok — independent honesty audit 2026-06-10. `hindep` is genuinely
-load-bearing in the *mathematical* sense (a true precondition, NOT bundled core):
-it is consumed only inside `entropy_pi_eq_sum_of_indep` to collapse `H(X^n)` to
-`∑ H(Xᵢ)`. Dropping it makes the claim FALSE (X₁=X₂ ⇒ `∑I > I_joint`), so the
-hypothesis is necessary and the inequality follows semantically. The hard step
-(superadditivity) is built in the body from genuine bridge/chain-rule lemmas, not
-asserted by a hypothesis. sorryAx-free (machine-confirmed). -/
+@audit:ok -/
 lemma mutualInfo_superadditive_of_indep
     {n : ℕ}
     {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
@@ -620,7 +594,7 @@ lemma mutualInfo_superadditive_of_indep
   rw [h_lhs_eq]
   linarith
 
-/-- **Stage 2 — single-letterized n-letter rate-distortion converse** (genuine).
+/-- **Single-letterized n-letter rate-distortion converse**.
 
 Given a block lossy code, an i.i.d. source `P_X`, and a probability space
 `(Ω, μ)` where `Xs i : Ω → α` are i.i.d. copies of `P_X` (mutual independence
@@ -630,7 +604,7 @@ the single-letter rate-distortion function satisfies
 (rateDistortionFunction (d as ℝ-valued) P_X D).toReal ≤ (1/n) · Real.log M.
 ```
 
-The proof composes, all with in-project genuine assets (no `sorry`, no residual):
+The proof composes:
 1. **Block-distortion identity**: `(1/n) ∑ᵢ Dᵢ = c.expectedBlockDistortion P_X d`
    via the product law `μ.map X^n = Measure.pi (fun _ => P_X)`
    (`iIndepFun_iff_map_fun_eq_pi_map` + `hXs_law`), `integral_map`, and Fubini
@@ -638,37 +612,19 @@ The proof composes, all with in-project genuine assets (no `sorry`, no residual)
 2. **Antitonicity**: `R(P_X, D) ≤ R(P_X, (1/n)∑Dᵢ)` since `(1/n)∑Dᵢ ≤ D` (`hD`).
 3. **n-way Jensen**: `R(P_X, (1/n)∑Dᵢ) ≤ ∑ ofReal(1/n) · R(P_X, Dᵢ)` built by
    induction on `n` from the binary convexity `rateDistortionFunction_convexOn`
-   (`rateDistortionFunction_jensen_uniform`, this file).
+   (`rateDistortionFunction_jensen_uniform`).
 4. **Per-letter feasibility**: `R(P_X, Dᵢ) ≤ I(Xᵢ; X̂ᵢ)` via
    `rateDistortionFunction_le_mutualInfo_perLetter` (`μ.map (Xs i) = P_X`).
 5. **MI superadditivity** (independent source): `∑ I(Xᵢ; X̂ᵢ) ≤ I(X^n; X̂^n)` via
-   `mutualInfo_superadditive_of_indep` (this file). This was previously believed
-   to be a Mathlib wall (the "D-1 wall" family of `ParallelGaussianPerCoord.lean`);
-   it is **not** — it wires the existing in-project entropy assets
-   (`entropy_pi_eq_sum_of_indep` = independent-source `H(X^n) = ∑ H(Xᵢ)`, the
-   gateway `condEntropy_pi_le_sum_condEntropy_per_letter` = `H(X^n|X̂^n) ≤
-   ∑ H(Xᵢ|X̂ᵢ)`, and the MI↔entropy bridge `mutualInfo_eq_entropy_sub_condEntropy`).
+   `mutualInfo_superadditive_of_indep`.
 6. **Block MI bound**: `I(X^n; X̂^n).toReal ≤ log M` (`mutualInfo_block_le_log_card`).
 
-Under-hypothesized history (2026-06-10): a previous signature took `{D : ℝ}` as a
-free variable and assumed nothing about the joint law of `Xs`, making the claimed
-conclusion **false** as framed (degenerate-boundary counterexamples: `n=1, M=2,
-|α|=4` uniform Hamming `D=0` gives `R = log 4 > log 2`; or `n=2, X₁=X₂` fully
-dependent gives `R = log 2 > (1/2)log 2`). The repair adds, as genuine
-*preconditions* (not load-bearing predicate bundling):
-* `hD : c.expectedBlockDistortion P_X d ≤ D` — the operating point.
-* `hindep : iIndepFun (fun i => Xs i) μ` + `hXs_law` — the i.i.d. memoryless
-  source assumption (this is what makes MI superadditivity hold).
+The independence and i.i.d. preconditions (`hindep` + `hXs_law`) are genuine: the
+conclusion is false without them (`n = 2, X₁ = X₂` gives `R = log 2 > (1/2)log 2`).
 The finiteness preconditions `h_MI_block_finite` / `h_MI_perletter_finite` are
-regularity (needed for the `ENNReal.toReal` monotonicity steps).
+needed for the `ENNReal.toReal` monotonicity steps.
 
-@audit:ok — independent honesty audit 2026-06-10 (commit `e73513c`): all
-preconditions (`hD`/`hindep`/`hXs_law`/`[Nonempty β]`/MI-finiteness) are genuine
-regularity, not load-bearing core bundling; the superadditivity + n-way Jensen
-core is self-built in the body. Sufficiency confirmed: both cited
-degenerate-boundary counterexamples (D-free, X₁=X₂ dependent) are closed by `hD`
-and `hindep` respectively. `#print axioms` = `[propext, Classical.choice,
-Quot.sound]` (sorryAx-free, machine-reconfirmed). -/
+@audit:ok -/
 @[entry_point]
 theorem rate_distortion_converse_n_letter_singleLetter
     [Fintype α] [Nonempty α] [MeasurableSingletonClass α]

@@ -3,27 +3,13 @@ import InformationTheory.Shannon.Converse
 import InformationTheory.Shannon.MIChainRule
 
 /-!
-# Channel coding converse — n-variable i.i.d. form (reuse test 2026-05)
+# Channel coding converse — n-variable i.i.d. form
 
-[reuse-test-2026-05 plan](../../../docs/reuse-test-2026-05.md) の Phase 2 成果物。
+## Main statements
 
-### 主張
-
-`Msg : Ω → M` を一様分布、`encoder : M → (Fin n → α)`、`Ys : Fin n → Ω → β` を
-通信路出力、`decoder : (Fin n → β) → M` とする。Markov chain
-`Msg → encoder ∘ Msg → Y^n` と通信路 + 入力分布の i.i.d. 仮定下で:
-
-```
-log |M| ≤ n · I(X_0; Y_0) + h(Pe) + Pe · log(|M| − 1)
-```
-
-ここで `X_0 ω := encoder (Msg ω) 0`、`Y_0 := Ys 0`、`Pe := μ {Msg ≠ decoder ∘ Y^n}`。
-
-### 構成 (3 step、bridge ゼロ)
-
-1. `shannon_converse_single_shot_markov_encoder` で `log|M| ≤ I(X^n; Y^n).toReal + Fano`。
-2. `mutualInfo_iid_eq_nsmul` で `I(X^n; Y^n) = n • I(X_0; Y_0)`。
-3. `ENNReal.toReal_nsmul`/`smul_eq_mul` で `(n • _).toReal = n * _.toReal`、`linarith` で閉じる。
+* `channel_coding_converse_iid`: Under a Markov chain `Msg → encoder ∘ Msg → Y^n`
+  and an i.i.d. joint distribution assumption, the log-cardinality of the message
+  set is bounded by `n · I(X_0; Y_0) + h(Pe) + Pe · log(|M| - 1)`.
 -/
 
 namespace InformationTheory.Shannon
@@ -41,19 +27,17 @@ variable {α β : Type*}
   [MeasurableSpace β] [MeasurableSingletonClass β]
 
 omit [DecidableEq M] [DecidableEq α] [DecidableEq β] in
-/-- Channel coding converse, n-variable i.i.d. form (Markov encoder 版).
+/-- Channel coding converse, n-variable i.i.d. form (Markov encoder).
 
-`Msg : Ω → M` 一様、`encoder : M → (Fin n → α)`、`Ys : Fin n → Ω → β`、
-`decoder : (Fin n → β) → M`。Markov chain `Msg → encoder ∘ Msg → Y^n` と
-i.i.d. 仮定下で:
+Under a Markov chain `Msg → encoder ∘ Msg → Y^n` and an i.i.d. joint
+distribution assumption:
 
 ```
-log |M| ≤ n · I(X_0; Y_0).toReal + h(Pe) + Pe · log(|M| − 1)
+log |M| ≤ n · I(X_0; Y_0).toReal + h(Pe) + Pe · log(|M| - 1)
 ```
 
-`X^n := encoder ∘ Msg`、`Y^n := fun ω i => Ys i ω`、
-`X_0 ω := encoder (Msg ω) 0`、`Y_0 := Ys 0`、
-`Pe := errorProb μ Msg Y^n decoder`。-/
+where `X_0 ω := encoder (Msg ω) 0`, `Y_0 := Ys 0`, and
+`Pe := errorProb μ Msg Y^n decoder`. -/
 @[entry_point]
 theorem channel_coding_converse_iid
     {n : ℕ} (hn : 0 < n)

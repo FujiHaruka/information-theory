@@ -5,51 +5,43 @@ import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import Mathlib.Analysis.SpecialFunctions.BinaryEntropy
 
 /-!
-# Constrained Maximum Entropy (Cover–Thomas Theorem 12.1.1) — T3-A
+# Constrained maximum entropy (Cover–Thomas Theorem 12.1.1)
 
-有限アルファベット `α` 上の pmf `P : α → ℝ` (∈ `stdSimplex ℝ α`) について、
-モーメント制約 `∑ x, P x · f i x = c i` (`i = 1..k`) のもとで Shannon entropy
-`H(P) = ∑ x, negMulLog (P x)` を最大化する分布は **Boltzmann–Gibbs exponential family**
+For a pmf `P : α → ℝ` on a finite alphabet, the distribution maximizing Shannon entropy
+`H(P) = ∑ x, negMulLog (P x)` subject to moment constraints `∑ x, P x · f i x = c i`
+is the Boltzmann–Gibbs exponential family
 
-  gibbsPmf f λ x := exp (∑ i, λ i · f i x) / ∑ y, exp (∑ i, λ i · f i y)
+  `gibbsPmf f λ x := exp (∑ i, λ i · f i x) / Z(λ)`
 
-で表される (Lagrange parameter `λ` を **ansatz として外から受け取る** pass-through 設計)。
+where `Z(λ) = ∑ y, exp (∑ i, λ i · f i y)` is the partition function.
+The Lagrange parameter `λ` is passed in as an hypothesis (ansatz pass-through design).
 
-## 主定理
+## Main definitions
 
-* `gibbsPmf`                       — Boltzmann–Gibbs pmf 定義
-* `gibbsPmf_mem_stdSimplex`        — `gibbsPmf f λ` は pmf (∈ `stdSimplex`)
-* `entropy_le_gibbs_of_constraints`
-                                   — **Tier 1 上界**: 制約下で `H(P) ≤ H(gibbsPmf f λ)`
-* `entropy_eq_gibbs_iff_of_constraints`
-                                   — **Tier 2 uniqueness**: 等号 ⟺ `P = gibbsPmf f λ`
+* `gibbsZ` — partition function `Z(λ) := ∑ y, exp ⟨λ, f y⟩`.
+* `gibbsPmf` — Boltzmann–Gibbs pmf `x ↦ exp ⟨λ, f x⟩ / Z(λ)`.
 
-## Approach
+## Main statements
 
-KKT / Lagrange duality は Mathlib に未整備 (`LagrangeMultipliers.lean:22-24` で TODO
-明記、KKT 不在)。本ファイルではこれを **Gibbs + Csiszár `klDivPmf` 直接ルート** で回避:
+* `gibbsPmf_mem_stdSimplex` — `gibbsPmf f λ ∈ stdSimplex ℝ α`.
+* `entropy_le_gibbs_of_constraints` — under moment constraints, `H(P) ≤ H(gibbsPmf f λ)`.
+* `entropy_eq_gibbs_iff_of_constraints` — equality holds iff `P = gibbsPmf f λ`.
+
+## Implementation notes
+
+KKT / Lagrange duality is not available in Mathlib
+(`Mathlib/Analysis/Calculus/LagrangeMultipliers.lean` notes the absence). The proof
+avoids this via the Gibbs + Csiszár `klDivPmf` algebraic-identity route:
 
 ```
-0 ≤ klDivPmf P (gibbsPmf f λ)                    -- CsiszarProjection.klDivPmf_nonneg
-  = -H(P) - ⟨λ, 𝔼_P[f]⟩ + log Z(λ)               -- 核 identity
-  = -H(P) - ⟨λ, c⟩    + log Z(λ)                 -- hP_constraints
-
-0 = klDivPmf (gibbsPmf f λ) (gibbsPmf f λ)       -- Chernoff.klDivPmf_self_eq_zero
-  = -H(gibbsPmf f λ) - ⟨λ, c⟩ + log Z(λ)         -- h_gibbs_constraints
-
-∴ H(P) ≤ H(gibbsPmf f λ)
+0 ≤ klDivPmf P (gibbsPmf f λ) = −H(P) − ⟨λ, c⟩ + log Z(λ)
+0 = klDivPmf (gibbsPmf f λ) (gibbsPmf f λ) = −H(gibbsPmf f λ) − ⟨λ, c⟩ + log Z(λ)
 ```
 
-ansatz `λ` を主定理 signature の hypothesis として外から取ることで、ψ(λ) 凸性 /
-Lagrange parameter 存在性 (Mathlib 不在道具立て) を**完全に回避**する。Lagrange
-parameter の存在性は別 plan (`max-entropy-constrained-existence-*`) で扱う想定。
-
-`Mathlib/MeasureTheory/Measure/Tilted.lean` ではなく `CsiszarProjection.klDivPmf` の
-pmf 形を採用したのは:
-1. Csiszár 既存 API (`klDivPmf_nonneg`, `klDivPmf_strictConvexOn_left`,
-   `klDivPmf_self_eq_zero`) が pmf 形に閉じている
-2. `Real.exp / log` の算術だけで gibbs と `log Z` が閉じる (`Tilted` の
-   `rnDeriv` / `=ᵐ` 議論を完全回避)
+This avoids any need for ψ(λ) convexity or Lagrange-multiplier existence theory.
+We use `CsiszarProjection.klDivPmf` rather than `Mathlib.MeasureTheory.Measure.Tilted`
+because the Csiszár API (`klDivPmf_nonneg`, `klDivPmf_self_eq_zero`) is closed in the pmf
+world, and `Real.exp / log` arithmetic suffices without `rnDeriv` or `=ᵐ` arguments.
 -/
 
 namespace InformationTheory.Shannon.MaxEntropyConstrained
@@ -64,7 +56,7 @@ open scoped BigOperators
 variable {α : Type*} [Fintype α] [DecidableEq α]
 variable {k : ℕ}
 
-/-! ## Phase A — `gibbsPmf` 定義 + 基本性質 (Tier 0) -/
+/-! ## Gibbs pmf: definition and basic properties -/
 
 /-- Partition function `Z(λ) := ∑ y, exp (∑ i, λ i · f i y)`. Independent `def` so
 that `Real.log Z(λ)` can be reused throughout Phase B's core identity. -/
@@ -124,7 +116,7 @@ lemma gibbsPmf_mem_stdSimplex [Nonempty α]
 
 omit [DecidableEq α] in
 /-- Closed form for `log (gibbsPmf f λ x)`: the numerator's exponent minus `log Z(λ)`.
-Phase B 核 identity の入口。 -/
+Entry point for the core algebraic identity in the main theorem proof. -/
 lemma log_gibbsPmf [Nonempty α]
     (f : Fin k → α → ℝ) (lam : Fin k → ℝ) (x : α) :
     Real.log (gibbsPmf f lam x)
@@ -133,10 +125,10 @@ lemma log_gibbsPmf [Nonempty α]
   rw [Real.log_div (Real.exp_ne_zero _) (gibbsZ_pos f lam).ne']
   rw [Real.log_exp]
 
-/-! ## Phase B — 核 identity + Tier 1 主定理 -/
+/-! ## Core identity and main upper bound -/
 
 omit [DecidableEq α] in
-/-- **Core algebraic identity (Phase B の重力中心)** — for any `Q ∈ stdSimplex` on `α`,
+/-- **Core algebraic identity** — for any `Q ∈ stdSimplex` on `α`,
 the KL divergence from `Q` to `gibbsPmf f λ` decomposes into negative entropy,
 the constraint inner product `⟨λ, 𝔼_Q[f]⟩`, and `log Z(λ)`:
 
@@ -243,7 +235,7 @@ lemma klDivPmf_gibbsPmf_eq [Nonempty α]
   ring
 
 omit [DecidableEq α] in
-/-- **T3-A 主定理 (Tier 1 上界)** — Cover–Thomas Theorem 12.1.1, pmf 形:
+/-- **Cover–Thomas Theorem 12.1.1 (upper bound)** — pmf form:
 under moment constraints `∑ x, P x · f i x = c i` for all `i`, and assuming the same
 constraints hold for the Boltzmann–Gibbs ansatz `gibbsPmf f λ` for some fixed Lagrange
 parameter `lam : Fin k → ℝ`, the entropy of `P` is bounded by the entropy of the gibbs
@@ -288,7 +280,7 @@ theorem entropy_le_gibbs_of_constraints [Nonempty α]
   -- Combine: H(G) - H(P) = klDivPmf P G - 0 ≥ 0.
   linarith
 
-/-! ## Phase C — Tier 2 uniqueness -/
+/-! ## Uniqueness -/
 
 omit [DecidableEq α] in
 /-- Auxiliary: for a full-support reference pmf `Q`, `klDivPmf P Q = 0 ↔ P = Q`.
@@ -330,8 +322,7 @@ lemma klDivPmf_eq_zero_iff_pmf
     exact klDivPmf_self_eq_zero Q hQ_pos
 
 omit [DecidableEq α] in
-/-- **T3-A uniqueness (Tier 2)** — entropy equality `H(P) = H(gibbsPmf f λ)` is achieved
-*if and only if* `P = gibbsPmf f λ` pointwise. -/
+/-- **Uniqueness** — `H(P) = H(gibbsPmf f λ)` if and only if `P = gibbsPmf f λ` pointwise. -/
 @[entry_point]
 theorem entropy_eq_gibbs_iff_of_constraints [Nonempty α]
     (f : Fin k → α → ℝ) (c : Fin k → ℝ)
@@ -373,14 +364,9 @@ theorem entropy_eq_gibbs_iff_of_constraints [Nonempty α]
   exact klDivPmf_eq_zero_iff_pmf hP (gibbsPmf_mem_stdSimplex f lam)
           (gibbsPmf_pos f lam)
 
-/-! ## Phase E — 特例展開 (Tier 3 stretch) -/
+/-! ## Special cases -/
 
-/-! ### E-1 Uniform 退化 (空制約 ⟹ uniform pmf, 教科書 12.1 trivial case)
-
-`f := 0 : Fin k → α → ℝ` (例えば `k = 0` の空制約) のとき、`gibbsPmf` は uniform pmf
-`x ↦ 1 / Fintype.card α` に等しい (`λ` の値に無依存)。エントロピーは `log (Fintype.card α)`
-で、`MaxEntropy.entropy_le_log_card` の pmf 形に一致する。
--/
+/-! ### E-1: Zero feature map reduces to uniform pmf -/
 
 omit [DecidableEq α] in
 /-- `gibbsZ` of the zero feature map is just `Fintype.card α` (each `exp 0 = 1` summed
@@ -427,9 +413,7 @@ lemma entropy_uniform_pmf [Nonempty α] :
   field_simp
 
 omit [DecidableEq α] in
-/-- **E-1 (Tier 3 特例)** — エントロピーの uniform pmf 評価値:
-`∑ x, negMulLog (gibbsPmf 0 lam x) = log (Fintype.card α)`. これは
-`MaxEntropy.entropy_le_log_card` の pmf 形 (sup) と一致する。 -/
+/-- With the zero feature map, the Gibbs entropy equals `log (Fintype.card α)`. -/
 @[entry_point]
 theorem entropy_gibbsPmf_zero_eq_log_card [Nonempty α] (lam : Fin k → ℝ) :
     ∑ x : α, Real.negMulLog (gibbsPmf (0 : Fin k → α → ℝ) lam x)
@@ -440,13 +424,7 @@ theorem entropy_gibbsPmf_zero_eq_log_card [Nonempty α] (lam : Fin k → ℝ) :
         rw [gibbsPmf_zero_eq_uniform lam]]
   exact entropy_uniform_pmf
 
-/-! ### E-2 Two-point exponential (Bernoulli, 教科書 Ex. 12.1)
-
-`α := Bool`, `k := 1`, `f 0 := fun b => if b then 1 else 0`, `c 0 := μ` のとき、
-mean constraint `gibbsPmf f λ true * 1 + gibbsPmf f λ false * 0 = μ` を満たす ansatz `λ`
-について、`gibbsPmf f λ true = μ`, `gibbsPmf f λ false = 1 - μ` で entropy が `binEntropy μ`
-に等しい。Lagrange parameter の具体値 `λ 0 = log (μ / (1-μ))` は scope 外 (ansatz pass-through)。
--/
+/-! ### E-2: Bernoulli case -/
 
 /-- The two-point feature map: indicator of `true`. -/
 noncomputable def boolFeature : Fin 1 → Bool → ℝ :=
@@ -481,7 +459,7 @@ lemma gibbsPmf_bool_false_eq_of_mean
   have h_true := gibbsPmf_bool_true_eq_of_mean lam μ h_mean
   linarith
 
-/-- **E-2 (Tier 3 特例)** — Bernoulli ansatz: under mean constraint `μ`, the gibbs
+/-- Under mean constraint `μ`, the Gibbs
 entropy on `Bool` is exactly the binary entropy `Real.binEntropy μ` (= textbook
 `-μ log μ - (1-μ) log (1-μ)`, Ex. 12.1). -/
 @[entry_point]
@@ -494,19 +472,13 @@ theorem entropy_gibbsPmf_bool_eq_binEntropy
       gibbsPmf_bool_false_eq_of_mean lam μ h_mean]
   rw [Real.binEntropy_eq_negMulLog_add_negMulLog_one_sub]
 
-/-! ### E-3 Discretized exponential (geometric ratio form, 教科書 Ex. 12.2)
-
-`α := Fin (N+1)` (`Nonempty` 確保のため `Nat.succ`), `k := 1`,
-`f 0 := fun x => (x : ℝ)` のとき、`gibbsPmf` は geometric ratio `q := exp (λ 0)` で
-`x ↦ q^x / ∑ y, q^y` 形 (closed form)。Lagrange parameter `λ` の存在性 / mean `μ` との
-具体的対応は scope 外 (ansatz pass-through、`gibbsPmf` の shape のみ確定する)。
--/
+/-! ### E-3: Discretized exponential (geometric ratio form) -/
 
 /-- The discrete "linear" feature map on `Fin (N+1)`: `f 0 x := (x.val : ℝ)`. -/
 noncomputable def linearFeature {N : ℕ} : Fin 1 → Fin (N + 1) → ℝ :=
   fun _ x => (x : ℝ)
 
-/-- **E-3 (Tier 3 特例)** — discretized exponential closed form: setting `q := exp (λ 0)`,
+/-- **Geometric ratio form** — setting `q := exp (λ 0)`,
 the Gibbs distribution with the linear feature is the geometric ratio
 `x ↦ q^x.val / ∑ y, q^y.val` on `Fin (N+1)`. Lagrange parameter `λ` is left as an
 ansatz; choosing `λ 0 = log q` then yields the geometric distribution with ratio `q`. -/

@@ -4,35 +4,27 @@ import InformationTheory.Shannon.StrongStein
 import Mathlib.MeasureTheory.Constructions.Pi
 
 /-!
-# Channel coding strong converse (E-1) — Verdú-Han 単発下界
+# Channel coding strong converse — Verdú-Han single-shot lower bound
 
-[E-1 plan](../../docs/shannon/channel-coding-strong-converse-plan.md).
-
-Cover-Thomas 7.9 strong form (Wolfowitz) の Lean 化のうち、**情報密度
-(information density) 単発下界** を Verdú-Han Lemma 4.2.2 の形で publish する。
-
-任意の code `c : Code M n α β`、任意の reference output law `Q^n : Measure (Fin n → β)`
-(probability measure)、任意の `γ > 0` で、`threshold := Real.log M + γ` のもと:
+Single-shot Verdú-Han lower bound (Lemma 4.2.2) for the channel coding strong converse.
+For any code `c`, reference output law `Q^n`, and `γ > 0`, with `threshold := log M + γ`:
 
 ```
 1 - (c.averageErrorProb W).toReal
-  ≤ Real.exp γ + (1 / M) * ∑ m, P_m^n (highLLRSet W c Q^n threshold m)
+  ≤ exp γ + (1 / M) * ∑ m, P_m^n (highLLRSet W c Q^n threshold m)
 ```
 
-ここで:
-- `P_m^n := Measure.pi (fun i => W (c.encoder m i))` (codeword `m` の channel 出力分布)
-- `highLLRSet W c Q^n t m := { y | P_m^n.real {y} > exp(t) · Q^n.real {y} }`
+where `P_m^n := Measure.pi (fun i => W (c.encoder m i))` and
+`highLLRSet W c Q^n t m := { y | P_m^n.real {y} > exp(t) · Q^n.real {y} }`.
 
-右辺第 1 項 `exp γ` は `M` で割っていない (decoder の partition `∑_m Q^n(B_m) ≤ Q^n(univ) ≤ 1`
-で吸収済み)。第 2 項は WLLN で 0 に飛ぶ tail term。両者で `Pe → 1` (`log M / n > I + δ`)。
+The asymptotic `Pe → 1` conclusion (for `log M / n > I + δ`) requires a WLLN step
+handled in a separate file.
 
-## 設計判断
+## Implementation notes
 
-* **Single-shot (no asymptotic)**: 本 file は単発不等式のみ publish。`Pe → 1` 系
-  の asymptotic は WLLN 段を別 file (deferred plan) で補う。Strong Stein の
-  Phase A (`steinTypicalSet_Q_prob_ge`) と同質の集合代数 + Markov ineq plumbing。
-* **任意の reference `Q^n`** (probability measure): i.i.d. `(outputDistribution p W)^n`
-  に限らず Verdú-Han の deterministic 形を取り、入力分布依存性を呼び出し側に分離。
+The reference measure `Q^n` is an arbitrary probability measure (not necessarily
+i.i.d. `(outputDistribution p W)^n`), following Verdú-Han's deterministic formulation
+and separating the input-distribution dependence to the caller.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
@@ -44,7 +36,7 @@ variable {α β : Type*}
   [Fintype α] [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β]
 
-/-! ### Phase A — 情報密度型単発下界 (per-codeword) -/
+/-! ### Per-codeword information-density lower bound -/
 
 /-- **High-LLR set for codeword `m`**: those `y` where the channel output law at
 codeword `m` exceeds the reference `Q` by more than `exp(threshold)`. -/
@@ -170,7 +162,7 @@ theorem channelCoding_per_codeword_decomposition
     exact measure_mono Set.inter_subset_right
   linarith
 
-/-! ### Phase B — Codeword-average Verdú-Han 下界 -/
+/-! ### Codeword-average Verdú-Han lower bound -/
 
 omit [Fintype α] [DecidableEq α] [MeasurableSingletonClass α] [Nonempty β] in
 /-- **Average-codeword Verdú-Han bound**:
@@ -347,6 +339,6 @@ theorem channelCoding_average_success_le
   -- Done.
   exact h_final
 
-/-! ### Phase C — 主形 (with `threshold := log M + γ`) -/
+/-! ### Main form with `threshold := log M + γ` -/
 
 end InformationTheory.Shannon.ChannelCoding

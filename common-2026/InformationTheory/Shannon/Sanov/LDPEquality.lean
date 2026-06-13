@@ -8,22 +8,30 @@ import Mathlib.Data.Nat.Choose.Multinomial
 /-!
 # Sanov LDP equality form (B-1'')
 
-Cover-Thomas Theorem 11.4.1 LDP equality, **簡略 open set 形**.
+Cover-Thomas Theorem 11.4.1, simplified open-set form:
 
 ```
-(1/n) log Q^n(⋃ c ∈ E n, T_c)  →  -klDivSumForm_ofVec P Q  (n → ∞)
+(1/n) log Q^n(⋃ c ∈ E n, T_c)  →  -D   as n → ∞
 ```
 
-入力: ユーザが渡す `P ∈ Δ`, `D = klDivSumForm_ofVec P (Q.real ∘ singleton)`,
-`E n` が `roundedTypeIndex P n` を eventually 含む + `∀ c ∈ E n, D ≤ klDivIndex c n Q`。
+where `D = klDivSumForm_ofVec P (Q.real ∘ singleton)`, given `E n` eventually contains
+`roundedTypeIndex P n` and `∀ c ∈ E n, D ≤ klDivIndex c n Q`.
 
-構成 (4 phase):
-* **Phase B** — achievable type sequence `roundedTypeIndex P n` の構成 + Tendsto。
-* **Phase C** — multinomial Stirling-free `Q^n(T_c) ≥ (n+1)^{-|α|} · exp(-n · klDivIndex)`.
-* **Phase D** — liminf 形 lower bound `liminf (1/n) log Q^n(⋃) ≥ -D`.
-* **Phase E** — sandwich `B-1' upper + Phase D lower` → Tendsto.
+## Main statements
 
-詳細: `docs/shannon/sanov-ldp-equality-plan.md` Phase B-E.
+* `typeClassByCount_card_ge` — multinomial lower bound (Stirling-free):
+  `(n+1)^{-|α|} · n^n / ∏ c(a)^{c(a)} ≤ |T_c|`.
+* `sanov_ldp_lower_bound_pointwise` — `liminf (1/n) log Q^n(⋃ c ∈ E n, T_c) ≥ -D`.
+* `sanov_ldp_equality` — sandwich: `Tendsto (1/n) log Q^n(⋃ c ∈ E n, T_c) → -D`.
+
+## Implementation notes
+
+* Phase B constructs the achievable type sequence `roundedTypeIndex P n` (floor rounding
+  with a single absorber letter to satisfy the sum constraint exactly).
+* Phase C proves the multinomial lower bound without Stirling's approximation, using only
+  the per-letter inequality `c! · c^k ≤ k! · c^c`.
+* Phase D extracts the `liminf` bound by sandwiching with `|α| log(n+1)/n → 0`.
+* Phase E closes via `tendsto_of_le_liminf_of_limsup_le`.
 -/
 
 namespace InformationTheory.Shannon
@@ -34,7 +42,7 @@ open scoped Topology
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ### Phase B — Rounded type sequence -/
+/-! ### Phase B — Rounded type sequence (achievable type index) -/
 
 /-- Default "absorber" letter for the rounded type index: any element of the
 nonempty Fintype `α`. -/
@@ -379,7 +387,7 @@ theorem klDivIndex_rounded_tendsto
     roundedTypeIndex_tendsto_vec P hP hP_nn
   exact h_cont.tendsto P |>.comp h_tendsto_vec
 
-/-! ### Phase C — Multinomial Stirling-free lower bound -/
+/-! ### Phase C — Multinomial lower bound (Stirling-free) -/
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
   [MeasurableSingletonClass α] in
@@ -685,12 +693,12 @@ private lemma piAntidiag_card_le (n : ℕ) :
     _ = (n+1) ^ Fintype.card α := h_card_pow
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **Multinomial Stirling-free lower bound** (Cover-Thomas 11.1.3):
-`(n+1)^{-|α|} · n^n / ∏ (c a)^(c a) ≤ |T_c|`.
+/-- **Multinomial lower bound** (Cover-Thomas 11.1.3):
+`(n+1)^{-|α|} · n^n / ∏ c(a)^{c(a)} ≤ |T_c|`.
 
-戦略: `multinomial univ c · ∏ (c/n)^{c a} ≥ (n+1)^{-|α|}` を multinomial theorem
-+ max-likelihood (per-letter factorial-power 不等式) で取り、最後に
-`multinomial univ c ≤ |T_c|` を合わせる。 -/
+Strategy: show `multinomial univ c · ∏ (c/n)^{c(a)} ≥ (n+1)^{-|α|}` via the multinomial
+theorem and the per-letter max-likelihood inequality; then combine with
+`multinomial univ c ≤ |T_c|`. -/
 theorem typeClassByCount_card_ge
     {n : ℕ} (c : α → ℕ) (hc_sum : (∑ a, c a) = n) :
     (((n : ℝ) + 1) ^ (Fintype.card α : ℕ))⁻¹ *
@@ -898,12 +906,10 @@ theorem typeClassByCount_card_ge
     exact h_div
 
 omit [Nonempty α] in
-/-- **Lower bound on `Q^n(T_c)`** (Phase C 主補題, from `typeClassByCount_card_ge`):
-`Q^n(T_c) ≥ (n+1)^{-|α|} · exp(-n · klDivIndex c n Q)`.
+/-- **Lower bound on `Q^n(T_c)`**: `Q^n(T_c) ≥ (n+1)^{-|α|} · exp(-n · klDivIndex c n Q)`.
 
-Derivation: `Q^n(T_c) = |T_c| · ∏ Q(a)^c(a)` (per-x identity), and the
-multinomial lower bound gives `|T_c| · ∏ Q(a)^c(a) ≥ (n+1)^{-|α|} · n^n / ∏ c(a)^c(a) · ∏ Q(a)^c(a)`,
-which after algebra equals `(n+1)^{-|α|} · exp(-n · klDivIndex c n Q)`. -/
+Follows from `typeClassByCount_card_ge` and the identity
+`∏ Q(a)^{c(a)} · n^n / ∏ c(a)^{c(a)} = exp(-n · klDivIndex c n Q)`. -/
 theorem typeClassByCount_Qn_ge
     (Q : Measure α) [IsProbabilityMeasure Q]
     (hQpos : ∀ a : α, 0 < Q.real {a})
@@ -1044,19 +1050,11 @@ theorem typeClassByCount_Qn_ge
   rw [← mul_assoc]
   exact mul_le_mul_of_nonneg_right h_card_ge h_qm_prod_nn
 
-/-! ### Phase D — liminf 形 lower bound -/
+/-! ### Phase D — liminf lower bound -/
 
-/-- **Sanov LDP lower bound (single-rounding sequence)**:
-`roundedTypeIndex P n ∈ E n` が eventually 成り立つとき
-`liminf (1/n) log Q^n(⋃ c ∈ E n, T_c) ≥ -klDivSumForm_ofVec P (Q.real ∘ singleton)`.
-
-証明 sketch:
-1. `T_{c_n} ⊆ ⋃ c ∈ E n, T_c` (c_n ∈ E n から)。
-2. Phase C: `Q^n(T_{c_n}) ≥ (n+1)^{-|α|} · exp(-n · klDivIndex c_n n Q)`.
-3. `(1/n) log Q^n(⋃) ≥ -|α| · log(n+1)/n - klDivIndex c_n n Q`.
-4. `log(n+1)/n → 0` (B-1' `log_succ_div_tendsto_zero`),
-   `klDivIndex c_n n Q → klDivSumForm_ofVec P` (Phase B `klDivIndex_rounded_tendsto`).
-5. liminf inequality. -/
+/-- **Sanov LDP lower bound (rounding sequence)**:
+if `roundedTypeIndex P n ∈ E n` eventually, then
+`liminf (1/n) log Q^n(⋃ c ∈ E n, T_c) ≥ -klDivSumForm_ofVec P (Q.real ∘ singleton)`. -/
 theorem sanov_ldp_lower_bound_pointwise
     (Q : Measure α) [IsProbabilityMeasure Q]
     (hQpos : ∀ a : α, 0 < Q.real {a})
@@ -1218,17 +1216,17 @@ theorem sanov_ldp_lower_bound_pointwise
 
 /-! ### Phase E — Tendsto sandwich (main theorem) -/
 
-/-- **Sanov LDP equality form** (B-1'' 主定理, Cover-Thomas Theorem 11.4.1 簡略形):
+/-- **Sanov LDP equality form** (Cover-Thomas Theorem 11.4.1):
 
 ```
 (1/n) log Q^n(⋃ c ∈ E n, T_c)  →  -klDivSumForm_ofVec P (Q.real ∘ singleton)
 ```
 
-入力: `P` (minimizer のユーザ指定形), `E n` が eventually `roundedTypeIndex P n` を含む,
-`∀ c ∈ E n, klDivSumForm_ofVec P Q ≤ klDivIndex c n Q` (minimizer 性).
+Inputs: `P` is the user-specified minimizer; `E n` eventually contains `roundedTypeIndex P n`;
+`∀ c ∈ E n, klDivSumForm_ofVec P Q ≤ klDivIndex c n Q` (minimizer hypothesis).
 
-証明 sketch: B-1' upper bound (`sanov_ldp_upper_bound`) で `limsup ≤ -D + ε` (∀ ε > 0)
-⇒ `limsup ≤ -D`. Phase D で `liminf ≥ -D`. `tendsto_of_le_liminf_of_limsup_le` で sandwich. -/
+Proof: `sanov_ldp_upper_bound` gives `limsup ≤ -D + ε` for all `ε > 0`, hence `limsup ≤ -D`;
+Phase D gives `liminf ≥ -D`; close via `tendsto_of_le_liminf_of_limsup_le`. -/
 @[entry_point]
 theorem sanov_ldp_equality
     (Q : Measure α) [IsProbabilityMeasure Q]

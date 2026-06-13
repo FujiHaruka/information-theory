@@ -8,10 +8,11 @@ import Mathlib.Topology.Order.Compact
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 
 /-!
-# D-1'' Phase D.1 — δ-asymptotic `pmfLog` bounds
+# δ-asymptotic `pmfLog` bounds for the smooth channel
 
-`ShannonTheoremFullDischarge` から分割した part ファイル。
-詳細は冒頭の `Phase D.1` セクション docstring を参照。
+Part file split from `ShannonTheoremFullDischarge`. Provides pointwise `pmfLog` bounds
+for `iidXs`, `iidYs`, and `jointSequence` under `iidAmbientMeasure p (Channel.smooth W δ)`,
+and analytic lemmas `exists_N_log_sq_le_n` / `exists_N_log_sq_plus_const_le_n`.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
@@ -23,23 +24,12 @@ variable {α β : Type*}
   [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β]
 
-/-! ## Phase D.1 — δ-asymptotic `pmfLog` bounds for `iidAmbientMeasure p (Channel.smooth W δ)`
-
-Phase D.2 で parent `channel_coding_achievability` の body を `μ := iidAmbientMeasure p (W_smooth δ)`
-で呼び出す際、内部の `pmfLogVariance μ iidYs` / `pmfLogVariance μ jointSequence` に対する
-δ-asymptotic bound が必要になる。本節は **pointwise pmfLog bound** を 3 形 (`iidXs` /
-`iidYs` / `jointSequence`) で publish する。variance への lift (Popoviciu) は parent body
-で `variance_le_sq_of_bounded` を直接呼ぶ形で吸収するため、本節では行わない。
-
-最後に解析的補題 `exists_N_log_sq_le_n` (Mathlib 完備の `Real.tendsto_pow_log_div_mul_add_atTop`
-からの再構成) を置く。N₁(δ) closed-form 化で `C · (log (n+1))² + 1 ≤ n` を満たす N の存在に使う。
--/
+/-! ## Pointwise `pmfLog` bounds and analytic growth lemmas -/
 
 open InformationTheory.Shannon (pmfLog)
 
 omit [DecidableEq α] [Nonempty α] [DecidableEq β] [MeasurableSingletonClass β] in
-/-- **D.1.3** — `iidXs` の pmfLog は `W` (および smooth の `δ`) に依存しない。
-`iidAmbient_map_iidXs` により marginal は常に `p` に等しいため。 -/
+/-- The pmfLog of `iidXs` is independent of `W` and `δ`, since the marginal is always `p`. -/
 lemma pmfLog_iidXs_const_in_smooth
     (p : Measure α) [IsProbabilityMeasure p]
     (W : Channel α β) [IsMarkovKernel W]
@@ -53,8 +43,8 @@ lemma pmfLog_iidXs_const_in_smooth
   rw [iidAmbient_map_iidXs p (Channel.smooth W δ) 0, iidAmbient_map_iidXs p W 0]
 
 omit [DecidableEq α] [Nonempty α] [DecidableEq β] in
-/-- **D.1.1** — `iidYs` の pmfLog は smooth で `log(|β|/δ)` で押さえられる。
-`(W_smooth δ a).real {b} ≥ δ/|β|` を経由した output 下限。 -/
+/-- `|pmfLog (iidAmbientMeasure p (Channel.smooth W δ)) iidYs b| ≤ log(|β|/δ)`,
+via the output lower bound `(W_smooth δ a).real {b} ≥ δ/|β|`. -/
 lemma pmfLog_iidYs_bound_smooth
     (p : Measure α) [IsProbabilityMeasure p]
     (W : Channel α β) [IsMarkovKernel W]
@@ -172,8 +162,8 @@ lemma pmfLog_iidYs_bound_smooth
   linarith
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **D.1.2** — `jointSequence` の pmfLog は smooth で
-`log(|α|·|β| / (p_min · δ))` で押さえられる。 -/
+/-- `|pmfLog (iidAmbientMeasure p (Channel.smooth W δ)) (jointSequence iidXs iidYs) (a,b)|
+≤ log(|α|·|β| / (p_min · δ))`. -/
 lemma pmfLog_jointSequence_bound_smooth
     (p : Measure α) [IsProbabilityMeasure p]
     {p_min : ℝ} (hp_min_pos : 0 < p_min)
@@ -274,8 +264,7 @@ lemma pmfLog_jointSequence_bound_smooth
     rw [h_target_eq_alt]; linarith
   linarith
 
-/-- **D.1.7** (解析的補題) — 任意の `C > 0` に対し `C · (log (n+1))² + 1 ≤ n` を満たす
-`N` が存在する。Mathlib `Real.tendsto_pow_log_div_mul_add_atTop` を経由。 -/
+/-- For any `C > 0`, there exists `N` such that `C · (log (n+1))² + 1 ≤ n` for all `n ≥ N`. -/
 lemma exists_N_log_sq_le_n (C : ℝ) (hC : 0 < C) :
     ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
       C * (Real.log ((n : ℝ) + 1))^2 + 1 ≤ (n : ℝ) := by
@@ -331,9 +320,8 @@ lemma exists_N_log_sq_le_n (C : ℝ) (hC : 0 < C) :
   have h_final : ((n : ℝ) + 1) / 4 + 1 ≤ (n : ℝ) := by linarith
   linarith
 
-/-- **D.1.8** (generalization of D.1.7) — for any `C > 0` and any constant `D`,
-there exists `N` such that `C * (log(n+1))² + D ≤ n` for all `n ≥ N`.
-Used in Phase D.3 outer-`N` construction. -/
+/-- For any `C > 0` and constant `D`, there exists `N` such that `C * (log(n+1))² + D ≤ n`
+for all `n ≥ N`. -/
 lemma exists_N_log_sq_plus_const_le_n (C D : ℝ) (hC : 0 < C) :
     ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
       C * (Real.log ((n : ℝ) + 1))^2 + D ≤ (n : ℝ) := by

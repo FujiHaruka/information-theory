@@ -8,35 +8,18 @@ import Mathlib.Topology.Order.Compact
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 
 /-!
-# D-1'' Phase D — parent surgery seeds (Phase D.0 + D.0')
+# Smooth input distribution and capacity lower bound construction
 
-[D-1'' ムーンショット plan](../../../docs/shannon/channel-coding-shannon-theorem-general-plan.md)
-の parent surgery の **入口** に位置する 2 補題:
+Constructs, from `R < capacity W`, a full-support smooth input distribution `pSmooth p₀ δ_p`
+and a smoothing radius `δ_B > 0` such that `R < I(pSmooth p₀ δ_p; Channel.smooth W δ).toReal`
+for all `δ ∈ (0, δ_B]`.
 
-* `exists_smooth_capacity_gt_uniform` (Phase D.0): δ-uniform 化形。`R < capacity W` から
-  `p₀ ∈ stdSimplex`, `δ_B > 0`, `R₁ > R` を抽出し、`∀ δ ∈ (0, δ_B]` で
-  `R₁ < I(p₀; W_smooth δ).toReal` を保証する。
-* `pSmooth_smooth_capacity_gt_uniform` (Phase D.0'): full-support 統合形。
-  `R < capacity W` から `p₀, δ_p, δ_B` を抽出し、`p := pSmooth p₀ δ_p` が full support
-  かつ `∀ δ ∈ (0, δ_B], R < I(p; W_smooth δ).toReal` を保証する。
+## Implementation notes
 
-## Approach
-
-`continuous_mutualInfoOfChannel_right_smooth` (右側 `δ` の連続性、`p` 固定) を pmf
-`pSmooth p₀ δ_p` で direct に instantiate する。joint `(p, δ)`-連続性は不要:
-
-1. `capacity_lt_implies_exists_pmf` で `p₀` を取り、`R < I(p₀; W).toReal` を得る。
-2. `continuous_mutualInfoOfChannel_left` (左側 `p` の連続性、`W` 固定) と
-   `continuous_pSmooth` 合成で `δ_p ↦ I(pSmooth p₀ δ_p; W).toReal` の `δ_p ∈ [0,1]`
-   連続性を得る。`δ_p = 0` で `I(p₀; W) > R` なので、十分小さい `δ_p > 0` で
-   `I(pSmooth p₀ δ_p; W) > R` 維持。
-3. `p := pSmooth p₀ δ_p` を固定し、`continuous_mutualInfoOfChannel_right_smooth` で
-   `δ ↦ I(p; Channel.smooth W δ).toReal` の `δ ∈ [0,1]` 連続性。
-4. `δ = 0` で `I(p; W) > R`、連続性より小さい `δ_B > 0` で
-   `∀ δ ∈ (0, δ_B], R < I(p; W_smooth δ).toReal` 維持。
-
-`Metric.mem_nhdsWithin_iff` で η を抽出 → `δ_B := min(η/2, 1)` パターン (既存
-`exists_smooth_capacity_gt` と同形)。
+Uses `continuous_mutualInfoOfChannel_right_smooth` (continuity in `δ` for fixed `p`) and
+`continuous_mutualInfoOfChannel_left` (continuity in `p` for fixed `W`). Joint `(p, δ)`
+continuity is not needed: first find `δ_p` making `I(pSmooth p₀ δ_p; W) > R`, then find
+`δ_B` keeping `I(pSmooth p₀ δ_p; W_smooth δ) > R` for `δ ∈ (0, δ_B]`.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
@@ -49,9 +32,8 @@ variable {α β : Type*}
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β]
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Phase D.0** (δ-uniform 化形): `R < capacity W` から `p₀ ∈ stdSimplex`、
-`δ_B ∈ (0, 1]`、`R₁ > R` を抽出。`∀ δ ∈ (0, δ_B]` で
-`R₁ < I(p₀; W_smooth δ).toReal` が成立。 -/
+/-- From `R < capacity W`, extracts `p₀ ∈ stdSimplex`, `δ_B ∈ (0, 1]`, and `R₁ > R`
+such that `R₁ < I(p₀; W_smooth δ).toReal` for all `δ ∈ (0, δ_B]`. -/
 @[entry_point]
 theorem exists_smooth_capacity_gt_uniform
     (W : Channel α β) [IsMarkovKernel W]
@@ -108,9 +90,8 @@ theorem exists_smooth_capacity_gt_uniform
   exact h_η ⟨hδ_mem_ball, hδ_mem_Icc⟩
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Phase D.0'** (pSmooth full-support 統合形): `R < capacity W` から
-`p₀, δ_p, δ_B`、および `I_lb > R` を抽出。`pSmooth p₀ δ_p` は各成分 > 0 の full-support
-pmf であり、`∀ δ ∈ (0, δ_B]` で `I_lb < I(pSmooth p₀ δ_p; W_smooth δ).toReal` が成立。 -/
+/-- From `R < capacity W`, extracts `p₀, δ_p, δ_B` and `I_lb > R` such that `pSmooth p₀ δ_p`
+has full support and `I_lb < I(pSmooth p₀ δ_p; W_smooth δ).toReal` for all `δ ∈ (0, δ_B]`. -/
 theorem pSmooth_smooth_capacity_gt_uniform
     (W : Channel α β) [IsMarkovKernel W]
     {R : ℝ} (hR : R < capacity W) :

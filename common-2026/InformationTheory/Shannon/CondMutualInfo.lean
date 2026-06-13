@@ -9,20 +9,35 @@ import InformationTheory.Shannon.MutualInfo
 import InformationTheory.Shannon.DPI
 
 /-!
-# Conditional mutual information & Markov chains (Phase 4-δ-(b) skeleton)
+# Conditional mutual information and Markov chains
 
-Shannon ムーンショット ([`docs/shannon/shannon-moonshot-plan.md`](../../../docs/shannon/shannon-moonshot-plan.md))
-の Phase 4-δ-(b): 条件付き相互情報量 `condMutualInfo` と Markov chain 述語
-`IsMarkovChain` を定義し、chain rule と Markov ⇒ condMI = 0、その合成として
-`mutualInfo_le_of_markov` (`I(X; Y) ≤ I(Z; Y)` under `X → Z → Y`) を整備する。
+Conditional mutual information `condMutualInfo` and the Markov chain predicate
+`IsMarkovChain`, together with the chain rule and the implication Markov ⇒ condMI = 0.
 
-設計判断 / Mathlib 在庫は [`docs/shannon/shannon-condmi-inventory.md`](../../../docs/shannon/shannon-condmi-inventory.md)
-を参照。Markov 定式化は **β 形式** (condDistrib 等式形) を採用、Mathlib
-`condIndepFun_iff_condDistrib_prod_ae_eq_prodMkRight` (`Conditional.lean:867`) と直結する。
+## Main definitions
 
-主応用: `InformationTheory/Shannon/Converse.lean` 末尾の `shannon_converse_single_shot_markov_encoder`
-(Markov chain `Msg → encoder ∘ Msg → Yo` ⇒ `I(Msg; Yo) ≤ I(encoder ∘ Msg; Yo)` で encoder を
-含む single-shot converse を導く)。
+* `condMutualInfo` — `I(X; Y | Z) := KL(P_Z ⊗ P_{(X,Y)|Z} ‖ P_Z ⊗ (P_{X|Z} × P_{Y|Z}))`.
+* `IsMarkovChain` — joint factorization form (γ-form): `μ.map (Z, X, Y)` equals
+  `(μ.map Z) ⊗ₘ (condDistrib X Z μ ×ₖ condDistrib Y Z μ)`.
+
+## Main statements
+
+* `mutualInfo_chain_rule` — `I((Z, X); Y) = I(Z; Y) + I(X; Y | Z)`.
+* `condMutualInfo_comm` — `I(X; Y | Z) = I(Y; X | Z)`.
+* `condMutualInfo_ne_top` — finiteness over finite alphabets.
+* `condMutualInfo_eq_zero_of_markov` — Markov chain ⇒ `I(X; Y | Z) = 0`.
+* `mutualInfo_le_of_markov` — `I(X; Y) ≤ I(Z; Y)` under `X → Z → Y`.
+* `condMutualInfo_map_left_measurableEquiv` — `I(e ∘ X; Y | Z) = I(X; Y | Z)`.
+* `condMutualInfo_map_middle_measurableEquiv` — `I(X; e ∘ Y | Z) = I(X; Y | Z)`.
+* `isMarkovChain_map_left` — post-processing preserves the Markov property.
+
+## Implementation notes
+
+The γ-form definition of `IsMarkovChain` (joint measure factorization) is chosen over
+the β-form (condDistrib equality via `prodMkRight`) because the β-form requires
+`[StandardBorelSpace Ω]` on the ambient space, whereas the γ-form avoids this constraint.
+The two forms are equivalent under standard Borel hypotheses via Mathlib's
+`condIndepFun_iff_condDistrib_prod_ae_eq_prodMkRight`.
 -/
 
 namespace InformationTheory.Shannon
@@ -38,12 +53,9 @@ variable {Z : Type*} [MeasurableSpace Z]
 /-- Conditional mutual information via KL divergence (compProd form):
 `I(X; Y | Z) := KL(P_Z ⊗ P_{(X,Y)|Z} ‖ P_Z ⊗ (P_{X|Z} × P_{Y|Z}))`.
 
-第 1 引数は `compProd_map_condDistrib` で `μ.map (Zc, Xs, Yo)` と等しい。compProd 形を直接の
-定義として採用する理由: Mathlib の chain rule (`klDiv_compProd_eq_add`) と直結し、γ-form Markov
-仮定下で `condMutualInfo = 0` が `klDiv_self` で trivial に従う。
-
-教科書的な積分形 `∫⁻ z, klDiv (κ_joint z) (κ_factored z) ∂(μ.map Z)` との同値性 (条件付き KL の
-公式) は補題として将来追加可能 (Mathlib に直接対応する補題は不在 — 必要になったら自作)。 -/
+The compProd form is the defining shape because it connects directly to Mathlib's chain
+rule (`klDiv_compProd_eq_add`) and makes `condMutualInfo = 0` under a Markov hypothesis
+immediate via `klDiv_self`. -/
 noncomputable def condMutualInfo
     (μ : Measure Ω) [IsFiniteMeasure μ]
     [StandardBorelSpace X] [Nonempty X]
@@ -52,7 +64,7 @@ noncomputable def condMutualInfo
   klDiv ((μ.map Zc) ⊗ₘ condDistrib (fun ω => (Xs ω, Yo ω)) Zc μ)
         ((μ.map Zc) ⊗ₘ ((condDistrib Xs Zc μ) ×ₖ (condDistrib Yo Zc μ)))
 
-/-- Conditional mutual information is non-negative (signature 上自明、`klDiv` が `ℝ≥0∞` 値)。 -/
+/-- Conditional mutual information is non-negative (`klDiv` is `ℝ≥0∞`-valued). -/
 @[entry_point]
 theorem condMutualInfo_nonneg
     (μ : Measure Ω) [IsFiniteMeasure μ]
@@ -61,15 +73,12 @@ theorem condMutualInfo_nonneg
     (Xs : Ω → X) (Yo : Ω → Y) (Zc : Ω → Z) :
     0 ≤ condMutualInfo μ Xs Yo Zc := bot_le
 
-/-- Markov chain `Xs → Zc → Yo` (γ-form, joint factorization): 結合分布が `Zc` を介して
-`Xs` と `Yo` の条件付き分布の積に分解される。Mathlib `condIndepFun_iff_map_prod_eq_prod_
-condDistrib_prod_condDistrib` (`Conditional.lean:817`) の RHS と同型。
+/-- Markov chain `Xs → Zc → Yo` (γ-form, joint factorization): the joint distribution
+factors through `Zc` as the product of the conditional marginals.
 
-β-form (condDistrib 等式形 + `prodMkRight`) は `[StandardBorelSpace Ω]` を経由する Mathlib
-lemma を要するため (`Conditional.lean:867` の `condIndepFun_iff_condDistrib_prod_ae_eq_prodMkRight`
-は `[StandardBorelSpace Ω]` 必須)、ここでは Ω への追加制約を避けて γ-form を採用。
-
-両形式は標準 Borel 仮定下で同値 (Mathlib lemma 経由)。 -/
+Chosen over the β-form (`condDistrib` equality + `prodMkRight`) to avoid requiring
+`[StandardBorelSpace Ω]` on the ambient space. The two forms are equivalent under
+standard Borel hypotheses. -/
 def IsMarkovChain (μ : Measure Ω) [IsFiniteMeasure μ]
     [StandardBorelSpace X] [Nonempty X]
     [StandardBorelSpace Y] [Nonempty Y]
@@ -113,21 +122,16 @@ private def permZYX_Z_XY (Z X Y : Type*)
     · exact measurable_fst.prodMk (measurable_snd.comp measurable_snd)
     · exact measurable_fst.comp measurable_snd
 
-/-- The forward map of `permZXY_ZYX` reduces to the explicit form `((z, x), y) ↦ ((z, y), x)`. -/
 @[simp] private lemma permZXY_ZYX_apply (Z X Y : Type*)
     [MeasurableSpace Z] [MeasurableSpace X] [MeasurableSpace Y]
     (p : (Z × X) × Y) :
     permZXY_ZYX Z X Y p = ((p.1.1, p.2), p.1.2) := rfl
 
-/-- The forward map of `permZYX_Z_XY` reduces to the explicit form `((z, y), x) ↦ (z, (x, y))`. -/
 @[simp] private lemma permZYX_Z_XY_apply (Z X Y : Type*)
     [MeasurableSpace Z] [MeasurableSpace X] [MeasurableSpace Y]
     (p : (Z × Y) × X) :
     permZYX_Z_XY Z X Y p = (p.1.1, (p.2, p.1.2)) := rfl
 
-/-- Plumbing for chain rule (A2): pushforward of the "product" side through `permZXY_ZYX`
-gives a compProd with `(μ.map Zc).prod (μ.map Yo)` base and `Kernel.prodMkRight Y` of the
-X kernel. 戦略は `Measure.ext_of_lintegral` + Tonelli swap。 -/
 private lemma product_map_perm_eq_compProd
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     [StandardBorelSpace X] [Nonempty X]
@@ -165,8 +169,6 @@ private lemma product_map_perm_eq_compProd
   exact (hf.comp (by fun_prop : Measurable
       (fun p : X × Y => ((z, p.2), p.1)))).aemeasurable
 
-/-- Plumbing for chain rule (B2): pushforward of the "factored" side through `permZYX_Z_XY`
-gives the condMutualInfo second-argument form `(μ.map Zc) ⊗ₘ (K_X ×ₖ K_Y)`. -/
 private lemma factored_map_perm_eq_compProd_prod
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     [StandardBorelSpace X] [Nonempty X]
@@ -207,17 +209,7 @@ private lemma factored_map_perm_eq_compProd_prod
   exact (hf.comp (by fun_prop : Measurable
       (fun p : Y × X => (z, (p.2, p.1))))).aemeasurable
 
-/-- Chain rule: `I((Z, X); Y) = I(Z; Y) + I(X; Y | Z)`.
-
-戦略 (chain rule plumbing on `(Z × X) × Y → (Z × Y) × X`):
-1. `permZXY_ZYX` で LHS の両引数を `(Z × Y) × X` 上に押し出す
-   - 第1引数 `μ.map ((Zc, Xs), Yo)` ↦ `μ.map ((Zc, Yo), Xs) = (μ.map (Zc, Yo)) ⊗ₘ condDistrib Xs (Zc, Yo) μ`
-   - 第2引数 `(μ.map (Zc, Xs)).prod (μ.map Yo)` ↦ `((μ.map Zc).prod (μ.map Yo)) ⊗ₘ Kernel.prodMkRight Y (condDistrib Xs Zc μ)` (`product_map_perm_eq_compProd`)
-2. `klDiv_compProd_eq_add` を base `(Z, Y) + X kernel` で適用
-   - 第1項 = `klDiv (μ.map (Zc, Yo)) ((μ.map Zc).prod (μ.map Yo)) = mutualInfo Zc Yo`
-   - 第2項 = `klDiv ((μ.map (Zc, Yo)) ⊗ₘ K) ((μ.map (Zc, Yo)) ⊗ₘ K')` (両 base 同一)
-3. 第2項を `permZYX_Z_XY` で `Z × (X × Y)` 上に再度押し出して `condMutualInfo` 形に対応
-   (`factored_map_perm_eq_compProd_prod` + `compProd_map_condDistrib`) -/
+/-- Chain rule: `I((Z, X); Y) = I(Z; Y) + I(X; Y | Z)`. -/
 @[entry_point]
 theorem mutualInfo_chain_rule
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -288,13 +280,7 @@ theorem mutualInfo_chain_rule
   rw [h_first, factored_map_perm_eq_compProd_prod μ Xs Yo Zc hXs hYo hZc]
   rfl
 
-/-- 条件付き相互情報量の対称性: `I(X; Y | Z) = I(Y; X | Z)`。
-
-戦略: 第 2 引数 `(X × Y)` を `(Y × X)` に交換する MeasurableEquiv
-`(refl Z).prodCongr prodComm : Z × (Y × X) ≃ᵐ Z × (X × Y)` を介し、
-`klDiv_map_measurableEquiv` で値不変。joint 側は `compProd_map_condDistrib` を 2 回挟んで
-`μ.map (Zc, Xs, Yo)` を経由、factored 側は `Measure.compProd_map` + `Kernel.prodComm_prod`
-で kernel の swap として処理。 -/
+/-- Symmetry of conditional mutual information: `I(X; Y | Z) = I(Y; X | Z)`. -/
 @[entry_point]
 theorem condMutualInfo_comm
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -329,9 +315,7 @@ theorem condMutualInfo_comm
         Kernel.prodComm_prod]
   rw [← h_joint, ← h_factored, klDiv_map_measurableEquiv]
 
-/-- 有限アルファベットでは条件付き相互情報量は有限。chain rule
-`mutualInfo μ (Zc, Xs) Yo = mutualInfo μ Zc Yo + condMutualInfo μ Xs Yo Zc` から
-`condMutualInfo ≤ mutualInfo (Zc, Xs) Yo` で押さえる。後者は `mutualInfo_ne_top` で有限。 -/
+/-- Over finite alphabets, conditional mutual information is finite. -/
 @[entry_point]
 theorem condMutualInfo_ne_top
     [Fintype X] [MeasurableSingletonClass X]
@@ -350,11 +334,7 @@ theorem condMutualInfo_ne_top
   exact ne_top_of_le_ne_top
     (mutualInfo_ne_top μ (fun ω => (Zc ω, Xs ω)) Yo (hZc.prodMk hXs) hYo) h_le
 
-/-- Markov chain `Xs → Zc → Yo` (γ-form) ⇒ `I(X; Y | Z) = 0`.
-
-γ-form 採用により直接的な証明: condMutualInfo の第1引数 `(μ.map Zc) ⊗ₘ condDistrib (Xs, Yo) Zc μ`
-は `compProd_map_condDistrib` で `μ.map (Zc, Xs, Yo)` と一致し、γ-form Markov の RHS が第2引数
-そのものなので、両者が等しく `klDiv_self` で 0。 -/
+/-- Markov chain `Xs → Zc → Yo` (γ-form) implies `I(X; Y | Z) = 0`. -/
 @[entry_point]
 theorem condMutualInfo_eq_zero_of_markov
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -371,16 +351,7 @@ theorem condMutualInfo_eq_zero_of_markov
   rw [h_num_eq, hmarkov]
   exact klDiv_self _
 
-/-- Markov chain `Xs → Zc → Yo` ⇒ `I(Xs; Yo) ≤ I(Zc; Yo)`.
-
-戦略 (chain rule + condMI = 0 + DPI for `Prod.snd : Z × X → X` の合成):
-1. DPI for `Prod.snd`: `I(Yo; Xs) ≤ I(Yo; (Zc, Xs))`、`mutualInfo_comm` で両端の対称化により
-   `I(Xs; Yo) ≤ I((Zc, Xs); Yo)`
-2. `mutualInfo_chain_rule` で `I((Zc, Xs); Yo) = I(Zc; Yo) + I(Xs; Yo | Zc)`
-3. `condMutualInfo_eq_zero_of_markov` で `I(Xs; Yo | Zc) = 0`
-4. 1+2+3 を合成
-
-主応用: `shannon_converse_single_shot_markov_encoder` (Converse.lean 末尾)。 -/
+/-- Markov chain `Xs → Zc → Yo` implies `I(Xs; Yo) ≤ I(Zc; Yo)`. -/
 @[entry_point]
 theorem mutualInfo_le_of_markov
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -417,21 +388,13 @@ theorem mutualInfo_le_of_markov
   rw [h_chain, h_zero, add_zero] at h_dpi
   exact h_dpi
 
-/-! ## Phase A (D-2'' インフラ) — `condMutualInfo` の `MeasurableEquiv` reshape 不変性
+/-! ## `MeasurableEquiv` invariance of `condMutualInfo`
 
-D-2'' / 後続 channel coding 系で `Y^n ↔ Y_i × Y^{≠i}` / `X^{≠i} ↔ X^{<i} × X^{>i}` などの
-reshape を扱うため、`condMutualInfo` 各引数の `MeasurableEquiv` 不変性を整備する
-(`mutualInfo_map_left/right_measurableEquiv` の条件付き版)。-/
+For channel coding arguments involving reshaping such as `Y^n ↔ Y_i × Y^{≠i}`, the
+following lemmas establish invariance of `condMutualInfo` under `MeasurableEquiv` on
+each argument. -/
 
-/-- **Left reshape**: `I(e ∘ X; Y | Z) = I(X; Y | Z)` for any `MeasurableEquiv e : X ≃ᵐ X'`.
-
-戦略: 第 1 引数 (joint kernel) と第 2 引数 (factored kernel) の両方に `id × (e × id)` を
-pushforward。
-- joint 側: `condDistrib (e∘X, Y) Z μ` の compProd 形は `μ.map (Z, e∘X, Y)` (via
-  `compProd_map_condDistrib`)。これは `μ.map (Z, X, Y)` を `id × (e × id)` で押し出した形。
-- factored 側: `Kernel.map_prod_eq` で `(condDistrib (e∘X) Z μ ×ₖ condDistrib Y Z μ)
-  = ((condDistrib X Z μ).map e ×ₖ condDistrib Y Z μ).map (Prod.map id (id))` 形を経由、
-  `condDistrib_comp` で `condDistrib (e∘X) Z μ =ᵐ (condDistrib X Z μ).map e`。 -/
+/-- **Left reshape**: `I(e ∘ X; Y | Z) = I(X; Y | Z)` for any `MeasurableEquiv e : X ≃ᵐ X'`. -/
 @[entry_point]
 theorem condMutualInfo_map_left_measurableEquiv
     {X' : Type*} [MeasurableSpace X'] [StandardBorelSpace X'] [Nonempty X']
@@ -492,8 +455,7 @@ theorem condMutualInfo_map_left_measurableEquiv
 
 /-- **Right reshape (Y/middle)**: `I(X; e ∘ Y | Z) = I(X; Y | Z)` for `e : Y ≃ᵐ Y'`.
 
-`condMutualInfo_comm` で第 1, 2 引数を swap し `condMutualInfo_map_left_measurableEquiv` に
-帰着。 -/
+Follows from `condMutualInfo_comm` and `condMutualInfo_map_left_measurableEquiv`. -/
 @[entry_point]
 theorem condMutualInfo_map_middle_measurableEquiv
     {Y' : Type*} [MeasurableSpace Y'] [StandardBorelSpace Y'] [Nonempty Y']
@@ -508,13 +470,6 @@ theorem condMutualInfo_map_middle_measurableEquiv
       condMutualInfo_map_left_measurableEquiv μ Yo Xs Zc hYo hXs hZc e,
       condMutualInfo_comm μ Yo Xs Zc hYo hXs hZc]
 
-/-- Helper: pushforward of a `compProd` along `Prod.map e id` equals a `compProd`
-with the pushed-forward base measure and the comap'd kernel.
-
-`((μ.map Zc) ⊗ₘ κ).map (Prod.map e id) = (μ.map (e ∘ Zc)) ⊗ₘ (κ.comap e.symm e.symm.measurable)`.
-
-戦略: `Measure.ext_of_lintegral` + `lintegral_compProd` + `lintegral_comap`。基準点 (e.symm (e z) = z)
-で comap pre-image を吸収する。 -/
 private lemma compProd_map_left_prodMap
     {α β γ : Type*} [MeasurableSpace α] [MeasurableSpace β] [MeasurableSpace γ]
     (ν : Measure α) [SFinite ν] (κ : Kernel α γ) [IsSFiniteKernel κ]
@@ -543,15 +498,7 @@ private lemma compProd_map_left_prodMap
   simp [Prod.map]
 
 /-- **Markov chain left post-processing**: if `Xs → Zc → Yo` is a Markov chain and
-`f : X → X'` is measurable, then `f ∘ Xs → Zc → Yo` is also a Markov chain.
-
-戦略: γ-form Markov の両辺に `id × (f × id) : Z × (X × Y) → Z × (X' × Y)` を pushforward。
-- LHS `μ.map (Z, X, Y)` ↦ `μ.map (Z, f∘X, Y)` (via `Measure.map_map`).
-- RHS `(μ.map Z) ⊗ₘ (K_X ×ₖ K_Y)` ↦ `(μ.map Z) ⊗ₘ (K_X.map f ×ₖ K_Y)`
-  (via `Measure.compProd_map` + `Kernel.map_prod_eq`).
-- `condDistrib_comp` で `condDistrib (f∘X) Z μ =ᵐ K_X.map f` を吸収。
-
-用途: D-2'' Phase B Step 1 (`X^{≠i} → X_i → Y_i` から `X^{<i} → X_i → Y_i` を `Prod.fst` で抽出). -/
+`f : X → X'` is measurable, then `f ∘ Xs → Zc → Yo` is also a Markov chain. -/
 @[entry_point]
 theorem isMarkovChain_map_left
     {X' : Type*} [MeasurableSpace X'] [StandardBorelSpace X'] [Nonempty X']

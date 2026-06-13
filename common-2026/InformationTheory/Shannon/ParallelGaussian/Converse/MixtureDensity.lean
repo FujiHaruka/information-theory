@@ -27,33 +27,32 @@ variable (h_parallel_meas : IsParallelGaussianKernelMeasurable N)
 variable (p : Measure (Fin n → ℝ)) [IsProbabilityMeasure p]
 
 
-/-! ## #5 closure — joint mixture density (1-D Phase 6 coordinate-product lift) -/
+/-! ## Joint mixture output density -/
 
-/-- **Joint mixture output density** `f_Y(z) := ∫⁻ x, ∏ᵢ gaussianPDF (x i)(N i)(z i) ∂p`.
-The `Fin n → ℝ` analogue of the 1-D `outputMixtureDensity`; `p` enters only as the
-integrating measure, so no product/AC structure on `p` is required. -/
+/-- The **joint mixture output density** `f_Y(z) := ∫⁻ x, ∏ᵢ gaussianPDF (x i) (N i) (z i) ∂p`,
+the `Fin n → ℝ` analogue of the 1-D output mixture density. -/
 noncomputable def parallelOutputMixtureDensity (z : Fin n → ℝ) : ℝ≥0∞ :=
   ∫⁻ x : Fin n → ℝ, piGaussProxy N (x, z) ∂p
 
-/-- Unfolded form of `parallelOutputMixtureDensity` (the product of coordinate Gaussian
-pdfs averaged over `p`).
+/-- Unfolded form of `parallelOutputMixtureDensity`.
+
 @audit:ok -/
 theorem parallelOutputMixtureDensity_eq (z : Fin n → ℝ) :
     parallelOutputMixtureDensity N p z
       = ∫⁻ x : Fin n → ℝ, ∏ i, gaussianPDF (x i) (N i) (z i) ∂p := rfl
 
 /-- The joint mixture density is measurable in `z`.
+
 @audit:ok -/
 theorem measurable_parallelOutputMixtureDensity :
     Measurable (parallelOutputMixtureDensity N p) := by
   unfold parallelOutputMixtureDensity
   exact Measurable.lintegral_prod_left' (piGaussProxy_measurable N)
 
-/-- (#5, density representation) The correlated output `μY` equals
-`volume.withDensity (parallelOutputMixtureDensity)`. The noise fibre
-`Measure.pi (gaussianReal (x i)(N i)) = volume.withDensity (∏ᵢ gaussianPDF (x i)(N i)·)`
-(`pi_withDensity_fin` + `gaussianReal_of_var_ne_zero`), and Tonelli swaps the `∂p` average
-to the outside — `p`-independent, so it lifts the 1-D `output_eq_withDensity_mixture`.
+/-- The correlated output `μY` equals `volume.withDensity (parallelOutputMixtureDensity)`
+(the noise fibre is a `withDensity` of the Gaussian-PDF product, with Tonelli moving the `∂p`
+average outside).
+
 @audit:ok -/
 theorem parallelOutput_eq_withDensity_mixture (hN : ∀ i, (N i : ℝ) ≠ 0) :
     outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)
@@ -117,7 +116,8 @@ theorem parallelOutput_eq_withDensity_mixture (hN : ∀ i, (N i : ℝ) ≠ 0) :
         refine lintegral_congr (fun z => ?_)
         rw [Pi.mul_apply, mul_comm]
 
-/-- (#5) The output rnDeriv is a.e. the joint mixture density.
+/-- The output rnDeriv is a.e. equal to the joint mixture density.
+
 @audit:ok -/
 theorem parallelOutput_rnDeriv_ae_mixture (hN : ∀ i, (N i : ℝ) ≠ 0) :
     (outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)).rnDeriv volume
@@ -125,9 +125,8 @@ theorem parallelOutput_rnDeriv_ae_mixture (hN : ∀ i, (N i : ℝ) ≠ 0) :
   rw [parallelOutput_eq_withDensity_mixture N h_meas h_parallel_meas p hN]
   exact Measure.rnDeriv_withDensity volume (measurable_parallelOutputMixtureDensity N p)
 
-/-- (#5, upper bound) The joint mixture density is bounded above by
-`∏ᵢ (√(2π Nᵢ))⁻¹`: each coordinate Gaussian is `≤ (√(2π Nᵢ))⁻¹`
-(`gaussianPDFReal_le_sup`), and `p` is a probability measure.
+/-- The joint mixture density is bounded above by `∏ᵢ (√(2π Nᵢ))⁻¹`.
+
 @audit:ok -/
 theorem parallelOutputMixtureDensity_le_sup (z : Fin n → ℝ) :
     parallelOutputMixtureDensity N p z
@@ -143,11 +142,10 @@ theorem parallelOutputMixtureDensity_le_sup (z : Fin n → ℝ) :
     _ = ∏ i, ENNReal.ofReal (Real.sqrt (2 * Real.pi * N i))⁻¹ := by
         rw [lintegral_const, measure_univ, mul_one]
 
-/-- (#5, concentration) Coordinate-box Chebyshev: there is a box
-`S = {x | ∀ i, |x i| ≤ Rᵢ}` carrying `≥ 1/2` of the mass of `p`. Each coordinate's
-finite second moment gives `p {|xᵢ| > Rᵢ} ≤ 1/(2n)`; a union bound over `Fin n` keeps the
-complement `≤ 1/2`. (`Fin n → ℝ` uses the sup norm, so the concentration set is the box,
-not the `‖·‖`-ball.)
+/-- **Coordinate-box concentration.** There is a box `S = {x | ∀ i, |x i| ≤ Rᵢ}` carrying
+`≥ 1/2` of the mass of `p`, via a per-coordinate Chebyshev bound and a union bound over
+`Fin n`.
+
 @audit:ok -/
 theorem parallel_concentration_box (P : ℝ) (hP : 0 ≤ P)
     (hp : p ∈ parallelGaussianPowerConstraintSet P) :
@@ -237,11 +235,10 @@ theorem parallel_concentration_box (P : ℝ) (hP : 0 ≤ P)
       (ne_of_lt (lt_of_le_of_lt h_union (by norm_num))) h1
 
 set_option maxHeartbeats 1000000 in
-/-- (#5, ★ lower bound) the joint mixture density admits a quadratic `-log` upper bound:
-`∃ a b, 0 ≤ a ∧ ∀ z, -log (f_Y z).toReal ≤ a · ∑ᵢ (zᵢ)² + b`. The coordinate-box
-concentration (`parallel_concentration_box`) gives `≥ 1/2` of the mass on `S`, and on `S`
-each coordinate Gaussian has a tail lower bound; the product gives `f_Y(z) ≥ (1/2)·∏ᵢ Krᵢ(zᵢ)`,
-quadratic in each `zᵢ`. Coordinate-product lift of the 1-D `output_logDensity_lower_bound` (`@audit:ok`).
+/-- **Quadratic `-log` upper bound on the mixture density:** `∃ a b, 0 ≤ a ∧ ∀ z,
+-log (f_Y z).toReal ≤ a · ∑ᵢ (zᵢ)² + b`. On the concentration box each coordinate Gaussian
+has a tail lower bound, giving `f_Y(z) ≥ (1/2)·∏ᵢ Krᵢ(zᵢ)`, quadratic in each `zᵢ`.
+
 @audit:ok -/
 theorem parallelOutput_logDensity_lower_bound (P : ℝ) (hP : 0 ≤ P)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
@@ -361,8 +358,9 @@ theorem parallelOutput_logDensity_lower_bound (P : ℝ) (hP : 0 ≤ P)
               + Real.log (Real.sqrt (2 * Real.pi * (N i : ℝ)))) + Real.log 2)) := by
         gcongr
 
-/-- (#5, combination) Quadratic bound on `|log f_Y|`: combines the constant upper bound
-with the quadratic lower bound. `∃ c₀ c₁, 0 ≤ c₁ ∧ ∀ z, |log (f_Y z).toReal| ≤ c₀ + c₁ ∑ᵢ(zᵢ)²`.
+/-- **Quadratic bound on `|log f_Y|`:** `∃ c₀ c₁, 0 ≤ c₁ ∧ ∀ z, |log (f_Y z).toReal| ≤ c₀ +
+c₁ ∑ᵢ (zᵢ)²`, combining the constant upper bound with the quadratic lower bound.
+
 @audit:ok -/
 theorem parallelOutputMixtureDensity_log_abs_le (P : ℝ) (hP : 0 ≤ P)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
@@ -386,7 +384,7 @@ theorem parallelOutputMixtureDensity_log_abs_le (P : ℝ) (hP : 0 ≤ P)
         le_antisymm h0 ENNReal.toReal_nonneg
       rw [this, Real.log_zero]; exact le_max_right _ _
     · exact le_trans (Real.log_le_log h0 h_le) (le_max_left _ _)
-  -- lower bound from Phase 3: `-log f_Y(z) ≤ a·∑zᵢ² + b`
+  -- quadratic lower bound: `-log f_Y(z) ≤ a·∑zᵢ² + b`
   obtain ⟨a, b, ha, h_low⟩ := parallelOutput_logDensity_lower_bound N p P hP hN hp
   refine ⟨max (Real.log M) 0 + max b 0, a, ha, fun z => ?_⟩
   rw [abs_le]
@@ -400,10 +398,9 @@ theorem parallelOutputMixtureDensity_log_abs_le (P : ℝ) (hP : 0 ≤ P)
     nlinarith [le_max_right b (0 : ℝ), mul_nonneg ha
       (Finset.sum_nonneg (fun i (_ : i ∈ Finset.univ) => sq_nonneg (z i)))]
 
-/-- Joint log-density integrability for the **correlated** output law.
+/-- Joint log-density integrability for the correlated output law: `log ((μY.rnDeriv volume
+z).toReal)` is integrable against `μY`.
 
-`log ((μY.rnDeriv volume z).toReal)` is integrable against `μY` (= finiteness of the joint
-differential entropy integrand) for the correlated Gaussian-smoothed output `μY`.
 @audit:ok -/
 theorem parallelOutput_joint_logDensity_integrable (P : ℝ) (hP : 0 ≤ P)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
@@ -421,7 +418,7 @@ theorem parallelOutput_joint_logDensity_integrable (P : ℝ) (hP : 0 ≤ P)
     parallelOutput_absolutelyContinuous_volume N h_meas h_parallel_meas p hN
   have h_rn_ae_q : q.rnDeriv volume =ᵐ[q] fY :=
     hq_ac.ae_le (parallelOutput_rnDeriv_ae_mixture N h_meas h_parallel_meas p hN)
-  -- quadratic abs bound on `log fY` (Phase 4)
+  -- quadratic abs bound on `log fY`
   obtain ⟨c₀, c₁, hc₁, h_abs⟩ := parallelOutputMixtureDensity_log_abs_le N p P hP hN hp
   -- each coordinate second moment is integrable against `q`
   have h_q_coord_sq : ∀ i, Integrable (fun z : Fin n → ℝ => (z i) ^ 2) q := by
@@ -459,17 +456,16 @@ theorem parallelOutput_joint_logDensity_integrable (P : ℝ) (hP : 0 ≤ P)
     rw [Real.norm_eq_abs, hz, hfY_def]
     exact h_abs z
 
-/-- **Fibre product-entropy identity.** Each fibre is a coordinate product of Gaussians,
-so its joint differential entropy is the coordinate sum of Gaussian entropies, each
-`(1/2)log(2πe Nᵢ)` independent of the mean `x i`. Hence the conditional term is the
-constant `∑ᵢ (1/2)log(2πe Nᵢ)`.
+/-- **Fibre product-entropy identity.** Each fibre is a coordinate product of Gaussians, so
+the conditional term is the constant `∑ᵢ (1/2)log(2πe Nᵢ)`.
+
 @audit:ok -/
 theorem parallel_condTerm_eq_sum_noise_entropy (hN : ∀ i, (N i : ℝ) ≠ 0) :
     (∫ x, jointDifferentialEntropyPi
         ((parallelGaussianChannel N h_meas h_parallel_meas) x) ∂p)
       = ∑ i : Fin n, (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (N i : ℝ)) := by
   have hN' : ∀ i, N i ≠ 0 := fun i h => hN i (by rw [h]; norm_num)
-  -- the integrand is the constant noise-entropy sum (mean-independent), via 鍵②
+  -- the integrand is the constant noise-entropy sum (mean-independent)
   have h_const : ∀ x : Fin n → ℝ,
       jointDifferentialEntropyPi ((parallelGaussianChannel N h_meas h_parallel_meas) x)
         = ∑ i : Fin n, (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (N i : ℝ)) := by
@@ -484,16 +480,15 @@ theorem parallel_condTerm_eq_sum_noise_entropy (hN : ∀ i, (N i : ℝ) ≠ 0) :
   rw [integral_congr_ae (Filter.Eventually.of_forall h_const), integral_const]
   simp
 
-/-- **Output marginal mean.** `mᵢ := ∫ y, y ∂(μY.map (· i))`. Abbreviation. -/
+/-- The **output marginal mean** `mᵢ := ∫ y, y ∂(μY.map (· i))`. -/
 noncomputable def parallelOutputMean (i : Fin n) : ℝ :=
   ∫ y, y ∂((outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)).map
     (fun z => z i))
 
-/-- **Marginal centered-second-moment value** (shared computation). With `m := μY.map(·i)`
-mean, `∫ (y − m)² ∂(μY.map(·i)) = (∫ (xᵢ − m)² ∂p) + Nᵢ` via the convolution identity
-`μY.map(·i) = (p.map(·i)) ∗ 𝒩(0,Nᵢ)`, `integral_conv`, and the Gaussian fibre second moment
-`∫ z, (xᵢ + z − m)² ∂𝒩(0,Nᵢ) = Nᵢ + (xᵢ − m)²`. This is the linchpin for the variance
-bounds (#8 / #9): noise additivity. Needs `Nᵢ ≠ 0` and `(xᵢ)²` integrability.
+/-- **Marginal centered-second-moment (noise additivity).** With `m` the marginal mean,
+`∫ (y − m)² ∂(μY.map (· i)) = (∫ (xᵢ − m)² ∂p) + Nᵢ`, via the convolution identity for the
+marginal and the Gaussian fibre second moment.
+
 @audit:ok -/
 theorem parallelOutput_centered_secondMoment_eq (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
     (hN : (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P)
@@ -555,8 +550,9 @@ theorem parallelOutput_centered_secondMoment_eq (P : ℝ) (hP : 0 ≤ P) (i : Fi
   rw [integral_add (integrable_const _) h_xc_sq_pi, integral_const]
   simp [add_comm]
 
-/-- **Output marginal mean equals input marginal mean.** `mᵢ = ∫ (xᵢ) ∂p`. The
-convolution `μY.map(·i) = (p.map(·i)) ∗ 𝒩(0,Nᵢ)` has mean = input mean + noise mean (= 0).
+/-- **Output marginal mean equals input marginal mean:** `mᵢ = ∫ (xᵢ) ∂p` (the noise mean is
+`0`).
+
 @audit:ok -/
 theorem parallelOutputMean_eq (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
     (hN : (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
@@ -608,10 +604,9 @@ theorem parallelOutputMean_eq (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
   rw [hpi, integral_map hmeas_i.aemeasurable
     (f := fun x : ℝ => x) (measurable_id).aestronglyMeasurable]
 
-/-- **Output marginal variance bound (noise additivity).** With `Yᵢ = Xᵢ + Zᵢ` and
-`Zᵢ ∼ 𝒩(0,Nᵢ)` independent of `Xᵢ`, `Var(Yᵢ) = Var(Xᵢ) + Nᵢ ≤ E[Xᵢ²] + Nᵢ`.
-The centering `mᵢ = E[Xᵢ]` (`parallelOutputMean_eq`) makes `∫ (xᵢ − mᵢ)² ∂p = Var(Xᵢ) ≤
-E[Xᵢ²]`.
+/-- **Output marginal variance bound:** `Var(Yᵢ) ≤ E[Xᵢ²] + Nᵢ`, from noise additivity
+`Var(Yᵢ) = Var(Xᵢ) + Nᵢ` and `Var(Xᵢ) ≤ E[Xᵢ²]`.
+
 @audit:ok -/
 theorem parallelOutput_variance_le (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
     (hN : (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
@@ -653,9 +648,9 @@ theorem parallelOutput_variance_le (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
     nlinarith [sq_nonneg m]
   linarith [key]
 
-/-- **Output marginal variance lower bound (noise contribution).** `Var(Yᵢ) ≥ Nᵢ`,
-since the independent Gaussian noise of variance `Nᵢ` adds to the (nonnegative) input
-variance: `∫ (yᵢ − mᵢ)² = (∫ (xᵢ − mᵢ)² ∂p) + Nᵢ ≥ Nᵢ`.
+/-- **Output marginal variance lower bound:** `Var(Yᵢ) ≥ Nᵢ`, since the independent noise of
+variance `Nᵢ` adds to the nonnegative input variance.
+
 @audit:ok -/
 theorem parallelOutput_variance_ge_noise (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
     (hN : (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
@@ -670,8 +665,8 @@ theorem parallelOutput_variance_ge_noise (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
   linarith
 
 /-- **Output marginal variance integrability.** The centered square `(yᵢ − mᵢ)²` is
-integrable against the marginal (= 1-D AWGN output of `p.map(·i)`), via
-`output_sq_sub_integrable`.
+integrable against the marginal.
+
 @audit:ok -/
 theorem parallelOutput_variance_integrable (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
     (hN : (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
@@ -693,10 +688,9 @@ theorem parallelOutput_variance_integrable (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
 
 set_option maxHeartbeats 1000000 in
 /-- **Output marginal entropy-integrand volume integrability** (for
-`differentialEntropy_le_gaussian_of_variance_le`). The marginal is the 1-D AWGN output of
-`p.map(·i)` (`parallelOutput_marginal_eq_awgn_output`), so the 1-D Phase-6 wall
-`outputDistribution_logDensity_integrable` applies, using the inherited power constraint
-`p.map(·i) ∈ awgnPowerConstraintSet P`.
+`differentialEntropy_le_gaussian_of_variance_le`), via the 1-D AWGN output of the input
+marginal and its inherited power constraint.
+
 @audit:ok -/
 theorem parallelOutput_marginal_entropy_integrable (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
     (hN : (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
@@ -715,10 +709,8 @@ theorem parallelOutput_marginal_entropy_integrable (P : ℝ) (hP : 0 ≤ P) (i :
   exact InformationTheory.Shannon.AWGN.outputDistribution_logDensity_integrable
     hP hN_NN (AWGN.isAwgnChannelMeasurable (N i)) (p.map (fun z => z i)) h_mem
 
-/-- **Decomposition regularity bundle: `hWx_q`** (fibre ≪ output).
-`W x ≪ volume` (`parallelChannel_fibre_absolutelyContinuous_volume`, Wave 1) composed with
-the reverse full-support AC `volume ≪ μY` (`volume_absolutelyContinuous_parallelOutput`);
-both need `hN`.
+/-- **Fibre ≪ output:** `W x ≪ μY`, via `W x ≪ volume ≪ μY`.
+
 @audit:ok -/
 theorem parallelChannel_fibre_absolutelyContinuous_output (hN : ∀ i, (N i : ℝ) ≠ 0)
     (x : Fin n → ℝ) :
@@ -727,9 +719,9 @@ theorem parallelChannel_fibre_absolutelyContinuous_output (hN : ∀ i, (N i : �
   exact (parallelChannel_fibre_absolutelyContinuous_volume N hN h_meas h_parallel_meas x).trans
     (volume_absolutelyContinuous_parallelOutput N h_meas h_parallel_meas p hN)
 
-/-- **Fibre rnDeriv ↔ Gaussian-PDF-product proxy.** For each fibre `W x = Measure.pi
-(gaussianReal (x i) (N i))`, `(W x).rnDeriv volume =ᵐ[W x] fun y => ∏ᵢ gaussianPDF (x i)(N i)(y i)`.
-Built from `pi_withDensity_fin` (`W x = volume.withDensity (∏ gaussianPDF)`) + `rnDeriv_withDensity`.
+/-- **Fibre rnDeriv as Gaussian-PDF-product proxy:** `(W x).rnDeriv volume =ᵐ[W x]
+fun y => ∏ᵢ gaussianPDF (x i) (N i) (y i)`.
+
 @audit:ok -/
 theorem parallelFibre_rnDeriv_ae_proxy (hN : ∀ i, (N i : ℝ) ≠ 0) (x : Fin n → ℝ) :
     (fun y => ((parallelGaussianChannel N h_meas h_parallel_meas) x).rnDeriv volume y)
@@ -760,14 +752,10 @@ theorem parallelFibre_rnDeriv_ae_proxy (hN : ∀ i, (N i : ℝ) ≠ 0) (x : Fin 
   exact h_rn
 
 set_option maxHeartbeats 800000 in
-/-- **Fibre log-proxy integrability over the joint** `∫ log(∏ gaussianPDF) ∂(p ⊗ₘ W)`.
+/-- **Fibre log-proxy integrability over the joint:** `log (∏ gaussianPDF)` is integrable
+against `p ⊗ₘ W`. The log of the Gaussian-PDF product is the coordinate sum
+`∑ᵢ (cᵢ + c'ᵢ (yᵢ − xᵢ)²)`, each quadratic summand integrable.
 
-The `Fin n → ℝ` analogue of the 1-D `integrable_log_proxy_fibre_compProd_general`. The
-log of the Gaussian-PDF product is the coordinate sum `∑ᵢ (cᵢ + c'ᵢ (yᵢ − xᵢ)²)`, integrable
-against `p ⊗ₘ W` since each per-coordinate quadratic `(yᵢ − xᵢ)²` is integrable (Gaussian
-fibre second moment + `(xᵢ)²` power constraint). The genuine multivariate assembly
-(`Measure.integrable_compProd_iff` + per-coordinate `Measure.pi` marginal integrals) mirrors
-the 1-D template at `Fin n` scale.
 @audit:ok -/
 theorem parallelFibre_logProxy_integrable_compProd (P : ℝ) (hP : 0 ≤ P)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
@@ -832,13 +820,11 @@ theorem parallelFibre_logProxy_integrable_compProd (P : ℝ) (hP : 0 ≤ P)
   exact (integrable_const (c₀ i)).add (h_sq.const_mul (c₁ i))
 
 set_option maxHeartbeats 1600000 in
-/-- **Channel↔RV MI decomposition value** for the correlated input.
-`I = jointDifferentialEntropyPi(μY) − ∫ jointDifferentialEntropyPi(W x) ∂p`.
-Genuine reduction to the sorryAx-free Phase 2 lift
-`parallel_mutualInfoOfChannel_toReal_eq_diffEntropyPi_sub`, with all preconditions supplied
-genuinely. (An earlier draft left this as a residual because the `Measure.pi`-product proxy
-density blew the unifier's `whnf` heartbeat budget on the large lift signature; Wave 4 fixed
-this by naming the proxy as an atomic `def`. See below.)
+/-- **Channel↔RV MI decomposition value** for the correlated input:
+`I = jointDifferentialEntropyPi(μY) − ∫ jointDifferentialEntropyPi(W x) ∂p`, a reduction to
+the decomposition lift `parallel_mutualInfoOfChannel_toReal_eq_diffEntropyPi_sub` with all
+preconditions supplied.
+
 @audit:ok -/
 theorem parallel_mi_decomp_value (P : ℝ) (hP : 0 ≤ P) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (hp : p ∈ parallelGaussianPowerConstraintSet P) :
@@ -850,21 +836,20 @@ theorem parallel_mi_decomp_value (P : ℝ) (hP : 0 ≤ P) (hN : ∀ i, (N i : �
   classical
   set W := parallelGaussianChannel N h_meas h_parallel_meas with hW_def
   set q := outputDistribution p W with hq_def
-  -- ===== Phase-1 regularity preconditions (all genuine / @audit:ok unless noted) =====
+  -- regularity preconditions
   have hW_ac : ∀ x, W x ≪ (volume : Measure (Fin n → ℝ)) :=
     fun x => parallelChannel_fibre_absolutelyContinuous_volume N hN h_meas h_parallel_meas x
   have hWx_q : ∀ x, W x ≪ q :=
     fun x => parallelChannel_fibre_absolutelyContinuous_output N h_meas h_parallel_meas p hN x
   have hq_ac : q ≪ (volume : Measure (Fin n → ℝ)) :=
     parallelOutput_absolutelyContinuous_volume N h_meas h_parallel_meas p hN
-  -- joint AC `p ⊗ₘ W ≪ p.prod q` (in-tree 手筋, same as 1-D template)
+  -- joint AC `p ⊗ₘ W ≪ p.prod q`
   have h_joint_ac : (p ⊗ₘ W) ≪ p.prod q := by
     rw [show p.prod q = p ⊗ₘ (Kernel.const (Fin n → ℝ) q) from (Measure.compProd_const).symm]
     exact Measure.absolutelyContinuous_compProd_right_iff.mpr
       (Filter.Eventually.of_forall
         (fun x => by simpa only [Kernel.const_apply] using hWx_q x))
-  -- proxy density `g z = ∏ᵢ gaussianPDF (z.1 i)(N i)(z.2 i)`, kept opaque (`@[irreducible]`)
-  -- so the lift's unifier does not expand the product (avoids the heartbeat blow-up)
+  -- proxy density `g z = ∏ᵢ gaussianPDF (z.1 i) (N i) (z.2 i)`, kept atomic for the lift
   let g : (Fin n → ℝ) × (Fin n → ℝ) → ℝ≥0∞ := piGaussProxy N
   have hg_prod : ∀ z, g z = ∏ i, gaussianPDF (z.1 i) (N i) (z.2 i) := fun z => rfl
   have hg_meas : Measurable g := piGaussProxy_measurable N
@@ -873,12 +858,12 @@ theorem parallel_mi_decomp_value (P : ℝ) (hP : 0 ≤ P) (hN : ∀ i, (N i : �
     refine (parallelFibre_rnDeriv_ae_proxy N h_meas h_parallel_meas hN x).trans ?_
     refine Filter.Eventually.of_forall (fun y => ?_)
     simp only [hg_prod (x, y)]
-  -- fibre log-proxy joint integrability (#leaf, residual #fibre-proxy)
+  -- fibre log-proxy joint integrability
   have h_int_fibre : Integrable (fun z => Real.log (g z).toReal) (p ⊗ₘ W) := by
     have hbase := parallelFibre_logProxy_integrable_compProd N h_meas h_parallel_meas p P hP hN hp
     refine hbase.congr (Filter.Eventually.of_forall (fun z => ?_))
     simp only [hg_prod z]
-  -- output log-density joint integrability: push #5 (over `q`) up to `p ⊗ₘ W` via snd
+  -- output log-density joint integrability: push the output-law integrability up via snd
   have h_int_out : Integrable
       (fun z : (Fin n → ℝ) × (Fin n → ℝ) =>
         Real.log (q.rnDeriv volume z.2).toReal) (p ⊗ₘ W) := by
@@ -898,25 +883,14 @@ theorem parallel_mi_decomp_value (P : ℝ) (hP : 0 ≤ P) (hN : ∀ i, (N i : �
 
 end Phase1Regularity
 
-/-- **#2 per-coord max-entropy converse split (correlated input).** (Plan Phase 3 / inventory §C)
+/-- **Per-coordinate max-entropy converse split** (correlated input). For `0 ≤ P`, every
+feasible input admits a split `P'` (with `0 ≤ P'ᵢ`, `∑ P'ᵢ ≤ P`) whose per-coordinate sum
+bounds the MI. Assembled from the MI decomposition, output-entropy subadditivity, per-coord
+Gaussian max-entropy, and the variance allocation `P'ᵢ := Var(Yᵢ) − Nᵢ`.
 
-For `0 ≤ P` the converse chain is a **genuine assembly** (0 own `sorry`): MI decomposition
-(Phase 2 lift, sorryAx-free) + output-entropy subadditivity (`jointDifferentialEntropyPi_le_sum`,
-genuine) + per-coord Gaussian max-entropy (`differentialEntropy_le_gaussian_of_variance_le`,
-`@audit:ok`) + variance allocation `P'ᵢ := Var(Yᵢ) − Nᵢ` + capacity log-algebra. As of Wave 4
-the entire converse organization plus all Phase-1 regularity / fibre product-entropy /
-output-variance preconditions are genuine, and the formerly-residual correlated-output joint
-integrability #5 (reached via `parallel_mi_decomp_value`) is now genuinely closed
-(`@audit:ok`, independent honesty audit 2026-05-29). This declaration carries no own `sorry`
-and is proof-done (sorryAx-free transitively).
-
-The `0 ≤ P` precondition is genuine and necessary: without it `parallel_per_input_mi_le_sum`
-would be FALSE for `P < 0` (the constraint set `parallelGaussianPowerConstraintSet P` is
-non-empty for `P < 0` — it contains the Dirac at 0, since `ENNReal.ofReal P = 0` collapses
-the lintegral constraint to `0 ≤ 0` — yet `∑ P'ᵢ ≤ P < 0` with `P'ᵢ ≥ 0` is unsatisfiable).
-The constraint is threaded from the headline `parallel_gaussian_capacity_formula_minimal`
-(which holds `0 < P`) through the constructor; the previous tier-5 `false-statement` defect
-(P unconstrained) has been fixed by adding this hypothesis. -/
+The `0 ≤ P` precondition is necessary: for `P < 0` the constraint set is non-empty (it
+contains the Dirac at 0) yet `∑ P'ᵢ ≤ P < 0` with `P'ᵢ ≥ 0` is unsatisfiable, so the
+statement would be false. -/
 theorem parallel_per_input_mi_le_sum {n : ℕ}
     (P : ℝ) (hP : 0 ≤ P) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -932,8 +906,7 @@ theorem parallel_per_input_mi_le_sum {n : ℕ}
   -- per-coordinate noise positivity
   have hN_pos : ∀ i, (0 : ℝ) < (N i : ℝ) :=
     fun i => lt_of_le_of_ne (N i).coe_nonneg (Ne.symm (hN i))
-  -- ===== Genuine region: `0 ≤ P` (threaded from the headline) =====
-  -- genuine integrability + Bochner second-moment bound from membership
+  -- integrability + Bochner second-moment bound from membership
   obtain ⟨hp_2mom_int, hp_2mom⟩ :=
     parallelGaussianPowerConstraintSet_mem_iff_integrable P hP p hp
   -- output law + marginals are probability measures
@@ -964,7 +937,7 @@ theorem parallel_per_input_mi_le_sum {n : ℕ}
   · -- the converse chain: MI decomp + subadditivity + per-coord max-entropy + log-algebra
     -- assembled via `parallelGaussian_max_ent_le_of_subadditivity`.
     set condTerm : ℝ := ∫ x, jointDifferentialEntropyPi (W x) ∂p with hcond_def
-    -- (★1) decomposition value: I = h(Yⁿ) − condTerm
+    -- decomposition value: I = h(Yⁿ) − condTerm
     have h_decomp :
         (mutualInfoOfChannel p W).toReal = jointDifferentialEntropyPi μY - condTerm := by
       rw [hμY_def, hcond_def, hW_def]
@@ -1040,13 +1013,11 @@ theorem parallel_per_input_mi_le_sum {n : ℕ}
       (mutualInfoOfChannel p W).toReal condTerm (fun i => varY i - (N i : ℝ)) N
       h_decomp h_marg_ac hμ_ac h_joint_ac h_int_marg h_int_joint h_perCoord
 
-/-! ## Phase 5 — `bddAbove` field (genuine, from the Phase 3 converse split) -/
+/-! ## Boundedness of the MI image -/
 
-/-- **#4 `BddAbove (miImage P N …)`** (Plan Phase 5 / inventory §E #4). Every MI value
-of a feasible (correlated) input is bounded by the *constant* `p`-independent
-water-filling sum `∑ᵢ (1/2) log(1 + P/Nᵢ)`: the Phase 3 split returns a feasible `P'`
-with `0 ≤ P'ᵢ` and `∑P'ᵢ ≤ P`, so `P'ᵢ ≤ P` coordinate-wise and `log` monotonicity
-caps each term. Genuine modulo the Phase 3 converse split. -/
+/-- **`BddAbove (miImage P N …)`.** Every MI value of a feasible input is bounded by the
+constant `∑ᵢ (1/2) log(1 + P/Nᵢ)`: the per-input split returns a feasible `P'` with
+`P'ᵢ ≤ P` coordinate-wise, and `log` monotonicity caps each term. -/
 theorem parallel_bddAbove_miImage {n : ℕ}
     (P : ℝ) (hP : 0 ≤ P) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)

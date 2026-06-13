@@ -4,28 +4,18 @@ import InformationTheory.Shannon.CondMutualInfo
 import InformationTheory.Shannon.Entropy
 
 /-!
-# Mutual information chain rule (n-variable) and i.i.d. corollary (B-7)
+# Mutual information chain rule (n-variable) and i.i.d. corollary
 
-[B-7 ムーンショット plan](../../../docs/shannon/mi-chain-rule-moonshot-plan.md) の本体。
-既存 2 変数 `mutualInfo_chain_rule` (`CondMutualInfo.lean:219`) と Han Phase B
-`jointEntropy_chain_rule` を「mutual information 版の n 変数 chain rule」として組み合わせ、
-更に i.i.d. (product distribution) 仮定下での collapse 形 `I(X^n; Y^n) = n · I(X_0; Y_0)`
-を別補題として publish する。
+`MeasurableEquiv` invariance, the n-variable chain rule, additivity under product
+distributions, and the entropy-MI bridge identity.
 
-## 主定理
+## Main statements
 
-* `mutualInfo_map_left_measurableEquiv` ─ `MeasurableEquiv` reshape 不変性 (左引数)
-* `mutualInfo_map_right_measurableEquiv` ─ 同 (右引数)
-* `mutualInfo_chain_rule_fin` ─ n 変数 chain rule:
-    `I(X_0, …, X_{n-1}; Y) = ∑ i, I(X_i; Y | (X_0, …, X_{i-1}))`
-* `mutualInfo_pi_eq_sum` ─ joint product 仮定下で MI 加法性:
-    `μ.map (i ↦ (X_i, Y_i)) = ⊗ᵢ μ.map (X_i, Y_i) ⇒ I(X^n; Y^n) = ∑ I(X_i; Y_i)`
-* `mutualInfo_iid_eq_nsmul` ─ i.i.d. corollary: 上 + 全 i で `μ.map (X_i, Y_i)` 共通
-  ⇒ `I(X^n; Y^n) = n · I(X_0; Y_0)`
-* `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy` ─ entropy ↔ MI 3 項橋:
-    `I(X; Y) = H(X) + H(Y) − H(X, Y)` for any joint probability measure on `α × β`
-    (finite alphabets). B-3'' Phase D-(b) で `H(jointSeq) − H(Xs) − H(Ys) = −I(p; W)`
-    に展開して使う。
+* `mutualInfo_map_left_measurableEquiv` — `I(e ∘ X; Y) = I(X; Y)`.
+* `mutualInfo_chain_rule_fin` — `I(X_0, …, X_{n-1}; Y) = ∑ i, I(X_i; Y | X_0, …, X_{i-1})`.
+* `mutualInfo_pi_eq_sum` — `I(X^n; Y^n) = ∑ I(X_i; Y_i)` under product joint distribution.
+* `mutualInfo_iid_eq_nsmul` — `I(X^n; Y^n) = n · I(X_0; Y_0)` for i.i.d. pairs.
+* `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy` — `I(X; Y) = H(X) + H(Y) − H(X, Y)`.
 -/
 
 namespace InformationTheory.Shannon
@@ -36,7 +26,7 @@ open scoped ENNReal NNReal BigOperators
 variable {Ω : Type*} [MeasurableSpace Ω]
 variable {X Y : Type*} [MeasurableSpace X] [MeasurableSpace Y]
 
-/-! ## Phase A — `mutualInfo` の MeasurableEquiv reshape 不変性 -/
+/-! ## `mutualInfo` invariance under `MeasurableEquiv` reshape -/
 
 /-- Mutual information is invariant under a `MeasurableEquiv` reshape of the left
 random variable: `I(e ∘ X; Y) = I(X; Y)`. Reduces to `klDiv_map_measurableEquiv`
@@ -73,7 +63,7 @@ theorem mutualInfo_map_left_measurableEquiv
   rw [← h_joint, ← h_marg, klDiv_map_measurableEquiv]
 
 
-/-! ## Phase B — n 変数 chain rule -/
+/-! ## n-variable chain rule -/
 
 section ChainRuleFin
 
@@ -363,9 +353,8 @@ theorem mutualInfo_pi_eq_sum
   -- klDiv (Measure.pi joint_i) (Measure.pi marginal_prod_i) = ∑ klDiv joint_i marg_i
   rw [klDiv_pi_eq_sum]
 
-/-- i.i.d. corollary (B-3 用): all `(X_i, Y_i)` jointly i.i.d. with common law
-implies `I(X^n; Y^n) = n · I(X_0; Y_0)`. n copies of the same RV pair under product
-distribution. -/
+/-- i.i.d. corollary: all `(X_i, Y_i)` jointly i.i.d. with common law implies
+`I(X^n; Y^n) = n · I(X_0; Y_0)`. -/
 @[entry_point]
 theorem mutualInfo_iid_eq_nsmul
     {n : ℕ} (hn : 0 < n)

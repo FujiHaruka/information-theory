@@ -2,37 +2,30 @@ import InformationTheory.Shannon.RateDistortion.ConverseMonotone
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# Rate-distortion convexity (E-4'' Phase A + B core)
+# Rate-distortion convexity
 
-[`docs/shannon/rate-distortion-convexity-plan.md`](../../../docs/shannon/rate-distortion-convexity-plan.md)
-の Phase A + Phase B core 実装。Cover-Thomas 10.4 の **rate-distortion 関数の凸性**:
+Convexity of the rate-distortion function in the distortion threshold
+(Cover–Thomas, Theorem 10.4): for all `D₁ D₂ : ℝ` and `λ ∈ [0, 1]`,
+`R(λ D₁ + (1-λ) D₂) ≤ λ R(D₁) + (1-λ) R(D₂)`.
 
-```
-∀ D₁ D₂ : ℝ, ∀ λ ∈ [0, 1],
-  R(λ D₁ + (1-λ) D₂) ≤ λ R(D₁) + (1-λ) R(D₂)
-```
+## Main definitions
 
-## 主補題
+* `mixtureMeasure` — the convex combination of two joint measures at weight `λ`.
 
-* `mixtureMeasure` — 2 つの結合分布の convex combination (measure-level)
-* `mixtureMeasure_map_fst` / `mixtureMeasure_map_snd` — pushforward の線形性
-* `mixtureMeasure_map_fst_eq` — 同じ X-marginal `P` をもつ 2 結合分布の混合は再び `P`
-* `expectedDistortion_mixtureMeasure` — distortion 線形性
-* `mixtureMeasure_feasible` — feasibility が convex combination で保存
-* `rateDistortionFunction_convexOn` — **Phase B 主補題**
+## Main statements
 
-## 設計判断 (plan 判断ログ参照)
+* `rateDistortionFunction_convexOn` — convexity of the rate-distortion function.
 
-* **`klDiv` joint convexity は DPI 経路で genuine に閉じた** (Cover-Thomas 2.7.2)。
-  Mathlib 直接不在だが、selector-extension (`Bool × Ω`) + プロジェクト資産
-  `klDiv_map_le` (一般 pushforward DPI) + 二点 selector の per-slice KL 加法性
-  (`klDiv_add_of_mutuallySingular`、互いに特異な成分の rnDeriv 分解) で自作。
-  3 層: `klDiv_joint_convex` (gateway) → `klDiv_mixture_le` → 主補題。
-  旧 subnormal (joint convexity を hypothesis 化) 形は撤回済。
-* **iInf plumbing**: 任意 feasible `ν₁`, `ν₂` をとって convex combination を構成し、
-  feasibility + per-pair bound を経由して `ENNReal.mul_iInf_of_ne` / `iInf_add` /
-  `add_iInf` で press する。境界 `lam = 0, 1` は別 branch。
-* **Phase C (n-letter form)** は deferred。
+## Implementation notes
+
+The joint convexity of `klDiv` (Cover–Thomas 2.7.2) is not available directly in
+Mathlib, so it is derived along the data-processing route in three layers:
+`klDiv_joint_convex` (a selector-extension on `Bool × Ω` combined with the
+pushforward DPI `klDiv_map_le` and the per-slice KL additivity of mutually
+singular components) → `klDiv_mixture_le` → `rateDistortionFunction_convexOn`.
+The infimum over feasible joints is pressed through
+`ENNReal.mul_iInf_of_ne` / `iInf_add` / `add_iInf`, with the boundary weights
+`λ = 0, 1` handled in separate branches.
 -/
 
 namespace InformationTheory.Shannon
@@ -42,7 +35,7 @@ open scoped ENNReal NNReal BigOperators
 
 variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 
-/-! ## Phase A — Mixture measure 構成 + feasibility 保存 -/
+/-! ## Mixture measure and feasibility -/
 
 /-- Convex combination of two joint measures on `α × β` with weight `λ ∈ [0, 1]`. -/
 noncomputable def mixtureMeasure
@@ -124,21 +117,19 @@ theorem mixtureMeasure_feasible
   exact add_le_add (mul_le_mul_of_nonneg_left h_dist₁ hlam₀)
     (mul_le_mul_of_nonneg_left h_dist₂ h1lam)
 
-/-! ## Phase B core — R(D) convexity 主補題
+/-! ## Convexity of the rate-distortion function
 
-`klDiv` の joint convexity (Cover-Thomas 2.7.2) は Mathlib 直接不在の gap だが、
-プロジェクト資産 `klDiv_map_le` (一般 pushforward DPI) を核に DPI 経路で genuine に
-閉じる。
+The joint convexity of `klDiv` is obtained along the data-processing route in
+three layers: `klDiv_joint_convex` (joint convexity stripped of the
+rate-distortion marginal structure), `klDiv_mixture_le` (its specialization to
+the mixture-measure form), and `rateDistortionFunction_convexOn` (the infimum
+press). -/
 
-3 層構造:
-* 層1 (gateway) `klDiv_joint_convex` — RD 固有構造から切り離した純 joint convexity。
-* 層2 `klDiv_mixture_le` — 層1 の RD 固有形への plumbing 適用。
-* 層3 `rateDistortionFunction_convexOn` — 層2 の iInf press。 -/
+/-! ### `klDiv` joint convexity gateway -/
 
-/-! ### 層1 (gateway) — `klDiv` の純 joint convexity -/
+/-- `klDiv` is invariant under the `Prod.mk b` embedding:
+`klDiv ((dirac b).prod μ) ((dirac b).prod σ) = klDiv μ σ`.
 
-/-- `klDiv` は `Prod.mk b`-埋め込みで不変: `klDiv ((dirac b).prod μ)((dirac b).prod σ) = klDiv μ σ`。
-両 DPI (`klDiv_map_le` を `Prod.mk b` と `Prod.snd` の両方向で適用) で示す。
 @audit:ok -/
 private lemma klDiv_dirac_prod {Ω : Type*} [MeasurableSpace Ω]
     (b : Bool) (μ σ : Measure Ω) [IsFiniteMeasure μ] [IsFiniteMeasure σ] :
@@ -148,13 +139,14 @@ private lemma klDiv_dirac_prod {Ω : Type*} [MeasurableSpace Ω]
   have _ : IsFiniteMeasure (μ.map (Prod.mk b)) := Measure.isFiniteMeasure_map μ _
   have _ : IsFiniteMeasure (σ.map (Prod.mk b)) := Measure.isFiniteMeasure_map σ _
   refine le_antisymm (klDiv_map_le hmk μ σ) ?_
-  -- 逆向き: Prod.snd で射影して戻す
+  -- Reverse direction: project back via Prod.snd.
   have hsnd : Measurable (Prod.snd : Bool × Ω → Ω) := measurable_snd
   have h := klDiv_map_le hsnd (μ.map (Prod.mk b)) (σ.map (Prod.mk b))
   rwa [Measure.map_map hsnd hmk, Measure.map_map hsnd hmk,
     show (Prod.snd ∘ Prod.mk b) = (id : Ω → Ω) from rfl, Measure.map_id, Measure.map_id] at h
 
-/-- 二つのスライス `(dirac true).prod μ` と `(dirac false).prod σ` は互いに特異。
+/-- The slices `(dirac true).prod μ` and `(dirac false).prod σ` are mutually singular.
+
 @audit:ok -/
 private lemma mutuallySingular_dirac_prod {Ω : Type*} [MeasurableSpace Ω]
     (μ σ : Measure Ω) [SFinite μ] [SFinite σ] :
@@ -171,12 +163,10 @@ private lemma mutuallySingular_dirac_prod {Ω : Type*} [MeasurableSpace Ω]
     convert measure_empty (μ := σ)
     ext ω; simp
 
-/-- 互いに特異な成分の和に対する `klDiv` の加法性。
-`A₁, B₁` と `A₂, B₂` がそれぞれ分離した台に乗っているとき (各 cross-特異)、
-`klDiv (A₁+A₂)(B₁+B₂) = klDiv A₁ B₁ + klDiv A₂ B₂`。
-3 つの特異性仮説 (`hB`/`hA₂B₁`/`hA₁B₂`) は全て rnDeriv 消失 (`rnDeriv_eq_zero_of_mutuallySingular`)
-+ 加法分解 (`rnDeriv_add_right_of_mutuallySingular`) に genuine に消費される precondition で、
-いずれかを落とすと加法性が偽になる (load-bearing core ではなく幾何的分離条件)。
+/-- Additivity of `klDiv` over a sum of mutually singular components: when
+`A₁, B₁` and `A₂, B₂` are supported on separated sets (each cross pair singular),
+`klDiv (A₁ + A₂) (B₁ + B₂) = klDiv A₁ B₁ + klDiv A₂ B₂`.
+
 @audit:ok -/
 private lemma klDiv_add_of_mutuallySingular {Ω : Type*} [MeasurableSpace Ω]
     (A₁ A₂ B₁ B₂ : Measure Ω)
@@ -185,10 +175,10 @@ private lemma klDiv_add_of_mutuallySingular {Ω : Type*} [MeasurableSpace Ω]
     klDiv (A₁ + A₂) (B₁ + B₂) = klDiv A₁ B₁ + klDiv A₂ B₂ := by
   have hac_B₁ : B₁ ≪ B₁ + B₂ := Measure.AbsolutelyContinuous.rfl.add_right B₂
   have hac_B₂ : B₂ ≪ B₁ + B₂ := Measure.AbsolutelyContinuous.rfl.add_right' B₁
-  -- 絶対連続性で場合分け
+  -- Split on absolute continuity.
   by_cases hac₁ : A₁ ≪ B₁
   swap
-  · -- A₁ ⋘̸ B₁ ⟹ 右辺 = ∞、左辺も ∞
+  · -- A₁ not ≪ B₁ ⟹ both sides are ∞.
     rw [klDiv_of_not_ac hac₁, top_add, klDiv_of_not_ac]
     intro hac
     exact hac₁ (Measure.absolutelyContinuous_of_add_of_mutuallySingular
@@ -201,17 +191,17 @@ private lemma klDiv_add_of_mutuallySingular {Ω : Type*} [MeasurableSpace Ω]
       (ν₁ := B₂) (ν₂ := B₁) ?_ hA₂B₁)
     rw [add_comm B₂ B₁]
     exact (Measure.AbsolutelyContinuous.add_left_iff.mp hac).2
-  -- 主ケース: A₁ ≪ B₁ かつ A₂ ≪ B₂
+  -- Main case: A₁ ≪ B₁ and A₂ ≪ B₂.
   have hac : (A₁ + A₂) ≪ (B₁ + B₂) :=
     Measure.AbsolutelyContinuous.add_left_iff.mpr ⟨hac₁.trans hac_B₁, hac₂.trans hac_B₂⟩
   rw [klDiv_eq_lintegral_klFun_of_ac hac₁, klDiv_eq_lintegral_klFun_of_ac hac₂,
     klDiv_eq_lintegral_klFun_of_ac hac, lintegral_add_measure]
-  -- rnDeriv の和分解 (a.e.[B₁+B₂])
+  -- Additive decomposition of the rnDeriv (a.e. [B₁ + B₂]).
   have hsum : (A₁ + A₂).rnDeriv (B₁ + B₂)
       =ᵐ[B₁ + B₂] A₁.rnDeriv (B₁ + B₂) + A₂.rnDeriv (B₁ + B₂) :=
     Measure.rnDeriv_add A₁ A₂ (B₁ + B₂)
   congr 1
-  · -- B₁ 上: (A₁+A₂).rnDeriv(B₁+B₂) =ᵐ[B₁] A₁.rnDeriv B₁
+  · -- On B₁: (A₁+A₂).rnDeriv (B₁+B₂) =ᵐ[B₁] A₁.rnDeriv B₁.
     refine lintegral_congr_ae ?_
     have hzero : A₂.rnDeriv (B₁ + B₂) =ᵐ[B₁] 0 :=
       Measure.rnDeriv_eq_zero_of_mutuallySingular hA₂B₁ hac_B₁
@@ -219,7 +209,7 @@ private lemma klDiv_add_of_mutuallySingular {Ω : Type*} [MeasurableSpace Ω]
       Measure.rnDeriv_add_right_of_mutuallySingular hB
     filter_upwards [hac_B₁.ae_le hsum, hzero, h2] with x hx1 hx0 hx2
     rw [hx1, Pi.add_apply, hx0, Pi.zero_apply, add_zero, hx2]
-  · -- B₂ 上: (A₁+A₂).rnDeriv(B₁+B₂) =ᵐ[B₂] A₂.rnDeriv B₂
+  · -- On B₂: (A₁+A₂).rnDeriv (B₁+B₂) =ᵐ[B₂] A₂.rnDeriv B₂.
     refine lintegral_congr_ae ?_
     have hzero : A₁.rnDeriv (B₁ + B₂) =ᵐ[B₂] 0 :=
       Measure.rnDeriv_eq_zero_of_mutuallySingular hA₁B₂ hac_B₂
@@ -229,8 +219,9 @@ private lemma klDiv_add_of_mutuallySingular {Ω : Type*} [MeasurableSpace Ω]
     filter_upwards [hac_B₂.ae_le hsum, hzero, h2] with x hx1 hx0 hx2
     rw [hx1, Pi.add_apply, hx0, Pi.zero_apply, zero_add, hx2]
 
-/-- 二点スライス上の `klDiv` 加法性 + 同一スカラー両側の引き出し:
-互いに特異なスライスの和に対し klDiv は分配し、各スライスのスカラーが引き出せる。
+/-- `klDiv` over the two-point slice sum: it distributes over mutually singular
+slices and the per-slice scalar can be factored out.
+
 @audit:ok -/
 private lemma klDiv_two_slice {Ω : Type*} [MeasurableSpace Ω]
     (μ₁ μ₂ σ₁ σ₂ : Measure Ω)
@@ -257,14 +248,14 @@ private lemma klDiv_two_slice {Ω : Type*} [MeasurableSpace Ω]
   have hTtf : Tt₁ ⟂ₘ Tf₂ := mutuallySingular_dirac_prod σ₁ σ₂
   have hStTf : St₁ ⟂ₘ Tf₂ := mutuallySingular_dirac_prod μ₁ σ₂
   have hSfTt : Sf₂ ⟂ₘ Tt₁ := (mutuallySingular_dirac_prod σ₁ μ₂).symm
-  -- 両側 smul で特異性を保存する局所補題
+  -- Mutual singularity is preserved under two-sided scaling.
   have smul_both : ∀ {U V : Measure (Bool × Ω)} (r s : ℝ≥0),
       U ⟂ₘ V → ((r : ℝ≥0∞) • U) ⟂ₘ ((s : ℝ≥0∞) • V) :=
     fun r s h => ((h.smul (r : ℝ≥0∞)).symm.smul (s : ℝ≥0∞)).symm
   rw [klDiv_add_of_mutuallySingular ((a : ℝ≥0∞) • St₁) ((b : ℝ≥0∞) • Sf₂)
         ((a : ℝ≥0∞) • Tt₁) ((b : ℝ≥0∞) • Tf₂)
         (smul_both a b hTtf) (smul_both b a hSfTt) (smul_both a b hStTf)]
-  -- 各スライスでスカラーを引き出す (klDiv_smul_same: 同一スカラー両側)
+  -- Factor out the per-slice scalar (`klDiv_smul_same`: same scalar on both sides).
   rw [show ((a : ℝ≥0∞) • St₁) = a • St₁ from rfl,
       show ((a : ℝ≥0∞) • Tt₁) = a • Tt₁ from rfl,
       show ((b : ℝ≥0∞) • Sf₂) = b • Sf₂ from rfl,
@@ -272,13 +263,15 @@ private lemma klDiv_two_slice {Ω : Type*} [MeasurableSpace Ω]
       klDiv_smul_same (μ := St₁) (ν := Tt₁) a,
       klDiv_smul_same (μ := Sf₂) (ν := Tf₂) b]
 
-/-- **層1 (gateway): joint convexity of `klDiv`.**
+/-- Joint convexity of `klDiv`, stated independently of the rate-distortion
+marginal structure: built from the selector extension on `Bool × Ω`, the
+pushforward DPI `klDiv_map_le` (forgetting the selector via `Prod.snd`), and the
+per-slice KL computation `klDiv_two_slice`.
 
-純 joint convexity を RD 固有の marginal 構造から切り離した一般形。
-selector-extension (`Bool × Ω`) + DPI (`klDiv_map_le` で selector を `Prod.snd` 射影で
-忘れる) + 二点 selector の per-slice KL 計算 (`klDiv_two_slice`) で genuine に構築する。
-`_hlam₀`/`_hlam₁` (lam ∈ [0,1]) は body 未使用: `ENNReal.ofReal` の負値クランプにより任意 lam で
-真 (statement を不当に弱めも強めもしない無害な framing 残置、load-bearing でない)。
+The hypotheses `_hlam₀` / `_hlam₁` (`lam ∈ [0,1]`) are unused in the body: the
+`ENNReal.ofReal` clamp of negative values makes the statement hold for every
+`lam`, so they are kept only as framing.
+
 @audit:ok -/
 theorem klDiv_joint_convex
     {Ω : Type*} [MeasurableSpace Ω]
@@ -329,11 +322,12 @@ theorem klDiv_joint_convex
   rw [hMN] at hDPI
   exact hDPI
 
-/-! ### 層2 — RD 固有形への plumbing 適用 -/
+/-! ### `klDiv` joint convexity in mixture-measure form -/
 
-/-- **層2: `klDiv` の joint convexity (混合測度形)**。
-分母 `P` (X-marginal) は両 witness で固定、`ν.map snd` のみ線形。
-層1 (`klDiv_joint_convex`) の genuine な plumbing 適用。
+/-- Joint convexity of `klDiv` in mixture-measure form: the denominator `P`
+(the X-marginal) is fixed across both witnesses, only `ν.map snd` is linear.
+Specialization of `klDiv_joint_convex`.
+
 @audit:ok -/
 theorem klDiv_mixture_le
     {lam : ℝ} (hlam₀ : 0 ≤ lam) (hlam₁ : lam ≤ 1)
@@ -349,42 +343,38 @@ theorem klDiv_mixture_le
   set m₂ := ν₂.map Prod.snd with hm₂
   have _ : IsFiniteMeasure m₁ := by rw [hm₁]; exact Measure.isFiniteMeasure_map ν₁ _
   have _ : IsFiniteMeasure m₂ := by rw [hm₂]; exact Measure.isFiniteMeasure_map ν₂ _
-  -- 分母 fst marginal = P, snd marginal = w•m₁ + w'•m₂
+  -- Denominator: fst marginal = P, snd marginal = w•m₁ + w'•m₂.
   have hfst : (mixtureMeasure lam ν₁ ν₂).map Prod.fst = P :=
     mixtureMeasure_map_fst_eq hlam₀ hlam₁ P ν₁ ν₂ h₁ h₂
   have hsnd : (mixtureMeasure lam ν₁ ν₂).map Prod.snd
       = ENNReal.ofReal lam • m₁ + ENNReal.ofReal (1 - lam) • m₂ :=
     mixtureMeasure_map_snd lam ν₁ ν₂
-  -- 分母 = w•(P.prod m₁) + w'•(P.prod m₂)
+  -- Denominator = w•(P.prod m₁) + w'•(P.prod m₂).
   have hden : (((mixtureMeasure lam ν₁ ν₂).map Prod.fst).prod
         ((mixtureMeasure lam ν₁ ν₂).map Prod.snd))
       = ENNReal.ofReal lam • (P.prod m₁) + ENNReal.ofReal (1 - lam) • (P.prod m₂) := by
     rw [hfst, hsnd, Measure.prod_add, Measure.prod_smul_right, Measure.prod_smul_right]
-  -- RHS の klDiv 分母を P.prod mᵢ に揃える
+  -- Align the RHS klDiv denominators with P.prod mᵢ.
   have hrhs₁ : (ν₁.map Prod.fst).prod m₁ = P.prod m₁ := by rw [h₁]
   have hrhs₂ : (ν₂.map Prod.fst).prod m₂ = P.prod m₂ := by rw [h₂]
   rw [hden, hrhs₁, hrhs₂]
   exact klDiv_joint_convex hlam₀ hlam₁ ν₁ ν₂ (P.prod m₁) (P.prod m₂)
 
-/-! ### 層3 — R(D) convexity 主補題 (iInf press) -/
+/-! ### Convexity of the rate-distortion function (infimum press) -/
 
 /-- **R(D) is convex**: the rate-distortion function is convex in the distortion
-threshold (Cover-Thomas 10.4).
-
+threshold (Cover–Thomas 10.4),
 `R(λ D₁ + (1-λ) D₂) ≤ λ R(D₁) + (1-λ) R(D₂)`.
 
-Proof: take any feasible witnesses `ν₁` (at `D₁`), `ν₂` (at `D₂`); their convex
+Take any feasible witnesses `ν₁` (at `D₁`) and `ν₂` (at `D₂`); their convex
 combination `mixtureMeasure λ ν₁ ν₂` is feasible at `λ D₁ + (1-λ) D₂`
 (`mixtureMeasure_feasible`), and the joint convexity of `klDiv`
-(`klDiv_mixture_le`, layer 2, itself genuine via the DPI gateway
-`klDiv_joint_convex`) gives the per-pair bound; pressing the `iInf` over feasible
-witnesses yields convexity.
+(`klDiv_mixture_le`) gives the per-pair bound; pressing the `iInf` over feasible
+witnesses yields convexity. The hypothesis `h_int_witness` (integrability of `d`
+on every joint with `Prod.fst`-marginal `P`) is a regularity precondition,
+needed so that the mixture witness has well-defined feasibility
+(`expectedDistortion` linearity).
 
-The regularity hypothesis `h_int_witness` (integrability of `d` on every joint
-with `Prod.fst`-marginal `P`) is a passive regularity precondition, needed so that
-the mixture witness has well-defined feasibility (`expectedDistortion` linearity).
-It supplies no convexity content — the convexity flows entirely from the genuine
-DPI gateway (`klDiv_map_le`), so it is not load-bearing.
 @audit:ok -/
 @[entry_point]
 theorem rateDistortionFunction_convexOn
@@ -398,11 +388,11 @@ theorem rateDistortionFunction_convexOn
         + ENNReal.ofReal (1 - lam) * rateDistortionFunction d P D₂ := by
   set w := ENNReal.ofReal lam with hw
   set w' := ENNReal.ofReal (1 - lam) with hw'
-  -- g ν = 被 iInf 量
+  -- g ν is the quantity under the iInf.
   set g : Measure (α × β) → ℝ≥0∞ :=
     fun ν => klDiv ν ((ν.map Prod.fst).prod (ν.map Prod.snd)) with hg
-  -- per-pair bound: 任意 feasible ν₁ (at D₁), ν₂ (at D₂) で
-  --   R(target) ≤ w * g ν₁ + w' * g ν₂
+  -- Per-pair bound: for any feasible ν₁ (at D₁) and ν₂ (at D₂),
+  --   R(target) ≤ w * g ν₁ + w' * g ν₂.
   have h_per_pair : ∀ (ν₁ ν₂ : Measure (α × β)),
       ν₁.map Prod.fst = P → expectedDistortion d ν₁ ≤ D₁ →
       ν₂.map Prod.fst = P → expectedDistortion d ν₂ ≤ D₂ →
@@ -428,7 +418,7 @@ theorem rateDistortionFunction_convexOn
               ((mixtureMeasure lam ν₁ ν₂).map Prod.snd)) :=
           rateDistortionFunction_le_of_feasible d P _ _ hfeas_marg hfeas_dist
       _ ≤ w * g ν₁ + w' * g ν₂ := klDiv_mixture_le hlam₀ hlam₁ P ν₁ ν₂ hm₁ hm₂
-  -- `w * R(D)` を nested iInf に展開する補助 (w ≠ 0, ≠ ∞ のとき)
+  -- Expand `w * R(D)` into a nested iInf (for w ≠ 0, ≠ ∞).
   have h_mul_iInf : ∀ (c : ℝ≥0∞) (D : ℝ), c ≠ 0 → c ≠ ⊤ →
       c * rateDistortionFunction d P D
         = ⨅ (ν : Measure (α × β)) (_ : ν.map Prod.fst = P)
@@ -440,36 +430,36 @@ theorem rateDistortionFunction_convexOn
     rw [ENNReal.mul_iInf_of_ne hc0 hctop]
     refine iInf_congr fun _ => ?_
     rw [ENNReal.mul_iInf_of_ne hc0 hctop]
-  -- iInf press、境界 lam = 0, 1 で場合分け
+  -- Press the iInf; handle the boundary weights lam = 0, 1 separately.
   rcases eq_or_lt_of_le hlam₀ with hlam0 | hlam0
-  · -- lam = 0: w = 0, w' = 1, target = D₂
+  · -- lam = 0: w = 0, w' = 1, target = D₂.
     rw [hw, hw', ← hlam0]
     have heq : (0 : ℝ) * D₁ + (1 - 0) * D₂ = D₂ := by ring
     rw [heq]
     simp only [sub_zero, ENNReal.ofReal_zero, ENNReal.ofReal_one, zero_mul, zero_add, one_mul,
       le_refl]
   rcases eq_or_lt_of_le hlam₁ with hlam1 | hlam1
-  · -- lam = 1: w = 1, w' = 0, target = D₁
+  · -- lam = 1: w = 1, w' = 0, target = D₁.
     rw [hw, hw', hlam1]
     have heq : (1 : ℝ) * D₁ + (1 - 1) * D₂ = D₁ := by ring
     rw [heq]
     simp only [sub_self, ENNReal.ofReal_one, ENNReal.ofReal_zero, one_mul, zero_mul, add_zero,
       le_refl]
-  -- 0 < lam < 1: 内部、w, w' ≠ 0, ≠ ∞
+  -- 0 < lam < 1: interior, w, w' ≠ 0, ≠ ∞.
   have hw0 : w ≠ 0 := by rw [hw]; simp [ENNReal.ofReal_eq_zero, not_le, hlam0]
   have hwtop : w ≠ ⊤ := by rw [hw]; exact ENNReal.ofReal_ne_top
   have hw'0 : w' ≠ 0 := by
     rw [hw']; simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]; linarith
   have hw'top : w' ≠ ⊤ := by rw [hw']; exact ENNReal.ofReal_ne_top
   rw [h_mul_iInf w D₁ hw0 hwtop, h_mul_iInf w' D₂ hw'0 hw'top]
-  -- 左の iInf (ν₁ / marg / dist) を順に剥がす
+  -- Peel off the left iInf (ν₁ / marg / dist) in turn.
   rw [ENNReal.iInf_add]
   refine le_iInf fun ν₁ => ?_
   rw [ENNReal.iInf_add]
   refine le_iInf fun hm₁ => ?_
   rw [ENNReal.iInf_add]
   refine le_iInf fun hd₁ => ?_
-  -- 右の iInf (ν₂ / marg / dist) を順に剥がす
+  -- Peel off the right iInf (ν₂ / marg / dist) in turn.
   rw [ENNReal.add_iInf]
   refine le_iInf fun ν₂ => ?_
   rw [ENNReal.add_iInf]

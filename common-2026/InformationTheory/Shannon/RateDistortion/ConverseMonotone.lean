@@ -2,20 +2,26 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.RateDistortion.Converse
 
 /-!
-# Rate-distortion converse (specified-distortion form, E-4' MVP)
+# Rate-distortion converse (specified-distortion form)
 
-[`docs/shannon/rate-distortion-converse-plan.md`](../../../docs/shannon/rate-distortion-converse-plan.md)
-の後継カード E-4' の MVP。Cover-Thomas 10.4 を **指定歪み形** で publish:
-
+The specified-distortion form of the rate-distortion converse (Cover–Thomas
+10.4):
 ```
 D̃ := 𝔼 d(X, decoder(encoder X)) ≤ D
 ⟹ (rateDistortionFunction (μ.map X) D).toReal ≤ Real.log M
 ```
 
-戦略は **R(D) の単調性** (`D₁ ≤ D₂ ⟹ R(D₂) ≤ R(D₁)`、feasible set 包含) と
-親 single-shot 形 (`R(D̃) ≤ log M`) の合成。`R(D) ≤ R(D̃) ≤ log M`。
+## Main statements
 
-E-4 本来 scope の convexity + n-letter Jensen は別カード (E-4'') へ deferred。
+* `rateDistortionFunction_antitone` — antitonicity of `R(D)` in the threshold.
+* `rate_distortion_converse_single_shot_specified` — `R(D) ≤ log M` at a
+  specified threshold `D ≥ D̃`.
+
+## Implementation notes
+
+The specified-distortion bound is the composition of antitonicity of `R(D)`
+(`D₁ ≤ D₂ ⟹ R(D₂) ≤ R(D₁)`, from feasible-set inclusion) with the single-shot
+form `R(D̃) ≤ log M`, giving `R(D) ≤ R(D̃) ≤ log M`.
 -/
 
 namespace InformationTheory.Shannon
@@ -46,9 +52,9 @@ theorem rateDistortionFunction_antitone
   have hν_dist₂ : expectedDistortion d ν ≤ D₂ := le_trans hν_dist hD
   exact iInf_le_of_le ν (iInf_le_of_le hν_marg (iInf_le _ hν_dist₂))
 
-/-! ## Specified-distortion single-shot converse 主定理 -/
+/-! ## Specified-distortion single-shot converse -/
 
-/-- **Single-shot rate-distortion converse, specified-distortion form (E-4' MVP)**.
+/-- **Single-shot rate-distortion converse, specified-distortion form**.
 
 For any single-shot lossy code `(encoder, decoder)` with image alphabet `M` and
 source random variable `X : Ω → α`, if the actual expected distortion
@@ -62,8 +68,7 @@ bounded by `Real.log |M|`:
 
 This is the form most commonly seen in textbooks (`R(D) ≤ rate`) and is the
 specified-distortion lift of `rate_distortion_converse_single_shot` via R(D)
-monotonicity. The `n`-letter form requires `R(D)` convexity (Jensen) and is
-deferred (E-4''). -/
+monotonicity. -/
 @[entry_point]
 theorem rate_distortion_converse_single_shot_specified
     [Fintype α] [Nonempty α] [MeasurableSingletonClass α]

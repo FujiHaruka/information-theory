@@ -3,26 +3,24 @@ import InformationTheory.Shannon.Bridge
 import InformationTheory.Shannon.CondMutualInfo
 
 /-!
-# Entropy chain rule, conditional entropy tower, and conditioning monotonicity (Phase A skeleton)
+# Entropy chain rule and conditioning monotonicity
 
-Han 不等式ムーンショット ([`docs/han/han-moonshot-plan.md`](../../../docs/han/han-moonshot-plan.md)) の Phase A:
-2 変数版の Shannon 不等式群を整備する。Phase B (n 変数 Han 本体) はここで揃った
-chain rule と「条件付けで減る」を `Fin n` の prefix に対して反復適用して証明する。
+Two-variable Shannon inequalities: chain rule, conditional mutual information formula,
+and the fact that conditioning never increases entropy.
 
-## 主定理
+## Main statements
 
-* `entropy_pair_eq_entropy_add_condEntropy` ─ `H(X, Y) = H(X) + H(Y | X)` (chain rule)
-* `condEntropy_tower` ─ `H(X | Y, Z) = ∫ y, ∫ z, ... d(condDistrib Z Y μ y) d P_Y` (補助補題)
-* `condMutualInfo_eq_condEntropy_sub_condEntropy` ─ `I(X; Z | Y) = H(X | Y) - H(X | Y, Z)` (中間補題)
-* `condEntropy_le_condEntropy_of_pair` ─ `H(X | Y, Z) ≤ H(X | Y)` (条件付けで減る)
+* `entropy_pair_eq_entropy_add_condEntropy` — `H(X, Y) = H(X) + H(Y | X)`.
+* `condEntropy_tower` — disintegration form of `H(X | Y, Z)`.
+* `condMutualInfo_eq_condEntropy_sub_condEntropy` — `I(X; Z | Y) = H(X | Y) - H(X | Y, Z)`.
+* `condEntropy_le_condEntropy_of_pair` — `H(X | Y, Z) ≤ H(X | Y)`.
 
-## 戦略 (Phase 0 結果より)
+## Implementation notes
 
-中間補題は `condMutualInfo` の compProd 形定義を `klDiv_compProd_const_eq_lintegral_of_ac`
-(Bridge.lean Helper 1) で fiber 上に展開し、各 fiber で Bridge 主定理
-`mutualInfo_eq_entropy_sub_condEntropy` を呼ぶ。Bridge 全体の写経は不要。tower 補題は
-`μ.map (Yo, Zo) = (μ.map Yo) ⊗ₘ condDistrib Zo Yo μ` で disintegration し Tonelli を効かせる。
-詳細は [`docs/han/han-mathlib-inventory.md`](../../../docs/han/han-mathlib-inventory.md) §3。
+`condMutualInfo_eq_condEntropy_sub_condEntropy` uses the Mathlib mutual-information
+chain rule `mutualInfo_chain_rule` plus `mutualInfo_comm`/`condMutualInfo_comm` to
+put `Xs` on the left, then lifts to `.toReal` using finiteness from `mutualInfo_ne_top`
+and `condMutualInfo_ne_top`.
 -/
 
 namespace InformationTheory.Shannon
@@ -197,21 +195,7 @@ theorem condEntropy_tower
     h_yz, Measure.integral_compProd (h_yz ▸ h_integrable)]
 
 omit [DecidableEq X] [DecidableEq Y] [Nonempty Y] [DecidableEq Z] in
-/-- The chain rule for conditional mutual information in Shannon (additive) form:
-`I(X; Z | Y) = H(X | Y) - H(X | Y, Z)`.
-
-戦略 (handoff 改訂版): fiber 展開ルートは Bridge Helper 1 の右 kernel 定数限定が
-ネックで却下。代わりに Mathlib chain rule + Bridge × 2 + `condMutualInfo_comm` で
-組む。具体的には `mutualInfo_chain_rule` を `(Xs := Zo, Yo := Xs, Zc := Yo)` で
-適用し
-`mI(Yo,Zo; Xs) = mI(Yo; Xs) + cMI(Zo; Xs | Yo)` を得て、`mutualInfo_comm` × 2 +
-`condMutualInfo_comm` × 1 で第 1 引数側を `Xs` に統一すると
-`mI(Xs; (Yo,Zo)) = mI(Xs; Yo) + cMI(Xs; Zo | Yo)` が出る。両辺 `.toReal` を取って
-Bridge `mutualInfo_eq_entropy_sub_condEntropy` を 2 回当て entropy μ Xs を相殺。
-
-`ENNReal.toReal_add` の有限性は `mutualInfo_ne_top` (MutualInfo.lean) と
-`condMutualInfo_ne_top` (CondMutualInfo.lean、chain rule 経由で `mutualInfo_ne_top`
-に帰着) で確保。 -/
+/-- Conditional mutual information formula: `I(X; Z | Y) = H(X | Y) - H(X | Y, Z)`. -/
 @[entry_point]
 theorem condMutualInfo_eq_condEntropy_sub_condEntropy
     (μ : Measure Ω) [IsProbabilityMeasure μ]

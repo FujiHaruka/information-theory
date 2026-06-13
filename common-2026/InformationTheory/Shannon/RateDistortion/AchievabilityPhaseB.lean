@@ -114,19 +114,12 @@ theorem blockDistortion_le_of_mem_distortionTypicalSet
       ≤ expectedJointDistortion μ (Xs 0) (Ys 0) d + δ := h.2
 
 
-/-! ## Phase B.3 — WLLN on distortion (skeleton) -/
+/-! ### Lower-bound joint-AEP independent probability
 
-
-/-! ### Phase B.2.2 — Anti-direction (lower bound) joint-AEP indep probability
-
-Cover-Thomas 10.5 (10.85) の核となる single-codeword typical-match probability の下界。
-既存 `ChannelCoding.jointlyTypicalSet_indep_prob_le` の **anti-direction** mirror。
-
-`jointlyTypicalSet_card_ge` は size lower bound (private helper)。
-`jointlyTypicalSet_indep_prob_ge` は product law 下での JTS 確率下界 (公開)。
-
-入力 hypothesis は **joint-law** 形 `μ.real {ω | (jX, jY) ∈ JTS} ≥ 1 - η` を取る。
-これは `jointlyTypicalSet_prob_tendsto_one` (`ChannelCoding.lean:402`) が直接供給する形。
+The lower-bound counterpart to `ChannelCoding.jointlyTypicalSet_indep_prob_le`
+for the single-codeword typical-match probability (Cover–Thomas 10.5, (10.85)).
+The input hypothesis is in joint-law form `μ.real {ω | (jX, jY) ∈ JTS} ≥ 1 - η`,
+as supplied by `jointlyTypicalSet_prob_tendsto_one`.
 -/
 
 omit [DecidableEq α] [DecidableEq β] in

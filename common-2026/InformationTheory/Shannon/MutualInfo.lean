@@ -6,21 +6,20 @@ import Mathlib.Probability.Kernel.CondDistrib
 import Mathlib.Probability.Kernel.Composition.MeasureCompProd
 
 /-!
-# Mutual information via KL divergence (Phase 4-α skeleton)
+# Mutual information via KL divergence
 
-Shannon ムーンショット ([`docs/shannon/shannon-moonshot-plan.md`](../../../docs/shannon/shannon-moonshot-plan.md))
-の Phase 4-α: Mathlib の `klDiv` を主軸に、相互情報量 `mutualInfo`、その基本性質
-(`mutualInfo_nonneg`, `mutualInfo_comm`, `mutualInfo_eq_zero_iff_indep`) を整備する。
+`mutualInfo μ X Y := klDiv (μ.map (X, Y)) ((μ.map X).prod (μ.map Y))` and its basic properties.
 
-Phase 4-M0 の在庫調査結果 ([`docs/shannon/shannon-mathlib-inventory.md`](../../../docs/shannon/shannon-mathlib-inventory.md))
-に基づく skeleton。実証は sorry-driven で順次充填する。
+## Main definitions
 
-主要素材:
-* `klDiv (μ ν : Measure α) : ℝ≥0∞` — `Mathlib/InformationTheory/KullbackLeibler/Basic.lean:57`
-* `klDiv_compProd_left` — `KullbackLeibler/ChainRule.lean:182` (`@[simp]`)
-* `klDiv_compProd_eq_add` — `KullbackLeibler/ChainRule.lean:204`
-* `klDiv_eq_zero_iff` — `KullbackLeibler/Basic.lean:377`
-* `indepFun_iff_map_prod_eq_prod_map_map` — `Probability/Independence/Basic.lean:701`
+* `mutualInfo` — `I(X; Y) := KL(P_{X,Y} ‖ P_X ⊗ P_Y)`.
+
+## Main statements
+
+* `mutualInfo_nonneg` — `0 ≤ I(X; Y)`.
+* `mutualInfo_comm` — `I(X; Y) = I(Y; X)`.
+* `mutualInfo_eq_zero_iff_indep` — `I(X; Y) = 0 ↔ X ⊥ Y`.
+* `mutualInfo_ne_top` — `I(X; Y) ≠ ∞` for finite alphabets.
 -/
 
 namespace InformationTheory.Shannon
@@ -39,18 +38,12 @@ noncomputable def mutualInfo
   klDiv (μ.map (fun ω => (Xs ω, Yo ω)))
         ((μ.map Xs).prod (μ.map Yo))
 
-/-- 相互情報量は非負。`klDiv` が `ℝ≥0∞` 値なので signature 上自明。 -/
+/-- Mutual information is nonneg (immediate from `klDiv : ℝ≥0∞`). -/
 @[entry_point]
 theorem mutualInfo_nonneg (μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y) :
     0 ≤ mutualInfo μ Xs Yo := bot_le
 
-/-- KL の MeasurableEquiv 不変性: 測度同型での pushforward は KL 値を保つ。
-Mathlib 不在 (Phase 4-M0 在庫調査確認済) のため自作。
-
-戦略: `MeasurableEmbedding.rnDeriv_map` (`Decomposition/RadonNikodym.lean:516`) で
-`(μ.map e).rnDeriv (ν.map e) ∘ e =ᵐ[ν] μ.rnDeriv ν` を得て、`lintegral_map_equiv` で
-`∫⁻ ∂(ν.map e)` を `∫⁻ ∂ν` に翻訳、`klDiv_eq_lintegral_klFun_of_ac` で結ぶ。
-非 `≪` 側は `e.symm` で逆変換して矛盾。 -/
+/-- KL divergence is invariant under pushforward by a `MeasurableEquiv`. -/
 theorem klDiv_map_measurableEquiv {α β : Type*}
     [MeasurableSpace α] [MeasurableSpace β]
     (e : α ≃ᵐ β) (μ ν : Measure α) [IsFiniteMeasure μ] [IsFiniteMeasure ν] :
@@ -72,13 +65,7 @@ theorem klDiv_map_measurableEquiv {α β : Type*}
       simpa using h₁
     rw [klDiv_of_not_ac hμν, klDiv_of_not_ac hμν_map]
 
-/-- KL の積測度補題 (probability measure 版): `klDiv (μ.prod ν₁) (μ.prod ν₂) = klDiv ν₁ ν₂`。
-DPI plumbing の起点。
-
-戦略: `prod_swap` + `klDiv_map_measurableEquiv` で `klDiv (ν₁.prod μ) (ν₂.prod μ)` に
-変形し、`compProd_const` で `klDiv (ν₁ ⊗ₘ Kernel.const _ μ) (ν₂ ⊗ₘ Kernel.const _ μ)` に
-翻訳、`klDiv_compProd_left` を適用。`Kernel.const _ μ` が Markov である必要があるため
-`[IsProbabilityMeasure μ]` を要求。一般 `IsFiniteMeasure` 形は将来課題。 -/
+/-- `klDiv (μ.prod ν₁) (μ.prod ν₂) = klDiv ν₁ ν₂` when `μ` is a probability measure. -/
 theorem klDiv_prod_const_left
     {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
     (μ : Measure α) [IsProbabilityMeasure μ]
@@ -90,8 +77,7 @@ theorem klDiv_prod_const_left
   rw [← h₁, ← h₂, klDiv_map_measurableEquiv e,
       ← Measure.compProd_const, ← Measure.compProd_const, klDiv_compProd_left]
 
-/-- 相互情報量の対称性: `I(X; Y) = I(Y; X)`。
-`MeasurableEquiv.prodComm` 経由で `klDiv_map_measurableEquiv` を適用。 -/
+/-- Mutual information is symmetric: `I(X; Y) = I(Y; X)`. -/
 @[entry_point]
 theorem mutualInfo_comm
     (μ : Measure Ω) [IsFiniteMeasure μ] (Xs : Ω → X) (Yo : Ω → Y)
@@ -106,9 +92,7 @@ theorem mutualInfo_comm
     Measure.prod_swap
   rw [← h₁, ← h₂, klDiv_map_measurableEquiv e]
 
-/-- 相互情報量がゼロ ↔ 独立。
-`indepFun_iff_map_prod_eq_prod_map_map` (`Independence/Basic.lean:701`) と
-`klDiv_eq_zero_iff` (`KullbackLeibler/Basic.lean:377`) の合成で示す。 -/
+/-- `I(X; Y) = 0 ↔ X` and `Y` are independent. -/
 @[entry_point]
 theorem mutualInfo_eq_zero_iff_indep
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -123,9 +107,6 @@ theorem mutualInfo_eq_zero_iff_indep
   rw [mutualInfo, klDiv_eq_zero_iff,
       ← indepFun_iff_map_prod_eq_prod_map_map hXs.aemeasurable hYo.aemeasurable]
 
-/-- 有限アルファベット上で結合分布が周辺積に絶対連続。Fintype の任意の集合は
-singleton の有限和に分解でき、product 測度の atom が 0 ⇒ 周辺の atom が 0 ⇒
-joint の atom も 0 (周辺射影での monotonicity)。 -/
 private lemma map_pair_absolutelyContinuous_prod_marginals
     [Fintype X] [MeasurableSingletonClass X]
     [Fintype Y] [MeasurableSingletonClass Y]
@@ -172,8 +153,6 @@ private lemma map_pair_absolutelyContinuous_prod_marginals
       _ = (μ.map Yo) {y} := (Measure.map_apply hYo (measurableSet_singleton _)).symm
       _ = 0 := hY
 
-/-- 有限アルファベットの結合分布上で `llr` は可積分。Fintype 上の確率測度では
-`lintegral_fintype` で有限和に分解され、各項が `≤ ENNReal.coe * (probability)` で有限。 -/
 private lemma integrable_llr_map_pair_prod_marginals
     [Fintype X] [MeasurableSingletonClass X]
     [Fintype Y] [MeasurableSingletonClass Y]
@@ -190,9 +169,7 @@ private lemma integrable_llr_map_pair_prod_marginals
   exact ENNReal.sum_lt_top.mpr fun _ _ =>
     ENNReal.mul_lt_top ENNReal.coe_lt_top (measure_lt_top _ _)
 
-/-- 有限アルファベットでは相互情報量は有限。AC + integrable から `klDiv_ne_top`。
-Phase A の `condMutualInfo_eq_condEntropy_sub_condEntropy` で chain rule の
-`ENNReal.toReal_add` を有効化するために必要。 -/
+/-- Mutual information is finite for finite alphabets. -/
 @[entry_point]
 theorem mutualInfo_ne_top
     [Fintype X] [MeasurableSingletonClass X]

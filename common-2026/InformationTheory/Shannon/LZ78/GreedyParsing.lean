@@ -53,7 +53,7 @@ parent `lz78EncodingLength` parameter slot of
   the concrete `lz78GreedyEncodingLength` plugs into the parent
   `IsZivInequalityPassthrough` (a.s. `limsup (lz/n) ≤ entropyRate`).
 
-## 撤退ライン
+## Scope
 
 * **L-LZ4-A** (engaged) — Concrete LZ78 parsing function published as
   the one-symbol-per-phrase form (worst-case but always valid).

@@ -5,32 +5,27 @@ import Mathlib.Analysis.Convex.StdSimplex
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 
 /-!
-# Shannon noisy channel coding theorem (D-1') — `hW_pos` 緩和
+# Shannon noisy channel coding theorem — smoothing infrastructure
 
-[D-1' ムーンショット plan](../../../docs/shannon/channel-coding-shannon-theorem-general-plan.md)
-の Phase A-D を統合し、`hW_pos : ∀ a b, 0 < (W a).real {b}` 仮定を取り除いた完全形主定理に到達する。
+Smoothing infrastructure for the Shannon noisy channel coding theorem without the
+full-support assumption `hW_pos`. The smoothed channel is
+`Channel.smooth W δ a := (1-δ) · W a + δ · uniformMeasureβ`.
 
-**主定理 (Phase D)**:
+## Main definitions
 
-```
-shannon_noisy_channel_coding_theorem_general :
-  (W : Channel α β) [IsMarkovKernel W]
-  {R : ℝ} (hR_pos : 0 < R) (hR : R < capacity W)
-  {ε : ℝ} (hε : 0 < ε) :
-  ∃ N : ℕ, ∀ n, N ≤ n →
-    ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
-      (c : Code M n α β),
-      ∀ m, (c.errorProbAt W m).toReal < ε
-```
+* `uniformMeasureβ β`: uniform probability measure on a finite type `β`.
+* `Channel.smooth W δ`: convex combination of `W` with the uniform output measure.
 
-経路: `Channel.smooth W δ a := (1-δ) • W a + δ • uniformMeasureβ` で full-support 化、
-D-1 を `W_smooth δ` に適用し、`δ → 0⁺` 極限で error と capacity の連続性を経由して
-一般 `W` に持ち上げる。
+## Main statements
 
-- Phase A: `uniformMeasureβ` + `Channel.smooth` + Markov 性 + positivity
-- Phase B: MI の `δ` 連続性 + `∃ δ₀ > 0, R < capacity (W_smooth δ₀)`
-- Phase C: D-1 適用 + TV bound (hybrid telescoping)
-- Phase D: 主定理組み立て
+* `exists_smooth_capacity_gt`: from `R < capacity W`, extracts `δ_B > 0` and `R₁ > R`
+  with `R₁ < capacity (W_smooth δ)` for all `δ ∈ (0, δ_B]`.
+* `errorProbAt_smooth_TV`: TV bound `|errorProbAt(W_smooth δ) - errorProbAt(W)| ≤ 2 n δ`.
+
+## Implementation notes
+
+The main theorem `shannon_noisy_channel_coding_theorem_general` is in
+`ShannonTheoremFullDischarge`, which imports this file for the smoothing infrastructure.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
@@ -42,7 +37,7 @@ variable {α β : Type*}
   [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β]
 
-/-! ## Phase A — `Channel.smooth` 定義 + 基本性質 -/
+/-! ## Smoothed channel definition and basic properties -/
 
 /-- Uniform probability measure on a nonempty finite type `β`. -/
 noncomputable def uniformMeasureβ (β : Type*) [Fintype β] [MeasurableSpace β] : Measure β :=
@@ -155,7 +150,7 @@ lemma Channel.smooth_pos
     exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
   linarith
 
-/-! ## Phase B — MI の `δ` 連続性 -/
+/-! ## Mutual information continuity in `δ` -/
 
 omit [DecidableEq α] [DecidableEq β] in
 /-- Helper: for any Markov channel `K`, the 3-entropy form of MI in terms of `(K a).real {b}`. -/
@@ -649,25 +644,6 @@ lemma errorProbAt_smooth_TV
   ring_nf
   rfl
 
-/-! ## Phase D — 主定理 (D-1'' deferred)
-
-Phase D 主定理 `shannon_noisy_channel_coding_theorem_general` (任意 `W` で `hW_pos` 除去) の
-組み立てには、Phase A-C の infrastructure に加えて parent D-1 の `N(δ)` が `δ ∈ (0, δ_B]` 上
-uniform に bounded であることが必要。これは parent D-1 (918 行) 内部の `N` 構成
-(`channel_coding_achievability`、`ChannelCodingAchievability.lean:1771, :1835` の 2 つの
-`Tendsto.metric_atTop` extraction = AEP + exp decay) を closed-form bound に書き直す surgery
-が要件で、本 D-1' の scope を超える。
-
-**D-1'' deferred** として `moonshot-seeds.md` に登録: parent N の closed-form lemma 切り出し
-(~200-400 行) + 本 file Phase A-C を import して主定理組み立て (~50 行)。
-
-本 file が publish するのは Phase A-C の **smoothing infrastructure** のみ:
-- `Channel.smooth W δ` + Markov 性 + atom positivity (Phase A)
-- MI の `δ` 連続性 + `exists_smooth_capacity_gt` (Phase B)
-- `errorProbAt_smooth_TV`: `|errorProbAt(W_smooth δ) − errorProbAt(W)| ≤ 2 n δ` (Phase C)
-
-これは D-1'' で本質的に再利用される。詳細は判断ログ 6 を参照。 -/
-
-/-! ### Phase D の主定理 (削除済、D-1'' へ移管) -/
+/-! ## TV bound -/
 
 end InformationTheory.Shannon.ChannelCoding

@@ -11,49 +11,35 @@ import InformationTheory.Shannon.MutualInfo
 import InformationTheory.Shannon.MIChainRule
 
 /-!
-# Multivariate differential entropy + subadditivity
+# Multivariate differential entropy and subadditivity
 
-Genuine common foundation for the AWGN / Parallel-Gaussian output-entropy upper
-bounds (`docs/shannon/multivariate-diffentropy-inventory.md`). Provides:
+Common foundation for AWGN / Parallel-Gaussian output-entropy upper bounds.
 
-* `jointDifferentialEntropy` — 2-variable joint differential entropy
-  (`Measure (ℝ × ℝ)`), defined `-∫ negMulLog (dμ/dvol)` exactly as the 1-D
-  `differentialEntropy`, so `volume_eq_prod` (`rfl`) makes the 1-D lemmas apply.
-* `jointDifferentialEntropyPi` — the `n`-variable form (`Measure (Fin n → ℝ)`)
-  the parallel-Gaussian consumer requires.
-* `integral_log_rnDeriv_self_eq_neg` — the reusable `∫ log(dμ/dν) ∂μ = -h(μ)`
-  core (works for joint *and* each marginal).
-* `jointDifferentialEntropy_le_sum` / `jointDifferentialEntropyPi_le_sum` —
-  subadditivity `h(Yⁿ) ≤ ∑ᵢ h(Yᵢ)`, via `klDiv(joint ‖ ∏ marginals) ≥ 0`.
+## Main definitions
 
-## Honesty status
+* `jointDifferentialEntropy` — 2-variable joint differential entropy on `Measure (ℝ × ℝ)`,
+  defined as `-∫ negMulLog (dμ/dvol)` (same shape as the 1-D `differentialEntropy`).
+* `jointDifferentialEntropyPi` — `n`-variable form on `Measure (Fin n → ℝ)`.
 
-The subadditivity *structure* (`KL ≥ 0` from `ENNReal.toReal_nonneg` + bridge) is
-genuine. The bridge from `KL` to entropies needs the Bayes density split
-(`llr(joint ‖ ∏ marginals) = ∑ log(marginalᵢ) − log(joint)`) plus integrability.
+## Main statements
 
-* **2-variable case (Phase 1 plan, discharged 2026-05-25):** the `h_llr_split`
-  honest hypothesis is fully discharged via Mathlib's `prod_withDensity₀` +
-  `rnDeriv_withDensity₀` + `rnDeriv_mul_rnDeriv` chain — see
-  `llr_split_from_density_factorize` and the `_v2` successors
-  (`klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2`,
-  `jointDifferentialEntropy_le_sum_v2`). The pre-discharge versions are kept
-  for backward compatibility, tagged
-  `@audit:superseded-by(<v2-name>)`.
+* `integral_log_rnDeriv_self_eq_neg` — `∫ log(dμ/dν) ∂μ = -h(μ)`.
+* `jointDifferentialEntropy_le_sum_v2` — `h(X,Y) ≤ h(X) + h(Y)`.
+* `jointDifferentialEntropyPi_le_sum` — `h(Yⁿ) ≤ ∑ᵢ h(Yᵢ)`.
 
-* **`n`-variable case (Phase 2, completed 2026-05-29):** now fully genuine
-  (0 sorry / 0 residual). `pi_withDensity` (joint density = ∏ marginal density)
-  is **absent from Mathlib** (inventory §D-1a), so it is built in-tree as
-  `pi_withDensity_fin` by `measurePreserving_piFinSuccAbove` induction +
-  `prod_withDensity`, which needs the generic change-of-variables for
-  `withDensity` under measurable equivalences (also absent in Mathlib in the
-  non-rnDeriv form) — supplied here as `withDensity_map_equiv` (de-specialized
-  from `MeasurableEmbedding.map_withDensity_rnDeriv`). The Bayes density split
-  `llr_split_from_density_factorize_pi` is discharged via
-  `pi_marginals_eq_volume_withDensity` + `rnDeriv_mul_rnDeriv`; the structural
-  bridge `klDiv_pi_marginals_toReal_eq_sum_sub_joint` and subadditivity
-  `jointDifferentialEntropyPi_le_sum` carry only regularity hypotheses
-  (absolute continuity + Bochner integrability of the log-density observables).
+## Implementation notes
+
+Subadditivity follows from `KL ≥ 0` + the bridge
+`(klDiv(joint ‖ ∏ marginals)).toReal = ∑ h(marginalᵢ) − h(joint)`.
+The Bayes density split is established via Mathlib's `prod_withDensity₀` +
+`rnDeriv_mul_rnDeriv`. The 2-variable original versions tagged
+`@audit:superseded-by(...)` are kept for backward compatibility.
+
+`pi_withDensity` (joint density = ∏ marginal densities on `Fin n → ℝ`) is absent
+from Mathlib, so it is built in-tree as `pi_withDensity_fin` by
+`measurePreserving_piFinSuccAbove` induction. The generic `withDensity_map_equiv`
+(change-of-variables under a measurable equivalence) is also absent in Mathlib's
+non-rnDeriv form and is supplied here.
 -/
 
 namespace InformationTheory.Shannon
@@ -79,10 +65,9 @@ noncomputable def jointDifferentialEntropyPi {n : ℕ} (μ : Measure (Fin n → 
 
 /-! ## Reusable core: `∫ log(dμ/dν) ∂μ = -∫ negMulLog(dμ/dν) ∂ν` -/
 
-/-- **Generic log-density / entropy identity (genuine).** For `μ ≪ ν` on any
-measurable space, `∫ x, log((μ.rnDeriv ν x).toReal) ∂μ = -∫ x, negMulLog((μ.rnDeriv
-ν x).toReal) ∂ν`. The RHS is precisely the (joint/1-D) differential entropy when
-`ν` is the relevant Lebesgue measure. Built from `integral_rnDeriv_smul`. -/
+/-- For `μ ≪ ν`, `∫ x, log((μ.rnDeriv ν x).toReal) ∂μ = -∫ x, negMulLog((μ.rnDeriv ν x).toReal) ∂ν`.
+
+The RHS is the (joint/1-D) differential entropy when `ν` is the relevant Lebesgue measure. -/
 theorem integral_log_rnDeriv_self_eq_neg
     {α : Type*} [MeasurableSpace α] {μ ν : Measure α} [SigmaFinite μ] [SigmaFinite ν]
     [μ.HaveLebesgueDecomposition ν] (hμν : μ ≪ ν) :
@@ -118,14 +103,11 @@ theorem withDensity_map_equiv {α β : Type*} [MeasurableSpace α] [MeasurableSp
 
 /-! ## 2-variable bridge + subadditivity -/
 
-/-- **2-variable subadditivity bridge (genuine structure, honest density split).**
-`(klDiv(joint ‖ μ_X ⊗ μ_Y)).toReal = h(μ_X) + h(μ_Y) − h(joint)`. The honest
-hypotheses (absolute continuity + Bayes llr split + integrability) mirror the
-channel手本 `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`.
+/-- 2-variable subadditivity bridge:
+`(klDiv(joint ‖ μ_X ⊗ μ_Y)).toReal = h(μ_X) + h(μ_Y) − h(joint)`.
 
-The `h_llr_split` honest hypothesis is **discharged** by the successor
-`klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2`; this version is retained
-for backward compatibility with prior callers.
+Hypotheses: absolute continuity + Bayes llr split `h_llr_split` + integrability.
+Superseded by `klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2`, which internalizes the split.
 
 `@audit:superseded-by(klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2)` -/
 theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint
@@ -133,7 +115,7 @@ theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint
     (h_fst_ac : (μ.map Prod.fst) ≪ volume)
     (h_snd_ac : (μ.map Prod.snd) ≪ volume)
     (h_joint_ac : μ ≪ (μ.map Prod.fst).prod (μ.map Prod.snd))
-    -- honest Bayes density split (mirrors 手本 `h_llr_split`): `llr(joint ‖ ∏ marg) =
+    -- honest Bayes density split: `llr(joint ‖ ∏ marg) =
     -- log(joint) − log(margX) − log(margY)`, i.e. `log(d joint / d∏marg)`.
     (h_llr_split :
       (fun z => llr μ ((μ.map Prod.fst).prod (μ.map Prod.snd)) z)
@@ -211,11 +193,9 @@ theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint
   ring
 
 /-- **★ 2-variable differential-entropy subadditivity** `h(X,Y) ≤ h(X) + h(Y)`.
-`KL ≥ 0` (`ENNReal.toReal_nonneg`) + the bridge, closed by `linarith`.
 
-The `h_llr_split` honest hypothesis is **discharged** by the successor
-`jointDifferentialEntropy_le_sum_v2`; this version is retained for backward
-compatibility with prior callers.
+Requires an explicit `h_llr_split` hypothesis for the Bayes density split.
+Superseded by `jointDifferentialEntropy_le_sum_v2`, which internalizes the split.
 
 `@audit:superseded-by(jointDifferentialEntropy_le_sum_v2)` -/
 theorem jointDifferentialEntropy_le_sum
@@ -320,13 +300,9 @@ theorem pi_withDensity_fin {n : ℕ} (ν : Fin n → Measure ℝ) [∀ i, SigmaF
     rw [h_symm]
     simp only [Fin.insertNth_apply_same, Fin.insertNth_apply_succAbove, hfr]
 
-/-- **Density factorization of the `n`-variable product marginals (genuine).**
-For a joint probability measure `μ` on `Fin n → ℝ` with each coordinate marginal
-`μᵢ := μ.map (· i)` absolutely continuous wrt the Lebesgue measure, the product
-`Measure.pi (μ ·)` factors through the Lebesgue measure on `Fin n → ℝ` as the
-`withDensity` with product density `z ↦ ∏ᵢ μᵢ.rnDeriv volume (z i)`. The
-`n`-variable analogue of `prod_marginals_eq_volume_withDensity`, discharged via
-`withDensity_rnDeriv_eq` (each marginal) + `pi_withDensity_fin` + `volume_pi`.
+/-- `n`-variable product-marginals factorization: `Measure.pi (μ.map (· i))`
+expressed as a `withDensity` on Lebesgue measure with product density
+`z ↦ ∏ᵢ (μ.map (· i)).rnDeriv volume (z i)`.
 @audit:ok -/
 theorem pi_marginals_eq_volume_withDensity
     {n : ℕ} {μ : Measure (Fin n → ℝ)} [IsProbabilityMeasure μ]
@@ -346,14 +322,9 @@ theorem pi_marginals_eq_volume_withDensity
         (fun i => Measure.measurable_rnDeriv _ _)]
   rw [← volume_pi]
 
-/-- **Genuine Bayes density split for the `n`-variable joint (a.e.[μ]).** The
-log-likelihood ratio of `μ` against the product of its marginals
-`∏ᵢ μᵢ := Measure.pi (μ.map (· i))` equals `log(joint density) − ∑ᵢ
-log(marginalᵢ density on the `i`-th coordinate)` almost-everywhere wrt `μ`,
-*without* an honest hypothesis. The `n`-variable generalization of
-`llr_split_from_density_factorize` (the 2-variable analogue), discharged via
-`pi_marginals_eq_volume_withDensity` + `rnDeriv_mul_rnDeriv` + `Real.log_mul`
-/ `Finset` log split.
+/-- `n`-variable LLR split (a.e.[μ]): the log-likelihood ratio of `μ` against
+the product of its marginals equals `log(joint density) − ∑ᵢ log(marginalᵢ density)`
+almost-everywhere wrt `μ`. The `n`-variable analogue of `llr_split_from_density_factorize`.
 @audit:ok -/
 theorem llr_split_from_density_factorize_pi
     {n : ℕ} {μ : Measure (Fin n → ℝ)} [IsProbabilityMeasure μ]
@@ -456,13 +427,10 @@ theorem llr_split_from_density_factorize_pi
   show Real.log ((μ.rnDeriv ρ z).toReal) = _
   linarith [h_log, h_log_g]
 
-/-- **`n`-variable subadditivity bridge (genuine).**
+/-- `n`-variable subadditivity bridge:
 `(klDiv(joint ‖ ∏ᵢ μᵢ)).toReal = ∑ᵢ h(μᵢ) − h(joint)`, where `μᵢ := μ.map (· i)`.
-The Bayes density split is supplied by the genuine lemma
-`llr_split_from_density_factorize_pi` (no honest hypothesis). The remaining
-hypotheses are regularity (absolute continuity + Bochner integrability of the
-log-density observables), exactly mirroring the 2-variable bridge
-`klDiv_prod_marginals_toReal_eq_sum_sub_joint`.
+
+Regularity hypotheses: absolute continuity + Bochner integrability of log-density observables.
 @audit:ok -/
 theorem klDiv_pi_marginals_toReal_eq_sum_sub_joint
     {n : ℕ} {μ : Measure (Fin n → ℝ)} [IsProbabilityMeasure μ]
@@ -557,24 +525,19 @@ theorem jointDifferentialEntropyPi_le_sum
     h_marg_ac hμ_ac h_joint_ac h_int_joint h_int_marg
   linarith [h_nn, h_bridge]
 
-/-! ## Phase 1 — genuine 2-variable Bayes density split (no honest `h_llr_split`)
+/-! ## 2-variable Bayes density split
 
-The `_v2` family below discharges the `h_llr_split` honest hypothesis of the
+The `_v2` family below discharges the `h_llr_split` hypothesis of the
 original `klDiv_prod_marginals_toReal_eq_sum_sub_joint` and
 `jointDifferentialEntropy_le_sum` via Mathlib's `prod_withDensity` +
-`rnDeriv_mul_rnDeriv`. The original (suspect) statements are kept for
-backward compatibility; the `_v2` versions are the genuine successors. -/
+`rnDeriv_mul_rnDeriv`. -/
 
-/-- **Density factorization of product marginals (genuine).** For a joint
-probability measure `μ` on `ℝ × ℝ` with marginals `μX, μY` both absolutely
+/-- Product of marginals expressed as a `withDensity` on Lebesgue measure.
+
+For a joint probability measure `μ` on `ℝ × ℝ` with marginals `μX, μY` both absolutely
 continuous wrt the Lebesgue measure, the product `μX × μY` factors through the
 Lebesgue measure on `ℝ × ℝ` as
-
-  `(μX).prod (μY) = volume.withDensity (z ↦ μX.rnDeriv volume z.1 * μY.rnDeriv volume z.2)`.
-
-Discharge route: `Measure.withDensity_rnDeriv_eq` rewrites each marginal as
-`volume.withDensity (.rnDeriv volume)`, then `prod_withDensity₀` fuses them, and
-`Measure.volume_eq_prod` (`rfl`) identifies the result. -/
+`(μX).prod (μY) = volume.withDensity (z ↦ μX.rnDeriv volume z.1 * μY.rnDeriv volume z.2)`. -/
 theorem prod_marginals_eq_volume_withDensity
     {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
     (h_fst_ac : (μ.map Prod.fst) ≪ volume)
@@ -597,12 +560,11 @@ theorem prod_marginals_eq_volume_withDensity
   -- `volume.prod volume = (volume : Measure (ℝ × ℝ))` (definitional)
   rw [← Measure.volume_eq_prod]
 
-/-- **Genuine Bayes density split for the 2-variable joint (a.e.[μ]).** The
-log-likelihood ratio of `μ` against the product of its marginals equals
+/-- Log-likelihood ratio split for the 2-variable joint (a.e.[μ]).
+
+The LLR of `μ` against the product of its marginals equals
 `log(joint density) − log(marginal_X density on z.1) − log(marginal_Y density on z.2)`
-almost-everywhere wrt `μ`, *without* an honest hypothesis. Discharge route:
-`prod_marginals_eq_volume_withDensity` + `rnDeriv_mul_rnDeriv` + `Real.log_mul`
-on the multiplicative chain `μ.rnDeriv ρ · ρ.rnDeriv vol = μ.rnDeriv vol`. -/
+almost-everywhere wrt `μ`. -/
 theorem llr_split_from_density_factorize
     {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
     (h_fst_ac : (μ.map Prod.fst) ≪ volume)
@@ -738,12 +700,10 @@ theorem llr_split_from_density_factorize
   show Real.log ((μ.rnDeriv ρ z).toReal) = _
   linarith [h_log, h_log_g]
 
-/-- **2-variable subadditivity bridge (genuine, no `h_llr_split`).** Discharged
-version of `klDiv_prod_marginals_toReal_eq_sum_sub_joint`: the Bayes density
-split is produced internally by `llr_split_from_density_factorize`, so the
-honest `h_llr_split` argument is no longer required. The remaining hypotheses
-are regularity (absolute continuity + Bochner integrability of three
-log-density observables). -/
+/-- 2-variable subadditivity bridge without explicit `h_llr_split`:
+`(klDiv(joint ‖ μ_X ⊗ μ_Y)).toReal = h(μ_X) + h(μ_Y) − h(joint)`.
+
+The Bayes density split is produced internally by `llr_split_from_density_factorize`. -/
 @[entry_point]
 theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2
     {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
@@ -770,9 +730,10 @@ theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2
     (llr_split_from_density_factorize h_fst_ac h_snd_ac h_joint_ac)
     h_int_fst h_int_snd h_int_joint h_int_fst_marg h_int_snd_marg
 
-/-- **★ 2-variable differential-entropy subadditivity (genuine, no `h_llr_split`).**
-Discharged version of `jointDifferentialEntropy_le_sum`: `h(X,Y) ≤ h(X) + h(Y)`
-with the Bayes density split internalized via `llr_split_from_density_factorize`. -/
+/-- **★ 2-variable differential-entropy subadditivity** `h(X,Y) ≤ h(X) + h(Y)`.
+
+The Bayes density split is internalized via `llr_split_from_density_factorize`;
+no explicit `h_llr_split` argument required. -/
 @[entry_point]
 theorem jointDifferentialEntropy_le_sum_v2
     {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
@@ -798,21 +759,5 @@ theorem jointDifferentialEntropy_le_sum_v2
     (llr_split_from_density_factorize h_fst_ac h_snd_ac h_joint_ac)
     h_int_fst h_int_snd h_int_joint h_int_fst_marg h_int_snd_marg
 
-/-! ## Phase 2 — completion note on `n`-variable subadditivity (2026-05-29)
-
-The `n`-variable subadditivity bridge (`klDiv_pi_marginals_toReal_eq_sum_sub_joint`
-+ `jointDifferentialEntropyPi_le_sum` above) is now **fully genuine** (0 sorry /
-0 residual). The previously-withdrawn discharge route (induction of the Phase 1
-2-variable density factorization through `measurePreserving_piFinSuccAbove`) was
-completed by first supplying the missing generic change-of-variables
-`withDensity_map_equiv` (de-specialized from the rnDeriv-only Mathlib lemma
-`MeasurableEmbedding.map_withDensity_rnDeriv`), then building
-`pi_withDensity_fin` by `piFinSuccAbove 0` induction + `prod_withDensity`, and
-finally `pi_marginals_eq_volume_withDensity` (`n`-variable analogue of the Phase
-1 `prod_marginals_eq_volume_withDensity`). The Bayes density split
-`llr_split_from_density_factorize_pi` then follows the 2-variable structure
-(`rnDeriv_mul_rnDeriv` + `Real.log_mul` / `Real.log_prod`). The earlier
-"~250-line reshape friction" reported on withdrawal turned out to be a single
-missing helper (`withDensity_map_equiv`, ~13 lines). -/
 
 end InformationTheory.Shannon

@@ -1,34 +1,27 @@
 import InformationTheory.Shannon.Entropy
 
 /-!
-# Shannon 共通土台 — Pi 値 reshape + 基本 plumbing
+# Shared Pi-type plumbing for Shannon information theory
 
-5 本のムーンショット (Loomis–Whitney / Slepian–Wolf / AEP / Stein / Polymatroid) で
-共通して使われる、Pi 値確率変数の `MeasurableEquiv` 押し出し不変性および
-`condEntropy ≥ 0` の基本不等式を集約したファイル。
+`MeasurableEquiv` invariance of entropy/condEntropy under re-indexing of Pi-type random
+variables, together with `condEntropy ≥ 0` and subset-split measurable equivalences.
 
-Han Phase B / Phase D で `Han.lean` / `HanD.lean` / `SlepianWolf.lean` 内に育っていた
-補題群を上流に上げ、後続 moonshot からも見えるようにする。判断根拠:
-[`docs/shannon/pi-refactor-decision.md`](../../docs/shannon/pi-refactor-decision.md)。
+## Main definitions
 
-## 主要補題
+* `subsetSplitMEquivAux` — `((↥T₁ → α) × (↥R → α)) ≃ᵐ (↥U → α)` for disjoint `T₁, R`
+  with `T₁ ∪ R = U`.
 
-* `entropy_measurableEquiv_comp` ─ `entropy μ (e ∘ X) = entropy μ X` for `e : β ≃ᵐ γ`
-* `condEntropy_measurableEquiv_comp` ─ conditioner 側 `MeasurableEquiv` reshape で
-  `condEntropy μ Xc (e ∘ Yo) = condEntropy μ Xc Yo`
-* `condEntropy_nonneg` ─ `0 ≤ H(W | Y)` (probability measure 上)
-* `MeasurableEquiv.coe_piFinsetUnion` / `_apply_left` / `_apply_right` ─ Mathlib
-  `Equiv.piFinsetUnion_left/_right` を `MeasurableEquiv.piFinsetUnion` 版に持ち上げる
-  薄いブリッジ
-* `subsetSplitMEquivAux` ─ disjoint 形 `Disjoint T₁ R + T₁ ∪ R = U` 入力の Pi reshape
-  `((↥T₁ → α) × (↥R → α)) ≃ᵐ (↥U → α)` (Mathlib `MeasurableEquiv.piFinsetUnion` +
-  `MeasurableEquiv.cast` の薄い合成)。subset 形 `T₁ ⊆ T₂` の call site は
-  `Finset.disjoint_sdiff` + `Finset.union_sdiff_of_subset` を inline で渡す。
+## Main statements
 
-これらは pi 値索引の組み替え (`MeasurableEquiv.piCongrLeft` /
-`MeasurableEquiv.sumPiEquivProdPi` / `MeasurableEquiv.piFinsetUnion` などの Mathlib
-標準同型) と組み合わせて `Fin n → α` ↔ `α × (Fin n → α)` ↔ `(↥S → α)` のような
-reshape を entropy 等式に持ち上げるために使う。
+* `entropy_measurableEquiv_comp` — `entropy μ (e ∘ X) = entropy μ X`.
+* `condEntropy_measurableEquiv_comp` — `condEntropy μ Xc (e ∘ Yo) = condEntropy μ Xc Yo`.
+* `condEntropy_nonneg` — `0 ≤ H(W | Y)`.
+
+## Implementation notes
+
+`MeasurableEquiv.coe_piFinsetUnion`, `piFinsetUnion_apply_left/right` lift
+`Equiv.piFinsetUnion_left/_right` into the `MeasurableEquiv` namespace for use in
+Pi-type reshape proofs across the Shannon moonshot files.
 -/
 
 namespace InformationTheory.Shannon
@@ -40,8 +33,6 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-- entropy is invariant under push-forward by a `MeasurableEquiv`. Helper for the
-`Fin (n+1) → α` ↔ `α × (Fin n → α)` reshape used in the chain-rule induction. -/
 lemma entropy_measurableEquiv_comp
     {β γ : Type*}
     [Fintype β] [Nonempty β]
@@ -70,9 +61,6 @@ lemma entropy_measurableEquiv_comp
       hpre]
 
 omit [DecidableEq α] in
-/-- conditioner side reshape: condEntropy is invariant under push-forward by
-a `MeasurableEquiv` on the conditioner. Reduces to two applications of
-`entropy_measurableEquiv_comp` via the H(Y,X) = H(Y) + H(X|Y) identity. -/
 lemma condEntropy_measurableEquiv_comp
     {β γ : Type*}
     [Fintype β] [Nonempty β]
@@ -102,11 +90,8 @@ lemma condEntropy_measurableEquiv_comp
     simpa using this
   linarith
 
-/-! ## condEntropy の基本不等式 -/
+/-! ## Basic inequality for conditional entropy -/
 
-/-- Conditional entropy is non-negative: `0 ≤ H(W | Y)`.
-被積分関数 `∑ x, negMulLog (q.real {x})` は probability measure 上の負エントロピー和
-(各項 ≥ 0)。 -/
 theorem condEntropy_nonneg
     {W : Type*} [Fintype W] [Nonempty W]
       [MeasurableSpace W] [MeasurableSingletonClass W]
@@ -119,24 +104,13 @@ theorem condEntropy_nonneg
   refine Finset.sum_nonneg fun x _ => ?_
   exact Real.negMulLog_nonneg measureReal_nonneg measureReal_le_one
 
-/-! ## 部分集合 reshape 索引
+/-! ## Subset reshape index equivalences -/
 
-`Finset (Fin n)` の subset 関係を pi 値型の `MeasurableEquiv` に持ち上げる plumbing。
-Han Phase D / Polymatroid / (将来) Loomis–Whitney refinements で共有。
-
-内部実装は Mathlib `MeasurableEquiv.piFinsetUnion`
-(`Mathlib/MeasureTheory/MeasurableSpace/Embedding.lean`) を `Finset.disjoint_sdiff`
-+ `Finset.union_sdiff_of_subset` で subset-form に持ち上げる薄いラッパー。 -/
-
-/-- The coe of `MeasurableEquiv.piFinsetUnion` is defeq the underlying
-`Equiv.piFinsetUnion`. Lifts pointwise apply lemmas (`Equiv.piFinsetUnion_left/_right`)
-into the `MeasurableEquiv` namespace. -/
 @[simp] lemma _root_.MeasurableEquiv.coe_piFinsetUnion
     {ι : Type*} [DecidableEq ι] {β : ι → Type*} [∀ i, MeasurableSpace (β i)]
     {s t : Finset ι} (h : Disjoint s t) :
     ⇑(MeasurableEquiv.piFinsetUnion (π := β) h) = Equiv.piFinsetUnion β h := rfl
 
-/-- pointwise apply (`s` branch) for `MeasurableEquiv.piFinsetUnion`. -/
 lemma _root_.MeasurableEquiv.piFinsetUnion_apply_left
     {ι : Type*} [DecidableEq ι] {β : ι → Type*} [∀ i, MeasurableSpace (β i)]
     {s t : Finset ι} (h : Disjoint s t)
@@ -146,7 +120,6 @@ lemma _root_.MeasurableEquiv.piFinsetUnion_apply_left
   rw [MeasurableEquiv.coe_piFinsetUnion]
   exact Equiv.piFinsetUnion_left β h hi hi'
 
-/-- pointwise apply (`t` branch) for `MeasurableEquiv.piFinsetUnion`. -/
 lemma _root_.MeasurableEquiv.piFinsetUnion_apply_right
     {ι : Type*} [DecidableEq ι] {β : ι → Type*} [∀ i, MeasurableSpace (β i)]
     {s t : Finset ι} (h : Disjoint s t)
@@ -156,9 +129,8 @@ lemma _root_.MeasurableEquiv.piFinsetUnion_apply_right
   rw [MeasurableEquiv.coe_piFinsetUnion]
   exact Equiv.piFinsetUnion_right β h hi hi'
 
-/-- Pi 値 `((↥T₁ → α) × (↥R → α)) ≃ᵐ (↥U → α)` for any `T₁, R, U : Finset ι` with
-`Disjoint T₁ R` and `T₁ ∪ R = U`. Mathlib `MeasurableEquiv.piFinsetUnion` post-composed
-with `MeasurableEquiv.cast` of the union equation. -/
+/-- The measurable equivalence `((↥T₁ → α) × (↥R → α)) ≃ᵐ (↥U → α)` for disjoint `T₁, R`
+with `T₁ ∪ R = U`. Composed from `MeasurableEquiv.piFinsetUnion` and `MeasurableEquiv.cast`. -/
 def subsetSplitMEquivAux {ι : Type*} [DecidableEq ι] {β : ι → Type*}
     [∀ i, MeasurableSpace (β i)] {T₁ R U : Finset ι}
     (hd : Disjoint T₁ R) (hU : T₁ ∪ R = U) :
@@ -167,7 +139,6 @@ def subsetSplitMEquivAux {ι : Type*} [DecidableEq ι] {β : ι → Type*}
     (MeasurableEquiv.cast (by rw [hU]) (by rw [hU]))
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- pointwise apply for `subsetSplitMEquivAux` on the canonical split of a global function. -/
 lemma subsetSplitMEquivAux_apply
     {n : ℕ} {T₁ R U : Finset (Fin n)}
     (hd : Disjoint T₁ R) (hU : T₁ ∪ R = U) (Xs : Fin n → α) :

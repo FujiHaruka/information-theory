@@ -34,7 +34,7 @@ gaps remain in the upstream pipeline:
   `klDivPmf · P₂` on `K := hoeffdingConstraintSet P₁ alpha` is full-support
   (`∀ a, 0 < Qstar a`). The textbook proof requires a `HasDerivAt` computation
   showing the directional derivative of `klDivPmf · P₂` at a `0`-atom is `-∞`,
-  contradicting Qstar's minimum. ~30-50 行 deferred per L-H4.
+  contradicting Qstar's minimum. ~30-50 lines deferred per L-H4.
 
 * **Gap H2** — full minimizer support consumption: downstream `hoeffding_minimizer_ge`
   (`HoeffdingTradeoff.lean:236`) was published in **hypothesis-form** taking
@@ -125,7 +125,7 @@ unstructured `∀ a, 0 < Qstar a`.
 The general-α discharge of this predicate (any minimizer of `klDivPmf · P₂` on
 `hoeffdingConstraintSet P₁ alpha`) is **deferred** (L-H4): the rigorous proof
 requires a `HasDerivAt` + `Real.log` singularity computation on the directional
-derivative of `klDivPmf · P₂` at a `0`-atom (~30-50 行).
+derivative of `klDivPmf · P₂` at a `0`-atom (~30-50 lines).
 
 For **boundary** values of `α` (namely `α = 0` and `α ≥ klDivPmf P₂ P₁`), the
 predicate is fully discharged from existing Mathlib + InformationTheory API

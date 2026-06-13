@@ -35,7 +35,7 @@ remain in scope of future discharge plans.
 * **§4. Bridge to `IsZivInequalityPassthrough`** — `True`-discharging
   constructor (kept trivial until L-LZ1-C is discharged elsewhere).
 
-## 撤退ライン
+## Scope
 
 * **L-LZ1-A** (engaged) — Combinatorial counting bound:
   `LZ78Parsing.count_le_card_phrase_space` and friends. Pure Nat/Finset,

@@ -1,7 +1,7 @@
 import InformationTheory.Shannon.EPI.Conv.Density
 import InformationTheory.Shannon.EPI.Conv.DensitySecondDeriv          -- convDensityAdd_deriv1_gaussian_eq
 import InformationTheory.Shannon.FisherInfo.V2
-import InformationTheory.Shannon.FisherInfo.V2DeBruijn   -- V2 Gaussian 閉形 J(𝒩(0,s))=1/s
+import InformationTheory.Shannon.FisherInfo.V2DeBruijn   -- V2 Gaussian closed form J(𝒩(0,s))=1/s
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime        -- convDensityAdd_pos / fisher_from_logDeriv
 import InformationTheory.Shannon.StamGaussianBound       -- stam_fisher_arith
 import Mathlib.MeasureTheory.Integral.Bochner.Basic          -- integral_mul_le_Lp_mul_Lq_of_nonneg
@@ -9,32 +9,21 @@ import Mathlib.MeasureTheory.Measure.Prod                    -- lintegral_linteg
 import Mathlib.Probability.Distributions.Gaussian.Real       -- variance_fun_id_gaussianReal / integral_gaussianReal_eq_integral_smul
 
 /-!
-# Stam convolution Fisher bound `J(pX ∗ g_s) ≤ 1/s` (GENUINELY CLOSED 2026-06-01)
+# Stam convolution Fisher information bound `J(pX ∗ g_s) ≤ 1/s`
 
-EPI per-time de Bruijn line の former shared 壁 (`wall:fisher-finiteness`,
-`docs/audit/audit-tags.md:70`)。Stam/Blachman の score-of-convolution monotonicity
-`J(X + √s·Z) ≤ J(√s·Z) = J(𝒩(0,s)) = 1/s` を任意確率密度 `pX` (重い裾含む) で述べる。
-**2026-06-01 closure**: pointwise Cauchy-Schwarz route で genuine 化 (sorryAx-free)。
-`gaussianConv_fisher_le_inv_var` 内 active `@residual(wall:fisher-finiteness)` は 0 件。
+For any probability density `pX` and Gaussian kernel `g_s` of variance `s`,
+the Fisher information of the convolution `pX ∗ g_s` satisfies `J(pX ∗ g_s) ≤ 1/s`.
 
-## closure route (pointwise Cauchy-Schwarz, 2026-06-01)
+## Main statements
 
-closure plan の「conditional expectation / disintegration」framing を経由せず、
-各 `x` を固定した elementary Hölder (p=q=2) で genuine 閉じる:
+* `gaussianConv_fisher_le_inv_var` — `fisherInfoOfDensity (pX ∗ g_s) ≤ ENNReal.ofReal (1/s)`.
 
-1. `convDensityAdd_deriv1_gaussian_eq` で `deriv p_s x = ∫ y, pX y · g_s(x-y)·(-(x-y)/s)`。
-2. 各 `x` で `(∫ pX y (x-y) g_s(x-y))² ≤ p_s(x) · ∫ pX y (x-y)² g_s(x-y)` (CS)。
-   ÷`p_s(x)>0` で `(logDeriv p_s x)²·p_s x ≤ (1/s²)·∫ pX y (x-y)² g_s(x-y)`。
-3. lintegrand へ持ち上げ + merge。
-4. Tonelli + Gaussian 2次モーメント `∫ u² g_s(u) du = s` ⇒ `(1/s²)·s·∫pX = 1/s`。
+## Implementation notes
 
-`hpX_mass : (∫ pX = 1)` を追加 (probability density の正規化、regularity precondition):
-`convDensityAdd_pos` の `0 < ∫ pX` と最終段の `∫ pX = 1` に要る。
-
-## consumer (2 件、`FisherInfoV2DeBruijnAssembly.lean`)
-
-`convDensityAdd_fisher_integrable` (Step 3 plumbing で有限上界を `< ⊤` に使う) と、
-それ経由の `_chain_ibp_fisher`。
+The proof follows a pointwise Cauchy-Schwarz route: the derivative formula
+`convDensityAdd_deriv1_gaussian_eq` gives `(deriv p_s x)` as an integral, Hölder's
+inequality with `p = q = 2` bounds `(logDeriv p_s x)² · p_s x` pointwise, and
+Tonelli's theorem plus the Gaussian second moment `∫ u² g_s u du = s` closes the bound.
 -/
 
 namespace InformationTheory.Shannon.FisherInfoV2
@@ -45,12 +34,7 @@ open MeasureTheory ProbabilityTheory Real
 open scoped ENNReal NNReal
 open InformationTheory.Shannon.EPIConvDensity (convDensityAdd)
 
-/-- **Gaussian second moment over `volume`**: `∫ u, u² · g_s(u) du = s`
-(`g_s = gaussianPDFReal 0 ⟨s,_⟩`, variance `s`).
-
-Via `variance_fun_id_gaussianReal` (`Var[id; gaussianReal 0 s] = s`) +
-`variance_eq_integral` (centered, mean `0`) + `integral_gaussianReal_eq_integral_smul`
-(withDensity 橋).
+/-- `∫ u, u ^ 2 * gaussianPDFReal 0 ⟨s, _⟩ u ∂volume = s`.
 @audit:ok -/
 theorem integral_sq_mul_gaussianPDFReal {s : ℝ} (hs : 0 < s) :
     ∫ u, u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u ∂volume = s := by
@@ -70,8 +54,7 @@ theorem integral_sq_mul_gaussianPDFReal {s : ℝ} (hs : 0 < s) :
     _ = ∫ u, (u - 0) ^ 2 ∂(gaussianReal 0 ⟨s, hs.le⟩) := by simp
     _ = s := by rw [hvar]
 
-/-- **Gaussian second moment integrability over `volume`**: `u ↦ u² · g_s(u)` is integrable
-(`u²` is `MemLp 2` under `gaussianReal 0 s`, transported to `volume` via the withDensity bridge).
+/-- `u ↦ u ^ 2 * gaussianPDFReal 0 ⟨s, _⟩ u` is integrable over `volume`.
 @audit:ok -/
 theorem integrable_sq_mul_gaussianPDFReal {s : ℝ} (hs : 0 < s) :
     Integrable (fun u => u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u) volume := by
@@ -90,8 +73,7 @@ theorem integrable_sq_mul_gaussianPDFReal {s : ℝ} (hs : 0 < s) :
   refine hsq_int.congr (Filter.Eventually.of_forall fun u => ?_)
   simp only [gaussianPDF, ENNReal.toReal_ofReal (gaussianPDFReal_nonneg _ _ _)]
 
-/-- **Per-`x` second-moment integrability**: `y ↦ (x-y)² · pX y · g_s(x-y)` is integrable
-(`(x-y)² g_s(x-y)` is a bounded poly×Gaussian, hence `≤ C·|pX y|`, integrable).
+/-- `y ↦ (x - y) ^ 2 * (pX y * g_s(x - y))` is integrable over `volume` for each `x`.
 @audit:ok -/
 theorem convSecondMoment_integrand_integrable
     (pX : ℝ → ℝ) (_hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)
@@ -135,8 +117,7 @@ theorem convSecondMoment_integrand_integrable
   refine (integrable_congr (Filter.Eventually.of_forall fun y => ?_)).mpr hint
   ring
 
-/-- **Pointwise Cauchy-Schwarz** (Hölder `p=q=2` over `volume`, per fixed `x`):
-`(∫ pX y (x-y) g_s(x-y))² ≤ p_s(x) · ∫ pX y (x-y)² g_s(x-y)`.
+/-- Pointwise Cauchy-Schwarz: `(∫ pX y (x-y) g_s(x-y))² ≤ p_s(x) · ∫ pX y (x-y)² g_s(x-y)`.
 @audit:ok -/
 theorem convScore_sq_le_pointwise
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -247,9 +228,7 @@ theorem convScore_sq_le_pointwise
   rw [hconv_eq, mul_comm I0 I2]
   exact hRHS
 
-/-- **Step 1 deriv1 formula (per fixed `x`)**: `deriv p_s x = -(1/s)·∫ pX y (x-y) g_s(x-y)`.
-Reconstructs the 5 Gaussian-tail domination preconditions of `convDensityAdd_deriv1_gaussian_eq`
-from `hpX_meas`/`hpX_int`/`hs` only (mirrors `convDensityAdd_deriv_hasDerivAt_self`).
+/-- `deriv (convDensityAdd pX g_s) x = ∫ y, pX y * g_s(x-y) * (-(x-y)/s) ∂volume`.
 @audit:ok -/
 theorem convDensityAdd_deriv_eq
     (pX : ℝ → ℝ) (hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)
@@ -331,8 +310,7 @@ theorem convDensityAdd_deriv_eq
   exact InformationTheory.Shannon.EPIConvDensitySecondDeriv.convDensityAdd_deriv1_gaussian_eq
     pX hs (fun y => |pX y| * M1) hb1_int hF1_meas hF1_int hF1'_meas hb1
 
-/-- **Per-`x` Fisher integrand bound**: `(logDeriv p_s x)²·p_s x ≤ (1/s²)·∫ (x-y)² pX y g_s(x-y)`.
-Combines the Step-1 deriv formula, the pointwise CS, and division by `p_s x > 0`.
+/-- `(logDeriv p_s x) ^ 2 * p_s x ≤ (1/s²) * ∫ (x-y)² * (pX y * g_s(x-y)) ∂volume`.
 @audit:ok -/
 theorem convLogDeriv_sq_mul_le
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -378,16 +356,8 @@ theorem convLogDeriv_sq_mul_le
       ≤ p_s x * ∫ y, (x - y) ^ 2 * (pX y * g (x - y)) ∂volume := hCS
     _ = (∫ y, (x - y) ^ 2 * (pX y * g (x - y)) ∂volume) * p_s x := by ring
 
-/-- **Stam convolution Fisher bound (GENUINELY CLOSED)** `J(pX ∗ g_s) ≤ 1/s`.
-任意確率密度 pX (重い裾含む) で成立。EPI per-time line の 2 consumer を gate
-(`convDensityAdd_fisher_integrable` / `_chain_ibp_fisher` via それ)。
-
-**Closure (2026-06-01)**: former `wall:fisher-finiteness` 唯一 carrier、pointwise Cauchy-Schwarz
-route で genuine 化 (file docstring の 4 step)。`#print axioms` = `[propext, Classical.choice,
-Quot.sound]` (sorryAx-free)。証明の核は全て本 body 内 (Step1 deriv1 formula `convDensityAdd_deriv_eq`,
-Step2 CS `convScore_sq_le_pointwise`, Step3 per-point `convLogDeriv_sq_mul_le`, Step4 Tonelli +
-Gaussian moment `integral_sq_mul_gaussianPDFReal = s`)。`hpX_nn`/`hpX_meas`/`hpX_int`/`hpX_mass`/`hs`
-は全て pX regularity precondition (`hpX_mass : ∫pX=1` = probability density 正規化、load-bearing でない)。
+/-- Stam convolution Fisher information bound: `J(pX ∗ g_s) ≤ 1/s` for any probability
+density `pX` and Gaussian kernel `g_s` of variance `s > 0`.
 @audit:ok -/
 theorem gaussianConv_fisher_le_inv_var
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)

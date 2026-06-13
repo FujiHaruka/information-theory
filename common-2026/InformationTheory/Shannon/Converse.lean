@@ -8,36 +8,24 @@ import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import Mathlib.Analysis.SpecialFunctions.BinaryEntropy
 
 /-!
-# Single-shot Shannon converse (Phase 4-γ skeleton)
+# Single-shot Shannon channel coding converse
 
-Shannon ムーンショット ([`docs/shannon/shannon-moonshot-plan.md`](../../../docs/shannon/shannon-moonshot-plan.md))
-の Phase 4-γ: 通信路符号化定理の逆 (single-shot 版) を、Phase 4-β bridge と
-Phase 4-α DPI、Phase 3 Fano (Measure 版) の組み合わせで導く。
+The converse to the channel coding theorem (single-shot version): for a uniformly
+distributed message `Msg` and channel output `Yo`,
+`log |M| ≤ I(Msg; Yo) + h(Pe) + Pe · log(|M| - 1)`.
 
-## 主定理
+## Main statements
 
-`Msg : Ω → M` (uniform on `M`, `|M| ≥ 2`)、`Yo : Ω → Y` (channel output)、
-`decoder : Y → M`、`Pe = μ {Msg ≠ decoder ∘ Yo}` のとき:
+* `shannon_converse_single_shot` — converse bound for a uniform message.
+* `shannon_converse_single_shot_markov_encoder` — converse with a Markov encoder.
 
-```
-log |M| ≤ I(Msg; Yo) + h(Pe) + Pe · log(|M| - 1)
-```
+## Implementation notes
 
-`mutualInfo μ Msg Yo` が `∞` のとき `.toReal = 0` で bound が壊れるため、有限性を仮定する。
-
-## 証明骨格
-
-```
-log|M| = H(Msg)                                           -- helper: uniform → log|M|
-       = I(Msg; decoder∘Yo).toReal + H(Msg | decoder∘Yo)  -- Phase 4-β bridge (rearranged)
-       ≤ I(Msg; Yo).toReal        + H(Msg | decoder∘Yo)   -- Phase 4-α DPI (postprocess Y → M_hat)
-       ≤ I(Msg; Yo).toReal        + h(Pe) + Pe·log(|M|-1) -- Phase 3 Fano (decoder = id : M→M)
-```
-
-なお計画書 (`docs/shannon/shannon-moonshot-plan.md` Phase 4-γ) では `I(encoder∘Msg; Yo)` を含む版が
-書かれているが、Markov 仮定なしには `I(Msg; Yo) ≤ I(encoder∘Msg; Yo)` は一般に成り立たない
-ため、ここでは encoder を含まない素直な定式化を採用する。encoder 版は injective encoder の
-仮定下でこの結果から系として従う。
+The proof chains `entropy μ Msg = log |M|` (uniform), the Bridge identity
+`mutualInfo_eq_entropy_sub_condEntropy`, the DPI `mutualInfo_le_of_postprocess`
+(applied to `decoder : Y → M`), and the Fano inequality. The encoder-free formulation
+is adopted because `I(Msg; Yo) ≤ I(encoder ∘ Msg; Yo)` does not hold without a Markov
+assumption; the Markov-encoder corollary is proved separately.
 -/
 
 namespace InformationTheory.Shannon
@@ -124,36 +112,18 @@ theorem shannon_converse_single_shot
   -- Chain: `log|M| = H(Msg) = I(Msg;M_hat).toReal + condEntropy ≤ I(Msg;Yo).toReal + Fano`
   linarith
 
-/-! ## Phase 4-δ-(a): injective encoder の系
+/-! ## Corollary: injective encoder
 
-`encoder : M → X` が injective なら、Phase 4-α DPI を `decoder' := Function.invFun encoder`
-で 1 回追加で適用するだけで `I(Msg; Yo) ≤ I(encoder ∘ Msg; Yo)` が出る。これを
-`shannon_converse_single_shot` と組み合わせて encoder を含む形の bound を導く。
-
-```
-I(Msg; Yo) = I(Yo; Msg)                              -- mutualInfo_comm
-           = I(Yo; decoder' ∘ (encoder ∘ Msg))       -- decoder' ∘ encoder = id
-           ≤ I(Yo; encoder ∘ Msg)                    -- Phase 4-α DPI
-           = I(encoder ∘ Msg; Yo)                    -- mutualInfo_comm
-```
+For an injective `encoder : M → X`, one additional application of the DPI with
+`decoder' := Function.invFun encoder` gives `I(Msg; Yo) ≤ I(encoder ∘ Msg; Yo)`,
+which combines with `shannon_converse_single_shot` to give the encoder-included bound.
 -/
 
-/-! ## Phase 4-δ-(b): Markov encoder の系
-
-Markov chain `Msg → encoder ∘ Msg → Yo` (β-form: `Yo` の (encoder∘Msg, Msg) 条件付き分布が
-encoder∘Msg のみに依存) の仮定下では、`mutualInfo_le_of_markov` で `I(Msg; Yo) ≤
-I(encoder ∘ Msg; Yo)` が出る。injective encoder の系 (Phase 4-δ-(a)) と異なり encoder の
-injectivity を仮定しない代わりに、通信路の Markov 性を要請する形。
-
-```
-I(Msg; Yo) ≤ I(encoder ∘ Msg; Yo)         -- mutualInfo_le_of_markov (Markov chain hypothesis)
-log |M| ≤ I(Msg; Yo) + h(Pe) + Pe·log(|M|-1)  -- shannon_converse_single_shot
-```
--/
+/-! ## Corollary: Markov encoder -/
 
 omit [DecidableEq M] in
-/-- Single-shot Shannon converse, Markov encoder 版:
-Markov chain `Msg → encoder ∘ Msg → Yo` (β-form) のもとで、
+/-- Single-shot Shannon converse with a Markov encoder:
+under the Markov chain `Msg → encoder ∘ Msg → Yo`,
 `log |M| ≤ I(encoder ∘ Msg; Yo) + h(Pe) + Pe · log(|M| - 1)`. -/
 theorem shannon_converse_single_shot_markov_encoder
     {X : Type*} [MeasurableSpace X] [StandardBorelSpace X] [Nonempty X]
@@ -183,7 +153,7 @@ theorem shannon_converse_single_shot_markov_encoder
   have h_le_real :
       (mutualInfo μ Msg Yo).toReal ≤ (mutualInfo μ (encoder ∘ Msg) Yo).toReal :=
     ENNReal.toReal_mono hMI_finite h_le_ennreal
-  -- 既存 single-shot に bridge
+  -- apply the base single-shot converse
   have h_base := shannon_converse_single_shot
     μ Msg Yo decoder hMsg hYo hdecoder hMsg_uniform hcard hMI_Msg_finite
   linarith

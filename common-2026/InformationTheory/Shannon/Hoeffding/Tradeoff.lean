@@ -8,40 +8,35 @@ import Mathlib.Probability.ProbabilityMassFunction.Constructions
 import Mathlib.Topology.Order.Compact
 
 /-!
-# T1-D Hoeffding tradeoff exponent (scaffolding + variational form)
+# Hoeffding tradeoff exponent — scaffolding and variational form
 
-Cover-Thomas Theorem 11.7.x の **n-IID Type II at Type I level `alpha` の指数収束**
-の **scaffolding** を publish する.
+Scaffolding towards Cover-Thomas Theorem 11.7.x:
 
 ```
 -(1/n) log β_n(alpha) → hoeffdingE2 P₁ P₂ alpha
 ```
 
-`hoeffdingE2` / `hoeffdingE2_attained` / `hoeffdingE2_unique` は **既に**
-`InformationTheory/Shannon/Chernoff.lean` で publish 済. 本ファイルでは
+`hoeffdingE2`, `hoeffdingE2_attained`, and `hoeffdingE2_unique` are published in
+`InformationTheory/Shannon/Chernoff.lean`. This file adds the pmf-form infrastructure
+and the Pythagoras-based minimizer bound.
 
-* `steinTypeII_at_level_pmf` — n-IID Type II error at Type I level alpha (pmf 形)
-* `pmfToMeasure` family — pmf ↔ Measure bridge (Sanov LDP 起動 / Stein typicality 流用前提)
-* `hoeffdingConstraintSet_convex` — constraint set 凸性 (Chernoff.lean 内 helper の公開化)
-* `hoeffdingE2_minimizer_full_support` — Csiszar Pythagoras の `hQs_pos` 要件を満たす Qstar full-support 性
-* `hoeffding_sanov_minimizer` — Pythagoras 経由の minimizer 整理 (Sanov LDP per-Qstar 起動の `h_minimizer` 仮定)
+## Main definitions
 
-を publish する. **完全 sandwich Tendsto** (`liminf ≥` を Sanov LDP per-Qstar から
-自前構築, `limsup ≤` を Stein typicality + Pythagoras から自前構築) は撤退ライン **L-H4**
-の判断によって本 plan では variational scaffolding に縮退し, 次セッションで継続.
+* `pmfToMeasure` — lift a pmf vector to `Measure α` via `PMF.ofFintype`.
+* `steinBetaSet_pmf` — set of achievable Type II errors at Type I level `alpha` (pmf form).
+* `steinTypeII_at_level_pmf` — optimal Type II error (pmf form).
 
-## 設計判断 (Phase 0' judgement #1)
+## Main statements
 
-* **pmf ↔ Measure bridge 候補 (a)** を採用: `PMF.ofFintype` + `PMF.toMeasure` 経由,
-  ~30 行 / 4 補題で plumbing を集約.
+* `hoeffdingConstraintSet_convex` — the Hoeffding constraint set is convex.
+* `hoeffding_minimizer_ge` — Csiszar Pythagoras gives `klDivPmf Qstar P₂ ≤ klDivPmf P P₂`
+  for any `P ∈ K` with full support, when `Qstar` is the minimizer.
 
-## 撤退ライン
+## Implementation notes
 
-* L-S1 継続 (T1-D Tendsto 形 plumbing 全部の defer).
-* **L-H4 適用**: Phase C/D の sandwich (achievability + converse) が 1 セッションで完走
-  困難と判断 (~80+80 行 + 自前 AEP 30-50 行 + Type I 制御 + pmf↔Measure 散布 = 200-300 行 残).
-  本 plan は **scaffolding + variational hypothesis 形 wrapper** で close, full Tendsto は
-  別 plan (`hoeffding-tradeoff-sandwich-plan.md`) に切り出し.
+* The full sandwich `Tendsto` (achievability from Sanov LDP + converse from Stein typicality)
+  is deferred to a follow-up plan. This file provides the variational scaffolding only.
+* The pmf ↔ Measure bridge uses `PMF.ofFintype` + `PMF.toMeasure` (~4 lemmas).
 -/
 
 namespace InformationTheory.Shannon.HoeffdingTradeoff
@@ -58,8 +53,7 @@ variable {α : Type*} [Fintype α] [Nonempty α]
 
 /-! ## Phase A — pmf ↔ Measure bridge (helper) -/
 
-/-- pmf 形 `P : α → ℝ` を `Measure α` に lift する.
-`PMF.ofFintype` 経由で `PMF.toMeasure` を取ると `IsProbabilityMeasure` が自動付与される. -/
+/-- Lift a pmf vector `P : α → ℝ` to `Measure α` via `PMF.ofFintype`. -/
 noncomputable def pmfToMeasure (P : α → ℝ)
     (hP_nn : ∀ a, 0 ≤ P a) (hP_sum : ∑ a, P a = 1) : Measure α :=
   (PMF.ofFintype (fun a => ENNReal.ofReal (P a)) (by
@@ -87,23 +81,20 @@ lemma pmfToMeasure_real_singleton
   rw [pmfToMeasure_apply_singleton P hP_nn hP_sum a]
   exact ENNReal.toReal_ofReal (hP_nn a)
 
-/-! ## Phase B — `steinTypeII_at_level_pmf` 定義 + 基本性質 -/
+/-! ## Phase B — `steinTypeII_at_level_pmf` definition and basic properties -/
 
-/-- n-IID Type II error set (pmf 形).
+/-- n-IID Type II error set (pmf form).
 
-`s : Finset (Fin n → α)` is the **acceptance region for H₀** (sample集合 where test
-decides "accept H₀"). The Type I error is `1 - ∑_{x ∈ s} ∏ P₁(x_i) = P₁^n(sᶜ)`
-(probability of false-rejecting H₀), and the Type II error is
-`∑_{x ∈ s} ∏ P₂(x_i) = P₂^n(s)` (probability of false-accepting H₀).
-
-Convention matches `Stein.lean :: steinBetaSet` (Measure 経路) with `Finset` instead of
-`Set + MeasurableSet`. -/
+`s : Finset (Fin n → α)` is the **acceptance region for H₀**. The Type I error is
+`1 - ∑_{x ∈ s} ∏ P₁(x_i)` and the Type II error is `∑_{x ∈ s} ∏ P₂(x_i)`.
+Convention matches `Stein.lean :: steinBetaSet` (Measure path) with `Finset`
+instead of `Set + MeasurableSet`. -/
 noncomputable def steinBetaSet_pmf (P₁ P₂ : α → ℝ) (n : ℕ) (alpha : ℝ) : Set ℝ :=
   { β : ℝ | ∃ (s : Finset (Fin n → α)),
       (1 - ∑ x ∈ s, ∏ i, P₁ (x i)) ≤ alpha ∧
       β = ∑ x ∈ s, ∏ i, P₂ (x i) }
 
-/-- Optimal Type II error (pmf 形). -/
+/-- Optimal Type II error (pmf form). -/
 noncomputable def steinTypeII_at_level_pmf (P₁ P₂ : α → ℝ) (n : ℕ) (alpha : ℝ) : ℝ :=
   sInf (steinBetaSet_pmf P₁ P₂ n alpha)
 
@@ -166,7 +157,7 @@ lemma steinTypeII_at_level_pmf_le_one
       exact Finset.sum_nonneg (fun x _ => Finset.prod_nonneg (fun i _ => hP₂_nn (x i)))⟩
   · exact one_mem_steinBetaSet_pmf P₁ P₂ hP₁_sum hP₂_sum n alpha h_alpha_nn
 
-/-! ## Phase C — Hoeffding constraint set 凸性 + Qstar full-support -/
+/-! ## Phase C — Hoeffding constraint set convexity + Qstar full support -/
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- The Hoeffding constraint set is **convex**: intersection of the convex simplex with
@@ -199,22 +190,15 @@ lemma hoeffdingConstraintSet_convex
     linarith [h_kl_avg]
 
 -- Phase B full-support: the rigorous proof requires a log-singularity gradient argument
--- (a 30-50 line HasDerivAt computation showing the directional derivative of `klDivPmf · P₂`
--- at a 0-atom is `-∞`, hence any perturbation away from 0 strictly improves the value,
--- contradicting Qstar's minimum 性). This is deferred to a follow-up plan; here we publish
--- the **hypothesis form** of all downstream lemmas, taking `hQs_pos` as input.
+-- (~30-50 lines, HasDerivAt computation showing the directional derivative of `klDivPmf · P₂`
+-- at a 0-atom is `-∞`). This is deferred; downstream lemmas take `hQs_pos` as a hypothesis.
 
-/-! ## Phase D — Pythagoras-based minimizer integration (Sanov LDP per-Qstar 前提) -/
+/-! ## Phase D — Pythagoras-based minimizer bound -/
 
 omit [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **Hoeffding Sanov minimizer**: under the Csiszar Pythagoras inequality,
-the Qstar-minimizer of `klDivPmf · P₂` on K satisfies for any pmf `P ∈ K` (full-support),
-`klDivPmf P P₂ ≥ klDivPmf Qstar P₂`. This is the per-`c ∈ K_n` form of the Sanov LDP
-`h_minimizer` hypothesis.
-
-**戦略**: csiszar_pythagoras_inequality を直接適用:
-`klDivPmf P P₂ ≥ klDivPmf P Qstar + klDivPmf Qstar P₂ ≥ klDivPmf Qstar P₂`
-(since `klDivPmf P Qstar ≥ 0`). -/
+/-- **Hoeffding Sanov minimizer**: for any `P ∈ K` with full support,
+`klDivPmf Qstar P₂ ≤ klDivPmf P P₂`, via the Csiszar Pythagoras inequality
+`klDivPmf P P₂ ≥ klDivPmf P Qstar + klDivPmf Qstar P₂`. -/
 @[entry_point]
 lemma hoeffding_minimizer_ge
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)

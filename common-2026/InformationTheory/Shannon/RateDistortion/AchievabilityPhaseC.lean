@@ -1,26 +1,21 @@
 import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseB
 
 /-!
-# Rate-distortion achievability — Phase C-1 (codebook-level match probability)
+# Rate-distortion achievability — codebook-level match probability
 
-[`docs/shannon/rate-distortion-achievability-plan.md`](../../../docs/shannon/rate-distortion-achievability-plan.md)
+Lower bounds on the probability that some codeword of an i.i.d. product codebook
+is jointly typical with a source word, and the source-averaged failure
+probability obtained by integrating over the source distribution.
 
-Phase C-1 lifts the per-codeword joint-typicality probability bound to the
-codebook level. Given a source word `x : Fin n → α` and a product codebook
-`c : Fin M → (Fin n → β)` drawn i.i.d. from `p`, we want a lower bound on
-the probability that **some** codeword `c m` is jointly typical with `x`.
+## Main statements
 
-Three lemmas:
-
-* `per_codeword_no_match_prob` — `p.real {y | (x, y) ∉ JTS} = 1 - p.real {y | (x, y) ∈ JTS}`
-  (probabilistic complement rewrite under `IsProbabilityMeasure p`).
 * `codebook_indep_no_match_prob_eq` — under the product measure
-  `Measure.pi (fun _ : Fin M => p)`, the probability that *no* codeword matches `x`
+  `Measure.pi (fun _ : Fin M => p)`, the probability that no codeword matches `x`
   factors as `(1 - p.real {y | (x, y) ∈ JTS}) ^ M`.
-* `single_codeword_typical_match_prob` — direct complement: the probability that
-  *some* codeword matches `x` is at least `1 - (1 - p.real {y | (x, y) ∈ JTS}) ^ M`.
-
-The main consumer is the random-coding average distortion bound (Phase D).
+* `single_codeword_typical_match_prob` — the probability that some codeword
+  matches `x` is at least `1 - (1 - p.real {y | (x, y) ∈ JTS}) ^ M`.
+* `encoder_failure_prob_le_exp_neg_M_avg` — exponentialization of the
+  source-averaged failure-pow bound.
 -/
 
 namespace InformationTheory.Shannon
@@ -37,13 +32,11 @@ variable [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass �
 variable [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β]
 
 
-/-! ## Phase C-2: source-averaged failure probability
+/-! ## Source-averaged failure probability
 
-The Phase C-2 layer integrates the per-source-word bound from `single_codeword_typical_match_prob`
-over the source distribution `P_X`, producing a bound on the *source-averaged* failure
-probability that is later combined with the WLLN over the codebook in Phase D.
-
-The non-trivial step is the Fubini-style bridge `p_typ_avg_eq_indep_prob`, which rewrites
+Integrating the per-source-word bound `single_codeword_typical_match_prob` over
+the source distribution `P_X` produces a bound on the source-averaged failure
+probability. The non-trivial step is the Fubini-style bridge rewriting
 `∫ x, p.real {y | (x, y) ∈ JTS} ∂P_X` as `(P_X.prod p).real (JTS)`.
 -/
 
@@ -122,7 +115,7 @@ theorem encoder_failure_prob_le_exp_neg_M_avg
     measureReal_le_one
   exact one_sub_pow_le_exp_neg_mul M h_pos h_le
 
-/-! ## Phase C-3: pigeonhole (existence from average)
+/-! ## Pigeonhole (existence from average)
 
 A `Codebook M n β`-indexed function whose `codebookMeasure`-weighted average is `≤ B`
 admits at least one deterministic codebook attaining `≤ B`. Verbatim mirror of

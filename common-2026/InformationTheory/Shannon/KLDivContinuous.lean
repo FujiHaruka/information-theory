@@ -4,16 +4,19 @@ import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import Mathlib.Topology.Algebra.Monoid
 
 /-!
-# KL divergence vector form continuity (B-1'' Phase A)
+# KL divergence in vector form and its continuity
 
-`klDivSumForm_ofVec p q := ∑ a, p a · (log (p a) - log (q a))` の
-`p : α → ℝ` (point-wise / Pi topology) 上での連続性。
+`klDivSumForm_ofVec p q := ∑ a, p a * (log (p a) - log (q a))` and its continuity in `p`
+under the Pi topology on `α → ℝ` (finite `α`).
 
-`SanovLDP.lean` の `klDivIndex c n Q` は `klDivSumForm_ofVec (c · / n) (Q.real ∘ singleton)`
-に書き直せる (`klDivIndex_eq_ofVec`)、これにより Phase B / D の rounded type sequence の
-KL 値の `Tendsto` を `klDivSumForm_ofVec` の連続性 + `(c/n → P°)` で取れる。
+## Main definitions
 
-詳細: `docs/shannon/sanov-ldp-equality-plan.md` Phase A.
+* `klDivSumForm_ofVec` — KL divergence taking `α → ℝ` inputs.
+
+## Main statements
+
+* `klDivSumForm_ofVec_continuous` — continuous in `p` when `q a > 0` for all `a`.
+* `klDivIndex_eq_ofVec` — `klDivIndex c n Q = klDivSumForm_ofVec (c/n) (Q.real ∘ singleton)`.
 -/
 
 namespace InformationTheory.Shannon
@@ -23,26 +26,16 @@ open MeasureTheory Real
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-- KL divergence in finite-alphabet **vector** form (`α → ℝ` 入力):
-`klDivSumForm_ofVec p q := ∑ a, p a · (log (p a) - log (q a))`.
+/-- KL divergence in finite-alphabet vector form taking `α → ℝ` inputs:
+`klDivSumForm_ofVec p q := ∑ a, p a * (log (p a) - log (q a))`.
 
-`Measure α` 経由ではなく `α → ℝ` の Pi-topology で連続性を取るための変種。
-B-1' の `klDivIndex c n Q` とは `c · / n` を `p`、`Q.real ∘ singleton` を `q` として一致
-(`klDivIndex_eq_ofVec`). -/
+This variant is designed for continuity arguments in the Pi topology on `α → ℝ`,
+complementing the `Measure α`-based `klDiv`. -/
 noncomputable def klDivSumForm_ofVec (p q : α → ℝ) : ℝ :=
   ∑ a : α, p a * (Real.log (p a) - Real.log (q a))
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **KL の `p` 上での連続性** (Phase A 主補題):
-`q a > 0` for all `a` ⟹ `p ↦ klDivSumForm_ofVec p q` is continuous on `α → ℝ`.
-
-境界処理:
-* `p a = 0`: `negMulLog 0 = 0` ⇒ `p a · log p a = 0` で連続。
-* `q a = 0`: 除外 (`hq_pos`)。`log q a` は定数として登場。
-
-証明 sketch: 各 `a` で `p a · log p a = -negMulLog (p a)` を `Real.negMulLog_def` で取り
-`Real.continuous_negMulLog.comp (continuous_apply a)`。`p ↦ -p a · log q a` は定数倍で連続。
-合計 `p a · (log p a - log q a)` の連続性、`continuous_finset_sum` で plumbing。 -/
+/-- `p ↦ klDivSumForm_ofVec p q` is continuous when `q a > 0` for all `a`. -/
 @[entry_point]
 theorem klDivSumForm_ofVec_continuous
     (q : α → ℝ) (_hq_pos : ∀ a, 0 < q a) :
@@ -65,8 +58,6 @@ theorem klDivSumForm_ofVec_continuous
   exact h_negMulLog.neg.sub (h_eval.const_mul (Real.log (q a)))
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **`klDivIndex` (B-1') と `klDivSumForm_ofVec` の連絡**:
-`klDivIndex c n Q = klDivSumForm_ofVec (c/n) (Q.real ∘ singleton)`. -/
 lemma klDivIndex_eq_ofVec (c : α → ℕ) (n : ℕ) (Q : Measure α) :
     klDivIndex c n Q
       = klDivSumForm_ofVec (fun a => (c a : ℝ) / n) (fun a => Q.real {a}) := rfl

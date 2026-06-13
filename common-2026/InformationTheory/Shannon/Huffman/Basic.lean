@@ -13,17 +13,43 @@ import InformationTheory.Shannon.ShannonCode.Basic
 import InformationTheory.Shannon.ShannonCode.KraftReverse
 
 /-!
-# Huffman 最適性 (Cover-Thomas Theorem 5.8.1)
+# Huffman code lengths
 
-T1-A シードカード (`docs/shannon/huffman-moonshot-plan.md`).
+Constructs the binary Huffman code length function `huffmanLength` for a finite alphabet `α`
+equipped with a probability measure, following Cover–Thomas Theorem 5.8.1.
 
-binary (D = 2) prefix code に対し、`huffmanLength` を実構成し:
-- 正値 (`huffmanLength_pos`)
-- Kraft 不等式充足 (`huffmanLength_kraft_le_one`)
-- 任意 Kraft-feasible `l` 比較で最適 (`huffmanLength_optimal`)
-- 副系として prefix code 構成 (`exists_huffman_prefix_code`)
+## Main definitions
 
-を publish.
+* `groupKey` — deterministic comparison key (lex on probability then colex) used to break ties
+  in `huffmanStep`.
+* `HuffmanGrouping` — invariant on the working multiset: no-duplicates, nonempty groups,
+  pairwise-disjoint carriers.
+* `huffmanStep` — one merge step: extracts the two minimum-probability groups and returns the
+  merged multiset together with a proof that `HuffmanGrouping` is preserved.
+* `huffmanLengthAux` — recursion on the multiset; assigns a codeword length to each `α`-element.
+* `initMultiset` — initial multiset of singleton groups `({a}, P.real {a})`.
+* `huffmanLength` — the published codeword-length function `huffmanLengthAux (initMultiset P)`.
+* `huffmanCost` — multiset-level expected length used in the cost-level optimality proof.
+
+## Main statements
+
+* `groupKey_injective` — `groupKey` is injective (probability + colex breaks all ties).
+* `huffmanStep_min_fst` / `huffmanStep_min_snd` — the two extracted groups have minimum
+  probability in `s` (resp. `s.erase .val.1`).
+* `huffmanLength_pos` — `huffmanLength P a > 0` when `card α ≥ 2`.
+* `huffmanLength_kraft_eq_one` — the Kraft sum equals `1` exactly.
+* `huffmanLength_kraft_le_one` — the Kraft inequality holds.
+* `exists_huffman_prefix_code` — a prefix-free binary code of the Huffman lengths exists.
+* `huffmanCost_step` — `huffmanCost` decreases by the merged-group probability at each step.
+* `huffmanCost_eq_of_prob_multiset` — `huffmanCost` depends only on the probability multiset.
+* `expectedLength_eq_huffmanCost` — the expected length of `huffmanLength P` equals
+  `huffmanCost (initMultiset P)`.
+
+## Implementation notes
+
+The merge step uses `groupKey` (a lex order on `ℝ ×ₗ Colex (Finset α)`) rather than a plain
+probability ordering so that the minimum selection is deterministic even under probability ties.
+This is essential for the carrier-crossing cost argument (`huffmanCost_eq_of_prob_multiset`).
 -/
 
 namespace InformationTheory.Shannon.Huffman
@@ -34,17 +60,14 @@ open scoped BigOperators
 variable {α : Type*} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-- **決定的比較キー (colex 2 段 lex)** — `huffmanStep` の min 選択を一意化する.
-第 1 キー = 確率 `p.2` (昇順)、tie-break 第 2 キー = `toColex p.1` (colex 順).
-`[LinearOrder α]` から `LinearOrder (Colex (Finset α))` (`Finset.Colex.instLinearOrder`)
-が立ち、`ℝ ×ₗ Colex (Finset α)` の `Prod.Lex` 全順序で min が一意確定する
-(`groupKey` 単射: 確率が等しくても colex で区別). -/
+/-- Deterministic comparison key for `huffmanStep`: primary key is probability `p.2` (ascending),
+tie-break is `toColex p.1` (colex order). The resulting `Prod.Lex` total order on
+`ℝ ×ₗ Colex (Finset α)` makes the minimum selection unique even under probability ties. -/
 noncomputable def groupKey (p : Finset α × ℝ) : ℝ ×ₗ Colex (Finset α) :=
   toLex (p.2, toColex p.1)
 
 omit [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- `groupKey` は単射 (確率 + colex tie-break で group を一意に決定). -/
 @[entry_point]
 lemma groupKey_injective : Function.Injective (groupKey (α := α)) := by
   intro p q h
@@ -56,7 +79,6 @@ lemma groupKey_injective : Function.Injective (groupKey (α := α)) := by
 
 omit [Fintype α] [DecidableEq α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- `groupKey` の min は確率 (`p.2`) の min を含意する (第 1 キー射影). -/
 lemma groupKey_le_imp_snd_le {p q : Finset α × ℝ} (h : groupKey p ≤ groupKey q) :
     p.2 ≤ q.2 := by
   unfold groupKey at h
@@ -65,12 +87,10 @@ lemma groupKey_le_imp_snd_le {p q : Finset α × ℝ} (h : groupKey p ≤ groupK
   · exact le_of_lt h
   · exact le_of_eq h1
 
-/-! ### 内部実装: Multiset ベースの Huffman 再帰 -/
+/-! ### Internal implementation: Multiset-based Huffman recursion -/
 
-/-- Huffman 再帰で保たれる group 不変量 (C-6 強化版):
-- `Nodup`: 多重集合 `s` に重複なし
-- 各 group は非空 (`p.1.Nonempty`)
-- 異なる group の `p.1` は互いに disjoint -/
+/-- Invariant on a working group multiset: no duplicates, every group is nonempty,
+and distinct groups have disjoint carriers. -/
 def HuffmanGrouping (s : Multiset (Finset α × ℝ)) : Prop :=
   s.Nodup ∧
   (∀ p ∈ s, p.1.Nonempty) ∧
@@ -80,6 +100,7 @@ omit [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α] in
 lemma HuffmanGrouping.nodup {s : Multiset (Finset α × ℝ)} (h : HuffmanGrouping s) :
     s.Nodup := h.1
+
 
 omit [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α] in
@@ -92,13 +113,9 @@ lemma HuffmanGrouping.disjoint {s : Multiset (Finset α × ℝ)} (h : HuffmanGro
     {p q : Finset α × ℝ} (hp : p ∈ s) (hq : q ∈ s) (hpq : p ≠ q) :
     Disjoint p.1 q.1 := h.2.2 p hp q hq hpq
 
-/-- `huffmanStep` (one step): 与えられた `s : Multiset (Finset α × ℝ)` から、
-最小 2 group `(A, pA), (B, pB)` を取り出し、merged group `(A ∪ B, pA + pB)` を
-含む新 multiset `s''` を返す. `s.card ≥ 2` + `HuffmanGrouping s` 前提.
-
-`Subtype` で **構造的 spec を焼き込む** (plan C-6 強化版):
-- 既存 3 件 (`p.1 ∈ s`, `p.2.1 ∈ s.erase p.1`, shape of `p.2.2`)
-- 新規: `HuffmanGrouping p.2.2` (不変量保存) -/
+/-- One Huffman merge step: extracts the two minimum-`groupKey` groups from `s` and returns
+the merged multiset together with membership witnesses and the proof that `HuffmanGrouping`
+is preserved. Requires `s.card ≥ 2` and `HuffmanGrouping s`. -/
 noncomputable def huffmanStep
     (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
     { p : (Finset α × ℝ) × (Finset α × ℝ) × Multiset (Finset α × ℝ) //
@@ -132,21 +149,20 @@ noncomputable def huffmanStep
       (R := ℝ ×ₗ Colex (Finset α)) groupKey hs'_ne)
   have hx2 : x2 ∈ s' ∧ ∀ z ∈ s', x2.2 ≤ z.2 :=
     ⟨hx2k.1, fun z hz => groupKey_le_imp_snd_le (hx2k.2 z hz)⟩
-  -- HuffmanGrouping 保存の事実を組み上げる
+  -- Assemble witnesses for HuffmanGrouping preservation.
   have hx1_mem : x1 ∈ s := hx1.1
   have hx2_mem_s' : x2 ∈ s' := hx2.1
-  -- s.erase x1 のメンバから x2 が s に属する
+  -- x2 ∈ s.erase x1 implies x2 ∈ s.
   have hx2_mem_s : x2 ∈ s := Multiset.mem_of_mem_erase hx2_mem_s'
-  -- Nodup ⇒ x1 と x2 は別物 (`x2 ∈ s.erase x1` から)
+  -- Nodup implies x1 ≠ x2 (since x2 ∈ s.erase x1).
   have hx12_ne : x1 ≠ x2 := by
     intro heq
     rw [← heq] at hx2_mem_s'
     exact hg.nodup.notMem_erase hx2_mem_s'
-  -- erase erase の構造 (Nodup 保存)
+  -- Nodup is preserved under double erase.
   have h_ee_nodup : ((s.erase x1).erase x2).Nodup :=
     ((hg.nodup.erase x1).erase x2)
-  -- merged が ((s.erase x1).erase x2) に属しないことを示す
-  -- (merged = (x1.1 ∪ x2.1, x1.2 + x2.2))
+  -- Show that merged = (x1.1 ∪ x2.1, x1.2 + x2.2) is not in the double-erase multiset.
   let merged : Finset α × ℝ := (x1.1 ∪ x2.1, x1.2 + x2.2)
   -- merged ≠ q for any q ∈ erase erase (uses disjointness + nonempty + Nodup)
   have h_merged_not_in :
@@ -181,13 +197,8 @@ noncomputable def huffmanStep
       rw [hfst] at ha_in_merged
       have h_disj : Disjoint x1.1 x2.1 := hg.disjoint hx1_mem hx2_mem_s hx12_ne
       exact (Finset.disjoint_right.mp h_disj ha_in_merged) ha
-    -- erase で x1 を消したので、merged ∈ s' = s.erase x1 でも merged ≠ x1 が必要
-    -- merged ∈ s かつ merged ≠ x1, merged ≠ x2, hence merged ∈ erase erase は OK
-    -- このパスは矛盾を導かないので、別ルートが必要 — 実は merged ∈ s と矛盾?
-    -- HuffmanGrouping disjoint より:
-    --   merged ∈ s ∧ x1 ∈ s ∧ merged ≠ x1 ⇒ Disjoint merged.1 x1.1
-    --   しかし merged.1 = x1.1 ∪ x2.1 ⊇ x1.1, ⇒ x1.1 = ∅ (x1.1 と自身 disjoint)
-    --   一方 x1.1 nonempty (HuffmanGrouping nonempty) ⇒ 矛盾
+    -- HuffmanGrouping.disjoint gives Disjoint merged.1 x1.1,
+    -- but merged.1 ⊇ x1.1 and x1.1 is nonempty, contradiction.
     have h_disj_merged_x1 : Disjoint merged.1 x1.1 :=
       hg.disjoint hmem_s hx1_mem h_merged_ne_x1
     have hx1_ne : x1.1.Nonempty := hg.nonempty hx1_mem
@@ -200,9 +211,9 @@ noncomputable def huffmanStep
   · exact hx1_mem
   · exact hx2_mem_s'
   · rfl
-  -- HuffmanGrouping (merged ::ₘ erase erase)
+  -- Verify HuffmanGrouping for (merged ::ₘ erase erase).
   refine ⟨?_, ?_, ?_⟩
-  · -- Nodup: cons は merged ∉ erase erase なら nodup
+  · -- Nodup: merged ∉ erase erase so cons is nodup.
     exact (Multiset.nodup_cons).mpr ⟨h_merged_not_in, h_ee_nodup⟩
   · -- ∀ p ∈ cons, p.1.Nonempty
     intro p hp
@@ -266,7 +277,6 @@ noncomputable def huffmanStep
         exact hg.disjoint hp_s hq_s hpq
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- `huffmanStep` の構造的 spec を取り出す簡略アクセサ. -/
 lemma huffmanStep_spec
     (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
     (huffmanStep s hs hg).val.1 ∈ s ∧
@@ -279,10 +289,7 @@ lemma huffmanStep_spec
   (huffmanStep s hs hg).property
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **`huffmanStep` の groupKey-minimality spec (`.val.1` は `s` 全体の `groupKey` 最小)**.
-決定化の核 — 定義本体の `Classical.choose (exists_min_image groupKey ...)` の spec を
-unfold で取り出す. `groupKey` は単射なので min は一意 (確率 tie は colex で破られる).
-carrier 横断の決定的対応 (Phase H2) に必須. -/
+/-- `.val.1` minimizes `groupKey` over all of `s`. -/
 @[entry_point]
 lemma huffmanStep_key_min_fst
     (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
@@ -302,9 +309,7 @@ lemma huffmanStep_key_min_fst
   exact hx1.2 z hz
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **`huffmanStep` の minimality spec (`.val.1` は `s` 全体の確率最小)**.
-`huffmanStep_key_min_fst` (groupKey 最小) の第 1 キー射影 (`groupKey_le_imp_snd_le`)
-から確率 `≤` を導く. statement は決定化前と不変. -/
+/-- `.val.1` has minimum probability in `s`. -/
 @[entry_point]
 lemma huffmanStep_min_fst
     (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
@@ -313,9 +318,7 @@ lemma huffmanStep_min_fst
   exact groupKey_le_imp_snd_le (huffmanStep_key_min_fst s hs hg z hz)
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **`huffmanStep` の 2nd groupKey-minimality spec (`.val.2.1` は `s.erase .val.1` 全体の
-`groupKey` 最小)**. 定義本体の 2 段目 `Classical.choose (exists_min_image groupKey ...)` の
-spec を unfold で取り出す. -/
+/-- `.val.2.1` minimizes `groupKey` over `s.erase .val.1`. -/
 @[entry_point]
 lemma huffmanStep_key_min_snd
     (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
@@ -324,7 +327,7 @@ lemma huffmanStep_key_min_snd
   classical
   have hs_ne : s ≠ 0 := by
     intro heq; rw [heq, Multiset.card_zero] at hs; omega
-  -- x1 と s' = s.erase x1 を再構成
+  -- Reconstruct x1 and s' = s.erase x1.
   set x1 := Classical.choose (Multiset.exists_min_image (α := Finset α × ℝ)
     (R := ℝ ×ₗ Colex (Finset α)) groupKey hs_ne) with hx1_def
   have hx1 : x1 ∈ s ∧ ∀ z ∈ s, groupKey x1 ≤ groupKey z :=
@@ -351,8 +354,7 @@ lemma huffmanStep_key_min_snd
   exact hx2.2 z hz
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **`huffmanStep` の 2nd minimality spec (`.val.2.1` は `s.erase .val.1` 全体の確率最小)**.
-`huffmanStep_key_min_snd` の第 1 キー射影から導く. statement は決定化前と不変. -/
+/-- `.val.2.1` has minimum probability in `s.erase .val.1`. -/
 @[entry_point]
 lemma huffmanStep_min_snd
     (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
@@ -362,14 +364,12 @@ lemma huffmanStep_min_snd
   exact groupKey_le_imp_snd_le (huffmanStep_key_min_snd s hs hg z hz)
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- `huffmanStep` 後の HuffmanGrouping 保存 (アクセサ). -/
 lemma huffmanStep_grouping
     (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
     HuffmanGrouping (huffmanStep s hs hg).val.2.2 :=
   (huffmanStep s hs hg).property.2.2.2
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- `huffmanStep` 後の multiset cardinality は **ちょうど 1 減る**. -/
 lemma huffmanStep_card_eq
     (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
     (huffmanStep s hs hg).val.2.2.card = s.card - 1 := by
@@ -385,18 +385,14 @@ lemma huffmanStep_card_eq
   omega
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- `huffmanStep` 後の multiset cardinality は 1 減る. -/
 lemma huffmanStep_card_lt
     (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
     (huffmanStep s hs hg).val.2.2.card < s.card := by
   rw [huffmanStep_card_eq s hs hg]; omega
 
-/-- `huffmanLength` の内部実装: 確率付き group (`Finset α × ℝ`) の Multiset を入力に、
-各 `α` 要素に対する codeword 長を返す.
-
-`s.card` 上の strong induction で再帰. `HuffmanGrouping s` でない場合は `fun _ => 0` を返す
-(out-of-spec 入力に対する default; 我々が使うのは `initMultiset P` から始まる descendants
-のみ、これらは常に `HuffmanGrouping`). -/
+/-- Internal recursion on `s.card`: assigns a codeword length to each `α`-element by strong
+induction on `s.card`, merging the two minimum-probability groups at each step. Returns the
+zero function on out-of-spec inputs (where `HuffmanGrouping s` fails). -/
 noncomputable def huffmanLengthAux
     (s : Multiset (Finset α × ℝ)) : α → ℕ := by
   classical
@@ -416,14 +412,13 @@ noncomputable def huffmanLengthAux
       fun _ => 0
 termination_by s.card
 
-/-- Initial multiset: 各 singleton `{a}` を確率 `P.real {a}` でラップ. -/
+/-- Initial working multiset: each element `a : α` maps to the singleton group `({a}, P.real {a})`. -/
 noncomputable def initMultiset (P : Measure α) : Multiset (Finset α × ℝ) :=
   (Finset.univ : Finset α).val.map (fun a => ({a}, P.real {a}))
 
-/-! ### `huffmanLengthAux` の展開 / 構造的不変量 -/
+/-! ### Unfolding lemmas and structural invariants for `huffmanLengthAux` -/
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- `huffmanLengthAux` の展開 (recursive step, `HuffmanGrouping` 前提). -/
 lemma huffmanLengthAux_eq_step (s : Multiset (Finset α × ℝ)) (h : 2 ≤ s.card)
     (hg : HuffmanGrouping s) :
     huffmanLengthAux s =
@@ -437,7 +432,6 @@ lemma huffmanLengthAux_eq_step (s : Multiset (Finset α × ℝ)) (h : 2 ≤ s.ca
   simp only [dif_pos hg, dif_pos h]
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- `huffmanLengthAux` の base case (card ≤ 1 ∧ HuffmanGrouping). -/
 lemma huffmanLengthAux_eq_zero (s : Multiset (Finset α × ℝ)) (h : s.card ≤ 1)
     (hg : HuffmanGrouping s) :
     huffmanLengthAux s = fun _ => 0 := by
@@ -445,18 +439,16 @@ lemma huffmanLengthAux_eq_zero (s : Multiset (Finset α × ℝ)) (h : s.card ≤
   rw [huffmanLengthAux]
   simp only [dif_pos hg, dif_neg h']
 
-/-! ### 主役定義 -/
+/-! ### Main definition -/
 
-/-- **Huffman 語長関数** (binary, D = 2). -/
+/-- Binary Huffman codeword-length function: `huffmanLengthAux` applied to the initial
+singleton-group multiset of `P`. -/
 noncomputable def huffmanLength (P : Measure α) : α → ℕ :=
   huffmanLengthAux (initMultiset P)
 
-/-! ### 主定理 -/
+/-! ### Main theorems -/
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- `huffmanLengthAux` の正値性 invariant (induction on `s.card`):
-    任意の group `p ∈ s` が `a` を含むなら、語長 `huffmanLengthAux s a` は
-    `s.card = 1` のとき `0`、`s.card ≥ 2` のとき `> 0`. -/
 lemma huffmanLengthAux_pos_of_mem
     (s : Multiset (Finset α × ℝ)) (a : α)
     (hmem : ∃ p ∈ s, a ∈ p.1) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
@@ -467,44 +459,31 @@ lemma huffmanLengthAux_pos_of_mem
     -- n = s.card ≥ 2
     rw [huffmanLengthAux_eq_step s hs hg]
     simp only
-    -- step を取り出す
     set step := (huffmanStep s hs hg).val with hstep_def
     obtain ⟨hx1_mem, hx2_mem, hshape, hg''⟩ := huffmanStep_spec s hs hg
-    -- 場合分け: a ∈ step.1.1 ∨ a ∈ step.2.1.1
     by_cases h_in_AB : a ∈ step.1.1 ∨ a ∈ step.2.1.1
     · simp [h_in_AB]
     · simp only [h_in_AB, ↓reduceIte, gt_iff_lt]
-      -- 残: 0 < huffmanLengthAux step.2.2 a
-      -- ∃ p ∈ step.2.2, a ∈ p.1 を示す
       push Not at h_in_AB
       obtain ⟨h_not_A, h_not_B⟩ := h_in_AB
-      -- hmem の p について、p ≠ step.1, p ≠ step.2.1, p ∈ erase erase
       obtain ⟨p, hp_mem, hp_a⟩ := hmem
       have hp_ne_x1 : p ≠ step.1 := by
         rintro rfl; exact h_not_A hp_a
       have hp_ne_x2 : p ≠ step.2.1 := by
         rintro rfl; exact h_not_B hp_a
-      -- p ∈ s.erase step.1
       have hp_in_s' : p ∈ s.erase step.1 :=
         (Multiset.mem_erase_of_ne hp_ne_x1).mpr hp_mem
-      -- p ∈ (s.erase step.1).erase step.2.1
       have hp_in_s'' :
           p ∈ (s.erase step.1).erase step.2.1 :=
         (Multiset.mem_erase_of_ne hp_ne_x2).mpr hp_in_s'
       have hp_in_step22 : p ∈ step.2.2 := by
         rw [hshape]; exact Multiset.mem_cons_of_mem hp_in_s''
       have hmem' : ∃ q ∈ step.2.2, a ∈ q.1 := ⟨p, hp_in_step22, hp_a⟩
-      -- step.2.2.card < s.card より s.card ≥ 2 の場合に応じて IH か base-case
       have hs''_lt : step.2.2.card < s.card := huffmanStep_card_lt s hs hg
-      -- s.card = 2 のとき、step.2.2.card = 1, s.erase step.1 .erase step.2.1 = 0
-      -- このとき hp_in_s'' で p ∈ 0 → False、矛盾
       by_cases hs''_two : 2 ≤ step.2.2.card
-      · -- IH 適用
-        have hn' : step.2.2.card < n := by omega
+      · have hn' : step.2.2.card < n := by omega
         exact ih step.2.2.card hn' step.2.2 hmem' hs''_two hg'' rfl
-      · -- step.2.2.card ≤ 1 のときは hp_in_s'' で矛盾を導く:
-        -- step.2.2 = merged ::ₘ erase_erase なので step.2.2.card ≥ 1
-        -- step.2.2.card ≤ 1 ⇒ step.2.2.card = 1 ⇒ erase_erase.card = 0 ⇒ p ∉ erase_erase
+      · -- step.2.2.card = 1, so the double-erase is empty, giving p ∉ 0, contradiction.
         push Not at hs''_two
         have h_ee_card : ((s.erase step.1).erase step.2.1).card = 0 := by
           have : step.2.2.card = ((s.erase step.1).erase step.2.1).card + 1 := by
@@ -516,7 +495,6 @@ lemma huffmanLengthAux_pos_of_mem
         exact absurd hp_in_s'' (Multiset.notMem_zero _)
 
 omit [DecidableEq α] [LinearOrder α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- `initMultiset` の各要素 `a` は singleton group `({a}, P.real {a})` に属する. -/
 lemma mem_initMultiset (P : Measure α) (a : α) :
     ∃ p ∈ initMultiset P, a ∈ p.1 := by
   refine ⟨({a}, P.real {a}), ?_, ?_⟩
@@ -526,12 +504,11 @@ lemma mem_initMultiset (P : Measure α) (a : α) :
   · simp
 
 omit [DecidableEq α] [LinearOrder α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- `initMultiset P` は `HuffmanGrouping` を満たす (Nodup + Nonempty + Disjoint). -/
 lemma initMultiset_huffmanGrouping (P : Measure α) :
     HuffmanGrouping (initMultiset P) := by
   classical
   refine ⟨?_, ?_, ?_⟩
-  · -- Nodup: f := fun a => ({a}, P.real {a}) は injective (1st coord で識別)
+  · -- Nodup: the map a ↦ ({a}, P.real {a}) is injective via the first coordinate.
     unfold initMultiset
     have hinj : Function.Injective
         (fun a : α => (({a} : Finset α), P.real {a})) := by
@@ -546,14 +523,13 @@ lemma initMultiset_huffmanGrouping (P : Measure α) :
     obtain ⟨a, _, ha_eq⟩ := hp
     rw [← ha_eq]
     exact Finset.singleton_nonempty a
-  · -- Disjoint: 異なる singleton は disjoint
+  · -- Disjoint: distinct singletons are disjoint.
     intro p hp q hq hpq
     unfold initMultiset at hp hq
     rw [Multiset.mem_map] at hp hq
     obtain ⟨a, _, ha_eq⟩ := hp
     obtain ⟨b, _, hb_eq⟩ := hq
     rw [← ha_eq, ← hb_eq]
-    -- ({a}, _) ≠ ({b}, _) ⟹ a ≠ b
     have hab : a ≠ b := by
       intro heq
       apply hpq
@@ -561,7 +537,7 @@ lemma initMultiset_huffmanGrouping (P : Measure α) :
     simp [hab]
 
 omit [Nonempty α] [MeasurableSingletonClass α] in
-/-- Huffman 語長は正値 (`Fintype.card α ≥ 2` のとき). -/
+/-- `huffmanLength P a > 0` when `Fintype.card α ≥ 2`. -/
 theorem huffmanLength_pos (P : Measure α) [IsProbabilityMeasure P]
     (_hP : ∀ a, 0 < P.real {a}) (h_card : 2 ≤ Fintype.card α) (a : α) :
     0 < huffmanLength P a := by
@@ -574,10 +550,9 @@ theorem huffmanLength_pos (P : Measure α) [IsProbabilityMeasure P]
   · rw [hcard_init]; exact h_card
   · exact initMultiset_huffmanGrouping P
 
-/-! ### Kraft 不等式 — 補助補題 (constancy + 不変量) -/
+/-! ### Kraft inequality: auxiliary lemmas (constancy and invariants) -/
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- `huffmanLengthAux s a` は各 group `p ∈ s` の `p.1` 上で定数. -/
 lemma huffmanLengthAux_const_on_group
     (s : Multiset (Finset α × ℝ)) (hg : HuffmanGrouping s)
     (p : Finset α × ℝ) (hp : p ∈ s) (a b : α) (ha : a ∈ p.1) (hb : b ∈ p.1) :
@@ -649,22 +624,19 @@ lemma huffmanLengthAux_const_on_group
             (p := p) hp_s'' (a := a) (b := b) ha hb rfl
     · rw [huffmanLengthAux_eq_zero s (by omega) hg]
 
-/-- Huffman 用 Kraft 和 (per-group 形). 各 group `p ∈ s` の Kraft 寄与は
-`(∑ a ∈ p.1, 2^(-huffmanLengthAux s a)) / p.1.card`. constancy 補題下では
-`2^(-d_p(s))` に一致. -/
+/-- Per-group Kraft sum: `∑_p (∑_{a ∈ p.1} 2^(-huffmanLengthAux s a)) / p.1.card`.
+By `huffmanLengthAux_const_on_group` this equals `∑_p 2^(-depth(p))`. -/
 noncomputable def kraftPerGroup (s : Multiset (Finset α × ℝ)) : ℝ :=
   (s.map (fun p =>
     (∑ a ∈ p.1, (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ))) / (p.1.card : ℝ))).sum
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- `kraftPerGroup` の base 値: `s.card ≤ 1` で `s.card` に等しい (各 group の depth = 0). -/
 lemma kraftPerGroup_eq_card_of_base
     (s : Multiset (Finset α × ℝ)) (h : s.card ≤ 1) (hg : HuffmanGrouping s) :
     kraftPerGroup s = (s.card : ℝ) := by
   unfold kraftPerGroup
   rw [huffmanLengthAux_eq_zero s h hg]
-  -- 各 term は (∑_{a ∈ p.1} 2^0) / p.1.card = p.1.card / p.1.card = 1
-  -- s.map (fun _ => 1) |>.sum = s.card
+  -- Each term: (∑_{a ∈ p.1} 2^0) / p.1.card = 1, so the multiset sum equals s.card.
   have hterm : ∀ p ∈ s,
       (∑ a ∈ p.1, (2 : ℝ) ^ (-((0 : ℕ) : ℤ))) / (p.1.card : ℝ) = 1 := by
     intro p hp
@@ -683,7 +655,6 @@ lemma kraftPerGroup_eq_card_of_base
     exact hterm p hp
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- Helper: `s = x1 ::ₘ x2 ::ₘ ee` (`Nodup` + erase の inverse). -/
 lemma huffmanStep_orig_decomp
     (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
     s = (huffmanStep s hs hg).val.1 ::ₘ (huffmanStep s hs hg).val.2.1 ::ₘ
@@ -720,7 +691,6 @@ lemma huffmanLengthAux_step_other
   simp [ha]
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- 各 ee 内の group `q` について、`q.1` 上で `huffmanLengthAux s = huffmanLengthAux s''`. -/
 lemma huffmanLengthAux_step_eq_on_other_group
     (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s)
     (q : Finset α × ℝ)
@@ -753,20 +723,6 @@ lemma huffmanLengthAux_step_eq_on_other_group
   exact huffmanLengthAux_step_other s hs hg ha_notAB
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- `kraftPerGroup` の **step 不変量** (本 Kraft 証明の心臓部):
-`s → huffmanStep s` で値が保存される.
-
-論証: `s = x1 ::ₘ x2 ::ₘ ee` と `s'' = merged ::ₘ ee` に分解、それぞれの kraft 寄与:
-- `ee 寄与`: 各 `q ∈ ee` で `huffmanLengthAux s = huffmanLengthAux s''` on `q.1` (disjoint
-  から). 寄与は同一.
-- `x1, x2 寄与 (in s)`: `(∑ a ∈ x1.1, 2^(-d_x1)) / x1.1.card + (∑ a ∈ x2.1, 2^(-d_x2)) / x2.1.card`
-  ここで `d_x1 = d_x2 = d_merged + 1` (`huffmanLengthAux_step_merged`)
-  = `(x1.1.card · 2^(-(d_m+1))) / x1.1.card + ...`
-  = `2^(-(d_m+1)) + 2^(-(d_m+1))`
-  = `2^(-d_m)`
-- `merged 寄与 (in s'')`: `(∑ a ∈ merged.1, 2^(-d_m)) / merged.1.card`
-  = `merged.1.card · 2^(-d_m) / merged.1.card = 2^(-d_m)`.
-合計一致. -/
 lemma kraftPerGroup_step
     (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
     kraftPerGroup s = kraftPerGroup (huffmanStep s hs hg).val.2.2 := by
@@ -776,20 +732,15 @@ lemma kraftPerGroup_step
   set s'' := (huffmanStep s hs hg).val.2.2 with hs''_def
   set ee := (s.erase x1).erase x2 with hee_def
   let merged : Finset α × ℝ := (x1.1 ∪ x2.1, x1.2 + x2.2)
-  -- shape: s'' = merged ::ₘ ee
   have hshape' : s'' = merged ::ₘ ee := hshape
-  -- x1, x2, ee の disjoint 性質
   have hx1_x2_ne : x1 ≠ x2 := by
     intro heq; rw [← heq] at hx2_mem
     exact hg.nodup.notMem_erase hx2_mem
-  -- s = x1 ::ₘ x2 ::ₘ ee
   have hs_decomp : s = x1 ::ₘ x2 ::ₘ ee := huffmanStep_orig_decomp s hs hg
-  -- nonempty proofs
   have hx1_ne : x1.1.Nonempty := hg.nonempty hx1_mem
   have hx2_s : x2 ∈ s := Multiset.mem_of_mem_erase hx2_mem
   have hx2_ne : x2.1.Nonempty := hg.nonempty hx2_s
   have hmerged_ne : merged.1.Nonempty := hx1_ne.mono Finset.subset_union_left
-  -- cards
   have hx1_card_pos : (0 : ℝ) < x1.1.card := by
     exact_mod_cast Finset.card_pos.mpr hx1_ne
   have hx2_card_pos : (0 : ℝ) < x2.1.card := by
@@ -806,9 +757,7 @@ lemma kraftPerGroup_step
   -- Need: depth is constant on x1.1, x2.1, merged.1
   -- Use constancy lemma + step relation
   -- Define depths as `huffmanLengthAux s'' a` for some specific a in merged.1
-  -- Goal: ∑ x ∈ p.1, 2^(-huffmanLengthAux s x) for each p ∈ s
-  -- Strategy: 直接 kraftPerGroup を sum_cons で展開 (s と s'' は触らない)
-  -- Avoid `rw` on `hs_decomp` (would also rewrite inside `huffmanLengthAux s`).
+  -- Expand kraftPerGroup via sum_cons without rewriting hs_decomp inside huffmanLengthAux s.
   -- Instead use sum_cons directly via the multiset equality.
   have lhs_eq :
       kraftPerGroup s =
@@ -841,7 +790,6 @@ lemma kraftPerGroup_step
   rw [lhs_eq, rhs_eq]
   -- LHS: f_s x1 + (f_s x2 + (ee.map f_s).sum)
   -- RHS: f_s'' merged + (ee.map f_s'').sum
-  -- Need: ee 寄与等式 + (f_s x1 + f_s x2 = f_s'' merged)
   have h_ee_sum :
       (ee.map (fun p =>
         (∑ a ∈ p.1, (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ))) / (p.1.card : ℝ))).sum
@@ -854,20 +802,12 @@ lemma kraftPerGroup_step
     apply Finset.sum_congr rfl
     intro a ha
     rw [huffmanLengthAux_step_eq_on_other_group s hs hg q hq ha]
-  -- 主等式: f_s x1 + f_s x2 = f_s'' merged
-  -- f_s x1 = (∑ a ∈ x1.1, 2^(-huffmanLengthAux s a)) / x1.1.card
-  -- by step_merged, huffmanLengthAux s a = huffmanLengthAux s'' a + 1 for a ∈ x1.1 (⊆ x1.1 ∪ x2.1)
-  -- by constancy in s'' on merged.1 ⊇ x1.1: huffmanLengthAux s'' a = const = d_m
-  -- pick a0 ∈ x1.1, b0 ∈ x2.1
   obtain ⟨a0, ha0⟩ := hx1_ne
   obtain ⟨b0, hb0⟩ := hx2_ne
-  -- merged ∈ s''
   have hmerged_in_s'' : merged ∈ s'' := by rw [hshape']; exact Multiset.mem_cons_self _ _
   have ha0_merged : a0 ∈ merged.1 := Finset.mem_union_left _ ha0
   have hb0_merged : b0 ∈ merged.1 := Finset.mem_union_right _ hb0
-  -- d_m := huffmanLengthAux s'' a0
   set d_m := huffmanLengthAux s'' a0 with hd_m_def
-  -- All a ∈ merged.1: huffmanLengthAux s'' a = d_m (constancy in s'' on merged)
   have h_merged_const : ∀ a ∈ merged.1, huffmanLengthAux s'' a = d_m := by
     intro a ha
     exact huffmanLengthAux_const_on_group s'' hg'' merged hmerged_in_s'' a a0 ha ha0_merged
@@ -880,7 +820,6 @@ lemma kraftPerGroup_step
     have h2 : huffmanLengthAux s'' a = d_m :=
       h_merged_const a (Finset.mem_union_left _ ha)
     omega
-  -- Similarly for x2
   have h_x2_aux : ∀ a ∈ x2.1, huffmanLengthAux s a = d_m + 1 := by
     intro a ha
     have h1 : huffmanLengthAux s a = huffmanLengthAux s'' a + 1 := by
@@ -889,13 +828,6 @@ lemma kraftPerGroup_step
     have h2 : huffmanLengthAux s'' a = d_m :=
       h_merged_const a (Finset.mem_union_right _ ha)
     omega
-  -- Compute terms:
-  -- f_s x1 = (∑ a ∈ x1.1, 2^(-(d_m+1))) / x1.1.card = (x1.1.card · 2^(-(d_m+1))) / x1.1.card
-  --       = 2^(-(d_m+1)) = (1/2) · 2^(-d_m)
-  -- f_s x2 = same = (1/2) · 2^(-d_m)
-  -- f_s x1 + f_s x2 = 2^(-d_m)
-  -- f_s'' merged = (∑ a ∈ merged.1, 2^(-d_m)) / merged.1.card = merged.1.card · 2^(-d_m) / merged.1.card
-  --             = 2^(-d_m)
   have h_x1_term :
       (∑ a ∈ x1.1, (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ))) / (x1.1.card : ℝ)
       = (2 : ℝ) ^ (-((d_m + 1 : ℕ) : ℤ)) := by
@@ -948,9 +880,6 @@ lemma kraftPerGroup_step
   linarith
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- Strong invariant: `HuffmanGrouping s` ⇒ `kraftPerGroup s = s.card` (基底でも step でも `s.card` は減らない…?
-実は `kraftPerGroup` は step で不変、`s.card` は減るので一致しない。**正しくは**: 各 group が depth `d_p` を
-持ち、`∑_{p} 2^(-d_p) = 1` (full binary tree). 帰納 base case `s.card = 1` で `kraftPerGroup = 1`. -/
 lemma kraftPerGroup_eq_one
     (s : Multiset (Finset α × ℝ)) (hs : 1 ≤ s.card) (hg : HuffmanGrouping s) :
     kraftPerGroup s = 1 := by
@@ -971,13 +900,10 @@ lemma kraftPerGroup_eq_one
       simp [h1]
 
 omit [Nonempty α] [MeasurableSingletonClass α] in
-/-- `initMultiset P` での `kraftPerGroup` は atom 和に一致: 各 group が singleton なので、
-`∑_a 2^(-huffmanLength P a) = kraftPerGroup (initMultiset P) = 1`. -/
 lemma kraftPerGroup_initMultiset_eq_kraft (P : Measure α) :
     kraftPerGroup (initMultiset P)
       = ∑ a : α, (2 : ℝ) ^ (-(huffmanLength P a : ℤ)) := by
   classical
-  -- まず: kraftPerGroup の各 term は singleton group では `2^(-d)` に簡約
   have hsimp : ∀ a : α,
       (∑ x ∈ ({a} : Finset α),
           (2 : ℝ) ^ (-(huffmanLengthAux (initMultiset P) x : ℤ)))
@@ -985,30 +911,22 @@ lemma kraftPerGroup_initMultiset_eq_kraft (P : Measure α) :
       = (2 : ℝ) ^ (-(huffmanLengthAux (initMultiset P) a : ℤ)) := by
     intro a
     simp
-  -- kraftPerGroup の展開: initMultiset = univ.val.map f
   unfold kraftPerGroup
   show ((initMultiset P).map _).sum
     = ∑ a : α, (2 : ℝ) ^ (-(huffmanLength P a : ℤ))
   unfold initMultiset
   rw [Multiset.map_map]
-  -- Goal: ((univ.val.map (f ∘ (fun a => ({a}, P.real {a})))).sum = ∑ a ∈ univ, ...
-  -- Finset.sum is defined as Multiset.sum ∘ Finset.val.map
   unfold huffmanLength
-  -- Use Finset.sum_def
   rw [show ∑ a : α, (2 : ℝ) ^ (-(huffmanLengthAux (initMultiset P) a : ℤ))
       = ((Finset.univ : Finset α).val.map
           (fun a => (2 : ℝ) ^ (-(huffmanLengthAux (initMultiset P) a : ℤ)))).sum from rfl]
-  -- Both sides are multiset sums of maps; show the maps are equal
   congr 1
   apply Multiset.map_congr rfl
   intro a _
-  -- Goal: ((∑ x ∈ {a}, 2^(-...)) / ({a}.card : ℝ)) = 2^(-...)
-  -- Note: huffmanLengthAux (initMultiset P) — the inner `initMultiset` is opaque here
   exact hsimp a
 
 omit [MeasurableSingletonClass α] in
-/-- Huffman 語長は Kraft 不等式 (D = 2) を **等号** で充足: `∑ 2^(-huffmanLength) = 1`.
-これは `kraftPerGroup` が `HuffmanGrouping` 上常に `1` であることから従う. -/
+/-- The Kraft sum of `huffmanLength P` equals `1`. -/
 @[entry_point]
 theorem huffmanLength_kraft_eq_one (P : Measure α) [IsProbabilityMeasure P]
     (_hP : ∀ a, 0 < P.real {a}) :
@@ -1023,7 +941,7 @@ theorem huffmanLength_kraft_eq_one (P : Measure α) [IsProbabilityMeasure P]
   exact kraftPerGroup_eq_one _ hcard hinit
 
 omit [MeasurableSingletonClass α] in
-/-- Huffman 語長は Kraft 不等式 (D = 2) を充足 (実は等号). -/
+/-- `huffmanLength P` satisfies the binary Kraft inequality (in fact with equality). -/
 @[entry_point]
 theorem huffmanLength_kraft_le_one (P : Measure α) [IsProbabilityMeasure P]
     (hP : ∀ a, 0 < P.real {a}) :
@@ -1031,8 +949,7 @@ theorem huffmanLength_kraft_le_one (P : Measure α) [IsProbabilityMeasure P]
   rw [huffmanLength_kraft_eq_one P hP]
 
 omit [MeasurableSingletonClass α] in
-/-- **副系**: Huffman 語長から prefix code が構成できる
-(`ShannonCodeKraftReverse.exists_prefix_code_of_kraft` 経由). -/
+/-- A prefix-free binary code realising the `huffmanLength P` exists. -/
 @[entry_point]
 theorem exists_huffman_prefix_code
     (P : Measure α) [IsProbabilityMeasure P]
@@ -1046,32 +963,18 @@ theorem exists_huffman_prefix_code
   · intro a; exact huffmanLength_pos P hP h_card a
   · exact huffmanLength_kraft_le_one P hP
 
--- Phase 4-5 (`exists_sibling_min_pair` + `huffmanLength_optimal`) は本 plan
--- scope-out. 後続 seed `T1-A'` (`docs/textbook-roadmap.md` 参照) で publish 予定.
+/-! ### Cost-level recurrence for the optimality proof -/
 
-/-! ### cost-level pivot (T1-A'') — multiset-level expected length 漸化式
-
-Cover-Thomas Theorem 5.8.1 強形を per-symbol depth identity (FALSE) ではなく
-**期待長そのもの (cost = ∑ prob·depth)** の多重集合上漸化で閉じるための核。
-`kraftPerGroup` 群 (`Huffman.lean:655`) と同じ per-group shape を採り、
-`kraftPerGroup_step` の証明 template を mirror する
-(`docs/shannon/huffman-cost-level-optimality-plan.md`)。 -/
-
-/-- group 多重集合上の期待長 (= ∑ group, (group 確率質量 `p.2`) · (group depth)).
-group 上 depth は `huffmanLengthAux_const_on_group` で定数なので、
-`(∑ a ∈ p.1, d) / p.1.card` で代表元の depth を取り出す (= `kraftPerGroup` と同 shape).
+/-- Multiset-level expected length: `∑_p p.2 * (∑_{a ∈ p.1} huffmanLengthAux s a) / p.1.card`.
+By `huffmanLengthAux_const_on_group`, depth is constant on each group, so this equals
+`∑_p p.2 * depth(p)`.
 @audit:ok -/
 noncomputable def huffmanCost (s : Multiset (Finset α × ℝ)) : ℝ :=
   (s.map (fun p =>
     p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s a : ℝ)) / (p.1.card : ℝ)))).sum
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **cost の step 不変 + merged ペナルティ**:
-`huffmanCost s = huffmanCost s'' + (x1.2 + x2.2)`  where `s'' = (huffmanStep s ..).val.2.2`,
-`x1 = .val.1`, `x2 = .val.2.1`.
-論証は `kraftPerGroup_step` (`Huffman.lean:770`) の直接 mirror: 重み `(∑ 2^(-d))/card` を
-`p.2 * (∑ d)/card` に替え、merged 寄与 `(x1.2+x2.2)·d_m` と x1/x2 寄与
-`x1.2·(d_m+1)+x2.2·(d_m+1)` の差 = `(x1.2+x2.2)`。
+/-- `huffmanCost s = huffmanCost s'' + (x1.2 + x2.2)` where `s''` is the merged multiset.
 @audit:ok -/
 lemma huffmanCost_step
     (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
@@ -1104,7 +1007,7 @@ lemma huffmanCost_step
     show ((x1.1 ∪ x2.1).card : ℝ) = _
     rw [Finset.card_union_of_disjoint hdisj_x1x2]
     push_cast; ring
-  -- LHS / RHS を per-group 形に展開 (kraftPerGroup_step mirror)
+  -- Expand LHS and RHS per-group, mirroring the kraftPerGroup_step proof.
   have lhs_eq :
       huffmanCost s =
       x1.2 * ((∑ a ∈ x1.1, (huffmanLengthAux s a : ℝ)) / (x1.1.card : ℝ))
@@ -1133,7 +1036,7 @@ lemma huffmanCost_step
     rw [this]
     simp only [Multiset.map_cons, Multiset.sum_cons]
   rw [lhs_eq, rhs_eq]
-  -- ee 寄与等式
+  -- contribution equation for ee
   have h_ee_sum :
       (ee.map (fun p =>
         p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s a : ℝ)) / (p.1.card : ℝ)))).sum
@@ -1147,7 +1050,6 @@ lemma huffmanCost_step
     apply Finset.sum_congr rfl
     intro a ha
     rw [huffmanLengthAux_step_eq_on_other_group s hs hg q hq ha]
-  -- depth 値: a0 ∈ x1.1, b0 ∈ x2.1, d_m := huffmanLengthAux s'' a0
   obtain ⟨a0, ha0⟩ := hx1_ne
   obtain ⟨b0, hb0⟩ := hx2_ne
   have hmerged_in_s'' : merged ∈ s'' := by rw [hshape']; exact Multiset.mem_cons_self _ _
@@ -1171,7 +1073,6 @@ lemma huffmanCost_step
     have h2 : huffmanLengthAux s'' a = d_m :=
       h_merged_const a (Finset.mem_union_right _ ha)
     omega
-  -- x1 寄与: (∑ a ∈ x1.1, (d_m+1)) / card = (d_m+1)
   have h_x1_term :
       (∑ a ∈ x1.1, (huffmanLengthAux s a : ℝ)) / (x1.1.card : ℝ)
       = ((d_m : ℝ) + 1) := by
@@ -1216,7 +1117,7 @@ lemma huffmanCost_step
   ring
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **C2 base**: `huffmanCost s = 0` for `s.card ≤ 1` (全 group depth 0).
+/-- `huffmanCost s = 0` when `s.card ≤ 1`.
 @audit:ok -/
 lemma huffmanCost_eq_zero_of_base
     (s : Multiset (Finset α × ℝ)) (h : s.card ≤ 1) (hg : HuffmanGrouping s) :
@@ -1231,8 +1132,6 @@ lemma huffmanCost_eq_zero_of_base
     intro p _
     simp
 
-/-- Helper: 特定要素 `x ∈ s` を erase してから snd を map した結果は、
-`s.map snd` から値 `x.2` を 1 個 erase したものに等しい (injective 不要、cons 分解). -/
 private lemma map_snd_erase {α : Type*} [DecidableEq α]
     (s : Multiset (Finset α × ℝ)) (x : Finset α × ℝ) (hx : x ∈ s) :
     (s.erase x).map Prod.snd = (s.map Prod.snd).erase x.2 := by
@@ -1240,15 +1139,7 @@ private lemma map_snd_erase {α : Type*} [DecidableEq α]
   conv_rhs => rw [show s = x ::ₘ s.erase x from (Multiset.cons_erase hx).symm]
   rw [Multiset.map_cons, Multiset.erase_cons_head]
 
-/-- **C3 核 — cost は確率多重集合のみで決まる (carrier 非依存)**.
-2 つの `HuffmanGrouping` 多重集合 `s` (carrier `α`), `t` (carrier `β`) が同じ確率多重集合
-(`s.map Prod.snd = t.map Prod.snd : Multiset ℝ`) を持てば、`huffmanCost s = huffmanCost t`.
-
-証明 = `s.card` strong induction + `huffmanCost_step`:
-- `huffmanStep` は確率最小・第2最小の 2 group を選ぶ (`huffmanStep_min_fst`/`_min_snd`)。
-  tie でどの物理 group を選ぶかは違っても、選ばれる確率**値**は多重集合の最小2値で確定。
-- ペナルティ `x1.2 + x2.2` = 最小2値の和 = `s.map snd` から確定 (s, t で一致)。
-- 残木の確率多重集合も多重集合から確定 → IH 適用。
+/-- `huffmanCost` depends only on the probability multiset `s.map Prod.snd`.
 @audit:ok -/
 lemma huffmanCost_eq_of_prob_multiset
     {α : Type*} [DecidableEq α] [LinearOrder α]
@@ -1260,7 +1151,7 @@ lemma huffmanCost_eq_of_prob_multiset
   classical
   induction hn : s.card using Nat.strong_induction_on generalizing s t β with
   | _ n ih =>
-    -- card 一致
+    -- cardinalities agree
     have hcard_eq : s.card = t.card := by
       have h1 : (s.map Prod.snd).card = s.card := Multiset.card_map _ _
       have h2 : (t.map Prod.snd).card = t.card := Multiset.card_map _ _
@@ -1268,25 +1159,24 @@ lemma huffmanCost_eq_of_prob_multiset
     by_cases h2 : 2 ≤ s.card
     · -- step case
       have h2t : 2 ≤ t.card := by rw [← hcard_eq]; exact h2
-      -- s 側 step
+      -- step decomposition for s
       set xs1 := (huffmanStep s h2 hsg).val.1 with hxs1
       set xs2 := (huffmanStep s h2 hsg).val.2.1 with hxs2
       set s'' := (huffmanStep s h2 hsg).val.2.2 with hs''
       obtain ⟨hxs1_mem, hxs2_mem, hshape_s, hg_s''⟩ := (huffmanStep s h2 hsg).property
-      -- t 側 step
+      -- step decomposition for t
       set yt1 := (huffmanStep t h2t htg).val.1 with hyt1
       set yt2 := (huffmanStep t h2t htg).val.2.1 with hyt2
       set t'' := (huffmanStep t h2t htg).val.2.2 with ht''
       obtain ⟨hyt1_mem, hyt2_mem, hshape_t, hg_t''⟩ := (huffmanStep t h2t htg).property
-      -- min 性 (確率値)
+      -- minimality of chosen probabilities
       have hxs1_min : ∀ z ∈ s, xs1.2 ≤ z.2 := huffmanStep_min_fst s h2 hsg
       have hxs2_min : ∀ z ∈ s.erase xs1, xs2.2 ≤ z.2 := huffmanStep_min_snd s h2 hsg
       have hyt1_min : ∀ z ∈ t, yt1.2 ≤ z.2 := huffmanStep_min_fst t h2t htg
       have hyt2_min : ∀ z ∈ t.erase yt1, yt2.2 ≤ z.2 := huffmanStep_min_snd t h2t htg
       have hxs2_mem_s : xs2 ∈ s := Multiset.mem_of_mem_erase hxs2_mem
       have hyt2_mem_t : yt2 ∈ t := Multiset.mem_of_mem_erase hyt2_mem
-      -- M := s.map snd = t.map snd ; xs1.2, xs2.2, yt1.2, yt2.2 は M の元
-      -- 最小値 (xs1.2 = yt1.2) を確率多重集合の antisymmetry で同定
+      -- identify xs1.2 = yt1.2 via antisymmetry over the shared probability multiset
       have hxs1_min_M : ∀ v ∈ s.map Prod.snd, xs1.2 ≤ v := by
         intro v hv
         rw [Multiset.mem_map] at hv
@@ -1307,7 +1197,7 @@ lemma huffmanCost_eq_of_prob_multiset
         map_snd_erase s xs1 hxs1_mem
       have hsnd_t' : (t.erase yt1).map Prod.snd = (s.map Prod.snd).erase yt1.2 := by
         rw [map_snd_erase t yt1 hyt1_mem, ← h]
-      -- xs2.2, yt2.2 は (s.map snd).erase xs1.2 = ....erase yt1.2 の最小値
+      -- xs2.2, yt2.2 are minima of (s.map snd).erase xs1.2 = ....erase yt1.2
       have hMe : (s.map Prod.snd).erase xs1.2 = (s.map Prod.snd).erase yt1.2 := by
         rw [hv1_eq]
       have hxs2v_Me : xs2.2 ∈ (s.map Prod.snd).erase xs1.2 := by
@@ -1328,7 +1218,7 @@ lemma huffmanCost_eq_of_prob_multiset
         apply le_antisymm
         · exact hxs2_min_Me _ (hMe ▸ hyt2v_Me)
         · exact hyt2_min_Me _ (hMe ▸ hxs2v_Me)
-      -- penalty 一致
+      -- penalties agree
       have hpen : xs1.2 + xs2.2 = yt1.2 + yt2.2 := by rw [hv1_eq, hv2_eq]
       -- s''.map snd = t''.map snd
       have hsnd_s'' : s''.map Prod.snd
@@ -1343,12 +1233,12 @@ lemma huffmanCost_eq_of_prob_multiset
         rw [map_snd_erase (t.erase yt1) yt2 hyt2_mem, hsnd_t']
       have hsnd_eq : s''.map Prod.snd = t''.map Prod.snd := by
         rw [hsnd_s'', hsnd_t'', hpen, hv1_eq, hv2_eq]
-      -- IH
+      -- induction hypothesis
       have hcard_s'' : s''.card < s.card := huffmanStep_card_lt s h2 hsg
       have hcard_s''_lt_n : s''.card < n := by omega
       have hcost_s'' : huffmanCost s'' = huffmanCost t'' :=
         ih s''.card hcard_s''_lt_n s'' t'' hg_s'' hg_t'' hsnd_eq rfl
-      -- 連結
+      -- combine
       rw [huffmanCost_step s h2 hsg, huffmanCost_step t h2t htg,
           ← hxs1, ← hxs2, ← hs'', ← hyt1, ← hyt2, ← ht'',
           hcost_s'', hpen]
@@ -1359,9 +1249,7 @@ lemma huffmanCost_eq_of_prob_multiset
           huffmanCost_eq_zero_of_base t ht_le htg]
 
 omit [Nonempty α] [MeasurableSingletonClass α] in
-/-- **C1-b**: `expectedLength P (huffmanLength P) = huffmanCost (initMultiset P)`.
-`initMultiset` の各 group は singleton `({a}, P.real{a})` なので per-group sum が
-`∑ a, P.real{a}·(huffmanLength P a)` に collapse する.
+/-- `expectedLength P (huffmanLength P) = huffmanCost (initMultiset P)`.
 @audit:ok -/
 lemma expectedLength_eq_huffmanCost (P : Measure α) :
     InformationTheory.Shannon.ShannonCode.expectedLength P (huffmanLength P)
@@ -1369,7 +1257,6 @@ lemma expectedLength_eq_huffmanCost (P : Measure α) :
   classical
   unfold InformationTheory.Shannon.ShannonCode.expectedLength huffmanCost
   unfold huffmanLength
-  -- LHS: ∑ a : α, P.real{a} * d a = (univ.val.map (fun a => P.real{a} * d a)).sum
   rw [show ∑ a : α, P.real {a} * (huffmanLengthAux (initMultiset P) a : ℝ)
       = ((Finset.univ : Finset α).val.map
           (fun a => P.real {a} * (huffmanLengthAux (initMultiset P) a : ℝ))).sum from rfl]
@@ -1377,7 +1264,7 @@ lemma expectedLength_eq_huffmanCost (P : Measure α) :
   congr 1
   apply Multiset.map_congr rfl
   intro a _
-  -- 各 singleton group では p.2 * (∑_{x∈{a}} d)/card = P.real{a} * (d a)
+  -- each singleton group collapses: p.2 * (∑_{x∈{a}} d)/card = P.real{a} * (d a)
   show P.real {a} * (huffmanLengthAux (initMultiset P) a : ℝ)
     = P.real {a} * ((∑ x ∈ ({a} : Finset α),
         (huffmanLengthAux (initMultiset P) x : ℝ)) / (({a} : Finset α).card : ℝ))

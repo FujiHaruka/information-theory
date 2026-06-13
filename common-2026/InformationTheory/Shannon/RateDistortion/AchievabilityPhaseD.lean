@@ -3,40 +3,28 @@ import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Order.Filter.AtTopBot.Basic
 
 /-!
-# Rate-distortion achievability — Phase D MVP (asymptotic decay)
+# Rate-distortion achievability — asymptotic decay and distortion decomposition
 
-[`docs/shannon/rate-distortion-achievability-plan.md`](../../../docs/shannon/rate-distortion-achievability-plan.md)
-
-Phase D-MVP supplies the *purely asymptotic* part of the rate-distortion
-achievability argument: assuming the per-`n` bounds delivered by Phases B and C
-(joint-typicality probability `≥ (1-η)·exp(-n·θ)`, codebook size
+The asymptotic part of the rate-distortion achievability argument: from the
+per-`n` bounds (joint-typicality probability `≥ (1-η)·exp(-n·θ)`, codebook size
 `M_n ≥ ⌈exp(n·R)⌉`, and the source-averaged failure bound
 `(1 - p_typ)^M ≤ exp(-M · p_typ)`), the random-coding failure probability tends
-to `0` provided `R > θ ≥ 0`.
+to `0` provided `R > θ ≥ 0`. Also provides the distortion decomposition of the
+joint-typical encoder into the within-`δ` and worst-case branches.
 
-Three lemmas:
+## Main definitions
+
+* `distortionMax d` — the worst-case single-letter distortion, an absolute upper
+  bound on `blockDistortion`.
+
+## Main statements
 
 * `ceil_exp_mul_exp_neg_tendsto_atTop` — `M_n · exp(-nθ) → ∞` when `R > θ`.
 * `exp_neg_tendsto_zero_of_tendsto_atTop` — `f n → ∞ ⟹ exp(-f n) → 0`.
-* `source_averaged_failure_tendsto_zero` — composition: a sequence sandwiched
-  between `0` and `exp(-M_n · (1-η) · exp(-nθ))` tends to `0`.
-
-## Phase D.5 — distortion decomposition
-
-The distortion-typical event lets us decompose the block distortion of the
-joint-typical encoder into two cases:
-
-* `distortionMax d` — the worst-case single-letter distortion `(α × β)` value as a
-  real number, an absolute upper bound on `blockDistortion`.
 * `blockDistortion_le_distortionMax` — `blockDistortion ≤ distortionMax`.
-* `blockDistortion_decompose` — case split: if `(x, y) ∈ distortionTypicalSet`,
-  use the within-`δ` bound; otherwise use `distortionMax`.
-* `source_avg_distortion_le_simpler` — codebook-fixed Bochner integral form of
-  the decomposition: `∫ x, blockDistortion ∂P_X` is bounded by
+* `source_avg_distortion_le_simpler` — codebook-fixed Bochner-integral form of
+  the distortion decomposition: `∫ x, blockDistortion ∂P_X` is bounded by
   `(𝔼d + δ) + distortionMax · Pr(encoder fails distortion-typicality)`.
-
-Entropy bridge (`θ = I(X;Y) + something`) and the random-codebook Fubini are
-deferred to a later session.
 -/
 
 namespace InformationTheory.Shannon
@@ -48,7 +36,7 @@ open scoped ENNReal NNReal BigOperators Topology
 set_option linter.unusedSectionVars false
 set_option linter.unusedVariables false
 
-/-- **D.2 — `M_n · exp(-nθ) → ∞`** when `M_n ≥ ⌈exp(nR)⌉` and `R > θ`. -/
+/-- `M_n · exp(-nθ) → ∞` when `M_n ≥ ⌈exp(nR)⌉` and `R > θ`. -/
 lemma ceil_exp_mul_exp_neg_tendsto_atTop
     {R θ : ℝ} (hRθ : θ < R) :
     Filter.Tendsto (fun n : ℕ =>
@@ -86,7 +74,7 @@ lemma ceil_exp_mul_exp_neg_tendsto_atTop
   rw [h_eq] at h_mul
   exact h_mul
 
-/-- **D.3 — `exp(-f n) → 0`** when `f n → ∞`. -/
+/-- `exp(-f n) → 0` when `f n → ∞`. -/
 lemma exp_neg_tendsto_zero_of_tendsto_atTop
     {f : ℕ → ℝ} (hf : Filter.Tendsto f Filter.atTop Filter.atTop) :
     Filter.Tendsto (fun n => Real.exp (-(f n))) Filter.atTop (𝓝 0) := by
@@ -95,7 +83,7 @@ lemma exp_neg_tendsto_zero_of_tendsto_atTop
   exact Real.tendsto_exp_atBot.comp h_neg
 
 
-/-! ## Phase D.5 — distortion decomposition -/
+/-! ## Distortion decomposition -/
 
 section D5
 variable {Ω : Type*} [MeasurableSpace Ω]
@@ -103,8 +91,8 @@ variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 variable [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
 variable [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β]
 
-/-- **D.5.1 — Maximum single-letter distortion** over the (finite, nonempty)
-alphabet `α × β`, taken as a real number. Used as the worst-case bound for
+/-- The maximum single-letter distortion over the (finite, nonempty) alphabet
+`α × β`, taken as a real number. Used as the worst-case bound for
 `blockDistortion` on the encoder-fail event. -/
 noncomputable def distortionMax (d : DistortionFn α β) : ℝ :=
   (Finset.univ : Finset (α × β)).sup' Finset.univ_nonempty
@@ -132,7 +120,7 @@ lemma distortion_le_distortionMax (d : DistortionFn α β) (a : α) (b : β) :
     (Finset.mem_univ (a, b))
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **D.5.1 main** — `blockDistortion d n x y ≤ distortionMax d`. -/
+/-- `blockDistortion d n x y ≤ distortionMax d`. -/
 lemma blockDistortion_le_distortionMax
     (d : DistortionFn α β) (n : ℕ) (x : Fin n → α) (y : Fin n → β) :
     blockDistortion d n x y ≤ distortionMax d := by
@@ -174,7 +162,7 @@ lemma expectedJointDistortion_nonneg
 
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **D.5.3 (simplified form) — codebook-fixed average distortion decomposition.**
+/-- **Codebook-fixed average distortion decomposition.**
 
 For a fixed deterministic codebook `c : Codebook M n β` and the joint-typical
 lossy encoder, the source-averaged block distortion satisfies
@@ -186,15 +174,9 @@ lossy encoder, the source-averaged block distortion satisfies
       · P_X { x | (x, c (encoder x)) ∉ distortionTypicalSet }
 ```
 
-The failure event is stated **encoder-side**: the encoder's chosen codeword is
-not distortion-typical. Compared to the existence form
-`{ x | ∃ m, (x, c m) ∈ distortionTypicalSet }`, this version is what the proof
-naturally delivers and is no harder for Phase E to dominate by the existence
-form (any encoder failure implies absence of any distortion-typical match for
-the encoder's choice; Phase E will bound the existence-form failure separately).
-
-`hδ : 0 ≤ δ` is used to ensure `Edδ := 𝔼[d] + δ ≥ 0`, simplifying the
-decomposition `dMax ≤ Edδ + dMax * 1`. -/
+The failure event is stated encoder-side: the encoder's chosen codeword is not
+distortion-typical. The hypothesis `hδ : 0 ≤ δ` ensures `𝔼[d] + δ ≥ 0`,
+simplifying the decomposition `dMax ≤ (𝔼[d] + δ) + dMax * 1`. -/
 @[entry_point]
 theorem source_avg_distortion_le_simpler
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)

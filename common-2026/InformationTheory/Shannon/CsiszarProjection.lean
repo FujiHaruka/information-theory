@@ -6,34 +6,34 @@ import Mathlib.Analysis.Calculus.Deriv.Slope
 import Mathlib.Topology.Order.Compact
 
 /-!
-# Csiszár I-projection / Pythagorean inequality
+# Csiszár I-projection and the Pythagorean inequality
 
-InformationTheory E-6 ムーンショット ([`docs/shannon/csiszar-projection-plan.md`])。
+For a finite alphabet `α`, a full-support reference pmf `Q : α → ℝ`, and a closed convex
+set `K ⊆ stdSimplex ℝ α`:
 
-有限アルファベット `α` 上の確率 pmf `Q : α → ℝ` (full support) と凸閉集合
-`K ⊆ stdSimplex ℝ α` について
+- **Existence**: there is `Q* ∈ K` minimizing `klDivPmf · Q` over `K`.
+- **Uniqueness**: the minimizer is unique.
+- **Pythagorean inequality** (Cover-Thomas 11.6.1): for all `P ∈ K`,
+  `klDivPmf P Q ≥ klDivPmf P Q* + klDivPmf Q* Q`.
 
-- **存在**: `∃ Q* ∈ K, ∀ P ∈ K, klDivPmf Q* Q ≤ klDivPmf P Q`
-- **一意性**: 最小化元は一意
-- **Pythagorean inequality** (Cover-Thomas 11.6.1):
-  `klDivPmf P Q ≥ klDivPmf P Q* + klDivPmf Q* Q` for `P ∈ K`
+## Main definitions
 
-## 主定理
+* `klDivPmf P Q := ∑ a, Q a * klFun (P a / Q a)` — real-valued finite-alphabet KL divergence.
 
-* `klDivPmf P Q := ∑ a, Q a * klFun (P a / Q a)` (Real-valued, finite-alphabet pmf 形)
-* `csiszar_projection_exists` — 存在 (extreme value theorem + 連続性)
-* `csiszar_projection_unique` — 一意性 (strict convexity)
-* `csiszar_pythagoras_inequality` — Pythagorean inequality (1 次条件)
+## Main statements
 
-## 戦略 (Approach)
+* `csiszar_projection_exists` — existence via extreme value theorem.
+* `csiszar_projection_unique` — uniqueness via strict convexity.
+* `csiszar_pythagoras_inequality` — Pythagorean inequality via the first-order condition.
 
-1. **Phase A**: `klDivPmf` 定義 + 連続性 (`klFun` 連続 + Q full support) +
-   strict convexity (per-coordinate `strictConvexOn_klFun`)
-2. **Phase B**: `IsCompact.exists_isMinOn` 経由で存在
-3. **Phase C**: strict convexity + mid-point の対偶論法で一意性
-4. **Phase D**: 代数恒等式 `klDivPmf P Q = klDivPmf P Q* + ∑ P(a) log(Q*/Q)` +
-   1 次条件 `∑ (P - Q*) log(Q*/Q) ≥ 0` を `t ↦ klDivPmf ((1-t)Q* + tP) Q` の
-   右微分 `≥ 0` で導出
+## Implementation notes
+
+Proof strategy for the Pythagorean inequality: the first-order condition
+`∑ (P - Q*)(log Q* - log Q) ≥ 0` is derived from the right derivative of
+`t ↦ klDivPmf ((1-t)Q* + tP) Q` at `t = 0` being non-negative (minimality of `Q*`).
+Combined with the algebraic identity
+`klDivPmf P Q = klDivPmf P Q* + ∑ P·(log Q* - log Q)` and the expansion of
+`klDivPmf Q* Q`, this gives the inequality.
 -/
 
 namespace InformationTheory.Shannon.CsiszarProjection
@@ -45,7 +45,7 @@ open scoped BigOperators Topology
 
 variable {α : Type*} [Fintype α]
 
-/-! ## Phase A — `klDivPmf` 定義 + 連続性 + 厳密凸性 -/
+/-! ## `klDivPmf`: definition, non-negativity, continuity, and strict convexity -/
 
 /-- **Real-valued finite-alphabet KL divergence** as a pmf functional:
 `klDivPmf P Q := ∑ a, Q a * klFun (P a / Q a)` where
@@ -159,17 +159,15 @@ lemma klDivPmf_strictConvexOn_left (Q : α → ℝ) (hQ_pos : ∀ a, 0 < Q a) :
   rw [smul_eq_mul, smul_eq_mul]
   linarith
 
-/-! ## Phase B — 存在 (extreme value theorem) -/
+/-! ## Existence via extreme value theorem -/
 
-/-- 任意の閉集合 `K ⊆ stdSimplex ℝ α` はコンパクト
-(`isCompact_stdSimplex` + `IsCompact.of_isClosed_subset`)。 -/
 lemma isCompact_of_subset_stdSimplex {K : Set (α → ℝ)}
     (hK_closed : IsClosed K) (hK_sub : K ⊆ stdSimplex ℝ α) :
     IsCompact K :=
   IsCompact.of_isClosed_subset (isCompact_stdSimplex ℝ α) hK_closed hK_sub
 
-/-- **存在** (Cover-Thomas 11.6.1 a): 閉凸非空 `K ⊆ stdSimplex ℝ α` と full-support
-reference Q について `klDivPmf · Q` を最小化する `Q* ∈ K` が存在する。 -/
+/-- **Existence** (Cover-Thomas 11.6.1 a): for a nonempty closed set `K ⊆ stdSimplex ℝ α` and
+full-support `Q`, there exists `Q* ∈ K` minimizing `klDivPmf · Q` over `K`. -/
 @[entry_point]
 theorem csiszar_projection_exists {K : Set (α → ℝ)} {Q : α → ℝ}
     (hK_closed : IsClosed K)
@@ -182,9 +180,10 @@ theorem csiszar_projection_exists {K : Set (α → ℝ)} {Q : α → ℝ}
     continuous_klDivPmf_left Q hQ_pos
   exact hK_compact.exists_isMinOn hK_ne h_cont.continuousOn
 
-/-! ## Phase C — 一意性 (strict convexity) -/
+/-! ## Uniqueness via strict convexity -/
 
-/-- **一意性** (Cover-Thomas 11.6.1 b): 凸閉非空 `K ⊆ stdSimplex ℝ α` 上の最小化元は一意。 -/
+/-- **Uniqueness** (Cover-Thomas 11.6.1 b): the minimizer of `klDivPmf · Q` on a convex
+`K ⊆ stdSimplex ℝ α` is unique. -/
 @[entry_point]
 theorem csiszar_projection_unique {K : Set (α → ℝ)} {Q : α → ℝ}
     (hK_conv : Convex ℝ K)
@@ -225,7 +224,7 @@ theorem csiszar_projection_unique {K : Set (α → ℝ)} {Q : α → ℝ}
       < (1/2 : ℝ) * klDivPmf Qstar Q + (1/2 : ℝ) * klDivPmf Qstar' Q := h_strict
   linarith
 
-/-! ## Phase D — Pythagorean inequality -/
+/-! ## Pythagorean inequality -/
 
 /-- **Standard sum form** for `klDivPmf` under probability measure hypotheses:
 `klDivPmf P Q = ∑ a, P a * (log (P a) - log (Q a))` when `∑ P = ∑ Q = 1` and both
@@ -258,9 +257,8 @@ lemma klDivPmf_eq_log_diff_sum
   rw [Finset.sum_add_distrib, Finset.sum_sub_distrib, hQ_sum, hP_sum]
   ring
 
-/-- **代数恒等式**: full support `P, Q*, Q` (簡単のため: 全 atom で `P a > 0`,
-`Q* a > 0`, `Q a > 0`) のもとで
-`klDivPmf P Q = klDivPmf P Q* + ∑ a, P a * (log (Q* a) - log (Q a))`。 -/
+/-- Algebraic identity: for full-support `P, Q*, Q`,
+`klDivPmf P Q = klDivPmf P Q* + ∑ a, P a * (log (Q* a) - log (Q a))`. -/
 lemma klDivPmf_decomp_via_intermediate
     {P Qstar Q : α → ℝ}
     (hP_sum : ∑ a, P a = 1)
@@ -277,8 +275,8 @@ lemma klDivPmf_decomp_via_intermediate
   refine Finset.sum_congr rfl fun a _ => ?_
   ring
 
-/-- **`klDivPmf Q* Q` の展開** (Q*, Q full support):
-`klDivPmf Q* Q = ∑ a, Q* a * (log (Q* a) - log (Q a))` (= 標準形 `∑ Q* log(Q*/Q)`)。 -/
+/-- Expansion of `klDivPmf Q* Q` in log-ratio form:
+`klDivPmf Q* Q = ∑ a, Q* a * (log (Q* a) - log (Q a))`. -/
 lemma klDivPmf_self_expand
     {Qstar Q : α → ℝ}
     (hQs_sum : ∑ a, Qstar a = 1)
@@ -289,12 +287,11 @@ lemma klDivPmf_self_expand
       = ∑ a : α, Qstar a * (Real.log (Qstar a) - Real.log (Q a)) :=
   klDivPmf_eq_log_diff_sum hQs_sum hQ_sum hQs_pos hQ_pos
 
-/-- **1 次条件**: `Q*` が最小化元なら、任意 `P ∈ K` で
-`∑ a, (P a - Q* a) * (log (Q* a) - log (Q a)) ≥ 0`。
+/-- **First-order condition**: if `Q*` minimizes `klDivPmf · Q` over `K`, then for all `P ∈ K`,
+`∑ a, (P a - Q* a) * (log (Q* a) - log (Q a)) ≥ 0`.
 
-戦略: `φ(t) := klDivPmf ((1-t)Q* + tP) Q` は `t = 0` で右微分が
-`∑ a, (P a - Q* a) * (log (Q* a) - log (Q a))` であり、最小化条件 `φ(0) ≤ φ(t)`
-(for `t ∈ [0,1]`) から右微分 ≥ 0。 -/
+Proof: the right derivative of `t ↦ klDivPmf ((1-t)Q* + tP) Q` at `t = 0` equals the sum,
+and non-negativity follows from minimality (`φ(0) ≤ φ(t)` for small `t > 0`). -/
 lemma csiszar_first_order_condition
     {K : Set (α → ℝ)} {Q : α → ℝ}
     (hK_conv : Convex ℝ K)
@@ -442,13 +439,12 @@ lemma csiszar_first_order_condition
     exact h_slope_nn
   exact this
 
-/-- **Pythagorean inequality** (Cover-Thomas 11.6.1 c):
-最小化元 `Q*` と `P ∈ K` について
-`klDivPmf P Q ≥ klDivPmf P Q* + klDivPmf Q* Q`。
+/-- **Pythagorean inequality** (Cover-Thomas 11.6.1 c): for the minimizer `Q*` and any `P ∈ K`,
+`klDivPmf P Q ≥ klDivPmf P Q* + klDivPmf Q* Q`.
 
-戦略: 代数恒等式 `klDivPmf P Q = klDivPmf P Q* + ∑ P a · log(Q*/Q)` +
-`klDivPmf Q* Q = ∑ Q* a · log(Q*/Q)` + 1 次条件
-`∑ (P - Q*) log(Q*/Q) ≥ 0` の 3 つを合成。 -/
+Proof: combine the algebraic identity `klDivPmf P Q = klDivPmf P Q* + ∑ P·(log Q* - log Q)`,
+the expansion `klDivPmf Q* Q = ∑ Q*·(log Q* - log Q)`, and the first-order condition
+`∑ (P - Q*)·(log Q* - log Q) ≥ 0`. -/
 @[entry_point]
 theorem csiszar_pythagoras_inequality
     {K : Set (α → ℝ)} {Q : α → ℝ}

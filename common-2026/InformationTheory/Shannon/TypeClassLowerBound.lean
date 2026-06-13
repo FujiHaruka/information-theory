@@ -1,29 +1,28 @@
 import InformationTheory.Shannon.Sanov.LDPEquality
 
 /-!
-# Type-class size lower bound (E-2)
+# Type-class size lower bound (Cover-Thomas 11.1.3)
 
-Method of types の **size 下界** (Cover-Thomas 11.1.3):
-`|T(c)| ≥ (n+1)^{-|α|} · exp(n · H(c/n))`
+For a count vector `c : α → ℕ` with `∑ c = n`, the type class
+`T(c) := { x : Fin n → α | ∀ a, typeCount x a = c a }` satisfies
+`|T(c)| ≥ (n+1)^{-|α|} · exp(n · H(c/n))`,
+where `H(c/n) := -∑ (c(a)/n) · log(c(a)/n)` is the empirical entropy.
 
-ここで `T(c) := { x : Fin n → α | ∀ a, typeCount x a = c a }` は count vector `c` の type class、
-`H(c/n) := -∑ (c(a)/n) · log(c(a)/n)` は経験分布 `c/n` の Shannon entropy。
+## Main definitions
 
-## 既存資産との関係
+* `entropyByCount` — empirical entropy of the count vector.
 
-`SanovLDPEquality.lean:705` `typeClassByCount_card_ge` は同等の不等式を
-**`(n+1)^{-|α|} · n^n / ∏ c(a)^{c(a)} ≤ |T_c|`** 形 (生形) で publish 済み。
-本ファイルは bridge identity `n^n / ∏ c(a)^{c(a)} = exp(n · H(c/n))` を加えて
-entropy 形に書き直す。
+## Main statements
 
-## 設計判断
+* `pow_div_prod_pow_eq_exp_n_entropyByCount` — bridge identity
+  `nⁿ / ∏ c(a)^{c(a)} = exp(n · H(c/n))`.
 
-- **新規 file**: `SanovLDPEquality.lean` (1394 行) は十分大きく、E-2 publish 形を
-  独立に切り出して downstream (Cover-Thomas 11 系) からの import を容易にする。
-- **`entropyByCount` 定義**: `klDivIndex c n (uniformOn univ)` 経由ではなく直接定義。
-  `klDivIndex` は asymmetric (`Q.real {a}` を取る) のため uniform `Q` 代入が plumbing 重い。
-- **Mathlib `Real.log 0 = 0` 規約**: `c(a) = 0` の atom は両辺で 0 を吐くため、support
-  制限なしで identity が成立 (証明内で per-`a` `Nat.eq_zero_or_pos` 分岐)。
+## Implementation notes
+
+`entropyByCount` is defined directly rather than via `klDivIndex` with a uniform
+reference, since `klDivIndex` is asymmetric and the uniform substitution is heavy.
+The `Real.log 0 = 0` convention makes the identity hold without a support
+restriction; each atom `c(a) = 0` contributes `0` to both sides.
 -/
 
 namespace InformationTheory.Shannon
@@ -39,8 +38,6 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 noncomputable def entropyByCount (c : α → ℕ) (n : ℕ) : ℝ :=
   -∑ a : α, ((c a : ℝ) / n) * Real.log ((c a : ℝ) / n)
 
-/-- Per-atom identity: `c · log(c/n) = c · log c - c · log n` for any `c : ℕ`, `n : ℕ`
-with `(n : ℝ) ≠ 0`. Holds also for `c = 0` by the `log 0 = 0` convention. -/
 private lemma cnt_mul_log_div
     (c_a : ℕ) {n : ℕ} (hn : (n : ℝ) ≠ 0) :
     (c_a : ℝ) * Real.log ((c_a : ℝ) / n)

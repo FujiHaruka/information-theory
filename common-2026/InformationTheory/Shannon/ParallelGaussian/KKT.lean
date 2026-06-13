@@ -8,47 +8,25 @@ import Mathlib.Topology.Order.OrderClosed
 import Mathlib.Analysis.Convex.SpecificFunctions.Basic
 
 /-!
-# T2-B L-WF1 + L-WF2 + L-PG1 discharge: Parallel Gaussian water-filling KKT body
+# Water-filling KKT level and optimality
 
-Cover-Thomas Ch.9.4 並列 Gaussian channel の **撤退ライン 3 本** —
-L-WF1 (KKT 充足性), L-WF2 (一意性 / 最適性), L-PG1 (active-set ↔ water-filling
-同値性) — の body を本 file で discharge する。
+The KKT water level and the optimality of the water-filling allocation for the parallel
+Gaussian channel (Cover–Thomas, Theorem 9.4.1).
 
-## 撤退ラインの位置づけ
+## Main statements
 
-親 plan `parallel-gaussian-moonshot-plan.md` の 3 つの hypothesis:
+* `exists_waterFillingKKT_of_pos` — for `P > 0` and at least one coordinate, a water level
+  `ν` exists with `IsWaterFillingKKT P N ν` (the allocation uses up the budget). Obtained
+  from continuity and monotonicity of `ν ↦ ∑_i max(0, ν - N_i)` and the intermediate value
+  theorem.
+* `isWaterFillingOptimal_of_kkt` — given a KKT water level, the water-filling allocation
+  maximizes the constrained per-coordinate log-sum, i.e. `IsWaterFillingOptimal P N ν`.
 
-* **L-WF1 (`IsWaterFillingKKT P N ν`)**: `∑ waterFillingPower ν N = P`
-  ― ν の存在 (intermediate value theorem) を本 file で discharge。
-* **L-WF2 (`IsWaterFillingOptimal P N ν`)**: water-filling が制約付き log-sum 最大化解。
-  当初は `WaterFillingOptimalityCertificate` 経由の abstract-certificate retreat predicate で
-  reduce する設計だったが、load-bearing bundling + reduction 未配線 + consumer 0 のため orphan
-  cleanup で削除 (2026-06-13)。**現在は本 file の `isWaterFillingOptimal_of_kkt` が `IsWaterFillingOptimal`
-  を産出する単一の窓口** — body は genuine 証明済 (2026-06-13、共通 KKT 乗数 `λ = 1/(2ν)` での
-  per-coord tangent 上界 `waterFillingCost_tangent_le` を足し上げ、相補スラックネス + `λ≥0` で
-  線形剰余を潰す Lagrange reduction、`Real.log_le_sub_one_of_pos` 直接ルート)。capacity formula
-  family はこの補題で L-WF2 を内部供給 (`h_opt` 仮説を drop)。
-* **L-PG1**: chain rule は `parallel-gaussian-chain-rule-plan.md` で discharge 済。
+## Implementation notes
 
-本 file の核心成果は **L-WF1 の完全 discharge** (`exists_waterFillingKKT_of_pos`、genuine) と
-**L-WF2 の genuine discharge** (`isWaterFillingOptimal_of_kkt`、sorryAx-free)。
-
-## Approach
-
-```
-Phase A: Continuity / monotonicity of g(ν) := ∑ max(0, ν - N_i)
-  ──> g is continuous (Continuous.max + continuous_finsetSum)
-  ──> g is monotone (waterFillingPower_mono_in_ν + Finset.sum_le_sum)
-  ──> g(min N) = 0  (every term is max(0, -nonneg) = 0)
-  ──> g(max N + P/n + 1) ≥ P  (each term ≥ ν - max N ≥ P/n, sum ≥ P)
-
-Phase B: IVT on g over [min N, max N + P/n + 1]
-  ──> ∃ ν ∈ Icc, g(ν) = P  (intermediate_value_Icc)
-  ──> 撤退ライン L-WF1 fully discharged.
-
-(旧 Phase C/D = L-WF2/L-PG1 の abstract-certificate retreat predicate は consumer 0 の
- dead scaffolding として削除済 — 上記 module docstring 参照。)
-```
+The optimality proof uses the common KKT multiplier `λ = 1/(2ν)`: the per-coordinate
+tangent upper bound `waterFillingCost_tangent_le` (from `log u ≤ u - 1`) summed over
+coordinates, with complementary slackness and `λ ≥ 0` killing the linear remainder.
 -/
 
 namespace InformationTheory.Shannon.ParallelGaussian
@@ -58,7 +36,7 @@ set_option linter.unusedVariables false
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal BigOperators Topology
 
-/-! ## Phase A — `waterFillingPower` sum continuity + monotonicity -/
+/-! ## Continuity and monotonicity of the water-filling sum -/
 
 /-- `waterFillingPower ν N i` is continuous in `ν`. -/
 lemma waterFillingPower_continuous_in_ν {n : ℕ} (N : Fin n → ℝ≥0) (i : Fin n) :
@@ -106,18 +84,12 @@ lemma waterFillingPower_sum_ge_of_all_active {n : ℕ} (N : Fin n → ℝ≥0)
   rw [h_const] at h_sum
   exact h_sum
 
-/-! ## Phase B — `exists_waterFillingKKT_of_pos` (L-WF1 discharge via IVT) -/
+/-! ## Existence of the KKT water level -/
 
-/-- **L-WF1 discharge (existence of KKT water level)**: For positive total power
-`P > 0` and finite noise vector `N : Fin (n+1) → ℝ≥0` (at least one coordinate),
-there exists a water level `ν` such that the water-filling allocation exactly
-uses up all the power `∑_i max(0, ν - N_i) = P`.
-
-**Strategy**: The function `g(ν) := ∑_i waterFillingPower ν N i` is continuous
-and monotone in `ν`. At `ν₀ = min_i N_i` (or any value below), `g(ν₀) = 0 ≤ P`.
-At `ν₁ = Nmax + P` (or any value sufficiently large), `g(ν₁) ≥ (n+1)·P ≥ P`.
-Intermediate value theorem (`intermediate_value_Icc`) gives `ν ∈ [ν₀, ν₁]` with
-`g(ν) = P`. -/
+/-- **Existence of a KKT water level.** For positive total power `P > 0` and at least one
+coordinate, there is a water level `ν` whose water-filling allocation exactly uses up the
+power, `∑_i max(0, ν - N_i) = P`. Proved by the intermediate value theorem applied to the
+continuous, monotone `ν ↦ ∑_i waterFillingPower ν N i`. -/
 @[entry_point]
 theorem exists_waterFillingKKT_of_pos {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) :
@@ -190,16 +162,14 @@ theorem exists_waterFillingKKT_of_pos {n : ℕ}
     intermediate_value_Icc hν₀_le_ν₁ hg_cont hP_in_Icc
   exact ⟨ν, hν_eq⟩
 
-/-! ## L-WF2 genuine closure helpers (Cover-Thomas 9.4.1 optimization step) -/
+/-! ## Water-filling optimality -/
 
-/-- Each noise level is strictly positive (from `(N i : ℝ) ≠ 0` and `0 ≤ (N i : ℝ)`). -/
 lemma noise_pos {n : ℕ} (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0) (i : Fin n) :
     0 < (N i : ℝ) :=
   lt_of_le_of_ne (NNReal.coe_nonneg _) (Ne.symm (hN i))
 
-/-- **`ν > 0` from the KKT budget equality.** If `ν ≤ N_i` for every `i`, all
-coordinates are inactive and the water-filling sum is `0 = P`, contradicting
-`0 < P`. Hence some coordinate is active (`ν > N_i ≥ 0`), forcing `ν > 0`. -/
+/-- The KKT water level is positive: `0 < ν`. If `ν ≤ N_i` for every `i` then every
+coordinate is inactive and the budget sum is `0 = P`, contradicting `0 < P`. -/
 lemma waterFillingKKT_level_pos {n : ℕ} (P : ℝ) (hP : 0 < P) (N : Fin n → ℝ≥0)
     (ν : ℝ) (h_kkt : IsWaterFillingKKT P N ν) :
     0 < ν := by
@@ -215,16 +185,12 @@ lemma waterFillingKKT_level_pos {n : ℕ} (P : ℝ) (hP : 0 < P) (N : Fin n → 
   rw [hsum0] at h_kkt
   linarith
 
-/-- **Per-coordinate tangent (KKT-stationarity) upper bound.** For the common KKT
-multiplier `λ = 1/(2ν)`, the per-coordinate cost
-`g_i(t) = (1/2) log(1 + t/N_i)` satisfies
-`g_i(P'_i) ≤ g_i(P*_i) + λ·(P'_i − P*_i)` where `P*_i = waterFillingPower ν N i`.
-
-Derived directly from the elementary tangent inequality `log u ≤ u − 1`
-(`Real.log_le_sub_one_of_pos`) applied to `u = (N_i + P'_i)/(N_i + P*_i) > 0`,
-giving `g_i(P'_i) − g_i(P*_i) ≤ (1/2)·(P'_i − P*_i)/(N_i + P*_i)`; then
-`N_i + P*_i = ν` (active) or `N_i + P*_i = N_i ≥ ν` (inactive) bounds the slope by
-`λ` using `P'_i − P*_i = P'_i ≥ 0` in the inactive case. -/
+/-- Per-coordinate tangent (KKT-stationarity) upper bound. For the common KKT multiplier
+`λ = 1/(2ν)`, the per-coordinate cost `g_i(t) = (1/2) log(1 + t/N_i)` satisfies
+`g_i(P'_i) ≤ g_i(P*_i) + λ·(P'_i - P*_i)` where `P*_i = waterFillingPower ν N i`. Derived
+from the tangent inequality `log u ≤ u - 1` at `u = (N_i + P'_i)/(N_i + P*_i)`, bounding the
+slope by `λ` in both the active (`N_i + P*_i = ν`) and inactive (`N_i + P*_i = N_i ≥ ν`)
+cases. -/
 lemma waterFillingCost_tangent_le {n : ℕ} (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (ν : ℝ) (hν : 0 < ν) (i : Fin n) {P'i : ℝ} (hP'i : 0 ≤ P'i) :
     (1/2) * Real.log (1 + P'i / (N i : ℝ))
@@ -299,44 +265,17 @@ lemma waterFillingCost_tangent_le {n : ℕ} (N : Fin n → ℝ≥0) (hN : ∀ i,
     _ ≤ (1/2) * (Real.log (a + Pstar) - Real.log a)
         + (1 / (2 * ν)) * (P'i - Pstar) := by linarith [h_slope]
 
-/-- **L-WF2 (water-filling optimality), genuine discharge.**
+/-- **Water-filling optimality from the KKT level.** Given a KKT water level `ν`
+(`h_kkt : ∑ max(0, ν - N_i) = P`), the water-filling allocation `P_i^* = max(0, ν - N_i)`
+maximizes the per-coordinate sum `∑ (1/2) log(1 + P_i / N_i)` over the feasible set
+`{P' | ∀ i, 0 ≤ P'_i ∧ ∑_i P'_i ≤ P}`, i.e. `IsWaterFillingOptimal P N ν`.
 
-Given the KKT water level `ν` (`h_kkt : ∑ max(0, ν - N_i) = P`), the water-filling
-allocation `P_i^* = max(0, ν - N_i)` maximizes the concave per-coordinate sum
-`∑ (1/2) log(1 + P_i / N_i)` over the feasible set
-`{P' : ∀ i, 0 ≤ P'_i ∧ ∑_i P'_i ≤ P}`, i.e. `IsWaterFillingOptimal P N ν`.
+Proof: the common KKT multiplier `λ = 1/(2ν)` gives the per-coordinate tangent bound
+`waterFillingCost_tangent_le`; summing over `i`, complementary slackness `∑ P*_i = P`
+(`h_kkt`) and feasibility `∑ P'_i ≤ P` make the linear remainder `λ·(∑P'_i - P) ≤ 0`
+(with `λ ≥ 0` from `ν > 0`, `waterFillingKKT_level_pos`).
 
-This is the genuine convex-optimization core of the water-filling theorem
-(Cover-Thomas 9.4.1's optimization step). Proof: the common KKT multiplier
-`λ = 1/(2ν)` gives a per-coordinate tangent (stationarity) upper bound
-`g_i(P'_i) ≤ g_i(P*_i) + λ·(P'_i − P*_i)` (`waterFillingCost_tangent_le`,
-derived from the elementary `log u ≤ u − 1`). Summing over `i`,
-`∑ g_i(P'_i) ≤ ∑ g_i(P*_i) + λ·(∑P'_i − ∑P*_i)`. Complementary slackness
-`∑P*_i = P` (= `h_kkt`) and feasibility `∑P'_i ≤ P` make the linear remainder
-`λ·(∑P'_i − P) ≤ 0` (since `λ ≥ 0` from `ν > 0`, `waterFillingKKT_level_pos`),
-yielding `∑ g_i(P'_i) ≤ ∑ g_i(P*_i)`. The `ν ≤ min N_i` degenerate boundary is
-killed by `h_kkt + hP` (it would force `∑ = 0 ≠ P`), so `λ = 1/(2ν)` is
-well-defined and nonnegative.
-
-Proof done (0 sorry / 0 residual, sorryAx-free `#print axioms` =
-`[propext, Classical.choice, Quot.sound]`). No load-bearing hypothesis — only the
-budget equality `h_kkt`, `0<P`, `N_i≠0` are taken, all preconditions/regularity;
-the optimality conclusion (`∀ feasible P', ∑ cost(P') ≤ ∑ cost(P*)`) is genuinely
-derived, not encoded in any hypothesis.
-
-@audit:ok — independent honesty audit 2026-06-13 (commit 3529022): all four
-honesty checks PASS. (1) non-circular: body is a genuine intro + per-coord
-tangent + sum + complementary-slackness derivation, no hypothesis has type
-`IsWaterFillingOptimal`. (2) non-load-bearing: `h_kkt` is the budget equality
-pinning `ν` (a precondition, IVT-dischargeable via `exists_waterFillingKKT_of_pos`),
-not the optimality conclusion; core-reconstruction test fails to extract the cost
-ordering from the hypotheses alone. (3) non-degenerate: `IsWaterFillingOptimal`
-is a genuine `∀ feasible P'` inequality (not `:True`). (4) sufficiency: tangent
-bound (`log u ≤ u−1`) + active/inactive slope split (active slope `=1/(2ν)`,
-inactive `1/(2a)≤1/(2ν)` with `P'_i≥0`) + `λ≥0` from `ν>0` genuinely yields the
-conclusion; degenerate boundaries (`P'=P*`, `P'=0`, `n=0`) substituted, no
-counterexample. `#print axioms` sorryAx-free machine-confirmed for this lemma and
-the helpers `noise_pos` / `waterFillingKKT_level_pos` / `waterFillingCost_tangent_le`. -/
+@audit:ok -/
 @[entry_point]
 theorem isWaterFillingOptimal_of_kkt {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)

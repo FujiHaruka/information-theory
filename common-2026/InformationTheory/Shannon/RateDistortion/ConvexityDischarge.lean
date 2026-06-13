@@ -3,18 +3,11 @@ import InformationTheory.Shannon.Sanov.Basic
 import Mathlib.InformationTheory.KullbackLeibler.KLFun
 
 /-!
-# `klDiv` joint convexity discharge for E-4'' (E-4''')
+# `klDiv` joint convexity discharge
 
-[`docs/shannon/rate-distortion-convexity-plan.md`](../../../docs/shannon/rate-distortion-convexity-plan.md)
-の **E-4'' Phase B core** が hypothesis 化していた `klDiv` joint convexity
-(`h_klDiv_conv`) を **pmf 形 (per-atom log-sum inequality)** で discharge する予定だった。
-
-## 現状 (orphan removal 後)
-
-Step A〜E の補題群および主定理 `rateDistortionFunction_convexOn_pmf` は
-すべて非参照だったため orphan として削除された。実体の凸性主定理は
-`InformationTheory/Shannon/RateDistortion/Convexity.lean` 側の
-`rateDistortionFunction_convexOn` を参照のこと。
+The convexity of the rate-distortion function is established in
+`InformationTheory/Shannon/RateDistortion/Convexity.lean` as
+`rateDistortionFunction_convexOn`. This module is currently empty.
 -/
 
 namespace InformationTheory.Shannon

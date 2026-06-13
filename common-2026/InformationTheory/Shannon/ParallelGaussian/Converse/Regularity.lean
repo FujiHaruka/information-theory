@@ -35,17 +35,10 @@ instance parallelOutput_marginal_isProbabilityMeasure (i : Fin n) :
     inferInstance
   exact Measure.isProbabilityMeasure_map (measurable_pi_apply i).aemeasurable
 
-/-- **Parallel-output marginal as 1-D AWGN convolution** (Wave 3 linchpin).
-The `i`-th coordinate marginal of the correlated output law is the 1-D AWGN output law
-of the `i`-input marginal smoothed by the noise `gaussianReal 0 (N i)`:
+/-- **Parallel-output marginal as 1-D AWGN convolution.** The `i`-th coordinate marginal of
+the correlated output law is the input marginal smoothed by the noise:
 `μY.map (· i) = (p.map (· i)) ∗ gaussianReal 0 (N i)`.
 
-Built by identifying `μY.map (· i)` with the 1-D AWGN output law of the input marginal,
-`outputDistribution (p.map (· i)) (awgnChannel (N i) …)`, which equals the convolution by
-`outputDistribution_awgn_eq_conv`. The identification is a `lintegral`-level equality
-(`Measure.ext_of_lintegral`): on the joint `p ⊗ₘ W`, `∫⁻ f((y) i) ∂(W x) = ∫⁻ yi, f yi
-∂(gaussianReal (x i) (N i))` (the `i`-marginal of the Gaussian product fibre, via
-`Measure.pi_map_eval`), which matches the 1-D AWGN fibre `(awgnChannel (N i)) (x i)`.
 @audit:ok -/
 theorem parallelOutput_marginal_eq_conv (i : Fin n) :
     (outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)).map
@@ -120,10 +113,10 @@ theorem parallelOutput_marginal_eq_conv (i : Fin n) :
     rw [hLHS, hRHS]
   rw [h_id, InformationTheory.Shannon.AWGN.outputDistribution_awgn_eq_conv]
 
-/-- **Parallel-output marginal as 1-D AWGN output law.** A repackaging of
-`parallelOutput_marginal_eq_conv`: the `i`-marginal of the correlated output equals the
-1-D AWGN output law `outputDistribution (p.map (· i)) (awgnChannel (N i))`. This lets all
-1-D AWGN Phase 6 lemmas (variance / log-density integrability) apply verbatim.
+/-- **Parallel-output marginal as 1-D AWGN output law.** The `i`-marginal of the correlated
+output equals the 1-D AWGN output law `outputDistribution (p.map (· i)) (awgnChannel (N i))`,
+letting the single-coordinate AWGN lemmas apply verbatim.
+
 @audit:ok -/
 theorem parallelOutput_marginal_eq_awgn_output (i : Fin n) :
     (outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)).map
@@ -133,10 +126,9 @@ theorem parallelOutput_marginal_eq_awgn_output (i : Fin n) :
   rw [parallelOutput_marginal_eq_conv N h_meas h_parallel_meas p i,
     InformationTheory.Shannon.AWGN.outputDistribution_awgn_eq_conv]
 
-/-- **`i`-marginal inherits the 1-D AWGN power constraint.** The total constraint
-`∑ⱼ ∫⁻ (xⱼ)² ∂p ≤ P` dominates the single coordinate `∫⁻ (xᵢ)² ∂p`, and the marginal
-push-forward sends `∫⁻ y² ∂(p.map (· i)) = ∫⁻ (xᵢ)² ∂p`, so `p.map (· i) ∈
-awgnPowerConstraintSet P`.
+/-- **`i`-marginal inherits the 1-D AWGN power constraint.** From the total constraint
+`∑ⱼ ∫⁻ (xⱼ)² ∂p ≤ P`, the input marginal satisfies `p.map (· i) ∈ awgnPowerConstraintSet P`.
+
 @audit:ok -/
 theorem parallelMarginal_mem_awgnPowerConstraintSet (P : ℝ)
     (hp : p ∈ parallelGaussianPowerConstraintSet P) (i : Fin n) :
@@ -152,10 +144,9 @@ theorem parallelMarginal_mem_awgnPowerConstraintSet (P : ℝ)
     (f := fun j => ∫⁻ x : Fin n → ℝ, ENNReal.ofReal ((x j) ^ 2) ∂p)
     (fun j _ => bot_le) (Finset.mem_univ i)
 
-/-- Output law joint absolute continuity `μY ≪ volume` (Gaussian-smoothed full support).
-The output is the fibre mixture `μY s = ∫⁻ x, (W x) s ∂p`; each fibre
-`W x = Measure.pi (gaussianReal (x i) (N i)) ≪ volume` (Step A + `gaussianReal_absolutelyContinuous`,
-needs `hN`), so the mixture is `≪ volume`.
+/-- Output law absolute continuity `μY ≪ volume`. The output is the fibre mixture
+`μY s = ∫⁻ x, (W x) s ∂p`, and each fibre is `≪ volume`, so the mixture is too.
+
 @audit:ok -/
 theorem parallelOutput_absolutelyContinuous_volume (hN : ∀ i, (N i : ℝ) ≠ 0) :
     outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)
@@ -177,9 +168,8 @@ theorem parallelOutput_absolutelyContinuous_volume (hN : ∀ i, (N i : ℝ) ≠ 
   rw [hpre]
   exact h_fibre_ac x hvol
 
-/-- Each coordinate marginal `μY.map (· i) ≪ volume`.
-The marginal is `μY.map (· i)`; the fibre's `i`-marginal `gaussianReal (x i) (N i) ≪ volume`,
-so the mixture `i`-marginal is `≪ volume`.
+/-- Each coordinate marginal is absolutely continuous: `μY.map (· i) ≪ volume`.
+
 @audit:ok -/
 theorem parallelOutput_marginal_absolutelyContinuous_volume (hN : ∀ i, (N i : ℝ) ≠ 0)
     (i : Fin n) :
@@ -217,9 +207,8 @@ theorem parallelOutput_marginal_absolutelyContinuous_volume (hN : ∀ i, (N i : 
   rw [hpre, ← Measure.map_apply hmeas_i hs]
   exact h_fibre_marg_ac x hvol
 
-/-- **Reverse full-support AC of each output coordinate marginal** `volume ≪ μY.map (· i)`.
-Mirror of `parallelOutput_marginal_absolutelyContinuous_volume` with the fibre marginal
-reverse AC `volume ≪ gaussianReal (x i) (N i)` (`gaussianReal_absolutelyContinuous'`).
+/-- **Reverse full-support AC of each output coordinate marginal:** `volume ≪ μY.map (· i)`.
+
 @audit:ok -/
 theorem volume_absolutelyContinuous_parallelOutput_marginal (hN : ∀ i, (N i : ℝ) ≠ 0)
     (i : Fin n) :
@@ -258,11 +247,10 @@ theorem volume_absolutelyContinuous_parallelOutput_marginal (hN : ∀ i, (N i : 
   obtain ⟨x, hx⟩ := h_ae.exists
   exact h_fibre_marg_rev x hx
 
-/-- **Reverse full-support AC of the correlated output law** `volume ≪ μY`.
-The output mixture `μY s = ∫⁻ x, (W x) s ∂p`; from `μY s = 0` the `p`-integral of the
-nonnegative `x ↦ (W x) s` vanishes, so `(W x) s = 0` for `p`-a.e. `x` (in particular some
-`x`, as `p` is a probability measure), whence `volume s = 0` by the reverse Gaussian-product
-AC `volume ≪ W x` (`volume_absolutelyContinuous_pi_gaussian`, needs `hN`).
+/-- **Reverse full-support AC of the correlated output law:** `volume ≪ μY`. From `μY s = 0`
+the nonnegative `x ↦ (W x) s` vanishes `p`-a.e., so `volume s = 0` by the reverse
+Gaussian-product AC `volume ≪ W x`.
+
 @audit:ok -/
 theorem volume_absolutelyContinuous_parallelOutput (hN : ∀ i, (N i : ℝ) ≠ 0) :
     (volume : Measure (Fin n → ℝ))
@@ -289,12 +277,9 @@ theorem volume_absolutelyContinuous_parallelOutput (hN : ∀ i, (N i : ℝ) ≠ 
   obtain ⟨x, hx⟩ := h_ae.exists
   exact h_fibre_rev x hx
 
-/-- Joint vs. product-of-marginals absolute continuity for the output law.
-`μY ≪ volume` (`parallelOutput_absolutelyContinuous_volume`, Wave 1) composed with the
-reverse `volume ≪ Measure.pi (μY.map (· i))` from `pi_absolutelyContinuous_reverse`, whose
-componentwise mutual-AC hypotheses are the forward marginal AC
-(`parallelOutput_marginal_absolutelyContinuous_volume`) and the reverse marginal AC
-(`volume_absolutelyContinuous_parallelOutput_marginal`); all need `hN`.
+/-- Joint vs. product-of-marginals absolute continuity for the output law:
+`μY ≪ Measure.pi (fun i => μY.map (· i))`, via `μY ≪ volume ≪ Measure.pi (marginals)`.
+
 @audit:ok -/
 theorem parallelOutput_absolutelyContinuous_pi_marginals (hN : ∀ i, (N i : ℝ) ≠ 0) :
     outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)
@@ -308,8 +293,7 @@ theorem parallelOutput_absolutelyContinuous_pi_marginals (hN : ∀ i, (N i : ℝ
 
 /-- **1-D AWGN output log-density integrability over the output law itself.** The integrand
 `log ((q.rnDeriv volume y).toReal)` is integrable against `q = outputDistribution p₁ (awgn N₁)`.
-Derived from the joint form `outputDistribution_logDensity_integrable_joint` by the
-snd-marginal pushforward (`q = (p₁ ⊗ₘ W).snd`).
+
 @audit:ok -/
 private theorem awgnOutput_logDensity_integrable_self (P : ℝ) (hP : 0 ≤ P)
     (Ni : ℝ≥0) (hNi : (Ni : ℝ) ≠ 0) (p₁ : Measure ℝ) [IsProbabilityMeasure p₁]
@@ -335,9 +319,9 @@ private theorem awgnOutput_logDensity_integrable_self (P : ℝ) (hP : 0 ≤ P)
     ← integrable_map_measure hg_aesm' measurable_snd.aemeasurable, ← h_map] at h_joint
   exact h_joint
 
-/-- Marginal log-density joint integrability. The integrand depends only on the `i`-th
-coordinate; pushing forward to the marginal `μY.map(·i) = q` (1-D AWGN output), it reduces
-to `awgnOutput_logDensity_integrable_self`.
+/-- Marginal log-density integrability over the joint output law. The integrand depends only
+on the `i`-th coordinate, so it pushes to the marginal `μY.map (· i)` (a 1-D AWGN output).
+
 @audit:ok -/
 theorem parallelOutput_marginal_logDensity_integrable (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
     (hN : (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :

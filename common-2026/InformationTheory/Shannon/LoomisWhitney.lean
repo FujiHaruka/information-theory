@@ -3,33 +3,29 @@ import InformationTheory.Shannon.Han.DShearer
 import Mathlib.Probability.UniformOn
 
 /-!
-# Loomis–Whitney 不等式 (情報理論的証明)
+# Loomis–Whitney inequality (information-theoretic proof)
 
-InformationTheory の最初のムーンショット ([`docs/shannon/loomis-whitney-moonshot-plan.md`])。
-Han Phase D の `shearer_inequality` を engine として、
-任意 `n` の有限族 `α : Type` 上の有限部分集合 `A : Finset (Fin n → α)` に対する
-$|A|^{n-1} \le \prod_{i : \text{Fin}\,n} |\pi_i(A)|$ を sorry なしで証明する。
+For any finite alphabet `α` and non-empty finite set `A : Finset (Fin n → α)`:
+$$|A|^{n-1} \le \prod_{i : \text{Fin}\,n} |\pi_i(A)|,$$
+where `π_i(A)` is the projection of `A` onto all coordinates except `i`.
 
-## 主定義・主定理
+## Main definitions
 
-* `projectionExcept i A` ─ `A : Finset (Fin n → α)` の `i` 成分を除いた射影像。
-* `entropy_uniformOn_eq_log_card` ─ `μ = uniformOn (A : Set β)` のもとで
-  `entropy μ id = log #A` (情報量はカーディナリティの log と等しい)。
-* `entropy_le_log_image_card` ─ 任意 `f : β → γ` で
-  `entropy μ f ≤ log #(A.image f)` (像濃度の log を超えない)。
-* `loomis_whitney` ─ Loomis–Whitney 不等式 (主定理)。
+* `projectionExcept i A` — projection of `A : Finset (Fin n → α)` onto `{j : Fin n // j ≠ i}`.
 
-## 戦略
+## Main statements
 
-`μ := uniformOn (A : Set (Fin n → α))`、`Xs i ω := ω i` を取る:
+* `entropy_uniformOn_eq_log_card` — `entropy (uniformOn A) id = log #A`.
+* `entropy_le_log_image_card` — `entropy (uniformOn A) f ≤ log #(A.image f)`.
+* `loomis_whitney` — the Loomis–Whitney inequality.
 
-1. `entropy μ Xs ω↦ω = log #A` (Phase A)
-2. `shearer_inequality` を `S i := univ.filter (· ≠ i)`、`k = n-1` で適用
-   (cover 条件は `(univ.erase j).card = n-1`)
-3. 各 marginal 項 `jointEntropySubset μ Xs (S i) ≤ log #(projectionExcept i A)`
-   (Phase B; `entropy_le_log_image_card` を `f := fun ω j => ω j.val` で適用)
-4. `Real.log_prod` で和をとり `Real.log_le_log_iff` で逆向きに log を剥がして
-   自然数版の不等式に持ち上げる (Phase C)
+## Implementation notes
+
+The proof takes `μ := uniformOn (A : Set (Fin n → α))` and `Xs i ω := ω i`, applies
+`shearer_inequality` with cover `S i := univ.filter (· ≠ i)` (each coordinate covered
+`n - 1` times), bounds each marginal entropy by `log #(projectionExcept i A)` via
+Jensen / `entropy_le_log_image_card`, and converts `∑ log = log ∏` to peel off the
+logarithm.
 -/
 
 namespace InformationTheory.Shannon
@@ -37,13 +33,9 @@ namespace InformationTheory.Shannon
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal
 
-/-! ## Phase A — counting measure 上の entropy plumbing -/
+/-! ## Phase A — entropy plumbing on counting measures -/
 
-/-- 一様分布の entropy はカーディナリティの log に等しい。
-
-`μ = uniformOn (A : Set β)` で `A` が空でないとき、恒等写像 `id : β → β` の entropy は
-`log #A`。証明は per-singleton mass `1/#A` を `uniformOn_apply_finset` から取り出し、
-`negMulLog (1/N) = (log N) / N` の代数で和を `#A · (log N)/N = log N` に潰す。 -/
+/-- The entropy of the identity on the uniform distribution over `A` equals `log #A`. -/
 @[entry_point]
 theorem entropy_uniformOn_eq_log_card
     {β : Type*} [Fintype β] [Nonempty β]
@@ -108,22 +100,10 @@ theorem entropy_uniformOn_eq_log_card
   -- A.card * (log A.card / A.card) = log A.card
   field_simp
 
-/-- `Y := f ∘ id` の像で支えられる確率分布の entropy は像濃度の log を超えない。
+/-- For `μ = uniformOn (A : Set β)`, `entropy μ f ≤ log #(A.image f)`.
 
-具体的には `μ = uniformOn (A : Set β)` のもとで `entropy μ f ≤ log #(A.image f)`。
-証明は: `μ.map f` の support が `A.image f` に含まれるので、
-`negMulLog x ≤ x · (log #(A.image f) - log x)` 形ではなく、
-**Jensen** (`negMulLog` 凹性) でやらず **直接** に
-`entropy μ f ≤ entropy_uniform_on_image_f`、後者を `entropy_uniformOn_eq_log_card` で評価する
-ルートを取りたいが、push-forward が一様分布になるとは限らないので
-ここでは `negMulLog x ≤ -x · log p_min + x · log #` のような直接評価ではなく、
-
-**実装ルート (採用)**: 「`y ∉ A.image f` では mass 0」から `support` を絞り、
-`-∑ p_y log p_y ≤ log #support` を負エントロピー関数の凹性 (Jensen) で示す。
-`Real.inner_le_nnreal_iff_norm_le` 系は重いので、ここでは `negMulLog` の上界
-`negMulLog p ≤ -p · log (1 / #support)` (Gibbs) を 1 段適用、続いて
-`log (1/N) = -log N` で整形、`∑ p = 1` で潰す。
--/
+Proof: apply Jensen's inequality for `negMulLog` (concave on `[0, ∞)`) to bound
+`∑ negMulLog p_y ≤ N · negMulLog (1/N)`, then use `negMulLog (1/N) = (log N)/N`. -/
 @[entry_point]
 theorem entropy_le_log_image_card
     {β γ : Type*} [Fintype β] [Nonempty β]
@@ -191,9 +171,6 @@ theorem entropy_le_log_image_card
             (((uniformOn (A : Set β)).map f).real ({y} : Set γ)) from
       (Finset.sum_subset (Finset.subset_univ (A.image f))
         (fun y _ hy => by rw [h_outside y hy, Real.negMulLog_zero])).symm]
-  -- (6) Gibbs: negMulLog p ≤ p * log N + (1/N - p) * (algebra noise) — instead use Jensen on negMulLog (concave on [0, ∞)).
-  -- Here we use: ∑ negMulLog p ≤ N * negMulLog (mean) by concavity, and mean = 1/N.
-  -- mean = (∑ p) / N = 1/N. negMulLog (1/N) = (log N) / N, so N * (log N)/N = log N.
   set s : Finset γ := A.image f with hs_def
   have hs_card : s.card = N := rfl
   have hs_card_pos : 0 < s.card := hN_pos
@@ -259,22 +236,14 @@ theorem entropy_le_log_image_card
       ≤ Real.log (A.image f).card
   exact h_jensen
 
-/-! ## Phase B — 射影 plumbing -/
+/-! ## Phase B — projection plumbing -/
 
-/-- `i` 番目の成分を除いた射影像。`A : Finset (Fin n → α)` を
-`{j : Fin n // j ≠ i} → α` 値の Finset に落とす。 -/
+/-- Projection of `A : Finset (Fin n → α)` onto coordinates except `i`. -/
 def projectionExcept {n : ℕ} {α : Type*} [DecidableEq α]
     (i : Fin n) (A : Finset (Fin n → α)) :
     Finset ({j : Fin n // j ≠ i} → α) :=
   A.image (fun x j => x j.val)
 
-/-- 射影 entropy ≤ 射影像濃度の log。
-
-`μ = uniformOn (A : Set (Fin n → α))` のもとで、
-`Xs i ω := ω i` に対して `jointEntropySubset μ Xs (univ.filter (· ≠ i))`
-は `(j : ↥(univ.filter (· ≠ i)) → α)` 値 RV の entropy。
-これを `{j // j ≠ i}` 値 RV に reshape し
-`entropy_le_log_image_card` を適用する。 -/
 theorem jointEntropySubset_le_log_projectionExcept_card
     {n : ℕ} {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -342,15 +311,12 @@ theorem jointEntropySubset_le_log_projectionExcept_card
       ≤ Real.log (projectionExcept i A).card
   exact h_le
 
-/-! ## Phase C — Loomis–Whitney 主定理 -/
+/-! ## Phase C — Loomis–Whitney main theorem -/
 
-/-- Loomis–Whitney 不等式 (情報理論的証明)。
+/-- **Loomis–Whitney inequality** (information-theoretic proof).
 
-任意 `n ≥ 1`、有限族 `α : Type` 上の有限部分集合 `A : Finset (Fin n → α)` で
-`A.Nonempty` のとき:
-$$|A|^{n-1} \le \prod_{i : \text{Fin}\,n} |\pi_i(A)|.$$
-
-ここで `\pi_i(A) := \{x \restriction \{j \ne i\} \mid x \in A\} = projectionExcept i A`。 -/
+For any non-empty `A : Finset (Fin n → α)`,
+`A.card ^ (n - 1) ≤ ∏ i : Fin n, (projectionExcept i A).card`. -/
 @[entry_point]
 theorem loomis_whitney
     {n : ℕ} {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]

@@ -4,32 +4,35 @@ import InformationTheory.Shannon.Sanov.Basic
 import Mathlib.MeasureTheory.Order.Group.Lattice
 
 /-!
-# Strong typicality (E-7) — Cover-Thomas 11.2
+# Strong typicality (Cover-Thomas Theorem 11.2)
 
-シードカード E-7 ([`docs/shannon/strong-typicality-plan.md`](../../docs/shannon/strong-typicality-plan.md))。
-Cover-Thomas Theorem 11.2 — strongly typical set
+Three main theorems for the strongly typical set
+`A^*_ε^n := { x : Fin n → α | ∀ a, |(typeCount x a : ℝ)/n - P(a)| ≤ ε }`:
 
-  `A^{*n}_ε := { x : Fin n → α | ∀ a, |(N(a|x^n) : ℝ)/n - P(a)| ≤ ε }`
+1. `stronglyTypicalSet_prob_tendsto_one` — `μ {ω | jointRV ∈ A^*} → 1` (WLLN on indicators).
+2. (size upper bound) — `|A^*| ≤ exp(n(H + ε·L))` via the strong-to-weak inclusion.
+3. `stronglyTypicalSet_card_ge_eventually` — `∃ N, ∀ n ≥ N, (1-η)·exp(n(H - ε·L - δ)) ≤ |A^*|`.
 
-の 3 主定理:
-1. `stronglyTypicalSet_prob_tendsto_one`: `μ {ω | jointRV ∈ A^*} → 1` (WLLN on indicators).
-2. `stronglyTypicalSet_card_le`: `|A^*| ≤ exp(n(H + ε·L))` (Strong ⊆ Weak typical 経由).
-3. `stronglyTypicalSet_card_ge_eventually`: `∃ N, ∀ n ≥ N, (1-η)·exp(n(H - ε·L)) ≤ |A^*|`.
+Here `L := logSumAbs μ Xs = ∑ a, |log P(a)|`, `N(a|x^n) := typeCount x a`,
+`P(a) := (μ.map (Xs 0)).real {a}`, `H := entropy μ (Xs 0)`.
 
-ここで `L := ∑ a, |log P(a)|` (`logSumAbs μ Xs`)、`N(a|x^n) := typeCount x a`、
-`P(a) := (μ.map (Xs 0)).real {a}`、`H := entropy μ (Xs 0)`。
+## Main definitions
 
-## 設計メモ
+* `stronglyTypicalSet` — the strongly typical set `A^*_ε^n`.
+* `logSumAbs` — the Lipschitz constant `∑ a, |log P(a)|` of the strong-to-weak bridge.
 
-* 既存 weak typicality (`AEP.lean`、1599 行) と並立。Strong ⟹ Weak (with `ε·L`) を
-  Phase 3 bridge で示し、Phase 4 size bound は weak typical の既存 bound を呼ぶだけ。
-* WLLN は per-letter indicator `Y_a i ω := 𝟙(Xs i ω = a)` に `strong_law_ae_real` を
-  letter 毎に n 本回し、`α` 有限の union bound で「全 letter 同時に concentration」を得る。
-* `α` generic — `α := α' × β` で instantiate すれば joint strong typical 形が得られる
-  (E-5 Slepian–Wolf achievability 前段で再利用可能、本 plan では single-variable 形のみ)。
-* full support `hpos : ∀ a, 0 < P(a)` は size bound の Phase 3 bridge で必須
-  (`L = ∑ a, |log P(a)|` の有限性 + Phase G `typicalSet_prob_le` の `hpos` 仮定)。
-  prob_tendsto_one (Phase 2) には `hpos` 不要。
+## Main statements
+
+* `stronglyTypicalSet_prob_tendsto_one` — probability of the typical set tends to 1.
+* `stronglyTypicalSet_card_ge_eventually` — lower size bound (eventually in `n`).
+
+## Implementation notes
+
+The WLLN is applied per letter via `strong_law_ae_real` on the indicators
+`Y_a i ω := 𝟙(Xs i ω = a)`, then a union bound over the finite alphabet `α`
+gives simultaneous concentration. Full support `hpos : ∀ a, 0 < P(a)` is
+required for the size bounds (via `typicalSet_prob_le`) but not for the
+probability convergence.
 -/
 
 namespace InformationTheory.Shannon
@@ -43,7 +46,7 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ### Phase 1 — `stronglyTypicalSet` 定義 -/
+/-! ### Definitions -/
 
 /-- **Strongly typical set** (Cover-Thomas 11.2):
 `A^*_ε^n := { x : Fin n → α | ∀ a, |(typeCount x a : ℝ)/n - P(a)| ≤ ε }`. -/
@@ -58,16 +61,14 @@ lemma mem_stronglyTypicalSet_iff
     x ∈ stronglyTypicalSet μ Xs n ε ↔
       ∀ a : α, |(typeCount x a : ℝ) / n - (μ.map (Xs 0)).real {a}| ≤ ε := Iff.rfl
 
-/-- Measurability of the strongly typical set (finite ambient). -/
 @[entry_point]
 theorem measurableSet_stronglyTypicalSet
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (n : ℕ) (ε : ℝ) :
     MeasurableSet (stronglyTypicalSet μ Xs n ε) :=
   (Set.toFinite _).measurableSet
 
-/-! ### Phase 2 — `stronglyTypicalSet_prob_tendsto_one` — WLLN on indicators -/
+/-! ### Probability convergence -/
 
-/-- Letter-indicator: `letterIndicator Xs a i ω = 1 if Xs i ω = a else 0`. -/
 noncomputable def letterIndicator (Xs : ℕ → Ω → α) (a : α) (i : ℕ) : Ω → ℝ :=
   fun ω => if Xs i ω = a then (1 : ℝ) else 0
 
@@ -77,8 +78,6 @@ lemma measurable_letterIndicator
   unfold letterIndicator
   exact Measurable.ite (hXs i (measurableSet_singleton a)) measurable_const measurable_const
 
-/-- For each fixed `a`, the indicator sequence `(letterIndicator Xs a i)_i` is pairwise
-independent given the same for `Xs`. -/
 lemma indepFun_letterIndicator
     (μ : Measure Ω) (Xs : ℕ → Ω → α)
     (_hXs : ∀ i, Measurable (Xs i))
@@ -92,8 +91,6 @@ lemma indepFun_letterIndicator
   have h := (hindep hij).comp hf_meas hf_meas
   exact h
 
-/-- For each fixed `a`, the indicator sequence `(letterIndicator Xs a i)_i` is
-identically distributed when `Xs` is. -/
 lemma identDistrib_letterIndicator
     (μ : Measure Ω) (Xs : ℕ → Ω → α)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ) (a : α) (i : ℕ) :
@@ -103,7 +100,6 @@ lemma identDistrib_letterIndicator
   -- letterIndicator Xs a i = f ∘ Xs i
   exact (hident i).comp hf_meas
 
-/-- The expected value of `letterIndicator Xs a 0` under `μ` equals `P(a)`. -/
 lemma integral_letterIndicator
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (a : α) :
@@ -133,7 +129,6 @@ lemma integral_letterIndicator
     simp [hf_def, smul_eq_mul]
   exact h_sum
 
-/-- Integrability of `letterIndicator a 0` on a probability measure (it is bounded). -/
 lemma integrable_letterIndicator
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (a : α) :
@@ -145,8 +140,6 @@ lemma integrable_letterIndicator
     unfold letterIndicator
     split_ifs <;> simp
 
-/-- Per-letter empirical-mean identity: for `x : Fin n → α`,
-`(typeCount x a : ℝ) / n = (1/n) · ∑ i : Fin n, indicator(x_i = a)`. -/
 lemma typeCount_eq_sum_indicator
     {n : ℕ} (x : Fin n → α) (a : α) :
     (typeCount x a : ℝ) = ∑ i : Fin n, if x i = a then (1 : ℝ) else 0 := by
@@ -157,7 +150,6 @@ lemma typeCount_eq_sum_indicator
         rw [← Finset.sum_filter]]
   rw [Finset.sum_const, nsmul_eq_mul, mul_one]
 
-/-- WLLN for per-letter indicators: `μ {ω | |.../n - P(a)| > ε} → 0`. -/
 lemma letterIndicator_inProbability
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -332,10 +324,9 @@ theorem stronglyTypicalSet_prob_tendsto_one
   · exact Filter.Eventually.of_forall h_ge
   · exact Filter.Eventually.of_forall h_le
 
-/-! ### Phase 3 — Strong ⟹ Weak typical (bridge identity) -/
+/-! ### Strong-to-weak typicality bridge -/
 
-/-- `logSumAbs μ Xs := ∑ a, |log P(a)|` — the "Lipschitz constant" of the
-strong-to-weak typicality bridge. Finite for any finite alphabet. -/
+/-- Lipschitz constant `∑ a, |log P(a)|` of the strong-to-weak typicality bridge. -/
 noncomputable def logSumAbs (μ : Measure Ω) (Xs : ℕ → Ω → α) : ℝ :=
   ∑ a : α, |Real.log ((μ.map (Xs 0)).real {a})|
 
@@ -344,11 +335,6 @@ lemma logSumAbs_nonneg (μ : Measure Ω) (Xs : ℕ → Ω → α) :
     0 ≤ logSumAbs μ Xs :=
   Finset.sum_nonneg fun _ _ => abs_nonneg _
 
-/-- **Key bridge identity**: for `x : Fin n → α` with `n > 0`,
-`(∑ i, pmfLog (x i))/n - H = ∑ a, (P(a) - (typeCount x a)/n) · log P(a)`.
-
-This rewrites the "weak typicality" displacement as a sum of "strong typicality"
-per-letter displacements, weighted by `log P(a)`. -/
 lemma weak_displacement_eq_strong_sum
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (_hXs : ∀ i, Measurable (Xs i))
@@ -404,7 +390,6 @@ lemma weak_displacement_eq_strong_sum
   field_simp
   ring
 
-/-- **Strong ⟹ Weak typicality**: `x ∈ A^*_ε ⟹ |.../n - H| ≤ ε · L`. -/
 lemma stronglyTypical_implies_weakly_typical_bound
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -436,8 +421,6 @@ lemma stronglyTypical_implies_weakly_typical_bound
     _ = ε * logSumAbs μ Xs := by
           rfl
 
-/-- **Strong ⟹ Weak (set inclusion)** with strict-form weak target `< ε'`:
-if `ε · L < ε'`, then `A^*_ε ⊆ T_{ε'}`. -/
 lemma stronglyTypicalSet_subset_typicalSet
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -450,7 +433,7 @@ lemma stronglyTypicalSet_subset_typicalSet
   exact lt_of_le_of_lt
     (stronglyTypical_implies_weakly_typical_bound μ Xs hXs hn x hx) h_bound
 
-/-! ### Phase 4 — Size sandwich -/
+/-! ### Size bounds -/
 
 /-- **Size lower bound (eventually-N form)**: for any `η > 0`,
 eventually `|A^*_ε^n| ≥ (1-η) · exp(n · (H - ε·L - δ))`. -/

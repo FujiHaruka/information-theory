@@ -4,65 +4,31 @@ import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# T2-C-WS: Whittaker-Shannon sampling partial publish
+# Whittaker-Shannon sampling (partial, Cover-Thomas Ch.9.6)
 
-Cover-Thomas Ch.9.6. Companion to `ShannonHartley.lean` (327 行) which
-publishes `shannon_hartley_formula` in **L-SH1+L-SH2+L-SH3 hypothesis
-pass-through form**. The retreat lines all collapse to the
-**Whittaker-Shannon sampling theorem**
+Companion to `ShannonHartley.lean`. Mathlib does not ship the Whittaker-Shannon
+sampling theorem `f(t) = Σ_{n ∈ ℤ} f(n/(2W)) · sincN(2W·t - n)` for
+`f ∈ L²(ℝ)` bandlimited to `[-W, W]`.
 
-  `f(t) = Σ_{n ∈ ℤ} f(n/(2W)) · sincN(2W·t - n)`
+This file publishes the subset of the Whittaker-Shannon machinery available in
+current Mathlib:
 
-for `f` ∈ L²(ℝ) bandlimited to `[-W, W]`. Mathlib does not ship this
-theorem (only `Real.sinc` and its continuity / integrability — see the
-Mathlib gap section below).
+- `sincN x := Real.sinc (π · x)` — normalized sinc whose zeros are at the integers.
+- `sincN_int_eq_zero` — the integer-zero identity `sincN (n : ℝ) = 0` for `n ≠ 0`.
+- `whittaker_shannon_sample_collapse` — `sincN((2W)·(n₀/(2W)) − n) = δ_{n,n₀}`.
 
-This file publishes the **largest subset of the Whittaker-Shannon
-machinery that goes through with current Mathlib**:
+## Main statements
 
-- A normalized sinc `sincN x := Real.sinc (π · x)` whose zeros land at
-  the **integers** (the information-theoretic convention).
-- The integer-zero identity `sincN (n : ℝ) = 0` for `n ≠ 0` (the
-  algebraic reason the Whittaker-Shannon series collapses to a single
-  term when evaluated at a sample point).
-- The **sample-point collapse** `sincN ((2W) · (n₀ / (2W)) - n) = δ_{n,n₀}`
-  which is the rigorous form of "only the `n = n₀` term survives".
-- A **1-point Whittaker-Shannon uniqueness** theorem in hypothesis
-  pass-through form (`IsWhittakerShannonInterpolation` predicate), ready
-  for a future discharge module to plug a real series-convergence proof
-  into the predicate.
+* `sincN_le_one`, `neg_one_le_sincN` — pointwise bounds.
+* `continuous_sincN`, `measurable_sincN` — regularity.
+* `sincN_int_eq_zero`, `sincN_int_eq_kronecker` — zeros at nonzero integers.
+* `whittaker_shannon_sample_collapse` — sample-point collapse (Kronecker delta form).
 
-## Approach
+## Implementation notes
 
-We commit to **撤退ライン L-WS-A** (sinc basic + integer-zero +
-sample-point collapse + 1-point hypothesis pass-through) and explicitly
-scope out:
-
-* **L-WS-B** (L²-orthogonality of `{sincN(·-n)}_{n ∈ ℤ}`) — requires the
-  Fourier transform of the rectangular pulse + Plancherel, neither
-  shipped as a named Mathlib lemma.
-* **L-WS-C** (Plancherel-style sampling identity / Poisson summation)
-  — substantially further from current Mathlib.
-
-The architectural shape mirrors `ShannonHartley.lean`: a closed-form
-definition, a hypothesis predicate carrying the convergent-series
-equality, and a main pass-through theorem consuming the predicate.
-
-## Mathlib gap
-
-Mathlib ships `Real.sinc`, `sinc_zero`, `sinc_neg`, `sinc_of_ne_zero`,
-`abs_sinc_le_one`, `continuous_sinc`, `measurable_sinc`,
-`stronglyMeasurable_sinc`, `integrable_sinc`. It does **not** ship:
-
-1. `Real.sinc (n · π) = 0` for non-zero integer `n` (normalized integer
-   zeros; trivially provable from `Real.sin_int_mul_pi`, no named lemma).
-2. `{n ∈ ℤ ↦ sincN(t - n)}` L²-orthogonality.
-3. Poisson summation for Schwartz / band-limited functions.
-4. `IsBandlimited f W : Prop` predicate (no canonical definition).
-5. Whittaker-Shannon sampling theorem itself.
-
-This file publishes #1 directly and exposes #2–5 as hypothesis
-predicates for future discharge.
+L²-orthogonality of `{sincN(·-n)}_{n ∈ ℤ}` requires the Fourier transform of the
+rectangular pulse and Plancherel; Poisson summation requires Schwartz-class results.
+Neither is available in Mathlib, so both are out of scope here.
 -/
 
 namespace InformationTheory.Shannon.WhittakerShannonPartial
@@ -102,7 +68,6 @@ theorem continuous_sincN : Continuous sincN := by
 theorem measurable_sincN : Measurable sincN :=
   continuous_sincN.measurable
 
-/-- For non-zero `x`, the normalized sinc equals `sin(π·x) / (π·x)`. -/
 theorem sincN_of_ne_zero (x : ℝ) (hx : x ≠ 0) :
     sincN x = Real.sin (Real.pi * x) / (Real.pi * x) := by
   unfold sincN

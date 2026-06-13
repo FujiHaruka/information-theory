@@ -6,34 +6,27 @@ import InformationTheory.Shannon.MIChainRule
 import InformationTheory.Shannon.CondMutualInfo
 
 /-!
-# Channel coding feedback converse — chain-rule 段 (E-10 MVP)
+# Channel coding feedback converse — chain-rule form
 
-[E-10 ムーンショット plan](../../../docs/shannon/dmc-feedback-capacity-plan.md) の
-本体。Cover-Thomas Theorem 7.12 — feedback あり DMC でも capacity は同じ。
+Cover-Thomas Theorem 7.12: for a DMC with feedback, capacity equals the memoryless
+capacity. The per-letter inequality `I(M; Y_i | Y^{<i}) ≤ I(X_i; Y_i)` is left as
+a hypothesis `h_per_letter`; its internal proof is in `FeedbackComplete`.
 
-## MVP scope (本 file)
+## Main definitions
 
-Cover-Thomas 7.12 の **chain rule 段** を 0 sorry で publish:
+* `FeedbackCode M n α β`: feedback code structure with causal encoder
+  `encoder : ∀ i : Fin n, Fin M → (Fin i.val → β) → α`.
 
-```
-log |M| ≤ n · C + h(Pe) + Pe · log(|M| - 1)
-```
+## Main statements
 
-per-letter inequality (`I(M; Y_i | Y^{<i}) ≤ I(X_i; Y_i)`, memoryless ⇒) は
-仮定形 `h_per_letter` に抽出。完全形 (per-letter bound 内部証明) は E-10' deferred。
-
-## 主定理
-
-* `FeedbackCode M n α β`: feedback 符号構造 (`encoder : ∀ i : Fin n, Fin M → (Fin i.val → β) → α`)。
-* `mutualInfo_chain_rule_Y_axis_fin`: Y 軸 n 変数 chain rule
-  `I(M; Y^n) = ∑ I(M; Y_i | Y^{<i})`。
-* `channel_coding_feedback_converse_chain`:
-  仮定 `condMutualInfo μ Msg (Ys i) Y^{<i} ≤ mutualInfo μ (Xs i) (Ys i)` で
-  `I(M; Y^n) ≤ ∑ I(X_i; Y_i)`。
-* `channel_coding_feedback_converse_capacity`:
-  各 i で `I(X_i; Y_i) ≤ C` 仮定で `I(M; Y^n) ≤ n • C`。
-* `channel_coding_feedback_converse`: Fano + 上記合成、
-  `log|M| ≤ n·C + h(Pe) + Pe · log(|M| - 1)`。
+* `mutualInfo_chain_rule_Y_axis_fin`: Y-axis n-variable chain rule
+  `I(M; Y^n) = ∑ I(M; Y_i | Y^{<i})`.
+* `channel_coding_feedback_converse_chain`: Under the per-letter bound hypothesis,
+  `I(M; Y^n) ≤ ∑ I(X_i; Y_i)`.
+* `channel_coding_feedback_converse_capacity`: Under `I(X_i; Y_i) ≤ C` for all `i`,
+  `I(M; Y^n) ≤ n • C`.
+* `channel_coding_feedback_converse`: Combines Fano inequality with the above to give
+  `log |M| ≤ n · C + h(Pe) + Pe · log(|M| - 1)`.
 -/
 
 namespace InformationTheory.Shannon.ChannelCodingFeedback
@@ -43,7 +36,7 @@ open scoped ENNReal NNReal BigOperators
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-! ## Phase A — `FeedbackCode` 構造 -/
+/-! ## `FeedbackCode` structure -/
 
 /-- A **feedback code** of length `n` with `M` messages. The encoder at time `i` takes
 the message and the **prior outputs** `Y_0, …, Y_{i-1}` to produce the input symbol
@@ -97,7 +90,7 @@ def ofCode [MeasurableSpace α] [MeasurableSpace β]
 
 end FeedbackCode
 
-/-! ## Phase B — Y 軸 n 変数 chain rule -/
+/-! ## Y-axis n-variable chain rule -/
 
 section ChainRuleY
 
@@ -106,14 +99,10 @@ variable {M : Type*} [MeasurableSpace M]
 variable {β : Type*} [Fintype β] [MeasurableSpace β] [MeasurableSingletonClass β]
   [Nonempty β] [StandardBorelSpace β]
 
-/-- **Y-axis n-variable chain rule for mutual information** (本 plan Phase B 主結果).
+/-- **Y-axis n-variable chain rule for mutual information**:
+`I(Msg; Y_0, …, Y_{n-1}) = ∑ i, I(Msg; Y_i | (Y_0, …, Y_{i-1}))`.
 
-```
-I(Msg; Y_0, …, Y_{n-1}) = ∑ i, I(Msg; Y_i | (Y_0, …, Y_{i-1}))
-```
-
-Derived from `mutualInfo_chain_rule_fin` (X-axis form
-`I(X_0,…,X_{n-1}; Yo) = ∑ I(X_i; Yo | X^{<i})`) by symmetry: swap left/right with
+Derived from `mutualInfo_chain_rule_fin` by swapping left/right roles via
 `mutualInfo_comm` and `condMutualInfo_comm`. -/
 @[entry_point]
 theorem mutualInfo_chain_rule_Y_axis_fin
@@ -146,7 +135,7 @@ theorem mutualInfo_chain_rule_Y_axis_fin
 
 end ChainRuleY
 
-/-! ## Phase C — chain-rule converse (hypothesis 形) -/
+/-! ## Chain-rule converse (hypothesis form) -/
 
 section ChainConverse
 
@@ -155,20 +144,11 @@ variable {α : Type*} [MeasurableSpace α]
 variable {β : Type*} [Fintype β] [MeasurableSpace β] [MeasurableSingletonClass β]
   [Nonempty β] [StandardBorelSpace β]
 
-/-- **Chain-rule converse (Cover-Thomas 7.12, chain step、hypothesis 形)**:
+/-- **Chain-rule converse (Cover-Thomas 7.12, chain step, hypothesis form)**:
+under the per-letter bound `I(Msg; Y_i | Y^{<i}) ≤ I(X_i; Y_i)`,
+`I(Msg; Y^n) ≤ ∑ i, I(X_i; Y_i)`.
 
-Assuming the per-letter bound `I(Msg; Y_i | Y^{<i}) ≤ I(X_i; Y_i)` (which, for a
-memoryless channel + causal feedback encoder, follows from `Y_i ⊥ (Msg, Y^{<i}) | X_i`),
-the total mutual information is bounded by the sum of per-letter mutual informations:
-
-```
-I(Msg; Y^n) ≤ ∑ i, I(X_i; Y_i)
-```
-
-The per-letter inequality is left as hypothesis — its purely-internal proof is **E-10'
-deferred** (judgement log 1).
-
-`@audit:retract-candidate(superseded-by-memoryless-form)` -/
+@audit:retract-candidate(superseded-by-memoryless-form) -/
 theorem channel_coding_feedback_converse_chain
     {n : ℕ}
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -184,12 +164,11 @@ theorem channel_coding_feedback_converse_chain
   rw [mutualInfo_chain_rule_Y_axis_fin μ Msg Ys hMsg hYs]
   exact Finset.sum_le_sum (fun i _ => h_per_letter i)
 
-/-- **Capacity 上界 (Cover-Thomas 7.12 main bound、hypothesis 形)**:
-Per-letter bound + per-letter `I(X_i; Y_i) ≤ C` ⇒ `I(Msg; Y^n) ≤ n • C`.
+/-- **Capacity upper bound (Cover-Thomas 7.12, hypothesis form)**:
+per-letter bound + `I(X_i; Y_i) ≤ C` for all `i` implies `I(Msg; Y^n) ≤ n • C`
+(where `n • C` is `nsmul` in `ℝ≥0∞`).
 
-In `ℝ≥0∞` arithmetic the conclusion is `(n : ℕ) • C` — `nsmul` of `ℝ≥0∞`.
-
-`@audit:retract-candidate(superseded-by-memoryless-form)` -/
+@audit:retract-candidate(superseded-by-memoryless-form) -/
 theorem channel_coding_feedback_converse_capacity
     {n : ℕ} (C : ℝ≥0∞)
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -213,7 +192,7 @@ theorem channel_coding_feedback_converse_capacity
 
 end ChainConverse
 
-/-! ## Phase D — Fano 合成 main theorem -/
+/-! ## Main converse theorem -/
 
 section MainConverse
 
@@ -224,32 +203,20 @@ variable {β : Type*} [Fintype β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
 omit [DecidableEq M] in
-/-- **Feedback channel coding converse (Cover-Thomas Theorem 7.12)** — chain rule 段
-を hypothesis 形に分離した MVP form。
+/-- **Feedback channel coding converse (Cover-Thomas Theorem 7.12)** — hypothesis form.
 
-`Msg : Ω → M` を一様分布 (`μ.map Msg = |M|⁻¹ • Measure.count`)、`Xs i ω : α` を時刻 `i`
-の入力、`Ys i ω : β` を時刻 `i` の出力、`decoder : (Fin n → β) → M` とする。
-
-Per-letter bound `I(Msg; Y_i | Y^{<i}) ≤ I(X_i; Y_i)` + 各 i で `I(X_i; Y_i) ≤ C` の
-仮定下で、Fano 不等式と組み合わせて:
+Under the per-letter bound `I(Msg; Y_i | Y^{<i}) ≤ I(X_i; Y_i)` and `I(X_i; Y_i) ≤ C`
+for all `i`, combined with the Fano inequality:
 
 ```
 log |M| ≤ n · C.toReal + h(Pe) + Pe · log(|M| - 1)
 ```
 
-ここで `Pe := μ {Msg ≠ decoder ∘ Y^n}` (`MeasureFano.errorProb`)。
+where `Pe := μ {Msg ≠ decoder ∘ Y^n}`. The capacity `C` is an arbitrary `ℝ≥0∞` value;
+callers supply the DMC capacity bound. Unlike `channel_coding_converse_iid`, no
+Markov chain on `Msg → encoder ∘ Msg → Y^n` is required (feedback breaks it).
 
-Capacity `C` 自体は `C := sup_p I(p; W)` のような大域定義に縛らず、本定理 signature では
-任意の `ℝ≥0∞` 値 `C` を許容。callers が DMC capacity の存在 + 有限性を付与して
-具体的な `C` を渡す形。
-
-**注**: 既存 `channel_coding_converse_iid` は Markov chain `Msg → encoder ∘ Msg → Y^n`
-仮定下で `I(X^n; Y^n) = n · I(X_0; Y_0)` を経由するが、feedback 下ではこの Markov chain
-自体が成立しない (`X_i` が prior `Y` に依存)。本定理は `shannon_converse_single_shot`
-(Markov 仮定なしの単発形) を `Yo := Y^n` で呼び、per-letter chain rule で `n·C` を直接
-組み立てる。
-
-`@audit:retract-candidate(superseded-by-memoryless-form)` -/
+@audit:retract-candidate(superseded-by-memoryless-form) -/
 @[entry_point]
 theorem channel_coding_feedback_converse
     {n : ℕ} (C : ℝ≥0∞) (hC_finite : C ≠ ∞)

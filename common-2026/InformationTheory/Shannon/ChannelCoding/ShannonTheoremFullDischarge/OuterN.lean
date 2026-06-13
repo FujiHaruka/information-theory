@@ -11,10 +11,10 @@ import Mathlib.Topology.Order.Compact
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 
 /-!
-# D-1'' Phase D.3 — outer `N` construction (max-error closed form)
+# Outer `N` construction — max-error closed form
 
-`ShannonTheoremFullDischarge` から分割した part ファイル。
-詳細は冒頭の `Phase D.3` セクション docstring を参照。
+Part file split from `ShannonTheoremFullDischarge`. Constructs the outer `N₀` that
+simultaneously controls the TV smoothing error and the smooth-channel achievability.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
@@ -28,9 +28,9 @@ variable {α β : Type*}
   [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β]
 
-/-! ## Phase D.3 — outer `N` construction (max-error closed form)
+/-! ## Outer `N` construction
 
-We build, for any `R < capacity W` and `ε > 0`, an `N₀` such that for every
+For any `R < capacity W` and `ε > 0`, we build an `N₀` such that for every
 `n ≥ N₀` we can simultaneously:
 
 * pick `δ_n ∈ (0, δ_B]` with `2 n δ_n < ε/2` (so the TV bound contributes ≤ `ε/2`);
@@ -51,7 +51,7 @@ The construction:
 -/
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- Lower bound for `pSmooth p₀ δ`: every entry is ≥ `δ / |α|`. -/
+/-- Every entry of `pSmooth p₀ δ` is at least `δ / |α|`. -/
 lemma pSmooth_ge {p₀ : α → ℝ} (hp₀ : p₀ ∈ stdSimplex ℝ α)
     {δ : ℝ} (_hδ_pos : 0 < δ) (hδ_le : δ ≤ 1) (a : α) :
     δ / (Fintype.card α : ℝ) ≤ pSmooth p₀ δ a := by
@@ -61,8 +61,7 @@ lemma pSmooth_ge {p₀ : α → ℝ} (hp₀ : p₀ ∈ stdSimplex ℝ α)
     rw [div_eq_mul_inv]
   linarith [h_eq]
 
-/-- For `δ_n := min(δ_B, ε/(16(n+1)))` with `0 < δ_B` and `0 < ε`,
-`1/δ_n ≤ (1/δ_B + 16/ε)·(n+1)`. -/
+/-- For `δ_n := min(δ_B, ε/(16(n+1)))`, `1/δ_n ≤ (1/δ_B + 16/ε)·(n+1)`. -/
 lemma one_div_smooth_n_le
     {δ_B ε : ℝ} (hδ_B_pos : 0 < δ_B) (hε_pos : 0 < ε) (n : ℕ) :
     let δ_n : ℝ := min δ_B (ε / (16 * ((n : ℝ) + 1)))
@@ -121,9 +120,9 @@ lemma one_div_smooth_n_le
 
 omit [DecidableEq α] [DecidableEq β] in
 set_option maxHeartbeats 1200000 in
-/-- **Phase D.3** — outer `N` construction with simultaneous `δ_n` and max-error
-code. For any `R < capacity W` and `ε > 0`, there exists `N₀` such that for all
-`n ≥ N₀` we can pick `δ_n` and a code with the two `ε/2` halves. -/
+/-- For any `R < capacity W` and `ε > 0`, there exists `N₀` such that for all
+`n ≥ N₀` one can pick `δ_n` with `2 n δ_n < ε/2` and a code at the smooth channel
+`Channel.smooth W δ_n` achieving max-error less than `ε/2`. -/
 theorem exists_N_for_smooth_achievability_uniform
     (W : Channel α β) [IsMarkovKernel W]
     {R : ℝ} (hR_pos : 0 < R) (hR : R < capacity W)
