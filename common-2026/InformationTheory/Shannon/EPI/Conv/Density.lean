@@ -5,26 +5,20 @@ import Mathlib.Analysis.Calculus.LogDeriv
 import Mathlib.MeasureTheory.Group.Integral           -- integral_sub_left_eq_self (reflection)
 
 /-!
-# Convolution density apparatus — gateway atom (DECISIVE GATE)
+# Convolution density apparatus
 
 `p_Z(z) = ∫ x, p_X(x) · p_Y(z - x) ∂volume` (sum density of independent `X, Y`),
 its pointwise differentiability, and the `logDeriv p_Z` representation. This is
-the common foundational helper that both former EPI walls
-(`wall:stam-step2-density` / `wall:debruijn-integration`, both now [CLOSED
-2026-06-04] — genuine, sorryAx-free) consume.
+the common foundational helper for the density-route Stam and de Bruijn arguments.
 
-## Why the parametric-integral route (not `HasCompactSupport`)
+## Implementation notes
 
-The 6 Mathlib `HasCompactSupport.*_convolution_*` lemmas
-(`Mathlib/Analysis/Calculus/ContDiff/Convolution.lean`,
-`epi-wall-reattack-inventory.md` §3) require the smooth factor to have **compact
-support**, which the Gaussian heat kernel does not. We bypass that wall entirely
-by going through `hasDerivAt_integral_of_dominated_loc_of_deriv_le`
-(`Mathlib/Analysis/Calculus/ParametricIntegral.lean:289`): differentiation under
-the integral sign, with the Gaussian-tail domination supplied as **regularity
-preconditions** (honest hyp, NOT load-bearing — see CLAUDE.md "Verification honesty").
-
-## Mathlib-shape-driven
+The 6 Mathlib `HasCompactSupport.*_convolution_*` lemmas require the smooth factor
+to have **compact support**, which the Gaussian heat kernel does not have. We go
+through `hasDerivAt_integral_of_dominated_loc_of_deriv_le`
+(`Mathlib/Analysis/Calculus/ParametricIntegral.lean`): differentiation under the
+integral sign, with the Gaussian-tail domination supplied as regularity
+preconditions.
 
 `convDensityAdd` is defined as a Bochner `∫` (not `⋆ₗ` / `⋆[L,μ]`), matching the
 conclusion shape of the parametric-integral gateway
@@ -66,23 +60,17 @@ theorem convDensityAdd_comm (pX pY : ℝ → ℝ) :
 noncomputable def convDensityAddDeriv (pX pY : ℝ → ℝ) : ℝ → ℝ → ℝ :=
   fun z x => pX x * deriv pY (z - x)
 
-/-- **Gateway atom (DECISIVE GATE).** Under Gaussian-tail / integrability
-regularity preconditions, `convDensityAdd pX pY` is differentiable at `z₀` with
-derivative `∫ x, p_X x · p_Y' (z₀ - x)`.
+/-- **Gateway atom.** Under Gaussian-tail / integrability regularity preconditions,
+`convDensityAdd pX pY` is differentiable at `z₀` with derivative
+`∫ x, p_X x · p_Y' (z₀ - x)`.
 
-All hypotheses are honest regularity preconditions (integrability,
-ae-measurability, the domination bound, pointwise differentiability of the
-integrand), pinned exactly in the shape
-`hasDerivAt_integral_of_dominated_loc_of_deriv_le` consumes. They are NOT a
-load-bearing bundling of the conclusion: the differentiability of `convDensityAdd`
-is *derived*, not assumed.
+All hypotheses are regularity preconditions (integrability, ae-measurability, the
+domination bound, pointwise differentiability of the integrand), pinned in the shape
+`hasDerivAt_integral_of_dominated_loc_of_deriv_le` consumes. The differentiability
+of `convDensityAdd` is derived, not assumed.
 
 * `s` is a neighborhood of `z₀`.
 * `bound` is the integrable Gaussian-tail dominating function.
-
-Independent audit 2026-05-30: `h_diff` quantifies the *per-`x` integrand*
-`fun z => pX x * pY (z - x)`, not the integral — regularity precondition, 1:1
-with the gateway lemma's `h_diff`.
 @audit:ok -/
 theorem convDensityAdd_hasDerivAt
     (pX pY : ℝ → ℝ) (z₀ : ℝ) {s : Set ℝ} {bound : ℝ → ℝ}
@@ -131,7 +119,7 @@ theorem convDensityAdd_logDeriv
 
 /-- **Public gateway API**: the convolution density is differentiable at `z₀`, with
 the `logDeriv` (score) given by the score-of-convolution formula. Bundles the two
-atoms above for downstream walls (Phase 3 Blachman / Phase 4 de Bruijn).
+atoms above for the downstream Blachman and de Bruijn arguments.
 @audit:ok -/
 @[entry_point]
 theorem convDensity_add_differentiable
@@ -154,32 +142,23 @@ theorem convDensity_add_differentiable
     convDensityAdd_logDeriv pX pY z₀ hs hF_meas hF_int hF'_meas h_bound
       bound_integrable h_diff⟩
 
-/-! ## Phase 3a (GATE) — discharge the 7 gateway hyps from `IsRegularDensityV2`
+/-! ## Discharging the gateway hypotheses from `IsRegularDensityV2`
 
-`convDensityAdd_hasDerivAt_of_regular`: the GATE wrapper that supplies all 7
-parametric-integral regularity hyps from Stam's density preconditions
-`IsRegularDensityV2 fX/fY` + normalization `∫fX = 1` (`∫fY = 1` not needed here)
-plus three genuine regularity preconditions:
+`convDensityAdd_hasDerivAt_of_regular`: the wrapper that supplies all
+parametric-integral regularity hypotheses from the density preconditions
+`IsRegularDensityV2 fX/fY` plus three genuine regularity preconditions:
 
 * `hX_int : Integrable fX` — `fX` is a probability density.
-* `hY_bdd`  : `fY` is bounded (Gaussian PDF is, since `exp(-x²)` is bounded).
+* `hY_bdd`  : `fY` is bounded (the Gaussian PDF is, since `exp(-x²)` is bounded).
 * `hY'_bdd` : `deriv fY` is bounded (Gaussian `deriv = -(x-m)/v · pdf`,
   polynomial × Gaussian decay → bounded).
 
-These three are **honest regularity preconditions**, NOT load-bearing: the
-differentiability of `convDensityAdd` is *derived* via the gateway, not assumed.
-The Gaussian instance satisfies all three (1-line confirmation in docstring of
-each `have`).
+These are per-factor regularity preconditions on `fX`/`fY` individually, not on the
+convolution; the differentiability of `convDensityAdd` is derived via the gateway,
+not assumed. The Gaussian instance satisfies all three. -/
 
-Independent audit 2026-05-30: the 3 added hyps are per-factor regularity
-(`Integrable fX` / `|fY|≤M` / `|deriv fY|≤M`) on `fX`/`fY` individually, NOT on
-the convolution; none has `HasDerivAt`/`Differentiable (convDensityAdd …)` type,
-so no circularity. core-reconstruction test: granting all 5 hyps does not hand
-the differentiability — it is constructed via the gateway `convDensityAdd_hasDerivAt`
-(itself `@audit:ok`) inside the body. Gaussian witnesses are non-vacuous
-(smooth+positive+tail→0 ⇒ `IsRegularDensityV2`; PDF bounded; `deriv = poly×Gaussian`
-bounded; PDF integrable). `#print axioms` = [propext, Classical.choice, Quot.sound]
-(sorryAx-free, machine-checked). 0 sorry / 0 @residual.
+/-- Discharges the gateway hypotheses of `convDensityAdd_hasDerivAt` from
+`IsRegularDensityV2 fX/fY` plus per-factor boundedness/integrability preconditions.
 @audit:ok -/
 theorem convDensityAdd_hasDerivAt_of_regular (fX fY : ℝ → ℝ) (z₀ : ℝ)
     (hregX : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fX)

@@ -10,10 +10,10 @@ import InformationTheory.Shannon.EPI.Stam.SupplyTwoTime
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# Phase A — density-form EPI (`entropy_power_inequality_of_density`)
+# Density-form entropy power inequality
 
-EPI for absolutely continuous distributions with finite second moment and regular densities,
-proved via a 3-noise lift and two-time terminal.
+`entropy_power_inequality_of_density`: EPI for absolutely continuous distributions with
+finite second moment and regular densities, proved via a 3-noise lift and two-time terminal.
 
 ## Main statements
 

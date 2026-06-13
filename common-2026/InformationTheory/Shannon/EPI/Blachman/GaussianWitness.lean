@@ -12,10 +12,10 @@ import InformationTheory.Shannon.EPI.Blachman.Density
 /-!
 # Gaussian witness for `IsBlachmanConvReady` / `IsRegularDensityV2`
 
-Density-route non-vacuousness closure (`epi-wall-reattack-plan`, Phase 3e):
-a **proven inhabitant** of `IsBlachmanConvReady (gaussianPDFReal mX vX) (gaussianPDFReal mY vY)`
+A proven inhabitant of `IsBlachmanConvReady (gaussianPDFReal mX vX) (gaussianPDFReal mY vY)`
 and `IsRegularDensityV2 (gaussianPDFReal m v)`, built from the existing Gaussian
-Fisher-information lemmas plus the measure-level convolution closed form.
+Fisher-information lemmas plus the measure-level convolution closed form. This
+establishes non-vacuousness of the density-route predicates.
 
 The linchpin `convDensityAdd_gaussian_closed_form` shows the pointwise density
 convolution closed form `convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal mY vY)
@@ -291,15 +291,11 @@ integrable × bounded, then `/pZ`); `int_prod1/2/3` by the shear change of varia
 marginal `Integrable.integral_prod_left` plus the `condDensityX · pZ = fX·fY(z-·)`
 cancellation.
 
-WITNESS STATUS: proof done — `#print axioms isBlachmanConvReady_gaussianPDFReal`
-yields `[propext, Classical.choice, Quot.sound]` (sorryAx-free, transitive 0 sorry),
-so a **proven inhabitant** of `IsBlachmanConvReady (gaussianPDFReal mX vX)
-(gaussianPDFReal mY vY)` exists. The Phase 3d non-vacuousness caveat is thereby
-machine-confirmed for the density route.
-
-Structurally GENUINE — the witness is a plain `structure` literal `{mX mY vX vY}
-(hvX hvY)`; `IsBlachmanConvReady` carries ONLY `Integrable`/boundedness/positivity
-fields (no inequality/equality/value core), so this is not a load-bearing bundle.
+The witness is a plain `structure` literal `{mX mY vX vY} (hvX hvY)`;
+`IsBlachmanConvReady` carries only `Integrable`/boundedness/positivity fields (no
+inequality/equality/value core), so this is not a load-bearing bundle. It is a
+proven inhabitant of `IsBlachmanConvReady (gaussianPDFReal mX vX)
+(gaussianPDFReal mY vY)`, establishing non-vacuousness for the density route.
 @audit:ok -/
 @[entry_point]
 theorem isBlachmanConvReady_gaussianPDFReal
@@ -676,35 +672,21 @@ theorem isBlachmanConvReady_gaussianPDFReal
     refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
     simp only [Function.comp, Function.uncurry]
 
-/-! ## Step 4 — capstone: density-route convex Fisher bound fires on Gaussians
+/-! ## Density-route convex Fisher bound on Gaussians
 
 The witness `isBlachmanConvReady_gaussianPDFReal`, `isRegularDensityV2_gaussianPDFReal`
 and Gaussian normalization (`integral_gaussianPDFReal_eq_one`) are fed into the
-`@audit:ok` density-route core `convex_fisher_bound_of_ready`, turning the isolated
-existence proof of an `IsBlachmanConvReady` inhabitant into an **operational** statement:
-the convex Fisher bound `J(Z) ≤ λ² J(X) + (1-λ)² J(Y)` genuinely fires for Gaussian
-densities through the density route. This is the first in-tree consumer of the witness.
+density-route core `convex_fisher_bound_of_ready`, so the convex Fisher bound
+`J(Z) ≤ λ² J(X) + (1-λ)² J(Y)` fires for Gaussian densities through the density route.
 -/
 
-/-- **Density-route convex Fisher bound for Gaussians (capstone).**
+/-- **Density-route convex Fisher bound for Gaussians.**
 
 The density-route convex Fisher bound `convex_fisher_bound_of_ready` fires end-to-end
 on Gaussian densities: feeding the proven `IsBlachmanConvReady` witness +
-`IsRegularDensityV2` instances + Gaussian normalization, every precondition is an
-existing `@audit:ok` part, so this is genuine 0-sorry. This wires the previously
-isolated witness into an actual consumer, upgrading "an inhabitant exists" to "the
-density route computes the bound for Gaussians".
-
-WITNESS STATUS: proof done (genuine 0-sorry). Every argument to
-`convex_fisher_bound_of_ready` is an `@audit:ok` part:
-`isBlachmanConvReady_gaussianPDFReal` / `isRegularDensityV2_gaussianPDFReal` (this file)
-and `integral_gaussianPDFReal_eq_one` (Mathlib).
-
-@audit:ok — independent honesty audit (2026-05-31, commit `de4099b`): single-term
-application of the `@audit:ok` core `convex_fisher_bound_of_ready`; the only
-hypotheses are regularity (`vX,vY ≠ 0`, `0 ≤ lam ≤ 1`), none carries the inequality
-core (structurally bundle-incapable). `#print axioms` →
-[propext, Classical.choice, Quot.sound] (sorryAx-free, transitive 0 sorry). -/
+`IsRegularDensityV2` instances + Gaussian normalization. The only hypotheses are
+regularity (`vX,vY ≠ 0`, `0 ≤ lam ≤ 1`); none carries the inequality core.
+@audit:ok -/
 @[entry_point]
 theorem convex_fisher_bound_gaussian_via_density_route
     (mX mY : ℝ) {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0)
@@ -723,17 +705,10 @@ Specializing `convex_fisher_bound_gaussian_via_density_route` via the Gaussian F
 closed form `J(𝒩(m,v)) = 1/v` (`fisherInfoOfDensity_gaussianPDFReal`) and the
 convolution closed form `convDensityAdd (gaussian)(gaussian) = gaussian(sum)`, the
 density route yields the same `1/(vX+vY) ≤ λ²/vX + (1-λ)²/vY` arithmetic content as the
-measure-level closed-form route `stam_convex_fisher_bound_gaussian`. This makes the
-agreement of the two routes explicit.
-
-@audit:ok — independent honesty audit (2026-05-31, commit `de4099b`): genuine rewrite
-chain (`convDensityAdd_gaussian_closed_form` + `fisherInfoOfDensity_gaussianPDFReal` =
-`1/v`, all `@audit:ok`) of the proven density-route bound `hbnd`; no degenerate-equality
-exploitation (`1/v` is a genuine positive closed form, `vXY,vX,vY ≠ 0`). The 2-route
-agreement claim is accurately scoped — same `1/(vX+vY) ≤ λ²/vX+(1-λ)²/vY` *arithmetic
-content* as `stam_convex_fisher_bound_gaussian` (which goes through `stam_fisher_arith`),
-not a definitional identity of `fisherInfoOfDensity` vs `fisherInfoOfMeasureV2`.
-`#print axioms` → [propext, Classical.choice, Quot.sound] (sorryAx-free). -/
+measure-level closed-form route `stam_convex_fisher_bound_gaussian`. This is the same
+arithmetic content, not a definitional identity of `fisherInfoOfDensity` vs
+`fisherInfoOfMeasureV2`.
+@audit:ok -/
 @[entry_point]
 theorem convex_fisher_bound_gaussian_via_density_route_closed_form
     (mX mY : ℝ) {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0)

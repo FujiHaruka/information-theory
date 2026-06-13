@@ -2,16 +2,16 @@ import InformationTheory.Shannon.EPI.DensityForm
 
 
 /-!
-# Pivot B — explicit-density de Bruijn producer and explicit Phase A EPI
+# Explicit-density de Bruijn producer and explicit density-form EPI
 
-This file implements Pivot B: replacing the canonical `Measure.rnDeriv` representative
-in the de Bruijn producer with an explicit density argument.
+This file replaces the canonical `Measure.rnDeriv` representative in the de Bruijn
+producer with an explicit density argument.
 
 The canonical `rnDeriv` representative is `Classical.choose`-derived and generically
 non-differentiable, so `IsRegularDensityV2` (full pointwise regularity) cannot be
 transported from a smoothed density `conv(pX, g_t)` to a mere a.e.-equal canonical
-representative. Pivot B works around this by making the producer accept an explicit
-`pX : ℝ → ℝ` that the caller controls.
+representative. The producer here accepts an explicit `pX : ℝ → ℝ` that the caller
+controls.
 
 ## Main definitions
 
@@ -19,7 +19,7 @@ representative. Pivot B works around this by making the producer accept an expli
 
 ## Main statements
 
-- `entropy_power_inequality_of_density_explicit`: explicit-density Phase A EPI.
+- `entropy_power_inequality_of_density_explicit`: explicit-density density-form EPI.
 
 ## Implementation notes
 
@@ -583,7 +583,7 @@ theorem entropy_power_inequality_of_density_explicit
 
 /-- **Blachman bridge** — `IsBlachmanConvReady (convDensityAdd p_base g_τ) (gaussianPDFReal 0 v)`.
 
-The explicit Phase A `entropy_power_inequality_of_density_explicit` requires, for each density
+The explicit `entropy_power_inequality_of_density_explicit` requires, for each density
 witness `q`, a `hready : ∀ v ≠ 0, IsBlachmanConvReady q (gaussianPDFReal 0 v)`. When `q` is
 itself a conv-density `convDensityAdd p_base g_τ`, the bare `IsBlachmanConvReady (conv …) (g_v)`
 shape is supplied by the asymmetric producer `isBlachmanConvReady_convDensityAdd_gaussian_asym`:
@@ -632,11 +632,11 @@ theorem isBlachmanConvReady_convGaussian_gaussian (p_base : ℝ → ℝ) {τ : �
     rw [hh]; ring
   rwa [hcollapse] at hbundle
 
-/-- **Pivot B Phase 2a — per-`t` smoothing EPI**.
+/-- **Per-`t` smoothing EPI**.
 
 For smoothed variables `X_t = X + √t·Z_X`, `Y_t = Y + √t·Z_Y` (independent standard-normal
 noises), the entropy-power inequality holds at every fixed `t > 0`. Proved by instantiating the
-explicit-density Phase A EPI `entropy_power_inequality_of_density_explicit` at `X := X_t`,
+explicit-density EPI `entropy_power_inequality_of_density_explicit` at `X := X_t`,
 `Y := Y_t`, with conv-density witnesses `convDensityAdd p_base g_τ` (canonical-base densities
 convolved with the smoothing Gaussian), and discharging all regularity obligations via the
 public conv-Gaussian producers (regularity / normalization / Blachman / finite Fisher /
@@ -985,7 +985,7 @@ theorem entropyPower_smoothed_epi_perT
     rw [hpSt_def]
     exact InformationTheory.Shannon.convDensityAdd_gaussian_sq_integrable
       hpSb_nn hpSb_meas hpSb_int hpSb_mom (by positivity)
-  -- ===== assemble explicit Phase A at X := Xt, Y := Yt =====
+  -- ===== assemble the explicit density-form EPI at X := Xt, Y := Yt =====
   have hmain := entropy_power_inequality_of_density_explicit P Xt Yt hXt_meas hYt_meas hXtYt_indep
     hXt_ac hYt_ac h_mom_Xt h_mom_Yt
     pXt hpXt_nn hpXt_meas hpXt_int hpXt_law hpXt_mom hreg_pXt hpXt_norm hready_pXt hent_pXt
@@ -994,7 +994,7 @@ theorem entropyPower_smoothed_epi_perT
   -- rewrite Xt/Yt back to the brief's explicit `fun ω => …` form.
   simpa only [hXt_def, hYt_def] using hmain
 
-/-- **Pivot B Phase 2b — finite-variance classical EPI (Real, no noise)**.
+/-- **Finite-variance classical EPI (Real, no noise)**.
 
 The base-level entropy-power inequality `N(X+Y) ≥ N(X) + N(Y)` for absolutely
 continuous, finite-variance, independent `X, Y` — with NO smoothing noise. Obtained
@@ -1135,7 +1135,7 @@ theorem entropy_power_add_ge_of_finite_variance
     exact entropyPower_smoothed_epi_perT lift X' Y' ZX ZY hX'_meas hY'_meas hZX_meas hZY_meas
       hX'_ac hY'_ac h_mom_X' h_mom_Y' hZX_law hZY_law h_iIndep ht
   -- endpoint density witnesses.
-  -- generic builder (variable noise law / variance), mirroring Phase A `endpt_of`.
+  -- generic builder (variable noise law / variance), mirroring the density-form `endpt_of`.
   have endpt_of : ∀ (W : Ω → ℝ) (W' : Ω × ℝ × ℝ × ℝ → ℝ) (Zw : Ω × ℝ × ℝ × ℝ → ℝ)
       (vZ : ℝ≥0),
       Measurable W → Measurable W' → Measurable Zw → IndepFun W' Zw lift →
@@ -1309,7 +1309,7 @@ theorem entropy_power_add_ge_of_finite_variance
     exact htend_sum
   exact hfinal
 
-/-- **Pivot B Phase 2b — finite-variance classical EPI (ext, ℝ≥0∞)**.
+/-- **Finite-variance classical EPI (ext, ℝ≥0∞)**.
 
 The `entropyPowerExt` (ℝ≥0∞-valued) version of `entropy_power_add_ge_of_finite_variance`.
 Under the same hypotheses, `Nₑ(X+Y) ≥ Nₑ(X) + Nₑ(Y)` in `ℝ≥0∞`. Obtained by lifting the
@@ -1351,11 +1351,11 @@ theorem entropyPowerExt_add_ge_of_finite_variance
     ← ENNReal.ofReal_add (entropyPower_nonneg _) (entropyPower_nonneg _)]
   exact ENNReal.ofReal_le_ofReal hreal
 
-/-! ## Infinite-variance a.c. classical EPI (closure note)
+/-! ## Infinite-variance a.c. classical EPI
 
-The named wall `entropyPowerExt_add_ge_infinite_variance` was resolved (2026-06-07) via
-route T (compact-support truncation + finite-variance EPI black-box + Gibbs + DCT).
-The genuine closure lives in `EPIInfiniteVarianceCapstone.lean`; it cannot reside here
-because this file is upstream of the truncation module (import cycle). -/
+The infinite-variance case `entropyPowerExt_add_ge_infinite_variance` is established
+in `EPIInfiniteVarianceCapstone.lean` (compact-support truncation + finite-variance
+EPI + Gibbs + DCT). It cannot reside here because this file is upstream of the
+truncation module (import cycle). -/
 
 end InformationTheory.Shannon.EPICase1SmoothingLimit

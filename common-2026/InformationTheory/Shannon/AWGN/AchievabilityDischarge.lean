@@ -423,12 +423,7 @@ past `N₀`. The preconditions `hP : 0 < P` and `hN : (N:ℝ) ≠ 0` exclude the
 degenerate corner `1 + P/N < 0`, where `P.toNNReal = 0` collapses `klDiv` to `0`
 and the alias term no longer decays; under `0 < P` and `0 < N` we have
 `1 + P/N > 1 > 0`. They are regularity preconditions, not a bundled proof core.
-
-@audit:ok (independent honesty audit 2026-06-12, commit f69cfea: false-statement #6
-RESOLVED. `hP`/`hN` are regularity preconditions excluding the false corner `1+P/N<0`,
-NOT load-bearing bundling; corner discharged by a genuine contradiction
-`absurd (0 ≤ 1+P/N) hPN_nonneg` via `div_pos hP hN_pos`. 0 sorry / 0 residual,
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` re-confirmed.) -/
+@audit:ok -/
 theorem awgn_random_coding_union_bound
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
     (hP : 0 < P) (hN : (N : ℝ) ≠ 0)
@@ -782,15 +777,14 @@ theorem awgn_random_coding_union_bound
     rw [hint_eq]
     exact hmass
   -- ── Atom 3: second (alias) term `∑_{m'≠m} ∫ Wch(E2 m') = (M−1)·Q A ≤ ε`. ──
-  -- GENUINE (false-statement #6 fix, 2026-06-12): both sub-steps are now discharged
-  -- in this body. (a) **Q-marginal collapse** `∑_{m'≠m} ∫ Wch(E2 m') = (M−1)·Q A`
+  -- Two sub-steps: (a) **Q-marginal collapse** `∑_{m'≠m} ∫ Wch(E2 m') = (M−1)·Q A`
   -- (m'≠m ⟹ codebook m' ⊥ codebook m, the product law `Q`; same plumbing as term1's
   -- J-marginal). (b) **N₀-decay** `(M−1)·Q A ≤ (M−1)·exp(−(klDiv_n − n·3δ)) ≤
   -- ⌈exp(nR)⌉·exp(−n(I−3δ)) ≤ ε` from `hA_indep`, `hM_le`, and `hslack` (margin
   -- `g = I − R − 3δ > 0`, needing `klDiv_n = n·I` via `klDiv_perLetter_eq_capacity`
   -- and `klDiv_nFold_eq_nsmul`). `N₀ = ⌈log(2/ε)/g⌉` is the pinned decay threshold.
   -- The closed-form `klDiv_n = n·I` needs `0 < P` (precondition `hP`), which also
-  -- excludes the former degenerate corner `1 + P/N < 0`. sorryAx-free.
+  -- excludes the degenerate corner `1 + P/N < 0`.
   have h_term2 :
       ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
           ∫⁻ codebook, (Wch codebook) (E2 codebook m')
@@ -1075,12 +1069,9 @@ theorem awgn_random_coding_union_bound
               * Real.exp (-((klDiv J Q).toReal - (n : ℝ) * (3 * δ)))) := by
             rw [← ENNReal.ofReal_mul (by positivity)]
         _ ≤ ENNReal.ofReal ε := ENNReal.ofReal_le_ofReal hreal_decay
-    · -- The degenerate corner `1 + P/N < 0` (`P < −N`) is now UNREACHABLE: the
+    · -- The degenerate corner `1 + P/N < 0` (`P < −N`) is unreachable: the
       -- signature precondition `hP : 0 < P` together with `hN_pos : 0 < N` gives
       -- `P/N > 0`, hence `1 + P/N > 1 > 0`, contradicting `hPN_nonneg : ¬ 0 ≤ 1+P/N`.
-      -- (Fix for false-statement #6: previously `hslack` was satisfiable in this
-      -- corner via Mathlib's `Real.log x = log|x|` convention with `1+P/N < 0`, where
-      -- `klDiv J Q = 0` made term2 false-as-framed. Adding `hP`/`hN` excludes it.)
       have hPN_pos : (0 : ℝ) < P / (N : ℝ) := div_pos hP hN_pos
       exact absurd (by linarith : (0 : ℝ) ≤ 1 + P / (N : ℝ)) hPN_nonneg
   -- ── Combine: `≤ ε + ε = 2ε`. ──
@@ -1101,10 +1092,9 @@ error probability (using `jointTypicalDecoder` against the AEP-supplied typical
 set) is `≤ 2ε` for all `M ≤ ⌈exp(n R)⌉` once `n` is large enough, given the
 typicality margin `R + 3δ < (1/2) log(1 + P/N)` with `δ` separate from `ε`.
 
-@audit:ok (independent honesty audit 2026-06-12, commit f69cfea: genuine modular
-composition of `continuousAepGaussian_holds` + `awgn_random_coding_union_bound`; own
-`hP`/`hN` passed through to the union bound at the call site, 0 sorry / 0 residual,
-`#print axioms` = `[propext, Classical.choice, Quot.sound]`.) -/
+A modular composition of `continuousAepGaussian_holds` + `awgn_random_coding_union_bound`;
+`hP`/`hN` are passed through to the union bound at the call site.
+@audit:ok -/
 @[entry_point]
 theorem awgn_avg_error_union_bound
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -1350,11 +1340,9 @@ union-bound margin `R'' + 3δ < C`, the typical set and its two AEP bounds from
 `awgn_random_coding_union_bound P' N h_meas`, and the power constraint from the
 per-codeword expurgation bound `awgnPowerConstraintPerCodeword_holds P' P N`.
 
-@audit:ok (independent honesty audit 2026-06-12, commit f69cfea: proof-done CONFIRMED.
 The strict witness `hP'_pos : 0 < P'` (from `awgnPowerWitness_exists`) + `hN` are
-genuinely supplied to `awgn_random_coding_union_bound`, not fabricated from `≤`.
-0 sorry / 0 residual, `#print axioms` = `[propext, Classical.choice, Quot.sound]`
-re-confirmed by this audit.) -/
+supplied to `awgn_random_coding_union_bound`.
+@audit:ok -/
 @[entry_point]
 theorem isAwgnTypicalityHypothesis
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -1374,11 +1362,10 @@ theorem isAwgnTypicalityHypothesis
     awgnPowerWitness_exists P hP N hN hR_pos hR
   -- Non-strict slack kept under the original name for the verbatim assembly.
   have hP'_lt_P : P' ≤ P := le_of_lt hP'_lt_P_strict
-  -- (i) AEP at `P'` (typical-set existence + 2 bounds at slack `δ`) — wall 1.
+  -- (i) AEP at `P'` (typical-set existence + 2 bounds at slack `δ`).
   have h_aep' := continuousAepGaussian_holds P' N
-  -- (iii) per-codeword power-constraint expurgation bound — wall 3 (Phase 5a
-  -- genuine, sorryAx-free). Needs the variance-level slack
-  -- `(P'.toNNReal : ℝ) < P`; from `0 < P' < P` and `(P'.toNNReal : ℝ) = P'`
+  -- (iii) per-codeword power-constraint expurgation bound. Needs the variance-level
+  -- slack `(P'.toNNReal : ℝ) < P`; from `0 < P' < P` and `(P'.toNNReal : ℝ) = P'`
   -- (since `P' > 0`).
   have hP'_toNNReal_eq : (P'.toNNReal : ℝ) = P' := by
     rw [Real.coe_toNNReal']; exact max_eq_left hP'_pos.le

@@ -550,7 +550,7 @@ theorem differentialEntropyExt_top_of_indep_add_unconditional
     rw [hconv]
     exact negPart_negMulLog_conv_single_ne_top (P.map W) (P.map V) hW_ac hBW
   -- **Step 1 — `h(ν_n) → ⊤`** (squeeze: per-n monotone below a tendsto-⊤ sequence).
-  -- Phase 3: `h(Q_n.map W) → ⊤`.
+  -- `h(Q_n.map W) → ⊤`.
   have hW_tendsto : Tendsto (fun n => differentialEntropyExt ((truncW P W n).map W)) atTop
       (𝓝 (⊤ : EReal)) :=
     differentialEntropyExt_truncW_tendsto_top W P hW hW_ac hBW hW_top

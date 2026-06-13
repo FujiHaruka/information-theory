@@ -22,59 +22,26 @@ import InformationTheory.Shannon.EPI.G2.ConvEntropyDensity
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# G2: heat-flow entropy-power continuity at the endpoint `t = 0⁺`
+# Heat-flow entropy-power continuity at the endpoint `t = 0⁺`
 
-This file isolates the single analytic atom used by the live EPI continuity
-consumer in `EPIStamToBridge.lean`:
+This file isolates the single analytic atom used by the EPI continuity consumer in
+`EPIStamToBridge.lean`: the continuity of
+`t ↦ entropyPower (P.map (fun ω => X ω + √t · Z ω))` at the endpoint `t = 0⁺` along
+the heat-flow ray. The interior `t > 0` continuity is supplied separately and
+genuinely by `csiszarLogRatioGap_differentiableOn_interior`.
 
-* `csiszarLogRatioGap_continuousOn` (R-5-b, live: feeds `antitoneOn_of_deriv_nonpos`
-  in R-5-c).
+The endpoint atom is `heatFlowEntropyPower_continuousWithinAt_zero`, claiming only
+`ContinuousWithinAt (Set.Ioi 0) 0` (the single endpoint limit `t → 0⁺`). The endpoint
+is re-attached to the interior with the OrderDual mirror
+`AntitoneOn.insert_of_continuousWithinAt` (added in this file).
 
-(The dead difference-version continuity consumer was deleted with the dead
-de Bruijn difference subgraph.)
+## Main statements
 
-It reduces, at the endpoint `t = 0`, to the continuity of a single term
-`t ↦ entropyPower (P.map (fun ω => X ω + √t · Z ω))` as `t → 0⁺` along the
-heat-flow ray. The interior `t > 0` is genuine (already supplied by
-`csiszarLogRatioGap_differentiableOn_interior`).
-
-## Surface shrink (2026-06-04): full ray → endpoint `t = 0⁺` only
-
-The shared wall is now `heatFlowEntropyPower_continuousWithinAt_zero`, claiming
-only `ContinuousWithinAt (Set.Ioi 0) 0` (the single endpoint limit `t → 0⁺`),
-not the full-ray `ContinuousOn (Set.Ici 0)`. The interior `t > 0` continuity is
-recovered *genuinely* on the consumer side (`EPIStamToBridge.lean`) from
-`csiszarLogRatioGap_differentiableOn_interior` (`.continuousOn`, no wall), and the
-endpoint is re-attached with the OrderDual mirror
-`AntitoneOn.insert_of_continuousWithinAt` (added in this file). Net honesty gain:
-the residual shrinks from "continuity along every ray point" to "continuity at the
-single endpoint `t = 0⁺`"; the interior is now honest-genuine.
-
-## GATE verdict (2026-06-03): NO-GO — `wall:heatflow-continuity`
-
-The endpoint continuity hinges on a `t = 0⁺`-uniform integrable pointwise
-majorant `g` with `‖negMulLog (f_t x)‖ ≤ g x` for all small `t`, required by
-`MeasureTheory.continuousWithinAt_of_dominated`. Such a `g` cannot be built from
-the fields available in `IsDeBruijnRegularityHyp`:
-
-* The only smoothed-density envelopes (`convDensityAdd_logFactor_poly_majorant`,
-  `_chain_domination`, `gaussGradMaj`, all in `FisherInfoV2DeBruijnAssembly.lean`,
-  all `private`) are **fixed-`t`** with constants that **diverge as `t → 0⁺`**
-  (`A_up ⊃ (1/2)·log(4πt) + 2R²/t`, slope `B = 2/t`) and are restricted to
-  `s ∈ Ioo (t/2, 2t)` — explicitly bounded away from `0`.
-* The regularity fields supply only `pX_nn`, `pX_meas`, `pX_law` (an L¹ density)
-  and `pX_mom` (finite second moment) — no L^∞ / continuity control on `pX`. For a
-  general L¹ + finite-second-moment density `pX`, `negMulLog (pX ∗ g_t)` admits no
-  single `t`-uniform integrable pointwise envelope as `t → 0⁺` (e.g. `pX` with an
-  integrable singularity).
-
-`entropyPower` / `differentialEntropy` continuity is absent in both Mathlib and
-InformationTheory (loogle: 0 declarations). The endpoint atom is therefore parked
-as a shared sorry lemma `heatFlowEntropyPower_continuousWithinAt_zero` under the
-(now SUPERSEDED) wall name `heatflow-continuity` — see the wall register; the live
-residual is `wall:approx-identity-L1`. The DCT machinery
-(`continuousWithinAt_of_dominated`) itself is fully present in Mathlib; the wall
-is the uniform majorant only.
+* `heatFlowEntropyPower_continuousWithinAt_zero` — endpoint entropy-power continuity.
+* `heatFlowDifferentialEntropy_continuousWithinAt_zero` — the inner
+  differential-entropy continuity it lifts.
+* `differentialEntropy_convDensity_integral_tendsto` — the density-level
+  entropy-integral convergence underlying both.
 -/
 
 namespace InformationTheory.Shannon
@@ -84,49 +51,22 @@ open InformationTheory.Shannon.EntropyPowerInequality
 open InformationTheory.Shannon.EPIConvDensity
 open scoped ENNReal NNReal Topology
 
-/-! ## Layer 1 — approximate-identity L¹ convergence (moved)
-
-The density-level approximate-identity L¹ convergence `convDensityAdd pX g_t → pX`
-in `L¹(volume)` as `t → 0⁺` now lives in `EPIApproxIdentityL1.lean` as
-`convDensityAdd_tendsto_L1_zero` (with its genuine translation-continuity /
-continuous-Minkowski / difference-representation helpers). The layer-2 machinery
-below no longer consumes it: the 2026-06-05 sandwich swap derives the
-entropy-integral limit directly from the (α)/(β) bounds (both `@audit:ok`), so the
-Vitali UI/UT/ae route and its `wall:approx-identity-L1` witnesses are gone. -/
-
-/-! ## Layer 1' — entropy finiteness of the limit density (now a precondition)
+/-! ## Entropy finiteness of the limit density (a precondition)
 
 `Integrable (negMulLog pX)` (= `h(X) < ∞`, differential entropy of the limit
-density `pX` finite) is required as the limit-side `MemLp` / `Integrable` input by
-the Vitali (`tendsto_Lp_of_tendsto_ae`) and the L¹→integral
-(`tendsto_integral_of_L1'`) machinery. It does **not** follow from the L¹ +
+density `pX` finite) is required as the limit-side `Integrable` input by the
+entropy-integral machinery. It does **not** follow from the L¹ +
 finite-second-moment regularity of `pX` (a concentrated density can have
-`∫ negMulLog pX = −∞`, an under-hypothesised / insufficient signature in the sense
-of CLAUDE.md "Verification honesty"). Rather than claim a false implication, it is now
-carried as an explicit **`hpX_ent` precondition** (plan Phase 5-F, pitfall-2 option
-a): the input `X` has finite differential entropy. This is a regularity
-precondition on the input distribution, not a load-bearing conclusion. The former
-`negMulLog_integrable_of_density` lemma (which falsely claimed derivability from L¹
-+ second moment) is deleted. -/
+`∫ negMulLog pX = −∞`). It is therefore carried as an explicit `hpX_ent`
+precondition: the input `X` has finite differential entropy. This is a regularity
+precondition on the input distribution, not a load-bearing conclusion. -/
 
-/-! ## Layer 1'' — per-time entropy-integrand integrability (parked wall)
-
-The L¹→integral machinery (`tendsto_integral_of_L1'`) requires
-`Integrable (negMulLog (convDensityAdd pX g_t))` for each `t > 0`. Mathlib-internal
-asset `convDensityAdd_negMulLog_integrable` (FisherInfoV2DeBruijnAssembly.lean:2529)
-proves exactly this but is `private` (file-scoped). Re-exposed here as a public
-shared sorry lemma; a follow-up may make the Assembly version public and discharge
-this by delegation (genuine, no new analytic content). -/
-
-/-- **Layer 1'' (per-time entropy-integrand integrability).**
+/-- **Per-time entropy-integrand integrability.**
 For each `t > 0`, `negMulLog (convDensityAdd pX g_t)` is `volume`-integrable.
 
-Closed (2026-06-04, plan Phase 5-E) by importing the genuine in-tree asset
-`FisherInfoV2.convDensityAdd_negMulLog_integrable`
-(`FisherInfoV2DeBruijnAssembly.lean:2529`, `@audit:ok`, sorryAx-free). The asset
-was formerly `private` (file-scoped); it is now public, and this lemma delegates to
-it verbatim (same conclusion type). Pure plumbing, no new analytic content — the
-former `private` file-scope obstacle is removed.
+Delegates verbatim to the in-tree asset
+`FisherInfoV2.convDensityAdd_negMulLog_integrable` (same conclusion type); pure
+plumbing, no new analytic content.
 @audit:ok -/
 theorem convDensityAdd_negMulLog_integrable_pub
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -137,30 +77,27 @@ theorem convDensityAdd_negMulLog_integrable_pub
   InformationTheory.Shannon.FisherInfoV2.convDensityAdd_negMulLog_integrable
     pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
 
-/-! ## Layer 2 — genuine two-sided sandwich (2026-06-05)
+/-! ## Two-sided sandwich for the entropy-integral limit
 
-The lift from per-time entropy integrals to the endpoint entropy integral is now a
-genuine two-sided sandwich, replacing the former Vitali (UnifIntegrable / UnifTight)
-route. The previous route consumed parked `wall:approx-identity-L1` witnesses; those
-are deleted. The sandwich uses two `@audit:ok` levers plus a genuine maxent bound:
+The lift from per-time entropy integrals to the endpoint entropy integral is a
+two-sided sandwich:
 
 * **(α) limsup upper bound** — `InformationTheory.EPIG2KLFatou.negMulLog_convDensity_limsup_le`
   (Fatou / KL lower-semicontinuity): `limsup (∫ negMulLog f_n) ≤ ∫ negMulLog pX`.
 * **(β) per-`n` lower bound** — `negMulLog_convDensity_entropy_ge_density`
   (conditioning reduces entropy): `∫ negMulLog pX ≤ ∫ negMulLog f_n`.
 * **uniform upper bound** — `negMulLog_convDensityAdd_gaussian_entropy_upper`
-  (Gaussian maximum-entropy, `@audit:ok`): a per-`n` bound with a uniform variance
-  majorant (the `v n` are bounded since `v n → 0`), supplying the
-  `IsBoundedUnder (· ≤ ·)` witness for the squeeze.
+  (Gaussian maximum-entropy): a per-`n` bound with a uniform variance majorant
+  (the `v n` are bounded since `v n → 0`), supplying the `IsBoundedUnder (· ≤ ·)`
+  witness for the squeeze.
 
 The squeeze `tendsto_of_le_liminf_of_limsup_le` then gives `∫ negMulLog f_n → ∫
 negMulLog pX` along sequences, lifted to `𝓝[Ioi 0] 0` via
 `Filter.tendsto_iff_seq_tendsto`. -/
 
-/-- **Layer 2 (genuine entropy-integral convergence).** Density-level
-entropy-integral convergence: given the regularity of `pX` and the entropy-finiteness
-precondition `hpX_ent` (= `h(X) < ∞`, a regularity precondition on the input — see
-Layer 1' note), the differential-entropy integrals of the heat-smoothed densities
+/-- **Entropy-integral convergence.** Given the regularity of `pX` and the
+entropy-finiteness precondition `hpX_ent` (= `h(X) < ∞`, a regularity precondition
+on the input), the differential-entropy integrals of the heat-smoothed densities
 converge to the entropy integral of `pX` as `t → 0⁺`:
 
 `∫ negMulLog (convDensityAdd pX g_t) ∂volume → ∫ negMulLog pX ∂volume`.
@@ -216,14 +153,14 @@ theorem differentialEntropy_convDensity_integral_tendsto
     (hv_lim.mono_right nhdsWithin_le_nhds).bddAbove_range
   -- Abbreviation for the target value `a := ∫ g = ∫ negMulLog pX`.
   set a : ℝ := ∫ x, g x ∂volume with ha_def
-  -- **(β) lower bound** (`negMulLog_convDensity_entropy_ge_density`, genuine, `@audit:ok`):
+  -- **(β) lower bound** (`negMulLog_convDensity_entropy_ge_density`):
   -- for every `n`, `∫ negMulLog pX ≤ ∫ F n`, i.e. `a ≤ ∫ F n`.
   have hβ : ∀ n, a ≤ ∫ x, F n x ∂volume := by
     intro n
     rw [ha_def, hg_def, hF_def]
     exact negMulLog_convDensity_entropy_ge_density hpX_nn hpX_meas hpX_int hpX_mass hpX_mom
       hpX_ent (v_Z := 1) one_pos v hv_pos n
-  -- **(α) limsup upper bound** (`negMulLog_convDensity_limsup_le`, genuine, `@audit:ok`):
+  -- **(α) limsup upper bound** (`negMulLog_convDensity_limsup_le`):
   -- `limsup (∫ F ·) ≤ ∫ negMulLog pX = a`.
   have hα : Filter.limsup (fun n => ∫ x, F n x ∂volume) atTop ≤ a := by
     rw [ha_def, hg_def]
@@ -232,7 +169,7 @@ theorem differentialEntropy_convDensity_integral_tendsto
     -- The lever's summand `∫ negMulLog (convDensityAdd pX (gaussianPDFReal 0 ⟨v n,_⟩))`
     -- is `F n` by definition.
     simpa only [hF_def] using hlim
-  -- **Uniform upper bound on `∫ F n`** (genuine, `@audit:ok`, no wall): the Gaussian
+  -- **Uniform upper bound on `∫ F n`**: the Gaussian
   -- maximum-entropy bound `negMulLog_convDensityAdd_gaussian_entropy_upper` gives a per-`n`
   -- bound with a uniform variance majorant `V` (since the `v n` are bounded above).
   obtain ⟨C, hC⟩ : ∃ C : ℝ, ∀ n, (∫ x, F n x ∂volume) ≤ C := by
@@ -286,23 +223,21 @@ theorem differentialEntropy_convDensity_integral_tendsto
     exact hn.symm
   simp only [hF_def, Function.comp_apply, hwit]
 
-/-- **Step 1 (genuine standalone helper): heat-flow differential-entropy endpoint
-continuity.** With explicit regularity preconditions on `X, Z` (measurability,
-independence, Gaussian noise law `P.map Z = 𝒩(0, v_Z)`) and a Real density witness
-`pX` for `P.map X`, the inner differential entropy of the heat-flow path is
-`ContinuousWithinAt (Set.Ioi 0) 0`:
+/-- **Heat-flow differential-entropy endpoint continuity.** With explicit regularity
+preconditions on `X, Z` (measurability, independence, Gaussian noise law
+`P.map Z = 𝒩(0, v_Z)`) and a Real density witness `pX` for `P.map X`, the inner
+differential entropy of the heat-flow path is `ContinuousWithinAt (Set.Ioi 0) 0`:
 
 `t ↦ differentialEntropy (P.map (X + √t·Z))` is continuous at `t = 0⁺`.
 
-This is the genuine bridge (plan Phase 5-B, Approach B-1..B-4): the density
-identification `pPath_eq_convDensityAdd` (`@audit:ok`, general `v_Z`) turns the
-pushforward density into `convDensityAdd pX (gaussianPDFReal 0 ⟨t·v_Z,_⟩)` for each
-`t > 0`, the differential entropy becomes `∫ negMulLog (convDensityAdd …)` (B-2),
-the layer-2 machinery `differentialEntropy_convDensity_integral_tendsto`
-(reparameterised `t' := t·v_Z`) supplies the limit (B-3), and `ContinuousWithinAt`
-is recovered with the endpoint value `differentialEntropy (P.map X) = ∫ negMulLog pX`
-(B-4). All fields are preconditions (regularity / input-distribution data); no
-continuity conclusion is bundled.
+The density identification `pPath_eq_convDensityAdd` turns the pushforward density
+into `convDensityAdd pX (gaussianPDFReal 0 ⟨t·v_Z,_⟩)` for each `t > 0`, the
+differential entropy becomes `∫ negMulLog (convDensityAdd …)`, the
+entropy-integral convergence `differentialEntropy_convDensity_integral_tendsto`
+(reparameterised `t' := t·v_Z`) supplies the limit, and `ContinuousWithinAt`
+is recovered with the endpoint value `differentialEntropy (P.map X) = ∫ negMulLog pX`.
+All fields are preconditions (regularity / input-distribution data); no continuity
+conclusion is bundled.
 @audit:ok -/
 theorem heatFlowDifferentialEntropy_continuousWithinAt_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω} (X Z : Ω → ℝ) (P : Measure Ω)
@@ -328,8 +263,8 @@ theorem heatFlowDifferentialEntropy_continuousWithinAt_zero
       differentialEntropy_eq_integral_withDensity hpX_meas.ennreal_ofReal]
     refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
     simp only [ENNReal.toReal_ofReal (hpX_nn x)]
-  -- (B-1 + B-2) Per-`t > 0`, the inner differential entropy equals the
-  -- `convDensityAdd` entropy integral with variance `t·v_Z`.
+  -- Per-`t > 0`, the inner differential entropy equals the `convDensityAdd`
+  -- entropy integral with variance `t·v_Z`.
   have h_perT : ∀ t : ℝ, 0 < t →
       differentialEntropy (P.map (fun ω => X ω + Real.sqrt t * Z ω))
         = ∫ x, Real.negMulLog
@@ -345,18 +280,18 @@ theorem heatFlowDifferentialEntropy_continuousWithinAt_zero
         (fun ω => X ω + Real.sqrt t * Z ω)
           = InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z t := rfl
     rw [hpath_eq]
-    -- density identification (B-1)
+    -- density identification
     have hrn := InformationTheory.Shannon.FisherInfoV2.pPath_eq_convDensityAdd
       X Z hX_meas hZ_meas hXZ_indep v_Z hv_Z_pos hZ_law pX hpX_nn hpX_meas hpX_law ht
     unfold differentialEntropy
-    -- (B-2) push the a.e. density identity into the integrand.
+    -- push the a.e. density identity into the integrand.
     refine integral_congr_ae ?_
     filter_upwards [hrn] with x hx
     rw [hx, ENNReal.toReal_ofReal]
     unfold convDensityAdd
     exact integral_nonneg fun y =>
       mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _)
-  -- (B-3) Reparameterise the layer-2 limit `t' := t·v_Z`. First the inner reparam.
+  -- Reparameterise the entropy-integral limit `t' := t·v_Z`. First the inner reparam.
   have h_reparam : Tendsto (fun t : ℝ => t * (v_Z : ℝ)) (𝓝[Set.Ioi 0] 0) (𝓝[Set.Ioi 0] 0) := by
     rw [tendsto_nhdsWithin_iff]
     constructor
@@ -372,7 +307,7 @@ theorem heatFlowDifferentialEntropy_continuousWithinAt_zero
         (convDensityAdd pX (gaussianPDFReal 0 (t * v_Z).toNNReal) x) ∂volume)
         (𝓝[Set.Ioi 0] 0) (𝓝 (∫ x, Real.negMulLog (pX x) ∂volume)) :=
     h_layer2.comp h_reparam
-  -- (B-4) Assemble `ContinuousWithinAt`.
+  -- Assemble `ContinuousWithinAt`.
   rw [ContinuousWithinAt, h_end_val]
   refine h_tendsto.congr' ?_
   filter_upwards [self_mem_nhdsWithin] with t ht
@@ -404,41 +339,26 @@ theorem _root_.AntitoneOn.insert_of_continuousWithinAt
 /-- **Heat-flow endpoint regularity bundle** (precondition for the G2 wall lemma).
 
 Carries exactly the regularity / input-distribution data the density-identification
-bridge (`pPath_eq_convDensityAdd`) and the layer-2 machinery
+bridge (`pPath_eq_convDensityAdd`) and the entropy-integral machinery
 (`differentialEntropy_convDensity_integral_tendsto`) require, at the endpoint
 `t = 0⁺`:
 
 * `hX_meas` / `hZ_meas` / `hXZ_indep` — measurability + independence of the de
-  Bruijn pair `X ⊥ Z` (Cover-Thomas 17.7.2 standing assumptions).
+  Bruijn pair `X ⊥ Z` (Cover–Thomas 17.7.2 standing assumptions).
 * `v_Z` / `hv_Z_pos` / `hZ_law` — the Gaussian noise law `P.map Z = 𝒩(0, v_Z)`
   (general variance, so the sum instance `Z_X+Z_Y ∼ 𝒩(0,2)` fits).
 * `pX` / `hpX_nn` / `hpX_meas` / `hpX_law` — a Real density witness for `P.map X`.
 * `hpX_int` / `hpX_mass` / `hpX_mom` — `pX` is a probability density with finite
-  second moment (layer-2 regularity inputs).
+  second moment.
 * `hpX_ent` — `negMulLog pX` is `volume`-integrable, i.e. the input differential
-  entropy `h(X)` is finite (plan Phase 5-F precondition; a regularity precondition
-  on the input distribution, not derivable from L¹ + second moment — see Layer 1').
+  entropy `h(X)` is finite (a regularity precondition on the input distribution,
+  not derivable from L¹ + second moment).
 
-**Every field is a precondition** (regularity / input-distribution data); none is a
-continuity / L¹-convergence / density-identification conclusion. This is NOT a
+Every field is a precondition (regularity / input-distribution data); none is a
+continuity / L¹-convergence / density-identification conclusion. This is not a
 load-bearing hypothesis bundle — the analytic content is discharged genuinely by
-`heatFlowDifferentialEntropy_continuousWithinAt_zero`, which only *consumes* these
-fields as inputs (cf. `audit-tags.md` "non-bundle check").
-
-Independent honesty audit 2026-06-04 (fresh subagent, commit fa0fe3f): PASS. All
-13 fields checked individually — measurability / independence / Gaussian noise law
-/ Real density witness data — every one is a precondition. No field has type
-`ContinuousWithinAt …` / a limit / an L¹-convergence / a density-identification
-equality; the structure carries no conclusion atom. Not load-bearing (tier 5),
-not degenerate. The wall lemma consumes the bundle as inputs to the genuine helper.
-
-Plan Phase 5-F (2026-06-04): a 14th field `hpX_ent` (`Integrable (negMulLog pX)`,
-input entropy finiteness) was added. It is a regularity precondition on the input
-distribution `X` (the input has finite differential entropy), NOT a continuity /
-density-identification conclusion — distinct from the heat-flow continuity that is
-the wall lemma's conclusion. It replaces the former false-as-stated
-`negMulLog_integrable_of_density` lemma (which claimed entropy finiteness followed
-from L¹ + second moment; a concentrated density refutes that). -/
+`heatFlowDifferentialEntropy_continuousWithinAt_zero`, which only consumes these
+fields as inputs. -/
 structure IsHeatFlowEndpointRegular {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] where
   hX_meas : Measurable X
@@ -456,69 +376,23 @@ structure IsHeatFlowEndpointRegular {Ω : Type*} [MeasurableSpace Ω]
   hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume
   hpX_ent : Integrable (fun x => Real.negMulLog (pX x)) volume
 
-/-- **G2 shared wall lemma (endpoint version)** — heat-flow entropy-power
-continuity at the single endpoint `t = 0⁺`.
+/-- **Heat-flow entropy-power endpoint continuity.**
 
 `t ↦ entropyPower (P.map (fun ω => X ω + √t · Z ω))` is `ContinuousWithinAt
-(Set.Ioi 0) 0` (the limit `t → 0⁺`). The live consumer
+(Set.Ioi 0) 0` (the limit `t → 0⁺`). The consumer
 (`csiszarLogRatioGap_continuousWithinAt_zero`) reduces to three instances of this
 single endpoint term; the interior `t > 0` continuity is supplied separately and
-genuinely from `csiszarLogRatioGap_differentiableOn_interior` (`.continuousOn`),
-so the wall is confined to the one endpoint atom.
+genuinely from `csiszarLogRatioGap_differentiableOn_interior` (`.continuousOn`).
 
-The endpoint `t = 0⁺` is genuinely discharged (2026-06-04, plan Phase 5-B): the
-inner differential-entropy continuity is the standalone helper
+The endpoint is discharged via the inner differential-entropy continuity
 `heatFlowDifferentialEntropy_continuousWithinAt_zero` (density identification
-`pPath_eq_convDensityAdd` + reparameterised layer-2 machinery
-`differentialEntropy_convDensity_integral_tendsto`), and `entropyPower =
-exp ∘ (2·differentialEntropy)` lifts it via `Real.continuous_exp`. The direct
-`sorry` is gone.
+`pPath_eq_convDensityAdd` + reparameterised entropy-integral convergence
+`differentialEntropy_convDensity_integral_tendsto`), with `entropyPower =
+exp ∘ (2·differentialEntropy)` lifting it via `Real.continuous_exp`.
 
-**Wall CLOSED (2026-06-05, sandwich swap).** The layer-2 machinery
-`differentialEntropy_convDensity_integral_tendsto` was re-derived genuinely via a
-two-sided sandwich — the Fatou-LSC limsup upper bound
-`InformationTheory.EPIG2KLFatou.negMulLog_convDensity_limsup_le` (α, `@audit:ok`)
-plus the conditioning per-`n` lower bound
-`negMulLog_convDensity_entropy_ge_density` (β, `@audit:ok`), squeezed by
-`tendsto_of_le_liminf_of_limsup_le` with the uniform upper-boundedness witness from
-the genuine Gaussian maxent bound `negMulLog_convDensityAdd_gaussian_entropy_upper`
-(`@audit:ok`). The Vitali UI/UT route (and the parked
-`wall:approx-identity-L1` witnesses) is no longer consumed; the witnesses were
-deleted. `#print axioms` is now `[propext, Classical.choice, Quot.sound]`
-(sorryAx-free, machine-checked 2026-06-05). This lemma carries no residual.
-
-The bridge requires `Measurable X`, `Measurable Z`, `IndepFun X Z P` and a Real
-density witness for `P.map X` — not carried by the old `IsDeBruijnRegularityHyp`.
-This signature now takes `IsHeatFlowEndpointRegular X Z P` instead, whose fields
-are **all preconditions** (regularity / input-distribution data); no continuity /
-density-identification conclusion is bundled (not load-bearing). The structure was
-threaded down the consumer chain in the same plan (Phase 5-D).
-
-Surface shrink (2026-06-04): the predecessor `heatFlowEntropyPower_continuousOn`
-claimed the full ray `ContinuousOn (Set.Ici 0)`; this version shrinks the residual
-to the single endpoint, with the interior recovered genuinely on the consumer side.
-
-Residual status (plan Phase 5-B/5-E/5-F + 2026-06-05 sandwich closure): this
-lemma's **own** body is genuine — it delegates to
-`heatFlowDifferentialEntropy_continuousWithinAt_zero` (itself `sorry`-free), which
-in turn consumes the now-genuine layer-2 machinery. All former residuals are closed:
-
-* Phase 5-E (plumbing): `convDensityAdd_negMulLog_integrable_pub` is genuine —
-  it delegates to the (now public) `@audit:ok` Assembly asset
-  `FisherInfoV2.convDensityAdd_negMulLog_integrable`.
-* Phase 5-F (precondition): the limit-density entropy finiteness is the `hpX_ent`
-  field of `IsHeatFlowEndpointRegular` — a regularity precondition, not a residual.
-* 2026-06-05 (layer-2 sandwich): the last transitive residual
-  (`wall:approx-identity-L1`, via the Vitali UI/UT witnesses) is removed — the
-  layer-2 limit is now derived by the (α)/(β) sandwich, both `@audit:ok`. The
-  Vitali witnesses were deleted.
-
-`#print axioms heatFlowEntropyPower_continuousWithinAt_zero` is therefore
-`[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-checked
-2026-06-05). The signature `IsHeatFlowEndpointRegular X Z P` carries only
+The signature takes `IsHeatFlowEndpointRegular X Z P`, whose fields are all
 preconditions (regularity / input-distribution data); no continuity /
-density-identification conclusion is bundled (not load-bearing / circular /
-wall-misuse). 0 own sorry, 0 residual.
+density-identification conclusion is bundled.
 @audit:ok -/
 @[entry_point]
 theorem heatFlowEntropyPower_continuousWithinAt_zero

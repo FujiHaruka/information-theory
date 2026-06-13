@@ -18,10 +18,11 @@ import Mathlib.Topology.Instances.EReal.Lemmas
 import Mathlib.Order.Filter.AtTopBot.Group
 
 /-!
-# Entropy Power Inequality — L-EPI3 final integration
+# Entropy power inequality — final integration
 
 This file integrates the building blocks from `EPIPlumbing`, `EPIStamDischarge`,
-and `FisherInfoV2DeBruijn` to assemble `IsEPIL3IntegratedPipeline` and derive EPI.
+and `FisherInfoV2DeBruijn` to assemble `IsEPIL3IntegratedPipeline` and derive the
+entropy power inequality.
 
 ## Main definitions
 
@@ -29,21 +30,23 @@ and `FisherInfoV2DeBruijn` to assemble `IsEPIL3IntegratedPipeline` and derive EP
 
 ## Main statements
 
-- `isEPIL3IntegratedPipeline_of_gaussian`: Gaussian full discharge (§3).
-- `entropy_power_inequality_gaussian_full`: Gaussian EPI hypothesis-free (§9).
-- `isEPIL3IntegratedPipeline_symm`: symmetry of the integrated pipeline (§6).
-- `isEPIL3IntegratedPipeline_of_stam`: pipeline from a Stam residual (§6).
-- `integrated_pipeline_roundtrip`: round-trip sanity check (§11).
+- `isEPIL3IntegratedPipeline_of_gaussian`: Gaussian pipeline witness from an honest
+  Stam hypothesis.
+- `entropy_power_inequality_gaussian_full`: Gaussian EPI, hypothesis-free.
+- `isEPIL3IntegratedPipeline_symm`: symmetry of the integrated pipeline.
+- `isEPIL3IntegratedPipeline_of_stam`: pipeline from a Stam residual.
+- `integrated_pipeline_roundtrip`: round-trip sanity check.
 
 ## Implementation notes
 
-The Stam-to-EPI bridge (Cover-Thomas Lemma 17.7.3, Csiszár-style coupling) is absent
+The Stam-to-EPI bridge (Cover–Thomas Lemma 17.7.3, Csiszár-style coupling) is absent
 from Mathlib. The current design:
-- L-EPI1 (Stam inequality) is received as a genuine `IsStamInequalityHyp X Y P`.
-- L-EPI2 (de Bruijn integration) uses `IsDeBruijnIntegrationHyp` and
+- The Stam inequality is received as a genuine `IsStamInequalityHyp X Y P`.
+- de Bruijn integration uses `IsDeBruijnIntegrationHyp` and
   `FisherInfoV2DeBruijn.deBruijn_identity_v2_gaussian` for the Gaussian case.
-- The Stam → L-EPI3 coupling uses `IsStamToEPIBridgeHyp` pass-through;
-  the Gaussian saturation case is fully discharged in §3.
+- The Stam-to-EPI coupling is discharged internally by consumers via the shared
+  sorry lemma `EntropyPowerInequality.stamToEPIBridge_holds`; the Gaussian
+  saturation case is fully discharged.
 -/
 
 namespace InformationTheory.Shannon.EPIL3Integration
@@ -58,39 +61,28 @@ open InformationTheory.Shannon.EPIStamDischarge
 open InformationTheory.Shannon.EPIConvDensity (convDensityAdd)
 open InformationTheory.Shannon.EPIBlachmanGaussianWitness (convDensityAdd_gaussian_closed_form)
 
-/-! ## §1 — Integrated pipeline predicate -/
+/-! ## Integrated pipeline predicate -/
 
-/-- **Integrated L-EPI3 pipeline predicate**.
+/-- **Integrated pipeline predicate**.
 
-Carries the genuine Stam inequality (Cover-Thomas Lemma 17.7.2 signature) as its
-single field. The Stam-to-EPI *bridge* (Cover-Thomas Lemma 17.7.3 coupling) is no
-longer a load-bearing field: consumers now discharge it internally via the shared
-sorry lemma `EntropyPowerInequality.stamToEPIBridge_holds`
+Carries the genuine Stam inequality (Cover–Thomas Lemma 17.7.2 signature) as its
+single field. The Stam-to-EPI *bridge* (Cover–Thomas Lemma 17.7.3 coupling) is not a
+load-bearing field: consumers discharge it internally via the shared sorry lemma
+`EntropyPowerInequality.stamToEPIBridge_holds`
 (`@residual(plan:epi-stam-to-conclusion-plan)`) rather than threading a
-`bridge : IsStamToEPIBridgeHyp` predicate hypothesis (Cluster C Tier-3 → Tier-2
-migration, `epi-stam-cluster-c-sorry-migration-plan`, route L-EPISC-3-α: the
-bundle structure is retained but its load-bearing bridge field is removed). -/
+`bridge : IsStamToEPIBridgeHyp` predicate hypothesis. -/
 @[entry_point]
 structure IsEPIL3IntegratedPipeline {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop where
-  /-- Stam inequality (Cover-Thomas Lemma 17.7.2) genuine signature. -/
+  /-- Stam inequality (Cover–Thomas Lemma 17.7.2) genuine signature. -/
   stam : IsStamInequalityHyp X Y P
 
-/-! ## §3 — Gaussian full discharge (hypothesis-free) -/
+/-! ## Gaussian pipeline witness -/
 
 /-- **Gaussian pipeline witness from an honest Stam hypothesis**.
 
-For independent Gaussians `X, Y` with non-zero variance, the Stam-to-EPI
-*bridge* field is discharged hypothesis-free via `isStamToEPIBridgeHyp_of_gaussian`
-(which uses `isEntropyPowerInequalityHypothesis_of_gaussian` under the hood,
-applying the Gaussian saturation case from `EntropyPowerInequality.lean`). The
-*Stam* field is supplied as an **honest `IsStamInequalityHyp X Y P` argument**, not
-discharged.
-
-**RESOLVED (2026-05-20):** the former vacuous "Fisher-info-zero" route — which
-`exfalso`-ed the `0 < J_X` precondition against the buggy V1 `fisherInfo = 0`
-artefact for Gaussians and asserted nothing about Stam — was removed. There is no
-vacuous back-door: the Stam half is a genuine non-circular hypothesis here. The
+For independent Gaussians `X, Y` with non-zero variance, the *Stam* field is supplied
+as an honest `IsStamInequalityHyp X Y P` argument, not discharged. The
 genuine hypothesis-free Gaussian EPI (no Stam claim at all) is
 `entropy_power_inequality_gaussian_full`. -/
 @[entry_point]
@@ -102,22 +94,12 @@ theorem isEPIL3IntegratedPipeline_of_gaussian
     (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂)
     (h_stam : IsStamInequalityHyp X Y P) :
     IsEPIL3IntegratedPipeline X Y P :=
-  -- The former `bridge` field (discharged here via `isStamToEPIBridgeHyp_of_gaussian`)
-  -- was removed in Cluster C Tier-2 migration; the bridge is now discharged
-  -- internally by consumers via `stamToEPIBridge_holds`. The Gaussian-law
-  -- arguments are retained as regularity preconditions documenting the setting.
+  -- The bridge is discharged internally by consumers via `stamToEPIBridge_holds`;
+  -- the Gaussian-law arguments are retained as regularity preconditions
+  -- documenting the setting.
   { stam := h_stam }
 
--- (deleted, legacy Stam→EPI subtree removal) `entropy_power_inequality_three_arg_integrated`
--- and `entropy_power_inequality_four_arg_integrated` were removed together with the
--- legacy bridge subtree: both delegated through `epi_l3_of_integrated_pipeline`
--- (deleted in §1) into `EntropyPowerInequality.stamToEPIBridge_holds` (the lone EPI-family
--- `sorry`, deleted), so they are transitive consumers of that bridge and could not survive
--- its removal. Both had 0 consumers (dead leaves). NOTE: these two were NOT on the brief's
--- explicit delete list — they are forced co-deletions surfaced by `dep_consumers.sh`
--- (reverse-dependency gap in the brief's ripple estimate; reported to orchestrator).
-
-/-! ## §6 — Pipeline predicate manipulation -/
+/-! ## Pipeline predicate manipulation -/
 
 /-- **Symmetry of integrated pipeline**: `IsEPIL3IntegratedPipeline X Y P`
 implies `IsEPIL3IntegratedPipeline Y X P`. -/
@@ -131,10 +113,8 @@ theorem isEPIL3IntegratedPipeline_symm
 
 /-- **Pipeline from a Stam residual directly** (mirrors `epi_via_stam`).
 
-After the Cluster C Tier-2 migration the bundle no longer carries a `bridge`
-field, so the pipeline is built from the genuine Stam residual alone; the
-Stam→EPI bridge is discharged internally by consumers via
-`stamToEPIBridge_holds`. -/
+The pipeline is built from the genuine Stam residual alone; the Stam-to-EPI bridge
+is discharged internally by consumers via `stamToEPIBridge_holds`. -/
 @[entry_point]
 theorem isEPIL3IntegratedPipeline_of_stam
     {Ω : Type*} [MeasurableSpace Ω]
@@ -143,25 +123,11 @@ theorem isEPIL3IntegratedPipeline_of_stam
     IsEPIL3IntegratedPipeline X Y P where
   stam := h_stam
 
-/-! ## §7 — Hypothesis-reduced re-publish of `entropy_power_inequality`
+/-! ## Concrete Gaussian EPI via saturation
 
-The original `entropy_power_inequality` takes three separate hypotheses
-(L-EPI1 `_h_stam`, L-EPI2 `_h_debruijn`, L-EPI3 `h_epi`); the L-EPI1 and L-EPI2
-slots are placeholder `True` so any caller can pass `trivial`. We re-publish
-under a single, integrated, **non-trivial** hypothesis (the pipeline) — this
-is the "hypothesis-reduced form" promised in the parent plan. -/
-
-/-! ## §8 — Composability with `EPIPlumbing` translation invariance -/
-
-/-! ## §9 — Concrete Gaussian EPI (genuine, via saturation)
-
-**RESOLVED (2026-05-20):** the former `isStamInequalityHyp_of_gaussian_v1_zero`
-and `isEPIL3IntegratedPipeline_gaussian` discharged the Stam predicate vacuously
-through the buggy V1 `fisherInfo = 0` artefact for Gaussians and were removed. The
-genuine Gaussian EPI is `entropy_power_inequality_gaussian_full` below (direct from
-`entropyPower_gaussian_additivity`); the integrated-pipeline form takes
-a real `IsStamInequalityHyp` argument (`entropy_power_inequality_gaussian_via_pipeline`).
--/
+The genuine Gaussian EPI is `entropy_power_inequality_gaussian_full` below (direct from
+`entropyPower_gaussian_additivity`); the integrated-pipeline form takes a real
+`IsStamInequalityHyp` argument. -/
 
 /-- **Gaussian EPI hypothesis-free**: combine the Gaussian saturation case
 directly (no Stam predicate needed for the inequality itself; the predicate
@@ -179,13 +145,10 @@ theorem entropy_power_inequality_gaussian_full
     P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
   exact h_eq.ge
 
-/-! ## §10 — Composability with `FisherInfoV2DeBruijn` (V2 de Bruijn identity) -/
-
-/-! ## §11 — Final sanity-check / regression theorems -/
+/-! ## Final sanity-check theorems -/
 
 /-- **Round-trip**: building a pipeline from the Stam residual and then
-extracting it yields the original. (The bundle no longer carries a `bridge`
-field after the Cluster C Tier-2 migration.) -/
+extracting it yields the original. -/
 @[entry_point]
 theorem integrated_pipeline_roundtrip
     {Ω : Type*} [MeasurableSpace Ω]
@@ -195,169 +158,49 @@ theorem integrated_pipeline_roundtrip
     h.stam = h_stam :=
   rfl
 
-/-! ## §12 — `epi-debruijn-integration-plan` Phase B/C/D contributions
+/-! ## Family-level de Bruijn lift and bounded-T FTC application
 
-This section contributes the **family-level de Bruijn lift** (Phase B) and the
-**bounded-T Gaussian FTC application** (Phase C) called for by
-`docs/shannon/epi-debruijn-integration-plan.md`. The former load-bearing
-predicate `IsHeatFlowFamilyHyp` (and its Gaussian constructor) was **deleted**
-in the Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`,
-task 3α-3): it had 0 active consumers; the genuine `HasDerivAt` content is
-available through `FisherInfoV2.deBruijn_identity_v2_gaussian` directly, and a
-non-Gaussian extension should route through the genuine de Bruijn lemma
-`debruijnIdentityV2_holds_assembled` (`wall:debruijn-integration` is [CLOSED
-2026-06-04]) rather than a load-bearing structure. A second predicate
-`IsDeBruijnTailHyp` (intended for the `T → ∞` tail-analysis externalization)
-was attempted in the Wave 3 third batch and then **retracted** in the same
-batch by the independent honesty audit
-(`defect(epi-debruijn-tail-vacuous-and-empty)`; see retraction comment in
-the structure-definition area below). Tail-analysis externalization remains
-a pending plan-level task (Phase C-5).
+This section provides the family-level de Bruijn lift and the bounded-T Gaussian
+FTC application. The genuine `HasDerivAt` content is available through
+`FisherInfoV2.deBruijn_identity_v2_gaussian`; a non-Gaussian extension routes
+through the genuine de Bruijn lemma `debruijnIdentityV2_holds_assembled`.
 
-### Honesty notes (load-bearing) — read before extending this section.
+The §1–§11 pipeline wrappers take only the single-field Stam-residual bundle and
+discharge the Stam-to-EPI bridge internally via the shared sorry lemma
+`EntropyPowerInequality.stamToEPIBridge_holds`
+(`@residual(plan:epi-stam-to-conclusion-plan)`); they carry no load-bearing
+predicate hypothesis. The de Bruijn integration identity here is the honest input
+to Csiszár scaling. -/
 
-1. The predicate `IsDeBruijnIntegrationHyp X Z P T`
-   (`EPIStamDischarge.lean:198-214`) **was repaired 2026-05-25** (Wave 3 third
-   batch): the former `∀ fPath` quantifier (which collapsed via `fPath := 0`
-   through `fisherInfoOfMeasureV2 μ f = fisherInfoOfDensity f` defeq and
-   `fisherInfoOfDensity 0 = 0` (`FisherInfoV2.lean:100`)) is now
-   `∃ fPath, ∀ h_X h_target, ...`, so the predicate is satisfiable for
-   genuine density witnesses. Its current declaration-level tag is
-   `@audit:retract-candidate(load-bearing-predicate)` (Tier 3 bookkeeping,
-   `EPIStamDischarge.lean`), and the analytic core is no longer threaded as a
-   load-bearing hypothesis: a general witness `isDeBruijnIntegrationHyp_holds`
-   produces the predicate by delegating to the genuine (sorryAx-free) lemma
-   `debruijnIntegrationIdentity_holds` (`FisherInfoV2DeBruijn.lean`), whose
-   per-time core is now `debruijnIdentityV2_holds_assembled`
-   (`wall:debruijn-integration` is [CLOSED 2026-06-04]). The standalone
-   Gaussian-case statements below (`bounded_T_ftc_gaussian`) still bypass the
-   predicate because the genuine bridge from the bounded-T identity to a
-   `∃ fPath` witness is sister-plan responsibility
-   (`epi-debruijn-integration-plan.md` Phase B/C/D).
+/-! ### De Bruijn tail externalization
 
-2. Similarly, `IsDeBruijnRegularityHyp X Z P` (`EPIStamDischarge.lean:152-172`)
-   **was repaired 2026-05-25** (Wave 3 third batch): the former
-   `Integrable (… ) (volume.restrict (Set.Ioi 0))` field (which diverged on
-   Gaussian `1/(2(v+t))`) is now
-   `∀ T : ℝ, 0 < T → IntervalIntegrable (… ) volume 0 T` (bounded-T window),
-   so the field is satisfiable for Gaussian density witnesses. The tail
-   behavior on `(0, ∞)` was intended to be externalized via `IsDeBruijnTailHyp`
-   (§ below), but that predicate was **retracted** in the same batch by
-   independent audit; tail-analysis externalization is now a pending
-   plan-level task (Phase C-5, awaiting `EReal`-lift refactor). This section
-   continues to provide the per-time-point V2 family lift
-   (`isRegularDeBruijnHypV2_family_of_gaussian`) as a standalone deliverable;
-   constructing `IsDeBruijnRegularityHyp` for Gaussian via the repaired
-   signature is sister-plan responsibility.
+Externalizes the `T → ∞` tail-analysis of the heat-flow differential entropy as
+data, with an `EReal` lift for the divergent Gaussian limit and a `Z_law` field
+that closes the `Z := 0` vacuous-bypass channel.
 
-3. The §1–§11 pipeline wrappers used to thread
-   `IsEPIL3IntegratedPipeline`'s `bridge : IsStamToEPIBridgeHyp` field as a
-   load-bearing predicate. That field was **removed** in the Cluster C Tier-2
-   migration (`epi-stam-cluster-c-sorry-migration-plan`, route L-EPISC-3-α): the
-   bundle structure is retained but the bridge is now discharged internally by
-   consumers via the shared sorry lemma
-   `EntropyPowerInequality.stamToEPIBridge_holds`
-   (`@residual(plan:epi-stam-to-conclusion-plan)`). The de Bruijn integration
-   identity in this section remains the honest *input* to Csiszár scaling, and
-   the pipeline wrappers no longer carry a load-bearing predicate hypothesis.
--/
-
--- (deleted 2026-05-28, Cluster C Tier-2 migration `epi-stam-cluster-c-sorry-migration-plan`,
--- task 3α-3) The `structure IsHeatFlowFamilyHyp X Z P` (family-level heat-flow
--- regularity bundle) was removed outright: it had **0 active hypothesis-form
--- consumers** (no declaration took `(h : IsHeatFlowFamilyHyp …)` as an
--- argument) and its sole inhabitation source was the hypothesis-free Gaussian
--- constructor `isHeatFlowFamilyHyp_of_gaussian` (also deleted below). This is
--- the `-empty-consumers` pure-delete sister to `34e17bc` / `37284f1`. A
--- non-Gaussian heat-flow regularity extension that re-introduces a load-bearing
--- consumer should be re-introduced via the genuine de Bruijn lemma
--- `debruijnIdentityV2_holds_assembled` (`wall:debruijn-integration` is [CLOSED
--- 2026-06-04]), not a load-bearing structure.
-
--- (retracted 2026-05-25, Wave 3 third batch independent audit) **De Bruijn
--- tail-analysis hypothesis** `IsDeBruijnTailHyp X Z P`.
---
--- The Wave 3 third batch (`823e150`) attempted to close a `fPath_tail ≡ 0`
--- vacuous bypass by adding a `tail_limit : Tendsto ... atTop (nhds h_inf)`
--- field. The independent honesty audit reopened to DEFECT on two grounds:
---   (1) the structure had no `Z_law : P.map Z = gaussianReal 0 1` field, so
---       `Z := fun _ ↦ 0` yields `gaussianConvolution X Z T = X` and
---       `tail_limit` holds trivially with `h_inf := h(P.map X)` by
---       `tendsto_const_nhds` — the vacuous channel survives;
---   (2) even after adding `Z_law`, `h_inf : ℝ` cannot hold the genuine
---       `T → ∞` heat-flow entropy limit which diverges to `+∞` (Gaussian
---       sub-entropy lower bound `(1/2)log(2πe·T)`), so the predicate is
---       essentially uninhabited and any consumer is vacuously discharged.
---
--- Predicate retracted; consumer count is 0 (Phase D was sister-plan pending).
--- The honest re-introduction path requires `h_inf : EReal` (or `ℝ≥0∞`) and
--- a `Z_law` field; tracked under `docs/shannon/epi-debruijn-integration-plan.md`
--- Phase C-5 with `defect(epi-debruijn-tail-vacuous-and-empty)` rationale.
-
-/-! ### Phase C-5 — De Bruijn tail externalization (honest re-introduction)
-
-Honest re-introduction of `IsDeBruijnTailHyp X Z P` per
-`docs/shannon/epi-debruijn-tail-reintroduction-plan.md`. The Wave 3 third
-batch retract (commit `823e150`, 2026-05-25) identified two defects:
-(i) absence of `Z_law` allowed a `Z := 0` vacuous bypass, and
-(ii) `h_inf : ℝ` made the predicate essentially uninhabited because the
-Gaussian sub-entropy `(1/2) log (2π e (v+T))` diverges to `+∞` as `T → ∞`.
-
-Both defects are addressed structurally:
-
-* `Z_law : P.map Z = gaussianReal 0 1` is included as a field, closing the
-  `Z = 0` bypass channel.
-* `h_inf : EReal` accommodates the `+∞` Gaussian limit; coercion to `EReal`
-  is provided by `Real.toEReal`, and the convergence
+* `Z_law : P.map Z = gaussianReal 0 1` closes the `Z = 0` bypass channel.
+* `h_inf : EReal` accommodates the `+∞` Gaussian limit; the convergence
   `Tendsto (Real.toEReal ∘ ·) atTop (𝓝 ⊤) ↔ Tendsto · atTop atTop`
-  (`EReal.tendsto_coe_nhds_top_iff`) bridges to the standard real-valued
-  divergence statement.
+  (`EReal.tendsto_coe_nhds_top_iff`) bridges to the real-valued divergence
+  statement.
 
-The Gaussian instance `isDeBruijnTailHyp_of_gaussian` uses
-`h_inf := ⊤` and routes the existing closed-form
-`differentialEntropy_gaussianConvolution_of_gaussian` through
-`Real.tendsto_log_atTop` and the standard `atTop`-shift / `atTop`-scaling
-chain. -/
+The Gaussian instance `isDeBruijnTailHyp_of_gaussian` uses `h_inf := ⊤` and routes
+the closed form `differentialEntropy_gaussianConvolution_of_gaussian` through
+`Real.tendsto_log_atTop` and the standard `atTop`-shift / `atTop`-scaling chain. -/
 
-/-- **De Bruijn tail-analysis hypothesis** (`IsDeBruijnTailHyp X Z P`, honest
-re-introduction 2026-05-25).
+/-- **De Bruijn tail-analysis hypothesis** (`IsDeBruijnTailHyp X Z P`).
 
 Externalizes the `T → ∞` tail-analysis of the heat-flow differential entropy
 `T ↦ h(P.map (X + √T · Z))` as a load-bearing hypothesis with EReal lift
 `h_inf : EReal` (Gaussian case `h_inf = ⊤`) and a `Z_law` field structurally
-closing the `Z := 0` vacuous-bypass channel that retracted the prior
-incarnation.
+closing the `Z := 0` vacuous-bypass channel.
 
-Honest re-introduction conditions (both required, derived from the retract
-verdict `defect(epi-debruijn-tail-vacuous-and-empty)`):
-
-1. **`EReal` lift** — `h_inf : EReal` allows divergent (`⊤`) limits.
-2. **`Z_law` field** — `Z_law : P.map Z = gaussianReal 0 1` closes the
-   `Z = 0` vacuous bypass.
-
-NOT a discharge — load-bearing on `Z_law` + `tail_limit`.
-
-`@audit:ok` — 2026-05-27 independent honesty audit (Phase 1.B follow-up).
-Re-verified the past 2026-05-25 audit:PASS verdict (recorded inline below) and
-confirmed it remains accurate under current honesty doctrine. Body is a genuine
-3-field `Type` structure where each field is a regularity precondition
-(`Z_law` rules the vacuous `Z := 0` bypass, `h_inf : EReal` lifts the divergent
-Gaussian case, `tail_limit` carries the genuine `Tendsto` content). The
-Gaussian instance constructor `isDeBruijnTailHyp_of_gaussian` (`:770`)
-exhibits a substantive multi-step `Tendsto` discharge via
-`Real.tendsto_log_atTop` + `EReal.tendsto_coe_nhds_top_iff`. No active
-consumer yet; the structure exists to externalize the `T → ∞` tail-analysis
-as honest data, not as a load-bearing claim.
-
--- audit:PASS 2026-05-25 by honesty-auditor: Tier 1/2/3 verified.
--- T1 (type ≠ conclusion): 3-field structure ≠ Gaussian-instance signature;
---   discharge is a substantive 5-step Tendsto chain, no circularity.
--- T2 (vacuous-bypass closure): `Z_law : P.map Z = gaussianReal 0 1` rules out
---   `Z := 0` (Dirac ≠ Gaussian), `h_inf : EReal` is forced by limit uniqueness
---   in T2 space, `atTop` is non-trivial — all three channels structurally closed.
--- T3 (semantic non-emptiness): `h_inf : EReal` lift makes `⊤` representable;
---   Gaussian instance `isDeBruijnTailHyp_of_gaussian` exhibits a genuine
---   discharge with `h_inf := ⊤` via `Real.tendsto_log_atTop` + EReal coe lift. -/
+Each field is a regularity precondition: `Z_law` rules out the vacuous `Z := 0`
+bypass, `h_inf : EReal` lifts the divergent Gaussian case, and `tail_limit`
+carries the genuine `Tendsto` content. The Gaussian instance constructor
+`isDeBruijnTailHyp_of_gaussian` exhibits a substantive multi-step `Tendsto`
+discharge via `Real.tendsto_log_atTop` + `EReal.tendsto_coe_nhds_top_iff`.
+@audit:ok -/
 structure IsDeBruijnTailHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] : Type where
   /-- `Z` is the standard normal driving the heat flow (vacuous-bypass closure). -/
@@ -376,11 +219,10 @@ structure IsDeBruijnTailHyp {Ω : Type*} [MeasurableSpace Ω]
           (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z T))))
       atTop (𝓝 h_inf)
 
--- (Gaussian discharge `isDeBruijnTailHyp_of_gaussian` is deferred until after
--- `differentialEntropy_gaussianConvolution_of_gaussian` (the closed-form
--- bridge) is in scope below in Phase C-3.)
+-- (Gaussian discharge `isDeBruijnTailHyp_of_gaussian` is stated below, after the
+-- closed-form bridge `differentialEntropy_gaussianConvolution_of_gaussian` is in scope.)
 
-/-! ### Phase B helpers — `gaussianConvolution` boundary -/
+/-! ### `gaussianConvolution` boundary helpers -/
 
 /-- `gaussianConvolution X Z 0 = X` pointwise (uses `Real.sqrt 0 = 0`). -/
 @[entry_point]
@@ -404,10 +246,9 @@ theorem differentialEntropy_gaussianConvolution_at_zero
       = InformationTheory.Shannon.differentialEntropy (P.map X) := by
   rw [map_gaussianConvolution_at_zero]
 
-/-! ### Phase B-4 — Gaussian per-time-point V2 family lift -/
+/-! ### Gaussian per-time-point V2 family lift -/
 
-/-- **Gaussian per-time-point V2 family lift** (Phase B-4, honest, Gaussian
-restricted, hypothesis-free).
+/-- **Gaussian per-time-point V2 family lift** (Gaussian restricted, hypothesis-free).
 
 For independent Gaussian `X ∼ 𝒩(m, v)` (with `v ≠ 0`) and standard normal
 `Z ∼ 𝒩(0, 1)`, the V2 de Bruijn regularity `IsRegularDeBruijnHypV2 X Z P t`
@@ -416,13 +257,7 @@ holds for every `t > 0`, with explicit density witness
 
 The witness is constructed by routing
 `FisherInfoV2.deBruijn_identity_v2_gaussian` (which gives the `HasDerivAt`
-directly) into the structure constructor; no Mathlib-side discharge is needed
-because Phase D of `fisher-info-gaussian-discharge-moonshot-plan.md` already
-publishes that derivative.
-
-This is the family-level lift promised by Phase B of
-`epi-debruijn-integration-plan.md`, restricted to the Gaussian case. The
-general non-Gaussian case is externalized via `IsHeatFlowFamilyHyp`.
+directly) into the structure constructor.
 
 (Returns `Type`, not `Prop`, because `IsRegularDeBruijnHypV2` carries a
 density witness as data; declared `noncomputable def` accordingly.)
@@ -438,27 +273,25 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
     ∀ t : ℝ, 0 < t →
       InformationTheory.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2 X Z P t := by
   intro t ht
-  -- Phase 2.B step 1 (foundation): `IsRegularDeBruijnHypV2` is now 2-field
-  -- (regularity only). The `derivAt_entropy_eq_half_fisher_v2` field used to
-  -- be filled here via `deBruijn_identity_v2_gaussian`; that discharge is
-  -- now downstream (via the genuine `debruijnIdentityV2_holds_assembled`;
-  -- `wall:debruijn-integration` is [CLOSED 2026-06-04]).
+  -- `IsRegularDeBruijnHypV2` is 2-field (regularity only). The
+  -- `derivAt_entropy_eq_half_fisher_v2` discharge is downstream, via the genuine
+  -- `debruijnIdentityV2_holds_assembled`.
   exact
     { Z_law := hZ_law
       density_t := gaussianPDFReal m (v + ⟨t, ht.le⟩)
-      -- Conv-pin (Gaussian case, 2026-05-31 plan §5-F): genuine closure.
+      -- Conv-pin (Gaussian case): genuine closure.
       -- `density_t = gaussianPDFReal m (v + ⟨t,ht.le⟩)` and the conv-pin RHS is
       -- `convDensityAdd (gaussianPDFReal m v) (gaussianPDFReal 0 ⟨t,ht.le⟩)`, which
       -- equals `gaussianPDFReal (m+0) (v+⟨t,ht.le⟩) = gaussianPDFReal m (v+⟨t,ht.le⟩)`
-      -- by `convDensityAdd_gaussian_closed_form` (@audit:ok, sorryAx-free) + `add_zero`.
+      -- by `convDensityAdd_gaussian_closed_form` + `add_zero`.
       density_t_eq := by
         intro ht' x
         have ht_ne : (⟨t, ht.le⟩ : ℝ≥0) ≠ 0 := by
           intro h
           exact ht.ne' (congrArg NNReal.toReal h)
         rw [convDensityAdd_gaussian_closed_form hv ht_ne, add_zero]
-      -- §5A `pX`-witness fields (Gaussian case): `X ∼ 𝒩(m, v)` has Lebesgue
-      -- density `gaussianPDFReal m v`. All genuine (no new sorry).
+      -- `pX`-witness fields (Gaussian case): `X ∼ 𝒩(m, v)` has Lebesgue
+      -- density `gaussianPDFReal m v`.
       pX := gaussianPDFReal m v
       pX_nn := fun x => gaussianPDFReal_nonneg m v x
       pX_meas := measurable_gaussianPDFReal m v
@@ -484,13 +317,7 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
         filter_upwards with x
         rw [gaussianPDF, ENNReal.toReal_ofReal (gaussianPDFReal_nonneg m v x)] }
 
--- (deleted 2026-05-28, Cluster C Tier-2 migration, task 3α-3) The Gaussian
--- constructor `isHeatFlowFamilyHyp_of_gaussian` was removed together with the
--- `IsHeatFlowFamilyHyp` structure it inhabited (see the structure-deletion note
--- in §12). It had no consumers; its genuine `HasDerivAt` content is available
--- through `FisherInfoV2.deBruijn_identity_v2_gaussian` directly.
-
-/-! ### Phase C-3 — Gaussian closed-form entropy at the heat-flow boundary -/
+/-! ### Gaussian closed-form entropy at the heat-flow boundary -/
 
 /-- **Gaussian heat-flow entropy boundary value at `T`** for `T ≥ 0`. -/
 @[entry_point]
@@ -510,16 +337,14 @@ theorem differentialEntropy_gaussianConvolution_of_gaussian
   exact InformationTheory.Shannon.FisherInfoV2.differentialEntropy_gaussianReal_heat_path
     m hv hT
 
-/-! ### Phase C-5 — Gaussian discharge of `IsDeBruijnTailHyp` (honest)
+/-! ### Gaussian discharge of `IsDeBruijnTailHyp`
 
-The Gaussian instance constructor for the re-introduced `IsDeBruijnTailHyp`
-predicate (`@audit:ok` per 2026-05-27 audit, defined above near the
-retraction notice at `:595-613`). Discharged with `h_inf := ⊤` via
-the existing closed-form `differentialEntropy_gaussianConvolution_of_gaussian`
+The Gaussian instance constructor for `IsDeBruijnTailHyp`, discharged with
+`h_inf := ⊤` via the closed-form `differentialEntropy_gaussianConvolution_of_gaussian`
 combined with `Real.tendsto_log_atTop` and the standard `atTop`-shift /
 `atTop`-scaling chain, lifted to `EReal` by `EReal.tendsto_coe_nhds_top_iff`. -/
 
-/-- **Gaussian instance of `IsDeBruijnTailHyp`** (Phase C-5 honest discharge).
+/-- **Gaussian instance of `IsDeBruijnTailHyp`**.
 
 When `P.map X = gaussianReal m v` with `v ≠ 0`, `P.map Z = gaussianReal 0 1`,
 and `X ⊥ Z`, the heat-flow entropy diverges to `+∞` (Gaussian sub-entropy
@@ -581,14 +406,12 @@ noncomputable def isDeBruijnTailHyp_of_gaussian
     -- Lift to EReal.
     exact EReal.tendsto_coe_nhds_top_iff.mpr h_entropy
 
-/-! ### Phase C-1/C-4 — Bounded-T FTC application (Gaussian case)
+/-! ### Bounded-T FTC application (Gaussian case)
 
-This is the **honest Gaussian-restricted bounded-T deliverable** of Phase C:
-the de Bruijn integration identity holds for Gaussian `X` on `(0, T)` as a
-direct consequence of Mathlib's bounded FTC and Phase B-4 above. Stated as a
-*standalone* identity (not via `IsDeBruijnIntegrationHyp`, which carries the
-honest `∃ fPath` shape post-repair; bridging this standalone equality into a
-predicate witness remains sister-plan responsibility — see §12 honesty note 1). -/
+The de Bruijn integration identity holds for Gaussian `X` on `(0, T)` as a
+direct consequence of Mathlib's bounded FTC and the family lift above. Stated as a
+standalone identity (not via `IsDeBruijnIntegrationHyp`, which carries the
+`∃ fPath` shape). -/
 
 /-- **Heat-flow entropy derivative (Gaussian, on `s > 0` neighbourhood)**.
 
@@ -700,8 +523,7 @@ theorem continuousOn_differentialEntropy_heat_flow_gaussian
     exact (h_arg_pos s' hs').ne'
   exact continuousOn_const.mul h_log_cont
 
-/-- **Bounded-T FTC application (Gaussian case)** — Phase C-1/C-4 main
-deliverable.
+/-- **Bounded-T FTC application (Gaussian case)**.
 
 For Gaussian `X ∼ 𝒩(m, v)` with `v ≠ 0`, the heat-flow entropy gap over
 the bounded interval `(0, T)` equals the path integral of `1/(2(v+t))`:
@@ -709,22 +531,10 @@ the bounded interval `(0, T)` equals the path integral of `1/(2(v+t))`:
 `h(N(m, v+T)) - h(N(m, v))
     = ∫_(0, T) 1/(2(v+t)) dt`,
 
-stated as a direct equality (i.e., bypassing the
-`IsDeBruijnIntegrationHyp X Z P T` predicate; the predicate now carries the
-honest `∃ fPath` shape post-repair, but bridging from this standalone equality
-into the predicate's existential witness remains sister-plan work — see §12
-honesty note 1). The integration uses Mathlib `intervalIntegral` and is
-converted to `Set.Ioo`-form for downstream consumption.
-
-`@audit:ok` — genuine bounded-T FTC discharge, body 0 sorry. The former
-bookkeeping tag (`@audit:retract-candidate(load-bearing-predicate)`) described
-the downstream `IsEPIL3IntegratedPipeline.bridge` field this lemma fed into;
-that load-bearing field was removed in Cluster C Tier-2 migration
-(`epi-stam-cluster-c-sorry-migration-plan`), so the bookkeeping tag no longer
-applies. Unbounded `T → ∞` lift remains a pending plan-level task (the
-previously intended `IsDeBruijnTailHyp` externalization was retracted by
-independent audit; see the §12 honesty notes and the retraction comment in the
-structure-definition area). -/
+stated as a direct equality (bypassing the `IsDeBruijnIntegrationHyp X Z P T`
+predicate). The integration uses Mathlib `intervalIntegral` and is converted to
+`Set.Ioo`-form for downstream consumption.
+@audit:ok -/
 @[entry_point]
 theorem bounded_T_ftc_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
@@ -776,44 +586,21 @@ theorem bounded_T_ftc_gaussian
   rw [← h_f0]
   rw [← h_ftc, h_ioc, h_ioo_eq_ioc]
 
-/-! ### Phase D — Section closure note
+/-! ## 1-source Csiszár log-ratio gap
 
-Closure update (2026-05-28, Cluster C Tier-2 migration
-`epi-stam-cluster-c-sorry-migration-plan`, route L-EPISC-3-α): the
-`IsEPIL3IntegratedPipeline` bundle's former load-bearing
-`bridge : IsStamToEPIBridgeHyp` field was **removed**. The §1–§11 pipeline
-wrappers now take only the single-field Stam-residual bundle and discharge the
-Stam→EPI bridge internally via the shared sorry lemma
-`EntropyPowerInequality.stamToEPIBridge_holds`
-(`@residual(plan:epi-stam-to-conclusion-plan)`); they no longer carry a
-load-bearing predicate hypothesis and hold no `@residual` of their own (the
-Mathlib wall is localized in `stamToEPIBridge_holds`).
-
-Phase D's own contributions (Phase B-4/C-1/C-4 above) remain the de Bruijn-side
-honest inputs to the Csiszár scaling argument and are unchanged. -/
-
-/-! ## §13 — 1-source Csiszár log-ratio gap (genuine monotone object)
-
-The genuine ratio object `csiszarLogRatioGap` (and its `t = 0` / `t = 1`
-endpoints) used by the live EPI ratio line in `EPIStamToBridge.lean`
+The ratio object `csiszarLogRatioGap` (and its `t = 0` / `t = 1` endpoints) is used
+by the live EPI ratio line in `EPIStamToBridge.lean`
 (`csiszarLogRatioGap_hasDerivAt` → `csiszarLogRatioGap_antitoneOn_Ici_zero` →
-`isStamToEPIScalingHyp_of_*`).
+`isStamToEPIScalingHyp_of_*`). -/
 
-The earlier difference-form Csiszár gap families were deleted as a structurally
-orphaned, false-as-framed dead subgraph; the ratio reframe
-(`epi-csiszar-ratio-reframe-plan`) is the genuine successor.
--/
-
-/-- **1-source Csiszár log-ratio gap** (genuine monotone object).
+/-- **1-source Csiszár log-ratio gap** (monotone object).
 
 `r(t) = log (N_sum t) − log (N_X t + N_Y t)` where
 `N_sum = entropyPower (P.map (X+Y+√t·(Z_X+Z_Y)))`,
 `N_X = entropyPower (P.map (X+√t·Z_X))`, `N_Y = entropyPower (P.map (Y+√t·Z_Y))`.
 
-This replaces the (deleted) false-as-framed difference gap: the
-log-ratio derivative `r'(t) = J_sum − (N_X·J_X + N_Y·J_Y)/(N_X+N_Y) ≤ 0` is
-genuinely closable from plain harmonic Stam (see
-`epi-csiszar-ratio-reframe-plan`). Both `log` arguments are strictly positive
+The log-ratio derivative `r'(t) = J_sum − (N_X·J_X + N_Y·J_Y)/(N_X+N_Y) ≤ 0` is
+closable from plain harmonic Stam. Both `log` arguments are strictly positive
 (`entropyPower_pos`, `add_pos`), so the gap is well-defined. -/
 @[entry_point]
 noncomputable def csiszarLogRatioGap {Ω : Type*} [MeasurableSpace Ω]
@@ -848,7 +635,7 @@ theorem csiszarLogRatioGap_at_zero {Ω : Type*} [MeasurableSpace Ω]
     simp [Real.sqrt_zero]
   rw [h_sum_funext, h_X_funext, h_Y_funext]
 
-/-- **R-4-a — Endpoint `t = 1` of the log-ratio gap is zero (Gaussian saturation)**.
+/-- **Endpoint `t = 1` of the log-ratio gap is zero (Gaussian saturation)**.
 
 At `t = 1` the 1-source heat-flow paths are `X + Z_X`, `Y + Z_Y`, and their sum
 `X + Y + (Z_X + Z_Y) = (X + Z_X) + (Y + Z_Y)`. When the convolved endpoints

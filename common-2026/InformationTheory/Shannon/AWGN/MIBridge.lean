@@ -107,7 +107,7 @@ theorem differentialEntropy_awgnChannel_apply_eq_noise
   rw [awgnChannel_apply]
   exact differentialEntropy_gaussianReal_mean_invariant x hN
 
-/-! ## Phase B — Three primitive predicates -/
+/-! ## Three primitive predicates -/
 
 /-- The channel output marginal under Gaussian input `gaussianReal 0 P` equals the
 convolution `gaussianReal 0 (P + N)`. -/

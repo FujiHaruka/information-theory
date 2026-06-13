@@ -12,10 +12,8 @@ import Mathlib.Analysis.Convex.Mul
 /-!
 # EPI Blachman — explicit density route (S2 + S3, condExp-free)
 
-Phase 3b of `docs/shannon/epi-wall-reattack-plan.md` (density-route, condExp-free).
-Consumes the Phase 3a gateway `convDensityAdd_hasDerivAt_of_regular`
-(`EPIConvDensity.lean:187`, `@audit:ok`) and builds, *without any
-`condExp`/`condDistrib`/disintegration*:
+Consumes the gateway `convDensityAdd_hasDerivAt_of_regular` (`EPIConvDensity.lean`)
+and builds, without any `condExp`/`condDistrib`/disintegration:
 
 * `condDensityX fX fY z x := fX x * fY (z - x) / convDensityAdd fX fY z`
   — the conditional density `p_{X|Z}(x|z)` written as an explicit ratio of
@@ -31,10 +29,10 @@ Consumes the Phase 3a gateway `convDensityAdd_hasDerivAt_of_regular`
   This is the score-of-convolution representation written as an explicit
   probability-weighted integral, the substitute for the disintegration bridge.
 
-All bundled hypotheses are **regularity preconditions** (`IsRegularDensityV2`,
+All bundled hypotheses are regularity preconditions (`IsRegularDensityV2`,
 boundedness of the smooth factor and its derivative, integrability of the score
 products, positivity of `p_Z`). None is a load-bearing bundling of the score
-identity itself — see CLAUDE.md "Verification honesty".
+identity itself.
 -/
 
 namespace InformationTheory.Shannon.EPIBlachmanDensity
@@ -195,7 +193,7 @@ theorem score_conv_eq_weighted_integral (fX fY : ℝ → ℝ) (lam z : ℝ)
   rw [← hP_def]
   ring
 
-/-! ## Phase 3c — convex Fisher bound (density route step 4-5)
+/-! ## Convex Fisher bound (density route)
 
 This section consumes S2/S3 (above) and assembles the **convex Fisher bound**
 
@@ -343,7 +341,7 @@ theorem score_sq_le_weighted_integral (fX fY : ℝ → ℝ) (lam z : ℝ)
   refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
   simp only [mul_comm]
 
-/-! ### Phase 3c-fin — Tonelli 3-term evaluation helpers
+/-! ### Tonelli 3-term evaluation helpers
 
 These three private lemmas evaluate each of the three terms obtained by expanding
 `W_λ² = λ²·s_X(x)² + (1-λ)²·s_Y(z-x)² + 2λ(1-λ)·s_X(x)·s_Y(z-x)` inside the double
@@ -406,14 +404,10 @@ private theorem convex_fisher_term2 (fX fY : ℝ → ℝ)
 /-- **Term 3** (the cross term): the inner `z` integral of `logDeriv fY (z-x)·fY (z-x)`
 is `∫ logDeriv fY · fY = 0`, so the whole term vanishes.
 
-@audit:ok — independent audit (2026-05-30): `hregY : IsRegularDensityV2 fY` is a
-regularity precondition (diff/pos/tail/∫deriv=0), consumed only to invoke the
-`@audit:ok` lemma `integral_logDeriv_density_eq_zero`; `hint3 : Integrable (uncurry
-…) (volume.prod volume)` is a pure product-measure integrability precondition on the
-already-expanded cross-term integrand (no core bundling). Conclusion (= 0) genuinely
-reconstructed: `integral_integral_swap` (Tonelli) + `integral_sub_right_eq_self`
-(translation) + `integral_logDeriv_density_eq_zero` (score-mean-zero). Not handed by
-any hyp. sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`). -/
+The conclusion `= 0` is reconstructed via `integral_integral_swap` (Tonelli) +
+`integral_sub_right_eq_self` (translation) + `integral_logDeriv_density_eq_zero`
+(score-mean-zero). `hregY` and `hint3` are regularity / integrability preconditions.
+@audit:ok -/
 private theorem convex_fisher_cross (fX fY : ℝ → ℝ)
     (hregY : IsRegularDensityV2 fY)
     (hint3 :
@@ -436,7 +430,7 @@ private theorem convex_fisher_cross (fX fY : ℝ → ℝ)
     rw [htr, integral_logDeriv_density_eq_zero hregY, mul_zero]
   simp only [hinner, integral_zero]
 
-/-- **Convex Fisher bound (density route, Phase 3c main result).**
+/-- **Convex Fisher bound (density route).**
 
 For `0 ≤ lam ≤ 1`,
 `(fisherInfoOfDensity (convDensityAdd fX fY)).toReal
@@ -608,42 +602,32 @@ theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
     convex_fisher_cross fX fY hregY hint_prod3]
   ring
 
-/-! ## Phase 3d bundle — `IsBlachmanConvReady` regularity precondition bundle
+/-! ## `IsBlachmanConvReady` regularity precondition bundle
 
 `convex_fisher_bound` requires, beyond `IsRegularDensityV2 fX/fY` + `∫=1`, a set of
-**regularity preconditions** that `IsRegularDensityV2` does *not* imply: boundedness
-of `f` and `deriv f`, several integrability side-conditions, positivity of the
+regularity preconditions that `IsRegularDensityV2` does not imply: boundedness of
+`f` and `deriv f`, several integrability side-conditions, positivity of the
 convolution density `p_Z`, and the three product-measure (Tonelli) integrabilities.
-These are needed for the convolution-Fisher analysis but are **not** derivable from
+These are needed for the convolution-Fisher analysis but are not derivable from
 "regular density" alone (e.g. `Differentiable` does not bound `deriv f`).
 
-We bundle them into a single structure `IsBlachmanConvReady fX fY` so the Stam
+They are bundled into a single structure `IsBlachmanConvReady fX fY` so the Stam
 predicates (`IsStamCondExpCSHyp` / `IsStamCauchySchwarz` / `IsStamCauchySchwarzOptimal`)
-can carry exactly **one** extra hypothesis rather than 14. Every field is a
-regularity / integrability / boundedness / positivity precondition — **none** bundles
-the convex Fisher inequality core (which lives genuinely inside `convex_fisher_bound`'s
-body). The `lam`-dependent integrabilities (`int_W`, `int_Wsq`, `int_inner`) are
-quantified over `lam ∈ [0,1]` because the consuming predicates conclude an `∀ lam`
-bound. -/
+carry one extra hypothesis rather than many. The `lam`-dependent integrabilities
+(`int_W`, `int_Wsq`, `int_inner`) are quantified over `lam ∈ [0,1]` because the
+consuming predicates conclude an `∀ lam` bound. -/
 /-- Regularity precondition bundle for the convolution-Fisher analysis.
 
-@audit:ok — independent honesty audit (2026-05-31): all 19 fields are pure
-regularity / integrability / boundedness / positivity preconditions; the bundle is
-field-for-field the SAME hypotheses `convex_fisher_bound` (`@audit:ok`) already takes
-individually (1:1 mapping verified — see `convex_fisher_bound_of_ready`). The
+All 19 fields are regularity / integrability / boundedness / positivity
+preconditions; the bundle is field-for-field the same hypotheses `convex_fisher_bound`
+takes individually (see `convex_fisher_bound_of_ready`). The
 `logDeriv (convDensityAdd fX fY)`-containing fields (`int_fisherZ` / `int_prod1/2/3`)
-assert only **`Integrable (…)`** of the verbatim integrands, NOT the value of any
-integral nor any inequality — identical honesty state to `convex_fisher_bound`'s
-already-`@audit:ok` argument group. No `:True` slot, no circular field, no
-inequality/equality core bundled. NON-VACUOUSNESS: a proven Gaussian inhabitant
-`isBlachmanConvReady_gaussianPDFReal` (`EPIBlachmanGaussianWitness.lean`) is now wired
-in-tree with all 19 fields genuine (0 sorry, `#print axioms` → sorryAx-free), so the
-predicates carrying this bundle have a machine-confirmed proven inhabitant. (Witness
-`isBlachmanConvReady_gaussianPDFReal` independent honesty audit COMPLETE 2026-05-31,
-commit `6e65535`, `@audit:ok` confirmed — sorryAx-free machine-verified. Scope note:
-this confirms non-vacuousness of `IsBlachmanConvReady` itself; a Gaussian inhabitant
-lemma for the upstream `IsStamCauchySchwarz*` predicates is the remaining
-`epi-wall-reattack-plan` wiring step.) -/
+assert only `Integrable (…)` of the verbatim integrands, not the value of any
+integral nor any inequality, so none bundles the convex Fisher inequality core
+(which lives inside `convex_fisher_bound`'s body). A proven Gaussian inhabitant
+`isBlachmanConvReady_gaussianPDFReal` (`EPIBlachmanGaussianWitness.lean`, sorryAx-free)
+establishes non-vacuousness.
+@audit:ok -/
 structure IsBlachmanConvReady (fX fY : ℝ → ℝ) : Prop where
   /-- `fX` is Lebesgue-integrable. -/
   int_fX : Integrable fX volume
@@ -839,14 +823,10 @@ theorem isBlachmanConvReady_symm {fX fY : ℝ → ℝ}
     ring
 
 /-- **Convex Fisher bound from the regularity bundle**. Applies `convex_fisher_bound`
-by projecting all 14+ integrability / boundedness / positivity preconditions out of
-the `IsBlachmanConvReady` bundle. Pure plumbing — no analytic content beyond
+by projecting the integrability / boundedness / positivity preconditions out of the
+`IsBlachmanConvReady` bundle. Pure plumbing — no analytic content beyond
 `convex_fisher_bound`.
-
-@audit:ok — independent honesty audit (2026-05-31): 0-sorry projection wrapper; body
-forwards the 20 `IsBlachmanConvReady` fields (+ `hreg`/`hnorm` regularity) into the
-`@audit:ok` core `convex_fisher_bound` at the consumer-chosen `lam`. No hypothesis
-carries the inequality core; conclusion ≠ any hypothesis type. -/
+@audit:ok -/
 theorem convex_fisher_bound_of_ready (fX fY : ℝ → ℝ) (lam : ℝ)
     (hlam0 : 0 ≤ lam) (hlam1 : lam ≤ 1)
     (hregX : IsRegularDensityV2 fX) (hregY : IsRegularDensityV2 fY)
