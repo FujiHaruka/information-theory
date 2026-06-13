@@ -153,51 +153,6 @@ theorem swap_normalization_proof : SwapNormalizationHypothesis.{u} := by
   intro β _ _ _ _ _ _ Q _ ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
   exact swap_normalization_strong Q ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
 
-/-! ### 強形主定理 — Hyp1 discharged, Hyp2 を primitive で受ける形
-
-Hyp1 (`SwapNormalizationHypothesis`) は `swap_normalization_proof` で **無条件 genuine
-discharge** 済. Hyp2 (`HuffmanMergedIdentificationHypothesis`) の measure 層は
-`huffmanMergedIdentification_of_aux` で剥離済で、残るのは pure-combinatorics の primitive
-`MergedHuffmanAuxIdentHypothesis` のみ.
-
-下記 `huffmanLength_optimal_modulo_aux_ident` は **Hyp1 を被せ済**で、引数として残るのは
-`MergedHuffmanAuxIdentHypothesis` 一つだけ. この primitive の genuine discharge
-(Part C, `huffmanLengthAux` の carrier-crossing 対応) は本 session で閉じられていない
-残タスク (下記 docstring 参照). -/
-
-/-- **強形主定理 (Hyp1 discharged)** — `MergedHuffmanAuxIdentHypothesis` を **唯一の
-load-bearing hypothesis** として受け、Cover–Thomas Theorem 5.8.1 強形を結論する.
-
-Hyp1 (swap normalization) は `swap_normalization_proof` で無条件に genuine discharge 済.
-よって残る open hypothesis は `h_aux : MergedHuffmanAuxIdentHypothesis` の **1 つだけ**.
-
-注: `h_aux` は load-bearing hypothesis (型は「`huffmanLengthAux (mergedInitMultiset Q a b) x
-= (if x.val = a then huffmanLength Q a - 1 else huffmanLength Q x.val)`」 — Huffman 再帰を
-2 carrier (`β` と `{y // y ≠ b}`) 間で関連付ける genuine な combinatorial 恒等式)。
-
-**Superseded (2026-05-30)**: cost-level pivot (`huffman-cost-level-optimality`) で帰納核から
-`h_aux`/`h_ident` 依存を除去した無引数 genuine 後継 `huffmanLength_optimal` (本 file:225、
-`@audit:ok`、`#print axioms` sorryAx 非依存) が同結論を hypothesis なしで与える。本 wrapper は
-body に実 sorry を持たず FALSE `h_aux` (`MergedHuffmanAuxIdentHypothesis`) を load-bearing
-hypothesis として取るだけなので、`@residual(plan:...)` が指す closure 対象の sorry は存在しない
-(旧 `@residual` を撤回)。weak-form API 後方互換のため残置。
-
-@audit:superseded-by(huffmanLength_optimal) -/
-@[entry_point]
-theorem huffmanLength_optimal_modulo_aux_ident
-    {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
-    [MeasurableSpace α] [MeasurableSingletonClass α]
-    (h_aux : MergedHuffmanAuxIdentHypothesis.{u})
-    (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
-    (l : α → ℕ) (hl_pos : ∀ a, 0 < l a)
-    (hl_kraft : ∑ a : α, ((2 : ℝ)) ^ (-(l a : ℤ)) ≤ 1) :
-    InformationTheory.Shannon.ShannonCode.expectedLength P (huffmanLength P)
-      ≤ InformationTheory.Shannon.ShannonCode.expectedLength P l :=
-  huffmanLength_optimal_with_hypotheses
-    swap_normalization_proof
-    (huffmanMergedIdentification_of_aux h_aux)
-    P hP l hl_pos hl_kraft
-
 /-! ### T1-A'' — 無条件 strong form (cost-level pivot) -/
 
 /-- **Cover–Thomas Theorem 5.8.1 (strong form) — hypothesis 引数なし**.
@@ -208,11 +163,10 @@ merged-carrier の bridge は cost-level
 (`expectedLength_merged_cost_bridge`、per-symbol depth identity FALSE を経由しない)
 で閉じている)。
 
-前任 `huffmanLength_optimal_modulo_aux_ident` は FALSE predicate
-`MergedHuffmanAuxIdentHypothesis` を hypothesis に取る weak form だったが、本定理は
-cost-level pivot (`docs/shannon/huffman-cost-level-optimality-plan.md`) で帰納核から
-`h_ident` 依存を除去した新 motor `huffmanLength_optimal_aux` を経由するため、FALSE
-predicate を **一切経由しない**。
+本定理は cost-level pivot (`docs/shannon/huffman-cost-level-optimality-plan.md`) で
+帰納核から `h_ident` 依存を除去した motor `huffmanLength_optimal_aux` を経由するため、
+FALSE predicate (`MergedHuffmanAuxIdentHypothesis` 系、issue #4 で retract 済) を
+**一切経由しない**。
 @audit:ok -/
 @[entry_point]
 theorem huffmanLength_optimal

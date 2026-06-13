@@ -712,16 +712,12 @@ lemma swap_step_le
       nlinarith [hprod]
   exact ⟨hl'_pos, hkraft', hexpL', hl'_a, hl'_m⟩
 
-/-! ### Phase 4 hypothesis abbreviations (weak form 用)
+/-! ### swap normalization 補助述語
 
-T1-A' 主定理を完全な 0 sorry で publish するために、Cover-Thomas 標準証明で最も
-技術的に重い 2 ステップ — **swap normalization** と **huffmanLength identification** —
-は本ファイルでは証明せず、`huffmanLength_optimal_with_hypotheses` の **hypothesis
-として外から渡す weak form** で publish する。
-
-これら 2 hypothesis を discharge する完全証明は後継 seed `T1-A''` (
-`docs/textbook-roadmap.md`) で予定。abbreviation はそれまでの sub-statement の
-typing 用. -/
+cost-level motor `huffmanLength_optimal_aux` は swap normalization ステップを
+`SwapNormalizationHypothesis` として引数で受け取り、headline `huffmanLength_optimal`
+が `swap_normalization_proof` (genuine, sorry なし) を供給して無条件化する。
+本述語はその interface typing 用. -/
 
 universe u
 
@@ -732,17 +728,14 @@ universe u
 `a` = global-min (`_h_a_min`), `b` = rest-min (`_h_b_min`). 旧 disjunctive 形
 `∀ c, Q{a} ≤ Q{c} ∨ Q{b} ≤ Q{c}` は `a` が global-min なだけで `b` は任意でよく、
 Cover-Thomas swap 論法 (least-2 leaf を最長 2 leaf へ swap) が閉じない。call site
-(`huffmanLength_optimal_aux_with_hypotheses` の step case) は `exists_sibling_min_pair`
+(`huffmanLength_optimal_aux` の step case) は `exists_sibling_min_pair`
 経由で strong 形を実際に供給するため、これは weak 化ではなく mis-statement の修正.
 
-@audit:retract-candidate(load-bearing-predicate) — `SwapNormalizationHypothesis` の constructive
-core は `HuffmanStrongForm.lean:144` `swap_normalization_proof` (genuine、sorry なし)。本 predicate を
-hypothesis に取る wrapper 群 (上流 + 下流 17 件、全 21 件) は dead (無引数 `huffmanLength_optimal` が
-cost-level pivot で supersede 済)。旧 weak-form alias を集約していた `HuffmanWalls.lean` は偽述語
-スキャフォールドとして削除済 (issue #4)。
-本 predicate 自体は constructive discharge 済なので削除可能だが、wrapper 群 (load-bearing
-hypothesis 形 + extract-only consumer の混在) が依然 hypothesis 形で API として残るため
-predicate も併存。 -/
+constructive core は `StrongForm.lean` `swap_normalization_proof` (genuine、sorry なし) で
+無条件 discharge 済。headline `huffmanLength_optimal` がこれを供給し、cost-level motor
+`huffmanLength_optimal_aux` が本述語を引数で消費する legitimate interface predicate
+(precondition であって load-bearing-in-defect ではない)。FALSE 述語に依存していた weak-form
+wrapper 群は issue #4 で retract 済. -/
 abbrev SwapNormalizationHypothesis : Prop :=
   ∀ {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -760,304 +753,7 @@ abbrev SwapNormalizationHypothesis : Prop :=
       InformationTheory.Shannon.ShannonCode.expectedLength Q l_norm
         ≤ InformationTheory.Shannon.ShannonCode.expectedLength Q ll
 
-/-- **Weak form hypothesis 2**: `huffmanLength` identification on `mergedMeasure`.
 
-`a` = global-min (`_h_a_min`), `b` = rest-min (`_h_b_min`).
-
-⚠ **FALSE as a universal statement** (2026-05-30 機械確定): 旧 docstring は「strong
-precondition (a,b first-merged 対) なら成立、任意 sibling 対では一致しない」と主張したが
-**これは誤り**。反例 β={0,1,2,3} weights `[1,2,1,1]` a=0 b=2 — 全強前提 (a global-min /
-b rest-min / a≠b / huffmanLength 一致) **かつ a,b first-merged** でも x=0 で恒等式失敗。
-merged tree が元木の collapse に対応しない (決定的 colex tie-break の merge 不安定性)。本
-predicate は `MergedHuffmanAuxIdentHypothesis` と同一 statement (measure-level、
-`initMultiset_mergedMeasure_eq` 経由) で同じ反例で FALSE。discharge 不能。検証 script:
-`docs/shannon/verify/merged_huffman_aux_ident_counterexample.py`。
-
-タグ語彙裁定 (independent honesty audit 2026-05-30): 本 def は conditional wrapper に
-hypothesis として渡る形だが、predicate **自身が機械検証可能に FALSE** (universal statement、
-反例独立再現済) なので根本原因は load-bearing ではなく false-hypothesis。`load-bearing-predicate`
-は「true だが closure 待ちの暫定」を含意するため不正確 → wall lemma 側 (`huffman_merged_identification_hypothesis_holds`
-の `@audit:defect(false-statement)`) と整合する `false-hypothesis` reason に確定。consumer は
-hypothesis 形のまま残存 (上流 + 下流 全 21 件、import cycle 回避、`huffman-sorry-migration-plan.md`
-判断ログ #2-#4) するが、false premise を渡す形なので vacuously-true wrapper、genuine closure は
-cost-level identity への pivot 完遂時 (`huffman-cost-level-optimality`)。
-
-@audit:defect(false-statement) @audit:retract-candidate(false-hypothesis) @audit:closed-by-successor(huffman-cost-level-optimality) -/
-abbrev HuffmanMergedIdentificationHypothesis : Prop :=
-  ∀ {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
-    [MeasurableSpace β] [MeasurableSingletonClass β]
-    (Q : Measure β) [IsProbabilityMeasure Q] (_hQ : ∀ a, 0 < Q.real {a})
-    (_h_card : 3 ≤ Fintype.card β)
-    (a b : β) (hab : a ≠ b)
-    (_h_a_min : ∀ c, Q.real {a} ≤ Q.real {c})
-    (_h_b_min : ∀ c, c ≠ a → Q.real {b} ≤ Q.real {c})
-    (_h_sibling : huffmanLength Q a = huffmanLength Q b)
-    (x : { y : β // y ≠ b }),
-    huffmanLength (mergedMeasure Q a b hab) x
-      = (if x.val = a then huffmanLength Q a - 1 else huffmanLength Q x.val)
-
-/-! ### 主定理 (Cover-Thomas Theorem 5.8.1) — weak form -/
-
-/-- **Phase 4 helper — strong induction motor**: Auxiliary version with `Fintype.card α = n`
-explicit, allowing `Nat.strong_induction_on` on `n` with `generalizing α P l`.
-
-**Weak form**: 2 hypothesis (`h_swap` / `h_ident`) を hypothesis として外から受け取る.
-
-注: 本宣言の hypothesis 引数 `h_swap` / `h_ident` は load-bearing。`h_ident`
-(`HuffmanMergedIdentificationHypothesis`) は FALSE statement なので供給元が無く、本 motor は
-top-most weak-form API だが dead (無引数 `huffmanLength_optimal` が supersede)。
-
-**Superseded (2026-05-30)**: cost-level pivot (`huffman-cost-level-optimality`) で帰納核から
-`h_ident` 依存を除去した genuine 後継 `huffmanLength_optimal_aux` (本 file:1259、`@audit:ok`、
-`#print axioms` sorryAx 非依存) が同結論を FALSE predicate 非経由で与える。本 motor は body に
-実 sorry を持たず FALSE `h_ident` を load-bearing hypothesis として thread するだけ (line 1040) で
-あり、`@residual(plan:...)` が指す closure 対象の sorry は存在しない (旧 `@residual` を撤回)。
-weak-form API 後方互換のため宣言は残置。
-
-@audit:superseded-by(huffmanLength_optimal_aux) -/
-private theorem huffmanLength_optimal_aux_with_hypotheses (n : ℕ)
-    (h_swap : SwapNormalizationHypothesis.{u})
-    (h_ident : HuffmanMergedIdentificationHypothesis.{u})
-    {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
-    [MeasurableSpace α] [MeasurableSingletonClass α]
-    (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
-    (l : α → ℕ) (hl_pos : ∀ a, 0 < l a)
-    (hl_kraft : ∑ a : α, ((2 : ℝ)) ^ (-(l a : ℤ)) ≤ 1)
-    (hn : Fintype.card α = n) :
-    InformationTheory.Shannon.ShannonCode.expectedLength P (huffmanLength P)
-      ≤ InformationTheory.Shannon.ShannonCode.expectedLength P l := by
-  induction n using Nat.strong_induction_on generalizing α with
-  | _ n IH =>
-    classical
-    -- base case: n ≤ 2
-    by_cases h_card : Fintype.card α ≤ 2
-    · -- n ≤ 2: huffmanLength P x ≤ 1 ∀ x. ∀ x, 0 < l x. So E[H] ≤ E[l].
-      -- 具体的に: huffmanLength P x の値は card = 1 で 0, card = 2 で 1.
-      -- 各場合に E[huffmanLength P] ≤ 1 = ∑ P {x} * 1 ≤ ∑ P {x} * l x = E[l]
-      unfold InformationTheory.Shannon.ShannonCode.expectedLength
-      -- 各 x : α について huffmanLength P x ≤ l x を示す
-      apply Finset.sum_le_sum
-      intro x _
-      have hPx : 0 ≤ P.real {x} := measureReal_nonneg
-      -- P.real {x} * huffmanLength P x ≤ P.real {x} * l x
-      apply mul_le_mul_of_nonneg_left _ hPx
-      -- huffmanLength P x ≤ l x as ℝ. 十分: huffmanLength P x ≤ 1 ≤ l x
-      have h_huffman_le_one : huffmanLength P x ≤ 1 := by
-        have h_card_pos : 1 ≤ Fintype.card α := Fintype.card_pos
-        have h_card_le_2 : Fintype.card α ≤ 2 := h_card
-        rcases Nat.lt_or_ge (Fintype.card α) 2 with h_lt | h_ge
-        · -- card ≤ 1: huffmanLength = 0
-          unfold huffmanLength
-          have hcard_init : (initMultiset P).card ≤ 1 := by
-            unfold initMultiset
-            rw [Multiset.card_map]
-            show (Finset.univ : Finset α).card ≤ 1
-            rw [Finset.card_univ]
-            omega
-          rw [huffmanLengthAux_eq_zero (initMultiset P) hcard_init
-            (initMultiset_huffmanGrouping P)]
-          simp
-        · -- card = 2: huffmanLength = 1
-          have h_n : Fintype.card α = 2 := by omega
-          unfold huffmanLength
-          have hcard_init : (initMultiset P).card = 2 := by
-            unfold initMultiset
-            rw [Multiset.card_map]
-            show (Finset.univ : Finset α).card = 2
-            rw [Finset.card_univ]
-            exact h_n
-          have h_card_two : 2 ≤ (initMultiset P).card := by omega
-          have h_grouping := initMultiset_huffmanGrouping P
-          -- After one step, s''.card = 1, so huffmanLengthAux s'' = 0.
-          set step := (huffmanStep (initMultiset P) h_card_two h_grouping).val with hstep_def
-          have hstep_card : step.2.2.card = 1 := by
-            show (huffmanStep (initMultiset P) h_card_two h_grouping).val.2.2.card = 1
-            rw [huffmanStep_card_eq (initMultiset P) h_card_two h_grouping, hcard_init]
-          have hstep_grouping : HuffmanGrouping step.2.2 :=
-            (huffmanStep (initMultiset P) h_card_two h_grouping).property.2.2.2
-          obtain ⟨hx1_mem, hx2_mem, hshape, hg''⟩ :=
-            huffmanStep_spec (initMultiset P) h_card_two h_grouping
-          have hx1_mem' : step.1 ∈ initMultiset P := hx1_mem
-          have hx1_form : ∃ y : α, step.1 = ({y}, P.real {y}) := by
-            unfold initMultiset at hx1_mem'
-            rw [Multiset.mem_map] at hx1_mem'
-            obtain ⟨y, _, hye⟩ := hx1_mem'
-            exact ⟨y, hye.symm⟩
-          obtain ⟨y₁, hy₁_eq⟩ := hx1_form
-          have hx2_mem_init : step.2.1 ∈ initMultiset P :=
-            Multiset.mem_of_mem_erase hx2_mem
-          have hx2_form : ∃ y : α, step.2.1 = ({y}, P.real {y}) := by
-            unfold initMultiset at hx2_mem_init
-            rw [Multiset.mem_map] at hx2_mem_init
-            obtain ⟨y, _, hye⟩ := hx2_mem_init
-            exact ⟨y, hye.symm⟩
-          obtain ⟨y₂, hy₂_eq⟩ := hx2_form
-          have hy₁_ne_y₂ : y₁ ≠ y₂ := by
-            intro heq
-            have hstep1_ne : step.1 ≠ step.2.1 := by
-              intro h
-              rw [h] at hx2_mem
-              exact h_grouping.nodup.notMem_erase hx2_mem
-            apply hstep1_ne
-            rw [hy₁_eq, hy₂_eq, heq]
-          -- x ∈ {y₁, y₂} since card α = 2 and y₁ ≠ y₂
-          have hx_eq : x = y₁ ∨ x = y₂ := by
-            have h_univ : (Finset.univ : Finset α) = {y₁, y₂} := by
-              apply Finset.eq_of_subset_of_card_le
-              · intro z _
-                by_contra hzn
-                rw [Finset.mem_insert, Finset.mem_singleton] at hzn
-                push Not at hzn
-                have h3 : ({y₁, y₂, z} : Finset α).card = 3 := by
-                  rw [Finset.card_insert_of_notMem, Finset.card_insert_of_notMem,
-                      Finset.card_singleton]
-                  · simp [hzn.2.symm]
-                  · simp [hy₁_ne_y₂, hzn.1.symm]
-                have h_le : ({y₁, y₂, z} : Finset α).card ≤ Fintype.card α :=
-                  Finset.card_le_univ _
-                omega
-              · rw [show (Finset.univ : Finset α).card = 2 from
-                  by rw [show (Finset.univ : Finset α).card = Fintype.card α from rfl]; exact h_n]
-                rw [Finset.card_insert_of_notMem (by simp [hy₁_ne_y₂]),
-                    Finset.card_singleton]
-            have hxm : x ∈ (Finset.univ : Finset α) := Finset.mem_univ x
-            rw [h_univ, Finset.mem_insert, Finset.mem_singleton] at hxm
-            exact hxm
-          have h_xy_inAB : x ∈ step.1.1 ∨ x ∈ step.2.1.1 := by
-            cases hx_eq with
-            | inl h => left; rw [hy₁_eq]; simp [h]
-            | inr h => right; rw [hy₂_eq]; simp [h]
-          rw [huffmanLengthAux_step_merged (initMultiset P) h_card_two h_grouping h_xy_inAB]
-          have hstep22_le : step.2.2.card ≤ 1 := by rw [hstep_card]
-          rw [huffmanLengthAux_eq_zero step.2.2 hstep22_le hstep_grouping]
-      -- Combine: huffmanLength P x ≤ 1 ≤ l x
-      have h_one_le_lx : (1 : ℝ) ≤ (l x : ℝ) := by
-        exact_mod_cast hl_pos x
-      calc ((huffmanLength P x : ℕ) : ℝ)
-          ≤ (1 : ℝ) := by exact_mod_cast h_huffman_le_one
-        _ ≤ (l x : ℝ) := h_one_le_lx
-    · -- step case: Fintype.card α ≥ 3
-      push Not at h_card
-      have h_card_ge_3 : 3 ≤ Fintype.card α := h_card
-      have h_card_ge_2 : 2 ≤ Fintype.card α := by omega
-      -- sibling pair (a, b) を取得 (strong: a = global-min, b = rest-min)
-      obtain ⟨a, b, hab, h_sib, h_a_min, h_b_min⟩ :=
-        exists_sibling_min_pair P hP h_card_ge_2
-      -- l を normalize: l_swap a = l_swap b  (hypothesis `h_swap` 経由)
-      obtain ⟨l_norm, hln_pos, hln_kraft, hln_eq_ab, hln_le⟩ :=
-        h_swap P l hl_pos hl_kraft a b hab h_a_min h_b_min h_card_ge_3
-      -- l_norm a ≥ 2 (otherwise Kraft > 1 with card ≥ 3)
-      have hln_a_ge_2 : 2 ≤ l_norm a := by
-        by_contra h_lt
-        push Not at h_lt
-        have h_la_eq_1 : l_norm a = 1 := by
-          have h_pos := hln_pos a; omega
-        -- Then 2^(-l_norm a) = 1/2, same for b. plus at least 1 more positive term > 1.
-        -- ∑ x : α, 2^(-l_norm x) ≥ 2^(-l_norm a) + 2^(-l_norm b) = 1, plus positive ⇒ > 1.
-        -- Get c ≠ a, c ≠ b
-        have h_exists_c : ∃ c : α, c ≠ a ∧ c ≠ b := by
-          by_contra h_no_c
-          have h_no_c' : ∀ c : α, c = a ∨ c = b := by
-            intro c
-            by_contra hcab
-            apply h_no_c
-            push Not at hcab
-            exact ⟨c, hcab.1, hcab.2⟩
-          have h_univ : (Finset.univ : Finset α) ⊆ {a, b} := by
-            intro c _
-            rcases h_no_c' c with h_eq_a | h_eq_b
-            · rw [h_eq_a]; simp
-            · rw [h_eq_b]; simp
-          have h_card_le_2 : Fintype.card α ≤ 2 := by
-            have hle := Finset.card_le_card h_univ
-            simp only [Finset.card_univ] at hle
-            have h2 : ({a, b} : Finset α).card ≤ 2 := by
-              calc ({a, b} : Finset α).card
-                  ≤ ({a} : Finset α).card + 1 := Finset.card_insert_le _ _
-                _ = 2 := by rw [Finset.card_singleton]
-            omega
-          omega
-        obtain ⟨c, hca, hcb⟩ := h_exists_c
-        -- ∑ over {a, b, c} ≤ 1 から 2^(-1) + 2^(-1) + 2^(-l_norm c) ≤ 1
-        have h_pos_pow : (0 : ℝ) < (2 : ℝ) ^ (-(l_norm c : ℤ)) := by
-          apply zpow_pos
-          norm_num
-        have h_sum_three :
-            ((2 : ℝ)) ^ (-(l_norm a : ℤ)) + ((2 : ℝ)) ^ (-(l_norm b : ℤ))
-              + ((2 : ℝ)) ^ (-(l_norm c : ℤ))
-              ≤ ∑ x : α, ((2 : ℝ)) ^ (-(l_norm x : ℤ)) := by
-          have hne_ab : a ≠ b := hab
-          have hne_ca : c ≠ a := hca
-          have hne_cb : c ≠ b := hcb
-          have h_three_sub :
-              ({a, b, c} : Finset α) ⊆ Finset.univ := Finset.subset_univ _
-          have h_sum_eq :
-              (∑ x ∈ ({a, b, c} : Finset α), ((2 : ℝ)) ^ (-(l_norm x : ℤ)))
-                = ((2 : ℝ)) ^ (-(l_norm a : ℤ)) + ((2 : ℝ)) ^ (-(l_norm b : ℤ))
-                  + ((2 : ℝ)) ^ (-(l_norm c : ℤ)) := by
-            rw [show ({a, b, c} : Finset α) = insert a (insert b ({c} : Finset α)) from rfl,
-                Finset.sum_insert (by simp [hne_ab, hne_ca.symm]),
-                Finset.sum_insert (by simp [hne_cb.symm]),
-                Finset.sum_singleton]
-            ring
-          rw [← h_sum_eq]
-          apply Finset.sum_le_sum_of_subset_of_nonneg h_three_sub
-          intros y _ _
-          positivity
-        have h_pow_a : ((2 : ℝ)) ^ (-(l_norm a : ℤ)) = 1/2 := by
-          rw [h_la_eq_1]; norm_num
-        have h_pow_b : ((2 : ℝ)) ^ (-(l_norm b : ℤ)) = 1/2 := by
-          rw [← hln_eq_ab, h_la_eq_1]; norm_num
-        rw [h_pow_a, h_pow_b] at h_sum_three
-        linarith
-      -- Bridge R: ∃ l', positivity ∧ kraft ∧ E[l_norm] = E[mergedMeasure, l'] + (P{a} + P{b})
-      obtain ⟨l', hl'_pos, hl'_kraft, hl'_eq⟩ :=
-        expectedLength_bridge_R P l_norm hln_pos a b hab hln_eq_ab hln_a_ge_2 hln_kraft
-      -- mergedMeasure の IsProbabilityMeasure instance
-      have hP'_inst : IsProbabilityMeasure (mergedMeasure P a b hab) :=
-        mergedMeasure_isProbabilityMeasure P a b hab
-      have hP'_pos : ∀ x : { y : α // y ≠ b },
-          0 < (mergedMeasure P a b hab).real {x} :=
-        mergedMeasure_pos P hP a b hab
-      -- IH on α' (Fintype.card α' = Fintype.card α - 1 < n)
-      have h_card_α' :
-          Fintype.card { y : α // y ≠ b } = Fintype.card α - 1 :=
-        fintype_card_subtype_ne b
-      have h_card_α'_lt : Fintype.card { y : α // y ≠ b } < n := by
-        rw [h_card_α', ← hn]; omega
-      -- α' is nonempty: a ≠ b ⇒ ⟨a, hab⟩ : α'.
-      haveI : Nonempty { y : α // y ≠ b } := ⟨⟨a, hab⟩⟩
-      -- IH 適用: huffmanLength の方が l' より expected length 小
-      have h_IH :
-          InformationTheory.Shannon.ShannonCode.expectedLength
-              (mergedMeasure P a b hab) (huffmanLength (mergedMeasure P a b hab))
-            ≤ InformationTheory.Shannon.ShannonCode.expectedLength
-              (mergedMeasure P a b hab) l' :=
-        IH _ h_card_α'_lt (mergedMeasure P a b hab) hP'_pos l' hl'_pos hl'_kraft rfl
-      -- huffmanLength_mergedMeasure_eq: huffmanLength (mergedMeasure ...) x = L'(x)
-      -- (hypothesis `h_ident` 経由)
-      have h_L'_link : ∀ x : { y : α // y ≠ b },
-          huffmanLength (mergedMeasure P a b hab) x
-            = (if x.val = a then huffmanLength P a - 1 else huffmanLength P x.val) := by
-        intro x
-        exact h_ident P hP h_card_ge_3 a b hab h_a_min h_b_min h_sib x
-      -- Bridge L: E[P, huffmanLength P] = E[merged, huffmanLength merged] + (P{a} + P{b})
-      have h_BL := huffmanLength_bridge_L P hP h_card_ge_2 a b hab h_sib
-        (huffmanLength (mergedMeasure P a b hab)) h_L'_link
-      -- 連結: E[P, huffmanLength P]
-      --     = E[merged, huffmanLength merged] + (P{a}+P{b})    -- (h_BL)
-      --     ≤ E[merged, l']                  + (P{a}+P{b})     -- (h_IH)
-      --     = E[P, l_norm]                                    -- (hl'_eq, rearranged)
-      --     ≤ E[P, l]                                          -- (hln_le)
-      calc InformationTheory.Shannon.ShannonCode.expectedLength P (huffmanLength P)
-          = InformationTheory.Shannon.ShannonCode.expectedLength
-              (mergedMeasure P a b hab) (huffmanLength (mergedMeasure P a b hab))
-            + (P.real {a} + P.real {b}) := h_BL
-        _ ≤ InformationTheory.Shannon.ShannonCode.expectedLength
-              (mergedMeasure P a b hab) l'
-            + (P.real {a} + P.real {b}) := by linarith
-        _ = InformationTheory.Shannon.ShannonCode.expectedLength P l_norm := by linarith
-        _ ≤ InformationTheory.Shannon.ShannonCode.expectedLength P l := hln_le
 
 /-! ### cost-level bridge L (T1-A'' pivot — per-symbol depth identity を経由しない) -/
 
@@ -1242,9 +938,9 @@ lemma expectedLength_merged_cost_bridge
       huffmanCost_step (initMultiset P) h2 hg, ← hxs1, ← hxs2, ← hs'',
       hcost_s'', hmerged_C1b, hpen]
 
-/-- **Phase M — cost-level 帰納核 (h_ident 引数なし)**: weak-form motor
-`huffmanLength_optimal_aux_with_hypotheses` から FALSE な `h_ident`
-(`HuffmanMergedIdentificationHypothesis`) 引数を **除去**した版.
+/-- **Phase M — cost-level 帰納核 (h_ident 引数なし)**: FALSE な identification
+hypothesis (`MergedHuffmanAuxIdentHypothesis` 系、issue #4 で retract 済) を一切取らず、
+swap normalization (`h_swap`, genuine) のみを引数に取る strong-induction motor.
 
 step case の per-symbol bridge (`h_L'_link` + `huffmanLength_bridge_L`) を
 **cost-level bridge** `expectedLength_merged_cost_bridge` (per-symbol depth identity 不要)
@@ -1439,32 +1135,5 @@ theorem huffmanLength_optimal_aux (n : ℕ)
         _ = InformationTheory.Shannon.ShannonCode.expectedLength P l_norm := by linarith
         _ ≤ InformationTheory.Shannon.ShannonCode.expectedLength P l := hln_le
 
-/-- **主定理 (Cover-Thomas Theorem 5.8.1) — weak form** — Huffman 語長は任意の
-Kraft-feasible 語長関数より expected length が小さい. **Weak form** として
-swap normalization と identification の 2 hypothesis を引数で受け取る. 完全な
-discharge は後継 seed `T1-A''` で予定.
-
-注: 本 weak-form の `h_ident` (`HuffmanMergedIdentificationHypothesis`) は FALSE statement なので
-供給元が無く、本 wrapper は dead (無引数 `huffmanLength_optimal` が supersede)。
-
-**Superseded (2026-05-30)**: 無引数 genuine 後継 `huffmanLength_optimal`
-(`HuffmanStrongForm.lean`、`@audit:ok`) が同結論を hypothesis なしで与える。本 wrapper は body に
-実 sorry を持たず FALSE `h_ident` (`HuffmanMergedIdentificationHypothesis`) を hypothesis として
-取るだけなので、`@residual(plan:...)` が指す closure 対象の sorry は存在しない (旧 `@residual` を
-撤回)。weak-form API 後方互換のため残置。
-
-@audit:superseded-by(huffmanLength_optimal) -/
-theorem huffmanLength_optimal_with_hypotheses
-    {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
-    [MeasurableSpace α] [MeasurableSingletonClass α]
-    (h_swap : SwapNormalizationHypothesis.{u})
-    (h_ident : HuffmanMergedIdentificationHypothesis.{u})
-    (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
-    (l : α → ℕ) (hl_pos : ∀ a, 0 < l a)
-    (hl_kraft : ∑ a : α, ((2 : ℝ)) ^ (-(l a : ℤ)) ≤ 1) :
-    InformationTheory.Shannon.ShannonCode.expectedLength P (huffmanLength P)
-      ≤ InformationTheory.Shannon.ShannonCode.expectedLength P l :=
-  huffmanLength_optimal_aux_with_hypotheses (Fintype.card α) h_swap h_ident
-    P hP l hl_pos hl_kraft rfl
 
 end InformationTheory.Shannon.Huffman
