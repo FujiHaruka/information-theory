@@ -7,6 +7,7 @@ A Lean 4 + Mathlib formalization project. Scope evolves; for the current focus s
 - `InformationTheory.lean` — library root. After adding a new file under `InformationTheory/`, append the corresponding `import` line here.
 - `private` is **file-scoped, not namespace-scoped**. Sub-modules that share `private` helpers must live in the same file, or those helpers leak as public symbols.
 - `docs/` holds source materials (PDFs / plans / inventories) and per-task `proof-log-*.md` + `metrics/` outputs. Treat plan and inventory files as the source of truth for whatever is currently active.
+- `docs/rules/` is the **SoT for code conventions** — naming, docstrings, module structure, Lean style (`docs/rules/README.md` indexes them). Consult it before writing or editing declarations. Headline policy (Mathlib-PR-quality target): **code-surface prose (`.lean` docstrings + comments) is English** and American-spelled; document only defs / `structure` / `class` / `inductive` + headline (`@[entry_point]`) theorems — internal supporting lemmas stay bare and let the name carry the meaning (`docs/rules/docstrings.md`). Migration status → `docs/docstring-tidyup-plan.md`.
 
 ## Build Setup
 
