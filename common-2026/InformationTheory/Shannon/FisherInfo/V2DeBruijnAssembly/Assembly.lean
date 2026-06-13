@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
-import InformationTheory.Shannon.FisherConvBound   -- shared 壁 gaussianConv_fisher_le_inv_var
-import InformationTheory.Shannon.EPI.Conv.DensitySecondDeriv  -- STEP-D bridge convDensityAdd_deriv2_eq_gaussian
+import InformationTheory.Shannon.FisherConvBound
+import InformationTheory.Shannon.EPI.Conv.DensitySecondDeriv
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Core
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Domination
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Derivatives
@@ -15,36 +15,12 @@ open InformationTheory.Shannon.EPIConvDensity (convDensityAdd convDensityAddDeri
 
 variable {Ω : Type*} {_mΩ : MeasurableSpace Ω}
 
-/-- **de Bruijn IBP step on the time-`t` convolution density — genuine atom application.**
-The de Bruijn integration-by-parts identity at fixed time `t`:
+/-- The de Bruijn integration-by-parts identity at fixed time `t`:
 `∫ (- log p_t - 1) · ∂²_x p_t = ∫ (logDeriv p_t)² · p_t`, where `p_t = convDensityAdd pX g_t`.
+Applies `debruijn_ibp_step` with the IBP quadruple `u = -log p_t - 1`, `v = ∂_x p_t`,
+`u' = -logDeriv p_t`, `v' = ∂²_x p_t`, drawing differentiability from the deriv-existence helpers
+and the three integrability preconditions from the entropy- and Fisher-integrability lemmas.
 
-**§Phase 5-G IBP localization (2026-05-31)**: the former monolithic body `sorry` is **factored**
-into a genuine `debruijn_ibp_step` (`@audit:ok`) application + named residuals (0 local sorry).
-The body now:
-- identifies the IBP quadruple `u = -log p_t - 1`, `v = ∂_x p_t`, `u' = -logDeriv p_t`,
-  `v' = ∂²_x p_t`;
-- supplies `hp_pos : 0 < p_t` genuinely (`convDensityAdd_pos`, mass `0 < ∫ pX = 1` from `hpX_mass`);
-- builds `hu : HasDerivAt u (u' ·)` genuinely (`Real.hasDerivAt_log ∘ HasDerivAt p_t` via the
-  deriv-existence helper `convDensityAdd_hasDerivAt_self`);
-- builds `hv : HasDerivAt v (v' ·)` from the deriv-existence helper
-  `convDensityAdd_deriv_hasDerivAt_self`;
-- supplies the three integrability hyps from the **entropy-finiteness wall** (`huv'`/`huv` =
-  `EntropyConvFinite.convDensityAdd_logFactor_deriv2_integrable` / `_deriv_integrable`) and the
-  **Fisher-finiteness wall** (`hu'v` from `convDensityAdd_fisher_integrable`, via the genuine
-  pointwise identity `u'·v = -((logDeriv p_t)²·p_t)` using `hp_pos`);
-- applies `debruijn_ibp_step` and reconciles RHS `-∫ u'·v = ∫ (logDeriv p_t)²·p_t` by
-  `integral_congr_ae` (same genuine pointwise identity).
-
-`hpX_nn`/`hpX_meas`/`hpX_int`/`hpX_mass` are pure pX regularity preconditions (`hpX_mass`:
-unit mass, used for strict positivity); the IBP equality is the genuine claim. No load-bearing
-hypothesis bundled. The remaining honest `sorry`s are localized in: (a) the `plan:` arm — the two
-deriv-existence helpers `convDensityAdd_hasDerivAt_self` / `convDensityAdd_deriv_hasDerivAt_self`
-are now **genuinely closed** (`@audit:ok`, 0 sorry), so the live `plan:` residual is the per-`x`
-heat-equation domination plumbing in `debruijnIdentityV2_holds_assembled_chain_hdiff` (`:2088`,
-in-tree machinery, NOT a Mathlib gap); (b) the entropy-finiteness wall (`EntropyConvFinite.lean`);
-(c) the Fisher-finiteness wall (`convDensityAdd_fisher_integrable`). The transitive marker is
-compound (AND of the plan + the two walls).
 @audit:ok -/
 private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -122,26 +98,11 @@ private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step
   filter_upwards with x
   rw [show u' x * v x = (u' * v) x from rfl, hpt_pointwise x, neg_neg]
 
-/-- **§5G-4: IBP + Fisher value match (L-PT-δ) — genuine plumbing over 2 named walls.**
-The integrated entropy-derivative equals half the Fisher info of `pPath t`. de Bruijn IBP
-(`debruijn_ibp_step`) moves the spatial-2nd-derivative factor onto the `negMulLog'` factor
-`(- log p - 1)`, yielding `∫ (∂_x p)²/p = ∫ (logDeriv p)²·p`, identified with
-`fisherInfoOfDensityReal` via `fisher_from_logDeriv`.
+/-- The integrated entropy-derivative equals half the Fisher info of `pPath t`. de Bruijn IBP
+moves the spatial second-derivative factor onto `(- log p - 1)`, yielding
+`∫ (∂_x p)²/p = ∫ (logDeriv p)² · p`, which `fisher_from_logDeriv` identifies with
+`fisherInfoOfDensityReal`. Here `hentDeriv` pins `entDeriv` to the per-`x` closed form.
 
-**§Phase 5-G case B split (2026-05-31, 案 B)**: the former monolithic body sorry is **factored**
-into two named walls + genuine plumbing (0 local sorry). The body now:
-(1) rewrites `∫ entDeriv` to `∫ (- log p_t - 1)·((1/2)·∂²_x p_t)` via the a.e. pin `hentDeriv`;
-(2) pulls out the `(1/2)` constant (`integral_const_mul` after an a.e. `ring` congr); (3) applies
-the **IBP step wall** `_chain_ibp_fisher_ibp_step` (de Bruijn IBP, `plan:` — `debruijn_ibp_step`
-atom + tsupport=ℝ + integrability); (4) applies `fisher_from_logDeriv` (atom `@audit:ok`) with its
-integrability hyp supplied by the **Fisher integrability wall** `convDensityAdd_fisher_integrable`
-(`wall:fisher-finiteness` — Stam convolution Fisher bound `J(X+Z)≤J(Z)=1/t`, Mathlib/repo absent).
-The `p_t ≥ 0` precondition of `fisher_from_logDeriv` is `convDensityAdd` nonnegativity
-(`integral_nonneg` + `hpX_nn` + `gaussianPDFReal_nonneg`, mirrors `_entropy_eq:293`).
-
-`hentDeriv` pins `entDeriv` to the §5G-1 closed form (integrand-level identification, not the
-conclusion). The Fisher-equality conclusion is the genuine claim. The remaining honest `sorry`s
-are localized in the 2 named walls above (no local sorry here).
 @audit:ok -/
 private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -177,39 +138,14 @@ private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher
   rw [fisher_from_logDeriv p_t hp_nn
     (convDensityAdd_fisher_integrable pX hpX_nn hpX_meas hpX_int hpX_mass ht)]
 
-/-- **§5G-3 hdiff plumbing (a.e.-over-Ioo per-`x` chain-rule) — GENUINELY CLOSED (0 sorry).**
-The per-`x`, per-`s∈Ioo (t/2)(2*t)` chain-rule derivative of the entropy integrand
-`fun s => negMulLog (pPath s x)`, with value the §5G-1 closed form
-`entDerivFn s x = (- log (pPath s x) - 1)·((1/2)·∂²_x pPath_s x)`, where
-`pPath s x = convDensityAdd pX g_{max s 0} x`.
+/-- The per-`x`, per-`s ∈ Ioo (t/2) (2*t)` chain-rule derivative of the entropy integrand
+`fun s => negMulLog (pPath s x)`, with value the closed form
+`(- log (pPath s x) - 1) · ((1/2) · ∂²_x pPath_s x)`, where
+`pPath s x = convDensityAdd pX g_{max s 0} x`. This is the `hdiff` precondition of the
+parametric-diff atom `entropy_hasDerivAt_via_parametric`. The derivation composes
+`_chain_entDeriv_formula` with the σ-derivative from `heatFlow_density_heat_equation`, whose
+domination hypotheses come from the Gaussian-Hessian majorant and the global kernel bounds.
 
-This is the `hdiff` precondition of the parametric-diff atom `entropy_hasDerivAt_via_parametric`.
-The genuine derivation route is, for each `(x, s∈Ioo)`:
-(1) §5G-1 `_chain_entDeriv_formula` (the negMulLog chain rule, `@audit:ok`), fed the σ-derivative
-    witness `hpath_deriv : HasDerivAt (fun σ => convDensityAdd pX g_{max σ 0} x) ((1/2)·∂²_x p_s x) s`;
-(2) that σ-derivative from `heatFlow_density_heat_equation` (`@audit:ok` atom), whose 11
-    integrand-level Gaussian-tail domination hyps plus the two deriv pins
-    (`convDensityAdd_hasDerivAt_self` / `convDensityAdd_deriv_hasDerivAt_self`, `@audit:ok`) are
-    supplied per-`x`.
-
-**Closure (2026-06-01, Wave 4b)**: the former monolithic `sorry` is now fully discharged.
-- The two deriv pins `hpathDeriv1`/`hpathDeriv2` are built by σ-case-split: for `σ > 0` the
-  `max σ 0 = σ` reconciliation (`NNReal.eq`+`max_eq_left`) lets the Wave-4a deriv-existence
-  helpers `convDensityAdd_hasDerivAt_self` / `convDensityAdd_deriv_hasDerivAt_self` (`@audit:ok`)
-  apply; for `σ ≤ 0` the path `pPath σ = convDensityAdd pX g_0 = 0` (since `gaussianPDFReal 0 0 = 0`,
-  `gaussianPDFReal_zero_var`) is the zero constant, so the derivs are 0 (`hasDerivAt_const`).
-- The 11 heat-eq domination hyps are discharged genuinely: the σ-direction group via the
-  `s`-uniform Gaussian-Hessian majorant `gaussHessMaj s` at base `s` (the σ-window `Ioo (s/2)(2s)`
-  is exactly `gaussianHess_le_gaussHessMaj`'s window with `t := s`); the two spatial-direction
-  groups via the fixed-`s` global kernel bounds `kernel_x_deriv1/2_global_bound` (`@audit:ok`,
-  `bound = |pX|·M`, integrable via `Integrable.mul_const` / `mul_bdd`) — the same template as
-  the Wave-4a helpers.
-- The chain rule (B+C) composes via `_chain_entDeriv_formula` with the `max s 0 = s` log-factor
-  reconciliation; `pathDeriv2 s x` is defeq to the goal's `deriv (deriv (g_{max s 0})) x`.
-
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified;
-no transitive `sorryAx`). The conclusion is an integrand-level derivative-existence statement —
-NOT the composed `HasDerivAt`-of-the-integral, NOT hyp-bundled. All hyps pX regularity.
 @audit:ok -/
 private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -434,44 +370,13 @@ private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
   rw [← hmaxs] at hchain
   exact hchain
 
-/-- **§5G-3: parametric-diff composition.**
-The entropy integral `∫ negMulLog (pPath s ·)` has its `s`-derivative at `t` given by the
-integral of `entDeriv` (the §5G-1 per-`x` closed form), and that integral equals
-`(1/2)·fisherInfoOfDensityReal (pPath t)`. Composes `entropy_hasDerivAt_via_parametric` (atom,
-now neighborhood-version: `hb`/`hdiff` quantified over `Set.Ioo (t/2)(2*t)`, requires `0 < t`)
-with §5G-1 (per-`x` chain rule), §5G-2 (full-entDeriv Ioo domination), §5G-4 (Fisher value). The
-`HasDerivAt` and Fisher-value conclusions are genuine claims; they are NOT supplied as
-hypotheses.
+/-- The entropy integral `∫ negMulLog (pPath s ·)` has its `s`-derivative at `t` given by the
+integral of a per-`x` closed-form `entDeriv`, and that integral equals
+`(1/2) · fisherInfoOfDensityReal (pPath t)`. Composes `entropy_hasDerivAt_via_parametric` (the
+neighborhood version over `Set.Ioo (t/2) (2*t)`) with the per-`x` chain rule (`_chain_hdiff`), the
+joint domination (`_chain_domination`), the entropy integrability
+(`convDensityAdd_negMulLog_integrable`), and the Fisher value match (`_chain_ibp_fisher`).
 
-**§Phase 5-G case C wiring (2026-05-31, §5G-3 配線完了)**: the former monolithic body `sorry`
-is **factored** into a genuine `entropy_hasDerivAt_via_parametric` (`@audit:ok` atom) application
-+ named residuals (0 local sorry). The existential output `entDeriv` is the §5G-1 per-`x` closed
-form `entDerivFn t x = (- log p_t x - 1)·((1/2)·∂²_x p_t x)` (kept in `max s 0` form so the
-被微分関数 matches `_chain` verbatim; `max s 0 = s` on the `Ioo (t/2)(2*t)` neighborhood). The body:
-
-- **first goal** (`HasDerivAt`): applies the Ioo-version atom `entropy_hasDerivAt_via_parametric`,
-  supplying its 6 preconditions —
-  · `hbound_int` / `hb` from §5G-2 `_chain_domination` (proof-done envelope, `@audit:ok`), with the
-    `max s 0 = s` reconciliation on `Ioo` (each `s > 0`);
-  · `hint` from the entropy-finiteness wall `convDensityAdd_negMulLog_integrable`
-    (`wall:entropy-finiteness`), moved to the `g_{max t 0}` form via `max t 0 = t`;
-  · `hmeas` / `hderiv_meas` **genuine** (joint-measurable convolution integrand + `negMulLog`/`log`
-    composition + `measurable_deriv`, all Mathlib std — mirrors `convDensityAdd_fisher_integrable`'s
-    `hpt_meas` route);
-  · `hdiff` from the named honest-sorry helper `_chain_hdiff` (a.e.-over-Ioo §5G-1 chain rule +
-    heat-eq atom domination plumbing, `plan:`).
-- **second goal** (Fisher value): applies §5G-4 `_chain_ibp_fisher` (genuine plumbing over the
-  Fisher + entropy walls), with `hentDeriv` pinning `entDerivFn t` to the `⟨t,_⟩`-form integrand a.e.
-  (definitional `max t 0 = t` reconciliation).
-
-The `HasDerivAt` + Fisher-value conclusions are the genuine claims, NOT bundled into hypotheses.
-The remaining honest `sorry` is localized in `_chain_hdiff` (named, `plan:`); the file-level
-residual grep still reflects this declaration's transitive dependency on §5G-2, §5G-3, §5G-4.
-
-`hpX_mass:∫pX=1` and `hpX_mom : Integrable (fun y => y²·pX y) volume` are honest regularity
-preconditions (unit mass + finite second moment / variance of `X`), threaded purely to supply
-the §5G-2 domination's GAP① normalization and route-II Tonelli even-moment envelope; they do NOT
-change the residual's meaning.
 @audit:ok -/
 private theorem debruijnIdentityV2_holds_assembled_chain_parametric
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -580,32 +485,11 @@ private theorem debruijnIdentityV2_holds_assembled_chain_parametric
     exact debruijnIdentityV2_holds_assembled_chain_ibp_fisher
       pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht (fun x => entDerivFn t x) hentDeriv
 
-/-- **Assembly chain core (段 2-7, genuine plumbing over §5G sub-lemmas)**: given the
-heat-flow density path `pPath s = convDensityAdd pX (gaussianPDFReal 0 ⟨s,_⟩)` (the
-convolution density of the law of `X + √s·Z`) with its X-density witness `pX`, the
-`s`-derivative of the entropy `∫ negMulLog (pPath s ·)` at `t` equals
-`(1/2) · fisherInfoOfDensityReal (pPath t)`.
+/-- For the heat-flow density path `pPath s = convDensityAdd pX (gaussianPDFReal 0 ⟨s, _⟩)`
+(the convolution density of the law of `X + √s · Z`), the `s`-derivative of the entropy
+`∫ negMulLog (pPath s ·)` at `t` equals `(1/2) · fisherInfoOfDensityReal (pPath t)`. Obtained
+from `_chain_parametric`.
 
-After the §Phase 5-G sub-lemma split (2026-05-31), the former monolithic sorry is
-**factored** into the 5 §5G sub-lemmas. The body of this lemma is now **genuine plumbing**
-(§5G-5): it `obtain`s the entropy-derivative + value from `_chain_parametric` (§5G-3) and
-rewrites — no local sorry. After the §5G wiring (2026-05-31), `_chain_domination` (§5G-2) and
-`_chain_entDeriv_formula` (§5G-1) are genuine (proof-done / `@audit:ok`); `_chain_parametric`
-(§5G-3) and `_chain_ibp_fisher` (§5G-4) are genuine plumbing (0 local sorry). The remaining
-honest `sorry` + `@residual` are localized in the named leaf residuals only: `_chain_hdiff`
-(§5G-3 hdiff, `plan:` heat-eq domination plumbing), the 2 deriv-existence helpers
-(`convDensityAdd_hasDerivAt_self` / `_deriv_hasDerivAt_self`, `plan:`), the entropy-finiteness
-wall (`EntropyConvFinite.lean`), and the Fisher-finiteness wall (`convDensityAdd_fisher_integrable`).
-
-`pX`/`hpX_nn`/`hpX_meas`/`hpX_int` are pure regularity preconditions (X has a Lebesgue
-density `pX`). The conclusion (`HasDerivAt … (1/2) · fisher`) is NOT bundled into a
-hypothesis — it is the genuine claim, derived from the sub-lemmas once the regularity is
-supplied.
-
-**All walls CLOSED (2026-06-01, commit b5e13e2)**: `_chain_hdiff` genuinely closed,
-entropy-finiteness closed in-file as Assembly plumbing, and Fisher-finiteness
-(`gaussianConv_fisher_le_inv_var`, FisherConvBound.lean) genuinely closed via pointwise
-Cauchy-Schwarz. NO remaining transitive `sorryAx`.
 @audit:ok -/
 private theorem debruijnIdentityV2_holds_assembled_chain
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -626,20 +510,11 @@ private theorem debruijnIdentityV2_holds_assembled_chain
   rw [hval] at hderiv
   exact hderiv
 
-/-- **Entropy ↔ ∫ negMulLog density bridge (段 1-2, honest sorry)**: along the heat-flow
-path, the differential entropy of the pushforward equals the `∫ negMulLog` of the
-convolution density, on a neighborhood of `t`, and the entropy function agrees
-eventually with the `∫ negMulLog (convDensityAdd …)` function used by the chain core.
+/-- Along the heat-flow path, on a neighborhood of `t` the differential entropy of the
+pushforward equals the `∫ negMulLog` of the convolution density: for `s` near `t`,
+`differentialEntropy (P.map (X + √s · Z)) = ∫ x, negMulLog (convDensityAdd pX g_s x)`. Uses the
+density identification `pPath_eq_convDensityAdd` and `differentialEntropy_eq_integral_density`.
 
-Concretely: for `s` near `t` (so `s > 0`),
-`differentialEntropy (P.map (X + √s·Z)) = ∫ x, negMulLog (convDensityAdd pX g_s x)`.
-This uses Phase 1b (`pPath_eq_convDensityAdd`, density identification) +
-`differentialEntropy_eq_integral_density` (`DifferentialEntropy.lean:65`,
-`negMulLog x = -(x log x)`). The gap is the a.e.-equality bookkeeping
-(`rnDeriv =ᵐ ofReal∘convDensityAdd` → `differentialEntropy` integrand congr).
-
-All hypotheses are regularity preconditions; the conclusion (an entropy/integral
-equality) is NOT a `HasDerivAt` core.
 @audit:ok -/
 private theorem debruijnIdentityV2_holds_assembled_entropy_eq
     {P : Measure Ω} [IsProbabilityMeasure P]
@@ -679,16 +554,9 @@ private theorem debruijnIdentityV2_holds_assembled_entropy_eq
   refine integral_nonneg (fun y => ?_)
   exact mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _)
 
-/-- **Fisher value match (段 1+7, genuine closure)**: the Fisher info of the time-`t`
-convolution density `convDensityAdd pX g_t` equals the Fisher info of the structure's
-density witness `density_t`.
-
-With the **conv pin** (`density_t_eq`, conv-pin redesign §Phase 5-F 案 1), `density_t` is
-pinned pointwise to the smooth convolution representative `convDensityAdd pX g_t`. So the
-two functions are **equal** (`funext (hdensity_t_eq ht)`), and `fisherInfoOfDensityReal`
-applied to the same function gives the same value. No a.e.-congruence gap remains — this
-pointwise equality is exactly what the old rnDeriv pin could not supply (rnDeriv agrees
-with the smooth conv only a.e.), and what makes this match genuine (0 sorry). -/
+/-- The Fisher info of the time-`t` convolution density `convDensityAdd pX g_t` equals the
+Fisher info of the density witness `density_t`. Since `density_t_eq` pins `density_t` pointwise
+to `convDensityAdd pX g_t`, the two functions are equal and the values coincide. -/
 private theorem debruijnIdentityV2_holds_assembled_fisher_match
     {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (_hX : Measurable X) (_hZ : Measurable Z) (_hXZ : IndepFun X Z P)
@@ -706,37 +574,13 @@ private theorem debruijnIdentityV2_holds_assembled_fisher_match
     funext (hdensity_t_eq ht)
   rw [hfun]
 
-/-- **de Bruijn identity body — genuine assembly (Phase 5, plan §5C)**.
+/-- The per-time de Bruijn identity: for `X ⊥ Z` with `Z ∼ 𝒩(0, 1)` and `t > 0`,
+`(d/dt) differentialEntropy (P.map (X + √t · Z)) = (1/2) · fisherInfoOfDensityReal h_reg.density_t`.
+Proved by assembling the per-time atoms; lives in a separate file from the de Bruijn definitions to
+avoid an import cycle. The body threads through `_entropy_eq` (entropy as `∫ negMulLog`), `_chain`
+(its `s`-derivative), and `_fisher_match` (the density-witness value), combined via
+`HasDerivAt.congr_of_eventuallyEq`.
 
-Same signature as `debruijnIdentityV2_holds` (`FisherInfoV2DeBruijn.lean`), proved by
-assembling the 6 genuine per-time atoms
-(`FisherInfoV2DeBruijnPerTime.lean`, all `@audit:ok`). Lives in a separate file to avoid
-the import cycle (the atom file imports `FisherInfoV2DeBruijn`, so the wall file cannot
-import the atoms; the assembly is the *reverse* dependency).
-
-The assembly threads through three named regularity-plumbing lemmas
-(`_entropy_eq` = 段 1-2, `_chain` = 段 2-7, `_fisher_match` = 段 1+7). After the conv-pin
-redesign (§Phase 5-F 案 1, 2026-05-31), `_entropy_eq` and `_fisher_match` are **genuine**
-(0 sorry) — `_fisher_match` closes by `funext` because the conv pin makes `density_t`
-*pointwise equal* to `convDensityAdd pX g_t`. After the Wave 4b closure (2026-06-01), the
-`_chain` (段 2-7) plumbing leaf `_chain_hdiff` is also genuinely closed; the only remaining
-transitive `sorryAx` is now the two Mathlib walls `wall:fisher-finiteness` +
-`wall:entropy-finiteness` (de Bruijn IBP / Fisher integrability). The atoms themselves are
-genuine.
-
-Honesty sign-off (conv-pin redesign, 2026-05-31 / closure update 2026-06-01):
-(1) **Signature identical to shim `debruijnIdentityV2_holds`** (`FisherInfoV2DeBruijn.lean`): same
-conclusion `HasDerivAt (… differentialEntropy …) ((1/2)·fisherInfoOfDensityReal h_reg.density_t) t`,
-same hyps (`h_reg : IsRegularDeBruijnHypV2`); no weakening / no extra regularity added (the shim uses
-underscore `_hX/_hZ/_hXZ/_ht`, this assembly genuinely consumes `hX/hZ/hXZ/ht`).
-(2) **Body genuine**: real wiring (`_chain` deriv + `_eq` eventual-equality →
-`congr_of_eventuallyEq` → `rw [_fisher_match]`), no circular `:= h`, no degenerate.
-(3) **NOT name-laundering**: `_assembled` + same signature; `#print axioms` now confirms NO
-`sorryAx` dependency.
-
-**End-to-end CLOSED (2026-06-01, commit b5e13e2)**: with `_chain_hdiff`, entropy-finiteness, and
-Fisher-finiteness (`gaussianConv_fisher_le_inv_var`) all genuinely closed, the per-time de Bruijn
-identity is now genuine end-to-end with NO remaining transitive `sorryAx`.
 @audit:ok -/
 theorem debruijnIdentityV2_holds_assembled
     {P : Measure Ω} [IsProbabilityMeasure P]
@@ -766,10 +610,10 @@ theorem debruijnIdentityV2_holds_assembled
       rw [h_reg.pX_law, withDensity_apply _ MeasurableSet.univ, setLIntegral_univ]
     rw [hlint, Measure.map_apply hX MeasurableSet.univ, Set.preimage_univ, measure_univ,
       ENNReal.toReal_one]
-  -- 段 2-7: the entropy-as-∫negMulLog chain has the half-fisher derivative at t.
+  -- the entropy-as-∫negMulLog chain has the half-fisher derivative at t.
   have h_chain := debruijnIdentityV2_holds_assembled_chain h_reg.pX h_reg.pX_nn
     h_reg.pX_meas hpX_int hpX_mass h_reg.pX_mom ht
-  -- 段 1-2: entropy =ᶠ ∫ negMulLog (convDensityAdd …) near t.
+  -- entropy =ᶠ ∫ negMulLog (convDensityAdd …) near t.
   have h_eq := debruijnIdentityV2_holds_assembled_entropy_eq X Z hX hZ hXZ h_reg.Z_law
     h_reg.pX h_reg.pX_nn h_reg.pX_meas h_reg.pX_law ht
   -- transfer the derivative to the entropy function via eventual equality.
@@ -778,7 +622,7 @@ theorem debruijnIdentityV2_holds_assembled
       ((1/2) * fisherInfoOfDensityReal
         (convDensityAdd h_reg.pX (gaussianPDFReal 0 ⟨t, ht.le⟩)))
       t := h_chain.congr_of_eventuallyEq h_eq
-  -- 段 1+7: rewrite the RHS fisher value to use `h_reg.density_t`.
+  -- rewrite the RHS fisher value to use `h_reg.density_t`.
   rw [debruijnIdentityV2_holds_assembled_fisher_match X Z hX hZ hXZ h_reg.Z_law
     h_reg.pX h_reg.pX_nn h_reg.pX_meas h_reg.pX_law h_reg.density_t h_reg.density_t_eq ht]
     at h_ent

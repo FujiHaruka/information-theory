@@ -6,48 +6,27 @@ import Mathlib.Analysis.Calculus.ParametricIntegral
 import Mathlib.MeasureTheory.Integral.IntegralEqImproper
 import Mathlib.MeasureTheory.Measure.WithDensity
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
-import Mathlib.Analysis.SpecialFunctions.Sqrt              -- HasDerivAt.sqrt
-import Mathlib.Analysis.SpecialFunctions.ExpDeriv          -- HasDerivAt.exp
+import Mathlib.Analysis.SpecialFunctions.Sqrt
+import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 
 /-!
-# per-time de Bruijn identity — density-route analytic core (atoms)
+# Per-time de Bruijn identity — analytic-core atoms
 
-per-time de Bruijn identity を一般 `X` で genuine 化するための
-解析核を atom 分解して提供する scaffolding file。capstone は
-`debruijnIdentityV2_holds_assembled` (`FisherInfoV2DeBruijnAssembly.lean`、genuine
-sorryAx-free)。旧 per-time shim `debruijnIdentityV2_holds` (`FisherInfoV2DeBruijn.lean`)
-は **削除済** (2026-06-01、consumer は `FisherInfoV2DeBruijnGenuine.lean` に移設)。
+The analytic-core atoms of the per-time de Bruijn identity for a general `X`, decomposed for the
+assembly `debruijnIdentityV2_holds_assembled` in `FisherInfoV2DeBruijnAssembly.lean`.
 
-Phase 0 (false→true signature pivot) は親 file `FisherInfoV2DeBruijn.lean` で完了済
-(`IsRegularDeBruijnHypV2` に density-pin field `density_t_eq` 追加)。
+## Main statements
 
-本 file は plan `epi-debruijn-pertime-closure-plan.md` の Phase 1-5 atom を提供:
-
-* **Phase 1a** `gaussianConvolution_law_conv` — **genuine**: 法 (law) の畳み込み分解
-  `P.map (X + √s·Z) = (P.map X) ∗ gaussianReal 0 ⟨s·v_Z, _⟩` (Z ∼ 𝒩(0, v_Z)、任意分散;
-  `IndepFun.map_add_eq_map_conv_map` + `√s·Z ∼ 𝒩(0, s·v_Z)`)。density witness 不要、
-  全 `X` で成立。`v_Z := 1` で旧 `s` 分散形を回復。
-* **Phase 1b** `pPath_eq_convDensityAdd` — density 同定 (**genuine** `@audit:ok`, L-PT-β closed):
-  `(P.map (X+√s·Z)).rnDeriv volume =ᵐ convDensityAdd p_X (gaussianPDFReal 0 ⟨s·v_Z, _⟩)`
-  (Z ∼ 𝒩(0, v_Z)、任意分散、`v_Z := 1` で旧形回復)。
-  Phase 1a + `gaussianReal_of_var_ne_zero` + `conv_withDensity_eq_lconvolution` +
-  bridge `pPath_eq_convDensityAdd_lconvolution_bridge` (`∫⁻ → ofReal ∫`)。bridge の per-z
-  可積分性は `Integrable.mul_bdd` (pX 可積分 × Gaussian 有界 `gaussianPDFReal_le_prefactor`)、
-  density witness 可測性は `hpX_meas.ennreal_ofReal` で genuine 化 (regularity hyp
-  `hpX_meas : Measurable pX` 追加)。
-* **Phase 2** `heatFlow_density_heat_equation` — heat eq per-density (**genuine**, L-PT-α closed:
-  σ-direction + spatial 2nd-deriv lifts via gateway lemma `hasDerivAt_integral_of_dominated_loc_of_deriv_le`,
-  `Set.Ioo (s/2) (2s)` σ-neighborhood, `HasDerivAt.unique` against pins; per-`y` domination as §5B-2 hyps)
-* **Phase 3** `entropy_hasDerivAt_via_parametric` — entropy parametric diff (**genuine** `@audit:ok`,
-  neighborhood version: `hb`/`hdiff` over `Set.Ioo (t/2)(2t)`, requires `0 < t`; gateway needs only
-  ball domination, the former `∀ s ∈ univ` form was un-instantiable / false-statement, fixed 2026-05-31)
-* **Phase 4a** `debruijn_ibp_step` — 無限区間 IBP (**genuine** `@audit:ok`:
-  `integral_mul_deriv_eq_deriv_mul_of_integrable` と同形、`exact` 一発)
-* **Phase 4b** `fisher_from_logDeriv` — logDeriv→Fisher congr (`sorry`)
-
-Phase 5 (capstone) は本 file では着手しない — genuine 版
-`debruijnIdentityV2_holds_assembled` は下流の `FisherInfoV2DeBruijnAssembly.lean` 側にあり、
-本 file は atom 群を供給するだけ (plan §Phase 5 参照)。
+* `gaussianConvolution_law_conv` — the law of `X + √s · Z` factors as the convolution of the law
+  of `X` with `𝒩(0, s · v_Z)` when `Z ∼ 𝒩(0, v_Z)`.
+* `pPath_eq_convDensityAdd` — the density of `X + √s · Z` is `convDensityAdd pX (g_{s·v_Z})`.
+* `heatFlow_density_heat_equation` — the heat-flow density solves the heat equation
+  `∂_s p = (1/2) ∂²_x p`.
+* `entropy_hasDerivAt_via_parametric` — differentiation under the integral sign for the entropy
+  along the path.
+* `debruijn_ibp_step` — the infinite-interval integration-by-parts step.
+* `fisher_from_logDeriv` — the shape congruence connecting the IBP output to the Fisher
+  information.
 -/
 
 namespace InformationTheory.Shannon.FisherInfoV2
@@ -59,21 +38,12 @@ open InformationTheory.Shannon.EPIConvDensity (convDensityAdd convDensityAddDeri
 
 variable {Ω : Type*} {_mΩ : MeasurableSpace Ω}
 
-/-! ## Phase 1a — law factorization (genuine) -/
+/-! ## Phase 1a — law factorization -/
 
-/-- **Phase 1a (genuine, general noise variance)**: the law of the heat-flow path
-`X + √s·Z` factors as the convolution of the law of `X` with the Gaussian `𝒩(0, s·v_Z)`,
-when `Z ∼ 𝒩(0, v_Z)`.
-
-`P.map (gaussianConvolution X Z s) = (P.map X) ∗ gaussianReal 0 ⟨s·v_Z, _⟩`.
-
-This is the foundational measure-level step of the density identification (Phase 1b):
-the density of the LHS is the convolution of `p_X` with the `𝒩(0, s·v_Z)` density. Holds
-for **arbitrary** `X` (no density witness needed) — only `Z ∼ 𝒩(0, v_Z)` is used.
-The `v_Z` generalization is needed because the sum instance `(X+Y, Z_X+Z_Y)` has noise
-`Z ∼ 𝒩(0, 2)`. The former `v_Z = 1` form is recovered with `s·1 = s`.
-
-`√s·Z ∼ 𝒩(0, (√s)²·v_Z) = 𝒩(0, s·v_Z)` (`gaussianReal_map_const_mul`), then
+/-- The law of the heat-flow path `X + √s · Z` factors as the convolution of the law of `X` with
+`𝒩(0, s · v_Z)` when `Z ∼ 𝒩(0, v_Z)`:
+`P.map (gaussianConvolution X Z s) = (P.map X) ∗ gaussianReal 0 ⟨s · v_Z, _⟩`. Holds for arbitrary
+`X` (no density witness needed). Via `√s · Z ∼ 𝒩(0, s · v_Z)` (`gaussianReal_map_const_mul`) and
 `IndepFun.map_add_eq_map_conv_map`.
 
 @audit:ok -/
@@ -113,12 +83,10 @@ theorem gaussianConvolution_law_conv
   rw [h_funext,
     IndepFun.map_add_eq_map_conv_map hX h_meas_sqrtZ h_indep_X_sqrtZ, h_sqrtZ_map]
 
-/-! ## Phase 1b — density identification (L-PT-β honest sorry) -/
+/-! ## Phase 1b — density identification -/
 
-/-- **Closed-form Gaussian pdf bound (genuine)**: the Gaussian density is bounded above by
-the normalizing prefactor `(√(2πv))⁻¹` (since `exp` of a nonpositive exponent is `≤ 1`).
-Mathlib has `gaussianPDFReal_nonneg` / `_pos` but no upper bound; supplied here for the
-`Integrable.mul_bdd` domination in the L-PT-β bridge.
+/-- The Gaussian density is bounded above by the normalizing prefactor `(√(2πv))⁻¹`.
+
 @audit:ok -/
 private theorem gaussianPDFReal_le_prefactor (μ : ℝ) (v : ℝ≥0) (x : ℝ) :
     gaussianPDFReal μ v x ≤ (Real.sqrt (2 * Real.pi * v))⁻¹ := by
@@ -133,22 +101,11 @@ private theorem gaussianPDFReal_le_prefactor (μ : ℝ) (v : ℝ≥0) (x : ℝ) 
         exact mul_le_mul_of_nonneg_left hexp_le hpref_nn
     _ = (Real.sqrt (2 * Real.pi * v))⁻¹ := mul_one _
 
-/-- **L-PT-β bridge (genuine)**: the ENNReal lconvolution density of the two
-`withDensity` factors equals `ENNReal.ofReal` of the Bochner-`∫` convolution density
-`convDensityAdd pX (gaussianPDFReal 0 v)`, pointwise (so a.e.).
+/-- The ENNReal lconvolution density of the two `withDensity` factors equals `ENNReal.ofReal`
+of the Bochner convolution density `convDensityAdd pX (gaussianPDFReal 0 v)`, pointwise. The
+`∫⁻ → ofReal ∫` step is `ofReal_integral_eq_lintegral_ofReal`, whose per-`z` integrability comes
+from `pX` integrable times the Gaussian factor bounded by its prefactor.
 
-`lconvolution_def`: `((ofReal∘pX) ⋆ₗ gaussianPDF 0 v) z = ∫⁻ y, ofReal (pX y) * ofReal (gpdfReal 0 v (-y+z)) ∂volume`.
-`convDensityAdd pX g z = ∫ y, pX y * g (z-y) ∂volume`. With `z - y = -y + z` and
-`ofReal (a*b) = ofReal a * ofReal b` (`0 ≤ pX y`), the `∫⁻` equals `ofReal (∫ ...)` by
-`ofReal_integral_eq_lintegral_ofReal`, whose per-`z` integrability precondition
-`Integrable (fun y => pX y * gpdfReal 0 v (z-y))` is discharged genuinely:
-`pX` is integrable (probability density, regularity hyp `hpX_int`) and the Gaussian factor
-is bounded by its prefactor `(√(2πv))⁻¹` (`gaussianPDFReal_le_prefactor`), so
-`Integrable.mul_bdd` closes it. `hpX_int` is a pure regularity precondition (NOT
-load-bearing), supplied by the caller from `P.map X = withDensity (ofReal∘pX)` with `P`
-a probability measure.
-
-**Independent audit (this session)**: closes the former L-PT-β residual.
 @audit:ok -/
 private theorem pPath_eq_convDensityAdd_lconvolution_bridge
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
@@ -170,8 +127,7 @@ private theorem pPath_eq_convDensityAdd_lconvolution_bridge
   -- rewrite `-y + z` to the `convDensityAdd` shape `z - y`
   have hsub : ∀ y : ℝ, (-y + z) = z - y := fun y => by ring
   simp only [hsub]
-  -- `∫⁻ ofReal f = ofReal (∫ f)` needs integrability of `fun y => pX y * gpdfReal 0 v (z-y)`
-  -- (per-`z` analytic precondition — L-PT-β residual).
+  -- `∫⁻ ofReal f = ofReal (∫ f)` needs integrability of `fun y => pX y * gpdfReal 0 v (z-y)`.
   have hint : Integrable (fun y => pX y * gaussianPDFReal 0 ⟨s, hs⟩ (z - y)) volume := by
     -- `pX` integrable × Gaussian factor bounded by its prefactor ⇒ `Integrable.mul_bdd`.
     refine hpX_int.mul_bdd (c := (Real.sqrt (2 * Real.pi * (⟨s, hs⟩ : ℝ≥0)))⁻¹) ?_ ?_
@@ -186,26 +142,13 @@ private theorem pPath_eq_convDensityAdd_lconvolution_bridge
   rw [← ofReal_integral_eq_lintegral_ofReal hint hnn]
   rfl
 
-/-- **Phase 1b (genuine, L-PT-β closed, general noise variance)**: when `P.map X` has a
-Real density witness `pX` (`P.map X = volume.withDensity (ENNReal.ofReal ∘ pX)`) and
-`Z ∼ 𝒩(0, v_Z)` with `v_Z > 0`, the density of the heat-flow path `X + √s·Z` is a.e.
-equal to `convDensityAdd pX (gaussianPDFReal 0 ⟨s·v_Z,_⟩)`.
+/-- When `P.map X` has a real density witness `pX` and `Z ∼ 𝒩(0, v_Z)` with `v_Z > 0`, the
+density of the heat-flow path `X + √s · Z` is a.e. equal to
+`convDensityAdd pX (gaussianPDFReal 0 ⟨s · v_Z, _⟩)`. The chain composes
+`gaussianConvolution_law_conv` (law factorization), `gaussianReal_of_var_ne_zero`,
+`conv_withDensity_eq_lconvolution`, and the bridge `pPath_eq_convDensityAdd_lconvolution_bridge`.
+The general `v_Z` is needed for the sum instance `(X+Y, Z_X+Z_Y)`, whose noise has variance `2`.
 
-The `v_Z` generalization is needed because the sum instance `(X+Y, Z_X+Z_Y)` has noise
-`Z ∼ 𝒩(0, 2)`. The former `v_Z = 1` form is recovered with `s·1 = s`.
-
-Foundation chain (all Mathlib-direct): Phase 1a (`gaussianConvolution_law_conv`, now with
-general `v_Z`, gives `(P.map X) ∗ 𝒩(0, s·v_Z)`) +
-`gaussianReal_of_var_ne_zero` (`𝒩(0,s·v_Z) = volume.withDensity (gaussianPDF 0 ⟨s·v_Z,_⟩)`) +
-`conv_withDensity_eq_lconvolution` (conv of two `withDensity` = `withDensity` of the
-lconvolution `∫⁻`) + the `∫⁻ → ofReal ∫` bridge `pPath_eq_convDensityAdd_lconvolution_bridge`
-(generic in its variance argument: instantiated at `s·v_Z`).
-
-Both former residuals are now genuine: `hf_meas` is `hpX_meas.ennreal_ofReal` (regularity hyp
-`hpX_meas : Measurable pX`), and the bridge's per-`z` integrability is discharged by
-`Integrable pX volume`, derived here from `hpX_law` + `P` probability (`∫⁻ ofReal(pX) =
-(P.map X) univ = 1 < ∞`). `hpX_meas` is a pure regularity precondition (NOT load-bearing),
-as are `v_Z`/`hv_Z_pos`/`hZ_law` (noise-law preconditions).
 @audit:ok -/
 theorem pPath_eq_convDensityAdd
     {P : Measure Ω} [IsProbabilityMeasure P]
@@ -243,31 +186,27 @@ theorem pPath_eq_convDensityAdd
     measurable_gaussianPDF 0 _
   rw [MeasureTheory.conv_withDensity_eq_lconvolution hf_meas hg_meas]
   -- Step 4: `rnDeriv (withDensity h) =ᵐ h`, then identify the lconvolution density with
-  --   `ofReal ∘ convDensityAdd` via the `∫⁻ → ofReal ∫` bridge (L-PT-β), instantiated at
+  --   `ofReal ∘ convDensityAdd` via the `∫⁻ → ofReal ∫` bridge, instantiated at
   --   variance `s·v_Z` (the bridge is generic in its variance argument).
   refine (Measure.rnDeriv_withDensity volume
     (MeasureTheory.measurable_lconvolution volume hf_meas hg_meas)).trans ?_
   exact pPath_eq_convDensityAdd_lconvolution_bridge pX hpX_nn hpX_int (s * v_Z)
     (by positivity) hv_ne
 
-/-! ## Phase 2 — heat equation per-density (L-PT-α honest sorry, max cost) -/
+/-! ## Phase 2 — heat equation per density -/
 
--- Genuine kernel-level helpers (heat-flow Gaussian kernel `g_σ(u) = gaussianPDFReal 0 ⟨σ,_⟩ u`).
--- These are the analytic core of the heat equation at the kernel level (plan §Phase 2,
--- L-PT-α partial progress). The body `heatFlow_density_heat_equation` consumes them.
+-- Kernel-level helpers for the heat-flow Gaussian kernel `g_σ(u) = gaussianPDFReal 0 ⟨σ,_⟩ u`,
+-- consumed by `heatFlow_density_heat_equation`.
 
-/-- Explicit `ℝ`-parameterized heat kernel `g(σ, u) = (√(2πσ))⁻¹ · exp(-u²/(2σ))`, with `σ`
-ranging over `ℝ` (not `ℝ≥0`). Agrees with `gaussianPDFReal 0 ⟨σ,_⟩` for `σ > 0`; needed so
-the `σ`-derivative can be taken over a real neighborhood (the `NNReal` coercion `⟨σ,_⟩` cannot
-be formed for `σ < 0`). `def` — no proof obligation, agreement with `gaussianPDFReal`
-established by `heatFlow_density_heat_equation_kernel_eq`. -/
+/-- The heat kernel `g(σ, u) = (√(2πσ))⁻¹ · exp(-u²/(2σ))` with `σ` ranging over `ℝ`. Used so the
+`σ`-derivative can be taken over a real neighborhood (the coercion `⟨σ, _⟩ : ℝ≥0` cannot be formed
+for `σ < 0`); it agrees with `gaussianPDFReal 0 ⟨σ, _⟩` for `σ > 0`
+(`heatFlow_density_heat_equation_kernel_eq`). -/
 noncomputable def heatFlow_density_heat_equation_kernel (σ u : ℝ) : ℝ :=
   (Real.sqrt (2 * Real.pi * σ))⁻¹ * Real.exp (-u ^ 2 / (2 * σ))
 
-/-- The explicit `ℝ`-kernel agrees with `gaussianPDFReal 0 ⟨σ,_⟩` for `σ > 0`.
+/-- The kernel agrees with `gaussianPDFReal 0 ⟨σ, _⟩` for `σ > 0`.
 
-**Independent audit (commit `6f675ca`)**: genuine definitional agreement (`rfl` after
-`sub_zero`).
 @audit:ok -/
 theorem heatFlow_density_heat_equation_kernel_eq
     {σ : ℝ} (hσ : 0 < σ) (u : ℝ) :
@@ -277,12 +216,9 @@ theorem heatFlow_density_heat_equation_kernel_eq
   simp only [sub_zero]
   rfl
 
-/-- **Kernel spatial 1st derivative (genuine)**: for the Gaussian heat kernel with mean `0`
-and variance `σ > 0`, `g_σ(u) = (√(2πσ))⁻¹ · exp(-u²/(2σ))`,
-`∂_u g_σ(u) = g_σ(u) · (-(u/σ))`.
+/-- The spatial first derivative of the Gaussian heat kernel:
+`∂_u g_σ(u) = g_σ(u) · (-(u/σ))` for `σ > 0`.
 
-**Independent audit (commit `6f675ca`)**: genuine chain-rule computation, non-degenerate
-closed form (`-(u/σ)` factor).
 @audit:ok -/
 theorem heatFlow_density_heat_equation_kernel_x_deriv1
     {σ : ℝ} (hσ : 0 < σ) (u : ℝ) :
@@ -300,10 +236,9 @@ theorem heatFlow_density_heat_equation_kernel_x_deriv1
   convert hcm using 1
   ring
 
-/-- **Kernel spatial 2nd derivative (genuine)**: `∂²_u g_σ(u) = g_σ(u) · (u²/σ² - 1/σ)`.
+/-- The spatial second derivative of the Gaussian heat kernel:
+`∂²_u g_σ(u) = g_σ(u) · (u²/σ² - 1/σ)`.
 
-**Independent audit (commit `6f675ca`)**: genuine product-rule computation, non-degenerate
-closed form (`u²/σ² - 1/σ` factor, `≠ 0` e.g. at `u = 0`).
 @audit:ok -/
 theorem heatFlow_density_heat_equation_kernel_x_deriv2
     {σ : ℝ} (hσ : 0 < σ) (u : ℝ) :
@@ -319,12 +254,9 @@ theorem heatFlow_density_heat_equation_kernel_x_deriv2
   field_simp
   ring
 
-/-- **Kernel σ-derivative (genuine)**: differentiating the kernel in its variance `σ`,
+/-- The σ-derivative of the Gaussian heat kernel:
 `∂_σ g_σ(u) = (1/2) · g_σ(u) · (u²/σ² - 1/σ)`.
 
-**Independent audit (commit `6f675ca`)**: genuine — differentiates both the prefactor
-`(√(2πσ))⁻¹` and the exponent in `σ`, closes via `√(2πσ)² = 2πσ`. Non-degenerate closed
-form.
 @audit:ok -/
 theorem heatFlow_density_heat_equation_kernel_sigma_deriv
     {σ : ℝ} (hσ : 0 < σ) (u : ℝ) :
@@ -363,14 +295,9 @@ theorem heatFlow_density_heat_equation_kernel_sigma_deriv
   field_simp
   ring
 
-/-- **Kernel heat equation (genuine)**: the Gaussian heat kernel solves the heat equation,
-`∂_σ g_σ(u) = (1/2) · ∂²_u g_σ(u)`. Both sides equal `(1/2) · g_σ(u) · (u²/σ² - 1/σ)`.
+/-- The Gaussian heat kernel solves the heat equation `∂_σ g_σ(u) = (1/2) · ∂²_u g_σ(u)`; both
+sides equal `(1/2) · g_σ(u) · (u²/σ² - 1/σ)`.
 
-**Independent audit (commit `6f675ca`)**: genuine, NON-degenerate. The two `HasDerivAt`
-conjuncts are not vacuously-equal: σ-side derivative is `(1/2)·g·(u²/σ²-1/σ)`, x-2nd
-derivative is `g·(u²/σ²-1/σ)`, both non-trivially nonzero (e.g. `-1/σ ≠ 0` at `u = 0`), so
-the heat-equation link `∂_σ = (1/2)∂²_u` is a real identity (not both ≡ 0). Assembled from
-the two genuine kernel-derivative lemmas.
 @audit:ok -/
 @[entry_point]
 theorem heatFlow_density_heat_equation_kernel_heat_eq
@@ -383,46 +310,15 @@ theorem heatFlow_density_heat_equation_kernel_heat_eq
   ⟨heatFlow_density_heat_equation_kernel_sigma_deriv hσ u,
    heatFlow_density_heat_equation_kernel_x_deriv2 hσ u⟩
 
-/-- **Phase 2 (genuine, L-PT-α closed)**: the heat-flow density satisfies the heat
-equation per density: `∂_σ pPath σ x = (1/2) ∂²_x pPath σ x` at `σ = s`.
+/-- The heat-flow density satisfies the heat equation: `∂_σ pPath σ x = (1/2) ∂²_x pPath σ x` at
+`σ = s`. Here `hpPath` pins `pPath σ` to the heat-flow convolution
+`convDensityAdd pX (gaussianPDFReal 0 ⟨σ, _⟩)` on the positive `σ`-range, and
+`hpathDeriv1` / `hpathDeriv2` identify `pathDeriv1` / `pathDeriv2` as its spatial first and
+second derivatives. These pins fix which functions the arguments are; the heat-equation equality
+is the conclusion, derived from the kernel-level heat equation, not a hypothesis. The remaining
+arguments are per-`y` integrand domination preconditions in the shape consumed by
+`hasDerivAt_integral_of_dominated_loc_of_deriv_le`.
 
-`pPath : ℝ → ℝ → ℝ` is the heat-flow density path, **pinned** by `hpPath` to be the
-heat-flow density `pPath σ = convDensityAdd pX (gaussianPDFReal 0 ⟨σ,_⟩)` on the
-positive `σ`-range (Phase-5 instantiation). `pathDeriv1` / `pathDeriv2` are **pinned**
-by `hpathDeriv1` / `hpathDeriv2` to be the first / second `x`-(spatial) derivatives of
-`pPath`. The conclusion is the `σ`-`HasDerivAt` of `pPath · x` equal to `(1/2)` times
-that spatial second derivative — the heat equation.
-
-**Honesty (avoids Phase-0-type false statement)**: an earlier draft took `pathDeriv2`
-as a *free* function unrelated to `pPath`, making the statement universally FALSE
-(counterexample `pPath := fun σ _ => σ`, `pathDeriv2 := 0` forces `HasDerivAt id 0 s`,
-a `1 = 0` contradiction — the same false-statement shape that judgment #17 fixed for
-`IsRegularDeBruijnHypV2.density_t_eq`). The fix pins `pathDeriv2` (and `pPath` itself)
-**definitionally**: `pathDeriv1`/`pathDeriv2` are *identified* as the genuine spatial
-derivatives of `pPath`, and `pPath` is *identified* as the heat-flow convolution. These
-are regularity / definitional bindings (which function `pathDeriv2` *is*), NOT the heat
-equation. The heat-equation equality `∂_σ pPath = (1/2) ∂²_x pPath` is the **conclusion**
-that the body proves and is deliberately NOT supplied as a hypothesis — doing so
-would be load-bearing (bundling the proof core into a hypothesis), which is forbidden.
-
-**Honesty of the added domination hyps (§5B-2)**: the `boundσ`/`hboundσ_int`/`hFσ_*`/`hbσ`
-(σ-direction) and `boundξ{1,2}`/`hFξ*`/`hbξ*` (spatial-direction) hypotheses are all
-*regularity preconditions* — per-`y` integrand integrability / ae-measurability /
-Gaussian-tail domination bounds, in the exact shape the gateway lemma
-`hasDerivAt_integral_of_dominated_loc_of_deriv_le` consumes. They are 1:1 with the 7-hyp
-group of `convDensityAdd_hasDerivAt` (`EPIConvDensity.lean:86`, `@audit:ok`) and the
-hyp group of Phase 3 `entropy_hasDerivAt_via_parametric` (`@audit:ok`). They do NOT bundle
-the heat-equation conclusion: that link is *derived* in the body from the genuine
-kernel-level heat equation `heatFlow_density_heat_equation_kernel_heat_eq`.
-
-**Closure (genuine, L-PT-α resolved)**: the two differentiation-under-the-integral-sign
-lifts are discharged via the gateway lemma. STEP A/B/C (σ-direction): the gateway over
-the compact neighborhood `Set.Ioo (s/2) (2s)` gives `∂_σ pPath x = ∫ y, pX y · ∂_σ g_σ(x-y)`
-(keeping `σ > 0` so the `(u²/σ²-1/σ)` factor stays finite — the σ→0 blow-up of plan §5B-4
-is avoided), then the `1/2` is pulled out via the kernel σ-derivative closed form. STEP D
-(spatial): two further gateway applications + `HasDerivAt.unique` against the pins
-`hpathDeriv1`/`hpathDeriv2` identify `pathDeriv2 s x = ∫ y, pX y · ∂²_x g_σ(x-y)`, which
-matches the σ-side via `heatFlow_density_heat_equation_kernel_heat_eq`.
 @audit:ok -/
 theorem heatFlow_density_heat_equation
     (pX : ℝ → ℝ)
@@ -435,9 +331,9 @@ theorem heatFlow_density_heat_equation
     -- definitional pin: `pathDeriv2` IS the spatial second derivative of `pPath`
     (hpathDeriv2 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pathDeriv1 σ ξ) (pathDeriv2 σ y) y)
     {s : ℝ} (hs : 0 < s) (x : ℝ)
-    -- §5B-2 σ-direction domination: per-`y` integrand `pX y · g_σ(x-y)` and its σ-derivative
+    -- σ-direction domination: per-`y` integrand `pX y · g_σ(x-y)` and its σ-derivative
     -- `pX y · ∂_σ g_σ(x-y)` are bounded/integrable on the compact σ-neighborhood
-    -- `Set.Ioo (s/2) (2s)`. These are regularity preconditions (NOT the heat equation).
+    -- `Set.Ioo (s/2) (2s)`.
     (boundσ : ℝ → ℝ) (hboundσ_int : Integrable boundσ volume)
     (hFσ_meas : ∀ᶠ σ in nhds s,
       AEStronglyMeasurable
@@ -450,7 +346,7 @@ theorem heatFlow_density_heat_equation
     (hbσ : ∀ᵐ y ∂volume, ∀ σ ∈ Set.Ioo (s/2) (2*s),
       ‖pX y * ((1/2) * (heatFlow_density_heat_equation_kernel σ (x - y)
         * ((x - y) ^ 2 / σ ^ 2 - 1 / σ)))‖ ≤ boundσ y)
-    -- §5B-2 spatial-direction domination (pathDeriv2 identification): the spatial 1st and
+    -- spatial-direction domination (pathDeriv2 identification): the spatial 1st and
     -- 2nd derivative integrands of `pX y · g_s(x-y)` are bounded/integrable.
     (boundξ1 : ℝ → ℝ) (hboundξ1_int : Integrable boundξ1 volume)
     (hFξ1_meas : ∀ ξ : ℝ,
@@ -623,43 +519,14 @@ theorem heatFlow_density_heat_equation
   rw [hpathDeriv2_eq]
   exact hB
 
-/-! ## Phase 3 — entropy parametric diff (L-PT-γ honest sorry) -/
+/-! ## Phase 3 — entropy parametric differentiation -/
 
-/-- **Phase 3 (L-PT-γ honest sorry)**: differentiation under the integral sign for the
-entropy along the heat-flow path:
-`(d/ds) ∫ x, negMulLog (pPath s x) ∂volume = ∫ x, (d/ds) negMulLog (pPath s x) ∂volume`
-at `s = t`.
+/-- Differentiation under the integral sign for the entropy along the heat-flow path:
+`(d/ds) ∫ x, negMulLog (pPath s x) ∂volume = ∫ x, entDeriv t x ∂volume` at `s = t`, via the
+gateway `hasDerivAt_integral_of_dominated_loc_of_deriv_le`. The domination and per-`x` derivative
+hypotheses are quantified over the neighborhood `Set.Ioo (t/2) (2*t)` (all the gateway needs); a
+universal form would be un-instantiable since the integrand diverges as `s → 0⁺` and `s → ∞`.
 
-Core lemma: `hasDerivAt_integral_of_dominated_loc_of_deriv_le`
-(`ParametricIntegral.lean:289`, `𝕜 := ℝ`). The Gaussian-tail dominating function
-`bound`'s `Integrable bound volume` is a load-bearing-free regularity precondition
-(supplied here as a hypothesis). Stated against an abstract entropy-integrand
-derivative `entDeriv` and dominating `bound` to keep the parametric-diff shape.
-
-**Independent audit (commit `127319f`)**: genuine. Hypotheses are all regularity /
-parametric-diff preconditions — `hdiff` is the *per-x integrand* `HasDerivAt`, NOT the
-integral-level conclusion (which `hasDerivAt_integral_of_dominated_loc_of_deriv_le`
-produces from them). No load-bearing hyp, no circular `:= h`. Body genuinely plumbs the
-hyps into the gateway lemma and extracts `.2`. `#print axioms` = `[propext,
-Classical.choice, Quot.sound]` (sorryAx-free), 0 sorry / 0 residual.
-
-**Neighborhood-version weakening (2026-05-31, false-statement fix §Phase 5-G case A)**:
-the previous `hb`/`hdiff` quantified `∀ s ∈ Set.univ`, which is **not instantiable** for the
-de Bruijn integrand (the negMulLog' factor `-log p_s x - 1` diverges as `s→∞` for fixed `x`,
-and the heat-eq σ-derivative blows up as `s→0+`), so the over-strong univ form could never be
-supplied by a true caller. The gateway `hasDerivAt_integral_of_dominated_loc_of_deriv_le` only
-needs domination/derivative on a set `s ∈ 𝓝 t` (its body extracts an ε-ball internally), so the
-honest precondition shape is a `t`-neighborhood `Set.Ioo (t/2) (2*t)`. We add `(ht : 0 < t)`
-(needed so `Ioo (t/2) (2*t) ∈ 𝓝 t` with `t/2 < t < 2*t`) and pass `Ioo_mem_nhds` as the gateway's
-`hs`. Body remains a pure gateway call + `.2` extraction (genuine, 0 sorry); the heat-eq atom
-`heatFlow_density_heat_equation` (`:472-477`) uses the identical `Set.Ioo (s/2) (2*s)` +
-`Ioo_mem_nhds` precedent. `@audit:ok` retained (still genuine + now satisfiable).
-
-**Independent re-audit (2026-05-31, weakened signature)**: ok. `#print axioms` re-confirmed
-sorryAx-free (`[propext, Classical.choice, Quot.sound]`). The `Ioo (t/2)(2*t)` neighborhood is
-instantiable (gateway needs only `s ∈ 𝓝 t`, extracting an ε-ball internally per
-`ParametricIntegral.lean:295`); the old `Set.univ` form was un-instantiable. `hb`/`hdiff` stay
-integrand-level (not load-bearing). @audit:ok confirmed.
 @audit:ok -/
 theorem entropy_hasDerivAt_via_parametric
     (pPath : ℝ → ℝ → ℝ) (entDeriv : ℝ → ℝ → ℝ) (bound : ℝ → ℝ) {t : ℝ} (ht : 0 < t)
@@ -681,18 +548,12 @@ theorem entropy_hasDerivAt_via_parametric
       (bound := bound) hnhds hmeas hint hderiv_meas hb hbound_int hdiff
   simpa only using hgate.2
 
-/-! ## Phase 4a — infinite-interval IBP (L-PT-δ honest sorry) -/
+/-! ## Phase 4a — infinite-interval integration by parts -/
 
-/-- **Phase 4a (L-PT-δ honest sorry)**: the de Bruijn integration-by-parts step on the
-whole line, `∫ x, negMulLog'(p x) · (∂_s p) x = - ∫ x, ∂_x (negMulLog' ∘ p) x · (∂_s p) x`
-(boundary terms vanish by Gaussian-tail decay).
+/-- The de Bruijn integration-by-parts step on the whole line:
+`∫ x, u x · v' x = - ∫ x, u' x · v x`, where the boundary terms vanish by tail decay. A direct
+application of `MeasureTheory.integral_mul_deriv_eq_deriv_mul_of_integrable`.
 
-Core lemma: `MeasureTheory.integral_mul_deriv_eq_deriv_mul_of_integrable`
-(`IntegralEqImproper.lean:1318`, `A := ℝ`). The signature is exactly the Mathlib
-lemma's shape (`A := ℝ` is a `NormedRing`/`NormedAlgebra ℝ`): the support-wide
-`HasDerivAt` (`tsupport`) and the three integrability hyps are its preconditions; the
-boundary-term vanishing (tail decay) is discharged internally by the `_of_integrable`
-variant (no separate `Tendsto` hyp needed).
 @audit:ok -/
 theorem debruijn_ibp_step
     (u v u' v' : ℝ → ℝ)
@@ -702,24 +563,12 @@ theorem debruijn_ibp_step
     ∫ x, u x * v' x = - ∫ x, u' x * v x :=
   MeasureTheory.integral_mul_deriv_eq_deriv_mul_of_integrable hu hv huv' hu'v huv
 
-/-! ## Phase 4b — logDeriv → Fisher congr -/
+/-! ## Phase 4b — logDeriv to Fisher congruence -/
 
-/-- **Phase 4b honest sorry**: shape congruence connecting the IBP output
-`∫ (∂_x p)²/p` to the V2 Fisher info `fisherInfoOfDensityReal p`:
-`∫ x, (logDeriv p x)^2 * p x ∂volume = fisherInfoOfDensityReal p` (under
-integrability / finiteness so the `ℝ≥0∞`↔`ℝ` `.toReal` round-trip holds).
+/-- Shape congruence connecting the IBP output to the V2 Fisher information:
+`∫ x, (logDeriv p x)² · p x ∂volume = fisherInfoOfDensityReal p`, under nonnegativity and
+integrability so the `ℝ≥0∞ ↔ ℝ` round-trip holds.
 
-Uses `convDensityAdd_logDeriv` (`EPIConvDensity.lean:113`, `@audit:ok`) for the
-`logDeriv p = (∫ pX·pY')/p` identification + `fisherInfoOfDensity` unfold
-(`FisherInfoV2.lean:89`). Stated against a density `p` with an integrability
-precondition.
-
-**Independent audit (commit `127319f`)**: genuine. `hp_nn` (nonnegativity) and `hint`
-(integrability) are regularity preconditions, not the claim. Body genuinely performs the
-`∫ ↔ (∫⁻ ofReal).toReal` round-trip via `ofReal_integral_eq_lintegral_ofReal` (uses
-`hint` + a.e. nonnegativity) and `ENNReal.toReal_ofReal` (uses `integral_nonneg`); both
-directions of the `.toReal` round-trip discharge their nonneg / integrability side-goals
-from the hyps.
 @audit:ok -/
 theorem fisher_from_logDeriv
     (p : ℝ → ℝ) (hp_nn : ∀ x, 0 ≤ p x)
@@ -738,15 +587,13 @@ theorem fisher_from_logDeriv
   rw [hlint, ← ofReal_integral_eq_lintegral_ofReal hint hg_nn,
     ENNReal.toReal_ofReal (integral_nonneg fun x => mul_nonneg (sq_nonneg _) (hp_nn x))]
 
-/-! ## Phase GAP — convolution-density everywhere positivity + Gaussian lower bound
+/-! ## Convolution-density positivity and Gaussian lower bound
 
-Upstream analytic parts feeding GAP① (polynomial majorant of the `log` factor) and the
-`tsupport = ℝ` requirement of the de Bruijn IBP step `debruijn_ibp_step`. The Gaussian
-convolution density `convDensityAdd pX g_s` is everywhere strictly positive and bounded
-below by a shifted Gaussian, so its support is all of `ℝ`. -/
+The Gaussian convolution density `convDensityAdd pX g_s` is everywhere strictly positive and
+bounded below by a shifted Gaussian, so its support is all of `ℝ`. -/
 
-/-- Integrability helper: `fun y => pX y * gaussianPDFReal 0 v (x - y)` is integrable
-(`pX` integrable × Gaussian factor bounded by its prefactor), reused by both GAP lemmas.
+/-- `fun y => pX y * gaussianPDFReal 0 v (x - y)` is integrable.
+
 @audit:ok -/
 private theorem convDensityAdd_integrand_integrable
     (pX : ℝ → ℝ) (hpX_int : Integrable pX volume) (v : ℝ≥0) (x : ℝ) :
@@ -758,19 +605,11 @@ private theorem convDensityAdd_integrand_integrable
     rw [Real.norm_eq_abs, abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (x - y))]
     exact gaussianPDFReal_le_prefactor 0 v (x - y)
 
-/-- **GAP lemma A (everywhere positivity, genuine)**: when `pX` is a nonnegative integrable
-density carrying positive mass (`0 < ∫ pX`), the Gaussian convolution density is strictly
-positive at every point `x`.
+/-- When `pX` is a nonnegative integrable density with positive mass (`0 < ∫ pX`), the Gaussian
+convolution density is strictly positive at every `x`. The integrand `y ↦ pX y · g_s(x-y)` is
+nonnegative and integrable with support equal to that of `pX` (the Gaussian factor never
+vanishes), and `0 < ∫ pX` gives positive-measure support, hence a positive integral.
 
-The integrand `y ↦ pX y · g_s(x-y)` is nonnegative and integrable; its support equals the
-support of `pX` (the Gaussian factor `g_s` never vanishes, `s > 0`). Since `0 < ∫ pX` is
-equivalent to `0 < volume (support pX)` (`integral_pos_iff_support_of_nonneg`), the
-integrand also has positive-measure support, hence positive integral.
-
-**Genuine completion (0 sorry / 0 residual)**: `hpX_nn` / `hpX_int` / `hpX_mass` are
-regularity preconditions (a nonnegative integrable density with positive mass — for a
-genuine probability density `∫ pX = 1`). The strict positivity conclusion is *derived*,
-not assumed.
 @audit:ok -/
 theorem convDensityAdd_pos
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
@@ -801,8 +640,8 @@ theorem convDensityAdd_pos
     (integral_pos_iff_support_of_nonneg hF_nn hF_int).mpr (hsupp ▸ hpX_supp)
   simpa only [convDensityAdd, hF_def, hg_def] using this
 
-/-- Monotonicity of the centered Gaussian pdf in `|·|`: if `|u| ≤ |w|` then
-`g_v(w) ≤ g_v(u)` (the pdf decreases as the argument moves away from the mean `0`).
+/-- Monotonicity of the centered Gaussian pdf in `|·|`: if `|u| ≤ |w|` then `g_v(w) ≤ g_v(u)`.
+
 @audit:ok -/
 private theorem gaussianPDFReal_antitone_abs
     (v : ℝ≥0) {u w : ℝ} (huw : |u| ≤ |w|) :
@@ -819,22 +658,11 @@ private theorem gaussianPDFReal_antitone_abs
   · rw [neg_div, neg_div, neg_le_neg_iff]
     gcongr
 
-/-- **GAP lemma B (Gaussian lower bound, genuine)**: the Gaussian convolution density is
-bounded below by a `(1/2)`-scaled shifted Gaussian. Concretely there is a radius `R > 0` with
-`convDensityAdd pX g_s x ≥ (1/2) · g_s (|x| + R)` for every `x`.
+/-- The Gaussian convolution density is bounded below by a `(1/2)`-scaled shifted Gaussian:
+there is a radius `R > 0` with `(1/2) · g_s (|x| + R) ≤ convDensityAdd pX g_s x` for every `x`.
+The proof picks `R` so that `∫_{[-R,R]} pX ≥ 1/2` (tightness), drops the integral to that box,
+and uses the monotonicity of `g_s` in `|·|`.
 
-Mathematical route (all steps genuine, 0 sorry / 0 residual):
-1. tightness: `∃ R > 0, ∫ y in Set.Icc (-R) R, pX y ≥ 1/2` (from `∫_{[-R,R]} pX → ∫ pX = 1`
-   via `tendsto_setIntegral_of_monotone` on the exhausting boxes `Icc (-n) n`, whose union is
-   `univ`; eventually `> 1/2`, extract a box with `n > 0`).
-2. `convDensityAdd ≥ ∫_{[-R,R]} pX y · g_s(x-y)` (rest of the nonnegative integrand dropped,
-   `setIntegral_le_integral`).
-3. `g_s` monotone-decreasing in `|·|` (`gaussianPDFReal_antitone_abs`): for `y ∈ [-R,R]`,
-   `|x - y| ≤ |x| + R` so `g_s(x-y) ≥ g_s(|x| + R)`, giving
-   `∫_{[-R,R]} pX y · g_s(x-y) ≥ g_s(|x|+R) · ∫_{[-R,R]} pX ≥ g_s(|x|+R) · (1/2)`.
-
-**Genuine completion**: `hpX_nn` / `hpX_int` / `hpX_mass` (`∫ pX = 1`, probability density)
-are regularity preconditions. The lower bound is *derived*, not bundled into a hypothesis.
 @audit:ok -/
 @[entry_point]
 theorem convDensityAdd_lower_bound_gaussian

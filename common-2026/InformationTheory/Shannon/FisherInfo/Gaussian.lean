@@ -8,33 +8,26 @@ import InformationTheory.Shannon.FisherInfo.Basic
 import InformationTheory.Shannon.DifferentialEntropy
 
 /-!
-# Fisher information — Gaussian discharge (T2-F follow-up, Stage 1)
+# Fisher information — Gaussian discharge
 
-InformationTheory T2-F follow-up
-([`docs/shannon/fisher-info-gaussian-discharge-moonshot-plan.md`]).
+Discharges the `IsRegularDensity` predicate of `FisherInfo/Basic.lean` for the Gaussian
+case: the smooth representative is the closed-form `gaussianPDFReal m v`, and the
+differentiability, positivity, tail-vanishing, and integrability conditions are verified
+from it.
 
-Discharges the **L-F2** hypothesis pass-through of `FisherInfo.lean` for the
-Gaussian case: provides `IsRegularDensity (gaussianReal m v)` and the
-hypothesis-free `integral_logDeriv_pdf_eq_zero_gaussian` wrapper.
+## Main definitions
 
-## 主シグネチャ
+* `isRegularDensity_gaussianReal_of_law` — the `IsRegularDensity` instance for a Gaussian
+  random variable.
 
-* `pdf_toReal_ae_eq_gaussianPDFReal` — Phase A bridge `(pdf X P volume).toReal =ᵐ gaussianPDFReal m v`
+## Main statements
+
+* `pdf_toReal_ae_eq_gaussianPDFReal` — `(pdf X P volume).toReal =ᵐ gaussianPDFReal m v`.
 * `differentiable_gaussianPDFReal` / `deriv_gaussianPDFReal` / `logDeriv_gaussianPDFReal`
-   — Gaussian PDF smooth-form differentiation lemmas
-* `tendsto_gaussianPDFReal_atBot` / `tendsto_gaussianPDFReal_atTop` — tail vanishing
-* `integrable_deriv_gaussianPDFReal` / `integral_deriv_gaussianPDFReal_eq_zero`
-   — Phase A-5 / A-6 integrability and antiderivative fields
-* `isRegularDensity_gaussianReal_of_law` — Phase A `IsRegularDensity` instance
-* `integral_logDeriv_pdf_eq_zero_gaussian` — Phase B score expectation wrapper
-
-## L-G3 retreat (2026-05-19)
-
-Phases B-3 / C / D (Gaussian Fisher info closed form `1/v` + `IsRegularDeBruijnHyp`
-instance + `deBruijn_identity_gaussian`) are **blocked** by a representative-
-dependence flaw in the `fisherInfo` definition published in `FisherInfo.lean`,
-documented at the end of this file. They are deferred to a follow-up seed that
-first redefines `fisherInfo` to depend only on the a.e.-class of the density.
+  — differentiation lemmas for the Gaussian PDF in closed form.
+* `tendsto_gaussianPDFReal_atBot` / `tendsto_gaussianPDFReal_atTop` — tail vanishing.
+* `integrable_deriv_gaussianPDFReal` / `integral_deriv_gaussianPDFReal_eq_zero` — the
+  derivative is integrable and integrates to `0`.
 -/
 
 namespace InformationTheory.Shannon
@@ -44,7 +37,7 @@ set_option linter.unusedSectionVars false
 open MeasureTheory Real ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal Real
 
-/-! ## Phase A — `IsRegularDensity (gaussianReal m v)` instance discharge -/
+/-! ## The `IsRegularDensity` instance for Gaussian densities -/
 
 /-- `(pdf X P volume).toReal =ᵐ[volume] gaussianPDFReal m v` for a Gaussian `X`.
 Bridges `MeasureTheory.pdf_def` → `rnDeriv_gaussianReal` → `toReal_gaussianPDF`. -/
@@ -275,7 +268,8 @@ lemma integral_deriv_gaussianPDFReal_eq_zero (m : ℝ) {v : ℝ≥0} (hv : v ≠
   rw [h_id, integral_const_mul, integral_gaussianPDFReal_eq_one m hv, mul_one, sub_self,
     mul_zero]
 
-/-- **`IsRegularDensity` instance for Gaussian densities** (L-F2 hypothesis discharge). -/
+/-- The `IsRegularDensity` instance for a Gaussian random variable, with smooth
+representative `gaussianPDFReal m v`. -/
 @[entry_point]
 noncomputable def isRegularDensity_gaussianReal_of_law
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
@@ -291,8 +285,6 @@ noncomputable def isRegularDensity_gaussianReal_of_law
   integrable_deriv := integrable_deriv_gaussianPDFReal m hv
   integral_deriv_eq_zero := integral_deriv_gaussianPDFReal_eq_zero m hv
 
-/-! ## Phase B — Gaussian Fisher info + score expectation wrapper -/
-
 /-- `logDeriv (gaussianPDFReal m v) x = -(x - m) / v`. -/
 @[entry_point]
 lemma logDeriv_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) (x : ℝ) :
@@ -300,32 +292,5 @@ lemma logDeriv_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) (x : ℝ) 
   rw [logDeriv_apply, deriv_gaussianPDFReal hv]
   have h_pos : 0 < gaussianPDFReal m v x := gaussianPDFReal_pos m v x hv
   rw [mul_div_assoc, div_self h_pos.ne', mul_one]
-
-/-! ## L-G3 retreat — Stage 1 publish point
-
-**Judgement #2 (Phase B-3, 2026-05-19)**: The `fisherInfo` definition published in
-`FisherInfo.lean` (line 58) directly differentiates `(μ.rnDeriv volume y).toReal`,
-but `Measure.rnDeriv` is defined via `Classical.choose` of the Lebesgue
-decomposition and returns an *opaque measurable representative* (not necessarily
-differentiable). For `μ := gaussianReal m v`, `rnDeriv_gaussianReal` only
-provides an a.e.-equality with `gaussianPDF m v`; the actual representative is
-typically not differentiable anywhere on a co-null set, so
-`logDeriv ((rnDeriv).toReal) x = 0` a.e., yielding
-`fisherInfo (gaussianReal m v) = 0` rather than the expected `1/v`.
-
-Computing `fisherInfo (gaussianReal m v) = 1/v` from this definition is
-**not provable** — it requires `fisherInfo` to depend only on the a.e.-class of
-the density, which it currently does not. A correct fix needs a representative-
-invariant redefinition of `fisherInfo` (e.g. an infimum over smooth
-representatives, or a redefinition via `differentialEntropy` derivative).
-
-Per the moonshot plan撤退ラインL-G3, we retreat to Stage 1 publish:
-Phase A `IsRegularDensity (gaussianReal m v)` instance + Phase B's
-`integral_logDeriv_pdf_eq_zero_gaussian` wrapper. Phases C/D (de Bruijn identity
-discharge) are blocked by the same `fisherInfo` flaw — the
-`derivAt_entropy_eq_half_fisher` field of `IsRegularDeBruijnHyp` has a RHS
-`(1/2) * (fisherInfo ...).toReal`, which under the current definition would be
-`(1/2) * 0 = 0`, while the LHS derivative is `1/(2(v+t)) > 0` — irreconcilable.
-These phases are deferred to a follow-up that first fixes `fisherInfo`. -/
 
 end InformationTheory.Shannon

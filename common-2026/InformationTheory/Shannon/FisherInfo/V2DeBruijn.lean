@@ -10,51 +10,29 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic
 
 /-!
-# Fisher information V2 — Phase C bridge + Phase D de Bruijn identity (T2-F follow-up)
+# Fisher information V2 — measure-keyed wrapper and de Bruijn identity
 
-InformationTheory T2-F follow-up (parents:
-* `docs/shannon/fisher-info-moonshot-plan.md` Phase E (`deBruijn_identity` Tier 2)
-* `docs/shannon/fisher-info-gaussian-discharge-moonshot-plan.md` Phase C / D
-   (L-G3 retreat 2026-05-19)).
+Builds on the density-as-input Fisher information of `FisherInfoV2.lean` to define a
+measure-keyed wrapper, the heat-flow convolution path `X + √t · Z`, the V2 de Bruijn
+regularity predicate, and the Gaussian discharge of the de Bruijn identity.
 
-This file builds on top of `FisherInfoV2.lean`'s V2 redefinition (which fixes the
-V1 representative-dependence flaw documented in `FisherInfoGaussian.lean` L-G3
-retreat) to publish
+## Main definitions
 
-* **Phase C — V1 ↔ V2 bridge**: V1 `IsRegularDensity` witnesses lift to V2
-  `IsRegularDensityV2`; V1 `fisherInfo (P.map X)` is bridged to V2
-  `fisherInfoOfDensity (h_v1.density)` via the chosen smooth representative.
-* **Phase D — de Bruijn identity (V2 form)**: a V2 `IsRegularDeBruijnHypV2`
-  predicate (statement-form, L-F1+L-F2 hypothesis pass-through, with the RHS
-  using `fisherInfoOfDensity` so the Gaussian case actually evaluates to `1/v`
-  rather than the V1 `0` ghost) and `deBruijn_identity_v2`.
-* **Gaussian discharge** `deBruijn_identity_v2_gaussian`: when `X ∼ 𝒩(m, v)`,
-  `Z ∼ 𝒩(0, 1)`, `X ⊥ Z`, the law of `X + √t Z` is `𝒩(m, v + t)` (Mathlib
-  `gaussianReal_add_gaussianReal_of_indepFun`); the LHS
-  `(d/dt) (1/2) log (2π e (v + t))` equals `1/(2(v + t))` (Mathlib `hasDerivAt_log`
-  composition); the RHS `(1/2) · J(𝒩(m, v + t)) = (1/2) · (1/(v + t))` matches
-  via V2 `fisherInfoOfDensityReal_gaussianPDFReal`.
-## 主シグネチャ
+* `fisherInfoOfMeasureV2` — the Fisher information of a measure carrying an explicit smooth
+  density witness.
+* `gaussianConvolution` — the heat-flow path `X + √t · Z`.
+* `IsRegularDeBruijnHypV2` — the V2 de Bruijn regularity predicate, whose right-hand side
+  uses the V2 Fisher information.
+* `IsDeBruijnPathRegular` — the path-regularity bundle for the integrated de Bruijn
+  identity.
 
-* `fisherInfoOfMeasureV2` — Phase C measure-keyed V2 Fisher info (density-witness form)
-* `fisherInfoOfMeasureV2_gaussianReal` — Phase C Gaussian closed form `1/v` (V2)
-* `gaussianConvolution` — abbrev for `P.map (fun ω => X ω + √t · Z ω)` (heat-flow path)
-* `IsRegularDeBruijnHypV2` — Phase D V2 regularity predicate (RHS uses V2 fisher info)
-* `deBruijn_identity_v2` — Phase D de Bruijn identity, V2 (MOVED to
-   `FisherInfoV2DeBruijnGenuine.lean`; now delegates to the genuine sorryAx-free
-   `debruijnIdentityV2_holds_assembled`)
-* `deBruijn_identity_v2_gaussian` — Gaussian discharge (hypothesis-free), the canonical
-   Stage 2 publish target blocked under V1 by the representative-dependence flaw
+## Main statements
 
-## 撤退ライン
-
-* **L-FV2D-A** (採用): V2 redefinition path — density-as-input form, both bridge
-   and de Bruijn are stated against `fisherInfoOfDensity` (Gaussian evaluates correctly).
-* **L-FV2D-B** (本 file): de Bruijn identity hypothesis pass-through (statement-form
-   publish) — the heat-equation + dominated-bound machinery for the *general* `X`
-   case is bundled into `IsRegularDeBruijnHypV2` and discharged downstream
-   (Gaussian case is fully discharged here).
-* **L-FV2D-C** (未採用): full general-`X` discharge via Cover-Thomas Phase C/D heat-eq.
+* `fisherInfoOfMeasureV2_gaussianReal` — the Gaussian closed form `1 / v`.
+* `gaussianConvolution_law_of_gaussian` — the law of `X + √t · Z` is `𝒩(m, v + t)` when `X`
+  is Gaussian and `X ⊥ Z`.
+* `deBruijn_identity_v2_gaussian` — the de Bruijn identity for a Gaussian `X`,
+  `(d/dt) h(X + √t · Z) = 1 / (2(v + t))`.
 -/
 
 namespace InformationTheory.Shannon.FisherInfoV2
@@ -65,19 +43,11 @@ open MeasureTheory Real ProbabilityTheory InformationTheory
 open InformationTheory.Shannon.EPIConvDensity (convDensityAdd)
 open scoped ENNReal NNReal Real
 
-/-! ## Phase C — V1 ↔ V2 bridge (measure-keyed wrapper) -/
+/-! ## Measure-keyed wrapper -/
 
-/-- **V2 Fisher information of a measure**, density-witness form.
-
-Takes a measure `μ : Measure ℝ` together with an explicit smooth density witness
-`f : ℝ → ℝ`. The Fisher information is computed as
-`fisherInfoOfDensity f` (the V2 density-as-input form). The witness is unrelated
-to `μ.rnDeriv volume` syntactically — it is the caller's responsibility to
-verify the relevant a.e.-equality if needed (cf. `fisherInfoOfMeasureV2_eq_of_pdf_ae_eq`).
-
-This is the V2 analogue of `InformationTheory.Shannon.fisherInfo` from `FisherInfo.lean`,
-but with the V1 representative-dependence flaw eliminated: the caller picks the
-representative explicitly. -/
+/-- The Fisher information of a measure `μ` carrying an explicit smooth density witness
+`f`, computed as `fisherInfoOfDensity f`. The witness is syntactically unrelated to
+`μ.rnDeriv volume`; the caller is responsible for the relevant a.e.-equality. -/
 noncomputable def fisherInfoOfMeasureV2 (_μ : Measure ℝ) (f : ℝ → ℝ) : ℝ≥0∞ :=
   fisherInfoOfDensity f
 
@@ -94,10 +64,8 @@ theorem fisherInfoOfMeasureV2_def (μ : Measure ℝ) (f : ℝ → ℝ) :
 theorem fisherInfoOfMeasureV2Real_def (μ : Measure ℝ) (f : ℝ → ℝ) :
     fisherInfoOfMeasureV2Real μ f = fisherInfoOfDensityReal f := rfl
 
-/-- **Gaussian Fisher info — V2 measure-keyed closed form** `1/v`.
-
-The deliverable that was blocked under V1 by the representative-dependence flaw
-(`FisherInfoGaussian.lean` L-G3 retreat). -/
+/-- The Gaussian Fisher information in measure-keyed form:
+`fisherInfoOfMeasureV2 (gaussianReal m v) (gaussianPDFReal m v) = ENNReal.ofReal (1 / v)`. -/
 @[entry_point]
 theorem fisherInfoOfMeasureV2_gaussianReal
     (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
@@ -114,23 +82,16 @@ theorem fisherInfoOfMeasureV2Real_gaussianReal
   unfold fisherInfoOfMeasureV2Real
   exact fisherInfoOfDensityReal_gaussianPDFReal m hv
 
-/-! ## Phase D — Heat-flow path (gaussianConvolution) abbrev -/
+/-! ## Heat-flow path -/
 
-/-- **Heat-flow convolution path** `X + √t · Z`. The `t`-parametrised family of
-random variables underpinning de Bruijn identity (Cover-Thomas 17.7.2). For
-`Z ∼ 𝒩(0, 1)` and `X` independent of `Z`, the law `P.map (gaussianConvolution X Z t)`
-is the convolution of `P.map X` with `𝒩(0, t)`, hence the *Gaussian heat
-semigroup* action on `P.map X`.
-
-Defined as a plain abbreviation rather than a wrapper structure so that callers
-can use existing `Measure.map` API without an additional layer. -/
+/-- The heat-flow convolution path `X + √t · Z`, the `t`-parametrised family underlying the
+de Bruijn identity (Cover–Thomas 17.7.2). For `Z ∼ 𝒩(0, 1)` and `X ⊥ Z`, the law
+`P.map (gaussianConvolution X Z t)` is the convolution of `P.map X` with `𝒩(0, t)`. -/
 noncomputable def gaussianConvolution {α : Type*} (X Z : α → ℝ) (t : ℝ) : α → ℝ :=
   fun ω => X ω + Real.sqrt t * Z ω
 
-/-- **Law of `X + √t · Z`** when `X` is Gaussian `𝒩(m, v)`, `Z` is standard normal,
-and `X ⊥ Z`: the result is `𝒩(m, v + t.toNNReal)`. The key Mathlib facts used
-are `gaussianReal_map_const_mul` (law of `√t · Z` is `𝒩(0, t)`) and
-`gaussianReal_add_gaussianReal_of_indepFun` (sum of independent Gaussians). -/
+/-- The law of `X + √t · Z` is `𝒩(m, v + t)` when `X ∼ 𝒩(m, v)`, `Z ∼ 𝒩(0, 1)`, and
+`X ⊥ Z`. -/
 @[entry_point]
 theorem gaussianConvolution_law_of_gaussian
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
@@ -182,26 +143,14 @@ theorem gaussianConvolution_law_of_gaussian
   congr 1
   · ring
 
-/-! ## Phase D — `IsRegularDeBruijnHypV2` predicate + `deBruijn_identity_v2` -/
+/-! ## The de Bruijn regularity predicate -/
 
-/-- **V2 de Bruijn identity regularity predicate**.
-
-V2 analogue of `InformationTheory.Shannon.IsRegularDeBruijnHyp` (`FisherInfo.lean:200`).
-The key difference: the RHS uses **V2 fisher info** (`fisherInfoOfDensity` of an
-explicit density witness), so the Gaussian case actually evaluates to `1/v`
-rather than the V1 ghost `0`. Bundles a density witness `density_t : ℝ → ℝ`
-for the law of `X + √t Z`.
-
-**Phase 2.B foundation step (2026-05-27)**: 2 fields only — regularity
-preconditions (`Z_law` + `density_t`). The de Bruijn identity itself
-(`HasDerivAt ... ((1/2) * fisherInfoOfDensityReal density_t) t`) used to
-be bundled here as a third load-bearing field, but Phase 2.A audit
-(commit `a6ae83b`) flagged that arrangement as load-bearing hypothesis
-bundling (the field was `wall:debruijn-integration` smuggled into a
-regularity predicate). The de Bruijn identity core proof is now
-集約 (consolidated) into the genuine (sorryAx-free)
-`debruijnIdentityV2_holds_assembled` (FisherInfoV2DeBruijnAssembly.lean;
-`wall:debruijn-integration` is [CLOSED 2026-06-04]) as a genuine closure point. -/
+/-- The V2 de Bruijn regularity predicate. It carries a smooth density witness
+`density_t : ℝ → ℝ` for the law of `X + √t · Z`, together with regularity preconditions on
+`X`. The Fisher information on the right-hand side of the de Bruijn identity uses
+`fisherInfoOfDensity` of an explicit density witness, so the Gaussian case evaluates to
+`1 / v`. The de Bruijn identity itself is not a field of this predicate; it is proved
+separately in `debruijnIdentityV2_holds_assembled`. -/
 structure IsRegularDeBruijnHypV2 {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω)
     [IsProbabilityMeasure P]
@@ -210,111 +159,40 @@ structure IsRegularDeBruijnHypV2 {Ω : Type*} [MeasurableSpace Ω]
   Z_law : P.map Z = gaussianReal 0 1
   /-- Smooth density witness for `P.map (X + √t · Z)`. -/
   density_t : ℝ → ℝ
-  /-- **X-density witness fields (§5A, `epi-debruijn-pertime-closure-plan` Phase 5)**:
-  the `pX` series (4 fields) supplies a Real density witness for `X` itself, which is
-  the input required by the Phase 1b density-identification atom
-  `pPath_eq_convDensityAdd` (the law of `X + √s·Z` is the convolution of `P.map X`
-  with a Gaussian, expressed via `convDensityAdd pX g_σ`). It is also the smooth
-  representative to which `density_t` is pinned by `density_t_eq` below.
-
-  All four are **regularity preconditions**, NOT load-bearing: they assert that `X`
-  has a Lebesgue density `pX` (nonnegativity + measurability + the external-shape
-  equation `P.map X = withDensity (ofReal∘pX)`). They do not bundle the analytic
-  core (`HasDerivAt` / heat equation / Fisher); same series as `Z_law` / `density_t_eq`.
-
-  These fields are declared **before** `density_t_eq` so the latter's conv-pin RHS
-  can reference `pX` (structure fields cannot forward-reference). -/
+  /-- A real density witness for `X` itself: the law of `X + √s · Z` is the convolution of
+  `P.map X` with a Gaussian, expressed via `convDensityAdd pX g_σ`. Declared before
+  `density_t_eq` so the latter's right-hand side can reference `pX`. -/
   pX : ℝ → ℝ
-  /-- Nonnegativity of the X density witness (regularity precondition). -/
+  /-- The density witness `pX` is nonnegative. -/
   pX_nn : ∀ x, 0 ≤ pX x
-  /-- Measurability of the X density witness (regularity precondition). -/
+  /-- The density witness `pX` is measurable. -/
   pX_meas : Measurable pX
-  /-- External-shape equation: `X` has Lebesgue density `pX` (regularity
-  precondition, same form as `density_t_eq`; not load-bearing). -/
+  /-- `X` has Lebesgue density `pX`. -/
   pX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x))
-  /-- **Density-pin field (conv-pin redesign, 2026-05-31, plan §Phase 5-F 案 1)**: the
-  density witness `density_t` is pinned to the *smooth* representative
-  `convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)` — the convolution of the `X`
-  density `pX` with the time-`t` Gaussian heat kernel. This is the genuine density of
-  the pushforward `P.map (X + √t · Z)` (Phase 1b `pPath_eq_convDensityAdd`), written as
-  an explicit smooth function.
-
-  **Why conv-pin and not rnDeriv-pin**: the previous field pinned `density_t` pointwise
-  to `(rnDeriv (P.map (X+√t·Z)) volume).toReal`. `Measure.rnDeriv` is the
-  `Classical.choose` representative of the Lebesgue decomposition, generically
-  non-differentiable on a co-null set, forcing `logDeriv ((rnDeriv).toReal) = 0` a.e.
-  and hence `fisherInfoOfDensity density_t = 0` — the same false-statement defect as
-  `density_t := 0` (RHS `(1/2)·fisherInfoOfDensityReal density_t` forced to `0`,
-  contradicting the Gaussian derivative `1/(2(v+t)) ≠ 0`). Pinning instead to the
-  smooth convolution representative makes `logDeriv` genuine and the statement true.
-  The pin is the special case form needed by the Gaussian constructor
-  (`convDensityAdd_gaussian_closed_form`) and by `_fisher_match` (now genuine, both
-  sides are `fisherInfoOfDensityReal` of the *same* function, closed by `funext`).
-
-  This is a **regularity precondition** (an external-shape equation
-  `density_t x = convDensityAdd pX g_t x`), NOT load-bearing: it does not bundle the
-  analytic core (`HasDerivAt` / heat equation / IBP). The RHS is an explicit smooth
-  function, not a `HasDerivAt`/Fisher claim. Same series as `Z_law` / `pX_law`. The
-  `0 < t` is received field-internally (`∀ (ht : 0 < t)`) since the structure does not
-  carry positivity of `t`. -/
+  /-- The density witness `density_t` equals the smooth representative
+  `convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)` — the convolution of `pX` with the
+  time-`t` Gaussian heat kernel, which is the genuine density of `P.map (X + √t · Z)`.
+  Pinning to this smooth convolution (rather than to the `Measure.rnDeriv` representative,
+  which is generically non-differentiable) keeps `logDeriv` and hence
+  `fisherInfoOfDensity density_t` nonzero. The positivity `0 < t` is taken as an argument
+  since the structure does not carry it. -/
   density_t_eq : ∀ (ht : 0 < t) (x : ℝ),
     density_t x = convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x
-  /-- **Second-moment regularity precondition** (§Phase 5-G, hpX_mom threading 2026-05-31):
-  the X density `pX` has a finite second moment, i.e. `y ↦ y²·pX y` is volume-integrable.
-  This is a regularity precondition (NOT load-bearing): it asserts finite variance of `X`,
-  required by the §5G-2 domination's route-II Tonelli even-moment envelope
-  (`_chain_domination` → `convKernel_envelope_integrable` on `y²·pX`). It does NOT bundle any
-  `HasDerivAt` / Fisher analytic core. Same regularity series as `pX_law` / `density_t_eq`. -/
+  /-- `X` has a finite second moment: `y ↦ y² · pX y` is volume-integrable. -/
   pX_mom : Integrable (fun y => y ^ 2 * pX y) volume
 
--- moved to FisherInfoV2DeBruijnGenuine.lean (genuine, calls debruijnIdentityV2_holds_assembled):
---   the per-time shim `debruijnIdentityV2_holds` and the consumer `deBruijn_identity_v2`.
--- The shim is deleted (was `sorry` + `@residual(plan:epi-debruijn-pertime-closure)`); the
--- genuine same-signature `debruijnIdentityV2_holds_assembled` (FisherInfoV2DeBruijnAssembly.lean,
--- sorryAx-free) is now wired into the pipeline via FisherInfoV2DeBruijnGenuine.lean.
+/-- The path-regularity bundle for the integrated de Bruijn identity, packaging the FTC
+ingredients needed to integrate the per-time `debruijnIdentityV2_holds_assembled` derivative
+along the heat-flow path `(0, T)`.
 
-/-! ### `debruijnIntegrationIdentity_holds` — moved to FisherInfoV2DeBruijnGenuine.lean (積分形)
+* `fPath` — the density witness path: `fPath t` is the density of
+  `P.map (gaussianConvolution X Z t)`.
+* `reg_t` — per-time V2 de Bruijn regularity at each interior `t ∈ (0, T)`, with
+  `density_t = fPath t` so the per-time derivative value matches the integrand.
+* `cont` — continuity of the heat-flow entropy on `[0, T]`.
+* `integrable` — interval-integrability of the path integrand `(1/2) · J(X + √t · Z)` on
+  `(0, T)`.
 
-Cover-Thomas Lemma 17.7.2 の **積分形** (integration identity along the heat-flow path)。
-per-time identity `debruijnIdentityV2_holds_assembled` (genuine sorryAx-free) は per-time の `HasDerivAt` を返すのみで、その deriv を FTC
-(`intervalIntegral`) で積分して得られる差分恒等式
-
-    `h(X + √T·Z) − h(X) = ∫_0^T (1/2)·J(X + √t·Z) dt`
-
-は一般 `X` では Mathlib 未整備 (一般 heat-flow path の積分可能性 + FTC の bounded/unbounded
-interval 形が無い)。Gaussian 限定なら `bounded_T_ftc_gaussian` (`EPIL3Integration`) が同型を
-実演するが、本 lemma は density witness `fPath` を bundle した存在形で一般 `X` の壁に直接
-突き当たる。consumer (`EPIStamDischarge.IsDeBruijnIntegrationHyp` の witness 生成) は本 lemma を
-普通の lemma call として使う (各 use site で `sorry` を書かない)。
-
-結論 shape は `IsDeBruijnIntegrationHyp X Z P T` の body (`∃ fPath, ∀ h_X h_target, ...
-= ∫ t in Set.Ioo 0 T, (1/2)·(fisherInfoOfMeasureV2 ...).toReal ∂volume`) に合わせてある
-(CLAUDE.md「Mathlib-shape-driven Definitions」)。`IsDeBruijnIntegrationHyp` は downstream file
-で定義されるため (import cycle 回避) ここでは raw 積分形で述べ、consumer 側で predicate に
-畳み込む。 -/
-
-/-- **Path regularity bundle for the de Bruijn integration identity**.
-
-Phase 4 structural-closure precondition (`epi-debruijn-integration-phaseD-plan`
-follow-up): packages the FTC ingredients needed to integrate the per-time
-`debruijnIdentityV2_holds_assembled` derivative along the heat-flow path `(0, T)`.
-All four fields are **regularity preconditions** (which `X` is admissible / how
-regular the heat-flow path is), NOT the de Bruijn analytic core — the core
-(heat equation + IBP) is genuinely discharged by the per-time identity
-`debruijnIdentityV2_holds_assembled` (sorryAx-free, FisherInfoV2DeBruijnAssembly.lean),
-which the consumer `debruijnIntegrationIdentity_holds`
-(FisherInfoV2DeBruijnGenuine.lean) invokes per time-point via each `reg_t` field.
-
-* `fPath` — density witness path: `fPath t` is the density of
-`P.map (gaussianConvolution X Z t)`.
-* `reg_t` — per-time V2 de Bruijn regularity at each interior `t ∈ (0, T)`,
-with `density_t = fPath t` (so the per-time `HasDerivAt` value matches the
-integrand). This is what feeds `debruijnIdentityV2_holds_assembled` per time-point.
-* `cont` — continuity of the heat-flow entropy on the closed interval `[0, T]`
-(a path-regularity precondition; cf. the Gaussian instance
-`continuousOn_differentialEntropy_heat_flow_gaussian`).
-* `integrable` — the path integrand `(1/2) · J(X + √t·Z)` is interval-integrable
-on `(0, T)` (path integrability precondition).
 @audit:ok -/
 structure IsDeBruijnPathRegular {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] (T : ℝ) where
@@ -332,27 +210,9 @@ structure IsDeBruijnPathRegular {Ω : Type*} [MeasurableSpace Ω]
   integrable : IntervalIntegrable
     (fun t => (1/2) * fisherInfoOfDensityReal (fPath t)) volume 0 T
 
--- moved to FisherInfoV2DeBruijnGenuine.lean (genuine, calls debruijnIdentityV2_holds_assembled):
---   the consumer `debruijnIntegrationIdentity_holds` (de Bruijn integration identity along the
---   heat-flow path). It now integrates the genuine sorryAx-free per-time identity via FTC, so it
---   no longer carries a `@residual(wall:debruijn-integration)` transitive sorry.
+/-! ## Gaussian discharge -/
 
-/-! ## Gaussian discharge — `deBruijn_identity_v2_gaussian` (hypothesis-free)
-
-The Stage 2 publish point: when `X ∼ 𝒩(m, v)`, `Z ∼ 𝒩(0, 1)`, `X ⊥ Z`,
-the de Bruijn identity is fully proved without any hypothesis pass-through.
-
-Strategy: `P.map (X + √t Z) = 𝒩(m, v + t)`, so
-
-* LHS: `s ↦ differentialEntropy (𝒩(m, v + s)) = (1/2) log (2π e (v + s))`,
-  whose derivative at `t` is `1/(2(v + t))` via `Real.hasDerivAt_log` composition.
-* RHS: `(1/2) · J(𝒩(m, v + t)) = (1/2) · (1/(v + t)) = 1/(2(v + t))`
-  via V2 `fisherInfoOfMeasureV2Real_gaussianReal`.
-
-The two sides match by `field_simp` / `ring`. -/
-
-/-- Helper: `(1/2) * Real.log (2π e (v + s))` has derivative `1/(2(v + s))` at any
-`s ≥ 0` (when `v + s > 0`). -/
+/-- `(1/2) · log (2π e (v + s))` has derivative `1 / (2(v + s))` at `s` when `v + s > 0`. -/
 @[entry_point]
 theorem hasDerivAt_half_log_gaussian_entropy
     {v : ℝ≥0} (s : ℝ) (hvs : 0 < (v : ℝ) + s) :
@@ -393,9 +253,8 @@ theorem hasDerivAt_half_log_gaussian_entropy
   rw [h_rewrite] at h_half
   exact h_half
 
-/-- **Differential entropy of `gaussianReal m (v + s.toNNReal)`** along the heat-flow
-path, simplified to `(1/2) log (2π e (v + s))` for `s ≥ 0` (so `v + s` matches as
-a real number with `(v + s.toNNReal : ℝ) = v + s`). -/
+/-- The differential entropy of `gaussianReal m (v + s)` along the heat-flow path equals
+`(1/2) · log (2π e (v + s))` for `s ≥ 0`. -/
 @[entry_point]
 theorem differentialEntropy_gaussianReal_heat_path
     (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) {s : ℝ} (hs : 0 ≤ s) :
@@ -416,15 +275,9 @@ theorem differentialEntropy_gaussianReal_heat_path
   -- The `(v + ⟨s, hs⟩ : ℝ≥0).toReal = (v : ℝ) + s` step.
   rw [show ((v + ⟨s, hs⟩ : ℝ≥0) : ℝ) = (v : ℝ) + s from NNReal.coe_add v ⟨s, hs⟩]
 
-/-- **de Bruijn identity for Gaussian X** (V2, hypothesis-free).
-
-For `X ∼ 𝒩(m, v)`, `Z ∼ 𝒩(0, 1)`, `X ⊥ Z`, and `t > 0`,
-
-`(d/dt) h(X + √t · Z) = (1/2) · J(𝒩(m, v + t)) = 1/(2(v + t))`.
-
-This is the Stage 2 publish point of `fisher-info-gaussian-discharge-moonshot-plan.md`
-Phase D — the deliverable blocked under V1 by the representative-dependence flaw,
-now provable through V2 redefinition (cf. `FisherInfoV2.lean:296`). -/
+/-- The de Bruijn identity for a Gaussian `X` (hypothesis-free): for `X ∼ 𝒩(m, v)`,
+`Z ∼ 𝒩(0, 1)`, `X ⊥ Z`, and `t > 0`,
+`(d/dt) h(X + √t · Z) = (1/2) · J(𝒩(m, v + t)) = 1 / (2(v + t))`. -/
 @[entry_point]
 theorem deBruijn_identity_v2_gaussian
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]

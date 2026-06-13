@@ -14,66 +14,35 @@ import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPI.Conv.Density
 
 /-!
-# Fisher information V2 — de Bruijn body (T2-F wave7 follow-up)
+# Fisher information V2 — de Bruijn body
 
-Wave-7 T2-F follow-up to `FisherInfoV2DeBruijn.lean`. The signature file (already
-0-sorry, 452 lines) publishes:
+Body-side scaffolding for the general-`X` de Bruijn identity (Cover–Thomas 17.7.2's
+differentiate-under-the-integral via heat equation plus integration by parts), built on the
+definitions of `FisherInfoV2DeBruijn.lean`. The heat equation and the integration-by-parts step
+are exposed as predicates that compose into the de Bruijn statement.
 
-* `IsRegularDeBruijnHypV2` — the V2 regularity predicate bundling the de
-  Bruijn identity as an L-F1+L-F2 hypothesis pass-through,
-* `deBruijn_identity_v2` — the predicate-form de Bruijn identity, and
-* `deBruijn_identity_v2_gaussian` — the **fully discharged** Gaussian case.
+## Main definitions
 
-What is *not* discharged in the signature file is the general-`X` body —
-Cover-Thomas 17.7.2's "differentiate-under-the-integral via heat-equation +
-integration by parts" argument. This file provides a **body-side scaffolding**
-for that discharge:
+* `heatKernel t x` — the Gaussian heat kernel `(1/√(2π t)) exp(-x²/(2t))`, defined as
+  `gaussianPDFReal 0 ⟨t, _⟩ x` for `t > 0` and `0` otherwise.
+* `IsHeatFlowDensity X Z P p` — `p` is a density family for `X + √t · Z` satisfying the heat
+  equation `∂_t p = (1/2) Δ_x p`, bundled in statement form.
+* `IsIBPHypothesis X Z P p t` — the integration-by-parts conclusion at time `t`.
+* `IsRegularDeBruijnHypV2.ofHeatFlow` — the constructor turning an `IsHeatFlowDensity` witness
+  (plus a.c. and finite-second-moment regularity of `X`) into an `IsRegularDeBruijnHypV2`.
 
-## 内容
+## Main statements
 
-* `heatKernel t x` — the Gaussian heat kernel `(1/√(2π t)) exp(-x²/(2t))`,
-  defined as `gaussianPDFReal 0 ⟨t, _⟩ x` for `t > 0`.
-* `heatKernel_def_gaussianPDFReal` — unfold to `gaussianPDFReal`.
-* `heatKernel_pos`, `heatKernel_nonneg` — positivity.
-* `IsHeatFlowDensity X Z P p` — predicate that `p : ℝ → ℝ → ℝ` (parametrised by
-  `t ≥ 0`) is a smooth density family for `X + √t · Z` satisfying the heat
-  equation `∂_t p = (1/2) Δ_x p`. **撤退ライン L-FV2DB-A** (本 file 採用):
-  bundled as a predicate (statement-form), with field accessors for the heat
-  equation, the spatial second derivative, and the density correspondence.
-* `IsIBPHypothesis X Z P f t` — predicate that "integration by parts under
-  the heat kernel" yields the de Bruijn integrand for `(X + √t Z)` at `t`
-  given a smooth-density family `f`. **撤退ライン L-FV2DB-B** (本 file 採用):
-  bundled as a single `Prop` field carrying the derived `HasDerivAt`
-  statement, exposing only the boundary-term + Fisher-info integrand shape.
-* `deBruijn_identity_v2_of_heat_flow` — given `IsHeatFlowDensity` +
-  `IsIBPHypothesis`, **the body discharge of `deBruijn_identity_v2`** (RHS
-  uses V2 Fisher info on the density family at time `t`).
-* `IsRegularDeBruijnHypV2_of_heat_flow_ibp` — the constructor that turns
-  `IsHeatFlowDensity` + `IsIBPHypothesis` into a `IsRegularDeBruijnHypV2`
-  witness, closing the loop with the signature file.
+* `heatKernel_nonneg` / `measurable_heatKernel` — basic regularity of the heat kernel.
+* `deBruijn_identity_v2_of_heat_flow` — the de Bruijn identity from `IsHeatFlowDensity` plus
+  `IsIBPHypothesis`.
 
-## 撤退ライン
+## Implementation notes
 
-* **L-FV2DB-A** (本 file): heat-equation predicate `IsHeatFlowDensity` —
-  publish the predicate but do not derive `∂_t p = (1/2) Δ_x p` from the
-  convolution `p_0 * g_t` definition (this is the Cover-Thomas 17.7.2 PDE
-  step; deferred to `IsHeatFlowDensity` discharge work).
-* **L-FV2DB-B** (本 file): IBP / dominated-convergence predicate
-  `IsIBPHypothesis` — publish the predicate but do not perform the
-  Fubini-on-`integral` rearrangement (this is the deepest analytic step in
-  the de Bruijn argument; deferred).
-* **L-FV2DB-C** (本 file): `deBruijn_identity_v2_of_heat_flow` body discharge
-  composes the two predicates into the de Bruijn statement *without* any
-  remaining `sorry`. The Gaussian special case (`deBruijn_identity_v2_gaussian`
-  in the signature file) verifies that the predicates can be instantiated in
-  at least one non-trivial case.
-
-The L-FV2DB-A/B predicate split is the **Mathlib-shape choice** dictated by the
-CLAUDE.md "Mathlib-shape-driven definitions" rule: the heat-equation field is
-shaped exactly like the conclusion of `MeasureTheory.convolution_eq_lintegral`
-+ `Real.hasDerivAt_exp_neg_sq` chain rule, while the IBP field is shaped
-exactly like the conclusion expected by `HasDerivAt.congr_of_eventuallyEq` (so
-it composes with `deBruijn_identity_v2`'s LHS without bridging gymnastics).
+The predicate split follows the Mathlib-shape rule: the heat-equation field matches the
+conclusion of the convolution chain rule, while the integration-by-parts field matches the
+conclusion expected by `HasDerivAt.congr_of_eventuallyEq`, so the two compose with
+`deBruijn_identity_v2` without bridging lemmas.
 -/
 
 namespace InformationTheory.Shannon.FisherInfoV2
@@ -119,24 +88,11 @@ theorem measurable_heatKernel (t : ℝ) : Measurable (fun x => heatKernel t x) :
   · exact measurable_gaussianPDFReal 0 ⟨t, h.le⟩
   · exact measurable_const
 
-/-! ## Heat-flow density predicate (L-FV2DB-A pass-through)
+/-! ## Heat-flow density predicate -/
 
-The predicate `IsHeatFlowDensity X Z P p` bundles the property that
-`p : ℝ → ℝ → ℝ`, viewed as `p t x = (density of X + √t · Z at x)`, satisfies
-the heat equation `∂_t p = (1/2) Δ_x p` plus enough regularity for the
-de Bruijn argument.
-
-The predicate is *statement-form*: the heat equation is bundled as a field of
-type `∀ t > 0, ∀ x, HasDerivAt (fun s => p s x) ((1/2) * Δp t x) t`, but the
-*construction* of `p` from the convolution `p_0 * g_t` and the *verification*
-of the heat equation are not performed here (deferred to L-FV2DB-A discharge
-work). The Gaussian special case (`deBruijn_identity_v2_gaussian` in
-`FisherInfoV2DeBruijn.lean`) verifies the predicate can be instantiated. -/
-
-/-- **Heat-flow density predicate** for the law of `X + √t · Z`.
-
-`p t x` is the density of `P.map (gaussianConvolution X Z t)` at `x`. Bundles
-the heat equation and basic regularity. -/
+/-- The heat-flow density predicate for the law of `X + √t · Z`: `p t x` is the density of
+`P.map (gaussianConvolution X Z t)` at `x`, satisfying the heat equation `∂_t p = (1/2) Δ_x p`
+together with basic regularity. -/
 structure IsHeatFlowDensity {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (p : ℝ → ℝ → ℝ) : Prop where
@@ -146,11 +102,8 @@ structure IsHeatFlowDensity {Ω : Type*} [MeasurableSpace Ω]
   density_witness : ∀ t : ℝ, 0 < t → ∀ x : ℝ, 0 ≤ p t x
   /-- The density family is measurable in `x` for each `t > 0`. -/
   density_measurable : ∀ t : ℝ, 0 < t → Measurable (p t)
-  /-- **Heat equation** (statement-form bundled): there exists a function
-  `Δp : ℝ → ℝ → ℝ` such that for each `t > 0` and `x`, the time-derivative
-  `(d/dt) p t x` equals `(1/2) · Δp t x`. This is the L-FV2DB-A pass-through:
-  the field holds the conclusion of the heat-equation argument, not the
-  derivation. -/
+  /-- The heat equation in statement form: there is a `Δp : ℝ → ℝ → ℝ` with
+  `(d/dt) p t x = (1/2) · Δp t x` for each `t > 0` and `x`. -/
   heat_equation : ∃ Δp : ℝ → ℝ → ℝ, ∀ t : ℝ, 0 < t → ∀ x : ℝ,
     HasDerivAt (fun s => p s x) ((1/2) * Δp t x) t
 
@@ -170,42 +123,15 @@ theorem IsHeatFlowDensity.heat_equation_spec {Ω : Type*} [MeasurableSpace Ω]
       HasDerivAt (fun s => p s x) ((1/2) * h.laplacian t x) t :=
   h.heat_equation.choose_spec
 
-/-! ## Integration-by-parts predicate (L-FV2DB-B pass-through)
+/-! ## Integration-by-parts predicate -/
 
-The predicate `IsIBPHypothesis X Z P p t` bundles the result of the
-integration-by-parts step in Cover-Thomas 17.7.2: that the time-derivative of
-the differential entropy along the heat-flow path equals `(1/2) · J`
-**evaluated** at the heat-flow density `p t`. The "boundary terms vanish" +
-"dominated convergence to interchange derivative and integral" arguments are
-*inside* the predicate; the body discharge just composes the predicates.
-
-This is the L-FV2DB-B pass-through. -/
-
-/-- **IBP-derived de Bruijn integrand predicate** at time `t`.
-
-`IsIBPHypothesis X Z P p t` holds when the time-derivative of
+/-- The integration-by-parts conclusion at time `t`: the time-derivative of
 `differentialEntropy (P.map (X + √s · Z))` at `s = t` equals
-`(1/2) · fisherInfoOfDensityReal (p t)`. This is a *statement-form* predicate
-bundling the boundary-vanishing + interchange-of-derivative-and-integral
-conclusions of the IBP argument.
+`(1/2) · fisherInfoOfDensityReal (p t)`. This is a predicate-form literal alias of that
+`HasDerivAt` statement, retained for caller compatibility; it lifts a conclusion type into a
+predicate and is a deletion candidate.
 
-**Phase 2.B 段 3 (2026-05-27、`epi-stam-fisher-epi-integrated-sweep-plan`
-§Phase 2.B 段 3)**: 本 def は predicate-form literal alias
-(`def IsIBPHypothesis ... := HasDerivAt ((1/2) * fisherInfoOfDensityReal (p t)) t`)
-であり、conclusion-type を predicate に lifting した name-laundering pattern。
-段 2 完了で本 sweep 内 (`FisherInfoV2*` family) の全実 consumer (L3/D5) が
-`_h_ibp` underscore-prefixed unused 引数になった。de Bruijn identity の本体は
-genuine (sorryAx-free) な `debruijnIdentityV2_holds_assembled`
-(`FisherInfoV2DeBruijnAssembly.lean:3535`) に集約され、`wall:debruijn-integration`
-は **[CLOSED 2026-06-04]** (旧 shared sorry 補題 `debruijnIdentityV2_holds` は
-削除済)。
-
-本 sweep では retract 断行せず alias 維持。`FisherDeBruijnGaussianWitness.lean:43/51`
-に散文 documentation 言及あり (実コード reference 0 件、docstring 散文のみ)。
-完全 retract は後続 plan に委譲 (Gaussian witness file 等への外側 ripple を
-伴う場合があるため scope 拡大回避)。
-
-`@audit:retract-candidate(name-laundering-alias)` -/
+@audit:retract-candidate(name-laundering-alias) -/
 def IsIBPHypothesis {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (p : ℝ → ℝ → ℝ) (t : ℝ) : Prop :=
@@ -214,49 +140,21 @@ def IsIBPHypothesis {Ω : Type*} [MeasurableSpace Ω]
     ((1/2) * fisherInfoOfDensityReal (p t))
     t
 
-/-! ## Body discharge — `deBruijn_identity_v2_of_heat_flow` (L-FV2DB-C)
+/-! ## Body discharge -/
 
-Given the heat-flow density predicate (L-FV2DB-A) plus the IBP-predicate
-(L-FV2DB-B), the de Bruijn identity follows by simply unpacking the IBP
-predicate (it already states exactly the de Bruijn conclusion). This is the
-**body-side composition** of the two analytic predicates into the
-signature-file `deBruijn_identity_v2` shape. -/
+/-- The `IsRegularDeBruijnHypV2` constructor from a heat-flow density. The two extra
+preconditions are regularity of `X` itself, which `IsHeatFlowDensity` (carrying only the path
+density) does not supply:
 
-/-- **Constructor for `IsRegularDeBruijnHypV2`** from a heat-flow density.
+* `hX_ac : (P.map X) ≪ volume` — `X` has a Lebesgue density, feeding `pX_law` via
+  `withDensity_rnDeriv_eq`.
+* `h_mom_X : Integrable (fun ω => (X ω)^2) P` — `X` has finite second moment, feeding `pX_mom`
+  via `integrable_map_measure`.
 
-Phase 2.B 段 1 (foundation): builds the regularity predicate from the heat-flow
-density predicate, plus two **X-density regularity preconditions** required by the
-`pX`-witness fields (§5A):
+The density witness `density_t` is pinned to the smooth convolution `convDensityAdd pX g_t`, the
+genuine density of `P.map (X + √t · Z)`, so `density_t_eq` holds by `rfl`.
 
-* `hX_ac : (P.map X) ≪ volume` — `X` has a Lebesgue density. Required by `pX_law`
-(`withDensity_rnDeriv_eq`). The heat-flow predicate `IsHeatFlowDensity` carries
-only the *path* density `p` (density of `X + √t·Z`), NOT a witness for `X`'s own
-Lebesgue density, so this must be supplied externally.
-* `h_mom_X : Integrable (fun ω => (X ω)^2) P` — `X` has finite second moment.
-Required by `pX_mom` (transport of `X²` integrability to the `y²·pX` integral on
-`volume`). Again the heat-flow predicate carries no finite-variance source.
-
-Both are **regularity preconditions** (a.c. + finite variance), NOT load-bearing:
-they assert external regularity of `X` (existence of a density + finite variance),
-not any de Bruijn / Fisher / `HasDerivAt` analytic core. The de Bruijn identity
-itself is discharged downstream by the genuine (sorryAx-free)
-`debruijnIdentityV2_holds_assembled` (`FisherInfoV2DeBruijnAssembly.lean`;
-`wall:debruijn-integration` is [CLOSED 2026-06-04]).
-
-@audit:ok — independent honesty audit (2026-06-05, fresh auditor, commit 94a3ae8):
-3 fields (`density_t_eq`/`pX_law`/`pX_mom`) genuine, sorryAx-free. `#print axioms` =
-`[propext, Classical.choice, Quot.sound]` (transient + `lake env lean` after olean
-refresh). Sufficiency verified: the conv-pin `density_t := convDensityAdd pX g_t` is
-the genuine density of `P.map (X + √t·Z)` — `density_t_eq := rfl` is trivially true by
-construction, and the connection to the *actual* path measure is established genuinely
-downstream by `pPath_eq_convDensityAdd` (`@audit:ok`, consumed inside
-`debruijnIdentityV2_holds_assembled._entropy_eq` via `pX_law`/`Z_law`/`IndepFun`), so
-the conv-pin is the CORRECT side of the structure docstring's false-statement warning
-(NOT the rnDeriv-pin/`density_t:=0` degeneracy that collapses Fisher to 0). New
-preconditions `hX_ac`/`h_mom_X` are regularity (a.c. + finite 2nd moment of X): core-
-reconstruction test = granting them does NOT yield the de Bruijn identity; they only
-feed `pX_law` (`withDensity_rnDeriv_eq`) / `pX_mom` (`integrable_map_measure` transport).
-Load-bearing = NO. -/
+@audit:ok -/
 @[entry_point]
 noncomputable def IsRegularDeBruijnHypV2.ofHeatFlow
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
@@ -316,46 +214,13 @@ noncomputable def IsRegularDeBruijnHypV2.ofHeatFlow
     refine hsq_law.congr (Filter.Eventually.of_forall fun x => ?_)
     simp only [smul_eq_mul, ENNReal.toReal_ofReal (hpX_nn x)]; ring
 
-/-- **de Bruijn identity body discharge** (L-FV2DB-C).
+/-- The de Bruijn identity from a heat-flow density family `p` (`IsHeatFlowDensity`) and the IBP
+hypothesis at `t > 0` (`IsIBPHypothesis`), with the V2 Fisher information of the constructed
+density witness on the right. A pass-through to `deBruijn_identity_v2` via
+`IsRegularDeBruijnHypV2.ofHeatFlow`; the `_h_ibp` argument is kept for caller compatibility but
+unused.
 
-Given a heat-flow density family `p` satisfying the heat equation
-(`IsHeatFlowDensity`) and the IBP hypothesis at time `t > 0`
-(`IsIBPHypothesis`), the de Bruijn identity holds with the V2 Fisher
-information of `p t` on the RHS.
-
-**Phase 2.B 段 2 (2026-05-27、`epi-stam-fisher-epi-integrated-sweep-plan`
-§Phase 2.B 段 2)**: 旧 body `h_ibp` (literal alias of
-`IsIBPHypothesis X Z P p t := HasDerivAt ... ((1/2) * fisherInfoOfDensityReal (p t)) t`
-への 1 段 indirection) を解消し、`IsRegularDeBruijnHypV2.ofHeatFlow`
-constructor + `deBruijn_identity_v2` (genuine `debruijnIdentityV2_holds_assembled`
-経由、`wall:debruijn-integration` は [CLOSED 2026-06-04]) への honest pass-through に書換。
-constructor `ofHeatFlow` を本 declaration の上に移動済 (forward reference
-不可のため)。
-
-`h_ibp : IsIBPHypothesis X Z P p t` 引数は caller compat 維持のため保持
-(`_h_ibp` underscore prefix で unused 明示)。`IsIBPHypothesis` def 自身は
-predicate-form literal alias (D1) として残存し、`@audit:retract-candidate`
-を別途付与する段 3 task に委譲。
-
-NOTE (2026-06-05 closure): `deBruijn_identity_v2` 自体は genuine (sorryAx-free、
-`debruijnIdentityV2_holds_assembled` 経由)。`wall:debruijn-integration` は
-[CLOSED 2026-06-04]。`IsRegularDeBruijnHypV2.ofHeatFlow` constructor の 3 field
-(`density_t_eq`/`pX_law`/`pX_mom`) は本セッションで全 genuine 化済
-(`density_t` を `convDensityAdd pX g_t` に conv-pin して `density_t_eq := rfl`、
-`pX_law`/`pX_mom` は新 precondition `hX_ac`/`h_mom_X` から `withDensity_rnDeriv_eq`
-+ `integrable_map_measure` transport で閉じた、`rescaledInput_density_witness`
-手筋流用)。`#print axioms ofHeatFlow = [propext, Classical.choice, Quot.sound]`
-(sorryAx-free)。RHS は conv-pin により `p t` ではなく `ofHeatFlow ... .density_t`
-(= `convDensityAdd pX g_t`)。`hX_ac`/`h_mom_X` は X-density regularity precondition
-(a.c. + 有限2次モーメント) であり load-bearing でない。
-
-@audit:ok — independent honesty audit (2026-06-05, fresh auditor, commit 94a3ae8):
-sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`). Genuine
-pass-through to `deBruijn_identity_v2` (`@audit:ok`, `debruijnIdentityV2_holds_assembled`
-経由) on `ofHeatFlow` (`@audit:ok`). RHS conv-pin 変更 (`p t` → `ofHeatFlow….density_t`
-= `convDensityAdd pX g_t`) は statement をより正確にする (genuine path density)、偽化
-していない。NOTE: `_h_ibp : IsIBPHypothesis` は underscore-unused (name-laundering alias
-`@audit:retract-candidate`、本 commit 由来でなく既存、未消費なので dishonesty なし)。 -/
+@audit:ok -/
 @[entry_point]
 theorem deBruijn_identity_v2_of_heat_flow
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
@@ -374,32 +239,5 @@ theorem deBruijn_identity_v2_of_heat_flow
       t :=
   deBruijn_identity_v2 X Z hX hZ hXZ ht
     (IsRegularDeBruijnHypV2.ofHeatFlow hX hZ hXZ hX_ac h_mom_X ht h_heat)
-
-/-! ## Convenience corollaries
-
-These corollaries restate the de Bruijn identity from the heat-flow + IBP
-predicates *directly* in terms of `deBruijn_identity_v2`, so downstream callers
-can pick either pathway. -/
-
-/-! ## Documentation — Gaussian instance for L-FV2DB-A/B predicates
-
-The Gaussian case in the signature file (`deBruijn_identity_v2_gaussian`)
-already discharges the de Bruijn identity hypothesis-free. This section
-documents how the L-FV2DB-A/B predicates *would* be instantiated for the
-Gaussian case (`X ∼ 𝒩(m, v)`), via:
-
-* `p t x := gaussianPDFReal m (v + ⟨t, ht.le⟩) x` (the Gaussian density at
-  time `t`), and
-* heat equation: `∂_t gaussianPDFReal m (v + t) x = (1/2) · ∂²_x gaussianPDFReal m (v + t) x`
-  follows from direct calculation on the `exp(-(x - m)²/(2(v + t)))` form.
-* IBP: `(d/dt) (1/2) log(2π e (v + t)) = 1/(2(v + t)) = (1/2) · J(𝒩(m, v + t))`
-  is the discharged content of `deBruijn_identity_v2_gaussian`.
-
-Wiring this up as a concrete `IsHeatFlowDensity` + `IsIBPHypothesis` witness
-would require either (a) duplicating the Gaussian heat-equation calculation,
-or (b) running it as a separate lemma file. Since the signature-file
-discharge of the Gaussian de Bruijn identity is already complete, we expose
-the Gaussian IBP instance via the conclusion of `deBruijn_identity_v2_gaussian`
-directly. -/
 
 end InformationTheory.Shannon.FisherInfoV2

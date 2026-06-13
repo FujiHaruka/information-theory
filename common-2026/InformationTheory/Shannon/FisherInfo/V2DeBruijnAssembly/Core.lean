@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
-import InformationTheory.Shannon.FisherConvBound   -- shared 壁 gaussianConv_fisher_le_inv_var
-import InformationTheory.Shannon.EPI.Conv.DensitySecondDeriv  -- STEP-D bridge convDensityAdd_deriv2_eq_gaussian
+import InformationTheory.Shannon.FisherConvBound
+import InformationTheory.Shannon.EPI.Conv.DensitySecondDeriv
 
 namespace InformationTheory.Shannon.FisherInfoV2
 
@@ -12,31 +12,17 @@ open InformationTheory.Shannon.EPIConvDensity (convDensityAdd convDensityAddDeri
 
 variable {Ω : Type*} {_mΩ : MeasurableSpace Ω}
 
-/-! ## §5C assembly — `debruijnIdentityV2_holds_assembled`
+/-! ## Chain-rule and regularity helpers for the per-time assembly
 
-下記 named private lemma は assembly が各 atom を呼ぶための regularity/chain plumbing。
-全て honest sorry (`@residual(plan:epi-debruijn-pertime-closure)`)、本来証明したい形を保つ。
--/
+The named lemmas below are the regularity and chain-rule plumbing the assembly calls to
+build each atom of `debruijnIdentityV2_holds_assembled`. Convention:
+`pPath σ x := convDensityAdd pX (gaussianPDFReal 0 ⟨σ, _⟩) x`. -/
 
-/-! ## §5G `_chain` sub-lemma split (plan §Phase 5-G)
+/-- The per-`x` entropy-integrand chain rule: at `x` with `pPath t x ≠ 0`,
+`(d/ds) negMulLog (pPath s x)|_{s=t} = (- log (pPath t x) - 1) · D`, where `D` is the
+σ-derivative `∂_s pPath t x` supplied as a `HasDerivAt` witness. Derived via `HasDerivAt.comp`
+from `Real.hasDerivAt_negMulLog`.
 
-`debruijnIdentityV2_holds_assembled_chain` (段 2-7) is factored into 5 named sub-lemmas
-so the genuine plumbing (chain rule / atom composition) is separated from the true
-remaining cost (Gaussian-tail domination integrability + full-support C¹ + log-tail
-integrable majorant). All hyps are pX-system regularity + integrand-level
-domination/integrability/measurability; no `HasDerivAt`/Fisher/heat-eq conclusion is
-bundled into a hypothesis (load-bearing forbidden, plan §5G honesty constraint).
-
-Convention: `pPath σ x := convDensityAdd pX (gaussianPDFReal 0 ⟨σ,_⟩) x`. -/
-
-/-- **§5G-1: per-`x` entropy-integrand chain rule.**
-At `x` with `pPath t x ≠ 0`, `(d/ds) negMulLog (pPath s x)|_{s=t} = (- log (pPath t x) - 1) · D`
-where `D` is the σ-derivative `∂_s pPath t x`, supplied as the `HasDerivAt` witness.
-
-`hpos` (positivity at `t`) is a regularity precondition needed by `Real.hasDerivAt_negMulLog`;
-`hpath_deriv` is the σ-derivative of the *integrand* `fun s => pPath s x` (integrand-level
-regularity from `heatFlow_density_heat_equation`). The composed `HasDerivAt` conclusion is
-the genuine claim, derived via `HasDerivAt.comp` — NOT bundled into a hypothesis.
 @audit:ok -/
 theorem debruijnIdentityV2_holds_assembled_chain_entDeriv_formula
     (pX : ℝ → ℝ) {t : ℝ} (ht : 0 < t) (x : ℝ) (D : ℝ)
@@ -60,9 +46,8 @@ theorem debruijnIdentityV2_holds_assembled_chain_entDeriv_formula
   -- chain rule: `negMulLog ∘ (fun s => pPath s x)`.
   exact hneg.comp t hpath_deriv
 
-/-- **Genuine integrability helper**: `x ↦ x^k · exp(-b·x²)` is Lebesgue integrable for any
-`k : ℕ` and `b > 0`. Bridges the Mathlib `rpow` lemma `integrable_rpow_mul_exp_neg_mul_sq`
-(which uses `x ^ (k:ℝ)`) to the `pow` (`ℕ`-exponent) form via `rpow_natCast`.
+/-- `x ↦ x^k · exp(-b · x²)` is Lebesgue-integrable for any `k : ℕ` and `b > 0`.
+
 @audit:ok -/
 private theorem integrable_natPow_mul_exp_neg_mul_sq {b : ℝ} (hb : 0 < b) (k : ℕ) :
     Integrable (fun x : ℝ => x ^ k * Real.exp (-b * x ^ 2)) volume := by
@@ -76,9 +61,8 @@ private theorem integrable_natPow_mul_exp_neg_mul_sq {b : ℝ} (hb : 0 < b) (k :
     funext x; rw [Real.rpow_natCast]
   rwa [hcongr] at hrpow
 
-/-- **Closed-form Gaussian pdf upper bound (genuine, Assembly-local).** The centered Gaussian
-density is bounded above by its normalizing prefactor `(√(2πv))⁻¹` (since `exp` of a
-nonpositive exponent is `≤ 1`). Re-proved here because the PerTime version is `private`.
+/-- The centered Gaussian density is bounded above by its normalizing prefactor `(√(2πv))⁻¹`.
+
 @audit:ok -/
 theorem gaussianPDFReal_le_prefactor' (v : ℝ≥0) (u : ℝ) :
     gaussianPDFReal 0 v u ≤ (Real.sqrt (2 * Real.pi * v))⁻¹ := by
@@ -92,10 +76,9 @@ theorem gaussianPDFReal_le_prefactor' (v : ℝ≥0) (u : ℝ) :
       ≤ (Real.sqrt (2 * Real.pi * v))⁻¹ * 1 := mul_le_mul_of_nonneg_left hexp_le hpref_nn
     _ = (Real.sqrt (2 * Real.pi * v))⁻¹ := mul_one _
 
-/-- **Convolution density upper bound (genuine, Assembly-local).** For a probability density
-`pX` (`∫ pX = 1`), the convolution density `p_s x = ∫ pX y · g_s(x-y)` is bounded above by the
-Gaussian prefactor `(√(2πs))⁻¹`, uniformly in `x`. (`p_s x ≤ ∫ pX y · prefactor =
-prefactor · ∫ pX = prefactor`.) Used for the lower side of the GAP① `‖·‖` bound.
+/-- For a probability density `pX`, the convolution density `p_s x = ∫ pX y · g_s(x − y)` is
+bounded above by the Gaussian prefactor `(√(2πs))⁻¹`, uniformly in `x`.
+
 @audit:ok -/
 private theorem convDensityAdd_le_prefactor
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
@@ -121,8 +104,8 @@ private theorem convDensityAdd_le_prefactor
     exact mul_le_mul_of_nonneg_left (gaussianPDFReal_le_prefactor' ⟨s, hs.le⟩ (x - y)) (hpX_nn y)
   rwa [integral_mul_const, hpX_mass, one_mul] at hle
 
-/-- Monotonicity of the centered Gaussian pdf in `|·|` (Assembly-local re-proof of the
-PerTime `private` version): if `|u| ≤ |w|` then `g_v(w) ≤ g_v(u)`.
+/-- Monotonicity of the centered Gaussian pdf in `|·|`: if `|u| ≤ |w|` then `g_v(w) ≤ g_v(u)`.
+
 @audit:ok -/
 private theorem gaussianPDFReal_antitone_abs'
     (v : ℝ≥0) {u w : ℝ} (huw : |u| ≤ |w|) :
@@ -138,12 +121,10 @@ private theorem gaussianPDFReal_antitone_abs'
   · rw [← hv0]; simp
   · rw [neg_div, neg_div, neg_le_neg_iff]; gcongr
 
-/-- **Uniform-`R` Gaussian lower bound (genuine, Assembly-local).** A single tightness radius
-`R > 0`, *independent of `s`*, with `(1/2)·g_s(|x|+R) ≤ convDensityAdd pX g_s x` for every
-`s > 0` and `x`. The PerTime `convDensityAdd_lower_bound_gaussian` produces an `R` per `s`; for
-the `s`-uniform GAP① majorant the same tightness radius (`∫_{[-R,R]} pX ≥ 1/2`, which depends
-only on `pX`) must be reused across all `s`, so the tightness step is hoisted out and the per-`s`
-box-drop + Gaussian-monotonicity argument is applied with the common `R`.
+/-- A single tightness radius `R > 0`, independent of `s`, with
+`(1/2) · g_s(|x| + R) ≤ convDensityAdd pX g_s x` for every `s > 0` and `x`. The tightness
+condition `∫_{[-R,R]} pX ≥ 1/2` depends only on `pX`, so the radius is reused across all `s`.
+
 @audit:ok -/
 private theorem convDensityAdd_lower_bound_gaussian_uniformR
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
@@ -226,29 +207,12 @@ private theorem convDensityAdd_lower_bound_gaussian_uniformR
     _ ≤ ∫ y, F y ∂volume := hbox_le
     _ = convDensityAdd pX g x := rfl
 
-/-- **§5G-2a (GAP①): `s`-uniform polynomial majorant for the log factor — GENUINE (0 sorry).**
-On the `t`-neighborhood `Set.Ioo (t/2) (2*t)` (where `t/2 < s`, hence `s > 0`), the entropy
-log-factor `- log (p_s x) - 1` of the convolution density `p_s = convDensityAdd pX g_s` admits
-a polynomial-in-`x²` majorant uniform in `s`:
-`‖- log (p_s x) - 1‖ ≤ A + B·x²` with `B ≥ 0` (concretely `B = 2/t`).
+/-- On the neighborhood `Set.Ioo (t/2) (2*t)`, the entropy log-factor `- log (p_s x) - 1` of the
+convolution density `p_s = convDensityAdd pX g_s` admits an `s`-uniform polynomial-in-`x²`
+majorant `‖- log (p_s x) - 1‖ ≤ A + B·x²` with `B ≥ 0`. The upper bound comes from the
+`s`-uniform Gaussian lower bound on `p_s` (`convDensityAdd_lower_bound_gaussian_uniformR`); the
+lower bound from the prefactor upper bound on `p_s` (`convDensityAdd_le_prefactor`).
 
-**Closure (2026-05-31)**: now fully proved (was `sorry`). Two-sided `abs_le`:
-- **upper** (`- log p_s x - 1 ≤ A + B·x²`): the `s`-uniform Gaussian lower bound
-  `(1/2)·g_s(|x|+R) ≤ p_s x` (`convDensityAdd_lower_bound_gaussian_uniformR`, a single tightness
-  radius `R` reused across all `s`) + `Real.log_le_log`, then the closed form
-  `-log((1/2)g_s(|x|+R)) = log 2 + (1/2)log(2πs) + (|x|+R)²/(2s)`; on `s ∈ (t/2,2t)` use
-  `(1/2)log(2πs) ≤ (1/2)log(4πt)` (`s<2t`) and `(|x|+R)²/(2s) ≤ (2x²+2R²)/t` (`s>t/2`,
-  `(|x|+R)²≤2x²+2R²`).
-- **lower** (`-(A+B·x²) ≤ - log p_s x - 1`): `p_s x ≤ (√(2πs))⁻¹` (`convDensityAdd_le_prefactor`,
-  `g_s ≤ prefactor` + `∫pX=1`) ⇒ `-log p_s x ≥ (1/2)log(2πs) ≥ (1/2)log(πt)` (`s>t/2`), a constant
-  lower bound absorbed by `A`. `p_s x > 0` from `convDensityAdd_pos` (uses `0 < ∫ pX`).
-The route is "log of the lower bound" (`Real.log_le_log`+`Real.log_exp`), NOT `-log p ≤ p⁻¹-1`
-(which would blow up as `exp(+x²)`).
-
-`hpX_mass : ∫ pX = 1` is an honest probability-density regularity precondition (threaded from
-`debruijnIdentityV2_holds_assembled`, supplied via `(P.map X) univ = 1`); it feeds
-`convDensityAdd_lower_bound_gaussian_uniformR` / `_le_prefactor` / `_pos`. NOT load-bearing
-(the majorant inequality is derived, not assumed).
 @audit:ok -/
 theorem convDensityAdd_logFactor_poly_majorant
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (_hpX_meas : Measurable pX)
@@ -376,17 +340,12 @@ theorem convDensityAdd_logFactor_poly_majorant
   rw [Real.norm_eq_abs, abs_le]
   exact ⟨hlower, hupper⟩
 
-/-! ### §5G-2b helpers — the `s`-uniform Gaussian-Hessian majorant `gaussHessMaj t`
+/-! ### The `s`-uniform Gaussian-Hessian majorant `gaussHessMaj t` -/
 
-The `s`-uniform kernel majorant on the window `s ∈ (t/2, 2t)`:
-`g_s(u)·|u²/s² − 1/s| ≤ gaussHessMaj t u := (√(πt))⁻¹·exp(−u²/(4t))·(4u²/t² + 2/t)`.
-The prefactor `(2πs)^(−1/2)` is decreasing in `s` (min at `s = t/2` ⇒ `(πt)^(−1/2)`); the
-exponent `exp(−u²/(2s))` is increasing in `s` (`2s ≤ 4t` ⇒ `exp(−u²/(4t))`); the polynomial
-factor `|u²/s² − 1/s| ≤ u²/s² + 1/s ≤ 4u²/t² + 2/t` (`s ≥ t/2`). `gaussHessMaj t` is a
-Gaussian × quadratic, hence Lebesgue-integrable. This is the genuine `s`-uniform pointwise
-envelope feeding GAP②'s triangle inequality. -/
+/-- The `s`-uniform Gaussian-Hessian kernel majorant on the window `s ∈ (t/2, 2t)`:
+`g_s(u) · |u²/s² − 1/s| ≤ gaussHessMaj t u := (√(πt))⁻¹ · exp(−u²/(4t)) · (4u²/t² + 2/t)`,
+a Gaussian times a quadratic.
 
-/-- The `s`-uniform Gaussian-Hessian kernel majorant on the window `s ∈ (t/2, 2t)`.
 @audit:ok -/
 noncomputable def gaussHessMaj (t : ℝ) (u : ℝ) : ℝ :=
   (Real.sqrt (Real.pi * t))⁻¹ * Real.exp (-u ^ 2 / (4 * t)) * (4 * u ^ 2 / t ^ 2 + 2 / t)
@@ -400,8 +359,8 @@ theorem gaussHessMaj_nonneg {t : ℝ} (ht : 0 < t) (u : ℝ) : 0 ≤ gaussHessMa
   have h3 : (0:ℝ) ≤ 4 * u ^ 2 / t ^ 2 + 2 / t := by positivity
   positivity
 
-/-- `gaussHessMaj t` is globally bounded (Gaussian decay kills the quadratic).
-Used to prove `Integrable (fun y => pX y · gaussHessMaj t (x − y))` via `Integrable.mul_bdd`.
+/-- `gaussHessMaj t` is globally bounded.
+
 @audit:ok -/
 theorem gaussHessMaj_bdd {t : ℝ} (ht : 0 < t) :
     ∀ u : ℝ, gaussHessMaj t u
@@ -471,13 +430,9 @@ theorem gaussHessMaj_integrable {t : ℝ} (ht : 0 < t) :
     congr 1; field_simp
   rw [hexp_eq]; ring
 
-/-- For any constants `a b : ℝ`, the polynomial-weighted Gaussian-Hessian majorant
-`fun u => (a + b·u²)·gaussHessMaj t u` is Lebesgue-integrable. `gaussHessMaj t` is a
-Gaussian × quadratic, so the weight `(a+b·u²)` raises it to a Gaussian × quartic — still
-integrable via `integrable_rpow_mul_exp_neg_mul_sq` (the `u⁴` and `u²` Gaussian moments).
-This is the kernel `G(u) = (a+b·u²)·gaussHessMaj t u` used by the joint-envelope Tonelli
-route (`_chain_domination` first goal): the `x²`-weight `(A+B·x²)` of the log factor is split
-via `x² ≤ 2(x−y)² + 2y²`, and the `(x−y)²` part absorbs into this polynomial-weighted kernel.
+/-- For any constants `a b : ℝ`, the polynomial-weighted majorant `(a + b·u²) · gaussHessMaj t u`
+is Lebesgue-integrable (a Gaussian times a quartic).
+
 @audit:ok -/
 theorem gaussHessMaj_polyWeight_integrable {t : ℝ} (ht : 0 < t) (a b : ℝ) :
     Integrable (fun u : ℝ => (a + b * u ^ 2) * gaussHessMaj t u) volume := by
@@ -511,14 +466,9 @@ theorem gaussHessMaj_polyWeight_integrable {t : ℝ} (ht : 0 < t) (a b : ℝ) :
     congr 1; field_simp
   rw [hexp_eq, hc]; ring
 
-/-- For nonneg constants `a b`, the polynomial-weighted Gaussian-Hessian majorant
-`(a + b·u²)·gaussHessMaj t u` is globally bounded by an explicit constant.
-`gaussHessMaj t` is a Gaussian × quadratic, so `(a+b·u²)·gaussHessMaj t u` is a Gaussian × quartic,
-which decays to 0 at ±∞ (Gaussian wins). The bound uses `gaussHessMaj_bdd` for the `a·gaussHessMaj`
-term and `u²·gaussHessMaj ≤ (√(πt))⁻¹·(256e⁻² + 8e⁻¹)` (from `u⁴·exp(-u²/4t) = (u²·exp(-u²/8t))²
-≤ (8t·e⁻¹)²` and `u²·exp(-u²/4t) ≤ 4t·e⁻¹`, both via `mul_exp_neg_le_exp_neg_one`). Used to discharge
-the per-`y` fibre integrability `Integrable (fun y => pX y · G(x−y))` (bounded kernel × integrable pX)
-in the joint-envelope route II.
+/-- For nonneg constants `a b`, the polynomial-weighted majorant `(a + b·u²) · gaussHessMaj t u`
+is globally bounded by an explicit constant.
+
 @audit:ok -/
 theorem gaussHessMaj_polyWeight_bdd {t : ℝ} (ht : 0 < t) {a b : ℝ}
     (ha : 0 ≤ a) (hb : 0 ≤ b) :
@@ -651,11 +601,9 @@ theorem gaussianHess_le_gaussHessMaj {t : ℝ} (ht : 0 < t) {s : ℝ}
         apply mul_le_mul (mul_le_mul hpref hexp hexp_nn hprefT_nn) hpoly habs_nn
         exact mul_nonneg hprefT_nn hexpT_nn
 
-/-- **Tonelli integrability of the convolution-of-an-integrable-kernel envelope.**
-For an integrable kernel `K` and an integrable density `pX`, the convolution-shaped function
-`x ↦ ∫ y, pX y · K (x − y)` is Lebesgue-integrable (`∫_x = (∫K)·∫pX`, by translation
-invariance + `Integrable.integral_prod_left`). The product integrability on `volume.prod volume`
-uses `integrable_prod_iff'`.
+/-- For an integrable kernel `K` and an integrable density `pX`, the convolution-shaped function
+`x ↦ ∫ y, pX y · K (x − y)` is Lebesgue-integrable, via Tonelli on the product measure.
+
 @audit:ok -/
 theorem convKernel_envelope_integrable
     (pX K : ℝ → ℝ) (hpX_int : Integrable pX volume) (hpX_meas : Measurable pX)
@@ -692,11 +640,10 @@ theorem convKernel_envelope_integrable
   -- conclude via `Integrable.integral_prod_left`.
   exact hf_int.integral_prod_left
 
-/-- **Public re-export** of the private Tonelli envelope `convKernel_envelope_integrable`,
-stated on the `convDensityAdd` shape so downstream `IsRegularDensityV2` producers can
-reuse it without leaking the `private` helper. Identical content; the `convDensityAdd`
-unfold makes the conclusion `Integrable (convDensityAdd pX K) volume`.
-@audit:ok — pure re-export, no new content.
+/-- Public re-export of `convKernel_envelope_integrable` on the `convDensityAdd` shape, so
+downstream `IsRegularDensityV2` producers can reuse it without the `private` helper:
+`Integrable (convDensityAdd pX K) volume`.
+
 @audit:ok -/
 @[entry_point]
 theorem convDensityAdd_envelope_integrable
@@ -705,23 +652,10 @@ theorem convDensityAdd_envelope_integrable
     Integrable (convDensityAdd pX K) volume :=
   convKernel_envelope_integrable pX K hpX_int hpX_meas hK_int hK_meas
 
-/-! ### §5G-2b helpers — global sup bounds of the Gaussian kernel spatial derivatives
+/-! ### Global sup bounds of the Gaussian kernel spatial derivatives -/
 
-The STEP-D bridge `convDensityAdd_deriv2_eq_gaussian` consumes per-`s` domination hypotheses
-`‖pX y · kernel-deriv s (ξ-y)‖ ≤ bound y` *uniform in `ξ`*. Since the kernel argument `ξ - y`
-ranges over all of `ℝ`, the bound is `pX y · M` with `M` a **global sup** of the kernel
-derivative. Both global sups have closed forms provable from `Real.mul_exp_neg_le_exp_neg_one`
-(`y·exp(-y) ≤ exp(-1)`) and `exp ≤ 1`:
+/-- Global sup bound of the kernel spatial first derivative `g_s(u) · (-(u/s))`.
 
-* `kernel·(-(u/s))` (1st deriv): `‖·‖ = (√(2πs))⁻¹·exp(-u²/(2s))·|u|/s`, bounded via
-  `2|u| ≤ 1+u²` then `u²·exp(-u²/(2s)) ≤ 2s·exp(-1)` and `exp(-u²/(2s)) ≤ 1`.
-* `kernel·(u²/s²-1/s)` (2nd deriv): `‖·‖ ≤ (√(2πs))⁻¹·exp(-u²/(2s))·(u²/s²+1/s)`, bounded
-  termwise the same way.
-
-These are genuine global-boundedness facts (continuous Gaussian×polynomial → 0 at ∞), NOT
-load-bearing: they assert pure analytic majorants, no convolution/Hessian claim. -/
-
-/-- Global sup bound of the kernel spatial 1st derivative `g_s(u)·(-(u/s))`.
 @audit:ok -/
 theorem kernel_x_deriv1_global_bound {s : ℝ} (hs : 0 < s) :
     ∀ u : ℝ, ‖heatFlow_density_heat_equation_kernel s u * (-(u / s))‖

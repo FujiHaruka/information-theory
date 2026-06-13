@@ -12,56 +12,27 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Moments.Variance
 
 /-!
-# Fisher information V2 — density-as-input re-definition (T2-F follow-up, Stage 2)
+# Fisher information of a density
 
-InformationTheory T2-F follow-up (parent: `fisher-info-gaussian-discharge-moonshot-plan.md`
-判断ログ #2, 2026-05-19).
+The Fisher information `fisherInfoOfDensity f := ∫⁻ (logDeriv f x)² · f x dx` takes the
+density `f : ℝ → ℝ` as an explicit argument rather than extracting it from a measure via
+`Measure.rnDeriv`. The Radon–Nikodym derivative is defined via `Classical.choose` of the
+Lebesgue decomposition and returns a generically non-differentiable representative, so a
+measure-keyed definition collapses `logDeriv` to `0` a.e.; supplying the density directly
+avoids that.
 
-## Why a V2
+## Main definitions
 
-The original `InformationTheory.Shannon.fisherInfo` published in `FisherInfo.lean:58`
-takes the density via `(μ.rnDeriv volume y).toReal`. `Measure.rnDeriv` is defined
-via `Classical.choose` of the Lebesgue decomposition, so for `μ := gaussianReal m v`
-the chosen representative is generically non-differentiable on a co-null set,
-forcing `logDeriv ((rnDeriv).toReal) = 0` a.e. and hence
-`fisherInfo (gaussianReal m v) = 0` — not `1/v`. This blocks the Gaussian
-closed-form discharge (`fisher-info-gaussian-discharge-moonshot-plan.md` Phases
-B-3 / C / D, L-G3 retreat 2026-05-19).
+* `fisherInfoOfDensity` — the Fisher information of a density (`ℝ≥0∞`-valued).
+* `fisherInfoOfDensityReal` — its real-valued projection.
+* `IsRegularDensityV2` — the regularity predicate with the density `f` as its primary
+  field.
 
-This file fixes the flaw by **adopting 撤退ライン L-FV2-A** (density-argument-
-as-input form): the density `f : ℝ → ℝ` is an explicit input rather than derived
-through `Classical.choose`. Concretely
+## Main statements
 
-```lean
-noncomputable def fisherInfoOfDensity (f : ℝ → ℝ) : ℝ≥0∞ :=
-  ∫⁻ x, ENNReal.ofReal ((logDeriv f x) ^ 2) * ENNReal.ofReal (f x) ∂volume
-```
-
-Then `fisherInfoOfDensity (gaussianPDFReal m v) = ENNReal.ofReal (1/v)` is
-provable (Phase B-3 below).
-
-The existing `InformationTheory.Shannon.fisherInfo` and `FisherInfo.lean` /
-`FisherInfoGaussian.lean` API are left untouched — V2 lives in a parallel
-namespace `InformationTheory.Shannon.FisherInfoV2` and re-publishes Phase A/B-1/B-2
-analogues on top of the new definition (per task spec).
-
-## 主シグネチャ
-
-* `fisherInfoOfDensity` — Phase A 定義 (density-as-input, `ℝ≥0∞` 値)
-* `fisherInfoOfDensityReal` — Real-valued projection
-* `fisherInfoOfDensity_nonneg` / `_eq_lintegral_logDeriv_sq` — Tier 0
-* `fisherInfoOfDensity_zero` — degenerate (constant-zero density → `0`)
-* `IsRegularDensityV2` — Phase B regularity predicate, density `f` as primary field
-* `integral_logDeriv_density_eq_zero` — Phase B score expectation vanishes
-* `fisherInfoOfDensity_gaussianPDFReal` — **Phase B-3 closed form `1/v` (the deliverable
-   blocked by the V1 flaw)**
-
-## 撤退ライン
-
-- L-FV2-A (本実装で採用): density-argument-as-input 形 `fisherInfoOfDensity f`
-- L-FV2-B (未採用): `AEMeasurable` の equivalence class 形
-- L-FV2-C (未採用): Gaussian-only specialization で flaw bypass
-- L-FV2-D (本 file scope-out): 既存 `FisherInfo.lean` の置換 (parallel publish のみ)
+* `integral_logDeriv_density_eq_zero` — the score function has zero expectation.
+* `fisherInfoOfDensity_gaussianPDFReal` — the Gaussian closed form
+  `fisherInfoOfDensity (gaussianPDFReal m v) = ENNReal.ofReal (1 / v)`.
 -/
 
 namespace InformationTheory.Shannon.FisherInfoV2
@@ -71,21 +42,10 @@ set_option linter.unusedSectionVars false
 open MeasureTheory Real ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal Real
 
-/-! ## Phase A — `fisherInfoOfDensity` 定義 + Tier 0 基本性質 -/
-
-/-- **Fisher information of a density** `f : ℝ → ℝ`.
-
-`J(f) := ∫⁻ (logDeriv f x)² · f x dx` where `logDeriv f := deriv f / f` is
-Mathlib's score function (`Mathlib/Analysis/Calculus/LogDeriv.lean:34`).
-
-Density-as-input form (撤退ライン L-FV2-A): the density is an *explicit
-argument*, not derived through `Measure.rnDeriv` (which is `Classical.choose`'d
-and hence yields a generically non-differentiable representative). This
-sidesteps the representative-dependence flaw of the V1 definition
-`InformationTheory.Shannon.fisherInfo` (`FisherInfo.lean:58`).
-
-Returns `ℝ≥0∞` to capture `J = +∞` for irregular families. Use
-`fisherInfoOfDensityReal` or `.toReal` to project to `ℝ` when finite. -/
+/-- The Fisher information of a density `f : ℝ → ℝ`, defined as
+`∫⁻ (logDeriv f x)² · f x dx` with `logDeriv f := deriv f / f` Mathlib's score function.
+Valued in `ℝ≥0∞` to capture `+∞` for irregular families; use `fisherInfoOfDensityReal` or
+`.toReal` to project to `ℝ` when finite. -/
 noncomputable def fisherInfoOfDensity (f : ℝ → ℝ) : ℝ≥0∞ :=
   ∫⁻ x, ENNReal.ofReal ((logDeriv f x) ^ 2) * ENNReal.ofReal (f x) ∂volume
 
@@ -93,7 +53,7 @@ noncomputable def fisherInfoOfDensity (f : ℝ → ℝ) : ℝ≥0∞ :=
 @[entry_point]
 theorem fisherInfoOfDensity_nonneg (f : ℝ → ℝ) : 0 ≤ fisherInfoOfDensity f := bot_le
 
-/-- **Constant zero density**: `J(0) = 0`. -/
+/-- The Fisher information of the constant-zero density is `0`. -/
 @[entry_point]
 theorem fisherInfoOfDensity_zero : fisherInfoOfDensity (fun _ : ℝ => (0 : ℝ)) = 0 := by
   unfold fisherInfoOfDensity
@@ -106,21 +66,10 @@ noncomputable def fisherInfoOfDensityReal (f : ℝ → ℝ) : ℝ := (fisherInfo
 theorem fisherInfoOfDensityReal_nonneg (f : ℝ → ℝ) : 0 ≤ fisherInfoOfDensityReal f :=
   ENNReal.toReal_nonneg
 
-/-! ## Phase B-1 — `IsRegularDensityV2` predicate (density-as-input form) -/
-
-/-- **Regular density predicate V2** (density-as-input form, L-FV2-A).
-
-This is the V2 analogue of `InformationTheory.Shannon.IsRegularDensity` from
-`FisherInfo.lean`, but with **the density `f` as the primary input** rather than
-extracted via `Classical.choose` from `Measure.rnDeriv`. This is what makes
-Phase B-3 (Gaussian closed-form) provable in V2 but not V1.
-
-Bundles the differentiability + positivity + tail-vanishing + integrability
-needed for `integral_logDeriv_density_eq_zero` (score expectation = 0).
-
-Unlike V1, no measure `μ` is mentioned in the predicate itself: the link to a
-random variable `X : Ω → ℝ` (if any) is established separately via an a.e.-
-equality between `f` and `(pdf X P volume).toReal`. -/
+/-- The regularity predicate on a density `f`, bundling the differentiability, positivity,
+tail-vanishing, and integrability conditions needed for
+`integral_logDeriv_density_eq_zero`. No measure is mentioned: the link to a random variable
+`X` is established separately via an a.e.-equality between `f` and `(pdf X P volume).toReal`. -/
 structure IsRegularDensityV2 (f : ℝ → ℝ) : Prop where
   /-- `f` is differentiable on all of `ℝ`. -/
   diff : Differentiable ℝ f
@@ -132,28 +81,14 @@ structure IsRegularDensityV2 (f : ℝ → ℝ) : Prop where
   tail_top : Filter.Tendsto f Filter.atTop (nhds 0)
   /-- `deriv f` is Lebesgue-integrable on all of `ℝ`. -/
   integrable_deriv : Integrable (deriv f) volume
-  /-- `∫ deriv f = 0` — regularity consequence of FTC + tail-vanishing on the
-  half-lines. Genuinely discharged for the Gaussian instance via
-  `integral_deriv_gaussianPDFReal_eq_zero` (`FisherInfoGaussian.lean:231-292`). -/
+  /-- `deriv f` integrates to `0` over `ℝ`, a regularity consequence of FTC plus
+  tail-vanishing on the half-lines. -/
   integral_deriv_eq_zero : ∫ x, deriv f x ∂volume = 0
 
-/-! ## Phase B-2 — Score function expectation vanishes (density-form) -/
+/-- The score function has zero expectation: for a regular density `f`, the integral of
+`logDeriv f · f = deriv f` over `ℝ` is `0`.
 
-/-- **Score function expectation vanishes** (V2, density-as-input form).
-
-For a regular density `f`,
-`∫ (logDeriv f)(x) · f(x) dx = ∫ f'(x) dx = f(∞) - f(-∞) = 0`.
-
-This is the V2 analogue of `InformationTheory.Shannon.integral_logDeriv_pdf_eq_zero`
-from `FisherInfo.lean` — the proof structure is identical, but stated cleanly
-on the explicit density `f`.
-
-Body is a genuine 12-line proof (pointwise `logDeriv f · f = deriv f` via
-positivity + `integral_congr_ae` + `IsRegularDensityV2.integral_deriv_eq_zero`
-field call). The field is a regularity consequence, not a load-bearing core
-hypothesis; cf. Phase 2.C honesty audit (2026-05-27).
-
-`@audit:ok` -/
+@audit:ok -/
 @[entry_point]
 theorem integral_logDeriv_density_eq_zero {f : ℝ → ℝ} (h_reg : IsRegularDensityV2 f) :
     ∫ x, logDeriv f x * f x ∂volume = 0 := by
@@ -168,16 +103,9 @@ theorem integral_logDeriv_density_eq_zero {f : ℝ → ℝ} (h_reg : IsRegularDe
       = ∫ x, deriv f x ∂volume := h_int
     _ = 0 := h_reg.integral_deriv_eq_zero
 
-/-! ## Phase B-3 — Gaussian closed form `fisherInfoOfDensity (gaussianPDFReal m v) = 1/v`
+/-! ## Gaussian closed form -/
 
-**The deliverable that the V1 definition could not provide** (cf.
-`FisherInfoGaussian.lean` L-G3 retreat).
--/
-
-/-- `((x - m) / v)² · gaussianPDFReal m v x` is Lebesgue-integrable for `v ≠ 0`.
-
-Strategy: rewrite as `(1/v²) · (x - m)² · gaussianPDFReal m v x`, then use
-`integrable_rpow_mul_exp_neg_mul_sq` at `s = 2` substituted via `y = x - m`. -/
+/-- `((x - m) / v)² · gaussianPDFReal m v x` is Lebesgue-integrable for `v ≠ 0`. -/
 lemma integrable_logDeriv_sq_mul_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     Integrable (fun x => ((x - m) / (v : ℝ)) ^ 2 * gaussianPDFReal m v x) volume := by
   have hv_pos : (0 : ℝ) < v := by
@@ -216,12 +144,7 @@ lemma integrable_logDeriv_sq_mul_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v
   simp only [gaussianPDFReal, hexp_eq]
   field_simp
 
-/-- **Key integral**: `∫ ((x - m)/v)² · gaussianPDFReal m v x dx = 1/v`.
-
-Strategy: rewrite the LHS as `(1/v²) · ∫ (x - m)² · gaussianPDFReal m v x dx`,
-identify `∫ (x - m)² · gaussianPDFReal m v x dx = v` via
-`variance_fun_id_gaussianReal` + `integral_gaussianReal_eq_integral_smul`,
-and conclude `(1/v²) · v = 1/v`. -/
+/-- `∫ ((x - m)/v)² · gaussianPDFReal m v x dx = 1 / v`. -/
 private lemma integral_logDeriv_sq_mul_gaussianPDFReal_eq (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     ∫ x, ((x - m) / (v : ℝ)) ^ 2 * gaussianPDFReal m v x ∂volume = 1 / (v : ℝ) := by
   have hv_pos : (0 : ℝ) < v := by
@@ -262,13 +185,9 @@ private lemma integral_logDeriv_sq_mul_gaussianPDFReal_eq (m : ℝ) {v : ℝ≥0
   -- Conclude: (1/v²) * v = 1/v.
   field_simp
 
-/-- **Gaussian Fisher information (V2 closed form)**:
-`fisherInfoOfDensity (gaussianPDFReal m v) = ENNReal.ofReal (1/v)`.
-
-This is the deliverable that was blocked by the V1 representative-dependence
-flaw (`FisherInfoGaussian.lean` L-G3 retreat). With the V2 density-as-input
-definition, the Gaussian PDF is supplied directly to `fisherInfoOfDensity` and
-the integral computes to `1/v` via the variance identity. -/
+/-- The Gaussian Fisher information in closed form:
+`fisherInfoOfDensity (gaussianPDFReal m v) = ENNReal.ofReal (1 / v)`, obtained by
+supplying the Gaussian PDF directly and evaluating the integral via the variance identity. -/
 @[entry_point]
 theorem fisherInfoOfDensity_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     fisherInfoOfDensity (gaussianPDFReal m v) = ENNReal.ofReal (1 / (v : ℝ)) := by
@@ -312,15 +231,5 @@ theorem fisherInfoOfDensityReal_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v 
   unfold fisherInfoOfDensityReal
   rw [fisherInfoOfDensity_gaussianPDFReal m hv]
   rw [ENNReal.toReal_ofReal (by positivity)]
-
-/-! ## Phase C — bridge to V1 `InformationTheory.Shannon.IsRegularDensity`
-
-For backwards-compatibility, every V1 `IsRegularDensity` instance (which is
-keyed by a random variable `X` and pinned to the density representative
-`density` field) induces a V2 `IsRegularDensityV2` on the very same density
-function. This lets callers that have already discharged V1 (notably Gaussian
-via `InformationTheory.Shannon.isRegularDensity_gaussianReal_of_law`) lift to V2 for
-free and obtain the Fisher info closed form.
--/
 
 end InformationTheory.Shannon.FisherInfoV2

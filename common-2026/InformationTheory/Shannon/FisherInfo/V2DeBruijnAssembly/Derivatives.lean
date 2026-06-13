@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
-import InformationTheory.Shannon.FisherConvBound   -- shared 壁 gaussianConv_fisher_le_inv_var
-import InformationTheory.Shannon.EPI.Conv.DensitySecondDeriv  -- STEP-D bridge convDensityAdd_deriv2_eq_gaussian
+import InformationTheory.Shannon.FisherConvBound
+import InformationTheory.Shannon.EPI.Conv.DensitySecondDeriv
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Core
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Domination
 
@@ -14,45 +14,11 @@ open InformationTheory.Shannon.EPIConvDensity (convDensityAdd convDensityAddDeri
 
 variable {Ω : Type*} {_mΩ : MeasurableSpace Ω}
 
-/-- **Fisher integrability of the time-`t` convolution density (wall call + Step-3 plumbing).**
-The square-score density `(logDeriv p_t)² · p_t` of the convolution density
-`p_t = convDensityAdd pX g_t` is Lebesgue-integrable, where `g_t = gaussianPDFReal 0 ⟨t,_⟩`.
+/-- The square-score density `(logDeriv p_t)² · p_t` of the convolution density
+`p_t = convDensityAdd pX g_t` is Lebesgue-integrable, where `g_t = gaussianPDFReal 0 ⟨t, _⟩`.
+The Fisher information `J(X + √t · Z) = ∫ (logDeriv p_t)² · p_t` is bounded by `1 / t`
+(`gaussianConv_fisher_le_inv_var`) and hence finite, so the integrand is integrable.
 
-**Rewire (2026-05-31, fisher-finiteness-closure-plan R-A Step 3 — genuine plumbing).** The
-former monolithic body sorry (`@residual(wall:fisher-finiteness)`) is replaced by a call to
-the shared Stam-convolution-Fisher wall `gaussianConv_fisher_le_inv_var`
-(`FisherConvBound.lean`, the sole `@residual(wall:fisher-finiteness)` carrier) plus genuine
-plumbing. The body now: (Step 2) `p_t ≥ 0` pointwise via `integral_nonneg`; (Step 3) calls
-the wall for `J(p_t) ≤ 1/t`; (Step 4) `J(p_t) < ⊤` by `lt_of_le_of_lt … ENNReal.ofReal_lt_top`;
-(Step 5) unfolds `fisherInfoOfDensity` and merges the two `ENNReal.ofReal` factors via
-`← ENNReal.ofReal_mul (sq_nonneg _)` (same as `fisher_from_logDeriv`) to `∫⁻ ofReal((logDeriv
-p_t)²·p_t) ≠ ∞`; (Step 6) a.e.-strong-measurability of `(logDeriv p_t)²·p_t` is now **genuine
-plumbing** (`p_t` strongly measurable via `StronglyMeasurable.integral_prod_right` on the
-jointly-measurable integrand `(z,x) ↦ pX x · g_t (z-x)`, `logDeriv p_t = deriv p_t / p_t` via
-`measurable_deriv` + the div), and concludes via
-`lintegral_ofReal_ne_top_iff_integrable`. **0 local sorry** here; the only residual is the
-shared wall it calls (transitive `sorryAx` via `gaussianConv_fisher_le_inv_var`).
-
-**True statement** (Stam convolution Fisher bound): for any probability density `pX`, the
-Fisher information of `X + √t·Z` is bounded by that of the Gaussian noise alone,
-`J(X + √t·Z) ≤ J(√t·Z) = 1/t < ∞` (Stam / Blachman score-of-convolution monotonicity). The
-integral `∫ (logDeriv p_t)²·p_t = J(X+√t·Z)` is therefore finite, hence the integrand is
-integrable. Even for a heavy-tailed `pX` (e.g. Cauchy) the Gaussian-smoothed score
-`(∂_x p_t)²/p_t ~ x⁻⁴` decays integrably.
-
-**Classification `wall:fisher-finiteness`** (NOT `plan:`): Mathlib has no convolution Fisher
-bound — loogle `fisherInfo` / `Blachman` return `Found 0 declarations`, and the in-repo Stam
-machinery (`EPIStam*`) is predicate pass-through only (no genuine `J(X+Z) ≤ J(Z)` lemma).
-Closing this requires a self-written Stam-convolution-Fisher-bound PR (`J(X+Z) ≤ J(Z) = 1/t`),
-i.e. a genuine Mathlib gap rather than a same-family closure plan. After this rewire the wall
-is localized to `gaussianConv_fisher_le_inv_var`; this consumer carries no local sorry.
-
-`hpX_nn`/`hpX_meas`/`hpX_int` are pure pX regularity preconditions; the integrability
-conclusion is the genuine claim. No load-bearing hypothesis bundled.
-
-**Wall CLOSED (2026-06-01, commit b5e13e2)**: the shared lemma `gaussianConv_fisher_le_inv_var`
-(`FisherConvBound.lean`) is now genuinely closed via pointwise Cauchy-Schwarz; the former
-`wall:fisher-finiteness` transitive `sorryAx` is gone.
 @audit:ok -/
 theorem convDensityAdd_fisher_integrable
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -108,17 +74,11 @@ theorem convDensityAdd_fisher_integrable
   -- Step 6 (concl): `∫⁻ ofReal g ≠ ∞ ↔ Integrable g`.
   exact (lintegral_ofReal_ne_top_iff_integrable hg_aesm hg_nn).mp hfin.ne
 
-/-- **Differentiability of the convolution density (deriv-existence helper).**
-`HasDerivAt p_t (deriv p_t x) x` for `p_t = convDensityAdd pX g_t` at every `x` (`t > 0`).
+/-- `HasDerivAt p_t (deriv p_t x) x` for `p_t = convDensityAdd pX g_t` at every `x` (`t > 0`):
+the spatial first derivative of the heat-flow convolution density exists, reconstructed via the
+parametric-integral gateway `hasDerivAt_integral_of_dominated_loc_of_deriv_le` with the
+domination supplied by `kernel_x_deriv1_global_bound`.
 
-Genuinely closed (0 sorry / 0 residual). The proof reconstructs the spatial first derivative
-of the heat-flow convolution density at `x` via the parametric-integral gateway
-`hasDerivAt_integral_of_dominated_loc_of_deriv_le` (the same machinery as the `@audit:ok` atom
-`convDensityAdd_deriv1_gaussian_eq`), supplying the integrand-level domination group from the
-`@audit:ok` global-sup bound `kernel_x_deriv1_global_bound` (`bound1 := |pX y| · M1` integrable
-via `Integrable.mul_const`). It then concludes `HasDerivAt p_t (deriv p_t x) x` by rewriting the
-derivative value (`hgate.2.deriv`). All hyps are pX regularity (`hpX_nn` carried for the family
-signature; `hpX_meas`/`hpX_int` used). NOT load-bearing, NOT circular.
 @audit:ok -/
 theorem convDensityAdd_hasDerivAt_self
     (pX : ℝ → ℝ) (_hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -207,20 +167,11 @@ theorem convDensityAdd_hasDerivAt_self
   rw [hderiv.deriv]
   exact hderiv
 
-/-- **Differentiability of the convolution-density derivative (deriv-existence helper).**
-`HasDerivAt (deriv p_t) (deriv (deriv p_t) x) x` for `p_t = convDensityAdd pX g_t` at every
-`x` (`t > 0`).
+/-- `HasDerivAt (deriv p_t) (deriv (deriv p_t) x) x` for `p_t = convDensityAdd pX g_t` at every
+`x` (`t > 0`): the spatial second derivative exists. The proof identifies `deriv p_t` as the
+kernel-form first-derivative function (`convDensityAdd_deriv1_gaussian_eq`) and differentiates it
+via the parametric-integral gateway with domination from `kernel_x_deriv2_global_bound`.
 
-Genuinely closed (0 sorry / 0 residual). Same family as `convDensityAdd_hasDerivAt_self`. The
-proof: (STEP 1) identifies `deriv p_t` as the kernel-form 1st-derivative function
-`fun ζ => ∫ y, pX y·(kernel t (ζ-y)·(-((ζ-y)/t)))` via the `@audit:ok` atom
-`convDensityAdd_deriv1_gaussian_eq` (`bound1 := |pX y| · M1` from `kernel_x_deriv1_global_bound`)
-+ a `gaussianPDFReal`↔kernel rewrite; (STEP 2) differentiates that 1st-derivative function at `x`
-via the parametric-integral gateway `hasDerivAt_integral_of_dominated_loc_of_deriv_le`
-(`bound2 := |pX y| · M2` from `kernel_x_deriv2_global_bound`, per-`y` 2nd-derivative
-`heatFlow_density_heat_equation_kernel_x_deriv2`); then concludes `HasDerivAt (deriv p_t)
-(deriv (deriv p_t) x) x` by rewriting the 2nd-derivative value (`hgate2.2.deriv`). All hyps are
-pX regularity (`hpX_nn` carried for the family signature). NOT load-bearing, NOT circular.
 @audit:ok -/
 theorem convDensityAdd_deriv_hasDerivAt_self
     (pX : ℝ → ℝ) (_hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -349,25 +300,17 @@ theorem convDensityAdd_deriv_hasDerivAt_self
   rw [hderiv2.deriv]
   exact hderiv2
 
-/-! ## §entropy-finiteness plumbing — the 3 former `EntropyConvFinite.lean` walls, relocated.
+/-! ## Entropy-finiteness plumbing
 
-These three `Integrable (...)` lemmas were previously honest-`sorry` `wall:entropy-finiteness`
-residuals in `EntropyConvFinite.lean`. **Orchestrator independent re-check (2026-06-01) found
-they are NOT a Mathlib wall** but plumbing onto the `@audit:ok` assets in this file
-(`_chain_domination` / `convDensityAdd_deriv1_gaussian_eq` / `convDensityAdd_logFactor_poly_majorant`
-/ the Gaussian envelopes `gaussHessMaj` / `gaussGradMaj`); the only obstacle was an import cycle
-(`Assembly` imports `EntropyConvFinite`, but the closure assets live in `Assembly`). They are
-relocated here, below `_chain_domination` and the envelopes, so the assets are in scope.
+Three integrability lemmas for the entropy of the convolution density, with a uniform
+signature: `pX` nonnegative, measurable, integrable, mass `1`, and finite second moment. They
+close from the Gaussian envelopes and the log-factor polynomial majorant in this file. -/
 
-Signature is uniform: `pX` nonneg / measurable / integrable + `∫ pX = 1` (`hpX_mass`, for the
-Gaussian majorant / positivity) + `Integrable (y²·pX)` (`hpX_mom`, for the `x²·p_t` moment in A
-and the `(A+B·x²)`-weighted envelopes in B/C). -/
+/-- The `s`-uniform Gaussian gradient kernel majorant on the window `s ∈ (t/2, 2t)`:
+`g_s(u) · |u/s| ≤ gaussGradMaj t u := (√(πt))⁻¹ · exp(−u²/(4t)) · (2|u|/t)`, the
+first-derivative analog of `gaussHessMaj`. A Gaussian times a linear factor, hence
+Lebesgue-integrable.
 
-/-- **The `s`-uniform Gaussian *gradient* kernel majorant** on the window `s ∈ (t/2, 2t)`:
-`g_s(u)·|u/s| ≤ gaussGradMaj t u := (√(πt))⁻¹·exp(−u²/(4t))·(2|u|/t)`.
-The 1st-derivative analog of `gaussHessMaj`: the prefactor `(2πs)^(−1/2)` is decreasing in `s`
-(min at `s=t/2` ⇒ `(πt)^(−1/2)`); `exp(−u²/2s)` increasing in `s` (`2s ≤ 4t` ⇒ `exp(−u²/4t)`);
-`|u|/s ≤ 2|u|/t` (`s ≥ t/2`). A Gaussian × linear envelope, hence Lebesgue-integrable.
 @audit:ok -/
 private noncomputable def gaussGradMaj (t : ℝ) (u : ℝ) : ℝ :=
   (Real.sqrt (Real.pi * t))⁻¹ * Real.exp (-u ^ 2 / (4 * t)) * (2 * |u| / t)
@@ -615,8 +558,7 @@ private theorem gaussGradMaj_polyWeight_bdd {t : ℝ} (ht : 0 < t) {a b : ℝ}
   · exact mul_le_mul_of_nonneg_left hu1 ha
   · exact mul_le_mul_of_nonneg_left hu3 hb
 
-/-- The `s`-uniform pointwise grad-kernel bound: `g_s(u)·|u/s| ≤ gaussGradMaj t u` on
-`s ∈ (t/2,2t)`. The 1st-derivative analog of `gaussianHess_le_gaussHessMaj`. -/
+/-- `g_s(u) · |u/s| ≤ gaussGradMaj t u` for `s ∈ (t/2, 2t)`. -/
 private theorem gaussianGrad_le_gaussGradMaj {t : ℝ} (ht : 0 < t) {s : ℝ}
     (hs : s ∈ Set.Ioo (t/2) (2*t)) (u : ℝ) :
     gaussianPDFReal 0 ⟨s, le_of_lt (by have := hs.1; linarith : (0:ℝ) < s)⟩ u
@@ -650,11 +592,8 @@ private theorem gaussianGrad_le_gaussGradMaj {t : ℝ} (ht : 0 < t) {s : ℝ}
         apply mul_le_mul (mul_le_mul hpref hexp hexp_nn hprefT_nn) hpoly hpoly_nn
         exact mul_nonneg hprefT_nn hexpT_nn
 
-/-- **Pointwise: `‖∂_x p_s x‖ ≤ ∫ pX y · gaussGradMaj t (x−y)`** on `s ∈ (t/2,2t)`.
-The gradient analog of `convDensityAdd_deriv2_le_gaussHessMaj_conv`: via
-`convDensityAdd_deriv1_gaussian_eq` the spatial 1st derivative is
-`∫ y, pX y · g_s(x−y)·(−(x−y)/s)`, and the kernel `g_s(u)·(−u/s)` is `s`-uniformly dominated by
-`gaussGradMaj t u`. -/
+/-- `‖∂_x p_s x‖ ≤ ∫ pX y · gaussGradMaj t (x − y)` for `s ∈ (t/2, 2t)`, the gradient analog of
+`convDensityAdd_deriv2_le_gaussHessMaj_conv`. -/
 private theorem convDensityAdd_deriv1_le_gaussGradMaj_conv
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) {t : ℝ} (ht : 0 < t) (x : ℝ) {s : ℝ}
@@ -733,13 +672,10 @@ private theorem convDensityAdd_deriv1_le_gaussGradMaj_conv
     rw [Real.norm_eq_abs, abs_mul, abs_of_nonneg hg_nn, abs_neg, abs_div, abs_of_pos hspos]
     exact gaussianGrad_le_gaussGradMaj ht hs (x - y)
 
-/-- **Entropy-finiteness plumbing — log-factor × 2nd-derivative integrability (former wall C).**
-`Integrable ((- log p_t - 1)·∂²_x p_t)` for `p_t = convDensityAdd pX g_t`, `t > 0`.
+/-- `Integrable ((- log p_t - 1) · ∂²_x p_t)` for `p_t = convDensityAdd pX g_t`, `t > 0`. Closes
+from the joint-domination envelope `debruijnIdentityV2_holds_assembled_chain_domination`
+instantiated at `s = t`.
 
-Orchestrator independent re-check (2026-06-01): this is NOT a Mathlib wall (was
-`@residual(wall:entropy-finiteness)` in `EntropyConvFinite.lean`); it closes directly from the
-`@audit:ok` `_chain_domination` envelope instantiated at `s = t`. Relocated from
-`EntropyConvFinite.lean` (import-cycle: the closure asset lives here).
 @audit:ok -/
 theorem convDensityAdd_logFactor_deriv2_integrable
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -798,13 +734,10 @@ theorem convDensityAdd_logFactor_deriv2_integrable
   rw [heq]
   exact hf_int.const_mul 2
 
-/-- **Entropy-finiteness plumbing — log-factor × 1st-derivative integrability (former wall B).**
-`Integrable ((- log p_t - 1)·∂_x p_t)` for `p_t = convDensityAdd pX g_t`, `t > 0`.
+/-- `Integrable ((- log p_t - 1) · ∂_x p_t)` for `p_t = convDensityAdd pX g_t`, `t > 0`. Closes
+from the log-factor polynomial majorant `convDensityAdd_logFactor_poly_majorant` and the
+gradient envelope `gaussGradMaj`.
 
-Orchestrator independent re-check (2026-06-01): NOT a Mathlib wall; closes via the `log`-factor
-polynomial majorant (`convDensityAdd_logFactor_poly_majorant`, `@audit:ok`) + the gradient
-envelope `gaussGradMaj` (1st-derivative analog of `gaussHessMaj`). Relocated from
-`EntropyConvFinite.lean` (import-cycle).
 @audit:ok -/
 theorem convDensityAdd_logFactor_deriv_integrable
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -942,14 +875,10 @@ theorem convDensityAdd_logFactor_deriv_integrable
     _ = pX y * G (x - y) + 2 * |B| * ((y ^ 2 * pX y) * gaussGradMaj t (x - y)) := by
         rw [hGval]; ring
 
-/-- **Entropy-finiteness plumbing — negMulLog integrability (former wall A).**
-`Integrable (negMulLog p_t)` for `p_t = convDensityAdd pX g_t`, `t > 0`, hence
-`h(X + √t·Z) = -∫ negMulLog p_t` is finite.
+/-- `Integrable (negMulLog p_t)` for `p_t = convDensityAdd pX g_t`, `t > 0`, so the entropy
+`h(X + √t · Z) = -∫ negMulLog p_t` is finite. Closes from the log-factor polynomial majorant
+(`‖negMulLog p_t‖ = p_t · |log p_t| ≤ p_t · (A + 1 + B·x²)`) and `Integrable (x² · p_t)`.
 
-Orchestrator independent re-check (2026-06-01): NOT a Mathlib wall; closes via the `log`-factor
-polynomial majorant (`‖negMulLog p_t‖ = p_t·|log p_t| ≤ p_t·(A+1+B·x²)`) + `Integrable (x²·p_t)`
-(`hpX_mom`, Tonelli on `∫x²·p_t = E[X²]+t`). Relocated from `EntropyConvFinite.lean`
-(import-cycle).
 @audit:ok -/
 theorem convDensityAdd_negMulLog_integrable
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)

@@ -2,28 +2,18 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly
 
 /-!
-# de Bruijn identity (V2) — genuine wiring of `debruijnIdentityV2_holds_assembled`
+# de Bruijn identity (V2)
 
-`FisherInfoV2DeBruijn.lean` originally housed the per-time wall shim
-`debruijnIdentityV2_holds` (`sorry` body, `@residual(plan:epi-debruijn-pertime-closure)`)
-together with its two consumers `deBruijn_identity_v2` and
-`debruijnIntegrationIdentity_holds`. The shim could not be made genuine in-place
-because the genuine same-signature proof `debruijnIdentityV2_holds_assembled`
-lives in `FisherInfoV2DeBruijnAssembly.lean`, which transitively imports
-`FisherInfoV2DeBruijn.lean` (via `FisherInfoV2DeBruijnPerTime` and via
-`FisherConvBound`) — so `FisherInfoV2DeBruijn` cannot call `_assembled` without
-creating an import cycle.
+The per-time de Bruijn identity and its integrated form, delegating to the assembled
+per-time identity `debruijnIdentityV2_holds_assembled`. These consumers live downstream of
+the assembly file because the assembly transitively imports `FisherInfoV2DeBruijn.lean`,
+so they cannot call the assembled identity from there without an import cycle.
 
-**Resolution (Strategy B — relocate consumers downstream)**: the per-time shim
-is deleted from `FisherInfoV2DeBruijn.lean`, and its two consumers are moved here,
-downstream of the assembly. They now delegate to the genuine sorryAx-free
-`debruijnIdentityV2_holds_assembled` (`#print axioms` =
-`[propext, Classical.choice, Quot.sound]`), so the de Bruijn pipeline carries no
-`sorry` for the per-time identity anymore.
+## Main statements
 
-The surviving definitions (`gaussianConvolution`, `IsRegularDeBruijnHypV2`,
-`IsDeBruijnPathRegular`, the Gaussian discharge, etc.) stay in
-`FisherInfoV2DeBruijn.lean` and are available here transitively.
+* `deBruijn_identity_v2` — the per-time de Bruijn identity
+  `(d/dt) h(X + √t · Z) = (1/2) · J(X + √t · Z)` with the V2 Fisher information.
+* `debruijnIntegrationIdentity_holds` — its integrated form along the heat-flow path.
 -/
 
 namespace InformationTheory.Shannon.FisherInfoV2
@@ -34,19 +24,10 @@ open MeasureTheory Real ProbabilityTheory InformationTheory
 open InformationTheory.Shannon.EPIConvDensity (convDensityAdd)
 open scoped ENNReal NNReal Real
 
-/-- **de Bruijn identity (V2 form)**, genuine delegation to the assembled lemma.
-
-For `X ⊥ Z` with `Z ∼ 𝒩(0, 1)`,
-
-`(d/dt) h(X + √t · Z) = (1/2) · J(X + √t · Z)`,
-
-stated with **V2 Fisher information** (`fisherInfoOfDensityReal`) on the RHS.
-
-This delegates to `debruijnIdentityV2_holds_assembled`
-(`FisherInfoV2DeBruijnAssembly.lean`), which is proven **sorryAx-free**
-(`#print axioms` = `[propext, Classical.choice, Quot.sound]`). It is no longer a
-pass-through to a per-time wall shim: the per-time identity is genuine
-end-to-end. `h_reg` is the V2 de Bruijn regularity precondition. -/
+/-- The de Bruijn identity (V2 form): for `X ⊥ Z` with `Z ∼ 𝒩(0, 1)`,
+`(d/dt) h(X + √t · Z) = (1/2) · J(X + √t · Z)`, stated with the V2 Fisher information
+`fisherInfoOfDensityReal` on the right. Delegates to `debruijnIdentityV2_holds_assembled`;
+`h_reg` is the regularity precondition. -/
 @[entry_point]
 theorem deBruijn_identity_v2
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
@@ -60,27 +41,10 @@ theorem deBruijn_identity_v2
       t :=
   debruijnIdentityV2_holds_assembled X Z hX hZ hXZ ht h_reg
 
-/-- **de Bruijn 積分恒等式 — genuine (assembled per-time identity + FTC)**.
-
-The per-time identity `debruijnIdentityV2_holds_assembled` is integrated along the
-heat-flow path `(0, T)` via Mathlib FTC
-(`intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le`) to produce the difference
-identity
-
-    `h(X + √T·Z) − h(X) = ∫_0^T (1/2)·J(X + √t·Z) dt`.
-
-`hT : 0 ≤ T` and the path-regularity bundle `h_path : IsDeBruijnPathRegular` are
-regularity / integrability preconditions; the de Bruijn analytic core (heat eq +
-IBP) is fully discharged by the genuine `debruijnIdentityV2_holds_assembled`
-(sorryAx-free), not bundled here.
-
-This is now genuine: the body Step 1 calls the genuine per-time identity
-`debruijnIdentityV2_holds_assembled` for each `t ∈ Ioo 0 T`, Step 2 assembles via
-Mathlib FTC `intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le`, Steps 3-5
-convert the interval integral to `Set.Ioo`/`Set.Ioc` and fix the boundary
-`f 0 = h(P.map X)`. No `:= sorry` / `:True` disguise. `h_path : IsDeBruijnPathRegular`
-is a genuine regularity precondition (not load-bearing — see that structure's
-audit note in `FisherInfoV2DeBruijn.lean`). -/
+/-- The integrated de Bruijn identity: integrating the per-time identity
+`debruijnIdentityV2_holds_assembled` along the heat-flow path `(0, T)` via FTC gives
+`h(X + √T·Z) − h(X) = ∫₀ᵀ (1/2)·J(X + √t·Z) dt`. Here `hT : 0 ≤ T` and the path-regularity
+bundle `h_path : IsDeBruijnPathRegular` are regularity and integrability preconditions. -/
 @[entry_point]
 theorem debruijnIntegrationIdentity_holds
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]

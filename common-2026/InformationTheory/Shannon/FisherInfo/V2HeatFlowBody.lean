@@ -14,61 +14,38 @@ import InformationTheory.Shannon.FisherInfo.Gaussian
 import InformationTheory.Shannon.DifferentialEntropy
 
 /-!
-# Fisher information V2 — heat-flow body (W9-S5 / L-FV2DB-A sub-decomposition)
+# Fisher information V2 — heat-flow body
 
-Wave-9 follow-up to `FisherInfoV2DeBruijnBody.lean` (wave-7). That file split the
-de Bruijn body into two pass-through predicates:
+Sub-decomposes the heat-flow side of the de Bruijn body. The heat equation
+`∂_t p = (1/2) Δ_x p` is exposed for the Gaussian heat kernel
+`heatKernel t x = gaussianPDFReal 0 ⟨t, _⟩ x` by giving its first and second spatial
+derivatives in closed form, and the monolithic `heat_equation` field of `IsHeatFlowDensity` is
+split into spatial-derivative, time-derivative, and convolution-representation sub-predicates.
 
-* `IsHeatFlowDensity` — **L-FV2DB-A** (heat-flow): bundles the heat equation
-  `∂_t p = (1/2) Δ_x p` as a single existential field, and
-* `IsIBPHypothesis` — **L-FV2DB-B** (integration by parts).
+## Main definitions
 
-This file *sub-decomposes* the L-FV2DB-A heat-flow side. The wave-7
-`heat_equation` field bundles the entire PDE as one opaque `∃ Δp, ...`. Here we
-expose the analytic structure of that PDE for the **Gaussian heat kernel**
-(`heatKernel t x = gaussianPDFReal 0 ⟨t, _⟩ x`) by giving the first and second
-spatial derivatives in closed form (both **internally discharged**).
+* `spatialLaplacianHeatKernel t x := (x²/t² - 1/t) · g_t x` — the spatial Laplacian of the heat
+  kernel.
+* `IsHeatSpatialDerivHyp` / `IsHeatTimeDerivHyp` / `IsHeatFlowConvolutionHyp` — the three
+  sub-predicates of the heat equation.
+* `IsHeatFlowDensity_of_sub_predicates` — re-assembles the sub-predicates into an
+  `IsHeatFlowDensity` witness.
+* `IsRegularDeBruijnHypV2.ofHeatSubhyp` — the `IsRegularDeBruijnHypV2` constructor from the
+  sub-predicates.
 
-## 内容
+## Main statements
 
-* `heatKernel_spatial_deriv` — closed form of `∂_x g_t`: equals `-(x/t)·g_t x`,
-  the `m = 0` specialization of `InformationTheory.Shannon.deriv_gaussianPDFReal`.
-  **(internal discharge)**
-* `heatKernel_hasDerivAt_spatial` — the `HasDerivAt` form, via
-  `differentiable_gaussianPDFReal`. **(internal discharge)**
-* `spatialLaplacianHeatKernel t x := (x²/t² - 1/t)·g_t x` — closed form of the
-  spatial Laplacian `Δ_x g_t = ∂²_x g_t`.
-* `heatKernel_spatial_laplacian` — `∂²_x g_t = spatialLaplacianHeatKernel t x`,
-  by differentiating `heatKernel_spatial_deriv` once more (product rule).
-  **(internal discharge — the core of this seed)**
-* `IsHeatSpatialDerivHyp` / `IsHeatTimeDerivHyp` / `IsHeatFlowConvolutionHyp` —
-  the three sub-predicates that L-FV2DB-A's monolithic `heat_equation` field
-  decomposes into. The spatial-derivative sub-predicate is **internally
-  discharged** for the Gaussian kernel (`isHeatSpatialDerivHyp_gaussian`); the
-  time-derivative and convolution-representation sub-predicates remain
-  pass-through (the variance-derivative of `gaussianPDFReal` is not in Mathlib).
-* `IsHeatFlowDensity_of_sub_predicates` — re-assembly: the three sub-predicates
-  re-build a wave-7 `IsHeatFlowDensity` witness.
-* `heatSemigroup_compose_law` — measure-level Gaussian semigroup composition
-  `g_{t₁} ⋆ g_{t₂} = g_{t₁+t₂}`. **(internal discharge, measure level)**
-* `deBruijn_identity_v2_of_heat_subhyp` — de Bruijn body bridge re-published from
-  the sub-predicate decomposition.
+* `heatKernel_spatial_deriv` / `heatKernel_hasDerivAt_spatial` — `∂_x g_t = -(x/t) · g_t`.
+* `heatKernel_spatial_laplacian` — `∂²_x g_t = spatialLaplacianHeatKernel t x`.
+* `isHeatSpatialDerivHyp_gaussian` — the Gaussian kernel satisfies the spatial-derivative
+  sub-predicate.
+* `deBruijn_identity_v2_of_heat_subhyp` — the de Bruijn identity from the sub-predicate
+  decomposition.
 
-## 撤退ライン
+## Implementation notes
 
-* **L-FV2HF-A** (本 file, 採用 + full discharge): the first and second spatial
-  derivatives of the Gaussian heat kernel are discharged internally
-  (`heatKernel_spatial_deriv`, `heatKernel_spatial_laplacian`,
-  `isHeatSpatialDerivHyp_gaussian`). This is the "manual verification 50-80
-  lines" item in `fisher-info-moonshot-plan.md` Phase C.
-* **L-FV2HF-B** (本 file, pass-through): the time-derivative sub-predicate
-  `IsHeatTimeDerivHyp`. The variance-derivative `∂_t gaussianPDFReal 0 ⟨t,_⟩ x`
-  is not available in Mathlib, so the time side is bundled as a `HasDerivAt`
-  statement-form field.
-* **L-FV2HF-C** (本 file, pass-through): the convolution-representation
-  sub-predicate `IsHeatFlowConvolutionHyp`. The density-level convolution
-  identity is deferred; the measure-level Gaussian semigroup composition is
-  discharged in `heatSemigroup_compose_law`.
+The time-derivative and convolution-representation sub-predicates are kept as pass-through
+hypotheses because the variance-derivative `∂_t gaussianPDFReal 0 ⟨t, _⟩ x` is not in Mathlib.
 -/
 
 namespace InformationTheory.Shannon.FisherInfoV2
@@ -78,7 +55,7 @@ set_option linter.unusedSectionVars false
 open MeasureTheory Real ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal Real
 
-/-! ## Spatial derivatives of the Gaussian heat kernel (L-FV2HF-A discharge) -/
+/-! ## Spatial derivatives of the Gaussian heat kernel -/
 
 /-- The variance of the heat kernel at time `t > 0` is nonzero as an `ℝ≥0`. -/
 theorem heatKernel_variance_ne_zero {t : ℝ} (ht : 0 < t) :
@@ -155,21 +132,19 @@ theorem heatKernel_spatial_laplacian {t : ℝ} (ht : 0 < t) (x : ℝ) :
 
 /-! ## Sub-predicate decomposition of L-FV2DB-A -/
 
-/-- **Spatial-derivative sub-predicate** (L-FV2HF-A).
-
-`p t` has the prescribed spatial second derivative `Δp t` at every `x` (for
-`t > 0`). For the Gaussian kernel this is **internally discharged** via
-`heatKernel_spatial_laplacian` (see `isHeatSpatialDerivHyp_gaussian`). -/
+/-- The spatial-derivative sub-predicate: `p t` has the prescribed spatial second derivative
+`Δp t` at every `x` (for `t > 0`). For the Gaussian kernel this is discharged by
+`isHeatSpatialDerivHyp_gaussian`. -/
 def IsHeatSpatialDerivHyp (p : ℝ → ℝ → ℝ) (Δp : ℝ → ℝ → ℝ) : Prop :=
   ∀ t : ℝ, 0 < t → ∀ x : ℝ,
     deriv (fun y => deriv (fun z => p t z) y) x = Δp t x
 
-/-- **Time-derivative sub-predicate** (L-FV2HF-B, pass-through). -/
+/-- The time-derivative sub-predicate: `p` solves the heat equation `∂_s p = (1/2) Δp` at `t`. -/
 def IsHeatTimeDerivHyp (p : ℝ → ℝ → ℝ) (Δp : ℝ → ℝ → ℝ) : Prop :=
   ∀ t : ℝ, 0 < t → ∀ x : ℝ,
     HasDerivAt (fun s => p s x) ((1 / 2) * Δp t x) t
 
-/-- **Convolution-representation sub-predicate** (L-FV2HF-C, pass-through). -/
+/-- The convolution-representation sub-predicate. -/
 def IsHeatFlowConvolutionHyp {Ω : Type*} [MeasurableSpace Ω]
     (_X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (p : ℝ → ℝ → ℝ) : Prop :=
@@ -179,10 +154,8 @@ def IsHeatFlowConvolutionHyp {Ω : Type*} [MeasurableSpace Ω]
 
 /-! ## Gaussian discharge of the spatial sub-predicate -/
 
-/-- **Gaussian heat kernel satisfies the spatial-derivative sub-predicate.**
-
-With `Δp t x := spatialLaplacianHeatKernel t x`, the heat kernel discharges
-`IsHeatSpatialDerivHyp` internally. This is the L-FV2HF-A discharge. -/
+/-- The Gaussian heat kernel satisfies `IsHeatSpatialDerivHyp` with
+`Δp t x := spatialLaplacianHeatKernel t x`. -/
 @[entry_point]
 theorem isHeatSpatialDerivHyp_gaussian :
     IsHeatSpatialDerivHyp (fun t x => heatKernel t x)
@@ -209,29 +182,12 @@ def IsHeatFlowDensity_of_sub_predicates {Ω : Type*} [MeasurableSpace Ω]
 
 /-! ## de Bruijn body bridge re-publish (from sub-predicates) -/
 
-/-- **de Bruijn identity body discharge from the sub-predicate decomposition.**
+/-- The de Bruijn identity from the sub-predicate decomposition: given the convolution and
+time-derivative sub-predicates (which re-assemble into an `IsHeatFlowDensity`) and the IBP
+hypothesis at `t`, the de Bruijn identity holds. Re-publishes `deBruijn_identity_v2_of_heat_flow`.
+The `_h_ibp` argument is kept for caller compatibility but unused (the genuine derivation does not
+consume the heat-equation core of `h_time`).
 
-Given the convolution + time-derivative sub-predicates (which re-assemble into a
-wave-7 `IsHeatFlowDensity`) and the IBP hypothesis at time `t`, the de Bruijn
-identity holds. Re-publishes `deBruijn_identity_v2_of_heat_flow` from the finer
-decomposition.
-
-**Phase 2.B 段 2 (2026-05-27、`epi-stam-fisher-epi-integrated-sweep-plan`
-§Phase 2.B 段 2)**: L3 (`deBruijn_identity_v2_of_heat_flow`) が
-honest pass-through (`IsRegularDeBruijnHypV2.ofHeatFlow` constructor +
-genuine `deBruijn_identity_v2`、`wall:debruijn-integration` は [CLOSED
-2026-06-04]) 化されたため、本 D5 も transitive pass-through に昇格。`h_ibp`
-引数は caller compat 維持 (L3 と同様 unused、`_h_ibp` underscore prefix)。
-
-NOTE (2026-06-05 closure): `deBruijn_identity_v2` 自体は genuine (sorryAx-free、
-`debruijnIdentityV2_holds_assembled` 経由)、`wall:debruijn-integration` は
-[CLOSED 2026-06-04]。`IsRegularDeBruijnHypV2.ofHeatFlow` constructor の 3 field
-(`density_t_eq`/`pX_law`/`pX_mom`) は commit 94a3ae8 で全 genuine 化済 (conv-pin
-+ `hX_ac`/`h_mom_X` regularity precond)。よって本 lemma は **sorryAx-free** (旧 NOTE
-の「transitive sorryAx 依存」は stale)。`h_conv`/`h_time` は `IsHeatFlowDensity` を
-再組立するが genuine path (`pPath_eq_convDensityAdd` + atoms) は `h_time` の heat-
-equation 核を消費しない (vestigial、本 commit 由来でなく既存の load-bearing pass-
-through predicate)。
 @audit:ok -/
 @[entry_point]
 theorem deBruijn_identity_v2_of_heat_subhyp
@@ -254,13 +210,9 @@ theorem deBruijn_identity_v2_of_heat_subhyp
   deBruijn_identity_v2_of_heat_flow X Z hX hZ hXZ hX_ac h_mom_X ht
     (IsHeatFlowDensity_of_sub_predicates h_conv h_time) _h_ibp
 
-/-- **`IsRegularDeBruijnHypV2` constructor from sub-predicates.**
+/-- The `IsRegularDeBruijnHypV2` constructor from the convolution and time-derivative
+sub-predicates, via `IsHeatFlowDensity_of_sub_predicates` and `ofHeatFlow`.
 
-Phase 2.B 段 1 (foundation) で `IsRegularDeBruijnHypV2` が 2-field 化された
-ため、本 constructor の旧 `h_ibp` 引数は段 1 で未使用化済。**Phase 2.B 段 2
-(2026-05-27)** で formal 引数自体を削除した (constructor body から literal
-alias chain が完全消滅、launder pattern 撲滅完了)。consumer 無し
-(本 file 内のみ定義、外部 reference は docstring 言及のみ)。
 @audit:ok -/
 @[entry_point]
 noncomputable def IsRegularDeBruijnHypV2.ofHeatSubhyp

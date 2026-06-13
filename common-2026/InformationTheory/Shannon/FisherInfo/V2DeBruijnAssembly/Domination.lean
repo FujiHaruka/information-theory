@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
-import InformationTheory.Shannon.FisherConvBound   -- shared 壁 gaussianConv_fisher_le_inv_var
-import InformationTheory.Shannon.EPI.Conv.DensitySecondDeriv  -- STEP-D bridge convDensityAdd_deriv2_eq_gaussian
+import InformationTheory.Shannon.FisherConvBound
+import InformationTheory.Shannon.EPI.Conv.DensitySecondDeriv
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Core
 
 namespace InformationTheory.Shannon.FisherInfoV2
@@ -13,19 +13,10 @@ open InformationTheory.Shannon.EPIConvDensity (convDensityAdd convDensityAddDeri
 
 variable {Ω : Type*} {_mΩ : MeasurableSpace Ω}
 
-/-- **Concrete pointwise Hessian bound** (extracted from GAP②'s pointwise body, reused by
-`_chain_domination`). For `s ∈ (t/2, 2t)`, the spatial second derivative of the convolution
-density is dominated by the convolution of `pX` against the `s`-uniform Gaussian-Hessian kernel
-majorant `gaussHessMaj t`:
-`‖∂²_x (pX ∗ g_s) x‖ ≤ ∫ y, pX y · gaussHessMaj t (x − y) ∂volume`.
+/-- For `s ∈ (t/2, 2t)`, the spatial second derivative of the convolution density is dominated
+by the convolution of `pX` against the `s`-uniform Gaussian-Hessian kernel majorant
+`gaussHessMaj t`: `‖∂²_x (pX ∗ g_s) x‖ ≤ ∫ y, pX y · gaussHessMaj t (x − y) ∂volume`.
 
-The proof routes through the STEP-D bridge `convDensityAdd_deriv2_eq_gaussian`
-(`∂²_x p_s x = ∫ y, pX y·g_s(x−y)·((x−y)²/s²−1/s)`), supplying its per-`s` domination hyps
-with the closed-form global sups `kernel_x_deriv1/2_global_bound`, then triangle inequality +
-the `s`-uniform majorant `gaussianHess_le_gaussHessMaj`. This is GAP②'s pointwise content as a
-named lemma so that **both** GAP② (as the existential envelope) **and** `_chain_domination` (route
-II Tonelli, which needs the concrete envelope, not the abstract `∃`) consume it. Only `0<t`
-regularity hyps; the Hessian bound (conclusion) is the genuine claim, not load-bearing.
 @audit:ok -/
 private theorem convDensityAdd_deriv2_le_gaussHessMaj_conv
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -132,52 +123,15 @@ private theorem convDensityAdd_deriv2_le_gaussHessMaj_conv
     apply mul_le_mul_of_nonneg_left _ (hpX_nn y)
     exact gaussianHess_le_gaussHessMaj ht hs (x - y)
 
-/-- **§5G-2b (GAP②, 案B polynomial-moment restate): integrable envelope for the spatial Hessian.**
-On the `t`-neighborhood `Set.Ioo (t/2) (2*t)`, the spatial second derivative
-`∂²_x p_s x = deriv (deriv (convDensityAdd pX g_s)) x` of the convolution density admits a
-**single Lebesgue-integrable envelope** `bound : ℝ → ℝ` uniform in `s`:
-`‖∂²_x p_s x‖ ≤ bound x` for all `s ∈ (t/2, 2t)`, with `Integrable bound volume`.
+/-- On the neighborhood `Set.Ioo (t/2) (2*t)`, the spatial second derivative
+`∂²_x p_s x = deriv (deriv (convDensityAdd pX g_s)) x` admits a single Lebesgue-integrable
+envelope `bound : ℝ → ℝ` uniform in `s`: `‖∂²_x p_s x‖ ≤ bound x` for all `s ∈ (t/2, 2t)`,
+with `Integrable bound volume`. The envelope is `bound x = ∫ y, pX y · gaussHessMaj t (x − y)`,
+the convolution of `pX` against the `s`-uniform Gaussian-Hessian kernel majorant; it keeps the
+Gaussian factor inside the convolution rather than dropping it, so it is finite for any
+finite-variance `pX` (a Gaussian-tail bound on the Hessian would be false for polynomial-tail
+densities).
 
-**Why the conclusion is an integrable-envelope existential, not a Gaussian-tail bound.** The
-prior `≤ C·(1+x²)·exp(-x²/c')` (Gaussian-tail) conclusion was a false statement: it asserts the
-Hessian decays *faster than any polynomial* in `x`, which fails for polynomial-tail finite-variance
-`pX` (counterexample `pX(y) = (2/π)/(1+y²)²` satisfies `∫pX = 1`, `∫y²·pX < ∞`, yet
-`∂²_x p_s(x) ~ const/x²` decays only polynomially — judgment log #15). The honest envelope keeps the
-Gaussian `g_s` *inside* the convolution rather than dropping it via a prefactor bound: via the
-heat-eq STEP D identification
-`∂²_x p_s x = ∫ y, pX y · g_s(x-y)·((x-y)²/s² - 1/s)`
-(`FisherInfoV2DeBruijnPerTime.heatFlow_density_heat_equation` STEP D + the kernel 2nd-deriv
-closed form `heatFlow_density_heat_equation_kernel_x_deriv2`), the triangle inequality gives the
-pointwise bound `‖∂²_x p_s x‖ ≤ ∫ y, pX y · g_s(x-y)·|(x-y)²/s² - 1/s| dy =: bound x` (the `g_s`
-Gaussian factor is retained, not bounded by its prefactor constant).
-
-**Integrability of the envelope (finite-second-moment).** `bound` is Lebesgue-integrable for any
-finite-variance `pX`: by Tonelli (the integrand is nonnegative)
-`∫_x bound x dx = ∫_y pX(y)·[∫_x g_s(x-y)·|(x-y)²/s² - 1/s| dx] dy = ∫_y pX(y)·K(y) dy`, where after
-the substitution `u = x - y` the inner integral
-`K(y) = ∫_u g_s(u)·|u²/s² - 1/s| du` is a *constant* in `y` (independent of `y`, since `g_s` is
-centred at 0 and `u` ranges over all of `ℝ`); more generally when the envelope is paired with a
-polynomial log-factor (`_chain_domination`) the `y`-integral picks up only `∫pX`, `∫y·pX`, `∫y²·pX`
-(mass + first + second moment), all finite under `hpX_mass`/`hpX_mom` (`∫y·pX` finite by `2|y| ≤ 1+y²`
-domination via `hpX_int.add hpX_mom`). The result is finite.
-
-This is honestly **true for polynomial-tail finite-variance pX** (the judgment-log-#15 counterexample
-`(2/π)/(1+y²)²` is *inside* scope — the envelope does not claim Gaussian tail), and heavy-tailed `pX`
-with infinite variance (e.g. Cauchy) is honestly excluded by the regularity hyp `hpX_mom`. All hyps
-(`hpX_mass`/`hpX_mom` included) are pX-system regularity, NOT load-bearing.
-
-**Progress (2026-05-31, this session)**: the envelope is now **concretely constructed** as
-`bound x := ∫ y, pX y · gaussHessMaj t (x − y)`, where `gaussHessMaj t u := (√(πt))⁻¹·exp(−u²/(4t))·
-(4u²/t² + 2/t)` is the genuine `s`-uniform Gaussian-Hessian kernel majorant (proved:
-`gaussianHess_le_gaussHessMaj` gives `g_s(u)·|u²/s²−1/s| ≤ gaussHessMaj t u` for all `s ∈ (t/2,2t)`;
-`gaussHessMaj_integrable` gives `Integrable (gaussHessMaj t)` as a Gaussian×quadratic). The
-**`Integrable bound` half is now genuinely closed** via `convKernel_envelope_integrable` (Tonelli
-`integrable_prod_iff'` + `Integrable.integral_prod_left` + translation invariance). The **only
-remaining residual is the pointwise bound** `‖∂²_x p_s x‖ ≤ bound x`: it needs the STEP-D bridge
-`convDensityAdd_deriv2_eq_gaussian` (∂²p_s as `∫ y, pX y·g_s(x−y)·((x−y)²/s²−1/s)`) + triangle +
-`gaussianHess_le_gaussHessMaj`, where the bridge's per-`s` domination hypotheses (global sup bounds of
-`g_s·(−v/s)` and `g_s·(v²/s²−1/s)` over `v`) remain to supply. So this stays an **honest sorry** but
-narrowed to the bridge/triangle pointwise step only.
 @audit:ok -/
 private theorem convDensityAdd_deriv2_poly_moment_majorant
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -200,43 +154,15 @@ private theorem convDensityAdd_deriv2_poly_moment_majorant
   · refine Filter.Eventually.of_forall (fun x s hs => ?_)
     exact convDensityAdd_deriv2_le_gaussHessMaj_conv pX hpX_nn hpX_meas hpX_int ht x hs
 
-/-- **§5G-2: full-entDeriv joint-domination group (L-PT-γ, 案B joint strategy).**
-Produces an integrable majorant `bound` dominating the **full** entropy σ-derivand
-`(- log (pPath s x) - 1) · ((1/2)·∂²_x pPath s x)` over the `t`-neighborhood
-`Set.Ioo (t/2) (2*t)`. On `Ioo (t/2)(2*t)` with `t > 0` we have `s > t/2 > 0`, so the NNReal
-variance witness `⟨s, _⟩` is well-defined (no `max s 0` needed).
+/-- Produces an integrable majorant `bound` dominating the full entropy σ-derivand
+`(- log (pPath s x) - 1) · ((1/2) · ∂²_x pPath s x)` uniformly over `s ∈ Set.Ioo (t/2) (2*t)`.
+The majorant is the product `(A + B·x²) · ((1/2) · hessBound x)` of an `s`-uniform polynomial
+majorant for the log factor (`convDensityAdd_logFactor_poly_majorant`) and the `s`-uniform
+integrable Hessian envelope (`convDensityAdd_deriv2_poly_moment_majorant`). Its integrability is
+established by Tonelli against the Gaussian moments of the kernel, which collapses the outer
+integral to the mass, first, and second moments of `pX` — all finite under `hpX_mass` and
+`hpX_mom`.
 
-**案B joint-domination wiring (2026-05-31, judgment log #16/#17)**: the body `obtain`s two
-`s`-uniform regularity helpers and forms their *joint* product envelope:
-- §5G-2a / GAP① (`convDensityAdd_logFactor_poly_majorant`, genuine `@audit:ok`): an `s`-uniform
-  polynomial majorant `A + B·x²` for the log factor `-log p_s x - 1`;
-- §5G-2b / GAP② (`convDensityAdd_deriv2_poly_moment_majorant`, honest sorry, polynomial-moment
-  restate): an `s`-uniform **integrable envelope** `hessBound x` for the spatial Hessian
-  `∂²_x p_s x` (keeping the `g_s` Gaussian inside the convolution; NO Gaussian-tail claim).
-
-The joint majorant is `(A + B·x²)·((1/2)·hessBound x)`. Its integrability is the analytic core,
-discharged via **route II = Tonelli + g_s moment** (the only honest route, judgment log #17):
-`∫_x (A+Bx²)·(1/2)hessBound x dx = (1/2)∫_y pX(y)·K(y) dy` where `K(y)` is a degree-2 polynomial in
-`y` (from `∫_u (A+B(u+y)²)·g_s(u)·|u²/s²−1/s| du` after `u = x−y` and the even-moment closed forms of
-`g_s`), so the outer integral collapses to `c0 + c1·∫y·pX + c2·∫y²·pX < ∞` (mass + first + second
-moment, all finite under `hpX_mass`/`hpX_mom`; the first moment is dominated by `2|y| ≤ 1+y²`).
-
-**Why route I is forbidden (judgment log #17, proof-pivot-advisor mpmath verification)**: the
-Hessian envelope `hessBound x` decays only **polynomially** `~const/x⁴` in `x` (the `g_s` Gaussian
-factor is dominated/killed by polynomial-tail `pX`, e.g. `(2/π)/(1+y²)²`). The closed-form route
-"bound `hessBound` by `x^{0,2,4}·exp(-(1/c)x²)` and close with `integrable_natPow_mul_exp_neg_mul_sq`"
-is **FALSE for polynomial-tail finite-variance pX** (it is the case-A defect re-emerging — the old
-Gaussian-tail `exp(-x²/c')` factor does not exist). Route II keeps the integrability honest by never
-asserting a Gaussian-tail closed form; the Gaussian decay only ever appears inside `g_s` under the
-moment integral.
-
-The `_chain_domination` statement (∃ integrable majorant over `Ioo (t/2,2t)`) is TRUE for general
-finite-2nd-moment pX, and the joint-domination wiring is the genuine route to it (no separated
-Gaussian-tail product, no false-statement dependency). All hyps are pX-system regularity; the
-existential output is integrand-level domination. The honest residual is localized in (a) the GAP②
-poly-moment envelope (§5G-2b) and (b) the joint envelope integrability core (route II Tonelli+moment,
-first goal below); the domination goal (second) is closed genuinely by `norm_mul`/`mul_le_mul`. The
-`@residual` is kept (transitive over GAP② + the integrability core).
 @audit:ok -/
 theorem debruijnIdentityV2_holds_assembled_chain_domination
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -250,9 +176,9 @@ theorem debruijnIdentityV2_holds_assembled_chain_domination
             * ((1/2) * deriv (deriv (convDensityAdd pX
               (gaussianPDFReal 0 ⟨s, le_of_lt (by have := hs.1; linarith : (0:ℝ) < s)⟩))) x)‖
           ≤ bound x) := by
-  -- 案B joint domination: the σ-derivand at `s` is the product
-  --   LogFactor(s,x) = - log (p_s x) - 1     (poly-in-x growth, GAP① `A + B·x²`)
-  --   (1/2)·Hess(s,x) = (1/2)·∂²_x p_s x     (integrable envelope `(1/2)·hessBound x`, GAP②).
+  -- Joint domination: the σ-derivand at `s` is the product
+  --   LogFactor(s,x) = - log (p_s x) - 1     (poly-in-x growth, `A + B·x²`)
+  --   (1/2)·Hess(s,x) = (1/2)·∂²_x p_s x     (integrable envelope `(1/2)·hessBound x`).
   -- GAP① gives an `s`-uniform polynomial majorant for the log factor;
   -- GAP② (poly-moment restate) gives an `s`-uniform integrable envelope `hessBound` for the Hessian.
   obtain ⟨A, B, hB_nn, hLog⟩ :=
