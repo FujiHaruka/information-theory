@@ -272,48 +272,4 @@ lemma expectedJointDistortion_rdAmbient
   intro p _
   rw [smul_eq_mul, ENNReal.toReal_ofReal (hqStar_simp.1 p)]
 
-/-! ## Partial discharge wrapper -/
-
-/-- **Rate-distortion achievability — partial discharge form** (E-3'' MVP).
-
-The witness-form theorem (`rate_distortion_achievability_witness_form`) with all
-i.i.d. ambient / probability-measure / distortion-bridge hypotheses **internally
-discharged** via `iidAmbientJointMeasure (pmfToMeasure qStar)`. The only
-remaining external hypothesis is the codebook-averaged failure sequence
-(`h_codebook_avg_failure` + `h_failure_tendsto_zero`), which currently requires
-strong typicality machinery beyond Phase B's weak typicality scope.
-
-Migration note (Phase 2.RD.4 of `ratedistortion-pgpc-sorry-migration-plan`):
-The load-bearing failure-sequence bundle (`failure_seq` + `h_failure_nn` +
-`h_failure_tendsto_zero` + `h_codebook_avg_failure`) has been removed from the
-partial-discharge wrapper, mirroring the upstream
-`rate_distortion_achievability_witness_form` retreat in Phase 2.RD.3. Body
-retreated to `sorry`; the prior body was a delegation to the (now sorry'd)
-upstream, so this is also transitively `sorry`. Tagging with `@residual` here
-because this wrapper is itself an independently published statement.
-
-`@residual(plan:rate-distortion-achievability-phase-e-strong-plan)`
-
-DEAD (2026-06-11 dead 掃除, judgment #19/#22 確認): consumer-0 (`dep_consumers
---transitive` 推移閉包 0) + genuine 後継 `rate_distortion_achievability_partial_discharge_strong`
-(`AchievabilityPhaseEStrongFinal.lean`、production headline が呼ぶ 0 sorry 形) が
-supersede。本 partial-discharge wrapper は pre-strong 形の dead 残置。
-@audit:retract-candidate(superseded-by-full-discharge)
-
--/
-@[entry_point]
-theorem rate_distortion_achievability_partial_discharge
-    (P_X_pmf : α → ℝ) (d : DistortionFn α β) {D : ℝ}
-    (qStar : α × β → ℝ) (hqStar_mem : qStar ∈ RDConstraint P_X_pmf d D)
-    {R : ℝ} (hI_lt_R : mutualInfoPmf qStar < R)
-    {ε' : ℝ} (hε' : 0 < ε')
-    (ε : ℝ) (δ_typ : ℝ) (hδ_typ : 0 ≤ δ_typ)
-    (h_slack : expectedDistortionPmf d qStar + δ_typ ≤ D + ε' / 2) :
-    ∃ N : ℕ, ∀ n, N ≤ n →
-      ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
-        (c : LossyCode M n α β),
-        c.expectedBlockDistortion
-            ((rdAmbient qStar).map (iidXs (α := α) (β := β) 0)) d ≤ D + ε' := by
-  sorry
-
 end InformationTheory.Shannon

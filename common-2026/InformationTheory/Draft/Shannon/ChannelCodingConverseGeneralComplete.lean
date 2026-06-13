@@ -37,18 +37,15 @@ Phase B 補題は **本 file 内に local section として配置**。理由:
 - 既存 `CondMutualInfo.lean` (413 行) の非改変が望ましい
 - 汎用 API として将来 `CondMutualInfo.lean` へ昇格は容易 (`namespace InformationTheory.Shannon`)
 
-## Phase C/D — 撤退ライン 0 sorry 達成形
+## Phase C/D — DEAD 削除済
 
-Phase C (`memoryless_per_summand_bound`) と Phase D
-(`channel_coding_converse_general_memoryless`) はともに hypothesis-form で publish。
-Phase C は (i) Y-axis chain rule conditional decomposition (`h_split`)、
-(ii) memoryless から Yother 項 = 0 (`h_yother_zero`)、
-(iii) augmented Markov `(X^{<i}, X_i) → X_i → Y_i` (`h_markov_xprefix`)、(iv) 合成、の 4 step。
-仮説 (i)-(iii) は `IsMemorylessChannel` から派生可能 (Markov 左 post-processing +
-augmentation + condMutualInfo の Y-引数 reshape) だが、これらの補助補題は
-`CondMutualInfo.lean` に未整備のため Phase C 仮説に格上げした (撤退ライン 採用)。
-Phase D は D-2 既存 `channel_coding_converse_general_chainRule` に Phase C を流し込んで
-各項を `I(X_i; Y_i)` で押さえる形。
+旧 Phase C (`memoryless_per_summand_bound`) / Phase D
+(`channel_coding_converse_general_memoryless`) は consumer-0 かつ production
+`channel_coding_converse_general_memoryless_pure` (`ConverseMemorylessPure.lean`、
+entropy 劣加法経路、sorryAx-free) が同 converse を達成済のため 2026-06-13 削除
+(`h_yother_zero` が encoder 任意で偽 = D-2' per-summand 路は放棄)。本 file は live な
+`IsMemorylessChannel` 定義 + condMutualInfo chain-rule 補題群 (`condMutualInfo_le_of_markov_joint`
+/ `condMutualInfo_chain_rule_X_2var` / `_Y_2var`) を保持。
 
 ## 判断ログ
 
@@ -320,149 +317,6 @@ theorem condMutualInfo_chain_rule_Y_2var
 
 end CondChainRule2Var
 
-/-! ## Phase C — `memoryless_per_summand_bound` (skeleton) -/
 
-section PerSummand
-
-variable {n : ℕ}
-variable {α : Type*} [Nonempty α]
-  [MeasurableSpace α] [StandardBorelSpace α]
-variable {β : Type*} [Nonempty β]
-  [MeasurableSpace β] [StandardBorelSpace β]
-
-/-- **Per-summand bound, hypothesis-form (D-2', Phase C, 撤退ライン)**.
-
-Under memoryless DMC (`IsMemorylessChannel`), each per-letter chain-rule summand of the
-total mutual information is bounded by the per-letter bare mutual information:
-
-```
-I(X_i; Y^n | X^{<i}) ≤ I(X_i; Y_i).
-```
-
-This is the per-summand collapse in Cover-Thomas Thm 7.9 (memoryless DMC converse
-without feedback). The current proof is **撤退ライン** form: takes two derived facts
-as hypotheses, both follow from `IsMemorylessChannel` but their internal derivation
-requires Markov-chain left post-processing infrastructure not yet in `CondMutualInfo.lean`:
-
-* `h_markov_xprefix i`: Markov chain `X^{<i} → X_i → Y_i` (derivable from `h_memo`
-  by left post-processing of the memoryless Markov chain
-  `(X^{≠i}, Y^{≠i}) → X_i → Y_i`, since `X^{<i}` is a function of `X^{≠i}`).
-* `h_yother_zero i`: `I(X_i; Y^{≠i} | (X^{<i}, Y_i)) = 0`, the Yother term in the
-  Y-axis 2-var conditional chain rule decomposition (Step 2 of plan, derivable from
-  `h_memo` via a stronger Markov-chain manipulation).
-* `h_split i`: the 2-var Y-axis conditional chain rule applied to the specific
-  `(Y_i, Yother)` split — derivable from `condMutualInfo_chain_rule_Y_2var` (Phase B
-  Lemma 2) together with a `condMutualInfo` reshape lemma for the Y-argument under a
-  `MeasurableEquiv` (Y^n ≃ᵐ β × ({j // j ≠ i} → β)) which is also not in scope.
-
-### Strategy (4 steps)
-
-* **Step 1**: by `h_split`, `condMI(X_i; Y^n; X^{<i}) = condMI(X_i; Y_i; X^{<i}) +
-  condMI(X_i; Yother; X^{<i}, Y_i)`.
-* **Step 2**: by `h_yother_zero`, the second summand is 0.
-* **Step 3** (Xprefix 項 ≤ bare MI): apply `mutualInfo_le_of_markov` to
-  `h_markov_xprefix` to get `I(X^{<i}; Y_i) ≤ I(X_i; Y_i)`, then chain rule
-  `I((X^{<i}, X_i); Y_i) = I(X^{<i}; Y_i) + condMI(X_i; Y_i; X^{<i})` combined with the
-  augmented Markov `(X^{<i}, X_i) → X_i → Y_i` (which follows from
-  `h_markov_xprefix` by adding the middle RV to the left, also requires extra
-  infrastructure).
-* **Step 4**: combine.
-
-Because the Markov-chain manipulations (left post-processing, middle augmentation) and
-the `condMutualInfo` reshape lemma are not yet in `CondMutualInfo.lean`, this lemma
-takes them as hypotheses. Phase D's wiring is independent of how these are obtained.
-
-**DEAD + SUPERSEDED (2026-06-10 機械検証)**: consumer-0。この per-summand 路 (D-2') は
-`h_yother_zero` が encoder 任意で偽のため放棄され、production の Strong route
-(`channel_coding_converse_general_memoryless_strong`, encoder-agnostic entropy
-subadditivity) に置換済。sorry 削除候補。
-
-@residual(plan:channel-coding-shannon-theorem-full-plan)
-@audit:superseded-by(channel_coding_converse_general_memoryless_strong)
-@audit:retract-candidate(superseded-by-full-discharge) -/
-@[entry_point]
-theorem memoryless_per_summand_bound
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
-    (_hXs : ∀ i, Measurable (Xs i)) (_hYs : ∀ i, Measurable (Ys i))
-    (_h_memo : IsMemorylessChannel μ Xs Ys) :
-    ∀ i : Fin n,
-      Shannon.condMutualInfo μ (Xs i) (fun ω j => Ys j ω)
-          (fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)
-        ≤ Shannon.mutualInfo μ (Xs i) (Ys i) := by
-  sorry
-
-end PerSummand
-
-/-! ## Phase D — 主定理 `channel_coding_converse_general_memoryless` (skeleton) -/
-
-section MainConverse
-
-variable {n : ℕ}
-variable {M : Type*} [Fintype M] [DecidableEq M] [Nonempty M]
-  [MeasurableSpace M] [MeasurableSingletonClass M] [StandardBorelSpace M]
-variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
-  [MeasurableSpace α] [MeasurableSingletonClass α] [StandardBorelSpace α]
-variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
-  [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
-
-omit [DecidableEq M] [DecidableEq α] [DecidableEq β] in
-/-- **Channel coding converse, memoryless DMC, hypothesis-form (Cover-Thomas Thm 7.9)**.
-
-Variant of `channel_coding_converse_general_chainRule` (D-2 既存) with the per-summand
-bound `I(X_i; Y^n | X^{<i}) ≤ I(X_i; Y_i)` derived from the memoryless DMC assumption
-`IsMemorylessChannel` via `memoryless_per_summand_bound` (Phase C).
-
-The Phase C lemma in its current form takes three derived facts as hypotheses
-(`h_yother_zero`, `h_split`, `h_markov_xprefix`), all derivable from
-`IsMemorylessChannel` but requiring Markov-chain manipulations not yet in
-`CondMutualInfo.lean`. Phase D pipes these hypotheses through.
-
-### Strategy (3 steps)
-
-1. Apply D-2 既存 `channel_coding_converse_general_chainRule` to obtain the chain-rule
-   decomposed bound `log|M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + Fano`.
-2. Apply `memoryless_per_summand_bound` (Phase C) to reduce each summand to
-   `I(X_i; Y_i)` — as an `ENNReal` inequality first, then take `.toReal` with
-   finite-sum monotonicity.
-3. `linarith` to finish (Fano terms identical on both sides).
-
-**DEAD + SUPERSEDED (2026-06-10 機械検証)**: この Draft theorem は consumer-0、かつ
-production `channel_coding_converse_general_memoryless_pure`
-(`Shannon/ChannelCoding/ConverseMemorylessPure.lean`) が **結論完全一致 + sorryAx-free**
-で同じ converse を達成済 (Strong route = entropy subadditivity 経由)。Draft の Phase C/D
-路は不要 (sorry 削除候補)。
-
-@residual(plan:channel-coding-shannon-theorem-full-plan)
-@audit:superseded-by(channel_coding_converse_general_memoryless_pure)
-@audit:retract-candidate(superseded-by-full-discharge) -/
-@[entry_point]
-theorem channel_coding_converse_general_memoryless
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Msg : Ω → M) (encoder : M → Fin n → α)
-    (Ys : Fin n → Ω → β) (decoder : (Fin n → β) → M)
-    (_hMsg : Measurable Msg) (_hYs : ∀ i, Measurable (Ys i))
-    (_hdecoder : Measurable decoder)
-    (_hmarkov : Shannon.IsMarkovChain μ Msg
-      (fun ω => encoder (Msg ω)) (fun ω i => Ys i ω))
-    (_h_memo : IsMemorylessChannel μ (fun i ω => encoder (Msg ω) i) Ys)
-    (_hMsg_uniform :
-      μ.map Msg = (Fintype.card M : ℝ≥0∞)⁻¹ • Measure.count)
-    (_hcard : 2 ≤ Fintype.card M)
-    (_hMI_finite : Shannon.mutualInfo μ
-      (fun ω => encoder (Msg ω)) (fun ω i => Ys i ω) ≠ ∞) :
-    Real.log (Fintype.card M) ≤
-      (∑ i : Fin n,
-        (Shannon.mutualInfo μ
-          (fun ω => encoder (Msg ω) i) (Ys i)).toReal) +
-        Real.binEntropy
-          (InformationTheory.MeasureFano.errorProb μ Msg
-            (fun ω i => Ys i ω) decoder) +
-        InformationTheory.MeasureFano.errorProb μ Msg
-          (fun ω i => Ys i ω) decoder *
-          Real.log ((Fintype.card M : ℝ) - 1) := by
-  sorry
-
-end MainConverse
 
 end InformationTheory.Shannon.ChannelCodingConverseGeneral

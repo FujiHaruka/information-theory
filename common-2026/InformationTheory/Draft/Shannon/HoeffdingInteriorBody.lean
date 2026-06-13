@@ -62,9 +62,11 @@ plug into its `IsHoeffdingMinimizerFullSupport` constructor.
   `IsHoeffdingInteriorMinimizer`, derive
   `IsHoeffdingMinimizerFullSupport Qstar` directly.
 
-* **`hoeffdingE2_interior_minimizer_via_predicates`** — the witness form of
-  the interior discharge: given the two interior predicates, produce a witness
-  `Qstar` that realises `hoeffdingE2 P₁ P₂ alpha` and is full-support.
+NOTE: `isHoeffdingInteriorMinimizer_of_gradient` / `hoeffdingE2_interior_minimizer_via_predicates`
+(interior 存在の witness form) は DEAD (consumer-0、production `hoeffding_tradeoff_exp` が
+IVT+exp-family Pythagorean bypass で supersede) のため 2026-06-13 削除。本 file は live な
+interface 述語 (`IsHoeffdingInteriorGradient` / `IsHoeffdingInteriorMinimizer`) + Pythagoras
+補題 (`csiszar_pythagoras_at_interior` 等) を保持。
 
 NOTE: the fixed-`alpha` interior sandwich `Tendsto` wrappers
 (`hoeffding_tradeoff_sandwich_at_interior_via_predicate` / `_via_gradient`) were
@@ -207,37 +209,6 @@ lemma isHoeffdingMinimizerFullSupport_of_gradient
     IsHoeffdingMinimizerFullSupport Qstar :=
   IsHoeffdingMinimizerFullSupport.of_pos (h_grad hQs_mem hQs_min)
 
-/-! ## Phase 3 — Interior witness packaged with `hoeffdingE2_attained` -/
-
-/-- **Interior minimizer existence (textbook L-H4-FS interior)**: at any
-`alpha ≥ 0`, the infimum `hoeffdingE2 P₁ P₂ alpha` is realised at some
-full-support `Qstar`.
-
-The textbook proof identifies `Qstar` as a one-parameter exponential tilt of
-`P₁` and uses the log-singularity gradient argument (directional derivative of
-`klDivPmf · P₂` at a `0`-atom is `−∞`) to rule out boundary minimizers in the
-interior regime.
-
-`@residual(plan:hoeffding-tradeoff-moonshot-plan)` — the predicate-form
-`IsHoeffdingInteriorGradient` hypothesis was previously bundled and is now
-retreated; the genuine `HasDerivAt` / Lagrangian-tilt discharge is deferred to
-`hoeffding-tradeoff-moonshot-plan` Phase B.
-
-DEAD (2026-06-11 dead 掃除, judgment #19/#22 確認): consumer-0 (`dep_consumers
---transitive` 推移閉包 0)。production `hoeffding_tradeoff_exp`
-(`Hoeffding/TradeoffExp.lean`、`#print axioms` sorryAx-free) が IVT+exp-family
-Pythagorean bypass で完成済 — 本 interior-minimizer existence 補題を一切経由しない。
-statement 自体は TRUE (`0 ≤ alpha` 付き) だが dead 残置。
-@audit:retract-candidate(superseded-by-full-discharge) -/
-@[entry_point]
-theorem isHoeffdingInteriorMinimizer_of_gradient
-    (P₁ P₂ : α → ℝ)
-    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (hP₁_sum : ∑ a, P₁ a = 1)
-    {alpha : ℝ} (h_alpha_nn : 0 ≤ alpha) :
-    ∃ Qstar, IsHoeffdingInteriorMinimizer P₁ P₂ alpha Qstar := by
-  sorry
-
 /-! ## Phase 4 — Interior `IsMinOn` consequence (Pythagoras ready) -/
 
 /-- **Interior `IsMinOn` extraction**: from `IsHoeffdingInteriorMinimizer`,
@@ -292,35 +263,6 @@ theorem csiszar_pythagoras_at_interior
     (hoeffdingConstraintSet_subset_stdSimplex P₁ alpha)
     hP₂_sum hP₂_pos hQs_interior.mem hQs_interior.full_support
     (hQs_interior.isMinOn hP₂_pos) hP_mem hP_pos
-
-/-! ## Phase 7 — `hoeffdingE2` interior characterization via predicates -/
-
-/-- **Interior infimum reached at full-support witness (textbook L-H4-FS
-interior)**: the infimum `hoeffdingE2 P₁ P₂ alpha` is realised at some
-full-support `Qstar` lying in `K(α)`.
-
-This packages the existence and full-support consequences as a single witness
-extraction, mirroring `hoeffdingE2_minimizer_at_boundary_alpha_ge_kl`
-(`HoeffdingSandwichBody.lean` Phase 2).
-
-`@residual(plan:hoeffding-tradeoff-moonshot-plan)` — the predicate-form
-`IsHoeffdingInteriorGradient` hypothesis was previously bundled and is now
-retreated.
-
-DEAD (2026-06-11 dead 掃除, judgment #19/#22 確認): consumer-0 (`dep_consumers
---transitive` 推移閉包 0)。production `hoeffding_tradeoff_exp`
-(`Hoeffding/TradeoffExp.lean`、sorryAx-free) が interior body を bypass。
-statement 自体は TRUE (`0 ≤ alpha` 付き) だが dead 残置。
-@audit:retract-candidate(superseded-by-full-discharge) -/
-@[entry_point]
-theorem hoeffdingE2_interior_minimizer_via_predicates
-    (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (hP₁_sum : ∑ a, P₁ a = 1)
-    {alpha : ℝ} (h_alpha_nn : 0 ≤ alpha) :
-    ∃ Qstar ∈ hoeffdingConstraintSet P₁ alpha,
-      hoeffdingE2 P₁ P₂ alpha = klDivPmf Qstar P₂ ∧
-      IsHoeffdingMinimizerFullSupport Qstar := by
-  sorry
 
 /-! ## Phase 8 — Hypothesis-form interior result -/
 

@@ -60,8 +60,9 @@ variable {β : Type*} [MeasurableSpace β] [Nonempty β] [StandardBorelSpace β]
 * `outputs_cond_indep`: 各 `i` で `Y^{≠i} → X^n → Y_i`、すなわち入力全体を condition すれば
 `Y_i` は他の出力 `Y^{≠i}` と独立 (出力の条件付き独立性)。
 
-これら 2 つから、対応する 3 仮説 (`h_yother_zero`, `h_split`, `h_markov_xprefix`) を
-合成して `channel_coding_converse_general_memoryless` を呼び出すのが本 file の目標。 -/
+(旧 D-2' 路は 3 仮説 `h_yother_zero`/`h_split`/`h_markov_xprefix` を
+`channel_coding_converse_general_memoryless` に渡す形だったが、`h_yother_zero` が encoder
+任意で偽のため放棄・削除済。本 file は entropy 劣加法の `_strong` 路を採る。) -/
 structure IsMemorylessChannelStrong (μ : Measure Ω) [IsFiniteMeasure μ]
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β) : Prop where
   /-- Per-letter Markov: `Y_i` depends on `X^n` only through `X_i`. -/
