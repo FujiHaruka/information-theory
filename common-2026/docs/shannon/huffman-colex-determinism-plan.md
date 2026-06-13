@@ -12,7 +12,7 @@
 > `Finset.Colex.instLinearOrder` で道がある** ことを本 plan の起草前 probe で確認済。
 > 旧判定 (#19, Section E) は撤回。ただし旧判断ログ entry 自体は append-only なので残す。
 >
-> **Status (2026-05-21)**: 計画起草。実装未着手。コードは未編集。
+> **Status**: CLOSED ✅ — superseded。Hyp2 は cost-level pivot ([`huffman-cost-level-optimality-plan.md`](./huffman-cost-level-optimality-plan.md)) で別経路に無条件 genuine 達成 (`huffmanLength_optimal`、状態は roadmap Ch.5 が SoT)。本 route の relabel-determinization コード (`ColexDeterminism.lean` / `MergedAuxIdent.lean` / `FirstStepProbe.lean`) は consumer-0 dead と確定し削除済 (2026-06-13)。以下本文は探索記録 (historical)。
 
 ## 進捗
 

@@ -13,7 +13,7 @@
 > 関数」の特殊形 = **full-B 構造定理 (500+ 行 moonshot)** に逢着する。本 plan は **その full-B 構造定理を
 > genuine に証明し、collapse を系で出して `MergedHuffmanAuxIdentHypothesis` を無条件 discharge** する。
 >
-> **Status (2026-05-21)**: 計画起草。実装未着手。コードは未編集。
+> **Status**: CLOSED ✅ — superseded (未実装)。full-B 構造定理は着手されず、Hyp2 collapse は cost-level pivot ([`huffman-cost-level-optimality-plan.md`](./huffman-cost-level-optimality-plan.md)) で別経路に無条件 genuine 達成 (`huffmanLength_optimal`、状態は roadmap Ch.5 が SoT)。前提とした colex cornerstone (`ColexDeterminism.lean` / `MergedIdentBody.lean` / `FirstStepProbe.lean`) は consumer-0 dead と確定し削除済 (2026-06-13)。以下本文は探索記録 (historical)。
 
 ## 進捗
 

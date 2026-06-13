@@ -12,7 +12,7 @@
 > 既存 FALSE wall 5 件は `@audit:closed-by-successor(huffman-strong-form-completion)` を
 > 引き続き持つ (= 前任 plan slug)。retract/書換手順は §「FALSE wall の retract 手順」参照。
 >
-> **Status (2026-05-30)**: 計画起草。実装未着手。
+> **Status**: DONE ✅ — `huffmanLength_optimal` (Cover-Thomas 5.8.1 強形・無条件) genuine 達成 (axiom 健全性は `#print axioms InformationTheory.Shannon.Huffman.huffmanLength_optimal` で都度再導出)。本 plan が探索初期に「削除推奨」と判定した FALSE-wall / colex-determinization artifact (`ColexDeterminism.lean` / `MergedAuxIdent.lean` / `MergedIdentBody.lean` / `FirstStepProbe.lean`) は consumer-0 dead 確定で削除済 (2026-06-13)。SoT = roadmap Ch.5。
 
 ## 進捗
 
