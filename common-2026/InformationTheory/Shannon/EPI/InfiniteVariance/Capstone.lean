@@ -1,37 +1,30 @@
-/-
-# 無限分散 a.c. 古典 EPI — capstone (route T → 無条件 EPI dispatch genuine 接続)
-
-route T headline `entropyPowerExt_add_ge_infinite_variance_truncation`
-(`EPIInfiniteVarianceTruncation.lean` 末尾、sorryAx-free) を用いて、named wall
-`entropyPowerExt_add_ge_infinite_variance`
-(旧 `EPICase1SmoothingLimit.lean:1407`、`@residual(wall:epi-infinite-variance-classical)`、`sorry`)
-を **genuine closure** する capstone。
-
-## import 制約 (循環回避)
-
-IVT (`EPIInfiniteVarianceTruncation`) は `EPICase1SmoothingLimit` を import している
-(一方向)。よって wall を EPICase1SmoothingLimit 内で headline を使って証明すると循環。
-本 capstone を **IVT の下流** に置き、IVT 系のみ import (`EPICase1SmoothingLimit` は IVT 経由で
-推移的に利用可能)。dispatch の consumer (`EPIUncondDispatch`) は IVT を import しないが、IVT は
-EPIUncondDispatch を import しないので循環なし。
-
-## Approach
-
-旧 wall signature と同一 (explicit X Y, `h_infvar`) の theorem を立て、
-**和の有限微分エントロピー `hent_sum` の有無で case split**:
-
-* **Case 1** (`hent_sum` 有り): route T headline
-  `entropyPowerExt_add_ge_infinite_variance_truncation` を適用 (`h_infvar` 不使用)。
-* **Case 2** (`¬ hent_sum`): 和の密度 `r := (P.map(X+Y)).rnDeriv vol |>.toReal` の `negMulLog`
-  が非可積分。負部 `B := ∫⁻ ofReal(-(negMulLog r))` は P 版負部補題 (`integrable_negPart...`) で
-  有限。`Integrable g vol ⟺ A<⊤ ∧ B<⊤` (`A := ∫⁻ ofReal(negMulLog r)`) の対偶で
-  `¬integrable ∧ B<⊤ → A=⊤` → `differentialEntropyExt ν = (A:EReal) - (B:EReal) = ⊤ - (finite) = ⊤`
-  → `entropyPowerExt ν = ⊤` → `le_top` で結論。
-
-`h_infvar` は signature 互換のため保持するが load-bearing でない (Case 1 で未使用、結論を弱める
-仮説)。`hX_ent`/`hY_ent` は各成分有限微分エントロピー regularity precondition。
--/
 import InformationTheory.Shannon.EPI.InfiniteVariance.Truncation
+
+/-!
+# Classical entropy power inequality for infinite-variance sums — capstone
+
+The named theorem `entropyPowerExt_add_ge_infinite_variance` (the same signature as the original
+finite-variance wall, with an explicit `h_infvar` infinite-variance hypothesis) is proved here
+using the conditioning-truncation route headline
+`entropyPowerExt_add_ge_infinite_variance_truncation`.
+
+## Implementation notes
+
+The theorem splits on whether the differential entropy of the sum is finite (`hent_sum`):
+
+* if it is finite, the truncation-route headline applies directly (`h_infvar` is unused);
+* otherwise the sum density `r := (P.map (X + Y)).rnDeriv volume |>.toReal` has non-integrable
+  `negMulLog`. Its negative part `B := ∫⁻ ofReal (-(negMulLog r))` is finite by the
+  probability-measure negative-part lemma, while `Integrable g volume ↔ A < ⊤ ∧ B < ⊤` (with
+  `A := ∫⁻ ofReal (negMulLog r)`) forces `A = ⊤`, so
+  `differentialEntropyExt ν = (A : EReal) - (B : EReal) = ⊤`, hence `entropyPowerExt ν = ⊤` and
+  the inequality holds by `le_top`.
+
+The `h_infvar` hypothesis is kept only for signature compatibility; it is not load-bearing
+(unused in the finite case, and a weakening hypothesis). `hX_ent` / `hY_ent` are
+per-component finite-differential-entropy regularity preconditions. To avoid an import cycle,
+this file is placed downstream of the truncation route and imports only that route.
+-/
 
 namespace InformationTheory.Shannon.EPIInfiniteVarianceTruncation
 
@@ -44,24 +37,15 @@ open scoped ENNReal NNReal Topology
 
 variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
 
-/-- **P 版 負部可積分性** — 和の密度 `r := (P.map(X+Y)).rnDeriv vol |>.toReal` (= `pX ∗ pY`,
-convolution) の `negMulLog` の負部 `(negMulLog r)⁻ = max (-(negMulLog r)) 0 = (r log r)⁺` の
-`volume`-可積分性。
+/-- The negative part `(negMulLog r)⁻ = max (-(negMulLog r)) 0` of `negMulLog` of the sum density
+`r := (P.map (X + Y)).rnDeriv volume |>.toReal` (the convolution `pX ∗ pY`) is `volume`-integrable.
 
-condTrunc 版 `integrable_negPart_negMulLog_map_condTrunc_sum` (`:600`, genuine `@audit:ok`) の P 版。
-condTrunc を `P` 自身に読み替え、密度同定 `rnDeriv_map_sum_ae` (`:1085`、P 版 conv density 同定) と、
-`Cq = (φ pY)⁺` 可積分性を `hY_ent` から直接 (`hY_ent.neg.pos_part`) 取る (condTrunc 版が
-`integrable_negMulLog_map_condTrunc` 経由だった部分の簡素化)。
+This is the conditioning-free version of `integrable_negPart_negMulLog_map_condTrunc_sum`. Since
+`pX · volume = P.map X` is a probability measure and `t ↦ t log t` is convex, the integral form of
+Jensen's inequality gives `(r z · log r z)⁺ ≤ ∫ x, pX x · (pY (z - x) · log pY (z - x))⁺ dx`, and
+Tonelli with translation invariance bounds `∫⁻ z (r log r)⁺` by `1 · C < ∞` where
+`C = ∫ (pY log pY)⁺ < ∞` comes from `hY_ent`.
 
-機構 (route ② Jensen + Tonelli、無限分散でも moment 不要): `pX·vol = P.map X` は確率測度
-(`∫ pX = 1`)。`t ↦ t log t` は凸 (`Real.convexOn_mul_log`) ゆえ Jensen 積分版
-(`ConvexOn.map_integral_le`) で `(r(z) log r(z))⁺ ≤ ∫ x, pX(x)·(pY(z-x) log pY(z-x))⁺ dx`。
-Tonelli + Lebesgue 平行移動不変で `∫⁻ z (r log r)⁺ ≤ 1·C < ∞`、`C = ∫ (pY log pY)⁺ < ∞` (from
-`hY_ent`)。
-
-honest: 結論は可積分性 (regularity)。仮説は a.c. + measurability + indep + 各成分有限微分
-エントロピー `hX_ent`/`hY_ent`。和エントロピー可積分性 (= Case 2 で否定する量) を仮説で受けて
-いない (非循環・非バンドル)。本 body は `hY_ent` のみ使用 (`hX_ent` 未使用 = より弱い仮説で成立)。
 @audit:ok -/
 theorem integrable_negPart_negMulLog_map_sum (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
@@ -286,20 +270,13 @@ theorem integrable_negPart_negMulLog_map_sum (P : Measure Ω) [IsProbabilityMeas
     _ = C := by rw [hpX_lint, one_mul, hC_def]
     _ < ∞ := hC_lt_top
 
-/-- **genuine wall** — 無限分散 a.c. 古典 EPI `Nₑ(X+Y) ≥ Nₑ(X) + Nₑ(Y)`。
-旧 `EPICase1SmoothingLimit.entropyPowerExt_add_ge_infinite_variance` (`:1407`,
-`@residual(wall:epi-infinite-variance-classical)`、`sorry`) と同一 signature の genuine 版。
+/-- The classical entropy power inequality `Nₑ(X + Y) ≥ Nₑ(X) + Nₑ(Y)` for an independent,
+absolutely continuous, finite-differential-entropy, infinite-variance sum.
 
-機構 = `hent_sum` の case split (`h_infvar` は signature 互換のため保持、Case 1 で未使用 =
-load-bearing でない、honest):
-* Case 1 (`hent_sum` 有り): route T headline 適用 (genuine, sorryAx-free)。
-* Case 2 (`¬ hent_sum`): 和エントロピー非可積分 → 負部有限 (P 版負部補題) → 正部 `A=⊤` →
-  `differentialEntropyExt ν = ⊤` → `entropyPowerExt ν = ⊤` → `le_top`。
-
-honest: `h_infvar` は結論を弱める仮説で load-bearing でない (Case 1 で未使用)。
-`hX_ent`/`hY_ent` は各成分有限微分エントロピー regularity precondition。route T で genuine
-closure 済 (旧 Lieb-Young / Brascamp-Lieb 壁主張は FALSE WALL — conditioning truncation で
-moment 非依存に閉じる)。
+The proof splits on `hent_sum`: when the sum entropy is finite the truncation-route headline
+applies; otherwise the sum entropy is `+∞`, so `entropyPowerExt ν = ⊤` and the inequality holds by
+`le_top`. The `h_infvar` hypothesis is kept for signature compatibility and is not load-bearing
+(unused in the finite case); `hX_ent` / `hY_ent` are per-component regularity preconditions.
 @audit:ok -/
 theorem entropyPowerExt_add_ge_infinite_variance
     (P : Measure Ω) [IsProbabilityMeasure P]

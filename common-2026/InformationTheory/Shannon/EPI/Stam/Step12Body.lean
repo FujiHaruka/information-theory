@@ -61,27 +61,24 @@ typed predicates and discharge the surrounding algebra in full:
   predicates ⇒ Wave 7's `IsStamCauchySchwarzOptimal` ⇒ `IsStamInequalityHyp`,
   closing the chain to the published Stam signature.
 
-### 撤退ライン (本 file で発動)
+## Main definitions
 
-* **L-S12-A** (採用): conditional-expectation core sub-decomposed to a single
-  typed field `convex_fisher_bound` inside `IsStamCondExpCSHyp` (replaces the
-  Wave 7 `True`). The field is a real inequality `J(Z) ≤ λ²J(X)+(1-λ)²J(Y)`,
-  which is exactly the output of Steps 1-3; the genuine `condExp` derivation of
-  *that* inequality is deferred to follow-up (`epi-stam-blachman-discharge-plan`).
-* **L-S12-B** (採用): score-convolution identity reified as the existence of the
-  optimal λ-witness in `IsStamScoreConvHyp`, NOT as `True`.
-* **L-S12-C** (未採用): full `condExp`-of-score measure-theoretic discharge.
+* `IsStamScoreConvHyp` (§2) — Step 1 typed predicate carrying the optimal `λ`-witness.
+* `IsStamCondExpCSHyp` (§3) — Step 2 typed predicate carrying the `∀λ` convex Fisher bound.
 
-## 主シグネチャ
+## Main statements
 
-* `stam_two_point_cs` (§1) — pointwise Cauchy-Schwarz `(ac+bd)² ≤ (a²+b²)(c²+d²)`
-* `stam_convex_cs` (§1) — λ-convex CS specialization, fully discharged
-* `stam_jensen_sq_le` (§1) — `(E)² ≤ E(²)` two-point Jensen, fully discharged
-* `IsStamScoreConvHyp` (§2) — Step 1 typed predicate (replaces `True`)
-* `IsStamCondExpCSHyp` (§3) — Step 2 typed predicate (replaces `True`)
-* `stamCauchySchwarzOptimal_of_step12` (§4) — Step 1+2 ⇒ Wave 7 optimal CS
-* `isStamInequalityHyp_of_step12` (§4) — full chain to published Stam signature
-* `isStamScoreConvHyp_of_gaussian` / `isStamCondExpCSHyp_of_gaussian` (§5)
+* `stam_two_point_cs`, `stam_convex_cs`, `stam_jensen_sq_le` (§1) — the fully discharged
+  Cauchy–Schwarz / Jensen algebra the `λ`-optimization consumes.
+* `stamCauchySchwarzOptimal_of_step12` (§4) — Steps 1+2 imply the optimal Cauchy–Schwarz form.
+* `isStamInequalityHyp_of_step12` (§4) — full chain to the published Stam signature.
+
+## Implementation notes
+
+The conditional-expectation core is reified as a single typed field `convex_fisher_bound` inside
+`IsStamCondExpCSHyp` (the real inequality `J(Z) ≤ λ² J(X) + (1 - λ)² J(Y)`, the output of
+Steps 1-3); the score-convolution identity is reified as the existence of the optimal `λ`-witness
+in `IsStamScoreConvHyp`.
 -/
 
 namespace InformationTheory.Shannon.EPIStamStep12Body
@@ -140,24 +137,12 @@ theorem stam_jensen_sq_le {lam : ℝ} (hlo : 0 ≤ lam) (hhi : lam ≤ 1) (u v :
 
 /-! ## §2 — Step 1 typed predicate `IsStamScoreConvHyp` (replaces Wave 7 `True`) -/
 
-/-- **Score-convolution representation hypothesis** (Step 1, typed).
-
-Blachman (1965): for independent `X, Y` with smooth densities, the score of
-`Z := X + Y` is the conditional expectation
-`s_Z(z) = E[λ s_X(X) + (1-λ) s_Y(Y) | X + Y = z]` for every `λ`.
-
-Wave 7 reified this as `IsStamScoreConvolution := True`. Here we upgrade it to a
-**typed** predicate carrying the optimal λ-witness `λ* = J_Y / (J_X + J_Y)`,
-which is the data the downstream λ-optimization (Step 4) consumes. The genuine
-`condExp`-of-score identity producing this witness is the irreducible
-measure-theoretic core (L-S12-B): we reify its *output* (existence of the
-λ-witness in `[0,1]`) rather than its derivation.
-
-Concretely: for the three Fisher-info reals, there exists `λ ∈ [0,1]` equal to
-the optimal `J_Y / (J_X + J_Y)`. This is unconditionally satisfiable (the
-optimum is a genuine point of `[0,1]`), so the predicate is *honestly
-discharged* by `isStamScoreConvHyp_intro`, unlike the `True` placeholder it
-replaces — the witness it produces is exactly the one the proof needs. -/
+/-- The score-convolution representation (Step 1, typed). Blachman (1965): for independent `X, Y`
+with smooth densities, the score of `Z := X + Y` is the conditional expectation
+`s_Z(z) = E[λ s_X(X) + (1 - λ) s_Y(Y) | X + Y = z]` for every `λ`. This predicate reifies the
+output — the existence of the optimal `λ`-witness `λ* = J_Y / (J_X + J_Y)` in `[0, 1]`, the data
+the downstream `λ`-optimization consumes — rather than the derivation. It is unconditionally
+satisfiable (`isStamScoreConvHyp_intro`). -/
 def IsStamScoreConvHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y : ℝ) (fX fY : ℝ → ℝ), 0 < J_X → 0 < J_Y →
@@ -165,10 +150,8 @@ def IsStamScoreConvHyp {Ω : Type*} [MeasurableSpace Ω]
     J_Y = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
     ∃ lam : ℝ, 0 ≤ lam ∧ lam ≤ 1 ∧ lam = J_Y / (J_X + J_Y)
 
-/-- The score-convolution typed predicate is genuinely provable: the optimal
-λ-witness `J_Y / (J_X + J_Y)` always lies in `[0,1]` for positive Fisher infos.
-This replaces the Wave 7 `trivial` discharge of the `True` placeholder with a
-real construction. -/
+/-- The score-convolution predicate holds: the optimal `λ`-witness `J_Y / (J_X + J_Y)` always lies
+in `[0, 1]` for positive Fisher infos. -/
 @[entry_point]
 theorem isStamScoreConvHyp_intro {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : IsStamScoreConvHyp X Y P := by
@@ -179,57 +162,22 @@ theorem isStamScoreConvHyp_intro {Ω : Type*} [MeasurableSpace Ω]
     rw [div_le_one hsum]; linarith
 
 
-/-! ## §3 — Step 2 typed predicate `IsStamCondExpCSHyp` (replaces Wave 7 `True`) -/
+/-! ## §3 — Step 2 typed predicate `IsStamCondExpCSHyp` -/
 
-/-- **Conditional Cauchy-Schwarz hypothesis** (Step 2, typed).
+/-- The conditional Cauchy–Schwarz hypothesis (Step 2, typed). Applying conditional Jensen
+`(E[g | G])² ≤ E[g² | G]` to `g = λ s_X + (1 - λ) s_Y` against the law of `Z = X + Y`, with the
+Step 1 score-convolution representation, yields the convex Fisher bound
+`J(Z) ≤ λ² J(X) + (1 - λ)² J(Y)` for every `λ ∈ [0, 1]`. This predicate exposes that `∀λ` bound as
+a typed field; §4 derives the optimal bound from it via the `λ`-optimization.
 
-The genuine Step 2-3 content: applying conditional Jensen `(E[g|G])² ≤ E[g²|G]`
-to `g = λ s_X + (1-λ) s_Y` against the law of `Z = X + Y`, with the
-score-convolution representation from Step 1, yields the **convex Fisher bound**
+The injected hypotheses (`IsRegularDensityV2 fX/fY`, the normalizations, the pointwise convolution
+identity, and the `IsBlachmanConvReady fX fY` bundle) are regularity preconditions, not the
+inequality core. The `∀λ` bound is supplied genuinely by `convex_fisher_bound_of_ready`
+(`EPIBlachmanDensity`); the producer `stam_step2_density_wall` is genuinely closed (sorryAx-free),
+so the predicate is a sound intermediate API Prop discharged from regularity alone, not a
+load-bearing wall.
 
-    `J(Z) ≤ λ² J(X) + (1-λ)² J(Y)`   for every `λ ∈ [0,1]`.
-
-Wave 7 reified this as `IsStamCauchySchwarz` (existence of *some* witness) and
-`IsStamCauchySchwarzOptimal` (= the optimal bound), but with *no* discharge path
-other than the trivial `True`/Gaussian-vacuous routes. Here we expose the
-**∀λ convex bound** as a typed field — exactly the output of the
-conditional-CS integration (`stam_convex_cs` integrated against `p_Z`). The
-single irreducible measure-theoretic step (turning the pointwise `stam_convex_cs`
-into the Fisher-info integral inequality) is the L-S12-A pass-through; once
-granted for all `λ`, §4 derives the optimal bound *fully* via the Wave 7
-λ-optimization.
-
-Phase 3d (2026-05-31): sound Prop statement. The injected hyps
-(`IsRegularDensityV2 fX/fY`, `∫fX=1`, `∫fY=1`, the *pointwise* convolution identity
-`∀ x, fXY x = convDensityAdd fX fY x`, and the `IsBlachmanConvReady fX fY` regularity
-bundle) are regularity preconditions, NOT the inequality's core. The `∀λ` convex Fisher
-bound is now supplied **genuinely** by `convex_fisher_bound_of_ready`
-(`EPIBlachmanDensity`); the producer `stam_step2_density_wall` of the resulting optimal
-predicate is genuinely closed (0-sorry, sorryAx-free). No honesty defect.
-
-@audit:ok — independent honesty audit (2026-05-31): SOUND Prop, no load-bearing /
-circular / `:True` field. NON-vacuity CAVEAT: the gating `IsBlachmanConvReady fX fY`
-hyp has no in-tree witness yet (Gaussian instance unwired); non-vacuousness pending the
-Gaussian witness (`epi-wall-reattack-plan`).
-
-@audit:ok — re-audit 2026-06-04 (independent, triggered by a `wall:stam-blachman`
-load-bearing-predicate report): MISREPORT REBUTTED. (1) This predicate is NOT injected as
-an open load-bearing hyp into a closed theorem: its consumers
-(`isStamCauchySchwarz_of_condExpCSHyp` / `stamCauchySchwarzOptimal_of_condExpCSHyp` /
-`isStamInequalityHyp_of_step12` …) are genuine sorryAx-free IMPLICATION wrappers
-(`#print axioms` = `[propext, Classical.choice, Quot.sound]`, machine-verified transiently
-2026-06-04), and the predicate is genuinely DISCHARGED from regularity alone by
-`EPIStamInequalityBody.stam_step2_density_wall` → `convex_fisher_bound_of_ready` → genuine
-`convex_fisher_bound` (all `@audit:ok`, sorryAx-free). So it is a sound intermediate API
-Prop with an in-tree producer, NOT an un-dischargeable load-bearing wall. (2) Zero
-load-bearing reach into the EPI main theorem: `EntropyPowerInequality.entropy_power_inequality`
-routes through `IsStamInequalityResidual` + `stamToEPIBridge_holds`, never through
-`IsStamCondExpCSHyp` (0 references in `EntropyPowerInequality.lean`); the entire
-`IsStamCondExpCSHyp` consumer cluster has ZERO live cross-file call sites (refs are
-docstring mentions only) — it is dead-ish API-completeness scaffolding. (3) The
-`wall:stam-blachman` in the report is the condExp-route score-of-convolution wall narrated
-in `EPIScoreCrossTermOrth.lean`, a DISTINCT (and bypassed-by-density-route) concern; it is
-prose, not an active `@residual` carried by any sorry on this declaration. No defect. -/
+@audit:ok -/
 def IsStamCondExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
@@ -337,19 +285,13 @@ theorem stamCauchySchwarzOptimal_of_step12 {Ω : Type*} [MeasurableSpace Ω]
     IsStamCauchySchwarzOptimal X Y P :=
   stamCauchySchwarzOptimal_of_condExpCSHyp h_cs
 
-/-- **Full chain: Step 1 + Step 2 ⇒ published Stam signature `IsStamInequalityHyp`.**
+/-- Full chain: Steps 1 and 2 imply the published Stam signature `IsStamInequalityHyp`. Composes
+the typed Step-1/Step-2 predicates with the body bridge `isStamInequalityHyp_via_body`, closing the
+chain from the conditional Cauchy–Schwarz body to the Cover–Thomas Lemma 17.7.2 form
+`1 / J(Z) ≥ 1 / J(X) + 1 / J(Y)`. The genuine input is the typed `h_cs : IsStamCondExpCSHyp X Y P`
+(the `∀λ` convex Fisher bound).
 
-Composes the typed Step-1/Step-2 predicates with the Wave 7 body bridge
-`isStamInequalityHyp_via_body`, closing the chain from the conditional-CS body
-to the Cover-Thomas Lemma 17.7.2 真 signature `1/J(Z) ≥ 1/J(X) + 1/J(Y)`.
-
-Note: the former cosmetic `IsStamScoreConvolution X Y P` slot on
-`isStamInequalityHyp_via_body` was dropped in the wall-consolidation pass (it
-was unconditionally constructible and unused). The chain's genuine input is the
-typed `h_cs : IsStamCondExpCSHyp X Y P` (Step 2, the ∀λ convex Fisher bound),
-threaded via `stamCauchySchwarzOptimal_of_step12`.
-
-`@audit:ok` -/
+@audit:ok -/
 @[entry_point]
 theorem isStamInequalityHyp_of_step12 {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}

@@ -15,13 +15,10 @@ open scoped ENNReal NNReal Topology
 
 variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
 
-/-! ### Helper 5 — RHS 収束 (plan §推奨分解 5) -/
-
-/-- **growing-set entropy 分解恒等式**: probability measure `μ` (a.c.+有限 entropy) を
-成長する切詰集合 `Sn := {|r|≤n}` で conditioning した測度の微分エントロピーは
-`h(cond μ Sn) = (m_n.toReal)⁻¹ · ∫ Sn.indicator (negMulLog ∘ q) ∂vol + log (m_n.toReal)`
-(`m_n := μ Sn`, `q x := (μ.rnDeriv vol x).toReal`)。
-`rnDeriv_cond_eq` (cond density formula) + `negMulLog_mul` + density の Sn 積分 = measure。 -/
+/-- Differential entropy of a measure conditioned on a growing truncation set
+`Sn := {|r| ≤ n}` decomposes as
+`h(cond μ Sn) = (m_n.toReal)⁻¹ · ∫ Sn.indicator (negMulLog ∘ q) ∂volume + log (m_n.toReal)`,
+where `m_n := μ Sn` and `q x := (μ.rnDeriv volume x).toReal`. -/
 theorem differentialEntropy_cond_decomp (μ : Measure ℝ) [IsProbabilityMeasure μ]
     {n : ℕ} (hpos : μ {r : ℝ | |r| ≤ (n : ℝ)} ≠ 0)
     (hac : μ ≪ volume)
@@ -106,14 +103,10 @@ theorem differentialEntropy_cond_decomp (μ : Measure ℝ) [IsProbabilityMeasure
   rw [h_negc, hc_eq]
   ring
 
-/-- **RHS 収束 (微分エントロピー版)**: `h(P_n.map Z) → h(P.map Z)` (各成分)。
-恒等式 `-∫ p_n log p_n = -(1/m_n)∫_{truncSet} p log p + log m_n`、第 1 項は固定可積分
-`p log p` の growing-set monotone/dominated convergence、第 2 項は `m_n → 1` → `log m_n → 0`。
-moment 非依存 (固定可積分関数 `p log p` のみ)。
-
-⚠ signature 追加: bridge `map_condTrunc_eq_cond_map` を使うため `hZ : Z = X ∨ Z = Y`
-(成分制約) + `hXY` (独立性) が必要 (旧 `hZ : Measurable Z` を置換、可測性は `hZ` から導出)。
-両者とも structural/regularity precondition (結論 = entropy 収束を encode しない)。 -/
+/-- Per-component convergence of differential entropy under conditioning truncation:
+`h((condTrunc P X Y n).map Z) → h(P.map Z)` for `Z = X` or `Z = Y`. The decomposition
+`-∫ p_n log p_n = -(1/m_n) ∫_{truncSet} p log p + log m_n` converges by dominated convergence on
+the fixed integrable `p log p` (first term) and `m_n → 1` (second term). -/
 theorem differentialEntropy_map_condTrunc_tendsto (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     {Z : Ω → ℝ} (hZ : Z = X ∨ Z = Y)
@@ -209,13 +202,9 @@ theorem differentialEntropy_map_condTrunc_tendsto (P : Measure Ω) [IsProbabilit
   rw [map_condTrunc_eq_cond_map P hX hY hXY hZ hpos,
     differentialEntropy_cond_decomp (P.map Z) hSn_pos hZ_ac hZ_ent]
 
-/-- **RHS 収束 (entropyPower 版)**: `Nₑ(P_n.map Z) → Nₑ(P.map Z)`。
-微分エントロピー版を `entropyPowerExt = exp (2·h)` の連続変換で lift。
-
-⚠ signature 追加: 微分エントロピー版 (`differentialEntropy_map_condTrunc_tendsto`) と
-per-n 有限 entropy (`integrable_negMulLog_map_condTrunc`、Z=X/Y で適用) のため
-`hZ : Z = X ∨ Z = Y` + `hXY` が必要 (旧 `hZ : Measurable Z` を置換)。
-structural/regularity precondition。 -/
+/-- Per-component convergence of the entropy power under conditioning truncation:
+`Nₑ((condTrunc P X Y n).map Z) → Nₑ(P.map Z)`, obtained from the differential-entropy version by
+the continuous transform `entropyPowerExt = exp (2 · h)`. -/
 theorem entropyPowerExt_map_condTrunc_tendsto (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     {Z : Ω → ℝ} (hZ : Z = X ∨ Z = Y)
@@ -249,23 +238,15 @@ theorem entropyPowerExt_map_condTrunc_tendsto (P : Measure Ω) [IsProbabilityMea
       = entropyPowerExt ((condTrunc P X Y n).map Z)
   exact (entropyPowerExt_of_ac_integrable hac_n hent_n).symm
 
-/-- **crux usc 微分エントロピー版の有界性**: `h(P_n.map(X+Y))` (= `h(μ_n)`) の列が
-`atTop` で上に有界 (`IsBoundedUnder (≤)`) かつ下から co-有界 (`IsCoboundedUnder (≤)`)。
-crux usc 本体 (`differentialEntropy_condTrunc_sum_limsup_le`) の limsup 比較 + exp-lift
-(`entropyPowerExt_condTrunc_sum_limsup_le`) の `Monotone.map_limsup_of_continuousAt` で
-`bdd_above`/`cobdd` 前提を供給する。
+/-- The sequence `h((condTrunc P X Y n).map (X + Y))` is bounded above (`IsBoundedUnder (≤)`) and
+cobounded below (`IsCoboundedUnder (≤)`) along `atTop`. These supply the `bddAbove` / `cobdd`
+premises for the monotone-continuous `limsup` push in the entropy-power upper semicontinuity
+bound.
 
-genuine (2026-06-07, 両側 fill 完了): 上界 (`.1`) は sub-helper C (`h(μ_n) ≤ RHS_n`) +
-sub-helper D (`RHS_n → h(ν)` → `IsBoundedUnder`) + `IsBoundedUnder.mono_le`。co-有界
-(`.2`、下界) は per-n EPI 下界: `Nₑ(μ_n) ≥ Nₑ(X_n)` (`entropyPowerExt_condTrunc_add_ge` +
-`le_self_add`)、`exp(2 h(μ_n)) = Nₑ(μ_n).toReal ≥ Nₑ(X_n).toReal → Nₑ(X).toReal =: cX > 0`
-(`entropyPowerExt_map_condTrunc_tendsto` Z=X)、eventually `≥ cX/2`、log を取り
-`h(μ_n) ≥ (1/2) log(cX/2) =: c`、`isCoboundedUnder_le_of_eventually_le` で閉じる。
-
-honest: 結論は列の有界性 (regularity)。仮説は a.c. + measurability + 各成分有限微分エントロピー
-`hX_ent`/`hY_ent` + 和エントロピー可積分 `hent_sum` (regularity precondition)。usc 不等式 (結論) を
-仮説で受けていない。`hX_ent`/`hY_ent` は co-有界の per-n EPI 下界供給に使う precondition
-(load-bearing でない)、Step 1 で crux-usc chain に threading 済 (headline `:2238-2239` が保持)。
+The upper bound comes from the per-`n` Gibbs bound `h(μ_n) ≤ RHS_n` plus convergence of `RHS_n`;
+the coboundedness comes from the per-`n` lower bound `Nₑ(μ_n) ≥ Nₑ(X_n)`, taking logs to get
+`h(μ_n) ≥ (1/2) log (Nₑ(X).toReal / 2)` eventually. The entropy finiteness hypotheses are
+regularity preconditions.
 @audit:ok -/
 theorem differentialEntropy_condTrunc_sum_bddUnder (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -358,23 +339,12 @@ theorem differentialEntropy_condTrunc_sum_bddUnder (P : Measure Ω) [IsProbabili
     show c ≤ hμn
     rw [hc_def]; linarith
 
-/-! ### Helper 4 — crux usc (plan §推奨分解 4, genuine sub-wall 候補) -/
+/-- Upper semicontinuity of differential entropy under conditioning truncation:
+`limsupₙ h((condTrunc P X Y n).map (X + Y)) ≤ h(P.map (X + Y))`.
 
-/-- **crux usc (微分エントロピー版)**: `limsup_n h(P_n.map(X+Y)) ≤ h(P.map(X+Y))`。
-Gibbs step (`differentialEntropy_le_cross_entropy` で h(P_n.map(X+Y)) を cross-entropy
-`-∫(p_n∗q_n)log(p∗q)` で上から抑える) + cross-entropy DCT (優関数 `C²(p∗q)|log(p∗q)|`、
-和の有限微分エントロピーで可積分、`tendsto_integral_of_dominated_convergence` で
-`→ -∫(p∗q)log(p∗q) = h(p∗q)`)。本 moonshot の核。
-
-genuine assembly (2026-06-07): limsup chain `limsup h(μ_n) ≤ limsup RHS_n = h(ν)` を
-sub-helper C (`differentialEntropy_condTrunc_sum_le_crossEntropy`、per-n Gibbs) +
-sub-helper D (`crossEntropySeq_tendsto`、RHS 収束) + boundedness
-(`differentialEntropy_condTrunc_sum_bddUnder`) を black box として genuine 組立。
-解析核 (Gibbs 前提供給 / DCT) は C/D に局所化、本 body の独自 sorry なし
-(transitive sorry は C/D/boundedness の plan park)。
-
-honest: signature の `hent_sum` は regularity precondition (有限微分エントロピー)、結論
-(usc 不等式) を encode しない。body は C/D/boundedness を呼ぶ限り genuine。
+Assembled from the per-`n` Gibbs bound `h(μ_n) ≤ RHS_n`, convergence `RHS_n → h(ν)`, and
+boundedness, into `limsup h(μ_n) ≤ limsup RHS_n = h(ν)`. The hypothesis `hent_sum` is a
+finite-differential-entropy regularity precondition.
 @audit:ok -/
 theorem differentialEntropy_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -409,19 +379,13 @@ theorem differentialEntropy_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabil
         Filter.limsup_le_limsup hC hcobdd hRHS_bdd
     _ = hν := hD.limsup_eq
 
-/-- **crux usc (entropyPower 版)**: `limsup_n Nₑ(P_n.map(X+Y)) ≤ Nₑ(P.map(X+Y))`。
-微分エントロピー版 (`differentialEntropy_condTrunc_sum_limsup_le`) を `entropyPowerExt`
-= `ENNReal.ofReal (exp (2·h))` の単調連続変換で lift。
+/-- Upper semicontinuity of the entropy power under conditioning truncation:
+`limsupₙ Nₑ((condTrunc P X Y n).map (X + Y)) ≤ Nₑ(P.map (X + Y))`.
 
-機構 (`g h := ofReal(exp(2h))`、単調連続):
-- per-n: `Nₑ(μ_n) = g(h(μ_n))` (`μ_n` a.c. `map_condTrunc_absolutelyContinuous` + 有限
-  entropy #2 `integrable_negMulLog_map_condTrunc_sum`、`entropyPowerExt_of_ac_integrable`)。
-- limit: `Nₑ(ν) = g(h(ν))` (ν a.c. + `hent_sum`)。
-- `limsup Nₑ(μ_n) = limsup (g∘h(μ_n)) = g(limsup h(μ_n))`
-  (`Monotone.map_limsup_of_continuousAt`、有界性は `differentialEntropy_condTrunc_sum_bddUnder`)
-  `≤ g(h(ν)) = Nₑ(ν)` (g 単調 + #3 `differentialEntropy_condTrunc_sum_limsup_le`)。
-
-`hent_sum` は regularity precondition (有限微分エントロピー)、結論を encode しない。
+The differential-entropy version is lifted through the monotone continuous map
+`g h := ENNReal.ofReal (exp (2 · h))`, rewriting both sides as `g ∘ h` and pushing the `limsup`
+through `g` via `Monotone.map_limsup_of_continuousAt`. The hypothesis `hent_sum` is a regularity
+precondition.
 @audit:ok -/
 theorem entropyPowerExt_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)

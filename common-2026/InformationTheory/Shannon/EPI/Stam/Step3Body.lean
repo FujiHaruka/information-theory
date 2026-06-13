@@ -12,58 +12,32 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic
 
 /-!
-# W9-S3 T2-D: Stam inequality body — **Step 3** (Cauchy-Schwarz → symmetric Fisher coupling) discharge
+# Stam inequality body — Step 3 (Cauchy–Schwarz to symmetric Fisher coupling)
 
-`InformationTheory/Shannon/EPIStamInequalityBody.lean` (Wave 7, 515 行) splits the
-1-dimensional Stam inequality proof (Cover-Thomas Lemma 17.7.2 / Stam 1959 /
-Blachman 1965) into four steps:
+The 1-dimensional Stam inequality proof (Cover–Thomas Lemma 17.7.2 / Stam 1959 / Blachman 1965)
+splits into four steps: the convolution score representation `s_Z = E[s_X | Z] = E[s_Y | Z]`,
+pointwise Cauchy–Schwarz on the conditional expectation, total expectation against `p_Z` giving the
+symmetric Fisher coupling `J(X + Y) ≤ λ² J(X) + (1 - λ)² J(Y)`, and optimization over `λ` giving
+`1 / J(X + Y) ≥ 1 / J(X) + 1 / J(Y)`. This file makes Step 3 — integrating the earlier steps into
+the symmetric Fisher coupling and bridging into the optimization — explicit.
 
-* **Step 1** — convolution score representation `s_Z = E[s_X | Z] = E[s_Y | Z]`
-  (`IsStamScoreConvolution`, §1 there).
-* **Step 2** — pointwise Cauchy-Schwarz on the conditional expectation
-  (`IsStamCauchySchwarz` existential-λ form, §2 there).
-* **Step 3** — *take total expectation* against `p_Z` and assemble the
-  **symmetric Fisher coupling** `J(X+Y) ≤ λ² J(X) + (1-λ)² J(Y)` for the chosen
-  `λ ∈ [0,1]`.
-* **Step 4** — optimize over `λ` (`stam_lambda_min`, §3 there) to obtain
-  `1/J(X+Y) ≥ 1/J(X) + 1/J(Y)`.
+## Main statements
 
-The Wave 7 file publishes Step 1, Step 2, and Step 4, but the **Step 3 chain**
-— integrating Step 1 + Step 2 into the symmetric Fisher coupling and bridging
-into Step 4 — is left implicit (folded inline into
-`isStamCauchySchwarz_of_optimal`). This file (W9-S3) makes Step 3 explicit.
+* `isStamInequalityHyp_via_step3` — the full chain to the genuine `IsStamInequalityHyp` signature,
+  from regularity alone via `stam_step2_density_wall`.
+* `stam_optimal_lambda_mem_unit` — membership of the optimal `λ` in the unit interval.
+* `stam_coupling_saturates` — the Gaussian saturation arithmetic kernel.
+* `epi_via_stam_step3_gaussian` — pipeline integration via Gaussian saturation.
 
-## Approach
+## Implementation notes
 
-The genuine analytic content of Step 2-3 — the conditional Cauchy-Schwarz
-integrated against `p_Z` to give the convex Fisher bound
-`J(Z) ≤ λ² J(X) + (1-λ)² J(Y)` and its λ-optimum
-`J(Z) ≤ J(X)J(Y)/(J(X)+J(Y))` — is localized to the **single lemma**
-`EPIStamInequalityBody.stam_step2_density_wall`, now **genuinely closed**
-(0-sorry, sorryAx-free; `wall:stam-step2-density` is [CLOSED 2026-06-04] via
-`convex_fisher_bound_of_ready`), which takes regularity preconditions
-only. The earlier design carried this content as load-bearing predicates
-(`IsStamTotalExpectation` ∀λ bound, `IsStamFisherCoupling` alias); those were
-removed in the wall-consolidation pass (`epi-stam-wall-consolidation-plan`)
-since they were isolated (zero cross-file consumers) and the shared-wall path
-is strictly more honest (tier-2 sorry rather than tier-4 load-bearing hyp).
+The genuine analytic content of Steps 2-3 — the conditional Cauchy–Schwarz integrated against `p_Z`
+giving the convex Fisher bound and its `λ`-optimum — is localized to the single lemma
+`EPIStamInequalityBody.stam_step2_density_wall`, which takes regularity preconditions only.
 
-The deliverables are:
+## References
 
-1. `isStamInequalityHyp_via_step3` (§4) — full Step 1→4 chain to the genuine
-   `IsStamInequalityHyp` signature, from regularity alone via the shared wall.
-2. `stam_optimal_lambda_mem_unit` (§1) — optimal-λ membership (arithmetic).
-3. `stam_coupling_saturates` (§5) — Gaussian saturation arithmetic kernel.
-4. `epi_via_stam_step3_gaussian` (§6) — pipeline integration (via Gaussian
-   saturation).
-
-### 主シグネチャ
-
-* `stam_optimal_lambda_mem_unit` (§1) — optimal-λ membership (arithmetic)
-* `isStamInequalityHyp_via_step3` (§4) — Stam signature from regularity via the
-  genuine (sorryAx-free) `stam_step2_density_wall`
-* `stam_coupling_saturates` (§5) — Gaussian saturation equality witness (arithmetic)
-* `epi_via_stam_step3_gaussian` (§6) — pipeline integration (via Gaussian saturation)
+[CoverThomas2006] Lemma 17.7.2; [Stam1959]; [Blachman1965].
 -/
 
 namespace InformationTheory.Shannon.EPIStamStep3Body
@@ -89,32 +63,13 @@ theorem stam_optimal_lambda_mem_unit {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
   rw [div_le_one hab]
   linarith
 
-/-! ## §4 — Full Step 1 → 4 chain to the genuine Stam signature
+/-! ## §4 — Full Step 1 → 4 chain to the genuine Stam signature -/
 
-The former Step-3 chain carried the genuine analytic content as a **load-bearing**
-`IsStamTotalExpectation` predicate (the ∀λ convex Fisher bound) plus an
-`IsStamFisherCoupling` intermediate alias of `IsStamCauchySchwarz`. The
-wall-consolidation pass (`epi-stam-wall-consolidation-plan`) removed those: the
-genuine Step 2-3 analytic core is now localized to the single genuine (sorryAx-free)
-lemma `EPIStamInequalityBody.stam_step2_density_wall` (regularity preconditions
-only; `wall:stam-step2-density` is [CLOSED 2026-06-04]), and the load-bearing
-predicates are deleted (they were isolated, with zero cross-file consumers). -/
-
-/-- **Full Step 1 → 4 chain to the genuine Stam signature** (the deliverable).
-
-Produces the genuine `IsStamInequalityHyp` (Cover-Thomas Lemma 17.7.2 真
-signature) from regularity preconditions alone: the genuine Step 2-3 convex
-Fisher bound is supplied internally by the genuine (sorryAx-free) lemma
-`stam_step2_density_wall` (`wall:stam-step2-density` is [CLOSED 2026-06-04]),
-and Steps 2/4 are discharged arithmetically by
-`isStamInequalityHyp_via_body`. This carries **no** load-bearing analytic
-hypothesis — only measurability / independence / probability measure.
-
-Update 2026-05-31 (owner-level pivot, epi-wall-reattack-plan): `stam_step2_density_wall`
-**and** `isStamInequalityHyp_via_body` are now **both genuinely closed** (0-sorry,
-`#print axioms` sorryAx-free). The published `IsStamInequalityHyp` was pivoted in lockstep
-with `IsStamInequalityResidual` to carry the pointwise convolution constraint +
-`IsBlachmanConvReady` bundle, closing the former regularity-precondition signature gap.
+/-- The full Step 1 → 4 chain to the genuine Stam signature: produces `IsStamInequalityHyp`
+(Cover–Thomas Lemma 17.7.2) from regularity preconditions alone. The Step 2-3 convex Fisher bound
+is supplied internally by `stam_step2_density_wall`, and the remaining steps are discharged
+arithmetically by `isStamInequalityHyp_via_body`. It carries no load-bearing analytic hypothesis —
+only measurability, independence, and the probability-measure instance.
 @audit:ok -/
 @[entry_point]
 theorem isStamInequalityHyp_via_step3 {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -125,25 +80,14 @@ theorem isStamInequalityHyp_via_step3 {Ω : Type*} {mΩ : MeasurableSpace Ω}
 
 /-! ## §5 — Gaussian saturation: Step 3 holds with equality at the optimum
 
-**RESOLVED (2026-05-20):** the former `isStamTotalExpectation_of_gaussian_fisherInfo_zero`,
-`isStamFisherCoupling_of_gaussian_saturation`, and the Step-3 chain
-`isStamInequalityHyp_of_gaussian_via_step3` discharged the total-expectation /
-coupling predicates vacuously by `exfalso`-ing the `0 < J_X` precondition against
-the buggy V1 `fisherInfo = 0` artefact for Gaussians. They asserted nothing about
-Stam actually holding and were removed. The genuine Gaussian EPI runs via
-`entropyPower_gaussian_additivity` (see `epi_via_stam_step3_gaussian`
-below); the arithmetic saturation kernel `stam_coupling_saturates` is genuine and
-kept.
+The genuine Gaussian entropy power inequality runs via `entropyPower_gaussian_additivity`
+(see `epi_via_stam_step3_gaussian` below); the arithmetic saturation kernel
+`stam_coupling_saturates` is kept.
 -/
 
-/-- **Gaussian saturation equality witness** (Step 3 equality condition).
-
-For Gaussian `X, Y`, the Stam inequality saturates: `J(X+Y) = J(X) J(Y) /
-(J(X) + J(Y))`, i.e. the Step-3 coupling holds with *equality* at the optimal
-`λ = J_Y / (J_X + J_Y)`. This lemma exhibits the *arithmetic* saturation: at the
-optimal λ, the coupling RHS `λ² J_X + (1-λ)² J_Y` equals the harmonic mean
-exactly (Wave 7 `stam_lambda_min`), so equality in the coupling is equivalent to
-equality in the harmonic-mean bound. -/
+/-- Gaussian saturation equality witness: at the optimal `λ = b / (a + b)`, the coupling RHS
+`λ² a + (1 - λ)² b` equals the harmonic mean `a b / (a + b)` exactly, so equality in the Step-3
+coupling is equivalent to equality in the harmonic-mean bound. -/
 @[entry_point]
 theorem stam_coupling_saturates {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
     (b / (a + b)) ^ 2 * a + (1 - b / (a + b)) ^ 2 * b = a * b / (a + b) := by
@@ -170,12 +114,6 @@ theorem epi_via_stam_step3_gaussian
 
 /-! ## §7 — Step 3 manipulation lemmas + intermediate calc -/
 
-/-! ## §8 — Sanity check / regression theorems
-
-The former `step3_chain_eq_body_chain` sanity check (a duplicate of
-`isStamInequalityHyp_via_step3` carrying the load-bearing predicates) was
-removed in the wall-consolidation pass: with the Step-2-3 core localized to the
-shared `stam_step2_density_wall`, there is a single honest path and no
-duplicate-chain obligation remains. -/
+/-! ## §8 — Sanity check / regression theorems -/
 
 end InformationTheory.Shannon.EPIStamStep3Body

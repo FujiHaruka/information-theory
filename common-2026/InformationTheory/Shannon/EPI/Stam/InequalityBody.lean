@@ -16,58 +16,37 @@ import Mathlib.Probability.Independence.Basic
 import Mathlib.Analysis.InnerProductSpace.Basic
 
 /-!
-# T2-D-B: Stam inequality body discharge (Cauchy-Schwarz / convolution-score path)
+# Stam inequality body discharge (Cauchy–Schwarz / convolution-score path)
 
-`InformationTheory/Shannon/EPIStamDischarge.lean` (Wave 5, 755 行) で Stam inequality
-`1 / J(X+Y) ≥ 1 / J(X) + 1 / J(Y)` を `IsStamInequalityHyp` 真 signature で
-publish 済。本 file (Wave 6 T2-D-B) はその **body discharge** を Cauchy-Schwarz
-+ convolution-score 経路で組み上げる。
+This file builds the body of the Stam inequality `1 / J(X + Y) ≥ 1 / J(X) + 1 / J(Y)` (published as
+`IsStamInequalityHyp` in `EPIStamDischarge`) along the Cauchy–Schwarz / convolution-score path.
 
-## Approach
+## Main definitions
 
-Cover-Thomas Lemma 17.7.2 の標準的な 1 次元 Stam inequality 証明は次の path:
+* `IsStamScoreConvolution X Y P` — the score-convolution representation (Step 1).
+* `IsStamCauchySchwarz X Y P` — the conditional Cauchy–Schwarz plus total expectation (Steps 2-3).
+* `IsStamCauchySchwarzOptimal X Y P` — the optimal-`λ` form of the Cauchy–Schwarz bound.
 
-1. **Score representation of convolution** (Lemma 17.7.1 / Blachman 1965): for
-   independent `X, Y` with densities, the score of `Z := X + Y` satisfies
-   `s_Z(z) = E[s_X(X) | X + Y = z] = E[s_Y(Y) | X + Y = z]`.
-2. **Cauchy-Schwarz** on `E[s_X(X) | X + Y = z]` and any linear combination
-   `λ s_X(X) + (1 - λ) s_Y(Y)`:
-       `s_Z(z)² ≤ E[(λ s_X(X) + (1 - λ) s_Y(Y))² | X + Y = z]`.
-3. **Take total expectation**: `J(Z) ≤ λ² J(X) + (1 - λ)² J(Y)`.
-4. **Optimize over λ**: with `λ = J(Y) / (J(X) + J(Y))`,
-       `J(Z) ≤ J(X) J(Y) / (J(X) + J(Y)) ⇔ 1/J(Z) ≥ 1/J(X) + 1/J(Y)`.
+## Main statements
 
-Mathlib に
-* `condExp`-based score conditional expectation manipulation,
-* Stam inequality / Blachman score-conv identity,
-* Cauchy-Schwarz on conditional expectations
+* `stam_step2_density_wall` — the genuine Step 2-3 analytic core, producing the optimal
+  Cauchy–Schwarz bound from regularity alone.
+* `isStamInequalityHyp_via_body` — bridge from the optimal Cauchy–Schwarz form to the published
+  Stam signature `IsStamInequalityHyp`.
+* `epi_via_stam_body_gaussian` — end-to-end entropy power inequality for Gaussians via the body
+  discharge.
 
-の三つともは標準形では存在しない (`rg "Stam|Blachman|score_conv" → 0 hit`).
-本 file は本体の **body** を Cauchy-Schwarz predicate 形に分解し、各 step を
-predicate pass-through で publish した上で、**predicate chain で Stam 真
-signature `IsStamInequalityHyp` を導出する** wrapper を提供する。
+## Implementation notes
 
-### 撤退ライン (本 file で発動)
+The standard 1-dimensional Stam inequality proof (Cover–Thomas Lemma 17.7.2) follows the path:
+score representation of the convolution (Blachman 1965), conditional Cauchy–Schwarz, total
+expectation giving `J(Z) ≤ λ² J(X) + (1 - λ)² J(Y)`, and optimization over `λ` at
+`λ = J(Y) / (J(X) + J(Y))`. The genuine analytic core (Steps 2-3) is localized to
+`stam_step2_density_wall`; the `λ`-optimization is the pure arithmetic `stam_lambda_min`.
 
-* **L-Stam-CS** (本 file core): `IsStamCauchySchwarz X Y P` predicate 形で Step 2-3
-  (Cauchy-Schwarz + total expectation) を pass-through。
-* **L-Stam-Conv** (本 file core): `IsStamScoreConvolution X Y P` で Step 1
-  (convolution score representation) を pass-through。
-* **L-Stam-Opt** (本 file core): `IsStamLambdaOptimal X Y P` で Step 4 (λ 最適化)
-  を pass-through。実体は `1 / a + 1 / b ≤ (a + b) / (a * b)` 形の純算術なので、
-  **predicate-free** で direct discharge する補題も併設。
+## References
 
-### 主シグネチャ
-
-* `IsStamScoreConvolution X Y P` (§1) — Step 1 predicate
-* `IsStamCauchySchwarz X Y P` (§2) — Step 2-3 predicate
-* `IsStamLambdaOptimal` (§3) — Step 4 純算術 closed form
-* `stam_inequality_via_predicate` (§4) — chain combinator (deliverable)
-* `isStamInequalityHyp_via_body` (§4) — `IsStamInequalityHyp` への bridge
-* `isStamCauchySchwarz_of_gaussian` (§5) — Gaussian discharge
-* `isStamScoreConvolution_of_gaussian` (§5) — Gaussian discharge
-* `stam_inequality_gaussian_body` (§5) — Gaussian full discharge corollary
-* `epi_via_stam_body_gaussian` (§6) — pipeline integration with §5
+[CoverThomas2006] Lemmas 17.7.1, 17.7.2; [Blachman1965].
 -/
 
 namespace InformationTheory.Shannon.EPIStamInequalityBody
@@ -82,38 +61,15 @@ open InformationTheory.Shannon.EPIStamDischarge
 
 /-! ## §1 — Convolution score representation predicate (Step 1) -/
 
-/-- **Convolution score representation hypothesis** (Blachman 1965 / Cover-Thomas
-Lemma 17.7.1 body form).
+/-- The score-convolution representation (Blachman 1965 / Cover–Thomas Lemma 17.7.1): for
+independent `X, Y` with smooth densities, the score of `Z := X + Y` is the conditional expectation
+`s_Z(z) = E[λ s_X(X) + (1 - λ) s_Y(Y) | X + Y = z]` for every `λ`. This predicate reifies the
+*output* of that identity — the existence of the optimal `λ`-witness `λ* = J_Y / (J_X + J_Y)` in
+`[0, 1]` — rather than its derivation. The witness is unconditionally constructible
+(`isStamScoreConvolution_intro`), so the predicate is not load-bearing: the downstream
+`λ`-optimization only consumes the witness.
 
-For independent `X, Y` with smooth densities `p_X, p_Y` (so that the score
-`s_X := (log p_X)' = p_X' / p_X` is well-defined), the score of the sum
-`Z := X + Y` admits the conditional expectation representation
-
-    `s_Z(z) = E[s_X(X) | X + Y = z] = E[s_Y(Y) | X + Y = z]`.
-
-In particular, for any `λ ∈ [0, 1]`,
-
-    `s_Z(z) = E[λ · s_X(X) + (1 - λ) · s_Y(Y) | X + Y = z]`.
-
-This identity (Blachman's score-of-convolution lemma) is the foundation of the
-1-dimensional Stam inequality proof. Mathlib has neither the score function
-abstraction tied to `pdf` nor `condExp` integration over the sum-level
-σ-algebra. We reify here the **optimal λ-witness** that the score-convolution
-identity *produces* (the value `λ* = J_Y / (J_X + J_Y)` is the one that
-minimizes the Cauchy-Schwarz upper bound in Step 4). This honest typed form
-replaces the Wave 7 `:= True` placeholder.
-
-The genuine `condExp`-of-score derivation (the Blachman identity producing this
-λ-witness from a `lconvolution` density argument) is the irreducible
-measure-theoretic core — a Mathlib wall (b) (`rg "Blachman|score_conv" → 0 hit`,
-no `lconvolution` differentiability API). We reify its *output* (the existence
-of the λ-witness in `[0, 1]`) rather than its derivation; the witness is
-unconditionally constructible by `isStamScoreConvolution_intro` below, so this
-predicate is *honestly discharged* (Tier 1) — it is **not load-bearing** for the
-λ-optimization downstream (Step 4 only consumes the λ-witness, which always
-exists as a real number in `[0,1]` for positive Fisher infos).
-
-`@audit:ok` -/
+@audit:ok -/
 def IsStamScoreConvolution {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y : ℝ) (fX fY : ℝ → ℝ), 0 < J_X → 0 < J_Y →
@@ -121,15 +77,10 @@ def IsStamScoreConvolution {Ω : Type*} [MeasurableSpace Ω]
     J_Y = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
     ∃ lam : ℝ, 0 ≤ lam ∧ lam ≤ 1 ∧ lam = J_Y / (J_X + J_Y)
 
-/-- **Unconditional discharge of the score-convolution typed predicate**.
+/-- Unconditional discharge of the score-convolution predicate: the optimal `λ`-witness
+`λ* = J_Y / (J_X + J_Y)` always lies in `[0, 1]` for positive Fisher infos.
 
-The optimal λ-witness `λ* = J_Y / (J_X + J_Y)` always lies in `[0, 1]` for
-positive Fisher infos — this is pure arithmetic (`positivity` + `div_le_one`).
-This replaces the Wave 7 `trivial` discharge of the `Prop := True` placeholder
-with a real construction; the witness it produces is exactly the one the
-λ-optimization (Step 4 `stam_lambda_min`) consumes.
-
-`@audit:ok` -/
+@audit:ok -/
 @[entry_point]
 theorem isStamScoreConvolution_intro {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : IsStamScoreConvolution X Y P := by
@@ -258,20 +209,11 @@ theorem stam_inverse_form_of_harmonic_mean
 
 /-! ## §4 — Predicate chain combinator (the deliverable) -/
 
-/-- **Optimal Cauchy-Schwarz predicate** (the actually pipeline-usable form).
-
-Strengthens `IsStamCauchySchwarz` to require the witness `λ = J_Y / (J_X + J_Y)`,
-which is the optimal λ minimizing `λ² J_X + (1-λ)² J_Y`.
-
-**Phase 3d (2026-05-31) — producer genuinely closed.** The quantification block carries
-the regularity preconditions (`IsRegularDensityV2 fX/fY`, `∫fX=1`, `∫fY=1`, the
-*pointwise* convolution identity `∀ x, fXY x = convDensityAdd fX fY x`, and the
-`IsBlachmanConvReady fX fY` bundle) between the Fisher-info identifications and the
-conclusion `J_sum ≤ J_X·J_Y/(J_X+J_Y)`. These are regularity preconditions
-(smoothness / normalization /
-convolution identification / boundedness / integrability), NOT the inequality's core.
-The unique producer `stam_step2_density_wall` is now **genuinely closed** (0-sorry,
-`#print axioms` sorryAx-free) — the Stam bound is assembled genuinely via
+/-- The optimal Cauchy–Schwarz form: `IsStamCauchySchwarz` strengthened to the optimal witness
+`λ = J_Y / (J_X + J_Y)`, giving the harmonic-mean bound `J_sum ≤ J_X · J_Y / (J_X + J_Y)`. The
+quantification block carries regularity preconditions (`IsRegularDensityV2 fX/fY`, the
+normalizations, the pointwise convolution identity, and the `IsBlachmanConvReady fX fY` bundle),
+not the inequality core; the bound is produced from regularity by `stam_step2_density_wall` via
 `convex_fisher_bound_of_ready`.
 @audit:ok -/
 def IsStamCauchySchwarzOptimal {Ω : Type*} [MeasurableSpace Ω]
@@ -290,41 +232,17 @@ def IsStamCauchySchwarzOptimal {Ω : Type*} [MeasurableSpace Ω]
     InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady fX fY →
     J_sum ≤ J_X * J_Y / (J_X + J_Y)
 
-/-- **Stam Step 2 density wall — GENUINELY CLOSED (Phase 3d, 2026-05-31)**.
+/-- The genuine analytic core of the Stam inequality's Steps 2-3 (Cover–Thomas Lemma 17.7.2 /
+Blachman 1965): for independent `X, Y` with smooth densities, the conditional Cauchy–Schwarz
+`s_Z(z)² ≤ E[(λ s_X + (1 - λ) s_Y)² | X + Y = z]` integrated against `p_Z` gives the convex Fisher
+bound `J(Z) ≤ λ² J(X) + (1 - λ)² J(Y)`, whose `λ`-optimum is the optimal Cauchy–Schwarz form
+`J(Z) ≤ J(X) J(Y) / (J(X) + J(Y))`.
 
-The genuine analytic core of the Stam inequality's Step 2-3 (Cover-Thomas Lemma
-17.7.2 / Blachman 1965): for independent `X, Y` with smooth densities, the
-conditional Cauchy-Schwarz `s_Z(z)² ≤ E[(λ s_X + (1-λ) s_Y)² | X+Y=z]` integrated
-against `p_Z` gives the convex Fisher bound `J(Z) ≤ λ² J(X) + (1-λ)² J(Y)`, whose
-λ-optimum is the **optimal Cauchy-Schwarz** form `J(Z) ≤ J(X) J(Y) / (J(X) + J(Y))`.
-
-This was historically the "Blachman wall". The density route
-(`EPIBlachmanDensity`, condExp-free explicit-density formulation) closed it: the
-convex Fisher bound is now a genuine theorem `convex_fisher_bound` (`@audit:ok`,
-atom A + S4 Jensen + 3-term Tonelli evaluation). Phase 3d assembles it here.
-
-## ✅ 2026-05-31 Phase 3d genuine closure (案 b' = `IsStamCondExpCSHyp` 経由)
-
-This `sorry` is now **genuinely closed** (0-sorry). The Phase 3d assemble routes the
-post-pivot predicate (which carries the pointwise convolution constraint
-`∀ x, fXY x = convDensityAdd fX fY x` + the `IsBlachmanConvReady fX fY` regularity
-bundle) through:
-
-* `stamCauchySchwarzOptimal_of_condExpCSHyp` (`EPIStamStep12Body`, `@audit:ok`):
-  reduces `IsStamCauchySchwarzOptimal` to the `∀λ` convex bound `IsStamCondExpCSHyp`
-  (the λ-optimization `stam_lambda_min` lives inside this bridge);
-* the `∀λ` convex bound is supplied **genuinely** by `convex_fisher_bound_of_ready`
-  (`EPIBlachmanDensity`, projecting `IsBlachmanConvReady` into the 14+ regularity
-  preconditions of the genuine `convex_fisher_bound`, `@audit:ok`).
-
-The pointwise `hconv` collapses `fisherInfoOfDensity fXY` to
-`fisherInfoOfDensity (convDensityAdd fX fY)` by `funext`, matching the analytic
-core's conclusion verbatim (atom Cong, no deriv-ae lifting needed). The added
-hypotheses (`hconv` pointwise + `IsBlachmanConvReady`) are **regularity
-preconditions** (smoothness / boundedness / integrability / positivity), NOT the
-inequality core — that core is genuinely assembled inside `convex_fisher_bound`.
-
-Closure tracked under `epi-wall-reattack-plan` (Phase 3d).
+The convex Fisher bound is supplied by the genuine `convex_fisher_bound_of_ready`
+(`EPIBlachmanDensity`, a condExp-free explicit-density formulation), and the `λ`-optimization is
+`stam_lambda_min`. The pointwise convolution hypothesis collapses `fisherInfoOfDensity fXY` to
+`fisherInfoOfDensity (convDensityAdd fX fY)` by `funext`; the added hypotheses are regularity
+preconditions, not the inequality core.
 @audit:ok -/
 theorem stam_step2_density_wall
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -355,25 +273,11 @@ theorem stam_step2_density_wall
   have h_min := stam_lambda_min hJX hJY
   linarith [h_bd, h_min]
 
-/-- **Stam inequality via predicate chain (optimal form)** — actual deliverable.
-
-Given the optimal Cauchy-Schwarz predicate, chain through Step 4 closed form to
-obtain the inverse-form Stam inequality. (The former cosmetic
-`IsStamScoreConvolution` slot was dropped in the wall-consolidation pass: its
-body never used it — it is unconditionally constructible by
-`isStamScoreConvolution_intro` and carried no information.)
-
-Audit note (2026-05-30): this is a genuine **implication** wrapper — body is the
-algebraic reshaping `J_sum ≤ J_X·J_Y/(J_X+J_Y) ⊢ 1/J_sum ≥ 1/J_X+1/J_Y` (conclusion
-type ≠ hypothesis type), `sorryAx`-free (`#print axioms` → `[propext, Classical.choice,
-Quot.sound]`), so `@audit:ok` for the implication is correct. **Note (Phase 3d,
-2026-05-31)**: the antecedent `IsStamCauchySchwarzOptimal X Y P` now carries the
-*pointwise* convolution constraint `∀ x, fXY x = convDensityAdd fX fY x` + the
-`IsBlachmanConvReady fX fY` bundle, and is a sound (non-false) Prop whose producer
-`stam_step2_density_wall` is **genuinely closed** (0-sorry). This wrapper asserts only
-the implication and is signature-agnostic, so it stays valid.
-
-`@audit:ok` -/
+/-- Given the optimal Cauchy–Schwarz predicate, chains through the `λ`-optimization closed form to
+obtain the inverse-form Stam inequality `1 / J_sum ≥ 1 / J_X + 1 / J_Y`. A genuine implication
+wrapper: the body is the algebraic reshaping from `J_sum ≤ J_X · J_Y / (J_X + J_Y)` (conclusion
+type ≠ hypothesis type).
+@audit:ok -/
 @[entry_point]
 theorem stam_inequality_via_predicate_optimal
     {Ω : Type*} [MeasurableSpace Ω]
@@ -398,41 +302,13 @@ theorem stam_inequality_via_predicate_optimal
     hregX hregY hnormX hnormY hconv hready
   exact stam_inverse_form_of_harmonic_mean hJX hJY hJsum h_le
 
-/-- **`IsStamInequalityHyp` from body predicate**. Bridge from the body-level
-optimal-CS predicate to the published Cover-Thomas Lemma 17.7.2 signature
-`IsStamInequalityHyp` (`EPIStamDischarge`).
-
-## ✅ 2026-05-31 owner-level pivot (epi-wall-reattack-plan) — GENUINELY CLOSED
-
-The published `IsStamInequalityHyp` (`EPIStamDischarge`) and its sibling
-`IsStamInequalityResidual` (`EntropyPowerInequality`) were pivoted in lockstep to
-carry the same two regularity preconditions that `IsStamCauchySchwarzOptimal`
-requires: the *pointwise* convolution identity `∀ x, fXY x = convDensityAdd fX fY x`
-(strengthened from the published `=ᵐ` form) and the `IsBlachmanConvReady fX fY` bundle
-(deriv-boundedness + higher-order integrability needed by the genuine
-`convex_fisher_bound`). With both signatures aligned, this bridge is now a genuine
-**implication** wrapper: `intro` all the (now-matching) hypotheses, apply `h_cs_opt`
-to get the harmonic-mean upper bound `J_sum ≤ J_X·J_Y/(J_X+J_Y)`, and reshape to the
-inverse form `1/J_sum ≥ 1/J_X + 1/J_Y` via `stam_inverse_form_of_harmonic_mean`. The
-conclusion type ≠ hypothesis type (no `:= h` circularity); the inequality core was
-genuinely assembled upstream in `stam_step2_density_wall`
-(`convex_fisher_bound_of_ready`). The added hypotheses are regularity preconditions,
-NOT the core. `#print axioms` → sorryAx-free.
-
-@audit:ok — independent honesty audit (2026-05-31): genuine implication wrapper, NOT
-load-bearing. Body `intro`s all matching hyps, applies `h_cs_opt` to get the
-harmonic-mean bound `J_sum ≤ J_X·J_Y/(J_X+J_Y)`, reshapes to `1/J_sum ≥ 1/J_X+1/J_Y`
-via `stam_inverse_form_of_harmonic_mean` (conclusion type ≠ hypothesis type, no `:= h`
-circularity). The antecedent `IsStamCauchySchwarzOptimal` is NOT injected as an open
-core hyp at the deliverable level: its production site `isStamInequalityHyp_via_step3`
-discharges it from regularity (`hX hY hXY`) alone via `stam_step2_density_wall`, whose
-inequality core is genuinely supplied by `convex_fisher_bound_of_ready` → genuine
-`convex_fisher_bound` (both `@audit:ok`). The 2 pivot-added hyps are regularity
-preconditions: the pointwise convolution identity `∀x, fXY x = convDensityAdd fX fY x`
-ties `fXY` to the convolution (so the conclusion is the genuine Stam bound, not
-universally false), and `IsBlachmanConvReady fX fY` is a 19-field bundle of
-`Integrable`/boundedness/positivity ONLY (no inequality/equality core; core-reconstruction
-test: granting the bundle does NOT hand the Stam bound).
+/-- Bridge from the body-level optimal Cauchy–Schwarz predicate to the published Stam signature
+`IsStamInequalityHyp` (Cover–Thomas Lemma 17.7.2). A genuine implication wrapper: it introduces the
+matching hypotheses, applies `h_cs_opt` to get the harmonic-mean bound
+`J_sum ≤ J_X · J_Y / (J_X + J_Y)`, and reshapes to the inverse form via
+`stam_inverse_form_of_harmonic_mean` (conclusion type ≠ hypothesis type, no circularity). The
+inequality core lives upstream in `stam_step2_density_wall`; the antecedent's extra hypotheses are
+regularity preconditions.
 @audit:ok -/
 @[entry_point]
 theorem isStamInequalityHyp_via_body
@@ -446,17 +322,10 @@ theorem isStamInequalityHyp_via_body
     hregX hregY hnormX hnormY hconv hready
   exact stam_inverse_form_of_harmonic_mean hJX hJY hJsum h_le
 
-/-! ## §5 — Gaussian saturation discharge -/
+/-! ## §5 — Gaussian saturation discharge
 
-
-/- **RESOLVED (2026-05-20):** the former `isStamCauchySchwarzOptimal_of_gaussian_fisherInfo_zero`
-and its chain lemmas `isStamInequalityHyp_of_gaussian_via_body` /
-`isStamInequalityHyp_of_gaussian_via_body_Y` discharged the optimal-CS predicate
-vacuously by `exfalso`-ing the `0 < J_X` (resp. `0 < J_Y`) precondition against
-the buggy V1 `fisherInfo = 0` artefact for Gaussians. They asserted nothing about
-Stam actually holding and were removed. The genuine Gaussian EPI runs via
-`entropyPower_gaussian_additivity` (see `epi_via_stam_body_gaussian`
-in §6 below). -/
+The genuine Gaussian entropy power inequality runs via `entropyPower_gaussian_additivity`
+(see `epi_via_stam_body_gaussian` in §6 below). -/
 
 /-! ## §6 — EPI pipeline integration with body discharge -/
 
@@ -552,17 +421,10 @@ theorem isStamCauchySchwarzOptimal_of_lambda_optimal
 
 /-! ## §10 — Stam inequality body discharge pipeline integration -/
 
-/-- **Body-discharged Stam inequality via Integrated Pipeline**: composes the
-body discharge predicates with the Wave 6 `EPIL3Integration` integrated
-pipeline.
-
-The former `h_bridge : IsStamToEPIBridgeHyp` argument was removed in the Cluster C
-Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`, route L-EPISC-3-α):
-`IsEPIL3IntegratedPipeline` no longer carries a load-bearing `bridge` field, so
-the pipeline is built from the genuine Stam residual alone (the Stam→EPI bridge is
-discharged internally by consumers via `stamToEPIBridge_holds`).
-
-`@audit:ok` -/
+/-- Composes the body-discharged Stam inequality into the `EPIL3Integration` integrated pipeline.
+The pipeline is built from the genuine Stam residual alone; the Stam-to-EPI bridge is discharged
+internally by consumers via `stamToEPIBridge_holds`.
+@audit:ok -/
 @[entry_point]
 theorem isStamInequalityHyp_via_body_to_pipeline
     {Ω : Type*} [MeasurableSpace Ω]
@@ -570,14 +432,6 @@ theorem isStamInequalityHyp_via_body_to_pipeline
     (h_cs_opt : IsStamCauchySchwarzOptimal X Y P) :
     InformationTheory.Shannon.EPIL3Integration.IsEPIL3IntegratedPipeline X Y P :=
   { stam := isStamInequalityHyp_via_body h_cs_opt }
-
--- (deleted 2026-06-11, legacy Stam→EPI subtree removal)
--- `entropy_power_inequality_via_body` (end-to-end EPI via body discharge, routed
--- through `epi_via_stam_main` → `entropy_power_inequality` →
--- `EntropyPowerInequality.stamToEPIBridge_holds`) was removed together with that
--- bridge subtree; it had 0 consumers. The genuine Stam-inequality half
--- (`isStamInequalityHyp_via_body` / `stam_step2_density_wall`) is unchanged and
--- remains available; only the legacy bridge-consuming wrapper is gone.
 
 /-! ## §11 — Sanity check / regression theorems -/
 

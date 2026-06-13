@@ -14,13 +14,10 @@ open scoped ENNReal NNReal Topology
 
 variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
 
-/-! ### Helper 3' — P 版 conv density 同定 + crux usc の解析核 sub-helper -/
-
-/-- **P 版 conv density 同定**: `(P.map(X+Y)).rnDeriv =ᵐ ofReal (convDensityAdd pX pY)`
-(`pX := (P.map X).rnDeriv vol |>.toReal`, `pY := (P.map Y).rnDeriv vol |>.toReal`)。
-`rnDeriv_map_condTrunc_sum_ae` の `condTrunc P X Y n` を `P` に読み替えた版。
-`indepSum_density_ae` を `P` 自体に適用。
-honest: 結論は a.e. 測度等式、仮説は独立 + measurability + a.c. (regularity)。
+/-- The sum density is the convolution of the marginal densities:
+`(P.map (X + Y)).rnDeriv =ᵐ ofReal (convDensityAdd pX pY)`, where
+`pX := (P.map X).rnDeriv volume |>.toReal` and `pY := (P.map Y).rnDeriv volume |>.toReal`. This is
+the conditioning-free version of `rnDeriv_map_condTrunc_sum_ae`.
 @audit:ok -/
 theorem rnDeriv_map_sum_ae (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
@@ -91,9 +88,9 @@ theorem rnDeriv_map_sum_ae (P : Measure Ω) [IsProbabilityMeasure P]
   filter_upwards [hrn_ofReal, hkey] with x hx hkx
   rw [hx, hkx]
 
-/-- **marginal mass の正値性 (factoring)**: `P (truncSet X Y n) ≠ 0` → 各成分の周辺
-mass `(P.map Z) {r | |r| ≤ n} ≠ 0` (Z = X or Y)。独立 factoring
-`P(truncSet) = P(X⁻¹Sn)·P(Y⁻¹Sn)` の片側因子が `(P.map Z) Sn` に一致。
+/-- Positivity of the marginal mass: `P (truncSet X Y n) ≠ 0` implies
+`(P.map Z) {r | |r| ≤ n} ≠ 0` for `Z = X` or `Z = Y`, since independence factors
+`P (truncSet) = P (X⁻¹ Sn) · P (Y⁻¹ Sn)` and one factor equals `(P.map Z) Sn`.
 @audit:ok -/
 theorem map_measure_truncBall_ne_zero (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -111,12 +108,12 @@ theorem map_measure_truncBall_ne_zero (P : Measure Ω) [IsProbabilityMeasure P]
   · intro h0; apply hpos; rw [hfac, h0, zero_mul]
   · intro h0; apply hpos; rw [hfac, h0, mul_zero]
 
-/-- **per-n 周辺密度の優関数 (single component)**: 固定 `n₀` (positive mass) に対し、
-`n₀ ≤ n` (ゆえ positive mass) で cond 周辺密度 `p_n := (condTrunc.map Z).rnDeriv vol |>.toReal`
-が定数倍 `C_Z · pZ` で上から抑えられる (`pZ := (P.map Z).rnDeriv vol |>.toReal`,
-`C_Z := ((P.map Z) {|r|≤n₀})⁻¹.toReal`)。機構: `map_condTrunc_eq_cond_map` で単成分
-conditioning に帰着 → `rnDeriv_cond_eq` で `p_n =ᵐ (m_n)⁻¹ · 1_Sn · pZ`、indicator + m_n 単調性
-(`Sn₀ ⊆ Sn` → `m_n ≥ m_{n₀}` → `m_n⁻¹ ≤ m_{n₀}⁻¹ = C_Z`) で上界。
+/-- Single-component dominating bound for the conditioned marginal density: for a fixed
+positive-mass `n₀` and any `n ≥ n₀`, the conditioned density
+`p_n := (condTrunc.map Z).rnDeriv volume |>.toReal` is bounded by `C_Z · pZ`, where
+`pZ := (P.map Z).rnDeriv volume |>.toReal` and `C_Z := ((P.map Z) {|r| ≤ n₀})⁻¹.toReal`. Reducing
+to single-component conditioning gives `p_n =ᵐ (m_n)⁻¹ · 1_Sn · pZ`, and `m_n⁻¹ ≤ m_{n₀}⁻¹ = C_Z`
+by monotonicity.
 @audit:ok -/
 theorem condTrunc_marginal_density_le (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -168,25 +165,12 @@ theorem condTrunc_marginal_density_le (P : Measure Ω) [IsProbabilityMeasure P]
       ENNReal.toReal_zero]
     exact mul_nonneg ENNReal.toReal_nonneg hpZx_nn
 
-/-- **sub-helper A — 優関数 `p_n∗q_n ≤ C·(p∗q)`** (pointwise a.e. `z`、`C = C_X·C_Y`)。
-固定 `n₀` (positive mass) に対し、`n ≥ n₀` で各成分の cond 密度
-`p_n := (condTrunc.map X).rnDeriv vol |>.toReal` が `C_X · pX` で上から抑えられ
-(`m_{X,n}⁻¹` の単調性、`C_X := (m_{X,n₀})⁻¹.toReal`)、同様に `q_n ≤ C_Y · qY`。convolution
-単調性で `p_n∗q_n ≤ C_X·C_Y·(pX∗qY)`。`C := C_X·C_Y`。
-
-**Genuine fill (2026-06-07, sorryAx-free)**: Step 1 各成分優関数 = helper
-`condTrunc_marginal_density_le` (`map_condTrunc_eq_cond_map` で単成分 conditioning に帰着
-→ `rnDeriv_cond_eq` の indicator 形 + `m_n` 単調性 `measure_mono`/`ENNReal.inv_le_inv`)。
-Step 2 各 z の畳込み単調性 = `integral_mono_of_nonneg` (LHS 可積分不要、RHS 可積分のみ)。
-per-z RHS 可積分性 (`∀ᵐ z, Integrable (x ↦ pX x · pY (z−x))`) は 2D 可積分性
-`integrable_prod_iff'` (layout `f (z,x) = pX x · pY (z−x)`、`convKernel_envelope_integrable`
-`FisherInfoV2DeBruijnAssembly.lean:791` を転用) + `Integrable.prod_right_ae` で genuine 供給
-(park 不要、session 内に閉じた)。Y 成分 bound の `q_n(z−x) ≤ C_Y qY(z−x)` への変換は
-測度保存写像 `x ↦ z − x` (`Measure.measurePreserving_sub_left`) の
-`QuasiMeasurePreserving.ae` で transport。
-
-honest: 結論は優関数不等式 (a.e. pointwise bound)。仮説は a.c. + measurability + positive mass。
-和エントロピー可積分性 (結論) を仮説で受けていない。
+/-- Dominating bound `p_n ∗ q_n ≤ C · (pX ∗ pY)` (a.e. `z`, with `C = C_X · C_Y`): for a fixed
+positive-mass `n₀` and all `n ≥ n₀`, each conditioned marginal density is bounded by a constant
+multiple of the corresponding `P`-marginal (`condTrunc_marginal_density_le`), and monotonicity of
+the convolution lifts this to the sum density. Per-`z` integrability of the convolution slice is
+supplied by `integrable_prod_iff'` plus `Integrable.prod_right_ae`, and the `Y`-bound is
+transported through the measure-preserving map `x ↦ z - x`.
 @audit:ok -/
 theorem convDensity_condTrunc_le_const_mul (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -292,14 +276,11 @@ theorem convDensity_condTrunc_le_const_mul (P : Measure Ω) [IsProbabilityMeasur
   show convDensityAdd pnX pnY z ≤ (C_X * C_Y) * convDensityAdd pX pY z
   simpa only [convDensityAdd] using hmono
 
-/-- **fixed-`n` 版 sub-helper A**: 単一 `n` (positive mass `hpos`) で優関数
-`convDensityAdd pnX pnY ≤ C · convDensityAdd pX pY` (a.e. `z`)。A 本体
-`convDensity_condTrunc_le_const_mul` の `n₀ := n`・`n = n` 特殊化を、`atTop` の eventually
-wrapper を介さず単一 `n` で直接供給する (各成分 bound `condTrunc_marginal_density_le` を
-`hn = le_refl n` で呼び、A の Step 2 畳込み単調性 `integral_mono_of_nonneg` を再利用)。
-C'/D は固定 `n` でこの bound を要求するため、本 helper で eventually 抽出の閾値依存を回避する。
-honest: 結論は優関数不等式 (a.e. bound)、仮説は a.c. + measurability + positive mass
-(regularity precondition)。和エントロピー可積分性 (= 親結論) を仮説で受けていない。
+/-- Fixed-`n` version of the dominating bound: for a single positive-mass `n`,
+`convDensityAdd pnX pnY ≤ C · convDensityAdd pX pY` (a.e. `z`). Same argument as
+`convDensity_condTrunc_le_const_mul` specialized at `n₀ := n`, supplied directly without the
+`atTop` eventually wrapper so that callers requiring the bound at a fixed `n` avoid threshold
+dependence.
 @audit:ok -/
 theorem convDensityAdd_condTrunc_le_const_mul_at (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -384,22 +365,10 @@ theorem convDensityAdd_condTrunc_le_const_mul_at (P : Measure Ω) [IsProbability
   show convDensityAdd pnX pnY z ≤ (C_X * C_Y) * convDensityAdd pX pY z
   simpa only [convDensityAdd] using hmono
 
-/-- **sub-helper B — 各点収束 `p_n∗q_n → p∗q`** (a.e. `z`)。
-`p_n → pX` a.e. (`m_{X,n} → 1`, `1_Sn → 1`)、`q_n → qY` a.e.、convolution 内 DCT
-(被積分関数収束 + 優関数 `C²·pX(x)qY(z-x)` 可積分) で各 `z` で
-`p_n∗q_n(z) → pX∗qY(z)`。
-
-honest: 結論は各点収束。仮説は a.c. + measurability。和エントロピー可積分性 (結論) を
-仮説で受けていない。
-
-**Genuine fill (2026-06-07, body 独自 sorry 0)**: 二重極限を filter 版 DCT
-(`tendsto_integral_filter_of_dominated_convergence`、atTop) で組立。(i) 各成分各点収束
-`pnZ_n x → pZ x` (a.e. x): cond density formula `pnZ_n =ᵐ (m_n)⁻¹·1_{Sn}·pZ` (per-n、`map_condTrunc_eq_cond_map`
-+ `rnDeriv_cond_eq`) を tail (n≥n₀) で `ae_all_iff` に束ね、`(m_n)⁻¹.toReal → 1` (`tendsto_measure_iUnion_atTop`)
-× `1_{Sn}(x) → 1` (`exists_nat_ge`) で各点極限。(ii) 内側 (各 z) DCT: 被積分 `pnX_n x·pnY_n(z−x)`
-の各点収束 (i × `x↦z−x` 測度保存 transport) + eventual 優関数 `C_X C_Y·pX(x)pY(z−x)`
-(`condTrunc_marginal_density_le` を n≥n₀ で) + slice 可積分 (`integrable_prod_iff'` + `prod_right_ae`)。
-self-audit 不可ゆえ `@residual` は残置 (orchestrator が独立監査)。
+/-- Pointwise convergence of the sum density under conditioning truncation:
+`p_n ∗ q_n → pX ∗ pY` (a.e. `z`). Each conditioned marginal converges a.e.
+(`p_n → pX`, `q_n → qY`), and the filter-form dominated convergence theorem with the dominating
+function `C² · pX(x) · pY(z - x)` gives `p_n ∗ q_n (z) → pX ∗ pY (z)` for a.e. `z`.
 @audit:ok -/
 theorem convDensity_condTrunc_tendsto (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -590,29 +559,19 @@ theorem convDensity_condTrunc_tendsto (P : Measure Ω) [IsProbabilityMeasure P]
     filter_upwards [hX_lim, hzY_lim'] with x hxlim hylim
     exact hxlim.mul hylim
 
-/-- **cross-entropy 列** `RHS_n := -∫ log(ν 密度) ∂μ_n` (`μ_n := condTrunc.map(X+Y)`,
-`ν := P.map(X+Y)`)。crux usc の Gibbs 上界 + DCT 収束先を結ぶ補助量。
+/-- The cross-entropy sequence `RHS_n := -∫ log (density of ν) ∂μ_n`, where
+`μ_n := (condTrunc P X Y n).map (X + Y)` and `ν := P.map (X + Y)`. It links the Gibbs upper bound
+and the dominated-convergence limit in the upper semicontinuity argument.
 @audit:ok -/
 noncomputable def crossEntropySeq (P : Measure Ω) (X Y : Ω → ℝ) (n : ℕ) : ℝ :=
   - ∫ x, Real.log ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal
       ∂((condTrunc P X Y n).map (fun ω => X ω + Y ω))
 
-/-- **sub-helper C' — cross-entropy 可積分性 (per-n)**: `Integrable (log ν 密度) μ_n`
-(`ν := P.map(X+Y)`, `μ_n := condTrunc.map(X+Y)`)。`∫|log ν 密度| dμ_n ≤ C²∫|log ν 密度|(p∗q)
-< ∞` (優関数 sub-helper A + 和エントロピー可積分 `hent_sum`)。Gibbs sub-helper C の
-`h_cross_int` 前提を供給。
-
-honest: 結論は可積分性 (regularity)。仮説は a.c. + measurability + 和エントロピー可積分
-(regularity)。usc 結論を仮説で受けていない。
-
-**Genuine fill (2026-06-07, body 独自 sorry 0)**: pull-back `Integrable g μ_n ⟺
-Integrable ((μ_n.rnDeriv vol)·g) vol` (`integrable_rnDeriv_smul_iff`、`hμ_n_ac =
-map_condTrunc_absolutelyContinuous`)。density 同定 `(μ_n.rnDeriv).toReal =ᵐ p_n∗q_n`
-(`rnDeriv_map_condTrunc_sum_ae` + `toReal_ofReal`)、`(ν.rnDeriv).toReal =ᵐ p∗q`
-(`rnDeriv_map_sum_ae`)。優関数 fixed-n `convDensityAdd_condTrunc_le_const_mul_at` で
-`p_n∗q_n ≤ C(p∗q)`、`|(μ_n.rnDeriv)·g| ≤ C·(ν.rnDeriv).toReal·|log| = C·|negMulLog((ν.rnDeriv).toReal)|`
-(`r·|log r| = |negMulLog r|`、r≥0)、`hent_sum.abs.const_mul C` で可積分 → `Integrable.mono'`。
-self-audit 不可ゆえ `@residual` は残置 (orchestrator が独立監査)。
+/-- Per-`n` integrability of the cross-entropy integrand: `log (density of ν)` is integrable
+against `μ_n`, where `ν := P.map (X + Y)` and `μ_n := (condTrunc P X Y n).map (X + Y)`. Pulling the
+integral back to `volume` and using the dominating bound `p_n ∗ q_n ≤ C (pX ∗ pY)` together with
+`hent_sum` bounds the integrand by `C · |negMulLog ((ν.rnDeriv).toReal)|`, which is integrable.
+This supplies the `h_cross_int` premise of the Gibbs bound.
 @audit:ok -/
 theorem crossEntropy_integrable_condTrunc_sum (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -699,18 +658,10 @@ theorem crossEntropy_integrable_condTrunc_sum (P : Measure Ω) [IsProbabilityMea
     _ = C * |Real.negMulLog ((ν.rnDeriv volume x).toReal)| := by rw [hr_log]
     _ = bnd x := by rw [hbnd_def]
 
-/-- **sub-helper C — per-n Gibbs 上界**: `∀ᶠ n, h(μ_n) ≤ RHS_n`
-(`RHS_n = crossEntropySeq P X Y n`)。`differentialEntropy_le_cross_entropy`
-(`μ = μ_n`, `ν = P.map(X+Y)`) に per-n regularity (μ_n a.c.、μ_n ≪ ν、μ_n 有限 entropy #2、
-cross-entropy 可積分 C' `crossEntropy_integrable_condTrunc_sum`) を供給。
-
-genuine Gibbs 配線: μ_n a.c. (`map_condTrunc_absolutelyContinuous`)、ν a.c.
-(conv abs continuous)、μ_n ≪ ν (`cond_absolutelyContinuous` の `.map`)、μ_n 有限 entropy
-(#2 `integrable_negMulLog_map_condTrunc_sum`)、cross-entropy 可積分 (C') を
-`differentialEntropy_le_cross_entropy` に供給。body 独自 sorry なし (transitive: C' + #2)。
-
-honest: 結論は per-n 不等式 (Gibbs)。仮説は a.c. + measurability + 和エントロピー可積分
-(regularity)。usc 結論を仮説で受けていない。
+/-- Per-`n` Gibbs upper bound: `∀ᶠ n, h(μ_n) ≤ RHS_n`, where `RHS_n = crossEntropySeq P X Y n`.
+The generalized Gibbs inequality `differentialEntropy_le_cross_entropy` is applied with
+`μ = μ_n`, `ν = P.map (X + Y)`, supplying the per-`n` regularity facts (`μ_n` absolutely
+continuous, `μ_n ≪ ν`, finite entropy, and the cross-entropy integrability).
 @audit:ok -/
 theorem differentialEntropy_condTrunc_sum_le_crossEntropy (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -751,23 +702,11 @@ theorem differentialEntropy_condTrunc_sum_le_crossEntropy (P : Measure Ω) [IsPr
     crossEntropy_integrable_condTrunc_sum P hX hY hXY hX_ac hY_ac hent_sum hpos
   exact differentialEntropy_le_cross_entropy hμ_ac hν_ac hμν hμ_ent hcross
 
-/-- **sub-helper D — cross-entropy 列の収束**: `RHS_n → h(ν)` (`ν = P.map(X+Y)`)。
-`RHS_n = ∫ (-log ν 密度)·(p_n∗q_n) dvol` (μ_n 密度経由で vol に pull back)、各点収束
-(sub-helper B `p_n∗q_n → p∗q`) + 優関数 `|log ν 密度|·C²(p∗q)` 可積分
-(sub-helper A + `hent_sum`) で `tendsto_integral_of_dominated_convergence` →
-`-∫(p∗q)log(p∗q) = h(ν)`。
-
-honest: 結論は数列の収束。仮説は a.c. + measurability + 和エントロピー可積分 (regularity)。
-usc 結論を仮説で受けていない。
-
-**Genuine fill (2026-06-07, body 独自 sorry 0)**: pull-back `crossEntropySeq n =ᶠ
--∫ (p_n∗q_n)·g dvol` (positive-mass tail、`integral_rnDeriv_smul` + `rnDeriv_map_condTrunc_sum_ae`、
-`g x = log((ν.rnDeriv).toReal)`)。外側 filter 版 DCT (`tendsto_integral_filter_of_dominated_convergence`、
-atTop): 各点収束 = B (`p_n∗q_n → p∗q`) × g(x) 定数、eventual 優関数 = A
-(`convDensity_condTrunc_le_const_mul`、n₀ 固定) × |g(x)| → `bnd = C·|negMulLog((ν.rnDeriv).toReal)|`
-(`hent_sum.abs.const_mul C` で可積分)。収束先 `-∫ (p∗q)·g = ∫ negMulLog((ν.rnDeriv).toReal) =
-differentialEntropy ν` (`rnDeriv_map_sum_ae` + `negMulLog_eq_neg`)。`Tendsto.congr' hpull hDCT.neg`。
-self-audit 不可ゆえ `@residual` は残置 (orchestrator が独立監査)。
+/-- Convergence of the cross-entropy sequence: `RHS_n → h(ν)` with `ν = P.map (X + Y)`. Pulling
+`RHS_n` back to `volume` as `∫ (-log (density of ν)) · (p_n ∗ q_n) dvolume`, the pointwise
+convergence `p_n ∗ q_n → pX ∗ pY` together with the dominating function
+`|log (density of ν)| · C² (pX ∗ pY)` (integrable from `hent_sum`) gives, via dominated
+convergence, the limit `-∫ (pX ∗ pY) log (pX ∗ pY) = h(ν)`.
 @audit:ok -/
 theorem crossEntropySeq_tendsto (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)

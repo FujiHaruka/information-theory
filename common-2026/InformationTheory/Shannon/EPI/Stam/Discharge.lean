@@ -15,62 +15,33 @@ import Mathlib.Probability.Independence.Basic
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 
 /-!
-# T2-D-S: Entropy Power Inequality — Stam inequality + de Bruijn integration 経路 discharge
+# Entropy power inequality via the Stam inequality and de Bruijn integration
 
-`InformationTheory/Shannon/EntropyPowerInequality.lean` (T2-D, 347 行) の主定理
-`entropy_power_inequality` は L-EPI1 + L-EPI2 + L-EPI3 三本立て hypothesis
-pass-through pattern で publish 済。本 file は **Stam inequality + de Bruijn
-integration 経路** で L-EPI1 / L-EPI2 を真の signature に格上げし、合成 wrapper
-`epi_via_stam` で **L-EPI3 を導出する hypothesis pipeline** を整える。
+This file raises the Stam-inequality and de Bruijn-integration ingredients of the entropy power
+inequality to their genuine signatures and assembles them into a pipeline.
 
-## Roadmap
+## Main definitions
 
-* §2 Stam inequality predicate (`IsStamInequalityHyp`) — Cover-Thomas 17.7.2
-  の真の signature `1/J(X+Y) ≥ 1/J(X) + 1/J(Y)` を hypothesis 化 + L-EPI1 bridge。
-* §3 de Bruijn regularity hypothesis (`IsDeBruijnRegularityHyp`) — heat-flow
-  path 上の各 t での `IsRegularDeBruijnHyp` + tail integrability を集約。
-* §4 de Bruijn integration predicate (`IsDeBruijnIntegrationHyp`) — Cover-Thomas
-  17.7.2 の `∫₀^∞ ... dt = h(N) - h(X)` integration identity を hypothesis 化
-  + L-EPI2 bridge。
-* §5 Gaussian saturation full discharge: `X, Y` ともに Gaussian なら Stam +
-  de Bruijn 全 hypothesis が **trivially** 取れる (Mathlib
-  `fisherInfoOfDensity_gaussianPDFReal` + Gaussian closed form 経由)。
-* §6 合成 wrapper `epi_via_stam`: §2 + §4 + bridge hypothesis から L-EPI3
-  を導出する。本格 discharge は L-EPI1/L-EPI2 → L-EPI3 の Stam-to-EPI bridge
-  (Cover-Thomas Lemma 17.7.3 の `∫ (J(X+√tZ)⁻¹) dt` 計算) が必要だが、本 file
-  は bridge そのものを predicate `IsStamToEPIBridgeHyp` として hypothesis 化。
-* §7 Gaussian full discharge corollary: §5 + §6 の合成で **Gaussian X, Y に
-  対し EPI が hypothesis 不要で導出**。
+* `IsStamInequalityHyp X Y P` — the Stam inequality `1/J(X + Y) ≥ 1/J(X) + 1/J(Y)`
+  (Cover–Thomas Lemma 17.7.2) as a predicate.
+* `IsDeBruijnRegularityHyp X Z P` — regularity of the heat-flow path needed for the de Bruijn
+  identity, bundling `IsRegularDeBruijnHypV2` at each `t > 0` with bounded-window integrability of
+  the derivative.
+* `IsDeBruijnIntegrationHyp X Z P T` — the de Bruijn integration identity
+  `h(target) - h(X) = ∫₀^T (1/2) J(X + √t Z) dt` as a predicate.
+* `IsStamToEPIBridgeHyp X Y P` — the implication from the Stam inequality to the entropy power
+  inequality hypothesis.
 
-## 撤退ライン (本 file で発動)
+## Main statements
 
-Mathlib に Stam inequality / de Bruijn integration / Fisher info convolution
-lemma が **完全不在** (`rg "Stam" → 0 hit`、inventory §A.5)。本 file は
+* `epi_via_stam` — assembles the Stam inequality and the Stam-to-EPI bridge into the entropy power
+  inequality hypothesis.
+* `epi_via_stam_gaussian` — for independent Gaussians, the entropy power inequality holds with no
+  upstream hypothesis, via Gaussian saturation.
 
-* L-EPI1 (Stam) は `IsStamInequalityHyp` 真 signature 化 (`1/J ≥ 1/J + 1/J` 形)。
-  旧 EntropyPowerInequality.lean の `IsStamInequalityHypothesis (= True)`
-  への trivial bridge `isStamInequalityHypothesis_of_stamInequalityHyp` は
-  Phase 3 Wave 2 (2026-05-27) で retract 済 (placeholder def 自体が削除)。
-* L-EPI2 (de Bruijn) は `IsDeBruijnIntegrationHyp` 真 signature 化
-  (`∫₀^∞ (d/dt) h(X+√t Z) dt = h(∞) - h(X)` integration identity 形)。
-  旧 `IsDeBruijnIntegrationHypothesis (= True)` への trivial bridge も
-  同 wave で retract 済。
-* 合成経路 `Stam + de Bruijn → L-EPI3` は更に `IsStamToEPIBridgeHyp` を
-  hypothesis 化 (Cover-Thomas Lemma 17.7.3 の本体経路、参考: Stam 1959 / Blachman
-  1965 / Cover-Thomas Ch.17.7 末尾 path-integral 議論)。**本 file scope-out**、
-  別 plan `epi-stam-to-conclusion-plan.md` (未着手) で discharge する想定。
-* Gaussian saturation case のみ §5/§7 で **撤退ラインなしで full discharge**。
+## References
 
-## 主シグネチャ
-
-* `IsStamInequalityHyp X Y P` (§2) — Stam inequality 真 signature
-  (旧 L-EPI1 bridge `isStamInequalityHypothesis_of_stamInequalityHyp` は
-  Phase 3 Wave 2 で retract 済、placeholder `:= True` 廃止に伴う)
-* `IsDeBruijnRegularityHyp X Z P` (§3) — de Bruijn regularity predicate
-* `IsDeBruijnIntegrationHyp X Z P` (§4) — de Bruijn integration 真 signature
-* `IsStamToEPIBridgeHyp X Y P` (§6) — Stam + de Bruijn → L-EPI3 bridge hypothesis
-* `epi_via_stam` (§6) — 合成 wrapper, L-EPI3 を導出
-* `epi_via_stam_gaussian` (§7) — Gaussian saturation full discharge corollary
+[CoverThomas2006] Lemma 17.7.2; [Stam1959]; [Blachman1965].
 -/
 
 namespace InformationTheory.Shannon.EPIStamDischarge
@@ -82,47 +53,20 @@ open MeasureTheory ProbabilityTheory Real
 open scoped ENNReal NNReal Topology
 open InformationTheory.Shannon.EntropyPowerInequality
 
-/-! ## §2 — Stam inequality predicate (Cover-Thomas Lemma 17.7.2 真 signature) -/
+/-! ## §2 — Stam inequality predicate -/
 
-/-- **Stam inequality hypothesis** (L-EPI1 真 signature, Cover-Thomas Lemma 17.7.2).
+/-- The 1-dimensional Stam inequality in inverse form (Cover–Thomas Lemma 17.7.2; Stam 1959;
+Blachman 1965): for independent `X, Y` with finite Fisher information,
+`1 / J(X + Y) ≥ 1 / J(X) + 1 / J(Y)`, where `J` is the (real-valued) Fisher information.
 
-For independent `X, Y` with finite Fisher information,
+The quantification block carries regularity preconditions (`IsRegularDensityV2 fX/fY`, the
+normalizations `∫ fX = 1`, `∫ fY = 1`, the pointwise convolution identity
+`∀ x, fXY x = convDensityAdd fX fY x`, and the `IsBlachmanConvReady fX fY` bundle). These are not
+the inequality core: the bound is genuinely produced from regularity alone by
+`stam_step2_density_wall` via `convex_fisher_bound_of_ready`. They are jointly satisfiable (a
+Gaussian witness inhabits the `IsBlachmanConvReady` bundle), so the predicate is non-vacuous.
 
-    `1 / J(X + Y) ≥ 1 / J(X) + 1 / J(Y)`
-
-where `J` is Fisher information (return type `ℝ` via `fisherInfoReal`).
-
-This is the 1-dimensional **Stam inequality** in inverse form (Cover-Thomas Lemma
-17.7.2; Stam 1959; Blachman 1965). Used as hypothesis pass-through; Mathlib has
-neither Fisher info convolution nor the inverse-triangle inequality (`rg "Stam"
-→ 0 hit`). Discharge via `epi-stam-discharge-plan.md` (未着手).
-
-To avoid division-by-zero, we phrase the predicate to require either
-`J(X) = J(Y) = 0` (Dirac case) or the inverse inequality on the real-valued
-projections (with finiteness).
-
-Audit 2026-05-31 (owner-level pivot, epi-wall-reattack-plan): sound Prop statement.
-The injected hyps (`IsRegularDensityV2 fX/fY`, `∫fX=1`, `∫fY=1`, the *pointwise*
-convolution identity `∀ x, fXY x = convDensityAdd fX fY x`, and the
-`IsBlachmanConvReady fX fY` bundle) are jointly satisfiable (Gaussian witness
-`isBlachmanConvReady_gaussianPDFReal` + `convDensityAdd_gaussian_closed_form`,
-NON-vacuous); the pointwise `hconv` ties `fXY` to the convolution so the conclusion is
-the genuine Stam bound, not universally false. These are regularity preconditions, not
-the inequality core (which is genuinely closed in `stam_step2_density_wall` via
-`convex_fisher_bound_of_ready`). Pivoted in lockstep with `IsStamInequalityResidual`
-(defeq chain via `fisherInfoOfMeasureV2_def`); the pointwise convolution constraint +
-`IsBlachmanConvReady` were added to let `isStamInequalityHyp_via_body` consume the
-genuine `IsStamCauchySchwarzOptimal` producer. No honesty defect.
-
-@audit:ok — independent honesty audit (2026-05-31): SOUND non-vacuous Prop. The injected
-hyps are regularity preconditions (smoothness / normalization / pointwise convolution
-identification / 19-field `Integrable`/boundedness/positivity bundle); none bundles the
-inequality core (the conclusion `1/J_sum ≥ 1/J_X+1/J_Y` is genuinely produced from
-regularity by `isStamInequalityHyp_via_step3` → `stam_step2_density_wall`, sorryAx-free).
-Non-vacuous: Gaussian witness `isBlachmanConvReady_gaussianPDFReal` inhabits the gating
-bundle. Pivot defeq-aligned with `IsStamInequalityResidual` (`fisherInfoOfMeasureV2_def`);
-defeq pass-through sites (`EPIStamToBridge` / `EPIL3Integration`) unchanged + green =
-honest type-identity, not sorry concealment. @audit:ok -/
+@audit:ok -/
 def IsStamInequalityHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
@@ -139,14 +83,7 @@ def IsStamInequalityHyp {Ω : Type*} [MeasurableSpace Ω]
     InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady fX fY →
     1 / J_sum ≥ 1 / J_X + 1 / J_Y
 
--- (retracted, Phase 3 Wave 2, 2026-05-27) `isStamInequalityHypothesis_of_stamInequalityHyp`
--- bridged `IsStamInequalityHyp X Y P → IsStamInequalityHypothesis X Y P` via
--- `trivial`. The target placeholder `IsStamInequalityHypothesis := True` in
--- `EntropyPowerInequality.lean` has been retracted in the same wave (defect-kind
--- prop-true resolved); the bridge has no remaining call sites.
-
-/-- Stam inequality hypothesis is symmetric in `X, Y` (the role of `X+Y` is
-unchanged when swapping the addends). -/
+/-- The Stam inequality hypothesis is symmetric in `X, Y`. -/
 theorem isStamInequalityHyp_symm
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -172,82 +109,17 @@ theorem isStamInequalityHyp_symm
 
 /-! ## §3 — de Bruijn regularity predicate -/
 
-/-- **de Bruijn regularity hypothesis along the heat-flow path** (L-DB1 形).
+/-- Regularity of the heat-flow path needed for the de Bruijn identity. For each `t > 0` it
+bundles the family-level regularity `IsRegularDeBruijnHypV2 X Z P t` (which carries genuine
+`HasDerivAt` content) with a shared density witness `density_path`, the pin `density_t_eq` tying it
+to the per-`t` internal density, and bounded-window integrability of the derivative.
 
-Bundles for each `t ∈ [0, ∞)` the family-level regularity
-`IsRegularDeBruijnHyp X Z P t` needed to apply `deBruijn_identity`, together
-with the tail integrability of the derivative `(d/dt) h(X + √t Z)` and the
-limit `lim_{t → ∞} h(X + √t Z) = (1/2) log (2πe (Var X + t))` (which collapses
-to `+∞` at finite truncation, with the limit form taking the genuine Gaussian
-saturation).
+The structure carries genuine `HasDerivAt` content via `reg_at` and the `density_t_eq` pin, so its
+body cannot be reduced to `sorry`. It is load-bearing rather than a regularity precondition; the
+tag flags it for eventual decomposition into a regularity precondition plus the genuine de Bruijn
+lemma.
 
-Used as hypothesis pass-through; Mathlib has no machinery for any of these
-ingredients (`rg "deBruijn" → 0 hit`).
-
-`@audit:retract-candidate(load-bearing-predicate)`
-(migrated 2026-05-28 from legacy `@audit:staged(epi-debruijn-regularity)`:
-this `structure` carries genuine `HasDerivAt` content via `reg_at` +
-`density_t_eq` pin, so it cannot be reduced to `sorry` in its body. Closure
-plan: `docs/shannon/epi-debruijn-integration-plan.md`. Active consumers
-exist across `EPIStamDischarge` / `EPIStamToBridge` / `EPIL3Integration`,
-so this is **not** a candidate for outright deletion — the tag flags it
-for eventual decomposition into a regularity precondition + the genuine
-de Bruijn lemma (`wall:debruijn-integration` is now [CLOSED 2026-06-04])
-once consumers can carry caller-supplied density data directly.)
-
-**Resolved 2026-05-25** (Wave 3 third batch): former
-`Integrable ... (volume.restrict (Set.Ioi 0))` field was unsatisfiable even for
-Gaussian X (the integrand `1/(2(v+t))` over `(0,∞)` diverges, but `Integrable`
-requires `HasFiniteIntegral`). Replaced with bounded-T `IntervalIntegrable`
-window (`∀ T > 0, IntervalIntegrable f' volume 0 T`); for Gaussian
-`density_path t := gaussianPDFReal m (v + ⟨t,_⟩)` the integrand
-`1/(2(v+t))` is continuous and bounded on `[0,T]`, so the field is genuinely
-satisfiable. Tail behavior beyond `T` was originally going to be externalized via a
-separate `IsDeBruijnTailHyp` predicate; that predicate was **retracted** in
-the same Wave 3 third batch by independent audit
-(`defect(epi-debruijn-tail-vacuous-and-empty)`, see `EPIL3Integration.lean`
-retraction comment). Tail-analysis externalization is now a pending plan-level
-task (`docs/shannon/epi-debruijn-integration-plan.md` Phase C-5, awaiting
-`EReal`-lift refactor). Predicate remains load-bearing (carries the
-regularity content) so the audit tag stays at `staged(epi-debruijn-regularity)`
-rather than `ok`.
-
-**Honest refactor 2026-05-25+α** (sub-plan
-`docs/shannon/epi-debruijn-regularity-refactor-plan.md`): former
-`integrable_deriv : ∃ density_path, ...` had an inner existential decoupled
-from `reg_at`'s internal `density_t`, allowing trivial discharge of
-`integrable_deriv` *alone* via `density_path := fun _ _ ↦ 0` (an independent
-audit caveat on 2026-05-25). The structure has been refactored: `density_path`
-is now a top-level structure field, and the new `density_t_eq` field pins it
-to `(reg_at t ht).density_t`. Consequently, picking `density_path := 0`
-forces `(reg_at t ht).density_t = 0` via `density_t_eq`, which forces the
-RHS of `deBruijn_identity_v2 X Z ht (reg_at t ht)` (Phase 2.B foundation
-removed the `derivAt_entropy_eq_half_fisher_v2` field; the V2 de Bruijn
-identity is now delivered by the genuine (sorryAx-free)
-`debruijnIdentityV2_holds_assembled`; `wall:debruijn-integration` is [CLOSED
-2026-06-04]) to
-`(1/2) * fisherInfoOfDensityReal 0 = 0`; for the Gaussian instance the LHS
-is `HasDerivAt (fun s => h(𝒩(m, v+s))) (1/(2(v+t))) t` with
-`1/(2(v+t)) ≠ 0`, contradicting the pinned `0`. Thus the degenerate witness
-is now structurally infeasible — the trivial-zero bypass is closed at the
-type level. The previous caveat tag (slug
-`epi-debruijn-regularity-integrable-deriv-decoupled`, kind `caveat`) has been
-removed; the predicate remains load-bearing (carries the genuine `HasDerivAt`
-content) so the staged-audit tag stays.
-
-audit:PASS 2026-05-25 by honesty-auditor (independent, Track B):
-Tier 1 (caveat structurally resolved — inner existential gone, `density_path`
-top-level + `density_t_eq` pin present, `integrable_deriv` shares witness),
-Tier 2 (`density_path := 0` infeasible: `density_t_eq` forces V2 `density_t = 0`,
-RHS `(1/2) * fisherInfoOfDensityReal 0 = 0` contradicts Gaussian
-`1/(2(v+t))` derivative via `HasDerivAt.unique`),
-Tier 3 (`density_t_eq` is load-bearing not decorative — removing it
-restores the decoupled-existential bypass; `reg_at` keeps genuine
-`HasDerivAt` content; legacy `staged(epi-debruijn-regularity)` retained
-in 2026-05-25 audit because no general non-Gaussian discharge yet and
-tail-beyond-T externalization still pending. 2026-05-28 migration moved
-the tag to `retract-candidate(load-bearing-predicate)` per the current
-sorry-based honesty workflow — see top of docstring). -/
+@audit:retract-candidate(load-bearing-predicate) -/
 structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] where
   /-- Shared density witness. `density_path t` is intended to be the density
@@ -260,25 +132,16 @@ structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
   its own internal `density_t` witness — that internal witness is pinned to
   the top-level `density_path t` by `density_t_eq` below). -/
   reg_at : ∀ t : ℝ, 0 < t → InformationTheory.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2 X Z P t
-  /-- Pin the V2-internal `density_t` of `reg_at t ht` to the top-level
-  `density_path t`. Without this pin, the previous structure had two
-  independent existentials and `density_path := fun _ _ ↦ 0` trivially
-  discharged `integrable_deriv` alone (the resolved caveat). With this pin,
-  `density_path = 0` forces `(reg_at t ht).density_t = 0` and hence
-  `deBruijn_identity_v2 X Z ht (reg_at t ht)`'s RHS to `0` (Phase 2.B
-  foundation removed the `derivAt_entropy_eq_half_fisher_v2` field; V2
-  de Bruijn is now delivered by the genuine `debruijnIdentityV2_holds_assembled`,
-  `wall:debruijn-integration` is [CLOSED 2026-06-04]), which contradicts the true
-  Gaussian derivative `1/(2(v+t)) ≠ 0`. -/
+  /-- Pin the `IsRegularDeBruijnHypV2`-internal `density_t` of `reg_at t ht` to the top-level
+  `density_path t`. This shared witness closes the trivial-zero bypass: `density_path = 0` forces
+  `(reg_at t ht).density_t = 0`, hence the de Bruijn identity's RHS to `0`, contradicting the true
+  Gaussian derivative `1 / (2 (v + t)) ≠ 0`. -/
   density_t_eq : ∀ t : ℝ, ∀ ht : 0 < t,
     (reg_at t ht).density_t = density_path t
-  /-- The derivative `(1/2)·J(X+√t·Z).toReal` is interval-integrable on every
-  bounded window `[0, T]` along the heat-flow path, using the shared
-  `density_path`. Bounded-T form is genuinely satisfiable for Gaussian X (the
-  integrand `1/(2(v+t))` is continuous and bounded on `[0,T]`); tail behavior
-  beyond `T` is a pending plan-level task (the previously intended
-  `IsDeBruijnTailHyp` externalization was retracted by independent audit;
-  see `EPIL3Integration.lean` retraction comment). -/
+  /-- The derivative `(1/2) · J(X + √t · Z).toReal` is interval-integrable on every bounded window
+  `[0, T]` along the heat-flow path, using the shared `density_path`. This bounded-window form is
+  satisfiable for Gaussian `X`, where the integrand `1 / (2 (v + t))` is continuous and bounded on
+  `[0, T]`. -/
   integrable_deriv :
     ∀ T : ℝ, 0 < T →
       IntervalIntegrable
@@ -287,56 +150,18 @@ structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
               (P.map (fun ω => X ω + Real.sqrt t * Z ω)) (density_path t)).toReal)
         volume 0 T
 
-/-! ## §4 — de Bruijn integration predicate (Cover-Thomas Lemma 17.7.2 真 signature) -/
+/-! ## §4 — de Bruijn integration predicate -/
 
-/-- **de Bruijn integration hypothesis** (L-EPI2 真 signature).
+/-- The de Bruijn integration identity along the heat-flow path (Cover–Thomas Lemma 17.7.2):
+`h(target) - h(X) = ∫₀^T (1/2) · J(X + √t · Z) dt`, i.e. the differential entropy gap equals the
+path integral of half the Fisher information. Stated existentially over the density path `fPath`.
 
-Cover-Thomas Lemma 17.7.2 integration identity along the heat-flow path:
+The predicate carries the integration-identity content, so its `def` body cannot be reduced to
+`sorry`; it is load-bearing. There are no hypothesis-form consumers: the general witness
+`isDeBruijnIntegrationHyp_holds` produces it from `0 ≤ T` and a path-regularity precondition by
+delegating to `debruijnIntegrationIdentity_holds`.
 
-    `h(N(0, Var X + T)) - h(X)
-      = ∫_0^T (1/2) · J(X + √t · Z) dt`,
-
-i.e., the differential entropy gap between `X` and the maximally entropy
-Gaussian with the same variance equals the path integral of half the Fisher
-information.
-
-Used as hypothesis pass-through; full discharge requires both the de Bruijn
-identity (T2-F `deBruijn_identity` packaged with the L-DB1 regularity above)
-and the fundamental theorem of calculus along an unbounded interval (`rg
-"intervalIntegral.integral_deriv" → only bounded-interval forms`).
-
-`@audit:retract-candidate(load-bearing-predicate)`
-(migrated 2026-05-28 from legacy `@audit:staged(epi-debruijn-integration)`:
-this `def : Prop` is the existential identity
-`∃ fPath, ∀ ..., h_target - h_X = ∫ ... ∂volume`, the Cover-Thomas
-17.7.2 integration form itself, which cannot be reduced to `sorry` in a
-def body. Closure plan: `docs/shannon/epi-debruijn-integration-plan.md`.
-**Wall-delegation now in place (Cluster C sorry-migration 2026-05-28; Phase 4
-structural closure 2026-05-31)**: the `def` is kept as the genuine
-integration-form `Prop` (its shape is referenced by heat-flow path consumers +
-`EPIL3Integration`), but the analytic core is no longer threaded as a
-load-bearing hypothesis anywhere — there are 0 hypothesis-form consumers, and a
-general witness `isDeBruijnIntegrationHyp_holds` (below) produces the predicate
-(given `0 ≤ T` + a `IsDeBruijnPathRegular` path-regularity precondition) by
-delegating to the upstream lemma `debruijnIntegrationIdentity_holds`
-(`FisherInfoV2DeBruijn.lean`). Phase 4 reduced that lemma's former independent
-`sorry` to the per-time de Bruijn identity via FTC; that per-time identity is
-now the genuine (sorryAx-free) `debruijnIdentityV2_holds_assembled`
-(`wall:debruijn-integration` is [CLOSED 2026-06-04]), so no de Bruijn `sorry`
-remains at any use site.)
-
-**Resolved 2026-05-25** (Wave 3 third batch): former `∀ fPath` quantification
-collapsed via `fPath := fun _ _ ↦ 0` (because
-`fisherInfoOfMeasureV2 _ f = fisherInfoOfDensity f` is defeq, the measure
-argument is a labelling-only device), forcing the integrand to `0` and
-demanding `h_target = h_X` — false for non-degenerate `(X, T > 0)`.
-Refactored to existential `∃ fPath`, selecting the genuine density path
-along the heat-flow trajectory (Gaussian instance:
-`fPath t := gaussianPDFReal m (v + ⟨t,_⟩)`). Predicate remains load-bearing
-(carries the de Bruijn integration identity content); 2026-05-28 migration
-moved the tag from legacy `staged(epi-debruijn-integration)` to
-`retract-candidate(load-bearing-predicate)` (see top of docstring) per
-the current sorry-based honesty workflow. -/
+@audit:retract-candidate(load-bearing-predicate) -/
 def IsDeBruijnIntegrationHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) (T : ℝ) : Prop :=
   ∃ (fPath : ℝ → ℝ → ℝ),
@@ -376,22 +201,10 @@ theorem isDeBruijnIntegrationHyp_at_zero
   rw [hX_def, htarget_def, ← h_boundary]
   ring
 
-/-- **General de Bruijn integration witness** — `IsDeBruijnIntegrationHyp X Z P T`
-holds whenever `0 ≤ T` and the heat-flow path is regular
-(`IsDeBruijnPathRegular`), by delegation to the structurally-closed lemma
-`debruijnIntegrationIdentity_holds` (Phase 4 structural closure 2026-05-31).
-
-The integration identity is now genuinely reduced to the per-time de Bruijn
-identity (genuine `debruijnIdentityV2_holds_assembled`,
-`wall:debruijn-integration` is [CLOSED 2026-06-04]) via FTC: the
-upstream lemma carries **no local `sorry`**, only a path-regularity /
-integrability precondition `h_path` (which `X` admissible, how regular the
-path) plus `0 ≤ T`. The de Bruijn analytic core (heat eq + IBP) lives solely in
-the genuine per-time identity lemma, not in any hypothesis bundle here.
-
-The per-time lemma's existential is stated with `gaussianConvolution X Z t`, which is
-definitionally `fun ω => X ω + √t · Z ω` (the heat-flow path used by the predicate
-body), so the witness threads through directly. -/
+/-- `IsDeBruijnIntegrationHyp X Z P T` holds whenever `0 ≤ T` and the heat-flow path is regular
+(`IsDeBruijnPathRegular`), by delegation to `debruijnIntegrationIdentity_holds`. The integration
+identity reduces to the per-time de Bruijn identity via the fundamental theorem of calculus; the
+upstream lemma carries only a path-regularity precondition and `0 ≤ T`. -/
 @[entry_point]
 theorem isDeBruijnIntegrationHyp_holds
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
@@ -401,46 +214,21 @@ theorem isDeBruijnIntegrationHyp_holds
     IsDeBruijnIntegrationHyp X Z P T :=
   InformationTheory.Shannon.FisherInfoV2.debruijnIntegrationIdentity_holds X Z hX hZ hXZ T hT h_path
 
--- (retracted, wave-1) `isDeBruijnIntegrationHypothesis_of_deBruijnIntegrationHyp`
--- produced `IsDeBruijnIntegrationHypothesis` (formerly `:= True` placeholder)
--- via `trivial`; a pure Prop=True passthrough (degenerate_def) with no callers.
--- The target placeholder def itself was retracted in Phase 3 Wave 2 (2026-05-27).
--- The genuine de Bruijn integration predicate is `IsDeBruijnIntegrationHyp` (§4) above.
-
 /-! ## §5 — Gaussian saturation full discharge of the upstream hypotheses
 
-When both `P.map X` and `P.map Y` are Gaussian, the upstream Stam / de Bruijn
-hypotheses are **all discharged for free**: Stam becomes the trivial inverse
-identity (because `J(N(m, v)) = 1/v` closed-form), and de Bruijn-integration
-collapses to the linear variance increase along the heat flow.
-
-The block below packages this discharge via the genuine Gaussian saturation
-result (`entropyPower_gaussian_additivity`) reused in §7.
-
-**RESOLVED (2026-05-20):** the former `isStamInequalityHyp_of_fisherInfoReal_zero`
-(and its `_sum_zero` / `_Y_zero` siblings) discharged the Stam predicate by
-`exfalso`-ing the `0 < J_X` precondition against the buggy V1 `fisherInfo = 0`
-artefact for Gaussians. That asserted *nothing* about Stam actually holding and
-was removed. The genuine Gaussian EPI path runs entirely through
-`entropyPower_gaussian_additivity` (see §7).
+When both `P.map X` and `P.map Y` are Gaussian, the upstream Stam / de Bruijn hypotheses are all
+discharged for free: Stam becomes the trivial inverse identity (since `J(N(m, v)) = 1/v` in closed
+form), and de Bruijn integration collapses to the linear variance increase along the heat flow.
+The discharge below is packaged via the Gaussian saturation result
+`entropyPower_gaussian_additivity` reused in §7.
 -/
 
-/-! ## §6 — Stam-to-EPI bridge + 合成 wrapper -/
+/-! ## §6 — Stam-to-EPI bridge and assembly wrapper -/
 
-/-- **Stam-to-EPI bridge hypothesis** (L-EPI1 + L-EPI2 → L-EPI3 path-integral
-argument bundling).
-
-Cover-Thomas Lemma 17.7.3 derives EPI from Stam inequality + de Bruijn
-identity by considering the heat-flow path
-
-    `Z_t := (1 - t) · X + √t · G + t · √(...) · ...`
-
-(a normalized parametric mixture) and showing that the entropy power along
-the path is concave. This requires both Stam and de Bruijn as upstream
-inputs, plus the FTC over the path and a saturation argument at the endpoint.
-
-Bundled here as a hypothesis predicate to be discharged in the follow-up plan
-`epi-stam-to-conclusion-plan.md` (未着手). -/
+/-- The Stam-to-EPI bridge hypothesis: the implication from the Stam inequality to the entropy
+power inequality hypothesis. Cover–Thomas Lemma 17.7.3 derives the entropy power inequality from
+the Stam inequality and the de Bruijn identity by a heat-flow path-concavity argument plus a
+saturation argument at the endpoint; this predicate bundles that implication. -/
 def IsStamToEPIBridgeHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   IsStamInequalityHyp X Y P → IsEntropyPowerInequalityHypothesis X Y P
@@ -454,11 +242,10 @@ theorem isStamToEPIBridgeHyp_of_epi
     IsStamToEPIBridgeHyp X Y P :=
   fun _ => h_epi
 
-/-- **`epi_via_stam`**: 合成 wrapper. Stam inequality + de Bruijn integration
-+ Stam-to-EPI bridge から L-EPI3 (`IsEntropyPowerInequalityHypothesis`) を
-導出する。本 file の主 deliverable。
+/-- Assembles the Stam inequality and the Stam-to-EPI bridge into the entropy power inequality
+hypothesis `IsEntropyPowerInequalityHypothesis`.
 
-`@audit:ok` -/
+@audit:ok -/
 @[entry_point]
 theorem epi_via_stam
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -529,11 +316,6 @@ theorem isStamToEPIBridgeHyp_of_forall
     (h : IsStamInequalityHyp X Y P → IsEntropyPowerInequalityHypothesis X Y P) :
     IsStamToEPIBridgeHyp X Y P :=
   h
-
--- (retracted, wave-1) `isDeBruijnIntegrationHypothesis_trivial_of_anything` produced
--- `IsDeBruijnIntegrationHypothesis` (formerly `:= True` placeholder) via `trivial`;
--- an even more obviously vacuous Prop=True passthrough (degenerate_def) with no callers.
--- The target placeholder def itself was retracted in Phase 3 Wave 2 (2026-05-27).
 
 /-! ## §9 — 3-arg EPI via Stam (chain application) -/
 

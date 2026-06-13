@@ -16,43 +16,19 @@ import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 import Mathlib.Order.Monotone.Basic
 
 /-!
-# T2-D: Stam → EPI — Csiszár ratio path-derivative cluster
+# Stam → EPI: Csiszár ratio path-derivative cluster
 
-This file holds the Csiszár-coupling ratio path-derivative lemmas (the genuine
-`AntitoneOn` / continuity chain along the heat-flow path) consumed by the EPI
-case-1 closure.
+This file holds the Csiszár-coupling ratio path-derivative lemmas — the `AntitoneOn` and continuity
+chain along the heat-flow path — consumed by the entropy power inequality case-1 closure.
 
-The former in-place scaling/noise route through this file
-(`IsStamToEPIScalingHyp` / `stamToEPIScaling_holds` /
-`isStamToEPIBridgeHyp_of_scaling` / `stamScalingNoise_exists` /
-`isStamToEPIBridgeHyp_of_gaussian_via_scaling` /
-`IsEPIScalingDecomposedPipeline` / `entropy_power_inequality_unconditional`)
-has been **deleted** (2026-06-09, `epi-richness-route-b-plan` B2): the in-place
-noise existential `stamScalingNoise_exists` was a `false-statement` defect
-(false on atomic measures), and the scaling sub-predicate / headline decls built
-on it were dead code (consumer ripple 0). The honest richness predicate
-`IsStamScalingNoiseHyp` + its 2-noise lift inhabitant in `EPINoiseExtension`
-were likewise removed (2026-06-09) once superseded by the live **3-noise** lift
-route `EPINoiseExtension.entropy_power_inequality_via_lift3` (sorryAx-free),
-which transports EPI from `Ω × ℝ × ℝ × ℝ` and is what the density-form EPI
-conclusions consume.
+## Main statements
 
-## Surviving members
-
-* the Csiszár-cluster ratio path-derivative lemmas
-  (`entropyPower_hasDerivAt_of_diffEnt_hasDerivAt`,
-  `csiszarLogRatioGap_hasDerivAt`, `csiszarLogRatioGap_deriv_le_zero`,
-  `epi_of_csiszarLogRatioGap_zero_nonneg`, and the `AntitoneOn` / continuity
-  chain), live-consumed by
-  `EPICase1RatioLimit.entropyPower_add_ge_case1_of_regular` (§2''–§4).
-
-## File map
-
-* §2'' — Phase A A-2: path-derivative of the 1-source gap
-* §2''' — Phase A A-3: 1-source Stam reduction `g'(t) ≤ 0`
-* §5 — Symmetry, congruence, pass-through helpers
-* §6 — 3-arg / 4-arg chain forms via scaling decomposition
-* §7 — Round-trip / sanity-check theorems
+* `entropyPower_hasDerivAt_of_diffEnt_hasDerivAt` — entropy-power chain-rule helper.
+* `csiszarLogRatioGap_hasDerivAt` — the log-ratio gap path-derivative.
+* `csiszarLogRatioGap_deriv_le_zero` — the derivative is `≤ 0` from the 1-source Stam inequality.
+* `epi_of_csiszarLogRatioGap_zero_nonneg` — recovery of the entropy power inequality from
+  nonnegativity of the gap at `t = 0`.
+* `csiszarLogRatioGap_antitoneOn_Ici_zero` — antitonicity of the gap on the heat-flow ray.
 -/
 
 namespace InformationTheory.Shannon.EPIStamToBridge
@@ -66,91 +42,29 @@ open InformationTheory.Shannon.EntropyPowerInequality
 open InformationTheory.Shannon.EPIStamDischarge
 open InformationTheory.Shannon.EPIL3Integration
 
-/-! ## §2'' — Phase A A-2: path-derivative of the 1-source gap
+/-! ## §2'' — Path-derivative of the 1-source gap -/
 
-This subsection provides the entropy-power chain-rule helper used by the
-de Bruijn path-derivative computation along `t ∈ Ioi 0`, by direct application of
-the V2 de Bruijn identity (`deBruijn_identity_v2`,
-`InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:272`; Phase 2.B foundation
-removed the inline `IsRegularDeBruijnHypV2.derivAt_entropy_eq_half_fisher_v2`
-field, the identity is now delivered by the genuine (sorryAx-free)
-`debruijnIdentityV2_holds_assembled`; `wall:debruijn-integration` is [CLOSED
-2026-06-04]) to the three mapped measures
-`P.map (X + √t · Z_X)`, `P.map (Y + √t · Z_Y)`, `P.map ((X+Y) + √t · (Z_X+Z_Y))`,
-composed with `Real.exp` via a one-line chain rule helper.
-
-Bases (`X`, `Y`, `X + Y`) are all `t`-independent — no scaling-correction term
-appears (1-source design avoids L-Concl-A-δ at the source).
-
-Members:
-
-* `entropyPower_hasDerivAt_of_diffEnt_hasDerivAt` (A-2-2) — chain-rule helper
-  lifting `HasDerivAt h d t` to `HasDerivAt (fun s => Real.exp (2 · h s))
-  (Real.exp (2 · h t) · (2 · d)) t`. Single-line wrap of `HasDerivAt.exp`
-  composed with `HasDerivAt.const_mul`.
-
-(The difference-version path-derivative A-2-3 was deleted with the dead de Bruijn
-difference subgraph; the genuine ratio path-derivative lives in
-`csiszarLogRatioGap_hasDerivAt`.)
--/
-
-/-- **A-2-2 chain-rule helper**: if `f` has derivative `d` at `t`, then the
-"entropy power" composition `s ↦ Real.exp (2 · f s)` has derivative
-`Real.exp (2 · f t) · (2 · d)` at `t`.
-
-Used to lift the V2 de Bruijn identity `HasDerivAt (fun s => h (P.map
-(gaussianConvolution X Z s))) ((1/2) · J(X+√t·Z)) t` to the entropy-power
-form `HasDerivAt (fun s => entropyPower (P.map (gaussianConvolution X Z s)))
-(entropyPower (P.map (gaussianConvolution X Z t)) · (2 · (1/2) · J)) t`.
-
-Proof: `HasDerivAt.const_mul 2` (multiply derivative by `2`), then
-`HasDerivAt.exp` (chain with `Real.exp`). `@audit:ok` (trivial chain). -/
+/-- Entropy-power chain-rule helper: if `f` has derivative `d` at `t`, then the entropy-power
+composition `s ↦ Real.exp (2 · f s)` has derivative `Real.exp (2 · f t) · (2 · d)` at `t`. Used to
+lift the V2 de Bruijn identity to entropy-power form.
+@audit:ok -/
 @[entry_point]
 theorem entropyPower_hasDerivAt_of_diffEnt_hasDerivAt
     {f : ℝ → ℝ} {d t : ℝ} (h : HasDerivAt f d t) :
     HasDerivAt (fun s => Real.exp (2 * f s)) (Real.exp (2 * f t) * (2 * d)) t :=
   (h.const_mul 2).exp
 
-/-! ## §2''' — Phase A A-3: 1-source Stam reduction `g'(t) ≤ 0`
+/-! ## §2''' — 1-source Stam reduction `g'(t) ≤ 0` -/
 
-This subsection reduces the A-2-3 derivative expression to `≤ 0` using the
-1-source Stam inequality applied to the three convolved random variables
-`X + √t · Z_X`, `Y + √t · Z_Y`, `(X+Y) + √t · (Z_X+Z_Y)`.
+/-- Ratio-gap derivative core (pure arithmetic): from the harmonic Stam inequality
+`1 / J_sum ≥ 1 / J_X + 1 / J_Y` and positivity of the entropy powers `N_X, N_Y`, the log-ratio gap
+derivative `J_sum − (N_X · J_X + N_Y · J_Y) / (N_X + N_Y)` is `≤ 0`, equivalently
+`J_sum · (N_X + N_Y) ≤ N_X · J_X + N_Y · J_Y`.
 
-Concretely we consume `IsStamInequalityHyp (X + √t·Z_X) (Y + √t·Z_Y) P` at the
-specific `t > 0` and produce `g'(t) ≤ 0` where `g'(t)` is the right-hand side
-of the ratio path-derivative (A-2-3 difference version deleted with the dead
-de Bruijn difference subgraph; see `csiszarLogRatioGap_hasDerivAt`).
-
-`InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 _ f` is defined as
-`fisherInfoOfDensity f` (a `ℝ≥0∞` value), and `fisherInfoOfDensityReal f`
-equals `(fisherInfoOfDensity f).toReal`. The two forms therefore connect:
-`(fisherInfoOfMeasureV2 _ f).toReal = fisherInfoOfDensityReal f` (`rfl`).
-This is what lets the A-2-3 output (which carries `fisherInfoOfDensityReal`)
-plug into the `IsStamInequalityHyp` slot (which requires
-`(fisherInfoOfMeasureV2 _ _).toReal`).
-
-Members: the genuine ratio derivative-bound core (the difference-version A-3
-`g'(t) ≤ 0` lemma was deleted as false-as-framed; the genuine in-house
-arithmetic replacement is the ratio-gap derivative core below).
--/
-
-/-- **Ratio-gap derivative core (pure arithmetic)**. From plain harmonic Stam
-`1/J_sum ≥ 1/J_X + 1/J_Y` and positivity of the entropy powers `N_X, N_Y`, the
-log-ratio gap derivative `J_sum − (N_X·J_X + N_Y·J_Y)/(N_X+N_Y)` is `≤ 0`,
-equivalently `J_sum·(N_X+N_Y) ≤ N_X·J_X + N_Y·J_Y`. This is the genuine in-house
-content that replaces the (deleted) false-as-framed difference-gap derivative
-lemma; tracked by `epi-csiszar-ratio-reframe-plan`.
-
-Scope note (GS-A3' probe 2026-06-06): this is the **factor-1** abstract arith
-(coefficient `1` on `J_sum`). It is a true real-arithmetic inequality over the
-free variables (verbatim-reproduced as the probe's `factor1_arith`, compiles
-clean). It does NOT assert anything about a variance-2 sum: the analogous
-**factor-2** statement `2·J_sum − (…) ≤ 0` is FALSE from plain harmonic Stam +
-positivity (probe `factor2_arith_FALSE`, counterexample `J_X=2,J_Y=1,J_sum=2/3,
-N_X=1,N_Y=3`). The factor mismatch for the genuine 𝒩(0,2) sum coupling lives in
-the de Bruijn lift / `Z_law` precondition, NOT in this lemma; this lemma is
-honest as an abstract factor-1 inequality.
+This is the factor-1 inequality (coefficient `1` on `J_sum`), a true real-arithmetic inequality
+over the free variables. The analogous factor-2 statement is false from harmonic Stam and
+positivity alone; the factor mismatch for the genuine `𝒩(0, 2)` sum coupling lives in the de Bruijn
+lift, not in this lemma.
 @audit:ok -/
 theorem csiszar_ratio_deriv_le_zero_arith
     (J_X J_Y J_sum N_X N_Y : ℝ)
@@ -176,48 +90,18 @@ theorem csiszar_ratio_deriv_le_zero_arith
     mul_nonneg (le_of_lt hNsum) (le_of_lt (mul_pos hJX hJY)),
     h_stam_poly, mul_le_mul_of_nonneg_right h_stam_poly (le_of_lt hNsum)]
 
-/-- **R-2 — log-ratio gap derivative**. The genuine monotone object
-`csiszarLogRatioGap` (`EPIL3Integration.lean`) has derivative
+/-- The log-ratio gap derivative: `csiszarLogRatioGap X Y Z_X Z_Y P` has derivative
+`J_sum − (N_X · J_X + N_Y · J_Y) / (N_X + N_Y)` at any `t > 0`, where
+`N_i = entropyPower (P.map path_i t)` and `J_i = fisherInfoOfDensityReal ((h_reg_i.reg_at t ht).density_t)`.
+Built from the three per-term entropy-power derivatives (via the de Bruijn V2 identity and the
+chain-rule helper), `HasDerivAt.log` for the two log terms, composed by `HasDerivAt.sub`. The
+`h_reg_*` are regularity preconditions.
 
-`(d/dt) csiszarLogRatioGap X Y Z_X Z_Y P t = J_sum − (N_X·J_X + N_Y·J_Y)/(N_X+N_Y)`
-
-at any `t > 0`, where `N_i = entropyPower (P.map path_i t)` and
-`J_i = fisherInfoOfDensityReal ((h_reg_i.reg_at t ht).density_t)`.
-
-Built from the three per-term `HasDerivAt (fun s => entropyPower (P.map path_i s))
-(N_i · J_i) t` (via `entropyPower_hasDerivAt_of_diffEnt_hasDerivAt` over the
-de Bruijn V2 identity), then `HasDerivAt.log` for the
-two log terms (`log N_sum`: deriv `(N_sum·J_sum)/N_sum = J_sum`; `log(N_X+N_Y)`:
-deriv `(N_X·J_X+N_Y·J_Y)/(N_X+N_Y)`), composed by `HasDerivAt.sub`.
-
-Honesty: `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free,
-the de Bruijn building block `deBruijn_identity_v2` is genuine); `h_reg_*` are
-regularity preconditions, no load-bearing bundling.
-
-GS-A3' scope limitation (probe 2026-06-06, independent audit). This is an
-**honest conditional theorem**, but its conclusion is the **factor-1** derivative
-`J_sum − (…)` (coefficient `1` on `J_sum`). That value is correct only *under the
-hypotheses as stated*: `h_reg_sum.reg_at t ht` carries `IsRegularDeBruijnHypV2`'s
-`Z_law` field, which asserts `P.map (Z_X+Z_Y) = gaussianReal 0 1`
-(`deBruijn_identity_v2` is "for `Z ∼ 𝒩(0,1)`", yielding factor `(1/2)` → lifted
-`J_sum`). For the **genuine** sum coupling where `Z_X,Z_Y ∼ 𝒩(0,1)` are
-independent, the true sum law is `gaussianReal 0 2`, so `Z_law(sum)=𝒩(0,1)` is
-FALSE and `h_reg_sum` is **uninhabitable** in that setting — and the genuine
-variance-2 derivative would be `2·J_sum − (…)`. Hence this factor-1 derivative is
-NOT usable to discharge sum-EPI; this is a scope limitation of the single-`t` view,
-not a defect of this conditional theorem. As a conditional implication this theorem
-is genuinely TRUE (no internal inconsistency in the hypotheses → no vacuous-truth
-escape), non-circular, and non-bundled (`Z_law` is a
-precondition on the noise distribution, not a bundled derivative value). Honest
-closure of the sum line is achieved by the **two-time route**
-(`EPICase1TwoTime.lean`, `entropyPower_add_ge_case1_of_regular_twotime`, `@audit:ok`),
-which perturbs `X`/`Y` with separate unit-variance noises so the variance-2 view
-never arises. The variance-2 `false-statement` defect that this single-`t` view used
-to park in the sum producer (`EPICase1SumProducer.lean`) is resolved: that producer
-was a structurally dead orphan (0 consumers, superseded by the two-time route) and
-has been deleted (2026-06-06), so the `IsRegularDeBruijnHypV2.Z_law` general-variance
-refactor is no longer needed. (GS-A3' showed all single-`t` routes are blocked by a
-non-local co-monotonicity obligation, not weight tuning.)
+The conclusion is the factor-1 derivative, correct under the stated hypotheses: `h_reg_sum`'s
+`Z_law` field asserts `P.map (Z_X + Z_Y) = gaussianReal 0 1`. For the genuine sum coupling with
+independent unit-variance noises the sum law is `gaussianReal 0 2`, so `h_reg_sum` is then
+uninhabitable; honest closure of the sum line uses the two-time route, where `X` and `Y` are
+perturbed with separate unit-variance noises and the variance-2 view never arises.
 @audit:ok -/
 theorem csiszarLogRatioGap_hasDerivAt
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -360,60 +244,19 @@ theorem csiszarLogRatioGap_hasDerivAt
   unfold InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
   exact h_combined
 
-/-- **R-3 — `r'(t) ≤ 0` from 1-source Stam** (genuine successor of the
-deleted false-as-framed difference-gap derivative lemma).
+/-- The log-ratio gap derivative is `≤ 0` from the 1-source Stam inequality: the value
+`J_sum − (N_X · J_X + N_Y · J_Y) / (N_X + N_Y) ≤ 0` follows from the harmonic Stam inequality
+`1 / J_sum ≥ 1 / J_X + 1 / J_Y` (extracted from `h_stam`) plus positivity, via the arithmetic core
+`csiszar_ratio_deriv_le_zero_arith`. Unlike the difference-gap form, the ratio form is closable from
+harmonic Stam (weights `α = N_X / (N_X + N_Y)`, `β = N_Y / (N_X + N_Y)`, with `α² ≤ α`).
 
-The log-ratio gap derivative `J_sum − (N_X·J_X + N_Y·J_Y)/(N_X+N_Y) ≤ 0` follows
-from the 1-source Stam inequality (extracted as plain harmonic Stam
-`1/J_sum ≥ 1/J_X + 1/J_Y`) plus positivity, via the pure-arithmetic core
-`csiszar_ratio_deriv_le_zero_arith`. Unlike the difference-gap form, this RATIO
-form IS genuinely closable from plain Stam (weights `α = N_X/(N_X+N_Y)`,
-`β = N_Y/(N_X+N_Y)`, `α²≤α`).
-
-`h_stam` is the genuine Stam residual (Mathlib wall, separate `Prop` from EPI),
-`h_reg_*` are regularity preconditions — no load-bearing bundling.
-
-**Closure (案 B, R-3‴, 2026-06-01)**: the plain harmonic Stam
-`1/J_sum ≥ 1/J_X + 1/J_Y` is now extracted **genuinely** by applying `h_stam`
-(the ∀-quantified producer `Prop`) at the three path densities
-`f_i = (h_reg_*.reg_at t ht).density_t`. The application requires:
-* the three Fisher identifications `J_i = (fisherInfoOfMeasureV2 (P.map _) f_i).toReal`
-— `rfl` since `fisherInfoOfMeasureV2 _ f = fisherInfoOfDensity f`
-(`fisherInfoOfMeasureV2_def`) and `fisherInfoOfDensityReal f = (fisherInfoOfDensity f).toReal`;
-* the **caller-supplied regularity preconditions** below: `IsRegularDensityV2`
-for the two summand path densities (`h_regdens_X`/`h_regdens_Y`), the
-normalizations `∫ = 1` (`h_norm_X`/`h_norm_Y`), the pointwise convolution
-identification (`h_conv_id`), and the Blachman-readiness bundle (`h_blachman`).
-
-The core inequality itself lives genuinely in the producer side
-(`stam_step2_density_wall` → `isStamInequalityHyp_via_body`, `@audit:ok`
-sorryAx-free); the consumer only supplies the regularity inputs to apply it.
-None of the new preconditions bundle the inequality core — they are smoothness /
-normalization / structural (convolution) / 19-field Blachman regularity. In
-particular `h_blachman : IsBlachmanConvReady` is classified `@audit:ok` as a
-regularity precondition in `EPIStamDischarge`, NOT a load-bearing core. This is
-the honest closure path; the wall (a general-density Blachman producer for the
-non-Gaussian path density `convDensityAdd pX gaussian`) is pushed up to the
-callers as a `caller-supplied regularity precondition`, not injected here.
-
-@audit:ok — independent honesty audit (2026-06-01, commit `ba4353a`): all 4 checks
-PASS, `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free,
-0-sorry mechanically verified). (1) non-circular: conclusion
-`J_sum − (N_X·J_X+N_Y·J_Y)/(N_X+N_Y) ≤ 0` ≠ any hypothesis type. (2) NOT
-load-bearing: `h_stam : IsStamInequalityHyp` is the ∀-quantified genuine Stam
-PRODUCER (`@audit:ok`, producible from regularity alone via
-`isStamInequalityHyp_via_step3` → `stam_step2_density_wall` →
-`convex_fisher_bound_of_ready`, all sorryAx-free); the 6 new preconditions
-(`IsRegularDensityV2` smoothness, `∫=1` normalization, pointwise `convDensityAdd`
-structural id, 19-field `IsBlachmanConvReady` Integrable/bdd/pos bundle —
-`@audit:ok` regularity) are the producer's APPLY antecedents, none carries the
-inequality core. Core-reconstruction test: granting all 6 does NOT hand the Stam
-bound — `h_stam` is still required. (3) non-degenerate: no `:True`/vacuous shape.
-(4) sufficiency: the genuine RATIO form (NOT the false-as-framed difference form
-D3, correctly deleted) IS closable from plain harmonic Stam via the genuine
-arith core `csiszar_ratio_deriv_le_zero_arith` (`nlinarith`, `α²≤α` weights); the
-three Fisher `rfl` identifications hold since `fisherInfoOfMeasureV2` ignores its
-measure argument (`FisherInfoV2DeBruijn.lean:81`). -/
+The harmonic Stam inequality is extracted by applying the producer `h_stam` at the three path
+densities, using the Fisher identifications `J_i = (fisherInfoOfMeasureV2 (P.map _) f_i).toReal`
+(`rfl`, since `fisherInfoOfMeasureV2` ignores its measure argument) together with the
+caller-supplied regularity preconditions (`IsRegularDensityV2`, the normalizations, the pointwise
+convolution identification, and the `IsBlachmanConvReady` bundle). The inequality core lives in the
+producer; none of the preconditions bundle it.
+@audit:ok -/
 @[entry_point]
 theorem csiszarLogRatioGap_deriv_le_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -432,7 +275,7 @@ theorem csiszarLogRatioGap_deriv_le_zero
     (h_stam : InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
                 (fun ω => X ω + Real.sqrt t * Z_X ω)
                 (fun ω => Y ω + Real.sqrt t * Z_Y ω) P)
-    -- ↓ 案 B (R-3‴): caller-supplied regularity preconditions for applying `h_stam`.
+    -- caller-supplied regularity preconditions for applying `h_stam`.
     (h_regdens_X : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
                       ((h_reg_X.reg_at t ht).density_t))
     (h_regdens_Y : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
@@ -469,8 +312,8 @@ theorem csiszarLogRatioGap_deriv_le_zero
   -- Positivity of the entropy powers.
   have hNX_pos : 0 < N_X := entropyPower_pos _
   have hNY_pos : 0 < N_Y := entropyPower_pos _
-  -- Plain harmonic Stam `1/J_sum ≥ 1/J_X + 1/J_Y` extracted GENUINELY from
-  -- `h_stam` (案 B, R-3‴). We apply the ∀-quantified producer `Prop` at the three
+  -- Harmonic Stam `1/J_sum ≥ 1/J_X + 1/J_Y` extracted from
+  -- `h_stam`. We apply the ∀-quantified producer `Prop` at the three
   -- path densities `f_i = (h_reg_*.reg_at t ht).density_t`. The Fisher
   -- identifications `J_i = (fisherInfoOfMeasureV2 (P.map _) f_i).toReal` are `rfl`
   -- (`fisherInfoOfMeasureV2 _ f = fisherInfoOfDensity f`,
@@ -496,15 +339,9 @@ theorem csiszarLogRatioGap_deriv_le_zero
   exact csiszar_ratio_deriv_le_zero_arith J_X J_Y J_sum N_X N_Y
     hJX_pos hJY_pos hJsum_pos hNX_pos hNY_pos h_plain_stam
 
-/-- **R-4-b — EPI recovery bridge from `r(0) ≥ 0`**.
-
-The log-ratio gap at `t = 0` is `r(0) = log (eP(X+Y)) − log (eP X + eP Y)`
-(`csiszarLogRatioGap_at_zero`). Since both `eP(X+Y)` and `eP X + eP Y` are
-strictly positive (`entropyPower_pos`, `add_pos`), `0 ≤ r(0)` is equivalent to
-`eP X + eP Y ≤ eP(X+Y)` by `Real.log_le_log_iff`, i.e. the entropy power
-inequality.
-
-Genuine bridge — no `sorry`, no load-bearing hypotheses. -/
+/-- Entropy power inequality recovery from nonnegativity of the gap at `t = 0`. The log-ratio gap
+at `t = 0` is `log (eP(X + Y)) − log (eP X + eP Y)`; since both arguments are strictly positive,
+`0 ≤ r(0)` is equivalent to `eP X + eP Y ≤ eP(X + Y)` by `Real.log_le_log_iff`. -/
 theorem epi_of_csiszarLogRatioGap_zero_nonneg
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω)
@@ -524,9 +361,9 @@ theorem epi_of_csiszarLogRatioGap_zero_nonneg
   rw [Real.log_le_log_iff hB_pos hA_pos] at h_log_le
   exact h_log_le
 
-/-- **R-5-a — `csiszarLogRatioGap X Y Z_X Z_Y P` is differentiable on the
-interior `Set.Ioi 0 = interior (Set.Ici 0)`**, via R-2
-(`csiszarLogRatioGap_hasDerivAt`) + `HasDerivAt.differentiableAt`.
+/-- `csiszarLogRatioGap X Y Z_X Z_Y P` is differentiable on the interior
+`Set.Ioi 0 = interior (Set.Ici 0)`, via `csiszarLogRatioGap_hasDerivAt` and
+`HasDerivAt.differentiableAt`.
 @audit:ok -/
 theorem csiszarLogRatioGap_differentiableOn_interior
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -549,27 +386,11 @@ theorem csiszarLogRatioGap_differentiableOn_interior
     hX hZX hXZX hY hZY hYZY hXYZXY
     h_reg_sum h_reg_X h_reg_Y ht_pos).differentiableAt).differentiableWithinAt
 
--- **R-5-b (full-ray `ContinuousOn (Set.Ici 0)`) DELETED (surface shrink, 2026-06-04)**:
--- the full-ray continuity consumed the wall atom three times along *every* ray
--- point. After the surface shrink it had no consumer (R-5-c now derives interior
--- `AntitoneOn` from differentiability and re-attaches the endpoint via the
--- endpoint-only `csiszarLogRatioGap_continuousWithinAt_zero` below). Removing it
--- confines the wall to the single endpoint.
-
-/-- **R-5-b' — endpoint continuity `ContinuousWithinAt (Set.Ioi 0) 0` of
-`csiszarLogRatioGap X Y Z_X Z_Y P`**.
-
-The endpoint (`t = 0⁺`) version of R-5-b, mirroring the full-ray composition but
-using the shrunk shared atom `heatFlowEntropyPower_continuousWithinAt_zero`
-(`wall:heatflow-continuity`, endpoint only) three times, then the genuine
-`ContinuousWithinAt.log` / `.add` / `.sub` composition (with `entropyPower_pos` /
-`add_pos` discharging the `≠ 0` premises).
-
-This consumer carries **no `@residual`**: the only `sorry` lives in the shared
-`wall:heatflow-continuity` lemma, now confined to the single endpoint. The
-interior `t > 0` continuity is supplied genuinely by R-5-a
-(`csiszarLogRatioGap_differentiableOn_interior`, `.continuousOn`) on the consumer
-side (R-5-c). -/
+/-- Endpoint continuity `ContinuousWithinAt (Set.Ioi 0) 0` of `csiszarLogRatioGap X Y Z_X Z_Y P`,
+by composing the endpoint continuity of the three heat-flow entropy powers
+(`heatFlowEntropyPower_continuousWithinAt_zero`) through `ContinuousWithinAt.log` / `.add` / `.sub`
+(with `entropyPower_pos` / `add_pos` discharging the `≠ 0` premises). The interior `t > 0`
+continuity is supplied separately by `csiszarLogRatioGap_differentiableOn_interior`. -/
 theorem csiszarLogRatioGap_continuousWithinAt_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -589,19 +410,11 @@ theorem csiszarLogRatioGap_continuousWithinAt_zero
   exact (h_sum.log (entropyPower_pos _).ne').sub
     ((h_X.add h_Y).log (add_pos (entropyPower_pos _) (entropyPower_pos _)).ne')
 
-/-- **R-5-c — `AntitoneOn (fun t => csiszarLogRatioGap X Y Z_X Z_Y P t) (Set.Ici 0)`**,
-the genuine log-ratio EPI gap is antitone on the heat-flow ray `[0, ∞)`.
-
-Mirrors the (deleted) difference-version antitone lemma:
-applies `antitoneOn_of_deriv_nonpos` with the convex domain `Set.Ici 0`
-(`convex_Ici`), R-5-b (continuity), R-5-a (differentiability), and the per-`t`
-`deriv ≤ 0` from R-2 (`csiszarLogRatioGap_hasDerivAt.deriv`) + R-3
-(`csiszarLogRatioGap_deriv_le_zero`).
-
-Genuine assembly: this lemma carries **no new `@residual`**. It transitively
-inherits the G2 continuity wall (through R-5-b) and the plain-Stam extraction
-gap (through R-3); the assembly itself is genuine, exactly like D6's honesty
-structure. -/
+/-- The log-ratio gap `csiszarLogRatioGap X Y Z_X Z_Y P` is antitone on the heat-flow ray
+`Set.Ici 0`. Applies `antitoneOn_of_deriv_nonpos` on the convex domain, with interior
+differentiability (`csiszarLogRatioGap_differentiableOn_interior`), endpoint continuity
+(`csiszarLogRatioGap_continuousWithinAt_zero`), and the per-`t` `deriv ≤ 0` from
+`csiszarLogRatioGap_hasDerivAt` and `csiszarLogRatioGap_deriv_le_zero`. -/
 theorem csiszarLogRatioGap_antitoneOn_Ici_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -626,7 +439,7 @@ theorem csiszarLogRatioGap_antitoneOn_Ici_zero
       InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
         (fun ω => X ω + Real.sqrt t * Z_X ω)
         (fun ω => Y ω + Real.sqrt t * Z_Y ω) P ∧
-      -- ↓ 案 B (R-3‴): per-`t` caller-supplied regularity preconditions threaded to R-3.
+      -- per-`t` caller-supplied regularity preconditions threaded to the derivative-bound lemma.
       InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
         ((h_reg_X.reg_at t ht).density_t) ∧
       InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
@@ -644,9 +457,8 @@ theorem csiszarLogRatioGap_antitoneOn_Ici_zero
       (fun t : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
         X Y Z_X Z_Y P t)
       (Set.Ici (0 : ℝ)) := by
-  -- **Surface shrink (2026-06-04)**: derive `AntitoneOn` on the *interior*
-  -- `Set.Ioi 0` genuinely (continuity there is `differentiableOn.continuousOn`,
-  -- **no wall**), then re-attach the endpoint `0` via the endpoint-only wall atom
+  -- Derive `AntitoneOn` on the interior `Set.Ioi 0` (continuity there is
+  -- `differentiableOn.continuousOn`), then re-attach the endpoint `0` via
   -- `csiszarLogRatioGap_continuousWithinAt_zero` + `AntitoneOn.insert_of_continuousWithinAt`.
   set f := fun t : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
     X Y Z_X Z_Y P t with hf_def
@@ -684,13 +496,6 @@ theorem csiszarLogRatioGap_antitoneOn_Ici_zero
   -- Insert the endpoint: `insert 0 (Ioi 0) = Ici 0`.
   have := h_anti_Ioi.insert_of_continuousWithinAt h_cluster h_cont_zero
   rwa [Set.Ioi_insert] at this
-
--- **Difference-gap derivative route DELETED (R-5 rewire 2026-06-01 + dead
--- de Bruijn difference subgraph deletion)**: the false-as-framed difference-gap
--- derivative bound `eP_sum·J_sum ≤ eP_X·J_X + eP_Y·J_Y` does NOT follow from plain
--- harmonic Stam. The genuine successor is the RATIO route R-3
--- (`csiszarLogRatioGap_deriv_le_zero` : `J_sum − (N_X·J_X+N_Y·J_Y)/(N_X+N_Y) ≤ 0`),
--- closable from plain Stam (ratio weights `α,β` with `α²≤α`).
 
 /-! ## §5 — Predicate manipulation: symmetry, congruence, pass-through -/
 
