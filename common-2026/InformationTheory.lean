@@ -70,7 +70,6 @@ import InformationTheory.Shannon.ChannelCoding.Feedback
 import InformationTheory.Shannon.ChannelCoding.FeedbackComplete
 import InformationTheory.Shannon.ChannelCoding.ShannonTheorem
 import InformationTheory.Shannon.ChannelCoding.ShannonTheoremGeneral
-import InformationTheory.Shannon.ChannelCoding.ShannonTheoremFull
 import InformationTheory.Shannon.ChannelCoding.ShannonTheoremFullDischarge.SeedLemmas
 import InformationTheory.Shannon.ChannelCoding.ShannonTheoremFullDischarge.PmfLogBounds
 import InformationTheory.Shannon.ChannelCoding.ShannonTheoremFullDischarge.SmoothInstantiation

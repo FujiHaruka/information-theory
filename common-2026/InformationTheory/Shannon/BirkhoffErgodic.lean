@@ -992,51 +992,6 @@ end Sandwich
 
 /-! ## §6 Main theorem -/
 
-/-- **Birkhoff individual ergodic theorem (hypothesis form).**
-
-Given:
-* a probability-preserving ergodic transformation `T`,
-* an integrable observable `f`,
-* an a.e. limit function `gInf` of the Birkhoff averages
-  `A_n ω = (∑_{i=0}^{n} f (T^[i] ω)) / (n+1)`,
-* the hypotheses that `gInf` is a.e. strongly measurable, T-invariant,
-  and matches `f` in integral,
-
-we conclude that the Birkhoff averages converge a.e. to `∫ f dμ`.
-
-`@audit:retract-candidate(load-bearing-predicate-empty-consumers)` —
-small-cluster sorry-migration Phase 2.7: the successor `birkhoff_ergodic_ae`
-(this file, immediately below) discharges the same conclusion
-**unconditionally** via Mathlib's `Ergodic.ae_eq_const_of_ae_eq_comp_ae`
-together with the rational-`ε` sandwich
-`birkhoff_eventually_lt_integral_add` / `birkhoff_eventually_gt_integral_sub`.
-The 4-hypothesis pack `(hg_meas / hg_inv / hg_int / hg_lim)` carried here is a
-historical pass-through form (load-bearing on the a.e. limit data); it has
-**0 in-tree consumers** (`rg -n 'birkhoff_ergodic_ae_of_limit\b' InformationTheory/`
-yields only the self-definition). -/
-@[entry_point]
-theorem birkhoff_ergodic_ae_of_limit
-    {μ : Measure Ω} [IsProbabilityMeasure μ]
-    {T : Ω → Ω} (_hT : MeasurePreserving T μ μ) (hT_erg : Ergodic T μ)
-    {f : Ω → ℝ} (_hf : Integrable f μ)
-    {gInf : Ω → ℝ}
-    (hg_meas : AEStronglyMeasurable gInf μ)
-    (hg_inv : gInf ∘ T =ᵐ[μ] gInf)
-    (hg_int : ∫ ω, gInf ω ∂μ = ∫ ω, f ω ∂μ)
-    (hg_lim : ∀ᵐ ω ∂μ,
-      Tendsto (fun n : ℕ => birkhoffAverageReal T f n ω) atTop (𝓝 (gInf ω))) :
-    ∀ᵐ ω ∂μ, Tendsto (fun n : ℕ => birkhoffAverageReal T f n ω)
-      atTop (𝓝 (∫ x, f x ∂μ)) := by
-  obtain ⟨c, hc⟩ := hT_erg.ae_eq_const_of_ae_eq_comp_ae hg_meas hg_inv
-  have h_intg_c : ∫ ω, gInf ω ∂μ = c := by
-    have h_ae_c : ∀ᵐ ω ∂μ, gInf ω = c := hc
-    exact integral_eq_const h_ae_c
-  have hc_eq : c = ∫ ω, f ω ∂μ := by linarith [hg_int, h_intg_c]
-  filter_upwards [hg_lim, hc] with ω hω hcω
-  rw [hcω] at hω
-  rw [hc_eq] at hω
-  exact hω
-
 /-- **Birkhoff individual ergodic theorem.**
 
 For a probability-preserving ergodic transformation `T : Ω → Ω` and an
