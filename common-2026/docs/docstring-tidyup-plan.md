@@ -1,6 +1,6 @@
 # docstring tidy-up plan — Mathlib スタイルへの寄せ込み（英語化含む）
 
-**Status**: ACTIVE (2026-06-13 起票) / **Parent**: なし (standalone) /
+**Status**: Phase 0–3 DONE (2026-06-14、コードベース全体 CJK 0 / full build green) / 残: Phase 2.5 過去波プロセス語彙スイープ (延期) / **Parent**: なし (standalone) /
 **関連**: 規約 SoT [`rules/docstrings.md`](rules/docstrings.md) ・実測 [`mathlib-conventions-gap.md`](mathlib-conventions-gap.md) ・honesty タグ SoT [`audit/audit-tags.md`](audit/audit-tags.md)
 
 分割リファクタ (footprint の裾を named lemma に割る) に着手する**前に**、既存 docstring を Mathlib スタイルへ整える。
@@ -184,25 +184,41 @@ theorem steinTypicalSet_Q_prob_le ...
 theorem steinTypicalSet_Q_prob_le ...
 ```
 
-### Phase 2 — ファミリ単位ロールアウト
+### Phase 2 — ファミリ単位ロールアウト ✅ DONE (2026-06-14)
 
-- ファミリ (Shannon/AWGN, EPI, SlepianWolf, Fano, Probability, …) ごとに 1 パスで 3 ワークストリーム適用
-  (module doc 整形 / 補助補題散文の削除 / 生き残る散文の英語化)。
-- 純 doc 編集 (text-only) なので worktree 不要。ファミリ間でファイル所有を分離すれば並列も可
-  ([`.claude/guides/agent-dispatch-guide.md`](../.claude/guides/agent-dispatch-guide.md) の docs-only 例外)。
-- 各ファミリ完了時に tag 数 (@residual/@audit) を before/after で照合。
+ファミリ単位で 3 ワークストリーム (module doc 整形 / 補助補題散文の削除 / 生き残る散文の英語化) を
+text-only 1 パスで適用。各波で tag 数 (@residual/@audit) を before/after 照合し保存確認。完了波:
 
-### Phase 3 — 検証 / メトリクス
+- 波1 (12 families) `7b35db0` / 波2a (ChannelCoding/Huffman/ParallelGaussian/RateDistortion 他 + Shannon 直下) `ed4440d` / FisherInfo 13 本 `f49b8cb`。
+- 波2b — EPI/AWGN 残部 + 英語プロセス語彙クリーンアップ (CJK 1633→0):
+  EPI/Unconditional 7 本 `e7ba761` / EPI 機械エリア 17 本 (Case1/G2/Blachman/Conv) `d9a0516` /
+  EPI/InfiniteVariance+Stam 10 本 `75e8de7` / AWGN 14 本 + Asymptotic `7ce0f7a` /
+  英語プロセス語彙 11 本 (Phase/plan-ref/Wall narrative → 数学ロードマップ化) `40f59e9`。
 
-- full `lake build InformationTheory` 1 回 (0 error)。pre-commit 0 BLOCK。
-- tag 保存確認: `@residual` / `@audit:` 総数が起票時と一致。
-- プロセス語彙残量: docstring/module doc 内の Phase/Wall/判断/Retraction/撤退 が near 0。
-- **module doc の陳腐化 scope 主張**: module doc 内に `未着手` / `スコープ` / `TODO` / `Phase`
-  が残っていないか grep。module doc は machine-check されないため scope 主張が陳腐化して残る
-  (pilot で「Phase C・D 未着手」が、実際は両方着手済なのに虚偽のまま残っていた)。
-- **英語化**: `.lean` の docstring / コメントに日本語 (CJK) が残っていない
-  (`rg -l '[ぁ-んァ-ヶ一-龠]' --glob '*.lean' InformationTheory` が 0 件)。識別子は元から英語。
-- 文書化率の推移を記録 (94% → 着地値。数値目標ではなく副指標)。
+honesty: 波2b で触れた全ファイルは `lake env lean` で sorry-warning 0、編集は comment-strip 後
+code byte-identical。宣言直付け @residual/@audit タグは保存、tag slug は verbatim。
+
+### Phase 3 — 検証 / メトリクス ✅ DONE (2026-06-14)
+
+全 check pass (機械照合済):
+
+- full `lake build InformationTheory` = **3471 jobs green (exit 0)**。pre-commit 0 BLOCK。
+- **全ツリー CJK = 0 ファイル** (`rg -l '[ぁ-んァ-ヶ一-龠]' --glob '*.lean' InformationTheory` 空) =
+  コードベース全体の英語化完了。
+- 陳腐 scope 主張 (未着手 / スコープ / TODO) = 0。
+- 波2b の英語プロセス語彙 (Phase / plan-ref / Wall) = docstring / 見出しで 0
+  (残るのは honesty タグ slug 内の `@residual(plan:...)` / `@audit:closed-by-successor(...)` のみ、保存必須)。
+- tag grep 総数の減少 (residual / audit) は全て prose-ref / dated-audit-narrative 除去で、宣言タグの脱落ではない。
+- 文書化率は副指標扱いで数値は追わない (plan 既定どおり。タグ 644+66 / entry_point 709 / def 478 保持で構造的に Mathlib より高く着地)。
+
+### Phase 2.5 (仮) — follow-up: 過去波プロセス語彙スイープ 📋 延期 (ユーザー決定 2026-06-14)
+
+英語プロセス語彙 (Phase B/C/D, plan-file 参照, Wall narrative, retraction 経緯) が、
+**CJK→0 済の過去波ファイル約 66 本** (ChannelCoding / Probability / AEP / Chernoff 等) にも系統的に残存。
+波2b の 11 本のみ今回クリーンアップし、過去波スイープは別 follow-up タスクへ延期。
+
+- 方針: text-only / 宣言直付け @residual・@audit タグ保存 (散文中の prose-ref のみ除去) / rename しない。
+- 完了判定: 対象 families の docstring / 見出しから Phase/Wall/judgment narrative が消え、tag 数不変。
 
 ## DoD
 
@@ -221,10 +237,13 @@ theorem steinTypicalSet_Q_prob_le ...
 | 並列編集で main がドリフト | ファミリ単位でファイル所有分離。text-only ゆえ衝突は git index のみ → 逐次 commit。 |
 | 英語翻訳で数学的意味がずれる | 識別子は不変 (元から英語)。pilot で対訳の語彙・トーンを確定。Mathlib の同領域 docstring を範に。レビュー必須。 |
 
+## 知見 / 教訓
+
+- **実 sorry の権威的判定は `lake env lean` の sorry-warning であって grep ではない**。baseline の実 sorry 計数
+  (`rg ':= by sorry'`) は散文中のバッククォート言及を拾って**過大計上**していた (InfiniteVariance / AWGN の「1 本」は実体なし)。
+
 ## Decision log
 
-- 2026-06-13: 補助補題 docstring は Mathlib 流に**大幅削除**する方針をユーザー決定。rules/docstrings.md 改訂を Phase 0 に含める。
-- 2026-06-13: 文書化率の数値目標 (2 割) は追わない。タグ/entry_point/def 保持で構造的に高く着地するため、意味ルールで削る。
 - 2026-06-13: rename はこの pass のスコープ外 (text-only 維持 + dep 波及回避)。名前不十分は最小 1 行 + 別リスト記録に留める。
-- 2026-06-13: コード表面の散文を**英語へ全面移行**するユーザー決定 (Mathlib PR 水準が目標)。rules/docstrings.md・naming.md・lean-style.md・rules/README.md の「日本語可」記述を改訂済 (Phase 0)。内部 plan / handoff は日本語のまま。
-- 2026-06-13: pilot (Stein.lean) で運用確定 — 新規 docstring は追加しない / minimize は結論形のみ残す / セクション見出しは数学ロードマップのみ。
+- 2026-06-13: pilot (Stein.lean) で運用確定 — 新規 docstring は追加しない / minimize は結論形のみ残す / セクション見出しは数学ロードマップのみ (Keep/Strip ルール節に反映済)。
+- 2026-06-14: 過去波ファイル (CJK→0 済) のプロセス語彙スイープは Phase 2.5 として別 follow-up に延期 (ユーザー決定)。波2b の 11 本のみ今回クリーンアップ。
