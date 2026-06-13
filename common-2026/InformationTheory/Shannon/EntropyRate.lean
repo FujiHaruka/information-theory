@@ -8,17 +8,15 @@ import Mathlib.Topology.Order.MonotoneConvergence
 import Mathlib.Order.Filter.AtTopBot.CompleteLattice
 
 /-!
-# Entropy rate of a stationary process (E-8 / SMB Phase B — MVP)
+# Entropy rate of a stationary process
 
 For a stationary process `p : StationaryProcess μ α` on a finite alphabet `α`,
 the **block entropy** is `H_n := H(X_0, …, X_{n-1})` and the **entropy rate**
 is `H := lim_{n → ∞} H_n / n` (Cover–Thomas 4.2.1). Existence of the limit is
-the principal content of this file (Phase B of the SMB moonshot).
+the principal content of this file.
 
-This is the Phase B skeleton from
-[`docs/shannon/shannon-mcmillan-breiman-plan.md`](../../docs/shannon/shannon-mcmillan-breiman-plan.md).
-Birkhoff (Phase C) and the main SMB theorem (Phase D) build on `entropyRate`
-defined here.
+The Birkhoff ergodic theorem and the Shannon–McMillan–Breiman theorem build on
+`entropyRate` defined here.
 
 ## Main definitions
 
@@ -27,23 +25,21 @@ defined here.
 * `conditionalEntropyTail μ p n := condEntropy μ (p.obs n) (p.blockRV n)`
   — `H(X_n | X_0, …, X_{n-1})`.
 
-## Main results (Phase B)
+## Main results
 
-* `blockEntropy_succ_chain_rule` — `H_{n+1} = H_n + H(X_n | X_{<n})` (B.1, chain rule).
-  **Proved.**
+* `blockEntropy_succ_chain_rule` — `H_{n+1} = H_n + H(X_n | X_{<n})` (chain rule).
 * `blockEntropy_eq_sum_conditionalEntropyTail` — iterated chain rule.
-  **Proved.**
-* `blockEntropy_zero` — `H_0 = 0`. **Proved.**
-* `conditionalEntropyTail_nonneg` — `0 ≤ H(X_n | X_{<n})`. **Proved.**
-* `conditionalEntropyTail_antitone` (B.2) — `H(X_n | X_{<n})` non-increasing.
-  **Proved**: stationarity (joint pushforward equality via `MeasurePreserving T`)
+* `blockEntropy_zero` — `H_0 = 0`.
+* `conditionalEntropyTail_nonneg` — `0 ≤ H(X_n | X_{<n})`.
+* `conditionalEntropyTail_antitone` — `H(X_n | X_{<n})` non-increasing, from
+  stationarity (joint pushforward equality via `MeasurePreserving T`)
   + conditioning monotonicity (`condEntropy_le_condEntropy_of_pair`).
-* `entropyRate_exists_of_stationary` (B.3) — `blockEntropy / n` converges.
-  **Proved**: the antitone tail converges to some `L`, and Cesàro
-  on the chain-rule decomposition gives `blockEntropy / n → L`.
-* `entropyRate_eq_lim_condEntropy` (B.4) — `H(X_n | X_{<n}) → entropyRate`.
-  **Proved** via `Filter.Tendsto.limUnder_eq` on the Cesàro convergence to
-  identify `entropyRate = L = lim tail`.
+* `entropyRate_exists_of_stationary` — `blockEntropy / n` converges: the antitone
+  tail converges to some `L`, and Cesàro on the chain-rule decomposition gives
+  `blockEntropy / n → L`.
+* `entropyRate_eq_lim_condEntropy` — `H(X_n | X_{<n}) → entropyRate`, via
+  `Filter.Tendsto.limUnder_eq` on the Cesàro convergence to identify
+  `entropyRate = L = lim tail`.
 -/
 
 namespace InformationTheory.Shannon
@@ -60,7 +56,7 @@ noncomputable def blockEntropy (μ : Measure Ω) (p : StationaryProcess μ α) (
   entropy μ (p.blockRV n)
 
 /-- The per-step conditional entropy `H(X_n | X_0, …, X_{n-1})`. Decreasing in
-`n` for a stationary process (B.2). -/
+`n` for a stationary process. -/
 noncomputable def conditionalEntropyTail
     (μ : Measure Ω) [IsFiniteMeasure μ] (p : StationaryProcess μ α) (n : ℕ) : ℝ :=
   InformationTheory.MeasureFano.condEntropy μ (p.obs n) (p.blockRV n)
@@ -71,9 +67,9 @@ proven by `entropyRate_exists_of_stationary`. -/
 noncomputable def entropyRate (μ : Measure Ω) (p : StationaryProcess μ α) : ℝ :=
   Filter.atTop.limUnder (fun n : ℕ => blockEntropy μ p n / n)
 
-/-! ## (B.1) Chain rule
+/-! ## Chain rule
 
-`H_{n+1} = H_n + H(X_n | X_{<n})`, the engine of (B.3).
+`H_{n+1} = H_n + H(X_n | X_{<n})`, the engine of the existence proof.
 -/
 
 omit [DecidableEq α] in
@@ -129,7 +125,7 @@ theorem blockEntropy_succ_chain_rule
   exact entropy_pair_eq_entropy_add_condEntropy μ (p.blockRV n) (p.obs n)
     h_block_meas h_obs_meas
 
-/-! ## (B.2) Antitonicity of `conditionalEntropyTail`
+/-! ## Antitonicity of `conditionalEntropyTail`
 
 `H(X_{n+1} | X_0, …, X_n) ≤ H(X_n | X_0, …, X_{n-1})`. Proof:
 1. **Stationarity** (apply shift `T`): the joint pushforward
@@ -369,7 +365,8 @@ theorem conditionalEntropyTail_antitone
 
 omit [DecidableEq α] in
 /-- Conditional entropy on a finite alphabet is bounded above by `log |α|`,
-hence the tail is uniformly bounded. We only need `0 ≤ tail` for (B.3). -/
+hence the tail is uniformly bounded. We only need `0 ≤ tail` for the existence
+proof. -/
 theorem conditionalEntropyTail_nonneg
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) :
     0 ≤ conditionalEntropyTail μ p n := by
@@ -377,13 +374,13 @@ theorem conditionalEntropyTail_nonneg
   unfold conditionalEntropyTail
   exact condEntropy_nonneg μ (p.obs n) (p.blockRV n)
 
-/-! ## (B.3) Existence of the entropy rate
+/-! ## Existence of the entropy rate
 
 We show `Tendsto (blockEntropy μ p n / n) atTop (𝓝 H)` for some `H`, by the
 following route:
 
 * The chain rule gives `blockEntropy μ p n = ∑_{i < n} conditionalEntropyTail μ p i`.
-* `conditionalEntropyTail_antitone` (B.2) + non-negativity ⇒ tail converges to
+* `conditionalEntropyTail_antitone` + non-negativity ⇒ tail converges to
   some `L = ⨅ n, tail n`.
 * The Cesàro lemma `Filter.Tendsto.cesaro` converts `Tendsto tail → Tendsto avg`,
   and the chain-rule identity rewrites the Cesàro average as `blockEntropy / n`.
@@ -433,10 +430,9 @@ theorem blockEntropy_eq_sum_conditionalEntropyTail
         Finset.sum_range_succ]
 
 omit [DecidableEq α] in
-/-- (B.3, MVP form using `conditionalEntropyTail_antitone`): the entropy rate
-exists, i.e. `blockEntropy μ p n / n` converges.
+/-- The entropy rate exists, i.e. `blockEntropy μ p n / n` converges.
 
-Strategy: the chain rule + (B.2) say `tail n` is antitone and nonneg, hence
+Strategy: the chain rule + antitonicity say `tail n` is antitone and nonneg, hence
 converges to some `L`. By Cesàro, `(1/n) ∑_{i<n} tail i → L`. By the chain rule,
 this equals `blockEntropy μ p n / n`. -/
 @[entry_point]
@@ -467,7 +463,7 @@ theorem entropyRate_exists_of_stationary
     rw [← blockEntropy_eq_sum_conditionalEntropyTail μ p n, div_eq_inv_mul]
   exact h_cesaro.congr h_eq
 
-/-! ## (B.4) Equality with `lim conditionalEntropyTail`
+/-! ## Equality with `lim conditionalEntropyTail`
 
 `Tendsto (conditionalEntropyTail μ p) atTop (𝓝 (entropyRate μ p))`.
 
@@ -479,7 +475,7 @@ omit [DecidableEq α] in
 theorem entropyRate_eq_lim_condEntropy
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) :
     Tendsto (conditionalEntropyTail μ p) atTop (𝓝 (entropyRate μ p)) := by
-  -- (B.2) is used here. Strategy:
+  -- Antitonicity is used here. Strategy:
   --   * tail is antitone + bounded below 0 ⇒ converges to some `L`.
   --   * blockEntropy / n = (1/n) ∑_{i<n} tail i → L (Cesàro).
   --   * entropyRate = limUnder of a convergent sequence = L.

@@ -5,36 +5,37 @@ import Mathlib.Probability.Martingale.Upcrossing
 import Mathlib.MeasureTheory.Function.ConditionalExpectation.Real
 
 /-!
-# Backward martingale convergence theorem (E-8'' / Birkhoff a.s. — Phase β)
+# Backward martingale convergence theorem
 
-This file states and partially develops the **backward (reverse) martingale
-convergence theorem**: if `f : ℕᵒᵈ → Ω → ℝ` is a martingale with respect to
-an antitone filtration `ℋ : Filtration ℕᵒᵈ m₀` (i.e. `ℋ` decreases as the
-ℕ-index grows), and `f (toDual 0)` is integrable, then `f (toDual n)` converges
-almost everywhere as `n → ∞` to a `⨅ n, ℋ (toDual n)`-measurable limit.
+This file develops the **backward (reverse) martingale convergence theorem**:
+if `f : ℕᵒᵈ → Ω → ℝ` is a martingale with respect to an antitone filtration
+`ℋ : Filtration ℕᵒᵈ m₀` (i.e. `ℋ` decreases as the ℕ-index grows), and
+`f (toDual 0)` is integrable, then `f (toDual n)` converges almost everywhere
+as `n → ∞` to a `⨅ n, ℋ (toDual n)`-measurable limit.
 
-## Structure (per `docs/shannon/birkhoff-ergodic-plan.md` Phase β)
+## Structure
 
-* **β.1** — `Martingale (ι := ℕᵒᵈ)` API works out of the box because Mathlib's
+* `Martingale (ι := ℕᵒᵈ)` API works out of the box because Mathlib's
   `Martingale` is `Preorder ι`-generic (`Probability/Martingale/Basic.lean:53`).
   We expose two convenience renames (`backwardMartingale_condExp_ae_eq` and
   `BackwardMartingale.integrable`) tailored to the ℕᵒᵈ shape.
-* **β.2** — Backward upcrossing finiteness
-  (`BackwardMartingale.upcrossings_ae_lt_top`). **Fully proven**, including
-  the path-reversal combinatorial lemma `upcrossingsBefore_le_revPath_succ`
-  (see Path-reversal section below).
-* **β.3** — L¹ contraction `eLpNorm (f n) 1 μ ≤ eLpNorm (f (toDual 0)) 1 μ`.
-  Fully proven: backward martingale means `f n = 𝔼[f (toDual 0) | ℋ n]`
+* Backward upcrossing finiteness
+  (`BackwardMartingale.upcrossings_ae_lt_top`), including the path-reversal
+  combinatorial lemma `upcrossingsBefore_le_revPath_succ` (see Path-reversal
+  section below).
+* L¹ contraction `eLpNorm (f n) 1 μ ≤ eLpNorm (f (toDual 0)) 1 μ`:
+  backward martingale means `f n = 𝔼[f (toDual 0) | ℋ n]`
   (since `n ≤ toDual 0` in `ℕᵒᵈ`), then `eLpNorm_one_condExp_le_eLpNorm`.
-* **β.4** — Main theorem `BackwardMartingale.ae_tendsto`. **Fully proven**,
-  chaining off β.2 + β.3 + `tendsto_of_uncrossing_lt_top`, with the
+* Main theorem `BackwardMartingale.ae_tendsto`, chaining off the upcrossing
+  finiteness, the L¹ bound, and `tendsto_of_uncrossing_lt_top`, with the
   tail-σ-algebra measurability handled via `Filter.limsup_nat_add` tail
   invariance over `⨅ n, ℋ (toDual n)`.
 
-## Proxy machinery (Phase β scaffolding)
+## Proxy machinery
 
-The proofs of β.2 and β.4 hinge on lifting a finite-window forward proxy to
-the global backward sequence. We introduce the proxy infrastructure here:
+The upcrossing finiteness and main theorem proofs hinge on lifting a
+finite-window forward proxy to the global backward sequence. We introduce the
+proxy infrastructure here:
 
 * `reverseProxy N f k ω := f (toDual (N - k)) ω` — a forward sequence indexed
   by `k : ℕ` whose values along `[0, N]` are the reverse of `f (toDual ·)` on
@@ -64,11 +65,11 @@ obtain `n - 1` upcrossing witnesses for `revPath g N`, and translates back via
 
 * `BackwardMartingale.integrable` — `Integrable (f n) μ` for every `n : ℕᵒᵈ`.
 * `backwardMartingale_eq_condExp` — `f n =ᵐ[μ] 𝔼[f (toDual 0) | ℋ n]`.
-* `BackwardMartingale.eLpNorm_one_le` — L¹ bound (β.3, fully proven).
+* `BackwardMartingale.eLpNorm_one_le` — L¹ bound.
 * `reverseProxy`, `reverseFiltration`, `reverseProxy_isMartingale` —
   forward-proxy machinery for the finite-window forward Doob argument.
-* `BackwardMartingale.upcrossings_ae_lt_top` — β.2, **fully proven**.
-* `BackwardMartingale.ae_tendsto` — β.4, **fully proven**.
+* `BackwardMartingale.upcrossings_ae_lt_top` — backward upcrossing finiteness.
+* `BackwardMartingale.ae_tendsto` — the convergence theorem.
 -/
 
 namespace InformationTheory.Shannon
@@ -79,7 +80,7 @@ open scoped ENNReal NNReal ProbabilityTheory
 variable {Ω : Type*} {m₀ : MeasurableSpace Ω} {μ : Measure Ω}
 
 section BasicAPI
-/-! ### β.1 — `Martingale (ι := ℕᵒᵈ)` convenience wrappers -/
+/-! ### `Martingale (ι := ℕᵒᵈ)` convenience wrappers -/
 
 variable {f : ℕᵒᵈ → Ω → ℝ} {ℋ : Filtration ℕᵒᵈ m₀}
 
@@ -101,13 +102,13 @@ theorem backwardMartingale_eq_condExp (hf : Martingale f ℋ μ) (n : ℕᵒᵈ)
 end BasicAPI
 
 section L1Bound
-/-! ### β.3 — Automatic L¹ boundedness -/
+/-! ### Automatic L¹ boundedness -/
 
 variable {f : ℕᵒᵈ → Ω → ℝ} {ℋ : Filtration ℕᵒᵈ m₀}
 
 /-- L¹ contraction for backward martingales: `‖f n‖₁ ≤ ‖f (toDual 0)‖₁`.
 
-Proof: `f n = 𝔼[f (toDual 0) | ℋ n]` a.e. (β.1), then apply
+Proof: `f n = 𝔼[f (toDual 0) | ℋ n]` a.e., then apply
 `eLpNorm_one_condExp_le_eLpNorm`. -/
 @[entry_point]
 theorem BackwardMartingale.eLpNorm_one_le
@@ -542,12 +543,12 @@ private lemma upcrossingsBefore_le_revPath_succ {a b : ℝ} (hab : a < b)
 end PathReversal
 
 section Upcrossings
-/-! ### β.2 — Backward upcrossing finiteness (proven via path-reversal lemma) -/
+/-! ### Backward upcrossing finiteness (via the path-reversal lemma) -/
 
 variable {f : ℕᵒᵈ → Ω → ℝ} {ℋ : Filtration ℕᵒᵈ m₀}
 
 set_option linter.unusedVariables false in
-/-- **Backward upcrossing finiteness (β.2).** For a backward martingale indexed
+/-- **Backward upcrossing finiteness.** For a backward martingale indexed
 by `ℕᵒᵈ` with integrable head, the number of upcrossings of any interval
 `(a, b)` along the sequence `n ↦ f (toDual n)` is almost surely finite.
 
@@ -725,11 +726,11 @@ theorem BackwardMartingale.upcrossings_ae_lt_top
 end Upcrossings
 
 section MainTheorem
-/-! ### β.4 — Backward martingale convergence theorem (proven via β.2) -/
+/-! ### Backward martingale convergence theorem -/
 
 variable {f : ℕᵒᵈ → Ω → ℝ} {ℋ : Filtration ℕᵒᵈ m₀}
 
-/-- **Backward martingale convergence theorem (β.4).** If `f : ℕᵒᵈ → Ω → ℝ`
+/-- **Backward martingale convergence theorem.** If `f : ℕᵒᵈ → Ω → ℝ`
 is a martingale with respect to an antitone filtration `ℋ : Filtration ℕᵒᵈ m₀`
 and `f (toDual 0)` is integrable, then `n ↦ f (toDual n) ω` converges almost
 everywhere as `n → ∞` to a `⨅ n, ℋ (toDual n)`-measurable limit `g`.
@@ -738,7 +739,7 @@ This is the reverse-time analogue of
 `MeasureTheory.Submartingale.ae_tendsto_limitProcess`
 (`Probability/Martingale/Convergence.lean:209`).
 
-Proof: combines the L¹ bound (β.3) + a.e. upcrossing finiteness (β.2) +
+Proof: combines the L¹ bound + a.e. upcrossing finiteness +
 `tendsto_of_uncrossing_lt_top` to obtain pointwise convergence a.e., then
 constructs the `⨅ n, ℋ (toDual n)`-measurable limit via the standard
 `aemeasurable_of_tendsto_metrizable_ae'` pattern with a tail-σ-algebra
@@ -755,7 +756,7 @@ theorem BackwardMartingale.ae_tendsto
           atTop (𝓝 (g ω)) := by
   classical
   set g_back : ℕ → Ω → ℝ := fun n ω => f (OrderDual.toDual n) ω with hg_back_def
-  -- L¹ bound on `g_back` from β.3.
+  -- L¹ bound on `g_back`.
   set R : ℝ≥0 := (eLpNorm (f (OrderDual.toDual 0)) 1 μ).toNNReal with hR_def
   have hR_eq : (R : ℝ≥0∞) = eLpNorm (f (OrderDual.toDual 0)) 1 μ := by
     rw [hR_def]
@@ -768,7 +769,7 @@ theorem BackwardMartingale.ae_tendsto
   -- Bounded liminf-of-norm a.s. from L¹ bound.
   have h_liminf : ∀ᵐ ω ∂μ, Filter.liminf (fun n => (‖g_back n ω‖ₑ : ℝ≥0∞)) atTop < ∞ :=
     ae_bdd_liminf_atTop_of_eLpNorm_bdd one_ne_zero h_meas_g hbdd
-  -- All rational upcrossings finite a.s. from β.2.
+  -- All rational upcrossings finite a.s.
   have h_upcr : ∀ᵐ ω ∂μ, ∀ a b : ℚ, a < b →
       MeasureTheory.upcrossings (a : ℝ) (b : ℝ) g_back ω < ∞ := by
     rw [ae_all_iff]; intro a

@@ -4,7 +4,7 @@ import Mathlib.MeasureTheory.MeasurableSpace.Basic
 import Mathlib.Dynamics.Ergodic.MeasurePreserving
 
 /-!
-# Backward filtration and tail σ-algebra (E-8'' / Birkhoff a.s. — Phase α)
+# Backward filtration and tail σ-algebra
 
 Given a measurable transformation `T : Ω → Ω` on a measurable space `(Ω, m₀)`,
 the *backward filtration* is the antitone sequence
@@ -17,7 +17,7 @@ Indexed over `ℕᵒᵈ`, this becomes a `MeasureTheory.Filtration ℕᵒᵈ m�
 σ-algebra is `ℋ_∞ := ⋂_n ℋ_n`.
 
 These objects underpin the backward martingale approach to Birkhoff's ergodic
-theorem (Phase β / γ); see `docs/shannon/birkhoff-ergodic-plan.md`.
+theorem.
 
 ## Main definitions
 
@@ -31,7 +31,7 @@ theorem (Phase β / γ); see `docs/shannon/birkhoff-ergodic-plan.md`.
 * `tailSigma_le_comap_iterate` — `tailSigma ≤ comap (T^[n]) m₀` for every `n`.
 * `comap_T_tailSigma_le` — `comap T (tailSigma) ≤ tailSigma` (one half of
   T-invariance; the equality direction requires extra structure such as
-  measure preservation and is deferred to Phase γ when actually needed).
+  measure preservation).
 -/
 
 namespace InformationTheory.Shannon
@@ -108,7 +108,7 @@ lemma tailSigma_le (T : Ω → Ω) (hT : Measurable T) :
 
 /-- One half of T-invariance: pulling the tail σ-algebra back through `T` lands
 again inside the tail. The reverse inclusion requires additional structure
-(e.g. measure preservation) and is deferred. -/
+(e.g. measure preservation). -/
 @[entry_point]
 lemma comap_T_tailSigma_le (T : Ω → Ω) (hT : Measurable T) :
     MeasurableSpace.comap T (tailSigma T hT) ≤ tailSigma T hT := by

@@ -9,7 +9,7 @@ import Mathlib.MeasureTheory.MeasurableSpace.Pi
 import Mathlib.MeasureTheory.Integral.Lebesgue.Countable
 
 /-!
-# Blockwise channel + capacity limit form (I-2 seed)
+# Blockwise channel + capacity limit form
 
 A `BlockwiseChannel α β` is a sequence of kernels
 `W_n : Kernel (Fin n → α) (Fin n → β)` (one per block length). The **general**
@@ -32,20 +32,20 @@ to the single-letter formula `capacity W` via Fekete's lemma applied to the
 
 ## Main results
 
-* `capacityN_ofMemoryless_eq` — Phase 4-α: `(ofMemoryless W).capacityN n` matches
+* `capacityN_ofMemoryless_eq` — `(ofMemoryless W).capacityN n` matches
   `n · capacity W` (per-`n` equality, via `mutualInfo_iid_eq_nsmul`).
-* `capacity_lim_eq_capacity_of_memoryless` — Phase 4-β: limit form matches the
+* `capacity_lim_eq_capacity_of_memoryless` — limit form matches the
   single-letter capacity.
 
-Design judgements (see `docs/shannon/general-dmc-plan.md`):
+Design notes:
 
 * `BlockwiseChannel` is the **function form** `(n : ℕ) → Kernel _ _`. No marginal
-  consistency axiom; sufficient for memoryless extension + AWGN/MAC/BC seeds.
-* `Channel.toBlock` is defined directly via `Measure.pi` (Pivot A): this makes
+  consistency axiom; sufficient for the memoryless extension.
+* `Channel.toBlock` is defined directly via `Measure.pi`: this makes
   the `compProd ↔ pi` bridge (`toBlock_compProd_pi_factor`) almost definitional
-  via `measurePreserving_arrowProdEquivProdArrow`, replacing the previous
-  inductive `MeasurableEquiv.piFinSuccAbove` construction whose bridge
-  required ~80-150 lines of self-written plumbing.
+  via `measurePreserving_arrowProdEquivProdArrow`, instead of an inductive
+  `MeasurableEquiv.piFinSuccAbove` construction whose bridge would require
+  substantial self-written plumbing.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
@@ -138,7 +138,7 @@ theorem BlockwiseChannel.capacityN_nonneg (W : BlockwiseChannel α β) (n : ℕ)
 noncomputable def BlockwiseChannel.capacity_lim (W : BlockwiseChannel α β) : ℝ :=
   Filter.atTop.limUnder (fun n : ℕ => (W.capacityN n).toReal / n)
 
-/-! ## Phase B — Structural bridge `toBlock_compProd_pi_factor`
+/-! ## Structural bridge `toBlock_compProd_pi_factor`
 
 With `Channel.toBlock` defined directly via `Measure.pi`, the bridge becomes
 nearly definitional: `(Measure.pi p) ⊗ₘ (toBlock W n)` lives on `(Fin n → α) × (Fin n → β)`,
@@ -243,7 +243,7 @@ private theorem toBlock_compProd_pi_factor
   rw [Measure.map_apply h_meas_map (measurableSet_singleton _), h_preimage,
       h_lhs_compProd, h_pi_p, h_pi_W, ← Finset.prod_mul_distrib, h_rhs]
 
-/-! ## Phase C — Helper: arbitrary measure MI ≤ capacity -/
+/-! ## Helper: arbitrary measure MI ≤ capacity -/
 
 /-- Any probability measure on a finite alphabet equals `pmfToMeasure` of its
 real-valued atoms. -/
@@ -302,9 +302,9 @@ private theorem mutualInfoOfChannel_toReal_le_capacity
   show (mutualInfoOfChannel (pmfToMeasure p) W).toReal = (mutualInfoOfChannel q W).toReal
   rw [← hq_eq]
 
-/-! ## Phase 4-α core lemma — i.i.d. input MI multiplicativity
+/-! ## i.i.d. input MI multiplicativity
 
-The key identity behind Phase 4-α (≥ direction): for an i.i.d. product input
+The key identity behind the ≥ direction: for an i.i.d. product input
 `q := Measure.pi (fun _ : Fin n => p₀)`, the channel mutual information with the
 block kernel `W^{⊗n}` factors as `n • I(p₀; W)`. Proven by pushing both joint and
 marginal-product through the canonical `(Fin n → α × β) ≃ᵐ (Fin n → α) × (Fin n → β)`
@@ -413,25 +413,23 @@ private theorem mutualInfoOfChannel_pi_iid_eq_nsmul
   rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]
   rfl
 
-/-! ## Phase 4-α ≤ direction structure — per-letter marginal bridge
+/-! ## ≤ direction — per-letter marginal bridge
 
-The ≤ direction `capacityN_ofMemoryless_le` requires reducing per-block MI to a sum
-of per-letter MIs via the Cover-Thomas Thm 7.9 chain (subadditivity + memoryless
-splitting of conditional entropy). The chain ultimately reduces to two
-`IsMarkovChain` facts about `μ := q ⊗ₘ (Channel.toBlock W n)`, both of which require
-non-trivial `condDistrib` discharge (~50-100 lines each in the existing Mathlib
-infrastructure). These are **deferred** as `sorry` here, leaving the entire ≤
-direction as a single placeholder bridge for now.
+The ≤ direction `capacityN_ofMemoryless_le` reduces per-block MI to a sum of
+per-letter MIs via the Cover-Thomas Thm 7.9 chain (subadditivity + memoryless
+splitting of conditional entropy). The chain reduces to two `IsMarkovChain`
+facts about `μ := q ⊗ₘ (Channel.toBlock W n)`, each established via a
+`condDistrib` identification.
 
-The ≥ direction (`capacityN_ofMemoryless_ge`) goes through cleanly via
-`mutualInfoOfChannel_pi_iid_eq_nsmul`, providing the i.i.d.-input achievability of
-`n · capacity W`. Combined with `capacityN_ofMemoryless_le` (once discharged), the
-full equality `capacityN_ofMemoryless_eq` and limit form
-`capacity_lim_eq_capacity_of_memoryless` follow as in the original plan.
+The ≥ direction (`capacityN_ofMemoryless_ge`) goes through via
+`mutualInfoOfChannel_pi_iid_eq_nsmul`, giving the i.i.d.-input achievability of
+`n · capacity W`. Combined with `capacityN_ofMemoryless_le`, the full equality
+`capacityN_ofMemoryless_eq` and limit form
+`capacity_lim_eq_capacity_of_memoryless` follow.
 
 The per-letter marginal bridge (`per_letter_marginal_eq_compProd`) and per-letter
-MI identification (`mutualInfo_per_letter_eq_marginal`) below are kept as building
-blocks for a future discharge attempt.
+MI identification (`mutualInfo_per_letter_eq_marginal`) below are the building
+blocks for the ≤ direction.
 -/
 
 section LeDirection
@@ -1005,7 +1003,7 @@ private lemma isMarkovChain_outputs_cond_indep
   rfl
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- Phase 4-α (≤ direction): block capacity is bounded by `n · capacity W`.
+/-- ≤ direction: block capacity is bounded by `n · capacity W`.
 
 Strategy: for any block input `q`, apply `mutualInfo_le_sum_per_letter_of_memoryless_strong`
 to `μ := q ⊗ₘ (toBlock W n)` with coordinate RVs `Xs i z := z.1 i`, `Ys i z := z.2 i`.
@@ -1098,7 +1096,7 @@ private theorem capacityN_ofMemoryless_le
 
 end LeDirection
 
-/-- Phase 4-α (≥ direction): block capacity is bounded below by `n · capacity W`.
+/-- ≥ direction: block capacity is bounded below by `n · capacity W`.
 
 Strategy: pick the capacity achiever `p_opt ∈ stdSimplex` via `exists_capacity_achiever`,
 use `q := Measure.pi (fun _ => pmfToMeasure p_opt)` as the i.i.d. block input, and
@@ -1163,7 +1161,7 @@ private theorem capacityN_ofMemoryless_ge
   rw [← ENNReal.ofReal_natCast n,
       ← ENNReal.ofReal_mul (Nat.cast_nonneg n)]
 
-/-- Phase 4-α: per-`n` block-capacity equality for memoryless `W`.
+/-- Per-`n` block-capacity equality for memoryless `W`.
 
 Note: `[StandardBorelSpace α/β]` is added to satisfy the Cover-Thomas Thm 7.9
 route used in the ≤ direction (`mutualInfo_le_sum_per_letter_of_memoryless_strong`).
@@ -1182,10 +1180,10 @@ theorem capacityN_ofMemoryless_eq
       = ENNReal.ofReal ((n : ℝ) * capacity W) :=
   le_antisymm (capacityN_ofMemoryless_le W n _hn) (capacityN_ofMemoryless_ge W n _hn)
 
-/-! ## Phase 4-β — `capacity_lim_eq_capacity_of_memoryless` -/
+/-! ## `capacity_lim_eq_capacity_of_memoryless` -/
 
-/-- Phase 4-β: limit form matches the single-letter `capacity W` in the
-memoryless case. Direct from Phase 4-α (the sequence is eventually the constant
+/-- Limit form matches the single-letter `capacity W` in the memoryless case.
+Direct from the per-`n` equality (the sequence is eventually the constant
 `capacity W`). -/
 @[entry_point]
 theorem capacity_lim_eq_capacity_of_memoryless

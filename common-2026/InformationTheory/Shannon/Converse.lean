@@ -88,20 +88,20 @@ theorem shannon_converse_single_shot
   -- Step 1: entropy μ Msg = log |M|
   have h_entropy_log : entropy μ Msg = Real.log (Fintype.card M) :=
     entropy_of_uniform_msg μ Msg hMsg_uniform
-  -- Step 2: Phase 4-β bridge — KL form ↔ entropy − condEntropy
+  -- Step 2: Bridge — KL form ↔ entropy − condEntropy
   have h_bridge :
       (mutualInfo μ Msg (decoder ∘ Yo)).toReal
         = entropy μ Msg
           - InformationTheory.MeasureFano.condEntropy μ Msg (decoder ∘ Yo) :=
     mutualInfo_eq_entropy_sub_condEntropy μ Msg (decoder ∘ Yo) hMsg hM_hat_meas
-  -- Step 3: Phase 4-α DPI on Y → decoder ∘ Y, lifted to toReal under finiteness
+  -- Step 3: DPI on Y → decoder ∘ Y, lifted to toReal under finiteness
   have h_dpi_ennreal :
       mutualInfo μ Msg (decoder ∘ Yo) ≤ mutualInfo μ Msg Yo :=
     mutualInfo_le_of_postprocess μ Msg Yo hMsg hYo hdecoder
   have h_dpi :
       (mutualInfo μ Msg (decoder ∘ Yo)).toReal ≤ (mutualInfo μ Msg Yo).toReal :=
     ENNReal.toReal_mono hMI_finite h_dpi_ennreal
-  -- Step 4: Phase 3 Fano applied with `decoder = id : M → M`,
+  -- Step 4: Fano applied with `decoder = id : M → M`,
   -- which yields the same Pe by definitional reduction.
   have h_Pe_eq :
       InformationTheory.MeasureFano.errorProb μ Msg (decoder ∘ Yo) (id : M → M)

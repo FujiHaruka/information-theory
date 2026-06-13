@@ -3,11 +3,11 @@ import InformationTheory.Shannon.Han.Basic
 import InformationTheory.Shannon.SlepianWolf.Basic
 
 /-!
-# Conditional entropy on `Fin n` under strong memoryless DMC (D-2'' Phase B refactor)
+# Conditional entropy on `Fin n` under strong memoryless DMC
 
 The Cover-Thomas Thm 7.9 route to the per-letter MI bound goes via entropy
-subadditivity, avoiding the false-statement `h_yother_zero` hypothesis used in the
-D-2' hypothesis-form converse. The chain:
+subadditivity, avoiding a false-statement `h_yother_zero` hypothesis that a
+hypothesis-form converse would require. The chain:
 
 ```
 I(X^n; Y^n) = H(Y^n) - H(Y^n | X^n)

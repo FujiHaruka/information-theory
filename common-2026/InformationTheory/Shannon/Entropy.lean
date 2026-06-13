@@ -229,8 +229,8 @@ theorem condMutualInfo_eq_condEntropy_sub_condEntropy
 omit [DecidableEq X] [DecidableEq Y] [Nonempty Y] [DecidableEq Z] in
 /-- Conditioning never increases entropy: `H(X | Y, Z) ≤ H(X | Y)`. Direct corollary of
 the middle lemma `condMutualInfo_eq_condEntropy_sub_condEntropy` and
-`condMutualInfo_nonneg`. Phase B (n-variable Han) reduces to iterating this on
-prefixes of `Fin n`. -/
+`condMutualInfo_nonneg`. The n-variable Han inequality reduces to iterating this
+on prefixes of `Fin n`. -/
 @[entry_point]
 theorem condEntropy_le_condEntropy_of_pair
     (μ : Measure Ω) [IsProbabilityMeasure μ]
