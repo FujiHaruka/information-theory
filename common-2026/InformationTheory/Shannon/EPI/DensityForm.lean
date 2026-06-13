@@ -1,37 +1,3 @@
-/-
-# Phase A — 密度あり標準形 EPI (`entropy_power_inequality_of_density`)
-
-無条件 EPI moonshot の Phase A: 密度 (a.c.) + 有限2次モーメント + 入力密度正則性を
-honest regularity 前提として付けた標準形 EPI を **3-noise lift + two-time terminal**
-で sorryAx-free に導く。
-
-SoT plan: `docs/shannon/epi-stam-to-conclusion-plan.md` §Phase A。
-
-## Approach (解の全体形)
-
-base `(Ω,P)` を 3-noise lift `(Ω×ℝ×ℝ×ℝ, liftMeasure3 P)` へ持ち上げ、lift 上で 3 つの
-独立 unit 雑音 `Z_X := p.2.1` / `Z_Y := p.2.2.1` / `Z := p.2.2.2` (`gaussianReal 0 1` +
-独立を lift から genuine 供給) を使う。X/Y は singleton 雑音 `Z_X`/`Z_Y` で、sum は
-**separate unit noise `Z`** (variance 1) で平滑化する。これにより sum noise も unit
-となり、`isDeBruijnRegularityHyp_of_methodX_unitnoise` (`gaussianReal 0 1` 前提) が
-sum-instance にも genuine 適用できる (旧 2-noise route の `𝒩(0,2)` 撤退ラインが消える)。
-
-terminal は `EPICase1TwoTime.entropyPower_add_ge_case1_of_regular_twotime` (`@audit:ok`,
-sorryAx-free): de Bruijn group + endpoint group + scaling/variance/rescale +
-`h_stam_supply` を供給する。`h_stam_supply` は新 producer
-`EPIStamSupplyTwoTime.twoTime_stam_supply` (`@audit:ok`, sorryAx-free) から genuine 導出
-(3 positivity + inverse-Stam)。`entropy_power_inequality_via_lift3` で base に戻す。
-
-## two-time route の利点 (旧 L-PhA-α retreat-line 解消)
-
-旧 2-noise route では sum-pair の雑音が `p.2.1+p.2.2 ~ gaussianReal 0 2` (unit でない)
-ため producer が sum-instance に直接適用できず、`h_reg_sum` / sum-density Fisher
-positivity / conv-pin の 4 conjunct を `sorry` + `@residual` で park していた。本 route は
-sum を **独立な第3 unit 雑音 `Z`** で平滑化するため producer の `gaussianReal 0 1` 前提を
-満たし、4 park が全て genuine に閉じる。代わりに sum density の正則性前提 (Fisher 有限性 /
-`IsRegularDensityV2` / normalization / `IsBlachmanConvReady` / entropy 有限性) を入力前提
-として明示する (X/Y のものと parallel な honest regularity precondition、load-bearing でない)。
--/
 import InformationTheory.Shannon.EPI.Case1.RatioLimit
 import InformationTheory.Shannon.EPI.NoiseExtension
 import InformationTheory.Shannon.EPI.Stam.Step3Body
@@ -43,6 +9,25 @@ import InformationTheory.Shannon.EPI.Case1.TwoTime
 import InformationTheory.Shannon.EPI.Stam.SupplyTwoTime
 import InformationTheory.Meta.EntryPoint
 
+/-!
+# Phase A — density-form EPI (`entropy_power_inequality_of_density`)
+
+EPI for absolutely continuous distributions with finite second moment and regular densities,
+proved via a 3-noise lift and two-time terminal.
+
+## Main statements
+
+- `entropy_power_inequality_of_density`: EPI under explicit density regularity hypotheses.
+
+## Implementation notes
+
+The proof lifts the base space `(Ω, P)` to `(Ω × ℝ × ℝ × ℝ, liftMeasure3 P)` and
+introduces three independent unit-noise variables `Z_X`, `Z_Y`, `Z`. Smoothing the sum
+with a separate unit noise `Z` (rather than using `Z_X + Z_Y ~ 𝒩(0,2)`) ensures that
+`isDeBruijnRegularityHyp_of_methodX_unitnoise` (which requires `gaussianReal 0 1`) applies
+to the sum-instance as well.
+-/
+
 namespace InformationTheory.Shannon.EPIDensityForm
 
 open MeasureTheory ProbabilityTheory
@@ -53,21 +38,12 @@ open InformationTheory.Shannon.EPICase1TwoTime
 open InformationTheory.Shannon.EPINoiseExtension
 open scoped ENNReal NNReal
 
-/-- **Phase A — 密度あり標準形 EPI** (two-time route).
+/-- Entropy power inequality for absolutely continuous distributions with regular densities.
 
-`X Y : Ω → ℝ` が独立・各々絶対連続 (Lebesgue 密度を持つ) + 有限2次モーメント + 入力密度
-正則性 (`IsRegularDensityV2` / normalized / `IsBlachmanConvReady` / Fisher 有限 / entropy
-有限、いずれも load-bearing でない regularity precondition) を満たすとき、entropy power
-inequality が成立する。X/Y/sum の 3 density について parallel に正則性前提を取る (3-noise
-lift で sum も unit 雑音で平滑化するため、sum density 正則性が producer に genuine に乗る)。
-
-EPI の core は body 内で `entropyPower_add_ge_case1_of_regular_twotime` (`@audit:ok`,
-sorryAx-free) + `twoTime_stam_supply` (`@audit:ok`, sorryAx-free) から genuine 導出。
-`IsDeBruijnRegularityHyp` / `h_stam_supply` は signature に持ち込まず body 内で producer
-から導出 (name laundering なし、load-bearing hyp なし)。前提 16 個は全て regularity
-precondition: measurability/indep/a.c./moment + (X/Y/sum) × (Fisher 有限/IsRegularDensityV2/
-normalization/IsBlachmanConvReady/entropy 有限)。これらを grant しても EPI は出ず、body が
-genuine に lift3→producer→two-time-terminal を呼ぶ。 -/
+All 16 hypotheses are regularity preconditions (measurability, independence, absolute
+continuity, finite second moment, `IsRegularDensityV2`, normalization, `IsBlachmanConvReady`,
+finite Fisher information, finite entropy) for `X`, `Y`, and `X + Y`; they do not encode
+the EPI inequality core. The proof derives EPI via a 3-noise lift and two-time terminal. -/
 @[entry_point]
 theorem entropy_power_inequality_of_density
     {Ω : Type*} {mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
@@ -75,7 +51,7 @@ theorem entropy_power_inequality_of_density
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
     (h_mom_X : Integrable (fun ω => (X ω) ^ 2) P)
     (h_mom_Y : Integrable (fun ω => (Y ω) ^ 2) P)
-    -- input-density 正則性 (producer precondition、load-bearing でない、verbatim コピー)
+    -- input-density regularity (producer precondition, not load-bearing)
     (h_fisher_X : FisherInfoV2.fisherInfoOfDensity
         (fun x => ((P.map X).rnDeriv volume x).toReal) ≠ ∞)
     (hreg_pX : FisherInfoV2.IsRegularDensityV2
@@ -92,7 +68,7 @@ theorem entropy_power_inequality_of_density
     (hready_pY : ∀ v : ℝ≥0, v ≠ 0 →
         EPIBlachmanDensity.IsBlachmanConvReady
           (fun x => ((P.map Y).rnDeriv volume x).toReal) (gaussianPDFReal 0 v))
-    -- sum-density 正則性 (3-noise two-time route の honest 前提、X/Y と parallel)
+    -- sum-density regularity (honest precondition for the 3-noise route, parallel to X/Y)
     (h_fisher_XY : FisherInfoV2.fisherInfoOfDensity
         (fun x => ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) ≠ ∞)
     (hreg_pXY : FisherInfoV2.IsRegularDensityV2
@@ -101,7 +77,7 @@ theorem entropy_power_inequality_of_density
     (hready_pXY : ∀ v : ℝ≥0, v ≠ 0 →
         EPIBlachmanDensity.IsBlachmanConvReady
           (fun x => ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) (gaussianPDFReal 0 v))
-    -- input-density 微分エントロピー有限性 (load-bearing でない regularity precondition)
+    -- finite differential entropy of input densities (regularity precondition, not load-bearing)
     (hent_pX : Integrable
         (fun x => Real.negMulLog (((P.map X).rnDeriv volume x).toReal)) volume)
     (hent_pY : Integrable

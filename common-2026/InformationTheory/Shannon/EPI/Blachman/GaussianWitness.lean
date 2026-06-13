@@ -149,7 +149,7 @@ theorem integrable_logDeriv_mul_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v 
   simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hv]
   ring
 
-/-! ## 段0 — linchpin: density-level Gaussian convolution closed form -/
+/-! ## Step 0 — linchpin: density-level Gaussian convolution closed form -/
 
 /-- **Linchpin**: the pointwise density convolution closed form for Gaussians.
 
@@ -260,7 +260,7 @@ theorem convDensityAdd_gaussian_closed_form
   exact (h_cont_conv.ae_eq_iff_eq volume
     (InformationTheory.Shannon.differentiable_gaussianPDFReal (mX + mY) (vX + vY)).continuous).mp h_ae_real
 
-/-! ## 段1 — `IsRegularDensityV2 (gaussianPDFReal m v)` (6 fields, all direct) -/
+/-! ## Step 1 — `IsRegularDensityV2 (gaussianPDFReal m v)` (6 fields, all direct) -/
 
 /-- `IsRegularDensityV2 (gaussianPDFReal m v)` — all six fields discharged from the
 existing Gaussian regularity lemmas in `FisherInfoGaussian`.
@@ -275,7 +275,7 @@ theorem isRegularDensityV2_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0
   integrable_deriv := InformationTheory.Shannon.integrable_deriv_gaussianPDFReal m hv
   integral_deriv_eq_zero := InformationTheory.Shannon.integral_deriv_gaussianPDFReal_eq_zero m hv
 
-/-! ## 段2/段3 — `IsBlachmanConvReady` Gaussian witness (19 fields) -/
+/-! ## Steps 2/3 — `IsBlachmanConvReady` Gaussian witness (19 fields) -/
 
 /-- **Gaussian witness** for `IsBlachmanConvReady` — density-route non-vacuousness.
 
@@ -676,7 +676,7 @@ theorem isBlachmanConvReady_gaussianPDFReal
     refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
     simp only [Function.comp, Function.uncurry]
 
-/-! ## 段4 — capstone: density-route convex Fisher bound fires on Gaussians
+/-! ## Step 4 — capstone: density-route convex Fisher bound fires on Gaussians
 
 The witness `isBlachmanConvReady_gaussianPDFReal`, `isRegularDensityV2_gaussianPDFReal`
 and Gaussian normalization (`integral_gaussianPDFReal_eq_one`) are fed into the

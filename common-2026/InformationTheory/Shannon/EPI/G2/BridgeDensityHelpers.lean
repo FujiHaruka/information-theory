@@ -122,14 +122,9 @@ theorem klDiv_toReal_eq_neg_differentialEntropy_sub_cross
   rw [hent]
   ring
 
-/-- **ℝ≥0∞ per-fibre balance** (crux ② step b', `klDiv_toReal_eq_neg_differentialEntropy_sub_cross`
-の all-nonneg ℝ≥0∞ 版)。fibre 微分エントロピー正部 `A := ∫⁻ ofReal(negMulLog p)`、KL、cross 正部
-`Cpos := ∫⁻ ofReal(p·log q)` の和が、負部 `B := ∫⁻ ofReal(-negMulLog p)` と cross 負部
-`Cneg := ∫⁻ ofReal(-(p·log q))` の和に等しい。減算を含まない恒等式 (assemble が lintegral_add で
-per-fibre に還元して消費)。fibre 有限性 (`h_logp_int`/`h_cross_int`/`hKL`) は genuine regularity
-precondition (load-bearing でない): KL 有限性は P ≪ ν の絶対連続性 + llr 可積分性を表明するだけで、
-per-fibre 恒等式の核 (= `klDiv_toReal_eq_neg_differentialEntropy_sub_cross`) を仮説に encode しない。
-5 項全有限なので両辺 `.toReal` の一致 (Real 兄弟 + pos/neg part 分解 + linarith) から ℝ≥0∞ 等式を得る。
+/-- Per-fibre balance in `ℝ≥0∞`: the sum of the differential entropy positive part `A`,
+KL divergence, and cross-entropy positive part `Cpos` equals the sum of the negative parts `B` and `Cneg`.
+A subtraction-free identity used by the assembler via `lintegral_add`.
 @audit:ok -/
 theorem klDiv_negMulLog_cross_balance_ennreal
     (P ν : Measure ℝ) [IsProbabilityMeasure P] [IsProbabilityMeasure ν]

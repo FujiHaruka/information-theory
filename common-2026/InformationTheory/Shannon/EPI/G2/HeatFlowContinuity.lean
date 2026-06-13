@@ -102,8 +102,8 @@ the Vitali (`tendsto_Lp_of_tendsto_ae`) and the L¹→integral
 (`tendsto_integral_of_L1'`) machinery. It does **not** follow from the L¹ +
 finite-second-moment regularity of `pX` (a concentrated density can have
 `∫ negMulLog pX = −∞`, an under-hypothesised / insufficient signature in the sense
-of CLAUDE.md「検証の誠実性」). Rather than claim a false implication, it is now
-carried as an explicit **`hpX_ent` precondition** (plan Phase 5-F, 落とし穴2 option
+of CLAUDE.md "Verification honesty"). Rather than claim a false implication, it is now
+carried as an explicit **`hpX_ent` precondition** (plan Phase 5-F, pitfall-2 option
 a): the input `X` has finite differential entropy. This is a regularity
 precondition on the input distribution, not a load-bearing conclusion. The former
 `negMulLog_integrable_of_density` lemma (which falsely claimed derivability from L¹

@@ -5,45 +5,32 @@ import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 
 /-!
-# T2-D-P: Entropy Power Inequality — Plumbing補題群 (partial publish)
+# Entropy Power Inequality — plumbing lemmas
 
-`InformationTheory/Shannon/EntropyPowerInequality.lean` (T2-D, 347 行) で publish 済の
-`entropyPower μ := Real.exp (2 · h(μ))` 周りの **plumbing 補題群** を本 file で
-独立 publish する。Stam inequality / de Bruijn integration 本体 (L-EPI1 / L-EPI2
-discharge) は **scope-out** — 本 file は
+Supporting lemmas for `entropyPower μ := Real.exp (2 · h(μ))` published independently.
 
-* `entropyPower` の基本性質 (positivity / non-zero / log-form / 2πe-normalized form)
-* `differentialEntropy` の Phase B (translation / scaling / affine) を `entropyPower`
-  に持ち上げた変形系
-* `entropy_power_inequality` を 2πe-normalized form (Cover-Thomas Ch.17 流儀の
-  `N(μ) := (2πe)⁻¹ · entropyPower μ` 形) に reshape したもの
-* L-EPI3 hypothesis pass-through に乗る 4-arg chain
+## Main definitions
 
-を扱う。撤退ラインは積極的に許容 (~200-400 行で 0 sorry 着地)。
+- `gaussianEntropyPowerConst`: Cover-Thomas `(2πe)` normalization constant.
 
-## 主シグネチャ
+## Main statements
 
-* `entropyPower_pos_iff` / `entropyPower_ne_zero` — Tier 0 positivity 系
-* `entropyPower_eq_of_differentialEntropy_eq` / `entropyPower_le_of_differentialEntropy_le`
-   / `entropyPower_lt_of_differentialEntropy_lt` — 単調性
-* `log_entropyPower` — log-form unfold
-* `gaussianEntropyPowerConst` / `entropyPower_div_two_pi_e_gaussianReal` —
-   Cover-Thomas `(2πe)⁻¹` normalization
-* `entropyPower_map_add_const_eq_self` / `entropyPower_map_mul_const`
-   / `entropyPower_map_affine` — Phase B-1/B-2/B-3 lift
-* `entropy_power_inequality_normalized` — `N(X+Y) ≥ N(X) + N(Y)` form
-* `entropy_power_inequality_four_arg` — 4-arg chain
+- `entropyPower_pos_iff`, `entropyPower_ne_zero`: strict positivity.
+- `entropyPower_eq_of_differentialEntropy_eq`,
+  `entropyPower_le_of_differentialEntropy_le`,
+  `entropyPower_lt_of_differentialEntropy_lt`: monotonicity.
+- `log_entropyPower`: log-form.
+- `entropyPower_div_two_pi_e_gaussianReal`: Gaussian normalization.
+- `entropyPower_map_add_const_eq_self`, `entropyPower_map_mul_const`,
+  `entropyPower_map_affine`: translation and scaling.
+- `entropy_power_inequality_normalized`: `N(X+Y) ≥ N(X) + N(Y)` form.
+- `entropy_power_inequality_four_arg`: 4-argument chain.
 
-## Mathlib-shape-driven
+## Implementation notes
 
-`entropyPower μ := Real.exp (2 · h(μ))` は `Real.exp_pos` / `Real.exp_log` /
-`Real.log_exp` / `Real.exp_le_exp` の結論形に直結 (T2-D 本文 design)。
-
-## 撤退ライン
-
-Stam inequality + de Bruijn integration discharge は本 file scope 外。
-`entropy_power_inequality_normalized` 等は既存 `entropy_power_inequality` を
-hypothesis pass-through 形で reshape したものに留まる。
+The definition `entropyPower μ := Real.exp (2 · h(μ))` is chosen so that
+`Real.exp_pos`, `Real.exp_log`, and `Real.exp_le_exp` apply directly.
+Stam inequality and de Bruijn integration discharge are out of scope here.
 -/
 
 namespace InformationTheory.Shannon.EntropyPowerInequality
@@ -54,7 +41,7 @@ set_option linter.unusedSectionVars false
 open MeasureTheory ProbabilityTheory Real
 open scoped ENNReal NNReal Topology
 
-/-! ## §1 — Positivity / non-zero / log-form 系 -/
+/-! ## §1 — Positivity, non-zero, log-form -/
 
 
 /-- `entropyPower μ ≠ 0` (corollary of strict positivity). -/
@@ -174,7 +161,7 @@ theorem entropyPower_map_affine
   rw [h_log]
   ring
 
-/-! ## §6 — 4-arg EPI chain (L-EPI3 pass-through を 3 回適用) -/
+/-! ## §6 — 4-argument EPI chain -/
 
 /-- **4-arg EPI pass-through**: for independent `X, Y, Z, W` with the appropriate
 L-EPI3 hypotheses, `entropyPower (X+Y+Z+W) ≥ Σ entropyPower (·)`.

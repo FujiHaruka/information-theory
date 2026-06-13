@@ -27,7 +27,7 @@ measurable pieces — `StronglyMeasurable.integral_prod_right` for the numerator
 Layer-A joint measurability for the denominator, then `Measurable.div`.
 
 All hypotheses are pure regularity (`Measurable pX` etc.); no de Bruijn / Fisher
-core is threaded as a load-bearing hypothesis (CLAUDE.md「検証の誠実性」).
+core is threaded as a load-bearing hypothesis (CLAUDE.md "Verification honesty").
 -/
 
 namespace InformationTheory.Shannon.EPICase1ProducerMeasurability

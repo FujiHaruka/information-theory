@@ -33,7 +33,7 @@ limits), and Gaussian additivity yields `R t → 0`. -/
 
 The per-`t` regularity (a.c. + entropy integrability of the three W-path laws for
 the scaling step; the §3 squeeze regularity bundles `IsRescaledPathRegular` for the
-three paths) is threaded as honest preconditions (方針 X); the noise Gaussian laws +
+three paths) is threaded as honest preconditions (policy X); the noise Gaussian laws +
 independence are regularity. No EPI / Stam core is bundled.
 @audit:ok -/
 theorem csiszarLogRatioGap_tendsto_zero_atTop
@@ -61,7 +61,7 @@ theorem csiszarLogRatioGap_tendsto_zero_atTop
     -- noise laws are a.c. (Gaussian)
     (hZX_ac : (P.map Z_X) ≪ volume) (hZY_ac : (P.map Z_Y) ≪ volume)
     (hZXZY_ac : (P.map (fun ω => Z_X ω + Z_Y ω)) ≪ volume)
-    -- per-path variance data + §3 regularity bundles (方針 X, all regularity)
+    -- per-path variance data + §3 regularity bundles (policy X, all regularity)
     (varX varY varS : ℝ)
     (h_varX_nn : 0 ≤ varX) (h_varY_nn : 0 ≤ varY) (h_varS_nn : 0 ≤ varS)
     (h_reg_X : IsRescaledPathRegular X Z_X P varX v_X)
@@ -178,7 +178,7 @@ By the order-limit bridge §1 `epi_of_csiszarLogRatioGap_tendsto`, antitonicity 
 `R t → 0` force `R 0 ≥ 0`, hence EPI. **No entropic CLT** — the saturation `R t → 0`
 is the scaling squeeze of §4.
 
-All hypotheses are **honest regularity preconditions** (方針 X), the union of the two
+All hypotheses are **honest regularity preconditions** (policy X), the union of the two
 pillars' preconditions: pairwise + joint independence (`hXZX`/`hYZY`/`hXYZXY`), the
 three `IsDeBruijnRegularityHyp` / `IsHeatFlowEndpointRegular` density-witness bundles,
 the per-`t` `h_pos_stam` Fisher/Stam/Blachman bundle (ratio antitone side), the noise
@@ -201,11 +201,9 @@ regularity bundles; granting them (incl. the per-`t` `h_pos_stam` whose
 does NOT hand the EPI conclusion — that requires the pillars' genuine de Bruijn
 integration + scaling squeeze, neither encoded in any hypothesis. Sufficiency: body
 threads pillar args in matching order and composes via §1 bridge.
-**@audit:superseded-by(entropyPowerExt_add_ge_unconditional)** (2026-06-08): 本 single-time de Bruijn/
-ratio-limit case-1 EPI は、無条件 EPI が route T (smoothing+truncation、`entropyPowerExt_add_ge_finite_ac`
-経由 → `entropyPowerExt_add_ge_unconditional`) で case-1 を閉じたため EPI 用途では不要。consumer は dead leaf
-`entropyPower_add_ge_case1_of_methodX` のみ (無条件 headline チェーン外)。proof-done ゆえ残置。
-注: two-time 版 `entropyPower_add_ge_case1_of_regular_twotime` は別物で smoothing-limit 経由 LIVE。 -/
+**@audit:superseded-by(entropyPowerExt_add_ge_unconditional)** (2026-06-08): superseded by the
+unconditional EPI via route T; the sole consumer `entropyPower_add_ge_case1_of_methodX` is a dead leaf.
+Retained as proof-done. The two-time variant `entropyPower_add_ge_case1_of_regular_twotime` is separate and live. -/
 theorem entropyPower_add_ge_case1_of_regular
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     -- independence (pairwise + joint), shared by both pillars
@@ -341,11 +339,9 @@ The **de Bruijn per-time regularity group** (`h_reg_*'` / `h_endpt_*` / `h_pos_s
 is **not supplied from method-X** (it depends on the moonshot
 `epi-debruijn-pertime-closure`) and is threaded as an honest precondition.
 
-**@audit:superseded-by(entropyPowerExt_add_ge_unconditional)** (2026-06-08): 本 method-X case-1 EPI
-wrapper は consumer 0、かつ未解消 de Bruijn per-time 残壁 (`@residual` 下記) を抱える。無条件 EPI は
-route T で case-1 を閉じた (`entropyPowerExt_add_ge_unconditional`) ため、この de Bruijn EPI 経路は EPI
-用途では不要 = retract 候補。ただし de Bruijn 恒等式 closure 計画 `epi-debruijn-pertime-closure` 自体は
-EPI と独立の standalone goal として有効 (本 wrapper の supersede は de Bruijn 計画の中止を意味しない)。
+**@audit:superseded-by(entropyPowerExt_add_ge_unconditional)** (2026-06-08): 0 consumers, carries an
+unresolved de Bruijn per-time wall (`@residual` below). Superseded by the unconditional EPI (route T).
+The de Bruijn closure plan `epi-debruijn-pertime-closure` remains a valid standalone goal independently of this supersession.
 @residual(plan:epi-debruijn-pertime-closure) -/
 theorem entropyPower_add_ge_case1_of_methodX
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]

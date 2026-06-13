@@ -195,7 +195,7 @@ The squeeze structure (constant lower envelope from independent-noise monotonici
 + decaying upper envelope from Gaussian max-entropy → common limit `N(B)`) is the
 genuine analytic content of this lemma. All the per-`t` data feeding the two
 genuine envelope lemmas are threaded as **honest regularity preconditions**
-(方針 X, NOT load-bearing): `IndepFun B (A/√t)` (`h_indep`), a.c. of the path laws
+(policy X, NOT load-bearing): `IndepFun B (A/√t)` (`h_indep`), a.c. of the path laws
 (`h_path_ac`, `hB_ac`), the 8 fibre integrabilities of the lower-bound lemma
 (`h_lb`), the max-entropy data of the upper-bound lemma (mean / variance bound by
 `varA/t + v_B` / integrabilities, packaged in `h_ub`). The conclusion

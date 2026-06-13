@@ -1,28 +1,33 @@
-/-
-# Pivot B Phase 1 — explicit-density de Bruijn producer + explicit Phase A EPI
-
-有限分散古典 EPI closure の Pivot B。Phase A `entropy_power_inequality_of_density`
-(`EPIDensityForm.lean:70`) は de Bruijn group の producer `isDeBruijnRegularityHyp_of_methodX_unitnoise`
-(`EPICase1RatioLimit.lean:1950`) を呼ぶが、その producer は X の密度として
-**Mathlib 正準 `Measure.rnDeriv` の代表元** の `IsRegularDensityV2` (完全 pointwise) を要求する。
-正準 rnDeriv 代表元は `Classical.choose` 由来で generically 非微分可能なため、平滑化変数
-X_t = X + √t·Z の密度 conv(pX, g_t) が正則でも、それと a.e. 一致するだけの正準代表元には
-pointwise 述語 `IsRegularDensityV2` を transport できない。よって Phase A は事実上充足不能。
-
-## Approach
-
-producer を **explicit 密度版** に作り替える。canonical rnDeriv から pX を導出する前半を
-「explicit `pX : ℝ → ℝ` を引数で受ける」に置換した `isDeBruijnRegularityHyp_of_explicitDensity`
-(Deliverable 1) を作り、Phase A body の producer 呼出 3 本をこれに差し替えた explicit Phase A
-`entropy_power_inequality_of_density_explicit` (Deliverable 2) を作る。終端 lemma
-(`entropyPower_add_ge_case1_of_regular_twotime` + `twoTime_stam_supply`) と endpoint group
-(`endpt_of`, canonical rnDeriv を密度に使うが `IsRegularDensityV2` を要求しない) はそのまま再利用。
-
-explicit `pX` は conv(pX_base, g_t) のような pointwise 正則密度を後で渡すための明示 witness
-であり、a.e.-pin に弱めてはいけない (pivot の核心)。signature の各正則性前提は EPI を encode
-しない load-bearing でない regularity precondition。
--/
 import InformationTheory.Shannon.EPI.DensityForm
+
+
+/-!
+# Pivot B — explicit-density de Bruijn producer and explicit Phase A EPI
+
+This file implements Pivot B: replacing the canonical `Measure.rnDeriv` representative
+in the de Bruijn producer with an explicit density argument.
+
+The canonical `rnDeriv` representative is `Classical.choose`-derived and generically
+non-differentiable, so `IsRegularDensityV2` (full pointwise regularity) cannot be
+transported from a smoothed density `conv(pX, g_t)` to a mere a.e.-equal canonical
+representative. Pivot B works around this by making the producer accept an explicit
+`pX : ℝ → ℝ` that the caller controls.
+
+## Main definitions
+
+- `isDeBruijnRegularityHyp_of_explicitDensity`: explicit-density de Bruijn producer.
+
+## Main statements
+
+- `entropy_power_inequality_of_density_explicit`: explicit-density Phase A EPI.
+
+## Implementation notes
+
+All hypotheses (`hpX_nn`/`hpX_meas`/`hpX_int`/`hpX_law`/`hpX_mom`/`hreg_pX`/`hnorm_pX`/`hready_pX`)
+are regularity preconditions, not load-bearing: they assert pointwise regularity of the
+explicit density, normalization, and finite Fisher information, but do not encode the
+de Bruijn / Fisher-monotonicity inequality core.
+-/
 
 namespace InformationTheory.Shannon.EPICase1SmoothingLimit
 
@@ -34,19 +39,11 @@ open InformationTheory.Shannon.EPICase1TwoTime
 open InformationTheory.Shannon.EPINoiseExtension
 open scoped ENNReal NNReal
 
-/-- **Deliverable 1 — explicit-density de Bruijn producer**.
+/-- Explicit-density variant of `isDeBruijnRegularityHyp_of_methodX_unitnoise`.
 
-`isDeBruijnRegularityHyp_of_methodX_unitnoise` (`EPICase1RatioLimit.lean:1950`) の variant:
-「canonical rnDeriv から X の密度 pX を導出する前半」を「explicit `pX : ℝ → ℝ` を引数で受ける」
-に置換したもの。これにより consumer は conv(pX_base, g_t) のような **pointwise 正則** な
-explicit 密度をそのまま渡せる (canonical rnDeriv の非微分代表元 transport 不能問題を回避)。
-
-全前提 (`hpX_nn`/`hpX_meas`/`hpX_int`/`hpX_law`/`hpX_mom`/`hreg_pX`/`hnorm_pX`/`hready_pX`) は
-regularity precondition で load-bearing でない: pX が *正則* L¹ 密度であること
-(`IsRegularDensityV2` = 微分可能/正値/tail→0/可積分微分)、正規化、`IsBlachmanConvReady` bundle、
-有限 Fisher の主張のみで、de Bruijn / Fisher-monotonicity の不等式核を encode しない。
-body は producer の `refine { ... }` 部 (`EPICase1RatioLimit.lean:1995-2068`) を verbatim
-コピーし、canonical-rnDeriv 由来の前半を explicit 引数の named 参照に置換。
+Replaces the canonical `rnDeriv` prefix with an explicit `pX : ℝ → ℝ` argument,
+allowing the caller to pass a pointwise-regular density such as `conv(pX_base, g_t)`
+directly without having to transport `IsRegularDensityV2` through an a.e.-equality.
 @audit:ok -/
 noncomputable def isDeBruijnRegularityHyp_of_explicitDensity
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -126,17 +123,11 @@ noncomputable def isDeBruijnRegularityHyp_of_explicitDensity
       rw [Real.norm_of_nonneg hnn]
       exact hbound t ht
 
-/-- **Deliverable 2 — explicit-density Phase A EPI**.
+/-- Explicit-density variant of `entropy_power_inequality_of_density`.
 
-`EPIDensityForm.entropy_power_inequality_of_density` (`EPIDensityForm.lean:70`) の explicit-density
-variant: X/Y/sum の正則性前提を canonical rnDeriv 代表元ではなく **explicit `pX pY pXY : ℝ → ℝ`**
-について述べ、各々の withDensity link を追加。body は Phase A body をコピーし、producer 呼出 3 本を
-`isDeBruijnRegularityHyp_of_explicitDensity` に差し替え (canonical-rnDeriv bridge `hrn_*` 削除、
-endpoint `endpt_of` は再利用、`hent_p*` は `hrnae_*` 経由で rnDeriv 形に transport)。
-
-全前提 (`pX`/`pY`/`pXY` + 各正則性) は load-bearing でない regularity precondition で、
-EPI を encode しない。explicit `pX` は pointwise 正則密度を渡すための明示 witness であり、
-a.e.-pin に弱めていない (pivot の核心)。proof-done (0 残課題, sorryAx-free)。
+States regularity hypotheses for `pX`, `pY`, `pXY` as explicit `ℝ → ℝ` arguments
+rather than canonical `rnDeriv` representatives, and adds `withDensity` links.
+All hypotheses are regularity preconditions; they do not encode the EPI inequality core.
 @audit:ok -/
 theorem entropy_power_inequality_of_density_explicit
     {Ω : Type*} {mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
@@ -1360,13 +1351,11 @@ theorem entropyPowerExt_add_ge_of_finite_variance
     ← ENNReal.ofReal_add (entropyPower_nonneg _) (entropyPower_nonneg _)]
   exact ENNReal.ofReal_le_ofReal hreal
 
-/-! **Pivot B Phase 3 — infinite-variance a.c. classical EPI**:
-旧 named wall `entropyPowerExt_add_ge_infinite_variance` (`@residual(wall:epi-infinite-variance-classical)`)
-は **FALSE WALL** と判明 (2026-06-07)。Lieb-Young sharp Young / Brascamp-Lieb を経由せず、route T
-(conditioning truncation = 両成分同時 conditioning による compact-support 切詰 → 有限分散 EPI 黒箱
-`entropyPowerExt_add_ge_of_finite_variance` 再利用 → R→∞ で Gibbs + cross-entropy DCT による usc)
-で **genuine closure 済、sorryAx-free**。集約先は `EPIInfiniteVarianceCapstone.lean`
-(`EPIInfiniteVarianceTruncation.entropyPowerExt_add_ge_infinite_variance`)。本 file は IVT の上流
-ゆえここに genuine 版は置けない (import 循環) ため、capstone を IVT 下流に分離して closure した。 -/
+/-! ## Infinite-variance a.c. classical EPI (closure note)
+
+The named wall `entropyPowerExt_add_ge_infinite_variance` was resolved (2026-06-07) via
+route T (compact-support truncation + finite-variance EPI black-box + Gibbs + DCT).
+The genuine closure lives in `EPIInfiniteVarianceCapstone.lean`; it cannot reside here
+because this file is upstream of the truncation module (import cycle). -/
 
 end InformationTheory.Shannon.EPICase1SmoothingLimit

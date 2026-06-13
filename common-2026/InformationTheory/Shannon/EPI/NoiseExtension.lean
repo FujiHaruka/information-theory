@@ -1,29 +1,24 @@
-/-
-# EPI lift-and-transport: 3-noise lift 機材
-
-本 file は **3-noise lift** 空間 `Ω × ℝ × ℝ × ℝ` (3 因子はすべて `gaussianReal 0 1`) 上の
-machinery を集約する。two-time case-1 assembler は和を `(Z_X, Z_Y)` とは独立な単一 unit noise `Z`
-で摂動するため独立な標準正規が 3 つ要る。lift 上では第1因子 `Prod.fst` だけが `X`/`Y` を運ぶので、
-3 つの `entropyPower` 項はすべて `measurePreserving_fst` で base へ transport できる。
-
-`entropy_power_inequality_via_lift3` が live な transport lemma で、密度版 EPI 結論が消費する:
-`EPIDensityForm.entropy_power_inequality_of_density`,
-`EPICase1SmoothingLimit.entropy_power_inequality_of_density_explicit` /
-`entropy_power_add_ge_of_finite_variance`。
-
-## History
-
-元の **2-noise** lift route (`liftMeasure` on `Ω × ℝ × ℝ` / `stamScalingNoise_exists_on_lift` /
-`entropy_power_inequality_via_lift`) と、それが住んでいた richness 述語 `IsStamScalingNoiseHyp`
-(ToBridge.lean) は、削除された in-place 偽 W2 `stamScalingNoise_exists` (commit `192410c`) の honest
-置換だった。genuine・sorryAx-free だったが、3-noise route が密度版結論に結線された時点で superseded な
-dead code になり、consumer ripple 0 で削除した (2026-06-09, `epi-richness-route-b-plan` closure)。
--/
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic
 import Mathlib.MeasureTheory.Measure.Prod
 import Mathlib.MeasureTheory.Measure.Map
 import InformationTheory.Shannon.EntropyPower.Inequality
+
+/-!
+# EPI lift-and-transport: 3-noise lift machinery
+
+The 3-noise lift space `Ω × ℝ × ℝ × ℝ` (three independent standard Gaussian factors)
+and the transport lemma that reduces a lift-space EPI conclusion to a base-space one.
+
+## Main definitions
+
+- `liftMeasure3`: the product measure on `Ω × ℝ × ℝ × ℝ`.
+
+## Main statements
+
+- `entropyPower_map_comp_fst_eq3`: `entropyPower` is preserved by the first-factor projection.
+- `entropy_power_inequality_via_lift3`: reduces a lift-space EPI to the base-space EPI.
+-/
 
 namespace InformationTheory.Shannon.EPINoiseExtension
 
@@ -42,12 +37,11 @@ of the 2-noise factors for `Z` would break `Z ⊥ (Z_X, Z_Y)`. In the transport 
 only the first factor (`Prod.fst`) carries `X`/`Y`, so all three `entropyPower` terms
 transport via `measurePreserving_fst`. -/
 
-/-- 3-noise lift 空間 `Ω × ℝ × ℝ × ℝ` の測度 (3 因子はすべて標準正規)。 -/
+/-- Product measure on the 3-noise lift space `Ω × ℝ × ℝ × ℝ` (three standard Gaussian factors). -/
 noncomputable abbrev liftMeasure3 : Measure (Ω × ℝ × ℝ × ℝ) :=
   P.prod ((gaussianReal 0 1).prod ((gaussianReal 0 1).prod (gaussianReal 0 1)))
 
 omit [IsProbabilityMeasure P] in
-/-- lift3 上で `X` law が保存される (transport の linchpin)。 -/
 theorem entropyPower_map_comp_fst_eq3 (hX : Measurable X) :
     entropyPower ((liftMeasure3 P).map (fun p => X p.1)) = entropyPower (P.map X) := by
   have hmap : (liftMeasure3 P).map (fun p : Ω × ℝ × ℝ × ℝ => X p.1) = P.map X := by
@@ -56,10 +50,7 @@ theorem entropyPower_map_comp_fst_eq3 (hX : Measurable X) :
   rw [hmap]
 
 omit [IsProbabilityMeasure P] in
-/-- route B 本体 (3-noise lift、conditional transport 形)。仮説 `h_lift_epi` は別測度
-`liftMeasure3 P` 上の EPI 結論で、base `(Ω,P)` の EPI と別 Prop。これは honest な
-measure-transport reduction (Stam の核を抱えず lift 空間 EPI を base へ張替えるだけ) で、
-非循環・非バンドル。 -/
+/-- Reduce a lift-space EPI conclusion to the base-space EPI via measure transport along `Prod.fst`. -/
 theorem entropy_power_inequality_via_lift3 (hX : Measurable X) (hY : Measurable Y)
     (h_lift_epi : entropyPower ((liftMeasure3 P).map (fun p => X p.1 + Y p.1))
       ≥ entropyPower ((liftMeasure3 P).map (fun p => X p.1))

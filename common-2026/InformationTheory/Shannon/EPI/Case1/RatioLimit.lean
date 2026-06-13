@@ -17,7 +17,7 @@ import InformationTheory.Shannon.EPI.Case1.RatioLimit.Producer
 This file lands the **monotone + limit** architecture for the classical (case-1,
 a.c. inputs) entropy power inequality, **bypassing the entropic CLT wall**.
 
-## Architecture (advisor-verified, `epi-case1-difference-g3-closure-plan.md` 判断ログ 7/8)
+## Architecture (advisor-verified, `epi-case1-difference-g3-closure-plan.md` decision log 7/8)
 
 Let `R(t) = csiszarLogRatioGap X Y Z_X Z_Y P t
           = log N(law(X+Y+√t·(Z_X+Z_Y))) − log (N(law(X+√t·Z_X)) + N(law(Y+√t·Z_Y)))`,
@@ -54,7 +54,7 @@ standard normals), the two `log`s converge to the same value, so `R t → 0`.
 
 All per-`t` regularity (a.c., finite-entropy integrability of the W-path laws, the
 8 fibre-integrability preconditions of `differentialEntropy_add_ge_of_indep`, finite
-variance) is threaded as **honest preconditions** in the signatures (方針 X). The
+variance) is threaded as **honest preconditions** in the signatures (policy X). The
 Stam core / EPI core is never bundled as a `*Hypothesis`. The genuine analytic glue
 (scaling cancellation, log-continuity composition, Gaussian additivity, order limit)
 is the deliverable; preconditions not discharged here remain honest hypotheses.
@@ -66,7 +66,7 @@ sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`).
 The §3 squeeze is now genuine: both envelopes are derived from the genuine
 lemmas `differentialEntropy_add_ge_of_indep` (lower) and
 `differentialEntropy_le_gaussian_of_variance_le` (upper) using the per-`t`
-regularity bundle `IsRescaledPathRegular` (方針 X, NOT load-bearing). §4 threads
+regularity bundle `IsRescaledPathRegular` (policy X, NOT load-bearing). §4 threads
 three such bundles transparently. Discharging `IsRescaledPathRegular` (supplying
 the per-`t` regularity from a.c. inputs + Gaussian smoothing) is deferred to a
 later phase; here it is an honest precondition.

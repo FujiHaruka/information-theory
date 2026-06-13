@@ -10,7 +10,7 @@ import Mathlib.Analysis.Convex.Integral
 import Mathlib.Analysis.Convex.Mul
 
 /-!
-# EPI Blachman — explicit density route (S2 + S3, condExp 不使用)
+# EPI Blachman — explicit density route (S2 + S3, condExp-free)
 
 Phase 3b of `docs/shannon/epi-wall-reattack-plan.md` (density-route, condExp-free).
 Consumes the Phase 3a gateway `convDensityAdd_hasDerivAt_of_regular`
@@ -34,7 +34,7 @@ Consumes the Phase 3a gateway `convDensityAdd_hasDerivAt_of_regular`
 All bundled hypotheses are **regularity preconditions** (`IsRegularDensityV2`,
 boundedness of the smooth factor and its derivative, integrability of the score
 products, positivity of `p_Z`). None is a load-bearing bundling of the score
-identity itself — see CLAUDE.md「検証の誠実性」.
+identity itself — see CLAUDE.md "Verification honesty".
 -/
 
 namespace InformationTheory.Shannon.EPIBlachmanDensity
@@ -112,7 +112,7 @@ theorem symm_deriv_integral_eq (fX fY : ℝ → ℝ) (z : ℝ)
   -- goal : ∫ x, deriv fX x * fY (z - x) = ∫ x, fY (z - x) * deriv fX x
   exact integral_congr_ae (Filter.Eventually.of_forall (fun x => mul_comm _ _))
 
-/-- **S3 — score representation (Blachman core, condExp 不使用).**
+/-- **S3 — score representation (Blachman core, condExp-free).**
 
 For any `λ`, with `W_λ(x,z) := λ · logDeriv fX x + (1-λ) · logDeriv fY (z - x)`,
 `logDeriv (convDensityAdd fX fY) z = ∫ x, W_λ x z · p_{X|Z}(x|z) dx`.

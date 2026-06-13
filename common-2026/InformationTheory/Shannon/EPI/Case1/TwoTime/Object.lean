@@ -744,7 +744,7 @@ theorem twoTimeLogRatioGap_tendsto_zero_atTop
       (P.map (fun ω => (X ω + Y ω) / Real.sqrt σ + Z ω)) ≪ volume ∧
       Integrable (fun x => Real.negMulLog
         (((P.map (fun ω => (X ω + Y ω) / Real.sqrt σ + Z ω)).rnDeriv volume x).toReal)) volume)
-    -- per-path squeeze regularity bundles (方針 X; audited non-load-bearing in §3):
+    -- per-path squeeze regularity bundles (policy X; audited non-load-bearing in §3):
     (varX varY varS : ℝ)
     (h_varX_nn : 0 ≤ varX) (h_varY_nn : 0 ≤ varY) (h_varS_nn : 0 ≤ varS)
     (h_reg_X : IsRescaledPathRegular X Z_X P varX 1)

@@ -18,74 +18,32 @@ import Mathlib.Topology.Instances.EReal.Lemmas
 import Mathlib.Order.Filter.AtTopBot.Group
 
 /-!
-# T2-D-I: Entropy Power Inequality — L-EPI3 final integration
+# Entropy Power Inequality — L-EPI3 final integration
 
-`InformationTheory/Shannon/EntropyPowerInequality.lean` (T2-D, 347 行) の主定理
-`entropy_power_inequality` は L-EPI1 + L-EPI2 + L-EPI3 三本立て hypothesis
-pass-through pattern で publish 済。Wave 5 で
+This file integrates the building blocks from `EPIPlumbing`, `EPIStamDischarge`,
+and `FisherInfoV2DeBruijn` to assemble `IsEPIL3IntegratedPipeline` and derive EPI.
 
-* `InformationTheory/Shannon/EPIPlumbing.lean` (319 行)
-* `InformationTheory/Shannon/EPIStamDischarge.lean` (755 行)
-* `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean` (452 行)
+## Main definitions
 
-の三本柱が揃ったので、本 file はこれら building blocks を **integrate** し、
-L-EPI3 を取り出す **integrated pipeline** を整える。
+- `IsEPIL3IntegratedPipeline`: single-field structure carrying `IsStamInequalityHyp`.
 
-## Approach
+## Main statements
 
-主 deliverable は **`IsEPIL3IntegratedPipeline X Y Z P`** という構造体形 predicate。
-これを与えると `IsEntropyPowerInequalityHypothesis X Y P` (L-EPI3) が導かれ、
-さらに主定理 `entropy_power_inequality` を経由して `entropyPower (P.map (X+Y))
-≥ entropyPower (P.map X) + entropyPower (P.map Y)` に着地する。
+- `isEPIL3IntegratedPipeline_of_gaussian`: Gaussian full discharge (§3).
+- `entropy_power_inequality_gaussian_full`: Gaussian EPI hypothesis-free (§9).
+- `isEPIL3IntegratedPipeline_symm`: symmetry of the integrated pipeline (§6).
+- `isEPIL3IntegratedPipeline_of_stam`: pipeline from a Stam residual (§6).
+- `integrated_pipeline_roundtrip`: round-trip sanity check (§11).
 
-* §1 — **`IsEPIL3IntegratedPipeline`**: Stam (真 signature) の単一 field predicate。
-  `IsStamInequalityHyp X Y P` から L-EPI3 を生成。Stam-to-EPI *bridge* は
-  load-bearing field ではなくなり (Cluster C Tier-2 migration、
-  `epi-stam-cluster-c-sorry-migration-plan` route L-EPISC-3-α)、consumer が
-  shared sorry 補題 `stamToEPIBridge_holds` で内部 discharge する。
-* §2 — **integrated 主定理**: integrated pipeline → EPI。`InformationTheory/Shannon/EPIStamDischarge.lean`
-  の `epi_via_stam_main` を packaging。
-* §3 — **Gaussian EPI**: `X, Y` がともに Gaussian なら EPI は等号で成立
-  (`entropyPower_gaussian_additivity` 直行)。integrated pipeline 形は
-  `entropy_power_inequality_gaussian_via_pipeline` が真の `IsStamInequalityHyp`
-  を引数で受ける (honest pass-through)。
-  **RESOLVED (2026-05-20):** 旧 `isStamInequalityHyp_of_gaussian_v1_zero` /
-  `isEPIL3IntegratedPipeline_gaussian` は buggy V1 `fisherInfo = 0` artefact で
-  `0 < J_X` precondition を `exfalso` するだけの vacuous discharge だったため削除。
-* §4 — **variants**: log / exp / normalized form 全部 integrated pipeline 経由。
-* §5 — **chain forms**: 3-arg / 4-arg EPI を integrated pipeline 1 本立てで。
-* §6 — **predicate manipulation**: symm / refl / pass-through helpers。
+## Implementation notes
 
-## 撤退ライン (本 file で発動)
-
-Cover-Thomas Lemma 17.7.3 の Csiszár-style coupling argument (path-integral
-`∫₀^∞ (J(X+√tZ)⁻¹) dt = h(N) - h(X)` 形を使った Stam → EPI 導出) は **Mathlib
-不在 + 本 file scope-out**。
-
-* L-EPI1 (Stam inequality) は `EPIStamDischarge.IsStamInequalityHyp` 真
-  signature で受ける。
-* L-EPI2 (de Bruijn integration) は `EPIStamDischarge.IsDeBruijnIntegrationHyp`
-  真 signature + `FisherInfoV2DeBruijn.deBruijn_identity_v2_gaussian` Gaussian
-  discharge を引用。
-* L-EPI3 → EPI 着地は `EntropyPowerInequality.entropy_power_inequality` に
-  そのまま渡す。
-* Stam + de Bruijn → L-EPI3 の coupling 部は `IsStamToEPIBridgeHyp` hypothesis
-  pass-through、Gaussian saturation case のみ §3 で full discharge。
-
-## 主シグネチャ
-
-* `IsEPIL3IntegratedPipeline` — single-field Stam-residual bundle predicate (§1)
-* `epi_l3_of_integrated_pipeline` — L-EPI3 を生成 (§1)
-* `entropy_power_inequality_integrated` — integrated 主定理 (§2)
-* `isEPIL3IntegratedPipeline_of_gaussian` — Gaussian full discharge (§3)
-* `entropy_power_inequality_gaussian_via_pipeline` — Gaussian EPI via pipeline (§3)
-* `entropy_power_inequality_log_form_integrated`
-   / `entropy_power_inequality_exp_form_integrated`
-   / `entropy_power_inequality_normalized_integrated` — variants (§4)
-* `entropy_power_inequality_three_arg_integrated`
-   / `entropy_power_inequality_four_arg_integrated` — chain forms (§5)
-* `isEPIL3IntegratedPipeline_symm` / `isEPIL3IntegratedPipeline_of_epi_only`
-   — predicate manipulation (§6)
+The Stam-to-EPI bridge (Cover-Thomas Lemma 17.7.3, Csiszár-style coupling) is absent
+from Mathlib. The current design:
+- L-EPI1 (Stam inequality) is received as a genuine `IsStamInequalityHyp X Y P`.
+- L-EPI2 (de Bruijn integration) uses `IsDeBruijnIntegrationHyp` and
+  `FisherInfoV2DeBruijn.deBruijn_identity_v2_gaussian` for the Gaussian case.
+- The Stam → L-EPI3 coupling uses `IsStamToEPIBridgeHyp` pass-through;
+  the Gaussian saturation case is fully discharged in §3.
 -/
 
 namespace InformationTheory.Shannon.EPIL3Integration
@@ -480,7 +438,7 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
     ∀ t : ℝ, 0 < t →
       InformationTheory.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2 X Z P t := by
   intro t ht
-  -- Phase 2.B 段 1 (foundation): `IsRegularDeBruijnHypV2` is now 2-field
+  -- Phase 2.B step 1 (foundation): `IsRegularDeBruijnHypV2` is now 2-field
   -- (regularity only). The `derivAt_entropy_eq_half_fisher_v2` field used to
   -- be filled here via `deBruijn_identity_v2_gaussian`; that discharge is
   -- now downstream (via the genuine `debruijnIdentityV2_holds_assembled`;

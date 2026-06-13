@@ -8,26 +8,19 @@ import Mathlib.Analysis.SpecialFunctions.Log.Basic
 /-!
 # Donsker–Varadhan variational lower bound (easy direction)
 
-EPI G2 一般形サンドイッチ moonshot (`docs/shannon/epi-g2-general-sandwich-moonshot-plan.md`)
-の sub-Phase 2a。相対エントロピー `klDiv` の **変分下界 (Donsker–Varadhan の easy direction)**
+The variational lower bound on KL divergence:
+`KL(μ ‖ ν) ≥ ∫ g dμ − log (∫ exp(g) dν)` for all bounded measurable `g`.
 
-  `KL(μ ‖ ν) ≥ ∫ g dμ − log (∫ exp(g) dν)`   (∀ 有界可測 `g`)
+## Main statements
 
-を genuine に立てる。Phase 2b (hard direction, sup 到達) は別 task で park 中であり本 file は
-**触らない** (easy direction 1 本のみ)。
+- `integral_exp_sub_llr_le`: change-of-measure lemma `∫ exp(g − llr μ ν) ∂μ ≤ ∫ exp(g) ∂ν`.
+- `klDiv_variational_lower_bound`: main theorem `∫ g dμ − log (∫ exp(g) dν) ≤ (klDiv μ ν).toReal`.
 
-## 主シグネチャ
+## Implementation notes
 
-* `integral_exp_sub_llr_le` — change-of-measure 補題: `∫ exp(g − llr μ ν) ∂μ ≤ ∫ exp(g) ∂ν`。
-* `klDiv_variational_lower_bound` — 主定理: `∫ g dμ − log (∫ exp(g) dν) ≤ (klDiv μ ν).toReal`。
-
-## 証明骨子 (Jensen + 測度変換)
-
-`μ, ν` を確率測度, `μ ≪ ν` とする。`h := fun x => g x − llr μ ν x` に対し凸関数 `exp` の Jensen
-(`ConvexOn.map_integral_le`) で `exp (∫ h ∂μ) ≤ ∫ exp h ∂μ`。change-of-measure
-(`integral_toReal_rnDeriv_mul` + `rnDeriv_pos`) で `∫ exp h ∂μ ≤ ∫ exp g ∂ν`。よって
-`exp (∫ g ∂μ − KL) ≤ ∫ exp g ∂ν`、両辺 log で `∫ g ∂μ − KL ≤ log (∫ exp g ∂ν)`。
-`KL = ∫ llr ∂μ` (確率測度, `toReal_klDiv_of_measure_eq`) を使い結論を得る。
+The proof applies Jensen's inequality (`ConvexOn.map_integral_le`) to `h := g − llr μ ν`,
+then uses the change-of-measure identity (`integral_toReal_rnDeriv_mul`) to push to `ν`.
+The hard direction of Donsker–Varadhan (sup attainment) is not in scope here.
 -/
 
 namespace InformationTheory.Shannon
@@ -37,12 +30,8 @@ open scoped ENNReal NNReal
 
 variable {α : Type*} {mα : MeasurableSpace α} {μ ν : Measure α}
 
-/-- change-of-measure 補題: `μ ≪ ν` のとき有界可測 `g` に対し
-`∫ exp (g x − llr μ ν x) ∂μ ≤ ∫ exp (g x) ∂ν`。
-`llr = log (rnDeriv).toReal`, `rnDeriv > 0` μ-a.e. ゆえ被積分関数は μ-a.e.
-`exp (g x) · (rnDeriv μ ν x).toReal⁻¹` に等しく、`integral_toReal_rnDeriv_mul` で
-`ν` 上の積分に移すと `exp (g x) · 𝟙 {rnDeriv ≠ 0}` となり、`exp ≥ 0` で `∫ exp g ∂ν` に押さえられる。
-
+/-- Change-of-measure inequality: when `μ ≪ ν`,
+`∫ exp (g x − llr μ ν x) ∂μ ≤ ∫ exp (g x) ∂ν` for all bounded measurable `g`.
 @audit:ok -/
 theorem integral_exp_sub_llr_le [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (hμν : μ ≪ ν) {g : α → ℝ} (hg_meas : Measurable g) {C : ℝ} (hg_bdd : ∀ x, |g x| ≤ C) :
@@ -91,15 +80,8 @@ theorem integral_exp_sub_llr_le [IsProbabilityMeasure μ] [IsProbabilityMeasure 
   rw [hstep1, hstep2]
   exact hstep3
 
-/-- **Donsker–Varadhan の easy direction**: `μ, ν` 確率測度, `μ ≪ ν`, `Integrable (llr μ ν) μ`
-のとき有界可測 `g` に対し
-`∫ g ∂μ − log (∫ exp g ∂ν) ≤ (klDiv μ ν).toReal`。
-
-これは Donsker–Varadhan 変分公式 `KL = sup_g (∫g dμ − log∫exp g dν)` の **easy direction**
-(各 `g` で下界、sup は取らない)。Phase 2b の hard direction (sup 到達) は
-`docs/shannon/epi-g2-general-sandwich-moonshot-plan.md` §2b で `wall:kl-lower-semicontinuous`
-として park 中であり本 file の射程外。
-
+/-- Donsker–Varadhan variational lower bound (easy direction):
+`∫ g ∂μ − log (∫ exp g ∂ν) ≤ (klDiv μ ν).toReal` for all bounded measurable `g`.
 @audit:ok -/
 theorem klDiv_variational_lower_bound [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (hμν : μ ≪ ν) (h_int : Integrable (llr μ ν) μ)

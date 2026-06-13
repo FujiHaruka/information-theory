@@ -22,7 +22,7 @@ support**, which the Gaussian heat kernel does not. We bypass that wall entirely
 by going through `hasDerivAt_integral_of_dominated_loc_of_deriv_le`
 (`Mathlib/Analysis/Calculus/ParametricIntegral.lean:289`): differentiation under
 the integral sign, with the Gaussian-tail domination supplied as **regularity
-preconditions** (honest hyp, NOT load-bearing — see CLAUDE.md「検証の誠実性」).
+preconditions** (honest hyp, NOT load-bearing — see CLAUDE.md "Verification honesty").
 
 ## Mathlib-shape-driven
 
