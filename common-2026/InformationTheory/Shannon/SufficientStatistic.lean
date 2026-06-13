@@ -100,6 +100,7 @@ def IsSufficientStatisticFactorized
 - (B) `Xs ⟂ᵢ[f∘Xs] θ` ⟺ `θ ⟂ᵢ[f∘Xs] Xs` via `CondIndepFun.symm`。
 - (C) `θ ⟂ᵢ[f∘Xs] Xs` ⟺ 因子分解形 via `condIndepFun_iff_condDistrib_prod_ae_eq_prodMkRight`。
 @audit:ok -/
+@[entry_point]
 theorem isSufficient_iff_factorized
     (μ : Measure Ω) [IsProbabilityMeasure μ] [StandardBorelSpace Ω]
     [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Θ] [Nonempty Θ]

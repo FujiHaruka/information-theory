@@ -236,112 +236,6 @@ lemma mergedMeasure_real (P : Measure α) [IsFiniteMeasure P] (a b : α) (hab : 
     rw [ENNReal.toReal_add (measure_ne_top _ _) (measure_ne_top _ _)]
   · simp only [hxa, if_false]
 
-omit [Nonempty α] in
-/-- **Helper (Phase 3.3) — Bridge L (proof-pivot-advisor (ii))**: Huffman 側 expected length
-を sibling pair `(a, b)` の取り出し + 任意の `L' : α' → ℕ` の合成形に分解した等式.
-
-proof-pivot-advisor 推奨 (ii) で signature を **sibling-driven 分解形** に再 shape.
-`huffmanLength (mergedMeasure P a b hab)` を直接呼ばず、`L'` を `h_L'_link` の制約で
-parametrize する。`huffmanLength (mergedMeasure P a b hab) = L'` の同一視は Phase 4 で別補題に切り出し. -/
-lemma huffmanLength_bridge_L
-    (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
-    (h_card : 2 ≤ Fintype.card α) (a b : α) (hab : a ≠ b)
-    (h_sibling : huffmanLength P a = huffmanLength P b)
-    (L' : { x : α // x ≠ b } → ℕ)
-    (h_L'_link : ∀ x : { x : α // x ≠ b },
-      L' x = if x.val = a then huffmanLength P a - 1 else huffmanLength P x.val) :
-    InformationTheory.Shannon.ShannonCode.expectedLength P (huffmanLength P)
-      = InformationTheory.Shannon.ShannonCode.expectedLength
-          (mergedMeasure P a b hab) L'
-        + (P.real {a} + P.real {b}) := by
-  classical
-  set L := huffmanLength P with hL_def
-  -- L a ≥ 1
-  have hLa_pos : 0 < L a := huffmanLength_pos P hP h_card a
-  have hLa_ge_one : 1 ≤ L a := hLa_pos
-  -- ((L a - 1 : ℕ) : ℝ) = (L a : ℝ) - 1
-  have hLa_cast : ((L a - 1 : ℕ) : ℝ) = (L a : ℝ) - 1 := by
-    rw [Nat.cast_sub hLa_ge_one]; norm_num
-  -- expectedLength の展開
-  unfold InformationTheory.Shannon.ShannonCode.expectedLength
-  -- LHS: ∑ x : α, P.real{x} * L x. b の項を分離.
-  have hLHS_split :
-      (∑ x : α, P.real {x} * (L x : ℝ))
-        = (∑ x ∈ (Finset.univ : Finset α).erase b, P.real {x} * (L x : ℝ))
-            + P.real {b} * (L b : ℝ) := by
-    rw [Finset.sum_erase_add _ _ (Finset.mem_univ b)]
-  rw [hLHS_split]
-  -- b を a に同一視 (h_sibling: L a = L b)
-  have hLb_eq : (L b : ℝ) = (L a : ℝ) := by
-    rw [h_sibling]
-  rw [hLb_eq]
-  -- Subtype α' へ移行: ∑ x ∈ univ.erase b, f x = ∑ x : { y // y ≠ b }, f x.val
-  have h_erase_iff : ∀ x : α, x ∈ (Finset.univ : Finset α).erase b ↔ x ≠ b := by
-    intro x
-    simp [Finset.mem_erase]
-  have h_sum_subtype :
-      (∑ x ∈ (Finset.univ : Finset α).erase b, P.real {x} * (L x : ℝ))
-        = ∑ x : { y : α // y ≠ b }, P.real {x.val} * (L x.val : ℝ) := by
-    rw [Finset.sum_subtype (Finset.univ.erase b) h_erase_iff
-      (fun x => P.real {x} * (L x : ℝ))]
-  rw [h_sum_subtype]
-  -- RHS: ∑ x : α', mergedReal{x} * L' x の展開
-  -- a' := ⟨a, hab⟩ : α' で項分離
-  set a' : { y : α // y ≠ b } := ⟨a, hab⟩ with ha'_def
-  have ha'_mem : a' ∈ (Finset.univ : Finset { y : α // y ≠ b }) := Finset.mem_univ _
-  -- L' a' = L a - 1, ∀ x : α', x ≠ a' → L' x = L x.val
-  have hL'_a' : L' a' = L a - 1 := by
-    rw [h_L'_link a']; simp [ha'_def]
-  have hL'_other : ∀ x : { y : α // y ≠ b }, x ≠ a' → L' x = L x.val := by
-    intro x hx
-    rw [h_L'_link x]
-    have hxv_ne_a : x.val ≠ a := by
-      intro h
-      apply hx
-      apply Subtype.ext
-      exact h
-    simp [hxv_ne_a]
-  -- merged measure の real 値
-  have h_merged_a' : (mergedMeasure P a b hab).real {a'} = P.real {a} + P.real {b} := by
-    rw [mergedMeasure_real P a b hab a']; simp [ha'_def]
-  have h_merged_other : ∀ x : { y : α // y ≠ b }, x ≠ a' →
-      (mergedMeasure P a b hab).real {x} = P.real {x.val} := by
-    intro x hx
-    rw [mergedMeasure_real P a b hab x]
-    have hxv_ne_a : x.val ≠ a := by
-      intro h; apply hx; apply Subtype.ext; exact h
-    simp [hxv_ne_a]
-  -- RHS の展開: a' の項を分離
-  have hRHS_split :
-      (∑ x : { y : α // y ≠ b }, (mergedMeasure P a b hab).real {x} * (L' x : ℝ))
-        = (mergedMeasure P a b hab).real {a'} * (L' a' : ℝ)
-          + ∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
-              (mergedMeasure P a b hab).real {x} * (L' x : ℝ) := by
-    rw [← Finset.add_sum_erase _ _ ha'_mem]
-  rw [hRHS_split, h_merged_a', hL'_a', hLa_cast]
-  -- erase a' 上の sum を L' = L で書き換え
-  have h_sum_erase :
-      (∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
-          (mergedMeasure P a b hab).real {x} * (L' x : ℝ))
-        = ∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
-            P.real {x.val} * (L x.val : ℝ) := by
-    apply Finset.sum_congr rfl
-    intro x hx
-    have hx_ne : x ≠ a' := Finset.ne_of_mem_erase hx
-    rw [h_merged_other x hx_ne, hL'_other x hx_ne]
-  rw [h_sum_erase]
-  -- LHS の sum も a' で項分離
-  have hLHS_subtype_split :
-      (∑ x : { y : α // y ≠ b }, P.real {x.val} * (L x.val : ℝ))
-        = P.real {a} * (L a : ℝ)
-          + ∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
-              P.real {x.val} * (L x.val : ℝ) := by
-    rw [← Finset.add_sum_erase _ _ ha'_mem]
-  rw [hLHS_subtype_split]
-  -- 残: P.real{a}*L a + ∑erase + P.real{b}*L a
-  --   = (P.real{a}+P.real{b})*(L a - 1) + ∑erase + (P.real{a}+P.real{b})
-  ring
-
 omit [LinearOrder α] [Nonempty α] in
 /-- **Helper (Phase 3.4) — Bridge R (鍵 lemma、proof-pivot-advisor (A))**: 任意 `l` 側の
 expected length が merged 側 + `(P {a} + P {b})` の上から bound される不等式.
@@ -758,7 +652,7 @@ abbrev SwapNormalizationHypothesis : Prop :=
 /-! ### cost-level bridge L (T1-A'' pivot — per-symbol depth identity を経由しない) -/
 
 omit [Nonempty α] in
-/-- **C4 — cost-level bridge L**: `huffmanLength_bridge_L` の cost 版を per-symbol depth
+/-- **C4 — cost-level bridge L**: sibling pair 分解 (旧 `huffmanLength_bridge_L`、削除済) の cost 版を per-symbol depth
 identity (FALSE) を経由せず立てる. `(a, b)` は確率最小 2 個 (`h_a_min` / `h_b_min`).
 
 論証 chain (carrier-crossing を sum-level で回避):
@@ -942,7 +836,7 @@ lemma expectedLength_merged_cost_bridge
 hypothesis (`MergedHuffmanAuxIdentHypothesis` 系、issue #4 で retract 済) を一切取らず、
 swap normalization (`h_swap`, genuine) のみを引数に取る strong-induction motor.
 
-step case の per-symbol bridge (`h_L'_link` + `huffmanLength_bridge_L`) を
+step case の per-symbol bridge (`h_L'_link` + 旧 bridge-L 補題、削除済) を
 **cost-level bridge** `expectedLength_merged_cost_bridge` (per-symbol depth identity 不要)
 に差し替えた以外は元 motor と同一. `h_swap` (Hyp1, genuine) は引数で残す.
 無引数 headline `huffmanLength_optimal` は `HuffmanStrongForm.lean` で

@@ -1,3 +1,4 @@
+import InformationTheory.Meta.EntryPoint
 import Mathlib.MeasureTheory.Function.UniformIntegrable
 import Mathlib.MeasureTheory.Integral.Lebesgue.Markov
 import Mathlib.MeasureTheory.Function.LpSeminorm.Basic
@@ -55,6 +56,7 @@ exponent `1`.
 The measure `μ` is arbitrary — no `[IsFiniteMeasure μ]` is needed (the proof goes
 through `MeasureTheory.unifIntegrable_of`, which is finite-measure-free), so this
 applies to `volume`. -/
+@[entry_point]
 theorem unifIntegrable_of_superlinear_lintegral
     {f : ι → α → ℝ}
     (hf : ∀ i, AEStronglyMeasurable (f i) μ)

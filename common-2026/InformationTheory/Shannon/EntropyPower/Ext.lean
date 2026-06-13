@@ -1,4 +1,5 @@
 import InformationTheory.Shannon.DifferentialEntropy
+import InformationTheory.Meta.EntryPoint
 import Mathlib.Analysis.SpecialFunctions.Log.ERealExp
 import Mathlib.MeasureTheory.Measure.Decomposition.Lebesgue
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
@@ -134,6 +135,7 @@ theorem entropyPowerExt_singular {μ : Measure ℝ} (h : ¬ μ ≪ volume) :
 /-- **退化トラップ除去の verbatim 検証**: Dirac 測度のエントロピーパワーは `0`。
 旧 Real `entropyPower (dirac m) = exp 0 = 1` (誤) → 新 `entropyPowerExt (dirac m) = 0` (正)。
 @audit:ok -/
+@[entry_point]
 theorem entropyPowerExt_dirac (m : ℝ) : entropyPowerExt (Measure.dirac m) = 0 := by
   apply entropyPowerExt_singular
   intro h_ac
@@ -191,6 +193,7 @@ theorem integrable_negMulLog_gaussianReal_density (m : ℝ) {v : ℝ≥0} (hv : 
 /-- **a.c. 非自明値 ≠ 0 の sanity gate**: Gaussian (`v ≠ 0`、a.c.) のエントロピーパワーは
 `2πe·v` で `0` に潰れない (a.c. 判定が常時 false に転ぶ退化定義悪用の検出)。
 @audit:ok -/
+@[entry_point]
 theorem entropyPowerExt_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     entropyPowerExt (gaussianReal m v)
       = ENNReal.ofReal (2 * Real.pi * Real.exp 1 * (v : ℝ)) := by
