@@ -57,10 +57,8 @@ L-PG0 hypothesis filled by `isParallelGaussianKernelMeasurable N`. They added
 no derivation beyond that fill; the un-active wrapper itself was a `:= h`
 pass-through (`IsParallelGaussianPerCoordReduction` def-unfolds to the goal
 equality). Both wrappers, plus their `_of_perCoordReduction` parents, have been
-retracted. Callers (`ParallelGaussianKKT.lean`, `ParallelGaussianWFCertBody.lean`,
-`ParallelGaussianWFStationarityBody.lean`) now consume
-`IsParallelGaussianPerCoordReduction` directly via def-unfolding of the
-predicate. The honest hypothesis-free headline lives in
-`ParallelGaussianPerCoord.parallel_gaussian_capacity_formula`. -/
+retracted. The honest, derived headline lives in
+`ParallelGaussianPerCoord.parallel_gaussian_capacity_formula` (a real `le_antisymm`
+sup-sandwich, not a `:= h` pass-through). -/
 
 end InformationTheory.Shannon.ParallelGaussian

@@ -335,10 +335,13 @@ theorem isParallelGaussianPerCoordReduction_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N)
-    (ν : ℝ) (h_kkt : IsWaterFillingKKT P N ν) (h_opt : IsWaterFillingOptimal P N ν)
+    (ν : ℝ) (h_kkt : IsWaterFillingKKT P N ν)
     (h_reg : IsParallelGaussianPerCoordRegularity P N h_meas h_parallel_meas
               (fun i => (waterFillingPower ν N i).toNNReal)) :
     IsParallelGaussianPerCoordReduction P N h_meas h_parallel_meas ν := by
+  -- L-WF2: water-filling optimality, derived internally from the KKT water level
+  -- (sorry-routed in `isWaterFillingOptimal_of_kkt`), no longer a load-bearing hyp.
+  have h_opt : IsWaterFillingOptimal P N ν := isWaterFillingOptimal_of_kkt P hP N hN ν h_kkt
   set Q : Fin (n + 1) → ℝ≥0 := fun i => (waterFillingPower ν N i).toNNReal with hQ_def
   -- `(Q i : ℝ) = waterFillingPower ν N i` since the power is nonnegative
   have h_Q_eq : ∀ i, (Q i : ℝ) = waterFillingPower ν N i := fun i => by
@@ -380,16 +383,20 @@ This **replaces** the conclusion-as-hypothesis reduction
 `isParallelGaussianPerCoordReduction_discharged` — a genuine **sup-sandwich**
 (`le_antisymm` of `parallelGaussianCapacity_le_sum` / `parallelGaussianCapacity_ge_sum`,
 i.e. `csSup_le` max-entropy upper bound + `le_csSup` achiever lower bound). The
-only hypotheses are the *genuine* honest inputs:
+hypotheses are:
 
 * `h_kkt` (L-WF1): water level uses up the budget `∑ max(0, ν - N_i) = P` (genuine,
 IVT-dischargeable via `exists_waterFillingKKT_of_pos`);
-* `h_opt` (L-WF2): water-filling is the constrained `∑ (1/2) log(1 + P_i/N_i)`
-maximizer (genuine, concavity-dischargeable);
 * `h_reg` (🟢ʰ): the residual analytic regularity bundle
 `IsParallelGaussianPerCoordRegularity` — `bddAbove` + achiever-MI value +
 correlated-input max-entropy bound — **none of which is the conclusion equality**;
 they mirror the 1-D `AWGN.awgnCapacity_eq` residuals.
+
+L-WF2 (water-filling optimality, `IsWaterFillingOptimal`) is **no longer a
+hypothesis**: it is derived internally from `h_kkt` via the sorry-routed
+`isWaterFillingOptimal_of_kkt` (`@residual(plan:parallel-gaussian-wf2-optimality-plan)`).
+So this theorem is unconditional in L-WF2 but transitively carries that single
+honest `sorry` (type-check done, NOT proof done).
 
 No `h_per_coord : IsParallelGaussianPerCoordReduction` argument (the conclusion) is
 taken; the body is a real `le_antisymm` derivation, never `:= h_per_coord`.
@@ -401,14 +408,14 @@ theorem parallel_gaussian_capacity_formula {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N)
-    (ν : ℝ) (h_kkt : IsWaterFillingKKT P N ν) (h_opt : IsWaterFillingOptimal P N ν)
+    (ν : ℝ) (h_kkt : IsWaterFillingKKT P N ν)
     (h_reg : IsParallelGaussianPerCoordRegularity P N h_meas h_parallel_meas
               (fun i => (waterFillingPower ν N i).toNNReal)) :
     parallelGaussianCapacity P N h_meas h_parallel_meas
       = ∑ i : Fin (n + 1), (1/2) *
           Real.log (1 + waterFillingPower ν N i / (N i : ℝ)) :=
   isParallelGaussianPerCoordReduction_discharged P hP N hN h_meas h_parallel_meas
-    ν h_kkt h_opt h_reg
+    ν h_kkt h_reg
 
 /-! ## `achiever_mi` genuine reduction (L-PG1 Phase 2)
 
@@ -877,13 +884,13 @@ theorem parallel_gaussian_capacity_formula_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N)
-    (ν : ℝ) (h_kkt : IsWaterFillingKKT P N ν) (h_opt : IsWaterFillingOptimal P N ν)
+    (ν : ℝ) (h_kkt : IsWaterFillingKKT P N ν)
     (h_reg : IsParallelGaussianPerCoordRegularity P N h_meas h_parallel_meas
               (fun i => (waterFillingPower ν N i).toNNReal)) :
     parallelGaussianCapacity P N h_meas h_parallel_meas
       = ∑ i : Fin (n + 1), (1/2) *
           Real.log (1 + waterFillingPower ν N i / (N i : ℝ)) :=
   parallel_gaussian_capacity_formula P hP N hN h_meas h_parallel_meas
-    ν h_kkt h_opt h_reg
+    ν h_kkt h_reg
 
 end InformationTheory.Shannon.ParallelGaussian
