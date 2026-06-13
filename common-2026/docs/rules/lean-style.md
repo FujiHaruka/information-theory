@@ -13,7 +13,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.Basic
 # ファイルのタイトル
 
 何を定義/証明するか、主要な定理、表記法、設計判断の要約。
-本文は 2 スペースインデント（markdown 要件）。日本語で可。
+本文は 2 スペースインデント（markdown 要件）。英語で書く。
 -/
 ```
 
@@ -100,4 +100,4 @@ import Mathlib.Analysis.SpecialFunctions.Log.Basic
 - `/- … -/`: 技術コメント（TODO / 実装メモ）、証明中コメント。
 - `--`: 短い / 行内コメント。
 - `/-- … -/`: docstring。複数行でも継続行をインデントしない。
-- 散文は日本語で可。ただし**識別子は英語・米綴り**（→ [`naming.md`](naming.md)）。
+- 散文も**識別子も英語・米綴り**（→ [`naming.md`](naming.md)）。コード表面（`.lean`）の docstring / コメントは英語に統一。

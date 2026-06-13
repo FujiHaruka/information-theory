@@ -47,8 +47,8 @@
 ### 読み替え（adapt）— 修正して適用
 
 - **import**: Mathlib は「全 import を public/通常でグループ化しアルファベット順」。本プロジェクトは `import Mathlib` 禁止・必要モジュールのみ・`InformationTheory.lean` への登録（→ `CLAUDE.md` Import Policy が SoT）。**グループ内アルファベット順だけ軽い指針として採用**、残りは `CLAUDE.md` に従う。
-- **module docstring**: Mathlib は copyright header の直後を必須とする。本プロジェクトは copyright header を置かない（下記）ので、**ファイル先頭の import 群の直後に `/-! # … -/` を置く**（既に実態と一致）。本文は日本語で可。
-- **American English**: Mathlib は綴りを米英語に統一。本プロジェクトでは **識別子（定理名・定義名）は英語・米綴り**を守るが、**docstring / コメントの散文は日本語で可**（実態がそう）。この規則は識別子にのみ適用する。
+- **module docstring**: Mathlib は copyright header の直後を必須とする。本プロジェクトは copyright header を置かない（下記）ので、**ファイル先頭の import 群の直後に `/-! # … -/` を置く**（既に実態と一致）。本文は英語で書く。
+- **English / American English**: Mathlib は散文・綴りを米英語に統一。本プロジェクトも将来の Mathlib PR を見据え、**識別子も docstring / コメントの散文も英語・米綴り**に統一する（旧方針「散文は日本語可」から 2026-06-13 転換。移行 → [`../docstring-tidyup-plan.md`](../docstring-tidyup-plan.md)）。内部の plan / handoff（`docs/**/*.md`）は作業言語として日本語のままでよい。
 
 ### 非適用（skip）— 本プロジェクトには課さない。理由付き
 

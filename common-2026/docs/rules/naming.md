@@ -22,7 +22,7 @@ Mathlib 命名規約（<https://leanprover-community.github.io/contribute/naming
 
 - `snake_case` 文脈に現れる `UpperCamelCase` は `lowerCamelCase` に倒す。
 - 頭字語はひとかたまりとして文脈の規則に従う。
-- **識別子は英語・米綴り**（`factorization`、`factorisation` ではない）。docstring / コメントの日本語散文には適用しない。
+- **識別子・散文ともに英語・米綴り**（`factorization`、`factorisation` ではない）。docstring / コメントの散文も英語に統一する（2026-06-13 方針転換 → [`docstrings.md`](docstrings.md)）。
 
 ## 定理名の組み立て（最重要）
 
