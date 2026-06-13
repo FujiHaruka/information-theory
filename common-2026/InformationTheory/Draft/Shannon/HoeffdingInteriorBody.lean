@@ -2,86 +2,51 @@ import InformationTheory.Shannon.Hoeffding.SandwichBody
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# T1-D Hoeffding tradeoff — interior body extension (L-H4-FS interior)
+# Hoeffding tradeoff — interior body extension
 
-`HoeffdingSandwichBody.lean` (wave6 publish, 335 行) fully discharged the
-**boundary** cases of the `IsHoeffdingMinimizerFullSupport` predicate (Phase 2
-there, retreat **L-H4-FB**):
+`HoeffdingSandwichBody` discharges the boundary cases of the
+`IsHoeffdingMinimizerFullSupport` predicate:
 
 * `α = 0` — the constraint set collapses to `{P₁}` and full support is `hP₁_pos`.
 * `α ≥ klDivPmf P₂ P₁` — `P₂` itself is a feasible minimizer with full support
   `hP₂_pos`.
 
-This file (wave7 gap-close T1-D) extends the discharge into the **interior**
-regime `0 < α < klDivPmf P₂ P₁`. In this regime the textbook proof identifies
-the Csiszár I-projection minimizer of `klDivPmf · P₂` over the constraint set
-`K(α)` as a one-parameter exponential tilt of `P₁` (Lagrangian / KKT form):
+This file extends that to the interior regime `0 < α < klDivPmf P₂ P₁`. There the textbook
+proof identifies the Csiszár I-projection minimizer of `klDivPmf · P₂` over the constraint
+set `K(α)` as a one-parameter exponential tilt of `P₁` (Lagrangian / KKT form):
 
       `Qstar a = c(λ*) * P₁ a ^ (1 - λ*) * P₂ a ^ λ*`
 
-for some `λ* ∈ (0, 1)` chosen so that `klDivPmf Qstar P₁ = α`. Two ingredients
-are needed to publish the full-support claim in the interior:
+for some `λ* ∈ (0, 1)` chosen so that `klDivPmf Qstar P₁ = α`.
 
-* **Interior gradient (L-H4-FS-grad)**: the directional derivative of
-  `klDivPmf · P₂` at a `0`-atom is `-∞`, hence any minimizer with a `0`-atom
-  contradicts the constraint `IsMinOn`. This is a `HasDerivAt` / `Real.log`
-  singularity argument (the proper rigorous Csiszár textbook step). We capture
-  it as a **predicate hypothesis** here — the actual `HasDerivAt` discharge
-  remains deferred per the L-H4-FS retreat.
+## Main definitions
 
-* **Interior characterization (L-H4-FS-char)**: at any interior `α`, the
-  minimizer has the exponential-tilt form above with full support inherited
-  from `hP₁_pos` and `hP₂_pos`. We capture it as a **predicate hypothesis**.
+* `IsHoeffdingInteriorGradient P₁ P₂ alpha` — a predicate wrapping the log-singularity
+  gradient claim: no Csiszár–Pythagoras minimizer of `klDivPmf · P₂` on `K(α)` has a
+  `0`-atom. It captures the directional-derivative-`= -∞` argument as a hypothesis; the
+  underlying `HasDerivAt` discharge is deferred.
+* `IsHoeffdingInteriorMinimizer P₁ P₂ alpha Qstar` — a predicate wrapping the Lagrangian-tilt
+  characterization: `Qstar` is full support and arises as the I-projection of `P₂` onto
+  `K(α)`.
 
-## Strategy — predicate pass-through
+## Main statements
 
-Both pieces above are bundled into Prop-valued predicates so callers can
-either:
+* `isHoeffdingMinimizerFullSupport_of_interior` / `isHoeffdingMinimizerFullSupport_of_gradient`
+  — bridges from the interior predicates to `IsHoeffdingMinimizerFullSupport Qstar`.
+* `csiszar_pythagoras_at_interior` — the Pythagorean inequality at an interior minimizer.
+* `hoeffding_minimizer_ge_at_interior` — the interior minimizer is `klDivPmf · P₂`-minimal
+  over `K(α)`.
 
-  (a) supply a direct full-support proof for a specific Qstar (e.g. from a
-      bespoke calculation in a particular α regime), or
-  (b) chain the two interior predicates `IsHoeffdingInteriorGradient` /
-      `IsHoeffdingInteriorMinimizer` into
-      `IsHoeffdingMinimizerFullSupport` via
-      `isHoeffdingMinimizerFullSupport_of_interior`.
+## Implementation notes
 
-The bridge file `HoeffdingSandwichBody.lean` is unmodified; the new predicates
-plug into its `IsHoeffdingMinimizerFullSupport` constructor.
-
-## What this file publishes
-
-* **`IsHoeffdingInteriorGradient P₁ P₂ alpha`** — predicate wrapping the
-  log-singularity gradient claim: *no Csiszar-Pythagoras minimizer of
-  `klDivPmf · P₂` on `K(α)` can have a `0`-atom*.
-
-* **`IsHoeffdingInteriorMinimizer P₁ P₂ alpha Qstar`** — predicate wrapping the
-  Lagrangian-tilt characterization: `Qstar` is full-support and arises as the
-  unique I-projection of `P₂` onto `K(α)`.
-
-* **`isHoeffdingMinimizerFullSupport_of_interior`** — bridge: from
-  `IsHoeffdingInteriorMinimizer`, derive
-  `IsHoeffdingMinimizerFullSupport Qstar` directly.
-
-NOTE: `isHoeffdingInteriorMinimizer_of_gradient` / `hoeffdingE2_interior_minimizer_via_predicates`
-(interior 存在の witness form) は DEAD (consumer-0、production `hoeffding_tradeoff_exp` が
-IVT+exp-family Pythagorean bypass で supersede) のため 2026-06-13 削除。本 file は live な
-interface 述語 (`IsHoeffdingInteriorGradient` / `IsHoeffdingInteriorMinimizer`) + Pythagoras
-補題 (`csiszar_pythagoras_at_interior` 等) を保持。
-
-NOTE: the fixed-`alpha` interior sandwich `Tendsto` wrappers
-(`hoeffding_tradeoff_sandwich_at_interior_via_predicate` / `_via_gradient`) were
-**deleted in the 2026-05-28 Draft retraction**. Their conclusion
-`Tendsto → hoeffdingE2 … alpha` was false in general (Stein's lemma: the
-fixed-`alpha` rate targets `D(P₁‖P₂)`, not `E₂(alpha)`), making their
-variational premises jointly unsatisfiable. The genuine successor is the
-exponential-level `hoeffding_tradeoff_exp` (`HoeffdingTradeoffExp.lean`).
-
-## Retreat lines (L-H4-FS)
-
-The full `HasDerivAt` singularity proof of `IsHoeffdingInteriorGradient` and
-the existence proof of `IsHoeffdingInteriorMinimizer` (Lagrangian solving) are
-deferred to a follow-up. This file fixes their **interfaces** so that
-downstream consumers can wire them into the sandwich pipeline today.
+Both interior pieces are bundled into `Prop`-valued predicates so callers can either supply
+a direct full-support proof for a specific `Qstar`, or chain the predicates into
+`IsHoeffdingMinimizerFullSupport`. `HoeffdingSandwichBody` is left unmodified; the predicates
+plug into its `IsHoeffdingMinimizerFullSupport` constructor. The full `HasDerivAt`
+singularity proof and the Lagrangian existence proof are deferred to a follow-up; this file
+fixes their interfaces. The production path is the exponential-level `hoeffding_tradeoff_exp`
+(`HoeffdingTradeoffExp`), which bypasses these predicates via an IVT + exponential-family
+Pythagorean argument.
 -/
 
 namespace InformationTheory.Shannon.HoeffdingInteriorBody
@@ -99,27 +64,18 @@ open scoped BigOperators Topology
 variable {α : Type*} [Fintype α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ## Phase 1 — Interior predicates (L-H4-FS pass-through) -/
+/-! ## Interior predicates -/
 
-/-- **L-H4-FS interior gradient (predicate)**: at interior `α`, *every*
-Csiszar-Pythagoras minimizer `Qstar` of `klDivPmf · P₂` on `K(α)` has full
-support.
+/-- Interior gradient predicate: at interior `α`, every Csiszár–Pythagoras minimizer `Qstar`
+of `klDivPmf · P₂` on `K(α)` has full support. Wraps the deferred log-singularity argument
+(the directional derivative of `klDivPmf · P₂` at a `Qstar` with `Qstar a₀ = 0` is `-∞`,
+contradicting `IsMinOn`). The `Qstar` is universally quantified: the predicate is a property
+of `(P₁, P₂, alpha)`, not of any specific `Qstar`.
 
-This wraps the deferred log-singularity gradient computation: the directional
-derivative of `klDivPmf · P₂` at a `Qstar` with `Qstar a₀ = 0` is `-∞`,
-contradicting `IsMinOn`. The full `HasDerivAt` discharge (~30-50 行) is
-deferred per L-H4-FS.
-
-Note the universally-quantified `Qstar`: the predicate is a property of
-`(P₁, P₂, alpha)`, not of any specific Qstar.
-
-`@audit:retract-candidate(load-bearing-predicate)` — all *hypothesis-form
-load-bearing* consumers were retreated in `hoeffding-sorry-migration-plan`
-Phase 2 to body-level `sorry` + `@residual(plan:hoeffding-tradeoff-moonshot-plan)`.
-One extract-only bridge `isHoeffdingMinimizerFullSupport_of_gradient` still
-consumes this predicate as a hypothesis, but it is a pass-through
-(predicate-apply, no load-bearing claim injected); inlining it removes the
-last hypothesis-form use. -/
+`@audit:retract-candidate(load-bearing-predicate)` — all hypothesis-form load-bearing
+consumers were retreated to body-level `sorry` + `@residual(plan:hoeffding-tradeoff-moonshot-plan)`.
+One extract-only bridge `isHoeffdingMinimizerFullSupport_of_gradient` still consumes this as a
+pass-through hypothesis (predicate-apply, no load-bearing claim injected). -/
 def IsHoeffdingInteriorGradient
     (P₁ P₂ : α → ℝ) (alpha : ℝ) : Prop :=
   ∀ ⦃Qstar : α → ℝ⦄,
@@ -127,26 +83,14 @@ def IsHoeffdingInteriorGradient
     hoeffdingE2 P₁ P₂ alpha = klDivPmf Qstar P₂ →
     ∀ a, 0 < Qstar a
 
-/-- **L-H4-FS interior minimizer (predicate)**: `Qstar` is full-support and
-arises as the Csiszar-Pythagoras minimizer of `klDivPmf · P₂` on the interior
-constraint set `K(α)`.
+/-- Interior minimizer predicate: `Qstar` is full support and arises as the Csiszár–Pythagoras
+minimizer of `klDivPmf · P₂` on the interior constraint set `K(α)`. The Lagrangian-tilt closed
+form `Qstar a ∝ P₁ a ^ (1-λ*) * P₂ a ^ λ*` is not exposed; only its consequences (membership,
+infimum-realising, full support) are.
 
-The Lagrangian-tilt closed form
-`Qstar a ∝ P₁ a ^ (1-λ*) * P₂ a ^ λ*` is not exposed in this predicate; only
-its consequences (membership, infimum-realising, full-support) are.
-
-`@audit:retract-candidate(load-bearing-predicate)` — all *hypothesis-form
-load-bearing* consumers were retreated in `hoeffding-sorry-migration-plan`
-Phase 2. Five extract-only consumers remain (pass-through, no load-bearing
-claim injected): `IsHoeffdingInteriorMinimizer.pos` /
-`isHoeffdingMinimizerFullSupport_of_interior` /
-`IsHoeffdingInteriorMinimizer.isMinOn` / `csiszar_pythagoras_at_interior` /
-`hoeffding_minimizer_ge_at_interior`. The producer-side constructors
-(`isHoeffdingInteriorMinimizer_of_lagrange` + `…_of_constraint_eq` /
-`…_of_ivt` wrappers) were **deleted 2026-06-11** (dead-cleanup sweep): they were
-false-as-stated (interior minimizer asserted for arbitrary `{alpha lam}` with no
-linking constraint) and consumer-0. No constructor for this predicate remains;
-the production path `hoeffding_tradeoff_exp` (sorryAx-free) bypasses it. -/
+`@audit:retract-candidate(load-bearing-predicate)` — all hypothesis-form load-bearing consumers
+were retreated; the remaining consumers are extract-only pass-throughs. No constructor for this
+predicate remains, and the production path `hoeffding_tradeoff_exp` (sorryAx-free) bypasses it. -/
 structure IsHoeffdingInteriorMinimizer
     (P₁ P₂ : α → ℝ) (alpha : ℝ) (Qstar : α → ℝ) : Prop where
   /-- `Qstar` lies in the constraint set `K(α)`. -/
@@ -175,16 +119,11 @@ lemma IsHoeffdingInteriorMinimizer.mk'
     realises := h_min
     full_support := h_pos }
 
-/-! ## Phase 2 — Bridge: interior predicate ⇒ full-support predicate -/
+/-! ## Bridge: interior predicate ⇒ full-support predicate -/
 
-/-- **Bridge (L-H4-FS interior ⇒ FS)**: from `IsHoeffdingInteriorMinimizer`,
-the existing `IsHoeffdingMinimizerFullSupport` predicate (defined in
-`HoeffdingSandwichBody.lean`) holds directly.
-
-This is the principal hand-off from the wave7 interior layer to the wave6
-sandwich body layer: callers who can supply
-`IsHoeffdingInteriorMinimizer` (e.g. via the textbook Lagrangian construction)
-get the `IsHoeffdingMinimizerFullSupport` flag immediately. -/
+/-- From `IsHoeffdingInteriorMinimizer`, the `IsHoeffdingMinimizerFullSupport` predicate of
+`HoeffdingSandwichBody` holds directly. This is the principal hand-off from the interior layer
+to the sandwich-body layer. -/
 @[entry_point]
 lemma isHoeffdingMinimizerFullSupport_of_interior
     {P₁ P₂ : α → ℝ} {alpha : ℝ} {Qstar : α → ℝ}
@@ -192,13 +131,10 @@ lemma isHoeffdingMinimizerFullSupport_of_interior
     IsHoeffdingMinimizerFullSupport Qstar :=
   IsHoeffdingMinimizerFullSupport.of_pos h.full_support
 
-/-- **Bridge (L-H4-FS gradient ⇒ FS, given attained minimizer)**: given the
-interior gradient predicate and a `Qstar` that lies in `K(α)` and realises the
-infimum, conclude `IsHoeffdingMinimizerFullSupport`.
-
-This is the alternative entry point: callers with the textbook gradient
-argument (via `IsHoeffdingInteriorGradient`) plus the standard
-`hoeffdingE2_attained` witness directly recover the full-support flag. -/
+/-- Given the interior gradient predicate and a `Qstar` that lies in `K(α)` and realises the
+infimum, conclude `IsHoeffdingMinimizerFullSupport`. The alternative entry point to
+`isHoeffdingMinimizerFullSupport_of_interior`, for callers holding the gradient argument plus
+an attained-minimizer witness. -/
 @[entry_point]
 lemma isHoeffdingMinimizerFullSupport_of_gradient
     {P₁ P₂ : α → ℝ} {alpha : ℝ}
@@ -209,13 +145,11 @@ lemma isHoeffdingMinimizerFullSupport_of_gradient
     IsHoeffdingMinimizerFullSupport Qstar :=
   IsHoeffdingMinimizerFullSupport.of_pos (h_grad hQs_mem hQs_min)
 
-/-! ## Phase 4 — Interior `IsMinOn` consequence (Pythagoras ready) -/
+/-! ## Interior `IsMinOn` consequence -/
 
-/-- **Interior `IsMinOn` extraction**: from `IsHoeffdingInteriorMinimizer`,
-extract the `IsMinOn` flag that `csiszar_pythagoras_inequality` needs.
-
-This is a transparent re-packaging — useful because downstream callers ask
-for `IsMinOn` rather than `hoeffdingE2 = klDivPmf Qstar P₂`. -/
+/-- From `IsHoeffdingInteriorMinimizer`, the `IsMinOn` flag that
+`csiszar_pythagoras_inequality` needs, repackaged from the `hoeffdingE2 = klDivPmf Qstar P₂`
+field. -/
 lemma IsHoeffdingInteriorMinimizer.isMinOn
     {P₁ P₂ : α → ℝ} {alpha : ℝ} {Qstar : α → ℝ}
     (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -241,12 +175,11 @@ lemma IsHoeffdingInteriorMinimizer.isMinOn
   -- Then klDivPmf Qstar P₂ = hoeffdingE2 ≤ klDivPmf Q P₂.
   linarith [h.realises]
 
-/-! ## Phase 5 — Pythagoras consumption via interior predicate -/
+/-! ## Pythagoras at an interior minimizer -/
 
-/-- **Pythagoras-on-interior**: at interior `α`, given an
-`IsHoeffdingInteriorMinimizer Qstar`, the Pythagorean inequality
-(`csiszar_pythagoras_inequality`) holds against any other
-full-support `P ∈ K(α)`. -/
+/-- At interior `α`, given an `IsHoeffdingInteriorMinimizer Qstar`, the Pythagorean
+inequality (`csiszar_pythagoras_inequality`) holds against any other full-support
+`P ∈ K(α)`. -/
 @[entry_point]
 theorem csiszar_pythagoras_at_interior
     (P₁ P₂ : α → ℝ)
@@ -264,10 +197,9 @@ theorem csiszar_pythagoras_at_interior
     hP₂_sum hP₂_pos hQs_interior.mem hQs_interior.full_support
     (hQs_interior.isMinOn hP₂_pos) hP_mem hP_pos
 
-/-! ## Phase 8 — Hypothesis-form interior result -/
+/-! ## Hypothesis-form interior result -/
 
-/-- **L-H4-FS interior, hypothesis-form discharge**: at interior `α`, the
-`hoeffding_minimizer_ge` consumer of `HoeffdingTradeoff.lean` accepts the
+/-- At interior `α`, the `hoeffding_minimizer_ge` consumer of `HoeffdingTradeoff` accepts the
 interior minimizer directly without an external full-support hypothesis. -/
 @[entry_point]
 theorem hoeffding_minimizer_ge_at_interior

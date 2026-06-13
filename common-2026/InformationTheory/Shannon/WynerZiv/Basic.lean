@@ -3,9 +3,10 @@ import InformationTheory.Shannon.RateDistortion.Achievability
 import InformationTheory.Shannon.RateDistortion.ConverseNLetter
 
 /-!
-# Wyner–Ziv lossy distributed coding (T3-D Phase A — definitions)
+# Wyner–Ziv lossy distributed coding
 
-Cover–Thomas Theorem 15.9.1 (Wyner–Ziv, side information `Y` at decoder only).
+The rate-distortion function for Wyner–Ziv lossy compression with side
+information `Y` available at the decoder only (Cover–Thomas, Theorem 15.9.1):
 
 ```
 R_WZ(D) = min_{p(u|x), f : U × Y → X̂} [ I(X ; U) − I(Y ; U) ]
@@ -14,27 +15,32 @@ R_WZ(D) = min_{p(u|x), f : U × Y → X̂} [ I(X ; U) − I(Y ; U) ]
 with the minimization subject to the Markov chain `U − X − Y` and the distortion
 constraint `𝔼 d(X, f(U, Y)) ≤ D`.
 
-## File layout
+This file defines the `WynerZivCode` structure, the joint pmf marginals, the
+`WynerZivConstraint` feasible set, the `wynerZivRatePmf` rate function, the
+slice-attainment lemma, and the rate-equality wrapper `wyner_ziv_tendsto`. The
+achievability and converse legs are developed in `WynerZivAchievability.lean` and
+`WynerZivConverse.lean`.
 
-* `WynerZiv.lean` — this file: `WynerZivCode` structure, joint pmf marginals,
-  `WynerZivConstraint` set, `wynerZivRatePmf` rate function, attainment lemma,
-  and the public Phase D `wyner_ziv_tendsto` wrapper.
-* `WynerZivAchievability.lean` — `wyner_ziv_achievability` (hypothesis
-  pass-through form; L-WZ achievability discharge plan).
-* `WynerZivConverse.lean` — `wyner_ziv_converse` (hypothesis pass-through form;
-  L-WZ2 Csiszár's sum identity / L-WZ3 `R_WZ(D)` convexity discharge plans).
+## Main definitions
 
-## 撤退ライン (確定発動 3 本 + plumbing 縮退)
+* `WynerZivCode` — a Wyner–Ziv block code (X-side encoder, side-information
+  decoder).
+* `wzMarginalXY`, `wzMarginalXU`, `wzMarginalYU` — the marginals of a joint pmf.
+* `WynerZivConstraint` — the feasible `(q, f)` pairs.
+* `wynerZivRatePmf` — the rate function `R_WZ(D)`.
 
-* L-WZ1: auxiliary cardinality bound `|U| ≤ |α|+1` を別 plan へ defer (`U` は
-  本 file で `Fintype + DecidableEq + Nonempty` の引数として受ける).
-* L-WZ2: Csiszár's sum identity を converse の `h_csiszar` hypothesis として
-  pass-through.
-* L-WZ3: `R_WZ(D)` 凸性を converse の `h_jensen` hypothesis として pass-through.
-* L-WP-statement-pass: Phase B / C / D の主定理は achievability / converse の
-  rate-inequality 部分を hypothesis pass-through 化して 0 sorry 発行
-  (`h_ach_rate`, `h_conv_rate` を主定理 signature に追加). Discharge は別 plan
-  (`wyner-ziv-achievability-discharge-*`, `wyner-ziv-converse-discharge-*`).
+## Main statements
+
+* `continuous_wzObjective` — continuity of the objective `I(X;U) − I(Y;U)`.
+* `wynerZivRatePmf_attained_slice` — the objective attains its minimum on a
+  decoder slice.
+* `wyner_ziv_tendsto` — the rate-equality form from two-sided bounds.
+
+## Implementation notes
+
+The decoder `f : U × β → γ` is carried as an external second component, so the
+constraint set lives on `(α × β × U → ℝ) × (U × β → γ)`. The auxiliary alphabet
+`U` is taken as an argument rather than constructed from a cardinality bound.
 -/
 
 namespace InformationTheory.Shannon
@@ -221,12 +227,9 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **Wyner–Ziv rate function (pmf form)** —
-`R_WZ(D) := sInf { I(X;U) − I(Y;U) | (q, f) ∈ WynerZivConstraint U P_XY d D }`.
-
-The auxiliary alphabet `U` is taken as an argument (L-WZ1: cardinality bound
-`|U| ≤ |α|+1` is deferred to a separate seed `wyner-ziv-cardinality-bound-*`).
--/
+/-- The **Wyner–Ziv rate function** (pmf form),
+`R_WZ(D) := sInf { I(X;U) − I(Y;U) | (q, f) ∈ WynerZivConstraint U P_XY d D }`,
+with the auxiliary alphabet `U` taken as an argument. -/
 noncomputable def wynerZivRatePmf
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) : ℝ :=
   sInf ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
@@ -324,16 +327,9 @@ theorem wynerZivRatePmf_attained_slice
   exact hK_compact.exists_isMinOn h_ne hCont_obj.continuousOn
 
 /-- The image of the Wyner–Ziv constraint set under the objective is bounded
-below by the canonical lower bound `-Real.log (Fintype.card U)` (since
-`I(X;U) ≥ 0` and `I(Y;U) ≤ Real.log (Fintype.card U)` for any pmf with
-`U`-marginal on a finite alphabet). For the present file we record the
-existence of *some* lower bound conditionally on a hypothesis; the explicit
-bound is supplied by callers when needed.
-
-Phase 1 (sorry-migration): the `@audit:suspect` tag was removed — the body is
-already purely constructive (`refine ⟨B, ?_⟩; rintro v ⟨qf, hqf, rfl⟩;
-exact h_lb qf hqf`), the `B` and `h_lb` arguments are precondition-style
-regularity inputs (caller-supplied lower bound), not load-bearing claims. -/
+below by any caller-supplied lower bound `B` (the canonical bound is
+`-Real.log (Fintype.card U)`, since `I(X;U) ≥ 0` and
+`I(Y;U) ≤ Real.log (Fintype.card U)` on a finite alphabet). -/
 @[entry_point]
 theorem wynerZivRatePmf_image_bddBelow_of_objective
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ)
@@ -349,7 +345,7 @@ theorem wynerZivRatePmf_image_bddBelow_of_objective
 
 end Rate
 
-/-! ## Phase D wrapper -/
+/-! ## Rate-equality wrapper -/
 
 section Wrapper
 
@@ -358,19 +354,10 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **Wyner–Ziv main theorem (rate-equality form)** — assuming both
-achievability `R ≥ wynerZivRatePmf(D)` and converse `R ≤ wynerZivRatePmf(D)`
-have been established, `R = wynerZivRatePmf(D)`.
-
-The two-sided hypotheses are discharged in `WynerZivAchievability.lean`
-(`wyner_ziv_achievability`) and `WynerZivConverse.lean`
-(`wyner_ziv_converse`) respectively.
-
-Phase 1 (sorry-migration): the `@audit:suspect` tag was removed — the body
-`le_antisymm h_conv h_ach` is a pure variational `≤ ∧ ≥ → =` composition,
-which is structurally non-circular: the conclusion type `R = wynerZivRatePmf …`
-is strictly weaker than the AND of the two hypothesis types, so there is no
-hypothesis-bundling of the conclusion. -/
+/-- The Wyner–Ziv rate-equality form: from achievability
+`R ≥ wynerZivRatePmf(D)` and converse `R ≤ wynerZivRatePmf(D)`,
+`R = wynerZivRatePmf(D)`. The two-sided hypotheses are discharged in
+`WynerZivAchievability.lean` and `WynerZivConverse.lean`. -/
 @[entry_point]
 theorem wyner_ziv_tendsto
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)

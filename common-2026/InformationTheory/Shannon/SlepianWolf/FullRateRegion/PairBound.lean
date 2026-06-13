@@ -19,18 +19,14 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β]
 
-/-! ## Phase E.4 — `swError_EXY` strict-form expectation bound under random binning.
+/-! ## The strict `swError_EXY` expectation bound under random binning
 
-The "both coordinates differ" sub-event `swError_EXY_strict` admits a clean bound
+The "both coordinates differ" sub-event `swError_EXY_strict` admits the bound
 `|JTS| / (M_X · M_Y)` via pair-binning collision (`1/M_X · 1/M_Y`) summed over the
-joint typical set. Combined with `jointlyTypicalSet_card_le`, this gives the
-target `exp(n · (H(X,Y) + ε)) / (M_X · M_Y)`.
-
-The original `swError_EXY` (without the strict restriction) splits into three
-sub-cases by `(p.1 = X^n ?, p.2 = Y^n ?)`; the two "loose" cases (one coordinate
-agrees) are absorbed into `swError_EX` / `swError_EY` via
-`swError_EXY_subset_union`. Phase F combines this with the Phase D main
-decomposition to obtain the full 5-event union bound. -/
+joint typical set, which with `jointlyTypicalSet_card_le` gives the target
+`exp(n · (H(X,Y) + ε)) / (M_X · M_Y)`. The original `swError_EXY` splits into three
+sub-cases by `(p.1 = Xⁿ ?, p.2 = Yⁿ ?)`; the two "loose" cases are absorbed into
+`swError_EX` / `swError_EY` via `swError_EXY_subset_union`. -/
 
 /-- The "both coordinates differ" sub-event of `swError_EXY`. -/
 private def swError_EXY_strict
@@ -111,18 +107,10 @@ private lemma measurableSet_swError_EXY_strict
   exact hmeas hS_meas
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Random pair-binning alias expectation bound** (Phase E.4 utility).
-
-For a (deterministic) finite set `S` of candidate alias **pairs**, the product
-binning-measure probability that there exists `p ∈ S` with **both coordinates**
-differing from the truth and **both hashes** colliding is bounded by
-`|S| / (M_X · M_Y)`.
-
-This is the union-bound + product collision-probability skeleton specialised
-to the both-axis case: each per-pair collision factors as a product (the two
-binning measures are independent), each factor is `(M_X)⁻¹` resp. `(M_Y)⁻¹`
-by `binning_collision_prob`, and the cardinality bound trivially upper-bounds
-the count of admissible aliases. -/
+/-- For a finite set `S` of candidate alias pairs, the product binning-measure
+probability that some `p ∈ S` has both coordinates differing from the truth and
+both hashes colliding is at most `|S| / (M_X · M_Y)` (union bound over the per-pair
+product collision probability `1/M_X · 1/M_Y`). -/
 private lemma binning_pair_alias_expectation_le_aux
     {n M_X M_Y : ℕ} [NeZero M_X] [NeZero M_Y]
     (truth_x : Fin n → α) (truth_y : Fin n → β)
@@ -197,20 +185,15 @@ private lemma binning_pair_alias_expectation_le_aux
         exact mul_le_mul_of_nonneg_right h_card h_prod_nn
     _ = (S.card : ℝ) * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by ring
 
-/-! ### Phase E.4 main bound — `swError_EXY_strict` expectation bound.
+/-! ### The `swError_EXY_strict` expectation bound
 
-The expected `μ`-mass of the strict `E_{XY}` error event (both coordinates of
-the alias differ from the truth) over the **product** random binning hash
+The expected `μ`-mass of the strict `E_{XY}` error event (both alias coordinates
+differ from the truth) over the product random binning hash
 `(f_X, f_Y) ∼ (binningMeasure α n M_X) × (binningMeasure β n M_Y)` is bounded by
-
-`exp(n · (H(X, Y) + ε)) / (M_X · M_Y)`
-
-— the joint typical set's cardinality bound divided by the product bin count.
-
-Strategy: 3-product Tonelli swap on `BP := B_X × B_Y` and ambient `μ`,
-followed by a per-`ω` slice bound via `binning_pair_alias_expectation_le_aux`
-applied to `S := JTS.toFinite.toFinset` (which is `ω`-independent), and
-closing with `jointlyTypicalSet_card_le`. -/
+`exp(n · (H(X, Y) + ε)) / (M_X · M_Y)`, the joint typical set's cardinality bound
+divided by the product bin count. The proof Fubini-swaps `BP := B_X × B_Y` and `μ`,
+applies `binning_pair_alias_expectation_le_aux` per `ω`, and closes with
+`jointlyTypicalSet_card_le`. -/
 
 omit [DecidableEq α] [DecidableEq β] in
 set_option linter.unusedVariables false in
@@ -425,19 +408,17 @@ theorem swError_EXY_strict_expectation_le
         exact ENNReal.ofReal_ne_top
     _ = C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := ENNReal.toReal_ofReal hRHS_nn
 
-/-! ## Phase F — Pigeonhole + finalize (Cover-Thomas 15.4.1 完全形)
+/-! ## Pigeonhole and finalize (Cover–Thomas 15.4.1)
 
-Phase D の 4 分解と Phase E.1-E.4 の bound を結合し、 binning expectation 上で
-total bound を取って pigeonhole で deterministic な encoder pair を取り出し、
-rate condition `R_X > H(Y|X)`, `R_Y > H(X|Y)`, `R_X + R_Y > H(X, Y)` の下で
-error probability → 0 を導く。
+Combines the four-event decomposition with the per-term binning bounds, takes a total
+bound over the binning expectation, extracts a deterministic encoder pair by
+pigeonhole, and derives `error probability → 0` under the rate conditions
+`R_X > H(Y|X)`, `R_Y > H(X|Y)`, `R_X + R_Y > H(X, Y)`.
 
-本セクションは 4 declaration で構成される:
-
-* `entropy_joint_sub_marginal_eq_condEntropy` (bridge): `H(X,Y) - H(X) = H(Y|X)`.
-* `swErrorProb_total_expectation_le` (F.1): binning 上の 4 項総和 expectation bound.
-* `exists_pair_le_of_binning_integral_le` (F.2): 期待値 → deterministic 取り出し.
-* `slepian_wolf_full_rate_region_achievability` (F.3 主定理): rate region achievability.
+* `entropy_joint_sub_marginal_eq_condEntropy` — the bridge `H(X,Y) - H(X) = H(Y|X)`.
+* `swErrorProb_total_expectation_le` — the total binning-expectation bound.
+* `exists_pair_le_of_binning_integral_le` — pigeonhole extraction.
+* `slepian_wolf_full_rate_region_achievability` — rate region achievability.
 -/
 
 section PhaseF
@@ -450,7 +431,7 @@ variable {α' β' Ω' : Type*}
     [MeasurableSpace β'] [MeasurableSingletonClass β']
 
 omit [DecidableEq α'] [DecidableEq β'] in
-/-- **Bridge**: `H(X, Y) - H(X) = H(Y | X)`. Direct corollary of chain rule
+/-- `H(X, Y) - H(X) = H(Y | X)`, a corollary of the chain rule
 `entropy_pair_eq_entropy_add_condEntropy`. -/
 private lemma entropy_joint_sub_marginal_eq_condEntropy
     (μ : Measure Ω') [IsProbabilityMeasure μ]
@@ -464,9 +445,9 @@ private lemma entropy_joint_sub_marginal_eq_condEntropy
 end PhaseF
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **F.1**: Phase D 4 分解 + Phase E.4 subset 吸収を結合した
-binning expectation total bound. 係数 2 は `EXY ⊆ EX ∪ EY ∪ EXY_strict` の
-2 重カウントを吸収. -/
+/-- The total binning-expectation bound, combining the four-event decomposition
+with the `swError_EXY` subset absorption. The factor `2` absorbs the double count
+in `EXY ⊆ EX ∪ EY ∪ EXY_strict`. -/
 private theorem swErrorProb_total_expectation_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
@@ -884,8 +865,9 @@ private theorem swErrorProb_total_expectation_le
           linarith [hmono_E2, hmono_E3, hE4]
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **F.2 pigeonhole**: 期待値 ≤ δ から deterministic 取り出し。
-First moment method (`MeasureTheory.exists_le_integral`) を 2 回適用。 -/
+/-- Pigeonhole: from a double-integral bound `≤ δ`, extract a deterministic encoder
+pair `(f_X, f_Y)` with `g f_X f_Y ≤ δ`, by applying the first moment method
+(`MeasureTheory.exists_le_integral`) to the outer and inner integrals in turn. -/
 private lemma exists_pair_le_of_binning_integral_le
     {n M_X M_Y : ℕ} [NeZero M_X] [NeZero M_Y]
     (g : ((Fin n → α) → Fin M_X) → ((Fin n → β) → Fin M_Y) → ℝ)
@@ -914,14 +896,13 @@ private lemma exists_pair_le_of_binning_integral_le
     MeasureTheory.exists_le_integral (hg_int_inner f_X)
   exact ⟨f_X, f_Y, le_trans hf_Y hf_X_bound⟩
 
-/-! ## Phase E.5 — Exponential squeeze with rate parametrization
+/-! ## Exponential squeeze with rate parametrization
 
-For `M_n := codebookSize R n = ⌈exp(n R)⌉`, the inverse `M_n⁻¹ ≤ exp(-n R)`, so
-each expectation bound `exp(n c) · M_n⁻¹` is `≤ exp(n (c - R))`, which tends to `0`
-whenever `c < R`. This is the analytic engine that turns the per-term expectation
-bounds (E.2/E.3/E.4) into `Tendsto (𝓝 0)`. -/
+For `M_n := codebookSize R n = ⌈exp(n R)⌉`, the inverse `M_n⁻¹ ≤ exp(-n R)`, so each
+expectation bound `exp(n c) · M_n⁻¹` is `≤ exp(n (c - R))`, which tends to `0`
+whenever `c < R`. This turns the per-term expectation bounds into `Tendsto (𝓝 0)`. -/
 
-/-- `(codebookSize R n)⁻¹ ≤ exp(-n R)`. From `exp(n R) ≤ ⌈exp(n R)⌉ = codebookSize R n`.
+/-- `(codebookSize R n)⁻¹ ≤ exp(-n R)`, from `exp(n R) ≤ ⌈exp(n R)⌉ = codebookSize R n`.
 @audit:ok -/
 private lemma codebookSize_inv_le_exp_neg (R : ℝ) (n : ℕ) :
     ((codebookSize R n : ℝ))⁻¹ ≤ Real.exp (-(n : ℝ) * R) := by
@@ -934,7 +915,7 @@ private lemma codebookSize_inv_le_exp_neg (R : ℝ) (n : ℕ) :
     _ = Real.exp (-(n : ℝ) * R) := by
         rw [← Real.exp_neg]; ring_nf
 
-/-- **E.5 squeeze**: for `c < R`, `exp(n c) · (codebookSize R n)⁻¹ → 0`.
+/-- For `c < R`, `exp(n c) · (codebookSize R n)⁻¹ → 0`.
 @audit:ok -/
 private lemma tendsto_exp_mul_codebookSize_inv {c R : ℝ} (hcR : c < R) :
     Filter.Tendsto
@@ -961,7 +942,7 @@ private lemma tendsto_exp_mul_codebookSize_inv {c R : ℝ} (hcR : c < R) :
       _ = Real.exp ((n : ℝ) * (c - R)) := by
           rw [← Real.exp_add]; ring_nf
 
-/-- **E.5 squeeze (two-codebook)**: for `c < R_X + R_Y`,
+/-- For `c < R_X + R_Y`,
 `exp(n c) · (codebookSize R_X n)⁻¹ · (codebookSize R_Y n)⁻¹ → 0`.
 @audit:ok -/
 private lemma tendsto_exp_mul_codebookSize_inv₂ {c R_X R_Y : ℝ}
@@ -995,20 +976,21 @@ private lemma tendsto_exp_mul_codebookSize_inv₂ {c R_X R_Y : ℝ}
       _ = Real.exp ((n : ℝ) * (c - (R_X + R_Y))) := by
           rw [← Real.exp_add, ← Real.exp_add]; ring_nf
 
-/-! ## Phase F.3 — Slepian–Wolf full rate region achievability (headline)
+/-! ## Slepian–Wolf full rate region achievability
 
-Assembles Phase D (decomposition), Phase E (per-term bounds), F.1 (total binning
-expectation), F.2 (pigeonhole), and E.5 (exponential squeeze) into the achievability
-of the full Slepian–Wolf rate region: for any rates strictly above the conditional
-entropies `H(X|Y)`, `H(Y|X)` and the joint entropy `H(X,Y)`, there is a sequence of
-binning encoders + joint typicality decoders whose error probability tends to `0`. -/
+Assembles the error decomposition, the per-term binning bounds, the total binning
+expectation, the pigeonhole extraction, and the exponential squeeze into the
+achievability of the full Slepian–Wolf rate region: for any rates strictly above the
+conditional entropies `H(X|Y)`, `H(Y|X)` and the joint entropy `H(X,Y)`, there is a
+sequence of binning encoders and joint typicality decoders whose error probability
+tends to `0`. -/
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **F.3 main theorem — Slepian–Wolf full rate region achievability**
-(Cover–Thomas 15.4.1). For an i.i.d. source `(Xⁿ, Yⁿ)` with full support, any rate
-pair `(R_X, R_Y)` with `R_X > H(X|Y)`, `R_Y > H(Y|X)`, `R_X + R_Y > H(X,Y)` is
-achievable: there are codebook sizes `M_X, M_Y` with the required asymptotic rates and
-encoders/decoders whose error probability → 0.
+/-- **Slepian–Wolf full rate region achievability** (Cover–Thomas 15.4.1). For an
+i.i.d. source `(Xⁿ, Yⁿ)` with full support, any rate pair `(R_X, R_Y)` with
+`R_X > H(X|Y)`, `R_Y > H(Y|X)`, `R_X + R_Y > H(X,Y)` is achievable: there are
+codebook sizes `M_X, M_Y` with the required asymptotic rates and encoders/decoders
+whose error probability → 0.
 @audit:ok -/
 @[entry_point]
 theorem slepian_wolf_full_rate_region_achievability

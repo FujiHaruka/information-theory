@@ -2,59 +2,30 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.WynerZiv.Basic
 
 /-!
-# Wyner–Ziv body discharge — L-WZ3 partial plumbing (T3-D continuation)
+# Wyner–Ziv body: monotonicity and affine plumbing
 
-This file publishes a **partial discharge layer** for the Wyner–Ziv body
-(`WynerZiv.lean` + `WynerZivAchievability.lean` + `WynerZivConverse.lean`
-were published 2026-05-19 in statement-level pass-through form). The full
-body discharge of L-WZ1 (auxiliary cardinality bound), L-WZ2 (Csiszár's
-sum identity), and L-WZ3 (`R_WZ(D)` convexity) is split across multiple
-moonshot plans; this file targets the *most tractable* fragments of L-WZ3
-plus surrounding plumbing.
+Monotonicity of the Wyner–Ziv rate function in the distortion budget, together
+with the affine building blocks and boundedness facts used by the convexity
+development in `ConvexityBody.lean`.
 
-## Scope
+## Main statements
 
-* **D-antitone of `wynerZivRatePmf`** — `D ≤ D' ⟹ R_WZ(D') ≤ R_WZ(D)`,
-  the *monotone* half of L-WZ3 (convexity in `D`). Fully discharged via
-  set-inclusion + `sInf` monotonicity (RD `rateDistortionFunction_antitone`
-  pattern verbatim).
-* **Constraint set D-monotonicity** — `D ≤ D' ⟹ Cstr(D) ⊆ Cstr(D')`,
-  the elementary building block.
-* **Affinity of `wzMarginalXY`** and **`wzExpectedDistortion`** in the joint
-  pmf `q` — the *affine* build blocks of the (un-completed) full convexity
-  proof. These hold *independently* of the Markov cross-product constraint,
-  which is non-affine and blocks the full L-WZ3 discharge in the present
-  scope.
-* **`convex_stdSimplex` re-export** — a one-line wrapper namespaced under
-  InformationTheory.
-* **Constraint image ⊆ `stdSimplex` projection** — the natural pmf-level
-  containment that suffices to derive `BddBelow` of the Wyner–Ziv objective
-  image automatically (compactness of the simplex + continuity of the
-  objective).
-* **Wyner–Ziv objective `BddBelow`** — fully discharged via the compact-
-  image route (no explicit numerical lower bound asserted).
-
-## 撤退ライン
-
-* **L-WZ3 full convexity** (`R_WZ(λD₁ + (1−λ)D₂) ≤ λR_WZ(D₁) + (1−λ)R_WZ(D₂)`)
-  — *not discharged*. The Markov cross-product constraint
-  `q(x,y,u) · Σ q(x,y',u') = q(x,y,u') · Σ q(x,y',u)` is quadratic and not
-  preserved under convex combinations, so the standard "convex hull of two
-  feasible points is feasible" argument breaks. The present file discharges
-  only the monotone half plus build blocks; full convexity is deferred to
-  `wyner-ziv-convexity-discharge-*`.
-* **L-WZ1 cardinality bound** and **L-WZ2 Csiszár's sum identity** — outside
-  the scope of this file.
+* `WynerZivConstraint_mono_in_D` — the constraint set grows with `D`.
+* `wynerZivRatePmf_antitone`, `wynerZivRatePmf_antitone_of_feasible` —
+  `D ≤ D' ⟹ R_WZ(D') ≤ R_WZ(D)`, with the `BddBelow`/non-emptiness side
+  conditions discharged for the feasibility-witness form.
+* `wzMarginalXY_add`, `wzMarginalXY_smul`, `wzMarginalXY_convex_combination` —
+  affinity of the `(X,Y)`-marginal in the joint pmf.
+* `wynerZivObjective_image_bddBelow` — the objective image is bounded below, via
+  compactness of the simplex.
 
 ## Notation
 
-Throughout, `U` is the auxiliary alphabet (carried as an argument; L-WZ1
-defers the cardinality bound). Variable name `qf` denotes a pair
-`(q, f) : (α × β × U → ℝ) × (U × β → γ)` — the joint pmf and the decoder.
-The image of the *first projection* `qf ↦ qf.1` of the constraint set is
-contained in the standard simplex, which is the entry point for both the
-`BddBelow` argument and the `convex_stdSimplex` re-export.
-
+`U` is the auxiliary alphabet (carried as an argument). The variable `qf` denotes
+a pair `(q, f) : (α × β × U → ℝ) × (U × β → γ)` — the joint pmf and the decoder.
+The first projection of the constraint set lies in the standard simplex, the
+entry point for both the `BddBelow` argument and the `convex_stdSimplex`
+re-export.
 -/
 
 namespace InformationTheory.Shannon
@@ -107,24 +78,16 @@ lemma wynerZivObjective_image_mono_in_D
   rcases hv with ⟨qf, hqf, hv_eq⟩
   exact ⟨qf, WynerZivConstraint_mono_in_D U P_XY d hD hqf, hv_eq⟩
 
-/-- **Wyner–Ziv rate function is antitone in `D` (monotone half of L-WZ3).**
+/-- The Wyner–Ziv rate function is antitone in `D`: for `D ≤ D'`, if the
+smaller-threshold objective image is non-empty and the larger-threshold image is
+`BddBelow`, then `wynerZivRatePmf U P_XY d D' ≤ wynerZivRatePmf U P_XY d D`.
 
-For `D ≤ D'`, if the smaller-threshold objective image is non-empty (which
-is automatic in the feasible regime — any feasible `(q, f)` at `D` is also
-feasible at `D'`) and the larger-threshold image is `BddBelow`, then
-`wynerZivRatePmf U P_XY d D' ≤ wynerZivRatePmf U P_XY d D`.
-
-Proof: image-of-constraint inclusion + `csInf` monotonicity. The `BddBelow`
-side condition is supplied automatically in the
+The non-emptiness condition is genuinely required because of Mathlib's
+`Real.sInf_empty = 0` convention: without it, `sInf (image D') ≤ sInf (image D) = 0`
+could fail when the smaller image is empty and the larger one is non-empty with a
+negative infimum. The `BddBelow` side condition is supplied automatically by the
 `wynerZivRatePmf_antitone_of_nonempty` corollary below via the simplex
-projection. The non-emptiness condition is genuinely required because of
-Mathlib's `Real.sInf_empty = 0` convention: without it, the inequality
-`sInf (image D') ≤ sInf (image D) = 0` could fail when the smaller image is
-empty and the larger one is non-empty with a negative infimum.
-
-This is the *monotone* (D-antitone) fragment of L-WZ3 (convexity in `D`).
-The full convexity statement is blocked by the non-affine Markov
-cross-product constraint and is deferred. -/
+projection. -/
 @[entry_point]
 theorem wynerZivRatePmf_antitone
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {D D' : ℝ} (hD : D ≤ D')
@@ -155,8 +118,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- `wzMarginalXY` is **additive** in `q`. Build block for the (deferred)
-L-WZ3 full convexity proof: marginalization is a linear operation. -/
+/-- `wzMarginalXY` is additive in `q`. -/
 @[entry_point]
 lemma wzMarginalXY_add (q₁ q₂ : α × β × U → ℝ) :
     wzMarginalXY U (q₁ + q₂) = wzMarginalXY U q₁ + wzMarginalXY U q₂ := by
@@ -164,8 +126,7 @@ lemma wzMarginalXY_add (q₁ q₂ : α × β × U → ℝ) :
   unfold wzMarginalXY
   simp [Finset.sum_add_distrib, Pi.add_apply]
 
-/-- `wzMarginalXY` is **homogeneous** in `q`. Build block for the (deferred)
-L-WZ3 full convexity proof. -/
+/-- `wzMarginalXY` is homogeneous in `q`. -/
 @[entry_point]
 lemma wzMarginalXY_smul (c : ℝ) (q : α × β × U → ℝ) :
     wzMarginalXY U (c • q) = c • wzMarginalXY U q := by
@@ -199,8 +160,7 @@ variable [Fintype α] [Fintype β]
 variable (U : Type*) [Fintype U]
 
 /-- `convex_stdSimplex` re-exported for the Wyner–Ziv ambient simplex
-`stdSimplex ℝ (α × β × U)`. Build block for the (deferred) full convexity
-proof — the joint pmf lives in this simplex. -/
+`stdSimplex ℝ (α × β × U)`. -/
 @[entry_point]
 lemma convex_stdSimplex_wynerZiv :
     Convex ℝ (stdSimplex ℝ (α × β × U)) :=
@@ -325,11 +285,8 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **Convex combination preserves `stdSimplex` membership.** Direct
-specialization of `convex_stdSimplex` to two-point combinations on the
-Wyner–Ziv ambient simplex `α × β × U`. Build block for the (deferred)
-full L-WZ3 convexity proof, exposing the membership form Lean tactics can
-chain into. -/
+/-- A convex combination of two simplex points lies in the simplex, on the
+Wyner–Ziv ambient simplex `α × β × U`. -/
 @[entry_point]
 lemma stdSimplex_convex_combination_mem
     {q₁ q₂ : α × β × U → ℝ}
@@ -339,9 +296,8 @@ lemma stdSimplex_convex_combination_mem
     a • q₁ + b • q₂ ∈ stdSimplex ℝ (α × β × U) :=
   (convex_stdSimplex_wynerZiv (U := U)) hq₁ hq₂ ha hb hab
 
-/-- `wzMarginalXY` is preserved under convex combinations: if both
-`q₁, q₂` have `wzMarginalXY = P_XY`, then so does any convex combination.
-Affinity build block for the (deferred) L-WZ3 convexity proof. -/
+/-- `wzMarginalXY` is preserved under convex combinations: if both `q₁, q₂` have
+`wzMarginalXY = P_XY`, then so does any convex combination. -/
 @[entry_point]
 lemma wzMarginalXY_convex_combination
     (P_XY : α × β → ℝ) {q₁ q₂ : α × β × U → ℝ}
@@ -356,8 +312,8 @@ lemma wzMarginalXY_convex_combination
   have h_factor : a * P_XY p + b * P_XY p = (a + b) * P_XY p := by ring
   rw [h_factor, hab, one_mul]
 
-/-- `wzExpectedDistortion` (for fixed decoder `f`) is **convex-combination
-linear**. Affinity build block for the (deferred) L-WZ3 convexity proof. -/
+/-- `wzExpectedDistortion` (for fixed decoder `f`) is linear under convex
+combinations of `q`. -/
 lemma wzExpectedDistortion_convex_combination
     (d : α → γ → ℝ) (q₁ q₂ : α × β × U → ℝ) (f : U × β → γ)
     {a b : ℝ} :

@@ -18,23 +18,12 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β]
 
-/-! ## Phase E common utility — alias expectation bound. -/
+/-! ## Alias expectation bound -/
 
 omit [DecidableEq α] in
-/-- **Random-binning alias expectation bound (E.2 / E.3 / E.4 common utility).**
-
-Fixing the source realization, let `S` be a (deterministic) set of candidate alias
-sequences `x'`. Then the binning-measure probability that some `x' ∈ S` with
-`x' ≠ truth` hashes to the same bin as `truth` is bounded by `|S| / M_X`.
-
-This is the union-bound + collision-probability skeleton shared by all three
-non-`E_0` error events: the only thing that varies between them is the choice of
-`S` (a conditional-typical fiber size on the `X` axis, on the `Y` axis, or on the
-joint axis).
-
-The `truth` may or may not lie in `S`; the constraint `x' ≠ truth` filters it out
-of the union, but we coarsely bound the count by `|S|` (not `|S \ {truth}|`) for
-downstream cleanliness. -/
+/-- The binning-measure probability that some `x' ∈ S` with `x' ≠ truth` hashes to
+the same bin as `truth` is at most `|S| / M_X` (union bound over the per-alias
+collision probability `1/M_X`). -/
 private lemma binning_alias_expectation_le_aux
     {n M_X : ℕ} [NeZero M_X]
     (truth : Fin n → α) (S : Finset (Fin n → α)) :
@@ -93,43 +82,14 @@ private lemma binning_alias_expectation_le_aux
     _ ≤ (S.card : ℝ) * ((M_X : ℝ))⁻¹ := by
         exact mul_le_mul_of_nonneg_right h_card h_inv_nn
 
-/-! ## Phase E.2 — `swError_EX` expectation bound under random binning.
+/-! ## The `E_X` expectation bound under random binning
 
-The expected `μ`-mass of the `E_X` error event over the random binning
-hash `f_X ∼ binningMeasure α n M_X` is bounded by
-`exp(n · (H(X,Y) - H(Y) + 2ε)) / M_X` — the conditional-typical fiber
-size on the `X` axis divided by the bin count. This is the heart of the
-random-binning achievability argument on the `X`-only error axis.
-
-Strategy (Fubini + per-`ω` slice argument):
-
-1. **Tonelli swap** (Bochner integral form): the outer integral over `f_X`
-   of `μ.real (swError_EX ... f_X)` becomes the outer integral over `ω` of
-   the inner `(binningMeasure ...).real`-mass of the per-`ω` collision
-   event. Concretely we rewrite each set's `Measure.real` as the Bochner
-   integral of its indicator and apply
-   `MeasureTheory.integral_integral_swap` on the product `μ ⊗ binningMeasure`.
-
-2. **Per-`ω` rewrite**: for fixed `ω`, the slice is exactly
-   `{f_X | ∃ x' ∈ conditionalTypicalSlice μ Xs Ys n ε (jointRV Ys n ω),
-            x' ≠ jointRV Xs n ω ∧ f_X x' = f_X (jointRV Xs n ω)}`
-   by `mem_conditionalTypicalSlice_iff` (definitional).
-
-3. **Apply `binning_alias_expectation_le_aux`** with
-   `S := slice.toFinite.toFinset` and `truth := jointRV Xs n ω`. This
-   gives the per-`ω` bound `S.card * (M_X)⁻¹`.
-
-4. **Slice cardinality bound (`conditionalTypicalSlice_card_le`)**: the
-   slice cardinality is at most `exp(n · (H(X,Y) - H(Y) + 2ε))`, uniformly
-   in `ω` (the bound is `y`-independent).
-
-5. **Outer-integral closure**: integrate the uniform `ω`-pointwise bound
-   against `μ` (a probability measure) — the integral of a constant equals
-   the constant.
-
-`hε : 0 < ε` is kept in the signature as part of the public API (matches
-the `conditionalTypicalSlice_card_le` shape and is consumed by downstream
-final-rate-region theorems) even though this proof does not branch on it. -/
+The expected `μ`-mass of the `E_X` error event over the random binning hash
+`f_X ∼ binningMeasure α n M_X` is bounded by the conditional-typical fiber size on
+the `X` axis divided by the bin count, `exp(n · (H(X,Y) - H(Y) + 2ε)) / M_X`. The
+proof swaps the order of integration (Fubini over `μ ⊗ binningMeasure`), applies
+`binning_alias_expectation_le_aux` to the per-`ω` collision slice, and bounds the
+slice cardinality by `conditionalTypicalSlice_card_le`. -/
 
 omit [DecidableEq α] [DecidableEq β] in
 set_option linter.unusedVariables false in
@@ -310,23 +270,17 @@ theorem swError_EX_expectation_le
         exact ENNReal.ofReal_ne_top
     _ = C * ((M_X : ℝ))⁻¹ := ENNReal.toReal_ofReal h_rhs_nn
 
-/-! ## Phase E.3 — `swError_EY` expectation bound under random binning.
+/-! ## The `E_Y` expectation bound under random binning
 
-Mirror of Phase E.2 with the `X` and `Y` axes swapped. The expected
-`μ`-mass of the `E_Y` error event over the random binning hash
-`f_Y ∼ binningMeasure β n M_Y` is bounded by
-`exp(n · (H(X,Y) - H(X) + 2ε)) / M_Y` — the conditional-typical
-fiber size on the `Y` axis divided by the bin count.
+The `X`/`Y`-symmetric counterpart of `swError_EX_expectation_le`, working with the
+`Y`-fiber slice `{y' | (x, y') ∈ jointlyTypicalSet}`. The expected `μ`-mass of the
+`E_Y` error event over `f_Y ∼ binningMeasure β n M_Y` is bounded by
+`exp(n · (H(X,Y) - H(X) + 2ε)) / M_Y`. -/
 
-The proof is the exact symmetric counterpart to E.2: we work with the
-Y-fiber slice (`{y' | (x, y') ∈ jointlyTypicalSet}`) instead of the
-X-fiber. Phase C only published the X-fiber form; the Y-fiber variant
-is built locally as a `private` utility below. -/
+/-! ### Y-fiber slice utility -/
 
-/-! ### Y-fiber slice utility (mirror of Phase C). -/
-
-/-- The Y-fiber of the jointly typical set at a fixed X-block `x`. Mirror of
-`conditionalTypicalSlice` (Phase C) with the two axes swapped. -/
+/-- The `Y`-fiber of the jointly typical set at a fixed `X`-block `x`, the `X`/`Y`
+mirror of `conditionalTypicalSlice`. -/
 private noncomputable def conditionalTypicalSliceY
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (n : ℕ) (ε : ℝ) (x : Fin n → α) : Set (Fin n → β) :=
@@ -360,9 +314,9 @@ private lemma conditionalTypicalSliceY_empty_of_x_not_typical
     exact hy.elim
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Y-fiber slice size bound** (mirror of `conditionalTypicalSlice_card_le`).
-For any X-block `x`, the cardinality of the Y-fiber of the jointly typical
-set at `x` is at most `exp(n · (H(X, Y) - H(X) + 2ε))`. -/
+/-- For any `X`-block `x`, the cardinality of the `Y`-fiber of the jointly typical
+set at `x` is at most `exp(n · (H(X, Y) - H(X) + 2ε))`, the `X`/`Y` mirror of
+`conditionalTypicalSlice_card_le`. -/
 private theorem conditionalTypicalSliceY_card_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)

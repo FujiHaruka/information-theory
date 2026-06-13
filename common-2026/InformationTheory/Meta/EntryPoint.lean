@@ -1,12 +1,12 @@
 /-
-  InformationTheory/Meta/EntryPoint.lean — orphan detection 用 tag attribute
+  The `@[entry_point]` tag attribute for orphan detection.
 
-  `@[entry_point]` で declaration をマークすると、`scripts/FindOrphans.lean`
-  が BFS root として扱う。`InformationTheory.*` 名前空間配下で、いずれの entry point
-  からも transitively reachable でない declaration は orphan として報告される。
+  Marking a declaration with `@[entry_point]` makes `scripts/FindOrphans.lean` treat it as
+  a BFS root. Any declaration under the `InformationTheory.*` namespace that is not
+  transitively reachable from some entry point is reported as an orphan.
 
-  `@[simp]` / `@[ext]` / `instance` 属性持ちは検出器側で自動的に root 扱いに
-  なるので、明示的に `@[entry_point]` を付ける必要はない。
+  Declarations carrying `@[simp]` / `@[ext]` / `instance` are treated as roots automatically
+  by the detector, so they need no explicit `@[entry_point]`.
 -/
 import Lean
 

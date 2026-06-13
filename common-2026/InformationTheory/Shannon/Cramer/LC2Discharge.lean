@@ -6,47 +6,21 @@ import Mathlib.Probability.ProductMeasure
 import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 
 /-!
-# Cramér L-C2 discharge (T1-C follow-up) — Phase A scaffolding (L-D3 retreat)
+# Cramér L-C2 discharge: i.i.d. plumbing
 
-The parent file `InformationTheory/Shannon/Cramer.lean` publishes `cramer_lower`,
-`cramer_lower_legendre`, and `cramer_tendsto` in **L-C2 hypothesis-form**: the
-caller must supply `h_tilted_lower`, a tilted-side lower bound on the upper
-tail probability of an i.i.d. sample sum.
+Independence, identical-distribution, and boundedness plumbing for the
+coordinate-evaluation family `X i := Y ∘ eval i` on the infinite product
+`Measure.infinitePi (fun _ : ℕ => μ₀)` (and its per-coordinate tilt), used to
+discharge the tilted-side lower-bound hypothesis of the Cramér lower bound.
 
-This file makes progress towards discharging that hypothesis under the
-canonical probabilistic model where the ambient space is `ℕ → Ω₀` with the
-infinite product `μ := Measure.infinitePi (fun _ : ℕ => μ₀)` and the i.i.d.
-family is `X i := Y ∘ eval i` for some bounded `Y : Ω₀ → ℝ`.
-
-## Status (L-D3 retreat, see `cramer-lc2-discharge-moonshot-plan.md` §撤退ライン)
-
-This module publishes **Phase A scaffolding** only:
+## Main statements
 
 * `cgf_eval_eq_cgf_base` — the CGF bridge `cgf (Y ∘ eval i) (infinitePi μ₀) =
-  cgf Y μ₀` used to align the Cramér exponent across the two sides.
-* `iIndepFun_tilted_ambient` — the tilted-ambient family
-  `(fun i ω => Y (ω i))` is `iIndepFun` under
-  `Measure.infinitePi (fun _ : ℕ => μ₀.tilted (lam * Y ·))`.
-* `identDistrib_tilted_ambient` — each `Y ∘ eval i` is identically
-  distributed to `Y ∘ eval 0`.
-* `iIndepFun_eval_under_infinitePi` / `identDistrib_eval_under_infinitePi` /
-  `bounded_eval_family` — the same plumbing under the un-tilted base
-  product measure, used to invoke the parent `cramer_lower`.
-
-Phase B (Mathlib `strong_law_ae_real` launch + in-probability LLN) and Phase C
-(Cramér change-of-measure) are deferred to a follow-up plan (`cramer-lc2-
-discharge-phase-bc-plan.md`) per the planning document's L-D3 retreat line.
-The blocker encountered during Phase B implementation was repeated
-typeclass-instance synthesis failures around `IsProbabilityMeasure
-(Measure.infinitePi (fun _ : ℕ => μ₀.tilted ...))`: Lean's instance machinery
-does not consistently beta-reduce the per-coordinate `μ₀.tilted` factor through
-the `fun _ : ℕ => ...` wrapper, even when the equivalent `haveI` is in scope,
-which propagates metavariable stuck-ness to every downstream lemma whose
-return type mentions the product measure.
-
-Note: the parent `cramer_lower` already publishes the full Cramér lower bound
-in hypothesis form, so downstream consumers can supply their own
-`h_tilted_lower` and use `Cramer.cramer_lower` directly without this module.
+  cgf Y μ₀`, aligning the Cramér exponent across the two sides.
+* `iIndepFun_tilted_ambient`, `identDistrib_tilted_ambient` — independence and
+  identical distribution of the coordinate-eval family under the tilted ambient.
+* `iIndepFun_eval_under_infinitePi`, `identDistrib_eval_under_infinitePi`,
+  `bounded_eval_family` — the same plumbing under the un-tilted base product.
 -/
 
 namespace InformationTheory.Shannon.Cramer.Discharge
@@ -56,11 +30,11 @@ open scoped Topology BigOperators ENNReal Function
 
 variable {Ω₀ : Type*} [MeasurableSpace Ω₀]
 
-/-! ## Phase A — tilted ambient + n-IID plumbing -/
+/-! ## Tilted ambient and n-IID plumbing -/
 
-/-- **CGF bridge**: `cgf (Y ∘ eval i) (infinitePi (fun _ => μ₀)) = cgf Y μ₀`.
-This is the key identification used to align the Cramér exponent across the
-infinitePi-side and the per-coordinate `μ₀`-side. -/
+/-- The CGF bridge `cgf (Y ∘ eval i) (infinitePi (fun _ => μ₀)) = cgf Y μ₀`,
+aligning the Cramér exponent across the infinitePi side and the per-coordinate
+`μ₀` side. -/
 @[entry_point]
 lemma cgf_eval_eq_cgf_base
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
@@ -126,11 +100,10 @@ lemma identDistrib_tilted_ambient
       exact Measure.infinitePi_map_eval _ k
     rw [h_push i, h_push 0]
 
-/-! ## Phase A — coordinate-eval family under the un-tilted base product -/
+/-! ## Coordinate-eval family under the un-tilted base product -/
 
 /-- The coordinate-eval family `X i ω := Y (ω i)` is `iIndepFun` under
-`infinitePi μ₀` (un-tilted base product measure). This is a Phase A bystander
-needed to invoke the parent `cramer_lower`. -/
+`infinitePi μ₀` (the un-tilted base product measure). -/
 lemma iIndepFun_eval_under_infinitePi
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) :

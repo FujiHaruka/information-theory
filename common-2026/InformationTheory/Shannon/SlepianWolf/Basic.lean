@@ -8,12 +8,11 @@ import InformationTheory.Shannon.Pi
 import Mathlib.Analysis.SpecialFunctions.BinaryEntropy
 
 /-!
-# Slepian–Wolf converse (single-shot, Phase A〜C skeleton)
+# Slepian–Wolf single-shot converse
 
-Slepian–Wolf single-shot converse moonshot
-([`docs/shannon/slepian-wolf-moonshot-plan.md`](../../../docs/shannon/slepian-wolf-moonshot-plan.md))。
-2 ソース `(Xs, Ys) : Ω → α × β` を独立 encoder `eX, eY` で圧縮し、joint decoder `dec` で
-復号するときの誤り率 `Pe ≤ ε` から rate に下界 3 本を導く:
+Two sources `(Xs, Ys) : Ω → α × β` are compressed by independent encoders
+`eX, eY` and reconstructed by a joint decoder `dec`. From an error probability
+`Pe ≤ ε` one derives three rate lower bounds:
 
 ```
 log Mx        ≥ H(X | Y)   - δ(Pe)
@@ -21,14 +20,12 @@ log My        ≥ H(Y | X)   - δ(Pe)
 log Mx+log My ≥ H(X, Y)    - δ(Pe)
 ```
 
-本ファイルは:
-1. `entropy_le_log_card`: 任意 `μ` 上の `H(W) ≤ log |α|` (Phase A 新規, Jensen 経由)
-2. `fano_inequality_with_side_info`: 既存 Fano の paired conditioner thin wrapper (Phase A)
-3. `entropy_ge_condEntropy`: `H(W) ≥ H(W | Y)` (Phase B 共通 helper)
-4. `slepian_wolf_converse_X / _Y / _sum`: 3 bound 本体 (Phase B)
-5. `slepian_wolf_converse_single_shot`: 3 bound 統合 (Phase C)
+## Main statements
 
-を提供する。
+* `entropy_le_log_card` — `H(W) ≤ log |α|` for any `μ`, via Jensen on `negMulLog`.
+* `fano_inequality_with_side_info` — Fano with a paired conditioner `(Yo, Si)`.
+* `entropy_ge_condEntropy` — conditioning never increases entropy, `H(W | Y) ≤ H(W)`.
+* `slepian_wolf_converse_X` / `_Y` / `_sum` — the three rate lower bounds.
 -/
 
 namespace InformationTheory.Shannon
@@ -36,13 +33,9 @@ namespace InformationTheory.Shannon
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal
 
-/-! ## Phase A.1 — `entropy_le_log_card`
+/-! ## Entropy is bounded by the log of the alphabet size -/
 
-Jensen 不等式 (`negMulLog` の凹性) を Fintype の全 univ 上で適用する。
-`entropy_le_log_image_card` (LoomisWhitney.lean) の uniform 仮定を外した一般版。
--/
-
-/-- 任意 `μ` 上の `H(W) ≤ log |α|`. Jensen on `negMulLog` over `Fintype.univ`. -/
+/-- `H(W) ≤ log |α|` for any `μ`, by Jensen for `negMulLog` over `Fintype.univ`. -/
 @[entry_point]
 theorem entropy_le_log_card
     {Ω : Type*} [MeasurableSpace Ω]
@@ -129,14 +122,10 @@ theorem entropy_le_log_card
   rw [h_simp] at h_mul
   exact h_mul
 
-/-! ## Phase A.2 — side info Fano wrapper
+/-! ## Fano with side information -/
 
-既存 `fano_inequality_measure_theoretic` の `Yo` を `(Yo, sideInfo) : Ω → Y × S` で
-呼ぶだけの thin wrapper。
--/
-
-/-- Side-info 入り Fano: `condEntropy μ Xs (Yo, Si) ≤ binEntropy(Pe) + Pe · log(|X|-1)`.
-既存 `fano_inequality_measure_theoretic` を paired conditioner で呼ぶ thin wrapper。 -/
+/-- Fano with side information: `condEntropy μ Xs (Yo, Si) ≤ binEntropy(Pe) + Pe · log(|X|-1)`,
+obtained from `fano_inequality_measure_theoretic` with the paired conditioner `(Yo, Si)`. -/
 @[entry_point]
 theorem fano_inequality_with_side_info
     {Ω : Type*} [MeasurableSpace Ω]
@@ -160,10 +149,9 @@ theorem fano_inequality_with_side_info
   exact InformationTheory.MeasureFano.fano_inequality_measure_theoretic
     μ Xs (fun ω => (Yo ω, Si ω)) decoder hXs hpair hdec hcard
 
-/-! ## Phase B helper — `H(W) ≥ H(W | Y)`. -/
+/-! ## Conditioning never increases entropy -/
 
-/-- Conditioning never increases entropy: `H(W) ≥ H(W | Y)`.
-`mutualInfo_eq_entropy_sub_condEntropy` + `mutualInfo` 非負から導出。 -/
+/-- Conditioning never increases entropy: `H(W | Y) ≤ H(W)`. -/
 @[entry_point]
 theorem entropy_ge_condEntropy
     {Ω : Type*} [MeasurableSpace Ω]
@@ -181,31 +169,13 @@ theorem entropy_ge_condEntropy
   have h_nn : 0 ≤ (mutualInfo μ Ws Yo).toReal := ENNReal.toReal_nonneg
   linarith
 
-/-! ## Phase B — Slepian–Wolf 3 bound 本体
+/-! ## The three rate lower bounds
 
-Approach (per `docs/shannon/slepian-wolf-moonshot-plan.md` §Phase B):
-
-```
-log Mx ≥ entropy μ (eX ∘ Xs)                          -- entropy_le_log_card on Fin Mx
-       ≥ condEntropy μ (eX ∘ Xs) Ys                   -- entropy_ge_condEntropy
-       ≥ condEntropy μ Xs (eX ∘ Xs, Ys) + … (chain)   -- 不等式の橋渡し
-       ≥ condEntropy μ Xs Ys - δ(Pe)                  -- side info Fano + monotonicity
-```
-
-但し chain rule 経路で詰まるため、本実装は
-```
-log Mx ≥ entropy μ (eX ∘ Xs, Ys) - entropy μ Ys
-       = condEntropy μ (eX ∘ Xs) Ys                   -- chain rule
-       ≥ condEntropy μ Xs Ys - δ(Pe)
-```
-の **chain rule 1 段** + **conditioning monotonicity 1 段** + **Fano** という直接ルートを
-取る (詳細は判断ログ参照)。
-
-各 bound は独立 theorem として実装し、Phase C で `slepian_wolf_converse_single_shot` に
-統合する。
-
-`δ(Pe)` は inline で `Real.binEntropy Pe + Pe · Real.log (|α| - 1)` 形 (Mx bound では `|α|`、
-sum bound では `|α × β|`、各 bound で誤り率も bound 固有の決め方あり)。
+Each bound chains `entropy_le_log_card`, `entropy_ge_condEntropy`, a
+conditional mutual-information bridge, and `fano_inequality_with_side_info`.
+The Fano penalty `δ(Pe)` is written inline as
+`Real.binEntropy Pe + Pe · Real.log (|·| - 1)`, with the alphabet `|α|` for the
+`X` bound, `|β|` for the `Y` bound, and `|α × β|` for the sum bound.
 -/
 
 variable {Ω : Type*} [MeasurableSpace Ω]
@@ -216,8 +186,9 @@ variable {β : Type*} [Fintype β] [Nonempty β]
 
 /-- Slepian–Wolf converse, **X bound**:
 `log Mx ≥ H(X | Y) - h(Pe_X) - Pe_X · log(|α| - 1)`,
-ただし `Pe_X = μ {ω | Xs ω ≠ decX (Ys ω, eX (Xs ω))}` は X の marginal error。
-ここで `decX : β × Fin Mx → α` は joint decoder の X 成分: `decX(y, m) := (dec(m, eY y)).1`。 -/
+where `Pe_X = μ {ω | Xs ω ≠ decX (Ys ω, eX (Xs ω))}` is the marginal `X` error and
+`decX : β × Fin Mx → α` is the `X` component of the joint decoder,
+`decX(y, m) := (dec(m, eY y)).1`. -/
 @[entry_point]
 theorem slepian_wolf_converse_X
     {Mx My : ℕ} [NeZero Mx] [NeZero My]
@@ -293,7 +264,7 @@ theorem slepian_wolf_converse_X
   -- log Mx ≥ H(EX) ≥ H(EX | Ys) ≥ H(X | Ys) - H(X | Ys, EX) ≥ H(X | Ys) - δ(Pe_X)
   linarith
 
-/-- Slepian–Wolf converse, **Y bound** (X / Y 対称形):
+/-- Slepian–Wolf converse, **Y bound** (the `X`/`Y`-symmetric form):
 `log My ≥ H(Y | X) - h(Pe_Y) - Pe_Y · log(|β| - 1)`. -/
 @[entry_point]
 theorem slepian_wolf_converse_Y
@@ -363,7 +334,7 @@ theorem slepian_wolf_converse_Y
 
 /-- Slepian–Wolf converse, **sum bound**:
 `log Mx + log My ≥ H(X, Y) - h(Pe) - Pe · log(|α × β| - 1)`,
-`Pe = μ {ω | (Xs ω, Ys ω) ≠ dec (eX (Xs ω), eY (Ys ω))}` joint error。 -/
+where `Pe = μ {ω | (Xs ω, Ys ω) ≠ dec (eX (Xs ω), eY (Ys ω))}` is the joint error. -/
 @[entry_point]
 theorem slepian_wolf_converse_sum
     {Mx My : ℕ} [NeZero Mx] [NeZero My]

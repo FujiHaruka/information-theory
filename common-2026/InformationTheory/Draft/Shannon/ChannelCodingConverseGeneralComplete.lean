@@ -5,59 +5,36 @@ import InformationTheory.Shannon.MIChainRule
 import InformationTheory.Shannon.MutualInfo
 
 /-!
-# Channel coding converse (general input) — memoryless per-summand bound (D-2')
+# Channel coding converse (general input) — memoryless per-summand bound
 
-[D-2' ムーンショット plan](../../../docs/shannon/channel-coding-converse-general-d2-prime-plan.md)
-の本体 (Phase A + Phase B、Phase C/D は skeleton)。親 file `ChannelCodingConverseGeneral.lean`
-の `channel_coding_converse_general_chainRule` は per-summand inequality
-`I(X_i; Y^n | X^{<i}) ≤ I(X_i; Y_i)` を chain rule で和に分解した形を残していたが、本 file は
-**memoryless 性のみ** から per-summand inequality を導出し、Cover-Thomas 7.9 一般入力 converse
-を完全形に到達させる準備をする。
+A memoryless predicate for a discrete memoryless channel together with the conditional
+mutual-information chain-rule lemmas it needs, used to derive the per-summand inequality of
+the general-input channel coding converse (Cover–Thomas 7.9) from memorylessness alone.
 
-## Phase A — `IsMemorylessChannel` 述語
+## Main definitions
 
-memoryless DMC は **「各時刻 `i` で、`Y_i` は `X_i` にのみ依存し、`X^{≠i}` および `Y^{≠i}` には
-依存しない」** を意味する。これを **Markov chain `(X^{≠i}, Y^{≠i}) → X_i → Y_i`** で記述
-(E-10' `IsMemorylessFeedback` の対称形、kernel `W` への参照なし)。
+* `IsMemorylessChannel μ Xs Ys` — a memoryless DMC (without feedback), formalized by the
+  per-time-step Markov chain `(X^{≠i}, Y^{≠i}) → X_i → Y_i`, i.e. given `X_i`, the output
+  `Y_i` is independent of all other inputs and outputs. No explicit channel kernel `W` is
+  referenced.
 
-## Phase B — 補助補題 2 本 (local section)
+## Main statements
 
-* `condMutualInfo_le_of_markov_joint`: joint Markov chain
-  `(Wc, Xs) → (Wc, Zc) → Yo` 仮定下で `I(Xs; Yo | Wc) ≤ I(Zc; Yo | Wc)`。
-  既存 `mutualInfo_le_of_markov` を augmented variables `(Wc, Xs), (Wc, Zc)` に適用し、
-  chain rule で `I(Wc; Yo)` の共通項を相殺。
-* `condMutualInfo_chain_rule_Y_axis_fin`: Y 軸 n 変数 chain rule の `Wc` 条件下版。
-  X 軸 chain rule (`mutualInfo_chain_rule_fin`) + `mutualInfo_comm` + `condMutualInfo_comm`
-  + chain rule の `Wc` 上 swap で導出。
+* `condMutualInfo_le_of_markov_joint` — under the joint Markov chain
+  `(Wc, Xs) → (Wc, Zc) → Yo`, `I(Xs; Yo | Wc) ≤ I(Zc; Yo | Wc)`.
+* `condMutualInfo_chain_rule_X_2var` / `condMutualInfo_chain_rule_Y_2var` — two-variable
+  conditional chain rules for `condMutualInfo` along each axis.
 
-### 配置判断 (option 2 採用)
+## Implementation notes
 
-Phase B 補題は **本 file 内に local section として配置**。理由:
-- Phase C/D で呼ばれる範囲が D-2' file 内のみ
-- 既存 `CondMutualInfo.lean` (413 行) の非改変が望ましい
-- 汎用 API として将来 `CondMutualInfo.lean` へ昇格は容易 (`namespace InformationTheory.Shannon`)
+The conditional chain-rule lemmas are kept here in local sections rather than in
+`CondMutualInfo.lean`, which they leave unmodified; they live in
+`namespace InformationTheory.Shannon`, so promoting them to the general API later is easy.
 
-## Phase C/D — DEAD 削除済
-
-旧 Phase C (`memoryless_per_summand_bound`) / Phase D
-(`channel_coding_converse_general_memoryless`) は consumer-0 かつ production
-`channel_coding_converse_general_memoryless_pure` (`ConverseMemorylessPure.lean`、
-entropy 劣加法経路、sorryAx-free) が同 converse を達成済のため 2026-06-13 削除
-(`h_yother_zero` が encoder 任意で偽 = D-2' per-summand 路は放棄)。本 file は live な
-`IsMemorylessChannel` 定義 + condMutualInfo chain-rule 補題群 (`condMutualInfo_le_of_markov_joint`
-/ `condMutualInfo_chain_rule_X_2var` / `_Y_2var`) を保持。
-
-## 判断ログ
-
-* **`IsMemorylessChannel` 採用形**: plan Phase A 採用形 (subtype `{j : Fin n // j ≠ i}` 上の
-  product) をそのまま採用。`Fintype`/`MeasurableSpace`/`Nonempty`/`StandardBorelSpace` の
-  type class はすべて Mathlib auto-derive で機能 (Fin の Fintype + decidable `j ≠ i` で
-  `Subtype.fintype`、product 上の MeasurableSpace は `MeasurableSpace.pi` で auto)。
-* **`condMutualInfo_le_of_markov_joint` 採用形**: 単純 Markov chain `Xs → Zc → Yo` 仮定だけ
-  からは一般に従わない (Wc が `Xs, Zc, Yo` の Markov 構造を破ることがある)。**natural な
-  conditional 一般化** として "augmented Markov chain `(Wc, Xs) → (Wc, Zc) → Yo`" を仮定し、
-  chain rule で `I(Wc; Yo)` 共通項を相殺する経路。`I(Wc; Yo) ≠ ∞` を要する (ENNReal 引き算)。
-* **option 2 採用**: local section、`CondMutualInfo.lean` 非改変。
+`condMutualInfo_le_of_markov_joint` does not follow from the bare Markov chain
+`Xs → Zc → Yo` alone, since `Wc` may break that Markov structure; the augmented chain
+`(Wc, Xs) → (Wc, Zc) → Yo` is assumed instead, and the common term `I(Wc; Yo)` is cancelled
+via the chain rule, which requires `I(Wc; Yo) ≠ ∞` (an `ENNReal` subtraction).
 -/
 
 namespace InformationTheory.Shannon.ChannelCodingConverseGeneral
@@ -67,7 +44,7 @@ open scoped ENNReal NNReal BigOperators
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-! ## Phase A — memoryless 性の formal 定式化 -/
+/-! ## The memoryless-channel predicate -/
 
 section Memoryless
 
@@ -84,9 +61,8 @@ chain property: for each `i : Fin n`, the random variables form a Markov chain
 
 That is, given `X_i`, the output `Y_i` is independent of all other inputs `X^{≠i}` and
 all other outputs `Y^{≠i}`. This captures the textbook memoryless DMC property without
-referring to an explicit channel kernel `W`.
-
-E-10' `IsMemorylessFeedback` の対称形 (msg 引数なし)。 -/
+referring to an explicit channel kernel `W`. This is the feedback-free counterpart of
+`IsMemorylessFeedback` (no message argument). -/
 def IsMemorylessChannel (μ : Measure Ω) [IsFiniteMeasure μ]
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β) : Prop :=
   ∀ i : Fin n,
@@ -110,10 +86,7 @@ lemma IsMemorylessChannel.markovChain (μ : Measure Ω) [IsFiniteMeasure μ]
 
 end Memoryless
 
-/-! ## Phase B — 補助補題 (local section)
-
-option 2: 本 file 内に置き、`CondMutualInfo.lean` を非改変に保つ。
--/
+/-! ## Conditional mutual-information chain-rule lemmas -/
 
 section CondMIAuxiliary
 
@@ -133,18 +106,9 @@ I(Xs; Yo | Wc) ≤ I(Zc; Yo | Wc).
 ```
 
 This is the natural conditional generalization of `mutualInfo_le_of_markov`. The single
-Markov chain `Xs → Zc → Yo` alone is **not** sufficient — `Wc` may break the Markov
-property unless it is also conditionally compatible (hence the augmented form).
-
-### Strategy
-
-* Apply 2-variable chain rule (`mutualInfo_chain_rule`) twice:
-  - `I((Wc, Xs); Yo) = I(Wc; Yo) + I(Xs; Yo | Wc)`
-  - `I((Wc, Zc); Yo) = I(Wc; Yo) + I(Zc; Yo | Wc)`
-* Apply `mutualInfo_le_of_markov` to the augmented Markov chain:
-  - `I((Wc, Xs); Yo) ≤ I((Wc, Zc); Yo)`
-* Subtract `I(Wc; Yo)` from both sides (allowed by `I(Wc; Yo) ≠ ∞` and
-  `ENNReal.add_le_add_iff_left`). -/
+Markov chain `Xs → Zc → Yo` alone is not sufficient — `Wc` may break the Markov property
+unless it is also conditionally compatible, hence the augmented form. The finiteness
+`I(Wc; Yo) ≠ ∞` is needed to cancel the common term after the chain rule. -/
 @[entry_point]
 theorem condMutualInfo_le_of_markov_joint
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -190,28 +154,15 @@ variable {X X' Y W : Type*}
   [MeasurableSpace W] [StandardBorelSpace W] [Nonempty W]
 
 omit [StandardBorelSpace W] [Nonempty W] in
-/-- **2-variable X-axis conditional chain rule for `condMutualInfo`** (Phase B 補題 2,
-new form).
+/-- 2-variable X-axis conditional chain rule for `condMutualInfo`.
 
 ```
 I((X, X'); Y | Wc) = I(X; Y | Wc) + I(X'; Y | (Wc, X))
 ```
 
 Derived from three applications of the bare 2-variable chain rule
-`mutualInfo_chain_rule` together with `prodAssoc` reshape on the left, then
-cancellation of the common term `I(Wc; Y)` (requires `I(Wc; Y) ≠ ∞`).
-
-### Strategy
-
-* (A) Apply chain rule with `Zc := Wc, Xs := (X, X'), Yo := Y`:
-  `I((Wc, (X, X')); Y) = I(Wc; Y) + condMI (X, X') Y Wc`.
-* (B) Reshape `(Wc, (X, X'))` ↔ `((Wc, X), X')` via `MeasurableEquiv.prodAssoc.symm`
-  and `mutualInfo_map_left_measurableEquiv`.
-* (C) Apply chain rule with `Zc := (Wc, X), Xs := X', Yo := Y`:
-  `I(((Wc, X), X'); Y) = I((Wc, X); Y) + condMI X' Y (Wc, X)`.
-* (D) Apply chain rule with `Zc := Wc, Xs := X, Yo := Y`:
-  `I((Wc, X); Y) = I(Wc; Y) + condMI X Y Wc`.
-* Combine and cancel `I(Wc; Y)` via `WithTop.add_left_cancel` (`I(Wc; Y) ≠ ∞`). -/
+`mutualInfo_chain_rule` together with a `prodAssoc` reshape on the left, then
+cancellation of the common term `I(Wc; Y)` (requires `I(Wc; Y) ≠ ∞`). -/
 theorem condMutualInfo_chain_rule_X_2var
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (X_RV : Ω → X) (X'_RV : Ω → X') (Yo : Ω → Y) (Wc : Ω → W)

@@ -2,28 +2,17 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.Han.D
 
 /-!
-# Han Phase D — Phase C: Shearer の不等式 (整数 covering 形)
+# Han's inequality — Shearer's inequality (integer covering form)
 
-`S : ι → Finset (Fin n)` が各 `i : Fin n` を少なくとも `k` 回被覆するとき
-$k \cdot H(X_{[n]}) \le \sum_j H(X_{S_j})$ を示す。
+If `S : ι → Finset (Fin n)` covers each `i : Fin n` at least `k` times, then
+`k · H(X_{[n]}) ≤ ∑_j H(X_{S_j})`.
 
-Phase A の `jointEntropySubset_chain_rule`, `condEntropy_subset_anti`,
-および `jointEntropySubset_univ` をフルに使う組み合わせ証明。Han 本体は呼ばない。
+## Main statements
 
-## 証明骨格
-
-1. 各 `j : ι` について
-   `H(X_{S_j}) = ∑_{i ∈ S_j} H(X_i | X_{S_j ∩ <i})`           -- Phase A chain
-              `≥ ∑_{i ∈ S_j} H(X_i | X_{<i})`                  -- Phase A monotonicity
-   ここで `<i := Finset.univ.filter (· < i)` で
-   `S_j.filter (· < i) ⊆ univ.filter (· < i)`。
-2. ι で sum し、二重和入れ替え:
-   `∑_{j} ∑_{i ∈ S_j} H(X_i | X_{<i}) = ∑_{i} (cover i) · H(X_i | X_{<i})`
-   ここで `cover i := #(univ.filter (i ∈ S j))`。
-3. `cover i ≥ k` かつ `H(X_i | X_{<i}) ≥ 0` より
-   `(cover i) * f(i) ≥ k * f(i)`。
-4. Phase A chain rule (S = univ) + `jointEntropySubset_univ` で
-   `H(X_{[n]}) = ∑_i H(X_i | X_{<i})`。
+* `shearer_inequality` — the integer-covering Shearer inequality. The proof combines the
+  subset chain rule `jointEntropySubset_chain_rule`, conditional-entropy monotonicity
+  `condEntropy_subset_anti`, and `jointEntropySubset_univ`, then swaps the double sum to
+  expose the covering multiplicity `cover i := #{j | i ∈ S j} ≥ k`.
 -/
 
 namespace InformationTheory.Shannon
@@ -37,9 +26,8 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 variable {Ω : Type*} [MeasurableSpace Ω]
 
 omit [DecidableEq α] in
-/-- Shearer の不等式 (整数 covering 形)。
-`S : ι → Finset (Fin n)` が各 `i : Fin n` を少なくとも `k` 回被覆するとき:
-$k \cdot H(X_{[n]}) \le \sum_j H(X_{S_j})$。 -/
+/-- Shearer's inequality (integer covering form): if `S : ι → Finset (Fin n)` covers each
+`i : Fin n` at least `k` times, then `k · H(X_{[n]}) ≤ ∑_j H(X_{S_j})`. -/
 @[entry_point]
 theorem shearer_inequality
     {ι : Type*} [Fintype ι]
@@ -65,7 +53,7 @@ theorem shearer_inequality
     intro i _
     exact condEntropy_subset_anti μ Xs hXs i
       (Finset.filter_subset_filter (· < i) (Finset.subset_univ T))
-  -- Step B: jointEntropy μ Xs = ∑ i, f i (Phase A chain rule with S = univ)
+  -- Step B: jointEntropy μ Xs = ∑ i, f i (chain rule with S = univ)
   have h_joint_eq : jointEntropy μ Xs = ∑ i, f i := by
     rw [← jointEntropySubset_univ μ Xs hXs]
     rw [jointEntropySubset_chain_rule μ Xs hXs Finset.univ]
@@ -80,7 +68,7 @@ theorem shearer_inequality
     apply Finset.sum_nonneg
     intro x _
     exact Real.negMulLog_nonneg measureReal_nonneg measureReal_le_one
-  -- Step D: 二重和入れ替え
+  -- Step D: swap the double sum
   -- ∑ j : ι, ∑ i ∈ S j, f i = ∑ i, (cover i) * f i
   have h_double : ∑ j : ι, ∑ i ∈ S j, f i
       = ∑ i, ((Finset.univ.filter (fun j : ι => i ∈ S j)).card : ℝ) * f i := by
@@ -95,7 +83,7 @@ theorem shearer_inequality
     apply Finset.sum_congr rfl
     intro i _
     rw [← Finset.sum_filter, Finset.sum_const, nsmul_eq_mul]
-  -- Step E: cover i ≥ k かつ f i ≥ 0 から (k : ℝ) * f i ≤ (cover i) * f i
+  -- Step E: cover i ≥ k and f i ≥ 0 give (k : ℝ) * f i ≤ (cover i) * f i
   have h_cover_ge : ∀ i,
       (k : ℝ) * f i
         ≤ ((Finset.univ.filter (fun j : ι => i ∈ S j)).card : ℝ) * f i := by

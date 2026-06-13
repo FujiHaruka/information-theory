@@ -20,8 +20,8 @@ This is the deterministic-post-processing case of the data processing
 inequality. The proof goes through the log-sum inequality (Jensen on
 `Real.negMulLog`) applied per fiber `f⁻¹{xh}`.
 
-The Phase 0 form `decode : Y → X` of Fano's inequality is recovered
-downstream by combining DPI with the Phase 1 Markov-form `fano_inequality`.
+The decoder form `decode : Y → X` of Fano's inequality is recovered downstream by combining
+DPI with the Markov-form `fano_inequality`.
 -/
 
 namespace InformationTheory
@@ -307,10 +307,10 @@ theorem condEntropy_le_pushforward_condEntropy
   unfold jointEntropy yEntropy
   exact h_sum_xh
 
-/-! ## Compatibility of Markov-form errorProb with the Phase 0 decode form -/
+/-! ## Compatibility of the Markov-form errorProb with the decoder form -/
 
-/-- The Markov-form error probability of a pushforward agrees with the
-Phase 0 (decoder) error probability. -/
+/-- The Markov-form error probability of a pushforward agrees with the decoder error
+probability. -/
 lemma pushforward_errorProb (P : FiniteJointPMF X Y) (f : Y → X) :
     (P.pushforward f).errorProb
       = ∑ x, ∑ y, if x = f y then 0 else P.mass x y := by
@@ -344,10 +344,9 @@ lemma pushforward_errorProb (P : FiniteJointPMF X Y) (f : Y → X) :
   rw [Finset.sum_congr rfl (fun xh _ => hstep1 xh)]
   exact Finset.sum_fiberwise Finset.univ f (fun y => if x = f y then 0 else P.mass x y)
 
-/-! ## Phase 0 form recovered from Markov Fano + DPI -/
+/-! ## Decoder form recovered from Markov Fano + DPI -/
 
-/-- Phase 0 form of Fano's inequality: for a deterministic decoder
-`decode : Y → X`, the Phase 0 conditional-entropy estimate
+/-- Decoder form of Fano's inequality: for a deterministic decoder `decode : Y → X`,
 
   `H(X | Y) ≤ binEntropy Pe + Pe * log (|X| - 1)`
 
@@ -363,8 +362,8 @@ theorem fano_inequality_decode
   have hFano := (P.pushforward decode).fano_inequality hcard
   linarith
 
-/-- Phase 0 form of Fano's inequality, with the error probability written
-in the Phase 0 explicit double-sum form `∑ x, ∑ y, if x = decode y then 0 else P.mass x y`. -/
+/-- Decoder form of Fano's inequality, with the error probability written
+in the explicit double-sum form `∑ x, ∑ y, if x = decode y then 0 else P.mass x y`. -/
 @[entry_point]
 theorem fano_inequality_decode'
     (P : FiniteJointPMF X Y) (decode : Y → X)
@@ -374,7 +373,7 @@ theorem fano_inequality_decode'
   rw [← P.pushforward_errorProb decode]
   exact P.fano_inequality_decode decode hcard
 
-/-- Phase 0 form of the strict inverse Fano bound (`error_lower_bound`)
+/-- Decoder form of the strict inverse Fano bound (`error_lower_bound`)
 recovered for a deterministic decoder via DPI. -/
 @[entry_point]
 theorem error_lower_bound_decode

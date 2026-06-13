@@ -8,29 +8,32 @@ import Mathlib.Data.EReal.Operations
 import Mathlib.Probability.Distributions.Gaussian.Real
 
 /-!
-# 拡張 entropyPower (二層定義 + coercion bridge)
+# Extended entropy power
 
-EPI 無条件化 (moonshot S1) のための再型付け定義。退化トラップ
-(特異測度 → 旧 `entropyPower = exp 0 = 1`) を、`EReal` 上位レイヤで
-特異測度を `⊥` に落とすことで除去する。
+A two-layer redefinition of entropy power on `EReal` that removes the degeneracy of the
+real-valued `entropyPower` (under which a singular measure satisfies `entropyPower = exp 0 = 1`).
 
-- `differentialEntropyExt : Measure ℝ → EReal`: 特異で `⊥`、`μ ≪ volume`
-  で **真の拡張微分エントロピー** (正部・負部の `EReal` 差) を返す。
-  これにより `h = +∞` (裾の重い a.c. 密度) で `⊤`、`h = −∞` (背の高いピーク
-  密度) で `⊥`、有限で workhorse `differentialEntropy` 値に一致する。
-- `entropyPowerExt : Measure ℝ → ℝ≥0∞`: **非分岐** `EReal.exp (2 * differentialEntropyExt μ)`。
-  `EReal.exp` が `exp ⊥ = 0` (特異 / `h = −∞`) / `exp ⊤ = ∞` (`h = +∞`) /
-  `exp ↑x = ofReal (exp x)` (有限 a.c.) を 1 関数で吸収。
+* `differentialEntropyExt : Measure ℝ → EReal` returns `⊥` for a singular measure and, for
+  `μ ≪ volume`, the genuine extended differential entropy as the `EReal` difference of the
+  positive and negative parts. It evaluates to `⊤` for an infinite-entropy a.c. density
+  (`h = +∞`), to `⊥` for a tall peaked density (`h = −∞`), and to the workhorse
+  `differentialEntropy` value when finite.
+* `entropyPowerExt : Measure ℝ → ℝ≥0∞` is the non-branching `EReal.exp (2 * differentialEntropyExt μ)`,
+  with `EReal.exp` absorbing `exp ⊥ = 0`, `exp ⊤ = ∞`, and `exp ↑x = ofReal (exp x)` in one function.
 
-**⚠ 設計ノート (honesty-critical, `docs/shannon/epi-uncond-deffix-monotone-plan.md` §1)**:
-a.c. 枝を `(differentialEntropy μ : EReal)` で coerce する旧定義は **infinite-entropy a.c. 入力で
-FALSE-as-stated** だった (Bochner `differentialEntropy` は非可積分時 garbage `0` を返し、`h = ±∞` を
-`entropyPowerExt = 1` に潰す → 無条件 EPI が偽)。正しい修正は「非可積分 → `⊤`」の素朴版**ではない**
-(`h = −∞` のピーク密度を `∞` に飛ばし別の偽命題を作る)。符号判別必須 = **正部 `∫⁻ ofReal(negMulLog f)`
-と負部 `∫⁻ ofReal(-(negMulLog f))` の `EReal` 差**で `+∞` / `−∞` / 有限を正しく出す。
+## Main definitions
 
-SoT 計画: `docs/shannon/epi-unconditional-moonshot-plan.md` (傘) +
-`docs/shannon/epi-uncond-deffix-monotone-plan.md` (def-fix campaign)。
+* `differentialEntropyExt` — the extended differential entropy valued in `EReal`.
+* `entropyPowerExt` — the extended entropy power valued in `ℝ≥0∞`.
+
+## Implementation notes
+
+The a.c. branch must distinguish signs: coercing `differentialEntropy μ` directly is false as
+stated for infinite-entropy inputs, because the Bochner integral returns `0` when the integrand is
+non-integrable, collapsing `h = ±∞` to `entropyPowerExt = 1`. Taking the `EReal` difference of the
+positive part `∫⁻ ofReal(negMulLog f)` and the negative part `∫⁻ ofReal(-(negMulLog f))` produces
+`+∞` / `−∞` / a finite value correctly. Following `klDiv`, the a.c. test is made definitional via
+`open Classical in` together with `irreducible_def`.
 -/
 
 namespace InformationTheory.Shannon
@@ -39,17 +42,12 @@ open MeasureTheory Real ProbabilityTheory
 open scoped ENNReal NNReal
 
 open Classical in
-/-- 拡張微分エントロピー: 特異測度で `⊥`、`μ ≪ volume` で正部・負部の `EReal` 差。
+/-- The extended differential entropy: `⊥` for a singular measure and, for `μ ≪ volume`, the
+`EReal` difference `A − B` of the positive part `A := ∫⁻ ofReal(negMulLog f)` and the negative part
+`B := ∫⁻ ofReal(-(negMulLog f))` of `negMulLog ∘ f`, where `f` is the density. When both `A` and `B`
+are finite this equals the workhorse `differentialEntropy μ`; `A = ⊤` (heavy tail) gives `⊤`,
+`B = ⊤` (tall peak) gives `⊥`, and `A = B = ⊤` gives `⊥` (the EPI-safe side of `⊤ − ⊤`).
 
-a.c. 枝の値 `A − B`（`A := ∫⁻ ofReal(negMulLog f)`, `B := ∫⁻ ofReal(-(negMulLog f))`,
-`f := density`）は `EReal` で評価する:
-- `A, B` 有限（= `negMulLog∘f` 可積分）→ workhorse `differentialEntropy μ` に一致。
-- `A = ⊤, B < ⊤`（正部発散 = 裾）→ `⊤`（`h = +∞`）。
-- `A < ⊤, B = ⊤`（負部発散 = ピーク）→ `⊥`（`h = −∞`、`fin − ⊤ = ⊥`）。
-- `A = ⊤, B = ⊤`（両発散、未定義）→ `⊥`（`⊤ − ⊤ = ⊥`、EPI に安全側）。
-
-`klDiv` (Mathlib) を precedent に `open Classical in` + `irreducible_def` で a.c. 判定を
-definitional 化する（`Decidable (μ ≪ volume)` 不在ゆえ classical instance を供給）。
 @audit:ok -/
 noncomputable irreducible_def differentialEntropyExt (μ : Measure ℝ) : EReal :=
   if μ ≪ volume then
@@ -58,12 +56,14 @@ noncomputable irreducible_def differentialEntropyExt (μ : Measure ℝ) : EReal 
           ∂volume : ℝ≥0∞) : EReal))
   else ⊥
 
-/-- 拡張エントロピーパワー (ℝ≥0∞): 特異 / `h=−∞` で `0`、`h=+∞` で `∞`、有限 a.c. で `ofReal (exp (2h))`。
-`EReal.exp` が `exp ⊥ = 0` / `exp ⊤ = ∞` / `exp ↑x = ofReal (exp x)` を 1 関数で供給する非分岐定義。 -/
+/-- The extended entropy power valued in `ℝ≥0∞`: `0` for a singular measure or `h = −∞`, `∞` for
+`h = +∞`, and `ofReal (exp (2h))` for a finite a.c. entropy, via the non-branching
+`EReal.exp (2 * differentialEntropyExt μ)`. -/
 noncomputable def entropyPowerExt (μ : Measure ℝ) : ℝ≥0∞ :=
   EReal.exp (2 * differentialEntropyExt μ)
 
-/-- a.c. 枝での `differentialEntropyExt` の raw value（正部・負部の `EReal` 差）。
+/-- The a.c.-branch value of `differentialEntropyExt` as the `EReal` difference of positive and
+negative parts.
 @audit:ok -/
 theorem differentialEntropyExt_of_ac {μ : Measure ℝ} (h : μ ≪ volume) :
     differentialEntropyExt μ
@@ -73,12 +73,8 @@ theorem differentialEntropyExt_of_ac {μ : Measure ℝ} (h : μ ≪ volume) :
             ∂volume : ℝ≥0∞) : EReal)) := by
   rw [differentialEntropyExt]; exact if_pos h
 
-/-- a.c. かつ `negMulLog∘density` 可積分（= 有限微分エントロピー）のとき、`differentialEntropyExt`
-は workhorse `differentialEntropy` に一致。
-
-正部・負部の `EReal` 差を `MeasureTheory.integral_eq_lintegral_pos_part_sub_lintegral_neg_part`
-（Bochner = `toReal A − toReal B`）+ `EReal.coe_sub` + `EReal.coe_ennreal_toReal` で workhorse に橋渡し。
-正部/負部 lintegral 有限性は `Integrable.hasFiniteIntegral` + `ofReal(g) ≤ ‖g‖ₑ` の `lintegral_mono`。
+/-- When `μ ≪ volume` and `negMulLog ∘ density` is integrable (finite differential entropy),
+`differentialEntropyExt` equals the workhorse `differentialEntropy`.
 @audit:ok -/
 theorem differentialEntropyExt_of_ac_integrable {μ : Measure ℝ} (hac : μ ≪ volume)
     (hint : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
@@ -100,14 +96,14 @@ theorem differentialEntropyExt_of_ac_integrable {μ : Measure ℝ} (hac : μ ≪
     exact integral_eq_lintegral_pos_part_sub_lintegral_neg_part hint
   rw [hwork, EReal.coe_sub, EReal.coe_ennreal_toReal hAfin, EReal.coe_ennreal_toReal hBfin]
 
-/-- 特異枝での `differentialEntropyExt` の値 (`⊥`)。
+/-- The singular-branch value of `differentialEntropyExt` is `⊥`.
 @audit:ok -/
 theorem differentialEntropyExt_singular {μ : Measure ℝ} (h : ¬ μ ≪ volume) :
     differentialEntropyExt μ = ⊥ := by
   rw [differentialEntropyExt]
   exact if_neg h
 
-/-- 有限 a.c. 枝での `entropyPowerExt` の値 (`ENNReal.ofReal (exp (2h))`)。
+/-- The finite a.c.-branch value of `entropyPowerExt` is `ENNReal.ofReal (exp (2h))`.
 @audit:ok -/
 theorem entropyPowerExt_of_ac_integrable {μ : Measure ℝ} (hac : μ ≪ volume)
     (hint : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
@@ -117,23 +113,22 @@ theorem entropyPowerExt_of_ac_integrable {μ : Measure ℝ} (hac : μ ≪ volume
     show (2 : EReal) = ((2 : ℝ) : EReal) by norm_cast, ← EReal.coe_mul,
     EReal.exp_coe]
 
-/-- `differentialEntropyExt μ = ⊤` (`h = +∞`) のとき `entropyPowerExt μ = ⊤ = ∞`。
-無限エントロピー a.c. 入力で EPI が `∞ ≥ ...` の `le_top` で閉じるための bridge。
+/-- If `differentialEntropyExt μ = ⊤` (i.e. `h = +∞`) then `entropyPowerExt μ = ⊤`.
 @audit:ok -/
 theorem entropyPowerExt_eq_top_of_diffEntExt_top {μ : Measure ℝ}
     (h : differentialEntropyExt μ = ⊤) : entropyPowerExt μ = ⊤ := by
   unfold entropyPowerExt
   rw [h, EReal.mul_top_of_pos (by norm_num), EReal.exp_top]
 
-/-- 特異枝（および `h = −∞`）での `entropyPowerExt` の値 (`0`、退化トラップ除去)。
+/-- The singular-branch (and `h = −∞`) value of `entropyPowerExt` is `0`.
 @audit:ok -/
 theorem entropyPowerExt_singular {μ : Measure ℝ} (h : ¬ μ ≪ volume) :
     entropyPowerExt μ = 0 := by
   unfold entropyPowerExt
   rw [differentialEntropyExt_singular h, EReal.mul_bot_of_pos (by norm_num), EReal.exp_bot]
 
-/-- **退化トラップ除去の verbatim 検証**: Dirac 測度のエントロピーパワーは `0`。
-旧 Real `entropyPower (dirac m) = exp 0 = 1` (誤) → 新 `entropyPowerExt (dirac m) = 0` (正)。
+/-- The entropy power of a Dirac measure is `0` (where the real-valued `entropyPower` degenerates
+to `1`).
 @audit:ok -/
 @[entry_point]
 theorem entropyPowerExt_dirac (m : ℝ) : entropyPowerExt (Measure.dirac m) = 0 := by
@@ -144,9 +139,9 @@ theorem entropyPowerExt_dirac (m : ℝ) : entropyPowerExt (Measure.dirac m) = 0 
     Measure.eq_zero_of_absolutelyContinuous_of_mutuallySingular h_ac h_sing
   exact (NeZero.ne' (Measure.dirac m)).symm h_zero
 
-/-- Gaussian 密度の `negMulLog` は volume 可積分（有限微分エントロピー）。
-`negMulLog(gaussianPDF) =ᵐ gaussianPDF·c₁ + gaussianPDF·(x-m)²/(2v)`、前者は密度可積分、
-後者は Gaussian 2 次モーメント有限（`memLp_id_gaussianReal`）から。sanity gate `_gaussianReal` 用。
+/-- `negMulLog` of a Gaussian density is volume-integrable (finite differential entropy), via the
+a.e. identity `negMulLog(gaussianPDF) = gaussianPDF · c₁ + gaussianPDF · (x-m)²/(2v)` with the
+density integrable and the second moment finite.
 @audit:ok -/
 theorem integrable_negMulLog_gaussianReal_density (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     Integrable (fun x => Real.negMulLog ((gaussianReal m v).rnDeriv volume x).toReal) volume := by
@@ -190,8 +185,7 @@ theorem integrable_negMulLog_gaussianReal_density (m : ℝ) {v : ℝ≥0} (hv : 
     ring
   exact h_t1.add h_t2
 
-/-- **a.c. 非自明値 ≠ 0 の sanity gate**: Gaussian (`v ≠ 0`、a.c.) のエントロピーパワーは
-`2πe·v` で `0` に潰れない (a.c. 判定が常時 false に転ぶ退化定義悪用の検出)。
+/-- The entropy power of a Gaussian (`v ≠ 0`, a.c.) is `2πe·v`, hence does not collapse to `0`.
 @audit:ok -/
 @[entry_point]
 theorem entropyPowerExt_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :

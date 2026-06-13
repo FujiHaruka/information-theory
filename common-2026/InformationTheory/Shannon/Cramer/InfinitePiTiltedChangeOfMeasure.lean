@@ -5,23 +5,21 @@ import Mathlib.Probability.ProductMeasure
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# infinitePi-tilted change-of-measure (Cramér Phase C, Phases 2–4)
+# infinitePi-tilted change-of-measure
 
 This file builds on the finite `Measure.pi` tilt factorization
-(`MeasurePiTiltedFactorization.pi_tilted_sum_eq_pi_tilted`) to discharge — or
-maximally shrink — the `IsMeasureInfinitePiTiltedEq` predicate of
-`InformationTheory/Shannon/CramerLC2PhaseC.lean`.
+(`MeasurePiTiltedFactorization.pi_tilted_sum_eq_pi_tilted`) to supply the
+infinite-product change-of-measure machinery behind the Cramér lower bound.
 
-## Outline
+## Main statements
 
-* **Fintype generalization of Phase 1**: the `Fin n` factorization lemmas
-  generalized to an arbitrary `Fintype` index via `MeasurableEquiv.piCongrLeft`
-  reindexing, so they apply at the `↥(Finset.range n)` subtype produced by
-  `infinitePi_cylinder`.
-* **Phase 2 (cylinder lift)**: the width-`n` event
-  `{ω | a·n ≤ ∑_{i<n} Y(ω i)}` is a cylinder over `Finset.range n`; its
-  `infinitePi` mass equals the `Measure.pi` mass of the corresponding finite
-  event, on both the un-tilted and the tilted ambient.
+* `pi_tilted_sum_eq_pi_tilted_fintype` — the tilt of a finite product measure by
+  the sum exponent factors as the product of per-coordinate tilts, generalized
+  from `Fin n` to an arbitrary `Fintype` index.
+* `cramer_lower_phaseC_residual_discharge` — the end-to-end liminf lower bound
+  from the optimal-tilt inputs.
+* `tiltedWindow_eventually_large_of_cgfDeriv_interior` — the tilted-window mass
+  is eventually `≥ 1/2` when the cgf derivative lands strictly inside the window.
 -/
 
 namespace InformationTheory.Shannon.Cramer.Discharge
@@ -31,11 +29,8 @@ open scoped Topology BigOperators ENNReal Function
 
 variable {Ω₀ : Type*} [MeasurableSpace Ω₀]
 
-/-! ## Fintype generalization of the Phase 1 lintegral Fubini -/
+/-! ## Fintype generalization of the lintegral Fubini identity -/
 
-/-- **Fintype lintegral Fubini** for `Measure.pi` of a per-coordinate product,
-generalizing `lintegral_pi_prod` from `Fin n` to an arbitrary `Fintype` index by
-reindexing through `Fintype.equivFin`. -/
 theorem lintegral_pi_prod_fintype {ι : Type*} [Fintype ι] {E : ι → Type*}
     {mE : ∀ i, MeasurableSpace (E i)} {μ : (i : ι) → Measure (E i)}
     [∀ i, SigmaFinite (μ i)]
@@ -58,11 +53,8 @@ theorem lintegral_pi_prod_fintype {ι : Type*} [Fintype ι] {E : ι → Type*}
   rw [lintegral_pi_prod (μ := fun j => μ (e j)) (fun j => hg (e j))]
   exact e.prod_comp (fun i => ∫⁻ ω, g i ω ∂(μ i))
 
-/-! ## Fintype generalization of the Phase 1 box Tonelli and tilt factorization -/
+/-! ## Fintype generalization of the box Tonelli and tilt factorization -/
 
-/-- **Fintype box Tonelli**: the lintegral over the box `pi univ s` of a
-per-coordinate product factors coordinate-wise, for an arbitrary `Fintype`
-index. Generalizes `setLIntegral_pi_prod_factor`. -/
 theorem setLIntegral_pi_prod_factor_fintype {ι : Type*} [Fintype ι]
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {g : Ω₀ → ℝ≥0∞} (hg : Measurable g) (s : ι → Set Ω₀)
@@ -91,9 +83,6 @@ theorem setLIntegral_pi_prod_factor_fintype {ι : Type*} [Fintype ι]
   refine Finset.prod_congr rfl (fun i _ => ?_)
   rw [lintegral_indicator (hs i)]
 
-/-- **Fintype normalization constant**: the partition function of the sum
-exponent on a finite (`Fintype`) product is the `card`-th power of the
-single-coordinate partition function. Generalizes `integral_exp_sum_pi_eq_pow`. -/
 theorem integral_exp_sum_pi_eq_pow_fintype {ι : Type*} [Fintype ι]
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀] {Y : Ω₀ → ℝ} (lam : ℝ) :
     ∫ x, Real.exp (∑ i, lam * Y (x i)) ∂(Measure.pi (fun _ : ι => μ₀))
@@ -101,9 +90,8 @@ theorem integral_exp_sum_pi_eq_pow_fintype {ι : Type*} [Fintype ι]
   simp_rw [Real.exp_sum]
   rw [integral_fintype_prod_eq_pow (fun ω => Real.exp (lam * Y ω))]
 
-/-- **Fintype tilt factorization**: the tilt of a finite (`Fintype`) product
-measure by the sum exponent factors as the product of per-coordinate tilts.
-Generalizes `pi_tilted_sum_eq_pi_tilted`. -/
+/-- The tilt of a finite (`Fintype`) product measure by the sum exponent factors
+as the product of per-coordinate tilts. -/
 @[entry_point]
 theorem pi_tilted_sum_eq_pi_tilted_fintype {ι : Type*} [Fintype ι]
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
@@ -132,48 +120,25 @@ theorem pi_tilted_sum_eq_pi_tilted_fintype {ι : Type*} [Fintype ι]
   refine Finset.prod_congr rfl (fun i _ => ?_)
   rw [tilted_apply' _ _ (hs i)]
 
-/-! ## Phase 2/3/4 — hoisted to `CramerBoundaryUpstream.lean`
+/-! ## End-to-end Cramér lower bound from the residual predicate
 
-The following declarations were moved **verbatim** to
-`InformationTheory/Shannon/CramerBoundaryUpstream.lean` on 2026-06-11 to break
-the `CramerCltBoundaryClosure → InfinitePiTiltedChangeOfMeasure → CramerLC2PhaseC`
-import cycle (`cramer-root-wiring-plan` Phase A a1):
-`infinitePi_partialSum_event_eq_pi`, `change_of_measure_lower_bound_pi`,
-`IsTiltedWindowEventuallyLarge`, `isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge`,
+Several supporting declarations (`infinitePi_partialSum_event_eq_pi`,
+`change_of_measure_lower_bound_pi`, `IsTiltedWindowEventuallyLarge`,
+`isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge`,
 `tiltedWindow_eventually_tendsto_one`, `tiltedWindow_eventually_large_of_interior`,
-`tiltedMean_eq_deriv_cgf`. They remain available here transitively via
-`CramerLC2PhaseC → CramerBoundaryUpstream`. -/
+`tiltedMean_eq_deriv_cgf`) live in
+`InformationTheory/Shannon/CramerBoundaryUpstream.lean` and are available here
+transitively. -/
 
+/-- The Cramér lower bound, end-to-end from the cgf-derivative and cobounded
+inputs: the liminf lower bound `-(lam·a − Λ(lam)) ≤ liminf (1/n) log P[S_n ≥ a·n]`
+from the optimal-tilt inputs (`h_deriv : deriv (cgf …) lam = a`, non-degeneracy
+`hVar`, and the cobounded-below regularity `h_coboundedBelow`); the body is a
+single pass-through to `cramer_lower_phaseC_partial_discharge`. The hypotheses
+`hVar` and `h_coboundedBelow` are regularity preconditions, not part of the proof
+core.
 
-/-! ## Phase 4 — end-to-end Cramér lower bound from the residual predicate -/
-
-/-- **Cramér lower bound, end-to-end from cgf-derivative + cobounded inputs**.
-Discharges the full change-of-measure machinery (Phases 1–3 of
-`infinitepi-tilted-rn-discharge`) down to the CLT-boundary headline, yielding the
-liminf lower bound `-(lam·a − Λ(lam)) ≤ liminf (1/n) log P[S_n ≥ a·n]` from the
-optimal-tilt inputs (`h_deriv : deriv (cgf …) lam = a`, non-degeneracy `hVar`,
-and the cobounded-below regularity `h_coboundedBelow`); the body is a single
-pass-through to `cramer_lower_phaseC_partial_discharge`.
-
-WIRED 2026-06-11 (`cramer-root-wiring-plan` Phase A): the upstream
-`cramer_lower_phaseC_partial_discharge` is now discharged by the sorryAx-free
-CLT-boundary headline, so this wrapper is sorryAx-free too (verified
-`#print axioms` = `[propext, Classical.choice, Quot.sound]`). The root's
-non-degeneracy precondition `hVar` is threaded through here as a regularity
-precondition.
-
-API-CLEANUP 2026-06-11: the formerly-retained
-`_h_res : IsTiltedWindowEventuallyLarge μ₀ Y lam` parameter — audited as a
-genuine unused argument (the body passes ONLY
-`hY_meas h_bdd a lam hlam h_deriv hVar h_coboundedBelow` and never references it,
-the window-mass core being supplied internally by the headline CLT) — was dropped
-from the signature; `dep_consumers.sh` confirmed 0 term-level consumers first.
-
-@audit:ok (2026-06-11 independent honesty audit: sorryAx-free
-`[propext, Classical.choice, Quot.sound]` machine-confirmed; fully proved as
-stated, no load-bearing hypothesis. The dropped `_h_res` only strengthened the
-precondition unnecessarily and was provably unused, so removing it weakens the
-hypotheses — strictly honesty-preserving.) -/
+@audit:ok -/
 @[entry_point]
 theorem cramer_lower_phaseC_residual_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]

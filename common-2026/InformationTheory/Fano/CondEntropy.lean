@@ -4,17 +4,8 @@ import Mathlib.Data.Fintype.BigOperators
 /-!
 # 3-variable joint and conditional entropy: chain rule + deterministic collapse
 
-M2 lemmas. We work directly with raw mass functions `μ : X → E → Y → ℝ`
-rather than committing to a structured PMF type, because every chain rule
-becomes a `ring` identity at this level.
-
-> **Formalism boundary (2026-05-10)**: 本ファイルは Phase 1 Fano core proof
-> (`InformationTheory/Fano/Core.lean`) 専用の **PMF 形** entropy/condEntropy 群です。
-> Shannon converse / Han / measure-theoretic Fano (`InformationTheory/Fano/Measure.lean`,
-> `InformationTheory/Shannon/*`) で使われる **測度形** entropy (`Shannon.Bridge.entropy`)
-> および `InformationTheory.MeasureFano.condEntropy` とは parallel formalism
-> であり、相互依存はありません。新規ムーンショットは測度形を使用してください。
-> 詳細: `docs/moonshot-seeds.md` の横断観察セクション。
+We work directly with raw mass functions `μ : X → E → Y → ℝ` rather than committing to a
+structured PMF type, because every chain rule becomes a `ring` identity at this level.
 
 The two non-trivial outputs are:
 
@@ -22,9 +13,15 @@ The two non-trivial outputs are:
   `H(X, E | Y) = H(X | Y) + H(E | X, Y)`;
 * `H(E | X, Y) = 0` whenever `E` is a deterministic function of `(X, Y)`.
 
-Together with M1's `entropyOfFn_le_log_supportCard` and M3's
-`binEntropy_jensen_finset`, these are everything M5/M6 need to assemble the
-Fano core inequality.
+Together with `entropyOfFn_le_log_supportCard` and `binEntropy_jensen_finset`, these
+assemble the Fano core inequality.
+
+## Implementation notes
+
+This file's mass-function entropy/condEntropy are the form used by the `Fano.Core`
+development. The measure-theoretic developments (`Fano.Measure`, `Shannon.Bridge.entropy`,
+`InformationTheory.MeasureFano.condEntropy`) use a parallel formalism; the two do not
+depend on each other.
 -/
 
 namespace InformationTheory

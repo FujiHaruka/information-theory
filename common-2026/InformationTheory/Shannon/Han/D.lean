@@ -2,32 +2,23 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.Han.Basic
 
 /-!
-# Han Phase D: subset 版 joint entropy infrastructure (skeleton)
+# Han's inequality — subset joint entropy
 
-Han Phase D ロードマップ ([`docs/han/han-phase-d-plan.md`](../../../docs/han/han-phase-d-plan.md))
-の Phase A skeleton。`Fin n` の任意部分集合 `S : Finset (Fin n)` に対する
-joint entropy `H(X_S)` を定義し、Phase B (D-1 subset average chain) /
-Phase C (D-2 Shearer) の入口となる 4 主定理を sorry-driven で並べる。
+Joint entropy `H(X_S)` over an arbitrary subset `S : Finset (Fin n)` of coordinates, with
+the subset chain rule, conditioning monotonicity, and the subset form of Han's inequality.
 
-## 主要定義・主定理
+## Main definitions
 
-* `jointEntropySubset μ Xs S` ─ `(i : ↑S) → α` 値の joint entropy。
-* `jointEntropySubset_univ` ─ `S = univ` で `jointEntropy μ Xs` に一致。
-* `jointEntropySubset_chain_rule` ─ subset 版 chain rule。
-* `condEntropy_subset_anti` ─ subset 版 conditioning monotonicity (`T₁ ⊆ T₂ ⟹` 条件側を増やすと減る)。
-* `han_inequality_subset` ─ Han の不等式の subset 版。`han_inequality` を `Finset.orderEmbOfFin S` で
-  restrict し reshape する見込み。
+* `jointEntropySubset μ Xs S` — the joint entropy of the `(i : ↑S) → α`-valued family.
 
-## 戦略 (inventory より)
+## Main statements
 
-* Pi 値 instance (`Fintype`, `MeasurableSpace`, `MeasurableSingletonClass`,
-  `Nonempty`, `DecidableEq`) は `Han.lean` の `{j // j ≠ i}` 前例から自動発火見込み
-  (inventory 軸 (c))。
-* `jointEntropySubset_chain_rule` / `condEntropy_subset_anti` は
-  `Finset.induction_on` で `S` を 1 元ずつ拡張、Phase A/B の写経再利用。
-* `han_inequality_subset` は `Finset.orderEmbOfFin S rfl : Fin S.card ↪o Fin n`
-  経由で既存 `han_inequality` を適用、両辺を `entropy_measurableEquiv_comp` +
-  `MeasurableEquiv.piCongrLeft` で reshape (inventory 軸 (d), 50〜70 行見積もり)。
+* `jointEntropySubset_univ` — agrees with `jointEntropy μ Xs` when `S = univ`.
+* `jointEntropySubset_chain_rule` — the subset chain rule
+  `H(X_S) = ∑ i ∈ S, H(Xᵢ | X_{S ∩ {j < i}})`.
+* `condEntropy_subset_anti` — conditioning monotonicity: `T₁ ⊆ T₂` makes the conditional
+  entropy smaller.
+* `han_inequality_subset` — the subset form `(|S| − 1) · H(X_S) ≤ ∑ i ∈ S, H(X_{S \ {i}})`.
 -/
 
 namespace InformationTheory.Shannon
@@ -40,34 +31,28 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-! ## Pi reshape plumbing
-
-`subsetSplitMEquivAux` / `subsetSplitMEquivAux_apply` は `InformationTheory.Shannon.Pi` に
-集約 (Han → Pi で transitively 見える)。subset 形 (`T₁ ⊆ T₂`) は
-`Finset.disjoint_sdiff` + `Finset.union_sdiff_of_subset h` を inline で渡す。 -/
-
-/-- 部分集合 `S : Finset (Fin n)` 上の joint entropy。
-`(i : ↑S) → α` 値の random variable のエントロピー。 -/
+/-- The joint entropy over a subset `S : Finset (Fin n)`, i.e. the entropy of the
+`(i : ↑S) → α`-valued random variable. -/
 noncomputable def jointEntropySubset
     (μ : Measure Ω) (Xs : Fin n → Ω → α) (S : Finset (Fin n)) : ℝ :=
   entropy μ (fun ω (i : S) => Xs i.val ω)
 
 omit [DecidableEq α] in
-/-- `S = Finset.univ` のとき subset 版は通常の `jointEntropy` に一致。 -/
+/-- For `S = Finset.univ`, the subset joint entropy agrees with `jointEntropy μ Xs`. -/
 theorem jointEntropySubset_univ
     (μ : Measure Ω) (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i)) :
     jointEntropySubset μ Xs Finset.univ = jointEntropy μ Xs := by
   classical
-  -- 索引の同型 `↥(Finset.univ : Finset (Fin n)) ≃ Fin n`。
+  -- the index equivalence `↥(Finset.univ : Finset (Fin n)) ≃ Fin n`
   let idxEquiv : ↥(Finset.univ : Finset (Fin n)) ≃ Fin n :=
     { toFun := Subtype.val
       invFun := fun i => ⟨i, Finset.mem_univ i⟩
       left_inv := by rintro ⟨_, _⟩; rfl
       right_inv := fun _ => rfl }
-  -- piCongrLeft で `(↥univ → α) ≃ᵐ (Fin n → α)` を構成。
+  -- piCongrLeft gives `(↥univ → α) ≃ᵐ (Fin n → α)`
   let e : (↥(Finset.univ : Finset (Fin n)) → α) ≃ᵐ (Fin n → α) :=
     MeasurableEquiv.piCongrLeft (fun _ : Fin n => α) idxEquiv
-  -- subset 側 RV の measurability
+  -- measurability of the subset-side random variable
   have hXs_univ :
       Measurable (fun ω (j : ↥(Finset.univ : Finset (Fin n))) => Xs j.val ω) :=
     measurable_pi_iff.mpr (fun j => hXs j.val)
@@ -79,11 +64,8 @@ theorem jointEntropySubset_univ
   congr 1
 
 omit [DecidableEq α] in
-/-- subset 版 chain rule の per-summand bridge:
-`condEntropy μ (Xs (φ k)) (Fin k.val 形) = condEntropy μ (Xs (φ k)) (S.filter 形)`。
-
-`Fin k.val ≃ ↥(S.filter (· < φ k))` を `(orderIsoOfFin S).symm` 経由で構成し、
-`condEntropy_measurableEquiv_comp` で reshape。 -/
+/-- The per-summand bridge for the subset chain rule, reindexing the conditioning family
+from the `Fin k.val` form to the `S.filter (· < φ k)` form. -/
 private lemma condEntropy_chainSummand_bridge
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -189,11 +171,7 @@ private lemma condEntropy_chainSummand_bridge
       (by rw [h_eq])
 
 omit [DecidableEq α] in
-/-- subset 版 chain rule:
-`H(X_S) = ∑ i ∈ S, H(X_i | X_{S ∩ {j : j < i}})`。
-
-Phase B の n-変数 chain rule を `Xs ∘ orderEmbOfFin S` に適用し、
-両辺を `jointEntropySubset` 形に reshape する。 -/
+/-- The subset chain rule: `H(X_S) = ∑ i ∈ S, H(Xᵢ | X_{S ∩ {j < i}})`. -/
 @[entry_point]
 theorem jointEntropySubset_chain_rule
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -263,11 +241,8 @@ theorem jointEntropySubset_chain_rule
   rw [h_chain, h_rhs]
 
 omit [DecidableEq α] in
-/-- subset 版 conditioning monotonicity:
-`T₁ ⊆ T₂ ⟹ H(X_i | X_{T₂}) ≤ H(X_i | X_{T₁})`。
-
-Phase A の `condEntropy_le_condEntropy_of_pair` を `T₂ \ T₁` の要素を
-1 つずつ `T₁` に加える induction で繰り返す。 -/
+/-- Conditioning monotonicity on subsets: `T₁ ⊆ T₂` implies
+`H(Xᵢ | X_{T₂}) ≤ H(Xᵢ | X_{T₁})`. -/
 @[entry_point]
 theorem condEntropy_subset_anti
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -278,8 +253,8 @@ theorem condEntropy_subset_anti
       ≤ InformationTheory.MeasureFano.condEntropy μ (Xs i)
           (fun ω (j : T₁) => Xs j.val ω) := by
   classical
-  -- Setup: T₂ への条件付けを (T₁, T₂\T₁) ペアに reshape し、
-  -- condEntropy_le_condEntropy_of_pair で T₂\T₁ を捨てる。
+  -- Reshape conditioning on T₂ into the pair (T₁, T₂ \ T₁), then drop T₂ \ T₁ via
+  -- condEntropy_le_condEntropy_of_pair.
   set XT₁ : Ω → (↥T₁ → α) := fun ω j => Xs j.val ω with hXT₁_def
   set XR : Ω → (↥(T₂ \ T₁) → α) := fun ω j => Xs j.val ω with hXR_def
   have hXT₁_meas : Measurable XT₁ :=
@@ -305,7 +280,7 @@ theorem condEntropy_subset_anti
     exact condEntropy_measurableEquiv_comp μ (Xs i) (hXs i)
       (fun ω => (XT₁ ω, XR ω)) (hXT₁_meas.prodMk hXR_meas) e
   rw [h_eq]
-  -- condEntropy_le_condEntropy_of_pair で R を捨てる
+  -- drop R via condEntropy_le_condEntropy_of_pair
   exact condEntropy_le_condEntropy_of_pair μ (Xs i) XT₁ XR
     (hXs i) hXT₁_meas hXR_meas
 
@@ -392,12 +367,8 @@ private lemma jointEntropyExcept_orderEmb_eq
   exact h_comp.symm
 
 omit [DecidableEq α] in
-/-- Han の不等式の subset 版:
-`(|S| - 1) · H(X_S) ≤ ∑ i ∈ S, H(X_{S \ {i}})`。
-
-`Finset.orderEmbOfFin S rfl : Fin S.card ↪o Fin n` で `S` を `Fin S.card` から
-の埋め込みとみなし、`Xs' k ω := Xs (S.orderEmbOfFin rfl k) ω` に対して既存
-`han_inequality` を適用、両辺を `jointEntropySubset` 形に reshape する。 -/
+/-- The subset form of Han's inequality:
+`(|S| − 1) · H(X_S) ≤ ∑ i ∈ S, H(X_{S \ {i}})`. -/
 @[entry_point]
 theorem han_inequality_subset
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -451,7 +422,7 @@ theorem han_inequality_subset
     -- h_comp : entropy μ (fun ω j => Xs j.val ω) = entropy μ (fun ω k => Xs' k ω)
     unfold jointEntropy jointEntropySubset
     exact h_comp.symm
-  -- RHS bridge: 各 summand を per-k bridge で書き換えて、sum を bij で reindex
+  -- RHS bridge: rewrite each summand via the per-k bridge and reindex the sum by a bijection
   have h_rhs :
       ∑ k : Fin S.card, jointEntropyExcept μ Xs' k
         = ∑ i ∈ S, jointEntropySubset μ Xs (S.erase i) := by

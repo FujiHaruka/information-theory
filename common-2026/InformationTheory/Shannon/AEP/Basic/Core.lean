@@ -22,7 +22,7 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ### Phase A — i.i.d. 列 と block joint RV -/
+/-! ### I.i.d. sequence and block joint random variable -/
 
 /-- Block joint random variable: `jointRV Xs n ω = (Xs 0 ω, Xs 1 ω, …, Xs (n-1) ω)`. -/
 def jointRV (Xs : ℕ → Ω → α) (n : ℕ) : Ω → (Fin n → α) :=
@@ -38,13 +38,13 @@ lemma measurable_jointRV (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i
     Measurable (jointRV Xs n) :=
   measurable_pi_lambda _ fun i => hXs i
 
-/-! ### Phase B — probability AEP
+/-! ### Probability AEP
 
-The per-symbol log-likelihood is `−Real.log ((μ.map (Xs 0)).real {Xs i ω})`. We
-bundle it via the alphabet-side function `pmfLog μ Xs : α → ℝ` so that
-`logLikelihood μ Xs i ω = pmfLog μ Xs (Xs i ω)`. This shape lets us lift
-`IdentDistrib (Xs i) (Xs 0)` and `IndepFun (Xs i) (Xs j)` to the `logLikelihood`
-sequence by composition with the (always-measurable, finite-domain) `pmfLog`.
+The per-symbol log-likelihood is `−Real.log ((μ.map (Xs 0)).real {Xs i ω})`. It
+is factored through the alphabet-side function `pmfLog μ Xs : α → ℝ` so that
+`logLikelihood μ Xs i ω = pmfLog μ Xs (Xs i ω)`. This shape lets `IdentDistrib
+(Xs i) (Xs 0)` and `IndepFun (Xs i) (Xs j)` lift to the `logLikelihood` sequence
+by composition with the (always-measurable, finite-domain) `pmfLog`.
 -/
 
 /-- Alphabet-side `−log p(x)` function (independent of `i`). -/
@@ -75,8 +75,6 @@ lemma measurable_logLikelihood
   (measurable_pmfLog μ Xs).comp (hXs i)
 
 omit [DecidableEq α] [Nonempty α] in
-/-- `pmfLog μ Xs` is integrable on a finite alphabet (any function on a finite
-discrete space is bounded, hence integrable for any finite measure). -/
 lemma integrable_logLikelihood
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (i : ℕ) :
@@ -90,7 +88,7 @@ lemma integrable_logLikelihood
   exact h_int.comp_measurable (hXs i)
 
 omit [DecidableEq α] [Nonempty α] in
-/-- The expectation of `logLikelihood μ Xs 0` is the entropy of `Xs 0`. -/
+/-- `∫ logLikelihood μ Xs 0 ∂μ = entropy μ (Xs 0)`. -/
 lemma integral_logLikelihood_zero
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) :
@@ -116,7 +114,6 @@ lemma integral_logLikelihood_zero
   simp [smul_eq_mul]
 
 omit [DecidableEq α] [Nonempty α] in
-/-- Composition lift of `IdentDistrib` to `logLikelihood`. -/
 lemma identDistrib_logLikelihood
     (μ : Measure Ω) (Xs : ℕ → Ω → α)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ) (i : ℕ) :
@@ -124,7 +121,6 @@ lemma identDistrib_logLikelihood
   simpa [logLikelihood_eq_comp] using (hident i).comp (measurable_pmfLog μ Xs)
 
 omit [DecidableEq α] [Nonempty α] in
-/-- Composition lift of pairwise `IndepFun` to `logLikelihood`. -/
 lemma indepFun_logLikelihood
     (μ : Measure Ω) (Xs : ℕ → Ω → α)
     (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j) :
@@ -210,7 +206,7 @@ theorem aep_inProbability
   show ε ≤ dist (f n ω) (g ω) ↔ ε ≤ |f n ω - g ω|
   rw [Real.dist_eq]
 
-/-! ### Phase C — typical set `T_ε^n` -/
+/-! ### Typical set `T_ε^n` -/
 
 /-- **Typical set**: blocks `x : Fin n → α` whose empirical entropy is within `ε`
 of the true entropy `H(Xs 0)`. -/
@@ -237,15 +233,15 @@ theorem measurableSet_typicalSet
   exact (Set.toFinite (typicalSet μ Xs n ε)).measurableSet
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Size bound**: `|T_ε^n| ≤ exp (n · (H + ε))`. We state the bound with
-`Real.exp` rather than `2^x` to avoid the `log 2` plumbing — the textbook
-form follows by re-basing the logarithm.
+/-- **Size bound**: `|T_ε^n| ≤ exp (n · (H + ε))`. The bound is stated with
+`Real.exp` rather than `2^x` to avoid the `log 2` plumbing; the textbook form
+follows by re-basing the logarithm.
 
-**仮定 `hpos`**: 教科書 statement (Cover-Thomas Theorem 3.1.2) は暗黙に
-"support 全体" を仮定している。Mathlib `Real.log 0 = 0` 規約のもとでも、
-サポート外点を含む typical block の card は和で評価できないため (`pmfLog x i = 0`
-for `P(x_i) = 0` ⇒ $\exp(-\sum \text{pmfLog})$ が $P^n(x) = 0$ より厳密に大きくなり
-下界として使えない)、`[∀ x, P(x) > 0]` を追加で受ける。 -/
+The full-support hypothesis `hpos` is required because, under the Mathlib
+`Real.log 0 = 0` convention, a typical block containing an out-of-support point
+cannot be evaluated by the sum (for `P(x_i) = 0` we get `pmfLog x i = 0`, so
+`exp(-∑ pmfLog)` is strictly larger than `P^n(x) = 0` and fails as a lower
+bound), so `[∀ x, P(x) > 0]` is taken as an extra hypothesis. -/
 @[entry_point]
 theorem typicalSet_card_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]

@@ -3,39 +3,30 @@ import InformationTheory.Shannon.AEP.Basic
 import InformationTheory.Shannon.ChannelCoding.Basic
 
 /-!
-# Slepian–Wolf conditional typical slice (E-5'' Phase C MVP)
+# Slepian–Wolf conditional typical slice
 
-Phase C of the E-5'' deferred ムーンショット
-([`docs/shannon/slepian-wolf-full-rate-region-plan.md`](../../docs/shannon/slepian-wolf-full-rate-region-plan.md)).
+This file publishes the **conditional typical slice size bound**, the key new
+ingredient for the full Slepian–Wolf rate region (Cover–Thomas Theorem 15.4.1).
+For a fixed `Y`-block `y : Fin n → β`, the `X`-fiber of the jointly typical set
+is bounded in size by `exp(n · (H(X|Y) + 2ε))`, where `H(X|Y) := H(X, Y) - H(Y)`.
 
-This file publishes the **conditional typical slice size bound**, the key
-new ingredient for the full Slepian–Wolf rate region (Cover-Thomas
-Theorem 15.4.1). For a fixed Y-block `y : Fin n → β`, the X-fiber of the
-jointly typical set is bounded in size by `exp(n · (H(X|Y) + 2ε))`
-where `H(X|Y) := H(X, Y) - H(Y)`.
-
-## 主結果
+## Main definitions
 
 * `conditionalTypicalSlice μ Xs Ys n ε y` —
   the fiber `{x : Fin n → α | (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε}`.
-* `conditionalTypicalSlice_finite` — the slice is finite.
-* `conditionalTypicalSlice_subset_X_typicalSet` — every element of the
-  slice belongs to the X-axis `typicalSet`.
-* `conditionalTypicalSlice_empty_of_y_not_typical` — the slice is empty
-  unless `y ∈ typicalSet μ Ys n ε`.
+
+## Main statements
+
 * `conditionalTypicalSlice_card_le` — the slice size is bounded by
   `exp(n · (H(X, Y) - H(Y) + 2ε))`.
 
-## 証明戦略
+## Implementation notes
 
-For each fiber element `x` we have `(x, y)` jointly typical, so the
-joint sequence `i ↦ (x i, y i)` lies in the single-axis joint typical set
-`typicalSet μ (jointSequence Xs Ys) n ε`. By `typicalSet_prob_ge`
-applied to the joint sequence, each such sample has probability at least
-`exp(-n · (H(X, Y) + ε))`. Summed over the fiber, this is at most
-`Pr[Y^n = y]` (project away the X-axis). If `y` is Y-typical (forced by
-the JTS membership), then `Pr[Y^n = y] ≤ exp(-n · (H(Y) - ε))` by
-`typicalSet_prob_le`. Combining yields the claimed cardinality bound.
+* Each fiber element `x` makes `(x, y)` jointly typical, so the joint sequence
+  `i ↦ (x i, y i)` lies in `typicalSet μ (jointSequence Xs Ys) n ε` and each
+  sample has probability at least `exp(-n · (H(X, Y) + ε))` by
+  `typicalSet_prob_ge`. Summed over the fiber this is at most `Pr[Yⁿ = y]`, which
+  for `Y`-typical `y` is at most `exp(-n · (H(Y) - ε))` by `typicalSet_prob_le`.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
@@ -96,17 +87,9 @@ lemma conditionalTypicalSlice_empty_of_y_not_typical
 /-! ## Main bound — fiber cardinality -/
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Conditional typical slice size bound**. For any Y-block `y`,
-the cardinality of the X-fiber of the jointly typical set at `y` is at
-most `exp(n · (H(X, Y) - H(Y) + 2ε))`. The right-hand side equals
-`exp(n · (H(X|Y) + 2ε))` by the chain rule `H(X|Y) = H(X, Y) - H(Y)`.
-
-Proof: only Y-typical `y` give a non-empty slice. For such `y`,
-each fiber sample `(x, y)` has joint probability at least
-`exp(-n(H(X,Y)+ε))` (by `typicalSet_prob_ge` on the joint sequence),
-and the total probability of the slice is at most `Pr[Y^n = y]`
-which is at most `exp(-n(H(Y)-ε))` by `typicalSet_prob_le` on the
-Y-axis. -/
+/-- **Conditional typical slice size bound**: for any `Y`-block `y`, the
+cardinality of the `X`-fiber of the jointly typical set at `y` is at most
+`exp(n · (H(X, Y) - H(Y) + 2ε))`, equivalently `exp(n · (H(X|Y) + 2ε))`. -/
 @[entry_point]
 theorem conditionalTypicalSlice_card_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]

@@ -11,51 +11,24 @@ import Mathlib.MeasureTheory.Measure.Tilted
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# Cramér L-C2 Phase C partial discharge (T1-C follow-up Phase C)
+# Cramér lower bound: end-to-end discharge
 
-This file extends `InformationTheory/Shannon/CramerLC2DischargeExt.lean` (Phase A/B
-plumbing + tilted LLN) with the **Phase C partial discharge** of the
-`h_tilted_lower` hypothesis of `Cramer.cramer_lower`.
+This file completes the Cramér lower bound for the canonical i.i.d. infinite
+product setting, discharging the change-of-measure step against the CLT-boundary
+headline `CramerCltBoundary.cramer_lower_boundary_unconditional`.
 
-## Status
+The change-of-measure step relates the tilted infinite-product measure
+`Measure.infinitePi (fun _ : ℕ => μ₀.tilted (lam * Y ·))` to the cylinder tilt of
+the un-tilted product measure `(Measure.infinitePi (fun _ : ℕ => μ₀)).tilted (...)`
+on cylinders of width `n`, identified through the predicate
+`IsMeasureInfinitePiTiltedEq` (defined upstream in `CramerBoundaryUpstream.lean`).
 
-Phase C requires a **Cramér change-of-measure step** that relates the tilted
-infinite-product measure
-`Measure.infinitePi (fun _ : ℕ => μ₀.tilted (lam * Y ·))` to the tilted-form of
-the un-tilted product measure
-`(Measure.infinitePi (fun _ : ℕ => μ₀)).tilted (∑ i ∈ Finset.range n, lam * Y ∘ eval i)`
-on cylinders of width `n`. Mathlib has no direct compatibility lemma for this
-(`Measure.infinitePi_tilted_eq`), and the textbook proof requires a 500+ line
-construction of the n-letter Radon–Nikodym derivative.
+## Main statements
 
-We therefore **abstract this identification as a hypothesis** via the predicate
-`IsMeasureInfinitePiTiltedEq` and publish a *partial* discharge: given the
-n-letter RN-deriv compatibility as a hypothesis, the in-probability LLN from
-`CramerLC2DischargeExt.tilted_lln_in_probability_real` is converted into the
-parent `h_tilted_lower` hypothesis form, and threaded through the existing
-`cramer_lower` / `cramer_lower_legendre` / `cramer_tendsto` chain.
-
-## Outline
-
-### Phase C-1 — predicate for the missing Mathlib gap
-
-* `IsMeasureInfinitePiTiltedEq μ₀ Y lam` — the n-letter RN-deriv identification
-  that the tilted infinite product is, on cylinders of width `n`, equivalent to
-  the cylinder-restricted tilt of the un-tilted product measure with the sum
-  exponent `∑ i ∈ Finset.range n, lam · Y (ω i) − n · Λ(lam)`.
-
-### Phase C-2 — (removed)
-
-* `tilted_lower_from_predicate` was **deleted 2026-06-11** (dead-cleanup sweep):
-  false-as-stated (no constraint linking `a` to `lam`; refuted at `a = M + 1`,
-  empty event) and consumer-0 (the production path runs through `cramer_lower`).
-
-### Phase C-3 — main discharged wrappers
-
-* `cramer_lower_phaseC_partial_discharge` — `cramer_lower` with `h_tilted_lower`
-  replaced by `IsMeasureInfinitePiTiltedEq`.
-* `cramer_lower_legendre_phaseC_partial_discharge` — Legendre form.
-* `cramer_tendsto_phaseC_partial_discharge` — `Tendsto` form.
+* `cramer_lower_phaseC_partial_discharge` — the liminf lower bound at threshold
+  `a` and optimal tilt `lam`.
+* `cramer_lower_legendre_phaseC_partial_discharge` — its Legendre form.
+* `cramer_tendsto_phaseC_partial_discharge` — the two-sided `Tendsto` form.
 -/
 
 namespace InformationTheory.Shannon.Cramer.Discharge
@@ -65,66 +38,29 @@ open scoped Topology BigOperators ENNReal Function
 
 variable {Ω₀ : Type*} [MeasurableSpace Ω₀]
 
-/-! ## Phase C-1 — n-letter RN-deriv identification predicate
+/-! ## Discharged wrappers -/
 
-`IsMeasureInfinitePiTiltedEq` (the n-letter change-of-measure predicate) was
-**hoisted** to `InformationTheory/Shannon/CramerBoundaryUpstream.lean` on
-2026-06-11 (`cramer-root-wiring-plan` Phase A a1, import-cycle break) and is
-re-exported here via that import. References in this file
-(`isMeasureInfinitePiTiltedEq_iff`) resolve to the upstream definition. -/
+/-- The Cramér lower bound for the canonical i.i.d. product-measure setting
+`X i ω := Y (ω i)` with `Y : Ω₀ → ℝ` bounded and measurable, on the un-tilted
+infinite product `μ := Measure.infinitePi (fun _ => μ₀)`: the asymptotic liminf
+lower bound at threshold `a` and tilt `lam`.
 
-/-! ## Phase C-3 — discharged wrappers -/
+The ambient i.i.d. hypotheses are discharged using the plumbing from
+`LC2Discharge`; the change-of-measure step is discharged by the headline
+`CramerCltBoundary.cramer_lower_boundary_unconditional`. The optimal-tilt
+hypothesis `h_deriv : deriv (cgf (Y∘·0) (infinitePi μ₀)) lam = a` is required for
+truth: without it the per-`lam` bound fails for general `a` (e.g.
+`μ₀ = Bernoulli(1/2)`, `Y(0)=0, Y(1)=1`, `lam=0`, `a=0.9`); the bound is tight
+precisely at the optimal tilt, where `lam·a − Λ(lam) = cramerRate a`. The
+non-degeneracy hypothesis `hVar` and the cobounded-below hypothesis
+`h_coboundedBelow` are regularity preconditions, not part of the proof core.
 
-/-- **Cramér lower bound, Phase C partial discharge**.
-
-For the canonical i.i.d. product-measure setting `X i ω := Y (ω i)` with
-`Y : Ω₀ → ℝ` bounded and measurable, and on the un-tilted infinite product
-`μ := Measure.infinitePi (fun _ => μ₀)`, the conclusion is the asymptotic
-Cramér lower bound at threshold `a` and tilt `lam`.
-
-The other ambient hypotheses (`iIndepFun`, `IdentDistrib`, bounded family) are
-discharged using the Phase A plumbing from `CramerLC2Discharge`. The former gap
-(the n-letter Radon–Nikodym derivative identification of the tilted infinite
-product / the CLT-boundary window mass) is now **closed**: this theorem is
-discharged below by the sorryAx-free headline `cramer_lower_boundary_unconditional`
-(see the WIRED note).
-
-DEF-FIX 2026-06-11 (false-statement defect repaired, canonical i.i.d. product
-specialization of the general-IID `cramer_lower` in `Cramer.lean`). The
-optimal-tilt hypothesis `(h_deriv : deriv (cgf (Y∘·0) (infinitePi μ₀)) lam = a)`
-is now part of the signature, so the statement is TRUE-as-stated. Background:
-WITHOUT `h_deriv` the per-`lam` bound is false for general `a` (counterexample
-`μ₀ = Bernoulli(1/2)`, `Y(0)=0, Y(1)=1`, `lam=0`, `a=0.9`: LHS `= 0` but
-`liminf (1/n) log P[S_n ≥ 0.9n] = -D(0.9‖0.5) = -0.368… < 0`); it is tight
-precisely at the optimal tilt `a = deriv cgf lam`, where
-`lam·a − Λ(lam) = cramerRate a`. The def-fix threads `h_deriv` through
-`cramer_lower_legendre_phaseC_partial_discharge`, the `@[entry_point]`
-`cramer_tendsto_phaseC_partial_discharge`, and `cramer_lower_phaseC_residual_discharge`
-(`InfinitePiTiltedChangeOfMeasure.lean`).
-
-WIRED 2026-06-11 (`cramer-root-wiring-plan` Phase A): the former CLT-boundary
-`sorry` is now **discharged** by the sorryAx-free headline
-`CramerCltBoundary.cramer_lower_boundary_unconditional` (verbatim-matching
-conclusion, internal-point form `a = deriv cgf lam`). The import cycle was broken
-by hoisting the change-of-measure machinery to the upstream module
-`CramerBoundaryUpstream.lean`, so the headline file is now an upstream supplier
-and can be imported here. The headline requires the non-degeneracy precondition
-`hVar` (`0 < Var[Y∘eval 0; infinitePi (μ₀.tilted (lam·Y))]`), which is added to
-this signature as a regularity precondition (NOT load-bearing core: the window
-mass is supplied internally by the CLT inside the headline; `hVar` only excludes
-the degenerate constant-RV case where the Gaussian-median / window-mass argument
-breaks). `_h_deriv` is activated (`h_deriv`) to pin the optimal tilt.
-
-@audit:ok (2026-06-11 independent honesty audit: sorryAx-free `[propext,
-Classical.choice, Quot.sound]` machine-confirmed; body is a verbatim `exact` of
-the `@audit:ok` headline `cramer_lower_boundary_unconditional` with matching
-argument order. `hVar` is a precondition, NOT load-bearing — decisive check: the
-window-mass `≥ 1/4` core is derived inside `tiltedWindow_eventually_large_of_boundary`
-via the CLT (`tilted_halfline_tendsto_half`), where `hVar` is consumed only as the
-non-degeneracy input that keeps the CLT non-trivial; at `Var = 0` the tilted sum is
-a.e. constant and the half-line→1/2 claim collapses. Granting `hVar` alone does not
-hand over the conclusion. `h_deriv` pins `a = ∫Y∂tilted` (def-fix #24); `h_coboundedBelow`
-is the standard `liminf_le_liminf` side-condition.) -/
+@audit:ok (sorryAx-free `[propext, Classical.choice, Quot.sound]`; body is a
+verbatim `exact` of the `@audit:ok` headline `cramer_lower_boundary_unconditional`.
+`hVar` is non-load-bearing: the window-mass `≥ 1/4` core is derived inside the CLT
+of the headline, where `hVar` is consumed only as the non-degeneracy input; at
+`Var = 0` the tilted sum is a.e. constant and the argument collapses, so granting
+`hVar` alone does not hand over the conclusion.) -/
 theorem cramer_lower_phaseC_partial_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
@@ -148,28 +84,15 @@ theorem cramer_lower_phaseC_partial_discharge
   CramerCltBoundary.cramer_lower_boundary_unconditional
     hY_meas h_bdd a lam hlam h_deriv hVar h_coboundedBelow
 
-/-- **Cramér lower bound (Legendre form), Phase C partial discharge**.
+/-- The Legendre form of `cramer_lower_phaseC_partial_discharge`, with the
+conclusion expressed as `-cramerRate a`. The Legendre-attainment hypothesis
+`hlam_opt` bridges `lam·a − Λ(lam)` to `cramerRate a`; together with `h_deriv`
+(optimal tilt) and `hVar` (non-degeneracy) these are regularity preconditions,
+not part of the proof core.
 
-L-MIG-1: `hlam_opt` restored as regularity precondition (audit-2 verdict).
-The root `cramer_lower_phaseC_partial_discharge` is now sorryAx-free (discharged
-by the CLT-boundary headline), so this wrapper is too.
-
-DEF-FIX 2026-06-11: honest-inheriting. The root
-`cramer_lower_phaseC_partial_discharge` now carries the optimal-tilt hypothesis
-`(h_deriv : deriv (cgf …) lam = a)` (true-as-stated); this wrapper threads
-`h_deriv` through alongside the `hlam_opt` Legendre-attainment hypothesis (the
-two are distinct regularity preconditions: `hlam_opt` bridges the conclusion to
-`cramerRate`, `h_deriv` pins the optimal tilt).
-
-WIRED 2026-06-11 (`cramer-root-wiring-plan` Phase A a3): the root now also
-requires the non-degeneracy precondition `hVar`; it is threaded through here as a
-regularity precondition (not load-bearing, see the root docstring). The root is
-now sorryAx-free, so this wrapper is too.
-
-@audit:ok (2026-06-11 independent honesty audit: sorryAx-free machine-confirmed;
-threads root preconditions through and rewrites the conclusion via the
-`hlam_opt` Legendre-attainment precondition. `hVar`/`h_deriv`/`hlam_opt` are all
-regularity preconditions, no load-bearing core.) -/
+@audit:ok (sorryAx-free; threads root preconditions through and rewrites the
+conclusion via the `hlam_opt` Legendre-attainment precondition. `hVar`, `h_deriv`,
+`hlam_opt` are all regularity preconditions, no load-bearing core.) -/
 theorem cramer_lower_legendre_phaseC_partial_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
@@ -199,21 +122,14 @@ theorem cramer_lower_legendre_phaseC_partial_discharge
     (μ₀ := μ₀) hY_meas h_bdd a lam hlam h_deriv hVar h_coboundedBelow
   rw [← hlam_opt]; exact h
 
-/-- **Cramér's theorem (`Tendsto` form), Phase C partial discharge**.
+/-- Cramér's theorem in `Tendsto` form: the empirical log-tail rate converges to
+`-cramerRate a`. The proof is a sandwich of `cramer_upper_legendre`
+(constructive, upper bound) and `cramer_lower_legendre_phaseC_partial_discharge`
+(lower bound). All hypotheses are regularity preconditions or cobounded
+side-conditions.
 
-L-MIG-1: `hlam_opt` restored as regularity precondition (audit-2 verdict).
-Sandwich of `cramer_upper_legendre` (constructive) and
-`cramer_lower_legendre_phaseC_partial_discharge` (now sorryAx-free via the
-CLT-boundary headline through `cramer_lower_phaseC_partial_discharge`).
-
-WIRED 2026-06-11 (`cramer-root-wiring-plan` Phase A): the lower-bound leg now
-runs through the sorryAx-free root (discharged by the CLT-boundary headline);
-this `@[entry_point]` is therefore now sorryAx-free. The root's non-degeneracy
-precondition `hVar` is threaded through here as a regularity precondition.
-
-@audit:ok (2026-06-11 independent honesty audit: sorryAx-free machine-confirmed;
-genuine `le_antisymm`-style sandwich of `cramer_upper_legendre` (constructive)
-and `cramer_lower_legendre_phaseC_partial_discharge` (headline-backed). All
+@audit:ok (sorryAx-free; genuine `le_antisymm`-style sandwich of
+`cramer_upper_legendre` and `cramer_lower_legendre_phaseC_partial_discharge`. All
 hypotheses are regularity preconditions / cobounded side-conditions.) -/
 @[entry_point]
 theorem cramer_tendsto_phaseC_partial_discharge
@@ -295,15 +211,10 @@ theorem cramer_tendsto_phaseC_partial_discharge
       (μ₀ := μ₀) hY_meas h_bdd a lam hlam hlam_opt h_deriv hVar h_coboundedBelow
   exact tendsto_of_le_liminf_of_limsup_le h_lower h_upper h_bdd_above h_bdd_below
 
-/-! ## Phase C-4 — sanity corollary: predicate triviality cases
+/-! ## Predicate interface -/
 
-These corollaries are not part of the main discharge but illustrate the
-predicate's interface. They are kept minimal and trivial. -/
-
-/-- The predicate is monotone in the un-tilted ambient: if it holds for one
-choice of `μ₀`, the consequent inequality is parameterized by `a` and `ε`. The
-following helper records the predicate's defining shape `∀ a ε, ... ∃ C ...`
-for downstream callers who want to inline the construction. -/
+/-- The defining shape `∀ a ε, ... ∃ C ...` of `IsMeasureInfinitePiTiltedEq`,
+exposed for downstream callers who want to inline the construction. -/
 @[entry_point]
 lemma isMeasureInfinitePiTiltedEq_iff (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam : ℝ) :
     IsMeasureInfinitePiTiltedEq μ₀ Y lam ↔

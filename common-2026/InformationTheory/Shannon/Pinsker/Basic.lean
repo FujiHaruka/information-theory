@@ -5,41 +5,28 @@ import Mathlib.Algebra.Order.BigOperators.Ring.Finset
 import Mathlib.InformationTheory.KullbackLeibler.KLFun
 
 /-!
-# Pinsker 不等式 (TV と KL の bridge)
+# Pinsker's inequality (total variation and Kullback–Leibler divergence)
 
-InformationTheory B-5 ムーンショット ([`docs/shannon/pinsker-moonshot-plan.md`])。
+For probability measures `P, Q` on a finite alphabet `α` with `P ≪ Q`, the total-variation
+norm `tvNorm P Q := (1/2) * ∑ x, |P.real {x} - Q.real {x}|` is bounded by the square root of
+the Kullback–Leibler divergence: `tvNorm P Q ≤ √((klDiv P Q).toReal)`.
 
-有限アルファベット `α` 上の確率測度 `P, Q` (`P ≪ Q`) について
-`tvNorm P Q ≤ √((klDiv P Q).toReal)` を Lean 化。
-ここで `tvNorm P Q := (1/2) * Σ |P.real {x} - Q.real {x}|`。
+This is the weak form with constant `1`; the sharp Cover–Thomas (11.6) form
+`tvNorm P Q ≤ √((klDiv P Q).toReal / 2)` is proved separately in `Pinsker/Sharp.lean`.
 
-**注**: 本シードでは elementary な calculus を抑えるため、**定数 √2 ゆるい版**
-`TV ≤ √(KL)` (`Real.sqrt` の中に `/2` が無い) で commit。Cover-Thomas 11.6 strict
-形 `TV ≤ √(KL/2)` は `klFun(t) ≥ 3(t-1)^2/(2(t+2))` を要し、本シードでは扱わない。
-Sanov / Strong Stein など下流 qualitative 用途には定数の √2 落ちは影響なし。
+## Main definitions
 
-## 主定理
+* `tvNorm` — the total-variation norm between two probability measures on a finite alphabet.
 
-* `klFun_eq_sub_sqrt_sq_add` (private) — 算術的恒等式: `klFun t = (1 - √t)^2 + 2 * √t * klFun (√t)`
-* `klFun_ge_sub_sqrt_sq` — 点別 Bretagnolle-Huber 下界: `(√t - 1)^2 ≤ klFun t` for `t ≥ 0`
-* `tvNorm` — 有限 alphabet 上 2 確率測度間の TV ノルム
-* `tvNorm_le_sqrt_klDiv` — Pinsker (弱形): `tvNorm P Q ≤ √(klDiv P Q).toReal`
+## Main statements
 
-## 戦略
+* `klFun_ge_sub_sqrt_sq` — the pointwise Bretagnolle–Huber bound `(√t - 1)^2 ≤ klFun t`.
+* `tvNorm_le_sqrt_klDiv` — Pinsker's inequality (weak form) `tvNorm P Q ≤ √((klDiv P Q).toReal)`.
 
-1. **Phase A (Real-only)**: 算術恒等式
-   `klFun(t) = (1-√t)^2 + 2*√t * klFun(√t)` for `t ≥ 0`
-   から `klFun_nonneg` で `klFun(t) ≥ (1-√t)^2`。Bretagnolle-Huber 下界。
+## Implementation notes
 
-2. **Phase B**: discrete Pinsker
-   - per-element: `Q.real{x} * klFun(P.real{x}/Q.real{x}) ≥ (√P.real{x} - √Q.real{x})^2`
-     (algebraic, no calculus)
-   - 和: `(klDiv P Q).toReal ≥ Σ (√p_x - √q_x)^2` (Hellinger² ≤ KL)
-   - Cauchy-Schwarz on `|p - q| = |√p - √q| * (√p + √q)`:
-     `(Σ |p-q|)^2 ≤ Σ (√p-√q)^2 * Σ (√p+√q)^2`
-   - `Σ (√p+√q)^2 ≤ Σ 2(p+q) = 4` (algebra)
-   - `(2 tvNorm)^2 ≤ H² * 4 ≤ 4 (klDiv P Q).toReal`
-   - `tvNorm² ≤ (klDiv P Q).toReal` ⟹ `tvNorm ≤ √(klDiv P Q).toReal`
+The proof combines the pointwise Bretagnolle–Huber bound `klFun t ≥ (√t - 1)^2` with the
+Cauchy–Schwarz factorization `|p - q| = |√p - √q| · (√p + √q)`, bounding `∑ (√p + √q)^2 ≤ 4`.
 -/
 
 namespace InformationTheory.Shannon.Pinsker
@@ -47,17 +34,12 @@ namespace InformationTheory.Shannon.Pinsker
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal
 
-/-! ## Phase A — Bretagnolle-Huber 点別不等式 -/
+/-! ### Bretagnolle–Huber pointwise inequality -/
 
-/-- 算術恒等式: `klFun(t) = (1-√t)^2 + 2*√t * klFun(√t)` for `t ≥ 0`.
-
-非自明な代数: `klFun(t) - (1-√t)^2 = 2√t * klFun(√t)`、よって
-`klFun ≥ 0` から `klFun(t) ≥ (1-√t)^2` (Bretagnolle-Huber 下界)。 -/
 private lemma klFun_eq_sub_sqrt_sq_add (t : ℝ) (ht : 0 ≤ t) :
     klFun t = (1 - Real.sqrt t) ^ 2 + 2 * Real.sqrt t * klFun (Real.sqrt t) := by
-  -- 展開: klFun(t) = t log t + 1 - t, klFun(√t) = √t log(√t) + 1 - √t.
-  -- (√t)^2 = t, log(√t) = (log t)/2 ⟹ 2*√t*klFun(√t) = t log t + 2√t - 2 t.
-  -- (1-√t)^2 + 2√t klFun(√t) = (1 - 2√t + t) + (t log t + 2√t - 2t) = t log t + 1 - t = klFun(t).
+  -- klFun t = t log t + 1 - t, klFun (√t) = √t log(√t) + 1 - √t;
+  -- (√t)^2 = t, log(√t) = (log t)/2 give (1-√t)^2 + 2√t klFun(√t) = t log t + 1 - t.
   unfold klFun
   have h_sqrt_sq : Real.sqrt t * Real.sqrt t = t := Real.mul_self_sqrt ht
   have h_log_sqrt : Real.log (Real.sqrt t) = Real.log t / 2 := Real.log_sqrt ht
@@ -68,7 +50,7 @@ private lemma klFun_eq_sub_sqrt_sq_add (t : ℝ) (ht : 0 ≤ t) :
           = 2 * (Real.sqrt t * Real.sqrt t) * Real.log (Real.sqrt t) by ring,
       h_sqrt_sq, h_log_sqrt]
     ring
-  -- 展開して `nlinarith` / `linarith` で潰す
+  -- expand and close with `nlinarith` / `linarith`
   have h_expand :
       2 * Real.sqrt t * (Real.sqrt t * Real.log (Real.sqrt t) + 1 - Real.sqrt t)
         = t * Real.log t + 2 * Real.sqrt t - 2 * t := by
@@ -81,9 +63,7 @@ private lemma klFun_eq_sub_sqrt_sq_add (t : ℝ) (ht : 0 ≤ t) :
   have h_sq : Real.sqrt t ^ 2 = t := Real.sq_sqrt ht
   nlinarith [h_sq]
 
-/-- 点別 Bretagnolle-Huber 下界: `(√t - 1)^2 ≤ klFun t` for `t ≥ 0`.
-
-(`(√t - 1)^2 = (1 - √t)^2` で、`(√t)^2 = t` から `(√t - 1)^2 = (t-1)^2/(√t+1)^2`。) -/
+/-- The pointwise Bretagnolle–Huber bound `(√t - 1)^2 ≤ klFun t` for `t ≥ 0`. -/
 @[entry_point]
 lemma klFun_ge_sub_sqrt_sq (t : ℝ) (ht : 0 ≤ t) :
     (Real.sqrt t - 1) ^ 2 ≤ klFun t := by
@@ -95,31 +75,27 @@ lemma klFun_ge_sub_sqrt_sq (t : ℝ) (ht : 0 ≤ t) :
   have h_rest : 0 ≤ 2 * Real.sqrt t * klFun (Real.sqrt t) := by positivity
   linarith
 
-/-! ## Phase B — 有限 alphabet TV + Pinsker 主定理 -/
+/-! ### Total variation and Pinsker's inequality -/
 
 variable {α : Type*} [Fintype α] [DecidableEq α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
 omit [DecidableEq α] [MeasurableSingletonClass α] in
-/-- 有限 alphabet 上の 2 確率測度間の全変動 (TV) ノルム。 -/
+/-- The total-variation norm between two probability measures on a finite alphabet. -/
 noncomputable def tvNorm (P Q : Measure α) : ℝ :=
   (1/2) * ∑ x : α, |P.real {x} - Q.real {x}|
 
 
 omit [DecidableEq α] in
-/-- **Pinsker 不等式 (弱形)**: 有限 alphabet 上の `P ≪ Q` 確率測度について
-`tvNorm P Q ≤ √(klDiv P Q).toReal`。
-
-シャープな `TV ≤ √(KL/2)` (Cover-Thomas 11.6 strict) ではなく、定数 1
-(本来の Pinsker 定数 1/√2 の √2 倍ゆるい) 版。`klFun(t) ≥ (√t - 1)^2` (Bretagnolle-
-Huber) + Cauchy-Schwarz on `|p - q| = |√p - √q| * (√p + √q)` 経由。 -/
+/-- Pinsker's inequality (weak form, constant `1`): for probability measures `P ≪ Q` on a
+finite alphabet, `tvNorm P Q ≤ √((klDiv P Q).toReal)`. -/
 @[entry_point]
 theorem tvNorm_le_sqrt_klDiv
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (hPQ : P ≪ Q) :
     tvNorm P Q ≤ Real.sqrt (klDiv P Q).toReal := by
   classical
-  -- Step 1: 各 x で rnDeriv 識別 — `(P.rnDeriv Q x) * Q{x} = P{x}`.
+  -- Step 1: identify the Radon–Nikodym derivative at each `x`: `(P.rnDeriv Q x) * Q{x} = P{x}`.
   have h_rnD_enn : ∀ x, (P.rnDeriv Q x) * Q {x} = P {x} := by
     intro x
     have h_wd : Q.withDensity (P.rnDeriv Q) = P :=
@@ -180,7 +156,7 @@ theorem tvNorm_le_sqrt_klDiv
     have h_sqrt_div : Real.sqrt ((P.rnDeriv Q x).toReal)
         = Real.sqrt (P.real {x}) / Real.sqrt (Q.real {x}) := by
       rw [h_rnD_div, Real.sqrt_div measureReal_nonneg]
-    -- 計算: q * (√(p/q) - 1)^2 = q * ((√p - √q)/√q)^2 = (√p - √q)^2
+    -- compute: q * (√(p/q) - 1)^2 = q * ((√p - √q)/√q)^2 = (√p - √q)^2
     have h_sqrt_q_pos : 0 < Real.sqrt (Q.real {x}) := Real.sqrt_pos.mpr hQx_pos
     have h_sqrt_q_ne : Real.sqrt (Q.real {x}) ≠ 0 := h_sqrt_q_pos.ne'
     have h_sqrt_q_sq : Real.sqrt (Q.real {x}) * Real.sqrt (Q.real {x}) = Q.real {x} :=

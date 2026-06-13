@@ -4,22 +4,28 @@ import InformationTheory.Shannon.Han.D
 import Mathlib.Analysis.SpecialFunctions.Log.Base
 
 /-!
-# Hypercube edge-boundary entropy-sharp inequality (B-2'')
+# Hypercube edge-boundary entropy-sharp inequality
 
-Boolean cube `Fin n → Bool` 上の edge-boundary に関する **entropy-sharp** 形
-isoperimetric 不等式:
+The entropy-sharp isoperimetric inequality for the edge boundary on the Boolean cube
+`Fin n → Bool`:
 
-  `|A| · (n - log₂ |A|) ≤ |∂_e A|`
+  `|A| · (n − log₂ |A|) ≤ |∂_e A|`,
 
-(Harper / Han / Cover-Thomas 流。AM-GM 形 B-2' `edgeBoundary_ge_AMGM` よりも sharp。)
+which is sharper than the AM-GM form `edgeBoundary_ge_AMGM`.
 
-戦略は `condEntropy_coord_eq` (核補題, Phase B) で `μ_A := uniformOn A` 上の
-方向 `i` の条件付きエントロピーを fibre size 1/2 の point-wise 計算で
-`(2 (|A| - |π_{≠i}(A)|) / |A|) · log 2` と評価し、chain rule (`jointEntropy_chain_rule`) +
-conditioning monotonicity (`condEntropy_subset_anti`) で Σ を log|A| で押さえ、
-B-2' counting identity (`edgeBoundary_count_eq`) と組み合わせる。
+## Main statements
 
-詳細は `docs/shannon/hypercube-edge-boundary-sharp-plan.md` を参照。
+* `condEntropy_coord_eq` — the direction-`i` conditional entropy on `μ_A := uniformOn A`
+  equals `(2 (|A| − |π_{≠i}(A)|) / |A|) · log 2`.
+* `sum_condEntropy_le_log_card` — `∑ i, H(Xᵢ | X_{≠i}) ≤ log |A|`, from the chain rule and
+  conditioning monotonicity.
+* `edgeBoundary_entropy_sharp` — the entropy-sharp bound `|A| · (n − log₂ |A|) ≤ |∂_e A|`.
+
+## Implementation notes
+
+The conditional entropy `condEntropy_coord_eq` is computed via the chain rule
+`H(X_{≠i}, Xᵢ) = H(X_{≠i}) + H(Xᵢ | X_{≠i})`, evaluating `H(X_{≠i})` directly from the
+projection fibre masses, which avoids a pointwise `condDistrib` Bernoulli computation.
 -/
 
 namespace InformationTheory.Shannon
@@ -27,26 +33,25 @@ namespace InformationTheory.Shannon
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal
 
-/-! ## Phase A — `μ_A := uniformOn (A : Set (Fin n → Bool))` setup -/
+/-! ## Uniform measure on `A` -/
 
-/-- `μ_A := uniformOn (A : Set (Fin n → Bool))` は `A.Nonempty` で確率測度。 -/
+/-- For nonempty `A`, `uniformOn (A : Set (Fin n → Bool))` is a probability measure. -/
 private lemma uniformOn_A_isProb
     {n : ℕ} {A : Finset (Fin n → Bool)} (hA : A.Nonempty) :
     IsProbabilityMeasure (uniformOn (A : Set (Fin n → Bool))) :=
   isProbabilityMeasure_uniformOn A.finite_toSet hA
 
-/-- 座標射影 `ω ↦ ω i` の可測性。`measurable_pi_apply` の薄いラッパー。 -/
+/-- Measurability of the coordinate projection `ω ↦ ω i`. -/
 private lemma xsCoord_measurable {n : ℕ} (i : Fin n) :
     Measurable (fun ω : Fin n → Bool => ω i) :=
   measurable_pi_apply i
 
-/-- `{j // j ≠ i}` 上への投影 `ω ↦ fun j => ω j.val` の可測性。 -/
+/-- Measurability of the projection `ω ↦ fun j => ω j.val` onto `{j // j ≠ i}`. -/
 private lemma xExceptCoord_measurable {n : ℕ} (i : Fin n) :
     Measurable (fun ω : Fin n → Bool => fun (j : {j : Fin n // j ≠ i}) => ω j.val) :=
   measurable_pi_iff.mpr (fun j => measurable_pi_apply j.val)
 
-/-- `μ_A` 上の coord-family `Xs i ω := ω i` の joint entropy は `log |A|`。
-B-2' AM-GM 形と同じ `h_joint_log` reshape パターン。 -/
+/-- The joint entropy of the coordinate family `Xs i ω := ω i` under `μ_A` equals `log |A|`. -/
 private lemma jointEntropy_xs_eq_log_card
     {n : ℕ} {A : Finset (Fin n → Bool)} (hA : A.Nonempty) :
     jointEntropy (uniformOn (A : Set (Fin n → Bool)))
@@ -58,21 +63,13 @@ private lemma jointEntropy_xs_eq_log_card
   rw [h_eq]
   exact entropy_uniformOn_eq_log_card hA
 
-/-! ## Phase B — 核補題 `condEntropy_coord_eq`
+/-! ## The conditional entropy `condEntropy_coord_eq`
 
-戦略 (plan の `pointwise_condEntropy_value` / `fibre_size_classification` から差し替え):
-`condDistrib` の点別値を計算する代わりに **chain rule**
-`H(X_{≠i}, X_i) = H(X_{≠i}) + H(X_i | X_{≠i})` を使う:
+The direction-`i` conditional entropy is computed via the chain rule
+`H(X_{≠i}, Xᵢ) = H(X_{≠i}) + H(Xᵢ | X_{≠i})`: the joint entropy is `log |A|`, and `H(X_{≠i})`
+is computed directly from the projection fibre masses `c_i(y) / |A|`. -/
 
-* `H(X_{≠i}, X_i) = H(Xs) = log |A|` (reshape).
-* `H(X_{≠i})` は `μ_A.map X_{≠i}` の各点質量 `c_i(y)/|A|` から直接計算
-  (`negMulLog (1/|A|) = log|A|/|A|`、`negMulLog (2/|A|) = (2/|A|)(log|A| - log 2)`)。
-* 差し引いて `H(X_i | X_{≠i}) = 2 (|A| - |π_{≠i}(A)|) log 2 / |A|`。
-
-`condDistrib` の点別 Bern(1/2) 評価 (R1) を完全に回避できる。 -/
-
-/-- `μ_A.map (projMap i)` の各点質量は fibre size / |A|。
-`uniformOn_apply_finset` を `t := Finset.univ.filter (projMap i x = y)` で当てる。 -/
+/-- The point mass of `μ_A.map (projMap i)` at `y` is the fibre size over `y` divided by `|A|`. -/
 private lemma map_projMap_real
     {n : ℕ} (i : Fin n) {A : Finset (Fin n → Bool)} (_hA : A.Nonempty)
     (y : {j : Fin n // j ≠ i} → Bool) :
@@ -100,10 +97,8 @@ private lemma map_projMap_real
   rw [h_inter, ENNReal.toReal_div]
   rfl
 
-/-- `entropy μ_A X_{≠i}` の閉形:
-size-1 fibre (`S_1 = |proj| - D_i`) は `negMulLog (1/|A|)`、
-size-2 fibre (`S_2 = D_i = |A| - |proj|`) は `negMulLog (2/|A|)`、それ以外 0。
-代数簡約後 `log|A| - 2 D_i log 2 / |A|`。 -/
+/-- The entropy of the projection `X_{≠i}` under `μ_A` in closed form:
+`log |A| − 2 (|A| − |π_{≠i}(A)|) · log 2 / |A|`. -/
 private lemma entropy_projMap_eq
     {n : ℕ} (i : Fin n) {A : Finset (Fin n → Bool)} (hA : A.Nonempty) :
     entropy (uniformOn (A : Set (Fin n → Bool)))
@@ -332,11 +327,7 @@ private lemma entropy_projMap_eq
   field_simp
   ring
 
-/-! ## Phase B (cont'd) -- chain rule で核補題 -/
-
-/-- 主結果向け bridge: pair `(X_{≠i}, X_i)` の joint entropy は `log |A|`。
-
-`(Fin n → Bool) ≃ᵐ ({j // j ≠ i} → Bool) × Bool` を直接構成して reshape。 -/
+/-- The joint entropy of the pair `(X_{≠i}, Xᵢ)` under `μ_A` equals `log |A|`. -/
 private lemma entropy_pair_proj_coord_eq_log_card
     {n : ℕ} (i : Fin n) {A : Finset (Fin n → Bool)} (hA : A.Nonempty) :
     entropy (uniformOn (A : Set (Fin n → Bool)))
@@ -405,11 +396,8 @@ private lemma entropy_pair_proj_coord_eq_log_card
       ((fun (j : {j : Fin n // j ≠ i}) => ω j.val), ω i)) from rfl] at h
   rw [h, h_full]
 
-/-- 核補題: 方向 `i` の条件付きエントロピー
-`condEntropy μ_A (Xs i) X_{≠i} = (2 (|A| - |π_{≠i}(A)|) / |A|) · log 2`。
-
-戦略: chain rule `H(X_{≠i}, X_i) = H(X_{≠i}) + H(X_i | X_{≠i})` で
-`H(X_i | X_{≠i}) = H(joint) - H(X_{≠i})`、各成分を直接計算。 -/
+/-- The direction-`i` conditional entropy under `μ_A`:
+`condEntropy μ_A (Xs i) X_{≠i} = (2 (|A| − |π_{≠i}(A)|) / |A|) · log 2`. -/
 theorem condEntropy_coord_eq
     {n : ℕ} {A : Finset (Fin n → Bool)} (hA : A.Nonempty) (i : Fin n) :
     InformationTheory.MeasureFano.condEntropy
@@ -441,10 +429,10 @@ theorem condEntropy_coord_eq
   rw [h_form]
   linarith
 
-/-! ## Phase C — chain rule + conditioning monotonicity -/
+/-! ## Chain rule and conditioning monotonicity -/
 
-/-- chain rule summand `Fin i.val → α` 形 と `↥(univ.filter (· < i)) → α` 形 の reshape。
-HanD.lean `condEntropy_chainSummand_bridge` の S = univ 版を局所写経。 -/
+/-- Reshape the chain-rule conditioning family from the `Fin i.val → α` form to the
+`↥(univ.filter (· < i)) → α` form. -/
 private lemma condEntropy_chain_to_subset
     {n : ℕ} {α : Type*}
     [Fintype α] [Nonempty α]
@@ -501,7 +489,8 @@ private lemma condEntropy_chain_to_subset
       Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) hcond_meas e_cond).symm.trans
     (by rw [h_eq])
 
-/-- subtype `{j // j ≠ i}` 形 と `↥(univ.erase i)` 形 の reshape。 -/
+/-- Reshape the conditioning family from the `{j // j ≠ i}` form to the
+`↥(univ.erase i)` form. -/
 private lemma condEntropy_subtype_erase_bridge
     {n : ℕ} {α : Type*}
     [Fintype α] [Nonempty α]
@@ -549,13 +538,8 @@ private lemma condEntropy_subtype_erase_bridge
     (fun ω (j : {j : Fin n // j ≠ i}) => Xs j.val ω) hcond_meas e_cond).symm.trans
     (by rw [h_eq])
 
-/-- Σ_i の条件付きエントロピーを `log|A|` で押さえる。
-
-chain rule (`jointEntropy_chain_rule`) で
-`log|A| = Σ_i condEntropy μ_A (Xs i) X_{<i}` を取り、
-各 `i` で `condEntropy_subset_anti` を
-`T₁ := univ.filter (· < i) ⊆ T₂ := univ.erase i` に適用し、
-`Fin i.val ≃ ↥(univ.filter (· < i))` と `{j // j ≠ i} ≃ ↥(univ.erase i)` の reshape で結ぶ。 -/
+/-- The sum of the direction-wise conditional entropies is bounded by `log |A|`:
+`∑ i, H(Xᵢ | X_{≠i}) ≤ log |A|`. -/
 theorem sum_condEntropy_le_log_card
     {n : ℕ} {A : Finset (Fin n → Bool)} (hA : A.Nonempty) :
     ∑ i : Fin n,
@@ -616,21 +600,16 @@ theorem sum_condEntropy_le_log_card
   rw [← h_chain] at h_sum_per_i
   exact h_sum_per_i
 
-/-! ## Phase D — 主定理 -/
+/-! ## Main theorem -/
 
-/-- B-2'' 主結果 (Harper / Han entropy-sharp edge-isoperimetric):
-nonempty `A ⊆ Fin n → Bool` で `|A| · (n - log₂ |A|) ≤ |∂_e A|`。
-
-`condEntropy_coord_eq` (Phase B) と `sum_condEntropy_le_log_card` (Phase C) で
-Σ を `log|A|` で押さえ、B-2' の counting identity `edgeBoundary_count_eq`
-(`2 Σ_i |π_{≠i}(A)| = n|A| + |∂_e A|`) を ℝ にキャストして代入、
-`Real.logb 2 |A| = log |A| / log 2` の bridge で `log₂` 形に整える。 -/
+/-- The entropy-sharp edge-isoperimetric inequality: for nonempty `A ⊆ Fin n → Bool`,
+`|A| · (n − log₂ |A|) ≤ |∂_e A|`. -/
 @[entry_point]
 theorem edgeBoundary_entropy_sharp {n : ℕ} {A : Finset (Fin n → Bool)}
     (hA : A.Nonempty) :
     (A.card : ℝ) * ((n : ℝ) - Real.logb 2 A.card) ≤ (edgeBoundaryCount A : ℝ) := by
   classical
-  -- n = 0 case: Fin 0 → Bool は単一点、A.card = 1、edgeBoundary = 0、両辺 0。
+  -- n = 0 case: Fin 0 → Bool is a singleton, A.card = 1, edgeBoundary = 0, both sides 0.
   by_cases hn : n = 0
   · subst hn
     -- A : Finset (Fin 0 → Bool); Subsingleton.

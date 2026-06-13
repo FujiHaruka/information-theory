@@ -24,21 +24,19 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 variable {α : Type*} [Fintype α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ### Phase E — 源符号化定理 achievability
+/-! ### Source-coding theorem, achievability
 
-Phase E は source-coding achievability (Cover-Thomas Theorem 5.4.2) を `Tendsto` 形で
-立てる。`M_n := ⌈exp(n · R)⌉` を取り、typical set ↔ `Fin M_n` の bijection で encoder /
-decoder を構成、`typicalSet_prob_tendsto_one` で error rate → 0、`Nat.le_ceil` /
-`Nat.ceil_lt_add_one` の squeeze で `log M_n / n → R`。
-
-詳細: [`docs/shannon/aep-achievability-plan.md`](../../docs/shannon/aep-achievability-plan.md).
+The source-coding achievability theorem (Cover-Thomas Theorem 5.4.2) is stated
+in `Tendsto` form. With codebook size `M_n := ⌈exp(n · R)⌉`, the encoder and
+decoder are built from a bijection between the typical set and `Fin M_n`; the
+error rate vanishes via `typicalSet_prob_tendsto_one`, and `log M_n / n → R`
+follows from a `Nat.le_ceil` / `Nat.ceil_lt_add_one` squeeze.
 -/
 
 /-- The codebook size used in the achievability proof: `M_n := ⌈exp(n · R)⌉`. -/
 noncomputable def codebookSize (R : ℝ) (n : ℕ) : ℕ :=
   Nat.ceil (Real.exp ((n : ℝ) * R))
 
-/-- `M_n ≥ 1` (so `Fin M_n` is `Nonempty`). -/
 lemma codebookSize_pos (R : ℝ) (n : ℕ) : 0 < codebookSize R n := by
   unfold codebookSize
   exact Nat.ceil_pos.mpr (Real.exp_pos _)
@@ -46,7 +44,6 @@ lemma codebookSize_pos (R : ℝ) (n : ℕ) : 0 < codebookSize R n := by
 instance codebookSize_neZero (R : ℝ) (n : ℕ) : NeZero (codebookSize R n) :=
   ⟨(codebookSize_pos R n).ne'⟩
 
-/-- Cardinality of typical set is ≤ `M_n` (provided `H + ε ≤ R` and `hpos`). -/
 lemma typicalSet_card_le_codebookSize
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -96,7 +93,6 @@ noncomputable def aepDecoder
     exact fun _ => Classical.arbitrary α
 
 omit [MeasurableSingletonClass α] in
-/-- **Round-trip lemma**: `d_n ∘ c_n = id` on typical set. -/
 lemma aepDecoder_aepEncoder_of_mem_typicalSet
     (μ : Measure Ω) (Xs : ℕ → Ω → α)
     (n : ℕ) (ε R : ℝ)
@@ -135,11 +131,11 @@ lemma aepDecoder_aepEncoder_of_mem_typicalSet
     rw [hsymm]
   exact this
 
-/-! #### Phase B — error rate Tendsto -/
+/-! ### Error-rate convergence -/
 
 omit [MeasurableSingletonClass α] in
-/-- error event ⊆ {jointRV Xs n ∉ typicalSet}. The orientation matches
-`errorProb`: `Xs ω ≠ decoder (encoder (Xs ω))`. -/
+/-- The error event is contained in `{jointRV Xs n ∉ typicalSet}`, with the
+orientation `Xs ω ≠ decoder (encoder (Xs ω))` matching `errorProb`. -/
 lemma error_subset_compl_typicalSet
     (μ : Measure Ω) (Xs : ℕ → Ω → α)
     (n : ℕ) (ε R : ℝ)
@@ -153,7 +149,6 @@ lemma error_subset_compl_typicalSet
   apply hω
   exact (aepDecoder_aepEncoder_of_mem_typicalSet μ Xs n ε R h_card_le _ hmem).symm
 
-/-- error rate → 0. -/
 lemma aep_errorProb_tendsto_zero
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -235,9 +230,9 @@ lemma aep_errorProb_tendsto_zero
     exact measureReal_nonneg
   exact squeeze_zero h_error_nn h_error_le h_compl_tendsto
 
-/-! #### Phase C — rate Tendsto + main theorem -/
+/-! ### Rate convergence and achievability theorem -/
 
-/-- `log M_n / n → R` (squeeze via `Nat.le_ceil` and `Nat.ceil_lt_add_one`). -/
+/-- `log M_n / n → R`. -/
 lemma codebookSize_log_div_tendsto
     {R : ℝ} (hR : 0 < R) :
     Tendsto (fun n : ℕ => Real.log (codebookSize R n : ℝ) / n) atTop (𝓝 R) := by
@@ -398,13 +393,13 @@ theorem source_coding_achievability
   · exact codebookSize_log_div_tendsto h_R_pos
   · exact aep_errorProb_tendsto_zero μ Xs hXs hpos hindep_pair hident hε h_le
 
-/-! ### Phase F — Unified source coding theorem (両側等号)
+/-! ### Unified source-coding theorem (two-sided equality)
 
-Combining Phase D (weak converse) and Phase E (achievability) yields
+Combining the weak converse and the achievability direction yields
 `sInf (achievableRates μ Xs) = entropy μ (Xs 0)`. An "achievable code" is a family
 `(M_n, c_n, d_n)` whose error probability vanishes and whose rate `log M_n / n`
-is universally bounded (the `hM_bdd` hypothesis of Phase D). The achievability
-witnesses produced by Phase E satisfy this universally-bounded condition because
+is universally bounded (the `hM_bdd` hypothesis of the converse). The
+achievability witnesses satisfy this universally-bounded condition because
 `Tendsto rate atTop (𝓝 R)` implies `BddAbove (Set.range rate)`
 (`Filter.Tendsto.bddAbove_range`).
 -/
@@ -431,7 +426,7 @@ noncomputable def achievableRates
         IsAchievableCode μ Xs M c d ∧
         Filter.liminf (fun n : ℕ => Real.log (M n : ℝ) / n) atTop = r }
 
-/-- (Phase D lifted) Every achievable rate is at least the entropy. -/
+/-- Every achievable rate is at least the entropy. -/
 @[entry_point]
 theorem entropy_le_of_mem_achievableRates
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -447,7 +442,7 @@ theorem entropy_le_of_mem_achievableRates
   exact source_coding_converse μ Xs hXs hindep_full hident hcard M c d
     hAch.hPe_to_zero hAch.hM_bdd
 
-/-- (Phase E lifted) Any rate strictly above the entropy is achievable. -/
+/-- Any rate strictly above the entropy is achievable. -/
 @[entry_point]
 theorem mem_achievableRates_of_gt_entropy
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -464,7 +459,7 @@ theorem mem_achievableRates_of_gt_entropy
   obtain ⟨R', hR'⟩ := hRate.bddAbove_range
   exact ⟨R', fun n => hR' (Set.mem_range_self n)⟩
 
-/-- **Source coding theorem (両側等号)**:
+/-- **Source coding theorem**:
 The infimum of asymptotic rates of achievable block source codes equals the
 entropy of the source. -/
 @[entry_point]
@@ -493,15 +488,14 @@ theorem source_coding_theorem
   · -- H ≤ sInf: H is a lower bound and achievableRates is nonempty.
     exact le_csInf h_nonempty h_lb
 
-/-! ### Phase G — Point-wise probability upper bound on typicalSet
+/-! ### Point-wise probability upper bound on the typical set
 
 Cover-Thomas Theorem 3.1.2 (a)(2): for any `x ∈ T_ε^n`,
-`P^n(x) = ∏ P(x_i) ≤ exp(-n(H - ε))`. This is the **point-wise** companion of the
-size bound `|T_ε^n| ≤ exp(n(H+ε))` and is the key input for the Phase B-(c)
-"independent-pair" bound in channel coding achievability (B-3).
+`P^n(x) = ∏ P(x_i) ≤ exp(-n(H - ε))`. This is the point-wise companion of the
+size bound `|T_ε^n| ≤ exp(n(H+ε))`.
 
 The factorization `μ.map (jointRV Xs n) = Measure.pi (μ.map (Xs ·))` requires
-mutual independence (`iIndepFun`), not just pairwise independence. We obtain it
+mutual independence (`iIndepFun`), not just pairwise independence. It is obtained
 via `iIndepFun_iff_map_fun_eq_pi_map` after restricting indices `ℕ → Fin n` with
 `iIndepFun.precomp Fin.val_injective`. -/
 
@@ -617,17 +611,18 @@ theorem typicalSet_prob_le
     rw [hreal]
     exact this
 
-/-! ### Phase H — Point-wise lower bound + size lower bound (D-3, Cover-Thomas 3.1.2 完全形)
+/-! ### Point-wise lower bound and size lower bound
 
-`typicalSet_prob_le` (Phase G, 点別上界) と `typicalSet_prob_tendsto_one` (Phase C, 集合確率
-→ 1) と `typicalSet_card_le` (Phase C, サイズ上界) に加え、Cover-Thomas Theorem 3.1.2 の
-完全 4 帰結を充足する残り 2 本:
-- `typicalSet_prob_ge`: 点別下界 `exp(-n(H+ε)) ≤ P^n(x)` for `x ∈ T_ε^n`
-- `typicalSet_card_ge`: サイズ下界 `(1-η) · exp(n(H-ε)) ≤ |T_ε^n|` whenever `μ(T) ≥ 1-η`
+The remaining two of the four consequences in Cover-Thomas Theorem 3.1.2, beyond
+`typicalSet_prob_le` (point-wise upper bound), `typicalSet_prob_tendsto_one`
+(set probability `→ 1`), and `typicalSet_card_le` (size upper bound):
+- `typicalSet_prob_ge`: point-wise lower bound `exp(-n(H+ε)) ≤ P^n(x)` for `x ∈ T_ε^n`
+- `typicalSet_card_ge`: size lower bound `(1-η) · exp(n(H-ε)) ≤ |T_ε^n|` whenever `μ(T) ≥ 1-η`
 
-実装: 点別下界は `prob_le` の方向反転 (上側不等式 `(∑ pmfLog)/n - H < ε` を使う)、
-サイズ下界は `μ(T) = ∑_{x∈T} p(x) ≤ |T| · exp(-n(H-ε))` (point-wise upper bound) を
-変形して取得。-/
+The point-wise lower bound reverses the direction of `prob_le` (using the upper
+inequality `(∑ pmfLog)/n - H < ε`); the size lower bound is obtained by
+rearranging `μ(T) = ∑_{x∈T} p(x) ≤ |T| · exp(-n(H-ε))` (the point-wise upper
+bound). -/
 
 /-- **Point-wise lower bound on typical-set mass**: for `x ∈ T_ε^n`,
 `exp(-n · (H + ε)) ≤ (μ.map (jointRV Xs n)).real {x}`. Dual of

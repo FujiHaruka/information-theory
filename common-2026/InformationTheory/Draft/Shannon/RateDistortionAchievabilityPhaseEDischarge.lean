@@ -4,20 +4,15 @@ import InformationTheory.Shannon.IIDProductInput.Joint
 import InformationTheory.Shannon.ChannelCoding.ShannonTheorem
 
 /-!
-# Rate-distortion achievability — Phase E partial discharge (E-3'')
+# Rate-distortion achievability — partial discharge of the witness form
 
-[`docs/shannon/rate-distortion-achievability-plan.md`](../../../docs/shannon/rate-distortion-achievability-plan.md)
-
-Phase E MVP (`RateDistortionAchievabilityPhaseE.lean`) publishes the achievability
-half of the rate-distortion theorem in *witness form*, with the ambient
-i.i.d. construction (`μ, Xs, Ys`) and several entropy / distortion-bridge
-hypotheses left as pass-throughs.
-
-This file **internally discharges** those pass-throughs by instantiating the
-ambient with `iidAmbientJointMeasure (pmfToMeasure qStar)`, where `qStar` is the
-feasible joint pmf provided by the user. The only remaining external hypothesis
-is the codebook-averaged random-coding failure sequence — this currently
-requires strong typicality machinery beyond Phase B's weak typicality scope.
+The witness form of the rate-distortion achievability theorem carries the ambient i.i.d.
+construction (`μ, Xs, Ys`) and several entropy / distortion-bridge hypotheses as
+pass-throughs. This file internally discharges those pass-throughs by instantiating the
+ambient with `iidAmbientJointMeasure (pmfToMeasure qStar)`, where `qStar` is a feasible
+joint pmf. The only remaining external hypothesis is the codebook-averaged random-coding
+failure sequence, which requires strong-typicality machinery beyond the weak (entropy-only)
+typicality available here.
 
 ## What is discharged here
 
@@ -33,9 +28,9 @@ requires strong typicality machinery beyond Phase B's weak typicality scope.
 ## What is *not* discharged here
 
 * `h_codebook_avg_failure`: requires strong typicality (joint type ~ q*) to
-  bound the per-codebook conditional failure probability via product law.
-  Phase B's weak (entropy-only) typicality cannot give an exponential decay
-  here; left as an external hypothesis on a `failure_seq → 0` sequence.
+  bound the per-codebook conditional failure probability via the product law.
+  Weak (entropy-only) typicality cannot give an exponential decay here; left as
+  an external hypothesis on a `failure_seq → 0` sequence.
 -/
 
 namespace InformationTheory.Shannon

@@ -10,31 +10,27 @@ import Mathlib.Order.LiminfLimsup
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# Cramér's theorem (T1-C, Tier 0 baseline)
+# Cramér's theorem
 
-This file publishes the **Legendre transform** of a real-valued function and the
-**Cramér rate function** (`I(a) = Λ^*(a)` for `Λ = cgf X μ`), together with the
-basic properties needed for the upper / lower bounds of Cramér's large deviation
-theorem.
+The **Legendre transform** of a real-valued function and the **Cramér rate
+function** (`I(a) = Λ^*(a)` for `Λ = cgf X μ`), together with the upper bound of
+Cramér's large deviation theorem (Cover–Thomas, Theorem 11.4.1, upper half) in
+per-`n` Chernoff, log, and limsup forms. The lower bound is developed downstream
+in `CramerGeneralLower.lean`.
 
-The full Cover-Thomas Theorem 11.4.1 (the upper and lower bounds on
-`(1/n) log P[Sₙ ≥ na]` as `n → ∞`) is left as Tier 1 / Tier 2 follow-ups; this
-file keeps the surface minimal so it can be shipped as a stable foundation.
+## Main definitions
 
-## 主定義
+* `legendre Λ a` — the Legendre transform `Λ^*(a) := sup_λ (λ·a − Λ(λ))`.
+* `cramerRate X μ a` — the Cramér rate function `I(a) := (cgf X μ)^*(a)`.
 
-* `legendre Λ a := sSup ((fun lam => lam * a - Λ lam) '' Set.univ)` — Mathlib
-  に Legendre / convex conjugate API は存在しないため自前で定義する。
-* `cramerRate X μ a := legendre (cgf X μ) a` — Cramér rate function.
+## Main statements
 
-## Tier 0 publish 内容
-
-* `legendre_apply_le` — `BddAbove` 仮定下で `lam * a - Λ lam ≤ legendre Λ a`.
-* `legendre_nonneg` — `Λ 0 = 0` + `BddAbove` 仮定下で `0 ≤ legendre Λ a`.
-* `cramerRate_apply_le` — Cramér rate に翻訳した `legendre_apply_le`.
-* `cramerRate_nonneg` — 確率測度では `cgf · μ 0 = 0` なので非負。
-* `cgf_sum_eq_nsmul` — i.i.d. + 同分布なら `cgf (∑ Xᵢ) μ t = n · cgf (X 0) μ t`.
-* `integrable_exp_mul_of_bounded` — bounded RV ⇒ 全 `t` で `exp (t * X)` integrable.
+* `cramerRate_apply_le`, `cramerRate_nonneg` — basic bounds on the rate function.
+* `chernoff_bound_n_iid` — per-`n` Chernoff bound for the upper tail of an i.i.d.
+  bounded sum.
+* `cramer_upper`, `cramer_upper_legendre` — the limsup-form upper bound.
+* `integral_tilted_eq_deriv_cgf`, `klDiv_tilted_eq` — tilted change-of-measure
+  identities used by the lower bound.
 -/
 
 namespace InformationTheory.Shannon.Cramer
@@ -44,14 +40,13 @@ open scoped Topology BigOperators
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
 
-/-! ## Tier 0 — `legendre` + `cramerRate` 定義 + 基本性質 -/
+/-! ## `legendre` and `cramerRate`: definitions and basic properties -/
 
-/-- **Legendre transform** of `Λ : ℝ → ℝ` at `a`: `Λ^*(a) := sup_λ (λ·a − Λ(λ))`.
+/-- The **Legendre transform** of `Λ : ℝ → ℝ` at `a`: `Λ^*(a) := sup_λ (λ·a − Λ(λ))`.
 
-Mathlib に Legendre 変換 / convex conjugate の汎用 API は (本稿時点で) 存在しない
-ため、ここでは textbook 形そのまま `sSup` で定義する。`BddAbove` でない場合は
-Mathlib 規約により `sSup = 0` 返却となるため、本ファイルの基本性質には
-`BddAbove` 仮定を明示的に付ける。 -/
+Mathlib has no general Legendre-transform / convex-conjugate API, so this is the
+textbook `sSup` form. When the image set is not `BddAbove`, Mathlib returns
+`sSup = 0`, so the basic properties below take an explicit `BddAbove` hypothesis. -/
 noncomputable def legendre (Λ : ℝ → ℝ) (a : ℝ) : ℝ :=
   sSup ((fun lam : ℝ => lam * a - Λ lam) '' Set.univ)
 
@@ -91,7 +86,7 @@ lemma cramerRate_nonneg [IsProbabilityMeasure μ] (X : Ω → ℝ) (a : ℝ)
     0 ≤ cramerRate X μ a :=
   legendre_nonneg _ (cgf_zero) a h_bdd
 
-/-! ## Tier 0 — `cgf` sum + bounded-RV integrability helpers -/
+/-! ## `cgf` sum and bounded-RV integrability helpers -/
 
 /-- For a bounded real random variable on a finite measure space, the
 exponential moment `exp (t * Y)` is integrable for every `t`. This is the
@@ -142,7 +137,7 @@ lemma cgf_sum_eq_nsmul {X : ℕ → Ω → ℝ}
   rw [h_sum, Finset.sum_congr rfl h_each, Finset.sum_const, Finset.card_range,
     nsmul_eq_mul]
 
-/-! ## Tier 1 — Cramér upper bound (per-n Chernoff bound, i.i.d. strengthening) -/
+/-! ## Cramér upper bound: per-`n` Chernoff bound (i.i.d. strengthening) -/
 
 /-- **Per-n Chernoff bound** for the upper tail of an i.i.d. sum of bounded real
 random variables (Cover-Thomas 11.4.1 upper half, point-wise in `n`).
@@ -253,7 +248,7 @@ lemma cramer_log_bound_n_iid [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
   refine h_div.trans (le_of_eq ?_)
   field_simp
 
-/-! ## Tier 2 — Cramér upper bound (limsup form) -/
+/-! ## Cramér upper bound: limsup form -/
 
 /-- **Cramér upper bound, limsup form** (Cover-Thomas 11.4.1 upper half).
 
@@ -306,9 +301,9 @@ non-negative `lam` (`hlam_opt`), then
 
 `limsup_n (1/n) log P[a·n ≤ Sₙ] ≤ -cramerRate (X 0) μ a`.
 
-L-MIG-1: `hlam_opt` restored as regularity precondition (audit-2 verdict —
-Legendre 凸性 + `a ≥ 𝔼[X]` で textbook discharge 可能、load-bearing でなく
-precondition)、self-contained constructive proof through `cramer_upper`. -/
+`hlam_opt` is a regularity precondition (it holds for `a ≥ 𝔼[X]` by convexity of
+the Legendre transform), not part of the proof core; the result is a constructive
+specialization of `cramer_upper`. -/
 theorem cramer_upper_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
     (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
@@ -328,24 +323,18 @@ theorem cramer_upper_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
   have h := cramer_upper (μ := μ) h_indep h_meas h_ident h_bdd a lam hlam h_pos h_cobdd
   rw [← hlam_opt]; exact h
 
-/-! ## Tier 2 (Phase C) — Cramér lower bound (tilted change-of-measure)
+/-! ## Cramér lower bound: tilted change-of-measure identities
 
-The lower bound is more subtle than the upper bound. The textbook proof uses an
-exponential change-of-measure to the **tilted measure** `μ_lam := μ.tilted (lam * X ·)`,
-where `lam` is chosen so that `Λ'(lam) = a`. Under the tilted measure:
+The lower bound uses an exponential change-of-measure to the **tilted measure**
+`μ_lam := μ.tilted (lam * X ·)`, where `lam` is chosen so that `Λ'(lam) = a`.
+Under the tilted measure the mean of `X` equals `a`, a tilted-side law of large
+numbers concentrates the sample mean near `a`, and converting back to `μ` via the
+Radon–Nikodym derivative of `tilted` picks up an
+`exp(-n · (lam · a − Λ(lam))) = exp(-n · cramerRate)` factor.
 
-1. The mean of `X` equals `a` (Mathlib: `integral_tilted_mul_self`),
-2. So a (tilted-side) LLN concentrates the sample mean near `a`,
-3. Converting back to `μ` via the Radon-Nikodym derivative of `tilted` picks up an
-   `exp(-n · (lam · a − Λ(lam))) = exp(-n · cramerRate)` factor.
-
-The bottleneck (cf. plan §C-3 / fallback L-C2) is the **n-IID re-construction
-of the tilted measure** (`(infinitePi μ).tilted (∑ lam * X i)` vs
-`infinitePi (μ.tilted ...)`). Mathlib does not provide a direct lemma here, so
-the present file follows the L-C2 fallback: we publish `klDiv_tilted_eq` (the
-KL-of-tilted identity, useful on its own) and the **tilted-Chernoff
-hypothesis-form** lower bound, deferring the tilted-LLN construction to a
-follow-up plan. -/
+This file publishes the change-of-measure building blocks — `klDiv_tilted_eq`
+(the KL-of-tilted identity) and `integral_tilted_eq_deriv_cgf` — that the
+downstream lower bound consumes. -/
 
 /-- **Universal integrability for bounded RVs**: a bounded random variable has
 every `t ∈ ℝ` in its `integrableExpSet`, hence the whole real line lies in the
@@ -362,22 +351,21 @@ lemma mem_interior_integrableExpSet_of_bounded
   rw [h_univ, interior_univ]
   exact Set.mem_univ t
 
-/-- **Tilted measure is a probability measure** (Phase C-2, bounded RV form). -/
+/-- The tilted measure of a bounded random variable is a probability measure. -/
 lemma isProbabilityMeasure_tilted_of_bounded [IsProbabilityMeasure μ]
     {Y : Ω → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) :
     IsProbabilityMeasure (μ.tilted (fun ω => lam * Y ω)) :=
   isProbabilityMeasure_tilted (integrable_exp_mul_of_bounded hY_meas h_bdd lam)
 
-/-- **Tilted mean equals `Λ'(lam)`** (Phase C-2). For a bounded RV `Y`, the
-expectation of `Y` under `μ.tilted (lam * Y ·)` equals the first derivative of
-`cgf Y μ` at `lam`. -/
+/-- For a bounded random variable `Y`, the expectation of `Y` under
+`μ.tilted (lam * Y ·)` equals the first derivative of `cgf Y μ` at `lam`. -/
 @[entry_point]
 lemma integral_tilted_eq_deriv_cgf [IsProbabilityMeasure μ]
     {Y : Ω → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) :
     ∫ ω, Y ω ∂(μ.tilted (fun ω => lam * Y ω)) = deriv (cgf Y μ) lam :=
   integral_tilted_mul_self (mem_interior_integrableExpSet_of_bounded hY_meas h_bdd lam)
 
-/-- **KL-of-tilted identity** (Phase C-1).
+/-- KL-of-tilted identity.
 
 For a bounded real random variable `X : Ω → ℝ` on a probability measure `μ`,
 the (integral form of the) Kullback-Leibler divergence between `μ.tilted (lam * X ·)`

@@ -4,35 +4,29 @@ import Mathlib.Probability.UniformOn
 import Mathlib.MeasureTheory.Constructions.Pi
 
 /-!
-# Slepian–Wolf random binning machinery (E-5' Phase A + B MVP)
-
-Phase A + B of the E-5' (full SW rate region) ムーンショット
-([`docs/shannon/slepian-wolf-full-rate-region-plan.md`](../../docs/shannon/slepian-wolf-full-rate-region-plan.md)).
+# Slepian–Wolf random binning machinery
 
 This file introduces the **random-binning measure** `binningMeasure α n M` on the
 hash-function space `(Fin n → α) → Fin M`, plus the **collision-probability**
 collapse `𝔼_f[1_{f x = f x'}] = 1/M` for `x ≠ x'` (and `= 1` for `x = x'`).
 
-These are the encoder-side mirror of `ChannelCodingAchievability.codebookMeasure`
-(`Measure.pi (fun _ : Fin M => Measure.pi (fun _ : Fin n => p))`): the index of
-the outer `Measure.pi` is swapped from `Fin M` (codeword count) to
-`(Fin n → α)` (input-sequence space).
-
-Phase C-F (joint typicality decoder + error decomposition + finalize) are
-**out of scope** for this MVP and are tracked separately in the E-5'' deferred
-seed.
-
-## 主結果
+## Main definitions
 
 * `binningMeasure α n M` — `Measure.pi (fun _ : (Fin n → α) => uniformOn univ)`
   on `(Fin n → α) → Fin M`.
-* `binningMeasure.instIsProbabilityMeasure` — probability measure on hash space.
+
+## Main statements
+
 * `binningMeasure_singleton_real` — `(binningMeasure α n M).real {f} = (1/M)^{|α|^n}`.
 * `binning_collision_prob` — for `x ≠ x'`,
   `(binningMeasure α n M).real {f | f x = f x'} = 1/M`.
-* `binning_collision_prob_eq_self` — for any `x`,
-  `(binningMeasure α n M).real {f | f x = f x} = 1`.
 
+## Implementation notes
+
+* This is the encoder-side mirror of `ChannelCodingAchievability.codebookMeasure`
+  (`Measure.pi (fun _ : Fin M => Measure.pi (fun _ : Fin n => p))`): the index of
+  the outer `Measure.pi` is swapped from `Fin M` (codeword count) to `(Fin n → α)`
+  (input-sequence space).
 -/
 
 namespace InformationTheory.Shannon
@@ -45,7 +39,7 @@ set_option linter.unusedSectionVars false
 variable {α : Type*} [Fintype α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ## Phase A — `binningMeasure` definition and basic instances -/
+/-! ## The random binning measure and basic instances -/
 
 /-- **Random binning measure.** Each input sequence `x ∈ (Fin n → α)` is hashed
 independently to a uniformly random bin index in `Fin M`. The total law on the
@@ -99,30 +93,10 @@ lemma binningMeasure_singleton_real
   rw [Finset.prod_const]
   rfl
 
-/-! ## Phase B — Collision probability collapse `𝔼[1_{f x = f x'}] = 1/M`
+/-! ## Collision probability collapse `𝔼[1_{f x = f x'}] = 1/M` -/
 
-The single most important fact about random binning: for **distinct** input
-sequences `x ≠ x'`, the probability that they hash to the same bin is `1/M`,
-matching naive intuition. For `x = x'`, the probability is trivially `1`.
-
-The proof technique is the standard "decompose the collision event into
-disjoint slices by the shared hash value, evaluate each slice via
-`Measure.pi_singleton`, then sum out the remaining `|α|^n - 2` (resp. `|α|^n - 1`)
-coordinates against probability `1`." This is the **encoder-side mirror** of the
-`ChannelCodingAchievability.codebook_marginal_one` / `codebook_marginal_two`
-factorization. -/
-
-/-- **Collision probability, distinct inputs (`x ≠ x'`).**
-
-For random binning at rate `1/M` per input sequence, two distinct sequences
-collide with probability exactly `1/M`. This is the cornerstone of the
-random-binning achievability argument (Cover-Thomas Theorem 15.4.1):
-* For each fixed `x' ≠ x`, the probability over the random hash that
-  `f x' = f x` is `1/M_X`.
-* Combined with the conditional-typical fiber size bound (Phase C-(C.5),
-  out of scope here), this gives `E[|alias x'| · 1_{f x' = f x}] ≤
-  |fiber| / M_X`.
-* The rate condition `R_X > H(X|Y)` then forces this expectation to `0`. -/
+/-- For random binning at rate `1/M` per input sequence, two distinct sequences
+`x ≠ x'` collide with probability exactly `1/M` (Cover–Thomas Theorem 15.4.1). -/
 @[entry_point]
 theorem binning_collision_prob
     {n M : ℕ} [NeZero M]

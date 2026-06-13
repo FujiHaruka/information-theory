@@ -7,44 +7,37 @@ import Mathlib.Analysis.MeanInequalities
 import Mathlib.Data.Real.ConjExponents
 
 /-!
-# Chernoff information + Hoeffding tradeoff exponent (T1-B + T1-D, Tier 0)
+# Chernoff information and the Hoeffding tradeoff exponent
 
-textbook (Cover-Thomas 11.7 / 11.9) の Chernoff exponent `C(P₁, P₂)` と
-Hoeffding tradeoff exponent `E₂(α)` を **finite-alphabet pmf** 形 (`α → ℝ`)
-で定義し、最も基本的な性質 (端点値、非負性、`Icc 0 1` 上の連続性、`min` 達成性)
-を publish する Tier 0 baseline.
+The Chernoff exponent `C(P₁, P₂)` and the Hoeffding tradeoff exponent `E₂(α)`
+(Cover–Thomas 11.7 / 11.9) for finite-alphabet pmfs `P₁, P₂ : α → ℝ`, together with the
+convexity of `λ ↦ log Z(λ)` and the achievability side of the Chernoff bound on the Bayes
+error of an `n`-sample binary hypothesis test.
 
-## 主定義
+## Main definitions
 
-* `chernoffZSum P₁ P₂ lam := ∑ a, (P₁ a)^(1-lam) · (P₂ a)^lam` (textbook `Z(λ)`)
-* `chernoffInfo P₁ P₂ := -sInf ((Real.log ∘ chernoffZSum P₁ P₂) '' Icc 0 1)`
-  (Chernoff information; achievement & non-negativity below)
-* `hoeffdingE2 P₁ P₂ alpha := sInf ((klDivPmf · P₂) '' {Q ∈ stdSimplex ∧ klDivPmf Q P₁ ≤ alpha})`
-  (Hoeffding tradeoff exponent at Type I level `alpha`)
+* `chernoffZSum P₁ P₂ lam` — the Chernoff partition function `Z(λ) := ∑ a, P₁(a)^(1-λ) · P₂(a)^λ`.
+* `chernoffInfo P₁ P₂` — the Chernoff information `-sInf ((log ∘ Z) '' Icc 0 1)`.
+* `chernoffMediator P₁ P₂ lam` — the tilted mediator pmf `P₁(a)^(1-λ) · P₂(a)^λ / Z(λ)`.
+* `hoeffdingE2 P₁ P₂ alpha` — the Hoeffding tradeoff exponent at Type I level `alpha`.
+* `hoeffdingConstraintSet P₁ alpha` — the constraint set `{Q ∈ stdSimplex | klDivPmf Q P₁ ≤ alpha}`.
+* `bayesErrorMinPmf P₁ P₂ n` — the optimal `n`-sample Bayes error with equal priors.
 
-## Tier 0 publish 内容
+## Main statements
 
-- `chernoffZSum_lam_zero`, `chernoffZSum_lam_one` — 端点 `Z(0) = Z(1) = 1`
-- `chernoffZSum_pos` — full-support 下で `Z(λ) > 0`
-- `chernoffZSum_continuous` — `Icc 0 1` 上の連続性
-- `chernoffInfo_attained` — `∃ λ ∈ Icc 0 1, chernoffInfo = -log Z(λ)`
-- `chernoffInfo_nonneg` — `chernoffInfo ≥ 0`
-- `klDivPmf_self_eq_zero` — `klDivPmf P P = 0` (Hoeffding 側で再利用)
-- `hoeffdingE2_constraint_nonempty` — 制約集合非空 (`P₁ ∈ K`)
-- `hoeffdingE2_attained` — Csiszar projection 経由で達成性
-- `hoeffdingE2_nonneg` — `hoeffdingE2 ≥ 0`
+* `chernoffInfo_attained`, `chernoffInfo_nonneg` — the Chernoff information is attained and nonnegative.
+* `convexOn_chernoffLogZ` — `λ ↦ log Z(λ)` is convex on `Icc 0 1`.
+* `hoeffdingE2_attained`, `hoeffdingE2_nonneg`, `hoeffdingE2_unique` — existence, nonnegativity,
+  and uniqueness of the Hoeffding minimizer.
+* `bayesErrorMinPmf_le_half_Z_pow` — the Chernoff bound `bayesErrorMinPmf ≤ (1/2) · Z(λ)^n`.
+* `chernoff_lemma_achievability` — the achievability rate `liminf ≥ chernoffInfo`.
 
-Tier 1+ (achievability / converse for Chernoff、tradeoff `Tendsto` 形) は本ファイル
-では未着手 (judgement log + plan §進捗 参照).
+## Implementation notes
 
-## 設計判断
-
-- **finite-alphabet pmf 形 (`α → ℝ`)** に統一: Tier 0 で `Measure` 経路は不要、
-  `CsiszarProjection.klDivPmf` を素直に再利用できる
-- **Mathlib-shape-driven**: `chernoffInfo` は `sInf (... '' Icc 0 1)` 形で定義し、
-  `IsCompact.exists_isMinOn` + `Real.sInf_image_Icc_*` 系で達成性を取る
-- **撤退ライン L-S3** (定義 + 基本性質のみ publish) を確実に通すスコープに絞った。
-  Tier 1+ (Sanov LDP per-tilt / tilted LRT) は別セッション
+Everything is stated in finite-alphabet pmf form (`α → ℝ`) so that `CsiszarProjection.klDivPmf`
+can be reused directly. `chernoffInfo` and `hoeffdingE2` are stated as `sInf` over an image of a
+compact set, so attainment follows from `IsCompact.exists_sInf_image_eq`. The convexity of
+`log Z` is obtained from the multiplicative Hölder bound `Z(αλ₁ + βλ₂) ≤ Z(λ₁)^α · Z(λ₂)^β`.
 -/
 
 namespace InformationTheory.Shannon.Chernoff
@@ -57,20 +50,18 @@ open scoped BigOperators Topology
 
 variable {α : Type*} [Fintype α] [DecidableEq α]
 
-/-! ## Phase A — Chernoff exponent 定義 + 基本性質 -/
+/-! ### Chernoff exponent: definition and basic properties -/
 
-/-- **Chernoff partition function** `Z(λ) := ∑_a P₁(a)^{1-λ} · P₂(a)^λ`
-(Cover-Thomas 11.9.1). textbook 形そのまま、`Real.rpow` 算術で書く. -/
+/-- The Chernoff partition function `Z(λ) := ∑_a P₁(a)^(1-λ) · P₂(a)^λ` (Cover–Thomas 11.9.1). -/
 noncomputable def chernoffZSum (P₁ P₂ : α → ℝ) (lam : ℝ) : ℝ :=
   ∑ a : α, (P₁ a) ^ (1 - lam) * (P₂ a) ^ lam
 
-/-- **Chernoff information** `C(P₁, P₂) := -min_{λ ∈ [0,1]} log Z(λ)`.
-
-`sInf` で書き、`chernoffInfo_attained` で実際に `min` が達成されることを別途証明. -/
+/-- The Chernoff information `C(P₁, P₂) := -min_{λ ∈ [0,1]} log Z(λ)`, stated as `-sInf` of the
+image; `chernoffInfo_attained` shows the minimum is realized. -/
 noncomputable def chernoffInfo (P₁ P₂ : α → ℝ) : ℝ :=
   -(sInf ((fun lam : ℝ => Real.log (chernoffZSum P₁ P₂ lam)) '' Set.Icc (0:ℝ) 1))
 
-/-! ### A-1 端点値 `Z(0) = Z(1) = 1` -/
+/-! ### Endpoint values `Z(0) = Z(1) = 1` -/
 
 omit [DecidableEq α] in
 /-- `Z(0) = ∑ P₁(a) = 1` for pmf P₁. -/
@@ -98,7 +89,7 @@ lemma chernoffZSum_lam_one
   simp_rw [h_term]
   exact hP₂_sum
 
-/-! ### A-2 strict positivity -/
+/-! ### Strict positivity -/
 
 omit [DecidableEq α] in
 /-- Each summand `(P₁ a)^(1-λ) · (P₂ a)^λ` is strictly positive under full support. -/
@@ -120,7 +111,7 @@ lemma chernoffZSum_pos
     exact chernoffZSum_term_pos P₁ P₂ hP₁_pos hP₂_pos lam a
   · exact Finset.univ_nonempty
 
-/-! ### A-3 連続性 -/
+/-! ### Continuity -/
 
 omit [DecidableEq α] in
 /-- `λ ↦ Z(λ)` is continuous on `ℝ`. -/
@@ -151,7 +142,7 @@ lemma chernoffLogZ_continuous
     chernoffZSum_pos P₁ P₂ hP₁_pos hP₂_pos lam
   exact (Real.continuousAt_log h_pos.ne').comp hZ_cont.continuousAt
 
-/-! ### A-4 `chernoffInfo` 達成性 + 非負性 -/
+/-! ### Attainment and nonnegativity of `chernoffInfo` -/
 
 omit [DecidableEq α] in
 /-- Chernoff information is attained: `∃ λ* ∈ Icc 0 1, chernoffInfo = -log Z(λ*)`. -/
@@ -212,11 +203,10 @@ theorem chernoffInfo_nonneg
       ≤ Real.log (chernoffZSum P₁ P₂ 0) := csInf_le h_bdd h_logZ0_in_img
     _ = 0 := h_logZ0
 
-/-! ### A-5 Chernoff information symmetry `C(P₁, P₂) = C(P₂, P₁)` -/
+/-! ### Symmetry `Z_{P₁,P₂}(λ) = Z_{P₂,P₁}(1 - λ)` -/
 
 omit [DecidableEq α] in
-/-- **Symmetry of `chernoffZSum`** in `λ ↔ 1 - λ`:
-`Z_{P₁,P₂}(λ) = Z_{P₂,P₁}(1 - λ)` (just swap the exponents). -/
+/-- Symmetry of `chernoffZSum` under `λ ↔ 1 - λ`: `Z_{P₁,P₂}(λ) = Z_{P₂,P₁}(1 - λ)`. -/
 @[entry_point]
 lemma chernoffZSum_swap (P₁ P₂ : α → ℝ) (lam : ℝ) :
     chernoffZSum P₁ P₂ lam = chernoffZSum P₂ P₁ (1 - lam) := by
@@ -226,11 +216,10 @@ lemma chernoffZSum_swap (P₁ P₂ : α → ℝ) (lam : ℝ) :
   rw [show (1 : ℝ) - (1 - lam) = lam by ring]
   ring
 
-/-! ## Phase D — Hoeffding tradeoff exponent (Tier 0: 定義 + min 達成性) -/
+/-! ### Hoeffding tradeoff exponent -/
 
 omit [DecidableEq α] in
-/-- `klDivPmf P P = 0`: KL divergence of any pmf with itself is zero.
-Useful for Hoeffding constraint set non-emptiness (`P₁ ∈ {Q : klDivPmf Q P₁ ≤ alpha}`). -/
+/-- `klDivPmf P P = 0`: the Kullback–Leibler divergence of a positive pmf with itself is zero. -/
 lemma klDivPmf_self_eq_zero
     (P : α → ℝ) (hP_pos : ∀ a, 0 < P a) :
     klDivPmf P P = 0 := by
@@ -286,12 +275,8 @@ lemma hoeffdingConstraintSet_isClosed
   exact h_simplex.inter h_sublevel
 
 omit [DecidableEq α] in
-/-- **Hoeffding `min` 達成性**: there exists `Q* ∈ K` realizing the infimum
-`hoeffdingE2 P₁ P₂ alpha = klDivPmf Q* P₂`.
-
-Strategy: the constraint set `K` is compact (closed subset of the simplex). The functional
-`Q ↦ klDivPmf Q P₂` is continuous in `Q` (`continuous_klDivPmf_left`). Apply
-`IsCompact.exists_sInf_image_eq` directly. -/
+/-- The Hoeffding infimum is attained: there exists `Q* ∈ K` with
+`hoeffdingE2 P₁ P₂ alpha = klDivPmf Q* P₂`. -/
 @[entry_point]
 theorem hoeffdingE2_attained
     (P₁ P₂ : α → ℝ)
@@ -345,15 +330,12 @@ theorem hoeffdingE2_nonneg
   have hP₂_nn : ∀ a, 0 ≤ P₂ a := fun a => (hP₂_pos a).le
   exact klDivPmf_nonneg Q P₂ hQ_nn hP₂_nn
 
-/-! ### A-5 (Tier 1 入口) `log Z(λ)` の凸性 (Hölder 経路)
+/-! ### Convexity of `log Z(λ)` via Hölder
 
-Cover-Thomas 11.9.1 の核となる凸性: `λ ↦ log Z(λ)` は `Icc 0 1` 上で凸。
-Hölder 不等式 `∑ f_i g_i ≤ (∑ f_i^p)^{1/p} · (∑ g_i^q)^{1/q}` で
-`Z(αλ₁ + βλ₂) ≤ Z(λ₁)^α · Z(λ₂)^β` を取り、対数で
-`log Z(αλ₁ + βλ₂) ≤ α log Z(λ₁) + β log Z(λ₂)` を結論する。
-
-端点 `α = 0` または `α = 1` (i.e., `β = 0`) は degenerate (凸結合が片方の端点に
-退化) で `Real.HolderConjugate` の `1 < p` 要件に乗らないため、別 case 化する。 -/
+The convexity of `λ ↦ log Z(λ)` on `Icc 0 1` (Cover–Thomas 11.9.1). From Hölder's inequality one
+obtains the multiplicative form `Z(αλ₁ + βλ₂) ≤ Z(λ₁)^α · Z(λ₂)^β`; taking logarithms gives the
+convexity. The endpoints `α = 0` and `α = 1` are handled separately, since they fall outside the
+`1 < p` requirement of `Real.HolderConjugate`. -/
 
 omit [DecidableEq α] in
 /-- **Hölder multiplicative form** for the Chernoff partition function:
@@ -462,9 +444,7 @@ lemma chernoffZSum_holder_mul
   exact hHolder
 
 omit [DecidableEq α] in
-/-- **`log Z(λ)` is convex on `Icc 0 1`**.
-
-Mediator of `chernoffInfo` 達成性 + 凸性 (Cover-Thomas 11.9.1 setup). -/
+/-- `λ ↦ log Z(λ)` is convex on `Icc 0 1` (Cover–Thomas 11.9.1). -/
 @[entry_point]
 theorem convexOn_chernoffLogZ
     (P₁ P₂ : α → ℝ) [Nonempty α]
@@ -510,13 +490,9 @@ theorem convexOn_chernoffLogZ
   rw [h_log_split] at h_log_le
   exact h_log_le
 
-/-! ### A-8 (Tier 1 入口) Chernoff mediator `T_λ` (pmf form)
+/-! ### Chernoff mediator `T_λ` (pmf form) -/
 
-`T_λ(a) := (P₁ a)^{1-λ} · (P₂ a)^λ / Z(λ)`. Phase B/C で Sanov LDP per-tilt や
-tilted LRT を起動する際の入口分布。判断ログ #5 に従い **pmf 形 (`α → ℝ`) で統一**
-(Measure 経路は Tier 1+ の Sanov per-tilt 起動段階で必要なら追加)。 -/
-
-/-- **Chernoff mediator** in pmf form: `T_λ(a) := P₁(a)^{1-λ} · P₂(a)^λ / Z(λ)`. -/
+/-- The Chernoff mediator pmf `T_λ(a) := P₁(a)^(1-λ) · P₂(a)^λ / Z(λ)`. -/
 noncomputable def chernoffMediator (P₁ P₂ : α → ℝ) (lam : ℝ) : α → ℝ :=
   fun a => (P₁ a) ^ (1 - lam) * (P₂ a) ^ lam / chernoffZSum P₁ P₂ lam
 
@@ -568,13 +544,11 @@ lemma chernoffMediator_lam_one
   rw [chernoffZSum_lam_one P₁ P₂ (fun a => (hP₁_pos a).le) hP₂_sum]
   rw [sub_self, Real.rpow_zero, one_mul, Real.rpow_one, div_one]
 
-/-! ### Phase D 残 — `hoeffdingE2` 一意性 (Csiszar projection + strict convexity 経由) -/
+/-! ### Uniqueness of the Hoeffding minimizer -/
 
 omit [DecidableEq α] in
-/-- **Hoeffding `min` 達成点の一意性**: the constraint set `K` is convex (closed +
-sub-simplex の preimage of convex sublevel under convex `klDivPmf · P₁` is closed +
-convex), `klDivPmf · P₂` は `K` 上で strictly convex (full-support `P₂` から `stdSimplex` 上
-で strictly convex)、よって最小値達成点は一意。 -/
+/-- The Hoeffding minimizer is unique: `klDivPmf · P₂` is strictly convex on the convex constraint
+set `K`, so the minimizer of `hoeffdingE2` is unique. -/
 @[entry_point]
 theorem hoeffdingE2_unique
     (P₁ P₂ : α → ℝ)
@@ -655,27 +629,12 @@ theorem hoeffdingE2_unique
     exact csInf_le h_bdd h_in_img
   linarith
 
-/-! ## Phase C — Chernoff achievability (Bayes error upper bound → rate lower bound)
+/-! ### Chernoff achievability (Bayes error upper bound)
 
-Cover-Thomas Theorem 11.9.1 の **achievability side** (rate-side lower bound):
-
-```
-bayesErrorMinPmf P₁ P₂ n ≤ (1/2) · Z(λ)^n      (for all λ ∈ Icc 0 1)
-```
-⟹ `liminf_n -(1/n) log bayesErrorMinPmf ≥ chernoffInfo P₁ P₂`.
-
-**自前 pmf 形 n-IID**: 既存 `Measure.pi` plumbing を使わず、有限和 `∑_{x : Fin n → α}` と
-有限積 `∏ i, P (x i)` で書く。Phase E (Sanov LDP per-tilt) で Measure 経路に持ち上げる際は
-別補題で繋ぐ。
-
-### Phase C スコープ
-
-* `bayesErrorMinPmf P₁ P₂ n` — n-IID Bayes error (optimal Bayes test の minimum)
-* `chernoffMin_per_point_le` — per-point `min(a, b) ≤ a^{1-λ} · b^λ` (Hölder degenerate)
-* `bayesErrorMinPmf_le_half_Z_pow` — `bayesErrorMinPmf ≤ (1/2) Z(λ)^n`
-* `chernoff_rate_ge_chernoffInfo_of_pos` — `λ ∈ Icc 0 1` 個別形
-* `chernoff_achievability` — rate-side achievability (`liminf ≥ chernoffInfo`)
--/
+The achievability side of Cover–Thomas Theorem 11.9.1: the Chernoff bound
+`bayesErrorMinPmf P₁ P₂ n ≤ (1/2) · Z(λ)^n` for every `λ ∈ Icc 0 1` yields
+`liminf_n -(1/n) log bayesErrorMinPmf ≥ chernoffInfo P₁ P₂`. The `n`-fold IID structure is written
+directly with a finite sum `∑_{x : Fin n → α}` of finite products `∏ i, P (x i)`. -/
 
 /-- **n-IID Bayes error** in pmf form:
 `bayesErrorMinPmf P₁ P₂ n := (1/2) · ∑_{x : Fin n → α} min(∏ P₁(x_i), ∏ P₂(x_i))`.
@@ -686,7 +645,7 @@ giving error contribution `(1/2) · min(P₁^n(x), P₂^n(x))` per `x`). -/
 noncomputable def bayesErrorMinPmf (P₁ P₂ : α → ℝ) (n : ℕ) : ℝ :=
   (1 / 2 : ℝ) * ∑ x : Fin n → α, min (∏ i, P₁ (x i)) (∏ i, P₂ (x i))
 
-/-! ### C-1 Per-point bound `min(a, b) ≤ a^{1-λ} · b^λ` -/
+/-! ### Per-point bound `min(a, b) ≤ a^(1-λ) · b^λ` -/
 
 omit [DecidableEq α] in
 /-- **Geometric mean inequality** (degenerate Hölder form):
@@ -720,7 +679,7 @@ lemma min_le_rpow_mul_rpow
     exact Real.rpow_one _
   linarith [h_sum_eq ▸ h_mul]
 
-/-! ### C-2 `bayesErrorMinPmf ≤ (1/2) Z(λ)^n` -/
+/-! ### `bayesErrorMinPmf ≤ (1/2) Z(λ)^n` -/
 
 omit [DecidableEq α] in
 /-- **Auxiliary: n-IID per-point factorization**:
@@ -768,10 +727,7 @@ lemma sum_prod_rpow_eq_Z_pow
   rw [Fintype.piFinset_univ]
 
 omit [DecidableEq α] in
-/-- **`bayesErrorMinPmf ≤ (1/2) · Z(λ)^n`** for each `λ ∈ Icc 0 1`.
-
-Cover-Thomas 11.9.1 の core inequality. Per-point `min(a, b) ≤ a^{1-λ} · b^λ` を
-`a := ∏ P₁(x_i)`, `b := ∏ P₂(x_i)` で起動 → sum over x → `Z(λ)^n`. -/
+/-- The Chernoff bound `bayesErrorMinPmf ≤ (1/2) · Z(λ)^n` for each `λ ∈ Icc 0 1`. -/
 @[entry_point]
 theorem bayesErrorMinPmf_le_half_Z_pow
     (P₁ P₂ : α → ℝ) (hP₁_nn : ∀ a, 0 ≤ P₁ a) (hP₂_nn : ∀ a, 0 ≤ P₂ a)
@@ -798,7 +754,7 @@ theorem bayesErrorMinPmf_le_half_Z_pow
   rw [sum_prod_rpow_eq_Z_pow P₁ P₂ hP₁_nn hP₂_nn lam n] at h_sum_le
   exact h_sum_le
 
-/-! ### C-3 Positivity of `bayesErrorMinPmf` (full support から自動) -/
+/-! ### Positivity of `bayesErrorMinPmf` -/
 
 omit [DecidableEq α] in
 /-- **`bayesErrorMinPmf > 0`** under full support `P₁, P₂ > 0`. -/
@@ -819,7 +775,7 @@ lemma bayesErrorMinPmf_pos
     exact lt_min h_prod_P₁_pos h_prod_P₂_pos
   · exact Finset.univ_nonempty
 
-/-! ### C-4 Rate lower bound per `λ`: `-(1/n) log bayesErrorMinPmf ≥ -log Z(λ) - (log 2)/n` -/
+/-! ### Per-`λ` rate lower bound -/
 
 omit [DecidableEq α] in
 /-- For each fixed `λ ∈ Icc 0 1`,
@@ -1026,39 +982,11 @@ theorem chernoff_achievability
     have h_pos : (0 : ℝ) < Real.log 2 / n := div_pos h_log2_pos hn_R
     linarith
 
-/-! ## Phase B — Chernoff converse (Bayes error lower bound → rate upper bound)
-
-Cover-Thomas Theorem 11.9.1 の **converse side** (rate-side upper bound):
-
-```
-limsup_n -(1/n) log bayesErrorMinPmf ≤ chernoffInfo P₁ P₂
-```
-
-**Strategy** (judgement log #6 に従い Measure 経路): `chernoffMediator T_λ*` を pmf として
-構築し、それを `pmfToMeasure` で `Measure α` に lift。`sanov_ldp_equality` を `Q := P_i (Measure)`
-で per-tilt 起動し、Bayes error を `P_i^n (typeClass T_λ*)` で下から押さえる。
-
-本セッションでは Phase C の achievability のみで publish 完成。Phase B converse は
-**deferred** (撤退ライン L-S2 適用): 次セッションで Sanov LDP per-tilt 起動を補強。
--/
-
-/-! ## Phase E — 主定理 wrapper (Phase C: achievability のみで publish)
-
-`chernoffInfo` を rate として「achievability `liminf ≥ chernoffInfo`」を主定理として publish。
-Phase B converse (rate `limsup ≤`) は本セッションでは未着手 (撤退ライン L-S2)。
-
-main wrapper `chernoff_lemma_achievability`:
-
-```
-liminf -(1/n) log bayesErrorMinPmf ≥ chernoffInfo P₁ P₂
-```
--/
+/-! ### Achievability main statement -/
 
 omit [DecidableEq α] in
-/-- **Chernoff achievability** (T1-B Tier 1 publish, Cover-Thomas Theorem 11.9.1 半分):
-`bayesErrorMinPmf` の指数収束 rate は少なくとも `chernoffInfo P₁ P₂` 以上.
-
-撤退ライン L-S2: converse side (`limsup ≤`) は本セッションでは未着手. -/
+/-- The achievability half of the Chernoff bound (Cover–Thomas Theorem 11.9.1): the exponential
+convergence rate of `bayesErrorMinPmf` is at least `chernoffInfo P₁ P₂`. -/
 @[entry_point]
 theorem chernoff_lemma_achievability
     (P₁ P₂ : α → ℝ) [Nonempty α]

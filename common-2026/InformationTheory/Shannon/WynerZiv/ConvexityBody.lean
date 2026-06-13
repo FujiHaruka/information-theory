@@ -2,68 +2,46 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.WynerZiv.Discharge
 
 /-!
-# Wyner–Ziv L-WZ3 **full convexity** discharge under factorization predicate
-# (T3-D continuation, Cover–Thomas 15.9 凸性)
+# Wyner–Ziv convexity under the factorization predicate
 
-`WynerZivDischarge.lean` discharged the *D-antitone* half of L-WZ3 plus the
-affine build blocks (`wzMarginalXY` additivity / homogeneity, `stdSimplex`
-convexity re-export). It deferred the **full convexity** of `R_WZ(D)` to a
-follow-up plan: the Markov cross-product constraint
-`q(x,y,u) · Σ q(x,y',u') = q(x,y,u') · Σ q(x,y',u)` is quadratic, so the
-"convex hull of two feasible points is feasible" argument breaks at the
-constraint level.
-
-The standard route — and the one Cover–Thomas (§15.9) actually take — is to
-*re-parameterise* the constraint by an **affine factorisation predicate**:
+Convexity of the Wyner–Ziv rate function (Cover–Thomas, §15.9). The Markov
+cross-product constraint `q(x,y,u) · Σ q(x,y',u') = q(x,y,u') · Σ q(x,y',u)` is
+quadratic, so the "convex hull of two feasible points is feasible" argument fails
+on the raw joint pmf. The standard route re-parameterizes the constraint by an
+affine factorization predicate
 
 ```
 q(x, y, u) = κ(u | x) · P_XY(x, y)
 ```
 
-where `κ : α → U → ℝ` is a transition kernel (per-row non-negativity and
-per-row sum 1). On the factorised manifold:
+where `κ : α → U → ℝ` is a transition kernel (per-row non-negative, per-row sum
+`1`). On the factorized manifold the Markov chain `U − X − Y` holds
+automatically, the `(X,Y)`-marginal recovers `P_XY`, `stdSimplex` membership
+reduces to row-stochasticity, and the joint is affine in `κ`, so convex
+combinations of feasible points stay feasible.
 
-* the Markov chain `U − X − Y` holds *automatically* (the joint factors
-  `Y` out of the `U`-coupling, so `q(x,y,u)/q_X(x) = κ(u|x)` is `y`-free),
-* the `(X,Y)`-marginal recovers `P_XY` (when `P_XY` is itself a pmf),
-* the `stdSimplex` membership reduces to the kernel's row-stochasticity,
-* and the joint is **affine in `κ`** — convex combinations of two kernels
-  yield another valid kernel, hence a feasible point at convex
-  combinations of `D`-budgets.
+## Main definitions
 
-This file discharges L-WZ3 *full convexity* on this re-parameterised
-manifold: the **factorisable constraint set** is convex (in the joint pmf
-`q`), and under the standard Cover–Thomas convexity-of-objective hypothesis
-on the kernel (Lemma 15.9 of CT — `I(X;U) − I(Y;U)` is convex in `κ`), the
-rate function inherits convexity in `D`.
-
-## Scope
-
-* `IsWynerZivFactorizable U P_XY q` — the affine predicate
-  "`q(x,y,u) = κ(u|x) · P_XY(x,y)` for some row-stochastic kernel `κ`".
-* `IsWynerZivFactorizable_*` — kernel-level structural lemmas:
-  Markov chain, `(X,Y)`-marginal, `stdSimplex` membership.
-* `IsWynerZivFactorizable_convex_combination` — convex combinations preserve
-  the predicate (the *core* affine result).
-* `WynerZivFactorizableConstraint` — the factorisable refinement of
+* `IsWynerZivFactorizable U P_XY q` — the factorization predicate.
+* `WynerZivFactorizableConstraint` — the factorizable refinement of
   `WynerZivConstraint`.
-* `WynerZivFactorizableConstraint_convex_in_q` — the refinement is convex
-  in the joint-pmf coordinate.
-* `wynerZivRateFactorizable` — the rate function restricted to factorisable
-  joints (the form Cover–Thomas convexity directly addresses).
-* `wynerZivRateFactorizable_convex_of_objective_convex` — under the
-  hypothesis that the Wyner–Ziv objective is convex in `q` on factorisable
-  joints (Cover–Thomas Lemma 15.9), `R_WZ_fact(D)` is convex in `D`.
+* `wynerZivRateFactorizable` — the rate function restricted to factorizable
+  joints.
 
-## 撤退ライン
+## Main statements
 
-* The Cover–Thomas Lemma 15.9 itself (convexity of `I(X;U) − I(Y;U)` in
-  the kernel `κ`, on factorisable joints) is **not discharged here**. It
-  is published as a *hypothesis* (`h_obj_convex`) on the convexity
-  theorem, mirroring the upstream `WynerZiv.lean` pattern of carrying
-  L-WZ statements as pass-through hypotheses on the Phase-D wrapper.
-  Its independent discharge is a separate seed
-  (`wyner-ziv-objective-convexity-discharge-*`).
+* `IsWynerZivFactorizable_convex_combination` — convex combinations preserve the
+  predicate.
+* `WynerZivFactorizableConstraint_convex_combination` — feasibility survives
+  convex combinations at the mixed distortion budget.
+* `wynerZivRateFactorizable_convex_in_D` — under convexity of the objective on
+  factorizable joints, the rate function is convex in `D`.
+
+## Implementation notes
+
+The convexity of the objective `I(X;U) − I(Y;U)` in the kernel `κ` (Cover–Thomas
+Lemma 15.9) is carried as a hypothesis `h_obj_convex` on the convexity theorems
+rather than proved here.
 -/
 
 namespace InformationTheory.Shannon
@@ -360,8 +338,8 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 points at thresholds `D₁, D₂` is feasible at the mixed threshold
 `a D₁ + b D₂`** (with shared decoder `f`).
 
-This is the structural step that turns L-WZ3 convexity into a one-liner on
-factorisable joints: feasibility *survives* convex combinations on the
+This is the structural step that turns convexity into a one-liner on
+factorisable joints: feasibility survives convex combinations on the
 factorised manifold (unlike the raw constraint set where the Markov
 cross-product fails to be preserved). -/
 @[entry_point]
@@ -387,7 +365,7 @@ theorem WynerZivFactorizableConstraint_convex_combination
 
 end FactorisableConvexCombination
 
-/-! ## §7 Factorisable rate function and full L-WZ3 convexity -/
+/-! ## §7 Factorisable rate function and its convexity -/
 
 section FactorisableRate
 
@@ -427,25 +405,11 @@ theorem wynerZivRateFactorizable_antitone
   refine ⟨qf, ?_, rfl⟩
   exact WynerZivFactorizableConstraint_mono_in_D U P_XY d hD hqf
 
-/-- **L-WZ3 full convexity, hypothesis-driven form (Cover–Thomas §15.9).**
-
-Under the standing hypotheses:
-* `h_obj_convex` — Cover–Thomas Lemma 15.9: the Wyner–Ziv objective
-  `I(X;U) − I(Y;U)` is *convex* in the joint pmf `q` along convex
-  combinations of factorisable joints. Discharged elsewhere
-  (`wyner-ziv-objective-convexity-discharge-*`).
-* `h_feasible₁, h_feasible₂` — feasibility witnesses at `D₁`, `D₂`.
-* `h_bdd_mixed` — `BddBelow` of the factorisable image at the mixed
-  threshold `a D₁ + b D₂` (always supplied by the simplex projection on
-  the upstream raw image; carried as hypothesis here to keep this file
-  self-contained — see the `_of_BddBelow_simplex` corollary).
-
-then the rate function is convex in `D` along the factorisable manifold:
-`R_WZ_fact(a D₁ + b D₂) ≤ a · R_WZ_fact(D₁) + b · R_WZ_fact(D₂)`.
-
-The hypothesis `h_obj_convex` is the *minimal* Lemma-15.9-shaped piece
-needed; the rest is the standard "feasibility ⇒ image-level inf bound"
-machinery from `WynerZivDischarge.lean`.
+/-- Convexity of the factorizable rate function along a fixed decoder `f`: under
+convexity of the objective on factorizable joints (`h_obj_convex`), feasibility
+witnesses at `D₁, D₂`, and `BddBelow` of the factorizable image at the mixed
+threshold, the inf over the mixed budget is bounded by the convex combination of
+objective values.
 
 `@audit:superseded-by(wynerZivRateFactorizable_convex_in_D_unconditional)` -/
 theorem wynerZivRateFactorizable_convex
@@ -535,12 +499,10 @@ lemma wynerZivFactorizableObjective_image_bddBelow
     exact factorisable_subset_constraint U h_pmf d D hqf
   exact (wynerZivObjective_image_bddBelow U P_XY d D).mono h_subset
 
-/-- **L-WZ3 full convexity, simplex-projection corollary.** A user-facing
-form: when `P_XY ∈ stdSimplex` (genuinely a pmf), the `h_bdd_mixed` side
-condition on `wynerZivRateFactorizable_convex` is discharged via
-`wynerZivFactorizableObjective_image_bddBelow`. The remaining hypothesis is
-the Cover–Thomas Lemma 15.9 convexity-of-objective, plus two feasibility
-witnesses.
+/-- The simplex-projection corollary of `wynerZivRateFactorizable_convex`: when
+`P_XY ∈ stdSimplex`, the `BddBelow` side condition is discharged via
+`wynerZivFactorizableObjective_image_bddBelow`, leaving the objective-convexity
+hypothesis and two feasibility witnesses.
 
 `@audit:superseded-by(wynerZivRateFactorizable_convex_in_D_unconditional)` -/
 theorem wynerZivRateFactorizable_convex_of_pmf
@@ -577,25 +539,10 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **L-WZ3 full convexity in the standard rate-level form.**
-
-`R_WZ_fact(a D₁ + b D₂) ≤ a · R_WZ_fact(D₁) + b · R_WZ_fact(D₂)`.
-
-Hypotheses:
-* `h_pmf` — `P_XY` is a pmf (discharges `BddBelow`).
-* `h_obj_convex` — Cover–Thomas Lemma 15.9 (convexity of `I(X;U) − I(Y;U)`
-  in `q` on factorisable joints).
-* `h_ne_mixed` — image at the mixed threshold is non-empty (any feasibility
-  witness at *either* `D₁` or `D₂` discharges this via the convex-combination
-  lemma; we carry the side condition to keep the wrapper minimal).
-* `h_inf_attained₁, h_inf_attained₂` — witnesses that `R_WZ_fact(Dᵢ)` is
-  attained (or approached) by some feasible `(qᵢ, f)`. This is the standard
-  "if `sInf` is bounded below + non-empty, every value `≥ sInf − ε`" route.
-
-This wrapper is hypothesis-driven by design; the inner-loop attainment
-witnesses are supplied by callers (downstream `WynerZivAchievability.lean`
-already publishes the slice-form attainment lemma; the joint-form attainment
-is deferred to a separate plan).
+/-- Convexity of the factorizable rate function in `D`, rate-level form:
+`R_WZ_fact(a D₁ + b D₂) ≤ a · R_WZ_fact(D₁) + b · R_WZ_fact(D₂)`. Takes `P_XY` a
+pmf, objective convexity on factorizable joints, feasibility witnesses, and
+attainment of `R_WZ_fact(Dᵢ)` at those witnesses.
 
 `@audit:superseded-by(wynerZivRateFactorizable_convex_in_D_unconditional)` -/
 theorem wynerZivRateFactorizable_convex_in_D

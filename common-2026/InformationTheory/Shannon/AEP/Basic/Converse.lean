@@ -23,20 +23,17 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ### Phase D — 源符号化定理 weak converse
+/-! ### Source-coding theorem, weak converse
 
-Phase D は source-coding converse (Cover-Thomas Theorem 5.4.1) を `Filter.liminf` 形で
-立てる。Phase A〜C の `Pairwise IndepFun` 仮定では block entropy の `H(X^n) = n · H(X)`
-が出ないため、Phase D は `iIndepFun` (mutual independence) を新規仮定として受ける。
-
-詳細: [`docs/shannon/aep-source-coding-plan.md`](../../docs/shannon/aep-source-coding-plan.md).
+The source-coding converse (Cover-Thomas Theorem 5.4.1) is stated in
+`Filter.liminf` form. The block entropy identity `H(X^n) = n · H(X)` is not
+available from the `Pairwise IndepFun` hypothesis used elsewhere in this family,
+so the converse takes mutual independence (`iIndepFun`) as a hypothesis.
 -/
 
-/-! #### Phase A補助 — i.i.d. block entropy chain rule -/
+/-! ### I.i.d. block entropy chain rule -/
 
 omit [DecidableEq α] in
-/-- 独立条件付き ⇒ `condEntropy = entropy`. `mutualInfo_eq_zero_iff_indep` +
-`mutualInfo_eq_entropy_sub_condEntropy` の合成。 -/
 lemma condEntropy_eq_entropy_of_indepFun
     {β : Type*} [MeasurableSpace β]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -55,8 +52,6 @@ lemma condEntropy_eq_entropy_of_indepFun
   linarith
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- `IdentDistrib` ⇒ entropy 等. `μ.map X = ν.map Y` ⟹ pointwise singleton mass 等から
-entropy の有限和定義が一致。 -/
 lemma entropy_eq_of_identDistrib
     {Ω' : Type*} [MeasurableSpace Ω']
     (μ : Measure Ω) (ν : Measure Ω') (X : Ω → α) (Y : Ω' → α)
@@ -66,7 +61,7 @@ lemma entropy_eq_of_identDistrib
   refine Finset.sum_congr rfl fun x _ => ?_
   rw [show (μ.map X).real {x} = (ν.map Y).real {x} from by rw [h.map_eq]]
 
-/-- Block jointRV を `Fin n` 形に restrict した family. -/
+/-- The block `jointRV` as a `Fin n`-indexed family. -/
 private noncomputable def jointFamily (Xs : ℕ → Ω → α) (n : ℕ) : Fin n → Ω → α :=
   fun i ω => Xs i.val ω
 
@@ -75,9 +70,6 @@ private lemma measurable_jointFamily (Xs : ℕ → Ω → α) (hXs : ∀ i, Meas
     (n : ℕ) (i : Fin n) : Measurable (jointFamily Xs n i) := hXs i.val
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- Independence of `Xs i` and the prefix `(Xs 0, ..., Xs (i-1))` from `iIndepFun`.
-直接 `iIndepFun.indepFun_finset` を `S = {i}`, `T = Finset.range i` over `ℕ` で適用し、
-両辺を `IndepFun.comp` で `Xs i` および `Fin i → α` 型に潰す。 -/
 private lemma indepFun_Xs_prefix_of_iIndepFun
     (μ : Measure Ω)
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -110,12 +102,7 @@ private lemma indepFun_Xs_prefix_of_iIndepFun
   exact h_lifted
 
 omit [DecidableEq α] in
-/-- **Pi 化 entropy chain rule for i.i.d. blocks**: `H(X^n) = n · H(X_0)`.
-
-戦略 (Han 路線): `Han.jointEntropy_chain_rule` を `Fin n` 上で適用、各 summand
-`condEntropy μ (X_i) prefix_i` を `condEntropy_eq_entropy_of_indepFun` で `entropy μ (X_i)`
-に潰し、`entropy_eq_of_identDistrib` で `entropy μ (X_0)` に統一、`Finset.sum_const` で
-`n · H(X_0)` を出す。 -/
+/-- **Entropy chain rule for i.i.d. blocks**: `H(X^n) = n · H(X_0)`. -/
 @[entry_point]
 theorem entropy_jointRV_eq_n_smul
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -125,14 +112,14 @@ theorem entropy_jointRV_eq_n_smul
     (n : ℕ) :
     entropy μ (jointRV Xs n) = (n : ℝ) * entropy μ (Xs 0) := by
   classical
-  -- jointRV は jointFamily の joint と defeq.
+  -- `jointRV` is defeq to the joint of `jointFamily`.
   set F : Fin n → Ω → α := jointFamily Xs n with hF_def
   have hF_meas : ∀ i, Measurable (F i) := measurable_jointFamily Xs hXs n
   -- jointEntropy μ F = entropy μ (jointRV Xs n) by defeq.
   have h_je_eq : jointEntropy μ F = entropy μ (jointRV Xs n) := rfl
   -- Apply `jointEntropy_chain_rule`.
   have h_chain := jointEntropy_chain_rule μ F hF_meas
-  -- 各 summand: condEntropy μ (F i) prefix_i = entropy μ (F i) (independence).
+  -- Each summand: condEntropy μ (F i) prefix_i = entropy μ (F i) (independence).
   have h_each : ∀ i : Fin n,
       InformationTheory.MeasureFano.condEntropy μ (F i)
           (fun ω (j : Fin i.val) => F ⟨j.val, j.isLt.trans i.isLt⟩ ω)
@@ -163,15 +150,11 @@ theorem entropy_jointRV_eq_n_smul
   rw [Finset.sum_congr rfl (fun i _ => h_each i)]
   rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
 
-/-! #### Phase B — per-n converse bound (Slepian-Wolf 流儀 4-step) -/
+/-! ### Per-block converse bound -/
 
 omit [DecidableEq α] in
-/-- per-n source coding converse bound:
-`(n : ℝ) · H(Xs 0) ≤ log M + h(Pe_n) + Pe_n · n · log |α|`.
-
-Slepian-Wolf converse 流儀の 4-step (entropy_le_log_card + bridge + DPI + Fano) を
-`X^n := jointRV Xs n` 上で再演し、Phase A の `entropy_jointRV_eq_n_smul` で LHS を
-`n · H(X_0)` に換算する。 -/
+/-- Per-block source-coding converse bound:
+`(n : ℝ) · H(Xs 0) ≤ log M + h(Pe_n) + Pe_n · n · log |α|`. -/
 @[entry_point]
 theorem source_coding_per_n_bound
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -200,12 +183,12 @@ theorem source_coding_per_n_bound
   have hc_meas : Measurable c := measurable_of_countable _
   have hd_meas : Measurable d := measurable_of_countable _
   have hYn_meas : Measurable Yn := hc_meas.comp hXn_meas
-  -- Pi 化 Fintype card 算: Fintype.card (Fin n → α) = (Fintype.card α)^n.
+  -- Product Fintype card: Fintype.card (Fin n → α) = (Fintype.card α)^n.
   have hcard_Pi : (Fintype.card (Fin n → α) : ℝ) = (Fintype.card α : ℝ)^n := by
     rw [Fintype.card_fun, Fintype.card_fin]
     push_cast
     rfl
-  -- Pi 化 alphabet で Fano が呼べる: 2 ≤ Fintype.card (Fin n → α).
+  -- Fano applies on the product alphabet: 2 ≤ Fintype.card (Fin n → α).
   have hcard_Pi_ge_2 : 2 ≤ Fintype.card (Fin n → α) := by
     rw [Fintype.card_fun, Fintype.card_fin]
     have h2n : 2 ≤ 2^n := by
@@ -287,7 +270,7 @@ theorem source_coding_per_n_bound
   rw [h_LHS, h_HXn_decomp]
   linarith [h_step_A, h_step_B, h_step_D, h_Pe_mul]
 
-/-! #### Phase C — `Filter.liminf` 形主定理 -/
+/-! ### Converse theorem in `Filter.liminf` form -/
 
 omit [DecidableEq α] in
 /-- **Source coding theorem, weak converse**:

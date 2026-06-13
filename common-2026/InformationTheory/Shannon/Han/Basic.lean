@@ -3,30 +3,21 @@ import InformationTheory.Shannon.Entropy
 import InformationTheory.Shannon.Pi
 
 /-!
-# Joint entropy on `Fin n` and the n-variable chain rule (Phase B skeleton)
+# Joint entropy on `Fin n`, the n-variable chain rule, and Han's inequality
 
-Han 不等式ムーンショット ([`docs/han/han-moonshot-plan.md`](../../../docs/han/han-moonshot-plan.md))
-の Phase B skeleton。Phase A の 2 変数 chain rule
-`entropy_pair_eq_entropy_add_condEntropy` を `Fin n` の prefix に対して反復適用して
-n 変数 chain rule を得る。Phase C (Han の不等式本体) の入口。
+The Shannon joint entropy of a finite family of random variables, its `n`-variable chain
+rule (obtained by iterating the two-variable rule
+`entropy_pair_eq_entropy_add_condEntropy` along prefixes of `Fin n`), and Han's inequality.
 
-## 主要定義・主定理
+## Main definitions
 
-* `jointEntropy μ Xs` ─ `Fin n → Ω → α` の joint entropy。`entropy` の薄いラッパー。
-* `jointEntropyExcept μ Xs i` ─ index `i` を除いた `{j // j ≠ i}`-値の joint entropy。
-* `jointEntropy_chain_rule` ─ `H(X_0, …, X_{n-1}) = ∑ i, H(X_i | X_0, …, X_{i-1})`。
+* `jointEntropy μ Xs` — the joint entropy of `Xs : Fin n → Ω → α`.
+* `jointEntropyExcept μ Xs i` — the joint entropy of the family with coordinate `i` removed.
 
-## 戦略
+## Main statements
 
-`n` に関する induction:
-
-* base (`n = 0`): joint は単一点 `Fin 0 → α` 上、`entropy = 0`、和も空。
-* step (`n + 1`): `Fin (n+1) → α` を「`Fin n` への restriction」と「`Xs ⟨n, _⟩`」の
-  pair に分解 → Phase A `entropy_pair_eq_entropy_add_condEntropy` を 1 段適用 →
-  IH で n-prefix を展開 → `Fin.sum_univ_castSucc` 系で和に整形。
-
-Pi-値 RV の instance (`Pi.fintype`, `MeasurableSpace.pi`,
-`Pi.instMeasurableSingletonClass`) は Phase 0 で `Fin n → α` まで自動発火確認済。
+* `jointEntropy_chain_rule` — `H(X₀, …, X_{n-1}) = ∑ i, H(Xᵢ | X₀, …, X_{i-1})`.
+* `han_inequality` — `(n − 1) · H(Xs) ≤ ∑ i, H(Xs except i)`.
 -/
 
 namespace InformationTheory.Shannon
@@ -50,11 +41,8 @@ noncomputable def jointEntropyExcept
   entropy μ (fun ω (j : {j // j ≠ i}) => Xs j ω)
 
 omit [DecidableEq α] in
-/-- n 変数 chain rule for Shannon joint entropy:
-`H(X_0, …, X_{n-1}) = ∑ i, H(X_i | X_0, …, X_{i-1})`.
-
-Phase A の `entropy_pair_eq_entropy_add_condEntropy` を `n` についての帰納で
-反復適用して証明する。 -/
+/-- The `n`-variable chain rule for Shannon joint entropy:
+`H(X₀, …, X_{n-1}) = ∑ i, H(Xᵢ | X₀, …, X_{i-1})`. -/
 @[entry_point]
 theorem jointEntropy_chain_rule
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -145,14 +133,14 @@ theorem jointEntropy_chain_rule
     rw [Fin.sum_univ_castSucc]
     congr 1
 
-/-! ## Phase C: Han の不等式 -/
+/-! ## Han's inequality -/
 
 section HanInequality
 
 variable [DecidableEq α]
 
-/-- `Fin i.val ⊕ {j : Fin n // i < j}` と `{j : Fin n // j ≠ i}` の自然な同型。
-prefix `j < i` と suffix `i < j` を合わせた像が補集合 `j ≠ i` と一致することを使う。 -/
+/-- The natural equivalence `Fin i.val ⊕ {j : Fin n // i < j} ≃ {j : Fin n // j ≠ i}`
+splitting the complement of `i` into the prefix `j < i` and the suffix `i < j`. -/
 private def exceptIdxEquiv {n : ℕ} (i : Fin n) :
     Fin i.val ⊕ {j : Fin n // i < j} ≃ {j : Fin n // j ≠ i} where
   toFun := Sum.elim
@@ -185,9 +173,8 @@ private def exceptIdxEquiv {n : ℕ} (i : Fin n) :
     · simp only [h, dite_true, Sum.elim_inl]
     · simp only [h, dite_false, Sum.elim_inr]
 
-/-- 補集合 `{j // j ≠ i}` を prefix `Fin i.val` + suffix `{j // i < j}` に分解する
-MeasurableEquiv。`exceptIdxEquiv` を index 同型として `piCongrLeft` で逆向きに転送し、
-`sumPiEquivProdPi` で sum を product に分解する。 -/
+/-- The `MeasurableEquiv` splitting `({j // j ≠ i} → α)` into the prefix `(Fin i.val → α)`
+and the suffix `({j // i < j} → α)`. -/
 private def exceptSplitMEquiv {n : ℕ} (i : Fin n) :
     ({j : Fin n // j ≠ i} → α) ≃ᵐ
       (Fin i.val → α) × ({j : Fin n // i < j} → α) :=
@@ -195,9 +182,8 @@ private def exceptSplitMEquiv {n : ℕ} (i : Fin n) :
       (exceptIdxEquiv i)).symm).trans
     (MeasurableEquiv.sumPiEquivProdPi (fun _ : Fin i.val ⊕ {j : Fin n // i < j} => α))
 
-/-- `α ⊕ {j : Fin n // j ≠ i} ≃ Fin n` 相当の index 同型 (`i` を Sum.inl,
-補集合を Sum.inr に対応させる)。実装は `Fin.cases` 風の場合分け。
-ここでは Pi 値で使うので等価性を直接書き下す。 -/
+/-- The index equivalence `Unit ⊕ {j : Fin n // j ≠ i} ≃ Fin n` sending the `Unit` summand
+to `i` and the complement to the remaining indices. -/
 private def fullIdxEquiv {n : ℕ} (i : Fin n) :
     Unit ⊕ {j : Fin n // j ≠ i} ≃ Fin n where
   toFun := Sum.elim (fun _ => i) (fun j => j.val)
@@ -212,10 +198,10 @@ private def fullIdxEquiv {n : ℕ} (i : Fin n) :
     · simp [h]
     · simp [h]
 
-/-- Pi `Fin n → α` を `α × ({j // j ≠ i} → α)` に分解する MeasurableEquiv。 -/
+/-- The `MeasurableEquiv` splitting `(Fin n → α)` into `α × ({j // j ≠ i} → α)`. -/
 private def piExceptMEquiv {n : ℕ} (i : Fin n) :
     (Fin n → α) ≃ᵐ α × ({j : Fin n // j ≠ i} → α) := by
-  -- Step 1: piCongrLeft で `Fin n → α ≃ᵐ (Unit ⊕ {j // j ≠ i}) → α`
+  -- Step 1: piCongrLeft gives `Fin n → α ≃ᵐ (Unit ⊕ {j // j ≠ i}) → α`
   let e1 : (Unit ⊕ {j : Fin n // j ≠ i} → α) ≃ᵐ (Fin n → α) :=
     MeasurableEquiv.piCongrLeft (fun _ : Fin n => α) (fullIdxEquiv i)
   -- Step 2: sumPi → prod
@@ -225,16 +211,16 @@ private def piExceptMEquiv {n : ℕ} (i : Fin n) :
   let e3 : (Unit → α) ≃ᵐ α := MeasurableEquiv.funUnique Unit α
   exact e1.symm.trans (e2.trans (MeasurableEquiv.prodCongr e3 (.refl _)))
 
-/-- `(Fin n → α)` を `α × (prefix × suffix)` に分解する MeasurableEquiv。
-`piExceptMEquiv` と `exceptSplitMEquiv` の合成。 -/
+/-- The `MeasurableEquiv` splitting `(Fin n → α)` into `α × ((Fin i.val → α) × ({j // i < j} → α))`,
+composing `piExceptMEquiv` with `exceptSplitMEquiv`. -/
 private def fullSplitMEquiv {n : ℕ} (i : Fin n) :
     (Fin n → α) ≃ᵐ α × ((Fin i.val → α) × ({j : Fin n // i < j} → α)) :=
   (piExceptMEquiv i).trans (MeasurableEquiv.prodCongr (.refl α) (exceptSplitMEquiv i))
 
 omit [DecidableEq α] in
 set_option linter.unusedSectionVars false in
-/-- 個別不等式: 各 `i : Fin n` で `H(Xs) - H(Xs except i) ≤ H(Xs i | prefix)`。
-Phase A の chain rule + 「条件付けで減る」を 1 段ずつ組み合わせる。 -/
+/-- The per-coordinate bound: for each `i : Fin n`,
+`H(Xs) − H(Xs except i) ≤ H(Xs i | X₀, …, X_{i-1})`. -/
 private lemma han_single_bound
     {n : ℕ}
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -262,7 +248,7 @@ private lemma han_single_bound
     measurable_pi_iff.mpr (fun _ => hXs _)
   have hjoint_meas : Measurable (fun ω (j : Fin n) => Xs j ω) :=
     measurable_pi_iff.mpr (fun j => hXs j)
-  -- Phase A chain rule on (prefSuff, Xs i)
+  -- two-variable chain rule on (prefSuff, Xs i)
   have h_chain :=
     entropy_pair_eq_entropy_add_condEntropy μ prefSuff (Xs i) hprefSuff_meas (hXs i)
   -- Bridge 1: entropy of (prefSuff, Xs i) = jointEntropy μ Xs
@@ -329,12 +315,9 @@ private lemma han_single_bound
 
 omit [DecidableEq α] in
 set_option linter.unusedSectionVars false in
-/-- Han の不等式: 任意個 `n` の確率変数 `Xs : Fin n → Ω → α` に対し
-`(n - 1) · H(Xs) ≤ ∑ i, H(Xs except i)`。
-
-Phase A の `entropy_pair_eq_entropy_add_condEntropy` と
-`condEntropy_le_condEntropy_of_pair`、Phase B の `jointEntropy_chain_rule` を
-組み合わせて証明する。`n = 0, 1` の退化ケース (両辺 0) も含めて成立する。 -/
+/-- Han's inequality: for a finite family `Xs : Fin n → Ω → α` of random variables,
+`(n − 1) · H(Xs) ≤ ∑ i, H(Xs except i)`. The degenerate cases `n = 0, 1` (both sides `0`)
+are included. -/
 @[entry_point]
 theorem han_inequality
     {n : ℕ}
@@ -350,7 +333,7 @@ theorem han_inequality
           InformationTheory.MeasureFano.condEntropy μ (Xs i)
             (fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) :=
     Finset.sum_le_sum (fun i _ => han_single_bound μ Xs hXs i)
-  -- Phase B chain rule for the RHS
+  -- chain rule for the RHS
   have h_chain := jointEntropy_chain_rule μ Xs hXs
   rw [← h_chain] at h_sum_bound
   -- LHS simplification: ∑ (H - H_i) = n·H - ∑ H_i

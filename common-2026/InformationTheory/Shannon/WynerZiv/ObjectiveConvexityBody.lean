@@ -46,15 +46,14 @@ and the rate-level wrapper `wynerZivRateFactorizable_convex_in_D` is
 re-published with `h_obj_convex` replaced by the strictly more primitive
 `WynerZivCondEntDiffConvex`.
 
-## 撤退ライン
+## Implementation notes
 
-* The bare convexity of the conditional-entropy difference
-  `WynerZivCondEntDiffConvex` is **not** discharged here: it is the
-  irreducible analytic core of Cover–Thomas Lemma 15.9 (convexity of
-  `I(X;U|Y)` in `κ`, a joint-convexity-of-KL argument).  Everything *around*
-  it — the `H(U)` cancellation, the `H(X)−H(Y)` constancy, and the assembly
-  into `h_obj_convex` — is fully discharged.  This is a strict vertical
-  reduction: the carried predicate is genuinely smaller and reusable.
+The bare convexity of the conditional-entropy difference
+`WynerZivCondEntDiffConvex` is the irreducible analytic core of Cover–Thomas
+Lemma 15.9 (convexity of `I(X;U|Y)` in `κ`, a joint-convexity-of-KL argument);
+it is carried as a predicate rather than proved here. Everything around it — the
+`H(U)` cancellation, the `H(X)−H(Y)` constancy, and the assembly into
+`h_obj_convex` — is discharged.
 -/
 
 namespace InformationTheory.Shannon
@@ -284,12 +283,10 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **L-WZ3 full convexity, with `h_obj_convex` replaced by the primitive
-core `WynerZivCondEntDiffConvex`.**  Re-publication of
-`wynerZivRateFactorizable_convex_in_D` where the deep objective-convexity
-hypothesis is now the strictly more primitive conditional-entropy-difference
-convexity predicate, which the assembly `wzObjective_convex_of_condEntDiff`
-discharges into `h_obj_convex`.
+/-- Convexity of the factorizable rate function in `D`, with `h_obj_convex`
+replaced by the more primitive conditional-entropy-difference convexity predicate
+`WynerZivCondEntDiffConvex` (discharged into `h_obj_convex` by
+`wzObjective_convex_of_condEntDiff`).
 
 `@audit:superseded-by(wynerZivRateFactorizable_convex_in_D_unconditional)` -/
 @[entry_point]

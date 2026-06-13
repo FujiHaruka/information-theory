@@ -3,30 +3,32 @@ import InformationTheory.Shannon.AEP.Basic.Converse
 import InformationTheory.Shannon.AEP.Basic.Achievability
 
 /-!
-# AEP — Asymptotic Equipartition Property (Phase A〜C)
+# AEP — Asymptotic Equipartition Property
 
-漸近等分配性の形式化。Cover-Thomas 教科書 Theorem 3.1.1〜3.1.2 の Phase A〜C
-(AEP 本体 + typical set の 3 主定理) をスコープとし、Phase D / E (源符号化定理)
-は別ファイル。
+Formalization of the asymptotic equipartition property, Cover-Thomas Theorem
+3.1.1–3.1.2. This module re-exports the AEP core, the source-coding converse, and
+the achievability development from the `AEP.Basic.*` submodules.
 
-## 構成
+## Main definitions
 
-* **Phase A** — i.i.d. 列 `Xs : ℕ → Ω → α` から block `jointRV : Ω → (Fin n → α)`
-  の定義 + 基本 measurability
-* **Phase B** — probability AEP:
-  `(1/n) ∑ i, (-Real.log ((μ.map (Xs 0)).real {Xs i ω}))` が `entropy μ (Xs 0)`
-  に a.s. / 確率収束 (`strong_law_ae_real` を `Y i := −log P(Xs i ω)` で適用)
-* **Phase C** — typical set `T_ε^n` の measurability + size bound + 確率 → 1
+* `jointRV` — the block random variable `Ω → (Fin n → α)` built from an i.i.d.
+  sequence `Xs : ℕ → Ω → α`.
+* `typicalSet` — the typical set `T_ε^n`.
 
-## i.i.d. 仮定の流儀
+## Main statements
 
-Mathlib に `IsIID` predicate は無いため、`strong_law_ae_real` と同じ 2 仮定形
-`Pairwise (fun i j => Xs i ⟂ᵢ[μ] Xs j)` + `∀ i, IdentDistrib (Xs i) (Xs 0) μ μ`
-を直接受ける。`(· ⟂ᵢ[μ] ·) on Xs` 形の `(· · ·)` anonymous lambda は `on` と
-組み合わさったときに parsing 失敗するので、明示的な `fun i j => …` で書く。
+* `aep_ae` / `aep_inProbability` — the empirical entropy estimator
+  `(1/n) ∑ i, (-Real.log ((μ.map (Xs 0)).real {Xs i ω}))` converges to
+  `entropy μ (Xs 0)` almost surely and in probability.
+* `typicalSet_card_le` / `typicalSet_prob_tendsto_one` — size bound and
+  asymptotic probability of the typical set.
 
-## 撤退ライン (本シード)
+## Implementation notes
 
-Phase A〜C 緑通過 = AEP 単体 publish ライン。Phase D / E は次セッション。
+Mathlib has no `IsIID` predicate, so the i.i.d. hypothesis is taken in the same
+two-part form as `strong_law_ae_real`:
+`Pairwise (fun i j => Xs i ⟂ᵢ[μ] Xs j)` and `∀ i, IdentDistrib (Xs i) (Xs 0) μ μ`.
+The `(· ⟂ᵢ[μ] ·) on Xs` anonymous-lambda form fails to parse when combined with
+`on`, so the explicit `fun i j => …` form is used.
 -/
 

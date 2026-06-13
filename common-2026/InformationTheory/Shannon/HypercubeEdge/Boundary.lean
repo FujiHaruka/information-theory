@@ -2,39 +2,40 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.LoomisWhitney
 
 /-!
-# Boolean hypercube edge-boundary bound (B-2')
+# Boolean hypercube edge-boundary bound
 
-Boolean cube `Fin n → Bool` 上の edge boundary を **directed coordinate-flip pair** で
-組合せ的に定義し, Loomis–Whitney と AM-GM の合わせ技で edge-isoperimetric 型下界を
-publish する。
+The edge boundary of a subset of the Boolean cube `Fin n → Bool`, defined combinatorially
+via directed coordinate-flip pairs, together with an edge-isoperimetric lower bound obtained
+from Loomis–Whitney and AM-GM.
 
-## 主定義
+## Main definitions
 
-* `flipCoord i x` — `x : Fin n → Bool` の `i` 番目成分を反転。`Function.update x i (!x i)`.
-* `edgeBoundaryCount A` — `(x, i)` 対 (`x ∈ A`, `flipCoord i x ∉ A`) の数。
-  Boolean cube の unordered edge `{x, flipCoord i x}` で片端点だけ `A` に入るものに 1 対 1 対応。
-* `internalEdgePairCount A` — `(x, i)` 対 (`x ∈ A`, `flipCoord i x ∈ A`) の数。
-  unordered internal edge を両端から 2 度 counts するため、`internal edges × 2` に等しい。
+* `flipCoord i x` — flip the `i`-th coordinate of `x : Fin n → Bool`,
+  i.e. `Function.update x i (!x i)`.
+* `edgeBoundaryCount A` — the number of pairs `(x, i)` with `x ∈ A` and `flipCoord i x ∉ A`,
+  in bijection with the unordered edges of the cube having exactly one endpoint in `A`.
+* `internalEdgePairCount A` — the number of pairs `(x, i)` with `x ∈ A` and `flipCoord i x ∈ A`;
+  it counts each unordered internal edge twice.
 
-## 主補題・主定理
+## Main statements
 
-* `edge_total_count` — `edgeBoundaryCount A + internalEdgePairCount A = n * A.card`。
-  各 `x ∈ A` と `i : Fin n` で `flipCoord i x` は `A` に入るか入らないか, 二択 disjoint。
+* `edge_total_count` — `edgeBoundaryCount A + internalEdgePairCount A = n * A.card`.
 * `internal_pair_count_eq_projection_sum` —
-  `internalEdgePairCount A = 2 * (n * A.card - Σ_i (projectionExcept i A).card)`。
+  `internalEdgePairCount A + 2 * ∑ i, (projectionExcept i A).card = 2 * (n * A.card)`.
 * `edgeBoundary_count_eq` —
-  `edgeBoundaryCount A + n * A.card = 2 * Σ_i (projectionExcept i A).card`。
-  上の 2 補題の差から、減算を ℕ で回避するため和の形で書く。
+  `edgeBoundaryCount A + n * A.card = 2 * ∑ i, (projectionExcept i A).card`.
 * `sum_projection_card_ge_amgm` —
-  `(n : ℝ) * (A.card : ℝ)^((n-1)/n) ≤ Σ_i ((projectionExcept i A).card : ℝ)`。
-  Loomis–Whitney (`loomis_whitney`) + AM-GM の corollary。
-* `edgeBoundary_ge_AMGM` — 主結果。`A.Nonempty` のもとで:
-  `2 * (n : ℝ) * (A.card : ℝ)^((n-1)/n) ≤ (edgeBoundaryCount A : ℝ) + n * A.card`。
-  これは `|∂_e A| ≥ 2n |A|^{(n-1)/n} - n |A|` の Lean 表示 (整数差回避のため和の形)。
+  `(n : ℝ) * (A.card)^((n-1)/n) ≤ ∑ i, ((projectionExcept i A).card : ℝ)`, from Loomis–Whitney
+  and AM-GM.
+* `edgeBoundary_ge_AMGM` — for nonempty `A`,
+  `2 * n * (A.card)^((n-1)/n) ≤ edgeBoundaryCount A + n * A.card`, the additive form of
+  `|∂_e A| ≥ 2n · |A|^{(n-1)/n} − n · |A|`.
 
-`SimpleGraph` 構造を持ち込まず, `Sym2` も使わない素朴な組合せ定義に絞り,
-Mathlib 上流側の `SimpleGraph.edgeBoundary` API gap を回避する。
-entropy-sharp 形 `|∂_e A| ≥ |A|(n - log₂|A|)` は B-2'' deferred で別 PR。
+## Implementation notes
+
+The definitions avoid `SimpleGraph` and `Sym2`, working with naive combinatorial pairs to
+sidestep the `SimpleGraph.edgeBoundary` API. Counting identities are stated additively to
+avoid natural-number subtraction.
 -/
 
 namespace InformationTheory.Shannon
@@ -42,9 +43,9 @@ namespace InformationTheory.Shannon
 open Finset
 open scoped BigOperators
 
-/-! ## Phase A — coord flip + edge counts -/
+/-! ## Coordinate flip and edge counts -/
 
-/-- `x : Fin n → Bool` の `i` 番目成分を反転。 -/
+/-- Flip the `i`-th coordinate of `x : Fin n → Bool`. -/
 def flipCoord {n : ℕ} (i : Fin n) (x : Fin n → Bool) : Fin n → Bool :=
   Function.update x i (!x i)
 
@@ -65,23 +66,23 @@ lemma flipCoord_apply_other {n : ℕ} (i : Fin n) (x : Fin n → Bool)
     simp [flipCoord]
   · rw [flipCoord_apply_other i _ h, flipCoord_apply_other i x h]
 
-/-- `(x, i)` 対で `x ∈ A`, `flipCoord i x ∉ A` を満たすものの数。
-Boolean cube 上の edge `{x, flipCoord i x}` で片端点だけ `A` に入るものに対応 (各 edge 1 対 1)。 -/
+/-- The number of pairs `(x, i)` with `x ∈ A` and `flipCoord i x ∉ A`, in bijection with the
+cube edges having exactly one endpoint in `A`. -/
 def edgeBoundaryCount {n : ℕ} (A : Finset (Fin n → Bool)) : ℕ :=
   (Finset.univ.filter
     (fun p : (Fin n → Bool) × Fin n => p.1 ∈ A ∧ flipCoord p.2 p.1 ∉ A)).card
 
-/-- `(x, i)` 対で `x ∈ A`, `flipCoord i x ∈ A` を満たすものの数。
-unordered internal edge を両端で 2 度 counts。 -/
+/-- The number of pairs `(x, i)` with `x ∈ A` and `flipCoord i x ∈ A`, counting each internal
+edge twice. -/
 @[entry_point]
 def internalEdgePairCount {n : ℕ} (A : Finset (Fin n → Bool)) : ℕ :=
   (Finset.univ.filter
     (fun p : (Fin n → Bool) × Fin n => p.1 ∈ A ∧ flipCoord p.2 p.1 ∈ A)).card
 
-/-! ## Phase A — counting identities -/
+/-! ## Counting identities -/
 
-/-- `(x, i)` 対全体のうち `x ∈ A` のものは `n * A.card` 個。
-さらに `flipCoord i x ∈ A` か否かで disjoint 分割される。 -/
+/-- The pairs `(x, i)` with `x ∈ A` number `n * A.card`, split disjointly by whether
+`flipCoord i x ∈ A`: `edgeBoundaryCount A + internalEdgePairCount A = n * A.card`. -/
 @[entry_point]
 theorem edge_total_count {n : ℕ} (A : Finset (Fin n → Bool)) :
     edgeBoundaryCount A + internalEdgePairCount A = n * A.card := by
@@ -116,35 +117,24 @@ theorem edge_total_count {n : ℕ} (A : Finset (Fin n → Bool)) :
     ring
   rw [hsplit, hS_card]
 
-/-! ## Phase A — projection identity
+/-! ## Projection identity
 
-各 `i : Fin n` で `projectionExcept i A` の元 `y` ごとに preimage size を分類:
-`y` の Boolean cube preimage の中で `A` に属するものは 1 個 (singly covered) か
-2 個 (doubly covered)。 doubly covered fibre の数を `D_i`, singly covered の数を
-`S_i` とすると:
+For each direction `i`, every fibre of `projectionExcept i A` is covered once or twice in `A`;
+double-counting these coverages relates `∑ i, (projectionExcept i A).card` to `A.card` and the
+edge boundary count, stated additively to avoid natural-number subtraction. -/
 
-* `|projectionExcept i A| = D_i + S_i`
-* `|A| = 2 D_i + S_i`
-* 上 2 式から `D_i = |A| - |projectionExcept i A|`.
-
-direction `i` での `internalEdgePairCount` への寄与は `2 D_i`
-(各 doubly covered fibre は両端 `x` で counts), 一方 `edgeBoundaryCount` への寄与は
-`S_i = 2 |projectionExcept i A| - |A|`。直接 ℕ 上で証明すると差や減算が絡むので,
-**double-counting 形** で `Σ_i 2 |projectionExcept i A| = n * A.card + edgeBoundaryCount A`
-の和の形に publish する。 -/
-
-/-- 各 `(x, i)` 対 (`x ∈ A`) について `flipCoord i x ∈ A ↔ x.update i (!x i) ∈ A`。
-これは `flipCoord` の def-unfold だが counts の中で再利用するため明示。 -/
+/-- `flipCoord i x ∈ A ↔ Function.update x i (!x i) ∈ A`, the definitional unfolding of
+`flipCoord`. -/
 @[entry_point]
 lemma flipCoord_mem_iff {n : ℕ} (A : Finset (Fin n → Bool)) (x : Fin n → Bool)
     (i : Fin n) :
     flipCoord i x ∈ A ↔ Function.update x i (!x i) ∈ A := Iff.rfl
 
-/-- direction `i` の projection map `(Fin n → Bool) → ({j // j ≠ i} → Bool)`。 -/
+/-- The projection `(Fin n → Bool) → ({j // j ≠ i} → Bool)` dropping coordinate `i`. -/
 def projMap {n : ℕ} (i : Fin n) (x : Fin n → Bool) :
     {j : Fin n // j ≠ i} → Bool := fun j => x j.val
 
-/-- projection を bit `b` で extend した元。`b = false/true` で extension0/extension1。 -/
+/-- Extend a projection by the bit `b` at coordinate `i`. -/
 def extension {n : ℕ} (i : Fin n) (b : Bool)
     (y : {j : Fin n // j ≠ i} → Bool) : Fin n → Bool :=
   fun j => if h : j = i then b else y ⟨j, h⟩
@@ -166,11 +156,10 @@ lemma extension_apply_ne {n : ℕ} (i : Fin n) (b : Bool)
   show extension i b y j = y ⟨j, hj⟩
   rw [extension_apply_ne i b y hj]
 
-/-- `projectionExcept i A` の元は `A.image (projMap i)` と同じ。 -/
 lemma projectionExcept_eq_image {n : ℕ} (i : Fin n) (A : Finset (Fin n → Bool)) :
     projectionExcept i A = A.image (projMap i) := rfl
 
-/-- `flipCoord i x` は `projMap i x` の `!x i` 拡張に等しい。 -/
+/-- `flipCoord i x` equals the extension of `projMap i x` by the flipped bit `!x i`. -/
 lemma extension_projMap_flip {n : ℕ} (i : Fin n) (x : Fin n → Bool) :
     extension i (!x i) (projMap i x) = flipCoord i x := by
   funext j
@@ -179,7 +168,7 @@ lemma extension_projMap_flip {n : ℕ} (i : Fin n) (x : Fin n → Bool) :
   · rw [extension_apply_ne i (!x i) (projMap i x) h, flipCoord_apply_other i x h]
     rfl
 
-/-- 任意 `y` に対し `projMap i x = y ↔ x = extension i (x i) y`。 -/
+/-- `projMap i x = y ↔ x = extension i (x i) y`. -/
 lemma projMap_eq_iff {n : ℕ} (i : Fin n) (x : Fin n → Bool)
     (y : {j : Fin n // j ≠ i} → Bool) :
     projMap i x = y ↔ x = extension i (x i) y := by
@@ -194,25 +183,13 @@ lemma projMap_eq_iff {n : ℕ} (i : Fin n) (x : Fin n → Bool)
   · intro h
     rw [h]; exact projMap_extension i (x i) y
 
-/-- direction `i` の boundary 寄与: `x ∈ A` で `flipCoord i x ∉ A`。 -/
+/-- The boundary contribution in direction `i`: elements `x ∈ A` with `flipCoord i x ∉ A`. -/
 def boundaryDirSet {n : ℕ} (A : Finset (Fin n → Bool)) (i : Fin n) :
     Finset (Fin n → Bool) :=
   A.filter (fun x => flipCoord i x ∉ A)
 
-/-- direction `i` ごとの (`x ∈ A`, `flipCoord i x ∈ A`) と (`x ∈ A`, `flipCoord i x ∉ A`)
-の counts を `projectionExcept` の cardinality に bridge する補題。
-
-`Σ_i 2 * (projectionExcept i A).card = n * A.card + edgeBoundaryCount A`
-の形で publish (ℕ 上、減算を回避)。
-
-証明戦略: `A × Fin n` を `(x, i) ↦ (projectionExcept i x, i)` で `(projectionExcept i A) × Fin n`
-側に集計し, fiber size を分類。具体的には, 各 `y ∈ projectionExcept i A` の preimage
-(in `A` along coord `i`) は size 1 か 2。preimage size = 2 のとき "internal" 寄与 `(x, i)` が
-2 回 counts、`flipCoord i x ∈ A` も 2 回。preimage size = 1 のとき "boundary" 寄与 `(x, i)` が
-1 回, `flipCoord i x ∉ A`。
-
-両 case で `(preimage size) + (2 - preimage size) = 2` が `Σ` で `2 |projectionExcept i A|` を出す。
--/
+/-- `2 * ∑ i, (projectionExcept i A).card = n * A.card + edgeBoundaryCount A`, obtained by
+classifying each projection fibre as singly or doubly covered in `A`. -/
 theorem two_sum_projection_eq {n : ℕ} (A : Finset (Fin n → Bool)) :
     2 * ∑ i : Fin n, (projectionExcept i A).card
       = n * A.card + edgeBoundaryCount A := by
@@ -565,13 +542,8 @@ theorem two_sum_projection_eq {n : ℕ} (A : Finset (Fin n → Bool)) :
     intro p _
     exact Finset.mem_univ _
 
-/-- 内部 edge pair count を projection 和の形で書き直す。
-`edge_total_count` から `internalEdgePairCount = n*A.card - edgeBoundaryCount` だが
-ℕ 引算は不便なので, `two_sum_projection_eq` と組み合わせて
-
-`internalEdgePairCount A + 2 * Σ_i (projectionExcept i A).card = 2 * (n * A.card)`
-
-の形で publish。 -/
+/-- The internal edge pair count in projection-sum form:
+`internalEdgePairCount A + 2 * ∑ i, (projectionExcept i A).card = 2 * (n * A.card)`. -/
 @[entry_point]
 theorem internal_pair_count_eq_projection_sum {n : ℕ}
     (A : Finset (Fin n → Bool)) :
@@ -581,18 +553,18 @@ theorem internal_pair_count_eq_projection_sum {n : ℕ}
   have h2 := two_sum_projection_eq A
   omega
 
-/-- Edge boundary を projection 和の形で publish (ℕ 上, 減算を `+` で回避)。 -/
+/-- The edge boundary in projection-sum form:
+`edgeBoundaryCount A + n * A.card = 2 * ∑ i, (projectionExcept i A).card`. -/
 theorem edgeBoundary_count_eq {n : ℕ} (A : Finset (Fin n → Bool)) :
     edgeBoundaryCount A + n * A.card
       = 2 * ∑ i : Fin n, (projectionExcept i A).card := by
   have := two_sum_projection_eq A
   omega
 
-/-! ## Phase B — Loomis–Whitney + AM-GM corollary -/
+/-! ## Loomis–Whitney and AM-GM corollary -/
 
-/-- AM-GM on positive reals: `(∏ x_i)^(1/n) ≤ (Σ x_i)/n` ⟹ `n · (∏)^(1/n) ≤ Σ x_i`。
-ここでは `x_i := (projectionExcept i A).card : ℝ`、`∏ x_i ≥ |A|^{n-1}` (LW) を組み合わせ,
-`Σ x_i ≥ n · |A|^{(n-1)/n}` を出す。 -/
+/-- `(n : ℝ) * (A.card)^((n-1)/n) ≤ ∑ i, ((projectionExcept i A).card : ℝ)`, combining the
+Loomis–Whitney bound `∏ i, (projectionExcept i A).card ≥ A.card^(n-1)` with AM-GM. -/
 @[entry_point]
 theorem sum_projection_card_ge_amgm {n : ℕ} {α : Type*}
     [Fintype α] [DecidableEq α] [Nonempty α]
@@ -658,13 +630,9 @@ theorem sum_projection_card_ge_amgm {n : ℕ} {α : Type*}
   rw [show ((1 : ℝ) / n) = (n : ℝ)⁻¹ from by rw [one_div]] at h_final
   exact h_final
 
-/-- B-2' 主結果 (Han-Bregman 流 edge isoperimetric, AM-GM 形)。
-nonempty `A ⊆ Fin n → Bool` で:
-`2 * n * |A|^{(n-1)/n} ≤ |∂_e A| + n * |A|` (ℝ 上, 減算回避)。
-
-等価形: `|∂_e A| ≥ 2n · |A|^{(n-1)/n} - n · |A|`。
-
-証明: `edgeBoundary_count_eq` + `sum_projection_card_ge_amgm`. -/
+/-- The edge-isoperimetric lower bound: for nonempty `A ⊆ Fin n → Bool`,
+`2 * n * (A.card)^((n-1)/n) ≤ edgeBoundaryCount A + n * A.card`, the additive form of
+`|∂_e A| ≥ 2n · |A|^{(n-1)/n} − n · |A|`. -/
 @[entry_point]
 theorem edgeBoundary_ge_AMGM {n : ℕ} {A : Finset (Fin n → Bool)} (hA : A.Nonempty) :
     2 * (n : ℝ) * ((A.card : ℝ) ^ (n - 1 : ℕ)) ^ ((n : ℝ)⁻¹)

@@ -4,20 +4,19 @@ import InformationTheory.Shannon.ChannelCoding.Basic
 import Mathlib.Probability.Moments.Variance
 
 /-!
-# AEP — rate-uniform 形 (Chebyshev 経由)
+# AEP — rate-uniform form (via Chebyshev)
 
-[D-1'' ムーンショット plan](../../../docs/shannon/channel-coding-shannon-theorem-general-plan.md)
-の Step 1: 既存 `typicalSet_prob_tendsto_one` (`AEP.lean:375`) は `Tendsto … (𝓝 1)` 形のみで
-closed-form bound を持たない。本ファイルは Chebyshev 不等式
-(`ProbabilityTheory.meas_ge_le_variance_div_sq`) と pairwise variance sum
-(`ProbabilityTheory.IndepFun.variance_sum`) を経由して **explicit な `N(ε, η)`** で
+`typicalSet_prob_tendsto_one` gives only the `Tendsto … (𝓝 1)` form and carries no
+closed-form bound. This module establishes an explicit `N(ε, η)` with
 
   `n ≥ N → μ {ω | jointRV Xs n ω ∈ typicalSet μ Xs n ε} ≥ 1 - η`
 
-を確立する。D-1'' Step 2-5 の主定理組み立てで `δ ⊆ (0, δ_B]` 上の N(δ) bound に再利用する。
+via the Chebyshev inequality (`ProbabilityTheory.meas_ge_le_variance_div_sq`) and
+the pairwise variance sum (`ProbabilityTheory.IndepFun.variance_sum`).
 
-`pmfLog μ Xs : α → ℝ` は alphabet 上の有限関数のため、`logLikelihood μ Xs i` は
-`pmfLog` の値域 (有限集合) で a.s. bounded → `MemLp _ 2 μ`。よって全部品が揃う。
+Since `pmfLog μ Xs : α → ℝ` is a finite function on the alphabet, each
+`logLikelihood μ Xs i` is a.s. bounded by the range of `pmfLog` (a finite set),
+hence `MemLp _ 2 μ`, which supplies the integrability ingredients.
 -/
 
 namespace InformationTheory.Shannon
@@ -29,7 +28,7 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-- 共通の bound: `pmfLog μ Xs` の絶対値の sup. -/
+/-- The supremum of `|pmfLog μ Xs|` over the alphabet. -/
 noncomputable def pmfLogBound (μ : Measure Ω) (Xs : ℕ → Ω → α) : ℝ :=
   Finset.univ.sup' Finset.univ_nonempty (fun a : α => |pmfLog μ Xs a|)
 
@@ -40,7 +39,6 @@ lemma abs_pmfLog_le_bound (μ : Measure Ω) (Xs : ℕ → Ω → α) (a : α) :
   exact Finset.le_sup' (f := fun a : α => |pmfLog μ Xs a|) (Finset.mem_univ a)
 
 omit [DecidableEq α] [MeasurableSingletonClass α] in
-/-- `logLikelihood μ Xs i ω` is bounded by `pmfLogBound μ Xs` for every `ω`. -/
 lemma abs_logLikelihood_le_bound
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (i : ℕ) (ω : Ω) :
     |logLikelihood μ Xs i ω| ≤ pmfLogBound μ Xs := by
@@ -48,7 +46,6 @@ lemma abs_logLikelihood_le_bound
   exact abs_pmfLog_le_bound μ Xs (Xs i ω)
 
 omit [DecidableEq α] in
-/-- `logLikelihood μ Xs i` is in `L²(μ)`. -/
 lemma memLp_logLikelihood
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (i : ℕ) :
@@ -71,9 +68,7 @@ lemma pmfLogVariance_nonneg (μ : Measure Ω) (Xs : ℕ → Ω → α) :
   exact ENNReal.toReal_nonneg
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Popoviciu lift**: a pointwise `|pmfLog Xs a| ≤ B` bound gives
-`pmfLogVariance ≤ B²` (via `variance_le_sq_of_bounded`). Used in Phase D.3
-parent surgery to bound axis-wise variance closed-form by `(log(|β|/δ))²` etc. -/
+/-- A pointwise bound `|pmfLog Xs a| ≤ B` gives `pmfLogVariance ≤ B²`. -/
 lemma pmfLogVariance_le_sq_of_bounded
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -98,7 +93,6 @@ lemma pmfLogVariance_le_sq_of_bounded
   exact h
 
 omit [DecidableEq α] [Nonempty α] in
-/-- Variance is invariant under `IdentDistrib`. -/
 lemma variance_logLikelihood_eq
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α)
@@ -108,13 +102,9 @@ lemma variance_logLikelihood_eq
   exact (identDistrib_logLikelihood μ Xs hident i).variance_eq
 
 omit [DecidableEq α] in
-/-- Chebyshev applied to `∑ i ∈ range n, logLikelihood μ Xs i` and divided by `n`:
-for `n ≥ 1` and `ε > 0`,
-
-  `μ {ω | ε ≤ |(∑ i ∈ range n, logLikelihood μ Xs i ω) / n - H|}`
-    `≤ ENNReal.ofReal (pmfLogVariance μ Xs / (n * ε^2))`.
-
-This is the **explicit-rate** version of `aep_inProbability`. -/
+/-- Explicit-rate version of `aep_inProbability`: for `n ≥ 1` and `ε > 0`,
+`μ {ω | ε ≤ |(∑ i ∈ range n, logLikelihood μ Xs i ω) / n - H|}
+  ≤ ENNReal.ofReal (pmfLogVariance μ Xs / (n * ε^2))`. -/
 lemma aep_chebyshev_bound
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -208,8 +198,6 @@ lemma aep_chebyshev_bound
   rw [h_eq]
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- The typical-set event has the same complement as the Chebyshev "bad" set, re-indexed
-from `range n` to `Fin n`. -/
 private lemma typicalSet_compl_eq
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (n : ℕ) {ε : ℝ} :
     {ω | jointRV Xs n ω ∈ typicalSet μ Xs n ε}
@@ -224,11 +212,9 @@ private lemma typicalSet_compl_eq
   rw [h_sum]
 
 omit [DecidableEq α] in
-/-- **Step 1 main result**: explicit-rate AEP. For any `ε, η > 0`, there is `N(ε, η)` such that
-for all `n ≥ N`, the typical-set has μ-measure ≥ `1 - η`.
-
-The explicit bound is `N := ⌈pmfLogVariance / (η · ε²)⌉ + 1`, so `n ≥ N ⇒
-pmfLogVariance / (n · ε²) ≤ η`. -/
+/-- **Explicit-rate AEP**: for any `ε, η > 0`, there is `N(ε, η)` such that for all
+`n ≥ N`, the typical set has μ-measure ≥ `1 - η`. The explicit bound is
+`N := ⌈pmfLogVariance / (η · ε²)⌉ + 1`, so `n ≥ N ⇒ pmfLogVariance / (n · ε²) ≤ η`. -/
 @[entry_point]
 theorem typicalSet_prob_ge_of_rate
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -317,9 +303,9 @@ theorem typicalSet_prob_ge_of_rate
     simpa [ENNReal.toReal_ofReal hη.le] using this
   linarith
 
-/-- **Step 2 / part 1**: closed-form `N(g, ε')` for exponential decay.
-For any `g, ε' > 0`, there is `N` such that for all `n ≥ N`,
-`exp(- n · g) < ε'`. Concretely `N := ⌈max 0 (-log ε' / g)⌉ + 1`. -/
+/-- Closed-form `N(g, ε')` for exponential decay: for any `g, ε' > 0`, there is
+`N` such that `exp(- n · g) < ε'` for all `n ≥ N`. Concretely
+`N := ⌈max 0 (-log ε' / g)⌉ + 1`. -/
 @[entry_point]
 theorem exp_neg_mul_lt_of_rate {g ε' : ℝ} (hg : 0 < g) (hε' : 0 < ε') :
     ∃ N : ℕ, ∀ n ≥ N, Real.exp (- (n : ℝ) * g) < ε' := by
@@ -352,13 +338,9 @@ theorem exp_neg_mul_lt_of_rate {g ε' : ℝ} (hg : 0 < g) (hε' : 0 < ε') :
   rw [h_neg_eq]
   exact h_step
 
-/-- **Step 2 / part 2**: closed-form `N(I, R, ε, ε')` for the channel-coding E2 term.
-Given the AEP gap `g := I - R - 3ε > 0` and any tolerance `ε' > 0`, there is `N` such that
-for all `n ≥ N`,
-`(⌈exp(n·R)⌉ - 1) · exp(n · (-I + 3ε)) < ε'`.
-
-Closed form follows from `exp_neg_mul_lt_of_rate` plus the squeeze
-`(⌈exp(nR)⌉ - 1) · exp(n·(-I+3ε)) ≤ exp(-n · g)`. -/
+/-- Closed-form `N(I, R, ε, ε')` for the channel-coding E2 term. Given the AEP
+gap `g := I - R - 3ε > 0` and any tolerance `ε' > 0`, there is `N` such that
+`(⌈exp(n·R)⌉ - 1) · exp(n · (-I + 3ε)) < ε'` for all `n ≥ N`. -/
 @[entry_point]
 theorem channelCoding_E2_lt_of_rate
     {I R ε ε' : ℝ} (hgap : 0 < I - R - 3 * ε) (hε' : 0 < ε') :
@@ -552,26 +534,21 @@ theorem jointlyTypicalSet_prob_ge_of_rate
     simp
   linarith [h_jointEvt_toReal_eq, h_compl_le]
 
-/-! ## Closed-form `N(ε, η)` variants — D-1'' Phase D parent surgery
+/-! ## Closed-form `N(ε, η)` variants
 
-The `_of_rate` form (`∃ N, ∀ n ≥ N, P`) is sufficient for the parent
-`channel_coding_achievability` proof. But for **parent surgery** at Phase D.3
-("∃ outer N, ∀ n ≥ outer N, codebook on `W_smooth δ_n` with `δ_n → 0`") we need
-`N` exposed as a **closed-form function of the inputs** so that the outer
-construction can substitute `δ_n` and conclude `N(δ_n) ≤ n` via the
-`(log n)² / n → 0` lemma (`exists_N_log_sq_le_n`).
+The `_of_rate` form (`∃ N, ∀ n ≥ N, P`) suffices for many callers. When the outer
+construction needs to substitute a sequence `δ_n → 0` and conclude `N(δ_n) ≤ n`,
+`N` must instead be exposed as a closed-form function of the inputs.
 
 The closed-form `N` is the same one extracted in the `_of_rate` proof bodies,
-hoisted out as a `def`. The `_at_N` theorems differ from `_of_rate` only in
-that the existential is collapsed to the explicit `def`. -/
+hoisted out as a `def`. The `_at_N` theorems differ from `_of_rate` only in that
+the existential is collapsed to the explicit `def`. -/
 
 /-- Closed-form `N(V, η, ε)` for `typicalSet_prob_ge` — extracted from the
 proof of `typicalSet_prob_ge_of_rate`. -/
 noncomputable def typicalSetMinN (V η ε : ℝ) : ℕ :=
   max 1 (Nat.ceil (V / (η * ε ^ 2)) + 1)
 
-/-- Monotonicity in `V` (with `η, ε > 0`): a larger variance upper bound only
-makes `N` larger. -/
 lemma typicalSetMinN_mono_V {V V' η ε : ℝ} (hηε : 0 < η * ε ^ 2)
     (hVV' : V ≤ V') :
     typicalSetMinN V η ε ≤ typicalSetMinN V' η ε := by
@@ -582,7 +559,7 @@ lemma typicalSetMinN_mono_V {V V' η ε : ℝ} (hηε : 0 < η * ε ^ 2)
   exact div_le_div_of_nonneg_right hVV' hηε.le
 
 omit [DecidableEq α] in
-/-- **D.AEP.1**: closed-form `N` version of `typicalSet_prob_ge_of_rate`. -/
+/-- Closed-form `N` version of `typicalSet_prob_ge_of_rate`. -/
 @[entry_point]
 theorem typicalSet_prob_ge_at_N
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -665,10 +642,9 @@ theorem typicalSet_prob_ge_at_N
   linarith
 
 omit [DecidableEq α] in
-/-- **D.AEP.2**: variance-upper-bound version of `typicalSet_prob_ge_at_N`.
-Caller provides an upper bound `V_upper ≥ pmfLogVariance μ Xs`, and the
-closed-form `N` is `typicalSetMinN V_upper η ε` (independent of the true
-variance). -/
+/-- Variance-upper-bound version of `typicalSet_prob_ge_at_N`. The caller
+provides an upper bound `V_upper ≥ pmfLogVariance μ Xs`, and the closed-form `N`
+is `typicalSetMinN V_upper η ε` (independent of the true variance). -/
 @[entry_point]
 theorem typicalSet_prob_ge_at_N_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -691,7 +667,7 @@ noncomputable def expNegMulMinN (g ε' : ℝ) : ℕ :=
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
   [MeasurableSingletonClass α] in
-/-- **D.AEP.3**: closed-form `N` version of `exp_neg_mul_lt_of_rate`. -/
+/-- Closed-form `N` version of `exp_neg_mul_lt_of_rate`. -/
 @[entry_point]
 theorem exp_neg_mul_lt_at_N {g ε' : ℝ} (hg : 0 < g) (hε' : 0 < ε') :
     ∀ n, expNegMulMinN g ε' ≤ n → Real.exp (- (n : ℝ) * g) < ε' := by
@@ -722,7 +698,7 @@ theorem exp_neg_mul_lt_at_N {g ε' : ℝ} (hg : 0 < g) (hε' : 0 < ε') :
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
   [MeasurableSingletonClass α] in
-/-- **D.AEP.4**: closed-form `N` version of `channelCoding_E2_lt_of_rate`.
+/-- Closed-form `N` version of `channelCoding_E2_lt_of_rate`.
 The `N` is `expNegMulMinN (I - R - 3ε) ε'`. -/
 @[entry_point]
 theorem channelCoding_E2_lt_at_N
@@ -761,9 +737,9 @@ noncomputable def jointlyTypicalSetMinN
       (typicalSetMinN V_Z (η / 3) ε)
 
 omit [DecidableEq α] in
-/-- **D.AEP.5**: variance-upper-bound version of joint AEP. The caller
-provides axis-wise variance upper bounds `V_X, V_Y, V_Z`, and the closed-form
-`N` is `jointlyTypicalSetMinN V_X V_Y V_Z η ε`. -/
+/-- Variance-upper-bound version of joint AEP. The caller provides axis-wise
+variance upper bounds `V_X, V_Y, V_Z`, and the closed-form `N` is
+`jointlyTypicalSetMinN V_X V_Y V_Z η ε`. -/
 @[entry_point]
 theorem jointlyTypicalSet_prob_ge_at_N_le
     {β : Type*} [Fintype β] [Nonempty β]

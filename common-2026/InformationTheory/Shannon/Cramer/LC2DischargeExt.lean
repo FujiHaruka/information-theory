@@ -6,62 +6,29 @@ import Mathlib.Probability.ProductMeasure
 import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 
 /-!
-# Cramér L-C2 extension (T1-C follow-up follow-up) — Phase A' + B-1 + B-3
+# Cramér L-C2 extension: tilted-side law of large numbers
 
-This file extends `InformationTheory/Shannon/CramerLC2Discharge.lean` (Phase A) with the
-**Phase B partial discharge** needed for Cover-Thomas Theorem 11.4.1's lower
-bound.
+This file extends `InformationTheory/Shannon/Cramer/LC2Discharge.lean` with the
+tilted-side law of large numbers for the coordinate-eval family on the infinite
+product measure.
 
-The parent `CramerLC2Discharge.lean` got stuck at Phase B because Lean's
-typeclass synthesis does not consistently β-reduce the per-coordinate
-`μ₀.tilted` factor through the `fun _ : ℕ => …` wrapper when looking up
-`IsProbabilityMeasure (Measure.infinitePi (fun _ : ℕ => μ₀.tilted ...))`. This
-file *bypasses* that obstruction by:
+## Main statements
 
-1. Promoting the `haveI` pattern (used internally in `iIndepFun_tilted_ambient`)
-   to an outward-facing lemma `isProbabilityMeasure_infinitePi_tilted_of_bounded`
-   (Mathlib PR-candidate).
-2. Combining it with `iIndepFun.indepFun` and Mathlib's `strong_law_ae_real` to
-   publish the **tilted-side almost-sure LLN** `tilted_lln_ae`.
-3. Converting a.s. → in-probability via `tendstoInMeasure_of_tendsto_ae` to
-   publish `tilted_lln_in_probability`.
+* `isProbabilityMeasure_infinitePi_tilted_of_bounded` — the tilted infinite
+  product `Measure.infinitePi (fun _ : ℕ => μ₀.tilted (lam * Y ·))` is a
+  probability measure.
+* `pairwise_indepFun_tilted_ambient`, `integrable_eval_under_infinitePi_tilted`,
+  `integral_eval_under_infinitePi_tilted` — the inputs to the strong law.
+* `tilted_lln_ae` — the almost-sure law of large numbers on the tilted ambient.
+* `tilted_lln_in_probability`, `tilted_lln_in_probability_real` — its in-measure
+  (in-probability) upgrades.
 
-## Phase A' — bypass plumbing
+## Implementation notes
 
-* `isProbabilityMeasure_infinitePi_tilted_of_bounded` — beta-redex bypass for
-  the product probability-measure instance (PR-candidate).
-* `pairwise_indepFun_tilted_ambient` — `Pairwise IndepFun` form for
-  `strong_law_ae_real`.
-* `integrable_eval_under_infinitePi_tilted` — bounded RV ⇒ integrable on the
-  tilted ambient.
-* `integral_eval_under_infinitePi_tilted` — push-forward identity:
-  `(infinitePi (fun _ => ν))[Y ∘ eval i] = ν[Y]`.
-
-## Phase B-1 — almost-sure LLN on the tilted ambient
-
-* `tilted_lln_ae` — `strong_law_ae_real` instantiated at the tilted ambient.
-
-## Phase B-3 — in-probability LLN on the tilted ambient
-
-* `tilted_lln_in_probability` — `tendstoInMeasure_of_tendsto_ae` instantiated at
-  `tilted_lln_ae`.
-* `tilted_lln_in_probability_real` — `.real`-form rewrite for downstream use in
-  Cramér's change-of-measure step (Phase C, deferred).
-
-## Phase C (deferred — see `cramer-lc2-ext-moonshot-plan.md` §Approach)
-
-Phase C is the Cramér change-of-measure step that converts the tilted-side
-in-probability LLN into the parent file's `h_tilted_lower` hypothesis. It is
-deferred because the core ingredient is the n-letter Radon-Nikodym derivative
-identification
-
-```
-(Measure.infinitePi (fun _ => μ₀)).tilted (∑ i ∈ range n, lam * Y (· i))
-  ↔  Measure.infinitePi (fun _ => μ₀.tilted (lam * Y ·))  on cylinders of width n
-```
-
-which has no direct Mathlib counterpart and is its own ~500-line construction
-(`cramer-change-of-measure-discharge-plan.md`, separate seed).
+`isProbabilityMeasure_infinitePi_tilted_of_bounded` is stated as an outward-facing
+lemma because Lean's typeclass synthesis does not consistently β-reduce the
+per-coordinate `μ₀.tilted` factor through the `fun _ : ℕ => …` wrapper when
+looking up `IsProbabilityMeasure (Measure.infinitePi (fun _ : ℕ => μ₀.tilted ...))`.
 -/
 
 namespace InformationTheory.Shannon.Cramer.Discharge
@@ -71,18 +38,13 @@ open scoped Topology BigOperators ENNReal Function
 
 variable {Ω₀ : Type*} [MeasurableSpace Ω₀]
 
-/-! ## Phase A' — beta-redex bypass plumbing -/
+/-! ## Probability-measure instance and strong-law inputs -/
 
-/-- **β-redex bypass** (Mathlib PR-candidate): the infinite-product measure
+/-- The infinite-product measure
 `Measure.infinitePi (fun _ : ℕ => μ₀.tilted (lam * Y ·))` is a probability
-measure.
-
-Without this lemma, callers hitting Lean's typeclass synthesis on the term
-`IsProbabilityMeasure (Measure.infinitePi (fun _ : ℕ => μ₀.tilted ...))` get
-stuck on the β-redex inside the `(fun _ => ...) i` head; the standard
-`Measure.infinitePi` instance is registered for `[hμ : ∀ i, IsProbabilityMeasure
-(μ i)]`, but the unifier does not β-reduce the per-coordinate factor through
-the `fun _ : ℕ => ...` wrapper consistently across downstream lemmas. -/
+measure. Stated explicitly because the unifier does not β-reduce the
+per-coordinate factor through the `fun _ : ℕ => ...` wrapper consistently when
+synthesizing the standard `Measure.infinitePi` instance. -/
 @[entry_point]
 lemma isProbabilityMeasure_infinitePi_tilted_of_bounded
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
@@ -95,9 +57,6 @@ lemma isProbabilityMeasure_infinitePi_tilted_of_bounded
       ((fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω)) i) := fun _ => hp
   infer_instance
 
-/-- **Pairwise independence on the tilted ambient.** Strengthens the existing
-`iIndepFun_tilted_ambient` (i.e. `iIndepFun`) into the `Pairwise IndepFun` form
-required by `strong_law_ae_real`. -/
 lemma pairwise_indepFun_tilted_ambient
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) :
@@ -108,8 +67,6 @@ lemma pairwise_indepFun_tilted_ambient
   intro i j hij
   exact (iIndepFun_tilted_ambient hY_meas h_bdd lam).indepFun hij
 
-/-- **Integrable evaluation under the tilted ambient.** A bounded random variable
-`Y` composed with `eval 0` is integrable on the tilted product measure. -/
 lemma integrable_eval_under_infinitePi_tilted
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) :
@@ -129,8 +86,8 @@ lemma integrable_eval_under_infinitePi_tilted
     rw [Real.norm_eq_abs]
     exact hM (ω 0))
 
-/-- **Integral bridge**: the integral of `Y ∘ eval 0` under the tilted infinite
-product equals the integral of `Y` under the tilted base. -/
+/-- The integral of `Y ∘ eval 0` under the tilted infinite product equals the
+integral of `Y` under the tilted base. -/
 lemma integral_eval_under_infinitePi_tilted
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) :
@@ -159,11 +116,11 @@ lemma integral_eval_under_infinitePi_tilted
       (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))) h_eval_meas h_aesm
   rw [← h_map, h_push]
 
-/-! ## Phase B-1 — almost-sure LLN on the tilted ambient -/
+/-! ## Almost-sure LLN on the tilted ambient -/
 
-/-- **Tilted-side strong law of large numbers** (Phase B-1). Under the tilted
-infinite product measure, the empirical mean of the coordinate-eval family
-converges almost surely to the base-tilted expectation of `Y`. -/
+/-- Under the tilted infinite product measure, the empirical mean of the
+coordinate-eval family converges almost surely to the base-tilted expectation of
+`Y`. -/
 @[entry_point]
 theorem tilted_lln_ae
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
@@ -200,11 +157,10 @@ theorem tilted_lln_ae
   rw [h_int_eq] at h_lln
   exact h_lln
 
-/-! ## Phase B-3 — in-probability LLN on the tilted ambient -/
+/-! ## In-probability LLN on the tilted ambient -/
 
-/-- **Tilted-side in-probability LLN** (Phase B-3). The almost-sure convergence
-from `tilted_lln_ae` upgrades to convergence in measure (= in probability on a
-probability space). -/
+/-- The almost-sure convergence from `tilted_lln_ae` upgrades to convergence in
+measure (= in probability on a probability space). -/
 @[entry_point]
 theorem tilted_lln_in_probability
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
@@ -234,9 +190,8 @@ theorem tilted_lln_in_probability
     exact (h_sum.div_const _).aestronglyMeasurable
   exact tendstoInMeasure_of_tendsto_ae h_meas h_ae
 
-/-- **Tilted-side in-probability LLN, `.real`-form** (Phase B-3 corollary). For
-every `ε > 0`, the measure of the bad set `{ω | ε ≤ |S̄_n - 𝔼[Y]|}` tends to
-zero. -/
+/-- The `.real`-form of `tilted_lln_in_probability`: for every `ε > 0`, the
+measure of the bad set `{ω | ε ≤ |S̄_n - 𝔼[Y]|}` tends to zero. -/
 @[entry_point]
 theorem tilted_lln_in_probability_real
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]

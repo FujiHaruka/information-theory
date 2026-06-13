@@ -10,75 +10,35 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic
 
 /-!
-# T2-D: Entropy Power Inequality (Cover-Thomas Theorem 17.7.3)
+# Entropy power inequality (Cover–Thomas Theorem 17.7.3)
 
-独立な実値確率変数 `X, Y` に対する **Entropy Power Inequality (EPI)**
+The entropy power inequality (EPI) for independent real-valued random variables `X, Y`:
 
-    `exp(2 h(X + Y)) ≥ exp(2 h(X)) + exp(2 h(Y))`.
+`exp(2 h(X + Y)) ≥ exp(2 h(X)) + exp(2 h(Y))`,
 
-を hypothesis pass-through 形で publish。Cover-Thomas Ch.17.7 (Inequalities in
-Information Theory) の頂点で、Gaussian theory の閉じに対応する。
+stated through the named EPI-conclusion predicate `IsEntropyPowerInequalityHypothesis`, together
+with the Gaussian saturation case where the inequality holds with equality.
 
-## Roadmap (per `docs/shannon/epi-moonshot-plan.md`)
+## Main definitions
 
-* Phase A — `entropyPower` 定義 + Gaussian closed form
-* Phase B — L-EPI1 + L-EPI2 + L-EPI3 predicate 定義
-* Phase C — 主定理 `entropy_power_inequality` (L-EPI3 適用)
-* Phase D — Gaussian saturation case (撤退ラインなしで full discharge)
-* Phase E — 補助 corollary 群 (positivity / scaling / log form)
+* `entropyPower μ := exp (2 · h(μ))` — the entropy power of a measure on `ℝ`.
+* `IsEntropyPowerInequalityHypothesis X Y P` — the EPI conclusion as a named `Prop`.
 
-## 撤退ライン (本 file で発動)
+## Main statements
 
-EPI 本体 (Stam inequality → de Bruijn integration の合成) は Mathlib に**全く
-不在** (`loogle "EntropyPower"` で unknown identifier、`rg "Stam"` で 0 hit)。
-本 file では Cover-Thomas Theorem 17.7.3 の textbook 完全形を signature に
-保持しつつ、主定理本体は L-EPI3 単独で着地する **L-EPI1 + L-EPI2 + L-EPI3
-三本立て hypothesis pass-through pattern** を採用する (T2-B / T2-C / T3-D /
-T3-F と同流儀)。
+* `entropyPower_pos`, `entropyPower_nonneg`, `entropyPower_gaussianReal` — basic properties and the
+  Gaussian closed form `2πe v`.
+* `entropyPower_gaussian_additivity` — EPI holds with equality for independent Gaussians.
+* `isEntropyPowerInequalityHypothesis_of_gaussian` — the EPI predicate holds for independent Gaussians.
+* `entropyPower_map_add_const`, `entropy_power_inequality_three_arg` — translation invariance and the
+  three-variable form.
 
-* **L-EPI1 (Stam inequality)**: genuine 代替 `IsStamInequalityResidual X Y P :
-  Prop` (`:197+`) が Stam の `1/J(X+Y) ≥ 1/J(X) + 1/J(Y)` を density-keyed
-  Fisher info で表現。主定理 `entropy_power_inequality` の hypothesis に直接
-  入っており、旧 placeholder `IsStamInequalityHypothesis := True` (Phase 3
-  Wave 2 retract 済) は廃止。Discharge plan `epi-stam-discharge-plan.md`
-  (未着手) で shared sorry 補題 `stamToEPIBridge_holds` を closure 予定。
-* **L-EPI2 (de Bruijn integration)**: heat-flow path 上の EPI integration
-  identity は T2-F `IsRegularDeBruijnHyp` を `[0, ∞)` 上で積分する形で扱う。
-  旧 placeholder `IsDeBruijnIntegrationHypothesis := True` (Phase 3 Wave 2
-  retract 済) は廃止。`wall:debruijn-integration` は **[CLOSED 2026-06-04]**
-  — genuine (sorryAx-free) `debruijnIdentityV2_holds_assembled`
-  (`FisherInfoV2DeBruijnAssembly.lean`) に集約され、旧 shared sorry 補題
-  `debruijnIdentityV2_holds` は削除済。
-* **L-EPI3 (EPI conclusion、核心 retreat)**: `IsEntropyPowerInequalityHypothesis
-  X Y P : Prop` を EPI 結論そのものとし、主定理本体は `:= h_epi` で着地。
-  Discharge plan `epi-stam-to-conclusion-plan.md` で L-EPI1 + L-EPI2 から
-  導出する想定。
+## Implementation notes
 
-## Mathlib-shape-driven Definitions
-
-* `entropyPower μ : ℝ := Real.exp (2 * differentialEntropy μ)` は
-  `Real.exp_pos` / `Real.exp_log` の結論形に直結。Cover-Thomas の
-  `N(μ) = (2πe)⁻¹ · exp(2 h(μ))` 形は scaling corollary で吸収。
-* L-EPI3 形 `IsEntropyPowerInequalityHypothesis` は EPI 結論を `Prop` 化し、
-  主定理本体を `:= h_epi` の 1 行で着地させる (T2-B L-PG1 / T2-C L-SH3
-  と同流儀)。
-* Gaussian saturation case は Mathlib
-  `gaussianReal_add_gaussianReal_of_indepFun` + InformationTheory
-  `differentialEntropy_gaussianReal` の合成で **full discharge** (撤退
-  ラインなし)。
-
-## 主シグネチャ
-
-* `entropyPower` — Phase A 定義
-* `entropyPower_pos`, `entropyPower_gaussianReal` — Tier 0 補助
-* `IsEntropyPowerInequalityHypothesis` — Phase B L-EPI3 predicate
-  (L-EPI1 / L-EPI2 placeholder `Prop := True` 形は Phase 3 Wave 2 retract 済、
-  genuine 代替は `IsStamInequalityResidual` (L-EPI1) + genuine `debruijnIdentityV2_holds_assembled` (L-EPI2、`wall:debruijn-integration` は [CLOSED 2026-06-04]))
-* `entropy_power_inequality` — Phase C 主定理 (L-EPI3 適用形)
-* `entropy_power_inequality_exp_form` — Cover-Thomas 露出形 (Real.exp 展開)
-* `entropyPower_gaussian_additivity` — Phase D, full discharge (Cover-Thomas Ch.17 用語整合)
-* `entropyPower_nonneg`, `entropyPower_map_add_const`,
-  `entropy_power_inequality_log_form` — Phase E corollaries
+`entropyPower` is defined as `exp (2 h(μ))`, directly matching the conclusion forms of
+`Real.exp_pos` / `Real.exp_log`; the Cover–Thomas normalization `N(μ) = (2πe)⁻¹ · exp(2 h(μ))` is
+recovered by a scaling corollary. The Gaussian saturation case is discharged from Mathlib's
+`gaussianReal_add_gaussianReal_of_indepFun` together with `differentialEntropy_gaussianReal`.
 -/
 
 namespace InformationTheory.Shannon.EntropyPowerInequality
@@ -89,16 +49,11 @@ set_option linter.unusedSectionVars false
 open MeasureTheory ProbabilityTheory
 open scoped ENNReal NNReal Topology
 
-/-! ## §A — `entropyPower` 定義 + 基本性質 -/
+/-! ### `entropyPower`: definition and basic properties -/
 
-/-- **Entropy power** of a measure `μ` on `ℝ`.
-
-`entropyPower μ := exp (2 · h(μ))` where `h` is `InformationTheory.Shannon.differentialEntropy`.
-
-Cover-Thomas Ch.17 の `N(X) := (2πe)⁻¹ · exp(2 h(X))` と係数差のみ; 本 file
-は `exp (2 h(μ))` 直書きで採用する (Mathlib-shape-driven, EPI signature
-`exp(2 h(X+Y)) ≥ exp(2 h(X)) + exp(2 h(Y))` に直結)。係数 `(2πe)` の付替は
-scaling corollary で扱える。 -/
+/-- The entropy power of a measure `μ` on `ℝ`: `entropyPower μ := exp (2 · h(μ))`, where `h` is
+`InformationTheory.Shannon.differentialEntropy`. This differs from the Cover–Thomas normalization
+`N(X) := (2πe)⁻¹ · exp(2 h(X))` only by the constant `(2πe)`, recovered by a scaling corollary. -/
 noncomputable def entropyPower (μ : Measure ℝ) : ℝ :=
   Real.exp (2 * InformationTheory.Shannon.differentialEntropy μ)
 
@@ -140,56 +95,25 @@ theorem entropyPower_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     positivity
   exact Real.exp_log h_pos
 
-/-! ## §B — L-EPI1 + L-EPI2 + L-EPI3 retreat predicates -/
+/-! ### EPI conclusion predicate -/
 
--- (retracted, Phase 3 Wave 2, 2026-05-27) `IsStamInequalityHypothesis := True`
--- (旧 L-EPI1 placeholder, defect-kind prop-true) was retracted: the genuine
--- non-circular alternative `IsStamInequalityResidual` (`:152+`) is now in place
--- and is consumed directly by `entropy_power_inequality`. The lone bridge
--- wrapper `isStamInequalityHypothesis_of_stamInequalityHyp` in
--- `EPIStamDischarge.lean` (body `trivial`) has been deleted in the same wave.
---
--- (retracted, Phase 3 Wave 2, 2026-05-27) `IsDeBruijnIntegrationHypothesis := True`
--- (旧 L-EPI2 placeholder, defect-kind prop-true) was retracted: its sole
--- call site was `epi_via_stam_main_eq` as an unused `_h_db` argument, which
--- has been removed; the de Bruijn identity is now the genuine (sorryAx-free)
--- `debruijnIdentityV2_holds_assembled` (`FisherInfoV2DeBruijnAssembly.lean`;
--- `wall:debruijn-integration` is [CLOSED 2026-06-04]), which supersedes the
--- placeholder.
+/-- The EPI conclusion named as a `Prop`:
 
-/-- **L-EPI3 (EPI conclusion predicate)**: EPI 結論
+`entropyPower (P.map (X+Y)) ≥ entropyPower (P.map X) + entropyPower (P.map Y)`.
 
-    `entropyPower (P.map (X+Y)) ≥ entropyPower (P.map X) + entropyPower (P.map Y)`
-
-を `Prop` として名付けたもの。**これは EPI 結論そのもの**であり、hypothesis として
-は使わない (使うと `theorem epi (h : EPI) : EPI := h` の循環になる)。Gaussian
-saturation の出力 (§D) や下流 pipeline の中間結果に名前を付けるために保持する。 -/
+This is the conclusion itself and is not used as a hypothesis (that would be circular); it names the
+output of the Gaussian saturation case and downstream intermediate results. -/
 def IsEntropyPowerInequalityHypothesis {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   entropyPower (P.map (fun ω => X ω + Y ω))
     ≥ entropyPower (P.map X) + entropyPower (P.map Y)
 
--- (deleted 2026-06-11, legacy Stam→EPI subtree removal) The Stam residual
--- `IsStamInequalityResidual` (Cover-Thomas Lemma 17.7.2 V2 density-keyed Prop) was
--- removed: after deleting the legacy bridge (`IsStamToEPIBridge` /
--- `stamToEPIBridge_holds`) and all its consumers (`entropy_power_inequality` and the
--- exp/log/normalized/integrated/via-stam wrappers), it had 0 remaining references
--- (verified by `scripts/dep_consumers.sh`). It was a sorryAx-free Prop, so its
--- removal is harmless. The genuine Stam residual still consumed by the live
--- (non-legacy) pipeline is `EPIStamDischarge.IsStamInequalityHyp`.
+/-! ### Gaussian saturation case -/
 
-/-! ## §D — Gaussian saturation case (Cover-Thomas Theorem 17.7.3 等号成立、FULL DISCHARGE) -/
-
-/-- **Gaussian saturation case**: X, Y それぞれ独立 Gaussian で variance 非零
-なら EPI は **等号成立** `exp(2 h(X+Y)) = exp(2 h(X)) + exp(2 h(Y))`.
-
-撤退ラインなしで full discharge (Mathlib `gaussianReal_add_gaussianReal_of_indepFun`
-が sum の law を Gaussian と特定 + InformationTheory `differentialEntropy_gaussianReal`
-が closed form を与える)。
-
-これにより L-EPI3 hypothesis は **Gaussian の場合 trivially provable**
-(同 hypothesis を `_ge_of_eq` の形で得る、§E corollary
-`isEntropyPowerInequalityHypothesis_of_gaussian` 参照)。
+/-- For independent Gaussians `X, Y` with nonzero variance, EPI holds with equality:
+`exp(2 h(X+Y)) = exp(2 h(X)) + exp(2 h(Y))`. This follows from
+`gaussianReal_add_gaussianReal_of_indepFun` identifying the law of the sum as Gaussian, together
+with the closed form `differentialEntropy_gaussianReal`.
 
 @audit:ok -/
 @[entry_point]
@@ -252,11 +176,10 @@ theorem isEntropyPowerInequalityHypothesis_of_gaussian
 -- via `EPIStamDischarge.isStamToEPIBridgeHyp_of_gaussian`, so this
 -- in-file `IsStamToEPIBridge` wrapper is redundant.
 
-/-! ## §E — 補助 corollary 群 -/
+/-! ### Corollaries -/
 
-/-- **Translation invariance of entropy power**: for `μ ≪ volume` and
-σ-finite `μ`, `entropyPower (μ.map (· + a)) = entropyPower μ`. The hypothesis
-matches `InformationTheory.Shannon.differentialEntropy_map_add_const`.
+/-- Translation invariance of entropy power: for `μ ≪ volume` and σ-finite `μ`,
+`entropyPower (μ.map (· + a)) = entropyPower μ`.
 
 @audit:ok -/
 @[entry_point]
@@ -266,26 +189,19 @@ theorem entropyPower_map_add_const {μ : Measure ℝ} (hμ : μ ≪ volume)
   unfold entropyPower
   rw [InformationTheory.Shannon.differentialEntropy_map_add_const hμ]
 
-/-- **3-arg EPI pass-through**: 3 つの独立変数 `X, Y, Z` に対し EPI を
-chain することで `exp(2 h(X+Y+Z)) ≥ exp(2 h(X)) + exp(2 h(Y)) + exp(2 h(Z))`.
+/-- The three-variable EPI obtained by chaining the two-variable form: for independent `X, Y, Z`,
+`exp(2 h(X+Y+Z)) ≥ exp(2 h(X)) + exp(2 h(Y)) + exp(2 h(Z))`, from two lower-arity EPI conclusions
+(the `X+Y` vs `Z` pair and the `X` vs `Y` pair).
 
-2-arg 形を 2 回適用するための 2 つの lower-arity EPI 結論を取る (X+Y vs Z の
-ペアで 1 回、X vs Y のペアで 1 回)。
+The body is a structural composition (associativity plus transitivity via `linarith`) with no
+internal `sorry`: the supplied `h_xy_z_epi` / `h_x_y_epi` carry lower-arity EPI conclusions
+`IsEntropyPowerInequalityHypothesis _ _ P` transparently, and this wrapper holds no core itself —
+the load-bearing content lives at the definition site of the `IsEntropyPowerInequalityHypothesis`
+predicate. The sister `EPIPlumbing.entropy_power_inequality_four_arg` carries `@audit:ok` for the
+same reason, and this declaration was migrated from a stale
+`@audit:retract-candidate(load-bearing-predicate)`.
 
-`@audit:ok` — Cluster C sorry-migration audit 2026-05-28. 本 wrapper の body は
-genuine な structural composition (assoc + transitivity via `linarith`、internal
-`sorry` なし)。caller が供給する `h_xy_z_epi` / `h_x_y_epi` は lower-arity の EPI
-**結論** (`IsEntropyPowerInequalityHypothesis _ _ P`) を transparent に carry する
-ものであり、当該 wrapper 自身は core を抱えていない — transitive な load-bearing-ness
-は L-EPI3 predicate の定義 site (`IsEntropyPowerInequalityHypothesis`、named
-conclusion form) に live する。sister `EPIPlumbing.entropy_power_inequality_four_arg`
-(Phase 1.C audit で同一 rationale により `@audit:ok`) と同型。stale な
-`@audit:retract-candidate(load-bearing-predicate)` から migrate。
-**signature 不変**: 本 wrapper は `EPIL3Integration.entropy_power_inequality_three_arg_integrated`
-(parallel Group 1 が編集中) が現 signature で consume するため、引数を削ると cross-file
-collision。一般原則として、Stam noise / de Bruijn regularity / limit hyp を thread する
-discharge route を、hypothesis-free を標榜する wrapper の delegate 先には使わない
-(hypothesis-free 偽装を避ける)。 -/
+@audit:ok -/
 theorem entropy_power_inequality_three_arg {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y Z : Ω → ℝ)

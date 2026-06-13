@@ -5,29 +5,23 @@ import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 
 /-!
-# シャープ Pinsker 不等式 (定数 1/√2)
+# Sharp Pinsker inequality (constant `1/√2`)
 
-InformationTheory B-5' ムーンショット ([`docs/shannon/pinsker-sharp-moonshot-plan.md`])。
+For probability measures `P, Q` on a finite alphabet `α` with `P ≪ Q`, the sharp Cover–Thomas
+(11.6) form of Pinsker's inequality: `tvNorm P Q ≤ √((klDiv P Q).toReal / 2)`. The total-variation
+norm `tvNorm` is shared with the weak form in `Pinsker/Basic.lean`.
 
-有限アルファベット `α` 上の確率測度 `P, Q` (`P ≪ Q`) について
-`tvNorm P Q ≤ √((klDiv P Q).toReal / 2)` を Lean 化 (Cover-Thomas 11.6 strict 形)。
+## Main statements
 
-弱形 (`InformationTheory/Shannon/Pinsker.lean` の `tvNorm_le_sqrt_klDiv`, 定数 1, Bretagnolle-Huber 経路)
-は touch せず、本ファイルで sharp 版を独立 publish。`tvNorm` 定義は弱形と共有 (`Pinsker.tvNorm`)。
+* `klFun_sharp_lower` — the pointwise sharp bound `3 * (t - 1)^2 ≤ 2 * (t + 2) * klFun t`.
+* `tvNorm_le_sqrt_klDiv_div_two` — the sharp Pinsker inequality `tvNorm P Q ≤ √((klDiv P Q).toReal / 2)`.
 
-## 主定理
+## Implementation notes
 
-* `klFun_sharp_lower` — 点別 sharp Pinsker: `3 * (t - 1)^2 ≤ 2 * (t + 2) * klFun t` for `t ≥ 0`
-* `tvNorm_le_sqrt_klDiv_div_two` — sharp Pinsker: `tvNorm P Q ≤ √((klDiv P Q).toReal / 2)`
-
-## 戦略
-
-1. **Phase A**: `H(t) := 2(t+2)·klFun(t) - 3(t-1)²` の 3 段サインチェイン
-   - `H''(t) = 4(log t + 1/t - 1) ≥ 0` for `t > 0` (`Real.one_sub_inv_le_log_of_pos` 一行)
-   - `H'(1) = 0` ⟹ `H'` が `(0, ∞)` 上 sign-change at `t = 1`
-   - `H(1) = 0` ⟹ `H` は `t = 1` で最小値 0
-   - `t = 0` 別途 (`H(0) = 1`)
-2. **Phase B**: per-element 適用 + Cauchy-Schwarz + `Σ(p+2q) = 3`
+The pointwise bound is obtained from the auxiliary `H t := 2 (t + 2) · klFun t - 3 (t - 1)^2`,
+whose second derivative `4 (log t + 1/t - 1)` is nonnegative on `(0, ∞)` and which has a minimum
+of `0` at `t = 1`. The global bound follows by a per-element application together with the
+Cauchy–Schwarz step and `∑ (p + 2q) = 3`.
 -/
 
 namespace InformationTheory.Shannon.PinskerSharp
@@ -35,23 +29,22 @@ namespace InformationTheory.Shannon.PinskerSharp
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal
 
-/-! ## Phase A — 点別 sharp Pinsker 不等式 -/
+/-! ### Pointwise sharp Pinsker inequality -/
 
-/-- 主要関数 `H(t) := 2(t+2)·klFun(t) - 3(t-1)²` のサポート。 -/
+/-- The auxiliary function `H t := 2 (t + 2) · klFun t - 3 (t - 1)^2`. -/
 private noncomputable def H (t : ℝ) : ℝ := 2 * (t + 2) * klFun t - 3 * (t - 1) ^ 2
 
-/-- `H` の 1 階導関数の閉形式。 -/
+/-- Closed form of the first derivative of `H`. -/
 private noncomputable def Hderiv (t : ℝ) : ℝ := 4 * ((t + 1) * Real.log t - 2 * (t - 1))
 
-/-- `H` の 2 階導関数の閉形式。 -/
+/-- Closed form of the second derivative of `H`. -/
 private noncomputable def Hderiv2 (t : ℝ) : ℝ := 4 * (Real.log t + 1 / t - 1)
 
-/-- `H` の `t > 0` での 1 階微分。 -/
 private lemma hasDerivAt_H {t : ℝ} (ht : 0 < t) :
     HasDerivAt H (Hderiv t) t := by
   unfold H Hderiv
   have ht_ne : t ≠ 0 := ht.ne'
-  -- 2 * (t + 2) の微分 = 2
+  -- derivative of `2 * (t + 2)` is `2`
   have h1 : HasDerivAt (fun t : ℝ => 2 * (t + 2)) 2 t := by
     have hid : HasDerivAt (fun t : ℝ => t + 2) 1 t :=
       (hasDerivAt_id t).add_const 2
@@ -62,7 +55,7 @@ private lemma hasDerivAt_H {t : ℝ} (ht : 0 < t) :
       (2 * klFun t + 2 * (t + 2) * Real.log t) t := by
     have hmul := h1.mul h2
     convert hmul using 1
-  -- 3 * (t - 1) ^ 2 の微分 = 6 * (t - 1)
+  -- derivative of `3 * (t - 1) ^ 2` is `6 * (t - 1)`
   have hid' : HasDerivAt (fun t : ℝ => t - 1) 1 t :=
     (hasDerivAt_id t).sub_const 1
   have h4 : HasDerivAt (fun t : ℝ => (t - 1) ^ 2) (2 * (t - 1) * 1) t := by
@@ -75,12 +68,11 @@ private lemma hasDerivAt_H {t : ℝ} (ht : 0 < t) :
   unfold klFun
   ring
 
-/-- `Hderiv` の `t > 0` での 1 階微分 (= `H` の 2 階導関数)。 -/
 private lemma hasDerivAt_Hderiv {t : ℝ} (ht : 0 < t) :
     HasDerivAt Hderiv (Hderiv2 t) t := by
   unfold Hderiv Hderiv2
   have ht_ne : t ≠ 0 := ht.ne'
-  -- (t + 1) * log t の微分: 1 * log t + (t + 1) * (1/t)
+  -- derivative of `(t + 1) * log t`: `1 * log t + (t + 1) * (1/t)`
   have h_log : HasDerivAt Real.log (1 / t) t := by
     rw [one_div]; exact Real.hasDerivAt_log ht_ne
   have h_t1 : HasDerivAt (fun t : ℝ => t + 1) 1 t :=
@@ -88,21 +80,20 @@ private lemma hasDerivAt_Hderiv {t : ℝ} (ht : 0 < t) :
   have h_t1_log : HasDerivAt (fun t : ℝ => (t + 1) * Real.log t)
       (1 * Real.log t + (t + 1) * (1 / t)) t :=
     h_t1.mul h_log
-  -- 2 * (t - 1) の微分: 2
+  -- derivative of `2 * (t - 1)`: `2`
   have h_tm1 : HasDerivAt (fun t : ℝ => t - 1) 1 t :=
     (hasDerivAt_id t).sub_const 1
   have h_2tm1 : HasDerivAt (fun t : ℝ => 2 * (t - 1)) 2 t := by
     have := h_tm1.const_mul 2
     simpa using this
-  -- (t+1)*log t - 2*(t-1) の微分: log t + (t+1)/t - 2
+  -- derivative of `(t+1)*log t - 2*(t-1)`: `log t + (t+1)/t - 2`
   have h_inner := h_t1_log.sub h_2tm1
-  -- 4 * (...) の微分: 4 * (log t + (t+1)/t - 2)
+  -- derivative of `4 * (...)`: `4 * (log t + (t+1)/t - 2)`
   have h_4 := h_inner.const_mul 4
   convert h_4 using 1
   field_simp
   ring
 
-/-- `H''(t) ≥ 0` for `t > 0`、`Real.one_sub_inv_le_log_of_pos` 経由で 1 行。 -/
 private lemma Hderiv2_nonneg {t : ℝ} (ht : 0 < t) : 0 ≤ Hderiv2 t := by
   unfold Hderiv2
   have h := Real.one_sub_inv_le_log_of_pos ht
@@ -111,19 +102,16 @@ private lemma Hderiv2_nonneg {t : ℝ} (ht : 0 < t) : 0 ≤ Hderiv2 t := by
     rw [one_div]; exact h
   linarith
 
-/-- `Hderiv(1) = 0`. -/
 private lemma Hderiv_one : Hderiv 1 = 0 := by
   unfold Hderiv
   simp
 
-/-- `H(1) = 0`. -/
 private lemma H_one : H 1 = 0 := by
   unfold H
   rw [klFun_one]
   ring
 
 
-/-- `Hderiv` は `(0, ∞)` 上 monotone (`H'' ≥ 0` から)。 -/
 private lemma Hderiv_monotoneOn : MonotoneOn Hderiv (Set.Ioi (0 : ℝ)) := by
   have hconv : Convex ℝ (Set.Ioi (0 : ℝ)) := convex_Ioi 0
   have hint : interior (Set.Ioi (0 : ℝ)) = Set.Ioi (0 : ℝ) := interior_Ioi
@@ -140,12 +128,10 @@ private lemma Hderiv_monotoneOn : MonotoneOn Hderiv (Set.Ioi (0 : ℝ)) := by
     rw [hint] at ht
     exact Hderiv2_nonneg ht
 
-/-- `H` is continuous on `[0, ∞)` (klFun continuous + polynomial). -/
 private lemma continuous_H : Continuous H := by
   unfold H
   fun_prop
 
-/-- `H` は `[1, ∞)` 上 monotone。 -/
 private lemma H_monotoneOn_Ici_one : MonotoneOn H (Set.Ici (1 : ℝ)) := by
   have hconv : Convex ℝ (Set.Ici (1 : ℝ)) := convex_Ici 1
   have hint : interior (Set.Ici (1 : ℝ)) = Set.Ioi (1 : ℝ) := interior_Ici
@@ -167,7 +153,6 @@ private lemma H_monotoneOn_Ici_one : MonotoneOn H (Set.Ici (1 : ℝ)) := by
     exact hmono
 
 
-/-- `H` は `(0, 1]` 上 antitone。 -/
 private lemma H_antitoneOn_Ioc_zero_one : AntitoneOn H (Set.Ioc (0 : ℝ) 1) := by
   refine antitoneOn_of_hasDerivWithinAt_nonpos (D := Set.Ioc (0 : ℝ) 1)
     (convex_Ioc 0 1) continuous_H.continuousOn (f' := Hderiv) ?_ ?_
@@ -183,7 +168,6 @@ private lemma H_antitoneOn_Ioc_zero_one : AntitoneOn H (Set.Ioc (0 : ℝ) 1) := 
     rw [Hderiv_one] at hmono
     exact hmono
 
-/-- `H(t) ≥ 0` for `t > 0`. `H(1) = 0` + 上記 monotone/antitone から。 -/
 private lemma H_nonneg_of_pos {t : ℝ} (ht : 0 < t) : 0 ≤ H t := by
   rcases le_or_gt t 1 with h_le | h_gt
   · -- t ≤ 1: AntitoneOn (0, 1] H, t ≤ 1, so H t ≥ H 1 = 0.
@@ -199,7 +183,7 @@ private lemma H_nonneg_of_pos {t : ℝ} (ht : 0 < t) : 0 ≤ H t := by
     rw [H_one] at h
     exact h
 
-/-- **点別 sharp Pinsker 不等式**: `3·(t-1)² ≤ 2·(t+2)·klFun(t)` for `t ≥ 0`. -/
+/-- The pointwise sharp Pinsker inequality `3 · (t - 1)^2 ≤ 2 · (t + 2) · klFun t` for `t ≥ 0`. -/
 @[entry_point]
 lemma klFun_sharp_lower (t : ℝ) (ht : 0 ≤ t) :
     3 * (t - 1) ^ 2 ≤ 2 * (t + 2) * klFun t := by
@@ -213,7 +197,7 @@ lemma klFun_sharp_lower (t : ℝ) (ht : 0 ≤ t) :
     unfold H at h_H
     linarith
 
-/-! ## Phase B — 主定理 -/
+/-! ### Sharp Pinsker inequality -/
 
 variable {α : Type*} [Fintype α] [MeasurableSpace α] [MeasurableSingletonClass α]
 
@@ -223,7 +207,7 @@ private lemma per_element_sharp
     (hPQ : P ≪ Q) (x : α) :
     3 * (P.real {x} - Q.real {x}) ^ 2 / (2 * (P.real {x} + 2 * Q.real {x}))
       ≤ Q.real {x} * klFun (P.rnDeriv Q x).toReal := by
-  -- rnDeriv 識別
+  -- identify the Radon–Nikodym derivative
   have h_rnD_enn : (P.rnDeriv Q x) * Q {x} = P {x} := by
     have h_wd : Q.withDensity (P.rnDeriv Q) = P :=
       Measure.withDensity_rnDeriv_eq P Q hPQ
@@ -252,12 +236,12 @@ private lemma per_element_sharp
   have h_rnD_div : (P.rnDeriv Q x).toReal = P.real {x} / Q.real {x} := by
     field_simp
     linarith [h_rnD_real]
-  -- 点別 Phase A 適用
+  -- apply the pointwise bound
   have h_t_nn : 0 ≤ (P.rnDeriv Q x).toReal := ENNReal.toReal_nonneg
   have h_sharp : 3 * ((P.rnDeriv Q x).toReal - 1) ^ 2
       ≤ 2 * ((P.rnDeriv Q x).toReal + 2) * klFun ((P.rnDeriv Q x).toReal) :=
     klFun_sharp_lower _ h_t_nn
-  -- 代数: Q.real{x} 倍で展開
+  -- algebra: scale by Q.real{x}
   -- t = p/q, want 3(p-q)²/(2(p+2q)) ≤ q · klFun(t).
   -- From h_sharp: 3(t-1)² ≤ 2(t+2) klFun(t).
   -- Multiply by q²: 3(p-q)² ≤ 2(p+2q) q · klFun(t) (since q·(t-1) = p-q, q·(t+2) = p+2q).
@@ -298,7 +282,7 @@ private lemma per_element_sharp
   rw [div_le_iff₀ (by linarith : (0 : ℝ) < 2 * (p + 2 * q))]
   linarith
 
-/-- **シャープ Pinsker 不等式**: 有限 alphabet 上の `P ≪ Q` 確率測度について
+/-- The sharp Pinsker inequality: for probability measures `P ≪ Q` on a finite alphabet,
 `tvNorm P Q ≤ √((klDiv P Q).toReal / 2)`. -/
 @[entry_point]
 theorem tvNorm_le_sqrt_klDiv_div_two
@@ -405,7 +389,7 @@ theorem tvNorm_le_sqrt_klDiv_div_two
         exact Finset.sum_congr rfl fun x _ => hf_id x
       linarith [h_sum_id ▸ h_KL_ge]
     linarith
-  -- Step 6: 統合
+  -- Step 6: combine
   have h_tv_sq_eq : 2 * Pinsker.tvNorm P Q = ∑ x : α, |P.real {x} - Q.real {x}| := by
     unfold Pinsker.tvNorm; ring
   have h_main_sq : (2 * Pinsker.tvNorm P Q) ^ 2 ≤ 2 * (klDiv P Q).toReal := by

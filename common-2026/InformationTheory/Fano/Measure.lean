@@ -10,29 +10,32 @@ import Mathlib.Analysis.SpecialFunctions.BinaryEntropy
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 
 /-!
-# Fano's inequality: measure-theoretic form (Phase 3, ムーンショット達成)
+# Fano's inequality: measure-theoretic form
 
-Cover & Thomas / Polyanskiy 級の Fano 不等式の測度論版を、Mathlib の
-`condDistrib` (正則条件付き分布) を主役にして証明したファイル。`docs/fano/fano-moonshot-plan.md`
-の Phase 3 ゴール (ただし decoder = deterministic な `Y → X` 版) を完成形で達成済み。
-randomized decoder `Ω → X` への一般化は Phase 3.5 として今後の課題。
+The measure-theoretic form of Fano's inequality (Cover–Thomas, Polyanskiy), proved with
+Mathlib's `condDistrib` (the regular conditional distribution) as the central object, for a
+deterministic decoder `Y → X`.
 
-設定:
-* `X : Fintype`（離散・有限）— 通信路のアルファベット
-* `Y : MeasurableSpace`（任意；`ℝ`、`ℝⁿ`、Polish 空間など連続分布 OK）
-* `(Ω, μ)` 上の確率変数 `Xs : Ω → X` (送信源) と `Yo : Ω → Y` (観測)
-* `decoder : Y → X` — 決定論的可測復号器
+Setting:
+* `X : Fintype` (discrete, finite) — the channel alphabet
+* `Y : MeasurableSpace` (arbitrary; `ℝ`, `ℝⁿ`, Polish spaces, etc. are admissible)
+* random variables `Xs : Ω → X` (source) and `Yo : Ω → Y` (observation) on `(Ω, μ)`
+* `decoder : Y → X` — a deterministic measurable decoder
 
-`condDistrib` の `StandardBorelSpace` 要求は出力側の型に課されるが、本定理での出力は
-`X` であり、`Fintype + MeasurableSingletonClass + Countable` から
-`DiscreteMeasurableSpace → StandardBorelSpace` が自動で derive される。したがって
-`Y` の側に追加の制約は不要 (Phase 2 インベントリ調査時の予測との差分)。
+## Main definitions
 
-Phase 1 (`InformationTheory/Fano/Core.lean`) の離散 Fano を `y : Y` ごとに pointwise 適用し、
-`P_Yo = μ.map Yo` 上で Bochner Jensen により積分形に集約する戦略。詳細は
-`docs/fano/fano-mathlib-inventory.md`。
+* `condEntropy μ Xs Yo` — the conditional entropy `H(Xs | Yo)` as an integral over `μ.map Yo`.
+* `errorProb μ Xs Yo decoder` — the decoding error probability `P(Xs ≠ decoder ∘ Yo)`.
 
-## 証明の構造
+## Main statements
+
+* `fano_inequality_measure_theoretic` — `H(Xs | Yo) ≤ binEntropy Pe + Pe · log(|X| − 1)`.
+
+## Implementation notes
+
+The discrete Fano inequality of `Fano.Core` is applied pointwise for each `y : Y`, then
+aggregated into integral form on `P_Yo = μ.map Yo` via Bochner–Jensen. The proof chains four
+steps:
 
 ```
 H(Xs | Yo)
@@ -40,11 +43,15 @@ H(Xs | Yo)
   ≤ ∫ y, qaryEntropy |X| (Pe_y) dP_Yo                        -- Step 1: pointwise_fano
   ≤ qaryEntropy |X| (∫ y, Pe_y dP_Yo)                        -- Step 2: Bochner Jensen
   = qaryEntropy |X| (errorProb μ Xs Yo decoder)              -- Step 3: disintegration
-  = h(Pe) + Pe · log(|X| - 1)                                -- Step 4: qaryEntropy 分解
+  = h(Pe) + Pe · log(|X| - 1)                                -- Step 4: qaryEntropy split
 ```
 
-ここで `Q_y = (condDistrib Xs Yo μ y).real` (`y` 条件下の `Xs` の離散分布) と
-`Pe_y = Q_y {x | x ≠ decoder y}` (`y` 条件下の誤り率)。
+Here `Q_y = (condDistrib Xs Yo μ y).real` is the conditional distribution of `Xs` given `y`
+and `Pe_y = Q_y {x | x ≠ decoder y}` is the error rate given `y`. The `StandardBorelSpace`
+requirement of `condDistrib` is imposed on the output type, which here is `X`; from
+`Fintype + MeasurableSingletonClass + Countable` the instance
+`DiscreteMeasurableSpace → StandardBorelSpace` is derived automatically, so `Y` carries no
+extra constraint.
 -/
 
 namespace InformationTheory.MeasureFano
@@ -62,35 +69,35 @@ variable {Y : Type*} [MeasurableSpace Y]
 
 /-! ## Definitions -/
 
-/-- 測度論版・条件付き Shannon エントロピー: `H(Xs | Yo) = ∫ H(Xs | Yo=y) dP_Yo(y)`。
+/-- Conditional Shannon entropy, measure-theoretic form:
+`H(Xs | Yo) = ∫ H(Xs | Yo = y) dP_Yo(y)`.
 
-各 `y : Y` で `condDistrib Xs Yo μ y : Measure X` は離散分布なので、
-`negMulLog` の点和でその `y` における条件付きエントロピーを取り、`P_Yo = μ.map Yo` で積分する。 -/
+For each `y : Y` the measure `condDistrib Xs Yo μ y : Measure X` is discrete, so the
+conditional entropy at `y` is the pointwise `negMulLog` sum, integrated against
+`P_Yo = μ.map Yo`. -/
 def condEntropy (μ : Measure Ω) [IsFiniteMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y) : ℝ :=
   ∫ y, ∑ x : X, Real.negMulLog ((condDistrib Xs Yo μ y).real {x}) ∂(μ.map Yo)
 
-/-- 誤り確率: `Pe = P(Xs ≠ decoder ∘ Yo)`。 -/
+/-- Decoding error probability `Pe = P(Xs ≠ decoder ∘ Yo)`. -/
 def errorProb (μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y) (decoder : Y → X) : ℝ :=
   μ.real {ω | Xs ω ≠ decoder (Yo ω)}
 
-/-- `y` 条件下の誤り率: `Pe(y) = (condDistrib Xs Yo μ y).real {x | x ≠ decoder y}`。 -/
+/-- Error rate given `y`: `Pe(y) = (condDistrib Xs Yo μ y).real {x | x ≠ decoder y}`. -/
 def pointwiseErrorProb (μ : Measure Ω) [IsFiniteMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y) (decoder : Y → X) (y : Y) : ℝ :=
   (condDistrib Xs Yo μ y).real {x : X | x ≠ decoder y}
 
-/-! ## Pointwise Fano (Phase 1 bridge)
+/-! ## Pointwise Fano (bridge to the discrete form)
 
-各 `y : Y` で離散 Fano を呼ぶための glue lemma。`y` 依存性を取り除いた抽象形:
-任意の確率測度 `Q : Measure X` と guess `xh : X` に対して、Shannon エントロピーが
-`qaryEntropy |X| Pe` で押さえられる。
-
-証明は Phase 1 の `FiniteJointPMF.fano_inequality` を、第二座標が `xh` の Dirac
-になる `FiniteJointPMF X X` に適用するだけ。
+A glue lemma for invoking the discrete Fano inequality at each `y : Y`, in a form with the
+`y`-dependence abstracted away: for any probability measure `Q : Measure X` and guess
+`xh : X`, the Shannon entropy is bounded by `qaryEntropy |X| Pe`. The proof applies
+`FiniteJointPMF.fano_inequality` to the `FiniteJointPMF X X` whose second coordinate is a
+Dirac mass at `xh`.
 -/
 
 omit [DecidableEq X] [Nonempty X] in
-/-- `Q : Measure X` 上の確率質量の総和は `1`。 -/
 private lemma sum_real_singleton_eq_one (Q : Measure X) [IsProbabilityMeasure Q] :
     ∑ x : X, Q.real {x} = 1 := by
   rw [show (∑ x : X, Q.real {x}) = ∑ x ∈ (Finset.univ : Finset X), Q.real {x} from rfl,
@@ -98,8 +105,9 @@ private lemma sum_real_singleton_eq_one (Q : Measure X) [IsProbabilityMeasure Q]
   rw [show ((Finset.univ : Finset X) : Set X) = Set.univ from Finset.coe_univ]
   simp [measureReal_def, measure_univ]
 
-/-- `Q : Measure X` (確率測度) と guess `xh : X` から構成する Phase 1 用の `FiniteJointPMF X X`。
-第二座標が `xh` での Dirac、すなわち `mass x x' = Q.real {x} · 𝟙[x' = xh]`。 -/
+/-- The `FiniteJointPMF X X` built from a probability measure `Q : Measure X` and a guess
+`xh : X`, with a Dirac mass at `xh` in the second coordinate, i.e.
+`mass x x' = Q.real {x} · 𝟙[x' = xh]`. -/
 def diracPMF (Q : Measure X) [IsProbabilityMeasure Q] (xh : X) :
     FiniteJointPMF X X where
   mass := fun x x' => if x' = xh then Q.real {x} else 0
@@ -117,15 +125,14 @@ def diracPMF (Q : Measure X) [IsProbabilityMeasure Q] (xh : X) :
     rw [Finset.sum_congr rfl (fun x _ => hInner x)]
     exact sum_real_singleton_eq_one Q
 
-/-! ### `diracPMF` の各種計算 -/
+/-! ### Computations for `diracPMF` -/
 
 omit [Nonempty X] in
-/-- `diracPMF` の `mass` の展開形（projection 用）。 -/
 private lemma diracPMF_mass (Q : Measure X) [IsProbabilityMeasure Q] (xh x x' : X) :
     (diracPMF Q xh).mass x x' = if x' = xh then Q.real {x} else 0 := rfl
 
 omit [Nonempty X] in
-/-- `diracPMF` の同時エントロピーは `Q` のエントロピーに一致。 -/
+/-- The joint entropy of `diracPMF Q xh` equals `∑ x, negMulLog (Q.real {x})`. -/
 private lemma diracPMF_jointEntropy (Q : Measure X) [IsProbabilityMeasure Q] (xh : X) :
     (diracPMF Q xh).jointEntropy = ∑ x : X, Real.negMulLog (Q.real {x}) := by
   unfold FiniteJointPMF.jointEntropy
@@ -136,7 +143,7 @@ private lemma diracPMF_jointEntropy (Q : Measure X) [IsProbabilityMeasure Q] (xh
   rw [diracPMF_mass, if_pos rfl]
 
 omit [Nonempty X] in
-/-- `diracPMF` の `Y`-marginal は `xh` での Dirac。 -/
+/-- The `Y`-marginal of `diracPMF Q xh` is the Dirac mass at `xh`. -/
 private lemma diracPMF_marginalY (Q : Measure X) [IsProbabilityMeasure Q] (xh x' : X) :
     (diracPMF Q xh).marginalY x' = if x' = xh then 1 else 0 := by
   unfold FiniteJointPMF.marginalY
@@ -151,7 +158,7 @@ private lemma diracPMF_marginalY (Q : Measure X) [IsProbabilityMeasure Q] (xh x'
     rw [diracPMF_mass, if_neg hx']
 
 omit [Nonempty X] in
-/-- `diracPMF` の `Y`-エントロピーは `0`（Dirac の純粋性）。 -/
+/-- The `Y`-entropy of `diracPMF Q xh` is `0` (the Dirac mass is pure). -/
 private lemma diracPMF_yEntropy (Q : Measure X) [IsProbabilityMeasure Q] (xh : X) :
     (diracPMF Q xh).yEntropy = 0 := by
   unfold FiniteJointPMF.yEntropy
@@ -163,14 +170,14 @@ private lemma diracPMF_yEntropy (Q : Measure X) [IsProbabilityMeasure Q] (xh : X
   · rw [if_neg hx']; simp
 
 omit [Nonempty X] in
-/-- `diracPMF` の条件付きエントロピーは `Q` のエントロピーに一致。 -/
+/-- The conditional entropy of `diracPMF Q xh` equals `∑ x, negMulLog (Q.real {x})`. -/
 private lemma diracPMF_condEntropy (Q : Measure X) [IsProbabilityMeasure Q] (xh : X) :
     (diracPMF Q xh).condEntropy = ∑ x : X, Real.negMulLog (Q.real {x}) := by
   unfold FiniteJointPMF.condEntropy
   rw [diracPMF_jointEntropy, diracPMF_yEntropy, sub_zero]
 
 omit [Nonempty X] in
-/-- `diracPMF` の誤り確率は `Q` から見た `{xh}` の補集合の確率。 -/
+/-- The error probability of `diracPMF Q xh` is the `Q`-mass of the complement of `{xh}`. -/
 private lemma diracPMF_errorProb (Q : Measure X) [IsProbabilityMeasure Q] (xh : X) :
     (diracPMF Q xh).errorProb = Q.real {x : X | x ≠ xh} := by
   unfold FiniteJointPMF.errorProb
@@ -202,11 +209,10 @@ private lemma diracPMF_errorProb (Q : Measure X) [IsProbabilityMeasure Q] (xh : 
   rw [hSet]
 
 omit [DecidableEq X] [Nonempty X] in
-/-- Pointwise Fano: `Q : Measure X`（確率測度）と guess `xh : X` に対し、
-`∑ x, negMulLog (Q.real {x}) ≤ qaryEntropy |X| (Q.real {x | x ≠ xh})`。
-
-`diracPMF Q xh : FiniteJointPMF X X`（第二座標が `xh` の Dirac）に対する
-Phase 1 の `fano_core` がそのまま結論を与える。 -/
+/-- Pointwise Fano: for a probability measure `Q : Measure X` and guess `xh : X`,
+`∑ x, negMulLog (Q.real {x}) ≤ qaryEntropy |X| (Q.real {x | x ≠ xh})`. The conclusion comes
+directly from `fano_core` applied to `diracPMF Q xh` (Dirac at `xh` in the second
+coordinate). -/
 lemma pointwise_fano (Q : Measure X) [IsProbabilityMeasure Q] (xh : X)
     (hcard : 2 ≤ Fintype.card X) :
     (∑ x : X, Real.negMulLog (Q.real {x}))
@@ -218,8 +224,8 @@ lemma pointwise_fano (Q : Measure X) [IsProbabilityMeasure Q] (xh : X)
 
 /-! ## Main theorem: Fano's inequality, measure-theoretic form
 
-ムーンショットの本丸。Step 1〜4 を `calc` で chain した完成形。各 step は
-独立補題ではなく定理内 `have` で局所構築している。
+Steps 1–4 are chained with `calc`. Each step is built locally as a `have` inside the
+theorem rather than as a separate lemma.
 -/
 
 omit [DecidableEq X] in
@@ -233,11 +239,11 @@ theorem fano_inequality_measure_theoretic
     condEntropy μ Xs Yo ≤
       Real.binEntropy (errorProb μ Xs Yo decoder)
         + errorProb μ Xs Yo decoder * Real.log ((Fintype.card X : ℝ) - 1) := by
-  -- ## 共通 infrastructure (Step 1 / 2 / 3 で共有)
+  -- ## Shared infrastructure (used in Steps 1 / 2 / 3)
   haveI : IsProbabilityMeasure (μ.map Yo) :=
     Measure.isProbabilityMeasure_map hYo.aemeasurable
-  -- "y 依存の誤り事象 {x | x ≠ decoder y}" を Y × X 上の固定可測集合へ持ち上げ、
-  -- `Kernel.measurable_kernel_prodMk_left` を呼べる形に整える。
+  -- Lift the `y`-dependent error event `{x | x ≠ decoder y}` to a fixed measurable set on
+  -- `Y × X`, so that `Kernel.measurable_kernel_prodMk_left` applies.
   have hMS : MeasurableSet {p : Y × X | p.2 ≠ decoder p.1} := by
     have hMS_eq : MeasurableSet {p : Y × X | p.2 = decoder p.1} :=
       measurableSet_eq_fun measurable_snd (hdec.comp measurable_fst)
@@ -267,7 +273,8 @@ theorem fano_inequality_measure_theoretic
     apply Real.log_nonneg
     have : (2 : ℝ) ≤ (Fintype.card X : ℝ) := by exact_mod_cast hcard
     linarith
-  -- ## Step 1: per-y で離散 Fano (`pointwise_fano`) を適用し、被積分関数を qaryEntropy(Pe(y)) に上から押さえる。
+  -- ## Step 1: apply the discrete Fano (`pointwise_fano`) per `y`, bounding the integrand
+  -- above by `qaryEntropy (Pe(y))`.
   have hPointwise : ∀ y : Y,
       (∑ x : X, Real.negMulLog ((condDistrib Xs Yo μ y).real {x}))
         ≤ Real.qaryEntropy (Fintype.card X)
@@ -279,7 +286,8 @@ theorem fano_inequality_measure_theoretic
               (pointwiseErrorProb μ Xs Yo decoder y) ∂(μ.map Yo) := by
     unfold condEntropy
     apply MeasureTheory.integral_mono_ae
-    · -- Integrable LHS: ∑ x, negMulLog((cond y).real {x}) は probability measure 上有界可測。
+    · -- Integrable LHS: `∑ x, negMulLog ((cond y).real {x})` is bounded and measurable on a
+      -- probability measure.
       have hMeasOne : ∀ x : X,
           Measurable (fun y => (condDistrib Xs Yo μ y).real {x}) := fun x =>
         ENNReal.measurable_toReal.comp
@@ -292,7 +300,7 @@ theorem fano_inequality_measure_theoretic
       refine Filter.Eventually.of_forall (fun y => ⟨?_, ?_⟩)
       · exact Finset.sum_nonneg (fun x _ =>
           Real.negMulLog_nonneg measureReal_nonneg measureReal_le_one)
-      · -- 各項は negMulLog t ≤ 1 - t ≤ 1 (for t ≥ 0)
+      · -- Each term satisfies `negMulLog t ≤ 1 - t ≤ 1` for `t ≥ 0`.
         calc ∑ x : X, Real.negMulLog ((condDistrib Xs Yo μ y).real {x})
             ≤ ∑ _x : X, (1 : ℝ) := by
               refine Finset.sum_le_sum (fun x _ => ?_)
@@ -302,7 +310,8 @@ theorem fano_inequality_measure_theoretic
               linarith [measureReal_nonneg (μ := condDistrib Xs Yo μ y)
                 (s := ({x} : Set X))]
           _ = (Fintype.card X : ℝ) := by simp
-    · -- Integrable RHS: y ↦ qaryEntropy |X| (Pe(y))。Pe ∈ [0,1] かつ qaryEntropy 連続。
+    · -- Integrable RHS: `y ↦ qaryEntropy |X| (Pe(y))`, with `Pe ∈ [0,1]` and `qaryEntropy`
+      -- continuous.
       have hRHS : Measurable
           (fun y => Real.qaryEntropy (Fintype.card X)
                       (pointwiseErrorProb μ Xs Yo decoder y)) :=
@@ -322,9 +331,9 @@ theorem fano_inequality_measure_theoretic
       linarith [Real.binEntropy_le_log_two
         (p := pointwiseErrorProb μ Xs Yo decoder y)]
     · exact Filter.Eventually.of_forall hPointwise
-  -- ## Step 2: Bochner Jensen で qaryEntropy(∫ Pe(y) dP_Yo) に上から押さえる。
-  -- qaryEntropy = Pe·log(|X|-1) + binEntropy(Pe) と分解し、線形項は積分と可換、
-  -- binEntropy 項は ConcaveOn.le_map_integral で凹性 Jensen を適用する。
+  -- ## Step 2: Bochner–Jensen bounds the integral above by `qaryEntropy (∫ Pe(y) dP_Yo)`.
+  -- Split `qaryEntropy = Pe·log(|X|-1) + binEntropy(Pe)`: the linear term commutes with the
+  -- integral, and concave Jensen (`ConcaveOn.le_map_integral`) applies to the `binEntropy` term.
   have step2 :
       (∫ y, Real.qaryEntropy (Fintype.card X)
               (pointwiseErrorProb μ Xs Yo decoder y) ∂(μ.map Yo))
@@ -360,9 +369,9 @@ theorem fano_inequality_measure_theoretic
         hPe_mem hPe_integrable hbinEntropy_integrable
     rw [hLHS_eq, hqDecomp (∫ y, pointwiseErrorProb μ Xs Yo decoder y ∂(μ.map Yo))]
     linarith
-  -- ## Step 3: disintegration で ∫ Pe(y) dP_Yo = errorProb μ Xs Yo decoder。
-  -- 鎖: integral_toReal で実積分→lintegral に持ち上げ、
-  -- compProd_apply (←) → compProd_map_condDistrib → map_apply で µ 上の事象に降ろす。
+  -- ## Step 3: disintegration gives `∫ Pe(y) dP_Yo = errorProb μ Xs Yo decoder`.
+  -- Chain: `integral_toReal` lifts the real integral to a lintegral, then
+  -- `compProd_apply (←) → compProd_map_condDistrib → map_apply` descend to an event on `μ`.
   have step3 :
       (∫ y, pointwiseErrorProb μ Xs Yo decoder y ∂(μ.map Yo))
         = errorProb μ Xs Yo decoder := by
@@ -379,7 +388,7 @@ theorem fano_inequality_measure_theoretic
         compProd_map_condDistrib hXs.aemeasurable,
         Measure.map_apply (hYo.prodMk hXs) hMS]
     rfl
-  -- Step 4: qaryEntropy = binEntropy + Pe * log(|X|-1) (Phase 0/1 の既知書き換え)
+  -- Step 4: `qaryEntropy = binEntropy + Pe * log(|X|-1)` (a known rewrite).
   have step4 :
       Real.qaryEntropy (Fintype.card X) (errorProb μ Xs Yo decoder)
         = Real.binEntropy (errorProb μ Xs Yo decoder)

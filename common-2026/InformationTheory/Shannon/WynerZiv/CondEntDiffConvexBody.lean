@@ -368,10 +368,10 @@ theorem wynerZivCondEntDiffConvex_holds
   refine Finset.sum_le_sum (fun u _ => ?_)
   exact wzCondEntDiff_block_convex U P_XY h_pmf_nn hq₁ hq₂ a b ha hb hab u
 
-/-! ## Re-published unconditional rate wrapper (L-WZ3 full convexity) -/
+/-! ## Unconditional rate-level convexity wrapper -/
 
-/-- **L-WZ3 full convexity, unconditional.**  The rate-level Wyner–Ziv
-convexity with the deep objective-convexity hypothesis fully discharged. -/
+/-- Convexity of the factorizable rate function in `D`, with the
+objective-convexity hypothesis fully discharged. -/
 @[entry_point]
 theorem wynerZivRateFactorizable_convex_in_D_unconditional
     {γ : Type*}

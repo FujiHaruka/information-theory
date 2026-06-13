@@ -17,7 +17,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β]
 
-/-! ## Phase D-1 — Joint typicality decoder -/
+/-! ## Joint typicality decoder -/
 
 /-- Slepian–Wolf joint typicality decoder. Given a bin pair `(i, j)`, returns the
 unique source pair `(x, y)` consistent with the bins whose joint sequence is jointly
@@ -36,7 +36,7 @@ noncomputable def swJointTypicalDecoder
     then Classical.choose h.exists
     else (Classical.arbitrary _, Classical.arbitrary _)
 
-/-! ## Phase D-2 — Four error events -/
+/-! ## The four error events -/
 
 /-- `E_0`: the **true** source pair is not jointly typical. -/
 def swError_E0
@@ -78,7 +78,7 @@ def swError_EXY
           ∧ f_Y p.2 = f_Y (jointRV Ys n ω)
           ∧ p ∈ jointlyTypicalSet μ Xs Ys n ε }
 
-/-! ## Phase D-3 — Decoder equation under unique witness -/
+/-! ## Decoder equation under a unique witness -/
 
 omit [DecidableEq α] [DecidableEq β] in
 /-- If `(X^n, Y^n)` is jointly typical **and** is the **unique** source pair (across
@@ -117,7 +117,7 @@ lemma swJointTypicalDecoder_eq_of_unique
     Classical.choose_spec hExUnique.exists
   exact hunique (Classical.choose hExUnique.exists) hch_spec.1 hch_spec.2.1 hch_spec.2.2
 
-/-! ## Phase D-4 — Main decomposition -/
+/-! ## Main error decomposition -/
 
 omit [DecidableEq α] [DecidableEq β] in
 set_option linter.unusedVariables false in
@@ -225,7 +225,7 @@ theorem swErrorProb_le_E0_plus_EX_plus_EY_plus_EXY
         have := measureReal_union_le (μ := μ) E0 EX
         linarith
 
-/-! ## Phase D-5 — Measurability of the four events -/
+/-! ## Measurability of the four events -/
 
 omit [DecidableEq α] [DecidableEq β] in
 lemma measurableSet_swError_EX
@@ -276,12 +276,11 @@ lemma measurableSet_swError_EY
   rw [h_eq]
   exact hmeas hS_meas
 
-/-! ## Phase E.1 — `swError_E0` probability tends to zero (AEP).
+/-! ## The `E_0` probability tends to zero
 
 The "true source pair is not jointly typical" event has probability tending to `0`
-by the joint AEP (`jointlyTypicalSet_prob_tendsto_one`). This is the simplest of the
-four error-event bounds, and the only one that does **not** depend on the random
-binning measure: it is a pure statement about the underlying source process. -/
+by the joint AEP (`jointlyTypicalSet_prob_tendsto_one`); it is the only one of the
+four error-event bounds that does not depend on the random binning measure. -/
 
 omit [DecidableEq α] [DecidableEq β] in
 @[entry_point]
