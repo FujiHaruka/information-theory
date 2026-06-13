@@ -1,7 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.Huffman.Optimality
 import InformationTheory.Shannon.Huffman.SwapNormCompletion
-import InformationTheory.Shannon.Huffman.MergedIdentBody
 import InformationTheory.Shannon.Huffman.SwapNormProof
 
 /-!
