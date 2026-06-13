@@ -1,7 +1,7 @@
 # AWGN MI bridge — `mutualInfoOfChannel` ↔ `h(Y) − h(Y|X)` plan (stub)
 
 > **Status (2026-06-11)**: **CLOSED (genuine)**。① per-letter bridge は
-> `awgn_per_letter_mi_bridge_genuine` (`AWGN/Converse.lean:549`、`@audit:ok`) で genuine 化済
+> `awgn_per_letter_mi_bridge_genuine` (`AWGN/Converse.lean:552`、`@audit:ok`) で genuine 化済
 > (mixture→compProd 因子分解 + generic continuous-channel MI chain rule asset + 混合 log-density
 > 可積分性 + fibre entropy 平行移動不変)。`awgn_converse` body はその呼出に置換され、
 > file scope 0 sorry。②③ (density chain-rule) も genuine discharge 済。
@@ -10,7 +10,7 @@
 
 ## Position
 
-- 対象定理 (closure 済): per-letter bridge `awgn_per_letter_mi_bridge_genuine` (`InformationTheory/Shannon/AWGN/Converse.lean:549`、`@audit:ok`)
+- 対象定理 (closure 済): per-letter bridge `awgn_per_letter_mi_bridge_genuine` (`InformationTheory/Shannon/AWGN/Converse.lean:552`、`@audit:ok`)
 - 残作業 (converse とは独立): closed-form MI bridge `mutualInfoOfChannel_gaussianInput_closed_form'` (`InformationTheory/Shannon/AWGN/MIClosedForm.lean`) の `h_bridge` load-bearing 解消。旧 bare 形 `mutualInfoOfChannel_gaussianInput_closed_form` (旧 `AWGN.lean`) は retire 済
 - 親 moonshot: [`awgn-moonshot-plan.md`](./awgn-moonshot-plan.md)
 - 関連 plan: `awgn-mi-decomp-plan.md` (隣接 MI 分解), `awgn-converse-aux-plan.md`
@@ -48,7 +48,7 @@
 - ② ③ (per-channel decomposition / density chain-rule): **達成済 (genuine)** —
   `IsContChannelMIDecompHyp` / `IsAwgnMIDecomp` は genuine discharge。
 - ① per-letter bridge: **達成済 (genuine)** — `awgn_per_letter_mi_bridge_genuine`
-  (`AWGN/Converse.lean:549`、`@audit:ok`)。`h_mi_bridge_per_letter` は `awgn_converse`
+  (`AWGN/Converse.lean:552`、`@audit:ok`)。`h_mi_bridge_per_letter` は `awgn_converse`
   signature から落ち、body はその genuine bridge 呼出に置換。
 - `mutualInfoOfChannel_gaussianInput_closed_form` の `h_bridge` (closed-form MI bridge、
   achievability/headline 側): converse closure とは独立の残作業。
