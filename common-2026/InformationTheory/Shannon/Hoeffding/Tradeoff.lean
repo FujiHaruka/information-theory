@@ -34,8 +34,9 @@ and the Pythagoras-based minimizer bound.
 
 ## Implementation notes
 
-* The full sandwich `Tendsto` (achievability from Sanov LDP + converse from Stein typicality)
-  is deferred to a follow-up plan. This file provides the variational scaffolding only.
+* This file provides the variational scaffolding; the full sandwich `Tendsto`
+  (achievability from Sanov LDP + converse from Stein typicality) is in
+  `HoeffdingTradeoffExp.lean`.
 * The pmf ↔ Measure bridge uses `PMF.ofFintype` + `PMF.toMeasure` (~4 lemmas).
 -/
 
@@ -51,7 +52,7 @@ open scoped BigOperators Topology ENNReal
 variable {α : Type*} [Fintype α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ## Phase A — pmf ↔ Measure bridge (helper) -/
+/-! ## pmf ↔ Measure bridge (helper) -/
 
 /-- Lift a pmf vector `P : α → ℝ` to `Measure α` via `PMF.ofFintype`. -/
 noncomputable def pmfToMeasure (P : α → ℝ)
@@ -81,7 +82,7 @@ lemma pmfToMeasure_real_singleton
   rw [pmfToMeasure_apply_singleton P hP_nn hP_sum a]
   exact ENNReal.toReal_ofReal (hP_nn a)
 
-/-! ## Phase B — `steinTypeII_at_level_pmf` definition and basic properties -/
+/-! ## `steinTypeII_at_level_pmf` definition and basic properties -/
 
 /-- n-IID Type II error set (pmf form).
 
@@ -157,7 +158,7 @@ lemma steinTypeII_at_level_pmf_le_one
       exact Finset.sum_nonneg (fun x _ => Finset.prod_nonneg (fun i _ => hP₂_nn (x i)))⟩
   · exact one_mem_steinBetaSet_pmf P₁ P₂ hP₁_sum hP₂_sum n alpha h_alpha_nn
 
-/-! ## Phase C — Hoeffding constraint set convexity + Qstar full support -/
+/-! ## Hoeffding constraint set convexity + Qstar full support -/
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- The Hoeffding constraint set is **convex**: intersection of the convex simplex with
@@ -189,11 +190,11 @@ lemma hoeffdingConstraintSet_convex
       linarith
     linarith [h_kl_avg]
 
--- Phase B full-support: the rigorous proof requires a log-singularity gradient argument
--- (~30-50 lines, HasDerivAt computation showing the directional derivative of `klDivPmf · P₂`
--- at a 0-atom is `-∞`). This is deferred; downstream lemmas take `hQs_pos` as a hypothesis.
+-- Full-support of the minimizer: the rigorous proof requires a log-singularity gradient
+-- argument (HasDerivAt computation showing the directional derivative of `klDivPmf · P₂`
+-- at a 0-atom is `-∞`). Downstream lemmas take `hQs_pos` as a hypothesis.
 
-/-! ## Phase D — Pythagoras-based minimizer bound -/
+/-! ## Pythagoras-based minimizer bound -/
 
 omit [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- **Hoeffding Sanov minimizer**: for any `P ∈ K` with full support,

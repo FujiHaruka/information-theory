@@ -8,11 +8,10 @@ import InformationTheory.Shannon.Hoeffding.Tradeoff
 import InformationTheory.Shannon.Hoeffding.SandwichDischarge
 
 /-!
-# Hoeffding tradeoff — exponential-level redefinition (full genuine closure)
+# Hoeffding tradeoff — exponential-level redefinition
 
-This file fixes the **DEF-FLAW** of the constant-α `steinTypeII_at_level_pmf`
-headline (sandwich plan judgement log #4): the operational quantity is
-redefined at the **exponential level** — the acceptance region is the
+Unlike the constant-α `steinTypeII_at_level_pmf`, the operational quantity here
+is defined at the **exponential level** — the acceptance region is the
 KL-sublevel set of empirical types `E_r n = {c | klDivIndex c n P₁ ≤ r}` — and
 the resulting Type-II error converges to `hoeffdingE2 P₁ P₂ r`. The two
 directions are proved separately: the converse (limsup) via
@@ -20,9 +19,7 @@ directions are proved separately: the converse (limsup) via
 achievability (liminf) via `sanov_ldp_lower_bound_pointwise` on a perturbation
 `Qstar_ε = (1-ε)·Qstar + ε·P₁` (strict KL-interior, so the rounded types are
 eventually in `E_r`) followed by `ε → 0`. The headline `hoeffding_tradeoff_exp`
-is **hypothesis-free** on the interior `0 < r < klDivPmf P₂ P₁` (no `h_in_E`).
-
-See `docs/shannon/hoeffding-exponent-level-redef-plan.md`.
+holds on the interior `0 < r < klDivPmf P₂ P₁`.
 -/
 
 namespace InformationTheory.Shannon.HoeffdingTradeoffExp
@@ -40,7 +37,7 @@ set_option linter.unusedSectionVars false
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ## Phase 1 — `E_r` acceptance region + `steinTypeII_exp` definition -/
+/-! ## `E_r` acceptance region + `steinTypeII_exp` definition -/
 
 /-- **Exponential-level acceptance region**: *valid* empirical types
 (`∑ c = n`) whose KL divergence from `P₁` is within `r` (a closed KL-sublevel
@@ -76,7 +73,7 @@ lemma mem_E_r_iff (P₁ : α → ℝ) (hP₁_nn : ∀ a, 0 ≤ P₁ a) (hP₁_su
   unfold E_r
   simp only [Finset.mem_filter, Finset.mem_univ, true_and]
 
-/-! ## Phase 2 — KL bridges (count-0-tolerant) -/
+/-! ## KL bridges (count-0-tolerant) -/
 
 omit [DecidableEq α] in
 /-- **`klDivPmf` log-diff form tolerant of count-0 atoms in `P`**: requires only
@@ -128,11 +125,7 @@ lemma klDivIndex_eq_klDivPmf_empirical
   rw [klDivIndex_eq_ofVec, klDivSumForm_ofVec]
   rw [klDivPmf_eq_log_diff_sum_of_Q_pos h_emp_nn h_emp_sum hQ_sum hQ_pos]
 
-/-! ## Phase 5 — Qstar from the constructive minimizer -/
-
--- (consumed inline in the headline; no standalone lemma needed)
-
-/-! ## Phase 2 (continued) — `h_in_E` from rounded-type KL convergence -/
+/-! ## `h_in_E` from rounded-type KL convergence -/
 
 /-- **Eventually accepted**: the rounded type of a strict-interior `Qstar`
 (`klDivPmf Qstar P₁ < r`) lands in `E_r n` for all large `n`. -/
@@ -169,7 +162,7 @@ lemma roundedTypeIndex_mem_E_r_eventually
   rw [mem_E_r_iff]
   exact ⟨hn_pos, roundedTypeIndex_sum Qstar hQs_sum hQs_nn n hn_pos, hn.le⟩
 
-/-! ## Phase 2 (continued) — perturbation toward `P₁` (discharges L-EXP-IN) -/
+/-! ## Perturbation toward `P₁` -/
 
 /-- **Perturbed minimizer** `Qstar_ε := (1-ε)·Qstar + ε·P₁`. -/
 noncomputable def Qstar_perturb (Qstar P₁ : α → ℝ) (ε : ℝ) : α → ℝ :=
@@ -261,7 +254,7 @@ lemma klDivPmf_perturb_tendsto
   rw [h_pt0] at h_tendsto
   exact h_tendsto.mono_left nhdsWithin_le_nhds
 
-/-! ## Phase 4 — `h_minimizer` premise -/
+/-! ## `h_minimizer` premise -/
 
 /-- **Minimizer premise**: for every `c ∈ E_r n`, the minimizer value
 `klDivSumForm_ofVec Qstar (P₂.real ∘ singleton)` lower-bounds `klDivIndex c n P₂`.
@@ -328,12 +321,12 @@ lemma hoeffding_exp_minimizer
     exact klDivPmf_nonneg Q' P₂ hQ'.1.1 (fun a => (hP₂_pos a).le)
   exact csInf_le h_bdd ⟨p, hp_mem, rfl⟩
 
-/-! ## Phase 2 (continued) — achievability via perturbation (L-EXP-IN discharge) -/
+/-! ## Achievability via perturbation -/
 
 /-- **Achievability rate bound at perturbation level `ε`**: for the strictly
-interior perturbed minimizer `Qstar_ε`, the genuine strict-interior
+interior perturbed minimizer `Qstar_ε`, the strict-interior
 `roundedTypeIndex_mem_E_r_eventually` feeds `sanov_ldp_lower_bound_pointwise`,
-yielding `-klDivPmf Qstar_ε P₂ ≤ liminf (rate)`. **No `h_in_E` is used.** -/
+yielding `-klDivPmf Qstar_ε P₂ ≤ liminf (rate)`. -/
 lemma hoeffding_exp_liminf_perturb
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
@@ -378,37 +371,34 @@ lemma hoeffding_exp_liminf_perturb
   rw [h_bridge] at h_lb
   exact h_lb
 
-/-! ## Phase 6 — headline
+/-! ## Headline
 
 The Sanov two-sided collapse (`sanov_ldp_equality`), the minimizer premise
 (`hoeffding_exp_minimizer`), the KL bridges, the `Qstar` extraction
-(`exists_hoeffding_minimizer_full_support`) and the sign flip are all genuine and
-discharged below. The single residual gap is **L-EXP-IN** (plan judgement log #1,
-Phase 2 (retreat condition): the interior minimizer `Qstar` lies on the *active* boundary
+(`exists_hoeffding_minimizer_full_support`) and the sign flip assemble below.
+
+The subtlety is that the interior minimizer `Qstar` lies on the *active* boundary
 `klDivPmf Qstar P₁ = r` (the tilt's constraint is an equality, see
-`HoeffdingLagrangeIVTBody.lean:161`), so the rounded type
-`roundedTypeIndex Qstar n` converges to the closed-sublevel *boundary* and is not
-provably eventually inside `E_r n = {klDivIndex ≤ r}`. Enlarging `E_r` with a
-rounding margin restores achievability but breaks `hoeffding_exp_minimizer`
-(a margin point may beat `Qstar`), so the two requirements genuinely conflict at
-the active constraint. This is the one honest LDP-plumbing hypothesis
-`h_in_E`. -/
+`exists_lam_hoeffdingTilt_kl_eq`), so the rounded type `roundedTypeIndex Qstar n`
+converges to the closed-sublevel *boundary* and is not provably eventually inside
+`E_r n = {klDivIndex ≤ r}`. Enlarging `E_r` with a rounding margin would restore
+achievability but break `hoeffding_exp_minimizer` (a margin point may beat
+`Qstar`), so the two requirements conflict at the active constraint. The
+resolution is the perturbation argument below. -/
 
-/-- **Hoeffding tradeoff at the exponential level** (interior), **full genuine
-closure — hypothesis-free**.
+/-- **Hoeffding tradeoff at the exponential level** (interior).
 
-The single remaining honest hypothesis `h_in_E` of the prior version (the
-**L-EXP-IN** gap: the realizing minimizer `Qstar` sits on the *active* boundary
-`klDivPmf Qstar P₁ = r`, so its rounded type straddles the closed sublevel set
-`E_r n = {klDivIndex ≤ r}`) is now discharged by a **perturbation argument**.
-Pushing `Qstar` slightly toward `P₁` (`Qstar_perturb`) lands strictly inside the
-constraint (`klDivPmf_perturb_lt`, by convexity of `klDivPmf · P₁` and
-`klDivPmf P₁ P₁ = 0`), restoring the genuine strict-interior eventual membership
+The active-boundary obstruction (the realizing minimizer `Qstar` sits on the
+*active* boundary `klDivPmf Qstar P₁ = r`, so its rounded type straddles the
+closed sublevel set `E_r n = {klDivIndex ≤ r}`) is resolved by a **perturbation
+argument**. Pushing `Qstar` slightly toward `P₁` (`Qstar_perturb`) lands strictly
+inside the constraint (`klDivPmf_perturb_lt`, by convexity of `klDivPmf · P₁` and
+`klDivPmf P₁ P₁ = 0`), restoring the strict-interior eventual membership
 (`roundedTypeIndex_mem_E_r_eventually`). The achievability (`liminf`) bound is
 proven per-perturbation (`hoeffding_exp_liminf_perturb`) and the perturbation is
 removed by ε→0 continuity (`klDivPmf_perturb_tendsto`). The converse (`limsup`)
-bound uses `sanov_ldp_upper_bound`, which needs only the minimizer premise (no
-`h_in_E`); its positivity witness is supplied by the same perturbed sequence. -/
+bound uses `sanov_ldp_upper_bound`, which needs only the minimizer premise; its
+positivity witness is supplied by the same perturbed sequence. -/
 @[entry_point]
 theorem hoeffding_tradeoff_exp
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -420,7 +410,7 @@ theorem hoeffding_tradeoff_exp
       atTop (𝓝 (hoeffdingE2 P₁ P₂ r)) := by
   classical
   set μ₂ := pmfToMeasure P₂ (fun a => (hP₂_pos a).le) hP₂_sum with hμ₂
-  -- Phase 5: extract the constructive full-support minimizer Qstar.
+  -- Extract the constructive full-support minimizer Qstar.
   obtain ⟨Qstar, hQs_mem, hQs_min, hQs_pos⟩ :=
     exists_hoeffding_minimizer_full_support P₁ P₂ hP₁_pos hP₂_pos hP₁_sum hP₂_sum
       h_r_pos.le

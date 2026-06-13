@@ -3,23 +3,23 @@ import InformationTheory.Meta.EntryPoint
 import Mathlib.Topology.Order.IntermediateValue
 
 /-!
-# T1-D Hoeffding tradeoff — Lagrange constraint-match via IVT (wave10 S1)
+# Hoeffding tradeoff — Lagrange constraint-match via IVT
 
-`HoeffdingInteriorGradientBody.lean` (wave9) reduced the interior Csiszár
-characterization to a single named hypothesis `IsHoeffdingLagrangeHyp`, a
-`structure` with two fields:
+The interior Csiszár characterization `IsHoeffdingLagrangeHyp`
+(`HoeffdingInteriorGradientBody.lean`) is a `structure` with two fields:
 
 * `mem` — the tilt at `lam` lies in the constraint set `K(α)`
   (`klDivPmf (tilt) P₁ ≤ alpha`);
 * `realises` — the tilt at `lam` realises the infimum
   (`hoeffdingE2 = klDivPmf (tilt) P₂`).
 
-The companion gradient sub-predicate `IsKLGradientHyp` is *already discharged*
-in-file (`isKLGradientHyp_tilt`). This file discharges the **`mem`** half — the
-*constraint-match* — from the **Intermediate Value Theorem**, and reduces the
-remaining **`realises`** half to a strictly-more-primitive *minimality*
-predicate `IsHoeffdingTiltMinimal` (the Csiszár I-projection minimality), with
-the bridge `IsHoeffdingTiltMinimal → realises` fully discharged.
+The companion gradient sub-predicate `IsKLGradientHyp` is discharged in
+`HoeffdingInteriorGradientBody.lean` (`isKLGradientHyp_tilt`). This file
+discharges the **`mem`** half — the *constraint-match* — from the
+**Intermediate Value Theorem**, and reduces the remaining **`realises`** half to
+a strictly-more-primitive *minimality* predicate `IsHoeffdingTiltMinimal` (the
+Csiszár I-projection minimality), with the bridge
+`IsHoeffdingTiltMinimal → realises` fully discharged.
 
 ## Approach
 
@@ -37,7 +37,7 @@ At the endpoints the tilt collapses to the data distributions
 `alpha ∈ [0, klDivPmf P₂ P₁]` there is a `λ ∈ [0,1]` with `g(λ) = alpha`. That
 `λ` makes the tilt land *exactly* on the constraint boundary, discharging the
 `mem` field (with equality, hence `≤ alpha`). This is the genuine implicit-
-function / monotonicity content the wave9 design flagged.
+function / monotonicity content of the interior characterization.
 
 The `realises` field is the Csiszár-projection infimum-attainment. It is
 *not* derivable from IVT; it requires that the tilt minimises `klDivPmf · P₂`
@@ -60,13 +60,12 @@ flag + IVT then assembles a full `IsHoeffdingLagrangeHyp`.
 * `exists_isHoeffdingLagrangeHyp_of_minimal` — existence form (IVT supplies the
   `lam`; minimality is supplied per witness).
 
-## Retreat line
+## Remaining content
 
 The standalone discharge of `IsHoeffdingTiltMinimal` (the I-projection
 minimality of the explicit tilt, i.e. the first-order/gradient KKT argument)
-is the single remaining analytic content; it is kept as the primitive carried
-through `isHoeffdingLagrangeHyp_of_minimal`. The `mem` half is now fully
-constructive.
+is the analytic content carried as the primitive through
+`isHoeffdingLagrangeHyp_of_minimal`. The `mem` half is fully constructive.
 -/
 
 namespace InformationTheory.Shannon.HoeffdingLagrangeIVTBody
@@ -84,7 +83,7 @@ open scoped BigOperators Topology
 variable {α : Type*} [Fintype α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ## Phase 1 — Continuity of the constraint functional `g(λ) = klDivPmf T_λ P₁` -/
+/-! ## Continuity of the constraint functional `g(λ) = klDivPmf T_λ P₁` -/
 
 /-- The Chernoff mediator coordinate `λ ↦ T_λ(a)` is continuous in `λ` (a
 continuous `rpow` numerator divided by the strictly-positive continuous `Z`). -/
@@ -122,7 +121,7 @@ lemma hoeffdingTilt_continuous_kl_P₁
     continuous_klFun.comp h_div
   exact h_kl.const_mul (P₁ a)
 
-/-! ## Phase 2 — Endpoint values of `g` -/
+/-! ## Endpoint values of `g` -/
 
 /-- `g(0) = klDivPmf P₁ P₁ = 0`. -/
 lemma hoeffdingTilt_kl_P₁_lam_zero
@@ -149,7 +148,7 @@ lemma hoeffdingTilt_kl_P₁_lam_one
     exact chernoffMediator_lam_one P₁ P₂ hP₁_pos hP₂_pos hP₂_sum a
   rw [h_eq]
 
-/-! ## Phase 3 — IVT constraint-match -/
+/-! ## IVT constraint-match -/
 
 /-- **IVT constraint-match**: for any `alpha ∈ [0, klDivPmf P₂ P₁]` there is a
 tilt parameter `lam ∈ [0,1]` whose tilt hits the Type-I constraint *exactly*:
@@ -176,7 +175,7 @@ theorem exists_lam_hoeffdingTilt_kl_eq
   obtain ⟨lam, hlam_mem, hlam_eq⟩ := h_ivt h_mem_Icc
   exact ⟨lam, hlam_mem, hlam_eq⟩
 
-/-! ## Phase 4 — `mem` from a constraint-match -/
+/-! ## `mem` from a constraint-match -/
 
 /-- A tilt parameter hitting the constraint with equality lands in the
 constraint set `K(α)` (membership = simplex + `KL = alpha ≤ alpha`). -/
@@ -189,7 +188,7 @@ theorem hoeffdingTilt_mem_constraintSet_of_kl_eq
   refine ⟨hoeffdingTilt_mem_stdSimplex P₁ P₂ hP₁_pos hP₂_pos lam, ?_⟩
   exact le_of_eq h_kl
 
-/-! ## Phase 5 — Primitive minimality predicate + bridge to `realises` -/
+/-! ## Primitive minimality predicate + bridge to `realises` -/
 
 /-- **Primitive tilt-minimality** (Csiszár I-projection): the tilt at `lam`
 minimises `klDivPmf · P₂` over the constraint set `K(α)`. This carries genuine
@@ -232,7 +231,7 @@ theorem isHoeffdingTiltMinimal_realises
     exact h_min hQ'
   linarith
 
-/-! ## Phase 6 — Assemble `IsHoeffdingLagrangeHyp` -/
+/-! ## Assemble `IsHoeffdingLagrangeHyp` -/
 
 /-- **Assemble Lagrange hypothesis**: from an IVT constraint-match (`mem`,
 `klDivPmf tilt P₁ = alpha`) and the minimality primitive, build a full

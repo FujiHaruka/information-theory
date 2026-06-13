@@ -13,14 +13,12 @@ import InformationTheory.Shannon.KLDivContinuous
 import Mathlib.Topology.Order.LiminfLimsup
 
 /-!
-# T1-D Hoeffding tradeoff — sandwich discharge (hypothesis-free headline)
+# Hoeffding tradeoff — sandwich discharge
 
-This file discharges the two residual variational hypotheses
-`h_liminf` (achievability) / `h_limsup` (converse) of the
-`HoeffdingSandwich.hoeffding_tradeoff_sandwich` wrapper and publishes the
-**hypothesis-free** `hoeffding_tradeoff` `Tendsto`.
+This file publishes the constructive full-support minimizer of `klDivPmf · P₂`
+on the constraint set and the boundary achievability inequality.
 
-## Approach (constructive 3-case minimizer, no abstract L-H4)
+## Approach — constructive 3-case minimizer
 
 `exists_hoeffding_minimizer_full_support` supplies an explicit full-support
 minimizer `Qstar` of `klDivPmf · P₂` on the constraint set, branching on `alpha`:
@@ -29,9 +27,8 @@ minimizer `Qstar` of `klDivPmf · P₂` on the constraint set, branching on `alp
 * `0 < alpha ≤ klDivPmf P₂ P₁` : `Qstar = hoeffdingTilt P₁ P₂ lam`  (IVT tilt)
 * `klDivPmf P₂ P₁ ≤ alpha`     : `Qstar = P₂`            (boundary collapse)
 
-All three cases reuse already-published 0-sorry constructive machinery, so
-`Qstar` full support is constructive — the abstract log-singularity gradient
-argument (L-H4) is avoided.
+All three cases are constructive, so `Qstar` full support is constructive — the
+abstract log-singularity gradient argument is avoided.
 -/
 
 namespace InformationTheory.Shannon.HoeffdingSandwichDischarge
@@ -50,7 +47,7 @@ open scoped BigOperators Topology ENNReal
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ## Phase 1 — Constructive full-support minimizer (3-case) -/
+/-! ## Constructive full-support minimizer (3-case) -/
 
 omit [DecidableEq α] in
 /-- **Constructive 3-case minimizer**: an explicit full-support `Qstar` realising
@@ -92,15 +89,14 @@ lemma exists_hoeffding_minimizer_full_support
           hP₁_sum hP₂_sum h_alpha_nn h_alpha_gt.le
       exact ⟨Qstar, hQs_mem, hQs_min, hQs_full.pos⟩
 
-/-! ## Phase 2 — achievability `E2 ≤ liminf rate` on the boundary regime
+/-! ## Achievability `E2 ≤ liminf rate` on the boundary regime
 
-The achievability inequality `hoeffdingE2 P₁ P₂ alpha ≤ liminf rate` is discharged
+The achievability inequality `hoeffdingE2 P₁ P₂ alpha ≤ liminf rate` holds
 **unconditionally on the boundary regime** `klDivPmf P₂ P₁ ≤ alpha`, where
 `hoeffdingE2 = 0` (`hoeffdingE2_eq_zero_at_alpha_ge_kl`) and the inequality reduces
 to `0 ≤ liminf rate`, i.e. the rate is non-negative (`steinTypeII ≤ 1 ⇒ log ≤ 0`).
-This is the one genuinely-discharged asymptotic inequality of the file. Outside the
-boundary it is *not* generally true — see the judgement log in Phase 3 (it fails at
-`alpha = 0`, where `E₂(0) = D(P₁‖P₂) > 0 = liminf rate`). -/
+Outside the boundary it is *not* generally true — see the analysis below (it fails
+at `alpha = 0`, where `E₂(0) = D(P₁‖P₂) > 0 = liminf rate`). -/
 
 omit [DecidableEq α] in
 /-- **achievability at the boundary** (`klDivPmf P₂ P₁ ≤ alpha`, fully
@@ -142,24 +138,12 @@ theorem hoeffding_tradeoff_achievability_at_boundary
       linarith
     exact mul_nonneg_iff.mpr (Or.inr ⟨h_neg_inv_nonpos, h_log_le⟩)
 
-/-! ## Retraction record — the fixed-`alpha` scaffolding does not target the
-## Hoeffding tradeoff curve (judgement log #1)
+/-! ## The fixed-`alpha` rate does not target the Hoeffding tradeoff curve
 
-A cluster of fixed-`alpha` sandwich `Tendsto` wrappers claiming
-`Tendsto rate → hoeffdingE2 P₁ P₂ alpha` (`hoeffding_tradeoff_of_asymptotics`
-here, plus `hoeffding_tradeoff_with_hypothesis` / `hoeffding_tradeoff_sandwich` /
-`hoeffding_tradeoff_sandwich_via_predicate` /
-`hoeffding_tradeoff_sandwich_at_boundary_alpha_ge_kl` in the sibling files) has
-been **retracted** (2026-05-28). They took the two variational inequalities
-`h_liminf` (achievability) / `h_limsup` (converse) as hypotheses, but those
-premises are **jointly unsatisfiable** in the general fixed-`alpha` regime, so the
-wrappers were vacuous `@[entry_point]` deliverables. The sound replacement is the
-exponential-level `hoeffding_tradeoff_exp` (`HoeffdingTradeoffExp.lean`), so the
-retraction loses no content.
-
-The mathematical reason: `steinTypeII_at_level_pmf` bakes in a *constant* Type-I
-level `alpha`, whereas the Hoeffding tradeoff curve `E₂(alpha)` is the limit only
-in the **exponential-level** regime `alpha_n = exp(-n r)`. The fixed-`alpha` rate
+A fixed-`alpha` `Tendsto rate → hoeffdingE2 P₁ P₂ alpha` does **not** hold:
+`steinTypeII_at_level_pmf` bakes in a *constant* Type-I level `alpha`, whereas
+the Hoeffding tradeoff curve `E₂(alpha)` is the limit only in the
+**exponential-level** regime `alpha_n = exp(-n r)`. The fixed-`alpha` rate
 `-(1/n) log steinTypeII_at_level_pmf` converges to `D(P₁‖P₂)`, *not* `E₂(alpha)`.
 Two concrete contradictions:
 
@@ -167,27 +151,27 @@ Two concrete contradictions:
   `s = univ` (every other `Finset` has `∑ ∏ P₁ < 1`), so
   `steinTypeII_at_level_pmf P₁ P₂ n 0 = 1` and `rate n ≡ 0`. But
   `hoeffdingE2 P₁ P₂ 0 = klDivPmf P₁ P₂ = D(P₁‖P₂) > 0` in general. So
-  `rate → 0 ≠ E₂(0)` — the headline is **false at `alpha = 0`**.
+  `rate → 0 ≠ E₂(0)`.
 
 * **`0 < alpha < 1`**: `steinTypeII_at_level_pmf P₁ P₂ n alpha`
   coincides with `steinOptimalBeta (pmfToMeasure P₁) (pmfToMeasure P₂) n alpha`
   (the pmf and measure β-sets agree on the finite alphabet), so by Stein's lemma
-  `rate n → D(P₁‖P₂) = E₂(0) > E₂(alpha)`. The headline is **false for
-  `alpha > 0`** as well.
+  `rate n → D(P₁‖P₂) = E₂(0) > E₂(alpha)`.
 
 Consequences for the two variational inequalities:
 
 * **achievability** `hoeffdingE2 alpha ≤ liminf rate`: holds whenever
   `E₂(alpha) ≤ liminf rate`. On the **boundary** `klDivPmf P₂ P₁ ≤ alpha` we have
-  `E₂(alpha) = 0 ≤ liminf rate` unconditionally (`hoeffding_tradeoff_achievability_at_boundary`,
-  Phase 2 above — this is the one genuinely-discharged asymptotic inequality and
-  is retained). At `alpha = 0` it is *false* (`E₂(0) = D > 0 = liminf rate`).
+  `E₂(alpha) = 0 ≤ liminf rate` unconditionally
+  (`hoeffding_tradeoff_achievability_at_boundary` above). At `alpha = 0` it is
+  *false* (`E₂(0) = D > 0 = liminf rate`).
 * **converse** `limsup rate ≤ hoeffdingE2 alpha`: would require
   `limsup rate ≤ E₂(alpha)`, contradicted at every `alpha` by the limits above.
 
-This file is kept (with its `InformationTheory.lean` import) as this documentation plus
-the two genuine declarations that survive: the constructive minimizer
-`exists_hoeffding_minimizer_full_support` (consumed by `HoeffdingTradeoffExp.lean`)
-and the boundary achievability `hoeffding_tradeoff_achievability_at_boundary`. -/
+The genuine statement of the tradeoff is the exponential-level
+`hoeffding_tradeoff_exp` (`HoeffdingTradeoffExp.lean`). This file's two
+declarations — the constructive minimizer `exists_hoeffding_minimizer_full_support`
+(consumed by `HoeffdingTradeoffExp.lean`) and the boundary achievability
+`hoeffding_tradeoff_achievability_at_boundary` — are both genuine. -/
 
 end InformationTheory.Shannon.HoeffdingSandwichDischarge

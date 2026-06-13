@@ -4,50 +4,32 @@ import InformationTheory.Meta.EntryPoint
 import Mathlib.Order.Filter.IsBounded
 
 /-!
-# T1-D Hoeffding tradeoff — rate boundedness (`IsBoundedUnder` internal discharge)
+# Hoeffding tradeoff — rate boundedness
 
-This file publishes the **boundedness internal discharge** lemmas for the
-fixed-`alpha` Type-II rate sequence
-`-(1/n) log (steinTypeII_at_level_pmf P₁ P₂ n alpha)`.
+This file publishes the boundedness lemmas for the fixed-`alpha` Type-II rate
+sequence `-(1/n) log (steinTypeII_at_level_pmf P₁ P₂ n alpha)`. They are
+unconditional facts about the rate sequence, and
+`hoeffding_rate_isBoundedUnder_le` is consumed by
+`hoeffding_tradeoff_achievability_at_boundary`
+(`HoeffdingSandwichDischarge.lean`).
 
-## Retraction note (2026-05-28)
-
-The original `hoeffding_tradeoff_sandwich` slim sandwich `Tendsto` wrapper that
-lived in this file has been **retracted**. It claimed `rate → hoeffdingE2 P₁ P₂ alpha`
-for general fixed `alpha`, taking the two variational inequalities `h_liminf` /
-`h_limsup` as hypotheses — but those premises are jointly unsatisfiable in the
-general fixed-`alpha` regime (Stein's lemma: the fixed-`alpha` rate targets
-`D(P₁‖P₂)`, not the Hoeffding tradeoff curve `E₂(alpha)`). The genuine, sound
-statement is `hoeffding_tradeoff_exp` (`HoeffdingTradeoffExp.lean`, exponential-level
-regime). See the retraction record in `HoeffdingSandwichDischarge.lean`.
-
-The two boundedness lemmas below are retained: they are genuine, unconditional
-facts about the rate sequence, and `hoeffding_rate_isBoundedUnder_le` is consumed
-by `hoeffding_tradeoff_achievability_at_boundary` (`HoeffdingSandwichDischarge.lean`).
+The fixed-`alpha` rate converges to `D(P₁‖P₂)`, not to the Hoeffding tradeoff
+curve `E₂(alpha)`; the genuine statement of the tradeoff is
+`hoeffding_tradeoff_exp` at the exponential level
+(`HoeffdingTradeoffExp.lean`).
 
 ## What this file publishes
 
-* `hoeffding_rate_isBoundedUnder_ge` (**L-HS-B internal discharge**): the rate sequence
+* `hoeffding_rate_isBoundedUnder_ge`: the rate sequence
   `-(1/n) log steinTypeII_at_level_pmf` is bounded below (by `0`) along `atTop`,
   derived from `steinTypeII_at_level_pmf_le_one` + `Real.log_nonpos`.
 
-* `hoeffding_rate_isBoundedUnder_le` (**L-HS-U internal discharge**): the rate sequence
-  is bounded above by `M := -log p₂_min + |log(1 - alpha)|` along `atTop`,
-  derived from a lower bound `steinTypeII ≥ (1 - alpha) · p₂_min^n` obtained by
-  Type I constraint + minimum P₂ atom.
+* `hoeffding_rate_isBoundedUnder_le`: the rate sequence is bounded above by
+  `M := -log p₂_min + |log(1 - alpha)|` along `atTop`, derived from a lower
+  bound `steinTypeII ≥ (1 - alpha) · p₂_min^n` obtained by Type I constraint +
+  minimum P₂ atom (under `alpha < 1`, which avoids the `log 0` corner case).
 
-## Retreat lines adopted
-
-* **L-HS-U** (upper bound side, internal discharge): the trivial uniform upper bound
-  `rate n ≤ -log p₂_min + |log(1-α)|` via `steinTypeII ≥ (1-α) · p₂_min^n`.
-  **Hypothesis**: `alpha < 1` (avoids `log 0` corner case in the constraint).
-
-* **L-HS-B** (lower bound side, internal discharge): `rate n ≥ 0` for `n ≥ 1`,
-  via `steinTypeII ≤ 1` (already published) ⇒ `log ≤ 0` ⇒ `-(1/n) log ≥ 0`.
-
-## Design notes
-
-* The `pmf` form `α → ℝ` is kept throughout.
+The `pmf` form `α → ℝ` is kept throughout.
 -/
 
 namespace InformationTheory.Shannon.HoeffdingSandwich
@@ -62,10 +44,10 @@ open scoped BigOperators Topology
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ## Phase 1 — `IsBoundedUnder (· ≥ ·)` internal discharge (L-HS-B) -/
+/-! ## `IsBoundedUnder (· ≥ ·)`: rate bounded below -/
 
 omit [DecidableEq α] in
-/-- **L-HS-B internal discharge**: the rate sequence
+/-- The rate sequence
 `-(1/n) log (steinTypeII_at_level_pmf P₁ P₂ n alpha)` is bounded below by `0`
 along `atTop`.
 
@@ -105,10 +87,10 @@ lemma hoeffding_rate_isBoundedUnder_ge
   -- (-(1/n)) * log: product of nonpos and nonpos is nonneg.
   exact mul_nonneg_iff.mpr (Or.inr ⟨h_neg_inv_nonpos, h_log_le⟩)
 
-/-! ## Phase 2 — `IsBoundedUnder (· ≤ ·)` internal discharge (L-HS-U) -/
+/-! ## `IsBoundedUnder (· ≤ ·)`: rate bounded above -/
 
 omit [DecidableEq α] in
-/-- **L-HS-U lemma 1**: lower bound on `steinTypeII_at_level_pmf` when `alpha < 1`
+/-- Lower bound on `steinTypeII_at_level_pmf` when `alpha < 1`
 under full support `P₁, P₂ > 0`.
 
 Strategy: pick the smallest `P₂` atom `a₀`. For any test `s` with Type I ≤ alpha,
@@ -181,7 +163,7 @@ lemma steinTypeII_at_level_pmf_ge_pow_pmin
     linarith
 
 omit [DecidableEq α] in
-/-- **L-HS-U internal discharge**: the rate sequence is bounded above along `atTop`
+/-- The rate sequence is bounded above along `atTop`
 under full support + `alpha < 1`. The uniform upper bound is
 `M := -log p₂_min - log(1 - alpha) / n`, which is bounded by
 `-log p₂_min + |log(1 - alpha)|` for `n ≥ 1`. -/
@@ -207,7 +189,7 @@ lemma hoeffding_rate_isBoundedUnder_le
   have hn_R : (0 : ℝ) < n := by exact_mod_cast hn
   have hn_ne : (n : ℝ) ≠ 0 := ne_of_gt hn_R
   have hn_one_le : (1 : ℝ) ≤ n := by exact_mod_cast hn
-  -- Lower bound on steinTypeII via Phase 2 lemma (same a₀ as outer).
+  -- Lower bound on steinTypeII via the preceding lemma (same a₀ as outer).
   have h_lower :
       (1 - alpha) * p_min ^ n ≤ steinTypeII_at_level_pmf P₁ P₂ n alpha :=
     steinTypeII_at_level_pmf_ge_pow_pmin P₁ P₂ hP₁_pos hP₂_pos hP₁_sum hP₂_sum

@@ -2,9 +2,9 @@ import InformationTheory.Shannon.Hoeffding.LagrangeIVTBody
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# S18 Hoeffding I-projection minimizer attainment — `IsHoeffdingTiltMinimal` discharge
+# Hoeffding I-projection minimizer attainment — `IsHoeffdingTiltMinimal` discharge
 
-`HoeffdingLagrangeIVTBody.lean` (wave10 S1) discharged the `mem` half of
+`HoeffdingLagrangeIVTBody.lean` discharged the `mem` half of
 `IsHoeffdingLagrangeHyp` from the IVT and reduced the `realises` half to the
 strictly-primitive predicate
 
@@ -12,16 +12,15 @@ strictly-primitive predicate
         := `IsMinOn (klDivPmf · P₂) (hoeffdingConstraintSet P₁ α) (hoeffdingTilt P₁ P₂ λ)`,
 
 the Csiszár I-projection minimality of the exponential tilt. This file
-**discharges** that minimality fully (no `sorry`, no boundary pass-through),
-for the genuine interior regime `0 < λ ≤ 1` with the IVT constraint-match
-`klDivPmf (tilt) P₁ = α`.
+**discharges** that minimality fully, for the interior regime `0 < λ ≤ 1` with
+the IVT constraint-match `klDivPmf (tilt) P₁ = α`.
 
 ## Approach
 
 The discharge is the exponential-family Pythagorean identity, derived from the
 **log-linearity** of the tilt and a per-coordinate algebraic identity that holds
 *even at zero atoms* (so the minimality extends to the whole constraint set `K`,
-boundary included — no `IsHoeffdingInteriorGradient` retreat is needed).
+boundary included).
 
 The key per-coordinate fact, valid for `R > 0` and all `Q ≥ 0` (including `Q = 0`,
 where `0 · log 0 = 0`):
@@ -77,7 +76,7 @@ open scoped BigOperators Topology
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ## Phase 1 — Per-coordinate `klFun` identity (valid at zero atoms) -/
+/-! ## Per-coordinate `klFun` identity (valid at zero atoms) -/
 
 /-- **Per-coordinate `klFun` identity**: for a positive reference `R` and any
 `Q ≥ 0` (including `Q = 0`, where `0 · log 0 = 0`),
@@ -97,7 +96,7 @@ lemma klFun_ref_mul {R Q : ℝ} (hR : 0 < R) (hQ : 0 ≤ Q) :
     field_simp
     ring
 
-/-! ## Phase 2 — `klDivPmf` cross-entropy sum form (no full support) -/
+/-! ## `klDivPmf` cross-entropy sum form (no full support) -/
 
 omit [DecidableEq α] in
 /-- **Cross-entropy sum form** of `klDivPmf`, valid for any `Q ∈ stdSimplex`
@@ -111,7 +110,7 @@ lemma klDivPmf_eq_entropyCross_sum
   refine Finset.sum_congr rfl fun a _ => ?_
   exact klFun_ref_mul (hR_pos a) (hQ_nn a)
 
-/-! ## Phase 3 — Master exponential-family identity -/
+/-! ## Master exponential-family identity -/
 
 omit [DecidableEq α] in
 /-- **Master identity**: for every `Q ∈ stdSimplex` the log-linear weighting of
@@ -172,7 +171,7 @@ lemma hoeffdingTilt_kl_master
   rw [hQ_sum, h_const_sum]
   ring
 
-/-! ## Phase 4 — Pythagorean difference identity -/
+/-! ## Pythagorean difference identity -/
 
 omit [DecidableEq α] in
 /-- **Pythagorean difference identity** (Csiszár): subtracting the master
@@ -202,7 +201,7 @@ lemma hoeffdingTilt_kl_pythagoras_diff
   rw [h_TT] at h_master_T
   linarith [h_master_Q, h_master_T]
 
-/-! ## Phase 5 — `IsHoeffdingTiltMinimal` discharge -/
+/-! ## `IsHoeffdingTiltMinimal` discharge -/
 
 omit [DecidableEq α] in
 /-- **I-projection minimality discharge**: for `0 < λ ≤ 1` and the IVT
@@ -250,7 +249,7 @@ theorem isHoeffdingTiltMinimal_of_constraint_eq
     exact nonneg_of_mul_nonneg_left h_mul' h_lam_pos
   linarith
 
-/-! ## Phase 6 — Constructive `IsHoeffdingLagrangeHyp` (both halves) -/
+/-! ## Constructive `IsHoeffdingLagrangeHyp` (both halves) -/
 
 omit [DecidableEq α] in
 /-- **Fully constructive Lagrange hypothesis**: from `0 < λ ≤ 1` and the IVT
@@ -267,7 +266,7 @@ theorem isHoeffdingLagrangeHyp_of_constraint_eq
     (isHoeffdingTiltMinimal_of_constraint_eq P₁ P₂ hP₁_pos hP₂_pos hP₁_sum hP₂_sum
       h_lam_pos h_lam_le h_kl)
 
-/-! ## Phase 7 — Interior existence (IVT + discharged minimality) -/
+/-! ## Interior existence (IVT + discharged minimality) -/
 
 omit [DecidableEq α] in
 /-- **Interior existence**: for interior `0 < α ≤ klDivPmf P₂ P₁`, the IVT

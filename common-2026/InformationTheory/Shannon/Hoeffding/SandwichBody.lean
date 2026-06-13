@@ -4,70 +4,40 @@ import InformationTheory.Shannon.MaxEntropy.Constrained
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# T1-D Hoeffding tradeoff — sandwich body completion (residual 2 hypotheses)
+# Hoeffding tradeoff — sandwich body completion
 
 This file publishes the **`IsHoeffdingMinimizerFullSupport`** predicate plus the
 **boundary full-support discharges** (`α = 0` and `α ≥ klDivPmf P₂ P₁`) used by
-the constructive minimizer of `HoeffdingSandwichDischarge.lean` and the genuine
+the constructive minimizer of `HoeffdingSandwichDischarge.lean` and the
 exponential-level closure `hoeffding_tradeoff_exp` (`HoeffdingTradeoffExp.lean`).
 
-## Retraction note (2026-05-28)
+The fixed-`alpha` rate targets `D(P₁‖P₂)`, not the Hoeffding tradeoff curve
+`E₂(alpha)`; the genuine statement is `hoeffding_tradeoff_exp`.
 
-The fixed-`alpha` sandwich `Tendsto` wrappers `hoeffding_tradeoff_sandwich_via_predicate`
-and `hoeffding_tradeoff_sandwich_at_boundary_alpha_ge_kl` that lived in this file
-have been **retracted**: their `h_liminf` / `h_limsup` premises are jointly
-unsatisfiable in the general fixed-`alpha` regime (the rate targets `D(P₁‖P₂)`,
-not the Hoeffding tradeoff curve `E₂(alpha)`). See the retraction record in
-`HoeffdingSandwichDischarge.lean`. The genuine statement is `hoeffding_tradeoff_exp`.
-The full-support predicate and boundary discharges below are retained — they are
-sound and feed the genuine successor.
+## Structure
 
-## Context
+The full-support predicate `IsHoeffdingMinimizerFullSupport` wraps the claim
+`∀ a, 0 < Qstar a` so downstream lemmas take a single named assumption. The
+general-`alpha` discharge of this predicate (full support of any
+Csiszár-Pythagoras minimizer of `klDivPmf · P₂` on `K`) requires a log-singularity
+gradient argument and is supplied externally via the constructive minimizer.
 
-`HoeffdingSandwich.lean` already discharged the **boundedness defaults**
-(`IsBoundedUnder (· ≤ ·)` + `IsBoundedUnder (· ≥ ·)`) internally, reducing the
-sandwich `Tendsto` from a **4-hypothesis** to a **2-hypothesis** form. Two further
-gaps remain in the upstream pipeline:
+For **boundary values of α** the full-support claim is fully discharged from
+existing Mathlib + InformationTheory API:
 
-* **Gap H1** — the **log-singularity gradient argument** for
-  `hoeffdingE2_minimizer_full_support`: any Csiszar-Pythagoras minimizer of
-  `klDivPmf · P₂` on `K := hoeffdingConstraintSet P₁ alpha` is full-support
-  (`∀ a, 0 < Qstar a`). The textbook proof requires a `HasDerivAt` computation
-  showing the directional derivative of `klDivPmf · P₂` at a `0`-atom is `-∞`,
-  contradicting Qstar's minimum. ~30-50 lines deferred per L-H4.
+* `α = 0`: `klDivPmf Q P₁ ≤ 0` combined with `klDivPmf_nonneg` forces
+  `klDivPmf Q P₁ = 0`. By `klDivPmf_eq_zero_iff_pmf`, `Q = P₁`. Hence the sole
+  `K`-element is `P₁`, full-support by `hP₁_pos`.
 
-* **Gap H2** — full minimizer support consumption: downstream `hoeffding_minimizer_ge`
-  (`HoeffdingTradeoff.lean:236`) was published in **hypothesis-form** taking
-  `hQs_pos : ∀ a, 0 < Qstar a` as an explicit argument; we want a flag carrying
-  this so callers wire only one assumption.
-
-## Strategy — body discharge + hypothesis pass-through
-
-Per the L-H4 retreat lines:
-
-* **Retreat L-H4-FS** (full support, hypothesis pass-through): we introduce the
-  `IsHoeffdingMinimizerFullSupport` `Prop`-valued predicate that wraps the
-  deferred `∀ a, 0 < Qstar a` claim and use it as an input to downstream lemmas.
-  Discharge of the predicate itself in the **general** `alpha` regime
-  requires the gradient argument and is deferred.
-
-* **Retreat L-H4-FB** (boundary full discharge): for **boundary values of α**
-  — namely `α = 0` and `α ≥ klDivPmf P₂ P₁` — we **fully discharge** the
-  full-support claim from already-published Mathlib + InformationTheory API:
-
-  - `α = 0`: `klDivPmf Q P₁ ≤ 0` combined with `klDivPmf_nonneg` forces
-    `klDivPmf Q P₁ = 0`. By `klDivPmf_eq_zero_iff_pmf`, `Q = P₁`. Hence the
-    sole `K`-element is `P₁`, which is full-support by `hP₁_pos`.
-
-  - `α ≥ klDivPmf P₂ P₁`: `P₂ ∈ K` (constraint satisfied). Combined with
-    `hoeffdingE2_nonneg` and `klDivPmf P₂ P₂ = 0`, the infimum is `0` and
-    `Qstar = P₂` realises it with full support by `hP₂_pos`. (Different
-    minimizers may exist, but a full-support one is always available.)
+* `α ≥ klDivPmf P₂ P₁`: `P₂ ∈ K` (constraint satisfied). Combined with
+  `hoeffdingE2_nonneg` and `klDivPmf P₂ P₂ = 0`, the infimum is `0` and
+  `Qstar = P₂` realises it with full support by `hP₂_pos`. (Different minimizers
+  may exist, but a full-support one is always available.)
 
 ## What this file publishes
 
 * **`IsHoeffdingMinimizerFullSupport`** (`Prop` predicate, abbrev form): wraps
-  the deferred `∀ a, 0 < Qstar a` claim.
+  the claim `∀ a, 0 < Qstar a`.
 
 * **`hoeffdingE2_minimizer_at_boundary_alpha_zero`** (full discharge): at `α = 0`,
   every `Qstar ∈ K` (with `K = {P₁}` in this case) is full-support, i.e.
@@ -81,24 +51,11 @@ Per the L-H4 retreat lines:
   `hoeffding_minimizer_ge` taking `IsHoeffdingMinimizerFullSupport` instead of
   raw `hQs_pos`.
 
-## Retreat lines adopted
-
-* **L-H4-FS** (hypothesis pass-through for full support): the **general** Qstar
-  full-support claim (any α with general Csiszar-Pythagoras minimizer) remains
-  deferred. `IsHoeffdingMinimizerFullSupport` carries the deferred assumption.
-
-* **L-H4-FB** (boundary full discharge): both edge cases
-  `α = 0` and `α ≥ klDivPmf P₂ P₁` are **fully discharged** from existing API.
-
-## Design notes
-
-* `IsHoeffdingMinimizerFullSupport` is intentionally a thin alias (definitional
-  unfolding to `∀ a, 0 < Qstar a`). Callers can construct it either from a
-  raw pointwise positivity proof or from the boundary discharges above.
-
-* The boundary discharges assume `hP₁_pos` / `hP₂_pos` (full-support source
-  pmfs). The `α = 0` case additionally needs `klDivPmf_eq_zero_iff_pmf` from
-  `MaxEntropyConstrained.lean`.
+`IsHoeffdingMinimizerFullSupport` is a thin alias (definitional unfolding to
+`∀ a, 0 < Qstar a`); callers construct it either from a raw pointwise positivity
+proof or from the boundary discharges above. The boundary discharges assume
+`hP₁_pos` / `hP₂_pos` (full-support source pmfs); the `α = 0` case additionally
+needs `klDivPmf_eq_zero_iff_pmf` from `MaxEntropyConstrained.lean`.
 -/
 
 namespace InformationTheory.Shannon.HoeffdingSandwichBody
@@ -116,20 +73,18 @@ open scoped BigOperators Topology
 variable {α : Type*} [Fintype α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ## Phase 1 — Full-support predicate (hypothesis pass-through, L-H4-FS) -/
+/-! ## Full-support predicate -/
 
-/-- **L-H4-FS pass-through**: the deferred `∀ a, 0 < Qstar a` claim wrapped as a
-`Prop` so downstream lemmas can take a single named assumption instead of an
-unstructured `∀ a, 0 < Qstar a`.
+/-- The claim `∀ a, 0 < Qstar a` wrapped as a `Prop` so downstream lemmas can
+take a single named assumption instead of an unstructured `∀ a, 0 < Qstar a`.
 
 The general-α discharge of this predicate (any minimizer of `klDivPmf · P₂` on
-`hoeffdingConstraintSet P₁ alpha`) is **deferred** (L-H4): the rigorous proof
-requires a `HasDerivAt` + `Real.log` singularity computation on the directional
-derivative of `klDivPmf · P₂` at a `0`-atom (~30-50 lines).
+`hoeffdingConstraintSet P₁ alpha`) requires a `HasDerivAt` + `Real.log`
+singularity computation on the directional derivative of `klDivPmf · P₂` at a
+`0`-atom.
 
 For **boundary** values of `α` (namely `α = 0` and `α ≥ klDivPmf P₂ P₁`), the
-predicate is fully discharged from existing Mathlib + InformationTheory API
-(see Phase 2 below). -/
+predicate is fully discharged from existing Mathlib + InformationTheory API. -/
 def IsHoeffdingMinimizerFullSupport (Qstar : α → ℝ) : Prop :=
   ∀ a, 0 < Qstar a
 
@@ -143,9 +98,9 @@ lemma IsHoeffdingMinimizerFullSupport.pos
     {Qstar : α → ℝ} (h : IsHoeffdingMinimizerFullSupport Qstar) :
     ∀ a, 0 < Qstar a := h
 
-/-! ## Phase 2 — Boundary full discharge (L-H4-FB) -/
+/-! ## Boundary full discharge -/
 
-/-- **L-H4-FB part 1** (boundary `α = 0` full discharge): at `α = 0`, every
+/-- Boundary `α = 0` full discharge: at `α = 0`, every
 `Q ∈ hoeffdingConstraintSet P₁ 0` equals `P₁`.
 
 `klDivPmf Q P₁ ≤ 0` (constraint) + `klDivPmf_nonneg` ⇒ `klDivPmf Q P₁ = 0`.
@@ -170,7 +125,7 @@ lemma hoeffdingConstraintSet_eq_singleton_at_alpha_zero
     -- klDivPmf Q P₁ = 0 ↔ Q = P₁.
     exact (klDivPmf_eq_zero_iff_pmf hQ_simplex hP₁_simplex hP₁_pos).mp hQ_kl_eq
 
-/-- **L-H4-FB part 2** (boundary `α ≥ klDivPmf P₂ P₁` full discharge): when
+/-- Boundary `α ≥ klDivPmf P₂ P₁` full discharge: when
 `α` is at least `klDivPmf P₂ P₁`, then `P₂ ∈ hoeffdingConstraintSet P₁ alpha`. -/
 lemma P₂_mem_hoeffdingConstraintSet
     (P₁ P₂ : α → ℝ) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -179,7 +134,7 @@ lemma P₂_mem_hoeffdingConstraintSet
     P₂ ∈ hoeffdingConstraintSet P₁ alpha := by
   refine ⟨⟨fun a => (hP₂_pos a).le, hP₂_sum⟩, h_alpha_ge⟩
 
-/-- **L-H4-FB part 2 (E2 collapse)**: when `α ≥ klDivPmf P₂ P₁`, the
+/-- **E2 collapse**: when `α ≥ klDivPmf P₂ P₁`, the
 `hoeffdingE2` value equals `0`, since `P₂` itself realises the minimum. -/
 lemma hoeffdingE2_eq_zero_at_alpha_ge_kl
     (P₁ P₂ : α → ℝ)
@@ -213,7 +168,7 @@ lemma hoeffdingE2_eq_zero_at_alpha_ge_kl
     hoeffdingE2_nonneg P₁ P₂ hP₁_pos hP₂_pos hP₁_sum alpha h_alpha_nn
   linarith
 
-/-- **L-H4-FB part 2 (predicate form, witness)**: at `α ≥ klDivPmf P₂ P₁`, the
+/-- **Predicate form, witness**: at `α ≥ klDivPmf P₂ P₁`, the
 witness `Qstar := P₂` lies in `K`, realises `hoeffdingE2 = klDivPmf P₂ P₂ = 0`,
 and is full-support (by `hP₂_pos`). -/
 lemma hoeffdingE2_minimizer_at_boundary_alpha_ge_kl
@@ -232,7 +187,7 @@ lemma hoeffdingE2_minimizer_at_boundary_alpha_ge_kl
       h_alpha_nn h_alpha_ge, klDivPmf_self_eq_zero P₂ hP₂_pos]
   · exact hP₂_pos
 
-/-! ## Phase 3 — Pythagoras-based minimizer integration via predicate -/
+/-! ## Pythagoras-based minimizer integration via predicate -/
 
 /-- **`hoeffding_minimizer_ge` via predicate**: variant of
 `HoeffdingTradeoff.hoeffding_minimizer_ge` taking
