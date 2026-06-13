@@ -6,44 +6,43 @@ import Mathlib.Probability.Distributions.Gaussian.Basic
 import Mathlib.MeasureTheory.Measure.GiryMonad
 
 /-!
-# T2-A: AWGN channel capacity `C = (1/2) log(1 + P/N)`
+# AWGN channel capacity
 
-Cover-Thomas Ch.9. The continuous specialization of the Shannon noisy-channel
-coding theorem to the additive white Gaussian noise channel.
+The continuous specialization of the Shannon noisy-channel coding theorem to the
+additive white Gaussian noise channel (Cover–Thomas, Chapter 9): the
+power-constrained capacity has the closed form `C = (1/2) log(1 + P/N)`.
 
-## Roadmap (per `docs/shannon/awgn-moonshot-plan.md`)
+## Main definitions
 
-* Phase A (this file) — `awgnChannel` kernel + `AwgnCode` bundle + MI closed-form
-  bridge + `awgnCapacity` definition + closed form `= (1/2) log(1+P/N)`.
-* Phase B (`AWGNAchievability.lean`) — Achievability under hypothesis F-1
-  (continuous joint-typicality pass-through).
-* Phase C (`AWGNConverse.lean`) — Converse under hypothesis F-3 (per-letter
-  integrability pass-through).
-* Phase D (this file, end) — Main theorem `awgn_channel_coding_theorem`
-  (achievability + converse + closed-form sandwich).
+* `awgnChannel N` — the AWGN channel kernel sending input `x` to the law of
+  `Y = x + Z` with `Z ∼ 𝒩(0, N)`, i.e. `gaussianReal x N`.
+* `AwgnCode M n P` — a block code with an output-power constraint and a measurable
+  decoder, specialized to alphabet `ℝ`.
+* `awgnPowerConstraintSet P` — the probability measures with lower-integral second
+  moment at most `P`.
+* `awgnCapacity P N` — the supremum of the channel mutual information over inputs in
+  the power-constraint set.
 
-## 撤退ライン (本 file で発動)
+## Main statements
 
-* **F-2 (MI bridge)**: `mutualInfoOfChannel (gaussianReal 0 P) (awgnChannel N)
-  = h(Y) - h(Z)` の bridge は下流で genuine に discharge 済
-  (`AWGNMIBridge.awgn_mi_bridge_of_primitives`)。closed-form の log-algebra は
-  `AWGNMIBridge.awgn_mi_gaussian_closed_form_of_primitives` に inline 済 (旧
-  `mutualInfoOfChannel_gaussianInput_closed_form` h_bridge-form wrapper は retire)。
-* **F-1 / F-3**: 主定理 `awgn_channel_coding_theorem` の signature で
-  `IsAwgnTypicalityHypothesis` / `IsAwgnConverseIntegrableHyp` を pass-through。
-* **F-4 (kernel measurability)**: `awgnChannel` の `measurable'` field —
-  `Measurable (fun x : ℝ => gaussianReal x N)` — は本 plan のスコープ外として
-  外部 hypothesis `h_awgn_measurable` 経由で構成 (`mkAwgnChannel`)。直接構成
-  (~50-100 行、`measurable_gaussianPDF` + Fubini) は後続 plan
-  `awgn-kernel-measurability-plan.md` に defer。判断ログ #1 で確定。
+* `awgnCapacity_eq` — the power-constrained capacity equals `(1/2) log(1 + P/N)`,
+  as the sandwich of the Gaussian-achievable lower bound and the max-entropy upper
+  bound.
 
-## Mathlib-shape-driven Definitions
+## Implementation notes
 
-* `awgnChannel N : Channel ℝ ℝ` は `toFun x := gaussianReal x N` で直接定義
-  (`gaussianReal_conv_gaussianReal` (`m₁+m₂, v₁+v₂`) の結論形に直結)。
-* `awgnCapacity P N : ℝ` は `sSup` 直書き
-  (`InformationTheory/Shannon/ChannelCodingShannonTheorem.lean` の `stdSimplex` 形は
-  `Fintype α` 想定で AWGN 不適用)。
+* `awgnChannel N` is defined directly by `toFun x := gaussianReal x N`, matching the
+  conclusion form of `gaussianReal_conv_gaussianReal` (mean `m₁ + m₂`, variance
+  `v₁ + v₂`). Its kernel measurability field is supplied as the explicit hypothesis
+  `IsAwgnChannelMeasurable N` rather than constructed inline.
+* `awgnPowerConstraintSet P` uses the lower integral `∫⁻ ofReal (x²) ∂p ≤ ofReal P`
+  rather than the Bochner `∫ x² ∂p ≤ P`. The Bochner integral returns `0` on a
+  non-integrable integrand, so the naive Bochner constraint would admit heavy-tailed
+  inputs with infinite second moment and falsify the converse bound; the lower
+  integral forces genuine integrability of `x²`.
+* `awgnCapacity P N` is written as a bare `sSup`: the `stdSimplex` form in
+  `ChannelCodingShannonTheorem.lean` assumes a `Fintype` alphabet and does not apply
+  to the continuous AWGN input.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -53,26 +52,18 @@ set_option linter.unusedVariables false
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal BigOperators Topology
 
-/-! ## D.1 — `awgnChannel : Channel ℝ ℝ`
-
-撤退ライン F-4 採用: `Measurable (fun x : ℝ => gaussianReal x N)` を hypothesis
-引数として外出し。直接構成 (`measurable_gaussianPDF` + Fubini, ~50-100 行) は
-別 plan に defer。 -/
+/-! ## The AWGN channel kernel -/
 
 /-- The AWGN measurability hypothesis: `(fun x : ℝ => gaussianReal x N)` is
-measurable as a map `ℝ → Measure ℝ`. Discharging this is deferred to a follow-up
-plan `awgn-kernel-measurability-plan.md` (see `docs/shannon/awgn-moonshot-plan.md`
-撤退ライン F-4 / 判断ログ #1). -/
+measurable as a map `ℝ → Measure ℝ`. This is supplied as an explicit hypothesis so
+that the kernel can be built without the (not yet available) Mathlib API for
+mean-measurability of `gaussianReal m v`. -/
 def IsAwgnChannelMeasurable (N : ℝ≥0) : Prop :=
   Measurable (fun x : ℝ => gaussianReal x N)
 
-/-- AWGN channel kernel: on input `x : ℝ`, output `Y = x + Z` where `Z ∼ 𝒩(0, N)`.
+/-- AWGN channel kernel: on input `x : ℝ`, the output `Y = x + Z` with `Z ∼ 𝒩(0, N)`.
 The kernel returns the law of `Y` directly as `gaussianReal x N` (mean shifted to `x`,
-variance = noise power `N`).
-
-撤退ライン F-4 hypothesis pass-through: requires `IsAwgnChannelMeasurable N`
-to construct the kernel (Mathlib API for `m`-measurability of `gaussianReal m v`
-is not yet in the inventory; see plan §危険 4). -/
+variance equal to the noise power `N`); building it requires `IsAwgnChannelMeasurable N`. -/
 noncomputable def awgnChannel (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) :
     InformationTheory.Shannon.ChannelCoding.Channel ℝ ℝ where
   toFun x := gaussianReal x N
@@ -88,7 +79,7 @@ instance awgnChannel.instIsMarkovKernel (N : ℝ≥0) (h_meas : IsAwgnChannelMea
     show IsProbabilityMeasure (gaussianReal x N)
     infer_instance
 
-/-! ## D.6 — `AwgnCode` (Code + power constraint + decoder measurability) -/
+/-! ## The AWGN block code -/
 
 /-- Block code with a power constraint and a measurable decoder, specialized to
 input/output alphabet `ℝ`. Adds the two fields missing from `Code M n ℝ ℝ`:
@@ -110,7 +101,7 @@ noncomputable def AwgnCode.toCode {M n : ℕ} {P : ℝ} (c : AwgnCode M n P) :
   encoder := c.encoder
   decoder := c.decoder
 
-/-! ## D.2 — `awgnPowerConstraintSet` + `awgnCapacity P N` -/
+/-! ## The power-constraint set and capacity -/
 
 /-- Power constraint set: probability measures with a (genuine, lintegral) second
 moment `≤ P`. Using the lower integral `∫⁻ x, ofReal (x²) ∂p ≤ ofReal P` instead of the
@@ -190,8 +181,8 @@ theorem gaussianInput_mem_constraintSet (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) :
   rw [h_lint]
   exact ENNReal.ofReal_le_ofReal (by rw [Real.coe_toNNReal P hP])
 
-/-- The AWGN capacity is bounded below by `(1/2) log(1 + P/N)` — achieved by the
-Gaussian input, using the F-2 hypothesis form of the closed-form MI.
+/-- The AWGN capacity is bounded below by `(1/2) log(1 + P/N)`, achieved by the
+Gaussian input via the closed-form mutual information hypothesis `h_bridge_gauss`.
 
 `@audit:closed-by-successor(awgn-moonshot-plan)` -/
 @[entry_point]
@@ -214,9 +205,9 @@ theorem awgnCapacity_ge_gaussian
   refine h_bridge_gauss ▸ le_csSup h_bdd ?_
   exact ⟨gaussianReal 0 P.toNNReal, h_mem, rfl⟩
 
-/-- The AWGN capacity is bounded above by `(1/2) log(1 + P/N)` — every input
-satisfying the second-moment constraint gives MI ≤ `(1/2) log(1+P/N)` via the
-Gaussian max-entropy bound. Pass-through via hypothesis `h_max_ent`.
+/-- The AWGN capacity is bounded above by `(1/2) log(1 + P/N)`: every input
+satisfying the second-moment constraint has mutual information at most
+`(1/2) log(1 + P/N)` via the Gaussian max-entropy bound `h_max_ent`.
 
 `@audit:closed-by-successor(awgn-moonshot-plan)` -/
 @[entry_point]
@@ -237,11 +228,11 @@ theorem awgnCapacity_le_gaussian
   · rintro y ⟨p, hp_mem, rfl⟩
     exact h_max_ent p hp_mem
 
-/-- **AWGN capacity closed form** (Cover-Thomas 9.1). Sandwich: the supremum over
-power-constrained inputs equals `(1/2) log(1 + P/N)`.
-
-`h_bridge_gauss`, `h_max_ent`, `h_bdd` are the F-2 撤退ライン hypotheses; their
-discharge is deferred to follow-up plans.
+/-- **AWGN capacity closed form** (Cover–Thomas, Theorem 9.1): the supremum over
+power-constrained inputs equals `(1/2) log(1 + P/N)`, obtained as the sandwich of
+the Gaussian-achievable lower bound and the max-entropy upper bound. The hypotheses
+`h_bridge_gauss`, `h_max_ent`, `h_bdd` carry the closed-form mutual information and
+boundedness inputs whose discharge is deferred to follow-up plans.
 
 `@audit:closed-by-successor(awgn-moonshot-plan)` -/
 @[entry_point]

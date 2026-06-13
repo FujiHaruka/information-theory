@@ -11,49 +11,45 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.InformationTheory.KullbackLeibler.ChainRule
 import InformationTheory.Shannon.MultivariateDiffEntropy
 
-/-! # AWGN F-3 converse — analytic body discharge
+/-! # AWGN channel coding converse — analytic body
 
-Plan: `docs/shannon/awgn-converse-aux-plan.md` (Phase 0 inventory 反映 1143 行)
-+ `docs/shannon/awgn-m5-sorry-migration-plan.md` Phase 3-α (sorry-based migration)
+Assembles the analytic body of the AWGN channel-coding converse (Cover–Thomas, 9.1.2):
+Fano's inequality, the data-processing inequality, the mutual-information chain rule,
+the per-letter Gaussian maximum-entropy bound, and the sum-form integration that combines
+them into `log M ≤ n · (1/2) log(1 + P/N) + binEntropy(Pe) + Pe · log(M − 1)`.
 
-Cover-Thomas 9.1.2 (converse) の analytic body (Fano + DPI + chain rule + per-letter
-Gaussian max-entropy + sum-form integration) を組み立てる。
+## Main definitions
 
-**2026-05-28 Phase 3-α sorry-based migration**: 旧 bundle predicate
-`IsAwgnConverseFeasible` + 3 sub-bound predicate
-(`PerLetterIntegrabilityForConverse` / `ContinuousMIChainRuleForConverse` /
-`MarkovChainForConverse`) を削除し、各 analytic content を
-`InformationTheory/Shannon/AwgnWalls.lean` の補題に格上げ (Tier 3 → Tier 2)。consumer
-は当該補題を呼ぶ普通の lemma call に縮約 (本 file scope は 0 sorry)。3 補題のうち
-3 補題とも後に genuine 化済 (`@audit:ok`、sorryAx-free)、Mathlib 壁は **全て closure**。
+* `awgnConverseJoint` — the canonical joint law of `(W, Yⁿ)` under a uniform message `W`
+  and the memoryless AWGN channel, as the mixture `(1/M) ∑ₘ δ_m ⊗ ∏ᵢ AWGN_{encoder m i}`.
+* `perLetterYLaw` — the per-coordinate output marginal of `Yᵢ`, a mixture of Gaussians.
+* `perLetterMI` / `jointMIWYn` / `jointMIXnYn` — the per-letter and joint mutual
+  informations `I(Xᵢ; Yᵢ)`, `I(W; Yⁿ)`, `I(Xⁿ; Yⁿ)` on the canonical joint.
+* `perLetterInputSecondMoment` — the per-letter input second moment under a uniform message.
 
-| 旧 predicate | 後継補題 | wall name (status) |
-|---|---|---|
-| `PerLetterIntegrabilityForConverse` | `awgnPerLetterIntegrability_holds` | `awgn-per-letter-integrability` (closed 2026-06-10, genuine `@audit:ok`, sorryAx-free) |
-| `ContinuousMIChainRuleForConverse` | `awgnContinuousMIChainRule_holds` | `awgn-continuous-mi-chain-rule` (closed 2026-06-12, genuine `@audit:ok`, sorryAx-free) |
-| `MarkovChainForConverse` | `awgnConverseMarkov_holds` (旧 Route B / L-AWGNM5-1-α) | `awgn-converse-markov-regularity` (closed 2026-06-04, genuine `@audit:ok`, sorryAx-free) |
+## Main statements
 
-## Phase 構成
+* `awgn_converse_single_shot_call` — Fano dispatch yielding
+  `log M ≤ I(W; Yⁿ) + binEntropy(Pe) + Pe · log(M − 1)`.
+* `awgn_dpi` — `I(W; Yⁿ) ≤ I(Xⁿ; Yⁿ)` from the Markov chain `W → Xⁿ → Yⁿ`.
+* `awgn_chain_rule` — `I(Xⁿ; Yⁿ) ≤ ∑ᵢ I(Xᵢ; Yᵢ)` for the memoryless channel.
+* `awgn_per_letter_mi_le_log_var` — the per-letter Gaussian maximum-entropy bound.
+* `awgn_sum_per_letter_mi_le_n_capacity` — `∑ᵢ I(Xᵢ; Yᵢ) ≤ n · (1/2) log(1 + P/N)`.
+* `isAwgnConverseFeasible_discharger` / `awgn_converse_F3_discharged` — the assembled
+  converse inequality.
 
-* Phase A — joint law / marginal / MI の closed-form quantity (`awgnConverseJoint` /
-  `perLetterYLaw` / `perLetterMI` / `jointMIWYn` / `jointMIXnYn`)
-* Phase B-Fano — `awgn_converse_single_shot_call` (Phase B-Fano dispatch)
-* Phase B-DPI/chain — `awgn_dpi` (Markov DPI、`awgnConverseMarkov_holds` 経由) /
-  `awgn_chain_rule` (chain rule、`awgnContinuousMIChainRule_holds` 経由)
-* Phase B-Gaussian — 起草時 `awgn_per_letter_mi_le_capacity` 想定だったが
-  per-message `power_constraint` から per-letter `E[X_i²] ≤ P` が genuine 化不能
-  (false-statement defect) のため **撤回**。代替は Phase C の sum-form chain
-  (`awgn_per_letter_input_power_avg` + `awgn_per_letter_mi_le_log_var` + Jensen)。
-* Phase C — `isAwgnConverseFeasible_discharger` 統合 + `awgn_converse_F3_discharged` wrapper
+## Implementation notes
 
-## 設計指針
-
-* `perLetterYLaw` / `awgnConverseJoint` は closed-form で genuine 化済。
-  `perLetterMI` / `jointMIWYn` / `jointMIXnYn` は canonical joint `awgnConverseJoint`
-  の `mutualInfo` 形で genuine 化済。
-* 残る 1 hyp `h_mi_bridge_per_letter` (per-letter MI = `h(Y_i) - h(Z)` bridge) は
-  F-2 closure 待ち (`awgn-mi-bridge-plan.md`)、`awgn_converse` (`AWGNConverse.lean`)
-  の sorry に集約。 -/
+* The mutual informations are stated through the single canonical joint `awgnConverseJoint`
+  so that data-processing and chain-rule lemmas apply directly. Finiteness of `I(W; Yⁿ)`
+  and `I(Xⁿ; Yⁿ)` is obtained from `klDiv_ne_top` (absolute continuity plus integrable
+  log-likelihood ratio), constructed directly to avoid the circularity of a Real-form chain
+  rule, since `W` is discrete and `Xⁿ` is finite-valued.
+* The capacity bound is built from a sum form (per-letter second moment, per-letter
+  Gaussian maximum-entropy, and Jensen) rather than a per-letter power constraint, because
+  the per-message power constraint does not yield a per-letter `E[Xᵢ²] ≤ P`.
+* `h_mi_bridge_per_letter` carries the bridge `I(Xᵢ; Yᵢ) = h(Yᵢ) − h(Z)` as an explicit
+  hypothesis; it is discharged elsewhere. -/
 
 namespace InformationTheory.Shannon.AWGN
 
@@ -63,14 +59,13 @@ open MeasureTheory ProbabilityTheory InformationTheory
   InformationTheory.Shannon
 open scoped ENNReal NNReal BigOperators Topology
 
-/-! ## Phase A — local quantities (joint law / marginal / MI) -/
+/-! ## Local quantities: joint law, output marginals, mutual informations -/
 
-/-- **Canonical joint law of `(W, Y^n)` under uniform message and AWGN channel**.
+/-- Canonical joint law of `(W, Yⁿ)` under a uniform message and the AWGN channel.
 
-Sample space `Ω := Fin M × (Fin n → ℝ)` with `W = Prod.fst` and `Y^n = Prod.snd`.
-Under uniform `W ∼ Uniform(Fin M)` and conditional `Y^n | W=m ∼ ∏ᵢ N(c.encoder m i, N)`,
-the joint law is the mixture
-`(1/M) ∑ m, δ_m ⊗ ∏ᵢ AWGN_{c.encoder m i}`. -/
+On the sample space `Ω := Fin M × (Fin n → ℝ)` with `W = Prod.fst` and `Yⁿ = Prod.snd`,
+under uniform `W ∼ Uniform(Fin M)` and conditional `Yⁿ | W = m ∼ ∏ᵢ N(c.encoder m i, N)`,
+the joint law is the mixture `(1/M) ∑ₘ δ_m ⊗ ∏ᵢ AWGN_{c.encoder m i}`. -/
 noncomputable def awgnConverseJoint
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (c : AwgnCode M n P) :
@@ -80,9 +75,8 @@ noncomputable def awgnConverseJoint
       (Measure.dirac m).prod
         (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i)))
 
-/-- `awgnConverseJoint` is a probability measure when `M ≥ 1` (= `[NeZero M]`):
-the mixture has weights `(1/M)` summing to `1`. Body fill is Phase B-DPI side
-(regularity prerequisite for `IsMarkovChain` typeclass resolution). -/
+/-- `awgnConverseJoint` is a probability measure when `M ≥ 1` (`[NeZero M]`):
+the mixture has weights `(1/M)` summing to `1`. -/
 instance awgnConverseJoint.instIsProbabilityMeasure
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
@@ -107,8 +101,8 @@ instance awgnConverseJoint.instIsProbabilityMeasure
   have hM_ne_top : (M : ℝ≥0∞) ≠ ∞ := ENNReal.natCast_ne_top M
   exact ENNReal.inv_mul_cancel hM_ne_zero hM_ne_top
 
-/-- per-letter `Y_i` 周辺分布 (uniform `W` 上の `encoder ∘ W` marginal を AWGN で
-convolve)。`(1/M) ∑ₘ AWGN_{c.encoder m i}` の閉じた形 (= mixture of Gaussians)。 -/
+/-- Per-letter output marginal of `Yᵢ` under a uniform message: the closed form
+`(1/M) ∑ₘ AWGN_{c.encoder m i}`, a mixture of Gaussians. -/
 @[entry_point]
 noncomputable def perLetterYLaw
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
@@ -138,44 +132,19 @@ noncomputable def jointMIXnYn
     {M n : ℕ} (c : AwgnCode M n P) : ℝ≥0∞ :=
   mutualInfo (awgnConverseJoint h_meas c) (fun ω => c.encoder ω.1) Prod.snd
 
-/-! ## Phase A — sub-bound walls (Phase 3-α sorry-based migration)
+/-! ## Sub-bound lemmas
 
-**2026-05-28 Phase 3-α (`awgn-m5-sorry-migration-plan.md`)**: 旧 3 sub-bound predicate
-(`PerLetterIntegrabilityForConverse` / `ContinuousMIChainRuleForConverse` /
-`MarkovChainForConverse`) + bundle `IsAwgnConverseFeasible` を削除し、各 analytic
-content を `InformationTheory/Shannon/AwgnWalls.lean` の shared sorry 補題に格上げした
-(Tier 3 `@audit:retract-candidate(load-bearing-predicate)` → Tier 2 `sorry` +
-`@residual(wall:…)`)。consumer (`isAwgnConverseFeasible_discharger` /
-`awgn_converse_F3_discharged`) は wall 補題を呼ぶ普通の lemma call に縮約。
+The three analytic sub-bounds (per-letter log-density integrability, the continuous
+mutual-information chain rule, and the Markov-chain factorization) live as lemmas in
+`InformationTheory/Shannon/AwgnWalls.lean` and are invoked here as ordinary lemma calls. -/
 
-| 旧 predicate | 後継補題 (`AwgnWalls.lean`) | wall name (status) |
-|---|---|---|
-| `PerLetterIntegrabilityForConverse` | `awgnPerLetterIntegrability_holds` | `awgn-per-letter-integrability` (closed 2026-06-10, genuine `@audit:ok`) |
-| `ContinuousMIChainRuleForConverse` | `awgnContinuousMIChainRule_holds` | `awgn-continuous-mi-chain-rule` (closed 2026-06-12, genuine `@audit:ok`) |
-| `MarkovChainForConverse` | `awgnConverseMarkov_holds` (旧 Route B, L-AWGNM5-1-α) | `awgn-converse-markov-regularity` (closed 2026-06-04, genuine `@audit:ok`) |
+/-! ## Fano dispatch
 
-`MarkovChainForConverse` は Phase 3α-1 で当初 Route B (L-AWGNM5-1-α) に降格していたが、
-独立壁再評価で plumbing 過大評価と判明し `awgnConverseMarkov_holds` で genuine 化済
-(sorryAx-free)。`awgn-per-letter-integrability` も 2026-06-10 に genuine 化 (有限 1-D
-Gaussian 混合密度の直接 domination、SMB 不要)。`awgn-continuous-mi-chain-rule` は
-2026-06-12 に genuine closure (W-input route: deterministic DPI + generic n-D channel MI
-decomp + n-D subadditivity + per-letter 1-D decomp、sorryAx-free)。よって本 cluster の
-active wall は **0 件**。 -/
+`awgn_converse_single_shot_call` invokes `shannon_converse_single_shot` with
+`X := Fin M`, `Y := Fin n → ℝ`, `decoder := c.decoder`, `μ := awgnConverseJoint c h_meas`,
+assembling Fano's inequality, the data-processing postprocessing step, the entropy chain,
+and `H(W uniform) = log M`. -/
 
-/-! ## Phase B-Fano skeleton (本 commit は signature + sorry のみ)
-
-`shannon_converse_single_shot` (`InformationTheory/Shannon/Converse.lean:81`) を
-`X := Fin M, Y := Fin n → ℝ, decoder := c.decoder, μ := awgnConverseJoint c h_meas`
-で 1 行呼出。Fano + DPI postprocess + entropy chain + `H(W uniform) = log M` を
-集約。 -/
-
-/-! ### Private helpers for `awgn_converse_single_shot_call`
-
-`shannon_converse_single_shot` を `awgnConverseJoint` で起動するために必要な
-plumbing 補題群。本 section の補題はすべて private、本 file 内専用。 -/
-
-/-- Auxiliary: on a `Fintype` + `MeasurableSingletonClass`, `Measure.count`
-equals `∑ a, Measure.dirac a` (Finset.univ sum). -/
 private lemma count_eq_finset_sum_dirac (α : Type*) [Fintype α]
     [MeasurableSpace α] [MeasurableSingletonClass α] :
     (Measure.count : Measure α) = ∑ a : α, Measure.dirac a := by
@@ -192,12 +161,8 @@ private lemma count_eq_finset_sum_dirac (α : Type*) [Fintype α]
     exact h
   rw [← h_sum, Measure.sum_fintype]
 
-/-- AWGN converse の uniform message marginal: `(awgnConverseJoint h_meas c).map Prod.fst
-= (Fintype.card (Fin M))⁻¹ • Measure.count`。
-
-mixture `(1/M) ∑ m, (dirac m).prod ν_m` の `Prod.fst` 像が、各 `ν_m` が
-probability measure であることから `(1/M) ∑ m, dirac m`、これが Fintype `Fin M`
-上の `Measure.count` の `(1/M)` 倍に等しい (`MeasurableSingletonClass` 経由)。 -/
+/-- The message marginal `(awgnConverseJoint h_meas c).map Prod.fst` equals
+`(Fintype.card (Fin M))⁻¹ • Measure.count`. -/
 private lemma awgnConverseJoint_map_fst
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
@@ -228,8 +193,6 @@ private lemma awgnConverseJoint_map_fst
   -- Now: (M⁻¹) • ∑ m, dirac m = (M⁻¹) • Measure.count.
   rw [count_eq_finset_sum_dirac]
 
-/-- AWGN converse joint の `Prod.snd` measurability (trivial, but used for
-`shannon_converse_single_shot.hYo`). -/
 private lemma awgnConverseJoint_measurable_snd :
     Measurable (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) :=
   measurable_snd
@@ -238,13 +201,8 @@ private lemma awgnConverseJoint_measurable_fst :
     Measurable (Prod.fst : Fin M × (Fin n → ℝ) → Fin M) :=
   measurable_fst
 
-/-- AWGN converse `Pe` bridge: AWGN `Pe = (1/M) ∑ m, (errorProbAt ...).toReal`
-(in the theorem statement) 形 と Fano `errorProb (awgnConverseJoint h_meas c)
-Prod.fst Prod.snd c.decoder` 形の同値性。
-
-mixture `(1/M) ∑ m, (dirac m).prod ν_m` 上で `{ω | ω.1 ≠ c.decoder ω.2}` を測ると、
-各 m 成分は `((dirac m).prod ν_m) S = ν_m {y | m ≠ c.decoder y} = ν_m (errorEvent m)
-= errorProbAt m`。線形性で全体: `(1/M) ∑ m, errorProbAt m`。 -/
+/-- The Fano error probability `errorProb (awgnConverseJoint h_meas c) Prod.fst Prod.snd
+c.decoder` equals the AWGN average `(1/M) ∑ₘ (errorProbAt … m).toReal`. -/
 private lemma awgn_errorProb_eq_fano_errorProb
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
@@ -321,17 +279,15 @@ private lemma awgn_errorProb_eq_fano_errorProb
   -- `errorProbAt c.toCode W m = Measure.pi (W (c.encoder m i)) (errorEvent m)`.
   rfl
 
-/-! ## Block-mixture output density (n-dim, finite codebook mixture)
+/-! ## Block-mixture output density
 
-`I(W; Y^n) ≠ ∞` / `I(X^n; Y^n) ≠ ∞` の genuine 化に必要な n 次元 mixture density 機構。
-parallel-gaussian の `parallelOutputMixtureDensity*` を **finite codebook** 特化形に
-lift (import cycle のため再利用不可、self-build)。block output `blockYLaw` は有限個の
-codeword 上の n 次元積 Gaussian の mixture なので、concentration-box は不要 — sup 上界 +
-**同一成分** 下界 (`blockDensity ≥ M⁻¹ · 成分 m の密度`) で `|log density|` を成分 m
-中心の 2 次モーメント envelope に dominate できる (1-D `integrable_log_rnDeriv_perLetterYLaw`
-の構造そのままの n 次元版)。 -/
+The `n`-dimensional output density needed for finiteness of `I(W; Yⁿ)` and `I(Xⁿ; Yⁿ)`.
+The block output `blockYLaw` is a mixture of `n`-dimensional product Gaussians over the
+finitely many codewords, so `|log density|` is dominated by a quadratic envelope centred at
+component `m` via a supremum upper bound together with a same-component lower bound
+(`blockDensity ≥ M⁻¹ · (density of component m)`). -/
 
-/-- **Block output law** `I(·; Y^n)` の 2 番目周辺 `(awgnConverseJoint).map Prod.snd`。 -/
+/-- Block output law: the `Prod.snd` marginal `(awgnConverseJoint).map Prod.snd`. -/
 private noncomputable def blockYLaw
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (c : AwgnCode M n P) : Measure (Fin n → ℝ) :=
@@ -660,15 +616,15 @@ private lemma integrable_log_blockYLaw_on_component
         linarith
       exact le_trans h_upper hub
 
-/-! ### I(W; Y^n) finiteness via the discrete-input compProd chain rule
+/-! ### Finiteness of `I(W; Yⁿ)` via the discrete-input compProd chain rule
 
-`W = Fin M` (discrete) のため joint は `(M⁻¹•count) ⊗ₘ K` (K m := n 次元 block component),
-marginal 積は `(M⁻¹•count) ⊗ₘ const blockY`。`klDiv_ne_top_iff` (AC + integrable llr) を
-`absolutelyContinuous_compProd_iff` + `integrable_llr_compProd_iff` で per-fibre に落とし、
-fibre 部 = 各成分の output log-density integrability (`integrable_log_blockYLaw_on_component`)
-+ Gaussian fibre log-density integrability で genuine に閉じる。 -/
+Since `W = Fin M` is discrete, the joint is `(M⁻¹ • count) ⊗ₘ K` with `K m` the `n`-dimensional
+block component, and the product of marginals is `(M⁻¹ • count) ⊗ₘ const blockY`. Finiteness
+follows from `klDiv_ne_top` (absolute continuity plus integrable log-likelihood ratio), reduced
+per-fibre to the output log-density integrability of each component
+(`integrable_log_blockYLaw_on_component`) and the Gaussian fibre log-density integrability. -/
 
-/-- Discrete-input block kernel `K m := pi (gaussianReal (encoder m i) N)` (Fin M → Y^n)。 -/
+/-- Discrete-input block kernel `K m := pi (gaussianReal (encoder m i) N)` (`Fin M → Yⁿ`). -/
 private noncomputable def blockKernel
     {P : ℝ} (N : ℝ≥0) {M n : ℕ} (c : AwgnCode M n P) :
     Kernel (Fin M) (Fin n → ℝ) :=
@@ -910,24 +866,13 @@ private lemma awgnConverseJoint_mi_W_ne_top
     · -- L¹-norm-over-fibre integral integrable over the finite message measure
       exact Integrable.of_finite
 
-/-- **AWGN converse MI finiteness (genuine, formerly `wall:multivariate-mi`)**.
+/-- AWGN converse mutual-information finiteness:
+`I(W; Yⁿ) ≠ ∞ ∧ I(Xⁿ; Yⁿ) ≠ ∞` on the canonical joint.
 
-`I(W; Y^n) ≠ ∞` ∧ `I(X^n; Y^n) ≠ ∞` on the AWGN converse canonical joint.
-
-**2026-06-12 genuine 化 (false wall 反証, `cause:loogle-blind` + `cause:single-route`)**:
-旧 docstring の「continuous-Y llr
-integrability は substantial plumbing beyond scope」「ENNReal chain rule が circular」
-は **Real-form chain rule から ne_top を導こうとした場合の話**。本実装は直接
-`klDiv_ne_top` (AC + integrable llr 直構築) ルートで循環を回避。`W` (Fin M, discrete) /
-`X^n` (encoder∘fst, finite-valued) のため joint は有限個の codeword 上の n 次元積
-Gaussian mixture、各成分 `klDiv νₘ blockYLaw < ∞` を sup 上界 + 同一成分下界で genuine 化
-(parallel-gaussian `parallelOutput_joint_logDensity_integrable` 手法の finite-codebook
-特化形)。`hN : N ≠ 0` は regularity precondition: `N = 0` で `gaussianReal _ 0 = Dirac`
-となり各成分が Lebesgue density を失う (`gaussianReal_of_var_ne_zero` が呼べず density-route
-が崩壊) ため必要。core を bundle する load-bearing hyp ではなく、density 機構の前提条件。
-(独立 honesty audit 2026-06-12: `hN` の動機が「N=0 で命題が偽」ではなく「density-route の
-退化境界除外」である点を訂正 — discrete-W では N=0 でも joint は有限 atomic で klDiv 有限、
-命題自体は N=0 でも真。但し本証明 route は density を要するため `hN` は正当な precondition。)
+`hN : N ≠ 0` is a regularity precondition for the density route, not a load-bearing
+hypothesis: at `N = 0` each `gaussianReal _ 0` degenerates to a Dirac measure and loses its
+Lebesgue density. The proposition itself still holds at `N = 0` (with discrete `W` the joint
+is finitely atomic), but this proof goes through the densities, so `N ≠ 0` is required.
 
 @audit:ok -/
 private lemma awgnConverseJoint_pair_mi_ne_top
@@ -966,10 +911,8 @@ private lemma awgnConverseJoint_pair_mi_ne_top
     rw [mutualInfo_comm (awgnConverseJoint h_meas c) Prod.snd Prod.fst hsnd hfst]
   exact ne_top_of_le_ne_top h_W h_le
 
-/-- AWGN converse の `mutualInfo` finiteness: `mutualInfo (awgnConverseJoint c) Prod.fst Prod.snd ≠ ∞`。
-
-`awgnConverseJoint_pair_mi_ne_top` 経由 (共有 wall lemma の `.1`)。本 declaration
-は **0-sorry / 0-@residual**、wall 自体は shared lemma に集約。
+/-- AWGN converse mutual-information finiteness:
+`mutualInfo (awgnConverseJoint c) Prod.fst Prod.snd ≠ ∞`.
 
 @audit:ok -/
 private lemma awgnConverseJoint_mutualInfo_ne_top
@@ -980,14 +923,9 @@ private lemma awgnConverseJoint_mutualInfo_ne_top
         (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) ≠ ∞ :=
   (awgnConverseJoint_pair_mi_ne_top hN h_meas c).1
 
-/-- **Phase B-Fano**: Fano + DPI postprocess + entropy chain + `H(W) = log M` を
-`shannon_converse_single_shot` 1 行呼出で集約。
-
-結論: `log M ≤ I(W; Y^n).toReal + binEntropy(Pe) + Pe · log(M-1)`。
-
-Pe bridge (T-FFC-5、`errorProbAt` ↔ Fano `errorProb` の同値性、private helper
-`awgn_errorProb_eq_fano_errorProb` に切出し) + MI-finite plumbing (private helper
-`awgnConverseJoint_mutualInfo_ne_top` に切出し) を経由。 -/
+/-- Fano dispatch: assembling Fano's inequality, the data-processing postprocessing step,
+the entropy chain, and `H(W) = log M` through `shannon_converse_single_shot` gives
+`log M ≤ I(W; Yⁿ).toReal + binEntropy(Pe) + Pe · log(M − 1)`. -/
 @[entry_point]
 theorem awgn_converse_single_shot_call
     (P : ℝ) (N : ℝ≥0) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
@@ -1042,30 +980,24 @@ theorem awgn_converse_single_shot_call
   unfold jointMIWYn
   exact h_shannon
 
-/-! ## Phase B-DPI/chain
+/-! ## Data-processing and chain rule
 
-DPI side: `mutualInfo_le_of_markov` (`CondMutualInfo.lean:385`) で
-`I(W; Y^n) ≤ I(X^n; Y^n)` を導く (Markov factorization は shared sorry 補題
-`awgnConverseMarkov_holds`、`AwgnWalls.lean`)。
-Chain side: shared sorry 補題 `awgnContinuousMIChainRule_holds` (`AwgnWalls.lean`)
-を defeq で接続。 -/
+The data-processing side derives `I(W; Yⁿ) ≤ I(Xⁿ; Yⁿ)` from `mutualInfo_le_of_markov`,
+with the Markov factorization supplied by `awgnConverseMarkov_holds` (`AwgnWalls.lean`). The
+chain-rule side connects to `awgnContinuousMIChainRule_holds` (`AwgnWalls.lean`) by
+definitional equality. -/
 
-/-- **Phase B-DPI**: Markov chain `W → encoder ∘ W → Y^n` から
-`I(W; Y^n) ≤ I(X^n; Y^n)` を `mutualInfo_le_of_markov` (genuine、判断 #3) で導く。
-
-Markov factorization は genuine 補題 `awgnConverseMarkov_holds`
-(`AwgnWalls.lean`、旧 wall `awgn-converse-markov-regularity` は closed 2026-06-04、
-`@audit:ok`、sorryAx-free) から取得 (`converseJointInline` ≡ `awgnConverseJoint` defeq
-で接続)。 -/
+/-- Data-processing inequality: the Markov chain `W → encoder ∘ W → Yⁿ` yields
+`I(W; Yⁿ) ≤ I(Xⁿ; Yⁿ)` via `mutualInfo_le_of_markov`, with the Markov factorization
+supplied by `awgnConverseMarkov_holds`. -/
 @[entry_point]
 theorem awgn_dpi
     (P : ℝ) (N : ℝ≥0) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
     (jointMIWYn h_meas c).toReal ≤ (jointMIXnYn h_meas c).toReal := by
-  -- Markov chain `W → X^n → Y^n` (γ-form) ⇒ ENNReal DPI
-  -- `mutualInfo W Y^n ≤ mutualInfo X^n Y^n`.
-  -- shared sorry 補題から Markov factorization を取得 (defeq で
-  -- `IsMarkovChain (awgnConverseJoint …)` に接続)。
+  -- Markov chain `W → X^n → Y^n` ⇒ ENNReal DPI `mutualInfo W Y^n ≤ mutualInfo X^n Y^n`.
+  -- The Markov factorization comes from `awgnConverseMarkov_holds`, connected to
+  -- `IsMarkovChain (awgnConverseJoint …)` by definitional equality.
   have h_markov :
       IsMarkovChain (awgnConverseJoint h_meas c)
         (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
@@ -1102,13 +1034,9 @@ theorem awgn_dpi
   unfold jointMIWYn jointMIXnYn
   exact ENNReal.toReal_mono h_finite h_dpi_enn
 
-/-- **Phase B-chain**: continuous MI chain rule for memoryless AWGN
-`I(X^n; Y^n) ≤ ∑ᵢ I(X_i; Y_i)`。genuine 補題
-`awgnContinuousMIChainRule_holds` (`AwgnWalls.lean`、旧 wall
-`awgn-continuous-mi-chain-rule` は 2026-06-12 に genuine closure、sorryAx-free) から取得
-(`converseJointInline` ≡ `awgnConverseJoint` defeq、`jointMIXnYn` / `perLetterMI` unfold
-で結論一致)。`hN` / `[NeZero M]` は genuine 補題の regularity precondition (density-route 用)、
-両方 converse consumer `isAwgnConverseFeasible_discharger` から供給。 -/
+/-- Mutual-information chain rule for the memoryless AWGN channel:
+`I(Xⁿ; Yⁿ) ≤ ∑ᵢ I(Xᵢ; Yᵢ)`, supplied by `awgnContinuousMIChainRule_holds`. `hN` and
+`[NeZero M]` are regularity preconditions of that lemma's density route. -/
 @[entry_point]
 theorem awgn_chain_rule
     (P : ℝ) (N : ℝ≥0) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
@@ -1116,26 +1044,21 @@ theorem awgn_chain_rule
     (jointMIXnYn h_meas c).toReal ≤ ∑ i : Fin n, (perLetterMI h_meas c i).toReal :=
   awgnContinuousMIChainRule_holds hN h_meas c
 
-/-! ## Phase C — Per-letter input second moment / Jensen / sum-form chain
-(Phase B-Gaussian 撤回後の再設計、`awgn-converse-aux-plan.md` Phase C 反映)。
+/-! ## Per-letter input second moment, Jensen, and the sum-form capacity bound
 
-旧 `awgn_per_letter_mi_le_capacity` (per-letter `E[X_i²] ≤ P` 形、`power_constraint`
-per-message 形からは genuine 化不能の false-statement defect) は本 commit で撤回し、
-代わりに **sum-form + Jensen** で `∑ᵢ I(X_i; Y_i) ≤ n · (1/2) log(1+P/N)` を直接立てる。 -/
+The capacity bound `∑ᵢ I(Xᵢ; Yᵢ) ≤ n · (1/2) log(1 + P/N)` is established in sum form via the
+per-letter Gaussian maximum-entropy bound and Jensen's inequality, rather than from a
+per-letter power constraint (which does not follow from the per-message power constraint). -/
 
-/-- Per-letter input second moment `E[X_i² | W ∼ Uniform(Fin M)]
-= (1/M) ∑_m (c.encoder m i)²`。Uniform message 上で input letter `X_i = c.encoder W i`
-の 2 次モーメント。`power_constraint` (per-message block 形) と `1/n ∑_i` avg で
-`(1/n) ∑_i perLetterInputSecondMoment c i ≤ P` が genuine に出る (`awgn_per_letter_input_power_avg`)。 -/
+/-- Per-letter input second moment `E[Xᵢ² | W ∼ Uniform(Fin M)] = (1/M) ∑ₘ (c.encoder m i)²`,
+the second moment of the input letter `Xᵢ = c.encoder W i` under a uniform message. -/
 @[entry_point]
 noncomputable def perLetterInputSecondMoment
     {M n : ℕ} {P : ℝ} (c : AwgnCode M n P) (i : Fin n) : ℝ :=
   (1 / (M : ℝ)) * ∑ m : Fin M, (c.encoder m i) ^ 2
 
-/-- **C-1a** Average of per-letter input second moments is bounded by `P`.
-
-`(1/n) ∑ᵢ E[X_i²] ≤ P` を `power_constraint` (per-message form `∑ᵢ (encoder m i)² ≤ n·P`)
-から Fubini swap (∑ᵢ ∑ₘ = ∑ₘ ∑ᵢ) で genuine 化。 -/
+/-- The average of the per-letter input second moments is bounded by `P`:
+`(1/n) ∑ᵢ E[Xᵢ²] ≤ P`, from the per-message power constraint by a Fubini swap. -/
 @[entry_point]
 theorem awgn_per_letter_input_power_avg
     {M n : ℕ} (hM_pos : 0 < M) (hn_pos : 0 < n) {P : ℝ}
@@ -1187,7 +1110,7 @@ theorem awgn_per_letter_input_power_avg
   rw [h_rhs] at h_combine
   exact h_combine
 
-/-! ### Private helpers for `awgn_per_letter_mi_le_log_var` (C-1b) -/
+/-! ### Helpers for the per-letter maximum-entropy bound -/
 
 /-- Closed form of `perLetterYLaw`: mixture of Gaussians
 `(M⁻¹ : ℝ≥0∞) • ∑ₘ gaussianReal (c.encoder m i) N`. -/
@@ -1481,20 +1404,17 @@ private lemma perLetterYLaw_variance_le
   have hm_sq_nn : 0 ≤ m_avg ^ 2 := sq_nonneg _
   linarith
 
-/-- **C-1b** Per-letter MI bound via per-letter input variance.
-
-Per-letter `I(X_i; Y_i) ≤ (1/2) log(1 + perLetterInputSecondMoment c i / N)`
-を `differentialEntropy_le_gaussian_of_variance_le` (4 hyp 形、`DifferentialEntropy.lean:518`)
-で導出。`Y_i` の分散 ≤ `E[X_i²] + N` (input ⊥⊥ noise) で Gaussian max-entropy。
-
-戦略 (mini-plan `awgn-converse-c1b-gaussian-maxent` §Approach):
+/-- Per-letter mutual-information bound via the per-letter input variance:
+`I(Xᵢ; Yᵢ) ≤ (1/2) log(1 + perLetterInputSecondMoment c i / N)`, derived from the Gaussian
+maximum-entropy bound `differentialEntropy_le_gaussian_of_variance_le`. The variance of `Yᵢ`
+is at most `E[Xᵢ²] + N` since the input and the noise are independent, giving
 ```
-(perLetterMI).toReal  = h(Y_i) - h(gaussianReal 0 N)                  -- bridge hyp
-                     ≤ (1/2) log(2πe·v_Y) - (1/2) log(2πe·N)          -- max-entropy 4 hyp
-                     = (1/2) log(v_Y / N) ≤ (1/2) log((S²+N)/N)
-                     = (1/2) log(1 + S²/N)                              -- arithmetic
+I(Xᵢ; Yᵢ) = h(Yᵢ) − h(gaussianReal 0 N)              -- bridge hypothesis
+          ≤ (1/2) log(2πe·v_Y) − (1/2) log(2πe·N)    -- Gaussian maximum entropy
+          = (1/2) log(v_Y / N) ≤ (1/2) log((S² + N)/N)
+          = (1/2) log(1 + S²/N)
 ```
-where `v_Y := (perLetterInputSecondMoment c i + N).toNNReal`. -/
+with `v_Y := (perLetterInputSecondMoment c i + N).toNNReal`. -/
 @[entry_point]
 theorem awgn_per_letter_mi_le_log_var
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -1548,9 +1468,8 @@ theorem awgn_per_letter_mi_le_log_var
   have h_var_int :
       Integrable (fun x : ℝ => (x - m) ^ 2) (perLetterYLaw h_meas c i) :=
     perLetterYLaw_var_integrable hN h_meas c i m
-  -- Per-letter log-density integrability via the genuine lemma
-  -- (`AwgnWalls.lean` `awgnPerLetterIntegrability_holds`, `@audit:ok`, sorryAx-free);
-  -- `converseJointInline` ≡ `awgnConverseJoint`, so `perLetterYLaw h_meas c i` matches by defeq.
+  -- Per-letter log-density integrability via `awgnPerLetterIntegrability_holds`
+  -- (`AwgnWalls.lean`); `perLetterYLaw h_meas c i` matches by definitional equality.
   have h_ent_int :
       Integrable (fun y : ℝ =>
           Real.negMulLog
@@ -1597,7 +1516,7 @@ theorem awgn_per_letter_mi_le_log_var
     _ = (1 / 2) * Real.log ((v : ℝ) / (N : ℝ)) := h_log_diff
     _ = (1 / 2) * Real.log (1 + S2 / (N : ℝ)) := by rw [h_v_div]
 
-/-- **C-1c** Jensen / concavity of `log(1+·/N)`:
+/-- Jensen's inequality for the concave map `log(1 + ·/N)`:
 `∑ᵢ (1/2) log(1 + xᵢ/N) ≤ n · (1/2) log(1 + (∑ᵢ xᵢ / n) / N)` for `xᵢ ≥ 0`.
 
 `Real.log` is concave on `Ioi 0` (`Mathlib.Analysis.Convex.SpecificFunctions.Basic.
@@ -1664,10 +1583,9 @@ theorem sum_log_one_add_le_n_log_one_add_avg
   -- `f (xs i) = log(1 + xs i / N)` and `f (∑ ...) = log(1 + (...)/N)`.
   exact h_jensen
 
-/-- **C-2** Sum of per-letter MIs is bounded by `n · (1/2) log(1 + P/N)`.
-
-C-1a + C-1b + C-1c の合成: per-letter MI bound (variance 形) + per-letter variance
-average ≤ P + Jensen for log(1+x/N) concavity. -/
+/-- The sum of per-letter mutual informations is bounded by `n · (1/2) log(1 + P/N)`,
+combining the per-letter maximum-entropy bound, the average input-power bound, and Jensen's
+inequality for the concavity of `log(1 + ·/N)`. -/
 @[entry_point]
 theorem awgn_sum_per_letter_mi_le_n_capacity
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -1752,11 +1670,9 @@ theorem awgn_sum_per_letter_mi_le_n_capacity
   -- Chain: sum ≤ ∑ log ≤ n · log_avg ≤ n · log_P.
   exact h_sum_le_sum.trans (h_jensen.trans h_jensen_chained)
 
-/-- **C-5** Joint MI finiteness on the AWGN converse joint (transitive closure).
-
-`I(W; Y^n) ≤ I(X^n; Y^n) ≤ ∑ᵢ I(X_i; Y_i) ≤ n · (1/2) log(1+P/N) < ∞` で両 MI が ≠ ∞。
-sibling helpers `awgnConverseJoint_mutualInfo_ne_top` / `awgn_dpi` 内 `(jointMIXnYn).≠ ∞`
-の二つ共通の MI-finiteness wall を一括 discharge。
+/-- Joint mutual-information finiteness on the AWGN converse joint:
+`I(W; Yⁿ) ≠ ∞ ∧ I(Xⁿ; Yⁿ) ≠ ∞`, since
+`I(W; Yⁿ) ≤ I(Xⁿ; Yⁿ) ≤ ∑ᵢ I(Xᵢ; Yᵢ) ≤ n · (1/2) log(1 + P/N) < ∞`.
 
 @audit:ok -/
 @[entry_point]
@@ -1771,28 +1687,17 @@ theorem awgnConverseJoint_mutualInfo_ne_top_via_chain
   awgnConverseJoint_pair_mi_ne_top
     (by intro h; exact hN (by rw [h]; norm_num)) h_meas c
 
-/-! ## Phase C — converse discharger + `awgn_converse_F3_discharged` wrapper -/
+/-! ## Converse assembly -/
 
-/-- **Phase C-3 — converse discharger** (genuine assembly of the chain).
-
-Phase B-Fano + B-DPI + B-chain + C-2 (sum form) を連鎖:
+/-- Converse discharger: the assembled chain
 ```
-log M ≤ I(W; Y^n).toReal + binEntropy(Pe) + Pe·log(M-1)     (Phase B-Fano)
-      ≤ I(X^n; Y^n).toReal + binEntropy(Pe) + Pe·log(M-1)   (Phase B-DPI, Markov)
-      ≤ ∑ I(X_i; Y_i).toReal + binEntropy(Pe) + Pe·log(M-1) (Phase B-chain)
-      ≤ n · (1/2) log(1+P/N) + binEntropy(Pe) + Pe·log(M-1) (Phase C-2, sum form)
+log M ≤ I(W; Yⁿ).toReal + binEntropy(Pe) + Pe·log(M − 1)     (Fano)
+      ≤ I(Xⁿ; Yⁿ).toReal + binEntropy(Pe) + Pe·log(M − 1)    (data-processing)
+      ≤ ∑ I(Xᵢ; Yᵢ).toReal + binEntropy(Pe) + Pe·log(M − 1)  (chain rule)
+      ≤ n · (1/2) log(1 + P/N) + binEntropy(Pe) + Pe·log(M − 1)  (capacity bound)
 ```
-
-**2026-05-28 Phase 3-α sorry-based migration**: 旧 load-bearing bundle hyp
-`h_feasible : IsAwgnConverseFeasible` を除去し、3 sub-bound (per-letter integrability /
-continuous MI chain rule / Markov) は `AwgnWalls.lean` の補題
-(`awgnPerLetterIntegrability_holds` / `awgnContinuousMIChainRule_holds` /
-`awgnConverseMarkov_holds`) を `awgn_dpi` / `awgn_chain_rule` /
-`awgn_sum_per_letter_mi_le_n_capacity` 内部から呼ぶ普通の lemma call に縮約した
-(Tier 3 → Tier 2)。per-letter integrability と Markov は genuine 化済 (`@audit:ok`、
-sorryAx-free)、残る Mathlib 壁は continuous MI chain rule のみ。残る hyp
-`h_mi_bridge_per_letter` は per-letter MI = `h(Y_i) - h(Z)`
-の bridge (F-2 closure 待ち、`awgn-mi-bridge-plan.md`)、本 file scope では 0 sorry。 -/
+The bridge `h_mi_bridge_per_letter` (per-letter `I(Xᵢ; Yᵢ) = h(Yᵢ) − h(Z)`) is taken as a
+hypothesis and discharged elsewhere. -/
 @[entry_point]
 theorem isAwgnConverseFeasible_discharger
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -1810,16 +1715,13 @@ theorem isAwgnConverseFeasible_discharger
       ≤ (n : ℝ) * ((1 / 2) * Real.log (1 + P / (N : ℝ)))
         + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1) := by
   have hN_nnreal : N ≠ 0 := by intro h; exact hN (by rw [h]; norm_num)
-  -- Step (a)+(b)+(e) — B-Fano: `log M ≤ I(W; Y^n).toReal + binEntropy(Pe) + Pe · log(M-1)`.
+  -- Fano: `log M ≤ I(W; Y^n).toReal + binEntropy(Pe) + Pe · log(M-1)`.
   have h_fano := awgn_converse_single_shot_call P N hN_nnreal h_meas hM c Pe hPe
-  -- Step (c-DPI) — B-DPI: `I(W; Y^n).toReal ≤ I(X^n; Y^n).toReal`
-  -- (Markov factorization via `awgnConverseMarkov_holds`, genuine `@audit:ok`).
+  -- Data-processing: `I(W; Y^n).toReal ≤ I(X^n; Y^n).toReal` (Markov factorization).
   have h_dpi := awgn_dpi P N hN_nnreal h_meas c
-  -- Step (c-chain) — B-chain: `I(X^n; Y^n).toReal ≤ ∑ᵢ I(X_i; Y_i).toReal`
-  -- (chain rule via `awgnContinuousMIChainRule_holds`, genuine `@audit:ok` 2026-06-12).
+  -- Chain rule: `I(X^n; Y^n).toReal ≤ ∑ᵢ I(X_i; Y_i).toReal`.
   have h_chain_le := awgn_chain_rule P N hN_nnreal h_meas c
-  -- Step (d) — C-2: `∑ᵢ I(X_i; Y_i).toReal ≤ n · (1/2) log(1+P/N)`
-  -- (per-letter integrability via `awgnPerLetterIntegrability_holds`, genuine `@audit:ok`).
+  -- Capacity bound: `∑ᵢ I(X_i; Y_i).toReal ≤ n · (1/2) log(1+P/N)`.
   have h_sum := awgn_sum_per_letter_mi_le_n_capacity P hP N hN h_meas hn_pos c
     (h_mi_bridge_per_letter (M := M) (n := n) hM c)
   -- Assemble: transitive `≤` chain on the first summand.
@@ -1829,15 +1731,8 @@ theorem isAwgnConverseFeasible_discharger
   -- Add `binEntropy(Pe) + Pe · log(M-1)` (constants on both sides).
   linarith [h_fano, h_lhs_chain]
 
-/-- **Phase C-6 — `awgn_converse_F3_discharged` wrapper**.
-
-`awgn_converse` の body を埋めるための薄い wrapper。`2 ≤ M` から `NeZero M` typeclass を
-導出し、`isAwgnConverseFeasible_discharger` に委譲。
-
-**2026-05-28 Phase 3-α**: 旧 load-bearing bundle hyp `h_feasible :
-IsAwgnConverseFeasible` を除去 (Tier 3 → Tier 2、analytic content は `AwgnWalls.lean`
-shared sorry 補題に集約)。残る hyp `h_mi_bridge_per_letter` は F-2 closure 待ちの
-per-letter MI bridge (`awgn-mi-bridge-plan.md`)、本 file scope では 0 sorry。 -/
+/-- Thin wrapper over `isAwgnConverseFeasible_discharger`: derives the `NeZero M` instance
+from `2 ≤ M` and delegates. The bridge `h_mi_bridge_per_letter` is taken as a hypothesis. -/
 @[entry_point]
 theorem awgn_converse_F3_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)

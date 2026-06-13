@@ -2,18 +2,16 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.AWGN.F1Discharge
 
 /-!
-# T2-A F-2 (MI bridge) discharge: AWGN channel mutual information closed form
+# AWGN channel mutual information closed form
 
-Cover-Thomas Ch.9, Theorem 9.2.1: for the AWGN channel `Y = X + Z` with Gaussian
-input `X ∼ 𝒩(0, P)` and independent noise `Z ∼ 𝒩(0, N)`,
+For the AWGN channel `Y = X + Z` with Gaussian input `X ∼ 𝒩(0, P)` and independent
+noise `Z ∼ 𝒩(0, N)`, the channel mutual information has the closed form
 
 ```
 I(X ; Y) = h(Y) − h(Y | X) = h(𝒩(0, P + N)) − h(𝒩(0, N)).
 ```
 
-`AWGNF1Discharge.awgn_theorem_F1_discharged` exposes this identity as the
-hypothesis `h_mi_bridge`. The present file discharges that hypothesis by
-**reducing it to three explicit primitive predicates**, each capturing one
+This identity is reduced to three explicit primitive predicates, each capturing one
 fundamental fact about the AWGN structure:
 
 1. `IsAwgnOutputGaussian` — the channel output marginal
@@ -24,24 +22,28 @@ fundamental fact about the AWGN structure:
    where `h(Y|X) := ∫ h(awgnChannel N x) ∂(gaussianReal 0 P)` is the
    integral of fibrewise differential entropies.
 3. `IsAwgnCondEntropyEqNoise` — the conditional entropy equals the noise
-   entropy: `∫ h(awgnChannel N x) ∂(gaussianReal 0 P) = h(𝒩(0, N))` (mean
-   shift / translation invariance of `differentialEntropy`, integrated against
-   the input).
+   entropy: `∫ h(awgnChannel N x) ∂(gaussianReal 0 P) = h(𝒩(0, N))` (translation
+   invariance of `differentialEntropy`, integrated against the input).
 
-The main combinator `awgn_mi_bridge_of_primitives` chains these three into the
-`h_mi_bridge` shape consumed by `AWGNF1Discharge`. The hypothesis-free
-re-publish `awgn_theorem_F2_discharged` takes the three primitive predicates
-in place of the raw `h_mi_bridge` equality.
+The combinator `awgn_mi_bridge_of_primitives` chains these three into the closed-form
+mutual-information identity.
 
-## 撤退ライン
+## Main definitions
 
-撤退ライン F-2 を **3 個の primitive predicate に縮減** した形で discharge。
-本 file は textbook discharge を行わず、各 primitive predicate を `Prop`
-として **具体 predicate 形** で外出しする (CLAUDE.md / 親 plan の指示通り)。
-将来の plan で各 primitive predicate を Mathlib `gaussianReal_conv_gaussianReal`
-+ `differentialEntropy_map_add_const` + `mutualInfoOfChannel_eq_*` で
-discharge 可能 (本 file の補助補題 `awgn_cond_entropy_eq_noise_entropy_of_const`
-が個別 fibre の translation invariance を Mathlib 直結で証明済み)。
+* `IsAwgnOutputGaussian`, `IsAwgnMIDecomp`, `IsAwgnCondEntropyEqNoise` — the three
+  primitive predicates described above.
+
+## Main statements
+
+* `differentialEntropy_gaussianReal_mean_invariant` — `h(𝒩(m, v)) = h(𝒩(0, v))`.
+* `awgn_cond_entropy_eq_noise_entropy_of_const` — discharge of
+  `IsAwgnCondEntropyEqNoise`.
+* `awgn_mi_bridge_of_primitives` — the closed-form mutual information from the three
+  primitives.
+* `awgn_mi_gaussian_closed_form_of_primitives` — the `(1/2) log(1 + P/N)` value of the
+  Gaussian-input mutual information.
+* `awgn_capacity_closed_form_F2_discharged` — the AWGN capacity closed form with the
+  Gaussian MI fact reduced to two primitives.
 
 ## Approach
 
@@ -49,7 +51,7 @@ discharge 可能 (本 file の補助補題 `awgn_cond_entropy_eq_noise_entropy_o
                                      ┌── IsAwgnOutputGaussian P N h_meas
                                      │   = (jointDistribution ...).snd
                                      │     = gaussianReal 0 (P+N)
-h_mi_bridge :                        │
+mutual-information identity:         │
   I(X;Y).toReal                      ├── IsAwgnMIDecomp P N h_meas
   = h(N(0,P+N)) − h(N(0,N))   ◀────  │   = I(X;Y).toReal
                                      │     = h(output) − h(Y|X)
@@ -65,12 +67,13 @@ I.toReal = h(out) − h(Y|X)                 -- IsAwgnMIDecomp
          = h(gaussianReal 0 (P+N)) − h(N)   -- IsAwgnCondEntropyEqNoise
 ```
 
-## Mathlib gap (PR 候補)
+## Implementation notes
 
-* `differentialEntropy (gaussianReal m v) = differentialEntropy (gaussianReal 0 v)`:
-  既存の `differentialEntropy_map_add_const` + `gaussianReal_map_const_add`
-  から導出可能だが、専用 lemma は未掲載。本 file の `differentialEntropy_gaussianReal_mean_invariant`
-  はそれを Mathlib 直結 1 行で publish (Mathlib-shape-driven)。
+The mean-translation invariance of Gaussian differential entropy,
+`differentialEntropy (gaussianReal m v) = differentialEntropy (gaussianReal 0 v)`,
+follows from `differentialEntropy_map_add_const` and `gaussianReal_map_const_add`; it
+is published here as `differentialEntropy_gaussianReal_mean_invariant` and brings every
+channel fibre to the noise-only form.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -81,16 +84,8 @@ set_option linter.unusedSectionVars false
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal BigOperators Topology
 
-/-! ## Phase A — Auxiliary: mean-translation invariance of `differentialEntropy` on Gaussian -/
-
-/-- **Mean translation invariance of Gaussian differential entropy** (Mathlib gap PR
-candidate).
-
-`h(𝒩(m, v)) = h(𝒩(0, v))` — translation by `m` does not change differential entropy.
-
-Direct corollary of `differentialEntropy_map_add_const` + `gaussianReal_map_const_add`.
-Used inside `awgn_cond_entropy_eq_noise_entropy_of_const` to bring every fibre
-`awgnChannel N x = gaussianReal x N` to the noise-only form `gaussianReal 0 N`. -/
+/-- Mean translation invariance of Gaussian differential entropy:
+`h(𝒩(m, v)) = h(𝒩(0, v))`. -/
 theorem differentialEntropy_gaussianReal_mean_invariant
     (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     InformationTheory.Shannon.differentialEntropy (gaussianReal m v)
@@ -103,8 +98,8 @@ theorem differentialEntropy_gaussianReal_mean_invariant
     InformationTheory.Shannon.differentialEntropy_gaussianReal 0 hv
   rw [h1, h2]
 
-/-- Pointwise version on AWGN fibre: each fibre `awgnChannel N x = gaussianReal x N`
-has the same differential entropy as the noise alone. -/
+/-- Each AWGN channel fibre has the same differential entropy as the noise alone:
+`h(awgnChannel N x) = h(𝒩(0, N))`. -/
 theorem differentialEntropy_awgnChannel_apply_eq_noise
     (N : ℝ≥0) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N) (x : ℝ) :
     InformationTheory.Shannon.differentialEntropy ((awgnChannel N h_meas) x)
@@ -114,24 +109,16 @@ theorem differentialEntropy_awgnChannel_apply_eq_noise
 
 /-! ## Phase B — Three primitive predicates -/
 
-/-- **Primitive predicate 1: output Gaussian.** The channel output marginal
-under Gaussian input `gaussianReal 0 P` equals the convolution
-`gaussianReal 0 (P + N)`.
-
-Discharge route (deferred): `gaussianReal_conv_gaussianReal` + the joint
-`(p ⊗ₘ awgnChannel N).snd = ∫ (awgnChannel N x) ∂p` identity. -/
+/-- The channel output marginal under Gaussian input `gaussianReal 0 P` equals the
+convolution `gaussianReal 0 (P + N)`. -/
 def IsAwgnOutputGaussian (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) : Prop :=
   (InformationTheory.Shannon.ChannelCoding.outputDistribution
       (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas))
     = gaussianReal 0 (P.toNNReal + N)
 
-/-- **Primitive predicate 2: MI ↔ entropy decomposition.** The channel mutual
-information splits as `I(X;Y) = h(Y) − h(Y|X)`, where `h(Y|X)` is realized
-as the integral of fibrewise differential entropies against the input law.
-
-This is the continuous analogue of
-`mutualInfoOfChannel_eq_HX_add_HY_sub_HZ`. Discharge route (deferred): unfold
-`mutualInfoOfChannel` (KL form) and split via `klDiv_compProd_*` Mathlib API. -/
+/-- The channel mutual information splits as `I(X;Y) = h(Y) − h(Y|X)`, where `h(Y|X)`
+is the integral of fibrewise differential entropies against the input law. This is the
+continuous analogue of `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ`. -/
 def IsAwgnMIDecomp (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) : Prop :=
   (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
       (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas)).toReal
@@ -141,27 +128,19 @@ def IsAwgnMIDecomp (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) 
       - (∫ x, InformationTheory.Shannon.differentialEntropy ((awgnChannel N h_meas) x)
             ∂(gaussianReal 0 P.toNNReal))
 
-/-- **Primitive predicate 3: conditional entropy equals noise entropy.**
-The integral of fibrewise differential entropies against the Gaussian input
+/-- The integral of fibrewise differential entropies against the Gaussian input
 collapses to the noise-only entropy `h(𝒩(0, N))`.
 
-Note: by `differentialEntropy_awgnChannel_apply_eq_noise`, the integrand is
-identically the constant `h(𝒩(0, N))`, so this predicate is equivalent to
-`IsProbabilityMeasure (gaussianReal 0 P.toNNReal)` (always true). The constant
-collapse is proved as `awgn_cond_entropy_eq_noise_entropy_of_const` below;
-this `def` is kept as a named hypothesis purely for symmetry with the
-deferred discharge structure. -/
+By `differentialEntropy_awgnChannel_apply_eq_noise` the integrand is identically the
+constant `h(𝒩(0, N))`, so this predicate holds for any probability-measure input; it
+is kept as a named primitive for symmetry with the other two. -/
 def IsAwgnCondEntropyEqNoise (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) : Prop :=
   (∫ x, InformationTheory.Shannon.differentialEntropy ((awgnChannel N h_meas) x)
         ∂(gaussianReal 0 P.toNNReal))
     = InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N)
 
-/-! ## Phase C — Discharge of primitive 3 (`IsAwgnCondEntropyEqNoise`) -/
-
-/-- The integral of fibrewise differential entropies under Gaussian input
-collapses to `h(𝒩(0, N))` — proven from
-`differentialEntropy_awgnChannel_apply_eq_noise` (mean translation invariance
-of Gaussian entropy) and `IsProbabilityMeasure`. -/
+/-- The integral of fibrewise differential entropies under Gaussian input collapses to
+`h(𝒩(0, N))`, discharging `IsAwgnCondEntropyEqNoise`. -/
 @[entry_point]
 theorem awgn_cond_entropy_eq_noise_entropy_of_const
     (P : ℝ) (N : ℝ≥0) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N) :
@@ -177,13 +156,9 @@ theorem awgn_cond_entropy_eq_noise_entropy_of_const
   -- ∫ c ∂μ = c (probability measure).
   simp
 
-/-! ## Phase D — Bridge combinator (3 primitives → `h_mi_bridge` shape) -/
-
-/-- **MI bridge from primitives.** Combines the three primitive predicates
-into the `h_mi_bridge` equality consumed by
-`AWGNF1Discharge.awgn_theorem_F1_discharged`.
-
-Proof: chain
+/-- The closed-form AWGN channel mutual information
+`I(X;Y).toReal = h(𝒩(0, P+N)) − h(𝒩(0, N))`, obtained by chaining the three
+primitive predicates:
 ```
 I.toReal = h(out) − h(Y|X)                    [IsAwgnMIDecomp]
          = h(𝒩(0, P+N)) − h(Y|X)               [IsAwgnOutputGaussian]
@@ -209,17 +184,9 @@ theorem awgn_mi_bridge_of_primitives
   -- Step 3: collapse conditional entropy via primitive 3.
   rw [h_cond]
 
-/-! ## Phase F — Capacity closed form (3-primitive form) -/
-
-/-- **Closed-form Gaussian MI** from primitives.
-
-Combines the 3 primitives into the bridge (`awgn_mi_bridge_of_primitives`), then
-runs the Gaussian closed-form `differentialEntropy_gaussianReal` log-algebra
-**inline** to produce the `(1/2) log(1 + P/N)` value used by `awgnCapacity_eq`.
-The algebra was formerly the load-bearing wrapper
-`AWGN.mutualInfoOfChannel_gaussianInput_closed_form` (took the bridge identity as
-a hypothesis `h_bridge`); that wrapper has been retired and its body inlined here,
-where `h_mi_bridge` is genuinely discharged from primitives.
+/-- The Gaussian-input AWGN channel mutual information equals `(1/2) log(1 + P/N)`,
+obtained by combining the three primitives into `awgn_mi_bridge_of_primitives` and
+running the Gaussian closed-form `differentialEntropy_gaussianReal` log algebra inline.
 
 `@audit:closed-by-successor(awgn-mi-decomp-plan)` -/
 @[entry_point]
@@ -237,10 +204,7 @@ theorem awgn_mi_gaussian_closed_form_of_primitives
     awgn_cond_entropy_eq_noise_entropy_of_const P N hN_NN h_meas
   have h_mi_bridge :=
     awgn_mi_bridge_of_primitives P N h_meas h_out h_decomp h_cond
-  -- Inlined Gaussian-input closed-form algebra (was the load-bearing wrapper
-  -- `AWGN.mutualInfoOfChannel_gaussianInput_closed_form`, now retired). `h_mi_bridge`
-  -- is genuinely constructed above from `awgn_mi_bridge_of_primitives`, so the
-  -- remaining steps are pure `differentialEntropy_gaussianReal` log-algebra.
+  -- The remaining steps are pure `differentialEntropy_gaussianReal` log algebra.
   -- `(P.toNNReal : ℝ) = P` from positivity.
   have hP_toNN : ((P.toNNReal : ℝ≥0) : ℝ) = P := Real.coe_toNNReal P hP_pos.le
   -- Step 1: rewrite MI as h(P+N) - h(N) via the bridge identity.
@@ -284,11 +248,9 @@ theorem awgn_mi_gaussian_closed_form_of_primitives
   congr 1
   rw [show (P + N) / (N : ℝ) = 1 + P / (N : ℝ) by field_simp; ring]
 
-/-- **AWGN capacity closed form** (F-1 + F-2 partially discharged form).
-
-`AWGNF1Discharge.awgn_capacity_closed_form_F1_discharged` の `h_bridge_gauss`
-引数を、本 file の 2 primitives (`IsAwgnOutputGaussian` + `IsAwgnMIDecomp`)
-に縮減した形で再 publish。残りの hypothesis (`h_bdd`, `h_max_ent`) はそのまま.
+/-- The AWGN capacity closed form, re-published with the Gaussian mutual-information
+fact reduced to the two primitives `IsAwgnOutputGaussian` and `IsAwgnMIDecomp`. The
+remaining hypotheses (`h_bdd`, `h_max_ent`) are unchanged.
 
 `@audit:closed-by-successor(awgn-mi-decomp-plan)` -/
 @[entry_point]

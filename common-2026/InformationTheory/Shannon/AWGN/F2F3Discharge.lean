@@ -2,57 +2,25 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.AWGN.F1Discharge
 
 /-!
-# T2-A F-2 + F-3 discharge (MVP hypothesis pass-through 縮減形)
+# AWGN jointly typical set and capacity re-publish
 
-Cover-Thomas Ch.9 AWGN channel coding theorem の **撤退ライン F-2 (continuous
-jointly typical decoding for achievability) + F-3 (per-letter MI Fano converse)**
-を **MVP 縮減 hypothesis pass-through 形** で discharge する body file。
+The continuous jointly typical set for the AWGN channel coding theorem
+(Cover–Thomas Ch. 9), together with the thin re-publish of the AWGN coding theorem
+and its capacity closed form with the kernel-measurability layer discharged.
 
-## 撤退ラインの位置づけ (本 file の役割)
+## Main definitions
 
-親 plan `awgn-moonshot-plan.md` の三本柱 (F-1 / F-2 / F-3、`AWGNF1Discharge.lean`
-で F-1 = kernel measurability を完了済) のうち、
+* `AWGNJointlyTypicalSet n P N ε` — the jointly typical set on `ℝⁿ × ℝⁿ` cut out by
+  three empirical power bounds.
 
-* **F-2 — Continuous jointly-typical decoding (achievability body)**:
-  `AWGNJointlyTypicalSet n P N ε` を `ℝⁿ × ℝⁿ` 上の **3 つの power-bound 不等式**
-  (`|X|²/n ≤ P+ε`, `|X-Y|²/n ≤ N+ε`, `|Y|²/n ≤ P+N+ε`) で型レベル定義し、
-  Gaussian random codebook + joint typical decoder の error 上界を
-  `IsAwgnF2DecodingHypothesis` predicate に集約。**実体 (continuous AEP, 球殻 volume
-  formula, union bound)** は Mathlib 不在のため、本 file では body の
-  **structural reduction** (hypothesis を `awgn_achievability_jointly_typical_body`
-  に流し込み `IsAwgnTypicalityHypothesis` に戻す) だけを実装。
-* **F-3 — Per-letter MI Fano converse (converse body)**:
-  per-letter MI bound `I(X_i; Y_i) ≤ (1/2) log(1+P/N)` を `n` 個の chain rule で
-  合算 + Fano data processing で converse に変換するライン。**実体 (chain rule on
-  memoryless channel, Gaussian max-entropy via
-  `differentialEntropy_le_gaussian_of_variance_le`, Fano data processing)** は
-  Mathlib 不在。本 file が MVP で予約した F-3 hypothesis predicate はすべて
-  撤回済 — genuine F-3 converse body は `AWGNConverseDischarge.lean` /
-  `AWGNConverse.lean` に存在する。
+## Main statements
 
-## 現状 (本 file、2026-05-27/28 migration 後)
-
-本 file が MVP として導入した F-2 / F-3 の hypothesis pass-through predicate
-群および対応する body lemma はすべて撤回済 (load-bearing alias の
-name-laundering 撤回 + vestigial `True` placeholder の retraction)。現在 file に
-残るのは:
-
-* `AWGNJointlyTypicalSet` 定義 + structural lemmas
-  (`AWGNJointlyTypicalSet_subset_of_le_ε`、`AWGNJointlyTypicalSet_measurable`)。
-* `awgn_theorem_of_F2F3_hypotheses` — `AWGNF1Discharge.awgn_theorem_F1_discharged`
-  の薄い re-publish (F-4 kernel measurability は genuine 埋め込み済)。dead だった
-  F-2 MI bridge hypothesis は 2026-06-12 cleanup で除去。decl 名の `F2F3` は
-  historical artefact (F-2/F-3 predicate hyp はもはや取らない)。
-* `awgn_capacity_closed_form_of_maxent_hypotheses` — capacity closed form の
-  re-publish (max-entropy / bddAbove を hypothesis に取る)。
-
-genuine F-2 (achievability) / F-3 (converse) body は別 file / 別 plan に存在:
-
-* F-1 / F-2 achievability → `awgn-achievability-typicality-plan.md`
-  (`awgn_achievability` body)。
-* F-3 converse → `AWGNConverseDischarge.lean` (`perLetterMI` /
-  `jointMIXnYn ≤ ∑ perLetterMI` / honest `h_mi_bridge_per_letter` residual) +
-  `AWGNConverse.lean` (`awgn_converse`)、`awgn-converse-aux-plan.md`。
+* `AWGNJointlyTypicalSet_zero`, `AWGNJointlyTypicalSet_subset_of_le_ε`,
+  `AWGNJointlyTypicalSet_measurable` — degenerate case, monotonicity in the slack,
+  and measurability of the jointly typical set.
+* `awgn_capacity_closed_form_of_maxent_hypotheses` — the AWGN capacity closed form,
+  with the kernel-measurability layer discharged and the max-entropy / boundedness
+  conditions taken as hypotheses.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -62,9 +30,9 @@ set_option linter.unusedVariables false
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal BigOperators Topology
 
-/-! ## Phase A — `AWGNJointlyTypicalSet` definition + structural lemmas -/
+/-! ## AWGN jointly typical set -/
 
-/-- **AWGN continuous jointly typical set** (Cover-Thomas 9.2).
+/-- The AWGN continuous jointly typical set (Cover–Thomas 9.2).
 
 On `ℝⁿ × ℝⁿ`, the joint typical set for an AWGN channel with input power `P`,
 noise power `N`, and slack `ε > 0`, consists of pairs `(x, y)` such that
@@ -144,44 +112,11 @@ lemma AWGNJointlyTypicalSet_measurable (n : ℕ) (P N ε : ℝ) :
   rw [h_eq]
   exact (h1.inter h2).inter h3
 
-/-! ## Phase B — F-2 body (Continuous jointly typical decoding)
+/-! ## Capacity closed form re-publish -/
 
-2026-05-27 F-1/F-3 peer migration: the verbatim-equivalent alias
-`IsAwgnF2DecodingHypothesis` (a `name-laundering-alias` retract-candidate)
-was removed together with its underlying `IsAwgnTypicalityHypothesis`
-predicate. Phase B is intentionally empty now; F-2 body discharge lives in
-the analytic `awgn-achievability-typicality-plan.md` successor. -/
-
-
-/-! ## Phase C — F-3 body (Per-letter MI Fano converse)
-
-2026-05-28 retraction: the vestigial per-letter `Prop := True` placeholder
-predicate (tier-5 `defect(prop-true)`) was an orphan left when its sibling
-chain-hypothesis predicate was deleted in the 2026-05-27 peer migration. Its
-sole consumer (`awgn_theorem_of_F2F3_hypotheses`) never used it, so it has been
-deleted (pure retraction, no content lost). The genuine F-3 per-letter converse
-obligation lives in the converse files (`AWGNConverseDischarge.lean`'s
-`perLetterMI` / `jointMIXnYn ≤ ∑ perLetterMI` / honest `h_mi_bridge_per_letter`
-residual, plus `AWGNConverse.lean`'s `awgn_converse`). -/
-
-/- **F-3 body hypothesis 2 (REMOVED)**: the verbatim-equivalent alias
-`IsAwgnF3ChainHypothesis` (a `name-laundering-alias` retract-candidate) was
-removed together with its underlying `IsAwgnConverseHypothesis` predicate
-(2026-05-27 F-1/F-3 peer migration). The chain rule + Fano data processing
-aggregation lives inside the analytic `awgn-converse-aux-plan.md` successor. -/
-
-
-/-! ## Phase E — Capacity closed form re-publish (F-1 + F-2-MI-bridge) -/
-
-/-- **AWGN capacity closed form — F-1 discharged, max-entropy/bddAbove taken as
-hypotheses.**
-
-⚠️ NOT a full discharge: the supremum closed form still TAKES `h_bridge_gauss`,
-`h_bdd`, and the max-entropy bound `h_max_ent` as hypotheses. The genuine
-max-entropy step needs continuous differential-entropy / Gaussian extremality
-machinery absent from Mathlib. Only the F-1 layer (kernel measurability) is
-closed here; this re-publishes
-`AWGNF1Discharge.awgn_capacity_closed_form_F1_discharged` unchanged in content.
+/-- The AWGN capacity closed form, re-published with the kernel-measurability layer
+discharged. The Gaussian MI value `h_bridge_gauss`, boundedness `h_bdd`, and the
+max-entropy bound `h_max_ent` are taken as hypotheses.
 
 `@audit:closed-by-successor(awgn-converse-aux-plan)` -/
 @[entry_point]

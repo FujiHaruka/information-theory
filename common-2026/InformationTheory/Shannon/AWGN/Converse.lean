@@ -4,44 +4,36 @@ import InformationTheory.Shannon.AWGN.ConverseDischarge
 import InformationTheory.Shannon.ChannelCoding.MIDecomp
 
 /-!
-# T2-A Phase C: AWGN channel coding theorem — converse (Tier 2 sorry form)
+# AWGN channel coding theorem: the converse
 
-Cover-Thomas Ch.9.1.2 (converse) を **Tier 2 (`sorry + @residual`) 形** で publish。
+The converse half of the AWGN channel coding theorem (Cover–Thomas, Chapter 9.1.2):
+for every power-constrained block code, the rate is bounded by the channel capacity
+plus the Fano error terms.
 
-Converse 経路は標準的に:
-1. Fano: `log M ≤ I(W; Ŵ) + binEntropy(Pe) + Pe·log(M-1)` を `fano_inequality_measure_theoretic`
-   (`InformationTheory/Fano/Measure.lean`) で `X := Fin M`, `Y := (Fin n → ℝ)` 再利用。
-2. Data processing: `I(W; Ŵ) ≤ I(X^n; Y^n)` (encoder/decoder の関数性).
-3. Chain rule + memoryless: `I(X^n; Y^n) ≤ ∑ I(X_i; Y_i)`.
-4. Per-letter max-entropy (`differentialEntropy_le_gaussian_of_variance_le`,
-   4-hypothesis 形): `I(X_i; Y_i) ≤ (1/2) log(1+P/N)`.
-5. 合計: `log M ≤ n·(1/2) log(1+P/N) + binEntropy(Pe) + Pe·log(M-1)`.
+The proof follows the standard route:
+1. Fano: `log M ≤ I(W; Ŵ) + binEntropy(Pe) + Pe·log(M-1)`.
+2. Data processing: `I(W; Ŵ) ≤ I(Xⁿ; Yⁿ)` from the functionality of encoder/decoder.
+3. Chain rule and memorylessness: `I(Xⁿ; Yⁿ) ≤ ∑ I(Xᵢ; Yᵢ)`.
+4. Per-letter max-entropy: `I(Xᵢ; Yᵢ) ≤ (1/2) log(1 + P/N)`.
+5. Summation: `log M ≤ n·(1/2) log(1 + P/N) + binEntropy(Pe) + Pe·log(M-1)`.
 
-実体 (Fano + chain rule + per-letter max-entropy 連鎖) は別 plan
-`docs/shannon/awgn-converse-aux-plan.md` (Tier 3) に defer。
+## Main statements
 
-**2026-05-27 F-1/F-3 peer migration**: previously `IsAwgnConverseHypothesis`
-load-bearing predicate (circular passthrough) を Tier 5 として保持していたが、
-peer F-1 と同時に第一選択 migration (predicate 削除 + body `sorry` +
-`@residual(plan:awgn-converse-aux-plan)`、Tier 5 → Tier 2)。analytic body 完成
-は successor plan に委ね、本 file の signature は genuine conclusion を直接 statement に。
+* `awgn_per_letter_mi_bridge_genuine` — the per-letter mutual information equals the
+  output differential entropy minus the input-independent noise entropy.
+* `awgn_converse` — the converse rate bound for any code with `M ≥ 2` messages.
 
-**2026-05-27 F-3 wiring (`awgn-main-converse-wiring`)**: `awgn_converse` body は
-`AWGNConverseDischarge.awgn_converse_F3_discharged` への delegation で discharge。
-import 方向は `AWGNConverse → AWGNConverseDischarge` に flip (循環解消、旧
-`AWGNConverseDischarge → AWGNConverse` import を削除)。
+## Implementation notes
 
-**2026-05-28 Phase 3-α sorry-based migration (`awgn-m5-sorry-migration-plan.md`)**:
-旧 load-bearing 引数 2 件 (`h_feasible : IsAwgnConverseFeasible …` + per-letter MI
-bridge `h_mi_bridge_per_letter`) を `awgn_converse` signature から除去。
-`h_feasible` の analytic content は `AWGN/Walls.lean` shared sorry 補題に移管済。
-
-**2026-06-11 per-letter MI bridge genuine closure (`awgn-mi-bridge-plan`)**:
-`h_mi_bridge_per_letter` (per-letter MI = `h(Y_i) - h(Z)` bridge) は本 file 上流の
-`awgn_per_letter_mi_bridge_genuine` で genuine に閉じ、`awgn_converse` body は
-その genuine bridge 呼出に置換。本 file scope は 0 sorry、signature は genuine
-conclusion を直接 statement。converse の 3 Mathlib 壁すべて closed のため
-`awgn_converse` は transitively sorryAx-free。
+* The per-letter input marginal `perLetterXLaw` is a mixture of Diracs over the
+  encoder coordinates, and the per-letter joint `(Xᵢ, Yᵢ)` law factors as
+  `perLetterXLaw ⊗ₘ awgnChannel`. The bridge is then obtained from the generic
+  continuous-channel mutual-information chain rule
+  (`ChannelCoding.mutualInfoOfChannel_toReal_eq_diffEntropy_sub`) together with the
+  translation invariance of the AWGN fibre entropy.
+* The mixture output law `perLetterYLaw` has a real density bounded above by the
+  Gaussian peak and below by a single component, which gives the quadratic envelope
+  used to prove integrability of its log-density.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -52,37 +44,16 @@ open MeasureTheory ProbabilityTheory InformationTheory
   InformationTheory.Shannon InformationTheory.Shannon.ChannelCoding
 open scoped ENNReal NNReal BigOperators Topology
 
-/-! ## Per-letter MI bridge — genuine closure (`awgn-mi-bridge-plan`)
+/-! ## The per-letter mutual-information bridge -/
 
-`(perLetterMI h_meas c i).toReal = h(Y_i) − h(𝒩(0,N))` を、generic continuous-channel
-MI chain rule の genuine asset
-`ChannelCoding.mutualInfoOfChannel_toReal_eq_diffEntropy_sub`
-(`InformationTheory/Shannon/AWGN/ContChannelMIDecomp.lean`、2026-05-28 genuine、
-旧 `wall:awgn-mi-decomp` CLOSED) に乗せて閉じる。
-
-経路:
-1. per-letter input marginal `perLetterXLaw := (awgnConverseJoint).map (X_i)`
-   (= mixture of diracs `(1/M) ∑ₘ δ(encoder m i)`)。
-2. joint factorization `(awgnConverseJoint).map (X_i, Y_i) = perLetterXLaw ⊗ₘ awgnChannel`
-   (mixture を `compProd_smul_left` + `compProd_add_left`(finset) で各 dirac 成分に分け、
-   `dirac_compProd_apply` で `δ_a ⊗ₘ κ = (δ_a).prod (κ a)` を使う)。
-3. `perLetterMI = mutualInfoOfChannel perLetterXLaw awgnChannel`
-   (`mutualInfoOfChannel_eq_mutualInfo_prod` 逆向き + map 整合)。
-4. chain rule asset で `= h(outputDistribution) − ∫ h(awgnChannel x) ∂perLetterXLaw`。
-5. `outputDistribution perLetterXLaw awgnChannel = perLetterYLaw` (snd marginal)、
-   `∫ h(awgnChannel x) ∂p = h(𝒩(0,N))` (`differentialEntropy_awgnChannel_apply_eq_noise`)。
--/
-
-/-- per-letter input marginal `X_i = c.encoder ω.1 i` の周辺分布。
-`(1/M) ∑ₘ δ(c.encoder m i)` の mixture of Diracs (`Fin M` 上 uniform message を
-encoder の `i` 座標で押し出した分布)。 -/
+/-- The per-letter input marginal of `Xᵢ = c.encoder ω.1 i`: the mixture of Diracs
+`(1/M) ∑ₘ δ(c.encoder m i)`, i.e. the law of the `i`-th encoder coordinate under a
+uniform message. -/
 noncomputable def perLetterXLaw
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (c : AwgnCode M n P) (i : Fin n) : Measure ℝ :=
   (awgnConverseJoint h_meas c).map (fun ω => c.encoder ω.1 i)
 
-/-- Closed form of `perLetterXLaw`: mixture of Diracs
-`(M⁻¹ : ℝ≥0∞) • ∑ₘ δ(c.encoder m i)`. -/
 private lemma perLetterXLaw_eq_mixture
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
@@ -111,7 +82,6 @@ private lemma perLetterXLaw_eq_mixture
     Measure.map_fst_prod, measure_univ, one_smul,
     Measure.map_dirac' (measurable_of_countable (fun a : Fin M => c.encoder a i)) m]
 
-/-- `perLetterXLaw` is a probability measure. -/
 private instance perLetterXLaw_isProbabilityMeasure
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
@@ -120,11 +90,7 @@ private instance perLetterXLaw_isProbabilityMeasure
   exact Measure.isProbabilityMeasure_map
     ((measurable_of_countable (fun a : Fin M => c.encoder a i)).comp measurable_fst).aemeasurable
 
-/-- **Joint factorization** of the per-letter pair `(X_i, Y_i)` law.
-
-`(awgnConverseJoint).map (fun ω => (c.encoder ω.1 i, ω.2 i)) = perLetterXLaw ⊗ₘ awgnChannel`.
-The mixture-of-diracs input marginal composed with the AWGN kernel reconstructs the
-per-letter joint law: each summand `δ(encoder m i) ⊗ₘ awgnChannel = (δ a).prod (𝒩(a,N))`. -/
+/-- The per-letter pair law factors as `perLetterXLaw ⊗ₘ awgnChannel`. -/
 private lemma awgnConverseJoint_map_pair_eq_compProd
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
@@ -195,7 +161,6 @@ private lemma awgnConverseJoint_map_pair_eq_compProd
     rw [Measure.dirac_prod]
   rw [h_lhs, h_rhs]
 
-/-- `outputDistribution perLetterXLaw awgnChannel = perLetterYLaw`. -/
 private lemma outputDistribution_eq_perLetterYLaw
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
@@ -212,7 +177,6 @@ private lemma outputDistribution_eq_perLetterYLaw
   rw [Measure.map_map measurable_snd hf_meas]
   rfl
 
-/-- `perLetterMI = mutualInfoOfChannel perLetterXLaw awgnChannel`. -/
 private lemma perLetterMI_eq_mutualInfoOfChannel
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
@@ -233,7 +197,6 @@ private lemma perLetterMI_eq_mutualInfoOfChannel
         = perLetterYLaw h_meas c i from rfl,
     outputDistribution_eq_perLetterYLaw h_meas c i]
 
-/-- `∫ x, h(awgnChannel x) ∂perLetterXLaw = h(𝒩(0,N))` (fibre entropy is constant in `x`). -/
 private lemma integral_diffEntropy_awgnChannel_eq_noise
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
@@ -251,9 +214,6 @@ private lemma integral_diffEntropy_awgnChannel_eq_noise
   rw [integral_congr_ae (Filter.Eventually.of_forall (fun x => h_const x))]
   simp
 
-/-- Local closed form of `perLetterYLaw`: mixture of Gaussians
-`(M⁻¹ : ℝ≥0∞) • ∑ₘ gaussianReal (encoder m i) N` (re-derived here; the ConverseDischarge
-version is `private`). -/
 private lemma perLetterYLaw_eq_mixture_local
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
@@ -281,7 +241,6 @@ private lemma perLetterYLaw_eq_mixture_local
     rw [awgnChannel_apply]; exact measure_univ
   rw [h_prod_one, one_smul, awgnChannel_apply]
 
-/-- `perLetterYLaw ≪ volume` (mixture of full-support Gaussians). -/
 private lemma perLetterYLaw_ac_volume
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
@@ -293,7 +252,6 @@ private lemma perLetterYLaw_ac_volume
   exact Measure.absolutelyContinuous_sum_left fun m =>
     gaussianReal_absolutelyContinuous _ hN
 
-/-- `volume ≪ perLetterYLaw` (the mixture is full-support: dominates one component). -/
 private lemma volume_ac_perLetterYLaw
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
@@ -321,8 +279,6 @@ private lemma volume_ac_perLetterYLaw
     (Measure.absolutelyContinuous_smul hM_inv_ne_zero)
   exact (h1.trans h2).trans h3
 
-/-- Each AWGN fibre is absolutely continuous w.r.t. the per-letter output mixture
-`gaussianReal x N ≪ perLetterYLaw` (chain `𝒩(x,N) ≪ volume ≪ perLetterYLaw`). -/
 private lemma awgnChannel_ac_perLetterYLaw
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) (x : ℝ) :
@@ -335,7 +291,6 @@ private noncomputable def perLetterRealDensity
     {P : ℝ} (N : ℝ≥0) {M n : ℕ} (c : AwgnCode M n P) (i : Fin n) (y : ℝ) : ℝ :=
   (1 / (M : ℝ)) * ∑ m : Fin M, gaussianPDFReal (c.encoder m i) N y
 
-/-- The per-letter output law is `volume.withDensity (ofReal ∘ perLetterRealDensity)`. -/
 private lemma perLetterYLaw_withDensity_real
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
@@ -375,7 +330,6 @@ private lemma perLetterYLaw_withDensity_real
     refine Finset.sum_congr rfl (fun m _ => ?_)
     rw [gaussianPDF]
 
-/-- Integrability of `(y − a₀)²` against the per-letter mixture (finite second moment). -/
 private lemma perLetterYLaw_sq_sub_integrable
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) (a₀ : ℝ) :
@@ -397,10 +351,6 @@ private lemma perLetterYLaw_sq_sub_integrable
   rw [hrw]
   exact ((h_sq.sub (h_id.const_mul (2 * a₀))).add (integrable_const (a₀ ^ 2)))
 
-/-- Output-marginal log-density integrability: `log (q.rnDeriv vol)` is integrable
-against the per-letter mixture `q = perLetterYLaw`. The mixture density is bounded above
-by the Gaussian peak (so `log ≤ const`) and below by a single component (so `log ≥
-quadratic`); hence `|log density|` is dominated by a finite-second-moment quadratic. -/
 private lemma integrable_log_rnDeriv_perLetterYLaw
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
@@ -542,12 +492,10 @@ private lemma integrable_log_rnDeriv_perLetterYLaw
         linarith
       exact le_trans h_upper h2
 
-/-- **Per-letter MI bridge (genuine)**: `I(X_i; Y_i).toReal = h(Y_i) − h(𝒩(0,N))`.
-
-Closes `awgn-mi-bridge-plan`: the per-letter mutual information equals output
-differential entropy minus the (input-independent) noise entropy, via the generic
-continuous-channel MI chain rule asset and the AWGN translation-invariance of
-fibre entropy.
+/-- The per-letter mutual information equals the output differential entropy minus the
+input-independent noise entropy: `I(Xᵢ; Yᵢ).toReal = h(Yᵢ) − h(𝒩(0, N))`, via the
+generic continuous-channel mutual-information chain rule and the AWGN
+translation invariance of the fibre entropy.
 @audit:ok -/
 theorem awgn_per_letter_mi_bridge_genuine
     {P : ℝ} {N : ℝ≥0} (hN : (N : ℝ) ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
@@ -638,39 +586,17 @@ theorem awgn_per_letter_mi_bridge_genuine
   rw [perLetterMI_eq_mutualInfoOfChannel h_meas c i, ← hp_def, ← hW_def, h_decomp,
     ← hq_def, hq_eq, integral_diffEntropy_awgnChannel_eq_noise hN_NN h_meas c i]
 
-/-! ## Converse — `awgn_converse` (Tier 2 sorry + @residual) -/
+/-! ## The converse rate bound -/
 
-/-- **AWGN converse theorem (Cover-Thomas 9.1.2)**.
+/-- **AWGN converse theorem** (Cover–Thomas, Theorem 9.1.2). For every code with
+`M ≥ 2` messages, block length `n`, output-power constraint `P` and average error
+probability `Pe`, the rate satisfies
 
-For every code with `M ≥ 2` messages, block length `n`, output power constraint
-`P` and average error probability `Pe`, the rate satisfies
+`log M ≤ n·(1/2) log(1 + P/N) + binEntropy(Pe) + Pe·log(M - 1)`.
 
-`log M ≤ n·(1/2) log(1+P/N) + binEntropy(Pe) + Pe·log(M-1)`.
-
-**2026-05-28 Phase 3-α sorry-based migration**: published signature は genuine
-conclusion (`log M ≤ n·(1/2) log(1+P/N) + binEntropy(Pe) + Pe·log(M-1)`) を直接
-statement とし、旧 load-bearing 引数 2 件 (`h_feasible` bundle + per-letter MI
-bridge `h_mi_bridge_per_letter`) を除去。`h_feasible` の analytic content は
-`AWGN/Walls.lean` shared sorry 補題 (`awgnPerLetterIntegrability_holds` /
-`awgnContinuousMIChainRule_holds` / `awgnConverseMarkov_holds`) に移管済 (本 file は
-それらの呼出を `awgn_converse_F3_discharged` 内部で間接利用)。
-
-**2026-06-11 per-letter MI bridge genuine closure (`awgn-mi-bridge-plan`)**: the
-per-letter MI bridge `h_mi_bridge_per_letter` (`I(X_i; Y_i) = h(Y_i) − h(𝒩(0,N))`) は、
-本 file 上流の `awgn_per_letter_mi_bridge_genuine` で **genuine に閉じた** (mixture→compProd
-因子分解 `awgnConverseJoint_map_pair_eq_compProd` + generic continuous-channel MI chain
-rule asset `ChannelCoding.mutualInfoOfChannel_toReal_eq_diffEntropy_sub`
-(`ChannelCoding/MIDecomp.lean`、上流 relocate 済) + 混合 log-density 可積分性
-`integrable_log_rnDeriv_perLetterYLaw` + fibre entropy 平行移動不変)。`awgn_converse` body
-は genuine bridge 呼出に置換し、本 file scope の `sorry` は **0** になった。
-
-This declaration is `sorry`-free in its own file, and now also **transitively
-sorryAx-free**: all three converse Mathlib walls have been closed (false-wall
-overturns). `wall:multivariate-mi` (`AWGN/ConverseDischarge.lean`,
-`awgnConverseJoint_pair_mi_ne_top`) and `wall:awgn-continuous-mi-chain-rule`
-(`AWGN/Walls.lean`, `awgnContinuousMIChainRule_holds`) are both genuinely closed.
-Re-verify with `#print axioms InformationTheory.Shannon.AWGN.awgn_converse`
-(expect `[propext, Classical.choice, Quot.sound]`). -/
+The per-letter mutual-information bridge is supplied by
+`awgn_per_letter_mi_bridge_genuine`, and the rate bound is assembled by
+`awgn_converse_F3_discharged`. -/
 @[entry_point]
 theorem awgn_converse
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)

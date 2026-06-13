@@ -10,42 +10,28 @@ import InformationTheory.Shannon.MultivariateDiffEntropy
 import Mathlib.Probability.Distributions.Gaussian.Real
 
 /-!
-# AWGN Walls — shared sorry 補題集約 file
+# AWGN shared analytic lemmas
 
-Parent plan: `docs/shannon/awgn-m5-sorry-migration-plan.md` Phase 2.
+The analytic core lemmas of the AWGN channel coding theorem, collected in one file so
+they can be shared by the achievability and converse developments. They cover the
+per-letter and `n`-fold KL identities, the continuous Gaussian AEP, the per-codeword
+power constraint, and the converse-side Markov / chain-rule / integrability facts.
 
-10 declaration の Tier 3 (`@audit:retract-candidate(load-bearing-predicate)`、
-bookkeeping) → Tier 2 (`sorry` + `@residual(<class>:<slug>)`、honest 撤退口) 移行に
-おいて、analytic content の Mathlib 壁を「shared sorry 補題」(`docs/audit/audit-tags.md`
-「共有 Mathlib 壁: shared sorry 補題パターン」) として 1 ヶ所に集約する file。
+## Main statements
 
-Phase 2 = shared sorry 補題の signature + body sorry 残置のみ (Phase 3 で consumer
-側の predicate 削除 + signature 書換)。本 file 単独で type-check done。
+* `klDiv_perLetter_eq_capacity` — per-letter KL divergence equals `(1/2) log(1+P/N)`.
+* `klDiv_nFold_eq_nsmul` — `klDiv(Jₙ,Qₙ).toReal = n · klDiv(J₁,Q₁).toReal`.
+* `continuousAepGaussian_holds` — the continuous Gaussian AEP exponent bound.
+* `awgnPowerConstraintPerCodeword_holds` — the per-codeword power constraint.
 
-## Achievability-side 補題 (δ-separation + D4 後の現状)
+## Implementation notes
 
-| 補題名 | 状態 | 備考 |
-|---|---|---|
-| `klDiv_perLetter_eq_capacity` | genuine, sorryAx-free | bridge ① 1a: per-letter KL = `(1/2)log(1+P/N)` (compProd 経路、MIClosedForm cycle 回避) |
-| `klDiv_nFold_eq_nsmul` | genuine, sorryAx-free | bridge ① 1b: `klDiv(J_n,Q_n).toReal = n·klDiv(J₁,Q₁).toReal` (reshape + `klDiv_pi_eq_sum`) |
-| `continuousAepGaussian_holds` | genuine, sorryAx-free | (ii) 削除済 / (iii) δ-exponent。change-of-measure core (G-2 tensorize `pi_withDensity` + `lintegral_pi_prod_eq_prod`) + degenerate `hkl0` (`awgn_perLetter_klDiv_degenerate`) を closure。`hφ_memLp` も closed |
-| `awgnPowerConstraintPerCodeword_holds` | genuine, sorryAx-free | per-codeword expurgation 形 (false `∀m`-form の置換) |
-
-**RETIRED (2026-06-12, D4)**: false `awgnRandomCodingBound_holds` (`∀decoder` 過大) +
-`awgnPowerConstraintHonest_holds` (`∀m` 指数 rate unsatisfiable) は削除済 (本 file 下部
-の retire note 参照)。union bound の genuine 形 `awgn_random_coding_union_bound` は
-consumer file (`AchievabilityDischarge.lean`) に置く (kernel/decoder が local)。
-
-## Signature 設計方針 (Mathlib-shape-driven)
-
-- `continuousAepGaussian_holds`: 旧 predicate body と verbatim 同型 (`gaussianCodebook`
-  不使用 / 2 段 `Measure.pi` の inline 形で書き、consumer は `gaussianCodebook` ≡ 2 段
-  `Measure.pi` defeq で接続)。slack `δ` を error 目標 `ε` と分離した形。
-
-## Import policy
-
-`AWGN.lean` 経由で `ChannelCoding.Code` / `errorEvent` などへの transitive access あり
-(本 file 内で `Code.mk` を直接書かないため、明示 import 不要)。
+* `continuousAepGaussian_holds` is stated in the inline two-stage `Measure.pi` form
+  rather than via `gaussianCodebook`, and connects to consumers through the defeq
+  `gaussianCodebook ≡` two-stage `Measure.pi`. The slack `δ` is kept separate from the
+  error target `ε`.
+* `ChannelCoding.Code` / `errorEvent` are reachable transitively through the base file,
+  so no explicit import of them is needed (this file never writes `Code.mk` directly).
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -55,24 +41,7 @@ set_option linter.unusedVariables false
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal BigOperators Topology
 
-/-! ## Wall 1 — `awgn-continuous-aep-gaussian`
-
-(Note: the former Wall 0 `contChannelMIDecomp_holds` — the continuous-channel MI
-chain rule `I(X;Y) = h(Y) − h(Y|X)` — was **closed 2026-05-28**: it is now assembled
-genuinely from local helpers in
-`InformationTheory.Shannon.AWGN.ContChannelMIDecomp.mutualInfoOfChannel_toReal_eq_diffEntropy_sub`
-(0 sorry), so no shared wall is needed. This file's active wall count is now **3**:
-Wall 6 `awgn-converse-markov-regularity` was **genuine-closed 2026-06-04**
-(`awgnConverseMarkov_holds` is sorryAx-free, see its docstring); Wall 4
-`awgn-per-letter-integrability` was **genuine-closed 2026-06-10**
-(`awgnPerLetterIntegrability_holds` is sorryAx-free — the wall verdict over-claimed:
-the per-letter law is a finite 1-D Gaussian mixture, no SMB needed); Wall 5
-`awgn-continuous-mi-chain-rule` was **genuine-closed 2026-06-12**
-(`awgnContinuousMIChainRule_holds` is sorryAx-free — W-input route: deterministic DPI +
-generic n-D channel MI decomposition + n-D subadditivity + per-letter 1-D decomposition;
-the wall verdict over-claimed continuous-output MI chain machinery). Remaining active
-walls (all achievability-side): 1 `awgn-continuous-aep-gaussian`, 2
-`awgn-random-coding-bound`, 3 `awgn-power-constraint-honest`.) -/
+/-! ## Continuous Gaussian AEP -/
 
 /-- **Shear pushforward of a density** (linchpin for the `J₁` density identity, absent
 from Mathlib): pushing a `volume.prod volume`-density `ρ` through the measure-preserving
@@ -173,18 +142,18 @@ private lemma pi_withDensity {n : ℕ} {E : Fin n → Type*}
   refine Finset.prod_congr rfl fun i _ => ?_
   rw [lintegral_indicator (hs i), ← withDensity_apply _ (hs i)]
 
-/-! ### Bridge ① — per-letter AWGN KL closed form + n-fold identity (shared)
+/-! ### Per-letter AWGN KL closed form and n-fold identity
 
-Two shared lemmas consumed by the achievability deep atoms (`continuousAepGaussian_holds`
-(iii) below and the `awgn_random_coding_union_bound` term2 in `AchievabilityDischarge.lean`).
+Two shared lemmas consumed by the achievability development (`continuousAepGaussian_holds`
+below and `awgn_random_coding_union_bound` in `AchievabilityDischarge.lean`).
 
-* `klDiv_perLetter_eq_capacity` (1a): the per-letter joint `J₁`/product `Q₁` KL equals the
+* `klDiv_perLetter_eq_capacity`: the per-letter joint `J₁`/product `Q₁` KL equals the
   AWGN capacity `(1/2) log(1 + P/N)`. Routed through the conditional-KL integral
   (`klDiv_compProd_const_toReal_integral`, `CondKLIntegral.lean`) + the 1-D Gaussian KL
   closed form (`klDiv_gaussianReal_gaussianReal_eq`, `DifferentialEntropy.lean`), **avoiding
   `mutualInfoOfChannel` / `MIClosedForm.lean`** which would create the import cycle
   `Walls → MIClosedForm → ContChannelMIDecomp → Walls`.
-* `klDiv_nFold_eq_nsmul` (1b): `klDiv(J_n,Q_n).toReal = n · klDiv(J₁,Q₁).toReal`, via the
+* `klDiv_nFold_eq_nsmul`: `klDiv(J_n,Q_n).toReal = n · klDiv(J₁,Q₁).toReal`, via the
   `arrowProdEquivProdArrow` reshape (`klDiv_map_measurableEquiv`) + `klDiv_pi_eq_sum`
   + i.i.d. `Finset.sum_const` collapse. -/
 
@@ -732,58 +701,40 @@ theorem klDiv_nFold_eq_nsmul (P : ℝ) (N : ℝ≥0) {n : ℕ} :
     Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul,
     ENNReal.toReal_mul, ENNReal.toReal_natCast]
 
-/-- **Continuous AEP for n-dim Gaussian** (Phase B-0 wall, 旧 `IsContinuousAEPGaussian`).
+/-- Continuous AEP for the `n`-dimensional Gaussian.
 
-Given `P : ℝ`, `N : ℝ≥0`, a **typicality slack** `δ > 0` and an **error tolerance**
-`ε > 0` (separated as independent parameters), there exists a threshold `N₀` such that
-for every `n ≥ N₀`, a measurable typical set `A ⊆ (Fin n → ℝ) × (Fin n → ℝ)` exists
-satisfying the 2 AEP sub-bounds:
+Given `P : ℝ`, `N : ℝ≥0`, a typicality slack `δ > 0`, and an error tolerance `ε > 0`
+(independent parameters), there exists a threshold `N₀` such that for every `n ≥ N₀`
+there is a measurable typical set `A ⊆ (Fin n → ℝ) × (Fin n → ℝ)` satisfying:
 
-* **(i) joint codebook+noise mass `≥ 1 - ε`**: under the joint law of `(X, Y)` with
+* (i) joint codebook+noise mass `≥ 1 - ε`, under the joint law of `(X, Y)` with
   `X ∼ N(0,P)` i.i.d. and `Y = X + Z`, `Z ∼ N(0,N)` i.i.d.;
-* **(iii) independent-pair upper bound** (`X'` independent of `Y`): under the product
-  of marginals, `A` has mass `≤ exp(−(klDiv_n − n·3δ)) = exp(−n(I − 3δ))`, where
-  `klDiv_n = klDiv(joint, product) = n·I` is the n-letter KL (per-letter MI `I`).
+* (ii) independent-pair upper bound (`X'` independent of `Y`): under the product of
+  marginals, `A` has mass `≤ exp(−(klDivₙ − n·3δ)) = exp(−n(I − 3δ))`, where
+  `klDivₙ = klDiv(joint, product) = n·I` is the `n`-letter KL (per-letter MI `I`).
 
-The slack `δ` controls the typical set's width (engine slack); the error target `ε`
-controls the mass-failure level of (i). Decoupling them lets the consumer pick
-`R + 3δ < I` (typicality margin) independently of the error goal `ε`, which is what
-makes the union-bound's second term honestly decay (the previous `δ ≡ ε` coupling made
-the union bound's term-2 false-as-framed when `3ε ≥ I`).
+The slack `δ` controls the typical set's width; the error target `ε` controls the
+mass-failure level of (i). Decoupling them lets the consumer pick `R + 3δ < I`
+independently of `ε`, which makes the union bound's second term decay.
 
-**STATUS (2026-06-12) — GENUINELY CLOSED (sorryAx-free, 0 sorry / 0 `@residual`).**
-Sub-bound (ii) deleted (false `klDiv`-to-`volume` form); (iii) exponent n-normalized
-(`−(klDiv_n − n·3δ) = −n(I − 3δ)`); both deep atoms (degenerate `hkl0` + (iii)
-change-of-measure) now genuinely discharged.
+Implementation:
 
-* **(ii) volume bound REMOVED (earlier phase):** the old (ii) `klDiv`-to-`volume` form was
-  a false statement (`volume univ = ⊤ ⇒ ν.real univ = 0` clamps the term to 0), not a
-  Mathlib gap. The consumer discarded it and the union-bound's second-term mass is supplied
-  by (iii), so (ii) was non-load-bearing. Excised (not statement-fixed).
-* **(i) genuine (engine):** the AEP mass concentration needs only a finite-`n` Chebyshev
-  weak law (`pi_empirical_mean_concentration` / `pi_empirical_mean_typical_mass`,
-  `AchievabilityAEP.lean`, sorryAx-free). The typical set `A` is built from the per-letter
-  joint info-density `φ(x,y) = log dJ₁/dQ₁`, wired into the engine's abstract `μ`/`φ`.
-* **(iii) GENUINELY CLOSED (change-of-measure tensorize):** the corrected exponent
-  `−(klDiv_n − n·3δ) = −n(I − 3δ)` is discharged by the **G-2 tensorize** `pi_withDensity`
-  (built on the new sorryAx-free lintegral box-Fubini `lintegral_pi_prod_eq_prod`): with
-  `Q₁ ≪ J₁`, `pi Q₁ = (pi J₁).withDensity (∏ᵢ Q₁.rnDeriv J₁ (wᵢ))`, and on `B` the product
-  density `(∏ᵢ Q₁.rnDeriv J₁ (wᵢ)).toReal = exp(−∑φ) ≤ exp(−n(I − δ)) ≤ exp(−(n·I − n·3δ))`
-  (per-letter exp relation `awgn_perLetter_changeOfMeasure_facts`, `J₁[φ] = (klDiv J₁ Q₁).toReal`
-  via `toReal_klDiv_of_measure_eq`). `klDiv_n = n·I` is `klDiv_nFold_eq_nsmul`.
-* **degenerate `hkl0` GENUINELY CLOSED:** `(klDiv Jn Qn).toReal = 0` for `P.toNNReal = 0 ∨ N = 0`
-  via `klDiv_nFold_eq_nsmul` (normalize to `n·(klDiv J₁ Q₁).toReal`) +
-  `awgn_perLetter_klDiv_degenerate`: `P'=0` ⇒ `J₁ = Q₁` (shear identity on `{0}×ℝ`,
-  `klDiv_self`); `N=0 ∧ P'≠0` ⇒ `J₁` on the diagonal `{(x,x)}` (`Q₁`-null since `μX` atomless)
-  ⇒ `¬J₁≪Q₁` ⇒ `klDiv = ⊤` ⇒ `toReal = 0`. The exponent `−(0 − n·3δ) = n·3δ ≥ 0` makes the
-  bound `exp(n·3δ) ≥ 1 ≥ Qn univ`.
-
-Independently audited 2026-06-12: sorryAx-free (`#print axioms` =
-`[propext, Classical.choice, Quot.sound]`); degenerate `A := Set.univ` branch is an
-honest witness of the existential (not vacuity-abuse — the bound (iii) is a concentration
-upper bound that is genuinely loose, RHS `≥ 1`, when `klDiv = 0`, and `klDiv_n = 0` is
-machine-proved, not asserted); signatures of the consumed shared bridges carry the correct
-nondegenerate preconditions. No circularity / bundling / degenerate-def.
+* (i) uses only the finite-`n` Chebyshev weak law
+  (`pi_empirical_mean_concentration` / `pi_empirical_mean_typical_mass`). The typical set
+  `A` is built from the per-letter joint info-density `φ(x,y) = log dJ₁/dQ₁`.
+* (ii) is discharged by the tensorize `pi_withDensity` (built on the lintegral box-Fubini
+  `lintegral_pi_prod_eq_prod`): with `Q₁ ≪ J₁`,
+  `pi Q₁ = (pi J₁).withDensity (∏ᵢ Q₁.rnDeriv J₁ (wᵢ))`, and on `B` the product density
+  `(∏ᵢ Q₁.rnDeriv J₁ (wᵢ)).toReal = exp(−∑φ) ≤ exp(−n(I − δ))`
+  (`awgn_perLetter_changeOfMeasure_facts`, `J₁[φ] = (klDiv J₁ Q₁).toReal` via
+  `toReal_klDiv_of_measure_eq`); `klDivₙ = n·I` is `klDiv_nFold_eq_nsmul`.
+* The degenerate case `(klDiv Jn Qn).toReal = 0` for `P.toNNReal = 0 ∨ N = 0` is handled
+  via `klDiv_nFold_eq_nsmul` + `awgn_perLetter_klDiv_degenerate`: `P'=0` gives `J₁ = Q₁`
+  (shear identity on `{0}×ℝ`, `klDiv_self`); `N=0 ∧ P'≠0` puts `J₁` on the diagonal
+  `{(x,x)}` (`Q₁`-null since `μX` is atomless), so `¬J₁≪Q₁` and `klDiv = ⊤`, `toReal = 0`.
+  The exponent `n·3δ ≥ 0` makes the bound `exp(n·3δ) ≥ 1 ≥ Qn univ`. The degenerate
+  `A := Set.univ` branch is an honest witness: bound (ii) is genuinely loose (RHS `≥ 1`)
+  when `klDiv = 0`, which is machine-proved rather than asserted.
 @audit:ok -/
 theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
     ∀ ⦃δ ε : ℝ⦄, 0 < δ → 0 < ε → ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n →
@@ -1244,25 +1195,9 @@ theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
                 mul_le_mul_left' prob_le_one _
             _ = ENNReal.ofReal (Real.exp _) := mul_one _
 
-/-! ## Wall 2 / Wall 3 — RETIRED false statements (2026-06-12, D4)
+/-! ## Per-codeword power constraint -/
 
-The two old false achievability walls were **deleted** in the δ-separation + D4
-consumer rewire:
-
-* `awgnRandomCodingBound_holds` (`∀decoder` abstraction, false by the constant
-  decoder `fun _ _ ↦ m₀` counterexample) → replaced by the genuine δ-separated
-  `awgn_random_coding_union_bound` (decoder fixed to `jointTypicalDecoder A`, the
-  two AEP bounds threaded as arguments) in `AchievabilityDischarge.lean`.
-* `awgnPowerConstraintHonest_holds` (`∀m`-form, mass `= q^M` unsatisfiable for `R`
-  near capacity) → replaced by the per-codeword expurgation form
-  `awgnPowerConstraintPerCodeword_holds` below (Phase 5a, sorryAx-free), which the
-  consumer's per-codeword combined-penalty barrier consumes.
-
-Wall name register entries `awgn-random-coding-bound` / `awgn-power-constraint-honest`
-in `docs/audit/audit-tags.md` are now stale (no active `@residual(wall:…)`). -/
-
-/-- **Per-codeword power-constraint expurgation bound** (Phase 5a / D3, genuine
-replacement for the false `∀ m`-form power-constraint wall).
+/-- Per-codeword power-constraint expurgation bound.
 
 For a codebook drawn from the 2-stage Gaussian product law at codeword variance
 `P_cb`, and a power target `P_target` with strict slack `P_cb < P_target`, each
@@ -1395,47 +1330,22 @@ theorem awgnPowerConstraintPerCodeword_holds
   rw [div_lt_iff₀ hεδ] at hNn
   nlinarith [hNn, hVarnn, hδ2, hnR]
 
-/-! ## Converse-side walls — `awgn-per-letter-integrability` / `awgn-continuous-mi-chain-rule`
-/ `awgn-converse-markov-regularity`
+/-! ## Converse-side shared lemmas
 
-Phase 3-α (`docs/shannon/awgn-m5-sorry-migration-plan.md`) で `AWGNConverseDischarge.lean`
-の 3 sub-bound predicate (`PerLetterIntegrabilityForConverse` /
-`ContinuousMIChainRuleForConverse` / `MarkovChainForConverse`) + bundle
-`IsAwgnConverseFeasible` を削除し、各 sub-bound の analytic content を shared sorry
-補題に格上げする。
+The converse-side analytic facts: per-letter log-density integrability, the memoryless
+MI chain rule, and the deterministic-encoder Markov factorization.
 
-**Import cycle 回避**: 旧 predicate body は `awgnConverseJoint` / `perLetterYLaw` /
-`perLetterMI` / `jointMIXnYn` (いずれも `AWGNConverseDischarge.lean` 定義) を参照する。
-これら named def を本 file から直接参照すると `AwgnWalls → AWGNConverseDischarge →
-AwgnWalls` の import cycle になるため、`awgnConverseJoint` の body を本 file の
-private mirror def `converseJointInline` に inline する (両 def は同一 RHS なので
-**defeq**: consumer 側 `unfold awgnConverseJoint perLetterYLaw …` で goal が本 file の
-inline 形に一致し、shared 補題が適用可能)。
+The old predicate bodies referenced `awgnConverseJoint` / `perLetterYLaw` / `perLetterMI`
+/ `jointMIXnYn`, all defined in `AWGNConverseDischarge.lean`. Referencing those named defs
+from this file directly would create the import cycle
+`Walls → ConverseDischarge → Walls`, so the body of `awgnConverseJoint` is inlined here as
+the private mirror def `converseJointInline`. The two defs share the same RHS, so they are
+definitionally equal: on the consumer side `unfold awgnConverseJoint perLetterYLaw …`
+reduces the goal to the inline form here, where the shared lemmas apply. -/
 
-**Markov の Route 判定 (Phase 3α-1, 更新)**: `MarkovChainForConverse` の genuine 化
-(`IsMarkovChain (awgnConverseJoint) Prod.fst (encoder∘fst) Prod.snd`) は当初 Route B
-(shared sorry, wall `awgn-converse-markov-regularity`) で撤退したが、独立壁再評価で「真の
-Mathlib 不在ではなく deterministic-encoder factorization plumbing 過大評価」と判定され、
-`awgnConverseMarkov_holds` で **genuine 化完了** (mixture-of-diracs 上の message-space
-marginal `μ = (μ.map fst) ⊗ₘ (W.comap encoder)` を起点に `condDistrib` 同定、precedent
-`BlockwiseChannel.isMarkovChain_per_letter_input`)。
-
-**Wall 4 `awgn-per-letter-integrability` の closure (2026-06-10)**: 当初の wall verdict
-(continuous SMB / n-dim `differentialEntropy`) は **過大評価** だった。実際の goal は
-`volume` 上の **1 次元** integrability で、per-letter 出力法 `Y_i` は有限 Gaussian 混合
-`(1/M) ∑ₘ 𝒩(encoder m i, N)` (`perLetterLaw_eq_mixture`)、その `rnDeriv volume` は混合
-密度 `perLetterMixtureDensity` (`perLetterLaw_withDensity`)。`negMulLog` of density を
-Gaussian moment integrand で dominate して genuine 化 (`awgnPerLetterIntegrability_holds`
-は sorryAx-free)。連続入力版 `outputDistribution_logDensity_integrable` を mirror した形
-だが、有限混合ゆえ Chebyshev 集中不要 (lower bound は単一成分で出る)。cause:single-route
-(壁判定が 1 ルート = SMB のみ想定で、1-D 混合密度の直接 domination ルートを見落とした)。
-
-よって converse-side の active wall は **0 件** (Wall 1/2/3 = achievability 系のみ残存)、
-Markov / per-letter integrability / MI chain rule (Wall 5) は全て genuine。 -/
-
-/-- Mirror of `awgnConverseJoint` (`AWGNConverseDischarge.lean:65`) body, inlined here
-to break the would-be import cycle. Defeq to `awgnConverseJoint h_meas c` (both `def`s
-share the same RHS, so consumer-side `unfold awgnConverseJoint` reduces to this form). -/
+/-- Mirror of the `awgnConverseJoint` body, inlined here to break the would-be import
+cycle. Defeq to `awgnConverseJoint h_meas c` (both `def`s share the same RHS, so
+consumer-side `unfold awgnConverseJoint` reduces to this form). -/
 private noncomputable def converseJointInline
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (c : AwgnCode M n P) :
@@ -1466,18 +1376,16 @@ private instance converseJointInline.instIsProbabilityMeasure
   have hM_ne_top : (M : ℝ≥0∞) ≠ ∞ := ENNReal.natCast_ne_top M
   exact ENNReal.inv_mul_cancel hM_ne_zero hM_ne_top
 
-/-! ### Wall 4 — `awgn-per-letter-integrability`
+/-! ### Per-letter log-density integrability
 
-**Genuine closure (2026-06-10).** The wall verdict (continuous SMB / n-dim
-`differentialEntropy`) over-claimed: the actual goal is a **1-dimensional** integrability
-against `volume` on `ℝ`. The per-letter output law `Y_i` is a **finite mixture of shifted
-1-D Gaussians** `(1/M) ∑ₘ 𝒩(encoder m i, N)`, so its `rnDeriv volume` is the finite
-Gaussian-mixture density `(1/M) ∑ₘ gaussianPDF (encoder m i) N`. `negMulLog` of that density
-is dominated by a Gaussian moment integrand — pure 1-D measure-theoretic domination, no SMB.
-The proof mirrors the continuous-input analogue
-`AwgnCapacityConverseMaxent.outputDistribution_logDensity_integrable` (not importable here —
-import cycle), but is simpler: the finite mixture needs no Chebyshev concentration (the
-lower bound comes from a single component). -/
+The goal is a 1-dimensional integrability against `volume` on `ℝ`. The per-letter output
+law `Y_i` is a finite mixture of shifted 1-D Gaussians `(1/M) ∑ₘ 𝒩(encoder m i, N)`, so
+its `rnDeriv volume` is the finite Gaussian-mixture density
+`(1/M) ∑ₘ gaussianPDF (encoder m i) N`. `negMulLog` of that density is dominated by a
+Gaussian moment integrand — pure 1-D measure-theoretic domination. The proof mirrors the
+continuous-input analogue `AwgnCapacityConverseMaxent.outputDistribution_logDensity_integrable`
+(not importable here, due to the import cycle), but is simpler: the finite mixture needs no
+Chebyshev concentration (the lower bound comes from a single component). -/
 
 /-- The finite per-letter Gaussian-mixture density at coordinate `i`:
 `(1/M) ∑ₘ gaussianPDF (encoder m i) N y` (`ℝ≥0∞`-valued). For `M ≥ 1` and `N ≠ 0` this is
@@ -1703,25 +1611,18 @@ private lemma perLetterLaw_sq_integrable
   refine Integrable.smul_measure ?_ hM_ne_top
   exact integrable_finsetSum_measure.mpr (fun m _ => h_comp m)
 
-/-- **Per-letter `Y_i` log-density integrability** (旧 `PerLetterIntegrabilityForConverse`).
+/-- Per-letter `Y_i` log-density integrability.
 
-For every coordinate `i`, the per-letter output law `Y_i` (here written as the pushforward
-of the inlined joint along `ω ↦ ω.2 i`) has Lebesgue-integrable `negMulLog (rnDeriv · vol)`.
+For every coordinate `i`, the per-letter output law `Y_i` (here the pushforward of the
+inlined joint along `ω ↦ ω.2 i`) has Lebesgue-integrable `negMulLog (rnDeriv · vol)`.
 Consumer-side `unfold perLetterYLaw awgnConverseJoint` reduces `perLetterYLaw h_meas c i`
 to `(converseJointInline h_meas c).map (fun ω => ω.2 i)` (defeq).
 
-Genuine: the per-letter law is a finite Gaussian mixture; `negMulLog` of its `rnDeriv`
-is dominated by a Gaussian-moment integrand (`perLetterMixtureDensity_log_abs_le` +
+The per-letter law is a finite Gaussian mixture; `negMulLog` of its `rnDeriv` is
+dominated by a Gaussian-moment integrand (`perLetterMixtureDensity_log_abs_le` +
 `perLetterLaw_sq_integrable`). The degenerate `M = 0` / `N = 0` cases give a singular
-law (`rnDeriv = 0` a.e., `negMulLog 0 = 0`, constant, integrable).
-
-Independently audited 2026-06-11 (wall-overturn confirmed genuine): signature is
-byte-identical to the pre-closure `sorry` version (no hypothesis added, conclusion
-unweakened — the former `wall:awgn-per-letter-integrability` over-claimed continuous
-SMB / n-dim `differentialEntropy` for what is a 1-D finite-mixture log-density
-domination); the `M = 0` / `N = 0` boundary is discharged by a genuine singular-law
-argument (`rnDeriv =ᵐ 0`), not an exfalso/vacuity exploit; `#print axioms` =
-`[propext, Classical.choice, Quot.sound]` (sorryAx-free, this theorem + all 6 helpers).
+law (`rnDeriv = 0` a.e., `negMulLog 0 = 0`, constant, integrable), so the boundary is
+discharged by a genuine singular-law argument rather than a vacuity exploit.
 @audit:ok -/
 @[entry_point]
 theorem awgnPerLetterIntegrability_holds
@@ -1809,15 +1710,14 @@ theorem awgnPerLetterIntegrability_holds
     filter_upwards [h_rn_zero] with y hy
     rw [hy]; simp
 
-/-! ### Wall 5 — `awgn-continuous-mi-chain-rule` (genuine closure)
+/-! ### Memoryless MI chain rule
 
-**Genuine closure (2026-06-12, false-wall overturn).** The wall verdict over-claimed: the
-`I(X^n;Y^n) ≤ ∑ᵢ I(X_i;Y_i)` chain rule is the textbook proof
+The chain rule `I(X^n;Y^n) ≤ ∑ᵢ I(X_i;Y_i)` is the textbook argument
 `I(W;Y^n) = h(Y^n) − n·h(noise) ≤ ∑ h(Y_i) − n·h(noise) = ∑ I(X_i;Y_i)`, combined with the
-**deterministic data-processing inequality** `I(X^n;Y^n) ≤ I(W;Y^n)` (since `X^n = encoder ∘ W`
+deterministic data-processing inequality `I(X^n;Y^n) ≤ I(W;Y^n)` (since `X^n = encoder ∘ W`
 is a measurable post-processing of `W`, via `mutualInfo_le_of_postprocess` — no Markov-chain
-machinery needed). The `I(W;Y^n)` decomposition uses the **discrete-input** block kernel
-`blockKernelInline : Channel (Fin M) (Fin n → ℝ)` whose measurability is *free*
+machinery needed). The `I(W;Y^n)` decomposition uses the discrete-input block kernel
+`blockKernelInline : Channel (Fin M) (Fin n → ℝ)` whose measurability is free
 (`measurable_of_countable`, input `Fin M`), so the parallel-Gaussian kernel-measurability
 gap (X-input route) is sidestepped. Pieces:
 
@@ -3251,30 +3151,20 @@ private lemma jointDifferentialEntropyPi_blockYLawInline_le_sum
     (h_marg_eq i))] at h_sub
   exact h_sub
 
-/-- **Memoryless AWGN continuous MI chain rule** (旧 `ContinuousMIChainRuleForConverse`).
+/-- Memoryless AWGN continuous MI chain rule.
 
-`I(X^n; Y^n) ≤ ∑ᵢ I(X_i; Y_i)` on the inlined joint — **genuine closure** (false-wall
-overturn, 2026-06-12). The route: `I(X^n;Y^n) ≤ I(W;Y^n)` (deterministic DPI) `= h(Y^n) −
-n·h(noise) ≤ ∑ h(Y_i) − n·h(noise) = ∑ I(X_i;Y_i)`, combining `mutualInfo_encoder_le_fst`,
-`blockMI_decomp`, `jointDifferentialEntropyPi_blockYLawInline_le_sum`, and `perLetterMI_decomp`.
-Consumer-side `unfold jointMIXnYn perLetterMI awgnConverseJoint` で defeq.
+`I(X^n; Y^n) ≤ ∑ᵢ I(X_i; Y_i)` on the inlined joint. The route:
+`I(X^n;Y^n) ≤ I(W;Y^n)` (deterministic DPI) `= h(Y^n) − n·h(noise) ≤ ∑ h(Y_i) − n·h(noise)
+= ∑ I(X_i;Y_i)`, combining `mutualInfo_encoder_le_fst`, `blockMI_decomp`,
+`jointDifferentialEntropyPi_blockYLawInline_le_sum`, and `perLetterMI_decomp`.
+Consumer-side `unfold jointMIXnYn perLetterMI awgnConverseJoint` gives defeq.
 
-`[NeZero M]` (`M ≥ 1`, the uniform message law is a probability measure) and `hN : N ≠ 0`
-(full-support Gaussian fibres ⇒ blockYLaw absolutely continuous) are **regularity
-preconditions**, both supplied by the converse consumer `isAwgnConverseFeasible_discharger`
-(`2 ≤ M` ⇒ `NeZero M`, and `hN : (N:ℝ) ≠ 0`). Not load-bearing: the MI inequality is
-proved genuinely from the entropy chain, not encoded in the hypotheses.
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free).
-
-Independent honesty audit 2026-06-12 PASS (4-check): non-circular / non-bundled
-(all helpers `mutualInfo_encoder_le_fst` (real DPI `mutualInfo_le_of_postprocess`),
-`blockMI_decomp` / `perLetterMI_decomp` (genuine gateway-atom applications, all-regularity
-hyps discharged locally), `jointDifferentialEntropyPi_blockYLawInline_le_sum` (KL≥0
-subadditivity) carry regularity, not the claim) / non-degenerate / sufficiency
-(degenerate boundary N=0 ⇒ Gaussian fibres collapse to Diracs, breaking only the
-density route — the MI inequality itself stays true (KL≥0-backed), so `hN`/`NeZero M`
-are density-route regularity, not false-statement constraints). `#print axioms` re-confirmed
-sorryAx-free with refreshed oleans.
+`[NeZero M]` (`M ≥ 1`, so the uniform message law is a probability measure) and `hN : N ≠ 0`
+(full-support Gaussian fibres ⇒ blockYLaw absolutely continuous) are regularity
+preconditions, both supplied by the converse consumer. They are not load-bearing: the MI
+inequality is proved from the entropy chain, not encoded in the hypotheses (at the
+degenerate boundary `N = 0` the Gaussian fibres collapse to Diracs, breaking only the
+density route, while the MI inequality itself stays true since it is KL≥0-backed).
 @audit:ok -/
 @[entry_point]
 theorem awgnContinuousMIChainRule_holds
@@ -3319,22 +3209,20 @@ theorem awgnContinuousMIChainRule_holds
             ((converseJointInline h_meas c).map (fun ω => ω.2 i))) - (n : ℝ) * h := by
         gcongr
 
-/-! ### Wall 6 — `awgn-converse-markov-regularity` (Route B, L-AWGNM5-1-α) -/
+/-! ### Markov factorization -/
 
-/-- **Markov chain `W → encoder ∘ W → Y^n` factorization** (旧 `MarkovChainForConverse`).
+/-- Markov chain `W → encoder ∘ W → Y^n` factorization.
 
-`IsMarkovChain (converseJointInline h_meas c) Prod.fst (encoder ∘ fst) Prod.snd` の γ-form
-joint factorization, **genuine closure** (旧 wall `awgn-converse-markov-regularity` は
-真の Mathlib 不在ではなく deterministic-encoder factorization の plumbing 過大評価だった)。
+`IsMarkovChain (converseJointInline h_meas c) Prod.fst (encoder ∘ fst) Prod.snd`, the
+joint factorization.
 
-証明骨子: 基本恒等式 `μ = (μ.map fst) ⊗ₘ (W.comap encoder)` (message-space marginal、
-`W := Channel.toBlock (awgnChannel N) n` は noise block kernel) を mixture-of-diracs 上で
-`ext_of_lintegral` により確立 (`h_marginalA`)。これから `condDistrib Yo Zc μ =ᵐ W`
-(`condDistrib_ae_eq_of_measure_eq_compProd`) を導き、`condDistrib Xs Zc μ` を
-`compProd_map_condDistrib` で吸収、triple-joint factorization を `ext_of_lintegral` +
-`h_marginalA` reduction で検証する (precedent:
-`BlockwiseChannel.isMarkovChain_per_letter_input`)。`#print axioms` は sorryAx-free
-(`[propext, Classical.choice, Quot.sound]`、本 session 機械確認)。
+The argument starts from the identity `μ = (μ.map fst) ⊗ₘ (W.comap encoder)` (with `μ` the
+message-space marginal and `W := Channel.toBlock (awgnChannel N) n` the noise block kernel),
+established on the mixture-of-diracs via `ext_of_lintegral` (`h_marginalA`). From it,
+`condDistrib Yo Zc μ =ᵐ W` (`condDistrib_ae_eq_of_measure_eq_compProd`); then `condDistrib Xs Zc μ`
+is absorbed via `compProd_map_condDistrib`, and the triple-joint factorization is verified by
+`ext_of_lintegral` + the `h_marginalA` reduction (precedent:
+`BlockwiseChannel.isMarkovChain_per_letter_input`).
 @audit:ok -/
 @[entry_point]
 theorem awgnConverseMarkov_holds

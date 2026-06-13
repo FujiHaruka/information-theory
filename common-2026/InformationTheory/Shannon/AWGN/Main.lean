@@ -4,41 +4,24 @@ import InformationTheory.Shannon.AWGN.Achievability
 import InformationTheory.Shannon.AWGN.Converse
 
 /-!
-# T2-A Phase D: AWGN main theorem — `awgn_channel_coding_theorem`
+# AWGN channel coding theorem
 
-Cover-Thomas Ch.9 (Theorem 9.1.1 + 9.1.2) AWGN noisy channel coding theorem の
-統合 publish。Achievability + Converse + closed-form capacity の sandwich を
-1 つの signature に集約。
+The AWGN noisy-channel coding theorem (Cover–Thomas Theorems 9.1.1 + 9.1.2):
+achievability, converse, and the closed-form capacity assembled into one statement.
 
-撤退ライン F-4 hypothesis pass-through 1 本 (2026-05-27 F-1/F-3 peer
-migration 後、2026-06-12 dead `h_mi_bridge` cleanup 後):
-* `h_meas : IsAwgnChannelMeasurable N` — F-4: kernel measurability の外出し
+## Main statements
 
-F-2 (MI closed-form bridge) は genuine closure 済 (`awgn-mi-bridge-plan`
-closed)。本 achievability chain が取っていた `h_mi_bridge` hypothesis は body
-未参照の dead hyp だったため、2026-06-12 cleanup で signature から除去
-(achievability の結論は `awgn_achievability` から得られ MI bridge に依存しない)。
+* `awgn_channel_coding_theorem` — the achievability half (codes exist below capacity).
+* `awgn_capacity_closed_form` — the capacity equals `(1/2) log(1 + P/N)`.
 
-F-1 / F-3 は `IsAwgnTypicalityHypothesis` / `IsAwgnConverseHypothesis` predicate
-削除に伴い signature から除去。F-1 (achievability) は `awgn_achievability` の
-`sorry + @residual(plan:awgn-achievability-typicality-plan)` として独立 publish。
-F-3 (converse) は `awgn_converse` body を `awgn_converse_F3_discharged` への
-1 行 `exact` wrapper として discharge 済 (2026-05-27 `awgn-main-converse-wiring`
-mini-plan)。converse 経路の 3 Mathlib 壁 (mi-bridge / multivariate-mi /
-continuous-mi-chain-rule) はすべて false-wall overturn で genuine closure し、
-`awgn_converse` は **完全 transitively sorryAx-free**
-(`#print axioms InformationTheory.Shannon.AWGN.awgn_converse` で再確認可能)。
+## Implementation notes
 
-それぞれの discharge plan:
-* F-4 → `awgn-kernel-measurability-plan.md`
-* F-1 (achievability) → `awgn-achievability-typicality-plan.md`
-* F-2 (converse 壁) → closed (`awgn-mi-bridge-plan`)
-* F-3 (converse) → closed (3 壁すべて genuine、`awgn-converse-aux-plan`)
+`awgn_channel_coding_theorem` is a pass-through to the genuine `awgn_achievability`;
+the converse is available separately via `awgn_converse`. The kernel measurability is
+exposed as the hypothesis `h_meas : IsAwgnChannelMeasurable N`.
 
-判断ログ #2 (3 ファイル分離戦略) より、主定理 wrapper は AWGN.lean 末尾ではなく
-本 file (`AWGNMain.lean`) に置く: AWGNAchievability + AWGNConverse を import
-する必要があり、AWGN.lean に置くと循環依存になるため。判断ログ #2 (再判断) で
-記録予定。
+The wrapper lives in this file rather than at the end of the `awgnChannel` base file so
+that it can import both `Achievability` and `Converse` without creating an import cycle.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -59,26 +42,9 @@ output power constraint `E[X²] ≤ P`:
   there exists `N₀` such that for every `n ≥ N₀`, there is an `AwgnCode`
   with `M ≥ ⌈exp(nR)⌉` messages and per-message error probability < ε.
 
-This is the **achievability half** statement, with converse available
-separately via `awgn_converse` (now wired to `awgn_converse_F3_discharged`,
-2026-05-27 `awgn-main-converse-wiring` mini-plan). The remaining 撤退ライン
-hypothesis (`h_meas`) exposes the F-4 撤退ライン structure;
-F-1 / F-3 are no longer signaled by predicate hyps (2026-05-27 F-1/F-3
-peer migration removed `IsAwgnTypicalityHypothesis` /
-`IsAwgnConverseHypothesis`). The F-2 `h_mi_bridge` hypothesis was a dead
-pass-through (never used in the body) and was removed in the 2026-06-12 cleanup
-(F-2 itself is genuinely closed via `awgn-mi-bridge-plan`).
-
-撤退ライン discharge plans:
-* F-4 (`h_meas`) → `awgn-kernel-measurability-plan.md`
-* F-1 (achievability body) → `awgn-achievability-typicality-plan.md`
-  (`awgn_achievability` body は `sorry` + `@residual(plan:...)`)
-* F-2 → genuine closure 済 (`awgn-mi-bridge-plan` closed)。dead だった
-  `h_mi_bridge` hyp は 2026-06-12 cleanup で本 chain の signature から除去。
-* F-3 (converse body) → `awgn-converse-aux-plan.md` (`awgn_converse` body は
-  `awgn_converse_F3_discharged` 経由で discharge 済。converse の 3 Mathlib 壁
-  すべて genuine closure 済のため `awgn_converse` は transitively sorryAx-free —
-  `awgn-main-converse-wiring` mini-plan で完了)
+This is the achievability-half statement; the converse is available separately via
+`awgn_converse`, which is transitively sorryAx-free. The hypothesis `h_meas` exposes
+the kernel measurability.
 
 `@audit:closed-by-successor(awgn-moonshot-plan)`
 
@@ -108,9 +74,9 @@ theorem awgn_channel_coding_theorem
 
 `awgnCapacity P N h_meas = (1/2) log(1 + P/N)`.
 
-The four hypotheses (`h_bridge_gauss`, `h_bdd`, `h_max_ent`) are the F-2 撤退
-ライン pass-throughs (Gaussian-input closed form + bounded-above of MI image +
-max-entropy upper bound). See `AWGN.awgnCapacity_eq` for the underlying sandwich.
+The hypotheses `h_bridge_gauss`, `h_bdd`, `h_max_ent` supply the Gaussian-input closed
+form, the bounded-above property of the MI image, and the max-entropy upper bound. See
+`AWGN.awgnCapacity_eq` for the underlying sandwich.
 
 `@audit:closed-by-successor(awgn-moonshot-plan)` -/
 @[entry_point]

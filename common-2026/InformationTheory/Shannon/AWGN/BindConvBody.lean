@@ -3,51 +3,30 @@ import InformationTheory.Shannon.AWGN.MIBridgeDischarge
 import Mathlib.MeasureTheory.Group.Convolution
 
 /-!
-# W9-S1 T2-A: body discharge of `IsAwgnBindEqConv`
+# AWGN bind/convolution bridge
 
-Wave7 で publish した `InformationTheory/Shannon/AWGNMIBridgeDischarge.lean` は
-`IsAwgnOutputGaussian` を named hypothesis `IsAwgnBindEqConv` に縮減した:
+The AWGN kernel composed with the Gaussian input law equals the additive
+convolution of the input with the noise law,
+`(awgnChannel N h_meas) ∘ₘ (gaussianReal 0 P.toNNReal)
+= (gaussianReal 0 P.toNNReal) ∗ (gaussianReal 0 N)` (`IsAwgnBindEqConv`). This is a
+purely measure-theoretic fact that does not depend on the concrete form of the input.
 
-```
-IsAwgnBindEqConv P N h_meas
-  := (awgnChannel N h_meas) ∘ₘ (gaussianReal 0 P.toNNReal)
-       = (gaussianReal 0 P.toNNReal) ∗ (gaussianReal 0 N)
-```
+## Main statements
 
-本 file はこの translation-kernel ↔ additive-convolution bridge を **完全 discharge**
-する。AWGN 独立な純粋測度論的事実であり、入力 `p := gaussianReal 0 P.toNNReal`
-の具体形には依存しない。
+* `bind_eq_conv_of_translation_kernel` — the generic translation-kernel ↔
+  additive-convolution bridge: for any kernel whose fibres are translation maps of a
+  fixed measure `ν`, `κ ∘ₘ p = p ∗ ν`.
+* `isAwgnBindEqConv_discharged` — the AWGN specialization.
 
-## Approach
+## Implementation notes
 
-`κ ∘ₘ p = Measure.bind p κ` (Giry monad bind, `CompNotation`), `p ∗ ν = (p.prod ν).map (·+·)`
-(`Measure.conv`)。両者を `lintegral` 経由で一致させる (`Measure.ext_of_lintegral`):
-
-```
-∫⁻ y, f y ∂(κ ∘ₘ p)  = ∫⁻ x, ∫⁻ y, f y ∂(κ x) ∂p        -- lintegral_bind
-∫⁻ y, f y ∂(p ∗ ν)   = ∫⁻ x, ∫⁻ y, f (x+y) ∂ν ∂p         -- lintegral_conv
-```
-
-x ごとの fibre は `awgnChannel N x = gaussianReal x N`。Mathlib
-`gaussianReal_map_const_add` で `gaussianReal x N = (gaussianReal 0 N).map (x + ·)`、
-`lintegral_map` で fibre 一致:
-
-```
-∫⁻ y, f y ∂(gaussianReal x N)
-  = ∫⁻ y, f y ∂((gaussianReal 0 N).map (x + ·))
-  = ∫⁻ y, f (x + y) ∂(gaussianReal 0 N).
-```
-
-## 一般化レイヤ
-
-主補題 `bind_eq_conv_of_translation_kernel` は AWGN に依存しない一般 translation
-kernel `κ x = ν.map (x + ·)` (s-finite `p`, sfinite `ν`) について `κ ∘ₘ p = p ∗ ν`
-を示す。AWGN への特殊化はこの一般補題 + `gaussianReal_map_const_add` で 1 行。
-
-## Mathlib gap
-
-`Kernel.comp_eq_conv_of_translation` 相当 (translation-kernel ↔ conv) は Mathlib
-未掲載。本 file の `bind_eq_conv_of_translation_kernel` がその generic 形を publish。
+The two sides are matched through their `lintegral` characterizations
+(`Measure.ext_of_lintegral`): the Giry-monad composition expands fibrewise via
+`Measure.lintegral_bind`, the convolution via `Measure.lintegral_conv`, and the
+fibres agree because each AWGN fibre is the translation map of the noise-only
+Gaussian, `gaussianReal x N = (gaussianReal 0 N).map (x + ·)` (Mathlib
+`gaussianReal_map_const_add`). The AWGN-specific result is the one-line
+specialization of the generic translation-kernel lemma.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -58,21 +37,18 @@ set_option linter.unusedSectionVars false
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal BigOperators Topology
 
-/-! ## Phase A — fibre identity: translation map of a Gaussian -/
+/-! ## Fibre identity: translation map of a Gaussian -/
 
 /-- Each AWGN fibre is the translation map of the noise-only Gaussian:
-`gaussianReal x N = (gaussianReal 0 N).map (x + ·)`.
-Direct corollary of Mathlib `gaussianReal_map_const_add` (mean `0 + x = x`). -/
+`gaussianReal x N = (gaussianReal 0 N).map (x + ·)`. -/
 theorem gaussianReal_eq_map_const_add (N : ℝ≥0) (x : ℝ) :
     gaussianReal x N = (gaussianReal 0 N).map (x + ·) := by
   rw [gaussianReal_map_const_add (μ := 0) (v := N) x, zero_add]
 
-/-! ## Phase B — generic translation-kernel ↔ convolution bridge -/
+/-! ## Generic translation-kernel ↔ convolution bridge -/
 
-/-- **Translation-kernel ↔ additive-convolution bridge (generic).**
-
-For any kernel `κ : Kernel ℝ ℝ` whose every fibre is the translation map of a fixed
-finite measure `ν` (`κ x = ν.map (x + ·)`), the Giry-monad composition with an
+/-- For any kernel `κ : Kernel ℝ ℝ` whose every fibre is the translation map of a
+fixed measure `ν` (`κ x = ν.map (x + ·)`), the Giry-monad composition with an
 s-finite input `p` coincides with the additive convolution `p ∗ ν`. -/
 @[entry_point]
 theorem bind_eq_conv_of_translation_kernel
@@ -88,17 +64,12 @@ theorem bind_eq_conv_of_translation_kernel
   refine lintegral_congr fun x => ?_
   rw [hκ x, lintegral_map hf (measurable_const_add x)]
 
-/-! ## Phase C — AWGN specialization: discharge `IsAwgnBindEqConv` -/
+/-! ## AWGN specialization -/
 
-/-- **`IsAwgnBindEqConv` body discharge.**
-
-The AWGN kernel composed with the Gaussian input equals the additive convolution
+/-- The AWGN kernel composed with the Gaussian input equals the additive convolution
 with the noise law:
 `(awgnChannel N h_meas) ∘ₘ (gaussianReal 0 P.toNNReal)
-  = (gaussianReal 0 P.toNNReal) ∗ (gaussianReal 0 N)`.
-
-Specialization of `bind_eq_conv_of_translation_kernel` with `ν := gaussianReal 0 N`
-and the fibre identity `gaussianReal_eq_map_const_add`. -/
+= (gaussianReal 0 P.toNNReal) ∗ (gaussianReal 0 N)`. -/
 @[entry_point]
 theorem isAwgnBindEqConv_discharged
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) :
@@ -110,14 +81,10 @@ theorem isAwgnBindEqConv_discharged
   rw [awgnChannel_apply]
   exact gaussianReal_eq_map_const_add N x
 
-/-- **AWGN capacity closed form — output-Gaussian (bind/conv) genuinely closed,
-MI-decomp/bddAbove/max-entropy taken as hypotheses.**
-
-⚠️ NOT a full discharge: the MI decomposition (`h_decomp`), `h_bdd` and the
-max-entropy bound (`h_max_ent`) remain OPEN — taken as hypotheses (max-entropy /
-continuous MI chain rule machinery absent from Mathlib). Only the output-Gaussian
-fact is genuinely closed via the now-proved bind/conv bridge, so `IsAwgnBindEqConv`
-is dispatched automatically.
+/-- The AWGN capacity closed form, with the output-Gaussian fact discharged via the
+bind/convolution bridge (so `IsAwgnBindEqConv` is supplied automatically) and the MI
+decomposition `h_decomp`, boundedness `h_bdd`, and max-entropy bound `h_max_ent`
+taken as hypotheses.
 
 `@audit:closed-by-successor(awgn-moonshot-plan)` -/
 @[entry_point]

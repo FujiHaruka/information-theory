@@ -7,40 +7,46 @@ import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Topology.MetricSpace.Pseudo.Defs
 
 /-!
-# Asymptotic / exponent framework (I-3)
+# Asymptotic / exponent framework
 
-教科書 (Cover-Thomas) の `\doteq` (exponent equality) と closed-form rate extraction
-wrapper を提供する漸近系 / rate 系 API 層。
+The exponent-equality relation `\doteq` of Cover–Thomas and a closed-form rate-extraction
+wrapper, forming the asymptotic / rate API layer.
 
-## 表記法
+## Notation
 
-- `a ≐ b` (`DotEq a b`): `(Real.log ∘ a − Real.log ∘ b) =o[atTop] (·:ℝ)`
-- 教科書 `f(n) = o(n)` は Lean では `f =o[atTop] (fun n : ℕ => (n : ℝ))` で書ける
-- 教科書 `f(n) = o(1)` は Lean では `f =o[atTop] (fun _ => (1 : ℝ))` で書ける
+* `a ≐ b` (`DotEq a b`): `(Real.log ∘ a − Real.log ∘ b) =o[atTop] (·:ℝ)`.
+* The textbook `f(n) = o(n)` is `f =o[atTop] (fun n : ℕ => (n : ℝ))`.
+* The textbook `f(n) = o(1)` is `f =o[atTop] (fun _ => (1 : ℝ))`.
 
-設計判断 (詳細は `docs/api/asymptotic-plan.md` §C):
+## Main definitions
 
-- `DotEq` は `IsLittleO` 直書き (候補 B)。`ℝ` 値主、`ℝ≥0∞` 版 alias は本 I-3 では publish しない
-- notation `≐` は `scoped[InformationTheory.Asymptotic]` で限定。`open InformationTheory.Asymptotic`
-  した callsite だけが見る
-- positivity hypothesis は述語に組み込まず、bridge / mul / inv の引数で要求する
-- 既存 `InformationTheory/Shannon/AEPRate.lean` (905 行) は不変。本ファイルは抽象 wrapper
-  `exp_decay_N_of_pos` を追加するのみ、callsite migration は範囲外
+* `DotEq` — exponent equality, defined directly as an `IsLittleO`.
+
+## Main statements
+
+* `dotEq_iff_tendsto_log_div` — the bridge to `(1/n) · log (a/b) → 0` under positivity.
+* `exp_decay_N_of_pos` — a closed-form block length for `exp(-n·g) < ε'`.
+
+## Implementation notes
+
+* `DotEq` is `ℝ`-valued; no `ℝ≥0∞` alias is published here.
+* The notation `≐` is `scoped[InformationTheory.Asymptotic]`, so only call sites that
+  `open InformationTheory.Asymptotic` see it.
+* Positivity is not built into the predicate (Mathlib's `Real.log` returns `0` for `x ≤ 0`,
+  so `DotEq` is well-defined for any `ℕ → ℝ`); it is required at the bridge / `mul` / `inv`
+  use sites instead.
 -/
 
 namespace InformationTheory.Asymptotic
 
 open Asymptotics Filter Topology Real
 
-/-- **Exponent equality (textbook `\doteq`)**: `a_n ≐ b_n` if
+/-- Exponent equality (the textbook `\doteq`): `a ≐ b` when
 `Real.log (a n) − Real.log (b n) = o(n)` along `atTop`.
 
-教科書 (Cover-Thomas) の `a_n ≐ b_n ⟺ (1/n) log (a_n / b_n) → 0` と同値
-(`dotEq_iff_tendsto_log_div`, under positivity `0 < a n ∧ 0 < b n`).
-
-positivity hypothesis は述語自体には組み込まれない (Mathlib `Real.log` は
-`x ≤ 0` で `0` を返すため `DotEq` 自体は any `ℕ → ℝ` で well-defined)。
-positivity は use site で要求する。 -/
+Under positivity `0 < a n ∧ 0 < b n` this is equivalent to
+`(1/n) · log (a n / b n) → 0` (`dotEq_iff_tendsto_log_div`). Positivity is required at
+the use site rather than in the predicate. -/
 @[entry_point]
 def DotEq (a b : ℕ → ℝ) : Prop :=
   (fun n : ℕ => Real.log (a n) - Real.log (b n)) =o[atTop] (fun n : ℕ => (n : ℝ))
@@ -115,11 +121,8 @@ lemma DotEq.inv {a b : ℕ → ℝ} (h : a ≐ b) :
   rw [h_eq]
   exact h.neg_left
 
-/-- **Bridge**: `DotEq` is equivalent to `Tendsto ((1/n) * log (a/b)) → 0`
-under positivity.
-
-両辺の `(1/n) * log (a n / b n)` と `(log (a n) - log (b n)) / (n : ℝ)` は
-positivity の下で `Real.log_div` + 可換性で同形。 -/
+/-- Bridge: under positivity, `a ≐ b` is equivalent to
+`Tendsto (fun n => (1/n) * log (a n / b n)) atTop (𝓝 0)`. -/
 @[entry_point]
 lemma dotEq_iff_tendsto_log_div (a b : ℕ → ℝ) (hPos : ∀ n, 0 < a n ∧ 0 < b n) :
     a ≐ b ↔
@@ -147,12 +150,8 @@ lemma dotEq_iff_tendsto_log_div (a b : ℕ → ℝ) (hPos : ∀ n, 0 < a n ∧ 0
         = ((fun n : ℕ => Real.log (a n) - Real.log (b n))
             =o[atTop] (fun n : ℕ => (n : ℝ))) from rfl, h_iff, h_ratio_eq]
 
-/-- **Closed-form `N` for `exp(-n·g) < ε'`** (rate extraction wrapper).
-For `g, ε' > 0`, the witness `N := ⌈max 0 (-Real.log ε' / g)⌉ + 1` works.
-
-既存 `InformationTheory/Shannon/AEPRate.lean:323` の `exp_neg_mul_lt_of_rate` の
-family-agnostic 版。本 I-3 では abstract wrapper のみ publish、既存 callsite
-migration は本タスク範囲外。 -/
+/-- Closed-form block length for `exp(-n·g) < ε'` (rate-extraction wrapper).
+For `g, ε' > 0`, the witness `N := ⌈max 0 (-Real.log ε' / g)⌉ + 1` works. -/
 @[entry_point]
 theorem exp_decay_N_of_pos {g ε' : ℝ} (hg : 0 < g) (hε' : 0 < ε') :
     ∃ N : ℕ, ∀ n ≥ N, Real.exp (-(n : ℝ) * g) < ε' := by
@@ -185,20 +184,20 @@ theorem exp_decay_N_of_pos {g ε' : ℝ} (hg : 0 < g) (hε' : 0 < ε') :
   rw [h_neg_eq]
   exact h_step
 
-/-! ## 動作確認 -/
+/-! ## Usage examples -/
 
--- `≐` notation + `dotEq_iff_tendsto_log_div` の使用例。
+-- `≐` notation via `dotEq_iff_tendsto_log_div`.
 example (a b : ℕ → ℝ) (hPos : ∀ n, 0 < a n ∧ 0 < b n)
     (h : Tendsto (fun n : ℕ => (1 / (n : ℝ)) * Real.log (a n / b n)) atTop (𝓝 0)) :
     a ≐ b :=
   (dotEq_iff_tendsto_log_div a b hPos).mpr h
 
--- `exp_decay_N_of_pos` の直呼び使用例。
+-- Direct use of `exp_decay_N_of_pos`.
 example {g ε' : ℝ} (hg : 0 < g) (hε' : 0 < ε') :
     ∃ N : ℕ, ∀ n ≥ N, Real.exp (-(n : ℝ) * g) < ε' :=
   exp_decay_N_of_pos hg hε'
 
--- `DotEq` の refl 動作確認 (notation 経由)。
+-- `DotEq` reflexivity through the notation.
 example (a : ℕ → ℝ) : a ≐ a := DotEq.refl a
 
 end InformationTheory.Asymptotic

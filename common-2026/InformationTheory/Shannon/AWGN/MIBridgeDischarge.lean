@@ -2,10 +2,9 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.AWGN.MIBridge
 
 /-!
-# T2-A AWGN MI bridge: body discharge of `IsAwgnOutputGaussian`
+# AWGN output marginal is Gaussian
 
-Wave6 で publish した `InformationTheory/Shannon/AWGNMIBridge.lean` の 3 個の primitive
-predicate のうち、本 file は **`IsAwgnOutputGaussian` の body discharge** を行う。
+The AWGN channel output marginal under Gaussian input is itself Gaussian:
 
 ```
 IsAwgnOutputGaussian P N h_meas
@@ -13,41 +12,36 @@ IsAwgnOutputGaussian P N h_meas
         = gaussianReal 0 (P.toNNReal + N)
 ```
 
-つまり `Y = X + Z` where `X ∼ 𝒩(0,P)`, `Z ∼ 𝒩(0,N)` independent ⇒ `Y ∼ 𝒩(0,P+N)`.
+that is, for `Y = X + Z` with `X ∼ 𝒩(0, P)` and independent `Z ∼ 𝒩(0, N)` one has
+`Y ∼ 𝒩(0, P + N)`.
 
-## Approach
+## Main definitions
 
-P-1 (Mathlib snd_compProd): `(p ⊗ₘ W).snd = W ∘ₘ p` (Markov kernel composition).
-P-2 (translation-kernel-conv bridge): `(awgnChannel N) ∘ₘ p = p ∗ (gaussianReal 0 N)`.
-P-3 (Mathlib gaussianReal_conv_gaussianReal): `(gaussianReal 0 P) ∗ (gaussianReal 0 N)
-       = gaussianReal 0 (P+N)`.
+* `IsAwgnBindEqConv` — the bridge identity stating that the AWGN kernel composition
+  equals additive convolution of measures.
 
-P-2 は新しい lemma で、`charFun` を経由して証明する:
-- `charFun (awgnChannel N ∘ₘ p) t = ∫ charFun (gaussianReal x N) t ∂p(x)
-   = exp(-t²N/2) · ∫ exp(itx) ∂p(x) = exp(-t²N/2) · charFun p t`
-- `charFun (p ∗ gaussianReal 0 N) t = charFun p t · charFun (gaussianReal 0 N) t
-   = charFun p t · exp(-t²N/2)` (Mathlib `charFun_conv`).
+## Main statements
 
-両者一致 ⇒ `Measure.ext_of_charFun`。
+* `awgn_output_gaussian_of_bind_eq_conv` — the output marginal is `𝒩(0, P + N)`,
+  given the bind/conv bridge.
+* `awgn_capacity_closed_form_of_maxent_bindconv` — the capacity closed form with the
+  output-Gaussian fact reduced to the bind/conv bridge, the remaining mutual-information
+  facts taken as hypotheses.
 
-## 撤退ライン
+## Implementation notes
 
-P-2 の bind/conv bridge を直接 charFun 経由で展開するのは ~100 行掛かる
-ため、本 file ではこの bridge を **named hypothesis `IsAwgnBindEqConv`** として
-切り出し、`gaussianReal_conv_gaussianReal` のみ Mathlib 直結で消費する形に
-縮減。`IsAwgnBindEqConv` は translation-kernel に対する一般的事実であり、
-**`IsAwgnChannelMeasurable`-style 構造的 hypothesis** として後続 plan で discharge。
+The output marginal is computed in three structural steps: `outputDistribution` is
+the second marginal of the joint law (definitional), `(p ⊗ₘ W).snd = W ∘ₘ p` is the
+Markov-kernel composition identity (`Measure.snd_compProd`), and
+`gaussianReal_conv_gaussianReal` collapses the convolution of two Gaussians into a
+single Gaussian.
 
-`IsAwgnOutputGaussian` 自身は本 file の `awgn_output_gaussian_of_bind_eq_conv`
-で `IsAwgnBindEqConv` から完全に導出される。Bind-conv bridge は AWGN 独立な
-測度論的事実なので分離が自然 (cf. `awgn-kernel-measurability-plan.md` 撤退ライン F-4)。
-
-## Mathlib gap (PR 候補)
-
-* `Kernel.comp_eq_conv_of_translation`: for any kernel `κ x = ν.map (x + ·)` and
-  s-finite measure `p`, `κ ∘ₘ p = p ∗ ν` — generic translation-kernel ↔ conv
-  bridge. Not in Mathlib (specializes via `Measure.lintegral_comp`, `lintegral_conv`,
-  Fubini). Discharging here directly would inflate the file ~80-100 lines.
+The middle step — that the AWGN kernel composition coincides with additive
+convolution — is a generic translation-kernel identity that is independent of the
+AWGN specifics. Discharging it inline through the characteristic-function route would
+inflate the file by roughly 80–100 lines (`lintegral` expansion, Fubini, change of
+variables), so it is exposed as the single named hypothesis `IsAwgnBindEqConv` and
+discharged separately.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -58,44 +52,29 @@ set_option linter.unusedSectionVars false
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal BigOperators Topology
 
-/-! ## Phase A — Bind/conv bridge primitive -/
-
-/-- **Translation-kernel ↔ additive-convolution bridge** (named hypothesis).
-
-For the AWGN translation kernel `awgnChannel N` and the Gaussian input
-`p := gaussianReal 0 P.toNNReal`, the kernel composition coincides with the
-additive convolution of measures:
+/-- The bridge identity stating that, for the AWGN translation kernel `awgnChannel N`
+and Gaussian input `p := gaussianReal 0 P.toNNReal`, the kernel composition coincides
+with the additive convolution of measures:
 
 ```
 awgnChannel N ∘ₘ (gaussianReal 0 P.toNNReal)
   = (gaussianReal 0 P.toNNReal) ∗ (gaussianReal 0 N)
 ```
 
-This is a fully **AWGN-independent** measure-theoretic identity: any kernel of the
-form `κ x = ν.map (x + ·)` (translation kernel with translation measure `ν`)
-satisfies `κ ∘ₘ p = p ∗ ν` for s-finite `p` and finite `ν`, by Fubini + change of
-variables. Discharging this generic bridge inside the current file would inflate
-the proof ~80–100 lines (lintegral expansion + Fubini + change of variables);
-the structural reduction here exposes it as a single named hypothesis, to be
-discharged in the dedicated `awgn-bind-conv-bridge-plan.md` follow-up. -/
+This is an AWGN-independent measure-theoretic fact: any translation kernel
+`κ x = ν.map (x + ·)` satisfies `κ ∘ₘ p = p ∗ ν` for s-finite `p` and finite `ν`, by
+Fubini and change of variables. It is exposed as a named hypothesis so the
+output-Gaussian computation does not have to expand it inline. -/
 def IsAwgnBindEqConv (P : ℝ) (N : ℝ≥0)
     (h_meas : IsAwgnChannelMeasurable N) : Prop :=
   (awgnChannel N h_meas) ∘ₘ (gaussianReal 0 P.toNNReal)
     = (gaussianReal 0 P.toNNReal) ∗ (gaussianReal 0 N)
 
-/-! ## Phase B — Body discharge of `IsAwgnOutputGaussian` -/
+/-- The AWGN channel output marginal under Gaussian input equals `𝒩(0, P + N)`, given
+the bind/conv bridge `IsAwgnBindEqConv P N h_meas`.
 
-/-- **Output Gaussian (body discharge).**
-
-Given the bind/conv bridge `IsAwgnBindEqConv P N h_meas` (Phase A), the
-`IsAwgnOutputGaussian P N h_meas` predicate is fully discharged via:
-
-1. `outputDistribution = compProd.snd` (definitional).
-2. `(p ⊗ₘ W).snd = W ∘ₘ p` (Mathlib `Measure.snd_compProd`).
-3. Bind/conv bridge `IsAwgnBindEqConv` (Phase A primitive).
-4. `(gaussianReal 0 P.toNNReal) ∗ (gaussianReal 0 N) = gaussianReal 0 (P.toNNReal + N)`
-   (Mathlib `gaussianReal_conv_gaussianReal`).
--/
+The proof chains `outputDistribution = compProd.snd` (definitional),
+`Measure.snd_compProd`, the bridge hypothesis, and `gaussianReal_conv_gaussianReal`. -/
 @[entry_point]
 theorem awgn_output_gaussian_of_bind_eq_conv
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
@@ -114,19 +93,10 @@ theorem awgn_output_gaussian_of_bind_eq_conv
       (m₁ := (0 : ℝ)) (m₂ := (0 : ℝ)) (v₁ := P.toNNReal) (v₂ := N)
   simpa using this
 
-/-! ## Phase C — MI decomposition primitive (body decomposition) -/
-
-
-/-! ## Phase D — Combined body discharge re-publish -/
-
-/-- **AWGN capacity closed form — output-Gaussian reduced to bind/conv,
-MI-decomp/bddAbove/max-entropy taken as hypotheses.**
-
-⚠️ NOT a full discharge: the MI decomposition (`h_decomp`), `h_bdd` and the
-max-entropy bound (`h_max_ent`) remain OPEN — taken as hypotheses. The genuine
-max-entropy / continuous MI chain rule machinery is absent from Mathlib. Only the
-output-Gaussian fact is closed (reduced to the bind/conv bridge primitive
-`IsAwgnBindEqConv`).
+/-- The AWGN capacity closed form, with the output-Gaussian fact reduced to the
+bind/conv bridge `IsAwgnBindEqConv`. The mutual-information decomposition
+(`h_decomp`), the boundedness `h_bdd`, and the max-entropy bound (`h_max_ent`)
+remain as hypotheses; only the output-Gaussian fact is supplied here.
 
 `@audit:closed-by-successor(awgn-mi-decomp-plan)` -/
 @[entry_point]

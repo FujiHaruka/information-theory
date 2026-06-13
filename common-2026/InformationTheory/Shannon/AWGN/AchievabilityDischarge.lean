@@ -7,52 +7,46 @@ import Mathlib.Probability.Independence.Basic
 import Mathlib.MeasureTheory.Constructions.Pi
 
 /-!
-# AWGN Achievability — typicality discharge (Phase A + B-0 skeleton)
+# AWGN achievability via joint typicality
 
-Cover-Thomas 9.2 (Theorem 9.1.1 achievability) の Lean 化。親 plan
-`docs/shannon/awgn-achievability-typicality-plan.md` の Phase A-E をこの 1 file に
-集約する。**全 Phase 埋め済 + sorryAx-free** (2026-06-12 false-statement #6 fix で
-最後の degenerate-corner sorry を `hP`/`hN` 追加で解消)。
+The achievability half of the AWGN channel coding theorem (Cover–Thomas 9.2,
+Theorem 9.1.1): for any rate `R` below the Gaussian capacity
+`(1/2) log(1 + P/N)`, there exist `(M, n)` codes whose maximal per-message error
+probability is below any prescribed `ε`. The construction is the random Gaussian
+codebook + joint-typicality decoder + expurgation, assembled into the headline
+`isAwgnTypicalityHypothesis`.
 
-**2026-06-12 import 反転 wiring**: headline `awgn_achievability`
-(`Achievability.lean`) が本 file の `isAwgnTypicalityHypothesis` を直接呼ぶ形に
-なったため (Achievability が本 file を import する向きへ反転)、本 file は上流
-(Achievability / Main / F1Discharge) を import しなくなった。旧 F-1 wrapper
-`awgn_achievability_F1_via_staged_hyps` は headline discharge により superseded で
-**削除** (git 履歴に残存)、`awgn_theorem_F4_discharged_F1_via_staged` は
-`F1Discharge.lean` へ移設 (body を discharge 済 headline `awgn_achievability` 呼出し
-に再配線)。本 file の publish 対象は `isAwgnTypicalityHypothesis` (genuine assembly)。
+## Main definitions
 
-## Phase 構成 (all genuine, 0 sorry in this file)
+* `gaussianCodebook M n σsq` — the random codebook law: `M` codewords, each `n`
+  i.i.d. `𝒩(0, σsq)` components, carried by `Fin M → Fin n → ℝ`.
+* `jointTypicalDecoder A codebook` — decodes a received vector `y` to the
+  smallest codeword index whose pair lies in the typical set `A`.
 
-* Phase A — `gaussianCodebook` 測度 + IndepFun + marginal lemma
-* Phase B-0 — continuous AEP は shared sorry 補題 `continuousAepGaussian_holds`
-  (`Walls.lean`、現在 sorryAx-free) に移管、本 file は直接呼出す
-* Phase C — joint typical decoder + δ-separated union bound
-  (`awgn_random_coding_union_bound`、term1 / term2 / N₀ 全 genuine)
-* Phase D — expurgation + AwgnCode 抽出
-* Phase E — `isAwgnTypicalityHypothesis` 統合 (sorryAx-free)。旧 main wrapper 2 本は
-  2026-06-12 import 反転で削除 / `F1Discharge.lean` へ移設 (上記参照)
+## Main statements
 
-## 判断確定 (`docs/shannon/awgn-achievability-typicality-mathlib-inventory.md`)
+* `awgn_random_coding_union_bound` — with the decoder fixed to
+  `jointTypicalDecoder A`, the average per-message error probability is `≤ 2ε`
+  past a rate-dependent threshold, given the two AEP bounds on `A`.
+* `awgn_avg_error_union_bound` — closes the union bound against the AEP-supplied
+  typical set.
+* `awgnPowerWitness_exists` — produces a strictly smaller variance `P' < P` for
+  which `R` is still below `capacity(P')`.
+* `isAwgnTypicalityHypothesis` — the assembled achievability statement consumed
+  by the headline `awgn_achievability`.
 
-* 判断 #1: **T-2 採用** — `IsContinuousAEPGaussian` regularity hyp 化 (continuous
-  SMB / n-d differentialEntropy の Mathlib 不在を staged にする)
-* 判断 #2: **Option A** (2 段 `Measure.pi`) — `AwgnCode.encoder` と型 defeq
-* 判断 #3: **Option γ** (`klDiv` 形) — InformationTheory 既存 `klDiv_*` 資産で完備、
-  Option β `differentialEntropy` の `@audit:suspect(differential-entropy-plan)`
-  負債継承を回避
+## Implementation notes
 
-## Retraction log
-
-* `IsAwgnPowerConstraintRealizable` (formerly defined just above
-  `IsAwgnPowerConstraintHonest`) was a `false-statement` ORPHAN predicate
-  retracted on 2026-05-26 (Round 4 escalate #2, sibling plan
-  `awgn-power-constraint-realizable-pivot-plan.md` Phase 5). The chi-square
-  median analysis (`P(∑ X² ≤ nP) → 0.5⁺` for `X ∼ N(0, P)` i.i.d.) shows the
-  v1 statement is unsatisfiable; the ε-relaxed successor
-  `IsAwgnPowerConstraintHonest P_cb P_target N` (below) with `P_cb < P_target`
-  slack is canonical.
+* `gaussianCodebook` is built as a two-stage `Measure.pi`, which is definitionally
+  equal to `AwgnCode.encoder`, so no measurable-equivalence transport is needed.
+* The mutual-information slack is expressed in `klDiv` form rather than via
+  `differentialEntropy`, so the existing `klDiv_*` API supplies the decay bounds
+  directly.
+* The continuous AEP for the `n`-dimensional Gaussian lives in
+  `InformationTheory/Shannon/AWGN/Walls.lean` as `continuousAepGaussian_holds`;
+  consumers here call it directly rather than taking a predicate hypothesis.
+* The typicality slack `δ` is an independent parameter from the error target `ε`;
+  coupling `δ ≡ ε` makes the alias term false whenever `3ε ≥ I`.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -62,13 +56,12 @@ set_option linter.unusedVariables false
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal BigOperators Topology
 
-/-! ## Phase A — Random Gaussian codebook -/
+/-! ## Random Gaussian codebook -/
 
-/-- **Random Gaussian codebook**: M codewords, each n i.i.d. components
-`X(m, i) ∼ 𝒩(0, σsq)`. Concrete carrier type `Fin M → Fin n → ℝ` matches
-`AwgnCode.encoder` definitionally (no measurable-equivalence transport needed).
-
-判断 #2 (Option A) — 2 段 `Measure.pi`. -/
+/-- The random Gaussian codebook: `M` codewords, each `n` i.i.d. components
+`X(m, i) ∼ 𝒩(0, σsq)`, built as a two-stage `Measure.pi`. The concrete carrier
+type `Fin M → Fin n → ℝ` matches `AwgnCode.encoder` definitionally, so no
+measurable-equivalence transport is needed. -/
 noncomputable def gaussianCodebook (M n : ℕ) (σsq : ℝ≥0) :
     Measure (Fin M → Fin n → ℝ) :=
   Measure.pi (fun _ : Fin M => Measure.pi (fun _ : Fin n => gaussianReal 0 σsq))
@@ -80,10 +73,8 @@ instance gaussianCodebook_isProbabilityMeasure (M n : ℕ) (σsq : ℝ≥0) :
     IsProbabilityMeasure (gaussianCodebook M n σsq) := by
   unfold gaussianCodebook; infer_instance
 
-/-- **Codeword marginal** — projecting `gaussianCodebook` onto codeword index `m`
-gives back the inner i.i.d. Gaussian product measure on `Fin n → ℝ`.
-
-Single-call to `measurePreserving_eval` (Pi.lean:407, prob-measure flavour). -/
+/-- Projecting `gaussianCodebook` onto codeword index `m` gives back the inner
+i.i.d. Gaussian product measure on `Fin n → ℝ`. -/
 @[entry_point]
 theorem gaussianCodebook_codeword_law (M n : ℕ) (σsq : ℝ≥0) (m : Fin M) :
     (gaussianCodebook M n σsq).map (fun c : Fin M → Fin n → ℝ => c m)
@@ -92,13 +83,8 @@ theorem gaussianCodebook_codeword_law (M n : ℕ) (σsq : ℝ≥0) (m : Fin M) :
   exact (MeasureTheory.measurePreserving_eval
     (μ := fun _ : Fin M => Measure.pi (fun _ : Fin n => gaussianReal 0 σsq)) m).map_eq
 
-/-- **Codewords are mutually independent** — under the codebook law, distinct
-codewords `c m`, `c m'` are independent random variables. Derived from
-`iIndepFun_pi` (Basic.lean:784) + `iIndepFun.indepFun`.
-
-trap 1 (inventory axis 1): `iIndepFun_pi` requires the inner `Measure.pi
-(gaussianReal 0 σsq)` to be a probability measure — this is provided by the
-`gaussianCodebook_isProbabilityMeasure`-style autoinference. -/
+/-- Under the codebook law, distinct codewords `c m`, `c m'` are independent
+random variables. -/
 @[entry_point]
 theorem gaussianCodebook_indepFun_codewords (M n : ℕ) (σsq : ℝ≥0)
     {m m' : Fin M} (hmm' : m ≠ m') :
@@ -116,28 +102,22 @@ theorem gaussianCodebook_indepFun_codewords (M n : ℕ) (σsq : ℝ≥0)
     exact this
   exact h_iIndep.indepFun hmm'
 
-/-! ## Phase B-0 — Continuous AEP for n-dim Gaussian (Mathlib gap)
+/-! ## Continuous AEP for the n-dimensional Gaussian
 
-The load-bearing predicate `IsContinuousAEPGaussian` was **removed** in the
-AWGN M5 Tier 3 → Tier 2 sorry-based migration (Phase 3-β, plan
-`docs/shannon/awgn-m5-sorry-migration-plan.md`). Its analytic content moved to the
-lemma `continuousAepGaussian_holds` in `InformationTheory/Shannon/AWGN/Walls.lean`
-(machine-verified sorryAx-free as of 2026-06-12; re-check with `#print axioms`).
-Consumers in this file call that lemma directly instead of taking a predicate
-hypothesis. -/
+The continuous AEP is the lemma `continuousAepGaussian_holds` in
+`InformationTheory/Shannon/AWGN/Walls.lean`. Consumers in this file call that
+lemma directly instead of taking a predicate hypothesis. -/
 
-/-! ## Phase C — Joint typical decoder + union bound -/
+/-! ## Joint typical decoder and union bound -/
 
-/-- **Joint typical decoder** (Cover-Thomas 9.2 / inventory Axis 5, Option A).
-Given a typical set `A ⊆ (Fin n → ℝ) × (Fin n → ℝ)` and a candidate codebook,
-the decoder maps each received vector `y` to the smallest codeword index `m`
-satisfying `(codebook m, y) ∈ A`; if no such `m` exists, returns the default
-`⟨0, …⟩ : Fin M` (well-defined under `[NeZero M]`).
+/-- The joint-typicality decoder (Cover–Thomas 9.2). Given a typical set
+`A ⊆ (Fin n → ℝ) × (Fin n → ℝ)` and a candidate codebook, it maps each received
+vector `y` to the smallest codeword index `m` with `(codebook m, y) ∈ A`; if no
+such `m` exists it returns the default `⟨0, …⟩ : Fin M` (well-defined under
+`[NeZero M]`).
 
-判断: inventory Axis 5 推奨 Option A (`Classical.choose` + `measurable_to_countable'`).
-The set `A` is passed as a parameter so that callers can directly plug the AEP-
-supplied set obtained from `h_aep : IsContinuousAEPGaussian P N`. This avoids the
-`Fin.find` `(h : ∃ k, p k)` explicit-argument trap (inventory line 251). -/
+The set `A` is a parameter so that callers can plug in the AEP-supplied typical
+set directly. -/
 noncomputable def jointTypicalDecoder
     {n M : ℕ} [NeZero M]
     (A : Set ((Fin n → ℝ) × (Fin n → ℝ)))
@@ -148,20 +128,8 @@ noncomputable def jointTypicalDecoder
   if h : ∃ m : Fin M, (codebook m, y) ∈ A then Fin.find _ h
   else ⟨0, Nat.pos_of_ne_zero (NeZero.ne M)⟩
 
-/-- **Decoder measurability** (Phase C-2). Via `measurable_to_countable'`
-(`Mathlib/MeasureTheory/MeasurableSpace/Constructions.lean:42`): since the codomain
-`Fin M` is countable, it suffices to show each fibre `decoder ⁻¹' {m}` is
-measurable. The fibre splits into the two cases of the `dif`:
-
-- `{y | ∃ m', (codebook m', y) ∈ A ∧ Classical.choose ⟨m', …⟩ = m}` (typical hit)
-- `{y | ¬ ∃ m', (codebook m', y) ∈ A} ∩ {y | (default : Fin M) = m}` (fallback)
-
-Both are built from `Measurable.exists` (`Constructions.lean:889`) /
-`MeasurableSet.compl` / `MeasurableSet.inter` applied to the section
-`{y | (codebook m', y) ∈ A}`, which is measurable since `A` is.
-
-trap: this proof works for **any** measurable set `A`; it does *not* depend on the
-AEP bound shape. -/
+/-- The joint-typicality decoder is measurable for any measurable typical set
+`A`. -/
 @[entry_point]
 theorem jointTypicalDecoder_measurable
     {n M : ℕ} [NeZero M]
@@ -271,28 +239,14 @@ theorem jointTypicalDecoder_measurable
   · rw [if_pos h_eq]; exact hNoneAll
   · rw [if_neg h_eq]; exact MeasurableSet.empty
 
-/-! ### Helper plumbing for `hPe_meas` (Phase E-1 residual measurability closure)
+/-! ### Measurability plumbing for the per-message error
 
-Three private helpers used solely to discharge the AE-measurability of
+Private helpers that discharge the AE-measurability of
 `c ↦ (Measure.pi (W ∘ c m)) (errorEvent c m)` inside
-`isAwgnTypicalityHypothesis`:
+`isAwgnTypicalityHypothesis`: the joint measurability of the decoder, the
+codebook kernel, and the kernel-section measurability. -/
 
-1. `jointTypicalDecoder_joint_measurable` — extends
-   `jointTypicalDecoder_measurable` from "y-only with codebook fixed" to
-   "joint in (codebook, y)". Same Boolean-combination skeleton as the
-   y-only proof, lifted to the product space.
-2. `awgnCodebookKernel` — packages `c ↦ Measure.pi (fun i => awgnChannel
-   N h_meas (c m i))` as a genuine `Kernel (Fin M → Fin n → ℝ) (Fin n → ℝ)`
-   via `Measurable.measure_of_isPiSystem_of_isProbabilityMeasure` on the
-   box π-system; each box evaluates to a finite product of measurable
-   coordinate kernels.
-3. `awgnCodebookKernel_apply_prodMk_measurable` — applies
-   `Kernel.measurable_kernel_prodMk_left` to give measurability of
-   `c ↦ K c (Prod.mk c ⁻¹' T)` for any jointly measurable `T`. -/
-
-/-- Joint measurability in `(codebook, y)` of `jointTypicalDecoder`. The
-proof mirrors `jointTypicalDecoder_measurable` but lifts every step to the
-product measurable space `(Fin M → Fin n → ℝ) × (Fin n → ℝ)`. -/
+/-- Joint measurability in `(codebook, y)` of `jointTypicalDecoder`. -/
 private theorem jointTypicalDecoder_joint_measurable
     {n M : ℕ} [NeZero M]
     (A : Set ((Fin n → ℝ) × (Fin n → ℝ))) (hA : MeasurableSet A) :
@@ -400,11 +354,6 @@ private theorem jointTypicalDecoder_joint_measurable
   · rw [if_pos h_eq]; exact hNoneAll
   · rw [if_neg h_eq]; exact MeasurableSet.empty
 
-/-- The `Measure (Fin n → ℝ)`-valued map `c ↦ Measure.pi (fun i => awgnChannel
-N h_meas (c m i))` is measurable. Proof via
-`Measurable.measure_of_isPiSystem_of_isProbabilityMeasure` on the standard box
-π-system, where each box reduces to a finite product of measurable coordinate
-applications of `awgnChannel`. -/
 private theorem awgnCodebook_pi_measurable
     {n M : ℕ} (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) (m : Fin M) :
     Measurable (fun c : Fin M → Fin n → ℝ =>
@@ -453,59 +402,27 @@ instance awgnCodebookKernel.instIsMarkovKernel
     haveI : IsMarkovKernel (awgnChannel N h_meas) := awgnChannel.instIsMarkovKernel N h_meas
     infer_instance
 
-/-! ### Phase 4 (D2) — genuine random-coding union bound
+/-! ### Random-coding union bound -/
 
-The genuine replacement for the false `awgnRandomCodingBound_holds`
-(`Walls.lean`, `∀ decoder` over-generalisation). Instead of quantifying over an
-arbitrary measurable decoder, we **fix** `decoder := jointTypicalDecoder A` and
-take the two AEP outputs ((i) joint-mass `≥ 1−ε`, (iii) product-mass
-`≤ exp(−(klDiv_n − 3nε))`) as hypotheses — a **modular composition** of the
-genuine Wall-1 (`continuousAepGaussian_holds`) output, not a load-bearing bundle.
-The conclusion is the Cover–Thomas 9.2 union bound:
-`∫⁻ codebook, channel_m(errorEvent m) ≤ 2ε`. -/
+/-- The random-coding union bound (Cover–Thomas 9.2, with the typicality slack
+`δ` separated from the error target `ε`). With the codebook drawn from the
+two-stage Gaussian product law and the decoder fixed to the joint-typicality
+decoder against `A`, there is a threshold `N₀` such that for every `n ≥ N₀`,
+every codebook size `M ≤ ⌈exp(nR)⌉`, and every measurable typical set `A`
+satisfying the two AEP bounds at slack `δ`, the average per-message error
+probability is `≤ 2ε`:
 
-/-- **Random-coding union bound** (Cover–Thomas 9.2, Phase 4 = D2, δ-separated).
-With the codebook drawn from the 2-stage Gaussian product law and the decoder
-fixed to the joint-typical decoder against `A`, there is a threshold `N₀` such
-that for every `n ≥ N₀`, every codebook size `M ≤ ⌈exp(nR)⌉`, and every
-measurable typical set `A` satisfying the two AEP bounds (with **typicality slack
-`δ`**), the average (over the codebook) per-message error probability is `≤ 2ε`:
+* `hA_mass` — the joint codebook+noise law puts mass `≥ 1−ε` on `A`.
+* `hA_indep` — the independent-pair product law puts mass
+  `≤ exp(−(klDiv_n − 3nδ))` on `A`.
 
-* `hA_mass` — (i): the joint codebook+noise law `J` puts mass `≥ 1−ε` on `A`
-  (verbatim the `continuousAepGaussian_holds` (i) conjunct).
-* `hA_indep` — (iii): the independent-pair product law `Q` puts mass
-  `≤ exp(−(klDiv_n − 3nδ))` on `A` (verbatim the (iii) conjunct, slack `δ`).
-
-The **slack assumption** `hslack : R + 3δ < (1/2) log(1 + P/N)` is what makes the
-second (alias) term honestly decay: with the typicality margin `g = I − R − 3δ > 0`
-and `klDiv_n = n·I`, the alias mass `(M−1)·exp(−(klDiv_n − 3nδ)) ≤ ⌈exp(nR)⌉·
-exp(−n(I − 3δ)) = exp(−ng)·(...) → 0`, so it is `≤ ε` past a threshold `N₀`
-(depending only on `ε, δ, R, N, P`, not on `M` or `A`). The previous `δ ≡ ε`
-coupling made this term false-as-framed whenever `3ε ≥ I` (e.g. `P=N=1, R=0.1,
-ε=0.2, n=1, M=2`: alias term `= 1 > ε`).
-
-`J` and `Q` are copied verbatim from `Walls.lean`'s `continuousAepGaussian_holds`.
-
-**Honesty**: `hA_mass`/`hA_indep` are *genuine outputs* of Wall 1, threaded as
-hypotheses for a standard layering — the decoder is fixed (`jointTypicalDecoder A`),
-no `*Hypothesis` predicate encodes the proof core, so this is **not** load-bearing
-hypothesis bundling. `hslack` is a genuine regularity precondition (the
-typicality-margin condition `R + 3δ < I`), not a bundled core.
-
-**false-statement #6 RESOLVED (2026-06-12, signature fix).** The preconditions
-`hP : 0 < P` and `hN : (N:ℝ) ≠ 0` were added to exclude the degenerate corner
-`1 + P/N < 0` (`P < −N`). In that corner `P.toNNReal = 0`, `J = Q`, `klDiv J Q = 0`,
-so the alias term2 did not decay and was false-as-framed; it was satisfiable under
-the old `{ε δ R}` signature because `hslack` uses Mathlib's `Real.log x = log|x|`
-convention (so `(1/2)log|1+P/N| > R+3δ` could hold with `1+P/N < 0`). With `0 < P`
-and `0 < N` we get `P/N > 0`, hence `1 + P/N > 1 > 0`, and the `by_cases` corner
-branch is discharged by contradiction. Both consumers (`awgn_avg_error_union_bound`,
-`isAwgnTypicalityHypothesis` via the strict witness `P' > 0`) already supply these
-at their call sites. The whole declaration is now genuine: term1 (J-marginal mass),
-N₀ pin (`N₀ = ⌈log(2/ε)/g⌉`, `g = I − R − 3δ > 0`), and term2 (Q-marginal collapse +
-decay via `klDiv_perLetter_eq_capacity` / `klDiv_nFold_eq_nsmul` giving `klDiv_n = n·I`)
-are all sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`).
-Precedent: false-statement #5 (2026-06-12, Fix B) resolved within-session.
+The slack assumption `hslack : R + 3δ < (1/2) log(1 + P/N)` is what makes the
+alias term decay: with the typicality margin `g = I − R − 3δ > 0` and
+`klDiv_n = n·I`, the alias mass is bounded by `exp(−ng)·(…) → 0`, hence `≤ ε`
+past `N₀`. The preconditions `hP : 0 < P` and `hN : (N:ℝ) ≠ 0` exclude the
+degenerate corner `1 + P/N < 0`, where `P.toNNReal = 0` collapses `klDiv` to `0`
+and the alias term no longer decays; under `0 < P` and `0 < N` we have
+`1 + P/N > 1 > 0`. They are regularity preconditions, not a bundled proof core.
 
 @audit:ok (independent honesty audit 2026-06-12, commit f69cfea: false-statement #6
 RESOLVED. `hP`/`hN` are regularity preconditions excluding the false corner `1+P/N<0`,
@@ -1178,18 +1095,11 @@ theorem awgn_random_coding_union_bound
     _ = ENNReal.ofReal (2 * ε) := by
         rw [← ENNReal.ofReal_add hε.le hε.le]; ring_nf
 
-/-- **Random-coding union bound** (Cover-Thomas 9.2 / Phase C-3, δ-separated). Under
-the random Gaussian codebook + AWGN channel, the average per-message error
-probability (using `jointTypicalDecoder` against the AEP-supplied typical set)
-is `≤ 2ε` for all `M ≤ ⌈exp(n R)⌉` once `n` is large enough, given the typicality
-margin `R + 3δ < (1/2) log(1 + P/N)`.
-
-**δ-separation (2026-06-12)**: the typicality slack `δ` is now an independent
-parameter from the error target `ε` (the old `δ ≡ ε` coupling made the alias
-term false-as-framed when `3ε ≥ I`). The body takes the typical set `A` (with its
-two AEP bounds at slack `δ`) from `continuousAepGaussian_holds P N hδ hε` and the
-union-bound threshold from `awgn_random_coding_union_bound P N h_meas hε hδ hR_pos
-hslack`, threading `A`'s two bounds into the union bound.
+/-- The random-coding union bound closed against the AEP-supplied typical set.
+Under the random Gaussian codebook and AWGN channel, the average per-message
+error probability (using `jointTypicalDecoder` against the AEP-supplied typical
+set) is `≤ 2ε` for all `M ≤ ⌈exp(n R)⌉` once `n` is large enough, given the
+typicality margin `R + 3δ < (1/2) log(1 + P/N)` with `δ` separate from `ε`.
 
 @audit:ok (independent honesty audit 2026-06-12, commit f69cfea: genuine modular
 composition of `continuousAepGaussian_holds` + `awgn_random_coding_union_bound`; own
@@ -1228,13 +1138,10 @@ theorem awgn_avg_error_union_bound
   refine ⟨A, hA_meas, ?_⟩
   exact hN_rand (le_of_max_le_right hn : N_rand ≤ n) hM_pos hM_le A hA_meas hA_mass hA_indep
 
-/-! ## Phase D — Expurgation -/
+/-! ## Expurgation -/
 
-/-- **Expurgation (D-1)**: avg-≤-B integral ⇒ ∃ codebook with the same bound.
-
-Direct 1-line firing of `MeasureTheory.exists_le_lintegral` (Average.lean:738,
-inventory Axis 4.1.1) — `gaussianCodebook M n σsq` is a probability measure
-(Phase A instance) so the lemma applies, then `le_trans`. -/
+/-- If the codebook-average of `Pe` is at most `B`, then some specific codebook
+achieves `Pe ≤ B`. -/
 @[entry_point]
 theorem awgn_exists_codebook_le_avg
     {M n : ℕ} (σsq : ℝ≥0)
@@ -1246,12 +1153,8 @@ theorem awgn_exists_codebook_le_avg
   obtain ⟨c, hc⟩ := exists_le_lintegral hPe_aemeas
   exact ⟨c, hc.trans h_avg⟩
 
-/-- **Expurgation (D-2)** "worst-half throw-away": if the sum of `Pe m` is
-bounded by `M * (2ε)`, at least `M/2` indices `m` have `Pe m ≤ 4ε`.
-
-Pure `Finset` / arithmetic contraposition (inventory Axis 4.2). Pe is taken in
-`ℝ` here because the resulting bound is then handed to `Code.errorProbAt.toReal`
-slack reasoning in D-3. -/
+/-- Worst-half expurgation: if the sum of `Pe m` is bounded by `M · (2ε)`, then
+at least `M/2` indices `m` satisfy `Pe m ≤ 4ε`. -/
 @[entry_point]
 theorem awgn_expurgate_worst_half
     {M : ℕ} (hM : 2 ≤ M)
@@ -1311,24 +1214,16 @@ theorem awgn_expurgate_worst_half
   · intro m hm
     exact (Finset.mem_filter.mp hm).2
 
-/-! ## Phase D — Power constraint (Mathlib gap) + feasibility witness
+/-! ## Power constraint and feasibility witness
 
-The load-bearing predicate `IsAwgnPowerConstraintHonest` and the bundle
-`IsAwgnRandomCodingFeasible` were **removed** in the AWGN M5 Tier 3 → Tier 2
-sorry-based migration (Phase 3-β, plan
-`docs/shannon/awgn-m5-sorry-migration-plan.md`).
+The per-codeword power-constraint bound `awgnPowerConstraintPerCodeword_holds`
+lives in `InformationTheory/Shannon/AWGN/Walls.lean`. The achievability assembly
+also needs a shared slack witness `∃ P' ∈ (0, P)` with `R < capacity(P')`,
+supplied by `awgnPowerWitness_exists` below, which returns a strict `P' < P` (the
+variance-level slack `(P'.toNNReal : ℝ) < P` required by the per-codeword
+bound). -/
 
-* The power-constraint analytic content is now the per-codeword expurgation bound
-  `awgnPowerConstraintPerCodeword_holds` in
-  `InformationTheory/Shannon/AwgnWalls.lean` (genuine, sorryAx-free); the false
-  `∀m`-form `awgnPowerConstraintHonest_holds` was retired (D4).
-* The bundle's only genuine (non-wall) content was the shared slack witness
-  `∃ P' ∈ (0, P)` with `R < capacity(P')`. The sub-bounds at `P'` are now supplied
-  by the achievability decomposition, and the slack witness is provided by the
-  genuine helper `awgnPowerWitness_exists` below (which returns a **strict**
-  `P' < P`, needed for the variance-level slack `(P'.toNNReal : ℝ) < P`). -/
-
-/-- **Power-constraint slack witness** (genuine helper).
+/-- The power-constraint slack witness.
 
 Given `R < capacity(P) = (1/2) log(1 + P/N)`, produce a strictly smaller variance
 `P' ∈ (0, P)` for which the rate `R` is still below `capacity(P')`. The strict
@@ -1385,10 +1280,10 @@ theorem awgnPowerWitness_exists (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : 
     (Real.lt_log_iff_exp_lt harg_P'_pos).mpr hexp_lt'
   linarith
 
-/-- **Expurgation (D-3)**: bridge to `AwgnCode` type given a deterministic
-codebook satisfying both the per-message error bound and the per-message power
-constraint. Uses `jointTypicalDecoder` for the decoder and converts the
-`ℝ≥0∞`-valued error bound to `< 5ε` real-valued slack. -/
+/-- Bridge to the `AwgnCode` type from a deterministic codebook satisfying both
+the per-message error bound and the per-message power constraint, using
+`jointTypicalDecoder` as the decoder and converting the `ℝ≥0∞`-valued error
+bound to the `< 5ε` real-valued slack. -/
 @[entry_point]
 theorem awgn_extract_AwgnCode
     {P : ℝ} {N : ℝ≥0}
@@ -1441,39 +1336,19 @@ theorem awgn_extract_AwgnCode
         apply ENNReal.toReal_mono h_ne_top h_pe_le
     _ < 5 * ε := h_target
 
-/-! ## Phase E — `isAwgnTypicalityHypothesis` 統合 + main wrapper -/
+/-! ## Achievability assembly -/
 
-/-- **F-1 achievability discharge** — genuine 580-line achievability assembly,
-predicate-hypothesis-free.
+/-- The assembled AWGN achievability statement: for any rate `R` below the
+Gaussian capacity and any `ε > 0`, there is a threshold `N₀` such that for every
+`n ≥ N₀` there is an `(M, n)` code (with `M ≥ ⌈exp(nR)⌉`) whose maximal
+per-message error probability over the AWGN channel is below `ε`.
 
-History: the bundle hyp `h_feasible : IsAwgnRandomCodingFeasible P N h_meas`
-(Phase 2 pivot 2024-05-24) was **removed** by AWGN M5 Phase 3-β (2026-05-28).
-The 2026-06-12 **δ-separation + D4 rewire** then re-wired the achievability core
-to the new honest decomposition: the typical set (with its two AEP bounds at
-slack `δ`) comes from `continuousAepGaussian_holds P' N`, the per-message error
-bound from the **δ-separated genuine union bound**
-`awgn_random_coding_union_bound P' N h_meas` (this file, Phase 4 = D2), and the
-power constraint from the **per-codeword expurgation bound**
-`awgnPowerConstraintPerCodeword_holds P' P N` (`Walls.lean`, Phase 5a = D3,
-sorryAx-free). The old false walls `awgnRandomCodingBound_holds` (`∀decoder`
-over-strong) and `awgnPowerConstraintHonest_holds` (`∀m` exponential-rate
-unsatisfiable) are **retired** (deleted).
-
-**Body structure (Phase 3 rewire)**: the shared slack variance `P'` (strict
-`P' < P`) comes from `awgnPowerWitness_exists`. A typicality slack `δ := (C−R)/12`
-is introduced so the union-bound margin `R'' + 3δ < C` holds. The 580-line F-1
-assembly (rate inflation, doubling, **per-codeword combined-penalty barrier**,
-D-1 extraction, worst-half, monotonic reindex, sub⊆full inclusion, D-3 bridge)
-is preserved; the barrier is now `g c := ∑_m (Pe c m + 𝟙_{violate m}(c))` so the
-power constraint is enforced per-codeword (matching `awgnPowerConstraintPerCodeword_holds`).
-
-**Honesty**: the assembly body is GENUINE (no degenerate/circular/laundering);
-0 sorry / 0 `@residual` **in this declaration**, and all transitively consumed
-lemmas are now sorryAx-free: `awgn_random_coding_union_bound` (false-statement #6
-fix, term1 + term2 + N₀ all genuine), `continuousAepGaussian_holds` (`Walls.lean`),
-and `awgnPowerConstraintPerCodeword_holds` (`Walls.lean`). `#print axioms
-isAwgnTypicalityHypothesis` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free,
-machine-verified 2026-06-12).
+The assembly combines a strictly smaller slack variance `P'` from
+`awgnPowerWitness_exists`, a typicality slack `δ := (C−R)/12` for the
+union-bound margin `R'' + 3δ < C`, the typical set and its two AEP bounds from
+`continuousAepGaussian_holds P' N`, the per-message error bound from
+`awgn_random_coding_union_bound P' N h_meas`, and the power constraint from the
+per-codeword expurgation bound `awgnPowerConstraintPerCodeword_holds P' P N`.
 
 @audit:ok (independent honesty audit 2026-06-12, commit f69cfea: proof-done CONFIRMED.
 The strict witness `hP'_pos : 0 < P'` (from `awgnPowerWitness_exists`) + `hN` are
@@ -1492,12 +1367,9 @@ theorem isAwgnTypicalityHypothesis
               ∀ m, (c.toCode.errorProbAt (awgnChannel N h_meas) m).toReal < ε := by
   intro R hR_pos hR ε hε
   classical
-  -- AWGN M5 Phase 3-β: the bundled feasibility hypothesis `h_feasible` was
-  -- removed. The shared slack variance `P'` (strict `P' < P`) comes from the
-  -- genuine helper `awgnPowerWitness_exists`; the three sub-bounds at `P'` come
-  -- from the shared sorry 補題 in `AwgnWalls.lean`. The 580-line assembly below
-  -- is preserved verbatim, consuming `h_aep' / h_rand' / h_power'` exactly as
-  -- the old bundle destructure did.
+  -- The shared slack variance `P'` (strict `P' < P`) comes from
+  -- `awgnPowerWitness_exists`; the three sub-bounds at `P'` come from the lemmas
+  -- in `Walls.lean`. The assembly below consumes `h_aep' / h_rand' / h_power'`.
   obtain ⟨P', hP'_pos, hP'_lt_P_strict, hR_lt_P'C⟩ :=
     awgnPowerWitness_exists P hP N hN hR_pos hR
   -- Non-strict slack kept under the original name for the verbatim assembly.
