@@ -8,29 +8,28 @@ import InformationTheory.Shannon.CramerBoundaryUpstream
 
 This file closes the **boundary case** `a = m` (= tilted mean = `deriv (cgf Y μ₀) lam`)
 of the residual window predicate `IsTiltedWindowEventuallyLarge`, the only piece left
-after the change-of-measure machinery (Phases 1–3 of the parent
-`infinitepi-tilted-rn-discharge`) is discharged. The interior case
+after the change-of-measure machinery is discharged. The interior case
 `a < m < a + ε` is handled by the existing two-sided LLN squeeze
 (`tiltedWindow_eventually_large_of_interior`); the boundary case requires a CLT
 refinement, supplied here.
 
-## Outline (plan `cramer-chernoff-clt-closure-moonshot-plan`)
+## Outline
 
-* **Phase 1** — `gaussianReal_Ici_eq_half` (Gaussian median, symmetry-by-map). CLOSED.
-* **Phase 3** — apply the CLT `tendstoInDistribution_inv_sqrt_mul_sum_sub` to the tilted
+* `gaussianReal_Ici_eq_half` — the Gaussian median, by symmetry-by-map.
+* apply the CLT `tendstoInDistribution_inv_sqrt_mul_sum_sub` to the tilted
   ambient, with the existing `iIndepFun` / `IdentDistrib` / bounded plumbing and a
   self-built `HasLaw id (gaussianReal 0 v.toNNReal)` witness.
-* **Phase 2** — portmanteau half-line bridge: `frontier (Ici 0) = {0}` is null under
+* portmanteau half-line bridge: `frontier (Ici 0) = {0}` is null under
   `gaussianReal 0 v` (`noAtoms`), so the CLT weak convergence transfers to the half-line
   mass.
-* **scaling** — the window event `{m·n ≤ ∑Y}` is the `S_n`-preimage of `Ici 0`, which
+* scaling — the window event `{m·n ≤ ∑Y}` is the `S_n`-preimage of `Ici 0`, which
   identifies the CLT half-line mass with `P{m·n ≤ ∑Y}`.
-* **Phase 4** — `tiltedWindow_eventually_large_of_boundary`: the window mass
+* `tiltedWindow_eventually_large_of_boundary`: the window mass
   `P{m·n ≤ ∑Y} − P{(m+ε)·n ≤ ∑Y}` tends to `1/2 − 0 = 1/2 ≥ 1/4` (the second term
   vanishes by the one-sided LLN).
-* **Phase 5** — a relaxed `∃C>0` window predicate + a new reduction to
+* a relaxed `∃C>0` window predicate + a new reduction to
   `IsMeasureInfinitePiTiltedEq`, discharged at `a = m`.
-* **Phase 6** — Cramér end-to-end lower bound at the interior point
+* Cramér end-to-end lower bound at the interior point
   `a = deriv (cgf Y μ₀) lam`, with the residual hypothesis removed.
 -/
 
@@ -43,7 +42,7 @@ open scoped ENNReal NNReal Topology BigOperators
 half-line `{x | 0 ≤ x}`. Symmetry-by-map: `x ↦ -x` swaps the two closed half-lines and
 fixes `gaussianReal 0 v`.
 
-@audit:ok (2026-06-11 independent honesty audit: sorryAx-free; genuine symmetry-by-map). -/
+@audit:ok (genuine symmetry-by-map). -/
 theorem gaussianReal_Ici_eq_half {v : ℝ≥0} (hv : v ≠ 0) :
     gaussianReal 0 v {x : ℝ | (0 : ℝ) ≤ x} = 1 / 2 := by
   set μ : Measure ℝ := gaussianReal 0 v with hμ
@@ -80,11 +79,11 @@ theorem gaussianReal_Ici_eq_half {v : ℝ≥0} (hv : v ≠ 0) :
     rw [ENNReal.eq_div_iff (by norm_num) (by norm_num), mul_comm, ← htwo, mul_comm]
   rw [hIci]; exact hhalf
 
-/-! ## Phase 3 — CLT applied to the tilted ambient -/
+/-! ## CLT applied to the tilted ambient -/
 
 variable {Ω₀ : Type*} [MeasurableSpace Ω₀]
 
-/-- **Gaussian self-law witness** (Phase 3): the identity map on `ℝ` has law
+/-- **Gaussian self-law witness**: the identity map on `ℝ` has law
 `gaussianReal 0 w` under `gaussianReal 0 w`. Supplies the `HasLaw Y (gaussianReal 0 …)`
 argument of the CLT with the trivial witness `(ℝ, gaussianReal 0 w, id)`. -/
 theorem gaussianReal_hasLaw_id {w : ℝ≥0} :
@@ -92,7 +91,7 @@ theorem gaussianReal_hasLaw_id {w : ℝ≥0} :
   aemeasurable := aemeasurable_id
   map_eq := Measure.map_id
 
-/-- **Half-line mass tends to the Gaussian median** (Phase 3 CLT + Phase 2 portmanteau +
+/-- **Half-line mass tends to the Gaussian median** (CLT + portmanteau +
 scaling). The tilted-ambient mass (ℝ≥0∞-valued) of the half-line
 `{ω | m·n ≤ ∑_{i<n} Y(ω i)}` (at the tilted mean `m = ∫ Y ∂tilted`) converges to the
 Gaussian mass `gaussianReal 0 v.toNNReal (Ici 0)`.
@@ -103,8 +102,7 @@ tilted ambient (with the self-built `gaussianReal_hasLaw_id` witness and the exi
 portmanteau half-line lemma (`frontier (Ici 0) = {0}`, null under `noAtoms`); identify the
 window event with the `S_n`-preimage of `Ici 0` via `Measure.map_apply`.
 
-@audit:ok (2026-06-11 independent honesty audit: sorryAx-free; genuine CLT + portmanteau
-+ scaling assembly). -/
+@audit:ok (genuine CLT + portmanteau + scaling assembly). -/
 theorem tilted_halfline_tendsto_gaussian
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ)
@@ -194,9 +192,9 @@ theorem tilted_halfline_tendsto_gaussian
       exact Real.sqrt_pos.2 (by exact_mod_cast hn)
     rw [mul_nonneg_iff_of_pos_left hsqrt, sub_nonneg, mul_comm]
 
-/-! ## Phase 2 + scaling — half-line mass tends to `1/2` -/
+/-! ## Half-line mass tends to `1/2` -/
 
-/-- **Half-line mass tends to `1/2`** (Phase 1 median applied to the Gaussian half-line
+/-- **Half-line mass tends to `1/2`** (Gaussian median applied to the Gaussian half-line
 limit). The tilted-ambient `.real`-mass of `{ω | m·n ≤ ∑_{i<n} Y(ω i)}` tends to `1/2`. -/
 theorem tilted_halfline_tendsto_half
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
@@ -212,7 +210,7 @@ theorem tilted_halfline_tendsto_half
       atTop (𝓝 (1 / 2)) := by
   set v : ℝ := Var[fun ω : ℕ → Ω₀ => Y (ω 0);
     Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))] with hvdef
-  -- The Gaussian half-line mass is exactly `1/2` (Phase 1, `Ici 0 = {x | 0 ≤ x}`).
+  -- The Gaussian half-line mass is exactly `1/2` (`Ici 0 = {x | 0 ≤ x}`).
   have hmedian : gaussianReal 0 v.toNNReal (Set.Ici (0 : ℝ)) = 1 / 2 := by
     have hset : Set.Ici (0 : ℝ) = {x : ℝ | (0 : ℝ) ≤ x} := by
       ext x; simp [Set.mem_Ici]
@@ -232,16 +230,16 @@ theorem tilted_halfline_tendsto_half
   -- `Measure.real s = (μ s).toReal`, so the two functions agree.
   exact htoReal
 
-/-! ## Phase 4 — window mass eventually `≥ 1/4` at the boundary -/
+/-! ## Window mass eventually `≥ 1/4` at the boundary -/
 
-/-- **Boundary window largeness** (Phase 4). At the boundary `a = m` (= tilted mean),
+/-- **Boundary window largeness**. At the boundary `a = m` (= tilted mean),
 the tilted infinite-product window mass `{ω | m·n ≤ ∑Y < (m+ε)·n}` is eventually `≥ 1/4`.
-The lower half-line tends to `1/2` (Phase 2 + scaling + median); the upper half-line at
+The lower half-line tends to `1/2` (half-line mass + scaling + median); the upper half-line at
 `m + ε > m` vanishes by the one-sided LLN; their difference tends to `1/2 ≥ 1/4`.
 
-@audit:ok (2026-06-11 independent honesty audit: sorryAx-free; genuine CLT + LLN assembly;
-`hVar : 0 < Var` is the non-degeneracy precondition required by the Gaussian median
-`gaussianReal_Ici_eq_half` (v=0 degeneracy is correctly excluded by spec). -/
+@audit:ok (genuine CLT + LLN assembly; `hVar : 0 < Var` is the non-degeneracy precondition
+required by the Gaussian median `gaussianReal_Ici_eq_half` (v=0 degeneracy is correctly
+excluded by spec). -/
 theorem tiltedWindow_eventually_large_of_boundary
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ)
@@ -320,17 +318,17 @@ theorem tiltedWindow_eventually_large_of_boundary
   -- Eventually `≥ 1/4`.
   exact hwindow.eventually_const_le (by norm_num)
 
-/-! ## Phase 5 — relaxed window predicate + boundary discharge -/
+/-! ## Relaxed window predicate + boundary discharge -/
 
-/-- **Per-instance change-of-measure half-line lower bound** (Phase 5 core). At a single
+/-- **Per-instance change-of-measure half-line lower bound**. At a single
 threshold `a` and `ε > 0`, eventual largeness `C ≤ tilted-window mass` lifts (via the
 finite-level change-of-measure `change_of_measure_lower_bound_pi` and the cylinder lift)
 to the un-tilted half-line lower bound `C·exp(-n(λa - Λ + λε)) ≤ P{a·n ≤ ∑Y}`. This is the
 per-`(a, ε)` body shared by the relaxed `∀a` reduction and the boundary liminf bridge.
 
-@audit:ok (2026-06-11 independent honesty audit: sorryAx-free; genuine change-of-measure
-lift via `change_of_measure_lower_bound_pi` (real density bound, not vacuous) + cylinder
-lift; no C=0/exp=0 vacuity — at the call site `C = 1/4 > 0`, `exp(...) > 0` always). -/
+@audit:ok (genuine change-of-measure lift via `change_of_measure_lower_bound_pi` (real
+density bound, not vacuous) + cylinder lift; no C=0/exp=0 vacuity — at the call site
+`C = 1/4 > 0`, `exp(...) > 0` always). -/
 theorem tilted_window_lower_to_halfline
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) (hlam : 0 ≤ lam)
@@ -355,7 +353,7 @@ theorem tilted_window_lower_to_halfline
   have hlift_W := Cramer.Discharge.infinitePi_partialSum_event_eq_pi
       (ν := μ₀.tilted (fun ω => lam * Y ω)) hY n
       (fun r => a * (n : ℝ) ≤ r ∧ r < (a + ε) * n) hPW
-  -- Phase 3 change-of-measure at the finite level.
+  -- Change-of-measure at the finite level.
   have hcm := Cramer.Discharge.change_of_measure_lower_bound_pi
     (n := n) (μ₀ := μ₀) hY h_bdd a ε lam hlam
   have hfin_E : (Measure.pi (fun _ : Fin n => μ₀))
@@ -388,17 +386,16 @@ theorem tilted_window_lower_to_halfline
   rw [hW_real] at hn
   exact hn
 
-/-! ## Phase 6 — Cramér end-to-end lower bound at the interior optimal tilt -/
+/-! ## Cramér end-to-end lower bound at the interior optimal tilt -/
 
-/-- **Per-`ε` boundary liminf lower bound** (Phase 6 core). At the boundary `a = m`
+/-- **Per-`ε` boundary liminf lower bound**. At the boundary `a = m`
 (= tilted mean `∫ Y ∂tilted`), for each `ε > 0`, the half-line tail rate is eventually
 bounded below by `(1/n)·log((1/4)·exp(-n(λm - Λ + λε)))`, whose limit is
 `-(λm - Λ + λε)`. By `liminf_le_liminf`, `-(λm - Λ + λε) ≤ liminf (1/n)·log P{m·n ≤ ∑Y}`.
 
-@audit:ok (2026-06-11 independent honesty audit: sorryAx-free; no degenerate-log exploit —
-`hP_pos : 0 < P{...}` is derived from the window lower bound `(1/4)·exp(...) ≤ P{...}`, so
-`log` is taken of a strictly positive real; `h_coboundedBelow` is the genuine
-`liminf_le_liminf` side-condition, not load-bearing). -/
+@audit:ok (no degenerate-log exploit — `hP_pos : 0 < P{...}` is derived from the window
+lower bound `(1/4)·exp(...) ≤ P{...}`, so `log` is taken of a strictly positive real;
+`h_coboundedBelow` is the genuine `liminf_le_liminf` side-condition, not load-bearing). -/
 theorem boundary_liminf_lower_of_eps
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) (hlam : 0 ≤ lam)
@@ -476,7 +473,7 @@ theorem boundary_liminf_lower_of_eps
       = liminf g atTop := hg_tendsto.liminf_eq.symm
     _ ≤ _ := liminf_le_liminf hev_le hbnd h_coboundedBelow
 
-/-- **Cramér lower bound, boundary closure** (Phase 6). At the interior optimal tilt
+/-- **Cramér lower bound, boundary closure**. At the interior optimal tilt
 `a = m = ∫ Y ∂tilted` (= `deriv (cgf Y μ₀) lam`, the boundary of the residual window), the
 asymptotic upper-tail rate is bounded below by the per-`lam` Chernoff exponent
 `-(λm - Λ)`. The residual largeness hypothesis is **removed** — the boundary window mass is
@@ -485,9 +482,8 @@ regularity preconditions remain: boundedness, non-degeneracy `0 < Var`, and the 
 hypothesis on the rate sequence (a precondition shared with `cramer_lower`). The `ε → 0⁺`
 limit collapses the per-`ε` bounds `boundary_liminf_lower_of_eps` to the sharp exponent.
 
-@audit:ok (2026-06-11 independent honesty audit: sorryAx-free; `ε→0⁺` collapse via
-`le_of_forall_sub_le` is genuine; the CLT supplies the boundary window mass internally —
-no residual largeness hypothesis). -/
+@audit:ok (`ε→0⁺` collapse via `le_of_forall_sub_le` is genuine; the CLT supplies the
+boundary window mass internally — no residual largeness hypothesis). -/
 theorem cramer_lower_boundary
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) (hlam : 0 ≤ lam)
@@ -530,23 +526,21 @@ theorem cramer_lower_boundary
     rw [heq] at h
     exact h
 
-/-- **Cramér lower bound, boundary closure — consumer form** (Phase 6 end-to-end). The
+/-- **Cramér lower bound, boundary closure — consumer form**. The
 infinitePi-side restatement of `cramer_lower_boundary` matching the conclusion shape of
 `Cramer.Discharge.cramer_lower_phaseC_partial_discharge`: the cgf is written on the
 coordinate-eval family `Y ∘ eval 0` under the un-tilted product, and the threshold is the
 optimal tilt `a = deriv (cgf (Y∘eval 0) (infinitePi μ₀)) lam`. The optimal-tilt hypothesis
-`h_deriv` (the same regularity precondition carried by the consumer root after the
-2026-06-11 def-fix) pins `a = m = ∫ Y ∂tilted` via `tiltedMean_eq_deriv_cgf` and the
-cgf-eval bridge, so the residual largeness hypothesis is **removed**: the boundary window
-mass is supplied internally by the CLT. This is the unconditional internal-point form
-targeted by the parent W-3 retreat line.
+`h_deriv` (the same regularity precondition carried by the consumer root) pins
+`a = m = ∫ Y ∂tilted` via `tiltedMean_eq_deriv_cgf` and the cgf-eval bridge, so the residual
+largeness hypothesis is **removed**: the boundary window mass is supplied internally by the
+CLT. This is the unconditional internal-point form targeted by the parent W-3 retreat line.
 
-@audit:ok (2026-06-11 independent honesty audit: sorryAx-free `[propext, Classical.choice,
-Quot.sound]` machine-confirmed; `h_deriv`/`hVar`/`h_coboundedBelow` are all preconditions,
-not load-bearing — `h_deriv` pins `a = m` (the true-as-framed constraint, def-fix #24),
-`hVar` is the non-degeneracy precondition, `h_coboundedBelow` is the standard
-`liminf_le_liminf` side-condition (satisfiable: rate terms ≤ 0 since `P ≤ 1`, not vacuous);
-matches consumer root `cramer_lower_phaseC_partial_discharge` signature verbatim). -/
+@audit:ok (`h_deriv`/`hVar`/`h_coboundedBelow` are all preconditions, not load-bearing —
+`h_deriv` pins `a = m` (the true-as-framed constraint), `hVar` is the non-degeneracy
+precondition, `h_coboundedBelow` is the standard `liminf_le_liminf` side-condition
+(satisfiable: rate terms ≤ 0 since `P ≤ 1`, not vacuous); matches consumer root
+`cramer_lower_phaseC_partial_discharge` signature verbatim). -/
 theorem cramer_lower_boundary_unconditional
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (a lam : ℝ) (hlam : 0 ≤ lam)

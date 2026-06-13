@@ -7,7 +7,7 @@ import InformationTheory.Shannon.Cramer.Cramer
 This module relocates the **root B** Cramér lower-bound chain
 (`cramer_lower` / `cramer_lower_legendre` / `cramer_tendsto`) downstream of the
 CLT-boundary headline `cramer_lower_boundary_unconditional`
-(`CramerCltBoundaryClosure.lean`, sorryAx-free).
+(`CramerCltBoundaryClosure.lean`).
 
 The chain previously lived in `InformationTheory/Shannon/Cramer/Cramer.lean`,
 upstream of the headline.  Discharging `cramer_lower` against the headline there
@@ -53,31 +53,30 @@ variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
 /-- **Cramér lower bound** (general i.i.d.), root B form, transported to the
 CLT-boundary headline `cramer_lower_boundary_unconditional`.
 
-DEF-FIX 2026-06-11 (false-statement defect repaired): the optimal-tilt
-hypothesis `h_deriv : deriv (cgf (X 0) μ) lam = a` makes the per-`lam` Chernoff
-exponent `-(lam·a − Λ(lam))` a genuine lower bound for the tail rate.
+The optimal-tilt hypothesis `h_deriv : deriv (cgf (X 0) μ) lam = a` makes the
+per-`lam` Chernoff exponent `-(lam·a − Λ(lam))` a genuine lower bound for the
+tail rate.
 
-WIRING 2026-06-11 (root B): `hVar` (non-degenerate variance) is added as a
-regularity precondition and the body is discharged by transport to the headline
-(`Ω₀ := Ω`, `μ₀ := μ`, `Y := X 0`).  The transport identifies the joint law of
-the general i.i.d. family `X` with the canonical i.i.d. copies `X 0 ∘ eval i`
-under `infinitePi (fun _ => μ)`, via `iIndepFun_iff_map_fun_eq_infinitePi_map`
-and `IdentDistrib.map_eq`; the partial-sum event masses agree by pullback through
-the two joint maps.  `hVar` is a precondition, not a load-bearing core — the
-window-mass core is supplied internally by the CLT inside the headline; root B
-only transports + `exact`.
+`hVar` (non-degenerate variance) is a regularity precondition; the body is
+discharged by transport to the headline (`Ω₀ := Ω`, `μ₀ := μ`, `Y := X 0`).  The
+transport identifies the joint law of the general i.i.d. family `X` with the
+canonical i.i.d. copies `X 0 ∘ eval i` under `infinitePi (fun _ => μ)`, via
+`iIndepFun_iff_map_fun_eq_infinitePi_map` and `IdentDistrib.map_eq`; the
+partial-sum event masses agree by pullback through the two joint maps.  `hVar` is
+a precondition, not a load-bearing core — the window-mass core is supplied
+internally by the CLT inside the headline; this statement only transports +
+`exact`.
 
-@audit:ok (2026-06-11 independent honesty audit: sorryAx-free `[propext,
-Classical.choice, Quot.sound]` machine-confirmed. Transport is a GENUINE reduction
-(not a false implication): both the general-iid joint law `μ.map g` and the
-canonical copy `P.map g₀` push forward to the SAME `infinitePi (μ.map (X 0))` —
-`h_indep` is genuinely consumed by `iIndepFun_iff_map_fun_eq_infinitePi_map` and
-`h_ident` by `IdentDistrib.map_eq` to factor the marginals; the partial-sum event
-masses then agree by double pullback (`hpreB`/`hpre0` correct). `h_bdd0` correctly
-specializes `h_bdd` to `X 0` (i=0 instance); `h_deriv'` is a sound rewrite of
-`h_deriv` through the cgf bridge `cgf_eval_eq_cgf_base`; `hVar` is passed verbatim
-to the headline (matching form, no under-hypothesization) and is a precondition
-(non-degeneracy), not load-bearing.) -/
+@audit:ok (Transport is a GENUINE reduction (not a false implication): both the
+general-iid joint law `μ.map g` and the canonical copy `P.map g₀` push forward to
+the SAME `infinitePi (μ.map (X 0))` — `h_indep` is genuinely consumed by
+`iIndepFun_iff_map_fun_eq_infinitePi_map` and `h_ident` by `IdentDistrib.map_eq`
+to factor the marginals; the partial-sum event masses then agree by double
+pullback (`hpreB`/`hpre0` correct). `h_bdd0` correctly specializes `h_bdd` to
+`X 0` (i=0 instance); `h_deriv'` is a sound rewrite of `h_deriv` through the cgf
+bridge `cgf_eval_eq_cgf_base`; `hVar` is passed verbatim to the headline (matching
+form, no under-hypothesization) and is a precondition (non-degeneracy), not
+load-bearing.) -/
 theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
     (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
@@ -185,9 +184,8 @@ theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
 
 /-- **Cramér lower bound, Legendre form**. Threads `hVar` to `cramer_lower`.
 
-@audit:ok (2026-06-11 independent honesty audit: sorryAx-free; rewrites conclusion
-via the `hlam_opt` Legendre-attainment precondition, all hypotheses are regularity
-preconditions threaded to `cramer_lower`.) -/
+@audit:ok (rewrites conclusion via the `hlam_opt` Legendre-attainment precondition,
+all hypotheses are regularity preconditions threaded to `cramer_lower`.) -/
 theorem cramer_lower_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
     (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
@@ -210,13 +208,12 @@ theorem cramer_lower_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
   rw [← hlam_opt]; exact h
 
 /-- **Cramér's theorem (`Tendsto` form)** (Cover-Thomas 11.4.1). Sandwich of
-`cramer_upper_legendre` (Phase B) and `cramer_lower_legendre` (Phase C). Threads
-`hVar` to the lower-bound side.
+the upper bound `cramer_upper_legendre` and the lower bound `cramer_lower_legendre`.
+Threads `hVar` to the lower-bound side.
 
-@audit:ok (2026-06-11 independent honesty audit: sorryAx-free `[propext,
-Classical.choice, Quot.sound]` machine-confirmed; genuine sandwich of the
-constructive upper bound and the headline-backed lower bound. All hypotheses are
-regularity preconditions / cobounded-bounded side-conditions.) -/
+@audit:ok (genuine sandwich of the constructive upper bound and the headline-backed
+lower bound. All hypotheses are regularity preconditions / cobounded-bounded
+side-conditions.) -/
 @[entry_point]
 theorem cramer_tendsto [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))

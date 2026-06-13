@@ -55,12 +55,12 @@ precisely at the optimal tilt, where `lam·a − Λ(lam) = cramerRate a`. The
 non-degeneracy hypothesis `hVar` and the cobounded-below hypothesis
 `h_coboundedBelow` are regularity preconditions, not part of the proof core.
 
-@audit:ok (sorryAx-free `[propext, Classical.choice, Quot.sound]`; body is a
-verbatim `exact` of the `@audit:ok` headline `cramer_lower_boundary_unconditional`.
-`hVar` is non-load-bearing: the window-mass `≥ 1/4` core is derived inside the CLT
-of the headline, where `hVar` is consumed only as the non-degeneracy input; at
-`Var = 0` the tilted sum is a.e. constant and the argument collapses, so granting
-`hVar` alone does not hand over the conclusion.) -/
+@audit:ok (body is a verbatim `exact` of the headline
+`cramer_lower_boundary_unconditional`. `hVar` is non-load-bearing: the
+window-mass `≥ 1/4` core is derived inside the CLT of the headline, where `hVar`
+is consumed only as the non-degeneracy input; at `Var = 0` the tilted sum is a.e.
+constant and the argument collapses, so granting `hVar` alone does not hand over
+the conclusion.) -/
 theorem cramer_lower_phaseC_partial_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
@@ -90,9 +90,9 @@ conclusion expressed as `-cramerRate a`. The Legendre-attainment hypothesis
 (optimal tilt) and `hVar` (non-degeneracy) these are regularity preconditions,
 not part of the proof core.
 
-@audit:ok (sorryAx-free; threads root preconditions through and rewrites the
-conclusion via the `hlam_opt` Legendre-attainment precondition. `hVar`, `h_deriv`,
-`hlam_opt` are all regularity preconditions, no load-bearing core.) -/
+@audit:ok (threads root preconditions through and rewrites the conclusion via the
+`hlam_opt` Legendre-attainment precondition. `hVar`, `h_deriv`, `hlam_opt` are all
+regularity preconditions, no load-bearing core.) -/
 theorem cramer_lower_legendre_phaseC_partial_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
@@ -128,9 +128,9 @@ theorem cramer_lower_legendre_phaseC_partial_discharge
 (lower bound). All hypotheses are regularity preconditions or cobounded
 side-conditions.
 
-@audit:ok (sorryAx-free; genuine `le_antisymm`-style sandwich of
-`cramer_upper_legendre` and `cramer_lower_legendre_phaseC_partial_discharge`. All
-hypotheses are regularity preconditions / cobounded side-conditions.) -/
+@audit:ok (genuine `le_antisymm`-style sandwich of `cramer_upper_legendre` and
+`cramer_lower_legendre_phaseC_partial_discharge`. All hypotheses are regularity
+preconditions / cobounded side-conditions.) -/
 @[entry_point]
 theorem cramer_tendsto_phaseC_partial_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
@@ -175,7 +175,7 @@ theorem cramer_tendsto_phaseC_partial_discharge
             {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop
       (𝓝 (-cramerRate (fun ω : ℕ → Ω₀ => Y (ω 0))
             (Measure.infinitePi (fun _ : ℕ => μ₀)) a)) := by
-  -- Phase A plumbing: infinite-product i.i.d. structure.
+  -- Infinite-product i.i.d. structure plumbing.
   have h_indep : iIndepFun (fun i : ℕ => fun ω : ℕ → Ω₀ => Y (ω i))
       (Measure.infinitePi (fun _ : ℕ => μ₀)) :=
     iIndepFun_eval_under_infinitePi (μ₀ := μ₀) hY_meas
@@ -199,7 +199,7 @@ theorem cramer_tendsto_phaseC_partial_discharge
             (Measure.infinitePi (fun _ : ℕ => μ₀)) a :=
     cramer_upper_legendre (μ := Measure.infinitePi (fun _ : ℕ => μ₀))
       h_indep h_meas h_ident h_bdd_eval a lam hlam hlam_opt h_pos h_cobdd
-  -- Lower bound (sorryAx-free via cramer_lower_phaseC_partial_discharge).
+  -- Lower bound via cramer_lower_phaseC_partial_discharge.
   have h_lower :
       -cramerRate (fun ω : ℕ → Ω₀ => Y (ω 0))
           (Measure.infinitePi (fun _ : ℕ => μ₀)) a

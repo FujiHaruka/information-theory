@@ -8,7 +8,7 @@ import InformationTheory.Meta.EntryPoint
 
 This file hoists the `IsMeasureInfinitePiTiltedEq` predicate (formerly in
 `InformationTheory/Shannon/Cramer/LC2PhaseC.lean`) together with the seven
-Phase-2/3/4 change-of-measure / tilted-LLN-window theorems (formerly in
+change-of-measure / tilted-LLN-window theorems (formerly in
 `InformationTheory/Shannon/Cramer/InfinitePiTiltedChangeOfMeasure.lean`) into a
 single **upstream** module that does NOT import `CramerLC2PhaseC.lean`.
 
@@ -43,7 +43,7 @@ open scoped Topology BigOperators ENNReal Function
 
 variable {Ω₀ : Type*} [MeasurableSpace Ω₀]
 
-/-! ## Phase C-1 — n-letter RN-deriv identification predicate (hoisted) -/
+/-! ## n-letter RN-deriv identification predicate (hoisted) -/
 
 /-- **Cramér n-letter change-of-measure predicate** (Mathlib gap abstraction).
 
@@ -61,10 +61,7 @@ where `μ_tilt := Measure.infinitePi (fun _ => μ₀.tilted (lam * Y ·))` and
 
 In the textbook setting this follows from `(dμ_tilt / dμ)|_{cylinder n}
 = exp(lam · ∑ Y(ω_i) − n·Λ(lam))`, but the n-letter RN-deriv identification is
-not yet in Mathlib.
-
-HOISTED 2026-06-11 from `CramerLC2PhaseC.lean:102` (`cramer-root-wiring-plan`
-Phase A a1, cycle-break). Verbatim move, no proof change. -/
+not yet in Mathlib. -/
 def IsMeasureInfinitePiTiltedEq (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam : ℝ) : Prop :=
   ∀ a ε : ℝ, 0 < ε →
     ∃ C > 0, ∀ᶠ n : ℕ in atTop,
@@ -72,7 +69,7 @@ def IsMeasureInfinitePiTiltedEq (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam
         ≤ (Measure.infinitePi (fun _ : ℕ => μ₀)).real
             {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)}
 
-/-! ## Phase 2 — cylinder lift (hoisted) -/
+/-! ## Cylinder lift (hoisted) -/
 
 /-- **Cylinder lift**: an event over the first `n` coordinates of the infinite
 product, expressed via a predicate on the partial sum, has `infinitePi` mass
@@ -119,9 +116,9 @@ theorem infinitePi_partialSum_event_eq_pi {ν : Measure Ω₀} [IsProbabilityMea
   refine iff_of_eq (congrArg P (Finset.sum_congr rfl (fun j _ => ?_)))
   rw [Equiv.piCongrLeft_apply_apply]
 
-/-! ## Phase 3 — finite change-of-measure lower bound (hoisted) -/
+/-! ## Finite change-of-measure lower bound (hoisted) -/
 
-/-- **Finite change-of-measure lower bound** (Phase 3, `Measure.pi` level).
+/-- **Finite change-of-measure lower bound** (`Measure.pi` level).
 
 For `lam ≥ 0`, on the window `W_n := {x | a·n ≤ ∑ Y(x i) < (a+ε)·n}` the
 un-tilted product mass of the half-line event `E_n := {x | a·n ≤ ∑ Y(x i)}` is
@@ -129,9 +126,7 @@ bounded below by `exp(-n·(lam·a − Λ + lam·ε))` times the tilted product m
 `W_n`, where `Λ = cgf Y μ₀ lam`. The density `d(pi μ₀)/d(pi μ_tilt)` is
 `exp(−lam·∑Y + n·Λ)`, bounded below on `W_n` by `exp(−lam(a+ε)n + nΛ)`.
 
-@audit:ok (2026-06-11 independent honesty audit: sorryAx-free machine-confirmed;
-signature verbatim-identical to the pre-hoist version, genuine density-bound proof,
-honesty-neutral relocation.) -/
+@audit:ok (genuine density-bound proof) -/
 theorem change_of_measure_lower_bound_pi {n : ℕ} {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
     (a ε lam : ℝ) (hlam : 0 ≤ lam) :
@@ -217,11 +212,11 @@ theorem change_of_measure_lower_bound_pi {n : ℕ} {μ₀ : Measure Ω₀} [IsPr
           exact Real.exp_zero
         rw [hprod, ENNReal.ofReal_one, one_mul]
 
-/-! ## Phase 4 — residual predicate + reduction to `IsMeasureInfinitePiTiltedEq` (hoisted) -/
+/-! ## Residual predicate + reduction to `IsMeasureInfinitePiTiltedEq` (hoisted) -/
 
-/-- **Residual predicate** (Phase 4, W-3 reduction): the tilted infinite-product
+/-- **Residual predicate** (W-3 reduction): the tilted infinite-product
 window mass is eventually at least `1/2`. This is the *only* piece left after the
-change-of-measure machinery (Phases 1–3) is discharged; it holds precisely when
+change-of-measure machinery is discharged; it holds precisely when
 the tilted mean `∫ Y ∂μ₀.tilted` lies in the window `[a, a+ε)`, which is the
 Cramér optimality condition `∫ Y ∂μ₀.tilted = a`. It follows from the existing
 tilted-side LLN `tilted_lln_in_probability_real` under that condition. -/
@@ -234,14 +229,11 @@ def IsTiltedWindowEventuallyLarge (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (l
 
 /-- **W-3 residual reduction**: the residual window predicate implies the full
 n-letter RN-deriv predicate `IsMeasureInfinitePiTiltedEq`. The change-of-measure
-lower bound (Phase 3) plus the cylinder lift (Phase 2) reduce the predicate to
+lower bound plus the cylinder lift reduce the predicate to
 the eventual largeness of the tilted window mass, discharged here with `C = 1/2`.
 
-@audit:ok (2026-06-11 independent honesty audit: sorryAx-free `[propext,
-Classical.choice, Quot.sound]` machine-confirmed; signature matches the pre-hoist
-version verbatim (honesty-neutral relocation). `h_res` is genuinely consumed
-(`filter_upwards [h_res a ε hε]`) to supply the window-mass input, not a vacuous
-bundle.) -/
+@audit:ok (`h_res` is genuinely consumed (`filter_upwards [h_res a ε hε]`) to
+supply the window-mass input, not a vacuous bundle.) -/
 @[entry_point]
 theorem isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
@@ -265,7 +257,7 @@ theorem isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge
   have hlift_W := infinitePi_partialSum_event_eq_pi
       (ν := μ₀.tilted (fun ω => lam * Y ω)) hY n
       (fun r => a * (n : ℝ) ≤ r ∧ r < (a + ε) * n) hPW
-  -- Phase 3 change-of-measure at the finite level.
+  -- Change-of-measure at the finite level.
   have hcm := change_of_measure_lower_bound_pi (n := n) (μ₀ := μ₀) hY h_bdd a ε lam hlam
   -- Convert change-of-measure to `.real` form.
   have hfin_t : (Measure.pi (fun _ : Fin n => μ₀.tilted (fun ω => lam * Y ω)))
@@ -411,8 +403,7 @@ here: boundedness of `Y` makes `exp (t·Y)` integrable for *every* `t`
 (`Cramer.integrable_exp_mul_of_bounded`), so `integrableExpSet Y μ₀ = Set.univ`
 and its interior is again `Set.univ`.
 
-@audit:ok (2026-06-11 independent honesty audit: sorryAx-free machine-confirmed;
-signature verbatim-identical to the pre-hoist version, honesty-neutral relocation.) -/
+@audit:ok -/
 theorem tiltedMean_eq_deriv_cgf
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) :
