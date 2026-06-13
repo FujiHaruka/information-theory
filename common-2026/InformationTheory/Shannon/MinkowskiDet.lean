@@ -1,6 +1,3 @@
-/-
-Copyright (c) 2026 InformationTheory contributors. All rights reserved.
--/
 import Mathlib.LinearAlgebra.Matrix.PosDef
 import Mathlib.Analysis.Matrix.PosDef
 import Mathlib.Analysis.Matrix.Spectrum

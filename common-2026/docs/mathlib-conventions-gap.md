@@ -45,7 +45,21 @@ IT+Probability サブツリー全体で、theorem/lemma 1 件が占める行数 
   → `## References` (+必要に応じ `## Implementation notes`)。本文は **英語**。
 - `@[simp]`/`@[deprecated NewName (since := "DATE")]`/`protected`/`@[refl]` 等を規律的に使う。
 
-### 1.4 命名
+### 1.4 private と docstring 密度 (直感に反する実測)
+
+- **private はほとんど使わない**: Mathlib 1500 ファイルで private は 519 / 全 40346 = **1.3%**。
+  細かく割った補題は**ほぼ public** で残す (「小補題 = 再利用 API」)。private は本物の実装詳細のみ。
+  本プロジェクトは 363 / 2364 = **15.4%** (~12 倍)。
+- **docstring は API 表面だけ**: Mathlib は宣言の **~17–20% しか docstring を持たない**
+  (Probability pub 20% / Analysis.SpecialFunctions pub 17%)。付くのは主に **def と headline 定理**で、
+  支える補題群は**裸** — 名前とモジュール doc が意味を担う (docBlame linter は def に要求、theorem/lemma に要求しない)。
+  本プロジェクトは private 含め **~94% を文書化** = 大幅な過剰文書化。
+  この過剰 docstring が Phase/判断/audit といったプロセス語彙の漏入経路になっている (§3-A-3 と直結)。
+- **aux/step 命名**: `aux1/aux2` 式の機械的連番は 0 件 (gaming パターンは現状なし)。
+  `XxxAux` は名前付き補助関数 + ちゃんと命名された補題族 (Huffman/LZ78) で許容範囲。
+  本物の smell な補助補題 (`*_aux`) は 5〜6 件のみ。
+
+### 1.5 命名
 
 - def は lowerCamelCase (`hammingDist`)、定理は snake_case (`hammingDist_eq_zero`)、型/構造は PascalCase。
 - 名前が結論の形を表す: `_of_` (仮説)、`_iff_`/`_eq_`/`_le_`/`_ne_`、`_self`/`_comm`/`_assoc`。
@@ -112,12 +126,20 @@ IT+Probability サブツリー全体で、theorem/lemma 1 件が占める行数 
 
 ## 4. 推奨アクション (優先順)
 
-1. footprint > 150 行の 76 宣言を棚卸しし、named helper lemma への分解を family 単位で進める
-   (まず `AWGN/Walls.lean` の 500/438 行 2 本)。proof done と独立に進められる純リファクタ。
-2. 1200 行超 15 ファイルを概念単位に分割。`Walls`/`*Discharge` を数学的概念名へ改名。
-3. Copyright ヘッダを全 269 ファイルに一括付与 (スクリプト 1 本)。
+**閾値アンカーは Mathlib p99 = 48 行から開始** (2026-06-13 決定)。48 は固定キャップではなく
+「ここに再利用可能な補題が埋まっていないか見ろ」の診断トリガー。裾カウント (>48 / >115) を
+追跡指標として持ち、中央値を 7〜10 へ寄せる。pre-commit での弱い enforcement は大規模リファクタ後に判断。
+
+1. footprint の裾を棚卸しし named lemma へ分解 (>250 の 16 本 → >115 の 137 本 → 49–115 は機会主義的)。
+   まず `ConditionalMethodOfTypes/Mass.lean:318` (907)・`AWGN/AchievabilityDischarge.lean:515` (684)・
+   `EPI/G2/ConvEntropyDensity.lean:117` (629)。proof done と独立に進められる純リファクタ。
+   **抽出補題は Mathlib 流に「public + 記述的命名 + docstring なし」** とする (§1.4: 現状の
+   private 15.4% / docstring 94% は逆方向)。新規 `_aux` 補題は作らない (名前で事実を語らせる)。
+2. 1200 行超 15 ファイルを概念単位に分割。`Walls`/`*Discharge` を数学的概念名へ改名。切るのは概念の継ぎ目。
+3. **Copyright ヘッダは保留**: ad-hoc な 2 ファイル (`MinkowskiDet` / `CondKLIntegral`) は 2026-06-13 に削除済
+   (実 author 名義がなく文面も不統一だった)。upstream 化の段で author を確定してから全ファイル一括付与する。
 4. module doc を Mathlib テンプレへ寄せ、Phase/Wall/判断/Retraction といった**プロセス語彙を
-   docstring から plan/handoff 側へ移す** (コードは数学だけ語る)。
+   docstring から plan/handoff 側へ移す** (コードは数学だけ語る)。過剰 docstring も Mathlib 水準へ間引く。
 5. `<;>`/bare `simp` は現状維持 (ギャップではない)。
 
 ---

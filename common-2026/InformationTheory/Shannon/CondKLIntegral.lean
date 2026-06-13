@@ -1,6 +1,3 @@
-/-
-Copyright (c) 2026. Released under Apache 2.0 license.
--/
 import Mathlib.InformationTheory.KullbackLeibler.ChainRule
 import Mathlib.Probability.Kernel.Composition.IntegralCompProd
 import Mathlib.Probability.Kernel.Composition.AbsolutelyContinuous
