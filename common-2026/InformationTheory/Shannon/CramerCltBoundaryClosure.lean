@@ -322,23 +322,6 @@ theorem tiltedWindow_eventually_large_of_boundary
 
 /-! ## Phase 5 — relaxed window predicate + boundary discharge -/
 
-/-- **Relaxed residual window predicate** (Phase 5). The `1/2` threshold of the existing
-`IsTiltedWindowEventuallyLarge` is relaxed to an existential constant `∃ C > 0`. This
-absorbs the boundary `1/4` of `tiltedWindow_eventually_large_of_boundary` while keeping
-the reduction to `IsMeasureInfinitePiTiltedEq` intact.
-
-@audit:ok (2026-06-11 independent honesty audit: this is a relaxed *predicate* used only
-as the hypothesis of the standalone implication `isMeasureInfinitePiTiltedEq_of_…LargeC`;
-it is honestly documented as "false in general" and is verified OFF the headline proof path
-— the headline calls `tilted_window_lower_to_halfline` directly at `a = m`, never this
-predicate, so it is not load-bearing on the unconditional closure). -/
-def IsTiltedWindowEventuallyLargeC (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam : ℝ) : Prop :=
-  ∀ a ε : ℝ, 0 < ε →
-    ∃ C > 0, ∀ᶠ n : ℕ in atTop,
-      C ≤ (Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))).real
-          {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)
-            ∧ ∑ i ∈ Finset.range n, Y (ω i) < (a + ε) * n}
-
 /-- **Per-instance change-of-measure half-line lower bound** (Phase 5 core). At a single
 threshold `a` and `ε > 0`, eventual largeness `C ≤ tilted-window mass` lifts (via the
 finite-level change-of-measure `change_of_measure_lower_bound_pi` and the cylinder lift)
@@ -404,27 +387,6 @@ theorem tilted_window_lower_to_halfline
   refine mul_le_mul_of_nonneg_left ?_ (le_of_lt (Real.exp_pos _))
   rw [hW_real] at hn
   exact hn
-
-/-- **Relaxed reduction** (Phase 5). The relaxed window predicate implies the full
-n-letter RN-deriv predicate `IsMeasureInfinitePiTiltedEq`, by the same change-of-measure
-lower bound as `isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge`, threading the existential
-constant `C` instead of the fixed `1/2`.
-
-This is a genuine *implication* (a reduction tool). Its hypothesis
-`IsTiltedWindowEventuallyLargeC` is the relaxed `∀a∀ε` window predicate; it is *false in
-general* (for `a` far from the tilted mean the window has vanishing mass) and is satisfiable
-only at the boundary threshold. Phase 6 therefore bypasses this `∀a` predicate and uses the
-per-`(a, ε)` core `tilted_window_lower_to_halfline` directly at `a = m`. -/
-theorem isMeasureInfinitePiTiltedEq_of_tiltedWindowLargeC
-    {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
-    {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) (hlam : 0 ≤ lam)
-    (h_res : IsTiltedWindowEventuallyLargeC μ₀ Y lam) :
-    Cramer.Discharge.IsMeasureInfinitePiTiltedEq μ₀ Y lam := by
-  intro a ε hε
-  obtain ⟨C, hCpos, hev⟩ := h_res a ε hε
-  refine ⟨C, hCpos, ?_⟩
-  filter_upwards [hev] with n hn
-  exact tilted_window_lower_to_halfline hY h_bdd lam hlam a ε hn
 
 /-! ## Phase 6 — Cramér end-to-end lower bound at the interior optimal tilt -/
 

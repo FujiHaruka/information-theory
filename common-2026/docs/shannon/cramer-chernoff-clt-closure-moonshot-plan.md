@@ -542,3 +542,11 @@ Mathlib PR-candidate として価値があり、後退ゼロ。
 
 5. **2026-06-11 配線残件 (上記「後続候補」) も closure — 子 `cramer-root-wiring-plan.md` 完了** (roadmap 判断ログ #26、`7e4f05a`/`184affa`/`8a8a001`):
    #4 で「別 plan」とした closed-but-unwired 2 root を子 plan で解消。root A は 8 decl 上流 hoist の cycle-break で `exact headline`、root B (`cramer_lower`) は下流 `CramerGeneralLower.lean` へ移設し iid joint law transport で discharge。両 root sorryAx-free、独立監査 `@audit:ok` 12 件。project 実 sorry 17→15。**Cramér CLT-boundary は headline + 上流両 root とも完全 closure。**
+
+6. **2026-06-13 orphan cleanup で Phase 5 reduction tool 2 件を削除** (orphan sweep):
+   Phase 6 headline が bypass する緩和 predicate `IsTiltedWindowEventuallyLargeC` (def、false-as-framed) +
+   それを唯一の consumer とする reduction `isMeasureInfinitePiTiltedEq_of_tiltedWindowLargeC` (consumer 0) は、
+   closure 後 dead scaffolding 化していた (headline は live core `tilted_window_lower_to_halfline` を `a=m` で
+   直接呼ぶ)。3点照合 (dep_consumers transitive 0 + 全ツリー textual grep = prose のみ) で削除、`#print axioms
+   cramer_lower_boundary_unconditional` = `[propext, Classical.choice, Quot.sound]` 維持を確認。上記 #4 の
+   「reduction tool に留め」記述は履歴 (削除前の状態)。false-as-framed の知見自体は roadmap 判断ログに残置。

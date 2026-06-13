@@ -41,6 +41,7 @@ import InformationTheory.Shannon.EPI.Conv.DensityAssoc
 import InformationTheory.Shannon.EPI.Conv.DensityNormalization
 import InformationTheory.Shannon.EPI.Case1.TwoTime
 import InformationTheory.Shannon.EPI.Stam.SupplyTwoTime
+import InformationTheory.Meta.EntryPoint
 
 namespace InformationTheory.Shannon.EPIDensityForm
 
@@ -67,6 +68,7 @@ sorryAx-free) + `twoTime_stam_supply` (`@audit:ok`, sorryAx-free) から genuine
 precondition: measurability/indep/a.c./moment + (X/Y/sum) × (Fisher 有限/IsRegularDensityV2/
 normalization/IsBlachmanConvReady/entropy 有限)。これらを grant しても EPI は出ず、body が
 genuine に lift3→producer→two-time-terminal を呼ぶ。 -/
+@[entry_point]
 theorem entropy_power_inequality_of_density
     {Ω : Type*} {mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)

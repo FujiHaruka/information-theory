@@ -20,19 +20,13 @@ L-WF1 (KKT 充足性), L-WF2 (一意性 / 最適性), L-PG1 (active-set ↔ wate
 
 * **L-WF1 (`IsWaterFillingKKT P N ν`)**: `∑ waterFillingPower ν N = P`
   ― ν の存在 (intermediate value theorem) を本 file で discharge。
-* **L-WF2 (`IsWaterFillingOptimal P N ν`)**: water-filling が `∑ (1/2) log(1+P_i/N_i)`
-  の最大化解 ― 厳密凸性 (`StrictConcaveOn`) + Lagrange 一意性に依存し
-  Mathlib API が手薄なため、**KKT 一意性壁の撤退ライン** (タスク仕様) に従い
-  `WaterFillingOptimalityCertificate` predicate (abstract certificate)
-  経由の hypothesis pass-through 形で reduce。
-* **L-PG1 (`IsParallelGaussianPerCoordReduction`)**: chain rule + per-coord AWGN
-  reduction ― 別 plan (`parallel-gaussian-chain-rule-plan.md`) に defer する
-  ため、finer-grained predicate bundle `ParallelGaussianChainRuleBundle`
-  経由の hypothesis pass-through 形で reduce。
+* **L-WF2 / L-PG1**: 当初は `WaterFillingOptimalityCertificate` / `ParallelGaussianChainRuleBundle`
+  の abstract-certificate retreat predicate 経由で reduce する設計だったが、これらは
+  hypothesis pass-through 形の load-bearing bundling で reduction も未配線のまま consumer 0 と化していた
+  ため orphan cleanup で削除 (2026-06-13)。L-WF2 の strict-concavity 部品は `WFCertBody.lean` /
+  `WFStationarityBody.lean` に、L-PG1 chain rule は `parallel-gaussian-chain-rule-plan.md` に存在。
 
 本 file の核心成果は **L-WF1 の完全 discharge** (`exists_waterFillingKKT_of_pos`)。
-L-WF2 + L-PG1 は **abstract certificate ↔ hypothesis** の同値性 (双方向 reduction)
-を proof body 経由で publish。
 
 ## Approach
 
@@ -47,24 +41,9 @@ Phase B: IVT on g over [min N, max N + P/n + 1]
   ──> ∃ ν ∈ Icc, g(ν) = P  (intermediate_value_Icc)
   ──> 撤退ライン L-WF1 fully discharged.
 
-Phase C: L-WF2 certificate reduction
-  ──> Define WaterFillingOptimalityCertificate as a predicate bundling
-      the strict-concavity + KKT-feasibility hypotheses.
-  ──> Show `WaterFillingOptimalityCertificate P N ν → IsWaterFillingOptimal P N ν`
-      via direct unfolding (certificate IS the optimality statement).
-
-Phase D: L-PG1 bundle reduction
-  ──> Define ParallelGaussianChainRuleBundle as a triple-hypothesis predicate.
-  ──> Show bundle → IsParallelGaussianPerCoordReduction via direct chaining.
+(旧 Phase C/D = L-WF2/L-PG1 の abstract-certificate retreat predicate は consumer 0 の
+ dead scaffolding として削除済 — 上記 module docstring 参照。)
 ```
-
-## 撤退ライン採用
-
-* **L-WF2 retreat (KKT-uniqueness wall)**: 凸関数 strict convexity + minimum
-  uniqueness の hypothesis pass-through 形 (`WaterFillingOptimalityCertificate`
-  abstract predicate)。
-* **L-PG1 retreat (chain-rule scope)**: bundle predicate
-  (`ParallelGaussianChainRuleBundle`) 形 hypothesis pass-through。
 -/
 
 namespace InformationTheory.Shannon.ParallelGaussian
@@ -205,33 +184,5 @@ theorem exists_waterFillingKKT_of_pos {n : ℕ}
   obtain ⟨ν, hν_mem, hν_eq⟩ :=
     intermediate_value_Icc hν₀_le_ν₁ hg_cont hP_in_Icc
   exact ⟨ν, hν_eq⟩
-
-/-! ## Phase C — `WaterFillingOptimalityCertificate` (L-WF2 retreat) -/
-
-/-- **L-WF2 abstract optimality certificate** (KKT-uniqueness retreat line).
-
-A water level `ν` is **optimality-certified** if the per-coordinate cost
-`fun P' => ∑ i, (1/2) * log(1 + P' i / N_i)` attains its constrained maximum
-at the water-filling allocation `waterFillingPower ν N`. Bundling the
-strict-concavity + Lagrange-uniqueness data as an abstract predicate
-(`Prop`) allows us to defer the full KKT discharge while delivering the
-`IsWaterFillingOptimal` reduction in one line.
-
-タスク仕様の撤退ライン:
-> KKT 一意性が壁になったら凸関数の strict convexity + minimum uniqueness の
-> hypothesis pass-through 形で抜く -/
-def WaterFillingOptimalityCertificate {n : ℕ} (P : ℝ) (N : Fin n → ℝ≥0) (ν : ℝ) :
-    Prop :=
-  ∀ (P' : Fin n → ℝ), (∀ i, 0 ≤ P' i) → (∑ i : Fin n, P' i ≤ P) →
-    ∑ i : Fin n, (1/2) * Real.log (1 + P' i / (N i : ℝ))
-      ≤ ∑ i : Fin n, (1/2) * Real.log (1 + waterFillingPower ν N i / (N i : ℝ))
-
-
-/-! ## Phase D — `ParallelGaussianChainRuleBundle` (L-PG1 retreat) -/
-
-
-/-! ## Phase E — Combined capacity formula (L-WF1 discharged + L-WF2/L-PG1
-certificates) -/
-
 
 end InformationTheory.Shannon.ParallelGaussian
