@@ -13,11 +13,22 @@ import InformationTheory.Shannon.EPI.Unconditional.TruncationLimit.Core
 import InformationTheory.Shannon.EPI.Unconditional.TruncationLimit.Mono
 
 /-!
-# TruncationLimit — Limit part
+# TruncationLimit — limit part
 
-截断密度 a.e. 収束 / h(W_n)→⊤ / route (d'') ⊤-枝 assembly /
-無条件 gateway 単調性 (方針 Y) と entropyPower lift。Core / Mono part に依存。
-umbrella: `InformationTheory.Shannon.EPI.Unconditional.TruncationLimit`。
+a.e. convergence of truncated densities, divergence `h(W_n) → ⊤`, the `⊤`-branch assembly, and the
+unconditional gateway monotonicity together with its `entropyPower` lift.
+
+## Main statements
+
+* `differentialEntropyExt_truncW_tendsto_top` — `h(W) = ⊤ ⟹ h(W_n) → ⊤` along the truncations.
+* `differentialEntropyExt_top_of_indep_add_unconditional` — the unconditional `⊤`-branch
+  `h(W) = ⊤ ⟹ h(W+V) = ⊤`.
+* `differentialEntropyExt_mono_add_unconditional` — unconditional gateway monotonicity
+  `W` a.c. and `W ⊥ V ⟹ h(W) ≤ h(W+V)`.
+* `entropyPowerExt_mono_add_unconditional` — its `entropyPowerExt` lift.
+
+Depends on the `Core` and `Mono` parts; re-exported by the umbrella
+`InformationTheory.Shannon.EPI.Unconditional.TruncationLimit`.
 -/
 
 namespace InformationTheory.Shannon
@@ -27,11 +38,11 @@ open scoped ENNReal NNReal Topology
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-- **(2a) helper — truncated W-marginal density a.e. 収束**: `((truncW P W n).map W).rnDeriv vol x).toReal`
-は n→∞ で `((P.map W).rnDeriv vol x).toReal` に volume-a.e. 収束。`(truncW P W n).map W = cond (P.map W) Sn`
-(`Sn n := {r | |r| ≤ n}`) + `rnDeriv_cond_eq` で `fn_n x = c_n⁻¹ · 1_{Sn n}(x) · fW_enn x` (a.e.)、
-`c_n = (P.map W) Sn → 1` (`tendsto_measure_iUnion_atTop`、`⋃ Sn = univ`) + 固定 x で十分大 n で `x ∈ Sn n`。
-weak-conv 不使用 (各点極限)。`hW_ac` は a.c. (cond 保存)、regularity precondition。
+/-- The truncated W-marginal density converges a.e. (volume) to the full W-marginal density:
+`(((truncW P W n).map W).rnDeriv volume x).toReal → ((P.map W).rnDeriv volume x).toReal` as
+`n → ∞`. Uses `(truncW P W n).map W = cond (P.map W) Sn` with `Sn n = {r | |r| ≤ n}`, the conditioned
+density formula `rnDeriv_cond_eq`, and the pointwise limit (no weak convergence).
+
 @audit:ok -/
 theorem truncW_map_density_tendsto_ae
     (W : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -128,10 +139,10 @@ theorem truncW_map_density_tendsto_ae
     hcbar_lim.mul tendsto_const_nhds
   simpa using hprod
 
-/-- **(2b) helper — `h(μ) = ⊤ ⟹ A(μ) = ⊤`** (正部 lintegral 発散の抽出)。
-`differentialEntropyExt μ = (A:EReal) − (B:EReal) = ⊤` (a.c. 枝) から、`A ≠ ⊤` だと EReal 引き算が
-`⊤` になり得ない (`B = ⊤`: `fin − ⊤ = ⊥`、`B ≠ ⊤`: `fin − fin = fin`) ので `A = ⊤`。`B(μ) < ⊤` 不要
-(`h = ⊤` だけで `A = ⊤` が follow、より強い形)。
+/-- `h(μ) = ⊤ ⟹ A(μ) = ⊤`: the positive-part `lintegral` diverges when the a.c.-branch differential
+entropy is `⊤`. Since `h μ = (A : EReal) - (B : EReal) = ⊤` is impossible for finite `A`, we get
+`A = ⊤`; no hypothesis on `B(μ)` is needed.
+
 @audit:ok -/
 theorem posPart_lintegral_eq_top_of_diffEntExt_top {μ : Measure ℝ} (hac : μ ≪ volume)
     (htop : differentialEntropyExt μ = ⊤) :
@@ -154,14 +165,11 @@ theorem posPart_lintegral_eq_top_of_diffEntExt_top {μ : Measure ℝ} (hac : μ 
     rw [hAcoe, hBcoe, ← EReal.coe_sub] at htop
     exact (EReal.coe_ne_top _ htop)
 
-/-- **Step 0 helper — `h(μ) = ⊤ ⟹ B(μ) ≠ ⊤`** (負部 lintegral 有限性の抽出、`posPart_…` の対称形)。
-`differentialEntropyExt μ = (A:EReal) − (B:EReal) = ⊤` (a.c. 枝) から、`B = ⊤` だと EReal 引き算が
-`(A:EReal) − ⊤ = ⊥ ≠ ⊤` (`EReal.sub_top`、`(A:ℝ≥0∞) ≠ ⊥`) ゆえ矛盾、よって `B ≠ ⊤`。これにより
-assembly の Step 0 で `hW_top` から `B(P.map W) ≠ ⊤` を導出でき、signature に `hW_negPart_fin` を
-足さずに済む (= 無条件性の鍵)。
+/-- `h(μ) = ⊤ ⟹ B(μ) ≠ ⊤`: the negative-part `lintegral` is finite when the a.c.-branch differential
+entropy is `⊤` (the symmetric counterpart of `posPart_lintegral_eq_top_of_diffEntExt_top`). If
+`B = ⊤`, then `(A : EReal) - ⊤ = ⊥ ≠ ⊤`. This lets the assembly derive `B(P.map W) ≠ ⊤` from
+`h(W) = ⊤` without adding a hypothesis to the signature.
 
-genuine (新規 helper)。`htop : h(μ)=⊤` から `B ≠ ⊤` を EReal 減算規約の場合分けで抽出、
-循環/bundling/退化なし。@residual なし。
 @audit:ok -/
 theorem negPart_lintegral_ne_top_of_diffEntExt_top {μ : Measure ℝ} (hac : μ ≪ volume)
     (htop : differentialEntropyExt μ = ⊤) :
@@ -176,11 +184,11 @@ theorem negPart_lintegral_ne_top_of_diffEntExt_top {μ : Measure ℝ} (hac : μ 
   rw [hBtop, EReal.coe_ennreal_top, EReal.sub_top] at htop
   exact absurd htop (by simp)
 
-/-- **(2c) helper — truncated W-marginal の負部 lintegral の明示上界**: `c_n ≠ 0` のとき
-`B(W_n) ≤ ofReal|cbar_n · log cbar_n| + ofReal(cbar_n) · B(W)`、`cbar_n := ((P.map W)(Sn n))⁻¹.toReal`、
-`Sn n := {r | |r| ≤ n}`。truncated 密度 `fn = cbar_n · 1_{Sn n} · fW` の `negMulLog_mul` 分解 +
-`∫⁻ ofReal(fW) = 1` (確率密度正規化) で得る。`cbar_n → 1` ゆえ B(W_n) を最終的に固定有限値で抑えるための
-per-n bound。
+/-- Explicit upper bound on the negative-part `lintegral` of the truncated W-marginal: when `c_n ≠ 0`,
+`B(W_n) ≤ ofReal |cbar_n · log cbar_n| + ofReal cbar_n · B(W)`, where `cbar_n := ((P.map W) (Sn n))⁻¹`
+and `Sn n = {r | |r| ≤ n}`. Obtained from the `negMulLog`-product decomposition of the truncated
+density `fn = cbar_n · 1_{Sn n} · fW` and the probability normalization `∫⁻ ofReal fW = 1`.
+
 @audit:ok -/
 theorem truncW_map_negPart_lintegral_le
     (W : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -285,38 +293,14 @@ theorem truncW_map_negPart_lintegral_le
         rw [lintegral_add_left hg1_meas, lintegral_const_mul _ hfW_meas, hfW_lint, mul_one,
           lintegral_const_mul _ hnegm_meas]
 
-/-- **W-marginal の ⊤-divergence** (route (d'') 専用、⊤ ケースに縮小): `h(W) = ⊤` のとき
-`h(W_n) → ⊤`、`W_n := truncW P W n` (= `P` を W-事象 `{|W| ≤ n}` で条件付けた compact-support 近似)。
+/-- `⊤`-divergence of the W-marginal entropy: if `h(W) = ⊤`, then `h(W_n) → ⊤` along the
+truncations `W_n := truncW P W n`. The argument has three steps: a.e. convergence of the truncated
+densities (`truncW_map_density_tendsto_ae`), `A(P.map W) = ⊤`
+(`posPart_lintegral_eq_top_of_diffEntExt_top`) combined via Fatou
+(`differentialEntropyExt_posPart_le_liminf_of_ae_tendsto`) to force `A(W_n) → ⊤`, and a uniform
+bound on `B(W_n)` (`truncW_map_negPart_lintegral_le`), so that `h(W_n) = A - B → ⊤`. Closes by
+a.e. convergence of densities alone, with no weak-convergence portmanteau.
 
-**スコープ縮小 (判断ログ6)**: 旧版は任意 `h(W)` の full `Tendsto … (𝓝 (h(W)))` だったが、
-これは有限ケースで reverse-Fatou (`≥` 方向) を要し over-scoped。route (d'') が実際に必要とするのは
-⊤ ケースのみ (gateway ⊤ 枝の closure で per-n 単調性との squeeze に使う発散) なので、結論を
-`𝓝 (⊤ : EReal)` に固定し finite ケースを切り落とす。LSC/Fatou は `≤` しか出さないが、⊤ への発散は
-`liminf = ⊤` から `Tendsto … ⊤` が一発で出るため (`eventually_lt_of_lt_liminf` + `ENNReal.tendsto_nhds_top`)
-極限と相性が良い。
-
-**証明の骨格 (3 段、weak-conv 不使用)**:
-1. **density a.e. 収束** `fn_n → fW` a.e.(volume): `(truncW P W n).map W = cond (P.map W) Sn`
-   (`Sn n := {r | |r| ≤ n}`、`hQW_eq` 同型) → `rnDeriv_cond_eq` で `fn_n x = c_n⁻¹.toReal · 1_{Sn n}(x) · fW x`、
-   `c_n = (P.map W) Sn`。n→∞: `c_n → 1` (`tendsto_measure_iUnion_atTop`、`⋃ Sn = univ`) ゆえ
-   `c_n⁻¹.toReal → 1`、各固定 x で十分大 n で `x ∈ Sn n` ゆえ `1_{Sn n}(x) → 1`、積 → `fW x`。各点極限で弱収束でない。
-2. **`A(P.map W) = ⊤`**: `h(P.map W) = A − B = ⊤` (EReal) から `A = ⊤` (EReal の `(A:EReal) − (B:EReal) = ⊤`
-   は `A ≠ ⊤` だと不可能、場合分けで `A(P.map W) = ⊤`)。`B(P.map W) < ⊤` 不要 (helper はより強い形)。
-3. **合成**: Fatou helper `differentialEntropyExt_posPart_le_liminf_of_ae_tendsto` (1 を h_ae に渡す) で
-   `A(P.map W) ≤ liminf A(Q_n.map W)` → `A(P.map W)=⊤` ⟹ `liminf A(Q_n.map W) = ⊤` (`top_le_iff`) ⟹
-   `A(Q_n.map W) → ⊤` (ℝ≥0∞ liminf=⊤ ⟹ tendsto ⊤)。+ `B(Q_n.map W)` 有界 (`hBn_fin` 分解、`cbar→1`
-   ゆえ eventually 一様有界) ⟹ `h(Q_n.map W) = A−B → ⊤` (EReal、A→⊤ かつ B 有界)。
-
-仮説は全て regularity (非 load-bearing): `hW`/`hW_ac` は可測/絶対連続、`hW_negPart_fin` (= `B(W) < ⊤`)
-は h(W) 負部有限性 (2 の `⊤−⊤` 不定形回避 + 3 の B 有界化に必要)、`hW_top` は ⊤-divergence の前提
-(結論の発散先 ⊤ を grant する precondition であって発散の核を encode しない)。
-
-**proof-done (Phase 3、0 sorry)**: 上記 3 段を helper `truncW_map_density_tendsto_ae` (1) /
-`posPart_lintegral_eq_top_of_diffEntExt_top` (2) / `differentialEntropyExt_posPart_le_liminf_of_ae_tendsto`
-(Fatou) / `truncW_map_negPart_lintegral_le` (B 有界化) で組立、最終 EReal Tendsto は
-`EReal.tendsto_nhds_top_iff_real` で `∀ M, eventually M < A_n − B_n`。weak-convergence portmanteau
-(`tendsto_iff_forall_integral_tendsto` 等) は使わず density a.e. 収束 (finitary) のみで閉じる
-(L-Uncond-Y-roi 不発動)。
 @audit:ok -/
 theorem differentialEntropyExt_truncW_tendsto_top
     (W : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -459,8 +443,6 @@ preserved under conditioning on the `W`-event `{|W| ≤ n}`), bounds `B(Q_n.map 
 explicit bound `truncW_map_negPart_lintegral_le` (finite since `B(W) < ⊤` and `c_n ≠ 0`), then lifts
 to the sum law via the single-component finiteness `negPart_negMulLog_conv_single_ne_top`.
 
-genuine (新規 helper)。`hW`/`hV`/`hWV`/`hW_ac`/`hBW`/`hn` は全て regularity precondition
-(結論 = 截断和周辺負部の有限性 を encode せず)。@residual なし。
 @audit:ok -/
 private theorem negPart_lintegral_map_truncW_add_ne_top
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -532,18 +514,12 @@ private theorem negPart_lintegral_map_truncW_add_ne_top
   rw [hsum_conv]
   exact negPart_negMulLog_conv_single_ne_top (Q.map W) (Q.map V) hW_ac_Q hBQW
 
-/-- **gateway ⊤ 枝 (無条件)**: `h(W) = ⊤ ⟹ h(W+V) = ⊤`、無条件版② (i-a) を bypass。
-per-n 単調性 `h(W_n) ≤ h(W_n + V)` (`differentialEntropyExt_mono_add_truncW`) と `h(W_n) → ⊤`
-(`differentialEntropyExt_truncW_tendsto_top`、⊤ ケース専用に縮小済) を組み、
-`h(W_n + V) ≥ h(W_n) → ⊤` で `h(W+V) = ⊤`。
-route T capstone Case 2 (`EPIInfiniteVarianceCapstone.lean:343`、`entropyPowerExt = ⊤` を
-`le_top`) と同型の「⊤ 枝は EReal ⊤ 表現で trivial に閉じる」を再利用する。
+/-- Unconditional `⊤`-branch of gateway monotonicity: `h(W) = ⊤ ⟹ h(W+V) = ⊤`. Combines per-`n`
+monotonicity `h(W_n) ≤ h(W_n + V)` (`differentialEntropyExt_mono_add_truncW`) with the divergence
+`h(W_n) → ⊤` (`differentialEntropyExt_truncW_tendsto_top`) to squeeze `h(W_n + V) → ⊤`, then derives
+`A(ν) = ⊤` via per-`n` Gibbs and measure domination. The only hypotheses are the regularity
+preconditions `hW`/`hV`/`hWV`/`hW_ac` together with the case condition `hW_top`.
 
-**⊤ 枝のみ無条件、有限枝は別 lemma** (finite ② / coe 枝)。`_unconditional` 命名は本 ⊤ 枝が真に
-無条件 (regularity precondition `hW`/`hV`/`hWV`/`hW_ac` のみ、無条件版② sorry を継承しない) なため
-honest。`hW_top` (h(W)=⊤) は場合分け precondition で load-bearing でない。
-
-route β' Phase 4 で埋める。
 @audit:ok -/
 theorem differentialEntropyExt_top_of_indep_add_unconditional
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -734,23 +710,18 @@ theorem differentialEntropyExt_top_of_indep_add_unconditional
   rw [differentialEntropyExt_of_ac hν_ac, ← hAν_def, hAν_top, EReal.coe_ennreal_top,
     ← EReal.coe_ennreal_toReal hBν, EReal.top_sub_coe]
 
-/-! ## 無条件 gateway 単調性 (方針 Y、(i-a) 非依存)
+/-! ## Unconditional gateway monotonicity
 
-⊥ 枝 (`bot_le`)、有限枝 (`differentialEntropyExt_mono_add_of_integrable`、per-fibre Gibbs)、
-⊤ 枝 (`differentialEntropyExt_top_of_indep_add_unconditional`、route β') の 3 部品を組んで
-gateway 単調性を無条件で建てる。有限枝は finiteness → integrability の bridge
-(`differentialEntropyExt_integrable_of_finite`) を経由する。 -/
+Gateway monotonicity is assembled unconditionally from three pieces: the `⊥` branch (`bot_le`), the
+finite branch (`differentialEntropyExt_mono_add_of_integrable`, per-fibre Gibbs), and the `⊤` branch
+(`differentialEntropyExt_top_of_indep_add_unconditional`). The finite branch goes through the
+finiteness-to-integrability bridge `differentialEntropyExt_integrable_of_finite`. -/
 
-/-- **有限微分エントロピー → `negMulLog∘density` 可積分** (`differentialEntropyExt_of_ac_integrable`
-の converse)。a.c. + `h(μ) ≠ ⊤` + `h(μ) ≠ ⊥` から、`negMulLog (density)` が `volume` 上可積分。
+/-- Finite differential entropy implies integrability of `negMulLog ∘ density` (the converse of
+`differentialEntropyExt_of_ac_integrable`): from `μ ≪ volume`, `h(μ) ≠ ⊤`, and `h(μ) ≠ ⊥`, the
+function `negMulLog ((μ.rnDeriv volume ·).toReal)` is `volume`-integrable. Both `A` and `B` (the
+positive- and negative-part `lintegral`s) are then finite, giving `HasFiniteIntegral`.
 
-`differentialEntropyExt_of_ac hac` で `h = (A:EReal) − (B:EReal)` (A/B = 正部・負部 lintegral)。
-- `A ≠ ⊤`: A=⊤ なら `(⊤:EReal) − B = ⊤` (B<⊤) で `h=⊤`、`hne_top` に矛盾。
-- `B ≠ ⊤`: B=⊤ なら `A − ⊤ = ⊥` (A<⊤) で `h=⊥`、`hne_bot` に矛盾。
-- `A<⊤ ∧ B<⊤ ⟹ Integrable`: aestronglyMeasurable + HasFiniteIntegral
-  (`∫⁻ ‖negMulLog f‖ₑ = A + B < ⊤`)。
-
-honesty: `hne_top`/`hne_bot` は有限性 regularity precondition (結論 = Integrable を encode せず)。
 @audit:ok -/
 theorem differentialEntropyExt_integrable_of_finite {μ : Measure ℝ} (hac : μ ≪ volume)
     (hne_top : differentialEntropyExt μ ≠ ⊤) (hne_bot : differentialEntropyExt μ ≠ ⊥) :
@@ -783,12 +754,11 @@ theorem differentialEntropyExt_integrable_of_finite {μ : Measure ℝ} (hac : μ
   exact (Real.continuous_negMulLog.measurable.comp
     (μ.measurable_rnDeriv volume).ennreal_toReal).aestronglyMeasurable
 
-/-- **無条件 gateway 単調性** (方針 Y、(i-a) 非依存): `W a.c. ∧ W ⊥ V ⟹ h(W) ≤ h(W+V)`。
-⊥ 枝 = `bot_le`、有限枝 = `differentialEntropyExt_mono_add_of_integrable` (per-fibre Gibbs)、
-⊤ 枝 = `differentialEntropyExt_top_of_indep_add_unconditional` (route β')。
+/-- Unconditional gateway monotonicity: `W` a.c. and `W ⊥ V ⟹ h(W) ≤ h(W+V)`. The proof splits into
+the `⊥` branch (`bot_le`), the finite branch (`differentialEntropyExt_mono_add_of_integrable` via the
+finiteness-to-integrability bridge), and the `⊤` branch
+(`differentialEntropyExt_top_of_indep_add_unconditional`).
 
-旧 `EPIUncondMonotone.differentialEntropyExt_mono_add` の無条件 proof-done 版 (旧版は無条件版②
-`differentialEntropyExt_indep_add_eq_add_klDiv` (i-a) に transitive 依存)。本版は (i-a) を継承しない。
 @audit:ok -/
 theorem differentialEntropyExt_mono_add_unconditional
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -806,9 +776,9 @@ theorem differentialEntropyExt_mono_add_unconditional
       exact differentialEntropyExt_mono_add_of_integrable W V P hW hV hWV hW_ac
         (differentialEntropyExt_integrable_of_finite hW_ac htop hne_bot)
 
-/-- **無条件 gateway atom** (方針 Y): `W a.c. ∧ W ⊥ V ⟹ N(W+V) ≥ N(W)`。
-`differentialEntropyExt_mono_add_unconditional` を `EReal.exp_monotone` で `entropyPowerExt`
-(= `EReal.exp (2 · differentialEntropyExt)`) に lift。proof-done (i-a 非依存)。
+/-- Unconditional gateway atom: `W` a.c. and `W ⊥ V ⟹ N(W+V) ≥ N(W)`. Lifts
+`differentialEntropyExt_mono_add_unconditional` along `EReal.exp_monotone` to `entropyPowerExt`.
+
 @audit:ok -/
 theorem entropyPowerExt_mono_add_unconditional
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]

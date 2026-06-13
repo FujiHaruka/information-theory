@@ -12,12 +12,34 @@ import Mathlib.Order.Filter.AtTopBot.CountablyGenerated
 import Mathlib.InformationTheory.KullbackLeibler.Basic
 
 /-!
-# TruncationLimit — Core part
+# TruncationLimit — core part
 
-route β' (truncation + monotone-limit) の foundational layer。truncW 構成 / cond 密度公式 /
-measure domination / cross-entropy (crossPos/crossNeg) と finiteness-free ℝ≥0∞ Gibbs /
-convolution 密度 / per-fibre a.c. / 和周辺負部有限性。下流 part (Mono / Limit) が import する。
-umbrella: `InformationTheory.Shannon.EPI.Unconditional.TruncationLimit`。
+Foundational layer for the truncation + monotone-limit route.
+
+## Main definitions
+
+* `truncW` — conditioning `P` on the `W`-event `{|W| ≤ n}` (single-variable truncation).
+* `crossPos` / `crossNeg` — the positive and negative parts of the cross-entropy, as `ℝ≥0∞`-valued
+  `lintegral`s.
+
+## Main statements
+
+* `rnDeriv_cond_eq` — Radon–Nikodym derivative of a conditioned measure.
+* `ennreal_gibbs_rearranged` — a `⊤`-tolerant `ℝ≥0∞` rearrangement of the Gibbs inequality.
+* `conv_eq_withDensity_translate_average` — the sum law as a translate-average `withDensity`,
+  needing only the left factor a.c.
+* `condDistrib_ae_absolutelyContinuous_indep_add` — per-fibre absolute continuity of the
+  affine-shift fibre against the sum marginal.
+* `negPart_negMulLog_conv_single_ne_top` — single-component negative-part finiteness of the sum law.
+
+## Implementation notes
+
+* The cross-entropy is kept as `ℝ≥0∞`-valued positive/negative parts (`crossPos` / `crossNeg`)
+  rather than an `ℝ`-valued difference, so that the Gibbs inequality can be stated in a rearranged
+  form that avoids the `⊤ - ⊤` indeterminacy and remains valid when `h(μ) = ⊤`.
+
+Re-exported by the umbrella `InformationTheory.Shannon.EPI.Unconditional.TruncationLimit`; the
+downstream `Mono` / `Limit` parts import this.
 -/
 
 namespace InformationTheory.Shannon
@@ -27,19 +49,17 @@ open scoped ENNReal NNReal Topology
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-- **W 単独 truncation の構成** (route T `condTrunc` を W 単独に読み替え)。
-`truncW P W n := P[| {ω | |W ω| ≤ n}]` (`W` の値が `[-n, n]` に入る事象での条件付け)。
-各 `truncW P W n` は compact support (有界) → 有限分散・有限エントロピーを満たし、a.c.
-(`cond_absolutelyContinuous` 保存) を保つ。route T の joint `truncSet X Y n` と違い W 単独。
+/-- Single-variable truncation: `truncW P W n` conditions `P` on the event `{ω | |W ω| ≤ n}`, i.e.
+on `W` taking values in `[-n, n]`. Each `truncW P W n` has compact support (hence finite variance
+and finite entropy) and preserves absolute continuity.
+
 @audit:ok -/
 noncomputable def truncW (P : Measure Ω) (W : Ω → ℝ) (n : ℕ) : Measure Ω :=
   ProbabilityTheory.cond P {ω | |W ω| ≤ (n : ℝ)}
 
-/-- **cond density formula** (route T `rnDeriv_cond_eq` を W 単独 truncation 用に再掲、heavy
-import 回避のため local 再証明): 確率測度 `μ : Measure ℝ` を可測集合 `s` (positive mass) で
-条件付けた測度の Radon-Nikodym 微分は `(cond μ s).rnDeriv volume =ᵐ (μ s)⁻¹ · 1_s · μ.rnDeriv volume`。
-`cond μ s = (μ s)⁻¹ • μ.restrict s` の scalar mul + restrict の rnDeriv (`rnDeriv_smul_left_of_ne_top`
-+ `rnDeriv_restrict`、共に Mathlib) で組立。route T と完全同型 (集約漏れでなく import cycle/cost 回避)。
+/-- Radon–Nikodym derivative of a conditioned measure: for a probability measure `μ` and a
+measurable set `s` of positive mass, `(cond μ s).rnDeriv volume =ᵐ (μ s)⁻¹ · 1_s · μ.rnDeriv volume`.
+
 @audit:ok -/
 theorem rnDeriv_cond_eq (μ : Measure ℝ) [IsProbabilityMeasure μ] {s : Set ℝ}
     (hs : MeasurableSet s) (hpos : μ s ≠ 0) :
@@ -61,8 +81,8 @@ measure `truncW P W n = P[| {|W| ≤ n}]` forward through `W + V` is bounded abo
 scaled pushforward of `P` through `W + V`. Pure measure monotonicity (no convolution / density):
 `cond P E = (P E)⁻¹ • P.restrict E ≤ (P E)⁻¹ • P` via `restrict_le_self`, then push forward
 (`Measure.map_smul` + `Measure.map_mono`). Used downstream for the klDiv expansion of the truncated
-truncW sum law. (`hn` は consumer の `cond` well-defined scope を揃えるための regularity precondition で
-API 対称用に保持。`P E = 0` でも `cond P E = 0 ≤ anything` ゆえ本 `≤` 方向の proof body では未使用。)
+sum law. (`hn` is a regularity precondition kept for API symmetry; the `≤` direction does not use
+it, since `cond P E = 0 ≤ anything` when `P E = 0`.)
 @audit:ok -/
 theorem map_truncW_add_le_smul_map_add
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -99,44 +119,37 @@ theorem map_truncW_add_absolutelyContinuous_map_add
   exact Measure.absolutelyContinuous_of_le_smul
     (map_truncW_add_le_smul_map_add W V P hW hV n hn)
 
-/-! ### route (d'') atom 2 — finiteness-free ℝ≥0∞ cross-entropy (Gibbs)
+/-! ### Finiteness-free `ℝ≥0∞` cross-entropy (Gibbs)
 
-route (d'') の load-bearing piece。⊤ を跨ぐ Gibbs 不等式 `h(μ) ≤ crossEnt(μ,ν)` を、in-tree の
-ℝ-valued `differentialEntropy_le_cross_entropy` (`EPIInfiniteVarianceTruncation.lean:997`、
-`integral_sub` で有限 cross-integral + μ 自身の有限微分エントロピーを必須にし ⊤ で破綻) でなく、
-**有限性を要求しない ℝ≥0∞ lintegral 形** で建てる。
+The Gibbs inequality `h(μ) ≤ crossEnt(μ, ν)` is built in an `ℝ≥0∞`-`lintegral` form that requires no
+finiteness, rather than in the in-tree `ℝ`-valued `differentialEntropy_le_cross_entropy` (which
+needs a finite cross-integral and breaks down at `⊤`).
 
-cross-entropy の正部・負部 (ℝ≥0∞):
-* `crossPos μ ν := ∫⁻ x, ofReal (-log fν x) ∂μ` (= `∫ (-log fν)⁺ dμ`、ofReal が負部を 0 clamp)
-* `crossNeg μ ν := ∫⁻ x, ofReal (log fν x) ∂μ`  (= `∫ (log fν)⁺ dμ`)
+The cross-entropy is split into its positive and negative parts (`ℝ≥0∞`), with
+`fν x := (ν.rnDeriv volume x).toReal`:
 
-ただし `fν x := (ν.rnDeriv volume x).toReal`。`crossEnt(μ,ν) = -∫ log fν ∂μ = crossPos - crossNeg`
-(ℝ で書くと subtraction、ℝ≥0∞ では ⊤-⊤ 回避のため移項形で扱う)。
+* `crossPos μ ν := ∫⁻ x, ofReal (-log fν x) ∂μ` — picks up the negative part of `log fν`.
+* `crossNeg μ ν := ∫⁻ x, ofReal (log fν x) ∂μ` — picks up the positive part.
 
-**atom 2 全体 proof-done (sorryAx-free)**: `crossPos_self`/`crossNeg_self` (self-identity) +
-`ennreal_gibbs_rearranged` (consumer form、`A(μ)=⊤` 許容) が `#print axioms` で
-`[propext, Classical.choice, Quot.sound]`。⊤-case Gibbs は **負部 `∫⁻ ofReal(-log r) ∂μ ≤ 1`**
-(普遍定数 1-有界 = klFun≥0 の content、`-r log r ≤ 1`) で genuine 着地。 -/
+Then `crossEnt(μ, ν) = -∫ log fν ∂μ = crossPos - crossNeg`, handled in rearranged form over `ℝ≥0∞`
+to avoid the `⊤ - ⊤` indeterminacy. The `⊤`-case Gibbs lands via the universal bound
+`∫⁻ ofReal(-log r) ∂μ ≤ 1` (the content of `klFun ≥ 0`, from `-r log r ≤ 1`). -/
 
-/-- **cross-entropy 正部** (ℝ≥0∞): `∫⁻ x, ofReal (-log ((ν.rnDeriv volume x).toReal)) ∂μ`。
-`ν` の対数密度の **負値部** を `μ` で積分 (ofReal が負部 = `log fν < 0` のとき 0 clamp ⟹
-正の寄与のみ拾う)。`A(μ) = crossPos μ μ` (self-identity helper `crossPos_self`)。 -/
+/-- Positive part of the cross-entropy (`ℝ≥0∞`): `∫⁻ x, ofReal (-log ((ν.rnDeriv volume x).toReal)) ∂μ`,
+integrating the negative values of the log-density of `ν` against `μ`. -/
 noncomputable def crossPos (μ ν : Measure ℝ) : ℝ≥0∞ :=
   ∫⁻ x, ENNReal.ofReal (-Real.log ((ν.rnDeriv volume x).toReal)) ∂μ
 
-/-- **cross-entropy 負部** (ℝ≥0∞): `∫⁻ x, ofReal (log ((ν.rnDeriv volume x).toReal)) ∂μ`。
-`ν` の対数密度の **正値部** を `μ` で積分。`B(μ) = crossNeg μ μ` (self-identity helper `crossNeg_self`)。 -/
+/-- Negative part of the cross-entropy (`ℝ≥0∞`): `∫⁻ x, ofReal (log ((ν.rnDeriv volume x).toReal)) ∂μ`,
+integrating the positive values of the log-density of `ν` against `μ`. -/
 noncomputable def crossNeg (μ ν : Measure ℝ) : ℝ≥0∞ :=
   ∫⁻ x, ENNReal.ofReal (Real.log ((ν.rnDeriv volume x).toReal)) ∂μ
 
-/-- **self-identity (正部)**: `ν` を自分自身に対する cross-entropy 正部が `differentialEntropyExt`
-a.c. 枝の正部 `A(ν)` (`EntropyPowerExt.lean:61`) に一致。
-`crossPos ν ν = ∫⁻ ofReal(-log fν) ∂ν = ∫⁻ (ν.rnDeriv vol)·ofReal(-log fν) ∂vol`
-(change-of-measure `lintegral_rnDeriv_mul`) `= ∫⁻ ofReal(negMulLog fν) ∂vol = A(ν)`
-(a.e. `ν.rnDeriv vol = ofReal fν` + `ofReal fν · ofReal(-log fν) = ofReal(fν·(-log fν)) = ofReal(negMulLog fν)`)。
+/-- Self-identity (positive part): the cross-entropy positive part of `ν` against itself equals the
+positive part `A(ν) = ∫⁻ x, ofReal (negMulLog ((ν.rnDeriv volume x).toReal)) ∂volume` of the a.c.
+branch of `differentialEntropyExt`. Obtained by change of measure (`lintegral_rnDeriv_mul`).
 
-route (d'') の atom 1 (測度 domination) を `A(ν)` に橋渡しする鍵。proof-done (0 sorry)。
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free)。@audit:ok -/
+@audit:ok -/
 theorem crossPos_self (ν : Measure ℝ) [SigmaFinite ν] (hν : ν ≪ volume) :
     crossPos ν ν
       = ∫⁻ x, ENNReal.ofReal (Real.negMulLog ((ν.rnDeriv volume x).toReal)) ∂volume := by
@@ -157,9 +170,11 @@ theorem crossPos_self (ν : Measure ℝ) [SigmaFinite ν] (hν : ν ≪ volume) 
   congr 1
   ring
 
-/-- **self-identity (負部)**: `ν` を自分自身に対する cross-entropy 負部が `differentialEntropyExt`
-a.c. 枝の負部 `B(ν)` (`EntropyPowerExt.lean:62`) に一致。`crossPos_self` と同型 (符号反転)。
-proof-done (0 sorry)。`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free)。@audit:ok -/
+/-- Self-identity (negative part): the cross-entropy negative part of `ν` against itself equals the
+negative part `B(ν) = ∫⁻ x, ofReal (-(negMulLog ((ν.rnDeriv volume x).toReal))) ∂volume` of the a.c.
+branch of `differentialEntropyExt`. The sign-flipped analogue of `crossPos_self`.
+
+@audit:ok -/
 theorem crossNeg_self (ν : Measure ℝ) [SigmaFinite ν] (hν : ν ≪ volume) :
     crossNeg ν ν
       = ∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((ν.rnDeriv volume x).toReal))) ∂volume := by
@@ -179,9 +194,6 @@ theorem crossNeg_self (ν : Measure ℝ) [SigmaFinite ν] (hν : ν ≪ volume) 
   congr 1
   ring
 
-/-- **整数性 helper**: `∫⁻ ofReal(f) < ⊤` ∧ `∫⁻ ofReal(-f) < ⊤` ∧ `AEStronglyMeasurable f`
-から `Integrable f m`。`HasFiniteIntegral f = ∫⁻ ‖f‖ₑ` を `‖f‖ₑ = ofReal(f) + ofReal(-f)`
-(正部・負部分解) に展開し、両 lintegral 有限性 + `lintegral_add` で組む。 -/
 theorem integrable_of_lintegral_ofReal_pos_neg_ne_top {m : Measure ℝ} {f : ℝ → ℝ}
     (hf_meas : AEStronglyMeasurable f m)
     (hpos : (∫⁻ x, ENNReal.ofReal (f x) ∂m) ≠ ⊤)
@@ -201,21 +213,12 @@ theorem integrable_of_lintegral_ofReal_pos_neg_ne_top {m : Measure ℝ} {f : ℝ
         lintegral_add_left' hf_meas.aemeasurable.ennreal_ofReal _
     _ < ⊤ := ENNReal.add_lt_top.2 ⟨hpos.lt_top, hneg.lt_top⟩
 
-/-- **⊤ を跨ぐ ℝ≥0∞ Gibbs (rearranged、finite-entropy 枝)**: `μ ≪ ν ≪ volume` (ともに
-probability) で `h(μ) ≤ crossEnt(μ,ν)` を **⊤-⊤ を回避した移項 ℝ≥0∞ 形**:
-`A(μ) + crossNeg μ ν ≤ crossPos μ ν + B(μ)`
-(`A(μ) := ∫⁻ ofReal(negMulLog fμ) ∂vol`, `B(μ) := ∫⁻ ofReal(-(negMulLog fμ)) ∂vol`)。
-**`μ` が有限微分エントロピー (`hμ_ent`) + cross-entropy μ-可積分 (`h_cross_int`) を持つ枝専用**
-(両者で 4 lintegral 全有限 → ℝ-valued Gibbs に降ろせる)。A(μ)=⊤ の枝は consumer-form
-`ennreal_gibbs_rearranged` が別途扱う。
+/-- Rearranged `ℝ≥0∞` Gibbs inequality, finite-entropy branch: for `μ ≪ ν ≪ volume` (both
+probability measures) with `μ` of finite differential entropy and the cross-entropy `μ`-integrable,
+`A(μ) + crossNeg μ ν ≤ crossPos μ ν + B(μ)`. Here all four `lintegral`s are finite, so the bound
+descends to the `ℝ`-valued Gibbs inequality and lifts back. The `A(μ) = ⊤` branch is handled by the
+consumer form `ennreal_gibbs_rearranged`.
 
-**証明**: in-tree `differentialEntropy_le_cross_entropy` (`EPIInfiniteVarianceTruncation.lean:997`、
-ℝ-valued Gibbs) を適用、`integral_eq_lintegral_pos_part_sub_lintegral_neg_part` で両辺を正部・負部
-lintegral 差に同定 → ℝ で移項 → 全有限ゆえ ℝ≥0∞ に持ち上げ。
-
-`hμ_ac`/`hν_ac`/`hμν` は絶対連続性、`hμ_ent`/`h_cross_int` は有限性 regularity precondition
-(grant しても Gibbs 不等式は出ない → 非 load-bearing)。出口補題 `differentialEntropy_le_cross_entropy`
-(ℝ-Gibbs、本体に KL≥0 = `toReal_klDiv_of_measure_eq` の genuine 核) を pos/neg 分解で lift。
 @audit:ok -/
 private theorem ennreal_gibbs_rearranged_of_finite_ent {μ ν : Measure ℝ}
     [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
@@ -268,35 +271,13 @@ private theorem ennreal_gibbs_rearranged_of_finite_ent {μ ν : Measure ℝ}
   rw [ENNReal.toReal_add hA_fin hCN_fin, ENNReal.toReal_add hCP_fin hB_fin]
   linarith
 
-/-- **⊤ を跨ぐ ℝ≥0∞ Gibbs (rearranged、consumer form)**: `μ ≪ ν ≪ volume` (ともに probability) で
-`A(μ) + crossNeg μ ν ≤ crossPos μ ν + B(μ)`。route (d'') atom 2 の最終消費形。
-`A(μ) := ∫⁻ ofReal(negMulLog fμ) ∂vol`, `B(μ) := ∫⁻ ofReal(-(negMulLog fμ)) ∂vol`。
+/-- Rearranged `ℝ≥0∞` Gibbs inequality (consumer form): for `μ ≪ ν ≪ volume` (both probability
+measures) with `B(μ)` and `crossNeg μ ν` finite, `A(μ) + crossNeg μ ν ≤ crossPos μ ν + B(μ)`, where
+`A(μ) = ∫⁻ ofReal(negMulLog fμ) ∂vol` and `B(μ) = ∫⁻ ofReal(-(negMulLog fμ)) ∂vol`. This version
+allows `A(μ) = ⊤` (i.e. `h(μ) = +∞`): the proof splits on `A(μ)`, delegating the finite branch to
+`ennreal_gibbs_rearranged_of_finite_ent` and closing the `⊤` branch via the universal bound
+`∫⁻ ofReal(-log r) ∂μ ≤ 1` (the content of `klFun ≥ 0`), which forces `crossPos μ ν = ⊤`.
 
-**`A(μ) = ⊤` (h(μ)=+∞) を許す版**: assembly では `μ = ν_n` (截断和の法) が `h(ν_n) = ⊤` になりうる
-(V が無限エントロピーのとき bounded-W + V が ⊤)。その枝で `A(W+V) = ⊤` を引き出すのが route (d'')
-の核心。`crossPos μ ν` も ⊤ を許す。一方 `B(μ)` (= μ 自身の負部、`hμ_negPart_fin`) と
-`crossNeg μ ν` (= 負部 cross-entropy、atom 1 domination で `(P E)⁻¹·B(ν) < ⊤`) は finite に固定。
-
-**証明 (A(μ) で場合分け、proof-done)**:
-- **A(μ) < ⊤**: μ 有限微分エントロピー (A<⊤ ∧ B<⊤ で `negMulLog∘fμ` 可積分) →
-  `crossPos μ ν` で更に場合分け: ⊤ なら RHS=⊤ で `le_top`、finite なら cross-entropy μ-可積分
-  (crossPos<⊤ ∧ crossNeg<⊤ で `log∘fν` 可積分) → finite-entropy 版 `_of_finite_ent` に委譲。
-- **A(μ) = ⊤**: `A(μ)=⊤ ⟹ crossPos μ ν = ⊤` (⊤-case Gibbs、finiteness precondition 不要) を出し、
-  RHS=`crossPos+B(μ)=⊤` で `le_top`。核は **負部の普遍定数 1-有界** (= klFun≥0 の content):
-  1. pointwise subadditivity (μ-a.e.、`-log fμ = -log fν + -log r`, `r := dμ/dν`):
-     `ofReal(-log fμ) ≤ ofReal(-log fν) + ofReal(-log r)` (`ENNReal.ofReal_add_le`)。積分して
-     `A(μ) = crossPos μ μ ≤ crossPos μ ν + ∫⁻ ofReal(-log r) ∂μ` (`crossPos_self` で `crossPos μ μ = A(μ)`)。
-  2. `∫⁻ ofReal(-log r) ∂μ ≤ 1`: change-of-measure `lintegral_rnDeriv_mul` で ν へ移し
-     `∫⁻ ofReal(r·(-log r)) ∂ν`、各 fibre で `-r log r ≤ 1 - r ≤ 1` (`Real.log_le_sub_one_of_pos`
-     を `1/r` に適用)、`∫⁻ 1 ∂ν = ν univ = 1`。
-  3. `A(μ)=⊤ ≤ crossPos μ ν + 1`、`1 ≠ ⊤` ゆえ `crossPos μ ν = ⊤`。
-  (当初 #2 ルートを「負部が `crossNeg+A` で wrong-direction」と誤判定したが、負部 = dμ/dν の log で
-  cross 項でなく、`-r log r ≤ 1` の普遍定数で抑えられる = klFun≥0 が効く。orchestrator escalate で訂正。)
-
-`hμ_ac`/`hν_ac`/`hμν` は絶対連続性、`hμ_negPart_fin` (= B(μ)<⊤) / `hCN_fin` (= crossNeg μ ν<⊤)
-は有限性 regularity precondition (A<⊤ 枝で finite-entropy 版へ委譲する際の integrability 供給に使用、
-A=⊤ 枝では未使用 = 結論核を encode せず非 load-bearing。downstream assembly が同じ finiteness を持つ)。
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free)。
 @audit:ok -/
 theorem ennreal_gibbs_rearranged {μ ν : Measure ℝ}
     [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
@@ -426,10 +407,10 @@ theorem ennreal_gibbs_rearranged {μ ν : Measure ℝ}
         · rw [crossPos] at hCP_top; exact hCP_top
       exact ennreal_gibbs_rearranged_of_finite_ent hμ_ac hν_ac hμν hμ_ent h_cross_int
 
-/-- **per-fibre entropy integrability の translation 不変性**: `ν ≪ volume` で
-`negMulLog (rnDeriv ν)` が可積分なら、平行移動 `ν.map (· + y)` でも可積分。Lebesgue 平行移動不変
-(`map_add_right_eq_self`) + measure-preserving 合成 (`MeasurePreserving.integrable_comp_emb`) +
-`MeasurableEmbedding.rnDeriv_map` で shift 後の rnDeriv を shift 前に同定。
+/-- Translation invariance of per-fibre entropy integrability: if `negMulLog (rnDeriv ν volume)` is
+integrable for `ν ≪ volume`, then so is the corresponding integrand for the translate
+`ν.map (· + y)`, by Lebesgue translation invariance.
+
 @audit:ok -/
 theorem integrable_negMulLog_rnDeriv_map_add_const
     {ν : Measure ℝ} [SigmaFinite ν] (y : ℝ)
@@ -532,9 +513,10 @@ for a.e. `z ∂(Q.map V)`. This is the **continuous** version of the general dis
 `condDistrib z ≪ μ.map X` (Mathlib's general/non-discrete version is absent; the in-tree
 `Bridge.condDistrib_ae_absolutelyContinuous_map` is `[Countable X]`-only, unusable for `X = ℝ`).
 
-機構: 和密度 `r(x) = ∫⁻ v, f_W(x-v) ∂μ_V` (= `conv_eq_withDensity_translate_average`)、translate 密度
-`f_W(·-z)`。Fubini で `(μ_V × vol)({(z,x) : r(x)=0 ∧ 0<f_W(x-z)}) = 0` (各 x で `r(x)=0 ⟹ f_W(x-v)=0`
-μ_V-a.e.)、swap で a.e. z に `{r=0} ⊆ {f_W(·-z)=0}` vol-a.e. を出し、withDensity 間 a.c. に変換。
+The argument uses the sum density `r(x) = ∫⁻ v, f_W(x-v) ∂μ_V` and the translate density
+`f_W(·-z)`: a Fubini argument gives `(μ_V × vol)({(z,x) : r(x) = 0 ∧ 0 < f_W(x-z)}) = 0`, and a swap
+yields `{r = 0} ⊆ {f_W(·-z) = 0}` vol-a.e. for a.e. `z`, which converts to absolute continuity
+between the `withDensity` measures.
 @audit:ok -/
 theorem condDistrib_ae_absolutelyContinuous_indep_add
     {μW μV : Measure ℝ} [SFinite μW] [SFinite μV] [IsProbabilityMeasure μV] (hμW_ac : μW ≪ volume) :
@@ -585,27 +567,12 @@ theorem condDistrib_ae_absolutelyContinuous_indep_add
   by_contra hne
   exact hxsub ⟨hx0 hxA, pos_iff_ne_zero.mpr hne⟩
 
-/-- **single-component negative-part finiteness of the sum law** — `B(μW ∗ μV) < ⊤` from
-`B(μW) < ⊤`. The single-component generalization of route-T
-`integrable_negPart_negMulLog_map_condTrunc_sum` (`EPIInfiniteVarianceTruncation.lean:600`),
-which averages over the X-marginal `pn·vol` (requires both components a.c.) and bounds the
-Y-marginal negative part. Here the averaging is over the **general probability measure** `μV`
-(no a.c. on `μV` needed, so it works even when `V` is non-a.c.), bounding the **W-marginal**
-negative part `B(μW)`.
+/-- Single-component negative-part finiteness of the sum law: `B(μW ∗ μV) < ⊤` from `B(μW) < ⊤`.
+The averaging is over the general probability measure `μV` (no absolute continuity on `μV` needed,
+so it works even when `V` is non-a.c.), bounding the W-marginal negative part `B(μW)`. The core is a
+per-`z` Jensen bound on the convex `t ↦ t log t` against the convolution density, followed by a
+Tonelli collapse using translation invariance.
 
-機構 (route-T:600 を下敷きに、averaging measure を `pn·vol → μV` に差し替え):
-- `r := ((μW ∗ μV).rnDeriv vol).toReal`, `fW := (μW.rnDeriv vol).toReal`, `φ t := t·log t`.
-  目標 `∫⁻ ofReal(-(negMulLog r)) = ∫⁻ ofReal(φ r) ≤ ∫⁻ ofReal(max (φ r) 0)`。
-- 収束密度: `r =ᵐ[vol] fun z => ∫ v, fW(z-v) ∂μV` (`conv_eq_withDensity_translate_average` の
-  `Measure.rnDeriv_withDensity` + `integral_toReal`)。`μV` 確率測度ゆえ平均。
-- per-z Jensen: `φ(r z) ≤ ∫ v, max (φ (fW(z-v))) 0 ∂μV` (`Real.convexOn_mul_log.map_integral_le`,
-  `μ := μV` 確率測度)。
-- Tonelli + 平行移動不変: `∫⁻ z, ofReal(max (φ (r z)) 0) ≤ ∫⁻ z ∫⁻ v ofReal(max(φ(fW(z-v)))0) ∂μV
-  = ∫⁻ v ∫⁻ z ofReal(Cq(z-v)) ∂vol ∂μV = (μV univ)·C = 1·C = C = B(μW) < ⊤`.
-
-proof-done (0 sorry)。`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free)。
-非循環/非バンドル/非退化: 結論 (和周辺負部 lintegral 有限性) は仮説 (`hμW` a.c. + `B(μW)<⊤`) と
-非同型、両仮説は regularity precondition、`:True`/退化なし。
 @audit:ok -/
 theorem negPart_negMulLog_conv_single_ne_top
     (μW μV : Measure ℝ) [IsFiniteMeasure μW] [IsProbabilityMeasure μV] (hμW : μW ≪ volume)

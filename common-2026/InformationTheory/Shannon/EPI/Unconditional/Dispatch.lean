@@ -4,35 +4,28 @@ import InformationTheory.Shannon.EPI.InfiniteVariance.Capstone
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# EPI 無条件化 — case-1 dispatch (Pivot B Phase 3)
+# Entropy power inequality — case-1 dispatch
 
-`docs/shannon/epi-finitevar-smoothing-limit-plan.md` の Phase 3。`EPIUncondMixedCase.lean`
-の 4-case dispatch (`entropyPowerExt_add_ge_dispatch_skeleton`) と case-1 named wall
-(`entropyPowerExt_add_ge_finite_ac`) を本 file に集約する。
+The two-a.c. classical entropy power inequality `N(X+Y) ≥ N(X) + N(Y)` (case 1 of the
+absolute-continuity case split) together with the four-case dispatch skeleton that combines it
+with the mixed and singular cases.
 
-**なぜ別 file か (import cycle 回避)**: case-1 の両 a.c. 古典 EPI は有限分散 sub-case を
-`EPICase1SmoothingLimit.entropyPowerExt_add_ge_of_finite_variance` (smoothing-limit closure、
-sorryAx-free) に delegate したい。しかし `EPICase1SmoothingLimit` は (transitive に
-`EPIDensityForm → EPICase1RatioLimit → EPIUncondMixedCase` 経由で) `EPIUncondMixedCase` の
-低レベル補題 (`map_add_absolutelyContinuous` / `differentialEntropy_add_ge_of_indep`) を import
-している。したがって `EPIUncondMixedCase` 自身に `import EPICase1SmoothingLimit` を足すと
-import cycle (Lean は "already been declared" で拒否、機械確認 2026-06-06)。dispatch +
-case-1 wall を両 file (`EPIUncondMixedCase` + `EPICase1SmoothingLimit`) の **下流** に置くこと
-で cycle を断ち、delegation を成立させる。dispatch の in-tree code consumer は 0 件
-(`rg` で確認、docs 言及のみ) ゆえ移動の影響は最小。
+## Main statements
 
-**case-1 (両 a.c.) の有限分散 / 無限分散 分解**: case-1 古典 EPI を分散の有無で 2 分:
-* **有限分散**: `entropyPowerExt_add_ge_of_finite_variance` (smoothing-limit、genuine) に
-  delegate。和の有限微分エントロピー `hW_ent` precondition を threading するのみで own sorry
-  なし (`hW_ent` は `hX_ent`/`hY_ent` と同階層の regularity precondition、EPI を encode しない)。
-* **無限分散**: `EPIInfiniteVarianceTruncation.entropyPowerExt_add_ge_infinite_variance`
-  (route T = conditioning truncation で **genuine closure 済、sorryAx-free**、capstone
-  `EPIInfiniteVarianceCapstone.lean`)。旧 Lieb-Young / Brascamp-Lieb 壁は FALSE WALL だった。
+* `entropyPowerExt_add_ge_finite_ac` — case 1 (both push-forwards a.c. with finite differential
+  entropy): the extended-real entropy power inequality, split by finiteness of variance.
+* `entropy_power_inequality_of_ac` — the real-valued entropy power inequality under absolute
+  continuity and finite differential entropy.
 
-旧 bundled `wall:epi-finite-entropy-ac-classical` (両 a.c. 有限エントロピー古典 EPI の 1 本
-sorry) は本 file で有限分散枝 (smoothing closure) + 無限分散枝 (route T closure) の 2 本に
-**分解 + 両枝 genuine closure** された。`entropyPowerExt_add_ge_finite_ac` 自身は delegation のみで
-own sorry 0、両枝とも sorryAx-free ゆえ transitive sorry も 0 (proof-done)。
+## Implementation notes
+
+* This file sits downstream of both `EPIUncondMixedCase` and `EPICase1SmoothingLimit` so that the
+  case-1 lemma can delegate to `EPICase1SmoothingLimit.entropyPowerExt_add_ge_of_finite_variance`.
+  Placing the dispatch in either of those files instead would introduce an import cycle, since
+  `EPICase1SmoothingLimit` already (transitively) imports `EPIUncondMixedCase`.
+* Case 1 is split by whether both inputs have finite variance: the finite-variance branch
+  delegates to the smoothing-limit closure, the infinite-variance branch to the conditioning
+  truncation (route T) closure. Both branches are `sorryAx`-free.
 -/
 
 namespace InformationTheory.Shannon
@@ -43,31 +36,13 @@ open scoped ENNReal NNReal
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-- **case 1 残核 — 両 a.c. + 両有限エントロピーの classical EPI**。
+/-- The classical entropy power inequality `N(X+Y) ≥ N(X) + N(Y)` when both `P.map X` and
+`P.map Y` are absolutely continuous and have finite differential entropy. The proof splits on
+whether both inputs have finite variance: the finite-variance branch delegates to the
+smoothing-limit closure, the infinite-variance branch to the conditioning-truncation (route T)
+closure. The hypotheses `hX_ent`/`hY_ent`/`hW_ent` are finite-differential-entropy regularity
+preconditions.
 
-両 a.c. かつ両入力が有限微分エントロピー (negMulLog density 可積分) のとき EPI
-`N(X+Y) ≥ N(X) + N(Y)`。これは古典 EPI そのもの。有限分散 / 無限分散で `by_cases` 分割:
-
-* **有限分散** (`hfv : Integrable (·²) X ∧ Integrable (·²) Y`):
-  `EPICase1SmoothingLimit.entropyPowerExt_add_ge_of_finite_variance` (smoothing→正則化 limit
-  closure、sorryAx-free) に delegate。X+Y の有限微分エントロピー `hW_ent`
-  (`negMulLog ((P.map (X+Y)).rnDeriv volume ·).toReal` 可積分) を threading するのみ。これは
-  `hX_ent`/`hY_ent` と同階層の regularity precondition であって EPI を encode しない
-  (**NOT load-bearing**)。本枝に own sorry は無い。
-* **無限分散** (`¬ hfv`):
-  `EPIInfiniteVarianceTruncation.entropyPowerExt_add_ge_infinite_variance` (route T =
-  conditioning truncation で **genuine closure 済、sorryAx-free**、capstone
-  `EPIInfiniteVarianceCapstone.lean`) に delegate。
-
-本補題自身は delegation のみで own sorry 0、signature honest (`hX_ent`/`hY_ent`/`hW_ent` は
-有限微分エントロピー regularity precondition、結論を encode しない)。両枝 (有限分散 smoothing /
-無限分散 route T) とも sorryAx-free ゆえ **transitive sorry も 0 (proof-done)**。旧 bundled
-`wall:epi-finite-entropy-ac-classical` の分解先。
-
-無限分散枝の closure 経緯: 旧 wall slug `epi-infinite-variance-classical` は「Lieb-Young
-sharp Young / Brascamp-Lieb 必須」を前提とした壁判定だったが、**FALSE WALL** と判明
-(2026-06-07)。route T (両成分同時 conditioning による compact-support 切詰 → 有限分散 EPI 黒箱
-再利用 → R→∞ で Gibbs + cross-entropy DCT による usc) で sharp Young を経ずに genuine closure。
 @audit:ok -/
 theorem entropyPowerExt_add_ge_finite_ac
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -80,50 +55,29 @@ theorem entropyPowerExt_add_ge_finite_ac
     entropyPowerExt (P.map (fun ω => X ω + Y ω))
       ≥ entropyPowerExt (P.map X) + entropyPowerExt (P.map Y) := by
   by_cases hfv : Integrable (fun ω => (X ω) ^ 2) P ∧ Integrable (fun ω => (Y ω) ^ 2) P
-  · -- 有限分散: smoothing-limit closure に delegate。和の有限微分エントロピー `hW_ent` は
-    -- hX_ent/hY_ent と同階層の regularity precondition を threading するだけ。
+  · -- Finite variance: delegate to the smoothing-limit closure, threading the finite
+    -- differential entropy `hW_ent` of the sum.
     obtain ⟨h_mom_X, h_mom_Y⟩ := hfv
     exact EPICase1SmoothingLimit.entropyPowerExt_add_ge_of_finite_variance
       P X Y hX hY hXY hX_ac hY_ac h_mom_X h_mom_Y hX_ent hY_ent hW_ent
-  · -- 無限分散: route T (conditioning truncation) で genuine closure 済 (sorryAx-free)。
+  · -- Infinite variance: route T (conditioning truncation) closure.
     exact EPIInfiniteVarianceTruncation.entropyPowerExt_add_ge_infinite_variance
       P X Y hX hY hXY hX_ac hY_ac hX_ent hY_ent hfv
 
-/-- **Phase 5 — 3-case 判定 dispatch スケルトン**.
+/-- Four-case dispatch for the extended-real entropy power inequality, splitting on absolute
+continuity of `P.map X` and `P.map Y`: both a.c. delegates to `entropyPowerExt_add_ge_finite_ac`,
+the mixed cases to `entropyPowerExt_mixed_add_ge` / `_symm`, and the doubly-singular case to
+`entropyPowerExt_singular_add_ge`. The integrability and finite-entropy hypotheses are path-dependent
+regularity preconditions threaded into the mixed-case lemmas.
 
-`P.map X ≪ volume` / `P.map Y ≪ volume` の 4 分岐で組む:
-* 両 a.c. (**case 1**): named wall `entropyPowerExt_add_ge_finite_ac` (両有限エントロピーの
-  classical EPI、有限分散 = smoothing closure / 無限分散 = named wall に分解) に置換。
-  threaded `hX_ent`/`hY_ent` を再利用。
-* X a.c. ∧ Y 特異 (case 2): `entropyPowerExt_mixed_add_ge` (+ X+Y path の integrability + `hX_ent`/`hW_ent`)。
-* Y a.c. ∧ X 特異 (case 2 対称): `entropyPowerExt_mixed_add_ge_symm` (+ Y+X path の integrability + `hY_ent`/`hWyx_ent`)。
-* 両特異 (case 3): `entropyPowerExt_singular_add_ge` (型自明、RHS=0)。
-
-case 3 (両特異) 枝は `entropyPowerExt_singular_add_ge` 直接呼出で genuine に閉じる。
-case 2 (X a.c. ∧ Y 特異) / case 2 対称 (Y a.c. ∧ X 特異) の 2 枝は、Phase 4 補題
-`entropyPowerExt_mixed_add_ge` / `_symm` を **8 integrability + 2 finite-entropy precondition
-つきで直接呼出** する。これらの integrability / finite-entropy は path 依存の honest regularity
-precondition (X+Y path / Y+X path の a.c. 密度 + fibre regularity + 有限微分エントロピー、
-**NOT load-bearing**)。case 1 枝 (両 a.c.) は named wall `entropyPowerExt_add_ge_finite_ac` 呼出に
-delegate (threaded `hX_ent`/`hY_ent` を再利用)。
-
-**全 4 枝 genuine か delegation** (case 3 は vacuous でなく特異測度のエントロピーパワーが
-真に 0、case 2 の前提は load-bearing でなく regularity precondition を Phase 4 補題に threading
-するのみ、case 1 は named wall に delegation)。新 finite-entropy 前提 4 本は honest regularity
-precondition (load-bearing でない)。dispatch 自身は own sorry 0、case-1 無限分散枝が route T で
-genuine closure 済 (2026-06-07) ゆえ **transitive sorry も 0 (proof-done)**。
-
-**@audit:superseded-by(entropyPowerExt_add_ge_unconditional)**: 本 skeleton は 21 precondition
-(case2/2symm 用 16 integrability + case-1/case2 用 5 finite-entropy) を取るが、2026-06-08 Phase 5
-endgame で method-Y gateway 経由の完全無条件版 `entropyPowerExt_add_ge_unconditional`
-(`EPIUncondDispatchFull.lean`、`hX hY hXY` のみ、precondition 0、sorryAx-free、独立監査 all-OK) が
-別建てされ canonical headline となった。本 skeleton は proof-done の consumer 0 leaf として残置
-(削除しないが新規利用は無条件版を推奨)。
+@audit:superseded-by(entropyPowerExt_add_ge_unconditional) The fully unconditional version
+`entropyPowerExt_add_ge_unconditional` (in `EPIUncondDispatchFull`, taking only `hX hY hXY`) is the
+canonical headline; this skeleton is retained as a proof-done leaf with no consumers.
 @audit:ok -/
 theorem entropyPowerExt_add_ge_dispatch_skeleton
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    -- case 2 (X a.c. ∧ Y 特異) 用 X+Y path の 8 integrability regularity precondition (NOT load-bearing)
+    -- Case 2 (X a.c., Y singular): X+Y-path integrability regularity preconditions.
     (h_ac : (P.map Y) ⊗ₘ condDistrib (fun ω => X ω + Y ω) Y P
         ≪ (P.map Y) ⊗ₘ Kernel.const ℝ (P.map (fun ω => X ω + Y ω)))
     (h_int : Integrable
@@ -146,7 +100,7 @@ theorem entropyPowerExt_add_ge_dispatch_skeleton
     (h_logq_int : Integrable
       (fun x => Real.log (((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal))
       (P.map (fun ω => X ω + Y ω)))
-    -- case 2 対称 (Y a.c. ∧ X 特異) 用 Y+X path の 8 integrability regularity precondition (NOT load-bearing)
+    -- Case 2 symmetric (Y a.c., X singular): Y+X-path integrability regularity preconditions.
     (h_ac_symm : (P.map X) ⊗ₘ condDistrib (fun ω => Y ω + X ω) X P
         ≪ (P.map X) ⊗ₘ Kernel.const ℝ (P.map (fun ω => Y ω + X ω)))
     (h_int_symm : Integrable
@@ -169,7 +123,7 @@ theorem entropyPowerExt_add_ge_dispatch_skeleton
     (h_logq_int_symm : Integrable
       (fun x => Real.log (((P.map (fun ω => Y ω + X ω)).rnDeriv volume x).toReal))
       (P.map (fun ω => Y ω + X ω)))
-    -- case 1 (両 a.c.) + case 2 / 対称 用 finite-entropy regularity precondition (NOT load-bearing)
+    -- Case 1 (both a.c.) and case 2 / symmetric: finite-entropy regularity preconditions.
     (hX_ent : Integrable (fun x => Real.negMulLog ((P.map X).rnDeriv volume x).toReal) volume)
     (hW_ent : Integrable
       (fun x => Real.negMulLog ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume)
@@ -180,37 +134,25 @@ theorem entropyPowerExt_add_ge_dispatch_skeleton
       ≥ entropyPowerExt (P.map X) + entropyPowerExt (P.map Y) := by
   by_cases hX_ac : P.map X ≪ volume
   · by_cases hY_ac : P.map Y ≪ volume
-    · -- case 1 (両 a.c.): named wall `entropyPowerExt_add_ge_finite_ac` に delegation。
+    · -- Case 1 (both a.c.): delegate to `entropyPowerExt_add_ge_finite_ac`.
       exact entropyPowerExt_add_ge_finite_ac X Y P hX hY hXY hX_ac hY_ac hX_ent hY_ent hW_ent
-    · -- case 2 (X a.c. ∧ Y 特異): Phase 4 補題を 8 integrability + 2 finite-entropy precondition つきで直接呼出。
+    · -- Case 2 (X a.c., Y singular).
       exact entropyPowerExt_mixed_add_ge X Y P hX hY hXY hX_ac hY_ac h_ac h_int hκ_v
         hκ_logp_int hκ_cross_int h_fibreEnt_int h_cross_int h_logq_int hX_ent hW_ent
   · by_cases hY_ac : P.map Y ≪ volume
-    · -- case 2 対称 (Y a.c. ∧ X 特異): Phase 4 対称版を Y+X path integrability + 2 finite-entropy つきで直接呼出。
+    · -- Case 2 symmetric (Y a.c., X singular).
       exact entropyPowerExt_mixed_add_ge_symm X Y P hX hY hXY hY_ac hX_ac h_ac_symm h_int_symm
         hκ_v_symm hκ_logp_int_symm hκ_cross_int_symm h_fibreEnt_int_symm h_cross_int_symm
         h_logq_int_symm hY_ent hWyx_ent
-    · -- case 3 (両特異): 型自明、RHS=0。
+    · -- Case 3 (both singular): RHS = 0.
       exact entropyPowerExt_singular_add_ge X Y P hX_ac hY_ac
 
-/-- **実数版 EPI — a.c. + 有限微分エントロピー前提版 (proof-done)**。
+/-- The real-valued entropy power inequality `N(X+Y) ≥ N(X) + N(Y)` (with `entropyPower μ =
+exp (2 · h μ)`) for independent `X`, `Y` whose push-forwards are absolutely continuous with finite
+differential entropy. The inequality is supplied by the extended-real version
+`entropyPowerExt_add_ge_finite_ac`; this lemma only transports it across `ℝ≥0∞ → ℝ` via
+`entropyPowerExt_of_ac_integrable`.
 
-両入力 `X`, `Y` が独立、各 push-forward 測度が Lebesgue 測度に絶対連続 (a.c.) かつ
-有限微分エントロピー (negMulLog density 可積分) のとき、実数版エントロピーパワー不等式
-`N(X+Y) ≥ N(X) + N(Y)` が成立 (`entropyPower : Measure ℝ → ℝ`、`exp(2·h(μ))`)。
-
-前提 `hX_ac`/`hY_ac` (a.c.)・`hX_ent`/`hY_ent`/`hW_ent` (有限微分エントロピー = negMulLog
-density 可積分) は **regularity precondition であって NOT load-bearing**。EPI 不等式の core は
-拡張版 `entropyPowerExt_add_ge_finite_ac` (ℝ≥0∞ 値、有限分散 = smoothing closure / 無限分散 =
-route T closure、両枝 sorryAx-free) が供給する。本補題が行うのは ℝ≥0∞→ℝ の型変換のみ:
-各 a.c.+可積分枝で `entropyPowerExt μ = ENNReal.ofReal (Real.exp (2·h μ)) = ENNReal.ofReal
-(entropyPower μ)` (`entropyPowerExt_of_ac_integrable`) を使い、ℝ≥0∞ 不等式を ℝ 不等式に剥がす。
-
-対比: 現 headline `entropy_power_inequality` (`EntropyPowerInequality.lean:289`) は `h_stam`
-+ 未証明橋 `stamToEPIBridge_holds` を transitive 消費し proof-done でない。本補題は a.c.+有限
-エントロピー前提つきだが own sorry 0 かつ transitive sorry 0 で **sorryAx-free** (proof-done)。
-
-命名 `_of_ac` は前提 (a.c.) を反映する記述的命名 (name laundering でない)。
 @audit:ok -/
 @[entry_point]
 theorem entropy_power_inequality_of_ac
@@ -223,18 +165,18 @@ theorem entropy_power_inequality_of_ac
       (fun x => Real.negMulLog ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume) :
     entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
-  -- W = X+Y も a.c. (X a.c. ∧ 独立 ⟹ X+Y a.c.)
+  -- W = X+Y is a.c. (a.c. of an a.c. factor under independence).
   have hW_ac : (P.map (fun ω => X ω + Y ω)) ≪ volume :=
     map_add_absolutelyContinuous X Y P hX hY hXY hX_ac
-  -- ℝ≥0∞ 版 EPI を取得
+  -- The ℝ≥0∞-valued inequality.
   have hineq := entropyPowerExt_add_ge_finite_ac X Y P hX hY hXY hX_ac hY_ac hX_ent hY_ent hW_ent
-  -- 3 項を ofReal (exp (2h)) = ofReal (entropyPower) に書換
+  -- Rewrite each term as `ofReal (exp (2h)) = ofReal (entropyPower)`.
   rw [entropyPowerExt_of_ac_integrable hW_ac hW_ent,
     entropyPowerExt_of_ac_integrable hX_ac hX_ent,
     entropyPowerExt_of_ac_integrable hY_ac hY_ent] at hineq
-  -- RHS の ofReal a + ofReal b を ofReal (a+b) にまとめる
+  -- Combine `ofReal a + ofReal b` into `ofReal (a + b)` on the RHS.
   rw [← ENNReal.ofReal_add (Real.exp_nonneg _) (Real.exp_nonneg _)] at hineq
-  -- entropyPower 定義を展開し、目標を ofReal 版不等式に直して hineq に一致させる
+  -- Unfold `entropyPower` and match the goal with `hineq` in `ofReal` form.
   rw [ge_iff_le, entropyPower, entropyPower, entropyPower,
     ← ENNReal.ofReal_le_ofReal_iff (Real.exp_nonneg _)]
   exact hineq

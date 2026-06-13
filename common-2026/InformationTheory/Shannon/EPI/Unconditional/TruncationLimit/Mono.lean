@@ -12,11 +12,12 @@ import Mathlib.InformationTheory.KullbackLeibler.Basic
 import InformationTheory.Shannon.EPI.Unconditional.TruncationLimit.Core
 
 /-!
-# TruncationLimit — Mono part
+# TruncationLimit — monotonicity part
 
-正部 lintegral の Fatou lift / 有限エントロピー単調性 (per-fibre translate Gibbs) /
-per-n 截断単調性。Core part (truncW / conv 密度 / per-fibre a.c. / cross-entropy) に依存。
-umbrella: `InformationTheory.Shannon.EPI.Unconditional.TruncationLimit`。
+Fatou lift of the positive-part `lintegral`, finite-entropy monotonicity via per-fibre translate
+Gibbs, and per-`n` truncation monotonicity. Depends on the `Core` part (`truncW`, convolution
+density, per-fibre absolute continuity, cross-entropy); re-exported by the umbrella
+`InformationTheory.Shannon.EPI.Unconditional.TruncationLimit`.
 -/
 
 namespace InformationTheory.Shannon
@@ -26,26 +27,11 @@ open scoped ENNReal NNReal Topology
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-- **negMulLog-Fatou helper** — 正部 lintegral `A` の Fatou lift。
-density の toReal a.e. 収束 `f_{μ_n} → f_μ` から `A_μ ≤ liminf A_{μ_n}` を Fatou で出す
-(`A μ := ∫⁻ x, ofReal (negMulLog (rnDeriv μ vol x).toReal) ∂volume` = `differentialEntropyExt`
-の a.c. 枝の正部、`EntropyPowerExt.lean:61`)。
+/-- Fatou lift of the positive-part `lintegral` `A μ = ∫⁻ x, ofReal (negMulLog (rnDeriv μ vol x))`:
+from a.e. convergence of the densities `(μ_n).rnDeriv vol → μ.rnDeriv vol`, the lower bound
+`A μ ≤ liminf (A μ_n)`. Built from `lintegral_liminf_le` with continuity of `negMulLog` and
+`ENNReal.ofReal`.
 
-`klDiv_le_liminf_of_ae_tendsto` (`EPIG2KLFatouLSC.lean:112`、`@audit:ok`) と完全同型で、
-`klFun`→`negMulLog` 差替のみ (両者 continuous)。骨格 = `lintegral_liminf_le` +
-`ENNReal.continuous_ofReal` + `Tendsto.liminf_eq` + `lintegral_mono_ae`。
-
-**proof-done (Phase 3、0 sorry)**: pointwise `F n x → G x` を `Real.continuous_negMulLog` +
-`ENNReal.continuous_ofReal` 合成で出し、`Tendsto.liminf_eq.ge` で `G x ≤ liminf (F · x)`、
-`lintegral_mono_ae` + Fatou `lintegral_liminf_le` で結論。
-
-honesty 4-check (proof-done): (1) 非循環 — 結論 (正部 lintegral の liminf 下界) は仮説 `h_ae`
-(density a.e. 収束) と非同型、body は genuine 全証明。(2) 非バンドル — `h_ae` は a.e. 収束 input
-precondition、Fatou 不等式の核を encode せず。(3) 非退化 — `:True` slot なし。(4) sufficiency —
-Fatou (`lintegral_liminf_le`、非負被積分関数列で `∫ liminf ≤ liminf ∫`) が正しい向き: `ofReal(negMulLog
-...)` で負部を 0 clamp した正部 A に対し成立する向きで、収束列の極限 = liminf を使う
-(`klDiv_le_liminf_of_ae_tendsto` body と同構造)。`klDiv_le_liminf_of_ae_tendsto` (`EPIG2KLFatouLSC.lean:112`)
-と **別物** (参照測度 γ 有限 vs volume 無限、klFun vs negMulLog) ゆえ集約漏れでない。
 @audit:ok -/
 theorem differentialEntropyExt_posPart_le_liminf_of_ae_tendsto
     (μ : Measure ℝ) (μ_n : ℕ → Measure ℝ)
@@ -82,24 +68,11 @@ theorem differentialEntropyExt_posPart_le_liminf_of_ae_tendsto
       ≤ ∫⁻ x, Filter.liminf (fun n => F n x) atTop ∂volume := lintegral_mono_ae hpt
     _ ≤ Filter.liminf (fun n => ∫⁻ x, F n x ∂volume) atTop := lintegral_liminf_le hF_meas
 
-/-- **finite-entropy 単調性 (truncation 不要、un-truncated)**: `W` a.c. ∧ `W ⊥ V` ∧ `h(W)` の負部
-有限 (`Integrable (negMulLog ((Q.map W).rnDeriv vol ·).toReal)`、= 有限微分エントロピー) のとき
-`h(W) ≤ h(W+V)`。per-fibre translate Gibbs で建て、`ν = W+V` の有限性で場合分け (有限枝 = 実数 Gibbs、
-⊤ 枝 = `le_top`)。**truncation を要求しない**ので un-truncated `W` に直接適用できる
-(`differentialEntropyExt_mono_add_truncW` の core を `Q : Measure Ω` 一般で抽出したもの)。
+/-- Finite-entropy monotonicity of differential entropy under independent addition: for `W` a.c.,
+`W ⊥ V`, and `Q.map W` of finite differential entropy (`hW_ent`), `h(W) ≤ h(W+V)`. The proof uses
+per-fibre translate Gibbs and splits on finiteness of `ν = W+V` (finite branch: real-valued Gibbs;
+`⊤` branch: `le_top`). It requires no truncation, so it applies directly to an un-truncated `W`.
 
-`differentialEntropyExt_mono_add_truncW` は本補題に `Q := truncW P W n` を渡し、preamble
-(条件付けでの a.c. / 独立 / 有限エントロピー保存) を供給する系として書ける。core は truncation
-を一切使わず、compact support が core に供給していた唯一の入力 = `Q.map W` の有限エントロピー
-`hW_ent` を仮説として受ける。
-
-**仮説は全て regularity (非 load-bearing)**: `hW`/`hV`/`hWV`/`hW_ac` は可測/独立/絶対連続、
-`hW_ent` (= `Q.map W` の有限微分エントロピー) は ⊤ 枝の `⊤-⊤` 不定形回避用の有限性 precondition
-(grant しても単調性は出ない = 非 load-bearing)。単調性の核は body の per-fibre translate Gibbs
-(`differentialEntropy_le_cross_entropy` 経由) + Tonelli collapse で body が担い、仮説に encode しない。
-
-proof-done (0 sorry / 0 @residual)。`#print axioms` = `[propext, Classical.choice, Quot.sound]`
-(sorryAx-free、`differentialEntropyExt_mono_add_truncW` の core を抽出したものなので transitive も同等)。
 @audit:ok -/
 theorem differentialEntropyExt_mono_add_of_integrable
     (W V : Ω → ℝ) (Q : Measure Ω) [IsProbabilityMeasure Q]
@@ -424,32 +397,12 @@ theorem differentialEntropyExt_mono_add_of_integrable
         rw [Ne, EReal.coe_ennreal_eq_top_iff]; exact hB_lt_top)
     rw [hdiff_top]; exact le_top
 
-/-- **per-n 単調性** (proof-done, 0 sorry): 各 n で `h(W_n) ≤ h(W_n + V)`、`W_n := truncW P W n`
-(= `P` を W-事象 `{|W| ≤ n}` で条件付けた compact-support 近似)。
+/-- Per-`n` monotonicity `h(W_n) ≤ h(W_n + V)`, where `W_n := truncW P W n` is the compact-support
+approximation obtained by conditioning `P` on the `W`-event `{|W| ≤ n}`. The preamble supplies the
+truncation-specific regularity (a.c., independence, and finite entropy preserved under
+conditioning), then delegates to the truncation-free core
+`differentialEntropyExt_mono_add_of_integrable`.
 
-**route (core を `differentialEntropyExt_mono_add_of_integrable` に抽出)**: 旧版は finite ② chain rule
-`differentialEntropyExt_eq_condEntExt_add_klDiv_of_finite` を `X:=W+V, Z:=V` で適用していたが、
-その 11 regularity 仮説のうち `hκ_dens_meas` (joint 密度可測) が Mathlib 不在の真 gap だった。
-本版は **chain rule を完全に捨て**、fibre を抽象 condDistrib でなく **explicit な平行移動
-`(Q.map W).map(·+z)`** として扱う per-fibre translate Gibbs に置き換える。
-
-**2026-06-08 refactor**: per-fibre translate Gibbs core を **truncation 非依存の一般化補題
-`differentialEntropyExt_mono_add_of_integrable`** (`Q : Measure Ω` 一般、`hW_ent` = `Q.map W` の有限
-微分エントロピーを仮説に取る) に抽出した。本補題は `Q := truncW P W n` を渡し、preamble で truncation
-固有の regularity (条件付けでの a.c. 保存 `hW_ac_Q` / 独立保存 `hindep` / compact-support による有限
-エントロピー `hW_ent_Q`) を供給して、core 一般化補題を呼ぶ系として書ける。core が truncation から受けて
-いた唯一の入力は `hW_ent_Q` (W-marginal の有限エントロピー) ただ一つで、その他 (Tonelli collapse / 平行
-移動 identities / 畳み込み密度) は任意 a.c. 確率測度で動くため、un-truncated `W` への直接適用も可能。
-
-**preamble の構成**: `Q := truncW P W n`、`hindep` (W ⊥ V は W-事象条件付けで保存) / `hW_ac_Q`
-(cond の a.c. 保存) / `hW_ent_Q` (compact-support `Sn = {|W|≤n}` ⟹ 密度 `c⁻¹·1_Sn·fW` の正部 `A<⊤`
-+ 負部 `B<⊤` = `hW_negPart_fin` から、両部有限 ⟹ integrable)。これらを揃えて
-`differentialEntropyExt_mono_add_of_integrable W V Q hW hV hindep hW_ac_Q hW_ent_Q` で結論。
-
-**仮説は全て regularity (非 load-bearing)**: `hW`/`hV`/`hWV`/`hW_ac` は可測/独立/絶対連続、
-`hW_negPart_fin` (= `B(W) < ⊤`) は h(W) 負部有限性、`hn` (positive mass) は cond well-defined の scope。
-単調性の核は一般化補題 body の per-fibre Gibbs + Tonelli が担い、仮説に encode しない。`#print axioms` =
-`[propext, Classical.choice, Quot.sound]` (sorryAx-free、要 olean refresh で確認)。
 @audit:ok -/
 theorem differentialEntropyExt_mono_add_truncW
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
