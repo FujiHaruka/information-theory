@@ -101,8 +101,8 @@
 |---|---|---|
 | `ParallelGaussianPerCoord.lean` | 5 (L187,207,256,302,366) | per-coord 主鎖 + bridge wrapper (capacity_ge_sum, max_ent_le, 最終 `parallel_gaussian_capacity_formula`) |
 | `ParallelGaussianKKT.lean` | 4 (L282,294,324,362) | KKT discharged wrapper (bundle ↔ per-coord reduction 双方向 + 主定理 KKT 版) |
-| `ParallelGaussianWFStationarityBody.lean` | 1 (L143) | WFstat discharged wrapper |
-| `ParallelGaussianWFCertBody.lean` | 1 (L329) | WFcert discharged wrapper |
+| `ParallelGaussianWFStationarityBody.lean` | 1 (L143) | WFstat discharged wrapper — ⚠️ 2026-06-13: この wrapper は後に消失し空スケルトン化、ファイルごと削除 (本 audit の「実体なし」評価が裏付けられた) |
+| `ParallelGaussianWFCertBody.lean` | 1 (L329) | WFcert discharged wrapper — ⚠️ 2026-06-13: 現状は汎用 tangent 補題 `ConcaveOn.le_tangent_of_hasDerivAt` 1 本のみ、WFcert discharge wrapper は不在 |
 
 **整合チェック**:
 - (a) **件数**: plan §「進捗」で Phase A-D 全 `[ ]`、L-PG1 hypothesis pass-through 形で publish 予定とあり 11 件残置は plan 通り。

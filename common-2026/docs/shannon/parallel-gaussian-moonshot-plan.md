@@ -1,19 +1,28 @@
 # Parallel Gaussian Channels + Water-filling ムーンショット計画 🌙 (T2-B)
 
-> **Status (2026-05-25, commit `0fe2ad4`)**: 全 Phase + 全撤退ライン genuine discharge 完了。
-> Headline = `parallel_gaussian_capacity_formula_minimal`
-> (`ParallelGaussianPerCoordRegularity.lean`、hypothesis-minimal 形)。
-> 残 residual = `h_multivar_decomp` 1 件 (multivariate channel↔RV MI decomposition、別 plan 領域)。
+> **Status (2026-06-13 訂正)**: headline `parallel_gaussian_capacity_formula_minimal`
+> (`ParallelGaussian/PerCoordRegularity.lean`、hypothesis-minimal 形) は converse #5
+> (joint log-density integrability) closure 後 **sorryAx-free**。ただし **2 本の撤退ライン
+> 仮説 `h_kkt` (L-WF1) / `h_opt` (L-WF2) を明示仮説として運ぶ conditional な形**であり、
+> unconditional な完成形ではない (= type-check done, NOT proof done)。
 >
-> - L-WF1 → `exists_waterFillingKKT_of_pos` (IVT) — `ParallelGaussianKKT.lean:141`
-> - L-WF2 → `waterFillingCertificate_of_KKT` + `isWaterFillingOptimal_of_certificate`
->   (log-concavity + Lagrange) — `ParallelGaussianWFStationarityBody.lean`
-> - L-PG0 → `ParallelGaussianL_PG0Discharge.lean:98` (kernel measurability)
-> - L-PG1 → 子 plan [`parallel-gaussian-l-pg1-discharge-plan.md`](parallel-gaussian-l-pg1-discharge-plan.md)
->   で全 Phase 完遂、11 件 closure。`parallel_gaussian_capacity_formula` (`PerCoord.lean:367`)
->   は chain-rule plan で genuine `le_antisymm` 着地済 (旧 `:= h_per_coord` pass-through は retracted)。
-> - Legacy 6 wrappers (KKT 4 + WFCertBody 1 + WFStationarityBody 1) →
->   `@audit:superseded-by(parallel-gaussian-l-pg1-discharge)` 移行 (本体保持)。
+> - **L-WF1** `h_kkt : IsWaterFillingKKT` → discharge 補題は**存在** (`KKT.lean`
+>   `exists_waterFillingKKT_of_pos`, IVT)。ただし headline は自動適用せず仮説のまま。
+> - **L-WF2** `h_opt : IsWaterFillingOptimal` → **未 discharge (OPEN)**。当初 KKT
+>   tangent/Lagrange certificate 経由で閉じる計画だったが、`WFCertBody.lean` の実装は
+>   **Phase A の汎用 tangent 補題 `ConcaveOn.le_tangent_of_hasDerivAt` 1 本のみ**に留まり、
+>   `waterFillingCertificate_of_KKT` / `isWaterFillingOptimal_of_certificate` 等の discharge
+>   補題は書かれなかった。`IsWaterFillingOptimal` を産出する定理はプロジェクト内に皆無
+>   (2026-06-13 確認)。空スケルトン `WFStationarityBody.lean` は 2026-06-13 削除。
+> - **L-PG0** → `L_PG0Discharge.lean` (kernel measurability) — discharge 済。
+> - **L-PG1** → 子 plan [`parallel-gaussian-l-pg1-discharge-plan.md`](parallel-gaussian-l-pg1-discharge-plan.md)、
+>   `parallel_gaussian_capacity_formula` (`PerCoord.lean`) は chain-rule plan で genuine
+>   `le_antisymm` 着地済 (旧 `:= h_per_coord` pass-through は retracted)。
+>
+> ⚠️ **過去の本ブロックは「全 Phase + 全撤退ライン genuine discharge 完了」「L-WF2 →
+> `waterFillingCertificate_of_KKT` 等で discharge 済」と記していたが誤り** (2026-06-13 訂正)。
+> L-WF2 は未 discharge の open hypothesis。残課題は L-WF2 の discharge (sorry+@residual 化
+> もしくは genuine 証明) — owner 判断待ちの follow-up。
 >
 > **Parent**: [`textbook-roadmap.md`](../textbook-roadmap.md) §「Tier 2 — T2-B」
 > **Predecessor**: T2-A `AWGN.lean` 完成形 (548 行)、F-* hypothesis pattern 流用元
@@ -83,18 +92,20 @@ import: `AWGN`, `AWGNMain`, `ChannelCoding`, `DifferentialEntropy`,
 Phase 0 inventory → Phase A/B/C/D 実装 → Phase V verify、すべて完了。
 判断 #1, #2 (`IsParallelAwgnChannelMeasurable := ∀ i, ...` 形 + L-WF1/L-WF2/L-PG1 三本立て
 採用) は publish に反映済 (詳細 → 判断ログ)。実装詳細は code (SoT):
-`ParallelGaussian.lean`, `ParallelGaussianKKT.lean`, `ParallelGaussianWFCertBody.lean`,
-`ParallelGaussianWFStationarityBody.lean`, `ParallelGaussianL_PG0Discharge.lean`,
-`ParallelGaussianPerCoord.lean`, `ParallelGaussianPerCoordRegularity.lean`。
+`ParallelGaussian/Basic.lean`, `ParallelGaussian/KKT.lean`,
+`ParallelGaussian/WFCertBody.lean` (Phase A tangent 補題のみ;
+`WFStationarityBody.lean` は空スケルトンのため 2026-06-13 削除),
+`ParallelGaussian/L_PG0Discharge.lean`, `ParallelGaussian/PerCoord.lean`,
+`ParallelGaussian/PerCoordRegularity.lean`。
 
 ---
 
-## 撤退ライン (全 discharge 済)
+## 撤退ライン (L-WF2 未 discharge、他 discharge 済)
 
 | Slug | 形 | discharge 経路 | 着地先 file |
 |---|---|---|---|
-| **L-WF1** | `IsWaterFillingKKT P N ν := ∑ waterFillingPower ν N = P` | IVT + 連続単調増加 | `ParallelGaussianKKT.lean:141` (`exists_waterFillingKKT_of_pos`) |
-| **L-WF2** | water-filling 配分が log-sum 最大化 | log-concavity tangent + Lagrange certificate | `ParallelGaussianWFStationarityBody.lean` (`waterFillingCertificate_of_KKT` + `isWaterFillingOptimal_of_certificate`) |
+| **L-WF1** | `IsWaterFillingKKT P N ν := ∑ waterFillingPower ν N = P` | IVT + 連続単調増加 | `KKT.lean` (`exists_waterFillingKKT_of_pos`) ✅ |
+| **L-WF2** ⚠️OPEN | water-filling 配分が log-sum 最大化 (`IsWaterFillingOptimal`) | 当初 log-concavity tangent + Lagrange certificate を予定 | **未実装**。`WFCertBody.lean` に汎用 tangent 補題 `ConcaveOn.le_tangent_of_hasDerivAt` (Phase A) のみ。`waterFillingCertificate_of_KKT` / `isWaterFillingOptimal_of_certificate` は不在、`IsWaterFillingOptimal` 産出定理は皆無。headline は `h_opt` を仮説として運ぶ |
 | **L-PG0** | `Measurable (fun x => Measure.pi (gaussianReal (x i) (N i)))` | `Measure.pi` measurability lift | `ParallelGaussianL_PG0Discharge.lean:98` |
 | **L-PG1** | `parallelGaussianCapacity = ∑ (1/2) log(1+waterFilling/N)` (per-coord AWGN bundle) | 子 plan `parallel-gaussian-l-pg1-discharge-plan.md` (sup-sandwich + `le_antisymm` + chain-rule plan) | `ParallelGaussianPerCoord.lean:367` + `ParallelGaussianPerCoordRegularity.lean` (headline minimal) |
 

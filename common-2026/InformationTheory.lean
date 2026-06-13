@@ -219,7 +219,6 @@ import InformationTheory.Shannon.AWGN.CapacityConverseMaxent
 import InformationTheory.Shannon.AWGN.MIClosedForm
 import InformationTheory.Shannon.ParallelGaussian.WFCertBody
 import InformationTheory.Shannon.Hoeffding.LagrangeIVTBody
-import InformationTheory.Shannon.ParallelGaussian.WFStationarityBody
 import InformationTheory.Shannon.LZ78.PhraseCountAsymptoticBody
 import InformationTheory.Shannon.LZ78.ZivCountingBody
 import InformationTheory.Shannon.WynerZiv.ObjectiveConvexityBody

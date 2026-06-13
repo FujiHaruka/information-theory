@@ -43,7 +43,7 @@
 | **MI chain rule (=)** `mutualInfo_pi_eq_sum` | `MIChainRule.lean:341` | 🟢 genuine、ただし **product 入力 i.i.d. factorization 3 本前提で `=` のみ** | **相関入力の優加法性 `≤` は不在** → ステップ1 自作 (最重) |
 | **channel↔prod MI** `mutualInfoOfChannel_eq_mutualInfo_prod` | `ChannelCoding.lean:99` | 🟢 genuine (`[IsMarkovKernel W]`) | `mutualInfoOfChannel` ↔ `mutualInfo` 変換 (ステップ1,3) |
 | **L-WF1** 存在 `exists_waterFillingKKT_of_pos` | `ParallelGaussianKKT.lean:141` | 🟢 **genuine** (IVT、`Fin (n+1)` nonempty) | sup の電力配分確定 (ステップ4) |
-| **L-WF2** 最適性 `waterFillingCertificate_of_lagrange` + `isWFStationarityHyp_of_pos` + `isWFLagrangeBundle_of_KKT` | `WFCertBody.lean:202,261,307` / `WFStationarityBody.lean:104` | 🟢 **genuine** (log-concavity tangent bound + Lagrange) | sup ≤ water-filling sum (ステップ4) |
+| **L-WF2** 最適性 `IsWaterFillingOptimal` | (discharge 補題不在) | 🔴 **OPEN** (2026-06-13 訂正)。`waterFillingCertificate_of_lagrange` / `isWFStationarityHyp_of_pos` / `isWFLagrangeBundle_of_KKT` は**いずれも未実装**。`WFCertBody.lean` に汎用 tangent 補題 `ConcaveOn.le_tangent_of_hasDerivAt` (Phase A) のみ、`WFStationarityBody.lean` は空スケルトンのため削除。`IsWaterFillingOptimal` 産出定理は皆無 | sup ≤ water-filling sum (ステップ4) — `h_opt` 仮説のまま |
 | **L-PG1** `IsParallelGaussianPerCoordReduction` | `ParallelGaussian.lean:235` | 🔴 **OPEN** (conclusion-as-hypothesis、`:= h_per_coord`) | **本 plan の discharge 対象** |
 
 **重要な前提訂正 (judgement #1 候補)**: 親 plan / `ParallelGaussian.lean:255-262` の
@@ -247,8 +247,8 @@ InformationTheory/Shannon/
   MIChainRule.lean             ← 既存。mutualInfo_pi_eq_sum (:341) を product achiever で再利用 (変更なし)
   ChannelCoding.lean           ← 既存。mutualInfoOfChannel_eq_mutualInfo_prod (:99) (変更なし)
   ParallelGaussian.lean        ← 既存。L-PG1 def (:235) / capacity (:176) / 主定理 (:277) を import (変更なし、docstring 修正は Phase V 指示のみ)
-  ParallelGaussianKKT.lean     ← 既存。L-WF1 (:141) / L-WF2 reduction (:235) を再利用 (変更なし)
-  ParallelGaussianWFCertBody.lean ← 既存。L-WF2 lagrange (:202) を再利用 (変更なし)
+  ParallelGaussianKKT.lean     ← 既存。L-WF1 (exists_waterFillingKKT_of_pos) を再利用 (L-WF2 reduction は実在せず、判断 #3 訂正)
+  ParallelGaussianWFCertBody.lean ← 既存。Phase A tangent 補題のみ (L-WF2 lagrange は実在せず、判断 #3 訂正)
   ParallelGaussianPerCoord.lean ← 新規 (~450-750 行)。L-PG1 genuine discharge + headline 再 publish
 InformationTheory.lean                ← import InformationTheory.Shannon.ParallelGaussianPerCoord 追記 (Phase V、オーケストレータ)
 ```
@@ -275,8 +275,8 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 - [x] **`MIChainRule.lean`**: `mutualInfo_pi_eq_sum` (`:341`, product 入力 `=` 🟢、achiever で利用)
 - [x] **`ChannelCoding.lean`**: `mutualInfoOfChannel_eq_mutualInfo_prod` (`:99`), `mutualInfoOfChannel` (`:84`), `outputDistribution` (`:71`), `jointDistribution` (`:54`)
 - [x] **`ParallelGaussian.lean`**: `parallelGaussianCapacity` (`:176`), `parallelGaussianChannel` (`:94`), `IsParallelGaussianPerCoordReduction` (`:235`, L-PG1 def), `waterFillingPower` (`:129`), 主定理 (`:277`)
-- [x] **`ParallelGaussianKKT.lean`**: `exists_waterFillingKKT_of_pos` (`:141`, L-WF1 🟢), `isWaterFillingOptimal_of_certificate` (`:235`, L-WF2 reduction), `IsWaterFillingKKT`/`IsWaterFillingOptimal` 利用
-- [x] **`ParallelGaussianWFCertBody.lean`** / **`WFStationarityBody.lean`**: L-WF2 genuine cert (`:202`/`:104`)
+- [x] **`ParallelGaussianKKT.lean`**: `exists_waterFillingKKT_of_pos` (L-WF1 🟢), `IsWaterFillingKKT`/`IsWaterFillingOptimal` 利用。⚠️ `isWaterFillingOptimal_of_certificate` は**実在しない** (2026-06-13 訂正、判断 #3 参照)
+- [x] **`ParallelGaussianWFCertBody.lean`**: 汎用 tangent 補題 `ConcaveOn.le_tangent_of_hasDerivAt` (Phase A) のみ。⚠️ 「L-WF2 genuine cert」は誤り — discharge 補題は不在 (`WFStationarityBody.lean` は空スケルトンのため 2026-06-13 削除)
 - [x] **Mathlib `MeasureTheory.Constructions.Pi`**: `Measure.pi`, `Measure.pi_pi`, `Measure.integral_pi` (achiever の `∫xᵢ²` 計算)
 - [x] **Mathlib `Probability.Distributions.Gaussian.Real`**: `gaussianReal`, `variance_id_gaussianReal`, `gaussianReal_absolutelyContinuous`
 
@@ -508,11 +508,15 @@ genuine 化する。撤退の段階 (浅い順):
 2. **判断 #2 (planner、着手前)**: 段 1/段 2 を **`Fin (n+1)`** で立てる。L-WF1 存在補題
    `exists_waterFillingKKT_of_pos` (`KKT.lean:141`) が IVT 端点構成に nonempty を要求するため。
    `n=0` (空チャネル) は容量 0 = water-filling sum 0 で trivial、必要なら別 corollary。
-3. **判断 #3 (着手前確認、water-filling 層 genuine 確定)**: L-WF1 (`exists_waterFillingKKT_of_pos`,
-   IVT) / L-WF2 (`waterFillingCertificate_of_lagrange` + `isWFStationarityHyp_of_pos` log-concavity
-   tangent + `isWFLagrangeBundle_of_KKT`) は **既に genuine discharge 済** (`KKT.lean` / `WFCertBody.lean`
-   / `WFStationarityBody.lean`、0 sorry)。本 plan はステップ4 でこれらを結合するのみ、water-filling
-   最適化の新規証明は不要。残る OPEN は情報理論コア L-PG1 のみ。
+3. **判断 #3 (着手前確認) — ⚠️ 2026-06-13 訂正、当時の確認は誤り**: 当時「L-WF1
+   (`exists_waterFillingKKT_of_pos`, IVT) / L-WF2 (`waterFillingCertificate_of_lagrange` +
+   `isWFStationarityHyp_of_pos` + `isWFLagrangeBundle_of_KKT`) は既に genuine discharge 済 (0 sorry)」
+   と記録したが、**L-WF2 の discharge 補題は実在しなかった** (2026-06-13 確認: `WFCertBody.lean` は
+   汎用 tangent 補題 `ConcaveOn.le_tangent_of_hasDerivAt` のみ、`WFStationarityBody.lean` は空スケルトン
+   →削除、`IsWaterFillingOptimal` 産出定理は皆無)。L-WF1 のみ discharge 補題が存在。**本 plan が
+   成立したのは、L-PG1 (per-coord reduction) も L-WF1/L-WF2 も headline で `h_kkt`/`h_opt` 仮説として
+   運ばれる構造のため**、L-WF2 が未 discharge でも L-PG1 discharge には支障がなかったから。残る OPEN は
+   L-PG1 (本 plan で closure) に加え **L-WF2 (`IsWaterFillingOptimal` の未 discharge、別 follow-up)**。
 
 <!-- Phase 着手後に append: 差分エントロピー subadditivity の Mathlib 在庫有無 (Phase 0)、
 D-1 (MI 優加法性 honest 仮定化) 発動有無 (Phase 1)、honest 仮定の最終本数、per-coord = AWGN

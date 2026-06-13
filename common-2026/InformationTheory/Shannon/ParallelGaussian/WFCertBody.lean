@@ -5,59 +5,34 @@ import Mathlib.Analysis.Convex.SpecificFunctions.Basic
 import Mathlib.Analysis.SpecialFunctions.Log.Deriv
 
 /-!
-# W9-G4 T2-B `WaterFillingOptimalityCertificate` body discharge
+# Concave tangent-line bound (convex-analysis helper)
 
-wave6 `ParallelGaussianKKT.lean` published the parallel-Gaussian water-filling
-optimality as an **abstract certificate** (`WaterFillingOptimalityCertificate`)
-plus the chain-rule bundle (`ParallelGaussianChainRuleBundle`), reduced to the
-`IsWaterFillingOptimal` / `IsParallelGaussianPerCoordReduction` predicates by
-bidirectional definitional unfolding. This file attempts to **discharge the
-algebraic core of the certificate body** rather than leave it as a pure
-pass-through.
+A standalone convex-analysis lemma: a function concave on a set `S` lies below
+its tangent line at any point where it has a derivative,
+`f y ≤ f x + f' · (y - x)` for all `x, y ∈ S` with `HasDerivAt f f' x`. It is the
+affine-bound restatement of Mathlib's slope inequalities
+(`ConcaveOn.slope_le_of_hasDerivAt` / `ConcaveOn.le_slope_of_hasDerivAt`),
+obtained by an `x < y` / `x = y` / `y < x` trichotomy.
 
-## What is genuinely discharged here
+## Provenance / honest status
 
-The certificate states that water-filling maximizes the concave per-coordinate
-sum `∑ (1/2) log(1 + P_i / N_i)` subject to `P_i ≥ 0, ∑ P_i ≤ P`. The textbook
-KKT proof factors into:
+This file was originally drafted as **Phase A** of an intended discharge of the
+parallel-Gaussian water-filling optimality (`IsWaterFillingOptimal`, the L-WF2
+hypothesis carried by `parallel_gaussian_capacity_formula*`). The plan was to
+factor the textbook KKT argument into a concave tangent-line bound, a
+per-coordinate Lagrange-stationarity discharge, complementary slackness, and a
+Lagrange reduction to an optimality certificate.
 
-1. **Concave tangent-line inequality** (`ConcaveOn.le_tangent_of_hasDerivAt`):
-   for `f` concave on `S` with `HasDerivAt f f' x`,
-   `f y ≤ f x + f' · (y - x)` for all `x, y ∈ S`. *Fully discharged* from
-   Mathlib's slope lemmas via an `x = y / x < y / y < x` trichotomy.
-
-2. **Per-coordinate Lagrange stationarity** (`IsWFStationarityHyp`): each cost
-   `g_i(t) = (1/2) log(1 + t / N_i)` admits the tangent bound
-   `g_i(P'_i) ≤ g_i(P_i^*) + λ · (P'_i - P_i^*)` at the water-filling point with
-   a *common* multiplier `λ`. This is the KKT first-order condition; its
-   discharge requires identifying `λ = 1/(2ν)` and the concavity of `g_i`, which
-   is encoded as a sub-predicate (Lagrange-multiplier ansatz pass-through, same
-   shape as `MaxEntropyConstrainedKKT.KKTSolution.moment_match`).
-
-3. **Complementary slackness** (`IsWFComplementarySlacknessHyp`):
-   `λ · (∑ P_i^* - P) = 0` together with `λ ≥ 0`.
-
-4. **Lagrange reduction** (`waterFillingCertificate_of_lagrange`): given (2) + (3)
-   + primal feasibility `∑ P_i^* ≤ P`, the certificate holds. *Fully discharged*
-   — pure algebra: sum the per-coordinate tangent bounds, then collapse the
-   linear remainder using `λ ≥ 0`, `∑ P'_i ≤ P`, and complementary slackness.
-
-## Approach
-
-```
-Phase A: Concave tangent-line lemma (Mathlib slope → affine bound)         [internal]
-Phase B: Per-coordinate cost concavity + derivative                        [internal]
-Phase C: KKT sub-predicate bundle (stationarity / slackness / feasibility) [defs]
-Phase D: Lagrange reduction  bundle → WaterFillingOptimalityCertificate    [internal]
-Phase E: Stationarity discharge  log-concavity → IsWFStationarityHyp       [internal]
-Phase F: Re-publish parallel_gaussian_capacity_formula_WFcert_discharged
-```
-
-The deep convex-duality fact "such a `λ` with complementary slackness exists"
-remains a hypothesis (the KKT-uniqueness wall the wave6 retreat line names); but
-its *use* — turning the multiplier into the optimality certificate — is now an
-internal theorem, and the per-coordinate stationarity bound is discharged from
-genuine log-concavity.
+**Only Phase A (this tangent-line lemma) was ever implemented.** The downstream
+phases — `concaveOn_wfCost`, `waterFillingCertificate_of_lagrange`,
+`isWFStationarityHyp_of_pos`, `parallel_gaussian_capacity_formula_WFcert_discharged`
+and the KKT-internal Lagrange-bundle lemmas — were never written. Consequently
+**L-WF2 (`IsWaterFillingOptimal`) remains an open, undischarged hypothesis**: it
+is threaded through the capacity-formula headlines as `h_opt`, not proved (see
+`Basic.lean` `IsWaterFillingOptimal` def docstring and
+`parallel-gaussian-moonshot-plan.md`). The earlier docstring here claimed those
+downstream lemmas were "genuinely discharged"; that was false and has been
+removed. What survives below is just the general tangent bound.
 -/
 
 namespace InformationTheory.Shannon.ParallelGaussian
