@@ -24,13 +24,14 @@ L-WF1 (KKT 充足性), L-WF2 (一意性 / 最適性), L-PG1 (active-set ↔ wate
   当初は `WaterFillingOptimalityCertificate` 経由の abstract-certificate retreat predicate で
   reduce する設計だったが、load-bearing bundling + reduction 未配線 + consumer 0 のため orphan
   cleanup で削除 (2026-06-13)。**現在は本 file の `isWaterFillingOptimal_of_kkt` が `IsWaterFillingOptimal`
-  を産出する単一の窓口** — body は `sorry` + `@residual(plan:parallel-gaussian-wf2-optimality-plan)`
-  (genuine closure は凹 tangent + 共通 KKT 乗数 Lagrange、Phase A 部品 `ConcaveOn.le_tangent_of_hasDerivAt`
-  は `WFCertBody.lean` に既存)。capacity formula family はこの補題で L-WF2 を内部供給 (`h_opt` 仮説を drop)。
+  を産出する単一の窓口** — body は genuine 証明済 (2026-06-13、共通 KKT 乗数 `λ = 1/(2ν)` での
+  per-coord tangent 上界 `waterFillingCost_tangent_le` を足し上げ、相補スラックネス + `λ≥0` で
+  線形剰余を潰す Lagrange reduction、`Real.log_le_sub_one_of_pos` 直接ルート)。capacity formula
+  family はこの補題で L-WF2 を内部供給 (`h_opt` 仮説を drop)。
 * **L-PG1**: chain rule は `parallel-gaussian-chain-rule-plan.md` で discharge 済。
 
 本 file の核心成果は **L-WF1 の完全 discharge** (`exists_waterFillingKKT_of_pos`、genuine) と
-**L-WF2 の sorry-routed 単一窓口** (`isWaterFillingOptimal_of_kkt`)。
+**L-WF2 の genuine discharge** (`isWaterFillingOptimal_of_kkt`、sorryAx-free)。
 
 ## Approach
 
@@ -189,7 +190,116 @@ theorem exists_waterFillingKKT_of_pos {n : ℕ}
     intermediate_value_Icc hν₀_le_ν₁ hg_cont hP_in_Icc
   exact ⟨ν, hν_eq⟩
 
-/-- **L-WF2 (water-filling optimality), sorry-routed discharge.**
+/-! ## L-WF2 genuine closure helpers (Cover-Thomas 9.4.1 optimization step) -/
+
+/-- Each noise level is strictly positive (from `(N i : ℝ) ≠ 0` and `0 ≤ (N i : ℝ)`). -/
+lemma noise_pos {n : ℕ} (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0) (i : Fin n) :
+    0 < (N i : ℝ) :=
+  lt_of_le_of_ne (NNReal.coe_nonneg _) (Ne.symm (hN i))
+
+/-- **`ν > 0` from the KKT budget equality.** If `ν ≤ N_i` for every `i`, all
+coordinates are inactive and the water-filling sum is `0 = P`, contradicting
+`0 < P`. Hence some coordinate is active (`ν > N_i ≥ 0`), forcing `ν > 0`. -/
+lemma waterFillingKKT_level_pos {n : ℕ} (P : ℝ) (hP : 0 < P) (N : Fin n → ℝ≥0)
+    (ν : ℝ) (h_kkt : IsWaterFillingKKT P N ν) :
+    0 < ν := by
+  by_contra h
+  rw [not_lt] at h
+  -- `ν ≤ 0` ⇒ every coordinate inactive ⇒ sum = 0 = P, contradicting `0 < P`.
+  have hsum0 : ∑ i : Fin n, waterFillingPower ν N i = 0 := by
+    apply waterFillingPower_sum_eq_zero_of_le_min
+    intro i
+    have : (0 : ℝ) ≤ (N i : ℝ) := NNReal.coe_nonneg _
+    linarith
+  rw [IsWaterFillingKKT] at h_kkt
+  rw [hsum0] at h_kkt
+  linarith
+
+/-- **Per-coordinate tangent (KKT-stationarity) upper bound.** For the common KKT
+multiplier `λ = 1/(2ν)`, the per-coordinate cost
+`g_i(t) = (1/2) log(1 + t/N_i)` satisfies
+`g_i(P'_i) ≤ g_i(P*_i) + λ·(P'_i − P*_i)` where `P*_i = waterFillingPower ν N i`.
+
+Derived directly from the elementary tangent inequality `log u ≤ u − 1`
+(`Real.log_le_sub_one_of_pos`) applied to `u = (N_i + P'_i)/(N_i + P*_i) > 0`,
+giving `g_i(P'_i) − g_i(P*_i) ≤ (1/2)·(P'_i − P*_i)/(N_i + P*_i)`; then
+`N_i + P*_i = ν` (active) or `N_i + P*_i = N_i ≥ ν` (inactive) bounds the slope by
+`λ` using `P'_i − P*_i = P'_i ≥ 0` in the inactive case. -/
+lemma waterFillingCost_tangent_le {n : ℕ} (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
+    (ν : ℝ) (hν : 0 < ν) (i : Fin n) {P'i : ℝ} (hP'i : 0 ≤ P'i) :
+    (1/2) * Real.log (1 + P'i / (N i : ℝ))
+      ≤ (1/2) * Real.log (1 + waterFillingPower ν N i / (N i : ℝ))
+        + (1 / (2 * ν)) * (P'i - waterFillingPower ν N i) := by
+  set a : ℝ := (N i : ℝ) with ha_def
+  have ha_pos : 0 < a := noise_pos N hN i
+  set Pstar : ℝ := waterFillingPower ν N i with hPstar_def
+  have hPstar_nonneg : 0 ≤ Pstar := waterFillingPower_nonneg ν N i
+  -- positivity of the two arguments of `log`
+  have h1 : 0 < a + P'i := by linarith
+  have h2 : 0 < a + Pstar := by linarith
+  -- rewrite `1 + t/a = (a + t)/a`
+  have heq1 : 1 + P'i / a = (a + P'i) / a := by field_simp
+  have heq2 : 1 + Pstar / a = (a + Pstar) / a := by field_simp
+  rw [heq1, heq2]
+  -- log of ratio
+  have hlog1 : Real.log ((a + P'i) / a) = Real.log (a + P'i) - Real.log a := by
+    rw [Real.log_div (by linarith) (by linarith)]
+  have hlog2 : Real.log ((a + Pstar) / a) = Real.log (a + Pstar) - Real.log a := by
+    rw [Real.log_div (by linarith) (by linarith)]
+  rw [hlog1, hlog2]
+  -- tangent inequality: log(a+P'i) - log(a+Pstar) ≤ (P'i - Pstar)/(a + Pstar)
+  have h_tangent : Real.log (a + P'i) - Real.log (a + Pstar)
+      ≤ (P'i - Pstar) / (a + Pstar) := by
+    have hu_pos : 0 < (a + P'i) / (a + Pstar) := div_pos h1 h2
+    have h_log_ratio : Real.log ((a + P'i) / (a + Pstar)) ≤ (a + P'i) / (a + Pstar) - 1 :=
+      Real.log_le_sub_one_of_pos hu_pos
+    rw [Real.log_div (by linarith) (by linarith)] at h_log_ratio
+    have h_simp : (a + P'i) / (a + Pstar) - 1 = (P'i - Pstar) / (a + Pstar) := by
+      field_simp; ring
+    linarith [h_simp ▸ h_log_ratio]
+  -- slope bound: (1/2)·(P'i - Pstar)/(a + Pstar) ≤ (1/(2ν))·(P'i - Pstar)
+  have h_slope : (1 / 2) * ((P'i - Pstar) / (a + Pstar))
+      ≤ (1 / (2 * ν)) * (P'i - Pstar) := by
+    by_cases h_inactive : ν ≤ a
+    · -- inactive: Pstar = 0, a ≥ ν, slope = (1/2)·P'i/a ≤ (1/2)·P'i/ν
+      have hPstar0 : Pstar = 0 := by
+        rw [hPstar_def]; exact waterFillingPower_eq_zero_of_inactive ν N i h_inactive
+      rw [hPstar0]
+      simp only [sub_zero, add_zero]
+      -- goal: (1/2) * (P'i / a) ≤ (1/(2ν)) * P'i
+      have h_inv : a⁻¹ ≤ ν⁻¹ := by gcongr
+      have h_prod : P'i * a⁻¹ ≤ P'i * ν⁻¹ := mul_le_mul_of_nonneg_left h_inv hP'i
+      have ha_ne : a ≠ 0 := ne_of_gt ha_pos
+      have hν_ne : ν ≠ 0 := ne_of_gt hν
+      have hlhs : (1/2) * (P'i / a) = (1/2) * (P'i * a⁻¹) := by
+        rw [div_eq_mul_inv P'i a]
+      have hrhs : (1 / (2 * ν)) * P'i = (1/2) * (P'i * ν⁻¹) := by
+        field_simp
+      rw [hlhs, hrhs]
+      linarith
+    · -- active: Pstar = ν - a > 0, a + Pstar = ν
+      have h_active : a < ν := not_le.mp h_inactive
+      have hPstar_eq : Pstar = ν - a := by
+        rw [hPstar_def]; simp only [waterFillingPower_apply]
+        exact max_eq_right (by linarith)
+      have h_aP : a + Pstar = ν := by rw [hPstar_eq]; ring
+      rw [h_aP]
+      have hν_ne : ν ≠ 0 := ne_of_gt hν
+      -- the two slope expressions with denominator ν are equal
+      apply le_of_eq
+      field_simp
+  -- combine
+  calc (1/2) * (Real.log (a + P'i) - Real.log a)
+      = (1/2) * (Real.log (a + Pstar) - Real.log a)
+        + (1/2) * (Real.log (a + P'i) - Real.log (a + Pstar)) := by ring
+    _ ≤ (1/2) * (Real.log (a + Pstar) - Real.log a)
+        + (1/2) * ((P'i - Pstar) / (a + Pstar)) := by
+          have := mul_le_mul_of_nonneg_left h_tangent (by norm_num : (0:ℝ) ≤ 1/2)
+          linarith
+    _ ≤ (1/2) * (Real.log (a + Pstar) - Real.log a)
+        + (1 / (2 * ν)) * (P'i - Pstar) := by linarith [h_slope]
+
+/-- **L-WF2 (water-filling optimality), genuine discharge.**
 
 Given the KKT water level `ν` (`h_kkt : ∑ max(0, ν - N_i) = P`), the water-filling
 allocation `P_i^* = max(0, ν - N_i)` maximizes the concave per-coordinate sum
@@ -197,37 +307,57 @@ allocation `P_i^* = max(0, ν - N_i)` maximizes the concave per-coordinate sum
 `{P' : ∀ i, 0 ≤ P'_i ∧ ∑_i P'_i ≤ P}`, i.e. `IsWaterFillingOptimal P N ν`.
 
 This is the genuine convex-optimization core of the water-filling theorem
-(Cover-Thomas 9.4.1's optimization step): concavity of `t ↦ (1/2) log(1 + t/N_i)`
-plus the common KKT multiplier `λ = 1/(2ν)`. The Phase-A tangent-line bound
-`ConcaveOn.le_tangent_of_hasDerivAt` (`WFCertBody.lean`) is the first ingredient;
-the per-coordinate Lagrange stationarity, complementary slackness, and Lagrange
-reduction were never implemented (the originally-intended `WFCertBody` /
-`WFStationarityBody` discharge never materialized — see those files' history).
+(Cover-Thomas 9.4.1's optimization step). Proof: the common KKT multiplier
+`λ = 1/(2ν)` gives a per-coordinate tangent (stationarity) upper bound
+`g_i(P'_i) ≤ g_i(P*_i) + λ·(P'_i − P*_i)` (`waterFillingCost_tangent_le`,
+derived from the elementary `log u ≤ u − 1`). Summing over `i`,
+`∑ g_i(P'_i) ≤ ∑ g_i(P*_i) + λ·(∑P'_i − ∑P*_i)`. Complementary slackness
+`∑P*_i = P` (= `h_kkt`) and feasibility `∑P'_i ≤ P` make the linear remainder
+`λ·(∑P'_i − P) ≤ 0` (since `λ ≥ 0` from `ν > 0`, `waterFillingKKT_level_pos`),
+yielding `∑ g_i(P'_i) ≤ ∑ g_i(P*_i)`. The `ν ≤ min N_i` degenerate boundary is
+killed by `h_kkt + hP` (it would force `∑ = 0 ≠ P`), so `λ = 1/(2ν)` is
+well-defined and nonnegative.
 
-It is **not** a Mathlib wall (the convex-analysis machinery exists; the proof is a
-self-buildable ~150-250 line KKT/concavity argument). The capacity headlines
-(`parallel_gaussian_capacity_formula*`) now derive water-filling optimality from
-this lemma internally rather than carrying it as a load-bearing hypothesis, so the
-single honest residual for L-WF2 lives here.
-
-Independent honesty audit 2026-06-13 (PASS, tier-2 honest_residual): signature is
-non-circular (`IsWaterFillingKKT` = `∑ max(0,ν−N_i) = P` is the budget equality,
-semantically distinct from the `∀ P', … ≤ …` optimality conclusion), non-bundled
-(no `*Optimal`/`*Hypothesis` predicate carrying the conclusion is taken as a hyp —
-only the budget eq + `0<P` + `N_i≠0`), non-degenerate, and **sufficient**: the
-conclusion genuinely follows (degenerate-boundary refutation `ν ≤ min N_i` is killed
-by `h_kkt + hP`, forcing `ν > min N_i > 0` so `λ = 1/(2ν) > 0` is well-defined; the
-allocation is the true Cover-Thomas 9.4.1 concave-separable KKT optimum). `plan:`
-(not `wall:`) classification verified: `Real.strictConcaveOn_log` /
-`ConcaveOn.le_tangent_of_hasDerivAt` exist in Mathlib (loogle), Phase A compiles.
-Headline `parallel_gaussian_capacity_formula_minimal` confirmed to carry `sorryAx`
-(`lake env lean` + `#print axioms`) = genuine tier-2, the `h_opt` drop is a real
-load-bearing-hypothesis removal, not name laundering.
-@residual(plan:parallel-gaussian-wf2-optimality-plan) -/
+Proof done (0 sorry / 0 residual, sorryAx-free `#print axioms` =
+`[propext, Classical.choice, Quot.sound]`). No load-bearing hypothesis — only the
+budget equality `h_kkt`, `0<P`, `N_i≠0` are taken, all preconditions/regularity;
+the optimality conclusion (`∀ feasible P', ∑ cost(P') ≤ ∑ cost(P*)`) is genuinely
+derived, not encoded in any hypothesis (awaiting independent honesty audit before
+`@audit:ok`). -/
+@[entry_point]
 theorem isWaterFillingOptimal_of_kkt {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (ν : ℝ) (h_kkt : IsWaterFillingKKT P N ν) :
     IsWaterFillingOptimal P N ν := by
-  sorry
+  -- `ν > 0` from the KKT budget equality, so `λ = 1/(2ν) ≥ 0`.
+  have hν : 0 < ν := waterFillingKKT_level_pos P hP N ν h_kkt
+  have hlam_nonneg : 0 ≤ 1 / (2 * ν) := by positivity
+  intro P' hP'_nonneg hP'_sum
+  -- per-coordinate tangent bound, summed
+  have h_pointwise : ∀ i ∈ (Finset.univ : Finset (Fin n)),
+      (1/2) * Real.log (1 + P' i / (N i : ℝ))
+        ≤ (1/2) * Real.log (1 + waterFillingPower ν N i / (N i : ℝ))
+          + (1 / (2 * ν)) * (P' i - waterFillingPower ν N i) := by
+    intro i _
+    exact waterFillingCost_tangent_le N hN ν hν i (hP'_nonneg i)
+  have h_sum_le :
+      ∑ i : Fin n, (1/2) * Real.log (1 + P' i / (N i : ℝ))
+        ≤ ∑ i : Fin n, ((1/2) * Real.log (1 + waterFillingPower ν N i / (N i : ℝ))
+          + (1 / (2 * ν)) * (P' i - waterFillingPower ν N i)) :=
+    Finset.sum_le_sum h_pointwise
+  -- split the RHS sum into the optimal-cost sum + the linear remainder
+  rw [Finset.sum_add_distrib] at h_sum_le
+  -- the linear remainder: λ · (∑P'_i − ∑P*_i) = λ · (∑P'_i − P) ≤ 0
+  have h_rem : ∑ i : Fin n, (1 / (2 * ν)) * (P' i - waterFillingPower ν N i) ≤ 0 := by
+    rw [← Finset.mul_sum]
+    have h_diff_sum : ∑ i : Fin n, (P' i - waterFillingPower ν N i)
+        = (∑ i : Fin n, P' i) - P := by
+      rw [Finset.sum_sub_distrib]
+      rw [IsWaterFillingKKT] at h_kkt
+      rw [h_kkt]
+    rw [h_diff_sum]
+    have h_le_zero : (∑ i : Fin n, P' i) - P ≤ 0 := by linarith
+    exact mul_nonpos_of_nonneg_of_nonpos hlam_nonneg h_le_zero
+  linarith
 
 end InformationTheory.Shannon.ParallelGaussian

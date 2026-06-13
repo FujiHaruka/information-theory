@@ -217,7 +217,6 @@ import InformationTheory.Shannon.AWGN.MIDecompBody
 import InformationTheory.Shannon.AWGN.ContChannelMIDecomp
 import InformationTheory.Shannon.AWGN.CapacityConverseMaxent
 import InformationTheory.Shannon.AWGN.MIClosedForm
-import InformationTheory.Shannon.ParallelGaussian.WFCertBody
 import InformationTheory.Shannon.Hoeffding.LagrangeIVTBody
 import InformationTheory.Shannon.LZ78.PhraseCountAsymptoticBody
 import InformationTheory.Shannon.LZ78.ZivCountingBody
