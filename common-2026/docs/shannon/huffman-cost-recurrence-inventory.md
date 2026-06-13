@@ -1,5 +1,7 @@
 # Ch.5 Huffman cost-level 漸化式 — Mathlib API 在庫調査
 
+> 🗄️ **ARCHIVED (Phase 完了)** — 完了済 Phase の在庫調査。in-project `file` 参照は 2026-06 split リファクタ前の旧モノリシックレイアウト (`Shannon/Huffman.lean` → 現 `Shannon/Huffman/*.lean`、`Shannon/HuffmanOptimality.lean` → `Shannon/Huffman/Optimality.lean` 等) を指す。陳腐化した旧行番号は除去済。歴史的記録として保存 (headline `huffmanLength_optimal` は sorryAx-free 完成)。
+
 > 親計画: [`docs/shannon/huffman-strong-form-completion-plan.md`](huffman-strong-form-completion-plan.md)（判断ログ #4, 2026-05-30「cost-level merge identity への pivot」）。本ファイルは「multiset-level cost `huffmanCost s` の 1-step 漸化式を `s.card` strong induction で証明する」ために必要な Mathlib primitive の在庫。docs-only。
 >
 > **重要な事実 (verbatim 確認済)**: `huffmanCost` は **まだ存在しない** (`rg huffmanCost InformationTheory/ docs/` → 0 hit)。本調査は新規定義 `huffmanCost` + 漸化式補題のための在庫であり、既存コードの監査ではない。
@@ -40,7 +42,7 @@ theorem huffmanCost_step (s) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
 -- → huffmanCost s = huffmanCost s'' + (x1.2 + x2.2)  ∎
 ```
 
-注: `len` の漸化 (子の長さ = 親の長さ + 1) は `huffmanLengthAux_eq_step` (`InformationTheory/Shannon/Huffman.lean:427`) の `fun a => if a ∈ A ∨ a ∈ B then g a + 1 else g a` 構造に対応する。per-group 版 `len` を新規に定義する必要がある (§5)。
+注: `len` の漸化 (子の長さ = 親の長さ + 1) は `huffmanLengthAux_eq_step` (`InformationTheory/Shannon/Huffman.lean`) の `fun a => if a ∈ A ∨ a ∈ B then g a + 1 else g a` 構造に対応する。per-group 版 `len` を新規に定義する必要がある (§5)。
 
 ---
 
@@ -129,7 +131,7 @@ theorem huffmanCost_step (s) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
 |---|---|---|---|---|
 | multiset strong induction | `Multiset.strongInductionOn` | `Mathlib/Data/Multiset/Basic.lean:72` | ✅ 既存 | card 上の strong induction の標準形 |
 | 展開等式 | `Multiset.strongInductionOn_eq` | `Mathlib/Data/Multiset/Basic.lean:79` | ✅ 既存 | IH の unfold |
-| card 減少 | `huffmanStep_card_lt` (InformationTheory) | `InformationTheory/Shannon/Huffman.lean:389` | ✅ 既存 (自作済) | `s''.card < s.card`、IH 適用条件 |
+| card 減少 | `huffmanStep_card_lt` (InformationTheory) | `InformationTheory/Shannon/Huffman.lean` | ✅ 既存 (自作済) | `s''.card < s.card`、IH 適用条件 |
 
 **verbatim signature**:
 
@@ -149,7 +151,7 @@ theorem strongInductionOn_eq {p : Multiset α → Sort*} (s : Multiset α) (H) :
     @strongInductionOn _ p s H = H s fun t _h => @strongInductionOn _ p t H
 ```
 
-**注意 (戦略選択)**: `strongInductionOn` は multiset `<` 上の induction。`huffmanLengthAux` は既に `termination_by s.card`（`InformationTheory/Shannon/Huffman.lean:417`）で定義され、`huffmanLengthAux_eq_step` で展開済。よって `huffmanCost_step` の証明は **strong induction を新たに回す必要がなく、1-step 等式の直接計算で済む可能性が高い**（IH は不要、`huffmanLengthAux_eq_step` の per-group 版を len の漸化として使うだけ）。strong induction が要るのは「cost の閉形 `huffmanCost (initMultiset P) = Σ ...`」のような複数ステップ集約のときで、その場合 `s.card` を `Nat.strong_induction_on` で回すか `strongInductionOn` を使う。
+**注意 (戦略選択)**: `strongInductionOn` は multiset `<` 上の induction。`huffmanLengthAux` は既に `termination_by s.card`（`InformationTheory/Shannon/Huffman.lean`）で定義され、`huffmanLengthAux_eq_step` で展開済。よって `huffmanCost_step` の証明は **strong induction を新たに回す必要がなく、1-step 等式の直接計算で済む可能性が高い**（IH は不要、`huffmanLengthAux_eq_step` の per-group 版を len の漸化として使うだけ）。strong induction が要るのは「cost の閉形 `huffmanCost (initMultiset P) = Σ ...`」のような複数ステップ集約のときで、その場合 `s.card` を `Nat.strong_induction_on` で回すか `strongInductionOn` を使う。
 
 判定: **✅ 既存。漸化式単発なら induction 自体不要。多ステップ集約には `strongInductionOn` / 既存 `huffmanStep_card_lt` で対応。**
 
@@ -178,7 +180,7 @@ theorem strongInductionOn_eq {p : Multiset α → Sort*} (s : Multiset α) (H) :
   ```
   加法形: `Finset.sum_map_val [AddCommMonoid M] (s : Finset ι) (f : ι → M) : (s.1.map f).sum = ∑ a ∈ s, f a`。`rfl`。
 
-**接続の形 (verbatim 確認済の橋)**: `expectedLength P l = ∑ a : α, P.real {a} * (l a : ℝ)`（`InformationTheory/Shannon/ShannonCode.lean:56`）。`initMultiset P = (Finset.univ).val.map (fun a => ({a}, P.real {a}))`（`InformationTheory/Shannon/Huffman.lean:420`）。よって:
+**接続の形 (verbatim 確認済の橋)**: `expectedLength P l = ∑ a : α, P.real {a} * (l a : ℝ)`（`InformationTheory/Shannon/ShannonCode.lean`）。`initMultiset P = (Finset.univ).val.map (fun a => ({a}, P.real {a}))`（`InformationTheory/Shannon/Huffman.lean`）。よって:
 
 ```
 expectedLength P l
@@ -207,7 +209,7 @@ expectedLength P l
 - **`Multiset.sum_map_erase`** (category B 主役):
   - `[DecidableEq ι]` — 要素型 `Finset α × ℝ` の DecidableEq（`α` が `DecidableEq` を持てば自動、Huffman の variable に既存）。
   - `[AddCommMonoid M]` — 値型 `ℝ`、自動。
-  - `(h : a ∈ m)` — **membership 仮説が必須**。二重 erase の 1 段目は `x2 ∈ s.erase x1`（`huffmanStep_spec` の `.val.2.1 ∈ s.erase .val.1` が供給、`InformationTheory/Shannon/Huffman.lean:273`）、2 段目は `x1 ∈ s`（同 spec `.val.1 ∈ s`, line 272）。membership は既存 spec から取れる。
+  - `(h : a ∈ m)` — **membership 仮説が必須**。二重 erase の 1 段目は `x2 ∈ s.erase x1`（`huffmanStep_spec` の `.val.2.1 ∈ s.erase .val.1` が供給、`InformationTheory/Shannon/Huffman.lean`）、2 段目は `x1 ∈ s`（同 spec `.val.1 ∈ s`, line 272）。membership は既存 spec から取れる。
   - `f` の injectivity は **不要**（`map_erase` と違い値レベル）。
 
 - **`Multiset.map_erase`** (使わないが罠として明記):

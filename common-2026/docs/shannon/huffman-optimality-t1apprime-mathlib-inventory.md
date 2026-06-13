@@ -1,5 +1,7 @@
 # T1-A'' Huffman Optimality Strong Form — Mathlib + InformationTheory API Inventory
 
+> 🗄️ **ARCHIVED (Phase 完了)** — 完了済 Phase の在庫調査。in-project `file` 参照は 2026-06 split リファクタ前の旧モノリシックレイアウト (`Shannon/Huffman.lean` → 現 `Shannon/Huffman/*.lean`、`Shannon/HuffmanOptimality.lean` → `Shannon/Huffman/Optimality.lean` 等) を指す。陳腐化した旧行番号は除去済。歴史的記録として保存 (headline `huffmanLength_optimal` は sorryAx-free 完成)。
+
 > Parent: `docs/textbook-roadmap.md` § Tier 1 — **T1-A''. Huffman optimality (full discharge of 2 weak-form hypotheses)**
 > Predecessor: `docs/shannon/huffman-optimality-mathlib-inventory.md` (T1-A' inventory, ~440 行)
 > Existing artefact: `InformationTheory/Shannon/HuffmanOptimality.lean` (1054 行 / 0 sorry / weak form publish), `InformationTheory/Shannon/Huffman.lean` (961 行 / 0 sorry)
@@ -37,16 +39,16 @@ theorem huffmanLength_optimal
 
 | name | file:line | role |
 | --- | --- | --- |
-| `swap_step_le` | `InformationTheory/Shannon/HuffmanOptimality.lean:650` | H1 main step。 (a, m) = (min-prob symbol, current longest position) で順次呼ぶ |
-| `mergedMeasure` | `InformationTheory/Shannon/HuffmanOptimality.lean:244` | H2 LHS の measure |
-| `mergedMeasure_real` | `InformationTheory/Shannon/HuffmanOptimality.lean:251` | H2 各 group の確率値 |
-| `mergedMeasure_isProbabilityMeasure` | `InformationTheory/Shannon/HuffmanOptimality.lean:550` | H2 [IsProbabilityMeasure] |
-| `mergedMeasure_pos` | `InformationTheory/Shannon/HuffmanOptimality.lean:624` | H2 huffmanLength_pos 前提 |
-| `SwapNormalizationHypothesis` | `InformationTheory/Shannon/HuffmanOptimality.lean:759-773` | **discharge 対象** (H1) |
-| `HuffmanMergedIdentificationHypothesis` | `InformationTheory/Shannon/HuffmanOptimality.lean:776-785` | **discharge 対象** (H2) |
-| `huffmanLength_optimal_with_hypotheses` | `InformationTheory/Shannon/HuffmanOptimality.lean:1041` | 主定理 entry。両 hypothesis を渡して強形を得る |
-| `huffmanLength_kraft_eq_one` | `InformationTheory/Shannon/Huffman.lean:924` | H1 Kraft = 1 contradiction |
-| `huffmanStep_initMultiset_sibling` (`private`) | `InformationTheory/Shannon/HuffmanOptimality.lean:66` | H2 で `(a, b)` が huffmanStep pick up された pair であることの identification |
+| `swap_step_le` | `InformationTheory/Shannon/HuffmanOptimality.lean` | H1 main step。 (a, m) = (min-prob symbol, current longest position) で順次呼ぶ |
+| `mergedMeasure` | `InformationTheory/Shannon/HuffmanOptimality.lean` | H2 LHS の measure |
+| `mergedMeasure_real` | `InformationTheory/Shannon/HuffmanOptimality.lean` | H2 各 group の確率値 |
+| `mergedMeasure_isProbabilityMeasure` | `InformationTheory/Shannon/HuffmanOptimality.lean` | H2 [IsProbabilityMeasure] |
+| `mergedMeasure_pos` | `InformationTheory/Shannon/HuffmanOptimality.lean` | H2 huffmanLength_pos 前提 |
+| `SwapNormalizationHypothesis` | `InformationTheory/Shannon/HuffmanOptimality.lean-773` | **discharge 対象** (H1) |
+| `HuffmanMergedIdentificationHypothesis` | `InformationTheory/Shannon/HuffmanOptimality.lean-785` | **discharge 対象** (H2) |
+| `huffmanLength_optimal_with_hypotheses` | `InformationTheory/Shannon/HuffmanOptimality.lean` | 主定理 entry。両 hypothesis を渡して強形を得る |
+| `huffmanLength_kraft_eq_one` | `InformationTheory/Shannon/Huffman.lean` | H1 Kraft = 1 contradiction |
+| `huffmanStep_initMultiset_sibling` (`private`) | `InformationTheory/Shannon/HuffmanOptimality.lean` | H2 で `(a, b)` が huffmanStep pick up された pair であることの identification |
 
 ---
 
@@ -85,7 +87,7 @@ bubble sort 終了後、`l a ≠ l b` のときの shortening が必要。**Kraf
 
 | name | file:line | role |
 | --- | --- | --- |
-| `huffmanLength_kraft_eq_one` | `InformationTheory/Shannon/Huffman.lean:924` | H1 内で `ll = huffmanLength` のとき `l a = l b` 自動成立、一般 `ll` 側で slack 活用 |
+| `huffmanLength_kraft_eq_one` | `InformationTheory/Shannon/Huffman.lean` | H1 内で `ll = huffmanLength` のとき `l a = l b` 自動成立、一般 `ll` 側で slack 活用 |
 | `Function.update_apply` | `Mathlib/Logic/Function/Basic.lean:640` | shortening 後の各 `l' x` の値計算 |
 | `Function.update_idem` | `Mathlib/Logic/Function/Basic.lean:764` | 複数回 shortening の合成 |
 | `Function.update_comm` | `Mathlib/Logic/Function/Basic.lean:759` | reuse |
@@ -100,15 +102,15 @@ bubble sort 終了後、`l a ≠ l b` のときの shortening が必要。**Kraf
 
 | name | file:line | role |
 | --- | --- | --- |
-| `initMultiset` | `InformationTheory/Shannon/Huffman.lean:298` | `Multiset (Finset α × ℝ)`. 両側で計算 |
-| `initMultiset_huffmanGrouping` | `InformationTheory/Shannon/Huffman.lean:416` | HuffmanGrouping 保存 |
-| `huffmanStep_card_eq` | `InformationTheory/Shannon/Huffman.lean:251` | cardinality bridge |
-| `huffmanLengthAux_step_merged` | `InformationTheory/Shannon/Huffman.lean:614` | **本命**: `a ∈ merged` のとき +1 |
-| `huffmanLengthAux_step_other` | `InformationTheory/Shannon/Huffman.lean:625` | **本命**: `a ∉ merged` のとき不変 |
-| `huffmanLengthAux_step_eq_on_other_group` | `InformationTheory/Shannon/Huffman.lean:636` | other group 上で `s` と `s''` 値一致 |
-| `huffmanLengthAux_const_on_group` | `InformationTheory/Shannon/Huffman.lean:467` | **本命** |
-| `huffmanStep_orig_decomp` | `InformationTheory/Shannon/Huffman.lean:599` | `s = x1 ::ₘ x2 ::ₘ ee` |
-| `huffmanStep_initMultiset_sibling` | `InformationTheory/Shannon/HuffmanOptimality.lean:66` | `(a, b)` が huffmanStep pick up された pair |
+| `initMultiset` | `InformationTheory/Shannon/Huffman.lean` | `Multiset (Finset α × ℝ)`. 両側で計算 |
+| `initMultiset_huffmanGrouping` | `InformationTheory/Shannon/Huffman.lean` | HuffmanGrouping 保存 |
+| `huffmanStep_card_eq` | `InformationTheory/Shannon/Huffman.lean` | cardinality bridge |
+| `huffmanLengthAux_step_merged` | `InformationTheory/Shannon/Huffman.lean` | **本命**: `a ∈ merged` のとき +1 |
+| `huffmanLengthAux_step_other` | `InformationTheory/Shannon/Huffman.lean` | **本命**: `a ∉ merged` のとき不変 |
+| `huffmanLengthAux_step_eq_on_other_group` | `InformationTheory/Shannon/Huffman.lean` | other group 上で `s` と `s''` 値一致 |
+| `huffmanLengthAux_const_on_group` | `InformationTheory/Shannon/Huffman.lean` | **本命** |
+| `huffmanStep_orig_decomp` | `InformationTheory/Shannon/Huffman.lean` | `s = x1 ::ₘ x2 ::ₘ ee` |
+| `huffmanStep_initMultiset_sibling` | `InformationTheory/Shannon/HuffmanOptimality.lean` | `(a, b)` が huffmanStep pick up された pair |
 
 **Mathlib 側**:
 
