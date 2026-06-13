@@ -1,12 +1,19 @@
 # Parallel Gaussian: L-WF2 water-filling 最適性 discharge サブ計画
 
 > **Parent**: [`parallel-gaussian-moonshot-plan.md`](parallel-gaussian-moonshot-plan.md) §撤退ライン **L-WF2**
+>
+> ✅ **DONE (2026-06-13)**: `KKT.isWaterFillingOptimal_of_kkt` genuine closure 完了
+> (sorryAx-free `[propext, Classical.choice, Quot.sound]`、独立 honesty 監査 PASS = `@audit:ok`)。
+> headline `parallel_gaussian_capacity_formula_minimal` も sorryAx-free 化。実装は当初計画の
+> 凹 tangent 機構を使わず **`Real.log_le_sub_one_of_pos` を `u=(N_i+P'_i)/(N_i+P*_i)` に適用して
+> tangent 上界 `1/(2(N_i+P*_i))` を直接導出**するより簡潔なルートで着地 (ConcaveOn/HasDerivAt 不要
+> → tangent 補題移設も不要、orphan な `WFCertBody.lean` は削除)。
 
 ## 進捗
 
-- [ ] M0 在庫調査 — Mathlib の凹関数 tangent / Lagrange / KKT 補題棚卸し 📋
-- [ ] skeleton — Phase 分解 + per-step sorry 📋
-- [ ] 本体実装 — `isWaterFillingOptimal_of_kkt` の sorry を genuine 証明に 📋
+- [x] M0 在庫調査 — `Real.log_le_sub_one_of_pos` で tangent 上界を直接化 (ConcaveOn 機構不要と判明) ✅
+- [x] skeleton — helper (`noise_pos` / `waterFillingKKT_level_pos` / `waterFillingCost_tangent_le`) ✅
+- [x] 本体実装 — `isWaterFillingOptimal_of_kkt` genuine 証明 (sorryAx-free、`@audit:ok`) ✅
 
 ## ゴール / Approach
 

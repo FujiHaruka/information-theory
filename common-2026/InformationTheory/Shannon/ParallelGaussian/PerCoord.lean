@@ -340,7 +340,8 @@ theorem isParallelGaussianPerCoordReduction_discharged {n : ℕ}
               (fun i => (waterFillingPower ν N i).toNNReal)) :
     IsParallelGaussianPerCoordReduction P N h_meas h_parallel_meas ν := by
   -- L-WF2: water-filling optimality, derived internally from the KKT water level
-  -- (sorry-routed in `isWaterFillingOptimal_of_kkt`), no longer a load-bearing hyp.
+  -- via the genuine (sorryAx-free, @audit:ok) `isWaterFillingOptimal_of_kkt`, no
+  -- longer a load-bearing hypothesis.
   have h_opt : IsWaterFillingOptimal P N ν := isWaterFillingOptimal_of_kkt P hP N hN ν h_kkt
   set Q : Fin (n + 1) → ℝ≥0 := fun i => (waterFillingPower ν N i).toNNReal with hQ_def
   -- `(Q i : ℝ) = waterFillingPower ν N i` since the power is nonnegative
@@ -393,10 +394,10 @@ correlated-input max-entropy bound — **none of which is the conclusion equalit
 they mirror the 1-D `AWGN.awgnCapacity_eq` residuals.
 
 L-WF2 (water-filling optimality, `IsWaterFillingOptimal`) is **no longer a
-hypothesis**: it is derived internally from `h_kkt` via the sorry-routed
-`isWaterFillingOptimal_of_kkt` (`@residual(plan:parallel-gaussian-wf2-optimality-plan)`).
-So this theorem is unconditional in L-WF2 but transitively carries that single
-honest `sorry` (type-check done, NOT proof done).
+hypothesis**: it is derived internally from `h_kkt` via the genuine, sorryAx-free,
+independently-audited (`@audit:ok`) `isWaterFillingOptimal_of_kkt` (KKT.lean). So
+this theorem is unconditional in L-WF2 and carries no L-WF2 residual — its only
+remaining input is the genuine `h_kkt` precondition.
 
 No `h_per_coord : IsParallelGaussianPerCoordReduction` argument (the conclusion) is
 taken; the body is a real `le_antisymm` derivation, never `:= h_per_coord`.

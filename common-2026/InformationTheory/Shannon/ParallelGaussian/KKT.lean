@@ -322,8 +322,21 @@ Proof done (0 sorry / 0 residual, sorryAx-free `#print axioms` =
 `[propext, Classical.choice, Quot.sound]`). No load-bearing hypothesis — only the
 budget equality `h_kkt`, `0<P`, `N_i≠0` are taken, all preconditions/regularity;
 the optimality conclusion (`∀ feasible P', ∑ cost(P') ≤ ∑ cost(P*)`) is genuinely
-derived, not encoded in any hypothesis (awaiting independent honesty audit before
-`@audit:ok`). -/
+derived, not encoded in any hypothesis.
+
+@audit:ok — independent honesty audit 2026-06-13 (commit 3529022): all four
+honesty checks PASS. (1) non-circular: body is a genuine intro + per-coord
+tangent + sum + complementary-slackness derivation, no hypothesis has type
+`IsWaterFillingOptimal`. (2) non-load-bearing: `h_kkt` is the budget equality
+pinning `ν` (a precondition, IVT-dischargeable via `exists_waterFillingKKT_of_pos`),
+not the optimality conclusion; core-reconstruction test fails to extract the cost
+ordering from the hypotheses alone. (3) non-degenerate: `IsWaterFillingOptimal`
+is a genuine `∀ feasible P'` inequality (not `:True`). (4) sufficiency: tangent
+bound (`log u ≤ u−1`) + active/inactive slope split (active slope `=1/(2ν)`,
+inactive `1/(2a)≤1/(2ν)` with `P'_i≥0`) + `λ≥0` from `ν>0` genuinely yields the
+conclusion; degenerate boundaries (`P'=P*`, `P'=0`, `n=0`) substituted, no
+counterexample. `#print axioms` sorryAx-free machine-confirmed for this lemma and
+the helpers `noise_pos` / `waterFillingKKT_level_pos` / `waterFillingCost_tangent_le`. -/
 @[entry_point]
 theorem isWaterFillingOptimal_of_kkt {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)

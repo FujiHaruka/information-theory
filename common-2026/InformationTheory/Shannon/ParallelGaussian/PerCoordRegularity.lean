@@ -109,13 +109,13 @@ Both converse fields are now fully genuine: the formerly transitive
 2026-05-29 (multivariate mixture-density lift, `@audit:ok`), so both
 `parallel_bddAbove_miImage` and `parallel_per_input_mi_le_sum` are sorryAx-free.
 
-This file is `0 sorry`. The converse side is fully genuine; the **single remaining
-residual** of `parallel_gaussian_capacity_formula_minimal` is L-WF2 (water-filling
-optimality), now derived internally from `h_kkt` via the sorry-routed
-`KKT.isWaterFillingOptimal_of_kkt` (`@residual(plan:parallel-gaussian-wf2-optimality-plan)`)
-rather than carried as a load-bearing `h_opt` hypothesis. So the headline is
-**type-check done (tier 2), NOT proof done** — `#print axioms` now reports `sorryAx`
-transitively through that L-WF2 `sorry`. -/
+This file is `0 sorry`. Both the converse side **and** L-WF2 (water-filling
+optimality) are now fully genuine: L-WF2 is derived internally from `h_kkt` via the
+genuine, sorryAx-free, independently-audited (`@audit:ok`) `KKT.isWaterFillingOptimal_of_kkt`
+(2026-06-13 closure) rather than carried as a load-bearing `h_opt` hypothesis. So
+`parallel_gaussian_capacity_formula_minimal` is **proof done** —
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free), with the
+genuine `h_kkt` (L-WF1, IVT-dischargeable) as its only remaining precondition. -/
 @[entry_point]
 theorem isParallelGaussianPerCoordRegularity_of_pieces {n : ℕ}
     (P : ℝ) (hP : 0 ≤ P) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
@@ -164,7 +164,8 @@ History of dropped load-bearing hypotheses:
   `awgn_perCoord_mi_closed_form` (hypothesis-free, sorryAx-free).
 * `h_opt` (L-WF2 water-filling optimality): dropped 2026-06-13; previously a
   load-bearing hypothesis (the optimization core), it is now derived internally from
-  `h_kkt` via the sorry-routed `KKT.isWaterFillingOptimal_of_kkt`.
+  `h_kkt` via the genuine, sorryAx-free, independently-audited (`@audit:ok`)
+  `KKT.isWaterFillingOptimal_of_kkt`.
 
 Genuine input retained: `h_kkt` (L-WF1, water level uses the budget — a genuine
 precondition pinning `ν`, IVT-dischargeable via `exists_waterFillingKKT_of_pos`),
@@ -172,10 +173,10 @@ plus the regularity preconditions `hP` / `hN` / `h_meas` / `h_parallel_meas`. Th
 body assembles `h_reg` via the constructor and invokes the genuine `le_antisymm`
 sup-sandwich `parallel_gaussian_capacity_formula`.
 
-This is **type-check done (tier 2), NOT proof done**: the single residual is L-WF2,
-the `KKT.isWaterFillingOptimal_of_kkt` `sorry`
-(`@residual(plan:parallel-gaussian-wf2-optimality-plan)`), carried transitively
-through `parallel_gaussian_capacity_formula`. `#print axioms` reports `sorryAx`. -/
+This is **proof done**: `#print axioms` = `[propext, Classical.choice, Quot.sound]`
+(sorryAx-free). The only remaining input is the genuine `h_kkt` precondition (L-WF1,
+itself IVT-dischargeable); achiever, converse, per-coord closed form, and L-WF2
+optimality are all genuine. -/
 @[entry_point]
 theorem parallel_gaussian_capacity_formula_minimal {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
