@@ -8,33 +8,41 @@ import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.Probability.Kernel.Composition.MeasureCompProd
 
 /-!
-# Stein の補題 — Phase A〜B (achievability) スコープ
+# Stein's lemma
 
-仮説検定の最適 type-II error が KL の指数で減衰することを示す Stein の補題
-(Cover-Thomas Theorem 11.8.3) のうち、**lower bound (achievability)** までを
-スコープとする。Phase C (converse, upper bound) と Phase D (統合形 `Tendsto`)
-は本ファイルでは未着手。
+Stein's lemma for binary hypothesis testing (Cover–Thomas, Theorem 11.8.3): the optimal
+type-II error of an `n`-sample test with type-I error at most `ε` decays exponentially in `n`
+at the rate of the Kullback–Leibler divergence `klDiv P Q`. This file develops both the
+achievability (lower bound) and the converse (upper bound) sides, and assembles them into a
+bound on the optimal type-II error `steinOptimalBeta`.
 
-## 構成
+## Main definitions
 
-* **Phase A** — log-likelihood ratio plumbing:
-  * `llrPmf P Q : α → ℝ`、`logLikelihoodRatio P Q Xs i : Ω → ℝ`
-  * 期待値 LR = KL: `integral_logLikelihoodRatio_under_P = (klDiv P Q).toReal`
-  * Stein 強法則 `stein_strong_law` (AEP `aep_ae` の 2 分布化)
-  * 確率収束 `stein_inProbability` (AEP `aep_inProbability` の 2 分布化)
-* **Phase B** — Stein lower bound:
-  * Stein-typical set `steinTypicalSet P Q n ε`
-  * P-side typicality → 1 (`steinTypicalSet_P_prob_tendsto_one`)
-  * Q-side mass bound (`steinTypicalSet_Q_prob_le`)
-  * `stein_achievability` — typicality test の存在 (撤退ライン到達)
+* `llrPmf P Q` — the alphabet-side log-likelihood ratio `log P{x} − log Q{x}`.
+* `logLikelihoodRatio P Q Xs i` — the per-sample log-likelihood ratio along a process `Xs`.
+* `steinTypicalSet P Q n ε` — blocks whose empirical log-likelihood ratio is within `ε` of
+  `klDiv P Q`.
+* `steinBetaSet P Q n ε` — the type-II error probabilities attainable by `ε`-level tests.
+* `steinOptimalBeta P Q n ε` — the infimum of `steinBetaSet`, the optimal type-II error.
 
-## 設計メモ
+## Main statements
 
-* AEP plumbing の **2 分布化** で 70〜80% の補題を再利用。新規構築は 2〜3 本のみ
-* Phase A.7 の `klDiv_pi_eq_n_smul` は Phase C で必要だが Phase B では不要、
-  本ファイルでは未実装 (Phase C 着手時に追加)
-* `α : Fintype` + `[MeasurableSingletonClass α]` + `hQpos : ∀ x, 0 < Q.real {x}`
-  のもとで全て point-wise に展開、Pi 値 RN 微分の汎用 plumbing を回避
+* `stein_strong_law` — the empirical mean of the log-likelihood ratio converges almost surely
+  to `(klDiv P Q).toReal`.
+* `stein_inProbability` — the same convergence holds in probability.
+* `stein_achievability` — there exist `ε`-level tests whose type-II error decays at rate
+  `klDiv P Q`.
+* `stein_converse_finite_n` — every `ε`-level test obeys the matching converse rate bound.
+* `steinOptimalBeta_log_le_of_converse` and `steinOptimalBeta_log_ge_of_achievability` — the
+  converse and achievability bounds expressed on `steinOptimalBeta`.
+
+## Implementation notes
+
+* The log-likelihood-ratio plumbing is obtained as the two-distribution specialization of the
+  AEP development, which lets most measurability, identical-distribution, and independence
+  lemmas be reused rather than reproved.
+* Over a finite alphabet `α` with `0 < Q.real {x}` for every `x`, all quantities are expanded
+  point-wise, avoiding the general Radon–Nikodym derivative machinery for product measures.
 -/
 
 namespace InformationTheory.Shannon
@@ -46,11 +54,10 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ### Phase A — log-likelihood ratio plumbing -/
+/-! ### Log-likelihood ratio plumbing -/
 
-/-- Alphabet-side log-likelihood ratio `log P(x) − log Q(x)`. AEP `pmfLog` の 2 分布化。
-On the support of `P` (where `P{x} > 0`) and assuming `Q{x} > 0` for all `x`, this
-equals `Real.log ((P.rnDeriv Q x).toReal)`. -/
+/-- The alphabet-side log-likelihood ratio `log P{x} − log Q{x}`. On the support of `P` and
+assuming `Q{x} > 0` for all `x`, this equals `Real.log ((P.rnDeriv Q x).toReal)`. -/
 noncomputable def llrPmf (P Q : Measure α) : α → ℝ :=
   fun x => Real.log (P.real {x}) - Real.log (Q.real {x})
 
@@ -77,7 +84,6 @@ lemma measurable_logLikelihoodRatio
   (measurable_llrPmf P Q).comp (hXs i)
 
 omit [DecidableEq α] [Nonempty α] in
-/-- Integrability of the per-symbol LR on a finite alphabet. -/
 lemma integrable_logLikelihoodRatio
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (P Q : Measure α)
@@ -90,12 +96,7 @@ lemma integrable_logLikelihoodRatio
   exact h_int.comp_measurable (hXs i)
 
 omit [DecidableEq α] [Nonempty α] in
-/-- The expected log-likelihood ratio under `P` equals `(klDiv P Q).toReal`.
-This is the 2-distribution analogue of AEP `integral_logLikelihood_zero`.
-
-**Hypotheses**: `μ.map (Xs 0) = P`, `P ≪ Q`, and `0 < Q.real {x}` for every `x`
-(the latter gives `(P.rnDeriv Q x).toReal = P.real {x} / Q.real {x}` pointwise).
--/
+/-- The expected log-likelihood ratio under `P` equals `(klDiv P Q).toReal`. -/
 theorem integral_logLikelihoodRatio_under_P
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
@@ -161,7 +162,6 @@ theorem integral_logLikelihoodRatio_under_P
     rw [h_llr_eq]
 
 omit [DecidableEq α] [Nonempty α] in
-/-- Composition lift of `IdentDistrib` to `logLikelihoodRatio`. -/
 lemma identDistrib_logLikelihoodRatio
     (μ : Measure Ω) (P Q : Measure α) (Xs : ℕ → Ω → α)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ) (i : ℕ) :
@@ -169,7 +169,6 @@ lemma identDistrib_logLikelihoodRatio
   simpa [logLikelihoodRatio_eq_comp] using (hident i).comp (measurable_llrPmf P Q)
 
 omit [DecidableEq α] [Nonempty α] in
-/-- Composition lift of pairwise `IndepFun` to `logLikelihoodRatio`. -/
 lemma indepFun_logLikelihoodRatio
     (μ : Measure Ω) (P Q : Measure α) (Xs : ℕ → Ω → α)
     (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j) :
@@ -181,9 +180,8 @@ lemma indepFun_logLikelihoodRatio
   simpa [logLikelihoodRatio_eq_comp] using h.comp hpf hpf
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Stein 強法則** (Cover-Thomas LR-side): the empirical mean of the per-symbol
-log-likelihood ratio converges almost surely to `(klDiv P Q).toReal`. AEP `aep_ae`
-の 2 分布化。 -/
+/-- The empirical mean of the per-sample log-likelihood ratio converges almost surely to
+`(klDiv P Q).toReal`. -/
 @[entry_point]
 theorem stein_strong_law
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -211,8 +209,8 @@ theorem stein_strong_law
   simpa [h_int_eq] using hω
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Stein convergence in probability**: the empirical mean of the LR converges
-to `(klDiv P Q).toReal` in probability. -/
+/-- The empirical mean of the log-likelihood ratio converges to `(klDiv P Q).toReal` in
+probability. -/
 @[entry_point]
 theorem stein_inProbability
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -254,10 +252,10 @@ theorem stein_inProbability
   show ε ≤ dist (f n ω) (g ω) ↔ ε ≤ |f n ω - g ω|
   rw [Real.dist_eq]
 
-/-! ### Phase B — Stein-typical set and Stein lower bound (achievability) -/
+/-! ### Stein-typical set and achievability -/
 
-/-- **Stein-typical set**: blocks `x : Fin n → α` whose empirical LR is within `ε`
-of the true KL divergence. AEP `typicalSet` の 2 分布化。 -/
+/-- The Stein-typical set: blocks `x : Fin n → α` whose empirical log-likelihood ratio is within
+`ε` of `(klDiv P Q).toReal`. -/
 noncomputable def steinTypicalSet
     (P Q : Measure α) (n : ℕ) (ε : ℝ) : Set (Fin n → α) :=
   { x | |(∑ i : Fin n, llrPmf P Q (x i)) / n - (klDiv P Q).toReal| < ε }
@@ -276,7 +274,7 @@ theorem measurableSet_steinTypicalSet
 
 omit [DecidableEq α] in
 set_option linter.unusedSectionVars false in
-/-- **P-side typicality probability tends to 1**: `μ {ω | jointRV Xs n ω ∈ T} → 1`. -/
+/-- Under `P`, the probability that a block lands in the Stein-typical set tends to `1`. -/
 theorem steinTypicalSet_P_prob_tendsto_one
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
@@ -337,12 +335,7 @@ theorem steinTypicalSet_P_prob_tendsto_one
   rw [h_event_eq n]
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Q-side mass bound**: `Q^n(T_ε^n) ≤ exp(-n · (klDiv - ε))`.
-
-The textbook Stein-typicality argument: on `T_ε^n`, the empirical LR is at least
-`klDiv - ε`, so each block `x ∈ T_ε^n` has `Π_i Q.real{x_i} ≤ Π_i P.real{x_i} ·
-exp(-(klDiv - ε))`. Summing over `T` and using `∑ Π_i P.real{x_i} = 1` gives the
-bound. AEP `typicalSet_card_le` の Q 測度版。 -/
+/-- The `Qⁿ`-mass of the Stein-typical set is at most `exp(-n · ((klDiv P Q).toReal − ε))`. -/
 theorem steinTypicalSet_Q_prob_le
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (hPpos : ∀ x : α, 0 < P.real {x})
@@ -485,12 +478,10 @@ theorem steinTypicalSet_Q_prob_le
   exact h_sum_le
 
 omit [DecidableEq α] in
-/-- **Stein achievability (lower bound)**: there exists a sequence of α-level tests
-whose type-II error decays as `exp(-n · (klDiv P Q - δ))`.
-
-Statement is in pi-measure form (the lifting from RV-form requires
-`iIndepFun` → `Measure.pi` translation, which is recorded as the hypothesis
-`hMapJoint : μ.map (jointRV Xs n) = Measure.pi (fun _ : Fin n => P)`). -/
+/-- Achievability of Stein's lower bound: eventually there exist `ε`-level tests whose type-II
+error decays as `exp(-n · ((klDiv P Q).toReal − δ))`. The statement is in product-measure form;
+the translation from the random-variable form is supplied by the hypothesis
+`hMapJoint : μ.map (jointRV Xs n) = Measure.pi (fun _ : Fin n => P)`. -/
 @[entry_point]
 theorem stein_achievability
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -635,19 +626,16 @@ theorem stein_achievability
   rw [h_simp] at h_step
   exact h_step
 
-/-! ### Phase C — Pi 化 KL chain rule (`klDiv_pi_eq_n_smul`)
+/-! ### Tensorization of the KL divergence
 
-i.i.d. Pi 測度間の KL は片サンプルの KL の `n` 倍に分解する:
-`klDiv (Π_{Fin n} P) (Π_{Fin n} Q) = n · klDiv P Q`.
-
-Mathlib に直接補題は不在 (loogle 0 件、`docs/shannon/stein-converse-mathlib-inventory.md` 軸 1)。
-`klDiv_compProd_eq_add` + `klDiv_compProd_left` + `MeasurableEquiv.piFinSuccAbove`
-で induction で構築する。Stein converse の Phase B (Bernoulli reduction の DPI) で
-右辺 `klDiv P^n Q^n = n · klDiv P Q` を扱うために必要。 -/
+The KL divergence between i.i.d. product measures factorizes as `n` times the single-sample KL
+divergence: `klDiv (Π_{Fin n} P) (Π_{Fin n} Q) = n · klDiv P Q`. It is built by induction on `n`,
+reshaping `Fin (n+1) → α` into `α × (Fin n → α)` via `MeasurableEquiv.piFinSuccAbove` and applying
+the compProd chain rule `klDiv_compProd_eq_add`. -/
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- Pi 化 KL chain rule の base case (`n = 0`): `Fin 0 → α` は empty 上の関数型、Pi 測度は
-共に `dirac isEmptyElim` (`Measure.pi_of_empty`)、KL = 0。 -/
+/-- Base case of the KL tensorization: the product measures over `Fin 0 → α` agree, so their KL
+divergence is `0`. -/
 theorem klDiv_pi_zero
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q] :
     klDiv (Measure.pi (fun _ : Fin 0 => P)) (Measure.pi (fun _ : Fin 0 => Q)) = 0 := by
@@ -656,11 +644,8 @@ theorem klDiv_pi_zero
   exact klDiv_self _
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- Pi 化 KL chain rule の step case: `klDiv (Π_{n+1} P) (Π_{n+1} Q) = klDiv P Q + klDiv (Π_n P) (Π_n Q)`.
-
-`measurePreserving_piFinSuccAbove` で `(Fin (n+1) → α) ≃ᵐ α × (Fin n → α)` の reshape、
-`klDiv_map_measurableEquiv` で KL を保ち、`Measure.compProd_const` (`prod = compProd const`) で
-compProd 形に乗せ、`klDiv_compProd_eq_add` + `klDiv_prod_const_left` で展開。 -/
+/-- Step case of the KL tensorization:
+`klDiv (Π_{n+1} P) (Π_{n+1} Q) = klDiv P Q + klDiv (Π_n P) (Π_n Q)`. -/
 theorem klDiv_pi_succ
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q] (n : ℕ) :
     klDiv (Measure.pi (fun _ : Fin (n + 1) => P)) (Measure.pi (fun _ : Fin (n + 1) => Q))
@@ -717,7 +702,7 @@ theorem klDiv_pi_succ
     (Measure.pi (fun j : Fin n => Q))
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Pi 化 KL chain rule**: `klDiv (Π_{Fin n} P) (Π_{Fin n} Q) = n · klDiv P Q`. -/
+/-- KL tensorization: `klDiv (Π_{Fin n} P) (Π_{Fin n} Q) = n · klDiv P Q`. -/
 theorem klDiv_pi_eq_n_smul
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q] (n : ℕ) :
     klDiv (Measure.pi (fun _ : Fin n => P)) (Measure.pi (fun _ : Fin n => Q))
@@ -729,20 +714,17 @@ theorem klDiv_pi_eq_n_smul
     push_cast
     ring
 
-/-! ### Phase D — Stein converse (Phase B of the converse plan)
+/-! ### Stein converse
 
-任意の α-level 検定 `s : Set (Fin n → α)` の type-II error は
-`exp(-n · klDiv P Q - δ_n)` 以上 (= log を取って `-(1/n) log Q^n s ≤ klDiv P Q + δ_n`)。
-証明戦略: Bernoulli reduction + DPI + Bool KL の sum 形展開 + α-level 補正 (`docs/shannon/
-stein-converse-plan.md` Phase B)。 -/
+Every `ε`-level test obeys the converse rate bound. The argument reduces the test to a Bernoulli
+random variable, applies the data-processing inequality together with the KL tensorization, and
+expands the resulting two-point KL divergence into its sum form before correcting for the level
+constraint. -/
 
 omit [DecidableEq α] [Nonempty α] in
-/-- Bool 上の確率測度の KL 値 (`toReal`) を 2 点 sum 形に展開する。
-`klDiv (μ : Measure Bool) (ν : Measure Bool)` で `μ ≪ ν` のとき、
-`(klDiv μ ν).toReal = (μ {true}).toReal * log((μ {true}).toReal / (ν {true}).toReal)
-                    + (μ {false}).toReal * log((μ {false}).toReal / (ν {false}).toReal)`.
-
-`Bridge.lean` の private `klDiv_discrete_toReal_eq_sum` の Bool 版 (Fintype.sum_bool で展開). -/
+/-- The `toReal` KL divergence between two probability measures on `Bool` (with `μ ≪ ν`) expands
+into the two-point sum
+`μ{true} · (log μ{true} − log ν{true}) + μ{false} · (log μ{false} − log ν{false})`. -/
 private lemma klDiv_bool_toReal_eq_sum
     (μ ν : Measure Bool) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (hμν : μ ≪ ν) :
@@ -804,7 +786,7 @@ private lemma klDiv_bool_toReal_eq_sum
   rw [h_per_point true, h_per_point false]
 
 omit [DecidableEq α] [Nonempty α] in
-/-- 検定 `s : Set (Fin n → α)` の Bool 値 indicator 関数。 -/
+/-- The `Bool`-valued indicator of a test `s : Set (Fin n → α)`. -/
 private noncomputable def steinTestFn (n : ℕ) (s : Set (Fin n → α)) :
     (Fin n → α) → Bool :=
   fun x => @decide (x ∈ s) (Classical.dec _)
@@ -815,7 +797,6 @@ private lemma measurable_steinTestFn (n : ℕ) (s : Set (Fin n → α)) :
 
 omit [Fintype α] [DecidableEq α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- 検定 indicator の preimage of `{true}` is `s`. -/
 private lemma steinTestFn_preimage_true (n : ℕ) (s : Set (Fin n → α)) :
     steinTestFn n s ⁻¹' {true} = s := by
   ext x
@@ -823,14 +804,12 @@ private lemma steinTestFn_preimage_true (n : ℕ) (s : Set (Fin n → α)) :
 
 omit [Fintype α] [DecidableEq α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- 検定 indicator の preimage of `{false}` is `sᶜ`. -/
 private lemma steinTestFn_preimage_false (n : ℕ) (s : Set (Fin n → α)) :
     steinTestFn n s ⁻¹' {false} = sᶜ := by
   ext x
   simp [steinTestFn]
 
 omit [DecidableEq α] [Nonempty α] in
-/-- 検定 indicator pushforward の Bool {true} 値は `μ s`. -/
 private lemma steinTestFn_map_true (n : ℕ) (s : Set (Fin n → α)) (μ : Measure (Fin n → α)) :
     (μ.map (steinTestFn n s)) {true} = μ s := by
   rw [Measure.map_apply (measurable_steinTestFn n s) (measurableSet_singleton _),
@@ -843,8 +822,7 @@ private lemma steinTestFn_map_false (n : ℕ) (s : Set (Fin n → α)) (μ : Mea
       steinTestFn_preimage_false]
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- Pi 化 absolute continuity: `P ≪ Q` ⇒ `Π_{Fin n} P ≪ Π_{Fin n} Q`.
-`piFinSuccAbove` reshape + `AbsolutelyContinuous.prod` で induction。 -/
+/-- Absolute continuity tensorizes: `P ≪ Q` implies `Π_{Fin n} P ≪ Π_{Fin n} Q`. -/
 private theorem absolutelyContinuous_pi
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (hPQ : P ≪ Q) (n : ℕ) :
@@ -887,9 +865,8 @@ private theorem absolutelyContinuous_pi
     exact h_prod_ac.map h_e_sym_meas
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Stein converse (Bool KL ≤ n · klDiv P Q form)**: any α-level test `s` satisfies
-    `klDiv ((Pi P).map (testFn s)) ((Pi Q).map (testFn s)) ≤ n · klDiv P Q`.
-    DPI + Pi 化 chain rule の合成。 -/
+/-- For any test `s`, the KL divergence between the pushforwards of `Pⁿ` and `Qⁿ` along the test
+indicator is at most `n · klDiv P Q`. -/
 theorem stein_converse_bool_kl_le
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (n : ℕ) (s : Set (Fin n → α)) :
@@ -900,10 +877,8 @@ theorem stein_converse_bool_kl_le
   exact klDiv_map_le (measurable_steinTestFn n s) _ _
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Stein converse (post-DPI sum-form bound)**: under α-level `P^n sᶜ ≤ ε`, the
-Bernoulli sum-form lower bound on `klDiv ((P^n).map test) ((Q^n).map test)` gives
-the `(P^n s) log((P^n s)/(Q^n s)) + (P^n sᶜ) log((P^n sᶜ)/(Q^n sᶜ)) ≤ n · klDiv P Q`
-inequality. -/
+/-- The two-point sum form of the converse bound:
+`(Pⁿ s)(log Pⁿ s − log Qⁿ s) + (Pⁿ sᶜ)(log Pⁿ sᶜ − log Qⁿ sᶜ) ≤ n · (klDiv P Q).toReal`. -/
 theorem stein_converse_sum_form
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (hPQ : P ≪ Q) (n : ℕ) (s : Set (Fin n → α)) :
@@ -959,27 +934,15 @@ theorem stein_converse_sum_form
   rw [← h_sum_eq]
   exact h_dpi_real
 
-/-! ### Phase E — Stein converse (final inequality form)
+/-! ### The converse inequality
 
-`stein_converse_sum_form` (Bool sum-form bound) を α-level + sign analysis で整理し、
-`-(1/n) log Q^n s ≤ klDiv P Q / (1-ε) + log 2 / (n(1-ε))` の形に到達する。
-
-Key bounds (ε ∈ (0,1) fixed, `s` α-level, `Pn s ≥ 1-ε`, `Qn s ∈ (0, 1]`, `Qn sᶜ ∈ (0,1]`):
-* Term 1 lower bound: `(Pn s)(log Pn s - log Qn s)
-    ≥ (Pn s) log Pn s + (1-ε)(-log Qn s)
-    = -negMulLog(Pn s) + (1-ε)(-log Qn s)`
-* Term 2 lower bound: `(Pn sᶜ)(log Pn sᶜ - log Qn sᶜ)
-    ≥ (Pn sᶜ) log Pn sᶜ + 0   (since `-(Pn sᶜ) log Qn sᶜ ≥ 0`)
-    = -negMulLog(Pn sᶜ)`
-* Sum: `S ≥ -binEntropy(Pn s) + (1-ε)(-log Qn s) ≥ -log 2 + (1-ε)(-log Qn s)`. -/
+The two-point sum-form bound is sharpened, using the level constraint together with
+`binEntropy ≤ log 2` and the sign of `log Qⁿ sᶜ`, into the concrete rate bound
+`-(1/n) log Qⁿ s ≤ (klDiv P Q).toReal / (1−ε) + log 2 / (n(1−ε))`. -/
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Stein converse (concrete inequality)**: for any measurable α-level test `s`
-(`P^n sᶜ ≤ ε`) with `0 < n`, the type-II error satisfies
-`-(1/n) log Q^n s ≤ klDiv P Q / (1-ε) + log 2 / (n(1-ε))`.
-
-Proof: Bool sum-form bound `S ≤ n · klDiv P Q` combined with the algebraic inequality
-`S ≥ -log 2 + (1-ε)(-log Q^n s)` (uses α-level + `binEntropy ≤ log 2` + sign of `log Q^n sᶜ`). -/
+/-- The finite-`n` Stein converse: any measurable `ε`-level test `s` (with `Pⁿ sᶜ ≤ ε`) and
+`0 < n` satisfies `-(1/n) log Qⁿ s ≤ (klDiv P Q).toReal / (1−ε) + log 2 / (n(1−ε))`. -/
 @[entry_point]
 theorem stein_converse_finite_n
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
@@ -1128,23 +1091,15 @@ theorem stein_converse_finite_n
       ≤ (klDiv P Q).toReal / (1 - ε) + Real.log 2 / ((n : ℝ) * (1 - ε))
   exact h_target
 
-/-! ### Phase C — Tendsto 形統合: `steinOptimalBeta` + liminf/limsup sandwich
+/-! ### The optimal type-II exponent
 
-`stein_achievability` (lower side, eventually) と `stein_converse_finite_n`
-(upper side, pointwise) を `steinOptimalBeta P Q n ε` 経由で liminf / limsup に
-持ち上げる:
+The achievability and converse bounds are lifted onto the optimal type-II error
+`steinOptimalBeta P Q n ε`. The two bounds do not coincide: the converse carries a `1/(1−ε)`
+factor, so the rate `-(1/n) log (steinOptimalBeta P Q n ε)` is sandwiched between
+`(klDiv P Q).toReal − δ` from below and `(klDiv P Q).toReal / (1−ε) + log 2 / (n(1−ε))` from
+above. Letting `ε → 0⁺` collapses the upper bound back to `(klDiv P Q).toReal`. -/
 
-```
-(klDiv P Q).toReal ≤ liminf_n -(1/n) * log (steinOptimalBeta P Q n ε)
-limsup_n -(1/n) * log (steinOptimalBeta P Q n ε) ≤ (klDiv P Q).toReal / (1 - ε)
-```
-
-Converse の `1/(1-ε)` 補正は本 plan の `stein_converse_finite_n` の DPI + log-sum
-下界 routes で構造的に残るため、strict `Tendsto → klDiv` ではなく sandwich 形に
-なる (strong Stein には strong converse が必要)。`ε → 0+` の極限を取ると上限が
-`klDiv` に押し戻る (`inf_{ε ∈ (0,1)} K/(1-ε) = K`)。 -/
-
-/-- The set of type-II error probabilities of α-level tests at level `ε`. -/
+/-- The set of type-II error probabilities attainable by `ε`-level tests. -/
 noncomputable def steinBetaSet
     (P Q : Measure α) (n : ℕ) (ε : ℝ) : Set ℝ :=
   { β : ℝ | ∃ (s : Set (Fin n → α)), MeasurableSet s ∧
@@ -1204,9 +1159,8 @@ lemma steinOptimalBeta_le_one
   csInf_le (steinBetaSet_bddBelow P Q n ε) (one_mem_steinBetaSet P Q n ε hε)
 
 omit [DecidableEq α] [Nonempty α] in
-/-- Pointwise converse bound in exponential form: for any α-level test `s`,
-`Q^n s ≥ exp(-n * (K/(1-ε) + log 2 / (n(1-ε))))`. Derived from
-`stein_converse_finite_n` by taking `exp` of both sides. -/
+/-- Exponential form of the converse: for any `ε`-level test `s`,
+`exp(-n · ((klDiv P Q).toReal / (1−ε) + log 2 / (n(1−ε)))) ≤ Qⁿ s`. -/
 lemma exp_le_Qn_of_alpha_level
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (hPpos : ∀ x : α, 0 < P.real {x})
@@ -1275,8 +1229,8 @@ lemma exp_le_Qn_of_alpha_level
   exact h_exp_chain
 
 omit [DecidableEq α] [Nonempty α] in
-/-- The set `steinBetaSet` is bounded below by `exp(-n * (K/(1-ε) + log 2/(n(1-ε))))`,
-hence `steinOptimalBeta` is also. -/
+/-- The optimal type-II error is bounded below in exponential form:
+`exp(-n · ((klDiv P Q).toReal / (1−ε) + log 2 / (n(1−ε)))) ≤ steinOptimalBeta P Q n ε`. -/
 lemma exp_le_steinOptimalBeta
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (hPpos : ∀ x : α, 0 < P.real {x})
@@ -1291,7 +1245,7 @@ lemma exp_le_steinOptimalBeta
   exact exp_le_Qn_of_alpha_level P Q hPpos hPQ hQpos hε hε1 hn s hs hα
 
 omit [DecidableEq α] [Nonempty α] in
-/-- `steinOptimalBeta` is strictly positive (under our hypotheses). -/
+/-- The optimal type-II error `steinOptimalBeta` is strictly positive. -/
 lemma steinOptimalBeta_pos
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (hPpos : ∀ x : α, 0 < P.real {x})
@@ -1302,8 +1256,8 @@ lemma steinOptimalBeta_pos
   lt_of_lt_of_le (Real.exp_pos _) (exp_le_steinOptimalBeta P Q hPpos hPQ hQpos hε hε1 hn)
 
 omit [DecidableEq α] [Nonempty α] in
-/-- Converse-side upper bound on the rate:
-`-(1/n) log steinOptimalBeta ≤ K/(1-ε) + log 2/(n(1-ε))`. -/
+/-- Converse-side upper bound on the type-II exponent:
+`-(1/n) log (steinOptimalBeta P Q n ε) ≤ (klDiv P Q).toReal / (1−ε) + log 2 / (n(1−ε))`. -/
 @[entry_point]
 theorem steinOptimalBeta_log_le_of_converse
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
@@ -1332,8 +1286,8 @@ theorem steinOptimalBeta_log_le_of_converse
   linarith
 
 omit [DecidableEq α] in
-/-- Achievability-side lower bound on the rate: eventually
-`K - δ ≤ -(1/n) log steinOptimalBeta`. -/
+/-- Achievability-side lower bound on the type-II exponent: eventually
+`(klDiv P Q).toReal − δ ≤ -(1/n) log (steinOptimalBeta P Q n ε)`. -/
 @[entry_point]
 theorem steinOptimalBeta_log_ge_of_achievability
     (μ : Measure Ω) [IsProbabilityMeasure μ]
