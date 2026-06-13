@@ -6,10 +6,10 @@ import Mathlib.Probability.Moments.Basic
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# Finite `Measure.pi` tilt factorization (Cramér Phase C, Phase 1)
+# Finite `Measure.pi` tilt factorization
 
-This file builds the **finite-product tilt factorization** lemma that is the
-missing first piece for the `IsMeasureInfinitePiTiltedEq` discharge of
+This file builds the **finite-product tilt factorization** lemma, a building block
+for the `IsMeasureInfinitePiTiltedEq` reduction in
 `InformationTheory/Shannon/CramerLC2PhaseC.lean`.
 
 The key result is `pi_tilted_sum_eq_pi_tilted`:
@@ -19,19 +19,19 @@ The key result is `pi_tilted_sum_eq_pi_tilted`:
 ```
 
 Mathlib has no `Measure.pi × tilted` / `Measure.pi × withDensity` compatibility
-lemma (loogle `Found 0`). We build it from `Measure.pi_eq` (a measure on a finite
-product equals the product measure if they agree on rectangles), reducing to a
-box-wise lintegral product factorization which we prove by `Fin n` induction
-mirroring `MeasureTheory.integral_fin_nat_prod_eq_prod`.
+lemma. We build it from `Measure.pi_eq` (a measure on a finite product equals the
+product measure if they agree on rectangles), reducing to a box-wise lintegral
+product factorization which we prove by `Fin n` induction mirroring
+`MeasureTheory.integral_fin_nat_prod_eq_prod`.
 
 ## Outline
 
 * `lintegral_pi_prod` — unrestricted lintegral Fubini for `Measure.pi` of a
   per-coordinate product, by `Fin n` induction.
-* `setLIntegral_pi_prod_factor` (1-C) — box-restricted version via the indicator
+* `setLIntegral_pi_prod_factor` — box-restricted version via the indicator
   trick.
-* `integral_exp_sum_pi_eq_pow` (1-B) — normalization constant `Z^n`.
-* `pi_tilted_sum_eq_pi_tilted` (1-D) — the finite tilt factorization.
+* `integral_exp_sum_pi_eq_pow` — normalization constant `Z^n`.
+* `pi_tilted_sum_eq_pi_tilted` — the finite tilt factorization.
 -/
 
 namespace InformationTheory.Shannon.Cramer.Discharge
@@ -41,7 +41,7 @@ open scoped Topology BigOperators ENNReal
 
 variable {Ω₀ : Type*} [MeasurableSpace Ω₀]
 
-/-! ## 1-C core: lintegral product factorization over `Measure.pi` -/
+/-! ## Lintegral product factorization over `Measure.pi` -/
 
 /-- **Unrestricted lintegral Fubini** for `Measure.pi` of a per-coordinate
 product of nonnegative measurable functions. The lintegral analogue of
@@ -72,7 +72,7 @@ theorem lintegral_pi_prod {n : ℕ} {E : Fin n → Type*}
       conv_rhs => rw [← n_ih (fun i => hg i.succ)]
       exact hpm
 
-/-- **1-C (box-restricted Tonelli)**: the lintegral over the box `pi univ s` of a
+/-- **Box-restricted Tonelli**: the lintegral over the box `pi univ s` of a
 per-coordinate product factors as the product of the per-coordinate
 box-restricted lintegrals. -/
 @[entry_point]
@@ -104,9 +104,9 @@ theorem setLIntegral_pi_prod_factor {n : ℕ} {μ₀ : Measure Ω₀} [IsProbabi
   refine Finset.prod_congr rfl (fun i _ => ?_)
   rw [lintegral_indicator (hs i)]
 
-/-! ## 1-B: normalization constant `Z^n` -/
+/-! ## Normalization constant `Z^n` -/
 
-/-- **1-B**: the partition function of the sum exponent on the finite product is
+/-- The partition function of the sum exponent on the finite product is
 the `n`-th power of the single-coordinate partition function. -/
 @[entry_point]
 theorem integral_exp_sum_pi_eq_pow {n : ℕ} {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
@@ -116,10 +116,10 @@ theorem integral_exp_sum_pi_eq_pow {n : ℕ} {μ₀ : Measure Ω₀} [IsProbabil
   simp_rw [Real.exp_sum]
   rw [integral_fintype_prod_eq_pow (fun ω => Real.exp (lam * Y ω)), Fintype.card_fin]
 
-/-! ## 1-D: the finite tilt factorization (main deliverable) -/
+/-! ## The finite tilt factorization -/
 
-/-- **1-D (main deliverable)**: the tilt of the finite product measure by the
-sum exponent factors as the product of the per-coordinate tilts.
+/-- The tilt of the finite product measure by the sum exponent factors as the
+product of the per-coordinate tilts.
 
 `(Measure.pi (fun _ => μ₀)).tilted (∑ i, lam · Y (· i)) = Measure.pi (fun _ => μ₀.tilted (lam · Y))`. -/
 @[entry_point]

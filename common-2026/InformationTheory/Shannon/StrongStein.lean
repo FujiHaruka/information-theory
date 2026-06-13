@@ -182,7 +182,7 @@ theorem steinAlphaTest_Q_prob_ge
   set A : Set (Fin n → α) := s ∩ Tset
   have hA_meas : MeasurableSet A := hs.inter hT_meas
   have hA_sub : A ⊆ Tset := Set.inter_subset_right
-  -- Apply Phase A: c * P^n(A) ≤ Q^n(A).
+  -- Apply the typical-set lower bound: c * P^n(A) ≤ Q^n(A).
   have h_A : c * (Pn A).toReal ≤ (Qn A).toReal :=
     steinTypicalSubset_Q_prob_ge P Q hPpos hQpos A hA_sub
   -- (Qn A) ≤ (Qn s) since A ⊆ s.

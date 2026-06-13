@@ -33,7 +33,7 @@ namespace InformationTheory.Shannon
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal
 
-/-! ## Phase A — entropy plumbing on counting measures -/
+/-! ## Entropy on counting measures -/
 
 /-- The entropy of the identity on the uniform distribution over `A` equals `log #A`. -/
 @[entry_point]
@@ -236,7 +236,7 @@ theorem entropy_le_log_image_card
       ≤ Real.log (A.image f).card
   exact h_jensen
 
-/-! ## Phase B — projection plumbing -/
+/-! ## Coordinate projections -/
 
 /-- Projection of `A : Finset (Fin n → α)` onto coordinates except `i`. -/
 def projectionExcept {n : ℕ} {α : Type*} [DecidableEq α]
@@ -311,7 +311,7 @@ theorem jointEntropySubset_le_log_projectionExcept_card
       ≤ Real.log (projectionExcept i A).card
   exact h_le
 
-/-! ## Phase C — Loomis–Whitney main theorem -/
+/-! ## Loomis–Whitney main theorem -/
 
 /-- **Loomis–Whitney inequality** (information-theoretic proof).
 

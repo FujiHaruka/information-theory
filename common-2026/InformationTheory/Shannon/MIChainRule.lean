@@ -76,8 +76,8 @@ variable {α : Type*} [Fintype α] [MeasurableSpace α] [MeasurableSingletonClas
 Induction on `n`. base `n=0`: LHS = `mutualInfo` of a constant `Fin 0 → α`-valued RV,
 which is independent of anything ⇒ 0; RHS is the empty sum. step `n+1`: split via
 `MeasurableEquiv.piFinSuccAbove (Fin.last n)` so that `Fin (n+1) → α ≃ᵐ α × (Fin n → α)`,
-then `prodComm` so we land on `(prefix, last)`, apply Phase A reshape, then the
-2-variable `mutualInfo_chain_rule` (`CondMutualInfo.lean:219`) with `Zc := prefix`,
+then `prodComm` so we land on `(prefix, last)`, apply `mutualInfo_map_left_measurableEquiv`,
+then the 2-variable `mutualInfo_chain_rule` with `Zc := prefix`,
 `Xs_arg := last`, then IH on the `Fin n` prefix, then `Fin.sum_univ_castSucc`. -/
 @[entry_point]
 theorem mutualInfo_chain_rule_fin
@@ -156,7 +156,7 @@ theorem mutualInfo_chain_rule_fin
         rw [Fin.succAbove_last]
     have hpi_meas : Measurable (fun ω (i : Fin (n + 1)) => Xs i ω) :=
       measurable_pi_iff.mpr (fun i => hXs i)
-    -- Apply Phase A reshape and prodComm to land on (f, g) form.
+    -- Apply the measurable-equiv reshape and prodComm to land on (f, g) form.
     have h_reshape :
         mutualInfo μ (fun ω (i : Fin (n + 1)) => Xs i ω) Yo
           = mutualInfo μ (fun ω => (f ω, g ω)) Yo := by
@@ -207,7 +207,7 @@ theorem mutualInfo_chain_rule_fin
 
 end ChainRuleFin
 
-/-! ## Phase C — i.i.d. corollary -/
+/-! ## i.i.d. corollary -/
 
 section IID
 
@@ -387,11 +387,11 @@ theorem mutualInfo_iid_eq_nsmul
 
 end IID
 
-/-! ## Phase D — entropy ↔ MI three-term bridge
+/-! ## Entropy ↔ MI three-term bridge
 
 For a joint probability measure on a finite-alphabet product space `α × β`, the standard
 identity `I(X; Y) = H(X) + H(Y) − H(X, Y)` connects the `klDiv`-based `mutualInfo` to the
-Shannon-entropy `entropy`. Used in B-3'' Phase D-(b) to rewrite the joint-AEP exponent
+Shannon-entropy `entropy`. This rewrites the joint-AEP exponent
 `H(X, Y) − H(X) − H(Y)` as `−I(p; W)`.
 -/
 

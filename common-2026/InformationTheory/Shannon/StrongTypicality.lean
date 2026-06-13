@@ -456,7 +456,8 @@ theorem stronglyTypicalSet_card_ge_eventually
   have hL_nn : 0 ≤ L := logSumAbs_nonneg μ Xs
   have hε_L_nn : 0 ≤ ε * L := mul_nonneg hε.le hL_nn
   have hε'_pos : 0 < ε' := by show 0 < ε * L + δ; linarith
-  -- Step 1: from Phase 2, eventually μ {jointRV ∈ A^*_ε} ≥ 1-η as ℝ≥0∞.
+  -- Step 1: from the probability-convergence theorem, eventually
+  -- μ {jointRV ∈ A^*_ε} ≥ 1-η as ℝ≥0∞.
   have h_tend := stronglyTypicalSet_prob_tendsto_one μ Xs hXs hindep_pair hident hε
   -- Bridge to ℝ-tendsto: μ.real (T) = (μ A).toReal.
   have h_eq : ∀ n : ℕ,
@@ -492,7 +493,7 @@ theorem stronglyTypicalSet_card_ge_eventually
   have hN_n : N ≤ n := le_of_max_le_left hn
   have hn_pos : 1 ≤ n := le_of_max_le_right hn
   have hμ : (1 - η) ≤ (μ.map (jointRV Xs n)).real (stronglyTypicalSet μ Xs n ε) := hN n hN_n
-  -- Step 2: A^*_ε ⊆ T_{ε'} (Phase 3).
+  -- Step 2: A^*_ε ⊆ T_{ε'} via the strong-to-weak inclusion.
   have hn_pos' : 0 < n := hn_pos
   have h_subset : stronglyTypicalSet μ Xs n ε ⊆ typicalSet μ Xs n ε' := by
     apply stronglyTypicalSet_subset_typicalSet μ Xs hXs hn_pos'

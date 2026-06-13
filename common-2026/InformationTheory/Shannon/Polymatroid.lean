@@ -116,7 +116,7 @@ theorem jointEntropySubset_mono
   rw [h_reshape, h_chain]
   linarith
 
-/-! ## Subset chain rule helper (used by Phase C)
+/-! ## Subset chain rule helper
 
 A "disjoint union" version of the pair chain rule that lets the caller specify
 the target `U` directly (avoiding `T₂ \ T₁` casts). -/
