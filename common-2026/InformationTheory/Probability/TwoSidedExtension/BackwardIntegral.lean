@@ -582,7 +582,7 @@ private lemma integral_pmfLogCondPast_eq_sum (k : ℕ) :
   intro a _
   exact integral_indicator_mul_negLog_condProbPast μ p k a
 
-/-! ### Phase G bridge to `conditionalEntropyTail`
+/-! ### Bridge to `conditionalEntropyTail`
 
 The remaining piece of the integral identity is matching the `μZ`-side condExp
 formulation of `condProbPast` with the `μ`-side `condDistrib` formulation of
@@ -689,7 +689,7 @@ lemma comap_pastBlock_eq_pastSigma (k : ℕ) :
 /-! ### Joint-law identification via stationarity -/
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Joint-law equality** (Phase F-style, the key bridge for the integral identity).
+/-- **Joint-law equality** (the key bridge for the integral identity).
 
 The pushforward of `μZ` under the joint map `x ↦ (coord0 x, pastBlock k x)`
 equals the pushforward of `μ` under `ω ↦ (p.obs k ω, p.blockRV k ω)`.
@@ -697,7 +697,7 @@ equals the pushforward of `μ` under `ω ↦ (p.obs k ω, p.blockRV k ω)`.
 Proof: both sides are probability measures on `α × (Fin k → α)`. We show they
 agree on rectangles `{a} ×ˢ {s}`, which is enough since the spaces are finite.
 The LHS rectangle reduces, via stationarity (shift by `k`), to the marginal at
-the index set `{0, 1, …, k}`, which by Phase F equals the ℕ-side block.
+the index set `{0, 1, …, k}`, which equals the ℕ-side block.
 The RHS rectangle is exactly the singleton mass of `μ.map (p.blockRV (k+1))`
 at the corresponding `Fin (k+1) → α`. -/
 @[entry_point]

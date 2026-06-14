@@ -2,13 +2,13 @@ import InformationTheory.Shannon.IIDProductInput.Basic
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# i.i.d. ambient `(μ, Xs, Ys)` from a joint distribution (E-3' rate-distortion variant)
+# i.i.d. ambient `(μ, Xs, Ys)` from a joint distribution (rate-distortion variant)
 
 This file mirrors `IIDProductInput.lean` (the channel-coding variant built from a
 source pmf `p` and channel `W`), but takes a **joint distribution**
-`joint : Measure (α × β)` directly as input. This is the shape required by
-Phase E of the rate-distortion achievability proof, where the ambient law is
-specified jointly rather than as `(p ⊗ₘ W)`.
+`joint : Measure (α × β)` directly as input. This is the shape required by the
+rate-distortion achievability proof, where the ambient law is specified jointly
+rather than as `(p ⊗ₘ W)`.
 
 The coordinate random variables `iidXs`, `iidYs` and the joint sequence
 `jointSequence iidXs iidYs` are **reused verbatim** from

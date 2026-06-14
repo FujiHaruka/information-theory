@@ -5,13 +5,12 @@ import InformationTheory.Shannon.TypeClassLowerBound
 import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseEStrong
 
 /-!
-# Conditional method of types — Core (Phases A–E.3)
+# Conditional method of types — Core
 
 Definitions and structural lemmas for the conditional method of types:
-conditional type classes (Phase A), marginal sums (Phase B), the slice
-partition (Phase C), the floor-matrix construction (Phase E.1), per-row
-multinomial cardinality (Phase E.2) and the per-`y` Y-product mass identity
-(Phase E.3). Downstream assembly lives in
+conditional type classes, marginal sums, the slice partition, the floor-matrix
+construction, per-row multinomial cardinality, and the per-`y` Y-product mass
+identity. Downstream assembly lives in
 `InformationTheory.Shannon.ConditionalMethodOfTypes.Mass`.
 
 This file is part of the `ConditionalMethodOfTypes` umbrella; see that module
@@ -31,7 +30,7 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 variable [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
 variable [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β]
-/-! ## Phase A — Conditional type-class basics + joint type bridge -/
+/-! ## Conditional type-class basics + joint type bridge -/
 
 /-- **Conditional type class.** Sequences `y : Fin n → β` whose joint type with
 the fixed X-block `x` equals the count vector `c : α × β → ℕ`. -/
@@ -74,7 +73,7 @@ lemma mem_conditionalTypeClass_iff_joint {n : ℕ} (x : Fin n → α) (c : α ×
     unfold typeCount at h_p
     exact h_p
 
-/-! ## Phase B — Marginal sums of joint type -/
+/-! ## Marginal sums of joint type -/
 
 /-- **X-marginal recovery.** If `y ∈ conditionalTypeClass x c`, then for each `a`,
 `∑ b, c (a, b) = typeCount x a`. -/
@@ -112,7 +111,7 @@ lemma conditionalTypeClass_xMarginal {n : ℕ} (x : Fin n → α) (c : α × β 
   rw [h_sum]
   rfl
 
-/-! ## Phase C — Slice partition by joint type -/
+/-! ## Slice partition by joint type -/
 
 /-- **Slice partition indices.** Count vectors `c : α × β → Fin (n+1)` whose
 empirical type is within `ε` of `qZ := μ.map (jointSequence Xs Ys 0)`. -/
@@ -167,31 +166,31 @@ lemma conditionalStronglyTypicalSlice_eq_biUnion
         exact_mod_cast congrArg (Nat.cast (R := ℝ)) h_eq]
     exact hc_close p
 
-/-! ## Phase D — Slice cardinality (polynomial number of joint types) -/
+/-! ## Slice cardinality (polynomial number of joint types) -/
 
-/-! ## Phase E — Per-fiber slice mass lower bound (main theorem)
+/-! ## Per-fiber slice mass lower bound (main theorem)
 
-**Status (final)**: Phases E.1–E.4 + main assembly **0 sorry**. The entropy-
-concentration helper `conditional_KL_concentration_ge` is discharged via the
-χ²-style KL upper bound and Archimedean N-choice for the three vanishing slack
-terms (`log(n+1)/n → 0`, `1/n → 0`, and the constant Lipschitz amplification).
+The entropy-concentration helper `conditional_KL_concentration_ge` is discharged
+via the χ²-style KL upper bound and an Archimedean N-choice for the three
+vanishing slack terms (`log(n+1)/n → 0`, `1/n → 0`, and the constant Lipschitz
+amplification).
 
-The Phase E inventory established here (`floorMatrix` + `floorMatrix_row_sum` +
+The pieces assembled here (`floorMatrix` + `floorMatrix_row_sum` +
 `floorMatrix_total` + `productMass_eq_columnProd` + `conditionalTypeClass_card_ge`
-+ `conditionalStronglyTypicalSlice_mass_ge` assembly) is the publishable
-Cover-Thomas 10.6.1 form for downstream consumers.
++ `conditionalStronglyTypicalSlice_mass_ge`) yield the Cover–Thomas 10.6.1 form
+for downstream consumers.
 
 ### Note on the entropy form
 
-Some prior inventory comments (e.g. `RateDistortionAchievabilityPhaseEStrong.lean`)
-described the bound as `exp(-n · (H(Z) - H(X) + slack)) = exp(-n · (H(Y|X) + slack))`.
+The bound is sometimes paraphrased as
+`exp(-n · (H(Z) - H(X) + slack)) = exp(-n · (H(Y|X) + slack))`.
 That paraphrase is **incorrect**: when `X = Y` deterministically (a degenerate
 but legal case), `H(Y|X) = 0` so the paraphrased bound demands `mass ≥ exp(-n·slack)
 ≈ 1`, but the actual mass is `≈ exp(-n · H(X))`. The correct form (used here)
 is `exp(-n · I(X;Y))`, which yields `mass ≥ exp(-n·H(X)) · poly(n)⁻¹` in that
 case (consistent with the truth). -/
 
-/-! ### Phase E.1 — Floor matrix construction
+/-! ### Floor matrix construction
 
 We construct an integer joint count `floorMatrix x` such that
 * Row sums match `typeCount x` (so the conditional class is nonempty).
@@ -612,7 +611,7 @@ lemma floorMatrix_dist_le
       div_le_div_of_nonneg_right h_card_ge_one hn_pos.le
     linarith
 
-/-! ### Phase E.2 — Per-row multinomial cardinality
+/-! ### Per-row multinomial cardinality
 
 For the floor matrix, the conditional type class equals a product (over rows)
 of per-row type classes on `β`, and we lower-bound its cardinality via the
@@ -872,7 +871,7 @@ lemma conditionalTypeClass_card_ge
         = ((∏ a : α, ((typeClassByCount (α := β) (n := Ta a) (crow a)).toFinite.toFinset.card)) : ℝ)
       from by exact_mod_cast h_bij.symm]
 
-/-! ### Phase E.3 — Per-y Y-product mass identity -/
+/-! ### Per-y Y-product mass identity -/
 
 /-- For `y ∈ conditionalTypeClass x c`, the Y-product mass at `y` equals
 `∏_b qY(b)^{col_b}` where `col_b = ∑_a c (a, b)`. -/

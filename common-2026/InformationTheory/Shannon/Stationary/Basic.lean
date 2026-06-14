@@ -4,17 +4,16 @@ import Mathlib.Probability.IdentDistrib
 import Mathlib.MeasureTheory.MeasurableSpace.Basic
 
 /-!
-# Stationary processes (E-8 / SMB Phase A — MVP)
+# Stationary processes
 
 Lean encoding of a stationary (resp. ergodic) discrete-time process via a
 `MeasurePreserving` (resp. `Ergodic`) shift `T : Ω → Ω` together with a
 single observable `X : Ω → α`. Time-`i` observation is `X ∘ T^[i]`, the
 block `(X_0, …, X_{n-1})` is `blockRV n : Ω → (Fin n → α)`.
 
-This is the Phase A skeleton from
-[`docs/shannon/shannon-mcmillan-breiman-plan.md`](../../docs/shannon/shannon-mcmillan-breiman-plan.md);
-the further phases (B onward) build the entropy rate, Birkhoff, log-likelihood
-chain rule, and the SMB main theorem on top of these definitions.
+These definitions are the foundation for the entropy rate, Birkhoff's ergodic
+theorem, the log-likelihood chain rule, and the Shannon–McMillan–Breiman
+theorem.
 
 ## Main definitions
 
@@ -23,7 +22,7 @@ chain rule, and the SMB main theorem on top of these definitions.
 * `StationaryProcess.blockRV n` — joint `(X_0, …, X_{n-1}) : Ω → (Fin n → α)`.
 * `ErgodicProcess` — extends `StationaryProcess` with `Ergodic T μ`.
 
-## Main results (Phase A)
+## Main results
 
 * `StationaryProcess.measurable_obs` — each `obs i` is measurable.
 * `StationaryProcess.measurable_blockRV` — `blockRV n` is measurable.

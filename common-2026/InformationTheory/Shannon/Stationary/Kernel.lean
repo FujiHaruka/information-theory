@@ -5,7 +5,7 @@ import InformationTheory.Shannon.EntropyRate
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 
 /-!
-# Stationary-process telescoping layer (LZ78 blockRV refactor, Phase K)
+# Stationary-process telescoping layer (LZ78 `blockRV` factorization)
 
 This file derives the genuine **algebraic telescoping** backbone of the LZ78
 per-path parsing factorization `Pₙ{block ω} = ∏ⱼ condPhraseProb …`

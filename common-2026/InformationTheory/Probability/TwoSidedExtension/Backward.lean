@@ -25,7 +25,7 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ## Phase G — forward filtration of finite past + `pmfLogCond` Levy
+/-! ## Forward filtration of the finite past + `pmfLogCond` Lévy convergence
 
 The forward filtration is the monotone (in `ℕ`) family of σ-algebras `pastSigma k`
 of events depending only on the **finite past** `{coord_i : -k ≤ i ≤ -1}` of length
@@ -48,10 +48,10 @@ The per-step conditional log-likelihood is then
 which collapses pointwise to `-log condProbPast (coord0 ω) k ω`.
 
 The terminal integral identity
-`∫ pmfLogCondInfty dμZ = entropyRate μ p` is the SMB bridge: it follows from
-the per-step identity `∫ pmfLogCondPast k dμZ = conditionalEntropyTail μ p k`
-(via the joint-law equality of Phase B's `shiftedMarginal`) and DCT pushed
-through forward Lévy + `entropyRate_eq_lim_condEntropy`.
+`∫ pmfLogCondInfty dμZ = entropyRate μ p` follows from the per-step identity
+`∫ pmfLogCondPast k dμZ = conditionalEntropyTail μ p k` (via the joint-law
+equality of `shiftedMarginal`) and DCT pushed through forward Lévy +
+`entropyRate_eq_lim_condEntropy`.
 -/
 
 section Backward

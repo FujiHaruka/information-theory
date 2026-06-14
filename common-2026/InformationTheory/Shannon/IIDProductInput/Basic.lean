@@ -3,13 +3,11 @@ import Mathlib.Probability.ProductMeasure
 import Mathlib.Probability.Independence.InfinitePi
 
 /-!
-# i.i.d. ambient `(μ, Xs, Ys)` for Phase D-(b) of channel coding achievability
-
-[B-3'' Phase C+D plan](../../../docs/shannon/channel-coding-phase-cd-plan.md).
+# i.i.d. ambient `(μ, Xs, Ys)` for channel coding achievability
 
 This file provides the **i.i.d. ambient probability space** consumed by the
-abstract `random_codebook_average_le` (Phase C-(c)) and the main theorem
-`channel_coding_achievability` (Phase D-(b)) of
+abstract `random_codebook_average_le` and the main theorem
+`channel_coding_achievability` of
 `InformationTheory/Shannon/ChannelCodingAchievability.lean`.
 
 ## Construction
@@ -24,7 +22,7 @@ are coordinate projections:
 * `iidYs i ω := (ω i).2` — the i-th output symbol
 
 These exactly match the abstract `Xs`, `Ys` hypothesis shapes (`iIndepFun`,
-`IdentDistrib`, marginal-matching) demanded by the Phase B / C lemmas.
+`IdentDistrib`, marginal-matching) demanded by the achievability lemmas.
 
 ## Channel positivity
 

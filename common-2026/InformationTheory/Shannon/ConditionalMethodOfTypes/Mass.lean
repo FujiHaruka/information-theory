@@ -6,10 +6,10 @@ import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseEStrong
 import InformationTheory.Shannon.ConditionalMethodOfTypes.Core
 
 /-!
-# Conditional method of types — Mass assembly (Phase E.4 + main theorem)
+# Conditional method of types — Mass assembly
 
 Main assembly for the conditional method of types: the marginal-Y
-identification and per-`y` Y-product mass lower bound (Phase E.4), the entropy
+identification and per-`y` Y-product mass lower bound, the entropy
 concentration helper `conditional_KL_concentration_ge`, and the headline
 theorem `conditionalStronglyTypicalSlice_mass_ge`.
 
@@ -30,17 +30,17 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 variable [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
 variable [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β]
-/-! ### Phase E.4 — Main assembly
+/-! ### Main assembly
 
 The main theorem combines the four pieces:
-1. **`floorMatrix` construction** (Phase E.1, proven): pick a single c_floor with
+1. **`floorMatrix` construction**: pick a single c_floor with
    row sums = typeCount x, total = n, and entries close to `n · qZ`.
-2. **`floorMatrix_dist_le`** (statement only, Phase E.1): the rounding stays within
+2. **`floorMatrix_dist_le`**: the rounding stays within
    `ε_X + |β|/n` of `qZ`. For n large or ε > ε_X, c_floor ∈ `sliceTypeIndices`.
-3. **`conditionalTypeClass_card_ge`** (statement only, Phase E.2): the slice
+3. **`conditionalTypeClass_card_ge`**: the slice
    contains `conditionalTypeClass x c_floor` which has cardinality
    `≥ poly(n)⁻¹ · ∏_a (T_a^{T_a} / ∏_b c(a,b)^{c(a,b)})` (per-row multinomial).
-4. **`productMass_eq_columnProd`** (Phase E.3, proven): for each `y` in this
+4. **`productMass_eq_columnProd`**: for each `y` in this
    class, Y-product mass equals `∏_b qY(b)^{col_b}`.
 
 Final algebra (the assembly): combining the cardinality bound, the per-y mass,
@@ -220,7 +220,7 @@ private lemma productMass_columnProd_ge
           rfl
   have h_lb := neg_le_of_abs_le h_abs_bound
   linarith
-/-! ### Phase E.4 — Entropy concentration helper (`conditional_KL_concentration_ge`)
+/-! ### Entropy concentration helper (`conditional_KL_concentration_ge`)
 
 Combines the per-row multinomial cardinality lower bound
 (`conditionalTypeClass_card_ge`) with the per-y Y-product mass shape to yield the

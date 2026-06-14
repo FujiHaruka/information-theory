@@ -24,7 +24,7 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ## Phase B — shifted finite-dimensional marginals -/
+/-! ## Shifted finite-dimensional marginals -/
 
 section ShiftedMarginal
 
@@ -198,7 +198,7 @@ theorem isProjectiveMeasureFamily_shiftedMarginal :
 
 end ShiftedMarginal
 
-/-! ## Phase C — projective consistency + σ-additivity -/
+/-! ## Projective consistency + σ-additivity -/
 
 section StationaryContent
 
@@ -284,7 +284,7 @@ theorem stationaryContent_isSigmaSubadditive :
 
 end StationaryContent
 
-/-! ## Phase D — Carathéodory extension `μZ` -/
+/-! ## Carathéodory extension `μZ` -/
 
 section MuZ
 
@@ -333,7 +333,7 @@ instance instIsProbabilityMeasure_μZ : IsProbabilityMeasure (μZ μ p) := by
 
 end MuZ
 
-/-! ## Phase E — shift `MeasurePreserving` + `Ergodic` -/
+/-! ## Shift `MeasurePreserving` + `Ergodic` -/
 
 section Shift
 
@@ -450,7 +450,7 @@ theorem rightInverse_shiftZSymm :
 
 end Shift
 
-/-! ## Phase F — coupling with the one-sided side -/
+/-! ## Coupling with the one-sided side -/
 
 section Coupling
 
@@ -614,12 +614,11 @@ theorem μZ_block_cylinder_eq (n : ℕ) (s : Fin n → α) :
 
 end Coupling
 
-/-! ## Phase E.5 — `ergodic_shiftZ`
+/-! ## `ergodic_shiftZ`
 
 Two-sided shift ergodicity via **cylinder approximation + ℕ-factor transfer**.
 
-**Strategy A (cylinder approximation)**. For a `shiftZ`-invariant measurable set
-`A ⊆ (ℤ → α)`:
+For a `shiftZ`-invariant measurable set `A ⊆ (ℤ → α)`:
 
 1. Approximate `A` by a finite cylinder `t` (over some `F ⊆ ℤ`) up to ε in symmetric
    difference — via `MeasureTheory.exists_measure_symmDiff_lt_of_generateFrom_isSetRing`
@@ -910,7 +909,7 @@ variable (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α)
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- The two-sided shift is ergodic when the underlying process is ergodic.
 
-**Strategy A (cylinder approximation + ℕ-factor transfer).** For any
+By cylinder approximation + ℕ-factor transfer. For any
 `shiftZ`-invariant measurable set `A`, approximate `A` to within ε by a
 measurable cylinder, then shift to move the index set into the nonnegative
 half-line. This yields a `posSigma`-measurable approximation, so `A` is μZ-a.e.
