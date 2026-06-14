@@ -285,6 +285,116 @@ theorem entropyPower_add_ge_case1_of_regular
   -- Order-limit bridge §1: antitone + `R t → 0` ⟹ EPI.
   exact epi_of_csiszarLogRatioGap_tendsto X Y Z_X Z_Y P h_anti h_lim
 
+theorem variance_rescaledPath_le
+    (P : Measure Ω) [IsProbabilityMeasure P]
+    (A B : Ω → ℝ) (hA : Measurable A) (hB : Measurable B)
+    (hAB : IndepFun A B P) (h_mom_A : Integrable (fun ω => (A ω)^2) P)
+    (v_B : ℝ≥0) (hB_law : P.map B = gaussianReal 0 v_B)
+    (t : ℝ) (ht : 0 < t) :
+    (∫ x, (x - (∫ y, y ∂(P.map (fun ω => A ω / Real.sqrt t + B ω))))^2
+          ∂(P.map (fun ω => A ω / Real.sqrt t + B ω)))
+        ≤ ProbabilityTheory.variance A P / t + (v_B : ℝ) := by
+  have h_sqrt_pos : (0 : ℝ) < Real.sqrt t := Real.sqrt_pos.mpr ht
+  set Zt : Ω → ℝ := fun ω => A ω / Real.sqrt t with hZt
+  have hZt_meas : Measurable Zt := hA.div_const _
+  have hW_meas : Measurable (fun ω => Zt ω + B ω) := hZt_meas.add hB
+  -- `A/√t` and `B` finite second moments → `MemLp 2`.
+  have hB_memLp : MemLp B 2 P := by
+    have hid : MemLp (id : ℝ → ℝ) 2 (P.map B) := by
+      rw [hB_law]; exact memLp_id_gaussianReal' 2 (by simp)
+    have := (memLp_map_measure_iff (p := 2) (μ := P) (g := (id : ℝ → ℝ))
+      aestronglyMeasurable_id hB.aemeasurable).mp hid
+    simpa [Function.comp] using this
+  have hZt_sq : Integrable (fun ω => (Zt ω)^2) P := by
+    have : (fun ω => (Zt ω)^2) = (fun ω => (1 / t) * (A ω)^2) := by
+      funext ω; simp only [hZt, div_pow, Real.sq_sqrt ht.le]; ring
+    rw [this]; exact h_mom_A.const_mul _
+  have hZt_memLp : MemLp Zt 2 P :=
+    (memLp_two_iff_integrable_sq_norm hZt_meas.aestronglyMeasurable).mpr (by simpa using hZt_sq)
+  -- `Zt ⊥ B`.
+  have h_indep : IndepFun Zt B P := by
+    have : Zt = (fun a => a / Real.sqrt t) ∘ A := by funext ω; rfl
+    rw [this]; exact hAB.comp (measurable_id.div_const _) measurable_id
+  -- LHS = `Var[id; P.map path]`.
+  have hLHS : (∫ x, (x - (∫ y, y ∂(P.map (fun ω => Zt ω + B ω))))^2
+        ∂(P.map (fun ω => Zt ω + B ω)))
+      = ProbabilityTheory.variance (fun ω => Zt ω + B ω) P := by
+    rw [← ProbabilityTheory.variance_eq_integral measurable_id'.aemeasurable]
+    exact ProbabilityTheory.variance_id_map hW_meas.aemeasurable
+  -- `Var[path] = Var[Zt] + Var[B] = (1/t)Var[A] + v_B`.
+  have hVarZt : ProbabilityTheory.variance Zt P
+      = (1 / t) * ProbabilityTheory.variance A P := by
+    have hZt_eq : Zt = fun ω => (1 / Real.sqrt t) * A ω := by
+      funext ω; simp only [hZt]; rw [div_eq_inv_mul, one_div]
+    rw [hZt_eq, ProbabilityTheory.variance_const_mul]
+    congr 1
+    rw [div_pow, one_pow, Real.sq_sqrt ht.le]
+  have hVarB : ProbabilityTheory.variance B P = (v_B : ℝ) := by
+    rw [← ProbabilityTheory.variance_id_map hB.aemeasurable, hB_law,
+      ProbabilityTheory.variance_id_gaussianReal]
+  have hVarSum : ProbabilityTheory.variance (fun ω => Zt ω + B ω) P
+      = (1 / t) * ProbabilityTheory.variance A P + (v_B : ℝ) := by
+    rw [ProbabilityTheory.IndepFun.variance_fun_add hZt_memLp hB_memLp h_indep,
+      hVarZt, hVarB]
+  rw [hLHS, hVarSum, one_div, inv_mul_eq_div]
+
+theorem rescaledPath_ac_and_negMulLog_integrable
+    (P : Measure Ω) [IsProbabilityMeasure P]
+    (A B : Ω → ℝ) (hA : Measurable A) (hB : Measurable B)
+    (hAB : IndepFun A B P) (hA_ac : (P.map A) ≪ volume)
+    (h_mom_A : Integrable (fun ω => (A ω)^2) P)
+    (v_B : ℝ≥0) (hv_B : v_B ≠ 0) (hB_law : P.map B = gaussianReal 0 v_B)
+    (t : ℝ) (ht : 0 < t) :
+    (P.map (fun ω => A ω / Real.sqrt t + B ω)) ≪ volume ∧
+    Integrable (fun x => Real.negMulLog
+      (((P.map (fun ω => A ω / Real.sqrt t + B ω)).rnDeriv volume x).toReal)) volume := by
+  set Zt : Ω → ℝ := fun ω => A ω / Real.sqrt t with hZt
+  have hZt_meas : Measurable Zt := hA.div_const _
+  have hB_ac : (P.map B) ≪ volume := by
+    rw [hB_law]; exact gaussianReal_absolutelyContinuous 0 hv_B
+  have h_indep : IndepFun Zt B P := by
+    have : Zt = (fun a => a / Real.sqrt t) ∘ A := by funext ω; rfl
+    rw [this]; exact hAB.comp (measurable_id.div_const _) measurable_id
+  -- a.c. of `A/√t + B`.
+  have hμ_ac : (P.map (fun ω => Zt ω + B ω)) ≪ volume := by
+    have hWac : (P.map (fun ω => B ω + Zt ω)) ≪ volume :=
+      map_add_absolutelyContinuous B Zt P hB hZt_meas h_indep.symm hB_ac
+    have h_path : (fun ω => Zt ω + B ω) = (fun ω => B ω + Zt ω) := by funext ω; ring
+    rw [h_path]; exact hWac
+  refine ⟨hμ_ac, ?_⟩
+  -- negMulLog (path rnDeriv) integrable (B(i)-identical, path = `Zt + B`).
+  have hv_B_pos : (0 : ℝ≥0) < v_B := pos_iff_ne_zero.mpr hv_B
+  obtain ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom⟩ :=
+    rescaledInput_density_witness A P hA hA_ac h_mom_A ht
+  have hgconv : InformationTheory.Shannon.FisherInfoV2.gaussianConvolution Zt B 1
+      = fun ω => Zt ω + B ω := by
+    funext ω
+    simp only [InformationTheory.Shannon.FisherInfoV2.gaussianConvolution,
+      Real.sqrt_one, one_mul]
+  have h_path_rnDeriv : (P.map (fun ω => Zt ω + B ω)).rnDeriv volume
+      =ᵐ[volume] fun z => ENNReal.ofReal
+        (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+          (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) z) := by
+    have := InformationTheory.Shannon.FisherInfoV2.pPath_eq_convDensityAdd
+      Zt B hZt_meas hB h_indep v_B hv_B_pos hB_law pX hpX_nn hpX_meas hpX_law
+      (s := 1) one_pos
+    rwa [hgconv] at this
+  have hvar_eq : (⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩ : ℝ≥0) = v_B := by
+    apply NNReal.coe_injective; show (1 : ℝ) * (v_B : ℝ) = (v_B : ℝ); rw [one_mul]
+  have h_asset : Integrable (fun x =>
+      Real.negMulLog (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+        (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x)) volume := by
+    rw [show (⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩ : ℝ≥0) = v_B from hvar_eq]
+    have hv_B_pos' : (0 : ℝ) < v_B := hv_B_pos
+    simpa using InformationTheory.Shannon.convDensityAdd_negMulLog_integrable_pub
+      hpX_nn hpX_meas hpX_int hpX_mass hpX_mom (t := (v_B : ℝ)) hv_B_pos'
+  refine h_asset.congr ?_
+  filter_upwards [h_path_rnDeriv] with x hx
+  have hcd_nn : 0 ≤ InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+      (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x :=
+    integral_nonneg fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg _ _ _)
+  rw [hx, ENNReal.toReal_ofReal hcd_nn]
+
 /-- **Case-1 EPI under method-X regularity** (entropic-CLT-free, unit-noise form).
 `N(P.map(X+Y)) ≥ N(P.map X) + N(P.map Y)` for a.c. inputs, reduced to **method-X
 regularity** (a.c. inputs + finite second moments + **standard-normal** `𝒩(0,1)`
@@ -441,61 +551,6 @@ theorem entropyPower_add_ge_case1_of_methodX
     have h_eq : (Z_X + Z_Y) = fun ω => Z_X ω + Z_Y ω := by funext ω; rfl
     rw [h_eq] at h; simpa using h
   -- ===== C-5: variance bounds (hold with equality, `varA := Var[A;P]`). =====
-  -- General per-path variance bound: for a method-X input `A` (measurable, finite
-  -- second moment) and Gaussian noise `B` (`P.map B = gaussianReal 0 v_B`)
-  -- independent of `A`, the path `A/√t + B` has variance exactly `Var[A]/t + v_B`,
-  -- so the `≤ varA/t + v_B` bound holds with equality at `varA := Var[A;P]`.
-  have h_var_general : ∀ (A B : Ω → ℝ), Measurable A → Measurable B →
-      IndepFun A B P → Integrable (fun ω => (A ω)^2) P →
-      (v_B : ℝ≥0) → P.map B = gaussianReal 0 v_B →
-      ∀ t : ℝ, 0 < t →
-        (∫ x, (x - (∫ y, y ∂(P.map (fun ω => A ω / Real.sqrt t + B ω))))^2
-              ∂(P.map (fun ω => A ω / Real.sqrt t + B ω)))
-            ≤ ProbabilityTheory.variance A P / t + (v_B : ℝ) := by
-    intro A B hA hB hAB h_mom_A v_B hB_law t ht
-    have h_sqrt_pos : (0 : ℝ) < Real.sqrt t := Real.sqrt_pos.mpr ht
-    set Zt : Ω → ℝ := fun ω => A ω / Real.sqrt t with hZt
-    have hZt_meas : Measurable Zt := hA.div_const _
-    have hW_meas : Measurable (fun ω => Zt ω + B ω) := hZt_meas.add hB
-    -- `A/√t` and `B` finite second moments → `MemLp 2`.
-    have hB_memLp : MemLp B 2 P := by
-      have hid : MemLp (id : ℝ → ℝ) 2 (P.map B) := by
-        rw [hB_law]; exact memLp_id_gaussianReal' 2 (by simp)
-      have := (memLp_map_measure_iff (p := 2) (μ := P) (g := (id : ℝ → ℝ))
-        aestronglyMeasurable_id hB.aemeasurable).mp hid
-      simpa [Function.comp] using this
-    have hZt_sq : Integrable (fun ω => (Zt ω)^2) P := by
-      have : (fun ω => (Zt ω)^2) = (fun ω => (1 / t) * (A ω)^2) := by
-        funext ω; simp only [hZt, div_pow, Real.sq_sqrt ht.le]; ring
-      rw [this]; exact h_mom_A.const_mul _
-    have hZt_memLp : MemLp Zt 2 P :=
-      (memLp_two_iff_integrable_sq_norm hZt_meas.aestronglyMeasurable).mpr (by simpa using hZt_sq)
-    -- `Zt ⊥ B`.
-    have h_indep : IndepFun Zt B P := by
-      have : Zt = (fun a => a / Real.sqrt t) ∘ A := by funext ω; rfl
-      rw [this]; exact hAB.comp (measurable_id.div_const _) measurable_id
-    -- LHS = `Var[id; P.map path]`.
-    have hLHS : (∫ x, (x - (∫ y, y ∂(P.map (fun ω => Zt ω + B ω))))^2
-          ∂(P.map (fun ω => Zt ω + B ω)))
-        = ProbabilityTheory.variance (fun ω => Zt ω + B ω) P := by
-      rw [← ProbabilityTheory.variance_eq_integral measurable_id'.aemeasurable]
-      exact ProbabilityTheory.variance_id_map hW_meas.aemeasurable
-    -- `Var[path] = Var[Zt] + Var[B] = (1/t)Var[A] + v_B`.
-    have hVarZt : ProbabilityTheory.variance Zt P
-        = (1 / t) * ProbabilityTheory.variance A P := by
-      have hZt_eq : Zt = fun ω => (1 / Real.sqrt t) * A ω := by
-        funext ω; simp only [hZt]; rw [div_eq_inv_mul, one_div]
-      rw [hZt_eq, ProbabilityTheory.variance_const_mul]
-      congr 1
-      rw [div_pow, one_pow, Real.sq_sqrt ht.le]
-    have hVarB : ProbabilityTheory.variance B P = (v_B : ℝ) := by
-      rw [← ProbabilityTheory.variance_id_map hB.aemeasurable, hB_law,
-        ProbabilityTheory.variance_id_gaussianReal]
-    have hVarSum : ProbabilityTheory.variance (fun ω => Zt ω + B ω) P
-        = (1 / t) * ProbabilityTheory.variance A P + (v_B : ℝ) := by
-      rw [ProbabilityTheory.IndepFun.variance_fun_add hZt_memLp hB_memLp h_indep,
-        hVarZt, hVarB]
-    rw [hLHS, hVarSum, one_div, inv_mul_eq_div]
   -- Concrete variances.
   set varX : ℝ := ProbabilityTheory.variance X P with hvarX_def
   set varY : ℝ := ProbabilityTheory.variance Y P with hvarY_def
@@ -514,75 +569,24 @@ theorem entropyPower_add_ge_case1_of_methodX
   -- ===== C-2: the three `IsRescaledPathRegular` bundles. =====
   have h_reg_X : IsRescaledPathRegular X Z_X P varX v_X :=
     isRescaledPathRegular_of_methodX X Z_X P hX hZX v_X hv_X hZX_law hXZX hX_ac
-      varX h_varX_nn h_mom_X (h_var_general X Z_X hX hZX hXZX h_mom_X v_X hZX_law)
+      varX h_varX_nn h_mom_X (variance_rescaledPath_le P X Z_X hX hZX hXZX h_mom_X v_X hZX_law)
   have h_reg_Y : IsRescaledPathRegular Y Z_Y P varY v_Y :=
     isRescaledPathRegular_of_methodX Y Z_Y P hY hZY v_Y hv_Y hZY_law hYZY hY_ac
-      varY h_varY_nn h_mom_Y (h_var_general Y Z_Y hY hZY hYZY h_mom_Y v_Y hZY_law)
+      varY h_varY_nn h_mom_Y (variance_rescaledPath_le P Y Z_Y hY hZY hYZY h_mom_Y v_Y hZY_law)
   have h_reg_S : IsRescaledPathRegular (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P
       varS (v_X + v_Y) :=
     isRescaledPathRegular_of_methodX (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P
       (hX.add hY) (hZX.add hZY) (v_X + v_Y) hv_sum hZXZY_law hXYZXY hXY_ac
       varS h_varS_nn h_mom_S
-      (h_var_general (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) (hX.add hY) (hZX.add hZY)
-        hXYZXY h_mom_S (v_X + v_Y) hZXZY_law)
+      (variance_rescaledPath_le P (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω)
+        (hX.add hY) (hZX.add hZY) hXYZXY h_mom_S (v_X + v_Y) hZXZY_law)
   -- ===== C-4: per-`t` scaling regularity (B(i)-identical density plumbing). =====
-  have h_scale_general : ∀ (A B : Ω → ℝ), Measurable A → Measurable B →
-      IndepFun A B P → (P.map A) ≪ volume → Integrable (fun ω => (A ω)^2) P →
-      (v_B : ℝ≥0) → v_B ≠ 0 → P.map B = gaussianReal 0 v_B →
-      ∀ t : ℝ, 0 < t →
-        (P.map (fun ω => A ω / Real.sqrt t + B ω)) ≪ volume ∧
-        Integrable (fun x => Real.negMulLog
-          (((P.map (fun ω => A ω / Real.sqrt t + B ω)).rnDeriv volume x).toReal)) volume := by
-    intro A B hA hB hAB hA_ac h_mom_A v_B hv_B hB_law t ht
-    set Zt : Ω → ℝ := fun ω => A ω / Real.sqrt t with hZt
-    have hZt_meas : Measurable Zt := hA.div_const _
-    have hB_ac : (P.map B) ≪ volume := by
-      rw [hB_law]; exact gaussianReal_absolutelyContinuous 0 hv_B
-    have h_indep : IndepFun Zt B P := by
-      have : Zt = (fun a => a / Real.sqrt t) ∘ A := by funext ω; rfl
-      rw [this]; exact hAB.comp (measurable_id.div_const _) measurable_id
-    -- a.c. of `A/√t + B`.
-    have hμ_ac : (P.map (fun ω => Zt ω + B ω)) ≪ volume := by
-      have hWac : (P.map (fun ω => B ω + Zt ω)) ≪ volume :=
-        map_add_absolutelyContinuous B Zt P hB hZt_meas h_indep.symm hB_ac
-      have h_path : (fun ω => Zt ω + B ω) = (fun ω => B ω + Zt ω) := by funext ω; ring
-      rw [h_path]; exact hWac
-    refine ⟨hμ_ac, ?_⟩
-    -- negMulLog (path rnDeriv) integrable (B(i)-identical, path = `Zt + B`).
-    have hv_B_pos : (0 : ℝ≥0) < v_B := pos_iff_ne_zero.mpr hv_B
-    obtain ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom⟩ :=
-      rescaledInput_density_witness A P hA hA_ac h_mom_A ht
-    have hgconv : InformationTheory.Shannon.FisherInfoV2.gaussianConvolution Zt B 1
-        = fun ω => Zt ω + B ω := by
-      funext ω
-      simp only [InformationTheory.Shannon.FisherInfoV2.gaussianConvolution,
-        Real.sqrt_one, one_mul]
-    have h_path_rnDeriv : (P.map (fun ω => Zt ω + B ω)).rnDeriv volume
-        =ᵐ[volume] fun z => ENNReal.ofReal
-          (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
-            (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) z) := by
-      have := InformationTheory.Shannon.FisherInfoV2.pPath_eq_convDensityAdd
-        Zt B hZt_meas hB h_indep v_B hv_B_pos hB_law pX hpX_nn hpX_meas hpX_law
-        (s := 1) one_pos
-      rwa [hgconv] at this
-    have hvar_eq : (⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩ : ℝ≥0) = v_B := by
-      apply NNReal.coe_injective; show (1 : ℝ) * (v_B : ℝ) = (v_B : ℝ); rw [one_mul]
-    have h_asset : Integrable (fun x =>
-        Real.negMulLog (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
-          (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x)) volume := by
-      rw [show (⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩ : ℝ≥0) = v_B from hvar_eq]
-      have hv_B_pos' : (0 : ℝ) < v_B := hv_B_pos
-      simpa using InformationTheory.Shannon.convDensityAdd_negMulLog_integrable_pub
-        hpX_nn hpX_meas hpX_int hpX_mass hpX_mom (t := (v_B : ℝ)) hv_B_pos'
-    refine h_asset.congr ?_
-    filter_upwards [h_path_rnDeriv] with x hx
-    have hcd_nn : 0 ≤ InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
-        (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x :=
-      integral_nonneg fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg _ _ _)
-    rw [hx, ENNReal.toReal_ofReal hcd_nn]
-  have h_scale_X := h_scale_general X Z_X hX hZX hXZX hX_ac h_mom_X v_X hv_X hZX_law
-  have h_scale_Y := h_scale_general Y Z_Y hY hZY hYZY hY_ac h_mom_Y v_Y hv_Y hZY_law
-  have h_scale_sum := h_scale_general (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω)
+  have h_scale_X := rescaledPath_ac_and_negMulLog_integrable P X Z_X hX hZX hXZX hX_ac
+    h_mom_X v_X hv_X hZX_law
+  have h_scale_Y := rescaledPath_ac_and_negMulLog_integrable P Y Z_Y hY hZY hYZY hY_ac
+    h_mom_Y v_Y hv_Y hZY_law
+  have h_scale_sum := rescaledPath_ac_and_negMulLog_integrable P (fun ω => X ω + Y ω)
+    (fun ω => Z_X ω + Z_Y ω)
     (hX.add hY) (hZX.add hZY) hXYZXY hXY_ac h_mom_S (v_X + v_Y) hv_sum hZXZY_law
   -- ===== C-6 + final: thread de Bruijn group, invoke `_of_regular`. =====
   exact entropyPower_add_ge_case1_of_regular X Y Z_X Z_Y P hX hY hZX hZY
