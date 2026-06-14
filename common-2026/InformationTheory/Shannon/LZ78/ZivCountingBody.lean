@@ -10,9 +10,9 @@ import Mathlib.Algebra.Order.BigOperators.Group.List
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 
 /-!
-# LZ78 distinct-phrase counting bound — Phase B: `c · log c ≤ K·n` (T4-A)
+# LZ78 distinct-phrase counting bound — `c · log c ≤ K·n`
 
-`InformationTheory/Shannon/LZ78GreedyLongestPrefix.lean` (Phase A) established
+`InformationTheory/Shannon/LZ78GreedyLongestPrefix.lean` establishes
 the genuine longest-prefix greedy parse `lz78PhraseStrings` together with
 its **distinct invariant** `lz78PhraseStrings_nodup` and the
 total-length conservation `lz78PhraseStrings_total_length_le`.
@@ -26,12 +26,11 @@ c · log c ≤ K · T          (K = 4·log(|α|+1),  T = total symbol count)
 ```
 
 which, instantiated at `lz78PhraseStrings input` with `T ≤ input.length`,
-gives the Ziv product bound `c(n) · log c(n) ≤ K·n` (★). The inversion
-`isBigO_natCast_div_log_of_mul_log_le`
-(`LZ78PhraseCountAsymptoticBody.lean:107`) is already genuine, so this
-file closes the remaining primitive ingredient of `c(n) = O(n / log n)`.
+gives the Ziv product bound `c(n) · log c(n) ≤ K·n` (★). Composed with the
+inversion `isBigO_natCast_div_log_of_mul_log_le`
+(`LZ78PhraseCountAsymptoticBody.lean`), this yields `c(n) = O(n / log n)`.
 
-## Approach (overall strategy / shape)
+## Approach
 
 The substantive content is the **shortest-first packing lower bound** on
 the total length `T` of `c` distinct non-empty strings. Two genuine
@@ -340,7 +339,7 @@ section ZivBound
 variable {α : Type*} [Fintype α] [DecidableEq α]
 
 omit [DecidableEq α] in
-/-- **`foldr`-length equals `map`-length sum**: bridges the Phase A
+/-- **`foldr`-length equals `map`-length sum**: bridges the
 total-length shape to the `List.sum` shape used by the packing lemma. -/
 theorem foldr_length_eq_map_sum (ws : List (List α)) :
     ws.foldr (fun w acc => w.length + acc) 0 = (ws.map List.length).sum := by
@@ -348,11 +347,11 @@ theorem foldr_length_eq_map_sum (ws : List (List α)) :
   | nil => simp
   | cons hd tl ih => simp only [List.foldr_cons, List.map_cons, List.sum_cons, ih]
 
-/-- **Phase B core — Ziv product bound `c·log c ≤ K·n` on the genuine
-greedy parse**: the distinct phrase count `c = (lz78PhraseStrings input).length`
-satisfies `c · log c ≤ 8·log(|α|+1) · input.length`. This is the genuine
+/-- **Ziv product bound `c·log c ≤ K·n` on the genuine greedy parse**: the
+distinct phrase count `c = (lz78PhraseStrings input).length` satisfies
+`c · log c ≤ 8·log(|α|+1) · input.length`. This is the genuine
 Cover–Thomas `(★)` for the longest-prefix greedy parse, combining the
-Phase A invariants `lz78PhraseStrings_nodup` / `lz78PhraseStrings_forall_ne_nil`
+invariants `lz78PhraseStrings_nodup` / `lz78PhraseStrings_forall_ne_nil`
 / `lz78PhraseStrings_total_length_le` with the §3 packing core. -/
 @[entry_point]
 theorem lz78PhraseStrings_mul_log_le [Nonempty α] (input : List α) :
@@ -363,7 +362,7 @@ theorem lz78PhraseStrings_mul_log_le [Nonempty α] (input : List α) :
   -- bounds `c·log c` by `8·log(b1)·(total phrase length)`.
   have hcore := total_length_ge_count_mul_log (lz78PhraseStrings input)
     (lz78PhraseStrings_nodup input) (lz78PhraseStrings_forall_ne_nil input)
-  -- The total phrase length is `≤ input.length` (Phase A length conservation).
+  -- The total phrase length is `≤ input.length` (length conservation).
   have hlen : ((lz78PhraseStrings input).map List.length).sum ≤ input.length := by
     rw [← foldr_length_eq_map_sum]
     exact lz78PhraseStrings_total_length_le input
@@ -399,13 +398,13 @@ theorem lz78PhraseStrings_mul_log_le_of_length
   have := lz78PhraseStrings_mul_log_le (input n)
   rwa [hlen n] at this
 
-/-- **Phase B bridge — genuine distinct-phrase-count asymptotic
-`c(n) = O(n / log n)`**: combining the Phase B product bound `(★)`
+/-- **Genuine distinct-phrase-count asymptotic
+`c(n) = O(n / log n)`**: combining the product bound `(★)`
 (`lz78PhraseStrings_mul_log_le`) with the genuine inversion lemma
 `isBigO_natCast_div_log_of_mul_log_le`
 (`LZ78PhraseCountAsymptoticBody.lean`), the *genuine longest-prefix
 greedy* distinct phrase count is `O(n / log n)`. This connects the
-Phase A distinct invariant to the Cover–Thomas Eq. 13.124 envelope with
+distinct invariant to the Cover–Thomas Eq. 13.124 envelope with
 no honest hypothesis. -/
 @[entry_point]
 theorem lz78PhraseStrings_count_isBigO

@@ -6,18 +6,15 @@ import Mathlib.Data.List.Nodup
 import Mathlib.Data.List.Basic
 
 /-!
-# LZ78 longest-prefix greedy parsing — Phase A: distinct-phrase invariant (T4-A)
+# LZ78 longest-prefix greedy parsing — distinct-phrase invariant
 
-`InformationTheory/Shannon/LZ78GreedyParsingImpl.lean` published a structurally
-valid LZ78 parsing whose worker `lz78GreedyParseAux` is, on inspection,
-**one-symbol-per-step** (it always feeds the dictionary the singleton
-`[s]`, so every phrase consumes exactly one symbol and `count = n`,
-`lz78GreedyParse_count`). That degenerate form makes the distinct-phrase
-invariant *false* (the same singleton recurs), so the sharp counting
-bound `c(n) · log c(n) ≤ K·n` cannot hold.
+A one-symbol-per-step parse (always feeding the dictionary the singleton
+`[s]`, so every phrase consumes exactly one symbol and `count = n`) makes
+the distinct-phrase invariant *false* (the same singleton recurs), so the
+sharp counting bound `c(n) · log c(n) ≤ K·n` cannot hold.
 
 This file establishes the **genuine longest-prefix-match greedy parse**
-together with the central Phase A invariant: the list of emitted phrase
+together with the central invariant: the list of emitted phrase
 **strings** (the LZ78 dictionary entries) is `Nodup`.
 
 ## Design (Mathlib-shape-driven)
@@ -40,17 +37,16 @@ LZ78's behaviour (match the longest dictionary prefix, append one new
 symbol), recorded in the cheapest shape for the invariant proof.
 
 We track only the **phrase strings** here — that is the object the
-counting bound (Phase B) reasons about. The back-pointer
+counting bound reasons about. The back-pointer
 `LZ78Parsing`/`inRange` structure of `LZ78GreedyParsingImpl.lean` is left
-untouched (its `count = n` lemmas are not Phase A's concern and remain
-genuine for the worst-case form).
+untouched.
 
 ## File layout
 
 * **§1. Longest-prefix worker** — `lz78PhraseStringsAux` / `lz78PhraseStrings`:
   the genuine greedy parse, returning the list of emitted phrase strings.
 * **§2. Distinct-phrase invariant** — `lz78PhraseStrings_nodup`: the list
-  of emitted phrase strings is `Nodup` (Phase A core).
+  of emitted phrase strings is `Nodup`.
 * **§3. Length conservation** — `lz78PhraseStrings_total_length`: the
   total number of symbols across emitted phrases (plus the unfinished
   tail) equals the input length, supplying the counting denominator `n`.
@@ -122,8 +118,8 @@ theorem lz78PhraseStringsAux_nodup :
         exact lz78PhraseStringsAux_nodup fuel (dict.concat (cur ++ [s])) [] rest
           (List.Nodup.concat hmem hd)
 
-/-- **Phase A core — distinct phrase invariant**: the list of emitted
-phrase strings of the genuine longest-prefix greedy parse is `Nodup`. -/
+/-- **Distinct phrase invariant**: the list of emitted phrase strings of
+the genuine longest-prefix greedy parse is `Nodup`. -/
 @[entry_point]
 theorem lz78PhraseStrings_nodup (input : List α) :
     (lz78PhraseStrings input).Nodup :=
@@ -202,7 +198,7 @@ theorem lz78PhraseStrings_total_length_le (input : List α) :
 
 end Length
 
-/-! ## §4. Phrase count bound (Phase B entry) -/
+/-! ## §4. Phrase count bound -/
 
 section CountBound
 
@@ -257,7 +253,7 @@ theorem length_le_foldr_length_of_ne_nil (l : List (List α))
       have := ih htl
       omega
 
-/-- **Phase B entry — distinct phrase count bound**: the number of distinct
+/-- **Distinct phrase count bound**: the number of distinct
 phrases emitted by the genuine longest-prefix greedy parse is at most the
 input length. Combined with `lz78PhraseStrings_nodup` (the strings are
 distinct), this is the count `c(n) ≤ n` feeding the Cover–Thomas

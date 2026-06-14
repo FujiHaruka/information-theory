@@ -42,7 +42,7 @@ open scoped ENNReal NNReal
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ### Phase A — type class definition + plumbing -/
+/-! ### Type class definition -/
 
 /-- Number of occurrences of letter `a` in sequence `x : Fin n → α`. -/
 noncomputable def typeCount {n : ℕ} (x : Fin n → α) (a : α) : ℕ :=
@@ -121,7 +121,7 @@ lemma typeClass_prod_ratio
         = Real.log (Q.real {x i}) - Real.log (P.real {x i}) := by ring
     rw [h_neg, ← Real.log_div (hQpos (x i)).ne' (hPpos (x i)).ne']
     exact Real.exp_log (div_pos (hQpos (x i)) (hPpos (x i)))
-  -- Step 2: ∏ Q/P = exp(-∑ (logP - logQ)) = exp(-n · klDivSumForm) via Phase A aggregation.
+  -- Step 2: ∏ Q/P = exp(-∑ (logP - logQ)) = exp(-n · klDivSumForm) via log aggregation.
   have h_prod_ratio : (∏ i : Fin n, Q.real {x i} / P.real {x i})
       = Real.exp (-((n : ℝ) * klDivSumForm P Q)) := by
     have h_rhs : Real.exp (-(∑ i : Fin n, (Real.log (P.real {x i}) - Real.log (Q.real {x i}))))
@@ -138,7 +138,7 @@ lemma typeClass_prod_ratio
   rw [h_split, h_prod_ratio]
   ring
 
-/-! ### Phase B — Sanov A main theorem -/
+/-! ### Sanov A main theorem -/
 
 set_option linter.unusedSectionVars false in
 /-- **Sanov A form** (Cover-Thomas Theorem 11.1.4):
@@ -216,7 +216,7 @@ theorem typeClass_Qn_le
             _ = 1 := h_total
     _ = Real.exp (-((n : ℝ) * D)) := one_mul _
 
-/-! ### Phase B (corollary) — `(klDiv P Q).toReal` form -/
+/-! ### `(klDiv P Q).toReal` form (corollary) -/
 
 omit [DecidableEq α] [Nonempty α] in
 /-- `klDivSumForm P Q = (klDiv P Q).toReal` when `P ≪ Q` (both probability measures). -/

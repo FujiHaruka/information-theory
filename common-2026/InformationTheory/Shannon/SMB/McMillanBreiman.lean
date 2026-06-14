@@ -5,7 +5,7 @@ import InformationTheory.Shannon.Bridge
 import Mathlib.Topology.Order.LiminfLimsup
 
 /-!
-# Shannon-McMillan-Breiman theorem (sandwich form — E-8' weakened MVP)
+# Shannon-McMillan-Breiman theorem (sandwich form)
 
 Cover–Thomas Theorem 16.8.1: for a stationary ergodic process with finite
 alphabet `α`, the per-symbol negative log-likelihood
@@ -86,9 +86,8 @@ If the per-symbol log-likelihood average `blockLogAvg μ p n` satisfies the
 two Cover–Thomas 16.8 bounds (liminf ≥ entropy rate, limsup ≤ entropy rate)
 and is a.s. bounded, then it converges to the entropy rate a.s.
 
-This is the "Phase D" wrapper: once Birkhoff (Phase C) supplies the two
-sandwich inequalities a.s., the conclusion follows immediately from
-`tendsto_of_le_liminf_of_limsup_le`. -/
+Once Birkhoff supplies the two sandwich inequalities a.s., the conclusion
+follows immediately from `tendsto_of_le_liminf_of_limsup_le`. -/
 @[entry_point]
 theorem shannon_mcmillan_breiman_of_sandwich
     (μ : Measure Ω) [IsProbabilityMeasure μ]

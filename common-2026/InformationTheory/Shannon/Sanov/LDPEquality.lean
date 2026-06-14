@@ -6,7 +6,7 @@ import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Data.Nat.Choose.Multinomial
 
 /-!
-# Sanov LDP equality form (B-1'')
+# Sanov LDP equality form
 
 Cover-Thomas Theorem 11.4.1, simplified open-set form:
 
@@ -26,12 +26,12 @@ where `D = klDivSumForm_ofVec P (Q.real ∘ singleton)`, given `E n` eventually 
 
 ## Implementation notes
 
-* Phase B constructs the achievable type sequence `roundedTypeIndex P n` (floor rounding
-  with a single absorber letter to satisfy the sum constraint exactly).
-* Phase C proves the multinomial lower bound without Stirling's approximation, using only
+* The achievable type sequence `roundedTypeIndex P n` is built by floor rounding
+  with a single absorber letter to satisfy the sum constraint exactly.
+* The multinomial lower bound is proved without Stirling's approximation, using only
   the per-letter inequality `c! · c^k ≤ k! · c^c`.
-* Phase D extracts the `liminf` bound by sandwiching with `|α| log(n+1)/n → 0`.
-* Phase E closes via `tendsto_of_le_liminf_of_limsup_le`.
+* The `liminf` bound is extracted by sandwiching with `|α| log(n+1)/n → 0`.
+* The equality closes via `tendsto_of_le_liminf_of_limsup_le`.
 -/
 
 namespace InformationTheory.Shannon
@@ -42,7 +42,7 @@ open scoped Topology
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ### Phase B — Rounded type sequence (achievable type index) -/
+/-! ### Rounded type sequence (achievable type index) -/
 
 /-- Default "absorber" letter for the rounded type index: any element of the
 nonempty Fintype `α`. -/
@@ -361,7 +361,7 @@ lemma typeClassByCount_nonempty_of_sum
 
 
 omit [MeasurableSingletonClass α] in
-/-- **KL convergence via Phase A continuity**:
+/-- **KL convergence via `klDivSumForm_ofVec` continuity**:
 `klDivIndex (roundedTypeIndex P n) n Q → klDivSumForm_ofVec P (Q.real ∘ singleton)`. -/
 theorem klDivIndex_rounded_tendsto
     (Q : Measure α) (hQpos : ∀ a, 0 < Q.real {a})
@@ -369,7 +369,7 @@ theorem klDivIndex_rounded_tendsto
     Tendsto (fun n : ℕ =>
         klDivIndex (fun a => (roundedTypeIndex P n a : ℕ)) n Q)
       atTop (𝓝 (klDivSumForm_ofVec P (fun a => Q.real {a}))) := by
-  -- rewrite klDivIndex via Phase A connection
+  -- rewrite klDivIndex via the `klDivSumForm_ofVec` connection
   have h_rewrite : ∀ n,
       klDivIndex (fun a => (roundedTypeIndex P n a : ℕ)) n Q
         = klDivSumForm_ofVec
@@ -387,7 +387,7 @@ theorem klDivIndex_rounded_tendsto
     roundedTypeIndex_tendsto_vec P hP hP_nn
   exact h_cont.tendsto P |>.comp h_tendsto_vec
 
-/-! ### Phase C — Multinomial lower bound (Stirling-free) -/
+/-! ### Multinomial lower bound (Stirling-free) -/
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
   [MeasurableSingletonClass α] in
@@ -1050,7 +1050,7 @@ theorem typeClassByCount_Qn_ge
   rw [← mul_assoc]
   exact mul_le_mul_of_nonneg_right h_card_ge h_qm_prod_nn
 
-/-! ### Phase D — liminf lower bound -/
+/-! ### liminf lower bound -/
 
 /-- **Sanov LDP lower bound (rounding sequence)**:
 if `roundedTypeIndex P n ∈ E n` eventually, then
@@ -1102,7 +1102,7 @@ theorem sanov_ldp_lower_bound_pointwise
       intro x hx
       simp only [Set.mem_iUnion]
       exact ⟨roundedTypeIndex P n, h_inE, hx⟩
-    -- Phase C: Q^n(T_{c_n}) ≥ (n+1)^{-|α|} exp(-n klDivIndex c_n n Q).
+    -- Q^n(T_{c_n}) ≥ (n+1)^{-|α|} exp(-n klDivIndex c_n n Q).
     have h_Qn_ge := typeClassByCount_Qn_ge Q hQpos hn_pos (c_seq n)
       (roundedTypeIndex_sum P hP_prob hP_nn n hn_pos)
     -- Q^n(⋃) ≥ Q^n(T_{c_n}).
@@ -1214,7 +1214,7 @@ theorem sanov_ldp_lower_bound_pointwise
   exact h_liminf_le
 
 
-/-! ### Phase E — Tendsto sandwich (main theorem) -/
+/-! ### Tendsto sandwich (main theorem) -/
 
 /-- **Sanov LDP equality form** (Cover-Thomas Theorem 11.4.1):
 
@@ -1226,7 +1226,8 @@ Inputs: `P` is the user-specified minimizer; `E n` eventually contains `roundedT
 `∀ c ∈ E n, klDivSumForm_ofVec P Q ≤ klDivIndex c n Q` (minimizer hypothesis).
 
 Proof: `sanov_ldp_upper_bound` gives `limsup ≤ -D + ε` for all `ε > 0`, hence `limsup ≤ -D`;
-Phase D gives `liminf ≥ -D`; close via `tendsto_of_le_liminf_of_limsup_le`. -/
+`sanov_ldp_lower_bound_pointwise` gives `liminf ≥ -D`; close via
+`tendsto_of_le_liminf_of_limsup_le`. -/
 @[entry_point]
 theorem sanov_ldp_equality
     (Q : Measure α) [IsProbabilityMeasure Q]
@@ -1249,10 +1250,10 @@ theorem sanov_ldp_equality
     (((Measure.pi (fun _ : Fin n => Q))
       (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal) with hf_def
   have hP_nn : ∀ a, 0 ≤ P a := fun a => (hP_full a).le
-  -- Lower bound (from Phase D): -D ≤ liminf f.
+  -- Lower bound: -D ≤ liminf f.
   have h_liminf : -D ≤ liminf f atTop :=
     sanov_ldp_lower_bound_pointwise Q hQpos P hP_prob hP_full E h_in_E
-  -- Upper bound (from B-1'): limsup f ≤ -D.
+  -- Upper bound: limsup f ≤ -D.
   -- Strategy: provide eventually upper bound `f ≤ -D + ε` for any ε > 0, conclude `f` bounded above.
   -- Then use ε → 0 to get limsup ≤ -D.
   have h_upper_event : ∀ ε > (0 : ℝ), ∀ᶠ n : ℕ in atTop, f n ≤ -D + ε := by
@@ -1294,8 +1295,8 @@ theorem sanov_ldp_equality
     have := h_upper_event 1 (by norm_num)
     filter_upwards [this] with n hn; exact hn
   -- bounded below eventually: -D ≤ liminf is fine in the conditionally complete world,
-  -- but for IsBoundedUnder ge we use the Phase D liminf bound to get a uniform finite lower bound.
-  -- f n ≥ -D - 1 eventually (via Phase D or just: f bounded since 0 < Q^n ≤ 1, log ≤ 0).
+  -- but for IsBoundedUnder ge we use the liminf bound to get a uniform finite lower bound.
+  -- f n ≥ -D - 1 eventually (via the liminf bound or just: f bounded since 0 < Q^n ≤ 1, log ≤ 0).
   -- f n is bounded below uniformly using ` Q^n(⋃) ≥ Q^n({x}) ≥ (∏ Q(x_i)) ≥ (min Q a)^n `.
   -- ⇒ log Q^n(⋃) ≥ n · log (min Q a), so (1/n) log Q^n(⋃) ≥ log (min Q a) = -|log (min Q a)|.
   -- Pick `M := -log (min_a Q.real {a})` (positive, finite, since each Q.real {a} > 0 and finite α).

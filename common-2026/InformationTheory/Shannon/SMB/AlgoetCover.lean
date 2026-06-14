@@ -3,9 +3,9 @@ import InformationTheory.Shannon.SMB.AlgoetCover.TwoSidedRatio
 import InformationTheory.Shannon.SMB.AlgoetCover.Liminf
 
 /-!
-# SMB Algoet–Cover sandwich (Phase D — skeleton)
+# SMB Algoet–Cover sandwich
 
-Phase D Algoet–Cover sandwich. Discharges the four hypotheses of
+The Algoet–Cover sandwich discharges the four hypotheses of
 `shannon_mcmillan_breiman_of_sandwich` (`liminf ≥ H`, `limsup ≤ H`, a.s.
 boundedness above and below) to produce the hypothesis-free
 `shannon_mcmillan_breiman` theorem. The proofs combine the chain rule

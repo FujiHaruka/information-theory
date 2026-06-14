@@ -6,7 +6,7 @@ import Mathlib.Probability.Kernel.CondDistrib
 import Mathlib.MeasureTheory.Integral.Lebesgue.Countable
 
 /-!
-# SMB chain rule decomposition (Phase C.1 + C.2)
+# SMB chain rule decomposition
 
 For a stationary process `p : StationaryProcess μ α` over a finite alphabet,
 this file establishes the Cover–Thomas 16.8 **chain rule for log-likelihood**:
@@ -14,8 +14,8 @@ this file establishes the Cover–Thomas 16.8 **chain rule for log-likelihood**:
   `-log P_n({block_n ω}) = ∑_{i<n} -log P(obs i | block_i)(block_i ω){obs i ω}`
 
 a.s. over `ω`. The right-hand side is named `pmfLogCond μ p i ω`. The result
-is the algebraic skeleton that Phase C.3 (Levy convergence) and Phase D
-(Birkhoff + Cesàro sandwich) use to discharge the four hypotheses of
+is the algebraic identity that the Levy convergence and the Birkhoff +
+Cesàro sandwich use to discharge the four hypotheses of
 `shannon_mcmillan_breiman_of_sandwich`.
 
 ## Main definitions
@@ -248,7 +248,7 @@ lemma cond_singleton_pos_ae
 
 `pmfLogCond μ p l` is integrable, and its integral equals
 `conditionalEntropyTail μ p l`. This bridges the Birkhoff time-average to the
-spatial average that Phase D will use. -/
+spatial average used by the sandwich. -/
 
 omit [DecidableEq α] in
 /-- The expected per-step conditional log-likelihood equals the conditional
@@ -337,7 +337,7 @@ lemma integrable_pmfLogCond
   exact (MeasureTheory.integrable_map_measure hF_meas.aestronglyMeasurable
     h_pair_meas.aemeasurable).mp h_int_pair
 
-/-! ## Birkhoff per-level application (Phase D building block)
+/-! ## Birkhoff per-level application
 
 For each fixed level `l`, the Birkhoff time average of `pmfLogCond p l` along
 the orbit converges a.s. to `conditionalEntropyTail μ p l`. This is the

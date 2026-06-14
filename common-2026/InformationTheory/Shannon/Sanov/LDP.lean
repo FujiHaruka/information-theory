@@ -47,7 +47,7 @@ open scoped ENNReal NNReal Topology
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ### Phase A — type-count index + polynomial bound -/
+/-! ### Type-count index + polynomial bound -/
 
 /-- Type-count index: `α → Fin (n+1)`, indexing empirical count vectors.
 Inconsistent indices (∑ ≠ n) yield an empty type class. -/
@@ -68,7 +68,7 @@ lemma typeCountIndex_card (n : ℕ) :
   exact (Fintype.card_fin _).symm
 
 
-/-! ### Phase B — type class by integer counts + Sanov bound -/
+/-! ### Type class by integer counts + Sanov bound -/
 
 /-- **Type class by integer counts** `T(c) := {x | ∀ a, typeCount x a = c a}`. -/
 def typeClassByCount {n : ℕ} (c : α → ℕ) : Set (Fin n → α) :=
@@ -293,7 +293,7 @@ theorem typeClassByCount_Qn_le
             _ = 1 := h_total
     _ = Real.exp (-((n : ℝ) * klDivIndex c n Q)) := one_mul _
 
-/-! ### Phase C — union form upper bound + LDP main statement -/
+/-! ### Union form upper bound + LDP main statement -/
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- If `∑ c a ≠ n` then `typeClassByCount c = ∅`. -/
