@@ -50,6 +50,20 @@ The construction:
    `exists_N_log_sq_plus_const_le_n` produces the outer `N₀`.
 -/
 
+lemma one_le_mul_div_mul_of_le_one {a b p d : ℝ} (ha : 1 ≤ a) (hb : 1 ≤ b)
+    (hp_pos : 0 < p) (hp_le : p ≤ 1) (hd_pos : 0 < d) (hd_le : d ≤ 1) :
+    (1 : ℝ) ≤ a * b / (p * d) := by
+  have hpd_pos : 0 < p * d := mul_pos hp_pos hd_pos
+  have hab_ge : (1 : ℝ) ≤ a * b := by nlinarith
+  have hpd_le_one : p * d ≤ 1 := by
+    have : p * d ≤ 1 * 1 := mul_le_mul hp_le hd_le hd_pos.le (by norm_num)
+    linarith
+  rw [le_div_iff₀ hpd_pos]
+  calc (1 : ℝ) * (p * d) ≤ 1 * 1 :=
+        mul_le_mul_of_nonneg_left hpd_le_one (by norm_num)
+    _ = 1 := by norm_num
+    _ ≤ a * b := hab_ge
+
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- Every entry of `pSmooth p₀ δ` is at least `δ / |α|`. -/
 lemma pSmooth_ge {p₀ : α → ℝ} (hp₀ : p₀ ∈ stdSimplex ℝ α)
@@ -211,6 +225,148 @@ lemma sq_le_two_mul_sq_add_two_mul_sq_of_nonneg_of_le_add
   have h_eq2 : |y| ^ 2 = y ^ 2 := sq_abs _
   linarith
 
+lemma logSq_div_le_two_sq_add_two_logSq {c s δ m : ℝ} (hc : 1 ≤ c) (hs_pos : 0 < s)
+    (hδ_pos : 0 < δ) (hδ_le : δ ≤ 1) (hm1_pos : 0 < m + 1)
+    (h_one_div_le : 1 / δ ≤ s * (m + 1)) :
+    (Real.log (c / δ)) ^ 2
+      ≤ 2 * (Real.log c + Real.log s) ^ 2 + 2 * (Real.log (m + 1)) ^ 2 := by
+  have hc_pos : 0 < c := lt_of_lt_of_le zero_lt_one hc
+  have h_div_ge : (1 : ℝ) ≤ c / δ := by
+    rw [le_div_iff₀ hδ_pos]; nlinarith
+  have h_log_nn : 0 ≤ Real.log (c / δ) := Real.log_nonneg h_div_ge
+  have h_log_le : Real.log (c / δ) ≤ (Real.log c + Real.log s) + Real.log (m + 1) :=
+    log_div_le_log_add_log_add_log_succ hc_pos hs_pos hδ_pos hm1_pos h_one_div_le
+  exact sq_le_two_mul_sq_add_two_mul_sq_of_nonneg_of_le_add h_log_nn h_log_le
+
+lemma typicalSetMinN_real_le_two_coef_logSq_add
+    {V A Lsq C D η3 εg : ℝ} (hs : 0 < η3 * εg ^ 2) (hV : 0 ≤ V)
+    (hVA : V ≤ A + 2 * Lsq) (hLsq : 0 ≤ Lsq)
+    (hC : C = 2 / (η3 * εg ^ 2)) (hD : A / (η3 * εg ^ 2) + 2 ≤ D) :
+    (typicalSetMinN V η3 εg : ℝ) ≤ 2 * C * Lsq + D := by
+  have hbase : (typicalSetMinN V η3 εg : ℝ) ≤ V / (η3 * εg ^ 2) + 2 :=
+    typicalSetMinN_le_div_add_two hs hV
+  have h_div_le : V / (η3 * εg ^ 2) ≤ (A + 2 * Lsq) / (η3 * εg ^ 2) :=
+    div_le_div_of_nonneg_right hVA hs.le
+  have h_split : (A + 2 * Lsq) / (η3 * εg ^ 2)
+      = A / (η3 * εg ^ 2) + 2 * Lsq / (η3 * εg ^ 2) := by rw [add_div]
+  have h_2C : 2 * Lsq / (η3 * εg ^ 2) ≤ 2 * C * Lsq := by
+    rw [hC]
+    have h_eq : 2 * (2 / (η3 * εg ^ 2)) * Lsq = 4 * Lsq / (η3 * εg ^ 2) := by
+      field_simp; ring
+    rw [h_eq]
+    have h24 : 2 * Lsq ≤ 4 * Lsq := by linarith
+    exact div_le_div_of_nonneg_right h24 hs.le
+  linarith
+
+lemma channelCodingSmoothMinN_real_le_two_coef_logSq_add
+    {V_X V_Y V_Z A_Y A_Z Lsq C D η3 εg I_lb R' ε' : ℝ}
+    (hη3 : η3 = ε' / 2 / 3) (hεg : εg = (I_lb - R') / 6) (hs : 0 < η3 * εg ^ 2)
+    (hVX : 0 ≤ V_X) (hVY : V_Y ≤ A_Y + 2 * Lsq) (hVZ : V_Z ≤ A_Z + 2 * Lsq)
+    (hLsq : 0 ≤ Lsq)
+    (hVY_nn : 0 ≤ V_Y) (hVZ_nn : 0 ≤ V_Z)
+    (hC : C = 2 / (η3 * εg ^ 2))
+    (hDX : V_X / (η3 * εg ^ 2) + 2 ≤ D) (hDY : A_Y / (η3 * εg ^ 2) + 2 ≤ D)
+    (hDZ : A_Z / (η3 * εg ^ 2) + 2 ≤ D)
+    (hDexp : (expNegMulMinN ((I_lb - R') / 2) (ε' / 2) : ℝ) ≤ D)
+    (hD1 : (1 : ℝ) ≤ D) (hCLsq : 0 ≤ 2 * C * Lsq) :
+    (channelCodingSmoothMinN V_X V_Y V_Z I_lb R' ε' : ℝ) ≤ 2 * C * Lsq + D := by
+  have hAt : (typicalSetMinN V_X η3 εg : ℝ) ≤ 2 * C * Lsq + D :=
+    typicalSetMinN_real_le_two_coef_logSq_add hs hVX
+      (by linarith) hLsq hC hDX
+  have hAY' : (typicalSetMinN V_Y η3 εg : ℝ) ≤ 2 * C * Lsq + D :=
+    typicalSetMinN_real_le_two_coef_logSq_add hs hVY_nn hVY hLsq hC hDY
+  have hAZ' : (typicalSetMinN V_Z η3 εg : ℝ) ≤ 2 * C * Lsq + D :=
+    typicalSetMinN_real_le_two_coef_logSq_add hs hVZ_nn hVZ hLsq hC hDZ
+  have hAExp : (expNegMulMinN ((I_lb - R') / 2) (ε' / 2) : ℝ) ≤ 2 * C * Lsq + D := by
+    linarith
+  have hA1 : (1 : ℝ) ≤ 2 * C * Lsq + D := by linarith
+  unfold channelCodingSmoothMinN jointlyTypicalSetMinN
+  subst hη3 hεg
+  push_cast
+  refine max_le (max_le (max_le (max_le ?_ ?_) ?_) hAExp) hA1
+  · exact hAt
+  · exact hAY'
+  · exact hAZ'
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
+lemma exists_subcode_maxError_lt_two_mul
+    {n M' : ℕ} (c : Code M' n α β) (W' : Channel α β) [IsMarkovKernel W']
+    {R R' ε' : ℝ} (hR_pos : 0 < R)
+    (hM'_lb : Nat.ceil (Real.exp ((n : ℝ) * R')) ≤ M')
+    (hrate : 2 * Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ Nat.ceil (Real.exp ((n : ℝ) * R')))
+    (h_avg_lt : (c.averageErrorProb W').toReal < ε') :
+    ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M) (cs : Code M n α β),
+      ∀ m, (cs.errorProbAt W' m).toReal < 2 * ε' := by
+  classical
+  have hK : (1 : ℝ) < 2 := by norm_num
+  have h_filter_bound := errorProbAt_filter_card_bound (M := M') (n := n) c W' hK
+  set T : Finset (Fin M') := (Finset.univ : Finset (Fin M')).filter
+      (fun m => 2 * (c.averageErrorProb W').toReal <
+        (c.errorProbAt W' m).toReal) with hT_def
+  set S : Finset (Fin M') := (Finset.univ : Finset (Fin M')).filter
+      (fun m => (c.errorProbAt W' m).toReal ≤
+        2 * (c.averageErrorProb W').toReal) with hS_def
+  have hST_partition : S.card + T.card = M' := by
+    have h_union : S ∪ T = Finset.univ := by
+      apply Finset.eq_univ_iff_forall.mpr
+      intro m
+      rw [Finset.mem_union, hS_def, hT_def, Finset.mem_filter, Finset.mem_filter]
+      rcases le_or_gt ((c.errorProbAt W' m).toReal)
+          (2 * (c.averageErrorProb W').toReal) with h | h
+      · exact Or.inl ⟨Finset.mem_univ m, h⟩
+      · exact Or.inr ⟨Finset.mem_univ m, h⟩
+    have h_disj : Disjoint S T := by
+      rw [hS_def, hT_def]
+      refine Finset.disjoint_filter.mpr ?_
+      intro m _ hm
+      exact not_lt_of_ge hm
+    have := Finset.card_union_of_disjoint h_disj
+    rw [h_union, Finset.card_univ, Fintype.card_fin] at this
+    linarith
+  have h_T_card_le : 2 * T.card ≤ M' := by
+    have h_real : ((T.card : ℝ) * 2 : ℝ) ≤ (M' : ℝ) := h_filter_bound
+    have h_real' : ((2 * T.card : ℕ) : ℝ) ≤ ((M' : ℕ) : ℝ) := by
+      push_cast; linarith
+    exact_mod_cast h_real'
+  have h_2S_ge_M : M' ≤ 2 * S.card := by
+    have : M' = S.card + T.card := hST_partition.symm
+    omega
+  have h_rate_inequality : 2 * Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ 2 * S.card :=
+    hrate.trans (hM'_lb.trans h_2S_ge_M)
+  have h_ceil_le_S_card : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ S.card := by
+    have h2 : (2 : ℕ) > 0 := by norm_num
+    exact Nat.le_of_mul_le_mul_left h_rate_inequality h2
+  have h_exp_nR_pos : 0 ≤ (n : ℝ) * R := mul_nonneg (Nat.cast_nonneg _) hR_pos.le
+  have h_ceil_ge_1 : 1 ≤ Nat.ceil (Real.exp ((n : ℝ) * R)) := by
+    rw [Nat.one_le_iff_ne_zero, Ne, Nat.ceil_eq_zero, not_le]
+    exact lt_of_lt_of_le zero_lt_one (Real.one_le_exp h_exp_nR_pos)
+  have hS_pos : 0 < S.card := lt_of_lt_of_le h_ceil_ge_1 h_ceil_le_S_card
+  refine ⟨S.card, h_ceil_le_S_card, c.subcode S hS_pos, ?_⟩
+  intro m'
+  have h_sub_le := c.subcode_errorProbAt_le W' S hS_pos m'
+  set m₀ : Fin M' := (S.equivFin.symm ⟨m'.val, by simp [Fin.is_lt]⟩).val with hm₀_def
+  have hm₀_mem : m₀ ∈ S := (S.equivFin.symm ⟨m'.val, by simp [Fin.is_lt]⟩).property
+  have h_m₀_le : (c.errorProbAt W' m₀).toReal ≤
+      2 * (c.averageErrorProb W').toReal := by
+    rw [hS_def, Finset.mem_filter] at hm₀_mem
+    exact hm₀_mem.2
+  have h_sub_le_top : c.errorProbAt W' m₀ ≠ ∞ := by
+    haveI : IsProbabilityMeasure
+        (Measure.pi (fun i => W' (c.encoder m₀ i))) := by infer_instance
+    exact ((prob_le_one
+      (μ := Measure.pi (fun i => W' (c.encoder m₀ i)))
+      (s := c.errorEvent m₀)).trans_lt ENNReal.one_lt_top).ne
+  have h_sub_le_toReal :
+      ((c.subcode S hS_pos).errorProbAt W' m').toReal
+        ≤ (c.errorProbAt W' m₀).toReal :=
+    (ENNReal.toReal_le_toReal
+      (ne_top_of_le_ne_top h_sub_le_top h_sub_le) h_sub_le_top).mpr h_sub_le
+  calc ((c.subcode S hS_pos).errorProbAt W' m').toReal
+      ≤ (c.errorProbAt W' m₀).toReal := h_sub_le_toReal
+    _ ≤ 2 * (c.averageErrorProb W').toReal := h_m₀_le
+    _ < 2 * ε' := by linarith
+
 omit [DecidableEq α] [DecidableEq β] in
 set_option maxHeartbeats 1200000 in
 /-- For any `R < capacity W` and `ε > 0`, there exists `N₀` such that for all
@@ -362,71 +518,29 @@ theorem exists_N_for_smooth_achievability_uniform
   have h_one_div_δ_n_le : 1 / δ_n ≤ (1 / δ_B + 16 / ε) * ((n : ℝ) + 1) :=
     one_div_smooth_n_le hδ_B_pos hε n
   have h_sum_pos : (0 : ℝ) < 1 / δ_B + 16 / ε := by positivity
-  have h_log_β_δ_n_le : Real.log ((Fintype.card β : ℝ) / δ_n) ≤ K_Y + Real.log ((n : ℝ) + 1) := by
-    have hK_eq : K_Y = Real.log ((Fintype.card β : ℝ)) + Real.log (1 / δ_B + 16 / ε) := rfl
-    have h := log_div_le_log_add_log_add_log_succ hβ_pos h_sum_pos hδ_n_pos hn1_pos
-      h_one_div_δ_n_le
-    linarith [h, hK_eq]
-  -- Similarly for V_Z bound.
-  have hαβ_pos : (0 : ℝ) < (Fintype.card α : ℝ) * (Fintype.card β : ℝ) := mul_pos hα_pos hβ_pos
-  have hαβ_pmin_pos : (0 : ℝ) < (Fintype.card α : ℝ) * (Fintype.card β : ℝ) / p_min := by
-    positivity
-  have h_log_Z_le : Real.log (((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n))
-      ≤ K_Z + Real.log ((n : ℝ) + 1) := by
-    set A : ℝ := (Fintype.card α : ℝ) * (Fintype.card β : ℝ) / p_min with hA_def
-    have hA_pos : 0 < A := hαβ_pmin_pos
-    have h_eq1 : ((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n) = A / δ_n := by
-      rw [hA_def, div_mul_eq_div_div]
-    have hK_eq : K_Z = Real.log A + Real.log (1 / δ_B + 16 / ε) := rfl
-    rw [h_eq1]
-    have h := log_div_le_log_add_log_add_log_succ hA_pos h_sum_pos hδ_n_pos hn1_pos
-      h_one_div_δ_n_le
-    linarith [h, hK_eq]
-  -- (log)² ≤ 2 K² + 2 (log(n+1))² via (a+b)² ≤ 2a² + 2b².
-  have hlog_n1_nn : 0 ≤ Real.log ((n : ℝ) + 1) := by
-    apply Real.log_nonneg; linarith
-  -- Define V_Y_n := (log(|β|/δ_n))², V_Z_n := same shape.
+  -- (log)² ≤ 2 K² + 2 (log(n+1))²: combine the log-div bound with `(a+b)² ≤ 2a² + 2b²`.
   set V_Y_n : ℝ := (Real.log ((Fintype.card β : ℝ) / δ_n)) ^ 2 with hV_Y_n_def
   set V_Z_n : ℝ := (Real.log (((Fintype.card α : ℝ) * (Fintype.card β : ℝ))
                               / (p_min * δ_n))) ^ 2 with hV_Z_n_def
-  -- V_Y_n ≤ 2 K_Y² + 2 (log(n+1))².
+  have hβ1 : (1 : ℝ) ≤ (Fintype.card β : ℝ) := by
+    exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
+  have hα1 : (1 : ℝ) ≤ (Fintype.card α : ℝ) := by
+    exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
   have h_V_Y_n_bound : V_Y_n ≤ 2 * K_Y ^ 2 + 2 * (Real.log ((n : ℝ) + 1)) ^ 2 := by
-    rw [hV_Y_n_def]
-    have hβ_ge_one : (1 : ℝ) ≤ (Fintype.card β : ℝ) := by
-      exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
-    have h_β_δ_n_ge : (1 : ℝ) ≤ (Fintype.card β : ℝ) / δ_n := by
-      rw [le_div_iff₀ hδ_n_pos]; linarith
-    have h_log_nn : 0 ≤ Real.log ((Fintype.card β : ℝ) / δ_n) :=
-      Real.log_nonneg h_β_δ_n_ge
-    exact sq_le_two_mul_sq_add_two_mul_sq_of_nonneg_of_le_add h_log_nn h_log_β_δ_n_le
+    rw [hV_Y_n_def, hK_Y_def]
+    exact logSq_div_le_two_sq_add_two_logSq hβ1 h_sum_pos hδ_n_pos hδ_n_le hn1_pos
+      h_one_div_δ_n_le
   have h_V_Z_n_bound : V_Z_n ≤ 2 * K_Z ^ 2 + 2 * (Real.log ((n : ℝ) + 1)) ^ 2 := by
-    rw [hV_Z_n_def]
-    have hαβ_ge_one : (1 : ℝ) ≤ (Fintype.card α : ℝ) * (Fintype.card β : ℝ) := by
-      have hα1 : (1 : ℝ) ≤ (Fintype.card α : ℝ) := by
-        exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
-      have hβ1 : (1 : ℝ) ≤ (Fintype.card β : ℝ) := by
-        exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
-      nlinarith
     have hp_min_le_one : p_min ≤ 1 := by
-      rw [hp_min_def]
-      have h1 : δ_p ≤ 1 := hδ_p_le
-      have hα1 : (1 : ℝ) ≤ (Fintype.card α : ℝ) := by
-        exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
-      rw [div_le_one hα_pos]; linarith
-    have hpd_pos : 0 < p_min * δ_n := mul_pos hp_min_pos hδ_n_pos
-    have hpd_le_one : p_min * δ_n ≤ 1 := by
-      have : p_min * δ_n ≤ 1 * 1 := by
-        exact mul_le_mul hp_min_le_one hδ_n_le hδ_n_pos.le (by norm_num)
-      linarith
-    have h_arg_ge : (1 : ℝ) ≤ ((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n) := by
-      rw [le_div_iff₀ hpd_pos]
-      calc (1 : ℝ) * (p_min * δ_n) ≤ 1 * 1 :=
-            mul_le_mul_of_nonneg_left hpd_le_one (by norm_num)
-        _ = 1 := by norm_num
-        _ ≤ (Fintype.card α : ℝ) * (Fintype.card β : ℝ) := hαβ_ge_one
-    have h_log_nn : 0 ≤ Real.log (((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n)) :=
-      Real.log_nonneg h_arg_ge
-    exact sq_le_two_mul_sq_add_two_mul_sq_of_nonneg_of_le_add h_log_nn h_log_Z_le
+      rw [hp_min_def, div_le_one hα_pos]; linarith
+    have hαβ_pmin_ge : (1 : ℝ) ≤ (Fintype.card α : ℝ) * (Fintype.card β : ℝ) / p_min := by
+      rw [le_div_iff₀ hp_min_pos]; nlinarith
+    rw [hV_Z_n_def, hK_Z_def,
+      show ((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n)
+        = ((Fintype.card α : ℝ) * (Fintype.card β : ℝ) / p_min) / δ_n from
+        div_mul_eq_div_div _ _ _]
+    exact logSq_div_le_two_sq_add_two_logSq hαβ_pmin_ge h_sum_pos hδ_n_pos hδ_n_le
+      hn1_pos h_one_div_δ_n_le
   -- Variance bounds.
   have hV_Y_bound : pmfLogVariance μ iidYs ≤ V_Y_n :=
     pmfLogVariance_le_sq_of_bounded μ iidYs hYs hV_Y_pointwise
@@ -444,150 +558,36 @@ theorem exists_N_for_smooth_achievability_uniform
   -- e) +1 (the outer max-with-1).
   -- Sum: D_const + 2·C_coef·(log(n+1))². Compare against `n`.
   have hηε_sq : 0 < (η / 3) * ε_gap ^ 2 := by positivity
-  -- typicalSetMinN bound: max(1, ⌈V/(η·ε²)⌉ + 1) ≤ V/(η·ε²) + 2 (with V ≥ 0).
-  have h_tsMinN_le : ∀ V : ℝ, 0 ≤ V →
-      (typicalSetMinN V (η / 3) ε_gap : ℝ) ≤ V / ((η / 3) * ε_gap ^ 2) + 2 :=
-    fun V hV => typicalSetMinN_le_div_add_two hηε_sq hV
   have hV_X_nn : 0 ≤ V_X := by rw [hV_X_def]; exact sq_nonneg _
   have hV_Y_n_nn : 0 ≤ V_Y_n := by rw [hV_Y_n_def]; exact sq_nonneg _
   have hV_Z_n_nn : 0 ≤ V_Z_n := by rw [hV_Z_n_def]; exact sq_nonneg _
+  -- Each `typicalSetMinN`/`expNegMulMinN` axis is bounded by `2·C_coef·(log(n+1))² + D_const`.
+  -- The three `D_const`-side inequalities (`hDX`/`hDY`/`hDZ`) split `V_const/s` into nonneg parts.
+  have h_total_split : V_const / ((η / 3) * ε_gap ^ 2)
+      = V_X / ((η / 3) * ε_gap ^ 2) + 2 * K_Y ^ 2 / ((η / 3) * ε_gap ^ 2)
+        + 2 * K_Z ^ 2 / ((η / 3) * ε_gap ^ 2) := by
+    rw [hV_const_def, add_div, add_div]
+  have h_VX_nn : 0 ≤ V_X / ((η / 3) * ε_gap ^ 2) := by positivity
+  have h_KY_nn : 0 ≤ 2 * K_Y ^ 2 / ((η / 3) * ε_gap ^ 2) := by positivity
+  have h_KZ_nn : 0 ≤ 2 * K_Z ^ 2 / ((η / 3) * ε_gap ^ 2) := by positivity
+  have h_expNeg_nn : 0 ≤ (expNegMulMinN ((I_lb - R') / 2) (ε' / 2) : ℝ) := Nat.cast_nonneg _
+  have hDX : V_X / ((η / 3) * ε_gap ^ 2) + 2 ≤ D_const := by
+    rw [hD_const_def, h_total_split]; linarith
+  have hDY : 2 * K_Y ^ 2 / ((η / 3) * ε_gap ^ 2) + 2 ≤ D_const := by
+    rw [hD_const_def, h_total_split]; linarith
+  have hDZ : 2 * K_Z ^ 2 / ((η / 3) * ε_gap ^ 2) + 2 ≤ D_const := by
+    rw [hD_const_def, h_total_split]; linarith
+  have hDexp : (expNegMulMinN ((I_lb - R') / 2) (ε' / 2) : ℝ) ≤ D_const := by
+    rw [hD_const_def, h_total_split]; linarith
+  have hD1 : (1 : ℝ) ≤ D_const := by
+    rw [hD_const_def, h_total_split]; linarith
+  have hCLsq : 0 ≤ 2 * C_coef * (Real.log ((n : ℝ) + 1)) ^ 2 := by positivity
   have h_smoothN_le :
       (channelCodingSmoothMinN V_X V_Y_n V_Z_n I_lb R' ε' : ℝ)
-        ≤ 2 * C_coef * (Real.log ((n : ℝ) + 1)) ^ 2 + D_const := by
-    -- The max can be broken into 3 + 2 components.
-    unfold channelCodingSmoothMinN
-    -- All bounds:
-    have hTS_X := h_tsMinN_le V_X hV_X_nn
-    have hTS_Y := h_tsMinN_le V_Y_n hV_Y_n_nn
-    have hTS_Z := h_tsMinN_le V_Z_n hV_Z_n_nn
-    -- Apply variance-form bounds:
-    have hTS_Y_const_form : V_Y_n / ((η / 3) * ε_gap ^ 2) + 2
-        ≤ (2 * K_Y ^ 2 + 2 * (Real.log ((n : ℝ) + 1)) ^ 2) / ((η / 3) * ε_gap ^ 2) + 2 := by
-      have h_div_le : V_Y_n / ((η / 3) * ε_gap ^ 2)
-          ≤ (2 * K_Y ^ 2 + 2 * (Real.log ((n : ℝ) + 1)) ^ 2) / ((η / 3) * ε_gap ^ 2) := by
-        exact div_le_div_of_nonneg_right h_V_Y_n_bound hηε_sq.le
-      linarith
-    have hTS_Y_full := hTS_Y.trans hTS_Y_const_form
-    have hTS_Z_const_form : V_Z_n / ((η / 3) * ε_gap ^ 2) + 2
-        ≤ (2 * K_Z ^ 2 + 2 * (Real.log ((n : ℝ) + 1)) ^ 2) / ((η / 3) * ε_gap ^ 2) + 2 := by
-      have h_div_le : V_Z_n / ((η / 3) * ε_gap ^ 2)
-          ≤ (2 * K_Z ^ 2 + 2 * (Real.log ((n : ℝ) + 1)) ^ 2) / ((η / 3) * ε_gap ^ 2) := by
-        exact div_le_div_of_nonneg_right h_V_Z_n_bound hηε_sq.le
-      linarith
-    have hTS_Z_full := hTS_Z.trans hTS_Z_const_form
-    -- jointlyTypicalSetMinN unfolded: max(max TS_X TS_Y) TS_Z.
-    unfold jointlyTypicalSetMinN
-    -- Each TS ≤ "2·C·(log)² + D_const" component-wise; max ≤ ...
-    -- Build the final inequality. Each individual TS is ≤ bound. The max of three is ≤ bound.
-    -- We use: max a b ≤ c ↔ a ≤ c ∧ b ≤ c.
-    push_cast
-    -- Each typicalSetMinN ≤ 2·C·(log)² + (V_X / ηε² + 2) (resp.) ≤ sum of constants and 2·C·(log)².
-    have hAt : (typicalSetMinN V_X (η / 3) ε_gap : ℝ)
-        ≤ 2 * C_coef * (Real.log ((n : ℝ) + 1)) ^ 2 + D_const := by
-      have h1 := hTS_X
-      have h_log_nn_sq : 0 ≤ (Real.log ((n : ℝ) + 1)) ^ 2 := sq_nonneg _
-      have h_C_nn : 0 ≤ 2 * C_coef := by linarith
-      have h_term_nn : 0 ≤ 2 * C_coef * (Real.log ((n : ℝ) + 1)) ^ 2 := by positivity
-      have hD : V_X / ((η / 3) * ε_gap ^ 2) + 2 ≤ D_const := by
-        rw [hD_const_def, hV_const_def]
-        have hKY_nn : 0 ≤ 2 * K_Y ^ 2 / ((η / 3) * ε_gap ^ 2) := by positivity
-        have hKZ_nn : 0 ≤ 2 * K_Z ^ 2 / ((η / 3) * ε_gap ^ 2) := by positivity
-        have h_split : (V_X + 2 * K_Y ^ 2 + 2 * K_Z ^ 2) / ((η / 3) * ε_gap ^ 2)
-            = V_X / ((η / 3) * ε_gap ^ 2)
-              + 2 * K_Y ^ 2 / ((η / 3) * ε_gap ^ 2)
-              + 2 * K_Z ^ 2 / ((η / 3) * ε_gap ^ 2) := by
-          rw [add_div, add_div]
-        have h_expNeg_nn : 0 ≤ (expNegMulMinN ((I_lb - R') / 2) (ε' / 2) : ℝ) := by
-          exact Nat.cast_nonneg _
-        linarith
-      linarith
-    have hAY : (typicalSetMinN V_Y_n (η / 3) ε_gap : ℝ)
-        ≤ 2 * C_coef * (Real.log ((n : ℝ) + 1)) ^ 2 + D_const := by
-      have hKY_term :
-          (2 * K_Y ^ 2 + 2 * (Real.log ((n : ℝ) + 1)) ^ 2) / ((η / 3) * ε_gap ^ 2) + 2
-            ≤ 2 * C_coef * (Real.log ((n : ℝ) + 1)) ^ 2 + D_const := by
-        rw [hD_const_def, hV_const_def, hC_coef_def]
-        -- 2·C_coef = 2 · 2 / ((η/3) · ε_gap²) = 4 / (...). And the lhs splits.
-        have h_split : (2 * K_Y ^ 2 + 2 * (Real.log ((n : ℝ) + 1)) ^ 2) / ((η / 3) * ε_gap ^ 2)
-            = 2 * K_Y ^ 2 / ((η / 3) * ε_gap ^ 2)
-              + 2 * (Real.log ((n : ℝ) + 1)) ^ 2 / ((η / 3) * ε_gap ^ 2) := by
-          rw [add_div]
-        have h_2C : 2 * (2 / ((η / 3) * ε_gap ^ 2)) * (Real.log ((n : ℝ) + 1)) ^ 2
-            = 2 * (Real.log ((n : ℝ) + 1)) ^ 2 / ((η / 3) * ε_gap ^ 2) * 2 := by ring
-        have h_const_nn1 : 0 ≤ V_X / ((η / 3) * ε_gap ^ 2) := by positivity
-        have h_const_nn2 : 0 ≤ 2 * K_Z ^ 2 / ((η / 3) * ε_gap ^ 2) := by positivity
-        have h_expNeg_nn : 0 ≤ (expNegMulMinN ((I_lb - R') / 2) (ε' / 2) : ℝ) := by
-          exact Nat.cast_nonneg _
-        have h_total_split : (V_X + 2 * K_Y ^ 2 + 2 * K_Z ^ 2) / ((η / 3) * ε_gap ^ 2)
-            = V_X / ((η / 3) * ε_gap ^ 2) + 2 * K_Y ^ 2 / ((η / 3) * ε_gap ^ 2)
-              + 2 * K_Z ^ 2 / ((η / 3) * ε_gap ^ 2) := by
-          rw [add_div, add_div]
-        -- Combine.
-        have h_2_log : 2 * (Real.log ((n : ℝ) + 1)) ^ 2 / ((η / 3) * ε_gap ^ 2)
-            ≤ 2 * (2 / ((η / 3) * ε_gap ^ 2)) * (Real.log ((n : ℝ) + 1)) ^ 2 := by
-          have h_eq : 2 * (2 / ((η / 3) * ε_gap ^ 2)) * (Real.log ((n : ℝ) + 1)) ^ 2
-              = 4 * (Real.log ((n : ℝ) + 1)) ^ 2 / ((η / 3) * ε_gap ^ 2) := by
-            field_simp; ring
-          rw [h_eq]
-          have h_log_sq_nn : 0 ≤ (Real.log ((n : ℝ) + 1)) ^ 2 := sq_nonneg _
-          have h_24 : 2 * (Real.log ((n : ℝ) + 1)) ^ 2 ≤ 4 * (Real.log ((n : ℝ) + 1)) ^ 2 := by
-            linarith
-          exact div_le_div_of_nonneg_right h_24 hηε_sq.le
-        linarith
-      linarith [hTS_Y_full, hKY_term]
-    have hAZ : (typicalSetMinN V_Z_n (η / 3) ε_gap : ℝ)
-        ≤ 2 * C_coef * (Real.log ((n : ℝ) + 1)) ^ 2 + D_const := by
-      have hKZ_term :
-          (2 * K_Z ^ 2 + 2 * (Real.log ((n : ℝ) + 1)) ^ 2) / ((η / 3) * ε_gap ^ 2) + 2
-            ≤ 2 * C_coef * (Real.log ((n : ℝ) + 1)) ^ 2 + D_const := by
-        rw [hD_const_def, hV_const_def, hC_coef_def]
-        have h_split : (2 * K_Z ^ 2 + 2 * (Real.log ((n : ℝ) + 1)) ^ 2) / ((η / 3) * ε_gap ^ 2)
-            = 2 * K_Z ^ 2 / ((η / 3) * ε_gap ^ 2)
-              + 2 * (Real.log ((n : ℝ) + 1)) ^ 2 / ((η / 3) * ε_gap ^ 2) := by
-          rw [add_div]
-        have h_const_nn1 : 0 ≤ V_X / ((η / 3) * ε_gap ^ 2) := by positivity
-        have h_const_nn2 : 0 ≤ 2 * K_Y ^ 2 / ((η / 3) * ε_gap ^ 2) := by positivity
-        have h_expNeg_nn : 0 ≤ (expNegMulMinN ((I_lb - R') / 2) (ε' / 2) : ℝ) := by
-          exact Nat.cast_nonneg _
-        have h_total_split : (V_X + 2 * K_Y ^ 2 + 2 * K_Z ^ 2) / ((η / 3) * ε_gap ^ 2)
-            = V_X / ((η / 3) * ε_gap ^ 2) + 2 * K_Y ^ 2 / ((η / 3) * ε_gap ^ 2)
-              + 2 * K_Z ^ 2 / ((η / 3) * ε_gap ^ 2) := by
-          rw [add_div, add_div]
-        have h_2_log : 2 * (Real.log ((n : ℝ) + 1)) ^ 2 / ((η / 3) * ε_gap ^ 2)
-            ≤ 2 * (2 / ((η / 3) * ε_gap ^ 2)) * (Real.log ((n : ℝ) + 1)) ^ 2 := by
-          have h_eq : 2 * (2 / ((η / 3) * ε_gap ^ 2)) * (Real.log ((n : ℝ) + 1)) ^ 2
-              = 4 * (Real.log ((n : ℝ) + 1)) ^ 2 / ((η / 3) * ε_gap ^ 2) := by
-            field_simp; ring
-          rw [h_eq]
-          have h_log_sq_nn : 0 ≤ (Real.log ((n : ℝ) + 1)) ^ 2 := sq_nonneg _
-          have h_24 : 2 * (Real.log ((n : ℝ) + 1)) ^ 2 ≤ 4 * (Real.log ((n : ℝ) + 1)) ^ 2 := by
-            linarith
-          exact div_le_div_of_nonneg_right h_24 hηε_sq.le
-        linarith
-      linarith [hTS_Z_full, hKZ_term]
-    have hAExp : (expNegMulMinN ((I_lb - R') / 2) (ε' / 2) : ℝ)
-        ≤ 2 * C_coef * (Real.log ((n : ℝ) + 1)) ^ 2 + D_const := by
-      rw [hD_const_def]
-      have h_term_nn : 0 ≤ 2 * C_coef * (Real.log ((n : ℝ) + 1)) ^ 2 := by positivity
-      have h_const_nn1 : 0 ≤ V_const / ((η / 3) * ε_gap ^ 2) := by
-        apply div_nonneg
-        · rw [hV_const_def]; positivity
-        · exact hηε_sq.le
-      linarith
-    have hA1 : (1 : ℝ) ≤ 2 * C_coef * (Real.log ((n : ℝ) + 1)) ^ 2 + D_const := by
-      rw [hD_const_def]
-      have h_term_nn : 0 ≤ 2 * C_coef * (Real.log ((n : ℝ) + 1)) ^ 2 := by positivity
-      have h_const_nn1 : 0 ≤ V_const / ((η / 3) * ε_gap ^ 2) := by
-        apply div_nonneg
-        · rw [hV_const_def]; positivity
-        · exact hηε_sq.le
-      have h_expNeg_nn : 0 ≤ (expNegMulMinN ((I_lb - R') / 2) (ε' / 2) : ℝ) := Nat.cast_nonneg _
-      linarith
-    -- Combine via max_le.
-    refine max_le (max_le (max_le (max_le ?_ ?_) ?_) hAExp) hA1
-    · exact hAt
-    · exact hAY
-    · exact hAZ
+        ≤ 2 * C_coef * (Real.log ((n : ℝ) + 1)) ^ 2 + D_const :=
+    channelCodingSmoothMinN_real_le_two_coef_logSq_add
+      (by rw [hη_def]) hε_gap_def hηε_sq hV_X_nn h_V_Y_n_bound h_V_Z_n_bound
+      (sq_nonneg _) hV_Y_n_nn hV_Z_n_nn hC_coef_def hDX hDY hDZ hDexp hD1 hCLsq
   -- From outer N₀: 2·C_coef · (log(n+1))² + D_const ≤ n.
   have h_log_le_n := hN_log n hn_log
   have h_smoothN_le_n :
@@ -602,85 +602,14 @@ theorem exists_N_for_smooth_achievability_uniform
       hδ_n_pos hδ_n_le hR'_pos hR'_lt_I_lb hMI_δ_n.le V_X V_Y_n V_Z_n
       hV_X_bound hV_Y_bound hV_Z_bound hε'_pos n h_smoothN_le_n_nat
   -- Step 11: max-error upgrade via subcode trick (mirror `channel_coding_achievability_max_error`).
-  -- Let M' ≥ ⌈exp(nR')⌉ and avg < ε' = ε/8. We pick a subcode with size ≥ ⌈exp(nR)⌉.
-  -- The "good" Finset S has avg-error ≤ 2 avg < 2·ε' = ε/4 < ε/2.
-  have hK : (1 : ℝ) < 2 := by norm_num
-  have h_filter_bound :=
-    errorProbAt_filter_card_bound (M := M') (n := n) c' (Channel.smooth W δ_n) hK
-  set T : Finset (Fin M') := (Finset.univ : Finset (Fin M')).filter
-      (fun m => 2 * (c'.averageErrorProb (Channel.smooth W δ_n)).toReal <
-        (c'.errorProbAt (Channel.smooth W δ_n) m).toReal) with hT_def
-  set S : Finset (Fin M') := (Finset.univ : Finset (Fin M')).filter
-      (fun m => (c'.errorProbAt (Channel.smooth W δ_n) m).toReal ≤
-        2 * (c'.averageErrorProb (Channel.smooth W δ_n)).toReal) with hS_def
-  have hST_partition : S.card + T.card = M' := by
-    have h_union : S ∪ T = Finset.univ := by
-      apply Finset.eq_univ_iff_forall.mpr
-      intro m
-      rw [Finset.mem_union, hS_def, hT_def, Finset.mem_filter, Finset.mem_filter]
-      rcases le_or_gt ((c'.errorProbAt (Channel.smooth W δ_n) m).toReal)
-          (2 * (c'.averageErrorProb (Channel.smooth W δ_n)).toReal) with h | h
-      · exact Or.inl ⟨Finset.mem_univ m, h⟩
-      · exact Or.inr ⟨Finset.mem_univ m, h⟩
-    have h_disj : Disjoint S T := by
-      rw [hS_def, hT_def]
-      refine Finset.disjoint_filter.mpr ?_
-      intro m _ hm
-      exact not_lt_of_ge hm
-    have := Finset.card_union_of_disjoint h_disj
-    rw [h_union, Finset.card_univ, Fintype.card_fin] at this
-    linarith
-  have h_T_card_le : 2 * T.card ≤ M' := by
-    have h_real : ((T.card : ℝ) * 2 : ℝ) ≤ (M' : ℝ) := h_filter_bound
-    have h_real' : ((2 * T.card : ℕ) : ℝ) ≤ ((M' : ℕ) : ℝ) := by
-      push_cast; linarith
-    exact_mod_cast h_real'
-  have h_2S_ge_M : M' ≤ 2 * S.card := by
-    have : M' = S.card + T.card := hST_partition.symm
-    omega
-  have h_rate_inequality : 2 * Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ 2 * S.card := by
-    calc 2 * Nat.ceil (Real.exp ((n : ℝ) * R))
-        ≤ Nat.ceil (Real.exp ((n : ℝ) * R')) := hN_rate n hn_rate
-      _ ≤ M' := hM'_lb
-      _ ≤ 2 * S.card := h_2S_ge_M
-  have h_ceil_le_S_card : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ S.card := by
-    have h2 : (2 : ℕ) > 0 := by norm_num
-    exact Nat.le_of_mul_le_mul_left h_rate_inequality h2
-  have h_exp_nR_pos : 0 ≤ (n : ℝ) * R := mul_nonneg (Nat.cast_nonneg _) hR_pos.le
-  have h_exp_nR_ge_1 : 1 ≤ Real.exp ((n : ℝ) * R) :=
-    Real.one_le_exp h_exp_nR_pos
-  have h_ceil_ge_1 : 1 ≤ Nat.ceil (Real.exp ((n : ℝ) * R)) := by
-    rw [Nat.one_le_iff_ne_zero, Ne, Nat.ceil_eq_zero, not_le]
-    exact lt_of_lt_of_le zero_lt_one h_exp_nR_ge_1
-  have hS_pos : 0 < S.card := lt_of_lt_of_le h_ceil_ge_1 h_ceil_le_S_card
-  -- Assemble: ⟨δ_n, ..., S.card, h_ceil_le_S_card, subcode, max-error bound⟩.
-  refine ⟨δ_n, hδ_n_pos, hδ_n_le, h_2nδ_lt, S.card, h_ceil_le_S_card,
-    c'.subcode S hS_pos, ?_⟩
+  -- Let M' ≥ ⌈exp(nR')⌉ and avg < ε' = ε/8. The subcode trick gives a code of size
+  -- ≥ ⌈exp(nR)⌉ with max-error < 2·ε' = ε/4 < ε/2.
+  obtain ⟨M, hM_lb, cs, h_max_lt⟩ :=
+    exists_subcode_maxError_lt_two_mul c' (Channel.smooth W δ_n) hR_pos hM'_lb
+      (hN_rate n hn_rate) h_avg_lt
+  refine ⟨δ_n, hδ_n_pos, hδ_n_le, h_2nδ_lt, M, hM_lb, cs, ?_⟩
   intro m'
-  -- Per-message max-error bound: each subcode error ≤ 2·avg < 2·ε' = ε/4 < ε/2.
-  have h_sub_le := c'.subcode_errorProbAt_le (Channel.smooth W δ_n) S hS_pos m'
-  set m₀ : Fin M' := (S.equivFin.symm ⟨m'.val, by simp [Fin.is_lt]⟩).val with hm₀_def
-  have hm₀_mem : m₀ ∈ S := (S.equivFin.symm ⟨m'.val, by simp [Fin.is_lt]⟩).property
-  have h_m₀_le : (c'.errorProbAt (Channel.smooth W δ_n) m₀).toReal ≤
-      2 * (c'.averageErrorProb (Channel.smooth W δ_n)).toReal := by
-    rw [hS_def, Finset.mem_filter] at hm₀_mem
-    exact hm₀_mem.2
-  have h_sub_le_top : c'.errorProbAt (Channel.smooth W δ_n) m₀ ≠ ∞ := by
-    haveI : IsProbabilityMeasure
-        (Measure.pi (fun i => Channel.smooth W δ_n (c'.encoder m₀ i))) := by infer_instance
-    exact ((prob_le_one
-      (μ := Measure.pi (fun i => Channel.smooth W δ_n (c'.encoder m₀ i)))
-      (s := c'.errorEvent m₀)).trans_lt ENNReal.one_lt_top).ne
-  have h_sub_le_toReal :
-      ((c'.subcode S hS_pos).errorProbAt (Channel.smooth W δ_n) m').toReal
-        ≤ (c'.errorProbAt (Channel.smooth W δ_n) m₀).toReal :=
-    (ENNReal.toReal_le_toReal
-      (ne_top_of_le_ne_top h_sub_le_top h_sub_le) h_sub_le_top).mpr h_sub_le
-  calc ((c'.subcode S hS_pos).errorProbAt (Channel.smooth W δ_n) m').toReal
-      ≤ (c'.errorProbAt (Channel.smooth W δ_n) m₀).toReal := h_sub_le_toReal
-    _ ≤ 2 * (c'.averageErrorProb (Channel.smooth W δ_n)).toReal := h_m₀_le
-    _ < 2 * ε' := by linarith
-    _ = ε / 4 := by rw [hε'_def]; ring
-    _ < ε / 2 := by linarith
+  have h2ε'_lt : 2 * ε' < ε / 2 := by rw [hε'_def]; linarith
+  exact (h_max_lt m').trans h2ε'_lt
 
 end InformationTheory.Shannon.ChannelCoding
