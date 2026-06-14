@@ -41,6 +41,16 @@ def swError_EXY_strict
           ∧ p ∈ jointlyTypicalSet μ Xs Ys n ε }
 
 omit [DecidableEq α] [DecidableEq β] in
+lemma measureReal_swError_EXY_strict_le_one
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) {n M_X M_Y : ℕ} (ε : ℝ)
+    (f_X : (Fin n → α) → Fin M_X) (f_Y : (Fin n → β) → Fin M_Y) :
+    μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ≤ 1 := by
+  have h_le : μ (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ≤ 1 := prob_le_one
+  unfold Measure.real
+  exact (ENNReal.toReal_le_toReal (measure_ne_top _ _) (by simp)).mpr h_le
+
+omit [DecidableEq α] [DecidableEq β] in
 /-- The full `swError_EXY` event is contained in the union of the two single-axis
 events `swError_EX`, `swError_EY` and the strict `swError_EXY_strict`. The loose
 cases (only one coordinate of the alias `p` agrees with the truth) are absorbed
@@ -294,47 +304,18 @@ theorem swError_EXY_strict_expectation_le
     rw [h_decomp]
     refine MeasurableSet.iUnion (fun fg => ?_)
     exact (measurableSet_singleton _).prod (h_meas_EXY_strict fg.1 fg.2)
-  -- Fubini: (BP.prod μ) E rewrites two ways.
-  have h_fubini1 :
-      (BP.prod μ) E
-        = ∫⁻ fg, μ (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) ∂BP := by
-    rw [Measure.prod_apply hE_meas]
-    congr 1
-  have h_fubini2 :
-      (BP.prod μ) E
-        = ∫⁻ ω, BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2} ∂μ := by
-    rw [Measure.prod_apply_symm hE_meas]
-    congr 1
+  -- Fubini swap: ∫⁻ fg, μ (slice fg) ∂BP = ∫⁻ ω, BP (slice ω) ∂μ.
   have h_swap :
       ∫⁻ fg, μ (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) ∂BP
-        = ∫⁻ ω, BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2} ∂μ := by
-    rw [← h_fubini1, h_fubini2]
-  -- ENNReal lift of per-ω bound.
-  have h_per_omega_ennreal : ∀ ω : Ω,
-      BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2}
-        ≤ ENNReal.ofReal (C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) := by
-    intro ω
-    have hr := h_per_omega ω
-    have hne_top : BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2} ≠ ∞ :=
-      measure_ne_top _ _
-    rw [show BP.real {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2}
-          = (BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2}).toReal from rfl] at hr
-    calc BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2}
-        = ENNReal.ofReal
-            (BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2}).toReal := by
-          rw [ENNReal.ofReal_toReal hne_top]
-      _ ≤ ENNReal.ofReal (C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) :=
-          ENNReal.ofReal_le_ofReal hr
+        = ∫⁻ ω, BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2} ∂μ :=
+    lintegral_measure_swap_of_prod_measurableSet BP μ
+      (fun fg => swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) hE_meas
+  -- ENNReal lift of per-ω bound, integrated against μ.
   have h_lint_le :
       ∫⁻ ω, BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2} ∂μ
-        ≤ ENNReal.ofReal (C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) := by
-    calc ∫⁻ ω, BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2} ∂μ
-        ≤ ∫⁻ _, ENNReal.ofReal (C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) ∂μ :=
-          lintegral_mono h_per_omega_ennreal
-      _ = ENNReal.ofReal (C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) * μ Set.univ := by
-          rw [lintegral_const]
-      _ = ENNReal.ofReal (C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) := by
-          rw [measure_univ, mul_one]
+        ≤ ENNReal.ofReal (C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) :=
+    lintegral_measure_le_ofReal_of_measureReal_le BP μ
+      (fun ω => {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2}) h_per_omega
   -- Bochner outer integral over BP — convert to lintegral.
   have h_int_nn : 0 ≤ᵐ[BP] fun fg : ((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y) =>
       μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) := by
@@ -349,37 +330,10 @@ theorem swError_EXY_strict_expectation_le
   -- Bochner integrable on BP.
   have h_integrable_BP : Integrable
       (fun fg : ((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y) =>
-        μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)) BP := by
-    refine ⟨h_int_meas, ?_⟩
-    -- HasFiniteIntegral: ∫⁻ ‖·‖ < ∞. Bounded integrand × finite measure.
-    refine (hasFiniteIntegral_def _ _).mpr ?_
-    have h_bound : ∀ fg : ((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y),
-        ‖μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)‖₊ ≤ 1 := by
-      intro fg
-      have h_nn : 0 ≤ μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) :=
-        measureReal_nonneg
-      have h_le_one : μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) ≤ 1 := by
-        have := prob_le_one (μ := μ)
-            (s := swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)
-        unfold Measure.real
-        have h_le : (μ (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)).toReal ≤ 1 := by
-          have h_lt_one : μ (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) ≤ 1 := this
-          exact (ENNReal.toReal_le_toReal (measure_ne_top _ _) (by simp)).mpr h_lt_one
-        exact h_le
-      rw [Real.nnnorm_of_nonneg h_nn]
-      exact_mod_cast h_le_one
-    calc ∫⁻ fg, ‖μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)‖ₑ ∂BP
-        ≤ ∫⁻ _, 1 ∂BP := by
-          refine lintegral_mono fun fg => ?_
-          have hb := h_bound fg
-          rw [show ‖μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)‖ₑ
-                = ((‖μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)‖₊ : ℝ≥0∞))
-                from rfl]
-          have : ((‖μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)‖₊ : ℝ≥0∞))
-              ≤ ((1 : ℝ≥0) : ℝ≥0∞) := by exact_mod_cast hb
-          simpa using this
-      _ = BP Set.univ := by rw [lintegral_const, one_mul]
-      _ < ∞ := measure_lt_top _ _
+        μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)) BP :=
+    integrable_of_nonneg_le_one_of_discrete BP _
+      (fun _ => measureReal_nonneg)
+      (fun fg => measureReal_swError_EXY_strict_le_one μ Xs Ys ε fg.1 fg.2)
   -- Use Bochner Fubini to convert iterated integral to integral over BP.
   rw [show (∫ f_X, ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y)
               ∂B_Y ∂B_X)
@@ -387,20 +341,11 @@ theorem swError_EXY_strict_expectation_le
     rw [integral_prod _ h_integrable_BP]]
   -- Convert Bochner ∫ over BP to lintegral.
   rw [integral_eq_lintegral_of_nonneg_ae h_int_nn h_int_meas]
-  have h_ofReal_eq : ∀ fg : ((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y),
-      ENNReal.ofReal (μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2))
-        = μ (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) := by
-    intro fg
-    have hne_top : μ (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) ≠ ∞ :=
-      measure_ne_top _ _
-    rw [show μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)
-          = (μ (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)).toReal from rfl,
-        ENNReal.ofReal_toReal hne_top]
   have h_lint_eq :
       ∫⁻ fg, ENNReal.ofReal (μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)) ∂BP
-        = ∫⁻ fg, μ (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) ∂BP := by
-    refine lintegral_congr (fun fg => ?_)
-    exact h_ofReal_eq fg
+        = ∫⁻ fg, μ (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) ∂BP :=
+    lintegral_ofReal_measureReal_eq_lintegral_measure μ BP
+      (fun fg => swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)
   rw [h_lint_eq, h_swap]
   calc (∫⁻ ω, BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2} ∂μ).toReal
       ≤ (ENNReal.ofReal (C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹)).toReal := by
@@ -444,27 +389,6 @@ private lemma entropy_joint_sub_marginal_eq_condEntropy
 
 end PhaseF
 
-lemma integrable_of_nonneg_le_one_of_discrete {γ : Type*}
-    [MeasurableSpace γ] [DiscreteMeasurableSpace γ]
-    (ν : Measure γ) [IsFiniteMeasure ν] (g : γ → ℝ)
-    (h_nn : ∀ x, 0 ≤ g x) (h_le : ∀ x, g x ≤ 1) :
-    Integrable g ν := by
-  refine ⟨Measurable.aestronglyMeasurable Measurable.of_discrete, ?_⟩
-  refine (hasFiniteIntegral_def _ _).mpr ?_
-  have h_bound : ∀ x, ‖g x‖₊ ≤ 1 := by
-    intro x
-    rw [Real.nnnorm_of_nonneg (h_nn x)]
-    exact_mod_cast h_le x
-  calc ∫⁻ x, ‖g x‖ₑ ∂ν
-      ≤ ∫⁻ _, 1 ∂ν := by
-        refine lintegral_mono fun x => ?_
-        have hb := h_bound x
-        rw [show ‖g x‖ₑ = ((‖g x‖₊ : ℝ≥0∞)) from rfl]
-        have : ((‖g x‖₊ : ℝ≥0∞)) ≤ ((1 : ℝ≥0) : ℝ≥0∞) := by exact_mod_cast hb
-        simpa using this
-    _ = ν Set.univ := by rw [lintegral_const, one_mul]
-    _ < ∞ := measure_lt_top _ _
-
 omit [DecidableEq α] [DecidableEq β] in
 lemma swErrorProb_le_one
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -477,16 +401,6 @@ lemma swErrorProb_le_one
                 (f_X (jointRV Xs n ω), f_Y (jointRV Ys n ω))
                 ≠ (jointRV Xs n ω, jointRV Ys n ω)} ≤ 1 :=
     prob_le_one
-  unfold Measure.real
-  exact (ENNReal.toReal_le_toReal (measure_ne_top _ _) (by simp)).mpr h_le
-
-omit [DecidableEq α] [DecidableEq β] in
-lemma measureReal_swError_EXY_strict_le_one
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) {n M_X M_Y : ℕ} (ε : ℝ)
-    (f_X : (Fin n → α) → Fin M_X) (f_Y : (Fin n → β) → Fin M_Y) :
-    μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ≤ 1 := by
-  have h_le : μ (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ≤ 1 := prob_le_one
   unfold Measure.real
   exact (ENNReal.toReal_le_toReal (measure_ne_top _ _) (by simp)).mpr h_le
 
@@ -941,6 +855,68 @@ private lemma exists_pair_le_of_binning_integral_le
     MeasureTheory.exists_le_integral (hg_int_inner f_X)
   exact ⟨f_X, f_Y, le_trans hf_Y hf_X_bound⟩
 
+omit [DecidableEq α] [DecidableEq β] in
+private lemma exists_encoder_pair_swErrorProb_le
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindepY_full : iIndepFun (fun i => Ys i) μ)
+    (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
+    (hindepX_full : iIndepFun (fun i => Xs i) μ)
+    (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hindepZ_full : iIndepFun (fun i => jointSequence Xs Ys i) μ)
+    (hidentZ : ∀ i,
+      IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
+    (hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
+    (hposZ : ∀ p : α × β,
+      0 < (μ.map (jointSequence Xs Ys 0)).real {p})
+    {n M_X M_Y : ℕ} [NeZero M_X] [NeZero M_Y] {ε : ℝ} (hε : 0 < ε) :
+    ∃ (f_X : (Fin n → α) → Fin M_X) (f_Y : (Fin n → β) → Fin M_Y),
+      swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+          (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
+        ≤ μ.real (swError_E0 μ Xs Ys n ε)
+          + 2 * (Real.exp ((n : ℝ) * (entropy μ (jointSequence Xs Ys 0)
+              - entropy μ (Ys 0) + 2 * ε)) * ((M_X : ℝ))⁻¹)
+          + 2 * (Real.exp ((n : ℝ) * (entropy μ (jointSequence Xs Ys 0)
+              - entropy μ (Xs 0) + 2 * ε)) * ((M_Y : ℝ))⁻¹)
+          + Real.exp ((n : ℝ) * (entropy μ (jointSequence Xs Ys 0) + ε))
+              * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by
+  have htotal := swErrorProb_total_expectation_le (n := n) (M_X := M_X)
+    (M_Y := M_Y) μ Xs Ys hXs hYs hindepY_full hidentY hindepX_full hidentX
+    hindepZ_full hidentZ hposX hposY hposZ hε
+  have hg_nn : ∀ (f_X : (Fin n → α) → Fin M_X)
+      (f_Y : (Fin n → β) → Fin M_Y),
+      0 ≤ swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+            (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) := by
+    intro f_X f_Y; unfold swErrorProb; exact measureReal_nonneg
+  have hg_le : ∀ (f_X : (Fin n → α) → Fin M_X)
+      (f_Y : (Fin n → β) → Fin M_Y),
+      swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+            (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) ≤ 1 := by
+    intro f_X f_Y
+    unfold swErrorProb Measure.real
+    exact (ENNReal.toReal_le_toReal (measure_ne_top _ _) (by simp)).mpr prob_le_one
+  have hInt_inner : ∀ f_X : (Fin n → α) → Fin M_X,
+      Integrable (fun f_Y => swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+                  (swJointTypicalDecoder μ Xs Ys ε f_X f_Y))
+        (binningMeasure β n M_Y) := fun f_X =>
+    integrable_of_nonneg_le_one_of_discrete (binningMeasure β n M_Y) _
+      (fun f_Y => hg_nn f_X f_Y) (fun f_Y => hg_le f_X f_Y)
+  have hInt_outer : Integrable
+      (fun f_X => ∫ f_Y, swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+                  (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
+                  ∂(binningMeasure β n M_Y)) (binningMeasure α n M_X) := by
+    refine integrable_of_nonneg_le_one_of_discrete (binningMeasure α n M_X) _
+      (fun f_X => integral_nonneg (fun f_Y => hg_nn f_X f_Y)) (fun f_X => ?_)
+    calc ∫ f_Y, swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+            (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) ∂(binningMeasure β n M_Y)
+        ≤ ∫ _ : (Fin n → β) → Fin M_Y, (1 : ℝ) ∂(binningMeasure β n M_Y) :=
+          integral_mono (hInt_inner f_X) (integrable_const 1)
+            (fun f_Y => hg_le f_X f_Y)
+      _ = 1 := by rw [integral_const, probReal_univ, smul_eq_mul, mul_one]
+  exact exists_pair_le_of_binning_integral_le _ hInt_inner hInt_outer htotal
+
 /-! ## Exponential squeeze with rate parametrization
 
 For `M_n := codebookSize R n = ⌈exp(n R)⌉`, the inverse `M_n⁻¹ ≤ exp(-n R)`, so each
@@ -1114,82 +1090,10 @@ theorem slepian_wolf_full_rate_region_achievability
       swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
           (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) ≤ B n := by
     intro n
-    -- Total expectation bound (F.1).
-    have htotal := swErrorProb_total_expectation_le (n := n) (M_X := M_X n)
+    rw [hB]
+    exact exists_encoder_pair_swErrorProb_le (n := n) (M_X := M_X n)
       (M_Y := M_Y n) μ Xs Ys hXs hYs hindepY_full hidentY hindepX_full hidentX
       hindepZ_full hidentZ hposX hposY hposZ hε
-    -- Integrability of the swErrorProb integrand (bounded by 1, discrete).
-    have hg_nn : ∀ (f_X : (Fin n → α) → Fin (M_X n))
-        (f_Y : (Fin n → β) → Fin (M_Y n)),
-        0 ≤ swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
-              (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) := by
-      intro f_X f_Y; unfold swErrorProb; exact measureReal_nonneg
-    have hg_le : ∀ (f_X : (Fin n → α) → Fin (M_X n))
-        (f_Y : (Fin n → β) → Fin (M_Y n)),
-        swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
-              (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) ≤ 1 := by
-      intro f_X f_Y
-      unfold swErrorProb Measure.real
-      exact (ENNReal.toReal_le_toReal (measure_ne_top _ _) (by simp)).mpr prob_le_one
-    have hInt_inner : ∀ f_X : (Fin n → α) → Fin (M_X n),
-        Integrable (fun f_Y => swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
-                    (swJointTypicalDecoder μ Xs Ys ε f_X f_Y))
-          (binningMeasure β n (M_Y n)) := by
-      intro f_X
-      refine ⟨Measurable.aestronglyMeasurable Measurable.of_discrete, ?_⟩
-      refine (hasFiniteIntegral_def _ _).mpr ?_
-      calc ∫⁻ f_Y, ‖swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
-                (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)‖ₑ
-              ∂(binningMeasure β n (M_Y n))
-          ≤ ∫⁻ _, 1 ∂(binningMeasure β n (M_Y n)) := by
-            refine lintegral_mono fun f_Y => ?_
-            have hb : ‖swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
-                  (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)‖₊ ≤ 1 := by
-              rw [Real.nnnorm_of_nonneg (hg_nn f_X f_Y)]
-              exact_mod_cast hg_le f_X f_Y
-            rw [show ‖_‖ₑ = ((‖_‖₊ : ℝ≥0∞)) from rfl]
-            have : ((‖swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
-                  (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)‖₊ : ℝ≥0∞)) ≤ ((1 : ℝ≥0) : ℝ≥0∞) := by
-              exact_mod_cast hb
-            simpa using this
-        _ = binningMeasure β n (M_Y n) Set.univ := by rw [lintegral_const, one_mul]
-        _ < ∞ := measure_lt_top _ _
-    have hInt_outer : Integrable
-        (fun f_X => ∫ f_Y, swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
-                    (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
-                    ∂(binningMeasure β n (M_Y n))) (binningMeasure α n (M_X n)) := by
-      refine ⟨Measurable.aestronglyMeasurable Measurable.of_discrete, ?_⟩
-      refine (hasFiniteIntegral_def _ _).mpr ?_
-      calc ∫⁻ f_X, ‖∫ f_Y, swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
-                (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
-                ∂(binningMeasure β n (M_Y n))‖ₑ ∂(binningMeasure α n (M_X n))
-          ≤ ∫⁻ _, 1 ∂(binningMeasure α n (M_X n)) := by
-            refine lintegral_mono fun f_X => ?_
-            have hnn : 0 ≤ ∫ f_Y, swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
-                  (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) ∂(binningMeasure β n (M_Y n)) :=
-              integral_nonneg (fun f_Y => hg_nn f_X f_Y)
-            have hle1 : (∫ f_Y, swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
-                  (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) ∂(binningMeasure β n (M_Y n)))
-                  ≤ 1 := by
-              calc _ ≤ ∫ _ : (Fin n → β) → Fin (M_Y n), (1 : ℝ) ∂(binningMeasure β n (M_Y n)) :=
-                    integral_mono (hInt_inner f_X) (integrable_const 1)
-                      (fun f_Y => hg_le f_X f_Y)
-                _ = 1 := by rw [integral_const, probReal_univ, smul_eq_mul, mul_one]
-            have hb : ‖∫ f_Y, swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
-                  (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
-                  ∂(binningMeasure β n (M_Y n))‖₊ ≤ 1 := by
-              rw [Real.nnnorm_of_nonneg hnn]
-              exact_mod_cast hle1
-            rw [show ‖_‖ₑ = ((‖_‖₊ : ℝ≥0∞)) from rfl]
-            have : ((‖∫ f_Y, swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
-                  (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
-                  ∂(binningMeasure β n (M_Y n))‖₊ : ℝ≥0∞)) ≤ ((1 : ℝ≥0) : ℝ≥0∞) := by
-              exact_mod_cast hb
-            simpa using this
-        _ = binningMeasure α n (M_X n) Set.univ := by rw [lintegral_const, one_mul]
-        _ < ∞ := measure_lt_top _ _
-    -- Pigeonhole (F.2).
-    exact exists_pair_le_of_binning_integral_le _ hInt_inner hInt_outer htotal
   -- Functionalize the choice.
   refine ⟨M_X, M_Y, fun n => codebookSize_pos R_X n, fun n => codebookSize_pos R_Y n,
     fun n => (hExists n).choose, fun n => (hExists n).choose_spec.choose,

@@ -18,6 +18,91 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β]
 
+/-! ## Generic measure-theoretic plumbing -/
+
+lemma integrable_of_nonneg_le_one_of_discrete {γ : Type*}
+    [MeasurableSpace γ] [DiscreteMeasurableSpace γ]
+    (ν : Measure γ) [IsFiniteMeasure ν] (g : γ → ℝ)
+    (h_nn : ∀ x, 0 ≤ g x) (h_le : ∀ x, g x ≤ 1) :
+    Integrable g ν := by
+  refine ⟨Measurable.aestronglyMeasurable Measurable.of_discrete, ?_⟩
+  refine (hasFiniteIntegral_def _ _).mpr ?_
+  have h_bound : ∀ x, ‖g x‖₊ ≤ 1 := by
+    intro x
+    rw [Real.nnnorm_of_nonneg (h_nn x)]
+    exact_mod_cast h_le x
+  calc ∫⁻ x, ‖g x‖ₑ ∂ν
+      ≤ ∫⁻ _, 1 ∂ν := by
+        refine lintegral_mono fun x => ?_
+        have hb := h_bound x
+        rw [show ‖g x‖ₑ = ((‖g x‖₊ : ℝ≥0∞)) from rfl]
+        have : ((‖g x‖₊ : ℝ≥0∞)) ≤ ((1 : ℝ≥0) : ℝ≥0∞) := by exact_mod_cast hb
+        simpa using this
+    _ = ν Set.univ := by rw [lintegral_const, one_mul]
+    _ < ∞ := measure_lt_top _ _
+
+lemma lintegral_measure_le_ofReal_of_measureReal_le {Ω' γ : Type*}
+    [MeasurableSpace Ω'] [MeasurableSpace γ]
+    (ν : Measure γ) [IsFiniteMeasure ν]
+    (μ : Measure Ω') [IsProbabilityMeasure μ]
+    (s : Ω' → Set γ) {K : ℝ}
+    (hbound : ∀ ω, ν.real (s ω) ≤ K) :
+    ∫⁻ ω, ν (s ω) ∂μ ≤ ENNReal.ofReal K := by
+  have h_per_omega : ∀ ω, ν (s ω) ≤ ENNReal.ofReal K := by
+    intro ω
+    have hr := hbound ω
+    have hne_top : ν (s ω) ≠ ∞ := measure_ne_top _ _
+    rw [show ν.real (s ω) = (ν (s ω)).toReal from rfl] at hr
+    calc ν (s ω)
+        = ENNReal.ofReal (ν (s ω)).toReal := by rw [ENNReal.ofReal_toReal hne_top]
+      _ ≤ ENNReal.ofReal K := ENNReal.ofReal_le_ofReal hr
+  calc ∫⁻ ω, ν (s ω) ∂μ
+      ≤ ∫⁻ _, ENNReal.ofReal K ∂μ := lintegral_mono h_per_omega
+    _ = ENNReal.ofReal K * μ Set.univ := by rw [lintegral_const]
+    _ = ENNReal.ofReal K := by rw [measure_univ, mul_one]
+
+lemma lintegral_ofReal_measureReal_eq_lintegral_measure {Ω' γ : Type*}
+    [MeasurableSpace Ω'] [MeasurableSpace γ]
+    (μ : Measure Ω') [IsFiniteMeasure μ] (ν : Measure γ) (s : γ → Set Ω') :
+    ∫⁻ x, ENNReal.ofReal (μ.real (s x)) ∂ν = ∫⁻ x, μ (s x) ∂ν := by
+  refine lintegral_congr (fun x => ?_)
+  have hne_top : μ (s x) ≠ ∞ := measure_ne_top _ _
+  rw [show μ.real (s x) = (μ (s x)).toReal from rfl, ENNReal.ofReal_toReal hne_top]
+
+lemma lintegral_measure_swap_of_prod_measurableSet {Ω' γ : Type*}
+    [MeasurableSpace Ω'] [MeasurableSpace γ]
+    (ν : Measure γ) [SFinite ν] (μ : Measure Ω') [SFinite μ]
+    (s : γ → Set Ω')
+    (hE : MeasurableSet {q : γ × Ω' | q.2 ∈ s q.1}) :
+    ∫⁻ g, μ (s g) ∂ν = ∫⁻ ω, ν {g | ω ∈ s g} ∂μ := by
+  have h_fubini1 : (ν.prod μ) {q : γ × Ω' | q.2 ∈ s q.1}
+      = ∫⁻ g, μ (s g) ∂ν := by
+    rw [Measure.prod_apply hE]; congr 1
+  have h_fubini2 : (ν.prod μ) {q : γ × Ω' | q.2 ∈ s q.1}
+      = ∫⁻ ω, ν {g | ω ∈ s g} ∂μ := by
+    rw [Measure.prod_apply_symm hE]; congr 1
+  rw [← h_fubini1, h_fubini2]
+
+lemma le_exp_of_mul_exp_neg_le (c : ℝ) (n : ℕ) (HZ HX ε : ℝ)
+    (hchain : c * Real.exp (-(n : ℝ) * (HZ + ε)) ≤ Real.exp (-(n : ℝ) * (HX - ε))) :
+    c ≤ Real.exp ((n : ℝ) * (HZ - HX + 2 * ε)) := by
+  have hexp_pos : 0 < Real.exp ((n : ℝ) * (HZ + ε)) := Real.exp_pos _
+  have hexp_cancel :
+      Real.exp (-(n : ℝ) * (HZ + ε)) * Real.exp ((n : ℝ) * (HZ + ε)) = 1 := by
+    rw [show -(n : ℝ) * (HZ + ε) = -((n : ℝ) * (HZ + ε)) from by ring, ← Real.exp_add]
+    simp
+  have hmul := mul_le_mul_of_nonneg_right hchain hexp_pos.le
+  have hlhs :
+      c * Real.exp (-(n : ℝ) * (HZ + ε)) * Real.exp ((n : ℝ) * (HZ + ε)) = c := by
+    rw [mul_assoc, hexp_cancel, mul_one]
+  have hrhs :
+      Real.exp (-(n : ℝ) * (HX - ε)) * Real.exp ((n : ℝ) * (HZ + ε))
+        = Real.exp ((n : ℝ) * (HZ - HX + 2 * ε)) := by
+    rw [← Real.exp_add]; congr 1; ring
+  rw [hlhs] at hmul
+  rw [hrhs] at hmul
+  exact hmul
+
 /-! ## Alias expectation bound -/
 
 omit [DecidableEq α] in
@@ -185,53 +270,18 @@ theorem swError_EX_expectation_le
     rw [h_decomp]
     refine MeasurableSet.iUnion (fun f_X => ?_)
     exact (measurableSet_singleton _).prod (h_meas_EX f_X)
-  -- Step 3: Apply Fubini for measures both ways.
-  -- (B_X.prod μ) E = ∫⁻ f_X, μ (slice_f_X) ∂B_X = ∫⁻ ω, B_X (slice_ω) ∂μ.
-  have h_fubini1 :
-      (B_X.prod μ) E = ∫⁻ f_X, μ (swError_EX μ Xs Ys n ε f_X) ∂B_X := by
-    rw [Measure.prod_apply hE_meas]
-    -- Prod.mk f_X ⁻¹' E = swError_EX μ ... f_X.
-    congr 1
-  have h_fubini2 :
-      (B_X.prod μ) E
-        = ∫⁻ ω, B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X} ∂μ := by
-    rw [Measure.prod_apply_symm hE_meas]
-    congr 1
-  -- Combine: ∫⁻ f_X, μ (...) ∂B_X = ∫⁻ ω, B_X (...) ∂μ.
+  -- Step 3: Fubini swap ∫⁻ f_X, μ (slice f_X) ∂B_X = ∫⁻ ω, B_X (slice ω) ∂μ.
   have h_swap :
       ∫⁻ f_X, μ (swError_EX μ Xs Ys n ε f_X) ∂B_X
-        = ∫⁻ ω, B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X} ∂μ := by
-    rw [← h_fubini1, h_fubini2]
-  -- Step 4: bound the inner B_X-mass uniformly in ω.
-  -- Per-ω bound at the ENNReal level: B_X (...) ≤ ENNReal.ofReal (C * (M_X)⁻¹).
-  have h_per_omega_ennreal : ∀ ω : Ω,
-      B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X}
-        ≤ ENNReal.ofReal (C * ((M_X : ℝ))⁻¹) := by
-    intro ω
-    have hr := h_per_omega ω
-    -- B_X.real S = (B_X S).toReal; B_X S < ∞ (probability measure).
-    have hne_top : B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X} ≠ ∞ :=
-      measure_ne_top _ _
-    rw [show B_X.real {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X}
-          = (B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X}).toReal from rfl] at hr
-    -- ENNReal.ofReal preserves the inequality on toReal ≤ real.
-    have h_rhs_nn : 0 ≤ C * ((M_X : ℝ))⁻¹ := mul_nonneg hC_nn hMinv_nn
-    calc B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X}
-        = ENNReal.ofReal (B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X}).toReal := by
-          rw [ENNReal.ofReal_toReal hne_top]
-      _ ≤ ENNReal.ofReal (C * ((M_X : ℝ))⁻¹) :=
-          ENNReal.ofReal_le_ofReal hr
-  -- Integrate the uniform pointwise bound against μ.
+        = ∫⁻ ω, B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X} ∂μ :=
+    lintegral_measure_swap_of_prod_measurableSet B_X μ
+      (fun f_X => swError_EX μ Xs Ys n ε f_X) hE_meas
+  -- Step 4: bound the inner B_X-mass uniformly in ω, integrated against μ.
   have h_lint_le :
       ∫⁻ ω, B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X} ∂μ
-        ≤ ENNReal.ofReal (C * ((M_X : ℝ))⁻¹) := by
-    calc ∫⁻ ω, B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X} ∂μ
-        ≤ ∫⁻ _, ENNReal.ofReal (C * ((M_X : ℝ))⁻¹) ∂μ :=
-          lintegral_mono h_per_omega_ennreal
-      _ = ENNReal.ofReal (C * ((M_X : ℝ))⁻¹) * μ Set.univ := by
-          rw [lintegral_const]
-      _ = ENNReal.ofReal (C * ((M_X : ℝ))⁻¹) := by
-          rw [measure_univ, mul_one]
+        ≤ ENNReal.ofReal (C * ((M_X : ℝ))⁻¹) :=
+    lintegral_measure_le_ofReal_of_measureReal_le B_X μ
+      (fun ω => {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X}) h_per_omega
   -- Step 5: convert Bochner outer integral to lintegral and conclude.
   -- Outer integrand `f_X ↦ μ.real (swError_EX ... f_X)` is non-negative.
   have h_int_nn : 0 ≤ᵐ[B_X] fun f_X => μ.real (swError_EX μ Xs Ys n ε f_X) := by
@@ -246,21 +296,12 @@ theorem swError_EX_expectation_le
     refine Measurable.of_discrete
   rw [integral_eq_lintegral_of_nonneg_ae h_int_nn h_int_meas]
   -- Now goal: (∫⁻ f_X, ENNReal.ofReal (μ.real ...) ∂B_X).toReal ≤ C * (M_X)⁻¹.
-  -- ENNReal.ofReal (μ.real S) = μ S (since μ S ≤ 1 < ∞).
-  have h_ofReal_eq : ∀ f_X : (Fin n → α) → Fin M_X,
-      ENNReal.ofReal (μ.real (swError_EX μ Xs Ys n ε f_X))
-        = μ (swError_EX μ Xs Ys n ε f_X) := by
-    intro f_X
-    have hne_top : μ (swError_EX μ Xs Ys n ε f_X) ≠ ∞ := measure_ne_top _ _
-    rw [show μ.real (swError_EX μ Xs Ys n ε f_X)
-          = (μ (swError_EX μ Xs Ys n ε f_X)).toReal from rfl,
-        ENNReal.ofReal_toReal hne_top]
-  -- Substitute into the lintegral.
+  -- Convert ENNReal.ofReal (μ.real S) = μ S, then Fubini-swap.
   have h_lint_eq :
       ∫⁻ f_X, ENNReal.ofReal (μ.real (swError_EX μ Xs Ys n ε f_X)) ∂B_X
-        = ∫⁻ f_X, μ (swError_EX μ Xs Ys n ε f_X) ∂B_X := by
-    refine lintegral_congr (fun f_X => ?_)
-    exact h_ofReal_eq f_X
+        = ∫⁻ f_X, μ (swError_EX μ Xs Ys n ε f_X) ∂B_X :=
+    lintegral_ofReal_measureReal_eq_lintegral_measure μ B_X
+      (fun f_X => swError_EX μ Xs Ys n ε f_X)
   rw [h_lint_eq, h_swap]
   -- Goal: (∫⁻ ω, B_X (...) ∂μ).toReal ≤ C * (M_X)⁻¹.
   have h_rhs_nn : 0 ≤ C * ((M_X : ℝ))⁻¹ := mul_nonneg hC_nn hMinv_nn
@@ -312,6 +353,40 @@ private lemma conditionalTypicalSliceY_empty_of_x_not_typical
     exact absurd hy.1 hx
   · intro hy
     exact hy.elim
+
+omit [DecidableEq α] [DecidableEq β] in
+lemma measureReal_map_jointRV_proj_fst_eq
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (n : ℕ) (x : Fin n → α) :
+    (μ.map (jointRV (jointSequence Xs Ys) n)).real
+        ((fun z i => (z i).1) ⁻¹' ({x} : Set (Fin n → α)))
+      = (μ.map (jointRV Xs n)).real ({x} : Set (Fin n → α)) := by
+  classical
+  have hZs : ∀ i, Measurable (jointSequence Xs Ys i) := fun i =>
+    measurable_jointSequence Xs Ys hXs hYs i
+  have hproj_meas : Measurable (fun z : Fin n → α × β => fun i => (z i).1) := by
+    apply measurable_pi_lambda
+    intro i
+    exact (measurable_pi_apply i).fst
+  have h_meas_x : MeasurableSet ({x} : Set (Fin n → α)) := measurableSet_singleton x
+  have h_meas_pre : MeasurableSet
+      ((fun z : Fin n → α × β => fun i => (z i).1) ⁻¹' ({x} : Set (Fin n → α))) :=
+    hproj_meas h_meas_x
+  have hZmeas : Measurable (jointRV (jointSequence Xs Ys) n) :=
+    measurable_jointRV (jointSequence Xs Ys) hZs n
+  have hXmeas : Measurable (jointRV Xs n) := measurable_jointRV Xs hXs n
+  have hpre_eq :
+      jointRV (jointSequence Xs Ys) n ⁻¹'
+          ((fun z : Fin n → α × β => fun i => (z i).1) ⁻¹' ({x} : Set (Fin n → α)))
+        = jointRV Xs n ⁻¹' ({x} : Set (Fin n → α)) := by
+    ext ω
+    simp only [Set.mem_preimage, Set.mem_singleton_iff]
+    constructor
+    · intro hω; funext i; have := congr_fun hω i; exact this
+    · intro hω; funext i; have := congr_fun hω i; exact this
+  unfold MeasureTheory.Measure.real
+  rw [Measure.map_apply hZmeas h_meas_pre, Measure.map_apply hXmeas h_meas_x, hpre_eq]
 
 omit [DecidableEq α] [DecidableEq β] in
 /-- For any `X`-block `x`, the cardinality of the `Y`-fiber of the jointly typical
@@ -413,34 +488,8 @@ private theorem conditionalTypicalSliceY_card_le
     have hbridge :
         (μ.map (jointRV Zs n)).real (proj_X ⁻¹' ({x} : Set (Fin n → α)))
           = (μ.map (jointRV Xs n)).real ({x} : Set (Fin n → α)) := by
-      have hproj_meas : Measurable proj_X := by
-        apply measurable_pi_lambda
-        intro i
-        exact (measurable_pi_apply i).fst
-      have h_meas_x : MeasurableSet ({x} : Set (Fin n → α)) :=
-        measurableSet_singleton x
-      have h_meas_pre : MeasurableSet (proj_X ⁻¹' ({x} : Set (Fin n → α))) :=
-        hproj_meas h_meas_x
-      have hZmeas : Measurable (jointRV Zs n) := measurable_jointRV Zs hZs n
-      have hXmeas : Measurable (jointRV Xs n) := measurable_jointRV Xs hXs n
-      have hpre_eq :
-          jointRV Zs n ⁻¹' (proj_X ⁻¹' ({x} : Set (Fin n → α)))
-            = jointRV Xs n ⁻¹' ({x} : Set (Fin n → α)) := by
-        ext ω
-        simp only [Set.mem_preimage, Set.mem_singleton_iff]
-        constructor
-        · intro hω
-          funext i
-          have := congr_fun hω i
-          exact this
-        · intro hω
-          funext i
-          have := congr_fun hω i
-          exact this
-      unfold MeasureTheory.Measure.real
-      rw [Measure.map_apply hZmeas h_meas_pre]
-      rw [Measure.map_apply hXmeas h_meas_x]
-      rw [hpre_eq]
+      rw [hZs_def]
+      exact measureReal_map_jointRV_proj_fst_eq μ Xs Ys hXs hYs n x
     have hXbd : (μ.map (jointRV Xs n)).real ({x} : Set (Fin n → α))
         ≤ Real.exp (-(n : ℝ) * (HX - ε)) :=
       typicalSet_prob_le μ Xs hXs hindepX_full hidentX hposX n x hxT
@@ -455,27 +504,7 @@ private theorem conditionalTypicalSliceY_card_le
             hbound_image
         _ = (μ.map (jointRV Xs n)).real ({x} : Set (Fin n → α)) := hbridge
         _ ≤ Real.exp (-(n : ℝ) * (HX - ε)) := hXbd
-    have hexp_pos : 0 < Real.exp ((n : ℝ) * (HZ + ε)) := Real.exp_pos _
-    have hexp_cancel :
-        Real.exp (-(n : ℝ) * (HZ + ε)) * Real.exp ((n : ℝ) * (HZ + ε)) = 1 := by
-      rw [show -(n : ℝ) * (HZ + ε) = -((n : ℝ) * (HZ + ε)) from by ring,
-          ← Real.exp_add]
-      simp
-    have hmul :=
-      mul_le_mul_of_nonneg_right hchain hexp_pos.le
-    have hlhs :
-        (F.card : ℝ) * Real.exp (-(n : ℝ) * (HZ + ε))
-            * Real.exp ((n : ℝ) * (HZ + ε)) = (F.card : ℝ) := by
-      rw [mul_assoc, hexp_cancel, mul_one]
-    have hrhs :
-        Real.exp (-(n : ℝ) * (HX - ε)) * Real.exp ((n : ℝ) * (HZ + ε))
-          = Real.exp ((n : ℝ) * (HZ - HX + 2 * ε)) := by
-      rw [← Real.exp_add]
-      congr 1
-      ring
-    rw [hlhs] at hmul
-    rw [hrhs] at hmul
-    exact hmul
+    exact le_exp_of_mul_exp_neg_le (F.card : ℝ) n HZ HX ε hchain
   · -- X not typical: F = ∅, cardinality 0, RHS ≥ 0.
     have hempty :
         conditionalTypicalSliceY μ Xs Ys n ε x = ∅ :=

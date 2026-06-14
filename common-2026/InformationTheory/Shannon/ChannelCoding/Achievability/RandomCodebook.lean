@@ -225,6 +225,56 @@ The `codebookMeasure p M n` is a product over `Fin M` of `Measure.pi p`-rows.
 When the integrand depends only on the `m`-th row (resp. `m`-th and `m'`-th rows
 for `m ≠ m'`), we can factorize and sum out the other rows. -/
 
+lemma prod_erase_eq_prod_subtype_ne
+    {M : ℕ} [DecidableEq (Fin M)] (m : Fin M) {R : Type*} [CommMonoid R]
+    (g : Fin M → R) (g' : {m' : Fin M // m' ≠ m} → R)
+    (hg : ∀ (m'' : Fin M) (h : m'' ≠ m), g m'' = g' ⟨m'', h⟩) :
+    ∏ m'' ∈ (Finset.univ : Finset (Fin M)).erase m, g m''
+      = ∏ m'' : {m' : Fin M // m' ≠ m}, g' m'' := by
+  classical
+  have h_rhs : (∏ m'' : {m' : Fin M // m' ≠ m}, g' m'')
+      = ∏ m'' ∈ ((Finset.univ : Finset (Fin M)).erase m).attach,
+          g' ⟨m''.1, (Finset.mem_erase.mp m''.2).1⟩ := by
+    symm
+    apply Finset.prod_bij (fun (m'' : {m'' // m'' ∈ (Finset.univ : Finset (Fin M)).erase m})
+      _ => (⟨m''.1, (Finset.mem_erase.mp m''.2).1⟩ : {m' : Fin M // m' ≠ m}))
+    · intro a _; exact Finset.mem_univ _
+    · intro a _ b _ hab
+      have h1 : (⟨a.1, _⟩ : {m' : Fin M // m' ≠ m}).1 = (⟨b.1, _⟩ : {m' : Fin M // m' ≠ m}).1 :=
+        congrArg Subtype.val hab
+      exact Subtype.ext h1
+    · intro b _
+      exact ⟨⟨b.1, Finset.mem_erase.mpr ⟨b.2, Finset.mem_univ _⟩⟩,
+        Finset.mem_attach _ _, rfl⟩
+    · intro _ _; rfl
+  rw [h_rhs, ← Finset.prod_attach]
+  refine Finset.prod_congr rfl ?_
+  intro ⟨m'', hm''_mem⟩ _
+  exact hg m'' (Finset.mem_erase.mp hm''_mem).1
+
+lemma sum_prod_measureReal_singleton_eq_one
+    {J γ : Type*} [Fintype J] [DecidableEq J] [Fintype γ] [MeasurableSpace γ]
+    [MeasurableSingletonClass γ] (P : Measure γ) [IsProbabilityMeasure P] :
+    ∑ c : J → γ, ∏ j : J, P.real {c j} = 1 := by
+  classical
+  have h_sum_one : (∑ x : γ, P.real {x}) = 1 :=
+    sum_measureReal_singleton_univ_eq_one P
+  have h_pi := (Finset.prod_univ_sum
+    (κ := fun _ : J => γ)
+    (t := fun _ => (Finset.univ : Finset γ))
+    (R := ℝ)
+    (f := fun (_ : J) x => P.real {x})).symm
+  have h_lhs_eq : (∑ c : J → γ, ∏ j : J, P.real {c j})
+      = ∑ c ∈ Fintype.piFinset (fun _ : J => (Finset.univ : Finset γ)),
+        ∏ j : J, P.real {c j} := by
+    apply Finset.sum_bij (fun (c : J → γ) _ => c)
+    · intro a _; exact Fintype.mem_piFinset.mpr (fun _ => Finset.mem_univ _)
+    · intro a _ b _ h; exact h
+    · intro b _; exact ⟨b, Finset.mem_univ _, rfl⟩
+    · intro _ _; rfl
+  rw [h_lhs_eq, h_pi]
+  exact Finset.prod_eq_one (fun i _ => h_sum_one)
+
 omit [DecidableEq α] [Nonempty α] [Fintype β]
   [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
 /-- **Single-row marginalization.** Sum out all rows other than `m`. -/
@@ -334,67 +384,19 @@ private lemma codebook_marginal_one
             P.real {(invFun (x, c')) m''})
           = ∏ m'' : {m' : Fin M // m' ≠ m}, P.real {c' m''} := by
       intro x c'
-      -- Both sides are products over an index set in bijection with `{m' : Fin M | m' ≠ m}`.
-      -- Reindex the RHS via the obvious embedding `Subtype → Fin M`.
-      have h_bij : ∀ m'' : Fin M, ∀ (h : m'' ≠ m),
-          (invFun (x, c')) m'' = c' ⟨m'', h⟩ := by
-        intro m'' h
+      refine prod_erase_eq_prod_subtype_ne m
+        (fun m'' => P.real {(invFun (x, c')) m''})
+        (fun m'' => P.real {c' m''}) (fun m'' h => ?_)
+      have h_bij : (invFun (x, c')) m'' = c' ⟨m'', h⟩ := by
         show (if h' : m'' = m then x else c' ⟨m'', h'⟩) = c' ⟨m'', h⟩
         simp [h]
-      -- Convert RHS into a finset sum over the attached subtype.
-      have h_rhs :
-          (∏ m'' : {m' : Fin M // m' ≠ m}, P.real {c' m''})
-            = ∏ m'' ∈ ((Finset.univ : Finset (Fin M)).erase m).attach,
-                P.real {c' ⟨m''.1, (Finset.mem_erase.mp m''.2).1⟩} := by
-        symm
-        apply Finset.prod_bij (fun (m'' : {m'' // m'' ∈ (Finset.univ : Finset (Fin M)).erase m})
-          _ => (⟨m''.1, (Finset.mem_erase.mp m''.2).1⟩ : {m' : Fin M // m' ≠ m}))
-        · intro a _; exact Finset.mem_univ _
-        · intro a _ b _ hab
-          have h1 : (⟨a.1, _⟩ : {m' : Fin M // m' ≠ m}).1 = (⟨b.1, _⟩ : {m' : Fin M // m' ≠ m}).1 :=
-            congrArg Subtype.val hab
-          exact Subtype.ext h1
-        · intro b _
-          refine ⟨⟨b.1, Finset.mem_erase.mpr ⟨b.2, Finset.mem_univ _⟩⟩, ?_, ?_⟩
-          · exact Finset.mem_attach _ _
-          · rfl
-        · intro _ _; rfl
-      rw [h_rhs]
-      -- LHS = ∏ m'' ∈ univ.erase m, P.real {invFun (x, c') m''}
-      -- = ∏ m'' ∈ (univ.erase m).attach, P.real {invFun (x, c') m''.1}
-      rw [← Finset.prod_attach]
-      refine Finset.prod_congr rfl ?_
-      intro ⟨m'', hm''_mem⟩ _
-      have h_ne : m'' ≠ m := (Finset.mem_erase.mp hm''_mem).1
-      rw [h_bij m'' h_ne]
+      simp only [h_bij]
     -- For the equiv `e`, by its def, `(e.symm (x, c'))` is the construction.
     -- We want: ∑_x ∑_c' (P{x} * f x) * (∏ ... ) = ∑_x (P{x} * f x).
     -- That requires ∑_{c'} ∏_{m'} P{c' m'} = 1.
-    have h_sum_one_alpha : (∑ x : Fin n → α, P.real {x}) = 1 :=
-      sum_measureReal_singleton_univ_eq_one P
     have h_sum_other : ∑ c' : {m' : Fin M // m' ≠ m} → (Fin n → α),
-        ∏ m'' : {m' : Fin M // m' ≠ m}, P.real {c' m''} = 1 := by
-      -- ∑_{c'} ∏_{i} g(c' i) = ∏_i ∑_x g(x) = ∏_i 1 = 1.
-      -- Use `Finset.prod_univ_sum` with `f i x := P.real {x}` (constant in i).
-      have h_pi := (Finset.prod_univ_sum
-        (κ := fun _ : {m' : Fin M // m' ≠ m} => (Fin n → α))
-        (t := fun _ => (Finset.univ : Finset (Fin n → α)))
-        (R := ℝ)
-        (f := fun (_ : {m' : Fin M // m' ≠ m}) x => P.real {x})).symm
-      have h_lhs_eq : (∑ c' : {m' : Fin M // m' ≠ m} → (Fin n → α),
-            ∏ m'' : {m' : Fin M // m' ≠ m}, P.real {c' m''})
-          = ∑ c' ∈ Fintype.piFinset
-              (fun _ : {m' : Fin M // m' ≠ m} => (Finset.univ : Finset (Fin n → α))),
-            ∏ i : {m' : Fin M // m' ≠ m}, P.real {c' i} := by
-        apply Finset.sum_bij (fun (c' : {m' : Fin M // m' ≠ m} → (Fin n → α)) _ => c')
-        · intro a _; exact Fintype.mem_piFinset.mpr (fun _ => Finset.mem_univ _)
-        · intro a _ b _ h; exact h
-        · intro b _; exact ⟨b, Finset.mem_univ _, rfl⟩
-        · intro _ _; rfl
-      rw [h_lhs_eq, h_pi]
-      apply Finset.prod_eq_one
-      intro i _
-      exact h_sum_one_alpha
+        ∏ m'' : {m' : Fin M // m' ≠ m}, P.real {c' m''} = 1 :=
+      sum_prod_measureReal_singleton_eq_one P
     -- Combine: ∑_x ∑_{c'} A(x) * B(c') = (∑_x A(x)) * (∑_{c'} B(c'))
     -- Here B(c') = ∏... and ∑ B = 1, so result is ∑_x A(x).
     calc ∑ x : Fin n → α, ∑ c' : {m' : Fin M // m' ≠ m} → (Fin n → α),
@@ -551,28 +553,9 @@ private lemma codebook_marginal_two
   rw [Finset.sum_congr rfl (fun c'' _ => h_inner_eq c'')]
   rw [← Finset.mul_sum]
   -- Use prod_univ_sum to compute ∑_{c''} ∏_{m''} P{c'' m''} = ∏_{m''} ∑_x P{x} = 1.
-  have h_sum_one_alpha : (∑ x : Fin n → α, P.real {x}) = 1 :=
-    sum_measureReal_singleton_univ_eq_one P
   have h_sum_other : ∑ c'' : {m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'} → (Fin n → α),
-      ∏ m'' : {m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'}, P.real {c'' m''} = 1 := by
-    have h_pi := (Finset.prod_univ_sum
-      (κ := fun _ : {m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'} => (Fin n → α))
-      (t := fun _ => (Finset.univ : Finset (Fin n → α)))
-      (R := ℝ)
-      (f := fun (_ : {m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'}) x => P.real {x})).symm
-    have h_lhs_eq : (∑ c'' : {m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'} → (Fin n → α),
-          ∏ m'' : {m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'}, P.real {c'' m''})
-        = ∑ c'' ∈ Fintype.piFinset
-            (fun _ : {m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'} =>
-              (Finset.univ : Finset (Fin n → α))),
-          ∏ i : {m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'}, P.real {c'' i} := by
-      apply Finset.sum_bij (fun (c'' : {m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'} → (Fin n → α)) _ => c'')
-      · intro a _; exact Fintype.mem_piFinset.mpr (fun _ => Finset.mem_univ _)
-      · intro a _ b _ h; exact h
-      · intro b _; exact ⟨b, Finset.mem_univ _, rfl⟩
-      · intro _ _; rfl
-    rw [h_lhs_eq, h_pi]
-    apply Finset.prod_eq_one; intro i _; exact h_sum_one_alpha
+      ∏ m'' : {m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'}, P.real {c'' m''} = 1 :=
+    sum_prod_measureReal_singleton_eq_one P
   rw [h_sum_other, mul_one]
 
 omit [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β] in
@@ -1024,6 +1007,74 @@ private lemma random_codebook_E2_swap
   exact jointlyTypicalSet_indep_prob_le μ Xs Ys hXs hYs hindepX hidentX hindepY hidentY
     hposX hposY hposZ n hε
 
+lemma sum_weighted_diag_offdiag_decomp
+    {ι : Type*} [Fintype ι] [DecidableEq ι] {M : ℕ}
+    (w : ι → ℝ) (a : ι → Fin M → ℝ) (b : ι → Fin M → Fin M → ℝ) (Minv : ℝ) :
+    ∑ c : ι, w c *
+        (Minv * ∑ m : Fin M,
+          (a c m + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, b c m m'))
+      = Minv * ∑ m : Fin M,
+          ((∑ c : ι, w c * a c m)
+          + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
+              ∑ c : ι, w c * b c m m') := by
+  classical
+  have step1 : ∀ c : ι,
+      w c * (Minv *
+          ∑ m : Fin M,
+            (a c m + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, b c m m'))
+        = Minv *
+          ∑ m : Fin M, (w c *
+            (a c m + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, b c m m')) := by
+    intro c
+    rw [← mul_assoc, mul_comm (w c) Minv, mul_assoc, Finset.mul_sum]
+  rw [Finset.sum_congr rfl (fun c _ => step1 c), ← Finset.mul_sum]
+  congr 1
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl (fun m _ => ?_)
+  have step2 : ∀ c : ι,
+      w c *
+          (a c m + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, b c m m')
+        = w c * a c m +
+            ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, w c * b c m m' := by
+    intro c
+    rw [mul_add, Finset.mul_sum]
+  rw [Finset.sum_congr rfl (fun c _ => step2 c), Finset.sum_add_distrib,
+      Finset.sum_comm]
+
+lemma diag_add_offdiag_sum_le
+    {M : ℕ} (hM : 0 < M) (a : ℝ) (b : Fin M → ℝ) (A B : ℝ) {m : Fin M}
+    (ha : a ≤ A) (hb : ∀ m' ∈ (Finset.univ : Finset (Fin M)).erase m, b m' ≤ B) :
+    a + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, b m'
+      ≤ A + ((M : ℝ) - 1) * B := by
+  have h_offdiag :
+      ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, b m'
+        ≤ ∑ _m' ∈ (Finset.univ : Finset (Fin M)).erase m, B :=
+    Finset.sum_le_sum hb
+  have h_card : ((Finset.univ : Finset (Fin M)).erase m).card = M - 1 := by
+    rw [Finset.card_erase_of_mem (Finset.mem_univ _), Finset.card_univ, Fintype.card_fin]
+  have h_eval :
+      ∑ _m' ∈ (Finset.univ : Finset (Fin M)).erase m, B = ((M : ℝ) - 1) * B := by
+    rw [Finset.sum_const, nsmul_eq_mul, h_card]
+    have : ((M - 1 : ℕ) : ℝ) = (M : ℝ) - 1 := by
+      rw [Nat.cast_sub hM, Nat.cast_one]
+    rw [this]
+  calc a + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, b m'
+      ≤ A + ∑ _m' ∈ (Finset.univ : Finset (Fin M)).erase m, B := add_le_add ha h_offdiag
+    _ = A + ((M : ℝ) - 1) * B := by rw [h_eval]
+
+lemma sum_average_le_of_forall_le
+    {M : ℕ} (g : Fin M → ℝ) (Minv B : ℝ) (hMinv : 0 ≤ Minv)
+    (hMinvM : Minv * (M : ℝ) = 1) (hg : ∀ m : Fin M, g m ≤ B) :
+    Minv * ∑ m : Fin M, g m ≤ B := by
+  have h_M_card : (Finset.univ : Finset (Fin M)).card = M := by
+    rw [Finset.card_univ, Fintype.card_fin]
+  calc Minv * ∑ m : Fin M, g m
+      ≤ Minv * ∑ _m : Fin M, B :=
+        mul_le_mul_of_nonneg_left (Finset.sum_le_sum (fun m _ => hg m)) hMinv
+    _ = Minv * ((M : ℝ) * B) := by
+        rw [Finset.sum_const, nsmul_eq_mul, h_M_card]
+    _ = B := by rw [← mul_assoc, hMinvM, one_mul]
+
 omit [DecidableEq α] [DecidableEq β] in
 /-- **Random codebook average (probabilistic-method form).** With each codeword
 drawn i.i.d. from `p^n` (so the codebook law is `codebookMeasure p M n`), the
@@ -1157,37 +1208,9 @@ theorem random_codebook_average_le
         = ((M : ℝ))⁻¹ * ∑ m : Fin M,
             ((∑ c : Codebook M n α, wM.real {c} * E1_indiv c m)
             + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
-                ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m') := by
-    -- Distribute carefully using term rewriting.
-    -- Step 1: turn `wM.real {c} * ((M)⁻¹ * sum_m ...)` into
-    --   `(M)⁻¹ * sum_m (wM.real {c} * (...))` by re-associating.
-    have step1 : ∀ c : Codebook M n α,
-        wM.real {c} * (((M : ℝ))⁻¹ *
-            ∑ m : Fin M,
-              (E1_indiv c m +
-                ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, E2_indiv c m m'))
-          = ((M : ℝ))⁻¹ *
-            ∑ m : Fin M, (wM.real {c} *
-              (E1_indiv c m +
-                ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, E2_indiv c m m')) := by
-      intro c
-      rw [← mul_assoc, mul_comm (wM.real {c}) ((M : ℝ))⁻¹, mul_assoc, Finset.mul_sum]
-    rw [Finset.sum_congr rfl (fun c _ => step1 c), ← Finset.mul_sum]
-    congr 1
-    rw [Finset.sum_comm]
-    refine Finset.sum_congr rfl (fun m _ => ?_)
-    -- Goal: ∑_c wM * (E1 + ∑_{m'≠m} E2) = (∑_c wM*E1) + ∑_{m'≠m} ∑_c wM*E2
-    have step2 : ∀ c : Codebook M n α,
-        wM.real {c} *
-            (E1_indiv c m +
-              ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, E2_indiv c m m')
-          = wM.real {c} * E1_indiv c m +
-              ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
-                wM.real {c} * E2_indiv c m m' := by
-      intro c
-      rw [mul_add, Finset.mul_sum]
-    rw [Finset.sum_congr rfl (fun c _ => step2 c), Finset.sum_add_distrib,
-        Finset.sum_comm]
+                ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m') :=
+    sum_weighted_diag_offdiag_decomp (fun c => wM.real {c}) E1_indiv E2_indiv
+      ((M : ℝ))⁻¹
   -- Step 4: bound each inner Fubini sum.
   -- (E1) `∑_c w(c) * E1_indiv c m ≤ E1` for every `m`.
   -- (E2) `∑_c w(c) * E2_indiv c m m' ≤ Eexp` for every `m ≠ m'`.
@@ -1207,52 +1230,22 @@ theorem random_codebook_average_le
             ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m'
         ≤ E1 + ((M : ℝ) - 1) * Eexp := by
     intro m
-    -- The E2 inner sum: `∑_{m'≠m} … ≤ ∑_{m'≠m} Eexp = (M-1) * Eexp`.
-    have h_E2_sum :
-        ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
-            ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m'
-          ≤ ∑ _m' ∈ (Finset.univ : Finset (Fin M)).erase m, Eexp := by
-      refine Finset.sum_le_sum (fun m' hm' => ?_)
-      have hne : m ≠ m' := (Finset.mem_erase.mp hm').1.symm
-      exact h_E2_swap m m' hne
-    have h_card : ((Finset.univ : Finset (Fin M)).erase m).card = M - 1 := by
-      rw [Finset.card_erase_of_mem (Finset.mem_univ _), Finset.card_univ, Fintype.card_fin]
-    have h_E2_sum_eval :
-        ∑ _m' ∈ (Finset.univ : Finset (Fin M)).erase m, Eexp
-          = ((M : ℝ) - 1) * Eexp := by
-      rw [Finset.sum_const, nsmul_eq_mul, h_card]
-      have hM_ge : 1 ≤ M := hM
-      have : ((M - 1 : ℕ) : ℝ) = (M : ℝ) - 1 := by
-        rw [Nat.cast_sub hM_ge, Nat.cast_one]
-      rw [this]
-    calc (∑ c : Codebook M n α, wM.real {c} * E1_indiv c m)
-          + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
-              ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m'
-        ≤ E1 + ∑ _m' ∈ (Finset.univ : Finset (Fin M)).erase m, Eexp :=
-          add_le_add (h_E1_swap m) h_E2_sum
-      _ = E1 + ((M : ℝ) - 1) * Eexp := by rw [h_E2_sum_eval]
+    refine diag_add_offdiag_sum_le hM _
+      (fun m' => ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m') E1 Eexp
+      (h_E1_swap m) (fun m' hm' => ?_)
+    have hne : m ≠ m' := (Finset.mem_erase.mp hm').1.symm
+    exact h_E2_swap m m' hne
   -- Aggregate over `m`.
   have h_M_inv_M_eq : ((M : ℝ))⁻¹ * (M : ℝ) = 1 := by
     field_simp
-  have h_M_card : (Finset.univ : Finset (Fin M)).card = M := by
-    rw [Finset.card_univ, Fintype.card_fin]
   have h_final :
       ((M : ℝ))⁻¹ * ∑ m : Fin M,
           ((∑ c : Codebook M n α, wM.real {c} * E1_indiv c m)
           + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
               ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m')
-      ≤ E1 + ((M : ℝ) - 1) * Eexp := by
-    calc ((M : ℝ))⁻¹ * ∑ m : Fin M,
-            ((∑ c : Codebook M n α, wM.real {c} * E1_indiv c m)
-            + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
-                ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m')
-        ≤ ((M : ℝ))⁻¹ * ∑ _m : Fin M, (E1 + ((M : ℝ) - 1) * Eexp) := by
-          refine mul_le_mul_of_nonneg_left (Finset.sum_le_sum (fun m _ => h_per_m_bound m))
-            h_M_inv_nn
-      _ = ((M : ℝ))⁻¹ * ((M : ℝ) * (E1 + ((M : ℝ) - 1) * Eexp)) := by
-          rw [Finset.sum_const, nsmul_eq_mul, h_M_card]
-      _ = E1 + ((M : ℝ) - 1) * Eexp := by
-          rw [← mul_assoc, h_M_inv_M_eq, one_mul]
+      ≤ E1 + ((M : ℝ) - 1) * Eexp :=
+    sum_average_le_of_forall_le _ ((M : ℝ))⁻¹ (E1 + ((M : ℝ) - 1) * Eexp)
+      h_M_inv_nn h_M_inv_M_eq h_per_m_bound
   -- Combine.
   calc ∑ c : Codebook M n α, wM.real {c} *
             ((codebookToCode μ Xs Ys hM ε c).averageErrorProb W).toReal
