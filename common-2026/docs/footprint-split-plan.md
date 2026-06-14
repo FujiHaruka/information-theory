@@ -9,7 +9,7 @@ Lean style [`rules/lean-style.md`](rules/lean-style.md) ・honesty タグ [`audi
 ## 進捗
 
 - [x] Phase 0 — 測定 + pilot 較正 ✅ (`floorMatrix_dist_le`、commit `d2fb1fa`)
-- [ ] Phase 1 — 優先1 (>250 行 tier) を named helper へ分解 🚧 (25 本中 13 本 done、残 12 本 + 1 本再分解)
+- [ ] Phase 1 — 優先1 (>250 行 tier) を named helper へ分解 🚧 (13 本 done + 再分解1完了、残 13 本)
 - [ ] Phase 2 — 優先2 (>115 行 tier、159 本) を機会主義的に分解 📋
 - [ ] Phase 3 — 最終再実測 + 裾縮小確認 📋
 
@@ -179,10 +179,10 @@ DoD で許容**。footprint は before→after。
 | `EPI/Case1/SmoothingLimit.lean` (365→336) | `entropyPower_smoothed_epi_perT` | マルチ。**>250 残留** |
 | `EPI/Case1/SmoothingLimit.lean` (310→264) | `entropy_power_add_ge_of_finite_variance` | マルチ。**>250 残留** |
 | `AWGN/Walls.lean` (485→323) | `continuousAepGaussian_holds` | **>250 残留** |
-| `EPI/Case1/RatioLimit/PathRegular.lean` (590→25) | `isRescaledPathRegular_of_methodX` | body 縮小、ただし helper `rescaledPath_indep_regular` が **498 行** = relabel → **要再分解** (下記、anti-relabeling) |
+| `EPI/Case1/RatioLimit/PathRegular.lean` (590→25) | `isRescaledPathRegular_of_methodX` | body 縮小 + helper `rescaledPath_indep_regular` を 498→**122** へ 14 小 helper 再帰分解済 (`b2887fa`、anti-relabel 実証)。file max 122 で >250 clear |
 | `SlepianWolf/FullRateRegion/PairBound.lean` (420→386) | `swErrorProb_total_expectation_le` | **>250 残留** |
 
-**残作業 — 優先1 (13 ターゲット + 1 本再分解)**
+**残作業 — 優先1 (13 ターゲット)**
 
 | # | file:line (footprint) | 対象 | sorry | 備考 |
 |---|---|---|---|---|
@@ -199,7 +199,6 @@ DoD で許容**。footprint は before→after。
 | 22 | `EPI/InfiniteVariance/Truncation/Construction.lean:505` (256) | `integrable_negPart_negMulLog_map_condTrunc_sum` | 0 | |
 | 23 | `ChannelCoding/.../SmoothInstantiation.lean:51` (256) | `channel_coding_achievability_smooth_at_N_le` | 0 | |
 | 24 | `EPI/Case1/RatioLimit/Assembly.lean:342` (253) | `entropyPower_add_ge_case1_of_methodX` | 0 | 閾値近傍 = ≤250 へ clean に割れる公算 (pilot 類) |
-| 再 | `EPI/Case1/RatioLimit/PathRegular.lean` (498) | `rescaledPath_indep_regular` | 0 | **anti-relabeling 再分解**: #7 抽出時に生まれた 498 行 helper を更に小 helper へ割る。今セッションで着手中 — 結果判明なら更新、未着手なら本行を残す |
 
 ### sorry 持ちターゲット (#4) の特別扱い
 
