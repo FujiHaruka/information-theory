@@ -10,7 +10,7 @@ Lean style [`rules/lean-style.md`](rules/lean-style.md) ・honesty タグ [`audi
 
 - [x] Phase 0 — 測定 + pilot 較正 ✅ (`floorMatrix_dist_le`、commit `d2fb1fa`)
 - [x] Phase 1 — 優先1 (>250 行 tier) を named helper へ分解 ✅ **全 25 本処理済** (clean 割れブロックは全抽出、>250 残留=不可分 core は現実的 DoD で許容)
-- [ ] Phase 2 — 優先2 (>115 行 tier、159 本) を機会主義的に分解 📋 (dedup 候補は下記「Phase 2 への申し送り」参照、4 件全決着)
+- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-3、>150: 91→77)
 - [ ] Phase 3 — 最終再実測 + 裾縮小確認 📋
 - [ ] Phase 4 — **option C (>250 spine 攻略)** 🔨 (2026-06-14 着手。**3 本クリア >250: 15→12、両機構検証済**。残 12 本。下記 Phase 4 節)
 
@@ -205,41 +205,69 @@ file:line (footprint) sorry-count は §4.1 入力データを verbatim 使用 (
 sorryAx-free)。コード側の `@audit:ok`/`@residual`/sorry 数は全 13 本で機械検証して verbatim 保存
 (Assembly は既存 sorry+@residual を含め 1→1 保存)。
 
-## Phase 2 — 優先2 (>115 行 tier) を機会主義的に分解 📋
+## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-3 完了)
 
 **proof-log: no**。
 
-優先1 完了後に着手。>115 行 tier は **159 本**。本 Phase では個別列挙しない (優先1 と異なり、
-着手時に再実測してファイル単位で拾う = §4.1 入力データのスナップショットに固定しない)。
+**状態 (2026-06-14)**: Wave 1-3 完了。**>150 tier: 91 → 77 (−14)、>250 は 0 維持** (official
+decl-to-next-decl metric で再実測)。各 Wave は全 Hard invariants (対象 sig byte-identical /
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` 不変 / sorry 数不変 / `lake env lean`
+clean + 該当 build green) を orchestrator が独立機械検証済。**新規 sorry/residual なし (純リファクタ)
+ゆえ honesty audit 不要**。
 
-- 優先1 と同じ抽出ルール・gotcha・Mathlib 流 helper ルール・Hard invariants を適用する。
-- **機会主義的に進める**: 優先1 で触ったファイルに >115 の隣接宣言があれば同 Wave で拾う。
-- **49–115 行 tier (392 本) は機会主義のみ**: 専用 Wave を組まない。優先1/2 で開いたファイルに
-  あれば拾う程度。
+着手ルール: 優先1 と同じ抽出ルール・gotcha・Mathlib 流 helper ルール・Hard invariants を適用。
+本 Phase は個別列挙でなく着手時に再実測してファイル単位で拾う。49–115 行 tier は機会主義のみ
+(専用 Wave を組まず、開いたファイルにあれば拾う程度)。
 
-### Phase 1 で見つかった具体的 dedup 候補 (Phase 2 の優先着手先)
+### 完了 Wave (詳細は commit、ここは 1 行要約)
 
-純抽出で >250 を消せない代わり、**重複削除**は総行数を下げる高価値手 (ただし裾 >250 は縮まない —
-重複補題は大定理より前にあり footprint は独立に測られる)。Phase 1 で agent が発見した候補
-(全て cross-file = 第2ファイルを参照、`lake build` 連結確認が必須):
+- **Wave 1** (`b2a9bf4`): `Huffman/Optimality.lean` 3 本 (`huffmanLength_optimal_aux` 188→66 /
+  `expectedLength_merged_cost_bridge` 174→137 / `expectedLength_bridge_R` 163→27) +
+  `Sanov/LDPEquality.lean` 3 本 (`typeClassByCount_card_ge` 211→140 /
+  `sanov_ldp_lower_bound_pointwise` 174→78 / `sanov_ldp_equality` 152→88)。計 12 public helper、全 <150。
+- **Wave 2** (`4cd9578`): `ChannelCoding/Achievability/RandomCodebook.lean`
+  (`codebook_marginal_one` 197→149 clear / `codebook_marginal_two` 154→135 clear /
+  `random_codebook_average_le` 235→176 partial=不可分 Code-API spine / `E1_swap`230・`E2_swap`215 は
+  floor で inline 維持) + `SlepianWolf/FullRateRegion/{PairBound,AliasBound}.lean` 4 本
+  (`swError_EXY_strict_expectation_le` 235→body144 / `slepian_wolf_full_rate_region_achievability`
+  213→139 / `swError_EX_expectation_le` 187→131 / `conditionalTypicalSliceY_card_le` 176→124)。
+  共有 Fubini-lift helper 6 本を下位 `AliasBound` へ集約し `PairBound` が import 経由共有
+  (cross-file、cycle なし、full build green 3471)。
+- **Wave 3** (BackwardIntegral / Object):
+  `Probability/TwoSidedExtension/BackwardIntegral.lean` 2 本
+  (`integrable_indicator_mul_negLog_of_condExp` 217→body148 /
+  `joint_pastBlock_coord0_eq` 201→23) + `EPI/Case1/TwoTime/Object.lean` 2 本
+  (`twoTimeLogRatioGap_tendsto_zero_atTop` 224→98 /
+  `entropyPower_add_ge_case1_of_regular_twotime` 201→143)。計 20 helper。
 
-1. **`SmoothingLimit.lean` ⊃ DensityForm sibling — DONE (2/3、`f7dc459`)**。3 本のうち
-   `integral_sub_integral_sq_smoothed_path_le` / `smoothed_path_absolutelyContinuous_and_negMulLog_integrable`
-   は DensityForm の `_rescaled_path_` 版と body byte 一致 → 削除し FQ 呼出に差替済 (axioms 不変、~103 行減)。
-   残る `isHeatFlowEndpointRegular_of_map_eq_rnDeriv` は **重複でない**: SmoothingLimit 版は `(vZ : ℝ≥0)`
-   一般版、DensityForm `_of_canonical_rnDeriv` は `vZ=1` 特殊化で、L1219 に一般 vZ 呼出があるため inline 維持。
-   なお **>250 残留 (339/336/264) は縮まない** (重複補題は大定理より前 = footprint 独立。handoff の「縮む」は誤り)。
-2. ~~Ext.lean inline `hbound` → Mono helper~~ **DEAD (import cycle)**。`Mono.lean` は L1 で
-   `EntropyPower.Ext` を import 済 (Mono→Ext) ゆえ Ext→Mono は直接 cycle。candidate 3 と同じ下位移設 re-arch が要る。
-3. **GeneralDensity ↔ SupplyTwoTime の Blachman per-field helper** は `s=t` 特殊化でほぼ重複だが
-   **import cycle** (SupplyTwoTime → GeneralDensity) で直接 dedup 不可。共有 helper を下位モジュールへ
-   移設する re-arch が要る (Phase 2 の範囲外、option C 寄り)。
-4. ~~`eq_sum_indicator_preimage_mul` (TwoSidedRatio) の inline 重複~~ **FALSE (重複なし、検証済)**。
-   SMB 内で `.indicator (fun _ => (1` も `Finset.sum_eq_single`+indicator も TwoSidedRatio のみ、call site は
-   内部 1 件で外部 0。dedup 余地なし。
+### 計測ニュアンス (Phase 2 で確立、Wave 4+ でも適用)
 
-> **Phase 1 dedup 候補 4 件すべて決着** (#1 DONE 2/3 / #2 import cycle DEAD / #3 re-arch 要 = option C 寄り /
-> #4 重複なし FALSE)。残る Phase 2 = >115 tier の機会主義抽出のみ (plan 通り専用 Wave は組まない)。
+- footprint = **宣言行から次の top-level 宣言までの距離** (docstring・空行込み)。proof body 長と乖離する:
+  body が 144 行でも **次の宣言の docstring が宣言間に挟まる**と decl-to-next metric は 170 になりうる。
+  Wave 2/3 の `swError_EXY_strict` (body144/metric170)・`integrable_indicator...` (body148/metric157) が
+  この artifact。**進捗は metric (decl-to-next) で追うが、body <150 を実質達成と見なす**。
+- **sorry 計測の落とし穴**: 単純 `grep -c sorry` は **docstring 内の "sorry"/"sorry-free" 文字列**を拾う
+  (Object.lean は docstring に 5 箇所、実 sorry tactic は 0)。ターゲット選定で sorry 持ち判定する際は実
+  sorry tactic token を確認する (decl span の `grep sorry` は over-count)。
+
+### Wave 4+ への申し送り
+
+- **触らない (option-C 済 floor 残留)**: Mass 249 / union_bound 245 / ConvEntropyDensity 245 /
+  OuterN 241 等。
+- **fresh な >150 候補** (再実測必須): `debruijnIdentityV2_holds_assembled_chain_hdiff` (Assembly 231) /
+  `integrable_negPart_negMulLog_map_sum` (Capstone 231) / `entropy_projMap_eq` (BoundarySharp 229) /
+  `convJointLlr_integrable` (ConvEntropyDensity 229) / `jointStronglyTypicalSet_indep_prob_ge`
+  (AchievabilityPhaseEStrong 227) / `ergodic_shiftZ` (TwoSidedExtension/Core 223) /
+  `conditionalTypeClass_card_eq_prod_typeClass` (Core 212) / `hoeffding_tradeoff_exp` (Hoeffding 198) 等。
+- プロトコル: 並列 ≤ 2・1 ファイル 1 エージェント・worktree + boilerplate・orchestrator 検証は同一。
+
+### Phase 1 由来 dedup 候補 (全 4 件決着済、参考)
+
+純抽出で >250 を消せない代わり **重複削除**は総行数を下げるが、裾 >250 は縮まない (重複補題は大定理より
+前にあり footprint は独立)。Phase 1 で発見した候補は **4 件すべて決着**: #1 DONE 2/3 (`f7dc459`、
+SmoothingLimit ⊃ DensityForm sibling の lift 2 本削除) / #2 import cycle DEAD (Ext→Mono は直接 cycle) /
+#3 re-arch 要 = option C 寄り (GeneralDensity ↔ SupplyTwoTime の Blachman per-field、import cycle) /
+#4 重複なし FALSE (`eq_sum_indicator_preimage_mul` は TwoSidedRatio 内部 1 件のみ)。
 
 ### Phase 1 で確立した検証プロトコル (process 教訓、Phase 2 でも適用)
 
