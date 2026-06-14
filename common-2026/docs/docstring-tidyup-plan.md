@@ -1,6 +1,6 @@
 # docstring tidy-up plan — Mathlib スタイルへの寄せ込み（英語化含む）
 
-**Status**: Phase 0–3 DONE (2026-06-14、コードベース全体 CJK 0 / full build green) / 残: Phase 2.5 過去波プロセス語彙スイープ (延期) / **Parent**: なし (standalone) /
+**Status**: Phase 0–3 + 2.5 ALL DONE (2026-06-14、コードベース全体 CJK 0 / プロセス語彙 0 / full build green) / **Parent**: なし (standalone) /
 **関連**: 規約 SoT [`rules/docstrings.md`](rules/docstrings.md) ・実測 [`mathlib-conventions-gap.md`](mathlib-conventions-gap.md) ・honesty タグ SoT [`audit/audit-tags.md`](audit/audit-tags.md)
 
 分割リファクタ (footprint の裾を named lemma に割る) に着手する**前に**、既存 docstring を Mathlib スタイルへ整える。
@@ -211,14 +211,27 @@ code byte-identical。宣言直付け @residual/@audit タグは保存、tag slu
 - tag grep 総数の減少 (residual / audit) は全て prose-ref / dated-audit-narrative 除去で、宣言タグの脱落ではない。
 - 文書化率は副指標扱いで数値は追わない (plan 既定どおり。タグ 644+66 / entry_point 709 / def 478 保持で構造的に Mathlib より高く着地)。
 
-### Phase 2.5 (仮) — follow-up: 過去波プロセス語彙スイープ 📋 延期 (ユーザー決定 2026-06-14)
+### Phase 2.5 — 過去波プロセス語彙スイープ ✅ DONE (2026-06-14)
 
-英語プロセス語彙 (Phase B/C/D, plan-file 参照, Wall narrative, retraction 経緯) が、
-**CJK→0 済の過去波ファイル約 66 本** (ChannelCoding / Probability / AEP / Chernoff 等) にも系統的に残存。
-波2b の 11 本のみ今回クリーンアップし、過去波スイープは別 follow-up タスクへ延期。
+英語プロセス語彙が CJK→0 済の過去波ファイルにも系統的に残存していた分を全て除去。
+**100 ファイルを 12 バッチ (opus subagent, 並列度1 の逐次 dispatch) で整形**:
 
-- 方針: text-only / 宣言直付け @residual・@audit タグ保存 (散文中の prose-ref のみ除去) / rename しない。
-- 完了判定: 対象 families の docstring / 見出しから Phase/Wall/judgment narrative が消え、tag 数不変。
+- 第1群 (`\bPhase\b` 66 本): ChannelCoding 8 / Hoeffding 8 / Shannon直下 13 / Cramer 4 /
+  SMB+Sanov+LZ78 9 / EPI+FisherInfo+RateDistortion 8 / Probability+小family 10 / singles 6。
+- 第2群 (Phase トークン無し・初回 grep 漏れ、plan-ref/wave/judgment/parked/dated 24 本)。
+- dev-slug 残部 (retreat-line `L-*` / task-code `T-*` / roadmap M-stage 14 本):
+  predicate を命名する `L-EPI3`/`L-SH1-3`/`L-C2` は実 predicate 名へ言い換え、純 decomposition ラベルは除去。
+
+除去対象: Phase ラベル / plan-file 参照 / wave・seed・judgment log / Wall narrative / retraction 経緯 /
+parked dev-status / dated closure metadata (`As of 2026`, axiom kernel, `0 sorry / 0 residual` 状態言明) /
+retreat-line・task-code・roadmap-stage slug。保持: 全 `@residual`/`@audit` タグ (散文参照含む verbatim)・
+構造的 honesty 推論 (load-bearing 判定理由 / regularity precondition / 実 residual 記述 / 補題間 delegation)。
+
+完了判定 (全て機械照合済): 全 100 ファイル **code byte-identical** (block/line コメント除去後 HEAD と diff) /
+**全タグ数 HEAD→work 不変** / `lake env lean` clean / tree-wide で散文プロセス語彙 0
+(`Phase`/`-plan`/`judgment`/`wave`/`T-code`/`L-slug`/`roadmap M`/`parked-status`/`dated` = 0、
+残る `scope-out` 3 は `@audit:closed-by-successor` タグの正当な根拠散文) / CJK 0 / **full `lake build` 3471 jobs green**。
+honesty audit 不要 (新規 sorry/@residual を導入しないため。タグ数保存で代替検証)。
 
 ## DoD
 
@@ -246,4 +259,4 @@ code byte-identical。宣言直付け @residual/@audit タグは保存、tag slu
 
 - 2026-06-13: rename はこの pass のスコープ外 (text-only 維持 + dep 波及回避)。名前不十分は最小 1 行 + 別リスト記録に留める。
 - 2026-06-13: pilot (Stein.lean) で運用確定 — 新規 docstring は追加しない / minimize は結論形のみ残す / セクション見出しは数学ロードマップのみ (Keep/Strip ルール節に反映済)。
-- 2026-06-14: 過去波ファイル (CJK→0 済) のプロセス語彙スイープは Phase 2.5 として別 follow-up に延期 (ユーザー決定)。波2b の 11 本のみ今回クリーンアップ。
+- 2026-06-14: Phase 2.5 完遂。過去波 100 ファイルを 12 バッチ逐次 dispatch で整形、tree-wide プロセス語彙 0 / 全タグ verbatim 保存 / code byte-identical / full build green。初回 `\bPhase\b` grep が 66 本だったが、Phase トークンを含まない plan-ref/dev-slug 群 (L-*/T-codes/roadmap-M) が追加で表面化し計 100 本に拡大。L-* slug は predicate 命名なら実名へ言い換え・純ラベルは除去。
