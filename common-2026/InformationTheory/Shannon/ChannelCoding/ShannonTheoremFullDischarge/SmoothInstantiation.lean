@@ -42,6 +42,65 @@ noncomputable def channelCodingSmoothMinN
         (expNegMulMinN ((I_lb - R) / 2) (ε' / 2)))
       1
 
+theorem jointlyTypicalSetMinN_le_channelCodingSmoothMinN
+    (V_X V_Y V_Z I_lb R ε' : ℝ) :
+    jointlyTypicalSetMinN V_X V_Y V_Z (ε' / 2) ((I_lb - R) / 6) ≤
+      channelCodingSmoothMinN V_X V_Y V_Z I_lb R ε' := by
+  unfold channelCodingSmoothMinN
+  exact (le_max_left _ _).trans (le_max_left _ _)
+
+theorem expNegMulMinN_le_channelCodingSmoothMinN
+    (V_X V_Y V_Z I_lb R ε' : ℝ) :
+    expNegMulMinN ((I_lb - R) / 2) (ε' / 2) ≤
+      channelCodingSmoothMinN V_X V_Y V_Z I_lb R ε' := by
+  unfold channelCodingSmoothMinN
+  exact (le_max_right _ _).trans (le_max_left _ _)
+
+theorem one_le_channelCodingSmoothMinN
+    (V_X V_Y V_Z I_lb R ε' : ℝ) :
+    1 ≤ channelCodingSmoothMinN V_X V_Y V_Z I_lb R ε' := by
+  unfold channelCodingSmoothMinN
+  exact le_max_right _ _
+
+omit [DecidableEq α] [DecidableEq β] in
+theorem iidAmbient_entropy_exponent_eq
+    (p : Measure α) [IsProbabilityMeasure p]
+    (Wδ : Channel α β) [IsMarkovKernel Wδ] :
+    InformationTheory.Shannon.entropy (iidAmbientMeasure p Wδ)
+        (jointSequence (α := α) (β := β) iidXs iidYs 0)
+      - InformationTheory.Shannon.entropy (iidAmbientMeasure p Wδ) (iidXs 0)
+      - InformationTheory.Shannon.entropy (iidAmbientMeasure p Wδ) (iidYs 0)
+        = -(mutualInfoOfChannel p Wδ).toReal := by
+  set μ : Measure (ℕ → α × β) := iidAmbientMeasure p Wδ with hμ_def
+  have h_entZ : InformationTheory.Shannon.entropy μ
+      (jointSequence (α := α) (β := β) iidXs iidYs 0)
+        = InformationTheory.Shannon.entropy (jointDistribution p Wδ) id := by
+    refine InformationTheory.Shannon.entropy_eq_of_identDistrib μ (jointDistribution p Wδ)
+      (jointSequence iidXs iidYs 0) id ?_
+    refine ⟨(measurable_jointSequence iidXs iidYs measurable_iidXs measurable_iidYs 0).aemeasurable,
+      measurable_id.aemeasurable, ?_⟩
+    rw [iidAmbient_map_jointSequence, Measure.map_id]
+  have h_entX : InformationTheory.Shannon.entropy μ (iidXs (α := α) (β := β) 0)
+        = InformationTheory.Shannon.entropy (jointDistribution p Wδ) Prod.fst := by
+    refine InformationTheory.Shannon.entropy_eq_of_identDistrib μ (jointDistribution p Wδ)
+      (iidXs 0) Prod.fst ?_
+    refine ⟨(measurable_iidXs 0).aemeasurable, measurable_fst.aemeasurable, ?_⟩
+    rw [iidAmbient_map_iidXs]
+    show p = (jointDistribution p Wδ).map Prod.fst
+    rw [show ((jointDistribution p Wδ).map Prod.fst) = (jointDistribution p Wδ).fst from rfl,
+        jointDistribution_def]
+    exact (Measure.fst_compProd p Wδ).symm
+  have h_entY : InformationTheory.Shannon.entropy μ (iidYs (α := α) (β := β) 0)
+        = InformationTheory.Shannon.entropy (jointDistribution p Wδ) Prod.snd := by
+    refine InformationTheory.Shannon.entropy_eq_of_identDistrib μ (jointDistribution p Wδ)
+      (iidYs 0) Prod.snd ?_
+    refine ⟨(measurable_iidYs 0).aemeasurable, measurable_snd.aemeasurable, ?_⟩
+    rw [iidAmbient_map_iidYs]
+    rfl
+  rw [h_entZ, h_entX, h_entY]
+  have hMI := mutualInfoOfChannel_eq_HX_add_HY_sub_HZ p Wδ
+  linarith
+
 omit [DecidableEq α] [DecidableEq β] in
 /-- **Smooth achievability with closed-form N**: `channel_coding_achievability` with the
 existential `N` replaced by `channelCodingSmoothMinN V_X V_Y V_Z I_lb R ε'`.
@@ -150,60 +209,23 @@ theorem channel_coding_achievability_smooth_at_N_le
         = jointDistribution p Wδ :=
     iidAmbient_map_jointSequence p Wδ 0
   -- Step 3: entropy exponent equation (HZ - HX - HY = -I).
-  have h_entZ : InformationTheory.Shannon.entropy μ
-      (jointSequence (α := α) (β := β) iidXs iidYs 0)
-        = InformationTheory.Shannon.entropy (jointDistribution p Wδ) id := by
-    refine InformationTheory.Shannon.entropy_eq_of_identDistrib μ (jointDistribution p Wδ)
-      (jointSequence iidXs iidYs 0) id ?_
-    refine ⟨(measurable_jointSequence iidXs iidYs measurable_iidXs measurable_iidYs 0).aemeasurable,
-      measurable_id.aemeasurable, ?_⟩
-    rw [iidAmbient_map_jointSequence, Measure.map_id]
-  have h_entX : InformationTheory.Shannon.entropy μ (iidXs (α := α) (β := β) 0)
-        = InformationTheory.Shannon.entropy (jointDistribution p Wδ) Prod.fst := by
-    refine InformationTheory.Shannon.entropy_eq_of_identDistrib μ (jointDistribution p Wδ)
-      (iidXs 0) Prod.fst ?_
-    refine ⟨(measurable_iidXs 0).aemeasurable, measurable_fst.aemeasurable, ?_⟩
-    rw [iidAmbient_map_iidXs]
-    show p = (jointDistribution p Wδ).map Prod.fst
-    rw [show ((jointDistribution p Wδ).map Prod.fst) = (jointDistribution p Wδ).fst from rfl,
-        jointDistribution_def]
-    exact (Measure.fst_compProd p Wδ).symm
-  have h_entY : InformationTheory.Shannon.entropy μ (iidYs (α := α) (β := β) 0)
-        = InformationTheory.Shannon.entropy (jointDistribution p Wδ) Prod.snd := by
-    refine InformationTheory.Shannon.entropy_eq_of_identDistrib μ (jointDistribution p Wδ)
-      (iidYs 0) Prod.snd ?_
-    refine ⟨(measurable_iidYs 0).aemeasurable, measurable_snd.aemeasurable, ?_⟩
-    rw [iidAmbient_map_iidYs]
-    rfl
   have h_exp_eq : InformationTheory.Shannon.entropy μ
         (jointSequence (α := α) (β := β) iidXs iidYs 0)
       - InformationTheory.Shannon.entropy μ (iidXs 0)
       - InformationTheory.Shannon.entropy μ (iidYs 0) = -I := by
-    rw [h_entZ, h_entX, h_entY]
-    have hMI := mutualInfoOfChannel_eq_HX_add_HY_sub_HZ p Wδ
-    rw [← hI_def] at hMI
-    linarith
+    rw [hμ_def, hI_def]
+    exact iidAmbient_entropy_exponent_eq p Wδ
   -- Step 4-5: closed-form `N₁` from `jointlyTypicalSet_prob_ge_at_N_le`.
   have hε'_half : 0 < ε' / 2 := by linarith
   intro n hn_ge
   -- Extract sub-bounds from `channelCodingSmoothMinN ≤ n`.
   have hn_N₁ : jointlyTypicalSetMinN V_X V_Y V_Z (ε' / 2) ε ≤ n := by
-    have h1 : jointlyTypicalSetMinN V_X V_Y V_Z (ε' / 2) ε ≤
-        channelCodingSmoothMinN V_X V_Y V_Z I_lb R ε' := by
-      unfold channelCodingSmoothMinN
-      exact (le_max_left _ _).trans (le_max_left _ _)
-    exact h1.trans hn_ge
-  have hn_N₂ : expNegMulMinN ((I_lb - R) / 2) (ε' / 2) ≤ n := by
-    have h1 : expNegMulMinN ((I_lb - R) / 2) (ε' / 2) ≤
-        channelCodingSmoothMinN V_X V_Y V_Z I_lb R ε' := by
-      unfold channelCodingSmoothMinN
-      exact (le_max_right _ _).trans (le_max_left _ _)
-    exact h1.trans hn_ge
-  have hn_one : 1 ≤ n := by
-    have h1 : 1 ≤ channelCodingSmoothMinN V_X V_Y V_Z I_lb R ε' := by
-      unfold channelCodingSmoothMinN
-      exact le_max_right _ _
-    exact h1.trans hn_ge
+    rw [hε_def]
+    exact (jointlyTypicalSetMinN_le_channelCodingSmoothMinN V_X V_Y V_Z I_lb R ε').trans hn_ge
+  have hn_N₂ : expNegMulMinN ((I_lb - R) / 2) (ε' / 2) ≤ n :=
+    (expNegMulMinN_le_channelCodingSmoothMinN V_X V_Y V_Z I_lb R ε').trans hn_ge
+  have hn_one : 1 ≤ n :=
+    (one_le_channelCodingSmoothMinN V_X V_Y V_Z I_lb R ε').trans hn_ge
   -- Joint AEP closed form.
   have hN₁ := jointlyTypicalSet_prob_ge_at_N_le (β := β) μ iidXs iidYs hXs hYs
       hindepX_pair hidentX hindepY_pair hidentY hindepZ hidentZ
