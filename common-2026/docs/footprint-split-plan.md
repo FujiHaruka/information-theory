@@ -10,7 +10,7 @@ Lean style [`rules/lean-style.md`](rules/lean-style.md) ・honesty タグ [`audi
 
 - [x] Phase 0 — 測定 + pilot 較正 ✅ (`floorMatrix_dist_le`、commit `d2fb1fa`)
 - [x] Phase 1 — 優先1 (>250 行 tier) を named helper へ分解 ✅ **全 25 本処理済** (clean 割れブロックは全抽出、>250 残留=不可分 core は現実的 DoD で許容)
-- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-3、>150: 91→77)
+- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-5、>150: 91→73)
 - [ ] Phase 3 — 最終再実測 + 裾縮小確認 📋
 - [ ] Phase 4 — **option C (>250 spine 攻略)** 🔨 (2026-06-14 着手。**3 本クリア >250: 15→12、両機構検証済**。残 12 本。下記 Phase 4 節)
 
@@ -205,11 +205,11 @@ file:line (footprint) sorry-count は §4.1 入力データを verbatim 使用 (
 sorryAx-free)。コード側の `@audit:ok`/`@residual`/sorry 数は全 13 本で機械検証して verbatim 保存
 (Assembly は既存 sorry+@residual を含め 1→1 保存)。
 
-## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-3 完了)
+## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-5 完了)
 
 **proof-log: no**。
 
-**状態 (2026-06-14)**: Wave 1-3 完了。**>150 tier: 91 → 77 (−14)、>250 は 0 維持** (official
+**状態 (2026-06-15)**: Wave 1-5 完了。**>150 tier: 91 → 73 (−18)、>250 は 0 維持** (official
 decl-to-next-decl metric で再実測)。各 Wave は全 Hard invariants (対象 sig byte-identical /
 `#print axioms` = `[propext, Classical.choice, Quot.sound]` 不変 / sorry 数不変 / `lake env lean`
 clean + 該当 build green) を orchestrator が独立機械検証済。**新規 sorry/residual なし (純リファクタ)
@@ -239,6 +239,17 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   `joint_pastBlock_coord0_eq` 201→23) + `EPI/Case1/TwoTime/Object.lean` 2 本
   (`twoTimeLogRatioGap_tendsto_zero_atTop` 224→98 /
   `entropyPower_add_ge_case1_of_regular_twotime` 201→143)。計 20 helper。
+- **Wave 4** (`13aab27`): `Shannon/HypercubeEdge/BoundarySharp.lean` `entropy_projMap_eq` 229→143
+  (helper 1 本 `fibre_oneortwo_of_mem_projectionExcept` 85、純組合せ) +
+  `Shannon/ConditionalMethodOfTypes/Core.lean` `conditionalTypeClass_card_eq_prod_typeClass` 212→74
+  (helper 3 本 public: `conditionalTypeClass_joint_iff_slice` 39 / `filter_card_comp_equiv_symm_eq` 13 /
+  `sliceSubtype_equiv_typeClassByCount` 31)。計 4 helper 全 <150。
+- **Wave 5** (`6e88c90`): `Shannon/Hoeffding/TradeoffExp.lean` entry_point `hoeffding_tradeoff_exp`
+  198→114 (helper 3 本 measure 引数化: `E_r_union_meas_pos_eventually` 39 /
+  `E_r_union_rate_isBoundedUnder_above` 24 / `E_r_union_rate_isBoundedUnder_below` 88) +
+  `Shannon/SlepianWolf/ConditionalTypicalSlice.lean` entry_point `conditionalTypicalSlice_card_le`
+  199→144 (helper 2 本: `jointRV_jointSequence_proj_measureReal_eq` 34 /
+  `le_exp_sub_of_mul_exp_neg_le_exp_neg` 10)。計 5 helper 全 <150。
 
 ### 計測ニュアンス (Phase 2 で確立、Wave 4+ でも適用)
 
@@ -250,15 +261,15 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   (Object.lean は docstring に 5 箇所、実 sorry tactic は 0)。ターゲット選定で sorry 持ち判定する際は実
   sorry tactic token を確認する (decl span の `grep sorry` は over-count)。
 
-### Wave 4+ への申し送り
+### Wave 6+ への申し送り
 
 - **触らない (option-C 済 floor 残留)**: Mass 249 / union_bound 245 / ConvEntropyDensity 245 /
   OuterN 241 等。
 - **fresh な >150 候補** (再実測必須): `debruijnIdentityV2_holds_assembled_chain_hdiff` (Assembly 231) /
-  `integrable_negPart_negMulLog_map_sum` (Capstone 231) / `entropy_projMap_eq` (BoundarySharp 229) /
-  `convJointLlr_integrable` (ConvEntropyDensity 229) / `jointStronglyTypicalSet_indep_prob_ge`
-  (AchievabilityPhaseEStrong 227) / `ergodic_shiftZ` (TwoSidedExtension/Core 223) /
-  `conditionalTypeClass_card_eq_prod_typeClass` (Core 212) / `hoeffding_tradeoff_exp` (Hoeffding 198) 等。
+  `integrable_negPart_negMulLog_map_sum` (Capstone 231) / `convJointLlr_integrable`
+  (ConvEntropyDensity 229) / `jointStronglyTypicalSet_indep_prob_ge` (AchievabilityPhaseEStrong 227) /
+  `ergodic_shiftZ` (TwoSidedExtension/Core 223) / `differentialEntropyExt_mono_add_truncW` (Mono 206) /
+  `klDiv_gaussianReal_gaussianReal_eq` (DifferentialEntropy 204) / `tvNorm_le_sqrt_klDiv` (Pinsker 194) 等。
 - プロトコル: 並列 ≤ 2・1 ファイル 1 エージェント・worktree + boilerplate・orchestrator 検証は同一。
 
 ### Phase 1 由来 dedup 候補 (全 4 件決着済、参考)
