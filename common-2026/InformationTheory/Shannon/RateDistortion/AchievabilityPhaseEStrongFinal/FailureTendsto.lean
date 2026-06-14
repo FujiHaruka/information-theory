@@ -33,6 +33,125 @@ variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 variable [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
 variable [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β]
 
+lemma measureReal_prod_eq_measureReal_prod_swap_image
+    {γ₁ γ₂ : Type*} [MeasurableSpace γ₁] [MeasurableSpace γ₂]
+    (μ : Measure γ₁) (ν : Measure γ₂) [SFinite μ] [SFinite ν]
+    {S : Set (γ₁ × γ₂)} (hS : MeasurableSet S) :
+    (μ.prod ν).real S = (ν.prod μ).real (Prod.swap '' S) := by
+  have h_eq : (μ.prod ν) S = (ν.prod μ) (Prod.swap ⁻¹' S) := by
+    have h_swap := MeasureTheory.Measure.prod_swap (μ := ν) (ν := μ)
+    rw [← h_swap, MeasureTheory.Measure.map_apply measurable_swap hS]
+  have h_swap_eq : Prod.swap ⁻¹' S = Prod.swap '' S := by
+    ext xy; constructor
+    · intro hxy
+      refine ⟨xy.swap, hxy, ?_⟩
+      simp [Prod.swap]
+    · rintro ⟨ab, hab, rfl⟩
+      simp only [Prod.swap, Set.mem_preimage, Prod.mk.eta]
+      exact hab
+  show ((μ.prod ν) S).toReal = (((ν.prod μ)) (Prod.swap '' S)).toReal
+  rw [h_eq, h_swap_eq]
+
+lemma sum_weighted_le_const_add_sum_weighted_of_le_add
+    {ι : Type*} [Fintype ι] (w f g : ι → ℝ) (A : ℝ)
+    (hw_nonneg : ∀ i, 0 ≤ w i) (hw_sum : ∑ i, w i = 1)
+    (h_le : ∀ i, f i ≤ A + g i) :
+    ∑ i, w i * f i ≤ A + ∑ i, w i * g i := by
+  have h_step1 : ∑ i, w i * f i ≤ ∑ i, w i * (A + g i) :=
+    Finset.sum_le_sum (fun i _ => mul_le_mul_of_nonneg_left (h_le i) (hw_nonneg i))
+  have h_step2 : ∑ i, w i * (A + g i) = A + ∑ i, w i * g i := by
+    have h_dist : ∑ i, w i * (A + g i)
+        = (∑ i, w i * A) + ∑ i, w i * g i := by
+      rw [← Finset.sum_add_distrib]
+      refine Finset.sum_congr rfl (fun i _ => ?_); ring
+    have h_sum_A : ∑ i, w i * A = A := by
+      rw [show ∑ i, w i * A = (∑ i, w i) * A from by rw [Finset.sum_mul]]
+      rw [hw_sum]; ring
+    rw [h_dist, h_sum_A]
+  linarith
+
+lemma measureReal_le_add_measureReal_of_subset_union
+    {γ : Type*} [MeasurableSpace γ] (μ : Measure γ) [IsFiniteMeasure μ]
+    {S A B : Set γ} (hS : S ⊆ A ∪ B) :
+    μ.real S ≤ μ.real A + μ.real B := by
+  have h_le := measureReal_mono (μ := μ) hS (measure_ne_top _ _)
+  have h_union_le : μ.real (A ∪ B) ≤ μ.real A + μ.real B :=
+    measureReal_union_le _ _
+  linarith
+
+lemma sum_measureReal_singleton_univ_eq_one
+    {ι : Type*} [MeasurableSpace ι] [Fintype ι] [MeasurableSingletonClass ι]
+    (μ : Measure ι) [IsProbabilityMeasure μ] :
+    ∑ i : ι, μ.real {i} = 1 := by
+  have h_real_univ : μ.real ((Finset.univ : Finset ι) : Set ι) = 1 := by
+    rw [Finset.coe_univ, measureReal_def, measure_univ]
+    rfl
+  have h_sum_eq := sum_measureReal_singleton (μ := μ) (Finset.univ : Finset ι)
+  rw [h_sum_eq, h_real_univ]
+
+lemma measureReal_prod_eq_sum_measureReal_singleton_mul_measureReal_section
+    {ι γ : Type*} [MeasurableSpace ι] [Fintype ι] [MeasurableSingletonClass ι]
+    [MeasurableSpace γ] (μ : Measure ι) (ν : Measure γ)
+    [IsFiniteMeasure μ] [IsFiniteMeasure ν]
+    {R : Set (ι × γ)} (hR : MeasurableSet R) :
+    (μ.prod ν).real R
+      = ∑ c : ι, μ.real {c} * ν.real (Prod.mk c ⁻¹' R) := by
+  have h_prod : (μ.prod ν) R = ∫⁻ c, ν (Prod.mk c ⁻¹' R) ∂μ :=
+    Measure.prod_apply hR
+  have h_lint_eq :
+      ∫⁻ c, ν (Prod.mk c ⁻¹' R) ∂μ
+        = ∑ c : ι, ν (Prod.mk c ⁻¹' R) * μ {c} :=
+    MeasureTheory.lintegral_fintype (μ := μ) _
+  show ((μ.prod ν) R).toReal = _
+  rw [h_prod, h_lint_eq, ENNReal.toReal_sum]
+  · refine Finset.sum_congr rfl (fun c _ => ?_)
+    rw [ENNReal.toReal_mul]
+    show ν.real _ * μ.real _ = μ.real _ * ν.real _
+    ring
+  · intro c _
+    exact ENNReal.mul_ne_top (measure_ne_top _ _) (measure_ne_top _ _)
+
+lemma measureReal_prod_le_of_measure_section_le_ofReal
+    {γ₁ γ₂ : Type*} [MeasurableSpace γ₁] [MeasurableSpace γ₂]
+    (μ : Measure γ₁) (ν : Measure γ₂) [IsProbabilityMeasure μ] [SFinite ν]
+    {R : Set (γ₁ × γ₂)} (hR : MeasurableSet R) (b : ℝ) (hb : 0 ≤ b)
+    (h_section : ∀ x, ν (Prod.mk x ⁻¹' R) ≤ ENNReal.ofReal b) :
+    (μ.prod ν).real R ≤ b := by
+  have h_prod : (μ.prod ν) R = ∫⁻ x, ν (Prod.mk x ⁻¹' R) ∂μ :=
+    Measure.prod_apply hR
+  have h_int_bound :
+      ∫⁻ x, ν (Prod.mk x ⁻¹' R) ∂μ ≤ ENNReal.ofReal b := by
+    calc ∫⁻ x, ν (Prod.mk x ⁻¹' R) ∂μ
+        ≤ ∫⁻ _x, ENNReal.ofReal b ∂μ := lintegral_mono h_section
+      _ = ENNReal.ofReal b * μ Set.univ := by rw [lintegral_const]
+      _ ≤ ENNReal.ofReal b := by rw [measure_univ]; rw [mul_one]
+  show ((μ.prod ν) R).toReal ≤ b
+  rw [h_prod]
+  calc (∫⁻ x, ν (Prod.mk x ⁻¹' R) ∂μ).toReal
+      ≤ (ENNReal.ofReal b).toReal :=
+        ENNReal.toReal_mono ENNReal.ofReal_ne_top h_int_bound
+    _ = b := ENNReal.toReal_ofReal hb
+
+lemma tendsto_measureReal_compl_zero_of_tendsto_measure_one
+    {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (E : ℕ → Set Ω) (hE_meas : ∀ n, MeasurableSet (E n))
+    (hE : Filter.Tendsto (fun n => μ (E n)) Filter.atTop (𝓝 1)) :
+    Filter.Tendsto (fun n => (μ (E n)ᶜ).toReal) Filter.atTop (𝓝 0) := by
+  have h_aep_real :
+      Filter.Tendsto (fun n => μ.real (E n)) Filter.atTop (𝓝 1) := by
+    simp only [measureReal_def]
+    exact (ENNReal.tendsto_toReal ENNReal.one_ne_top).comp hE
+  have h_pointwise : ∀ n, (μ (E n)ᶜ).toReal = 1 - μ.real (E n) := by
+    intro n
+    show (μ (E n)ᶜ).toReal = _
+    rw [← measureReal_def, probReal_compl_eq_one_sub (hE_meas n)]
+  have h_minus :
+      Filter.Tendsto (fun n => (1 : ℝ) - μ.real (E n)) Filter.atTop (𝓝 0) := by
+    have := h_aep_real.const_sub (1 : ℝ)
+    simpa using this
+  refine h_minus.congr (fun n => ?_)
+  rw [h_pointwise n]
+
 /-! ## Main probabilistic content: `codebookAvgFailureStrong → 0` -/
 
 /-- **Main `tendsto_zero` for the strong-encoder failure sequence.**
@@ -249,7 +368,6 @@ theorem codebookAvgFailureStrong_tendsto_zero
                   ∉ stronglyTypicalSet (rdAmbient qStar)
                       (iidXs (α := α) (β := β)) n ε_X}).toReal)
         Filter.atTop (𝓝 0) := by
-    -- μ.real (compl) = 1 - μ.real (event); event → 1 ⟹ compl → 0.
     have h_meas : ∀ n,
         MeasurableSet
           {ω | InformationTheory.Shannon.jointRV
@@ -262,53 +380,25 @@ theorem codebookAvgFailureStrong_tendsto_zero
         InformationTheory.Shannon.measurable_jointRV
           (iidXs (α := α) (β := β)) measurable_iidXs n
       exact hmeas_jr (Set.toFinite _).measurableSet
-    -- Translate to the `.real` form on both sides.
-    have h_aep_real :
-        Filter.Tendsto
-          (fun n : ℕ => (rdAmbient qStar).real
-            {ω | InformationTheory.Shannon.jointRV
-                  (iidXs (α := α) (β := β)) n ω
-                  ∈ stronglyTypicalSet (rdAmbient qStar)
-                      (iidXs (α := α) (β := β)) n ε_X})
-          Filter.atTop (𝓝 1) := by
-      have := h_aep
-      simp only [measureReal_def]
-      refine (ENNReal.tendsto_toReal ?_).comp this
-      exact ENNReal.one_ne_top
-    -- (rdAmbient qStar).real (compl set) = 1 - (rdAmbient qStar).real (event)
-    have h_pointwise : ∀ n,
-        ((rdAmbient qStar) {ω | InformationTheory.Shannon.jointRV
-              (iidXs (α := α) (β := β)) n ω
-              ∉ stronglyTypicalSet (rdAmbient qStar)
-                  (iidXs (α := α) (β := β)) n ε_X}).toReal
-          = 1 - (rdAmbient qStar).real {ω | InformationTheory.Shannon.jointRV
-                  (iidXs (α := α) (β := β)) n ω
-                  ∈ stronglyTypicalSet (rdAmbient qStar)
-                      (iidXs (α := α) (β := β)) n ε_X} := by
-      intro n
-      have h_compl_eq :
-          {ω | InformationTheory.Shannon.jointRV
-                (iidXs (α := α) (β := β)) n ω
-                ∉ stronglyTypicalSet (rdAmbient qStar)
-                    (iidXs (α := α) (β := β)) n ε_X}
-            = {ω | InformationTheory.Shannon.jointRV
-                  (iidXs (α := α) (β := β)) n ω
-                  ∈ stronglyTypicalSet (rdAmbient qStar)
-                      (iidXs (α := α) (β := β)) n ε_X}ᶜ := by
-        ext ω; simp
-      show ((rdAmbient qStar) _).toReal = _
-      rw [h_compl_eq, ← measureReal_def, probReal_compl_eq_one_sub (h_meas n)]
-    have h_minus : Filter.Tendsto
-        (fun n : ℕ => (1 : ℝ) - (rdAmbient qStar).real
-          {ω | InformationTheory.Shannon.jointRV
+    have h_base := tendsto_measureReal_compl_zero_of_tendsto_measure_one
+      (rdAmbient qStar)
+      (fun n => {ω | InformationTheory.Shannon.jointRV
                 (iidXs (α := α) (β := β)) n ω
                 ∈ stronglyTypicalSet (rdAmbient qStar)
                     (iidXs (α := α) (β := β)) n ε_X})
-        Filter.atTop (𝓝 0) := by
-      have := h_aep_real.const_sub (1 : ℝ)
-      simpa using this
-    refine h_minus.congr (fun n => ?_)
-    rw [h_pointwise n]
+      h_meas h_aep
+    refine h_base.congr (fun n => ?_)
+    have h_set_eq :
+        {ω | InformationTheory.Shannon.jointRV
+              (iidXs (α := α) (β := β)) n ω
+              ∉ stronglyTypicalSet (rdAmbient qStar)
+                  (iidXs (α := α) (β := β)) n ε_X}
+          = {ω | InformationTheory.Shannon.jointRV
+                (iidXs (α := α) (β := β)) n ω
+                ∈ stronglyTypicalSet (rdAmbient qStar)
+                    (iidXs (α := α) (β := β)) n ε_X}ᶜ := by
+      ext ω; simp
+    rw [h_set_eq]
   -- Bridge AEP to `Measure.pi` form via `rdAmbient_block_law_iidXs`.
   have h_pi_compl_tendsto :
       Filter.Tendsto
@@ -465,29 +555,18 @@ theorem codebookAvgFailureStrong_tendsto_zero
       have hFc_meas : MeasurableSet Fc := (Set.toFinite _).measurableSet
       have hNc_meas : MeasurableSet Nc := (Set.toFinite _).measurableSet
       -- Measure subadditivity on real values:
-      have h_union :
-          (P_X n).real Fc ≤ (P_X n).real notTX + (P_X n).real Nc := by
-        have h_le := measureReal_mono (μ := P_X n) (hFc_subset)
-            (measure_ne_top _ _)
-        have h_union_le :
-            (P_X n).real (notTX ∪ Nc)
-              ≤ (P_X n).real notTX + (P_X n).real Nc :=
-          measureReal_union_le _ _
-        linarith
-      exact h_union
+      haveI : IsProbabilityMeasure (P_X n) := by
+        show IsProbabilityMeasure
+          (Measure.pi (fun _ : Fin n =>
+              (rdAmbient qStar).map (iidXs (α := α) (β := β) 0)))
+        infer_instance
+      exact measureReal_le_add_measureReal_of_subset_union (P_X n) hFc_subset
     -- Step b: ∑_c W{c}.real * fail_c c ≤ (P_X n).real notTX + ∑_c W{c}.real * Pr_X(Nc) (avg form).
     -- Use that ∑_c W{c}.real = 1 (W probability) for the notTX term.
     have hW_sum_one : ∑ c : Codebook (Mn n) n β, W.real {c} = 1 := by
-      haveI : MeasurableSingletonClass (Fin n → β) := Pi.instMeasurableSingletonClass
       haveI : MeasurableSingletonClass (Codebook (Mn n) n β) :=
         Pi.instMeasurableSingletonClass
-      have h_real_univ : W.real
-          ((Finset.univ : Finset (Codebook (Mn n) n β)) : Set _) = 1 := by
-        rw [Finset.coe_univ, measureReal_def, measure_univ]
-        rfl
-      have h_sum_eq :=
-        sum_measureReal_singleton (μ := W) (Finset.univ : Finset (Codebook (Mn n) n β))
-      rw [h_sum_eq, h_real_univ]
+      exact sum_measureReal_singleton_univ_eq_one W
     have h_weighted_avg :
         ∑ c : Codebook (Mn n) n β, W.real {c} * fail_c c
           ≤ (P_X n).real notTX
@@ -496,57 +575,16 @@ theorem codebookAvgFailureStrong_tendsto_zero
                   { x : Fin n → α | x ∈ T_X ∧
                       ¬ ∃ m : Fin (Mn n), (x, c m) ∈ jointStronglyTypicalSet
                           (rdAmbient qStar) (iidXs (α := α) (β := β))
-                          (iidYs (α := α) (β := β)) n ε_join } := by
-      have h_step1 :
-          ∑ c, W.real {c} * fail_c c
-            ≤ ∑ c, W.real {c} *
-                ((P_X n).real notTX +
-                  (P_X n).real
-                    { x : Fin n → α | x ∈ T_X ∧
-                        ¬ ∃ m : Fin (Mn n), (x, c m) ∈ jointStronglyTypicalSet
-                            (rdAmbient qStar) (iidXs (α := α) (β := β))
-                            (iidYs (α := α) (β := β)) n ε_join }) := by
-        refine Finset.sum_le_sum (fun c _ => ?_)
-        exact mul_le_mul_of_nonneg_left (h_per_c_bound c) measureReal_nonneg
-      have h_step2 :
-          ∑ c, W.real {c} *
-              ((P_X n).real notTX +
-                (P_X n).real
-                  { x : Fin n → α | x ∈ T_X ∧
-                      ¬ ∃ m : Fin (Mn n), (x, c m) ∈ jointStronglyTypicalSet
-                          (rdAmbient qStar) (iidXs (α := α) (β := β))
-                          (iidYs (α := α) (β := β)) n ε_join })
-            = (P_X n).real notTX
-              + ∑ c, W.real {c} * (P_X n).real
-                  { x : Fin n → α | x ∈ T_X ∧
-                      ¬ ∃ m : Fin (Mn n), (x, c m) ∈ jointStronglyTypicalSet
-                          (rdAmbient qStar) (iidXs (α := α) (β := β))
-                          (iidYs (α := α) (β := β)) n ε_join } := by
-        have h_dist :
-            ∑ c, W.real {c} *
-                ((P_X n).real notTX +
-                  (P_X n).real
-                    { x : Fin n → α | x ∈ T_X ∧
-                        ¬ ∃ m : Fin (Mn n), (x, c m) ∈ jointStronglyTypicalSet
-                            (rdAmbient qStar) (iidXs (α := α) (β := β))
-                            (iidYs (α := α) (β := β)) n ε_join })
-              = (∑ c, W.real {c} * (P_X n).real notTX) +
-                ∑ c, W.real {c} * (P_X n).real
-                  { x : Fin n → α | x ∈ T_X ∧
-                      ¬ ∃ m : Fin (Mn n), (x, c m) ∈ jointStronglyTypicalSet
-                          (rdAmbient qStar) (iidXs (α := α) (β := β))
-                          (iidYs (α := α) (β := β)) n ε_join } := by
-          rw [← Finset.sum_add_distrib]
-          refine Finset.sum_congr rfl (fun c _ => ?_); ring
-        have h_sum_notTX :
-            ∑ c : Codebook (Mn n) n β, W.real {c} * (P_X n).real notTX
-              = (P_X n).real notTX := by
-          rw [show ∑ c : Codebook (Mn n) n β, W.real {c} * (P_X n).real notTX
-                  = (∑ c : Codebook (Mn n) n β, W.real {c}) * (P_X n).real notTX
-              from by rw [Finset.sum_mul]]
-          rw [hW_sum_one]; ring
-        rw [h_dist, h_sum_notTX]
-      linarith
+                          (iidYs (α := α) (β := β)) n ε_join } :=
+      sum_weighted_le_const_add_sum_weighted_of_le_add
+        (fun c => W.real {c}) fail_c
+        (fun c => (P_X n).real
+          { x : Fin n → α | x ∈ T_X ∧
+              ¬ ∃ m : Fin (Mn n), (x, c m) ∈ jointStronglyTypicalSet
+                  (rdAmbient qStar) (iidXs (α := α) (β := β))
+                  (iidYs (α := α) (β := β)) n ε_join })
+        ((P_X n).real notTX)
+        (fun _ => measureReal_nonneg) hW_sum_one h_per_c_bound
     -- Step c: bound ∑_c W{c}.real * Pr_X(Nc) ≤ exp(-(Mn n) * target n).
     -- This is the Fubini swap + Step B.
     have h_avg_nomatch_bound :
@@ -599,7 +637,8 @@ theorem codebookAvgFailureStrong_tendsto_zero
                           (rdAmbient qStar) (iidXs (α := α) (β := β))
                           (iidYs (α := α) (β := β)) n ε_join }
             = (W.prod (P_X n)).real R_set := by
-        -- Use Measure.prod_apply with sections.
+        haveI : MeasurableSingletonClass (Codebook (Mn n) n β) :=
+          Pi.instMeasurableSingletonClass
         have h_section : ∀ c : Codebook (Mn n) n β,
             (Prod.mk c ⁻¹' R_set)
               = { x : Fin n → α | x ∈ T_X ∧
@@ -607,34 +646,8 @@ theorem codebookAvgFailureStrong_tendsto_zero
                       (rdAmbient qStar) (iidXs (α := α) (β := β))
                       (iidYs (α := α) (β := β)) n ε_join } := by
           intro c; ext x; simp [hR_set_def]
-        have h_prod :
-            (W.prod (P_X n)) R_set
-              = ∫⁻ c, (P_X n) (Prod.mk c ⁻¹' R_set) ∂W :=
-          Measure.prod_apply hR_set_meas
-        -- Each section measure is in ENNReal: `(P_X n) (slice_c c) = ((P_X n).real (slice_c c)).toNNReal · 1` form.
-        -- For the converse, evaluate ∫⁻ as a finsum.
-        have h_lint_eq :
-            ∫⁻ c, (P_X n) (Prod.mk c ⁻¹' R_set) ∂W
-              = ∑ c : Codebook (Mn n) n β,
-                  (P_X n) (Prod.mk c ⁻¹' R_set) * W {c} := by
-          haveI : MeasurableSingletonClass (Codebook (Mn n) n β) :=
-            Pi.instMeasurableSingletonClass
-          exact MeasureTheory.lintegral_fintype (μ := W) _
-        -- toReal of sum of products = real-sum (each finite).
-        have h_toreal_sum :
-            ((W.prod (P_X n)) R_set).toReal
-              = ∑ c : Codebook (Mn n) n β,
-                  W.real {c} * (P_X n).real (Prod.mk c ⁻¹' R_set) := by
-          rw [h_prod, h_lint_eq, ENNReal.toReal_sum]
-          · refine Finset.sum_congr rfl (fun c _ => ?_)
-            rw [ENNReal.toReal_mul]
-            show (P_X n).real _ * W.real _ = W.real _ * (P_X n).real _
-            ring
-          · intro c _
-            exact ENNReal.mul_ne_top (measure_ne_top _ _) (measure_ne_top _ _)
-        -- Combine.
-        show _ = ((W.prod (P_X n)) R_set).toReal
-        rw [h_toreal_sum]
+        rw [measureReal_prod_eq_sum_measureReal_singleton_mul_measureReal_section
+              W (P_X n) hR_set_meas]
         refine Finset.sum_congr rfl (fun c _ => ?_)
         rw [h_section c]
       -- Now apply Fubini to swap and bound.
@@ -649,27 +662,8 @@ theorem codebookAvgFailureStrong_tendsto_zero
       -- Bound the integrand: for x ∈ T_X, W (swap_section x) ≤ target n; for x ∉ T_X, 0.
       have h_prod_swap :
           (W.prod (P_X n)).real R_set
-            = ((P_X n).prod W).real (Prod.swap '' R_set) := by
-        -- (W.prod (P_X n)) R = ((P_X n).prod W) (Prod.swap ⁻¹' R) = ((P_X n).prod W) (Prod.swap '' R).
-        -- We use `prod_swap` or `Measure.measurePreserving_swap`.
-        have h_eq :
-            (W.prod (P_X n)) R_set
-              = ((P_X n).prod W) (Prod.swap ⁻¹' R_set) := by
-          have h_swap := MeasureTheory.Measure.prod_swap (μ := P_X n) (ν := W)
-          -- (P_X.prod W).map Prod.swap = W.prod (P_X)
-          rw [← h_swap, MeasureTheory.Measure.map_apply measurable_swap hR_set_meas]
-        -- Prod.swap is an involution, so preimage = image.
-        have h_swap_eq : Prod.swap ⁻¹' R_set = Prod.swap '' R_set := by
-          ext xy; constructor
-          · intro hxy
-            refine ⟨xy.swap, hxy, ?_⟩
-            simp [Prod.swap]
-          · rintro ⟨ab, hab, rfl⟩
-            simp only [Prod.swap, Set.mem_preimage, Prod.mk.eta]
-            exact hab
-        show ((W.prod (P_X n)) R_set).toReal
-            = (((P_X n).prod W) (Prod.swap '' R_set)).toReal
-        rw [h_eq, h_swap_eq]
+            = ((P_X n).prod W).real (Prod.swap '' R_set) :=
+        measureReal_prod_eq_measureReal_prod_swap_image W (P_X n) hR_set_meas
       -- swap R_set = {(x, c) | (c, x) ∈ R_set}
       set R_set' : Set ((Fin n → α) × Codebook (Mn n) n β) := Prod.swap '' R_set
         with hR_set'_def
@@ -693,11 +687,6 @@ theorem codebookAvgFailureStrong_tendsto_zero
           rfl
       have hR_set'_meas : MeasurableSet R_set' := by
         rw [hR_set'_eq]; exact (Set.toFinite _).measurableSet
-      -- Now apply prod_apply on (P_X n).prod W with R_set'.
-      have h_prod' :
-          ((P_X n).prod W) R_set'
-            = ∫⁻ x, W (Prod.mk x ⁻¹' R_set') ∂(P_X n) :=
-        Measure.prod_apply hR_set'_meas
       -- For each x, Prod.mk x ⁻¹' R_set' is {c | x ∈ T_X ∧ ¬∃m, (x, c m) ∈ JSTS}.
       have h_section_x : ∀ x : Fin n → α,
           Prod.mk x ⁻¹' R_set'
@@ -773,30 +762,15 @@ theorem codebookAvgFailureStrong_tendsto_zero
           exact ENNReal.ofReal_le_ofReal h_real_le
         · rw [if_neg hxTX]; simp
       -- Therefore ∫⁻ x, W(section x) d(P_X n) ≤ ENNReal.ofReal bound.
-      have h_int_bound :
-          ∫⁻ x, W (Prod.mk x ⁻¹' R_set') ∂(P_X n)
-            ≤ ENNReal.ofReal bound := by
-        haveI : IsProbabilityMeasure (P_X n) := by
-          show IsProbabilityMeasure
-            (Measure.pi (fun _ : Fin n =>
-                (rdAmbient qStar).map (iidXs (α := α) (β := β) 0)))
-          infer_instance
-        calc ∫⁻ x, W (Prod.mk x ⁻¹' R_set') ∂(P_X n)
-            ≤ ∫⁻ _x, ENNReal.ofReal bound ∂(P_X n) :=
-              lintegral_mono (fun x => h_section_bound x)
-          _ = ENNReal.ofReal bound * (P_X n) Set.univ := by
-              rw [lintegral_const]
-          _ ≤ ENNReal.ofReal bound := by
-              rw [measure_univ]; rw [mul_one]
+      haveI : IsProbabilityMeasure (P_X n) := by
+        show IsProbabilityMeasure
+          (Measure.pi (fun _ : Fin n =>
+              (rdAmbient qStar).map (iidXs (α := α) (β := β) 0)))
+        infer_instance
       have h_real_le :
-          ((P_X n).prod W).real R_set' ≤ bound := by
-        show (((P_X n).prod W) R_set').toReal ≤ bound
-        rw [h_prod']
-        calc (∫⁻ x, W (Prod.mk x ⁻¹' R_set') ∂(P_X n)).toReal
-            ≤ (ENNReal.ofReal bound).toReal := by
-              refine ENNReal.toReal_mono ?_ h_int_bound
-              exact ENNReal.ofReal_ne_top
-          _ = bound := ENNReal.toReal_ofReal hbound_nn
+          ((P_X n).prod W).real R_set' ≤ bound :=
+        measureReal_prod_le_of_measure_section_le_ofReal
+          (P_X n) W hR_set'_meas bound hbound_nn h_section_bound
       calc ∑ c, W.real {c} * (P_X n).real
               { x : Fin n → α | x ∈ T_X ∧
                   ¬ ∃ m : Fin (Mn n), (x, c m) ∈ jointStronglyTypicalSet
