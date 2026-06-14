@@ -275,6 +275,315 @@ theorem isRegularDensityV2_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0
   integrable_deriv := InformationTheory.Shannon.integrable_deriv_gaussianPDFReal m hv
   integral_deriv_eq_zero := InformationTheory.Shannon.integral_deriv_gaussianPDFReal_eq_zero m hv
 
+/-! ## Steps 2/3 — `IsBlachmanConvReady` Gaussian witness field helpers -/
+
+@[entry_point]
+theorem integrable_scoreWeight_mul_condDensityX_gaussianPDFReal
+    {mX mY : ℝ} {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0)
+    (lam : ℝ) (z : ℝ) :
+    Integrable (fun x =>
+      scoreWeight (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) lam z x
+        * condDensityX (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) z x) volume := by
+  -- scoreWeight·condDensityX = (1/pZ)·(scoreWeight·(fX·fY(z-·)))
+  obtain ⟨CfX, hCfX⟩ := bdd_gaussianPDFReal mX vX
+  obtain ⟨CfY, hCfY⟩ := bdd_gaussianPDFReal mY vY
+  -- term A: logDeriv fX · fX (integrable) × fY(z-·) (bounded)
+  have hA : Integrable (fun x =>
+      logDeriv (gaussianPDFReal mX vX) x * gaussianPDFReal mX vX x
+        * gaussianPDFReal mY vY (z - x)) volume :=
+    (integrable_logDeriv_mul_gaussianPDFReal hvX).mul_bdd
+      ((measurable_gaussianPDFReal mY vY).comp
+        (measurable_const.sub measurable_id)).aestronglyMeasurable (c := CfY)
+      (Filter.Eventually.of_forall fun x => by simpa [Real.norm_eq_abs] using hCfY (z - x))
+  -- term B: fX (bounded) × logDeriv fY(z-·)·fY(z-·) (integrable shift)
+  have hBbase : Integrable (fun x =>
+      logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x)) volume :=
+    (integrable_logDeriv_mul_gaussianPDFReal hvY).comp_sub_left z
+  have hB : Integrable (fun x =>
+      gaussianPDFReal mX vX x
+        * (logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x))) volume :=
+    hBbase.bdd_mul (measurable_gaussianPDFReal mX vX).aestronglyMeasurable (c := CfX)
+      (Filter.Eventually.of_forall fun x => by simpa [Real.norm_eq_abs] using hCfX x)
+  -- combine: lam·A + (1-lam)·B, then divide by pZ
+  have hcomb := ((hA.const_mul lam).add (hB.const_mul (1 - lam))).div_const
+    (convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) z)
+  refine hcomb.congr (Filter.Eventually.of_forall fun x => ?_)
+  simp only [scoreWeight, condDensityX, Pi.add_apply]
+  ring
+
+@[entry_point]
+theorem integrable_scoreWeight_sq_mul_condDensityX_gaussianPDFReal
+    {mX mY : ℝ} {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0)
+    (lam : ℝ) (z : ℝ) :
+    Integrable (fun x =>
+      (scoreWeight (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) lam z x) ^ 2
+        * condDensityX (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) z x) volume := by
+  obtain ⟨CfX, hCfX⟩ := bdd_gaussianPDFReal mX vX
+  obtain ⟨CfY, hCfY⟩ := bdd_gaussianPDFReal mY vY
+  obtain ⟨CfX', hCfX'⟩ := bdd_deriv_gaussianPDFReal (m := mX) hvX
+  obtain ⟨CfY', hCfY'⟩ := bdd_deriv_gaussianPDFReal (m := mY) hvY
+  -- term 1: lam² · (logDeriv fX x)²·fX x · fY(z-x)  = [int_fisherX] × [bounded fY(z-·)]
+  have hT1base : Integrable (fun x =>
+      (logDeriv (gaussianPDFReal mX vX) x) ^ 2 * gaussianPDFReal mX vX x) volume := by
+    refine (integrable_logDeriv_sq_mul_gaussianPDFReal mX hvX).congr
+      (Filter.Eventually.of_forall fun x => ?_)
+    simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvX, neg_div]; ring
+  have hT1 : Integrable (fun x =>
+      (logDeriv (gaussianPDFReal mX vX) x) ^ 2 * gaussianPDFReal mX vX x
+        * gaussianPDFReal mY vY (z - x)) volume :=
+    hT1base.mul_bdd ((measurable_gaussianPDFReal mY vY).comp
+      (measurable_const.sub measurable_id)).aestronglyMeasurable (c := CfY)
+      (Filter.Eventually.of_forall fun x => by simpa [Real.norm_eq_abs] using hCfY (z - x))
+  -- term 2: cross  logDeriv fX·fX (int) × logDeriv fY(z-·)·fY(z-·) (= deriv fY(z-·), bounded)
+  have hderivY_eq : ∀ w, logDeriv (gaussianPDFReal mY vY) w * gaussianPDFReal mY vY w
+      = deriv (gaussianPDFReal mY vY) w := by
+    intro w
+    rw [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvY,
+      InformationTheory.Shannon.deriv_gaussianPDFReal hvY]
+  have hT2meas : AEStronglyMeasurable
+      (fun x => logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x))
+      volume := by
+    have hcont : Continuous
+        (fun x => logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x)) := by
+      have heq : (fun x => logDeriv (gaussianPDFReal mY vY) (z - x)
+          * gaussianPDFReal mY vY (z - x))
+          = (fun x => deriv (gaussianPDFReal mY vY) (z - x)) := by
+        funext x; exact hderivY_eq (z - x)
+      rw [heq]
+      exact (continuous_deriv_gaussianPDFReal hvY).comp (continuous_const.sub continuous_id)
+    exact hcont.aestronglyMeasurable
+  have hT2 : Integrable (fun x =>
+      logDeriv (gaussianPDFReal mX vX) x * gaussianPDFReal mX vX x
+        * (logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x))) volume :=
+    (integrable_logDeriv_mul_gaussianPDFReal hvX).mul_bdd hT2meas (c := CfY')
+      (Filter.Eventually.of_forall fun x => by
+        rw [hderivY_eq (z - x)]; simpa [Real.norm_eq_abs] using hCfY' (z - x))
+  -- term 3: (1-lam)² · (logDeriv fY(z-·))²·fY(z-·) (int shift) × fX (bounded)
+  have hT3pre : Integrable (fun w =>
+      (logDeriv (gaussianPDFReal mY vY) w) ^ 2 * gaussianPDFReal mY vY w) volume := by
+    refine (integrable_logDeriv_sq_mul_gaussianPDFReal mY hvY).congr
+      (Filter.Eventually.of_forall fun w => ?_)
+    simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvY, neg_div]; ring
+  have hT3base : Integrable (fun x =>
+      (logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2 * gaussianPDFReal mY vY (z - x)) volume :=
+    hT3pre.comp_sub_left z
+  have hT3 : Integrable (fun x =>
+      gaussianPDFReal mX vX x
+        * ((logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2 * gaussianPDFReal mY vY (z - x)))
+        volume :=
+    hT3base.bdd_mul (measurable_gaussianPDFReal mX vX).aestronglyMeasurable (c := CfX)
+      (Filter.Eventually.of_forall fun x => by simpa [Real.norm_eq_abs] using hCfX x)
+  -- combine: lam²·T1 + 2·lam·(1-lam)·T2 + (1-lam)²·T3, then divide by pZ
+  have hcomb := ((((hT1.const_mul (lam ^ 2)).add
+    (hT2.const_mul (2 * lam * (1 - lam)))).add
+    (hT3.const_mul ((1 - lam) ^ 2)))).div_const
+    (convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) z)
+  refine hcomb.congr (Filter.Eventually.of_forall fun x => ?_)
+  simp only [scoreWeight, condDensityX, Pi.add_apply]
+  ring
+
+@[entry_point]
+theorem integrable_prod_logDeriv_sq_mul_gaussianPDFReal
+    {mX mY : ℝ} {vX vY : ℝ≥0} (hvX : vX ≠ 0) (_hvY : vY ≠ 0) :
+    Integrable (Function.uncurry fun z x =>
+      (logDeriv (gaussianPDFReal mX vX) x) ^ 2 * gaussianPDFReal mX vX x
+        * gaussianPDFReal mY vY (z - x)) (volume.prod volume) := by
+  -- shear `(z,x) ↦ (x, z - x)` separates `fY(z-x)`:
+  -- A a = (logDeriv fX a)²·fX a, B b = fY b
+  have hA : Integrable (fun a =>
+      (logDeriv (gaussianPDFReal mX vX) a) ^ 2 * gaussianPDFReal mX vX a) volume := by
+    refine (integrable_logDeriv_sq_mul_gaussianPDFReal mX hvX).congr
+      (Filter.Eventually.of_forall fun a => ?_)
+    simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvX, neg_div]; ring
+  have hB : Integrable (fun b => gaussianPDFReal mY vY b) volume :=
+    integrable_gaussianPDFReal mY vY
+  have hsep : Integrable
+      (fun p : ℝ × ℝ =>
+        ((logDeriv (gaussianPDFReal mX vX) p.1) ^ 2 * gaussianPDFReal mX vX p.1)
+          * gaussianPDFReal mY vY p.2) (volume.prod volume) :=
+    hA.mul_prod hB
+  have hcomp := (measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
+    (ν := (volume : Measure ℝ))).integrable_comp_of_integrable hsep
+  refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
+  simp only [Function.comp, Function.uncurry]
+
+@[entry_point]
+theorem integrable_prod_logDeriv_sq_shift_mul_gaussianPDFReal
+    {mX mY : ℝ} {vX vY : ℝ≥0} (_hvX : vX ≠ 0) (hvY : vY ≠ 0) :
+    Integrable (Function.uncurry fun z x =>
+      (logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2 * gaussianPDFReal mX vX x
+        * gaussianPDFReal mY vY (z - x)) (volume.prod volume) := by
+  -- shear `(z,x) ↦ (x, z-x)`: A a = fX a, B b = (logDeriv fY b)²·fY b
+  have hA : Integrable (fun a => gaussianPDFReal mX vX a) volume :=
+    integrable_gaussianPDFReal mX vX
+  have hB : Integrable (fun b =>
+      (logDeriv (gaussianPDFReal mY vY) b) ^ 2 * gaussianPDFReal mY vY b) volume := by
+    refine (integrable_logDeriv_sq_mul_gaussianPDFReal mY hvY).congr
+      (Filter.Eventually.of_forall fun b => ?_)
+    simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvY, neg_div]; ring
+  have hsep : Integrable
+      (fun p : ℝ × ℝ =>
+        gaussianPDFReal mX vX p.1
+          * ((logDeriv (gaussianPDFReal mY vY) p.2) ^ 2 * gaussianPDFReal mY vY p.2))
+        (volume.prod volume) :=
+    hA.mul_prod hB
+  have hcomp := (measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
+    (ν := (volume : Measure ℝ))).integrable_comp_of_integrable hsep
+  refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
+  simp only [Function.comp, Function.uncurry]
+  ring
+
+@[entry_point]
+theorem integrable_prod_logDeriv_mul_cross_gaussianPDFReal
+    {mX mY : ℝ} {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0) :
+    Integrable (Function.uncurry fun z x =>
+      logDeriv (gaussianPDFReal mX vX) x * gaussianPDFReal mX vX x
+        * (logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x)))
+      (volume.prod volume) := by
+  -- shear `(z,x) ↦ (x, z-x)`: A a = logDeriv fX a·fX a, B b = logDeriv fY b·fY b
+  have hA : Integrable (fun a =>
+      logDeriv (gaussianPDFReal mX vX) a * gaussianPDFReal mX vX a) volume :=
+    integrable_logDeriv_mul_gaussianPDFReal hvX
+  have hB : Integrable (fun b =>
+      logDeriv (gaussianPDFReal mY vY) b * gaussianPDFReal mY vY b) volume :=
+    integrable_logDeriv_mul_gaussianPDFReal hvY
+  have hsep : Integrable
+      (fun p : ℝ × ℝ =>
+        (logDeriv (gaussianPDFReal mX vX) p.1 * gaussianPDFReal mX vX p.1)
+          * (logDeriv (gaussianPDFReal mY vY) p.2 * gaussianPDFReal mY vY p.2))
+        (volume.prod volume) :=
+    hA.mul_prod hB
+  have hcomp := (measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
+    (ν := (volume : Measure ℝ))).integrable_comp_of_integrable hsep
+  refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
+  simp only [Function.comp, Function.uncurry]
+
+@[entry_point]
+theorem integrable_inner_scoreWeight_sq_condDensityX_mul_convDensityAdd_gaussianPDFReal
+    {mX mY : ℝ} {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0)
+    (lam : ℝ) (_hlam0 : 0 ≤ lam) (_hlam1 : lam ≤ 1) :
+    Integrable (fun z =>
+      (∫ x, (scoreWeight (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) lam z x) ^ 2
+          * condDensityX (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) z x ∂volume)
+        * convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) z) volume := by
+  have hvXY : vX + vY ≠ 0 := fun h => hvX (add_eq_zero.mp h).1
+  -- product-measure integrability of the three Tonelli terms (= int_prod1/2/3 integrands)
+  have hP1 := integrable_prod_logDeriv_sq_mul_gaussianPDFReal (mX := mX) (mY := mY) hvX hvY
+  have hP2 := integrable_prod_logDeriv_sq_shift_mul_gaussianPDFReal (mX := mX) (mY := mY) hvX hvY
+  have hP3 := integrable_prod_logDeriv_mul_cross_gaussianPDFReal (mX := mX) (mY := mY) hvX hvY
+  -- marginal integrability of inner integrals via Tonelli (`integral_prod_left`)
+  have hI1 := hP1.integral_prod_left
+  have hI2 := hP2.integral_prod_left
+  have hI3 := hP3.integral_prod_left
+  -- assemble: lam²·I1 + 2lam(1-lam)·I3 + (1-lam)²·I2
+  have hcomb := (((hI1.const_mul (lam ^ 2)).add
+    (hI3.const_mul (2 * lam * (1 - lam)))).add (hI2.const_mul ((1 - lam) ^ 2)))
+  refine hcomb.congr (Filter.Eventually.of_forall fun z => ?_)
+  -- pointwise: (∫ scoreWeight²·condDensityX)·pZ = lam²∫g1 + 2lam(1-lam)∫g3 + (1-lam)²∫g2
+  have hpZ : convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) z ≠ 0 := by
+    rw [convDensityAdd_gaussian_closed_form hvX hvY]
+    exact (gaussianPDFReal_pos _ _ z hvXY).ne'
+  set pZ := convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) z with hpZdef
+  -- per-z integrability (in x) of the three g-terms
+  obtain ⟨CfX, hCfX⟩ := bdd_gaussianPDFReal mX vX
+  obtain ⟨CfY, hCfY⟩ := bdd_gaussianPDFReal mY vY
+  obtain ⟨CfY', hCfY'⟩ := bdd_deriv_gaussianPDFReal (m := mY) hvY
+  have hg1 : Integrable (fun x =>
+      (logDeriv (gaussianPDFReal mX vX) x) ^ 2 * gaussianPDFReal mX vX x
+        * gaussianPDFReal mY vY (z - x)) volume := by
+    have hbase : Integrable (fun x =>
+        (logDeriv (gaussianPDFReal mX vX) x) ^ 2 * gaussianPDFReal mX vX x) volume := by
+      refine (integrable_logDeriv_sq_mul_gaussianPDFReal mX hvX).congr
+        (Filter.Eventually.of_forall fun a => ?_)
+      simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvX, neg_div]; ring
+    exact hbase.mul_bdd ((measurable_gaussianPDFReal mY vY).comp
+      (measurable_const.sub measurable_id)).aestronglyMeasurable (c := CfY)
+      (Filter.Eventually.of_forall fun x => by simpa [Real.norm_eq_abs] using hCfY (z - x))
+  have hderivY_eq : ∀ w, logDeriv (gaussianPDFReal mY vY) w * gaussianPDFReal mY vY w
+      = deriv (gaussianPDFReal mY vY) w := fun w => by
+    rw [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvY,
+      InformationTheory.Shannon.deriv_gaussianPDFReal hvY]
+  have hg3 : Integrable (fun x =>
+      logDeriv (gaussianPDFReal mX vX) x * gaussianPDFReal mX vX x
+        * (logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x))) volume := by
+    have hmeas : AEStronglyMeasurable
+        (fun x => logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x))
+        volume := by
+      have heq : (fun x => logDeriv (gaussianPDFReal mY vY) (z - x)
+          * gaussianPDFReal mY vY (z - x))
+          = (fun x => deriv (gaussianPDFReal mY vY) (z - x)) := by
+        funext x; exact hderivY_eq (z - x)
+      rw [heq]
+      exact ((continuous_deriv_gaussianPDFReal hvY).comp
+        (continuous_const.sub continuous_id)).aestronglyMeasurable
+    exact (integrable_logDeriv_mul_gaussianPDFReal hvX).mul_bdd hmeas (c := CfY')
+      (Filter.Eventually.of_forall fun x => by
+        rw [hderivY_eq (z - x)]; simpa [Real.norm_eq_abs] using hCfY' (z - x))
+  have hg2 : Integrable (fun x =>
+      (logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2 * gaussianPDFReal mX vX x
+        * gaussianPDFReal mY vY (z - x)) volume := by
+    have hpre : Integrable (fun w =>
+        (logDeriv (gaussianPDFReal mY vY) w) ^ 2 * gaussianPDFReal mY vY w) volume := by
+      refine (integrable_logDeriv_sq_mul_gaussianPDFReal mY hvY).congr
+        (Filter.Eventually.of_forall fun b => ?_)
+      simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvY, neg_div]; ring
+    have hbase : Integrable (fun x =>
+        (logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2 * gaussianPDFReal mY vY (z - x)) volume :=
+      hpre.comp_sub_left z
+    refine (hbase.bdd_mul (measurable_gaussianPDFReal mX vX).aestronglyMeasurable (c := CfX)
+      (Filter.Eventually.of_forall fun x => by
+        simpa [Real.norm_eq_abs] using hCfX x)).congr
+      (Filter.Eventually.of_forall fun x => ?_)
+    ring
+  -- step 1+2: pull `pZ` inside and cancel `condDensityX · pZ = fX·fY(z-·)`
+  have hstep12 : (∫ x, (scoreWeight (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) lam z x) ^ 2
+      * condDensityX (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) z x ∂volume) * pZ
+      = ∫ x, (scoreWeight (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) lam z x) ^ 2
+          * (gaussianPDFReal mX vX x * gaussianPDFReal mY vY (z - x)) ∂volume := by
+    rw [← integral_mul_const]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
+    simp only [condDensityX, ← hpZdef]
+    rw [mul_assoc, div_mul_cancel₀ _ hpZ]
+  -- step 3: expand the square into the three g-terms and split the integral
+  have hexpand : (fun x => (scoreWeight (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) lam z x) ^ 2
+      * (gaussianPDFReal mX vX x * gaussianPDFReal mY vY (z - x)))
+      = (fun x => lam ^ 2 * ((logDeriv (gaussianPDFReal mX vX) x) ^ 2 * gaussianPDFReal mX vX x
+            * gaussianPDFReal mY vY (z - x))
+        + 2 * lam * (1 - lam) * (logDeriv (gaussianPDFReal mX vX) x * gaussianPDFReal mX vX x
+            * (logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x)))
+        + (1 - lam) ^ 2 * ((logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2 * gaussianPDFReal mX vX x
+            * gaussianPDFReal mY vY (z - x))) := by
+    funext x; simp only [scoreWeight]; ring
+  simp only [Pi.add_apply, Function.uncurry]
+  -- split the expanded integral into the three g-integrals
+  have hsplit : (∫ x, (scoreWeight (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) lam z x) ^ 2
+      * (gaussianPDFReal mX vX x * gaussianPDFReal mY vY (z - x)) ∂volume)
+      = lam ^ 2 * (∫ x, (logDeriv (gaussianPDFReal mX vX) x) ^ 2 * gaussianPDFReal mX vX x
+            * gaussianPDFReal mY vY (z - x) ∂volume)
+        + 2 * lam * (1 - lam) * (∫ x, logDeriv (gaussianPDFReal mX vX) x * gaussianPDFReal mX vX x
+            * (logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x)) ∂volume)
+        + (1 - lam) ^ 2 * (∫ x, (logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2
+            * gaussianPDFReal mX vX x * gaussianPDFReal mY vY (z - x) ∂volume) := by
+    rw [hexpand]
+    rw [show (fun x => lam ^ 2 * ((logDeriv (gaussianPDFReal mX vX) x) ^ 2
+          * gaussianPDFReal mX vX x * gaussianPDFReal mY vY (z - x))
+        + 2 * lam * (1 - lam) * (logDeriv (gaussianPDFReal mX vX) x * gaussianPDFReal mX vX x
+            * (logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x)))
+        + (1 - lam) ^ 2 * ((logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2
+            * gaussianPDFReal mX vX x * gaussianPDFReal mY vY (z - x)))
+        = ((fun x => lam ^ 2 * ((logDeriv (gaussianPDFReal mX vX) x) ^ 2
+              * gaussianPDFReal mX vX x * gaussianPDFReal mY vY (z - x)))
+            + (fun x => 2 * lam * (1 - lam) * (logDeriv (gaussianPDFReal mX vX) x
+                * gaussianPDFReal mX vX x
+                * (logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x)))))
+          + (fun x => (1 - lam) ^ 2 * ((logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2
+              * gaussianPDFReal mX vX x * gaussianPDFReal mY vY (z - x))) from rfl,
+      integral_add' ((hg1.const_mul (lam ^ 2)).add (hg3.const_mul (2 * lam * (1 - lam))))
+          (hg2.const_mul ((1 - lam) ^ 2)),
+      integral_add' (hg1.const_mul (lam ^ 2)) (hg3.const_mul (2 * lam * (1 - lam))),
+      integral_const_mul, integral_const_mul, integral_const_mul]
+  rw [hstep12, hsplit]
+
 /-! ## Steps 2/3 — `IsBlachmanConvReady` Gaussian witness (19 fields) -/
 
 /-- **Gaussian witness** for `IsBlachmanConvReady` — density-route non-vacuousness.
@@ -349,254 +658,13 @@ theorem isBlachmanConvReady_gaussianPDFReal
       (convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) z)).congr
       (Filter.Eventually.of_forall fun x => ?_)
     simp only [condDensityX]
-  int_W := by
-    intro lam _ _ z
-    -- scoreWeight·condDensityX = (1/pZ)·(scoreWeight·(fX·fY(z-·)))
-    obtain ⟨CfX, hCfX⟩ := bdd_gaussianPDFReal mX vX
-    obtain ⟨CfY, hCfY⟩ := bdd_gaussianPDFReal mY vY
-    -- term A: logDeriv fX · fX (integrable) × fY(z-·) (bounded)
-    have hA : Integrable (fun x =>
-        logDeriv (gaussianPDFReal mX vX) x * gaussianPDFReal mX vX x
-          * gaussianPDFReal mY vY (z - x)) volume :=
-      (integrable_logDeriv_mul_gaussianPDFReal hvX).mul_bdd
-        ((measurable_gaussianPDFReal mY vY).comp
-          (measurable_const.sub measurable_id)).aestronglyMeasurable (c := CfY)
-        (Filter.Eventually.of_forall fun x => by simpa [Real.norm_eq_abs] using hCfY (z - x))
-    -- term B: fX (bounded) × logDeriv fY(z-·)·fY(z-·) (integrable shift)
-    have hBbase : Integrable (fun x =>
-        logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x)) volume :=
-      (integrable_logDeriv_mul_gaussianPDFReal hvY).comp_sub_left z
-    have hB : Integrable (fun x =>
-        gaussianPDFReal mX vX x
-          * (logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x))) volume :=
-      hBbase.bdd_mul (measurable_gaussianPDFReal mX vX).aestronglyMeasurable (c := CfX)
-        (Filter.Eventually.of_forall fun x => by simpa [Real.norm_eq_abs] using hCfX x)
-    -- combine: lam·A + (1-lam)·B, then divide by pZ
-    have hcomb := ((hA.const_mul lam).add (hB.const_mul (1 - lam))).div_const
-      (convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) z)
-    refine hcomb.congr (Filter.Eventually.of_forall fun x => ?_)
-    simp only [scoreWeight, condDensityX, Pi.add_apply]
-    ring
-  int_Wsq := by
-    intro lam _ _ z
-    obtain ⟨CfX, hCfX⟩ := bdd_gaussianPDFReal mX vX
-    obtain ⟨CfY, hCfY⟩ := bdd_gaussianPDFReal mY vY
-    obtain ⟨CfX', hCfX'⟩ := bdd_deriv_gaussianPDFReal (m := mX) hvX
-    obtain ⟨CfY', hCfY'⟩ := bdd_deriv_gaussianPDFReal (m := mY) hvY
-    -- term 1: lam² · (logDeriv fX x)²·fX x · fY(z-x)  = [int_fisherX] × [bounded fY(z-·)]
-    have hT1base : Integrable (fun x =>
-        (logDeriv (gaussianPDFReal mX vX) x) ^ 2 * gaussianPDFReal mX vX x) volume := by
-      refine (integrable_logDeriv_sq_mul_gaussianPDFReal mX hvX).congr
-        (Filter.Eventually.of_forall fun x => ?_)
-      simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvX, neg_div]; ring
-    have hT1 : Integrable (fun x =>
-        (logDeriv (gaussianPDFReal mX vX) x) ^ 2 * gaussianPDFReal mX vX x
-          * gaussianPDFReal mY vY (z - x)) volume :=
-      hT1base.mul_bdd ((measurable_gaussianPDFReal mY vY).comp
-        (measurable_const.sub measurable_id)).aestronglyMeasurable (c := CfY)
-        (Filter.Eventually.of_forall fun x => by simpa [Real.norm_eq_abs] using hCfY (z - x))
-    -- term 2: cross  logDeriv fX·fX (int) × logDeriv fY(z-·)·fY(z-·) (= deriv fY(z-·), bounded)
-    have hderivY_eq : ∀ w, logDeriv (gaussianPDFReal mY vY) w * gaussianPDFReal mY vY w
-        = deriv (gaussianPDFReal mY vY) w := by
-      intro w
-      rw [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvY,
-        InformationTheory.Shannon.deriv_gaussianPDFReal hvY]
-    have hT2meas : AEStronglyMeasurable
-        (fun x => logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x))
-        volume := by
-      have hcont : Continuous
-          (fun x => logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x)) := by
-        have heq : (fun x => logDeriv (gaussianPDFReal mY vY) (z - x)
-            * gaussianPDFReal mY vY (z - x))
-            = (fun x => deriv (gaussianPDFReal mY vY) (z - x)) := by
-          funext x; exact hderivY_eq (z - x)
-        rw [heq]
-        exact (continuous_deriv_gaussianPDFReal hvY).comp (continuous_const.sub continuous_id)
-      exact hcont.aestronglyMeasurable
-    have hT2 : Integrable (fun x =>
-        logDeriv (gaussianPDFReal mX vX) x * gaussianPDFReal mX vX x
-          * (logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x))) volume :=
-      (integrable_logDeriv_mul_gaussianPDFReal hvX).mul_bdd hT2meas (c := CfY')
-        (Filter.Eventually.of_forall fun x => by
-          rw [hderivY_eq (z - x)]; simpa [Real.norm_eq_abs] using hCfY' (z - x))
-    -- term 3: (1-lam)² · (logDeriv fY(z-·))²·fY(z-·) (int shift) × fX (bounded)
-    have hT3pre : Integrable (fun w =>
-        (logDeriv (gaussianPDFReal mY vY) w) ^ 2 * gaussianPDFReal mY vY w) volume := by
-      refine (integrable_logDeriv_sq_mul_gaussianPDFReal mY hvY).congr
-        (Filter.Eventually.of_forall fun w => ?_)
-      simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvY, neg_div]; ring
-    have hT3base : Integrable (fun x =>
-        (logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2 * gaussianPDFReal mY vY (z - x)) volume :=
-      hT3pre.comp_sub_left z
-    have hT3 : Integrable (fun x =>
-        gaussianPDFReal mX vX x
-          * ((logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2 * gaussianPDFReal mY vY (z - x)))
-          volume :=
-      hT3base.bdd_mul (measurable_gaussianPDFReal mX vX).aestronglyMeasurable (c := CfX)
-        (Filter.Eventually.of_forall fun x => by simpa [Real.norm_eq_abs] using hCfX x)
-    -- combine: lam²·T1 + 2·lam·(1-lam)·T2 + (1-lam)²·T3, then divide by pZ
-    have hcomb := ((((hT1.const_mul (lam ^ 2)).add
-      (hT2.const_mul (2 * lam * (1 - lam)))).add
-      (hT3.const_mul ((1 - lam) ^ 2)))).div_const
-      (convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) z)
-    refine hcomb.congr (Filter.Eventually.of_forall fun x => ?_)
-    simp only [scoreWeight, condDensityX, Pi.add_apply]
-    ring
-  int_inner := by
-    intro lam hlam0 hlam1
-    have hvXY : vX + vY ≠ 0 := fun h => hvX (add_eq_zero.mp h).1
-    -- product-measure integrability of the three Tonelli terms (= int_prod1/2/3 integrands)
-    have hP1 : Integrable
-        (Function.uncurry fun z x =>
-          (logDeriv (gaussianPDFReal mX vX) x) ^ 2 * gaussianPDFReal mX vX x
-            * gaussianPDFReal mY vY (z - x)) (volume.prod volume) := by
-      have hA : Integrable (fun a =>
-          (logDeriv (gaussianPDFReal mX vX) a) ^ 2 * gaussianPDFReal mX vX a) volume := by
-        refine (integrable_logDeriv_sq_mul_gaussianPDFReal mX hvX).congr
-          (Filter.Eventually.of_forall fun a => ?_)
-        simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvX, neg_div]; ring
-      have hcomp := (measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
-        (ν := (volume : Measure ℝ))).integrable_comp_of_integrable
-        (hA.mul_prod (integrable_gaussianPDFReal mY vY))
-      refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
-      simp only [Function.comp, Function.uncurry]
-    have hP2 : Integrable
-        (Function.uncurry fun z x =>
-          (logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2 * gaussianPDFReal mX vX x
-            * gaussianPDFReal mY vY (z - x)) (volume.prod volume) := by
-      have hB : Integrable (fun b =>
-          (logDeriv (gaussianPDFReal mY vY) b) ^ 2 * gaussianPDFReal mY vY b) volume := by
-        refine (integrable_logDeriv_sq_mul_gaussianPDFReal mY hvY).congr
-          (Filter.Eventually.of_forall fun b => ?_)
-        simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvY, neg_div]; ring
-      have hcomp := (measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
-        (ν := (volume : Measure ℝ))).integrable_comp_of_integrable
-        ((integrable_gaussianPDFReal mX vX).mul_prod hB)
-      refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
-      simp only [Function.comp, Function.uncurry]; ring
-    have hP3 : Integrable
-        (Function.uncurry fun z x =>
-          logDeriv (gaussianPDFReal mX vX) x * gaussianPDFReal mX vX x
-            * (logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x)))
-          (volume.prod volume) := by
-      have hcomp := (measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
-        (ν := (volume : Measure ℝ))).integrable_comp_of_integrable
-        ((integrable_logDeriv_mul_gaussianPDFReal (m := mX) hvX).mul_prod
-          (integrable_logDeriv_mul_gaussianPDFReal (m := mY) hvY))
-      refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
-      simp only [Function.comp, Function.uncurry]
-    -- marginal integrability of inner integrals via Tonelli (`integral_prod_left`)
-    have hI1 := hP1.integral_prod_left
-    have hI2 := hP2.integral_prod_left
-    have hI3 := hP3.integral_prod_left
-    -- assemble: lam²·I1 + 2lam(1-lam)·I3 + (1-lam)²·I2
-    have hcomb := (((hI1.const_mul (lam ^ 2)).add
-      (hI3.const_mul (2 * lam * (1 - lam)))).add (hI2.const_mul ((1 - lam) ^ 2)))
-    refine hcomb.congr (Filter.Eventually.of_forall fun z => ?_)
-    -- pointwise: (∫ scoreWeight²·condDensityX)·pZ = lam²∫g1 + 2lam(1-lam)∫g3 + (1-lam)²∫g2
-    have hpZ : convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) z ≠ 0 := by
-      rw [convDensityAdd_gaussian_closed_form hvX hvY]
-      exact (gaussianPDFReal_pos _ _ z hvXY).ne'
-    set pZ := convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) z with hpZdef
-    -- per-z integrability (in x) of the three g-terms
-    obtain ⟨CfX, hCfX⟩ := bdd_gaussianPDFReal mX vX
-    obtain ⟨CfY, hCfY⟩ := bdd_gaussianPDFReal mY vY
-    obtain ⟨CfY', hCfY'⟩ := bdd_deriv_gaussianPDFReal (m := mY) hvY
-    have hg1 : Integrable (fun x =>
-        (logDeriv (gaussianPDFReal mX vX) x) ^ 2 * gaussianPDFReal mX vX x
-          * gaussianPDFReal mY vY (z - x)) volume := by
-      have hbase : Integrable (fun x =>
-          (logDeriv (gaussianPDFReal mX vX) x) ^ 2 * gaussianPDFReal mX vX x) volume := by
-        refine (integrable_logDeriv_sq_mul_gaussianPDFReal mX hvX).congr
-          (Filter.Eventually.of_forall fun a => ?_)
-        simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvX, neg_div]; ring
-      exact hbase.mul_bdd ((measurable_gaussianPDFReal mY vY).comp
-        (measurable_const.sub measurable_id)).aestronglyMeasurable (c := CfY)
-        (Filter.Eventually.of_forall fun x => by simpa [Real.norm_eq_abs] using hCfY (z - x))
-    have hderivY_eq : ∀ w, logDeriv (gaussianPDFReal mY vY) w * gaussianPDFReal mY vY w
-        = deriv (gaussianPDFReal mY vY) w := fun w => by
-      rw [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvY,
-        InformationTheory.Shannon.deriv_gaussianPDFReal hvY]
-    have hg3 : Integrable (fun x =>
-        logDeriv (gaussianPDFReal mX vX) x * gaussianPDFReal mX vX x
-          * (logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x))) volume := by
-      have hmeas : AEStronglyMeasurable
-          (fun x => logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x))
-          volume := by
-        have heq : (fun x => logDeriv (gaussianPDFReal mY vY) (z - x)
-            * gaussianPDFReal mY vY (z - x))
-            = (fun x => deriv (gaussianPDFReal mY vY) (z - x)) := by
-          funext x; exact hderivY_eq (z - x)
-        rw [heq]
-        exact ((continuous_deriv_gaussianPDFReal hvY).comp
-          (continuous_const.sub continuous_id)).aestronglyMeasurable
-      exact (integrable_logDeriv_mul_gaussianPDFReal hvX).mul_bdd hmeas (c := CfY')
-        (Filter.Eventually.of_forall fun x => by
-          rw [hderivY_eq (z - x)]; simpa [Real.norm_eq_abs] using hCfY' (z - x))
-    have hg2 : Integrable (fun x =>
-        (logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2 * gaussianPDFReal mX vX x
-          * gaussianPDFReal mY vY (z - x)) volume := by
-      have hpre : Integrable (fun w =>
-          (logDeriv (gaussianPDFReal mY vY) w) ^ 2 * gaussianPDFReal mY vY w) volume := by
-        refine (integrable_logDeriv_sq_mul_gaussianPDFReal mY hvY).congr
-          (Filter.Eventually.of_forall fun b => ?_)
-        simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvY, neg_div]; ring
-      have hbase : Integrable (fun x =>
-          (logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2 * gaussianPDFReal mY vY (z - x)) volume :=
-        hpre.comp_sub_left z
-      refine (hbase.bdd_mul (measurable_gaussianPDFReal mX vX).aestronglyMeasurable (c := CfX)
-        (Filter.Eventually.of_forall fun x => by
-          simpa [Real.norm_eq_abs] using hCfX x)).congr
-        (Filter.Eventually.of_forall fun x => ?_)
-      ring
-    -- step 1+2: pull `pZ` inside and cancel `condDensityX · pZ = fX·fY(z-·)`
-    have hstep12 : (∫ x, (scoreWeight (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) lam z x) ^ 2
-        * condDensityX (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) z x ∂volume) * pZ
-        = ∫ x, (scoreWeight (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) lam z x) ^ 2
-            * (gaussianPDFReal mX vX x * gaussianPDFReal mY vY (z - x)) ∂volume := by
-      rw [← integral_mul_const]
-      refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
-      simp only [condDensityX, ← hpZdef]
-      rw [mul_assoc, div_mul_cancel₀ _ hpZ]
-    -- step 3: expand the square into the three g-terms and split the integral
-    have hexpand : (fun x => (scoreWeight (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) lam z x) ^ 2
-        * (gaussianPDFReal mX vX x * gaussianPDFReal mY vY (z - x)))
-        = (fun x => lam ^ 2 * ((logDeriv (gaussianPDFReal mX vX) x) ^ 2 * gaussianPDFReal mX vX x
-              * gaussianPDFReal mY vY (z - x))
-          + 2 * lam * (1 - lam) * (logDeriv (gaussianPDFReal mX vX) x * gaussianPDFReal mX vX x
-              * (logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x)))
-          + (1 - lam) ^ 2 * ((logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2 * gaussianPDFReal mX vX x
-              * gaussianPDFReal mY vY (z - x))) := by
-      funext x; simp only [scoreWeight]; ring
-    simp only [Pi.add_apply, Function.uncurry]
-    -- split the expanded integral into the three g-integrals
-    have hsplit : (∫ x, (scoreWeight (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) lam z x) ^ 2
-        * (gaussianPDFReal mX vX x * gaussianPDFReal mY vY (z - x)) ∂volume)
-        = lam ^ 2 * (∫ x, (logDeriv (gaussianPDFReal mX vX) x) ^ 2 * gaussianPDFReal mX vX x
-              * gaussianPDFReal mY vY (z - x) ∂volume)
-          + 2 * lam * (1 - lam) * (∫ x, logDeriv (gaussianPDFReal mX vX) x * gaussianPDFReal mX vX x
-              * (logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x)) ∂volume)
-          + (1 - lam) ^ 2 * (∫ x, (logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2
-              * gaussianPDFReal mX vX x * gaussianPDFReal mY vY (z - x) ∂volume) := by
-      rw [hexpand]
-      rw [show (fun x => lam ^ 2 * ((logDeriv (gaussianPDFReal mX vX) x) ^ 2
-            * gaussianPDFReal mX vX x * gaussianPDFReal mY vY (z - x))
-          + 2 * lam * (1 - lam) * (logDeriv (gaussianPDFReal mX vX) x * gaussianPDFReal mX vX x
-              * (logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x)))
-          + (1 - lam) ^ 2 * ((logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2
-              * gaussianPDFReal mX vX x * gaussianPDFReal mY vY (z - x)))
-          = ((fun x => lam ^ 2 * ((logDeriv (gaussianPDFReal mX vX) x) ^ 2
-                * gaussianPDFReal mX vX x * gaussianPDFReal mY vY (z - x)))
-              + (fun x => 2 * lam * (1 - lam) * (logDeriv (gaussianPDFReal mX vX) x
-                  * gaussianPDFReal mX vX x
-                  * (logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x)))))
-            + (fun x => (1 - lam) ^ 2 * ((logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2
-                * gaussianPDFReal mX vX x * gaussianPDFReal mY vY (z - x))) from rfl,
-        integral_add' ((hg1.const_mul (lam ^ 2)).add (hg3.const_mul (2 * lam * (1 - lam))))
-            (hg2.const_mul ((1 - lam) ^ 2)),
-        integral_add' (hg1.const_mul (lam ^ 2)) (hg3.const_mul (2 * lam * (1 - lam))),
-        integral_const_mul, integral_const_mul, integral_const_mul]
-    rw [hstep12, hsplit]
+  int_W := fun lam _ _ z =>
+    integrable_scoreWeight_mul_condDensityX_gaussianPDFReal hvX hvY lam z
+  int_Wsq := fun lam _ _ z =>
+    integrable_scoreWeight_sq_mul_condDensityX_gaussianPDFReal hvX hvY lam z
+  int_inner := fun lam hlam0 hlam1 =>
+    integrable_inner_scoreWeight_sq_condDensityX_mul_convDensityAdd_gaussianPDFReal
+      hvX hvY lam hlam0 hlam1
   int_fisherX := by
     refine (integrable_logDeriv_sq_mul_gaussianPDFReal mX hvX).congr
       (Filter.Eventually.of_forall fun x => ?_)
@@ -614,63 +682,9 @@ theorem isBlachmanConvReady_gaussianPDFReal
       (Filter.Eventually.of_forall fun x => ?_)
     simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvXY, neg_div]
     ring
-  int_prod1 := by
-    -- shear `(z,x) ↦ (x, z - x)` separates `fY(z-x)`:
-    -- A a = (logDeriv fX a)²·fX a, B b = fY b
-    have hA : Integrable (fun a =>
-        (logDeriv (gaussianPDFReal mX vX) a) ^ 2 * gaussianPDFReal mX vX a) volume := by
-      refine (integrable_logDeriv_sq_mul_gaussianPDFReal mX hvX).congr
-        (Filter.Eventually.of_forall fun a => ?_)
-      simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvX, neg_div]; ring
-    have hB : Integrable (fun b => gaussianPDFReal mY vY b) volume :=
-      integrable_gaussianPDFReal mY vY
-    have hsep : Integrable
-        (fun p : ℝ × ℝ =>
-          ((logDeriv (gaussianPDFReal mX vX) p.1) ^ 2 * gaussianPDFReal mX vX p.1)
-            * gaussianPDFReal mY vY p.2) (volume.prod volume) :=
-      hA.mul_prod hB
-    have hcomp := (measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
-      (ν := (volume : Measure ℝ))).integrable_comp_of_integrable hsep
-    refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
-    simp only [Function.comp, Function.uncurry]
-  int_prod2 := by
-    -- shear `(z,x) ↦ (x, z-x)`: A a = fX a, B b = (logDeriv fY b)²·fY b
-    have hA : Integrable (fun a => gaussianPDFReal mX vX a) volume :=
-      integrable_gaussianPDFReal mX vX
-    have hB : Integrable (fun b =>
-        (logDeriv (gaussianPDFReal mY vY) b) ^ 2 * gaussianPDFReal mY vY b) volume := by
-      refine (integrable_logDeriv_sq_mul_gaussianPDFReal mY hvY).congr
-        (Filter.Eventually.of_forall fun b => ?_)
-      simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvY, neg_div]; ring
-    have hsep : Integrable
-        (fun p : ℝ × ℝ =>
-          gaussianPDFReal mX vX p.1
-            * ((logDeriv (gaussianPDFReal mY vY) p.2) ^ 2 * gaussianPDFReal mY vY p.2))
-          (volume.prod volume) :=
-      hA.mul_prod hB
-    have hcomp := (measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
-      (ν := (volume : Measure ℝ))).integrable_comp_of_integrable hsep
-    refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
-    simp only [Function.comp, Function.uncurry]
-    ring
-  int_prod3 := by
-    -- shear `(z,x) ↦ (x, z-x)`: A a = logDeriv fX a·fX a, B b = logDeriv fY b·fY b
-    have hA : Integrable (fun a =>
-        logDeriv (gaussianPDFReal mX vX) a * gaussianPDFReal mX vX a) volume :=
-      integrable_logDeriv_mul_gaussianPDFReal hvX
-    have hB : Integrable (fun b =>
-        logDeriv (gaussianPDFReal mY vY) b * gaussianPDFReal mY vY b) volume :=
-      integrable_logDeriv_mul_gaussianPDFReal hvY
-    have hsep : Integrable
-        (fun p : ℝ × ℝ =>
-          (logDeriv (gaussianPDFReal mX vX) p.1 * gaussianPDFReal mX vX p.1)
-            * (logDeriv (gaussianPDFReal mY vY) p.2 * gaussianPDFReal mY vY p.2))
-          (volume.prod volume) :=
-      hA.mul_prod hB
-    have hcomp := (measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
-      (ν := (volume : Measure ℝ))).integrable_comp_of_integrable hsep
-    refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
-    simp only [Function.comp, Function.uncurry]
+  int_prod1 := integrable_prod_logDeriv_sq_mul_gaussianPDFReal hvX hvY
+  int_prod2 := integrable_prod_logDeriv_sq_shift_mul_gaussianPDFReal hvX hvY
+  int_prod3 := integrable_prod_logDeriv_mul_cross_gaussianPDFReal hvX hvY
 
 /-! ## Density-route convex Fisher bound on Gaussians
 
