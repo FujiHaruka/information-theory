@@ -41,7 +41,8 @@ from the canonical construction:
   polynomial majorant `|log p_t| ≤ A + B·x²`
   (`convDensityAdd_logFactor_poly_majorant`, made public in
   `FisherInfoV2DeBruijnAssembly`) integrated against `pX`'s translate moments
-  (helpers `hLog` / `hfib_eq` / `hfib_dom_int` in the proof body);
+  (the standalone `convCrossEntropy_perFibre_integrable` / `convCrossEntropy_zAvg_integrable`,
+  fed the a.e. identifications `hLog` / `hfib_eq` in the proof body);
 * marginal log-density integrability (`∫ negMulLog p_t < ∞`, the genuine
   `convDensityAdd_negMulLog_integrable`);
 * **joint llr integrability** `h_int` (= KL finiteness `D(joint ‖ product) < ∞`): closed
@@ -68,7 +69,7 @@ open scoped ENNReal NNReal Real
 /-- Translation transport for fibre integrability: if `κ z = ν.map (· + c·z)` (with
 `ν ≪ volume`), then `Integrable (fun x => Φ ((κ z).rnDeriv volume x).toReal) volume`
 holds iff `Integrable (fun x => Φ (ν.rnDeriv volume x).toReal) volume`. -/
-private theorem fibre_rnDeriv_integrable_iff
+theorem fibre_rnDeriv_integrable_iff
     (ν : Measure ℝ) [SigmaFinite ν] (c : ℝ) (Φ : ℝ → ℝ) :
     Integrable
       (fun x => Φ ((ν.map (fun y : ℝ => y + c)).rnDeriv volume x).toReal) volume
@@ -588,6 +589,102 @@ theorem convJointLlr_integrable
       nlinarith [hIDle, hc2]
     exact le_trans hF_le hI_eval
 
+/-- @audit:ok -/
+theorem integrable_sq_gaussianReal {v : ℝ≥0} :
+    Integrable (fun z : ℝ => z ^ 2) (gaussianReal 0 v) := by
+  have hmem : MemLp (id : ℝ → ℝ) 2 (gaussianReal 0 v) := memLp_id_gaussianReal 2
+  have := (memLp_two_iff_integrable_sq (μ := gaussianReal 0 v)
+    (f := (id : ℝ → ℝ)) measurable_id.aestronglyMeasurable).mp hmem
+  simpa using this
+
+/-- @audit:ok -/
+theorem condDistrib_fibre_rnDeriv_eq_translate {mZ : Measure ℝ} {ν : Measure ℝ}
+    [SigmaFinite ν] {κ : Kernel ℝ ℝ} {c : ℝ} {g : ℝ → ℝ≥0∞}
+    (hae : κ =ᵐ[mZ] affineShiftKernel ν c)
+    (hqν : ν.rnDeriv volume =ᵐ[volume] g) :
+    ∀ᵐ z ∂mZ, (κ z).rnDeriv volume =ᵐ[volume] fun x => g (x - c * z) := by
+  filter_upwards [hae] with z hz
+  rw [hz, affineShiftKernel_apply]
+  -- `(ν.map (· + c·z)).rnDeriv volume x =ᵐ ν.rnDeriv volume (x − c·z) =ᵐ g(x−c·z)`.
+  set d : ℝ := c * z with hd
+  have hf : MeasurableEmbedding (fun x : ℝ => x + d) := measurableEmbedding_addRight d
+  have hvol : (volume : Measure ℝ).map (fun x : ℝ => x + d) = volume :=
+    MeasureTheory.map_add_right_eq_self (μ := (volume : Measure ℝ)) d
+  have h_rn := hf.rnDeriv_map ν (volume : Measure ℝ)
+  rw [hvol] at h_rn
+  have hshift_qmp : Measure.QuasiMeasurePreserving (fun x : ℝ => x - d) volume volume := by
+    refine ⟨by fun_prop, ?_⟩
+    have : (volume : Measure ℝ).map (fun x : ℝ => x - d) = volume := by
+      simpa [sub_eq_add_neg] using
+        (MeasureTheory.map_add_right_eq_self (μ := (volume : Measure ℝ)) (-d))
+    rw [this]
+  have h_rn'' := hshift_qmp.ae_eq h_rn
+  have hqν'' := hshift_qmp.ae_eq hqν
+  filter_upwards [h_rn'', hqν''] with y hy hqy
+  simp only [Function.comp, sub_add_cancel] at hy hqy
+  rw [hy, hqy]
+
+/-- @audit:ok -/
+theorem condDistrib_fibre_absolutelyContinuous {mZ : Measure ℝ} {ν : Measure ℝ}
+    [SFinite ν] {κ : Kernel ℝ ℝ} {c : ℝ} (hν_ac : ν ≪ volume)
+    (hae : κ =ᵐ[mZ] affineShiftKernel ν c) :
+    ∀ᵐ z ∂mZ, κ z ≪ volume := by
+  filter_upwards [hae] with z hz
+  rw [hz, affineShiftKernel_apply]
+  have hvol : (volume : Measure ℝ).map (fun x : ℝ => x + c * z) = volume :=
+    MeasureTheory.map_add_right_eq_self (μ := (volume : Measure ℝ)) _
+  calc ν.map (fun x : ℝ => x + c * z)
+      ≪ volume.map (fun x : ℝ => x + c * z) := hν_ac.map (by fun_prop)
+    _ = volume := hvol
+
+/-- @audit:ok -/
+theorem condDistrib_fibre_pXlogpX_integrable {mZ : Measure ℝ} {ν : Measure ℝ}
+    [SigmaFinite ν] {κ : Kernel ℝ ℝ} {c : ℝ}
+    (hae : κ =ᵐ[mZ] affineShiftKernel ν c)
+    (h_pXlogpX : Integrable
+      (fun x => (ν.rnDeriv volume x).toReal * Real.log ((ν.rnDeriv volume x).toReal)) volume) :
+    ∀ᵐ z ∂mZ, Integrable
+      (fun x => ((κ z).rnDeriv volume x).toReal
+        * Real.log (((κ z).rnDeriv volume x).toReal)) volume := by
+  filter_upwards [hae] with z hz
+  rw [hz, affineShiftKernel_apply]
+  exact (fibre_rnDeriv_integrable_iff ν (c * z)
+    (fun t => t * Real.log t)).mpr h_pXlogpX
+
+/-- @audit:ok -/
+theorem condDistrib_fibre_entropy_integrable {mZ : Measure ℝ} {ν : Measure ℝ}
+    [SigmaFinite ν] [IsProbabilityMeasure mZ] {κ : Kernel ℝ ℝ} {c : ℝ}
+    (hν_ac : ν ≪ volume) (hae : κ =ᵐ[mZ] affineShiftKernel ν c) :
+    Integrable (fun z => differentialEntropy (κ z)) mZ := by
+  have hconst : (fun z => differentialEntropy (κ z))
+      =ᵐ[mZ] (fun _ => differentialEntropy ν) := by
+    filter_upwards [hae] with z hz
+    rw [hz, affineShiftKernel_apply]
+    exact differentialEntropy_map_add_const hν_ac (c * z)
+  exact (integrable_const _).congr hconst.symm
+
+/-- @audit:ok -/
+theorem abs_log_convDensityAdd_le_of_majorant {pX : ℝ → ℝ} {A B : ℝ}
+    {un : ℝ} (hun : 0 < un)
+    (hLog0 : ∀ᵐ x ∂volume, ∀ s : ℝ, (hs : s ∈ Set.Ioo (un / 2) (2 * un)) →
+      ‖- Real.log (convDensityAdd pX
+          (gaussianPDFReal 0 ⟨s, le_of_lt (by have := hs.1; linarith : (0:ℝ) < s)⟩) x) - 1‖
+        ≤ A + B * x ^ 2) :
+    ∀ᵐ x ∂volume, |Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨un, hun.le⟩) x)|
+      ≤ (A + 1) + B * x ^ 2 := by
+  have hun_mem : un ∈ Set.Ioo (un / 2) (2 * un) :=
+    ⟨by linarith [hun], by linarith [hun]⟩
+  filter_upwards [hLog0] with x hx
+  have hb := hx un hun_mem
+  set q : ℝ := convDensityAdd pX (gaussianPDFReal 0 ⟨un, hun.le⟩) x with hq_def
+  rw [Real.norm_eq_abs] at hb
+  have habs : |Real.log q| ≤ |(- Real.log q - 1)| + 1 := by
+    calc |Real.log q| = |(- Real.log q - 1) + 1| := by
+          rw [show (- Real.log q - 1) + 1 = - Real.log q by ring, abs_neg]
+      _ ≤ |(- Real.log q - 1)| + |(1:ℝ)| := abs_add_le _ _
+      _ = |(- Real.log q - 1)| + 1 := by norm_num
+  linarith
+
 /-- **(β) density form, pX-only.** Convolution with a Gaussian does not decrease the
 `negMulLog` entropy integral: `∫ negMulLog pX ≤ ∫ negMulLog (pX ∗ g_{u n})`.
 
@@ -727,94 +824,17 @@ theorem negMulLog_convDensity_entropy_ge_density
   obtain ⟨A, B, hB_nn, hLog0⟩ :=
     InformationTheory.Shannon.FisherInfoV2.convDensityAdd_logFactor_poly_majorant
       pX hpX_nn hpX_meas hpX_int hpX_mass (hu_pos n)
-  have hun_mem : u n ∈ Set.Ioo (u n / 2) (2 * u n) :=
-    ⟨by linarith [hu_pos n], by linarith [hu_pos n]⟩
-  have hLog : ∀ᵐ x ∂volume, |Real.log (p_t x)| ≤ (A + 1) + B * x ^ 2 := by
-    filter_upwards [hLog0] with x hx
-    have hb := hx (u n) hun_mem
-    -- `p_t = convDensityAdd pX g_{u n}` (the majorant's witness at `s = u n`).
-    have hpt_eq : convDensityAdd pX
-        (gaussianPDFReal 0 ⟨u n, le_of_lt (by have := hun_mem.1; linarith : (0:ℝ) < u n)⟩) x
-        = p_t x := by rw [hp_t_def]
-    rw [hpt_eq, Real.norm_eq_abs] at hb
-    have habs : |Real.log (p_t x)| ≤ |(- Real.log (p_t x) - 1)| + 1 := by
-      calc |Real.log (p_t x)| = |(- Real.log (p_t x) - 1) + 1| := by
-            rw [show (- Real.log (p_t x) - 1) + 1 = - Real.log (p_t x) by ring, abs_neg]
-        _ ≤ |(- Real.log (p_t x) - 1)| + |(1:ℝ)| := abs_add_le _ _
-        _ = |(- Real.log (p_t x) - 1)| + 1 := by norm_num
-    linarith
+  have hLog : ∀ᵐ x ∂volume, |Real.log (p_t x)| ≤ (A + 1) + B * x ^ 2 :=
+    abs_log_convDensityAdd_le_of_majorant (hu_pos n) hLog0
   -- (B) fibre density a.e. equals the translate `pX(· − √s·z)`.
   have hfib_eq : ∀ᵐ z ∂(μ.map Z),
       (condDistrib W Z μ z).rnDeriv volume
-        =ᵐ[volume] fun x => ENNReal.ofReal (pX (x - Real.sqrt s * z)) := by
-    filter_upwards [hae] with z hz
-    rw [hz, affineShiftKernel_apply]
-    -- `((μ.map X).map (· + c)).rnDeriv volume x =ᵐ (μ.map X).rnDeriv volume (x − c) =ᵐ pX(x−c)`.
-    set c : ℝ := Real.sqrt s * z with hc
-    have hf : MeasurableEmbedding (fun x : ℝ => x + c) := measurableEmbedding_addRight c
-    have hvol : (volume : Measure ℝ).map (fun x : ℝ => x + c) = volume :=
-      MeasureTheory.map_add_right_eq_self (μ := (volume : Measure ℝ)) c
-    have h_rn := hf.rnDeriv_map (μ.map X) (volume : Measure ℝ)
-    rw [hvol] at h_rn
-    -- `h_rn : (fun x => ((μ.map X).map (·+c)).rnDeriv volume (x+c)) =ᵐ[volume] (μ.map X).rnDeriv volume`.
-    -- Pull `h_rn` back along the measure-preserving shift `(· − c)`.
-    have hshift_qmp : Measure.QuasiMeasurePreserving (fun x : ℝ => x - c) volume volume := by
-      refine ⟨by fun_prop, ?_⟩
-      have : (volume : Measure ℝ).map (fun x : ℝ => x - c) = volume := by
-        simpa [sub_eq_add_neg] using
-          (MeasureTheory.map_add_right_eq_self (μ := (volume : Measure ℝ)) (-c))
-      rw [this]
-    have h_rn'' := hshift_qmp.ae_eq h_rn
-    -- `h_rn'' : (fun x => ((μX).map (·+c)).rnDeriv volume ((x−c)+c)) =ᵐ (μX).rnDeriv volume (x−c)`.
-    have hqX'' := hshift_qmp.ae_eq hqX
-    -- combine: `((μX).map (·+c)).rnDeriv volume y =ᵐ ofReal (pX (y−c))`.
-    filter_upwards [h_rn'', hqX''] with y hy hqy
-    simp only [Function.comp, sub_add_cancel] at hy hqy
-    rw [hy, hqy]
-  -- (C) the dominating function `pX(x−c)·((A+1)+B·x²)` is integrable for any shift `c`.
-  -- Expand `x² = (x−c)² + 2c·(x−c) + c²`, so the body is an `ℝ`-linear combination of the
-  -- translates of `pX`, `y·pX`, `y²·pX` (all `volume`-integrable).
-  -- `y·pX y` is integrable: `|y·pX| ≤ pX + y²·pX`.
-  have hpX_mom1 : Integrable (fun y => y * pX y) volume := by
-    refine Integrable.mono' (hpX_int.add hpX_mom)
-      (by fun_prop : AEStronglyMeasurable (fun y => y * pX y) volume) ?_
-    filter_upwards with y
-    rw [Real.norm_eq_abs, abs_mul, abs_of_nonneg (hpX_nn y)]
-    -- `|y|·pX ≤ (1+y²)·pX = pX + y²·pX` since `|y| ≤ 1 + y²` and `pX ≥ 0`.
-    have hy_le : |y| ≤ 1 + y ^ 2 := by nlinarith [sq_nonneg (|y| - 1), sq_abs y]
-    calc |y| * pX y ≤ (1 + y ^ 2) * pX y := by
-          apply mul_le_mul_of_nonneg_right hy_le (hpX_nn y)
-      _ = pX y + y ^ 2 * pX y := by ring
-  have hfib_dom_int : ∀ c : ℝ, Integrable
-      (fun x => pX (x - c) * ((A + 1) + B * x ^ 2)) volume := by
-    intro c
-    -- translates
-    have hT0 : Integrable (fun x => pX (x - c)) volume := hpX_int.comp_sub_right c
-    have hT1 : Integrable (fun x => (x - c) * pX (x - c)) volume := hpX_mom1.comp_sub_right c
-    have hT2 : Integrable (fun x => (x - c) ^ 2 * pX (x - c)) volume := hpX_mom.comp_sub_right c
-    -- assemble: `pX(x−c)·((A+1)+B x²) = (A+1)·pX(x−c) + B·((x−c)²pX + 2c·(x−c)pX + c²·pX)`.
-    have hcomb : Integrable
-        (fun x => (A + 1) * pX (x - c)
-          + B * ((x - c) ^ 2 * pX (x - c) + 2 * c * ((x - c) * pX (x - c))
-              + c ^ 2 * pX (x - c))) volume :=
-      (hT0.const_mul (A + 1)).add
-        (((hT2.add (hT1.const_mul (2 * c))).add (hT0.const_mul (c ^ 2))).const_mul B)
-    refine hcomb.congr (Filter.Eventually.of_forall (fun x => ?_))
-    ring
+        =ᵐ[volume] fun x => ENNReal.ofReal (pX (x - Real.sqrt s * z)) :=
+    condDistrib_fibre_rnDeriv_eq_translate hae hqX
   -- The 8 per-`n` preconditions of the Ω-level (β) lower bound.
   -- (3) per-fibre absolute continuity: each fibre is a translate of `μ.map X ≪ volume`.
-  have hκ_v : ∀ᵐ z ∂(μ.map Z), condDistrib W Z μ z ≪ volume := by
-    filter_upwards [hae] with z hz
-    rw [hz, affineShiftKernel_apply]
-    -- `(μ.map X).map (· + c·z) ≪ volume.map (· + c·z) = volume`.
-    have hshift : MeasurableEmbedding (fun x : ℝ => x + Real.sqrt s * z) :=
-      measurableEmbedding_addRight _
-    have hvol : (volume : Measure ℝ).map (fun x : ℝ => x + Real.sqrt s * z) = volume :=
-      MeasureTheory.map_add_right_eq_self (μ := (volume : Measure ℝ)) _
-    calc (μ.map X).map (fun x : ℝ => x + Real.sqrt s * z)
-        ≪ volume.map (fun x : ℝ => x + Real.sqrt s * z) :=
-          (hX_ac).map (by fun_prop)
-      _ = volume := hvol
+  have hκ_v : ∀ᵐ z ∂(μ.map Z), condDistrib W Z μ z ≪ volume :=
+    condDistrib_fibre_absolutelyContinuous hX_ac hae
   -- (1) joint absolute continuity: `condDistrib z ≪ volume ≪ μ.map W` (per-fibre),
   -- lifted to the compProd.
   have h_ac : (μ.map Z) ⊗ₘ condDistrib W Z μ
@@ -833,15 +853,12 @@ theorem negMulLog_convDensity_entropy_ge_density
     simp only [Pi.neg_apply, Real.negMulLog, neg_neg, neg_mul]
   have hκ_logp_int : ∀ᵐ z ∂(μ.map Z), Integrable
       (fun x => ((condDistrib W Z μ z).rnDeriv volume x).toReal
-        * Real.log (((condDistrib W Z μ z).rnDeriv volume x).toReal)) volume := by
-    filter_upwards [hae] with z hz
-    rw [hz, affineShiftKernel_apply]
-    exact (fibre_rnDeriv_integrable_iff (μ.map X) (Real.sqrt s * z)
-      (fun t => t * Real.log t)).mpr h_pXlogpX
+        * Real.log (((condDistrib W Z μ z).rnDeriv volume x).toReal)) volume :=
+    condDistrib_fibre_pXlogpX_integrable hae h_pXlogpX
   -- (5) per-fibre cross-term integrability.  The integrand couples the (translated)
   -- fibre density `p_z(x) = pX(x − √s·z)` with `log p_t(x)` (the marginal log-density).
-  -- Identify both factors a.e. (`hfib_eq` / `hqW`), bound by `pX(x−c)·((A+1)+B·x²)`
-  -- (`hLog`), then dominate by `hfib_dom_int c` (`Integrable.mono'`).
+  -- Identify both factors a.e. (`hfib_eq` / `hqW`), then delegate to the standalone
+  -- `convCrossEntropy_perFibre_integrable`.
   have hκ_cross_int : ∀ᵐ z ∂(μ.map Z), Integrable
       (fun x => ((condDistrib W Z μ z).rnDeriv volume x).toReal
         * Real.log (((μ.map W).rnDeriv volume x).toReal)) volume := by
@@ -860,14 +877,10 @@ theorem negMulLog_convDensity_entropy_ge_density
       hpX_nn hpX_meas hpX_int hpX_mass (hu_pos n) c).congr htarget_eq.symm
   -- (6) outer fibre-entropy integrability: each fibre entropy equals the constant
   -- `h(μ.map X)` (translation invariance), so the function is a.e. constant.
+  haveI : IsProbabilityMeasure (μ.map Z) := Measure.isProbabilityMeasure_map hZ.aemeasurable
   have h_fibreEnt_int : Integrable
-      (fun z => differentialEntropy (condDistrib W Z μ z)) (μ.map Z) := by
-    have hconst : (fun z => differentialEntropy (condDistrib W Z μ z))
-        =ᵐ[μ.map Z] (fun _ => differentialEntropy (μ.map X)) := by
-      filter_upwards [hae] with z hz
-      rw [hz, affineShiftKernel_apply]
-      exact differentialEntropy_map_add_const hX_ac (Real.sqrt s * z)
-    exact (integrable_const _).congr hconst.symm
+      (fun z => differentialEntropy (condDistrib W Z μ z)) (μ.map Z) :=
+    condDistrib_fibre_entropy_integrable hX_ac hae
   -- (7) outer cross-term integrability (the `μ_Z`-average of the (5) cross integrals).
   -- The inner integral a.e.-equals `F(z) = ∫ pX(x−√s·z)·log p_t(x) dx`; bound
   -- `|F(z)| ≤ (A+1) + 2B·M2 + 2B·s·z²` (via `x² ≤ 2(x−c)²+2c²` and the translate
@@ -880,11 +893,7 @@ theorem negMulLog_convDensity_entropy_ge_density
     -- `Fclean z = ∫ pX(x−√s·z)·log (convDensityAdd pX g_{u n}) dx`, whose `z`-integrability is
     -- the standalone `convCrossEntropy_zAvg_integrable` (fibre `q := pX`).
     have hsq_int : Integrable (fun z => z ^ 2) (μ.map Z) := by
-      rw [hZ_law]
-      have hmem : MemLp (id : ℝ → ℝ) 2 (gaussianReal 0 v_Z) := memLp_id_gaussianReal 2
-      have := (memLp_two_iff_integrable_sq (μ := gaussianReal 0 v_Z)
-        (f := (id : ℝ → ℝ)) measurable_id.aestronglyMeasurable).mp hmem
-      simpa using this
+      rw [hZ_law]; exact integrable_sq_gaussianReal
     have hF_eq : (fun z => ∫ x, ((condDistrib W Z μ z).rnDeriv volume x).toReal
           * Real.log (((μ.map W).rnDeriv volume x).toReal) ∂volume)
         =ᵐ[μ.map Z] fun z => ∫ x, pX (x - Real.sqrt s * z)
@@ -913,11 +922,7 @@ theorem negMulLog_convDensity_entropy_ge_density
   -- closed by the standalone `convJointLlr_integrable` (fibre `q := pX`, target `g := p_t`).
   haveI : IsProbabilityMeasure (μ.map Z) := Measure.isProbabilityMeasure_map hZ.aemeasurable
   have hsq_int : Integrable (fun z => z ^ 2) (μ.map Z) := by
-    rw [hZ_law]
-    have hmem : MemLp (id : ℝ → ℝ) 2 (gaussianReal 0 v_Z) := memLp_id_gaussianReal 2
-    have := (memLp_two_iff_integrable_sq (μ := gaussianReal 0 v_Z)
-      (f := (id : ℝ → ℝ)) measurable_id.aestronglyMeasurable).mp hmem
-    simpa using this
+    rw [hZ_law]; exact integrable_sq_gaussianReal
   -- `∫ pX·|log pX| < ∞` (the fibre-entropy in absolute value).
   have hpX_abs_ent : Integrable (fun x => pX x * |Real.log (pX x)|) volume := by
     have h := hpX_ent.norm
