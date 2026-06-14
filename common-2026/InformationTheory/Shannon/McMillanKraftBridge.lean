@@ -186,8 +186,8 @@ under taking prefixes — `lz78PhraseStringsAux` grows `cur ++ [s]` only while
 string set is far from prefix-free. `lz78PhraseStrings_nodup` gives
 distinctness, which is *necessary but not sufficient* for `UniquelyDecodable`.
 The uniquely-decodable object in LZ78 is the *encoded (parent-index, symbol)
-stream*, a different structure from the phrase strings. That UD object **is
-now built** (roadmap M1): `LZ78ConverseUDObject.lean` constructs the
+stream*, a different structure from the phrase strings.
+`LZ78ConverseUDObject.lean` constructs the
 fixed-width `(parent, symbol)` token code, proves its image
 `UniquelyDecodable` (`uniquelyDecodable_of_constantLength`), and feeds it back
 through §2 here to obtain a genuine `kraftSum ≤ 1` and `entropyD ≤ E[L]` for

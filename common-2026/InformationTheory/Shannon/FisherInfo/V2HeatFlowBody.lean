@@ -130,7 +130,7 @@ theorem heatKernel_spatial_laplacian {t : ℝ} (ht : 0 < t) (x : ℝ) :
 
 /-! ## Heat-equation right-hand side check (Gaussian, internal) -/
 
-/-! ## Sub-predicate decomposition of L-FV2DB-A -/
+/-! ## Sub-predicate decomposition -/
 
 /-- The spatial-derivative sub-predicate: `p t` has the prescribed spatial second derivative
 `Δp t` at every `x` (for `t > 0`). For the Gaussian kernel this is discharged by

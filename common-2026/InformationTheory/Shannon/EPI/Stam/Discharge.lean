@@ -484,7 +484,7 @@ theorem isEntropyPowerInequalityHypothesis_of_stam_pair
     IsEntropyPowerInequalityHypothesis X Y P :=
   h_bridge h_stam
 
-/-- **Pipeline composability**: given the L-EPI3-form already, the Stam pipeline
+/-- **Pipeline composability**: given the entropy-power-inequality form already, the Stam pipeline
 trivially returns the same hypothesis.
 
 `@audit:ok` -/

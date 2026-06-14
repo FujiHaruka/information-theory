@@ -15,15 +15,16 @@ power constraint `E[X(t)²] ≤ P`, the capacity is
 * `bandlimitedAwgnCapacity` — `W · log(1 + P/(N₀·W))`.
 * `perSampleAwgnCapacity` — Nyquist-reduction per-sample capacity `(1/2) · log(1 + P/(N₀·W))`.
 * `IsBandlimitedSamplingHypothesis`, `IsBandlimitedKernel`, `IsTwoWDegreesOfFreedom` —
-  open hypothesis predicates for the three Mathlib-wall residuals (L-SH1/2/3).
+  open hypothesis predicates for the three Mathlib-wall residuals.
 
 ## Main statements
 
-* `shannon_hartley_formula` — `C = W · log(1 + P/(N₀·W))` conditional on L-SH1/2/3.
+* `shannon_hartley_formula` — `C = W · log(1 + P/(N₀·W))` conditional on the three
+  open predicates above.
 
 ## Implementation notes
 
-The Nyquist sampling equivalence (L-SH1/2/3) requires the Whittaker-Shannon sampling
+The Nyquist sampling equivalence requires the Whittaker-Shannon sampling
 theorem and continuous-time AEP, neither of which is in Mathlib. These are taken as
 explicit hypothesis predicates; `shannon_hartley_formula` performs only the residual
 algebra `2W · perSample = W · log(1 + P/(N₀·W))`.
@@ -43,7 +44,7 @@ noise power within the band is `N₀`), and average signal power `P ≥ 0`. -/
 noncomputable def bandlimitedAwgnCapacity (W N₀ P : ℝ) : ℝ :=
   W * Real.log (1 + P / (N₀ * W))
 
-/-- Per-sample T2-A AWGN capacity obtained from the Nyquist-rate reduction.
+/-- Per-sample AWGN capacity obtained from the Nyquist-rate reduction.
 With one-sided noise PSD `N₀`, per-sample noise variance is `N₀/2` (since the
 total in-band noise power `N₀·W` is split across `2W` samples/second), and
 per-sample power budget is `P/(2W)`. The per-sample SNR therefore is
@@ -52,30 +53,30 @@ per-sample power budget is `P/(2W)`. The per-sample SNR therefore is
 noncomputable def perSampleAwgnCapacity (W N₀ P : ℝ) : ℝ :=
   (1 / 2) * Real.log (1 + P / (N₀ * W))
 
-/-! ## §B — L-SH hypothesis predicates.
+/-! ## §B — Bandlimited-channel hypothesis predicates.
 
 The three predicates below are open residuals (Mathlib walls): the first two carry only
 positivity, and `IsTwoWDegreesOfFreedom` states the `2W` degrees-of-freedom identity
 whose proof requires the Whittaker-Shannon sampling theorem + continuous-time AEP.
 They are consumed as explicit hypotheses by `shannon_hartley_formula`. -/
 
-/-- L-SH1: positivity carrier `0 < W ∧ 0 < N₀ ∧ 0 ≤ P`.
+/-- Bandlimited-sampling hypothesis: positivity carrier `0 < W ∧ 0 < N₀ ∧ 0 ≤ P`.
 
 The intended content is the Whittaker-Shannon sampling-equivalence between the
 continuous-time bandlimited AWGN channel and a sequence of independent per-sample
-T2-A AWGN channels at rate `2W`. That equivalence requires Whittaker-Shannon /
+AWGN channels at rate `2W`. That equivalence requires Whittaker-Shannon /
 Nyquist-Fourier machinery not in Mathlib; this predicate carries only positivity.
 
 `@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
 def IsBandlimitedSamplingHypothesis (W N₀ P : ℝ) : Prop :=
   0 < W ∧ 0 < N₀ ∧ 0 ≤ P
 
-/-- L-SH2: positivity stand-in `0 < W` for continuous-time AWGN noise kernel measurability.
+/-- Bandlimited-kernel hypothesis: positivity stand-in `0 < W` for continuous-time AWGN noise kernel measurability.
 
 `@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
 def IsBandlimitedKernel (W : ℝ) : Prop := 0 < W
 
-/-- L-SH3: the `2W` degrees-of-freedom per second identity `C = 2W · perSampleAwgnCapacity`.
+/-- The `2W` degrees-of-freedom per second identity `C = 2W · perSampleAwgnCapacity`.
 
 Requires Whittaker-Shannon sampling theorem + continuous AEP (not in Mathlib);
 taken as the caller's hypothesis.
@@ -86,7 +87,7 @@ def IsTwoWDegreesOfFreedom (W N₀ P C : ℝ) : Prop :=
 
 /-! ## §D — Sampling-rate scale-up: continuous capacity = `2W · per-sample`. -/
 
-/-- L-SH3 identity: `2W · perSample = W · log(1 + P/(N₀·W))`, the
+/-- The `2W` degrees-of-freedom identity: `2W · perSample = W · log(1 + P/(N₀·W))`, the
 Shannon-Hartley formula in closed form (pure algebra after the
 `perSampleAwgnCapacity` definition is unfolded). -/
 theorem twoW_perSample_eq_shannonHartley
@@ -96,16 +97,16 @@ theorem twoW_perSample_eq_shannonHartley
   unfold perSampleAwgnCapacity bandlimitedAwgnCapacity
   ring
 
-/-! ## §E — Main theorem: Shannon-Hartley formula (L-SH1/2/3 pass-through). -/
+/-! ## §E — Main theorem: Shannon-Hartley formula (hypothesis pass-through). -/
 
 /-- **Shannon-Hartley formula** (Cover-Thomas Theorem 9.6.1):
-`C = W · log(1 + P/(N₀·W))` conditional on L-SH1/2/3.
+`C = W · log(1 + P/(N₀·W))` conditional on the three bandlimited-channel hypotheses.
 
 The hypothesis `h_two_w : IsTwoWDegreesOfFreedom W N₀ P C` carries the `2W`
 degrees-of-freedom identity `C = 2W · perSampleAwgnCapacity W N₀ P`; this theorem
 only performs the residual algebra `2W · perSample = W · log(1 + P/(N₀·W))`.
-Closing L-SH3 requires the Whittaker-Shannon sampling theorem + continuous AEP
-(not in Mathlib).
+Closing the `2W` degrees-of-freedom identity requires the Whittaker-Shannon
+sampling theorem + continuous AEP (not in Mathlib).
 
 `@audit:retract-candidate(load-bearing-predicate) @audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan) @residual(plan:whittaker-shannon-partial-moonshot-plan)`
 -/

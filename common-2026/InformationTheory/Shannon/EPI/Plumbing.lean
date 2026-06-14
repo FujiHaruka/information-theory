@@ -164,16 +164,16 @@ theorem entropyPower_map_affine
 /-! ## §6 — 4-argument EPI chain -/
 
 /-- **4-arg EPI pass-through**: for independent `X, Y, Z, W` with the appropriate
-L-EPI3 hypotheses, `entropyPower (X+Y+Z+W) ≥ Σ entropyPower (·)`.
+entropy-power-inequality hypotheses, `entropyPower (X+Y+Z+W) ≥ Σ entropyPower (·)`.
 
-Chains three applications of L-EPI3 (the 2-arg `IsEntropyPowerInequalityHypothesis`
-predicate): once on `((X+Y)+Z) vs W`, once on `(X+Y) vs Z`, once on `X vs Y`.
+Chains three applications of the 2-arg `IsEntropyPowerInequalityHypothesis`
+predicate: once on `((X+Y)+Z) vs W`, once on `(X+Y) vs Z`, once on `X vs Y`.
 
-The L-EPI3 hypothesis is carried transparently through the `h_*_epi` arguments
-supplied by the caller; the chain to `entropy_power_inequality_three_arg` +
+The entropy-power-inequality hypothesis is carried transparently through the `h_*_epi`
+arguments supplied by the caller; the chain to `entropy_power_inequality_three_arg` +
 `linarith` is a structural composition. The transitive load-bearing-ness lives in
-the L-EPI3 predicate's definition site (`EntropyPowerInequality.lean`), not in this
-consumer wrapper.
+the `IsEntropyPowerInequalityHypothesis` predicate's definition site
+(`EntropyPowerInequality.lean`), not in this consumer wrapper.
 @audit:ok -/
 theorem entropy_power_inequality_four_arg {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -206,7 +206,7 @@ theorem entropy_power_inequality_four_arg {Ω : Type*} {mΩ : MeasurableSpace Ω
 
 /-! ## §7 — Misc. corollaries -/
 
-/-- L-EPI3 hypothesis is symmetric in `X` and `Y` (when the sum is reordered). -/
+/-- The entropy-power-inequality hypothesis is symmetric in `X` and `Y` (when the sum is reordered). -/
 theorem isEntropyPowerInequalityHypothesis_symm
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     {P : Measure Ω} {X Y : Ω → ℝ}

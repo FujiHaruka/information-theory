@@ -11,7 +11,7 @@ import Mathlib.Tactic.Ring
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# T1-A'' — `strict_kraft_one_implies_pairing` keystone (genuine combinatorial heart)
+# `strict_kraft_one_implies_pairing` keystone (genuine combinatorial heart)
 
 A self-contained, fully-proved lemma that is the genuine combinatorial heart of the
 Cover–Thomas swap-normalization argument and is **not present in Mathlib**.

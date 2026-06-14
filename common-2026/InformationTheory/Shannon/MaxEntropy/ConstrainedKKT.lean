@@ -2,7 +2,7 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.MaxEntropy.Constrained
 
 /-!
-# Constrained Maximum Entropy — Lagrange / KKT perspective (T3-A')
+# Constrained Maximum Entropy — Lagrange / KKT perspective
 
 The companion file `MaxEntropyConstrained.lean` publishes the **Boltzmann–Gibbs**
 main theorems (`entropy_le_gibbs_of_constraints`, `entropy_eq_gibbs_iff_of_constraints`)

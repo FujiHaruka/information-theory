@@ -6,7 +6,7 @@ import Mathlib.Probability.ProductMeasure
 import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 
 /-!
-# Cramér L-C2 discharge: i.i.d. plumbing
+# Cramér lower-bound discharge: i.i.d. plumbing
 
 Independence, identical-distribution, and boundedness plumbing for the
 coordinate-evaluation family `X i := Y ∘ eval i` on the infinite product

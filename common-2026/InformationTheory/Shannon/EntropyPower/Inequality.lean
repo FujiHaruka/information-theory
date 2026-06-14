@@ -150,7 +150,7 @@ theorem entropyPower_gaussian_additivity
   push_cast
   ring
 
-/-- L-EPI3 hypothesis is satisfied (with equality) whenever both `X` and `Y` are
+/-- The entropy-power-inequality hypothesis is satisfied (with equality) whenever both `X` and `Y` are
 independent Gaussians.
 
 @audit:ok -/

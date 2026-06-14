@@ -6,7 +6,7 @@ import Mathlib.Probability.ProductMeasure
 import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 
 /-!
-# Cramér L-C2 extension: tilted-side law of large numbers
+# Cramér lower-bound extension: tilted-side law of large numbers
 
 This file extends `InformationTheory/Shannon/Cramer/LC2Discharge.lean` with the
 tilted-side law of large numbers for the coordinate-eval family on the infinite
