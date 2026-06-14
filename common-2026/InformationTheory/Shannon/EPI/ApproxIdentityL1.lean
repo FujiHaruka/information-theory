@@ -371,11 +371,11 @@ private theorem psi_tendsto_zero
         ≤ ∫⁻ y in A, ENNReal.ofReal (g y) * (ε / 2) ∂volume := by
           refine setLIntegral_mono_ae (by measurability) ?_
           refine Filter.Eventually.of_forall fun y hy => ?_
-          exact mul_le_mul_left' (hδ_le y hy) _
+          exact mul_le_mul_right (hδ_le y hy) _
       _ = (∫⁻ y in A, ENNReal.ofReal (g y) ∂volume) * (ε / 2) := by
           rw [lintegral_mul_const'' _ (hg_meas.ennreal_ofReal.aemeasurable)]
       _ ≤ 1 * (ε / 2) := by
-          refine mul_le_mul_right' ?_ _
+          refine mul_le_mul_left ?_ _
           calc ∫⁻ y in A, ENNReal.ofReal (g y) ∂volume
               ≤ ∫⁻ y, ENNReal.ofReal (g y) ∂volume := setLIntegral_le_lintegral _ _
             _ = 1 := lintegral_gaussianPDFReal_eq_one 0 hv
@@ -387,11 +387,11 @@ private theorem psi_tendsto_zero
         ≤ ∫⁻ y in Aᶜ, ENNReal.ofReal (g y) * (2 * C) ∂volume := by
           refine setLIntegral_mono_ae (by measurability) ?_
           refine Filter.Eventually.of_forall fun y _ => ?_
-          exact mul_le_mul_left' (hφ_bdd y) _
+          exact mul_le_mul_right (hφ_bdd y) _
       _ = (∫⁻ y in Aᶜ, ENNReal.ofReal (g y) ∂volume) * (2 * C) := by
           rw [lintegral_mul_const'' _ (hg_meas.ennreal_ofReal.aemeasurable)]
       _ ≤ ENNReal.ofReal (t / δ ^ 2) * (2 * C) := by
-          refine mul_le_mul_right' ?_ _
+          refine mul_le_mul_left ?_ _
           rw [hAc_eq]
           exact gaussianTail_lintegral_le ht hδ
       _ = (2 * C) * ENNReal.ofReal (t / δ ^ 2) := mul_comm _ _

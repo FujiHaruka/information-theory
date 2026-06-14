@@ -1076,7 +1076,7 @@ theorem awgn_changeOfMeasure_pi_mass_le {P' N : ℝ≥0} (hP'_ne : P' ≠ 0) (hN
         rw [setLIntegral_const]
         calc ENNReal.ofReal (Real.exp _) * (Measure.pi (fun _ : Fin n => J₁)) B
             ≤ ENNReal.ofReal (Real.exp _) * 1 :=
-              mul_le_mul_left' prob_le_one _
+              mul_le_mul_right prob_le_one _
           _ = ENNReal.ofReal (Real.exp _) := mul_one _
 
 /-- Continuous AEP for the `n`-dimensional Gaussian.
