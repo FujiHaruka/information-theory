@@ -348,15 +348,147 @@ lemma floorMatrix_total (qZ : α × β → ℝ) (hqZ_nn : ∀ p, 0 ≤ qZ p)
   rw [h_fiber]
   simp
 
+lemma sum_real_prod_singleton_of_map_fst_eq
+    (ν : Measure (α × β)) [IsFiniteMeasure ν] (νX : Measure α)
+    (hmarg : ν.map Prod.fst = νX) (a : α) :
+    (∑ b' : β, ν.real {(a, b')}) = νX.real {a} := by
+  classical
+  have h_pre : (Prod.fst ⁻¹' ({a} : Set α) : Set (α × β))
+      = ⋃ b' ∈ (Finset.univ : Finset β), ({(a, b')} : Set (α × β)) := by
+    ext ⟨x', y'⟩
+    constructor
+    · intro hx'
+      have : x' = a := hx'
+      subst this
+      refine Set.mem_iUnion.mpr ⟨y', Set.mem_iUnion.mpr ⟨Finset.mem_univ _, rfl⟩⟩
+    · intro hx'
+      rcases Set.mem_iUnion.mp hx' with ⟨b', hb'⟩
+      rcases Set.mem_iUnion.mp hb' with ⟨_, hb''⟩
+      simp only [Set.mem_singleton_iff] at hb''
+      simp [Set.mem_preimage, hb'']
+  have h_map : (ν.map Prod.fst).real {a} = ν.real (Prod.fst ⁻¹' {a}) :=
+    map_measureReal_apply measurable_fst (MeasurableSet.singleton a)
+  have h_disj : (↑(Finset.univ : Finset β) : Set β).PairwiseDisjoint
+      (fun b' => ({(a, b')} : Set (α × β))) := by
+    intro b₁ _ b₂ _ hb s hs1 hs2 p hp
+    have hp1 := hs1 hp
+    have hp2 := hs2 hp
+    simp only [Set.mem_singleton_iff] at hp1 hp2
+    have heq : (a, b₁) = (a, b₂) := hp1.symm.trans hp2
+    exact (hb (Prod.mk.injEq _ _ _ _ |>.mp heq).2).elim
+  have h_meas : ∀ b' ∈ (Finset.univ : Finset β),
+      MeasurableSet ({(a, b')} : Set (α × β)) := fun _ _ => measurableSet_singleton _
+  have h_sum : ν.real (Prod.fst ⁻¹' {a}) = ∑ b' : β, ν.real {(a, b')} := by
+    rw [h_pre]
+    rw [measureReal_biUnion_finset h_disj h_meas]
+  rw [← hmarg, h_map, h_sum]
+
+lemma abs_floor_mul_div_sub_mul_le_of_abs_div_sub_le
+    (Ta : ℕ) (q s ε : ℝ) {n : ℕ} (hn_pos : (0 : ℝ) < n)
+    (hs_nn : 0 ≤ s) (hs_le : s ≤ 1) (hε : 0 ≤ ε)
+    (h_slack : |(Ta : ℝ) / n - q| ≤ ε) :
+    |((Nat.floor ((Ta : ℝ) * s) : ℕ) : ℝ) / n - q * s|
+      ≤ ε + 1 / n := by
+  have h_floor_le : (Nat.floor ((Ta : ℝ) * s) : ℝ) ≤ (Ta : ℝ) * s :=
+    Nat.floor_le (mul_nonneg (Nat.cast_nonneg _) hs_nn)
+  have h_floor_lt_succ : (Ta : ℝ) * s < (Nat.floor ((Ta : ℝ) * s) : ℝ) + 1 :=
+    Nat.lt_floor_add_one _
+  have h_slack_mul : |((Ta : ℝ) / n - q) * s| ≤ ε := by
+    rw [abs_mul, abs_of_nonneg hs_nn]
+    calc |(Ta : ℝ) / n - q| * s
+        ≤ ε * s := mul_le_mul_of_nonneg_right h_slack hs_nn
+      _ ≤ ε * 1 := mul_le_mul_of_nonneg_left hs_le hε
+      _ = ε := by ring
+  have h_decomp : ((Nat.floor ((Ta : ℝ) * s) : ℕ) : ℝ) / n - q * s
+      = ((Nat.floor ((Ta : ℝ) * s) : ℝ) - (Ta : ℝ) * s) / n
+        + ((Ta : ℝ) / n - q) * s := by
+    field_simp
+    ring
+  rw [h_decomp]
+  refine (abs_add_le _ _).trans ?_
+  have h1 : |((Nat.floor ((Ta : ℝ) * s) : ℝ) - (Ta : ℝ) * s) / n| ≤ 1 / n := by
+    rw [abs_div, abs_of_pos hn_pos]
+    apply div_le_div_of_nonneg_right _ hn_pos.le
+    rw [abs_le]; refine ⟨?_, ?_⟩ <;> linarith
+  linarith
+
+lemma abs_cast_sub_floor_sum_div_sub_mul_le_of_sum_eq_one
+    (Ta : ℕ) (q ε : ℝ) (r : β → ℝ) (b₀ : β) {n : ℕ} (hn_pos : (0 : ℝ) < n)
+    (hr_nn : ∀ b', 0 ≤ r b') (hr_le_one : ∀ b', r b' ≤ 1) (hsum_r : (∑ b' : β, r b') = 1)
+    (hε : 0 ≤ ε) (h_slack : |(Ta : ℝ) / n - q| ≤ ε) :
+    |((Ta : ℝ) - ((∑ b' ∈ Finset.univ.erase b₀,
+          Nat.floor ((Ta : ℝ) * r b') : ℕ) : ℝ)) / n - q * r b₀|
+      ≤ ε + (Fintype.card β : ℝ) / n := by
+  classical
+  have h_floor_le : ∀ b', (Nat.floor ((Ta : ℝ) * r b') : ℝ) ≤ (Ta : ℝ) * r b' :=
+    fun b' => Nat.floor_le (mul_nonneg (Nat.cast_nonneg _) (hr_nn b'))
+  have h_floor_lt_succ : ∀ b',
+      (Ta : ℝ) * r b' < (Nat.floor ((Ta : ℝ) * r b') : ℝ) + 1 :=
+    fun b' => Nat.lt_floor_add_one _
+  have h_decomp :
+      ((Ta : ℝ) - ((∑ b' ∈ Finset.univ.erase b₀,
+            Nat.floor ((Ta : ℝ) * r b') : ℕ) : ℝ)) / n - q * r b₀
+        = ((Ta : ℝ) / n - q) * r b₀
+            + (∑ b' ∈ Finset.univ.erase b₀,
+                ((Ta : ℝ) * r b' - (Nat.floor ((Ta : ℝ) * r b') : ℝ))) / n := by
+    have h_S_real : ((∑ b' ∈ Finset.univ.erase b₀,
+          Nat.floor ((Ta : ℝ) * r b') : ℕ) : ℝ)
+        = ∑ b' ∈ Finset.univ.erase b₀, (Nat.floor ((Ta : ℝ) * r b') : ℝ) := by
+      push_cast; rfl
+    rw [h_S_real]
+    have h_Ta_r_sum : (Ta : ℝ) * r b₀ + ∑ b' ∈ Finset.univ.erase b₀, (Ta : ℝ) * r b'
+        = (Ta : ℝ) := by
+      have h_pull : ∑ b' ∈ Finset.univ.erase b₀, (Ta : ℝ) * r b'
+          = (Ta : ℝ) * ∑ b' ∈ Finset.univ.erase b₀, r b' := by
+        rw [Finset.mul_sum]
+      rw [h_pull, ← mul_add]
+      rw [Finset.add_sum_erase _ (fun b' => r b') (Finset.mem_univ b₀)]
+      rw [hsum_r, mul_one]
+    rw [Finset.sum_sub_distrib]
+    field_simp
+    linarith [h_Ta_r_sum]
+  rw [h_decomp]
+  refine (abs_add_le _ _).trans ?_
+  have h_first : |((Ta : ℝ) / n - q) * r b₀| ≤ ε := by
+    rw [abs_mul, abs_of_nonneg (hr_nn b₀)]
+    calc |(Ta : ℝ) / n - q| * r b₀
+        ≤ ε * r b₀ := mul_le_mul_of_nonneg_right h_slack (hr_nn b₀)
+      _ ≤ ε * 1 := mul_le_mul_of_nonneg_left (hr_le_one b₀) hε
+      _ = ε := by ring
+  have h_each_nn : ∀ b' ∈ (Finset.univ : Finset β).erase b₀,
+      0 ≤ (Ta : ℝ) * r b' - (Nat.floor ((Ta : ℝ) * r b') : ℝ) := by
+    intro b' _; linarith [h_floor_le b']
+  have h_each_lt : ∀ b' ∈ (Finset.univ : Finset β).erase b₀,
+      (Ta : ℝ) * r b' - (Nat.floor ((Ta : ℝ) * r b') : ℝ) ≤ 1 := by
+    intro b' _; linarith [h_floor_lt_succ b']
+  have h_sum_nn :
+      0 ≤ ∑ b' ∈ Finset.univ.erase b₀,
+          ((Ta : ℝ) * r b' - (Nat.floor ((Ta : ℝ) * r b') : ℝ)) :=
+    Finset.sum_nonneg h_each_nn
+  have h_sum_le_card :
+      (∑ b' ∈ Finset.univ.erase b₀,
+          ((Ta : ℝ) * r b' - (Nat.floor ((Ta : ℝ) * r b') : ℝ)))
+        ≤ ((Finset.univ : Finset β).erase b₀).card := by
+    have h := Finset.sum_le_sum (s := ((Finset.univ : Finset β).erase b₀))
+      (f := fun b' => (Ta : ℝ) * r b' - (Nat.floor ((Ta : ℝ) * r b') : ℝ))
+      (g := fun _ => (1 : ℝ)) h_each_lt
+    simpa [Finset.sum_const, nsmul_eq_mul] using h
+  have h_card_le : (((Finset.univ : Finset β).erase b₀).card : ℝ)
+      ≤ (Fintype.card β : ℝ) := by
+    rw [Finset.card_erase_of_mem (Finset.mem_univ _)]
+    exact_mod_cast Nat.sub_le _ _
+  have h_second : |(∑ b' ∈ Finset.univ.erase b₀,
+          ((Ta : ℝ) * r b' - (Nat.floor ((Ta : ℝ) * r b') : ℝ))) / n|
+      ≤ (Fintype.card β : ℝ) / n := by
+    rw [abs_div, abs_of_pos hn_pos]
+    apply div_le_div_of_nonneg_right _ hn_pos.le
+    rw [abs_of_nonneg h_sum_nn]
+    exact h_sum_le_card.trans h_card_le
+  linarith
+
 /-- **Joint type close to qZ**: For `x` X-strongly-typical at slack `ε_X` with
 matching X-marginals, each entry of `floorMatrix qZ x` satisfies
-`|floorMatrix x a b / n - qZ(a,b)| ≤ ε_X + |β|/n`.
-
-**Status**: scaffolded but proof not completed in this session. The proof goes:
-* `c(a,b)/n - qZ(a,b) = (c(a,b)/n - (T_a/n)·(qZ(a,b)/qXa)) + (T_a/n - qXa)·(qZ(a,b)/qXa)`
-  where `T_a = typeCount x a` and `qXa = ∑ b', qZ(a,b')`.
-* First term: floor error, bounded by `|β|/n`.
-* Second term: bounded by `ε_X` using `hx` (X-strong-typical) and `hmarg_X` (qXa = qX(a)). -/
+`|floorMatrix x a b / n - qZ(a, b)| ≤ ε_X + |β| / n`. -/
 lemma floorMatrix_dist_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
@@ -379,44 +511,12 @@ lemma floorMatrix_dist_le
     exact Finset.univ_nonempty
   have hqXa_nn : 0 ≤ qXa := hqXa_pos.le
   -- X-marginal identification: qXa = qX a.
-  have h_qXa_eq : qXa = qX a := by
-    have h_pre : (Prod.fst ⁻¹' ({a} : Set α) : Set (α × β))
-        = ⋃ b' ∈ (Finset.univ : Finset β), ({(a, b')} : Set (α × β)) := by
-      ext ⟨x', y'⟩
-      constructor
-      · intro hx'
-        have : x' = a := hx'
-        subst this
-        refine Set.mem_iUnion.mpr ⟨y', Set.mem_iUnion.mpr ⟨Finset.mem_univ _, rfl⟩⟩
-      · intro hx'
-        rcases Set.mem_iUnion.mp hx' with ⟨b', hb'⟩
-        rcases Set.mem_iUnion.mp hb' with ⟨_, hb''⟩
-        simp only [Set.mem_singleton_iff] at hb''
-        simp [Set.mem_preimage, hb'']
-    have h_map : ((μ.map (jointSequence Xs Ys 0)).map Prod.fst).real {a}
-        = (μ.map (jointSequence Xs Ys 0)).real (Prod.fst ⁻¹' {a}) :=
-      map_measureReal_apply measurable_fst (MeasurableSet.singleton a)
-    have h_qX_eq : ((μ.map (jointSequence Xs Ys 0)).map Prod.fst).real {a} = qX a := by
-      rw [hmarg_X]
-    have h_disj : (↑(Finset.univ : Finset β) : Set β).PairwiseDisjoint
-        (fun b' => ({(a, b')} : Set (α × β))) := by
-      intro b₁ _ b₂ _ hb s hs1 hs2 p hp
-      have hp1 := hs1 hp
-      have hp2 := hs2 hp
-      simp only [Set.mem_singleton_iff] at hp1 hp2
-      have heq : (a, b₁) = (a, b₂) := hp1.symm.trans hp2
-      exact (hb (Prod.mk.injEq _ _ _ _ |>.mp heq).2).elim
-    have h_meas : ∀ b' ∈ (Finset.univ : Finset β),
-        MeasurableSet ({(a, b')} : Set (α × β)) := fun _ _ => measurableSet_singleton _
-    have h_sum : (μ.map (jointSequence Xs Ys 0)).real (Prod.fst ⁻¹' {a})
-        = ∑ b' : β, qZ (a, b') := by
-      rw [h_pre]
-      rw [measureReal_biUnion_finset h_disj h_meas]
-    rw [← h_qX_eq, h_map, h_sum]
+  have h_qXa_eq : qXa = qX a :=
+    sum_real_prod_singleton_of_map_fst_eq (μ.map (jointSequence Xs Ys 0)) (μ.map (Xs 0))
+      hmarg_X a
   -- typeCount x a / n - qX a slack bound from X-strong typicality.
   have hx_slack : |(typeCount x a : ℝ) / n - qX a| ≤ ε_X := hx a
   set Ta : ℕ := typeCount x a with hTa_def
-  have hTa_nn : (0 : ℝ) ≤ (Ta : ℝ) := Nat.cast_nonneg _
   have hn_pos : (0 : ℝ) < n := by exact_mod_cast hn
   -- Ratio r(b) := qZ(a,b) / qXa; r ≥ 0, ∑ r = 1.
   set r : β → ℝ := fun b' => qZ (a, b') / qXa with hr_def
@@ -428,56 +528,16 @@ lemma floorMatrix_dist_le
     -- qZ(a,b') ≤ ∑ b'', qZ(a,b'') = qXa
     exact Finset.single_le_sum (f := fun b'' => qZ (a, b''))
       (fun b'' _ => hqZ_nn _) (Finset.mem_univ b')
-  -- (T_a / n - qXa) * r(b) bound: ≤ ε_X (since |r| ≤ 1).
-  have h_slack_mul : ∀ b', |((Ta : ℝ) / n - qXa) * r b'| ≤ ε_X := by
-    intro b'
-    rw [abs_mul]
-    have h_abs_r : |r b'| = r b' := abs_of_nonneg (hr_nn b')
-    rw [h_abs_r]
-    have h_slack : |(Ta : ℝ) / n - qXa| ≤ ε_X := by
-      rw [h_qXa_eq]; exact hx_slack
-    calc |(Ta : ℝ) / n - qXa| * r b'
-        ≤ ε_X * r b' := by
-          refine mul_le_mul_of_nonneg_right h_slack (hr_nn b')
-      _ ≤ ε_X * 1 := by
-          refine mul_le_mul_of_nonneg_left (hr_le_one b') hε_X
-      _ = ε_X := by ring
-  -- Floor inequalities: for any nonneg r ≥ 0, T_a · r - 1 < floor(T_a · r) ≤ T_a · r.
-  have h_floor_le : ∀ b',
-      (Nat.floor ((Ta : ℝ) * r b') : ℝ) ≤ (Ta : ℝ) * r b' := by
-    intro b'
-    exact Nat.floor_le (by exact mul_nonneg hTa_nn (hr_nn b'))
-  have h_floor_lt_succ : ∀ b',
-      (Ta : ℝ) * r b' < (Nat.floor ((Ta : ℝ) * r b') : ℝ) + 1 :=
-    fun b' => Nat.lt_floor_add_one _
   -- Helper bound: |c/n - qZ(a,b)| ≤ ε_X + 1/n when c = floor(T_a · r(b)) and b ≠ b₀.
   have h_off_bound : ∀ b' : β,
       |((Nat.floor ((Ta : ℝ) * r b') : ℕ) : ℝ) / n - qZ (a, b')|
         ≤ ε_X + 1 / n := by
     intro b'
-    -- c/n - qZ(a,b) = (c/n - (T_a · r(b))/n) + ((T_a/n) · r(b) - qXa · r(b))
-    --              = floor_err / n + (T_a/n - qXa) · r(b)
-    -- with qZ(a,b) = qXa · r(b) (since qXa > 0).
     have h_qZ_eq : qZ (a, b') = qXa * r b' := by
       rw [hr_def]; field_simp
     rw [h_qZ_eq]
-    -- Decompose.
-    have h_decomp : ((Nat.floor ((Ta : ℝ) * r b') : ℕ) : ℝ) / n - qXa * r b'
-        = ((Nat.floor ((Ta : ℝ) * r b') : ℝ) - (Ta : ℝ) * r b') / n
-          + ((Ta : ℝ) / n - qXa) * r b' := by
-      field_simp
-      ring
-    rw [h_decomp]
-    refine (abs_add_le _ _).trans ?_
-    have h1 : |((Nat.floor ((Ta : ℝ) * r b') : ℝ) - (Ta : ℝ) * r b') / n| ≤ 1 / n := by
-      rw [abs_div, abs_of_pos hn_pos]
-      apply div_le_div_of_nonneg_right _ hn_pos.le
-      have h_lb : (Ta : ℝ) * r b' - 1 < (Nat.floor ((Ta : ℝ) * r b') : ℝ) := by
-        linarith [h_floor_lt_succ b']
-      have h_ub : (Nat.floor ((Ta : ℝ) * r b') : ℝ) ≤ (Ta : ℝ) * r b' := h_floor_le b'
-      rw [abs_le]; refine ⟨?_, ?_⟩ <;> linarith
-    have h2 := h_slack_mul b'
-    linarith
+    exact abs_floor_mul_div_sub_mul_le_of_abs_div_sub_le Ta qXa (r b') ε_X hn_pos
+      (hr_nn b') (hr_le_one b') hε_X (by rw [h_qXa_eq]; exact hx_slack)
   -- Distinguish b₀ vs b ≠ b₀.
   set b₀ : β := absorberLetterβ β with hb₀_def
   set S : ℕ := ∑ b' ∈ Finset.univ.erase b₀,
@@ -502,87 +562,14 @@ lemma floorMatrix_dist_le
     have h_qZ_eq : qZ (a, b₀) = qXa * r b₀ := by
       rw [hr_def]; field_simp
     rw [h_qZ_eq]
-    -- (Ta - S)/n - qXa · r(b₀)
-    --   = Ta/n - qXa · r(b₀) - S/n
-    --   = (Ta/n - qXa) + qXa · (1 - r(b₀)) - S/n        [if Ta/n + qXa · (1 - r) = Ta/n - qXa · r + qXa]
-    --   = (Ta/n - qXa)·r(b₀) + (Ta/n)·(1 - r(b₀)) - S/n + (qXa - qXa)·... — let me redo
-    -- Strategy: write as (Ta/n - qXa)·r(b₀) + (per-b' error sum) / n.
-    -- Note ∑_b' r(b') = 1 means qXa · ∑ r = qXa, hence qXa · (1 - r(b₀)) = qXa · ∑_{b' ≠ b₀} r(b').
     have h_sum_r : (∑ b' : β, r b') = 1 := by
       rw [hr_def]
       rw [← Finset.sum_div]
       rw [show (∑ b' : β, qZ (a, b')) = qXa from rfl]
       field_simp
-    have h_sum_r_split : (1 : ℝ) = r b₀ + ∑ b' ∈ Finset.univ.erase b₀, r b' := by
-      rw [← h_sum_r]
-      exact (Finset.add_sum_erase _ _ (Finset.mem_univ b₀)).symm
-    -- (Ta - S)/n - qXa · r(b₀)
-    --   = (Ta/n) · 1 - qXa · r(b₀) - S/n
-    --   = (Ta/n) · (r(b₀) + ∑_{b' ≠ b₀} r(b')) - qXa · r(b₀) - S/n
-    --   = (Ta/n - qXa) · r(b₀) + (Ta/n) · ∑_{b' ≠ b₀} r(b') - S/n
-    --   = (Ta/n - qXa) · r(b₀) + ∑_{b' ≠ b₀} ((Ta · r(b'))/n - (floor (Ta · r(b'))/n))
-    --   = (Ta/n - qXa) · r(b₀) + (∑_{b' ≠ b₀} (Ta · r(b') - floor(...))) / n
-    -- Each summand of the latter is in [0, 1), summed |β|-1 terms ≤ |β|-1 ≤ |β|.
-    have h_decomp :
-        ((Ta : ℝ) - (S : ℝ)) / n - qXa * r b₀
-          = ((Ta : ℝ) / n - qXa) * r b₀
-              + (∑ b' ∈ Finset.univ.erase b₀,
-                  ((Ta : ℝ) * r b' - (Nat.floor ((Ta : ℝ) * r b') : ℝ))) / n := by
-      have h_S_real : (S : ℝ)
-          = ∑ b' ∈ Finset.univ.erase b₀, (Nat.floor ((Ta : ℝ) * r b') : ℝ) := by
-        rw [hS_def]; push_cast; rfl
-      rw [h_S_real]
-      have h_Ta_r_sum : (Ta : ℝ) * r b₀ + ∑ b' ∈ Finset.univ.erase b₀, (Ta : ℝ) * r b'
-          = (Ta : ℝ) := by
-        have h_pull : ∑ b' ∈ Finset.univ.erase b₀, (Ta : ℝ) * r b'
-            = (Ta : ℝ) * ∑ b' ∈ Finset.univ.erase b₀, r b' := by
-          rw [Finset.mul_sum]
-        rw [h_pull, ← mul_add]
-        rw [Finset.add_sum_erase _ (fun b' => r b') (Finset.mem_univ b₀)]
-        rw [h_sum_r, mul_one]
-      have h_Ta_split : (Ta : ℝ)
-          = (Ta : ℝ) * r b₀ + ∑ b' ∈ Finset.univ.erase b₀, (Ta : ℝ) * r b' := h_Ta_r_sum.symm
-      rw [Finset.sum_sub_distrib]
-      field_simp
-      linarith [h_Ta_r_sum]
-    rw [h_decomp]
-    refine (abs_add_le _ _).trans ?_
-    -- Bound first term by ε_X.
-    have h_first := h_slack_mul b₀
-    -- Bound second term by (|β| - 1)/n ≤ |β|/n.
-    have h_each_nn : ∀ b' ∈ (Finset.univ : Finset β).erase b₀,
-        0 ≤ (Ta : ℝ) * r b' - (Nat.floor ((Ta : ℝ) * r b') : ℝ) := by
-      intro b' _; linarith [h_floor_le b']
-    have h_each_lt : ∀ b' ∈ (Finset.univ : Finset β).erase b₀,
-        (Ta : ℝ) * r b' - (Nat.floor ((Ta : ℝ) * r b') : ℝ) ≤ 1 := by
-      intro b' _; linarith [h_floor_lt_succ b']
-    have h_sum_nn :
-        0 ≤ ∑ b' ∈ Finset.univ.erase b₀,
-            ((Ta : ℝ) * r b' - (Nat.floor ((Ta : ℝ) * r b') : ℝ)) :=
-      Finset.sum_nonneg h_each_nn
-    have h_sum_le_card :
-        (∑ b' ∈ Finset.univ.erase b₀,
-            ((Ta : ℝ) * r b' - (Nat.floor ((Ta : ℝ) * r b') : ℝ)))
-          ≤ ((Finset.univ : Finset β).erase b₀).card := by
-      have h := Finset.sum_le_sum (s := ((Finset.univ : Finset β).erase b₀))
-        (f := fun b' => (Ta : ℝ) * r b' - (Nat.floor ((Ta : ℝ) * r b') : ℝ))
-        (g := fun _ => (1 : ℝ)) h_each_lt
-      simpa [Finset.sum_const, nsmul_eq_mul] using h
-    have h_card_erase :
-        ((Finset.univ : Finset β).erase b₀).card = Fintype.card β - 1 := by
-      rw [Finset.card_erase_of_mem (Finset.mem_univ _)]; rfl
-    have h_card_le : (((Finset.univ : Finset β).erase b₀).card : ℝ)
-        ≤ (Fintype.card β : ℝ) := by
-      rw [h_card_erase]
-      exact_mod_cast Nat.sub_le _ _
-    have h_second : |(∑ b' ∈ Finset.univ.erase b₀,
-            ((Ta : ℝ) * r b' - (Nat.floor ((Ta : ℝ) * r b') : ℝ))) / n|
-        ≤ (Fintype.card β : ℝ) / n := by
-      rw [abs_div, abs_of_pos hn_pos]
-      apply div_le_div_of_nonneg_right _ hn_pos.le
-      rw [abs_of_nonneg h_sum_nn]
-      exact h_sum_le_card.trans h_card_le
-    linarith
+    rw [hS_def]
+    exact abs_cast_sub_floor_sum_div_sub_mul_le_of_sum_eq_one Ta qXa ε_X r b₀ hn_pos
+      hr_nn hr_le_one h_sum_r hε_X (by rw [h_qXa_eq]; exact hx_slack)
   · -- b ≠ b₀: c = min(floor(...), Ta) = floor(...) [argument from row_sum proof].
     have h_val : floorMatrix qZ x a b
         = Nat.floor ((Ta : ℝ) * r b) := by
