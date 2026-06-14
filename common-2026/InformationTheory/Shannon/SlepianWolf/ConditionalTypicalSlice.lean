@@ -86,6 +86,52 @@ lemma conditionalTypicalSlice_empty_of_y_not_typical
 
 /-! ## Main bound — fiber cardinality -/
 
+-- If `c * exp(-a) ≤ exp(-b)`, then `c ≤ exp(a - b)` (for any reals `a b` and `c ≥ 0`).
+private lemma le_exp_sub_of_mul_exp_neg_le_exp_neg (c a b : ℝ) (_ : 0 ≤ c)
+    (h : c * Real.exp (-a) ≤ Real.exp (-b)) : c ≤ Real.exp (a - b) := by
+  have hea : 0 < Real.exp a := Real.exp_pos a
+  have := mul_le_mul_of_nonneg_right h hea.le
+  have hlhs : c * Real.exp (-a) * Real.exp a = c := by
+    rw [mul_assoc, ← Real.exp_add]; simp
+  have hrhs : Real.exp (-b) * Real.exp a = Real.exp (a - b) := by
+    rw [← Real.exp_add, show -b + a = a - b from by ring]
+  linarith [hlhs ▸ hrhs ▸ this]
+
+-- Bridge equality: pushing `proj_Y ⁻¹' {y}` through `μ.map (jointRV (jointSequence Xs Ys) n)`
+-- reduces to pushing `{y}` through `μ.map (jointRV Ys n)`.
+private lemma jointRV_jointSequence_proj_measureReal_eq
+    {Ω' α' β' : Type*} [MeasurableSpace Ω']
+    [Fintype α'] [MeasurableSpace α'] [MeasurableSingletonClass α']
+    [Fintype β'] [MeasurableSpace β'] [MeasurableSingletonClass β']
+    (μ' : Measure Ω')
+    (Xs' : ℕ → Ω' → α') (Ys' : ℕ → Ω' → β')
+    (hYs' : ∀ i, Measurable (Ys' i))
+    (hZs' : ∀ i, Measurable (jointSequence Xs' Ys' i))
+    (n' : ℕ) (y' : Fin n' → β') :
+    let proj_Y' : (Fin n' → α' × β') → (Fin n' → β') := fun z i => (z i).2
+    (μ'.map (jointRV (jointSequence Xs' Ys') n')).real
+        (proj_Y' ⁻¹' ({y'} : Set (Fin n' → β')))
+      = (μ'.map (jointRV Ys' n')).real ({y'} : Set (Fin n' → β')) := by
+  intro proj_Y'
+  have hproj_meas : Measurable proj_Y' := measurable_pi_lambda _ fun i =>
+    (measurable_pi_apply i).snd
+  have h_meas_y : MeasurableSet ({y'} : Set (Fin n' → β')) := measurableSet_singleton y'
+  have h_meas_pre : MeasurableSet (proj_Y' ⁻¹' ({y'} : Set (Fin n' → β'))) :=
+    hproj_meas h_meas_y
+  have hZmeas : Measurable (jointRV (jointSequence Xs' Ys') n') :=
+    measurable_jointRV _ hZs' n'
+  have hYmeas : Measurable (jointRV Ys' n') := measurable_jointRV Ys' hYs' n'
+  have hpre_eq :
+      jointRV (jointSequence Xs' Ys') n' ⁻¹' (proj_Y' ⁻¹' ({y'} : Set (Fin n' → β')))
+        = jointRV Ys' n' ⁻¹' ({y'} : Set (Fin n' → β')) := by
+    ext ω
+    simp only [Set.mem_preimage, Set.mem_singleton_iff]
+    constructor
+    · intro hω; funext i; exact congr_fun hω i
+    · intro hω; funext i; exact congr_fun hω i
+  unfold MeasureTheory.Measure.real
+  rw [Measure.map_apply hZmeas h_meas_pre, Measure.map_apply hYmeas h_meas_y, hpre_eq]
+
 omit [DecidableEq α] [DecidableEq β] in
 /-- **Conditional typical slice size bound**: for any `Y`-block `y`, the
 cardinality of the `X`-fiber of the jointly typical set at `y` is at most
@@ -134,22 +180,11 @@ theorem conditionalTypicalSlice_card_le
         (Set.Finite.mem_toFinset _).mp hx
       exact hx_set.2.2
     -- Step 1: point-wise mass lower bound via `typicalSet_prob_ge` on `Zs`.
-    -- `(μ.map (jointRV Zs n)).real {embed x} ≥ exp(-n(HZ + ε))` for `x ∈ F`.
     have hε_pos : 0 < ε := by
-      -- Either F is empty (in which case the conclusion holds trivially) or
-      -- we deduce `0 < ε` from membership in `typicalSet`.
-      rcases F.eq_empty_or_nonempty with hempty | ⟨x0, hx0⟩
-      · -- `F = ∅`: extract `ε` positivity from `y ∈ typicalSet μ Ys n ε` is not
-        -- needed; we will short-circuit using the empty case below. Default 0 < 1.
-        -- But for downstream uses we need to know `0 < ε`. We use `hyT`:
-        -- abs value < ε requires ε > 0 (since |x| ≥ 0). Actually |x| < ε with
-        -- |x| ≥ 0 implies ε > 0.
-        rw [mem_typicalSet_iff] at hyT
-        exact (abs_nonneg _).trans_lt hyT
-      · -- Non-empty case: pick `x0 ∈ F`, use that to extract ε > 0.
-        have h := hF_embed_typ x0 hx0
-        rw [mem_typicalSet_iff] at h
-        exact (abs_nonneg _).trans_lt h
+      rcases F.eq_empty_or_nonempty with _ | ⟨x0, hx0⟩
+      · rw [mem_typicalSet_iff] at hyT; exact (abs_nonneg _).trans_lt hyT
+      · have h := hF_embed_typ x0 hx0
+        rw [mem_typicalSet_iff] at h; exact (abs_nonneg _).trans_lt h
     have hpoint_ge : ∀ x ∈ F,
         Real.exp (-(n : ℝ) * (HZ + ε)) ≤
             (μ.map (jointRV Zs n)).real {embed x} := by
@@ -200,43 +235,10 @@ theorem conditionalTypicalSlice_card_le
           ≤ (μ.map (jointRV Zs n)).real (proj_Y ⁻¹' ({y} : Set (Fin n → β))) :=
       measureReal_mono (μ := μ.map (jointRV Zs n)) hproj_subset
     -- Step 5: relate `(μ.map (jointRV Zs n))` of `proj_Y ⁻¹' {y}` to `(μ.map (jointRV Ys n)) {y}`.
-    -- We use `μ.real {ω | jointRV Ys n ω = y}` as the bridge.
     have hbridge :
         (μ.map (jointRV Zs n)).real (proj_Y ⁻¹' ({y} : Set (Fin n → β)))
-          = (μ.map (jointRV Ys n)).real ({y} : Set (Fin n → β)) := by
-      -- proj_Y (jointRV Zs n ω) = jointRV Ys n ω.
-      have hproj_meas : Measurable proj_Y := by
-        apply measurable_pi_lambda
-        intro i
-        exact (measurable_pi_apply i).snd
-      have h_meas_y : MeasurableSet ({y} : Set (Fin n → β)) :=
-        measurableSet_singleton y
-      have h_meas_pre : MeasurableSet (proj_Y ⁻¹' ({y} : Set (Fin n → β))) :=
-        hproj_meas h_meas_y
-      have hZmeas : Measurable (jointRV Zs n) := measurable_jointRV Zs hZs n
-      have hYmeas : Measurable (jointRV Ys n) := measurable_jointRV Ys hYs n
-      -- Show the preimages of the singleton {y} under both maps coincide.
-      have hpre_eq :
-          jointRV Zs n ⁻¹' (proj_Y ⁻¹' ({y} : Set (Fin n → β)))
-            = jointRV Ys n ⁻¹' ({y} : Set (Fin n → β)) := by
-        ext ω
-        simp only [Set.mem_preimage, Set.mem_singleton_iff]
-        constructor
-        · intro hω
-          -- hω : proj_Y (jointRV Zs n ω) = y
-          funext i
-          have := congr_fun hω i
-          -- proj_Y (jointRV Zs n ω) i = (Zs i ω).2 = Ys i ω = jointRV Ys n ω i
-          exact this
-        · intro hω
-          funext i
-          have := congr_fun hω i
-          exact this
-      -- Map apply on both sides + the preimage equality.
-      unfold MeasureTheory.Measure.real
-      rw [Measure.map_apply hZmeas h_meas_pre]
-      rw [Measure.map_apply hYmeas h_meas_y]
-      rw [hpre_eq]
+          = (μ.map (jointRV Ys n)).real ({y} : Set (Fin n → β)) :=
+      jointRV_jointSequence_proj_measureReal_eq μ Xs Ys hYs hZs n y
     -- Step 6: Y-typical bound on `(μ.map (jointRV Ys n)).real {y}`.
     have hYbd : (μ.map (jointRV Ys n)).real ({y} : Set (Fin n → β))
         ≤ Real.exp (-(n : ℝ) * (HY - ε)) :=
@@ -253,30 +255,20 @@ theorem conditionalTypicalSlice_card_le
             hbound_image
         _ = (μ.map (jointRV Ys n)).real ({y} : Set (Fin n → β)) := hbridge
         _ ≤ Real.exp (-(n : ℝ) * (HY - ε)) := hYbd
-    -- Step 8: multiply by `exp(n(HZ + ε)) > 0` to isolate `F.card`.
-    have hexp_pos : 0 < Real.exp ((n : ℝ) * (HZ + ε)) := Real.exp_pos _
-    have hexp_cancel :
-        Real.exp (-(n : ℝ) * (HZ + ε)) * Real.exp ((n : ℝ) * (HZ + ε)) = 1 := by
-      rw [show -(n : ℝ) * (HZ + ε) = -((n : ℝ) * (HZ + ε)) from by ring,
-          ← Real.exp_add]
-      simp
-    have hmul :=
-      mul_le_mul_of_nonneg_right hchain hexp_pos.le
-    -- LHS: (F.card) * exp(-n(HZ+ε)) * exp(n(HZ+ε)) = F.card.
-    have hlhs :
-        (F.card : ℝ) * Real.exp (-(n : ℝ) * (HZ + ε))
-            * Real.exp ((n : ℝ) * (HZ + ε)) = (F.card : ℝ) := by
-      rw [mul_assoc, hexp_cancel, mul_one]
-    -- RHS: exp(-n(HY-ε)) * exp(n(HZ+ε)) = exp(n(HZ - HY + 2ε)).
-    have hrhs :
-        Real.exp (-(n : ℝ) * (HY - ε)) * Real.exp ((n : ℝ) * (HZ + ε))
-          = Real.exp ((n : ℝ) * (HZ - HY + 2 * ε)) := by
-      rw [← Real.exp_add]
-      congr 1
-      ring
-    rw [hlhs] at hmul
-    rw [hrhs] at hmul
-    exact hmul
+    -- Step 8: isolate `F.card`.
+    -- hchain : F.card * exp(-n(HZ+ε)) ≤ exp(-n(HY-ε)).
+    -- With the ring identity -n*(HZ+ε) = -(n*(HZ+ε)), apply the exp helper.
+    have hchain_rw : (F.card : ℝ) * Real.exp (-((n : ℝ) * (HZ + ε)))
+        ≤ Real.exp (-((n : ℝ) * (HY - ε))) := by
+      rw [show -((n : ℝ) * (HZ + ε)) = -(n : ℝ) * (HZ + ε) from by ring,
+          show -((n : ℝ) * (HY - ε)) = -(n : ℝ) * (HY - ε) from by ring]
+      exact hchain
+    have hstep8 : (F.card : ℝ) ≤ Real.exp ((n : ℝ) * (HZ + ε) - (n : ℝ) * (HY - ε)) :=
+      le_exp_sub_of_mul_exp_neg_le_exp_neg _ _ _ (Nat.cast_nonneg _) hchain_rw
+    calc (F.card : ℝ) ≤ Real.exp ((n : ℝ) * (HZ + ε) - (n : ℝ) * (HY - ε)) := hstep8
+      _ = Real.exp ((n : ℝ) * (HZ - HY + 2 * ε)) := by
+          rw [show (n : ℝ) * (HZ + ε) - (n : ℝ) * (HY - ε)
+              = (n : ℝ) * (HZ - HY + 2 * ε) from by ring]
   · -- Y not typical: F = ∅, cardinality 0, RHS ≥ 0.
     have hempty :
         conditionalTypicalSlice μ Xs Ys n ε y = ∅ :=

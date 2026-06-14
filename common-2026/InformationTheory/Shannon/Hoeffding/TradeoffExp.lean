@@ -371,6 +371,131 @@ lemma hoeffding_exp_liminf_perturb
   rw [h_bridge] at h_lb
   exact h_lb
 
+/-! ## Helpers for the headline proof -/
+
+private lemma E_r_union_meas_pos_eventually
+    (P₁ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₁_sum : ∑ a, P₁ a = 1)
+    (μ₂ : Measure α) [IsProbabilityMeasure μ₂] (hμ₂_pos : ∀ a, 0 < μ₂.real {a})
+    {Qstar : α → ℝ} (hQs_sum : ∑ a, Qstar a = 1) (hQs_nn : ∀ a, 0 ≤ Qstar a)
+    {r : ℝ}
+    (h_inE : ∀ᶠ n : ℕ in atTop,
+      roundedTypeIndex (Qstar_perturb Qstar P₁ (1/2)) n
+        ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r) :
+    ∀ᶠ n : ℕ in atTop, 0 < n ∧
+      0 < ((Measure.pi (fun _ : Fin n => μ₂))
+          (⋃ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
+            typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal := by
+  have h_n_pos : ∀ᶠ n : ℕ in atTop, 0 < n :=
+    Filter.eventually_atTop.mpr ⟨1, fun n hn => hn⟩
+  have hP_sum : ∑ a, Qstar_perturb Qstar P₁ (1/2) a = 1 :=
+    Qstar_perturb_sum hQs_sum hP₁_sum (1/2)
+  have hP_nn : ∀ a, 0 ≤ Qstar_perturb Qstar P₁ (1/2) a :=
+    Qstar_perturb_nonneg hQs_nn (fun a => (hP₁_pos a).le) (by norm_num) (by norm_num)
+  filter_upwards [h_n_pos, h_inE] with n hn_pos h_inE_n
+  refine ⟨hn_pos, ?_⟩
+  obtain ⟨x, hx⟩ := typeClassByCount_nonempty_of_sum
+    (fun a => (roundedTypeIndex (Qstar_perturb Qstar P₁ (1/2)) n a : ℕ))
+    (roundedTypeIndex_sum (Qstar_perturb Qstar P₁ (1/2)) hP_sum hP_nn n hn_pos)
+  have hx_in : x ∈ ⋃ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
+      typeClassByCount (α := α) (fun a => (c a : ℕ)) := by
+    simp only [Set.mem_iUnion]
+    exact ⟨roundedTypeIndex (Qstar_perturb Qstar P₁ (1/2)) n, h_inE_n, hx⟩
+  have h_sing_pos : (0 : ℝ) < ((Measure.pi (fun _ : Fin n => μ₂)) {x}).toReal := by
+    rw [Measure.pi_singleton, ENNReal.toReal_prod]
+    exact Finset.prod_pos (fun i _ => hμ₂_pos (x i))
+  have h_sing_le : ((Measure.pi (fun _ : Fin n => μ₂)) {x}).toReal
+      ≤ ((Measure.pi (fun _ : Fin n => μ₂))
+        (⋃ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
+          typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal := by
+    apply ENNReal.toReal_mono
+    · exact measure_ne_top _ _
+    · exact measure_mono (Set.singleton_subset_iff.mpr hx_in)
+  linarith
+
+private lemma E_r_union_rate_isBoundedUnder_above
+    (P₁ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₁_sum : ∑ a, P₁ a = 1)
+    (μ₂ : Measure α) [IsProbabilityMeasure μ₂] {r : ℝ} :
+    Filter.IsBoundedUnder (· ≤ ·) atTop (fun n : ℕ =>
+      (1 / (n : ℝ)) * Real.log
+        (((Measure.pi (fun _ : Fin n => μ₂))
+            (⋃ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
+              typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal)) := by
+  refine ⟨0, ?_⟩
+  rw [Filter.eventually_map]
+  have h_n_pos : ∀ᶠ n : ℕ in atTop, 0 < n :=
+    Filter.eventually_atTop.mpr ⟨1, fun n hn => hn⟩
+  filter_upwards [h_n_pos] with n hn_pos
+  have h_le_one : ((Measure.pi (fun _ : Fin n => μ₂))
+      (⋃ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
+        typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal ≤ 1 := by
+    have := MeasureTheory.measureReal_le_one (μ := Measure.pi (fun _ : Fin n => μ₂))
+      (s := ⋃ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
+        typeClassByCount (α := α) (fun a => (c a : ℕ)))
+    simpa [MeasureTheory.measureReal_def] using this
+  have h_log_le : Real.log _ ≤ 0 := Real.log_nonpos ENNReal.toReal_nonneg h_le_one
+  have h_one_div_nn : (0 : ℝ) ≤ 1 / (n : ℝ) := by positivity
+  exact mul_nonpos_of_nonneg_of_nonpos h_one_div_nn h_log_le
+
+private lemma E_r_union_rate_isBoundedUnder_below
+    (P₁ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₁_sum : ∑ a, P₁ a = 1)
+    (μ₂ : Measure α) [IsProbabilityMeasure μ₂] (hμ₂_pos : ∀ a, 0 < μ₂.real {a})
+    {Qstar : α → ℝ} (hQs_sum : ∑ a, Qstar a = 1) (hQs_nn : ∀ a, 0 ≤ Qstar a)
+    {r : ℝ}
+    (h_meas_pos : ∀ᶠ n : ℕ in atTop, 0 < n ∧
+      0 < ((Measure.pi (fun _ : Fin n => μ₂))
+          (⋃ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
+            typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal)
+    (h_inE : ∀ᶠ n : ℕ in atTop,
+      roundedTypeIndex (Qstar_perturb Qstar P₁ (1/2)) n
+        ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r) :
+    Filter.IsBoundedUnder (· ≥ ·) atTop (fun n : ℕ =>
+      (1 / (n : ℝ)) * Real.log
+        (((Measure.pi (fun _ : Fin n => μ₂))
+            (⋃ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
+              typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal)) := by
+  obtain ⟨a₀, _, ha₀⟩ := Finset.exists_min_image (s := (Finset.univ : Finset α))
+    (f := fun a => μ₂.real {a}) ⟨Classical.choice inferInstance, Finset.mem_univ _⟩
+  set m : ℝ := μ₂.real {a₀} with hm
+  have hm_pos : 0 < m := hμ₂_pos a₀
+  have hP_sum : ∑ a, Qstar_perturb Qstar P₁ (1/2) a = 1 :=
+    Qstar_perturb_sum hQs_sum hP₁_sum (1/2)
+  have hP_nn : ∀ a, 0 ≤ Qstar_perturb Qstar P₁ (1/2) a :=
+    Qstar_perturb_nonneg hQs_nn (fun a => (hP₁_pos a).le) (by norm_num) (by norm_num)
+  refine ⟨Real.log m, ?_⟩
+  rw [Filter.eventually_map]
+  filter_upwards [h_meas_pos, h_inE] with n h_npos_meas h_inE_n
+  obtain ⟨hn_pos, _⟩ := h_npos_meas
+  obtain ⟨x, hx⟩ := typeClassByCount_nonempty_of_sum
+    (fun a => (roundedTypeIndex (Qstar_perturb Qstar P₁ (1/2)) n a : ℕ))
+    (roundedTypeIndex_sum (Qstar_perturb Qstar P₁ (1/2)) hP_sum hP_nn n hn_pos)
+  have hx_in : x ∈ ⋃ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
+      typeClassByCount (α := α) (fun a => (c a : ℕ)) := by
+    simp only [Set.mem_iUnion]
+    exact ⟨roundedTypeIndex (Qstar_perturb Qstar P₁ (1/2)) n, h_inE_n, hx⟩
+  have h_sing_ge : m ^ n ≤ ((Measure.pi (fun _ : Fin n => μ₂)) {x}).toReal := by
+    rw [Measure.pi_singleton, ENNReal.toReal_prod]
+    calc m ^ n = ∏ _i : Fin n, m := by rw [Finset.prod_const]; simp
+      _ ≤ ∏ i : Fin n, μ₂.real {x i} :=
+        Finset.prod_le_prod (fun i _ => hm_pos.le)
+          (fun i _ => ha₀ (x i) (Finset.mem_univ _))
+  have h_sing_le : ((Measure.pi (fun _ : Fin n => μ₂)) {x}).toReal
+      ≤ ((Measure.pi (fun _ : Fin n => μ₂))
+        (⋃ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
+          typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal := by
+    apply ENNReal.toReal_mono
+    · exact measure_ne_top _ _
+    · exact measure_mono (Set.singleton_subset_iff.mpr hx_in)
+  have h_union_ge : m ^ n ≤ ((Measure.pi (fun _ : Fin n => μ₂))
+      (⋃ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
+        typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal :=
+    le_trans h_sing_ge h_sing_le
+  have h_pow_pos : (0 : ℝ) < m ^ n := pow_pos hm_pos _
+  have h_log_pow_le := Real.log_le_log h_pow_pos h_union_ge
+  rw [Real.log_pow] at h_log_pow_le
+  have h_n_inv_pos : 0 < 1 / (n : ℝ) := by positivity
+  have h := mul_le_mul_of_nonneg_left h_log_pow_le h_n_inv_pos.le
+  rwa [show (1 / (n : ℝ)) * ((n : ℝ) * Real.log m) = Real.log m by field_simp] at h
+
 /-! ## Headline
 
 The Sanov two-sided collapse (`sanov_ldp_equality`), the minimizer premise
@@ -470,34 +595,9 @@ theorem hoeffding_tradeoff_exp
   have h_meas_pos : ∀ᶠ n : ℕ in atTop, 0 < n ∧
       0 < ((Measure.pi (fun _ : Fin n => μ₂))
         (⋃ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
-          typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal := by
-    have h_n_pos : ∀ᶠ n : ℕ in atTop, 0 < n :=
-      Filter.eventually_atTop.mpr ⟨1, fun n hn => hn⟩
-    have hP_sum : ∑ a, Qstar_perturb Qstar P₁ (1/2) a = 1 :=
-      Qstar_perturb_sum hQs_sum hP₁_sum (1/2)
-    have hP_nn : ∀ a, 0 ≤ Qstar_perturb Qstar P₁ (1/2) a :=
-      Qstar_perturb_nonneg hQs_nn (fun a => (hP₁_pos a).le) (by norm_num) (by norm_num)
-    filter_upwards [h_n_pos, h_inE_perturb] with n hn_pos h_inE
-    refine ⟨hn_pos, ?_⟩
-    -- some accepted type T_c is nonempty ⇒ its singleton has positive μ₂^n mass.
-    obtain ⟨x, hx⟩ := typeClassByCount_nonempty_of_sum
-      (fun a => (roundedTypeIndex (Qstar_perturb Qstar P₁ (1/2)) n a : ℕ))
-      (roundedTypeIndex_sum (Qstar_perturb Qstar P₁ (1/2)) hP_sum hP_nn n hn_pos)
-    have hx_in : x ∈ ⋃ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
-        typeClassByCount (α := α) (fun a => (c a : ℕ)) := by
-      simp only [Set.mem_iUnion]
-      exact ⟨roundedTypeIndex (Qstar_perturb Qstar P₁ (1/2)) n, h_inE, hx⟩
-    have h_sing_pos : (0 : ℝ) < ((Measure.pi (fun _ : Fin n => μ₂)) {x}).toReal := by
-      rw [Measure.pi_singleton, ENNReal.toReal_prod]
-      exact Finset.prod_pos (fun i _ => hμ₂_pos (x i))
-    have h_sing_le : ((Measure.pi (fun _ : Fin n => μ₂)) {x}).toReal
-        ≤ ((Measure.pi (fun _ : Fin n => μ₂))
-          (⋃ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
-            typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal := by
-      apply ENNReal.toReal_mono
-      · exact measure_ne_top _ _
-      · exact measure_mono (Set.singleton_subset_iff.mpr hx_in)
-    linarith
+          typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal :=
+    E_r_union_meas_pos_eventually P₁ hP₁_pos hP₁_sum μ₂ hμ₂_pos
+      hQs_sum hQs_nn h_inE_perturb
   -- upper-bound event: ∀ ε > 0, eventually f n ≤ -D + ε (sanov upper bound, h_in_E-free).
   have h_upper_event : ∀ ε > (0 : ℝ), ∀ᶠ n : ℕ in atTop, f n ≤ -D + ε := by
     intro ε hε
@@ -510,70 +610,11 @@ theorem hoeffding_tradeoff_exp
     exact hN₀ n hn_ge hn_pos h_union_pos
   -- ===== Boundedness for the sandwich =====
   have h_bdd_above : Filter.IsBoundedUnder (· ≤ ·) atTop f := by
-    refine ⟨0, ?_⟩
-    rw [Filter.eventually_map]
-    have h_n_pos : ∀ᶠ n : ℕ in atTop, 0 < n :=
-      Filter.eventually_atTop.mpr ⟨1, fun n hn => hn⟩
-    filter_upwards [h_n_pos] with n hn_pos
-    show f n ≤ 0
-    rw [hf]
-    have h_le_one : ((Measure.pi (fun _ : Fin n => μ₂))
-        (⋃ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
-          typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal ≤ 1 := by
-      have := MeasureTheory.measureReal_le_one (μ := Measure.pi (fun _ : Fin n => μ₂))
-        (s := ⋃ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
-          typeClassByCount (α := α) (fun a => (c a : ℕ)))
-      simpa [MeasureTheory.measureReal_def] using this
-    have h_log_le : Real.log _ ≤ 0 := Real.log_nonpos ENNReal.toReal_nonneg h_le_one
-    have h_one_div_nn : (0 : ℝ) ≤ 1 / (n : ℝ) := by positivity
-    exact mul_nonpos_of_nonneg_of_nonpos h_one_div_nn h_log_le
+    rw [hf]; exact E_r_union_rate_isBoundedUnder_above P₁ hP₁_pos hP₁_sum μ₂
   have h_bdd_below : Filter.IsBoundedUnder (· ≥ ·) atTop f := by
-    -- m := min_a μ₂.real {a} > 0; μ₂^n(⋃) ≥ μ₂^n({x}) ≥ m^n ⇒ f n ≥ log m.
-    obtain ⟨a₀, _, ha₀⟩ := Finset.exists_min_image (s := (Finset.univ : Finset α))
-      (f := fun a => μ₂.real {a}) ⟨Classical.choice inferInstance, Finset.mem_univ _⟩
-    set m : ℝ := μ₂.real {a₀} with hm
-    have hm_pos : 0 < m := hμ₂_pos a₀
-    refine ⟨Real.log m, ?_⟩
-    rw [Filter.eventually_map]
-    have hP_sum : ∑ a, Qstar_perturb Qstar P₁ (1/2) a = 1 :=
-      Qstar_perturb_sum hQs_sum hP₁_sum (1/2)
-    have hP_nn : ∀ a, 0 ≤ Qstar_perturb Qstar P₁ (1/2) a :=
-      Qstar_perturb_nonneg hQs_nn (fun a => (hP₁_pos a).le) (by norm_num) (by norm_num)
-    filter_upwards [h_meas_pos, h_inE_perturb] with n h_npos_meas h_inE
-    obtain ⟨hn_pos, h_union_pos⟩ := h_npos_meas
-    show Real.log m ≤ f n
     rw [hf]
-    -- a witness type for nonemptiness, giving μ₂^n({x}) ≥ m^n.
-    obtain ⟨x, hx⟩ := typeClassByCount_nonempty_of_sum
-      (fun a => (roundedTypeIndex (Qstar_perturb Qstar P₁ (1/2)) n a : ℕ))
-      (roundedTypeIndex_sum (Qstar_perturb Qstar P₁ (1/2)) hP_sum hP_nn n hn_pos)
-    have hx_in : x ∈ ⋃ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
-        typeClassByCount (α := α) (fun a => (c a : ℕ)) := by
-      simp only [Set.mem_iUnion]
-      exact ⟨roundedTypeIndex (Qstar_perturb Qstar P₁ (1/2)) n, h_inE, hx⟩
-    have h_sing_ge : m ^ n ≤ ((Measure.pi (fun _ : Fin n => μ₂)) {x}).toReal := by
-      rw [Measure.pi_singleton, ENNReal.toReal_prod]
-      calc m ^ n = ∏ _i : Fin n, m := by rw [Finset.prod_const]; simp
-        _ ≤ ∏ i : Fin n, μ₂.real {x i} :=
-          Finset.prod_le_prod (fun i _ => hm_pos.le)
-            (fun i _ => ha₀ (x i) (Finset.mem_univ _))
-    have h_sing_le : ((Measure.pi (fun _ : Fin n => μ₂)) {x}).toReal
-        ≤ ((Measure.pi (fun _ : Fin n => μ₂))
-          (⋃ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
-            typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal := by
-      apply ENNReal.toReal_mono
-      · exact measure_ne_top _ _
-      · exact measure_mono (Set.singleton_subset_iff.mpr hx_in)
-    have h_union_ge : m ^ n ≤ ((Measure.pi (fun _ : Fin n => μ₂))
-        (⋃ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
-          typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal :=
-      le_trans h_sing_ge h_sing_le
-    have h_pow_pos : (0 : ℝ) < m ^ n := pow_pos hm_pos _
-    have h_log_pow_le := Real.log_le_log h_pow_pos h_union_ge
-    rw [Real.log_pow] at h_log_pow_le
-    have h_n_inv_pos : 0 < 1 / (n : ℝ) := by positivity
-    have h := mul_le_mul_of_nonneg_left h_log_pow_le h_n_inv_pos.le
-    rwa [show (1 / (n : ℝ)) * ((n : ℝ) * Real.log m) = Real.log m by field_simp] at h
+    exact E_r_union_rate_isBoundedUnder_below P₁ hP₁_pos hP₁_sum μ₂ hμ₂_pos
+      hQs_sum hQs_nn h_meas_pos h_inE_perturb
   -- ===== Converse limsup: from h_upper_event (∀ ε, eventually ≤ -D+ε) + cobounded. =====
   have h_limsup : limsup f atTop ≤ -D := by
     have h_cobdd : Filter.IsCoboundedUnder (· ≤ ·) atTop f :=
