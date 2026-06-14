@@ -118,6 +118,99 @@ lemma one_div_smooth_n_le
     linarith
   exact h_inv_le.trans h_target
 
+lemma typicalSetMinN_le_div_add_two {η ε : ℝ} (hηε : 0 < η * ε ^ 2)
+    {V : ℝ} (hV : 0 ≤ V) :
+    (typicalSetMinN V η ε : ℝ) ≤ V / (η * ε ^ 2) + 2 := by
+  unfold typicalSetMinN
+  have h_div_nn : 0 ≤ V / (η * ε ^ 2) := div_nonneg hV hηε.le
+  have h_ceil_le : (Nat.ceil (V / (η * ε ^ 2)) : ℝ)
+      ≤ V / (η * ε ^ 2) + 1 := by
+    have := Nat.ceil_lt_add_one h_div_nn
+    linarith
+  have h_max_le : ((max 1 (Nat.ceil (V / (η * ε ^ 2)) + 1) : ℕ) : ℝ)
+      ≤ V / (η * ε ^ 2) + 2 := by
+    have h_1_le : (1 : ℝ) ≤ V / (η * ε ^ 2) + 2 := by linarith
+    have h_ceil_plus_1_le :
+        ((Nat.ceil (V / (η * ε ^ 2)) + 1 : ℕ) : ℝ)
+          ≤ V / (η * ε ^ 2) + 2 := by
+      push_cast; linarith
+    have h_max_real : ((max 1 (Nat.ceil (V / (η * ε ^ 2)) + 1) : ℕ) : ℝ)
+        ≤ max 1 (V / (η * ε ^ 2) + 2) := by
+      push_cast
+      have h1 : (1 : ℝ) ≤ max 1 (V / (η * ε ^ 2) + 2) := le_max_left _ _
+      have h2 : (Nat.ceil (V / (η * ε ^ 2)) + 1 : ℝ)
+          ≤ max 1 (V / (η * ε ^ 2) + 2) := by
+        exact le_max_of_le_right (by linarith)
+      exact max_le h1 h2
+    have h_max_le_rhs : max 1 (V / (η * ε ^ 2) + 2) ≤ V / (η * ε ^ 2) + 2 :=
+      max_le h_1_le le_rfl
+    linarith
+  exact h_max_le
+
+lemma log_div_le_log_add_log_add_log_succ
+    {c s δ m : ℝ} (hc_pos : 0 < c) (hs_pos : 0 < s) (hδ_pos : 0 < δ) (hm1_pos : 0 < m + 1)
+    (h_one_div_le : 1 / δ ≤ s * (m + 1)) :
+    Real.log (c / δ) ≤ Real.log c + Real.log s + Real.log (m + 1) := by
+  have h_eq1 : c / δ = c * (1 / δ) := by
+    rw [one_div, div_eq_mul_inv]
+  have h_lhs_le : c / δ ≤ c * s * (m + 1) := by
+    rw [h_eq1]
+    have h_mul_le : c * (1 / δ) ≤ c * (s * (m + 1)) :=
+      mul_le_mul_of_nonneg_left h_one_div_le hc_pos.le
+    linarith [h_mul_le]
+  have h_lhs_pos : (0 : ℝ) < c / δ := by positivity
+  have h_mid_pos : (0 : ℝ) < c * s := mul_pos hc_pos hs_pos
+  have h_log_le := Real.log_le_log h_lhs_pos h_lhs_le
+  have h_log_split : Real.log (c * s * (m + 1))
+      = Real.log c + Real.log s + Real.log (m + 1) := by
+    rw [Real.log_mul h_mid_pos.ne' hm1_pos.ne', Real.log_mul hc_pos.ne' hs_pos.ne']
+  linarith [h_log_le, h_log_split]
+
+lemma two_mul_lt_half_of_le_div
+    {ε δ : ℝ} (hε : 0 < ε) (n : ℕ) (hn1_pos : (0 : ℝ) < (n : ℝ) + 1)
+    (hδ_le : δ ≤ ε / (16 * ((n : ℝ) + 1))) :
+    2 * (n : ℝ) * δ < ε / 2 := by
+  have h_target : 2 * (n : ℝ) * δ ≤ 2 * (n : ℝ) * (ε / (16 * ((n : ℝ) + 1))) := by
+    have hn_nn : 0 ≤ 2 * (n : ℝ) := by positivity
+    exact mul_le_mul_of_nonneg_left hδ_le hn_nn
+  have h_simp : 2 * (n : ℝ) * (ε / (16 * ((n : ℝ) + 1)))
+      = ε * ((n : ℝ) / ((n : ℝ) + 1)) / 8 := by
+    field_simp; ring
+  have h_n_n1 : (n : ℝ) / ((n : ℝ) + 1) ≤ 1 := by
+    rw [div_le_one hn1_pos]
+    linarith
+  have h_n_n1_nn : 0 ≤ (n : ℝ) / ((n : ℝ) + 1) := by
+    apply div_nonneg (Nat.cast_nonneg _) hn1_pos.le
+  have h_chain : ε * ((n : ℝ) / ((n : ℝ) + 1)) / 8 < ε / 2 := by
+    have h1 : ε * ((n : ℝ) / ((n : ℝ) + 1)) ≤ ε * 1 :=
+      mul_le_mul_of_nonneg_left h_n_n1 hε.le
+    have h2 : ε * 1 / 8 < ε / 2 := by linarith
+    have h3 : ε * ((n : ℝ) / ((n : ℝ) + 1)) / 8 ≤ ε * 1 / 8 := by
+      exact div_le_div_of_nonneg_right h1 (by norm_num)
+    linarith
+  linarith [h_target, h_simp, h_chain]
+
+lemma sq_le_two_mul_sq_add_two_mul_sq_of_nonneg_of_le_add
+    {x K y : ℝ} (hx : 0 ≤ x) (hxle : x ≤ K + y) :
+    x ^ 2 ≤ 2 * K ^ 2 + 2 * y ^ 2 := by
+  have h_abs : x ≤ |K| + |y| := by
+    have h1 : K ≤ |K| := le_abs_self _
+    have h2 : y ≤ |y| := le_abs_self _
+    linarith
+  have h_sq : x ^ 2 = |x| ^ 2 := by rw [sq_abs]
+  rw [h_sq]
+  have h_sq_le : |x| ^ 2 ≤ (|K| + |y|) ^ 2 := by
+    have h_abs_nn : 0 ≤ |x| := abs_nonneg _
+    rw [abs_of_nonneg hx]
+    exact pow_le_pow_left₀ hx h_abs 2
+  refine h_sq_le.trans ?_
+  have h_expand : (|K| + |y|) ^ 2 ≤ 2 * |K| ^ 2 + 2 * |y| ^ 2 := by
+    have h := sq_nonneg (|K| - |y|)
+    nlinarith
+  have h_eq1 : |K| ^ 2 = K ^ 2 := sq_abs _
+  have h_eq2 : |y| ^ 2 = y ^ 2 := sq_abs _
+  linarith
+
 omit [DecidableEq α] [DecidableEq β] in
 set_option maxHeartbeats 1200000 in
 /-- For any `R < capacity W` and `ε > 0`, there exists `N₀` such that for all
@@ -222,26 +315,8 @@ theorem exists_N_for_smooth_achievability_uniform
   have hδ_n_le : δ_n ≤ 1 := hδ_n_le_δ_B.trans hδ_B_le
   have hδ_n_le_target : δ_n ≤ ε / (16 * ((n : ℝ) + 1)) := min_le_right _ _
   -- TV target: 2 n δ_n < ε/2.
-  have h_2nδ_lt : 2 * (n : ℝ) * δ_n < ε / 2 := by
-    have h_target : 2 * (n : ℝ) * δ_n ≤ 2 * (n : ℝ) * (ε / (16 * ((n : ℝ) + 1))) := by
-      have hn_nn : 0 ≤ 2 * (n : ℝ) := by positivity
-      exact mul_le_mul_of_nonneg_left hδ_n_le_target hn_nn
-    have h_simp : 2 * (n : ℝ) * (ε / (16 * ((n : ℝ) + 1)))
-        = ε * ((n : ℝ) / ((n : ℝ) + 1)) / 8 := by
-      field_simp; ring
-    have h_n_n1 : (n : ℝ) / ((n : ℝ) + 1) ≤ 1 := by
-      rw [div_le_one hn1_pos]
-      linarith
-    have h_n_n1_nn : 0 ≤ (n : ℝ) / ((n : ℝ) + 1) := by
-      apply div_nonneg (Nat.cast_nonneg _) hn1_pos.le
-    have h_chain : ε * ((n : ℝ) / ((n : ℝ) + 1)) / 8 < ε / 2 := by
-      have h1 : ε * ((n : ℝ) / ((n : ℝ) + 1)) ≤ ε * 1 :=
-        mul_le_mul_of_nonneg_left h_n_n1 hε.le
-      have h2 : ε * 1 / 8 < ε / 2 := by linarith
-      have h3 : ε * ((n : ℝ) / ((n : ℝ) + 1)) / 8 ≤ ε * 1 / 8 := by
-        exact div_le_div_of_nonneg_right h1 (by norm_num)
-      linarith
-    linarith [h_target, h_simp, h_chain]
+  have h_2nδ_lt : 2 * (n : ℝ) * δ_n < ε / 2 :=
+    two_mul_lt_half_of_le_div hε n hn1_pos hδ_n_le_target
   -- δ_n is in the smooth-capacity range (0, δ_B], so I_lb < MI(p_full; W_smooth δ_n).
   have hδ_n_mem : δ_n ∈ Set.Ioc (0 : ℝ) δ_B := ⟨hδ_n_pos, hδ_n_le_δ_B⟩
   have hMI_δ_n : I_lb <
@@ -288,61 +363,25 @@ theorem exists_N_for_smooth_achievability_uniform
     one_div_smooth_n_le hδ_B_pos hε n
   have h_sum_pos : (0 : ℝ) < 1 / δ_B + 16 / ε := by positivity
   have h_log_β_δ_n_le : Real.log ((Fintype.card β : ℝ) / δ_n) ≤ K_Y + Real.log ((n : ℝ) + 1) := by
-    -- |β|/δ_n = |β| · (1/δ_n) ≤ |β| · (1/δ_B + 16/ε) · (n+1)
-    have h_eq1 : (Fintype.card β : ℝ) / δ_n = (Fintype.card β : ℝ) * (1 / δ_n) := by
-      rw [one_div, div_eq_mul_inv]
-    have h_β_pos : (0 : ℝ) < (Fintype.card β : ℝ) := hβ_pos
-    have h_lhs_le : (Fintype.card β : ℝ) / δ_n
-        ≤ (Fintype.card β : ℝ) * (1 / δ_B + 16 / ε) * ((n : ℝ) + 1) := by
-      rw [h_eq1]
-      have h_mul_le : (Fintype.card β : ℝ) * (1 / δ_n)
-          ≤ (Fintype.card β : ℝ) * ((1 / δ_B + 16 / ε) * ((n : ℝ) + 1)) :=
-        mul_le_mul_of_nonneg_left h_one_div_δ_n_le h_β_pos.le
-      linarith [h_mul_le]
-    have h_lhs_pos : (0 : ℝ) < (Fintype.card β : ℝ) / δ_n := by positivity
-    have h_mid_pos : (0 : ℝ) < (Fintype.card β : ℝ) * (1 / δ_B + 16 / ε) :=
-      mul_pos h_β_pos h_sum_pos
-    have h_rhs_pos : (0 : ℝ) < (Fintype.card β : ℝ) * (1 / δ_B + 16 / ε) * ((n : ℝ) + 1) :=
-      mul_pos h_mid_pos hn1_pos
-    have h_log_le := Real.log_le_log h_lhs_pos h_lhs_le
-    have h_log_split :
-        Real.log ((Fintype.card β : ℝ) * (1 / δ_B + 16 / ε) * ((n : ℝ) + 1))
-          = Real.log ((Fintype.card β : ℝ)) + Real.log (1 / δ_B + 16 / ε)
-            + Real.log ((n : ℝ) + 1) := by
-      rw [Real.log_mul h_mid_pos.ne' hn1_pos.ne',
-          Real.log_mul h_β_pos.ne' h_sum_pos.ne']
-    have hK_eq : K_Y = Real.log ((Fintype.card β : ℝ)) + Real.log (1 / δ_B + 16 / ε) := by
-      rfl
-    linarith [h_log_le, h_log_split, hK_eq]
+    have hK_eq : K_Y = Real.log ((Fintype.card β : ℝ)) + Real.log (1 / δ_B + 16 / ε) := rfl
+    have h := log_div_le_log_add_log_add_log_succ hβ_pos h_sum_pos hδ_n_pos hn1_pos
+      h_one_div_δ_n_le
+    linarith [h, hK_eq]
   -- Similarly for V_Z bound.
   have hαβ_pos : (0 : ℝ) < (Fintype.card α : ℝ) * (Fintype.card β : ℝ) := mul_pos hα_pos hβ_pos
   have hαβ_pmin_pos : (0 : ℝ) < (Fintype.card α : ℝ) * (Fintype.card β : ℝ) / p_min := by
     positivity
   have h_log_Z_le : Real.log (((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n))
       ≤ K_Z + Real.log ((n : ℝ) + 1) := by
-    -- (|α||β|)/(p_min δ_n) = (|α||β|/p_min) · (1/δ_n) ≤ (|α||β|/p_min) · (1/δ_B + 16/ε) · (n+1)
     set A : ℝ := (Fintype.card α : ℝ) * (Fintype.card β : ℝ) / p_min with hA_def
     have hA_pos : 0 < A := hαβ_pmin_pos
-    have h_eq1 : ((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n) = A * (1 / δ_n) := by
-      rw [hA_def]
-      rw [div_mul_eq_div_div]
-      rw [div_eq_mul_inv (A) _, one_div]
-    have h_lhs_le : ((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n)
-        ≤ A * (1 / δ_B + 16 / ε) * ((n : ℝ) + 1) := by
-      rw [h_eq1]
-      have := mul_le_mul_of_nonneg_left h_one_div_δ_n_le hA_pos.le
-      linarith
-    have h_lhs_pos : (0 : ℝ) < ((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n) := by
-      positivity
-    have h_mid_pos : (0 : ℝ) < A * (1 / δ_B + 16 / ε) := mul_pos hA_pos h_sum_pos
-    have h_log_le := Real.log_le_log h_lhs_pos h_lhs_le
-    have h_log_split : Real.log (A * (1 / δ_B + 16 / ε) * ((n : ℝ) + 1))
-        = Real.log A + Real.log (1 / δ_B + 16 / ε) + Real.log ((n : ℝ) + 1) := by
-      rw [Real.log_mul h_mid_pos.ne' hn1_pos.ne',
-          Real.log_mul hA_pos.ne' h_sum_pos.ne']
-    have hK_eq : K_Z = Real.log A + Real.log (1 / δ_B + 16 / ε) := by
-      rfl
-    linarith [h_log_le, h_log_split, hK_eq]
+    have h_eq1 : ((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n) = A / δ_n := by
+      rw [hA_def, div_mul_eq_div_div]
+    have hK_eq : K_Z = Real.log A + Real.log (1 / δ_B + 16 / ε) := rfl
+    rw [h_eq1]
+    have h := log_div_le_log_add_log_add_log_succ hA_pos h_sum_pos hδ_n_pos hn1_pos
+      h_one_div_δ_n_le
+    linarith [h, hK_eq]
   -- (log)² ≤ 2 K² + 2 (log(n+1))² via (a+b)² ≤ 2a² + 2b².
   have hlog_n1_nn : 0 ≤ Real.log ((n : ℝ) + 1) := by
     apply Real.log_nonneg; linarith
@@ -353,102 +392,41 @@ theorem exists_N_for_smooth_achievability_uniform
   -- V_Y_n ≤ 2 K_Y² + 2 (log(n+1))².
   have h_V_Y_n_bound : V_Y_n ≤ 2 * K_Y ^ 2 + 2 * (Real.log ((n : ℝ) + 1)) ^ 2 := by
     rw [hV_Y_n_def]
-    -- |log(β/δ_n)| ≤ |K_Y| + |log(n+1)|; squared via (a+b)² ≤ 2(a²+b²).
-    have h_abs : |Real.log ((Fintype.card β : ℝ) / δ_n)| ≤ |K_Y| + |Real.log ((n : ℝ) + 1)| := by
-      -- log(β/δ_n) is in [-|K_Y|, K_Y + log(n+1)] -- the upper bound, lower trivial via δ_n ≤ 1.
-      have h_β_δ_n_pos : (0 : ℝ) < (Fintype.card β : ℝ) / δ_n := by positivity
-      -- log(β/δ_n) ≥ 0 since β/δ_n ≥ 1 (since |β| ≥ 1 and δ_n ≤ 1).
-      have hβ_ge_one : (1 : ℝ) ≤ (Fintype.card β : ℝ) := by
-        exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
-      have h_β_δ_n_ge : (1 : ℝ) ≤ (Fintype.card β : ℝ) / δ_n := by
-        rw [le_div_iff₀ hδ_n_pos]; linarith
-      have h_log_nn : 0 ≤ Real.log ((Fintype.card β : ℝ) / δ_n) :=
-        Real.log_nonneg h_β_δ_n_ge
-      rw [abs_of_nonneg h_log_nn]
-      have h_K_Y_plus_log_nn : 0 ≤ K_Y + Real.log ((n : ℝ) + 1) := by
-        -- K_Y could be negative; but K_Y + log(n+1) ≥ log(β/δ_n) ≥ 0.
-        linarith [h_log_β_δ_n_le, h_log_nn]
-      have h_step : Real.log ((Fintype.card β : ℝ) / δ_n) ≤ |K_Y| + |Real.log ((n : ℝ) + 1)| := by
-        calc Real.log ((Fintype.card β : ℝ) / δ_n)
-            ≤ K_Y + Real.log ((n : ℝ) + 1) := h_log_β_δ_n_le
-          _ ≤ |K_Y| + |Real.log ((n : ℝ) + 1)| := by
-              have h1 : K_Y ≤ |K_Y| := le_abs_self _
-              have h2 : Real.log ((n : ℝ) + 1) ≤ |Real.log ((n : ℝ) + 1)| := le_abs_self _
-              linarith
-      exact h_step
-    have h_sq : (Real.log ((Fintype.card β : ℝ) / δ_n)) ^ 2
-        = |Real.log ((Fintype.card β : ℝ) / δ_n)| ^ 2 := by rw [sq_abs]
-    rw [h_sq]
-    have h_sq_le : |Real.log ((Fintype.card β : ℝ) / δ_n)| ^ 2
-        ≤ (|K_Y| + |Real.log ((n : ℝ) + 1)|) ^ 2 := by
-      have h_abs_nn : 0 ≤ |Real.log ((Fintype.card β : ℝ) / δ_n)| := abs_nonneg _
-      exact pow_le_pow_left₀ h_abs_nn h_abs 2
-    refine h_sq_le.trans ?_
-    -- (|K_Y| + |log(n+1)|)² ≤ 2 |K_Y|² + 2 |log(n+1)|² = 2 K_Y² + 2 (log(n+1))².
-    have h_expand : (|K_Y| + |Real.log ((n : ℝ) + 1)|) ^ 2
-        ≤ 2 * |K_Y| ^ 2 + 2 * |Real.log ((n : ℝ) + 1)| ^ 2 := by
-      have h := sq_nonneg (|K_Y| - |Real.log ((n : ℝ) + 1)|)
-      nlinarith
-    have h_eq1 : |K_Y| ^ 2 = K_Y ^ 2 := sq_abs _
-    have h_eq2 : |Real.log ((n : ℝ) + 1)| ^ 2 = (Real.log ((n : ℝ) + 1)) ^ 2 := sq_abs _
-    linarith
+    have hβ_ge_one : (1 : ℝ) ≤ (Fintype.card β : ℝ) := by
+      exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
+    have h_β_δ_n_ge : (1 : ℝ) ≤ (Fintype.card β : ℝ) / δ_n := by
+      rw [le_div_iff₀ hδ_n_pos]; linarith
+    have h_log_nn : 0 ≤ Real.log ((Fintype.card β : ℝ) / δ_n) :=
+      Real.log_nonneg h_β_δ_n_ge
+    exact sq_le_two_mul_sq_add_two_mul_sq_of_nonneg_of_le_add h_log_nn h_log_β_δ_n_le
   have h_V_Z_n_bound : V_Z_n ≤ 2 * K_Z ^ 2 + 2 * (Real.log ((n : ℝ) + 1)) ^ 2 := by
-    -- Same structure as V_Y_n_bound.
     rw [hV_Z_n_def]
-    have h_abs : |Real.log (((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n))|
-        ≤ |K_Z| + |Real.log ((n : ℝ) + 1)| := by
-      -- The arg ≥ 1: |α||β| ≥ 1 and p_min δ_n ≤ 1.
-      have hαβ_ge_one : (1 : ℝ) ≤ (Fintype.card α : ℝ) * (Fintype.card β : ℝ) := by
-        have hα1 : (1 : ℝ) ≤ (Fintype.card α : ℝ) := by
-          exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
-        have hβ1 : (1 : ℝ) ≤ (Fintype.card β : ℝ) := by
-          exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
-        nlinarith
-      have hp_min_le_one : p_min ≤ 1 := by
-        rw [hp_min_def]
-        have h1 : δ_p ≤ 1 := hδ_p_le
-        have hα1 : (1 : ℝ) ≤ (Fintype.card α : ℝ) := by
-          exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
-        rw [div_le_one hα_pos]; linarith
-      have hpd_pos : 0 < p_min * δ_n := mul_pos hp_min_pos hδ_n_pos
-      have hpd_le_one : p_min * δ_n ≤ 1 := by
-        have : p_min * δ_n ≤ 1 * 1 := by
-          exact mul_le_mul hp_min_le_one hδ_n_le hδ_n_pos.le (by norm_num)
-        linarith
-      have h_arg_ge : (1 : ℝ) ≤ ((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n) := by
-        rw [le_div_iff₀ hpd_pos]
-        calc (1 : ℝ) * (p_min * δ_n) ≤ 1 * 1 :=
-              mul_le_mul_of_nonneg_left hpd_le_one (by norm_num)
-          _ = 1 := by norm_num
-          _ ≤ (Fintype.card α : ℝ) * (Fintype.card β : ℝ) := hαβ_ge_one
-      have h_log_nn : 0 ≤ Real.log (((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n)) :=
-        Real.log_nonneg h_arg_ge
-      rw [abs_of_nonneg h_log_nn]
-      calc Real.log (((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n))
-          ≤ K_Z + Real.log ((n : ℝ) + 1) := h_log_Z_le
-        _ ≤ |K_Z| + |Real.log ((n : ℝ) + 1)| := by
-            have h1 : K_Z ≤ |K_Z| := le_abs_self _
-            have h2 : Real.log ((n : ℝ) + 1) ≤ |Real.log ((n : ℝ) + 1)| := le_abs_self _
-            linarith
-    have h_sq : (Real.log (((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n))) ^ 2
-        = |Real.log (((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n))| ^ 2 :=
-      by rw [sq_abs]
-    rw [h_sq]
-    have h_sq_le :
-        |Real.log (((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n))| ^ 2
-          ≤ (|K_Z| + |Real.log ((n : ℝ) + 1)|) ^ 2 := by
-      have h_abs_nn :
-          0 ≤ |Real.log (((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n))| :=
-        abs_nonneg _
-      exact pow_le_pow_left₀ h_abs_nn h_abs 2
-    refine h_sq_le.trans ?_
-    have h_expand : (|K_Z| + |Real.log ((n : ℝ) + 1)|) ^ 2
-        ≤ 2 * |K_Z| ^ 2 + 2 * |Real.log ((n : ℝ) + 1)| ^ 2 := by
-      have h := sq_nonneg (|K_Z| - |Real.log ((n : ℝ) + 1)|)
+    have hαβ_ge_one : (1 : ℝ) ≤ (Fintype.card α : ℝ) * (Fintype.card β : ℝ) := by
+      have hα1 : (1 : ℝ) ≤ (Fintype.card α : ℝ) := by
+        exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
+      have hβ1 : (1 : ℝ) ≤ (Fintype.card β : ℝ) := by
+        exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
       nlinarith
-    have h_eq1 : |K_Z| ^ 2 = K_Z ^ 2 := sq_abs _
-    have h_eq2 : |Real.log ((n : ℝ) + 1)| ^ 2 = (Real.log ((n : ℝ) + 1)) ^ 2 := sq_abs _
-    linarith
+    have hp_min_le_one : p_min ≤ 1 := by
+      rw [hp_min_def]
+      have h1 : δ_p ≤ 1 := hδ_p_le
+      have hα1 : (1 : ℝ) ≤ (Fintype.card α : ℝ) := by
+        exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
+      rw [div_le_one hα_pos]; linarith
+    have hpd_pos : 0 < p_min * δ_n := mul_pos hp_min_pos hδ_n_pos
+    have hpd_le_one : p_min * δ_n ≤ 1 := by
+      have : p_min * δ_n ≤ 1 * 1 := by
+        exact mul_le_mul hp_min_le_one hδ_n_le hδ_n_pos.le (by norm_num)
+      linarith
+    have h_arg_ge : (1 : ℝ) ≤ ((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n) := by
+      rw [le_div_iff₀ hpd_pos]
+      calc (1 : ℝ) * (p_min * δ_n) ≤ 1 * 1 :=
+            mul_le_mul_of_nonneg_left hpd_le_one (by norm_num)
+        _ = 1 := by norm_num
+        _ ≤ (Fintype.card α : ℝ) * (Fintype.card β : ℝ) := hαβ_ge_one
+    have h_log_nn : 0 ≤ Real.log (((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n)) :=
+      Real.log_nonneg h_arg_ge
+    exact sq_le_two_mul_sq_add_two_mul_sq_of_nonneg_of_le_add h_log_nn h_log_Z_le
   -- Variance bounds.
   have hV_Y_bound : pmfLogVariance μ iidYs ≤ V_Y_n :=
     pmfLogVariance_le_sq_of_bounded μ iidYs hYs hV_Y_pointwise
@@ -468,33 +446,8 @@ theorem exists_N_for_smooth_achievability_uniform
   have hηε_sq : 0 < (η / 3) * ε_gap ^ 2 := by positivity
   -- typicalSetMinN bound: max(1, ⌈V/(η·ε²)⌉ + 1) ≤ V/(η·ε²) + 2 (with V ≥ 0).
   have h_tsMinN_le : ∀ V : ℝ, 0 ≤ V →
-      (typicalSetMinN V (η / 3) ε_gap : ℝ) ≤ V / ((η / 3) * ε_gap ^ 2) + 2 := by
-    intro V hV
-    unfold typicalSetMinN
-    have h_div_nn : 0 ≤ V / ((η / 3) * ε_gap ^ 2) := div_nonneg hV hηε_sq.le
-    have h_ceil_le : (Nat.ceil (V / ((η / 3) * ε_gap ^ 2)) : ℝ)
-        ≤ V / ((η / 3) * ε_gap ^ 2) + 1 := by
-      have := Nat.ceil_lt_add_one h_div_nn
-      linarith
-    have h_max_le : ((max 1 (Nat.ceil (V / ((η / 3) * ε_gap ^ 2)) + 1) : ℕ) : ℝ)
-        ≤ V / ((η / 3) * ε_gap ^ 2) + 2 := by
-      have h_1_le : (1 : ℝ) ≤ V / ((η / 3) * ε_gap ^ 2) + 2 := by linarith
-      have h_ceil_plus_1_le :
-          ((Nat.ceil (V / ((η / 3) * ε_gap ^ 2)) + 1 : ℕ) : ℝ)
-            ≤ V / ((η / 3) * ε_gap ^ 2) + 2 := by
-        push_cast; linarith
-      have h_max_real : ((max 1 (Nat.ceil (V / ((η / 3) * ε_gap ^ 2)) + 1) : ℕ) : ℝ)
-          ≤ max 1 (V / ((η / 3) * ε_gap ^ 2) + 2) := by
-        push_cast
-        have h1 : (1 : ℝ) ≤ max 1 (V / ((η / 3) * ε_gap ^ 2) + 2) := le_max_left _ _
-        have h2 : (Nat.ceil (V / ((η / 3) * ε_gap ^ 2)) + 1 : ℝ)
-            ≤ max 1 (V / ((η / 3) * ε_gap ^ 2) + 2) := by
-          exact le_max_of_le_right (by linarith)
-        exact max_le h1 h2
-      have h_max_le_rhs : max 1 (V / ((η / 3) * ε_gap ^ 2) + 2) ≤ V / ((η / 3) * ε_gap ^ 2) + 2 :=
-        max_le h_1_le le_rfl
-      linarith
-    exact h_max_le
+      (typicalSetMinN V (η / 3) ε_gap : ℝ) ≤ V / ((η / 3) * ε_gap ^ 2) + 2 :=
+    fun V hV => typicalSetMinN_le_div_add_two hηε_sq hV
   have hV_X_nn : 0 ≤ V_X := by rw [hV_X_def]; exact sq_nonneg _
   have hV_Y_n_nn : 0 ≤ V_Y_n := by rw [hV_Y_n_def]; exact sq_nonneg _
   have hV_Z_n_nn : 0 ≤ V_Z_n := by rw [hV_Z_n_def]; exact sq_nonneg _
