@@ -21,44 +21,6 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 open InformationTheory.Shannon.TwoSided
 
 omit [DecidableEq α] [Nonempty α] in
-/-- `pmfLogCondInfty` is measurable (w.r.t. the pi σ-algebra). -/
-lemma measurable_pmfLogCondInfty
-    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) :
-    Measurable (pmfLogCondInfty μ p) := by
-  classical
-  unfold pmfLogCondInfty
-  refine (Real.measurable_log.comp ?_).neg
-  refine Finset.measurable_sum _ (fun a _ => ?_)
-  refine Measurable.mul ?_ ?_
-  · refine Measurable.indicator measurable_const ?_
-    exact measurableSet_coord0_eq a
-  · exact ((stronglyMeasurable_condProbInfty μ p a).mono
-      (iSup_le (fun n => (pastFiltration (α := α)).le n))).measurable
-
-omit [DecidableEq α] [Nonempty α] in
-/-- Measurability of `MRatioLowerZ` w.r.t. the product σ-algebra on `ℤ → α`. -/
-lemma measurable_MRatioLowerZ
-    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) :
-    Measurable (MRatioLowerZ μ p n) := by
-  classical
-  unfold MRatioLowerZ
-  refine ENNReal.measurable_ofReal.comp ?_
-  refine Real.measurable_exp.comp ?_
-  refine Measurable.sub ?_ ?_
-  · -- negLogQInftyZ is a measurable sum.
-    unfold negLogQInftyZ
-    refine Finset.measurable_sum _ (fun i _ => ?_)
-    exact (measurable_pmfLogCondInfty μ p).comp ((measurable_shiftZ).iterate i)
-  · -- n · blockLogAvgZ is measurable.
-    refine measurable_const.mul ?_
-    unfold blockLogAvgZ
-    refine measurable_const.mul ?_
-    refine Real.measurable_log.comp ?_
-    have h_disc : Measurable (fun y : Fin n → α =>
-        (((μZ μ p).map (firstBlockZ (α := α) n)).real {y})) := measurable_of_finite _
-    exact h_disc.comp (measurable_firstBlockZ n)
-
-omit [DecidableEq α] [Nonempty α] in
 /-- **Borel–Cantelli consequence (Z-side)**: μZ-a.s., `MRatioLowerZ n x ≤ n²` eventually. -/
 theorem MRatioLowerZ_le_sq_eventually
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) :

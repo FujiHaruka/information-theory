@@ -982,6 +982,51 @@ private lemma ofReal_exp_neg_log_mul_ofReal_le_one (c : ℝ) :
     exact zero_le_one
 
 omit [DecidableEq α] [Nonempty α] in
+lemma measurable_pmfLogCondInfty
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) :
+    Measurable (pmfLogCondInfty μ p) := by
+  classical
+  unfold pmfLogCondInfty
+  refine (Real.measurable_log.comp ?_).neg
+  refine Finset.measurable_sum _ (fun a _ => ?_)
+  refine Measurable.mul ?_ ?_
+  · refine Measurable.indicator measurable_const ?_
+    exact measurableSet_coord0_eq a
+  · exact ((stronglyMeasurable_condProbInfty μ p a).mono
+      (iSup_le (fun n => (pastFiltration (α := α)).le n))).measurable
+
+omit [DecidableEq α] [Nonempty α] in
+lemma measurable_MRatioLowerZ
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) :
+    Measurable (MRatioLowerZ μ p n) := by
+  classical
+  unfold MRatioLowerZ
+  refine ENNReal.measurable_ofReal.comp ?_
+  refine Real.measurable_exp.comp ?_
+  refine Measurable.sub ?_ ?_
+  · unfold negLogQInftyZ
+    refine Finset.measurable_sum _ (fun i _ => ?_)
+    exact (measurable_pmfLogCondInfty μ p).comp ((measurable_shiftZ).iterate i)
+  · refine measurable_const.mul ?_
+    unfold blockLogAvgZ
+    refine measurable_const.mul ?_
+    refine Real.measurable_log.comp ?_
+    have h_disc : Measurable (fun y : Fin n → α =>
+        (((μZ μ p).map (firstBlockZ (α := α) n)).real {y})) := measurable_of_finite _
+    exact h_disc.comp (measurable_firstBlockZ n)
+
+omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+lemma eq_sum_indicator_preimage_mul {β : Type*} (φ : β → α) (x : β)
+    (f : α → ℝ≥0∞) :
+    f (φ x) = ∑ a, ((φ ⁻¹' {a}).indicator (fun _ => (1 : ℝ≥0∞))) x * f a := by
+  classical
+  rw [Finset.sum_eq_single (φ x)]
+  · rw [Set.indicator_of_mem (by rfl : x ∈ φ ⁻¹' {φ x}), one_mul]
+  · intro b _ hb
+    rw [Set.indicator_of_notMem (by intro hx; exact hb hx.symm), zero_mul]
+  · intro h; exact absurd (Finset.mem_univ _) h
+
+omit [DecidableEq α] [Nonempty α] in
 /-- **CORE LEMMA (tower property)**: `∫ MRatioLowerZ n dμZ ≤ 1`. -/
 theorem integral_MRatioLowerZ_le_one
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) :
@@ -1048,34 +1093,12 @@ theorem integral_MRatioLowerZ_le_one
         * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a)
         * ENNReal.ofReal (Real.exp (pmfLogCondInfty μ p (shiftZ^[n] x))) with hF_def
     -- Step 1: pointwise (a.s.) decomposition `MRatio(n+1) =ᵐ ∑_a F a`.
-    have h_pmf_meas_self : Measurable (pmfLogCondInfty μ p) := by
-      unfold pmfLogCondInfty
-      refine (Real.measurable_log.comp ?_).neg
-      refine Finset.measurable_sum _ (fun a _ => ?_)
-      refine Measurable.mul ?_ ?_
-      · refine Measurable.indicator measurable_const ?_
-        exact measurableSet_coord0_eq a
-      · exact ((stronglyMeasurable_condProbInfty μ p a).mono
-          (iSup_le (fun n => (pastFiltration (α := α)).le n))).measurable
     have h_pmf_meas : Measurable
         (fun x : (∀ _ : ℤ, α) => Real.exp (pmfLogCondInfty μ p (shiftZ^[n] x))) :=
-      Real.measurable_exp.comp (h_pmf_meas_self.comp (measurable_shiftZ.iterate n))
-    have h_MR_meas : ∀ k, Measurable (MRatioLowerZ μ p k) := by
-      intro k
-      unfold MRatioLowerZ
-      refine ENNReal.measurable_ofReal.comp ?_
-      refine Real.measurable_exp.comp ?_
-      refine Measurable.sub ?_ ?_
-      · unfold negLogQInftyZ
-        refine Finset.measurable_sum _ (fun i _ => ?_)
-        exact h_pmf_meas_self.comp ((measurable_shiftZ).iterate i)
-      · refine measurable_const.mul ?_
-        unfold blockLogAvgZ
-        refine measurable_const.mul ?_
-        refine Real.measurable_log.comp ?_
-        have h_disc : Measurable (fun y : Fin k → α =>
-            (((μZ μ p).map (firstBlockZ (α := α) k)).real {y})) := measurable_of_finite _
-        exact h_disc.comp (measurable_firstBlockZ k)
+      Real.measurable_exp.comp ((measurable_pmfLogCondInfty μ p).comp
+        (measurable_shiftZ.iterate n))
+    have h_MR_meas : ∀ k, Measurable (MRatioLowerZ μ p k) :=
+      fun k => measurable_MRatioLowerZ μ p k
     -- All a.s. statements collected up front.
     have h_decomp : ∀ᵐ x ∂(μZ μ p),
         MRatioLowerZ μ p (n + 1) x = ∑ a, F a x := by
@@ -1099,18 +1122,8 @@ theorem integral_MRatioLowerZ_le_one
           ∀ (f : α → ℝ≥0∞),
             f (coord0 (shiftZ^[n] x))
               = ∑ a, (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))) x
-                  * f a := by
-        intro f
-        rw [Finset.sum_eq_single (coord0 (shiftZ^[n] x))]
-        · have h_mem : x ∈ (shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {coord0 (shiftZ^[n] x)}) := rfl
-          rw [Set.indicator_of_mem h_mem]; rw [one_mul]
-        · intro b _ hb
-          have h_notmem : x ∉ (shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {b}) := by
-            intro hx_mem
-            apply hb
-            exact hx_mem.symm
-          rw [Set.indicator_of_notMem h_notmem]; rw [zero_mul]
-        · intro h; exact absurd (Finset.mem_univ _) h
+                  * f a :=
+        fun f => eq_sum_indicator_preimage_mul (fun y => coord0 (shiftZ^[n] y)) x f
       -- Apply h_sum_indicator with f a := ofReal(blockCondRatio ... a) · ofReal(exp pmf shift^n x).
       -- Then re-associate the multiplication.
       have h_combined :
