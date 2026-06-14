@@ -109,7 +109,7 @@ finite product of per-coordinate weighted measures `(μ i).withDensity (f i)` eq
 measure `Measure.pi μ` weighted by the coordinatewise product density `x ↦ ∏ i, f i (x i)`.
 Proved via `Measure.pi_eq` (agreement on measurable boxes) + the box factorization
 `lintegral_pi_prod_eq_prod`. -/
-private lemma pi_withDensity {n : ℕ} {E : Fin n → Type*}
+lemma pi_withDensity {n : ℕ} {E : Fin n → Type*}
     {mE : ∀ i, MeasurableSpace (E i)} (μ : (i : Fin n) → Measure (E i))
     [∀ i, SigmaFinite (μ i)] (f : (i : Fin n) → E i → ℝ≥0∞) (hf : ∀ i, Measurable (f i))
     [∀ i, SigmaFinite ((μ i).withDensity (f i))] :
@@ -236,7 +236,7 @@ product `Q₁ = μX ⊗ μY` (nondegenerate `P', N ≠ 0`): the mutual absolute 
 factor in the density ratio cancels, so the ratio is a ratio of two strictly-positive-and-
 finite Gaussian densities, giving the exponential relation; mutual AC follows from the
 everywhere-positive-and-finite densities w.r.t. `volume.prod volume`. -/
-private lemma awgn_perLetter_changeOfMeasure_facts
+lemma awgn_perLetter_changeOfMeasure_facts
     {P' N : ℝ≥0} (hP'_ne : P' ≠ 0) (hN_ne : N ≠ 0)
     (J₁ Q₁ : Measure (ℝ × ℝ))
     (hJ₁ : J₁ = ((gaussianReal 0 P').prod (gaussianReal 0 N)).map (fun p => (p.1, p.1 + p.2)))
@@ -353,7 +353,7 @@ the per-letter KL `(klDiv J₁ Q₁).toReal = 0`. When `P' = 0` the input collap
 the shear is the identity on `{0} × ℝ`, so `J₁ = Q₁` (`klDiv_self`). When `N = 0`
 (with `P' ≠ 0`) the joint `J₁` concentrates on the diagonal `{(x, x)}`, which is `Q₁`-null
 (positive-variance Gaussian product, atomless), so `¬ J₁ ≪ Q₁` ⇒ `klDiv = ⊤` ⇒ `toReal = 0`. -/
-private lemma awgn_perLetter_klDiv_degenerate
+lemma awgn_perLetter_klDiv_degenerate
     (P' N : ℝ≥0) (hdeg : P' = 0 ∨ N = 0) :
     (klDiv
         (((gaussianReal 0 P').prod (gaussianReal 0 N)).map (fun p : ℝ × ℝ => (p.1, p.1 + p.2)))
@@ -859,6 +859,226 @@ lemma gaussian_shear_logRnDeriv_memLp_two (P' N : ℝ≥0) (hP_ne : P' ≠ 0) (h
     ring
   exact MemLp.ae_eq hφ_eq.symm hq_memLp
 
+theorem continuousAepGaussian_degenerate_witness
+    (P : ℝ) (N : ℝ≥0) (n : ℕ) {δ ε : ℝ} (hδ : 0 < δ) (hε : 0 < ε)
+    (hdeg : P.toNNReal = 0 ∨ N = 0) :
+    ∃ A : Set ((Fin n → ℝ) × (Fin n → ℝ)),
+      MeasurableSet A
+      ∧ (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+              (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
+            (fun p : (Fin n → ℝ) × (Fin n → ℝ) =>
+                (p.1, fun i => p.1 i + p.2 i))) A
+          ≥ ENNReal.ofReal (1 - ε)
+      ∧ ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+            (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N)))) A
+          ≤ ENNReal.ofReal (Real.exp (-(
+              (klDiv
+                  (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+                      (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
+                    (fun p : (Fin n → ℝ) × (Fin n → ℝ) =>
+                        (p.1, fun i => p.1 i + p.2 i)))
+                  ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+                    (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))))).toReal
+                - (n : ℝ) * (3 * δ)))) := by
+  classical
+  refine ⟨Set.univ, MeasurableSet.univ, ?_, ?_⟩
+  · -- (i) `Jₙ univ = 1 ≥ ofReal (1 - ε)`.
+    rw [show ((((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+          (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
+          (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i)))
+          Set.univ) = 1 from ?_]
+    · exact le_trans (ENNReal.ofReal_le_one.mpr (by linarith)) (le_refl 1)
+    · -- mass of `univ` under a probability measure is `1`
+      have hg_meas : Measurable
+          (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i)) :=
+        measurable_fst.prodMk (measurable_pi_lambda _ (fun i =>
+          ((measurable_pi_apply i).comp measurable_fst).add
+            ((measurable_pi_apply i).comp measurable_snd)))
+      haveI : IsProbabilityMeasure
+          (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+            (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
+            (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i))) :=
+        Measure.isProbabilityMeasure_map hg_meas.aemeasurable
+      exact measure_univ
+  · -- (iii) `Qₙ univ ≤ ofReal (exp (−(klDiv_n.toReal − n·3δ)))`, via `klDiv_n.toReal = 0`.
+    set Jn : Measure ((Fin n → ℝ) × (Fin n → ℝ)) :=
+      ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+          (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
+        (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i)) with hJn_def
+    set Qn : Measure ((Fin n → ℝ) × (Fin n → ℝ)) :=
+      (Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+        (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))) with hQn_def
+    haveI : IsProbabilityMeasure Qn := by rw [hQn_def]; infer_instance
+    -- `klDiv Jn Qn .toReal = 0` in both degenerate cases (GENUINE, sorryAx-free): normalize
+    -- the n-fold KL to `n · (klDiv J₁ Q₁).toReal` (`klDiv_nFold_eq_nsmul`, unconditional),
+    -- then the per-letter degenerate vanishing `awgn_perLetter_klDiv_degenerate`
+    -- (`P.toNNReal = 0` ⇒ `J₁ = Q₁` ⇒ `klDiv_self`; `N = 0 ∧ P' ≠ 0` ⇒ diagonal
+    -- mutual-singularity ⇒ `klDiv = ⊤` ⇒ `toReal = 0`).
+    have hkl0 : (klDiv Jn Qn).toReal = 0 := by
+      rw [hJn_def, hQn_def, klDiv_nFold_eq_nsmul P N,
+        awgn_perLetter_klDiv_degenerate P.toNNReal N hdeg, mul_zero]
+    -- the exponent is `≥ 0`, so the bound is `≥ 1 ≥ Qn univ` (genuine, modulo `hkl0`).
+    rw [hkl0]
+    refine le_trans (prob_le_one : Qn Set.univ ≤ 1) ?_
+    rw [zero_sub, neg_neg]
+    refine ENNReal.one_le_ofReal.mpr ?_
+    have hnn : (0 : ℝ) ≤ (n : ℝ) * (3 * δ) := by positivity
+    calc (1 : ℝ) = Real.exp 0 := (Real.exp_zero).symm
+      _ ≤ Real.exp ((n : ℝ) * (3 * δ)) := Real.exp_le_exp.mpr hnn
+
+theorem awgn_joint_law_reshape_eq (n : ℕ) (μX μZ : Measure ℝ)
+    [IsProbabilityMeasure μX] [IsProbabilityMeasure μZ] :
+    ((Measure.pi (fun _ : Fin n => μX)).prod (Measure.pi (fun _ : Fin n => μZ))).map
+        (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i))
+      = (Measure.pi (fun _ : Fin n =>
+          (μX.prod μZ).map (fun p : ℝ × ℝ => (p.1, p.1 + p.2)))).map
+          (MeasurableEquiv.arrowProdEquivProdArrow ℝ ℝ (Fin n)) := by
+  set e : (Fin n → ℝ × ℝ) ≃ᵐ (Fin n → ℝ) × (Fin n → ℝ) :=
+    MeasurableEquiv.arrowProdEquivProdArrow ℝ ℝ (Fin n) with he_def
+  set g : (Fin n → ℝ) × (Fin n → ℝ) → (Fin n → ℝ) × (Fin n → ℝ) :=
+    fun p => (p.1, fun i => p.1 i + p.2 i) with hg_def
+  set h₁ : ℝ × ℝ → ℝ × ℝ := fun p => (p.1, p.1 + p.2) with hh₁_def
+  set H : (Fin n → ℝ × ℝ) → (Fin n → ℝ × ℝ) := fun w i => h₁ (w i) with hH_def
+  have hg_meas : Measurable g := by
+    rw [hg_def]; exact measurable_fst.prodMk (measurable_pi_lambda _
+      (fun i => (measurable_pi_apply i).comp measurable_fst |>.add
+        ((measurable_pi_apply i).comp measurable_snd)))
+  have hh₁_meas : Measurable h₁ := by
+    rw [hh₁_def]; exact measurable_fst.prodMk (measurable_fst.add measurable_snd)
+  have hH_meas : Measurable H :=
+    measurable_pi_lambda _ (fun i => hh₁_meas.comp (measurable_pi_apply i))
+  -- reshape `(pi μX).prod (pi μZ) = (pi (μX × μZ)).map e`
+  have hmp := measurePreserving_arrowProdEquivProdArrow ℝ ℝ (Fin n)
+    (fun _ : Fin n => μX) (fun _ : Fin n => μZ)
+  have hprod_reshape :
+      (Measure.pi (fun _ : Fin n => μX)).prod (Measure.pi (fun _ : Fin n => μZ))
+        = (Measure.pi (fun _ : Fin n => μX.prod μZ)).map e := by
+    rw [he_def, ← hmp.map_eq]
+  -- `pi J₁ = (pi (μX × μZ)).map H` via `pi_map_pi`
+  have hpiJ₁ :
+      Measure.pi (fun _ : Fin n => (μX.prod μZ).map (fun p : ℝ × ℝ => (p.1, p.1 + p.2)))
+        = (Measure.pi (fun _ : Fin n => μX.prod μZ)).map H := by
+    rw [hH_def]
+    rw [Measure.pi_map_pi (f := fun _ : Fin n => h₁) (fun _ => hh₁_meas.aemeasurable)]
+  rw [hprod_reshape, hpiJ₁, Measure.map_map hg_meas e.measurable,
+    Measure.map_map e.measurable hH_meas]
+  -- `g ∘ e = e ∘ H` pointwise (the two pushforward maps coincide)
+  rfl
+
+theorem awgn_changeOfMeasure_pi_mass_le {P' N : ℝ≥0} (hP'_ne : P' ≠ 0) (hN_ne : N ≠ 0)
+    (n : ℕ) (hn0 : 0 < n) {δ : ℝ} (hδ : 0 < δ)
+    (J₁ Q₁ : Measure (ℝ × ℝ)) [IsProbabilityMeasure J₁] [IsProbabilityMeasure Q₁]
+    (hJ₁ : J₁ = ((gaussianReal 0 P').prod (gaussianReal 0 N)).map (fun p => (p.1, p.1 + p.2)))
+    (hQ₁ : Q₁ = (gaussianReal 0 P').prod (gaussianReal 0 (P' + N)))
+    (φ : ℝ × ℝ → ℝ) (hφ_def : φ = fun p => Real.log ((J₁.rnDeriv Q₁ p).toReal))
+    (B : Set (Fin n → ℝ × ℝ))
+    (hB_def : B = {w : Fin n → ℝ × ℝ | |(∑ i, φ (w i)) / (n : ℝ) - J₁[φ]| < δ}) :
+    (Measure.pi (fun _ : Fin n => Q₁)) B
+      ≤ ENNReal.ofReal
+          (Real.exp (-((n : ℝ) * (klDiv J₁ Q₁).toReal - (n : ℝ) * (3 * δ)))) := by
+  classical
+  -- per-letter change-of-measure facts: mutual AC + density-exp relation
+  obtain ⟨hJQ_ac, hQJ_ac, hdens_log⟩ :=
+    awgn_perLetter_changeOfMeasure_facts hP'_ne hN_ne J₁ Q₁ hJ₁ hQ₁
+  -- `φ = llr J₁ Q₁` (by definition).
+  have hφ_llr : φ = llr J₁ Q₁ := by funext p; rw [hφ_def, llr]
+  -- `J₁[φ] = (klDiv J₁ Q₁).toReal` (probability-measure correction terms vanish)
+  have hJφ : J₁[φ] = (klDiv J₁ Q₁).toReal := by
+    rw [hφ_llr, toReal_klDiv_of_measure_eq hJQ_ac (by rw [measure_univ, measure_univ])]
+  -- `hdens_ae : (Q₁.rnDeriv J₁ p).toReal = Real.exp (−φ p)` (φ = log dJ₁/dQ₁)
+  have hdens_ae : ∀ᵐ p ∂J₁, (Q₁.rnDeriv J₁ p).toReal = Real.exp (-φ p) := by
+    filter_upwards [hdens_log] with p hp; rw [hp, hφ_def]
+  -- the product density on `Fin n → ℝ × ℝ`
+  set ρ : (Fin n → ℝ × ℝ) → ℝ≥0∞ := fun w => ∏ i, Q₁.rnDeriv J₁ (w i) with hρ_def
+  -- `pi Q₁ = (pi J₁).withDensity ρ` (tensorize via `pi_withDensity`)
+  have hQ_wd_rn : Q₁ = J₁.withDensity (Q₁.rnDeriv J₁) :=
+    (Measure.withDensity_rnDeriv_eq Q₁ J₁ hQJ_ac).symm
+  have hrn_meas : Measurable (Q₁.rnDeriv J₁) := Measure.measurable_rnDeriv Q₁ J₁
+  have hB_meas : MeasurableSet B := by
+    rw [hB_def]
+    have hφ_meas : Measurable φ := by
+      rw [hφ_def]
+      exact Real.measurable_log.comp (Measure.measurable_rnDeriv J₁ Q₁).ennreal_toReal
+    have hsum : Measurable (fun w : Fin n → ℝ × ℝ => (∑ i, φ (w i)) / (n : ℝ) - J₁[φ]) :=
+      ((Finset.measurable_sum _
+        (fun i _ => hφ_meas.comp (measurable_pi_apply i))).div_const _).sub_const _
+    have hT : MeasurableSet {r : ℝ | |r| < δ} :=
+      measurableSet_lt (measurable_norm.comp measurable_id) measurable_const
+    exact hsum hT
+  have hpiQ_wd : Measure.pi (fun _ : Fin n => Q₁)
+      = (Measure.pi (fun _ : Fin n => J₁)).withDensity ρ := by
+    have hsf : ∀ _ : Fin n, SigmaFinite (J₁.withDensity (Q₁.rnDeriv J₁)) := by
+      intro _; rw [← hQ_wd_rn]; infer_instance
+    have := pi_withDensity (fun _ : Fin n => J₁) (fun _ => Q₁.rnDeriv J₁)
+      (fun _ => hrn_meas)
+    rw [hρ_def]
+    calc Measure.pi (fun _ : Fin n => Q₁)
+        = Measure.pi (fun _ : Fin n => J₁.withDensity (Q₁.rnDeriv J₁)) := by
+          simp_rw [← hQ_wd_rn]
+      _ = (Measure.pi (fun _ : Fin n => J₁)).withDensity
+            (fun w => ∏ i, Q₁.rnDeriv J₁ (w i)) := this
+  -- mass of `B` via the density representation + the pointwise bound on `B`
+  rw [hpiQ_wd, withDensity_apply _ hB_meas]
+  -- lift the per-coordinate density / finiteness facts to `pi J₁`-a.e.
+  have hrn_lt_top : ∀ᵐ p ∂J₁, Q₁.rnDeriv J₁ p < ∞ := Measure.rnDeriv_lt_top Q₁ J₁
+  have hdens_pi : ∀ᵐ w ∂(Measure.pi (fun _ : Fin n => J₁)),
+      ∀ i, (Q₁.rnDeriv J₁ (w i)).toReal = Real.exp (-φ (w i)) :=
+    Filter.eventually_all.2 fun i =>
+      (MeasureTheory.Measure.tendsto_eval_ae_ae
+        (μ := fun _ : Fin n => J₁) (i := i)).eventually hdens_ae
+  have hfin_pi : ∀ᵐ w ∂(Measure.pi (fun _ : Fin n => J₁)),
+      ∀ i, Q₁.rnDeriv J₁ (w i) ≠ ∞ :=
+    Filter.eventually_all.2 fun i =>
+      (MeasureTheory.Measure.tendsto_eval_ae_ae
+        (μ := fun _ : Fin n => J₁) (i := i)).eventually
+        (hrn_lt_top.mono fun p hp => hp.ne)
+  -- on `B`, `ρ w ≤ ofReal (exp (−(n·I − n·3δ)))` `[pi J₁]`-a.e.
+  have hbound : ∀ᵐ w ∂(Measure.pi (fun _ : Fin n => J₁)),
+      w ∈ B → ρ w ≤ ENNReal.ofReal
+        (Real.exp (-((n : ℝ) * (klDiv J₁ Q₁).toReal - (n : ℝ) * (3 * δ)))) := by
+    filter_upwards [hdens_pi, hfin_pi] with w hw_dens hw_fin hwB
+    -- `ρ w ≠ ∞` (finite product of finite factors), and its `toReal = exp(−∑φ)`
+    have hρ_ne_top : ρ w ≠ ∞ := by
+      rw [hρ_def]; exact ENNReal.prod_ne_top (fun i _ => hw_fin i)
+    have hρ_toReal : (ρ w).toReal = Real.exp (-(∑ i, φ (w i))) := by
+      rw [hρ_def, ENNReal.toReal_prod]
+      rw [show (-(∑ i, φ (w i))) = ∑ i, (-φ (w i)) by rw [Finset.sum_neg_distrib],
+        Real.exp_sum]
+      exact Finset.prod_congr rfl fun i _ => hw_dens i
+    -- on `B`, `∑φ(wᵢ) ≥ n(J₁[φ] − δ)`, so `exp(−∑φ) ≤ exp(−(n·I − n·3δ))`
+    rw [hB_def, Set.mem_setOf_eq, abs_lt] at hwB
+    obtain ⟨hwB_lo, hwB_hi⟩ := hwB
+    have hsum_ge : (n : ℝ) * ((klDiv J₁ Q₁).toReal - δ) ≤ ∑ i, φ (w i) := by
+      rw [← hJφ]
+      have hnR : (0 : ℝ) < n := by exact_mod_cast hn0
+      have : J₁[φ] - δ < (∑ i, φ (w i)) / (n : ℝ) := by linarith
+      rw [lt_div_iff₀ hnR] at this
+      nlinarith [this]
+    have hexp_le : Real.exp (-(∑ i, φ (w i)))
+        ≤ Real.exp (-((n : ℝ) * (klDiv J₁ Q₁).toReal - (n : ℝ) * (3 * δ))) := by
+      apply Real.exp_le_exp.mpr
+      have hδ3 : (n : ℝ) * ((klDiv J₁ Q₁).toReal - δ)
+          ≥ (n : ℝ) * (klDiv J₁ Q₁).toReal - (n : ℝ) * (3 * δ) := by
+        have hnR : (0 : ℝ) ≤ n := by positivity
+        nlinarith [hnR, hδ.le]
+      linarith [hsum_ge]
+    rw [← ENNReal.ofReal_toReal hρ_ne_top, hρ_toReal]
+    exact ENNReal.ofReal_le_ofReal hexp_le
+  -- integrate the bound over `B`
+  calc ∫⁻ w in B, ρ w ∂(Measure.pi (fun _ : Fin n => J₁))
+      ≤ ∫⁻ _ in B, ENNReal.ofReal
+          (Real.exp (-((n : ℝ) * (klDiv J₁ Q₁).toReal - (n : ℝ) * (3 * δ))))
+          ∂(Measure.pi (fun _ : Fin n => J₁)) := by
+        refine setLIntegral_mono_ae measurable_const.aemeasurable ?_
+        filter_upwards [hbound] with w hw using hw
+    _ ≤ ENNReal.ofReal
+          (Real.exp (-((n : ℝ) * (klDiv J₁ Q₁).toReal - (n : ℝ) * (3 * δ)))) := by
+        rw [setLIntegral_const]
+        calc ENNReal.ofReal (Real.exp _) * (Measure.pi (fun _ : Fin n => J₁)) B
+            ≤ ENNReal.ofReal (Real.exp _) * 1 :=
+              mul_le_mul_left' prob_le_one _
+          _ = ENNReal.ofReal (Real.exp _) := mul_one _
+
 /-- Continuous AEP for the `n`-dimensional Gaussian.
 
 Given `P : ℝ`, `N : ℝ≥0`, a typicality slack `δ > 0`, and an error tolerance `ε > 0`
@@ -927,51 +1147,8 @@ theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
   -- `Jₙ = Qₙ`, or `klDiv_of_not_ac` `= ⊤` ↦ `toReal = 0`), so the exponent
   -- `−(0 − n·3δ) = n·3δ ≥ 0` makes the bound `exp(n·3δ) ≥ 1 ≥ Qₙ univ`.
   by_cases hdeg : P.toNNReal = 0 ∨ N = 0
-  · -- Degenerate branch: `A := Set.univ` for all `n` (no engine).
-    refine ⟨1, fun n _hn => ⟨Set.univ, MeasurableSet.univ, ?_, ?_⟩⟩
-    · -- (i) `Jₙ univ = 1 ≥ ofReal (1 - ε)`.
-      rw [show ((((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-            (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
-            (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i)))
-            Set.univ) = 1 from ?_]
-      · exact le_trans (ENNReal.ofReal_le_one.mpr (by linarith)) (le_refl 1)
-      · -- mass of `univ` under a probability measure is `1`
-        have hg_meas : Measurable
-            (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i)) :=
-          measurable_fst.prodMk (measurable_pi_lambda _ (fun i =>
-            ((measurable_pi_apply i).comp measurable_fst).add
-              ((measurable_pi_apply i).comp measurable_snd)))
-        haveI : IsProbabilityMeasure
-            (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-              (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
-              (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i))) :=
-          Measure.isProbabilityMeasure_map hg_meas.aemeasurable
-        exact measure_univ
-    · -- (iii) `Qₙ univ ≤ ofReal (exp (−(klDiv_n.toReal − n·3δ)))`, via `klDiv_n.toReal = 0`.
-      set Jn : Measure ((Fin n → ℝ) × (Fin n → ℝ)) :=
-        ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-            (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
-          (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i)) with hJn_def
-      set Qn : Measure ((Fin n → ℝ) × (Fin n → ℝ)) :=
-        (Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-          (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))) with hQn_def
-      haveI : IsProbabilityMeasure Qn := by rw [hQn_def]; infer_instance
-      -- `klDiv Jn Qn .toReal = 0` in both degenerate cases (GENUINE, sorryAx-free): normalize
-      -- the n-fold KL to `n · (klDiv J₁ Q₁).toReal` (`klDiv_nFold_eq_nsmul`, unconditional),
-      -- then the per-letter degenerate vanishing `awgn_perLetter_klDiv_degenerate`
-      -- (`P.toNNReal = 0` ⇒ `J₁ = Q₁` ⇒ `klDiv_self`; `N = 0 ∧ P' ≠ 0` ⇒ diagonal
-      -- mutual-singularity ⇒ `klDiv = ⊤` ⇒ `toReal = 0`).
-      have hkl0 : (klDiv Jn Qn).toReal = 0 := by
-        rw [hJn_def, hQn_def, klDiv_nFold_eq_nsmul P N,
-          awgn_perLetter_klDiv_degenerate P.toNNReal N hdeg, mul_zero]
-      -- the exponent is `≥ 0`, so the bound is `≥ 1 ≥ Qn univ` (genuine, modulo `hkl0`).
-      rw [hkl0]
-      refine le_trans (prob_le_one : Qn Set.univ ≤ 1) ?_
-      rw [zero_sub, neg_neg]
-      refine ENNReal.one_le_ofReal.mpr ?_
-      have hnn : (0 : ℝ) ≤ (n : ℝ) * (3 * δ) := by positivity
-      calc (1 : ℝ) = Real.exp 0 := (Real.exp_zero).symm
-        _ ≤ Real.exp ((n : ℝ) * (3 * δ)) := Real.exp_le_exp.mpr hnn
+  · -- Degenerate branch: trivial typical set `A := Set.univ` for all `n` (no engine).
+    exact ⟨1, fun n _hn => continuousAepGaussian_degenerate_witness P N n hδ hε hdeg⟩
   -- Non-degenerate branch (second goal of `by_cases`): `P.toNNReal ≠ 0 ∧ N ≠ 0`.
   simp only [not_or] at hdeg
   obtain ⟨hP_ne, hN_ne⟩ := hdeg
@@ -1022,41 +1199,13 @@ theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
     have hT : MeasurableSet {r : ℝ | |r| < δ} :=
       measurableSet_lt (measurable_norm.comp measurable_id) measurable_const
     exact hsum hT
-  -- **Joint measure-identity**: the signature's joint law equals `(Measure.pi J₁).map e`.
-  -- `g ∘ e = e ∘ H` where `g (x,z) = (x, x+z)` (the AWGN map) and `H` applies
-  -- `(a,b) ↦ (a, a+b)` componentwise; reshape via `arrowProdEquivProdArrow` + `pi_map_pi`.
-  set g : (Fin n → ℝ) × (Fin n → ℝ) → (Fin n → ℝ) × (Fin n → ℝ) :=
-    fun p => (p.1, fun i => p.1 i + p.2 i) with hg_def
-  set h₁ : ℝ × ℝ → ℝ × ℝ := fun p => (p.1, p.1 + p.2) with hh₁_def
-  set H : (Fin n → ℝ × ℝ) → (Fin n → ℝ × ℝ) := fun w i => h₁ (w i) with hH_def
-  have hg_meas : Measurable g := by
-    rw [hg_def]; exact measurable_fst.prodMk (measurable_pi_lambda _
-      (fun i => (measurable_pi_apply i).comp measurable_fst |>.add
-        ((measurable_pi_apply i).comp measurable_snd)))
-  have hh₁_meas : Measurable h₁ := by
-    rw [hh₁_def]; exact measurable_fst.prodMk (measurable_fst.add measurable_snd)
-  have hH_meas : Measurable H :=
-    measurable_pi_lambda _ (fun i => hh₁_meas.comp (measurable_pi_apply i))
+  -- **Joint measure-identity** (`awgn_joint_law_reshape_eq`): the signature's joint law
+  -- equals `(Measure.pi J₁).map e`, via `arrowProdEquivProdArrow` + `pi_map_pi`.
   have hJ_eq :
-      ((Measure.pi (fun _ : Fin n => μX)).prod (Measure.pi (fun _ : Fin n => μZ))).map g
+      ((Measure.pi (fun _ : Fin n => μX)).prod (Measure.pi (fun _ : Fin n => μZ))).map
+          (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i))
         = (Measure.pi (fun _ : Fin n => J₁)).map e := by
-    -- reshape `(pi μX).prod (pi μZ) = (pi (μX × μZ)).map e`
-    have hmp := measurePreserving_arrowProdEquivProdArrow ℝ ℝ (Fin n)
-      (fun _ : Fin n => μX) (fun _ : Fin n => μZ)
-    have hprod_reshape :
-        (Measure.pi (fun _ : Fin n => μX)).prod (Measure.pi (fun _ : Fin n => μZ))
-          = (Measure.pi (fun _ : Fin n => μX.prod μZ)).map e := by
-      rw [he_def, ← hmp.map_eq]
-    -- `pi J₁ = (pi (μX × μZ)).map H` via `pi_map_pi`
-    have hpiJ₁ :
-        Measure.pi (fun _ : Fin n => J₁)
-          = (Measure.pi (fun _ : Fin n => μX.prod μZ)).map H := by
-      rw [hH_def, hJ₁_def]
-      rw [Measure.pi_map_pi (f := fun _ : Fin n => h₁) (fun _ => hh₁_meas.aemeasurable)]
-    rw [hprod_reshape, hpiJ₁, Measure.map_map hg_meas e.measurable,
-      Measure.map_map e.measurable hH_meas]
-    -- `g ∘ e = e ∘ H` pointwise (the two pushforward maps coincide)
-    rfl
+    rw [hJ₁_def, he_def]; exact awgn_joint_law_reshape_eq n μX μZ
   refine ⟨e.symm ⁻¹' B, ?_, ?_, ?_⟩
   · -- measurability of `A`
     exact e.symm.measurable hB_meas
@@ -1096,100 +1245,12 @@ theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
     have he_preim : e ⁻¹' (e.symm ⁻¹' B) = B := by
       ext w; simp [Set.mem_preimage, MeasurableEquiv.symm_apply_apply]
     rw [he_preim]
-    -- **Change-of-measure core** (G-2 closed via `pi_withDensity`): `Q₁ ≪ J₁`, so
-    -- `pi Q₁ = (pi J₁).withDensity (∏ᵢ Q₁.rnDeriv J₁ (wᵢ))`. On `B` the product density
-    -- `(∏ᵢ Q₁.rnDeriv J₁ (wᵢ)).toReal = exp(−∑φ) ≤ exp(−n(J₁[φ]−δ))`, and `J₁[φ] =
-    -- (klDiv J₁ Q₁).toReal`, giving `(pi Q₁) B ≤ exp(−(n·I − n·3δ))` since `δ ≤ 3δ`.
-    -- per-letter change-of-measure facts: mutual AC + density-exp relation
-    obtain ⟨hJQ_ac, hQJ_ac, hdens_log⟩ :=
-      awgn_perLetter_changeOfMeasure_facts hP_ne hN_ne J₁ Q₁ hJ₁_def hQ₁_def
-    -- `φ = llr J₁ Q₁` (by definition).
-    have hφ_llr : φ = llr J₁ Q₁ := by funext p; rw [hφ_def, llr]
-    -- `J₁[φ] = (klDiv J₁ Q₁).toReal` (probability-measure correction terms vanish)
-    have hJφ : J₁[φ] = (klDiv J₁ Q₁).toReal := by
-      rw [hφ_llr, toReal_klDiv_of_measure_eq hJQ_ac (by rw [measure_univ, measure_univ])]
-    -- `hdens_ae : (Q₁.rnDeriv J₁ p).toReal = Real.exp (−φ p)` (φ = log dJ₁/dQ₁)
-    have hdens_ae : ∀ᵐ p ∂J₁, (Q₁.rnDeriv J₁ p).toReal = Real.exp (-φ p) := by
-      filter_upwards [hdens_log] with p hp; rw [hp, hφ_def]
-    -- the product density on `Fin n → ℝ × ℝ`
-    set ρ : (Fin n → ℝ × ℝ) → ℝ≥0∞ := fun w => ∏ i, Q₁.rnDeriv J₁ (w i) with hρ_def
-    -- `pi Q₁ = (pi J₁).withDensity ρ` (tensorize via `pi_withDensity`)
-    have hQ_wd_rn : Q₁ = J₁.withDensity (Q₁.rnDeriv J₁) :=
-      (Measure.withDensity_rnDeriv_eq Q₁ J₁ hQJ_ac).symm
-    have hrn_meas : Measurable (Q₁.rnDeriv J₁) := Measure.measurable_rnDeriv Q₁ J₁
-    have hpiQ_wd : Measure.pi (fun _ : Fin n => Q₁)
-        = (Measure.pi (fun _ : Fin n => J₁)).withDensity ρ := by
-      have hsf : ∀ _ : Fin n, SigmaFinite (J₁.withDensity (Q₁.rnDeriv J₁)) := by
-        intro _; rw [← hQ_wd_rn]; infer_instance
-      have := pi_withDensity (fun _ : Fin n => J₁) (fun _ => Q₁.rnDeriv J₁)
-        (fun _ => hrn_meas)
-      rw [hρ_def]
-      calc Measure.pi (fun _ : Fin n => Q₁)
-          = Measure.pi (fun _ : Fin n => J₁.withDensity (Q₁.rnDeriv J₁)) := by
-            simp_rw [← hQ_wd_rn]
-        _ = (Measure.pi (fun _ : Fin n => J₁)).withDensity
-              (fun w => ∏ i, Q₁.rnDeriv J₁ (w i)) := this
-    -- mass of `B` via the density representation + the pointwise bound on `B`
-    rw [hpiQ_wd, withDensity_apply _ hB_meas]
-    -- lift the per-coordinate density / finiteness facts to `pi J₁`-a.e.
-    have hrn_lt_top : ∀ᵐ p ∂J₁, Q₁.rnDeriv J₁ p < ∞ := Measure.rnDeriv_lt_top Q₁ J₁
-    have hdens_pi : ∀ᵐ w ∂(Measure.pi (fun _ : Fin n => J₁)),
-        ∀ i, (Q₁.rnDeriv J₁ (w i)).toReal = Real.exp (-φ (w i)) :=
-      Filter.eventually_all.2 fun i =>
-        (MeasureTheory.Measure.tendsto_eval_ae_ae
-          (μ := fun _ : Fin n => J₁) (i := i)).eventually hdens_ae
-    have hfin_pi : ∀ᵐ w ∂(Measure.pi (fun _ : Fin n => J₁)),
-        ∀ i, Q₁.rnDeriv J₁ (w i) ≠ ∞ :=
-      Filter.eventually_all.2 fun i =>
-        (MeasureTheory.Measure.tendsto_eval_ae_ae
-          (μ := fun _ : Fin n => J₁) (i := i)).eventually
-          (hrn_lt_top.mono fun p hp => hp.ne)
-    -- on `B`, `ρ w ≤ ofReal (exp (−(n·I − n·3δ)))` `[pi J₁]`-a.e.
-    have hbound : ∀ᵐ w ∂(Measure.pi (fun _ : Fin n => J₁)),
-        w ∈ B → ρ w ≤ ENNReal.ofReal
-          (Real.exp (-((n : ℝ) * (klDiv J₁ Q₁).toReal - (n : ℝ) * (3 * δ)))) := by
-      filter_upwards [hdens_pi, hfin_pi] with w hw_dens hw_fin hwB
-      -- `ρ w ≠ ∞` (finite product of finite factors), and its `toReal = exp(−∑φ)`
-      have hρ_ne_top : ρ w ≠ ∞ := by
-        rw [hρ_def]; exact ENNReal.prod_ne_top (fun i _ => hw_fin i)
-      have hρ_toReal : (ρ w).toReal = Real.exp (-(∑ i, φ (w i))) := by
-        rw [hρ_def, ENNReal.toReal_prod]
-        rw [show (-(∑ i, φ (w i))) = ∑ i, (-φ (w i)) by rw [Finset.sum_neg_distrib],
-          Real.exp_sum]
-        exact Finset.prod_congr rfl fun i _ => hw_dens i
-      -- on `B`, `∑φ(wᵢ) ≥ n(J₁[φ] − δ)`, so `exp(−∑φ) ≤ exp(−(n·I − n·3δ))`
-      rw [hB_def, Set.mem_setOf_eq, abs_lt] at hwB
-      obtain ⟨hwB_lo, hwB_hi⟩ := hwB
-      have hsum_ge : (n : ℝ) * ((klDiv J₁ Q₁).toReal - δ) ≤ ∑ i, φ (w i) := by
-        rw [← hJφ]
-        have hnR : (0 : ℝ) < n := by exact_mod_cast hn0
-        have : J₁[φ] - δ < (∑ i, φ (w i)) / (n : ℝ) := by linarith
-        rw [lt_div_iff₀ hnR] at this
-        nlinarith [this]
-      have hexp_le : Real.exp (-(∑ i, φ (w i)))
-          ≤ Real.exp (-((n : ℝ) * (klDiv J₁ Q₁).toReal - (n : ℝ) * (3 * δ))) := by
-        apply Real.exp_le_exp.mpr
-        have hδ3 : (n : ℝ) * ((klDiv J₁ Q₁).toReal - δ)
-            ≥ (n : ℝ) * (klDiv J₁ Q₁).toReal - (n : ℝ) * (3 * δ) := by
-          have hnR : (0 : ℝ) ≤ n := by positivity
-          nlinarith [hnR, hδ.le]
-        linarith [hsum_ge]
-      rw [← ENNReal.ofReal_toReal hρ_ne_top, hρ_toReal]
-      exact ENNReal.ofReal_le_ofReal hexp_le
-    -- integrate the bound over `B`
-    calc ∫⁻ w in B, ρ w ∂(Measure.pi (fun _ : Fin n => J₁))
-        ≤ ∫⁻ _ in B, ENNReal.ofReal
-            (Real.exp (-((n : ℝ) * (klDiv J₁ Q₁).toReal - (n : ℝ) * (3 * δ))))
-            ∂(Measure.pi (fun _ : Fin n => J₁)) := by
-          refine setLIntegral_mono_ae measurable_const.aemeasurable ?_
-          filter_upwards [hbound] with w hw using hw
-      _ ≤ ENNReal.ofReal
-            (Real.exp (-((n : ℝ) * (klDiv J₁ Q₁).toReal - (n : ℝ) * (3 * δ)))) := by
-          rw [setLIntegral_const]
-          calc ENNReal.ofReal (Real.exp _) * (Measure.pi (fun _ : Fin n => J₁)) B
-              ≤ ENNReal.ofReal (Real.exp _) * 1 :=
-                mul_le_mul_left' prob_le_one _
-            _ = ENNReal.ofReal (Real.exp _) := mul_one _
+    -- **Change-of-measure core** (`awgn_changeOfMeasure_pi_mass_le`, G-2 via `pi_withDensity`):
+    -- `Q₁ ≪ J₁`, so `pi Q₁ = (pi J₁).withDensity (∏ᵢ Q₁.rnDeriv J₁ (wᵢ))`; on `B` the
+    -- product density `= exp(−∑φ) ≤ exp(−n(J₁[φ]−δ))` with `J₁[φ] = (klDiv J₁ Q₁).toReal`,
+    -- giving `(pi Q₁) B ≤ exp(−(n·I − n·3δ))` since `δ ≤ 3δ`.
+    exact awgn_changeOfMeasure_pi_mass_le hP_ne hN_ne n hn0 hδ J₁ Q₁ hJ₁_def hQ₁_def φ hφ_def
+      B hB_def
 
 /-! ## Per-codeword power constraint -/
 
