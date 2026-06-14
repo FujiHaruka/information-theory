@@ -97,6 +97,89 @@ private lemma map_projMap_real
   rw [h_inter, ENNReal.toReal_div]
   rfl
 
+private lemma fibre_oneortwo_of_mem_projectionExcept
+    {n : ℕ} (i : Fin n) {A : Finset (Fin n → Bool)}
+    (y : {j : Fin n // j ≠ i} → Bool) (hy : y ∈ projectionExcept i A) :
+    (A.filter (fun x => projMap i x = y)).card = 1 ∨
+    (A.filter (fun x => projMap i x = y)).card = 2 := by
+  classical
+  have hext_ne : extension i false y ≠ extension i true y := by
+    intro h
+    have := congrFun h i
+    simp at this
+  have h_y_in_A : extension i false y ∈ A ∨ extension i true y ∈ A := by
+    rw [show projectionExcept i A = A.image (projMap i) from rfl,
+        Finset.mem_image] at hy
+    obtain ⟨x, hxA, hxy⟩ := hy
+    have hxext : x = extension i (x i) y := (projMap_eq_iff i x y).mp hxy
+    cases hb : x i with
+    | false => left; rw [hxext, hb] at hxA; exact hxA
+    | true => right; rw [hxext, hb] at hxA; exact hxA
+  have h_filter_eq : A.filter (fun x => projMap i x = y) =
+      (({extension i false y} : Finset _).filter (· ∈ A)) ∪
+      (({extension i true y} : Finset _).filter (· ∈ A)) := by
+    ext x
+    simp only [Finset.mem_filter, Finset.mem_union, Finset.mem_singleton]
+    constructor
+    · rintro ⟨hxA, hpx⟩
+      have hxext : x = extension i (x i) y := (projMap_eq_iff i x y).mp hpx
+      cases hb : x i with
+      | false => left; exact ⟨by rw [hxext, hb], hxA⟩
+      | true => right; exact ⟨by rw [hxext, hb], hxA⟩
+    · rintro (⟨rfl, hxA⟩ | ⟨rfl, hxA⟩) <;> exact ⟨hxA, by simp⟩
+  have h_disjoint :
+      Disjoint (({extension i false y} : Finset _).filter (· ∈ A))
+        (({extension i true y} : Finset _).filter (· ∈ A)) := by
+    apply Finset.disjoint_filter_filter
+    rw [Finset.disjoint_singleton]; exact hext_ne
+  rcases h_y_in_A with h0 | h1
+  · by_cases h1 : extension i true y ∈ A
+    · right
+      rw [h_filter_eq, Finset.card_union_of_disjoint h_disjoint]
+      rw [show (({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A))
+            = {extension i false y} from by
+              apply Finset.filter_eq_self.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
+          show (({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A))
+            = {extension i true y} from by
+              apply Finset.filter_eq_self.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1]
+      simp
+    · left
+      rw [h_filter_eq, Finset.card_union_of_disjoint h_disjoint]
+      rw [show (({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A))
+            = {extension i false y} from by
+              apply Finset.filter_eq_self.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
+          show (({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A))
+            = ∅ from by
+              apply Finset.filter_eq_empty_iff.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1]
+      simp
+  · by_cases h0 : extension i false y ∈ A
+    · right
+      rw [h_filter_eq, Finset.card_union_of_disjoint h_disjoint]
+      rw [show (({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A))
+            = {extension i false y} from by
+              apply Finset.filter_eq_self.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
+          show (({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A))
+            = {extension i true y} from by
+              apply Finset.filter_eq_self.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1]
+      simp
+    · left
+      rw [h_filter_eq, Finset.card_union_of_disjoint h_disjoint]
+      rw [show (({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A))
+            = ∅ from by
+              apply Finset.filter_eq_empty_iff.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
+          show (({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A))
+            = {extension i true y} from by
+              apply Finset.filter_eq_self.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1]
+      simp
+
 /-- The entropy of the projection `X_{≠i}` under `μ_A` in closed form:
 `log |A| − 2 (|A| − |π_{≠i}(A)|) · log 2 / |A|`. -/
 private lemma entropy_projMap_eq
@@ -155,94 +238,8 @@ private lemma entropy_projMap_eq
   set S1 : Finset ({j : Fin n // j ≠ i} → Bool) :=
     proj.filter (fun y => fibre y = 1) with hS1_def
   -- Each y ∈ proj has fibre size 1 or 2.
-  have h_fibre_oneortwo : ∀ y ∈ proj, fibre y = 1 ∨ fibre y = 2 := by
-    intro y hy
-    -- A.filter (projMap i x = y) ⊆ {ext0 y, ext1 y}, and at least one in A.
-    have hext_ne : extension i false y ≠ extension i true y := by
-      intro h
-      have := congrFun h i
-      simp at this
-    -- y ∈ proj = A.image (projMap i), so at least one extension is in A.
-    have h_y_in_A : extension i false y ∈ A ∨ extension i true y ∈ A := by
-      show extension i false y ∈ A ∨ extension i true y ∈ A
-      rw [show proj = A.image (projMap i) from rfl, Finset.mem_image] at hy
-      obtain ⟨x, hxA, hxy⟩ := hy
-      have hxext : x = extension i (x i) y := (projMap_eq_iff i x y).mp hxy
-      cases hb : x i with
-      | false => left; rw [hxext, hb] at hxA; exact hxA
-      | true => right; rw [hxext, hb] at hxA; exact hxA
-    -- fibre y = (A.filter (projMap i x = y)).card; characterize.
-    -- A.filter (· = y) = ({ext0 y} ∩ A) ∪ ({ext1 y} ∩ A) (as Finsets).
-    have h_filter_eq : A.filter (fun x => projMap i x = y) =
-        (({extension i false y} : Finset _).filter (· ∈ A)) ∪
-        (({extension i true y} : Finset _).filter (· ∈ A)) := by
-      ext x
-      simp only [Finset.mem_filter, Finset.mem_union, Finset.mem_singleton]
-      constructor
-      · rintro ⟨hxA, hpx⟩
-        have hxext : x = extension i (x i) y := (projMap_eq_iff i x y).mp hpx
-        cases hb : x i with
-        | false => left; exact ⟨by rw [hxext, hb], hxA⟩
-        | true => right; exact ⟨by rw [hxext, hb], hxA⟩
-      · rintro (⟨rfl, hxA⟩ | ⟨rfl, hxA⟩) <;> exact ⟨hxA, by simp⟩
-    have h_disjoint :
-        Disjoint (({extension i false y} : Finset _).filter (· ∈ A))
-          (({extension i true y} : Finset _).filter (· ∈ A)) := by
-      apply Finset.disjoint_filter_filter
-      rw [Finset.disjoint_singleton]; exact hext_ne
-    rcases h_y_in_A with h0 | h1
-    · by_cases h1 : extension i true y ∈ A
-      · -- both in A: fibre = 2
-        right
-        show (A.filter (fun x => projMap i x = y)).card = 2
-        rw [h_filter_eq, Finset.card_union_of_disjoint h_disjoint]
-        rw [show (({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A))
-              = {extension i false y} from by
-                apply Finset.filter_eq_self.mpr
-                intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
-            show (({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A))
-              = {extension i true y} from by
-                apply Finset.filter_eq_self.mpr
-                intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1]
-        simp
-      · -- only h0: fibre = 1
-        left
-        show (A.filter (fun x => projMap i x = y)).card = 1
-        rw [h_filter_eq, Finset.card_union_of_disjoint h_disjoint]
-        rw [show (({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A))
-              = {extension i false y} from by
-                apply Finset.filter_eq_self.mpr
-                intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
-            show (({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A))
-              = ∅ from by
-                apply Finset.filter_eq_empty_iff.mpr
-                intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1]
-        simp
-    · by_cases h0 : extension i false y ∈ A
-      · right
-        show (A.filter (fun x => projMap i x = y)).card = 2
-        rw [h_filter_eq, Finset.card_union_of_disjoint h_disjoint]
-        rw [show (({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A))
-              = {extension i false y} from by
-                apply Finset.filter_eq_self.mpr
-                intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
-            show (({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A))
-              = {extension i true y} from by
-                apply Finset.filter_eq_self.mpr
-                intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1]
-        simp
-      · left
-        show (A.filter (fun x => projMap i x = y)).card = 1
-        rw [h_filter_eq, Finset.card_union_of_disjoint h_disjoint]
-        rw [show (({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A))
-              = ∅ from by
-                apply Finset.filter_eq_empty_iff.mpr
-                intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
-            show (({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A))
-              = {extension i true y} from by
-                apply Finset.filter_eq_self.mpr
-                intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1]
-        simp
+  have h_fibre_oneortwo : ∀ y ∈ proj, fibre y = 1 ∨ fibre y = 2 :=
+    fun y hy => fibre_oneortwo_of_mem_projectionExcept i y hy
   -- proj = S1 ∪ S2, disjoint
   have hS_disjoint : Disjoint S1 S2 := by
     apply Finset.disjoint_filter.mpr

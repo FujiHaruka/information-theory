@@ -604,6 +604,92 @@ For the floor matrix, the conditional type class equals a product (over rows)
 of per-row type classes on `β`, and we lower-bound its cardinality via the
 per-row multinomial Stirling-free bound. -/
 
+-- Joint-type membership condition is equivalent to per-fibre slice condition.
+lemma conditionalTypeClass_joint_iff_slice
+    {n : ℕ} (x : Fin n → α) (c : α × β → ℕ) (y : Fin n → β) :
+    (∀ a b, (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card = c (a, b)) ↔
+    (∀ a b, (Finset.univ.filter
+        (fun i : {k : Fin n // x k = a} => y i.val = b)).card = c (a, b)) := by
+  classical
+  constructor
+  · intro hP a b
+    have h_bij :
+        (Finset.univ.filter (fun i : {k : Fin n // x k = a} => y i.val = b)).card
+          = (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card := by
+      apply Finset.card_bij
+        (fun (i : {k : Fin n // x k = a})
+          (_ : i ∈ Finset.univ.filter (fun i : {k : Fin n // x k = a} => y i.val = b)) =>
+          i.val)
+      · intro i hi
+        rcases Finset.mem_filter.mp hi with ⟨_, h_yb⟩
+        exact Finset.mem_filter.mpr ⟨Finset.mem_univ _, i.property, h_yb⟩
+      · intro i _ j _ heq; exact Subtype.ext heq
+      · intro k hk
+        rcases Finset.mem_filter.mp hk with ⟨_, hxk_a, hyk_b⟩
+        exact ⟨⟨k, hxk_a⟩, Finset.mem_filter.mpr ⟨Finset.mem_univ _, hyk_b⟩, rfl⟩
+    rw [h_bij, hP a b]
+  · intro hQ a b
+    have h_bij :
+        (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card
+          = (Finset.univ.filter (fun i : {k : Fin n // x k = a} => y i.val = b)).card := by
+      apply Finset.card_bij
+        (fun (k : Fin n) (hk : k ∈ Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)) =>
+          (⟨k, (Finset.mem_filter.mp hk).2.1⟩ : {k : Fin n // x k = a}))
+      · intro k hk
+        rcases Finset.mem_filter.mp hk with ⟨_, _, h_yb⟩
+        exact Finset.mem_filter.mpr ⟨Finset.mem_univ _, h_yb⟩
+      · intro k₁ _ k₂ _ heq; exact Subtype.ext_iff.mp heq
+      · intro j hj
+        rcases Finset.mem_filter.mp hj with ⟨_, h_yb⟩
+        exact ⟨j.val, Finset.mem_filter.mpr ⟨Finset.mem_univ _, j.property, h_yb⟩, rfl⟩
+    rw [h_bij, hQ a b]
+
+-- Filter card is preserved when precomposing with an equiv's inverse.
+lemma filter_card_comp_equiv_symm_eq
+    {γ : Type*} [Fintype γ] {m : ℕ} (e : γ ≃ Fin m)
+    (f : γ → β) (b : β) :
+    (Finset.univ.filter (fun j : Fin m => f (e.symm j) = b)).card
+      = (Finset.univ.filter (fun i : γ => f i = b)).card := by
+  apply Finset.card_bij (fun (j : Fin m) _ => e.symm j)
+  · intro j hj
+    exact Finset.mem_filter.mpr ⟨Finset.mem_univ _, (Finset.mem_filter.mp hj).2⟩
+  · intro j₁ _ j₂ _ heq; exact e.symm.injective heq
+  · intro i hi
+    exact ⟨e i, Finset.mem_filter.mpr ⟨Finset.mem_univ _, by simp [(Finset.mem_filter.mp hi).2]⟩,
+      by simp⟩
+
+-- Per-fibre slice type is in bijection with the per-row type class on Fin (Ta a).
+noncomputable def sliceSubtype_equiv_typeClassByCount
+    {n : ℕ} (x : Fin n → α) (c : α × β → ℕ) (a : α)
+    (e : {i : Fin n // x i = a} ≃ Fin (typeCount x a)) :
+    {ga : {i : Fin n // x i = a} → β //
+      ∀ b, (Finset.univ.filter (fun i : {i : Fin n // x i = a} => ga i = b)).card = c (a, b)}
+    ≃ typeClassByCount (α := β) (n := typeCount x a) (fun b => c (a, b)) :=
+  { toFun := fun ga =>
+      ⟨fun j => ga.val (e.symm j), fun b => by
+        show typeCount (fun j => ga.val (e.symm j)) b = c (a, b)
+        simp only [typeCount]
+        show (Finset.univ.filter (fun j : Fin (typeCount x a) => ga.val (e.symm j) = b)).card
+            = c (a, b)
+        rw [filter_card_comp_equiv_symm_eq e ga.val b]
+        exact ga.property b⟩
+    invFun := fun g =>
+      ⟨fun i => g.val (e i), fun b => by
+        have h : (Finset.univ.filter (fun j : Fin (typeCount x a) => g.val j = b)).card
+            = c (a, b) := g.property b
+        rw [← h]
+        apply Finset.card_bij (fun (i : {i : Fin n // x i = a}) _ => e i)
+        · intro i hi
+          exact Finset.mem_filter.mpr ⟨Finset.mem_univ _, (Finset.mem_filter.mp hi).2⟩
+        · intro i₁ _ i₂ _ heq; exact e.injective heq
+        · intro j hj
+          exact ⟨e.symm j, Finset.mem_filter.mpr ⟨Finset.mem_univ _,
+            by simp [(Finset.mem_filter.mp hj).2]⟩, by simp⟩⟩
+    left_inv := fun ga => by
+      ext i; show ga.val (e.symm (e i)) = ga.val i; simp
+    right_inv := fun g => by
+      ext j; show g.val (e (e.symm j)) = g.val j; simp }
+
 /-- **Bijection cardinality**: the conditional type class card equals
 the product over `a` of per-row type class cards on `Fin (typeCount x a) → β`.
 
@@ -618,186 +704,52 @@ lemma conditionalTypeClass_card_eq_prod_typeClass
       = (conditionalTypeClass (β := β) x c).toFinite.toFinset.card := by
   classical
   set Ta : α → ℕ := fun a => typeCount x a with hTa_def
-  -- Step 1: cardinality of subtype S a = Fin (Ta a).
-  -- Build per-a equiv: ({i : Fin n // x i = a} ≃ Fin (Ta a)).
-  have hcard_S : ∀ a : α,
-      Fintype.card {i : Fin n // x i = a} = Ta a := by
-    intro a
-    -- {i : Fin n // x i = a} = filter (x i = a) Finset.univ
-    have : Fintype.card {i : Fin n // x i = a}
-        = (Finset.univ.filter (fun i : Fin n => x i = a)).card := by
-      rw [Fintype.card_subtype]
-    rw [this]
-    rfl
-  -- Pointwise card: card ({i // x i = a} → β) and card (Fin (Ta a) → β) all match.
-  -- We don't construct the explicit Equiv; instead, we work via card_pi and Fintype.card_subtype.
-  -- The conditionalTypeClass x c is in bijection with {y : Fin n → β // ∀ a, restr ∈ T_row a},
-  -- which is in bijection with ∀ a, {g_a : (S a → β) // typeClass-condition}.
-  -- We use Fintype.card_eq_of_equiv (Equiv-based card equality).
-  -- Build the Equiv directly.
   set Sa : α → Type _ := fun a => {i : Fin n // x i = a} with hSa_def
+  -- Per-fibre cardinality: card (Sa a) = Ta a.
+  have hcard_S : ∀ a : α, Fintype.card (Sa a) = Ta a := by
+    intro a
+    have : Fintype.card (Sa a) = (Finset.univ.filter (fun i : Fin n => x i = a)).card :=
+      Fintype.card_subtype _
+    rw [this]; rfl
   -- Equiv #1: (Fin n → β) ≃ (∀ a, Sa a → β).
-  -- Direct construction via Equiv mk.
   let φ : (Fin n → β) ≃ (∀ a, Sa a → β) :=
     { toFun := fun y a i => y i.val
       invFun := fun g i => g (x i) ⟨i, rfl⟩
       left_inv := fun y => by funext i; rfl
-      right_inv := fun g => by
-        funext a i
-        rcases i with ⟨k, hk⟩
-        subst hk
-        rfl }
-  -- Check forward direction: φ y a ⟨i, hi⟩ = y i.
-  have hφ_apply : ∀ (y : Fin n → β) (a : α) (i : Sa a), φ y a i = y i.val := by
-    intros; rfl
-  -- Build the constrained bijection.
-  -- We use `Equiv.subtypeEquiv φ ...`.
+      right_inv := fun g => by funext a i; rcases i with ⟨k, hk⟩; subst hk; rfl }
   set P : (Fin n → β) → Prop :=
     fun y => ∀ a b, (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card = c (a, b)
   set Q : (∀ a, Sa a → β) → Prop :=
     fun g => ∀ a b, (Finset.univ.filter (fun i : Sa a => g a i = b)).card = c (a, b)
-  -- Membership condition equivalence under φ.
-  have hPQ : ∀ y, P y ↔ Q (φ y) := by
-    intro y
-    constructor
-    · intro hP a b
-      -- card {i : Sa a | φ y a i = b} = card {i : Sa a | y i.val = b}
-      --   = card {i : Fin n | x i = a ∧ y i = b} = c (a, b)
-      have h_filter_card :
-          (Finset.univ.filter (fun i : Sa a => φ y a i = b)).card
-            = (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card := by
-        -- Bijection: i : Sa a (i.e. ⟨k, x k = a⟩) ↔ k : Fin n with x k = a ∧ y k = b.
-        rw [show (Finset.univ.filter (fun i : Sa a => φ y a i = b))
-              = (Finset.univ.filter (fun i : Sa a => y i.val = b))
-            from Finset.filter_congr (fun i _ => by rw [hφ_apply])]
-        -- Now use subtype filter card = filter on Fin n.
-        apply Finset.card_bij
-          (fun (i : Sa a) (_ : i ∈ Finset.univ.filter (fun i : Sa a => y i.val = b)) => i.val)
-        · -- mapsTo
-          intro i hi
-          rcases Finset.mem_filter.mp hi with ⟨_, h_yb⟩
-          refine Finset.mem_filter.mpr ⟨Finset.mem_univ _, ?_, h_yb⟩
-          exact i.property
-        · -- injective on
-          intro i hi j hj heq
-          exact Subtype.ext heq
-        · -- surjective on
-          intro k hk
-          rcases Finset.mem_filter.mp hk with ⟨_, hxk_a, hyk_b⟩
-          refine ⟨⟨k, hxk_a⟩, ?_, rfl⟩
-          exact Finset.mem_filter.mpr ⟨Finset.mem_univ _, hyk_b⟩
-      rw [h_filter_card]
-      exact hP a b
-    · intro hQ a b
-      have h_filter_card :
-          (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card
-            = (Finset.univ.filter (fun i : Sa a => φ y a i = b)).card := by
-        rw [show (Finset.univ.filter (fun i : Sa a => φ y a i = b))
-              = (Finset.univ.filter (fun i : Sa a => y i.val = b))
-            from Finset.filter_congr (fun i _ => by rw [hφ_apply])]
-        apply Finset.card_bij
-          (fun (k : Fin n) (hk : k ∈ Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)) =>
-            (⟨k, (Finset.mem_filter.mp hk).2.1⟩ : Sa a))
-        · intro k hk
-          rcases Finset.mem_filter.mp hk with ⟨_, _, h_yb⟩
-          refine Finset.mem_filter.mpr ⟨Finset.mem_univ _, h_yb⟩
-        · intro k₁ hk₁ k₂ hk₂ heq
-          exact Subtype.ext_iff.mp heq
-        · intro j hj
-          rcases Finset.mem_filter.mp hj with ⟨_, h_yb⟩
-          refine ⟨j.val, ?_, rfl⟩
-          refine Finset.mem_filter.mpr ⟨Finset.mem_univ _, j.property, h_yb⟩
-      rw [h_filter_card]; exact hQ a b
+  -- Membership condition is preserved by φ via conditionalTypeClass_joint_iff_slice.
+  have hPQ : ∀ y, P y ↔ Q (φ y) := conditionalTypeClass_joint_iff_slice x c
   -- ψ : {y // P y} ≃ {g // Q g}
   let ψ : {y // P y} ≃ {g // Q g} := φ.subtypeEquiv hPQ
-  -- {g // Q g} ≃ ∀ a, {ga : Sa a → β // ∀ b, (filter ... ).card = c (a, b)}
+  -- χ : {g // Q g} ≃ ∀ a, {ga : Sa a → β // per-row count condition}
   let χ : {g : ∀ a, Sa a → β // Q g} ≃
       ∀ a, {ga : Sa a → β // ∀ b, (Finset.univ.filter (fun i : Sa a => ga i = b)).card = c (a, b)} :=
     { toFun := fun g a => ⟨g.val a, fun b => g.property a b⟩
       invFun := fun g => ⟨fun a => (g a).val, fun a b => (g a).property b⟩
       left_inv := fun _ => rfl
       right_inv := fun _ => rfl }
-  -- For each a, the subtype `{ga // ∀ b, count = c (a, b)}` is in bijection with
-  -- `typeClassByCount (n := Ta a) (fun b => c (a, b))` on `Fin (Ta a) → β`,
-  -- via the cardinality equiv Sa a ≃ Fin (Ta a).
-  -- We construct the per-a equiv.
-  let eSa : ∀ a, Sa a ≃ Fin (Ta a) := fun a =>
-    Fintype.equivFinOfCardEq (hcard_S a)
-  -- Helper: per-a filter card equality between Sa a and Fin (Ta a) via eSa.
-  have h_filter_transport : ∀ a (ga : Sa a → β) (b : β),
-      (Finset.univ.filter (fun j : Fin (Ta a) => ga ((eSa a).symm j) = b)).card
-        = (Finset.univ.filter (fun i : Sa a => ga i = b)).card := by
-    intros a ga b
-    apply Finset.card_bij
-      (fun (j : Fin (Ta a))
-        (_ : j ∈ Finset.univ.filter (fun j : Fin (Ta a) => ga ((eSa a).symm j) = b)) =>
-        (eSa a).symm j)
-    · intro j hj
-      refine Finset.mem_filter.mpr ⟨Finset.mem_univ _, ?_⟩
-      exact (Finset.mem_filter.mp hj).2
-    · intro j₁ _ j₂ _ heq
-      exact (eSa a).symm.injective heq
-    · intro i hi
-      refine ⟨eSa a i, ?_, by simp⟩
-      refine Finset.mem_filter.mpr ⟨Finset.mem_univ _, ?_⟩
-      rw [Equiv.symm_apply_apply]
-      exact (Finset.mem_filter.mp hi).2
-  -- θ a : per-row subtype ≃ typeClassByCount (Ta a, fun b => c (a, b)).
-  let θ : ∀ a, {ga : Sa a → β // ∀ b, (Finset.univ.filter (fun i : Sa a => ga i = b)).card = c (a, b)}
-      ≃ typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b)) := fun a =>
-    { toFun := fun ga =>
-        ⟨fun j => ga.val ((eSa a).symm j), by
-          intro b
-          show typeCount _ b = c (a, b)
-          unfold typeCount
-          rw [h_filter_transport a ga.val b]
-          exact ga.property b⟩
-      invFun := fun g =>
-        ⟨fun i => g.val ((eSa a) i), by
-          intro b
-          have h : (Finset.univ.filter (fun j : Fin (Ta a) => g.val j = b)).card = c (a, b) :=
-            g.property b
-          -- want: (Finset.univ.filter (fun i : Sa a => g.val (eSa a i) = b)).card = c (a, b)
-          rw [← h]
-          apply Finset.card_bij
-            (fun (i : Sa a)
-              (_ : i ∈ Finset.univ.filter (fun i : Sa a => g.val (eSa a i) = b)) =>
-              eSa a i)
-          · intro i hi
-            refine Finset.mem_filter.mpr ⟨Finset.mem_univ _, ?_⟩
-            exact (Finset.mem_filter.mp hi).2
-          · intro i₁ _ i₂ _ heq
-            exact (eSa a).injective heq
-          · intro j hj
-            refine ⟨(eSa a).symm j, ?_, by simp⟩
-            refine Finset.mem_filter.mpr ⟨Finset.mem_univ _, ?_⟩
-            rw [Equiv.apply_symm_apply]
-            exact (Finset.mem_filter.mp hj).2⟩
-      left_inv := fun ga => by
-        ext i
-        show ga.val ((eSa a).symm (eSa a i)) = ga.val i
-        rw [Equiv.symm_apply_apply]
-      right_inv := fun g => by
-        ext j
-        show g.val ((eSa a) ((eSa a).symm j)) = g.val j
-        rw [Equiv.apply_symm_apply] }
-  -- Combine.
+  -- Per-a Equiv: Sa a ≃ Fin (Ta a) from cardinality equality.
+  let eSa : ∀ a, Sa a ≃ Fin (Ta a) := fun a => Fintype.equivFinOfCardEq (hcard_S a)
+  -- θ a : per-row subtype ≃ typeClassByCount (n := Ta a, fun b => c (a, b))
+  -- via sliceSubtype_equiv_typeClassByCount.
+  let θ := fun a => sliceSubtype_equiv_typeClassByCount x c a (eSa a)
+  -- Combine all three equivs into a single bijection.
   let final : {y // P y} ≃
       ∀ a, typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b)) :=
     ψ.trans (χ.trans (Equiv.piCongrRight θ))
-  -- Wrap as Fintype.card equalities. Attach Fintype instances for each per-row set.
   haveI hFinRow : ∀ a, Fintype
       (typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b))) :=
     fun a => (typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b))).toFinite.fintype
-  -- ∀-Fintype is from the per-row instances.
   haveI : Fintype (∀ a, typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b))) :=
     Pi.instFintype
-  -- per-row toFinset.card ↔ Fintype.card
   have h_per_card_eq : ∀ a,
       (typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b))).toFinite.toFinset.card
         = Fintype.card (typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b))) := by
     intro a; rw [(typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b))).toFinite.card_toFinset]
-  -- LHS: ∏ a, toFinset.card  =  ∏ a, Fintype.card = Fintype.card (∀ a, ...).
   have h_LHS_eq : (∏ a : α, (typeClassByCount (α := β) (n := Ta a)
         (fun b => c (a, b))).toFinite.toFinset.card)
       = Fintype.card (∀ a, typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b))) := by
@@ -805,18 +757,14 @@ lemma conditionalTypeClass_card_eq_prod_typeClass
           (fun b => c (a, b))).toFinite.toFinset.card)
         = ∏ a : α, Fintype.card (typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b)))
         from Finset.prod_congr rfl (fun a _ => h_per_card_eq a)]
-    -- Fintype.card_pi: card (∀ a, X a) = ∏ a, card (X a)
     convert (Fintype.card_pi (ι := α)
       (α := fun a => typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b)))).symm using 2
   rw [h_LHS_eq]
-  -- Fintype.card (∀ a, T_row a) = Fintype.card {y // P y} via final.
   have h_card_eq : Fintype.card (∀ a, typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b)))
       = Fintype.card {y // P y} :=
     (Fintype.card_congr final).symm
   rw [h_card_eq]
-  -- Fintype.card {y // P y} = card (conditionalTypeClass x c) via toFinset.card.
   rw [(conditionalTypeClass (β := β) x c).toFinite.card_toFinset]
-  -- Both subtype cards on {y // P y}, but Fintype instances differ — use Fintype.card_subtype_eq.
   exact Fintype.card_congr (Equiv.refl _)
 
 /-- **Cardinality lower bound for conditional type class** (product of per-row
