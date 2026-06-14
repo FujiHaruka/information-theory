@@ -27,6 +27,73 @@ open scoped ENNReal NNReal Topology
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 
+theorem lintegral_ofReal_neg_ne_top_of_integrable {α : Type*} {m : MeasurableSpace α}
+    {μ : Measure α} {g : α → ℝ} (hg : Integrable g μ) :
+    (∫⁻ x, ENNReal.ofReal (-(g x)) ∂μ) ≠ ⊤ := by
+  refine ne_top_of_le_ne_top hg.hasFiniteIntegral.ne (lintegral_mono fun x => ?_)
+  rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs]
+  exact ENNReal.ofReal_le_ofReal (le_trans (neg_le_abs _) (le_refl _))
+
+theorem mul_abs_log_eq_abs_negMulLog_of_nonneg {r : ℝ} (hr : 0 ≤ r) :
+    r * |Real.log r| = |Real.negMulLog r| := by
+  rw [Real.negMulLog, neg_mul, abs_neg, abs_mul, abs_of_nonneg hr]
+
+theorem lintegral_enorm_eq_lintegral_ofReal_add_ofReal_neg {α : Type*} {m : MeasurableSpace α}
+    {μ : Measure α} {g : α → ℝ} (hg : Measurable g) :
+    (∫⁻ x, ‖g x‖ₑ ∂μ)
+      = (∫⁻ x, ENNReal.ofReal (g x) ∂μ) + ∫⁻ x, ENNReal.ofReal (-(g x)) ∂μ := by
+  rw [← lintegral_add_left hg.ennreal_ofReal (fun x => ENNReal.ofReal (-(g x)))]
+  apply lintegral_congr; intro x
+  rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs]
+  rcases le_or_gt 0 (g x) with h | h
+  · have hneg : ENNReal.ofReal (-(g x)) = 0 :=
+      ENNReal.ofReal_of_nonpos (by linarith)
+    rw [abs_of_nonneg h, hneg, add_zero]
+  · have hpos : ENNReal.ofReal (g x) = 0 :=
+      ENNReal.ofReal_of_nonpos h.le
+    rw [abs_of_neg h, hpos, zero_add]
+
+theorem lintegral_ofReal_eq_top_of_not_hasFiniteIntegral {α : Type*} {m : MeasurableSpace α}
+    {μ : Measure α} {g : α → ℝ} (hg : Measurable g) (hnotfin : ¬ HasFiniteIntegral g μ)
+    (hneg : (∫⁻ x, ENNReal.ofReal (-(g x)) ∂μ) ≠ ⊤) :
+    (∫⁻ x, ENNReal.ofReal (g x) ∂μ) = ⊤ := by
+  have henorm_top : (∫⁻ x, ‖g x‖ₑ ∂μ) = ⊤ := by
+    by_contra h
+    exact hnotfin (hasFiniteIntegral_iff_enorm.mpr (lt_of_le_of_ne le_top h))
+  rw [lintegral_enorm_eq_lintegral_ofReal_add_ofReal_neg hg] at henorm_top
+  by_contra hA
+  exact (ENNReal.add_lt_top.mpr ⟨lt_of_le_of_ne le_top hA, lt_of_le_of_ne le_top hneg⟩).ne
+    henorm_top
+
+theorem differentialEntropy_eq_neg_integral_mul_log (μ : Measure ℝ) :
+    differentialEntropy μ
+      = - ∫ x, (μ.rnDeriv volume x).toReal * Real.log ((μ.rnDeriv volume x).toReal) ∂volume := by
+  rw [differentialEntropy, ← integral_neg]
+  apply integral_congr_ae; filter_upwards with x
+  change Real.negMulLog ((μ.rnDeriv volume x).toReal)
+    = -((μ.rnDeriv volume x).toReal * Real.log ((μ.rnDeriv volume x).toReal))
+  rw [Real.negMulLog]; ring
+
+theorem differentialEntropyExt_eq_top_of_not_integrable {μ : Measure ℝ} (hac : μ ≪ volume)
+    (hnotint : ¬ Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume)
+    (hBfin : (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((μ.rnDeriv volume x).toReal))) ∂volume)
+      ≠ ⊤) :
+    differentialEntropyExt μ = ⊤ := by
+  set g : ℝ → ℝ := fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal) with hg_def
+  have hg_meas : Measurable g :=
+    Real.continuous_negMulLog.measurable.comp
+      ((Measure.measurable_rnDeriv _ _).ennreal_toReal)
+  have hA_top : (∫⁻ x, ENNReal.ofReal (g x) ∂volume) = ⊤ := by
+    have hnotfin : ¬ HasFiniteIntegral g volume := fun hfin =>
+      hnotint ⟨hg_meas.aestronglyMeasurable, hfin⟩
+    exact lintegral_ofReal_eq_top_of_not_hasFiniteIntegral hg_meas hnotfin hBfin
+  rw [differentialEntropyExt_of_ac hac]
+  change ((∫⁻ x, ENNReal.ofReal (g x) ∂volume : ℝ≥0∞) : EReal)
+      - ((∫⁻ x, ENNReal.ofReal (-(g x)) ∂volume : ℝ≥0∞) : EReal) = ⊤
+  rw [hA_top, EReal.coe_ennreal_top]
+  exact EReal.top_sub (by
+    rw [Ne, EReal.coe_ennreal_eq_top_iff]; exact hBfin)
+
 /-- Fatou lift of the positive-part `lintegral` `A μ = ∫⁻ x, ofReal (negMulLog (rnDeriv μ vol x))`:
 from a.e. convergence of the densities `(μ_n).rnDeriv vol → μ.rnDeriv vol`, the lower bound
 `A μ ≤ liminf (A μ_n)`. Built from `lintegral_liminf_le` with continuity of `negMulLog` and
@@ -104,10 +171,8 @@ theorem differentialEntropyExt_mono_add_of_integrable
   -- (`∫⁻ ofReal(-(negMulLog f)) ≤ ∫⁻ ‖negMulLog f‖ₑ < ⊤`).
   have hBn_fin :
       (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (((Q.map W).rnDeriv volume x).toReal)))
-        ∂volume) ≠ ⊤ := by
-    refine ne_top_of_le_ne_top hW_ent.hasFiniteIntegral.ne (lintegral_mono fun x => ?_)
-    rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs]
-    exact ENNReal.ofReal_le_ofReal (le_trans (neg_le_abs _) (le_refl _))
+        ∂volume) ≠ ⊤ :=
+    lintegral_ofReal_neg_ne_top_of_integrable hW_ent
   -- ↓↓↓ **core, transplanted verbatim from `differentialEntropyExt_mono_add_truncW`** ↓↓↓
   -- abbreviations for the sum law `ν := Q.map (W+V) = (Q.map W) ∗ (Q.map V)` and its density.
   set ν : Measure ℝ := Q.map (fun ω => W ω + V ω) with hν_def
@@ -220,9 +285,8 @@ theorem differentialEntropyExt_mono_add_of_integrable
     -- **global product integrability** of `K (z, x) = fW (x - z) * log (rfun x)` over `μV.prod vol`.
     -- The absolute kernel `fW (x-z) * |log (rfun x)|` integrates (Tonelli, nonneg) to
     -- `∫ x, rfun x * |log r| = ∫ |negMulLog r| < ∞` (`hent_sum`).
-    have habs_eq : ∀ x, rfun x * |Real.log (rfun x)| = |Real.negMulLog (rfun x)| := by
-      intro x
-      rw [Real.negMulLog, neg_mul, abs_neg, abs_mul, abs_of_nonneg (hr_nn x)]
+    have habs_eq : ∀ x, rfun x * |Real.log (rfun x)| = |Real.negMulLog (rfun x)| :=
+      fun x => mul_abs_log_eq_abs_negMulLog_of_nonneg (hr_nn x)
     -- `∫⁻ z, ofReal (fW (x-z)) ∂μV = ofReal (rfun x)`  (a.e. x): the ENNReal convolution density.
     have hsumdens : ν.rnDeriv volume =ᵐ[volume] fun z => ∫⁻ v, fWe (z - v) ∂μV := by
       have hconv : ν = (volume : Measure ℝ).withDensity (fun z => ∫⁻ v, fWe (z - v) ∂μV) := by
@@ -341,11 +405,8 @@ theorem differentialEntropyExt_mono_add_of_integrable
         filter_upwards [hr_avg] with x hx
         rw [integral_mul_const, ← hx]
       -- `differentialEntropy ν = ∫ negMulLog r = -∫ r·log r`.
-      have hent_eq : differentialEntropy ν = - ∫ x, rfun x * Real.log (rfun x) ∂volume := by
-        rw [differentialEntropy, ← integral_neg]
-        apply integral_congr_ae; filter_upwards with x
-        show Real.negMulLog ((ν.rnDeriv volume x).toReal) = -(rfun x * Real.log (rfun x))
-        rw [Real.negMulLog]; ring
+      have hent_eq : differentialEntropy ν = - ∫ x, rfun x * Real.log (rfun x) ∂volume :=
+        differentialEntropy_eq_neg_integral_mul_log ν
       rw [hstep1, hswap, hcollapse, hent_eq]
     -- assemble:  `h(Q.map W) = ∫ z, h(Q.map W) ∂μV ≤ ∫ z, (-∫ log r ∂μWz) ∂μV = h(ν)`.
     calc differentialEntropy (Q.map W)
@@ -359,43 +420,8 @@ theorem differentialEntropyExt_mono_add_of_integrable
       _ = differentialEntropy ν := hRHS_eq
   · -- **Case A (infinite branch)**: `¬ hent_sum` and `B(ν) < ⊤` ⟹ `A(ν) = ⊤` ⟹
     -- `differentialEntropyExt ν = ⊤`, then `h(Q.map W) ≤ ⊤` by `le_top`.
-    set g : ℝ → ℝ := fun x => Real.negMulLog (rfun x) with hg_def
-    have hg_meas : Measurable g :=
-      Real.continuous_negMulLog.measurable.comp
-        ((Measure.measurable_rnDeriv _ _).ennreal_toReal)
-    set Aint : ℝ≥0∞ := ∫⁻ x, ENNReal.ofReal (g x) ∂volume with hA_def
-    set Bint : ℝ≥0∞ := ∫⁻ x, ENNReal.ofReal (-(g x)) ∂volume with hB_def
-    have hB_lt_top : Bint ≠ ⊤ := by rw [hB_def]; exact hBnu_fin
-    have hA_top : Aint = ⊤ := by
-      have hnotfin : ¬ HasFiniteIntegral g volume := fun hfin =>
-        hent_sum ⟨hg_meas.aestronglyMeasurable, hfin⟩
-      have henorm_top : (∫⁻ x, ‖g x‖ₑ ∂volume) = ⊤ := by
-        by_contra h
-        exact hnotfin (hasFiniteIntegral_iff_enorm.mpr (lt_of_le_of_ne le_top h))
-      have hsplit : (∫⁻ x, ‖g x‖ₑ ∂volume) = Aint + Bint := by
-        rw [hA_def, hB_def, ← lintegral_add_left
-          (Measurable.ennreal_ofReal hg_meas) (fun x => ENNReal.ofReal (-(g x)))]
-        apply lintegral_congr; intro x
-        rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs]
-        rcases le_or_gt 0 (g x) with h | h
-        · have hneg : ENNReal.ofReal (-(g x)) = 0 :=
-            ENNReal.ofReal_of_nonpos (by linarith)
-          rw [abs_of_nonneg h, hneg, add_zero]
-        · have hpos : ENNReal.ofReal (g x) = 0 :=
-            ENNReal.ofReal_of_nonpos h.le
-          rw [abs_of_neg h, hpos, zero_add]
-      rw [hsplit] at henorm_top
-      by_contra hA
-      exact (ENNReal.add_lt_top.mpr ⟨lt_of_le_of_ne le_top hA, lt_of_le_of_ne le_top hB_lt_top⟩).ne
-        henorm_top
-    have hdiff_top : differentialEntropyExt ν = ⊤ := by
-      rw [differentialEntropyExt_of_ac hWV_ac_Q]
-      show ((Aint : EReal) - (Bint : EReal)) = ⊤
-      rw [hA_def, hB_def, ← hg_def] at *
-      rw [hA_top, EReal.coe_ennreal_top]
-      exact EReal.top_sub (by
-        rw [Ne, EReal.coe_ennreal_eq_top_iff]; exact hB_lt_top)
-    rw [hdiff_top]; exact le_top
+    rw [differentialEntropyExt_eq_top_of_not_integrable hWV_ac_Q hent_sum hBnu_fin]
+    exact le_top
 
 /-- Per-`n` monotonicity `h(W_n) ≤ h(W_n + V)`, where `W_n := truncW P W n` is the compact-support
 approximation obtained by conditioning `P` on the `W`-event `{|W| ≤ n}`. The preamble supplies the
