@@ -318,10 +318,8 @@ max 907→249**。aspirational DoD「>250→0 / 各 ≤150 (新規 helper)」達
 
 ### dedup フォローアップ候補 (option C で発見、本パス外・任意)
 
-純 footprint 削減の過程で near-verbatim 重複を複数発見。いずれも >250 には関与せず、後続の任意クリーンアップ:
-
-- `OuterN.exists_subcode_maxError_lt_two_mul` (新 public) ≈ `ShannonTheorem.lean:609-690` の subcode max-error trick → 後者を前者の呼び出しに差し替え可。
-- `FailureTendsto.encoder_strong_failure_prob_le_rdAmbient` (新 public wrapper) は RD achievability family の Step-B positivity/indep/marginal 束を再利用可。
+- **#1 DONE** (`d0cabca`): subcode max-error trick の重複を解消。import 方向は **OuterN → ShannonTheorem** ゆえ「ShannonTheorem を OuterN 呼び出しに差し替え」は cycle で不可。逆に下位 (ShannonTheorem) へ `exists_subcode_maxError_lt_two_mul` を移し、inline 重複 (旧 `ShannonTheorem:609-690`) をその呼び出しへ、OuterN の重複定義を削除 (同名前空間で自動解決)。sig byte-identical / axioms 不変 (sorryAx-free) / full build green、純 ~74 行減。
+- **#2 DEAD** (検証済、非機会): `FailureTendsto.encoder_strong_failure_prob_le_rdAmbient` の concrete positivity/indep/marginal 束は **wrapper 1 箇所のみ** (FailureTendsto:382-395) で組まれ、唯一の consumer `codebookAvgFailureStrong_tendsto_zero` に既に再利用済。`AchievabilityPhaseEStrong` は完全 generic (`rdAmbient` 言及 0、docstring のみ)、`Setup` にも具体束なし。consumer が組む X 軸 (iidXs) の indep/ident は wrapper の joint 束とは別系統で重複ではない。**dedup 対象なし。**
 - 各ファイルの既存 `mul_le_mul_left'` deprecation (Walls L1079 等) / longLine / `show`→`change` style nit は別スタイルパス。
 
 ### Hard invariants (Phase 1 の 4 点 + option C 追加分)
