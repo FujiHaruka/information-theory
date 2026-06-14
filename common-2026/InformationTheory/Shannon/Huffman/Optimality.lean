@@ -359,7 +359,7 @@ lemma expectedLength_bridge_R
 /-! ### Probability measure instances for `mergedMeasure` -/
 
 omit [LinearOrder α] [Nonempty α] in
-/-- **Phase 4 helper**: `mergedMeasure P a b hab` is a probability measure (since
+/-- `mergedMeasure P a b hab` is a probability measure (since
 `P` is and the singleton masses sum to `1` on `α'`). -/
 lemma mergedMeasure_isProbabilityMeasure
     (P : Measure α) [IsProbabilityMeasure P] (a b : α) (hab : a ≠ b) :
@@ -425,7 +425,7 @@ lemma mergedMeasure_isProbabilityMeasure
   ring
 
 omit [Fintype α] [LinearOrder α] [Nonempty α] in
-/-- **Phase 4 helper**: positivity of `mergedMeasure` on singletons (from positivity of `P`). -/
+/-- Positivity of `mergedMeasure` on singletons (from positivity of `P`). -/
 lemma mergedMeasure_pos
     (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
     (a b : α) (hab : a ≠ b) (x : { y : α // y ≠ b }) :
@@ -436,7 +436,7 @@ lemma mergedMeasure_pos
   · simp only [ne_eq, hxa, ↓reduceIte]; exact hP x.val
 
 omit [LinearOrder α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **Phase 4 helper**: `Fintype.card { y : α // y ≠ b } = Fintype.card α - 1`. -/
+/-- `Fintype.card { y : α // y ≠ b } = Fintype.card α - 1`. -/
 private lemma fintype_card_subtype_ne (b : α) :
     Fintype.card { y : α // y ≠ b } = Fintype.card α - 1 := by
   classical

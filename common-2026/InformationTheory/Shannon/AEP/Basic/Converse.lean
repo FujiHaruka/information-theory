@@ -253,7 +253,7 @@ theorem source_coding_per_n_bound
         + InformationTheory.MeasureFano.condEntropy μ Xn Yn := by
     have h := mutualInfo_eq_entropy_sub_condEntropy μ Xn Yn hXn_meas hYn_meas
     linarith
-  -- LHS = n · H(Xs 0) via Phase A.
+  -- LHS = n · H(Xs 0) via the i.i.d. block entropy chain rule.
   have h_LHS : (n : ℝ) * entropy μ (Xs 0) = entropy μ Xn := by
     rw [hXn_def]
     exact (entropy_jointRV_eq_n_smul μ Xs hXs hindep_full hident n).symm

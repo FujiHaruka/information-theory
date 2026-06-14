@@ -707,7 +707,7 @@ lemma sum_prod_rpow_eq_Z_pow
     (lam : ℝ) (n : ℕ) :
     ∑ x : Fin n → α, (∏ i, P₁ (x i)) ^ (1 - lam) * (∏ i, P₂ (x i)) ^ lam
       = (chernoffZSum P₁ P₂ lam) ^ n := by
-  -- Rewrite each term as ∏ i, (P₁ (x i))^(1-lam) * (P₂ (x i))^lam (Phase C-2 prod_rpow_mul_rpow)
+  -- Rewrite each term as ∏ i, (P₁ (x i))^(1-lam) * (P₂ (x i))^lam (prod_rpow_mul_rpow)
   -- then ∑ over (Fin n → α) of ∏ i, f (x i) = (∑ a, f a)^n (Finset.prod_univ_sum or pi).
   have h_term_eq : ∀ x : Fin n → α,
       (∏ i, P₁ (x i)) ^ (1 - lam) * (∏ i, P₂ (x i)) ^ lam

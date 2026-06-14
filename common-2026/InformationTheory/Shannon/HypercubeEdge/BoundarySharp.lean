@@ -154,10 +154,10 @@ private lemma entropy_projMap_eq
     proj.filter (fun y => fibre y = 2) with hS2_def
   set S1 : Finset ({j : Fin n // j ≠ i} → Bool) :=
     proj.filter (fun y => fibre y = 1) with hS1_def
-  -- Each y ∈ proj has fibre size 1 or 2 (B-2' classification).
+  -- Each y ∈ proj has fibre size 1 or 2.
   have h_fibre_oneortwo : ∀ y ∈ proj, fibre y = 1 ∨ fibre y = 2 := by
     intro y hy
-    -- Use the B-2' analysis: A.filter (projMap i x = y) ⊆ {ext0 y, ext1 y}, and at least one in A.
+    -- A.filter (projMap i x = y) ⊆ {ext0 y, ext1 y}, and at least one in A.
     have hext_ne : extension i false y ≠ extension i true y := by
       intro h
       have := congrFun h i
@@ -635,7 +635,7 @@ theorem edgeBoundary_entropy_sharp {n : ℕ} {A : Finset (Fin n → Bool)}
   have h_log2_pos : 0 < Real.log 2 := Real.log_pos (by norm_num)
   have h_card_pos : 0 < (A.card : ℝ) := by exact_mod_cast hA.card_pos
   have h_card_ne : (A.card : ℝ) ≠ 0 := h_card_pos.ne'
-  -- Sum of Phase B over i:
+  -- Sum the direction-wise conditional entropies over i:
   have h_phaseB_sum :
       ∑ i : Fin n,
         InformationTheory.MeasureFano.condEntropy
@@ -678,7 +678,7 @@ theorem edgeBoundary_entropy_sharp {n : ℕ} {A : Finset (Fin n → Bool)}
     linarith
   rw [h_diff] at h_pull
   -- So Σ condEntropy_coord = (n|A| - |∂A|) / |A| * log 2 (after simplification)
-  -- Now use Phase C: Σ condEntropy ≤ log|A|
+  -- Now use the conditioning bound: Σ condEntropy ≤ log|A|
   have h_phaseC := sum_condEntropy_le_log_card hA
   rw [h_phaseB_sum, h_pull] at h_phaseC
   -- h_phaseC: (2 * ((n|A| - |∂A|)/2) / |A|) * log 2 ≤ log|A|

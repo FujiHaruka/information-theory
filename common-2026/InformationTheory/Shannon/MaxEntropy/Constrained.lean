@@ -59,7 +59,7 @@ variable {k : ℕ}
 /-! ## Gibbs pmf: definition and basic properties -/
 
 /-- Partition function `Z(λ) := ∑ y, exp (∑ i, λ i · f i y)`. Independent `def` so
-that `Real.log Z(λ)` can be reused throughout Phase B's core identity. -/
+that `Real.log Z(λ)` can be reused throughout the core identity. -/
 noncomputable def gibbsZ (f : Fin k → α → ℝ) (lam : Fin k → ℝ) : ℝ :=
   ∑ y, Real.exp (∑ i, lam i * f i y)
 
@@ -135,7 +135,7 @@ the constraint inner product `⟨λ, 𝔼_Q[f]⟩`, and `log Z(λ)`:
   klDivPmf Q (gibbsPmf f λ)
     = -H(Q) - ⟨λ, 𝔼_Q[f]⟩ + log Z(λ).
 
-Both the Tier 1 upper bound and the Tier 2 uniqueness recipe reduce to one application
+Both the upper bound and the uniqueness statement reduce to one application
 of this identity at `Q := P` plus another at `Q := gibbsPmf f λ`. -/
 lemma klDivPmf_gibbsPmf_eq [Nonempty α]
     (f : Fin k → α → ℝ) (lam : Fin k → ℝ)
@@ -332,7 +332,7 @@ theorem entropy_eq_gibbs_iff_of_constraints [Nonempty α]
     (h_gibbs_constraints : ∀ i, ∑ x, gibbsPmf f lam x * f i x = c i) :
     ∑ x, Real.negMulLog (P x) = ∑ x, Real.negMulLog (gibbsPmf f lam x)
       ↔ P = gibbsPmf f lam := by
-  -- Core identity at Q := P and Q := gibbsPmf f lam (reuse B-2 setup).
+  -- Core identity at Q := P and Q := gibbsPmf f lam.
   have h_eq_P := klDivPmf_gibbsPmf_eq f lam P hP
   have h_eq_G := klDivPmf_gibbsPmf_eq f lam (gibbsPmf f lam)
                     (gibbsPmf_mem_stdSimplex f lam)
@@ -366,7 +366,7 @@ theorem entropy_eq_gibbs_iff_of_constraints [Nonempty α]
 
 /-! ## Special cases -/
 
-/-! ### E-1: Zero feature map reduces to uniform pmf -/
+/-! ### Zero feature map reduces to uniform pmf -/
 
 omit [DecidableEq α] in
 /-- `gibbsZ` of the zero feature map is just `Fintype.card α` (each `exp 0 = 1` summed
@@ -424,7 +424,7 @@ theorem entropy_gibbsPmf_zero_eq_log_card [Nonempty α] (lam : Fin k → ℝ) :
         rw [gibbsPmf_zero_eq_uniform lam]]
   exact entropy_uniform_pmf
 
-/-! ### E-2: Bernoulli case -/
+/-! ### Bernoulli case -/
 
 /-- The two-point feature map: indicator of `true`. -/
 noncomputable def boolFeature : Fin 1 → Bool → ℝ :=
@@ -472,7 +472,7 @@ theorem entropy_gibbsPmf_bool_eq_binEntropy
       gibbsPmf_bool_false_eq_of_mean lam μ h_mean]
   rw [Real.binEntropy_eq_negMulLog_add_negMulLog_one_sub]
 
-/-! ### E-3: Discretized exponential (geometric ratio form) -/
+/-! ### Discretized exponential (geometric ratio form) -/
 
 /-- The discrete "linear" feature map on `Fin (N+1)`: `f 0 x := (x.val : ℝ)`. -/
 noncomputable def linearFeature {N : ℕ} : Fin 1 → Fin (N + 1) → ℝ :=
