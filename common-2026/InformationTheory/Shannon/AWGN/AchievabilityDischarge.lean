@@ -402,6 +402,138 @@ instance awgnCodebookKernel.instIsMarkovKernel
     haveI : IsMarkovKernel (awgnChannel N h_meas) := awgnChannel.instIsMarkovKernel N h_meas
     infer_instance
 
+lemma measurable_measurePi_awgnChannel
+    {n : ℕ} (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) :
+    Measurable (fun x : Fin n → ℝ =>
+      (Measure.pi (fun i => awgnChannel N h_meas (x i)) : Measure (Fin n → ℝ))) := by
+  haveI : IsMarkovKernel (awgnChannel N h_meas) :=
+    awgnChannel.instIsMarkovKernel N h_meas
+  haveI : ∀ x : Fin n → ℝ,
+      IsProbabilityMeasure
+        (Measure.pi (fun i => awgnChannel N h_meas (x i))) := fun x => by
+    infer_instance
+  refine Measurable.measure_of_isPiSystem_of_isProbabilityMeasure
+    (S := Set.pi Set.univ '' Set.pi Set.univ
+            (fun _ : Fin n => {s : Set ℝ | MeasurableSet s}))
+    (hgen := generateFrom_pi.symm) (hpi := isPiSystem_pi) ?_
+  rintro s ⟨t, ht, rfl⟩
+  simp_rw [Measure.pi_pi]
+  refine Finset.measurable_prod _ (fun i _ => ?_)
+  have hti : MeasurableSet (t i) := ht i (Set.mem_univ i)
+  have h_kernel_coe : Measurable
+      (fun x : ℝ => (awgnChannel N h_meas) x (t i)) :=
+    Kernel.measurable_coe _ hti
+  exact h_kernel_coe.comp (measurable_pi_apply i)
+
+lemma map_add_prod_pi_gaussianReal_eq_pi_gaussianReal
+    {n : ℕ} (v₁ v₂ : ℝ≥0) :
+    ((Measure.pi (fun _ : Fin n => gaussianReal 0 v₁)).prod
+        (Measure.pi (fun _ : Fin n => gaussianReal 0 v₂))).map
+      (fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i)
+      = Measure.pi (fun _ : Fin n => gaussianReal 0 (v₁ + v₂)) := by
+  set e : (Fin n → ℝ × ℝ) ≃ᵐ (Fin n → ℝ) × (Fin n → ℝ) :=
+    MeasurableEquiv.arrowProdEquivProdArrow ℝ ℝ (Fin n) with he_def
+  -- per-letter sum measure: `(gauss 0 v₁).prod (gauss 0 v₂)` pushed by `+`.
+  have hperletter : ∀ _ : Fin n,
+      ((gaussianReal 0 v₁).prod (gaussianReal 0 v₂)).map
+          (fun p : ℝ × ℝ => p.1 + p.2)
+        = gaussianReal 0 (v₁ + v₂) := by
+    intro _
+    have := gaussianReal_conv_gaussianReal (m₁ := 0) (m₂ := 0)
+      (v₁ := v₁) (v₂ := v₂)
+    rw [zero_add] at this
+    exact this
+  -- reshape `(pi gauss).prod (pi gauss) = (pi (gauss×gauss)).map e`.
+  have hmp := measurePreserving_arrowProdEquivProdArrow ℝ ℝ (Fin n)
+    (fun _ : Fin n => gaussianReal 0 v₁) (fun _ : Fin n => gaussianReal 0 v₂)
+  have hreshape :
+      (Measure.pi (fun _ : Fin n => gaussianReal 0 v₁)).prod
+          (Measure.pi (fun _ : Fin n => gaussianReal 0 v₂))
+        = (Measure.pi (fun _ : Fin n =>
+            (gaussianReal 0 v₁).prod (gaussianReal 0 v₂))).map e := by
+    rw [he_def, ← hmp.map_eq]
+  have hsum_meas : Measurable
+      (fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i) :=
+    measurable_pi_lambda _ (fun i =>
+      ((measurable_pi_apply i).comp measurable_fst).add
+        ((measurable_pi_apply i).comp measurable_snd))
+  have hcoord_meas : Measurable (fun p : ℝ × ℝ => p.1 + p.2) :=
+    measurable_fst.add measurable_snd
+  rw [hreshape, Measure.map_map hsum_meas e.measurable]
+  -- `Σ ∘ e = fun w i => (w i).1 + (w i).2`, which `pi_map_pi` factorizes.
+  have hcomp :
+      ((fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i) ∘ e)
+        = (fun (w : Fin n → ℝ × ℝ) (i : Fin n) => (w i).1 + (w i).2) := by
+    funext w; rfl
+  rw [hcomp]
+  haveI : ∀ _ : Fin n, SigmaFinite
+      (((gaussianReal 0 v₁).prod (gaussianReal 0 v₂)).map
+        (fun p : ℝ × ℝ => p.1 + p.2)) := by
+    intro i; rw [hperletter i]; infer_instance
+  rw [Measure.pi_map_pi (μ := fun _ : Fin n =>
+      (gaussianReal 0 v₁).prod (gaussianReal 0 v₂))
+      (f := fun _ : Fin n => (fun p : ℝ × ℝ => p.1 + p.2))
+      (fun _ => hcoord_meas.aemeasurable)]
+  congr 1
+  funext i
+  exact hperletter i
+
+lemma measurePi_awgnChannel_eq_pi_gaussianReal_map_add
+    {n : ℕ} (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) (x : Fin n → ℝ) :
+    Measure.pi (fun i => awgnChannel N h_meas (x i))
+      = (Measure.pi (fun _ : Fin n => gaussianReal 0 N)).map (fun z i => x i + z i) := by
+  -- Each fibre: `awgnChannel · (x i) = gaussianReal (x i) N = (gaussianReal 0 N).map (x i + ·)`.
+  have hfib : ∀ i : Fin n,
+      (awgnChannel N h_meas (x i) : Measure ℝ)
+        = (gaussianReal 0 N).map (x i + ·) := by
+    intro i
+    rw [awgnChannel_apply, gaussianReal_map_const_add, zero_add]
+  -- AEMeasurable of each shift map.
+  have haem : ∀ i : Fin n, AEMeasurable (x i + · : ℝ → ℝ) (gaussianReal 0 N) :=
+    fun i => (measurable_const.add measurable_id).aemeasurable
+  -- SigmaFinite of each pushforward (it equals `gaussianReal (x i) N`, a prob measure).
+  haveI hσ : ∀ i : Fin n, SigmaFinite ((gaussianReal 0 N).map (x i + ·)) := by
+    intro i
+    rw [gaussianReal_map_const_add, zero_add]
+    infer_instance
+  rw [Measure.pi_map_pi (μ := fun _ : Fin n => gaussianReal 0 N)
+    (f := fun i => (x i + ·)) haem]
+  congr 1
+  funext i
+  rw [hfib i]
+
+lemma lintegral_measurePi_awgnChannel_eq_pi_gaussianReal
+    {n : ℕ} (N v : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
+    (B : Set (Fin n → ℝ)) (hB : MeasurableSet B) :
+    (∫⁻ x, (Measure.pi (fun i => awgnChannel N h_meas (x i))) B
+        ∂(Measure.pi (fun _ : Fin n => gaussianReal 0 v)))
+      = Measure.pi (fun _ : Fin n => gaussianReal 0 (v + N)) B := by
+  -- per-vector channel collapse `chan x = (pi gauss).map (x + ·)`.
+  have hshift : ∀ x : Fin n → ℝ, Measurable (fun z : Fin n → ℝ => fun i => x i + z i) := by
+    intro x; exact measurable_pi_lambda _ (fun i => measurable_const.add (measurable_pi_apply i))
+  have hchanB : ∀ x : Fin n → ℝ,
+      (Measure.pi (fun i => awgnChannel N h_meas (x i))) B
+        = (Measure.pi (fun _ : Fin n => gaussianReal 0 N))
+            ((fun z : Fin n → ℝ => fun i => x i + z i) ⁻¹' B) := by
+    intro x
+    rw [measurePi_awgnChannel_eq_pi_gaussianReal_map_add N h_meas x,
+      Measure.map_apply (hshift x) hB]
+  -- integrate over `x`, fold into the prod, then push by `Σ`.
+  rw [lintegral_congr hchanB]
+  have hsum_meas : Measurable
+      (fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i) :=
+    measurable_pi_lambda _ (fun i =>
+      ((measurable_pi_apply i).comp measurable_fst).add
+        ((measurable_pi_apply i).comp measurable_snd))
+  have hsec_eq : ∀ x : Fin n → ℝ,
+      (fun z : Fin n → ℝ => fun i => x i + z i) ⁻¹' B
+        = Prod.mk x ⁻¹' ((fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i) ⁻¹' B) := by
+    intro x; rfl
+  rw [lintegral_congr (fun x => by rw [hsec_eq x]),
+    ← Measure.prod_apply (hsum_meas hB),
+    ← Measure.map_apply hsum_meas hB,
+    map_add_prod_pi_gaussianReal_eq_pi_gaussianReal v N]
+
 /-! ### Random-coding union bound -/
 
 /-- The random-coding union bound (Cover–Thomas 9.2, with the typicality slack
@@ -660,25 +792,8 @@ theorem awgn_random_coding_union_bound
           (Measure.pi (fun i => awgnChannel N h_meas (x i))) {y | (x, y) ∉ A}) := by
         have hk : Measurable (fun x : Fin n → ℝ =>
             (Measure.pi (fun i => awgnChannel N h_meas (x i)) :
-              Measure (Fin n → ℝ))) := by
-          haveI : IsMarkovKernel (awgnChannel N h_meas) :=
-            awgnChannel.instIsMarkovKernel N h_meas
-          haveI : ∀ x : Fin n → ℝ,
-              IsProbabilityMeasure
-                (Measure.pi (fun i => awgnChannel N h_meas (x i))) := fun x => by
-            infer_instance
-          refine Measurable.measure_of_isPiSystem_of_isProbabilityMeasure
-            (S := Set.pi Set.univ '' Set.pi Set.univ
-                    (fun _ : Fin n => {s : Set ℝ | MeasurableSet s}))
-            (hgen := generateFrom_pi.symm) (hpi := isPiSystem_pi) ?_
-          rintro s ⟨t, ht, rfl⟩
-          simp_rw [Measure.pi_pi]
-          refine Finset.measurable_prod _ (fun i _ => ?_)
-          have hti : MeasurableSet (t i) := ht i (Set.mem_univ i)
-          have h_kernel_coe : Measurable
-              (fun x : ℝ => (awgnChannel N h_meas) x (t i)) :=
-            Kernel.measurable_coe _ hti
-          exact h_kernel_coe.comp (measurable_pi_apply i)
+              Measure (Fin n → ℝ))) :=
+          measurable_measurePi_awgnChannel N h_meas
         -- Bundle as a Markov kernel and pull back the joint set via prodMk.
         let K : Kernel (Fin n → ℝ) (Fin n → ℝ) :=
           { toFun := fun x => Measure.pi (fun i => awgnChannel N h_meas (x i))
@@ -724,25 +839,8 @@ theorem awgn_random_coding_union_bound
         Measure.pi (fun i => awgnChannel N h_meas (x i))
           = μZ.map (fun z i => x i + z i) := by
       intro x
-      -- Each fibre: `awgnChannel · (x i) = gaussianReal (x i) N = (gaussianReal 0 N).map (x i + ·)`.
-      have hfib : ∀ i : Fin n,
-          (awgnChannel N h_meas (x i) : Measure ℝ)
-            = (gaussianReal 0 N).map (x i + ·) := by
-        intro i
-        rw [awgnChannel_apply, gaussianReal_map_const_add, zero_add]
-      -- AEMeasurable of each shift map.
-      have haem : ∀ i : Fin n, AEMeasurable (x i + · : ℝ → ℝ) (gaussianReal 0 N) :=
-        fun i => (measurable_const.add measurable_id).aemeasurable
-      -- SigmaFinite of each pushforward (it equals `gaussianReal (x i) N`, a prob measure).
-      haveI hσ : ∀ i : Fin n, SigmaFinite ((gaussianReal 0 N).map (x i + ·)) := by
-        intro i
-        rw [gaussianReal_map_const_add, zero_add]
-        infer_instance
-      rw [hμZ_def, Measure.pi_map_pi (μ := fun _ : Fin n => gaussianReal 0 N)
-        (f := fun i => (x i + ·)) haem]
-      congr 1
-      funext i
-      rw [hfib i]
+      rw [hμZ_def]
+      exact measurePi_awgnChannel_eq_pi_gaussianReal_map_add N h_meas x
     -- Pointwise: `f1 x = μZ (Prod.mk x ⁻¹' (Φ ⁻¹' Aᶜ))`.
     have hf1_eq : ∀ x : Fin n → ℝ,
         f1 x = μZ (Prod.mk x ⁻¹' (Φ ⁻¹' Aᶜ)) := by
@@ -793,107 +891,17 @@ theorem awgn_random_coding_union_bound
     -- per-letter marginals
     set μXn : Measure (Fin n → ℝ) :=
       Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal) with hμXn_def
-    set μZn : Measure (Fin n → ℝ) :=
-      Measure.pi (fun _ : Fin n => gaussianReal 0 N) with hμZn_def
     set μYn : Measure (Fin n → ℝ) :=
       Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N)) with hμYn_def
     haveI : IsProbabilityMeasure μXn := by rw [hμXn_def]; infer_instance
-    haveI : IsProbabilityMeasure μZn := by rw [hμZn_def]; infer_instance
     haveI : IsProbabilityMeasure μYn := by rw [hμYn_def]; infer_instance
     -- ── Step O (output-marginal identity): for any measurable `B`,
     -- `∫⁻ x, (channel x) B ∂μXn = μYn B` (the n-fold law of `X + Z`). ──
-    -- The n-fold output law `(μXn.prod μZn).map Σ = μYn`, `Σ p = fun i => p.1 i + p.2 i`,
-    -- via `arrowProdEquivProdArrow` reshape + per-coordinate Gaussian sum.
-    have hsumlaw :
-        ((μXn.prod μZn).map (fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i))
-          = μYn := by
-      set e : (Fin n → ℝ × ℝ) ≃ᵐ (Fin n → ℝ) × (Fin n → ℝ) :=
-        MeasurableEquiv.arrowProdEquivProdArrow ℝ ℝ (Fin n) with he_def
-      -- per-letter sum measure: `(gauss 0 P').prod (gauss 0 N)` pushed by `+`.
-      have hperletter : ∀ _ : Fin n,
-          ((gaussianReal 0 P.toNNReal).prod (gaussianReal 0 N)).map
-              (fun p : ℝ × ℝ => p.1 + p.2)
-            = gaussianReal 0 (P.toNNReal + N) := by
-        intro _
-        have := gaussianReal_conv_gaussianReal (m₁ := 0) (m₂ := 0)
-          (v₁ := P.toNNReal) (v₂ := N)
-        rw [zero_add] at this
-        exact this
-      -- reshape `μXn.prod μZn = (pi (gauss×gauss)).map e`.
-      have hmp := measurePreserving_arrowProdEquivProdArrow ℝ ℝ (Fin n)
-        (fun _ : Fin n => gaussianReal 0 P.toNNReal) (fun _ : Fin n => gaussianReal 0 N)
-      have hreshape :
-          μXn.prod μZn
-            = (Measure.pi (fun _ : Fin n =>
-                (gaussianReal 0 P.toNNReal).prod (gaussianReal 0 N))).map e := by
-        rw [hμXn_def, hμZn_def, he_def, ← hmp.map_eq]
-      have hsum_meas : Measurable
-          (fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i) :=
-        measurable_pi_lambda _ (fun i =>
-          ((measurable_pi_apply i).comp measurable_fst).add
-            ((measurable_pi_apply i).comp measurable_snd))
-      have hcoord_meas : Measurable (fun p : ℝ × ℝ => p.1 + p.2) :=
-        measurable_fst.add measurable_snd
-      rw [hreshape, Measure.map_map hsum_meas e.measurable]
-      -- `Σ ∘ e = fun w i => (w i).1 + (w i).2`, which `pi_map_pi` factorizes.
-      have hcomp :
-          ((fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i) ∘ e)
-            = (fun (w : Fin n → ℝ × ℝ) (i : Fin n) => (w i).1 + (w i).2) := by
-        funext w; rfl
-      rw [hcomp]
-      haveI : ∀ _ : Fin n, SigmaFinite
-          (((gaussianReal 0 P.toNNReal).prod (gaussianReal 0 N)).map
-            (fun p : ℝ × ℝ => p.1 + p.2)) := by
-        intro i; rw [hperletter i]; infer_instance
-      rw [Measure.pi_map_pi (μ := fun _ : Fin n =>
-          (gaussianReal 0 P.toNNReal).prod (gaussianReal 0 N))
-          (f := fun _ : Fin n => (fun p : ℝ × ℝ => p.1 + p.2))
-          (fun _ => hcoord_meas.aemeasurable)]
-      rw [hμYn_def]
-      congr 1
-      funext i
-      exact hperletter i
     have houtput : ∀ B : Set (Fin n → ℝ), MeasurableSet B →
         (∫⁻ x, (Measure.pi (fun i => awgnChannel N h_meas (x i))) B ∂μXn) = μYn B := by
       intro B hB
-      -- per-vector channel collapse `chan x = μZn.map (x + ·)` (same as term1's `hchan`).
-      have hchan : ∀ x : Fin n → ℝ,
-          Measure.pi (fun i => awgnChannel N h_meas (x i))
-            = μZn.map (fun z i => x i + z i) := by
-        intro x
-        have hfib : ∀ i : Fin n,
-            (awgnChannel N h_meas (x i) : Measure ℝ)
-              = (gaussianReal 0 N).map (x i + ·) := by
-          intro i; rw [awgnChannel_apply, gaussianReal_map_const_add, zero_add]
-        have haem : ∀ i : Fin n, AEMeasurable (x i + · : ℝ → ℝ) (gaussianReal 0 N) :=
-          fun i => (measurable_const.add measurable_id).aemeasurable
-        haveI hσ : ∀ i : Fin n, SigmaFinite ((gaussianReal 0 N).map (x i + ·)) := by
-          intro i; rw [gaussianReal_map_const_add, zero_add]; infer_instance
-        rw [hμZn_def, Measure.pi_map_pi (μ := fun _ : Fin n => gaussianReal 0 N)
-          (f := fun i => (x i + ·)) haem]
-        congr 1; funext i; rw [hfib i]
-      -- `(chan x) B = μZn {z | (fun i => x i + z i) ∈ B}`.
-      have hshift : ∀ x : Fin n → ℝ, Measurable (fun z : Fin n → ℝ => fun i => x i + z i) := by
-        intro x; exact measurable_pi_lambda _ (fun i => measurable_const.add (measurable_pi_apply i))
-      have hchanB : ∀ x : Fin n → ℝ,
-          (Measure.pi (fun i => awgnChannel N h_meas (x i))) B
-            = μZn ((fun z : Fin n → ℝ => fun i => x i + z i) ⁻¹' B) := by
-        intro x; rw [hchan x, Measure.map_apply (hshift x) hB]
-      -- integrate over `x ~ μXn`, fold into the prod, then push by `Σ`.
-      rw [lintegral_congr hchanB]
-      have hsum_meas : Measurable
-          (fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i) :=
-        measurable_pi_lambda _ (fun i =>
-          ((measurable_pi_apply i).comp measurable_fst).add
-            ((measurable_pi_apply i).comp measurable_snd))
-      -- `∫⁻ x, μZn (section x) ∂μXn = (μXn.prod μZn) (Σ ⁻¹' B) = (map Σ) B = μYn B`.
-      have hsec_eq : ∀ x : Fin n → ℝ,
-          (fun z : Fin n → ℝ => fun i => x i + z i) ⁻¹' B
-            = Prod.mk x ⁻¹' ((fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i) ⁻¹' B) := by
-        intro x; rfl
-      rw [lintegral_congr (fun x => by rw [hsec_eq x]),
-        ← Measure.prod_apply (hsum_meas hB),
-        ← Measure.map_apply hsum_meas hB, hsumlaw]
+      rw [hμXn_def, hμYn_def]
+      exact lintegral_measurePi_awgnChannel_eq_pi_gaussianReal N P.toNNReal h_meas B hB
     -- ── Step A (2-coordinate collapse): each summand `= Q A`. ──
     have hsummand : ∀ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
         (∫⁻ codebook, (Wch codebook) (E2 codebook m')
@@ -902,20 +910,8 @@ theorem awgn_random_coding_union_bound
       have hm'_ne : m' ≠ m := (Finset.mem_erase.mp hm').1
       -- The channel kernel `K x = Measure.pi (awgnChannel·(x i))`.
       have hk : Measurable (fun x : Fin n → ℝ =>
-          (Measure.pi (fun i => awgnChannel N h_meas (x i)) : Measure (Fin n → ℝ))) := by
-        haveI : IsMarkovKernel (awgnChannel N h_meas) := awgnChannel.instIsMarkovKernel N h_meas
-        haveI : ∀ x : Fin n → ℝ,
-            IsProbabilityMeasure (Measure.pi (fun i => awgnChannel N h_meas (x i))) :=
-          fun x => by infer_instance
-        refine Measurable.measure_of_isPiSystem_of_isProbabilityMeasure
-          (S := Set.pi Set.univ '' Set.pi Set.univ
-                  (fun _ : Fin n => {s : Set ℝ | MeasurableSet s}))
-          (hgen := generateFrom_pi.symm) (hpi := isPiSystem_pi) ?_
-        rintro s ⟨t, ht, rfl⟩
-        simp_rw [Measure.pi_pi]
-        refine Finset.measurable_prod _ (fun i _ => ?_)
-        have hti : MeasurableSet (t i) := ht i (Set.mem_univ i)
-        exact (Kernel.measurable_coe _ hti).comp (measurable_pi_apply i)
+          (Measure.pi (fun i => awgnChannel N h_meas (x i)) : Measure (Fin n → ℝ))) :=
+        measurable_measurePi_awgnChannel N h_meas
       let K : Kernel (Fin n → ℝ) (Fin n → ℝ) :=
         { toFun := fun x => Measure.pi (fun i => awgnChannel N h_meas (x i))
           measurable' := hk }
@@ -1326,6 +1322,65 @@ theorem awgn_extract_AwgnCode
         apply ENNReal.toReal_mono h_ne_top h_pe_le
     _ < 5 * ε := h_target
 
+lemma exists_two_mul_ceil_exp_le_ceil_exp_of_lt {R R'' : ℝ} (hR_nonneg : 0 ≤ R)
+    (hR_lt_R'' : R < R'') :
+    ∃ N₀ : ℕ, ∀ n : ℕ, N₀ ≤ n →
+      2 * Nat.ceil (Real.exp ((n : ℝ) * R))
+        ≤ Nat.ceil (Real.exp ((n : ℝ) * R'')) := by
+  -- Pick `N₀ = ⌈(log 4) / (R'' - R)⌉` so that for n ≥ N₀,
+  -- `exp(n(R''-R)) ≥ 4`, hence `exp(n R'') ≥ 4 * exp(n R)`. Then
+  -- `2 * ⌈exp(n R)⌉ ≤ 2 * (exp(n R) + 1) ≤ 4 * exp(n R) ≤ exp(n R'') ≤ ⌈exp(n R'')⌉`.
+  set δd : ℝ := R'' - R with hδd_def
+  have hδd_pos : 0 < δd := by linarith
+  -- Need `n * δd ≥ log 4`, i.e., `n ≥ log 4 / δd`.
+  set N₀ : ℕ := Nat.ceil (Real.log 4 / δd) with hN₀_def
+  refine ⟨N₀, fun n hn => ?_⟩
+  -- Cast `(N₀ : ℝ) ≤ (n : ℝ)`.
+  have h_ndelta : Real.log 4 / δd ≤ (n : ℝ) := by
+    have h_cast : ((N₀ : ℕ) : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn
+    calc Real.log 4 / δd ≤ (Nat.ceil (Real.log 4 / δd) : ℝ) := Nat.le_ceil _
+      _ = (N₀ : ℝ) := by rfl
+      _ ≤ (n : ℝ) := h_cast
+  have h_exp_n_delta_ge_4 : (4 : ℝ) ≤ Real.exp ((n : ℝ) * δd) := by
+    have h_n_delta : Real.log 4 ≤ (n : ℝ) * δd := by
+      have := (div_le_iff₀ hδd_pos).mp h_ndelta
+      linarith
+    have := Real.exp_le_exp.mpr h_n_delta
+    rwa [Real.exp_log (by norm_num : (0 : ℝ) < 4)] at this
+  have h_exp_R''_ge : Real.exp ((n : ℝ) * R'') = Real.exp ((n : ℝ) * R) * Real.exp ((n : ℝ) * δd) := by
+    rw [← Real.exp_add]; congr 1; ring
+  have h_exp_R_pos : 0 < Real.exp ((n : ℝ) * R) := Real.exp_pos _
+  have h_exp_R_ge_one : 1 ≤ Real.exp ((n : ℝ) * R) := by
+    apply Real.one_le_exp
+    exact mul_nonneg (Nat.cast_nonneg n) hR_nonneg
+  -- 2 * ⌈exp(nR)⌉ ≤ 2 * (exp(nR) + 1) ≤ 4 * exp(nR) ≤ exp(nR'') ≤ ⌈exp(nR'')⌉.
+  have h_ceil_R_le : (Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ)
+      ≤ Real.exp ((n : ℝ) * R) + 1 := by
+    exact (Nat.ceil_lt_add_one (le_of_lt h_exp_R_pos)).le
+  have h_two_ceil_R_le : (2 * Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ)
+      ≤ 4 * Real.exp ((n : ℝ) * R) := by
+    have : (2 : ℝ) * (Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ)
+        ≤ 2 * (Real.exp ((n : ℝ) * R) + 1) := by
+      linarith
+    calc (2 * Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ)
+        = 2 * (Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) := by norm_cast
+      _ ≤ 2 * (Real.exp ((n : ℝ) * R) + 1) := this
+      _ ≤ 2 * Real.exp ((n : ℝ) * R) + 2 * Real.exp ((n : ℝ) * R) := by linarith
+      _ = 4 * Real.exp ((n : ℝ) * R) := by ring
+  have h_4_le_R'' : (4 : ℝ) * Real.exp ((n : ℝ) * R) ≤ Real.exp ((n : ℝ) * R'') := by
+    rw [h_exp_R''_ge]
+    have : (4 : ℝ) * Real.exp ((n : ℝ) * R)
+        ≤ Real.exp ((n : ℝ) * δd) * Real.exp ((n : ℝ) * R) := by
+      nlinarith [h_exp_R_pos]
+    linarith [this, mul_comm (Real.exp ((n : ℝ) * R)) (Real.exp ((n : ℝ) * δd))]
+  have h_le_R'' : (2 * Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ)
+      ≤ Real.exp ((n : ℝ) * R'') := le_trans h_two_ceil_R_le h_4_le_R''
+  -- Conclude via Nat.le_ceil.
+  have : (2 * Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ)
+      ≤ (Nat.ceil (Real.exp ((n : ℝ) * R'')) : ℝ) :=
+    le_trans h_le_R'' (Nat.le_ceil _)
+  exact_mod_cast this
+
 /-! ## Achievability assembly -/
 
 /-- The assembled AWGN achievability statement: for any rate `R` below the
@@ -1343,6 +1398,113 @@ per-codeword expurgation bound `awgnPowerConstraintPerCodeword_holds P' P N`.
 The strict witness `hP'_pos : 0 < P'` (from `awgnPowerWitness_exists`) + `hN` are
 supplied to `awgn_random_coding_union_bound`.
 @audit:ok -/
+lemma errorEvent_jointTypicalDecoder_comp_subset_of_strictMono
+    {n M M_target : ℕ} [NeZero M] [NeZero M_target]
+    (A : Set ((Fin n → ℝ) × (Fin n → ℝ)))
+    (c : Fin M → Fin n → ℝ) (reindex : Fin M_target → Fin M)
+    (hreindex_strictMono : StrictMono reindex) (j : Fin M_target) :
+    (InformationTheory.Shannon.ChannelCoding.Code.mk
+          (M := M_target) (n := n) (α := ℝ) (β := ℝ)
+          (fun i => c (reindex i)) (jointTypicalDecoder A (fun i => c (reindex i)))).errorEvent j
+      ⊆ (InformationTheory.Shannon.ChannelCoding.Code.mk
+          (M := M) (n := n) (α := ℝ) (β := ℝ)
+          c (jointTypicalDecoder A c)).errorEvent (reindex j) := by
+  set subcodebook : Fin M_target → Fin n → ℝ := fun i => c (reindex i) with hsubcodebook_def
+  intro y hy
+  -- `hy : decoder_sub y ≠ j`. Show `decoder_full y ≠ reindex j`.
+  simp only [InformationTheory.Shannon.ChannelCoding.Code.mem_errorEvent] at hy ⊢
+  -- Goal: decoder_full y ≠ reindex j.
+  -- Suppose for contradiction decoder_full y = reindex j.
+  intro hfull_eq
+  have hsub_def : jointTypicalDecoder A subcodebook y ≠ j := hy
+  have hfull_def : jointTypicalDecoder A c y = reindex j := hfull_eq
+  -- Apply the by-cases on existence of typical codewords (for full).
+  classical
+  by_cases h_exists_full : ∃ k : Fin M, (c k, y) ∈ A
+  · -- Full has typical; extract the smallest-index characterization.
+    haveI : Decidable (∃ k : Fin M, (c k, y) ∈ A) := Classical.propDecidable _
+    haveI inst_full : DecidablePred fun k : Fin M => (c k, y) ∈ A :=
+      fun _ => Classical.propDecidable _
+    -- Rewrite decoder unfolding once with the SAME instance.
+    change
+      (haveI : Decidable (∃ m : Fin M, (c m, y) ∈ A) := Classical.propDecidable _;
+       haveI : DecidablePred fun m : Fin M => (c m, y) ∈ A :=
+          fun _ => Classical.propDecidable _;
+       if h' : ∃ m : Fin M, (c m, y) ∈ A then Fin.find _ h' else _) = reindex j
+        at hfull_def
+    rw [dif_pos h_exists_full] at hfull_def
+    -- The two `DecidablePred` instances are Subsingleton-equal; bridge them.
+    set inst_dec : DecidablePred fun k : Fin M => (c k, y) ∈ A :=
+      fun x => Classical.propDecidable ((fun m => (c m, y) ∈ A) x) with hinst_dec
+    have hfull_def_inst :
+        @Fin.find M (fun k => (c k, y) ∈ A) inst_full h_exists_full = reindex j := by
+      have h_inst_eq : inst_full = inst_dec := Subsingleton.elim _ _
+      rw [h_inst_eq]; exact hfull_def
+    have hfull_typ : (c (reindex j), y) ∈ A := by
+      have h_spec := @Fin.find_spec M (fun k => (c k, y) ∈ A) inst_full h_exists_full
+      rw [hfull_def_inst] at h_spec
+      exact h_spec
+    have hfull_min : ∀ k : Fin M, k < reindex j → (c k, y) ∉ A := by
+      intro k hk
+      have h_min := @Fin.find_min M (fun k => (c k, y) ∈ A) inst_full h_exists_full k
+      have hsub : k < @Fin.find M (fun k => (c k, y) ∈ A) inst_full h_exists_full := by
+        rw [hfull_def_inst]; exact hk
+      exact h_min hsub
+    -- In particular: (subcodebook j, y) = (c (reindex j), y) ∈ A.
+    have hsub_typ : (subcodebook j, y) ∈ A := hfull_typ
+    -- For ALL k' < j (Fin M_target), (subcodebook k', y) ∉ A by monotonicity.
+    have hsub_min : ∀ k' : Fin M_target, k' < j → (subcodebook k', y) ∉ A := by
+      intro k' hk'
+      have hreindex_lt : reindex k' < reindex j := hreindex_strictMono hk'
+      exact hfull_min (reindex k') hreindex_lt
+    -- So sub-decoder finds the smallest sub-typical index = j.
+    have h_exists_sub : ∃ k : Fin M_target, (subcodebook k, y) ∈ A :=
+      ⟨j, hsub_typ⟩
+    have : jointTypicalDecoder A subcodebook y = j := by
+      unfold jointTypicalDecoder
+      rw [dif_pos h_exists_sub]
+      set inst_sub_dec : DecidablePred fun k : Fin M_target => (subcodebook k, y) ∈ A :=
+        fun x => Classical.propDecidable ((fun m => (subcodebook m, y) ∈ A) x)
+      haveI inst_sub : DecidablePred fun k : Fin M_target => (subcodebook k, y) ∈ A :=
+        inferInstance
+      have h_inst_eq : inst_sub = inst_sub_dec := Subsingleton.elim _ _
+      show @Fin.find M_target (fun k => (subcodebook k, y) ∈ A) inst_sub_dec
+          h_exists_sub = j
+      rw [← h_inst_eq]
+      exact (Fin.find_eq_iff (i := j) h_exists_sub).mpr ⟨hsub_typ, hsub_min⟩
+    exact hsub_def this
+  · -- Full has no typical; decoder_full = ⟨0, ...⟩ = 0 ∈ Fin M.
+    unfold jointTypicalDecoder at hfull_def
+    rw [dif_neg h_exists_full] at hfull_def
+    -- So reindex j = 0 in Fin M (as a value).
+    have hreindex_zero : (reindex j : ℕ) = 0 := by
+      have : (reindex j : ℕ) = ((⟨0, Nat.pos_of_ne_zero (NeZero.ne M)⟩ : Fin M) : ℕ) := by
+        rw [← hfull_def]
+      simpa using this
+    -- No sub-codeword can be typical (each equals c(reindex k')).
+    have h_no_sub_typ : ¬ ∃ k : Fin M_target, (subcodebook k, y) ∈ A := by
+      rintro ⟨k, hk⟩
+      exact h_exists_full ⟨reindex k, hk⟩
+    have h_decoder_sub_zero : jointTypicalDecoder A subcodebook y
+        = ⟨0, Nat.pos_of_ne_zero (NeZero.ne M_target)⟩ := by
+      unfold jointTypicalDecoder
+      rw [dif_neg h_no_sub_typ]
+    -- For sub-decoder to satisfy `decoder_sub y ≠ j` (hsub_def), j ≠ 0.
+    have hj_ne_zero_sub : (j : ℕ) ≠ 0 := by
+      intro hj0
+      apply hsub_def
+      rw [h_decoder_sub_zero]
+      exact Fin.ext hj0.symm
+    -- reindex j = 0 with j ≠ 0 contradicts strict monotonicity (reindex 0 < reindex j).
+    have hj_pos : (0 : Fin M_target) < j := by
+      rw [Fin.pos_iff_ne_zero]
+      intro heq
+      exact hj_ne_zero_sub (by simp [heq])
+    have h_reindex_zero_lt : reindex 0 < reindex j := hreindex_strictMono hj_pos
+    have : (reindex 0 : ℕ) < (reindex j : ℕ) := h_reindex_zero_lt
+    rw [hreindex_zero] at this
+    exact Nat.not_lt_zero _ this
+
 @[entry_point]
 theorem isAwgnTypicalityHypothesis
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -1431,66 +1593,11 @@ theorem isAwgnTypicalityHypothesis
   obtain ⟨N_rand, hN_rand⟩ :=
     awgn_random_coding_union_bound P' N h_meas hP'_pos hN hε_rand_pos hδ_pos hR''_pos hslack''
   obtain ⟨N_pow,  hN_pow⟩  := h_power' hε_pow_pos
-  -- `N_doubling`: smallest `n ≥ 1` such that `2 * ⌈exp(nR)⌉ ≤ ⌈exp(n·R'')⌉`.
+  -- `N_doubling`: smallest `n` such that `2 * ⌈exp(nR)⌉ ≤ ⌈exp(n·R'')⌉`.
   -- Existence: `exp(nR'')/exp(nR) = exp(n(R''-R)) → ∞`, so for n large
   -- `exp(n·R'') ≥ 2 * exp(nR) + 2`, which forces the Nat.ceil inequality.
-  obtain ⟨N_doubling, hN_doubling⟩ :
-      ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →
-        2 * Nat.ceil (Real.exp ((n : ℝ) * R))
-          ≤ Nat.ceil (Real.exp ((n : ℝ) * R'')) := by
-    -- Pick `N₀ = ⌈(log 2 + log 4) / (R'' - R)⌉` so that for n ≥ N₀,
-    -- `exp(n(R''-R)) ≥ 4`, hence `exp(n R'') ≥ 4 * exp(n R)`. Then
-    -- `2 * ⌈exp(n R)⌉ ≤ 2 * (exp(n R) + 1) ≤ 4 * exp(n R) ≤ exp(n R'') ≤ ⌈exp(n R'')⌉`
-    -- holds provided `2 * exp(n R) ≥ 2` (i.e., `exp(n R) ≥ 1`, true for n ≥ 0).
-    set δd : ℝ := R'' - R with hδd_def
-    have hδd_pos : 0 < δd := by linarith
-    -- Need `n * δd ≥ log 4`, i.e., `n ≥ log 4 / δd`.
-    set N₀ : ℕ := Nat.ceil (Real.log 4 / δd) with hN₀_def
-    refine ⟨N₀, fun n hn => ?_⟩
-    -- Cast `(N₀ : ℝ) ≤ (n : ℝ)`.
-    have h_ndelta : Real.log 4 / δd ≤ (n : ℝ) := by
-      have h_cast : ((N₀ : ℕ) : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn
-      calc Real.log 4 / δd ≤ (Nat.ceil (Real.log 4 / δd) : ℝ) := Nat.le_ceil _
-        _ = (N₀ : ℝ) := by rfl
-        _ ≤ (n : ℝ) := h_cast
-    have h_exp_n_delta_ge_4 : (4 : ℝ) ≤ Real.exp ((n : ℝ) * δd) := by
-      have h_n_delta : Real.log 4 ≤ (n : ℝ) * δd := by
-        have := (div_le_iff₀ hδd_pos).mp h_ndelta
-        linarith
-      have := Real.exp_le_exp.mpr h_n_delta
-      rwa [Real.exp_log (by norm_num : (0 : ℝ) < 4)] at this
-    have h_exp_R''_ge : Real.exp ((n : ℝ) * R'') = Real.exp ((n : ℝ) * R) * Real.exp ((n : ℝ) * δd) := by
-      rw [← Real.exp_add]; congr 1; ring
-    have h_exp_R_pos : 0 < Real.exp ((n : ℝ) * R) := Real.exp_pos _
-    have h_exp_R_ge_one : 1 ≤ Real.exp ((n : ℝ) * R) := by
-      apply Real.one_le_exp; positivity
-    -- 2 * ⌈exp(nR)⌉ ≤ 2 * (exp(nR) + 1) ≤ 4 * exp(nR) ≤ exp(nR'') ≤ ⌈exp(nR'')⌉.
-    have h_ceil_R_le : (Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ)
-        ≤ Real.exp ((n : ℝ) * R) + 1 := by
-      exact (Nat.ceil_lt_add_one (le_of_lt h_exp_R_pos)).le
-    have h_two_ceil_R_le : (2 * Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ)
-        ≤ 4 * Real.exp ((n : ℝ) * R) := by
-      have : (2 : ℝ) * (Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ)
-          ≤ 2 * (Real.exp ((n : ℝ) * R) + 1) := by
-        linarith
-      calc (2 * Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ)
-          = 2 * (Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) := by norm_cast
-        _ ≤ 2 * (Real.exp ((n : ℝ) * R) + 1) := this
-        _ ≤ 2 * Real.exp ((n : ℝ) * R) + 2 * Real.exp ((n : ℝ) * R) := by linarith
-        _ = 4 * Real.exp ((n : ℝ) * R) := by ring
-    have h_4_le_R'' : (4 : ℝ) * Real.exp ((n : ℝ) * R) ≤ Real.exp ((n : ℝ) * R'') := by
-      rw [h_exp_R''_ge]
-      have : (4 : ℝ) * Real.exp ((n : ℝ) * R)
-          ≤ Real.exp ((n : ℝ) * δd) * Real.exp ((n : ℝ) * R) := by
-        nlinarith [h_exp_R_pos]
-      linarith [this, mul_comm (Real.exp ((n : ℝ) * R)) (Real.exp ((n : ℝ) * δd))]
-    have h_le_R'' : (2 * Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ)
-        ≤ Real.exp ((n : ℝ) * R'') := le_trans h_two_ceil_R_le h_4_le_R''
-    -- Conclude via Nat.le_ceil.
-    have : (2 * Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ)
-        ≤ (Nat.ceil (Real.exp ((n : ℝ) * R'')) : ℝ) :=
-      le_trans h_le_R'' (Nat.le_ceil _)
-    exact_mod_cast this
+  obtain ⟨N_doubling, hN_doubling⟩ :=
+    exists_two_mul_ceil_exp_le_ceil_exp_of_lt hR_pos.le hR_lt_R''
   refine ⟨max N_aep (max N_rand (max N_pow (max N_doubling 1))), ?_⟩
   intro n hn
   have hn_aep  : N_aep  ≤ n := le_trans (le_max_left _ _) hn
@@ -1788,119 +1895,9 @@ theorem isAwgnTypicalityHypothesis
         ⊆ (InformationTheory.Shannon.ChannelCoding.Code.mk
               (M := M) (n := n) (α := ℝ) (β := ℝ)
               c_full (jointTypicalDecoder A c_full)).errorEvent (reindex j) := by
-      intro y hy
-      -- `hy : decoder_sub y ≠ j`. Show `decoder_full y ≠ reindex j`.
-      simp only [InformationTheory.Shannon.ChannelCoding.Code.mem_errorEvent] at hy ⊢
-      -- Goal: decoder_full y ≠ reindex j.
-      -- Suppose for contradiction decoder_full y = reindex j.
-      intro hfull_eq
-      -- decoder_full y = reindex j means:
-      --   (c_full(reindex j), y) ∈ A AND ∀ k < reindex j, (c_full k, y) ∉ A
-      -- (the no-typical case is decoder = 0; if reindex j = 0 this collapses).
-      -- Actually let's use the characterization via Fin.find or by-cases.
-      -- decoder_full := if ∃ k, (c_full k, y) ∈ A then Fin.find _ _ else ⟨0, ...⟩.
-      have hsub_def : jointTypicalDecoder A subcodebook y ≠ j := hy
-      have hfull_def : jointTypicalDecoder A c_full y = reindex j := hfull_eq
-      -- Apply the by-cases on existence of typical codewords (for full).
-      classical
-      by_cases h_exists_full : ∃ k : Fin M, (c_full k, y) ∈ A
-      · -- Full has typical; use the existing `hChar` characterization from
-        -- `jointTypicalDecoder_measurable`. Specifically, since decoder_full y = reindex j:
-        --   (c_full(reindex j), y) ∈ A ∧ ∀ k < reindex j, (c_full k, y) ∉ A
-        -- (the m₀ branch can't fire when there's any typical codeword).
-        haveI : Decidable (∃ k : Fin M, (c_full k, y) ∈ A) := Classical.propDecidable _
-        haveI inst_full : DecidablePred fun k : Fin M => (c_full k, y) ∈ A :=
-          fun _ => Classical.propDecidable _
-        -- Rewrite decoder unfolding once with the SAME instance.
-        change
-          (haveI : Decidable (∃ m : Fin M, (c_full m, y) ∈ A) := Classical.propDecidable _;
-           haveI : DecidablePred fun m : Fin M => (c_full m, y) ∈ A :=
-              fun _ => Classical.propDecidable _;
-           if h' : ∃ m : Fin M, (c_full m, y) ∈ A then Fin.find _ h' else _) = reindex j
-            at hfull_def
-        rw [dif_pos h_exists_full] at hfull_def
-        -- Direct extraction via `Fin.find_spec` and `Fin.find_min`. The two
-        -- Decidable instances on `(c_full k, y) ∈ A` (the one in `hfull_def`'s
-        -- type from the decoder body, and `inst_full`) are Subsingleton-equal,
-        -- but Lean does not unify them by `rfl`. We bridge via Subsingleton.elim.
-        set inst_dec : DecidablePred fun k : Fin M => (c_full k, y) ∈ A :=
-          fun x => Classical.propDecidable ((fun m => (c_full m, y) ∈ A) x) with hinst_dec
-        have hfull_def_inst :
-            @Fin.find M (fun k => (c_full k, y) ∈ A) inst_full h_exists_full = reindex j := by
-          have h_inst_eq : inst_full = inst_dec := Subsingleton.elim _ _
-          rw [h_inst_eq]; exact hfull_def
-        have hfull_typ : (c_full (reindex j), y) ∈ A := by
-          have h_spec := @Fin.find_spec M (fun k => (c_full k, y) ∈ A) inst_full h_exists_full
-          rw [hfull_def_inst] at h_spec
-          exact h_spec
-        have hfull_min : ∀ k : Fin M, k < reindex j → (c_full k, y) ∉ A := by
-          intro k hk
-          have h_min := @Fin.find_min M (fun k => (c_full k, y) ∈ A) inst_full h_exists_full k
-          have hsub : k < @Fin.find M (fun k => (c_full k, y) ∈ A) inst_full h_exists_full := by
-            rw [hfull_def_inst]; exact hk
-          exact h_min hsub
-        -- hfull_typ : (c_full(reindex j), y) ∈ A
-        -- hfull_min : ∀ k < reindex j, (c_full k, y) ∉ A
-        -- In particular: (subcodebook j, y) = (c_full (reindex j), y) ∈ A.
-        have hsub_typ : (subcodebook j, y) ∈ A := hfull_typ
-        -- For ALL k' < j (Fin M_target), (subcodebook k', y) ∉ A
-        -- because reindex k' < reindex j by monotonicity, so by hfull_min.
-        have hsub_min : ∀ k' : Fin M_target, k' < j → (subcodebook k', y) ∉ A := by
-          intro k' hk'
-          have hreindex_lt : reindex k' < reindex j := hreindex_strictMono hk'
-          exact hfull_min (reindex k') hreindex_lt
-        -- So sub-decoder finds the smallest sub-typical index = j.
-        have h_exists_sub : ∃ k : Fin M_target, (subcodebook k, y) ∈ A :=
-          ⟨j, hsub_typ⟩
-        have : jointTypicalDecoder A subcodebook y = j := by
-          unfold jointTypicalDecoder
-          rw [dif_pos h_exists_sub]
-          -- Build the goal with the SAME decidability instance from the decoder body.
-          set inst_sub_dec : DecidablePred fun k : Fin M_target => (subcodebook k, y) ∈ A :=
-            fun x => Classical.propDecidable ((fun m => (subcodebook m, y) ∈ A) x)
-          haveI inst_sub : DecidablePred fun k : Fin M_target => (subcodebook k, y) ∈ A :=
-            inferInstance
-          have h_inst_eq : inst_sub = inst_sub_dec := Subsingleton.elim _ _
-          show @Fin.find M_target (fun k => (subcodebook k, y) ∈ A) inst_sub_dec
-              h_exists_sub = j
-          rw [← h_inst_eq]
-          exact (Fin.find_eq_iff (i := j) h_exists_sub).mpr ⟨hsub_typ, hsub_min⟩
-        exact hsub_def this
-      · -- Full has no typical; decoder_full = ⟨0, ...⟩ = 0 ∈ Fin M.
-        unfold jointTypicalDecoder at hfull_def
-        rw [dif_neg h_exists_full] at hfull_def
-        -- hfull_def : (⟨0, ...⟩ : Fin M) = reindex j
-        -- So reindex j = 0 in Fin M (as a value).
-        have hreindex_zero : (reindex j : ℕ) = 0 := by
-          have : (reindex j : ℕ) = ((⟨0, Nat.pos_of_ne_zero (NeZero.ne M)⟩ : Fin M) : ℕ) := by
-            rw [← hfull_def]
-          simpa using this
-        -- Sub-decoder: no sub-codeword can be typical, since each sub-codeword
-        -- equals c_full(reindex k') and h_exists_full says no c_full ℓ is typical.
-        have h_no_sub_typ : ¬ ∃ k : Fin M_target, (subcodebook k, y) ∈ A := by
-          rintro ⟨k, hk⟩
-          exact h_exists_full ⟨reindex k, hk⟩
-        have h_decoder_sub_zero : jointTypicalDecoder A subcodebook y
-            = ⟨0, Nat.pos_of_ne_zero (NeZero.ne M_target)⟩ := by
-          unfold jointTypicalDecoder
-          rw [dif_neg h_no_sub_typ]
-        -- For sub-decoder to satisfy `decoder_sub y ≠ j` (hsub_def), j ≠ 0.
-        have hj_ne_zero_sub : (j : ℕ) ≠ 0 := by
-          intro hj0
-          apply hsub_def
-          rw [h_decoder_sub_zero]
-          exact Fin.ext hj0.symm
-        -- From `reindex j = 0` in Fin M and `j ≠ 0` in Fin M_target, we'd need
-        -- reindex(j > 0) = 0. By monotonicity reindex(0) < reindex(j), so
-        -- reindex(0) < 0 in Fin M which is impossible.
-        have hj_pos : (0 : Fin M_target) < j := by
-          rw [Fin.pos_iff_ne_zero]
-          intro heq
-          exact hj_ne_zero_sub (by simp [heq])
-        have h_reindex_zero_lt : reindex 0 < reindex j := hreindex_strictMono hj_pos
-        have : (reindex 0 : ℕ) < (reindex j : ℕ) := h_reindex_zero_lt
-        rw [hreindex_zero] at this
-        exact Nat.not_lt_zero _ this
+      rw [hsubcodebook_def]
+      exact errorEvent_jointTypicalDecoder_comp_subset_of_strictMono
+        A c_full reindex hreindex_strictMono j
     -- Step 2: Monotonicity of `μ_y` gives the measure inclusion.
     have h_meas_le := μ_y.mono h_incl
     -- Step 3: The full-side bound from D-2 (`hS_pe` on `reindex j ∈ S`).
