@@ -82,6 +82,95 @@ private lemma pmfLogCondInfty_eq_sum_indicator_neg_log (x : (∀ _ : ℤ, α)) :
     pmfLogCondPast_inner_eq_self (fun a => -Real.log (condProbInfty μ p a x)) x
   rw [h_inner, h_sum]
 
+lemma tendsto_min_posPart_natCast (t : ℝ) :
+    Tendsto (fun M : ℕ => min (t⁺) (M : ℝ)) atTop (𝓝 (t⁺)) := by
+  obtain ⟨N, hN⟩ := exists_nat_ge (t⁺)
+  rw [Metric.tendsto_atTop]
+  intro ε hε
+  refine ⟨N, fun M hM => ?_⟩
+  have hMbig : (N : ℝ) ≤ (M : ℝ) := by exact_mod_cast hM
+  have h_pos_part_le_M : t⁺ ≤ (M : ℝ) := hN.trans hMbig
+  have hFM : min (t⁺) (M : ℝ) = t⁺ := min_eq_left h_pos_part_le_M
+  rw [hFM]; simp [hε]
+
+lemma norm_min_posPart_natCast_le (t : ℝ) (M : ℕ) :
+    ‖min (t⁺) (M : ℝ)‖ ≤ (M : ℝ) := by
+  have h_nn : 0 ≤ min (t⁺) (M : ℝ) := le_min (le_max_right _ _) M.cast_nonneg
+  have h_bound : min (t⁺) (M : ℝ) ≤ (M : ℝ) := min_le_right _ _
+  rw [Real.norm_eq_abs]
+  exact abs_le.mpr ⟨by linarith, h_bound⟩
+
+lemma min_posPart_neg_log_mul_le_negMulLog {y : ℝ} (hy_nn : 0 ≤ y) (hy_le : y ≤ 1)
+    (M : ℕ) : min ((-Real.log y)⁺) (M : ℝ) * y ≤ Real.negMulLog y := by
+  have hlog_np : Real.log y ≤ 0 := Real.log_nonpos hy_nn hy_le
+  have hneg_log_nn : 0 ≤ -Real.log y := neg_nonneg.mpr hlog_np
+  have h_pos_part : (-Real.log y)⁺ = -Real.log y := max_eq_left hneg_log_nn
+  have h_FM_le : min ((-Real.log y)⁺) (M : ℝ) ≤ -Real.log y :=
+    le_trans (min_le_left _ _) (le_of_eq h_pos_part)
+  calc min ((-Real.log y)⁺) (M : ℝ) * y ≤ (-Real.log y) * y :=
+        mul_le_mul_of_nonneg_right h_FM_le hy_nn
+    _ = Real.negMulLog y := by rw [Real.negMulLog]; ring
+
+lemma enorm_mul_neg_log_eq_ofReal {c y : ℝ} (hc : 0 ≤ c) (hy_nn : 0 ≤ y)
+    (hy_le : y ≤ 1) :
+    (‖c * (-Real.log y)‖ₑ : ENNReal) = ENNReal.ofReal (c * (-Real.log y)⁺) := by
+  have hlog_np : Real.log y ≤ 0 := Real.log_nonpos hy_nn hy_le
+  have hneg_log_nn : 0 ≤ -Real.log y := neg_nonneg.mpr hlog_np
+  have h_pos_part : (-Real.log y)⁺ = -Real.log y := max_eq_left hneg_log_nn
+  have hprod_nn : 0 ≤ c * (-Real.log y) := mul_nonneg hc hneg_log_nn
+  rw [h_pos_part]
+  exact Real.enorm_eq_ofReal hprod_nn
+
+lemma integrable_negMulLog_of_mem_Icc {β : Type*} {mβ : MeasurableSpace β}
+    {ν : Measure β} [IsFiniteMeasure ν] {g : β → ℝ}
+    (hg_meas : AEStronglyMeasurable g ν) (hg_nn : 0 ≤ᵐ[ν] g)
+    (hg_le : g ≤ᵐ[ν] fun _ => (1 : ℝ)) :
+    Integrable (fun x => Real.negMulLog (g x)) ν := by
+  refine Integrable.mono (integrable_const (1 : ℝ))
+    (Real.continuous_negMulLog.comp_aestronglyMeasurable hg_meas) ?_
+  filter_upwards [hg_nn, hg_le] with x hx_nn hx_le
+  have hx_nn' : (0 : ℝ) ≤ g x := hx_nn
+  rw [Real.norm_eq_abs, abs_of_nonneg (Real.negMulLog_nonneg hx_nn' hx_le),
+    Real.norm_eq_abs, abs_of_nonneg zero_le_one]
+  have h1 : Real.negMulLog (g x) ≤ 1 - g x := Real.negMulLog_le_one_sub_self hx_nn'
+  linarith
+
+lemma integral_negMulLog_le_one {β : Type*} {mβ : MeasurableSpace β}
+    {ν : Measure β} [IsProbabilityMeasure ν] {g : β → ℝ}
+    (hg_meas : AEStronglyMeasurable g ν) (hg_nn : 0 ≤ᵐ[ν] g)
+    (hg_le : g ≤ᵐ[ν] fun _ => (1 : ℝ)) :
+    ∫ x, Real.negMulLog (g x) ∂ν ≤ 1 := by
+  have h_bd : (fun x => Real.negMulLog (g x)) ≤ᵐ[ν] fun _ => (1 : ℝ) := by
+    filter_upwards [hg_nn, hg_le] with x hx_nn hx_le
+    have hx_nn' : (0 : ℝ) ≤ g x := hx_nn
+    have : Real.negMulLog (g x) ≤ 1 - g x := Real.negMulLog_le_one_sub_self hx_nn'
+    linarith
+  calc ∫ x, Real.negMulLog (g x) ∂ν
+      ≤ ∫ _, (1 : ℝ) ∂ν :=
+        integral_mono_ae (integrable_negMulLog_of_mem_Icc hg_meas hg_nn hg_le)
+          (integrable_const _) h_bd
+    _ = 1 := by rw [integral_const, smul_eq_mul]; simp
+
+lemma lintegral_ofReal_le_one_of_integral_le_one {β : Type*} {mβ : MeasurableSpace β}
+    {ν : Measure β} {φ : β → ℝ} (hφ_int : Integrable φ ν) (hφ_nn : 0 ≤ᵐ[ν] φ)
+    (hφ_le : ∫ x, φ x ∂ν ≤ 1) : ∫⁻ x, ENNReal.ofReal (φ x) ∂ν ≤ 1 := by
+  rw [← ofReal_integral_eq_lintegral_ofReal hφ_int hφ_nn]
+  exact_mod_cast ENNReal.ofReal_le_one.mpr hφ_le
+
+lemma lintegral_lt_top_of_monotone_tendsto_le {β : Type*} {mβ : MeasurableSpace β}
+    {ν : Measure β} {f : ℕ → β → ENNReal} {ψ : β → ENNReal} {C : ENNReal}
+    (hf_meas : ∀ M, Measurable (f M)) (hf_mono : ∀ x, Monotone fun M => f M x)
+    (hf_tendsto : ∀ x, Tendsto (fun M => f M x) atTop (𝓝 (ψ x)))
+    (hf_bound : ∀ M, ∫⁻ x, f M x ∂ν ≤ C) (hC : C < ⊤) :
+    ∫⁻ x, ψ x ∂ν < ⊤ := by
+  have h_supr_eq : ∫⁻ x, ψ x ∂ν = ⨆ M, ∫⁻ x, f M x ∂ν := by
+    rw [show ψ = fun x => ⨆ M, f M x by
+      funext x
+      exact (iSup_eq_of_tendsto (hf_mono x) (hf_tendsto x)).symm]
+    exact lintegral_iSup hf_meas (fun M N hMN x => hf_mono x hMN)
+  rw [h_supr_eq]
+  exact lt_of_le_of_lt (iSup_le hf_bound) hC
+
 omit [DecidableEq α] [Nonempty α] in
 /-- **Auxiliary integrability** (key technical lemma for both integrability theorems).
 
@@ -133,20 +222,14 @@ private lemma integrable_indicator_mul_negLog_of_condExp
     exact min_le_min le_rfl (by exact_mod_cast hMN)
   have hF_tendsto : ∀ x, Tendsto (fun M : ℕ => F M x) atTop (𝓝 ((-Real.log (g x))⁺)) := by
     intro x
-    obtain ⟨N, hN⟩ := exists_nat_ge ((-Real.log (g x))⁺)
-    rw [Metric.tendsto_atTop]
-    intro ε hε
-    refine ⟨N, fun M hM => ?_⟩
-    have hMbig : (N : ℝ) ≤ (M : ℝ) := by exact_mod_cast hM
-    have h_pos_part_le_M : (-Real.log (g x))⁺ ≤ (M : ℝ) := hN.trans hMbig
-    have hFM : F M x = (-Real.log (g x))⁺ := min_eq_left h_pos_part_le_M
-    rw [hFM]; simp [hε]
+    simp only [hF_def]
+    exact tendsto_min_posPart_natCast (-Real.log (g x))
   -- F M is bounded by M (as a real norm), hence integrable; ind * F M integrable via
   -- `Integrable.bdd_mul` (with bounded factor F M).
   have hF_norm_bound : ∀ M x, ‖F M x‖ ≤ (M : ℝ) := by
     intro M x
-    rw [Real.norm_eq_abs]
-    exact abs_le.mpr ⟨by have := hF_nn M x; linarith, hF_bound M x⟩
+    simp only [hF_def]
+    exact norm_min_posPart_natCast_le (-Real.log (g x)) M
   have hF_meas : ∀ M, @Measurable _ _ MeasurableSpace.pi _ (F M) :=
     fun M => ((hF_meas_m M).mono hm).measurable
   -- Pull-out for each M: μZ[ind * F M | m] =ᵐ F M * g. We compute via
@@ -177,27 +260,11 @@ private lemma integrable_indicator_mul_negLog_of_condExp
   have h_bound : ∀ M, ∀ᵐ x ∂(μZ μ p), F M x * g x ≤ Real.negMulLog (g x) := by
     intro M
     filter_upwards [hg_nn, hg_le] with x hx_nn hx_le
-    have hx_nn' : (0 : ℝ) ≤ g x := hx_nn
-    have hlog_np : Real.log (g x) ≤ 0 := Real.log_nonpos hx_nn' hx_le
-    have hneg_log_nn : 0 ≤ -Real.log (g x) := neg_nonneg.mpr hlog_np
-    have h_pos_part : (-Real.log (g x))⁺ = -Real.log (g x) := max_eq_left hneg_log_nn
-    have h_FM_le : F M x ≤ -Real.log (g x) := by
-      have h1 : F M x ≤ (-Real.log (g x))⁺ := min_le_left _ _
-      rwa [h_pos_part] at h1
-    calc F M x * g x ≤ (-Real.log (g x)) * g x :=
-          mul_le_mul_of_nonneg_right h_FM_le hx_nn'
-      _ = Real.negMulLog (g x) := by rw [Real.negMulLog]; ring
+    simp only [hF_def]
+    exact min_posPart_neg_log_mul_le_negMulLog hx_nn hx_le M
   -- Integrability of negMulLog g (bounded by 1 - g ≤ 1).
-  have h_meas_negMulLog : @Measurable _ _ MeasurableSpace.pi _ (fun x => Real.negMulLog (g x)) :=
-    Real.continuous_negMulLog.measurable.comp h_meas_g
-  have h_int_negMulLog : Integrable (fun x => Real.negMulLog (g x)) (μZ μ p) := by
-    refine Integrable.mono (integrable_const (1 : ℝ)) h_meas_negMulLog.aestronglyMeasurable ?_
-    filter_upwards [hg_nn, hg_le] with x hx_nn hx_le
-    have hx_nn' : (0 : ℝ) ≤ g x := hx_nn
-    rw [Real.norm_eq_abs, abs_of_nonneg (Real.negMulLog_nonneg hx_nn' hx_le),
-      Real.norm_eq_abs, abs_of_nonneg zero_le_one]
-    have h1 : Real.negMulLog (g x) ≤ 1 - g x := Real.negMulLog_le_one_sub_self hx_nn'
-    linarith
+  have h_int_negMulLog : Integrable (fun x => Real.negMulLog (g x)) (μZ μ p) :=
+    integrable_negMulLog_of_mem_Icc h_meas_g.aestronglyMeasurable hg_nn hg_le
   have h_int_FM_g : ∀ M, Integrable (fun x => F M x * g x) (μZ μ p) := by
     intro M
     refine Integrable.mono h_int_negMulLog
@@ -219,18 +286,8 @@ private lemma integrable_indicator_mul_negLog_of_condExp
     exact integral_congr_ae (h_pullout M)
   -- ∫ negMulLog g ≤ 1 (probability measure).
   have h_negMulLog_le_one :
-      ∫ x, Real.negMulLog (g x) ∂(μZ μ p) ≤ 1 := by
-    have h_bd : (fun x => Real.negMulLog (g x)) ≤ᵐ[μZ μ p] fun _ => (1 : ℝ) := by
-      filter_upwards [hg_nn, hg_le] with x hx_nn hx_le
-      have hx_nn' : (0 : ℝ) ≤ g x := hx_nn
-      have : Real.negMulLog (g x) ≤ 1 - g x := Real.negMulLog_le_one_sub_self hx_nn'
-      linarith
-    calc ∫ x, Real.negMulLog (g x) ∂(μZ μ p)
-        ≤ ∫ _, (1 : ℝ) ∂(μZ μ p) :=
-          integral_mono_ae h_int_negMulLog (integrable_const _) h_bd
-      _ = 1 := by
-          rw [integral_const, smul_eq_mul]
-          simp
+      ∫ x, Real.negMulLog (g x) ∂(μZ μ p) ≤ 1 :=
+    integral_negMulLog_le_one h_meas_g.aestronglyMeasurable hg_nn hg_le
   -- Uniform integral bound per M: ∫ ind * F M ≤ 1.
   have h_uniform_bound : ∀ M, ∫ x, ind x * F M x ∂(μZ μ p) ≤ 1 := by
     intro M
@@ -244,14 +301,7 @@ private lemma integrable_indicator_mul_negLog_of_condExp
   have h_eq_pos_part : (fun x => (‖ind x * (-Real.log (g x))‖ₑ : ENNReal))
       =ᵐ[μZ μ p] fun x => ENNReal.ofReal (ind x * (-Real.log (g x))⁺) := by
     filter_upwards [hg_nn, hg_le] with x hx_nn hx_le
-    have hx_nn' : (0 : ℝ) ≤ g x := hx_nn
-    have hlog_np : Real.log (g x) ≤ 0 := Real.log_nonpos hx_nn' hx_le
-    have hneg_log_nn : 0 ≤ -Real.log (g x) := neg_nonneg.mpr hlog_np
-    have h_pos_part : (-Real.log (g x))⁺ = -Real.log (g x) := max_eq_left hneg_log_nn
-    have hprod_nn : 0 ≤ ind x * (-Real.log (g x)) :=
-      mul_nonneg (h_ind_nn x) hneg_log_nn
-    rw [h_pos_part]
-    exact Real.enorm_eq_ofReal hprod_nn
+    exact enorm_mul_neg_log_eq_ofReal (h_ind_nn x) hx_nn hx_le
   -- The product ind * (-log g) is AEStronglyMeasurable.
   have h_meas_prod_pi : @Measurable _ _ MeasurableSpace.pi _
       (fun x => ind x * (-Real.log (g x))) :=
@@ -261,44 +311,23 @@ private lemma integrable_indicator_mul_negLog_of_condExp
     h_meas_prod_pi.aestronglyMeasurable
   refine ⟨h_meas_prod, ?_⟩
   rw [hasFiniteIntegral_iff_enorm, lintegral_congr_ae h_eq_pos_part]
-  -- ENNReal-of-real-integral identity per M.
-  have h_ind_FM_nn : ∀ M x, 0 ≤ ind x * F M x := fun M x =>
-    mul_nonneg (h_ind_nn x) (hF_nn M x)
-  have h_lintegral_eq : ∀ M,
-      ∫⁻ x, ENNReal.ofReal (ind x * F M x) ∂(μZ μ p)
-        = ENNReal.ofReal (∫ x, ind x * F M x ∂(μZ μ p)) := by
-    intro M
-    rw [← ofReal_integral_eq_lintegral_ofReal]
-    · refine (h_int_FM_ind M)
-    · filter_upwards with x using h_ind_FM_nn M x
+  -- ENNReal-of-real-integral bound per M.
   have h_lintegral_bound : ∀ M,
-      ∫⁻ x, ENNReal.ofReal (ind x * F M x) ∂(μZ μ p) ≤ 1 := by
-    intro M
-    rw [h_lintegral_eq M]
-    exact_mod_cast ENNReal.ofReal_le_one.mpr (h_uniform_bound M)
+      ∫⁻ x, ENNReal.ofReal (ind x * F M x) ∂(μZ μ p) ≤ 1 := fun M =>
+    lintegral_ofReal_le_one_of_integral_le_one (h_int_FM_ind M)
+      (Filter.Eventually.of_forall fun x => mul_nonneg (h_ind_nn x) (hF_nn M x))
+      (h_uniform_bound M)
   -- MCT (monotone increasing supremum).
   have h_mono : ∀ x, Monotone (fun M => ENNReal.ofReal (ind x * F M x)) := by
     intro x M N hMN
     apply ENNReal.ofReal_le_ofReal
     exact mul_le_mul_of_nonneg_left (hF_mono x hMN) (h_ind_nn x)
-  have h_tendsto : ∀ x, Tendsto (fun M => ENNReal.ofReal (ind x * F M x)) atTop
-      (𝓝 (ENNReal.ofReal (ind x * (-Real.log (g x))⁺))) := by
-    intro x
-    refine (ENNReal.continuous_ofReal.tendsto _).comp ?_
-    exact (hF_tendsto x).const_mul (ind x)
-  have h_meas_FM_ENN : ∀ M, @Measurable _ _ MeasurableSpace.pi _
-      (fun x => ENNReal.ofReal (ind x * F M x)) :=
-    fun M => ENNReal.continuous_ofReal.measurable.comp (h_meas_ind.mul (hF_meas M))
-  have h_supr_eq : ∫⁻ x, ENNReal.ofReal (ind x * (-Real.log (g x))⁺) ∂(μZ μ p)
-      = ⨆ M, ∫⁻ x, ENNReal.ofReal (ind x * F M x) ∂(μZ μ p) := by
-    rw [show (fun x => ENNReal.ofReal (ind x * (-Real.log (g x))⁺))
-        = fun x => ⨆ M, ENNReal.ofReal (ind x * F M x) by
-      funext x
-      exact (iSup_eq_of_tendsto (h_mono x) (h_tendsto x)).symm]
-    exact lintegral_iSup h_meas_FM_ENN (fun M N hMN x => h_mono x hMN)
-  rw [h_supr_eq]
-  refine lt_of_le_of_lt (iSup_le h_lintegral_bound) ?_
-  exact ENNReal.one_lt_top
+  refine lintegral_lt_top_of_monotone_tendsto_le
+    (C := 1)
+    (fun M => ENNReal.continuous_ofReal.measurable.comp (h_meas_ind.mul (hF_meas M)))
+    h_mono (fun x => ?_) h_lintegral_bound ENNReal.one_lt_top
+  refine (ENNReal.continuous_ofReal.tendsto _).comp ?_
+  exact (hF_tendsto x).const_mul (ind x)
 
 omit [DecidableEq α] [Nonempty α] in
 /-- Integrability of `pmfLogCondPast k`.
@@ -689,6 +718,161 @@ lemma comap_pastBlock_eq_pastSigma (k : ℕ) :
 /-! ### Joint-law identification via stationarity -/
 
 omit [DecidableEq α] [Nonempty α] in
+lemma mapZ_coord0_pastBlock_apply_singleton (k : ℕ) (a : α) (s : Fin k → α) :
+    (μZ μ p).map (fun x : (∀ _ : ℤ, α) => (coord0 x, pastBlock k x)) {(a, s)}
+      = (μ.map (p.blockRV (k + 1))) {Fin.snoc s a} := by
+  classical
+  have hpair_meas_Z : Measurable (fun x : (∀ _ : ℤ, α) => (coord0 x, pastBlock k x)) :=
+    (measurable_coord0).prodMk (measurable_pastBlock k)
+  set s_full : Fin (k + 1) → α := Fin.snoc s a with hs_full_def
+  -- Step LHS-1: rewrite the LHS as μZ of a set, then split into shifted-marginal.
+  rw [Measure.map_apply hpair_meas_Z (measurableSet_singleton _)]
+  -- Preimage rewrite: { x | (x 0 = a) ∧ pastBlock k x = s }
+  --   = { x | ∀ i : Fin (k+1), x ((i.val:ℤ) - k) = s_full i }
+  have hpre : (fun x : (∀ _ : ℤ, α) => (coord0 x, pastBlock k x)) ⁻¹' {(a, s)}
+      = { x : (∀ _ : ℤ, α) | ∀ i : Fin (k + 1), x ((i.val : ℤ) - k) = s_full i } := by
+    ext x
+    simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.mk.injEq, Set.mem_setOf_eq]
+    constructor
+    · rintro ⟨hcoord, hpast⟩
+      intro i
+      -- Cases on i: either i = Fin.last k or i = j.castSucc for j : Fin k.
+      refine Fin.lastCases ?_ ?_ i
+      · -- i = Fin.last k: x ((k:ℤ) - k) = x 0 = a = s_full (Fin.last k).
+        have h_int_last : ((Fin.last k).val : ℤ) - k = 0 := by
+          show ((k : ℤ)) - k = 0; ring
+        rw [h_int_last, hs_full_def, Fin.snoc_last]
+        exact hcoord
+      · intro j
+        -- i = j.castSucc: x (j.val - k) = (pastBlock k x) j = s j = s_full j.castSucc.
+        have hj_cast_val : (j.castSucc : Fin (k+1)).val = j.val := rfl
+        rw [hs_full_def, Fin.snoc_castSucc]
+        show x ((j.val : ℤ) - k) = s j
+        have : pastBlock k x j = s j := congr_fun hpast _
+        exact this
+    · intro hall
+      refine ⟨?_, ?_⟩
+      · -- coord0 x = a: extract `i = Fin.last k`.
+        have h_int_last : ((Fin.last k).val : ℤ) - k = 0 := by
+          show ((k : ℤ)) - k = 0; ring
+        have hlast := hall (Fin.last k)
+        rw [h_int_last, hs_full_def, Fin.snoc_last] at hlast
+        exact hlast
+      · funext j
+        have h := hall j.castSucc
+        rw [hs_full_def, Fin.snoc_castSucc] at h
+        show x ((j.val : ℤ) - k) = s j
+        have hcast_val : (j.castSucc : Fin (k+1)).val = j.val := rfl
+        rw [hcast_val] at h
+        exact h
+  rw [hpre]
+  -- A cylinder on the index set `J := { (i.val:ℤ) - k | i : Fin (k+1) }`.
+  set J : Finset ℤ :=
+    (Finset.univ.image (fun i : Fin (k + 1) => (i.val : ℤ) - k))
+    with hJ_def
+  have hi_mem : ∀ i : Fin (k + 1), ((i.val : ℤ) - k) ∈ J := by
+    intro i
+    rw [hJ_def, Finset.mem_image]
+    exact ⟨i, Finset.mem_univ _, rfl⟩
+  set S_J : Set (∀ _ : J, α) :=
+    { f | ∀ i : Fin (k + 1), f ⟨((i.val : ℤ) - k), hi_mem i⟩ = s_full i } with hS_J
+  have hS_J_meas : MeasurableSet S_J := by
+    have h_inter : S_J = ⋂ i : Fin (k + 1),
+        { f : ∀ _ : J, α | f ⟨((i.val : ℤ) - k), hi_mem i⟩ = s_full i } := by
+      ext f; simp [hS_J]
+    rw [h_inter]
+    refine MeasurableSet.iInter (fun i => ?_)
+    have hpre' : { f : ∀ _ : J, α | f ⟨((i.val : ℤ) - k), hi_mem i⟩ = s_full i }
+        = (fun f : ∀ _ : J, α => f ⟨((i.val : ℤ) - k), hi_mem i⟩) ⁻¹' {s_full i} := rfl
+    rw [hpre']
+    exact (measurable_pi_apply _) (measurableSet_singleton _)
+  have h_set_eq :
+      { x : (∀ _ : ℤ, α) | ∀ i : Fin (k + 1), x ((i.val : ℤ) - k) = s_full i }
+        = cylinder J S_J := by
+    ext x
+    simp only [Set.mem_setOf_eq, cylinder, Set.mem_preimage, Finset.restrict, hS_J]
+  rw [h_set_eq, μZ_cylinder μ p hS_J_meas]
+  have hJ_shift : ∀ j ∈ J, (0 : ℤ) ≤ j + k := by
+    intro j hj
+    rw [hJ_def, Finset.mem_image] at hj
+    obtain ⟨i, _, rfl⟩ := hj
+    have h1 : (0 : ℤ) ≤ (i.val : ℤ) := Int.natCast_nonneg _
+    linarith
+  rw [shiftedMarginal_eq_of_shift μ p J k hJ_shift,
+      Measure.map_apply (measurable_obsZ μ p k J) hS_J_meas]
+  rw [Measure.map_apply (p.measurable_blockRV (k+1)) (measurableSet_singleton _)]
+  apply congrArg
+  ext ω
+  simp only [Set.mem_preimage, hS_J, Set.mem_setOf_eq, obsZ, Set.mem_singleton_iff]
+  constructor
+  · intro hf
+    funext i
+    have := hf i
+    have hcast : ((((i.val : ℤ) - k) + ((k : ℕ) : ℤ)).toNat) = i.val := by
+      have : ((i.val : ℤ) - k) + ((k : ℕ) : ℤ) = (i.val : ℤ) := by ring
+      rw [this]
+      exact_mod_cast Int.toNat_natCast _
+    show p.blockRV (k+1) ω i = s_full i
+    rw [hcast] at this
+    exact this
+  · intro hf i
+    have hcast : ((((i.val : ℤ) - k) + ((k : ℕ) : ℤ)).toNat) = i.val := by
+      have : ((i.val : ℤ) - k) + ((k : ℕ) : ℤ) = (i.val : ℤ) := by ring
+      rw [this]
+      exact_mod_cast Int.toNat_natCast _
+    rw [hcast]
+    exact congr_fun hf i
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [IsProbabilityMeasure μ] in
+lemma map_obs_blockRV_apply_singleton (k : ℕ) (a : α) (s : Fin k → α) :
+    μ.map (fun ω : Ω => (p.obs k ω, p.blockRV k ω)) {(a, s)}
+      = (μ.map (p.blockRV (k + 1))) {Fin.snoc s a} := by
+  classical
+  have hpair_meas_Ω : Measurable (fun ω : Ω => (p.obs k ω, p.blockRV k ω)) :=
+    (p.measurable_obs k).prodMk (p.measurable_blockRV k)
+  set s_full : Fin (k + 1) → α := Fin.snoc s a with hs_full_def
+  rw [Measure.map_apply hpair_meas_Ω (measurableSet_singleton _),
+      Measure.map_apply (p.measurable_blockRV (k+1)) (measurableSet_singleton _)]
+  apply congrArg
+  ext ω
+  simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.mk.injEq]
+  constructor
+  · rintro ⟨hobs, hblock⟩
+    funext i
+    refine Fin.lastCases ?_ ?_ i
+    · -- i = Fin.last k.
+      rw [hs_full_def, Fin.snoc_last]
+      show p.obs (Fin.last k) ω = a
+      show p.obs k ω = a
+      exact hobs
+    · intro j
+      -- i = j.castSucc.
+      rw [hs_full_def, Fin.snoc_castSucc]
+      show p.obs j.castSucc.val ω = s j
+      have h1 : (j.castSucc : Fin (k+1)).val = j.val := rfl
+      rw [h1]
+      show p.obs j.val ω = s j
+      have h2 : p.blockRV k ω j = p.obs j.val ω := rfl
+      rw [← h2, hblock]
+  · intro hblock_full
+    refine ⟨?_, ?_⟩
+    · -- p.obs k ω = a (extract Fin.last k).
+      have hlast := congr_fun hblock_full (Fin.last k)
+      rw [hs_full_def, Fin.snoc_last] at hlast
+      show p.obs k ω = a
+      show p.obs (Fin.last k) ω = a
+      exact hlast
+    · funext j
+      have hj := congr_fun hblock_full j.castSucc
+      rw [hs_full_def, Fin.snoc_castSucc] at hj
+      show p.obs j.val ω = s j
+      have h1 : (j.castSucc : Fin (k+1)).val = j.val := rfl
+      have h2 : p.blockRV (k + 1) ω j.castSucc = p.obs j.castSucc.val ω := rfl
+      rw [h2] at hj
+      rw [h1] at hj
+      exact hj
+
+omit [DecidableEq α] [Nonempty α] in
 /-- **Joint-law equality** (the key bridge for the integral identity).
 
 The pushforward of `μZ` under the joint map `x ↦ (coord0 x, pastBlock k x)`
@@ -720,183 +904,9 @@ theorem joint_pastBlock_coord0_eq (k : ℕ) :
   -- It suffices to show equality on singletons (finite types).
   refine Measure.ext_of_singleton ?_
   rintro ⟨a, s⟩
-  -- LHS: μZ {x | coord0 x = a ∧ pastBlock k x = s}
-  --     = μZ {x | x 0 = a ∧ ∀ i : Fin k, x ((i.val:ℤ)-k) = s i}
-  -- We compute this via the shifted-marginal identity at index set
-  --   `J := {-k, -k+1, ..., 0}` (i.e. all `(i.val:ℤ)-k` for `i : Fin (k+1)`).
-  -- Equivalently, by stationarity (shift `N := k`), this equals the marginal at
-  -- `{0, 1, ..., k}`, which is the law of `blockRV (k+1)` indexed naturally;
-  -- a relabeling identifies the LHS singleton with `μ.map (blockRV (k+1)) {s_full}`
-  -- where `s_full : Fin (k+1) → α`, `s_full i = if i = last then a else s ⟨i.val, _⟩`.
-  -- The RHS singleton μ.map (obs k, blockRV k) {(a, s)} also equals
-  -- μ.map (blockRV (k+1)) {s_full} via the `e : Fin (k+1) → α ≃ᵐ α × (Fin k → α)`
-  -- of `piFinSuccAbove (Fin.last k)`. So both sides agree.
-  -- We carry out this computation through `μZ_block_cylinder_eq` plus stationarity.
-  -- Define `s_full : Fin (k+1) → α` via `Fin.snoc s a`.
-  -- `Fin.snoc s a` satisfies `(Fin.snoc s a) i.castSucc = s i` and
-  -- `(Fin.snoc s a) (Fin.last k) = a`.
-  set s_full : Fin (k + 1) → α := Fin.snoc s a with hs_full_def
-  -- LHS singleton evaluation.
-  -- Both LHS and RHS singletons map to μ.map (blockRV (k+1)) {s_full}.
-  have h_LHS :
-      (μZ μ p).map (fun x : (∀ _ : ℤ, α) => (coord0 x, pastBlock k x)) {(a, s)}
-        = (μ.map (p.blockRV (k + 1))) {s_full} := by
-    -- Step LHS-1: rewrite the LHS as μZ of a set, then split into shifted-marginal.
-    rw [Measure.map_apply hpair_meas_Z (measurableSet_singleton _)]
-    -- Preimage rewrite: { x | (x 0 = a) ∧ pastBlock k x = s }
-    --   = { x | ∀ i : Fin (k+1), x ((i.val:ℤ) - k) = s_full i }
-    have hpre : (fun x : (∀ _ : ℤ, α) => (coord0 x, pastBlock k x)) ⁻¹' {(a, s)}
-        = { x : (∀ _ : ℤ, α) | ∀ i : Fin (k + 1), x ((i.val : ℤ) - k) = s_full i } := by
-      ext x
-      simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.mk.injEq, Set.mem_setOf_eq]
-      constructor
-      · rintro ⟨hcoord, hpast⟩
-        intro i
-        -- Cases on i: either i = Fin.last k or i = j.castSucc for j : Fin k.
-        refine Fin.lastCases ?_ ?_ i
-        · -- i = Fin.last k: x ((k:ℤ) - k) = x 0 = a = s_full (Fin.last k).
-          have h_int_last : ((Fin.last k).val : ℤ) - k = 0 := by
-            show ((k : ℤ)) - k = 0; ring
-          rw [h_int_last, hs_full_def, Fin.snoc_last]
-          exact hcoord
-        · intro j
-          -- i = j.castSucc: x (j.val - k) = (pastBlock k x) j = s j = s_full j.castSucc.
-          have hj_cast_val : (j.castSucc : Fin (k+1)).val = j.val := rfl
-          rw [hs_full_def, Fin.snoc_castSucc]
-          show x ((j.val : ℤ) - k) = s j
-          have : pastBlock k x j = s j := congr_fun hpast _
-          exact this
-      · intro hall
-        refine ⟨?_, ?_⟩
-        · -- coord0 x = a: extract `i = Fin.last k`.
-          have h_int_last : ((Fin.last k).val : ℤ) - k = 0 := by
-            show ((k : ℤ)) - k = 0; ring
-          have hlast := hall (Fin.last k)
-          rw [h_int_last, hs_full_def, Fin.snoc_last] at hlast
-          exact hlast
-        · funext j
-          have h := hall j.castSucc
-          rw [hs_full_def, Fin.snoc_castSucc] at h
-          show x ((j.val : ℤ) - k) = s j
-          have hcast_val : (j.castSucc : Fin (k+1)).val = j.val := rfl
-          rw [hcast_val] at h
-          exact h
-    rw [hpre]
-    -- Now the LHS set is `{ x | ∀ i : Fin (k+1), x ((i.val:ℤ) - k) = s_full i }`,
-    -- a cylinder on the index set `J := { (i.val:ℤ) - k | i : Fin (k+1) }`.
-    -- Apply shifted marginal: with shift N = k, obsZ μ p k J ω = block at indices
-    -- ((i.val:ℤ) - k + k).toNat = i.val, i.e. p.obs i.val ω, recovering p.blockRV (k+1) ω.
-    -- We reuse `μZ_block_cylinder_eq` style: stationarity transports.
-    -- Easier path: build the equality via `shiftedMarginal_eq_of_shift` directly.
-    set J : Finset ℤ :=
-      (Finset.univ.image (fun i : Fin (k + 1) => (i.val : ℤ) - k))
-      with hJ_def
-    -- Membership of `(i.val : ℤ) - k` in J.
-    have hi_mem : ∀ i : Fin (k + 1), ((i.val : ℤ) - k) ∈ J := by
-      intro i
-      rw [hJ_def, Finset.mem_image]
-      exact ⟨i, Finset.mem_univ _, rfl⟩
-    -- Set up the cylinder base S_J : Set (∀ _ : J, α).
-    set S_J : Set (∀ _ : J, α) :=
-      { f | ∀ i : Fin (k + 1), f ⟨((i.val : ℤ) - k), hi_mem i⟩ = s_full i } with hS_J
-    -- S_J is measurable (finite type intersection over Fin (k+1)).
-    have hS_J_meas : MeasurableSet S_J := by
-      have h_inter : S_J = ⋂ i : Fin (k + 1),
-          { f : ∀ _ : J, α | f ⟨((i.val : ℤ) - k), hi_mem i⟩ = s_full i } := by
-        ext f; simp [hS_J]
-      rw [h_inter]
-      refine MeasurableSet.iInter (fun i => ?_)
-      have hpre' : { f : ∀ _ : J, α | f ⟨((i.val : ℤ) - k), hi_mem i⟩ = s_full i }
-          = (fun f : ∀ _ : J, α => f ⟨((i.val : ℤ) - k), hi_mem i⟩) ⁻¹' {s_full i} := rfl
-      rw [hpre']
-      exact (measurable_pi_apply _) (measurableSet_singleton _)
-    -- The LHS set equals `cylinder J S_J`.
-    have h_set_eq :
-        { x : (∀ _ : ℤ, α) | ∀ i : Fin (k + 1), x ((i.val : ℤ) - k) = s_full i }
-          = cylinder J S_J := by
-      ext x
-      simp only [Set.mem_setOf_eq, cylinder, Set.mem_preimage, Finset.restrict, hS_J]
-    rw [h_set_eq, μZ_cylinder μ p hS_J_meas]
-    -- Now: shiftedMarginal μ p J S_J = μ.map (p.blockRV (k+1)) {s_full}.
-    -- All elements of J are ≥ -k; we pick shift N = k.
-    have hJ_shift : ∀ j ∈ J, (0 : ℤ) ≤ j + k := by
-      intro j hj
-      rw [hJ_def, Finset.mem_image] at hj
-      obtain ⟨i, _, rfl⟩ := hj
-      have h1 : (0 : ℤ) ≤ (i.val : ℤ) := Int.natCast_nonneg _
-      linarith
-    rw [shiftedMarginal_eq_of_shift μ p J k hJ_shift,
-        Measure.map_apply (measurable_obsZ μ p k J) hS_J_meas]
-    -- The preimage under obsZ μ p k J equals the preimage of {s_full} under blockRV (k+1).
-    rw [Measure.map_apply (p.measurable_blockRV (k+1)) (measurableSet_singleton _)]
-    apply congrArg
-    ext ω
-    simp only [Set.mem_preimage, hS_J, Set.mem_setOf_eq, obsZ, Set.mem_singleton_iff]
-    constructor
-    · intro hf
-      funext i
-      have := hf i
-      -- hf i : p.obs ((((i.val : ℤ) - k) + k).toNat) ω = s_full i
-      -- Compute ((i.val : ℤ) - k + k).toNat = i.val.
-      have hcast : ((((i.val : ℤ) - k) + ((k : ℕ) : ℤ)).toNat) = i.val := by
-        have : ((i.val : ℤ) - k) + ((k : ℕ) : ℤ) = (i.val : ℤ) := by ring
-        rw [this]
-        exact_mod_cast Int.toNat_natCast _
-      show p.blockRV (k+1) ω i = s_full i
-      rw [hcast] at this
-      exact this
-    · intro hf i
-      have hcast : ((((i.val : ℤ) - k) + ((k : ℕ) : ℤ)).toNat) = i.val := by
-        have : ((i.val : ℤ) - k) + ((k : ℕ) : ℤ) = (i.val : ℤ) := by ring
-        rw [this]
-        exact_mod_cast Int.toNat_natCast _
-      rw [hcast]
-      exact congr_fun hf i
-  -- Now RHS: μ.map (obs k, blockRV k) {(a, s)} = μ.map (blockRV (k+1)) {s_full}.
-  have h_RHS :
-      μ.map (fun ω : Ω => (p.obs k ω, p.blockRV k ω)) {(a, s)}
-        = (μ.map (p.blockRV (k + 1))) {s_full} := by
-    rw [Measure.map_apply hpair_meas_Ω (measurableSet_singleton _),
-        Measure.map_apply (p.measurable_blockRV (k+1)) (measurableSet_singleton _)]
-    apply congrArg
-    ext ω
-    simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.mk.injEq]
-    constructor
-    · rintro ⟨hobs, hblock⟩
-      funext i
-      refine Fin.lastCases ?_ ?_ i
-      · -- i = Fin.last k: p.blockRV (k+1) ω (Fin.last k) = p.obs k ω = a = s_full (Fin.last k).
-        rw [hs_full_def, Fin.snoc_last]
-        show p.obs (Fin.last k) ω = a
-        show p.obs k ω = a
-        exact hobs
-      · intro j
-        -- i = j.castSucc: p.blockRV (k+1) ω j.castSucc = p.obs j.val ω = p.blockRV k ω j = s j.
-        rw [hs_full_def, Fin.snoc_castSucc]
-        show p.obs j.castSucc.val ω = s j
-        have h1 : (j.castSucc : Fin (k+1)).val = j.val := rfl
-        rw [h1]
-        show p.obs j.val ω = s j
-        have h2 : p.blockRV k ω j = p.obs j.val ω := rfl
-        rw [← h2, hblock]
-    · intro hblock_full
-      refine ⟨?_, ?_⟩
-      · -- p.obs k ω = a (extract Fin.last k).
-        have hlast := congr_fun hblock_full (Fin.last k)
-        rw [hs_full_def, Fin.snoc_last] at hlast
-        show p.obs k ω = a
-        show p.obs (Fin.last k) ω = a
-        exact hlast
-      · funext j
-        have hj := congr_fun hblock_full j.castSucc
-        rw [hs_full_def, Fin.snoc_castSucc] at hj
-        show p.obs j.val ω = s j
-        have h1 : (j.castSucc : Fin (k+1)).val = j.val := rfl
-        have h2 : p.blockRV (k + 1) ω j.castSucc = p.obs j.castSucc.val ω := rfl
-        rw [h2] at hj
-        rw [h1] at hj
-        exact hj
-  rw [h_LHS, h_RHS]
+  -- Both LHS and RHS singletons reduce to `μ.map (blockRV (k+1)) {Fin.snoc s a}`.
+  rw [mapZ_coord0_pastBlock_apply_singleton μ p k a s,
+    map_obs_blockRV_apply_singleton μ p k a s]
 
 omit [DecidableEq α] in
 /-- **Conditional expectation identification**: `condProbPast a k` agrees a.s.

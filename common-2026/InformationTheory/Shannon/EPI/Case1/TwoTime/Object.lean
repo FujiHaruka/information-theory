@@ -671,6 +671,239 @@ theorem twoTimeLogRatioGap_antitoneOn_Ici_zero
   have := h_anti_Ioi.insert_of_continuousWithinAt h_cluster h_cont_zero
   rwa [Set.Ioi_insert] at this
 
+theorem heatFlowEP_zero (A B : Ω → ℝ) (P : Measure Ω) :
+    heatFlowEP A B P 0 = entropyPower (P.map A) := by
+  unfold heatFlowEP
+  have : (fun ω => A ω + Real.sqrt 0 * B ω) = A := by
+    funext ω; simp [Real.sqrt_zero]
+  rw [this]
+
+theorem matchedPath_component_div_exp_eq
+    (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    {J_A : ℝ → ℝ} {s : ℝ → ℝ}
+    (h_path : IsMatchedTimePath A B P J_A s)
+    (hA : Measurable A) (hB : Measurable B)
+    (h_scale : ∀ σ : ℝ, 0 < σ →
+      (P.map (fun ω => A ω / Real.sqrt σ + B ω)) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((P.map (fun ω => A ω / Real.sqrt σ + B ω)).rnDeriv volume x).toReal)) volume)
+    (hs_pos : ∀ t : ℝ, 0 < t → 0 < s t) :
+    ∀ t : ℝ, 0 < t →
+      s t / Real.exp t
+        = entropyPower (P.map A)
+            / entropyPower (P.map (fun ω => A ω / Real.sqrt (s t) + B ω)) := by
+  intro t ht
+  have hgrow : heatFlowEP A B P (s t) = entropyPower (P.map A) * Real.exp t := by
+    rw [h_path.matched_growth t ht.le, heatFlowEP_zero]
+  have hsc : heatFlowEP A B P (s t)
+      = s t * entropyPower (P.map (fun ω => A ω / Real.sqrt (s t) + B ω)) :=
+    entropyPower_path_scaling A B P hA hB (hs_pos t ht)
+      (h_scale (s t) (hs_pos t ht)).1 (h_scale (s t) (hs_pos t ht)).2
+  have hNr_pos : 0 < entropyPower (P.map (fun ω => A ω / Real.sqrt (s t) + B ω)) :=
+    entropyPower_pos _
+  rw [div_eq_div_iff (Real.exp_pos t).ne' hNr_pos.ne', ← hsc, hgrow]
+
+theorem sumHeatFlowEP_eq_mul_rescaled
+    (X Y Z_X Z_Y Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hX : Measurable X) (hY : Measurable Y)
+    (hZX : Measurable Z_X) (hZY : Measurable Z_Y) (hZ : Measurable Z)
+    (hZX_law : P.map Z_X = gaussianReal 0 1)
+    (hZY_law : P.map Z_Y = gaussianReal 0 1)
+    (hZ_law : P.map Z = gaussianReal 0 1)
+    (hXY_ZXZY_pair : IndepFun (fun ω => X ω + Y ω) (fun ω => (Z_X ω, Z_Y ω)) P)
+    (hXY_Z : IndepFun (fun ω => X ω + Y ω) Z P)
+    (hZX_ZY : IndepFun Z_X Z_Y P)
+    (h_scale_sum : ∀ σ : ℝ, 0 < σ →
+      (P.map (fun ω => (X ω + Y ω) / Real.sqrt σ + Z ω)) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((P.map (fun ω => (X ω + Y ω) / Real.sqrt σ + Z ω)).rnDeriv volume x).toReal)) volume)
+    {σ τ : ℝ} (hσ : 0 < σ) (hτ : 0 < τ) :
+    sumHeatFlowEP X Y Z_X Z_Y P σ τ
+      = (σ + τ)
+          * entropyPower (P.map (fun ω => (X ω + Y ω) / Real.sqrt (σ + τ) + Z ω)) := by
+  have hτpos : 0 < σ + τ := add_pos hσ hτ
+  have hlaw := matchedSum_law_eq X Y Z_X Z_Y Z P hX hY hZX hZY hZ hZX_law hZY_law hZ_law
+    hXY_ZXZY_pair hXY_Z hZX_ZY σ τ hσ hτ
+  have hAeq : sumHeatFlowEP X Y Z_X Z_Y P σ τ
+      = entropyPower (P.map (fun ω => (X ω + Y ω) + Real.sqrt (σ + τ) * Z ω)) := by
+    simp only [sumHeatFlowEP]
+    exact congrArg entropyPower hlaw
+  rw [hAeq]
+  exact entropyPower_path_scaling (fun ω => X ω + Y ω) Z P (hX.add hY) hZ hτpos
+    (h_scale_sum (σ + τ) hτpos).1 (h_scale_sum (σ + τ) hτpos).2
+
+theorem tendsto_div_one_of_tendsto_atTop_of_eq_mul_exp
+    {A B : ℝ → ℝ} {c : ℝ} (hc : 0 < c)
+    (hAe : Filter.Tendsto (fun t : ℝ => A t / Real.exp t) Filter.atTop (nhds c))
+    (hB : ∀ᶠ t in Filter.atTop, B t = c * Real.exp t) :
+    Filter.Tendsto (fun t : ℝ => A t / B t) Filter.atTop (nhds (1 : ℝ)) := by
+  have hfin := hAe.mul_const (1 / c)
+  have hone : c * (1 / c) = 1 := by
+    rw [mul_one_div, div_self hc.ne']
+  rw [hone] at hfin
+  refine (Filter.tendsto_congr' ?_).mp hfin
+  filter_upwards [hB] with t ht
+  rw [ht]
+  field_simp
+
+theorem entropyPower_rescaled_path_tendsto_gaussianEP
+    (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hA : Measurable A) (hB : Measurable B)
+    (hB_law : P.map B = gaussianReal 0 1)
+    (hB_ac : (P.map B) ≪ volume)
+    (var : ℝ) (h_var_nn : 0 ≤ var)
+    (h_reg : IsRescaledPathRegular A B P var 1) :
+    Filter.Tendsto
+      (fun σ : ℝ => entropyPower (P.map (fun ω => A ω / Real.sqrt σ + B ω)))
+      Filter.atTop (nhds (entropyPower (gaussianReal 0 (1 : ℝ≥0)))) := by
+  have h := entropyPower_rescaled_path_tendsto A B P hA hB (1 : ℝ≥0) one_ne_zero
+    hB_law var h_var_nn hB_ac h_reg
+  rwa [hB_law] at h
+
+theorem matchedPath_div_exp_tendsto
+    (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    {J_A : ℝ → ℝ} {s : ℝ → ℝ}
+    (h_path : IsMatchedTimePath A B P J_A s)
+    (hA : Measurable A) (hB : Measurable B)
+    (h_scale : ∀ σ : ℝ, 0 < σ →
+      (P.map (fun ω => A ω / Real.sqrt σ + B ω)) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((P.map (fun ω => A ω / Real.sqrt σ + B ω)).rnDeriv volume x).toReal)) volume)
+    (hs_pos : ∀ t : ℝ, 0 < t → 0 < s t)
+    {ν : ℝ} (hν_pos : 0 < ν)
+    (hN : Filter.Tendsto
+      (fun t : ℝ => entropyPower (P.map (fun ω => A ω / Real.sqrt (s t) + B ω)))
+      Filter.atTop (nhds ν)) :
+    Filter.Tendsto (fun t : ℝ => s t / Real.exp t) Filter.atTop
+      (nhds (entropyPower (P.map A) / ν)) := by
+  have h_comp := matchedPath_component_div_exp_eq A B P h_path hA hB h_scale hs_pos
+  refine (Filter.tendsto_congr' ?_).mp (tendsto_const_nhds.div hN hν_pos.ne')
+  filter_upwards [Filter.eventually_gt_atTop (0 : ℝ)] with t ht
+  exact (h_comp t ht).symm
+
+theorem tendsto_sum_mul_div_exp
+    {f g h F : ℝ → ℝ} {a b ν : ℝ}
+    (hf : Filter.Tendsto (fun t : ℝ => f t / Real.exp t) Filter.atTop (nhds a))
+    (hg : Filter.Tendsto (fun t : ℝ => g t / Real.exp t) Filter.atTop (nhds b))
+    (hh : Filter.Tendsto h Filter.atTop (nhds ν))
+    (hF : ∀ᶠ t in Filter.atTop, F t = (f t + g t) * h t) :
+    Filter.Tendsto (fun t : ℝ => F t / Real.exp t) Filter.atTop (nhds ((a + b) * ν)) := by
+  have h_sum : Filter.Tendsto (fun t : ℝ => (f t + g t) / Real.exp t) Filter.atTop
+      (nhds (a + b)) := by
+    have hadd := hf.add hg
+    have heq : (fun t : ℝ => f t / Real.exp t + g t / Real.exp t)
+        = (fun t : ℝ => (f t + g t) / Real.exp t) := by funext t; rw [add_div]
+    rwa [heq] at hadd
+  have hprod := h_sum.mul hh
+  refine (Filter.tendsto_congr' ?_).mp hprod
+  filter_upwards [hF] with t ht
+  rw [ht]; ring
+
+theorem sumHeatFlowEP_div_heatFlowEP_sum_tendsto_one
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    {J_X J_Y : ℝ → ℝ} {s r : ℝ → ℝ}
+    (h_path_X : IsMatchedTimePath X Z_X P J_X s)
+    (h_path_Y : IsMatchedTimePath Y Z_Y P J_Y r)
+    (Z : Ω → ℝ)
+    (hX : Measurable X) (hY : Measurable Y)
+    (hZX : Measurable Z_X) (hZY : Measurable Z_Y) (hZ : Measurable Z)
+    (hZX_law : P.map Z_X = gaussianReal 0 1)
+    (hZY_law : P.map Z_Y = gaussianReal 0 1)
+    (hZ_law : P.map Z = gaussianReal 0 1)
+    (hXY_ZXZY_pair : IndepFun (fun ω => X ω + Y ω) (fun ω => (Z_X ω, Z_Y ω)) P)
+    (hXY_Z : IndepFun (fun ω => X ω + Y ω) Z P)
+    (hZX_ZY : IndepFun Z_X Z_Y P)
+    (hZX_ac : (P.map Z_X) ≪ volume) (hZY_ac : (P.map Z_Y) ≪ volume)
+    (hZ_ac : (P.map Z) ≪ volume)
+    (hs_atTop : Filter.Tendsto s Filter.atTop Filter.atTop)
+    (hr_atTop : Filter.Tendsto r Filter.atTop Filter.atTop)
+    (hs_pos : ∀ t : ℝ, 0 < t → 0 < s t) (hr_pos : ∀ t : ℝ, 0 < t → 0 < r t)
+    (h_scale_X : ∀ σ : ℝ, 0 < σ →
+      (P.map (fun ω => X ω / Real.sqrt σ + Z_X ω)) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((P.map (fun ω => X ω / Real.sqrt σ + Z_X ω)).rnDeriv volume x).toReal)) volume)
+    (h_scale_Y : ∀ σ : ℝ, 0 < σ →
+      (P.map (fun ω => Y ω / Real.sqrt σ + Z_Y ω)) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((P.map (fun ω => Y ω / Real.sqrt σ + Z_Y ω)).rnDeriv volume x).toReal)) volume)
+    (h_scale_sum : ∀ σ : ℝ, 0 < σ →
+      (P.map (fun ω => (X ω + Y ω) / Real.sqrt σ + Z ω)) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((P.map (fun ω => (X ω + Y ω) / Real.sqrt σ + Z ω)).rnDeriv volume x).toReal)) volume)
+    (varX varY varS : ℝ)
+    (h_varX_nn : 0 ≤ varX) (h_varY_nn : 0 ≤ varY) (h_varS_nn : 0 ≤ varS)
+    (h_reg_X : IsRescaledPathRegular X Z_X P varX 1)
+    (h_reg_Y : IsRescaledPathRegular Y Z_Y P varY 1)
+    (h_reg_S : IsRescaledPathRegular (fun ω => X ω + Y ω) Z P varS 1)
+    (h_den : ∀ t : ℝ, 0 ≤ t →
+      heatFlowEP X Z_X P (s t) + heatFlowEP Y Z_Y P (r t)
+        = (entropyPower (P.map X) + entropyPower (P.map Y)) * Real.exp t) :
+    Filter.Tendsto
+      (fun t : ℝ => sumHeatFlowEP X Y Z_X Z_Y P (s t) (r t)
+        / (heatFlowEP X Z_X P (s t) + heatFlowEP Y Z_Y P (r t)))
+      Filter.atTop (nhds (1 : ℝ)) := by
+  set A := fun t : ℝ => sumHeatFlowEP X Y Z_X Z_Y P (s t) (r t) with hA
+  have hXY_pos : (0 : ℝ) < entropyPower (P.map X) + entropyPower (P.map Y) :=
+    add_pos (entropyPower_pos _) (entropyPower_pos _)
+  -- Common noise entropy power `ν = N(𝒩(0,1))`; all three noises share it.
+  set ν : ℝ := entropyPower (gaussianReal 0 (1 : ℝ≥0)) with hν
+  have hν_pos : (0 : ℝ) < ν := entropyPower_pos _
+  -- Rescaled-path envelope limits → ν (from §3 `entropyPower_rescaled_path_tendsto`).
+  have hNXr_lim : Filter.Tendsto
+      (fun σ : ℝ => entropyPower (P.map (fun ω => X ω / Real.sqrt σ + Z_X ω)))
+      Filter.atTop (nhds ν) :=
+    hν ▸ entropyPower_rescaled_path_tendsto_gaussianEP X Z_X P hX hZX hZX_law hZX_ac
+      varX h_varX_nn h_reg_X
+  have hNYr_lim : Filter.Tendsto
+      (fun σ : ℝ => entropyPower (P.map (fun ω => Y ω / Real.sqrt σ + Z_Y ω)))
+      Filter.atTop (nhds ν) :=
+    hν ▸ entropyPower_rescaled_path_tendsto_gaussianEP Y Z_Y P hY hZY hZY_law hZY_ac
+      varY h_varY_nn h_reg_Y
+  have hNSr_lim : Filter.Tendsto
+      (fun σ : ℝ => entropyPower (P.map (fun ω => (X ω + Y ω) / Real.sqrt σ + Z ω)))
+      Filter.atTop (nhds ν) :=
+    hν ▸ entropyPower_rescaled_path_tendsto_gaussianEP (fun ω => X ω + Y ω) Z P
+      (hX.add hY) hZ hZ_law hZ_ac varS h_varS_nn h_reg_S
+  -- Compose envelope limits with path divergence `s, r, τ = s + r → ∞`.
+  have hτ_atTop : Filter.Tendsto (fun t => s t + r t) Filter.atTop Filter.atTop :=
+    hs_atTop.atTop_add_atTop hr_atTop
+  have hNXr_s : Filter.Tendsto
+      (fun t : ℝ => entropyPower (P.map (fun ω => X ω / Real.sqrt (s t) + Z_X ω)))
+      Filter.atTop (nhds ν) := hNXr_lim.comp hs_atTop
+  have hNYr_r : Filter.Tendsto
+      (fun t : ℝ => entropyPower (P.map (fun ω => Y ω / Real.sqrt (r t) + Z_Y ω)))
+      Filter.atTop (nhds ν) := hNYr_lim.comp hr_atTop
+  have hNSr_τ : Filter.Tendsto
+      (fun t : ℝ =>
+        entropyPower (P.map (fun ω => (X ω + Y ω) / Real.sqrt (s t + r t) + Z ω)))
+      Filter.atTop (nhds ν) := hNSr_lim.comp hτ_atTop
+  -- Component asymptotics: `s t / eᵗ → N(X)/ν`, `r t / eᵗ → N(Y)/ν`.
+  have h_sX_lim := matchedPath_div_exp_tendsto X Z_X P h_path_X hX hZX h_scale_X hs_pos
+    hν_pos hNXr_s
+  have h_rY_lim := matchedPath_div_exp_tendsto Y Z_Y P h_path_Y hY hZY h_scale_Y hr_pos
+    hν_pos hNYr_r
+  -- `A t = τ t · NSr(τ t)` for `t > 0` (matched-sum reduction + scaling).
+  have h_A : ∀ᶠ t in Filter.atTop,
+      A t = (s t + r t)
+          * entropyPower (P.map (fun ω => (X ω + Y ω) / Real.sqrt (s t + r t) + Z ω)) := by
+    filter_upwards [Filter.eventually_gt_atTop (0 : ℝ)] with t ht
+    rw [hA]
+    exact sumHeatFlowEP_eq_mul_rescaled X Y Z_X Z_Y Z P hX hY hZX hZY hZ
+      hZX_law hZY_law hZ_law hXY_ZXZY_pair hXY_Z hZX_ZY h_scale_sum
+      (hs_pos t ht) (hr_pos t ht)
+  -- `A t / eᵗ → N(X) + N(Y)` (the `ν` factors cancel: `(N(X)/ν + N(Y)/ν)·ν`).
+  have h_Ae_lim : Filter.Tendsto (fun t : ℝ => A t / Real.exp t) Filter.atTop
+      (nhds (entropyPower (P.map X) + entropyPower (P.map Y))) := by
+    have h := tendsto_sum_mul_div_exp h_sX_lim h_rY_lim hNSr_τ h_A
+    have hval : (entropyPower (P.map X) / ν + entropyPower (P.map Y) / ν) * ν
+        = entropyPower (P.map X) + entropyPower (P.map Y) := by
+      field_simp
+    rwa [hval] at h
+  -- `A t / B t → 1` from `A t / eᵗ → N(X)+N(Y)` and `B t = (N(X)+N(Y))·eᵗ`.
+  refine tendsto_div_one_of_tendsto_atTop_of_eq_mul_exp hXY_pos h_Ae_lim ?_
+  filter_upwards [Filter.eventually_ge_atTop (0 : ℝ)] with t ht
+  exact h_den t ht
+
 /-- **TT-`_tendsto_zero_atTop`** — the two-time gap tends to `0` as `t → ∞`
 (Gaussian-saturation limit along the matched paths). Mirrors
 `csiszarLogRatioGap_tendsto_zero_atTop` (`EPICase1RatioLimit.lean:1178`).
@@ -760,24 +993,14 @@ theorem twoTimeLogRatioGap_tendsto_zero_atTop
   -- (eP X + eP Y) is positive.
   have hXY_pos : (0 : ℝ) < entropyPower (P.map X) + entropyPower (P.map Y) :=
     add_pos (entropyPower_pos _) (entropyPower_pos _)
-  -- `heatFlowEP _ _ _ 0 = entropyPower (P.map _)` (the `√0 = 0` collapse).
-  have hX0 : heatFlowEP X Z_X P 0 = entropyPower (P.map X) := by
-    unfold heatFlowEP
-    have : (fun ω => X ω + Real.sqrt 0 * Z_X ω) = X := by
-      funext ω; simp [Real.sqrt_zero]
-    rw [this]
-  have hY0 : heatFlowEP Y Z_Y P 0 = entropyPower (P.map Y) := by
-    unfold heatFlowEP
-    have : (fun ω => Y ω + Real.sqrt 0 * Z_Y ω) = Y := by
-      funext ω; simp [Real.sqrt_zero]
-    rw [this]
   -- §1 (genuine reduction): for `t ≥ 0`, `R t = log (A t) − log (B t)` and
   -- `B t = (eP X + eP Y)·eᵗ`.
   have hB_eq : ∀ t : ℝ, 0 ≤ t →
       B t = (entropyPower (P.map X) + entropyPower (P.map Y)) * Real.exp t := by
     intro t ht
     show heatFlowEP X Z_X P (s t) + heatFlowEP Y Z_Y P (r t) = _
-    rw [h_path_X.matched_growth t ht, h_path_Y.matched_growth t ht, hX0, hY0]
+    rw [h_path_X.matched_growth t ht, h_path_Y.matched_growth t ht,
+      heatFlowEP_zero, heatFlowEP_zero]
     ring
   have h_R_eq : ∀ t : ℝ, 0 ≤ t →
       twoTimeLogRatioGap X Y Z_X Z_Y P s r t = Real.log (A t) - Real.log (B t) := by
@@ -790,127 +1013,11 @@ theorem twoTimeLogRatioGap_tendsto_zero_atTop
   -- §2 (saturation core): the EPI ratio `A t / B t → 1` along the matched path.
   have h_ratio_tendsto :
       Filter.Tendsto (fun t : ℝ => A t / B t) Filter.atTop (nhds (1 : ℝ)) := by
-    -- Common noise entropy power `ν = N(𝒩(0,1))`; all three noises share it.
-    set ν : ℝ := entropyPower (gaussianReal 0 (1 : ℝ≥0)) with hν
-    have hν_pos : (0 : ℝ) < ν := entropyPower_pos _
-    -- Rescaled-path envelope limits → ν (from §3 `entropyPower_rescaled_path_tendsto`).
-    have hNXr_lim : Filter.Tendsto
-        (fun σ : ℝ => entropyPower (P.map (fun ω => X ω / Real.sqrt σ + Z_X ω)))
-        Filter.atTop (nhds ν) := by
-      have h := entropyPower_rescaled_path_tendsto X Z_X P hX hZX (1 : ℝ≥0) one_ne_zero
-        hZX_law varX h_varX_nn hZX_ac h_reg_X
-      rw [hZX_law, ← hν] at h; exact h
-    have hNYr_lim : Filter.Tendsto
-        (fun σ : ℝ => entropyPower (P.map (fun ω => Y ω / Real.sqrt σ + Z_Y ω)))
-        Filter.atTop (nhds ν) := by
-      have h := entropyPower_rescaled_path_tendsto Y Z_Y P hY hZY (1 : ℝ≥0) one_ne_zero
-        hZY_law varY h_varY_nn hZY_ac h_reg_Y
-      rw [hZY_law, ← hν] at h; exact h
-    have hNSr_lim : Filter.Tendsto
-        (fun σ : ℝ => entropyPower (P.map (fun ω => (X ω + Y ω) / Real.sqrt σ + Z ω)))
-        Filter.atTop (nhds ν) := by
-      have h := entropyPower_rescaled_path_tendsto (fun ω => X ω + Y ω) Z P (hX.add hY) hZ
-        (1 : ℝ≥0) one_ne_zero hZ_law varS h_varS_nn hZ_ac h_reg_S
-      rw [hZ_law, ← hν] at h; exact h
-    -- Compose envelope limits with path divergence `s, r, τ = s + r → ∞`.
-    have hτ_atTop : Filter.Tendsto (fun t => s t + r t) Filter.atTop Filter.atTop :=
-      hs_atTop.atTop_add_atTop hr_atTop
-    have hNXr_s : Filter.Tendsto
-        (fun t : ℝ => entropyPower (P.map (fun ω => X ω / Real.sqrt (s t) + Z_X ω)))
-        Filter.atTop (nhds ν) := hNXr_lim.comp hs_atTop
-    have hNYr_r : Filter.Tendsto
-        (fun t : ℝ => entropyPower (P.map (fun ω => Y ω / Real.sqrt (r t) + Z_Y ω)))
-        Filter.atTop (nhds ν) := hNYr_lim.comp hr_atTop
-    have hNSr_τ : Filter.Tendsto
-        (fun t : ℝ =>
-          entropyPower (P.map (fun ω => (X ω + Y ω) / Real.sqrt (s t + r t) + Z ω)))
-        Filter.atTop (nhds ν) := hNSr_lim.comp hτ_atTop
-    -- Component asymptotics: `s t / eᵗ → N(X)/ν`, `r t / eᵗ → N(Y)/ν`.
-    -- From `N_X(s t) = N(X)·eᵗ` (matched growth) and `N_X(s t) = s t · NXr(s t)` (scaling).
-    have h_sX : ∀ t : ℝ, 0 < t →
-        s t / Real.exp t
-          = entropyPower (P.map X)
-              / entropyPower (P.map (fun ω => X ω / Real.sqrt (s t) + Z_X ω)) := by
-      intro t ht
-      have hgrow : heatFlowEP X Z_X P (s t) = entropyPower (P.map X) * Real.exp t := by
-        rw [h_path_X.matched_growth t ht.le, hX0]
-      have hsc : heatFlowEP X Z_X P (s t)
-          = s t * entropyPower (P.map (fun ω => X ω / Real.sqrt (s t) + Z_X ω)) :=
-        entropyPower_path_scaling X Z_X P hX hZX (hs_pos t ht)
-          (h_scale_X (s t) (hs_pos t ht)).1 (h_scale_X (s t) (hs_pos t ht)).2
-      have hNXr_pos : 0 < entropyPower (P.map (fun ω => X ω / Real.sqrt (s t) + Z_X ω)) :=
-        entropyPower_pos _
-      rw [div_eq_div_iff (Real.exp_pos t).ne' hNXr_pos.ne', ← hsc, hgrow]
-    have h_rY : ∀ t : ℝ, 0 < t →
-        r t / Real.exp t
-          = entropyPower (P.map Y)
-              / entropyPower (P.map (fun ω => Y ω / Real.sqrt (r t) + Z_Y ω)) := by
-      intro t ht
-      have hgrow : heatFlowEP Y Z_Y P (r t) = entropyPower (P.map Y) * Real.exp t := by
-        rw [h_path_Y.matched_growth t ht.le, hY0]
-      have hsc : heatFlowEP Y Z_Y P (r t)
-          = r t * entropyPower (P.map (fun ω => Y ω / Real.sqrt (r t) + Z_Y ω)) :=
-        entropyPower_path_scaling Y Z_Y P hY hZY (hr_pos t ht)
-          (h_scale_Y (r t) (hr_pos t ht)).1 (h_scale_Y (r t) (hr_pos t ht)).2
-      have hNYr_pos : 0 < entropyPower (P.map (fun ω => Y ω / Real.sqrt (r t) + Z_Y ω)) :=
-        entropyPower_pos _
-      rw [div_eq_div_iff (Real.exp_pos t).ne' hNYr_pos.ne', ← hsc, hgrow]
-    have h_sX_lim : Filter.Tendsto (fun t : ℝ => s t / Real.exp t) Filter.atTop
-        (nhds (entropyPower (P.map X) / ν)) := by
-      refine (Filter.tendsto_congr' ?_).mp (tendsto_const_nhds.div hNXr_s hν_pos.ne')
-      filter_upwards [Filter.eventually_gt_atTop (0 : ℝ)] with t ht
-      exact (h_sX t ht).symm
-    have h_rY_lim : Filter.Tendsto (fun t : ℝ => r t / Real.exp t) Filter.atTop
-        (nhds (entropyPower (P.map Y) / ν)) := by
-      refine (Filter.tendsto_congr' ?_).mp (tendsto_const_nhds.div hNYr_r hν_pos.ne')
-      filter_upwards [Filter.eventually_gt_atTop (0 : ℝ)] with t ht
-      exact (h_rY t ht).symm
-    -- `τ t / eᵗ → (N(X) + N(Y))/ν`.
-    have h_τ_lim : Filter.Tendsto (fun t : ℝ => (s t + r t) / Real.exp t) Filter.atTop
-        (nhds ((entropyPower (P.map X) + entropyPower (P.map Y)) / ν)) := by
-      have hadd := h_sX_lim.add h_rY_lim
-      have heq : (fun t : ℝ => s t / Real.exp t + r t / Real.exp t)
-          = (fun t : ℝ => (s t + r t) / Real.exp t) := by funext t; rw [add_div]
-      rw [heq, ← add_div] at hadd
-      exact hadd
-    -- `A t = τ t · NSr(τ t)` for `t > 0` (matched-sum reduction + scaling).
-    have h_A : ∀ t : ℝ, 0 < t →
-        A t = (s t + r t)
-            * entropyPower (P.map (fun ω => (X ω + Y ω) / Real.sqrt (s t + r t) + Z ω)) := by
-      intro t ht
-      have hτpos : 0 < s t + r t := by
-        have := hs_pos t ht; have := hr_pos t ht; linarith
-      have hlaw := matchedSum_law_eq X Y Z_X Z_Y Z P hX hY hZX hZY hZ hZX_law hZY_law hZ_law
-        hXY_ZXZY_pair hXY_Z hZX_ZY (s t) (r t) (hs_pos t ht) (hr_pos t ht)
-      have hAeq : A t
-          = entropyPower (P.map (fun ω => (X ω + Y ω) + Real.sqrt (s t + r t) * Z ω)) := by
-        simp only [hA, sumHeatFlowEP]
-        exact congrArg entropyPower hlaw
-      rw [hAeq]
-      exact entropyPower_path_scaling (fun ω => X ω + Y ω) Z P (hX.add hY) hZ hτpos
-        (h_scale_sum (s t + r t) hτpos).1 (h_scale_sum (s t + r t) hτpos).2
-    -- `A t / eᵗ → N(X) + N(Y)`.
-    have h_Ae_lim : Filter.Tendsto (fun t : ℝ => A t / Real.exp t) Filter.atTop
-        (nhds (entropyPower (P.map X) + entropyPower (P.map Y))) := by
-      have hprod := h_τ_lim.mul hNSr_τ
-      have hval : ((entropyPower (P.map X) + entropyPower (P.map Y)) / ν) * ν
-          = entropyPower (P.map X) + entropyPower (P.map Y) := by
-        rw [div_mul_eq_mul_div, mul_div_assoc, div_self hν_pos.ne', mul_one]
-      rw [hval] at hprod
-      refine (Filter.tendsto_congr' ?_).mp hprod
-      filter_upwards [Filter.eventually_gt_atTop (0 : ℝ)] with t ht
-      rw [h_A t ht]; ring
-    -- `A t / B t = (A t / eᵗ)·(1/(N(X)+N(Y))) → 1` (eventually, `t ≥ 0`, via `hB_eq`).
-    have hfin := h_Ae_lim.mul_const
-      (1 / (entropyPower (P.map X) + entropyPower (P.map Y)))
-    have hone : (entropyPower (P.map X) + entropyPower (P.map Y))
-        * (1 / (entropyPower (P.map X) + entropyPower (P.map Y))) = 1 := by
-      rw [mul_one_div, div_self hXY_pos.ne']
-    rw [hone] at hfin
-    refine (Filter.tendsto_congr' ?_).mp hfin
-    filter_upwards [Filter.eventually_ge_atTop (0 : ℝ)] with t ht
-    rw [hB_eq t ht]
-    field_simp
+    rw [hA, hB]
+    exact sumHeatFlowEP_div_heatFlowEP_sum_tendsto_one X Y Z_X Z_Y P h_path_X h_path_Y Z
+      hX hY hZX hZY hZ hZX_law hZY_law hZ_law hXY_ZXZY_pair hXY_Z hZX_ZY
+      hZX_ac hZY_ac hZ_ac hs_atTop hr_atTop hs_pos hr_pos h_scale_X h_scale_Y h_scale_sum
+      varX varY varS h_varX_nn h_varY_nn h_varS_nn h_reg_X h_reg_Y h_reg_S hB_eq
   -- `B t > 0` for `t ≥ 0` (positive entropy powers times `eᵗ`).
   have hB_pos : ∀ t : ℝ, 0 ≤ t → 0 < B t := by
     intro t ht
@@ -979,6 +1086,59 @@ theorem epi_of_twoTimeLogRatioGap_tendsto
   have h_zero_le : (0 : ℝ) ≤ R 0 := le_of_tendsto h_lim h_tail
   -- Bridge to EPI.
   exact epi_of_twoTimeLogRatioGap_zero_nonneg X Y Z_X Z_Y P h_path_X h_path_Y h_zero_le
+
+theorem heatFlowEP_hasDerivAt_of_regular
+    (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
+    {σ : ℝ} (hσ : 0 < σ)
+    (h_reg : InformationTheory.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2 X Z P σ) :
+    HasDerivAt (fun u => heatFlowEP X Z P u)
+      (heatFlowEP X Z P σ
+        * InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal h_reg.density_t)
+      σ := by
+  set J := InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+    h_reg.density_t with hJ_def
+  have h_dB : HasDerivAt
+      (fun s => InformationTheory.Shannon.differentialEntropy
+        (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z s)))
+      ((1/2) * J) σ := by
+    have := InformationTheory.Shannon.FisherInfoV2.deBruijn_identity_v2
+      X Z hX hZ hXZ hσ h_reg
+    simpa only [hJ_def] using this
+  have h_eP := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB
+  have h_val : heatFlowEP X Z P σ * J
+      = Real.exp (2 * InformationTheory.Shannon.differentialEntropy
+          (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z σ)))
+        * (2 * ((1/2) * J)) := by
+    unfold heatFlowEP entropyPower InformationTheory.Shannon.FisherInfoV2.gaussianConvolution
+    ring
+  rw [h_val]; exact h_eP
+
+theorem heatFlowEP_tendsto_atTop
+    (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hX : Measurable X) (hZ : Measurable Z)
+    (hZ_law : P.map Z = gaussianReal 0 1)
+    (hZ_ac : (P.map Z) ≪ volume)
+    (h_scale : ∀ σ : ℝ, 0 < σ →
+      (P.map (fun ω => X ω / Real.sqrt σ + Z ω)) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((P.map (fun ω => X ω / Real.sqrt σ + Z ω)).rnDeriv volume x).toReal)) volume)
+    (var : ℝ) (h_var_nn : 0 ≤ var)
+    (h_rescale : IsRescaledPathRegular X Z P var 1) :
+    Filter.Tendsto (fun s => heatFlowEP X Z P s) Filter.atTop Filter.atTop := by
+  have hν_pos : (0 : ℝ) < entropyPower (P.map Z) := entropyPower_pos _
+  have hNr_lim := entropyPower_rescaled_path_tendsto X Z P hX hZ (1 : ℝ≥0) one_ne_zero
+    hZ_law var h_var_nn hZ_ac h_rescale
+  have h_eq : ∀ᶠ s in Filter.atTop,
+      heatFlowEP X Z P s = s * entropyPower (P.map (fun ω => X ω / Real.sqrt s + Z ω)) := by
+    filter_upwards [Filter.eventually_gt_atTop (0:ℝ)] with s hs
+    have hsc := entropyPower_path_scaling X Z P hX hZ hs (h_scale s hs).1 (h_scale s hs).2
+    simpa only [heatFlowEP] using hsc
+  have h_prod : Filter.Tendsto
+      (fun s : ℝ => s * entropyPower (P.map (fun ω => X ω / Real.sqrt s + Z ω)))
+      Filter.atTop Filter.atTop :=
+    Filter.Tendsto.atTop_mul_pos hν_pos Filter.tendsto_id hNr_lim
+  exact h_prod.congr' (h_eq.mono (fun s hs => hs.symm))
 
 /-- **TT case-1 EPI terminal** (two-time analog of the single-`t`
 `entropyPower_add_ge_case1_of_regular`, `EPICase1RatioLimit.lean:1343`).
@@ -1108,75 +1268,17 @@ theorem entropyPower_add_ge_case1_of_regular_twotime
       HasDerivAt (fun u => heatFlowEP X Z_X P u) (heatFlowEP X Z_X P σ * J_X σ) σ := by
     intro σ hσ
     rw [hJX_val σ hσ]
-    set J := InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
-      ((h_reg_X.reg_at σ hσ).density_t) with hJ_def
-    have h_dB : HasDerivAt
-        (fun s => InformationTheory.Shannon.differentialEntropy
-          (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z_X s)))
-        ((1/2) * J) σ := by
-      have := InformationTheory.Shannon.FisherInfoV2.deBruijn_identity_v2
-        X Z_X hX hZX hXZX hσ (h_reg_X.reg_at σ hσ)
-      simpa only [hJ_def] using this
-    have h_eP := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB
-    have h_val : heatFlowEP X Z_X P σ * J
-        = Real.exp (2 * InformationTheory.Shannon.differentialEntropy
-            (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z_X σ)))
-          * (2 * ((1/2) * J)) := by
-      unfold heatFlowEP entropyPower InformationTheory.Shannon.FisherInfoV2.gaussianConvolution
-      ring
-    rw [h_val]; exact h_eP
+    exact heatFlowEP_hasDerivAt_of_regular X Z_X P hX hZX hXZX hσ (h_reg_X.reg_at σ hσ)
   have hJ_deriv_Y : ∀ τ : ℝ, 0 < τ →
       HasDerivAt (fun u => heatFlowEP Y Z_Y P u) (heatFlowEP Y Z_Y P τ * J_Y τ) τ := by
     intro τ hτ
     rw [hJY_val τ hτ]
-    set J := InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
-      ((h_reg_Y.reg_at τ hτ).density_t) with hJ_def
-    have h_dB : HasDerivAt
-        (fun s => InformationTheory.Shannon.differentialEntropy
-          (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution Y Z_Y s)))
-        ((1/2) * J) τ := by
-      have := InformationTheory.Shannon.FisherInfoV2.deBruijn_identity_v2
-        Y Z_Y hY hZY hYZY hτ (h_reg_Y.reg_at τ hτ)
-      simpa only [hJ_def] using this
-    have h_eP := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB
-    have h_val : heatFlowEP Y Z_Y P τ * J
-        = Real.exp (2 * InformationTheory.Shannon.differentialEntropy
-            (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution Y Z_Y τ)))
-          * (2 * ((1/2) * J)) := by
-      unfold heatFlowEP entropyPower InformationTheory.Shannon.FisherInfoV2.gaussianConvolution
-      ring
-    rw [h_val]; exact h_eP
+    exact heatFlowEP_hasDerivAt_of_regular Y Z_Y P hY hZY hYZY hτ (h_reg_Y.reg_at τ hτ)
   -- ===== `hN_tendsto` assembly (heatFlowEP divergence, probe-5d). =====
-  have hN_tendsto_X : Filter.Tendsto (fun s => heatFlowEP X Z_X P s) Filter.atTop Filter.atTop := by
-    set ν : ℝ := entropyPower (P.map Z_X) with hν
-    have hν_pos : (0 : ℝ) < ν := entropyPower_pos _
-    have hNr_lim := entropyPower_rescaled_path_tendsto X Z_X P hX hZX (1 : ℝ≥0) one_ne_zero
-      hZX_law varX h_varX_nn hZX_ac h_rescale_X
-    have h_eq : ∀ᶠ s in Filter.atTop,
-        heatFlowEP X Z_X P s = s * entropyPower (P.map (fun ω => X ω / Real.sqrt s + Z_X ω)) := by
-      filter_upwards [Filter.eventually_gt_atTop (0:ℝ)] with s hs
-      have hsc := entropyPower_path_scaling X Z_X P hX hZX hs (h_scale_X s hs).1 (h_scale_X s hs).2
-      simpa only [heatFlowEP] using hsc
-    have h_prod : Filter.Tendsto
-        (fun s : ℝ => s * entropyPower (P.map (fun ω => X ω / Real.sqrt s + Z_X ω)))
-        Filter.atTop Filter.atTop :=
-      Filter.Tendsto.atTop_mul_pos hν_pos Filter.tendsto_id hNr_lim
-    exact h_prod.congr' (h_eq.mono (fun s hs => hs.symm))
-  have hN_tendsto_Y : Filter.Tendsto (fun s => heatFlowEP Y Z_Y P s) Filter.atTop Filter.atTop := by
-    set ν : ℝ := entropyPower (P.map Z_Y) with hν
-    have hν_pos : (0 : ℝ) < ν := entropyPower_pos _
-    have hNr_lim := entropyPower_rescaled_path_tendsto Y Z_Y P hY hZY (1 : ℝ≥0) one_ne_zero
-      hZY_law varY h_varY_nn hZY_ac h_rescale_Y
-    have h_eq : ∀ᶠ s in Filter.atTop,
-        heatFlowEP Y Z_Y P s = s * entropyPower (P.map (fun ω => Y ω / Real.sqrt s + Z_Y ω)) := by
-      filter_upwards [Filter.eventually_gt_atTop (0:ℝ)] with s hs
-      have hsc := entropyPower_path_scaling Y Z_Y P hY hZY hs (h_scale_Y s hs).1 (h_scale_Y s hs).2
-      simpa only [heatFlowEP] using hsc
-    have h_prod : Filter.Tendsto
-        (fun s : ℝ => s * entropyPower (P.map (fun ω => Y ω / Real.sqrt s + Z_Y ω)))
-        Filter.atTop Filter.atTop :=
-      Filter.Tendsto.atTop_mul_pos hν_pos Filter.tendsto_id hNr_lim
-    exact h_prod.congr' (h_eq.mono (fun s hs => hs.symm))
+  have hN_tendsto_X : Filter.Tendsto (fun s => heatFlowEP X Z_X P s) Filter.atTop Filter.atTop :=
+    heatFlowEP_tendsto_atTop X Z_X P hX hZX hZX_law hZX_ac h_scale_X varX h_varX_nn h_rescale_X
+  have hN_tendsto_Y : Filter.Tendsto (fun s => heatFlowEP Y Z_Y P s) Filter.atTop Filter.atTop :=
+    heatFlowEP_tendsto_atTop Y Z_Y P hY hZY hZY_law hZY_ac h_scale_Y varY h_varY_nn h_rescale_Y
   -- ===== Construct the matched paths `s` / `r` (strengthened `matchedTimePath_exists`). =====
   obtain ⟨s, h_path_X, hs_pos, hs_atTop⟩ :=
     matchedTimePath_exists X Z_X P J_X hX hZX hXZX hJX_pos hJ_deriv_X h_endpt_X hN_tendsto_X
