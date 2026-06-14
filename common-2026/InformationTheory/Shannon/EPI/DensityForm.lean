@@ -201,6 +201,183 @@ lemma rescaled_path_absolutelyContinuous_and_negMulLog_integrable
     integral_nonneg fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg _ _ _)
   rw [hx, ENNReal.toReal_ofReal hcd_nn]
 
+lemma liftMeasure3_map_fst_eq
+    {Ω : Type*} {mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
+    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) :
+    (liftMeasure3 P).map (fun p => X p.1) = P.map X ∧
+      (liftMeasure3 P).map (fun p => Y p.1) = P.map Y ∧
+      (liftMeasure3 P).map (fun p => X p.1 + Y p.1) = P.map (fun ω => X ω + Y ω) := by
+  refine ⟨?_, ?_, ?_⟩
+  · rw [show (fun p : Ω × ℝ × ℝ × ℝ => X p.1) = X ∘ Prod.fst from rfl,
+      ← Measure.map_map hX measurable_fst, measurePreserving_fst.map_eq]
+  · rw [show (fun p : Ω × ℝ × ℝ × ℝ => Y p.1) = Y ∘ Prod.fst from rfl,
+      ← Measure.map_map hY measurable_fst, measurePreserving_fst.map_eq]
+  · rw [show (fun p : Ω × ℝ × ℝ × ℝ => X p.1 + Y p.1) = (fun ω => X ω + Y ω) ∘ Prod.fst from rfl,
+      ← Measure.map_map (hX.add hY) measurable_fst, measurePreserving_fst.map_eq]
+
+lemma liftMeasure3_noise_laws
+    {Ω : Type*} {mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P] :
+    (liftMeasure3 P).map (fun p : Ω × ℝ × ℝ × ℝ => p.2.1) = gaussianReal 0 1 ∧
+      (liftMeasure3 P).map (fun p : Ω × ℝ × ℝ × ℝ => p.2.2.1) = gaussianReal 0 1 ∧
+      (liftMeasure3 P).map (fun p : Ω × ℝ × ℝ × ℝ => p.2.2.2) = gaussianReal 0 1 := by
+  refine ⟨?_, ?_, ?_⟩
+  · rw [show (fun p : Ω × ℝ × ℝ × ℝ => p.2.1) = Prod.fst ∘ Prod.snd from rfl,
+      ← Measure.map_map measurable_fst measurable_snd,
+      measurePreserving_snd.map_eq, measurePreserving_fst.map_eq]
+  · rw [show (fun p : Ω × ℝ × ℝ × ℝ => p.2.2.1) = Prod.fst ∘ Prod.snd ∘ Prod.snd from rfl,
+      ← Measure.map_map measurable_fst (measurable_snd.comp measurable_snd),
+      ← Measure.map_map measurable_snd measurable_snd,
+      measurePreserving_snd.map_eq, measurePreserving_snd.map_eq,
+      measurePreserving_fst.map_eq]
+  · rw [show (fun p : Ω × ℝ × ℝ × ℝ => p.2.2.2) = Prod.snd ∘ Prod.snd ∘ Prod.snd from rfl,
+      ← Measure.map_map measurable_snd (measurable_snd.comp measurable_snd),
+      ← Measure.map_map measurable_snd measurable_snd,
+      measurePreserving_snd.map_eq, measurePreserving_snd.map_eq,
+      measurePreserving_snd.map_eq]
+
+lemma liftMeasure3_moment_transport
+    {Ω : Type*} {mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
+    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
+    (h_mom_X : Integrable (fun ω => (X ω) ^ 2) P)
+    (h_mom_Y : Integrable (fun ω => (Y ω) ^ 2) P) :
+    Integrable (fun ω => (X ω + Y ω) ^ 2) P ∧
+      Integrable (fun p : Ω × ℝ × ℝ × ℝ => (X p.1) ^ 2) (liftMeasure3 P) ∧
+      Integrable (fun p : Ω × ℝ × ℝ × ℝ => (Y p.1) ^ 2) (liftMeasure3 P) ∧
+      Integrable (fun p : Ω × ℝ × ℝ × ℝ => (X p.1 + Y p.1) ^ 2) (liftMeasure3 P) := by
+  have h_mom_XY : Integrable (fun ω => (X ω + Y ω) ^ 2) P := by
+    have hX_memLp : MemLp X 2 P :=
+      (memLp_two_iff_integrable_sq_norm hX.aestronglyMeasurable).mpr (by simpa using h_mom_X)
+    have hY_memLp : MemLp Y 2 P :=
+      (memLp_two_iff_integrable_sq_norm hY.aestronglyMeasurable).mpr (by simpa using h_mom_Y)
+    have hS_memLp : MemLp (fun ω => X ω + Y ω) 2 P := hX_memLp.add hY_memLp
+    simpa using hS_memLp.integrable_sq
+  refine ⟨h_mom_XY, ?_, ?_, ?_⟩
+  · exact h_mom_X.comp_fst ((gaussianReal 0 1).prod ((gaussianReal 0 1).prod (gaussianReal 0 1)))
+  · exact h_mom_Y.comp_fst ((gaussianReal 0 1).prod ((gaussianReal 0 1).prod (gaussianReal 0 1)))
+  · exact h_mom_XY.comp_fst ((gaussianReal 0 1).prod ((gaussianReal 0 1).prod (gaussianReal 0 1)))
+
+lemma iIndepFun_liftMeasure3_of_indep
+    {Ω : Type*} {mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
+    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P) :
+    iIndepFun
+      ![fun p : Ω × ℝ × ℝ × ℝ => X p.1, fun p => Y p.1,
+        fun p => p.2.1, fun p => p.2.2.1, fun p => p.2.2.2]
+      (liftMeasure3 P) := by
+  set X' : Ω × ℝ × ℝ × ℝ → ℝ := fun p => X p.1 with hX'
+  set Y' : Ω × ℝ × ℝ × ℝ → ℝ := fun p => Y p.1 with hY'
+  set ZX : Ω × ℝ × ℝ × ℝ → ℝ := fun p => p.2.1 with hZX
+  set ZY : Ω × ℝ × ℝ × ℝ → ℝ := fun p => p.2.2.1 with hZY
+  set Z : Ω × ℝ × ℝ × ℝ → ℝ := fun p => p.2.2.2 with hZ
+  have hX'_meas : Measurable X' := hX.comp measurable_fst
+  have hY'_meas : Measurable Y' := hY.comp measurable_fst
+  have hZX_meas : Measurable ZX := measurable_fst.comp measurable_snd
+  have hZY_meas : Measurable ZY := (measurable_fst.comp measurable_snd).comp measurable_snd
+  have hZ_meas : Measurable Z := (measurable_snd.comp measurable_snd).comp measurable_snd
+  obtain ⟨hmap_X', hmap_Y', _⟩ := liftMeasure3_map_fst_eq P X Y hX hY
+  obtain ⟨hZX_law, hZY_law, hZ_law⟩ := liftMeasure3_noise_laws P (Ω := Ω)
+  have haem : ∀ i, AEMeasurable (![X', Y', ZX, ZY, Z] i) (liftMeasure3 P) := by
+    intro i; fin_cases i
+    · exact hX'_meas.aemeasurable
+    · exact hY'_meas.aemeasurable
+    · exact hZX_meas.aemeasurable
+    · exact hZY_meas.aemeasurable
+    · exact hZ_meas.aemeasurable
+  rw [iIndepFun_iff_map_fun_eq_pi_map haem]
+  symm
+  refine Measure.pi_eq (fun s hs => ?_)
+  have hjoint_meas : Measurable (fun ω i => ![X', Y', ZX, ZY, Z] i ω) := by
+    refine measurable_pi_lambda _ (fun i => ?_)
+    fin_cases i
+    · exact hX'_meas
+    · exact hY'_meas
+    · exact hZX_meas
+    · exact hZY_meas
+    · exact hZ_meas
+  rw [Measure.map_apply hjoint_meas (MeasurableSet.univ_pi hs)]
+  have hm0 : (liftMeasure3 P).map (![X', Y', ZX, ZY, Z] 0) = P.map X := by simpa using hmap_X'
+  have hm1 : (liftMeasure3 P).map (![X', Y', ZX, ZY, Z] 1) = P.map Y := by simpa using hmap_Y'
+  have hm2 : (liftMeasure3 P).map (![X', Y', ZX, ZY, Z] 2) = gaussianReal 0 1 := by
+    simpa using hZX_law
+  have hm3 : (liftMeasure3 P).map (![X', Y', ZX, ZY, Z] 3) = gaussianReal 0 1 := by
+    simpa using hZY_law
+  have hm4 : (liftMeasure3 P).map (![X', Y', ZX, ZY, Z] 4) = gaussianReal 0 1 := by
+    simpa using hZ_law
+  rw [Fin.prod_univ_five, hm0, hm1, hm2, hm3, hm4]
+  have hpre : (fun ω i => ![X', Y', ZX, ZY, Z] i ω) ⁻¹' (Set.univ.pi s)
+      = (X ⁻¹' s 0 ∩ Y ⁻¹' s 1) ×ˢ (s 2 ×ˢ (s 3 ×ˢ s 4)) := by
+    ext p
+    simp only [Set.mem_preimage, Set.mem_univ_pi, Set.mem_prod, Set.mem_inter_iff]
+    constructor
+    · intro h
+      exact ⟨⟨h 0, h 1⟩, h 2, h 3, h 4⟩
+    · intro h i
+      fin_cases i
+      · exact h.1.1
+      · exact h.1.2
+      · exact h.2.1
+      · exact h.2.2.1
+      · exact h.2.2.2
+  rw [hpre, Measure.prod_prod, Measure.prod_prod, Measure.prod_prod]
+  have hAprod : P (X ⁻¹' s 0 ∩ Y ⁻¹' s 1) = P.map X (s 0) * P.map Y (s 1) := by
+    rw [Measure.map_apply hX (hs 0), Measure.map_apply hY (hs 1)]
+    exact (indepFun_iff_measure_inter_preimage_eq_mul.1 hXY) (s 0) (s 1) (hs 0) (hs 1)
+  rw [hAprod]
+  ring
+
+lemma liftMeasure3_pairwise_indep
+    {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω}
+    {X' Y' ZX ZY Z : Ω × ℝ × ℝ × ℝ → ℝ}
+    (hX'_meas : Measurable X') (hY'_meas : Measurable Y')
+    (hZX_meas : Measurable ZX) (hZY_meas : Measurable ZY) (hZ_meas : Measurable Z)
+    (h_iIndep : iIndepFun ![X', Y', ZX, ZY, Z] (liftMeasure3 P)) :
+    IndepFun X' ZX (liftMeasure3 P) ∧
+      IndepFun Y' ZY (liftMeasure3 P) ∧
+      IndepFun X' Y' (liftMeasure3 P) ∧
+      IndepFun ZX ZY (liftMeasure3 P) ∧
+      IndepFun (fun p => (X' p, ZX p)) (fun p => (Y' p, ZY p)) (liftMeasure3 P) ∧
+      IndepFun (fun p => X' p + Y' p) Z (liftMeasure3 P) ∧
+      IndepFun (fun p => X' p + Y' p) (fun p => (ZX p, ZY p)) (liftMeasure3 P) := by
+  have hf_meas : ∀ i, Measurable (![X', Y', ZX, ZY, Z] i) := by
+    intro i; fin_cases i
+    · exact hX'_meas
+    · exact hY'_meas
+    · exact hZX_meas
+    · exact hZY_meas
+    · exact hZ_meas
+  have hXZX : IndepFun X' ZX (liftMeasure3 P) := by
+    have := h_iIndep.indepFun (i := (0 : Fin 5)) (j := (2 : Fin 5)) (by decide)
+    simpa using this
+  have hYZY : IndepFun Y' ZY (liftMeasure3 P) := by
+    have := h_iIndep.indepFun (i := (1 : Fin 5)) (j := (3 : Fin 5)) (by decide)
+    simpa using this
+  have hX'Y'_indep : IndepFun X' Y' (liftMeasure3 P) := by
+    have := h_iIndep.indepFun (i := (0 : Fin 5)) (j := (1 : Fin 5)) (by decide)
+    simpa using this
+  have hZX_ZY : IndepFun ZX ZY (liftMeasure3 P) := by
+    have := h_iIndep.indepFun (i := (2 : Fin 5)) (j := (3 : Fin 5)) (by decide)
+    simpa using this
+  have hpair_indep : IndepFun (fun p => (X' p, ZX p)) (fun p => (Y' p, ZY p)) (liftMeasure3 P) := by
+    have := h_iIndep.indepFun_prodMk_prodMk hf_meas 0 2 1 3
+      (by decide) (by decide) (by decide) (by decide)
+    simpa using this
+  have hXYZ : IndepFun (fun p => X' p + Y' p) Z (liftMeasure3 P) := by
+    have hpair : IndepFun (fun a => (X' a, Y' a)) Z (liftMeasure3 P) := by
+      have := h_iIndep.indepFun_prodMk hf_meas 0 1 4 (by decide) (by decide)
+      simpa using this
+    have hsum : Measurable (fun q : ℝ × ℝ => q.1 + q.2) := by fun_prop
+    have := hpair.comp hsum measurable_id
+    simpa [Function.comp] using this
+  have hXY_ZXZY_pair :
+      IndepFun (fun p => X' p + Y' p) (fun p => (ZX p, ZY p)) (liftMeasure3 P) := by
+    have hpair : IndepFun (fun a => (X' a, Y' a)) (fun a => (ZX a, ZY a)) (liftMeasure3 P) := by
+      have := h_iIndep.indepFun_prodMk_prodMk hf_meas 0 1 2 3
+        (by decide) (by decide) (by decide) (by decide)
+      simpa using this
+    have hsum : Measurable (fun q : ℝ × ℝ => q.1 + q.2) := by fun_prop
+    have := hpair.comp hsum (measurable_id : Measurable (id : ℝ × ℝ → ℝ × ℝ))
+    simpa [Function.comp] using this
+  exact ⟨hXZX, hYZY, hX'Y'_indep, hZX_ZY, hpair_indep, hXYZ, hXY_ZXZY_pair⟩
+
 /-- Entropy power inequality for absolutely continuous distributions with regular densities.
 
 All 16 hypotheses are regularity preconditions (measurability, independence, absolute
@@ -267,150 +444,24 @@ theorem entropy_power_inequality_of_density
   have hZY_meas : Measurable ZY := (measurable_fst.comp measurable_snd).comp measurable_snd
   have hZ_meas : Measurable Z := (measurable_snd.comp measurable_snd).comp measurable_snd
   -- law transport: lift.map (f∘fst) = P.map f
-  have hmap_X' : lift.map X' = P.map X := by
-    rw [hlift, hX', show (fun p : Ω × ℝ × ℝ × ℝ => X p.1) = X ∘ Prod.fst from rfl,
-      ← Measure.map_map hX measurable_fst, measurePreserving_fst.map_eq]
-  have hmap_Y' : lift.map Y' = P.map Y := by
-    rw [hlift, hY', show (fun p : Ω × ℝ × ℝ × ℝ => Y p.1) = Y ∘ Prod.fst from rfl,
-      ← Measure.map_map hY measurable_fst, measurePreserving_fst.map_eq]
-  have hmap_sum' : lift.map (fun p => X' p + Y' p) = P.map (fun ω => X ω + Y ω) := by
-    rw [hlift, hX', hY',
-      show (fun p : Ω × ℝ × ℝ × ℝ => X p.1 + Y p.1) = (fun ω => X ω + Y ω) ∘ Prod.fst from rfl,
-      ← Measure.map_map (hX.add hY) measurable_fst, measurePreserving_fst.map_eq]
+  obtain ⟨hmap_X', hmap_Y', hmap_sum'⟩ := liftMeasure3_map_fst_eq P X Y hX hY
   -- a.c. transport
   have hX'_ac : (lift.map X') ≪ volume := by rw [hmap_X']; exact hX_ac
   have hY'_ac : (lift.map Y') ≪ volume := by rw [hmap_Y']; exact hY_ac
   have hXY_ac : (P.map (fun ω => X ω + Y ω)) ≪ volume :=
     map_add_absolutelyContinuous X Y P hX hY hXY hX_ac
   have hXY'_ac : (lift.map (fun p => X' p + Y' p)) ≪ volume := by rw [hmap_sum']; exact hXY_ac
-  -- second moment of X+Y on base P (used both for lift transport and endpt_sum)
-  have h_mom_XY : Integrable (fun ω => (X ω + Y ω) ^ 2) P := by
-    have hX_memLp : MemLp X 2 P :=
-      (memLp_two_iff_integrable_sq_norm hX.aestronglyMeasurable).mpr (by simpa using h_mom_X)
-    have hY_memLp : MemLp Y 2 P :=
-      (memLp_two_iff_integrable_sq_norm hY.aestronglyMeasurable).mpr (by simpa using h_mom_Y)
-    have hS_memLp : MemLp (fun ω => X ω + Y ω) 2 P := hX_memLp.add hY_memLp
-    simpa using hS_memLp.integrable_sq
-  -- moment transport (to the 3-noise lift)
-  have h_mom_X' : Integrable (fun p => (X' p) ^ 2) lift := by
-    rw [hlift, hX']
-    exact h_mom_X.comp_fst ((gaussianReal 0 1).prod ((gaussianReal 0 1).prod (gaussianReal 0 1)))
-  have h_mom_Y' : Integrable (fun p => (Y' p) ^ 2) lift := by
-    rw [hlift, hY']
-    exact h_mom_Y.comp_fst ((gaussianReal 0 1).prod ((gaussianReal 0 1).prod (gaussianReal 0 1)))
-  have h_mom_XY' : Integrable (fun p => (X' p + Y' p) ^ 2) lift := by
-    rw [hlift, hX', hY']
-    exact (h_mom_XY.comp_fst
-      ((gaussianReal 0 1).prod ((gaussianReal 0 1).prod (gaussianReal 0 1))))
+  -- second moment of X+Y on base P + moment transport (to the 3-noise lift)
+  obtain ⟨h_mom_XY, h_mom_X', h_mom_Y', h_mom_XY'⟩ :=
+    liftMeasure3_moment_transport P X Y hX hY h_mom_X h_mom_Y
   -- noise laws (project through the nested products of the 3-noise lift)
-  have hZX_law : lift.map ZX = gaussianReal 0 1 := by
-    rw [hlift, hZX,
-      show (fun p : Ω × ℝ × ℝ × ℝ => p.2.1) = Prod.fst ∘ Prod.snd from rfl,
-      ← Measure.map_map measurable_fst measurable_snd,
-      measurePreserving_snd.map_eq, measurePreserving_fst.map_eq]
-  have hZY_law : lift.map ZY = gaussianReal 0 1 := by
-    rw [hlift, hZY,
-      show (fun p : Ω × ℝ × ℝ × ℝ => p.2.2.1)
-        = Prod.fst ∘ Prod.snd ∘ Prod.snd from rfl,
-      ← Measure.map_map measurable_fst (measurable_snd.comp measurable_snd),
-      ← Measure.map_map measurable_snd measurable_snd,
-      measurePreserving_snd.map_eq, measurePreserving_snd.map_eq,
-      measurePreserving_fst.map_eq]
-  have hZ_law : lift.map Z = gaussianReal 0 1 := by
-    rw [hlift, hZ,
-      show (fun p : Ω × ℝ × ℝ × ℝ => p.2.2.2)
-        = Prod.snd ∘ Prod.snd ∘ Prod.snd from rfl,
-      ← Measure.map_map measurable_snd (measurable_snd.comp measurable_snd),
-      ← Measure.map_map measurable_snd measurable_snd,
-      measurePreserving_snd.map_eq, measurePreserving_snd.map_eq,
-      measurePreserving_snd.map_eq]
-  -- 5-tuple joint independence
-  have h_iIndep : iIndepFun ![X', Y', ZX, ZY, Z] lift := by
-    have haem : ∀ i, AEMeasurable (![X', Y', ZX, ZY, Z] i) lift := by
-      intro i; fin_cases i
-      · exact hX'_meas.aemeasurable
-      · exact hY'_meas.aemeasurable
-      · exact hZX_meas.aemeasurable
-      · exact hZY_meas.aemeasurable
-      · exact hZ_meas.aemeasurable
-    rw [iIndepFun_iff_map_fun_eq_pi_map haem]
-    symm
-    refine Measure.pi_eq (fun s hs => ?_)
-    have hjoint_meas : Measurable (fun ω i => ![X', Y', ZX, ZY, Z] i ω) := by
-      refine measurable_pi_lambda _ (fun i => ?_)
-      fin_cases i
-      · exact hX'_meas
-      · exact hY'_meas
-      · exact hZX_meas
-      · exact hZY_meas
-      · exact hZ_meas
-    rw [Measure.map_apply hjoint_meas (MeasurableSet.univ_pi hs)]
-    have hm0 : lift.map (![X', Y', ZX, ZY, Z] 0) = P.map X := by simpa using hmap_X'
-    have hm1 : lift.map (![X', Y', ZX, ZY, Z] 1) = P.map Y := by simpa using hmap_Y'
-    have hm2 : lift.map (![X', Y', ZX, ZY, Z] 2) = gaussianReal 0 1 := by simpa using hZX_law
-    have hm3 : lift.map (![X', Y', ZX, ZY, Z] 3) = gaussianReal 0 1 := by simpa using hZY_law
-    have hm4 : lift.map (![X', Y', ZX, ZY, Z] 4) = gaussianReal 0 1 := by simpa using hZ_law
-    rw [Fin.prod_univ_five, hm0, hm1, hm2, hm3, hm4]
-    have hpre : (fun ω i => ![X', Y', ZX, ZY, Z] i ω) ⁻¹' (Set.univ.pi s)
-        = (X ⁻¹' s 0 ∩ Y ⁻¹' s 1) ×ˢ (s 2 ×ˢ (s 3 ×ˢ s 4)) := by
-      ext p
-      simp only [Set.mem_preimage, Set.mem_univ_pi, Set.mem_prod, Set.mem_inter_iff]
-      constructor
-      · intro h
-        exact ⟨⟨h 0, h 1⟩, h 2, h 3, h 4⟩
-      · intro h i
-        fin_cases i
-        · exact h.1.1
-        · exact h.1.2
-        · exact h.2.1
-        · exact h.2.2.1
-        · exact h.2.2.2
-    rw [hpre, hlift, Measure.prod_prod, Measure.prod_prod, Measure.prod_prod]
-    have hAprod : P (X ⁻¹' s 0 ∩ Y ⁻¹' s 1) = P.map X (s 0) * P.map Y (s 1) := by
-      rw [Measure.map_apply hX (hs 0), Measure.map_apply hY (hs 1)]
-      exact (indepFun_iff_measure_inter_preimage_eq_mul.1 hXY) (s 0) (s 1) (hs 0) (hs 1)
-    rw [hAprod]
-    ring
-  have hf_meas : ∀ i, Measurable (![X', Y', ZX, ZY, Z] i) := by
-    intro i; fin_cases i
-    · exact hX'_meas
-    · exact hY'_meas
-    · exact hZX_meas
-    · exact hZY_meas
-    · exact hZ_meas
-  -- pairwise/joint independences extracted from the 5-tuple
+  obtain ⟨hZX_law, hZY_law, hZ_law⟩ := liftMeasure3_noise_laws P (Ω := Ω)
+  -- 5-tuple joint independence + extracted pairwise/joint independences
   -- (indices: X'=0, Y'=1, ZX=2, ZY=3, Z=4)
-  have hXZX : IndepFun X' ZX lift := by
-    have := h_iIndep.indepFun (i := (0 : Fin 5)) (j := (2 : Fin 5)) (by decide)
-    simpa using this
-  have hYZY : IndepFun Y' ZY lift := by
-    have := h_iIndep.indepFun (i := (1 : Fin 5)) (j := (3 : Fin 5)) (by decide)
-    simpa using this
-  have hX'Y'_indep : IndepFun X' Y' lift := by
-    have := h_iIndep.indepFun (i := (0 : Fin 5)) (j := (1 : Fin 5)) (by decide)
-    simpa using this
-  have hZX_ZY : IndepFun ZX ZY lift := by
-    have := h_iIndep.indepFun (i := (2 : Fin 5)) (j := (3 : Fin 5)) (by decide)
-    simpa using this
-  have hpair_indep : IndepFun (fun p => (X' p, ZX p)) (fun p => (Y' p, ZY p)) lift := by
-    have := h_iIndep.indepFun_prodMk_prodMk hf_meas 0 2 1 3
-      (by decide) (by decide) (by decide) (by decide)
-    simpa using this
-  have hXYZ : IndepFun (fun p => X' p + Y' p) Z lift := by
-    have hpair : IndepFun (fun a => (X' a, Y' a)) Z lift := by
-      have := h_iIndep.indepFun_prodMk hf_meas 0 1 4 (by decide) (by decide)
-      simpa using this
-    have hsum : Measurable (fun q : ℝ × ℝ => q.1 + q.2) := by fun_prop
-    have := hpair.comp hsum measurable_id
-    simpa [Function.comp] using this
-  have hXY_ZXZY_pair : IndepFun (fun p => X' p + Y' p) (fun p => (ZX p, ZY p)) lift := by
-    have hpair : IndepFun (fun a => (X' a, Y' a)) (fun a => (ZX a, ZY a)) lift := by
-      have := h_iIndep.indepFun_prodMk_prodMk hf_meas 0 1 2 3
-        (by decide) (by decide) (by decide) (by decide)
-      simpa using this
-    have hsum : Measurable (fun q : ℝ × ℝ => q.1 + q.2) := by fun_prop
-    have := hpair.comp hsum (measurable_id : Measurable (id : ℝ × ℝ → ℝ × ℝ))
-    simpa [Function.comp] using this
+  have h_iIndep : iIndepFun ![X', Y', ZX, ZY, Z] lift :=
+    iIndepFun_liftMeasure3_of_indep P X Y hX hY hXY
+  obtain ⟨hXZX, hYZY, hX'Y'_indep, hZX_ZY, hpair_indep, hXYZ, hXY_ZXZY_pair⟩ :=
+    liftMeasure3_pairwise_indep hX'_meas hY'_meas hZX_meas hZY_meas hZ_meas h_iIndep
   -- noise a.c. (Gaussian)
   have hZX_ac : (lift.map ZX) ≪ volume := by rw [hZX_law]; exact gaussianReal_absolutelyContinuous 0 one_ne_zero
   have hZY_ac : (lift.map ZY) ≪ volume := by rw [hZY_law]; exact gaussianReal_absolutelyContinuous 0 one_ne_zero
