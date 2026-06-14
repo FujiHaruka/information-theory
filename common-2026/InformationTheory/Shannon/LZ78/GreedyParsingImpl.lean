@@ -6,12 +6,12 @@ import Mathlib.Data.List.Basic
 import Mathlib.Data.List.Range
 
 /-!
-# LZ78 longest-prefix-match greedy parsing — L-LZ4-E discharge (T4-A)
+# LZ78 longest-prefix-match greedy parsing
 
 `InformationTheory/Shannon/LZ78GreedyParsing.lean` published the **worst-case
-one-symbol-per-phrase** parsing `lz78OneSymbolParsing` and explicitly
-deferred the *genuine* longest-prefix-match greedy parse to L-LZ4-E.
-This file discharges L-LZ4-E: it implements the real Cover–Thomas
+one-symbol-per-phrase** parsing `lz78OneSymbolParsing` and left the
+*genuine* longest-prefix-match greedy parse to this file, which
+implements the real Cover–Thomas
 Ch.13.5 LZ78 greedy parsing as a recursive function on the input list,
 maintaining a dictionary of already-seen phrase strings and, at each
 step, matching the longest dictionary prefix, emitting a
@@ -36,8 +36,8 @@ The deliverable here is the **structural correctness layer**:
 We do **not** prove the parse is optimal (achieves the minimal phrase
 count); only that it is a *valid* LZ78 parsing whose count is `≤ n`.
 That is exactly what the asymptotic-optimality main theorem consumes
-(the sharper `count ≤ n / log n` bound is the deferred L-LZ4-D
-pass-through, unchanged here).
+(the sharper `count ≤ n / log n` bound is the separate pass-through
+developed elsewhere).
 
 ## File layout
 
@@ -292,8 +292,8 @@ section EncodingLength
 
 variable {α : Type*} [Fintype α] [DecidableEq α]
 
-/-- **Genuine greedy encoding length of a finite tuple (L-LZ4-E parameter
-slot)**: parse `List.ofFn x` with the real dictionary greedy parse and
+/-- **Genuine greedy encoding length of a finite tuple**: parse
+`List.ofFn x` with the real dictionary greedy parse and
 sum its phrase bit-lengths via the existing `LZ78Parsing.encodingLength`.
 This plugs into the parent `lz78EncodingLength : ∀ n, (Fin n → α) → ℕ`
 parameter of `lz78_asymptotic_optimality`. -/
@@ -366,8 +366,8 @@ variable (α : Type*) [Fintype α] [DecidableEq α]
 
 /-- **`IsLZ78ImplEncodingLengthBoundPassthrough B`** — hypothesis
 pass-through for an upper bound `B : ℕ → ℕ` on the *genuine* greedy
-encoding length (the L-LZ4-E analogue of
-`IsLZ78EncodingLengthBoundPassthrough`). -/
+encoding length (the analogue of
+`IsLZ78EncodingLengthBoundPassthrough` for the genuine greedy parse). -/
 def IsLZ78ImplEncodingLengthBoundPassthrough (B : ℕ → ℕ) : Prop :=
   ∀ (n : ℕ) (x : Fin n → α), lz78GreedyImplEncodingLength n x ≤ B n
 
@@ -394,7 +394,7 @@ theorem IsLZ78ImplEncodingLengthBoundPassthrough.mono {B₁ B₂ : ℕ → ℕ}
 
 end ImplBoundPassthrough
 
-/-! ## §7. Parent-theorem bridge (L-LZ4-E → main theorem) -/
+/-! ## §7. Parent-theorem bridge -/
 
 section ParentBridge
 
@@ -410,8 +410,7 @@ right type to plug into the parent `lz78_asymptotic_optimality`
 example : (∀ n, (Fin n → α) → ℕ) := @lz78GreedyImplEncodingLength α _ _
 
 
-/-- **T4-A main theorem with the genuine greedy parsing implementation
-(L-LZ4-E discharged)**.
+/-- **Main theorem with the genuine greedy parsing implementation**.
 
 Re-publishes the genuine two-sided `lz78_asymptotic_optimality` with the
 parameter `lz78EncodingLength` slot instantiated to the **genuine

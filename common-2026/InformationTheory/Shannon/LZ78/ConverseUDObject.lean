@@ -5,9 +5,7 @@ import Mathlib.Data.Nat.Bitwise
 import Mathlib.Data.Nat.Log
 
 /-!
-# LZ78 converse UD-object (T4-A, roadmap M1)
-
-`docs/shannon/lz78-completion-roadmap.md` §M1.
+# LZ78 converse UD-object
 
 This file builds the **uniquely-decodable LZ78 code object** that
 `McMillanKraftBridge.lean` §3 Residual 1 flagged as "out of scope / not
@@ -49,7 +47,7 @@ LZ78 per-phrase `(parent, symbol)` token code.
   `IsLZ78ConverseCodingLowerBound` (`LZ78ConverseKraft.lean`, Cover–Thomas
   Eq. 13.130) is an a.s.-eventual *per-realization* `liminf` bound. Getting
   there from the token-level Kraft requires the **averaged ⟶ a.s. lift**
-  (Barron / competitive optimality) — roadmap **M4**, genuinely separate and
+  (Barron / competitive optimality), genuinely separate and
   not attempted here. This file does not touch `IsLZ78ConverseCodingLowerBound`.
 -/
 
@@ -253,7 +251,7 @@ entropyD 2 P ≤ E[L] = bitLength c |α|.
 This is the genuine Cover–Thomas 5.4 converse, instantiated at the *real*
 LZ78 `(parent, symbol)` token code via the McMillan bridge. The block-rate
 form (Cover–Thomas Eq. 13.130, `IsLZ78ConverseCodingLowerBound`) needs the
-averaged⟶a.s. lift (roadmap M4) and is **not** addressed here. -/
+averaged⟶a.s. lift and is **not** addressed here. -/
 @[entry_point]
 theorem lz78TokenCode_entropyD_le_expectedLength (c : ℕ)
     (P : Measure (Fin (c + 1) × α)) [IsProbabilityMeasure P]

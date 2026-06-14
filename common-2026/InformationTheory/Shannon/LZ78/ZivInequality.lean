@@ -7,50 +7,48 @@ import Mathlib.Data.Fintype.Option
 import Mathlib.Data.Fintype.Prod
 
 /-!
-# LZ78 Ziv's inequality — L-LZ1 partial discharge (T4-A continuation)
+# LZ78 Ziv's inequality — combinatorial counting layer
 
 This file publishes the **combinatorial counting plumbing** layer of
 Ziv's inequality (Cover–Thomas Lemma 13.5.5; the upper-bound half of the
-LZ78 asymptotic optimality theorem). It is a **partial discharge** of
-the `IsZivInequalityPassthrough` placeholder published in
-`InformationTheory/Shannon/LempelZiv78.lean` (2026-05-19): the *combinatorial*
-layer (Nat-level phrase-space cardinality bound) is fully discharged
-here as concrete `theorem`s, while the *entropy* layer
+LZ78 asymptotic optimality theorem). It establishes the *combinatorial*
+layer (Nat-level phrase-space cardinality bound) as concrete `theorem`s,
+exposed to the `IsZivInequalityPassthrough` predicate in
+`InformationTheory/Shannon/LempelZiv78.lean`; the *entropy* layer
 (`H(X^n) ≤ Σ H(phrase_i)`) and the *log-sum* layer (final Ziv form)
-remain in scope of future discharge plans.
+are developed elsewhere.
 
 ## File layout
 
 * **§1. `LZ78Phrase` cardinality plumbing** —
   `LZ78Phrase.equivOptionNatProd`-style cardinality / image-card bounds.
-* **§2. `LZ78Parsing.count` combinatorial bounds (L-LZ1-A)** — Nat-level
+* **§2. `LZ78Parsing.count` combinatorial bounds** — Nat-level
   inequalities on `p.count = p.phrases.length` purely from the parsing
   invariant.
-* **§3. `ZivCountingBound` predicate (L-LZ1-B)** — a real-valued
+* **§3. `ZivCountingBound` predicate** — a real-valued
   predicate that exposes the combinatorial-layer Ziv counting bound at
   the `Prop` level, with a `.trivial` constructor and a constructor
-  taking a real bound directly. Designed so that future entropy-side
-  discharge can plug `ZivCountingBound` into the `IsZivInequalityPassthrough`
+  taking a real bound directly. Designed so that the entropy-side
+  layer can plug `ZivCountingBound` into the `IsZivInequalityPassthrough`
   bridge below.
 * **§4. Bridge to `IsZivInequalityPassthrough`** — `True`-discharging
-  constructor (kept trivial until L-LZ1-C is discharged elsewhere).
+  constructor (kept trivial; the entropy chain-rule layer is established
+  elsewhere).
 
 ## Scope
 
-* **L-LZ1-A** (engaged) — Combinatorial counting bound:
+* Combinatorial counting bound:
   `LZ78Parsing.count_le_card_phrase_space` and friends. Pure Nat/Finset,
   no measure-theoretic infrastructure.
-* **L-LZ1-B** (engaged) — `ZivCountingBound` real-valued `Prop` slot.
-* **L-LZ1-C** (deferred) — Entropy chain-rule layer (`H(X^n) ≤ Σ H(phrase_i)`)
-  in a future discharge plan.
-* **L-LZ1-D** (deferred) — log-sum + final Ziv inequality main form in a
-  future discharge plan.
+* `ZivCountingBound` real-valued `Prop` slot.
+* Entropy chain-rule layer (`H(X^n) ≤ Σ H(phrase_i)`), developed elsewhere.
+* Log-sum + final Ziv inequality main form, developed elsewhere.
 
 ## Pattern source
 
 The "extract the most tractable fragments" pattern is the same as
-`InformationTheory/Shannon/WynerZivDischarge.lean` (T3-D L-WZ3 partial discharge):
-the parent placeholder is *not* fully discharged; the file publishes the
+`InformationTheory/Shannon/WynerZivDischarge.lean`:
+the parent placeholder is not fully discharged; the file publishes the
 fragments that are tractable now plus a real-valued predicate exposing
 the layered shape, with `.trivial` bridges to the parent placeholder.
 -/
@@ -131,7 +129,7 @@ def LZ78Phrase.toParentBounded {c : ℕ}
 
 end PhraseCardinality
 
-/-! ## §2. `LZ78Parsing.count` combinatorial bounds (L-LZ1-A) -/
+/-! ## §2. `LZ78Parsing.count` combinatorial bounds -/
 
 section CountBounds
 
@@ -181,7 +179,7 @@ theorem LZ78Parsing.ofParentBounded_indexToBounded (p : LZ78Parsing α)
   unfold LZ78Parsing.indexToBounded
   exact LZ78Phrase.ofParentBounded_toParentBounded _ _
 
-/-- **`count` upper-bound via the bounded-parent ambient (L-LZ1-A core).**
+/-- **`count` upper-bound via the bounded-parent ambient.**
 For any LZ78 parsing on a finite alphabet, the number of *distinct*
 phrases is at most `(count + 1) · |α|`: every phrase is a pair
 `(parent ∈ Option (Fin count), symbol ∈ α)`. -/
@@ -237,23 +235,23 @@ downstream). -/
 
 end CountBounds
 
-/-! ## §3. `ZivCountingBound` predicate (L-LZ1-B) -/
+/-! ## §3. `ZivCountingBound` predicate -/
 
 section ZivCountingBoundPredicate
 
 variable {α : Type*}
 
-/-- **Real-valued Ziv counting-layer predicate (L-LZ1-B)**.
+/-- **Real-valued Ziv counting-layer predicate**.
 
 For a parsing `p` and a real-valued upper bound `B : ℝ`, this predicate
 asserts that the *combinatorial* layer of the Ziv inequality holds:
 the cast `(p.count : ℝ)` is bounded by `B`. The predicate is shaped
-so that future entropy-side discharges can supply `B = n / log c(n)`
+so that the entropy-side layer can supply `B = n / log c(n)`
 (Cover–Thomas Eq. 13.124) or any analogous real-valued upper bound and
 plug it into the parent `IsZivInequalityPassthrough` slot.
 
-The combinatorial layer of `B` is fully discharged by `card_phraseSet_le_pow`
-(§2); the entropy / log-sum layers are deferred. -/
+The combinatorial layer of `B` is established by `card_phraseSet_le_pow`
+(§2); the entropy / log-sum layers are developed elsewhere. -/
 def ZivCountingBound (p : LZ78Parsing α) (B : ℝ) : Prop :=
   (p.count : ℝ) ≤ B
 
@@ -290,10 +288,9 @@ q.count` (`ZivCountingBound.refl`), which holds unconditionally. The
 hypothesis `_h : ∀ μ p lz, IsZivInequalityPassthrough μ p lz` is therefore
 *not consumed*; the bridge is retained for symmetric API ergonomics
 between the parent passthrough predicate and the combinatorial-layer
-bound. (After the 2026-05-27 prop-true → genuine a.s. statement
-rewrite of `IsZivInequalityPassthrough`, `_h` now carries the genuine
-a.s. limsup upper bound but is still discarded here; the
-information-bearing direction lives downstream.) -/
+bound. `_h` carries the genuine a.s. limsup upper bound of
+`IsZivInequalityPassthrough` but is discarded here; the
+information-bearing direction lives downstream. -/
 @[entry_point]
 theorem ZivCountingBound.of_passthrough
     (_h : ∀ (μ : Measure Ω) (p : StationaryProcess μ α)

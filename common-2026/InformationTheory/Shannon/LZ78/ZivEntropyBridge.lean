@@ -5,7 +5,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import Mathlib.Analysis.Convex.Jensen
 
 /-!
-# LZ78 Ziv-inequality entropy bridge — foundational lemmas (T4-A)
+# LZ78 Ziv-inequality entropy bridge — foundational lemmas
 
 This file hosts the foundational, mutually-independent lemmas of the LZ78
 Ziv-inequality entropy bridge (Cover–Thomas §13.5), built on top of the
@@ -21,7 +21,7 @@ already-genuine SMB layer (`blockLogAvg`, `ShannonMcMillanBreiman.lean`).
   `n · blockLogAvg μ p n ω = -log Pₙ{block ω}` for `0 < n`, the form the Ziv
   chain consumes.
 
-## Per-path parsing factorization (L-LZ-Z5 scaffolding)
+## Per-path parsing factorization
 
 The Ziv chain (Cover–Thomas §13.5) needs the pushforward block probability
 `Pₙ{block ω}` bounded **above** by a product of per-phrase conditional
@@ -131,7 +131,7 @@ theorem blockLogAvg_eq_neg_log_blockProb
   unfold blockLogAvg
   field_simp
 
-/-! ## Per-path parsing factorization (L-LZ-Z5 scaffolding) -/
+/-! ## Per-path parsing factorization -/
 
 /-- **Cumulative parsing boundary length.**
 
@@ -169,7 +169,7 @@ noncomputable def condPhraseProb
   prefixBlockProb μ p ω (parsingBoundary μ p n ω (j + 1))
     / prefixBlockProb μ p ω (parsingBoundary μ p n ω j)
 
-/-- **Genuine Ziv-direction parsing factorization (L-LZ-Z5)**: the per-path
+/-- **Genuine Ziv-direction parsing factorization**: the per-path
 block probability of a stationary process is bounded **above** by the
 product of the LZ78 parse's per-phrase conditional probabilities,
 `Pₙ{block ω} ≤ ∏ⱼ condPhraseProb …` (Cover–Thomas §13.5, the per-path /
@@ -210,7 +210,7 @@ structure IsLZ78PerPathParsingFactorization
       0 < condPhraseProb μ p n ω j
 
 omit [Fintype α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Genuine backbone (L-LZ-Z3 + factorization → additive log form).**
+/-- **Genuine backbone: factorization to additive log form.**
 
 From the genuine Ziv-direction factorization, the sum, over the phrase
 positions of the parse, of the negative logs of the per-phrase conditional
