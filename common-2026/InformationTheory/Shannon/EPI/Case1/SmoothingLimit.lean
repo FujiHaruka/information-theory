@@ -123,6 +123,169 @@ noncomputable def isDeBruijnRegularityHyp_of_explicitDensity
       rw [Real.norm_of_nonneg hnn]
       exact hbound t ht
 
+noncomputable def isHeatFlowEndpointRegular_of_map_eq_rnDeriv
+    {Ω : Type*} {mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
+    {α : Type*} {mα : MeasurableSpace α} (μ : Measure α) [IsProbabilityMeasure μ]
+    (W : Ω → ℝ) (W' : α → ℝ) (Zw : α → ℝ) (vZ : ℝ≥0)
+    (hW : Measurable W) (hW' : Measurable W') (hZw : Measurable Zw)
+    (hWZ : IndepFun W' Zw μ) (hvZ : 0 < vZ) (hZw_law : μ.map Zw = gaussianReal 0 vZ)
+    (hmap : μ.map W' = P.map W) (hac : (P.map W) ≪ volume)
+    (hmom : Integrable (fun ω => (W ω) ^ 2) P)
+    (hent : Integrable (fun x => Real.negMulLog (((P.map W).rnDeriv volume x).toReal)) volume) :
+    IsHeatFlowEndpointRegular W' Zw μ := by
+  set p : ℝ → ℝ := fun x => ((P.map W).rnDeriv volume x).toReal with hp_def
+  have hp_nn : ∀ x, 0 ≤ p x := fun x => ENNReal.toReal_nonneg
+  have hp_meas : Measurable p := ((P.map W).measurable_rnDeriv volume).ennreal_toReal
+  have hp_law : μ.map W' = volume.withDensity (fun x => ENNReal.ofReal (p x)) := by
+    rw [hmap]
+    have hfin : ∀ᵐ x ∂volume, (P.map W).rnDeriv volume x < ∞ :=
+      Measure.rnDeriv_lt_top (P.map W) volume
+    have hcongr : (fun x => ENNReal.ofReal (p x)) =ᵐ[volume]
+        (P.map W).rnDeriv volume := by
+      filter_upwards [hfin] with x hx
+      simp only [hp_def, ENNReal.ofReal_toReal hx.ne]
+    rw [withDensity_congr_ae hcongr, Measure.withDensity_rnDeriv_eq _ _ hac]
+  have hp_int : Integrable p volume := by
+    have := Measure.integrable_toReal_rnDeriv (μ := P.map W) (ν := volume)
+    simpa [hp_def] using this
+  have hp_mass : (∫ y, p y ∂volume) = 1 := by
+    have hmass := MeasureTheory.Measure.integral_toReal_rnDeriv (μ := P.map W) (ν := volume) hac
+    have : IsProbabilityMeasure (P.map W) :=
+      MeasureTheory.Measure.isProbabilityMeasure_map hW.aemeasurable
+    rw [hp_def, hmass, Measure.real, measure_univ, ENNReal.toReal_one]
+  have hp_mom : Integrable (fun y => y ^ 2 * p y) volume := by
+    have hsq_law : Integrable (fun y => y ^ 2) (P.map W) := by
+      rw [integrable_map_measure
+        ((by fun_prop : Measurable (fun y : ℝ => y ^ 2)).aestronglyMeasurable)
+        hW.aemeasurable]
+      simpa [Function.comp] using hmom
+    rw [show P.map W = volume.withDensity (fun x => ENNReal.ofReal (p x)) from
+      hmap ▸ hp_law] at hsq_law
+    rw [integrable_withDensity_iff_integrable_smul₀'
+      hp_meas.ennreal_ofReal.aemeasurable
+      (Filter.Eventually.of_forall fun x => ENNReal.ofReal_lt_top)] at hsq_law
+    refine hsq_law.congr (Filter.Eventually.of_forall fun x => ?_)
+    simp only [smul_eq_mul, ENNReal.toReal_ofReal (hp_nn x)]; ring
+  exact
+    { hX_meas := hW'
+      hZ_meas := hZw
+      hXZ_indep := hWZ
+      v_Z := vZ
+      hv_Z_pos := hvZ
+      hZ_law := hZw_law
+      pX := p
+      hpX_nn := hp_nn
+      hpX_meas := hp_meas
+      hpX_law := hp_law
+      hpX_int := hp_int
+      hpX_mass := hp_mass
+      hpX_mom := hp_mom
+      hpX_ent := hent }
+
+lemma integral_sub_integral_sq_smoothed_path_le
+    {α : Type*} {mα : MeasurableSpace α} (μ : Measure α) [IsProbabilityMeasure μ]
+    (A B : α → ℝ) (hA : Measurable A) (hB : Measurable B)
+    (hAB : IndepFun A B μ) (h_mom_A : Integrable (fun p => (A p) ^ 2) μ)
+    (v_B : ℝ≥0) (hB_law : μ.map B = gaussianReal 0 v_B)
+    {t : ℝ} (ht : 0 < t) :
+    (∫ x, (x - (∫ y, y ∂(μ.map (fun p => A p / Real.sqrt t + B p)))) ^ 2
+          ∂(μ.map (fun p => A p / Real.sqrt t + B p)))
+        ≤ ProbabilityTheory.variance A μ / t + (v_B : ℝ) := by
+  have h_sqrt_pos : (0 : ℝ) < Real.sqrt t := Real.sqrt_pos.mpr ht
+  set Zt : α → ℝ := fun ω => A ω / Real.sqrt t with hZt
+  have hZt_meas : Measurable Zt := hA.div_const _
+  have hW_meas : Measurable (fun ω => Zt ω + B ω) := hZt_meas.add hB
+  have hB_memLp : MemLp B 2 μ := by
+    have hid : MemLp (id : ℝ → ℝ) 2 (μ.map B) := by
+      rw [hB_law]; exact memLp_id_gaussianReal' 2 (by simp)
+    have := (memLp_map_measure_iff (p := 2) (μ := μ) (g := (id : ℝ → ℝ))
+      aestronglyMeasurable_id hB.aemeasurable).mp hid
+    simpa [Function.comp] using this
+  have hZt_sq : Integrable (fun ω => (Zt ω)^2) μ := by
+    have : (fun ω => (Zt ω)^2) = (fun ω => (1 / t) * (A ω)^2) := by
+      funext ω; simp only [hZt, div_pow, Real.sq_sqrt ht.le]; ring
+    rw [this]; exact h_mom_A.const_mul _
+  have hZt_memLp : MemLp Zt 2 μ :=
+    (memLp_two_iff_integrable_sq_norm hZt_meas.aestronglyMeasurable).mpr (by simpa using hZt_sq)
+  have h_indep : IndepFun Zt B μ := by
+    have : Zt = (fun a => a / Real.sqrt t) ∘ A := by funext ω; rfl
+    rw [this]; exact hAB.comp (measurable_id.div_const _) measurable_id
+  have hLHS : (∫ x, (x - (∫ y, y ∂(μ.map (fun ω => Zt ω + B ω))))^2
+        ∂(μ.map (fun ω => Zt ω + B ω)))
+      = ProbabilityTheory.variance (fun ω => Zt ω + B ω) μ := by
+    rw [← ProbabilityTheory.variance_eq_integral measurable_id'.aemeasurable]
+    exact ProbabilityTheory.variance_id_map hW_meas.aemeasurable
+  have hVarZt : ProbabilityTheory.variance Zt μ
+      = (1 / t) * ProbabilityTheory.variance A μ := by
+    have hZt_eq : Zt = fun ω => (1 / Real.sqrt t) * A ω := by
+      funext ω; simp only [hZt]; rw [div_eq_inv_mul, one_div]
+    rw [hZt_eq, ProbabilityTheory.variance_const_mul]
+    congr 1
+    rw [div_pow, one_pow, Real.sq_sqrt ht.le]
+  have hVarB : ProbabilityTheory.variance B μ = (v_B : ℝ) := by
+    rw [← ProbabilityTheory.variance_id_map hB.aemeasurable, hB_law,
+      ProbabilityTheory.variance_id_gaussianReal]
+  have hVarSum : ProbabilityTheory.variance (fun ω => Zt ω + B ω) μ
+      = (1 / t) * ProbabilityTheory.variance A μ + (v_B : ℝ) := by
+    rw [ProbabilityTheory.IndepFun.variance_fun_add hZt_memLp hB_memLp h_indep,
+      hVarZt, hVarB]
+  rw [hLHS, hVarSum, one_div, inv_mul_eq_div]
+
+lemma smoothed_path_absolutelyContinuous_and_negMulLog_integrable
+    {α : Type*} {mα : MeasurableSpace α} (μ : Measure α) [IsProbabilityMeasure μ]
+    (A B : α → ℝ) (hA : Measurable A) (hB : Measurable B)
+    (hAB : IndepFun A B μ) (hA_ac : (μ.map A) ≪ volume)
+    (h_mom_A : Integrable (fun p => (A p) ^ 2) μ)
+    (v_B : ℝ≥0) (hv_B : v_B ≠ 0) (hB_law : μ.map B = gaussianReal 0 v_B)
+    {t : ℝ} (ht : 0 < t) :
+    (μ.map (fun p => A p / Real.sqrt t + B p)) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((μ.map (fun p => A p / Real.sqrt t + B p)).rnDeriv volume x).toReal)) volume := by
+  set Zt : α → ℝ := fun ω => A ω / Real.sqrt t with hZt
+  have hZt_meas : Measurable Zt := hA.div_const _
+  have hB_ac : (μ.map B) ≪ volume := by
+    rw [hB_law]; exact gaussianReal_absolutelyContinuous 0 hv_B
+  have h_indep : IndepFun Zt B μ := by
+    have : Zt = (fun a => a / Real.sqrt t) ∘ A := by funext ω; rfl
+    rw [this]; exact hAB.comp (measurable_id.div_const _) measurable_id
+  have hμ_ac : (μ.map (fun ω => Zt ω + B ω)) ≪ volume := by
+    have hWac : (μ.map (fun ω => B ω + Zt ω)) ≪ volume :=
+      map_add_absolutelyContinuous B Zt μ hB hZt_meas h_indep.symm hB_ac
+    have h_path : (fun ω => Zt ω + B ω) = (fun ω => B ω + Zt ω) := by funext ω; ring
+    rw [h_path]; exact hWac
+  refine ⟨hμ_ac, ?_⟩
+  have hv_B_pos : (0 : ℝ≥0) < v_B := pos_iff_ne_zero.mpr hv_B
+  obtain ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom⟩ :=
+    rescaledInput_density_witness A μ hA hA_ac h_mom_A ht
+  have hgconv : InformationTheory.Shannon.FisherInfoV2.gaussianConvolution Zt B 1
+      = fun ω => Zt ω + B ω := by
+    funext ω
+    simp only [InformationTheory.Shannon.FisherInfoV2.gaussianConvolution,
+      Real.sqrt_one, one_mul]
+  have h_path_rnDeriv : (μ.map (fun ω => Zt ω + B ω)).rnDeriv volume
+      =ᵐ[volume] fun z => ENNReal.ofReal
+        (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+          (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) z) := by
+    have := InformationTheory.Shannon.FisherInfoV2.pPath_eq_convDensityAdd
+      Zt B hZt_meas hB h_indep v_B hv_B_pos hB_law pX hpX_nn hpX_meas hpX_law
+      (s := 1) one_pos
+    rwa [hgconv] at this
+  have hvar_eq : (⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩ : ℝ≥0) = v_B := by
+    apply NNReal.coe_injective; show (1 : ℝ) * (v_B : ℝ) = (v_B : ℝ); rw [one_mul]
+  have h_asset : Integrable (fun x =>
+      Real.negMulLog (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+        (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x)) volume := by
+    rw [show (⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩ : ℝ≥0) = v_B from hvar_eq]
+    have hv_B_pos' : (0 : ℝ) < v_B := hv_B_pos
+    simpa using InformationTheory.Shannon.convDensityAdd_negMulLog_integrable_pub
+      hpX_nn hpX_meas hpX_int hpX_mass hpX_mom (t := (v_B : ℝ)) hv_B_pos'
+  refine h_asset.congr ?_
+  filter_upwards [h_path_rnDeriv] with x hx
+  have hcd_nn : 0 ≤ InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+      (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x :=
+    integral_nonneg fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg _ _ _)
+  rw [hx, ENNReal.toReal_ofReal hcd_nn]
+
 /-- Explicit-density variant of `entropy_power_inequality_of_density`.
 
 States regularity hypotheses for `pX`, `pY`, `pXY` as explicit `ℝ → ℝ` arguments
@@ -386,56 +549,10 @@ theorem entropy_power_inequality_of_density_explicit
       lift.map Zw = gaussianReal 0 1 → lift.map W' = P.map W → (P.map W) ≪ volume →
       Integrable (fun ω => (W ω) ^ 2) P →
       Integrable (fun x => Real.negMulLog (((P.map W).rnDeriv volume x).toReal)) volume →
-      IsHeatFlowEndpointRegular W' Zw lift := by
-    intro W W' Zw hW hW' hZw hWZ hZw_law hmap hac hmom hent
-    set p : ℝ → ℝ := fun x => ((P.map W).rnDeriv volume x).toReal with hp_def
-    have hp_nn : ∀ x, 0 ≤ p x := fun x => ENNReal.toReal_nonneg
-    have hp_meas : Measurable p := ((P.map W).measurable_rnDeriv volume).ennreal_toReal
-    have hp_law : lift.map W' = volume.withDensity (fun x => ENNReal.ofReal (p x)) := by
-      rw [hmap]
-      have hfin : ∀ᵐ x ∂volume, (P.map W).rnDeriv volume x < ∞ :=
-        Measure.rnDeriv_lt_top (P.map W) volume
-      have hcongr : (fun x => ENNReal.ofReal (p x)) =ᵐ[volume]
-          (P.map W).rnDeriv volume := by
-        filter_upwards [hfin] with x hx
-        simp only [hp_def, ENNReal.ofReal_toReal hx.ne]
-      rw [withDensity_congr_ae hcongr, Measure.withDensity_rnDeriv_eq _ _ hac]
-    have hp_int : Integrable p volume := by
-      have := Measure.integrable_toReal_rnDeriv (μ := P.map W) (ν := volume)
-      simpa [hp_def] using this
-    have hp_mass : (∫ y, p y ∂volume) = 1 := by
-      have hmass := MeasureTheory.Measure.integral_toReal_rnDeriv (μ := P.map W) (ν := volume) hac
-      have : IsProbabilityMeasure (P.map W) :=
-        MeasureTheory.Measure.isProbabilityMeasure_map hW.aemeasurable
-      rw [hp_def, hmass, Measure.real, measure_univ, ENNReal.toReal_one]
-    have hp_mom : Integrable (fun y => y ^ 2 * p y) volume := by
-      have hsq_law : Integrable (fun y => y ^ 2) (P.map W) := by
-        rw [integrable_map_measure
-          ((by fun_prop : Measurable (fun y : ℝ => y ^ 2)).aestronglyMeasurable)
-          hW.aemeasurable]
-        simpa [Function.comp] using hmom
-      rw [show P.map W = volume.withDensity (fun x => ENNReal.ofReal (p x)) from
-        hmap ▸ hp_law] at hsq_law
-      rw [integrable_withDensity_iff_integrable_smul₀'
-        hp_meas.ennreal_ofReal.aemeasurable
-        (Filter.Eventually.of_forall fun x => ENNReal.ofReal_lt_top)] at hsq_law
-      refine hsq_law.congr (Filter.Eventually.of_forall fun x => ?_)
-      simp only [smul_eq_mul, ENNReal.toReal_ofReal (hp_nn x)]; ring
-    exact
-      { hX_meas := hW'
-        hZ_meas := hZw
-        hXZ_indep := hWZ
-        v_Z := 1
-        hv_Z_pos := one_pos
-        hZ_law := hZw_law
-        pX := p
-        hpX_nn := hp_nn
-        hpX_meas := hp_meas
-        hpX_law := hp_law
-        hpX_int := hp_int
-        hpX_mass := hp_mass
-        hpX_mom := hp_mom
-        hpX_ent := hent }
+      IsHeatFlowEndpointRegular W' Zw lift :=
+    fun W W' Zw hW hW' hZw hWZ hZw_law hmap hac hmom hent =>
+      isHeatFlowEndpointRegular_of_map_eq_rnDeriv P lift W W' Zw 1 hW hW' hZw hWZ one_pos
+        hZw_law hmap hac hmom hent
   have h_endpt_X : IsHeatFlowEndpointRegular X' ZX lift :=
     endpt_of X X' ZX hX hX'_meas hZX_meas hXZX hZX_law hmap_X' hX_ac h_mom_X hent_X'
   have h_endpt_Y : IsHeatFlowEndpointRegular Y' ZY lift :=
@@ -451,99 +568,19 @@ theorem entropy_power_inequality_of_density_explicit
       ∀ t : ℝ, 0 < t →
         (∫ x, (x - (∫ y, y ∂(lift.map (fun p => A p / Real.sqrt t + B p))))^2
               ∂(lift.map (fun p => A p / Real.sqrt t + B p)))
-            ≤ ProbabilityTheory.variance A lift / t + (v_B : ℝ) := by
-    intro A B hA hB hAB h_mom_A v_B hB_law t ht
-    have h_sqrt_pos : (0 : ℝ) < Real.sqrt t := Real.sqrt_pos.mpr ht
-    set Zt : Ω × ℝ × ℝ × ℝ → ℝ := fun ω => A ω / Real.sqrt t with hZt
-    have hZt_meas : Measurable Zt := hA.div_const _
-    have hW_meas : Measurable (fun ω => Zt ω + B ω) := hZt_meas.add hB
-    have hB_memLp : MemLp B 2 lift := by
-      have hid : MemLp (id : ℝ → ℝ) 2 (lift.map B) := by
-        rw [hB_law]; exact memLp_id_gaussianReal' 2 (by simp)
-      have := (memLp_map_measure_iff (p := 2) (μ := lift) (g := (id : ℝ → ℝ))
-        aestronglyMeasurable_id hB.aemeasurable).mp hid
-      simpa [Function.comp] using this
-    have hZt_sq : Integrable (fun ω => (Zt ω)^2) lift := by
-      have : (fun ω => (Zt ω)^2) = (fun ω => (1 / t) * (A ω)^2) := by
-        funext ω; simp only [hZt, div_pow, Real.sq_sqrt ht.le]; ring
-      rw [this]; exact h_mom_A.const_mul _
-    have hZt_memLp : MemLp Zt 2 lift :=
-      (memLp_two_iff_integrable_sq_norm hZt_meas.aestronglyMeasurable).mpr (by simpa using hZt_sq)
-    have h_indep : IndepFun Zt B lift := by
-      have : Zt = (fun a => a / Real.sqrt t) ∘ A := by funext ω; rfl
-      rw [this]; exact hAB.comp (measurable_id.div_const _) measurable_id
-    have hLHS : (∫ x, (x - (∫ y, y ∂(lift.map (fun ω => Zt ω + B ω))))^2
-          ∂(lift.map (fun ω => Zt ω + B ω)))
-        = ProbabilityTheory.variance (fun ω => Zt ω + B ω) lift := by
-      rw [← ProbabilityTheory.variance_eq_integral measurable_id'.aemeasurable]
-      exact ProbabilityTheory.variance_id_map hW_meas.aemeasurable
-    have hVarZt : ProbabilityTheory.variance Zt lift
-        = (1 / t) * ProbabilityTheory.variance A lift := by
-      have hZt_eq : Zt = fun ω => (1 / Real.sqrt t) * A ω := by
-        funext ω; simp only [hZt]; rw [div_eq_inv_mul, one_div]
-      rw [hZt_eq, ProbabilityTheory.variance_const_mul]
-      congr 1
-      rw [div_pow, one_pow, Real.sq_sqrt ht.le]
-    have hVarB : ProbabilityTheory.variance B lift = (v_B : ℝ) := by
-      rw [← ProbabilityTheory.variance_id_map hB.aemeasurable, hB_law,
-        ProbabilityTheory.variance_id_gaussianReal]
-    have hVarSum : ProbabilityTheory.variance (fun ω => Zt ω + B ω) lift
-        = (1 / t) * ProbabilityTheory.variance A lift + (v_B : ℝ) := by
-      rw [ProbabilityTheory.IndepFun.variance_fun_add hZt_memLp hB_memLp h_indep,
-        hVarZt, hVarB]
-    rw [hLHS, hVarSum, one_div, inv_mul_eq_div]
+            ≤ ProbabilityTheory.variance A lift / t + (v_B : ℝ) :=
+    fun A B hA hB hAB h_mom_A v_B hB_law t ht =>
+      integral_sub_integral_sq_smoothed_path_le lift A B hA hB hAB h_mom_A v_B hB_law ht
   have h_scale_general : ∀ (A B : Ω × ℝ × ℝ × ℝ → ℝ), Measurable A → Measurable B →
       IndepFun A B lift → (lift.map A) ≪ volume → Integrable (fun p => (A p)^2) lift →
       (v_B : ℝ≥0) → v_B ≠ 0 → lift.map B = gaussianReal 0 v_B →
       ∀ t : ℝ, 0 < t →
         (lift.map (fun p => A p / Real.sqrt t + B p)) ≪ volume ∧
         Integrable (fun x => Real.negMulLog
-          (((lift.map (fun p => A p / Real.sqrt t + B p)).rnDeriv volume x).toReal)) volume := by
-    intro A B hA hB hAB hA_ac h_mom_A v_B hv_B hB_law t ht
-    set Zt : Ω × ℝ × ℝ × ℝ → ℝ := fun ω => A ω / Real.sqrt t with hZt
-    have hZt_meas : Measurable Zt := hA.div_const _
-    have hB_ac : (lift.map B) ≪ volume := by
-      rw [hB_law]; exact gaussianReal_absolutelyContinuous 0 hv_B
-    have h_indep : IndepFun Zt B lift := by
-      have : Zt = (fun a => a / Real.sqrt t) ∘ A := by funext ω; rfl
-      rw [this]; exact hAB.comp (measurable_id.div_const _) measurable_id
-    have hμ_ac : (lift.map (fun ω => Zt ω + B ω)) ≪ volume := by
-      have hWac : (lift.map (fun ω => B ω + Zt ω)) ≪ volume :=
-        map_add_absolutelyContinuous B Zt lift hB hZt_meas h_indep.symm hB_ac
-      have h_path : (fun ω => Zt ω + B ω) = (fun ω => B ω + Zt ω) := by funext ω; ring
-      rw [h_path]; exact hWac
-    refine ⟨hμ_ac, ?_⟩
-    have hv_B_pos : (0 : ℝ≥0) < v_B := pos_iff_ne_zero.mpr hv_B
-    obtain ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom⟩ :=
-      rescaledInput_density_witness A lift hA hA_ac h_mom_A ht
-    have hgconv : InformationTheory.Shannon.FisherInfoV2.gaussianConvolution Zt B 1
-        = fun ω => Zt ω + B ω := by
-      funext ω
-      simp only [InformationTheory.Shannon.FisherInfoV2.gaussianConvolution,
-        Real.sqrt_one, one_mul]
-    have h_path_rnDeriv : (lift.map (fun ω => Zt ω + B ω)).rnDeriv volume
-        =ᵐ[volume] fun z => ENNReal.ofReal
-          (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
-            (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) z) := by
-      have := InformationTheory.Shannon.FisherInfoV2.pPath_eq_convDensityAdd
-        Zt B hZt_meas hB h_indep v_B hv_B_pos hB_law pX hpX_nn hpX_meas hpX_law
-        (s := 1) one_pos
-      rwa [hgconv] at this
-    have hvar_eq : (⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩ : ℝ≥0) = v_B := by
-      apply NNReal.coe_injective; show (1 : ℝ) * (v_B : ℝ) = (v_B : ℝ); rw [one_mul]
-    have h_asset : Integrable (fun x =>
-        Real.negMulLog (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
-          (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x)) volume := by
-      rw [show (⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩ : ℝ≥0) = v_B from hvar_eq]
-      have hv_B_pos' : (0 : ℝ) < v_B := hv_B_pos
-      simpa using InformationTheory.Shannon.convDensityAdd_negMulLog_integrable_pub
-        hpX_nn hpX_meas hpX_int hpX_mass hpX_mom (t := (v_B : ℝ)) hv_B_pos'
-    refine h_asset.congr ?_
-    filter_upwards [h_path_rnDeriv] with x hx
-    have hcd_nn : 0 ≤ InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
-        (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x :=
-      integral_nonneg fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg _ _ _)
-    rw [hx, ENNReal.toReal_ofReal hcd_nn]
+          (((lift.map (fun p => A p / Real.sqrt t + B p)).rnDeriv volume x).toReal)) volume :=
+    fun A B hA hB hAB hA_ac h_mom_A v_B hv_B hB_law t ht =>
+      smoothed_path_absolutelyContinuous_and_negMulLog_integrable lift A B hA hB hAB hA_ac
+        h_mom_A v_B hv_B hB_law ht
   set varX : ℝ := ProbabilityTheory.variance X' lift with hvarX_def
   set varY : ℝ := ProbabilityTheory.variance Y' lift with hvarY_def
   set varS : ℝ := ProbabilityTheory.variance (fun p => X' p + Y' p) lift with hvarS_def
@@ -631,6 +668,70 @@ theorem isBlachmanConvReady_convGaussian_gaussian (p_base : ℝ → ℝ) {τ : �
     show 2 * h = (v : ℝ)
     rw [hh]; ring
   rwa [hcollapse] at hbundle
+
+lemma memLp_two_of_map_eq_gaussianReal_one
+    {Ω : Type*} {mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
+    (Z : Ω → ℝ) (hZ : Measurable Z) (hZ_law : P.map Z = gaussianReal 0 1) :
+    MemLp Z 2 P := by
+  have hid : MemLp (id : ℝ → ℝ) 2 (P.map Z) := by
+    rw [hZ_law]; exact memLp_id_gaussianReal' 2 (by simp)
+  have := (memLp_map_measure_iff (p := 2) (μ := P) (g := (id : ℝ → ℝ))
+    aestronglyMeasurable_id hZ.aemeasurable).mp hid
+  simpa [Function.comp] using this
+
+lemma map_eq_withDensity_ofReal_rnDeriv
+    {Ω : Type*} {mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
+    (V : Ω → ℝ) (p : ℝ → ℝ) (_hV : Measurable V) (hac : (P.map V) ≪ volume)
+    (hp_def : p = (fun x => ((P.map V).rnDeriv volume x).toReal)) :
+    P.map V = volume.withDensity (fun x => ENNReal.ofReal (p x)) := by
+  have hfin : ∀ᵐ x ∂volume, (P.map V).rnDeriv volume x < ∞ :=
+    Measure.rnDeriv_lt_top (P.map V) volume
+  have hcongr : (fun x => ENNReal.ofReal (p x)) =ᵐ[volume] (P.map V).rnDeriv volume := by
+    filter_upwards [hfin] with x hx
+    simp only [hp_def, ENNReal.ofReal_toReal hx.ne]
+  rw [withDensity_congr_ae hcongr, Measure.withDensity_rnDeriv_eq _ _ hac]
+
+lemma integrable_sq_mul_of_map_eq_withDensity_ofReal
+    {Ω : Type*} {mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
+    (V : Ω → ℝ) (p : ℝ → ℝ) (hV : Measurable V)
+    (hlaw : P.map V = volume.withDensity (fun x => ENNReal.ofReal (p x)))
+    (hp_nn : ∀ x, 0 ≤ p x) (hp_meas : Measurable p)
+    (hmom : Integrable (fun ω => (V ω) ^ 2) P) :
+    Integrable (fun y => y ^ 2 * p y) volume := by
+  have hsq_law : Integrable (fun y => y ^ 2) (P.map V) := by
+    rw [integrable_map_measure
+      ((by fun_prop : Measurable (fun y : ℝ => y ^ 2)).aestronglyMeasurable)
+      hV.aemeasurable]
+    simpa [Function.comp] using hmom
+  rw [hlaw] at hsq_law
+  rw [integrable_withDensity_iff_integrable_smul₀'
+    hp_meas.ennreal_ofReal.aemeasurable
+    (Filter.Eventually.of_forall fun x => ENNReal.ofReal_lt_top)] at hsq_law
+  refine hsq_law.congr (Filter.Eventually.of_forall fun x => ?_)
+  simp only [smul_eq_mul, ENNReal.toReal_ofReal (hp_nn x)]; ring
+
+lemma map_smoothed_eq_withDensity_convDensityAdd
+    {Ω : Type*} {mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
+    (U Zw : Ω → ℝ) (p_base : ℝ → ℝ) (v_Z : ℝ≥0)
+    (hU : Measurable U) (hZw : Measurable Zw) (hUZw : IndepFun U Zw P) (hv_Z : 0 < v_Z)
+    (hZw_law : P.map Zw = gaussianReal 0 v_Z) (hp_nn : ∀ x, 0 ≤ p_base x)
+    (hp_meas : Measurable p_base)
+    (hp_law : P.map U = volume.withDensity (fun x => ENNReal.ofReal (p_base x)))
+    {t : ℝ} (ht : 0 < t)
+    (hpath_ac : (P.map (fun ω => U ω + Real.sqrt t * Zw ω)) ≪ volume) :
+    P.map (fun ω => U ω + Real.sqrt t * Zw ω)
+      = volume.withDensity (fun x => ENNReal.ofReal
+          (InformationTheory.Shannon.EPIConvDensity.convDensityAdd p_base
+            (gaussianPDFReal 0 ⟨t * (v_Z : ℝ), by positivity⟩) x)) := by
+  have hgconv : InformationTheory.Shannon.FisherInfoV2.gaussianConvolution U Zw t
+      = fun ω => U ω + Real.sqrt t * Zw ω := rfl
+  have hrn := InformationTheory.Shannon.FisherInfoV2.pPath_eq_convDensityAdd
+    U Zw hU hZw hUZw v_Z hv_Z hZw_law p_base hp_nn hp_meas hp_law (s := t) ht
+  rw [hgconv] at hrn
+  have hself : P.map (fun ω => U ω + Real.sqrt t * Zw ω)
+      = volume.withDensity ((P.map (fun ω => U ω + Real.sqrt t * Zw ω)).rnDeriv volume) :=
+    (Measure.withDensity_rnDeriv_eq _ _ hpath_ac).symm
+  rw [hself, withDensity_congr_ae hrn]
 
 /-- **Per-`t` smoothing EPI**.
 
@@ -726,13 +827,8 @@ theorem entropyPower_smoothed_epi_perT
     simpa [hYt_def] using this
   -- ===== second moments of smoothed variables =====
   -- helper: a standard-normal variable is in `MemLp · 2 P`.
-  have hZmemLp : ∀ Z : Ω → ℝ, Measurable Z → P.map Z = gaussianReal 0 1 → MemLp Z 2 P := by
-    intro Z hZ hZ_law
-    have hid : MemLp (id : ℝ → ℝ) 2 (P.map Z) := by
-      rw [hZ_law]; exact memLp_id_gaussianReal' 2 (by simp)
-    have := (memLp_map_measure_iff (p := 2) (μ := P) (g := (id : ℝ → ℝ))
-      aestronglyMeasurable_id hZ.aemeasurable).mp hid
-    simpa [Function.comp] using this
+  have hZmemLp : ∀ Z : Ω → ℝ, Measurable Z → P.map Z = gaussianReal 0 1 → MemLp Z 2 P :=
+    fun Z hZ hZ_law => memLp_two_of_map_eq_gaussianReal_one P Z hZ hZ_law
   have h_mom_Xt : Integrable (fun ω => (Xt ω) ^ 2) P := by
     have hX_memLp : MemLp X 2 P :=
       (memLp_two_iff_integrable_sq_norm hX.aestronglyMeasurable).mpr (by simpa using h_mom_X)
@@ -788,14 +884,8 @@ theorem entropyPower_smoothed_epi_perT
   -- base withDensity links (from canonical rnDeriv + a.c.)
   have base_law : ∀ (V : Ω → ℝ) (p : ℝ → ℝ), Measurable V → (P.map V) ≪ volume →
       p = (fun x => ((P.map V).rnDeriv volume x).toReal) →
-      P.map V = volume.withDensity (fun x => ENNReal.ofReal (p x)) := by
-    intro V p hV hac hp_def
-    have hfin : ∀ᵐ x ∂volume, (P.map V).rnDeriv volume x < ∞ :=
-      Measure.rnDeriv_lt_top (P.map V) volume
-    have hcongr : (fun x => ENNReal.ofReal (p x)) =ᵐ[volume] (P.map V).rnDeriv volume := by
-      filter_upwards [hfin] with x hx
-      simp only [hp_def, ENNReal.ofReal_toReal hx.ne]
-    rw [withDensity_congr_ae hcongr, Measure.withDensity_rnDeriv_eq _ _ hac]
+      P.map V = volume.withDensity (fun x => ENNReal.ofReal (p x)) :=
+    fun V p hV hac hp_def => map_eq_withDensity_ofReal_rnDeriv P V p hV hac hp_def
   have hpXb_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX_base x)) :=
     base_law X pX_base hX hX_ac hpXb_def
   have hpYb_law : P.map Y = volume.withDensity (fun x => ENNReal.ofReal (pY_base x)) :=
@@ -807,19 +897,9 @@ theorem entropyPower_smoothed_epi_perT
       P.map V = volume.withDensity (fun x => ENNReal.ofReal (p x)) →
       (∀ x, 0 ≤ p x) → Measurable p →
       Integrable (fun ω => (V ω) ^ 2) P →
-      Integrable (fun y => y ^ 2 * p y) volume := by
-    intro V p hV hlaw hp_nn hp_meas hmom
-    have hsq_law : Integrable (fun y => y ^ 2) (P.map V) := by
-      rw [integrable_map_measure
-        ((by fun_prop : Measurable (fun y : ℝ => y ^ 2)).aestronglyMeasurable)
-        hV.aemeasurable]
-      simpa [Function.comp] using hmom
-    rw [hlaw] at hsq_law
-    rw [integrable_withDensity_iff_integrable_smul₀'
-      hp_meas.ennreal_ofReal.aemeasurable
-      (Filter.Eventually.of_forall fun x => ENNReal.ofReal_lt_top)] at hsq_law
-    refine hsq_law.congr (Filter.Eventually.of_forall fun x => ?_)
-    simp only [smul_eq_mul, ENNReal.toReal_ofReal (hp_nn x)]; ring
+      Integrable (fun y => y ^ 2 * p y) volume :=
+    fun V p hV hlaw hp_nn hp_meas hmom =>
+      integrable_sq_mul_of_map_eq_withDensity_ofReal P V p hV hlaw hp_nn hp_meas hmom
   have hpXb_mom : Integrable (fun y => y ^ 2 * pX_base y) volume :=
     base_mom X pX_base hX hpXb_law hpXb_nn hpXb_meas h_mom_X
   have hpYb_mom : Integrable (fun y => y ^ 2 * pY_base y) volume :=
@@ -850,18 +930,10 @@ theorem entropyPower_smoothed_epi_perT
       P.map (fun ω => U ω + Real.sqrt t * Zw ω)
         = volume.withDensity (fun x => ENNReal.ofReal
             (InformationTheory.Shannon.EPIConvDensity.convDensityAdd p_base
-              (gaussianPDFReal 0 ⟨t * (v_Z : ℝ), by positivity⟩) x)) := by
-    intro U Zw p_base v_Z hU hZw hUZw hv_Z hZw_law hp_nn hp_meas hp_law hpath_ac
-    have hgconv : InformationTheory.Shannon.FisherInfoV2.gaussianConvolution U Zw t
-        = fun ω => U ω + Real.sqrt t * Zw ω := rfl
-    have hrn := InformationTheory.Shannon.FisherInfoV2.pPath_eq_convDensityAdd
-      U Zw hU hZw hUZw v_Z hv_Z hZw_law p_base hp_nn hp_meas hp_law (s := t) ht
-    rw [hgconv] at hrn
-    -- `P.map path = withDensity (rnDeriv)`; rewrite rnDeriv via `hrn`.
-    have hself : P.map (fun ω => U ω + Real.sqrt t * Zw ω)
-        = volume.withDensity ((P.map (fun ω => U ω + Real.sqrt t * Zw ω)).rnDeriv volume) :=
-      (Measure.withDensity_rnDeriv_eq _ _ hpath_ac).symm
-    rw [hself, withDensity_congr_ae hrn]
+              (gaussianPDFReal 0 ⟨t * (v_Z : ℝ), by positivity⟩) x)) :=
+    fun U Zw p_base v_Z hU hZw hUZw hv_Z hZw_law hp_nn hp_meas hp_law hpath_ac =>
+      map_smoothed_eq_withDensity_convDensityAdd P U Zw p_base v_Z hU hZw hUZw hv_Z hZw_law
+        hp_nn hp_meas hp_law ht hpath_ac
   -- Xt: `v_Z = 1`, variance witness `⟨t·1,_⟩` collapses to `⟨t,_⟩`.
   have hpXt_law : P.map Xt = volume.withDensity (fun x => ENNReal.ofReal (pXt x)) := by
     have h := path_law X Z_X pX_base 1 hX hZX hX_ZX one_pos hZX_law hpXb_nn hpXb_meas hpXb_law
@@ -1142,56 +1214,10 @@ theorem entropy_power_add_ge_of_finite_variance
       0 < vZ → lift.map Zw = gaussianReal 0 vZ → lift.map W' = P.map W →
       (P.map W) ≪ volume → Integrable (fun ω => (W ω) ^ 2) P →
       Integrable (fun x => Real.negMulLog (((P.map W).rnDeriv volume x).toReal)) volume →
-      IsHeatFlowEndpointRegular W' Zw lift := by
-    intro W W' Zw vZ hW hW' hZw hWZ hvZ hZw_law hmap hac hmom hent
-    set p : ℝ → ℝ := fun x => ((P.map W).rnDeriv volume x).toReal with hp_def
-    have hp_nn : ∀ x, 0 ≤ p x := fun x => ENNReal.toReal_nonneg
-    have hp_meas : Measurable p := ((P.map W).measurable_rnDeriv volume).ennreal_toReal
-    have hp_law : lift.map W' = volume.withDensity (fun x => ENNReal.ofReal (p x)) := by
-      rw [hmap]
-      have hfin : ∀ᵐ x ∂volume, (P.map W).rnDeriv volume x < ∞ :=
-        Measure.rnDeriv_lt_top (P.map W) volume
-      have hcongr : (fun x => ENNReal.ofReal (p x)) =ᵐ[volume]
-          (P.map W).rnDeriv volume := by
-        filter_upwards [hfin] with x hx
-        simp only [hp_def, ENNReal.ofReal_toReal hx.ne]
-      rw [withDensity_congr_ae hcongr, Measure.withDensity_rnDeriv_eq _ _ hac]
-    have hp_int : Integrable p volume := by
-      have := Measure.integrable_toReal_rnDeriv (μ := P.map W) (ν := volume)
-      simpa [hp_def] using this
-    have hp_mass : (∫ y, p y ∂volume) = 1 := by
-      have hmass := MeasureTheory.Measure.integral_toReal_rnDeriv (μ := P.map W) (ν := volume) hac
-      have : IsProbabilityMeasure (P.map W) :=
-        MeasureTheory.Measure.isProbabilityMeasure_map hW.aemeasurable
-      rw [hp_def, hmass, Measure.real, measure_univ, ENNReal.toReal_one]
-    have hp_mom : Integrable (fun y => y ^ 2 * p y) volume := by
-      have hsq_law : Integrable (fun y => y ^ 2) (P.map W) := by
-        rw [integrable_map_measure
-          ((by fun_prop : Measurable (fun y : ℝ => y ^ 2)).aestronglyMeasurable)
-          hW.aemeasurable]
-        simpa [Function.comp] using hmom
-      rw [show P.map W = volume.withDensity (fun x => ENNReal.ofReal (p x)) from
-        hmap ▸ hp_law] at hsq_law
-      rw [integrable_withDensity_iff_integrable_smul₀'
-        hp_meas.ennreal_ofReal.aemeasurable
-        (Filter.Eventually.of_forall fun x => ENNReal.ofReal_lt_top)] at hsq_law
-      refine hsq_law.congr (Filter.Eventually.of_forall fun x => ?_)
-      simp only [smul_eq_mul, ENNReal.toReal_ofReal (hp_nn x)]; ring
-    exact
-      { hX_meas := hW'
-        hZ_meas := hZw
-        hXZ_indep := hWZ
-        v_Z := vZ
-        hv_Z_pos := hvZ
-        hZ_law := hZw_law
-        pX := p
-        hpX_nn := hp_nn
-        hpX_meas := hp_meas
-        hpX_law := hp_law
-        hpX_int := hp_int
-        hpX_mass := hp_mass
-        hpX_mom := hp_mom
-        hpX_ent := hent }
+      IsHeatFlowEndpointRegular W' Zw lift :=
+    fun W W' Zw vZ hW hW' hZw hWZ hvZ hZw_law hmap hac hmom hent =>
+      isHeatFlowEndpointRegular_of_map_eq_rnDeriv P lift W W' Zw vZ hW hW' hZw hWZ hvZ
+        hZw_law hmap hac hmom hent
   -- pairwise independences needed by the endpoint builder.
   have hf_meas : ∀ i, Measurable (![X', Y', ZX, ZY] i) := by
     intro i; fin_cases i
