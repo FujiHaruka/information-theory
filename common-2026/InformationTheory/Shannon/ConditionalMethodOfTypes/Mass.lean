@@ -307,6 +307,229 @@ private lemma sum_diff_log_abs_le_typicality
     _ = δ * ∑ a : γ, |Real.log (q a)| := by
         rw [← Finset.mul_sum]
 
+lemma exists_nat_forall_log_succ_div_le {C : ℝ} (hC : 0 < C) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → Real.log ((n : ℝ) + 1) / n ≤ C := by
+  have h_lim : Tendsto (fun n : ℕ => Real.log ((n : ℝ) + 1) / n) atTop (𝓝 0) := by
+    have h_log_id : Tendsto (fun x : ℝ => Real.log x / x) atTop (𝓝 0) :=
+      Real.isLittleO_log_id_atTop.tendsto_div_nhds_zero
+    have h_shift : Tendsto (fun n : ℕ => ((n : ℝ) + 1)) atTop atTop :=
+      (tendsto_natCast_atTop_atTop (R := ℝ)).atTop_add tendsto_const_nhds
+    have h_nat : Tendsto (fun n : ℕ => Real.log ((n : ℝ) + 1) / ((n : ℝ) + 1))
+        atTop (𝓝 0) := h_log_id.comp h_shift
+    have h_ratio : Tendsto (fun n : ℕ => ((n : ℝ) + 1) / n) atTop (𝓝 1) := by
+      have h1 : Tendsto (fun n : ℕ => (1 : ℝ) + 1 / n) atTop (𝓝 (1 + 0)) := by
+        refine tendsto_const_nhds.add ?_
+        exact tendsto_one_div_atTop_nhds_zero_nat
+      rw [add_zero] at h1
+      refine h1.congr' ?_
+      filter_upwards [Filter.eventually_gt_atTop 0] with n hn
+      have hn_R : (0 : ℝ) < n := by exact_mod_cast hn
+      field_simp
+    have h_prod : Tendsto
+        (fun n : ℕ => (Real.log ((n : ℝ) + 1) / ((n : ℝ) + 1))
+                        * (((n : ℝ) + 1) / n)) atTop (𝓝 (0 * 1)) := h_nat.mul h_ratio
+    rw [zero_mul] at h_prod
+    refine h_prod.congr' ?_
+    filter_upwards [Filter.eventually_gt_atTop 0] with n hn
+    have hn_R : (0 : ℝ) < n := by exact_mod_cast hn
+    have hn1_R : (0 : ℝ) < (n : ℝ) + 1 := by linarith
+    field_simp
+  rw [Metric.tendsto_atTop] at h_lim
+  obtain ⟨N, hN⟩ := h_lim _ hC
+  refine ⟨N, fun n hn => ?_⟩
+  have h := hN n hn
+  rw [Real.dist_eq, sub_zero] at h
+  have h_nn : 0 ≤ Real.log ((n : ℝ) + 1) / n := by
+    rcases Nat.eq_zero_or_pos n with h0 | hpos
+    · subst h0; simp
+    · have hn_R : (0 : ℝ) < n := by exact_mod_cast hpos
+      exact div_nonneg (Real.log_nonneg (by linarith)) hn_R.le
+  rw [abs_of_nonneg h_nn] at h
+  exact h.le
+
+lemma exists_nat_forall_div_le {K C : ℝ} (hK : 0 ≤ K) (hC : 0 < C) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → K / n ≤ C := by
+  obtain ⟨N, hN⟩ := exists_nat_gt (K / C)
+  refine ⟨max N 1, fun n hn => ?_⟩
+  have hN_le : N ≤ n := le_of_max_le_left hn
+  have hn1 : 1 ≤ n := le_of_max_le_right hn
+  have hn_R : (0 : ℝ) < n := by exact_mod_cast hn1
+  have hN_lt : K / C < (n : ℝ) := lt_of_lt_of_le hN (by exact_mod_cast hN_le)
+  rw [div_lt_iff₀ hC] at hN_lt
+  rw [div_le_iff₀ hn_R]
+  linarith
+
+lemma exists_nat_forall_le_nat_mul {K C : ℝ} (hK : 0 ≤ K) (hC : 0 < C) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → K ≤ (n : ℝ) * C := by
+  obtain ⟨N, hN⟩ := exists_nat_gt (K / C)
+  refine ⟨max N 1, fun n hn => ?_⟩
+  have hN_le : N ≤ n := le_of_max_le_left hn
+  have hn1 : 1 ≤ n := le_of_max_le_right hn
+  have hn_R : (0 : ℝ) < n := by exact_mod_cast hn1
+  have hN_lt : K / C < (n : ℝ) := lt_of_lt_of_le hN (by exact_mod_cast hN_le)
+  rw [div_lt_iff₀ hC] at hN_lt
+  linarith
+
+lemma sum_log_natCast_succ_le {γ : Type*} [Fintype γ] (g : γ → ℕ) (n : ℕ)
+    (hg_le : ∀ a, g a ≤ n) :
+    (∑ a : γ, Real.log ((g a : ℝ) + 1)) ≤ (Fintype.card γ : ℝ) * Real.log ((n : ℝ) + 1) := by
+  have h_each : ∀ a : γ, Real.log ((g a : ℝ) + 1) ≤ Real.log ((n : ℝ) + 1) := by
+    intro a
+    have hg_le_R : (g a : ℝ) ≤ (n : ℝ) := by exact_mod_cast hg_le a
+    have hg_nn : (0 : ℝ) ≤ (g a : ℝ) := Nat.cast_nonneg _
+    apply Real.log_le_log (by linarith : (0 : ℝ) < (g a : ℝ) + 1)
+    linarith
+  have h_sum_le : (∑ a : γ, Real.log ((g a : ℝ) + 1))
+      ≤ ∑ a : γ, Real.log ((n : ℝ) + 1) :=
+    Finset.sum_le_sum fun a _ => h_each a
+  have h_const : (∑ a : γ, Real.log ((n : ℝ) + 1))
+      = (Fintype.card γ : ℝ) * Real.log ((n : ℝ) + 1) := by
+    rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
+  linarith
+
+lemma sum_measureReal_singleton_eq_one {γ : Type*} [Fintype γ]
+    [MeasurableSpace γ] [MeasurableSingletonClass γ]
+    (ν : Measure γ) [IsProbabilityMeasure ν] :
+    (∑ a : γ, ν.real {a}) = 1 := by
+  classical
+  have h_univ_eq : (Set.univ : Set γ)
+      = ⋃ a ∈ (Finset.univ : Finset γ), ({a} : Set γ) := by ext a; simp
+  have h_disj : (↑(Finset.univ : Finset γ) : Set γ).PairwiseDisjoint
+      (fun a => ({a} : Set γ)) := by
+    intro a₁ _ a₂ _ ha s hs1 hs2 q hq
+    have hq1 := hs1 hq; have hq2 := hs2 hq
+    simp only [Set.mem_singleton_iff] at hq1 hq2
+    exact (ha (hq1.symm.trans hq2)).elim
+  have h_meas : ∀ a ∈ (Finset.univ : Finset γ),
+      MeasurableSet ({a} : Set γ) := fun _ _ => measurableSet_singleton _
+  have h_sum : ν.real (Set.univ : Set γ) = ∑ a : γ, ν.real {a} := by
+    rw [h_univ_eq, measureReal_biUnion_finset h_disj h_meas]
+  have h_univ : ν.real (Set.univ) = 1 := probReal_univ (μ := ν)
+  rw [← h_sum, h_univ]
+
+lemma neg_sum_mul_log_eq_neg_sum_mul_log_sub_sum_mul_log_div
+    {γ : Type*} [Fintype γ] (p q : γ → ℝ)
+    (hp_nn : ∀ a, 0 ≤ p a) (hq_pos : ∀ a, 0 < q a) :
+    -∑ a : γ, p a * Real.log (p a)
+      = (-∑ a : γ, p a * Real.log (q a))
+        - ∑ a : γ, p a * Real.log (p a / q a) := by
+  have h_each : ∀ a : γ,
+      p a * Real.log (p a)
+        = p a * Real.log (q a) + p a * Real.log (p a / q a) := by
+    intro a
+    rcases lt_or_eq_of_le (hp_nn a) with hpos | hzero
+    · rw [show p a * Real.log (q a) + p a * Real.log (p a / q a)
+            = p a * (Real.log (q a) + Real.log (p a / q a)) from by ring]
+      rw [show Real.log (q a) + Real.log (p a / q a) = Real.log (p a) from by
+        rw [Real.log_div hpos.ne' (hq_pos a).ne']; ring]
+    · rw [← hzero]; ring
+  rw [Finset.sum_congr rfl (fun a _ => h_each a)]
+  rw [Finset.sum_add_distrib, neg_add]
+  ring
+
+lemma sum_sq_div_le_card_mul {γ : Type*} [Fintype γ] (f r : γ → ℝ)
+    (δ m : ℝ) (hm : 0 < m) (h_close : ∀ a, |f a| ≤ δ)
+    (h_pos : ∀ a, 0 < r a) (h_min : ∀ a, m ≤ r a) :
+    (∑ a : γ, (f a) ^ 2 / r a) ≤ (Fintype.card γ : ℝ) * (δ ^ 2 / m) := by
+  have h_each : ∀ a ∈ (Finset.univ : Finset γ), (f a) ^ 2 / r a ≤ δ ^ 2 / m := by
+    intro a _
+    have h_sq : (f a) ^ 2 ≤ δ ^ 2 := by
+      rw [show (f a) ^ 2 = |f a| ^ 2 from (sq_abs _).symm]
+      exact pow_le_pow_left₀ (abs_nonneg _) (h_close a) 2
+    have h_num_le : (f a) ^ 2 / r a ≤ δ ^ 2 / r a :=
+      div_le_div_of_nonneg_right h_sq (h_pos a).le
+    have hδ_sq_nn : 0 ≤ δ ^ 2 := sq_nonneg _
+    have h_denom_le : δ ^ 2 / r a ≤ δ ^ 2 / m :=
+      div_le_div_of_nonneg_left hδ_sq_nn hm (h_min a)
+    linarith
+  calc ∑ a : γ, (f a) ^ 2 / r a
+      ≤ ∑ a : γ, δ ^ 2 / m := Finset.sum_le_sum h_each
+    _ = (Fintype.card γ : ℝ) * (δ ^ 2 / m) := by
+        rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
+
+lemma neg_sum_mul_log_le_neg_sum_mul_log_of_sum_eq
+    {γ : Type*} [Fintype γ] (p q : γ → ℝ)
+    (hp_nn : ∀ a, 0 ≤ p a) (hq_pos : ∀ a, 0 < q a)
+    (h_sum_eq : (∑ a : γ, p a) = ∑ a : γ, q a) :
+    -∑ a : γ, p a * Real.log (p a)
+      ≤ -∑ a : γ, p a * Real.log (q a) := by
+  have h_pointwise : ∀ a ∈ (Finset.univ : Finset γ),
+      p a * Real.log (q a / p a) ≤ q a - p a := by
+    intro a _
+    rcases lt_or_eq_of_le (hp_nn a) with hpos | hzero
+    · have h_ratio_pos : 0 < q a / p a := div_pos (hq_pos a) hpos
+      have hlog := Real.log_le_sub_one_of_pos h_ratio_pos
+      have hmul : p a * Real.log (q a / p a) ≤ p a * (q a / p a - 1) :=
+        mul_le_mul_of_nonneg_left hlog hpos.le
+      refine le_trans hmul ?_
+      have h_ratio_ne : p a ≠ 0 := hpos.ne'
+      have h_simp : p a * (q a / p a - 1) = q a - p a := by
+        rw [mul_sub, mul_one, mul_div_assoc', mul_comm (p a) (q a),
+            mul_div_assoc, div_self h_ratio_ne, mul_one]
+      linarith
+    · rw [← hzero, zero_mul]; linarith [(hq_pos a).le]
+  have h_sum1 :
+      (∑ a : γ, p a * Real.log (q a / p a)) ≤ ∑ a : γ, (q a - p a) :=
+    Finset.sum_le_sum h_pointwise
+  have h_sum_zero : (∑ a : γ, (q a - p a)) = 0 := by
+    rw [Finset.sum_sub_distrib, h_sum_eq, sub_self]
+  have h_diff :
+      (-∑ a : γ, p a * Real.log (p a)) - (-∑ a : γ, p a * Real.log (q a))
+        = ∑ a : γ, p a * Real.log (q a / p a) := by
+    rw [show (-∑ a : γ, p a * Real.log (p a)) - (-∑ a : γ, p a * Real.log (q a))
+          = ∑ a : γ, p a * Real.log (q a) - ∑ a : γ, p a * Real.log (p a) from by ring]
+    rw [← Finset.sum_sub_distrib]
+    refine Finset.sum_congr rfl fun a _ => ?_
+    rcases lt_or_eq_of_le (hp_nn a) with hpos | hzero
+    · rw [Real.log_div (hq_pos a).ne' hpos.ne']; ring
+    · rw [← hzero]; simp
+  linarith
+
+lemma sum_natCast_mul_log_eq {γ : Type*} [Fintype γ] (g : γ → ℕ) {n : ℕ}
+    (hn_ne : (n : ℝ) ≠ 0) (hg_sum : (∑ a : γ, (g a : ℝ)) = n) :
+    (∑ a : γ, (g a : ℝ) * Real.log (g a))
+      = (n : ℝ) * Real.log (n : ℝ)
+        - (n : ℝ) * (-∑ a : γ, ((g a : ℝ) / n) * Real.log ((g a : ℝ) / n)) := by
+  have h_each : ∀ a : γ, (g a : ℝ) * Real.log ((g a : ℝ) / n)
+      = (g a : ℝ) * Real.log (g a) - (g a : ℝ) * Real.log (n : ℝ) := by
+    intro a
+    rcases Nat.eq_zero_or_pos (g a) with h | h
+    · rw [show ((g a : ℕ) : ℝ) = 0 from by exact_mod_cast h]; simp
+    · have hpos : (0 : ℝ) < (g a : ℝ) := by exact_mod_cast h
+      rw [Real.log_div hpos.ne' hn_ne]; ring
+  have h_sum_each :
+      (∑ a : γ, (g a : ℝ) * Real.log ((g a : ℝ) / n))
+        = (∑ a : γ, (g a : ℝ) * Real.log (g a))
+          - (∑ a : γ, (g a : ℝ)) * Real.log (n : ℝ) := by
+    rw [Finset.sum_congr rfl (fun a _ => h_each a), Finset.sum_sub_distrib]
+    congr 1; rw [← Finset.sum_mul]
+  have hnH : (n : ℝ) * (-∑ a : γ, ((g a : ℝ) / n) * Real.log ((g a : ℝ) / n))
+      = -∑ a : γ, (g a : ℝ) * Real.log ((g a : ℝ) / n) := by
+    rw [mul_neg, Finset.mul_sum]
+    congr 1
+    refine Finset.sum_congr rfl fun a _ => ?_
+    field_simp
+  rw [hg_sum] at h_sum_each
+  linarith
+
+lemma sum_typeCount {n : ℕ} (x : Fin n → α) :
+    (∑ a : α, typeCount x a) = n := by
+  classical
+  unfold typeCount
+  have h_maps : ∀ i ∈ (Finset.univ : Finset (Fin n)),
+      x i ∈ (Finset.univ : Finset α) := fun _ _ => Finset.mem_univ _
+  have h_fiber := Finset.sum_fiberwise_of_maps_to (s := (Finset.univ : Finset (Fin n)))
+    (t := (Finset.univ : Finset α)) h_maps (fun _ : Fin n => (1 : ℕ))
+  have h_card : ∀ a : α,
+      ((Finset.univ : Finset (Fin n)).filter fun i => x i = a).card
+        = ∑ i ∈ ((Finset.univ : Finset (Fin n)).filter fun i => x i = a), (1 : ℕ) := by
+    intro a; rw [Finset.sum_const, Nat.smul_one_eq_cast]; rfl
+  rw [show (∑ a : α, ((Finset.univ : Finset (Fin n)).filter fun i => x i = a).card)
+        = ∑ a : α, ∑ i ∈ ((Finset.univ : Finset (Fin n)).filter fun i => x i = a),
+            (1 : ℕ)
+      from Finset.sum_congr rfl fun a _ => h_card a]
+  rw [h_fiber]; simp
+
 set_option maxHeartbeats 4000000 in
 /-- **Conditional KL concentration helper** — combines `conditionalTypeClass_card_ge`
 with `weak_displacement_eq_strong_sum` (joint) and a χ²-style KL bound to produce
@@ -382,39 +605,10 @@ private lemma conditional_KL_concentration_ge
   -- qZ marginalizes to a probability measure on α (resp. β).
   -- ∑ p, qZ p = 1.
   have h_qZ_sum_one : (∑ p : α × β, qZ p) = 1 := by
-    have h_univ_eq : (Set.univ : Set (α × β))
-        = ⋃ p ∈ (Finset.univ : Finset (α × β)), ({p} : Set (α × β)) := by ext p; simp
-    have h_disj : (↑(Finset.univ : Finset (α × β)) : Set (α × β)).PairwiseDisjoint
-        (fun p => ({p} : Set (α × β))) := by
-      intro p₁ _ p₂ _ hp s hs1 hs2 q hq
-      have hq1 := hs1 hq; have hq2 := hs2 hq
-      simp only [Set.mem_singleton_iff] at hq1 hq2
-      exact (hp (hq1.symm.trans hq2)).elim
-    have h_meas : ∀ p ∈ (Finset.univ : Finset (α × β)),
-        MeasurableSet ({p} : Set (α × β)) := fun _ _ => measurableSet_singleton _
-    have h_sum : (μ.map (jointSequence Xs Ys 0)).real (Set.univ : Set (α × β))
-        = ∑ p : α × β, qZ p := by
-      rw [h_univ_eq, measureReal_biUnion_finset h_disj h_meas]
-    have h_univ : (μ.map (jointSequence Xs Ys 0)).real (Set.univ) = 1 :=
-      probReal_univ (μ := μ.map (jointSequence Xs Ys 0))
-    rw [← h_sum, h_univ]
+    rw [hqZ_def]; exact sum_measureReal_singleton_eq_one (μ.map (jointSequence Xs Ys 0))
   -- ∑ a, qX a = 1.
   have h_qX_sum_one : (∑ a : α, qX a) = 1 := by
-    have h_univ_eq : (Set.univ : Set α)
-        = ⋃ a ∈ (Finset.univ : Finset α), ({a} : Set α) := by ext a; simp
-    have h_disj : (↑(Finset.univ : Finset α) : Set α).PairwiseDisjoint
-        (fun a => ({a} : Set α)) := by
-      intro a₁ _ a₂ _ ha s hs1 hs2 q hq
-      have hq1 := hs1 hq; have hq2 := hs2 hq
-      simp only [Set.mem_singleton_iff] at hq1 hq2
-      exact (ha (hq1.symm.trans hq2)).elim
-    have h_meas : ∀ a ∈ (Finset.univ : Finset α),
-        MeasurableSet ({a} : Set α) := fun _ _ => measurableSet_singleton _
-    have h_sum : (μ.map (Xs 0)).real (Set.univ : Set α) = ∑ a : α, qX a := by
-      rw [h_univ_eq, measureReal_biUnion_finset h_disj h_meas]
-    have h_univ : (μ.map (Xs 0)).real (Set.univ) = 1 :=
-      probReal_univ (μ := μ.map (Xs 0))
-    rw [← h_sum, h_univ]
+    rw [hqX_def]; exact sum_measureReal_singleton_eq_one (μ.map (Xs 0))
   -- qX a > 0 from qZ-marginal: qX a = ∑_b qZ(a, b), each term > 0.
   have hqX_pos : ∀ a : α, 0 < qX a := by
     intro a
@@ -459,104 +653,40 @@ private lemma conditional_KL_concentration_ge
       apply div_pos hδ_pos
       have : (0 : ℝ) < 4 * (Fintype.card α : ℝ) := by linarith
       exact mul_pos this hβ_pos
-    have h_lim : Tendsto (fun n : ℕ => Real.log ((n : ℝ) + 1) / n) atTop (𝓝 0) := by
-      have h_log_id : Tendsto (fun x : ℝ => Real.log x / x) atTop (𝓝 0) :=
-        Real.isLittleO_log_id_atTop.tendsto_div_nhds_zero
-      have h_shift : Tendsto (fun n : ℕ => ((n : ℝ) + 1)) atTop atTop :=
-        (tendsto_natCast_atTop_atTop (R := ℝ)).atTop_add tendsto_const_nhds
-      have h_nat : Tendsto (fun n : ℕ => Real.log ((n : ℝ) + 1) / ((n : ℝ) + 1))
-          atTop (𝓝 0) := h_log_id.comp h_shift
-      have h_ratio : Tendsto (fun n : ℕ => ((n : ℝ) + 1) / n) atTop (𝓝 1) := by
-        have h1 : Tendsto (fun n : ℕ => (1 : ℝ) + 1 / n) atTop (𝓝 (1 + 0)) := by
-          refine tendsto_const_nhds.add ?_
-          exact tendsto_one_div_atTop_nhds_zero_nat
-        rw [add_zero] at h1
-        refine h1.congr' ?_
-        filter_upwards [Filter.eventually_gt_atTop 0] with n hn
-        have hn_R : (0 : ℝ) < n := by exact_mod_cast hn
-        field_simp
-      have h_prod : Tendsto
-          (fun n : ℕ => (Real.log ((n : ℝ) + 1) / ((n : ℝ) + 1))
-                          * (((n : ℝ) + 1) / n)) atTop (𝓝 (0 * 1)) := h_nat.mul h_ratio
-      rw [zero_mul] at h_prod
-      refine h_prod.congr' ?_
-      filter_upwards [Filter.eventually_gt_atTop 0] with n hn
-      have hn_R : (0 : ℝ) < n := by exact_mod_cast hn
-      have hn1_R : (0 : ℝ) < (n : ℝ) + 1 := by linarith
-      field_simp
-    rw [Metric.tendsto_atTop] at h_lim
-    obtain ⟨N, hN⟩ := h_lim _ h_target_pos
-    refine ⟨N, fun n hn => ?_⟩
-    have h := hN n hn
-    rw [Real.dist_eq, sub_zero] at h
-    have h_nn : 0 ≤ Real.log ((n : ℝ) + 1) / n := by
-      rcases Nat.eq_zero_or_pos n with h0 | hpos
-      · subst h0; simp
-      · have hn_R : (0 : ℝ) < n := by exact_mod_cast hpos
-        exact div_nonneg (Real.log_nonneg (by linarith)) hn_R.le
-    rw [abs_of_nonneg h_nn] at h
-    exact h.le
+    exact exists_nat_forall_log_succ_div_le h_target_pos
   -- (C) (|β|·LZ + |α|·|β|·LY) / n ≤ hδ/4.
   obtain ⟨N_const, hN_const⟩ : ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
       ((Fintype.card β : ℝ) * LZ
         + (Fintype.card α : ℝ) * (Fintype.card β : ℝ) * LY) / n ≤ hδ / 4 := by
-    set C := (Fintype.card β : ℝ) * LZ + (Fintype.card α : ℝ) * (Fintype.card β : ℝ) * LY
-      with hC_def
-    have hC_nn : 0 ≤ C := by
+    have hC_nn : 0 ≤ (Fintype.card β : ℝ) * LZ
+        + (Fintype.card α : ℝ) * (Fintype.card β : ℝ) * LY := by
       have h1 : 0 ≤ (Fintype.card β : ℝ) * LZ := mul_nonneg hβ_nn hLZ_nn
       have h2 : 0 ≤ (Fintype.card α : ℝ) * (Fintype.card β : ℝ) * LY :=
         mul_nonneg hαβ_nn hLY_nn
       linarith
-    have h_target_pos : 0 < hδ / 4 := by linarith
-    obtain ⟨N, hN⟩ := exists_nat_gt (C / (hδ / 4))
-    refine ⟨max N 1, fun n hn => ?_⟩
-    have hN_le : N ≤ n := le_of_max_le_left hn
-    have hn1 : 1 ≤ n := le_of_max_le_right hn
-    have hn_R : (0 : ℝ) < n := by exact_mod_cast hn1
-    have hN_lt : C / (hδ / 4) < (n : ℝ) := lt_of_lt_of_le hN (by exact_mod_cast hN_le)
-    rw [div_lt_iff₀ h_target_pos] at hN_lt
-    rw [div_le_iff₀ hn_R]
-    linarith
+    exact exists_nat_forall_div_le hC_nn (by linarith)
   -- (D-cross) 2·|α|·|β|²·ε_X / qZ_min ≤ n · (hδ/8).
   obtain ⟨N_KL_cross, hN_KL_cross⟩ : ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
       2 * (Fintype.card α : ℝ) * (Fintype.card β : ℝ)^2 * ε_X / qZ_min
         ≤ (n : ℝ) * (hδ / 8) := by
-    set K := 2 * (Fintype.card α : ℝ) * (Fintype.card β : ℝ)^2 * ε_X / qZ_min with hK_def
-    have hK_nn : 0 ≤ K := by
+    have hK_nn : 0 ≤ 2 * (Fintype.card α : ℝ) * (Fintype.card β : ℝ)^2 * ε_X / qZ_min := by
       apply div_nonneg _ hqZ_min_pos.le
       apply mul_nonneg _ hε_X
       apply mul_nonneg _ (by positivity)
       linarith
-    have h_target_pos : 0 < hδ / 8 := by linarith
-    obtain ⟨N, hN⟩ := exists_nat_gt (K / (hδ / 8))
-    refine ⟨max N 1, fun n hn => ?_⟩
-    have hN_le : N ≤ n := le_of_max_le_left hn
-    have hn1 : 1 ≤ n := le_of_max_le_right hn
-    have hn_R : (0 : ℝ) < n := by exact_mod_cast hn1
-    have hN_lt : K / (hδ / 8) < (n : ℝ) := lt_of_lt_of_le hN (by exact_mod_cast hN_le)
-    rw [div_lt_iff₀ h_target_pos] at hN_lt
-    linarith
+    exact exists_nat_forall_le_nat_mul hK_nn (by linarith)
   -- (D-inv) |α|·|β|³ / (n · qZ_min) ≤ hδ/8.
   obtain ⟨N_KL_inv, hN_KL_inv⟩ : ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
       (Fintype.card α : ℝ) * (Fintype.card β : ℝ)^3 / (n * qZ_min) ≤ hδ / 8 := by
-    set K := (Fintype.card α : ℝ) * (Fintype.card β : ℝ)^3 / qZ_min with hK_def
-    have hK_nn : 0 ≤ K := by
+    have hK_nn : 0 ≤ (Fintype.card α : ℝ) * (Fintype.card β : ℝ)^3 / qZ_min := by
       apply div_nonneg _ hqZ_min_pos.le
       apply mul_nonneg hα_nn (by positivity)
-    have h_target_pos : 0 < hδ / 8 := by linarith
-    obtain ⟨N, hN⟩ := exists_nat_gt (K / (hδ / 8))
-    refine ⟨max N 1, fun n hn => ?_⟩
-    have hN_le : N ≤ n := le_of_max_le_left hn
-    have hn1 : 1 ≤ n := le_of_max_le_right hn
-    have hn_R : (0 : ℝ) < n := by exact_mod_cast hn1
-    have hN_lt : K / (hδ / 8) < (n : ℝ) := lt_of_lt_of_le hN (by exact_mod_cast hN_le)
-    rw [div_lt_iff₀ h_target_pos] at hN_lt
-    have hK_div : K / n ≤ hδ / 8 := by
-      rw [div_le_iff₀ hn_R]; linarith
-    -- Rewrite (|α|·|β|^3) / (n · qZ_min) = K / n.
-    have h_eq : (Fintype.card α : ℝ) * (Fintype.card β : ℝ)^3 / (n * qZ_min) = K / n := by
-      rw [hK_def, div_div, mul_comm (n : ℝ) qZ_min]
-    rw [h_eq]; exact hK_div
+    obtain ⟨N, hN⟩ := exists_nat_forall_div_le hK_nn (show (0 : ℝ) < hδ / 8 by linarith)
+    refine ⟨N, fun n hn => ?_⟩
+    have h_eq : (Fintype.card α : ℝ) * (Fintype.card β : ℝ)^3 / (n * qZ_min)
+        = (Fintype.card α : ℝ) * (Fintype.card β : ℝ)^3 / qZ_min / n := by
+      rw [div_div, mul_comm (n : ℝ) qZ_min]
+    rw [h_eq]; exact hN n hn
   -- Take the max of all four (and 1 to keep n ≥ 1).
   refine ⟨max (max (max N_log N_const) (max N_KL_cross N_KL_inv)) 1,
     fun n hn_ge x hx => ?_⟩
@@ -586,22 +716,7 @@ private lemma conditional_KL_concentration_ge
         (Finset.univ : Finset (Fin n)).card := Finset.card_filter_le _ _
     rw [Finset.card_univ, Fintype.card_fin] at h1
     exact h1
-  have hT_sum : (∑ a : α, T a) = n := by
-    show (∑ a : α, typeCount x a) = n
-    unfold typeCount
-    have h_maps : ∀ i ∈ (Finset.univ : Finset (Fin n)),
-        x i ∈ (Finset.univ : Finset α) := fun _ _ => Finset.mem_univ _
-    have h_fiber := Finset.sum_fiberwise_of_maps_to (s := (Finset.univ : Finset (Fin n)))
-      (t := (Finset.univ : Finset α)) h_maps (fun _ : Fin n => (1 : ℕ))
-    have h_card : ∀ a : α,
-        ((Finset.univ : Finset (Fin n)).filter fun i => x i = a).card
-          = ∑ i ∈ ((Finset.univ : Finset (Fin n)).filter fun i => x i = a), (1 : ℕ) := by
-      intro a; rw [Finset.sum_const, Nat.smul_one_eq_cast]; rfl
-    rw [show (∑ a : α, ((Finset.univ : Finset (Fin n)).filter fun i => x i = a).card)
-          = ∑ a : α, ∑ i ∈ ((Finset.univ : Finset (Fin n)).filter fun i => x i = a),
-              (1 : ℕ)
-        from Finset.sum_congr rfl fun a _ => h_card a]
-    rw [h_fiber]; simp
+  have hT_sum : (∑ a : α, T a) = n := sum_typeCount x
   -- c-distance bound.
   have hc_close : ∀ p, |((c p : ℕ) : ℝ) / n - qZ p| ≤ ε_X + (Fintype.card β : ℝ) / n := by
     intro p
@@ -693,60 +808,20 @@ private lemma conditional_KL_concentration_ge
         - ∑ a : α, ∑ b : β, (c (a, b) : ℝ) * Real.log (c (a, b) : ℝ)
         = (n : ℝ) * HZemp - (n : ℝ) * HXemp := by
     -- ∑_a T_a log T_a = n·log n - n·HXemp.
+    have hT_R_sum : (∑ a : α, (T a : ℝ)) = (n : ℝ) := by exact_mod_cast hT_sum
     have h_X : (∑ a : α, (T a : ℝ) * Real.log (T a : ℝ))
         = (n : ℝ) * Real.log (n : ℝ) - (n : ℝ) * HXemp := by
-      have h_each : ∀ a, (T a : ℝ) * Real.log ((T a : ℝ) / n)
-          = (T a : ℝ) * Real.log (T a : ℝ) - (T a : ℝ) * Real.log (n : ℝ) := by
-        intro a
-        rcases Nat.eq_zero_or_pos (T a) with h | h
-        · rw [h]; push_cast; simp
-        · have hpos : (0 : ℝ) < (T a : ℝ) := by exact_mod_cast h
-          rw [Real.log_div hpos.ne' hn_ne]; ring
-      have h_sum_each :
-          (∑ a : α, (T a : ℝ) * Real.log ((T a : ℝ) / n))
-            = (∑ a : α, (T a : ℝ) * Real.log (T a : ℝ))
-              - (∑ a : α, (T a : ℝ)) * Real.log (n : ℝ) := by
-        rw [Finset.sum_congr rfl (fun a _ => h_each a), Finset.sum_sub_distrib]
-        congr 1; rw [← Finset.sum_mul]
-      have hT_R_sum : (∑ a : α, (T a : ℝ)) = (n : ℝ) := by exact_mod_cast hT_sum
-      have hnHX : (n : ℝ) * HXemp = -∑ a : α, (T a : ℝ) * Real.log ((T a : ℝ) / n) := by
-        rw [hHXemp_def, mul_neg, Finset.mul_sum]
-        congr 1
-        refine Finset.sum_congr rfl fun a _ => ?_
-        field_simp
-      -- Substitute ∑ T = n into h_sum_each.
-      rw [hT_R_sum] at h_sum_each
-      linarith
+      rw [hHXemp_def]
+      exact sum_natCast_mul_log_eq T hn_ne hT_R_sum
     -- ∑_{ab} c log c = n·log n - n·HZemp.
+    have hc_R_sum : (∑ p : α × β, ((c p : ℕ) : ℝ)) = (n : ℝ) := by exact_mod_cast hc_total
     have h_Z : (∑ a : α, ∑ b : β, (c (a, b) : ℝ) * Real.log (c (a, b) : ℝ))
         = (n : ℝ) * Real.log (n : ℝ) - (n : ℝ) * HZemp := by
       have h_swap : (∑ a : α, ∑ b : β, (c (a, b) : ℝ) * Real.log (c (a, b) : ℝ))
           = ∑ p : α × β, ((c p : ℕ) : ℝ) * Real.log ((c p : ℕ) : ℝ) := by
         rw [← Finset.sum_product']; rfl
-      rw [h_swap]
-      have h_each : ∀ p : α × β, ((c p : ℕ) : ℝ) * Real.log (((c p : ℕ) : ℝ) / n)
-          = ((c p : ℕ) : ℝ) * Real.log ((c p : ℕ) : ℝ)
-            - ((c p : ℕ) : ℝ) * Real.log (n : ℝ) := by
-        intro p
-        rcases Nat.eq_zero_or_pos (c p) with h | h
-        · rw [show ((c p : ℕ) : ℝ) = 0 from by exact_mod_cast h]; simp
-        · have hpos : (0 : ℝ) < ((c p : ℕ) : ℝ) := by exact_mod_cast h
-          rw [Real.log_div hpos.ne' hn_ne]; ring
-      have h_sum_each :
-          (∑ p : α × β, ((c p : ℕ) : ℝ) * Real.log (((c p : ℕ) : ℝ) / n))
-            = (∑ p : α × β, ((c p : ℕ) : ℝ) * Real.log ((c p : ℕ) : ℝ))
-              - (∑ p : α × β, ((c p : ℕ) : ℝ)) * Real.log (n : ℝ) := by
-        rw [Finset.sum_congr rfl (fun p _ => h_each p), Finset.sum_sub_distrib]
-        congr 1; rw [← Finset.sum_mul]
-      have hc_R_sum : (∑ p : α × β, ((c p : ℕ) : ℝ)) = (n : ℝ) := by exact_mod_cast hc_total
-      have hnHZ : (n : ℝ) * HZemp =
-          -∑ p : α × β, ((c p : ℕ) : ℝ) * Real.log (((c p : ℕ) : ℝ) / n) := by
-        rw [hHZemp_def, mul_neg, Finset.mul_sum]
-        congr 1
-        refine Finset.sum_congr rfl fun p _ => ?_
-        field_simp
-      rw [hc_R_sum] at h_sum_each
-      linarith
+      rw [h_swap, hHZemp_def]
+      exact sum_natCast_mul_log_eq c hn_ne hc_R_sum
     linarith
   -- Assemble log card lower bound.
   have h_log_card_lb : (n : ℝ) * HZemp - (n : ℝ) * HXemp
@@ -773,69 +848,20 @@ private lemma conditional_KL_concentration_ge
     rw [h_split, h_chain]; linarith
   -- ── Step (II'): bound ∑_a log(T_a + 1) ≤ |α| · log(n + 1). ──
   have h_logT_sum_le : (∑ a : α, Real.log ((T a : ℝ) + 1))
-      ≤ (Fintype.card α : ℝ) * Real.log ((n : ℝ) + 1) := by
-    have h_each : ∀ a, Real.log ((T a : ℝ) + 1) ≤ Real.log ((n : ℝ) + 1) := by
-      intro a
-      have hT_le_R : (T a : ℝ) ≤ (n : ℝ) := by exact_mod_cast hT_le_n a
-      apply Real.log_le_log (by linarith : (0 : ℝ) < (T a : ℝ) + 1)
-      linarith
-    have h_sum_le : (∑ a : α, Real.log ((T a : ℝ) + 1))
-        ≤ ∑ a : α, Real.log ((n : ℝ) + 1) :=
-      Finset.sum_le_sum fun a _ => h_each a
-    have : (∑ a : α, Real.log ((n : ℝ) + 1)) = (Fintype.card α : ℝ) * Real.log ((n : ℝ) + 1) := by
-      rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
-    linarith
+      ≤ (Fintype.card α : ℝ) * Real.log ((n : ℝ) + 1) :=
+    sum_log_natCast_succ_le T n hT_le_n
   -- ── Step (III): Gibbs+typicality on X: HXemp ≤ HX + ε_X · LX. ──
   -- crossX := -∑_a (T_a/n) · log qX(a) = (∑_i pmfLog (x_i))/n.
   set crossX : ℝ := -∑ a : α, ((T a : ℝ) / n) * Real.log (qX a) with hcrossX_def
   -- HXemp ≤ crossX via Gibbs.
   have h_gibbs_X : HXemp ≤ crossX := by
-    -- Use log y ≤ y - 1 with y = qX/(T/n):
-    -- (T/n) · log(qX/(T/n)) ≤ qX - T/n. Sum: ≤ ∑ qX - ∑ T/n = 1 - 1 = 0.
-    have h_pointwise : ∀ a ∈ (Finset.univ : Finset α),
-        ((T a : ℝ) / n) * Real.log (qX a / ((T a : ℝ) / n)) ≤
-          qX a - ((T a : ℝ) / n) := by
-      intro a _
-      rcases lt_or_eq_of_le (show (0 : ℝ) ≤ (T a : ℝ) / n from
-        div_nonneg (Nat.cast_nonneg _) hn_pos.le) with hpos | hzero
-      · have h_ratio_pos : 0 < qX a / ((T a : ℝ) / n) := div_pos (hqX_pos a) hpos
-        have hlog := Real.log_le_sub_one_of_pos h_ratio_pos
-        have hmul : ((T a : ℝ) / n) * Real.log (qX a / ((T a : ℝ) / n))
-            ≤ ((T a : ℝ) / n) * (qX a / ((T a : ℝ) / n) - 1) :=
-          mul_le_mul_of_nonneg_left hlog hpos.le
-        refine le_trans hmul ?_
-        have h_ratio_ne : ((T a : ℝ) / n) ≠ 0 := hpos.ne'
-        have h_simp : ((T a : ℝ) / n) * (qX a / ((T a : ℝ) / n) - 1)
-            = qX a - (T a : ℝ) / n := by
-          rw [mul_sub, mul_one, mul_div_assoc', mul_comm ((T a : ℝ) / n) (qX a),
-              mul_div_assoc, div_self h_ratio_ne, mul_one]
-        linarith
-      · rw [← hzero, zero_mul]; linarith [hqX_nn a]
-    have h_sum1 :
-        (∑ a : α, ((T a : ℝ) / n) * Real.log (qX a / ((T a : ℝ) / n)))
-          ≤ ∑ a : α, (qX a - ((T a : ℝ) / n)) :=
-      Finset.sum_le_sum h_pointwise
-    have h_sum_zero : (∑ a : α, (qX a - ((T a : ℝ) / n))) = 0 := by
-      rw [Finset.sum_sub_distrib,
-        show (∑ a : α, ((T a : ℝ) / n)) = (∑ a : α, (T a : ℝ)) / n from by
-          rw [Finset.sum_div],
-        show (∑ a : α, (T a : ℝ)) = (n : ℝ) from by exact_mod_cast hT_sum,
-        div_self hn_ne, h_qX_sum_one, sub_self]
-    have h_HX_minus_cross :
-        HXemp - crossX
-          = ∑ a : α, ((T a : ℝ) / n) * Real.log (qX a / ((T a : ℝ) / n)) := by
-      rw [hHXemp_def, hcrossX_def]
-      rw [show -∑ a : α, ((T a : ℝ) / n) * Real.log ((T a : ℝ) / n)
-            - (-∑ a : α, ((T a : ℝ) / n) * Real.log (qX a))
-            = ∑ a : α, ((T a : ℝ) / n) * Real.log (qX a)
-              - ∑ a : α, ((T a : ℝ) / n) * Real.log ((T a : ℝ) / n) from by ring]
-      rw [← Finset.sum_sub_distrib]
-      refine Finset.sum_congr rfl fun a _ => ?_
-      rcases lt_or_eq_of_le (show (0 : ℝ) ≤ (T a : ℝ) / n from
-        div_nonneg (Nat.cast_nonneg _) hn_pos.le) with hpos | hzero
-      · rw [Real.log_div (hqX_pos a).ne' hpos.ne']; ring
-      · rw [← hzero]; simp
-    linarith
+    rw [hHXemp_def, hcrossX_def]
+    refine neg_sum_mul_log_le_neg_sum_mul_log_of_sum_eq
+      (fun a => (T a : ℝ) / n) qX
+      (fun a => div_nonneg (Nat.cast_nonneg _) hn_pos.le) hqX_pos ?_
+    rw [show (∑ a : α, (T a : ℝ) / n) = (∑ a : α, (T a : ℝ)) / n from by rw [Finset.sum_div],
+      show (∑ a : α, (T a : ℝ)) = (n : ℝ) from by exact_mod_cast hT_sum,
+      div_self hn_ne, h_qX_sum_one]
   -- crossX − HX  ≤ ε_X·LX (typicality on X via weak_displacement_eq_strong_sum).
   have h_cross_X_typ : |crossX - HX| ≤ ε_X * LX := by
     have h_cross_eq : (∑ i : Fin n, pmfLog μ Xs (x i)) / n = crossX := by
@@ -910,52 +936,19 @@ private lemma conditional_KL_concentration_ge
     have h_chi := KL_le_chi_square_finset (Finset.univ : Finset (α × β))
       (fun p => ((c p : ℕ) : ℝ) / n) qZ h_p_nn h_q_pos h_p_sum_eq
     refine le_trans h_chi ?_
-    -- bound each summand by ε_Z²/qZ_min.
-    have h_each : ∀ p ∈ (Finset.univ : Finset (α × β)),
-        (((c p : ℕ) : ℝ) / n - qZ p)^2 / qZ p ≤ ε_Z^2 / qZ_min := by
-      intro p _
-      have h1 : |((c p : ℕ) : ℝ) / n - qZ p| ≤ ε_Z := hc_close p
-      have h_sq : (((c p : ℕ) : ℝ) / n - qZ p)^2 ≤ ε_Z^2 := by
-        rw [show (((c p : ℕ) : ℝ) / n - qZ p)^2
-              = |((c p : ℕ) : ℝ) / n - qZ p|^2 from (sq_abs _).symm]
-        exact pow_le_pow_left₀ (abs_nonneg _) h1 2
-      -- (diff)²/qZ p ≤ ε_Z²/qZ p ≤ ε_Z²/qZ_min.
-      have h_num_le : (((c p : ℕ) : ℝ) / n - qZ p)^2 / qZ p ≤ ε_Z^2 / qZ p :=
-        div_le_div_of_nonneg_right h_sq (hqZ_pos p).le
-      have hε_Z_sq_nn : 0 ≤ ε_Z^2 := sq_nonneg _
-      have h_denom_le : ε_Z^2 / qZ p ≤ ε_Z^2 / qZ_min := by
-        apply div_le_div_of_nonneg_left hε_Z_sq_nn hqZ_min_pos (hqZ_min_le p)
-      linarith
-    calc ∑ p : α × β, (((c p : ℕ) : ℝ) / n - qZ p)^2 / qZ p
-        ≤ ∑ p : α × β, ε_Z^2 / qZ_min := Finset.sum_le_sum h_each
-      _ = ((Fintype.card (α × β) : ℕ) : ℝ) * (ε_Z^2 / qZ_min) := by
-          rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
-      _ = (Fintype.card α : ℝ) * (Fintype.card β : ℝ) * ε_Z^2 / qZ_min := by
-          rw [Fintype.card_prod]; push_cast; ring
+    have h_bound := sum_sq_div_le_card_mul (γ := α × β)
+      (fun p => ((c p : ℕ) : ℝ) / n - qZ p) qZ ε_Z qZ_min hqZ_min_pos hc_close hqZ_pos
+      hqZ_min_le
+    refine le_trans h_bound (le_of_eq ?_)
+    rw [Fintype.card_prod]; push_cast; ring
   -- HZemp = crossZ - KL_val.
   -- Pointwise: (c/n) · log(c/n) = (c/n) · log(qZ) + (c/n) · log((c/n)/qZ) (for c/n > 0).
   -- For c = 0, both sides are 0.
   have h_HZemp_eq : HZemp = crossZ - KL_val := by
     rw [hHZemp_def, hcrossZ_def, hKL_val_def]
-    have h_each : ∀ p : α × β,
-        ((c p : ℕ) : ℝ) / n * Real.log (((c p : ℕ) : ℝ) / n)
-          = ((c p : ℕ) : ℝ) / n * Real.log (qZ p)
-            + ((c p : ℕ) : ℝ) / n * Real.log ((((c p : ℕ) : ℝ) / n) / qZ p) := by
-      intro p
-      rcases lt_or_eq_of_le (show (0 : ℝ) ≤ ((c p : ℕ) : ℝ) / n from
-        div_nonneg (Nat.cast_nonneg _) hn_pos.le) with hpos | hzero
-      · rw [show ((c p : ℕ) : ℝ) / n * Real.log (qZ p)
-              + ((c p : ℕ) : ℝ) / n * Real.log ((((c p : ℕ) : ℝ) / n) / qZ p)
-            = ((c p : ℕ) : ℝ) / n
-              * (Real.log (qZ p) + Real.log ((((c p : ℕ) : ℝ) / n) / qZ p))
-            from by ring]
-        rw [show Real.log (qZ p) + Real.log ((((c p : ℕ) : ℝ) / n) / qZ p)
-              = Real.log (((c p : ℕ) : ℝ) / n) from by
-          rw [Real.log_div hpos.ne' (hqZ_pos p).ne']; ring]
-      · rw [← hzero]; ring
-    rw [Finset.sum_congr rfl (fun p _ => h_each p)]
-    rw [Finset.sum_add_distrib, neg_add]
-    ring
+    exact neg_sum_mul_log_eq_neg_sum_mul_log_sub_sum_mul_log_div
+      (fun p => ((c p : ℕ) : ℝ) / n) qZ
+      (fun p => div_nonneg (Nat.cast_nonneg _) hn_pos.le) hqZ_pos
   have h_HZemp_ge : HZemp ≥ HZ - ε_Z * LZ - KL_val := by
     have h_cross_ge : crossZ ≥ HZ - ε_Z * LZ := by
       have h := abs_sub_le_iff.mp h_cross_Z_typ
