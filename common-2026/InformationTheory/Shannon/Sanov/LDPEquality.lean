@@ -692,6 +692,52 @@ private lemma piAntidiag_card_le (n : ℕ) :
     _ = Fintype.card (α → Fin (n+1)) := by rw [Finset.card_univ]
     _ = (n+1) ^ Fintype.card α := h_card_pow
 
+omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+theorem prod_div_pow_eq_prod_pow_div_npow_of_sum
+    {n : ℕ} (c k : α → ℕ) (hk_sum : (∑ a, k a) = n) :
+    ∏ a, ((c a : ℝ) / n) ^ (k a) = (∏ a, (c a : ℝ) ^ (k a)) / (n : ℝ) ^ n := by
+  rw [show ∏ a, ((c a : ℝ) / n) ^ (k a)
+          = ∏ a, ((c a : ℝ) ^ (k a) / (n : ℝ) ^ (k a)) from
+      Finset.prod_congr rfl (fun a _ => div_pow _ _ _)]
+  rw [Finset.prod_div_distrib]
+  congr 1
+  rw [Finset.prod_pow_eq_pow_sum, hk_sum]
+
+theorem inv_mul_div_le_of_one_le_mul_mul_div
+    {B M P x : ℝ} (hB : 0 < B) (hP : 0 < P) (hx : 0 < x)
+    (h : (1 : ℝ) ≤ B * (M * (P / x))) :
+    B⁻¹ * (x / P) ≤ M := by
+  have h_npow_le : x ≤ B * M * P := by
+    have := mul_le_mul_of_nonneg_right h hx.le
+    rw [one_mul] at this
+    have h_rhs_eq : B * (M * (P / x)) * x = B * M * P := by field_simp
+    rw [h_rhs_eq] at this
+    exact this
+  have h_div : x / P ≤ B * M := by
+    rw [div_le_iff₀ hP]
+    linarith [h_npow_le]
+  rw [← div_le_iff₀' hB] at h_div
+  rw [show B⁻¹ * (x / P) = (x / P) / B by field_simp]
+  exact h_div
+
+omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+theorem multinomial_mul_prod_ratio_pow_le
+    {n : ℕ} (c k : α → ℕ) (hc_sum : (∑ a, c a) = n) (hk_sum : (∑ a, k a) = n) :
+    (Nat.multinomial Finset.univ k : ℝ) * ∏ a, ((c a : ℝ) / n) ^ (k a)
+      ≤ (Nat.multinomial Finset.univ c : ℝ) * ∏ a, ((c a : ℝ) / n) ^ (c a) := by
+  rw [prod_div_pow_eq_prod_pow_div_npow_of_sum c k hk_sum,
+    prod_div_pow_eq_prod_pow_div_npow_of_sum c c hc_sum]
+  rw [show (Nat.multinomial Finset.univ k : ℝ)
+          * ((∏ a, (c a : ℝ) ^ (k a)) / (n : ℝ) ^ n)
+        = ((Nat.multinomial Finset.univ k : ℝ) * (∏ a, (c a : ℝ) ^ (k a)))
+            / (n : ℝ) ^ n by ring]
+  rw [show (Nat.multinomial Finset.univ c : ℝ)
+          * ((∏ a, (c a : ℝ) ^ (c a)) / (n : ℝ) ^ n)
+        = ((Nat.multinomial Finset.univ c : ℝ) * (∏ a, (c a : ℝ) ^ (c a)))
+            / (n : ℝ) ^ n by ring]
+  apply div_le_div_of_nonneg_right _ (by positivity)
+  exact multinomial_pow_le_real c k hc_sum hk_sum
+
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- **Multinomial lower bound** (Cover-Thomas 11.1.3):
 `(n+1)^{-|α|} · n^n / ∏ c(a)^{c(a)} ≤ |T_c|`.
@@ -769,36 +815,7 @@ theorem typeClassByCount_card_ge
           ≤ (Nat.multinomial Finset.univ c : ℝ) * ∏ a, ((c a : ℝ) / n) ^ (c a) := by
       intros k hk_mem
       have hk_sum := (Finset.mem_piAntidiag.mp hk_mem).1
-      -- Use multinomial_pow_le_real but with `(c a / n)` factor.
-      -- multinomial k · ∏ (c/n)^k = multinomial k · ∏ (c)^k / n^n.
-      -- multinomial c · ∏ (c/n)^c = multinomial c · ∏ (c)^c / n^n.
-      have h_split_k : ∏ a, ((c a : ℝ) / n) ^ (k a)
-          = (∏ a, (c a : ℝ) ^ (k a)) / (n : ℝ) ^ n := by
-        rw [show ∏ a, ((c a : ℝ) / n) ^ (k a)
-                = ∏ a, ((c a : ℝ) ^ (k a) / (n : ℝ) ^ (k a)) from
-            Finset.prod_congr rfl (fun a _ => div_pow _ _ _)]
-        rw [Finset.prod_div_distrib]
-        congr 1
-        rw [Finset.prod_pow_eq_pow_sum, hk_sum]
-      have h_split_c : ∏ a, ((c a : ℝ) / n) ^ (c a)
-          = (∏ a, (c a : ℝ) ^ (c a)) / (n : ℝ) ^ n := by
-        rw [show ∏ a, ((c a : ℝ) / n) ^ (c a)
-                = ∏ a, ((c a : ℝ) ^ (c a) / (n : ℝ) ^ (c a)) from
-            Finset.prod_congr rfl (fun a _ => div_pow _ _ _)]
-        rw [Finset.prod_div_distrib]
-        congr 1
-        rw [Finset.prod_pow_eq_pow_sum, hc_sum]
-      rw [h_split_k, h_split_c]
-      rw [show (Nat.multinomial Finset.univ k : ℝ)
-              * ((∏ a, (c a : ℝ) ^ (k a)) / (n : ℝ) ^ n)
-            = ((Nat.multinomial Finset.univ k : ℝ) * (∏ a, (c a : ℝ) ^ (k a)))
-                / (n : ℝ) ^ n by ring]
-      rw [show (Nat.multinomial Finset.univ c : ℝ)
-              * ((∏ a, (c a : ℝ) ^ (c a)) / (n : ℝ) ^ n)
-            = ((Nat.multinomial Finset.univ c : ℝ) * (∏ a, (c a : ℝ) ^ (c a)))
-                / (n : ℝ) ^ n by ring]
-      apply div_le_div_of_nonneg_right _ (by positivity)
-      exact multinomial_pow_le_real c k hc_sum hk_sum
+      exact multinomial_mul_prod_ratio_pow_le c k hc_sum hk_sum
     -- Step 6: all terms ≥ 0.
     have h_term_nn : ∀ k ∈ Finset.piAntidiag (Finset.univ : Finset α) n,
         0 ≤ (Nat.multinomial Finset.univ k : ℝ) * ∏ a, ((c a : ℝ) / n) ^ (k a) := by
@@ -849,13 +866,8 @@ theorem typeClassByCount_card_ge
     -- ⟹ (n+1)^{-|α|} · n^n / ∏ c^c ≤ multinomial univ c.
     -- First rewrite ∏ (c/n)^c = ∏ c^c / n^n.
     have h_prod_split : ∏ a, ((c a : ℝ) / n) ^ (c a)
-        = (∏ a, (c a : ℝ) ^ (c a)) / (n : ℝ) ^ n := by
-      rw [show ∏ a, ((c a : ℝ) / n) ^ (c a)
-              = ∏ a, ((c a : ℝ) ^ (c a) / (n : ℝ) ^ (c a)) from
-          Finset.prod_congr rfl (fun a _ => div_pow _ _ _)]
-      rw [Finset.prod_div_distrib]
-      congr 1
-      rw [Finset.prod_pow_eq_pow_sum, hc_sum]
+        = (∏ a, (c a : ℝ) ^ (c a)) / (n : ℝ) ^ n :=
+      prod_div_pow_eq_prod_pow_div_npow_of_sum c c hc_sum
     rw [h_prod_split] at h_chain
     -- h_chain : 1 ≤ (n+1)^|α| · multinomial · (∏ c^c / n^n).
     -- Multiply by n^n / ∏ c^c (positive).
@@ -868,42 +880,10 @@ theorem typeClassByCount_card_ge
       rcases Nat.eq_zero_or_pos (c a) with h0 | hp
       · rw [h0]; simp
       · exact pow_pos (by exact_mod_cast hp) _
-    have h_n_pow_pos : (0 : ℝ) < (n : ℝ) ^ n := pow_pos hn_real_pos _
-    -- Manipulate h_chain.
-    -- 1 ≤ (n+1)^|α| · M · (P / n^n) where P = ∏ c^c, M = mult.
-    -- ⟹ n^n ≤ (n+1)^|α| · M · P.
-    -- ⟹ n^n / P ≤ (n+1)^|α| · M.
-    -- ⟹ (n+1)^{-|α|} · n^n / P ≤ M.
-    have h_npow_le :
-        (n : ℝ) ^ n ≤ ((n : ℝ) + 1) ^ Fintype.card α
-          * (Nat.multinomial Finset.univ c : ℝ) * (∏ a, (c a : ℝ) ^ (c a)) := by
-      have := mul_le_mul_of_nonneg_right h_chain h_n_pow_pos.le
-      rw [one_mul] at this
-      have h_rhs_eq : ((n : ℝ) + 1) ^ Fintype.card α
-          * ((Nat.multinomial Finset.univ c : ℝ)
-              * ((∏ a, (c a : ℝ) ^ (c a)) / (n : ℝ) ^ n)) * (n : ℝ) ^ n
-          = ((n : ℝ) + 1) ^ Fintype.card α
-              * (Nat.multinomial Finset.univ c : ℝ) * (∏ a, (c a : ℝ) ^ (c a)) := by
-        field_simp
-      rw [h_rhs_eq] at this
-      exact this
-    -- Divide by ∏ c^c (positive).
-    have h_div :
-        (n : ℝ) ^ n / (∏ a, (c a : ℝ) ^ (c a))
-          ≤ ((n : ℝ) + 1) ^ Fintype.card α
-              * (Nat.multinomial Finset.univ c : ℝ) := by
-      rw [div_le_iff₀ h_prod_cc_pos]
-      linarith [h_npow_le]
-    -- Multiply by (n+1)^{-|α|} (positive).
-    have h_succ_pow_pos : (0 : ℝ) < ((n : ℝ) + 1) ^ Fintype.card α :=
-      pow_pos hn_real_succ_pos _
-    rw [← div_le_iff₀' h_succ_pow_pos] at h_div
-    rw [show (((n : ℝ) + 1) ^ Fintype.card α)⁻¹
-            * ((n : ℝ) ^ n / ∏ a, ((c a : ℝ) ^ (c a)))
-          = ((n : ℝ) ^ n / (∏ a, ((c a : ℝ) ^ (c a))))
-              / ((n : ℝ) + 1) ^ Fintype.card α by
-      field_simp]
-    exact h_div
+    -- Manipulate h_chain into the goal:
+    -- from 1 ≤ (n+1)^|α| · (M · (P / n^n)) derive (n+1)^{-|α|} · (n^n / P) ≤ M.
+    exact inv_mul_div_le_of_one_le_mul_mul_div
+      (pow_pos hn_real_succ_pos _) h_prod_cc_pos (pow_pos hn_real_pos _) h_chain
 
 omit [Nonempty α] in
 /-- **Lower bound on `Q^n(T_c)`**: `Q^n(T_c) ≥ (n+1)^{-|α|} · exp(-n · klDivIndex c n Q)`.
@@ -1052,6 +1032,101 @@ theorem typeClassByCount_Qn_ge
 
 /-! ### liminf lower bound -/
 
+theorem neg_card_mul_logSucc_div_sub_klDivIndex_le_inv_mul_log_iUnion
+    (Q : Measure α) [IsProbabilityMeasure Q]
+    (hQpos : ∀ a : α, 0 < Q.real {a})
+    (P : α → ℝ) (hP_prob : (∑ a, P a) = 1) (hP_nn : ∀ a, 0 ≤ P a)
+    (E : ∀ n, Finset (TypeCountIndex α n))
+    {n : ℕ} (hn_pos : 0 < n)
+    (h_inE : roundedTypeIndex P n ∈ E n) :
+    -(Fintype.card α : ℝ) * (Real.log ((n : ℝ) + 1) / (n : ℝ))
+        - klDivIndex (fun a => (roundedTypeIndex P n a : ℕ)) n Q
+      ≤ (1 / (n : ℝ)) * Real.log
+          (((Measure.pi (fun _ : Fin n => Q))
+            (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal) := by
+  classical
+  set c_n : α → ℕ := fun a => (roundedTypeIndex P n a : ℕ) with hc_n_def
+  have hn_real_pos : (0 : ℝ) < n := by exact_mod_cast hn_pos
+  -- T_{c_n} ⊆ ⋃ c ∈ E n, T_c (because c_n ∈ E n).
+  have h_subset :
+      (typeClassByCount (α := α) (n := n) c_n)
+      ⊆ ⋃ c ∈ E n, typeClassByCount (α := α) (n := n) (fun a => (c a : ℕ)) := by
+    intro x hx
+    simp only [Set.mem_iUnion]
+    exact ⟨roundedTypeIndex P n, h_inE, hx⟩
+  -- Q^n(T_{c_n}) ≥ (n+1)^{-|α|} exp(-n klDivIndex c_n n Q).
+  have h_Qn_ge := typeClassByCount_Qn_ge Q hQpos hn_pos c_n
+    (roundedTypeIndex_sum P hP_prob hP_nn n hn_pos)
+  -- Q^n(⋃) ≥ Q^n(T_{c_n}).
+  have h_union_ge : ((Measure.pi (fun _ : Fin n => Q))
+        (typeClassByCount (α := α) c_n)).toReal
+      ≤ ((Measure.pi (fun _ : Fin n => Q))
+        (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal := by
+    apply ENNReal.toReal_mono
+    · exact measure_ne_top _ _
+    · exact measure_mono h_subset
+  -- Combine: Q^n(⋃) ≥ (n+1)^{-|α|} exp(-n klDivIndex).
+  have h_union_lb :
+      (((n : ℝ) + 1) ^ (Fintype.card α : ℕ))⁻¹
+        * Real.exp (-((n : ℝ) * klDivIndex c_n n Q))
+      ≤ ((Measure.pi (fun _ : Fin n => Q))
+        (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal :=
+    h_Qn_ge.trans h_union_ge
+  -- Take log: log Q^n(⋃) ≥ -|α| log(n+1) - n klDivIndex.
+  have h_lb_pos : (0 : ℝ) <
+      (((n : ℝ) + 1) ^ (Fintype.card α : ℕ))⁻¹
+        * Real.exp (-((n : ℝ) * klDivIndex c_n n Q)) := by
+    apply mul_pos
+    · positivity
+    · exact Real.exp_pos _
+  have h_log_mono : Real.log
+      ((((n : ℝ) + 1) ^ (Fintype.card α : ℕ))⁻¹
+        * Real.exp (-((n : ℝ) * klDivIndex c_n n Q)))
+      ≤ Real.log (((Measure.pi (fun _ : Fin n => Q))
+        (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal) :=
+    Real.log_le_log h_lb_pos h_union_lb
+  -- Compute log of LHS.
+  have h_log_lhs : Real.log
+      ((((n : ℝ) + 1) ^ (Fintype.card α : ℕ))⁻¹
+        * Real.exp (-((n : ℝ) * klDivIndex c_n n Q)))
+      = -(Fintype.card α : ℝ) * Real.log ((n : ℝ) + 1) - (n : ℝ) * klDivIndex c_n n Q := by
+    rw [Real.log_mul (by positivity) (Real.exp_pos _).ne']
+    rw [Real.log_inv, Real.log_pow, Real.log_exp]
+    ring
+  rw [h_log_lhs] at h_log_mono
+  -- Divide by n: -K log(n+1)/n - klDivIndex ≤ (1/n) log Q^n(⋃).
+  have h_one_div_pos : 0 < 1 / (n : ℝ) := by positivity
+  have h_mul := mul_le_mul_of_nonneg_left h_log_mono h_one_div_pos.le
+  have h_lhs_eq : (1 / (n : ℝ)) * (-(Fintype.card α : ℝ) * Real.log ((n : ℝ) + 1)
+        - (n : ℝ) * klDivIndex c_n n Q)
+      = -(Fintype.card α : ℝ) * (Real.log ((n : ℝ) + 1) / (n : ℝ)) - klDivIndex c_n n Q := by
+    field_simp
+  rw [h_lhs_eq] at h_mul
+  exact h_mul
+
+omit [Nonempty α] [MeasurableSingletonClass α] in
+theorem inv_mul_log_iUnion_typeClassByCount_le_zero
+    (Q : Measure α) [IsProbabilityMeasure Q]
+    (E : ∀ n, Finset (TypeCountIndex α n))
+    {n : ℕ} (hn_pos : 0 < n) :
+    (1 / (n : ℝ)) * Real.log
+        (((Measure.pi (fun _ : Fin n => Q))
+          (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal) ≤ 0 := by
+  classical
+  have h_Qn_le_one : ((Measure.pi (fun _ : Fin n => Q))
+      (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal ≤ 1 := by
+    have := MeasureTheory.measureReal_le_one (μ := Measure.pi (fun _ : Fin n => Q))
+      (s := ⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))
+    simpa [MeasureTheory.measureReal_def] using this
+  have h_one_div_nn : (0 : ℝ) ≤ 1 / (n : ℝ) := by positivity
+  have h_log_le : Real.log
+        (((Measure.pi (fun _ : Fin n => Q))
+          (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal) ≤ 0 := by
+    apply Real.log_nonpos
+    · exact ENNReal.toReal_nonneg
+    · exact h_Qn_le_one
+  exact mul_nonpos_of_nonneg_of_nonpos h_one_div_nn h_log_le
+
 /-- **Sanov LDP lower bound (rounding sequence)**:
 if `roundedTypeIndex P n ∈ E n` eventually, then
 `liminf (1/n) log Q^n(⋃ c ∈ E n, T_c) ≥ -klDivSumForm_ofVec P (Q.real ∘ singleton)`. -/
@@ -1094,71 +1169,10 @@ theorem sanov_ldp_lower_bound_pointwise
     have h_n_pos : ∀ᶠ n : ℕ in atTop, 0 < n :=
       Filter.eventually_atTop.mpr ⟨1, fun n hn => hn⟩
     filter_upwards [h_n_pos, h_in_E] with n hn_pos h_inE
-    have hn_real_pos : (0 : ℝ) < n := by exact_mod_cast hn_pos
-    -- T_{c_n} ⊆ ⋃ c ∈ E n, T_c (because c_n ∈ E n).
-    have h_subset :
-        (typeClassByCount (α := α) (n := n) (c_seq n))
-        ⊆ ⋃ c ∈ E n, typeClassByCount (α := α) (n := n) (fun a => (c a : ℕ)) := by
-      intro x hx
-      simp only [Set.mem_iUnion]
-      exact ⟨roundedTypeIndex P n, h_inE, hx⟩
-    -- Q^n(T_{c_n}) ≥ (n+1)^{-|α|} exp(-n klDivIndex c_n n Q).
-    have h_Qn_ge := typeClassByCount_Qn_ge Q hQpos hn_pos (c_seq n)
-      (roundedTypeIndex_sum P hP_prob hP_nn n hn_pos)
-    -- Q^n(⋃) ≥ Q^n(T_{c_n}).
-    have h_union_ge : ((Measure.pi (fun _ : Fin n => Q))
-          (typeClassByCount (α := α) (c_seq n))).toReal
-        ≤ ((Measure.pi (fun _ : Fin n => Q))
-          (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal := by
-      apply ENNReal.toReal_mono
-      · exact measure_ne_top _ _
-      · exact measure_mono h_subset
-    -- Combine: Q^n(⋃) ≥ (n+1)^{-|α|} exp(-n klDivIndex).
-    have h_union_lb :
-        (((n : ℝ) + 1) ^ (Fintype.card α : ℕ))⁻¹
-          * Real.exp (-((n : ℝ) * klDivIndex (c_seq n) n Q))
-        ≤ ((Measure.pi (fun _ : Fin n => Q))
-          (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal :=
-      h_Qn_ge.trans h_union_ge
-    -- Take log: log Q^n(⋃) ≥ log((n+1)^{-|α|}) + log(exp(-n klDivIndex)) = -|α| log(n+1) - n klDivIndex.
-    have h_lb_pos : (0 : ℝ) <
-        (((n : ℝ) + 1) ^ (Fintype.card α : ℕ))⁻¹
-          * Real.exp (-((n : ℝ) * klDivIndex (c_seq n) n Q)) := by
-      apply mul_pos
-      · positivity
-      · exact Real.exp_pos _
-    have h_union_pos : 0 < ((Measure.pi (fun _ : Fin n => Q))
-        (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal :=
-      lt_of_lt_of_le h_lb_pos h_union_lb
-    have h_log_mono : Real.log
-        ((((n : ℝ) + 1) ^ (Fintype.card α : ℕ))⁻¹
-          * Real.exp (-((n : ℝ) * klDivIndex (c_seq n) n Q)))
-        ≤ Real.log (((Measure.pi (fun _ : Fin n => Q))
-          (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal) :=
-      Real.log_le_log h_lb_pos h_union_lb
-    -- Compute log of LHS.
-    have h_log_lhs : Real.log
-        ((((n : ℝ) + 1) ^ (Fintype.card α : ℕ))⁻¹
-          * Real.exp (-((n : ℝ) * klDivIndex (c_seq n) n Q)))
-        = -K * Real.log ((n : ℝ) + 1) - (n : ℝ) * klDivIndex (c_seq n) n Q := by
-      have hpow_pos : (0 : ℝ) < ((n : ℝ) + 1) ^ (Fintype.card α : ℕ) := by positivity
-      rw [Real.log_mul (by positivity) (Real.exp_pos _).ne']
-      rw [Real.log_inv, Real.log_pow, Real.log_exp]
-      ring
-    rw [h_log_lhs] at h_log_mono
-    -- Now: -K log(n+1) - n klDivIndex ≤ log Q^n(⋃).
-    -- Divide by n: -K log(n+1)/n - klDivIndex ≤ (1/n) log Q^n(⋃) = f n.
-    have h_one_div_pos : 0 < 1 / (n : ℝ) := by positivity
-    have h_mul := mul_le_mul_of_nonneg_left h_log_mono h_one_div_pos.le
     show g n ≤ f n
-    rw [hg_def, hf_def]
-    -- (1/n) · (-K log(n+1) - n klDivIndex) = -K log(n+1)/n - klDivIndex.
-    have h_lhs_eq : (1 / (n : ℝ)) * (-K * Real.log ((n : ℝ) + 1)
-          - (n : ℝ) * klDivIndex (c_seq n) n Q)
-        = -K * (Real.log ((n : ℝ) + 1) / (n : ℝ)) - klDivIndex (c_seq n) n Q := by
-      field_simp
-    rw [h_lhs_eq] at h_mul
-    exact h_mul
+    rw [hg_def, hf_def, hK_def]
+    exact neg_card_mul_logSucc_div_sub_klDivIndex_le_inv_mul_log_iUnion
+      Q hQpos P hP_prob hP_nn E hn_pos h_inE
   -- Conclude: liminf f ≥ liminf g = -D (since g tendsto -D, liminf = -D).
   -- Need IsBoundedUnder (· ≥ ·) atTop g (bounded below): g tendsto -D, so eventually g ≥ -D - 1.
   have h_g_bdd_below : Filter.IsBoundedUnder (· ≥ ·) atTop g := by
@@ -1185,27 +1199,7 @@ theorem sanov_ldp_lower_bound_pointwise
     -- f n = (1/n) log Q^n. Q^n ≤ 1, so log ≤ 0, so (1/n) log ≤ 0.
     show f n ≤ 0
     rw [hf_def]
-    have h_Qn_le_one : ((Measure.pi (fun _ : Fin n => Q))
-        (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal ≤ 1 := by
-      have := MeasureTheory.measureReal_le_one (μ := Measure.pi (fun _ : Fin n => Q))
-        (s := ⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))
-      simpa [MeasureTheory.measureReal_def] using this
-    have h_one_div_nn : (0 : ℝ) ≤ 1 / (n : ℝ) := by positivity
-    -- log of value ≤ 1: if value > 0, log ≤ 0. If value = 0, log = 0.
-    rcases eq_or_lt_of_le (le_of_lt (lt_of_lt_of_le (by norm_num : (-1 : ℝ) < 0) h_one_div_nn))
-      with h_div_eq | h_div_pos
-    · -- 1/n = 0 (impossible since n > 0). Skip
-      have hn_real_pos : (0 : ℝ) < n := by exact_mod_cast hn_pos
-      have : 1 / (n : ℝ) > 0 := by positivity
-      linarith
-    · have h_log_le : Real.log
-          (((Measure.pi (fun _ : Fin n => Q))
-            (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal) ≤ 0 := by
-        apply Real.log_nonpos
-        · exact ENNReal.toReal_nonneg
-        · exact h_Qn_le_one
-      have h_mul_le := mul_nonpos_of_nonneg_of_nonpos h_one_div_nn h_log_le
-      exact h_mul_le
+    exact inv_mul_log_iUnion_typeClassByCount_le_zero Q E hn_pos
   have h_f_cobdd : Filter.IsCoboundedUnder (· ≥ ·) atTop f :=
     h_f_bdd_above.isCoboundedUnder_flip
   have h_liminf_le : liminf g atTop ≤ liminf f atTop :=
@@ -1215,6 +1209,87 @@ theorem sanov_ldp_lower_bound_pointwise
 
 
 /-! ### Tendsto sandwich (main theorem) -/
+
+omit [MeasurableSingletonClass α] in
+theorem iUnion_typeClassByCount_pos_of_mem
+    (Q : Measure α) [IsProbabilityMeasure Q]
+    (hQpos : ∀ a : α, 0 < Q.real {a})
+    (P : α → ℝ) (hP_prob : (∑ a, P a) = 1) (hP_nn : ∀ a, 0 ≤ P a)
+    (E : ∀ n, Finset (TypeCountIndex α n))
+    {n : ℕ} (hn_pos : 0 < n)
+    (h_inE : roundedTypeIndex P n ∈ E n) :
+    0 < ((Measure.pi (fun _ : Fin n => Q))
+        (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal := by
+  classical
+  obtain ⟨x, hx⟩ := typeClassByCount_nonempty_of_sum
+    (fun a => (roundedTypeIndex P n a : ℕ))
+    (roundedTypeIndex_sum P hP_prob hP_nn n hn_pos)
+  have hx_in_union : x ∈ ⋃ c ∈ E n,
+      typeClassByCount (α := α) (fun a => (c a : ℕ)) := by
+    simp only [Set.mem_iUnion]
+    exact ⟨roundedTypeIndex P n, ⟨h_inE, hx⟩⟩
+  have h_singleton_pos : (0 : ℝ) <
+      ((Measure.pi (fun _ : Fin n => Q)) {x}).toReal := by
+    rw [Measure.pi_singleton, ENNReal.toReal_prod]
+    apply Finset.prod_pos
+    intros i _
+    exact hQpos (x i)
+  have h_singleton_le : ((Measure.pi (fun _ : Fin n => Q)) {x}).toReal
+      ≤ ((Measure.pi (fun _ : Fin n => Q))
+          (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal := by
+    apply ENNReal.toReal_mono
+    · exact measure_ne_top _ _
+    · exact measure_mono (Set.singleton_subset_iff.mpr hx_in_union)
+  linarith
+
+omit [MeasurableSingletonClass α] in
+theorem log_le_inv_mul_log_iUnion_of_forall_le
+    (Q : Measure α) [IsProbabilityMeasure Q]
+    (P : α → ℝ) (hP_prob : (∑ a, P a) = 1) (hP_nn : ∀ a, 0 ≤ P a)
+    (E : ∀ n, Finset (TypeCountIndex α n))
+    {n : ℕ} (hn_pos : 0 < n)
+    (h_inE : roundedTypeIndex P n ∈ E n)
+    {m : ℝ} (hm_pos : 0 < m) (hm_le : ∀ a, m ≤ Q.real {a}) :
+    Real.log m ≤ (1 / (n : ℝ)) * Real.log
+        (((Measure.pi (fun _ : Fin n => Q))
+          (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal) := by
+  classical
+  obtain ⟨x, hx⟩ := typeClassByCount_nonempty_of_sum
+    (fun a => (roundedTypeIndex P n a : ℕ))
+    (roundedTypeIndex_sum P hP_prob hP_nn n hn_pos)
+  have hx_in_union : x ∈ ⋃ c ∈ E n,
+      typeClassByCount (α := α) (fun a => (c a : ℕ)) := by
+    simp only [Set.mem_iUnion]
+    exact ⟨roundedTypeIndex P n, ⟨h_inE, hx⟩⟩
+  -- Q^n({x}) = ∏ Q.real {x_i} ≥ m^n.
+  have h_singleton_eq : ((Measure.pi (fun _ : Fin n => Q)) {x}).toReal
+      = ∏ i : Fin n, Q.real {x i} := by
+    rw [Measure.pi_singleton, ENNReal.toReal_prod]; rfl
+  have h_singleton_ge : ((Measure.pi (fun _ : Fin n => Q)) {x}).toReal ≥ m ^ n := by
+    rw [h_singleton_eq]
+    calc m ^ n = ∏ _i : Fin n, m := by rw [Finset.prod_const]; simp
+      _ ≤ ∏ i : Fin n, Q.real {x i} :=
+        Finset.prod_le_prod (fun i _ => hm_pos.le) (fun i _ => hm_le (x i))
+  have h_union_ge_m_pow : ((Measure.pi (fun _ : Fin n => Q))
+      (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal ≥ m ^ n := by
+    have h1 : ((Measure.pi (fun _ : Fin n => Q)) {x}).toReal
+        ≤ ((Measure.pi (fun _ : Fin n => Q))
+            (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal := by
+      apply ENNReal.toReal_mono
+      · exact measure_ne_top _ _
+      · exact measure_mono (Set.singleton_subset_iff.mpr hx_in_union)
+    linarith
+  -- So log Q^n(⋃) ≥ log (m^n) = n log m, and (1/n) log ≥ log m.
+  have h_pow_pos : (0 : ℝ) < m ^ n := pow_pos hm_pos _
+  have h_log_pow_le : Real.log (m ^ n) ≤ Real.log
+      (((Measure.pi (fun _ : Fin n => Q))
+        (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal) :=
+    Real.log_le_log h_pow_pos h_union_ge_m_pow
+  rw [Real.log_pow] at h_log_pow_le
+  have h_n_inv_pos : 0 < 1 / (n : ℝ) := by positivity
+  have h := mul_le_mul_of_nonneg_left h_log_pow_le h_n_inv_pos.le
+  rw [show (1 / (n : ℝ)) * ((n : ℝ) * Real.log m) = Real.log m by field_simp] at h
+  exact h
 
 /-- **Sanov LDP equality form** (Cover-Thomas Theorem 11.4.1):
 
@@ -1266,27 +1341,8 @@ theorem sanov_ldp_equality
     filter_upwards [h_n_pos, h_n_ge, h_in_E] with n hn_pos hn_ge h_inE
     -- Q^n(⋃) > 0: since T_{c_n} ⊆ ⋃ and T_{c_n} nonempty, Q^n nonempty subset > 0.
     have h_meas_pos : 0 < ((Measure.pi (fun _ : Fin n => Q))
-          (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal := by
-      obtain ⟨x, hx⟩ := typeClassByCount_nonempty_of_sum
-        (fun a => (roundedTypeIndex P n a : ℕ))
-        (roundedTypeIndex_sum P hP_prob hP_nn n hn_pos)
-      have hx_in_union : x ∈ ⋃ c ∈ E n,
-          typeClassByCount (α := α) (fun a => (c a : ℕ)) := by
-        simp only [Set.mem_iUnion]
-        exact ⟨roundedTypeIndex P n, ⟨h_inE, hx⟩⟩
-      have h_singleton_pos : (0 : ℝ) <
-          ((Measure.pi (fun _ : Fin n => Q)) {x}).toReal := by
-        rw [Measure.pi_singleton, ENNReal.toReal_prod]
-        apply Finset.prod_pos
-        intros i _
-        exact hQpos (x i)
-      have h_singleton_le : ((Measure.pi (fun _ : Fin n => Q)) {x}).toReal
-          ≤ ((Measure.pi (fun _ : Fin n => Q))
-              (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal := by
-        apply ENNReal.toReal_mono
-        · exact measure_ne_top _ _
-        · exact measure_mono (Set.singleton_subset_iff.mpr hx_in_union)
-      linarith
+          (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal :=
+      iUnion_typeClassByCount_pos_of_mem Q hQpos P hP_prob hP_nn E hn_pos h_inE
     exact hN₀ n hn_ge hn_pos h_meas_pos
   -- bounded above eventually: f ≤ -D + 1. (`IsBoundedUnder (·≤·)`: ∃b, eventually f ≤ b.)
   have h_bdd_above : Filter.IsBoundedUnder (· ≤ ·) atTop f := by
@@ -1307,58 +1363,14 @@ theorem sanov_ldp_equality
     -- ha₀ : ∀ a' ∈ univ, Q.real {a₀} ≤ Q.real {a'}
     set m : ℝ := Q.real {a₀}
     have hm_pos : 0 < m := hQpos a₀
+    have hm_le : ∀ a, m ≤ Q.real {a} := fun a => ha₀ a (Finset.mem_univ _)
     refine ⟨Real.log m, ?_⟩
     rw [Filter.eventually_map]
     have h_n_pos : ∀ᶠ n : ℕ in atTop, 0 < n :=
       Filter.eventually_atTop.mpr ⟨1, fun n hn => hn⟩
     filter_upwards [h_n_pos, h_in_E] with n hn_pos h_inE
-    -- Bound f n ≥ log m.
-    obtain ⟨x, hx⟩ := typeClassByCount_nonempty_of_sum
-      (fun a => (roundedTypeIndex P n a : ℕ))
-      (roundedTypeIndex_sum P hP_prob hP_nn n hn_pos)
-    have hx_in_union : x ∈ ⋃ c ∈ E n,
-        typeClassByCount (α := α) (fun a => (c a : ℕ)) := by
-      simp only [Set.mem_iUnion]
-      exact ⟨roundedTypeIndex P n, ⟨h_inE, hx⟩⟩
-    -- Q^n({x}) = ∏ Q.real {x_i} ≥ m^n.
-    have h_singleton_eq : ((Measure.pi (fun _ : Fin n => Q)) {x}).toReal
-        = ∏ i : Fin n, Q.real {x i} := by
-      rw [Measure.pi_singleton, ENNReal.toReal_prod]; rfl
-    have h_singleton_ge : ((Measure.pi (fun _ : Fin n => Q)) {x}).toReal ≥ m ^ n := by
-      rw [h_singleton_eq]
-      calc m ^ n = ∏ _i : Fin n, m := by rw [Finset.prod_const]; simp
-        _ ≤ ∏ i : Fin n, Q.real {x i} :=
-          Finset.prod_le_prod (fun i _ => hm_pos.le)
-            (fun i _ => ha₀ (x i) (Finset.mem_univ _))
-    have h_union_ge_m_pow : ((Measure.pi (fun _ : Fin n => Q))
-        (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal ≥ m ^ n := by
-      have h1 : ((Measure.pi (fun _ : Fin n => Q)) {x}).toReal
-          ≤ ((Measure.pi (fun _ : Fin n => Q))
-              (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal := by
-        apply ENNReal.toReal_mono
-        · exact measure_ne_top _ _
-        · exact measure_mono (Set.singleton_subset_iff.mpr hx_in_union)
-      linarith
-    -- So log Q^n(⋃) ≥ log (m^n) = n log m, and (1/n) log ≥ log m.
-    have h_pow_pos : (0 : ℝ) < m ^ n := pow_pos hm_pos _
-    have h_union_pos : (0 : ℝ) < ((Measure.pi (fun _ : Fin n => Q))
-        (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal := by
-      linarith
-    have h_log_ge : Real.log m ≤ (1 / (n : ℝ)) * Real.log
-        (((Measure.pi (fun _ : Fin n => Q))
-          (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal) := by
-      have h_log_pow_le : Real.log (m ^ n) ≤ Real.log
-        (((Measure.pi (fun _ : Fin n => Q))
-          (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal) :=
-        Real.log_le_log h_pow_pos h_union_ge_m_pow
-      rw [Real.log_pow] at h_log_pow_le
-      have h_n_real_pos : (0 : ℝ) < n := by exact_mod_cast hn_pos
-      have h_n_inv_pos : 0 < 1 / (n : ℝ) := by positivity
-      have h := mul_le_mul_of_nonneg_left h_log_pow_le h_n_inv_pos.le
-      rw [show (1 / (n : ℝ)) * ((n : ℝ) * Real.log m) = Real.log m by field_simp] at h
-      exact h
     -- goal: f n ≥ Real.log m, i.e. Real.log m ≤ f n
-    exact h_log_ge
+    exact log_le_inv_mul_log_iUnion_of_forall_le Q P hP_prob hP_nn E hn_pos h_inE hm_pos hm_le
   -- Now: limsup f ≤ -D.
   have h_cobdd : Filter.IsCoboundedUnder (· ≤ ·) atTop f :=
     h_bdd_below.isCoboundedUnder_flip

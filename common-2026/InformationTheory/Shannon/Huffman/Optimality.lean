@@ -197,6 +197,157 @@ lemma mergedMeasure_real (P : Measure α) [IsFiniteMeasure P] (a b : α) (hab : 
     rw [ENNReal.toReal_add (measure_ne_top _ _) (measure_ne_top _ _)]
   · simp only [hxa, if_false]
 
+omit [LinearOrder α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+lemma kraft_sum_mergedLength_eq
+    (l : α → ℕ) (hl_pos : ∀ a, 0 < l a)
+    (a b : α) (hab : a ≠ b) (h_lab : l a = l b) :
+    (∑ x : { x : α // x ≠ b },
+        ((2 : ℝ)) ^ (-((if x.val = a then l a - 1 else l x.val : ℕ) : ℤ)))
+      = ∑ x : α, ((2 : ℝ)) ^ (-(l x : ℤ)) := by
+  classical
+  set l' : { x : α // x ≠ b } → ℕ :=
+    fun x => if x.val = a then l a - 1 else l x.val with hl'_def
+  set a' : { y : α // y ≠ b } := ⟨a, hab⟩ with ha'_def
+  have ha'_mem : a' ∈ (Finset.univ : Finset { y : α // y ≠ b }) := Finset.mem_univ _
+  have hla_ge_one : 1 ≤ l a := hl_pos a
+  -- l' a' = l a - 1, ∀ x : α', x ≠ a' → l' x = l x.val
+  have hl'_a' : l' a' = l a - 1 := by
+    simp [hl'_def, ha'_def]
+  have hl'_other : ∀ x : { y : α // y ≠ b }, x ≠ a' → l' x = l x.val := by
+    intro x hx
+    have hxv_ne_a : x.val ≠ a := by
+      intro h; apply hx; apply Subtype.ext; exact h
+    simp [hl'_def, hxv_ne_a]
+  -- 2^(-(l a - 1 : ℤ)) = 2 * 2^(-(l a : ℤ))
+  have hpow_succ : ((2 : ℝ)) ^ (-((l a - 1 : ℕ) : ℤ))
+      = 2 * ((2 : ℝ)) ^ (-(l a : ℤ)) := by
+    rw [Nat.cast_sub hla_ge_one]
+    push_cast
+    rw [show -((l a : ℤ) - 1) = 1 + -(l a : ℤ) by ring,
+        zpow_add₀ (by norm_num : (2 : ℝ) ≠ 0)]
+    simp
+  -- expand ∑_{x:α'} 2^{-l'(x)}
+  have h_sum_lhs :
+      (∑ x : { x : α // x ≠ b }, ((2 : ℝ)) ^ (-(l' x : ℤ)))
+        = ((2 : ℝ)) ^ (-((l a - 1 : ℕ) : ℤ))
+          + ∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
+              ((2 : ℝ)) ^ (-(l x.val : ℤ)) := by
+    rw [← Finset.add_sum_erase _ _ ha'_mem, hl'_a']
+    congr 1
+    apply Finset.sum_congr rfl
+    intro x hx
+    have hx_ne : x ≠ a' := Finset.ne_of_mem_erase hx
+    rw [hl'_other x hx_ne]
+  rw [show (∑ x : { x : α // x ≠ b },
+        ((2 : ℝ)) ^ (-((if x.val = a then l a - 1 else l x.val : ℕ) : ℤ)))
+      = ∑ x : { x : α // x ≠ b }, ((2 : ℝ)) ^ (-(l' x : ℤ)) from rfl]
+  rw [h_sum_lhs, hpow_succ]
+  -- expand ∑_{x:α} 2^{-l(x)}: separate b term, then a term
+  have h_erase_iff : ∀ x : α, x ∈ (Finset.univ : Finset α).erase b ↔ x ≠ b := by
+    intro x; simp [Finset.mem_erase]
+  have h_sum_α_split :
+      (∑ x : α, ((2 : ℝ)) ^ (-(l x : ℤ)))
+        = ((2 : ℝ)) ^ (-(l b : ℤ))
+          + ∑ x : { y : α // y ≠ b }, ((2 : ℝ)) ^ (-(l x.val : ℤ)) := by
+    rw [← Finset.add_sum_erase _ _ (Finset.mem_univ b),
+        Finset.sum_subtype (Finset.univ.erase b) h_erase_iff
+          (fun x => ((2 : ℝ)) ^ (-(l x : ℤ)))]
+  -- separate a' term in ∑_{x:α'} 2^{-l(x.val)}
+  have h_sum_α'_split :
+      (∑ x : { y : α // y ≠ b }, ((2 : ℝ)) ^ (-(l x.val : ℤ)))
+        = ((2 : ℝ)) ^ (-(l a : ℤ))
+          + ∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
+              ((2 : ℝ)) ^ (-(l x.val : ℤ)) := by
+    rw [← Finset.add_sum_erase _ _ ha'_mem]
+  rw [h_sum_α'_split] at h_sum_α_split
+  -- since l a = l b: ∑_α = 2 * 2^{-l a} + ∑_erase
+  have h_lb_la : ((2 : ℝ)) ^ (-(l b : ℤ)) = ((2 : ℝ)) ^ (-(l a : ℤ)) := by
+    rw [h_lab]
+  rw [h_lb_la] at h_sum_α_split
+  rw [h_sum_α_split]; ring
+
+omit [LinearOrder α] [Nonempty α] in
+lemma expectedLength_eq_mergedMeasure_mergedLength_add
+    (P : Measure α) [IsFiniteMeasure P]
+    (l : α → ℕ) (hl_pos : ∀ a, 0 < l a)
+    (a b : α) (hab : a ≠ b) (h_lab : l a = l b) :
+    InformationTheory.Shannon.ShannonCode.expectedLength P l
+      = InformationTheory.Shannon.ShannonCode.expectedLength
+          (mergedMeasure P a b hab)
+          (fun x => if x.val = a then l a - 1 else l x.val)
+        + (P.real {a} + P.real {b}) := by
+  classical
+  set l' : { x : α // x ≠ b } → ℕ :=
+    fun x => if x.val = a then l a - 1 else l x.val with hl'_def
+  set a' : { y : α // y ≠ b } := ⟨a, hab⟩ with ha'_def
+  have ha'_mem : a' ∈ (Finset.univ : Finset { y : α // y ≠ b }) := Finset.mem_univ _
+  have hla_ge_one : 1 ≤ l a := hl_pos a
+  have hla_cast : ((l a - 1 : ℕ) : ℝ) = (l a : ℝ) - 1 := by
+    rw [Nat.cast_sub hla_ge_one]; norm_num
+  unfold InformationTheory.Shannon.ShannonCode.expectedLength
+  -- separate b term and convert to Subtype sum
+  have h_erase_iff : ∀ x : α, x ∈ (Finset.univ : Finset α).erase b ↔ x ≠ b := by
+    intro x; simp [Finset.mem_erase]
+  have hLHS_split :
+      (∑ x : α, P.real {x} * (l x : ℝ))
+        = (∑ x ∈ (Finset.univ : Finset α).erase b, P.real {x} * (l x : ℝ))
+            + P.real {b} * (l b : ℝ) := by
+    rw [Finset.sum_erase_add _ _ (Finset.mem_univ b)]
+  rw [hLHS_split]
+  have hlb_eq : (l b : ℝ) = (l a : ℝ) := by rw [h_lab]
+  rw [hlb_eq]
+  have h_sum_subtype :
+      (∑ x ∈ (Finset.univ : Finset α).erase b, P.real {x} * (l x : ℝ))
+        = ∑ x : { y : α // y ≠ b }, P.real {x.val} * (l x.val : ℝ) := by
+    rw [Finset.sum_subtype (Finset.univ.erase b) h_erase_iff
+      (fun x => P.real {x} * (l x : ℝ))]
+  rw [h_sum_subtype]
+  -- l' a' = l a - 1, l' x = l x.val for x ≠ a'
+  have hl'_a' : l' a' = l a - 1 := by simp [hl'_def, ha'_def]
+  have hl'_other : ∀ x : { y : α // y ≠ b }, x ≠ a' → l' x = l x.val := by
+    intro x hx
+    have hxv_ne_a : x.val ≠ a := by
+      intro h; apply hx; apply Subtype.ext; exact h
+    simp [hl'_def, hxv_ne_a]
+  -- mergedMeasure values
+  have h_merged_a' : (mergedMeasure P a b hab).real {a'} = P.real {a} + P.real {b} := by
+    rw [mergedMeasure_real P a b hab a']; simp [ha'_def]
+  have h_merged_other : ∀ x : { y : α // y ≠ b }, x ≠ a' →
+      (mergedMeasure P a b hab).real {x} = P.real {x.val} := by
+    intro x hx
+    rw [mergedMeasure_real P a b hab x]
+    have hxv_ne_a : x.val ≠ a := by
+      intro h; apply hx; apply Subtype.ext; exact h
+    simp [hxv_ne_a]
+  -- separate a' term on RHS
+  have hRHS_split :
+      (∑ x : { y : α // y ≠ b }, (mergedMeasure P a b hab).real {x} * (l' x : ℝ))
+        = (mergedMeasure P a b hab).real {a'} * (l' a' : ℝ)
+          + ∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
+              (mergedMeasure P a b hab).real {x} * (l' x : ℝ) := by
+    rw [← Finset.add_sum_erase _ _ ha'_mem]
+  rw [hRHS_split, h_merged_a', hl'_a', hla_cast]
+  -- on the erase sum: l' = l and merged = P
+  have h_sum_erase :
+      (∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
+          (mergedMeasure P a b hab).real {x} * (l' x : ℝ))
+        = ∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
+            P.real {x.val} * (l x.val : ℝ) := by
+    apply Finset.sum_congr rfl
+    intro x hx
+    have hx_ne : x ≠ a' := Finset.ne_of_mem_erase hx
+    rw [h_merged_other x hx_ne, hl'_other x hx_ne]
+  rw [h_sum_erase]
+  -- separate a' term in the LHS Subtype sum
+  have hLHS_subtype_split :
+      (∑ x : { y : α // y ≠ b }, P.real {x.val} * (l x.val : ℝ))
+        = P.real {a} * (l a : ℝ)
+          + ∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
+              P.real {x.val} * (l x.val : ℝ) := by
+    rw [← Finset.add_sum_erase _ _ ha'_mem]
+  rw [hLHS_subtype_split]
+  ring
+
 omit [LinearOrder α] [Nonempty α] in
 lemma expectedLength_bridge_R
     (P : Measure α) [IsProbabilityMeasure P]
@@ -220,141 +371,10 @@ lemma expectedLength_bridge_R
     · simp only [hxa, if_true]; omega
     · simp only [hxa, if_false]; exact hl_pos x.val
   · -- Kraft inequality
-    set l' : { x : α // x ≠ b } → ℕ :=
-      fun x => if x.val = a then l a - 1 else l x.val with hl'_def
-    set a' : { y : α // y ≠ b } := ⟨a, hab⟩ with ha'_def
-    have ha'_mem : a' ∈ (Finset.univ : Finset { y : α // y ≠ b }) := Finset.mem_univ _
-    have hla_ge_one : 1 ≤ l a := hl_pos a
-    -- l' a' = l a - 1, ∀ x : α', x ≠ a' → l' x = l x.val
-    have hl'_a' : l' a' = l a - 1 := by
-      simp [hl'_def, ha'_def]
-    have hl'_other : ∀ x : { y : α // y ≠ b }, x ≠ a' → l' x = l x.val := by
-      intro x hx
-      have hxv_ne_a : x.val ≠ a := by
-        intro h; apply hx; apply Subtype.ext; exact h
-      simp [hl'_def, hxv_ne_a]
-    -- 2^(-(l a - 1 : ℤ)) = 2 * 2^(-(l a : ℤ))
-    have hpow_succ : ((2 : ℝ)) ^ (-((l a - 1 : ℕ) : ℤ))
-        = 2 * ((2 : ℝ)) ^ (-(l a : ℤ)) := by
-      rw [Nat.cast_sub hla_ge_one]
-      push_cast
-      rw [show -((l a : ℤ) - 1) = 1 + -(l a : ℤ) by ring,
-          zpow_add₀ (by norm_num : (2 : ℝ) ≠ 0)]
-      simp
-    -- expand ∑_{x:α'} 2^{-l'(x)}
-    have h_sum_lhs :
-        (∑ x : { x : α // x ≠ b }, ((2 : ℝ)) ^ (-(l' x : ℤ)))
-          = ((2 : ℝ)) ^ (-((l a - 1 : ℕ) : ℤ))
-            + ∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
-                ((2 : ℝ)) ^ (-(l x.val : ℤ)) := by
-      rw [← Finset.add_sum_erase _ _ ha'_mem, hl'_a']
-      congr 1
-      apply Finset.sum_congr rfl
-      intro x hx
-      have hx_ne : x ≠ a' := Finset.ne_of_mem_erase hx
-      rw [hl'_other x hx_ne]
-    rw [h_sum_lhs, hpow_succ]
-    -- expand ∑_{x:α} 2^{-l(x)}: separate b term, then a term
-    have h_erase_iff : ∀ x : α, x ∈ (Finset.univ : Finset α).erase b ↔ x ≠ b := by
-      intro x; simp [Finset.mem_erase]
-    have h_sum_α_split :
-        (∑ x : α, ((2 : ℝ)) ^ (-(l x : ℤ)))
-          = ((2 : ℝ)) ^ (-(l b : ℤ))
-            + ∑ x : { y : α // y ≠ b }, ((2 : ℝ)) ^ (-(l x.val : ℤ)) := by
-      rw [← Finset.add_sum_erase _ _ (Finset.mem_univ b),
-          Finset.sum_subtype (Finset.univ.erase b) h_erase_iff
-            (fun x => ((2 : ℝ)) ^ (-(l x : ℤ)))]
-    -- separate a' term in ∑_{x:α'} 2^{-l(x.val)}
-    have h_sum_α'_split :
-        (∑ x : { y : α // y ≠ b }, ((2 : ℝ)) ^ (-(l x.val : ℤ)))
-          = ((2 : ℝ)) ^ (-(l a : ℤ))
-            + ∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
-                ((2 : ℝ)) ^ (-(l x.val : ℤ)) := by
-      rw [← Finset.add_sum_erase _ _ ha'_mem]
-    rw [h_sum_α'_split] at h_sum_α_split
-    -- since l a = l b: ∑_α = 2 * 2^{-l a} + ∑_erase ≤ 1
-    have h_lb_la : ((2 : ℝ)) ^ (-(l b : ℤ)) = ((2 : ℝ)) ^ (-(l a : ℤ)) := by
-      rw [h_lab]
-    rw [h_lb_la] at h_sum_α_split
-    -- ∑_α = 2^{-l a} + (2^{-l a} + ∑_erase) = 2*2^{-l a} + ∑_erase
-    have h_final : 2 * ((2 : ℝ)) ^ (-(l a : ℤ))
-        + ∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
-            ((2 : ℝ)) ^ (-(l x.val : ℤ))
-        = ∑ x : α, ((2 : ℝ)) ^ (-(l x : ℤ)) := by
-      rw [h_sum_α_split]; ring
-    rw [h_final]
+    rw [kraft_sum_mergedLength_eq l hl_pos a b hab h_lab]
     exact hl_kraft
   · -- expectedLength equality
-    set l' : { x : α // x ≠ b } → ℕ :=
-      fun x => if x.val = a then l a - 1 else l x.val with hl'_def
-    set a' : { y : α // y ≠ b } := ⟨a, hab⟩ with ha'_def
-    have ha'_mem : a' ∈ (Finset.univ : Finset { y : α // y ≠ b }) := Finset.mem_univ _
-    have hla_ge_one : 1 ≤ l a := hl_pos a
-    have hla_cast : ((l a - 1 : ℕ) : ℝ) = (l a : ℝ) - 1 := by
-      rw [Nat.cast_sub hla_ge_one]; norm_num
-    unfold InformationTheory.Shannon.ShannonCode.expectedLength
-    -- separate b term and convert to Subtype sum
-    have h_erase_iff : ∀ x : α, x ∈ (Finset.univ : Finset α).erase b ↔ x ≠ b := by
-      intro x; simp [Finset.mem_erase]
-    have hLHS_split :
-        (∑ x : α, P.real {x} * (l x : ℝ))
-          = (∑ x ∈ (Finset.univ : Finset α).erase b, P.real {x} * (l x : ℝ))
-              + P.real {b} * (l b : ℝ) := by
-      rw [Finset.sum_erase_add _ _ (Finset.mem_univ b)]
-    rw [hLHS_split]
-    have hlb_eq : (l b : ℝ) = (l a : ℝ) := by rw [h_lab]
-    rw [hlb_eq]
-    have h_sum_subtype :
-        (∑ x ∈ (Finset.univ : Finset α).erase b, P.real {x} * (l x : ℝ))
-          = ∑ x : { y : α // y ≠ b }, P.real {x.val} * (l x.val : ℝ) := by
-      rw [Finset.sum_subtype (Finset.univ.erase b) h_erase_iff
-        (fun x => P.real {x} * (l x : ℝ))]
-    rw [h_sum_subtype]
-    -- l' a' = l a - 1, l' x = l x.val for x ≠ a'
-    have hl'_a' : l' a' = l a - 1 := by simp [hl'_def, ha'_def]
-    have hl'_other : ∀ x : { y : α // y ≠ b }, x ≠ a' → l' x = l x.val := by
-      intro x hx
-      have hxv_ne_a : x.val ≠ a := by
-        intro h; apply hx; apply Subtype.ext; exact h
-      simp [hl'_def, hxv_ne_a]
-    -- mergedMeasure values
-    have h_merged_a' : (mergedMeasure P a b hab).real {a'} = P.real {a} + P.real {b} := by
-      rw [mergedMeasure_real P a b hab a']; simp [ha'_def]
-    have h_merged_other : ∀ x : { y : α // y ≠ b }, x ≠ a' →
-        (mergedMeasure P a b hab).real {x} = P.real {x.val} := by
-      intro x hx
-      rw [mergedMeasure_real P a b hab x]
-      have hxv_ne_a : x.val ≠ a := by
-        intro h; apply hx; apply Subtype.ext; exact h
-      simp [hxv_ne_a]
-    -- separate a' term on RHS
-    have hRHS_split :
-        (∑ x : { y : α // y ≠ b }, (mergedMeasure P a b hab).real {x} * (l' x : ℝ))
-          = (mergedMeasure P a b hab).real {a'} * (l' a' : ℝ)
-            + ∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
-                (mergedMeasure P a b hab).real {x} * (l' x : ℝ) := by
-      rw [← Finset.add_sum_erase _ _ ha'_mem]
-    rw [hRHS_split, h_merged_a', hl'_a', hla_cast]
-    -- on the erase sum: l' = l and merged = P
-    have h_sum_erase :
-        (∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
-            (mergedMeasure P a b hab).real {x} * (l' x : ℝ))
-          = ∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
-              P.real {x.val} * (l x.val : ℝ) := by
-      apply Finset.sum_congr rfl
-      intro x hx
-      have hx_ne : x ≠ a' := Finset.ne_of_mem_erase hx
-      rw [h_merged_other x hx_ne, hl'_other x hx_ne]
-    rw [h_sum_erase]
-    -- separate a' term in the LHS Subtype sum
-    have hLHS_subtype_split :
-        (∑ x : { y : α // y ≠ b }, P.real {x.val} * (l x.val : ℝ))
-          = P.real {a} * (l a : ℝ)
-            + ∑ x ∈ (Finset.univ : Finset { y : α // y ≠ b }).erase a',
-                P.real {x.val} * (l x.val : ℝ) := by
-      rw [← Finset.add_sum_erase _ _ ha'_mem]
-    rw [hLHS_subtype_split]
-    ring
+    rw [expectedLength_eq_mergedMeasure_mergedLength_add P l hl_pos a b hab h_lab]
 
 /-! ### Probability measure instances for `mergedMeasure` -/
 
@@ -573,6 +593,51 @@ abbrev SwapNormalizationHypothesis : Prop :=
 
 /-! ### Cost-level bridge -/
 
+omit [Nonempty α] [LinearOrder α] in
+lemma initMultiset_mergedMeasure_snd_map_eq
+    (P : Measure α) [IsFiniteMeasure P] (a b : α) (hab : a ≠ b) :
+    (initMultiset (mergedMeasure P a b hab)).map Prod.snd
+      = (P.real {a} + P.real {b}) ::ₘ
+          (((Finset.univ : Finset α).erase a).erase b).val.map (fun c => P.real {c}) := by
+  classical
+  set f : α → ℝ := fun c => P.real {c} with hf
+  have hRHS_snd : (initMultiset (mergedMeasure P a b hab)).map Prod.snd
+      = (Finset.univ : Finset {y : α // y ≠ b}).val.map
+          (fun x => if x.val = a then P.real {a} + P.real {b} else P.real {x.val}) := by
+    unfold initMultiset; rw [Multiset.map_map]
+    apply Multiset.map_congr rfl
+    intro x _
+    exact mergedMeasure_real P a b hab x
+  have hemb : Finset.map (Function.Embedding.subtype (· ≠ b))
+      (Finset.univ : Finset {y : α // y ≠ b})
+      = (Finset.univ : Finset α).erase b := by
+    ext x; simp [Function.Embedding.subtype, Finset.mem_erase]
+  have hRHS' : (initMultiset (mergedMeasure P a b hab)).map Prod.snd
+      = ((Finset.univ : Finset α).erase b).val.map
+          (fun c => if c = a then P.real {a} + P.real {b} else P.real {c}) := by
+    rw [hRHS_snd, ← hemb, Finset.map_val, Multiset.map_map]
+    rfl
+  have hsplit : ((Finset.univ : Finset α).erase b).val.map
+        (fun c => if c = a then P.real {a} + P.real {b} else P.real {c})
+      = (P.real {a} + P.real {b}) ::ₘ
+          (((Finset.univ : Finset α).erase b).erase a).val.map f := by
+    conv_lhs => rw [show ((Finset.univ : Finset α).erase b).val
+        = a ::ₘ (((Finset.univ : Finset α).erase b).erase a).val by
+      rw [Finset.erase_val, Finset.erase_val]
+      exact (Multiset.cons_erase
+        ((Multiset.mem_erase_of_ne hab).mpr (Finset.mem_val.mpr (Finset.mem_univ a)))).symm]
+    rw [Multiset.map_cons]
+    simp only
+    congr 1
+    apply Multiset.map_congr rfl
+    intro c hc
+    have hc_ne_a : c ≠ a := by
+      intro heq; subst heq
+      rw [Finset.erase_val] at hc
+      exact ((Finset.univ : Finset α).erase b).nodup.notMem_erase hc
+    simp only [if_neg hc_ne_a]; rfl
+  rw [hRHS', hsplit, Finset.erase_right_comm]
+
 omit [Nonempty α] in
 /-- Cost-level bridge: `expectedLength P (huffmanLength P) = expectedLength (mergedMeasure P a b hab) (huffmanLength (mergedMeasure P a b hab)) + (P.real {a} + P.real {b})`.
 @audit:ok -/
@@ -697,42 +762,7 @@ lemma expectedLength_merged_cost_bridge
         = (P.real {a} + P.real {b}) ::ₘ
             (((Finset.univ : Finset α).erase a).erase b).val.map f := by
       rw [hLHS, hpen, hinit_snd, hxs1_val, hxs2_val, erase_a, erase_b]
-    have hRHS_snd : (initMultiset (mergedMeasure P a b hab)).map Prod.snd
-        = (Finset.univ : Finset {y : α // y ≠ b}).val.map
-            (fun x => if x.val = a then P.real {a} + P.real {b} else P.real {x.val}) := by
-      unfold initMultiset; rw [Multiset.map_map]
-      apply Multiset.map_congr rfl
-      intro x _
-      exact mergedMeasure_real P a b hab x
-    have hemb : Finset.map (Function.Embedding.subtype (· ≠ b))
-        (Finset.univ : Finset {y : α // y ≠ b})
-        = (Finset.univ : Finset α).erase b := by
-      ext x; simp [Function.Embedding.subtype, Finset.mem_erase]
-    have hRHS' : (initMultiset (mergedMeasure P a b hab)).map Prod.snd
-        = ((Finset.univ : Finset α).erase b).val.map
-            (fun c => if c = a then P.real {a} + P.real {b} else P.real {c}) := by
-      rw [hRHS_snd, ← hemb, Finset.map_val, Multiset.map_map]
-      rfl
-    have hsplit : ((Finset.univ : Finset α).erase b).val.map
-          (fun c => if c = a then P.real {a} + P.real {b} else P.real {c})
-        = (P.real {a} + P.real {b}) ::ₘ
-            (((Finset.univ : Finset α).erase b).erase a).val.map f := by
-      conv_lhs => rw [show ((Finset.univ : Finset α).erase b).val
-          = a ::ₘ (((Finset.univ : Finset α).erase b).erase a).val by
-        rw [Finset.erase_val, Finset.erase_val]
-        exact (Multiset.cons_erase
-          ((Multiset.mem_erase_of_ne hab).mpr (Finset.mem_val.mpr (Finset.mem_univ a)))).symm]
-      rw [Multiset.map_cons]
-      simp only
-      congr 1
-      apply Multiset.map_congr rfl
-      intro c hc
-      have hc_ne_a : c ≠ a := by
-        intro heq; subst heq
-        rw [Finset.erase_val] at hc
-        exact ((Finset.univ : Finset α).erase b).nodup.notMem_erase hc
-      simp only [if_neg hc_ne_a]; rfl
-    rw [hLHS', hRHS', hsplit, Finset.erase_right_comm]
+    rw [hLHS', initMultiset_mergedMeasure_snd_map_eq P a b hab]
   have hcost_s'' :
       huffmanCost s'' = huffmanCost (initMultiset (mergedMeasure P a b hab)) :=
     huffmanCost_eq_of_prob_multiset s'' (initMultiset (mergedMeasure P a b hab))
@@ -745,6 +775,144 @@ lemma expectedLength_merged_cost_bridge
   rw [expectedLength_eq_huffmanCost P,
       huffmanCost_step (initMultiset P) h2 hg, ← hxs1, ← hxs2, ← hs'',
       hcost_s'', hmerged_C1b, hpen]
+
+omit [Nonempty α] [MeasurableSingletonClass α] in
+lemma huffmanLength_le_one_of_card_le_two
+    (P : Measure α) (h_card : Fintype.card α ≤ 2) (x : α) :
+    huffmanLength P x ≤ 1 := by
+  classical
+  rcases Nat.lt_or_ge (Fintype.card α) 2 with h_lt | h_ge
+  · unfold huffmanLength
+    have hcard_init : (initMultiset P).card ≤ 1 := by
+      unfold initMultiset; rw [Multiset.card_map]
+      show (Finset.univ : Finset α).card ≤ 1
+      rw [Finset.card_univ]; omega
+    rw [huffmanLengthAux_eq_zero (initMultiset P) hcard_init
+      (initMultiset_huffmanGrouping P)]
+    simp
+  · have h_n : Fintype.card α = 2 := by omega
+    unfold huffmanLength
+    have hcard_init : (initMultiset P).card = 2 := by
+      unfold initMultiset; rw [Multiset.card_map]
+      show (Finset.univ : Finset α).card = 2
+      rw [Finset.card_univ]; exact h_n
+    have h_card_two : 2 ≤ (initMultiset P).card := by omega
+    have h_grouping := initMultiset_huffmanGrouping P
+    set step := (huffmanStep (initMultiset P) h_card_two h_grouping).val with hstep_def
+    have hstep_card : step.2.2.card = 1 := by
+      show (huffmanStep (initMultiset P) h_card_two h_grouping).val.2.2.card = 1
+      rw [huffmanStep_card_eq (initMultiset P) h_card_two h_grouping, hcard_init]
+    have hstep_grouping : HuffmanGrouping step.2.2 :=
+      (huffmanStep (initMultiset P) h_card_two h_grouping).property.2.2.2
+    obtain ⟨hx1_mem, hx2_mem, hshape, hg''⟩ :=
+      huffmanStep_spec (initMultiset P) h_card_two h_grouping
+    have hx1_form : ∃ y : α, step.1 = ({y}, P.real {y}) := by
+      have := hx1_mem; unfold initMultiset at this
+      rw [Multiset.mem_map] at this
+      obtain ⟨y, _, hye⟩ := this; exact ⟨y, hye.symm⟩
+    obtain ⟨y₁, hy₁_eq⟩ := hx1_form
+    have hx2_mem_init : step.2.1 ∈ initMultiset P :=
+      Multiset.mem_of_mem_erase hx2_mem
+    have hx2_form : ∃ y : α, step.2.1 = ({y}, P.real {y}) := by
+      have := hx2_mem_init; unfold initMultiset at this
+      rw [Multiset.mem_map] at this
+      obtain ⟨y, _, hye⟩ := this; exact ⟨y, hye.symm⟩
+    obtain ⟨y₂, hy₂_eq⟩ := hx2_form
+    have hy₁_ne_y₂ : y₁ ≠ y₂ := by
+      intro heq
+      have hstep1_ne : step.1 ≠ step.2.1 := by
+        intro h; rw [h] at hx2_mem
+        exact h_grouping.nodup.notMem_erase hx2_mem
+      apply hstep1_ne; rw [hy₁_eq, hy₂_eq, heq]
+    have hx_eq : x = y₁ ∨ x = y₂ := by
+      have h_univ : (Finset.univ : Finset α) = {y₁, y₂} := by
+        apply Finset.eq_of_subset_of_card_le
+        · intro z _
+          by_contra hzn
+          rw [Finset.mem_insert, Finset.mem_singleton] at hzn
+          push Not at hzn
+          have h3 : ({y₁, y₂, z} : Finset α).card = 3 := by
+            rw [Finset.card_insert_of_notMem, Finset.card_insert_of_notMem,
+                Finset.card_singleton]
+            · simp [hzn.2.symm]
+            · simp [hy₁_ne_y₂, hzn.1.symm]
+          have h_le : ({y₁, y₂, z} : Finset α).card ≤ Fintype.card α :=
+            Finset.card_le_univ _
+          omega
+        · rw [show (Finset.univ : Finset α).card = 2 from
+            by rw [show (Finset.univ : Finset α).card = Fintype.card α from rfl]; exact h_n]
+          rw [Finset.card_insert_of_notMem (by simp [hy₁_ne_y₂]),
+              Finset.card_singleton]
+      have hxm : x ∈ (Finset.univ : Finset α) := Finset.mem_univ x
+      rw [h_univ, Finset.mem_insert, Finset.mem_singleton] at hxm
+      exact hxm
+    have h_xy_inAB : x ∈ step.1.1 ∨ x ∈ step.2.1.1 := by
+      cases hx_eq with
+      | inl h => left; rw [hy₁_eq]; simp [h]
+      | inr h => right; rw [hy₂_eq]; simp [h]
+    rw [huffmanLengthAux_step_merged (initMultiset P) h_card_two h_grouping h_xy_inAB]
+    have hstep22_le : step.2.2.card ≤ 1 := by rw [hstep_card]
+    rw [huffmanLengthAux_eq_zero step.2.2 hstep22_le hstep_grouping]
+
+omit [Nonempty α] [LinearOrder α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+lemma two_le_normalizedLength_of_card_ge_three
+    (l_norm : α → ℕ) (hln_pos : ∀ a, 0 < l_norm a)
+    (a b : α) (hab : a ≠ b) (hln_eq_ab : l_norm a = l_norm b)
+    (hln_kraft : ∑ x : α, ((2 : ℝ)) ^ (-(l_norm x : ℤ)) ≤ 1)
+    (h_card_ge_3 : 3 ≤ Fintype.card α) :
+    2 ≤ l_norm a := by
+  classical
+  by_contra h_lt
+  push Not at h_lt
+  have h_la_eq_1 : l_norm a = 1 := by have h_pos := hln_pos a; omega
+  have h_exists_c : ∃ c : α, c ≠ a ∧ c ≠ b := by
+    by_contra h_no_c
+    have h_no_c' : ∀ c : α, c = a ∨ c = b := by
+      intro c; by_contra hcab; apply h_no_c
+      push Not at hcab; exact ⟨c, hcab.1, hcab.2⟩
+    have h_univ : (Finset.univ : Finset α) ⊆ {a, b} := by
+      intro c _
+      rcases h_no_c' c with h_eq_a | h_eq_b
+      · rw [h_eq_a]; simp
+      · rw [h_eq_b]; simp
+    have h_card_le_2 : Fintype.card α ≤ 2 := by
+      have hle := Finset.card_le_card h_univ
+      simp only [Finset.card_univ] at hle
+      have h2 : ({a, b} : Finset α).card ≤ 2 := by
+        calc ({a, b} : Finset α).card
+            ≤ ({a} : Finset α).card + 1 := Finset.card_insert_le _ _
+          _ = 2 := by rw [Finset.card_singleton]
+      omega
+    omega
+  obtain ⟨c, hca, hcb⟩ := h_exists_c
+  have h_pos_pow : (0 : ℝ) < (2 : ℝ) ^ (-(l_norm c : ℤ)) := by
+    apply zpow_pos; norm_num
+  have h_sum_three :
+      ((2 : ℝ)) ^ (-(l_norm a : ℤ)) + ((2 : ℝ)) ^ (-(l_norm b : ℤ))
+        + ((2 : ℝ)) ^ (-(l_norm c : ℤ))
+        ≤ ∑ x : α, ((2 : ℝ)) ^ (-(l_norm x : ℤ)) := by
+    have hne_ab : a ≠ b := hab
+    have hne_ca : c ≠ a := hca
+    have hne_cb : c ≠ b := hcb
+    have h_three_sub : ({a, b, c} : Finset α) ⊆ Finset.univ := Finset.subset_univ _
+    have h_sum_eq :
+        (∑ x ∈ ({a, b, c} : Finset α), ((2 : ℝ)) ^ (-(l_norm x : ℤ)))
+          = ((2 : ℝ)) ^ (-(l_norm a : ℤ)) + ((2 : ℝ)) ^ (-(l_norm b : ℤ))
+            + ((2 : ℝ)) ^ (-(l_norm c : ℤ)) := by
+      rw [show ({a, b, c} : Finset α) = insert a (insert b ({c} : Finset α)) from rfl,
+          Finset.sum_insert (by simp [hne_ab, hne_ca.symm]),
+          Finset.sum_insert (by simp [hne_cb.symm]),
+          Finset.sum_singleton]
+      ring
+    rw [← h_sum_eq]
+    apply Finset.sum_le_sum_of_subset_of_nonneg h_three_sub
+    intros y _ _; positivity
+  have h_pow_a : ((2 : ℝ)) ^ (-(l_norm a : ℤ)) = 1/2 := by
+    rw [h_la_eq_1]; norm_num
+  have h_pow_b : ((2 : ℝ)) ^ (-(l_norm b : ℤ)) = 1/2 := by
+    rw [← hln_eq_ab, h_la_eq_1]; norm_num
+  rw [h_pow_a, h_pow_b] at h_sum_three
+  linarith
 
 /-- Strong-induction motor for Huffman optimality.
 Takes `h_swap : SwapNormalizationHypothesis` as an argument; the headline `huffmanLength_optimal`
@@ -770,79 +938,8 @@ theorem huffmanLength_optimal_aux (n : ℕ)
       intro x _
       have hPx : 0 ≤ P.real {x} := measureReal_nonneg
       apply mul_le_mul_of_nonneg_left _ hPx
-      have h_huffman_le_one : huffmanLength P x ≤ 1 := by
-        rcases Nat.lt_or_ge (Fintype.card α) 2 with h_lt | h_ge
-        · unfold huffmanLength
-          have hcard_init : (initMultiset P).card ≤ 1 := by
-            unfold initMultiset; rw [Multiset.card_map]
-            show (Finset.univ : Finset α).card ≤ 1
-            rw [Finset.card_univ]; omega
-          rw [huffmanLengthAux_eq_zero (initMultiset P) hcard_init
-            (initMultiset_huffmanGrouping P)]
-          simp
-        · have h_n : Fintype.card α = 2 := by omega
-          unfold huffmanLength
-          have hcard_init : (initMultiset P).card = 2 := by
-            unfold initMultiset; rw [Multiset.card_map]
-            show (Finset.univ : Finset α).card = 2
-            rw [Finset.card_univ]; exact h_n
-          have h_card_two : 2 ≤ (initMultiset P).card := by omega
-          have h_grouping := initMultiset_huffmanGrouping P
-          set step := (huffmanStep (initMultiset P) h_card_two h_grouping).val with hstep_def
-          have hstep_card : step.2.2.card = 1 := by
-            show (huffmanStep (initMultiset P) h_card_two h_grouping).val.2.2.card = 1
-            rw [huffmanStep_card_eq (initMultiset P) h_card_two h_grouping, hcard_init]
-          have hstep_grouping : HuffmanGrouping step.2.2 :=
-            (huffmanStep (initMultiset P) h_card_two h_grouping).property.2.2.2
-          obtain ⟨hx1_mem, hx2_mem, hshape, hg''⟩ :=
-            huffmanStep_spec (initMultiset P) h_card_two h_grouping
-          have hx1_form : ∃ y : α, step.1 = ({y}, P.real {y}) := by
-            have := hx1_mem; unfold initMultiset at this
-            rw [Multiset.mem_map] at this
-            obtain ⟨y, _, hye⟩ := this; exact ⟨y, hye.symm⟩
-          obtain ⟨y₁, hy₁_eq⟩ := hx1_form
-          have hx2_mem_init : step.2.1 ∈ initMultiset P :=
-            Multiset.mem_of_mem_erase hx2_mem
-          have hx2_form : ∃ y : α, step.2.1 = ({y}, P.real {y}) := by
-            have := hx2_mem_init; unfold initMultiset at this
-            rw [Multiset.mem_map] at this
-            obtain ⟨y, _, hye⟩ := this; exact ⟨y, hye.symm⟩
-          obtain ⟨y₂, hy₂_eq⟩ := hx2_form
-          have hy₁_ne_y₂ : y₁ ≠ y₂ := by
-            intro heq
-            have hstep1_ne : step.1 ≠ step.2.1 := by
-              intro h; rw [h] at hx2_mem
-              exact h_grouping.nodup.notMem_erase hx2_mem
-            apply hstep1_ne; rw [hy₁_eq, hy₂_eq, heq]
-          have hx_eq : x = y₁ ∨ x = y₂ := by
-            have h_univ : (Finset.univ : Finset α) = {y₁, y₂} := by
-              apply Finset.eq_of_subset_of_card_le
-              · intro z _
-                by_contra hzn
-                rw [Finset.mem_insert, Finset.mem_singleton] at hzn
-                push Not at hzn
-                have h3 : ({y₁, y₂, z} : Finset α).card = 3 := by
-                  rw [Finset.card_insert_of_notMem, Finset.card_insert_of_notMem,
-                      Finset.card_singleton]
-                  · simp [hzn.2.symm]
-                  · simp [hy₁_ne_y₂, hzn.1.symm]
-                have h_le : ({y₁, y₂, z} : Finset α).card ≤ Fintype.card α :=
-                  Finset.card_le_univ _
-                omega
-              · rw [show (Finset.univ : Finset α).card = 2 from
-                  by rw [show (Finset.univ : Finset α).card = Fintype.card α from rfl]; exact h_n]
-                rw [Finset.card_insert_of_notMem (by simp [hy₁_ne_y₂]),
-                    Finset.card_singleton]
-            have hxm : x ∈ (Finset.univ : Finset α) := Finset.mem_univ x
-            rw [h_univ, Finset.mem_insert, Finset.mem_singleton] at hxm
-            exact hxm
-          have h_xy_inAB : x ∈ step.1.1 ∨ x ∈ step.2.1.1 := by
-            cases hx_eq with
-            | inl h => left; rw [hy₁_eq]; simp [h]
-            | inr h => right; rw [hy₂_eq]; simp [h]
-          rw [huffmanLengthAux_step_merged (initMultiset P) h_card_two h_grouping h_xy_inAB]
-          have hstep22_le : step.2.2.card ≤ 1 := by rw [hstep_card]
-          rw [huffmanLengthAux_eq_zero step.2.2 hstep22_le hstep_grouping]
+      have h_huffman_le_one : huffmanLength P x ≤ 1 :=
+        huffmanLength_le_one_of_card_le_two P h_card x
       have h_one_le_lx : (1 : ℝ) ≤ (l x : ℝ) := by exact_mod_cast hl_pos x
       calc ((huffmanLength P x : ℕ) : ℝ)
           ≤ (1 : ℝ) := by exact_mod_cast h_huffman_le_one
@@ -855,58 +952,8 @@ theorem huffmanLength_optimal_aux (n : ℕ)
         exists_sibling_min_pair P hP h_card_ge_2
       obtain ⟨l_norm, hln_pos, hln_kraft, hln_eq_ab, hln_le⟩ :=
         h_swap P l hl_pos hl_kraft a b hab h_a_min h_b_min h_card_ge_3
-      have hln_a_ge_2 : 2 ≤ l_norm a := by
-        by_contra h_lt
-        push Not at h_lt
-        have h_la_eq_1 : l_norm a = 1 := by have h_pos := hln_pos a; omega
-        have h_exists_c : ∃ c : α, c ≠ a ∧ c ≠ b := by
-          by_contra h_no_c
-          have h_no_c' : ∀ c : α, c = a ∨ c = b := by
-            intro c; by_contra hcab; apply h_no_c
-            push Not at hcab; exact ⟨c, hcab.1, hcab.2⟩
-          have h_univ : (Finset.univ : Finset α) ⊆ {a, b} := by
-            intro c _
-            rcases h_no_c' c with h_eq_a | h_eq_b
-            · rw [h_eq_a]; simp
-            · rw [h_eq_b]; simp
-          have h_card_le_2 : Fintype.card α ≤ 2 := by
-            have hle := Finset.card_le_card h_univ
-            simp only [Finset.card_univ] at hle
-            have h2 : ({a, b} : Finset α).card ≤ 2 := by
-              calc ({a, b} : Finset α).card
-                  ≤ ({a} : Finset α).card + 1 := Finset.card_insert_le _ _
-                _ = 2 := by rw [Finset.card_singleton]
-            omega
-          omega
-        obtain ⟨c, hca, hcb⟩ := h_exists_c
-        have h_pos_pow : (0 : ℝ) < (2 : ℝ) ^ (-(l_norm c : ℤ)) := by
-          apply zpow_pos; norm_num
-        have h_sum_three :
-            ((2 : ℝ)) ^ (-(l_norm a : ℤ)) + ((2 : ℝ)) ^ (-(l_norm b : ℤ))
-              + ((2 : ℝ)) ^ (-(l_norm c : ℤ))
-              ≤ ∑ x : α, ((2 : ℝ)) ^ (-(l_norm x : ℤ)) := by
-          have hne_ab : a ≠ b := hab
-          have hne_ca : c ≠ a := hca
-          have hne_cb : c ≠ b := hcb
-          have h_three_sub : ({a, b, c} : Finset α) ⊆ Finset.univ := Finset.subset_univ _
-          have h_sum_eq :
-              (∑ x ∈ ({a, b, c} : Finset α), ((2 : ℝ)) ^ (-(l_norm x : ℤ)))
-                = ((2 : ℝ)) ^ (-(l_norm a : ℤ)) + ((2 : ℝ)) ^ (-(l_norm b : ℤ))
-                  + ((2 : ℝ)) ^ (-(l_norm c : ℤ)) := by
-            rw [show ({a, b, c} : Finset α) = insert a (insert b ({c} : Finset α)) from rfl,
-                Finset.sum_insert (by simp [hne_ab, hne_ca.symm]),
-                Finset.sum_insert (by simp [hne_cb.symm]),
-                Finset.sum_singleton]
-            ring
-          rw [← h_sum_eq]
-          apply Finset.sum_le_sum_of_subset_of_nonneg h_three_sub
-          intros y _ _; positivity
-        have h_pow_a : ((2 : ℝ)) ^ (-(l_norm a : ℤ)) = 1/2 := by
-          rw [h_la_eq_1]; norm_num
-        have h_pow_b : ((2 : ℝ)) ^ (-(l_norm b : ℤ)) = 1/2 := by
-          rw [← hln_eq_ab, h_la_eq_1]; norm_num
-        rw [h_pow_a, h_pow_b] at h_sum_three
-        linarith
+      have hln_a_ge_2 : 2 ≤ l_norm a :=
+        two_le_normalizedLength_of_card_ge_three l_norm hln_pos a b hab hln_eq_ab hln_kraft h_card_ge_3
       obtain ⟨l', hl'_pos, hl'_kraft, hl'_eq⟩ :=
         expectedLength_bridge_R P l_norm hln_pos a b hab hln_eq_ab hln_a_ge_2 hln_kraft
       have hP'_inst : IsProbabilityMeasure (mergedMeasure P a b hab) :=
