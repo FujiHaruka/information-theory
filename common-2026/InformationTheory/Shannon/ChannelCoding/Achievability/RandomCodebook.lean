@@ -27,6 +27,89 @@ variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 variable [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β]
 
+lemma measureReal_pi_singleton_eq_prod
+    {ι : Type*} [Fintype ι] {δ : ι → Type*} [∀ i, MeasurableSpace (δ i)]
+    (κ : ∀ i, Measure (δ i)) [∀ i, SigmaFinite (κ i)] [∀ i, IsFiniteMeasure (κ i)]
+    (x : ∀ i, δ i) :
+    (Measure.pi κ).real {x} = ∏ i, (κ i).real {x i} := by
+  rw [measureReal_def, Measure.pi_singleton, ENNReal.toReal_prod]
+  rfl
+
+lemma sum_measureReal_singleton_univ_eq_one
+    {γ : Type*} [Fintype γ] [MeasurableSpace γ] [MeasurableSingletonClass γ]
+    (ν : Measure γ) [IsProbabilityMeasure ν] :
+    (∑ x : γ, ν.real {x}) = 1 := by
+  have h_univ_real : ν.real ((Finset.univ : Finset γ) : Set γ) = 1 := by
+    rw [Finset.coe_univ, measureReal_def, measure_univ]; rfl
+  rw [← sum_measureReal_singleton (μ := ν) (Finset.univ : Finset γ)] at h_univ_real
+  exact h_univ_real
+
+omit [Nonempty α] [Fintype β] [DecidableEq β] [Nonempty β] in
+lemma jointDistribution_real_singleton
+    (p : Measure α) [IsProbabilityMeasure p] (W : Channel α β) [IsMarkovKernel W]
+    (a : α) (b : β) :
+    (jointDistribution p W).real ({(a, b)} : Set (α × β))
+      = p.real {a} * (W a).real {b} := by
+  classical
+  rw [measureReal_def, jointDistribution_def]
+  have h1 : (p ⊗ₘ W) ({(a, b)} : Set (α × β))
+      = (p ⊗ₘ W) (({a} : Set α) ×ˢ ({b} : Set β)) := by
+    congr 1; ext ⟨a', b'⟩; simp [Prod.ext_iff]
+  rw [h1, Measure.compProd_apply ((measurableSet_singleton _).prod (measurableSet_singleton _))]
+  have h_pre : ∀ a' : α, Prod.mk a' ⁻¹' (({a} : Set α) ×ˢ ({b} : Set β))
+            = if a' = a then ({b} : Set β) else (∅ : Set β) := by
+    intro a'
+    by_cases ha' : a' = a
+    · subst ha'; ext z; simp
+    · ext z; simp [ha']
+  have h_lint_congr : (∫⁻ a' : α, (W a') (Prod.mk a' ⁻¹' (({a} : Set α) ×ˢ ({b} : Set β))) ∂p)
+        = ∫⁻ a' : α, (W a') (if a' = a then ({b} : Set β) else (∅ : Set β)) ∂p := by
+    refine lintegral_congr_ae (Filter.Eventually.of_forall fun a' => ?_)
+    show (W a') (Prod.mk a' ⁻¹' (({a} : Set α) ×ˢ ({b} : Set β)))
+        = (W a') (if a' = a then ({b} : Set β) else (∅ : Set β))
+    rw [h_pre a']
+  rw [h_lint_congr, lintegral_fintype]
+  have hsum : ∀ a' : α,
+      (W a') (if a' = a then ({b} : Set β) else (∅ : Set β)) * p {a'}
+        = (if a' = a then (W a) {b} * p {a} else 0) := by
+    intro a'
+    by_cases ha' : a' = a
+    · subst ha'; simp
+    · simp [ha']
+  rw [Finset.sum_congr rfl (fun a' _ => hsum a')]
+  rw [Finset.sum_ite_eq' Finset.univ a (fun _ => (W a) {b} * p {a})]
+  rw [if_pos (Finset.mem_univ _), ENNReal.toReal_mul]
+  show (W a).real {b} * p.real {a} = p.real {a} * (W a).real {b}
+  ring
+
+omit [DecidableEq α] [Nonempty α]
+  [Fintype β] [DecidableEq β] [Nonempty β] in
+lemma outputDistribution_real_singleton_eq_sum
+    (p : Measure α) [IsProbabilityMeasure p] (W : Channel α β) [IsMarkovKernel W]
+    (b : β) :
+    (outputDistribution p W).real {b} = ∑ a : α, p.real {a} * (W a).real {b} := by
+  classical
+  -- ((p ⊗ₘ W).snd){b} = (p ⊗ₘ W)(univ ×ˢ {b}) = ∫⁻ a, W a {b} ∂p.
+  have h1 : (outputDistribution p W) {b}
+      = (jointDistribution p W) (Set.univ ×ˢ ({b} : Set β)) := by
+    show (jointDistribution p W).snd {b} = _
+    rw [Measure.snd_apply (measurableSet_singleton _)]
+    congr 1; ext ⟨a, b'⟩; simp
+  rw [measureReal_def, h1, jointDistribution_def]
+  have h2 : (p ⊗ₘ W) (Set.univ ×ˢ ({b} : Set β)) = ∫⁻ a, W a {b} ∂p := by
+    rw [Measure.compProd_apply (MeasurableSet.univ.prod (measurableSet_singleton _))]
+    refine lintegral_congr_ae (Filter.Eventually.of_forall fun a => ?_)
+    show (W a) (Prod.mk a ⁻¹' (Set.univ ×ˢ ({b} : Set β))) = (W a) {b}
+    congr 1
+    ext y; simp
+  rw [h2, lintegral_fintype,
+      ENNReal.toReal_sum (fun a _ => ENNReal.mul_ne_top
+        (measure_ne_top _ _) (measure_ne_top _ _))]
+  refine Finset.sum_congr rfl (fun a _ => ?_)
+  rw [ENNReal.toReal_mul]
+  show (W a).real {b} * p.real {a} = p.real {a} * (W a).real {b}
+  ring
+
 /-! #### Fubini helpers for the random codebook average.
 
 The two helper lemmas below carry the Fubini-style swap between
@@ -287,12 +370,8 @@ private lemma codebook_marginal_one
     -- For the equiv `e`, by its def, `(e.symm (x, c'))` is the construction.
     -- We want: ∑_x ∑_c' (P{x} * f x) * (∏ ... ) = ∑_x (P{x} * f x).
     -- That requires ∑_{c'} ∏_{m'} P{c' m'} = 1.
-    have h_sum_one_alpha : (∑ x : Fin n → α, P.real {x}) = 1 := by
-      have h_univ_real : P.real ((Finset.univ : Finset (Fin n → α)) : Set _) = 1 := by
-        rw [Finset.coe_univ, measureReal_def, measure_univ]; rfl
-      rw [← sum_measureReal_singleton (μ := P) (Finset.univ : Finset (Fin n → α))]
-        at h_univ_real
-      exact h_univ_real
+    have h_sum_one_alpha : (∑ x : Fin n → α, P.real {x}) = 1 :=
+      sum_measureReal_singleton_univ_eq_one P
     have h_sum_other : ∑ c' : {m' : Fin M // m' ≠ m} → (Fin n → α),
         ∏ m'' : {m' : Fin M // m' ≠ m}, P.real {c' m''} = 1 := by
       -- ∑_{c'} ∏_{i} g(c' i) = ∏_i ∑_x g(x) = ∏_i 1 = 1.
@@ -472,12 +551,8 @@ private lemma codebook_marginal_two
   rw [Finset.sum_congr rfl (fun c'' _ => h_inner_eq c'')]
   rw [← Finset.mul_sum]
   -- Use prod_univ_sum to compute ∑_{c''} ∏_{m''} P{c'' m''} = ∏_{m''} ∑_x P{x} = 1.
-  have h_sum_one_alpha : (∑ x : Fin n → α, P.real {x}) = 1 := by
-    have h_univ_real : P.real ((Finset.univ : Finset (Fin n → α)) : Set _) = 1 := by
-      rw [Finset.coe_univ, measureReal_def, measure_univ]; rfl
-    rw [← sum_measureReal_singleton (μ := P) (Finset.univ : Finset (Fin n → α))]
-      at h_univ_real
-    exact h_univ_real
+  have h_sum_one_alpha : (∑ x : Fin n → α, P.real {x}) = 1 :=
+    sum_measureReal_singleton_univ_eq_one P
   have h_sum_other : ∑ c'' : {m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'} → (Fin n → α),
       ∏ m'' : {m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'}, P.real {c'' m''} = 1 := by
     have h_pi := (Finset.prod_univ_sum
@@ -555,45 +630,15 @@ private lemma random_codebook_E1_swap
   rw [h_swap_step1]
   -- Step 2: singleton mass identities.
   have h_P_singleton : ∀ (x : Fin n → α), P.real {x} = ∏ i, p.real {x i} := by
-    intro x; rw [hP_def, measureReal_def, Measure.pi_singleton, ENNReal.toReal_prod]; rfl
+    intro x; rw [hP_def]; exact measureReal_pi_singleton_eq_prod _ x
   have h_pi_W_singleton : ∀ (x : Fin n → α) (y : Fin n → β),
-      (Measure.pi (fun i => W (x i))).real {y} = ∏ i, (W (x i)).real {y i} := by
-    intro x y; rw [measureReal_def, Measure.pi_singleton, ENNReal.toReal_prod]; rfl
+      (Measure.pi (fun i => W (x i))).real {y} = ∏ i, (W (x i)).real {y i} :=
+    fun x y => measureReal_pi_singleton_eq_prod _ y
   set Q : Measure (Fin n → α × β) := Measure.pi (fun _ : Fin n => jointDistribution p W) with hQ_def
   haveI : IsProbabilityMeasure Q := by rw [hQ_def]; infer_instance
   have h_jointSingleton : ∀ (a : α) (b : β),
-      (jointDistribution p W).real ({(a, b)} : Set (α × β)) = p.real {a} * (W a).real {b} := by
-    intro a b
-    rw [measureReal_def, jointDistribution_def]
-    have h1 : (p ⊗ₘ W) ({(a, b)} : Set (α × β))
-        = (p ⊗ₘ W) (({a} : Set α) ×ˢ ({b} : Set β)) := by
-      congr 1; ext ⟨a', b'⟩; simp [Prod.ext_iff]
-    rw [h1, Measure.compProd_apply ((measurableSet_singleton _).prod (measurableSet_singleton _))]
-    have h_pre : ∀ a' : α, Prod.mk a' ⁻¹' (({a} : Set α) ×ˢ ({b} : Set β))
-              = if a' = a then ({b} : Set β) else (∅ : Set β) := by
-      intro a'
-      by_cases ha' : a' = a
-      · subst ha'; ext z; simp
-      · ext z; simp [ha']
-    have h_lint_congr : (∫⁻ a' : α, (W a') (Prod.mk a' ⁻¹' (({a} : Set α) ×ˢ ({b} : Set β))) ∂p)
-          = ∫⁻ a' : α, (W a') (if a' = a then ({b} : Set β) else (∅ : Set β)) ∂p := by
-      refine lintegral_congr_ae (Filter.Eventually.of_forall fun a' => ?_)
-      show (W a') (Prod.mk a' ⁻¹' (({a} : Set α) ×ˢ ({b} : Set β)))
-          = (W a') (if a' = a then ({b} : Set β) else (∅ : Set β))
-      rw [h_pre a']
-    rw [h_lint_congr, lintegral_fintype]
-    have hsum : ∀ a' : α,
-        (W a') (if a' = a then ({b} : Set β) else (∅ : Set β)) * p {a'}
-          = (if a' = a then (W a) {b} * p {a} else 0) := by
-      intro a'
-      by_cases ha' : a' = a
-      · subst ha'; simp
-      · simp [ha']
-    rw [Finset.sum_congr rfl (fun a' _ => hsum a')]
-    rw [Finset.sum_ite_eq' Finset.univ a (fun _ => (W a) {b} * p {a})]
-    rw [if_pos (Finset.mem_univ _), ENNReal.toReal_mul]
-    show (W a).real {b} * p.real {a} = p.real {a} * (W a).real {b}
-    ring
+      (jointDistribution p W).real ({(a, b)} : Set (α × β)) = p.real {a} * (W a).real {b} :=
+    fun a b => jointDistribution_real_singleton p W a b
   have h_Q_singleton : ∀ (x : Fin n → α) (y : Fin n → β),
       Q.real {(fun i => (x i, y i) : Fin n → α × β)}
         = P.real {x} * (Measure.pi (fun i => W (x i))).real {y} := by
@@ -838,33 +883,13 @@ private lemma random_codebook_E2_swap
     rfl
   -- 2b: discrete sum identities for `P.real {x}`, `(Pi (W∘x)).real {y}`, `μY.real {y}`.
   have h_P_singleton : ∀ (x : Fin n → α), P.real {x} = ∏ i, p.real {x i} := by
-    intro x; rw [hP_def, measureReal_def, Measure.pi_singleton, ENNReal.toReal_prod]; rfl
+    intro x; rw [hP_def]; exact measureReal_pi_singleton_eq_prod _ x
   have h_pi_W_singleton : ∀ (x : Fin n → α) (y : Fin n → β),
-      (Measure.pi (fun i => W (x i))).real {y} = ∏ i, (W (x i)).real {y i} := by
-    intro x y; rw [measureReal_def, Measure.pi_singleton, ENNReal.toReal_prod]; rfl
+      (Measure.pi (fun i => W (x i))).real {y} = ∏ i, (W (x i)).real {y i} :=
+    fun x y => measureReal_pi_singleton_eq_prod _ y
   have h_output_singleton : ∀ b : β,
-      (outputDistribution p W).real {b} = ∑ a : α, p.real {a} * (W a).real {b} := by
-    intro b
-    -- ((p ⊗ₘ W).snd){b} = (p ⊗ₘ W)(univ ×ˢ {b}) = ∫⁻ a, W a {b} ∂p.
-    have h1 : (outputDistribution p W) {b}
-        = (jointDistribution p W) (Set.univ ×ˢ ({b} : Set β)) := by
-      show (jointDistribution p W).snd {b} = _
-      rw [Measure.snd_apply (measurableSet_singleton _)]
-      congr 1; ext ⟨a, b'⟩; simp
-    rw [measureReal_def, h1, jointDistribution_def]
-    have h2 : (p ⊗ₘ W) (Set.univ ×ˢ ({b} : Set β)) = ∫⁻ a, W a {b} ∂p := by
-      rw [Measure.compProd_apply (MeasurableSet.univ.prod (measurableSet_singleton _))]
-      refine lintegral_congr_ae (Filter.Eventually.of_forall fun a => ?_)
-      show (W a) (Prod.mk a ⁻¹' (Set.univ ×ˢ ({b} : Set β))) = (W a) {b}
-      congr 1
-      ext y; simp
-    rw [h2, lintegral_fintype,
-        ENNReal.toReal_sum (fun a _ => ENNReal.mul_ne_top
-          (measure_ne_top _ _) (measure_ne_top _ _))]
-    refine Finset.sum_congr rfl (fun a _ => ?_)
-    rw [ENNReal.toReal_mul]
-    show (W a).real {b} * p.real {a} = p.real {a} * (W a).real {b}
-    ring
+      (outputDistribution p W).real {b} = ∑ a : α, p.real {a} * (W a).real {b} :=
+    fun b => outputDistribution_real_singleton_eq_sum p W b
   have h_μY_singleton : ∀ (y : Fin n → β),
       μY.real {y} = ∏ i, ∑ a : α, p.real {a} * (W a).real {y i} := by
     intro y
