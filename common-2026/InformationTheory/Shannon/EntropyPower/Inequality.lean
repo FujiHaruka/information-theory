@@ -166,15 +166,12 @@ theorem isEntropyPowerInequalityHypothesis_of_gaussian
   rw [entropyPower_gaussian_additivity P X Y hX hY hXY m₁ m₂ v₁ v₂
         hv₁ hv₂ hLawX hLawY]
 
--- (retracted 2026-05-28, EPI-Stam Cluster C+D sweep) `isStamToEPIBridge_of_epi`
--- was a trivial pass-through `IsEntropyPowerInequalityHypothesis X Y P →
--- IsStamToEPIBridge X Y P := fun _ => h_epi` with **0 consumers** (verified
--- via `rg -n 'isStamToEPIBridge_of_epi' InformationTheory/` returning only the
--- declaration line). It carried `@audit:retract-candidate(load-bearing-predicate)`
--- + `@audit:closed-by-successor(epi-stam-to-conclusion-plan)`; the discharge
--- path it provided (Gaussian-saturation → bridge) is now publicly available
--- via `EPIStamDischarge.isStamToEPIBridgeHyp_of_gaussian`, so this
--- in-file `IsStamToEPIBridge` wrapper is redundant.
+-- The discharge path from `IsEntropyPowerInequalityHypothesis` to
+-- `IsStamToEPIBridge` (Gaussian-saturation → bridge) is publicly available
+-- via `EPIStamDischarge.isStamToEPIBridgeHyp_of_gaussian`, so an
+-- in-file `IsStamToEPIBridge` wrapper would be redundant. (Former
+-- `@audit:retract-candidate(load-bearing-predicate)`
+-- + `@audit:closed-by-successor(epi-stam-to-conclusion-plan)`.)
 
 /-! ### Corollaries -/
 

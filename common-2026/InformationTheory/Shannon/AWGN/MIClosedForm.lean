@@ -4,8 +4,6 @@ import InformationTheory.Shannon.AWGN.ContChannelMIDecomp
 /-!
 # AWGN Gaussian-input MI closed form — hypothesis-free successor
 
-[awgn-mi-closed-form-relocation-plan.md](../../docs/shannon/awgn-mi-closed-form-relocation-plan.md).
-
 This file hosts the hypothesis-free Gaussian-input MI closed form. The old
 `h_bridge`-form wrapper `AWGN.mutualInfoOfChannel_gaussianInput_closed_form`
 (took the textbook identity `I = h(P+N) − h(N)` as an opaque load-bearing
@@ -22,11 +20,10 @@ producers.
 directly under `AWGNMIBridgeDischarge`), so this NEW file imports both and is the
 sole place where the hypothesis-free wrapper can be assembled.
 
-The wrapper's own body is **0 sorry**. The former transitive dependency on the
-shared MI-decomposition wall `contChannelMIDecomp_holds` has been retired
-(closed 2026-05-28: `ContChannelMIDecomp.mutualInfoOfChannel_toReal_eq_diffEntropy_sub`
-is now assembled genuinely from local helpers), so this Gaussian-input MI closed form
-is now genuine transitively. This file carries no `@residual` tag of its own.
+The MI-decomposition is assembled genuinely from local helpers via
+`ContChannelMIDecomp.mutualInfoOfChannel_toReal_eq_diffEntropy_sub`, so this
+Gaussian-input MI closed form is genuine transitively. This file carries no
+`@residual` tag of its own.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -36,12 +33,10 @@ open scoped ENNReal NNReal
 
 /-- AWGN channel mutual information, Gaussian input, closed form
 `I = (1/2)·log(1 + P/N)`, fully hypothesis-free (takes no `h_bridge`).
-The former transitive dependency on the shared MI-decomposition wall
-`contChannelMIDecomp_holds` has been retired (closed 2026-05-28: the generic body
-`mutualInfoOfChannel_toReal_eq_diffEntropy_sub` is now genuine), so this is now a
-genuine closed form. The old `h_bridge`-form wrapper in `AWGN.lean` has been
-retired (its log-algebra inlined into
-`AWGNMIBridge.awgn_mi_gaussian_closed_form_of_primitives`). -/
+The MI-decomposition generic body
+`mutualInfoOfChannel_toReal_eq_diffEntropy_sub` is genuine, so this is a
+genuine closed form. The log-algebra of the former `h_bridge`-form wrapper is
+inlined into `AWGNMIBridge.awgn_mi_gaussian_closed_form_of_primitives`. -/
 @[entry_point]
 theorem mutualInfoOfChannel_gaussianInput_closed_form'
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -49,7 +44,7 @@ theorem mutualInfoOfChannel_gaussianInput_closed_form'
     (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
         (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas)).toReal
       = (1/2) * Real.log (1 + P / (N : ℝ)) := by
-  -- `h_out` is genuine via the bind/conv bridge (both producers genuine, 0 sorry).
+  -- `h_out` is genuine via the bind/conv bridge (both producers genuine).
   have h_conv := isAwgnBindEqConv_discharged P N h_meas
   have h_out : IsAwgnOutputGaussian P N h_meas :=
     awgn_output_gaussian_of_bind_eq_conv P N h_meas h_conv

@@ -103,7 +103,7 @@ noncomputable def spatialLaplacianHeatKernel (t : ℝ) (x : ℝ) : ℝ :=
   (x ^ 2 / t ^ 2 - 1 / t) * heatKernel t x
 
 /-- **Second spatial derivative of the heat kernel** equals
-`spatialLaplacianHeatKernel`. The core internal discharge of this seed:
+`spatialLaplacianHeatKernel`. The core internal discharge:
 differentiate `heatKernel_spatial_deriv` once more (product rule).
 
 `∂²_x g_t(x) = (x²/t² - 1/t) · g_t(x)`. -/
@@ -163,9 +163,9 @@ theorem isHeatSpatialDerivHyp_gaussian :
   intro t ht x
   exact heatKernel_spatial_laplacian ht x
 
-/-! ## Re-assembly into wave-7 `IsHeatFlowDensity` -/
+/-! ## Re-assembly into `IsHeatFlowDensity` -/
 
-/-- **Re-assembly**: the sub-predicates re-build a wave-7 `IsHeatFlowDensity`. -/
+/-- **Re-assembly**: the sub-predicates re-build an `IsHeatFlowDensity`. -/
 @[entry_point]
 def IsHeatFlowDensity_of_sub_predicates {Ω : Type*} [MeasurableSpace Ω]
     {X Z : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]

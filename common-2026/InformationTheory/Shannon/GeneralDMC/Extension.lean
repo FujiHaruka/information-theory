@@ -1,17 +1,17 @@
 import InformationTheory.Shannon.GeneralDMC.Basic
 
 /-!
-# General DMC capacity — extension layer (wave7 I-2)
+# General DMC capacity — extension layer
 
 This file extends `InformationTheory/Shannon/GeneralDMC.lean` with three families of
-**hypothesis-form** publish theorems aimed at downstream seeds that need
+**hypothesis-form** publish theorems aimed at downstream modules that need
 capacity-limit reasoning beyond the memoryless DMC case.
 
 The mathematical objects this layer would *concretely* discharge (Verdú–Han
 sup-information rate, informationally stable channels, capacity-region
-convexity for general DMC) are out of scope per the wave7 retreat lines:
-their *statements* are exposed here as named publish surface, with the
-characterizing hypothesis taken pass-through.
+convexity for general DMC) are out of scope: their *statements* are exposed
+here as named publish surface, with the characterizing hypothesis taken
+pass-through.
 
 ## Main predicates
 
@@ -60,7 +60,6 @@ unfolding `capacity_lim` itself.
 ## References
 
 * `InformationTheory/Shannon/GeneralDMC.lean`
-* `docs/shannon/general-dmc-plan.md`
 * Verdú & Han, "A general formula for channel capacity" (IEEE TIT 1994).
 -/
 

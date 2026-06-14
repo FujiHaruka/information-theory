@@ -8,7 +8,7 @@ import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Order.Filter.AtTopBot.Basic
 
 /-!
-# LZ78 phrase-count asymptotic envelope — genuine `IsBigO` discharge (S3 wave10)
+# LZ78 phrase-count asymptotic envelope — genuine `IsBigO` discharge
 
 This file discharges the predicate `IsLZ78PhraseCountAsymptotic p B`
 (published in `InformationTheory/Shannon/LZ78ConverseAsymptotic.lean`) with
@@ -98,7 +98,7 @@ end ThresholdAlgebra
 
 section Inversion
 
-/-- **Genuine inversion (S3 core)**: from the primitive Cover–Thomas
+/-- **Genuine inversion**: from the primitive Cover–Thomas
 `c(n) · log c(n) ≤ K · n` bound, the count `c(n)` is `O(n / log n)`.
 
 `f : ℕ → ℝ` is the (nonnegative, real-valued) count sequence. The
@@ -184,7 +184,7 @@ section MulLogPredicate
 
 variable {α : Type*}
 
-/-- **Primitive Ziv `c·log c` product predicate (S3)**.
+/-- **Primitive Ziv `c·log c` product predicate**.
 
 For a family of parsings `p : ℕ → LZ78Parsing α` and constant `K : ℝ`,
 this asserts the Cover–Thomas Lemma 13.5.2 primitive bound `(★)`:
@@ -195,7 +195,7 @@ def IsZivCountingMulLogBound (p : ℕ → LZ78Parsing α) (K : ℝ) : Prop :=
   ∀ᶠ n in atTop, ((p n).count : ℝ) * Real.log ((p n).count : ℝ) ≤ K * (n : ℝ)
 
 /-- **Genuine discharge of `IsLZ78PhraseCountAsymptotic`** from the
-primitive `c·log c ≤ Kn` product bound. This is the S3 deliverable: the
+primitive `c·log c ≤ Kn` product bound: the
 asymptotic envelope predicate holds with genuine `IsBigO` content. -/
 theorem IsLZ78PhraseCountAsymptotic.of_mul_log_bound
     {p : ℕ → LZ78Parsing α} {K : ℝ} (_hK : 0 ≤ K)
@@ -214,7 +214,7 @@ section Wrappers
 
 variable {α : Type*}
 
-/-- **Re-published main S3 statement**: the LZ78 phrase-count is
+/-- **Re-published main statement**: the LZ78 phrase-count is
 `O(n / log n)` whenever the primitive product bound holds. Mirrors the
 shape of `lz78_phrase_count_asymptotic_n_div_log` but with the genuine
 `IsBigO` content supplied (no eventual-`≤` hypothesis needed). -/

@@ -534,7 +534,7 @@ optimal tilt `a = deriv (cgf (Y∘eval 0) (infinitePi μ₀)) lam`. The optimal-
 `h_deriv` (the same regularity precondition carried by the consumer root) pins
 `a = m = ∫ Y ∂tilted` via `tiltedMean_eq_deriv_cgf` and the cgf-eval bridge, so the residual
 largeness hypothesis is **removed**: the boundary window mass is supplied internally by the
-CLT. This is the unconditional internal-point form targeted by the parent W-3 retreat line.
+CLT. This is the unconditional internal-point form of the Cramér lower boundary.
 
 @audit:ok (`h_deriv`/`hVar`/`h_coboundedBelow` are all preconditions, not load-bearing —
 `h_deriv` pins `a = m` (the true-as-framed constraint), `hVar` is the non-degeneracy

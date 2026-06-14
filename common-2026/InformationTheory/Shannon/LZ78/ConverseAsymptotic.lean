@@ -6,7 +6,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Order.Filter.AtTopBot.Basic
 
 /-!
-# LZ78 converse — asymptotic body extension (T4-A wave7)
+# LZ78 converse — asymptotic body extension
 
 This file publishes the **asymptotic-body** layer on top of the
 combinatorial `ZivCountingBound` predicate already published in
@@ -20,27 +20,26 @@ plug into the `IsZivInequalityPassthrough` slot.
 
 ## Scope
 
-* **L-LZ2-asym-A** (engaged) — `IsLZ78PhraseCountAsymptotic` predicate
+* (engaged) — `IsLZ78PhraseCountAsymptotic` predicate
   shaped on `Asymptotics.IsBigO atTop`, plus a `.trivial` constructor.
-* **L-LZ2-asym-B** (engaged) — `IsZivCountingAsymptoticBound` per-`n`
+* (engaged) — `IsZivCountingAsymptoticBound` per-`n`
   bound aggregator with `.refl`, `.mono`, `.add_nonneg`, and
   `.of_pointwise_count` constructors.
-* **L-LZ2-asym-C** (engaged) — bridge theorems showing how a uniform
+* (engaged) — bridge theorems showing how a uniform
   per-`n` Ziv counting bound implies the asymptotic predicate.
-* **L-LZ2-asym-D** (deferred) — the *concrete* derivation of
+* (deferred) — the *concrete* derivation of
   `c(n) ≤ n / log_b n · (1 + o(1))` from Cover–Thomas Eq. 13.122–13.124
   is supplied as hypothesis; the numerical asymptotic
   `c(n) · log c(n) − n · log b = o(n)` is the Cover–Thomas Lemma 13.5.5
-  body and is in scope of a future discharge plan.
-* **L-LZ2-asym-E** (engaged) — `IsZivInequalityPassthrough` bridge.
+  body and remains out of scope here.
+* (engaged) — `IsZivInequalityPassthrough` bridge.
 
 ## Pattern source
 
 Follows the same "predicate + .trivial + bridge" pattern as
-`LZ78ZivInequality.lean` (LZ1) and `LZ78ConverseDischarge.lean`
-(L-LZ2). The asymptotic layer is wrapped in `Asymptotics.IsBigO`
-notation so downstream callers can plug `Mathlib.Analysis.Asymptotics`
-lemmas directly without re-shaping.
+`LZ78ZivInequality.lean` and `LZ78ConverseDischarge.lean`. The asymptotic
+layer is wrapped in `Asymptotics.IsBigO` notation so downstream callers can
+plug `Mathlib.Analysis.Asymptotics` lemmas directly without re-shaping.
 -/
 
 namespace InformationTheory.Shannon
@@ -50,13 +49,13 @@ open scoped ENNReal NNReal BigOperators
 
 set_option linter.unusedSectionVars false
 
-/-! ## §1. `IsZivCountingAsymptoticBound` per-`n` predicate (L-LZ2-asym-B) -/
+/-! ## §1. `IsZivCountingAsymptoticBound` per-`n` predicate -/
 
 section ZivCountingAsymptoticBound
 
 variable {α : Type*}
 
-/-- **Per-`n` Ziv counting asymptotic-bound predicate (L-LZ2-asym-B)**.
+/-- **Per-`n` Ziv counting asymptotic-bound predicate**.
 
 For a family of parsings `p : ℕ → LZ78Parsing α` indexed by block
 length, this predicate asserts a uniform per-`n` real-valued upper
@@ -104,13 +103,13 @@ theorem IsZivCountingAsymptoticBound.of_pointwise_count
 
 end ZivCountingAsymptoticBound
 
-/-! ## §2. `IsLZ78PhraseCountAsymptotic` predicate (L-LZ2-asym-A) -/
+/-! ## §2. `IsLZ78PhraseCountAsymptotic` predicate -/
 
 section PhraseCountAsymptotic
 
 variable {α : Type*}
 
-/-- **Asymptotic phrase-count predicate (L-LZ2-asym-A)**.
+/-- **Asymptotic phrase-count predicate**.
 
 For a family of LZ78 parsings `p : ℕ → LZ78Parsing α` and a reference
 envelope function `B : ℕ → ℝ` (in the textbook this is
@@ -149,7 +148,7 @@ theorem IsLZ78PhraseCountAsymptotic.of_eventual_le
 
 end PhraseCountAsymptotic
 
-/-! ## §3. Pure asymptotic algebra layer (L-LZ2-asym-C) -/
+/-! ## §3. Pure asymptotic algebra layer -/
 
 section AsymptoticAlgebra
 
@@ -157,7 +156,7 @@ variable {α : Type*}
 
 end AsymptoticAlgebra
 
-/-! ## §4. Bridge to parent `IsZivInequalityPassthrough` (L-LZ2-asym-E) -/
+/-! ## §4. Bridge to parent `IsZivInequalityPassthrough` -/
 
 section ZivPassthroughBridge
 
@@ -169,11 +168,9 @@ variable {α Ω : Type*} [Fintype α] [MeasurableSpace α] [MeasurableSpace Ω]
 (`IsLZ78PhraseCountAsymptotic.refl`), so any parsing family `q` and
 envelope `B = q.count` satisfies it unconditionally. The hypothesis
 `_h : ∀ μ p lz, IsZivInequalityPassthrough μ p lz` is therefore *not
-consumed*; the bridge is retained for API symmetry. (After the
-2026-05-27 prop-true → genuine a.s. statement rewrite of
-`IsZivInequalityPassthrough`, `_h` now carries a non-trivial a.s.
-limsup upper bound but is still discarded here; downstream consumers
-plug `_h` into the genuine information path.) -/
+consumed*; the bridge is retained for API symmetry. (`_h` carries a
+non-trivial a.s. limsup upper bound but is still discarded here;
+downstream consumers plug `_h` into the genuine information path.) -/
 @[entry_point]
 theorem IsLZ78PhraseCountAsymptotic.of_passthrough
     (_h : ∀ (μ : Measure Ω) (p : StationaryProcess μ α)
@@ -263,7 +260,7 @@ section MainAsymptoticResult
 
 variable {α : Type*}
 
-/-- **T4-A wave7 main statement: LZ78 phrase-count asymptotic upper
+/-- **Main statement: LZ78 phrase-count asymptotic upper
 bound, hypothesis pass-through form.**
 
 For any family of LZ78 parsings `p : ℕ → LZ78Parsing α` and any
@@ -276,12 +273,11 @@ shaped so that downstream callers can supply any concrete envelope
 function (e.g. `n / log_b n`, `n / log n`, `n`) without changing the
 external signature. The substantive arithmetic
 `c(n) · log c(n) ≤ n · log b + O(1)` (Cover–Thomas Lemma 13.5.5
-asymptotic body, L-LZ2-asym-D) remains in scope of a future discharge
-plan, but is *encapsulated* inside `B n` and so does not surface in
-this signature.
+asymptotic body) remains out of scope here, but is *encapsulated* inside
+`B n` and so does not surface in this signature.
 
 Pattern: the same `hypothesis pass-through` style as
-`relay_cutset_outer_bound` (T3-F). -/
+`relay_cutset_outer_bound`. -/
 @[entry_point]
 theorem lz78_phrase_count_asymptotic
     (p : ℕ → LZ78Parsing α) (B : ℕ → ℝ)

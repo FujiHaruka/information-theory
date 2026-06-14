@@ -190,7 +190,7 @@ theorem debruijnIdentityV2_holds_assembled_chain_domination
   have hg_nn : ∀ u, (0:ℝ) ≤ gaussHessMaj t u := gaussHessMaj_nonneg ht
   -- the joint majorant: (A + B·x²) · ((1/2)·E x).
   refine ⟨fun x => (A + B * x ^ 2) * ((1/2) * E x), ?_, ?_⟩
-  · -- **route II = Tonelli + g_s moment** (the only honest route, judgment log #17).
+  · -- **route II = Tonelli + g_s moment** (the only honest route).
     -- The dominating function: `H x = ∫ pX y·G(x−y) + 2|B|·∫ (y²·pX y)·g(x−y)`, where
     -- `G(u) = (|A| + 2|B|·u²)·gaussHessMaj t u` (Gaussian × quartic) and `g = gaussHessMaj t`.
     -- Both summands are `convKernel_envelope_integrable` envelopes (`pX` / `y²·pX` integrable,

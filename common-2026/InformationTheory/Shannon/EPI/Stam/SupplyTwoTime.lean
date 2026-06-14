@@ -31,8 +31,6 @@ interchange to the **input-level a.e. identity** `pXY =ᵐ convDensityAdd pX pY`
 + withDensity a.e.-uniqueness. The a.e.→pointwise wash through `convDensityAdd · g`
 is honest: the consumed object is the pointwise-pinned smooth `density_t`, the a.e.
 seam lives only at the un-smoothed input density.
-
-SoT plan: `docs/shannon/epi-debruijn-pertime-closure-plan.md` (closure of the seam).
 -/
 import InformationTheory.Shannon.EPI.Case1.TwoTime
 import InformationTheory.Shannon.EPI.Stam.Step3Body

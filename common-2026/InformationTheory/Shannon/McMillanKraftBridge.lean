@@ -22,10 +22,9 @@ H_D(P) ≤ E[L]    where  D = |β|,  L a = |c a|.
 
 ## Honesty status (read before reusing)
 
-* **McMillan itself is NOT reproved here.** As of 2026 Mathlib ships a genuine,
+* **McMillan itself is NOT reproved here.** Mathlib ships a genuine,
   unconditional `kraft_mcmillan_inequality`. This file is a *bridge*, not a
-  re-derivation. (The task brief assumed McMillan was absent from Mathlib; it
-  is present, so reproving it would be wasteful reinvention.)
+  re-derivation.
 
 * The bridge is **genuine** (`#print axioms` clean, type ≠ conclusion, no
   `:= h` circularity, no `True` slot). The only inputs are:

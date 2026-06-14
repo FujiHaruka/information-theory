@@ -6,7 +6,7 @@ import Mathlib.Data.List.Basic
 import Mathlib.Data.List.Range
 
 /-!
-# LZ78 greedy parsing — L-LZ4 partial discharge (T4-A continuation)
+# LZ78 greedy parsing — partial discharge
 
 This file publishes the **concrete LZ78 parsing implementation**
 and elementary **encoding-length upper bounds** of the form
@@ -19,9 +19,9 @@ which is the Cover–Thomas Theorem 13.5.2 phrase-by-phrase bit-length
 form (each phrase index needs `log(dictSize)` bits, each appended
 symbol needs `log(|α|)` bits, plus a constant overhead). The full
 asymptotic `n · log L_n` bound is the intended consequence; the
-present file lays the **structural plumbing** for L-LZ4 discharge so
-that downstream callers can plug `lz78GreedyEncodingLength` into the
-parent `lz78EncodingLength` parameter slot of
+present file lays the **structural plumbing** for the encoding-length
+discharge so that downstream callers can plug `lz78GreedyEncodingLength`
+into the parent `lz78EncodingLength` parameter slot of
 `lz78_asymptotic_optimality`
 (`InformationTheory/Shannon/LempelZiv78.lean`).
 
@@ -38,44 +38,44 @@ parent `lz78EncodingLength` parameter slot of
   consists of a single symbol (parent `none`). It is the **safest**
   greedy form (worst-case `count = input length`), satisfying the
   `LZ78Parsing` invariant by construction.
-* **§4. Greedy encoding-length function (L-LZ4 parameter slot)** —
+* **§4. Greedy encoding-length function (parameter slot)** —
   `lz78GreedyEncodingLength : ∀ n, (Fin n → α) → ℕ`: the concrete
   encoding length on tuples, plugging into the parent
   `lz78EncodingLength` parameter slot.
 * **§5. Encoding-length upper bound (Cover–Thomas Lemma 13.5.2)** —
   `lz78_encoding_length_le_n_log_n_plus_const`: the elementary
   count-times-per-phrase bit upper bound.
-* **§6. Count-vs-`n` bound as hypothesis pass-through (L-LZ4-D)** —
+* **§6. Count-vs-`n` bound as hypothesis pass-through** —
   `IsLZ78CountBoundPassthrough`: predicate exposing the sharper
   count bound `B(n)` as a hypothesis; the elementary `count ≤ n`
   bound is supplied as `.id`.
-* **§7. Bridge to `IsZivInequalityPassthrough` (L-LZ4 → L-LZ1)** —
+* **§7. Bridge to `IsZivInequalityPassthrough`** —
   the concrete `lz78GreedyEncodingLength` plugs into the parent
   `IsZivInequalityPassthrough` (a.s. `limsup (lz/n) ≤ entropyRate`).
 
 ## Scope
 
-* **L-LZ4-A** (engaged) — Concrete LZ78 parsing function published as
+* (engaged) — Concrete LZ78 parsing function published as
   the one-symbol-per-phrase form (worst-case but always valid).
-* **L-LZ4-B** (engaged) — Per-phrase + summed bit-length functions
+* (engaged) — Per-phrase + summed bit-length functions
   published as totally computable definitions.
-* **L-LZ4-C** (engaged) — Encoding-length upper bound in the
+* (engaged) — Encoding-length upper bound in the
   `n · (log(n+1) + log|α| + 2)` form proved by elementary arithmetic
   on `Nat.log`.
-* **L-LZ4-D** (deferred) — The sharper `count ≤ n / log n` bound
+* (deferred) — The sharper `count ≤ n / log n` bound
   (Cover–Thomas Eq. 13.124) is a hypothesis pass-through; the
-  combinatorial discharge is in scope of a future plan.
-* **L-LZ4-E** (deferred) — The full **dictionary-based longest-prefix
+  combinatorial discharge remains out of scope here.
+* (deferred) — The full **dictionary-based longest-prefix
   greedy** parsing (rather than the one-symbol-per-phrase trivial
-  form used here) is deferred to a future discharge plan. The trivial
-  form is sufficient for the seed's bit-length upper bound; only the
-  sharper `count ≤ n / log n` bound (L-LZ4-D) actually requires the
+  form used here) is out of scope here. The trivial
+  form is sufficient for the bit-length upper bound; only the
+  sharper `count ≤ n / log n` bound actually requires the
   full greedy machinery.
 
 ## Pattern source
 
 This file follows the **partial-discharge layering** pattern of
-`InformationTheory/Shannon/LZ78ZivInequality.lean` (L-LZ1-A/B/C/D layering):
+`InformationTheory/Shannon/LZ78ZivInequality.lean`:
 publish the tractable layers (concrete parsing + per-phrase + summed
 bit-length + the `count ≤ n` weak bound) as concrete theorems, expose
 deferred layers (sharper count-vs-n combinatorial bound) as hypothesis
@@ -174,7 +174,7 @@ def lz78RootPhrases (input : List α) : List (LZ78Phrase α) :=
 /-- **The one-symbol-per-phrase LZ78 parsing**. Each phrase is a root
 phrase (parent `none`), so the `inRange` invariant holds vacuously
 (no `some k` parents). This is a worst-case but always-valid LZ78
-parsing for the seed's structural plumbing. -/
+parsing for the structural plumbing. -/
 def lz78OneSymbolParsing (input : List α) : LZ78Parsing α :=
   { phrases := lz78RootPhrases input
     inRange := by
@@ -215,7 +215,7 @@ def lz78OneSymbolEncodingLength (input : List α) (a : ℕ) : ℕ :=
 
 end OneSymbolParsing
 
-/-! ## §4. Greedy encoding-length function (L-LZ4 parameter slot) -/
+/-! ## §4. Greedy encoding-length function (parameter slot) -/
 
 section GreedyEncodingLength
 
@@ -226,15 +226,15 @@ variable {α : Type*} [Fintype α]
 For an input `x : Fin n → α`, the encoding length is computed via
 `lz78OneSymbolEncodingLength` on the underlying list `List.ofFn x`
 with alphabet size `Fintype.card α`. The name "greedy" reflects the
-**L-LZ4 parameter slot semantics**: the concrete encoding-length
+**parameter slot semantics**: the concrete encoding-length
 function plugs into the parent `lz78EncodingLength` parameter of
 `lz78_asymptotic_optimality`.
 
 The current concrete instantiation uses the worst-case one-symbol
 parsing; the sharper longest-prefix-match greedy implementation is
-deferred to L-LZ4-E (downstream discharge plan), but the bit-length
+out of scope here, but the bit-length
 upper bound `n · (log(n+1) + log|α| + 2)` is the same in either case
-(since L-LZ4-E's count is `≤ n` as well, just possibly tighter). -/
+(since the greedy count is `≤ n` as well, just possibly tighter). -/
 def lz78GreedyEncodingLength (n : ℕ) (x : Fin n → α) : ℕ :=
   lz78OneSymbolEncodingLength (List.ofFn x) (Fintype.card α)
 
@@ -301,14 +301,14 @@ theorem lz78_encoding_length_per_symbol_le (n : ℕ) (hn : 0 < n) (x : Fin n →
 
 end EncodingLengthBound
 
-/-! ## §6. Count-vs-`n` bound as hypothesis pass-through (L-LZ4-D) -/
+/-! ## §6. Count-vs-`n` bound as hypothesis pass-through -/
 
 section CountVsN
 
 variable (α : Type*) [Fintype α]
 
 /-- **`IsLZ78CountBoundPassthrough` — hypothesis pass-through for the
-sharper `count ≤ B(n)` bound (Cover–Thomas Eq. 13.124, L-LZ4-D)**.
+sharper `count ≤ B(n)` bound (Cover–Thomas Eq. 13.124)**.
 
 Asserts that for every input length `n` and every tuple `x : Fin n → α`,
 the LZ78 parsing's phrase count is bounded by `B(n)`. The sharper
@@ -400,7 +400,7 @@ lz78GreedyEncodingLength n x ≤ B n
 is the general form; specific instances include
 `B(n) = n · (Nat.log 2 (n + 1) + Nat.log 2 |α| + 2)` (the Cover–Thomas
 13.5.2 form) and `B(n) ≈ n · log L_n` (the sharper form requiring
-L-LZ4-D's count-vs-n bound).
+the count-vs-n bound).
 
 This predicate allows downstream callers to abstract away the concrete
 encoding length and reason only about its upper bound. -/

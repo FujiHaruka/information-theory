@@ -3,22 +3,21 @@ import InformationTheory.Shannon.BlockwiseChannel
 import Mathlib.Analysis.Subadditive
 
 /-!
-# General DMC capacity (limit form) — publish layer (I-2 seed)
+# General DMC capacity (limit form) — publish layer
 
 This file is a thin **publish** layer on top of `BlockwiseChannel.lean`. It
 re-exports the limit-form capacity definition and four publish-surface
-theorems under a dedicated `GeneralDMC` namespace so that downstream seeds
+theorems under a dedicated `GeneralDMC` namespace so that downstream modules
 (`AWGN`, `MAC`, `BC`, `RelayCutset`, …) can refer to
 `GeneralDMC.capacity_lim` directly without depending on `BlockwiseChannel`
 plumbing names.
 
-For the **memoryless** case (the bridge target of I-2), every publish theorem
+For the **memoryless** case, every publish theorem
 is fully discharged via `BlockwiseChannel.capacity_lim_eq_capacity_of_memoryless`.
 For the **fully general** case (Han–Verdú spectral form / informationally
-stable channels) the publish theorems are exposed in **hypothesis-form**
-(retreat lines L-GD1 / L-GD2 of the I-2 plan): the limit-existence /
-monotonicity hypothesis is taken as an explicit argument and consumed
-pass-through. L-GD3 (Han–Verdú spectral form) is scoped out.
+stable channels) the publish theorems are exposed in **hypothesis-form**: the
+limit-existence / monotonicity hypothesis is taken as an explicit argument and
+consumed pass-through. The Han–Verdú spectral form itself is out of scope.
 
 ## Main publish surface
 
@@ -26,21 +25,21 @@ pass-through. L-GD3 (Han–Verdú spectral form) is scoped out.
   `BlockwiseChannel.capacity_lim`.
 * `GeneralDMC.capacity_lim_tendsto_of_memoryless` — for `ofMemoryless W`, the
   per-letter capacity sequence converges to `capacity W` (memoryless concrete
-  form of L-GD1).
+  limit form).
 * `GeneralDMC.capacity_lim_exists_of_memoryless` — limit-existence corollary
-  in `∃ ℓ, Tendsto …` shape (memoryless concrete form of L-GD1).
+  in `∃ ℓ, Tendsto …` shape (memoryless concrete limit form).
 * `GeneralDMC.capacity_lim_exists_of_subadditive` — Fekete-based general
-  pass-through (L-GD1 hypothesis-form): given a real-valued subadditive
+  limit-existence pass-through: given a real-valued subadditive
   surrogate that bounds the per-letter capacity, the limit exists.
 * `GeneralDMC.capacity_lim_eq_capacity_of_memoryless` — alias of the
-  `BlockwiseChannel` main theorem (the I-2 main publish target).
+  `BlockwiseChannel` main theorem (the main publish target).
 * `GeneralDMC.capacity_lim_nonneg_of_memoryless` — nonnegativity in the
   memoryless case (direct from the equality + `capacity_nonneg`).
 * `GeneralDMC.capacity_lim_monotone_in_n_of_memoryless` — the per-letter
   sequence `(capacityN _ n).toReal / n` is monotone in `n` for memoryless
   channels (in fact eventually constant).
-* `GeneralDMC.capacity_lim_pass_through_of_eventually_const` — hypothesis-form
-  pass-through (L-GD2): if the per-letter sequence is eventually equal to
+* `GeneralDMC.capacity_lim_pass_through_of_eventually_const` — monotonicity
+  pass-through: if the per-letter sequence is eventually equal to
   some constant `c`, then `capacity_lim = c`.
 
 ## Design
@@ -48,17 +47,15 @@ pass-through. L-GD3 (Han–Verdú spectral form) is scoped out.
 This file is intentionally signature-stable: it does **not** redefine
 `BlockwiseChannel`, `capacityN`, or `capacity_lim`, and adds no new
 mathematical content beyond statement-level pass-through. The four
-"publish bullets" requested in the I-2 roadmap (`capacity_lim_exists`,
+publish surfaces (`capacity_lim_exists`,
 `capacity_lim_nonneg`, `capacity_lim_monotone_in_n`,
 `capacity_lim_eq_capacity_of_memoryless`) are split into a **concrete
 memoryless flavour** (discharged 0-sorry from `BlockwiseChannel`) and a
-**general hypothesis-form flavour** (retreat lines L-GD1 / L-GD2, taking
-the relevant hypothesis as an explicit argument), per the plan.
+**general hypothesis-form flavour** (limit-existence / monotonicity taken
+as an explicit argument).
 
 ## References
 
-* `docs/shannon/general-dmc-plan.md`
-* `docs/shannon/general-dmc-mathlib-inventory.md`
 * `InformationTheory/Shannon/BlockwiseChannel.lean`
 -/
 
@@ -131,7 +128,7 @@ theorem capacityRate_ofMemoryless_eventually_const
   field_simp
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- Memoryless concrete L-GD1 (Tendsto-form): the per-letter capacity sequence
+/-- Memoryless concrete limit (Tendsto-form): the per-letter capacity sequence
 of `ofMemoryless W` converges to `capacity W`. -/
 @[entry_point]
 theorem capacity_lim_tendsto_of_memoryless
@@ -142,7 +139,7 @@ theorem capacity_lim_tendsto_of_memoryless
   exact (capacityRate_ofMemoryless_eventually_const W).mono (fun n hn => hn.symm)
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Main bridge** (I-2 target): for memoryless `W`, the general DMC
+/-- **Main bridge**: for memoryless `W`, the general DMC
 limit-form capacity coincides with the single-letter capacity. Alias of
 `BlockwiseChannel.capacity_lim_eq_capacity_of_memoryless`. -/
 @[entry_point]
@@ -156,7 +153,7 @@ end Memoryless
 /-! ## General hypothesis-form flavour
 
 For non-memoryless channels, limit existence and monotonicity are taken as
-explicit hypotheses (retreat lines L-GD1 / L-GD2). These versions are
+explicit hypotheses. These versions are
 intentionally minimal pass-through wrappers around `Subadditive.tendsto_lim`
 and `Filter.Tendsto.limUnder_eq` — no new mathematical content; the goal is
 to publish a stable downstream-facing API.
@@ -168,7 +165,7 @@ variable (W : BlockwiseChannel α β)
 
 /-- Pass-through monotonicity: if the per-letter capacity rate is eventually
 equal to a constant `c`, then `capacity_lim W = c`. Allows downstream code to
-state monotonicity hypotheses (`L-GD2`) and feed them through. -/
+state monotonicity hypotheses and feed them through. -/
 @[entry_point]
 theorem capacity_lim_pass_through_of_eventually_const
     {c : ℝ}

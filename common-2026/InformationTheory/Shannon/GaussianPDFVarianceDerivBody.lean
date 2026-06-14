@@ -147,7 +147,7 @@ theorem hasDerivAt_gaussianPDFRealVar_variance (m x : ℝ) {v : ℝ} (hv : 0 < v
 `∂_t g_t x = (1/2)(x²/t² − 1/t)·g_t x = (1/2) Δ_x g_t x`, i.e. `g_t` solves the
 heat equation `∂_t p = (1/2) Δ_x p`. This is the `m = 0` specialization of
 `hasDerivAt_gaussianPDFRealVar_variance`, re-expressed against `heatKernel` and
-the wave-9 `spatialLaplacianHeatKernel`. -/
+`spatialLaplacianHeatKernel`. -/
 @[entry_point]
 theorem hasDerivAt_heatKernel_time {t : ℝ} (ht : 0 < t) (x : ℝ) :
     HasDerivAt (fun s => InformationTheory.Shannon.FisherInfoV2.heatKernel s x)
@@ -169,7 +169,7 @@ theorem hasDerivAt_heatKernel_time {t : ℝ} (ht : 0 < t) (x : ℝ) :
   rw [InformationTheory.Shannon.FisherInfoV2.heatKernel_def_gaussianPDFReal hs,
     ← gaussianPDFRealVar_eq_gaussianPDFReal 0 hs]
 
-/-! ## Discharge of `IsHeatTimeDerivHyp` (the seed target) -/
+/-! ## Discharge of `IsHeatTimeDerivHyp` -/
 
 /-- **Gaussian heat kernel satisfies the time-derivative sub-predicate.**
 

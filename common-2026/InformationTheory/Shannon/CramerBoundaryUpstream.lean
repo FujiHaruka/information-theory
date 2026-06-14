@@ -33,7 +33,7 @@ Cramer → CramerBoundaryUpstream → CramerCltBoundaryClosure
 ```
 
 All hoisted declarations are sorry-free and were moved verbatim. No new proof is
-introduced here (pure wiring). Closure plan: `cramer-root-wiring-plan`.
+introduced here (pure wiring).
 -/
 
 namespace InformationTheory.Shannon.Cramer.Discharge
@@ -214,7 +214,7 @@ theorem change_of_measure_lower_bound_pi {n : ℕ} {μ₀ : Measure Ω₀} [IsPr
 
 /-! ## Residual predicate + reduction to `IsMeasureInfinitePiTiltedEq` (hoisted) -/
 
-/-- **Residual predicate** (W-3 reduction): the tilted infinite-product
+/-- **Residual predicate**: the tilted infinite-product
 window mass is eventually at least `1/2`. This is the *only* piece left after the
 change-of-measure machinery is discharged; it holds precisely when
 the tilted mean `∫ Y ∂μ₀.tilted` lies in the window `[a, a+ε)`, which is the
@@ -227,7 +227,7 @@ def IsTiltedWindowEventuallyLarge (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (l
           {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)
             ∧ ∑ i ∈ Finset.range n, Y (ω i) < (a + ε) * n}
 
-/-- **W-3 residual reduction**: the residual window predicate implies the full
+/-- **Residual reduction**: the residual window predicate implies the full
 n-letter RN-deriv predicate `IsMeasureInfinitePiTiltedEq`. The change-of-measure
 lower bound plus the cylinder lift reduce the predicate to
 the eventual largeness of the tilted window mass, discharged here with `C = 1/2`.
