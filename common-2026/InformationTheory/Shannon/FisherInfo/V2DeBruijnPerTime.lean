@@ -38,7 +38,7 @@ open InformationTheory.Shannon.EPIConvDensity (convDensityAdd convDensityAddDeri
 
 variable {Ω : Type*} {_mΩ : MeasurableSpace Ω}
 
-/-! ## Phase 1a — law factorization -/
+/-! ## Law factorization -/
 
 /-- The law of the heat-flow path `X + √s · Z` factors as the convolution of the law of `X` with
 `𝒩(0, s · v_Z)` when `Z ∼ 𝒩(0, v_Z)`:
@@ -83,7 +83,7 @@ theorem gaussianConvolution_law_conv
   rw [h_funext,
     IndepFun.map_add_eq_map_conv_map hX h_meas_sqrtZ h_indep_X_sqrtZ, h_sqrtZ_map]
 
-/-! ## Phase 1b — density identification -/
+/-! ## Density identification -/
 
 /-- The Gaussian density is bounded above by the normalizing prefactor `(√(2πv))⁻¹`.
 
@@ -174,7 +174,7 @@ theorem pPath_eq_convDensityAdd
       rw [hpX_law, withDensity_apply _ MeasurableSet.univ, setLIntegral_univ]
     rw [hlint, Measure.map_apply hX MeasurableSet.univ, Set.preimage_univ, measure_univ]
     exact ENNReal.one_lt_top
-  -- Step 1 (Phase 1a): law of `X + √s·Z` is the convolution `(P.map X) ∗ 𝒩(0, s·v_Z)`.
+  -- Step 1 (law factorization): law of `X + √s·Z` is the convolution `(P.map X) ∗ 𝒩(0, s·v_Z)`.
   rw [gaussianConvolution_law_conv X Z hX hZ hXZ v_Z hZ_law hs.le]
   -- Step 2: write both factors as `volume.withDensity _`.
   --   `P.map X = volume.withDensity (ofReal ∘ pX)`  (hyp)
@@ -193,7 +193,7 @@ theorem pPath_eq_convDensityAdd
   exact pPath_eq_convDensityAdd_lconvolution_bridge pX hpX_nn hpX_int (s * v_Z)
     (by positivity) hv_ne
 
-/-! ## Phase 2 — heat equation per density -/
+/-! ## Heat equation per density -/
 
 -- Kernel-level helpers for the heat-flow Gaussian kernel `g_σ(u) = gaussianPDFReal 0 ⟨σ,_⟩ u`,
 -- consumed by `heatFlow_density_heat_equation`.
@@ -519,7 +519,7 @@ theorem heatFlow_density_heat_equation
   rw [hpathDeriv2_eq]
   exact hB
 
-/-! ## Phase 3 — entropy parametric differentiation -/
+/-! ## Entropy parametric differentiation -/
 
 /-- Differentiation under the integral sign for the entropy along the heat-flow path:
 `(d/ds) ∫ x, negMulLog (pPath s x) ∂volume = ∫ x, entDeriv t x ∂volume` at `s = t`, via the
@@ -548,7 +548,7 @@ theorem entropy_hasDerivAt_via_parametric
       (bound := bound) hnhds hmeas hint hderiv_meas hb hbound_int hdiff
   simpa only using hgate.2
 
-/-! ## Phase 4a — infinite-interval integration by parts -/
+/-! ## Infinite-interval integration by parts -/
 
 /-- The de Bruijn integration-by-parts step on the whole line:
 `∫ x, u x · v' x = - ∫ x, u' x · v x`, where the boundary terms vanish by tail decay. A direct
@@ -563,7 +563,7 @@ theorem debruijn_ibp_step
     ∫ x, u x * v' x = - ∫ x, u' x * v x :=
   MeasureTheory.integral_mul_deriv_eq_deriv_mul_of_integrable hu hv huv' hu'v huv
 
-/-! ## Phase 4b — logDeriv to Fisher congruence -/
+/-! ## logDeriv to Fisher congruence -/
 
 /-- Shape congruence connecting the IBP output to the V2 Fisher information:
 `∫ x, (logDeriv p x)² · p x ∂volume = fisherInfoOfDensityReal p`, under nonnegativity and

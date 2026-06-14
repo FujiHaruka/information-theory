@@ -199,7 +199,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
     · -- σ ≤ 0: `pPath σ` is the zero function; deriv is 0.
       rw [hpPath_nonpos σ hσ]
       simpa using hasDerivAt_const y (0 : ℝ)
-    · -- σ > 0: use the Wave-4a deriv-existence helper.
+    · -- σ > 0: use the deriv-existence helper.
       rw [hpPath_pos σ hσ]
       exact convDensityAdd_hasDerivAt_self pX hpX_nn hpX_meas hpX_int hσ y
   -- pin `hpathDeriv2`: spatial 2nd derivative of `pPath σ`, for ALL σ.
@@ -223,7 +223,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
       rw [hval]
       exact convDensityAdd_deriv_hasDerivAt_self pX hpX_nn hpX_meas hpX_int hσ y
   -- the per-`x`, per-`s` derivative is now obtained by combining the heat-eq atom
-  -- (σ-derivative) with the §5G-1 negMulLog chain rule.
+  -- (σ-derivative) with the negMulLog chain rule.
   refine Filter.Eventually.of_forall (fun x s hs => ?_)
   have hspos : (0:ℝ) < s := by have := hs.1; linarith
   -- kernel continuity / measurability (shared by the domination groups).
@@ -303,7 +303,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
           ≤ 1 / 2 * gaussHessMaj s (x - y) := by
             apply mul_le_mul_of_nonneg_left hmaj (by norm_num)
         _ ≤ gaussHessMaj s (x - y) := by linarith [hgM_nn]
-    -- spatial-direction domination (fixed-s global bounds, Wave-4a route).
+    -- spatial-direction domination (fixed-s global bounds).
     case boundξ1 => exact fun y => |pX y| * Mξ1
     case hboundξ1_int => exact hpX_int.abs.mul_const _
     case hFξ1_meas =>
@@ -354,13 +354,13 @@ private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
       apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
       have := kernel_x_deriv2_global_bound hspos (ξ - y)
       rwa [hMξ2]
-  -- (B+C) chain rule: pin the `max s 0 = s` reconciliation then apply §5G-1.
+  -- (B+C) chain rule: pin the `max s 0 = s` reconciliation then apply the chain rule.
   have hmaxs : (⟨max s 0, le_max_right s 0⟩ : ℝ≥0) = ⟨s, hspos.le⟩ := by
     apply NNReal.eq; exact max_eq_left hspos.le
   have hpos : convDensityAdd pX (gaussianPDFReal 0 ⟨s, hspos.le⟩) x ≠ 0 :=
     (convDensityAdd_pos pX hpX_nn hpX_int hpX_pos hspos x).ne'
   -- `hpath_deriv : HasDerivAt (fun σ => pPath σ x) D s`; since `pPath σ x = conv g_{max σ 0} x`
-  -- definitionally, this is exactly the `hpath_deriv` shape §5G-1 expects.
+  -- definitionally, this is exactly the `hpath_deriv` shape the chain rule expects.
   have hchain := debruijnIdentityV2_holds_assembled_chain_entDeriv_formula
     pX hspos x ((1/2) * pathDeriv2 s x) hpos hpath_deriv
   -- `hchain` value: `(- log (conv g_{⟨s,_⟩} x) - 1) * ((1/2)·pathDeriv2 s x)`.
@@ -390,7 +390,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_parametric
         (∫ x, entDeriv x ∂volume) t
       ∧ (∫ x, entDeriv x ∂volume
           = (1/2) * fisherInfoOfDensityReal (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))) := by
-  -- the §5G-1 per-`x` closed form `entDerivFn s x`, as a 2-arg function for the atom.
+  -- the per-`x` closed form `entDerivFn s x`, as a 2-arg function for the atom.
   set entDerivFn : ℝ → ℝ → ℝ := fun s x =>
     (- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x) - 1)
       * ((1/2) * deriv (deriv (convDensityAdd pX
@@ -398,7 +398,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_parametric
   -- the witness derivative is `entDerivFn t`.
   refine ⟨fun x => entDerivFn t x, ?_, ?_⟩
   · -- ===== first goal: the HasDerivAt, via the parametric-diff atom. =====
-    -- §5G-2 domination: an integrable `bound` dominating `entDerivFn s` on `Ioo (t/2)(2*t)`.
+    -- domination: an integrable `bound` dominating `entDerivFn s` on `Ioo (t/2)(2*t)`.
     obtain ⟨bound, hbound_int, hb_dom⟩ :=
       debruijnIdentityV2_holds_assembled_chain_domination
         pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
@@ -457,7 +457,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_parametric
             (gaussianPDFReal 0 ⟨max t 0, le_max_right t 0⟩))) x) :=
         (measurable_deriv _).const_mul _
       exact (hlog_meas.mul hd2_meas).aestronglyMeasurable
-    -- `hb`: §5G-2 domination, restated for `entDerivFn s` (= `max s 0` form). On `Ioo (t/2)(2*t)`
+    -- `hb`: domination, restated for `entDerivFn s` (= `max s 0` form). On `Ioo (t/2)(2*t)`
     --   each `s > 0` so `max s 0 = s`, matching `_chain_domination`'s `⟨s,_⟩` form.
     have hb : ∀ᵐ x ∂volume, ∀ s ∈ Set.Ioo (t/2) (2*t), ‖entDerivFn s x‖ ≤ bound x := by
       filter_upwards [hb_dom] with x hx
@@ -467,14 +467,14 @@ private theorem debruijnIdentityV2_holds_assembled_chain_parametric
         apply NNReal.eq; exact max_eq_left hspos.le
       have hbx := hx s hs
       rw [hentDerivFn]; simp only; rw [hmaxs]; exact hbx
-    -- `hdiff`: §5G-3 hdiff plumbing (named honest sorry helper).
+    -- `hdiff`: per-`x` chain-rule derivative plumbing.
     have hdiff := debruijnIdentityV2_holds_assembled_chain_hdiff
       pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
     -- apply the parametric-diff atom (its `entDeriv` arg is `entDerivFn`, `pPath` arg is `pPath`).
     exact entropy_hasDerivAt_via_parametric pPath entDerivFn bound ht
       hbound_int hmeas hint hderiv_meas hb hdiff
-  · -- ===== second goal: Fisher value, via §5G-4 `_chain_ibp_fisher`. =====
-    -- the witness `entDeriv x = entDerivFn t x` equals the `⟨t,_⟩`-form §5G-1 integrand a.e.
+  · -- ===== second goal: Fisher value, via `_chain_ibp_fisher`. =====
+    -- the witness `entDeriv x = entDerivFn t x` equals the `⟨t,_⟩`-form integrand a.e.
     have hmaxt : (⟨max t 0, le_max_right t 0⟩ : ℝ≥0) = ⟨t, ht.le⟩ := by
       apply NNReal.eq; exact max_eq_left ht.le
     have hentDeriv : ∀ᵐ x ∂volume, entDerivFn t x =
@@ -502,7 +502,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain
       ((1/2) * fisherInfoOfDensityReal
         (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)))
       t := by
-  -- §5G-5 body assembly: §5G-3 (`_parametric`) supplies the entropy-derivative and its
+  -- body assembly: `_parametric` supplies the entropy-derivative and its
   -- value `= (1/2)·fisher`. The `max s 0` neighborhood correction is baked into the
   -- `_parametric` signature (integrand matches the `_chain` conclusion verbatim).
   obtain ⟨entDeriv, hderiv, hval⟩ :=
@@ -530,7 +530,7 @@ private theorem debruijnIdentityV2_holds_assembled_entropy_eq
   filter_upwards [eventually_gt_nhds ht] with s hs
   -- at `s > 0`: `max s 0 = s`.
   have hmax : max s 0 = s := max_eq_left hs.le
-  -- Phase 1b (now general noise variance): instantiate at `v_Z := 1` (recovers `s·1 = s`).
+  -- density identification (general noise variance): instantiate at `v_Z := 1` (recovers `s·1 = s`).
   have h1b := pPath_eq_convDensityAdd X Z hX hZ hXZ (1 : ℝ≥0) one_pos hZ_law
     pX hpX_nn hpX_meas hpX_law hs
   -- unfold differentialEntropy = ∫ negMulLog ((rnDeriv).toReal).
@@ -538,12 +538,12 @@ private theorem debruijnIdentityV2_holds_assembled_entropy_eq
   -- rewrite the variance witness `⟨max s 0, _⟩` to `⟨s, hs.le⟩`.
   have hwit : (⟨max s 0, le_max_right s 0⟩ : ℝ≥0) = ⟨s, hs.le⟩ := by
     apply NNReal.eq; exact hmax
-  -- the Phase 1b result variance `⟨s·1, _⟩` equals `⟨s, hs.le⟩` (`s·1 = s`).
+  -- the density-identification result variance `⟨s·1, _⟩` equals `⟨s, hs.le⟩` (`s·1 = s`).
   have hwit1 : (⟨s * (1 : ℝ≥0), by positivity⟩ : ℝ≥0) = ⟨s, hs.le⟩ := by
     apply NNReal.eq; simp
   rw [hwit1] at h1b
   rw [hwit]
-  -- congr the two integrands a.e. via Phase 1b + `toReal_ofReal` (convDensityAdd ≥ 0).
+  -- congr the two integrands a.e. via the density identification + `toReal_ofReal` (convDensityAdd ≥ 0).
   refine integral_congr_ae ?_
   filter_upwards [h1b] with x hx
   rw [hx]
@@ -592,7 +592,7 @@ theorem debruijnIdentityV2_holds_assembled
       (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
       ((1/2) * fisherInfoOfDensityReal h_reg.density_t)
       t := by
-  -- pX integrability from `pX_law` + `P` probability (mirrors Phase 1b `:210`).
+  -- pX integrability from `pX_law` + `P` probability.
   have hpX_int : Integrable h_reg.pX volume := by
     rw [Integrable, hasFiniteIntegral_iff_ofReal (Filter.Eventually.of_forall h_reg.pX_nn)]
     refine ⟨h_reg.pX_meas.aestronglyMeasurable, ?_⟩
@@ -601,8 +601,8 @@ theorem debruijnIdentityV2_holds_assembled
     rw [hlint, Measure.map_apply hX MeasurableSet.univ, Set.preimage_univ, measure_univ]
     exact ENNReal.one_lt_top
   -- pX is a genuine probability density ⇒ `∫ pX = 1` (mass = (P.map X) univ = P univ = 1).
-  --   Honest regularity precondition for the convolution Gaussian lower bound
-  --   (`convDensityAdd_lower_bound_gaussian`, GAP① route).
+  --   Regularity precondition for the convolution Gaussian lower bound
+  --   (`convDensityAdd_lower_bound_gaussian`).
   have hpX_mass : (∫ y, h_reg.pX y ∂volume) = 1 := by
     rw [integral_eq_lintegral_of_nonneg_ae (Filter.Eventually.of_forall h_reg.pX_nn)
       h_reg.pX_meas.aestronglyMeasurable]

@@ -22,7 +22,7 @@ The `_partial_discharge` wrapper (in `RateDistortionAchievabilityPhaseEDischarge
 and the underlying `_witness_form` (in `RateDistortionAchievabilityPhaseE.lean`)
 hard-code the **weak** joint-typical lossy encoder `jointTypicalLossyEncoder`.
 The strong-typicality random-coding analysis requires the **strong** encoder
-`jointStronglyTypicalLossyEncoder` (Phase B' of `PhaseEStrong.lean`).
+`jointStronglyTypicalLossyEncoder` (from `PhaseEStrong.lean`).
 
 To avoid invasive refactoring of those weak-encoder-bound proofs, this file
 **duplicates** the witness-form / partial-discharge layers with the strong
@@ -38,8 +38,9 @@ encoder-agnostic — only `blockDistortion_le_distortionMax` and
 2. `encoder_strong_failure_prob_le` — codebook-averaged probability that
    *no* strong-JT match exists, integrated over `x ∈ stronglyTypicalSet`,
    bounded by `exp(-M · exp(-n(I+δ)))`.
-3. `source_avg_distortion_le_simpler_generic` — Phase D.5 with arbitrary
-   encoder parameter (verbatim mirror of `source_avg_distortion_le_simpler`).
+3. `source_avg_distortion_le_simpler_generic` — source-averaged distortion
+   bound with arbitrary encoder parameter (verbatim mirror of
+   `source_avg_distortion_le_simpler`).
 4. `lossyCodeOfCodebook_strong` — strong analogue of `lossyCodeOfCodebook`.
 5. `rate_distortion_achievability_witness_form_strong` — verbatim mirror of
    the weak witness form.

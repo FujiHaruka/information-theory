@@ -167,9 +167,9 @@ noncomputable def IsRegularDeBruijnHypV2.ofHeatFlow
     (h_heat : IsHeatFlowDensity X Z P p) :
     IsRegularDeBruijnHypV2 X Z P t where
   Z_law := h_heat.Z_law
-  -- Conv-pin redesign: pin `density_t` directly to the smooth convolution
+  -- pin `density_t` directly to the smooth convolution
   -- representative so `density_t_eq` is `rfl`. This is the genuine density of
-  -- `P.map (X + √t·Z)` (Phase 1b `pPath_eq_convDensityAdd`), written explicitly.
+  -- `P.map (X + √t·Z)` (`pPath_eq_convDensityAdd`), written explicitly.
   density_t := convDensityAdd (fun x => ((P.map X).rnDeriv volume x).toReal)
     (gaussianPDFReal 0 ⟨t, _ht.le⟩)
   density_t_eq := fun _ _ => rfl

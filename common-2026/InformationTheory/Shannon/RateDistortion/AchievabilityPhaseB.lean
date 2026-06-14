@@ -5,12 +5,11 @@ import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 import Mathlib.Probability.StrongLaw
 
 /-!
-# Rate-distortion achievability — Phase B (joint-typical lossy encoder + distortion typical set)
+# Rate-distortion achievability — joint-typical lossy encoder + distortion typical set
 
-[`docs/shannon/rate-distortion-achievability-plan.md`](../../../docs/shannon/rate-distortion-achievability-plan.md)
-Phase B MVP. Two pieces of infrastructure for the lossy compression chain.
+Two pieces of infrastructure for the lossy compression chain.
 
-## Phase B.1 — joint-typical lossy encoder
+## Joint-typical lossy encoder
 
 Symmetric counterpart to `ChannelCodingAchievability.jointTypicalDecoder` on the encoder
 side of the lossy compression chain:
@@ -28,7 +27,7 @@ does **not** require uniqueness of the typical match — any one is fine because
 encoder's job is only to commit to a single index. Hence we use `Classical.choose`
 of `∃ m, _` rather than `Classical.choose` of `∃! m, _`.
 
-## Phase B.3 — distortion typical set
+## Distortion typical set
 
 The intersection of `jointlyTypicalSet` with the empirical-distortion constraint
 `blockDistortion d n x y ≤ 𝔼[d(X_0, Y_0)] + δ`:
@@ -78,7 +77,7 @@ noncomputable def lossyCodeOfCodebook
   decoder := c
 
 
-/-! ## Phase B.3 — distortion typical set -/
+/-! ## Distortion typical set -/
 
 /-- Expected per-symbol distortion `𝔼_μ[d(X, Y)]` as a real Bochner integral. The
 bound used in `distortionTypicalSet` references this quantity at `i = 0`; under
@@ -102,7 +101,7 @@ noncomputable def distortionTypicalSet
 
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **B.2.1**: on `distortionTypicalSet`, the empirical block distortion is bounded
+/-- On `distortionTypicalSet`, the empirical block distortion is bounded
 by the joint expectation plus `δ`. This is the structural fact that drives the
 distortion bound on encoder-success events in Cover-Thomas 10.5 (10.85). -/
 theorem blockDistortion_le_of_mem_distortionTypicalSet

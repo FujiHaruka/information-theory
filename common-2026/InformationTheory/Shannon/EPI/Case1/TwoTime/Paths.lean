@@ -22,8 +22,8 @@ import InformationTheory.Shannon.EPI.Case1.TwoTime.Core
 # EPI case-1 two-time object — matched-time path existence (§1)
 
 The inverse-function subproject: construct `s(t) = N_A⁻¹(N_A(0)·eᵗ)`. Five private
-sub-lemmas (i)–(v) + `matchedTimePath_exists`. Verbatim split of `TwoTime.lean`
-§1; proofs unchanged. Builds on `TwoTimeCore.lean` (§0). Umbrella: `TwoTime.lean`.
+sub-lemmas (i)–(v) + `matchedTimePath_exists`. Lives in `TwoTime.lean` §1,
+building on `TwoTimeCore.lean` (§0). Umbrella: `TwoTime.lean`.
 -/
 
 open MeasureTheory ProbabilityTheory Real
@@ -43,7 +43,7 @@ variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
 
 /-! ## §1 — Matched-time path existence (inverse-function subproject)
 
-The largest block (Phase 2 ~200-300 lines): construct `s(t) = N_A⁻¹(N_A(0)·eᵗ)`
+Construct `s(t) = N_A⁻¹(N_A(0)·eᵗ)`
 via strict monotonicity (`J_A > 0`), continuity on `Ici 0`, surjectivity
 (`N_A → ∞`), continuous inverse (`StrictMonoOn.orderIso`), and inverse-function
 derivative (`HasDerivAt.of_local_left_inverse` + `comp`). The hypotheses are
@@ -56,13 +56,13 @@ The five pieces (i)-(v) are isolated as private sub-lemmas below.
 /-- **(ii) Continuity of `N_A` on `Ici 0`.** Interior `s > 0` continuity from the
 supplied interior derivative `hJ_deriv` (`HasDerivAt → ContinuousAt`); the endpoint
 `s = 0` from the heat-flow endpoint continuity
-(`heatFlowEntropyPower_continuousWithinAt_zero`, CLOSED 2026-06-05). -/
+(`heatFlowEntropyPower_continuousWithinAt_zero`). -/
 private theorem matchedTimePath_N_continuousOn
     (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (h_endpt : IsHeatFlowEndpointRegular A B P)
     (hN_diff_int : ∀ s : ℝ, 0 < s → DifferentiableAt ℝ (fun u => heatFlowEP A B P u) s) :
     ContinuousOn (fun s => heatFlowEP A B P s) (Set.Ici (0 : ℝ)) := by
-  -- Endpoint `s = 0⁺`: heat-flow endpoint continuity (CLOSED 2026-06-05).
+  -- Endpoint `s = 0⁺`: heat-flow endpoint continuity.
   have h0 : ContinuousWithinAt (fun s => heatFlowEP A B P s) (Set.Ici (0 : ℝ)) 0 := by
     have hendpt :
         ContinuousWithinAt
@@ -223,8 +223,7 @@ private theorem matchedTimePath_path_continuousOn
     nlinarith [Real.one_le_exp ht, hC_pos]
   exact hg_cont.comp hinner hmaps
 
-/-- **(v) Inverse-function chain rule glue** (proof-log §Two-time formulation gate,
-mechanically verified in `ProbeF1.lean`): the matched path `s(t) = g (C·eᵗ)` has
+/-- **(v) Inverse-function chain rule glue**: the matched path `s(t) = g (C·eᵗ)` has
 derivative `1/J_A(s(t))` at `t > 0`, via `HasDerivAt.of_local_left_inverse` (giving
 `g' (C·eᵗ) = (N·J)⁻¹`) composed with `d/dt (C·eᵗ) = C·eᵗ`, cancelling to `1/J`. -/
 private theorem matchedTimePath_path_hasDerivAt
@@ -300,16 +299,15 @@ no in-tree theorem, threaded as in `csiszarLogRatioGap_deriv_le_zero`'s
 IsMatchedTimePath ...` — the existence of the matched path with its `e^t`
 property and FII-matched derivative.
 
-**Proof done (2026-06-06): genuinely closed, sorryAx-free.** The inverse-function
-subproject is assembled from five private sub-lemmas (`#print axioms
-matchedTimePath_exists = [propext, Classical.choice, Quot.sound]`):
+The inverse-function
+subproject is assembled from five private sub-lemmas:
 
 * (i) `matchedTimePath_N_strictMonoOn` — strict monotonicity from `J_A > 0`
 (`strictMonoOn_of_deriv_pos`, derivative `N_A(s)·J_A(s) > 0` via
 `entropyPower_pos` × `hJ_pos`);
 * (ii) `matchedTimePath_N_continuousOn` — continuity on `Ici 0` (interior from the
 supplied derivative `DifferentiableAt → ContinuousAt`; endpoint `s = 0⁺` from
-`heatFlowEntropyPower_continuousWithinAt_zero`, CLOSED 2026-06-05, via
+`heatFlowEntropyPower_continuousWithinAt_zero` via
 `continuousWithinAt_Ioi_iff_Ici`);
 * (iii)+(iv) `matchedTimePath_inverse` — surjectivity onto `[N_A 0, ∞)`
 (`isPreconnected_Ici.intermediate_value_Ici`, IVT) + continuous inverse
@@ -317,8 +315,7 @@ supplied derivative `DifferentiableAt → ContinuousAt`; endpoint `s = 0⁺` fro
 / `...continuousWithinAt_right_of_surjOn`);
 * (v) `matchedTimePath_path_hasDerivAt` — inverse-function chain rule glue
 (`HasDerivAt.of_local_left_inverse` giving `g'(C·eᵗ) = (N·J)⁻¹`, composed via
-`HasDerivAt.comp` with `d/dt (C·eᵗ) = C·eᵗ`, cancelling to `1/J_A`; mirrors the
-mechanically-verified `ProbeF1.lean` glue).
+`HasDerivAt.comp` with `d/dt (C·eᵗ) = C·eᵗ`, cancelling to `1/J_A`).
 
 **Surjectivity precondition** (`hN_tendsto`): the single-source heat-flow entropy
 power `N_A(s) = entropyPower (P.map (A + √s·B))` diverges to `∞` as `s → ∞`. This
@@ -381,7 +378,7 @@ theorem matchedTimePath_exists
     simpa only [hN, heatFlowEP, hC] using this
   · -- cont: continuity of `t ↦ g (C·eᵗ)` on `Ici 0`.
     exact matchedTimePath_path_continuousOn g C hC_pos hg_cont
-  · -- deriv_at: inverse-function chain rule glue (proof-log §formulation gate).
+  · -- deriv_at: inverse-function chain rule glue.
     intro t ht
     exact matchedTimePath_path_hasDerivAt N J_A g C t ht hC_pos
       hN_mono hg_maps hg_cont hg_rinv rfl hJ_pos hJ_deriv

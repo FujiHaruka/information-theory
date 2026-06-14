@@ -14,18 +14,17 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic
 
 /-!
-# W10-S20: Stam → de Bruijn → EPI conclusion assembly
+# Stam → de Bruijn → EPI conclusion assembly
 
-The EPI proof pieces have been progressively discharged across waves:
+The EPI proof pieces:
 
 * **Stam inequality** (Cover-Thomas Lemma 17.7.2). Step 4 (λ-optimization closed
-  form `J_sum ≤ J_X J_Y / (J_X + J_Y)`) is *fully arithmetic* and discharged in
+  form `J_sum ≤ J_X J_Y / (J_X + J_Y)`) is *fully arithmetic*, in
   `EPIStamInequalityBody.lean` (`stam_lambda_min`, `stam_lambda_lower_bound`,
-  `stam_inverse_form_of_harmonic_mean`). The genuine Step 2-3 analytic core (the
+  `stam_inverse_form_of_harmonic_mean`). The Step 2-3 analytic core (the
   conditional Cauchy-Schwarz + convex Fisher bound) is localized to the single
-  lemma `EPIStamInequalityBody.stam_step2_density_wall`, which is now **genuinely
-  closed** (0-sorry, sorryAx-free; `wall:stam-step2-density` is [CLOSED
-  2026-06-04] via `convex_fisher_bound_of_ready`; regularity preconditions only).
+  lemma `EPIStamInequalityBody.stam_step2_density_wall`, via
+  `convex_fisher_bound_of_ready` (regularity preconditions only).
   The chain `isStamInequalityHyp_via_step3` discharges `IsStamInequalityHyp` from
   regularity alone via that lemma.
 * **de Bruijn identity** (V2). `deBruijn_identity_v2` gives, from
@@ -39,22 +38,15 @@ remaining hypothesis to the genuinely-irreducible primitives.
 
 ## Approach
 
-This file wires the discharged Stam + de Bruijn pieces directly into the EPI
-conclusion, with no intermediate scaling-decomposition structure (an earlier
-Wave-7 decomposition predicate that split the bridge into `scaling`/`limit`
-around a black-box `IsStamInequalityHyp` field was removed; it is no longer part
-of the route). The wiring proceeds two ways:
+This file wires the Stam + de Bruijn pieces directly into the EPI
+conclusion, with no intermediate scaling-decomposition structure. The wiring
+proceeds two ways:
 
-1. **Stam from regularity via the (now genuine) wall lemma** (§2). The genuine
-   Step 2-3 analytic core is localized to `stam_step2_density_wall`, now genuinely
-   closed (0-sorry, sorryAx-free; `wall:stam-step2-density` is [CLOSED
-   2026-06-04]); `isStamInequalityHyp_of_primitives`
+1. **Stam from regularity via the wall lemma** (§2). The
+   Step 2-3 analytic core is localized to `stam_step2_density_wall`;
+   `isStamInequalityHyp_of_primitives`
    derives `IsStamInequalityHyp` from regularity preconditions alone (no
-   load-bearing analytic hypothesis). The earlier design carried this content as
-   load-bearing predicates (`IsStamScoreConvolution` + `IsStamTotalExpectation`
-   bundled in the `IsEPIStamDeBruijnPipeline` structure); those were removed in
-   the wall-consolidation pass (`epi-stam-wall-consolidation-plan`) as an isolated
-   island with zero cross-file consumers.
+   load-bearing analytic hypothesis).
 2. **de Bruijn gap-monotonicity engine** (§1, §6). The de Bruijn derivative
    `g'(t) = (1/2) · J(g_t)` is `≥ 0` because Fisher information is non-negative
    (`fisherInfoOfDensityReal_nonneg`). This is the *genuine* monotonicity content
@@ -63,17 +55,16 @@ of the route). The wiring proceeds two ways:
 
 The EPI conclusion (§3) is landed from regularity by deriving the Stam inequality
 from the shared wall and feeding it through the monolithic
-`IsEPIL3IntegratedPipeline`. The genuine Gaussian EPI (§5) is obtained directly
+`IsEPIL3IntegratedPipeline`. The Gaussian EPI (§5) is obtained directly
 from Gaussian saturation (`entropy_power_inequality_gaussian_full'`), with no Stam
-claim. (The former Gaussian *pipeline* discharge routed the Stam half through the
-buggy V1 Fisher-info-zero artefact and was removed — see §5, RESOLVED 2026-05-20.)
+claim.
 
 ## Genuine residual remaining
 
-After this assembly the EPI conclusion reduces to a single residual. Update
-2026-05-31 (Phase 3d): `stam_step2_density_wall` — the conditional Cauchy-Schwarz +
-convex Fisher bound (Cover-Thomas 17.7.2's deepest analytic content) — is now
-**genuinely closed** (0-sorry, sorryAx-free, `@audit:ok`) via
+After this assembly the EPI conclusion reduces to a single residual.
+`stam_step2_density_wall` — the conditional Cauchy-Schwarz +
+convex Fisher bound (Cover-Thomas 17.7.2's deepest analytic content) — is
+closed (`@audit:ok`) via
 `convex_fisher_bound_of_ready`. The remaining residual is the regularity-precondition
 signature gap on the published `IsStamInequalityHyp`, localized to
 `isStamInequalityHyp_via_body` (`@residual(plan:epi-wall-reattack-plan)`,
@@ -155,24 +146,14 @@ theorem isEPIGapMonotoneHyp_of_deBruijnV2
 
 /-- **Stam inequality from regularity preconditions** (via the shared wall).
 
-Produces the genuine `IsStamInequalityHyp` from measurability / independence /
-probability measure alone, delegating the genuine Step 2-3 analytic core to the
-now-genuine (sorryAx-free) lemma `stam_step2_density_wall`
-(`wall:stam-step2-density` is [CLOSED 2026-06-04]) via
-`isStamInequalityHyp_via_step3`. `#print axioms isStamInequalityHyp_of_primitives`
-= `[propext, Classical.choice, Quot.sound]` (sorryAx-free, 2026-06-04 audit).
-
-This replaces the former load-bearing version that chained two Stam-wall
-predicates (`IsStamScoreConvolution`, `IsStamTotalExpectation`); those predicates
-were removed in the wall-consolidation pass. The signature now carries **no**
+Produces `IsStamInequalityHyp` from measurability / independence /
+probability measure alone, delegating the Step 2-3 analytic core to the
+lemma `stam_step2_density_wall` via
+`isStamInequalityHyp_via_step3`. The signature carries **no**
 load-bearing analytic hypothesis.
 
-Update 2026-05-31 (owner-level pivot, epi-wall-reattack-plan): `stam_step2_density_wall`
-**and** `isStamInequalityHyp_via_body` are now **both genuinely closed** (0-sorry,
-`#print axioms` sorryAx-free). The published `IsStamInequalityHyp` was pivoted in lockstep
-with `IsStamInequalityResidual` to carry the pointwise convolution constraint +
-`IsBlachmanConvReady` bundle, closing the former regularity-precondition signature gap.
-This wrapper therefore produces a genuine, **sorryAx-free** `IsStamInequalityHyp`. -/
+The published `IsStamInequalityHyp` carries the pointwise convolution constraint +
+`IsBlachmanConvReady` bundle, closing the regularity-precondition signature gap. -/
 @[entry_point]
 theorem isStamInequalityHyp_of_primitives
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -183,37 +164,19 @@ theorem isStamInequalityHyp_of_primitives
 
 /-! ## §3 — Main EPI from regularity (via shared wall)
 
-The former refined pipeline `IsEPIStamDeBruijnPipeline` (a structure bundling the
-load-bearing `IsStamScoreConvolution` + `IsStamTotalExpectation` predicates) and
-its operation helpers (`isStamInequalityHyp_of_stamDeBruijn`,
-`isEPIL3IntegratedPipeline_of_stamDeBruijn`, `entropy_power_inequality_via_stamDeBruijn`,
-`isEPIStamDeBruijnPipeline_of_primitives`, `_symm`, `_congr`, `_roundtrip`) were
-removed in the wall-consolidation pass. They were an isolated island (zero
-cross-file consumers; the public main theorem `entropy_power_inequality`
-actually runs via `EntropyPowerInequality.stamToEPIBridge_holds`, verified by the
-forward dep graph 2026-06-09), and their load-bearing predicate content is now
-localized to the shared `stam_step2_density_wall`.
+The public main theorem `entropy_power_inequality` runs via
+`EntropyPowerInequality.stamToEPIBridge_holds`, and the load-bearing predicate
+content is localized to the shared `stam_step2_density_wall`. -/
 
-(deleted 2026-06-11, legacy Stam→EPI subtree removal) The wrapper
-`entropy_power_inequality_via_stamDeBruijn` (EPI conclusion from regularity
-preconditions, routed through `entropy_power_inequality_integrated` →
-`EntropyPowerInequality.stamToEPIBridge_holds`) was removed together with that
-bridge subtree; it had 0 consumers. -/
+/-! ## §5 — Gaussian EPI (via saturation)
 
-/-! ## §5 — Gaussian EPI (genuine, via saturation)
-
-**RESOLVED (2026-05-20):** the former `isEPIStamDeBruijnPipeline_of_gaussian` and
-`entropy_power_inequality_gaussian_via_stamDeBruijn` were removed. They presented a
-Gaussian EPI "via Stam + de Bruijn", but the Stam half (`totalExp`) was discharged
-vacuously through the buggy V1 `fisherInfo = 0` artefact (`exfalso` on `0 < J_X`),
-so the Stam/de Bruijn machinery played no load-bearing role — the inequality came
-entirely from Gaussian saturation. The genuine Gaussian EPI is
-`entropy_power_inequality_gaussian_full'` below (direct from
-`entropyPower_gaussian_additivity`), which carries no Stam claim.
+The Gaussian EPI is `entropy_power_inequality_gaussian_full'` below (direct from
+`entropyPower_gaussian_additivity`), which carries no Stam claim: the inequality
+comes entirely from Gaussian saturation.
 -/
 
-/-- **Gaussian EPI fully hypothesis-free** (re-verification + extension of
-`EPIL3Integration.entropy_power_inequality_gaussian_full`). The saturation case
+/-- **Gaussian EPI fully hypothesis-free**
+(`EPIL3Integration.entropy_power_inequality_gaussian_full`). The saturation case
 gives equality, hence `≥`; *no* pipeline hypothesis at all is required. -/
 @[entry_point]
 theorem entropy_power_inequality_gaussian_full'
@@ -254,11 +217,5 @@ derivative `g'(t) = (1/2) · J(g_t)` is non-negative, so the gap function
 predicate for the density witness. -/
 theorem isEPIGapMonotoneHyp_of_density (f : ℝ → ℝ) : IsEPIGapMonotoneHyp f :=
   isEPIGapMonotoneHyp_discharge f
-
-/-! ## §7 — Predicate manipulation + sanity checks
-
-The former refined-pipeline manipulation lemmas (`isEPIStamDeBruijnPipeline_symm`,
-`_congr`, `stamDeBruijn_pipeline_roundtrip`) were removed alongside the
-`IsEPIStamDeBruijnPipeline` structure in the wall-consolidation pass. -/
 
 end InformationTheory.Shannon.EPIStamDeBruijnConclusion

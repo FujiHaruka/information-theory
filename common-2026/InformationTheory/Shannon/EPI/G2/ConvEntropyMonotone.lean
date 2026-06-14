@@ -17,8 +17,7 @@ import InformationTheory.Shannon.EPI.G2.BridgeDensityHelpers
 # EPI G2 — (β) Convolution does not decrease differential entropy
 
 This file supplies the **lower bound** `h(pX) ≤ h(pX ∗ g_t)` of the EPI G2 general
-sandwich (`docs/shannon/epi-g2-general-sandwich-moonshot-plan.md`, Phase 1 (β)):
-the differential entropy of a Gaussian-smoothed density `convDensityAdd pX g_t`
+sandwich: the differential entropy of a Gaussian-smoothed density `convDensityAdd pX g_t`
 (with `g_t = gaussianPDFReal 0 ⟨t,_⟩`) is at least the differential entropy of `pX`.
 
 The mathematical route is the continuous **conditioning-reduces-entropy**
@@ -44,14 +43,13 @@ This is a **reusable, EPI-line-wide asset**: continuous conditional differential
 entropy + conditioning-reduces-entropy are absent from Mathlib (genuine gap, not a
 wall), but the `condDistrib` machinery exists, so a genuine construction is possible.
 
-## Status — fully closed (0 sorry / 0 residual, sorryAx-free)
+## Assembly of the bridge
 
-The whole (β) chain is now **genuinely closed**. The former `wall:cond-diff-entropy`
-bridge `differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv` is assembled
-from three genuinely-proved components:
+The bridge `differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv` is assembled
+from three components:
 
-* (a) `InformationTheory.klDiv_compProd_const_toReal_integral` (`CondKLIntegral.lean`,
-  which fills the Mathlib `ChainRule.lean:74-77` TODO) turns the joint KL `toReal` into
+* (a) `InformationTheory.klDiv_compProd_const_toReal_integral` (`CondKLIntegral.lean`)
+  turns the joint KL `toReal` into
   the `μ_Z`-average of fibrewise KL `∫ z, (klDiv (κ z) μ_X).toReal ∂μ_Z`;
 * (b) `klDiv_toReal_eq_neg_differentialEntropy_sub_cross` (`EPIG2BridgeDensityHelpers.lean`)
   expands each fibre into `−h(κ z) − ∫ p_z · log q_X`;
@@ -68,9 +66,8 @@ bundles; the downstream device form `differentialEntropy_indep_gaussian_add_ge` 
 density form `negMulLog_convDensity_entropy_ge` thread them at the heat-flow path
 `W := X + √s·Z` with conclusions unchanged.
 
-`condDifferentialEntropy_indep_add_eq` (independent-sum fibre identification) was already
-genuinely closed via the affine-shift kernel `affineShiftKernel`. All declarations here
-are now sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`).
+`condDifferentialEntropy_indep_add_eq` (independent-sum fibre identification) is
+obtained via the affine-shift kernel `affineShiftKernel`.
 -/
 
 namespace InformationTheory.Shannon
@@ -101,12 +98,11 @@ where `joint := (μ.map Z) ⊗ₘ condDistrib X Z μ` (the law of `(Z, X)`, by
 (`= (μ.map Z).prod (μ.map X)`, by `Measure.compProd_const`). This is the
 differential-entropy-level statement of `I(X;Z) = h(X) − h(X|Z)`.
 
-**Genuinely closed** (0 sorry / 0 residual, sorryAx-free), assembled from three
-genuinely-proved components, with the regularity / integrability hypotheses threaded
+Assembled from three components, with the regularity / integrability hypotheses threaded
 as honest preconditions:
 
-* (a) `InformationTheory.klDiv_compProd_const_toReal_integral` (`CondKLIntegral.lean`,
-  filling the Mathlib `ChainRule.lean:74-77` TODO) turns the joint KL `toReal` into the
+* (a) `InformationTheory.klDiv_compProd_const_toReal_integral` (`CondKLIntegral.lean`)
+  turns the joint KL `toReal` into the
   `μ_Z`-average of the fibrewise KL `∫ z, (klDiv (κ z) μ_X).toReal ∂μ_Z`;
 * (b) `klDiv_toReal_eq_neg_differentialEntropy_sub_cross`
   (`EPIG2BridgeDensityHelpers.lean`) expands each fibre into
@@ -115,7 +111,7 @@ as honest preconditions:
   identifies `∫_z ∫ p_z log q_X ∂μ_Z = ∫ q_X log q_X = −h(μ_X)` (Fubini marginal).
 
 Assembling: `RHS = −h(X|Z) − (−h(X)) = h(X) − h(X|Z)`. The classical continuous
-`I(X;Z) = h(X) − h(X|Z) = D(P_{Z,X} ‖ P_Z ⊗ P_X)` identity, now genuine in-tree.
+`I(X;Z) = h(X) − h(X|Z) = D(P_{Z,X} ‖ P_Z ⊗ P_X)` identity.
 
 All added hypotheses are regularity preconditions (absolute continuity, per-fibre
 absolute continuity, equal mass via Markov, integrability = KL finiteness), not
@@ -211,7 +207,7 @@ theorem differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv
 /-- **Conditioning reduces (differential) entropy**: `h(X | Z) ≤ h(X)`.
 
 The differential analogue of `I(X;Z) = h(X) − h(X|Z) = KL(joint ‖ product) ≥ 0`.
-This proof is **genuine** (0 sorry / 0 residual, sorryAx-free): the bridge
+The bridge
 `differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv` identifies the entropy
 difference with `(klDiv joint product).toReal`, whose non-negativity is type-trivial
 (`ENNReal.toReal_nonneg`, since `klDiv` is `ℝ≥0∞`-valued), so the
@@ -308,9 +304,9 @@ Conditioned on `Z = z`, the variable `fun ω => X ω + c · Z ω` is the constan
 (`differentialEntropy_map_add_const`). Averaging the constant `h(X)` over the
 probability law `μ.map Z` reproduces `h(X)`.
 
-**Genuine (0 sorry / 0 residual)**, sorryAx-free. The fibre identification
+The fibre identification
 `condDistrib (X + c·Z) Z μ =ᵐ[μ.map Z] affineShiftKernel (μ.map X) c` is assembled
-in-tree via:
+via:
 
 1. `indepFun_iff_map_prod_eq_prod_map_map` gives
    `μ.map (fun ω => (Z ω, X ω)) = (μ.map Z).prod (μ.map X)` (independence).
@@ -372,9 +368,8 @@ stated through an underlying independent pair `X ⊥ Z` with `Z` Gaussian.
 All hypotheses are regularity preconditions (the fields of
 `IsHeatFlowEndpointRegular`): measurability, independence, the noise law, and the
 absolute continuity of `μ.map X`. The bridge regularity / integrability preconditions
-(stated at the heat-flow path `W := X + √s·Z`) are threaded through unchanged. **Genuine**
-(0 sorry / 0 residual, sorryAx-free): `condDifferentialEntropy_le` is now genuinely
-closed. `@audit:ok` -/
+(stated at the heat-flow path `W := X + √s·Z`) are threaded through unchanged.
+`@audit:ok` -/
 theorem differentialEntropy_indep_gaussian_add_ge
     {Ω : Type*} [MeasurableSpace Ω] (X Z : Ω → ℝ) (μ : Measure Ω)
     [IsProbabilityMeasure μ] (s : ℝ) (hs : 0 < s)
@@ -425,9 +420,8 @@ The underlying independent pair `X ⊥ Z` (with `Z ∼ 𝒩(0, v_Z)`, `s·v_Z = 
 supplied as regularity preconditions, matching the fields of
 `IsHeatFlowEndpointRegular`. `pX` is identified with the density of `μ.map X`.
 The bridge regularity / integrability preconditions (stated at the heat-flow path
-`W := X + √s·Z` with `s := u n / v_Z`) are threaded through unchanged. **Genuine**
-(0 sorry / 0 residual, sorryAx-free): `condDifferentialEntropy_le` is now genuinely
-closed. `@audit:ok` -/
+`W := X + √s·Z` with `s := u n / v_Z`) are threaded through unchanged.
+`@audit:ok` -/
 theorem negMulLog_convDensity_entropy_ge
     {Ω : Type*} [MeasurableSpace Ω] (X Z : Ω → ℝ) (μ : Measure Ω)
     [IsProbabilityMeasure μ]
