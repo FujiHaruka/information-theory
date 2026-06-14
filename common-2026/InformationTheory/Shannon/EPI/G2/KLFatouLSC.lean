@@ -42,6 +42,32 @@ namespace InformationTheory.EPIG2KLFatou
 open MeasureTheory Filter Real ProbabilityTheory
 open scoped ENNReal NNReal Topology
 
+theorem toReal_le_liminf_toReal_of_le_liminf {a : ℕ → ℝ≥0∞} {b : ℝ≥0∞} {C : ℝ}
+    (hb : b ≠ ∞) (hC : ∀ᶠ i in atTop, a i ≤ ENNReal.ofReal C) (hle : b ≤ Filter.liminf a atTop) :
+    b.toReal ≤ Filter.liminf (fun i => (a i).toReal) atTop := by
+  have hliminf_toReal :
+      Filter.liminf (fun i => (a i).toReal) atTop = (Filter.liminf a atTop).toReal := by
+    rw [← ENNReal.liminf_toReal_eq (ENNReal.ofReal_ne_top) hC]
+  have hliminf_ne_top : Filter.liminf a atTop ≠ ∞ :=
+    ne_top_of_le_ne_top ENNReal.ofReal_ne_top
+      (Filter.liminf_le_of_frequently_le' hC.frequently)
+  rw [hliminf_toReal]
+  exact (ENNReal.toReal_le_toReal hb hliminf_ne_top).mpr hle
+
+theorem tendsto_of_le_liminf_of_le_tendsto {a b : ℕ → ℝ} {v C : ℝ}
+    (hnn : ∀ i, 0 ≤ a i) (hub : ∀ i, a i ≤ b i) (hbdd : ∀ i, a i ≤ C)
+    (hb : Tendsto b atTop (𝓝 v)) (hliminf_ge : v ≤ Filter.liminf a atTop) :
+    Tendsto a atTop (𝓝 v) := by
+  have hlimsup_le : Filter.limsup a atTop ≤ v := by
+    calc Filter.limsup a atTop
+        ≤ Filter.limsup b atTop :=
+          Filter.limsup_le_limsup (Filter.Eventually.of_forall hub)
+            (Filter.isCoboundedUnder_le_of_le atTop hnn) hb.isBoundedUnder_le
+      _ = v := hb.limsup_eq
+  have hbdd_le : Filter.IsBoundedUnder (· ≤ ·) atTop a := Filter.isBoundedUnder_of ⟨C, hbdd⟩
+  have hbdd_ge : Filter.IsBoundedUnder (· ≥ ·) atTop a := Filter.isBoundedUnder_of ⟨0, hnn⟩
+  exact tendsto_of_le_liminf_of_limsup_le hliminf_ge hlimsup_le hbdd_le hbdd_ge
+
 /-- **W2 — withDensity rnDeriv quotient identification** (the largest gap, an assembly
 of existing parts). For `f ≥ 0`, `g > 0`, both measurable and integrable, the
 Radon–Nikodym derivative of `volume.withDensity (ofReal∘f)` w.r.t.
@@ -672,35 +698,14 @@ theorem negMulLog_convDensity_limsup_le {pX : ℝ → ℝ}
       rw [← ENNReal.ofReal_toReal (hKL_ne_top (idx i))]
       exact ENNReal.ofReal_le_ofReal (hC i)
     -- `liminf (KLr (idx ·)) = (liminf klDiv ...).toReal ≥ (klDiv μ γ).toReal`.
-    have hliminf_toReal :
-        Filter.liminf (fun i => KLr (idx i)) atTop
-          = (Filter.liminf (fun i => klDiv (μn (idx i)) γ) atTop).toReal := by
-      rw [← ENNReal.liminf_toReal_eq (ENNReal.ofReal_ne_top) hb_bound]
-    have hliminf_klDiv_ne_top :
-        Filter.liminf (fun i => klDiv (μn (idx i)) γ) atTop ≠ ∞ :=
-      ne_top_of_le_ne_top ENNReal.ofReal_ne_top
-        (Filter.liminf_le_of_frequently_le' hb_bound.frequently)
-    have hliminf_ge : (klDiv μ γ).toReal ≤ Filter.liminf (fun i => KLr (idx i)) atTop := by
-      rw [hliminf_toReal]
-      exact (ENNReal.toReal_le_toReal hμ_KL_ne_top hliminf_klDiv_ne_top).mpr hw1
-    -- `limsup (KLr (idx ·)) ≤ (klDiv μ γ).toReal` from the β upper bound.
-    have hlimsup_le : Filter.limsup (fun i => KLr (idx i)) atTop ≤ (klDiv μ γ).toReal := by
-      have htend : Tendsto (fun i => - cross_n (idx i) - L) atTop (𝓝 ((klDiv μ γ).toReal)) :=
-        hupper_lim.comp (hns.comp _hms_mono.tendsto_atTop)
-      calc Filter.limsup (fun i => KLr (idx i)) atTop
-          ≤ Filter.limsup (fun i => - cross_n (idx i) - L) atTop :=
-            Filter.limsup_le_limsup
-              (Filter.Eventually.of_forall fun i => hKLr_upper (idx i))
-              (Filter.isCoboundedUnder_le_of_le atTop (fun i => hKLr_nn (idx i)))
-              htend.isBoundedUnder_le
-        _ = (klDiv μ γ).toReal := htend.limsup_eq
-    -- Squeeze: `KLr (idx ·) → (klDiv μ γ).toReal`.
-    have hKLr_bdd_le : Filter.IsBoundedUnder (· ≤ ·) atTop (fun i => KLr (idx i)) :=
-      Filter.isBoundedUnder_of ⟨C, fun i => hC i⟩
-    have hKLr_bdd_ge : Filter.IsBoundedUnder (· ≥ ·) atTop (fun i => KLr (idx i)) :=
-      Filter.isBoundedUnder_of ⟨0, fun i => hKLr_nn (idx i)⟩
+    have hliminf_ge : (klDiv μ γ).toReal ≤ Filter.liminf (fun i => KLr (idx i)) atTop :=
+      toReal_le_liminf_toReal_of_le_liminf hμ_KL_ne_top hb_bound hw1
+    -- Squeeze: `KLr (idx ·) → (klDiv μ γ).toReal`, from `0 ≤ KLr ≤ -cross_n - L → (klDiv μ γ).toReal`.
+    have htend : Tendsto (fun i => - cross_n (idx i) - L) atTop (𝓝 ((klDiv μ γ).toReal)) :=
+      hupper_lim.comp (hns.comp _hms_mono.tendsto_atTop)
     have hKLr_idx_tendsto : Tendsto (fun i => KLr (idx i)) atTop (𝓝 ((klDiv μ γ).toReal)) :=
-      tendsto_of_le_liminf_of_limsup_le hliminf_ge hlimsup_le hKLr_bdd_le hKLr_bdd_ge
+      tendsto_of_le_liminf_of_le_tendsto (fun i => hKLr_nn (idx i)) (fun i => hKLr_upper (idx i))
+        (fun i => hC i) htend hliminf_ge
     -- `cross_n (idx ·) → crossμ` along the subsequence.
     have hcross_idx : Tendsto (fun i => cross_n (idx i)) atTop (𝓝 crossμ) :=
       hcross_tendsto.comp (hns.comp _hms_mono.tendsto_atTop)
