@@ -135,6 +135,186 @@ theorem differentialEntropyExt_posPart_le_liminf_of_ae_tendsto
       ≤ ∫⁻ x, Filter.liminf (fun n => F n x) atTop ∂volume := lintegral_mono_ae hpt
     _ ≤ Filter.liminf (fun n => ∫⁻ x, F n x ∂volume) atTop := lintegral_liminf_le hF_meas
 
+theorem integral_map_add_const_eq_integral_translate_mul
+    (μW : Measure ℝ) [SigmaFinite μW] (hμW_ac : μW ≪ volume) (z : ℝ) (g : ℝ → ℝ) :
+    ∫ x, g x ∂(μW.map (fun x => x + z))
+      = ∫ x, (μW.rnDeriv volume (x - z)).toReal * g x ∂volume := by
+  set fWe : ℝ → ℝ≥0∞ := μW.rnDeriv volume with hfWe_def
+  have hfWe_meas : Measurable fWe := Measure.measurable_rnDeriv _ _
+  -- `μW.map (·+z) = vol.withDensity (fun x => fWe (x - z))`.
+  have hμWz_wd : μW.map (fun x => x + z)
+      = (volume : Measure ℝ).withDensity (fun x => fWe (x - z)) := by
+    conv_lhs => rw [show μW = (volume : Measure ℝ).withDensity fWe from
+      (Measure.withDensity_rnDeriv_eq μW volume hμW_ac).symm]
+    rw [map_add_const_withDensity fWe z]
+  -- a.e.-finiteness of the translated density.
+  have hfWe_translate_fin : ∀ᵐ x ∂volume, fWe (x - z) < ∞ := by
+    have h0 : ∀ᵐ x ∂volume, fWe x < ∞ := Measure.rnDeriv_lt_top μW volume
+    have hmp : MeasurePreserving (fun x : ℝ => x - z) volume volume :=
+      ⟨by fun_prop, MeasureTheory.map_sub_right_eq_self (μ := (volume : Measure ℝ)) z⟩
+    exact hmp.quasiMeasurePreserving.ae h0
+  rw [hμWz_wd, integral_withDensity_eq_integral_toReal_smul
+    (by fun_prop : Measurable fun x => fWe (x - z)) hfWe_translate_fin]
+  apply integral_congr_ae; filter_upwards with x
+  show ((fWe (x - z)).toReal) • g x = (μW.rnDeriv volume (x - z)).toReal * g x
+  rw [smul_eq_mul]
+
+theorem rnDeriv_conv_toReal_aeeq_integral_translate
+    (μW μV : Measure ℝ) [IsProbabilityMeasure μW] [IsProbabilityMeasure μV] (hμW_ac : μW ≪ volume) :
+    (fun x => ((μW ∗ μV).rnDeriv volume x).toReal)
+      =ᵐ[volume] fun x => ∫ z, (μW.rnDeriv volume (x - z)).toReal ∂μV := by
+  set fWe : ℝ → ℝ≥0∞ := μW.rnDeriv volume with hfWe_def
+  have hfWe_meas : Measurable fWe := Measure.measurable_rnDeriv _ _
+  have hconv : μW ∗ μV
+      = (volume : Measure ℝ).withDensity (fun z => ∫⁻ v, fWe (z - v) ∂μV) :=
+    conv_eq_withDensity_translate_average μW μV hμW_ac
+  have hrho_meas : Measurable (fun z => ∫⁻ v, fWe (z - v) ∂μV) :=
+    (hfWe_meas.comp (measurable_fst.sub measurable_snd)).lintegral_prod_right'
+  have h_rn : (μW ∗ μV).rnDeriv volume =ᵐ[volume] fun z => ∫⁻ v, fWe (z - v) ∂μV := by
+    rw [hconv]; exact Measure.rnDeriv_withDensity volume hrho_meas
+  have h_lt : ∀ᵐ z ∂volume, (μW ∗ μV).rnDeriv volume z < ∞ := Measure.rnDeriv_lt_top (μW ∗ μV) volume
+  filter_upwards [h_rn, h_lt] with x hx hx_lt
+  show ((μW ∗ μV).rnDeriv volume x).toReal = ∫ z, (μW.rnDeriv volume (x - z)).toReal ∂μV
+  have hfWe_x_meas : Measurable (fun z => fWe (x - z)) := by fun_prop
+  have hint_lt : (∫⁻ z, fWe (x - z) ∂μV) < ∞ := hx ▸ hx_lt
+  have hae_lt : ∀ᵐ z ∂μV, fWe (x - z) < ∞ :=
+    ae_lt_top' hfWe_x_meas.aemeasurable hint_lt.ne
+  rw [hx]; exact (integral_toReal hfWe_x_meas.aemeasurable hae_lt).symm
+
+theorem lintegral_ofReal_translate_density_aeeq
+    (μW μV : Measure ℝ) [IsProbabilityMeasure μW] [IsProbabilityMeasure μV] (hμW_ac : μW ≪ volume) :
+    ∀ᵐ x ∂volume,
+      (∫⁻ z, ENNReal.ofReal ((μW.rnDeriv volume (x - z)).toReal) ∂μV)
+        = ENNReal.ofReal (((μW ∗ μV).rnDeriv volume x).toReal) := by
+  set fWe : ℝ → ℝ≥0∞ := μW.rnDeriv volume with hfWe_def
+  have hfWe_meas : Measurable fWe := Measure.measurable_rnDeriv _ _
+  have hsumdens : (μW ∗ μV).rnDeriv volume =ᵐ[volume] fun z => ∫⁻ v, fWe (z - v) ∂μV := by
+    have hconv : μW ∗ μV
+        = (volume : Measure ℝ).withDensity (fun z => ∫⁻ v, fWe (z - v) ∂μV) :=
+      conv_eq_withDensity_translate_average μW μV hμW_ac
+    rw [hconv]
+    exact Measure.rnDeriv_withDensity volume
+      ((hfWe_meas.comp (measurable_fst.sub measurable_snd)).lintegral_prod_right')
+  have h_lt : ∀ᵐ z ∂volume, (μW ∗ μV).rnDeriv volume z < ∞ := Measure.rnDeriv_lt_top (μW ∗ μV) volume
+  filter_upwards [hsumdens, h_lt] with x hx hx_lt
+  have hae_fin : ∀ᵐ z ∂μV, fWe (x - z) < ∞ :=
+    ae_lt_top' (by fun_prop : Measurable fun z => fWe (x - z)).aemeasurable (hx ▸ hx_lt).ne
+  calc (∫⁻ z, ENNReal.ofReal ((μW.rnDeriv volume (x - z)).toReal) ∂μV)
+      = ∫⁻ z, fWe (x - z) ∂μV := by
+        apply lintegral_congr_ae; filter_upwards [hae_fin] with z hz
+        show ENNReal.ofReal ((fWe (x - z)).toReal) = fWe (x - z)
+        exact ENNReal.ofReal_toReal hz.ne
+    _ = ENNReal.ofReal (((μW ∗ μV).rnDeriv volume x).toReal) := by
+        rw [ENNReal.ofReal_toReal (by rw [hx]; exact (hx ▸ hx_lt).ne), hx]
+
+theorem lintegral_translate_mul_abs_log_ne_top
+    (μW μV : Measure ℝ) [IsProbabilityMeasure μW] [IsProbabilityMeasure μV] (hμW_ac : μW ≪ volume)
+    (hent_sum : Integrable
+      (fun x => Real.negMulLog (((μW ∗ μV).rnDeriv volume x).toReal)) volume) :
+    (∫⁻ p : ℝ × ℝ, ENNReal.ofReal
+        ((μW.rnDeriv volume (p.2 - p.1)).toReal
+          * |Real.log (((μW ∗ μV).rnDeriv volume p.2).toReal)|) ∂(μV.prod volume)) ≠ ⊤ := by
+  set fW : ℝ → ℝ := fun x => (μW.rnDeriv volume x).toReal with hfW_def
+  set rfun : ℝ → ℝ := fun x => ((μW ∗ μV).rnDeriv volume x).toReal with hrfun_def
+  have hfW_meas : Measurable fW := (Measure.measurable_rnDeriv _ _).ennreal_toReal
+  have hr_nn : ∀ x, 0 ≤ rfun x := fun _ => ENNReal.toReal_nonneg
+  have hlog_meas : Measurable (fun x => Real.log (rfun x)) :=
+    Real.measurable_log.comp ((Measure.measurable_rnDeriv _ _).ennreal_toReal)
+  have habs_eq : ∀ x, rfun x * |Real.log (rfun x)| = |Real.negMulLog (rfun x)| :=
+    fun x => mul_abs_log_eq_abs_negMulLog_of_nonneg (hr_nn x)
+  have hofReal_fW : ∀ᵐ x ∂volume,
+      (∫⁻ z, ENNReal.ofReal (fW (x - z)) ∂μV) = ENNReal.ofReal (rfun x) :=
+    lintegral_ofReal_translate_density_aeeq μW μV hμW_ac
+  have hker_meas : Measurable (fun p : ℝ × ℝ =>
+      ENNReal.ofReal (fW (p.2 - p.1) * |Real.log (rfun p.2)|)) :=
+    ((hfW_meas.comp (measurable_snd.sub measurable_fst)).mul
+      (hlog_meas.comp measurable_snd).abs).ennreal_ofReal
+  rw [lintegral_prod _ hker_meas.aemeasurable,
+    lintegral_lintegral_swap hker_meas.aemeasurable]
+  have hbody : (∫⁻ x, ∫⁻ z, ENNReal.ofReal (fW (x - z) * |Real.log (rfun x)|) ∂μV ∂volume)
+      = ∫⁻ x, ENNReal.ofReal (rfun x * |Real.log (rfun x)|) ∂volume := by
+    apply lintegral_congr_ae
+    filter_upwards [hofReal_fW] with x hx
+    calc (∫⁻ z, ENNReal.ofReal (fW (x - z) * |Real.log (rfun x)|) ∂μV)
+        = ENNReal.ofReal (|Real.log (rfun x)|) * ∫⁻ z, ENNReal.ofReal (fW (x - z)) ∂μV := by
+          rw [← lintegral_const_mul _
+            ((by fun_prop : Measurable fun z => fW (x - z)).ennreal_ofReal)]
+          apply lintegral_congr; intro z
+          rw [← ENNReal.ofReal_mul (abs_nonneg _), mul_comm (fW (x - z))]
+      _ = ENNReal.ofReal (|Real.log (rfun x)|) * ENNReal.ofReal (rfun x) := by rw [hx]
+      _ = ENNReal.ofReal (rfun x * |Real.log (rfun x)|) := by
+          rw [← ENNReal.ofReal_mul (abs_nonneg _), mul_comm]
+  rw [hbody]
+  have hfin : (∫⁻ x, ‖Real.negMulLog (rfun x)‖ₑ ∂volume) ≠ ⊤ :=
+    hent_sum.hasFiniteIntegral.ne
+  refine ne_top_of_le_ne_top hfin (lintegral_mono (fun x => ?_))
+  rw [habs_eq x, ← ofReal_norm_eq_enorm, Real.norm_eq_abs]
+
+theorem integrable_translate_mul_log
+    (μW μV : Measure ℝ) [IsProbabilityMeasure μW] [IsProbabilityMeasure μV] (hμW_ac : μW ≪ volume)
+    (hent_sum : Integrable
+      (fun x => Real.negMulLog (((μW ∗ μV).rnDeriv volume x).toReal)) volume) :
+    Integrable
+      (fun p : ℝ × ℝ => (μW.rnDeriv volume (p.2 - p.1)).toReal
+        * Real.log (((μW ∗ μV).rnDeriv volume p.2).toReal)) (μV.prod volume) := by
+  set fW : ℝ → ℝ := fun x => (μW.rnDeriv volume x).toReal with hfW_def
+  set rfun : ℝ → ℝ := fun x => ((μW ∗ μV).rnDeriv volume x).toReal with hrfun_def
+  have hfW_meas : Measurable fW := (Measure.measurable_rnDeriv _ _).ennreal_toReal
+  have hfW_nn : ∀ x, 0 ≤ fW x := fun _ => ENNReal.toReal_nonneg
+  have hlog_meas : Measurable (fun x => Real.log (rfun x)) :=
+    Real.measurable_log.comp ((Measure.measurable_rnDeriv _ _).ennreal_toReal)
+  have hglob_abs_lint : (∫⁻ p : ℝ × ℝ, ENNReal.ofReal
+      (fW (p.2 - p.1) * |Real.log (rfun p.2)|) ∂(μV.prod volume)) ≠ ⊤ :=
+    lintegral_translate_mul_abs_log_ne_top μW μV hμW_ac hent_sum
+  have hKmeas : AEStronglyMeasurable
+      (fun p : ℝ × ℝ => fW (p.2 - p.1) * Real.log (rfun p.2)) (μV.prod volume) :=
+    ((hfW_meas.comp (measurable_snd.sub measurable_fst)).mul
+      (hlog_meas.comp measurable_snd)).aestronglyMeasurable
+  refine ⟨hKmeas, ?_⟩
+  rw [hasFiniteIntegral_iff_enorm]
+  have henorm_eq : (∫⁻ p : ℝ × ℝ, ‖fW (p.2 - p.1) * Real.log (rfun p.2)‖ₑ ∂(μV.prod volume))
+      = ∫⁻ p : ℝ × ℝ, ENNReal.ofReal (fW (p.2 - p.1) * |Real.log (rfun p.2)|)
+        ∂(μV.prod volume) := by
+    apply lintegral_congr; intro p
+    rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs, abs_mul, abs_of_nonneg (hfW_nn _)]
+  rw [henorm_eq]
+  exact lt_of_le_of_ne le_top hglob_abs_lint
+
+theorem integral_neg_translate_log_eq_differentialEntropy
+    (μW μV : Measure ℝ) [IsProbabilityMeasure μW] [IsProbabilityMeasure μV] (hμW_ac : μW ≪ volume)
+    (hent_sum : Integrable
+      (fun x => Real.negMulLog (((μW ∗ μV).rnDeriv volume x).toReal)) volume) :
+    (∫ z, (- ∫ x, Real.log (((μW ∗ μV).rnDeriv volume x).toReal)
+        ∂(μW.map (fun x => x + z))) ∂μV)
+      = differentialEntropy (μW ∗ μV) := by
+  set fW : ℝ → ℝ := fun x => (μW.rnDeriv volume x).toReal with hfW_def
+  set rfun : ℝ → ℝ := fun x => ((μW ∗ μV).rnDeriv volume x).toReal with hrfun_def
+  have hinner : ∀ (z : ℝ) (g : ℝ → ℝ),
+      ∫ x, g x ∂(μW.map (fun x => x + z)) = ∫ x, fW (x - z) * g x ∂volume :=
+    fun z g => integral_map_add_const_eq_integral_translate_mul μW hμW_ac z g
+  have hr_avg : rfun =ᵐ[volume] fun x => ∫ z, fW (x - z) ∂μV :=
+    rnDeriv_conv_toReal_aeeq_integral_translate μW μV hμW_ac
+  have hKint : Integrable
+      (fun p : ℝ × ℝ => fW (p.2 - p.1) * Real.log (rfun p.2)) (μV.prod volume) :=
+    integrable_translate_mul_log μW μV hμW_ac hent_sum
+  have hstep1 : (∫ z, (- ∫ x, Real.log (rfun x) ∂(μW.map (fun x => x + z))) ∂μV)
+      = - ∫ z, (∫ x, fW (x - z) * Real.log (rfun x) ∂volume) ∂μV := by
+    rw [← integral_neg]
+    apply integral_congr_ae; filter_upwards with z
+    rw [hinner z (fun x => Real.log (rfun x))]
+  have hswap : (∫ z, (∫ x, fW (x - z) * Real.log (rfun x) ∂volume) ∂μV)
+      = ∫ x, (∫ z, fW (x - z) * Real.log (rfun x) ∂μV) ∂volume :=
+    integral_integral_swap (f := fun z x => fW (x - z) * Real.log (rfun x)) hKint
+  have hcollapse : (∫ x, (∫ z, fW (x - z) * Real.log (rfun x) ∂μV) ∂volume)
+      = ∫ x, rfun x * Real.log (rfun x) ∂volume := by
+    apply integral_congr_ae
+    filter_upwards [hr_avg] with x hx
+    rw [integral_mul_const, ← hx]
+  have hent_eq : differentialEntropy (μW ∗ μV)
+      = - ∫ x, rfun x * Real.log (rfun x) ∂volume :=
+    differentialEntropy_eq_neg_integral_mul_log (μW ∗ μV)
+  rw [hstep1, hswap, hcollapse, hent_eq]
+
 /-- Finite-entropy monotonicity of differential entropy under independent addition: for `W` a.c.,
 `W ⊥ V`, and `Q.map W` of finite differential entropy (`hW_ent`), `h(W) ≤ h(W+V)`. The proof uses
 per-fibre translate Gibbs and splits on finiteness of `ν = W+V` (finite branch: real-valued Gibbs;
@@ -259,98 +439,14 @@ theorem differentialEntropyExt_mono_add_of_integrable
       exact hmp.quasiMeasurePreserving.ae h0
     -- **inner integral identity**: `∫ x, g x ∂(μWz z) = ∫ x, fW (x - z) * g x ∂volume`.
     have hinner : ∀ (z : ℝ) (g : ℝ → ℝ),
-        ∫ x, g x ∂(μWz z) = ∫ x, fW (x - z) * g x ∂volume := by
-      intro z g
-      rw [hμWz_wd z, integral_withDensity_eq_integral_toReal_smul
-        (by fun_prop : Measurable fun x => fWe (x - z)) (hfWe_translate_fin z)]
-      apply integral_congr_ae; filter_upwards with x
-      show ((fWe (x - z)).toReal) • g x = fW (x - z) * g x
-      rw [smul_eq_mul]
-    -- **convergence density**: `rfun =ᵐ[vol] fun x => ∫ z, fW (x - z) ∂μV`.
-    have hr_avg : rfun =ᵐ[volume] fun x => ∫ z, fW (x - z) ∂μV := by
-      have hconv : ν = (volume : Measure ℝ).withDensity (fun z => ∫⁻ v, fWe (z - v) ∂μV) := by
-        rw [hν_conv]; exact conv_eq_withDensity_translate_average (Q.map W) (Q.map V) hW_ac_Q
-      have hrho_meas : Measurable (fun z => ∫⁻ v, fWe (z - v) ∂μV) :=
-        (hfWe_meas.comp (measurable_fst.sub measurable_snd)).lintegral_prod_right'
-      have h_rn : ν.rnDeriv volume =ᵐ[volume] fun z => ∫⁻ v, fWe (z - v) ∂μV := by
-        rw [hconv]; exact Measure.rnDeriv_withDensity volume hrho_meas
-      have h_lt : ∀ᵐ z ∂volume, ν.rnDeriv volume z < ∞ := Measure.rnDeriv_lt_top ν volume
-      filter_upwards [h_rn, h_lt] with x hx hx_lt
-      show (ν.rnDeriv volume x).toReal = ∫ z, fW (x - z) ∂μV
-      have hfWe_x_meas : Measurable (fun z => fWe (x - z)) := by fun_prop
-      have hint_lt : (∫⁻ z, fWe (x - z) ∂μV) < ∞ := hx ▸ hx_lt
-      have hae_lt : ∀ᵐ z ∂μV, fWe (x - z) < ∞ :=
-        ae_lt_top' hfWe_x_meas.aemeasurable hint_lt.ne
-      rw [hx]; exact (integral_toReal hfWe_x_meas.aemeasurable hae_lt).symm
-    -- **global product integrability** of `K (z, x) = fW (x - z) * log (rfun x)` over `μV.prod vol`.
-    -- The absolute kernel `fW (x-z) * |log (rfun x)|` integrates (Tonelli, nonneg) to
-    -- `∫ x, rfun x * |log r| = ∫ |negMulLog r| < ∞` (`hent_sum`).
-    have habs_eq : ∀ x, rfun x * |Real.log (rfun x)| = |Real.negMulLog (rfun x)| :=
-      fun x => mul_abs_log_eq_abs_negMulLog_of_nonneg (hr_nn x)
-    -- `∫⁻ z, ofReal (fW (x-z)) ∂μV = ofReal (rfun x)`  (a.e. x): the ENNReal convolution density.
-    have hsumdens : ν.rnDeriv volume =ᵐ[volume] fun z => ∫⁻ v, fWe (z - v) ∂μV := by
-      have hconv : ν = (volume : Measure ℝ).withDensity (fun z => ∫⁻ v, fWe (z - v) ∂μV) := by
-        rw [hν_conv]; exact conv_eq_withDensity_translate_average (Q.map W) (Q.map V) hW_ac_Q
-      rw [hconv]
-      exact Measure.rnDeriv_withDensity volume
-        ((hfWe_meas.comp (measurable_fst.sub measurable_snd)).lintegral_prod_right')
-    have hofReal_fW : ∀ᵐ x ∂volume,
-        (∫⁻ z, ENNReal.ofReal (fW (x - z)) ∂μV) = ENNReal.ofReal (rfun x) := by
-      have h_lt : ∀ᵐ z ∂volume, ν.rnDeriv volume z < ∞ := Measure.rnDeriv_lt_top ν volume
-      filter_upwards [hsumdens, h_lt] with x hx hx_lt
-      have hae_fin : ∀ᵐ z ∂μV, fWe (x - z) < ∞ :=
-        ae_lt_top' (by fun_prop : Measurable fun z => fWe (x - z)).aemeasurable (hx ▸ hx_lt).ne
-      calc (∫⁻ z, ENNReal.ofReal (fW (x - z)) ∂μV)
-          = ∫⁻ z, fWe (x - z) ∂μV := by
-            apply lintegral_congr_ae; filter_upwards [hae_fin] with z hz
-            show ENNReal.ofReal ((fWe (x - z)).toReal) = fWe (x - z)
-            exact ENNReal.ofReal_toReal hz.ne
-        _ = ENNReal.ofReal (rfun x) := by
-            rw [hrfun_def]; simp only
-            rw [ENNReal.ofReal_toReal (by rw [hx]; exact (hx ▸ hx_lt).ne), hx]
-    have hglob_abs_lint : ∫⁻ p : ℝ × ℝ, ENNReal.ofReal (fW (p.2 - p.1) * |Real.log (rfun p.2)|)
-        ∂(μV.prod volume) ≠ ⊤ := by
-      have hker_meas : Measurable (fun p : ℝ × ℝ =>
-          ENNReal.ofReal (fW (p.2 - p.1) * |Real.log (rfun p.2)|)) :=
-        ((hfW_meas.comp (measurable_snd.sub measurable_fst)).mul
-          (hlog_meas.comp measurable_snd).abs).ennreal_ofReal
-      rw [lintegral_prod _ hker_meas.aemeasurable,
-        lintegral_lintegral_swap hker_meas.aemeasurable]
-      have hbody : (∫⁻ x, ∫⁻ z, ENNReal.ofReal (fW (x - z) * |Real.log (rfun x)|) ∂μV ∂volume)
-          = ∫⁻ x, ENNReal.ofReal (rfun x * |Real.log (rfun x)|) ∂volume := by
-        apply lintegral_congr_ae
-        filter_upwards [hofReal_fW] with x hx
-        calc (∫⁻ z, ENNReal.ofReal (fW (x - z) * |Real.log (rfun x)|) ∂μV)
-            = ENNReal.ofReal (|Real.log (rfun x)|) * ∫⁻ z, ENNReal.ofReal (fW (x - z)) ∂μV := by
-              rw [← lintegral_const_mul _
-                ((by fun_prop : Measurable fun z => fW (x - z)).ennreal_ofReal)]
-              apply lintegral_congr; intro z
-              rw [← ENNReal.ofReal_mul (abs_nonneg _), mul_comm (fW (x - z))]
-          _ = ENNReal.ofReal (|Real.log (rfun x)|) * ENNReal.ofReal (rfun x) := by rw [hx]
-          _ = ENNReal.ofReal (rfun x * |Real.log (rfun x)|) := by
-              rw [← ENNReal.ofReal_mul (abs_nonneg _), mul_comm]
-      rw [hbody]
-      -- `∫⁻ ofReal(rfun x * |log r|) = ∫⁻ ofReal(|negMulLog r|) = ∫⁻ ‖negMulLog r‖ₑ < ∞`.
-      have hfin : (∫⁻ x, ‖Real.negMulLog (rfun x)‖ₑ ∂volume) ≠ ⊤ :=
-        hent_sum.hasFiniteIntegral.ne
-      refine ne_top_of_le_ne_top hfin (lintegral_mono (fun x => ?_))
-      rw [habs_eq x, ← ofReal_norm_eq_enorm, Real.norm_eq_abs]
+        ∫ x, g x ∂(μWz z) = ∫ x, fW (x - z) * g x ∂volume :=
+      fun z g => integral_map_add_const_eq_integral_translate_mul (Q.map W) hW_ac_Q z g
     -- the kernel `K (z, x) = fW (x - z) * log (rfun x)` is product-integrable (abs-dominated).
-    have hKmeas : AEStronglyMeasurable
-        (fun p : ℝ × ℝ => fW (p.2 - p.1) * Real.log (rfun p.2)) (μV.prod volume) :=
-      ((hfW_meas.comp (measurable_snd.sub measurable_fst)).mul
-        (hlog_meas.comp measurable_snd)).aestronglyMeasurable
     have hKint : Integrable
         (fun p : ℝ × ℝ => fW (p.2 - p.1) * Real.log (rfun p.2)) (μV.prod volume) := by
-      refine ⟨hKmeas, ?_⟩
-      rw [hasFiniteIntegral_iff_enorm]
-      have henorm_eq : (∫⁻ p : ℝ × ℝ, ‖fW (p.2 - p.1) * Real.log (rfun p.2)‖ₑ ∂(μV.prod volume))
-          = ∫⁻ p : ℝ × ℝ, ENNReal.ofReal (fW (p.2 - p.1) * |Real.log (rfun p.2)|)
-            ∂(μV.prod volume) := by
-        apply lintegral_congr; intro p
-        rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs, abs_mul, abs_of_nonneg (hfW_nn _)]
-      rw [henorm_eq]
-      exact lt_of_le_of_ne le_top hglob_abs_lint
+      rw [hμV_def, hfWb_def, hrfun_def, hν_conv]
+      exact integrable_translate_mul_log (Q.map W) (Q.map V) hW_ac_Q
+        (by rw [← hν_conv]; exact hent_sum')
     -- (d) per-fibre cross-integrability `Integrable (log r) (μWz z)`  (a.e. z), from the per-z
     -- section of the global product-integrable kernel `hKint`.
     have hcross_int : ∀ᵐ z ∂μV, Integrable
@@ -388,26 +484,9 @@ theorem differentialEntropyExt_mono_add_of_integrable
     -- (h) `∫ z, (-∫ x, log(r x) ∂(μWz z)) ∂μV = - ∫ x, r x · log(r x) ∂volume = h(ν)`.
     have hRHS_eq : (∫ z, (- ∫ x, Real.log (rfun x) ∂(μWz z)) ∂μV)
         = differentialEntropy ν := by
-      -- rewrite each inner via `hinner`, pull out the sign, Fubini-swap, collapse the inner z-integral.
-      have hstep1 : (∫ z, (- ∫ x, Real.log (rfun x) ∂(μWz z)) ∂μV)
-          = - ∫ z, (∫ x, fW (x - z) * Real.log (rfun x) ∂volume) ∂μV := by
-        rw [← integral_neg]
-        apply integral_congr_ae; filter_upwards with z
-        rw [hinner z (fun x => Real.log (rfun x))]
-      -- Fubini swap `∫ z ∫ x = ∫ x ∫ z`  (kernel `hKint` over `μV.prod vol`).
-      have hswap : (∫ z, (∫ x, fW (x - z) * Real.log (rfun x) ∂volume) ∂μV)
-          = ∫ x, (∫ z, fW (x - z) * Real.log (rfun x) ∂μV) ∂volume :=
-        integral_integral_swap (f := fun z x => fW (x - z) * Real.log (rfun x)) hKint
-      -- inner `∫ z, fW(x-z)·log(r x) ∂μV = (∫ z, fW(x-z) ∂μV)·log(r x) = rfun x · log(rfun x)` a.e.
-      have hcollapse : (∫ x, (∫ z, fW (x - z) * Real.log (rfun x) ∂μV) ∂volume)
-          = ∫ x, rfun x * Real.log (rfun x) ∂volume := by
-        apply integral_congr_ae
-        filter_upwards [hr_avg] with x hx
-        rw [integral_mul_const, ← hx]
-      -- `differentialEntropy ν = ∫ negMulLog r = -∫ r·log r`.
-      have hent_eq : differentialEntropy ν = - ∫ x, rfun x * Real.log (rfun x) ∂volume :=
-        differentialEntropy_eq_neg_integral_mul_log ν
-      rw [hstep1, hswap, hcollapse, hent_eq]
+      rw [hμWz_def, hrfun_def, hμV_def, hν_conv]
+      exact integral_neg_translate_log_eq_differentialEntropy (Q.map W) (Q.map V) hW_ac_Q
+        (by rw [← hν_conv]; exact hent_sum')
     -- assemble:  `h(Q.map W) = ∫ z, h(Q.map W) ∂μV ≤ ∫ z, (-∫ log r ∂μWz) ∂μV = h(ν)`.
     calc differentialEntropy (Q.map W)
         = ∫ _z, differentialEntropy (Q.map W) ∂μV := by
