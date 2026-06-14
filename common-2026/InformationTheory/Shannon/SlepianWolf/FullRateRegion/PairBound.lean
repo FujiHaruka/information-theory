@@ -29,7 +29,7 @@ sub-cases by `(p.1 = Xⁿ ?, p.2 = Yⁿ ?)`; the two "loose" cases are absorbed 
 `swError_EX` / `swError_EY` via `swError_EXY_subset_union`. -/
 
 /-- The "both coordinates differ" sub-event of `swError_EXY`. -/
-private def swError_EXY_strict
+def swError_EXY_strict
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (n : ℕ) {M_X M_Y : ℕ} (ε : ℝ)
     (f_X : (Fin n → α) → Fin M_X) (f_Y : (Fin n → β) → Fin M_Y) : Set Ω :=
@@ -466,6 +466,240 @@ lemma integrable_of_nonneg_le_one_of_discrete {γ : Type*}
     _ < ∞ := measure_lt_top _ _
 
 omit [DecidableEq α] [DecidableEq β] in
+lemma swErrorProb_le_one
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) {n M_X M_Y : ℕ} (ε : ℝ)
+    (f_X : (Fin n → α) → Fin M_X) (f_Y : (Fin n → β) → Fin M_Y) :
+    swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+        (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) ≤ 1 := by
+  unfold swErrorProb
+  have h_le : μ {ω | swJointTypicalDecoder μ Xs Ys ε f_X f_Y
+                (f_X (jointRV Xs n ω), f_Y (jointRV Ys n ω))
+                ≠ (jointRV Xs n ω, jointRV Ys n ω)} ≤ 1 :=
+    prob_le_one
+  unfold Measure.real
+  exact (ENNReal.toReal_le_toReal (measure_ne_top _ _) (by simp)).mpr h_le
+
+omit [DecidableEq α] [DecidableEq β] in
+lemma measureReal_swError_EXY_strict_le_one
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) {n M_X M_Y : ℕ} (ε : ℝ)
+    (f_X : (Fin n → α) → Fin M_X) (f_Y : (Fin n → β) → Fin M_Y) :
+    μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ≤ 1 := by
+  have h_le : μ (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ≤ 1 := prob_le_one
+  unfold Measure.real
+  exact (ENNReal.toReal_le_toReal (measure_ne_top _ _) (by simp)).mpr h_le
+
+omit [DecidableEq α] [DecidableEq β] in
+lemma integrable_measureReal_swError_EXY_strict_inner
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) {n M_X M_Y : ℕ} [NeZero M_Y] (ε : ℝ)
+    (f_X : (Fin n → α) → Fin M_X) :
+    Integrable (fun f_Y : (Fin n → β) → Fin M_Y =>
+        μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y)) (binningMeasure β n M_Y) :=
+  integrable_of_nonneg_le_one_of_discrete (binningMeasure β n M_Y) _
+    (fun _ => measureReal_nonneg)
+    (fun f_Y => measureReal_swError_EXY_strict_le_one μ Xs Ys ε f_X f_Y)
+
+omit [DecidableEq α] [DecidableEq β] in
+lemma integrable_measureReal_swError_EXY_strict_outer
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) {n M_X M_Y : ℕ} [NeZero M_X] [NeZero M_Y]
+    (ε : ℝ) :
+    Integrable (fun f_X : (Fin n → α) → Fin M_X =>
+        ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y)
+          ∂(binningMeasure β n M_Y)) (binningMeasure α n M_X) := by
+  refine integrable_of_nonneg_le_one_of_discrete (binningMeasure α n M_X) _ ?_ ?_
+  · intro f_X
+    refine integral_nonneg (fun f_Y => ?_)
+    exact measureReal_nonneg
+  · intro f_X
+    calc ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ∂(binningMeasure β n M_Y)
+        ≤ ∫ _ : (Fin n → β) → Fin M_Y, (1 : ℝ) ∂(binningMeasure β n M_Y) :=
+          integral_mono (integrable_measureReal_swError_EXY_strict_inner μ Xs Ys ε f_X)
+            (integrable_const 1)
+            (fun f_Y => measureReal_swError_EXY_strict_le_one μ Xs Ys ε f_X f_Y)
+      _ = 1 := by rw [integral_const, probReal_univ, smul_eq_mul, mul_one]
+
+omit [DecidableEq α] [DecidableEq β] in
+lemma swErrorProb_inner_integral_le
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) {n M_X M_Y : ℕ} [NeZero M_Y] (ε : ℝ)
+    (f_X : (Fin n → α) → Fin M_X)
+    (h_pointwise : ∀ (f_Y : (Fin n → β) → Fin M_Y),
+      swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+            (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
+        ≤ μ.real (swError_E0 μ Xs Ys n ε)
+          + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
+          + 2 * μ.real (swError_EY μ Xs Ys n ε f_Y)
+          + μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y))
+    (hInt_swErr_inner :
+      Integrable (fun f_Y => swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+                  (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)) (binningMeasure β n M_Y))
+    (hInt_EY : Integrable
+      (fun f_Y => μ.real (swError_EY μ Xs Ys n ε f_Y)) (binningMeasure β n M_Y))
+    (hInt_EXY_strict_inner : Integrable
+      (fun f_Y => μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y))
+        (binningMeasure β n M_Y)) :
+    ∫ f_Y, swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+                (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) ∂(binningMeasure β n M_Y)
+      ≤ μ.real (swError_E0 μ Xs Ys n ε)
+        + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
+        + 2 * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y) ∂(binningMeasure β n M_Y))
+        + ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y)
+            ∂(binningMeasure β n M_Y) := by
+  set B_Y : Measure ((Fin n → β) → Fin M_Y) := binningMeasure β n M_Y with hB_Y_def
+  have h_const_E0 : Integrable
+      (fun _ : (Fin n → β) → Fin M_Y => μ.real (swError_E0 μ Xs Ys n ε)) B_Y :=
+    integrable_const _
+  have h_const_EX : Integrable
+      (fun _ : (Fin n → β) → Fin M_Y =>
+        (2 : ℝ) * μ.real (swError_EX μ Xs Ys n ε f_X)) B_Y :=
+    integrable_const _
+  have h_2EY : Integrable
+      (fun f_Y => (2 : ℝ) * μ.real (swError_EY μ Xs Ys n ε f_Y)) B_Y :=
+    hInt_EY.const_mul 2
+  have h_RHS_integrable : Integrable
+      (fun f_Y => μ.real (swError_E0 μ Xs Ys n ε)
+                + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
+                + 2 * μ.real (swError_EY μ Xs Ys n ε f_Y)
+                + μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y)) B_Y := by
+    have h_sum1 : Integrable
+        (fun _ : (Fin n → β) → Fin M_Y =>
+          μ.real (swError_E0 μ Xs Ys n ε)
+            + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)) B_Y :=
+      h_const_E0.add h_const_EX
+    have h_sum2 : Integrable
+        (fun f_Y =>
+          μ.real (swError_E0 μ Xs Ys n ε)
+            + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
+            + 2 * μ.real (swError_EY μ Xs Ys n ε f_Y)) B_Y :=
+      h_sum1.add h_2EY
+    exact h_sum2.add hInt_EXY_strict_inner
+  have h_mono : ∫ f_Y, swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+                    (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) ∂B_Y
+          ≤ ∫ f_Y, (μ.real (swError_E0 μ Xs Ys n ε)
+                + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
+                + 2 * μ.real (swError_EY μ Xs Ys n ε f_Y)
+                + μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y)) ∂B_Y :=
+    integral_mono hInt_swErr_inner h_RHS_integrable h_pointwise
+  have h_split : ∫ f_Y, (μ.real (swError_E0 μ Xs Ys n ε)
+              + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
+              + 2 * μ.real (swError_EY μ Xs Ys n ε f_Y)
+              + μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y)) ∂B_Y
+        = μ.real (swError_E0 μ Xs Ys n ε)
+          + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
+          + 2 * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y) ∂B_Y)
+          + ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ∂B_Y := by
+    have h_sum1 : Integrable
+        (fun _ : (Fin n → β) → Fin M_Y =>
+          μ.real (swError_E0 μ Xs Ys n ε)
+            + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)) B_Y :=
+      h_const_E0.add h_const_EX
+    have h_sum2 : Integrable
+        (fun f_Y =>
+          μ.real (swError_E0 μ Xs Ys n ε)
+            + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
+            + 2 * μ.real (swError_EY μ Xs Ys n ε f_Y)) B_Y :=
+      h_sum1.add h_2EY
+    rw [integral_add h_sum2 hInt_EXY_strict_inner,
+        integral_add h_sum1 h_2EY,
+        integral_add h_const_E0 h_const_EX]
+    rw [integral_const, probReal_univ, smul_eq_mul, one_mul]
+    rw [integral_const, probReal_univ, smul_eq_mul, one_mul]
+    rw [integral_const_mul]
+  linarith [h_mono, h_split.le, h_split.ge]
+
+omit [DecidableEq α] [DecidableEq β] in
+lemma integrable_swError_outer_bound
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) {n M_X M_Y : ℕ} [NeZero M_X] [NeZero M_Y]
+    (ε : ℝ)
+    (hInt_EX : Integrable
+      (fun f_X => μ.real (swError_EX μ Xs Ys n ε f_X)) (binningMeasure α n M_X))
+    (hInt_EXY_strict_outer : Integrable
+      (fun f_X => ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y)
+        ∂(binningMeasure β n M_Y)) (binningMeasure α n M_X)) :
+    Integrable
+      (fun f_X => μ.real (swError_E0 μ Xs Ys n ε)
+                + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
+                + 2 * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y)
+                    ∂(binningMeasure β n M_Y))
+                + ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y)
+                    ∂(binningMeasure β n M_Y)) (binningMeasure α n M_X) := by
+  set B_X : Measure ((Fin n → α) → Fin M_X) := binningMeasure α n M_X with hB_X_def
+  set B_Y : Measure ((Fin n → β) → Fin M_Y) := binningMeasure β n M_Y with hB_Y_def
+  have h_const_E0 : Integrable
+      (fun _ : (Fin n → α) → Fin M_X => μ.real (swError_E0 μ Xs Ys n ε)) B_X :=
+    integrable_const _
+  have h_2EX : Integrable
+      (fun f_X => (2 : ℝ) * μ.real (swError_EX μ Xs Ys n ε f_X)) B_X :=
+    hInt_EX.const_mul 2
+  have h_const_2EY : Integrable
+      (fun _ : (Fin n → α) → Fin M_X =>
+        (2 : ℝ) * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y) ∂B_Y)) B_X :=
+    integrable_const _
+  have h_sum1 : Integrable
+      (fun f_X => μ.real (swError_E0 μ Xs Ys n ε)
+                + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)) B_X :=
+    h_const_E0.add h_2EX
+  have h_sum2 : Integrable
+      (fun f_X => μ.real (swError_E0 μ Xs Ys n ε)
+                + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
+                + 2 * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y) ∂B_Y)) B_X :=
+    h_sum1.add h_const_2EY
+  exact h_sum2.add hInt_EXY_strict_outer
+
+omit [DecidableEq α] [DecidableEq β] in
+lemma integral_swError_outer_split
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) {n M_X M_Y : ℕ} [NeZero M_X] [NeZero M_Y]
+    (ε : ℝ)
+    (hInt_EX : Integrable
+      (fun f_X => μ.real (swError_EX μ Xs Ys n ε f_X)) (binningMeasure α n M_X))
+    (hInt_EXY_strict_outer : Integrable
+      (fun f_X => ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y)
+        ∂(binningMeasure β n M_Y)) (binningMeasure α n M_X)) :
+    ∫ f_X, (μ.real (swError_E0 μ Xs Ys n ε)
+            + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
+            + 2 * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y)
+                ∂(binningMeasure β n M_Y))
+            + ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y)
+                ∂(binningMeasure β n M_Y)) ∂(binningMeasure α n M_X)
+      = μ.real (swError_E0 μ Xs Ys n ε)
+        + 2 * (∫ f_X, μ.real (swError_EX μ Xs Ys n ε f_X) ∂(binningMeasure α n M_X))
+        + 2 * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y) ∂(binningMeasure β n M_Y))
+        + ∫ f_X, ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y)
+            ∂(binningMeasure β n M_Y) ∂(binningMeasure α n M_X) := by
+  set B_X : Measure ((Fin n → α) → Fin M_X) := binningMeasure α n M_X with hB_X_def
+  set B_Y : Measure ((Fin n → β) → Fin M_Y) := binningMeasure β n M_Y with hB_Y_def
+  have h_const_E0 : Integrable
+      (fun _ : (Fin n → α) → Fin M_X => μ.real (swError_E0 μ Xs Ys n ε)) B_X :=
+    integrable_const _
+  have h_2EX : Integrable
+      (fun f_X => (2 : ℝ) * μ.real (swError_EX μ Xs Ys n ε f_X)) B_X :=
+    hInt_EX.const_mul 2
+  have h_const_2EY : Integrable
+      (fun _ : (Fin n → α) → Fin M_X =>
+        (2 : ℝ) * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y) ∂B_Y)) B_X :=
+    integrable_const _
+  have h_sum1 : Integrable
+      (fun f_X => μ.real (swError_E0 μ Xs Ys n ε)
+                + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)) B_X :=
+    h_const_E0.add h_2EX
+  have h_sum2 : Integrable
+      (fun f_X => μ.real (swError_E0 μ Xs Ys n ε)
+                + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
+                + 2 * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y) ∂B_Y)) B_X :=
+    h_sum1.add h_const_2EY
+  rw [integral_add h_sum2 hInt_EXY_strict_outer,
+      integral_add h_sum1 h_const_2EY,
+      integral_add h_const_E0 h_2EX]
+  rw [integral_const, probReal_univ, smul_eq_mul, one_mul]
+  rw [integral_const_mul]
+  rw [integral_const, probReal_univ, smul_eq_mul, one_mul]
+
+omit [DecidableEq α] [DecidableEq β] in
 /-- The total binning-expectation bound, combining the four-event decomposition
 with the `swError_EXY` subset absorption. The factor `2` absorbs the double count
 in `EXY ⊆ EX ∪ EY ∪ EXY_strict`. -/
@@ -562,219 +796,63 @@ private theorem swErrorProb_total_expectation_le
               (swError_EX μ Xs Ys n ε f_X) (swError_EY μ Xs Ys n ε f_Y)
             linarith
     linarith
-  -- Integrability template: any `μ.real (...)` integrand is bounded by 1,
-  -- discrete (finite domain → measurable), hence integrable.
-  -- We will need these for various per-summand sub-integrands.
-  have h_meas_inner : ∀ f_X : (Fin n → α) → Fin M_X,
-      AEStronglyMeasurable
-        (fun f_Y => swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
-                      (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)) B_Y := fun f_X =>
-    Measurable.aestronglyMeasurable Measurable.of_discrete
-  have h_meas_outer :
-      AEStronglyMeasurable
-        (fun f_X => ∫ f_Y, swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
-                      (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) ∂B_Y) B_X :=
-    Measurable.aestronglyMeasurable Measurable.of_discrete
-  -- Build a generic integrability lemma for "bounded by 1 + discrete" functions
-  -- on the product of two probability measures (B_X.prod B_Y) and on each
-  -- marginal.
-  -- Helper: every nonnegative ≤ 1 discrete function on `B_X` is integrable.
-  have hInt_B_X : ∀ g : ((Fin n → α) → Fin M_X) → ℝ,
-      (∀ f_X, 0 ≤ g f_X) → (∀ f_X, g f_X ≤ 1) → Integrable g B_X := fun g h_nn h_le =>
-    integrable_of_nonneg_le_one_of_discrete B_X g h_nn h_le
-  have hInt_B_Y : ∀ g : ((Fin n → β) → Fin M_Y) → ℝ,
-      (∀ f_Y, 0 ≤ g f_Y) → (∀ f_Y, g f_Y ≤ 1) → Integrable g B_Y := fun g h_nn h_le =>
-    integrable_of_nonneg_le_one_of_discrete B_Y g h_nn h_le
-  -- swErrorProb is bounded by 1 (it's a probability).
-  have h_swErr_le_one : ∀ (f_X : (Fin n → α) → Fin M_X)
-      (f_Y : (Fin n → β) → Fin M_Y),
-      swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
-        (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) ≤ 1 := by
-    intro f_X f_Y
-    unfold swErrorProb
-    have h_le : μ {ω | swJointTypicalDecoder μ Xs Ys ε f_X f_Y
-                  (f_X (jointRV Xs n ω), f_Y (jointRV Ys n ω))
-                  ≠ (jointRV Xs n ω, jointRV Ys n ω)} ≤ 1 :=
-      prob_le_one
-    unfold Measure.real
-    have : (μ {ω | swJointTypicalDecoder μ Xs Ys ε f_X f_Y
-            (f_X (jointRV Xs n ω), f_Y (jointRV Ys n ω))
-            ≠ (jointRV Xs n ω, jointRV Ys n ω)}).toReal ≤ 1 :=
-      (ENNReal.toReal_le_toReal (measure_ne_top _ _) (by simp)).mpr h_le
-    exact this
-  have h_swErr_nn : ∀ (f_X : (Fin n → α) → Fin M_X)
-      (f_Y : (Fin n → β) → Fin M_Y),
-      0 ≤ swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
-        (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) := by
-    intro f_X f_Y
-    unfold swErrorProb
-    exact measureReal_nonneg
-  -- Integrability of swErrorProb in f_Y for any f_X.
+  -- Integrability facts for the per-summand sub-integrands (bounded by 1, discrete).
   have hInt_swErr_inner : ∀ f_X : (Fin n → α) → Fin M_X,
       Integrable (fun f_Y => swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
                   (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)) B_Y := fun f_X =>
-    hInt_B_Y _ (h_swErr_nn f_X) (h_swErr_le_one f_X)
-  -- Integrability of μ.real (swError_EX) in f_X (it's f_Y-independent, but we
-  -- use this on the B_X axis).
+    integrable_of_nonneg_le_one_of_discrete B_Y _
+      (fun _ => by unfold swErrorProb; exact measureReal_nonneg)
+      (fun f_Y => swErrorProb_le_one μ Xs Ys ε f_X f_Y)
   have hInt_EX : Integrable
       (fun f_X => μ.real (swError_EX μ Xs Ys n ε f_X)) B_X := by
-    refine hInt_B_X _ (fun _ => measureReal_nonneg) (fun f_X => ?_)
+    refine integrable_of_nonneg_le_one_of_discrete B_X _
+      (fun _ => measureReal_nonneg) (fun f_X => ?_)
     have h_le : μ (swError_EX μ Xs Ys n ε f_X) ≤ 1 := prob_le_one
     unfold Measure.real
     exact (ENNReal.toReal_le_toReal (measure_ne_top _ _) (by simp)).mpr h_le
   have hInt_EY : Integrable
       (fun f_Y => μ.real (swError_EY μ Xs Ys n ε f_Y)) B_Y := by
-    refine hInt_B_Y _ (fun _ => measureReal_nonneg) (fun f_Y => ?_)
+    refine integrable_of_nonneg_le_one_of_discrete B_Y _
+      (fun _ => measureReal_nonneg) (fun f_Y => ?_)
     have h_le : μ (swError_EY μ Xs Ys n ε f_Y) ≤ 1 := prob_le_one
-    unfold Measure.real
-    exact (ENNReal.toReal_le_toReal (measure_ne_top _ _) (by simp)).mpr h_le
-  -- Integrability of inner integral over EXY_strict (∫ f_Y, μ.real EXY_strict ∂B_Y)
-  -- in f_X. Each inner integral is bounded by 1.
-  have h_EXY_strict_nn : ∀ (f_X : (Fin n → α) → Fin M_X)
-      (f_Y : (Fin n → β) → Fin M_Y),
-      0 ≤ μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) := fun _ _ =>
-    measureReal_nonneg
-  have h_EXY_strict_le_one : ∀ (f_X : (Fin n → α) → Fin M_X)
-      (f_Y : (Fin n → β) → Fin M_Y),
-      μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ≤ 1 := by
-    intro f_X f_Y
-    have h_le : μ (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ≤ 1 := prob_le_one
     unfold Measure.real
     exact (ENNReal.toReal_le_toReal (measure_ne_top _ _) (by simp)).mpr h_le
   have hInt_EXY_strict_inner : ∀ f_X : (Fin n → α) → Fin M_X,
       Integrable (fun f_Y => μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y)) B_Y :=
-    fun f_X => hInt_B_Y _ (fun _ => h_EXY_strict_nn f_X _)
-      (fun _ => h_EXY_strict_le_one f_X _)
+    fun f_X => integrable_measureReal_swError_EXY_strict_inner μ Xs Ys ε f_X
   have hInt_EXY_strict_outer : Integrable
-      (fun f_X => ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ∂B_Y) B_X := by
-    refine hInt_B_X _ ?_ ?_
-    · intro f_X
-      refine integral_nonneg (fun f_Y => ?_)
-      exact h_EXY_strict_nn f_X f_Y
-    · intro f_X
-      calc ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ∂B_Y
-          ≤ ∫ _ : (Fin n → β) → Fin M_Y, (1 : ℝ) ∂B_Y :=
-            integral_mono (hInt_EXY_strict_inner f_X) (integrable_const 1)
-              (fun f_Y => h_EXY_strict_le_one f_X f_Y)
-        _ = 1 := by rw [integral_const, probReal_univ, smul_eq_mul, mul_one]
+      (fun f_X => ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ∂B_Y) B_X :=
+    integrable_measureReal_swError_EXY_strict_outer μ Xs Ys ε
   -- Integrability of swErrorProb outer integral (in f_X), bounded by 1.
   have hInt_swErr_outer : Integrable
       (fun f_X => ∫ f_Y, swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
                     (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) ∂B_Y) B_X := by
-    refine hInt_B_X _ ?_ ?_
+    refine integrable_of_nonneg_le_one_of_discrete B_X _ ?_ ?_
     · intro f_X
-      exact integral_nonneg (fun f_Y => h_swErr_nn f_X f_Y)
+      exact integral_nonneg (fun f_Y => by unfold swErrorProb; exact measureReal_nonneg)
     · intro f_X
       calc ∫ f_Y, swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
                     (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) ∂B_Y
           ≤ ∫ _ : (Fin n → β) → Fin M_Y, (1 : ℝ) ∂B_Y :=
             integral_mono (hInt_swErr_inner f_X) (integrable_const 1)
-              (fun f_Y => h_swErr_le_one f_X f_Y)
+              (fun f_Y => swErrorProb_le_one μ Xs Ys ε f_X f_Y)
         _ = 1 := by rw [integral_const, probReal_univ, smul_eq_mul, mul_one]
-  -- Inner integral inequality (for each fixed f_X):
-  -- ∫ f_Y, swErrorProb ... ∂B_Y ≤ μ.real E0 + 2 μ.real (EX f_X)
-  --                              + 2 (∫ f_Y, μ.real (EY f_Y) ∂B_Y)
-  --                              + ∫ f_Y, μ.real (EXY_strict f_X f_Y) ∂B_Y.
+  -- Inner integral inequality (for each fixed f_X) and outer monotone bound.
   have h_inner_ineq : ∀ f_X : (Fin n → α) → Fin M_X,
       ∫ f_Y, swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
                   (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) ∂B_Y
         ≤ μ.real (swError_E0 μ Xs Ys n ε)
           + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
           + 2 * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y) ∂B_Y)
-          + ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ∂B_Y := by
-    intro f_X
-    -- Build the RHS as an integrand for integral_mono.
-    have h_const_E0 : Integrable
-        (fun _ : (Fin n → β) → Fin M_Y => μ.real (swError_E0 μ Xs Ys n ε)) B_Y :=
-      integrable_const _
-    have h_const_EX : Integrable
-        (fun _ : (Fin n → β) → Fin M_Y =>
-          (2 : ℝ) * μ.real (swError_EX μ Xs Ys n ε f_X)) B_Y :=
-      integrable_const _
-    have h_2EY : Integrable
-        (fun f_Y => (2 : ℝ) * μ.real (swError_EY μ Xs Ys n ε f_Y)) B_Y :=
-      hInt_EY.const_mul 2
-    have h_EXY_strict_inner_f := hInt_EXY_strict_inner f_X
-    -- pointwise summand-by-summand.
-    have h_RHS_integrable : Integrable
-        (fun f_Y => μ.real (swError_E0 μ Xs Ys n ε)
-                  + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
-                  + 2 * μ.real (swError_EY μ Xs Ys n ε f_Y)
-                  + μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y)) B_Y := by
-      have h_sum1 : Integrable
-          (fun _ : (Fin n → β) → Fin M_Y =>
-            μ.real (swError_E0 μ Xs Ys n ε)
-              + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)) B_Y :=
-        h_const_E0.add h_const_EX
-      have h_sum2 : Integrable
-          (fun f_Y =>
-            μ.real (swError_E0 μ Xs Ys n ε)
-              + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
-              + 2 * μ.real (swError_EY μ Xs Ys n ε f_Y)) B_Y :=
-        h_sum1.add h_2EY
-      exact h_sum2.add h_EXY_strict_inner_f
-    have h_mono : ∫ f_Y, swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
-                      (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) ∂B_Y
-            ≤ ∫ f_Y, (μ.real (swError_E0 μ Xs Ys n ε)
-                  + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
-                  + 2 * μ.real (swError_EY μ Xs Ys n ε f_Y)
-                  + μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y)) ∂B_Y :=
-      integral_mono (hInt_swErr_inner f_X) h_RHS_integrable
-        (fun f_Y => h_pointwise f_X f_Y)
-    -- Split the integrated RHS into 4 pieces.
-    have h_split : ∫ f_Y, (μ.real (swError_E0 μ Xs Ys n ε)
-                + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
-                + 2 * μ.real (swError_EY μ Xs Ys n ε f_Y)
-                + μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y)) ∂B_Y
-          = μ.real (swError_E0 μ Xs Ys n ε)
-            + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
-            + 2 * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y) ∂B_Y)
-            + ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ∂B_Y := by
-      have h_sum1 : Integrable
-          (fun _ : (Fin n → β) → Fin M_Y =>
-            μ.real (swError_E0 μ Xs Ys n ε)
-              + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)) B_Y :=
-        h_const_E0.add h_const_EX
-      have h_sum2 : Integrable
-          (fun f_Y =>
-            μ.real (swError_E0 μ Xs Ys n ε)
-              + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
-              + 2 * μ.real (swError_EY μ Xs Ys n ε f_Y)) B_Y :=
-        h_sum1.add h_2EY
-      rw [integral_add h_sum2 h_EXY_strict_inner_f,
-          integral_add h_sum1 h_2EY,
-          integral_add h_const_E0 h_const_EX]
-      rw [integral_const, probReal_univ, smul_eq_mul, one_mul]
-      rw [integral_const, probReal_univ, smul_eq_mul, one_mul]
-      rw [integral_const_mul]
-    linarith [h_mono, h_split.le, h_split.ge]
-  -- Integrability of the inner-bound (the RHS of h_inner_ineq) over B_X.
+          + ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ∂B_Y := fun f_X =>
+    swErrorProb_inner_integral_le μ Xs Ys ε f_X (fun f_Y => h_pointwise f_X f_Y)
+      (hInt_swErr_inner f_X) hInt_EY (hInt_EXY_strict_inner f_X)
   have hInt_RHS_outer : Integrable
       (fun f_X => μ.real (swError_E0 μ Xs Ys n ε)
                 + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
                 + 2 * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y) ∂B_Y)
-                + ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ∂B_Y) B_X := by
-    have h_const_E0 : Integrable
-        (fun _ : (Fin n → α) → Fin M_X => μ.real (swError_E0 μ Xs Ys n ε)) B_X :=
-      integrable_const _
-    have h_2EX : Integrable
-        (fun f_X => (2 : ℝ) * μ.real (swError_EX μ Xs Ys n ε f_X)) B_X :=
-      hInt_EX.const_mul 2
-    have h_const_2EY : Integrable
-        (fun _ : (Fin n → α) → Fin M_X =>
-          (2 : ℝ) * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y) ∂B_Y)) B_X :=
-      integrable_const _
-    have h_sum1 : Integrable
-        (fun f_X => μ.real (swError_E0 μ Xs Ys n ε)
-                  + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)) B_X :=
-      h_const_E0.add h_2EX
-    have h_sum2 : Integrable
-        (fun f_X => μ.real (swError_E0 μ Xs Ys n ε)
-                  + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
-                  + 2 * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y) ∂B_Y)) B_X :=
-      h_sum1.add h_const_2EY
-    exact h_sum2.add hInt_EXY_strict_outer
-  -- Apply integral_mono on the outer integral.
+                + ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ∂B_Y) B_X :=
+    integrable_swError_outer_bound μ Xs Ys ε hInt_EX hInt_EXY_strict_outer
   have h_outer_mono :
       ∫ f_X, ∫ f_Y, swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
                       (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) ∂B_Y ∂B_X
@@ -792,32 +870,8 @@ private theorem swErrorProb_total_expectation_le
         = μ.real (swError_E0 μ Xs Ys n ε)
           + 2 * (∫ f_X, μ.real (swError_EX μ Xs Ys n ε f_X) ∂B_X)
           + 2 * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y) ∂B_Y)
-          + ∫ f_X, ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ∂B_Y ∂B_X := by
-    have h_const_E0 : Integrable
-        (fun _ : (Fin n → α) → Fin M_X => μ.real (swError_E0 μ Xs Ys n ε)) B_X :=
-      integrable_const _
-    have h_2EX : Integrable
-        (fun f_X => (2 : ℝ) * μ.real (swError_EX μ Xs Ys n ε f_X)) B_X :=
-      hInt_EX.const_mul 2
-    have h_const_2EY : Integrable
-        (fun _ : (Fin n → α) → Fin M_X =>
-          (2 : ℝ) * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y) ∂B_Y)) B_X :=
-      integrable_const _
-    have h_sum1 : Integrable
-        (fun f_X => μ.real (swError_E0 μ Xs Ys n ε)
-                  + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)) B_X :=
-      h_const_E0.add h_2EX
-    have h_sum2 : Integrable
-        (fun f_X => μ.real (swError_E0 μ Xs Ys n ε)
-                  + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
-                  + 2 * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y) ∂B_Y)) B_X :=
-      h_sum1.add h_const_2EY
-    rw [integral_add h_sum2 hInt_EXY_strict_outer,
-        integral_add h_sum1 h_const_2EY,
-        integral_add h_const_E0 h_2EX]
-    rw [integral_const, probReal_univ, smul_eq_mul, one_mul]
-    rw [integral_const_mul]
-    rw [integral_const, probReal_univ, smul_eq_mul, one_mul]
+          + ∫ f_X, ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ∂B_Y ∂B_X :=
+    integral_swError_outer_split μ Xs Ys ε hInt_EX hInt_EXY_strict_outer
   -- Combine the outer monotone bound with the split + E.2/E.3/E.4.
   calc ∫ f_X, ∫ f_Y, swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
                       (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) ∂B_Y ∂B_X
