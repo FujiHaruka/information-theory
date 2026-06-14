@@ -112,7 +112,7 @@ conclusion `Tendsto … N(B)` nor either envelope inequality — those are deriv
 `entropyPower_rescaled_path_tendsto` by calling the genuine lemmas with these
 preconditions.
 
-Independent honesty audit 2026-06-05: non-load-bearing AFFIRMED. Each conjunct was
+Independent honesty audit: non-load-bearing AFFIRMED. Each conjunct was
 matched verbatim to a regularity precondition of `differentialEntropy_add_ge_of_indep`
 (lower bundle, X:=B Y:=A/√t) or `differentialEntropy_le_gaussian_of_variance_le`
 (upper bundle). The variance-bound conjunct `∫(x-m)² ≤ varA/t + v_B` is the standard
@@ -195,7 +195,7 @@ The squeeze structure (constant lower envelope from independent-noise monotonici
 + decaying upper envelope from Gaussian max-entropy → common limit `N(B)`) is the
 genuine analytic content of this lemma. All the per-`t` data feeding the two
 genuine envelope lemmas are threaded as **honest regularity preconditions**
-(policy X, NOT load-bearing): `IndepFun B (A/√t)` (`h_indep`), a.c. of the path laws
+(NOT load-bearing): `IndepFun B (A/√t)` (`h_indep`), a.c. of the path laws
 (`h_path_ac`, `hB_ac`), the 8 fibre integrabilities of the lower-bound lemma
 (`h_lb`), the max-entropy data of the upper-bound lemma (mean / variance bound by
 `varA/t + v_B` / integrabilities, packaged in `h_ub`). The conclusion
@@ -316,7 +316,7 @@ joint-≪-product / squared-deviation / both path-entropy log-integrabilities + 
 conditional-KL cross-entropy integrabilities) are closed genuinely using `hA_ac` + the
 `convDensityAdd` path-density identification + the extracted cross-entropy lemmas
 (`convCrossEntropy_perFibre_integrable` / `convCrossEntropy_zAvg_integrable` /
-`convJointLlr_integrable`, `EPIG2ConvEntropyDensity.lean`). sorryAx-free. -/
+`convJointLlr_integrable`, `EPIG2ConvEntropyDensity.lean`). -/
 
 /-- **Scaling preserves a.c.**: if `P.map A ≪ volume` then `P.map (A/√t) ≪ volume`
 for `t > 0` (the map `(·/√t)` is a Lebesgue-a.c. linear isomorphism). Genuine. -/
@@ -428,7 +428,7 @@ data threaded as `varA`-regularity, construct the per-`t` regularity bundle
 The key insight (demonstrated genuinely here): the fibre of
 `condDistrib (B + A/√t) (A/√t) P` is the translated Gaussian `gaussianReal z v_B` (the
 law of `B + z` by `affineShiftKernel`/Gaussian translation). This **avoids the
-2026-05-25 density-witness wall** for the general fibre: the fibre identification
+density-witness obstruction** for the general fibre: the fibre identification
 `condDistrib (B + A/√t) (A/√t) P =ᵐ affineShiftKernel (P.map B) 1` (`h_fibre_ae`) and
 the per-fibre a.c. `condDistrib z ≪ volume` (`hκ_v`, via `gaussianReal z v_B`) are both
 **closed genuinely** — exactly the conjuncts that are intractable in the general case.
@@ -438,13 +438,10 @@ Gaussian noise law, finite-second-moment `h_mom_A` + `varA`-regularity (`h_var_b
 The bundle being constructed is itself regularity (audited non-load-bearing at its def
 site §3).
 
-**Closure status (proof done — ALL 9 integrability conjuncts genuinely closed,
-2026-06-05):** the theorem and all its transitive helpers are sorryAx-free
-(`#print axioms isRescaledPathRegular_of_methodX` = `[propext, Classical.choice,
-Quot.sound]`). The 3 conditional-KL integrabilities formerly parked are now closed via
-the extracted standalone lemmas in `EPIG2ConvEntropyDensity.lean`
+**All 9 integrability conjuncts are supplied.** The 3 conditional-KL integrabilities are
+supplied via the extracted standalone lemmas in `EPIG2ConvEntropyDensity.lean`
 (`convCrossEntropy_perFibre_integrable` / `convCrossEntropy_zAvg_integrable` /
-`convJointLlr_integrable`, all `#print axioms` clean), instantiated here with the
+`convJointLlr_integrable`), instantiated here with the
 **Gaussian fibre** `q := gaussianPDFReal 0 v_B` (translated by `z`) and the target
 convolution density `g := convDensityAdd pX g_{v_B}`. No signature change was needed:
 because the fibre is Gaussian (not the input density), the joint-llr branch (b)

@@ -33,7 +33,7 @@ limits), and Gaussian additivity yields `R t → 0`. -/
 
 The per-`t` regularity (a.c. + entropy integrability of the three W-path laws for
 the scaling step; the §3 squeeze regularity bundles `IsRescaledPathRegular` for the
-three paths) is threaded as honest preconditions (policy X); the noise Gaussian laws +
+three paths) is threaded as honest preconditions; the noise Gaussian laws +
 independence are regularity. No EPI / Stam core is bundled.
 @audit:ok -/
 theorem csiszarLogRatioGap_tendsto_zero_atTop
@@ -61,7 +61,7 @@ theorem csiszarLogRatioGap_tendsto_zero_atTop
     -- noise laws are a.c. (Gaussian)
     (hZX_ac : (P.map Z_X) ≪ volume) (hZY_ac : (P.map Z_Y) ≪ volume)
     (hZXZY_ac : (P.map (fun ω => Z_X ω + Z_Y ω)) ≪ volume)
-    -- per-path variance data + §3 regularity bundles (policy X, all regularity)
+    -- per-path variance data + §3 regularity bundles (all regularity)
     (varX varY varS : ℝ)
     (h_varX_nn : 0 ≤ varX) (h_varY_nn : 0 ≤ varY) (h_varS_nn : 0 ≤ varS)
     (h_reg_X : IsRescaledPathRegular X Z_X P varX v_X)
@@ -178,7 +178,7 @@ By the order-limit bridge §1 `epi_of_csiszarLogRatioGap_tendsto`, antitonicity 
 `R t → 0` force `R 0 ≥ 0`, hence EPI. **No entropic CLT** — the saturation `R t → 0`
 is the scaling squeeze of §4.
 
-All hypotheses are **honest regularity preconditions** (policy X), the union of the two
+All hypotheses are **honest regularity preconditions**, the union of the two
 pillars' preconditions: pairwise + joint independence (`hXZX`/`hYZY`/`hXYZXY`), the
 three `IsDeBruijnRegularityHyp` / `IsHeatFlowEndpointRegular` density-witness bundles,
 the per-`t` `h_pos_stam` Fisher/Stam/Blachman bundle (ratio antitone side), the noise
@@ -189,20 +189,17 @@ Stam core is supplied genuinely inside the two pillars; the conclusion
 `N(X+Y) ≥ N(X)+N(Y)` is not encoded in any hypothesis. Honest naming
 (`_of_regular`, not bare `_unconditional`): the regularity preconditions are real.
 
-@audit:ok (independent honesty audit 2026-06-05): genuine assembly of two `@audit:ok`
-pillars through one `@audit:ok` bridge; own body `sorry`-free and **transitively
-sorryAx-free** (`#print axioms` = [propext, Classical.choice, Quot.sound]; the
-antitone pillar's stale "G2 continuity wall" docstring note refers to walls CLOSED
-2026-06-05 per audit-tags register). Over-claim check: conclusion is verbatim the
+@audit:ok (independent honesty audit): assembly of two `@audit:ok`
+pillars through one `@audit:ok` bridge. Over-claim check: the conclusion is verbatim the
 case-1 EPI `N(X+Y) ≥ N(X)+N(Y)`, no weaker substitute. Non-load-bearing AFFIRMED via
 core-reconstruction test: the ~30 preconditions are the union of the two pillars'
 regularity bundles; granting them (incl. the per-`t` `h_pos_stam` whose
-`IsStamInequalityHyp` is itself genuinely provable, `wall:stam-step2-density` CLOSED)
+`IsStamInequalityHyp` is itself genuinely provable, `wall:stam-step2-density`)
 does NOT hand the EPI conclusion — that requires the pillars' genuine de Bruijn
-integration + scaling squeeze, neither encoded in any hypothesis. Sufficiency: body
-threads pillar args in matching order and composes via §1 bridge.
-**@audit:superseded-by(entropyPowerExt_add_ge_unconditional)** (2026-06-08): superseded by the
-unconditional EPI via route T; the sole consumer `entropyPower_add_ge_case1_of_methodX` is a dead leaf.
+integration + scaling squeeze, neither encoded in any hypothesis. Sufficiency: the body
+threads pillar args in matching order and composes via the §1 bridge.
+**@audit:superseded-by(entropyPowerExt_add_ge_unconditional)**: superseded by the
+unconditional EPI; the sole consumer `entropyPower_add_ge_case1_of_methodX` is a dead leaf.
 Retained as proof-done. The two-time variant `entropyPower_add_ge_case1_of_regular_twotime` is separate and live. -/
 theorem entropyPower_add_ge_case1_of_regular
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -293,7 +290,7 @@ theorem entropyPower_add_ge_case1_of_regular
 regularity** (a.c. inputs + finite second moments + **standard-normal** `𝒩(0,1)`
 noise laws + 4-tuple independence) **plus de Bruijn per-time regularity**.
 
-**PB-1 unit-noise restate (2026-06-05, `epi-case1-debruijn-producer-plan`)**: the noise
+**Unit-noise restate**: the noise
 laws were generalized `gaussianReal 0 v_X`/`gaussianReal 0 v_Y` (`v_X v_Y` arbitrary
 nonzero). Since the conclusion `N(X+Y) ≥ N(X)+N(Y)` does not mention the noise, the noise
 is an auxiliary variable and fixing it to `𝒩(0,1)` loses no generality. This is required
@@ -303,8 +300,8 @@ threaded `IsDeBruijnRegularityHyp` group (previously vacuous for `v_X ≠ 1`). T
 re-introduces `v_X v_Y := (1 : ℝ≥0)` existentially to keep the `_of_regular` plumbing
 (general `v_B` on the §4 saturation side) unchanged.
 
-@audit-note: independent honesty audit (2026-06-05, fresh auditor, commit c0cd760).
-PB-1 restate VERIFIED to genuinely resolve the latent vacuity defect. The old signature
+@audit-note: independent honesty audit.
+The unit-noise restate resolves the latent vacuity defect. The old signature
 took arbitrary nonzero `v_X v_Y` while threading `IsDeBruijnRegularityHyp X Z_X P`, whose
 `reg_at t ht .Z_law` (= `IsRegularDeBruijnHypV2.Z_law`, `FisherInfoV2DeBruijn.lean:210`)
 hardcodes `P.map Z_X = gaussianReal 0 1` — so for `v_X ≠ 1` the hypotheses `hZX_law` and
@@ -315,11 +312,10 @@ hZX_law⟩` is HONEST (not circular `:= h`, not `:True`): it locally re-derives 
 `∃ v ≠ 0` shape the `_of_regular` plumbing expects, instantiated at the genuine witness
 `v = 1` carried by the unit hypothesis. The conclusion `N(X+Y) ≥ N(X)+N(Y)` is unchanged and
 not weakened; the noise is genuinely auxiliary (absent from the conclusion) so the unit
-restriction loses no generality. Wrapper itself sorryAx-free (orchestrator-confirmed); the
+restriction loses no generality. The
 threaded `IsDeBruijnRegularityHyp` / `h_reg_*` are honest preconditions (residuals live in
 the producer's `integrable_deriv`, see `isDeBruijnRegularityHyp_of_methodX_unitnoise`). Not
-`@audit:ok` only because it threads residual-carrying regularity hyps (type-check done, not
-proof done).
+`@audit:ok` only because it threads residual-carrying regularity hyps.
 
 This wrapper discharges the supply-able preconditions of
 `entropyPower_add_ge_case1_of_regular` from clean method-X data:
@@ -339,8 +335,8 @@ The **de Bruijn per-time regularity group** (`h_reg_*'` / `h_endpt_*` / `h_pos_s
 is **not supplied from method-X** (it depends on the moonshot
 `epi-debruijn-pertime-closure`) and is threaded as an honest precondition.
 
-**@audit:superseded-by(entropyPowerExt_add_ge_unconditional)** (2026-06-08): 0 consumers, carries an
-unresolved de Bruijn per-time wall (`@residual` below). Superseded by the unconditional EPI (route T).
+**@audit:superseded-by(entropyPowerExt_add_ge_unconditional)**: 0 consumers, carries an
+unresolved de Bruijn per-time wall (`@residual` below). Superseded by the unconditional EPI.
 The de Bruijn closure plan `epi-debruijn-pertime-closure` remains a valid standalone goal independently of this supersession.
 @residual(plan:epi-debruijn-pertime-closure) -/
 theorem entropyPower_add_ge_case1_of_methodX
@@ -360,7 +356,7 @@ theorem entropyPower_add_ge_case1_of_methodX
     (hZY_law : P.map Z_Y = gaussianReal 0 1)
     -- method-X: 4-tuple joint independence (inputs/noise all independent)
     (h_iIndep : iIndepFun ![X, Y, Z_X, Z_Y] P)
-    -- de Bruijn per-time regularity (cross-plan thread, NOT supply-able)
+    -- de Bruijn per-time regularity (NOT supply-able from method-X data)
     -- @residual(plan:epi-debruijn-pertime-closure)
     (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
                     (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)

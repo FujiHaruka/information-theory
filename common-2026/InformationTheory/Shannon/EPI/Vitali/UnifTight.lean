@@ -11,8 +11,8 @@ import InformationTheory.Shannon.FisherConvBound
 Genuine standalone implementation of the `hut` input for the layer-2 Vitali
 machinery (`differentialEntropy_convDensity_integral_tendsto`). The main lemma
 `negMulLog_convDensity_unifTight` has the *exact same signature* as the parked
-`EPIG2HeatFlowContinuity.negMulLog_convDensity_unifTight` (`:161`); the orchestrator
-will delegate the parked version to this file.
+`EPIG2HeatFlowContinuity.negMulLog_convDensity_unifTight` (`:161`), to which the parked
+version delegates.
 
 The strategy (inventory `epi-g2-vitali-witness-inventory.md`, category C):
 `f_n := convDensityAdd pX g_{u n} = pX ∗ g_{u n}`. Take `s = Icc (-R) R`; on the tail
@@ -90,7 +90,7 @@ private theorem integral_sq_mul_gaussianPDFReal_shift {t : ℝ} (ht : 0 < t) (y 
     integral_id_mul_gaussianPDFReal ht, integral_gaussianPDFReal_eq_one 0 hv_ne]
   ring
 
-/-- **Convolution-density second moment (GENUINELY CLOSED)**.
+/-- **Convolution-density second moment**.
 For `f_t = pX ∗ g_t` (Gaussian kernel of variance `t`):
 `∫ x², (convDensityAdd pX g_t) ∂volume = (∫ x², pX) + (∫ pX) · t`.
 @audit:ok -/
@@ -265,7 +265,7 @@ theorem convDensityAdd_second_moment_unif_bdd
     mul_le_mul_of_nonneg_left (hB_nn n) hmass_nn
   linarith
 
-/-! ## UT witness removed (2026-06-05)
+/-! ## UT witness removed
 
 The Vitali UnifTight witness `negMulLog_convDensity_unifTight` (parked under
 `wall:approx-identity-L1`) was the layer-2 (`differentialEntropy_convDensity_integral_tendsto`)

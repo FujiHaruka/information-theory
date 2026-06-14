@@ -8,8 +8,7 @@ import InformationTheory.Shannon.EPI.Case1.TwoTime.Object
 The single-time log-ratio object `csiszarLogRatioGap` (`EPIL3Integration.lean`)
 perturbs `X` and `Y` at the **same** time `t`, forcing `s = r = t`. Its sum
 derivative is the variance-2 quantity `2·J_sum`, which does **not** close from
-the harmonic Stam inequality (mechanically refuted in the GS-A3' gate, see
-`docs/shannon/proof-log-epi-case1-genvar-struct.md` §GS-A3').
+the harmonic Stam inequality.
 
 The **two-time object** perturbs `X` at time `s` and `Y` at time `r`
 **independently**, and follows the FII-matched path `s'(t) = 1/J_X(s)`,
@@ -20,13 +19,11 @@ entropy-power reparametrization) is
   `R(t) = log N(s(t),r(t)) − log(N_X(0) + N_Y(0)) − t`,
 
 with derivative `R'(t) = J_S·(1/J_X + 1/J_Y) − 1 ≤ 0` from the **existing**
-harmonic Stam producer (no new Mathlib wall). The arith core gate is PASS
-(proof-log §Two-time object, `twotime_full`); the formulation gate is PASS
-(proof-log §Two-time formulation gate, `ProbeF1.lean`, `e^t` characterization +
-inverse-function chain rule).
+harmonic Stam producer (no new Mathlib wall). The arithmetic core
+(`twotime_full`) and the formulation (`e^t` characterization +
+inverse-function chain rule) both go through.
 
-This file implements the two-time object of
-`docs/shannon/epi-case1-twotime-restructure-plan.md`. As of 2026-06-06 it is
+This file implements the two-time object. It is
 **proof-done** (0 `sorry`, 0 `@residual`): the derivative core
 (`twoTimeLogRatioGap_hasDerivAt`), the endpoints, and the Gaussian-saturation
 limit (`twoTimeLogRatioGap_tendsto_zero_atTop`) are all genuinely closed.

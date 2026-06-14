@@ -19,8 +19,8 @@ integrands `negMulLog (convDensityAdd pX g_{u n})` converge to `negMulLog pX`
 ## Why a subsequence (and why that is enough)
 
 The genuine scaffolding is the **layer-1 L¹ convergence**
-`convDensityAdd_tendsto_L1_zero` (`EPIApproxIdentityL1.lean`, `@audit:ok`,
-sorryAx-free). Composing it with `hu_lim` and feeding it through
+`convDensityAdd_tendsto_L1_zero` (`EPIApproxIdentityL1.lean`, `@audit:ok`).
+Composing it with `hu_lim` and feeding it through
 `tendstoInMeasure_of_tendsto_eLpNorm` (Lp → measure) and
 `TendstoInMeasure.exists_seq_tendsto_ae` (measure → a.e.) yields a.e. convergence
 of `convDensityAdd pX g_{u n} → pX` **along a subsequence** `f (ns i)`
@@ -53,7 +53,7 @@ Along any sequence `u → 0⁺`, the entropy integrands
 **a.e. along a subsequence** `n ↦ u (ns n)` (`StrictMono ns`).
 
 Genuine route: layer-1 L¹ convergence `convDensityAdd_tendsto_L1_zero`
-(`@audit:ok`, sorryAx-free) reparameterised to the sequence `u` via `hu_lim`,
+(`@audit:ok`) reparameterised to the sequence `u` via `hu_lim`,
 then `tendstoInMeasure_of_tendsto_eLpNorm` (Lp → measure) and
 `TendstoInMeasure.exists_seq_tendsto_ae` (measure → a.e. subsequence), and finally
 the continuous map `Real.negMulLog` composed pointwise. No own `sorry`.

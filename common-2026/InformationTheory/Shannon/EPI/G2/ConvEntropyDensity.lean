@@ -26,7 +26,7 @@ We **instantiate the canonical product space** `Ω := ℝ × ℝ`,
 `μ := (volume.withDensity (ofReal ∘ pX)).prod (gaussianReal 0 v_Z)`,
 `X := Prod.fst`, `Z := Prod.snd`. Then `X ⊥ Z` (product independence),
 `μ.map X = withDensity pX`, `μ.map Z = gaussianReal 0 v_Z`, and the 8 preconditions are
-discharged here (or honestly parked).
+discharged here.
 
 ## Status — proof done (0 sorry / 0 residual)
 

@@ -15,9 +15,8 @@ import InformationTheory.Meta.EntryPoint
 /-!
 # EPI G2 (α) upper bound — KL lower-semicontinuity via klFun-Fatou
 
-This file supplies the **(α) upper bound** of the EPI G2 general-sandwich moonshot
-along a constructive route that **avoids the Donsker–Varadhan dual hard direction**
-(the parked `2b` of `epi-g2-general-sandwich-moonshot-plan.md`).
+This file supplies the **(α) upper bound** of the EPI G2 general-sandwich result
+along a constructive route that **avoids the Donsker–Varadhan dual hard direction**.
 
 The route:
 - `klDiv μ γ = ∫⁻ klFun(rnDeriv μ γ) dγ` (`klDiv_eq_lintegral_klFun_of_ac`, the ℝ≥0∞
@@ -32,12 +31,10 @@ The route:
   through `klDiv_toReal_eq_neg_differentialEntropy_sub_cross`
   (`EPIG2BridgeDensityHelpers.lean`, `@audit:ok`).
 
-Per the inventory `docs/shannon/epi-g2-alpha-klfun-fatou-inventory.md`, the genuine
-Mathlib walls along this route are **0**: the missing facts (KL-LSC, withDensity
-rnDeriv quotient) are assemblies of existing parts. The (α) assembly is now
-genuinely **CLOSED** (2026-06-05): the final boundedness step is supplied by the
+The two missing facts (KL-LSC, withDensity rnDeriv quotient) are assemblies of existing
+Mathlib parts. The final boundedness step of the (α) assembly is supplied by the
 pX-only (β) lower bound `negMulLog_convDensity_entropy_ge_density`
-(`EPIG2ConvEntropyDensity.lean`). `negMulLog_convDensity_limsup_le` is sorryAx-free.
+(`EPIG2ConvEntropyDensity.lean`).
 -/
 
 namespace InformationTheory.EPIG2KLFatou
@@ -325,7 +322,7 @@ limsup bounded by the limit entropy `∫ negMulLog pX` along any `u → 0⁺`:
 
 `limsup (fun n => ∫ x, negMulLog (convDensityAdd pX g_{u n} x)) atTop ≤ ∫ x, negMulLog (pX x)`.
 
-ROUTE (genuine pieces all in this file, sorryAx-free — CLOSED 2026-06-05):
+ROUTE (the pieces all live in this file):
 - W1 `klDiv_le_liminf_of_ae_tendsto` gives `klDiv μ γ ≤ liminf klDiv (μ_n) γ` (ℝ≥0∞),
 - W2 `rnDeriv_withDensity_quotient_ae` identifies `rnDeriv μ_n γ =ᵐ[γ] ofReal (f_n/g)`,
 - W4 `convDensity_tendsto_ae_subseq` supplies `f_n → pX` a.e. (subsequence),
@@ -334,10 +331,10 @@ ROUTE (genuine pieces all in this file, sorryAx-free — CLOSED 2026-06-05):
   `(klDiv μ_n γ).toReal` into `−h(μ_n) − cross_n`, and `tendsto_of_subseq_tendsto`
   promotes the subsequence bound to the full sequence.
 
-CLOSURE (the former parked `hKL_limsup` step, now genuine): the boundedness that the
-ℝ≥0∞ → `toReal` transfer of W1 required is supplied by the **pX-only (β) lower bound**
+BOUNDEDNESS (the `hKL_limsup` step): the boundedness that the
+ℝ≥0∞ → `toReal` transfer of W1 requires is supplied by the **pX-only (β) lower bound**
 `negMulLog_convDensity_entropy_ge_density` (`EPIG2ConvEntropyDensity.lean`, `@audit:ok`,
-sorryAx-free, via the genuine `cond-diff-entropy` route): each `h(μ_n) ≥ h(pX)`, so
+via the `cond-diff-entropy` route): each `h(μ_n) ≥ h(pX)`, so
 `KLr n = −h(μ_n) − cross_n ≤ −cross_n − h(pX)`, which converges (W3) and hence bounds
 `KLr` above. KL finiteness `klDiv μ_n γ ≠ ∞` (and `klDiv μ γ ≠ ∞`) is the genuine
 llr-integrability content, established from the volume-density entropy + cross
