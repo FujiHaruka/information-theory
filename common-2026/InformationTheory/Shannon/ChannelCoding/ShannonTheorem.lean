@@ -570,6 +570,85 @@ lemma exists_N_two_ceil_exp_le
     h_lhs_real.trans (h_target_real.trans h_rhs_real)
   exact_mod_cast h_combined
 
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
+lemma exists_subcode_maxError_lt_two_mul
+    {n M' : ℕ} (c : Code M' n α β) (W' : Channel α β) [IsMarkovKernel W']
+    {R R' ε' : ℝ} (hR_pos : 0 < R)
+    (hM'_lb : Nat.ceil (Real.exp ((n : ℝ) * R')) ≤ M')
+    (hrate : 2 * Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ Nat.ceil (Real.exp ((n : ℝ) * R')))
+    (h_avg_lt : (c.averageErrorProb W').toReal < ε') :
+    ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M) (cs : Code M n α β),
+      ∀ m, (cs.errorProbAt W' m).toReal < 2 * ε' := by
+  classical
+  have hK : (1 : ℝ) < 2 := by norm_num
+  have h_filter_bound := errorProbAt_filter_card_bound (M := M') (n := n) c W' hK
+  set T : Finset (Fin M') := (Finset.univ : Finset (Fin M')).filter
+      (fun m => 2 * (c.averageErrorProb W').toReal <
+        (c.errorProbAt W' m).toReal) with hT_def
+  set S : Finset (Fin M') := (Finset.univ : Finset (Fin M')).filter
+      (fun m => (c.errorProbAt W' m).toReal ≤
+        2 * (c.averageErrorProb W').toReal) with hS_def
+  have hST_partition : S.card + T.card = M' := by
+    have h_union : S ∪ T = Finset.univ := by
+      apply Finset.eq_univ_iff_forall.mpr
+      intro m
+      rw [Finset.mem_union, hS_def, hT_def, Finset.mem_filter, Finset.mem_filter]
+      rcases le_or_gt ((c.errorProbAt W' m).toReal)
+          (2 * (c.averageErrorProb W').toReal) with h | h
+      · exact Or.inl ⟨Finset.mem_univ m, h⟩
+      · exact Or.inr ⟨Finset.mem_univ m, h⟩
+    have h_disj : Disjoint S T := by
+      rw [hS_def, hT_def]
+      refine Finset.disjoint_filter.mpr ?_
+      intro m _ hm
+      exact not_lt_of_ge hm
+    have := Finset.card_union_of_disjoint h_disj
+    rw [h_union, Finset.card_univ, Fintype.card_fin] at this
+    linarith
+  have h_T_card_le : 2 * T.card ≤ M' := by
+    have h_real : ((T.card : ℝ) * 2 : ℝ) ≤ (M' : ℝ) := h_filter_bound
+    have h_real' : ((2 * T.card : ℕ) : ℝ) ≤ ((M' : ℕ) : ℝ) := by
+      push_cast; linarith
+    exact_mod_cast h_real'
+  have h_2S_ge_M : M' ≤ 2 * S.card := by
+    have : M' = S.card + T.card := hST_partition.symm
+    omega
+  have h_rate_inequality : 2 * Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ 2 * S.card :=
+    hrate.trans (hM'_lb.trans h_2S_ge_M)
+  have h_ceil_le_S_card : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ S.card := by
+    have h2 : (2 : ℕ) > 0 := by norm_num
+    exact Nat.le_of_mul_le_mul_left h_rate_inequality h2
+  have h_exp_nR_pos : 0 ≤ (n : ℝ) * R := mul_nonneg (Nat.cast_nonneg _) hR_pos.le
+  have h_ceil_ge_1 : 1 ≤ Nat.ceil (Real.exp ((n : ℝ) * R)) := by
+    rw [Nat.one_le_iff_ne_zero, Ne, Nat.ceil_eq_zero, not_le]
+    exact lt_of_lt_of_le zero_lt_one (Real.one_le_exp h_exp_nR_pos)
+  have hS_pos : 0 < S.card := lt_of_lt_of_le h_ceil_ge_1 h_ceil_le_S_card
+  refine ⟨S.card, h_ceil_le_S_card, c.subcode S hS_pos, ?_⟩
+  intro m'
+  have h_sub_le := c.subcode_errorProbAt_le W' S hS_pos m'
+  set m₀ : Fin M' := (S.equivFin.symm ⟨m'.val, by simp [Fin.is_lt]⟩).val with hm₀_def
+  have hm₀_mem : m₀ ∈ S := (S.equivFin.symm ⟨m'.val, by simp [Fin.is_lt]⟩).property
+  have h_m₀_le : (c.errorProbAt W' m₀).toReal ≤
+      2 * (c.averageErrorProb W').toReal := by
+    rw [hS_def, Finset.mem_filter] at hm₀_mem
+    exact hm₀_mem.2
+  have h_sub_le_top : c.errorProbAt W' m₀ ≠ ∞ := by
+    haveI : IsProbabilityMeasure
+        (Measure.pi (fun i => W' (c.encoder m₀ i))) := by infer_instance
+    exact ((prob_le_one
+      (μ := Measure.pi (fun i => W' (c.encoder m₀ i)))
+      (s := c.errorEvent m₀)).trans_lt ENNReal.one_lt_top).ne
+  have h_sub_le_toReal :
+      ((c.subcode S hS_pos).errorProbAt W' m').toReal
+        ≤ (c.errorProbAt W' m₀).toReal :=
+    (ENNReal.toReal_le_toReal
+      (ne_top_of_le_ne_top h_sub_le_top h_sub_le) h_sub_le_top).mpr h_sub_le
+  calc ((c.subcode S hS_pos).errorProbAt W' m').toReal
+      ≤ (c.errorProbAt W' m₀).toReal := h_sub_le_toReal
+    _ ≤ 2 * (c.averageErrorProb W').toReal := h_m₀_le
+    _ < 2 * ε' := by linarith
+
 omit [DecidableEq α] [DecidableEq β] in
 /-- **Expurgation**: average error achievability implies max error achievability. -/
 @[entry_point]
@@ -605,87 +684,13 @@ theorem channel_coding_achievability_max_error
   have hn0 : N₀ ≤ n := (le_max_left _ _).trans hn
   have hn1 : N_rate ≤ n := (le_max_right _ _).trans hn
   obtain ⟨M, hM_lb, c, h_avg_lt⟩ := hN₀ n hn0
-  -- Apply B.1 (K = 2) and B.2.
-  have hK : (1 : ℝ) < 2 := by norm_num
-  have h_filter_bound :=
-    errorProbAt_filter_card_bound (M := M) (n := n) c W hK
-  -- Let T be the bad-message filter, S the good-message filter.
-  set T : Finset (Fin M) := (Finset.univ : Finset (Fin M)).filter
-      (fun m => 2 * (c.averageErrorProb W).toReal < (c.errorProbAt W m).toReal) with hT_def
-  set S : Finset (Fin M) := (Finset.univ : Finset (Fin M)).filter
-      (fun m => (c.errorProbAt W m).toReal ≤ 2 * (c.averageErrorProb W).toReal) with hS_def
-  -- T and S are complements in Finset.univ.
-  have hST_partition : S.card + T.card = M := by
-    have h_union : S ∪ T = Finset.univ := by
-      apply Finset.eq_univ_iff_forall.mpr
-      intro m
-      rw [Finset.mem_union, hS_def, hT_def, Finset.mem_filter, Finset.mem_filter]
-      rcases le_or_gt ((c.errorProbAt W m).toReal) (2 * (c.averageErrorProb W).toReal) with h | h
-      · exact Or.inl ⟨Finset.mem_univ m, h⟩
-      · exact Or.inr ⟨Finset.mem_univ m, h⟩
-    have h_disj : Disjoint S T := by
-      rw [hS_def, hT_def]
-      refine Finset.disjoint_filter.mpr ?_
-      intro m _ hm
-      exact not_lt_of_ge hm
-    have := Finset.card_union_of_disjoint h_disj
-    rw [h_union, Finset.card_univ, Fintype.card_fin] at this
-    linarith
-  -- From h_filter_bound, T.card * 2 ≤ M (as Reals, so as Nats).
-  have h_T_card_le : 2 * T.card ≤ M := by
-    have h_real : ((T.card : ℝ) * 2 : ℝ) ≤ (M : ℝ) := h_filter_bound
-    have h_real' : ((2 * T.card : ℕ) : ℝ) ≤ ((M : ℕ) : ℝ) := by
-      push_cast; linarith
-    exact_mod_cast h_real'
-  -- So `S.card = M - T.card ≥ M - M/2 ≥ ⌈M/2⌉ (as Nat division)`.
-  -- More directly: 2 * S.card ≥ M (using S.card + T.card = M and 2*T.card ≤ M).
-  have h_2S_ge_M : M ≤ 2 * S.card := by
-    have : M = S.card + T.card := hST_partition.symm
-    omega
-  -- And M ≥ ⌈exp(n R')⌉, and 2 * ⌈exp(n R)⌉ ≤ ⌈exp(n R')⌉.
-  have h_rate_inequality : 2 * Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ 2 * S.card := by
-    calc 2 * Nat.ceil (Real.exp ((n : ℝ) * R))
-        ≤ Nat.ceil (Real.exp ((n : ℝ) * R')) := hN_rate n hn1
-      _ ≤ M := hM_lb
-      _ ≤ 2 * S.card := h_2S_ge_M
-  -- Hence ⌈exp(n R)⌉ ≤ S.card.
-  have h_ceil_le_S_card : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ S.card := by
-    have h2 : (2 : ℕ) > 0 := by norm_num
-    exact Nat.le_of_mul_le_mul_left h_rate_inequality h2
-  -- S.card > 0 (because ⌈exp(n R)⌉ ≥ 1 for n R ≥ 0 — yes since R > 0).
-  have h_exp_nR_pos : 0 ≤ (n : ℝ) * R := mul_nonneg (Nat.cast_nonneg _) hR_pos.le
-  have h_exp_nR_ge_1 : 1 ≤ Real.exp ((n : ℝ) * R) :=
-    Real.one_le_exp h_exp_nR_pos
-  have h_ceil_ge_1 : 1 ≤ Nat.ceil (Real.exp ((n : ℝ) * R)) := by
-    rw [Nat.one_le_iff_ne_zero, Ne, Nat.ceil_eq_zero, not_le]
-    exact lt_of_lt_of_le zero_lt_one h_exp_nR_ge_1
-  have hS_pos : 0 < S.card := lt_of_lt_of_le h_ceil_ge_1 h_ceil_le_S_card
-  -- Build the subcode.
-  refine ⟨S.card, h_ceil_le_S_card, c.subcode S hS_pos, ?_⟩
-  intro m'
-  -- The error bound: each subcode error ≤ 2 * avg < 2 * ε' = ε/2 < ε.
-  have h_sub_le := c.subcode_errorProbAt_le W S hS_pos m'
-  set m₀ : Fin M := (S.equivFin.symm ⟨m'.val, by simp⟩).val with hm₀_def
-  have hm₀_mem : m₀ ∈ S := (S.equivFin.symm ⟨m'.val, by simp⟩).property
-  -- m₀ ∈ S means errorProbAt c W m₀ ≤ 2 * avg.
-  have h_m₀_le : (c.errorProbAt W m₀).toReal ≤ 2 * (c.averageErrorProb W).toReal := by
-    rw [hS_def, Finset.mem_filter] at hm₀_mem
-    exact hm₀_mem.2
-  -- Convert h_sub_le to .toReal.
-  have h_sub_le_top : c.errorProbAt W m₀ ≠ ∞ := by
-    haveI : IsProbabilityMeasure (Measure.pi (fun i => W (c.encoder m₀ i))) := by infer_instance
-    exact ((prob_le_one (μ := Measure.pi (fun i => W (c.encoder m₀ i))) (s := c.errorEvent m₀)).trans_lt ENNReal.one_lt_top).ne
-  have h_sub_le_toReal :
-      ((c.subcode S hS_pos).errorProbAt W m').toReal ≤ (c.errorProbAt W m₀).toReal :=
-    (ENNReal.toReal_le_toReal
-      (ne_top_of_le_ne_top h_sub_le_top h_sub_le) h_sub_le_top).mpr h_sub_le
-  -- Combine.
-  calc ((c.subcode S hS_pos).errorProbAt W m').toReal
-      ≤ (c.errorProbAt W m₀).toReal := h_sub_le_toReal
-    _ ≤ 2 * (c.averageErrorProb W).toReal := h_m₀_le
-    _ < 2 * ε' := by
-        have : (c.averageErrorProb W).toReal < ε' := h_avg_lt
-        linarith
+  -- Expurgation (subcode trick): from `M ≥ ⌈exp(n R')⌉` with `2 ⌈exp(n R)⌉ ≤ ⌈exp(n R')⌉`
+  -- and avg error `< ε'`, pick the good half to get max-error `< 2 ε' = ε/2 < ε`.
+  obtain ⟨M₂, hM₂_lb, cs, h_max_lt⟩ :=
+    exists_subcode_maxError_lt_two_mul c W hR_pos hM_lb (hN_rate n hn1) h_avg_lt
+  refine ⟨M₂, hM₂_lb, cs, fun m' => ?_⟩
+  calc (cs.errorProbAt W m').toReal
+      < 2 * ε' := h_max_lt m'
     _ = ε / 2 := by rw [hε'_def]; ring
     _ < ε := by linarith
 
