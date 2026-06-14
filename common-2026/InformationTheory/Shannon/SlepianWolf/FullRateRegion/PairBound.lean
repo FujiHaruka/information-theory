@@ -444,6 +444,27 @@ private lemma entropy_joint_sub_marginal_eq_condEntropy
 
 end PhaseF
 
+lemma integrable_of_nonneg_le_one_of_discrete {γ : Type*}
+    [MeasurableSpace γ] [DiscreteMeasurableSpace γ]
+    (ν : Measure γ) [IsFiniteMeasure ν] (g : γ → ℝ)
+    (h_nn : ∀ x, 0 ≤ g x) (h_le : ∀ x, g x ≤ 1) :
+    Integrable g ν := by
+  refine ⟨Measurable.aestronglyMeasurable Measurable.of_discrete, ?_⟩
+  refine (hasFiniteIntegral_def _ _).mpr ?_
+  have h_bound : ∀ x, ‖g x‖₊ ≤ 1 := by
+    intro x
+    rw [Real.nnnorm_of_nonneg (h_nn x)]
+    exact_mod_cast h_le x
+  calc ∫⁻ x, ‖g x‖ₑ ∂ν
+      ≤ ∫⁻ _, 1 ∂ν := by
+        refine lintegral_mono fun x => ?_
+        have hb := h_bound x
+        rw [show ‖g x‖ₑ = ((‖g x‖₊ : ℝ≥0∞)) from rfl]
+        have : ((‖g x‖₊ : ℝ≥0∞)) ≤ ((1 : ℝ≥0) : ℝ≥0∞) := by exact_mod_cast hb
+        simpa using this
+    _ = ν Set.univ := by rw [lintegral_const, one_mul]
+    _ < ∞ := measure_lt_top _ _
+
 omit [DecidableEq α] [DecidableEq β] in
 /-- The total binning-expectation bound, combining the four-event decomposition
 with the `swError_EXY` subset absorption. The factor `2` absorbs the double count
@@ -559,41 +580,11 @@ private theorem swErrorProb_total_expectation_le
   -- marginal.
   -- Helper: every nonnegative ≤ 1 discrete function on `B_X` is integrable.
   have hInt_B_X : ∀ g : ((Fin n → α) → Fin M_X) → ℝ,
-      (∀ f_X, 0 ≤ g f_X) → (∀ f_X, g f_X ≤ 1) → Integrable g B_X := by
-    intro g h_nn h_le
-    refine ⟨Measurable.aestronglyMeasurable Measurable.of_discrete, ?_⟩
-    refine (hasFiniteIntegral_def _ _).mpr ?_
-    have h_bound : ∀ f_X, ‖g f_X‖₊ ≤ 1 := by
-      intro f_X
-      rw [Real.nnnorm_of_nonneg (h_nn f_X)]
-      exact_mod_cast h_le f_X
-    calc ∫⁻ f_X, ‖g f_X‖ₑ ∂B_X
-        ≤ ∫⁻ _, 1 ∂B_X := by
-          refine lintegral_mono fun f_X => ?_
-          have hb := h_bound f_X
-          rw [show ‖g f_X‖ₑ = ((‖g f_X‖₊ : ℝ≥0∞)) from rfl]
-          have : ((‖g f_X‖₊ : ℝ≥0∞)) ≤ ((1 : ℝ≥0) : ℝ≥0∞) := by exact_mod_cast hb
-          simpa using this
-      _ = B_X Set.univ := by rw [lintegral_const, one_mul]
-      _ < ∞ := measure_lt_top _ _
+      (∀ f_X, 0 ≤ g f_X) → (∀ f_X, g f_X ≤ 1) → Integrable g B_X := fun g h_nn h_le =>
+    integrable_of_nonneg_le_one_of_discrete B_X g h_nn h_le
   have hInt_B_Y : ∀ g : ((Fin n → β) → Fin M_Y) → ℝ,
-      (∀ f_Y, 0 ≤ g f_Y) → (∀ f_Y, g f_Y ≤ 1) → Integrable g B_Y := by
-    intro g h_nn h_le
-    refine ⟨Measurable.aestronglyMeasurable Measurable.of_discrete, ?_⟩
-    refine (hasFiniteIntegral_def _ _).mpr ?_
-    have h_bound : ∀ f_Y, ‖g f_Y‖₊ ≤ 1 := by
-      intro f_Y
-      rw [Real.nnnorm_of_nonneg (h_nn f_Y)]
-      exact_mod_cast h_le f_Y
-    calc ∫⁻ f_Y, ‖g f_Y‖ₑ ∂B_Y
-        ≤ ∫⁻ _, 1 ∂B_Y := by
-          refine lintegral_mono fun f_Y => ?_
-          have hb := h_bound f_Y
-          rw [show ‖g f_Y‖ₑ = ((‖g f_Y‖₊ : ℝ≥0∞)) from rfl]
-          have : ((‖g f_Y‖₊ : ℝ≥0∞)) ≤ ((1 : ℝ≥0) : ℝ≥0∞) := by exact_mod_cast hb
-          simpa using this
-      _ = B_Y Set.univ := by rw [lintegral_const, one_mul]
-      _ < ∞ := measure_lt_top _ _
+      (∀ f_Y, 0 ≤ g f_Y) → (∀ f_Y, g f_Y ≤ 1) → Integrable g B_Y := fun g h_nn h_le =>
+    integrable_of_nonneg_le_one_of_discrete B_Y g h_nn h_le
   -- swErrorProb is bounded by 1 (it's a probability).
   have h_swErr_le_one : ∀ (f_X : (Fin n → α) → Fin M_X)
       (f_Y : (Fin n → β) → Fin M_Y),
