@@ -188,325 +188,307 @@ def boundaryDirSet {n : ℕ} (A : Finset (Fin n → Bool)) (i : Fin n) :
     Finset (Fin n → Bool) :=
   A.filter (fun x => flipCoord i x ∉ A)
 
+lemma fiber_projMap_eq_union {n : ℕ} (A : Finset (Fin n → Bool)) (i : Fin n)
+    (y : {j : Fin n // j ≠ i} → Bool) :
+    A.filter (fun x => projMap i x = y) =
+      ((({extension i false y} : Finset _).filter (· ∈ A)) ∪
+       (({extension i true y} : Finset _).filter (· ∈ A))) := by
+  classical
+  ext x
+  simp only [Finset.mem_filter, Finset.mem_union, Finset.mem_singleton]
+  constructor
+  · intro ⟨hxA, hpx⟩
+    have hxext : x = extension i (x i) y := (projMap_eq_iff i x y).mp hpx
+    cases hb : x i with
+    | false =>
+      left
+      exact ⟨by rw [hxext, hb], hxA⟩
+    | true =>
+      right
+      exact ⟨by rw [hxext, hb], hxA⟩
+  · rintro (⟨rfl, hxA⟩ | ⟨rfl, hxA⟩) <;>
+    exact ⟨hxA, by simp⟩
+
+lemma boundaryDirSet_fiber_projMap_eq_union {n : ℕ} (A : Finset (Fin n → Bool))
+    (i : Fin n) (y : {j : Fin n // j ≠ i} → Bool) :
+    (boundaryDirSet A i).filter (fun x => projMap i x = y) =
+      ((({extension i false y} : Finset _).filter
+          (fun x => x ∈ A ∧ extension i true y ∉ A)) ∪
+       (({extension i true y} : Finset _).filter
+          (fun x => x ∈ A ∧ extension i false y ∉ A))) := by
+  classical
+  ext x
+  simp only [boundaryDirSet, Finset.mem_filter,
+    Finset.mem_union, Finset.mem_singleton]
+  constructor
+  · rintro ⟨⟨hxA, hflip⟩, hpx⟩
+    have hxext : x = extension i (x i) y := (projMap_eq_iff i x y).mp hpx
+    cases hb : x i with
+    | false =>
+      left
+      have hfliprw : flipCoord i x = extension i true y := by
+        rw [← extension_projMap_flip i x, hpx, hb]
+        rfl
+      refine ⟨by rw [hxext, hb], hxA, ?_⟩
+      rw [← hfliprw]; exact hflip
+    | true =>
+      right
+      have hfliprw : flipCoord i x = extension i false y := by
+        rw [← extension_projMap_flip i x, hpx, hb]
+        rfl
+      refine ⟨by rw [hxext, hb], hxA, ?_⟩
+      rw [← hfliprw]; exact hflip
+  · rintro (⟨rfl, hxA, hext1⟩ | ⟨rfl, hxA, hext0⟩)
+    · refine ⟨⟨hxA, ?_⟩, ?_⟩
+      · have : flipCoord i (extension i false y) = extension i true y := by
+          funext j
+          by_cases hj : j = i
+          · subst hj; simp [flipCoord]
+          · rw [flipCoord_apply_other i _ hj,
+              extension_apply_ne i false y hj,
+              extension_apply_ne i true y hj]
+        rw [this]; exact hext1
+      · simp
+    · refine ⟨⟨hxA, ?_⟩, ?_⟩
+      · have : flipCoord i (extension i true y) = extension i false y := by
+          funext j
+          by_cases hj : j = i
+          · subst hj; simp [flipCoord]
+          · rw [flipCoord_apply_other i _ hj,
+              extension_apply_ne i true y hj,
+              extension_apply_ne i false y hj]
+        rw [this]; exact hext0
+      · simp
+
+lemma extension_false_ne_extension_true {n : ℕ} (i : Fin n)
+    (y : {j : Fin n // j ≠ i} → Bool) :
+    extension i false y ≠ extension i true y := by
+  intro h
+  have := congrFun h i
+  simp at this
+
+lemma extension_mem_of_mem_projectionExcept {n : ℕ} (A : Finset (Fin n → Bool))
+    (i : Fin n) (y : {j : Fin n // j ≠ i} → Bool) (hy : y ∈ projectionExcept i A) :
+    extension i false y ∈ A ∨ extension i true y ∈ A := by
+  classical
+  rw [projectionExcept_eq_image, Finset.mem_image] at hy
+  obtain ⟨x, hxA, hxy⟩ := hy
+  have hxext : x = extension i (x i) y := (projMap_eq_iff i x y).mp hxy
+  cases hb : x i with
+  | false =>
+    left
+    rw [hxext, hb] at hxA
+    exact hxA
+  | true =>
+    right
+    rw [hxext, hb] at hxA
+    exact hxA
+
+lemma two_eq_fiber_card_add_boundaryDirSet_fiber_card {n : ℕ}
+    (A : Finset (Fin n → Bool)) (i : Fin n) (y : {j : Fin n // j ≠ i} → Bool)
+    (hy : y ∈ projectionExcept i A) :
+    2 = (A.filter (fun x => projMap i x = y)).card +
+        ((boundaryDirSet A i).filter (fun x => projMap i x = y)).card := by
+  classical
+  have h_ext_ne : extension i false y ≠ extension i true y :=
+    extension_false_ne_extension_true i y
+  have h_y_in_A : extension i false y ∈ A ∨ extension i true y ∈ A :=
+    extension_mem_of_mem_projectionExcept A i y hy
+  rw [fiber_projMap_eq_union, boundaryDirSet_fiber_projMap_eq_union]
+  rcases h_y_in_A with h0 | h1
+  · -- h0 : extension i false y ∈ A
+    by_cases h1 : extension i true y ∈ A
+    · -- both in A: A.filter card = 2, bdir.filter card = 0
+      rw [Finset.card_union_of_disjoint, Finset.card_union_of_disjoint]
+      · rw [show ({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A)
+              = {extension i false y} from by
+              apply Finset.filter_eq_self.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
+          show ({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A)
+              = {extension i true y} from by
+              apply Finset.filter_eq_self.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1,
+          show ({extension i false y} : Finset (Fin n → Bool)).filter
+              (fun x => x ∈ A ∧ extension i true y ∉ A) = ∅ from by
+              apply Finset.filter_eq_empty_iff.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
+              rintro ⟨_, h⟩; exact h h1,
+          show ({extension i true y} : Finset (Fin n → Bool)).filter
+              (fun x => x ∈ A ∧ extension i false y ∉ A) = ∅ from by
+              apply Finset.filter_eq_empty_iff.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
+              rintro ⟨_, h⟩; exact h h0]
+        simp [Finset.card_singleton]
+      · apply Finset.disjoint_filter_filter
+        rw [Finset.disjoint_singleton]
+        exact h_ext_ne
+      · apply Finset.disjoint_filter_filter
+        rw [Finset.disjoint_singleton]
+        exact h_ext_ne
+    · -- only h0 in A: A.filter = {ext0}, bdir.filter = {ext0}
+      rw [Finset.card_union_of_disjoint, Finset.card_union_of_disjoint]
+      · rw [show ({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A)
+              = {extension i false y} from by
+              apply Finset.filter_eq_self.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
+          show ({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A) = ∅ from by
+              apply Finset.filter_eq_empty_iff.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1,
+          show ({extension i false y} : Finset (Fin n → Bool)).filter
+              (fun x => x ∈ A ∧ extension i true y ∉ A) = {extension i false y} from by
+              apply Finset.filter_eq_self.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
+              exact ⟨h0, h1⟩,
+          show ({extension i true y} : Finset (Fin n → Bool)).filter
+              (fun x => x ∈ A ∧ extension i false y ∉ A) = ∅ from by
+              apply Finset.filter_eq_empty_iff.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
+              rintro ⟨h, _⟩; exact h1 h]
+        simp [Finset.card_singleton]
+      · apply Finset.disjoint_filter_filter
+        rw [Finset.disjoint_singleton]
+        exact h_ext_ne
+      · apply Finset.disjoint_filter_filter
+        rw [Finset.disjoint_singleton]
+        exact h_ext_ne
+  · -- h1 : extension i true y ∈ A
+    by_cases h0 : extension i false y ∈ A
+    · -- both in A: same as previous "both" case
+      rw [Finset.card_union_of_disjoint, Finset.card_union_of_disjoint]
+      · rw [show ({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A)
+              = {extension i false y} from by
+              apply Finset.filter_eq_self.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
+          show ({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A)
+              = {extension i true y} from by
+              apply Finset.filter_eq_self.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1,
+          show ({extension i false y} : Finset (Fin n → Bool)).filter
+              (fun x => x ∈ A ∧ extension i true y ∉ A) = ∅ from by
+              apply Finset.filter_eq_empty_iff.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
+              rintro ⟨_, h⟩; exact h h1,
+          show ({extension i true y} : Finset (Fin n → Bool)).filter
+              (fun x => x ∈ A ∧ extension i false y ∉ A) = ∅ from by
+              apply Finset.filter_eq_empty_iff.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
+              rintro ⟨_, h⟩; exact h h0]
+        simp [Finset.card_singleton]
+      · apply Finset.disjoint_filter_filter
+        rw [Finset.disjoint_singleton]
+        exact h_ext_ne
+      · apply Finset.disjoint_filter_filter
+        rw [Finset.disjoint_singleton]
+        exact h_ext_ne
+    · -- only h1 in A
+      rw [Finset.card_union_of_disjoint, Finset.card_union_of_disjoint]
+      · rw [show ({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A) = ∅ from by
+              apply Finset.filter_eq_empty_iff.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
+          show ({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A)
+              = {extension i true y} from by
+              apply Finset.filter_eq_self.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1,
+          show ({extension i false y} : Finset (Fin n → Bool)).filter
+              (fun x => x ∈ A ∧ extension i true y ∉ A) = ∅ from by
+              apply Finset.filter_eq_empty_iff.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
+              rintro ⟨h, _⟩; exact h0 h,
+          show ({extension i true y} : Finset (Fin n → Bool)).filter
+              (fun x => x ∈ A ∧ extension i false y ∉ A) = {extension i true y} from by
+              apply Finset.filter_eq_self.mpr
+              intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
+              exact ⟨h1, h0⟩]
+        simp [Finset.card_singleton]
+      · apply Finset.disjoint_filter_filter
+        rw [Finset.disjoint_singleton]
+        exact h_ext_ne
+      · apply Finset.disjoint_filter_filter
+        rw [Finset.disjoint_singleton]
+        exact h_ext_ne
+
+lemma boundaryPairCount_eq_boundaryDirSet_card {n : ℕ} (A : Finset (Fin n → Bool))
+    (i : Fin n) :
+    (Finset.univ.filter
+        (fun p : (Fin n → Bool) × Fin n =>
+          p.1 ∈ A ∧ flipCoord p.2 p.1 ∉ A ∧ p.2 = i)).card
+      = (boundaryDirSet A i).card := by
+  classical
+  refine Finset.card_nbij' (fun (p : (Fin n → Bool) × Fin n) => p.1)
+    (fun x => (x, i)) ?_ ?_ ?_ ?_
+  · -- MapsTo: pair set → bdir
+    intro p hp
+    rw [Finset.mem_coe, Finset.mem_filter] at hp
+    rw [Finset.mem_coe, boundaryDirSet, Finset.mem_filter]
+    obtain ⟨_, hp1, hpflip, hp2⟩ := hp
+    rw [← hp2]
+    exact ⟨hp1, hpflip⟩
+  · -- MapsTo: bdir → pair set
+    intro x hx
+    rw [Finset.mem_coe, boundaryDirSet, Finset.mem_filter] at hx
+    rw [Finset.mem_coe, Finset.mem_filter]
+    exact ⟨Finset.mem_univ _, hx.1, hx.2, rfl⟩
+  · -- LeftInv: (p.1, i) = p when p.2 = i
+    intro p hp
+    rw [Finset.mem_coe, Finset.mem_filter] at hp
+    have hp2 : p.2 = i := hp.2.2.2
+    show (p.1, i) = p
+    rw [← hp2]
+  · intro x _; rfl
+
+lemma two_mul_projectionExcept_card_eq {n : ℕ} (A : Finset (Fin n → Bool))
+    (i : Fin n) :
+    2 * (projectionExcept i A).card
+      = A.card +
+        (Finset.univ.filter
+          (fun p : (Fin n → Bool) × Fin n =>
+            p.1 ∈ A ∧ flipCoord p.2 p.1 ∉ A ∧ p.2 = i)).card := by
+  classical
+  rw [boundaryPairCount_eq_boundaryDirSet_card]
+  -- Now: 2 * (projectionExcept i A).card = A.card + (boundaryDirSet A i).card.
+  have hMapsTo : (A : Set (Fin n → Bool)).MapsTo (projMap i)
+      (projectionExcept i A : Set _) := by
+    intro x hxA
+    rw [projectionExcept_eq_image]
+    exact Finset.mem_image_of_mem _ hxA
+  have h_A_sum : A.card
+      = ∑ y ∈ projectionExcept i A, (A.filter (fun x => projMap i x = y)).card :=
+    Finset.card_eq_sum_card_fiberwise hMapsTo
+  have hMapsTo_bdir : (boundaryDirSet A i : Set (Fin n → Bool)).MapsTo (projMap i)
+      (projectionExcept i A : Set _) := by
+    intro x hxbdir
+    rw [boundaryDirSet, Finset.coe_filter] at hxbdir
+    exact hMapsTo hxbdir.1
+  have h_bdir_sum : (boundaryDirSet A i).card
+      = ∑ y ∈ projectionExcept i A,
+          ((boundaryDirSet A i).filter (fun x => projMap i x = y)).card :=
+    Finset.card_eq_sum_card_fiberwise hMapsTo_bdir
+  have h_sum_2 :
+      ∑ _y ∈ projectionExcept i A, (2 : ℕ)
+        = ∑ y ∈ projectionExcept i A,
+            ((A.filter (fun x => projMap i x = y)).card +
+             ((boundaryDirSet A i).filter (fun x => projMap i x = y)).card) := by
+    apply Finset.sum_congr rfl
+    intro y hy
+    exact two_eq_fiber_card_add_boundaryDirSet_fiber_card A i y hy
+  rw [Finset.sum_const, smul_eq_mul, Nat.mul_comm, Finset.sum_add_distrib,
+    ← h_A_sum, ← h_bdir_sum] at h_sum_2
+  linarith
+
 /-- `2 * ∑ i, (projectionExcept i A).card = n * A.card + edgeBoundaryCount A`, obtained by
 classifying each projection fibre as singly or doubly covered in `A`. -/
 theorem two_sum_projection_eq {n : ℕ} (A : Finset (Fin n → Bool)) :
     2 * ∑ i : Fin n, (projectionExcept i A).card
       = n * A.card + edgeBoundaryCount A := by
   classical
-  -- Strategy: define for each i, a sum decomposition over (projectionExcept i A) using
-  --   2 = (preimage size) + (2 - preimage size).
-  -- We don't need an explicit "D_i" variable; instead double-count via the bijection:
-  -- {(x, i) : x ∈ A} ≃ Σ_i {y ∈ projectionExcept i A} × {fiber of y in A}.
-  -- A cleaner combinatorial route:
-  -- For each i, define
-  --   f_i : A → projectionExcept i A, f_i x := projection of x.
-  -- The fiber over y has size c_i(y) ∈ {1, 2}.
-  -- So 2 * (projectionExcept i A).card = Σ_{y ∈ proj} 2 = Σ_y [c_i(y) + (2 - c_i(y))].
-  -- Σ_y c_i(y) = (A → proj fiber sum) = A.card.
-  -- Σ_y (2 - c_i(y)) = #{y : c_i(y) = 1} = (boundary direction-i pair count).
-  -- The latter equals #{x ∈ A : flipCoord i x ∉ A} (each singly-covered y gives 1 such x).
-  -- Then sum over i.
-  -- direction-i boundary count, intrinsically defined.
+  -- Per-direction identity 2 * |projectionExcept i A| = |A| + (direction-i boundary pairs).
   have h_per_i : ∀ i : Fin n,
       2 * (projectionExcept i A).card
         = A.card +
           (Finset.univ.filter
             (fun p : (Fin n → Bool) × Fin n =>
-              p.1 ∈ A ∧ flipCoord p.2 p.1 ∉ A ∧ p.2 = i)).card := by
-    intro i
-    classical
-    set proj : Finset ({j : Fin n // j ≠ i} → Bool) := projectionExcept i A
-      with hproj_def
-    set bdir : Finset (Fin n → Bool) := boundaryDirSet A i with hbdir_def
-    -- The pair count {(x, j) : x ∈ A, flipCoord j x ∉ A, j = i} equals bdir.card,
-    -- via the bijection (x, i) ↔ x.
-    have h_pair_eq_bdir :
-        (Finset.univ.filter
-            (fun p : (Fin n → Bool) × Fin n =>
-              p.1 ∈ A ∧ flipCoord p.2 p.1 ∉ A ∧ p.2 = i)).card = bdir.card := by
-      refine Finset.card_nbij' (fun (p : (Fin n → Bool) × Fin n) => p.1)
-        (fun x => (x, i)) ?_ ?_ ?_ ?_
-      · -- MapsTo: pair set → bdir
-        intro p hp
-        rw [Finset.mem_coe, Finset.mem_filter] at hp
-        rw [hbdir_def, Finset.mem_coe, boundaryDirSet, Finset.mem_filter]
-        obtain ⟨_, hp1, hpflip, hp2⟩ := hp
-        rw [← hp2]
-        exact ⟨hp1, hpflip⟩
-      · -- MapsTo: bdir → pair set
-        intro x hx
-        rw [hbdir_def, Finset.mem_coe, boundaryDirSet, Finset.mem_filter] at hx
-        rw [Finset.mem_coe, Finset.mem_filter]
-        exact ⟨Finset.mem_univ _, hx.1, hx.2, rfl⟩
-      · -- LeftInv: (p.1, i) = p when p.2 = i
-        intro p hp
-        rw [Finset.mem_coe, Finset.mem_filter] at hp
-        have hp2 : p.2 = i := hp.2.2.2
-        show (p.1, i) = p
-        rw [← hp2]
-      · intro x _; rfl
-    rw [h_pair_eq_bdir]
-    -- Now: 2 * proj.card = A.card + bdir.card.
-    -- Define fibre count function over proj.
-    -- For each y ∈ proj, fibre y := A.filter (projMap i x = y) ⊆ {ext i false y, ext i true y}.
-    -- A.card = Σ_y (A.filter (projMap i x = y)).card (by card_eq_sum_card_fiberwise).
-    -- 2 * proj.card = Σ_y 2.
-    -- Show: Σ_y 2 = Σ_y (fibre_size_y) + Σ_y (2 - fibre_size_y)
-    --             = A.card + #{y : fibre_size_y = 1} ; and #{y : fibre size 1} = bdir.card.
-    --
-    -- Use Finset.card_eq_sum_card_fiberwise:
-    have hMapsTo : (A : Set (Fin n → Bool)).MapsTo (projMap i) (proj : Set _) := by
-      intro x hxA
-      rw [hproj_def, projectionExcept_eq_image]
-      exact Finset.mem_image_of_mem _ hxA
-    have h_A_sum : A.card = ∑ y ∈ proj, (A.filter (fun x => projMap i x = y)).card :=
-      Finset.card_eq_sum_card_fiberwise hMapsTo
-    -- Similarly for bdir.
-    have hMapsTo_bdir : (bdir : Set (Fin n → Bool)).MapsTo (projMap i) (proj : Set _) := by
-      intro x hxbdir
-      rw [hbdir_def, boundaryDirSet, Finset.coe_filter] at hxbdir
-      exact hMapsTo hxbdir.1
-    have h_bdir_sum : bdir.card
-        = ∑ y ∈ proj, (bdir.filter (fun x => projMap i x = y)).card :=
-      Finset.card_eq_sum_card_fiberwise hMapsTo_bdir
-    -- Per-y comparison: 2 = (A.filter ... = y).card + (bdir.filter ... = y).card
-    have h_per_y : ∀ y ∈ proj,
-        2 = (A.filter (fun x => projMap i x = y)).card +
-            (bdir.filter (fun x => projMap i x = y)).card := by
-      intro y hy
-      -- y ∈ proj means ∃ x ∈ A, projMap i x = y; both ext i false y, ext i true y are
-      -- candidates for being in A; at least one is in A; bdir filter counts the
-      -- "singly-covered" case.
-      -- Define a0 := ext i false y ∈ A, a1 := ext i true y ∈ A.
-      -- (A.filter ...).card = (if a0 then 1 else 0) + (if a1 then 1 else 0). ∈ {1, 2}
-      -- (bdir.filter ...).card = (if a0 ∧ ¬a1 then 1 else 0) + (if a1 ∧ ¬a0 then 1 else 0). ∈ {0, 1}
-      -- 2 = sum check:
-      --   both in A: A.filter card = 2, bdir.filter card = 0, sum = 2 ✓
-      --   only ext0 in A: A.filter card = 1, bdir.filter card = 1, sum = 2 ✓
-      --   only ext1 in A: same.
-      --   neither: impossible (y ∈ proj ⟹ at least one).
-      have h_filter_A : A.filter (fun x => projMap i x = y)
-          ⊆ ({extension i false y, extension i true y} : Finset (Fin n → Bool)) := by
-        intro x hx
-        simp only [Finset.mem_filter] at hx
-        have hxext : x = extension i (x i) y := (projMap_eq_iff i x y).mp hx.2
-        simp only [Finset.mem_insert, Finset.mem_singleton]
-        cases hb : x i with
-        | false => left; rw [hxext, hb]
-        | true => right; rw [hxext, hb]
-      -- We need a precise equality, not just ⊆. Use:
-      -- A.filter ... = (singleton if ext i false y ∉ A else {ext0}) ∪ similar for ext1.
-      have h_filter_A_eq : A.filter (fun x => projMap i x = y) =
-          ((({extension i false y} : Finset _).filter (· ∈ A)) ∪
-           (({extension i true y} : Finset _).filter (· ∈ A))) := by
-        ext x
-        simp only [Finset.mem_filter, Finset.mem_union, Finset.mem_singleton]
-        constructor
-        · intro ⟨hxA, hpx⟩
-          have hxext : x = extension i (x i) y := (projMap_eq_iff i x y).mp hpx
-          cases hb : x i with
-          | false =>
-            left
-            exact ⟨by rw [hxext, hb], hxA⟩
-          | true =>
-            right
-            exact ⟨by rw [hxext, hb], hxA⟩
-        · rintro (⟨rfl, hxA⟩ | ⟨rfl, hxA⟩) <;>
-          exact ⟨hxA, by simp⟩
-      have h_filter_bdir_eq : bdir.filter (fun x => projMap i x = y) =
-          ((({extension i false y} : Finset _).filter
-              (fun x => x ∈ A ∧ extension i true y ∉ A)) ∪
-           (({extension i true y} : Finset _).filter
-              (fun x => x ∈ A ∧ extension i false y ∉ A))) := by
-        ext x
-        simp only [hbdir_def, boundaryDirSet, Finset.mem_filter,
-          Finset.mem_union, Finset.mem_singleton]
-        constructor
-        · rintro ⟨⟨hxA, hflip⟩, hpx⟩
-          have hxext : x = extension i (x i) y := (projMap_eq_iff i x y).mp hpx
-          cases hb : x i with
-          | false =>
-            left
-            have hfliprw : flipCoord i x = extension i true y := by
-              rw [← extension_projMap_flip i x, hpx, hb]
-              rfl
-            refine ⟨by rw [hxext, hb], hxA, ?_⟩
-            rw [← hfliprw]; exact hflip
-          | true =>
-            right
-            have hfliprw : flipCoord i x = extension i false y := by
-              rw [← extension_projMap_flip i x, hpx, hb]
-              rfl
-            refine ⟨by rw [hxext, hb], hxA, ?_⟩
-            rw [← hfliprw]; exact hflip
-        · rintro (⟨rfl, hxA, hext1⟩ | ⟨rfl, hxA, hext0⟩)
-          · refine ⟨⟨hxA, ?_⟩, ?_⟩
-            · have : flipCoord i (extension i false y) = extension i true y := by
-                funext j
-                by_cases hj : j = i
-                · subst hj; simp [flipCoord]
-                · rw [flipCoord_apply_other i _ hj,
-                    extension_apply_ne i false y hj,
-                    extension_apply_ne i true y hj]
-              rw [this]; exact hext1
-            · simp
-          · refine ⟨⟨hxA, ?_⟩, ?_⟩
-            · have : flipCoord i (extension i true y) = extension i false y := by
-                funext j
-                by_cases hj : j = i
-                · subst hj; simp [flipCoord]
-                · rw [flipCoord_apply_other i _ hj,
-                    extension_apply_ne i true y hj,
-                    extension_apply_ne i false y hj]
-              rw [this]; exact hext0
-            · simp
-      -- Now compute cards in both equations and case-split on membership.
-      have h_ext_ne : extension i false y ≠ extension i true y := by
-        intro h
-        have := congrFun h i
-        simp at this
-      -- y ∈ proj: at least one extension is in A.
-      have h_y_in_A : extension i false y ∈ A ∨ extension i true y ∈ A := by
-        rw [hproj_def, projectionExcept_eq_image, Finset.mem_image] at hy
-        obtain ⟨x, hxA, hxy⟩ := hy
-        have hxext : x = extension i (x i) y := (projMap_eq_iff i x y).mp hxy
-        cases hb : x i with
-        | false =>
-          left
-          rw [hxext, hb] at hxA
-          exact hxA
-        | true =>
-          right
-          rw [hxext, hb] at hxA
-          exact hxA
-      -- Case-split on membership.
-      rw [h_filter_A_eq, h_filter_bdir_eq]
-      rcases h_y_in_A with h0 | h1
-      · -- h0 : extension i false y ∈ A
-        by_cases h1 : extension i true y ∈ A
-        · -- both in A: A.filter card = 2, bdir.filter card = 0
-          rw [Finset.card_union_of_disjoint, Finset.card_union_of_disjoint]
-          · rw [show ({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A)
-                  = {extension i false y} from by
-                  apply Finset.filter_eq_self.mpr
-                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
-              show ({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A)
-                  = {extension i true y} from by
-                  apply Finset.filter_eq_self.mpr
-                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1,
-              show ({extension i false y} : Finset (Fin n → Bool)).filter
-                  (fun x => x ∈ A ∧ extension i true y ∉ A) = ∅ from by
-                  apply Finset.filter_eq_empty_iff.mpr
-                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
-                  rintro ⟨_, h⟩; exact h h1,
-              show ({extension i true y} : Finset (Fin n → Bool)).filter
-                  (fun x => x ∈ A ∧ extension i false y ∉ A) = ∅ from by
-                  apply Finset.filter_eq_empty_iff.mpr
-                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
-                  rintro ⟨_, h⟩; exact h h0]
-            simp [Finset.card_singleton]
-          · apply Finset.disjoint_filter_filter
-            rw [Finset.disjoint_singleton]
-            exact h_ext_ne
-          · apply Finset.disjoint_filter_filter
-            rw [Finset.disjoint_singleton]
-            exact h_ext_ne
-        · -- only h0 in A: A.filter = {ext0}, bdir.filter = {ext0}
-          rw [Finset.card_union_of_disjoint, Finset.card_union_of_disjoint]
-          · rw [show ({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A)
-                  = {extension i false y} from by
-                  apply Finset.filter_eq_self.mpr
-                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
-              show ({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A) = ∅ from by
-                  apply Finset.filter_eq_empty_iff.mpr
-                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1,
-              show ({extension i false y} : Finset (Fin n → Bool)).filter
-                  (fun x => x ∈ A ∧ extension i true y ∉ A) = {extension i false y} from by
-                  apply Finset.filter_eq_self.mpr
-                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
-                  exact ⟨h0, h1⟩,
-              show ({extension i true y} : Finset (Fin n → Bool)).filter
-                  (fun x => x ∈ A ∧ extension i false y ∉ A) = ∅ from by
-                  apply Finset.filter_eq_empty_iff.mpr
-                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
-                  rintro ⟨h, _⟩; exact h1 h]
-            simp [Finset.card_singleton]
-          · -- disjointness of singleton-filter sets
-            apply Finset.disjoint_filter_filter
-            rw [Finset.disjoint_singleton]
-            exact h_ext_ne
-          · apply Finset.disjoint_filter_filter
-            rw [Finset.disjoint_singleton]
-            exact h_ext_ne
-      · -- h1 : extension i true y ∈ A
-        by_cases h0 : extension i false y ∈ A
-        · -- both in A: same as previous "both" case
-          rw [Finset.card_union_of_disjoint, Finset.card_union_of_disjoint]
-          · rw [show ({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A)
-                  = {extension i false y} from by
-                  apply Finset.filter_eq_self.mpr
-                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
-              show ({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A)
-                  = {extension i true y} from by
-                  apply Finset.filter_eq_self.mpr
-                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1,
-              show ({extension i false y} : Finset (Fin n → Bool)).filter
-                  (fun x => x ∈ A ∧ extension i true y ∉ A) = ∅ from by
-                  apply Finset.filter_eq_empty_iff.mpr
-                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
-                  rintro ⟨_, h⟩; exact h h1,
-              show ({extension i true y} : Finset (Fin n → Bool)).filter
-                  (fun x => x ∈ A ∧ extension i false y ∉ A) = ∅ from by
-                  apply Finset.filter_eq_empty_iff.mpr
-                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
-                  rintro ⟨_, h⟩; exact h h0]
-            simp [Finset.card_singleton]
-          · -- disjointness of singleton-filter sets
-            apply Finset.disjoint_filter_filter
-            rw [Finset.disjoint_singleton]
-            exact h_ext_ne
-          · apply Finset.disjoint_filter_filter
-            rw [Finset.disjoint_singleton]
-            exact h_ext_ne
-        · -- only h1 in A
-          rw [Finset.card_union_of_disjoint, Finset.card_union_of_disjoint]
-          · rw [show ({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A) = ∅ from by
-                  apply Finset.filter_eq_empty_iff.mpr
-                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
-              show ({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A)
-                  = {extension i true y} from by
-                  apply Finset.filter_eq_self.mpr
-                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1,
-              show ({extension i false y} : Finset (Fin n → Bool)).filter
-                  (fun x => x ∈ A ∧ extension i true y ∉ A) = ∅ from by
-                  apply Finset.filter_eq_empty_iff.mpr
-                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
-                  rintro ⟨h, _⟩; exact h0 h,
-              show ({extension i true y} : Finset (Fin n → Bool)).filter
-                  (fun x => x ∈ A ∧ extension i false y ∉ A) = {extension i true y} from by
-                  apply Finset.filter_eq_self.mpr
-                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
-                  exact ⟨h1, h0⟩]
-            simp [Finset.card_singleton]
-          · -- disjointness of singleton-filter sets
-            apply Finset.disjoint_filter_filter
-            rw [Finset.disjoint_singleton]
-            exact h_ext_ne
-          · apply Finset.disjoint_filter_filter
-            rw [Finset.disjoint_singleton]
-            exact h_ext_ne
-    -- Sum the h_per_y equation:
-    have h_sum_2 :
-        ∑ _y ∈ proj, (2 : ℕ)
-          = ∑ y ∈ proj, ((A.filter (fun x => projMap i x = y)).card +
-                          (bdir.filter (fun x => projMap i x = y)).card) := by
-      apply Finset.sum_congr rfl
-      intro y hy; exact h_per_y y hy
-    rw [Finset.sum_const, smul_eq_mul, Nat.mul_comm, Finset.sum_add_distrib,
-      ← h_A_sum, ← h_bdir_sum] at h_sum_2
-    -- 2 * proj.card = A.card + bdir.card
-    linarith
+              p.1 ∈ A ∧ flipCoord p.2 p.1 ∉ A ∧ p.2 = i)).card :=
+    fun i => two_mul_projectionExcept_card_eq A i
   -- Sum h_per_i over i:
   have h_sum :
       ∑ i : Fin n, 2 * (projectionExcept i A).card
