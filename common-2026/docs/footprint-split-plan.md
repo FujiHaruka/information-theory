@@ -10,7 +10,7 @@ Lean style [`rules/lean-style.md`](rules/lean-style.md) ・honesty タグ [`audi
 
 - [x] Phase 0 — 測定 + pilot 較正 ✅ (`floorMatrix_dist_le`、commit `d2fb1fa`)
 - [x] Phase 1 — 優先1 (>250 行 tier) を named helper へ分解 ✅ **全 25 本処理済** (clean 割れブロックは全抽出、>250 残留=不可分 core は現実的 DoD で許容)
-- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-14、>150: 91→55)
+- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-15、>150: 91→53)
 - [ ] Phase 3 — 最終再実測 + 裾縮小確認 📋
 - [ ] Phase 4 — **option C (>250 spine 攻略)** 🔨 (2026-06-14 着手。**3 本クリア >250: 15→12、両機構検証済**。残 12 本。下記 Phase 4 節)
 
@@ -205,11 +205,11 @@ file:line (footprint) sorry-count は §4.1 入力データを verbatim 使用 (
 sorryAx-free)。コード側の `@audit:ok`/`@residual`/sorry 数は全 13 本で機械検証して verbatim 保存
 (Assembly は既存 sorry+@residual を含め 1→1 保存)。
 
-## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-14 完了)
+## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-15 完了)
 
 **proof-log: no**。
 
-**状態 (2026-06-20)**: Wave 1-14 完了。**>150 tier: 91 → 55 (−36)、>250 は 0 維持** (official
+**状態 (2026-06-20)**: Wave 1-15 完了。**>150 tier: 91 → 53 (−38)、>250 は 0 維持** (official
 decl-to-next-decl metric で再実測)。各 Wave は全 Hard invariants (対象 sig byte-identical /
 `#print axioms` = `[propext, Classical.choice, Quot.sound]` 不変 / sorry 数不変 / `lake env lean`
 clean + 該当 build green) を orchestrator が独立機械検証済。**新規 sorry/residual なし (純リファクタ)
@@ -319,6 +319,12 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   175→143 (public helper 1 本: `integral_qaryEntropy_le_qaryEntropy_integral` 32 =
   「確率測度上 [0,1]値 integrable g に対し ∫ qaryEntropy(g) ≤ qaryEntropy(∫g)」汎用 Bochner-Jensen 抽象補題)。
   計 2 helper 全 <150。>150 tier 57→55。
+- **Wave 15** (`c6412e4`/`a9549ee`): `ChannelCoding/Basic.lean` `jointlyTypicalSet_prob_tendsto_one`
+  172→80 (helper 1 本 `measure_inter3_tendsto_one` 75 = 「3 可測事象が各々 μ→1 なら triple
+  intersection も →1」汎用 complement-union-bound 抽象補題) +
+  `RateDistortion/ConverseNLetter.lean` `rate_distortion_converse_n_letter_singleLetter`
+  173→146 (helper 1 本 `blockDistortion_eq_avg_perLetter` 57 = per-letter 歪み平均 = block 期待歪みの
+  change-of-variables 恒等式)。計 2 helper 全 <150。>150 tier 55→53、>250 = 0 維持。
 
 ### 計測ニュアンス (Phase 2 で確立、Wave 4+ でも適用)
 
@@ -330,7 +336,7 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   (Object.lean は docstring に 5 箇所、実 sorry tactic は 0)。ターゲット選定で sorry 持ち判定する際は実
   sorry tactic token を確認する (decl span の `grep sorry` は over-count)。
 
-### Wave 15+ への申し送り
+### Wave 16+ への申し送り
 
 - **触らない (option-C 済 floor 残留)**: Mass 249 / union_bound 245 / ConvEntropyDensity 245 等。
 - **計測アーティファクト — `convex_fisher_bound` (EPI/Blachman/Density 238) は候補から除外**:
@@ -343,13 +349,13 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   候補選定時は target の**実 body 末尾**と**次の matched decl** を Read で確認すること。
 - **次回推奨 (単一 >150・disjoint、各ファイル 1 回出現・小〜中抽出で <150 到達見込み、再実測値 —
   着手時に floor sibling 同居を Read 再確認)**:
-  `jointlyTypicalSet_prob_tendsto_one` (ChannelCoding/Basic.lean 172) /
-  `entropy_power_inequality_of_density` (EPI/DensityForm.lean 172) /
-  `rate_distortion_converse_n_letter_singleLetter` (RateDistortion/ConverseNLetter.lean 173) /
   `twoTime_stam_supply` (EPI/Stam/SupplyTwoTime.lean 170) /
   `isMarkovChain_weakUnion_left_to_conditioner` (ChannelCoding/ConverseMemorylessPure.lean 188) /
   `debruijnIdentityV2_holds_assembled_chain_domination` (V2DeBruijnAssembly/Domination.lean 184)。
   互いに別ファイルゆえ disjoint、1 agent 1 file で同時処理可。
+- **後回し寄り (signature 密結合で抽出が重い)**: `entropy_power_inequality_of_density`
+  (EPI/DensityForm.lean 172) — signature ~40 行 + lift-space wiring 密結合で、抽出に lift/X'/Y'/ZX/ZY/Z
+  多数を thread する必要があり重い。優先度低。
 - **後回し候補 (高 count multi-target = 単独抽出で <150 未達、複数 seam/helper 要)**:
   `codebookAvgFailureStrong_tendsto_zero` (RateDistortion/.../FailureTendsto 226、2+ helper 要・
   ファイル末尾の宣言・set 重め) /
