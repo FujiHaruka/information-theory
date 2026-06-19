@@ -228,6 +228,37 @@ Steps 1–4 are chained with `calc`. Each step is built locally as a `have` insi
 theorem rather than as a separate lemma.
 -/
 
+private theorem integral_qaryEntropy_le_qaryEntropy_integral {ι : Type*} [MeasurableSpace ι]
+    (ν : Measure ι) [IsProbabilityMeasure ν] (K : ℕ) (g : ι → ℝ)
+    (hg_meas : Measurable g)
+    (hg_mem : ∀ᵐ y ∂ν, g y ∈ Set.Icc (0:ℝ) 1)
+    (hg_int : Integrable g ν) :
+    (∫ y, Real.qaryEntropy K (g y) ∂ν) ≤ Real.qaryEntropy K (∫ y, g y ∂ν) := by
+  have hbinEntropy_integrable :
+      Integrable (fun y => Real.binEntropy (g y)) ν := by
+    apply Integrable.of_mem_Icc 0 (Real.log 2)
+      (Real.binEntropy_continuous.measurable.comp hg_meas).aemeasurable
+    filter_upwards [hg_mem] with y hy
+    exact ⟨Real.binEntropy_nonneg hy.1 hy.2, Real.binEntropy_le_log_two⟩
+  have hqDecomp : ∀ p : ℝ,
+      Real.qaryEntropy K p = p * Real.log ((K : ℝ) - 1) + Real.binEntropy p := fun p => by
+    rw [InformationTheory.qaryEntropy_eq_binEntropy_add_log]; ring
+  have hLHS_eq :
+      (∫ y, Real.qaryEntropy K (g y) ∂ν)
+        = (∫ y, g y ∂ν) * Real.log ((K : ℝ) - 1) +
+          (∫ y, Real.binEntropy (g y) ∂ν) := by
+    simp only [hqDecomp]
+    rw [integral_add (hg_int.mul_const _) hbinEntropy_integrable,
+        integral_mul_const]
+  have hJensen :
+      (∫ y, Real.binEntropy (g y) ∂ν)
+        ≤ Real.binEntropy (∫ y, g y ∂ν) :=
+    Real.strictConcave_binEntropy.concaveOn.le_map_integral
+      Real.binEntropy_continuous.continuousOn isClosed_Icc
+      hg_mem hg_int hbinEntropy_integrable
+  rw [hLHS_eq, hqDecomp (∫ y, g y ∂ν)]
+  linarith
+
 omit [DecidableEq X] in
 /-- Fano's inequality, measure-theoretic form (deterministic decoder). -/
 @[entry_point]
@@ -338,37 +369,9 @@ theorem fano_inequality_measure_theoretic
       (∫ y, Real.qaryEntropy (Fintype.card X)
               (pointwiseErrorProb μ Xs Yo decoder y) ∂(μ.map Yo))
         ≤ Real.qaryEntropy (Fintype.card X)
-            (∫ y, pointwiseErrorProb μ Xs Yo decoder y ∂(μ.map Yo)) := by
-    have hbinEntropy_integrable :
-        Integrable (fun y => Real.binEntropy (pointwiseErrorProb μ Xs Yo decoder y))
-          (μ.map Yo) := by
-      apply Integrable.of_mem_Icc 0 (Real.log 2)
-        (Real.binEntropy_continuous.measurable.comp hPeMeas).aemeasurable
-      exact Filter.Eventually.of_forall (fun _ =>
-        ⟨Real.binEntropy_nonneg measureReal_nonneg measureReal_le_one,
-         Real.binEntropy_le_log_two⟩)
-    have hqDecomp : ∀ p : ℝ,
-        Real.qaryEntropy (Fintype.card X) p
-          = p * Real.log ((Fintype.card X : ℝ) - 1) + Real.binEntropy p := fun p => by
-      rw [InformationTheory.qaryEntropy_eq_binEntropy_add_log]; ring
-    have hLHS_eq :
-        (∫ y, Real.qaryEntropy (Fintype.card X)
-                (pointwiseErrorProb μ Xs Yo decoder y) ∂(μ.map Yo))
-          = (∫ y, pointwiseErrorProb μ Xs Yo decoder y ∂(μ.map Yo)) *
-              Real.log ((Fintype.card X : ℝ) - 1) +
-            (∫ y, Real.binEntropy (pointwiseErrorProb μ Xs Yo decoder y) ∂(μ.map Yo)) := by
-      simp only [hqDecomp]
-      rw [integral_add (hPe_integrable.mul_const _) hbinEntropy_integrable,
-          integral_mul_const]
-    have hJensen :
-        (∫ y, Real.binEntropy (pointwiseErrorProb μ Xs Yo decoder y) ∂(μ.map Yo))
-          ≤ Real.binEntropy
-              (∫ y, pointwiseErrorProb μ Xs Yo decoder y ∂(μ.map Yo)) :=
-      Real.strictConcave_binEntropy.concaveOn.le_map_integral
-        Real.binEntropy_continuous.continuousOn isClosed_Icc
-        hPe_mem hPe_integrable hbinEntropy_integrable
-    rw [hLHS_eq, hqDecomp (∫ y, pointwiseErrorProb μ Xs Yo decoder y ∂(μ.map Yo))]
-    linarith
+            (∫ y, pointwiseErrorProb μ Xs Yo decoder y ∂(μ.map Yo)) :=
+    integral_qaryEntropy_le_qaryEntropy_integral (μ.map Yo) (Fintype.card X)
+      (pointwiseErrorProb μ Xs Yo decoder) hPeMeas hPe_mem hPe_integrable
   -- ## Step 3: disintegration gives `∫ Pe(y) dP_Yo = errorProb μ Xs Yo decoder`.
   -- Chain: `integral_toReal` lifts the real integral to a lintegral, then
   -- `compProd_apply (←) → compProd_map_condDistrib → map_apply` descend to an event on `μ`.
