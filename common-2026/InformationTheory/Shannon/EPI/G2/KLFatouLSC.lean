@@ -541,6 +541,85 @@ theorem tendsto_negMulLog_integral_of_klFatou_squeeze
   rw [hL_eq_val]
   exact hfin
 
+private theorem negMulLog_klFatou_bridge_identities {pX g : ℝ → ℝ} {f : ℕ → ℝ → ℝ}
+    (hpX_nn : ∀ x, 0 ≤ pX x) (hg_pos : ∀ x, 0 < g x)
+    (μn : ℕ → Measure ℝ) (μ γ : Measure ℝ)
+    [∀ n, IsProbabilityMeasure (μn n)] [IsProbabilityMeasure μ] [IsProbabilityMeasure γ]
+    (hf_nn : ∀ n x, 0 ≤ f n x)
+    (hcross_int : ∀ n, Integrable (fun x => f n x * Real.log (g x)) volume)
+    (hcross_int_μ : Integrable (fun x => pX x * Real.log (g x)) volume)
+    (hlogp_int : ∀ n, Integrable (fun x => f n x * Real.log (f n x)) volume)
+    (hlogp_int_μ : Integrable (fun x => pX x * Real.log (pX x)) volume)
+    (hμn_v : ∀ n, μn n ≪ volume) (hμ_v : μ ≪ volume) (hγ_v : γ ≪ volume)
+    (hμn_γ : ∀ n, μn n ≪ γ) (hμ_γ : μ ≪ γ)
+    (hμn_rnDeriv : ∀ n, (μn n).rnDeriv volume =ᵐ[volume] fun x => ENNReal.ofReal (f n x))
+    (hμ_rnDeriv : μ.rnDeriv volume =ᵐ[volume] fun x => ENNReal.ofReal (pX x))
+    (hγ_rnDeriv : γ.rnDeriv volume =ᵐ[volume] fun x => ENNReal.ofReal (g x))
+    (hent_n : ∀ n, differentialEntropy (μn n) = ∫ x, Real.negMulLog (f n x) ∂volume)
+    (hent_μ : differentialEntropy μ = ∫ x, Real.negMulLog (pX x) ∂volume) :
+    (∀ n, (∫ x, Real.negMulLog (f n x) ∂volume)
+        = - (klDiv (μn n) γ).toReal - ∫ x, f n x * Real.log (g x) ∂volume)
+    ∧ ((∫ x, Real.negMulLog (pX x) ∂volume)
+        = - (klDiv μ γ).toReal - ∫ x, pX x * Real.log (g x) ∂volume) := by
+  -- Cross-term in the bridge's density shape (rnDeriv form), rewritten to `f n · log g`.
+  have hcross_density : ∀ n, Integrable
+      (fun x => ((μn n).rnDeriv volume x).toReal
+        * Real.log ((γ.rnDeriv volume x).toReal)) volume := fun n =>
+    integrable_rnDeriv_toReal_mul_log_rnDeriv_toReal_of_density (hf_nn n) (fun x => (hg_pos x).le)
+      (hμn_rnDeriv n) hγ_rnDeriv (hcross_int n)
+  have hlogp_density : ∀ n, Integrable
+      (fun x => ((μn n).rnDeriv volume x).toReal
+        * Real.log (((μn n).rnDeriv volume x).toReal)) volume := fun n =>
+    integrable_rnDeriv_toReal_mul_log_rnDeriv_toReal_of_density (hf_nn n) (hf_nn n)
+      (hμn_rnDeriv n) (hμn_rnDeriv n) (hlogp_int n)
+  have hcross_density_μ : Integrable
+      (fun x => (μ.rnDeriv volume x).toReal
+        * Real.log ((γ.rnDeriv volume x).toReal)) volume :=
+    integrable_rnDeriv_toReal_mul_log_rnDeriv_toReal_of_density hpX_nn (fun x => (hg_pos x).le)
+      hμ_rnDeriv hγ_rnDeriv hcross_int_μ
+  have hlogp_density_μ : Integrable
+      (fun x => (μ.rnDeriv volume x).toReal
+        * Real.log ((μ.rnDeriv volume x).toReal)) volume :=
+    integrable_rnDeriv_toReal_mul_log_rnDeriv_toReal_of_density hpX_nn hpX_nn
+      hμ_rnDeriv hμ_rnDeriv hlogp_int_μ
+  -- Equal-mass conditions (all probability measures).
+  have hmass_n : ∀ n, (μn n) Set.univ = γ Set.univ := fun n => by
+    rw [(‹∀ n, IsProbabilityMeasure (μn n)› n).measure_univ,
+      ‹IsProbabilityMeasure γ›.measure_univ]
+  have hmass_μ : μ Set.univ = γ Set.univ := by
+    rw [‹IsProbabilityMeasure μ›.measure_univ, ‹IsProbabilityMeasure γ›.measure_univ]
+  -- The bridge, instantiated for each `n` and for `μ`.
+  have hbridge_n : ∀ n, (klDiv (μn n) γ).toReal
+      = - differentialEntropy (μn n)
+        - ∫ x, ((μn n).rnDeriv volume x).toReal
+            * Real.log ((γ.rnDeriv volume x).toReal) ∂volume := fun n =>
+    klDiv_toReal_eq_neg_differentialEntropy_sub_cross (μn n) γ (hμn_v n) hγ_v (hμn_γ n)
+      (hmass_n n) (hlogp_density n) (hcross_density n)
+  have hbridge_μ : (klDiv μ γ).toReal
+      = - differentialEntropy μ
+        - ∫ x, (μ.rnDeriv volume x).toReal
+            * Real.log ((γ.rnDeriv volume x).toReal) ∂volume :=
+    klDiv_toReal_eq_neg_differentialEntropy_sub_cross μ γ hμ_v hγ_v hμ_γ
+      hmass_μ hlogp_density_μ hcross_density_μ
+  -- Identify the bridge's cross-term (rnDeriv form) with `∫ f n · log g` and `∫ pX · log g`.
+  have hcross_eq_n : ∀ n,
+      (∫ x, ((μn n).rnDeriv volume x).toReal * Real.log ((γ.rnDeriv volume x).toReal) ∂volume)
+        = ∫ x, f n x * Real.log (g x) ∂volume := fun n =>
+    integral_rnDeriv_toReal_mul_log_rnDeriv_toReal_eq_of_density (hf_nn n)
+      (fun x => (hg_pos x).le) (hμn_rnDeriv n) hγ_rnDeriv
+  have hcross_eq_μ :
+      (∫ x, (μ.rnDeriv volume x).toReal * Real.log ((γ.rnDeriv volume x).toReal) ∂volume)
+        = ∫ x, pX x * Real.log (g x) ∂volume :=
+    integral_rnDeriv_toReal_mul_log_rnDeriv_toReal_eq_of_density hpX_nn
+      (fun x => (hg_pos x).le) hμ_rnDeriv hγ_rnDeriv
+  refine ⟨fun n => ?_, ?_⟩
+  · have := hbridge_n n
+    rw [hent_n n, hcross_eq_n n] at this
+    linarith [this]
+  · have := hbridge_μ
+    rw [hent_μ, hcross_eq_μ] at this
+    linarith [this]
+
 /-- **(α) upper bound assembly** — differential-entropy upper semicontinuity of the
 smoothed densities at the `t → 0⁺` endpoint, via the klFun-Fatou KL lower-semicontinuity
 route (`klDiv_le_liminf_of_ae_tendsto`) and the genuine bridge
@@ -578,6 +657,82 @@ so `KLr → (klDiv μ γ).toReal` (squeeze), hence `h_n → −(klDiv μ γ).toR
 The hypotheses are all regularity preconditions (`pX` density regularity + `σ² ≠ 0` +
 `u → 0⁺` positivity); the conclusion is the genuine limsup inequality, not bundled.
 @audit:ok -/
+private theorem negMulLog_klFatou_entropy_tendsto {pX g : ℝ → ℝ} {f : ℕ → ℝ → ℝ}
+    {σ2 : ℝ≥0} (hσ : σ2 ≠ 0)
+    (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
+    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    (hpX_ent : Integrable (fun x => Real.negMulLog (pX x)) volume)
+    {u : ℕ → ℝ} (hu_pos : ∀ n, 0 < u n) (hu_lim : Tendsto u atTop (𝓝[Set.Ioi 0] 0))
+    (hf_def : f = fun n => convDensityAdd pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩))
+    (μn : ℕ → Measure ℝ) (μ γ : Measure ℝ)
+    [∀ n, IsProbabilityMeasure (μn n)] [IsProbabilityMeasure μ] [IsProbabilityMeasure γ]
+    (hμn_def : ∀ n, μn n = volume.withDensity (fun x => ENNReal.ofReal (f n x)))
+    (hμ_def : μ = volume.withDensity (fun x => ENNReal.ofReal (pX x)))
+    (hf_nn : ∀ n x, 0 ≤ f n x) (hf_meas : ∀ n, Measurable (f n))
+    (hf_int : ∀ n, Integrable (f n) volume)
+    (hg_pos : ∀ x, 0 < g x) (hg_meas : Measurable g) (hg_int : Integrable g volume)
+    (hγ_wd : γ = volume.withDensity (fun x => ENNReal.ofReal (g x)))
+    (hμn_v : ∀ n, μn n ≪ volume) (hμ_v : μ ≪ volume) (hγ_v : γ ≪ volume)
+    (hμn_γ : ∀ n, μn n ≪ γ) (hμ_γ : μ ≪ γ)
+    (hμn_rnDeriv : ∀ n, (μn n).rnDeriv volume =ᵐ[volume] fun x => ENNReal.ofReal (f n x))
+    (hγ_rnDeriv : γ.rnDeriv volume =ᵐ[volume] fun x => ENNReal.ofReal (g x))
+    (hcross_int : ∀ n, Integrable (fun x => f n x * Real.log (g x)) volume)
+    (hcross_int_μ : Integrable (fun x => pX x * Real.log (g x)) volume)
+    (hlogp_int : ∀ n, Integrable (fun x => f n x * Real.log (f n x)) volume)
+    (hlogp_int_μ : Integrable (fun x => pX x * Real.log (pX x)) volume)
+    (hμ_rnDeriv : μ.rnDeriv volume =ᵐ[volume] fun x => ENNReal.ofReal (pX x))
+    (hhn_eq : ∀ n, (∫ x, Real.negMulLog (f n x) ∂volume)
+        = - (klDiv (μn n) γ).toReal - ∫ x, f n x * Real.log (g x) ∂volume)
+    (hhμ_eq : (∫ x, Real.negMulLog (pX x) ∂volume)
+        = - (klDiv μ γ).toReal - ∫ x, pX x * Real.log (g x) ∂volume)
+    (hcross_tendsto : Tendsto (fun n => ∫ x, f n x * Real.log (g x) ∂volume) atTop
+        (𝓝 (∫ x, pX x * Real.log (g x) ∂volume))) :
+    Tendsto (fun n => ∫ x, Real.negMulLog (f n x) ∂volume) atTop
+      (𝓝 (- (klDiv μ γ).toReal - ∫ x, pX x * Real.log (g x) ∂volume)) := by
+  -- Abbreviate the entropy / KL-toReal / cross sequences.
+  set h_n : ℕ → ℝ := fun n => ∫ x, Real.negMulLog (f n x) ∂volume with hh_def
+  set KLr : ℕ → ℝ := fun n => (klDiv (μn n) γ).toReal with hKLr_def
+  set cross_n : ℕ → ℝ := fun n => ∫ x, f n x * Real.log (g x) ∂volume with hcr_def
+  set crossμ : ℝ := ∫ x, pX x * Real.log (g x) ∂volume with hcrμ_def
+  -- KL finiteness for each `μn n` (= the genuine llr-integrability content), so that
+  -- the ℝ≥0∞ W1 bound can be transferred to `toReal`.
+  have hKL_ne_top : ∀ n, klDiv (μn n) γ ≠ ∞ := fun n =>
+    klDiv_ne_top_of_density_log_integrable (hf_nn n) (fun x => (hg_pos x).le)
+      (hμn_v n) hγ_v (hμn_γ n) (hμn_rnDeriv n) hγ_rnDeriv (hlogp_int n) (hcross_int n)
+  have hμ_KL_ne_top : klDiv μ γ ≠ ∞ :=
+    klDiv_ne_top_of_density_log_integrable hpX_nn (fun x => (hg_pos x).le)
+      hμ_v hγ_v hμ_γ hμ_rnDeriv hγ_rnDeriv hlogp_int_μ hcross_int_μ
+  -- (β) lower bound, supplying the upper boundedness of `KLr` (= each `h_n ≥ h(pX)`).
+  have hbeta : ∀ n, (∫ x, Real.negMulLog (pX x) ∂volume) ≤ h_n n := fun n => by
+    rw [hh_def, hf_def]
+    exact negMulLog_convDensity_entropy_ge_density hpX_nn hpX_meas hpX_int hpX_mass hpX_mom
+      hpX_ent hσ.bot_lt u hu_pos n
+  -- Convenient abbreviation for the target real value `L = h(pX) = -KLr_μ - crossμ`.
+  set L : ℝ := - (klDiv μ γ).toReal - crossμ with hL_def
+  have hL_eq : (∫ x, Real.negMulLog (pX x) ∂volume) = L := hhμ_eq
+  -- `cross_n → crossμ`, so the upper β bound `-cross_n - h(pX) → -crossμ - L = (klDiv μ γ).toReal`.
+  have hupper_lim : Tendsto (fun n => - cross_n n - L) atTop (𝓝 ((klDiv μ γ).toReal)) := by
+    have : Tendsto (fun n => - cross_n n - L) atTop (𝓝 (- crossμ - L)) :=
+      (hcross_tendsto.neg).sub_const L
+    have heq : - crossμ - L = (klDiv μ γ).toReal := by rw [hL_def]; ring
+    rwa [heq] at this
+  -- Each `KLr n` is the `toReal` of a genuine real value (β + bridge), bounded above.
+  have hKLr_upper : ∀ n, KLr n ≤ - cross_n n - L := fun n => by
+    have h1 := hhn_eq n
+    have h2 := hbeta n
+    rw [hL_eq] at h2
+    linarith [h1, h2]
+  have hKLr_nn : ∀ n, 0 ≤ KLr n := fun n => ENNReal.toReal_nonneg
+  -- The toReal-level entropy convergence, via the klFun-Fatou squeeze.
+  have hKLr_tendsto : Tendsto h_n atTop (𝓝 L) :=
+    tendsto_negMulLog_integral_of_klFatou_squeeze hpX_nn hpX_meas hpX_int hpX_mom g
+      hu_pos hu_lim hf_def μn μ γ hμn_def hμ_def hf_nn hf_meas hf_int
+      hg_pos hg_meas hg_int hγ_wd hμ_γ hμn_γ hγ_v hhn_eq hKLr_def hKLr_upper hKLr_nn
+      hupper_lim hcross_tendsto hKL_ne_top hμ_KL_ne_top hL_def
+  -- Unfold `h_n`/`L`/`crossμ` back to the explicit integrals.
+  simpa only [hh_def, hL_def, hcrμ_def] using hKLr_tendsto
+
 @[entry_point]
 theorem negMulLog_convDensity_limsup_le {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -669,46 +824,6 @@ theorem negMulLog_convDensity_limsup_le {pX : ℝ → ℝ}
   -- The `log p` integrability for `μ = pX`.
   have hlogp_int_μ : Integrable (fun x => pX x * Real.log (pX x)) volume :=
     integrable_mul_log_self_of_negMulLog_integrable hpX_ent
-  -- Cross-term in the bridge's density shape (rnDeriv form), rewritten to `f n · log g`.
-  have hcross_density : ∀ n, Integrable
-      (fun x => ((μn n).rnDeriv volume x).toReal
-        * Real.log ((γ.rnDeriv volume x).toReal)) volume := fun n =>
-    integrable_rnDeriv_toReal_mul_log_rnDeriv_toReal_of_density (hf_nn n) (fun x => (hg_pos x).le)
-      (hμn_rnDeriv n) hγ_rnDeriv (hcross_int n)
-  have hlogp_density : ∀ n, Integrable
-      (fun x => ((μn n).rnDeriv volume x).toReal
-        * Real.log (((μn n).rnDeriv volume x).toReal)) volume := fun n =>
-    integrable_rnDeriv_toReal_mul_log_rnDeriv_toReal_of_density (hf_nn n) (hf_nn n)
-      (hμn_rnDeriv n) (hμn_rnDeriv n) (hlogp_int n)
-  have hcross_density_μ : Integrable
-      (fun x => (μ.rnDeriv volume x).toReal
-        * Real.log ((γ.rnDeriv volume x).toReal)) volume :=
-    integrable_rnDeriv_toReal_mul_log_rnDeriv_toReal_of_density hpX_nn (fun x => (hg_pos x).le)
-      hμ_rnDeriv hγ_rnDeriv hcross_int_μ
-  have hlogp_density_μ : Integrable
-      (fun x => (μ.rnDeriv volume x).toReal
-        * Real.log ((μ.rnDeriv volume x).toReal)) volume :=
-    integrable_rnDeriv_toReal_mul_log_rnDeriv_toReal_of_density hpX_nn hpX_nn
-      hμ_rnDeriv hμ_rnDeriv hlogp_int_μ
-  -- Equal-mass conditions (all probability measures).
-  have hmass_n : ∀ n, (μn n) Set.univ = γ Set.univ := fun n => by
-    rw [(hμn_prob n).measure_univ, hγ_prob.measure_univ]
-  have hmass_μ : μ Set.univ = γ Set.univ := by
-    rw [hμ_prob.measure_univ, hγ_prob.measure_univ]
-  -- The bridge, instantiated for each `n` and for `μ`.
-  have hbridge_n : ∀ n, (klDiv (μn n) γ).toReal
-      = - differentialEntropy (μn n)
-        - ∫ x, ((μn n).rnDeriv volume x).toReal
-            * Real.log ((γ.rnDeriv volume x).toReal) ∂volume := fun n =>
-    haveI := hμn_prob n
-    klDiv_toReal_eq_neg_differentialEntropy_sub_cross (μn n) γ (hμn_v n) hγ_v (hμn_γ n)
-      (hmass_n n) (hlogp_density n) (hcross_density n)
-  have hbridge_μ : (klDiv μ γ).toReal
-      = - differentialEntropy μ
-        - ∫ x, (μ.rnDeriv volume x).toReal
-            * Real.log ((γ.rnDeriv volume x).toReal) ∂volume :=
-    klDiv_toReal_eq_neg_differentialEntropy_sub_cross μ γ hμ_v hγ_v hμ_γ
-      hmass_μ hlogp_density_μ hcross_density_μ
   -- Identify the differential entropies with the negMulLog integrals.
   have hent_n : ∀ n, differentialEntropy (μn n) = ∫ x, Real.negMulLog (f n x) ∂volume := fun n => by
     rw [hμn_def]
@@ -716,94 +831,27 @@ theorem negMulLog_convDensity_limsup_le {pX : ℝ → ℝ}
   have hent_μ : differentialEntropy μ = ∫ x, Real.negMulLog (pX x) ∂volume := by
     rw [hμ_def]
     exact differentialEntropy_withDensity_eq_integral_negMulLog hpX_meas hpX_nn
-  -- Identify the bridge's cross-term (rnDeriv form) with `∫ f n · log g` and `∫ pX · log g`.
-  have hcross_eq_n : ∀ n,
-      (∫ x, ((μn n).rnDeriv volume x).toReal * Real.log ((γ.rnDeriv volume x).toReal) ∂volume)
-        = ∫ x, f n x * Real.log (g x) ∂volume := fun n =>
-    integral_rnDeriv_toReal_mul_log_rnDeriv_toReal_eq_of_density (hf_nn n)
-      (fun x => (hg_pos x).le) (hμn_rnDeriv n) hγ_rnDeriv
-  have hcross_eq_μ :
-      (∫ x, (μ.rnDeriv volume x).toReal * Real.log ((γ.rnDeriv volume x).toReal) ∂volume)
-        = ∫ x, pX x * Real.log (g x) ∂volume :=
-    integral_rnDeriv_toReal_mul_log_rnDeriv_toReal_eq_of_density hpX_nn
-      (fun x => (hg_pos x).le) hμ_rnDeriv hγ_rnDeriv
-  -- Abbreviate the entropy / KL-toReal / cross sequences.
-  set h_n : ℕ → ℝ := fun n => ∫ x, Real.negMulLog (f n x) ∂volume with hh_def
-  set KLr : ℕ → ℝ := fun n => (klDiv (μn n) γ).toReal with hKLr_def
-  set cross_n : ℕ → ℝ := fun n => ∫ x, f n x * Real.log (g x) ∂volume with hcr_def
-  set crossμ : ℝ := ∫ x, pX x * Real.log (g x) ∂volume with hcrμ_def
-  -- Per-`n` rearrangement: `h_n n = - KLr n - cross_n n`.
-  have hhn_eq : ∀ n, h_n n = - KLr n - cross_n n := fun n => by
-    have := hbridge_n n
-    rw [hent_n n, hcross_eq_n n] at this
-    rw [hh_def, hKLr_def, hcr_def]
-    linarith [this]
-  -- `h(pX) = - KLr_μ - crossμ`.
-  have hhμ_eq : (∫ x, Real.negMulLog (pX x) ∂volume) = - (klDiv μ γ).toReal - crossμ := by
-    have := hbridge_μ
-    rw [hent_μ, hcross_eq_μ] at this
-    rw [hcrμ_def]; linarith [this]
-  -- W3: cross-term convergence (full sequence) `cross_n → crossμ`.
-  have hu_lim' : Tendsto u atTop (𝓝 0) := hu_lim.mono_right nhdsWithin_le_nhds
-  have hcross_tendsto : Tendsto cross_n atTop (𝓝 crossμ) := by
-    have hw3 := cross_term_tendsto hpX_nn hpX_meas hpX_int hpX_mom hσ u hu_pos hu_lim'
-    simpa only [hcr_def, hg_def, hcrμ_def] using hw3
-  -- **The toReal-level entropy convergence** (W1 `klDiv_le_liminf_of_ae_tendsto`
-  -- transferred to `toReal`, with the boundedness supplied by the genuine (β) lower bound
-  -- `negMulLog_convDensity_entropy_ge_density`, plus the W4 subsequence promotion).
-  -- `h_n n = - KLr n - cross_n n` (`hhn_eq`, genuine bridge), `KLr n ≥ 0`; the W1 bound
-  -- `(klDiv μ γ).toReal ≤ liminf KLr` along the a.e.-convergent W4 subsequence + the W3
-  -- limit `cross_n → crossμ` + the β upper bound on `KLr` squeeze `KLr → (klDiv μ γ).toReal`.
-  -- KL finiteness for each `μn n` (= the genuine llr-integrability content), so that
-  -- the ℝ≥0∞ W1 bound can be transferred to `toReal`.
-  have hKL_ne_top : ∀ n, klDiv (μn n) γ ≠ ∞ := fun n =>
-    haveI := hμn_prob n
-    haveI := hγ_prob
-    klDiv_ne_top_of_density_log_integrable (hf_nn n) (fun x => (hg_pos x).le)
-      (hμn_v n) hγ_v (hμn_γ n) (hμn_rnDeriv n) hγ_rnDeriv (hlogp_int n) (hcross_int n)
-  have hμ_KL_ne_top : klDiv μ γ ≠ ∞ :=
-    haveI := hμ_prob
-    haveI := hγ_prob
-    klDiv_ne_top_of_density_log_integrable hpX_nn (fun x => (hg_pos x).le)
-      hμ_v hγ_v hμ_γ hμ_rnDeriv hγ_rnDeriv hlogp_int_μ hcross_int_μ
-  -- (β) lower bound, supplying the upper boundedness of `KLr` (= each `h_n ≥ h(pX)`).
-  have hbeta : ∀ n, (∫ x, Real.negMulLog (pX x) ∂volume) ≤ h_n n := fun n => by
-    rw [hh_def]
-    exact negMulLog_convDensity_entropy_ge_density hpX_nn hpX_meas hpX_int hpX_mass hpX_mom
-      hpX_ent hσ.bot_lt u hu_pos n
-  -- Convenient abbreviation for the target real value `L = h(pX) = -KLr_μ - crossμ`.
-  set L : ℝ := - (klDiv μ γ).toReal - crossμ with hL_def
-  have hL_eq : (∫ x, Real.negMulLog (pX x) ∂volume) = L := hhμ_eq
-  -- `cross_n → crossμ`, so the upper β bound `-cross_n - h(pX) → -crossμ - L = (klDiv μ γ).toReal`.
-  have hupper_lim : Tendsto (fun n => - cross_n n - L) atTop (𝓝 ((klDiv μ γ).toReal)) := by
-    have : Tendsto (fun n => - cross_n n - L) atTop (𝓝 (- crossμ - L)) :=
-      (hcross_tendsto.neg).sub_const L
-    have heq : - crossμ - L = (klDiv μ γ).toReal := by rw [hL_def]; ring
-    rwa [heq] at this
-  -- Each `KLr n` is the `toReal` of a genuine real value (β + bridge), bounded above.
-  have hKLr_upper : ∀ n, KLr n ≤ - cross_n n - L := fun n => by
-    have h1 := hhn_eq n
-    have h2 := hbeta n
-    rw [hL_eq] at h2
-    linarith [h1, h2]
-  have hKLr_nn : ∀ n, 0 ≤ KLr n := fun n => ENNReal.toReal_nonneg
-  -- **The toReal-level entropy convergence**, via the klFun-Fatou squeeze (the genuine
-  -- subsequence-promotion principle on the abbreviated real sequences).
-  have hKLr_tendsto : Tendsto h_n atTop (𝓝 L) :=
-    haveI := hμ_prob
-    haveI := hγ_prob
-    haveI : ∀ n, IsProbabilityMeasure (μn n) := hμn_prob
-    tendsto_negMulLog_integral_of_klFatou_squeeze hpX_nn hpX_meas hpX_int hpX_mom g
+  -- The two bridge identities, assembled from the density-form bridge + cross/entropy ids.
+  obtain ⟨hhn_eq, hhμ_eq⟩ :=
+    negMulLog_klFatou_bridge_identities hpX_nn hg_pos μn μ γ hf_nn hcross_int hcross_int_μ
+      hlogp_int hlogp_int_μ hμn_v hμ_v hγ_v hμn_γ hμ_γ hμn_rnDeriv hμ_rnDeriv hγ_rnDeriv
+      hent_n hent_μ
+  -- W3: cross-term convergence (full sequence).
+  have hcross_tendsto : Tendsto (fun n => ∫ x, f n x * Real.log (g x) ∂volume) atTop
+      (𝓝 (∫ x, pX x * Real.log (g x) ∂volume)) := by
+    have hu_lim' : Tendsto u atTop (𝓝 0) := hu_lim.mono_right nhdsWithin_le_nhds
+    simpa only [hg_def] using cross_term_tendsto hpX_nn hpX_meas hpX_int hpX_mom hσ u hu_pos hu_lim'
+  -- The toReal-level entropy convergence, via the klFun-Fatou squeeze + (β) boundedness.
+  have hKLr_tendsto : Tendsto (fun n => ∫ x, Real.negMulLog (f n x) ∂volume) atTop
+      (𝓝 (- (klDiv μ γ).toReal - ∫ x, pX x * Real.log (g x) ∂volume)) :=
+    negMulLog_klFatou_entropy_tendsto hσ hpX_nn hpX_meas hpX_int hpX_mass hpX_mom hpX_ent
       hu_pos hu_lim hf_def μn μ γ (fun n => by rw [hμn_def]) hμ_def hf_nn hf_meas hf_int
-      hg_pos hg_meas hg_int hγ_wd hμ_γ hμn_γ hγ_v hhn_eq hKLr_def hKLr_upper hKLr_nn
-      hupper_lim hcross_tendsto hKL_ne_top hμ_KL_ne_top hL_def
-  -- The limsup of a convergent sequence equals its limit (`≤ L` trivially).
-  have hKL_limsup : Filter.limsup h_n atTop ≤ L := le_of_eq hKLr_tendsto.limsup_eq
-  -- Assemble: rewrite the goal limsup into `h_n`, apply the toReal bound, and close the
-  -- final equation through the genuine bridge `hhμ_eq`.
+      hg_pos hg_meas hg_int hγ_wd hμn_v hμ_v hγ_v hμn_γ hμ_γ hμn_rnDeriv hγ_rnDeriv
+      hcross_int hcross_int_μ hlogp_int hlogp_int_μ hμ_rnDeriv hhn_eq hhμ_eq hcross_tendsto
+  -- The limsup of a convergent sequence equals its limit; close through the bridge `hhμ_eq`.
   calc Filter.limsup (fun n => ∫ x, Real.negMulLog (f n x) ∂volume) atTop
-      = Filter.limsup h_n atTop := rfl
-    _ ≤ L := hKL_limsup
+      ≤ - (klDiv μ γ).toReal - ∫ x, pX x * Real.log (g x) ∂volume :=
+        le_of_eq hKLr_tendsto.limsup_eq
     _ = ∫ x, Real.negMulLog (pX x) ∂volume := hhμ_eq.symm
 
 end InformationTheory.EPIG2KLFatou
