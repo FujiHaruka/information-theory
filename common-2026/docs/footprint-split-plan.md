@@ -10,7 +10,7 @@ Lean style [`rules/lean-style.md`](rules/lean-style.md) ・honesty タグ [`audi
 
 - [x] Phase 0 — 測定 + pilot 較正 ✅ (`floorMatrix_dist_le`、commit `d2fb1fa`)
 - [x] Phase 1 — 優先1 (>250 行 tier) を named helper へ分解 ✅ **全 25 本処理済** (clean 割れブロックは全抽出、>250 残留=不可分 core は現実的 DoD で許容)
-- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-6、>150: 91→71)
+- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-7、>150: 91→69)
 - [ ] Phase 3 — 最終再実測 + 裾縮小確認 📋
 - [ ] Phase 4 — **option C (>250 spine 攻略)** 🔨 (2026-06-14 着手。**3 本クリア >250: 15→12、両機構検証済**。残 12 本。下記 Phase 4 節)
 
@@ -205,11 +205,11 @@ file:line (footprint) sorry-count は §4.1 入力データを verbatim 使用 (
 sorryAx-free)。コード側の `@audit:ok`/`@residual`/sorry 数は全 13 本で機械検証して verbatim 保存
 (Assembly は既存 sorry+@residual を含め 1→1 保存)。
 
-## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-6 完了)
+## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-7 完了)
 
 **proof-log: no**。
 
-**状態 (2026-06-19)**: Wave 1-6 完了。**>150 tier: 91 → 71 (−20)、>250 は 0 維持** (official
+**状態 (2026-06-19)**: Wave 1-7 完了。**>150 tier: 91 → 69 (−22)、>250 は 0 維持** (official
 decl-to-next-decl metric で再実測)。各 Wave は全 Hard invariants (対象 sig byte-identical /
 `#print axioms` = `[propext, Classical.choice, Quot.sound]` 不変 / sorry 数不変 / `lake env lean`
 clean + 該当 build green) を orchestrator が独立機械検証済。**新規 sorry/residual なし (純リファクタ)
@@ -258,6 +258,14 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   `tvNorm_le_sqrt_klDiv` 194→143 (Hellinger²/CS pure-real public helper 2 本: `finset_cs_sqrt_sq` ~32 /
   `sum_sqrt_add_sq_le_four` ~24。per-element Bretagnolle-Huber は measure 結合が深く inline 維持 partial)。
   計 8 helper 全 <150。>150 tier 73→71。
+- **Wave 7** (`9130241`/`893aa89`): `EPI/Unconditional/TruncationLimit/Mono.lean` entry
+  `differentialEntropyExt_mono_add_truncW` 205→124 (public helper 2 本:
+  `truncW_indepFun_of_indepFun` ~34 = 条件付けが W⊥V 保存・再利用可 /
+  `truncW_map_negMulLog_negPart_lintegral_ne_top` ~65 = truncated 密度負部 lintegral 有限性) +
+  `EPI/InfiniteVariance/Capstone.lean` entry `integrable_negPart_negMulLog_map_sum` 231→137
+  (convolution-Jensen public helper 3 本: `lintegral_conv_kernel_eq` 24 = translation-invariant
+  Tonelli / `integrable_conv_kernel` 16 / `conv_jensen_bound` 58 = μX-smul + ConvexOn.map_integral_le)。
+  計 5 helper 全 <150。>150 tier 71→69。
 
 ### 計測ニュアンス (Phase 2 で確立、Wave 4+ でも適用)
 
@@ -269,24 +277,25 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   (Object.lean は docstring に 5 箇所、実 sorry tactic は 0)。ターゲット選定で sorry 持ち判定する際は実
   sorry tactic token を確認する (decl span の `grep sorry` は over-count)。
 
-### Wave 7+ への申し送り
+### Wave 8+ への申し送り
 
 - **触らない (option-C 済 floor 残留)**: Mass 249 / union_bound 245 / ConvEntropyDensity 245 /
   OuterN 241 等。
 - **fresh な >150 候補** (再実測必須): `debruijnIdentityV2_holds_assembled_chain_hdiff` (Assembly 231) /
-  `integrable_negPart_negMulLog_map_sum` (Capstone 231) / `convJointLlr_integrable`
-  (ConvEntropyDensity 229) / `jointStronglyTypicalSet_indep_prob_ge` (AchievabilityPhaseEStrong 227) /
-  `ergodic_shiftZ` (TwoSidedExtension/Core 223) / `differentialEntropyExt_mono_add_truncW` (Mono 206) 等。
-- **再実測で浮上した fresh 候補** (いずれも option-C floor でない、Wave 着手時 reconfirm):
+  `convJointLlr_integrable` (ConvEntropyDensity 229) /
+  `jointStronglyTypicalSet_indep_prob_ge` (AchievabilityPhaseEStrong 227) /
+  `ergodic_shiftZ` (TwoSidedExtension/Core 223) /
   `convex_fisher_bound` (EPI/Blachman/Density 238、現状最大の fresh 非 floor。T1/T2/T3 set local +
   Tonelli 結合で partial 化しやすい) / `heatFlow_density_heat_equation` (FisherInfo/V2DeBruijnPerTime 208) /
   `differentialEntropyExt_top_of_indep_add_unconditional`
   (EPI/Unconditional/TruncationLimit/Limit 202)。
-- プロトコル: 並列 ≤ 2・1 ファイル 1 エージェント・worktree + boilerplate・orchestrator 検証は同一。
-- **process 申し送り**: Wave 6 では worktree isolation 指定でも分離ブランチが作られず agent commit が
-  main 直書きになった (commit は disjoint file ゆえ衝突なし、回収不要で検証のみ実施)。次回も worktree が
-  機能しない可能性 → 並列前に `git worktree list` で分離を確認、または disjoint file なら main 直書きでも
-  可と割り切る。
+- プロトコル: 並列 ≤ 2・1 ファイル 1 エージェント・orchestrator 検証は同一。
+- **process 申し送り (確定運用)**: worktree isolation 指定が **Wave 6・7 と 2 連続で機能せず**、
+  agent commit が main 直書きになった (分離ブランチが作られない)。Wave 7 では wave7a の WIP が
+  orchestrator の working tree に `M Mono.lean` として可視化された。確定した運用: (a) この環境では
+  worktree が効かない前提で、disjoint file を選べば main 直書きでも衝突しない、(b) orchestrator は各
+  agent の **commit 後** に検証する (WIP 中の `M` ファイルには触れない)、(c) 検証は HEAD に乗った状態で
+  per-file 実施。次回は worktree 指定を続けても良いが分離は期待しない。
 
 ### Phase 1 由来 dedup 候補 (全 4 件決着済、参考)
 
