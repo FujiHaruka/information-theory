@@ -535,6 +535,96 @@ theorem integrable_convKernel_of_lintegral_ne_top {p g : ℝ → ℝ}
     lintegral_lintegral_convKernel_ofReal_eq_mul hp hp_nn hg hg_nn, hp_lint, one_mul]
   exact lt_of_le_of_ne le_top hg_fin
 
+private theorem ae_section_integrable_convKernel {pn g : ℝ → ℝ}
+    (hpn_meas : Measurable pn) (hpn_nn : ∀ x, 0 ≤ pn x)
+    (hpn_lint : ∫⁻ x, ENNReal.ofReal (pn x) ∂volume = 1)
+    (hg_meas : Measurable g) (hg_nn : ∀ x, 0 ≤ g x)
+    (hg_fin : (∫⁻ w, ENNReal.ofReal (g w) ∂volume) ≠ ∞) :
+    ∀ᵐ z ∂volume, Integrable (fun x => pn x * g (z - x)) volume :=
+  (integrable_convKernel_of_lintegral_ne_top hpn_meas hpn_nn hpn_lint
+    hg_meas hg_nn hg_fin).prod_right_ae
+
+private theorem jensen_convDensityAdd_le_section_integral {pn qn : ℝ → ℝ}
+    (hpn_meas : Measurable pn) (hpn_nn : ∀ x, 0 ≤ pn x)
+    (hqn_meas : Measurable qn) (hqn_nn : ∀ x, 0 ≤ qn x)
+    (hpn_lint : ∫⁻ x, ENNReal.ofReal (pn x) ∂volume = 1)
+    (hsec_qn : ∀ᵐ z ∂volume, Integrable (fun x => pn x * qn (z - x)) volume)
+    (hsec_Cq : ∀ᵐ z ∂volume,
+      Integrable (fun x => pn x * max (qn (z - x) * Real.log (qn (z - x))) 0) volume)
+    (hsec_Cm : ∀ᵐ z ∂volume,
+      Integrable (fun x => pn x * max (-(qn (z - x) * Real.log (qn (z - x)))) 0) volume) :
+    ∀ᵐ z ∂volume, max ((fun t => t * Real.log t) (EPIConvDensity.convDensityAdd pn qn z)) 0
+      ≤ ∫ x, pn x * max (qn (z - x) * Real.log (qn (z - x))) 0 ∂volume := by
+  classical
+  set φ : ℝ → ℝ := fun t => t * Real.log t with hφ_def
+  have hφ_meas : Measurable φ := measurable_id.mul (Real.measurable_log.comp measurable_id)
+  set μX : Measure ℝ := volume.withDensity (fun x => ENNReal.ofReal (pn x)) with hμX_def
+  haveI hμXP : IsProbabilityMeasure μX := by
+    refine ⟨?_⟩
+    rw [hμX_def, withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ, hpn_lint]
+  filter_upwards [hsec_qn, hsec_Cq, hsec_Cm] with z hzqn hzCq hzCm
+  -- abbreviation `f x = qn (z - x)`.
+  set f : ℝ → ℝ := fun x => qn (z - x) with hf_def
+  have hf_meas : Measurable f := hqn_meas.comp (measurable_const.sub measurable_id)
+  have hf_nn : ∀ x, 0 ≤ f x := fun _ => hqn_nn _
+  have hpnofReal_meas : Measurable (fun x => ENNReal.ofReal (pn x)) := hpn_meas.ennreal_ofReal
+  have hpnofReal_lt : ∀ᵐ x ∂volume, ENNReal.ofReal (pn x) < ∞ :=
+    Filter.Eventually.of_forall (fun _ => ENNReal.ofReal_lt_top)
+  -- `convDensityAdd pn qn z = ∫ x, f x ∂μX`.
+  have hμX_smul : ∀ (h : ℝ → ℝ),
+      ∫ x, h x ∂μX = ∫ x, pn x * h x ∂volume := by
+    intro h
+    rw [hμX_def, integral_withDensity_eq_integral_toReal_smul hpnofReal_meas hpnofReal_lt]
+    apply integral_congr_ae; filter_upwards with x
+    rw [ENNReal.toReal_ofReal (hpn_nn x), smul_eq_mul]
+  -- `f` and the two positive/negative halves are integrable w.r.t. `μX`.
+  have hf_int : Integrable f μX := by
+    rw [hμX_def, integrable_withDensity_iff_integrable_smul' hpnofReal_meas hpnofReal_lt]
+    refine hzqn.congr ?_
+    filter_upwards with x; rw [ENNReal.toReal_ofReal (hpn_nn x), smul_eq_mul]
+  have hCqf_int : Integrable (fun x => max (φ (f x)) 0) μX := by
+    rw [hμX_def, integrable_withDensity_iff_integrable_smul' hpnofReal_meas hpnofReal_lt]
+    refine hzCq.congr ?_
+    filter_upwards with x
+    rw [ENNReal.toReal_ofReal (hpn_nn x), smul_eq_mul]
+  have hCmf_int : Integrable (fun x => max (-(φ (f x))) 0) μX := by
+    rw [hμX_def, integrable_withDensity_iff_integrable_smul' hpnofReal_meas hpnofReal_lt]
+    refine hzCm.congr ?_
+    filter_upwards with x
+    rw [ENNReal.toReal_ofReal (hpn_nn x), smul_eq_mul]
+  -- `φ ∘ f = (φ∘f)⁺ - (φ∘f)⁻`, hence integrable.
+  have hφf_eq : (fun x => φ (f x)) = fun x => max (φ (f x)) 0 - max (-(φ (f x))) 0 := by
+    funext x
+    rcases le_or_gt 0 (φ (f x)) with h | h
+    · rw [max_eq_left h, max_eq_right (by linarith : -(φ (f x)) ≤ 0)]; ring
+    · rw [max_eq_right h.le, max_eq_left (by linarith : 0 ≤ -(φ (f x)))]; ring
+  have hφf_int : Integrable (fun x => φ (f x)) μX := by
+    rw [hφf_eq]; exact hCqf_int.sub hCmf_int
+  -- Jensen:  `φ (∫ f ∂μX) ≤ ∫ φ∘f ∂μX`.
+  have hjz : φ (∫ x, f x ∂μX) ≤ ∫ x, φ (f x) ∂μX := by
+    have := Real.convexOn_mul_log.map_integral_le
+      (μ := μX) (f := f) (g := φ)
+      Real.continuous_mul_log.continuousOn
+      isClosed_Ici
+      (Filter.Eventually.of_forall (fun x => hf_nn x))
+      hf_int hφf_int
+    simpa only [hφ_def] using this
+  -- `convDensityAdd pn qn z = ∫ x, pn x * f x ∂volume = ∫ x, f x ∂μX`.
+  have hrz_eq : EPIConvDensity.convDensityAdd pn qn z = ∫ x, f x ∂μX := by
+    rw [hμX_smul f]; rfl
+  -- `φ (cda z) ≤ ∫ φ∘f ∂μX ≤ ∫ Cq∘f ∂μX = ∫ x, pn x * Cq (z-x) ∂vol`.
+  have hstep1 : φ (EPIConvDensity.convDensityAdd pn qn z) ≤ ∫ x, φ (f x) ∂μX := by
+    rw [hrz_eq]; exact hjz
+  have hstep2 : (∫ x, φ (f x) ∂μX) ≤ ∫ x, max (φ (f x)) 0 ∂μX :=
+    integral_mono hφf_int hCqf_int (fun x => le_max_left _ _)
+  have hstep3 : (∫ x, max (φ (f x)) 0 ∂μX)
+      = ∫ x, pn x * max (qn (z - x) * Real.log (qn (z - x))) 0 ∂volume := by
+    rw [hμX_smul (fun x => max (φ (f x)) 0)]
+  have hCq_int_z : (0 : ℝ) ≤ ∫ x, pn x * max (qn (z - x) * Real.log (qn (z - x))) 0 ∂volume :=
+    integral_nonneg (fun x => mul_nonneg (hpn_nn x) (le_max_right _ _))
+  show max (φ (EPIConvDensity.convDensityAdd pn qn z)) 0 ≤ _
+  exact max_le (by rw [← hstep3]; exact le_trans hstep1 hstep2) hCq_int_z
+
 /-- The negative part `(negMulLog r)⁻ = max (-(negMulLog r)) 0` of `negMulLog` of the conditioned
 sum density `r := (condTrunc.map (X + Y)).rnDeriv volume |>.toReal` (the convolution `p_n ∗ q_n`)
 is `volume`-integrable. This is the genuine core of the per-`n` finite-entropy lemma (the positive
@@ -637,99 +727,35 @@ theorem integrable_negPart_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProba
   -- convolution kernels (`integrable_convKernel_of_lintegral_ne_top`).
   -- ============================================================================
   -- the three section facts (a.e. `z`), for `g ∈ {qn, Cq, Cm}`.
-  have hsec_qn : ∀ᵐ z ∂volume, Integrable (fun x => pn x * qn (z - x)) volume := by
-    have := (integrable_convKernel_of_lintegral_ne_top hpn_meas hpn_nn hpn_lint
-      hqn_meas hqn_nn (by
-      have : ∫⁻ w, ENNReal.ofReal (qn w) ∂volume = 1 := by
-        have hlaw : (condTrunc P X Y n).map Y
-            = volume.withDensity (fun x => ENNReal.ofReal (qn x)) :=
-          map_condTrunc_withDensity_toReal_rnDeriv P hX hY hY hpos
-            (map_condTrunc_absolutelyContinuous P hX hY hY_ac)
-        haveI : IsProbabilityMeasure ((condTrunc P X Y n).map Y) :=
-          Measure.isProbabilityMeasure_map hY.aemeasurable
-        have h1 : ((condTrunc P X Y n).map Y) Set.univ = 1 := measure_univ
-        rwa [hlaw, withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ] at h1
-      rw [this]; exact ENNReal.one_ne_top)).prod_right_ae
-    exact this
-  have hsec_Cq : ∀ᵐ z ∂volume, Integrable (fun x => pn x * Cq (z - x)) volume := by
-    have := (integrable_convKernel_of_lintegral_ne_top hpn_meas hpn_nn hpn_lint
-      hCq_meas hCq_nn (by rw [← hC_def]; exact hC_lt_top.ne)).prod_right_ae
-    exact this
-  have hsec_Cm : ∀ᵐ z ∂volume, Integrable (fun x => pn x * Cm (z - x)) volume := by
-    have hCm_fin : (∫⁻ w, ENNReal.ofReal (Cm w) ∂volume) ≠ ∞ := by
-      have hfin := hCm_int.hasFiniteIntegral
-      rw [hasFiniteIntegral_iff_ofReal (Filter.Eventually.of_forall hCm_nn)] at hfin
-      exact hfin.ne
-    have := (integrable_convKernel_of_lintegral_ne_top hpn_meas hpn_nn hpn_lint
-      hCm_meas hCm_nn hCm_fin).prod_right_ae
-    exact this
+  have hqn_lint : ∫⁻ w, ENNReal.ofReal (qn w) ∂volume = 1 := by
+    have hlaw : (condTrunc P X Y n).map Y
+        = volume.withDensity (fun x => ENNReal.ofReal (qn x)) :=
+      map_condTrunc_withDensity_toReal_rnDeriv P hX hY hY hpos
+        (map_condTrunc_absolutelyContinuous P hX hY hY_ac)
+    haveI : IsProbabilityMeasure ((condTrunc P X Y n).map Y) :=
+      Measure.isProbabilityMeasure_map hY.aemeasurable
+    have h1 : ((condTrunc P X Y n).map Y) Set.univ = 1 := measure_univ
+    rwa [hlaw, withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ] at h1
+  have hCm_fin : (∫⁻ w, ENNReal.ofReal (Cm w) ∂volume) ≠ ∞ := by
+    have hfin := hCm_int.hasFiniteIntegral
+    rw [hasFiniteIntegral_iff_ofReal (Filter.Eventually.of_forall hCm_nn)] at hfin
+    exact hfin.ne
+  have hsec_qn := ae_section_integrable_convKernel hpn_meas hpn_nn hpn_lint
+    hqn_meas hqn_nn (by rw [hqn_lint]; exact ENNReal.one_ne_top)
+  have hsec_Cq := ae_section_integrable_convKernel hpn_meas hpn_nn hpn_lint
+    hCq_meas hCq_nn (by rw [← hC_def]; exact hC_lt_top.ne)
+  have hsec_Cm := ae_section_integrable_convKernel hpn_meas hpn_nn hpn_lint
+    hCm_meas hCm_nn hCm_fin
   -- ============================================================================
   -- per-`z` Jensen bound:  `G z ≤ ∫ x, pn x * Cq (z - x) ∂volume`  (a.e. `z`).
   -- ============================================================================
   have hjensen : ∀ᵐ z ∂volume, G z ≤ ∫ x, pn x * Cq (z - x) ∂volume := by
-    filter_upwards [hr_conv, hsec_qn, hsec_Cq, hsec_Cm] with z hz hzqn hzCq hzCm
-    -- abbreviation `f x = qn (z - x)`.
-    set f : ℝ → ℝ := fun x => qn (z - x) with hf_def
-    have hf_meas : Measurable f := hqn_meas.comp (measurable_const.sub measurable_id)
-    have hf_nn : ∀ x, 0 ≤ f x := fun _ => hqn_nn _
-    have hpnofReal_meas : Measurable (fun x => ENNReal.ofReal (pn x)) := hpn_meas.ennreal_ofReal
-    have hpnofReal_lt : ∀ᵐ x ∂volume, ENNReal.ofReal (pn x) < ∞ :=
-      Filter.Eventually.of_forall (fun _ => ENNReal.ofReal_lt_top)
-    -- `r z = ∫ x, f x ∂μX`.
-    have hμX_smul : ∀ (h : ℝ → ℝ),
-        ∫ x, h x ∂μX = ∫ x, pn x * h x ∂volume := by
-      intro h
-      rw [hμX_def, integral_withDensity_eq_integral_toReal_smul hpnofReal_meas hpnofReal_lt]
-      apply integral_congr_ae; filter_upwards with x
-      rw [ENNReal.toReal_ofReal (hpn_nn x), smul_eq_mul]
-    -- `f` and the two positive/negative halves are integrable w.r.t. `μX`.
-    -- Note `max (φ (f x)) 0 = Cq (z - x)`  and  `max (-(φ (f x))) 0 = Cm (z - x)`
-    -- (since `Cq w = max (φ (qn w)) 0` and `f x = qn (z - x)`).
-    have hf_int : Integrable f μX := by
-      rw [hμX_def, integrable_withDensity_iff_integrable_smul' hpnofReal_meas hpnofReal_lt]
-      refine hzqn.congr ?_
-      filter_upwards with x; rw [ENNReal.toReal_ofReal (hpn_nn x), smul_eq_mul]
-    have hCqf_int : Integrable (fun x => max (φ (f x)) 0) μX := by
-      rw [hμX_def, integrable_withDensity_iff_integrable_smul' hpnofReal_meas hpnofReal_lt]
-      refine hzCq.congr ?_
-      filter_upwards with x
-      rw [ENNReal.toReal_ofReal (hpn_nn x), smul_eq_mul]
-    have hCmf_int : Integrable (fun x => max (-(φ (f x))) 0) μX := by
-      rw [hμX_def, integrable_withDensity_iff_integrable_smul' hpnofReal_meas hpnofReal_lt]
-      refine hzCm.congr ?_
-      filter_upwards with x
-      rw [ENNReal.toReal_ofReal (hpn_nn x), smul_eq_mul]
-    -- `φ ∘ f = (φ∘f)⁺ - (φ∘f)⁻`, hence integrable.
-    have hφf_eq : (fun x => φ (f x)) = fun x => max (φ (f x)) 0 - max (-(φ (f x))) 0 := by
-      funext x
-      rcases le_or_gt 0 (φ (f x)) with h | h
-      · rw [max_eq_left h, max_eq_right (by linarith : -(φ (f x)) ≤ 0)]; ring
-      · rw [max_eq_right h.le, max_eq_left (by linarith : 0 ≤ -(φ (f x)))]; ring
-    have hφf_int : Integrable (fun x => φ (f x)) μX := by
-      rw [hφf_eq]; exact hCqf_int.sub hCmf_int
-    -- Jensen:  `φ (∫ f ∂μX) ≤ ∫ φ∘f ∂μX`.
-    have hjz : φ (∫ x, f x ∂μX) ≤ ∫ x, φ (f x) ∂μX := by
-      have := Real.convexOn_mul_log.map_integral_le
-        (μ := μX) (f := f) (g := φ)
-        Real.continuous_mul_log.continuousOn
-        isClosed_Ici
-        (Filter.Eventually.of_forall (fun x => hf_nn x))
-        hf_int hφf_int
-      simpa only [hφ_def] using this
-    -- `r z = convDensityAdd pn qn z = ∫ x, pn x * f x ∂volume = ∫ x, f x ∂μX`.
-    have hrz_eq : r z = ∫ x, f x ∂μX := by
-      rw [hz]; show EPIConvDensity.convDensityAdd pn qn z = _
-      rw [hμX_smul f]; rfl
-    -- `φ (r z) ≤ ∫ φ∘f ∂μX ≤ ∫ Cq∘f ∂μX = ∫ x, pn x * Cq (z-x) ∂vol`.
-    have hstep1 : φ (r z) ≤ ∫ x, φ (f x) ∂μX := by rw [hrz_eq]; exact hjz
-    have hstep2 : (∫ x, φ (f x) ∂μX) ≤ ∫ x, max (φ (f x)) 0 ∂μX :=
-      integral_mono hφf_int hCqf_int (fun x => le_max_left _ _)
-    have hstep3 : (∫ x, max (φ (f x)) 0 ∂μX) = ∫ x, pn x * Cq (z - x) ∂volume := by
-      rw [hμX_smul (fun x => max (φ (f x)) 0)]
-    have hCq_int_z : (0 : ℝ) ≤ ∫ x, pn x * Cq (z - x) ∂volume :=
-      integral_nonneg (fun x => mul_nonneg (hpn_nn x) (hCq_nn _))
-    rw [hG_def]
-    exact max_le (by rw [← hstep3]; exact le_trans hstep1 hstep2) hCq_int_z
+    have hbound := jensen_convDensityAdd_le_section_integral hpn_meas hpn_nn hqn_meas hqn_nn
+      hpn_lint hsec_qn hsec_Cq hsec_Cm
+    filter_upwards [hr_conv, hbound] with z hz hzb
+    show max (φ (r z)) 0 ≤ _
+    rw [hz]
+    exact hzb
   -- ============================================================================
   -- assemble:  `∫⁻ ofReal G ≤ ∫⁻ z ∫⁻ x ofReal (pn x * Cq (z-x)) = 1·C < ∞`.
   -- ============================================================================
