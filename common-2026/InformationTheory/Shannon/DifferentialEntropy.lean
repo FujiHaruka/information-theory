@@ -593,6 +593,99 @@ theorem differentialEntropy_le_gaussian_of_variance_le
 
 /-! ## KL divergence between Gaussians and corollaries -/
 
+/-! ### Gaussian moment helpers for KL computation -/
+
+theorem gaussianReal_variance_eq (m : ℝ) {v : ℝ≥0} (_hv : v ≠ 0) :
+    ∫ x, (x - m)^2 ∂(gaussianReal m v) = (v : ℝ) := by
+  have hX : AEMeasurable (fun x : ℝ => x) (gaussianReal m v) := measurable_id.aemeasurable
+  have h_var := variance_eq_integral (μ := gaussianReal m v) hX
+  have h_var_val : Var[fun x ↦ x; gaussianReal m v] = (v : ℝ) :=
+    by exact_mod_cast variance_fun_id_gaussianReal
+  rw [h_var_val] at h_var
+  have h_mean : ∫ x, (id : ℝ → ℝ) x ∂(gaussianReal m v) = m := integral_id_gaussianReal
+  simp only [id] at h_mean
+  rw [h_mean] at h_var
+  exact h_var.symm
+
+theorem gaussianReal_integrable_sq (m : ℝ) {v : ℝ≥0} (_hv : v ≠ 0) :
+    Integrable (fun x : ℝ => x^2) (gaussianReal m v) := by
+  have h_memLp : MemLp (id : ℝ → ℝ) 2 (gaussianReal m v) := memLp_id_gaussianReal 2
+  have h_int_sq : Integrable (fun x : ℝ => ‖(id : ℝ → ℝ) x‖^2) (gaussianReal m v) :=
+    (memLp_two_iff_integrable_sq_norm h_memLp.aestronglyMeasurable).mp h_memLp
+  refine h_int_sq.congr (Filter.Eventually.of_forall fun x => ?_)
+  show ‖x‖^2 = x^2
+  rw [Real.norm_eq_abs, sq_abs]
+
+theorem gaussianReal_integrable_sq_sub (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) (c : ℝ) :
+    Integrable (fun x : ℝ => (x - c)^2) (gaussianReal m v) := by
+  have h_eq : (fun x : ℝ => (x - c)^2) = fun x => x^2 + (-2 * c) * x + c^2 := by
+    funext x; ring
+  rw [h_eq]
+  refine (gaussianReal_integrable_sq m hv |>.add ?_).add (integrable_const _)
+  have h_int_x : Integrable (fun x : ℝ => x) (gaussianReal m v) :=
+    (memLp_id_gaussianReal 1 : MemLp id 1 (gaussianReal m v)).integrable (le_refl _)
+  exact h_int_x.const_mul (-2 * c)
+
+theorem gaussianReal_integral_sq_sub_eq (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) (c : ℝ) :
+    ∫ x, (x - c)^2 ∂(gaussianReal m v) = (v : ℝ) + (m - c)^2 := by
+  have h_int_x : Integrable (fun x : ℝ => x) (gaussianReal m v) :=
+    (memLp_id_gaussianReal 1 : MemLp id 1 (gaussianReal m v)).integrable (le_refl _)
+  have h_int_xm : Integrable (fun x : ℝ => x - m) (gaussianReal m v) :=
+    h_int_x.sub (integrable_const m)
+  have h_zero : ∫ x : ℝ, x - m ∂(gaussianReal m v) = 0 := by
+    rw [integral_sub h_int_x (integrable_const _)]
+    simp [integral_id_gaussianReal]
+  have h_int_shift : Integrable (fun x : ℝ => 2 * (m - c) * (x - m)) (gaussianReal m v) :=
+    h_int_xm.const_mul (2 * (m - c))
+  have h_int_xm2 : Integrable (fun x : ℝ => (x - m)^2) (gaussianReal m v) :=
+    gaussianReal_integrable_sq_sub m hv m
+  have h_ν_real : (gaussianReal m v).real Set.univ = 1 := by
+    rw [measureReal_def]; simp
+  calc ∫ x, (x - c)^2 ∂(gaussianReal m v)
+      = ∫ x, (x - m)^2 + 2 * (m - c) * (x - m) + (m - c)^2 ∂(gaussianReal m v) := by
+        refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
+        ring
+    _ = ∫ x, (x - m)^2 ∂(gaussianReal m v)
+        + ∫ x, 2 * (m - c) * (x - m) ∂(gaussianReal m v)
+        + ∫ x, (m - c)^2 ∂(gaussianReal m v) := by
+        rw [integral_add (f := fun x => (x - m)^2 + 2 * (m - c) * (x - m))
+            (g := fun _ => (m - c)^2)
+            (h_int_xm2.add h_int_shift) (integrable_const _),
+          integral_add h_int_xm2 h_int_shift]
+    _ = (v : ℝ) + 2 * (m - c) * 0 + (m - c)^2 := by
+        rw [gaussianReal_variance_eq m hv, integral_const_mul, h_zero, integral_const]
+        rw [h_ν_real]; simp
+    _ = (v : ℝ) + (m - c)^2 := by ring
+
+theorem gaussianReal_integrable_log_gaussianPDFReal
+    (m m' : ℝ) {v v' : ℝ≥0} (hv : v ≠ 0) (hv' : v' ≠ 0) :
+    Integrable (fun x => Real.log (gaussianPDFReal m' v' x)) (gaussianReal m v) := by
+  rw [show (fun x => Real.log (gaussianPDFReal m' v' x))
+      = fun x => (-(1/2) * Real.log (2 * Real.pi * v'))
+          + (-(1/(2 * v'))) * (x - m')^2 from
+      funext fun x => by rw [log_gaussianPDFReal_eq m' hv' x]; ring]
+  exact (integrable_const _).add
+    ((gaussianReal_integrable_sq_sub m hv m').const_mul (-(1/(2 * v'))))
+
+theorem gaussianReal_integral_log_gaussianPDFReal_eq
+    (m m' : ℝ) {v v' : ℝ≥0} (hv : v ≠ 0) (hv' : v' ≠ 0) :
+    ∫ x, Real.log (gaussianPDFReal m' v' x) ∂(gaussianReal m v)
+      = -(1/2) * Real.log (2 * Real.pi * v') - ((v : ℝ) + (m - m')^2) / (2 * v') := by
+  have h_int_sub : Integrable (fun x : ℝ => (x - m')^2) (gaussianReal m v) :=
+    gaussianReal_integrable_sq_sub m hv m'
+  have h_ν_real : (gaussianReal m v).real Set.univ = 1 := by rw [measureReal_def]; simp
+  rw [show (fun x => Real.log (gaussianPDFReal m' v' x))
+      = fun x => (-(1/2) * Real.log (2 * Real.pi * v'))
+          + (-(1/(2 * v'))) * (x - m')^2 from
+      funext fun x => by rw [log_gaussianPDFReal_eq m' hv' x]; ring]
+  rw [integral_add (f := fun _ => -(1/2) * Real.log (2 * Real.pi * v'))
+      (g := fun x => (-(1/(2 * v'))) * (x - m')^2)
+      (integrable_const _) (h_int_sub.const_mul _)]
+  rw [integral_const, integral_const_mul, gaussianReal_integral_sq_sub_eq m hv m', h_ν_real]
+  simp only [smul_eq_mul, one_mul]
+  field_simp
+  ring
+
 /-- Closed-form KL divergence between two Gaussians. -/
 @[entry_point]
 theorem klDiv_gaussianReal_gaussianReal_eq
@@ -600,8 +693,6 @@ theorem klDiv_gaussianReal_gaussianReal_eq
     (klDiv (gaussianReal m₁ v₁) (gaussianReal m₂ v₂)).toReal
       = (1/2) * (Real.log ((v₂ : ℝ) / v₁) + (v₁ : ℝ) / v₂
                   + (m₁ - m₂)^2 / v₂ - 1) := by
-  -- Strategy: use toReal_klDiv_of_measure_eq to get ∫ llr ν₁ ν₂ ∂ν₁, decompose
-  -- llr into log g₁ - log g₂, expand each log via log_gaussianPDFReal_eq, integrate.
   have hv₁_pos : (0 : ℝ) < v₁ := by
     have : (v₁ : ℝ) ≠ 0 := by exact_mod_cast hv₁
     exact lt_of_le_of_ne v₁.coe_nonneg (Ne.symm this)
@@ -618,156 +709,51 @@ theorem klDiv_gaussianReal_gaussianReal_eq
   have h_kl_eq : (klDiv ν₁ ν₂).toReal = ∫ x, llr ν₁ ν₂ x ∂ν₁ :=
     toReal_klDiv_of_measure_eq hμν h_meas_eq
   -- llr decomp: llr ν₁ ν₂ x =ᵐ[ν₁] log g₁(x) - log g₂(x).
-  have h_rn_chain_vol : ν₁.rnDeriv ν₂ * ν₂.rnDeriv volume =ᵐ[volume] ν₁.rnDeriv volume :=
-    Measure.rnDeriv_mul_rnDeriv hμν
   have h_rn_chain_ν₁ : ν₁.rnDeriv ν₂ * ν₂.rnDeriv volume =ᵐ[ν₁] ν₁.rnDeriv volume :=
-    hν₁_ac.ae_le h_rn_chain_vol
+    hν₁_ac.ae_le (Measure.rnDeriv_mul_rnDeriv hμν)
   have h_rn_g₁_ν₁ : ν₁.rnDeriv volume =ᵐ[ν₁] gaussianPDF m₁ v₁ :=
     hν₁_ac.ae_le (by rw [hν₁_def]; exact rnDeriv_gaussianReal m₁ v₁)
   have h_rn_g₂_ν₁ : ν₂.rnDeriv volume =ᵐ[ν₁] gaussianPDF m₂ v₂ :=
     hν₁_ac.ae_le (by rw [hν₂_def]; exact rnDeriv_gaussianReal m₂ v₂)
-  have h_rn_ν₁ν₂_pos : ∀ᵐ x ∂ν₁, 0 < ν₁.rnDeriv ν₂ x := Measure.rnDeriv_pos hμν
-  have h_rn_ν₁ν₂_lt_top : ∀ᵐ x ∂ν₁, ν₁.rnDeriv ν₂ x < ∞ :=
-    hμν.ae_le (Measure.rnDeriv_lt_top ν₁ ν₂)
   have h_llr_decomp : ∀ᵐ x ∂ν₁,
       llr ν₁ ν₂ x = Real.log (gaussianPDFReal m₁ v₁ x)
         - Real.log (gaussianPDFReal m₂ v₂ x) := by
-    filter_upwards [h_rn_chain_ν₁, h_rn_g₁_ν₁, h_rn_g₂_ν₁, h_rn_ν₁ν₂_pos, h_rn_ν₁ν₂_lt_top]
+    filter_upwards [h_rn_chain_ν₁, h_rn_g₁_ν₁, h_rn_g₂_ν₁,
+        Measure.rnDeriv_pos hμν, hμν.ae_le (Measure.rnDeriv_lt_top ν₁ ν₂)]
       with x h_chain h_g₁ h_g₂ h_pos h_lt_top
     have hg₁_pos : 0 < gaussianPDFReal m₁ v₁ x := gaussianPDFReal_pos m₁ v₁ x hv₁
     have hg₂_pos : 0 < gaussianPDFReal m₂ v₂ x := gaussianPDFReal_pos m₂ v₂ x hv₂
     have hν₁ν₂_real_pos : 0 < (ν₁.rnDeriv ν₂ x).toReal :=
       ENNReal.toReal_pos h_pos.ne' h_lt_top.ne
-      -- ν₁.rnDeriv vol x = ν₁.rnDeriv ν₂ x * gaussianPDF m₂ v₂ x.
-    have h_combine : (gaussianPDF m₁ v₁ x : ℝ≥0∞)
-        = ν₁.rnDeriv ν₂ x * gaussianPDF m₂ v₂ x := by
-      rw [← h_g₁, ← h_chain, Pi.mul_apply, h_g₂]
-    show Real.log ((ν₁.rnDeriv ν₂ x).toReal)
-        = Real.log (gaussianPDFReal m₁ v₁ x) - Real.log (gaussianPDFReal m₂ v₂ x)
     have h_real_combine : gaussianPDFReal m₁ v₁ x
         = (ν₁.rnDeriv ν₂ x).toReal * gaussianPDFReal m₂ v₂ x := by
+      have h_combine : (gaussianPDF m₁ v₁ x : ℝ≥0∞)
+          = ν₁.rnDeriv ν₂ x * gaussianPDF m₂ v₂ x := by
+        rw [← h_g₁, ← h_chain, Pi.mul_apply, h_g₂]
       have := congrArg ENNReal.toReal h_combine
       rwa [toReal_gaussianPDF, ENNReal.toReal_mul, toReal_gaussianPDF] at this
+    show Real.log ((ν₁.rnDeriv ν₂ x).toReal)
+        = Real.log (gaussianPDFReal m₁ v₁ x) - Real.log (gaussianPDFReal m₂ v₂ x)
     rw [h_real_combine, Real.log_mul hν₁ν₂_real_pos.ne' hg₂_pos.ne']
     ring
-  -- Compute each integral piece. log g(x) = -(1/2) log(2πv) - (x-m)²/(2v).
-  have h_mean_ν₁ : ∫ x, x ∂ν₁ = m₁ := by rw [hν₁_def]; exact integral_id_gaussianReal
-  have h_var_ν₁ : ∫ x, (x - m₁)^2 ∂ν₁ = (v₁ : ℝ) := by
-    have hX : AEMeasurable (fun x : ℝ => x) ν₁ := measurable_id.aemeasurable
-    have h_var := variance_eq_integral (μ := ν₁) hX
-    have h_var_val : Var[fun x ↦ x; ν₁] = (v₁ : ℝ) := by
-      rw [hν₁_def]; exact_mod_cast variance_fun_id_gaussianReal
-    rw [h_var_val] at h_var
-    have h_mean_id : ∫ x, (id : ℝ → ℝ) x ∂ν₁ = m₁ := h_mean_ν₁
-    simp only [id] at h_mean_id
-    rw [h_mean_id] at h_var
-    exact h_var.symm
-  -- Second moment integrability from MemLp id 2 (gaussianReal m v).
-  have h_int_x2_ν₁ : Integrable (fun x : ℝ => x^2) ν₁ := by
-    have h_memLp : MemLp (id : ℝ → ℝ) 2 ν₁ := by rw [hν₁_def]; exact memLp_id_gaussianReal 2
-    -- MemLp id 2: ∫ |id|² ∂ν₁ < ∞ via memLp_two_iff_integrable_sq_norm.
-    have h_int_sq : Integrable (fun x : ℝ => ‖(id : ℝ → ℝ) x‖^2) ν₁ :=
-      (memLp_two_iff_integrable_sq_norm h_memLp.aestronglyMeasurable).mp h_memLp
-    refine h_int_sq.congr (Filter.Eventually.of_forall fun x => ?_)
-    show ‖x‖^2 = x^2
-    rw [Real.norm_eq_abs, sq_abs]
-  have h_int_xm₁2_ν₁ : Integrable (fun x : ℝ => (x - m₁)^2) ν₁ := by
-    have h_eq : (fun x : ℝ => (x - m₁)^2)
-        = fun x => x^2 + (-2 * m₁) * x + m₁^2 := by
-      funext x; ring
-    rw [h_eq]
-    refine (h_int_x2_ν₁.add ?_).add (integrable_const _)
-    have h_int_x : Integrable (fun x : ℝ => x) ν₁ := by
-      have h_memLp1 : MemLp (id : ℝ → ℝ) 1 ν₁ := by rw [hν₁_def]; exact memLp_id_gaussianReal 1
-      exact h_memLp1.integrable (le_refl _)
-    exact h_int_x.const_mul (-2 * m₁)
-  have h_int_xm₂2_ν₁ : Integrable (fun x : ℝ => (x - m₂)^2) ν₁ := by
-    have h_eq : (fun x : ℝ => (x - m₂)^2)
-        = fun x => x^2 + (-2 * m₂) * x + m₂^2 := by
-      funext x; ring
-    rw [h_eq]
-    refine (h_int_x2_ν₁.add ?_).add (integrable_const _)
-    have h_int_x : Integrable (fun x : ℝ => x) ν₁ := by
-      have h_memLp1 : MemLp (id : ℝ → ℝ) 1 ν₁ := by rw [hν₁_def]; exact memLp_id_gaussianReal 1
-      exact h_memLp1.integrable (le_refl _)
-    exact h_int_x.const_mul (-2 * m₂)
-  -- Mean shift: ∫(x - m₂)² ∂ν₁ = v₁ + (m₁ - m₂)².
-  have h_mean_shift : ∫ x, (x - m₂)^2 ∂ν₁ = (v₁ : ℝ) + (m₁ - m₂)^2 := by
-    have h_int_x : Integrable (fun x : ℝ => x) ν₁ := by
-      have h_memLp1 : MemLp (id : ℝ → ℝ) 1 ν₁ := by rw [hν₁_def]; exact memLp_id_gaussianReal 1
-      exact h_memLp1.integrable (le_refl _)
-    have h_int_xm₁ : Integrable (fun x : ℝ => x - m₁) ν₁ :=
-      h_int_x.sub (integrable_const m₁)
-    -- Centering: ∫(x - m₁) ∂ν₁ = 0.
-    have h_zero : ∫ x : ℝ, x - m₁ ∂ν₁ = 0 := by
-      rw [integral_sub h_int_x (integrable_const _)]
-      simp [h_mean_ν₁]
-    have h_int_shift_linear : Integrable
-        (fun x : ℝ => 2 * (m₁ - m₂) * (x - m₁)) ν₁ :=
-      h_int_xm₁.const_mul (2 * (m₁ - m₂))
-    calc ∫ x, (x - m₂)^2 ∂ν₁
-        = ∫ x, (x - m₁)^2 + 2 * (m₁ - m₂) * (x - m₁) + (m₁ - m₂)^2 ∂ν₁ := by
-          refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
-          ring
-      _ = ∫ x, (x - m₁)^2 ∂ν₁
-          + ∫ x, 2 * (m₁ - m₂) * (x - m₁) ∂ν₁
-          + ∫ x, (m₁ - m₂)^2 ∂ν₁ := by
-          rw [integral_add (f := fun x => (x - m₁)^2 + 2 * (m₁ - m₂) * (x - m₁))
-              (g := fun _ => (m₁ - m₂)^2)
-              (h_int_xm₁2_ν₁.add h_int_shift_linear) (integrable_const _),
-            integral_add (f := fun x => (x - m₁)^2)
-              (g := fun x => 2 * (m₁ - m₂) * (x - m₁))
-              h_int_xm₁2_ν₁ h_int_shift_linear]
-      _ = (v₁ : ℝ) + 2 * (m₁ - m₂) * 0 + (m₁ - m₂)^2 := by
-          rw [h_var_ν₁, integral_const_mul, h_zero, integral_const]
-          have h_ν₁_real : ν₁.real Set.univ = 1 := by
-            rw [measureReal_def]; simp [hν₁_def]
-          rw [h_ν₁_real]; simp
-      _ = (v₁ : ℝ) + (m₁ - m₂)^2 := by ring
-  -- Compute integrals of log g₁ and log g₂ against ν₁.
-  have h_log_g₁_eq : ∀ x, Real.log (gaussianPDFReal m₁ v₁ x)
-      = (-(1/2) * Real.log (2 * Real.pi * v₁)) + (-(1/(2 * v₁))) * (x - m₁)^2 := by
-    intro x; rw [log_gaussianPDFReal_eq m₁ hv₁ x]; ring
-  have h_log_g₂_eq : ∀ x, Real.log (gaussianPDFReal m₂ v₂ x)
-      = (-(1/2) * Real.log (2 * Real.pi * v₂)) + (-(1/(2 * v₂))) * (x - m₂)^2 := by
-    intro x; rw [log_gaussianPDFReal_eq m₂ hv₂ x]; ring
+  -- Integrability of log densities against ν₁.
   have h_int_log_g₁ : Integrable (fun x => Real.log (gaussianPDFReal m₁ v₁ x)) ν₁ := by
-    rw [show (fun x => Real.log (gaussianPDFReal m₁ v₁ x))
-        = fun x => (-(1/2) * Real.log (2 * Real.pi * v₁))
-            + (-(1/(2 * v₁))) * (x - m₁)^2 from funext h_log_g₁_eq]
-    exact (integrable_const _).add (h_int_xm₁2_ν₁.const_mul (-(1/(2 * v₁))))
+    rw [hν₁_def]; exact gaussianReal_integrable_log_gaussianPDFReal m₁ m₁ hv₁ hv₁
   have h_int_log_g₂ : Integrable (fun x => Real.log (gaussianPDFReal m₂ v₂ x)) ν₁ := by
-    rw [show (fun x => Real.log (gaussianPDFReal m₂ v₂ x))
-        = fun x => (-(1/2) * Real.log (2 * Real.pi * v₂))
-            + (-(1/(2 * v₂))) * (x - m₂)^2 from funext h_log_g₂_eq]
-    exact (integrable_const _).add (h_int_xm₂2_ν₁.const_mul (-(1/(2 * v₂))))
-  have h_ν₁_real : ν₁.real Set.univ = 1 := by rw [measureReal_def]; simp [hν₁_def]
+    rw [hν₁_def]; exact gaussianReal_integrable_log_gaussianPDFReal m₁ m₂ hv₁ hv₂
+  -- Integral values via helper.
   have h_int_log_g₁_eq :
       ∫ x, Real.log (gaussianPDFReal m₁ v₁ x) ∂ν₁
         = -(1/2) * Real.log (2 * Real.pi * v₁) - (1/2) := by
-    rw [show (fun x => Real.log (gaussianPDFReal m₁ v₁ x))
-        = fun x => (-(1/2) * Real.log (2 * Real.pi * v₁))
-            + (-(1/(2 * v₁))) * (x - m₁)^2 from funext h_log_g₁_eq]
-    rw [integral_add (f := fun _ => -(1/2) * Real.log (2 * Real.pi * v₁))
-        (g := fun x => (-(1/(2 * v₁))) * (x - m₁)^2)
-        (integrable_const _) (h_int_xm₁2_ν₁.const_mul _)]
-    rw [integral_const, integral_const_mul, h_var_ν₁, h_ν₁_real]
-    simp only [smul_eq_mul, one_mul]
+    rw [hν₁_def, gaussianReal_integral_log_gaussianPDFReal_eq m₁ m₁ hv₁ hv₁]
+    have hv₁_ne : (v₁ : ℝ) ≠ 0 := hv₁_pos.ne'
     field_simp
     ring
   have h_int_log_g₂_eq :
       ∫ x, Real.log (gaussianPDFReal m₂ v₂ x) ∂ν₁
         = -(1/2) * Real.log (2 * Real.pi * v₂)
           - ((v₁ : ℝ) + (m₁ - m₂)^2) / (2 * v₂) := by
-    rw [show (fun x => Real.log (gaussianPDFReal m₂ v₂ x))
-        = fun x => (-(1/2) * Real.log (2 * Real.pi * v₂))
-            + (-(1/(2 * v₂))) * (x - m₂)^2 from funext h_log_g₂_eq]
-    rw [integral_add (f := fun _ => -(1/2) * Real.log (2 * Real.pi * v₂))
-        (g := fun x => (-(1/(2 * v₂))) * (x - m₂)^2)
-        (integrable_const _) (h_int_xm₂2_ν₁.const_mul _)]
-    rw [integral_const, integral_const_mul, h_mean_shift, h_ν₁_real]
-    field_simp
-    ring
+    rw [hν₁_def, gaussianReal_integral_log_gaussianPDFReal_eq m₁ m₂ hv₁ hv₂]
   -- Combine the two log-integral computations.
   have h_split : ∫ x, llr ν₁ ν₂ x ∂ν₁
       = ∫ x, Real.log (gaussianPDFReal m₁ v₁ x) ∂ν₁
@@ -776,10 +762,6 @@ theorem klDiv_gaussianReal_gaussianReal_eq
     exact integral_congr_ae h_llr_decomp
   rw [h_kl_eq, h_split, h_int_log_g₁_eq, h_int_log_g₂_eq]
   -- Final algebraic simplification.
-  -- LHS = -(1/2) log(2πv₁) - 1/2 - (-(1/2) log(2πv₂) - (v₁+(m₁-m₂)²)/(2v₂))
-  --     = (1/2) (log(2πv₂) - log(2πv₁)) - 1/2 + (v₁+(m₁-m₂)²)/(2v₂)
-  --     = (1/2) log(v₂/v₁) + v₁/(2v₂) + (m₁-m₂)²/(2v₂) - 1/2
-  --     = (1/2) [log(v₂/v₁) + v₁/v₂ + (m₁-m₂)²/v₂ - 1]
   have h_log_diff : Real.log ((v₂ : ℝ) / v₁)
       = Real.log (2 * Real.pi * v₂) - Real.log (2 * Real.pi * v₁) := by
     rw [show (v₂ : ℝ) / v₁ = (2 * Real.pi * v₂) / (2 * Real.pi * v₁) by field_simp]
