@@ -349,6 +349,49 @@ private lemma condDistrib_ae_absolutelyContinuous_map
   rw [hA_decomp, measure_biUnion_finset h_pwd h_meas]
   exact Finset.sum_eq_zero fun x hx => hy x (hP_each x hx)
 
+omit [DecidableEq X] [Nonempty X] in
+private theorem integrable_sum_fibre_real_mul_log
+    (κ : Kernel Y X) [IsMarkovKernel κ]
+    (νY : Measure Y) [IsFiniteMeasure νY] (νX : Measure X) :
+    (Integrable (fun y => ∑ x : X, (κ y).real {x}
+        * Real.log ((κ y).real {x})) νY)
+      ∧ (Integrable (fun y => ∑ x : X, (κ y).real {x}
+        * Real.log (νX.real {x})) νY) := by
+  have h_meas_real_Q : ∀ x : X, Measurable (fun y => (κ y).real {x}) :=
+    fun x => (Kernel.measurable_coe _ (measurableSet_singleton x)).ennreal_toReal
+  have h_Q_le_one : ∀ y x, (κ y).real {x} ≤ 1 :=
+    fun y x => measureReal_le_one (μ := κ y) (s := {x})
+  have h_int_QlogQ : ∀ x : X, Integrable
+      (fun y => (κ y).real {x} * Real.log ((κ y).real {x})) νY := by
+    intro x
+    refine Integrable.mono' (g := fun _ => (1 : ℝ))
+      (integrable_const _)
+      ((h_meas_real_Q x).mul (h_meas_real_Q x).log).aestronglyMeasurable ?_
+    refine ae_of_all _ fun y => ?_
+    have hQ_nn : 0 ≤ (κ y).real {x} := measureReal_nonneg
+    have hQ_le : (κ y).real {x} ≤ 1 := h_Q_le_one y x
+    have h_negMulLog_nn : 0 ≤ Real.negMulLog ((κ y).real {x}) :=
+      Real.negMulLog_nonneg hQ_nn hQ_le
+    have h_negMulLog_le_one : Real.negMulLog ((κ y).real {x}) ≤ 1 := by
+      refine (Real.negMulLog_le_one_sub_self hQ_nn).trans ?_
+      linarith
+    have h_eq : (κ y).real {x} * Real.log ((κ y).real {x})
+        = -Real.negMulLog ((κ y).real {x}) := by
+      rw [Real.negMulLog]; ring
+    rw [Real.norm_eq_abs, h_eq, abs_neg, abs_of_nonneg h_negMulLog_nn]
+    exact h_negMulLog_le_one
+  have h_int_QlogP : ∀ x : X, Integrable
+      (fun y => (κ y).real {x} * Real.log (νX.real {x})) νY := by
+    intro x
+    refine Integrable.mul_const ?_ _
+    refine Integrable.mono' (g := fun _ => (1 : ℝ)) (integrable_const _)
+      (h_meas_real_Q x).aestronglyMeasurable ?_
+    refine ae_of_all _ fun y => ?_
+    rw [Real.norm_eq_abs, abs_of_nonneg measureReal_nonneg]
+    exact h_Q_le_one y x
+  exact ⟨integrable_finsetSum _ fun x _ => h_int_QlogQ x,
+    integrable_finsetSum _ fun x _ => h_int_QlogP x⟩
+
 omit [DecidableEq X] in
 private theorem klDiv_joint_prod_marginals_toReal
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -448,33 +491,8 @@ private theorem klDiv_joint_prod_marginals_toReal
     refine Finset.sum_congr rfl fun x _ => ?_
     ring
   simp_rw [h_split]
-  -- Helper bound: 0 ≤ Q.real{x} ≤ 1 for any fibre / probability measure on a singleton.
-  have h_Q_le_one : ∀ y x, (condDistrib Xs Yo μ y).real {x} ≤ 1 :=
-    fun y x => measureReal_le_one (μ := condDistrib Xs Yo μ y) (s := {x})
-  -- Term 1: |Q.real{x} * log Q.real{x}| = negMulLog Q.real{x} ≤ 1 - Q.real{x} ≤ 1.
-  have h_int_QlogQ : ∀ x : X, Integrable
-      (fun y => (condDistrib Xs Yo μ y).real {x}
-        * Real.log ((condDistrib Xs Yo μ y).real {x})) (μ.map Yo) := by
-    intro x
-    refine Integrable.mono' (g := fun _ => (1 : ℝ))
-      (integrable_const _)
-      ((h_meas_real_Q x).mul (h_meas_real_Q x).log).aestronglyMeasurable ?_
-    refine ae_of_all _ fun y => ?_
-    have hQ_nn : 0 ≤ (condDistrib Xs Yo μ y).real {x} := measureReal_nonneg
-    have hQ_le : (condDistrib Xs Yo μ y).real {x} ≤ 1 := h_Q_le_one y x
-    have h_negMulLog_nn :
-        0 ≤ Real.negMulLog ((condDistrib Xs Yo μ y).real {x}) :=
-      Real.negMulLog_nonneg hQ_nn hQ_le
-    have h_negMulLog_le_one :
-        Real.negMulLog ((condDistrib Xs Yo μ y).real {x}) ≤ 1 := by
-      refine (Real.negMulLog_le_one_sub_self hQ_nn).trans ?_
-      linarith
-    have h_eq : (condDistrib Xs Yo μ y).real {x}
-        * Real.log ((condDistrib Xs Yo μ y).real {x})
-        = -Real.negMulLog ((condDistrib Xs Yo μ y).real {x}) := by
-      rw [Real.negMulLog]; ring
-    rw [Real.norm_eq_abs, h_eq, abs_neg, abs_of_nonneg h_negMulLog_nn]
-    exact h_negMulLog_le_one
+  obtain ⟨h_int_sumQlogQ, h_int_sumQlogP⟩ :=
+    integrable_sum_fibre_real_mul_log (condDistrib Xs Yo μ) (μ.map Yo) (μ.map Xs)
   -- Term 2: Q.real{x} * log P.real{x} = constant_x * Q.real{x}, bounded → integrable.
   have h_int_QlogP : ∀ x : X, Integrable
       (fun y => (condDistrib Xs Yo μ y).real {x}
@@ -485,15 +503,7 @@ private theorem klDiv_joint_prod_marginals_toReal
       (h_meas_real_Q x).aestronglyMeasurable ?_
     refine ae_of_all _ fun y => ?_
     rw [Real.norm_eq_abs, abs_of_nonneg measureReal_nonneg]
-    exact h_Q_le_one y x
-  have h_int_sumQlogQ : Integrable
-      (fun y => ∑ x : X, (condDistrib Xs Yo μ y).real {x}
-        * Real.log ((condDistrib Xs Yo μ y).real {x})) (μ.map Yo) :=
-    integrable_finsetSum _ fun x _ => h_int_QlogQ x
-  have h_int_sumQlogP : Integrable
-      (fun y => ∑ x : X, (condDistrib Xs Yo μ y).real {x}
-        * Real.log ((μ.map Xs).real {x})) (μ.map Yo) :=
-    integrable_finsetSum _ fun x _ => h_int_QlogP x
+    exact measureReal_le_one (μ := condDistrib Xs Yo μ y) (s := {x})
   -- (7) Linear split of the integral.
   rw [integral_sub h_int_sumQlogQ h_int_sumQlogP]
   -- (7-a) First term: ∫ ∑ Q*logQ = -condEntropy.
