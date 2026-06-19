@@ -514,6 +514,103 @@ private theorem negPart_lintegral_map_truncW_add_ne_top
   rw [hsum_conv]
   exact negPart_negMulLog_conv_single_ne_top (Q.map W) (Q.map V) hW_ac_Q hBQW
 
+-- Per-`n` upper bound: `h(ν_n) ≤ (2 * Aν : EReal)`, established via per-`n` Gibbs and measure
+-- domination. Self-contained block extracted from the `⊤`-branch proof to keep the
+-- parent body under the footprint limit.
+private theorem differentialEntropyExt_truncW_add_le_two_mul_Aν
+    {Ω : Type*} [MeasurableSpace Ω]
+    (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
+    (hW_ac : (P.map W) ≪ volume)
+    (hBW : (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (((P.map W).rnDeriv volume x).toReal)))
+        ∂volume) ≠ ⊤)
+    (ν : Measure ℝ) (hν_def : ν = P.map (fun ω => W ω + V ω))
+    (hν_ac : ν ≪ volume)
+    (hBν : (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((ν.rnDeriv volume x).toReal)))
+        ∂volume) ≠ ⊤)
+    (Aν : ℝ≥0∞)
+    (hAν_def : Aν
+        = ∫⁻ x, ENNReal.ofReal (Real.negMulLog ((ν.rnDeriv volume x).toReal)) ∂volume)
+    [IsProbabilityMeasure ν]
+    (hcn_ev : ∀ᶠ n : ℕ in atTop, P {ω | |W ω| ≤ (n : ℝ)} ≠ 0)
+    (hcinv_ev : ∀ᶠ n : ℕ in atTop, ((P {ω | |W ω| ≤ (n : ℝ)})⁻¹).toReal ≤ 2) :
+    ∀ᶠ n in atTop,
+        differentialEntropyExt ((truncW P W n).map (fun ω => W ω + V ω))
+          ≤ ((2 * Aν : ℝ≥0∞) : EReal) := by
+  filter_upwards [hcn_ev, hcinv_ev] with n hn hcinv
+  set νn : Measure ℝ := (truncW P W n).map (fun ω => W ω + V ω) with hνn_def
+  set cinv : ℝ≥0∞ := (P {ω | |W ω| ≤ (n : ℝ)})⁻¹ with hcinv_def
+  -- mass `c_n ∈ (0, 1]` so `cinv ∈ [1, ⊤)`.
+  have hcinv_top : cinv ≠ ⊤ := by
+    rw [hcinv_def]; exact ENNReal.inv_ne_top.mpr hn
+  have hcinv_le_two : cinv ≤ (2 : ℝ≥0∞) := by
+    rw [← ENNReal.ofReal_toReal hcinv_top, show (2 : ℝ≥0∞) = ENNReal.ofReal 2 by simp]
+    exact ENNReal.ofReal_le_ofReal hcinv
+  -- measure domination `ν_n ≤ cinv • ν` (atom 1).
+  have hdom : νn ≤ cinv • ν := by
+    rw [hνn_def, hcinv_def, hν_def]
+    exact map_truncW_add_le_smul_map_add W V P hW hV n hn
+  -- `ν_n ≪ ν ≪ volume`.
+  have hνn_ν : νn ≪ ν := by
+    rw [hνn_def, hν_def]
+    exact map_truncW_add_absolutelyContinuous_map_add W V P hW hV n hn
+  have hνn_ac : νn ≪ volume := hνn_ν.trans hν_ac
+  haveI hQ_prob : IsProbabilityMeasure (truncW P W n) := by
+    rw [truncW]; exact ProbabilityTheory.cond_isProbabilityMeasure hn
+  haveI hνn_prob : IsProbabilityMeasure νn := by
+    rw [hνn_def]
+    exact Measure.isProbabilityMeasure_map (hW.add hV).aemeasurable
+  -- `B(ν_n) ≠ ⊤`.
+  have hBνn : (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((νn.rnDeriv volume x).toReal)))
+      ∂volume) ≠ ⊤ := by
+    rw [hνn_def]
+    exact negPart_lintegral_map_truncW_add_ne_top W V P hW hV hWV hW_ac hBW n hn
+  -- `crossNeg ν_n ν ≤ cinv * crossNeg ν ν = cinv * B(ν)`, hence `≠ ⊤`.
+  have hCNνn_dom : crossNeg νn ν ≤ cinv * crossNeg ν ν := by
+    rw [crossNeg, crossNeg]
+    calc (∫⁻ x, ENNReal.ofReal (Real.log ((ν.rnDeriv volume x).toReal)) ∂νn)
+        ≤ ∫⁻ x, ENNReal.ofReal (Real.log ((ν.rnDeriv volume x).toReal)) ∂(cinv • ν) :=
+          lintegral_mono' hdom (le_refl _)
+      _ = cinv * ∫⁻ x, ENNReal.ofReal (Real.log ((ν.rnDeriv volume x).toReal)) ∂ν := by
+          rw [lintegral_smul_measure]; rfl
+  have hCNν_eq : crossNeg ν ν
+      = ∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((ν.rnDeriv volume x).toReal))) ∂volume :=
+    crossNeg_self ν hν_ac
+  have hCNνn_fin : crossNeg νn ν ≠ ⊤ := by
+    refine ne_top_of_le_ne_top ?_ hCNνn_dom
+    exact ENNReal.mul_ne_top hcinv_top (by rw [hCNν_eq]; exact hBν)
+  -- Gibbs (consumer form): `A(ν_n) + crossNeg ≤ crossPos + B(ν_n)`.
+  have hgibbs := ennreal_gibbs_rearranged hνn_ac hν_ac hνn_ν hBνn hCNνn_fin
+  -- `A(ν_n) ≤ crossPos ν_n ν + B(ν_n)`  (drop the nonneg `crossNeg`).
+  have hA_le : (∫⁻ x, ENNReal.ofReal (Real.negMulLog ((νn.rnDeriv volume x).toReal)) ∂volume)
+      ≤ crossPos νn ν
+        + ∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((νn.rnDeriv volume x).toReal))) ∂volume :=
+    le_trans (le_add_right (le_refl _)) hgibbs
+  -- `h(ν_n) = (A(ν_n):EReal) - (B(ν_n):EReal) ≤ (crossPos ν_n ν : EReal)`.
+  have hh_le : differentialEntropyExt νn ≤ ((crossPos νn ν : ℝ≥0∞) : EReal) := by
+    rw [differentialEntropyExt_of_ac hνn_ac]
+    rw [EReal.sub_le_iff_le_add (Or.inl (EReal.coe_ennreal_ne_bot _))
+      (Or.inl ((EReal.coe_ennreal_eq_top_iff).not.mpr hBνn))]
+    rw [← EReal.coe_ennreal_add]
+    exact_mod_cast hA_le
+  -- domination of the positive cross-entropy: `crossPos ν_n ν ≤ cinv * Aν ≤ 2 * Aν`.
+  have hCPνn_dom : crossPos νn ν ≤ (2 : ℝ≥0∞) * Aν := by
+    have hstep : crossPos νn ν ≤ cinv * crossPos ν ν := by
+      rw [crossPos, crossPos]
+      calc (∫⁻ x, ENNReal.ofReal (-Real.log ((ν.rnDeriv volume x).toReal)) ∂νn)
+          ≤ ∫⁻ x, ENNReal.ofReal (-Real.log ((ν.rnDeriv volume x).toReal)) ∂(cinv • ν) :=
+            lintegral_mono' hdom (le_refl _)
+        _ = cinv * ∫⁻ x, ENNReal.ofReal (-Real.log ((ν.rnDeriv volume x).toReal)) ∂ν := by
+            rw [lintegral_smul_measure]; rfl
+    have hCPν_eq : crossPos ν ν = Aν := by
+      rw [hAν_def]; exact crossPos_self ν hν_ac
+    calc crossPos νn ν ≤ cinv * crossPos ν ν := hstep
+      _ = cinv * Aν := by rw [hCPν_eq]
+      _ ≤ (2 : ℝ≥0∞) * Aν := by exact mul_le_mul' hcinv_le_two (le_refl _)
+  -- chain: `h(ν_n) ≤ (crossPos ν_n ν : EReal) ≤ (2 * Aν : EReal)`.
+  calc differentialEntropyExt νn ≤ ((crossPos νn ν : ℝ≥0∞) : EReal) := hh_le
+    _ ≤ ((2 * Aν : ℝ≥0∞) : EReal) := by exact_mod_cast hCPνn_dom
+
 /-- Unconditional `⊤`-branch of gateway monotonicity: `h(W) = ⊤ ⟹ h(W+V) = ⊤`. Combines per-`n`
 monotonicity `h(W_n) ≤ h(W_n + V)` (`differentialEntropyExt_mono_add_truncW`) with the divergence
 `h(W_n) → ⊤` (`differentialEntropyExt_truncW_tendsto_top`) to squeeze `h(W_n + V) → ⊤`, then derives
@@ -621,81 +718,9 @@ theorem differentialEntropyExt_top_of_indep_add_unconditional
     -- eventually `h(ν_n) ≤ (2 * Aν : EReal)`.
     have hub : ∀ᶠ n in atTop,
         differentialEntropyExt ((truncW P W n).map (fun ω => W ω + V ω))
-          ≤ ((2 * Aν : ℝ≥0∞) : EReal) := by
-      filter_upwards [hcn_ev, hcinv_ev] with n hn hcinv
-      set νn : Measure ℝ := (truncW P W n).map (fun ω => W ω + V ω) with hνn_def
-      set cinv : ℝ≥0∞ := (P {ω | |W ω| ≤ (n : ℝ)})⁻¹ with hcinv_def
-      -- mass `c_n ∈ (0, 1]` so `cinv ∈ [1, ⊤)`.
-      have hcn_ne_top : (P {ω | |W ω| ≤ (n : ℝ)}) ≠ ⊤ := measure_ne_top _ _
-      have hcinv_top : cinv ≠ ⊤ := by
-        rw [hcinv_def]; exact ENNReal.inv_ne_top.mpr hn
-      have hcinv_le_two : cinv ≤ (2 : ℝ≥0∞) := by
-        rw [← ENNReal.ofReal_toReal hcinv_top, show (2 : ℝ≥0∞) = ENNReal.ofReal 2 by simp]
-        exact ENNReal.ofReal_le_ofReal hcinv
-      -- measure domination `ν_n ≤ cinv • ν` (atom 1).
-      have hdom : νn ≤ cinv • ν := by
-        rw [hνn_def, hcinv_def, hν_def]
-        exact map_truncW_add_le_smul_map_add W V P hW hV n hn
-      -- `ν_n ≪ ν ≪ volume`.
-      have hνn_ν : νn ≪ ν := by
-        rw [hνn_def, hν_def]
-        exact map_truncW_add_absolutelyContinuous_map_add W V P hW hV n hn
-      have hνn_ac : νn ≪ volume := hνn_ν.trans hν_ac
-      haveI hQ_prob : IsProbabilityMeasure (truncW P W n) := by
-        rw [truncW]; exact ProbabilityTheory.cond_isProbabilityMeasure hn
-      haveI hνn_prob : IsProbabilityMeasure νn := by
-        rw [hνn_def]
-        exact Measure.isProbabilityMeasure_map (hW.add hV).aemeasurable
-      -- `B(ν_n) ≠ ⊤`.
-      have hBνn : (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((νn.rnDeriv volume x).toReal)))
-          ∂volume) ≠ ⊤ := by
-        rw [hνn_def]
-        exact negPart_lintegral_map_truncW_add_ne_top W V P hW hV hWV hW_ac hBW n hn
-      -- `crossNeg ν_n ν ≤ cinv * crossNeg ν ν = cinv * B(ν)`, hence `≠ ⊤`.
-      have hCNνn_dom : crossNeg νn ν ≤ cinv * crossNeg ν ν := by
-        rw [crossNeg, crossNeg]
-        calc (∫⁻ x, ENNReal.ofReal (Real.log ((ν.rnDeriv volume x).toReal)) ∂νn)
-            ≤ ∫⁻ x, ENNReal.ofReal (Real.log ((ν.rnDeriv volume x).toReal)) ∂(cinv • ν) :=
-              lintegral_mono' hdom (le_refl _)
-          _ = cinv * ∫⁻ x, ENNReal.ofReal (Real.log ((ν.rnDeriv volume x).toReal)) ∂ν := by
-              rw [lintegral_smul_measure]; rfl
-      have hCNν_eq : crossNeg ν ν
-          = ∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((ν.rnDeriv volume x).toReal))) ∂volume :=
-        crossNeg_self ν hν_ac
-      have hCNνn_fin : crossNeg νn ν ≠ ⊤ := by
-        refine ne_top_of_le_ne_top ?_ hCNνn_dom
-        exact ENNReal.mul_ne_top hcinv_top (by rw [hCNν_eq]; exact hBν)
-      -- Gibbs (consumer form): `A(ν_n) + crossNeg ≤ crossPos + B(ν_n)`.
-      have hgibbs := ennreal_gibbs_rearranged hνn_ac hν_ac hνn_ν hBνn hCNνn_fin
-      -- `A(ν_n) ≤ crossPos ν_n ν + B(ν_n)`  (drop the nonneg `crossNeg`).
-      have hA_le : (∫⁻ x, ENNReal.ofReal (Real.negMulLog ((νn.rnDeriv volume x).toReal)) ∂volume)
-          ≤ crossPos νn ν
-            + ∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((νn.rnDeriv volume x).toReal))) ∂volume :=
-        le_trans (le_add_right (le_refl _)) hgibbs
-      -- `h(ν_n) = (A(ν_n):EReal) - (B(ν_n):EReal) ≤ (crossPos ν_n ν : EReal)`.
-      have hh_le : differentialEntropyExt νn ≤ ((crossPos νn ν : ℝ≥0∞) : EReal) := by
-        rw [differentialEntropyExt_of_ac hνn_ac]
-        rw [EReal.sub_le_iff_le_add (Or.inl (EReal.coe_ennreal_ne_bot _))
-          (Or.inl ((EReal.coe_ennreal_eq_top_iff).not.mpr hBνn))]
-        rw [← EReal.coe_ennreal_add]
-        exact_mod_cast hA_le
-      -- domination of the positive cross-entropy: `crossPos ν_n ν ≤ cinv * Aν ≤ 2 * Aν`.
-      have hCPνn_dom : crossPos νn ν ≤ (2 : ℝ≥0∞) * Aν := by
-        have hstep : crossPos νn ν ≤ cinv * crossPos ν ν := by
-          rw [crossPos, crossPos]
-          calc (∫⁻ x, ENNReal.ofReal (-Real.log ((ν.rnDeriv volume x).toReal)) ∂νn)
-              ≤ ∫⁻ x, ENNReal.ofReal (-Real.log ((ν.rnDeriv volume x).toReal)) ∂(cinv • ν) :=
-                lintegral_mono' hdom (le_refl _)
-            _ = cinv * ∫⁻ x, ENNReal.ofReal (-Real.log ((ν.rnDeriv volume x).toReal)) ∂ν := by
-                rw [lintegral_smul_measure]; rfl
-        have hCPν_eq : crossPos ν ν = Aν := by
-          rw [hAν_def]; exact crossPos_self ν hν_ac
-        calc crossPos νn ν ≤ cinv * crossPos ν ν := hstep
-          _ = cinv * Aν := by rw [hCPν_eq]
-          _ ≤ (2 : ℝ≥0∞) * Aν := by exact mul_le_mul' hcinv_le_two (le_refl _)
-      -- chain: `h(ν_n) ≤ (crossPos ν_n ν : EReal) ≤ (2 * Aν : EReal)`.
-      calc differentialEntropyExt νn ≤ ((crossPos νn ν : ℝ≥0∞) : EReal) := hh_le
-        _ ≤ ((2 * Aν : ℝ≥0∞) : EReal) := by exact_mod_cast hCPνn_dom
+          ≤ ((2 * Aν : ℝ≥0∞) : EReal) :=
+      differentialEntropyExt_truncW_add_le_two_mul_Aν W V P hW hV hWV hW_ac hBW
+        ν hν_def hν_ac hBν Aν hAν_def hcn_ev hcinv_ev
     -- contradiction with `h(ν_n) → ⊤`.
     rw [EReal.tendsto_nhds_top_iff_real] at hνn_tendsto
     have h2Aν_fin : (2 * Aν) ≠ ⊤ := ENNReal.mul_ne_top (by simp) hAν_ne
