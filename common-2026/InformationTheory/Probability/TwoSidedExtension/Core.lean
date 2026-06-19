@@ -902,6 +902,130 @@ lemma exists_preimage_natProj_of_posSigma
 
 end ErgodicityMain
 
+-- Cylinder approximation + Borel-Cantelli: any shiftZ-invariant measurable set is
+-- a.e. equal to a posSigma-measurable set.
+omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+private lemma exists_posSigma_ae_eq_of_shiftZ_invariant
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (q : StationaryProcess μ α)
+    (A : Set (∀ _ : ℤ, α))
+    (hA : MeasurableSet A)
+    (hA_inv : shiftZ ⁻¹' A = A) :
+    ∃ A' : Set (∀ _ : ℤ, α),
+    MeasurableSet[posSigma (α := α)] A' ∧ A =ᵐ[μZ μ q] A' := by
+  -- Step (a): For each n, find a cylinder t_n with μZ(A Δ t_n) < 2^{-(n+1)}.
+  have hC : ∃ D : Set (Set (∀ _ : ℤ, α)),
+      D.Countable ∧ D ⊆ measurableCylinders (fun _ : ℤ => α) ∧
+        μZ μ q (⋃₀ D)ᶜ = 0 := by
+    refine ⟨{Set.univ}, Set.countable_singleton _, ?_, ?_⟩
+    · intro s hs
+      rw [Set.mem_singleton_iff] at hs
+      subst hs
+      rw [← cylinder_univ (∅ : Finset ℤ)]
+      exact cylinder_mem_measurableCylinders _ _ MeasurableSet.univ
+    · simp
+  -- For each n, use the symmDiff approximation lemma.
+  have h_approx : ∀ n : ℕ, ∃ t ∈ measurableCylinders (fun _ : ℤ => α),
+      μZ μ q (t ∆ A) < (1 / 2 : ℝ≥0∞) ^ (n + 1) := by
+    intro n
+    exact exists_measure_symmDiff_lt_of_generateFrom_isSetRing
+      isSetRing_measurableCylinders hC generateFrom_measurableCylinders.symm hA
+      (ENNReal.pow_pos (by norm_num) (n + 1))
+  choose t ht_mem ht_lt using h_approx
+  -- For each n, t n is a cylinder over some F_n.
+  have ht_cyl : ∀ n, ∃ (F : Finset ℤ) (S : Set (∀ _ : F, α)),
+      MeasurableSet S ∧ t n = cylinder F S := fun n =>
+    (mem_measurableCylinders (t n)).mp (ht_mem n)
+  choose F S hS_meas hF_eq using ht_cyl
+  -- For each n, pick k_n large enough so F_n + k_n ⊆ ℕ.
+  -- Set k_n := max(0, -min(F_n)).toNat if F_n nonempty, else 0.
+  set k : ℕ → ℕ := fun n =>
+    if h : (F n).Nonempty then (-(F n).min' h).toNat else 0 with hk_def
+  -- For each n, all elements of F_n shifted by k_n are nonneg.
+  have hk_nonneg : ∀ n, ∀ j ∈ F n, (0 : ℤ) ≤ j + (k n : ℤ) := by
+    intro n j hj
+    by_cases hF : (F n).Nonempty
+    · simp only [hk_def, dif_pos hF]
+      have hmin_le : (F n).min' hF ≤ j := (F n).min'_le _ hj
+      by_cases hpos : 0 ≤ -(F n).min' hF
+      · have hcoe : ((-((F n).min' hF)).toNat : ℤ) = -((F n).min' hF) :=
+          Int.toNat_of_nonneg hpos
+        rw [hcoe]; linarith
+      · push Not at hpos
+        have h0 : 0 ≤ j := le_trans (by linarith) hmin_le
+        have : (0 : ℤ) ≤ ((-((F n).min' hF)).toNat : ℤ) := Int.natCast_nonneg _
+        linarith
+    · exact absurd ⟨j, hj⟩ hF
+  -- Define s_n := shiftZ^[k_n]⁻¹' t_n. Cylinder + in posSigma.
+  set s : ℕ → Set (∀ _ : ℤ, α) := fun n => shiftZ^[k n] ⁻¹' t n with hs_def
+  have hs_pos : ∀ n, MeasurableSet[posSigma (α := α)] (s n) := by
+    intro n
+    rw [hs_def]
+    simp only
+    rw [hF_eq n]
+    exact shiftZ_iterate_preimage_cylinder_in_pos (α := α) (hS_meas n) (hk_nonneg n)
+  have hs_meas : ∀ n, MeasurableSet (s n) := fun n =>
+    cylinderEvents_le_pi (s n) (hs_pos n)
+  -- μZ(s_n Δ A) = μZ(t_n Δ A) (via measure preservation + shift invariance).
+  have hs_diff : ∀ n, μZ μ q (s n ∆ A) < (1 / 2 : ℝ≥0∞) ^ (n + 1) := by
+    intro n
+    -- s_n Δ A = shiftZ^[k]⁻¹ t_n Δ shiftZ^[k]⁻¹ A (since A = shiftZ^[k]⁻¹ A by invariance).
+    have hA_iter : ∀ k', shiftZ^[k'] ⁻¹' A = A := by
+      intro k'
+      induction k' with
+      | zero => simp
+      | succ m ih =>
+        show (shiftZ^[m + 1]) ⁻¹' A = A
+        rw [Function.iterate_succ, Set.preimage_comp]
+        -- shiftZ^[m+1] = shiftZ^[m] ∘ shiftZ
+        rw [ih, hA_inv]
+    have h_diff_eq : s n ∆ A = shiftZ^[k n] ⁻¹' (t n ∆ A) := by
+      rw [Set.preimage_symmDiff, hA_iter (k n)]
+    rw [h_diff_eq]
+    have hmp : MeasurePreserving (shiftZ^[k n] : (∀ _ : ℤ, α) → _) (μZ μ q) (μZ μ q) :=
+      (measurePreserving_shiftZ μ q).iterate (k n)
+    have h_meas_diff : NullMeasurableSet (t n ∆ A) (μZ μ q) :=
+      (((MeasurableSet.of_mem_measurableCylinders (ht_mem n)).symmDiff hA)).nullMeasurableSet
+    rw [hmp.measure_preimage h_meas_diff]
+    exact ht_lt n
+  -- Borel-Cantelli: ∑ μZ(s_n Δ A) ≤ ∑ (1/2)^{n+1} ≤ ∑ (1/2)^n, so limsup (s_n Δ A) is null.
+  have h_sum_fin : ∑' n : ℕ, μZ μ q (s n ∆ A) ≠ ∞ := by
+    have h_geom_fin : ∑' n : ℕ, (1 / 2 : ℝ≥0∞) ^ n ≠ ∞ := by
+      rw [ENNReal.tsum_geometric]; simp
+    have h_le : ∀ n : ℕ, μZ μ q (s n ∆ A) ≤ (1 / 2 : ℝ≥0∞) ^ n := by
+      intro n
+      refine le_trans (le_of_lt (hs_diff n)) ?_
+      rw [pow_succ]
+      refine mul_le_of_le_one_right' ?_
+      norm_num
+    exact ne_top_of_le_ne_top h_geom_fin (ENNReal.tsum_le_tsum h_le)
+  have h_limsup_null : μZ μ q (Filter.limsup (fun n => s n ∆ A) Filter.atTop) = 0 :=
+    MeasureTheory.measure_limsup_atTop_eq_zero h_sum_fin
+  -- Define A' := Filter.liminf s atTop. Show A' ∈ posSigma and A =ᵐ A'.
+  refine ⟨Filter.liminf s Filter.atTop, ?_, ?_⟩
+  · -- liminf s = ⨆ n, ⨅ m ≥ n, s m. Each s m ∈ posSigma; closed under ⨅, ⨆.
+    rw [Filter.liminf_eq_iSup_iInf_of_nat]
+    refine MeasurableSet.iUnion (fun n => ?_)
+    refine MeasurableSet.iInter (fun m => ?_)
+    refine MeasurableSet.iInter (fun _ => hs_pos m)
+  · -- A =ᵐ liminf s.
+    have h_ae_notin : ∀ᵐ x ∂(μZ μ q), x ∉ Filter.limsup (fun n => s n ∆ A) Filter.atTop :=
+      measure_eq_zero_iff_ae_notMem.mp h_limsup_null
+    filter_upwards [h_ae_notin] with x hx
+    rw [mem_limsup_iff_frequently_mem, Filter.not_frequently] at hx
+    apply propext
+    show x ∈ A ↔ x ∈ Filter.liminf s Filter.atTop
+    rw [mem_liminf_iff_eventually_mem]
+    constructor
+    · intro hxA
+      filter_upwards [hx] with n hxn
+      by_contra hxs
+      exact hxn (Or.inr ⟨hxA, hxs⟩)
+    · intro hxs
+      rcases (hxs.and hx).exists with ⟨n, hxsn, hxn_diff⟩
+      by_contra hxA
+      exact hxn_diff (Or.inl ⟨hxsn, hxA⟩)
+
 section ErgodicityProof
 
 variable (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α)
@@ -929,138 +1053,9 @@ theorem ergodic_shiftZ :
   refine ⟨fun A hA hA_inv => ?_⟩
   -- Step 1: reduce `EventuallyConst A` to `μZ A = 0 ∨ μZ (A^c) = 0`.
   rw [eventuallyConst_set']
-  -- Step 2: extract `A` to `posSigma`-measurable form modulo null.
-  -- Cylinder approximation: for each ε > 0, find a cylinder t with μZ(A Δ t) < ε.
-  -- Shift t to be in posSigma. Conclude A ∈ (posSigma) modulo null.
-  -- Then use ergodicity of shiftN.
-  -- We extract `A =ᵐ A'` for some `posSigma`-measurable `A'`.
-  have h_approx_pos : ∃ A' : Set (∀ _ : ℤ, α),
-      MeasurableSet[posSigma (α := α)] A' ∧ A =ᵐ[μZ μ q] A' := by
-    -- Step (a): For each n, find a cylinder t_n with μZ(A Δ t_n) < 2^{-(n+1)}.
-    have hC : ∃ D : Set (Set (∀ _ : ℤ, α)),
-        D.Countable ∧ D ⊆ measurableCylinders (fun _ : ℤ => α) ∧
-          μZ μ q (⋃₀ D)ᶜ = 0 := by
-      refine ⟨{Set.univ}, Set.countable_singleton _, ?_, ?_⟩
-      · intro s hs
-        rw [Set.mem_singleton_iff] at hs
-        subst hs
-        rw [← cylinder_univ (∅ : Finset ℤ)]
-        exact cylinder_mem_measurableCylinders _ _ MeasurableSet.univ
-      · simp
-    -- For each n, use the symmDiff approximation lemma.
-    have h_approx : ∀ n : ℕ, ∃ t ∈ measurableCylinders (fun _ : ℤ => α),
-        μZ μ q (t ∆ A) < (1 / 2 : ℝ≥0∞) ^ (n + 1) := by
-      intro n
-      exact exists_measure_symmDiff_lt_of_generateFrom_isSetRing
-        isSetRing_measurableCylinders hC generateFrom_measurableCylinders.symm hA
-        (ENNReal.pow_pos (by norm_num) (n + 1))
-    choose t ht_mem ht_lt using h_approx
-    -- For each n, t n is a cylinder over some F_n.
-    have ht_cyl : ∀ n, ∃ (F : Finset ℤ) (S : Set (∀ _ : F, α)),
-        MeasurableSet S ∧ t n = cylinder F S := fun n =>
-      (mem_measurableCylinders (t n)).mp (ht_mem n)
-    choose F S hS_meas hF_eq using ht_cyl
-    -- For each n, pick k_n large enough so F_n + k_n ⊆ ℕ.
-    -- Set k_n := max(0, -min(F_n)).toNat if F_n nonempty, else 0.
-    set k : ℕ → ℕ := fun n =>
-      if h : (F n).Nonempty then (-(F n).min' h).toNat else 0 with hk_def
-    -- For each n, all elements of F_n shifted by k_n are nonneg.
-    have hk_nonneg : ∀ n, ∀ j ∈ F n, (0 : ℤ) ≤ j + (k n : ℤ) := by
-      intro n j hj
-      by_cases hF : (F n).Nonempty
-      · simp only [hk_def, dif_pos hF]
-        have hmin_le : (F n).min' hF ≤ j := (F n).min'_le _ hj
-        by_cases hpos : 0 ≤ -(F n).min' hF
-        · have hcoe : ((-((F n).min' hF)).toNat : ℤ) = -((F n).min' hF) :=
-            Int.toNat_of_nonneg hpos
-          rw [hcoe]; linarith
-        · push Not at hpos
-          have h0 : 0 ≤ j := le_trans (by linarith) hmin_le
-          have : (0 : ℤ) ≤ ((-((F n).min' hF)).toNat : ℤ) := Int.natCast_nonneg _
-          linarith
-      · exact absurd ⟨j, hj⟩ hF
-    -- Define s_n := shiftZ^[k_n]⁻¹' t_n. Cylinder + in posSigma.
-    set s : ℕ → Set (∀ _ : ℤ, α) := fun n => shiftZ^[k n] ⁻¹' t n with hs_def
-    have hs_pos : ∀ n, MeasurableSet[posSigma (α := α)] (s n) := by
-      intro n
-      rw [hs_def]
-      simp only
-      rw [hF_eq n]
-      exact shiftZ_iterate_preimage_cylinder_in_pos (α := α) (hS_meas n) (hk_nonneg n)
-    have hs_meas : ∀ n, MeasurableSet (s n) := fun n =>
-      cylinderEvents_le_pi (s n) (hs_pos n)
-    -- μZ(s_n Δ A) = μZ(t_n Δ A) (via measure preservation + shift invariance).
-    have hs_diff : ∀ n, μZ μ q (s n ∆ A) < (1 / 2 : ℝ≥0∞) ^ (n + 1) := by
-      intro n
-      -- s_n Δ A = shiftZ^[k]⁻¹ t_n Δ shiftZ^[k]⁻¹ A (since A = shiftZ^[k]⁻¹ A by invariance).
-      have hA_iter : ∀ k', shiftZ^[k'] ⁻¹' A = A := by
-        intro k'
-        induction k' with
-        | zero => simp
-        | succ m ih =>
-          show (shiftZ^[m + 1]) ⁻¹' A = A
-          rw [Function.iterate_succ, Set.preimage_comp]
-          -- shiftZ^[m+1] = shiftZ^[m] ∘ shiftZ. So preimage is (shiftZ^[m] ∘ shiftZ)⁻¹ A = shiftZ⁻¹ (shiftZ^[m]⁻¹ A) = shiftZ⁻¹ A = A.
-          rw [ih, hA_inv]
-      have h_diff_eq : s n ∆ A = shiftZ^[k n] ⁻¹' (t n ∆ A) := by
-        -- shiftZ^[k]⁻¹ (t Δ A) = (shiftZ^[k]⁻¹ t) Δ (shiftZ^[k]⁻¹ A) = s_n Δ A.
-        rw [Set.preimage_symmDiff, hA_iter (k n)]
-      rw [h_diff_eq]
-      have hmp : MeasurePreserving (shiftZ^[k n] : (∀ _ : ℤ, α) → _) (μZ μ q) (μZ μ q) :=
-        (measurePreserving_shiftZ μ q).iterate (k n)
-      have h_meas_diff : NullMeasurableSet (t n ∆ A) (μZ μ q) :=
-        (((MeasurableSet.of_mem_measurableCylinders (ht_mem n)).symmDiff hA)).nullMeasurableSet
-      rw [hmp.measure_preimage h_meas_diff]
-      exact ht_lt n
-    -- Borel-Cantelli: ∑ μZ(s_n Δ A) ≤ ∑ (1/2)^{n+1} ≤ ∑ (1/2)^n, so limsup (s_n Δ A) is null.
-    have h_sum_fin : ∑' n : ℕ, μZ μ q (s n ∆ A) ≠ ∞ := by
-      have h_geom_fin : ∑' n : ℕ, (1 / 2 : ℝ≥0∞) ^ n ≠ ∞ := by
-        rw [ENNReal.tsum_geometric]
-        simp
-      have h_le : ∀ n : ℕ, μZ μ q (s n ∆ A) ≤ (1 / 2 : ℝ≥0∞) ^ n := by
-        intro n
-        refine le_trans (le_of_lt (hs_diff n)) ?_
-        -- (1/2)^(n+1) = (1/2)^n * (1/2) ≤ (1/2)^n.
-        rw [pow_succ]
-        refine mul_le_of_le_one_right' ?_
-        norm_num
-      exact ne_top_of_le_ne_top h_geom_fin (ENNReal.tsum_le_tsum h_le)
-    have h_limsup_null : μZ μ q (Filter.limsup (fun n => s n ∆ A) Filter.atTop) = 0 :=
-      MeasureTheory.measure_limsup_atTop_eq_zero h_sum_fin
-    -- Define A' := Filter.liminf s atTop. Show A' ∈ posSigma and A =ᵐ A'.
-    refine ⟨Filter.liminf s Filter.atTop, ?_, ?_⟩
-    · -- liminf s = ⨆ n, ⨅ m ≥ n, s m. Each s m ∈ posSigma; closed under ⨅, ⨆.
-      rw [Filter.liminf_eq_iSup_iInf_of_nat]
-      -- Goal: MeasurableSet[posSigma] (⨆ n, ⨅ i ≥ n, s i)
-      -- ⨆ on sets is ⋃, ⨅ is ⋂. Apply MeasurableSet.iUnion + MeasurableSet.iInter.
-      refine MeasurableSet.iUnion (fun n => ?_)
-      refine MeasurableSet.iInter (fun m => ?_)
-      refine MeasurableSet.iInter (fun _ => hs_pos m)
-    · -- A =ᵐ liminf s.
-      -- The set `limsup (s n Δ A)` has μZ measure 0. For x outside this null set,
-      -- x ∈ s n Δ A only finitely often, i.e., eventually x ∈ A ↔ x ∈ s n.
-      -- So x ∈ A ↔ (x ∈ s n for all sufficiently large n) ↔ x ∈ liminf s.
-      have h_ae_notin : ∀ᵐ x ∂(μZ μ q), x ∉ Filter.limsup (fun n => s n ∆ A) Filter.atTop :=
-        measure_eq_zero_iff_ae_notMem.mp h_limsup_null
-      filter_upwards [h_ae_notin] with x hx
-      -- hx : x ∉ limsup (fun n => s n ∆ A) atTop
-      -- Goal: A x = liminf s atTop x  (Set membership as `Prop` equality)
-      rw [mem_limsup_iff_frequently_mem, Filter.not_frequently] at hx
-      -- hx : ∀ᶠ n in atTop, x ∉ s n ∆ A
-      apply propext
-      show x ∈ A ↔ x ∈ Filter.liminf s Filter.atTop
-      rw [mem_liminf_iff_eventually_mem]
-      -- Goal: x ∈ A ↔ ∀ᶠ n in atTop, x ∈ s n.
-      constructor
-      · intro hxA
-        filter_upwards [hx] with n hxn
-        by_contra hxs
-        exact hxn (Or.inr ⟨hxA, hxs⟩)
-      · intro hxs
-        rcases (hxs.and hx).exists with ⟨n, hxsn, hxn_diff⟩
-        by_contra hxA
-        exact hxn_diff (Or.inl ⟨hxsn, hxA⟩)
-  obtain ⟨A', hA'_pos, hAA'⟩ := h_approx_pos
+  -- Step 2: cylinder approximation + Borel-Cantelli yields an a.e. posSigma representative.
+  -- Step 3: transfer ergodicity from shiftN.
+  obtain ⟨A', hA'_pos, hAA'⟩ := exists_posSigma_ae_eq_of_shiftZ_invariant μ q A hA hA_inv
   -- A' = natProj⁻¹ B for some measurable B.
   obtain ⟨B, hB, hA'_eq⟩ := exists_preimage_natProj_of_posSigma (α := α) hA'_pos
   -- B is shiftN-invariant mod null on ν.
