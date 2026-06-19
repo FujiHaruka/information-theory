@@ -10,7 +10,7 @@ Lean style [`rules/lean-style.md`](rules/lean-style.md) ・honesty タグ [`audi
 
 - [x] Phase 0 — 測定 + pilot 較正 ✅ (`floorMatrix_dist_le`、commit `d2fb1fa`)
 - [x] Phase 1 — 優先1 (>250 行 tier) を named helper へ分解 ✅ **全 25 本処理済** (clean 割れブロックは全抽出、>250 残留=不可分 core は現実的 DoD で許容)
-- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-9、>150: 91→65)
+- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-10、>150: 91→63)
 - [ ] Phase 3 — 最終再実測 + 裾縮小確認 📋
 - [ ] Phase 4 — **option C (>250 spine 攻略)** 🔨 (2026-06-14 着手。**3 本クリア >250: 15→12、両機構検証済**。残 12 本。下記 Phase 4 節)
 
@@ -205,11 +205,11 @@ file:line (footprint) sorry-count は §4.1 入力データを verbatim 使用 (
 sorryAx-free)。コード側の `@audit:ok`/`@residual`/sorry 数は全 13 本で機械検証して verbatim 保存
 (Assembly は既存 sorry+@residual を含め 1→1 保存)。
 
-## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-9 完了)
+## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-10 完了)
 
 **proof-log: no**。
 
-**状態 (2026-06-20)**: Wave 1-9 完了。**>150 tier: 91 → 65 (−26)、>250 は 0 維持** (official
+**状態 (2026-06-20)**: Wave 1-10 完了。**>150 tier: 91 → 63 (−28)、>250 は 0 維持** (official
 decl-to-next-decl metric で再実測)。各 Wave は全 Hard invariants (対象 sig byte-identical /
 `#print axioms` = `[propext, Classical.choice, Quot.sound]` 不変 / sorry 数不変 / `lake env lean`
 clean + 該当 build green) を orchestrator が独立機械検証済。**新規 sorry/residual なし (純リファクタ)
@@ -280,6 +280,13 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   `differentialEntropyExt_top_of_indep_add_unconditional` 202→130 (public helper 1 本:
   `differentialEntropyExt_truncW_add_le_two_mul_Aν` ~76 = per-n Gibbs + 測度 domination の hub
   ブロック切出、`[IsProbabilityMeasure ν]` を追加引数として明示)。計 2 helper 全 <150。>150 tier 67→65。
+- **Wave 10** (`00bb7ee`/`b04062e`): `EPI/G2/KLFatouLSC.lean` `negMulLog_convDensity_limsup_le`
+  228→120 (public helper 2 本: `negMulLog_klFatou_bridge_identities` = density-form bridge + cross/entropy
+  同定の 2 bridge identity 返却 / `negMulLog_klFatou_entropy_tendsto` = klFun-Fatou squeeze tail で
+  `Tendsto h_n (𝓝 L)`。1 本では 174 止まりで 2 本に分割) +
+  `FisherInfo/V2DeBruijnPerTime.lean` `heatFlow_density_heat_equation` 208→143 (public helper 1 本:
+  `heatFlow_pathDeriv2_eq_integral` ~73 = STEP D spatial-derivative identification ブロック切出)。
+  計 3 helper 全 <150。>150 tier 65→63。
 
 ### 計測ニュアンス (Phase 2 で確立、Wave 4+ でも適用)
 
@@ -291,7 +298,7 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   (Object.lean は docstring に 5 箇所、実 sorry tactic は 0)。ターゲット選定で sorry 持ち判定する際は実
   sorry tactic token を確認する (decl span の `grep sorry` は over-count)。
 
-### Wave 10+ への申し送り
+### Wave 11+ への申し送り
 
 - **触らない (option-C 済 floor 残留)**: Mass 249 / union_bound 245 / ConvEntropyDensity 245 /
   OuterN 241 等。
@@ -306,14 +313,12 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
 - **fresh な >150 候補** (再実測必須):
   `integral_MRatioLowerZ_le_one` (SMB/AlgoetCover/TwoSidedRatio 231、同ファイルに condLExp... 179 も
   >150 = 2 target 同居注意) /
-  `negMulLog_convDensity_limsup_le` (EPI/G2/KLFatouLSC 228) /
   `random_codebook_E1_swap` (ChannelCoding/Achievability/RandomCodebook 230) /
   `random_codebook_E2_swap` (同 215) ※同一ファイル 2 target、1 agent 1 file 規律で同時処理 /
   `codebookAvgFailureStrong_tendsto_zero` (RateDistortion/.../FailureTendsto 226、ファイル最後の宣言・
   set 重め・h_pointwise_bound ~71 行が seam だが <150 到達には追加抽出要) /
   `entropy_power_inequality_of_density_explicit` (EPI/Case1/SmoothingLimit 225、同ファイルに
-  604/874 等複数 >150 同居注意) /
-  `heatFlow_density_heat_equation` (FisherInfo/V2DeBruijnPerTime 208)。
+  604/874 等複数 >150 同居注意)。
   ※ `convJointLlr_integrable` (ConvEntropyDensity 229) は floor `negMulLog_convDensity_entropy_ge_density`
   (245) と同居 = floor sibling、touch 注意。
 - プロトコル: 並列 ≤ 2・1 ファイル 1 エージェント・orchestrator 検証は同一。
