@@ -10,7 +10,7 @@ Lean style [`rules/lean-style.md`](rules/lean-style.md) ・honesty タグ [`audi
 
 - [x] Phase 0 — 測定 + pilot 較正 ✅ (`floorMatrix_dist_le`、commit `d2fb1fa`)
 - [x] Phase 1 — 優先1 (>250 行 tier) を named helper へ分解 ✅ **全 25 本処理済** (clean 割れブロックは全抽出、>250 残留=不可分 core は現実的 DoD で許容)
-- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-11、>150: 91→61)
+- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-12、>150: 91→59)
 - [ ] Phase 3 — 最終再実測 + 裾縮小確認 📋
 - [ ] Phase 4 — **option C (>250 spine 攻略)** 🔨 (2026-06-14 着手。**3 本クリア >250: 15→12、両機構検証済**。残 12 本。下記 Phase 4 節)
 
@@ -205,11 +205,11 @@ file:line (footprint) sorry-count は §4.1 入力データを verbatim 使用 (
 sorryAx-free)。コード側の `@audit:ok`/`@residual`/sorry 数は全 13 本で機械検証して verbatim 保存
 (Assembly は既存 sorry+@residual を含め 1→1 保存)。
 
-## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-11 完了)
+## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-12 完了)
 
 **proof-log: no**。
 
-**状態 (2026-06-20)**: Wave 1-11 完了。**>150 tier: 91 → 61 (−30)、>250 は 0 維持** (official
+**状態 (2026-06-20)**: Wave 1-12 完了。**>150 tier: 91 → 59 (−32)、>250 は 0 維持** (official
 decl-to-next-decl metric で再実測)。各 Wave は全 Hard invariants (対象 sig byte-identical /
 `#print axioms` = `[propext, Classical.choice, Quot.sound]` 不変 / sorry 数不変 / `lake env lean`
 clean + 該当 build green) を orchestrator が独立機械検証済。**新規 sorry/residual なし (純リファクタ)
@@ -297,6 +297,14 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   `jensen_convDensityAdd_le_section_integral` ~64 = per-z Jensen bound を convDensityAdd ベースに書換 /
   `ae_section_integrable_convKernel` = section integrability 3 本を prod_right_ae 汎用化)。
   計 5 helper 全 <150。>150 tier 63→61。
+- **Wave 12** (`637b2c6`/`2802899`): `FisherInfo/V2DeBruijnAssembly/Derivatives.lean`
+  `convDensityAdd_negMulLog_integrable` 187→119 (public helper 1 本:
+  `convDensityAdd_sq_mul_integrable` = `Integrable (x²·p_t x)` ブロック ~70 行抽出、p_t/g を抽象関数+等式仮説で受ける) +
+  `ChannelCoding/ShannonTheoremFullDischarge/SmoothInstantiation.lean`
+  `channel_coding_achievability_smooth_at_N_le` 219→128 (public helper 2 本:
+  `channelCodingSmooth_avg_bound` = μ-regularity bundle → random_codebook_average_le 結論を直接返す (full/pos/match facts 内部再生成) /
+  `channelCodingSmooth_assemble` = E1/E2 bound block + exists_codebook_le_avg pigeonhole 集約)。
+  計 3 helper 全 <150。>150 tier 61→59。
 
 ### 計測ニュアンス (Phase 2 で確立、Wave 4+ でも適用)
 
@@ -308,7 +316,7 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   (Object.lean は docstring に 5 箇所、実 sorry tactic は 0)。ターゲット選定で sorry 持ち判定する際は実
   sorry tactic token を確認する (decl span の `grep sorry` は over-count)。
 
-### Wave 12+ への申し送り
+### Wave 13+ への申し送り
 
 - **触らない (option-C 済 floor 残留)**: Mass 249 / union_bound 245 / ConvEntropyDensity 245 等。
 - **計測アーティファクト — `convex_fisher_bound` (EPI/Blachman/Density 238) は候補から除外**:
@@ -330,10 +338,13 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   604/874 等複数 >150 同居注意)。
   ※ `convJointLlr_integrable` (ConvEntropyDensity 229) は floor `negMulLog_convDensity_entropy_ge_density`
   (245) と同居 = floor sibling、touch 注意。
-- **次回推奨 (単一 >150・disjoint、安全に並列可)**: `channel_coding_achievability_smooth_at_N_le`
-  (ChannelCoding/.../SmoothInstantiation 219、ファイル末尾の宣言) /
-  `convDensityAdd_negMulLog_integrable` (EPI/.../Derivatives 187)。いずれも単一 >150 target で
-  互いに disjoint、1 agent 1 file で同時処理可。
+- **次回推奨 (単一 >150・disjoint、安全に並列可、再実測値)**:
+  `codebookAvgFailureStrong_tendsto_zero` (RateDistortion/.../FailureTendsto 226、ファイル末尾の宣言) /
+  `integral_MRatioLowerZ_le_one` (SMB/AlgoetCover/TwoSidedRatio 231、同ファイルに condLExp... 179 同居 =
+  2 target 注意、disjoint 並列に回すなら同一 agent 所有か別 Wave へ) /
+  `differentialEntropyExt_mono_add_of_integrable` (EPI/Unconditional/TruncationLimit/Mono 183) /
+  `klDiv_joint_prod_marginals_toReal` (Bridge 181)。互いに別ファイルゆえ disjoint、1 agent 1 file で
+  同時処理可 (TwoSidedRatio は同居 target に注意)。
 - プロトコル: 並列 ≤ 2・1 ファイル 1 エージェント・orchestrator 検証は同一。
 - **process 申し送り (確定運用)**: worktree isolation 指定が **Wave 6・7 と 2 連続で機能せず**、
   agent commit が main 直書きになった (分離ブランチが作られない)。Wave 7 では wave7a の WIP が
