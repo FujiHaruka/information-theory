@@ -288,6 +288,124 @@ lemma channelCodingSmoothMinN_real_le_two_coef_logSq_add
   · exact hAY'
   · exact hAZ'
 
+/-- Per-`n` log-square bounds for `V_Y(δ_n)` and `V_Z(δ_n)`: both are dominated by
+`2·K² + 2·(log(n+1))²` once `1/δ_n ≤ (1/δ_B + 16/ε)·(n+1)`. -/
+private lemma outerN_logSq_bounds
+    {δ_B ε δ_n p_min K_Y K_Z : ℝ} {n : ℕ} {cα cβ : ℝ}
+    (hδ_B_pos : 0 < δ_B) (hε : 0 < ε)
+    (hp_min_pos : 0 < p_min) (hδ_n_pos : 0 < δ_n) (hδ_n_le : δ_n ≤ 1)
+    (hn1_pos : (0 : ℝ) < (n : ℝ) + 1)
+    (hβ1 : (1 : ℝ) ≤ cβ) (hα1 : (1 : ℝ) ≤ cα)
+    (h_one_div_δ_n_le : 1 / δ_n ≤ (1 / δ_B + 16 / ε) * ((n : ℝ) + 1))
+    (hK_Y_def : K_Y = Real.log cβ + Real.log (1 / δ_B + 16 / ε))
+    (hK_Z_def : K_Z = Real.log (cα * cβ / p_min) + Real.log (1 / δ_B + 16 / ε))
+    (hp_min_le_one : p_min ≤ 1) :
+    (Real.log (cβ / δ_n)) ^ 2
+        ≤ 2 * K_Y ^ 2 + 2 * (Real.log ((n : ℝ) + 1)) ^ 2 ∧
+      (Real.log ((cα * cβ) / (p_min * δ_n))) ^ 2
+        ≤ 2 * K_Z ^ 2 + 2 * (Real.log ((n : ℝ) + 1)) ^ 2 := by
+  have h_sum_pos : (0 : ℝ) < 1 / δ_B + 16 / ε := by positivity
+  refine ⟨?_, ?_⟩
+  · rw [hK_Y_def]
+    exact logSq_div_le_two_sq_add_two_logSq hβ1 h_sum_pos hδ_n_pos hδ_n_le hn1_pos
+      h_one_div_δ_n_le
+  · have hαβ_pmin_ge : (1 : ℝ) ≤ cα * cβ / p_min := by
+      rw [le_div_iff₀ hp_min_pos]; nlinarith
+    rw [hK_Z_def,
+      show (cα * cβ) / (p_min * δ_n) = (cα * cβ / p_min) / δ_n from
+        div_mul_eq_div_div _ _ _]
+    exact logSq_div_le_two_sq_add_two_logSq hαβ_pmin_ge h_sum_pos hδ_n_pos hδ_n_le
+      hn1_pos h_one_div_δ_n_le
+
+/-- Closed-form `channelCodingSmoothMinN ... ≤ n` from the per-`n` log-square variance
+bounds and the outer-`N` log-square absorption inequality. -/
+private lemma outerN_smoothMinN_le
+    {V_X V_Y_n V_Z_n K_Y K_Z V_const C_coef D_const η ε_gap I_lb R' ε' : ℝ} {n : ℕ}
+    (hη_def : η = ε' / 2) (hε_gap_def : ε_gap = (I_lb - R') / 6)
+    (hηε_sq : 0 < (η / 3) * ε_gap ^ 2)
+    (hV_X_nn : 0 ≤ V_X) (hV_Y_n_nn : 0 ≤ V_Y_n) (hV_Z_n_nn : 0 ≤ V_Z_n)
+    (hV_const_def : V_const = V_X + 2 * K_Y ^ 2 + 2 * K_Z ^ 2)
+    (hC_coef_def : C_coef = 2 / ((η / 3) * ε_gap ^ 2))
+    (hD_const_def : D_const = V_const / ((η / 3) * ε_gap ^ 2) + 6
+      + (expNegMulMinN ((I_lb - R') / 2) (ε' / 2) : ℕ) + 1)
+    (h_V_Y_n_bound : V_Y_n ≤ 2 * K_Y ^ 2 + 2 * (Real.log ((n : ℝ) + 1)) ^ 2)
+    (h_V_Z_n_bound : V_Z_n ≤ 2 * K_Z ^ 2 + 2 * (Real.log ((n : ℝ) + 1)) ^ 2)
+    (h_log_le_n :
+      2 * C_coef * (Real.log ((n : ℝ) + 1)) ^ 2 + D_const ≤ (n : ℝ)) :
+    channelCodingSmoothMinN V_X V_Y_n V_Z_n I_lb R' ε' ≤ n := by
+  have h_total_split : V_const / ((η / 3) * ε_gap ^ 2)
+      = V_X / ((η / 3) * ε_gap ^ 2) + 2 * K_Y ^ 2 / ((η / 3) * ε_gap ^ 2)
+        + 2 * K_Z ^ 2 / ((η / 3) * ε_gap ^ 2) := by
+    rw [hV_const_def, add_div, add_div]
+  have h_VX_nn : 0 ≤ V_X / ((η / 3) * ε_gap ^ 2) := by positivity
+  have h_KY_nn : 0 ≤ 2 * K_Y ^ 2 / ((η / 3) * ε_gap ^ 2) := by positivity
+  have h_KZ_nn : 0 ≤ 2 * K_Z ^ 2 / ((η / 3) * ε_gap ^ 2) := by positivity
+  have h_expNeg_nn : 0 ≤ (expNegMulMinN ((I_lb - R') / 2) (ε' / 2) : ℝ) := Nat.cast_nonneg _
+  have hDX : V_X / ((η / 3) * ε_gap ^ 2) + 2 ≤ D_const := by
+    rw [hD_const_def, h_total_split]; linarith
+  have hDY : 2 * K_Y ^ 2 / ((η / 3) * ε_gap ^ 2) + 2 ≤ D_const := by
+    rw [hD_const_def, h_total_split]; linarith
+  have hDZ : 2 * K_Z ^ 2 / ((η / 3) * ε_gap ^ 2) + 2 ≤ D_const := by
+    rw [hD_const_def, h_total_split]; linarith
+  have hDexp : (expNegMulMinN ((I_lb - R') / 2) (ε' / 2) : ℝ) ≤ D_const := by
+    rw [hD_const_def, h_total_split]; linarith
+  have hD1 : (1 : ℝ) ≤ D_const := by
+    rw [hD_const_def, h_total_split]; linarith
+  have hC_coef_nn : 0 ≤ C_coef := by rw [hC_coef_def]; positivity
+  have hCLsq : 0 ≤ 2 * C_coef * (Real.log ((n : ℝ) + 1)) ^ 2 := by positivity
+  have h_smoothN_le :
+      (channelCodingSmoothMinN V_X V_Y_n V_Z_n I_lb R' ε' : ℝ)
+        ≤ 2 * C_coef * (Real.log ((n : ℝ) + 1)) ^ 2 + D_const :=
+    channelCodingSmoothMinN_real_le_two_coef_logSq_add
+      (by rw [hη_def]) hε_gap_def hηε_sq hV_X_nn h_V_Y_n_bound h_V_Z_n_bound
+      (sq_nonneg _) hV_Y_n_nn hV_Z_n_nn hC_coef_def hDX hDY hDZ hDexp hD1 hCLsq
+  have h_smoothN_le_n :
+      (channelCodingSmoothMinN V_X V_Y_n V_Z_n I_lb R' ε' : ℝ) ≤ (n : ℝ) :=
+    h_smoothN_le.trans h_log_le_n
+  exact_mod_cast h_smoothN_le_n
+
+omit [DecidableEq α] [DecidableEq β] in
+/-- The three per-`n` variance bounds for the smooth channel `Channel.smooth W δ_n`:
+`pmfLogVariance` of `iidXs`, `iidYs`, and the joint sequence are bounded by the
+closed-form constants `V_X_B²`, `log(|β|/δ_n)²`, and `log(|α||β|/(p_min·δ_n))²`. -/
+private lemma outerN_variance_bounds
+    (p_meas : Measure α) [IsProbabilityMeasure p_meas]
+    (W : Channel α β) [IsMarkovKernel W]
+    {δ_n p_min V_X_B : ℝ} (hδ_n_pos : 0 < δ_n) (hδ_n_le : δ_n ≤ 1)
+    (hp_min_pos : 0 < p_min)
+    (hp_min_le_meas : ∀ a : α, p_min ≤ p_meas.real {a})
+    (hV_X_B : V_X_B = pmfLogBound (iidAmbientMeasure p_meas W) iidXs) :
+    let μ := iidAmbientMeasure p_meas (Channel.smooth W δ_n)
+    pmfLogVariance μ iidXs ≤ V_X_B ^ 2 ∧
+      pmfLogVariance μ iidYs ≤ (Real.log ((Fintype.card β : ℝ) / δ_n)) ^ 2 ∧
+      pmfLogVariance μ (jointSequence iidXs iidYs)
+        ≤ (Real.log (((Fintype.card α : ℝ) * (Fintype.card β : ℝ))
+            / (p_min * δ_n))) ^ 2 := by
+  intro μ
+  classical
+  haveI hWsmooth_mk : IsMarkovKernel (Channel.smooth W δ_n) :=
+    Channel.smooth_isMarkovKernel W hδ_n_pos.le hδ_n_le
+  haveI : IsProbabilityMeasure μ := by infer_instance
+  have hXs : ∀ i, Measurable (iidXs (α := α) (β := β) i) := measurable_iidXs
+  have hYs : ∀ i, Measurable (iidYs (α := α) (β := β) i) := measurable_iidYs
+  have hZ_meas : ∀ i, Measurable (jointSequence (α := α) (β := β) iidXs iidYs i) :=
+    fun i => measurable_jointSequence iidXs iidYs hXs hYs i
+  have hV_X_pointwise : ∀ a : α, |pmfLog μ iidXs a| ≤ V_X_B := by
+    intro a
+    rw [pmfLog_iidXs_const_in_smooth p_meas W hδ_n_pos hδ_n_le a, hV_X_B]
+    exact abs_pmfLog_le_bound (iidAmbientMeasure p_meas W) iidXs a
+  have hV_Y_pointwise : ∀ b : β,
+      |pmfLog μ iidYs b| ≤ Real.log ((Fintype.card β : ℝ) / δ_n) :=
+    fun b => pmfLog_iidYs_bound_smooth p_meas W hδ_n_pos hδ_n_le b
+  have hV_Z_pointwise : ∀ ab : α × β,
+      |pmfLog μ (jointSequence iidXs iidYs) ab| ≤
+        Real.log (((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n)) :=
+    fun ab => pmfLog_jointSequence_bound_smooth p_meas hp_min_pos hp_min_le_meas
+      W hδ_n_pos hδ_n_le ab
+  refine ⟨pmfLogVariance_le_sq_of_bounded μ iidXs hXs hV_X_pointwise,
+    pmfLogVariance_le_sq_of_bounded μ iidYs hYs hV_Y_pointwise,
+    pmfLogVariance_le_sq_of_bounded μ (jointSequence iidXs iidYs) hZ_meas hV_Z_pointwise⟩
+
 omit [DecidableEq α] [DecidableEq β] in
 set_option maxHeartbeats 1200000 in
 /-- For any `R < capacity W` and `ε > 0`, there exists `N₀` such that for all
@@ -346,28 +464,13 @@ theorem exists_N_for_smooth_achievability_uniform
   -- K_Z := log(|α|·|β|/p_min) + log(1/δ_B + 16/ε); log(|α||β|/(p_min δ_n)) ≤ K_Z + log(n+1).
   set K_Z : ℝ := Real.log ((Fintype.card α : ℝ) * (Fintype.card β : ℝ) / p_min) +
     Real.log (1 / δ_B + 16 / ε) with hK_Z_def
-  -- Step 6: identify the constant `D` and coefficient `C` for outer-N.
-  -- V_Y(δ_n) ≤ 2·K_Y² + 2·(log(n+1))², V_Z(δ_n) ≤ 2·K_Z² + 2·(log(n+1))².
-  -- jointlyTypicalSetMinN V_X V_Y V_Z (ε'/2) ((I_lb - R')/6)
-  --   = max(max(typicalSetMinN V_X (ε'/6) ε_gap, typicalSetMinN V_Y(δ_n) (ε'/6) ε_gap),
-  --       typicalSetMinN V_Z(δ_n) (ε'/6) ε_gap)
-  -- where ε_gap := (I_lb - R')/6.
-  -- typicalSetMinN V η ε_gap = max(1, ⌈V/(η·ε_gap²)⌉ + 1) ≤ V/(η·ε_gap²) + 2 + 1.
+  -- Step 6: outer-N coefficient `C_coef` and constant `D_const` (see `outerN_smoothMinN_le`).
   set ε_gap : ℝ := (I_lb - R') / 6 with hε_gap_def
-  have hI_lb_gt_R' : 0 < I_lb - R' := by linarith
-  have hε_gap_pos : 0 < ε_gap := by rw [hε_gap_def]; positivity
   set η : ℝ := ε' / 2 with hη_def
-  have hη_pos : 0 < η := by rw [hη_def]; linarith
-  have hη3_pos : 0 < η / 3 := by linarith
   -- Coefficient C absorbs `2 / ((η/3) · ε_gap²)`.
   set C_coef : ℝ := 2 / ((η / 3) * ε_gap ^ 2) with hC_coef_def
   have hC_coef_pos : 0 < C_coef := by
     rw [hC_coef_def]; positivity
-  -- D_const = sum of: V_X / ((η/3) · ε_gap²) + 2 (the +1 typicalSetMinN constants for X),
-  -- + (2·K_Y² + 2·K_Z²) / ((η/3) · ε_gap²) + 4 (for Y, Z),
-  -- + expNegMulMinN ((I_lb-R')/2) (ε'/2)  -- constant
-  -- + 1 (for the outer max-with-1 of channelCodingSmoothMinN).
-  -- We need a numerical upper bound.
   set V_const : ℝ := V_X + 2 * K_Y ^ 2 + 2 * K_Z ^ 2 with hV_const_def
   set D_const : ℝ := V_const / ((η / 3) * ε_gap ^ 2) + 6
     + (expNegMulMinN ((I_lb - R') / 2) (ε' / 2) : ℕ) + 1 with hD_const_def
@@ -400,75 +503,27 @@ theorem exists_N_for_smooth_achievability_uniform
       (mutualInfoOfChannel (pmfToMeasure (pSmooth p₀ δ_p))
         (Channel.smooth W δ_n)).toReal :=
     h_MI_uniform δ_n hδ_n_mem
-  have hR'_lt_MI : R' < (mutualInfoOfChannel (pmfToMeasure (pSmooth p₀ δ_p))
-        (Channel.smooth W δ_n)).toReal :=
-    hR'_lt_I_lb.trans hMI_δ_n
-  -- Variance upper bounds:
-  -- V_X bound is via `pmfLog_iidXs_const_in_smooth` + `pmfLogVariance_le_sq_of_bounded`.
-  -- We work in `μ := iidAmbientMeasure (pmfToMeasure p_full) (Channel.smooth W δ_n)`.
+  -- Variance upper bounds (V_X/V_Y/V_Z) on `μ := iidAmbientMeasure p_meas (W_smooth δ_n)`.
   haveI hWsmooth_mk : IsMarkovKernel (Channel.smooth W δ_n) :=
     Channel.smooth_isMarkovKernel W hδ_n_pos.le hδ_n_le
-  set p_meas : Measure α := pmfToMeasure (pSmooth p₀ δ_p) with hp_meas_def
-  set μ : Measure (ℕ → α × β) :=
-    iidAmbientMeasure p_meas (Channel.smooth W δ_n) with hμ_def
-  haveI : IsProbabilityMeasure μ := by rw [hμ_def]; infer_instance
-  have hXs : ∀ i, Measurable (iidXs (α := α) (β := β) i) := measurable_iidXs
-  have hYs : ∀ i, Measurable (iidYs (α := α) (β := β) i) := measurable_iidYs
-  -- V_X bound:
-  have hV_X_pointwise : ∀ a : α, |pmfLog μ iidXs a| ≤ V_X_B := by
-    intro a
-    rw [hμ_def, pmfLog_iidXs_const_in_smooth p_meas W hδ_n_pos hδ_n_le a]
-    exact abs_pmfLog_le_bound (iidAmbientMeasure p_meas W) iidXs a
-  have hV_X_bound : pmfLogVariance μ iidXs ≤ V_X :=
-    pmfLogVariance_le_sq_of_bounded μ iidXs hXs hV_X_pointwise
-  -- V_Y pointwise bound: |pmfLog μ iidYs b| ≤ log(|β|/δ_n).
-  have hV_Y_pointwise : ∀ b : β,
-      |pmfLog μ iidYs b| ≤ Real.log ((Fintype.card β : ℝ) / δ_n) := by
-    intro b
-    rw [hμ_def]
-    exact pmfLog_iidYs_bound_smooth p_meas W hδ_n_pos hδ_n_le b
-  -- V_Z pointwise bound: |pmfLog μ joint| ≤ log(|α||β|/(p_min·δ_n)).
-  have hV_Z_pointwise : ∀ ab : α × β,
-      |pmfLog μ (jointSequence iidXs iidYs) ab| ≤
-        Real.log (((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n)) := by
-    intro ab
-    rw [hμ_def]
-    exact pmfLog_jointSequence_bound_smooth p_meas hp_min_pos hp_min_le_meas
-      W hδ_n_pos hδ_n_le ab
-  -- Now bound log(|β|/δ_n) ≤ K_Y + log(n+1), and (log(|β|/δ_n))² ≤ 2 K_Y² + 2 (log(n+1))².
-  have h_one_div_δ_n_le : 1 / δ_n ≤ (1 / δ_B + 16 / ε) * ((n : ℝ) + 1) :=
-    one_div_smooth_n_le hδ_B_pos hε n
-  have h_sum_pos : (0 : ℝ) < 1 / δ_B + 16 / ε := by positivity
-  -- (log)² ≤ 2 K² + 2 (log(n+1))²: combine the log-div bound with `(a+b)² ≤ 2a² + 2b²`.
   set V_Y_n : ℝ := (Real.log ((Fintype.card β : ℝ) / δ_n)) ^ 2 with hV_Y_n_def
   set V_Z_n : ℝ := (Real.log (((Fintype.card α : ℝ) * (Fintype.card β : ℝ))
                               / (p_min * δ_n))) ^ 2 with hV_Z_n_def
+  obtain ⟨hV_X_bound, hV_Y_bound, hV_Z_bound⟩ :=
+    outerN_variance_bounds (pmfToMeasure (pSmooth p₀ δ_p)) W hδ_n_pos hδ_n_le hp_min_pos
+      hp_min_le_meas hV_X_B_def
+  -- Now bound (log(|β|/δ_n))² ≤ 2 K_Y² + 2 (log(n+1))², similarly for K_Z.
+  have h_one_div_δ_n_le : 1 / δ_n ≤ (1 / δ_B + 16 / ε) * ((n : ℝ) + 1) :=
+    one_div_smooth_n_le hδ_B_pos hε n
   have hβ1 : (1 : ℝ) ≤ (Fintype.card β : ℝ) := by
     exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
   have hα1 : (1 : ℝ) ≤ (Fintype.card α : ℝ) := by
     exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
-  have h_V_Y_n_bound : V_Y_n ≤ 2 * K_Y ^ 2 + 2 * (Real.log ((n : ℝ) + 1)) ^ 2 := by
-    rw [hV_Y_n_def, hK_Y_def]
-    exact logSq_div_le_two_sq_add_two_logSq hβ1 h_sum_pos hδ_n_pos hδ_n_le hn1_pos
-      h_one_div_δ_n_le
-  have h_V_Z_n_bound : V_Z_n ≤ 2 * K_Z ^ 2 + 2 * (Real.log ((n : ℝ) + 1)) ^ 2 := by
-    have hp_min_le_one : p_min ≤ 1 := by
-      rw [hp_min_def, div_le_one hα_pos]; linarith
-    have hαβ_pmin_ge : (1 : ℝ) ≤ (Fintype.card α : ℝ) * (Fintype.card β : ℝ) / p_min := by
-      rw [le_div_iff₀ hp_min_pos]; nlinarith
-    rw [hV_Z_n_def, hK_Z_def,
-      show ((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n)
-        = ((Fintype.card α : ℝ) * (Fintype.card β : ℝ) / p_min) / δ_n from
-        div_mul_eq_div_div _ _ _]
-    exact logSq_div_le_two_sq_add_two_logSq hαβ_pmin_ge h_sum_pos hδ_n_pos hδ_n_le
-      hn1_pos h_one_div_δ_n_le
-  -- Variance bounds.
-  have hV_Y_bound : pmfLogVariance μ iidYs ≤ V_Y_n :=
-    pmfLogVariance_le_sq_of_bounded μ iidYs hYs hV_Y_pointwise
-  have hZ_meas : ∀ i, Measurable (jointSequence (α := α) (β := β) iidXs iidYs i) :=
-    fun i => measurable_jointSequence iidXs iidYs hXs hYs i
-  have hV_Z_bound : pmfLogVariance μ (jointSequence iidXs iidYs) ≤ V_Z_n :=
-    pmfLogVariance_le_sq_of_bounded μ (jointSequence iidXs iidYs) hZ_meas hV_Z_pointwise
+  have hp_min_le_one : p_min ≤ 1 := by
+    rw [hp_min_def, div_le_one hα_pos]; linarith
+  obtain ⟨h_V_Y_n_bound, h_V_Z_n_bound⟩ :=
+    outerN_logSq_bounds hδ_B_pos hε hp_min_pos hδ_n_pos hδ_n_le hn1_pos
+      hβ1 hα1 h_one_div_δ_n_le hK_Y_def hK_Z_def hp_min_le_one
   -- Step 9: Apply `channel_coding_achievability_smooth_at_N_le` at `R'` with V_X, V_Y_n, V_Z_n.
   --   We need `channelCodingSmoothMinN V_X V_Y_n V_Z_n I_lb R' ε' ≤ n`.
   -- Decompose this max.
@@ -478,45 +533,14 @@ theorem exists_N_for_smooth_achievability_uniform
   -- d) expNegMulMinN((I_lb - R')/2)(ε'/2) ≤ const.
   -- e) +1 (the outer max-with-1).
   -- Sum: D_const + 2·C_coef·(log(n+1))². Compare against `n`.
-  have hηε_sq : 0 < (η / 3) * ε_gap ^ 2 := by positivity
   have hV_X_nn : 0 ≤ V_X := by rw [hV_X_def]; exact sq_nonneg _
   have hV_Y_n_nn : 0 ≤ V_Y_n := by rw [hV_Y_n_def]; exact sq_nonneg _
   have hV_Z_n_nn : 0 ≤ V_Z_n := by rw [hV_Z_n_def]; exact sq_nonneg _
-  -- Each `typicalSetMinN`/`expNegMulMinN` axis is bounded by `2·C_coef·(log(n+1))² + D_const`.
-  -- The three `D_const`-side inequalities (`hDX`/`hDY`/`hDZ`) split `V_const/s` into nonneg parts.
-  have h_total_split : V_const / ((η / 3) * ε_gap ^ 2)
-      = V_X / ((η / 3) * ε_gap ^ 2) + 2 * K_Y ^ 2 / ((η / 3) * ε_gap ^ 2)
-        + 2 * K_Z ^ 2 / ((η / 3) * ε_gap ^ 2) := by
-    rw [hV_const_def, add_div, add_div]
-  have h_VX_nn : 0 ≤ V_X / ((η / 3) * ε_gap ^ 2) := by positivity
-  have h_KY_nn : 0 ≤ 2 * K_Y ^ 2 / ((η / 3) * ε_gap ^ 2) := by positivity
-  have h_KZ_nn : 0 ≤ 2 * K_Z ^ 2 / ((η / 3) * ε_gap ^ 2) := by positivity
-  have h_expNeg_nn : 0 ≤ (expNegMulMinN ((I_lb - R') / 2) (ε' / 2) : ℝ) := Nat.cast_nonneg _
-  have hDX : V_X / ((η / 3) * ε_gap ^ 2) + 2 ≤ D_const := by
-    rw [hD_const_def, h_total_split]; linarith
-  have hDY : 2 * K_Y ^ 2 / ((η / 3) * ε_gap ^ 2) + 2 ≤ D_const := by
-    rw [hD_const_def, h_total_split]; linarith
-  have hDZ : 2 * K_Z ^ 2 / ((η / 3) * ε_gap ^ 2) + 2 ≤ D_const := by
-    rw [hD_const_def, h_total_split]; linarith
-  have hDexp : (expNegMulMinN ((I_lb - R') / 2) (ε' / 2) : ℝ) ≤ D_const := by
-    rw [hD_const_def, h_total_split]; linarith
-  have hD1 : (1 : ℝ) ≤ D_const := by
-    rw [hD_const_def, h_total_split]; linarith
-  have hCLsq : 0 ≤ 2 * C_coef * (Real.log ((n : ℝ) + 1)) ^ 2 := by positivity
-  have h_smoothN_le :
-      (channelCodingSmoothMinN V_X V_Y_n V_Z_n I_lb R' ε' : ℝ)
-        ≤ 2 * C_coef * (Real.log ((n : ℝ) + 1)) ^ 2 + D_const :=
-    channelCodingSmoothMinN_real_le_two_coef_logSq_add
-      (by rw [hη_def]) hε_gap_def hηε_sq hV_X_nn h_V_Y_n_bound h_V_Z_n_bound
-      (sq_nonneg _) hV_Y_n_nn hV_Z_n_nn hC_coef_def hDX hDY hDZ hDexp hD1 hCLsq
-  -- From outer N₀: 2·C_coef · (log(n+1))² + D_const ≤ n.
-  have h_log_le_n := hN_log n hn_log
-  have h_smoothN_le_n :
-      (channelCodingSmoothMinN V_X V_Y_n V_Z_n I_lb R' ε' : ℝ) ≤ (n : ℝ) :=
-    h_smoothN_le.trans h_log_le_n
+  -- Closed-form `channelCodingSmoothMinN ... ≤ n` from the per-`n` variance bounds and outer-N.
   have h_smoothN_le_n_nat :
-      channelCodingSmoothMinN V_X V_Y_n V_Z_n I_lb R' ε' ≤ n := by
-    exact_mod_cast h_smoothN_le_n
+      channelCodingSmoothMinN V_X V_Y_n V_Z_n I_lb R' ε' ≤ n :=
+    outerN_smoothMinN_le hη_def hε_gap_def (by positivity) hV_X_nn hV_Y_n_nn hV_Z_n_nn
+      hV_const_def hC_coef_def hD_const_def h_V_Y_n_bound h_V_Z_n_bound (hN_log n hn_log)
   -- Step 10: apply the closed-form average-error theorem.
   obtain ⟨M', hM'_lb, c', h_avg_lt⟩ :=
     channel_coding_achievability_smooth_at_N_le W p₀ hp₀_mem hδ_p_pos hδ_p_le
