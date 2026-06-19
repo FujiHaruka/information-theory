@@ -10,7 +10,7 @@ Lean style [`rules/lean-style.md`](rules/lean-style.md) ・honesty タグ [`audi
 
 - [x] Phase 0 — 測定 + pilot 較正 ✅ (`floorMatrix_dist_le`、commit `d2fb1fa`)
 - [x] Phase 1 — 優先1 (>250 行 tier) を named helper へ分解 ✅ **全 25 本処理済** (clean 割れブロックは全抽出、>250 残留=不可分 core は現実的 DoD で許容)
-- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-15、>150: 91→53)
+- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-16、>150: 91→51)
 - [ ] Phase 3 — 最終再実測 + 裾縮小確認 📋
 - [ ] Phase 4 — **option C (>250 spine 攻略)** 🔨 (2026-06-14 着手。**3 本クリア >250: 15→12、両機構検証済**。残 12 本。下記 Phase 4 節)
 
@@ -205,11 +205,11 @@ file:line (footprint) sorry-count は §4.1 入力データを verbatim 使用 (
 sorryAx-free)。コード側の `@audit:ok`/`@residual`/sorry 数は全 13 本で機械検証して verbatim 保存
 (Assembly は既存 sorry+@residual を含め 1→1 保存)。
 
-## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-15 完了)
+## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-16 完了)
 
 **proof-log: no**。
 
-**状態 (2026-06-20)**: Wave 1-15 完了。**>150 tier: 91 → 53 (−38)、>250 は 0 維持** (official
+**状態 (2026-06-20)**: Wave 1-16 完了。**>150 tier: 91 → 51 (−40)、>250 は 0 維持** (official
 decl-to-next-decl metric で再実測)。各 Wave は全 Hard invariants (対象 sig byte-identical /
 `#print axioms` = `[propext, Classical.choice, Quot.sound]` 不変 / sorry 数不変 / `lake env lean`
 clean + 該当 build green) を orchestrator が独立機械検証済。**新規 sorry/residual なし (純リファクタ)
@@ -325,6 +325,14 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   `RateDistortion/ConverseNLetter.lean` `rate_distortion_converse_n_letter_singleLetter`
   173→146 (helper 1 本 `blockDistortion_eq_avg_perLetter` 57 = per-letter 歪み平均 = block 期待歪みの
   change-of-variables 恒等式)。計 2 helper 全 <150。>150 tier 55→53、>250 = 0 維持。
+- **Wave 16** (`57f4d05`/`f5e1f0e`): `ChannelCoding/ConverseMemorylessPure.lean` (private)
+  `isMarkovChain_weakUnion_left_to_conditioner` 188→147 (helper 1 本
+  `condDistrib_prodMk_right_ae_eq_comap` 75 = Yo の (Zc,As) 条件付き分布 = Zc 条件付き分布の fst-comap
+  という conditional-independence reshape、Markov 前提を直接受ける) +
+  `EPI/Stam/SupplyTwoTime.lean` `twoTime_stam_supply` 170→132 (helper 1 本
+  `reg_density_t_sum_eq_convDensityAdd` 105 = sum density_t = X/Y density_t の convDensityAdd という
+  conv-pin gate、h_reg_X/Y/sum + σ/τ を受け内部で reg_at 構造再構築)。計 2 helper 全 <150。
+  >150 tier 53→51、>250 = 0 維持。
 
 ### 計測ニュアンス (Phase 2 で確立、Wave 4+ でも適用)
 
@@ -336,7 +344,7 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   (Object.lean は docstring に 5 箇所、実 sorry tactic は 0)。ターゲット選定で sorry 持ち判定する際は実
   sorry tactic token を確認する (decl span の `grep sorry` は over-count)。
 
-### Wave 16+ への申し送り
+### Wave 17+ への申し送り
 
 - **触らない (option-C 済 floor 残留)**: Mass 249 / union_bound 245 / ConvEntropyDensity 245 等。
 - **計測アーティファクト — `convex_fisher_bound` (EPI/Blachman/Density 238) は候補から除外**:
@@ -349,9 +357,16 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   候補選定時は target の**実 body 末尾**と**次の matched decl** を Read で確認すること。
 - **次回推奨 (単一 >150・disjoint、各ファイル 1 回出現・小〜中抽出で <150 到達見込み、再実測値 —
   着手時に floor sibling 同居を Read 再確認)**:
-  `twoTime_stam_supply` (EPI/Stam/SupplyTwoTime.lean 170) /
-  `isMarkovChain_weakUnion_left_to_conditioner` (ChannelCoding/ConverseMemorylessPure.lean 188) /
-  `debruijnIdentityV2_holds_assembled_chain_domination` (V2DeBruijnAssembly/Domination.lean 184)。
+  `debruijnIdentityV2_holds_assembled_chain_domination` (V2DeBruijnAssembly/Domination.lean 184、
+  未スカウト = 次回 seam 確認要)。
+- **中位 tier 151-157 の single-target disjoint 候補群 (小抽出で <150 到達見込み、ただし margin 薄く
+  net 削減を要確認、着手時 Read で実 body 末尾・次 matched decl を確認)**:
+  `integrable_indicator_mul_negLog_of_condExp` (BackwardIntegral 157) /
+  `csiszar_first_order_condition` (CsiszarProjection 154) /
+  `total_length_ge_count_mul_log` (LZ78/ZivCountingBody 154) /
+  `birkhoffAverage_pmfLogCondMarkov_tendsto` (SMB/AlgoetCover/Core 154) /
+  `birkhoffAverageReal_limsup_comp_T_ae` (BirkhoffErgodic 153) /
+  `condEntropy_pi_eq_sum_of_memoryless_strong` (CondEntropyMemoryless 151)。
   互いに別ファイルゆえ disjoint、1 agent 1 file で同時処理可。
 - **後回し寄り (signature 密結合で抽出が重い)**: `entropy_power_inequality_of_density`
   (EPI/DensityForm.lean 172) — signature ~40 行 + lift-space wiring 密結合で、抽出に lift/X'/Y'/ZX/ZY/Z
