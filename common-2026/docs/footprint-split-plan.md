@@ -10,7 +10,7 @@ Lean style [`rules/lean-style.md`](rules/lean-style.md) ・honesty タグ [`audi
 
 - [x] Phase 0 — 測定 + pilot 較正 ✅ (`floorMatrix_dist_le`、commit `d2fb1fa`)
 - [x] Phase 1 — 優先1 (>250 行 tier) を named helper へ分解 ✅ **全 25 本処理済** (clean 割れブロックは全抽出、>250 残留=不可分 core は現実的 DoD で許容)
-- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-12、>150: 91→59)
+- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-13、>150: 91→57)
 - [ ] Phase 3 — 最終再実測 + 裾縮小確認 📋
 - [ ] Phase 4 — **option C (>250 spine 攻略)** 🔨 (2026-06-14 着手。**3 本クリア >250: 15→12、両機構検証済**。残 12 本。下記 Phase 4 節)
 
@@ -205,11 +205,11 @@ file:line (footprint) sorry-count は §4.1 入力データを verbatim 使用 (
 sorryAx-free)。コード側の `@audit:ok`/`@residual`/sorry 数は全 13 本で機械検証して verbatim 保存
 (Assembly は既存 sorry+@residual を含め 1→1 保存)。
 
-## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-12 完了)
+## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-13 完了)
 
 **proof-log: no**。
 
-**状態 (2026-06-20)**: Wave 1-12 完了。**>150 tier: 91 → 59 (−32)、>250 は 0 維持** (official
+**状態 (2026-06-20)**: Wave 1-13 完了。**>150 tier: 91 → 57 (−34)、>250 は 0 維持** (official
 decl-to-next-decl metric で再実測)。各 Wave は全 Hard invariants (対象 sig byte-identical /
 `#print axioms` = `[propext, Classical.choice, Quot.sound]` 不変 / sorry 数不変 / `lake env lean`
 clean + 該当 build green) を orchestrator が独立機械検証済。**新規 sorry/residual なし (純リファクタ)
@@ -305,6 +305,13 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   `channelCodingSmooth_avg_bound` = μ-regularity bundle → random_codebook_average_le 結論を直接返す (full/pos/match facts 内部再生成) /
   `channelCodingSmooth_assemble` = E1/E2 bound block + exists_codebook_le_avg pigeonhole 集約)。
   計 3 helper 全 <150。>150 tier 61→59。
+- **Wave 13** (`69d1d44`/`db7d0df`): `Shannon/Bridge.lean` (private) `klDiv_joint_prod_marginals_toReal`
+  181→148 (public helper 1 本: `integrable_sum_fibre_real_mul_log` = integrability block ~46 行抽出、
+  一般 kernel κ/νY/νX で 2 sum-integrability を ∧ 返却) +
+  `EPI/Unconditional/TruncationLimit/Mono.lean` `differentialEntropyExt_mono_add_of_integrable`
+  183→69 (public helper 1 本: `differentialEntropy_le_of_conv_finite` = Case B finite branch
+  = per-fibre translate Gibbs 全体 ~114 行抽出、helper 自身も 141 行で <150)。
+  計 2 helper 全 <150。>150 tier 59→57。
 
 ### 計測ニュアンス (Phase 2 で確立、Wave 4+ でも適用)
 
@@ -316,7 +323,7 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   (Object.lean は docstring に 5 箇所、実 sorry tactic は 0)。ターゲット選定で sorry 持ち判定する際は実
   sorry tactic token を確認する (decl span の `grep sorry` は over-count)。
 
-### Wave 13+ への申し送り
+### Wave 14+ への申し送り
 
 - **触らない (option-C 済 floor 残留)**: Mass 249 / union_bound 245 / ConvEntropyDensity 245 等。
 - **計測アーティファクト — `convex_fisher_bound` (EPI/Blachman/Density 238) は候補から除外**:
@@ -338,13 +345,17 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   604/874 等複数 >150 同居注意)。
   ※ `convJointLlr_integrable` (ConvEntropyDensity 229) は floor `negMulLog_convDensity_entropy_ge_density`
   (245) と同居 = floor sibling、touch 注意。
-- **次回推奨 (単一 >150・disjoint、安全に並列可、再実測値)**:
-  `codebookAvgFailureStrong_tendsto_zero` (RateDistortion/.../FailureTendsto 226、ファイル末尾の宣言) /
+- **次回推奨 (単一 >150・disjoint、安全に並列可、再実測値 — Wave 14 着手時に floor sibling 同居を Read 再確認)**:
   `integral_MRatioLowerZ_le_one` (SMB/AlgoetCover/TwoSidedRatio 231、同ファイルに condLExp... 179 同居 =
   2 target 注意、disjoint 並列に回すなら同一 agent 所有か別 Wave へ) /
-  `differentialEntropyExt_mono_add_of_integrable` (EPI/Unconditional/TruncationLimit/Mono 183) /
-  `klDiv_joint_prod_marginals_toReal` (Bridge 181)。互いに別ファイルゆえ disjoint、1 agent 1 file で
-  同時処理可 (TwoSidedRatio は同居 target に注意)。
+  `codebookAvgFailureStrong_tendsto_zero` (RateDistortion/.../FailureTendsto 226、ファイル末尾の宣言・
+  set 重め) /
+  `swErrorProb_total_expectation_le` (SlepianWolf/FullRateRegion/PairBound 210) /
+  `conditionalStronglyTypicalSlice_mass_ge` (Shannon/.../Mass 210、Mass は option-C 済 floor 249 同居の
+  可能性ありゆえ着手前に Read 確認)。互いに別ファイルゆえ disjoint、1 agent 1 file で同時処理可。
+  **運用注記**: 上記 footprint はスナップショット値。同居 floor sibling (option-C 済 >250 残留や別 >150
+  target) の有無は Wave 着手時に target ファイルを Read して確認すること (Wave 13 までの計測アーティファクト
+  教訓 = 次 matched decl までの距離で測るため、同居宣言の有無で count-win 可否が変わる)。
 - プロトコル: 並列 ≤ 2・1 ファイル 1 エージェント・orchestrator 検証は同一。
 - **process 申し送り (確定運用)**: worktree isolation 指定が **Wave 6・7 と 2 連続で機能せず**、
   agent commit が main 直書きになった (分離ブランチが作られない)。Wave 7 では wave7a の WIP が
