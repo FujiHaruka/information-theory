@@ -138,6 +138,67 @@ private lemma isMarkovChain_bundle_left_with_conditioner
     measurable_id.prodMk measurable_const
   rw [lintegral_map h_inner_meas h_pair_meas]
 
+private lemma condDistrib_prodMk_right_ae_eq_comap
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (As : Ω → X) (Zc : Ω → Z) (Yo : Ω → Y)
+    (hAs : Measurable As) (hZc : Measurable Zc) (hYo : Measurable Yo)
+    (h_markov : Shannon.IsMarkovChain μ As Zc Yo) :
+    (condDistrib Yo (fun ω => (Zc ω, As ω)) μ)
+      =ᵐ[μ.map (fun ω => (Zc ω, As ω))]
+        ((condDistrib Yo Zc μ).comap (fun za : Z × X => za.1) measurable_fst
+          : Kernel (Z × X) Y) := by
+  haveI : IsProbabilityMeasure (μ.map Zc) :=
+    Measure.isProbabilityMeasure_map hZc.aemeasurable
+  have hZA : Measurable (fun ω => (Zc ω, As ω)) := hZc.prodMk hAs
+  haveI : IsProbabilityMeasure (μ.map (fun ω => (Zc ω, As ω))) :=
+    Measure.isProbabilityMeasure_map hZA.aemeasurable
+  set K_A : Kernel Z X := condDistrib As Zc μ with hK_A_def
+  set K_Y : Kernel Z Y := condDistrib Yo Zc μ with hK_Y_def
+  have h_ZA_marginal : μ.map (fun ω => (Zc ω, As ω)) = (μ.map Zc) ⊗ₘ K_A :=
+    (compProd_map_condDistrib hAs.aemeasurable).symm
+  refine condDistrib_ae_eq_of_measure_eq_compProd
+    (fun ω => (Zc ω, As ω)) hYo.aemeasurable ?_
+  -- Need: μ.map ((Z, A), Y) = (μ.map (Z, A)) ⊗ₘ (K_Y.comap fst).
+  -- LHS = (μ.map (Z, A, Y)).map (fun (z, a, y) => ((z, a), y)).
+  have h_perm_meas : Measurable
+      (fun p : Z × X × Y => ((p.1, p.2.1), p.2.2)) :=
+    (measurable_fst.prodMk (measurable_fst.comp measurable_snd)).prodMk
+      (measurable_snd.comp measurable_snd)
+  have h_LHS_reshape :
+      μ.map (fun ω => ((Zc ω, As ω), Yo ω))
+        = (μ.map (fun ω => (Zc ω, As ω, Yo ω))).map
+            (fun p : Z × X × Y => ((p.1, p.2.1), p.2.2)) := by
+    rw [Measure.map_map h_perm_meas (hZc.prodMk (hAs.prodMk hYo))]
+    rfl
+  rw [h_LHS_reshape, h_markov, h_ZA_marginal]
+  -- Now both sides are compProds; verify via Measure.ext_of_lintegral.
+  refine Measure.ext_of_lintegral _ fun f hf => ?_
+  -- LHS: ((μ.map Zc) ⊗ₘ (K_A ×ₖ K_Y)).map perm
+  rw [lintegral_map hf h_perm_meas]
+  -- Rewrite the integrand into the canonical compProd form (z, ay).
+  have h_LHS_fun :
+      (fun a : Z × X × Y => f ((a.1, a.2.1), a.2.2))
+        = fun a : Z × X × Y =>
+            (fun p : Z × (X × Y) => f ((p.1, p.2.1), p.2.2)) a := rfl
+  rw [h_LHS_fun]
+  have hgL : Measurable (fun p : Z × (X × Y) => f ((p.1, p.2.1), p.2.2)) :=
+    hf.comp ((measurable_fst.prodMk (measurable_fst.comp measurable_snd)).prodMk
+      (measurable_snd.comp measurable_snd))
+  rw [Measure.lintegral_compProd hgL]
+  -- RHS: ((μ.map Zc) ⊗ₘ K_A) ⊗ₘ (K_Y.comap fst)
+  rw [Measure.lintegral_compProd hf]
+  rw [Measure.lintegral_compProd
+        (Measurable.lintegral_kernel_prod_right' (κ := K_Y.comap _ measurable_fst) hf)]
+  refine lintegral_congr fun z => ?_
+  -- Inner: ∫⁻ ay ∂(K_A z ×ₖ K_Y z), f ((z, ay.1), ay.2)
+  -- vs    ∫⁻ a ∂(K_A z), ∫⁻ y ∂(K_Y.comap fst (z, a)), f ((z, a), y)
+  rw [Kernel.prod_apply]
+  have hgL_z : Measurable (fun p : X × Y => f ((z, p.1), p.2)) :=
+    hf.comp ((measurable_const.prodMk measurable_fst).prodMk measurable_snd)
+  rw [MeasureTheory.lintegral_prod _ hgL_z.aemeasurable]
+  refine lintegral_congr fun a => ?_
+  rw [Kernel.comap_apply _ measurable_fst]
+
 /-- **Graphoid weak union (γ-form direct)**: From `Markov μ (As, Bs) Zc Yo`
 (i.e., `Yo ⫫ (As, Bs) | Zc`), derive `Markov μ Bs (Zc, As) Yo` (i.e.,
 `Yo ⫫ Bs | (Zc, As)`).
@@ -187,49 +248,8 @@ private lemma isMarkovChain_weakUnion_left_to_conditioner
   -- Step (ii): Identify K_Y' =ᵐ[μ.map (Z, A)] K_Y.comap fst.
   have h_K_Y'_eq :
       K_Y' =ᵐ[μ.map (fun ω => (Zc ω, As ω))]
-        (K_Y.comap (fun za : Z × A => za.1) measurable_fst : Kernel (Z × A) Y) := by
-    refine condDistrib_ae_eq_of_measure_eq_compProd
-      (fun ω => (Zc ω, As ω)) hYo.aemeasurable ?_
-    -- Need: μ.map ((Z, A), Y) = (μ.map (Z, A)) ⊗ₘ (K_Y.comap fst).
-    -- LHS = (μ.map (Z, A, Y)).map (fun (z, a, y) => ((z, a), y)).
-    have h_perm_meas : Measurable
-        (fun p : Z × A × Y => ((p.1, p.2.1), p.2.2)) :=
-      (measurable_fst.prodMk (measurable_fst.comp measurable_snd)).prodMk
-        (measurable_snd.comp measurable_snd)
-    have h_LHS_reshape :
-        μ.map (fun ω => ((Zc ω, As ω), Yo ω))
-          = (μ.map (fun ω => (Zc ω, As ω, Yo ω))).map
-              (fun p : Z × A × Y => ((p.1, p.2.1), p.2.2)) := by
-      rw [Measure.map_map h_perm_meas (hZc.prodMk (hAs.prodMk hYo))]
-      rfl
-    rw [h_LHS_reshape, h_AZY, h_ZA_marginal]
-    -- Now both sides are compProds; verify via Measure.ext_of_lintegral.
-    refine Measure.ext_of_lintegral _ fun f hf => ?_
-    -- LHS: ((μ.map Zc) ⊗ₘ (K_A ×ₖ K_Y)).map perm
-    rw [lintegral_map hf h_perm_meas]
-    -- Rewrite the integrand into the canonical compProd form (z, ay).
-    have h_LHS_fun :
-        (fun a : Z × A × Y => f ((a.1, a.2.1), a.2.2))
-          = fun a : Z × A × Y =>
-              (fun p : Z × (A × Y) => f ((p.1, p.2.1), p.2.2)) a := rfl
-    rw [h_LHS_fun]
-    have hgL : Measurable (fun p : Z × (A × Y) => f ((p.1, p.2.1), p.2.2)) :=
-      hf.comp ((measurable_fst.prodMk (measurable_fst.comp measurable_snd)).prodMk
-        (measurable_snd.comp measurable_snd))
-    rw [Measure.lintegral_compProd hgL]
-    -- RHS: ((μ.map Zc) ⊗ₘ K_A) ⊗ₘ (K_Y.comap fst)
-    rw [Measure.lintegral_compProd hf]
-    rw [Measure.lintegral_compProd
-          (Measurable.lintegral_kernel_prod_right' (κ := K_Y.comap _ measurable_fst) hf)]
-    refine lintegral_congr fun z => ?_
-    -- Inner: ∫⁻ ay ∂(K_A z ×ₖ K_Y z), f ((z, ay.1), ay.2)
-    -- vs    ∫⁻ a ∂(K_A z), ∫⁻ y ∂(K_Y.comap fst (z, a)), f ((z, a), y)
-    rw [Kernel.prod_apply]
-    have hgL_z : Measurable (fun p : A × Y => f ((z, p.1), p.2)) :=
-      hf.comp ((measurable_const.prodMk measurable_fst).prodMk measurable_snd)
-    rw [MeasureTheory.lintegral_prod _ hgL_z.aemeasurable]
-    refine lintegral_congr fun a => ?_
-    rw [Kernel.comap_apply _ measurable_fst]
+        (K_Y.comap (fun za : Z × A => za.1) measurable_fst : Kernel (Z × A) Y) :=
+    condDistrib_prodMk_right_ae_eq_comap μ As Zc Yo hAs hZc hYo h_AZY
   -- Replace K_Y' with K_Y.comap fst in the goal via compProd_congr.
   unfold Shannon.IsMarkovChain
   have h_RHS_replace :
@@ -670,3 +690,4 @@ theorem channel_coding_converse_general_memoryless_pure
 end MainConversePure
 
 end InformationTheory.Shannon.ChannelCodingConverseGeneral
+
