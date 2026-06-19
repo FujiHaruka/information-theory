@@ -502,6 +502,107 @@ theorem differentialEntropyExt_mono_add_of_integrable
     rw [differentialEntropyExt_eq_top_of_not_integrable hWV_ac_Q hent_sum hBnu_fin]
     exact le_top
 
+-- Independence `W ⊥ V` is preserved when conditioning `P` on the `W`-event `{|W| ≤ n}`:
+-- the conditioning event is a preimage of `W`, so `V`'s law is unaffected.
+theorem truncW_indepFun_of_indepFun
+    (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hW : Measurable W) (_hV : Measurable V) (hWV : IndepFun W V P)
+    (n : ℕ) (hn : P {ω | |W ω| ≤ (n : ℝ)} ≠ 0) :
+    IndepFun W V (truncW P W n) := by
+  rw [indepFun_iff_measure_inter_preimage_eq_mul]
+  intro s t hs ht
+  set E : Set Ω := {ω : Ω | |W ω| ≤ (n : ℝ)} with hE_def
+  have hE_meas : MeasurableSet E := hW.abs measurableSet_Iic
+  have hEW : E ∩ W ⁻¹' s = W ⁻¹' ({r : ℝ | |r| ≤ (n : ℝ)} ∩ s) := by
+    ext ω; simp [hE_def, Set.mem_inter_iff, and_comm]
+  have hIcc_meas : MeasurableSet {r : ℝ | |r| ≤ (n : ℝ)} :=
+    (_root_.continuous_abs.measurable measurableSet_Iic)
+  have hAW : MeasurableSet ({r : ℝ | |r| ≤ (n : ℝ)} ∩ s) := hIcc_meas.inter hs
+  rw [truncW, cond_apply hE_meas, cond_apply hE_meas, cond_apply hE_meas]
+  have hjoint : E ∩ (W ⁻¹' s ∩ V ⁻¹' t) = W ⁻¹' ({r : ℝ | |r| ≤ (n : ℝ)} ∩ s) ∩ V ⁻¹' t := by
+    rw [← Set.inter_assoc, hEW]
+  rw [hjoint, hEW]
+  have hfac1 : P (W ⁻¹' ({r : ℝ | |r| ≤ (n : ℝ)} ∩ s) ∩ V ⁻¹' t)
+      = P (W ⁻¹' ({r : ℝ | |r| ≤ (n : ℝ)} ∩ s)) * P (V ⁻¹' t) :=
+    hWV.measure_inter_preimage_eq_mul _ _ hAW ht
+  have hEV : E ∩ V ⁻¹' t = W ⁻¹' {r : ℝ | |r| ≤ (n : ℝ)} ∩ V ⁻¹' t := by
+    ext ω; simp [hE_def]
+  have hfac2 : P (E ∩ V ⁻¹' t) = P E * P (V ⁻¹' t) := by
+    rw [hEV, hWV.measure_inter_preimage_eq_mul _ _ hIcc_meas ht, hE_def]; rfl
+  rw [hfac1, hfac2]
+  have hPE_ne : P E ≠ 0 := by rw [hE_def]; exact hn
+  have hPE_ne_top : P E ≠ ∞ := measure_ne_top P E
+  have hcancel : (P E)⁻¹ * (P E * P (V ⁻¹' t)) = P (V ⁻¹' t) := by
+    rw [← mul_assoc, ENNReal.inv_mul_cancel hPE_ne hPE_ne_top, one_mul]
+  rw [hcancel]
+  ring
+
+-- Negative-part lintegral of `negMulLog` of the truncated density `fn` is finite,
+-- given that the same quantity is finite for the base density `ρ`.
+-- Uses the decomposition `-(negMulLog fn) = 1_Sn·(cbar·log cbar·ρ.toReal + cbar·-(negMulLog ρ.toReal))`.
+theorem truncW_map_negMulLog_negPart_lintegral_ne_top
+    {Sn : Set ℝ} (_hSn_meas : MeasurableSet Sn)
+    {ρ : ℝ → ℝ≥0∞} (hρ_meas : Measurable ρ)
+    (hρ_lint : (∫⁻ x, ENNReal.ofReal ((ρ x).toReal) ∂volume) = 1)
+    {c : ℝ≥0∞} (_hc_top : c ≠ ∞)
+    {fn : ℝ → ℝ}
+    (h_fn_ae : ∀ᵐ x ∂volume, fn x = (c⁻¹ * Sn.indicator ρ x).toReal)
+    (hρ_negPart_fin :
+      (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (ρ x).toReal)) ∂volume) ≠ ⊤) :
+    (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (fn x))) ∂volume) ≠ ⊤ := by
+  set cbar : ℝ := (c⁻¹).toReal
+  have hcbar_nn : 0 ≤ cbar := ENNReal.toReal_nonneg
+  have hfW_meas : Measurable (fun x => ENNReal.ofReal ((ρ x).toReal)) := hρ_meas.ennreal_toReal.ennreal_ofReal
+  -- Rewrite `-(negMulLog fn)` a.e. using the pointwise formula.
+  have h_int_eq : (fun x => ENNReal.ofReal (-(Real.negMulLog (fn x))))
+      =ᵐ[volume] fun x => ENNReal.ofReal (Sn.indicator
+        (fun x => cbar * Real.log cbar * (ρ x).toReal + cbar * (-(Real.negMulLog (ρ x).toReal))) x) := by
+    filter_upwards [h_fn_ae] with x hx
+    rw [hx]
+    by_cases hxs : x ∈ Sn
+    · rw [Set.indicator_of_mem hxs (f := ρ),
+        Set.indicator_of_mem hxs
+          (f := fun x => cbar * Real.log cbar * (ρ x).toReal + cbar * (-(Real.negMulLog (ρ x).toReal))),
+        ENNReal.toReal_mul]
+      congr 1
+      show -(Real.negMulLog (cbar * (ρ x).toReal)) =
+          cbar * Real.log cbar * (ρ x).toReal + cbar * (-(Real.negMulLog (ρ x).toReal))
+      rw [Real.negMulLog_mul cbar (ρ x).toReal]
+      ring_nf
+      rw [Real.negMulLog]
+      ring
+    · rw [Set.indicator_of_notMem hxs (f := ρ),
+        Set.indicator_of_notMem hxs
+          (f := fun x => cbar * Real.log cbar * (ρ x).toReal + cbar * (-(Real.negMulLog (ρ x).toReal)))]
+      simp [Real.negMulLog]
+  rw [lintegral_congr_ae h_int_eq]
+  have hbound : ∀ x, ENNReal.ofReal (Sn.indicator
+        (fun x => cbar * Real.log cbar * (ρ x).toReal + cbar * (-(Real.negMulLog (ρ x).toReal))) x)
+      ≤ ENNReal.ofReal (|cbar * Real.log cbar|) * ENNReal.ofReal ((ρ x).toReal)
+        + ENNReal.ofReal cbar * ENNReal.ofReal (-(Real.negMulLog (ρ x).toReal)) := by
+    intro x
+    by_cases hxs : x ∈ Sn
+    · rw [Set.indicator_of_mem hxs]
+      refine le_trans ENNReal.ofReal_add_le ?_
+      refine add_le_add ?_ ?_
+      · rw [← ENNReal.ofReal_mul (abs_nonneg _)]
+        refine ENNReal.ofReal_le_ofReal (le_trans (le_abs_self _) ?_)
+        have hρ_nn : (0 : ℝ) ≤ (ρ x).toReal := ENNReal.toReal_nonneg
+        rw [abs_mul, abs_of_nonneg hρ_nn]
+      · rw [← ENNReal.ofReal_mul hcbar_nn]
+    · rw [Set.indicator_of_notMem hxs]; simp
+  refine ne_top_of_le_ne_top ?_ (lintegral_mono hbound)
+  have hg1_meas : Measurable
+      (fun x => ENNReal.ofReal (|cbar * Real.log cbar|) * ENNReal.ofReal ((ρ x).toReal)) :=
+    measurable_const.mul hfW_meas
+  have hnegm_meas : Measurable (fun x => ENNReal.ofReal (-(Real.negMulLog ((ρ x).toReal)))) :=
+    ((Real.continuous_negMulLog.measurable.comp hρ_meas.ennreal_toReal).neg).ennreal_ofReal
+  rw [lintegral_add_left hg1_meas]
+  refine ENNReal.add_ne_top.mpr ⟨?_, ?_⟩
+  · rw [lintegral_const_mul _ hfW_meas, hρ_lint, mul_one]; exact ENNReal.ofReal_ne_top
+  · rw [lintegral_const_mul _ hnegm_meas]
+    exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top hρ_negPart_fin
+
 /-- Per-`n` monotonicity `h(W_n) ≤ h(W_n + V)`, where `W_n := truncW P W n` is the compact-support
 approximation obtained by conditioning `P` on the `W`-event `{|W| ≤ n}`. The preamble supplies the
 truncation-specific regularity (a.c., independence, and finite entropy preserved under
@@ -528,45 +629,12 @@ theorem differentialEntropyExt_mono_add_truncW
     refine (Measure.AbsolutelyContinuous.trans ?_ hW_ac)
     rw [hQ_def, truncW]
     exact (ProbabilityTheory.cond_absolutelyContinuous).map hW
-  -- W ⊥ V is preserved under conditioning on a W-event `{|W| ≤ n}` (the event is a function of
-  -- W only, so V is unaffected). Self-built from `indepFun_iff_measure_inter_preimage_eq_mul`:
-  -- the conditioning event `E = W⁻¹' {r | |r| ≤ n}` absorbs into the W-preimage, and `hWV`
-  -- factors the joint measure of W- and V-preimages.
+  -- W ⊥ V is preserved under conditioning on a W-event `{|W| ≤ n}`.
   have hE_meas : MeasurableSet {ω : Ω | |W ω| ≤ (n : ℝ)} :=
     hW.abs measurableSet_Iic
   set E : Set Ω := {ω : Ω | |W ω| ≤ (n : ℝ)} with hE_def
-  have hindep : IndepFun W V Q := by
-    rw [indepFun_iff_measure_inter_preimage_eq_mul]
-    intro s t hs ht
-    -- `E ∩ W⁻¹' s = W⁻¹' (Icc⁻¹ ∩ s)` is itself a W-preimage of a measurable set.
-    have hEW : E ∩ W ⁻¹' s = W ⁻¹' ({r : ℝ | |r| ≤ (n : ℝ)} ∩ s) := by
-      ext ω; simp [hE_def, Set.mem_inter_iff, and_comm]
-    have hIcc_meas : MeasurableSet {r : ℝ | |r| ≤ (n : ℝ)} :=
-      (_root_.continuous_abs.measurable measurableSet_Iic)
-    have hAW : MeasurableSet ({r : ℝ | |r| ≤ (n : ℝ)} ∩ s) := hIcc_meas.inter hs
-    -- Expand each `cond` term via `cond_apply hE_meas`.
-    rw [hQ_def, truncW, cond_apply hE_meas, cond_apply hE_meas, cond_apply hE_meas]
-    -- The joint preimage: `E ∩ (W⁻¹s ∩ V⁻¹t) = (E ∩ W⁻¹s) ∩ V⁻¹t = W⁻¹(..) ∩ V⁻¹t`.
-    have hjoint : E ∩ (W ⁻¹' s ∩ V ⁻¹' t) = W ⁻¹' ({r : ℝ | |r| ≤ (n : ℝ)} ∩ s) ∩ V ⁻¹' t := by
-      rw [← Set.inter_assoc, hEW]
-    rw [hjoint, hEW]
-    -- Factor `P` on the W- and V-preimages via the original independence `hWV`.
-    have hfac1 : P (W ⁻¹' ({r : ℝ | |r| ≤ (n : ℝ)} ∩ s) ∩ V ⁻¹' t)
-        = P (W ⁻¹' ({r : ℝ | |r| ≤ (n : ℝ)} ∩ s)) * P (V ⁻¹' t) :=
-      hWV.measure_inter_preimage_eq_mul _ _ hAW ht
-    -- For the V-term: `E ∩ V⁻¹t = W⁻¹(Icc) ∩ V⁻¹t`, again factored by `hWV`.
-    have hEV : E ∩ V ⁻¹' t = W ⁻¹' {r : ℝ | |r| ≤ (n : ℝ)} ∩ V ⁻¹' t := by
-      ext ω; simp [hE_def]
-    have hfac2 : P (E ∩ V ⁻¹' t) = P E * P (V ⁻¹' t) := by
-      rw [hEV, hWV.measure_inter_preimage_eq_mul _ _ hIcc_meas ht, hE_def]; rfl
-    rw [hfac1, hfac2]
-    -- Arithmetic: `c·(a·v) = (c·a)·(c·(P E·v))` where `c = (P E)⁻¹`, since `c·P E = 1`.
-    have hPE_ne : P E ≠ 0 := by rw [hE_def]; exact hn
-    have hPE_ne_top : P E ≠ ∞ := measure_ne_top P E
-    have hcancel : (P E)⁻¹ * (P E * P (V ⁻¹' t)) = P (V ⁻¹' t) := by
-      rw [← mul_assoc, ENNReal.inv_mul_cancel hPE_ne hPE_ne_top, one_mul]
-    rw [hcancel]
-    ring
+  have hindep : IndepFun W V Q :=
+    truncW_indepFun_of_indepFun W V P hW hV hWV n (hE_def ▸ hn)
   -- **Set-up shared by the `≠ ⊥` / entropy blocks**: `Q.map W = cond (P.map W) Sn` (single-variable
   -- truncation), so its density is `c⁻¹ · 1_Sn · f_W` with `c = (P.map W) Sn = P E`.
   set Sn : Set ℝ := {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
@@ -597,8 +665,6 @@ theorem differentialEntropyExt_mono_add_truncW
   set fW : ℝ → ℝ := fun x => ((P.map W).rnDeriv volume x).toReal with hfW_def
   set c : ℝ≥0∞ := (P.map W) Sn with hc_def
   have hc_top : c ≠ ∞ := measure_ne_top _ _
-  set cbar : ℝ := (c⁻¹).toReal with hcbar_def
-  have hcbar_nn : 0 ≤ cbar := ENNReal.toReal_nonneg
   have h_rn : (Q.map W).rnDeriv volume
       =ᵐ[volume] fun x => c⁻¹ * Sn.indicator ((P.map W).rnDeriv volume) x := by
     rw [hQW_eq]; exact rnDeriv_cond_eq (P.map W) hSn_meas hSn_pos
@@ -606,66 +672,20 @@ theorem differentialEntropyExt_mono_add_truncW
   set fn : ℝ → ℝ := fun x => ((Q.map W).rnDeriv volume x).toReal with hfn_def
   have hfn_meas : Measurable fn := (Measure.measurable_rnDeriv _ _).ennreal_toReal
   -- `∫⁻ ofReal(fW) = 1` (probability density of `P.map W`).
-  have hfW_meas : Measurable (fun x => ENNReal.ofReal (fW x)) :=
-    (Measure.measurable_rnDeriv _ _).ennreal_toReal.ennreal_ofReal
   have hfW_lint : (∫⁻ x, ENNReal.ofReal (fW x) ∂volume) = 1 := by
     have hae_eq : (fun x => ENNReal.ofReal (fW x)) =ᵐ[volume] (P.map W).rnDeriv volume := by
       filter_upwards [(P.map W).rnDeriv_ne_top volume] with x hx
       rw [hfW_def]; exact ENNReal.ofReal_toReal hx
     rw [lintegral_congr_ae hae_eq, Measure.lintegral_rnDeriv hW_ac, measure_univ]
   -- **negative-part lintegral `B(W_n) < ⊤`** (from `hW_negPart_fin = B(W) < ⊤`).
+  -- Bridge: `fn x = (c⁻¹ * Sn.indicator (P.map W).rnDeriv x).toReal` a.e.
+  have h_fn_ae : ∀ᵐ x ∂volume,
+      fn x = (c⁻¹ * Sn.indicator ((P.map W).rnDeriv volume) x).toReal := by
+    filter_upwards [h_rn] with x hx; rw [hfn_def]; simp only; rw [hx]
   have hBn_fin :
-      (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (fn x))) ∂volume) ≠ ⊤ := by
-    -- pointwise `=ᵐ`: `-(negMulLog fn) = 1_Sn · ((cbar log cbar)·fW + cbar·(-(negMulLog fW)))`.
-    have h_int_eq : (fun x => ENNReal.ofReal (-(Real.negMulLog (fn x))))
-        =ᵐ[volume] fun x => ENNReal.ofReal (Sn.indicator
-          (fun x => cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x)))) x) := by
-      filter_upwards [h_rn] with x hx
-      rw [hfn_def]; simp only; rw [hx]
-      by_cases hxs : x ∈ Sn
-      · rw [Set.indicator_of_mem hxs (f := (P.map W).rnDeriv volume),
-          Set.indicator_of_mem hxs
-            (f := fun x => cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x)))),
-          ENNReal.toReal_mul]
-        congr 1
-        show -(Real.negMulLog (cbar * fW x)) = cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x)))
-        rw [Real.negMulLog_mul cbar (fW x)]
-        ring_nf
-        rw [Real.negMulLog]
-        ring
-      · rw [Set.indicator_of_notMem hxs (f := (P.map W).rnDeriv volume),
-          Set.indicator_of_notMem hxs
-            (f := fun x => cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x))))]
-        simp [Real.negMulLog]
-    rw [lintegral_congr_ae h_int_eq]
-    -- Bound the indicator integrand by two finite-integral pieces.
-    have hbound : ∀ x, ENNReal.ofReal (Sn.indicator
-          (fun x => cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x)))) x)
-        ≤ ENNReal.ofReal (|cbar * Real.log cbar|) * ENNReal.ofReal (fW x)
-          + ENNReal.ofReal cbar * ENNReal.ofReal (-(Real.negMulLog (fW x))) := by
-      intro x
-      by_cases hxs : x ∈ Sn
-      · rw [Set.indicator_of_mem hxs]
-        refine le_trans ENNReal.ofReal_add_le ?_
-        refine add_le_add ?_ ?_
-        · rw [← ENNReal.ofReal_mul (abs_nonneg _)]
-          refine ENNReal.ofReal_le_ofReal (le_trans (le_abs_self _) ?_)
-          have hfW_nn : (0 : ℝ) ≤ fW x := ENNReal.toReal_nonneg
-          rw [abs_mul, abs_of_nonneg hfW_nn]
-        · rw [← ENNReal.ofReal_mul hcbar_nn]
-      · rw [Set.indicator_of_notMem hxs]; simp
-    refine ne_top_of_le_ne_top ?_ (lintegral_mono hbound)
-    have hg1_meas : Measurable
-        (fun x => ENNReal.ofReal (|cbar * Real.log cbar|) * ENNReal.ofReal (fW x)) :=
-      measurable_const.mul hfW_meas
-    have hnegm_meas : Measurable (fun x => ENNReal.ofReal (-(Real.negMulLog (fW x)))) :=
-      ((Real.continuous_negMulLog.measurable.comp
-        ((Measure.measurable_rnDeriv _ _).ennreal_toReal)).neg).ennreal_ofReal
-    rw [lintegral_add_left hg1_meas]
-    refine ENNReal.add_ne_top.mpr ⟨?_, ?_⟩
-    · rw [lintegral_const_mul _ hfW_meas, hfW_lint, mul_one]; exact ENNReal.ofReal_ne_top
-    · rw [lintegral_const_mul _ hnegm_meas]
-      exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top hW_negPart_fin
+      (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (fn x))) ∂volume) ≠ ⊤ :=
+    truncW_map_negMulLog_negPart_lintegral_ne_top hSn_meas
+      (Measure.measurable_rnDeriv _ _) hfW_lint hc_top h_fn_ae hW_negPart_fin
   -- **positive-part lintegral `A(W_n) < ⊤`** (compact support: `negMulLog fn ≤ 1` on `Sn`,
   -- `fn = 0` off `Sn`, and `volume Sn < ⊤`).
   have hAn_fin :
