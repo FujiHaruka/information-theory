@@ -326,6 +326,132 @@ lemma jointStronglyTypicalSet_implies_Y_stronglyTypical
 
 /-! ### Strong joint typicality probability lower bound -/
 
+private lemma jointStronglyTypicalSet_card_eq_typicalSet_card
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) (n : ℕ) (ε : ℝ) :
+    (jointStronglyTypicalSet_finite μ Xs Ys n ε).toFinset.card
+      = (stronglyTypicalSet μ (jointSequence Xs Ys) n ε).toFinite.toFinset.card := by
+  let φ : (Fin n → α) × (Fin n → β) → (Fin n → α × β) :=
+    fun p i => (p.1 i, p.2 i)
+  have hφ_inj : Function.Injective φ := by
+    intro p q hpq
+    apply Prod.ext
+    · funext i
+      exact ((Prod.mk.injEq _ _ _ _).mp (congr_fun hpq i)).1
+    · funext i
+      exact ((Prod.mk.injEq _ _ _ _).mp (congr_fun hpq i)).2
+  have hφ_surj : Function.Surjective φ := by
+    intro z
+    refine ⟨(fun i => (z i).1, fun i => (z i).2), ?_⟩
+    funext i; rfl
+  set Afin : Finset ((Fin n → α) × (Fin n → β)) :=
+    (jointStronglyTypicalSet_finite μ Xs Ys n ε).toFinset
+  set Tfin : Finset (Fin n → α × β) :=
+    (stronglyTypicalSet μ (jointSequence Xs Ys) n ε).toFinite.toFinset
+  have h_image_eq : Afin.image φ = Tfin := by
+    ext q
+    constructor
+    · rintro hq
+      rw [Finset.mem_image] at hq
+      obtain ⟨⟨x, y⟩, hxy_mem, rfl⟩ := hq
+      rw [Set.Finite.mem_toFinset]
+      rw [Set.Finite.mem_toFinset, mem_jointStronglyTypicalSet_iff] at hxy_mem
+      exact hxy_mem
+    · intro hq
+      rw [Finset.mem_image]
+      obtain ⟨p, rfl⟩ := hφ_surj q
+      refine ⟨p, ?_, rfl⟩
+      rw [Set.Finite.mem_toFinset, show p = (p.1, p.2) from rfl,
+          mem_jointStronglyTypicalSet_iff]
+      rwa [Set.Finite.mem_toFinset] at hq
+  rw [← h_image_eq, Finset.card_image_of_injective _ hφ_inj]
+
+private lemma sum_marginals_eq_prod_real
+    {n : ℕ} (μXn : Measure (Fin n → α)) (μYn : Measure (Fin n → β))
+    [IsProbabilityMeasure μXn] [IsProbabilityMeasure μYn]
+    (Afin : Finset ((Fin n → α) × (Fin n → β)))
+    (A : Set ((Fin n → α) × (Fin n → β)))
+    (hcoe : (Afin : Set _) = A) :
+    ∑ p ∈ Afin, μXn.real {p.1} * μYn.real {p.2} = (μXn.prod μYn).real A := by
+  have h_real_eq : (μXn.prod μYn).real A
+      = ∑ p ∈ Afin, (μXn.prod μYn).real {p} := by
+    rw [← hcoe, ← sum_measureReal_singleton (μ := μXn.prod μYn) Afin]
+  rw [h_real_eq]
+  refine (Finset.sum_congr rfl ?_).symm
+  intro p _
+  have h_singleton_prod : ({p} : Set ((Fin n → α) × (Fin n → β)))
+      = ({p.1} : Set (Fin n → α)) ×ˢ ({p.2} : Set (Fin n → β)) := by
+    ext q; simp [Prod.ext_iff]
+  rw [h_singleton_prod]
+  exact measureReal_prod_prod (μ := μXn) (ν := μYn)
+    ({p.1} : Set (Fin n → α)) ({p.2} : Set (Fin n → β))
+
+private lemma jointStronglyTypicalSet_indep_perPair_prob_ge
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindepX_full : iIndepFun (fun i => Xs i) μ)
+    (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hindepY_full : iIndepFun (fun i => Ys i) μ)
+    (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
+    (hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
+    (hmarg_X : (μ.map (jointSequence Xs Ys 0)).map Prod.fst = μ.map (Xs 0))
+    (hmarg_Y : (μ.map (jointSequence Xs Ys 0)).map Prod.snd = μ.map (Ys 0))
+    {n : ℕ} (hn_pos : 0 < n)
+    {ε δ : ℝ} (hε : 0 < ε) (hδ : 0 < δ)
+    (HX HY εX' εY' : ℝ)
+    (hHX : HX = entropy μ (Xs 0)) (hHY : HY = entropy μ (Ys 0))
+    (hεX' : εX' = (Fintype.card β : ℝ) * ε * logSumAbs μ Xs + δ)
+    (hεY' : εY' = (Fintype.card α : ℝ) * ε * logSumAbs μ Ys + δ)
+    (hεX'_pos : 0 < εX') (hεY'_pos : 0 < εY') :
+    let μXn : Measure (Fin n → α) := μ.map (jointRV Xs n)
+    let μYn : Measure (Fin n → β) := μ.map (jointRV Ys n)
+    ∀ p ∈ (jointStronglyTypicalSet_finite μ Xs Ys n ε).toFinset,
+      Real.exp (-(n : ℝ) * (HX + εX'))
+        * Real.exp (-(n : ℝ) * (HY + εY'))
+        ≤ μXn.real {p.1} * μYn.real {p.2} := by
+  intro μXn μYn p hp
+  have hp_set : p ∈ jointStronglyTypicalSet μ Xs Ys n ε :=
+    (Set.Finite.mem_toFinset _).mp hp
+  rcases p with ⟨x, y⟩
+  set εX : ℝ := (Fintype.card β : ℝ) * ε
+  set εY : ℝ := (Fintype.card α : ℝ) * ε
+  have hεX_nn : 0 ≤ εX := mul_nonneg (Nat.cast_nonneg _) hε.le
+  have hεY_nn : 0 ≤ εY := mul_nonneg (Nat.cast_nonneg _) hε.le
+  have hLX_nn : 0 ≤ logSumAbs μ Xs := logSumAbs_nonneg μ Xs
+  have hLY_nn : 0 ≤ logSumAbs μ Ys := logSumAbs_nonneg μ Ys
+  have hxX_strong : x ∈ stronglyTypicalSet μ Xs n εX :=
+    jointStronglyTypicalSet_implies_X_stronglyTypical μ Xs Ys hXs hYs hmarg_X
+      hn_pos hε.le x y hp_set
+  have hxX_weak : x ∈ typicalSet μ Xs n εX' :=
+    stronglyTypicalSet_subset_typicalSet μ Xs hXs hn_pos
+      (ε := εX) (ε' := εX')
+      (by rw [hεX']; linarith [mul_nonneg hεX_nn hLX_nn])
+      hxX_strong
+  have hyY_strong : y ∈ stronglyTypicalSet μ Ys n εY :=
+    jointStronglyTypicalSet_implies_Y_stronglyTypical μ Xs Ys hXs hYs hmarg_Y
+      hn_pos hε.le x y hp_set
+  have hyY_weak : y ∈ typicalSet μ Ys n εY' :=
+    stronglyTypicalSet_subset_typicalSet μ Ys hYs hn_pos
+      (ε := εY) (ε' := εY')
+      (by rw [hεY']; linarith [mul_nonneg hεY_nn hLY_nn])
+      hyY_strong
+  have hbdX : Real.exp (-(n : ℝ) * (HX + εX')) ≤ μXn.real {x} := by
+    rw [hHX]
+    exact InformationTheory.Shannon.typicalSet_prob_ge μ Xs hXs hindepX_full hidentX
+      hposX n x hxX_weak
+  have hbdY : Real.exp (-(n : ℝ) * (HY + εY')) ≤ μYn.real {y} := by
+    rw [hHY]
+    exact InformationTheory.Shannon.typicalSet_prob_ge μ Ys hYs hindepY_full hidentY
+      hposY n y hyY_weak
+  have hY_exp_nn : 0 ≤ Real.exp (-(n : ℝ) * (HY + εY')) := (Real.exp_pos _).le
+  have hX_nn : 0 ≤ μXn.real {x} := measureReal_nonneg
+  calc Real.exp (-(n : ℝ) * (HX + εX')) * Real.exp (-(n : ℝ) * (HY + εY'))
+      ≤ μXn.real {x} * Real.exp (-(n : ℝ) * (HY + εY')) :=
+        mul_le_mul_of_nonneg_right hbdX hY_exp_nn
+    _ ≤ μXn.real {x} * μYn.real {y} :=
+        mul_le_mul_of_nonneg_left hbdY hX_nn
+
 /-- **Strong-typical independent probability lower bound** (mirror of
 `jointlyTypicalSet_indep_prob_ge` for the strong-typicality version).
 
@@ -383,62 +509,26 @@ theorem jointStronglyTypicalSet_indep_prob_ge
   set LZ : ℝ := logSumAbs μ Zs with hLZ_def
   have hLX_nn : 0 ≤ LX := logSumAbs_nonneg μ Xs
   have hLY_nn : 0 ≤ LY := logSumAbs_nonneg μ Ys
-  have hLZ_nn : 0 ≤ LZ := logSumAbs_nonneg μ Zs
   -- Strong-typical card lower bound (eventually).
   have hZmeas : ∀ i, Measurable (Zs i) := fun i =>
     measurable_jointSequence Xs Ys hXs hYs i
   obtain ⟨N₀, hN₀⟩ := stronglyTypicalSet_card_ge_eventually μ Zs hZmeas
     hindepZ_full hindepZ_pair hidentZ hposZ hε hδ hη
   refine ⟨max N₀ 1, fun n hn_ge => ?_⟩
-  have hn_N₀ : N₀ ≤ n := le_of_max_le_left hn_ge
   have hn_pos : 0 < n := by have := le_of_max_le_right hn_ge; omega
   -- Card lower bound on stronglyTypicalSet of Zs.
   have h_card_ge :
       (1 - η) * Real.exp ((n : ℝ) * (HZ - ε * LZ - δ))
-        ≤ ((stronglyTypicalSet μ Zs n ε).toFinite.toFinset.card : ℝ) := hN₀ n hn_N₀
-  -- Reshape: define A := jointStronglyTypicalSet via the φ-injection.
-  let φ : (Fin n → α) × (Fin n → β) → (Fin n → α × β) :=
-    fun p i => (p.1 i, p.2 i)
-  have hφ_inj : Function.Injective φ := by
-    intro p q hpq
-    apply Prod.ext
-    · funext i
-      exact ((Prod.mk.injEq _ _ _ _).mp (congr_fun hpq i)).1
-    · funext i
-      exact ((Prod.mk.injEq _ _ _ _).mp (congr_fun hpq i)).2
+        ≤ ((stronglyTypicalSet μ Zs n ε).toFinite.toFinset.card : ℝ) :=
+    hN₀ n (le_of_max_le_left hn_ge)
+  -- Reshape: jointStronglyTypicalSet card = stronglyTypicalSet card via φ-injection.
   set A : Set ((Fin n → α) × (Fin n → β)) := jointStronglyTypicalSet μ Xs Ys n ε
-    with hA_def
   set Afin : Finset ((Fin n → α) × (Fin n → β)) :=
-    (jointStronglyTypicalSet_finite μ Xs Ys n ε).toFinset with hAfin_def
-  -- The image φ '' Afin lies in (stronglyTypicalSet μ Zs n ε).toFinset.
-  -- And |φ '' Afin| = |Afin|.
-  set Tfin : Finset (Fin n → α × β) := (stronglyTypicalSet μ Zs n ε).toFinite.toFinset
-    with hTfin_def
-  -- φ is bijective: inverse is z ↦ (fun i => (z i).1, fun i => (z i).2).
-  have hφ_surj : Function.Surjective φ := by
-    intro z
-    refine ⟨(fun i => (z i).1, fun i => (z i).2), ?_⟩
-    funext i; rfl
-  -- φ '' Afin = Tfin via membership iff.
-  have h_image_eq : Afin.image φ = Tfin := by
-    ext q
-    simp only [Finset.mem_image, hAfin_def, hTfin_def, Set.Finite.mem_toFinset]
-    constructor
-    · rintro ⟨⟨x, y⟩, hxy_mem, rfl⟩
-      rw [mem_jointStronglyTypicalSet_iff] at hxy_mem
-      exact hxy_mem
-    · intro hq
-      obtain ⟨p, rfl⟩ := hφ_surj q
-      refine ⟨p, ?_, rfl⟩
-      rw [show p = (p.1, p.2) from rfl, mem_jointStronglyTypicalSet_iff]
-      exact hq
-  have h_card_eq_nat : Afin.card = Tfin.card := by
-    rw [← h_image_eq, Finset.card_image_of_injective _ hφ_inj]
-  have h_card_eq : (Afin.card : ℝ) = (Tfin.card : ℝ) := by
-    exact_mod_cast h_card_eq_nat
+    (jointStronglyTypicalSet_finite μ Xs Ys n ε).toFinset
   have h_Afin_ge : (1 - η) * Real.exp ((n : ℝ) * (HZ - ε * LZ - δ))
       ≤ (Afin.card : ℝ) := by
-    rw [h_card_eq]; exact h_card_ge
+    exact_mod_cast (jointStronglyTypicalSet_card_eq_typicalSet_card μ Xs Ys n ε).symm ▸
+      h_card_ge
   -- Strong joint ⟹ Strong X (slack |β|·ε), then ⊆ Weak X (slack |β|·ε·LX + δ).
   have h_meas_X : Measurable (jointRV Xs n) := measurable_jointRV Xs hXs n
   have h_meas_Y : Measurable (jointRV Ys n) := measurable_jointRV Ys hYs n
@@ -465,42 +555,13 @@ theorem jointStronglyTypicalSet_indep_prob_ge
   have h_each_ge : ∀ p ∈ Afin,
       Real.exp (-(n : ℝ) * (HX + εX'))
         * Real.exp (-(n : ℝ) * (HY + εY'))
-        ≤ μXn.real {p.1} * μYn.real {p.2} := by
-    intro p hp
-    have hp_set : p ∈ A := (Set.Finite.mem_toFinset _).mp hp
-    rcases p with ⟨x, y⟩
-    -- x is strongly typical for Xs at εX = |β|·ε.
-    have hxX_strong : x ∈ stronglyTypicalSet μ Xs n εX :=
-      jointStronglyTypicalSet_implies_X_stronglyTypical μ Xs Ys hXs hYs hmarg_X
-        hn_pos hε.le x y hp_set
-    -- x is weakly typical for Xs at εX' = εX·LX + δ (strict bound from strong ⊆ weak).
-    have hxX_weak : x ∈ typicalSet μ Xs n εX' := by
-      apply stronglyTypicalSet_subset_typicalSet μ Xs hXs hn_pos
-      · show εX * LX < εX * LX + δ
-        linarith
-      · exact hxX_strong
-    -- y is strongly typical for Ys at εY = |α|·ε.
-    have hyY_strong : y ∈ stronglyTypicalSet μ Ys n εY :=
-      jointStronglyTypicalSet_implies_Y_stronglyTypical μ Xs Ys hXs hYs hmarg_Y
-        hn_pos hε.le x y hp_set
-    have hyY_weak : y ∈ typicalSet μ Ys n εY' := by
-      apply stronglyTypicalSet_subset_typicalSet μ Ys hYs hn_pos
-      · show εY * LY < εY * LY + δ
-        linarith
-      · exact hyY_strong
-    have hbdX : Real.exp (-(n : ℝ) * (HX + εX')) ≤ μXn.real {x} :=
-      InformationTheory.Shannon.typicalSet_prob_ge μ Xs hXs hindepX_full hidentX
-        hposX n x hxX_weak
-    have hbdY : Real.exp (-(n : ℝ) * (HY + εY')) ≤ μYn.real {y} :=
-      InformationTheory.Shannon.typicalSet_prob_ge μ Ys hYs hindepY_full hidentY
-        hposY n y hyY_weak
-    have hY_exp_nn : 0 ≤ Real.exp (-(n : ℝ) * (HY + εY')) := (Real.exp_pos _).le
-    have hX_nn : 0 ≤ μXn.real {x} := measureReal_nonneg
-    calc Real.exp (-(n : ℝ) * (HX + εX')) * Real.exp (-(n : ℝ) * (HY + εY'))
-        ≤ μXn.real {x} * Real.exp (-(n : ℝ) * (HY + εY')) := by
-          exact mul_le_mul_of_nonneg_right hbdX hY_exp_nn
-      _ ≤ μXn.real {x} * μYn.real {y} := by
-          exact mul_le_mul_of_nonneg_left hbdY hX_nn
+        ≤ μXn.real {p.1} * μYn.real {p.2} :=
+    jointStronglyTypicalSet_indep_perPair_prob_ge μ Xs Ys hXs hYs
+      hindepX_full hidentX hindepY_full hidentY hposX hposY hmarg_X hmarg_Y
+      hn_pos hε hδ HX HY εX' εY' hHX_def hHY_def
+      (by simp only [hεX'_def, hεX_def, hLX_def])
+      (by simp only [hεY'_def, hεY_def, hLY_def])
+      hεX'_pos hεY'_pos
   -- Sum the per-pair bounds over Afin.
   set C : ℝ := Real.exp (-(n : ℝ) * (HX + εX')) * Real.exp (-(n : ℝ) * (HY + εY'))
     with hC_def
@@ -515,22 +576,9 @@ theorem jointStronglyTypicalSet_indep_prob_ge
   -- Sum identifies as product measure.
   have h_sum_eq :
       (∑ p ∈ Afin, μXn.real {p.1} * μYn.real {p.2})
-        = (μXn.prod μYn).real A := by
-    have h_real_eq : (μXn.prod μYn).real A
-        = ∑ p ∈ Afin, (μXn.prod μYn).real {p} := by
-      have h_coe : (Afin : Set _) = A :=
-        (jointStronglyTypicalSet_finite μ Xs Ys n ε).coe_toFinset
-      rw [← h_coe, ← sum_measureReal_singleton (μ := μXn.prod μYn) Afin]
-    rw [h_real_eq]
-    refine (Finset.sum_congr rfl ?_).symm
-    intro p _
-    have h_singleton_prod : ({p} : Set ((Fin n → α) × (Fin n → β)))
-        = ({p.1} : Set (Fin n → α)) ×ˢ ({p.2} : Set (Fin n → β)) := by
-      ext q
-      simp [Prod.ext_iff]
-    rw [h_singleton_prod]
-    exact measureReal_prod_prod (μ := μXn) (ν := μYn)
-      ({p.1} : Set (Fin n → α)) ({p.2} : Set (Fin n → β))
+        = (μXn.prod μYn).real A :=
+    sum_marginals_eq_prod_real μXn μYn Afin A
+      (jointStronglyTypicalSet_finite μ Xs Ys n ε).coe_toFinset
   -- Combine: lower-bound LHS = (1-η)·exp(...) ≤ Afin.card · C ≤ (μXn.prod μYn).real A.
   -- Need to verify the LHS exponent matches.
   -- LHS exp = n · ((HZ - HX - HY) - ((|β|·LX + |α|·LY + LZ)·ε + 3δ))
@@ -627,3 +675,4 @@ which uses the conditional method-of-types directly; the public theorem
 `rate_distortion_achievability` lives in that file. -/
 
 end InformationTheory.Shannon
+
