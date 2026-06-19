@@ -654,6 +654,77 @@ theorem isBlachmanConvReady_convDensityAdd_gaussian_asym (pX pY : ℝ → ℝ) {
     convDensityAdd_gaussian_asym_integrable_prod_deriv_mul pX pY hs ht
       hpX_nn hpX_meas hpX_int hpX_mass hpY_nn hpY_meas hpY_int hpY_mass
 
+-- Helper: the conv-pin gate `∀ x, RS.density_t x = convDensityAdd RX.density_t RY.density_t x`
+-- for the twoTime_stam_supply body. All hypotheses are regularity preconditions.
+private lemma reg_density_t_sum_eq_convDensityAdd
+    {Ω : Type*} [MeasurableSpace Ω]
+    (P : Measure Ω) [IsProbabilityMeasure P]
+    (X Y Z_X Z_Y Z : Ω → ℝ)
+    (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
+    (h_reg_X : EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
+    (h_reg_sum : EPIStamDischarge.IsDeBruijnRegularityHyp (fun ω => X ω + Y ω) Z P)
+    (σ τ : ℝ) (hσ : 0 < σ) (hτ : 0 < τ) :
+    ∀ x, (h_reg_sum.reg_at (σ + τ) (add_pos hσ hτ)).density_t x
+      = convDensityAdd (h_reg_X.reg_at σ hσ).density_t (h_reg_Y.reg_at τ hτ).density_t x := by
+  set RX := h_reg_X.reg_at σ hσ
+  set RY := h_reg_Y.reg_at τ hτ
+  set RS := h_reg_sum.reg_at (σ + τ) (add_pos hσ hτ)
+  set pX : ℝ → ℝ := RX.pX
+  set pY : ℝ → ℝ := RY.pX
+  set pXY : ℝ → ℝ := RS.pX
+  have hστ : 0 < σ + τ := add_pos hσ hτ
+  have hpinX : RX.density_t = convDensityAdd pX (gaussianPDFReal 0 ⟨σ, hσ.le⟩) := by
+    funext x; exact RX.density_t_eq hσ x
+  have hpinY : RY.density_t = convDensityAdd pY (gaussianPDFReal 0 ⟨τ, hτ.le⟩) := by
+    funext x; exact RY.density_t_eq hτ x
+  have hpinS : RS.density_t
+      = convDensityAdd pXY (gaussianPDFReal 0 ⟨σ + τ, hστ.le⟩) := by
+    funext x; exact RS.density_t_eq hστ x
+  have hpX_nn : ∀ x, 0 ≤ pX x := RX.pX_nn
+  have hpX_meas : Measurable pX := RX.pX_meas
+  have hpY_nn : ∀ x, 0 ≤ pY x := RY.pX_nn
+  have hpY_meas : Measurable pY := RY.pX_meas
+  have hpXY_nn : ∀ x, 0 ≤ pXY x := RS.pX_nn
+  have hpXY_meas : Measurable pXY := RS.pX_meas
+  obtain ⟨hpX_int, _⟩ := density_int_mass X pX hX hpX_nn hpX_meas RX.pX_law
+  obtain ⟨hpY_int, _⟩ := density_int_mass Y pY hY hpY_nn hpY_meas RY.pX_law
+  have lmass : ∀ (W : Ω → ℝ) (p : ℝ → ℝ), Measurable W → (∀ x, 0 ≤ p x) →
+      P.map W = volume.withDensity (fun x => ENNReal.ofReal (p x)) →
+      (∫⁻ x, ENNReal.ofReal (p x) ∂volume) = 1 := by
+    intro W p hW _ hp_law
+    have hprob : IsProbabilityMeasure (P.map W) :=
+      MeasureTheory.Measure.isProbabilityMeasure_map hW.aemeasurable
+    have := hprob.measure_univ
+    rw [hp_law, withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ] at this
+    exact this
+  have hpX_lmass := lmass X pX hX hpX_nn RX.pX_law
+  have hpY_lmass := lmass Y pY hY hpY_nn RY.pX_law
+  have hpXY_lmass : (∫⁻ x, ENNReal.ofReal (pXY x) ∂volume) ≠ ⊤ := by
+    rw [lmass (fun ω => X ω + Y ω) pXY (hX.add hY) hpXY_nn RS.pX_law]; exact ENNReal.one_ne_top
+  have hseam : pXY =ᵐ[volume] convDensityAdd pX pY :=
+    indepSum_density_ae X Y hX hY hXY pX pY pXY hpX_nn hpX_meas hpY_nn hpY_meas
+      RX.pX_law RY.pX_law RS.pX_law hpXY_nn hpXY_meas hpX_int hpY_int
+      hpXY_lmass hpX_lmass hpY_lmass
+  have hinterchange :
+      convDensityAdd (convDensityAdd pX (gaussianPDFReal 0 ⟨σ, hσ.le⟩))
+          (convDensityAdd pY (gaussianPDFReal 0 ⟨τ, hτ.le⟩))
+        = convDensityAdd (convDensityAdd pX pY)
+            (gaussianPDFReal 0 ⟨σ + τ, by positivity⟩) :=
+    EPIConvDensity.convDensityAdd_convGaussian_interchange_asym pX pY hσ hτ
+      hpX_nn hpX_meas hpX_int hpY_nn hpY_meas hpY_int
+  have hgconv : ∀ z,
+      convDensityAdd pXY (gaussianPDFReal 0 ⟨σ + τ, by positivity⟩) z
+        = convDensityAdd (convDensityAdd pX pY)
+            (gaussianPDFReal 0 ⟨σ + τ, by positivity⟩) z := by
+    intro z
+    show (∫ y, pXY y * _ ∂volume) = ∫ y, convDensityAdd pX pY y * _ ∂volume
+    refine integral_congr_ae ?_
+    filter_upwards [hseam] with y hy
+    rw [hy]
+  intro x
+  rw [hpinS, hpinX, hpinY, hinterchange, hgconv x]
+
 /-- **Two-time harmonic-Stam supply producer**.
 
 For `X Y Z_X Z_Y Z : Ω → ℝ` (all unit noises, sum perturbed by separate `Z`), independent
@@ -801,46 +872,8 @@ theorem twoTime_stam_supply {Ω : Type*} [MeasurableSpace Ω]
       hpX_nn hpX_meas hpX_int hpX_mass hpX_norm
       hpY_nn hpY_meas hpY_int hpY_mass hpY_norm
   -- the conv-pin gate `∀ x, RS.density_t x = convDensityAdd RX.density_t RY.density_t x`
-  have hconv : ∀ x, RS.density_t x = convDensityAdd RX.density_t RY.density_t x := by
-    -- `∫⁻ ofReal(p) = total mass = 1` from each `withDensity` probability law.
-    have lmass : ∀ (W : Ω → ℝ) (p : ℝ → ℝ), Measurable W → (∀ x, 0 ≤ p x) →
-        P.map W = volume.withDensity (fun x => ENNReal.ofReal (p x)) →
-        (∫⁻ x, ENNReal.ofReal (p x) ∂volume) = 1 := by
-      intro W p hW _ hp_law
-      have hprob : IsProbabilityMeasure (P.map W) :=
-        MeasureTheory.Measure.isProbabilityMeasure_map hW.aemeasurable
-      have := hprob.measure_univ
-      rw [hp_law, withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ] at this
-      exact this
-    have hpX_lmass := lmass X pX hX hpX_nn RX.pX_law
-    have hpY_lmass := lmass Y pY hY hpY_nn RY.pX_law
-    have hpXY_lmass : (∫⁻ x, ENNReal.ofReal (pXY x) ∂volume) ≠ ⊤ := by
-      rw [lmass (fun ω => X ω + Y ω) pXY (hX.add hY) hpXY_nn RS.pX_law]; exact ENNReal.one_ne_top
-    -- the input identity `pXY =ᵐ convDensityAdd pX pY` (the seam)
-    have hseam : pXY =ᵐ[volume] convDensityAdd pX pY :=
-      indepSum_density_ae X Y hX hY hXY pX pY pXY hpX_nn hpX_meas hpY_nn hpY_meas
-        RX.pX_law RY.pX_law RS.pX_law hpXY_nn hpXY_meas hpX_int hpY_int
-        hpXY_lmass hpX_lmass hpY_lmass
-    -- the asym 4-fold interchange: RHS = convDensityAdd (convDensityAdd pX pY) g_{σ+τ}
-    have hinterchange :
-        convDensityAdd (convDensityAdd pX (gaussianPDFReal 0 ⟨σ, hσ.le⟩))
-            (convDensityAdd pY (gaussianPDFReal 0 ⟨τ, hτ.le⟩))
-          = convDensityAdd (convDensityAdd pX pY)
-              (gaussianPDFReal 0 ⟨σ + τ, by positivity⟩) :=
-      EPIConvDensity.convDensityAdd_convGaussian_interchange_asym pX pY hσ hτ
-        hpX_nn hpX_meas hpX_int hpY_nn hpY_meas hpY_int
-    -- a.e.-invariance of `convDensityAdd · g` under a.e.-modification of the first arg
-    have hgconv : ∀ z,
-        convDensityAdd pXY (gaussianPDFReal 0 ⟨σ + τ, by positivity⟩) z
-          = convDensityAdd (convDensityAdd pX pY)
-              (gaussianPDFReal 0 ⟨σ + τ, by positivity⟩) z := by
-      intro z
-      show (∫ y, pXY y * _ ∂volume) = ∫ y, convDensityAdd pX pY y * _ ∂volume
-      refine integral_congr_ae ?_
-      filter_upwards [hseam] with y hy
-      rw [hy]
-    intro x
-    rw [hpinS, hpinX, hpinY, hinterchange, hgconv x]
+  have hconv : ∀ x, RS.density_t x = convDensityAdd RX.density_t RY.density_t x :=
+    reg_density_t_sum_eq_convDensityAdd P X Y Z_X Z_Y Z hX hY hXY h_reg_X h_reg_Y h_reg_sum σ τ hσ hτ
   -- instantiate the Stam hyp at the three `density_t`s; the J-gates close definitionally.
   have hJX : 0 < fisherInfoOfDensityReal RX.density_t := hposX
   have hJY : 0 < fisherInfoOfDensityReal RY.density_t := hposY
