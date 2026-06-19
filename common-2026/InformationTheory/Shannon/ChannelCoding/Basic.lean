@@ -370,6 +370,77 @@ theorem jointlyTypicalSet_card_le
     InformationTheory.Shannon.typicalSet_card_le μ Zs hZs hpos n hε
   exact h_card_le_R.trans h_joint
 
+-- Helper: if three events each have measure tending to 1, so does their triple intersection.
+-- (Complement-union bound: P(Aᶜ ∪ Bᶜ ∪ Cᶜ) ≤ P(Aᶜ) + P(Bᶜ) + P(Cᶜ) → 0.)
+private theorem measure_inter3_tendsto_one {Ω' : Type*} [MeasurableSpace Ω']
+    (μ' : Measure Ω') [IsProbabilityMeasure μ']
+    (A B C : ℕ → Set Ω')
+    (hA : ∀ n, MeasurableSet (A n)) (hB : ∀ n, MeasurableSet (B n)) (hC : ∀ n, MeasurableSet (C n))
+    (hA1 : Filter.Tendsto (fun n => μ' (A n)) Filter.atTop (𝓝 1))
+    (hB1 : Filter.Tendsto (fun n => μ' (B n)) Filter.atTop (𝓝 1))
+    (hC1 : Filter.Tendsto (fun n => μ' (C n)) Filter.atTop (𝓝 1)) :
+    Filter.Tendsto (fun n => μ' (A n ∩ B n ∩ C n)) Filter.atTop (𝓝 1) := by
+  -- Step 1: for any measurable E with μ'(E) → 1, we have μ'(Eᶜ) → 0.
+  have h_bad_tendsto : ∀ (E : ℕ → Set Ω') (hE : ∀ n, MeasurableSet (E n))
+      (h : Filter.Tendsto (fun n => μ' (E n)) Filter.atTop (𝓝 1)),
+      Filter.Tendsto (fun n => μ' ((E n)ᶜ)) Filter.atTop (𝓝 0) := by
+    intro E hE h
+    have h_id : ∀ n, μ' ((E n)ᶜ) = 1 - μ' (E n) := fun n => by
+      rw [measure_compl (hE n) (measure_ne_top μ' _), measure_univ]
+    refine Filter.Tendsto.congr (fun n => (h_id n).symm) ?_
+    have h_cont : Continuous (fun x : ℝ≥0∞ => (1 : ℝ≥0∞) - x) :=
+      ENNReal.continuous_sub_left (by simp)
+    have h_step : Filter.Tendsto (fun n => (1 : ℝ≥0∞) - μ' (E n)) Filter.atTop
+        (𝓝 ((1 : ℝ≥0∞) - 1)) := h_cont.tendsto _ |>.comp h
+    simpa using h_step
+  -- Step 2: derive complement → 0 for each axis.
+  have h_badA_to_zero := h_bad_tendsto A hA hA1
+  have h_badB_to_zero := h_bad_tendsto B hB hB1
+  have h_badC_to_zero := h_bad_tendsto C hC hC1
+  -- Step 3: complement of A ∩ B ∩ C ⊆ Aᶜ ∪ Bᶜ ∪ Cᶜ.
+  have h_compl_sub : ∀ n, (A n ∩ B n ∩ C n)ᶜ ⊆ (A n)ᶜ ∪ (B n)ᶜ ∪ (C n)ᶜ := by
+    intro n ω hω
+    rw [Set.mem_compl_iff, Set.mem_inter_iff, Set.mem_inter_iff,
+        not_and_or, not_and_or] at hω
+    rcases hω with (h_or | hC_bad)
+    · rcases h_or with hA_bad | hB_bad
+      · exact Set.mem_union_left _ (Set.mem_union_left _ hA_bad)
+      · exact Set.mem_union_left _ (Set.mem_union_right _ hB_bad)
+    · exact Set.mem_union_right _ hC_bad
+  -- Step 4: bound μ'((A∩B∩C)ᶜ) by the sum of the three complement measures.
+  have h_bound_compl : ∀ n,
+      μ' ((A n ∩ B n ∩ C n)ᶜ) ≤ μ' ((A n)ᶜ) + μ' ((B n)ᶜ) + μ' ((C n)ᶜ) := by
+    intro n
+    calc μ' ((A n ∩ B n ∩ C n)ᶜ)
+        ≤ μ' ((A n)ᶜ ∪ (B n)ᶜ ∪ (C n)ᶜ) := measure_mono (h_compl_sub n)
+      _ ≤ μ' ((A n)ᶜ ∪ (B n)ᶜ) + μ' ((C n)ᶜ) := measure_union_le _ _
+      _ ≤ (μ' ((A n)ᶜ) + μ' ((B n)ᶜ)) + μ' ((C n)ᶜ) := by
+          gcongr; exact measure_union_le _ _
+      _ = μ' ((A n)ᶜ) + μ' ((B n)ᶜ) + μ' ((C n)ᶜ) := by ring
+  -- Step 5: the sum of complements → 0 + 0 + 0 = 0.
+  have h_sum_tendsto : Filter.Tendsto
+      (fun n => μ' ((A n)ᶜ) + μ' ((B n)ᶜ) + μ' ((C n)ᶜ)) Filter.atTop (𝓝 0) := by
+    have h12 := h_badA_to_zero.add h_badB_to_zero
+    have h_all := h12.add h_badC_to_zero
+    simpa using h_all
+  -- Step 6: squeeze to conclude μ'((A∩B∩C)ᶜ) → 0.
+  have h_compl_tendsto : Filter.Tendsto (fun n => μ' ((A n ∩ B n ∩ C n)ᶜ))
+      Filter.atTop (𝓝 0) :=
+    tendsto_of_tendsto_of_tendsto_of_le_of_le
+      tendsto_const_nhds h_sum_tendsto (fun n => bot_le) h_bound_compl
+  -- Step 7: μ'(A∩B∩C) = 1 − μ'((A∩B∩C)ᶜ) → 1 − 0 = 1.
+  have h_meas_int : ∀ n, MeasurableSet (A n ∩ B n ∩ C n) :=
+    fun n => ((hA n).inter (hB n)).inter (hC n)
+  have h_id : ∀ n, μ' (A n ∩ B n ∩ C n) = 1 - μ' ((A n ∩ B n ∩ C n)ᶜ) := fun n => by
+    rw [measure_compl (h_meas_int n) (measure_ne_top μ' _), measure_univ]
+    exact (ENNReal.sub_sub_cancel (by simp) prob_le_one).symm
+  refine Filter.Tendsto.congr (fun n => (h_id n).symm) ?_
+  have h_cont : Continuous (fun x : ℝ≥0∞ => (1 : ℝ≥0∞) - x) :=
+    ENNReal.continuous_sub_left (by simp)
+  have h_step : Filter.Tendsto (fun n => (1 : ℝ≥0∞) - μ' ((A n ∩ B n ∩ C n)ᶜ))
+      Filter.atTop (𝓝 ((1 : ℝ≥0∞) - 0)) := h_cont.tendsto _ |>.comp h_compl_tendsto
+  simpa using h_step
+
 /-- **Bound (a): joint AEP probability**. The probability that the block-joint pair
 `(X^n, Y^n)` lies in the jointly typical set tends to `1`.
 
@@ -438,101 +509,24 @@ theorem jointlyTypicalSet_prob_tendsto_one
     · rintro ⟨⟨hX', hY'⟩, hZ'⟩
       refine ⟨hX', hY', ?_⟩
       exact hZ'
-  -- Bound `μ (jointEvt n)` from below: P(A ∩ B ∩ C) ≥ P(A) + P(B) + P(C) - 2.
-  -- We use the complement approach: P(complement of A∩B∩C) ≤ ∑ P(complement of each).
-  -- That gives μ(jointEvt n)ᶜ → 0, hence μ(jointEvt n) → 1.
-  set badX : ℕ → Set Ω := fun n => (goodX n)ᶜ
-  set badY : ℕ → Set Ω := fun n => (goodY n)ᶜ
-  set badZ : ℕ → Set Ω := fun n => (goodZ n)ᶜ
-  -- Each event is measurable (finite product alphabet).
-  have h_meas_goodX : ∀ n, MeasurableSet (goodX n) := by
-    intro n
-    have : MeasurableSet (InformationTheory.Shannon.typicalSet μ Xs n ε) :=
-      InformationTheory.Shannon.measurableSet_typicalSet μ Xs n ε
-    exact (InformationTheory.Shannon.measurable_jointRV Xs hXs n) this
-  have h_meas_goodY : ∀ n, MeasurableSet (goodY n) := by
-    intro n
-    have : MeasurableSet (InformationTheory.Shannon.typicalSet μ Ys n ε) :=
-      InformationTheory.Shannon.measurableSet_typicalSet μ Ys n ε
-    exact (InformationTheory.Shannon.measurable_jointRV Ys hYs n) this
-  have h_meas_goodZ : ∀ n, MeasurableSet (goodZ n) := by
-    intro n
-    have : MeasurableSet (InformationTheory.Shannon.typicalSet μ Zs n ε) :=
-      InformationTheory.Shannon.measurableSet_typicalSet μ Zs n ε
-    exact (InformationTheory.Shannon.measurable_jointRV Zs hZs n) this
-  -- μ(goodX n) → 1 ⇒ μ(badX n) → 0; similarly Y, Z.
-  have h_bad_tendsto : ∀ (E : ℕ → Set Ω) (hE : ∀ n, MeasurableSet (E n))
-      (h : Filter.Tendsto (fun n => μ (E n)) Filter.atTop (𝓝 1)),
-      Filter.Tendsto (fun n => μ ((E n)ᶜ)) Filter.atTop (𝓝 0) := by
-    intro E hE h
-    have h_id : ∀ n, μ ((E n)ᶜ) = 1 - μ (E n) := fun n => by
-      rw [measure_compl (hE n) (measure_ne_top μ _), measure_univ]
-    refine Filter.Tendsto.congr (fun n => (h_id n).symm) ?_
-    have h_cont : Continuous (fun x : ℝ≥0∞ => (1 : ℝ≥0∞) - x) :=
-      ENNReal.continuous_sub_left (by simp)
-    have h_step : Filter.Tendsto (fun n => (1 : ℝ≥0∞) - μ (E n)) Filter.atTop
-        (𝓝 ((1 : ℝ≥0∞) - 1)) := h_cont.tendsto _ |>.comp h
-    simpa using h_step
-  have h_badX_to_zero : Filter.Tendsto (fun n => μ (badX n)) Filter.atTop (𝓝 0) :=
-    h_bad_tendsto goodX h_meas_goodX hX
-  have h_badY_to_zero : Filter.Tendsto (fun n => μ (badY n)) Filter.atTop (𝓝 0) :=
-    h_bad_tendsto goodY h_meas_goodY hY
-  have h_badZ_to_zero : Filter.Tendsto (fun n => μ (badZ n)) Filter.atTop (𝓝 0) :=
-    h_bad_tendsto goodZ h_meas_goodZ hZ
-  -- μ(jointEvt n)ᶜ ≤ μ(badX n) + μ(badY n) + μ(badZ n) → 0.
-  have h_compl_sub : ∀ n, (jointEvt n)ᶜ ⊆ badX n ∪ badY n ∪ badZ n := by
-    intro n
-    rw [h_joint_decomp n]
-    intro ω hω
-    -- hω : ω ∉ goodX n ∩ goodY n ∩ goodZ n
-    rw [Set.mem_compl_iff, Set.mem_inter_iff, Set.mem_inter_iff,
-        not_and_or, not_and_or] at hω
-    rcases hω with (h_or | hZ_bad)
-    · rcases h_or with hX_bad | hY_bad
-      · exact Set.mem_union_left _ (Set.mem_union_left _ hX_bad)
-      · exact Set.mem_union_left _ (Set.mem_union_right _ hY_bad)
-    · exact Set.mem_union_right _ hZ_bad
-  have h_bound_compl : ∀ n,
-      μ ((jointEvt n)ᶜ) ≤ μ (badX n) + μ (badY n) + μ (badZ n) := by
-    intro n
-    calc μ ((jointEvt n)ᶜ)
-        ≤ μ (badX n ∪ badY n ∪ badZ n) := measure_mono (h_compl_sub n)
-      _ ≤ μ (badX n ∪ badY n) + μ (badZ n) := measure_union_le _ _
-      _ ≤ (μ (badX n) + μ (badY n)) + μ (badZ n) := by
-          gcongr
-          exact measure_union_le (badX n) (badY n)
-      _ = μ (badX n) + μ (badY n) + μ (badZ n) := by ring
-  -- Tendsto: μ(badX n) + μ(badY n) + μ(badZ n) → 0 + 0 + 0 = 0.
-  have h_sum_tendsto : Filter.Tendsto
-      (fun n => μ (badX n) + μ (badY n) + μ (badZ n)) Filter.atTop (𝓝 0) := by
-    have h12 : Filter.Tendsto (fun n => μ (badX n) + μ (badY n))
-        Filter.atTop (𝓝 (0 + 0)) := h_badX_to_zero.add h_badY_to_zero
-    have h_all : Filter.Tendsto (fun n => (μ (badX n) + μ (badY n)) + μ (badZ n))
-        Filter.atTop (𝓝 ((0 + 0) + 0)) := h12.add h_badZ_to_zero
-    simpa using h_all
-  -- μ((jointEvt n)ᶜ) → 0 by squeeze with `0 ≤ · ≤ (sum)`.
-  have h_compl_tendsto : Filter.Tendsto (fun n => μ ((jointEvt n)ᶜ))
-      Filter.atTop (𝓝 0) := by
-    -- bot_le for 0 ≤ μ; h_bound_compl for the upper bound; sandwich.
-    refine tendsto_of_tendsto_of_tendsto_of_le_of_le
-      tendsto_const_nhds h_sum_tendsto (fun n => bot_le) h_bound_compl
-  -- μ(jointEvt n) = 1 - μ((jointEvt n)ᶜ) → 1 - 0 = 1.
-  -- jointEvt n is measurable.
-  have h_meas_joint : ∀ n, MeasurableSet (jointEvt n) := by
-    intro n
-    rw [h_joint_decomp n]
-    exact ((h_meas_goodX n).inter (h_meas_goodY n)).inter (h_meas_goodZ n)
-  have h_id : ∀ n, μ (jointEvt n) = 1 - μ ((jointEvt n)ᶜ) := fun n => by
-    rw [measure_compl (h_meas_joint n) (measure_ne_top μ _), measure_univ]
-    -- 1 - (1 - x) = x for x ≤ 1 in ℝ≥0∞ (which holds: x = μ ≤ 1)
-    have h_le : μ (jointEvt n) ≤ 1 := prob_le_one
-    exact (ENNReal.sub_sub_cancel (by simp) h_le).symm
-  refine Filter.Tendsto.congr (fun n => (h_id n).symm) ?_
-  have h_cont : Continuous (fun x : ℝ≥0∞ => (1 : ℝ≥0∞) - x) :=
-    ENNReal.continuous_sub_left (by simp)
-  have h_step : Filter.Tendsto (fun n => (1 : ℝ≥0∞) - μ ((jointEvt n)ᶜ))
-      Filter.atTop (𝓝 ((1 : ℝ≥0∞) - 0)) := h_cont.tendsto _ |>.comp h_compl_tendsto
-  simpa using h_step
+  -- Each good event is measurable (finite product alphabet).
+  have h_meas_goodX : ∀ n, MeasurableSet (goodX n) := fun n =>
+    (InformationTheory.Shannon.measurable_jointRV Xs hXs n)
+      (InformationTheory.Shannon.measurableSet_typicalSet μ Xs n ε)
+  have h_meas_goodY : ∀ n, MeasurableSet (goodY n) := fun n =>
+    (InformationTheory.Shannon.measurable_jointRV Ys hYs n)
+      (InformationTheory.Shannon.measurableSet_typicalSet μ Ys n ε)
+  have h_meas_goodZ : ∀ n, MeasurableSet (goodZ n) := fun n =>
+    (InformationTheory.Shannon.measurable_jointRV Zs hZs n)
+      (InformationTheory.Shannon.measurableSet_typicalSet μ Zs n ε)
+  -- Apply the abstract complement-union-bound helper to goodX/goodY/goodZ.
+  -- Rewrite goal: μ (jointEvt n) = μ (goodX n ∩ goodY n ∩ goodZ n) via h_joint_decomp.
+  have h_eq : ∀ n, μ (jointEvt n) = μ (goodX n ∩ goodY n ∩ goodZ n) :=
+    fun n => congr_arg μ (h_joint_decomp n)
+  rw [show (fun n => μ (jointEvt n)) = fun n => μ (goodX n ∩ goodY n ∩ goodZ n) from
+    funext h_eq]
+  exact measure_inter3_tendsto_one μ goodX goodY goodZ
+    h_meas_goodX h_meas_goodY h_meas_goodZ hX hY hZ
 
 /-- **Bound (c): independent-pair probability**. The probability under the **product**
 measure `μX^n × μY^n` (where `μX^n := μ.map (jointRV Xs n)` and similarly for `Y`) that
@@ -683,3 +677,4 @@ theorem jointlyTypicalSet_indep_prob_le
 end JointlyTypical
 
 end InformationTheory.Shannon.ChannelCoding
+
