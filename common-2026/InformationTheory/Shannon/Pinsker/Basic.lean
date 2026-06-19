@@ -75,6 +75,62 @@ lemma klFun_ge_sub_sqrt_sq (t : ℝ) (ht : 0 ≤ t) :
   have h_rest : 0 ≤ 2 * Real.sqrt t * klFun (Real.sqrt t) := by positivity
   linarith
 
+/-! ### Cauchy-Schwarz and sum bound helpers -/
+
+private lemma finset_cs_sqrt_sq
+    {α : Type*} [Fintype α]
+    (p q : α → ℝ) (hp : ∀ i, 0 ≤ p i) (hq : ∀ i, 0 ≤ q i) :
+    (∑ i : α, |p i - q i|)^2
+      ≤ (∑ i : α, (Real.sqrt (p i) - Real.sqrt (q i))^2)
+        * (∑ i : α, (Real.sqrt (p i) + Real.sqrt (q i))^2) := by
+  refine Finset.sum_sq_le_sum_mul_sum_of_sq_eq_mul (Finset.univ : Finset α) ?_ ?_ ?_
+  · intro i _; exact sq_nonneg _
+  · intro i _; exact sq_nonneg _
+  · intro i _
+    have h_sq_p : Real.sqrt (p i) * Real.sqrt (p i) = p i :=
+      Real.mul_self_sqrt (hp i)
+    have h_sq_q : Real.sqrt (q i) * Real.sqrt (q i) = q i :=
+      Real.mul_self_sqrt (hq i)
+    have h_diff_sq : (Real.sqrt (p i) - Real.sqrt (q i))^2
+        * (Real.sqrt (p i) + Real.sqrt (q i))^2
+        = (p i - q i)^2 := by
+      have : (Real.sqrt (p i) - Real.sqrt (q i))
+          * (Real.sqrt (p i) + Real.sqrt (q i))
+          = p i - q i := by
+        ring_nf
+        rw [show Real.sqrt (p i)^2 = p i from
+          sq (Real.sqrt (p i)) ▸ h_sq_p,
+          show Real.sqrt (q i)^2 = q i from
+            sq (Real.sqrt (q i)) ▸ h_sq_q]
+      calc (Real.sqrt (p i) - Real.sqrt (q i))^2
+          * (Real.sqrt (p i) + Real.sqrt (q i))^2
+          = ((Real.sqrt (p i) - Real.sqrt (q i))
+            * (Real.sqrt (p i) + Real.sqrt (q i)))^2 := by ring
+        _ = (p i - q i)^2 := by rw [this]
+    rw [show |p i - q i|^2 = (p i - q i)^2 from sq_abs _, ← h_diff_sq]
+
+private lemma sum_sqrt_add_sq_le_four
+    {α : Type*} [Fintype α]
+    (p q : α → ℝ)
+    (hp : ∀ i, 0 ≤ p i) (hq : ∀ i, 0 ≤ q i)
+    (hpsum : ∑ i : α, p i = 1) (hqsum : ∑ i : α, q i = 1) :
+    ∑ i : α, (Real.sqrt (p i) + Real.sqrt (q i))^2 ≤ 4 := by
+  have h_per_i : ∀ i : α,
+      (Real.sqrt (p i) + Real.sqrt (q i))^2 ≤ 2 * (p i + q i) := by
+    intro i
+    have h_sq_p : Real.sqrt (p i)^2 = p i := Real.sq_sqrt (hp i)
+    have h_sq_q : Real.sqrt (q i)^2 = q i := Real.sq_sqrt (hq i)
+    have h_AM_GM : 2 * (Real.sqrt (p i) * Real.sqrt (q i))
+        ≤ Real.sqrt (p i)^2 + Real.sqrt (q i)^2 := by
+      nlinarith [sq_nonneg (Real.sqrt (p i) - Real.sqrt (q i))]
+    nlinarith [h_sq_p, h_sq_q, h_AM_GM]
+  have h_sum_le : ∑ i : α, (Real.sqrt (p i) + Real.sqrt (q i))^2
+      ≤ ∑ i : α, 2 * (p i + q i) :=
+    Finset.sum_le_sum fun i _ => h_per_i i
+  have h_sum_PQ : ∑ i : α, 2 * (p i + q i) = 4 := by
+    rw [← Finset.mul_sum, Finset.sum_add_distrib, hpsum, hqsum]; ring
+  linarith
+
 /-! ### Total variation and Pinsker's inequality -/
 
 variable {α : Type*} [Fintype α] [DecidableEq α]
@@ -182,75 +238,25 @@ theorem tvNorm_le_sqrt_klDiv
       ≤ (klDiv P Q).toReal := by
     rw [h_KL_eq]
     exact Finset.sum_le_sum fun x _ => h_per_x x
-  -- Step 5: Cauchy-Schwarz
-  -- (Σ |p - q|)^2 = (Σ |√p - √q| * (√p + √q))^2
-  --              ≤ Σ (√p - √q)^2 * Σ (√p + √q)^2
-  -- with r_x := |√p - √q| * (√p + √q), f_x := (√p - √q)^2, g_x := (√p + √q)^2.
-  -- But we have r_x = |p - q|, not in the right Cauchy-Schwarz format directly.
-  -- Use `Finset.sum_sq_le_sum_mul_sum_of_sq_eq_mul`:
-  --   (Σ r_i)^2 ≤ (Σ f_i)(Σ g_i) when r_i^2 = f_i * g_i.
-  -- Set r_x := |P.real{x} - Q.real{x}|, f_x := (√p - √q)^2, g_x := (√p + √q)^2.
-  -- Verify r_x^2 = f_x * g_x: (|p-q|)^2 = (p-q)^2 = (√p - √q)^2 * (√p + √q)^2.
+  -- Step 5: Cauchy-Schwarz (via finset_cs_sqrt_sq)
   have h_CS : (∑ x : α, |P.real {x} - Q.real {x}|)^2
       ≤ (∑ x : α, (Real.sqrt (P.real {x}) - Real.sqrt (Q.real {x}))^2)
-        * (∑ x : α, (Real.sqrt (P.real {x}) + Real.sqrt (Q.real {x}))^2) := by
-    refine Finset.sum_sq_le_sum_mul_sum_of_sq_eq_mul (Finset.univ : Finset α) ?_ ?_ ?_
-    · intro i _; exact sq_nonneg _
-    · intro i _; exact sq_nonneg _
-    · intro i _
-      -- |p - q|^2 = (p - q)^2 = (√p - √q)^2 * (√p + √q)^2
-      have h_sq_p : Real.sqrt (P.real {i}) * Real.sqrt (P.real {i}) = P.real {i} :=
-        Real.mul_self_sqrt measureReal_nonneg
-      have h_sq_q : Real.sqrt (Q.real {i}) * Real.sqrt (Q.real {i}) = Q.real {i} :=
-        Real.mul_self_sqrt measureReal_nonneg
-      have h_diff_sq : (Real.sqrt (P.real {i}) - Real.sqrt (Q.real {i}))^2
-          * (Real.sqrt (P.real {i}) + Real.sqrt (Q.real {i}))^2
-          = (P.real {i} - Q.real {i})^2 := by
-        have : (Real.sqrt (P.real {i}) - Real.sqrt (Q.real {i}))
-            * (Real.sqrt (P.real {i}) + Real.sqrt (Q.real {i}))
-            = P.real {i} - Q.real {i} := by
-          ring_nf
-          rw [show Real.sqrt (P.real {i})^2 = P.real {i} from
-            sq (Real.sqrt (P.real {i})) ▸ h_sq_p,
-            show Real.sqrt (Q.real {i})^2 = Q.real {i} from
-              sq (Real.sqrt (Q.real {i})) ▸ h_sq_q]
-        calc (Real.sqrt (P.real {i}) - Real.sqrt (Q.real {i}))^2
-            * (Real.sqrt (P.real {i}) + Real.sqrt (Q.real {i}))^2
-            = ((Real.sqrt (P.real {i}) - Real.sqrt (Q.real {i}))
-              * (Real.sqrt (P.real {i}) + Real.sqrt (Q.real {i})))^2 := by ring
-          _ = (P.real {i} - Q.real {i})^2 := by rw [this]
-      rw [show |P.real {i} - Q.real {i}|^2 = (P.real {i} - Q.real {i})^2 from sq_abs _,
-        ← h_diff_sq]
-  -- Step 6: Σ (√p + √q)^2 ≤ 4 (using (a+b)^2 ≤ 2(a^2 + b^2) = 2(p+q), sum = 2*2 = 4)
-  have h_sum_sq_sum_le_4 : ∑ x : α, (Real.sqrt (P.real {x}) + Real.sqrt (Q.real {x}))^2 ≤ 4 := by
-    have h_per_x_le : ∀ x : α,
-        (Real.sqrt (P.real {x}) + Real.sqrt (Q.real {x}))^2 ≤ 2 * (P.real {x} + Q.real {x}) := by
-      intro x
-      have h_sq_p : Real.sqrt (P.real {x})^2 = P.real {x} :=
-        Real.sq_sqrt measureReal_nonneg
-      have h_sq_q : Real.sqrt (Q.real {x})^2 = Q.real {x} :=
-        Real.sq_sqrt measureReal_nonneg
-      have h_AM_GM : 2 * (Real.sqrt (P.real {x}) * Real.sqrt (Q.real {x}))
-          ≤ Real.sqrt (P.real {x})^2 + Real.sqrt (Q.real {x})^2 := by
-        nlinarith [sq_nonneg (Real.sqrt (P.real {x}) - Real.sqrt (Q.real {x}))]
-      nlinarith [h_sq_p, h_sq_q, h_AM_GM]
-    have h_sum_le : ∑ x : α, (Real.sqrt (P.real {x}) + Real.sqrt (Q.real {x}))^2
-        ≤ ∑ x : α, 2 * (P.real {x} + Q.real {x}) :=
-      Finset.sum_le_sum fun x _ => h_per_x_le x
-    have h_sum_PQ : ∑ x : α, 2 * (P.real {x} + Q.real {x}) = 4 := by
-      have h_P : ∑ x : α, P.real {x} = 1 := by
-        rw [show (∑ x : α, P.real {x}) = ∑ x ∈ (Finset.univ : Finset α), P.real {x} from rfl,
-          sum_measureReal_singleton]
-        rw [show ((Finset.univ : Finset α) : Set α) = Set.univ from Finset.coe_univ]
-        simp [measureReal_def, measure_univ]
-      have h_Q : ∑ x : α, Q.real {x} = 1 := by
-        rw [show (∑ x : α, Q.real {x}) = ∑ x ∈ (Finset.univ : Finset α), Q.real {x} from rfl,
-          sum_measureReal_singleton]
-        rw [show ((Finset.univ : Finset α) : Set α) = Set.univ from Finset.coe_univ]
-        simp [measureReal_def, measure_univ]
-      rw [← Finset.mul_sum, Finset.sum_add_distrib, h_P, h_Q]
-      ring
-    linarith
+        * (∑ x : α, (Real.sqrt (P.real {x}) + Real.sqrt (Q.real {x}))^2) :=
+    finset_cs_sqrt_sq _ _ (fun _ => measureReal_nonneg) (fun _ => measureReal_nonneg)
+  -- Step 6: Σ (√p + √q)^2 ≤ 4 (via sum_sqrt_add_sq_le_four)
+  have h_P : ∑ x : α, P.real {x} = 1 := by
+    rw [show (∑ x : α, P.real {x}) = ∑ x ∈ (Finset.univ : Finset α), P.real {x} from rfl,
+      sum_measureReal_singleton]
+    rw [show ((Finset.univ : Finset α) : Set α) = Set.univ from Finset.coe_univ]
+    simp [measureReal_def, measure_univ]
+  have h_Q : ∑ x : α, Q.real {x} = 1 := by
+    rw [show (∑ x : α, Q.real {x}) = ∑ x ∈ (Finset.univ : Finset α), Q.real {x} from rfl,
+      sum_measureReal_singleton]
+    rw [show ((Finset.univ : Finset α) : Set α) = Set.univ from Finset.coe_univ]
+    simp [measureReal_def, measure_univ]
+  have h_sum_sq_sum_le_4 : ∑ x : α, (Real.sqrt (P.real {x}) + Real.sqrt (Q.real {x}))^2 ≤ 4 :=
+    sum_sqrt_add_sq_le_four _ _ (fun _ => measureReal_nonneg) (fun _ => measureReal_nonneg)
+      h_P h_Q
   -- Step 7: combine. (2 * tvNorm)^2 = (Σ |p-q|)^2 ≤ H² * 4 ≤ 4 * KL.toReal.
   -- So tvNorm^2 ≤ KL.toReal, hence tvNorm ≤ √KL.toReal.
   have h_sum_abs : ∑ x : α, |P.real {x} - Q.real {x}| = 2 * tvNorm P Q := by
