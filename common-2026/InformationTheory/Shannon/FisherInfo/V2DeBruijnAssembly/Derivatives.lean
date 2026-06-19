@@ -875,6 +875,90 @@ theorem convDensityAdd_logFactor_deriv_integrable
     _ = pX y * G (x - y) + 2 * |B| * ((y ^ 2 * pX y) * gaussGradMaj t (x - y)) := by
         rw [hGval]; ring
 
+private theorem convDensityAdd_sq_mul_integrable
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (hpX_int : Integrable pX volume)
+    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume) {t : ℝ} (ht : 0 < t)
+    {p_t g : ℝ → ℝ} (hp_t : p_t = convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))
+    (hg_def : g = gaussianPDFReal 0 ⟨t, ht.le⟩) (hp_nn : ∀ x, 0 ≤ p_t x)
+    (hg_nn : ∀ u, (0:ℝ) ≤ g u) (hg_meas : Measurable g)
+    (hg2_meas : Measurable (fun u => u ^ 2 * g u)) {Pg : ℝ}
+    (hg_le : ∀ u, g u ≤ Pg) (hg2_le : ∀ u, u ^ 2 * g u ≤ Pg * (2 * t * Real.exp (-1)))
+    (hEnv1_int :
+      Integrable (fun x => ∫ y, pX y * (fun u => u ^ 2 * g u) (x - y) ∂volume) volume)
+    (hEnv2_int : Integrable (fun x => ∫ y, (y ^ 2 * pX y) * g (x - y) ∂volume) volume) :
+    Integrable (fun x => x ^ 2 * p_t x) volume := by
+  have hmomPX_int : Integrable (fun y => y ^ 2 * pX y) volume := hpX_mom
+  -- dominating function `Hx = 2·∫ pX y·(x-y)²g(x-y) + 2·∫(y²pX)·g(x-y)`.
+  have hH_int : Integrable (fun x =>
+      2 * (∫ y, pX y * (fun u => u ^ 2 * g u) (x - y) ∂volume)
+      + 2 * (∫ y, (y ^ 2 * pX y) * g (x - y) ∂volume)) volume :=
+    (hEnv1_int.const_mul 2).add (hEnv2_int.const_mul 2)
+  -- measurability of `x²·p_t`.
+  have htarget_meas : AEStronglyMeasurable (fun x => x ^ 2 * p_t x) volume := by
+    have hpt_meas : Measurable p_t := by
+      rw [hp_t]
+      have huncurry : StronglyMeasurable
+          (Function.uncurry fun z x => pX x * gaussianPDFReal 0 ⟨t, ht.le⟩ (z - x)) := by
+        apply Measurable.stronglyMeasurable
+        apply (hpX_meas.comp measurable_snd).mul
+        exact (measurable_gaussianPDFReal 0 _).comp ((measurable_fst).sub measurable_snd)
+      have h := huncurry.integral_prod_right (ν := volume)
+      simpa only [convDensityAdd] using h.measurable
+    exact ((by fun_prop : Measurable (fun x : ℝ => x ^ 2)).mul hpt_meas).aestronglyMeasurable
+  refine Integrable.mono' hH_int htarget_meas ?_
+  filter_upwards with x
+  -- `‖x²·p_t x‖ = x²·p_t x = ∫ x²·pX y·g(x-y)`.
+  have hx2_pull : x ^ 2 * p_t x = ∫ y, x ^ 2 * (pX y * g (x - y)) ∂volume := by
+    rw [hp_t, hg_def]
+    show x ^ 2 * (∫ y, pX y * gaussianPDFReal 0 ⟨t, ht.le⟩ (x - y) ∂volume)
+      = ∫ y, x ^ 2 * (pX y * gaussianPDFReal 0 ⟨t, ht.le⟩ (x - y)) ∂volume
+    rw [← integral_const_mul]
+  rw [Real.norm_eq_abs,
+    abs_of_nonneg (mul_nonneg (sq_nonneg x) (hp_nn x) : (0:ℝ) ≤ x ^ 2 * p_t x), hx2_pull]
+  -- per-`y` fibre integrabilities.
+  have hfib1_int : Integrable (fun y => pX y * (fun u => u ^ 2 * g u) (x - y)) volume := by
+    refine hpX_int.mul_bdd (c := Pg * (2 * t * Real.exp (-1))) ?_ ?_
+    · exact (hg2_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+    · refine Filter.Eventually.of_forall (fun y => ?_)
+      simp only [Real.norm_eq_abs]
+      rw [abs_of_nonneg (mul_nonneg (sq_nonneg _) (hg_nn (x - y))
+        : (0:ℝ) ≤ (x - y) ^ 2 * g (x - y))]
+      exact hg2_le (x - y)
+  have hfib2_int : Integrable (fun y => (y ^ 2 * pX y) * g (x - y)) volume := by
+    refine hmomPX_int.mul_bdd (c := Pg) ?_ ?_
+    · exact (hg_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+    · exact Filter.Eventually.of_forall (fun y => by
+        rw [Real.norm_eq_abs, abs_of_nonneg (hg_nn (x - y))]; exact hg_le (x - y))
+  have hlhs_int : Integrable (fun y => x ^ 2 * (pX y * g (x - y))) volume := by
+    have hfibE_int : Integrable (fun y => pX y * g (x - y)) volume := by
+      refine hpX_int.mul_bdd (c := Pg) ?_ ?_
+      · exact (hg_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+      · exact Filter.Eventually.of_forall (fun y => by
+          rw [Real.norm_eq_abs, abs_of_nonneg (hg_nn (x - y))]; exact hg_le (x - y))
+    exact hfibE_int.const_mul _
+  have hdom_int : Integrable
+      (fun y => 2 * (pX y * (fun u => u ^ 2 * g u) (x - y))
+        + 2 * ((y ^ 2 * pX y) * g (x - y))) volume :=
+    (hfib1_int.const_mul 2).add (hfib2_int.const_mul 2)
+  have hH_eq : 2 * (∫ y, pX y * (fun u => u ^ 2 * g u) (x - y) ∂volume)
+        + 2 * (∫ y, (y ^ 2 * pX y) * g (x - y) ∂volume)
+      = ∫ y, (2 * (pX y * (fun u => u ^ 2 * g u) (x - y))
+          + 2 * ((y ^ 2 * pX y) * g (x - y))) ∂volume := by
+    rw [integral_add (hfib1_int.const_mul 2) (hfib2_int.const_mul 2),
+      integral_const_mul, integral_const_mul]
+  rw [hH_eq]
+  -- pointwise: `x²·pX y·g(x-y) ≤ 2·pX y·(x-y)²g + 2·(y²pX)·g` via `x² ≤ 2(x-y)²+2y²`.
+  refine integral_mono hlhs_int hdom_int (fun y => ?_)
+  have hpXg_nn : (0:ℝ) ≤ pX y * g (x - y) := mul_nonneg (hpX_nn y) (hg_nn (x - y))
+  have hx2 : x ^ 2 ≤ 2 * (x - y) ^ 2 + 2 * y ^ 2 := by
+    nlinarith [sq_nonneg (x - 2 * y), sq_nonneg x]
+  simp only []
+  calc x ^ 2 * (pX y * g (x - y))
+      ≤ (2 * (x - y) ^ 2 + 2 * y ^ 2) * (pX y * g (x - y)) :=
+        mul_le_mul_of_nonneg_right hx2 hpXg_nn
+    _ = 2 * (pX y * ((x - y) ^ 2 * g (x - y))) + 2 * ((y ^ 2 * pX y) * g (x - y)) := by ring
+
 /-- `Integrable (negMulLog p_t)` for `p_t = convDensityAdd pX g_t`, `t > 0`, so the entropy
 `h(X + √t · Z) = -∫ negMulLog p_t` is finite. Closes from the log-factor polynomial majorant
 (`‖negMulLog p_t‖ = p_t · |log p_t| ≤ p_t · (A + 1 + B·x²)`) and `Integrable (x² · p_t)`.
@@ -958,76 +1042,9 @@ theorem convDensityAdd_negMulLog_integrable
     calc u ^ 2 * (Pg * Real.exp (-u ^ 2 / (2 * t)))
         = Pg * (u ^ 2 * Real.exp (-u ^ 2 / (2 * t))) := by ring
       _ ≤ Pg * (2 * t * Real.exp (-1)) := mul_le_mul_of_nonneg_left hmul' hPg_nn
-  have hx2p_int : Integrable (fun x => x ^ 2 * p_t x) volume := by
-    -- dominating function `Hx = 2·∫ pX y·(x-y)²g(x-y) + 2·∫(y²pX)·g(x-y)`.
-    have hH_int : Integrable (fun x =>
-        2 * (∫ y, pX y * (fun u => u ^ 2 * g u) (x - y) ∂volume)
-        + 2 * (∫ y, (y ^ 2 * pX y) * g (x - y) ∂volume)) volume :=
-      (hEnv1_int.const_mul 2).add (hEnv2_int.const_mul 2)
-    -- measurability of `x²·p_t`.
-    have htarget_meas : AEStronglyMeasurable (fun x => x ^ 2 * p_t x) volume := by
-      have hpt_meas : Measurable p_t := by
-        rw [hp_t]
-        have huncurry : StronglyMeasurable
-            (Function.uncurry fun z x => pX x * gaussianPDFReal 0 ⟨t, ht.le⟩ (z - x)) := by
-          apply Measurable.stronglyMeasurable
-          apply (hpX_meas.comp measurable_snd).mul
-          exact (measurable_gaussianPDFReal 0 _).comp ((measurable_fst).sub measurable_snd)
-        have h := huncurry.integral_prod_right (ν := volume)
-        simpa only [convDensityAdd] using h.measurable
-      exact ((by fun_prop : Measurable (fun x : ℝ => x ^ 2)).mul hpt_meas).aestronglyMeasurable
-    refine Integrable.mono' hH_int htarget_meas ?_
-    filter_upwards with x
-    -- `‖x²·p_t x‖ = x²·p_t x = ∫ x²·pX y·g(x-y)`.
-    have hx2_pull : x ^ 2 * p_t x = ∫ y, x ^ 2 * (pX y * g (x - y)) ∂volume := by
-      rw [hp_t, hg_def]
-      show x ^ 2 * (∫ y, pX y * gaussianPDFReal 0 ⟨t, ht.le⟩ (x - y) ∂volume)
-        = ∫ y, x ^ 2 * (pX y * gaussianPDFReal 0 ⟨t, ht.le⟩ (x - y)) ∂volume
-      rw [← integral_const_mul]
-    rw [Real.norm_eq_abs,
-      abs_of_nonneg (mul_nonneg (sq_nonneg x) (hp_nn x) : (0:ℝ) ≤ x ^ 2 * p_t x), hx2_pull]
-    -- per-`y` fibre integrabilities.
-    have hfib1_int : Integrable (fun y => pX y * (fun u => u ^ 2 * g u) (x - y)) volume := by
-      refine hpX_int.mul_bdd (c := Pg * (2 * t * Real.exp (-1))) ?_ ?_
-      · exact (hg2_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-      · refine Filter.Eventually.of_forall (fun y => ?_)
-        simp only [Real.norm_eq_abs]
-        rw [abs_of_nonneg (mul_nonneg (sq_nonneg _) (hg_nn (x - y))
-          : (0:ℝ) ≤ (x - y) ^ 2 * g (x - y))]
-        exact hg2_le (x - y)
-    have hfib2_int : Integrable (fun y => (y ^ 2 * pX y) * g (x - y)) volume := by
-      refine hmomPX_int.mul_bdd (c := Pg) ?_ ?_
-      · exact (hg_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-      · exact Filter.Eventually.of_forall (fun y => by
-          rw [Real.norm_eq_abs, abs_of_nonneg (hg_nn (x - y))]; exact hg_le (x - y))
-    have hlhs_int : Integrable (fun y => x ^ 2 * (pX y * g (x - y))) volume := by
-      have hfibE_int : Integrable (fun y => pX y * g (x - y)) volume := by
-        refine hpX_int.mul_bdd (c := Pg) ?_ ?_
-        · exact (hg_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-        · exact Filter.Eventually.of_forall (fun y => by
-            rw [Real.norm_eq_abs, abs_of_nonneg (hg_nn (x - y))]; exact hg_le (x - y))
-      exact hfibE_int.const_mul _
-    have hdom_int : Integrable
-        (fun y => 2 * (pX y * (fun u => u ^ 2 * g u) (x - y))
-          + 2 * ((y ^ 2 * pX y) * g (x - y))) volume :=
-      (hfib1_int.const_mul 2).add (hfib2_int.const_mul 2)
-    have hH_eq : 2 * (∫ y, pX y * (fun u => u ^ 2 * g u) (x - y) ∂volume)
-          + 2 * (∫ y, (y ^ 2 * pX y) * g (x - y) ∂volume)
-        = ∫ y, (2 * (pX y * (fun u => u ^ 2 * g u) (x - y))
-            + 2 * ((y ^ 2 * pX y) * g (x - y))) ∂volume := by
-      rw [integral_add (hfib1_int.const_mul 2) (hfib2_int.const_mul 2),
-        integral_const_mul, integral_const_mul]
-    rw [hH_eq]
-    -- pointwise: `x²·pX y·g(x-y) ≤ 2·pX y·(x-y)²g + 2·(y²pX)·g` via `x² ≤ 2(x-y)²+2y²`.
-    refine integral_mono hlhs_int hdom_int (fun y => ?_)
-    have hpXg_nn : (0:ℝ) ≤ pX y * g (x - y) := mul_nonneg (hpX_nn y) (hg_nn (x - y))
-    have hx2 : x ^ 2 ≤ 2 * (x - y) ^ 2 + 2 * y ^ 2 := by
-      nlinarith [sq_nonneg (x - 2 * y), sq_nonneg x]
-    simp only []
-    calc x ^ 2 * (pX y * g (x - y))
-        ≤ (2 * (x - y) ^ 2 + 2 * y ^ 2) * (pX y * g (x - y)) :=
-          mul_le_mul_of_nonneg_right hx2 hpXg_nn
-      _ = 2 * (pX y * ((x - y) ^ 2 * g (x - y))) + 2 * ((y ^ 2 * pX y) * g (x - y)) := by ring
+  have hx2p_int : Integrable (fun x => x ^ 2 * p_t x) volume :=
+    convDensityAdd_sq_mul_integrable pX hpX_nn hpX_meas hpX_int hpX_mom ht hp_t hg_def
+      hp_nn hg_nn hg_meas hg2_meas hg_le hg2_le hEnv1_int hEnv2_int
   -- ============ assemble A from the two integrabilities + the majorant. ============
   -- dominating function `D x = (A+1)·p_t x + B·(x²·p_t x)`, integrable.
   have hD_int : Integrable (fun x => (A + 1) * p_t x + B * (x ^ 2 * p_t x)) volume :=
