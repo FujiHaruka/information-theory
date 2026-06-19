@@ -138,6 +138,135 @@ private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher
   rw [fisher_from_logDeriv p_t hp_nn
     (convDensityAdd_fisher_integrable pX hpX_nn hpX_meas hpX_int hpX_mass ht)]
 
+-- Helper: the σ-derivative of `pPath σ x` at `s`, given the heat-equation domination conditions.
+-- Packages the 112-line `heatFlow_density_heat_equation` application into a named lemma so that
+-- the main `_chain_hdiff` body stays under 150 lines.
+private theorem debruijnIdentityV2_chain_hdiff_pathDeriv
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (hpX_int : Integrable pX volume)
+    (pPath : ℝ → ℝ → ℝ)
+    (pathDeriv1 : ℝ → ℝ → ℝ)
+    (pathDeriv2 : ℝ → ℝ → ℝ)
+    (hpPath_pos : ∀ (σ : ℝ) (hσ : 0 < σ),
+        pPath σ = convDensityAdd pX (gaussianPDFReal 0 ⟨σ, hσ.le⟩))
+    (hpathDeriv1 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pPath σ ξ) (pathDeriv1 σ y) y)
+    (hpathDeriv2 : ∀ σ y : ℝ,
+        HasDerivAt (fun ξ => pathDeriv1 σ ξ) (pathDeriv2 σ y) y)
+    (x : ℝ) (s : ℝ) (hspos : 0 < s)
+    (hker_meas : Measurable (fun u : ℝ => heatFlow_density_heat_equation_kernel s u))
+    (hker_le : ∀ v : ℝ,
+        |heatFlow_density_heat_equation_kernel s v|
+          ≤ (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹)
+    (Mξ1 : ℝ) (hMξ1 : Mξ1 =
+        (Real.sqrt (2 * Real.pi * s))⁻¹ * ((1 + 2 * s * Real.exp (-1)) / (2 * s)))
+    (Mξ2 : ℝ) (hMξ2 : Mξ2 =
+        (Real.sqrt (2 * Real.pi * s))⁻¹ * ((2 * Real.exp (-1) + 1) / s)) :
+    HasDerivAt (fun σ => pPath σ x) ((1/2) * pathDeriv2 s x) s := by
+  refine heatFlow_density_heat_equation pX pPath pathDeriv1 pathDeriv2
+    hpPath_pos hpathDeriv1 hpathDeriv2 hspos x
+    ?boundσ ?hboundσ_int ?hFσ_meas ?hFσ_int ?hFσ'_meas ?hbσ
+    ?boundξ1 ?hboundξ1_int ?hFξ1_meas ?hFξ1_int ?hFξ1'_meas ?hbξ1
+    ?boundξ2 ?hboundξ2_int ?hFξ2_int ?hFξ2'_meas ?hbξ2
+  case boundσ => exact fun y => pX y * gaussHessMaj s (x - y)
+  case hboundσ_int =>
+    refine hpX_int.mul_bdd
+      (c := (Real.sqrt (Real.pi * s))⁻¹ * (16 * Real.exp (-1) / s + 2 / s)) ?_ ?_
+    · refine (Measurable.aestronglyMeasurable ?_)
+      have hM : Measurable (gaussHessMaj s) := by unfold gaussHessMaj; fun_prop
+      exact hM.comp (measurable_const.sub measurable_id)
+    · refine Filter.Eventually.of_forall (fun y => ?_)
+      rw [Real.norm_eq_abs, abs_of_nonneg (gaussHessMaj_nonneg hspos (x - y))]
+      exact gaussHessMaj_bdd hspos (x - y)
+  case hFσ_meas =>
+    refine Filter.Eventually.of_forall (fun σ => ?_)
+    exact (hpX_meas.aestronglyMeasurable).mul
+      (((show Measurable (fun u : ℝ => heatFlow_density_heat_equation_kernel σ u) by
+          unfold heatFlow_density_heat_equation_kernel; fun_prop).comp
+        (measurable_const.sub measurable_id)).aestronglyMeasurable)
+  case hFσ_int =>
+    refine hpX_int.mul_bdd
+      (c := (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹) ?_ ?_
+    · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+    · exact Filter.Eventually.of_forall (fun y => by
+        rw [Real.norm_eq_abs]; exact hker_le (x - y))
+  case hFσ'_meas =>
+    refine (hpX_meas.aestronglyMeasurable).mul ?_
+    refine AEStronglyMeasurable.const_mul ?_ _
+    refine AEStronglyMeasurable.mul ?_ ?_
+    · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+    · exact (((measurable_const.sub measurable_id).pow_const 2).div_const _).sub
+        measurable_const |>.aestronglyMeasurable
+  case hbσ =>
+    refine Filter.Eventually.of_forall (fun y σ hσ => ?_)
+    have hσpos : (0:ℝ) < σ := by have := hσ.1; linarith
+    rw [norm_mul, Real.norm_eq_abs, abs_of_nonneg (hpX_nn y)]
+    apply mul_le_mul_of_nonneg_left _ (hpX_nn y)
+    rw [heatFlow_density_heat_equation_kernel_eq hσpos (x - y)]
+    have hmaj := gaussianHess_le_gaussHessMaj hspos hσ (x - y)
+    have hg_nn : 0 ≤ gaussianPDFReal 0
+        ⟨σ, le_of_lt (by have := hσ.1; linarith : (0:ℝ) < σ)⟩ (x - y) :=
+      gaussianPDFReal_nonneg 0 _ _
+    have hgM_nn : 0 ≤ gaussHessMaj s (x - y) := gaussHessMaj_nonneg hspos (x - y)
+    rw [Real.norm_eq_abs, abs_mul, abs_of_nonneg (by norm_num : (0:ℝ) ≤ 1/2)]
+    have habs : |gaussianPDFReal 0 ⟨σ, hσpos.le⟩ (x - y) * ((x - y) ^ 2 / σ ^ 2 - 1 / σ)|
+        = gaussianPDFReal 0 ⟨σ, hσpos.le⟩ (x - y) * |(x - y) ^ 2 / σ ^ 2 - 1 / σ| := by
+      rw [abs_mul, abs_of_nonneg hg_nn]
+    rw [habs]
+    calc 1 / 2 * (gaussianPDFReal 0 ⟨σ, hσpos.le⟩ (x - y) * |(x - y) ^ 2 / σ ^ 2 - 1 / σ|)
+        ≤ 1 / 2 * gaussHessMaj s (x - y) := by
+          apply mul_le_mul_of_nonneg_left hmaj (by norm_num)
+      _ ≤ gaussHessMaj s (x - y) := by linarith [hgM_nn]
+  case boundξ1 => exact fun y => |pX y| * Mξ1
+  case hboundξ1_int => exact hpX_int.abs.mul_const _
+  case hFξ1_meas =>
+    intro ξ
+    exact (hpX_meas.aestronglyMeasurable).mul
+      ((hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable)
+  case hFξ1_int =>
+    intro ξ
+    refine hpX_int.mul_bdd
+      (c := (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹) ?_ ?_
+    · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+    · exact Filter.Eventually.of_forall (fun y => by
+        rw [Real.norm_eq_abs]; exact hker_le (ξ - y))
+  case hFξ1'_meas =>
+    intro ξ
+    refine (hpX_meas.aestronglyMeasurable).mul ?_
+    refine AEStronglyMeasurable.mul ?_ ?_
+    · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+    · exact ((measurable_const.sub measurable_id).div_const s).neg.aestronglyMeasurable
+  case hbξ1 =>
+    refine Filter.Eventually.of_forall (fun y ξ _ => ?_)
+    rw [norm_mul, Real.norm_eq_abs]
+    apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
+    have := kernel_x_deriv1_global_bound hspos (ξ - y)
+    rwa [hMξ1]
+  case boundξ2 => exact fun y => |pX y| * Mξ2
+  case hboundξ2_int => exact hpX_int.abs.mul_const _
+  case hFξ2_int =>
+    have hbound_int : Integrable (fun y => |pX y| * Mξ1) volume := hpX_int.abs.mul_const _
+    refine hbound_int.mono' ?_ (Filter.Eventually.of_forall (fun y => ?_))
+    · refine (hpX_meas.aestronglyMeasurable).mul ?_
+      refine AEStronglyMeasurable.mul ?_ ?_
+      · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+      · exact ((measurable_const.sub measurable_id).div_const s).neg.aestronglyMeasurable
+    · rw [norm_mul, Real.norm_eq_abs]
+      apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
+      have := kernel_x_deriv1_global_bound hspos (x - y)
+      rwa [hMξ1]
+  case hFξ2'_meas =>
+    refine (hpX_meas.aestronglyMeasurable).mul ?_
+    refine AEStronglyMeasurable.mul ?_ ?_
+    · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+    · exact (((measurable_const.sub measurable_id).pow_const 2).div_const _).sub
+        measurable_const |>.aestronglyMeasurable
+  case hbξ2 =>
+    refine Filter.Eventually.of_forall (fun y ξ _ => ?_)
+    rw [norm_mul, Real.norm_eq_abs]
+    apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
+    have := kernel_x_deriv2_global_bound hspos (ξ - y)
+    rwa [hMξ2]
+
 /-- The per-`x`, per-`s ∈ Ioo (t/2) (2*t)` chain-rule derivative of the entropy integrand
 `fun s => negMulLog (pPath s x)`, with value the closed form
 `(- log (pPath s x) - 1) · ((1/2) · ∂²_x pPath_s x)`, where
@@ -241,119 +370,14 @@ private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
   -- spatial 1st/2nd-derivative global-bound constants.
   set Mξ1 : ℝ := (Real.sqrt (2 * Real.pi * s))⁻¹ * ((1 + 2 * s * Real.exp (-1)) / (2 * s)) with hMξ1
   set Mξ2 : ℝ := (Real.sqrt (2 * Real.pi * s))⁻¹ * ((2 * Real.exp (-1) + 1) / s) with hMξ2
-  -- (A) σ-derivative pin from `heatFlow_density_heat_equation`.
-  have hpath_deriv : HasDerivAt (fun σ => pPath σ x) ((1/2) * pathDeriv2 s x) s := by
-    refine heatFlow_density_heat_equation pX pPath pathDeriv1 pathDeriv2
-      hpPath_pos hpathDeriv1 hpathDeriv2 hspos x
-      ?boundσ ?hboundσ_int ?hFσ_meas ?hFσ_int ?hFσ'_meas ?hbσ
-      ?boundξ1 ?hboundξ1_int ?hFξ1_meas ?hFξ1_int ?hFξ1'_meas ?hbξ1
-      ?boundξ2 ?hboundξ2_int ?hFξ2_int ?hFξ2'_meas ?hbξ2
-    -- σ-direction domination (`s`-uniform Gaussian-Hessian majorant `gaussHessMaj s`,
-    -- whose σ-window `Ioo (s/2)(2s)` matches `gaussianHess_le_gaussHessMaj` at base `s`).
-    case boundσ => exact fun y => pX y * gaussHessMaj s (x - y)
-    case hboundσ_int =>
-      -- `pX · (bounded gaussHessMaj s)` integrable via `mul_bdd`.
-      refine hpX_int.mul_bdd
-        (c := (Real.sqrt (Real.pi * s))⁻¹ * (16 * Real.exp (-1) / s + 2 / s)) ?_ ?_
-      · refine (Measurable.aestronglyMeasurable ?_)
-        have hM : Measurable (gaussHessMaj s) := by unfold gaussHessMaj; fun_prop
-        exact hM.comp (measurable_const.sub measurable_id)
-      · refine Filter.Eventually.of_forall (fun y => ?_)
-        rw [Real.norm_eq_abs, abs_of_nonneg (gaussHessMaj_nonneg hspos (x - y))]
-        exact gaussHessMaj_bdd hspos (x - y)
-    case hFσ_meas =>
-      -- a.e.-strong measurability of `y ↦ pX y · kernel σ (x-y)` for σ near `s`.
-      refine Filter.Eventually.of_forall (fun σ => ?_)
-      exact (hpX_meas.aestronglyMeasurable).mul
-        (((show Measurable (fun u : ℝ => heatFlow_density_heat_equation_kernel σ u) by
-            unfold heatFlow_density_heat_equation_kernel; fun_prop).comp
-          (measurable_const.sub measurable_id)).aestronglyMeasurable)
-    case hFσ_int =>
-      refine hpX_int.mul_bdd
-        (c := (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹) ?_ ?_
-      · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-      · exact Filter.Eventually.of_forall (fun y => by
-          rw [Real.norm_eq_abs]; exact hker_le (x - y))
-    case hFσ'_meas =>
-      refine (hpX_meas.aestronglyMeasurable).mul ?_
-      refine AEStronglyMeasurable.const_mul ?_ _
-      refine AEStronglyMeasurable.mul ?_ ?_
-      · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-      · exact (((measurable_const.sub measurable_id).pow_const 2).div_const _).sub
-          measurable_const |>.aestronglyMeasurable
-    case hbσ =>
-      -- `‖pX y · (1/2)·(kernel σ ·(…))‖ ≤ pX y · gaussHessMaj s (x-y)` on σ ∈ Ioo(s/2,2s).
-      refine Filter.Eventually.of_forall (fun y σ hσ => ?_)
-      have hσpos : (0:ℝ) < σ := by have := hσ.1; linarith
-      rw [norm_mul, Real.norm_eq_abs, abs_of_nonneg (hpX_nn y)]
-      apply mul_le_mul_of_nonneg_left _ (hpX_nn y)
-      -- the kernel equals the Gaussian pdf for σ>0; reuse the s-uniform Hessian majorant at base `s`.
-      rw [heatFlow_density_heat_equation_kernel_eq hσpos (x - y)]
-      have hmaj := gaussianHess_le_gaussHessMaj hspos hσ (x - y)
-      -- `‖(1/2)·(g_σ·(…))‖ = (1/2)·g_σ·|…| ≤ (1/2)·gaussHessMaj s ≤ gaussHessMaj s`.
-      have hg_nn : 0 ≤ gaussianPDFReal 0 ⟨σ, le_of_lt (by have := hσ.1; linarith : (0:ℝ) < σ)⟩ (x - y) :=
-        gaussianPDFReal_nonneg 0 _ _
-      have hgM_nn : 0 ≤ gaussHessMaj s (x - y) := gaussHessMaj_nonneg hspos (x - y)
-      rw [Real.norm_eq_abs, abs_mul, abs_of_nonneg (by norm_num : (0:ℝ) ≤ 1/2)]
-      have habs : |gaussianPDFReal 0 ⟨σ, hσpos.le⟩ (x - y) * ((x - y) ^ 2 / σ ^ 2 - 1 / σ)|
-          = gaussianPDFReal 0 ⟨σ, hσpos.le⟩ (x - y) * |(x - y) ^ 2 / σ ^ 2 - 1 / σ| := by
-        rw [abs_mul, abs_of_nonneg hg_nn]
-      rw [habs]
-      calc 1 / 2 * (gaussianPDFReal 0 ⟨σ, hσpos.le⟩ (x - y) * |(x - y) ^ 2 / σ ^ 2 - 1 / σ|)
-          ≤ 1 / 2 * gaussHessMaj s (x - y) := by
-            apply mul_le_mul_of_nonneg_left hmaj (by norm_num)
-        _ ≤ gaussHessMaj s (x - y) := by linarith [hgM_nn]
-    -- spatial-direction domination (fixed-s global bounds).
-    case boundξ1 => exact fun y => |pX y| * Mξ1
-    case hboundξ1_int => exact hpX_int.abs.mul_const _
-    case hFξ1_meas =>
-      intro ξ
-      exact (hpX_meas.aestronglyMeasurable).mul
-        ((hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable)
-    case hFξ1_int =>
-      intro ξ
-      refine hpX_int.mul_bdd
-        (c := (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹) ?_ ?_
-      · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-      · exact Filter.Eventually.of_forall (fun y => by
-          rw [Real.norm_eq_abs]; exact hker_le (ξ - y))
-    case hFξ1'_meas =>
-      intro ξ
-      refine (hpX_meas.aestronglyMeasurable).mul ?_
-      refine AEStronglyMeasurable.mul ?_ ?_
-      · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-      · exact ((measurable_const.sub measurable_id).div_const s).neg.aestronglyMeasurable
-    case hbξ1 =>
-      refine Filter.Eventually.of_forall (fun y ξ _ => ?_)
-      rw [norm_mul, Real.norm_eq_abs]
-      apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
-      have := kernel_x_deriv1_global_bound hspos (ξ - y)
-      rwa [hMξ1]
-    case boundξ2 => exact fun y => |pX y| * Mξ2
-    case hboundξ2_int => exact hpX_int.abs.mul_const _
-    case hFξ2_int =>
-      have hbound_int : Integrable (fun y => |pX y| * Mξ1) volume := hpX_int.abs.mul_const _
-      refine hbound_int.mono' ?_ (Filter.Eventually.of_forall (fun y => ?_))
-      · refine (hpX_meas.aestronglyMeasurable).mul ?_
-        refine AEStronglyMeasurable.mul ?_ ?_
-        · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-        · exact ((measurable_const.sub measurable_id).div_const s).neg.aestronglyMeasurable
-      · rw [norm_mul, Real.norm_eq_abs]
-        apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
-        have := kernel_x_deriv1_global_bound hspos (x - y)
-        rwa [hMξ1]
-    case hFξ2'_meas =>
-      refine (hpX_meas.aestronglyMeasurable).mul ?_
-      refine AEStronglyMeasurable.mul ?_ ?_
-      · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-      · exact (((measurable_const.sub measurable_id).pow_const 2).div_const _).sub
-          measurable_const |>.aestronglyMeasurable
-    case hbξ2 =>
-      refine Filter.Eventually.of_forall (fun y ξ _ => ?_)
-      rw [norm_mul, Real.norm_eq_abs]
-      apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
-      have := kernel_x_deriv2_global_bound hspos (ξ - y)
-      rwa [hMξ2]
+  -- (A) σ-derivative pin from `heatFlow_density_heat_equation` (delegated to helper).
+  have hpath_deriv : HasDerivAt (fun σ => pPath σ x) ((1/2) * pathDeriv2 s x) s :=
+    debruijnIdentityV2_chain_hdiff_pathDeriv
+      pX hpX_nn hpX_meas hpX_int
+      pPath pathDeriv1 pathDeriv2
+      hpPath_pos hpathDeriv1 hpathDeriv2
+      x s hspos hker_meas hker_le
+      Mξ1 hMξ1 Mξ2 hMξ2
   -- (B+C) chain rule: pin the `max s 0 = s` reconciliation then apply the chain rule.
   have hmaxs : (⟨max s 0, le_max_right s 0⟩ : ℝ≥0) = ⟨s, hspos.le⟩ := by
     apply NNReal.eq; exact max_eq_left hspos.le
