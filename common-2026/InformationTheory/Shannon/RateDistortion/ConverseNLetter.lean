@@ -594,6 +594,63 @@ lemma mutualInfo_superadditive_of_indep
   rw [h_lhs_eq]
   linarith
 
+private theorem blockDistortion_eq_avg_perLetter
+    [Fintype α] [Nonempty α] [MeasurableSingletonClass α]
+    [Fintype β] [Nonempty β] [MeasurableSingletonClass β]
+    {M n : ℕ} [NeZero M] (c : LossyCode M n α β)
+    (d : DistortionFn α β)
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (hindep : iIndepFun (fun i => Xs i) μ)
+    (P_X : Measure α) [IsProbabilityMeasure P_X]
+    (hXs_law : ∀ i, μ.map (Xs i) = P_X) :
+    (1 / (n : ℝ)) * ∑ i, ∫ ω, ((d (Xs i ω)
+        (c.decoder (c.encoder (fun j => Xs j ω)) i) : NNReal) : ℝ) ∂μ
+      = c.expectedBlockDistortion P_X d := by
+  set d' : α → β → ℝ := fun a b => ((d a b : NNReal) : ℝ)
+  set Xn : Ω → (Fin n → α) := fun ω j => Xs j ω
+  have hXn_meas : Measurable Xn := measurable_pi_iff.mpr hXs
+  -- Product law: μ.map Xn = Measure.pi (fun _ => P_X).
+  have h_pi_law : μ.map Xn = Measure.pi (fun _ : Fin n => P_X) := by
+    have h := (iIndepFun_iff_map_fun_eq_pi_map (μ := μ) (f := fun i => Xs i)
+      (fun i => (hXs i).aemeasurable)).mp hindep
+    simp only [Xn]
+    rw [h]
+    congr 1
+    funext i
+    exact hXs_law i
+  -- Each summand equals the integral under pi P_X via change of variables.
+  have h_each : ∀ i, ∫ ω, ((d (Xs i ω)
+        (c.decoder (c.encoder (fun j => Xs j ω)) i) : NNReal) : ℝ) ∂μ
+      = ∫ x : Fin n → α, d' (x i) (c.decoder (c.encoder x) i)
+          ∂(Measure.pi (fun _ : Fin n => P_X)) := by
+    intro i
+    have hg_meas : Measurable
+        (fun x : Fin n → α => d' (x i) (c.decoder (c.encoder x) i)) := by
+      apply measurable_of_countable
+    have hgoal : (fun ω => ((d (Xs i ω) (c.decoder (c.encoder (fun j => Xs j ω)) i) : NNReal) : ℝ))
+        = fun ω => (fun x : Fin n → α => d' (x i) (c.decoder (c.encoder x) i)) (Xn ω) := rfl
+    rw [hgoal, ← integral_map hXn_meas.aemeasurable hg_meas.aestronglyMeasurable, h_pi_law]
+  -- Sum and pull through the integral.
+  calc (1 / (n : ℝ)) * ∑ i, ∫ ω, ((d (Xs i ω)
+          (c.decoder (c.encoder (fun j => Xs j ω)) i) : NNReal) : ℝ) ∂μ
+      = (1 / (n : ℝ)) * ∑ i, ∫ x : Fin n → α,
+          d' (x i) (c.decoder (c.encoder x) i)
+            ∂(Measure.pi (fun _ : Fin n => P_X)) := by
+          rw [Finset.sum_congr rfl (fun i _ => h_each i)]
+    _ = (1 / (n : ℝ)) * ∫ x : Fin n → α,
+          ∑ i, d' (x i) (c.decoder (c.encoder x) i)
+            ∂(Measure.pi (fun _ : Fin n => P_X)) := by
+          rw [integral_finsetSum]
+          exact fun i _ => Integrable.of_finite
+    _ = ∫ x : Fin n → α,
+          (1 / (n : ℝ)) * ∑ i, d' (x i) (c.decoder (c.encoder x) i)
+            ∂(Measure.pi (fun _ : Fin n => P_X)) := by
+          rw [integral_const_mul]
+    _ = c.expectedBlockDistortion P_X d := by
+          rw [LossyCode.expectedBlockDistortion]
+          rfl
+
 /-- **Single-letterized n-letter rate-distortion converse**.
 
 Given a block lossy code, an i.i.d. source `P_X`, and a probability space
@@ -675,34 +732,8 @@ theorem rate_distortion_converse_n_letter_singleLetter
   -- Block-distortion identity: (1/n) ∑ Dvals = expectedBlockDistortion P_X d.
   have h_block_id :
       (1 / (n : ℝ)) * ∑ i, Dvals i = c.expectedBlockDistortion P_X d := by
-    -- Each Dvals i = ∫ x, d' (x i) (decoder (encoder x) i) ∂(pi P_X) via change of vars.
-    have h_each : ∀ i, Dvals i
-        = ∫ x : Fin n → α, d' (x i) (c.decoder (c.encoder x) i)
-            ∂(Measure.pi (fun _ : Fin n => P_X)) := by
-      intro i
-      rw [hDvals_def]
-      have hg_meas : Measurable
-          (fun x : Fin n → α => d' (x i) (c.decoder (c.encoder x) i)) := by
-        apply measurable_of_countable
-      rw [← h_pi_law, integral_map hXn_meas.aemeasurable hg_meas.aestronglyMeasurable]
-    -- Sum and pull through the integral.
-    calc (1 / (n : ℝ)) * ∑ i, Dvals i
-        = (1 / (n : ℝ)) * ∑ i, ∫ x : Fin n → α,
-            d' (x i) (c.decoder (c.encoder x) i)
-              ∂(Measure.pi (fun _ : Fin n => P_X)) := by
-            rw [Finset.sum_congr rfl (fun i _ => h_each i)]
-      _ = (1 / (n : ℝ)) * ∫ x : Fin n → α,
-            ∑ i, d' (x i) (c.decoder (c.encoder x) i)
-              ∂(Measure.pi (fun _ : Fin n => P_X)) := by
-            rw [integral_finsetSum]
-            exact fun i _ => Integrable.of_finite
-      _ = ∫ x : Fin n → α,
-            (1 / (n : ℝ)) * ∑ i, d' (x i) (c.decoder (c.encoder x) i)
-              ∂(Measure.pi (fun _ : Fin n => P_X)) := by
-            rw [integral_const_mul]
-      _ = c.expectedBlockDistortion P_X d := by
-            rw [LossyCode.expectedBlockDistortion]
-            rfl
+    simpa only [hDvals_def, hd'_def, hXh_def] using
+      blockDistortion_eq_avg_perLetter c d μ Xs hXs hindep P_X hXs_law
   -- Finiteness of each per-letter MI and the block MI.
   have hMI_per_finite : ∀ i, mutualInfo μ (Xs i) (Xh i) ≠ ∞ := by
     intro i
