@@ -77,7 +77,7 @@ lemma klFun_ge_sub_sqrt_sq (t : ℝ) (ht : 0 ≤ t) :
 
 /-! ### Cauchy-Schwarz and sum bound helpers -/
 
-private lemma finset_cs_sqrt_sq
+lemma finset_cs_sqrt_sq
     {α : Type*} [Fintype α]
     (p q : α → ℝ) (hp : ∀ i, 0 ≤ p i) (hq : ∀ i, 0 ≤ q i) :
     (∑ i : α, |p i - q i|)^2
@@ -109,7 +109,7 @@ private lemma finset_cs_sqrt_sq
         _ = (p i - q i)^2 := by rw [this]
     rw [show |p i - q i|^2 = (p i - q i)^2 from sq_abs _, ← h_diff_sq]
 
-private lemma sum_sqrt_add_sq_le_four
+lemma sum_sqrt_add_sq_le_four
     {α : Type*} [Fintype α]
     (p q : α → ℝ)
     (hp : ∀ i, 0 ≤ p i) (hq : ∀ i, 0 ≤ q i)
