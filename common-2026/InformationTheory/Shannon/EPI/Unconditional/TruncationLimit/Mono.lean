@@ -315,6 +315,141 @@ theorem integral_neg_translate_log_eq_differentialEntropy
     differentialEntropy_eq_neg_integral_mul_log (μW ∗ μV)
   rw [hstep1, hswap, hcollapse, hent_eq]
 
+private theorem differentialEntropy_le_of_conv_finite
+    (W V : Ω → ℝ) (Q : Measure Ω) [IsProbabilityMeasure Q]
+    (hW : Measurable W) (hV : Measurable V) (hW_ac_Q : (Q.map W) ≪ volume)
+    (hW_ent_Q : Integrable
+      (fun x => Real.negMulLog ((Q.map W).rnDeriv volume x).toReal) volume)
+    (ν : Measure ℝ) [IsProbabilityMeasure ν] (hν_ac : ν ≪ volume)
+    (hν_conv : ν = (Q.map W) ∗ (Q.map V)) (rfun : ℝ → ℝ)
+    (hrfun_def : rfun = fun x => (ν.rnDeriv volume x).toReal)
+    (hent_sum' : Integrable
+      (fun x => Real.negMulLog ((ν.rnDeriv volume x).toReal)) volume) :
+    differentialEntropy (Q.map W) ≤ differentialEntropy ν := by
+  haveI hWmap_prob : IsProbabilityMeasure (Q.map W) :=
+    Measure.isProbabilityMeasure_map hW.aemeasurable
+  haveI hVmap_prob : IsProbabilityMeasure (Q.map V) :=
+    Measure.isProbabilityMeasure_map hV.aemeasurable
+  -- **per-fibre translate Gibbs**.  Set `μWz z := (Q.map W).map (·+z)` (the per-fibre conditional
+  -- law of `W+V` given `V=z`, by independence).  Each `μWz z ≪ ν` (a.e. z), so per-fibre Gibbs gives
+  -- `h(μWz z) ≤ -∫ x, log(r x) ∂(μWz z)`, and translation invariance gives `h(μWz z) = h(Q.map W)`.
+  set μV : Measure ℝ := Q.map V with hμV_def
+  set fW : ℝ → ℝ := fun x => ((Q.map W).rnDeriv volume x).toReal with hfWb_def
+  -- the per-fibre translated measure.
+  set μWz : ℝ → Measure ℝ := fun z => (Q.map W).map (fun x => x + z) with hμWz_def
+  -- (a) per-fibre a.c. `μWz z ≪ ν`  (a.e. z ∂μV).
+  have hμWz_ac_ν : ∀ᵐ z ∂μV, μWz z ≪ ν := by
+    have hper := condDistrib_ae_absolutelyContinuous_indep_add
+      (μW := Q.map W) (μV := Q.map V) hW_ac_Q
+    filter_upwards [hper] with z hz
+    show (Q.map W).map (fun x => x + z) ≪ ν
+    rw [hν_conv]; exact hz
+  -- (b) per-fibre a.c. `μWz z ≪ volume`  (translation invariance).
+  have hμWz_ac_vol : ∀ z, μWz z ≪ volume := by
+    intro z
+    show (Q.map W).map (fun x => x + z) ≪ volume
+    have hshift : Measurable fun x : ℝ => x + z := by fun_prop
+    have h_map_vol : (volume : Measure ℝ).map (fun x : ℝ => x + z) = volume :=
+      MeasureTheory.map_add_right_eq_self (μ := (volume : Measure ℝ)) z
+    have := hW_ac_Q.map hshift
+    rwa [h_map_vol] at this
+  haveI hμWz_prob : ∀ z, IsProbabilityMeasure (μWz z) := by
+    intro z
+    show IsProbabilityMeasure ((Q.map W).map (fun x => x + z))
+    exact Measure.isProbabilityMeasure_map (by fun_prop : Measurable fun x : ℝ => x + z).aemeasurable
+  -- (c) per-fibre finite entropy.
+  have hμWz_ent : ∀ z, Integrable
+      (fun x => Real.negMulLog ((μWz z).rnDeriv volume x).toReal) volume := by
+    intro z
+    show Integrable (fun x => Real.negMulLog
+      (((Q.map W).map (fun x => x + z)).rnDeriv volume x).toReal) volume
+    exact integrable_negMulLog_rnDeriv_map_add_const (ν := Q.map W) z hW_ent_Q
+  -- **Foundational identities for the Tonelli collapse.**
+  set fWe : ℝ → ℝ≥0∞ := (Q.map W).rnDeriv volume with hfWeb_def
+  have hfWe_meas : Measurable fWe := Measure.measurable_rnDeriv _ _
+  have hfW_meas : Measurable fW := (Measure.measurable_rnDeriv _ _).ennreal_toReal
+  have hfW_nn : ∀ x, 0 ≤ fW x := fun _ => ENNReal.toReal_nonneg
+  have hr_nn : ∀ x, 0 ≤ rfun x := by rw [hrfun_def]; exact fun _ => ENNReal.toReal_nonneg
+  have hlog_meas : Measurable (fun x => Real.log (rfun x)) := by
+    rw [hrfun_def]
+    exact Real.measurable_log.comp ((Measure.measurable_rnDeriv _ _).ennreal_toReal)
+  -- `μWz z = vol.withDensity (fun x => fWe (x - z))`  (translate of an a.c. measure as withDensity).
+  have hμWz_wd : ∀ z, μWz z = (volume : Measure ℝ).withDensity (fun x => fWe (x - z)) := by
+    intro z
+    show (Q.map W).map (fun x => x + z) = _
+    conv_lhs => rw [show (Q.map W) = (volume : Measure ℝ).withDensity fWe from
+      (Measure.withDensity_rnDeriv_eq (Q.map W) volume hW_ac_Q).symm]
+    rw [map_add_const_withDensity fWe z]
+  -- a.e.-finiteness of the translated density `x ↦ fWe (x - z)`  (Lebesgue translation invariance).
+  have hfWe_translate_fin : ∀ z, ∀ᵐ x ∂volume, fWe (x - z) < ∞ := by
+    intro z
+    have h0 : ∀ᵐ x ∂volume, fWe x < ∞ := Measure.rnDeriv_lt_top (Q.map W) volume
+    have hmp : MeasurePreserving (fun x : ℝ => x - z) volume volume :=
+      ⟨by fun_prop, MeasureTheory.map_sub_right_eq_self (μ := (volume : Measure ℝ)) z⟩
+    exact hmp.quasiMeasurePreserving.ae h0
+  -- **inner integral identity**: `∫ x, g x ∂(μWz z) = ∫ x, fW (x - z) * g x ∂volume`.
+  have hinner : ∀ (z : ℝ) (g : ℝ → ℝ),
+      ∫ x, g x ∂(μWz z) = ∫ x, fW (x - z) * g x ∂volume :=
+    fun z g => integral_map_add_const_eq_integral_translate_mul (Q.map W) hW_ac_Q z g
+  -- the kernel `K (z, x) = fW (x - z) * log (rfun x)` is product-integrable (abs-dominated).
+  have hKint : Integrable
+      (fun p : ℝ × ℝ => fW (p.2 - p.1) * Real.log (rfun p.2)) (μV.prod volume) := by
+    rw [hμV_def, hfWb_def, hrfun_def, hν_conv]
+    exact integrable_translate_mul_log (Q.map W) (Q.map V) hW_ac_Q
+      (by rw [← hν_conv]; exact hent_sum')
+  -- (d) per-fibre cross-integrability `Integrable (log r) (μWz z)`  (a.e. z), from the per-z
+  -- section of the global product-integrable kernel `hKint`.
+  have hcross_int : ∀ᵐ z ∂μV, Integrable
+      (fun x => Real.log (rfun x)) (μWz z) := by
+    filter_upwards [hKint.prod_right_ae] with z hz_sec
+    -- `hz_sec : Integrable (fun x => fW (x - z) * log (rfun x)) volume`.
+    rw [hμWz_wd z, integrable_withDensity_iff_integrable_smul'
+      (by fun_prop : Measurable fun x => fWe (x - z)) (hfWe_translate_fin z)]
+    refine hz_sec.congr ?_
+    filter_upwards with x
+    show fW (x - z) * Real.log (rfun x) = (fWe (x - z)).toReal • Real.log (rfun x)
+    rw [smul_eq_mul]
+  -- (e) per-fibre Gibbs:  `h(μWz z) ≤ -∫ x, log(r x) ∂(μWz z)`  (a.e. z).
+  have hgibbs : ∀ᵐ z ∂μV,
+      differentialEntropy (μWz z) ≤ - ∫ x, Real.log (rfun x) ∂(μWz z) := by
+    filter_upwards [hμWz_ac_ν, hcross_int] with z hz_ac hz_cross
+    rw [hrfun_def]
+    rw [hrfun_def] at hz_cross
+    exact EPIInfiniteVarianceTruncation.differentialEntropy_le_cross_entropy
+      (hμWz_ac_vol z) hν_ac hz_ac (hμWz_ent z) hz_cross
+  -- (f) translation invariance:  `h(μWz z) = h(Q.map W)`.
+  have htrans_ent : ∀ z, differentialEntropy (μWz z) = differentialEntropy (Q.map W) := by
+    intro z
+    show differentialEntropy ((Q.map W).map (fun x => x + z)) = differentialEntropy (Q.map W)
+    exact differentialEntropy_map_add_const hW_ac_Q z
+  -- (g) the cross-entropy term collapses (after integration over μV) to `-h(ν)`.
+  -- the μV-integrability of `z ↦ -∫ x, log(r x) ∂(μWz z)` (for `integral_mono_ae`).
+  have hRHS_int : Integrable (fun z => - ∫ x, Real.log (rfun x) ∂(μWz z)) μV := by
+    have hbase : Integrable
+        (fun z => ∫ x, fW (x - z) * Real.log (rfun x) ∂volume) μV :=
+      hKint.integral_prod_left
+    refine (hbase.neg).congr ?_
+    filter_upwards with z
+    show -∫ x, fW (x - z) * Real.log (rfun x) ∂volume
+      = -∫ x, Real.log (rfun x) ∂(μWz z)
+    rw [hinner z (fun x => Real.log (rfun x))]
+  -- (h) `∫ z, (-∫ x, log(r x) ∂(μWz z)) ∂μV = - ∫ x, r x · log(r x) ∂volume = h(ν)`.
+  have hRHS_eq : (∫ z, (- ∫ x, Real.log (rfun x) ∂(μWz z)) ∂μV)
+      = differentialEntropy ν := by
+    rw [hμWz_def, hrfun_def, hμV_def, hν_conv]
+    exact integral_neg_translate_log_eq_differentialEntropy (Q.map W) (Q.map V) hW_ac_Q
+      (by rw [← hν_conv]; exact hent_sum')
+  -- assemble:  `h(Q.map W) = ∫ z, h(Q.map W) ∂μV ≤ ∫ z, (-∫ log r ∂μWz) ∂μV = h(ν)`.
+  calc differentialEntropy (Q.map W)
+      = ∫ _z, differentialEntropy (Q.map W) ∂μV := by
+        rw [integral_const, probReal_univ, one_smul]
+    _ ≤ ∫ z, (- ∫ x, Real.log (rfun x) ∂(μWz z)) ∂μV := by
+        apply integral_mono_ae (integrable_const _) hRHS_int
+        filter_upwards [hgibbs] with z hz
+        calc differentialEntropy (Q.map W) = differentialEntropy (μWz z) := (htrans_ent z).symm
+          _ ≤ _ := hz
+    _ = differentialEntropy ν := hRHS_eq
+
 /-- Finite-entropy monotonicity of differential entropy under independent addition: for `W` a.c.,
 `W ⊥ V`, and `Q.map W` of finite differential entropy (`hW_ent`), `h(W) ≤ h(W+V)`. The proof uses
 per-fibre translate Gibbs and splits on finiteness of `ν = W+V` (finite branch: real-valued Gibbs;
@@ -378,125 +513,11 @@ theorem differentialEntropyExt_mono_add_of_integrable
     rw [differentialEntropyExt_of_ac_integrable hν_ac hent_sum',
       differentialEntropyExt_of_ac_integrable hW_ac_Q hW_ent_Q]
     refine EReal.coe_le_coe_iff.mpr ?_
-    -- **per-fibre translate Gibbs**.  Set `μWz z := (Q.map W).map (·+z)` (the per-fibre conditional
-    -- law of `W+V` given `V=z`, by independence).  Each `μWz z ≪ ν` (a.e. z), so per-fibre Gibbs gives
-    -- `h(μWz z) ≤ -∫ x, log(r x) ∂(μWz z)`, and translation invariance gives `h(μWz z) = h(Q.map W)`.
-    -- Integrating over `μV` and collapsing the RHS by Tonelli (`r(x) = ∫ fW(x-z) ∂μV`) yields `h(ν)`.
+    -- per-fibre translate Gibbs, factored into the standalone helper.
     haveI hν_prob : IsProbabilityMeasure ν := by
       rw [hν_def]; exact Measure.isProbabilityMeasure_map (hW.add hV).aemeasurable
-    set μV : Measure ℝ := Q.map V with hμV_def
-    set fW : ℝ → ℝ := fun x => ((Q.map W).rnDeriv volume x).toReal with hfWb_def
-    -- the per-fibre translated measure.
-    set μWz : ℝ → Measure ℝ := fun z => (Q.map W).map (fun x => x + z) with hμWz_def
-    -- (a) per-fibre a.c. `μWz z ≪ ν`  (a.e. z ∂μV).
-    have hμWz_ac_ν : ∀ᵐ z ∂μV, μWz z ≪ ν := by
-      have hper := condDistrib_ae_absolutelyContinuous_indep_add
-        (μW := Q.map W) (μV := Q.map V) hW_ac_Q
-      filter_upwards [hper] with z hz
-      show (Q.map W).map (fun x => x + z) ≪ ν
-      rw [hν_conv]; exact hz
-    -- (b) per-fibre a.c. `μWz z ≪ volume`  (translation invariance).
-    have hμWz_ac_vol : ∀ z, μWz z ≪ volume := by
-      intro z
-      show (Q.map W).map (fun x => x + z) ≪ volume
-      have hshift : Measurable fun x : ℝ => x + z := by fun_prop
-      have h_map_vol : (volume : Measure ℝ).map (fun x : ℝ => x + z) = volume :=
-        MeasureTheory.map_add_right_eq_self (μ := (volume : Measure ℝ)) z
-      have := hW_ac_Q.map hshift
-      rwa [h_map_vol] at this
-    haveI hμWz_prob : ∀ z, IsProbabilityMeasure (μWz z) := by
-      intro z
-      show IsProbabilityMeasure ((Q.map W).map (fun x => x + z))
-      exact Measure.isProbabilityMeasure_map (by fun_prop : Measurable fun x : ℝ => x + z).aemeasurable
-    -- (c) per-fibre finite entropy.
-    have hμWz_ent : ∀ z, Integrable
-        (fun x => Real.negMulLog ((μWz z).rnDeriv volume x).toReal) volume := by
-      intro z
-      show Integrable (fun x => Real.negMulLog
-        (((Q.map W).map (fun x => x + z)).rnDeriv volume x).toReal) volume
-      exact integrable_negMulLog_rnDeriv_map_add_const (ν := Q.map W) z hW_ent_Q
-    -- **Foundational identities for the Tonelli collapse.**
-    set fWe : ℝ → ℝ≥0∞ := (Q.map W).rnDeriv volume with hfWeb_def
-    have hfWe_meas : Measurable fWe := Measure.measurable_rnDeriv _ _
-    have hfW_meas : Measurable fW := (Measure.measurable_rnDeriv _ _).ennreal_toReal
-    have hfW_nn : ∀ x, 0 ≤ fW x := fun _ => ENNReal.toReal_nonneg
-    have hr_nn : ∀ x, 0 ≤ rfun x := fun _ => ENNReal.toReal_nonneg
-    have hlog_meas : Measurable (fun x => Real.log (rfun x)) :=
-      Real.measurable_log.comp ((Measure.measurable_rnDeriv _ _).ennreal_toReal)
-    -- `μWz z = vol.withDensity (fun x => fWe (x - z))`  (translate of an a.c. measure as withDensity).
-    have hμWz_wd : ∀ z, μWz z = (volume : Measure ℝ).withDensity (fun x => fWe (x - z)) := by
-      intro z
-      show (Q.map W).map (fun x => x + z) = _
-      conv_lhs => rw [show (Q.map W) = (volume : Measure ℝ).withDensity fWe from
-        (Measure.withDensity_rnDeriv_eq (Q.map W) volume hW_ac_Q).symm]
-      rw [map_add_const_withDensity fWe z]
-    -- a.e.-finiteness of the translated density `x ↦ fWe (x - z)`  (Lebesgue translation invariance).
-    have hfWe_translate_fin : ∀ z, ∀ᵐ x ∂volume, fWe (x - z) < ∞ := by
-      intro z
-      have h0 : ∀ᵐ x ∂volume, fWe x < ∞ := Measure.rnDeriv_lt_top (Q.map W) volume
-      have hmp : MeasurePreserving (fun x : ℝ => x - z) volume volume :=
-        ⟨by fun_prop, MeasureTheory.map_sub_right_eq_self (μ := (volume : Measure ℝ)) z⟩
-      exact hmp.quasiMeasurePreserving.ae h0
-    -- **inner integral identity**: `∫ x, g x ∂(μWz z) = ∫ x, fW (x - z) * g x ∂volume`.
-    have hinner : ∀ (z : ℝ) (g : ℝ → ℝ),
-        ∫ x, g x ∂(μWz z) = ∫ x, fW (x - z) * g x ∂volume :=
-      fun z g => integral_map_add_const_eq_integral_translate_mul (Q.map W) hW_ac_Q z g
-    -- the kernel `K (z, x) = fW (x - z) * log (rfun x)` is product-integrable (abs-dominated).
-    have hKint : Integrable
-        (fun p : ℝ × ℝ => fW (p.2 - p.1) * Real.log (rfun p.2)) (μV.prod volume) := by
-      rw [hμV_def, hfWb_def, hrfun_def, hν_conv]
-      exact integrable_translate_mul_log (Q.map W) (Q.map V) hW_ac_Q
-        (by rw [← hν_conv]; exact hent_sum')
-    -- (d) per-fibre cross-integrability `Integrable (log r) (μWz z)`  (a.e. z), from the per-z
-    -- section of the global product-integrable kernel `hKint`.
-    have hcross_int : ∀ᵐ z ∂μV, Integrable
-        (fun x => Real.log (rfun x)) (μWz z) := by
-      filter_upwards [hKint.prod_right_ae] with z hz_sec
-      -- `hz_sec : Integrable (fun x => fW (x - z) * log (rfun x)) volume`.
-      rw [hμWz_wd z, integrable_withDensity_iff_integrable_smul'
-        (by fun_prop : Measurable fun x => fWe (x - z)) (hfWe_translate_fin z)]
-      refine hz_sec.congr ?_
-      filter_upwards with x
-      show fW (x - z) * Real.log (rfun x) = (fWe (x - z)).toReal • Real.log (rfun x)
-      rw [smul_eq_mul]
-    -- (e) per-fibre Gibbs:  `h(μWz z) ≤ -∫ x, log(r x) ∂(μWz z)`  (a.e. z).
-    have hgibbs : ∀ᵐ z ∂μV,
-        differentialEntropy (μWz z) ≤ - ∫ x, Real.log (rfun x) ∂(μWz z) := by
-      filter_upwards [hμWz_ac_ν, hcross_int] with z hz_ac hz_cross
-      exact EPIInfiniteVarianceTruncation.differentialEntropy_le_cross_entropy
-        (hμWz_ac_vol z) hν_ac hz_ac (hμWz_ent z) hz_cross
-    -- (f) translation invariance:  `h(μWz z) = h(Q.map W)`.
-    have htrans_ent : ∀ z, differentialEntropy (μWz z) = differentialEntropy (Q.map W) := by
-      intro z
-      show differentialEntropy ((Q.map W).map (fun x => x + z)) = differentialEntropy (Q.map W)
-      exact differentialEntropy_map_add_const hW_ac_Q z
-    -- (g) the cross-entropy term collapses (after integration over μV) to `-h(ν)`.
-    -- the μV-integrability of `z ↦ -∫ x, log(r x) ∂(μWz z)` (for `integral_mono_ae`).
-    have hRHS_int : Integrable (fun z => - ∫ x, Real.log (rfun x) ∂(μWz z)) μV := by
-      have hbase : Integrable
-          (fun z => ∫ x, fW (x - z) * Real.log (rfun x) ∂volume) μV :=
-        hKint.integral_prod_left
-      refine (hbase.neg).congr ?_
-      filter_upwards with z
-      show -∫ x, fW (x - z) * Real.log (rfun x) ∂volume
-        = -∫ x, Real.log (rfun x) ∂(μWz z)
-      rw [hinner z (fun x => Real.log (rfun x))]
-    -- (h) `∫ z, (-∫ x, log(r x) ∂(μWz z)) ∂μV = - ∫ x, r x · log(r x) ∂volume = h(ν)`.
-    have hRHS_eq : (∫ z, (- ∫ x, Real.log (rfun x) ∂(μWz z)) ∂μV)
-        = differentialEntropy ν := by
-      rw [hμWz_def, hrfun_def, hμV_def, hν_conv]
-      exact integral_neg_translate_log_eq_differentialEntropy (Q.map W) (Q.map V) hW_ac_Q
-        (by rw [← hν_conv]; exact hent_sum')
-    -- assemble:  `h(Q.map W) = ∫ z, h(Q.map W) ∂μV ≤ ∫ z, (-∫ log r ∂μWz) ∂μV = h(ν)`.
-    calc differentialEntropy (Q.map W)
-        = ∫ _z, differentialEntropy (Q.map W) ∂μV := by
-          rw [integral_const, probReal_univ, one_smul]
-      _ ≤ ∫ z, (- ∫ x, Real.log (rfun x) ∂(μWz z)) ∂μV := by
-          apply integral_mono_ae (integrable_const _) hRHS_int
-          filter_upwards [hgibbs] with z hz
-          calc differentialEntropy (Q.map W) = differentialEntropy (μWz z) := (htrans_ent z).symm
-            _ ≤ _ := hz
-      _ = differentialEntropy ν := hRHS_eq
+    exact differentialEntropy_le_of_conv_finite W V Q hW hV hW_ac_Q hW_ent_Q ν hν_ac hν_conv
+      rfun hrfun_def hent_sum'
   · -- **Case A (infinite branch)**: `¬ hent_sum` and `B(ν) < ⊤` ⟹ `A(ν) = ⊤` ⟹
     -- `differentialEntropyExt ν = ⊤`, then `h(Q.map W) ≤ ⊤` by `le_top`.
     rw [differentialEntropyExt_eq_top_of_not_integrable hWV_ac_Q hent_sum hBnu_fin]
