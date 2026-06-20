@@ -287,6 +287,93 @@ lemma klDivPmf_self_expand
       = ∑ a : α, Qstar a * (Real.log (Qstar a) - Real.log (Q a)) :=
   klDivPmf_eq_log_diff_sum hQs_sum hQ_sum hQs_pos hQ_pos
 
+/-- Derivative of the segment functional `t ↦ klDivPmf ((1-t) • Qstar + t • P) Q` at `t = 0`,
+equal to `∑ a, (P a - Qstar a) * (log (Qstar a) - log (Q a))`. -/
+lemma csiszar_segment_hasDerivAt
+    {Q Qstar P : α → ℝ} (hQ_pos : ∀ a, 0 < Q a) (hQs_pos : ∀ a, 0 < Qstar a) :
+    HasDerivAt (fun t : ℝ => klDivPmf ((1 - t) • Qstar + t • P) Q)
+      (∑ a : α, (P a - Qstar a) * (Real.log (Qstar a) - Real.log (Q a))) 0 := by
+  classical
+  set Pt : ℝ → α → ℝ := fun t => (1 - t) • Qstar + t • P with hPt_def
+  -- per-coordinate derivative
+  have h_per : ∀ a : α,
+      HasDerivAt (fun t : ℝ => Q a * klFun (Pt t a / Q a))
+        ((P a - Qstar a) * (Real.log (Qstar a) - Real.log (Q a))) 0 := by
+    intro a
+    have hQne : Q a ≠ 0 := (hQ_pos a).ne'
+    -- g_a t := Pt t a / Q a = Qstar a / Q a + t * ((P a - Qstar a) / Q a).
+    have h_g_eq : (fun t : ℝ => Pt t a / Q a)
+        = fun t => Qstar a / Q a + t * ((P a - Qstar a) / Q a) := by
+      funext t
+      have h_apply : Pt t a = (1 - t) * Qstar a + t * P a := by
+        simp [hPt_def, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
+      rw [h_apply]
+      field_simp
+      ring
+    -- HasDerivAt g_a ((P a - Qstar a) / Q a) 0
+    have h_g_deriv : HasDerivAt (fun t : ℝ => Pt t a / Q a) ((P a - Qstar a) / Q a) 0 := by
+      rw [h_g_eq]
+      have h1 : HasDerivAt (fun t : ℝ => t * ((P a - Qstar a) / Q a))
+          ((P a - Qstar a) / Q a) 0 := by
+        have := (hasDerivAt_id (0 : ℝ)).mul_const ((P a - Qstar a) / Q a)
+        simpa using this
+      have h2 : HasDerivAt (fun t : ℝ => Qstar a / Q a + t * ((P a - Qstar a) / Q a))
+          ((P a - Qstar a) / Q a) 0 := by
+        have := h1.const_add (Qstar a / Q a)
+        simpa using this
+      exact h2
+    -- g_a 0 = Qstar a / Q a (positive).
+    have h_g0 : Pt 0 a / Q a = Qstar a / Q a := by
+      have h_apply : Pt 0 a = Qstar a := by
+        simp [hPt_def, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
+      rw [h_apply]
+    have h_g0_pos : 0 < Qstar a / Q a := div_pos (hQs_pos a) (hQ_pos a)
+    -- klFun has derivative log at Qstar a / Q a.
+    have h_klfun_deriv : HasDerivAt klFun (Real.log (Qstar a / Q a)) (Qstar a / Q a) :=
+      hasDerivAt_klFun h_g0_pos.ne'
+    -- Need klFun at (Pt 0 a / Q a) which equals Qstar a / Q a.
+    have h_klfun_deriv' : HasDerivAt klFun (Real.log (Qstar a / Q a))
+        ((fun t : ℝ => Pt t a / Q a) 0) := by
+      show HasDerivAt klFun (Real.log (Qstar a / Q a)) (Pt 0 a / Q a)
+      rw [h_g0]
+      exact h_klfun_deriv
+    -- Chain rule (klFun ∘ g_a) has derivative log(g 0) * g'(0).
+    have h_kl_deriv : HasDerivAt (fun t : ℝ => klFun (Pt t a / Q a))
+        (Real.log (Qstar a / Q a) * ((P a - Qstar a) / Q a)) 0 := by
+      have := h_klfun_deriv'.comp (0 : ℝ) h_g_deriv
+      simpa [Function.comp_def] using this
+    -- × Q a (const_mul)
+    have h_scaled : HasDerivAt (fun t : ℝ => Q a * klFun (Pt t a / Q a))
+        (Q a * (Real.log (Qstar a / Q a) * ((P a - Qstar a) / Q a))) 0 :=
+      h_kl_deriv.const_mul (Q a)
+    -- Massage the RHS:
+    have h_rhs_eq :
+        Q a * (Real.log (Qstar a / Q a) * ((P a - Qstar a) / Q a))
+          = (P a - Qstar a) * (Real.log (Qstar a) - Real.log (Q a)) := by
+      rw [Real.log_div (hQs_pos a).ne' hQne]
+      field_simp
+    rw [h_rhs_eq] at h_scaled
+    exact h_scaled
+  -- Sum: HasDerivAt of φ = ∑ … = D
+  have h_sum : HasDerivAt (fun t : ℝ => ∑ a : α, Q a * klFun (Pt t a / Q a))
+      (∑ a : α, (P a - Qstar a) * (Real.log (Qstar a) - Real.log (Q a))) 0 := by
+    have h_sum_fn := HasDerivAt.sum (u := Finset.univ) (𝕜 := ℝ)
+      (fun a _ => h_per a)
+    have h_fun_eq :
+        (fun t : ℝ => ∑ a : α, Q a * klFun (Pt t a / Q a))
+          = ∑ a ∈ (Finset.univ : Finset α), fun t : ℝ => Q a * klFun (Pt t a / Q a) := by
+      funext t
+      simp [Finset.sum_apply]
+    rw [h_fun_eq]
+    exact h_sum_fn
+  -- klDivPmf (Pt t) Q matches the sum (defeq).
+  show HasDerivAt (fun t : ℝ => klDivPmf (Pt t) Q)
+    (∑ a : α, (P a - Qstar a) * (Real.log (Qstar a) - Real.log (Q a))) 0
+  have h_eq : ∀ t : ℝ, klDivPmf (Pt t) Q = ∑ a : α, Q a * klFun (Pt t a / Q a) := by
+    intro t; rfl
+  simp_rw [h_eq]
+  exact h_sum
+
 /-- **First-order condition**: if `Q*` minimizes `klDivPmf · Q` over `K`, then for all `P ∈ K`,
 `∑ a, (P a - Q* a) * (log (Q* a) - log (Q a)) ≥ 0`.
 
@@ -315,87 +402,7 @@ lemma csiszar_first_order_condition
   -- At t = 0: log(Qstar a / Q a) * (P a - Qstar a)/Q a.
   -- × Q a: log(Qstar a / Q a) * (P a - Qstar a).
   -- Summing: ∑ a, log(Qstar a/Q a)·(P a − Qstar a) = D (by `log_div`).
-  have hφ_deriv : HasDerivAt φ D 0 := by
-    -- per-coordinate derivative
-    have h_per : ∀ a : α,
-        HasDerivAt (fun t : ℝ => Q a * klFun (Pt t a / Q a))
-          ((P a - Qstar a) * (Real.log (Qstar a) - Real.log (Q a))) 0 := by
-      intro a
-      have hQne : Q a ≠ 0 := (hQ_pos a).ne'
-      -- g_a t := Pt t a / Q a = Qstar a / Q a + t * ((P a - Qstar a) / Q a).
-      have h_g_eq : (fun t : ℝ => Pt t a / Q a)
-          = fun t => Qstar a / Q a + t * ((P a - Qstar a) / Q a) := by
-        funext t
-        have h_apply : Pt t a = (1 - t) * Qstar a + t * P a := by
-          simp [hPt_def, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-        rw [h_apply]
-        field_simp
-        ring
-      -- HasDerivAt g_a ((P a - Qstar a) / Q a) 0
-      have h_g_deriv : HasDerivAt (fun t : ℝ => Pt t a / Q a) ((P a - Qstar a) / Q a) 0 := by
-        rw [h_g_eq]
-        have h1 : HasDerivAt (fun t : ℝ => t * ((P a - Qstar a) / Q a))
-            ((P a - Qstar a) / Q a) 0 := by
-          have := (hasDerivAt_id (0 : ℝ)).mul_const ((P a - Qstar a) / Q a)
-          simpa using this
-        have h2 : HasDerivAt (fun t : ℝ => Qstar a / Q a + t * ((P a - Qstar a) / Q a))
-            ((P a - Qstar a) / Q a) 0 := by
-          have := h1.const_add (Qstar a / Q a)
-          simpa using this
-        exact h2
-      -- g_a 0 = Qstar a / Q a (positive).
-      have h_g0 : Pt 0 a / Q a = Qstar a / Q a := by
-        have h_apply : Pt 0 a = Qstar a := by
-          simp [hPt_def, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-        rw [h_apply]
-      have h_g0_pos : 0 < Qstar a / Q a := div_pos (hQs_pos a) (hQ_pos a)
-      -- klFun has derivative log at Qstar a / Q a.
-      have h_klfun_deriv : HasDerivAt klFun (Real.log (Qstar a / Q a)) (Qstar a / Q a) :=
-        hasDerivAt_klFun h_g0_pos.ne'
-      -- Need klFun at (Pt 0 a / Q a) which equals Qstar a / Q a.
-      have h_klfun_deriv' : HasDerivAt klFun (Real.log (Qstar a / Q a))
-          ((fun t : ℝ => Pt t a / Q a) 0) := by
-        show HasDerivAt klFun (Real.log (Qstar a / Q a)) (Pt 0 a / Q a)
-        rw [h_g0]
-        exact h_klfun_deriv
-      -- Chain rule (klFun ∘ g_a) has derivative log(g 0) * g'(0).
-      have h_kl_deriv : HasDerivAt (fun t : ℝ => klFun (Pt t a / Q a))
-          (Real.log (Qstar a / Q a) * ((P a - Qstar a) / Q a)) 0 := by
-        have := h_klfun_deriv'.comp (0 : ℝ) h_g_deriv
-        simpa [Function.comp_def] using this
-      -- × Q a (const_mul)
-      have h_scaled : HasDerivAt (fun t : ℝ => Q a * klFun (Pt t a / Q a))
-          (Q a * (Real.log (Qstar a / Q a) * ((P a - Qstar a) / Q a))) 0 :=
-        h_kl_deriv.const_mul (Q a)
-      -- Massage the RHS:
-      have h_rhs_eq :
-          Q a * (Real.log (Qstar a / Q a) * ((P a - Qstar a) / Q a))
-            = (P a - Qstar a) * (Real.log (Qstar a) - Real.log (Q a)) := by
-        rw [Real.log_div (hQs_pos a).ne' hQne]
-        field_simp
-      rw [h_rhs_eq] at h_scaled
-      exact h_scaled
-    -- Sum: HasDerivAt of φ = ∑ … = D
-    -- HasDerivAt.sum returns "∑ i ∈ s, f i" rather than fun t => ∑ ...
-    have h_sum : HasDerivAt (fun t : ℝ => ∑ a : α, Q a * klFun (Pt t a / Q a))
-        (∑ a : α, (P a - Qstar a) * (Real.log (Qstar a) - Real.log (Q a))) 0 := by
-      have h_sum_fn := HasDerivAt.sum (u := Finset.univ) (𝕜 := ℝ)
-        (fun a _ => h_per a)
-      -- h_sum_fn : HasDerivAt (∑ i ∈ univ, fun t => Q i * klFun (Pt t i / Q i)) ... 0
-      -- Need to commute: (∑ i, f i) t = ∑ i, (f i t)
-      have h_fun_eq :
-          (fun t : ℝ => ∑ a : α, Q a * klFun (Pt t a / Q a))
-            = ∑ a ∈ (Finset.univ : Finset α), fun t : ℝ => Q a * klFun (Pt t a / Q a) := by
-        funext t
-        simp [Finset.sum_apply]
-      rw [h_fun_eq]
-      exact h_sum_fn
-    -- φ matches the sum (defeq).
-    show HasDerivAt (fun t : ℝ => klDivPmf (Pt t) Q) D 0
-    have h_eq : ∀ t : ℝ, klDivPmf (Pt t) Q = ∑ a : α, Q a * klFun (Pt t a / Q a) := by
-      intro t; rfl
-    simp_rw [h_eq]
-    exact h_sum
+  have hφ_deriv : HasDerivAt φ D 0 := csiszar_segment_hasDerivAt hQ_pos hQs_pos
   -- Step 2: For t ∈ [0, 1], Pt t ∈ K (by convexity).
   have h_Pt_mem : ∀ t ∈ Set.Icc (0 : ℝ) 1, Pt t ∈ K := by
     intro t ht
