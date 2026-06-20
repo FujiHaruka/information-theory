@@ -16,7 +16,8 @@ to families `(p : ℕ → LZ78Parsing α)` indexed by the block length, and
 the asymptotic shape `c(n) · log c(n) ≤ n · log b + O(1)` (Cover–Thomas
 Eq. 13.124, the Ziv-counting asymptotic) is exposed as a hypothesis
 pass-through `IsLZ78PhraseCountAsymptotic` that future discharges can
-plug into the `IsZivInequalityPassthrough` slot.
+plug in. The genuine a.s. achievability residual is scoped out as
+`lz78GreedyImpl_achievability_ae` in `GreedyParsingImpl.lean`.
 
 ## Scope
 
@@ -32,7 +33,6 @@ plug into the `IsZivInequalityPassthrough` slot.
   is supplied as hypothesis; the numerical asymptotic
   `c(n) · log c(n) − n · log b = o(n)` is the Cover–Thomas Lemma 13.5.5
   body and remains out of scope here.
-* (engaged) — `IsZivInequalityPassthrough` bridge.
 
 ## Pattern source
 
@@ -155,32 +155,6 @@ section AsymptoticAlgebra
 variable {α : Type*}
 
 end AsymptoticAlgebra
-
-/-! ## §4. Bridge to parent `IsZivInequalityPassthrough` -/
-
-section ZivPassthroughBridge
-
-variable {α Ω : Type*} [Fintype α] [MeasurableSpace α] [MeasurableSpace Ω]
-
-
-/-- **Trivial reverse**: the asymptotic predicate
-`IsLZ78PhraseCountAsymptotic q (fun n => (q n).count : ℝ)` is reflexive
-(`IsLZ78PhraseCountAsymptotic.refl`), so any parsing family `q` and
-envelope `B = q.count` satisfies it unconditionally. The hypothesis
-`_h : ∀ μ p lz, IsZivInequalityPassthrough μ p lz` is therefore *not
-consumed*; the bridge is retained for API symmetry. (`_h` carries a
-non-trivial a.s. limsup upper bound but is still discarded here;
-downstream consumers plug `_h` into the genuine information path.) -/
-@[entry_point]
-theorem IsLZ78PhraseCountAsymptotic.of_passthrough
-    (_h : ∀ (μ : Measure Ω) (p : StationaryProcess μ α)
-            (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ),
-            IsZivInequalityPassthrough μ p lz78EncodingLength)
-    (q : ℕ → LZ78Parsing α) :
-    IsLZ78PhraseCountAsymptotic q (fun n => ((q n).count : ℝ)) :=
-  IsLZ78PhraseCountAsymptotic.refl q
-
-end ZivPassthroughBridge
 
 /-! ## §5. Trivial-`n`-envelope bridges -/
 

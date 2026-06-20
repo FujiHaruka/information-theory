@@ -13,10 +13,11 @@ This file publishes the **combinatorial counting plumbing** layer of
 Ziv's inequality (Cover–Thomas Lemma 13.5.5; the upper-bound half of the
 LZ78 asymptotic optimality theorem). It establishes the *combinatorial*
 layer (Nat-level phrase-space cardinality bound) as concrete `theorem`s,
-exposed to the `IsZivInequalityPassthrough` predicate in
-`InformationTheory/Shannon/LempelZiv78.lean`; the *entropy* layer
-(`H(X^n) ≤ Σ H(phrase_i)`) and the *log-sum* layer (final Ziv form)
-are developed elsewhere.
+consumed by the `IsLZ78PhraseCountAsymptotic` asymptotic layer; the
+*entropy* layer (`H(X^n) ≤ Σ H(phrase_i)`) and the *log-sum* layer (final
+Ziv form) are developed elsewhere. The genuine a.s. achievability residual
+of LZ78 optimality is scoped out as `lz78GreedyImpl_achievability_ae` in
+`GreedyParsingImpl.lean`.
 
 ## File layout
 
@@ -27,13 +28,9 @@ are developed elsewhere.
   invariant.
 * **§3. `ZivCountingBound` predicate** — a real-valued
   predicate that exposes the combinatorial-layer Ziv counting bound at
-  the `Prop` level, with a `.trivial` constructor and a constructor
-  taking a real bound directly. Designed so that the entropy-side
-  layer can plug `ZivCountingBound` into the `IsZivInequalityPassthrough`
-  bridge below.
-* **§4. Bridge to `IsZivInequalityPassthrough`** — `True`-discharging
-  constructor (kept trivial; the entropy chain-rule layer is established
-  elsewhere).
+  the `Prop` level, with a `.refl` constructor and a constructor
+  taking a real bound directly. The entropy-side layer plugs
+  `ZivCountingBound` into the `IsLZ78PhraseCountAsymptotic` envelope.
 
 ## Scope
 
@@ -248,7 +245,7 @@ asserts that the *combinatorial* layer of the Ziv inequality holds:
 the cast `(p.count : ℝ)` is bounded by `B`. The predicate is shaped
 so that the entropy-side layer can supply `B = n / log c(n)`
 (Cover–Thomas Eq. 13.124) or any analogous real-valued upper bound and
-plug it into the parent `IsZivInequalityPassthrough` slot.
+plug it into the `IsLZ78PhraseCountAsymptotic` envelope.
 
 The combinatorial layer of `B` is established by `card_phraseSet_le_pow`
 (§2); the entropy / log-sum layers are developed elsewhere. -/
@@ -274,31 +271,5 @@ theorem ZivCountingBound.add_nonneg {p : LZ78Parsing α} {B ε : ℝ}
   exact le_trans h (by linarith)
 
 end ZivCountingBoundPredicate
-
-/-! ## §4. Bridge to `IsZivInequalityPassthrough` -/
-
-section ZivPassthroughBridge
-
-variable {α Ω : Type*} [Fintype α] [MeasurableSpace α] [MeasurableSpace Ω]
-
-
-/-- **Trivial reverse**: the combinatorial-layer bound
-`ZivCountingBound q (q.count : ℝ)` is the reflexive bound `q.count ≤
-q.count` (`ZivCountingBound.refl`), which holds unconditionally. The
-hypothesis `_h : ∀ μ p lz, IsZivInequalityPassthrough μ p lz` is therefore
-*not consumed*; the bridge is retained for symmetric API ergonomics
-between the parent passthrough predicate and the combinatorial-layer
-bound. `_h` carries the genuine a.s. limsup upper bound of
-`IsZivInequalityPassthrough` but is discarded here; the
-information-bearing direction lives downstream. -/
-@[entry_point]
-theorem ZivCountingBound.of_passthrough
-    (_h : ∀ (μ : Measure Ω) (p : StationaryProcess μ α)
-            (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ),
-            IsZivInequalityPassthrough μ p lz78EncodingLength)
-    (q : LZ78Parsing α) : ZivCountingBound q (q.count : ℝ) :=
-  ZivCountingBound.refl q
-
-end ZivPassthroughBridge
 
 end InformationTheory.Shannon

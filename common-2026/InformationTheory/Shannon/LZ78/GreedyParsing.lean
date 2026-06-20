@@ -49,9 +49,13 @@ into the parent `lz78EncodingLength` parameter slot of
   `IsLZ78CountBoundPassthrough`: predicate exposing the sharper
   count bound `B(n)` as a hypothesis; the elementary `count ≤ n`
   bound is supplied as `.id`.
-* **§7. Bridge to `IsZivInequalityPassthrough`** —
-  the concrete `lz78GreedyEncodingLength` plugs into the parent
-  `IsZivInequalityPassthrough` (a.s. `limsup (lz/n) ≤ entropyRate`).
+* **§8. Combined `IsLZ78EncodingLengthBoundPassthrough`** — the
+  count-bound passthrough composed with the per-phrase bit cost.
+* **§9. Per-symbol asymptotic bound** — `lz78_encoding_length_div_n_le`
+  and its `ℝ`-scaled bit-rate form.
+* **§10. Compatibility statements for the parent theorem** —
+  type-check witness + the worst-case `lz78GreedyEncodingLength` threaded
+  into the generic combinator `lz78_asymptotic_optimality`.
 
 ## Scope
 

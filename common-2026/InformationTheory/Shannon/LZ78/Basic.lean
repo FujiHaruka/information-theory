@@ -27,17 +27,7 @@ This single file publishes:
 
 * **§1. LZ78 phrase data structures** (`LZ78Phrase α`, `LZ78Parsing α`)
   — the type-level encoding of an LZ78 dictionary parsing.
-* **§2. Passthrough predicates** (`IsZivInequalityPassthrough`,
-  `IsLZ78ConversePassthrough`, `IsSMBSandwichPassthrough`) — **genuine
-  statements** for the discharged ingredients (Ziv's inequality, SMB
-  sandwich, the converse). Each body is the real a.s. statement
-  (`limsup ≤ entropyRate` / `entropyRate ≤ liminf` / `Tendsto … (𝓝 entropyRate)`)
-  rather than a `True` placeholder. These are **not hypotheses of
-  the §3 main theorem**; they survive only as discharge plumbing consumed
-  by the `.of*` bridge constructors in the downstream LZ78 files. The
-  genuine residual of the headline is the two-sided sandwich on `lz/n`,
-  not any of these predicates.
-* **§3. Generic sandwich combinator** — `lz78_asymptotic_optimality`
+* **§2. Generic sandwich combinator** — `lz78_asymptotic_optimality`
   (and its alias / bundled forms), the LZ78-flavored wrapper of
   `tendsto_of_le_liminf_of_limsup_le`. This is **not** the LZ78
   optimality claim itself; it derives a.s. convergence from a
@@ -46,28 +36,25 @@ This single file publishes:
   is `lz78_asymptotic_optimality_with_greedy_impl` in
   `InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`.
 
+## Scope-out of the asymptotic-optimality core
+
+The two genuine residuals of LZ78 asymptotic optimality — the
+achievability upper bound `∀ᵐ ω, limsup (lz/n) ≤ entropyRate`
+(Ziv's inequality, Cover–Thomas Lemma 13.5.5) and the converse lower
+bound `∀ᵐ ω, entropyRate ≤ liminf (lz/n)` (Cover–Thomas Theorem 13.5.3
+lower bound) — are the **single source of truth** in the two scope-out
+`sorry + @residual` lemmas
+`lz78GreedyImpl_achievability_ae` / `lz78GreedyImpl_converse_ae`
+in `InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`
+(`@residual(wall:lz78-aseventual-ziv)` / `@residual(wall:lz78-converse-aseventual)`,
+M3/M4 research-level scope-out, `docs/textbook-roadmap.md`). The earlier
+statement-only passthrough predicates (`IsZivInequalityPassthrough`,
+`IsLZ78ConversePassthrough`, `IsSMBSandwichPassthrough`) that duplicated
+these statements as dead scaffolding were removed; the SMB sandwich itself
+is fully discharged upstream (`shannon_mcmillan_breiman`).
+
 ## Statement-level structure
 
-This file publishes the **statement-level hypothesis pass-through** form
-of the asymptotic optimality theorem:
-
-* Ziv's inequality (Cover–Thomas Lemma 13.5.5) is published as
-  `IsZivInequalityPassthrough μ p lz78EncodingLength : Prop :=
-   ∀ᵐ ω, limsup (lz/n) ≤ entropyRate μ p` — the genuine achievability
-  upper bound a.s.
-* The LZ78 converse (Cover–Thomas Theorem 13.5.3 lower bound)
-  is published as
-  `IsLZ78ConversePassthrough μ p lz78EncodingLength : Prop :=
-   ∀ᵐ ω, entropyRate μ p ≤ liminf (lz/n)` — the genuine converse lower
-  bound a.s.
-* The SMB sandwich (a.s. convergence of the per-block negative
-  log-likelihood to the entropy rate) is published as
-  `IsSMBSandwichPassthrough μ p : Prop :=
-   ∀ᵐ ω, Tendsto (blockLogAvg μ p n) atTop (𝓝 (entropyRate μ p))`. This is
-  the bridge to `InformationTheory/Shannon/ShannonMcMillanBreiman.lean`'s
-  `shannon_mcmillan_breiman_of_sandwich`, which itself takes the two
-  sandwich inequalities as hypotheses (those in turn are discharged by
-  Birkhoff + the SMB chain rule).
 * The concrete `lz78Encode : List α → LZ78Parsing α` greedy
   parsing implementation is supplied externally; the generic combinator
   consumes a generic encoding-length function
@@ -102,14 +89,15 @@ type-level signatures.
 
 ## Derivation pattern
 
-The §3 combinator is a genuine two-sided-sandwich derivation via
+The §2 combinator is a genuine two-sided-sandwich derivation via
 `tendsto_of_le_liminf_of_limsup_le` (the same combine pattern as
 `shannon_mcmillan_breiman_of_sandwich` in `ShannonMcMillanBreiman.lean`),
 *not* an identity-wrap pass-through, and *not* the LZ78 optimality claim
-(its sandwich arguments are generic and caller-supplied). The §2
-passthrough predicates survive only as discharge plumbing consumed by the
-`.of*` bridges in the downstream LZ78 files; no published headline takes
-any of them as its residual hypothesis.
+(its sandwich arguments are generic and caller-supplied). The genuine
+two-sided sandwich on `lz/n` — the actual achievability / converse
+residual — lives as scope-out `sorry + @residual` in
+`GreedyParsingImpl.lean` (`lz78GreedyImpl_achievability_ae` /
+`lz78GreedyImpl_converse_ae`), the single source of truth.
 -/
 
 namespace InformationTheory.Shannon
@@ -211,104 +199,7 @@ end LZ78Parsing
 
 end LZ78Structures
 
-/-! ## §2. Passthrough predicates -/
-
-section PassthroughPredicates
-
-variable {α Ω : Type*}
-variable [Fintype α] [DecidableEq α] [Nonempty α]
-  [MeasurableSpace α] [MeasurableSingletonClass α]
-variable [MeasurableSpace Ω]
-
-/-- **Ziv's inequality passthrough predicate (Cover–Thomas Lemma 13.5.5)**.
-
-For a stationary process `p` on alphabet `α` and an encoding-length
-function `lz78EncodingLength : ∀ n, (Fin n → α) → ℕ`, this predicate
-asserts the Ziv inequality
-
-```
-c(n) · log c(n) ≤ - ∑_{i=1}^{c(n)} log P(phrase_i)
-```
-
-in its asymptotic per-sample form, which (when combined with SMB) gives
-the upper bound `lim sup (1/n) lz78EncodingLength ≤ H` almost surely.
-
-The body is the genuine a.s. limsup upper bound
-`∀ᵐ ω, limsup (lz n / n) ≤ entropyRate μ p` (not a `True`
-placeholder). The predicate *signature* depends on `μ`, `p`, and
-`lz78EncodingLength`, and the main theorem `lz78_asymptotic_optimality`
-does **not** take this predicate as a hypothesis, so its external
-interface is unaffected.
-
-`@audit:closed-by-successor(textbook-roadmap-m3-m4-scope-out)`
-— body is the genuine a.s. limsup upper bound statement; proof is research-level
-upstream scope-out. Statement-only publish form is maintained. -/
-def IsZivInequalityPassthrough
-    (μ : Measure Ω) (p : StationaryProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) : Prop :=
-  ∀ᵐ ω ∂μ,
-    Filter.limsup
-      (fun n => (lz78EncodingLength n (p.blockRV n ω) : ℝ) / (n : ℝ))
-      Filter.atTop
-    ≤ entropyRate μ p
-
-
-/-- **LZ78 converse passthrough predicate (Cover–Thomas Theorem 13.5.3
-lower bound)**.
-
-Asserts the lower-bound half of LZ78 asymptotic optimality:
-
-```
-lim inf (1/n) · lz78EncodingLength(X^n) ≥ H   a.s.
-```
-
-This is the harder direction (uses SMB lower bound + arbitrary prefix
-code Kraft inequality + finite-alphabet bookkeeping). The body is the
-genuine a.s. liminf lower bound
-`∀ᵐ ω, entropyRate μ p ≤ liminf (lz n / n)` (not a `True`
-placeholder).
-
-`@audit:closed-by-successor(textbook-roadmap-m3-m4-scope-out)`
-— body is the genuine a.s. liminf lower bound statement; proof is research-level
-upstream scope-out. Statement-only publish form is maintained. -/
-@[entry_point]
-def IsLZ78ConversePassthrough
-    (μ : Measure Ω) (p : StationaryProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) : Prop :=
-  ∀ᵐ ω ∂μ,
-    entropyRate μ p
-    ≤ Filter.liminf
-        (fun n => (lz78EncodingLength n (p.blockRV n ω) : ℝ) / (n : ℝ))
-        Filter.atTop
-
-
-/-- **SMB sandwich passthrough predicate (Cover–Thomas Theorem 16.8.1)**.
-
-Asserts that the per-block negative log-likelihood
-`blockLogAvg μ p n ω` converges almost surely to `entropyRate μ p`. This
-is *Shannon–McMillan–Breiman in its a.s. form*; the existing publish
-`shannon_mcmillan_breiman_of_sandwich` in
-`InformationTheory/Shannon/ShannonMcMillanBreiman.lean` takes the two sandwich
-inequalities (`liminf ≥ H`, `limsup ≤ H`) and the two boundedness
-hypotheses as input, and the present predicate stands in for the *output*
-of that sandwich combine. The body is the genuine a.s. Tendsto
-statement `∀ᵐ ω, Tendsto (blockLogAvg μ p n) atTop (𝓝 (entropyRate μ p))`
-(not a `True` placeholder), discharged via Birkhoff + the SMB chain rule.
-
-`@audit:closed-by-successor(textbook-roadmap-m3-m4-scope-out)`
-— body is the genuine a.s. Tendsto statement; proof is research-level
-upstream scope-out. Statement-only publish form is maintained. -/
-@[entry_point]
-def IsSMBSandwichPassthrough
-    (μ : Measure Ω) (p : StationaryProcess μ α) : Prop :=
-  ∀ᵐ ω ∂μ,
-    Filter.Tendsto (fun n => blockLogAvg μ p n ω) Filter.atTop
-      (𝓝 (entropyRate μ p))
-
-
-end PassthroughPredicates
-
-/-! ## §3. Main theorem — LZ78 asymptotic optimality -/
+/-! ## §2. Main theorem — LZ78 asymptotic optimality -/
 
 section MainTheorem
 
