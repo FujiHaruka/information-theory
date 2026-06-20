@@ -558,6 +558,106 @@ private lemma codebook_marginal_two
     sum_prod_measureReal_singleton_eq_one P
   rw [h_sum_other, mul_one]
 
+omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [DecidableEq β] [Nonempty β] in
+private lemma E1_lhs_sum_eq_Q_sum
+    {n : ℕ}
+    (P : Measure (Fin n → α)) (Q : Measure (Fin n → α × β))
+    (Wpi : (Fin n → α) → Measure (Fin n → β))
+    (hWpi : ∀ x, IsProbabilityMeasure (Wpi x))
+    (JTS : Set ((Fin n → α) × (Fin n → β)))
+    (Sfin : Finset (Fin n → α × β))
+    (hSfin : (Sfin : Set (Fin n → α × β))
+      = (fun z => ((fun i => (z i).1 : Fin n → α), (fun i => (z i).2 : Fin n → β)))
+          ⁻¹' (JTSᶜ : Set ((Fin n → α) × (Fin n → β))))
+    (hQ_singleton : ∀ (x : Fin n → α) (y : Fin n → β),
+      Q.real {(fun i => (x i, y i) : Fin n → α × β)} = P.real {x} * (Wpi x).real {y}) :
+    ∑ x : Fin n → α, P.real {x} * (Wpi x).real {y | (x, y) ∉ JTS}
+      = ∑ z ∈ Sfin, Q.real {z} := by
+  classical
+  let ψ : (Fin n → α × β) → (Fin n → α) × (Fin n → β) :=
+    fun z => (fun i => (z i).1, fun i => (z i).2)
+  have hSfin_mem : ∀ z : Fin n → α × β, z ∈ Sfin ↔ ψ z ∉ JTS := by
+    intro z
+    rw [← Finset.mem_coe, hSfin]; rfl
+  -- For each x, (Wpi x).real {y | ...} = ∑_{y ∈ slicefinset(x)} (Wpi x).real {y}.
+  have h_slice_fin : ∀ x : Fin n → α,
+      ({y | (x, y) ∉ JTS} : Set (Fin n → β)).Finite :=
+    fun _ => Set.toFinite _
+  have h_per_x : ∀ x : Fin n → α,
+      P.real {x} * (Wpi x).real {y | (x, y) ∉ JTS}
+        = ∑ y ∈ (h_slice_fin x).toFinset,
+            Q.real {(fun i => (x i, y i) : Fin n → α × β)} := by
+    intro x
+    haveI := hWpi x
+    set Ts : Finset (Fin n → β) := (h_slice_fin x).toFinset with hTs_def
+    have h_Ts_coe : (Ts : Set _) = {y | (x, y) ∉ JTS} :=
+      (h_slice_fin x).coe_toFinset
+    have h_eq : (Wpi x).real {y | (x, y) ∉ JTS}
+          = ∑ y ∈ Ts, (Wpi x).real {y} := by
+      rw [← h_Ts_coe, ← sum_measureReal_singleton (μ := Wpi x) Ts]
+    rw [h_eq, Finset.mul_sum]
+    refine Finset.sum_congr rfl (fun y _ => ?_)
+    rw [hQ_singleton x y]
+  rw [Finset.sum_congr rfl (fun x _ => h_per_x x)]
+  -- Build a finset = pairs (x,y) with (x,y) ∉ JTS, in bijection with Sfin.
+  set Tfin : Finset ((Fin n → α) × (Fin n → β)) :=
+    ((Finset.univ : Finset (Fin n → α)) ×ˢ
+      (Finset.univ : Finset (Fin n → β))).filter (fun p => p ∉ JTS) with hTfin_def
+  have h_lhs_to_T :
+      (∑ x : Fin n → α, ∑ y ∈ (h_slice_fin x).toFinset,
+            Q.real {(fun i => (x i, y i) : Fin n → α × β)})
+        = ∑ p ∈ Tfin, Q.real {(fun i => (p.1 i, p.2 i) : Fin n → α × β)} := by
+    have h_full : (∑ x : Fin n → α, ∑ y : Fin n → β,
+            if (x, y) ∉ JTS then
+              Q.real {(fun i => (x i, y i) : Fin n → α × β)}
+            else 0)
+          = ∑ x : Fin n → α, ∑ y ∈ (h_slice_fin x).toFinset,
+              Q.real {(fun i => (x i, y i) : Fin n → α × β)} := by
+      refine Finset.sum_congr rfl (fun x _ => ?_)
+      rw [← Finset.sum_filter]
+      apply Finset.sum_congr ?_ (fun _ _ => rfl)
+      ext y
+      rw [Finset.mem_filter, Set.Finite.mem_toFinset]
+      show (y ∈ (Finset.univ : Finset (Fin n → β)) ∧ (x, y) ∉ JTS) ↔
+        (x, y) ∉ JTS
+      constructor
+      · intro h; exact h.2
+      · intro h; exact ⟨Finset.mem_univ _, h⟩
+    rw [← h_full]
+    rw [← Finset.sum_product']
+    rw [hTfin_def]
+    rw [Finset.sum_filter]
+  rw [h_lhs_to_T]
+  -- bijection Tfin ≃ Sfin via (x, y) ↦ fun i => (x i, y i).
+  apply Finset.sum_bij
+    (i := fun (p : (Fin n → α) × (Fin n → β)) _ =>
+      (fun i => (p.1 i, p.2 i) : Fin n → α × β))
+  · intro p hp
+    rw [hSfin_mem]
+    rw [hTfin_def, Finset.mem_filter] at hp
+    exact hp.2
+  · intro a _ b _ hab
+    have h1 : a.1 = b.1 := by
+      funext i
+      have hh : (fun i => (a.1 i, a.2 i) : Fin n → α × β) i
+          = (fun i => (b.1 i, b.2 i) : Fin n → α × β) i := by rw [hab]
+      exact (Prod.mk.injEq _ _ _ _).mp hh |>.1
+    have h2 : a.2 = b.2 := by
+      funext i
+      have hh : (fun i => (a.1 i, a.2 i) : Fin n → α × β) i
+          = (fun i => (b.1 i, b.2 i) : Fin n → α × β) i := by rw [hab]
+      exact (Prod.mk.injEq _ _ _ _).mp hh |>.2
+    exact Prod.ext h1 h2
+  · intro z hz
+    rw [hSfin_mem] at hz
+    refine ⟨ψ z, ?_, ?_⟩
+    · rw [hTfin_def, Finset.mem_filter]
+      refine ⟨Finset.mem_product.mpr ⟨Finset.mem_univ _, Finset.mem_univ _⟩, ?_⟩
+      exact hz
+    · funext i; rfl
+  · intro _ _; rfl
+
 omit [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β] in
 /-- **(E1) Fubini swap.** For any message index `m`, the codebook expectation of
 the "true codeword not jointly typical" event equals the abstract i.i.d.
@@ -698,94 +798,101 @@ private lemma random_codebook_E1_swap
       ∑ x : Fin n → α, P.real {x} *
         (Measure.pi (fun i => W (x i))).real
           {y | (x, y) ∉ jointlyTypicalSet μ Xs Ys n ε}
-      = ∑ z ∈ Sfin, Q.real {z} := by
-    -- For each x, (Pi (W∘x)).real {y | ...} = ∑_{y ∈ slicefinset(x)} (Pi (W∘x)).real {y}.
-    have h_slice_fin : ∀ x : Fin n → α,
-        ({y | (x, y) ∉ jointlyTypicalSet μ Xs Ys n ε} : Set (Fin n → β)).Finite :=
-      fun _ => Set.toFinite _
-    have h_per_x : ∀ x : Fin n → α,
-        P.real {x} * (Measure.pi (fun i => W (x i))).real
-            {y | (x, y) ∉ jointlyTypicalSet μ Xs Ys n ε}
-          = ∑ y ∈ (h_slice_fin x).toFinset,
-              Q.real {(fun i => (x i, y i) : Fin n → α × β)} := by
-      intro x
-      set Ts : Finset (Fin n → β) := (h_slice_fin x).toFinset with hTs_def
-      have h_Ts_coe : (Ts : Set _) = {y | (x, y) ∉ jointlyTypicalSet μ Xs Ys n ε} :=
-        (h_slice_fin x).coe_toFinset
-      have h_eq : (Measure.pi (fun i => W (x i))).real
-              {y | (x, y) ∉ jointlyTypicalSet μ Xs Ys n ε}
-            = ∑ y ∈ Ts, (Measure.pi (fun i => W (x i))).real {y} := by
-        rw [← h_Ts_coe,
-            ← sum_measureReal_singleton (μ := Measure.pi (fun i => W (x i))) Ts]
-      rw [h_eq, Finset.mul_sum]
-      refine Finset.sum_congr rfl (fun y _ => ?_)
-      rw [h_Q_singleton x y]
-    rw [Finset.sum_congr rfl (fun x _ => h_per_x x)]
-    -- Now: ∑_x ∑_{y ∈ slicefinset(x)} Q.real {fun i => (x i, y i)} = ∑_{z ∈ S.toFinset} Q.real {z}.
-    -- Express LHS using a single sum over the filtered product finset.
-    -- Build a finset = pairs (x,y) with (x,y) ∉ JTS, in bijection with Sfin.
-    set Tfin : Finset ((Fin n → α) × (Fin n → β)) :=
-      ((Finset.univ : Finset (Fin n → α)) ×ˢ
-        (Finset.univ : Finset (Fin n → β))).filter (fun p => p ∉ JTS) with hTfin_def
-    -- Step a: LHS = ∑ p ∈ Tfin, Q.real {fun i => (p.1 i, p.2 i)}.
-    have h_lhs_to_T :
-        (∑ x : Fin n → α, ∑ y ∈ (h_slice_fin x).toFinset,
-              Q.real {(fun i => (x i, y i) : Fin n → α × β)})
-          = ∑ p ∈ Tfin, Q.real {(fun i => (p.1 i, p.2 i) : Fin n → α × β)} := by
-      -- Convert: ∑_x ∑_{y ∈ slicefinset(x)} F (x, y) = ∑_{(x,y) : (x,y) ∉ JTS} F (x, y)
-      -- using `Finset.sum_sigma` or via two-step: full product, then filter.
-      have h_full : (∑ x : Fin n → α, ∑ y : Fin n → β,
-              if (x, y) ∉ JTS then
-                Q.real {(fun i => (x i, y i) : Fin n → α × β)}
-              else 0)
-            = ∑ x : Fin n → α, ∑ y ∈ (h_slice_fin x).toFinset,
-                Q.real {(fun i => (x i, y i) : Fin n → α × β)} := by
-        refine Finset.sum_congr rfl (fun x _ => ?_)
-        -- ∑ y, ite ... = ∑ y ∈ filter ..., F
-        rw [← Finset.sum_filter]
-        apply Finset.sum_congr ?_ (fun _ _ => rfl)
-        ext y
-        rw [Finset.mem_filter, Set.Finite.mem_toFinset]
-        show (y ∈ (Finset.univ : Finset (Fin n → β)) ∧ (x, y) ∉ JTS) ↔
-          (x, y) ∉ jointlyTypicalSet μ Xs Ys n ε
-        constructor
-        · intro h; exact h.2
-        · intro h; exact ⟨Finset.mem_univ _, h⟩
-      rw [← h_full]
-      -- ∑_x ∑_y if ... = ∑_p if (p.1, p.2) ∉ JTS ... = ∑_{p ∈ Tfin} F p.
-      rw [← Finset.sum_product']
-      rw [hTfin_def]
-      rw [Finset.sum_filter]
-    rw [h_lhs_to_T]
-    -- Step b: bijection Tfin ≃ Sfin via (x, y) ↦ fun i => (x i, y i).
-    apply Finset.sum_bij
-      (i := fun (p : (Fin n → α) × (Fin n → β)) _ =>
-        (fun i => (p.1 i, p.2 i) : Fin n → α × β))
-    · intro p hp
-      rw [hSfin_def, Set.Finite.mem_toFinset]
-      rw [hTfin_def, Finset.mem_filter] at hp
-      exact hp.2
-    · intro a _ b _ hab
-      have h1 : a.1 = b.1 := by
-        funext i
-        have hh : (fun i => (a.1 i, a.2 i) : Fin n → α × β) i
-            = (fun i => (b.1 i, b.2 i) : Fin n → α × β) i := by rw [hab]
-        exact (Prod.mk.injEq _ _ _ _).mp hh |>.1
-      have h2 : a.2 = b.2 := by
-        funext i
-        have hh : (fun i => (a.1 i, a.2 i) : Fin n → α × β) i
-            = (fun i => (b.1 i, b.2 i) : Fin n → α × β) i := by rw [hab]
-        exact (Prod.mk.injEq _ _ _ _).mp hh |>.2
-      exact Prod.ext h1 h2
-    · intro z hz
-      rw [hSfin_def, Set.Finite.mem_toFinset] at hz
-      refine ⟨ψ z, ?_, ?_⟩
-      · rw [hTfin_def, Finset.mem_filter]
-        refine ⟨Finset.mem_product.mpr ⟨Finset.mem_univ _, Finset.mem_univ _⟩, ?_⟩
-        exact hz
-      · funext i; rfl
-    · intro _ _; rfl
+      = ∑ z ∈ Sfin, Q.real {z} :=
+    E1_lhs_sum_eq_Q_sum P Q (fun x => Measure.pi (fun i => W (x i)))
+      (fun _ => inferInstance) JTS Sfin (h_Sfin_coe.trans hS_def) h_Q_singleton
   rw [h_LHS_eq]
+
+omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [Fintype β] [DecidableEq β] [Nonempty β] in
+private lemma sum_chan_set_eq_μY
+    {n : ℕ}
+    (P : Measure (Fin n → α)) (μY : Measure (Fin n → β)) [IsProbabilityMeasure μY]
+    (Wpi : (Fin n → α) → Measure (Fin n → β))
+    (hWpi : ∀ x, IsProbabilityMeasure (Wpi x))
+    (f : (Fin n → α) → (Fin n → β) → ℝ)
+    (h_pi_W : ∀ (x : Fin n → α) (y : Fin n → β), (Wpi x).real {y} = f x y)
+    (h_chan : ∀ y : Fin n → β, (∑ x : Fin n → α, P.real {x} * f x y) = μY.real {y})
+    (S : Set (Fin n → β)) (hS : S.Finite) :
+    (∑ x : Fin n → α, P.real {x} * (Wpi x).real S) = μY.real S := by
+  classical
+  haveI : MeasurableSingletonClass (Fin n → β) := Pi.instMeasurableSingletonClass
+  set Sfin : Finset (Fin n → β) := hS.toFinset
+  have h_S_coe : (Sfin : Set _) = S := hS.coe_toFinset
+  have h_Wpi_real : ∀ x : Fin n → α,
+      (Wpi x).real S = ∑ y ∈ Sfin, f x y := by
+    intro x
+    haveI := hWpi x
+    have h1 : (Wpi x).real S = ∑ y ∈ Sfin, (Wpi x).real {y} := by
+      rw [← h_S_coe, ← sum_measureReal_singleton (μ := Wpi x) Sfin]
+    rw [h1]; exact Finset.sum_congr rfl (fun y _ => h_pi_W x y)
+  have h_μY_set : μY.real S = ∑ y ∈ Sfin, μY.real {y} := by
+    rw [← h_S_coe, ← sum_measureReal_singleton (μ := μY) Sfin]
+  calc (∑ x : Fin n → α, P.real {x} * (Wpi x).real S)
+      = ∑ x : Fin n → α, P.real {x} * ∑ y ∈ Sfin, f x y := by
+        refine Finset.sum_congr rfl (fun x _ => ?_); rw [h_Wpi_real x]
+    _ = ∑ x : Fin n → α, ∑ y ∈ Sfin, P.real {x} * f x y := by
+        refine Finset.sum_congr rfl (fun x _ => ?_); rw [Finset.mul_sum]
+    _ = ∑ y ∈ Sfin, ∑ x : Fin n → α, P.real {x} * f x y := Finset.sum_comm
+    _ = ∑ y ∈ Sfin, μY.real {y} := by
+        refine Finset.sum_congr rfl (fun y _ => h_chan y)
+    _ = μY.real S := h_μY_set.symm
+
+omit [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β] in
+private lemma prod_real_eq_slice_sum
+    {n : ℕ}
+    (P : Measure (Fin n → α)) [IsProbabilityMeasure P]
+    (μY : Measure (Fin n → β)) [IsProbabilityMeasure μY]
+    (JTS : Set ((Fin n → α) × (Fin n → β))) :
+    (P.prod μY).real JTS
+      = ∑ x' : Fin n → α, P.real {x'} * μY.real {y | (x', y) ∈ JTS} := by
+  classical
+  haveI : MeasurableSingletonClass (Fin n → α) := Pi.instMeasurableSingletonClass
+  haveI : MeasurableSingletonClass (Fin n → β) := Pi.instMeasurableSingletonClass
+  have h_JTS_fin : JTS.Finite := Set.toFinite _
+  set JTSfin : Finset _ := h_JTS_fin.toFinset
+  have h_JTS_coe : (JTSfin : Set _) = JTS := h_JTS_fin.coe_toFinset
+  have h_prod_sum : (P.prod μY).real JTS
+      = ∑ pq ∈ JTSfin, P.real {pq.1} * μY.real {pq.2} := by
+    have h_real_eq : (P.prod μY).real JTS = ∑ p ∈ JTSfin, (P.prod μY).real {p} := by
+      rw [← h_JTS_coe, ← sum_measureReal_singleton (μ := P.prod μY) JTSfin]
+    rw [h_real_eq]
+    refine Finset.sum_congr rfl (fun pq _ => ?_)
+    have h_sgl : ({pq} : Set ((Fin n → α) × (Fin n → β)))
+        = ({pq.1} : Set (Fin n → α)) ×ˢ ({pq.2} : Set (Fin n → β)) := by
+      ext ⟨a, b⟩; simp [Prod.ext_iff]
+    rw [h_sgl]; exact measureReal_prod_prod _ _
+  rw [h_prod_sum]
+  -- Convert ∑ pq ∈ JTSfin, F pq into ∑ x' : Fin n → α, ∑ y : Fin n → β, [pq ∈ JTSfin] * F pq.
+  have h_ind : (∑ pq ∈ JTSfin, P.real {pq.1} * μY.real {pq.2})
+      = ∑ x' : Fin n → α, ∑ y : Fin n → β,
+          (if (x', y) ∈ JTS then P.real {x'} * μY.real {y} else 0) := by
+    rw [show JTSfin = ((Finset.univ : Finset _) ×ˢ Finset.univ : Finset _).filter (· ∈ JTS) from ?_]
+    · rw [Finset.sum_filter]
+      rw [← Finset.sum_product']
+    · -- JTSfin = filter (· ∈ JTS) univ
+      ext pq
+      rw [Finset.mem_filter, Set.Finite.mem_toFinset]
+      constructor
+      · intro h; exact ⟨Finset.mem_product.mpr ⟨Finset.mem_univ _, Finset.mem_univ _⟩, h⟩
+      · intro h; exact h.2
+  rw [h_ind]
+  -- Inner: ∑_y if (x',y) ∈ JTS then P{x'}*μY{y} else 0 = P{x'} * μY.real {y | (x',y) ∈ JTS}.
+  refine Finset.sum_congr rfl (fun x' _ => ?_)
+  set S : Set (Fin n → β) := {y | (x', y) ∈ JTS}
+  have h_S_fin : S.Finite := Set.toFinite _
+  have h_μY_slice : μY.real {y | (x', y) ∈ JTS}
+      = ∑ y ∈ h_S_fin.toFinset, μY.real {y} := by
+    have h_eq : ({y | (x', y) ∈ JTS} : Set _) = ↑h_S_fin.toFinset := by
+      rw [h_S_fin.coe_toFinset]
+    rw [h_eq, sum_measureReal_singleton]
+  rw [h_μY_slice, Finset.mul_sum]
+  rw [show (∑ y : Fin n → β,
+              (if (x', y) ∈ JTS then P.real {x'} * μY.real {y} else 0))
+          = ∑ y ∈ (Finset.univ : Finset (Fin n → β)).filter (fun y => (x', y) ∈ JTS),
+              P.real {x'} * μY.real {y} from by rw [Finset.sum_filter]]
+  apply Finset.sum_congr ?_ (fun _ _ => rfl)
+  ext y; simp
 
 omit [DecidableEq α] [DecidableEq β] in
 /-- **(E2) Fubini swap.** For any two distinct message indices `m ≠ m'`, the
@@ -904,32 +1011,10 @@ private lemma random_codebook_E2_swap
   have h_sum_chan_set : ∀ x' : Fin n → α,
       (∑ x : Fin n → α, P.real {x} *
         (Measure.pi (fun i => W (x i))).real {y | (x', y) ∈ JTS})
-      = μY.real {y | (x', y) ∈ JTS} := by
-    intro x'
-    set S : Set (Fin n → β) := {y | (x', y) ∈ JTS}
-    have h_S_fin : S.Finite := Set.toFinite _
-    set Sfin : Finset (Fin n → β) := h_S_fin.toFinset
-    have h_S_coe : (Sfin : Set _) = S := h_S_fin.coe_toFinset
-    -- Pi(W∘x).real S = ∑_{y ∈ Sfin} ∏_i (W (x i)){y_i}.
-    have h_pi_W_real : ∀ x : Fin n → α,
-        (Measure.pi (fun i => W (x i))).real S = ∑ y ∈ Sfin, ∏ i, (W (x i)).real {y i} := by
-      intro x
-      have h1 : (Measure.pi (fun i => W (x i))).real S
-          = ∑ y ∈ Sfin, (Measure.pi (fun i => W (x i))).real {y} := by
-        rw [← h_S_coe, ← sum_measureReal_singleton (μ := Measure.pi (fun i => W (x i))) Sfin]
-      rw [h1]; exact Finset.sum_congr rfl (fun y _ => h_pi_W_singleton x y)
-    have h_μY_set : μY.real S = ∑ y ∈ Sfin, μY.real {y} := by
-      rw [← h_S_coe, ← sum_measureReal_singleton (μ := μY) Sfin]
-    calc (∑ x : Fin n → α, P.real {x} * (Measure.pi (fun i => W (x i))).real S)
-        = ∑ x : Fin n → α, P.real {x} * ∑ y ∈ Sfin, ∏ i, (W (x i)).real {y i} := by
-          refine Finset.sum_congr rfl (fun x _ => ?_); rw [h_pi_W_real x]
-      _ = ∑ x : Fin n → α, ∑ y ∈ Sfin, P.real {x} * ∏ i, (W (x i)).real {y i} := by
-          refine Finset.sum_congr rfl (fun x _ => ?_); rw [Finset.mul_sum]
-      _ = ∑ y ∈ Sfin, ∑ x : Fin n → α, P.real {x} * ∏ i, (W (x i)).real {y i} :=
-          Finset.sum_comm
-      _ = ∑ y ∈ Sfin, μY.real {y} := by
-          refine Finset.sum_congr rfl (fun y _ => h_chan_y_singleton y)
-      _ = μY.real S := h_μY_set.symm
+      = μY.real {y | (x', y) ∈ JTS} := fun x' =>
+    sum_chan_set_eq_μY P μY (fun x => Measure.pi (fun i => W (x i)))
+      (fun _ => inferInstance) (fun x y => ∏ i, (W (x i)).real {y i})
+      h_pi_W_singleton h_chan_y_singleton {y | (x', y) ∈ JTS} (Set.toFinite _)
   -- 2e: pull together ∑_x ∑_x' P{x}*P{x'}*Pi(W∘x){slice} = (μX.prod μY).real JTS.
   have h_rewrite :
       (∑ x : Fin n → α, ∑ x' : Fin n → α,
@@ -949,59 +1034,10 @@ private lemma random_codebook_E2_swap
     rw [h_inner, h_sum_chan_set x']
   rw [h_rewrite]
   -- 2f: ∑_x' P{x'} * μY{slice} = (μX.prod μY).real(JTS).
-  haveI : SFinite μX := by haveI : IsFiniteMeasure μX := inferInstance; infer_instance
-  haveI : SFinite μY := by haveI : IsFiniteMeasure μY := inferInstance; infer_instance
   have h_prod_eq : (μX.prod μY).real JTS = ∑ x' : Fin n → α,
       P.real {x'} * μY.real {y | (x', y) ∈ JTS} := by
-    -- Reduce by finite decomposition.
-    rw [hμX_eq]  -- μX = P
-    have h_JTS_fin : JTS.Finite := Set.toFinite _
-    set JTSfin : Finset _ := h_JTS_fin.toFinset
-    have h_JTS_coe : (JTSfin : Set _) = JTS := h_JTS_fin.coe_toFinset
-    have h_prod_sum : (P.prod μY).real JTS
-        = ∑ pq ∈ JTSfin, P.real {pq.1} * μY.real {pq.2} := by
-      have h_real_eq : (P.prod μY).real JTS = ∑ p ∈ JTSfin, (P.prod μY).real {p} := by
-        rw [← h_JTS_coe, ← sum_measureReal_singleton (μ := P.prod μY) JTSfin]
-      rw [h_real_eq]
-      refine Finset.sum_congr rfl (fun pq _ => ?_)
-      have h_sgl : ({pq} : Set ((Fin n → α) × (Fin n → β)))
-          = ({pq.1} : Set (Fin n → α)) ×ˢ ({pq.2} : Set (Fin n → β)) := by
-        ext ⟨a, b⟩; simp [Prod.ext_iff]
-      rw [h_sgl]; exact measureReal_prod_prod _ _
-    rw [h_prod_sum]
-    -- Convert ∑ pq ∈ JTSfin, F pq into ∑ x' : Fin n → α, ∑ y : Fin n → β, [pq ∈ JTSfin] * F pq.
-    have h_ind : (∑ pq ∈ JTSfin, P.real {pq.1} * μY.real {pq.2})
-        = ∑ x' : Fin n → α, ∑ y : Fin n → β,
-            (if (x', y) ∈ JTS then P.real {x'} * μY.real {y} else 0) := by
-      rw [show JTSfin = ((Finset.univ : Finset _) ×ˢ Finset.univ : Finset _).filter (· ∈ JTS) from ?_]
-      · rw [Finset.sum_filter]
-        rw [← Finset.sum_product']
-      · -- JTSfin = filter (· ∈ JTS) univ
-        ext pq
-        rw [Finset.mem_filter, Set.Finite.mem_toFinset]
-        constructor
-        · intro h; exact ⟨Finset.mem_product.mpr ⟨Finset.mem_univ _, Finset.mem_univ _⟩, h⟩
-        · intro h; exact h.2
-    rw [h_ind]
-    -- Inner: ∑_y if (x',y) ∈ JTS then P{x'}*μY{y} else 0 = P{x'} * μY.real {y | (x',y) ∈ JTS}.
-    refine Finset.sum_congr rfl (fun x' _ => ?_)
-    set S : Set (Fin n → β) := {y | (x', y) ∈ JTS}
-    have h_S_fin : S.Finite := Set.toFinite _
-    have h_μY_slice : μY.real {y | (x', y) ∈ JTS}
-        = ∑ y ∈ h_S_fin.toFinset, μY.real {y} := by
-      have h_eq : ({y | (x', y) ∈ JTS} : Set _) = ↑h_S_fin.toFinset := by
-        rw [h_S_fin.coe_toFinset]
-      rw [h_eq, sum_measureReal_singleton]
-    rw [h_μY_slice, Finset.mul_sum]
-    -- Goal: ∑_y if (x',y) ∈ JTS then P*μY{y} else 0 = ∑_{y ∈ S.toFinset} P*μY{y}.
-    -- Express LHS via filter, then bridge.
-    rw [show (∑ y : Fin n → β,
-                (if (x', y) ∈ JTS then P.real {x'} * μY.real {y} else 0))
-            = ∑ y ∈ (Finset.univ : Finset (Fin n → β)).filter (fun y => (x', y) ∈ JTS),
-                P.real {x'} * μY.real {y} from by rw [Finset.sum_filter]]
-    -- Now show two filtered sums are equal because filter set equals slice toFinset.
-    apply Finset.sum_congr ?_ (fun _ _ => rfl)
-    ext y; simp
+    rw [hμX_eq]
+    exact prod_real_eq_slice_sum P μY JTS
   rw [show (∑ x' : Fin n → α, P.real {x'} * μY.real {y | (x', y) ∈ JTS})
         = (μX.prod μY).real JTS from h_prod_eq.symm]
   exact jointlyTypicalSet_indep_prob_le μ Xs Ys hXs hYs hindepX hidentX hindepY hidentY
@@ -1074,6 +1110,17 @@ lemma sum_average_le_of_forall_le
     _ = Minv * ((M : ℝ) * B) := by
         rw [Finset.sum_const, nsmul_eq_mul, h_M_card]
     _ = B := by rw [← mul_assoc, hMinvM, one_mul]
+
+omit [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β] in
+private lemma averageErrorProb_toReal_eq
+    {M n : ℕ} (c : Code M n α β) (W : Channel α β) (hM : 0 < M)
+    (h_ne_top : ∀ m : Fin M, c.errorProbAt W m ≠ ∞) :
+    (c.averageErrorProb W).toReal
+      = ((M : ℝ))⁻¹ * ∑ m : Fin M, (c.errorProbAt W m).toReal := by
+  unfold Code.averageErrorProb
+  rw [if_neg hM.ne']
+  rw [ENNReal.toReal_mul, ENNReal.toReal_inv, ENNReal.toReal_natCast,
+      ENNReal.toReal_sum (fun m _ => h_ne_top m)]
 
 omit [DecidableEq α] [DecidableEq β] in
 /-- **Random codebook average (probabilistic-method form).** With each codeword
