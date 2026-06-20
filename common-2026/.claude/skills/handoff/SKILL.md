@@ -33,6 +33,18 @@ description: 現在のセッションの状態を `.claude/handoff.md` に書き
 - Active phase / 作業中の文脈: <一文>
 - 親子整合: <clean / 親 P と子 C が drift・子が新しい → 次セッションは親 DAG を子に合わせて直す>
 
+## Relay control（relay 連鎖のときだけ）
+
+relay スキルが連鎖を駆動しているときのみ入れる（relay が内容を渡す）。通常の handoff では省略。
+
+- Mode: ON | DONE | PAUSED | ABORTED
+- Goal: <完遂すべきゴール>
+- Leg: N / cap K
+- Predecessor: <session 名 or none>   # 後続が起動確認後に kill
+- Stop-on: completion | user-decision | no-progress×2 | leg-cap
+- Progress ledger:
+  - r1: <成果 / commit hash>
+
 ## Tasks
 
 (TaskList の出力を pending/in_progress のみ抽出。完了済みは除く)
