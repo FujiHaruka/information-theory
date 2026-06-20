@@ -263,6 +263,112 @@ theorem lz78_impl_rate_le_const [Nonempty α] (n : ℕ) (x : Fin n → α) :
       = (n : ℝ) * ((1 + 8 * b / Real.log 2) + (L + 2)) := by ring
   linarith [hterm1, hterm2]
 
+/-- **Phase 1 (gateway): per-symbol bit-rate decomposed into a
+`c·log c` term and an `o(1)` overhead** (deterministic, per-`n`).
+
+For `0 < n`, writing `c = (lz78PhraseStrings (List.ofFn x)).length` for the
+genuine distinct phrase count, the greedy bit-rate splits as
+
+```
+lz/n ≤ (c · log c) / (log 2 · n) + overhead(n, x)
+```
+
+where the overhead `overhead(n, x) = (c · log 2 + c · (log₂|α| + 2)) / (log 2 · n)`
+collects the `+1`-shift slack (`log(c+1) ≤ log 2 + log c`) and the alphabet /
+parent-index constant cost. The first term is the genuine combinatorial
+`c·log₂c/n` that the Ziv comparison connects to `blockLogAvg₂ = -log₂Pₙ/n`;
+the overhead is `o(1)` since `c = O(n/log n)` (`lz78PhraseStrings_count_isBigO`).
+
+This is the unit-coherent (`Nat.log 2 → Real.log / log 2`) restatement of the
+encoding-length expansion inside `lz78_impl_rate_le_const`; the bit-rate is
+left exactly as `c·log c/(log 2 · n) + overhead`, so the dominant term is
+available for the a.s.-eventual limsup comparison. -/
+theorem lz78_impl_bitrate_le_clogc_plus_overhead [Nonempty α]
+    (n : ℕ) (hn : 0 < n) (x : Fin n → α) :
+    (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ)
+      ≤ ((lz78PhraseStrings (List.ofFn x)).length : ℝ)
+            * Real.log ((lz78PhraseStrings (List.ofFn x)).length : ℝ)
+            / (Real.log 2 * (n : ℝ))
+        + (((lz78PhraseStrings (List.ofFn x)).length : ℝ) * Real.log 2
+            + ((lz78PhraseStrings (List.ofFn x)).length : ℝ)
+                * ((Nat.log 2 (Fintype.card α) : ℝ) + 2))
+            / (Real.log 2 * (n : ℝ)) := by
+  set c : ℕ := (lz78PhraseStrings (List.ofFn x)).length with hc
+  set L : ℝ := (Nat.log 2 (Fintype.card α) : ℝ) with hL
+  have hℓ2 : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  have hnR : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have hden_pos : (0 : ℝ) < Real.log 2 * (n : ℝ) := by positivity
+  have hcn : c ≤ n := lz78GreedyImplPhraseCount_ofFn_le n x
+  have hcR_nn : (0 : ℝ) ≤ (c : ℝ) := by positivity
+  -- Encoding length expanded via `bitLength_eq` (same as `lz78_impl_rate_le_const`).
+  have hlen : (lz78GreedyImplEncodingLength n x : ℝ)
+      = (c : ℝ) * ((Nat.log 2 (c + 1) : ℝ) + L + 2) := by
+    have hdef : lz78GreedyImplEncodingLength n x
+        = c * LZ78Phrase.bitLength c (Fintype.card α) := rfl
+    rw [hdef, LZ78Phrase.bitLength_eq]
+    push_cast [hL]
+    ring
+  rw [div_le_iff₀ hnR, hlen]
+  -- Bound `c · Nat.log 2 (c+1) · log 2 ≤ c · log(c+1) ≤ c·log 2 + c·log c`.
+  have hbridge : (c : ℝ) * (Nat.log 2 (c + 1) : ℝ) * Real.log 2
+      ≤ (c : ℝ) * Real.log (c + 1) := by
+    rw [mul_assoc]
+    apply mul_le_mul_of_nonneg_left _ hcR_nn
+    exact lz78_impl_natLog_mul_log_two_le (c + 1) |>.trans_eq (by push_cast; ring_nf)
+  -- `log(c+1) ≤ log 2 + log c` for `c ≥ 1`; for `c = 0`, `log 1 = 0 ≤ log 2`.
+  have hlogc1 : (c : ℝ) * Real.log (c + 1)
+      ≤ (c : ℝ) * Real.log 2 + (c : ℝ) * Real.log c := by
+    rcases Nat.eq_zero_or_pos c with hc0 | hcpos
+    · simp [hc0]
+    · have hcpos' : (1 : ℝ) ≤ (c : ℝ) := by exact_mod_cast hcpos
+      have hstep : Real.log ((c : ℝ) + 1) ≤ Real.log 2 + Real.log c := by
+        have h1 : Real.log ((c : ℝ) + 1) ≤ Real.log (2 * (c : ℝ)) := by
+          apply Real.log_le_log (by positivity); linarith
+        rwa [Real.log_mul (by norm_num) (by positivity)] at h1
+      calc (c : ℝ) * Real.log (c + 1)
+          ≤ (c : ℝ) * (Real.log 2 + Real.log c) :=
+            mul_le_mul_of_nonneg_left hstep hcR_nn
+        _ = (c : ℝ) * Real.log 2 + (c : ℝ) * Real.log c := by ring
+  -- The per-`c` term bound after clearing the common `log 2 · n` denominator.
+  have hkey : ((c : ℝ) * ((Nat.log 2 (c + 1) : ℝ) + L + 2)) * Real.log 2
+      ≤ (c : ℝ) * Real.log c + ((c : ℝ) * Real.log 2 + (c : ℝ) * (L + 2)) := by
+    have hexpand : ((c : ℝ) * ((Nat.log 2 (c + 1) : ℝ) + L + 2)) * Real.log 2
+        = (c : ℝ) * (Nat.log 2 (c + 1) : ℝ) * Real.log 2
+            + (c : ℝ) * (L + 2) * Real.log 2 := by ring
+    rw [hexpand]
+    have hLcost : (c : ℝ) * (L + 2) * Real.log 2 ≤ (c : ℝ) * (L + 2) := by
+      have hL2_nn : (0 : ℝ) ≤ (c : ℝ) * (L + 2) := by
+        have : (0 : ℝ) ≤ L + 2 := by rw [hL]; positivity
+        positivity
+      have hlog2_le1 : Real.log 2 ≤ 1 := by
+        calc Real.log 2 ≤ Real.log (Real.exp 1) :=
+              Real.log_le_log (by norm_num) (by
+                have : (2 : ℝ) ≤ Real.exp 1 := by
+                  have := Real.add_one_le_exp (1 : ℝ); linarith
+                linarith)
+          _ = 1 := Real.log_exp 1
+      calc (c : ℝ) * (L + 2) * Real.log 2
+          ≤ (c : ℝ) * (L + 2) * 1 :=
+            mul_le_mul_of_nonneg_left hlog2_le1 hL2_nn
+        _ = (c : ℝ) * (L + 2) := by ring
+    have h1 : (c : ℝ) * (Nat.log 2 (c + 1) : ℝ) * Real.log 2
+        ≤ (c : ℝ) * Real.log 2 + (c : ℝ) * Real.log c := hbridge.trans hlogc1
+    linarith
+  -- Combine the two RHS fractions and clear the `log 2 · n` denominator.
+  have hsum_frac :
+      (c : ℝ) * Real.log c / (Real.log 2 * (n : ℝ))
+        + ((c : ℝ) * Real.log 2 + (c : ℝ) * ((Nat.log 2 (Fintype.card α) : ℝ) + 2))
+            / (Real.log 2 * (n : ℝ))
+      = ((c : ℝ) * Real.log c + ((c : ℝ) * Real.log 2 + (c : ℝ) * (L + 2)))
+          / (Real.log 2 * (n : ℝ)) := by
+    rw [hL, ← add_div]
+  rw [hsum_frac, div_mul_eq_mul_div, le_div_iff₀ hden_pos]
+  -- Goal: `c·(Nat.log 2 (c+1) + L + 2) · (log 2 · n) ≤ (RHS_c) · n`.
+  -- Cancel `n` via `hkey` scaled by `n ≥ 0`.
+  have hnn : (0 : ℝ) ≤ (n : ℝ) := hnR.le
+  have hmul := mul_le_mul_of_nonneg_right hkey hnn
+  nlinarith [hmul]
+
 end EncodingLength
 
 /-! ## §2. `IsLZ78EncodingLengthBoundPassthrough` analogue -/
