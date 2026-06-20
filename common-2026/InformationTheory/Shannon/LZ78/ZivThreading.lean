@@ -314,6 +314,27 @@ lemma negLogQk_segment_eq_condQkState
   unfold condQkState
   rw [condQk_eq_prod_markovFactor μ p k N hkN ω s hs ℓ Z hZ, hf_def, ENNReal.toReal_prod]
 
+omit [DecidableEq α] in
+/-- **Per-phrase positivity.** When each per-position `markovFactor` along a phrase
+window `[N, N+ℓ)` is `> 0` (the `cond_singleton_pos_ae` regularity input), the
+per-`k`-state conditional product `condQkState μ p k s ℓ Z` of the phrase content is
+`> 0` (in `toReal`). It is the product of those positive factors
+(`condQk_eq_prod_markovFactor` + `ENNReal.toReal_prod`), needed to supply the `hpos`
+input of `condState_grouping_bound_mean`. -/
+lemma condQkState_pos_of_markovFactor_pos
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
+    (k N ℓ : ℕ) (hkN : k < N) (ω : Ω)
+    (s : Fin k → α) (Z : Fin ℓ → α)
+    (hs : s = windowState p k N ω)
+    (hZ : ∀ j : Fin ℓ, Z j = p.obs (N + j.val) ω)
+    (hposfac : ∀ m < ℓ,
+      0 < (markovFactor μ p k (N + m) (p.blockRV (N + m + 1) ω)).toReal) :
+    0 < (condQkState μ p k s ℓ Z).toReal := by
+  unfold condQkState
+  rw [condQk_eq_prod_markovFactor μ p k N hkN ω s hs ℓ Z hZ, ENNReal.toReal_prod]
+  refine Finset.prod_pos (fun m hm => ?_)
+  exact hposfac m (Finset.mem_range.mp hm)
+
 /-! ## Threading decomposition (genuine blocker: List↔Fin tiling) -/
 
 /-- **Telescoping of an `Ico` over a monotone partition.** For a monotone
@@ -564,13 +585,20 @@ lemma lz78_block_tiling
       bAbsorbed ≤ k + 1 ∧
       -- boundary-length bounds for the W2 limsup discharge (`Lmax` = longest phrase).
       n - e ≤ Lmax ∧
-      b ≤ k + Lmax := by
+      b ≤ k + Lmax ∧
+      -- slice/content correspondence: the `j`-th tiled slice of the block is the
+      -- `(bAbsorbed + j)`-th greedy phrase string (content half, carried for the
+      -- M3 `(k-state, length)` grouping reindex).
+      (∀ j : Fin c,
+        (lz78PhraseStrings (List.ofFn (fun i => p.blockRV n ω i)))[bAbsorbed + j.val]?
+          = some (((List.ofFn (fun i => p.blockRV n ω i)).drop (N j.castSucc)).take
+              (N j.succ - N j.castSucc))) := by
   filter_upwards [markovFactor_blockRV_pos_ae μ p k] with ω hpos
   obtain ⟨b, c, e, bAbsorbed, Lmax, N, hN0, hNlast, he_le, hmono, hstart, hcount, hbA,
-    htail, hbb⟩ := lz78_parse_tiling_positions (List.ofFn (fun i => p.blockRV n ω i)) k
+    htail, hbb, hslice⟩ := lz78_parse_tiling_positions (List.ofFn (fun i => p.blockRV n ω i)) k
   have hlen : (List.ofFn (fun i => p.blockRV n ω i)).length = n := List.length_ofFn
   refine ⟨b, c, e, bAbsorbed, Lmax, N, hN0, hNlast, ?_, hmono, hstart, ?_, hcount, hbA,
-    ?_, hbb⟩
+    ?_, hbb, hslice⟩
   · -- `e ≤ (List.ofFn …).length = n`.
     rwa [hlen] at he_le
   · -- per-position positivity from the a.s. asset.
@@ -600,6 +628,15 @@ lemma negLogQk_parse_threading
       (∀ j : Fin c, k < N j.castSucc) ∧
       c + bAbsorbed = (lz78PhraseStrings (List.ofFn (fun i => p.blockRV n ω i))).length ∧
       bAbsorbed ≤ k + 1 ∧ n - e ≤ Lmax ∧ b ≤ k + Lmax ∧
+      (∀ j : Fin c,
+        (lz78PhraseStrings (List.ofFn (fun i => p.blockRV n ω i)))[bAbsorbed + j.val]?
+          = some (((List.ofFn (fun i => p.blockRV n ω i)).drop (N j.castSucc)).take
+              (N j.succ - N j.castSucc))) ∧
+      -- per-phrase positivity (`condState_grouping_bound_mean`'s `hpos` input).
+      (∀ j : Fin c,
+        0 < (condQkState μ p k (windowState p k (N j.castSucc) ω)
+              (N j.succ - N j.castSucc)
+              (fun m => p.obs (N j.castSucc + m.val) ω)).toReal) ∧
       negLogQk μ p k n ω
         = (∑ i ∈ Finset.range b, pmfLogCondMarkov μ p k i ω)
           + (∑ j : Fin c,
@@ -610,9 +647,15 @@ lemma negLogQk_parse_threading
           + ∑ i ∈ Finset.Ico e n, pmfLogCondMarkov μ p k i ω := by
   filter_upwards [lz78_block_tiling μ p k n] with ω htiling
   obtain ⟨b, c, e, bAbsorbed, Lmax, N, hNb, hNe, hen, hmono, hstart, hposfac, hcount, hbA,
-    hne_tail, hb_bound⟩ := htiling
+    hne_tail, hb_bound, hslice⟩ := htiling
   refine ⟨b, c, e, bAbsorbed, Lmax, N, hNb, hNe, hen, hmono, hstart, hcount, hbA,
-    hne_tail, hb_bound, ?_⟩
-  exact negLogQk_phrase_threading μ p k n b c e ω N hNb hNe hen hmono hstart hposfac
+    hne_tail, hb_bound, hslice, ?_, ?_⟩
+  · -- per-phrase positivity from the per-position positivity `hposfac`.
+    intro j
+    refine condQkState_pos_of_markovFactor_pos μ p k (N j.castSucc) (N j.succ - N j.castSucc)
+      (hstart j) ω _ _ rfl (fun m => rfl) ?_
+    intro m hm
+    exact hposfac j m hm
+  · exact negLogQk_phrase_threading μ p k n b c e ω N hNb hNe hen hmono hstart hposfac
 
 end InformationTheory.Shannon
