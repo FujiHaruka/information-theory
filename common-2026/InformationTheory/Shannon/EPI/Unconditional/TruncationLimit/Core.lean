@@ -567,6 +567,87 @@ theorem condDistrib_ae_absolutelyContinuous_indep_add
   by_contra hne
   exact hxsub ⟨hx0 hxA, pos_iff_ne_zero.mpr hne⟩
 
+/-- Per-`z` Jensen a.e. bound feeding `negPart_negMulLog_conv_single_ne_top`:
+`max (φ (r z)) 0 ≤ ∫ v, max (φ (fW (z - v))) 0 ∂μV` a.e., where `φ t = t log t`,
+`fW = toReal ∘ μW.rnDeriv`, `r = toReal ∘ (μW ∗ μV).rnDeriv`. -/
+theorem convDensity_jensen_negMulLog_ae_bound
+    (μW μV : Measure ℝ) [IsFiniteMeasure μW] [IsProbabilityMeasure μV]
+    (hr_conv : (fun x => ((μW ∗ μV).rnDeriv volume x).toReal)
+      =ᵐ[volume] fun z => ∫ v, (μW.rnDeriv volume (z - v)).toReal ∂μV)
+    (hsec_Cq : ∀ᵐ z ∂volume,
+      Integrable (fun v => max ((μW.rnDeriv volume (z - v)).toReal
+        * Real.log ((μW.rnDeriv volume (z - v)).toReal)) 0) μV)
+    (hsec_fW : ∀ᵐ z ∂volume,
+      Integrable (fun v => (μW.rnDeriv volume (z - v)).toReal) μV) :
+    ∀ᵐ z ∂volume,
+      max (((μW ∗ μV).rnDeriv volume z).toReal * Real.log (((μW ∗ μV).rnDeriv volume z).toReal)) 0
+        ≤ ∫ v, max ((μW.rnDeriv volume (z - v)).toReal
+            * Real.log ((μW.rnDeriv volume (z - v)).toReal)) 0 ∂μV := by
+  set fW : ℝ → ℝ := fun x => (μW.rnDeriv volume x).toReal with hfW_def
+  set r : ℝ → ℝ := fun x => ((μW ∗ μV).rnDeriv volume x).toReal with hr_def
+  set φ : ℝ → ℝ := fun t => t * Real.log t with hφ_def
+  have hφ_eq : ∀ t, -(Real.negMulLog t) = φ t := by
+    intro t; show -(-t * Real.log t) = t * Real.log t; ring
+  have hfW_meas : Measurable fW := (Measure.measurable_rnDeriv _ _).ennreal_toReal
+  have hfW_nn : ∀ x, 0 ≤ fW x := fun _ => ENNReal.toReal_nonneg
+  have hφ_meas : Measurable φ := measurable_id.mul (Real.measurable_log.comp measurable_id)
+  set Cq : ℝ → ℝ := fun w => max (φ (fW w)) 0 with hCq_def
+  have hCq_nn : ∀ w, 0 ≤ Cq w := fun _ => le_max_right _ _
+  set G : ℝ → ℝ := fun z => max (φ (r z)) 0 with hG_def
+  filter_upwards [hr_conv, hsec_Cq, hsec_fW] with z hz hzCq hzfW
+  -- abbreviation `f v = fW (z - v)`.
+  set f : ℝ → ℝ := fun v => fW (z - v) with hf_def
+  have hf_nn : ∀ v, 0 ≤ f v := fun _ => hfW_nn _
+  -- `max (φ (f v)) 0 = Cq (z - v)` and `(φ∘f)⁻ = Cm (z - v)`.
+  have hCqf_int : Integrable (fun v => max (φ (f v)) 0) μV := hzCq
+  set Cm : ℝ → ℝ := fun v => max (-(φ (f v))) 0 with hCm_def
+  -- `Cm v = (negMulLog (f v))⁺ ≤ 1` pointwise (since `negMulLog t ≤ 1 - t ≤ 1` for `t ≥ 0`),
+  -- and constant `1` is integrable over the **probability** measure `μV`.
+  have hCm_meas : Measurable Cm :=
+    ((hφ_meas.comp (hfW_meas.comp (measurable_const.sub measurable_id))).neg).max measurable_const
+  have hCm_le_one : ∀ v, Cm v ≤ 1 := by
+    intro v
+    rw [hCm_def]
+    refine max_le ?_ (by norm_num)
+    have hnml : -(φ (f v)) = Real.negMulLog (f v) := by rw [← hφ_eq (f v), neg_neg]
+    rw [hnml]
+    calc Real.negMulLog (f v) ≤ 1 - f v := Real.negMulLog_le_one_sub_self (hf_nn v)
+      _ ≤ 1 := by have := hf_nn v; linarith
+  have hCm_int : Integrable Cm μV := by
+    refine Integrable.mono' (integrable_const (1 : ℝ)) hCm_meas.aestronglyMeasurable ?_
+    filter_upwards with v
+    rw [Real.norm_eq_abs, abs_of_nonneg (le_max_right _ _)]
+    exact hCm_le_one v
+  -- `φ ∘ f = (φ∘f)⁺ - (φ∘f)⁻`, hence integrable.
+  have hφf_eq : (fun v => φ (f v)) = fun v => max (φ (f v)) 0 - Cm v := by
+    funext v
+    show φ (f v) = max (φ (f v)) 0 - max (-(φ (f v))) 0
+    rcases le_or_gt 0 (φ (f v)) with h | h
+    · rw [max_eq_left h, max_eq_right (by linarith : -(φ (f v)) ≤ 0)]; ring
+    · rw [max_eq_right h.le, max_eq_left (by linarith : 0 ≤ -(φ (f v)))]; ring
+  have hf_int : Integrable f μV := hzfW
+  have hφf_int : Integrable (fun v => φ (f v)) μV := by
+    rw [hφf_eq]; exact hCqf_int.sub hCm_int
+  -- Jensen:  `φ (∫ f ∂μV) ≤ ∫ φ∘f ∂μV`.
+  have hjz : φ (∫ v, f v ∂μV) ≤ ∫ v, φ (f v) ∂μV := by
+    have := Real.convexOn_mul_log.map_integral_le
+      (μ := μV) (f := f) (g := φ)
+      Real.continuous_mul_log.continuousOn
+      isClosed_Ici
+      (Filter.Eventually.of_forall (fun v => hf_nn v))
+      hf_int hφf_int
+    simpa only [hφ_def] using this
+  -- `r z = ∫ v, f v ∂μV`  (the convolution-density identity `hz`).
+  have hrz_eq : r z = ∫ v, f v ∂μV := hz
+  have hstep1 : φ (r z) ≤ ∫ v, φ (f v) ∂μV := by rw [hrz_eq]; exact hjz
+  have hstep2 : (∫ v, φ (f v) ∂μV) ≤ ∫ v, max (φ (f v)) 0 ∂μV :=
+    integral_mono hφf_int hCqf_int (fun v => le_max_left _ _)
+  have hstep3 : (∫ v, max (φ (f v)) 0 ∂μV) = ∫ v, Cq (z - v) ∂μV := rfl
+  have hCq_int_z : (0 : ℝ) ≤ ∫ v, Cq (z - v) ∂μV :=
+    integral_nonneg (fun v => hCq_nn _)
+  show max (φ (r z)) 0 ≤ ∫ v, Cq (z - v) ∂μV
+  exact max_le (by rw [← hstep3]; exact le_trans hstep1 hstep2) hCq_int_z
+
 /-- Single-component negative-part finiteness of the sum law: `B(μW ∗ μV) < ⊤` from `B(μW) < ⊤`.
 The averaging is over the general probability measure `μV` (no absolute continuity on `μV` needed,
 so it works even when `V` is non-a.c.), bounding the W-marginal negative part `B(μW)`. The core is a
@@ -682,60 +763,8 @@ theorem negPart_negMulLog_conv_single_ne_top
   -- ============================================================================
   set G : ℝ → ℝ := fun z => max (φ (r z)) 0 with hG_def
   have hG_nn : ∀ z, 0 ≤ G z := fun _ => le_max_right _ _
-  have hjensen : ∀ᵐ z ∂volume, G z ≤ ∫ v, Cq (z - v) ∂μV := by
-    filter_upwards [hr_conv, hsec_Cq, hsec_fW] with z hz hzCq hzfW
-    -- abbreviation `f v = fW (z - v)`.
-    set f : ℝ → ℝ := fun v => fW (z - v) with hf_def
-    have hf_nn : ∀ v, 0 ≤ f v := fun _ => hfW_nn _
-    -- `max (φ (f v)) 0 = Cq (z - v)` and `(φ∘f)⁻ = Cm (z - v)`.
-    have hCqf_int : Integrable (fun v => max (φ (f v)) 0) μV := hzCq
-    set Cm : ℝ → ℝ := fun v => max (-(φ (f v))) 0 with hCm_def
-    -- `Cm v = (negMulLog (f v))⁺ ≤ 1` pointwise (since `negMulLog t ≤ 1 - t ≤ 1` for `t ≥ 0`),
-    -- and constant `1` is integrable over the **probability** measure `μV`.
-    have hCm_meas : Measurable Cm :=
-      ((hφ_meas.comp (hfW_meas.comp (measurable_const.sub measurable_id))).neg).max measurable_const
-    have hCm_le_one : ∀ v, Cm v ≤ 1 := by
-      intro v
-      rw [hCm_def]
-      refine max_le ?_ (by norm_num)
-      have hnml : -(φ (f v)) = Real.negMulLog (f v) := by rw [← hφ_eq (f v), neg_neg]
-      rw [hnml]
-      calc Real.negMulLog (f v) ≤ 1 - f v := Real.negMulLog_le_one_sub_self (hf_nn v)
-        _ ≤ 1 := by have := hf_nn v; linarith
-    have hCm_int : Integrable Cm μV := by
-      refine Integrable.mono' (integrable_const (1 : ℝ)) hCm_meas.aestronglyMeasurable ?_
-      filter_upwards with v
-      rw [Real.norm_eq_abs, abs_of_nonneg (le_max_right _ _)]
-      exact hCm_le_one v
-    -- `φ ∘ f = (φ∘f)⁺ - (φ∘f)⁻`, hence integrable.
-    have hφf_eq : (fun v => φ (f v)) = fun v => max (φ (f v)) 0 - Cm v := by
-      funext v
-      show φ (f v) = max (φ (f v)) 0 - max (-(φ (f v))) 0
-      rcases le_or_gt 0 (φ (f v)) with h | h
-      · rw [max_eq_left h, max_eq_right (by linarith : -(φ (f v)) ≤ 0)]; ring
-      · rw [max_eq_right h.le, max_eq_left (by linarith : 0 ≤ -(φ (f v)))]; ring
-    have hf_int : Integrable f μV := hzfW
-    have hφf_int : Integrable (fun v => φ (f v)) μV := by
-      rw [hφf_eq]; exact hCqf_int.sub hCm_int
-    -- Jensen:  `φ (∫ f ∂μV) ≤ ∫ φ∘f ∂μV`.
-    have hjz : φ (∫ v, f v ∂μV) ≤ ∫ v, φ (f v) ∂μV := by
-      have := Real.convexOn_mul_log.map_integral_le
-        (μ := μV) (f := f) (g := φ)
-        Real.continuous_mul_log.continuousOn
-        isClosed_Ici
-        (Filter.Eventually.of_forall (fun v => hf_nn v))
-        hf_int hφf_int
-      simpa only [hφ_def] using this
-    -- `r z = ∫ v, f v ∂μV`  (the convolution-density identity `hz`).
-    have hrz_eq : r z = ∫ v, f v ∂μV := hz
-    have hstep1 : φ (r z) ≤ ∫ v, φ (f v) ∂μV := by rw [hrz_eq]; exact hjz
-    have hstep2 : (∫ v, φ (f v) ∂μV) ≤ ∫ v, max (φ (f v)) 0 ∂μV :=
-      integral_mono hφf_int hCqf_int (fun v => le_max_left _ _)
-    have hstep3 : (∫ v, max (φ (f v)) 0 ∂μV) = ∫ v, Cq (z - v) ∂μV := rfl
-    have hCq_int_z : (0 : ℝ) ≤ ∫ v, Cq (z - v) ∂μV :=
-      integral_nonneg (fun v => hCq_nn _)
-    rw [hG_def]
-    exact max_le (by rw [← hstep3]; exact le_trans hstep1 hstep2) hCq_int_z
+  have hjensen : ∀ᵐ z ∂volume, G z ≤ ∫ v, Cq (z - v) ∂μV :=
+    convDensity_jensen_negMulLog_ae_bound μW μV hr_conv hsec_Cq hsec_fW
   -- ============================================================================
   -- assemble:  `∫⁻ ofReal(-(negMulLog r)) = ∫⁻ ofReal(φ r) ≤ ∫⁻ ofReal G ≤ 1·C < ⊤`.
   -- ============================================================================
