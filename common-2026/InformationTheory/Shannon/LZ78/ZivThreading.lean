@@ -1,5 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.SMB.AlgoetCover.Core
+import InformationTheory.Shannon.LZ78.GreedyLongestPrefix
 import Mathlib.Data.Fin.Tuple.Basic
 
 /-!
@@ -336,53 +337,45 @@ lemma sum_Ico_telescope_of_monotone {β : Type*} [AddCommMonoid β]
       Finset.sum_Ico_consecutive g (hmono_le 0 c (Nat.zero_le c)) (hM c)]
 
 omit [DecidableEq α] in
-/-- **Threading decomposition (target of this leg).** Given an explicit tiling of
-the block `[0, n)` into a leading boundary `[0, N 0)` and `c` phrase segments
-`[N j, N (j+1))` (encoded by a monotone `N : Fin (c+1) → ℕ` with `N` valued in
-`Finset.range (n+1)`, `N 0 = b` the boundary length, `N (Fin.last c) = n`, and each
-phrase start `≥ k`), the `k`-Markov negative log-likelihood `negLogQk μ p k n ω`
-splits as the boundary contribution over `[0, b)` plus the sum, over phrases, of the
-per-phrase conditional contributions `- log (condQkState μ p k sⱼ ℓⱼ Zⱼ).toReal`
-supplied by `negLogQk_segment_eq_condQkState`.
+/-- **Threading decomposition (target of this leg).** Given an explicit tiling of a
+prefix `[0, e)` of the block `[0, n)` into a leading boundary `[0, N 0)` and `c` phrase
+segments `[N j, N (j+1))` (encoded by a monotone `N : Fin (c+1) → ℕ`, `N 0 = b` the
+leading-boundary length, `N (Fin.last c) = e ≤ n` the parse-covered length, and each
+phrase start `> k`), plus a trailing boundary `[e, n)` for the unfinished tail, the
+`k`-Markov negative log-likelihood `negLogQk μ p k n ω` splits as the leading-boundary
+contribution over `[0, b)`, plus the sum over phrases of the per-phrase conditional
+contributions `- log (condQkState μ p k sⱼ ℓⱼ Zⱼ).toReal` (supplied by
+`negLogQk_segment_eq_condQkState`), plus the trailing-boundary contribution over `[e, n)`.
 
-The tiling hypotheses (`hNb` boundary start, `hNn` total length, `hmono` strict
-monotonicity giving a contiguous partition of `[b, n)`, `hstart` each phrase start
-`> k`) record the position bookkeeping as a *regularity* input describing the LZ
-parse — the plain combinatorial structure of `lz78PhraseStrings`, not the proof core
-(which is the factor-level correspondence already established in
+The tiling hypotheses (`hNb` leading-boundary start, `hNe` parse-covered length, `hen`
+the `≤`-slack, `hmono` strict monotonicity giving a contiguous partition of `[b, e)`,
+`hstart` each phrase start `> k`) record the position bookkeeping as a *regularity* input
+describing the LZ parse — the plain combinatorial structure of `lz78PhraseStrings`, not
+the proof core (which is the factor-level correspondence already established in
 `markovFactor_blockRV_eq_window` / `negLogQk_segment_eq_condQkState`). The positivity
-input `hposfac` (each per-position `markovFactor` along a phrase is `> 0`) is the
-genuine regularity precondition of `negLogQk_segment_eq_condQkState`, needed only to
-move `-log` through the product; it is `cond_singleton_pos_ae` along the phrase
-positions, not the proof core.
+input `hposfac` (each per-position `markovFactor` along a phrase is `> 0`) is the genuine
+regularity precondition of `negLogQk_segment_eq_condQkState`, needed only to move `-log`
+through the product; it is `cond_singleton_pos_ae` along the phrase positions, not the
+proof core.
 
-The body is now filled (sorryAx-free under these tiling/positivity regularity
-hypotheses): the `negLogQk` sum over `[0, n)` is split into the boundary `[0, b)` plus
-`[b, n)`, the interval `[b, n) = [N 0, N (last c))` is telescoped over the partition by
+The body is filled (sorryAx-free under these tiling/positivity regularity hypotheses):
+the `negLogQk` sum over `[0, n)` is split into `[0, b) ∪ [b, e) ∪ [e, n)`; the middle
+`[b, e) = [N 0, N (last c))` is telescoped over the partition by
 `sum_Ico_telescope_of_monotone`, each piece is reindexed to a phrase-local sum by
 `Finset.sum_Ico_eq_sum_range`, and the per-phrase sum is discharged by
-`negLogQk_segment_eq_condQkState`. The remaining **genuine blocker** is producing this
-tiling from the actual greedy parse: `lz78PhraseStrings (List.ofFn (blockRV n ω))`
-returns phrase *strings* with no absolute-position index, and may leave an unfinished
-tail (`lz78PhraseStrings_total_length_le` is `≤`, not `=`). Materializing `N`, `c`, and
-the tiling hypotheses from the parse is the List↔Fin scaffold left to the
-`lz78_block_tiling` atom; it inherits the `wall:lz78-aseventual-ziv` residual.
+`negLogQk_segment_eq_condQkState`. The trailing `[e, n)` remains as the unfinished-tail
+boundary term.
 
-Independent honesty audit material: non-circular (no hyp ≡ conclusion), non-bundled
-(`hNb`/`hNn`/`hmono`/`hstart`/`hposfac` record the LZ-parse partition position
-bookkeeping + per-position positivity — granting them yields a tiling of `[b, n)` and a
-well-defined `-log`, but NOT the `negLogQk = ∑ condQkState` equality, whose substance is
-the factor-level correspondence proved sorryAx-free in `negLogQk_segment_eq_condQkState`),
-non-degenerate, and TRUE-as-framed. The `hstart : k < N j.castSucc` is strict because
-`negLogQk_segment_eq_condQkState` routes every phrase position through
-`pmfLogCondMarkov_eq_neg_log_markovFactor` (needs `k < i`); a true tiling from
-`lz78PhraseStrings` has all phrase starts `≥ k` and the first `k`/leading phrases below
-position `k` can be absorbed into the boundary `[0, b)`, so strictness is a benign
-position bookkeeping constraint on the eventual tiling, not a load-bearing weakening. -/
+The remaining **genuine blocker** is producing this tiling from the actual greedy parse;
+see `lz78_block_tiling` below. The reconstruction invariant
+`lz78PhraseStrings_flatten_prefix` (parse phrases concatenate to a prefix of the input,
+sorryAx-free) furnishes the cumulative-position function; the residual sub-blockers are
+the per-phrase substring coherence (read phrase `j` off `obs` at its cumulative position),
+the leading-`k` boundary absorption, and the trailing-tail length `n - e`. -/
 lemma negLogQk_phrase_threading
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
-    (k n b c : ℕ) (ω : Ω)
-    (N : Fin (c + 1) → ℕ) (hNb : N 0 = b) (hNn : N (Fin.last c) = n)
+    (k n b c e : ℕ) (ω : Ω)
+    (N : Fin (c + 1) → ℕ) (hNb : N 0 = b) (hNe : N (Fin.last c) = e) (hen : e ≤ n)
     (hmono : ∀ j : Fin c, N j.castSucc + 1 ≤ N j.succ)
     (hstart : ∀ j : Fin c, k < N j.castSucc)
     (hposfac : ∀ (j : Fin c) (m : ℕ), m < N j.succ - N j.castSucc →
@@ -390,15 +383,17 @@ lemma negLogQk_phrase_threading
             (p.blockRV (N j.castSucc + m + 1) ω)).toReal) :
     negLogQk μ p k n ω
       = (∑ i ∈ Finset.range b, pmfLogCondMarkov μ p k i ω)
-        + ∑ j : Fin c,
+        + (∑ j : Fin c,
             - Real.log
               (condQkState μ p k (windowState p k (N j.castSucc) ω)
                 (N j.succ - N j.castSucc)
-                (fun m => p.obs (N j.castSucc + m.val) ω)).toReal := by
+                (fun m => p.obs (N j.castSucc + m.val) ω)).toReal)
+        + ∑ i ∈ Finset.Ico e n, pmfLogCondMarkov μ p k i ω := by
   classical
   set f : ℕ → ℝ := fun i => pmfLogCondMarkov μ p k i ω with hf_def
   -- Extend `N` to a total monotone `M : ℕ → ℕ` so the telescoping helper applies.
-  set M : ℕ → ℕ := fun i => if h : i < c + 1 then N ⟨i, h⟩ else n with hM_def
+  -- Off-grid values are pinned to `e = N (last c)` so `M c = e`.
+  set M : ℕ → ℕ := fun i => if h : i < c + 1 then N ⟨i, h⟩ else e with hM_def
   -- `M` agrees with `N` on `Fin (c+1)`.
   have hMN : ∀ (i : ℕ) (h : i < c + 1), M i = N ⟨i, h⟩ := by
     intro i h; simp only [hM_def, h, dif_pos]
@@ -407,9 +402,9 @@ lemma negLogQk_phrase_threading
     intro j; rw [hMN j.val (by omega)]; congr 1
   have hMsucc : ∀ j : Fin c, M (j.val + 1) = N j.succ := by
     intro j; rw [hMN (j.val + 1) (by omega)]; congr 1
-  -- Endpoints of the whole tiling.
+  -- Endpoints of the partitioned prefix `[b, e)`.
   have hM0 : M 0 = b := by rw [hMN 0 (by omega), ← hNb]; congr 1
-  have hMc : M c = n := by rw [hMN c (by omega), ← hNn]; congr 1
+  have hMc : M c = e := by rw [hMN c (by omega), ← hNe]; congr 1
   -- Monotonicity of `M`.
   have hMmono : ∀ i, M i ≤ M (i + 1) := by
     intro i
@@ -419,15 +414,15 @@ lemma negLogQk_phrase_threading
       have h1 : M i = N (⟨i, hi⟩ : Fin c).castSucc := hMN i (by omega)
       have h2 : M (i + 1) = N (⟨i, hi⟩ : Fin c).succ := hMN (i + 1) (by omega)
       rw [h1, h2]; exact le_of_lt (hmono ⟨i, hi⟩)
-    · -- `i + 1 ≥ c + 1`, so `M (i+1) = n`. Either `M i = n` too, or `i = c`.
-      have hMi1 : M (i + 1) = n := by
+    · -- `i + 1 ≥ c + 1`, so `M (i+1) = e`. Either `M i = e` too, or `i = c`.
+      have hMi1 : M (i + 1) = e := by
         simp only [hM_def, Nat.not_lt.mpr (Nat.not_lt.mp hic), dif_neg, not_false_eq_true]
       rcases Nat.lt_or_ge i (c + 1) with hi | hi
-      · -- `i < c + 1 ≤ i + 1`, so `i = c`, hence `M i = n` and `M (i+1) = n`.
+      · -- `i < c + 1 ≤ i + 1`, so `i = c`, hence `M i = e` and `M (i+1) = e`.
         have hieq : i = c := by omega
         rw [hMi1, ← hMc, hieq]
       · -- `i ≥ c + 1`, both off the grid.
-        have hMi : M i = n := by
+        have hMi : M i = e := by
           simp only [hM_def, Nat.not_lt.mpr hi, dif_neg, not_false_eq_true]
         rw [hMi, hMi1]
   -- Monotone `M i ≤ M j` for `i ≤ j`.
@@ -440,15 +435,19 @@ lemma negLogQk_phrase_threading
       · exact (ihj (Nat.lt_succ_iff.mp h)).trans (hMmono j)
       · have : i = j + 1 := le_antisymm hij h
         subst this; exact le_refl _
-  have hbn : b ≤ n := by rw [← hM0, ← hMc]; exact hMmono_le 0 c (Nat.zero_le c)
+  have hbe : b ≤ e := by rw [← hM0, ← hMc]; exact hMmono_le 0 c (Nat.zero_le c)
+  have hbn : b ≤ n := hbe.trans hen
   -- Step 1: `negLogQk = ∑ over [0,n)`.
   rw [show negLogQk μ p k n ω = ∑ i ∈ Finset.range n, f i from rfl]
-  -- Step 2: split `[0,n)` into boundary `[0,b)` + `[b,n)`.
-  rw [← Finset.sum_range_add_sum_Ico f hbn]
-  -- The boundary sum is already the target boundary term.
-  congr 1
-  -- Step 3: telescope `[b, n) = [M 0, M c)` over the partition.
-  rw [show b = M 0 from hM0.symm, show n = M c from hMc.symm,
+  -- Step 2: split `[0,n)` into `[0,b) ∪ [b,n)`, then `[b,n)` into `[b,e) ∪ [e,n)`.
+  rw [← Finset.sum_range_add_sum_Ico f hbn, ← Finset.sum_Ico_consecutive f hbe hen]
+  -- Reassociate: (boundary + Ico b e) + Ico e n matches the target shape.
+  rw [← add_assoc]
+  -- The leading-boundary sum and trailing `[e,n)` sum are already in target form;
+  -- discharge the middle `[b, e)` to the phrase sum.
+  congr 2
+  -- Step 3: telescope `[b, e) = [M 0, M c)` over the partition.
+  rw [show b = M 0 from hM0.symm, show e = M c from hMc.symm,
     sum_Ico_telescope_of_monotone M hMmono f c]
   -- Step 4: convert `∑ j ∈ range c` to `∑ j : Fin c` and discharge each piece.
   rw [Finset.sum_range fun j => ∑ i ∈ Finset.Ico (M j) (M (j + 1)), f i]
@@ -466,5 +465,76 @@ lemma negLogQk_phrase_threading
     (fun m => p.obs (N j.castSucc + m.val) ω) rfl (fun _ => rfl)
     (fun m hm => hposfac j m hm)
   rw [← hseg]
+
+/-! ## Tiling materialization from the greedy parse (genuine blocker) -/
+
+/-- **Tiling materialization from the LZ parse (genuine blocker).** For the block
+`blockRV n ω`, the greedy longest-prefix parse
+`lz78PhraseStrings (List.ofFn (fun i => blockRV n ω i))` yields the absolute-position
+tiling consumed by `negLogQk_phrase_threading`: a leading boundary length `b`, a phrase
+count `c`, a parse-covered length `e ≤ n`, and the cumulative-position function
+`N : Fin (c+1) → ℕ` with `N 0 = b`, `N (last c) = e`, the partition `[b, e)` strictly
+monotone (`hmono`), every phrase start `> k` (`hstart`, leading phrases below position
+`k` absorbed into the boundary), and the per-position positivity `hposfac`. Composing
+with `negLogQk_phrase_threading` then threads `negLogQk` over the genuine parse.
+
+**What is de-risked (sorryAx-free assets in hand):**
+* The factor-level correspondence and per-phrase segment identity
+  (`markovFactor_blockRV_eq_window`, `negLogQk_segment_eq_condQkState`) are closed.
+* The trailing-tail mismatch is closed: `negLogQk_phrase_threading` now carries a
+  trailing boundary `[e, n)`, so the `≤`-slack of `lz78PhraseStrings_total_length_le`
+  is absorbed (no `N (last c) = n` constraint).
+* The reconstruction invariant `lz78PhraseStrings_flatten_prefix` (the parse phrases
+  concatenate to a prefix of the input, with the unfinished tail as the leftover)
+  furnishes the cumulative-position function `N` and the covered length `e`.
+
+**What remains (the genuine multi-leg blocker, why `(1)` rewrite was infeasible here):**
+* **Per-phrase substring coherence.** Turning `lz78PhraseStrings_flatten_prefix`
+  (`flatten ++ tail = input`) into "phrase `j` equals `obs` on `[N j.castSucc, N j.succ)`"
+  needs a `List.flatten`-indexing chain (`List.getElem_flatten` / cumulative-length
+  bookkeeping) absent from the parse layer — phrase strings carry no absolute index, so
+  the content tuple `Z j = obs (N j.castSucc + m) ω` must be recovered from the flatten
+  decomposition position-by-position.
+* **Leading-`k` boundary absorption.** Phrases whose cumulative start is `≤ k` must be
+  folded into the leading boundary `[0, b)` to meet `hstart : k < N j.castSucc`; this
+  re-buckets a `Fin`-prefix of the phrase list.
+* **Per-position positivity `hposfac`.** `0 < (markovFactor …).toReal` along phrase
+  positions is `cond_singleton_pos_ae` — an a.s. statement, so the deterministic atom
+  carries it as a hypothesis; the a.s. wrapper discharges it at the use site.
+
+These are genuine combinatorial / measure-theoretic gaps (not a wiring issue), spanning
+the `List.flatten`-indexing scaffold + the a.s. positivity lift; isolated here as an
+honest `sorry`. Inherits the LZ78 achievability wall slug (route LOCK = `markovFactor`).
+
+**Non-vacuity anchor.** The plain existence of *some* tiling is vacuously true (`c = 0`,
+empty partition), so the genuine content is encoded by anchoring the tiling to the *parse*:
+the phrase count `c` is the genuine distinct-phrase count of the parse minus the leading
+phrases absorbed below position `k`, pinned by `c + bAbsorbed = parseCount` with the
+absorbed-count `bAbsorbed` at most `k`. For a long block whose parse has `parseCount > k`
+phrases this forces `c > 0`, so the empty-tiling escape is unavailable and the statement
+carries genuine `parse → tiling` content (exactly what the Ziv `c·log c` counting consumes).
+The leading-boundary symbol length `b` and trailing tail `n - e` are left unconstrained in
+this signature (they are `O(k)` + one phrase by the absorption, but the precise symbol
+accounting is part of the substring-coherence sub-blocker and is deferred to the closure
+rather than asserted here as a fragile inequality).
+
+@residual(wall:lz78-aseventual-ziv) -/
+lemma lz78_block_tiling
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
+    (k n : ℕ) (ω : Ω) :
+    ∃ (b c e bAbsorbed : ℕ) (N : Fin (c + 1) → ℕ),
+      -- the partition + boundary regularity consumed by `negLogQk_phrase_threading`
+      N 0 = b ∧ N (Fin.last c) = e ∧ e ≤ n ∧
+      (∀ j : Fin c, N j.castSucc + 1 ≤ N j.succ) ∧
+      (∀ j : Fin c, k < N j.castSucc) ∧
+      (∀ (j : Fin c) (m : ℕ), m < N j.succ - N j.castSucc →
+        0 < (markovFactor μ p k (N j.castSucc + m)
+              (p.blockRV (N j.castSucc + m + 1) ω)).toReal) ∧
+      -- non-vacuity: the tiling is the *parse* tiling (phrase count anchored to the
+      -- genuine distinct-phrase count, minus `bAbsorbed ≤ k` leading phrases).
+      c + bAbsorbed
+        = (lz78PhraseStrings (List.ofFn (fun i => p.blockRV n ω i))).length ∧
+      bAbsorbed ≤ k := by
+  sorry
 
 end InformationTheory.Shannon

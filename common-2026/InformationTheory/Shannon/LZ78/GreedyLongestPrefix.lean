@@ -195,6 +195,47 @@ theorem lz78PhraseStrings_total_length_le (input : List α) :
     (by omega)
   simpa using h
 
+/-- **Worker conserves the flattened string**: the concatenation
+(`List.flatten`) of all emitted phrase strings, followed by an unfinished
+tail, reproduces the symbols seen so far `dict.flatten ++ cur ++ input`. This
+is the genuine *reconstruction* invariant: the phrases tile a prefix of the
+input by concatenation at their cumulative lengths, with the leftover `tail`
+being the un-emitted suffix (the `≤`-slack of `lz78PhraseStrings_total_length_le`).
+Proved by induction on `fuel`, tracking the `cur` accumulator across the
+keep-growing / emit branches. -/
+theorem lz78PhraseStringsAux_flatten_conserve :
+    ∀ (fuel : ℕ) (dict : List (List α)) (cur input : List α),
+      input.length < fuel →
+      ∃ tail : List α,
+        (lz78PhraseStringsAux fuel dict cur input).flatten ++ tail
+          = dict.flatten ++ cur ++ input
+  | 0, _, _, _, h => by omega
+  | fuel + 1, dict, cur, [], _ => by
+      refine ⟨cur, ?_⟩; simp [lz78PhraseStringsAux]
+  | fuel + 1, dict, cur, s :: rest, h => by
+      unfold lz78PhraseStringsAux
+      by_cases hmem : (cur ++ [s]) ∈ dict
+      · simp only [hmem, if_true]
+        obtain ⟨tail, htail⟩ := lz78PhraseStringsAux_flatten_conserve fuel dict (cur ++ [s]) rest
+          (by simp only [List.length_cons] at h; omega)
+        exact ⟨tail, by rw [htail]; simp⟩
+      · simp only [hmem, if_false]
+        obtain ⟨tail, htail⟩ := lz78PhraseStringsAux_flatten_conserve fuel
+          (dict.concat (cur ++ [s])) [] rest
+          (by simp only [List.length_cons] at h; omega)
+        exact ⟨tail, by rw [htail]; simp [List.concat_eq_append, List.flatten_append]⟩
+
+/-- **Top-level reconstruction**: the concatenation of all emitted phrase
+strings, followed by an unfinished tail, equals the input. The cumulative
+phrase lengths therefore furnish an absolute-position tiling of a prefix of
+the input, with the tail accounting for the `≤`-slack. -/
+@[entry_point]
+theorem lz78PhraseStrings_flatten_prefix (input : List α) :
+    ∃ tail : List α, (lz78PhraseStrings input).flatten ++ tail = input := by
+  obtain ⟨tail, htail⟩ :=
+    lz78PhraseStringsAux_flatten_conserve (input.length + 1) [] [] input (by omega)
+  exact ⟨tail, by simpa using htail⟩
+
 end Length
 
 /-! ## §4. Phrase count bound -/
