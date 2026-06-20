@@ -5,17 +5,19 @@
 
 ## 進捗
 
-- [ ] M0 在庫確認（leg 3 在庫 `lz78-m3-inventory.md` 流用 + 差分）📋
-- [ ] Phase 1 — gateway atom（Step A 符号長 bit-rate 展開）📋
-- [ ] Phase 2 — length-grouping log-sum 核（genuine novel）📋
-- [ ] Phase 3 — overhead o(n) 制御 + limsup 合成 📋
-- [ ] Phase 4 — W2 discharge（`ziv_aseventual_le_blockLogAvg₂` の sorry を埋める）📋
+- [x] M0 在庫確認（leg 3 在庫 `lz78-m3-inventory.md` 流用 + 差分）✅
+- [x] Phase 1 — gateway atom（Step A 符号長 bit-rate 展開）✅ **GO**（`lz78_impl_bitrate_le_clogc_plus_overhead`、`GreedyParsingImpl.lean:286`、sorryAx-free、commit `7171707`）→ 単位整合は壁でないと確定
+- [ ] Phase 2 — length-grouping log-sum 核（genuine novel）🔄 **STALL at 2b**（可変深さ tree-node AEP、single in-session plan で閉じない genuine 壁 — 判断ログ #4）
+- [ ] Phase 3 — overhead o(n) 制御 + limsup 合成 📋（Phase 2b 未着なので未到達）
+- [ ] Phase 4 — W2 discharge（`ziv_aseventual_le_blockLogAvg₂` の sorry を埋める）📋（撤退ライン該当: `sorry` + `@residual(wall:lz78-aseventual-ziv)` 維持）
 
 ## ゴール
 
-W1（`shannon_mcmillan_breiman₂`、SMB-in-bits 橋）は leg 3 で **閉鎖済**（`@audit:ok`、sorryAx-free、`GreedyParsingImpl.lean:414`）。本サブ計画のゴールは残る **W2 = `ziv_aseventual_le_blockLogAvg₂`**（`GreedyParsingImpl.lean:451`、`@residual(wall:lz78-aseventual-ziv)`、唯一の active sorry）を **genuine に discharge** すること。W2 が閉じれば `lz78GreedyImpl_achievability_ae` が sorryAx-free 化され（合成本体は既に sorry-free）、**achievability 完遂**（headline に残るは M4 converse 壁のみ）。
+W1（`shannon_mcmillan_breiman₂`、SMB-in-bits 橋）は leg 3 で **閉鎖済**（`@audit:ok`、sorryAx-free、`GreedyParsingImpl.lean:520`）。本サブ計画のゴールは残る **W2 = `ziv_aseventual_le_blockLogAvg₂`**（`GreedyParsingImpl.lean:557`、`@residual(wall:lz78-aseventual-ziv)`、唯一の active sorry）を **genuine に discharge** すること。W2 が閉じれば `lz78GreedyImpl_achievability_ae` が sorryAx-free 化され（合成本体は既に sorry-free）、**achievability 完遂**（headline に残るは M4 converse 壁のみ）。
 
-W2 の verbatim signature（`GreedyParsingImpl.lean:451`、変更しない）:
+**leg 3 status（commit `7171707`）**: Phase 1 gateway = **GO**（`lz78_impl_bitrate_le_clogc_plus_overhead` sorryAx-free、単位整合は壁でない）。Phase 2 = **STALL at 2b**（`c·log c ≤ -log Pₙ + o(n)` 接続 = 可変深さ tree-node AEP、single in-session plan で閉じない genuine research-level 壁）→ W2 は `sorry` + `@residual` 維持（撤退ライン発動済、tier-2 honest、判断ログ #4）。M3 攻略は旧 `lz78-ziv-treenode-plan.md` T1-T5 路を resurrect する dedicated 複数 leg セッションへ。
+
+W2 の verbatim signature（`GreedyParsingImpl.lean:557`、変更しない）:
 
 ```lean
 theorem ziv_aseventual_le_blockLogAvg₂
@@ -38,7 +40,7 @@ theorem ziv_aseventual_le_blockLogAvg₂
 
 textbook の `c·log c ≤ -log Pₙ` を **そのまま def 化しない**。SMB が既に握っている結論形に target を合わせる。verbatim 確認済の握り 2 点:
 
-- **SMB-in-bits の握り**（W1、`@audit:ok`）: `∀ᵐ ω, Tendsto (fun n => blockLogAvg₂ μ p n ω) atTop (𝓝 entropyRate₂)`。`blockLogAvg₂ μ p n ω = blockLogAvg μ p n ω / Real.log 2`（`GreedyParsingImpl.lean:396` def）。
+- **SMB-in-bits の握り**（W1、`@audit:ok`）: `∀ᵐ ω, Tendsto (fun n => blockLogAvg₂ μ p n ω) atTop (𝓝 entropyRate₂)`。`blockLogAvg₂ μ p n ω = blockLogAvg μ p n ω / Real.log 2`（`GreedyParsingImpl.lean:502` def）。
 - **`-log Pₙ` の握り**（`ZivEntropyBridge.lean:126`、`@entry_point`、verbatim）: `(n : ℝ) * blockLogAvg μ p n ω = - Real.log ((μ.map (p.blockRV n)).real {p.blockRV n ω})`（`0 < n` 前提）。つまり `n · blockLogAvg = -log Pₙ`、`blockLogAvg = (-log Pₙ)/n`。
 
 W2 の RHS は既に `limsup blockLogAvg₂`（W1 の握る量そのもの）になっており、これが **正しい Mathlib-shape**。よって M2 が建てるべきは、**per-n の比較不等式**
@@ -70,9 +72,11 @@ genuine missing piece = `c·log c`（組合せ phrase count）を `-log Pₙ`（
 
 leg 3 在庫 `lz78-m3-inventory.md`（§A SMB / §B 符号長 / §C Ziv 核 / §D blockLogAvg・entropyRate / §E Mathlib limsup API）が **本サブ計画の素材として既に完備**。W1 は閉じたので §E の self-build 要素 1（SMB-in-bits）は不要。新規在庫不要、§C/§D/§E を本計画 Phase に割り当てるだけ。**proof-log: no**。
 
-### Phase 1 — gateway atom: Step A 符号長 bit-rate 展開（~30–60 行、低リスク）
+### Phase 1 — gateway atom: Step A 符号長 bit-rate 展開（✅ GO、leg 3）
 
-**proof-log: yes**（gateway の go/no-go 記録）。
+**結果（leg 3、commit `7171707`、sorryAx-free）**: `lz78_impl_bitrate_le_clogc_plus_overhead`（`GreedyParsingImpl.lean:286`、`[Nonempty α]` 追加）が **GO**。符号長 bit-rate を `c·log c/(log2·n) + overhead`（overhead = `(c·log 2 + c·(log₂|α|+2))/(log2·n)`）に分解、`lz78_impl_natLog_mul_log_two_le` + `bitLength_eq` で nat↔bit 単位整合を機械的に処理。**判定: nat↔bit 単位整合は壁でないと確定**（plumbing 級、想定外コスト無し）。proof-log 済。
+
+**proof-log: yes**（gateway の go/no-go 記録、済）。
 
 仮 signature（Mathlib-shape-driven、結論形を `blockLogAvg₂` 比較に噛ませる前段）:
 
@@ -90,7 +94,9 @@ theorem lz78_impl_bitrate_le_clogc_plus_overhead
 - **novel か**: いいえ。`lz78_impl_rate_le_const`（`GreedyParsingImpl.lean:171`）の中身の切り出し + bit 化。
 - **gateway 判定**: これが通れば nat↔bit 単位整合に想定外コストが無い = M2 tractable のシグナル。`+1` ずれ・`c=0` 退化に注意（`lz78_impl_rate_le_const` が既に処理済の手法を流用）。
 
-### Phase 2 — length-grouping log-sum 核（genuine novel、~120–250 行、medium–high）
+### Phase 2 — length-grouping log-sum 核（🔄 STALL at 2b、leg 3）
+
+**結果（leg 3、commit `7171707`）**: stall は 2a（length-grouped packing、既存 `total_length_ge_count_mul_log` あり）でも単位 plumbing でもなく、**2b の `c·log c ≤ -log Pₙ + o(n)` 接続そのもの**。これは **可変深さ tree-node AEP**（`c·log c ≤ ∑ⱼ -log qⱼ + o(n)`、D4 `∑qⱼ≈c` trap）を要し、codebase + Mathlib 不在。実装の決定的判定: 「Phase 2b の直接 `-log Pₙ` route は target としては real だが、`∑qⱼ` route と **同じ** genuine AEP で塞がれる。可変深さ tree-node AEP に shortcut は無い。**single in-session plan では閉じない genuine research-level scope**」。攻略 path = 旧 `lz78-ziv-treenode-plan.md` T1-T5（判断ログ #4）。**refutation（mandated）**: sorryAx-free 組合せ核 `c·log c ≤ 8·log(|α|+1)·n` は constant limsup `≤ 8·log(|α|+1)/log 2` しか出さず、低エントロピー源で `entropyRate₂` を超過 = genuine に不十分（壁確定、plumbing でない）。
 
 **proof-log: yes**（最大の難所、攻略記録必須）。
 
@@ -113,7 +119,7 @@ theorem lz78_impl_bitrate_le_clogc_plus_overhead
 
 **proof-log: no**。
 
-`ziv_aseventual_le_blockLogAvg₂`（`GreedyParsingImpl.lean:451`）の `sorry` を Phase 1–3 の合成で埋める。`∀ᵐ ω` の中で `0 < Pₙ`（a.s. regularity）+ `0 < n` を供給し、per-n 比較 → `limsup_le_limsup`。**signature は変えない**（statement は既に正しい Mathlib-shape）。完了後:
+`ziv_aseventual_le_blockLogAvg₂`（`GreedyParsingImpl.lean:557`）の `sorry` を Phase 1–3 の合成で埋める。`∀ᵐ ω` の中で `0 < Pₙ`（a.s. regularity）+ `0 < n` を供給し、per-n 比較 → `limsup_le_limsup`。**signature は変えない**（statement は既に正しい Mathlib-shape）。完了後:
 
 - consumer `lz78GreedyImpl_achievability_ae`（合成本体 sorry-free）が **sorryAx-free 化** → `#print axioms ziv_aseventual_le_blockLogAvg₂` / `lz78GreedyImpl_achievability_ae` = `[propext, Classical.choice, Quot.sound]` を機械確認（DoD proof done）。
 - docstring の `@residual(wall:lz78-aseventual-ziv)` を除去し `@audit:ok` 化（**独立 honesty audit を要請** — 新 sorry 消滅 + signature honest 確認）。
@@ -128,19 +134,20 @@ theorem lz78_impl_bitrate_le_clogc_plus_overhead
 
 各 Phase の抵触チェック: Phase 1（決定論的代数展開、limsup 対象を作るだけ、D1–D4 無関係）/ Phase 2a（length-grouped packing、D3 準拠）/ Phase 2b（`-log Pₙ` 直結、D4 素通り）/ Phase 3（overhead vanish = D2/D3 準拠）/ Phase 4（limsup 合成、per-block 形を作らない = D1 準拠）。
 
-## gateway atom 推奨
+## gateway atom 結果（leg 3、済）
 
-**Phase 1 = `lz78_impl_bitrate_le_clogc_plus_overhead`（Step A 符号長 bit-rate 展開）を最初に dispatch**（gateway-atom-first）。
+**Phase 1 = `lz78_impl_bitrate_le_clogc_plus_overhead`（Step A 符号長 bit-rate 展開）= GO**（gateway-atom-first、commit `7171707`、sorryAx-free）。
 
-- 通れば: nat↔bit 単位整合（`Nat.log 2` ↔ `Real.log/log 2`、`+1` ずれ、`c=0` 退化）に想定外コストが無い = **M2 全体 tractable**。続けて Phase 2（genuine 核）に進む。
-- stall すれば: 単位整合に想定外コスト = **真の壁の所在が Step A 単位整合（plumbing 級だが嵌る）** と pinpoint。Phase 2 の組合せ核に着手する前に gate で止まる（撤退判定へ）。
-- 根拠: Phase 1 は既存 `lz78_impl_rate_le_const`（`:171`）の中身切り出し + bit 化で、**最も risk が低く** かつ後続全 Phase の比較対象を供給する決定的 atom。在庫 `lz78-m3-inventory.md` の新規撤退ライン候補（「M3 着手 ~1 セッション以内に W1 + Step A が通らない」）の Step A に相当（W1 は既に閉じたので Step A 単独が gate）。
+- gateway 通過 → nat↔bit 単位整合（`Nat.log 2` ↔ `Real.log/log 2`、`+1` ずれ、`c=0` 退化）に想定外コスト無し = **単位整合は壁でない**と確定。
+- **しかし真の壁は単位整合の下流（Phase 2b）にあった**: gateway 通過後 Phase 2 に進むと、`c·log c ≤ -log Pₙ + o(n)` 接続（2b）が可変深さ tree-node AEP を要する genuine 壁で STALL（gateway-atom-first が「単位は OK だが combinatorial→conditional 橋が genuine 壁」を pinpoint した = atom-first の機能どおり）。Phase 1 の go/no-go gate は「単位整合の go」を意味し、「M2 全体 tractable」までは含意しなかった（leg 3 で combinatorial 核が真の壁と判明）。
 
-## 撤退ライン
+## 撤退ライン（leg 3 で該当・発動済）
 
-- **gateway（Phase 1）が ~1 セッション以内に通らない** → 単位整合に想定外コストのシグナル。**`ziv_aseventual_le_blockLogAvg₂` を `sorry` のまま据え置き、`@residual(wall:lz78-aseventual-ziv)` 維持**。
-- **Phase 2（length-grouping log-sum 核 2a/2b）が通らない** → genuine 組合せ核が想定より重い。同様に **`ziv_aseventual_le_blockLogAvg₂` を `sorry` + `@residual(wall:lz78-aseventual-ziv)` 維持**。
+- **発動済（leg 3）**: Phase 2b（`c·log c ≤ -log Pₙ + o(n)` 接続 = 可変深さ tree-node AEP）が **single in-session plan で閉じない genuine 壁** と判明 → **`ziv_aseventual_le_blockLogAvg₂` を `sorry` のまま据え置き、`@residual(wall:lz78-aseventual-ziv)` 維持**（達成済、tier-2 honest）。gateway（Phase 1）は GO だったので「gateway 不通」撤退条件には該当せず、撤退は **Phase 2b genuine 壁** 条件で発動。
+- **gateway（Phase 1）が ~1 セッション以内に通らない** → 単位整合に想定外コストのシグナル（leg 3 で **不該当**、gateway は GO）。
+- **Phase 2（length-grouping log-sum 核 2a/2b）が通らない** → genuine 組合せ核が想定より重い（leg 3 で **2b が該当**）。同様に **`ziv_aseventual_le_blockLogAvg₂` を `sorry` + `@residual(wall:lz78-aseventual-ziv)` 維持**。
 - 退出口は **sorry + `@residual` のみ**。hypothesis bundling（`*Hypothesis` / `*Reduction` predicate に core を抱えさせる）は **禁止**（CLAUDE.md「検証の誠実性」）。W2 の signature（`(μ, p)` + `[IsProbabilityMeasure μ]` regularity のみ）を変えない。Phase 2/3 で建てた個別 atom が sorry を持つなら、それぞれ `@residual(wall:lz78-aseventual-ziv)`（同壁）または新規 plan-slug を付与。
+- **次の攻略**: 旧 `lz78-ziv-treenode-plan.md` T1-T5 路を resurrect する dedicated 複数 leg セッション（M3、判断ログ #4）。本サブ計画（M2）の単位整合 gateway は閉じた。
 
 ## 規模・リスク総括
 
@@ -150,6 +157,7 @@ theorem lz78_impl_bitrate_le_clogc_plus_overhead
 
 ## 判断ログ
 
-1. **W1 は閉鎖済として扱う（在庫の W1 自前 closure 想定は obsolete）**: 在庫 `lz78-m3-inventory.md` は W1（SMB-in-bits 橋）を「自前 closure 対象（~30–60 行）」と書くが、leg 3 で `shannon_mcmillan_breiman₂`（`GreedyParsingImpl.lean:414`、`@audit:ok`、sorryAx-free）として **既に閉じた**。本サブ計画の対象は W2 のみ。
+1. **W1 は閉鎖済として扱う（在庫の W1 自前 closure 想定は obsolete）**: 在庫 `lz78-m3-inventory.md` は W1（SMB-in-bits 橋）を「自前 closure 対象（~30–60 行）」と書くが、leg 3 で `shannon_mcmillan_breiman₂`（`GreedyParsingImpl.lean:520`、`@audit:ok`、sorryAx-free）として **既に閉じた**。本サブ計画の対象は W2 のみ。
 2. **bit 単位で建てる（verbatim 確認の帰結）**: SMB-in-bits が既に `blockLogAvg₂`（bit）で握り、W2 RHS も `limsup blockLogAvg₂`。target を bit 形 `c·log₂c ≤ -log₂Pₙ + o(n)` で建て、nat 量（`lz78PhraseStrings_mul_log_le`、`blockLogAvg_eq_neg_log_blockProb`）は `/Real.log 2` で機械整合。`c·log c ≤ -log Pₙ`（nat）を直接 def 化しない（W2 の Mathlib-shape は bit）。
 3. **ripple ゼロ（機械確認）**: `ziv_aseventual_le_blockLogAvg₂` の direct consumer は 1 decl（`lz78GreedyImpl_achievability_ae`、同 file、statement 依存のみ）。W2 の body を埋めるだけで signature 不変 → 配線変更不要。`blockProb_neg_log_ge_sum`（D4）は 0 consumers（dead-start 裏取り）。
+4. **leg 3 stall pinpoint（gateway-atom-first、commit `7171707`、machine-verified）**: Phase 1 gateway = GO（`lz78_impl_bitrate_le_clogc_plus_overhead` sorryAx-free、単位整合は壁でないと確定）。stall は Phase 1（単位 plumbing）でも 2a（length-grouped packing、既存 `total_length_ge_count_mul_log`）でもなく、**Phase 2b の `c·log c ≤ -log Pₙ + o(n)` 接続そのもの = 可変深さ tree-node AEP**（`c·log c ≤ ∑ⱼ -log qⱼ + o(n)`、D4 `∑qⱼ≈c` trap）。直接 `-log Pₙ` route も `∑qⱼ` route と同じ genuine AEP で塞がれ、shortcut 無し → **single in-session plan で閉じない genuine research-level 壁**。撤退ライン Phase 2b 条件で発動、`@residual(wall:lz78-aseventual-ziv)` 維持（達成済）。**攻略 path**: 旧 `lz78-ziv-treenode-plan.md` T1-T5（tree-node sub-distribution → per-node 条件付き積 → `c log c ≤ ∑ -log q` log-sum → telescoping → `-log Pₙ` 接続）が obsolete でなく genuine な攻略 path（末尾の `-log Pₙ` 接続のみ r2 realign 後の SMB 接続形）。refutation（mandated）: `c·log c ≤ K·n` 単一組合せ核は constant limsup `≤ 8·log(|α|+1)/log 2` しか出さず低エントロピー源で `entropyRate₂` 超過 = 不十分（壁確定、plumbing でない）。`wall:lz78-aseventual-ziv` は不変（over-estimate でなく under-estimate 側 = roadmap r2 の「plumbing 級」誤認を是正、cause:false-statement 系の framing 訂正）。

@@ -46,13 +46,21 @@ SoT はコード側タグ (`@residual(wall:...)`)、本節は二次。
      `entropyRate₂` target で **TRUE-as-framed** (units fix で TRUE 化しただけで
      discharge ではない、a.s.-eventual Ziv/converse 内容は未証明)。ダミー parse 時代の
      defect は def-fix で、bit-vs-nat units defect は `entropyRate₂` 化で解消済。
-3. **`h_bdd_above` = 内製 discharge 済** (commit `a1ae108`、独立監査 all OK)。
+4. **M3 framing 訂正 (leg 3、2026-06-20、commit `7171707`)**: r2 realign が「可変深さ
+   AEP は SMB で蒸発」と書いたのは **source entropy limit (`-log₂Pₙ/n → H₂`) と LZ 固有の
+   combinatorial→conditional 橋 (`c·log₂c ≤ ∑ⱼ -log₂qⱼ + o(n)`、可変深さ tree-node AEP)
+   の混同による過小評価** だった。SMB が蒸発させたのは source-limit のみで、橋は genuine に
+   残る (gateway-atom-first probe で machine-disproof)。gateway (単位整合) は **plumbing で
+   closed** (`lz78_impl_bitrate_le_clogc_plus_overhead`、sorryAx-free)、残る genuine 核 =
+   可変深さ tree-node AEP は **research-level self-build** (旧 treenode plan T1-T5 路、§3 + §1 M3)。
+   壁 `wall:lz78-aseventual-ziv` は不変 (over-estimate でなく under-estimate 側 = plumbing 誤認を是正)。
+5. **`h_bdd_above` = 内製 discharge 済** (commit `a1ae108`、独立監査 all OK)。
    rate の `IsBoundedUnder (·≤·)` witness を proof body 内の `have` で構成し、
    **headline の仮説引数から除去した** (引数は `μ`, `p` のみ)。`O(1)` per-symbol
    rate 上界 `lz78_impl_rate_le_const` (sorryAx-free) を内製。当初 self-build 要と
    見ていた `Nat.log↔Real.log` bridge は Mathlib 既存 `Real.natLog_le_logb` で
    解決 (loogle Found 0 は誤判定、`docs/shannon/lz78-headline-bdd-discharge-plan.md`)。
-4. **完遂条件 = headline sorryAx-free** (M3 + M4 discharge で達成)。
+6. **完遂条件 = headline sorryAx-free** (M3 + M4 discharge で達成)。
 
 ### genuine 済の足場 (sorryAx 非依存・commit 済)
 
@@ -92,36 +100,51 @@ SoT はコード側タグ (`@residual(wall:...)`)、本節は二次。
 - **規模**: ~200–400 行。**リスク: 中** (正確な overhead 形・maxlen bound)。**必ず length-grouping で** (node-grouping は §2 D3 で偽)。
 
 ### M3 — a.s.-eventual Ziv 不等式を既証明 SMB に乗せる 【支配項・要・腰据え】
-> **2026-06-20 framing realign (feasibility gate 検証済)**: 旧 framing
-> (可変depth tree-node AEP + 固定深さ k AEP からの k↔n 連動 対角線/カットオフ
-> 持ち上げ + `Q_c^{tree}`) は **obsolete**。理由 = 無条件・sorry-free な
-> Shannon–McMillan–Breiman AEP `shannon_mcmillan_breiman`
+> **2026-06-20 framing realign (r2)**: 旧 framing の **エルゴード対角線持ち上げ**
+> (固定深さ k AEP `negLogQk_div_…` からの k↔n 連動 対角線/カットオフ) は **obsolete** —
+> 無条件・sorry-free な Shannon–McMillan–Breiman AEP `shannon_mcmillan_breiman`
 > (`SMB/AlgoetCover/Liminf.lean`、`∀ᵐ ω, blockLogAvg μ p n ω → entropyRate μ p`)
-> が既に存在し、`-log₂Pₙ/n → H₂` を free で供給する。可変深さ AEP 持ち上げ
-> sub-problem は SMB 完成で蒸発した (固定深さ k AEP `negLogQk_div_…` を M3 が
-> 直接対角線で持ち上げる必要は無い — それは SMB が内部で済ませている)。
-- **genuine な残ギャップ**: **決定論的 (または a.s.-eventual) な Ziv 不等式**
-  `c·log₂c ≤ -log₂Pₙ + o(n)` のみ。これを既証明 SMB に乗せる:
-  `c·log₂c ≤ -log₂Pₙ + o(n)` (Ziv 組合せ) → `-log₂Pₙ/n = blockLogAvg₂ → H₂`
-  (`shannon_mcmillan_breiman`、済) → `limsup (c·log₂c)/n ≤ H₂`。
-  ここで **`H₂` = `entropyRate₂`** (= SMB が `blockLogAvg₂` の極限として握る bit
-  entropy rate) で、これは壁補題 `lz78GreedyImpl_achievability_ae` の RHS
-  `entropyRate₂` そのもの。units fix 後の gateway atom (`c·log₂c/n` を
-  `blockLogAvg₂` に橋渡し → SMB で `entropyRate₂`) は壁 target と整合する。
+> が `-log₂Pₙ/n → H₂` を free で供給するため。
+>
+> **ただし r2 realign は過小評価だった (2026-06-20 leg 3 で machine-disproof)**:
+> SMB が蒸発させたのは **source entropy limit** (`-log₂Pₙ/n → H₂`、
+> `blockLogAvg₂ → entropyRate₂`) **だけ**。LZ 固有の **combinatorial→conditional 橋**
+> `c·log₂c ≤ ∑ⱼ -log₂qⱼ + o(n)` (= 可変深さ tree-node AEP、`∑qⱼ≈c` の D4 trap を含む)
+> は **蒸発していない** — gateway (Phase 1、closed) と SMB の **間** に genuine に残る。
+> r2 が「可変深さ AEP 持ち上げ sub-problem は SMB 完成で蒸発した」と書いたのは
+> **source-limit と combinatorial-bridge の混同** (§3 校正・判断ログ #1 参照)。
+- **genuine な残ギャップ (leg 3 で pinpoint)**: **a.s.-eventual な Ziv 不等式**
+  `c·log₂c ≤ -log₂Pₙ + o(n)` のうち、**combinatorial→conditional 橋**
+  `c·log₂c ≤ ∑ⱼ -log₂qⱼ + o(n)` (可変深さ tree-node AEP) が **single in-session plan
+  では閉じない genuine research-level scope**。leg 3 gateway-atom-first probe
+  (commit `7171707`) の決定的判定: Phase 2b の直接 `-log Pₙ` route も `∑qⱼ` route と
+  **同じ** genuine AEP で塞がれ、可変深さ tree-node AEP に shortcut は無い。
+  接続後は `-log₂Pₙ/n = blockLogAvg₂ → H₂ = entropyRate₂` (`shannon_mcmillan_breiman`、
+  済) で `limsup (c·log₂c)/n ≤ entropyRate₂` (= 壁補題 `lz78GreedyImpl_achievability_ae`
+  の RHS) に乗る。**gateway (単位整合) は plumbing で closed** (`lz78_impl_bitrate_le_clogc_plus_overhead`、
+  sorryAx-free)、**残る genuine 核は combinatorial→conditional 橋のみ**。
+- **refutation (leg 3、mandated)**: sorryAx-free 組合せ核
+  `c·log c ≤ 8·log(|α|+1)·n` (`lz78PhraseStrings_mul_log_le`) は **constant** limsup
+  `≤ 8·log(|α|+1)/log 2` しか出さず、低エントロピー源で `entropyRate₂` を超過 = genuine
+  に不十分。壁確定 (plumbing でない、単一 combinatorial bound では届かない)。
 - **D1/D2 (§2) との整合 — 真の難所**: この Ziv 不等式は **a.s.-eventual / limsup 形で
   なければならない**。per-block universal な clean 形 (`c·log c ≤ -log Pₙ` ∀n∀ω、D1)
   も overhead 形 (D2) も **machine-disproof で FALSE** (反例 `a^16`)。genuine な
-  statement は a.s.-eventual のみ。realign で「決定論的」と書く際もこの per-block
-  偽性と矛盾しないこと。crux は **o(n)/誤差項の制御** (distinctness → length-grouping
-  log-sum step、M2 の overhead 形) であって、エルゴード持ち上げではない。
+  statement は a.s.-eventual のみ。crux は **可変深さ tree-node AEP** (各深さで
+  conditional 積 `∏qⱼ` を取り `c·log c` に下から押さえる) であって、`shannon_mcmillan_breiman`
+  が握る source-limit ではない。
+- **攻略 path**: 旧 `lz78-ziv-treenode-plan.md` の T1-T5 (tree-node sub-distribution →
+  per-node 条件付き積 → `c log c ≤ ∑ -log q` log-sum → telescoping → `-log Pₙ` 接続) が
+  **obsolete でなく genuine な攻略 path** (ただし末尾で SMB に接続する点だけ r2 realign 後の形)。
 - **deliverable**: M2 (a.s.-eventual Ziv 組合せ) と合成して `lz78GreedyImpl_achievability_ae`
   (`@residual(wall:lz78-aseventual-ziv)`、`GreedyParsingImpl.lean`) の sorry を
   discharge → **achievability 完遂**。
-- **規模/リスク**: ~150–800 行、**medium–high**。**feared upstream ergodic addition は
-  不要** (旧 framing の「Mathlib 測度論基盤の新規追加 (upstream 級) が要る可能性」は
-  obsolete — エルゴード次元は plumbing 級、SMB が済ませている)。残るは標準教科書の
-  組合せ Ziv 不等式 self-build (NOT upstream-research, NOT 未解決) で、D1/D2 の
-  per-block 偽性回避 (a.s.-eventual / limsup 形に収める o(n) 制御) が crux。
+- **規模/リスク**: gateway (単位整合) は plumbing で **closed**。残る genuine 核 =
+  可変深さ tree-node AEP `c·log₂c ≤ ∑ⱼ -log₂qⱼ + o(n)` は **research-level self-build**
+  (旧 treenode plan T1-T5 路、**~数 leg**)。**feared upstream ergodic addition は不要**
+  (source-limit 次元は SMB が握る) だが、combinatorial→conditional 橋は単一 in-session plan
+  で閉じない genuine scope。`wall:lz78-aseventual-ziv` は正しい genuine 壁 (leg 3 で
+  over-estimate でなく **under-estimate 側 = plumbing 誤認** が判明 = 是正済)。
 
 ### M4 — converse Barron a.s. lift 【要・腰据え】
 - **内容**: M1 の期待値 converse `H_D ≤ E[lz]` を **a.s.-eventual pointwise `liminf lz/n ≥ entropyRate₂`** に持ち上げる (competitive-optimality / Barron 型エルゴード論法)。LZ78 は pointwise で Shannon code を破れるので **期待値↛pointwise**。
@@ -148,15 +171,16 @@ SoT はコード側タグ (`@residual(wall:...)`)、本節は二次。
 
 ## 3. 校正・規模・リスク総括
 
-- **校正 (2026-06-20 realign)**: 既存 SMB (`SMB/AlgoetCover/` = `Core.lean` + `Liminf.lean` + `TwoSidedRatio.lean`、計 ~2800 行) は **完成済・sorry-free** で、headline `shannon_mcmillan_breiman` が `-log₂Pₙ/n → H₂` を free で供給する。直感 **「LZ78 完遂 ≈ もう一本 SMB を建てる」は M3 については over-estimate** — SMB は既存で、M3 のエルゴード次元は plumbing 級 (SMB が握っている)。**M3 risk 再評価**: 残るは決定論的/a.s.-eventual Ziv 不等式 self-build (~150–800 行、medium–high risk) のみで、crux は D1/D2 の per-block 偽性回避 (a.s.-eventual / limsup 形に収める o(n) 制御)。**M4 (converse Barron a.s. lift) は別途** (SMB-lower + 期待値→a.s. lift、本 realign の対象外、依然 high risk)。
-- **総計**: おおよそ **~500–1500 行** (M3 が SMB 既存ぶん縮小、M4 + M2 + 配線が主)。
-- **数学的位置づけ**: LZ78 最適性は**標準教科書定理 (深い/未解決ではない)**。**M3 のエルゴード基盤は SMB 完成で済んでいる** ので、残りの難しさは「組合せ Ziv 不等式 self-build + 形式化が教科書の手抜きを露呈する」層に絞られる (M3 については「Mathlib に無いエルゴード定理を一から建てる」基盤コストはもう無い)。M4 は依然エルゴード a.s. lift が残る。
-- **進め方の推奨**: **M1 → M2** をまず確実に閉じて足場を固める (低〜中リスク、組合せ的)。**M3 = a.s.-eventual Ziv 不等式を既証明 SMB に乗せる接続** で、推奨 gateway atom = `(c·log₂c)/n` を `blockLogAvg₂` (SMB が握る `-log₂Pₙ/n`) に橋渡しする **self-contained 比較補題** (a.s.-eventual / limsup 形、`∑qⱼ≈c` の D4 trap 回避、length-grouping overhead で o(n) 制御)。これが go/no-go gate。**M4** (converse Barron a.s. lift) は独立した dedicated セッションで (依然 high risk、エルゴード a.s.)。
+- **校正 (2026-06-20 realign r2 → leg 3 訂正)**: 既存 SMB (`SMB/AlgoetCover/` = `Core.lean` + `Liminf.lean` + `TwoSidedRatio.lean`、計 ~2800 行) は **完成済・sorry-free** で、headline `shannon_mcmillan_breiman` が `-log₂Pₙ/n → H₂` を free で供給する。**ただし SMB が握るのは source entropy limit (`-log₂Pₙ/n → H₂`、`blockLogAvg₂ → entropyRate₂`) だけ** — r2 realign が「M3 のエルゴード次元は plumbing 級、SMB が握っている」と書いたのは **source-limit と LZ 固有の combinatorial→conditional 橋 (`c·log₂c ≤ ∑ⱼ -log₂qⱼ + o(n)`、可変深さ tree-node AEP) の混同で、後者を過大に蒸発させた過小評価** (leg 3 gateway-atom-first probe `7171707` で machine-disproof)。**M3 risk 再評価 (leg 3)**: gateway (単位整合、`lz78_impl_bitrate_le_clogc_plus_overhead`) は **plumbing で closed (sorryAx-free)**。残る genuine 核 = 可変深さ tree-node AEP `c·log₂c ≤ ∑ⱼ -log₂qⱼ + o(n)` は **research-level self-build** (single in-session plan で閉じない、旧 treenode plan T1-T5 路、~数 leg)。`c·log c ≤ K·n` 単一組合せ bound は constant limsup しか出さず低エントロピー源で不十分 (refutation 済)。**M4 (converse Barron a.s. lift) は別途** (SMB-lower + 期待値→a.s. lift、本 realign の対象外、依然 high risk)。
+- **総計**: おおよそ **~500–1500 行** (M3 = 可変深さ tree-node AEP 数 leg + M4 + M2 + 配線が主)。
+- **数学的位置づけ**: LZ78 最適性は**標準教科書定理 (深い/未解決ではない)**。**SMB が source entropy limit を握っている** ので残りの難しさは「組合せ Ziv 不等式 self-build + 形式化が教科書の手抜きを露呈する」層に絞られるが、M3 の genuine 核 (combinatorial→conditional 橋 = 可変深さ tree-node AEP) は **plumbing でなく research-level self-build** (旧 treenode plan T1-T5、leg 3 で plumbing 誤認を是正)。M4 は依然エルゴード a.s. lift が残る。
+- **進め方の推奨**: **M1 → M2** をまず確実に閉じて足場を固める (低〜中リスク、組合せ的)。**M2 gateway (Phase 1) は leg 3 で GO (closed)**、続く **M2 Phase 2b で genuine 壁 (可変深さ tree-node AEP) に到達 = STALL** (sub-plan 参照)。M3 攻略は旧 `lz78-ziv-treenode-plan.md` T1-T5 路 (tree-node sub-distribution → per-node 条件付き積 → log-sum → telescoping → `-log Pₙ` 接続、末尾のみ SMB 接続に realign) を resurrect する dedicated 複数 leg セッションで。**M4** (converse Barron a.s. lift) は独立した dedicated セッションで (依然 high risk、エルゴード a.s.)。
 
 ---
 
 ## 4. cross-link
-- **sub-plan**: [`lz78-m2-plan.md`](lz78-m2-plan.md) — M2 length-grouping Ziv 組合せ核 = W2 `ziv_aseventual_le_blockLogAvg₂` (`@residual(wall:lz78-aseventual-ziv)`) discharge 計画 (W1 SMB-in-bits は leg 3 で閉鎖済、本サブ計画は achievability の残壁 W2 を担当)。
+- **sub-plan**: [`lz78-m2-plan.md`](lz78-m2-plan.md) — M2 length-grouping Ziv 組合せ核 = W2 `ziv_aseventual_le_blockLogAvg₂` (`@residual(wall:lz78-aseventual-ziv)`) discharge 計画。W1 SMB-in-bits は leg 3 で閉鎖済。**leg 3 status: Phase 1 gateway = GO (`lz78_impl_bitrate_le_clogc_plus_overhead` sorryAx-free、commit `7171707`)、Phase 2 = STALL at 2b** (可変深さ tree-node AEP、single in-session plan で閉じない genuine research-level 壁)。W2 は `sorry` + `@residual` 維持 (撤退ライン該当、達成済)。
 - main: `docs/textbook-roadmap.md` 判断ログ #6 (現行サマリ、~35 エージェントの経緯・全 disproof・honest frontier の記録は `git log -- docs/textbook-roadmap.md` の 2026-05-26 整理前 commit に旧 #17–#26 として残置)
-- 既存 plan (本 roadmap が incremental master として統合): `lz78-completion-plan.md`, `lz78-treeinduced-aep-plan.md`, `lz78-aseventual-achievability-plan.md`, `lz78-ziv-treenode-plan.md`, `lz78-blockrv-refactor-plan.md` + `-inventory.md`
+- **M3 攻略 path (leg 3 で resurrect)**: [`lz78-ziv-treenode-plan.md`](lz78-ziv-treenode-plan.md) T1-T5 (tree-node sub-distribution → per-node 条件付き積 → `c log c ≤ ∑ -log q` log-sum → telescoping → `-log Pₙ` 接続)。obsolete でなく M3 の genuine 核 (可変深さ tree-node AEP) の攻略 path (末尾の `-log Pₙ` 接続のみ r2 realign 後の SMB 接続形)。
+- 既存 plan (本 roadmap が incremental master として統合): `lz78-completion-plan.md`, `lz78-treeinduced-aep-plan.md`, `lz78-aseventual-achievability-plan.md`, `lz78-blockrv-refactor-plan.md` + `-inventory.md`
 - 完遂判定: `GreedyParsingImpl.lean` の wall sorry lemma 2本 (M3/M4) が discharge され、headline `lz78_asymptotic_optimality_with_greedy_impl` が `#print axioms` で sorryAx 非依存になった時点 = 標準B 完遂 (`h_bdd_above` 内製化は commit `a1ae108` で済、完遂条件から除外)。
