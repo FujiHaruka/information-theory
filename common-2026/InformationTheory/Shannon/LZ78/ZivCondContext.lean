@@ -1,5 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.LZ78.ZivEntropyBridge
+import InformationTheory.Shannon.Stationary.Kernel
 import Mathlib.MeasureTheory.Measure.Real
 import Mathlib.MeasureTheory.Measure.Typeclasses.Probability
 
@@ -221,5 +222,81 @@ theorem condContext_card_mul_log_le_sum_neg_log
       ≤ (S.card : ℝ) * 1 :=
         mul_le_mul_of_nonneg_left hPsum (Nat.cast_nonneg _)
     _ = (S.card : ℝ) := mul_one _
+
+/-! ## Step 4 — symbol-by-symbol chain rule (conditional route reaches -log Pₙ) -/
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- Pointwise block-extension: `blockRV (m+1) ω = Fin.snoc (blockRV m ω) (obs m ω)`. -/
+theorem blockRV_succ_eq_snoc (p : StationaryProcess μ α) (m : ℕ) (ω : Ω) :
+    p.blockRV (m + 1) ω = Fin.snoc (p.blockRV m ω) (p.obs m ω) := by
+  funext i
+  refine Fin.lastCases ?_ ?_ i
+  · simp only [StationaryProcess.blockRV, Fin.snoc_last, Fin.val_last]
+  · intro j
+    simp only [StationaryProcess.blockRV, Fin.snoc_castSucc, Fin.val_castSucc]
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- Per-step identity: the node-context conditional along the path equals the
+ratio of successive prefix block probabilities,
+`condContextProb μ p (blockRV m ω) (obs m ω) = prefixBlockProb (m+1) / prefixBlockProb m`. -/
+theorem condContextProb_path_eq_ratio
+    (μ : Measure Ω) (p : StationaryProcess μ α) (m : ℕ) (ω : Ω) :
+    condContextProb μ p (p.blockRV m ω) (p.obs m ω)
+      = prefixBlockProb μ p ω (m + 1) / prefixBlockProb μ p ω m := by
+  unfold condContextProb prefixBlockProb
+  rw [← blockRV_succ_eq_snoc p m ω]
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- **Symbol-by-symbol chain-rule telescoping** (genuine, equality): the per-path
+block probability factorizes as the product of node-context conditionals along
+the path, given positivity of the intermediate prefix masses. -/
+theorem prod_condContextProb_path_telescope
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
+    (n : ℕ) (ω : Ω)
+    (hpos : ∀ m ≤ n, prefixBlockProb μ p ω m ≠ 0) :
+    (∏ m ∈ Finset.range n, condContextProb μ p (p.blockRV m ω) (p.obs m ω))
+      = prefixBlockProb μ p ω n := by
+  induction n with
+  | zero => simp [prefixBlockProb_zero]
+  | succ k ih =>
+      have hk : ∀ m ≤ k, prefixBlockProb μ p ω m ≠ 0 :=
+        fun m hm => hpos m (Nat.le_succ_of_le hm)
+      rw [Finset.prod_range_succ, ih hk, condContextProb_path_eq_ratio μ p k ω,
+        mul_div_cancel₀ _ (hpos k (Nat.le_succ k))]
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- **Conditional chain rule reaches `-log Pₙ`** (genuine, equality): unlike the
+marginal route (direction-mismatched, D8), the node-context conditional sum
+reaches the block neg-log-probability exactly,
+`∑_{m<n} -log q_cond = -log Pₙ{block ω}`. -/
+theorem sum_neg_log_condContextProb_path_eq
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
+    (n : ℕ) (ω : Ω)
+    (hpos : ∀ m ≤ n, prefixBlockProb μ p ω m ≠ 0) :
+    (∑ m ∈ Finset.range n,
+        - Real.log (condContextProb μ p (p.blockRV m ω) (p.obs m ω)))
+      = - Real.log ((μ.map (p.blockRV n)).real {p.blockRV n ω}) := by
+  have hne : ∀ m ∈ Finset.range n,
+      condContextProb μ p (p.blockRV m ω) (p.obs m ω) ≠ 0 := by
+    intro m hm
+    have hmn : m < n := Finset.mem_range.mp hm
+    rw [condContextProb_path_eq_ratio μ p m ω]
+    exact div_ne_zero (hpos (m + 1) hmn) (hpos m hmn.le)
+  rw [Finset.sum_neg_distrib, ← Real.log_prod hne,
+    prod_condContextProb_path_telescope μ p n ω hpos, prefixBlockProb]
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- **Conditional chain rule = `n · blockLogAvg`** (genuine, equality): the
+SMB-controlled quantity. Combined with SMB (`blockLogAvg → entropyRate`), this
+connects the conditional-context route to the source entropy limit. -/
+theorem sum_neg_log_condContextProb_path_eq_blockLogAvg
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
+    {n : ℕ} (hn : 0 < n) (ω : Ω)
+    (hpos : ∀ m ≤ n, prefixBlockProb μ p ω m ≠ 0) :
+    (∑ m ∈ Finset.range n,
+        - Real.log (condContextProb μ p (p.blockRV m ω) (p.obs m ω)))
+      = (n : ℝ) * blockLogAvg μ p n ω := by
+  rw [sum_neg_log_condContextProb_path_eq μ p n ω hpos,
+    ← blockLogAvg_eq_neg_log_blockProb μ p hn ω]
 
 end InformationTheory.Shannon
