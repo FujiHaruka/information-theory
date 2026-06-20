@@ -372,6 +372,16 @@ theorem channelCoding_E2_lt_of_rate
     rw [← h_exp_eq]; exact h_mul
   exact lt_of_le_of_lt h_upper_le (hN n hn)
 
+private theorem badEvt_toReal_le_of_good_bound
+    (μ : Measure Ω) [IsProbabilityMeasure μ] {s : Set Ω} (hs : MeasurableSet s)
+    {η3 : ℝ} (hgood : 1 - η3 ≤ (μ s).toReal) : (μ sᶜ).toReal ≤ η3 := by
+  have h_le_one : μ s ≤ 1 := prob_le_one
+  have h_compl_eq : (μ sᶜ).toReal = 1 - (μ s).toReal := by
+    rw [measure_compl hs (measure_ne_top μ _), measure_univ,
+        ENNReal.toReal_sub_of_le h_le_one (by simp)]
+    simp
+  rw [h_compl_eq]; linarith
+
 omit [DecidableEq α] in
 /-- **Joint AEP — closed-form rate**: for any `ε, η > 0`, there exists `N` such that for all
 `n ≥ N`, the jointly typical set has μ-measure ≥ `1 - η`. The bound `N` is built from three
@@ -477,35 +487,13 @@ theorem jointlyTypicalSet_prob_ge_of_rate
       _ ≤ (μ badX + μ badY) + μ badZ := by
           gcongr; exact measure_union_le badX badY
       _ = μ badX + μ badY + μ badZ := by ring
-  -- Each single-axis bad has toReal ≤ η / 3.
-  -- From hN_X: 1 - η/3 ≤ (μ goodX).toReal, with (μ badX).toReal = 1 - (μ goodX).toReal.
-  have h_goodX_le_one : μ goodX ≤ 1 := prob_le_one
-  have h_goodY_le_one : μ goodY ≤ 1 := prob_le_one
-  have h_goodZ_le_one : μ goodZ ≤ 1 := prob_le_one
-  have h_badX_toReal_eq : (μ badX).toReal = 1 - (μ goodX).toReal := by
-    rw [show badX = goodXᶜ from rfl,
-        measure_compl h_meas_goodX (measure_ne_top μ _), measure_univ,
-        ENNReal.toReal_sub_of_le h_goodX_le_one (by simp)]
-    simp
-  have h_badY_toReal_eq : (μ badY).toReal = 1 - (μ goodY).toReal := by
-    rw [show badY = goodYᶜ from rfl,
-        measure_compl h_meas_goodY (measure_ne_top μ _), measure_univ,
-        ENNReal.toReal_sub_of_le h_goodY_le_one (by simp)]
-    simp
-  have h_badZ_toReal_eq : (μ badZ).toReal = 1 - (μ goodZ).toReal := by
-    rw [show badZ = goodZᶜ from rfl,
-        measure_compl h_meas_goodZ (measure_ne_top μ _), measure_univ,
-        ENNReal.toReal_sub_of_le h_goodZ_le_one (by simp)]
-    simp
-  have h_X_bound : (μ badX).toReal ≤ η / 3 := by
-    have := hN_X n hn_N_X
-    rw [h_badX_toReal_eq]; linarith
-  have h_Y_bound : (μ badY).toReal ≤ η / 3 := by
-    have := hN_Y n hn_N_Y
-    rw [h_badY_toReal_eq]; linarith
-  have h_Z_bound : (μ badZ).toReal ≤ η / 3 := by
-    have := hN_Z n hn_N_Z
-    rw [h_badZ_toReal_eq]; linarith
+  -- Each single-axis bad has toReal ≤ η / 3 (helper: (μ goodᶜ).toReal ≤ η/3 from rate bound).
+  have h_X_bound : (μ badX).toReal ≤ η / 3 :=
+    badEvt_toReal_le_of_good_bound μ h_meas_goodX (hN_X n hn_N_X)
+  have h_Y_bound : (μ badY).toReal ≤ η / 3 :=
+    badEvt_toReal_le_of_good_bound μ h_meas_goodY (hN_Y n hn_N_Y)
+  have h_Z_bound : (μ badZ).toReal ≤ η / 3 :=
+    badEvt_toReal_le_of_good_bound μ h_meas_goodZ (hN_Z n hn_N_Z)
   -- Convert the ENNReal bound to a Real bound on toReal.
   have h_badX_ne_top : μ badX ≠ ∞ := measure_ne_top μ _
   have h_badY_ne_top : μ badY ≠ ∞ := measure_ne_top μ _
