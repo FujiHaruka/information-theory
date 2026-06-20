@@ -292,11 +292,23 @@ section EncodingLength
 
 variable {α : Type*} [Fintype α] [DecidableEq α]
 
-/-- **Genuine greedy encoding length of a finite tuple**: parse
-`List.ofFn x` with the real dictionary greedy parse and
-sum its phrase bit-lengths via the existing `LZ78Parsing.encodingLength`.
-This plugs into the parent `lz78EncodingLength : ∀ n, (Fin n → α) → ℕ`
-parameter of `lz78_asymptotic_optimality`. -/
+/-- **Greedy encoding length of a finite tuple**: parse `List.ofFn x` with
+`lz78GreedyParse` and sum its phrase bit-lengths via the existing
+`LZ78Parsing.encodingLength`. This plugs into the parent
+`lz78EncodingLength : ∀ n, (Fin n → α) → ℕ` parameter of
+`lz78_asymptotic_optimality`.
+
+AUDIT 2026-06-20: the "genuine longest-prefix-match greedy parse" claim is
+**false**. `lz78GreedyParseAux` consumes exactly ONE symbol per step and
+matches only the single-symbol list `[s]` against the dictionary — it is a
+one-symbol-per-phrase parse, NOT a longest-prefix match. Consequently
+`count = n` exactly (`lz78GreedyParse_count`, equality not `≤`), and this
+function equals `n·(log₂(n+1) + log₂|α| + 2)` EXACTLY, independent of `x`
+(machine-verified `lz78GreedyImplEncodingLength_eq_exact`, sorryAx-free,
+`scratch_lz78_falsecheck.lean`). The per-symbol rate therefore diverges to
+`+∞` rather than approaching the entropy rate. A genuine longest-prefix-match
+rewrite is required for the LZ78-optimality theorems downstream to be honest
+(strategic, owner-deferred). -/
 def lz78GreedyImplEncodingLength (n : ℕ) (x : Fin n → α) : ℕ :=
   (lz78GreedyParse (List.ofFn x)).encodingLength (Fintype.card α)
 
@@ -422,12 +434,28 @@ entropyRate μ p ≤ liminf_n (1/n) · lz78GreedyImplEncodingLength(X^n)   a.s.
 
 This is the lower-bound (converse) half of LZ78 asymptotic optimality —
 the harder direction (SMB liminf lower bound + arbitrary-prefix Kraft
-inequality + finite-alphabet bookkeeping). Its honest discharge is
-**research-level upstream scope-out** (textbook roadmap M3 variable-depth
-tree AEP / M4 Barron a.s. lift); the discharge machinery is absent from
-the codebase and not present in Mathlib.
+inequality + finite-alphabet bookkeeping).
 
-@residual(wall:lz78-converse-aseventual) -/
+AUDIT 2026-06-20 (independent, machine-verified): this signature is
+**false off the degenerate boundary**, NOT a genuine Mathlib wall. The
+root-cause def `lz78GreedyImplEncodingLength` is a ONE-SYMBOL parse
+(`lz78GreedyParseAux` consumes exactly one symbol per step, matching only
+the single-symbol list `[s]` — it is NOT a longest-prefix match despite
+the docstrings). Hence `lz78GreedyImplEncodingLength n x = n·(log₂(n+1) +
+log₂|α| + 2)` EXACTLY, independent of `x`, so the per-symbol rate diverges
+to `+∞` and `Filter.liminf (lz/n) atTop = 0` (the Mathlib junk value:
+`Real.sSup` of an unbounded set). The conclusion thus reduces to
+`entropyRate ≤ 0`; since `entropyRate ≥ 0` this is equivalent to
+`entropyRate = 0`, FALSE for any source with `entropyRate > 0` (e.g.
+uniform i.i.d. on `|α| ≥ 2`). Machine-verified via
+`liminf_eq_zero_of_tendsto_atTop` + `rateSeq_tendsto_atTop` (exit 0,
+sorryAx-free, `scratch_lz78_falsecheck.lean`). The first choice (rewrite
+the def to a genuine longest-prefix parse so the rate stays bounded) is a
+strategic decision deferred to the owner; until then this is a tier-5
+defect, not a `wall:`.
+
+@audit:defect(false-statement)
+@audit:retract-candidate(one-symbol-parse-rate-diverges; conclusion holds only at entropyRate=0 degenerate boundary; needs genuine longest-prefix-match def rewrite — successor plan: lz78-completion-roadmap) -/
 theorem lz78GreedyImpl_converse_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α) :
@@ -455,12 +483,23 @@ limsup_n (1/n) · lz78GreedyImplEncodingLength(X^n) ≤ entropyRate μ p   a.s.
 
 This is the achievability (upper-bound) half of LZ78 asymptotic
 optimality, i.e. the a.s.-eventual Ziv inequality
-`limsup (c·log₂ c / n) ≤ H₂` combined with the SMB upper bound. Its
-honest discharge is **research-level upstream scope-out** (textbook
-roadmap M3 variable-depth tree AEP / M4 Barron a.s. lift); the discharge
-machinery is absent from the codebase and not present in Mathlib.
+`limsup (c·log₂ c / n) ≤ H₂` combined with the SMB upper bound.
 
-@residual(wall:lz78-aseventual-ziv) -/
+AUDIT 2026-06-20 (independent, machine-verified): this signature is
+**vacuously true (degenerate)**, NOT a genuine Mathlib wall, and captures
+no genuine Ziv content. Same root cause as the converse: the def
+`lz78GreedyImplEncodingLength` is a ONE-SYMBOL parse (not longest-prefix),
+so the per-symbol rate `lz/n = log₂(n+1) + log₂|α| + 2` diverges to `+∞`,
+giving `Filter.limsup (lz/n) atTop = 0` (the Mathlib junk value:
+`Real.sInf ∅`). The conclusion thus reduces to `0 ≤ entropyRate`, TRUE for
+EVERY source (entropyRate ≥ 0), so the statement is provable trivially and
+asserts nothing about LZ78 optimality. Machine-verified via
+`limsup_eq_zero_of_tendsto_atTop` + `rateSeq_tendsto_atTop` (exit 0,
+sorryAx-free, `scratch_lz78_falsecheck.lean`). Genuine Ziv achievability
+requires a longest-prefix-match def rewrite (strategic, owner-deferred).
+
+@audit:defect(degenerate)
+@audit:retract-candidate(one-symbol-parse-rate-diverges; limsup=junk-0 so conclusion is vacuous 0≤entropyRate; needs genuine longest-prefix-match def rewrite — successor plan: lz78-completion-roadmap) -/
 theorem lz78GreedyImpl_achievability_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α) :
@@ -489,18 +528,39 @@ lim_{n → ∞} (1/n) · lz78GreedyImplEncodingLength(X^n) = entropyRate μ p   
 This is the LZ78 optimality headline. The two halves of the sandwich —
 the converse lower bound and the Ziv achievability upper bound — are
 supplied internally by `lz78GreedyImpl_converse_ae` and
-`lz78GreedyImpl_achievability_ae`, each a research-level scope-out wall
-carried as `sorry + @residual` (so this theorem is *not* unconditional;
-it transitively depends on `sorryAx`). The lower boundedness
-(`IsBoundedUnder (· ≥ ·)`) is derived genuinely from the nonnegativity of
-the integer-valued rate. The upper boundedness `h_bdd_above`
-(`IsBoundedUnder (· ≤ ·)`) is a genuine **regularity precondition**
-(eventual boundedness of the rate, not the load-bearing entropy-rate
-content) — it is the only open argument and is not load-bearing.
+`lz78GreedyImpl_achievability_ae`.
 
-The a.s. convergence is assembled from these via the generic combinator
-`lz78_asymptotic_optimality` (the LZ78-flavored
-`tendsto_of_le_liminf_of_limsup_le` squeeze). -/
+AUDIT 2026-06-20 (independent, machine-verified): this headline does NOT
+establish genuine LZ78 optimality, on three counts.
+
+(1) `h_bdd_above` is a **false hypothesis**, NOT a regularity precondition.
+The root-cause def `lz78GreedyImplEncodingLength` is a one-symbol parse, so
+the rate `lz/n = log₂(n+1) + log₂|α| + 2` diverges to `+∞`, and a sequence
+diverging to `+∞` is never `IsBoundedUnder (· ≤ ·)`. Hence `h_bdd_above` is
+unsatisfiable for this rate sequence and the implication is vacuously true.
+Machine-verified via `rateSeq_not_isBoundedUnder_le` (exit 0, sorryAx-free,
+`scratch_lz78_falsecheck.lean`). The prior claim "regularity precondition,
+not load-bearing" was the under-estimation error (the rate is not eventually
+bounded — the precondition is false, not merely open).
+
+(2) The conclusion `Tendsto (lz/n) (𝓝 entropyRate)` is FALSE off the
+degenerate boundary: the rate diverges to `+∞` (does not converge to
+`entropyRate`); with `liminf = limsup = 0` (Mathlib junk) the squeeze only
+"closes" to `entropyRate = 0`.
+
+(3) Its two input halves are themselves tier-5 defects (converse =
+false-statement, achievability = degenerate); see their docstrings.
+
+Genuine LZ78 optimality requires rewriting `lz78GreedyImplEncodingLength` to
+a true longest-prefix-match parse (strategic, owner-deferred — do NOT retract
+the headline here).
+
+The a.s. convergence is assembled via the generic combinator
+`lz78_asymptotic_optimality` (the genuine `tendsto_of_le_liminf_of_limsup_le`
+squeeze; the combinator is honest, the inputs are not).
+
+@audit:defect(false-hypothesis)
+@audit:retract-candidate(h_bdd_above false for divergent one-symbol-parse rate; conclusion false off entropyRate=0; depends on two tier-5 input halves — successor plan: lz78-completion-roadmap) -/
 @[entry_point]
 theorem lz78_asymptotic_optimality_with_greedy_impl
     (μ : Measure Ω) [IsProbabilityMeasure μ]
