@@ -154,6 +154,143 @@ private theorem convDensityAdd_deriv2_poly_moment_majorant
   · refine Filter.Eventually.of_forall (fun x s hs => ?_)
     exact convDensityAdd_deriv2_le_gaussHessMaj_conv pX hpX_nn hpX_meas hpX_int ht x hs
 
+private theorem convDensityAdd_jointMajorant_integrable
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (hpX_int : Integrable pX volume)
+    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    {t : ℝ} (ht : 0 < t) (A B : ℝ) :
+    Integrable (fun x => (A + B * x ^ 2)
+        * ((1/2) * (∫ y, pX y * gaussHessMaj t (x - y) ∂volume))) volume := by
+  set E : ℝ → ℝ := fun x => ∫ y, pX y * gaussHessMaj t (x - y) ∂volume with hE_def
+  have hg_meas : Measurable (gaussHessMaj t) := by unfold gaussHessMaj; fun_prop
+  have hg_nn : ∀ u, (0:ℝ) ≤ gaussHessMaj t u := gaussHessMaj_nonneg ht
+  -- **route II = Tonelli + g_s moment** (the only honest route).
+  -- The dominating function: `H x = ∫ pX y·G(x−y) + 2|B|·∫ (y²·pX y)·g(x−y)`, where
+  -- `G(u) = (|A| + 2|B|·u²)·gaussHessMaj t u` (Gaussian × quartic) and `g = gaussHessMaj t`.
+  -- Both summands are `convKernel_envelope_integrable` envelopes (`pX` / `y²·pX` integrable,
+  -- `G` / `g` integrable). Pointwise `‖(A+Bx²)·(1/2)E x‖ ≤ H x` via `x² ≤ 2(x−y)²+2y²` (NO odd
+  -- cross-term, so only even Gaussian moments needed). `hpX_mom` is genuinely used (it supplies
+  -- integrability of `y²·pX`, the heavy-tail-controlling density). `integrable_natPow_mul_exp_neg_mul_sq`
+  -- (route I = deleted case-A defect, false for polynomial-tail pX) is NOT used.
+  set G : ℝ → ℝ := fun u => (|A| + 2 * |B| * u ^ 2) * gaussHessMaj t u with hG_def
+  have hG_int : Integrable G volume := gaussHessMaj_polyWeight_integrable ht |A| (2 * |B|)
+  have hG_meas : Measurable G := by rw [hG_def]; fun_prop
+  have hG_nn : ∀ u, (0:ℝ) ≤ G u := fun u => by
+    rw [hG_def]; exact mul_nonneg (by positivity) (hg_nn u)
+  -- `y²·pX` integrable (= `hpX_mom`) and measurable.
+  have hmomPX_int : Integrable (fun y => y ^ 2 * pX y) volume := hpX_mom
+  have hmomPX_meas : Measurable (fun y => y ^ 2 * pX y) := by fun_prop
+  -- the two convolution envelopes.
+  have hEnv1_int : Integrable (fun x => ∫ y, pX y * G (x - y) ∂volume) volume :=
+    convKernel_envelope_integrable pX G hpX_int hpX_meas hG_int hG_meas
+  have hEnv2_int : Integrable (fun x => ∫ y, (y ^ 2 * pX y) * gaussHessMaj t (x - y) ∂volume)
+      volume :=
+    convKernel_envelope_integrable (fun y => y ^ 2 * pX y) (gaussHessMaj t)
+      hmomPX_int hmomPX_meas (gaussHessMaj_integrable ht) hg_meas
+  -- dominating function `H x` integrable.
+  have hH_int : Integrable (fun x => (∫ y, pX y * G (x - y) ∂volume)
+      + 2 * |B| * (∫ y, (y ^ 2 * pX y) * gaussHessMaj t (x - y) ∂volume)) volume :=
+    hEnv1_int.add (hEnv2_int.const_mul _)
+  -- measurability of the target (poly × convolution envelope).
+  have hE_meas : AEStronglyMeasurable E volume := by
+    rw [hE_def]
+    exact (convKernel_envelope_integrable pX (gaussHessMaj t) hpX_int hpX_meas
+      (gaussHessMaj_integrable ht) hg_meas).aestronglyMeasurable
+  have htarget_meas : AEStronglyMeasurable
+      (fun x => (A + B * x ^ 2) * ((1/2) * E x)) volume := by
+    refine AEStronglyMeasurable.mul ?_ ?_
+    · fun_prop
+    · exact hE_meas.const_mul _
+  -- pointwise domination `‖(A+Bx²)·(1/2)·E x‖ ≤ H x`.
+  refine Integrable.mono' hH_int htarget_meas (Filter.Eventually.of_forall (fun x => ?_))
+  -- nonneg of `E x` (= `∫ pX y·g(x−y)`, integrand `≥ 0`).
+  have hEnv_pos_int : Integrable (fun y => pX y * gaussHessMaj t (x - y)) volume := by
+    have hMmeas := hg_meas
+    refine hpX_int.mul_bdd
+      (c := (Real.sqrt (Real.pi * t))⁻¹ * (16 * Real.exp (-1) / t + 2 / t)) ?_ ?_
+    · exact (hMmeas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+    · refine Filter.Eventually.of_forall (fun y => ?_)
+      rw [Real.norm_eq_abs, abs_of_nonneg (hg_nn (x - y))]
+      exact gaussHessMaj_bdd ht (x - y)
+  have hE_nn : (0:ℝ) ≤ E x := by
+    rw [hE_def]
+    exact integral_nonneg (fun y => mul_nonneg (hpX_nn y) (hg_nn (x - y)))
+  -- `‖(A+Bx²)·(1/2)·E x‖ = |A+Bx²|·(1/2)·E x ≤ (|A|+|B|x²)·E x`.
+  rw [Real.norm_eq_abs, abs_mul, abs_mul]
+  have h12 : |(1/2 : ℝ)| = 1/2 := by rw [abs_of_pos]; norm_num
+  rw [h12, abs_of_nonneg hE_nn]
+  -- step 1: `|A+Bx²|·(1/2)·E x ≤ (|A|+|B|x²)·E x`.
+  have hstep1 : |A + B * x ^ 2| * (1/2 * E x) ≤ (|A| + |B| * x ^ 2) * E x := by
+    have hbound : |A + B * x ^ 2| ≤ |A| + |B| * x ^ 2 := by
+      calc |A + B * x ^ 2| ≤ |A| + |B * x ^ 2| := abs_add_le _ _
+        _ = |A| + |B| * x ^ 2 := by rw [abs_mul, abs_of_nonneg (sq_nonneg x)]
+    calc |A + B * x ^ 2| * (1/2 * E x)
+        ≤ (|A| + |B| * x ^ 2) * (1/2 * E x) :=
+          mul_le_mul_of_nonneg_right hbound (by positivity)
+      _ ≤ (|A| + |B| * x ^ 2) * E x := by
+          apply mul_le_mul_of_nonneg_left _ (by positivity)
+          nlinarith [hE_nn]
+  -- step 2: `(|A|+|B|x²)·E x = ∫ (|A|+|B|x²)·pX y·g(x−y) ≤ ∫ pX y·G(x−y) + 2|B|∫(y²pX)·g(x−y) = H x`.
+  refine le_trans hstep1 ?_
+  -- pull the constant `(|A|+|B|x²)` into the integral.
+  have hpull : (|A| + |B| * x ^ 2) * E x
+      = ∫ y, (|A| + |B| * x ^ 2) * (pX y * gaussHessMaj t (x - y)) ∂volume := by
+    rw [hE_def, ← integral_const_mul]
+  rw [hpull]
+  -- per-`y` fibre integrability of the two dominating pieces.
+  -- (1) `fun y => pX y · G(x−y)`: `G` globally bounded (`gaussHessMaj_polyWeight_bdd`) × `pX` integ.
+  have hfib1_int : Integrable (fun y => pX y * G (x - y)) volume := by
+    refine hpX_int.mul_bdd
+      (c := |A| * ((Real.sqrt (Real.pi * t))⁻¹ * (16 * Real.exp (-1) / t + 2 / t))
+        + 2 * |B| * ((Real.sqrt (Real.pi * t))⁻¹
+            * (256 * Real.exp (-1) ^ 2 + 8 * Real.exp (-1)))) ?_ ?_
+    · exact (hG_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+    · refine Filter.Eventually.of_forall (fun y => ?_)
+      rw [Real.norm_eq_abs, hG_def, abs_of_nonneg (hG_nn (x - y))]
+      exact gaussHessMaj_polyWeight_bdd ht (abs_nonneg A) (by positivity) (x - y)
+  -- (2) `fun y => (y²·pX y)·g(x−y)`: `g` globally bounded (`gaussHessMaj_bdd`) × `y²·pX` integ.
+  have hfib2_int : Integrable (fun y => (y ^ 2 * pX y) * gaussHessMaj t (x - y)) volume := by
+    refine hmomPX_int.mul_bdd
+      (c := (Real.sqrt (Real.pi * t))⁻¹ * (16 * Real.exp (-1) / t + 2 / t)) ?_ ?_
+    · exact (hg_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+    · refine Filter.Eventually.of_forall (fun y => ?_)
+      rw [Real.norm_eq_abs, abs_of_nonneg (hg_nn (x - y))]
+      exact gaussHessMaj_bdd ht (x - y)
+  -- target integrand integrability (for the LHS of `integral_mono`).
+  have hlhs_int : Integrable
+      (fun y => (|A| + |B| * x ^ 2) * (pX y * gaussHessMaj t (x - y))) volume :=
+    hEnv_pos_int.const_mul _
+  -- the dominating integrand: `pX y·G(x−y) + 2|B|·((y²pX)·g(x−y))`.
+  have hdom_int : Integrable
+      (fun y => pX y * G (x - y) + 2 * |B| * ((y ^ 2 * pX y) * gaussHessMaj t (x - y)))
+      volume :=
+    hfib1_int.add (hfib2_int.const_mul _)
+  -- `H x = ∫ pX y·G(x−y) + 2|B|·∫(y²pX)·g(x−y) = ∫ [pX y·G(x−y) + 2|B|·(y²pX)·g(x−y)]`.
+  have hH_eq : (∫ y, pX y * G (x - y) ∂volume)
+        + 2 * |B| * (∫ y, (y ^ 2 * pX y) * gaussHessMaj t (x - y) ∂volume)
+      = ∫ y, (pX y * G (x - y)
+          + 2 * |B| * ((y ^ 2 * pX y) * gaussHessMaj t (x - y))) ∂volume := by
+    rw [integral_add hfib1_int (hfib2_int.const_mul _), integral_const_mul]
+  rw [hH_eq]
+  -- pointwise: `(|A|+|B|x²)·pX y·g(x−y) ≤ pX y·G(x−y) + 2|B|·(y²pX)·g(x−y)`.
+  refine integral_mono hlhs_int hdom_int (fun y => ?_)
+  -- `(|A|+|B|x²) ≤ |A| + 2|B|(x−y)² + 2|B|y²` via `x² ≤ 2(x−y)²+2y²`, then multiply by `pX y·g ≥ 0`.
+  have hpXg_nn : (0:ℝ) ≤ pX y * gaussHessMaj t (x - y) :=
+    mul_nonneg (hpX_nn y) (hg_nn (x - y))
+  have hx2 : x ^ 2 ≤ 2 * (x - y) ^ 2 + 2 * y ^ 2 := by nlinarith [sq_nonneg (x - 2 * y), sq_nonneg x]
+  have hcoef : (|A| + |B| * x ^ 2)
+      ≤ (|A| + 2 * |B| * (x - y) ^ 2) + 2 * |B| * y ^ 2 := by
+    have hBabs : (0:ℝ) ≤ |B| := abs_nonneg B
+    nlinarith [mul_le_mul_of_nonneg_left hx2 hBabs]
+  -- `G(x−y) = (|A|+2|B|(x−y)²)·g(x−y)`.
+  have hGval : G (x - y) = (|A| + 2 * |B| * (x - y) ^ 2) * gaussHessMaj t (x - y) := by
+    rw [hG_def]
+  calc (|A| + |B| * x ^ 2) * (pX y * gaussHessMaj t (x - y))
+      ≤ ((|A| + 2 * |B| * (x - y) ^ 2) + 2 * |B| * y ^ 2) * (pX y * gaussHessMaj t (x - y)) :=
+        mul_le_mul_of_nonneg_right hcoef hpXg_nn
+    _ = pX y * G (x - y) + 2 * |B| * ((y ^ 2 * pX y) * gaussHessMaj t (x - y)) := by
+        rw [hGval]; ring
+
 /-- Produces an integrable majorant `bound` dominating the full entropy σ-derivand
 `(- log (pPath s x) - 1) · ((1/2) · ∂²_x pPath s x)` uniformly over `s ∈ Set.Ioo (t/2) (2*t)`.
 The majorant is the product `(A + B·x²) · ((1/2) · hessBound x)` of an `s`-uniform polynomial
@@ -181,141 +318,16 @@ theorem debruijnIdentityV2_holds_assembled_chain_domination
   --   (1/2)·Hess(s,x) = (1/2)·∂²_x p_s x     (integrable envelope `(1/2)·hessBound x`).
   -- GAP① gives an `s`-uniform polynomial majorant for the log factor;
   -- GAP② (poly-moment restate) gives an `s`-uniform integrable envelope `hessBound` for the Hessian.
-  obtain ⟨A, B, hB_nn, hLog⟩ :=
+  obtain ⟨A, B, _hB_nn, hLog⟩ :=
     convDensityAdd_logFactor_poly_majorant pX hpX_nn hpX_meas hpX_int hpX_mass ht
   -- The **concrete** envelope `E x = ∫ y, pX y · gaussHessMaj t (x − y)` (= GAP②'s in-body envelope),
   -- used directly here so that route II Tonelli sees the convolution shape (not an abstract `∃`).
   set E : ℝ → ℝ := fun x => ∫ y, pX y * gaussHessMaj t (x - y) ∂volume with hE_def
-  have hg_meas : Measurable (gaussHessMaj t) := by unfold gaussHessMaj; fun_prop
-  have hg_nn : ∀ u, (0:ℝ) ≤ gaussHessMaj t u := gaussHessMaj_nonneg ht
   -- the joint majorant: (A + B·x²) · ((1/2)·E x).
   refine ⟨fun x => (A + B * x ^ 2) * ((1/2) * E x), ?_, ?_⟩
-  · -- **route II = Tonelli + g_s moment** (the only honest route).
-    -- The dominating function: `H x = ∫ pX y·G(x−y) + 2|B|·∫ (y²·pX y)·g(x−y)`, where
-    -- `G(u) = (|A| + 2|B|·u²)·gaussHessMaj t u` (Gaussian × quartic) and `g = gaussHessMaj t`.
-    -- Both summands are `convKernel_envelope_integrable` envelopes (`pX` / `y²·pX` integrable,
-    -- `G` / `g` integrable). Pointwise `‖(A+Bx²)·(1/2)E x‖ ≤ H x` via `x² ≤ 2(x−y)²+2y²` (NO odd
-    -- cross-term, so only even Gaussian moments needed). `hpX_mom` is genuinely used (it supplies
-    -- integrability of `y²·pX`, the heavy-tail-controlling density). `integrable_natPow_mul_exp_neg_mul_sq`
-    -- (route I = deleted case-A defect, false for polynomial-tail pX) is NOT used.
-    set G : ℝ → ℝ := fun u => (|A| + 2 * |B| * u ^ 2) * gaussHessMaj t u with hG_def
-    have hG_int : Integrable G volume := gaussHessMaj_polyWeight_integrable ht |A| (2 * |B|)
-    have hG_meas : Measurable G := by rw [hG_def]; fun_prop
-    have hG_nn : ∀ u, (0:ℝ) ≤ G u := fun u => by
-      rw [hG_def]; exact mul_nonneg (by positivity) (hg_nn u)
-    -- `y²·pX` integrable (= `hpX_mom`) and measurable.
-    have hmomPX_int : Integrable (fun y => y ^ 2 * pX y) volume := hpX_mom
-    have hmomPX_meas : Measurable (fun y => y ^ 2 * pX y) := by fun_prop
-    -- the two convolution envelopes.
-    have hEnv1_int : Integrable (fun x => ∫ y, pX y * G (x - y) ∂volume) volume :=
-      convKernel_envelope_integrable pX G hpX_int hpX_meas hG_int hG_meas
-    have hEnv2_int : Integrable (fun x => ∫ y, (y ^ 2 * pX y) * gaussHessMaj t (x - y) ∂volume)
-        volume :=
-      convKernel_envelope_integrable (fun y => y ^ 2 * pX y) (gaussHessMaj t)
-        hmomPX_int hmomPX_meas (gaussHessMaj_integrable ht) hg_meas
-    -- dominating function `H x` integrable.
-    have hH_int : Integrable (fun x => (∫ y, pX y * G (x - y) ∂volume)
-        + 2 * |B| * (∫ y, (y ^ 2 * pX y) * gaussHessMaj t (x - y) ∂volume)) volume :=
-      hEnv1_int.add (hEnv2_int.const_mul _)
-    -- measurability of the target (poly × convolution envelope).
-    have hE_meas : AEStronglyMeasurable E volume := by
-      rw [hE_def]
-      exact (convKernel_envelope_integrable pX (gaussHessMaj t) hpX_int hpX_meas
-        (gaussHessMaj_integrable ht) hg_meas).aestronglyMeasurable
-    have htarget_meas : AEStronglyMeasurable
-        (fun x => (A + B * x ^ 2) * ((1/2) * E x)) volume := by
-      refine AEStronglyMeasurable.mul ?_ ?_
-      · fun_prop
-      · exact hE_meas.const_mul _
-    -- pointwise domination `‖(A+Bx²)·(1/2)·E x‖ ≤ H x`.
-    refine Integrable.mono' hH_int htarget_meas (Filter.Eventually.of_forall (fun x => ?_))
-    -- nonneg of `E x` (= `∫ pX y·g(x−y)`, integrand `≥ 0`).
-    have hEnv_pos_int : Integrable (fun y => pX y * gaussHessMaj t (x - y)) volume := by
-      have hMmeas := hg_meas
-      refine hpX_int.mul_bdd
-        (c := (Real.sqrt (Real.pi * t))⁻¹ * (16 * Real.exp (-1) / t + 2 / t)) ?_ ?_
-      · exact (hMmeas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-      · refine Filter.Eventually.of_forall (fun y => ?_)
-        rw [Real.norm_eq_abs, abs_of_nonneg (hg_nn (x - y))]
-        exact gaussHessMaj_bdd ht (x - y)
-    have hE_nn : (0:ℝ) ≤ E x := by
-      rw [hE_def]
-      exact integral_nonneg (fun y => mul_nonneg (hpX_nn y) (hg_nn (x - y)))
-    -- `‖(A+Bx²)·(1/2)·E x‖ = |A+Bx²|·(1/2)·E x ≤ (|A|+|B|x²)·E x`.
-    rw [Real.norm_eq_abs, abs_mul, abs_mul]
-    have h12 : |(1/2 : ℝ)| = 1/2 := by rw [abs_of_pos]; norm_num
-    rw [h12, abs_of_nonneg hE_nn]
-    -- step 1: `|A+Bx²|·(1/2)·E x ≤ (|A|+|B|x²)·E x`.
-    have hstep1 : |A + B * x ^ 2| * (1/2 * E x) ≤ (|A| + |B| * x ^ 2) * E x := by
-      have hbound : |A + B * x ^ 2| ≤ |A| + |B| * x ^ 2 := by
-        calc |A + B * x ^ 2| ≤ |A| + |B * x ^ 2| := abs_add_le _ _
-          _ = |A| + |B| * x ^ 2 := by rw [abs_mul, abs_of_nonneg (sq_nonneg x)]
-      calc |A + B * x ^ 2| * (1/2 * E x)
-          ≤ (|A| + |B| * x ^ 2) * (1/2 * E x) :=
-            mul_le_mul_of_nonneg_right hbound (by positivity)
-        _ ≤ (|A| + |B| * x ^ 2) * E x := by
-            apply mul_le_mul_of_nonneg_left _ (by positivity)
-            nlinarith [hE_nn]
-    -- step 2: `(|A|+|B|x²)·E x = ∫ (|A|+|B|x²)·pX y·g(x−y) ≤ ∫ pX y·G(x−y) + 2|B|∫(y²pX)·g(x−y) = H x`.
-    refine le_trans hstep1 ?_
-    -- pull the constant `(|A|+|B|x²)` into the integral.
-    have hpull : (|A| + |B| * x ^ 2) * E x
-        = ∫ y, (|A| + |B| * x ^ 2) * (pX y * gaussHessMaj t (x - y)) ∂volume := by
-      rw [hE_def, ← integral_const_mul]
-    rw [hpull]
-    -- per-`y` fibre integrability of the two dominating pieces.
-    -- (1) `fun y => pX y · G(x−y)`: `G` globally bounded (`gaussHessMaj_polyWeight_bdd`) × `pX` integ.
-    have hfib1_int : Integrable (fun y => pX y * G (x - y)) volume := by
-      refine hpX_int.mul_bdd
-        (c := |A| * ((Real.sqrt (Real.pi * t))⁻¹ * (16 * Real.exp (-1) / t + 2 / t))
-          + 2 * |B| * ((Real.sqrt (Real.pi * t))⁻¹
-              * (256 * Real.exp (-1) ^ 2 + 8 * Real.exp (-1)))) ?_ ?_
-      · exact (hG_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-      · refine Filter.Eventually.of_forall (fun y => ?_)
-        rw [Real.norm_eq_abs, hG_def, abs_of_nonneg (hG_nn (x - y))]
-        exact gaussHessMaj_polyWeight_bdd ht (abs_nonneg A) (by positivity) (x - y)
-    -- (2) `fun y => (y²·pX y)·g(x−y)`: `g` globally bounded (`gaussHessMaj_bdd`) × `y²·pX` integ.
-    have hfib2_int : Integrable (fun y => (y ^ 2 * pX y) * gaussHessMaj t (x - y)) volume := by
-      refine hmomPX_int.mul_bdd
-        (c := (Real.sqrt (Real.pi * t))⁻¹ * (16 * Real.exp (-1) / t + 2 / t)) ?_ ?_
-      · exact (hg_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-      · refine Filter.Eventually.of_forall (fun y => ?_)
-        rw [Real.norm_eq_abs, abs_of_nonneg (hg_nn (x - y))]
-        exact gaussHessMaj_bdd ht (x - y)
-    -- target integrand integrability (for the LHS of `integral_mono`).
-    have hlhs_int : Integrable
-        (fun y => (|A| + |B| * x ^ 2) * (pX y * gaussHessMaj t (x - y))) volume :=
-      hEnv_pos_int.const_mul _
-    -- the dominating integrand: `pX y·G(x−y) + 2|B|·((y²pX)·g(x−y))`.
-    have hdom_int : Integrable
-        (fun y => pX y * G (x - y) + 2 * |B| * ((y ^ 2 * pX y) * gaussHessMaj t (x - y)))
-        volume :=
-      hfib1_int.add (hfib2_int.const_mul _)
-    -- `H x = ∫ pX y·G(x−y) + 2|B|·∫(y²pX)·g(x−y) = ∫ [pX y·G(x−y) + 2|B|·(y²pX)·g(x−y)]`.
-    have hH_eq : (∫ y, pX y * G (x - y) ∂volume)
-          + 2 * |B| * (∫ y, (y ^ 2 * pX y) * gaussHessMaj t (x - y) ∂volume)
-        = ∫ y, (pX y * G (x - y)
-            + 2 * |B| * ((y ^ 2 * pX y) * gaussHessMaj t (x - y))) ∂volume := by
-      rw [integral_add hfib1_int (hfib2_int.const_mul _), integral_const_mul]
-    rw [hH_eq]
-    -- pointwise: `(|A|+|B|x²)·pX y·g(x−y) ≤ pX y·G(x−y) + 2|B|·(y²pX)·g(x−y)`.
-    refine integral_mono hlhs_int hdom_int (fun y => ?_)
-    -- `(|A|+|B|x²) ≤ |A| + 2|B|(x−y)² + 2|B|y²` via `x² ≤ 2(x−y)²+2y²`, then multiply by `pX y·g ≥ 0`.
-    have hpXg_nn : (0:ℝ) ≤ pX y * gaussHessMaj t (x - y) :=
-      mul_nonneg (hpX_nn y) (hg_nn (x - y))
-    have hx2 : x ^ 2 ≤ 2 * (x - y) ^ 2 + 2 * y ^ 2 := by nlinarith [sq_nonneg (x - 2 * y), sq_nonneg x]
-    have hcoef : (|A| + |B| * x ^ 2)
-        ≤ (|A| + 2 * |B| * (x - y) ^ 2) + 2 * |B| * y ^ 2 := by
-      have hBabs : (0:ℝ) ≤ |B| := abs_nonneg B
-      nlinarith [mul_le_mul_of_nonneg_left hx2 hBabs]
-    -- `G(x−y) = (|A|+2|B|(x−y)²)·g(x−y)`.
-    have hGval : G (x - y) = (|A| + 2 * |B| * (x - y) ^ 2) * gaussHessMaj t (x - y) := by
-      rw [hG_def]
-    calc (|A| + |B| * x ^ 2) * (pX y * gaussHessMaj t (x - y))
-        ≤ ((|A| + 2 * |B| * (x - y) ^ 2) + 2 * |B| * y ^ 2) * (pX y * gaussHessMaj t (x - y)) :=
-          mul_le_mul_of_nonneg_right hcoef hpXg_nn
-      _ = pX y * G (x - y) + 2 * |B| * ((y ^ 2 * pX y) * gaussHessMaj t (x - y)) := by
-          rw [hGval]; ring
+  · -- the joint majorant integrability, extracted to `convDensityAdd_jointMajorant_integrable`.
+    -- `E` is a `set` variable defeq to its expansion `∫ y, pX y · gaussHessMaj t (x − y)`.
+    exact convDensityAdd_jointMajorant_integrable pX hpX_nn hpX_meas hpX_int hpX_mom ht A B
   · -- domination: `‖LogFactor · (1/2 · Hess)‖ ≤ (A + B·x²)·((1/2)·E x)`, genuine via norm_mul.
     --   the Hessian bound `‖∂²p_s x‖ ≤ E x` is the concrete pointwise lemma.
     filter_upwards [hLog] with x hLogx
