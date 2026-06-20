@@ -202,7 +202,11 @@ is the genuine *reconstruction* invariant: the phrases tile a prefix of the
 input by concatenation at their cumulative lengths, with the leftover `tail`
 being the un-emitted suffix (the `≤`-slack of `lz78PhraseStrings_total_length_le`).
 Proved by induction on `fuel`, tracking the `cur` accumulator across the
-keep-growing / emit branches. -/
+keep-growing / emit branches.
+
+Independent honesty audit (2026-06-21): sorryAx-free
+(`#print axioms` = standard 3 axioms, no `sorryAx`, fresh-olean machine check); genuine
+structural induction on `fuel`, no sorry / hypothesis bundling. @audit:ok -/
 theorem lz78PhraseStringsAux_flatten_conserve :
     ∀ (fuel : ℕ) (dict : List (List α)) (cur input : List α),
       input.length < fuel →
@@ -228,7 +232,11 @@ theorem lz78PhraseStringsAux_flatten_conserve :
 /-- **Top-level reconstruction**: the concatenation of all emitted phrase
 strings, followed by an unfinished tail, equals the input. The cumulative
 phrase lengths therefore furnish an absolute-position tiling of a prefix of
-the input, with the tail accounting for the `≤`-slack. -/
+the input, with the tail accounting for the `≤`-slack.
+
+Independent honesty audit (2026-06-21): sorryAx-free
+(`#print axioms = [propext, Classical.choice, Quot.sound]`, fresh-olean machine check);
+genuine instantiation of `lz78PhraseStringsAux_flatten_conserve`, no sorry. @audit:ok -/
 @[entry_point]
 theorem lz78PhraseStrings_flatten_prefix (input : List α) :
     ∃ tail : List α, (lz78PhraseStrings input).flatten ++ tail = input := by

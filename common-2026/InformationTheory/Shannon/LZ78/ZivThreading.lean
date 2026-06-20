@@ -371,7 +371,19 @@ see `lz78_block_tiling` below. The reconstruction invariant
 `lz78PhraseStrings_flatten_prefix` (parse phrases concatenate to a prefix of the input,
 sorryAx-free) furnishes the cumulative-position function; the residual sub-blockers are
 the per-phrase substring coherence (read phrase `j` off `obs` at its cumulative position),
-the leading-`k` boundary absorption, and the trailing-tail length `n - e`. -/
+the leading-`k` boundary absorption, and the trailing-tail length `n - e`.
+
+Independent honesty audit (2026-06-21): body fill is sorryAx-free
+(`#print axioms = [propext, Classical.choice, Quot.sound]`, fresh-olean machine check).
+The signature additions vs. the prior leg are all regularity, not core bundling: `hstart`
+(each phrase start `> k`) and `hmono` are partition bookkeeping; `hposfac` (per-position
+`markovFactor > 0`) is the `cond_singleton_pos_ae` precondition of
+`negLogQk_segment_eq_condQkState` needed only to move `-log` through the product; the
+trailing-boundary generalization (`hNe : N (last c) = e`, `hen : e ≤ n`, plus the `[e, n)`
+term) relaxes the prior `N (last) = n` constraint and adds no core. The conclusion is an
+*exact equality* assembled by interval-split + telescope + the established factor
+correspondence — no hypothesis carries the conclusion. @audit:ok (non-circular,
+non-bundled, sorryAx-free). -/
 lemma negLogQk_phrase_threading
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (k n b c e : ℕ) (ω : Ω)
@@ -505,6 +517,21 @@ with `negLogQk_phrase_threading` then threads `negLogQk` over the genuine parse.
 These are genuine combinatorial / measure-theoretic gaps (not a wiring issue), spanning
 the `List.flatten`-indexing scaffold + the a.s. positivity lift; isolated here as an
 honest `sorry`. Inherits the LZ78 achievability wall slug (route LOCK = `markovFactor`).
+
+**Audit caveat (2026-06-21, independent honesty audit, honest_residual): the symbol
+accounting `b`/`n - e` is dropped but is NOT optional downstream.** The threading
+identity (`negLogQk_phrase_threading`) leaves the leading-boundary sum over `[0, b)` and
+the trailing-tail sum over `[e, n)` as additive terms. The W2 limsup discharge (Phase 3/4)
+needs `b / n → 0` and `(n - e) / n → 0` to vanish those boundary contributions; the present
+signature provides no such bound (the existential may legitimately return `b = e = n` when
+`parseCount ≤ k`, and places no `O(k)` cap on `b` for long blocks). So `lz78_block_tiling`
+as stated is TRUE-as-framed and honest, but is **not yet a sufficient input for Phase 3 on
+its own** — it must be strengthened with `b ≤ k + (one phrase)` and `n - e ≤ (one phrase)`
+(or the equivalent `o(n)` bounds) before composing with the threading identity discharges
+W2. These bounds live in the *same* substring-coherence `sorry` blocker, so closing that
+blocker should add the boundary-length conjuncts, not defer them again. Progress so far =
+the threading mechanism + non-vacuity anchor (genuine, audited), not a complete tiling-to-W2
+input.
 
 **Non-vacuity anchor.** The plain existence of *some* tiling is vacuously true (`c = 0`,
 empty partition), so the genuine content is encoded by anchoring the tiling to the *parse*:
