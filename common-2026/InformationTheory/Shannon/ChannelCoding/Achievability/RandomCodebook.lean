@@ -1111,7 +1111,8 @@ lemma sum_average_le_of_forall_le
         rw [Finset.sum_const, nsmul_eq_mul, h_M_card]
     _ = B := by rw [← mul_assoc, hMinvM, one_mul]
 
-omit [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β] in
+omit [Fintype α] [MeasurableSingletonClass α] [Fintype β] [MeasurableSingletonClass β]
+  [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β] in
 private lemma averageErrorProb_toReal_eq
     {M n : ℕ} (c : Code M n α β) (W : Channel α β) (hM : 0 < M)
     (h_ne_top : ∀ m : Fin M, c.errorProbAt W m ≠ ∞) :
@@ -1121,6 +1122,23 @@ private lemma averageErrorProb_toReal_eq
   rw [if_neg hM.ne']
   rw [ENNReal.toReal_mul, ENNReal.toReal_inv, ENNReal.toReal_natCast,
       ENNReal.toReal_sum (fun m _ => h_ne_top m)]
+
+omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
+private lemma errorProbAt_codebookToCode_ne_top
+    {Ω : Type*} [MeasurableSpace Ω]
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (W : Channel α β) [IsMarkovKernel W]
+    {M n : ℕ} (hM : 0 < M) (ε : ℝ) (c : Codebook M n α) (m : Fin M) :
+    (codebookToCode μ Xs Ys hM ε c).errorProbAt W m ≠ ∞ := by
+  have h_le_one : (codebookToCode μ Xs Ys hM ε c).errorProbAt W m ≤ 1 := by
+    show (Measure.pi (fun i => W ((codebookToCode μ Xs Ys hM ε c).encoder m i)))
+        ((codebookToCode μ Xs Ys hM ε c).errorEvent m) ≤ 1
+    haveI : IsProbabilityMeasure
+        (Measure.pi (fun i => W ((codebookToCode μ Xs Ys hM ε c).encoder m i))) :=
+      inferInstance
+    exact prob_le_one
+  exact h_le_one.trans_lt ENNReal.one_lt_top |>.ne
 
 omit [DecidableEq α] [DecidableEq β] in
 /-- **Random codebook average (probabilistic-method form).** With each codeword
@@ -1180,32 +1198,18 @@ theorem random_codebook_average_le
   -- `Fin M → Fin n → α`; we leave `Fintype.elim` to the unifier).
   haveI : MeasurableSingletonClass (Fin n → α) := Pi.instMeasurableSingletonClass
   haveI : MeasurableSingletonClass (Codebook M n α) := Pi.instMeasurableSingletonClass
-  -- `errorProbAt c W m` is `≤ 1` (Markov kernel; hence finite).
-  have h_errProbAt_le_one : ∀ (c : Codebook M n α) (m : Fin M),
-      (codebookToCode μ Xs Ys hM ε c).errorProbAt W m ≤ 1 := by
-    intro c m
-    show (Measure.pi (fun i => W ((codebookToCode μ Xs Ys hM ε c).encoder m i)))
-        ((codebookToCode μ Xs Ys hM ε c).errorEvent m) ≤ 1
-    haveI : IsProbabilityMeasure
-        (Measure.pi (fun i => W ((codebookToCode μ Xs Ys hM ε c).encoder m i))) :=
-      inferInstance
-    exact prob_le_one
+  -- `errorProbAt c W m` is finite (`≤ 1` for a Markov kernel).
   have h_errProbAt_ne_top : ∀ (c : Codebook M n α) (m : Fin M),
       (codebookToCode μ Xs Ys hM ε c).errorProbAt W m ≠ ∞ := fun c m =>
-    (h_errProbAt_le_one c m).trans_lt ENNReal.one_lt_top |>.ne
+    errorProbAt_codebookToCode_ne_top μ Xs Ys W hM ε c m
   -- Step 1: rewrite `(averageErrorProb).toReal = (1/M) * ∑_m (errorProbAt).toReal`.
   have h_avg_real : ∀ c : Codebook M n α,
       ((codebookToCode μ Xs Ys hM ε c).averageErrorProb W).toReal
         = ((M : ℝ))⁻¹ *
           ∑ m : Fin M, ((codebookToCode μ Xs Ys hM ε c).errorProbAt W m).toReal := by
     intro c
-    have hM_ne : (M : ℝ≥0∞) ≠ 0 := by
-      exact_mod_cast hM.ne'
-    have hM_top : (M : ℝ≥0∞) ≠ ∞ := ENNReal.natCast_ne_top M
-    unfold Code.averageErrorProb
-    rw [if_neg hM.ne']
-    rw [ENNReal.toReal_mul, ENNReal.toReal_inv, ENNReal.toReal_natCast,
-        ENNReal.toReal_sum (fun m _ => h_errProbAt_ne_top c m)]
+    exact averageErrorProb_toReal_eq (codebookToCode μ Xs Ys hM ε c) W hM
+      (h_errProbAt_ne_top c)
   -- Step 2: bound LHS by `(1/M) * ∑_c w(c) * ∑_m (errorProbAt).toReal`,
   -- then use `errorProbAt_le_E1_plus_E2` pointwise.
   have h_M_pos_R : 0 < (M : ℝ) := by exact_mod_cast hM
@@ -1293,19 +1297,7 @@ theorem random_codebook_average_le
       ≤ E1 + ((M : ℝ) - 1) * Eexp :=
     sum_average_le_of_forall_le _ ((M : ℝ))⁻¹ (E1 + ((M : ℝ) - 1) * Eexp)
       h_M_inv_nn h_M_inv_M_eq h_per_m_bound
-  -- Combine.
-  calc ∑ c : Codebook M n α, wM.real {c} *
-            ((codebookToCode μ Xs Ys hM ε c).averageErrorProb W).toReal
-      ≤ ∑ c : Codebook M n α, wM.real {c} *
-            (((M : ℝ))⁻¹ * ∑ m : Fin M,
-              (E1_indiv c m +
-                ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, E2_indiv c m m')) :=
-        h_weighted_bound
-    _ = ((M : ℝ))⁻¹ * ∑ m : Fin M,
-          ((∑ c : Codebook M n α, wM.real {c} * E1_indiv c m)
-          + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
-              ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m') :=
-        h_rhs_decomp
-    _ ≤ E1 + ((M : ℝ) - 1) * Eexp := h_final
+  -- Combine: `LHS ≤ (h_weighted_bound) = (h_rhs_decomp) ≤ (h_final)`.
+  exact (h_weighted_bound.trans_eq h_rhs_decomp).trans h_final
 
 end InformationTheory.Shannon.ChannelCoding
