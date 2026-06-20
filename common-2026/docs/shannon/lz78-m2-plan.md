@@ -7,20 +7,22 @@
 
 - [x] M0 在庫確認（leg 3 `lz78-m3-inventory.md` + leg 4 `lz78-m3-treenode-inventory.md` の route A/B 比較）✅
 - [x] Phase 1 — gateway atom（Step A 符号長 bit-rate 展開）✅ **GO**（`lz78_impl_bitrate_le_clogc_plus_overhead`、`GreedyParsingImpl.lean:286`、sorryAx-free、commit `7171707`）→ 単位整合は壁でないと確定
-- [ ] Phase 2 — length-grouping log-sum 核（genuine novel）🔄 **leg 4: gateway atom（抽象 Jensen grouping）実装中**（`ZivLengthGrouping.lean`、leg 3 の STALL は route 取り違え artifact — 判断ログ #4）
-- [ ] Phase 3 — overhead o(n) 制御 + limsup 合成 📋（Phase 2 gateway 通過後に着手）
+- [x] Phase 2a — convexity grouping（length 別 Jensen）✅ **sorryAx-free**（`ZivLengthGrouping.lean`、commit `c472518`）— necessary scaffolding だが単独では不十分
+- [x] Phase 2b — marginal sub-distribution + log-sum 橋 ✅ **sorryAx-free**（`ZivMeasureBridge.lean`、commit `d1d55db`）— **marginal なので方向不一致、`-log Pₙ` に届かない**（判断ログ #4）
+- [ ] Phase 2c — **genuine wall**: conditional-context (length, finite-context) AEP 🔄 **research-level**（marginal/node-position いずれも machine-ruled-out、判断ログ #4）→ 達成まで `sorry` + `@residual(wall:lz78-aseventual-ziv)` 維持
+- [ ] Phase 3 — overhead o(n) 制御 + limsup 合成 📋（Phase 2c 通過後に着手）
 - [ ] Phase 4 — W2 discharge（`ziv_aseventual_le_blockLogAvg₂` の sorry を埋める）📋（達成まで `sorry` + `@residual(wall:lz78-aseventual-ziv)` 維持）
 
 ## ゴール
 
 W1（`shannon_mcmillan_breiman₂`、SMB-in-bits 橋）は leg 3 で **閉鎖済**（`@audit:ok`、sorryAx-free、`GreedyParsingImpl.lean:520`）。本サブ計画のゴールは残る **W2 = `ziv_aseventual_le_blockLogAvg₂`**（`GreedyParsingImpl.lean:557`、`@residual(wall:lz78-aseventual-ziv)`、唯一の active sorry）を **genuine に discharge** すること。W2 が閉じれば `lz78GreedyImpl_achievability_ae` が sorryAx-free 化され（合成本体は既に sorry-free）、**achievability 完遂**（headline に残るは M4 converse 壁のみ）。
 
-**status（leg 4、route 是正後）**: Phase 1 gateway = **GO**（`lz78_impl_bitrate_le_clogc_plus_overhead` sorryAx-free、単位整合は壁でない）。**leg 3 の「STALL = single in-session で閉じない genuine research-level 壁、攻略は treenode T1-T5 路」は route 取り違えによる過大評価だった**（leg 4 の独立調査 = inventory `lz78-m3-treenode-inventory.md` + proof-pivot-advisor、両者機械裏取りで判明）:
+**status（leg 4 後半、gateway-atom-first probe による壁の精密 characterization 後）**: Phase 1 gateway = GO（単位整合は壁でない）。Phase 2a convexity grouping + Phase 2b marginal sub-distribution 橋 = **両方 sorryAx-free で建った**（necessary scaffolding）が、**leg 4 前半の「length-grouping route A は 1-2 leg で閉じる、rest plumbing」という楽観は撤回する**。leg 4 後半の gateway-atom-first probe で、壁 `ziv_aseventual_le_blockLogAvg₂` は **genuine research-level** と精密に機械裏取りされた。**2 つの単純 grouping が両方 machine-ruled-out**:
 
-- **route B (node-grouping = treenode T1-T5) は D3 trap で死ぬ**: overhead `c·log(#nodes) ≈ c·log c`、`lz78PhraseStrings_mul_log_le`（`c·log c ≤ K·n`、sorryAx-free）より `(c·log c)/n` は定数 = main term と同オーダーで vanish しない。数学的に細工不能。加えて treenode plan が「再利用、転記主体」と書く資産（`extendCylinder*`/`condNextSymbol_sum_eq_one`/`IsLZ78ZivCombinatorialCore`/ファイル `LZ78ZivCombinatorics.lean`/`LZ78ZivEntropyBridge.lean`）は commit `f67ec8a`/`602b1ad` で **削除済 (disk 不在)** = resurrection は転記でなく ~750-1100 行のゼロ再構築。`condPhraseProb` も固定 tuple `v` でなく観測 `ω` で parametrize された path-prefix 比なので node-context sub-distribution を既存資産から抽出できない。
-- **唯一の genuine route = (A) length-grouping**（同じ長さ ℓ の distinct phrase ≤ |α|^ℓ、#groups = O(log n)、overhead `c·log log n` → vanish）= **本 m2-plan の Approach (Step A-D) そのもの**。leg 3 が「genuine research-level」と評価したのは node/path-prefix route を probe した artifact で、**route A の gateway atom（抽象 Jensen grouping 不等式）は leg 3 で一度も isolated に試されていない**。最難サブピース（packing `card_short_le`/`total_length_ge_count_mul_log`、envelope `count_isBigO`）は既に sorryAx-free in-tree → length-grouping を正しく取れば **1-2 leg で閉じる見込み**（earned research-level verdict ではない）。
-- **decisive gateway atom（leg 4 で実装中）**: 抽象 Jensen grouping `c·log c ≤ ∑_ℓ c_ℓ·log c_ℓ + c·log(#groups)`（純 Finset/Real、`Real.convexOn_mul_log` + `ConvexOn.map_sum_le`）= treenode plan 判断 3 / feasibility リスク #1 そのもの。`InformationTheory/Shannon/LZ78/ZivLengthGrouping.lean` に実装。
-- **壁は維持**: 結果が出るまで W2 = `sorry` + `@residual(wall:lz78-aseventual-ziv)` を honest に維持（discharge しない）。撤退ラインは「gateway atom が通らなければ tier-2 維持」。
+- **(1) node-position-grouping（treenode T1-T5 literal）は D3 trap で死ぬ**: convexity overhead `c·log(#nodes)`、LZ tree で #nodes≈c なので `c·log(#nodes) ≈ c·log c` = main term と同オーダー、`lz78PhraseStrings_mul_log_le`（`c·log c ≤ K·n`、sorryAx-free）より `(c·log c)/n` は定数で vanish しない（D3 trap）。
+- **(2) marginal-length-grouping（leg 4 前半に sorryAx-free で建てた marginal route）は overhead が vanish するが方向が逆**: chain rule で `-log Pₙ = ∑_j -log q_cond(j)`（conditional）、memory 源では `q_cond ≥ P_marginal` ゆえ `∑ -log P_marginal ≥ -log Pₙ` = 欲しい `≤` と逆向き（iid で等号、memory で逆、Dirac で両 0 alive）。FKG/positive-association の Mathlib 補題は loogle **0-hit**。**marginal では `-log Pₙ` を上から押さえられない**。
+- **genuine core = conditional-context AEP**（唯一 `c·log c ≤ -log Pₙ + o(n)` を満たす構造）: **(length, finite-context)-grouping + conditional q(symbol|context) + AEP**。3 条件を同時に満たす必要 — (a) **conditional** で chain rule 経由 `-log Pₙ` に到達（marginal 不可）、(b) **per-context sub-distribution `∑_a q(context·a|context) ≤ 1`** で log-sum 適用可（path-prefix `condPhraseProb` は `∑qⱼ≈c` の D4 trap で不可）、(c) **finite-context で #contexts 有界** にして convexity overhead を vanish（naive node-grouping は #nodes≈c で D3 trap）。context 深さ→∞ の近似誤差を **AEP** で制御。= handoff 原典の「variable-depth tree-node AEP」framing は **正しかった**（leg 4 前半が一時 plumbing と誤読したのを再是正）。research-level・数 leg。
+- **壁は維持**: 結果が出るまで W2 = `sorry` + `@residual(wall:lz78-aseventual-ziv)` を honest に維持（discharge しない）。撤退ラインは「conditional-context AEP が通らなければ tier-2 維持」。
 
 W2 の verbatim signature（`GreedyParsingImpl.lean:557`、変更しない）:
 
@@ -60,16 +62,17 @@ lz78GreedyImplEncodingLength n (blockRV n ω) / n  ≤  blockLogAvg₂ μ p n ω
 
 → **bit 単位の target に nat 量を持ち込む際は両辺を `Real.log 2` で割る**。`c·Nat.log 2(c+1)` → `c·log(c+1)/log 2`（`lz78_impl_natLog_mul_log_two_le`、`GreedyParsingImpl.lean:155` verbatim で `Nat.log 2 m · log 2 ≤ log m`）。`blockLogAvg₂ = blockLogAvg/log 2 = (-log Pₙ)/(n·log 2)`。**bit 版で `c·log₂c ≤ -log₂Pₙ + o(n)` を建て、両辺の `/log 2` は定数なので機械的に整合**（`div_le_div_of_nonneg_right`）。
 
-### length-grouping 戦略の骨子（D3: node-grouping は偽）
+### genuine core 戦略の骨子（両単純 grouping は machine-ruled-out → conditional-context AEP）
 
-genuine missing piece = `c·log c`（組合せ phrase count）を `-log Pₙ`（source 確率）に繋ぐ length-grouping 不等式 + overhead 制御。骨子:
+genuine missing piece = `c·log c`（組合せ phrase count）を `-log Pₙ`（source 確率）に繋ぐ不等式 + overhead 制御。**leg 4 後半で 2 つの単純 grouping が両方死ぬことが機械裏取りされた**ので、骨子は conditional-context AEP に絞られる:
 
-1. **Step A（gateway）**: 符号長 bit-rate を `c·log₂c/n` 型に展開。`lz78_impl_rate_le_const` の証明内 `hlen`（`bitLength_eq` 展開）+ `hterm1`（`lz78_impl_natLog_mul_log_two_le`）を切り出して a.s.-eventual の比較対象を作る。**既存ピース流用、低リスク**。
-2. **Step B（genuine novel = 最大の難所）**: `c·log₂c ≤ -log₂Pₙ + overhead` を a.s.-eventual で建てる。phrase を **長さ別にグルーピング**（同じ長さ `ℓ` の phrase は高々 `|α|^ℓ` 個）し、log-sum を `-log Pₙ`（= `n·blockLogAvg₂·log 2`）に対し下から押さえる。**node-grouping（`c·log D/n`、D≈c で定数収束、vanish しない）は D3 で偽 → 必ず length-grouping**。
-3. **Step C（overhead o(n)）**: overhead = `c·H(length-dist) ≤ c·log(maxlen)`、`maxlen ≤ log_b n`（最長 phrase 長は対数オーダー）、`(c·log log n)/n → 0` を `c = O(n/log n)`（`lz78PhraseStrings_count_isBigO`、`ZivCountingBody.lean:410` verbatim、envelope `n/Real.log n`）と合成。`(c·log log n)/n = O((log log n)/log n) → 0`。
-4. **Step D（合成）**: per-n 比較不等式を `Filter.limsup_le_limsup` に乗せる。cobounded/bounded auto 引数は `lz78_impl_rate_le_const`（上界、`GreedyParsingImpl.lean:171` verbatim）+ `per_symbol_nonneg`（下界）で供給（headline `h_bdd_above` 既実証手法）。
+1. **Step A（gateway、closed）**: 符号長 bit-rate を `c·log₂c/n` 型に展開（`lz78_impl_bitrate_le_clogc_plus_overhead`、sorryAx-free）。
+2. **Step B-naive（両 ruled-out）**: 単純な length-grouping で `c·log₂c ≤ -log₂Pₙ + overhead` を直接建てる路は **両方死ぬ** — (i) **node-position-grouping**（overhead `c·log(#nodes)≈c·log c`、D3 で非 vanish）、(ii) **marginal-length-grouping**（overhead は vanish するが marginal sub-distribution `∑_a P(a)≤1` 経由で出る log-sum は `∑ -log P_marginal ≥ -log Pₙ` = **方向が逆**、memory 源で `-log Pₙ` を上から押さえられない）。
+3. **Step B-genuine（research-level）**: 唯一生き残る構造 = **conditional-context AEP**。phrase を **(length, finite-context)** で grouping し、**conditional** q(symbol|context) で chain rule 経由 `-log Pₙ` に到達。per-context sub-distribution `∑_a q(context·a|context) ≤ 1` で log-sum を適用（marginal でも path-prefix `∑qⱼ` でもない第三の量）、finite-context で #contexts 有界にして convexity overhead を vanish、context 深さ→∞ の近似誤差は **AEP** で制御。= variable-depth tree-node AEP framing。
+4. **Step C（overhead o(n)）**: finite-context truncation の overhead を `(c·log log n)/n → 0` で吸収（`c = O(n/log n)` envelope `lz78PhraseStrings_count_isBigO`、`ZivCountingBody.lean:410`）。
+5. **Step D（合成）**: per-n 比較不等式を `Filter.limsup_le_limsup` に乗せる。cobounded/bounded auto 引数は `lz78_impl_rate_le_const`（上界）+ `per_symbol_nonneg`（下界）で供給（headline `h_bdd_above` 既実証手法）。
 
-**D4 path-prefix route（`condPhraseProb` / `blockProb_neg_log_ge_sum`）は素通り**: `blockProb_neg_log_ge_sum` は **0 consumers**（本セッション `dep_consumers.sh` 機械裏取り、dead-start）で、握るのは `∑ⱼ -log qⱼ ≤ -log Pₙ` であって、missing piece の `c·log c ≤ ∑ⱼ -log qⱼ + o(n)`（`∑qⱼ≈c` trap、D4）ではない。length-grouping log-sum を **`-log Pₙ` に直接乗せる**（`∑qⱼ` を経由しない）。
+**marginal route（leg 4 前半 sorryAx-free 成果、necessary scaffolding）は方向不一致で `-log Pₙ` に届かない**。**D4 path-prefix route（`condPhraseProb` / `blockProb_neg_log_ge_sum`、0 consumers）も `∑qⱼ≈c` trap で素通り**。genuine core が要求する第三の量 = **node-context (conditional) sub-distribution** `∑_a q(node·a|node) ≤ 1`（marginal でも path-prefix でもない）= codebase + Mathlib 不在の missing measure-theoretic 核。leg 4 の `ZivMeasureBridge.lean` の sub-distribution 機構（`sum_marginal_real_le_one` の disjoint-cylinder 論法）を conditional cylinder 比へ拡張するのが入口。
 
 ## Phase 詳細
 
@@ -99,36 +102,40 @@ theorem lz78_impl_bitrate_le_clogc_plus_overhead
 - **novel か**: いいえ。`lz78_impl_rate_le_const`（`GreedyParsingImpl.lean:171`）の中身の切り出し + bit 化。
 - **gateway 判定**: これが通れば nat↔bit 単位整合に想定外コストが無い = M2 tractable のシグナル。`+1` ずれ・`c=0` 退化に注意（`lz78_impl_rate_le_const` が既に処理済の手法を流用）。
 
-### Phase 2 — length-grouping log-sum 核（🔄 leg 4: gateway atom 実装中）
+### Phase 2 — genuine core（2a/2b sorryAx-free 済、2c = genuine wall）
 
-**route 是正（leg 4）**: leg 3 の「stall = 2b の `c·log c ≤ -log Pₙ + o(n)` 接続 = 可変深さ tree-node AEP = single in-session plan で閉じない genuine research-level scope」は **node/path-prefix route を probe した artifact**。leg 4 の独立調査（inventory `lz78-m3-treenode-inventory.md` + proof-pivot-advisor、機械裏取り）で、その接続を **path-prefix `∑qⱼ`（D4 trap）/ node-grouping（D3 trap）でなく length-grouping で取れば壁ではない** と判明:
+leg 4 で 3 サブ Phase に分割。**2a/2b は sorryAx-free で建った（necessary scaffolding）が、2b が marginal で方向不一致 → genuine core は 2c = conditional-context AEP（research-level）**。
 
-- **length-grouping log-sum の決定的 atom = 抽象 Jensen grouping** `c·log c ≤ ∑_ℓ c_ℓ·log c_ℓ + c·log(#groups)`（純 Finset/Real）を、phrase を `List.length` で fiber 化（`card_eq_sum_card_fiberwise` / `sum_fiberwise_of_maps_to`、Finset API 完備）した上で `Real.convexOn_mul_log` + `ConvexOn.map_sum_le` で建てる。`#groups = O(log n)`（maxlen lemma）なので overhead `c·log(#groups) = c·log log n` は `(c·log log n)/n = O((log log n)/log n) → 0` で vanish（D3 をクリア）。これが leg 3 で一度も isolated に試されていない gateway atom。
-- leg 3 の refutation（sorryAx-free 単一 bound `c·log c ≤ 8·log(|α|+1)·n` は constant limsup しか出さず低エントロピー源で `entropyRate₂` 超過 = 不十分）は **「単一 bound では届かない」** ことを示すのみで、**length-grouping log-sum が届かないことを示していない**（length 別に entropy を割り当てると per-group bound の和が `-log Pₙ` に乗る）。
+#### Phase 2a — convexity grouping（length 別 Jensen）✅ sorryAx-free（commit `c472518`）
 
-**proof-log: yes**（gateway atom の go/no-go 記録必須）。実装 = `InformationTheory/Shannon/LZ78/ZivLengthGrouping.lean`。
+抽象 Jensen grouping `c·log c ≤ ∑_ℓ c_ℓ·log c_ℓ + c·log(#groups)`（純 Finset/Real、`Real.convexOn_mul_log` + `ConvexOn.map_sum_le`）+ LZ 長さ別特化。**deliverable**: `card_mul_log_le_sum_group_mul_log_add_card_log`（`ZivLengthGrouping.lean:49`）+ `lz78PhraseStrings_card_mul_log_le_sum_length_group`（`:143`）、両 sorryAx-free。**判定**: convexity grouping それ自体は壁でない（D3 を回避する length-fiber 化は機械的に成立）。だが単独では `-log Pₙ` に届かない（per-group log-sum を source 確率に乗せる橋が別途必要）。
 
-これが **genuine missing piece**（Mathlib にも codebase にもない核）。`c·log c` を `-log Pₙ` に繋ぐ length-grouping 不等式。**更に小分けに**:
+#### Phase 2b — marginal sub-distribution + log-sum 橋 ✅ sorryAx-free（commit `d1d55db`）— **方向不一致**
 
-- **2-gateway. 抽象 Jensen grouping atom**（leg 4、★最初に試す）。phrase 数を長さで fiber 化したときの `c·log c ≤ ∑_ℓ c_ℓ·log c_ℓ + c·log(#groups)`（純 Finset/Real、`Real.convexOn_mul_log` + `ConvexOn.map_sum_le`、in-project `log_sum_inequality` を group 集合に 1 回適用）。leg 3 で一度も isolated に試されていない decisive atom。これが通れば length-grouping が tractable のシグナル。`ZivLengthGrouping.lean` に実装。
-- **2a. length-distribution の log-sum 下界**（novel、~60–120 行）。phrase strings を長さ別に分類し、`∑ phrases -log(per-phrase prob) ≥ c·log c - c·H(length-dist)` 型の組合せ不等式。供給テンプレート = `total_length_ge_count_mul_log`（`ZivCountingBody.lean:190` verbatim、`c·log c ≤ 8·log(|α|+1)·T`）の packing 論法（同じ長さの distinct phrase は高々 `|α|^ℓ` 個 → 長さ別 entropy bound）。`lz78PhraseStrings_nodup`（`GreedyLongestPrefix.lean:123`）が distinctness 前提を供給。
-- **2b. per-path log-sum を `-log Pₙ` に接続**（novel + 既存橋、~40–80 行）。**D4 trap 回避が crux**: `∑ⱼ -log qⱼ`（path-prefix、`∑qⱼ≈c` trap）を経由せず、length-grouped log-sum を **直接** `-log Pₙ = n·blockLogAvg`（`blockLogAvg_eq_neg_log_blockProb`、`ZivEntropyBridge.lean:126` verbatim、`0 < n` + `0 < Pₙ` 前提）に乗せる。`0 < Pₙ` は a.s. regularity（observed cylinder 正質量）→ `∀ᵐ ω` の中で供給。
-- **novel か**: **はい、2-gateway/2a/2b が核**。2-gateway は抽象 Jensen grouping、2a は length-grouped packing の組合せ核（`total_length_ge_count_mul_log` の packing を長さ別 entropy 形に拡張）、2b は length-sum を source 確率に乗せる接続。最難サブピース（packing `card_short_le`/`total_length_ge_count_mul_log`、envelope `count_isBigO`）は既に sorryAx-free in-tree。Mathlib に LZ78/Ziv 不等式は無い（loogle 0、在庫裏取り済）。
+per-length **marginal** sub-distribution `∑_a P(a) ≤ 1` + per-group log-sum + 集約。**deliverable**: `sum_marginal_real_le_one`（`ZivMeasureBridge.lean:76`）+ `group_card_mul_log_le_sum_neg_log`（`:103`）+ `lz78PhraseStrings_mul_log_le_sum_neg_log_marginal_add_overhead`（`:184`、`c·log c ≤ ∑_phrases -log P_marginal + c·log D`）、全 sorryAx-free。**判定（machine-ruled-out）**: marginal 版は overhead が vanish するが、chain rule `-log Pₙ = ∑_j -log q_cond(j)` に対し memory 源では `q_cond ≥ P_marginal` ゆえ `∑ -log P_marginal ≥ -log Pₙ` = **欲しい `≤` と逆向き**（iid で等号、memory で逆、Dirac で両 0 alive）。FKG/positive-association の Mathlib 補題は loogle **0-hit**。**marginal では `-log Pₙ` を上から押さえられない** → 単独では genuine core を閉じない。ただし sub-distribution + log-sum の機構（disjoint-cylinder 論法）は conditional 版へ転用可能（necessary scaffolding）。
 
-**地雷チェック**: per-block `∀n∀ω` 形にしない（D1/D2 FALSE、反例 `a^16`）。2a/2b は **per-n 不等式 + overhead 項込み**で、limsup 形で o(n) を吸収して初めて成立。clean `c·log c ≤ -log Pₙ`（D1）や overhead 付き ∀n∀ω（D2）を書いた瞬間に即撤退。
+#### Phase 2c — genuine wall: conditional-context (length, finite-context) AEP 🔄 research-level
 
-### Phase 3 — overhead o(n) 制御 + limsup 合成（~50–100 行、medium）
+**proof-log: yes**（次 genuine atom の go/no-go 記録必須）。**これが genuine missing measure-theoretic 核**（codebase + Mathlib 不在）。両単純 grouping（node-position D3 / marginal 方向）が machine-ruled-out された後、唯一生き残る構造:
+
+- **次の genuine atom = node-context (conditional) sub-distribution `∑_a q(node·a|node) ≤ 1`** — path-prefix `condPhraseProb`（D4 trap、0 consumers、`∑≈c`）でも marginal（方向逆）でもない **第三の量**。leg 4 の `ZivMeasureBridge.lean` の sub-distribution 機構（`sum_marginal_real_le_one` の disjoint-cylinder 論法）を **conditional cylinder 比** へ拡張する路。
+- **正しい assembly = (length, finite-context)-grouping + conditional q(symbol|context) + AEP**。(a) conditional で chain rule 経由 `-log Pₙ` に到達、(b) per-context sub-distribution で log-sum 適用可、(c) finite-context で #contexts 有界 → convexity overhead vanish。context 深さ→∞ の近似誤差を AEP で制御。
+- **handoff 原典の「variable-depth tree-node AEP」framing は正しかった**（leg 4 前半が一時 plumbing と誤読したのを再是正）。research-level・数 leg の genuine 壁。
+
+**地雷チェック**: per-block `∀n∀ω` 形にしない（D1/D2 FALSE、反例 `a^16`）。conditional-context bound は **per-n 不等式 + overhead 項込み + AEP**で、limsup 形で o(n) を吸収して初めて成立。clean `c·log c ≤ -log Pₙ`（D1）や overhead 付き ∀n∀ω（D2）を書いた瞬間に即撤退。
+
+### Phase 3 — overhead o(n) 制御 + limsup 合成（~50–100 行、medium、Phase 2c 通過後）
 
 **proof-log: no**（plumbing 級だが o(n) 評価のみ注記）。
 
-- **3a. overhead → 0**（~30–60 行）。`overhead(n) = c·log(maxlen)/n`。`maxlen ≤ log_b n`（最長 phrase 長 = 対数オーダー、`(|α|+1)^maxlen ≤ n` 型から）。`(c·log log n)/n` を `c = O(n/log n)`（`lz78PhraseStrings_count_isBigO`、`ZivCountingBody.lean:410` verbatim、envelope `n/Real.log n`）と合成 → `O((log log n)/log n) → 0`。`blockRV n ω` を `input n` として食わせる際は `lz78PhraseStrings_mul_log_le_of_length`（`:393`）/ `count_isBigO`（`hlen : (input n).length = n`）形に。`blockRV n ω` の length は `n`（`blockRV` の定義から、要 verbatim 確認）。
-- **3b. limsup 合成**（~20–40 行）。Phase 1（Step A）+ Phase 2（c·log₂c ≤ -log₂Pₙ + overhead）+ Phase 3a（overhead→0）を `∀ᶠ n` の per-n 比較 `lz/n ≤ blockLogAvg₂ + err(n)`、`err→0` にまとめ、`Filter.limsup_le_limsup`（`LiminfLimsup.lean:198` verbatim、cobounded/bounded auto 引数）+ `Tendsto.add` 系（`err→0` を limsup に吸収）で `limsup(lz/n) ≤ limsup blockLogAvg₂`。cobounded/bounded witness = `lz78_impl_rate_le_const`（上界）+ `per_symbol_nonneg`（下界）、`Filter.isBoundedUnder_of`（headline `h_bdd_above` 実証手法）。
+- **3a. overhead → 0**（~30–60 行）。finite-context truncation の overhead `(c·log log n)/n` を `c = O(n/log n)`（`lz78PhraseStrings_count_isBigO`、`ZivCountingBody.lean:410` verbatim、envelope `n/Real.log n`）と合成 → `O((log log n)/log n) → 0`。`blockRV n ω` を `input n` として食わせる際は `count_isBigO`（`hlen : (input n).length = n`）形に。
+- **3b. limsup 合成**（~20–40 行）。Phase 1（Step A）+ Phase 2c（conditional-context AEP で `c·log₂c ≤ -log₂Pₙ + overhead`）+ Phase 3a（overhead→0）を `∀ᶠ n` の per-n 比較 `lz/n ≤ blockLogAvg₂ + err(n)`、`err→0` にまとめ、`Filter.limsup_le_limsup`（`LiminfLimsup.lean:198` verbatim、cobounded/bounded auto 引数）+ `Tendsto.add` 系で `limsup(lz/n) ≤ limsup blockLogAvg₂`。cobounded/bounded witness = `lz78_impl_rate_le_const`（上界）+ `per_symbol_nonneg`（下界）、`Filter.isBoundedUnder_of`（headline `h_bdd_above` 実証手法）。
 
 ### Phase 4 — W2 discharge（~10–30 行、低リスク・配線のみ）
 
 **proof-log: no**。
 
-`ziv_aseventual_le_blockLogAvg₂`（`GreedyParsingImpl.lean:557`）の `sorry` を Phase 1–3 の合成で埋める。`∀ᵐ ω` の中で `0 < Pₙ`（a.s. regularity）+ `0 < n` を供給し、per-n 比較 → `limsup_le_limsup`。**signature は変えない**（statement は既に正しい Mathlib-shape）。完了後:
+`ziv_aseventual_le_blockLogAvg₂`（`GreedyParsingImpl.lean:557`）の `sorry` を Phase 1–3（Phase 2c = conditional-context AEP 通過後）の合成で埋める。`∀ᵐ ω` の中で `0 < Pₙ`（a.s. regularity）+ `0 < n` を供給し、per-n 比較 → `limsup_le_limsup`。**signature は変えない**（statement は既に正しい Mathlib-shape）。完了後:
 
 - consumer `lz78GreedyImpl_achievability_ae`（合成本体 sorry-free）が **sorryAx-free 化** → `#print axioms ziv_aseventual_le_blockLogAvg₂` / `lz78GreedyImpl_achievability_ae` = `[propext, Classical.choice, Quot.sound]` を機械確認（DoD proof done）。
 - docstring の `@residual(wall:lz78-aseventual-ziv)` を除去し `@audit:ok` 化（**独立 honesty audit を要請** — 新 sorry 消滅 + signature honest 確認）。
@@ -136,45 +143,58 @@ theorem lz78_impl_bitrate_le_clogc_plus_overhead
 
 ## 地雷の不変条件（再探索禁止、各 atom が抵触しないこと）
 
-- **D1**: per-block `c·log c ≤ -log Pₙ`（∀n∀ω, clean）は **FALSE**（反例 `a^16`, c=5, -log Pₙ=0）。→ Phase 2 は **a.s.-eventual + overhead 項込みの per-n 形**、限界は limsup でのみ取る。
-- **D2**: overhead 版 `c·log c ≤ -log Pₙ + c·log(|α|+1)`（∀n∀ω）も **FALSE**（`Pₙ→1` family）。→ Phase 2/3 の overhead は **`c·log(maxlen)`（length-grouping、vanish する）**であって定数 `c·log(|α|+1)` ではない。
-- **D3**: node-grouping overhead `(c·log D)/n`（D≈c）は **定数収束（vanish しない）**。→ Phase 2/3 は **必ず length-grouping**（overhead `c·log(maxlen)`、support 指数的に小 → vanish）。`log D=log c` を `log(n/c)≈log log n` と取り違えない。
-- **D4**: path-prefix `Q_c = ∏ condPhraseProb` の AEP（`blockProb_neg_log_ge_sum` / `condPhraseProb`、`ZivEntropyBridge.lean`）は **0 direct consumers**（本セッション機械裏取り、dead-start、`∑ⱼqⱼ≈c` trap）。→ Phase 2b は **素通り**（`∑qⱼ` を経由せず length-grouped log-sum を直接 `-log Pₙ` に乗せる）。
+- **D1**: per-block `c·log c ≤ -log Pₙ`（∀n∀ω, clean）は **FALSE**（反例 `a^16`, c=5, -log Pₙ=0）。→ Phase 2c は **a.s.-eventual + overhead 項込みの per-n 形 + AEP**、限界は limsup でのみ取る。
+- **D2**: overhead 版 `c·log c ≤ -log Pₙ + c·log(|α|+1)`（∀n∀ω）も **FALSE**（`Pₙ→1` family）。→ overhead は finite-context truncation の vanish する項であって定数 `c·log(|α|+1)` ではない。
+- **D3（machine-ruled-out、leg 4 後半）**: node-position-grouping overhead `(c·log #nodes)/n`（#nodes≈c）は **定数収束（vanish しない）** = treenode T1-T5 literal が死ぬ。→ finite-context で #contexts を有界にして overhead vanish。`log #nodes=log c` を `log log n` と取り違えない。
+- **D4**: path-prefix `Q_c = ∏ condPhraseProb` の AEP（`blockProb_neg_log_ge_sum` / `condPhraseProb`、`ZivEntropyBridge.lean`）は **0 direct consumers**（機械裏取り、dead-start、`∑ⱼqⱼ≈c` trap）。→ Phase 2c は **path-prefix を素通り**（必要なのは node-context conditional sub-distribution `∑_a q(node·a|node)≤1` という第三の量）。
+- **D8（machine-ruled-out、leg 4 後半）**: marginal-length-grouping は overhead vanish だが **方向不一致** — memory 源で `∑ -log P_marginal ≥ -log Pₙ`（chain rule `-log Pₙ = ∑_j -log q_cond(j)` + `q_cond ≥ P_marginal`）= 欲しい `≤` と逆。FKG/positive-association loogle 0-hit。→ Phase 2c は **conditional** q(symbol|context) を使う（marginal 不可）。
 
-各 Phase の抵触チェック: Phase 1（決定論的代数展開、limsup 対象を作るだけ、D1–D4 無関係）/ Phase 2a（length-grouped packing、D3 準拠）/ Phase 2b（`-log Pₙ` 直結、D4 素通り）/ Phase 3（overhead vanish = D2/D3 準拠）/ Phase 4（limsup 合成、per-block 形を作らない = D1 準拠）。
+各 Phase の抵触チェック: Phase 1（決定論的代数展開、D1–D8 無関係）/ Phase 2a（convexity grouping、D3 を length-fiber で回避）/ Phase 2b（marginal sub-dist、D8 に該当して方向不一致＝単独で genuine core を閉じない）/ Phase 2c（conditional-context AEP、D1/D2 を AEP で / D3 を finite-context で / D4・D8 を conditional sub-dist で全て回避）/ Phase 3（overhead vanish = D2/D3 準拠）/ Phase 4（limsup 合成、per-block 形を作らない = D1 準拠）。
 
 ## gateway atom 結果
 
-**Phase 1（単位整合 gateway）= `lz78_impl_bitrate_le_clogc_plus_overhead`（Step A 符号長 bit-rate 展開）= GO**（gateway-atom-first、commit `7171707`、sorryAx-free）。
+**Phase 1（単位整合 gateway）= `lz78_impl_bitrate_le_clogc_plus_overhead` = GO**（commit `7171707`、sorryAx-free）。nat↔bit 単位整合は壁でないと確定（plumbing 級）。
 
-- gateway 通過 → nat↔bit 単位整合（`Nat.log 2` ↔ `Real.log/log 2`、`+1` ずれ、`c=0` 退化）に想定外コスト無し = **単位整合は壁でない**と確定。Phase 1 の go/no-go gate は「単位整合の go」を意味し、「M2 全体 tractable」までは含意しない。
+**Phase 2a/2b（convexity grouping + marginal sub-dist 橋）= 両 sorryAx-free だが genuine core を閉じない**（commit `c472518`/`d1d55db`、necessary scaffolding）。
 
-**Phase 2（length-grouping log-sum）の真の gateway atom = 抽象 Jensen grouping**（leg 4 で実装中、`ZivLengthGrouping.lean`）。
+**Phase 2c の gateway atom = node-context (conditional) sub-distribution `∑_a q(node·a|node) ≤ 1`**（leg 5 以降）。
 
-- leg 3 は Phase 1 通過後に Phase 2b を **path-prefix `∑qⱼ`（D4）/ node-grouping（D3）route で probe** し、「可変深さ tree-node AEP = genuine 壁」と評価したが、これは **route 取り違えによる artifact**（leg 4 の inventory + proof-pivot-advisor で機械裏取り）。length-grouping log-sum の decisive atom（抽象 Jensen grouping `c·log c ≤ ∑_ℓ c_ℓ·log c_ℓ + c·log(#groups)`）は **leg 3 で一度も isolated に dispatch されていない** = gateway-atom-first の atom 選定自体が誤っていた。
-- length-grouping route なら #groups=O(log n) で overhead vanish（D3 クリア）、最難サブピースは既に sorryAx-free in-tree。gateway atom が通れば **1-2 leg で閉じる見込み**。
+- leg 4 後半の gateway-atom-first probe で、**2 つの単純 grouping が両方 machine-ruled-out** されたのが決定的成果: (1) node-position-grouping = D3 trap（#nodes≈c で overhead 非 vanish）、(2) marginal-length-grouping = D8 方向不一致（`∑ -log P_marginal ≥ -log Pₙ`、memory で逆向き、FKG 補題 loogle 0-hit）。
+- 残る genuine core = conditional-context AEP（marginal/path-prefix いずれでもない第三の量 `∑_a q(node·a|node) ≤ 1` を中心に、(length, finite-context)-grouping + AEP）。これが genuine missing measure-theoretic 核（codebase + Mathlib 不在）。**research-level・数 leg**（leg 4 前半の「1-2 leg で閉じる」楽観は撤回）。
 
 ## 撤退ライン
 
-- **gateway atom（抽象 Jensen grouping、leg 4）が通らない** → length-grouping log-sum 核が想定より重い → **`ziv_aseventual_le_blockLogAvg₂` を `sorry` + `@residual(wall:lz78-aseventual-ziv)` 維持**（tier-2 honest）。結果が出るまで W2 は discharge しない。
-- **gateway（Phase 1、単位整合）が ~1 セッション以内に通らない** → 単位整合に想定外コストのシグナル（leg 3 で **不該当**、gateway は GO）。
-- **Phase 2（length-grouping log-sum 核 2-gateway/2a/2b）が通らない** → genuine 組合せ核が想定より重い。同様に **`ziv_aseventual_le_blockLogAvg₂` を `sorry` + `@residual(wall:lz78-aseventual-ziv)` 維持**。
-- 退出口は **sorry + `@residual` のみ**。hypothesis bundling（`*Hypothesis` / `*Reduction` predicate に core を抱えさせる）は **禁止**（CLAUDE.md「検証の誠実性」）。W2 の signature（`(μ, p)` + `[IsProbabilityMeasure μ]` regularity のみ）を変えない。Phase 2/3 で建てた個別 atom が sorry を持つなら、それぞれ `@residual(wall:lz78-aseventual-ziv)`（同壁）または新規 plan-slug を付与。
-- **route 是正（leg 4）**: 旧 `lz78-ziv-treenode-plan.md`（node-grouping route B）は **D3 trap + 削除済資産で reject**（parked、判断ログ #4）。攻略は **本 m2-plan の length-grouping route A**（Step A-D + 抽象 Jensen gateway atom）。
+- **Phase 2c（conditional-context AEP）が通らない** → genuine core が想定通り research-level → **`ziv_aseventual_le_blockLogAvg₂` を `sorry` + `@residual(wall:lz78-aseventual-ziv)` 維持**（tier-2 honest）。結果が出るまで W2 は discharge しない。
+- **node-context conditional sub-distribution atom が通らない** → genuine missing 核が想定より重い。同様に W2 = `sorry` + `@residual` 維持。
+- 退出口は **sorry + `@residual` のみ**。hypothesis bundling（`*Hypothesis` / `*Reduction` predicate に core を抱えさせる）は **禁止**（CLAUDE.md「検証の誠実性」）。W2 の signature（`(μ, p)` + `[IsProbabilityMeasure μ]` regularity のみ）を変えない。Phase 2c/3 で建てた個別 atom が sorry を持つなら、それぞれ `@residual(wall:lz78-aseventual-ziv)`（同壁）または新規 plan-slug を付与。
+- **route 履歴**: 旧 `lz78-ziv-treenode-plan.md`（node-position-grouping = route B）は D3 trap で reject 済（部分 un-park: conditional sub-distribution = 旧 T2 は genuine に必要な核と leg 4 で確認、判断ログ #4）。
 
 ## 規模・リスク総括
 
-- **総計**: ~210–440 行（Phase 1: 30–60 / Phase 2: 120–250 / Phase 3: 50–100 / Phase 4: 10–30）。在庫 `lz78-m3-inventory.md` 自前要素 2（a.s.-eventual Ziv 比較、~150–400 行 medium）に整合。
-- **支配項・最大リスク**: Phase 2（length-grouping log-sum 核、genuine novel、medium–high）。Phase 1/3/4 は plumbing〜既存資産流用（低〜medium）。leg 4 route 是正で「research-level、数 leg」評価は撤回 — gateway atom が通れば **1-2 leg 見込み**。
-- **genuine novel 核の所在**: Phase 2-gateway（抽象 Jensen grouping）+ Phase 2a（length-grouped packing 組合せ核、`total_length_ge_count_mul_log` の packing を長さ別 entropy 形に拡張）+ Phase 2b（length-sum → `-log Pₙ` 直結、D4 trap 回避）。これ以外（Step A 展開・overhead vanish・limsup 合成）は既存資産。
+- **総計**: ~300–600 行（Phase 2c conditional-context AEP が支配 / Phase 3 + Phase 4 配線）。Phase 1/2a/2b は sorryAx-free 済（足場、~250 行 committed）。
+- **支配項・最大リスク**: Phase 2c（conditional-context (length, finite-context) AEP、genuine missing measure-theoretic 核、research-level）。両単純 grouping が machine-ruled-out された後の唯一の生存構造。Phase 1/3/4 は plumbing〜既存資産流用（低〜medium）。
+- **genuine missing 核の所在**: Phase 2c = node-context (conditional) sub-distribution `∑_a q(node·a|node) ≤ 1`（marginal/path-prefix いずれでもない第三の量）+ finite-context truncation + AEP。これ以外（Step A 展開・convexity grouping 2a・marginal 橋 2b・overhead vanish・limsup 合成）は既存資産 / sorryAx-free 済。
 
 ## 判断ログ
 
 1. **W1 は閉鎖済として扱う（在庫の W1 自前 closure 想定は obsolete）**: 在庫 `lz78-m3-inventory.md` は W1（SMB-in-bits 橋）を「自前 closure 対象（~30–60 行）」と書くが、leg 3 で `shannon_mcmillan_breiman₂`（`GreedyParsingImpl.lean:520`、`@audit:ok`、sorryAx-free）として **既に閉じた**。本サブ計画の対象は W2 のみ。
 2. **bit 単位で建てる（verbatim 確認の帰結）**: SMB-in-bits が既に `blockLogAvg₂`（bit）で握り、W2 RHS も `limsup blockLogAvg₂`。target を bit 形 `c·log₂c ≤ -log₂Pₙ + o(n)` で建て、nat 量（`lz78PhraseStrings_mul_log_le`、`blockLogAvg_eq_neg_log_blockProb`）は `/Real.log 2` で機械整合。`c·log c ≤ -log Pₙ`（nat）を直接 def 化しない（W2 の Mathlib-shape は bit）。
 3. **ripple ゼロ（機械確認）**: `ziv_aseventual_le_blockLogAvg₂` の direct consumer は 1 decl（`lz78GreedyImpl_achievability_ae`、同 file、statement 依存のみ）。W2 の body を埋めるだけで signature 不変 → 配線変更不要。`blockProb_neg_log_ge_sum`（D4）は 0 consumers（dead-start 裏取り）。
-4. **route 確定 = length-grouping route A（leg 4 で route 取り違えを是正、inventory `lz78-m3-treenode-inventory.md` + proof-pivot-advisor、機械裏取り）**: leg 3 は Phase 2b を「可変深さ tree-node AEP = single in-session plan で閉じない genuine research-level 壁、攻略 = 旧 treenode T1-T5 路」と評価したが、これは **node/path-prefix route を probe した artifact**。
-   - **route B（node-grouping = treenode T1-T5）は D3 trap で死ぬ**: overhead `c·log(#nodes) ≈ c·log c`、`lz78PhraseStrings_mul_log_le`（`c·log c ≤ K·n`、sorryAx-free）より `(c·log c)/n` は定数 = main term と同オーダーで vanish しない。数学的に細工不能。加えて treenode plan が「再利用、転記主体」と書く資産（`extendCylinder*`/`condNextSymbol_sum_eq_one`/`IsLZ78ZivCombinatorialCore`/`LZ78ZivCombinatorics.lean`/`LZ78ZivEntropyBridge.lean`）は commit `f67ec8a`/`602b1ad` で **削除済 (disk 不在、rg 確認)** = resurrection は ~750-1100 行のゼロ再構築。`condPhraseProb` も固定 tuple `v` でなく観測 `ω` で parametrize された path-prefix 比なので node-context sub-distribution を既存資産から抽出できない。
-   - **唯一の genuine route = (A) length-grouping**（本 m2-plan の Approach Step A-D）。#groups = O(log n)、overhead `c·log log n` → vanish（D3 クリア）。最難サブピース（packing `card_short_le`/`total_length_ge_count_mul_log`、envelope `count_isBigO`）は既に sorryAx-free in-tree。**decisive gateway atom = 抽象 Jensen grouping** `c·log c ≤ ∑_ℓ c_ℓ·log c_ℓ + c·log(#groups)`（純 Finset/Real、`Real.convexOn_mul_log` + `ConvexOn.map_sum_le`）= treenode plan 判断 3 / feasibility リスク #1 そのもの。これは **leg 3 で一度も isolated に dispatch されていない**。`InformationTheory/Shannon/LZ78/ZivLengthGrouping.lean` に leg 4 で実装中、結果が出るまで W2 は `sorry` + `@residual(wall:lz78-aseventual-ziv)` 維持（discharge しない）。
-   - **severity 再評価**: leg 3 の「research-level、数 leg」は earned verdict でなく route 取り違え由来 = **過大評価**。length-grouping を正しく取れば 1-2 leg 見込み。refutation の `c·log c ≤ K·n` 単一 bound 不十分は「単一 bound では届かない」を示すのみで length-grouping log-sum の不達を示さない。**壁 `wall:lz78-aseventual-ziv` 自体は honest に維持**（gateway atom 実装中、TRUE-as-framed、a.s.-eventual Ziv 内容は未証明）。treenode plan は parked/STALE 化（route B 死亡）。
-   - **記録のみ（コード触らない）**: `isLZ78PerPathParsingFactorization_of_pos` が `ZivEntropyBridge.lean`/`Stationary/Kernel.lean` の docstring で「genuinely constructed」と記載されているが実在 decl が無い（inventory 発見、`rg` で phantom 確認）。コード docstring fact error、別途修正候補（SoT はコード側、今回は記録のみ）。
+4. **壁の精密 characterization = conditional-context AEP（leg 4 後半 gateway-atom-first probe、機械裏取り、本 leg 2 度目の修正）**: leg 4 前半の「length-grouping route A は 1-2 leg で閉じる、rest plumbing」という楽観は **撤回**。leg 4 後半の probe で壁 `ziv_aseventual_le_blockLogAvg₂` は **genuine research-level** と精密に裏取り。**2 つの単純 grouping が両方 machine-ruled-out**:
+   - **(1) node-position-grouping（treenode T1-T5 literal）= D3 trap**: convexity overhead `c·log(#nodes)`、LZ tree で #nodes≈c なので `c·log(#nodes) ≈ c·log c` = main term と同オーダー、`lz78PhraseStrings_mul_log_le`（`c·log c ≤ K·n`、sorryAx-free）より `(c·log c)/n` は定数で vanish しない。
+   - **(2) marginal-length-grouping（leg 4 前半 sorryAx-free 成果）= 方向不一致**: overhead は vanish するが、chain rule `-log Pₙ = ∑_j -log q_cond(j)`（conditional）に対し memory 源では `q_cond ≥ P_marginal` ゆえ `∑ -log P_marginal ≥ -log Pₙ` = 欲しい `≤` と逆（iid で等号、memory で逆、Dirac で両 0 alive）。FKG/positive-association の Mathlib 補題は loogle **0-hit**。marginal では `-log Pₙ` を上から押さえられない。
+   - **leg 4 の genuine sorryAx-free 成果（necessary scaffolding、単独で不十分）**: `ZivLengthGrouping.lean`（commit `c472518`、抽象 Jensen grouping + LZ 長さ別、両 sorryAx-free）+ `ZivMeasureBridge.lean`（commit `d1d55db`、per-length marginal sub-distribution `sum_marginal_real_le_one` + per-group log-sum + 集約、sorryAx-free）。marginal 版なので方向不一致で `-log Pₙ` に届かないが、sub-distribution + log-sum 機構（disjoint-cylinder 論法）は conditional 版に転用可能。
+   - **genuine core = conditional-context AEP**: 唯一 `c·log c ≤ -log Pₙ + o(n)` を満たす構造 = **(length, finite-context)-grouping + conditional q(symbol|context) + AEP**。3 条件同時 — (a) conditional で chain rule 経由 `-log Pₙ` 到達（marginal 不可）、(b) per-context sub-distribution `∑_a q(context·a|context) ≤ 1` で log-sum 適用可（path-prefix `condPhraseProb` は `∑qⱼ≈c` の D4 trap で不可）、(c) finite-context で #contexts 有界 → convexity overhead vanish（naive node-grouping は #nodes≈c で D3 trap）。context 深さ→∞ の近似誤差を AEP で制御。= handoff 原典の「variable-depth tree-node AEP」framing は **正しかった**（leg 4 前半が一時 plumbing と誤読したのを再是正）。
+   - **次の genuine atom（leg 5 以降）= node-context (conditional) sub-distribution `∑_a q(node·a|node) ≤ 1`** — path-prefix `condPhraseProb`（D4 trap、0 consumers、`∑≈c`）でも marginal（方向逆）でもない第三の量 = genuine missing measure-theoretic 核（codebase + Mathlib 不在）。leg 4 の `ZivMeasureBridge.lean` sub-distribution 機構を conditional cylinder 比へ拡張 → finite-context truncation + AEP で convexity overhead vanish（research-level）。
+   - **壁 `wall:lz78-aseventual-ziv` 自体は honest に維持**（TRUE-as-framed、conditional-context AEP 未証明）。treenode plan は **部分 un-park**（conditional sub-distribution = 旧 T2 は genuine 核、node-position-grouping = 旧 T3 assembly は D3 で dead）。
+   - **記録のみ（コード触らない）**: `isLZ78PerPathParsingFactorization_of_pos` が `ZivEntropyBridge.lean`/`Stationary/Kernel.lean` の docstring で「genuinely constructed」と記載されているが実在 decl が無い（phantom 確認）。コード docstring fact error、別途修正候補（SoT はコード側、今回は記録のみ）。
+
+## settled facts（machine-backed、confidence: machine）
+
+leg 4 後半に機械裏取りされた壁の characterization。re-verification は `#print axioms` / loogle に任せ（prose cache しない）、ここは expensive-to-rederive な機械裏取り判定のみ簡潔に記録。
+
+| claim | confidence | re-verification | notes |
+|---|---|---|---|
+| node-position-grouping = D3 trap（overhead `c·log #nodes ≈ c·log c` 非 vanish） | machine | `#print axioms lz78PhraseStrings_mul_log_le`（`c·log c ≤ K·n`、sorryAx-free） | #nodes≈c が D3 を実際に殺す |
+| marginal-length-grouping = 方向不一致（`∑ -log P_marginal ≥ -log Pₙ`） | machine | FKG/positive-association loogle 0-hit + chain rule `q_cond ≥ P_marginal` | iid で等号、memory で逆、Dirac で両 0 alive |
+| `ZivLengthGrouping.lean` + `ZivMeasureBridge.lean` 両 sorryAx-free | machine | `#print axioms` on `lz78PhraseStrings_card_mul_log_le_sum_length_group` / `lz78PhraseStrings_mul_log_le_sum_neg_log_marginal_add_overhead` | necessary scaffolding、commit `c472518`/`d1d55db` |
