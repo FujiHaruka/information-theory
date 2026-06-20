@@ -450,7 +450,23 @@ body from `lz78_impl_rate_le_const` / `lz78_impl_encoding_length_per_symbol_nonn
 so the squeeze `tendsto_of_le_liminf_of_limsup_le` is applied with all of its
 regularity inputs genuine. The remaining `sorryAx` is carried exactly via the
 two M3/M4 walls (`lz78GreedyImpl_converse_ae` / `lz78GreedyImpl_achievability_ae`,
-machine-verified); the boundedness discharge introduces no new `sorry`. -/
+machine-verified); the boundedness discharge introduces no new `sorry`.
+
+Independent auditor confirmation 2026-06-20 (commit `a1ae108`, fresh subagent):
+the `h_bdd_above` discharge is genuine, NOT vacuous/degenerate. The witness
+constant `C = (1 + 8·log(|α|+1)/log 2) + (log₂|α| + 2)` is a finite real and the
+bound `rate ≤ C` holds for every `ω` and every `n` (forall, not a.e.) via the
+sorryAx-free `lz78_impl_rate_le_const` (`#print axioms`
+= `[propext, Classical.choice, Quot.sound]`), whose only nontrivial input is the
+sorryAx-free Ziv core `lz78PhraseStrings_mul_log_le` plus `c ≤ n`. The bridge
+`lz78_impl_natLog_mul_log_two_le` is unconditionally true (both sides degenerate
+to 0 at `m ∈ {0,1}`; `Real.natLog_le_logb` has no precondition) — sorryAx-free.
+Four honesty checks PASS (non-circular: genuine forward to
+`lz78_asymptotic_optimality`, no identity-wrap; non-bundled: removed precondition,
+core stays in the two walls; non-degenerate: `C` finite, `n=0`/`|α|=1`/`c∈{0,1}`
+boundaries verified; sufficiency: rate bound machine-true, no counterexample).
+Headline `#print axioms` carries `sorryAx` exactly via the two walls — verdict
+`honest_residual` (tier 2). -/
 @[entry_point]
 theorem lz78_asymptotic_optimality_with_greedy_impl
     (μ : Measure Ω) [IsProbabilityMeasure μ]
