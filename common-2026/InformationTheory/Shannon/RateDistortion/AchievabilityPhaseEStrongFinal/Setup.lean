@@ -340,6 +340,32 @@ noncomputable def lossyCodeOfCodebookStrong
   encoder := jointStronglyTypicalLossyEncoder μ Xs Ys hM ε c
   decoder := c
 
+/-- Weighted-average bound: if `0 ≤ W` with `∑ W = 1`, each `f i ≤ a + m * g i`,
+`0 ≤ m`, and `∑ W · g ≤ B`, then `∑ W · f ≤ a + m · B`. -/
+lemma weighted_avg_bound {ι : Type*} [Fintype ι] (W f g : ι → ℝ) (a m B : ℝ)
+    (hW_nn : ∀ i, 0 ≤ W i) (hW_sum : ∑ i, W i = 1) (hm_nn : 0 ≤ m)
+    (h_per : ∀ i, f i ≤ a + m * g i) (h_g : ∑ i, W i * g i ≤ B) :
+    ∑ i, W i * f i ≤ a + m * B := by
+  have h_step1 : ∑ i, W i * f i ≤ ∑ i, W i * (a + m * g i) :=
+    Finset.sum_le_sum (fun i _ => mul_le_mul_of_nonneg_left (h_per i) (hW_nn i))
+  have h_step2 : ∑ i, W i * (a + m * g i) = a + m * ∑ i, W i * g i := by
+    have h_distribute :
+        ∑ i, W i * (a + m * g i)
+          = (∑ i, W i * a) + ∑ i, W i * (m * g i) := by
+      rw [← Finset.sum_add_distrib]
+      refine Finset.sum_congr rfl (fun i _ => ?_)
+      ring
+    rw [h_distribute]
+    have h_sum_a : ∑ i, W i * a = a := by
+      rw [show (∑ i, W i * a) = (∑ i, W i) * a from by rw [Finset.sum_mul]]
+      rw [hW_sum]; ring
+    have h_sum_m : ∑ i, W i * (m * g i) = m * ∑ i, W i * g i := by
+      rw [Finset.mul_sum]
+      refine Finset.sum_congr rfl (fun i _ => ?_)
+      ring
+    rw [h_sum_a, h_sum_m]
+  linarith [h_step2 ▸ h_step1, mul_le_mul_of_nonneg_left h_g hm_nn]
+
 /-! ## Witness-form rate-distortion achievability (strong-encoder variant)
 
 The strong-encoder analogue of `rate_distortion_achievability_witness_form`,
@@ -436,45 +462,24 @@ theorem rate_distortion_achievability_witness_form_strong
   have h_avg_bound :
       ∑ c : Codebook Mn n β, (codebookMeasure (μ.map (Ys 0)) Mn n).real {c} * f c
         ≤ (expectedJointDistortion μ (Xs 0) (Ys 0) d + δ_typ) + dMax * failure_seq n := by
-    set Edδ : ℝ := expectedJointDistortion μ (Xs 0) (Ys 0) d + δ_typ with hEdδ_def
-    set fail : Codebook Mn n β → ℝ := fun c =>
-      (Measure.pi (fun _ : Fin n => μ.map (Xs 0))).real
-        { x | (x, c (jointStronglyTypicalLossyEncoder μ Xs Ys hMn_pos ε_join c x))
-                ∉ distortionTypicalSet μ Xs Ys d n ε_dist δ_typ } with hfail_def
-    set W : Codebook Mn n β → ℝ :=
-      fun c => (codebookMeasure (μ.map (Ys 0)) Mn n).real {c} with hW_def
-    have h_per_codebook' : ∀ c : Codebook Mn n β,
-        f c ≤ Edδ + dMax * fail c := h_per_codebook
-    have h_w_nn : ∀ c : Codebook Mn n β, 0 ≤ W c := fun _ => measureReal_nonneg
-    have h_step1 : ∑ c, W c * f c ≤ ∑ c, W c * (Edδ + dMax * fail c) := by
-      refine Finset.sum_le_sum (fun c _ => ?_)
-      exact mul_le_mul_of_nonneg_left (h_per_codebook' c) (h_w_nn c)
-    have h_step2 : ∑ c, W c * (Edδ + dMax * fail c)
-          = Edδ + dMax * ∑ c, W c * fail c := by
-      have h_distribute :
-          ∑ c, W c * (Edδ + dMax * fail c)
-            = (∑ c, W c * Edδ) + ∑ c, W c * (dMax * fail c) := by
-        rw [← Finset.sum_add_distrib]
-        refine Finset.sum_congr rfl ?_
-        intro c _
-        ring
-      rw [h_distribute]
-      have h_sum_Edδ : ∑ c, W c * Edδ = Edδ := by
-        rw [show (∑ c, W c * Edδ) = (∑ c, W c) * Edδ from by
-              rw [Finset.sum_mul]]
-        rw [h_sum_one]; ring
-      have h_sum_dMax_fail : ∑ c, W c * (dMax * fail c) = dMax * ∑ c, W c * fail c := by
-        rw [Finset.mul_sum]
-        refine Finset.sum_congr rfl ?_
-        intro c _
-        ring
-      rw [h_sum_Edδ, h_sum_dMax_fail]
-    have h_step3 : ∑ c, W c * fail c ≤ failure_seq n := by
+    have h_step3 : ∑ c : Codebook Mn n β,
+        (codebookMeasure (μ.map (Ys 0)) Mn n).real {c} *
+          (Measure.pi (fun _ : Fin n => μ.map (Xs 0))).real
+            { x | (x, c (jointStronglyTypicalLossyEncoder μ Xs Ys hMn_pos ε_join c x))
+                    ∉ distortionTypicalSet μ Xs Ys d n ε_dist δ_typ }
+        ≤ failure_seq n := by
       have h_app := h_codebook_avg_failure h_n_pos
       convert h_app using 0
-    have h_step4 : dMax * ∑ c, W c * fail c ≤ dMax * failure_seq n :=
-      mul_le_mul_of_nonneg_left h_step3 h_dMax_nn
-    linarith [h_step1, h_step2.le]
+    exact weighted_avg_bound
+      (fun c => (codebookMeasure (μ.map (Ys 0)) Mn n).real {c})
+      f
+      (fun c => (Measure.pi (fun _ : Fin n => μ.map (Xs 0))).real
+        { x | (x, c (jointStronglyTypicalLossyEncoder μ Xs Ys hMn_pos ε_join c x))
+                ∉ distortionTypicalSet μ Xs Ys d n ε_dist δ_typ })
+      (expectedJointDistortion μ (Xs 0) (Ys 0) d + δ_typ)
+      dMax (failure_seq n)
+      (fun _ => measureReal_nonneg) h_sum_one h_dMax_nn
+      h_per_codebook h_step3
   obtain ⟨c₀, hc₀_le⟩ :=
     exists_codebook_low_avg (M := Mn) (n := n) (μ.map (Ys 0)) f h_avg_bound
   refine ⟨Mn, le_refl _, lossyCodeOfCodebookStrong μ Xs Ys hMn_pos ε_join c₀, ?_⟩
