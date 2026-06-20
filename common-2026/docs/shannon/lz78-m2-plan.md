@@ -11,13 +11,13 @@
 - [x] Phase 2b — marginal sub-distribution + log-sum 橋 ✅ **sorryAx-free**（`ZivMeasureBridge.lean`、commit `d1d55db`）— **marginal なので方向不一致、`-log Pₙ` に届かない**（判断ログ #4）
 - [x] Phase 2c-i — node-context conditional sub-distribution `∑_a q(v·a\|v) ≤ 1`（旧「次の genuine atom」）✅ **sorryAx-free**（`ZivCondContext.lean` `condContext_sum_le_one`/`condContext_card_mul_log_le_sum_neg_log`/chain-rule backbone、commit `cfe518b`/`6accdd2`、[lz78-facts.md](lz78-facts.md) 達成テーブル）— 第三の量は **既に建っている**
 - [~] Phase 2c-ii — **genuine wall**: Ziv (k-state, length)-grouping + k(n)→∞ diagonal grafting 🔄 **medium**（Cover-Thomas Lemma 13.5.5、判断ログ #4）→ 達成まで `sorry` + `@residual(wall:lz78-aseventual-ziv)` 維持
-  - **threading foundation = leg 8 で gateway GO + body fill + tiling 隔離、全監査 PASS**（`ZivThreading.lean`/`GreedyLongestPrefix.lean`、`bf78de9`/`29280cf`/`6fed263`/`6c8d939`）: gateway atom + factor correspondence 5 補題 + `negLogQk_phrase_threading` body fill すべて **sorryAx-free**（`negLogQk = boundary[0,b) + ∑_phrases -log condQkState + trailing[e,n)`、tiling+positivity regularity 入力下、`@audit:ok`）。parse reconstruction `lz78PhraseStrings_flatten_prefix` も sorryAx-free。残 1 sorry = `lz78_block_tiling`（`:538`、tiling 材料化、`@residual(wall:lz78-aseventual-ziv)`、honest_residual 監査 PASS）。**★ 監査 caveat**: 進捗 = threading 機構 + non-vacuity anchor 確立であって tiling-to-W2 入力完了ではない。drop した `b`/`n-e` symbol-accounting は downstream-necessary、**closure 時に boundary-length conjuncts (`b≤k+1phrase`/`n-e≤1phrase`) を結論へ追加**（再 defer 不可）。次 atom = per-phrase substring-coherence。詳細 = [lz78-facts.md](lz78-facts.md)「threading 配線」+ 判断ログ #5/#6。
-- [ ] Phase 3 — overhead o(n) 制御 + limsup 合成 📋（Phase 2c-ii 通過後に着手）
+  - **threading foundation + tiling 材料化 = leg 8–9 で sorryAx-free + 全監査 PASS**（`ZivThreading.lean`/`GreedyLongestPrefix.lean`/`Core.lean`、`bf78de9`/`29280cf`/`7b0ecbb`）: gateway atom + factor correspondence 5 補題 + `negLogQk_phrase_threading` body fill + **`lz78_block_tiling`（leg 9 CLOSED、`@audit:ok`、もはや sorry/residual ではない）** すべて sorryAx-free。leg 9 の 3 findings（a.s. statement 化 / `bAbsorbed ≤ k+1` off-by-one 訂正 / substring CONTENT coherence 不要）で leg 8 caveat は消化済。**次 = composition**: `lz78_block_tiling` から `obtain` → `negLogQk_phrase_threading` 適用で tiling/positivity 仮説を a.s. に internalize した `∀ᵐ ω, negLogQk = boundary[0,b) + ∑_phrases -log condQkState + trailing[e,n)`（args `μ,p,k,n` のみ）を産出 → (W) empirical-profile → (V) diagonalization → (Z) W2 discharge。詳細 = [lz78-facts.md](lz78-facts.md)「threading 配線」+ 判断ログ #5/#6。
+- [ ] Phase 3 — overhead o(n) 制御 + limsup 合成 📋（composition + Phase 2c-ii 通過後に着手）。**known sub-task**: `Lmax = o(n)` a.s.（longest LZ78 phrase の sublinear 成長）= `lz78_block_tiling` の boundary conjuncts（`n-e ≤ Lmax ∧ b ≤ k+Lmax`）を実 W2 vanishing に変える鍵、achievability wall 層に属し tiling 層が供給しない（leg 9 implementer + auditor 両者 flag）
 - [ ] Phase 4 — W2 discharge（`ziv_aseventual_le_blockLogAvg₂` の sorry を埋める）📋（達成まで `sorry` + `@residual(wall:lz78-aseventual-ziv)` 維持）
 
 ## ゴール
 
-W1（`shannon_mcmillan_breiman₂`、SMB-in-bits 橋）は leg 3 で **閉鎖済**（`@audit:ok`、sorryAx-free、`GreedyParsingImpl.lean:520`）。本サブ計画のゴールは残る **W2 = `ziv_aseventual_le_blockLogAvg₂`**（`GreedyParsingImpl.lean:557`、`@residual(wall:lz78-aseventual-ziv)`、唯一の active sorry）を **genuine に discharge** すること。W2 が閉じれば `lz78GreedyImpl_achievability_ae` が sorryAx-free 化され（合成本体は既に sorry-free）、**achievability 完遂**（headline に残るは M4 converse 壁のみ）。
+W1（`shannon_mcmillan_breiman₂`、SMB-in-bits 橋）は leg 3 で **閉鎖済**（`@audit:ok`、sorryAx-free、`GreedyParsingImpl.lean:520`）。本サブ計画のゴールは残る **W2 = `ziv_aseventual_le_blockLogAvg₂`**（`GreedyParsingImpl.lean:556`、`@residual(wall:lz78-aseventual-ziv)`、唯一の REAL 残 bare sorry）を **genuine に discharge** すること。W2 が閉じれば `lz78GreedyImpl_achievability_ae` が sorryAx-free 化され（合成本体は既に sorry-free）、**achievability 完遂**（headline に残るは M4 converse 壁のみ）。
 
 **status（leg 5 後、Q_k 資産発見による route 是正後）**: Phase 1 gateway = GO（単位整合は壁でない）。Phase 2a/2b（convexity grouping + marginal 橋）= sorryAx-free だが marginal 方向不一致で単独不十分。**leg 5 で route が是正された**: 旧 plan は genuine core を「conditional-context AEP を一から構築（Q_k from scratch、research-level・数 leg）」と書いたが、これは**過大評価だった**。実際には **kth-order Markov 測度 Q_k とその AEP + sub-distribution 境界が既に sorry-free で存在**する（[lz78-facts.md](lz78-facts.md) 達成テーブル、機械裏取り済）:
 
@@ -33,7 +33,7 @@ W1（`shannon_mcmillan_breiman₂`、SMB-in-bits 橋）は leg 3 で **閉鎖済
 - **規模/リスク是正**: 旧「~300–600 行 research-level・数 leg、Q_k from scratch」→ 新「Q_k measure/AEP/sub-dist + node-context conditional は free、残るは Ziv Lemma 13.5.5 (k-state,length)-grouping + k(n) diagonal の grafting、~150–300 行、**medium risk**」。依然 genuine だが「from scratch research-level」ではない。
 - **壁は維持**: 結果が出るまで W2 = `sorry` + `@residual(wall:lz78-aseventual-ziv)` を honest に維持（discharge しない）。**撤退ラインは「Ziv Lemma 13.5.5 gateway atom（per-step markovFactor (k-state,length)-grouping log-sum）が通らなければ tier-2 維持」**（gateway-atom-first：tier-2 維持の前に atom を 1 本 dispatch して試す）。
 
-W2 の verbatim signature（`GreedyParsingImpl.lean:557`、変更しない）:
+W2 の verbatim signature（`GreedyParsingImpl.lean:556`、変更しない）:
 
 ```lean
 theorem ziv_aseventual_le_blockLogAvg₂
@@ -139,6 +139,8 @@ per-length **marginal** sub-distribution `∑_a P(a) ≤ 1` + per-group log-sum 
 
 **proof-log: yes**（Ziv Lemma 13.5.5 gateway atom の go/no-go 記録必須）。**残る genuine missing piece**（既存 Q_k 資産への grafting）。Step B-naive（node-position D3 / marginal D8）が machine-ruled-out された後、生き残る構造 = **既存 kth-order Markov 測度 Q_k への grafting**:
 
+**leg 8–9 progress（threading + tiling 材料化 CLOSED、sorryAx-free、全監査 PASS）**: gateway atom + factor correspondence 5 補題 + `negLogQk_phrase_threading` body fill + `lz78_block_tiling`（leg 9 CLOSED、`@audit:ok`、5th existential `Lmax` + boundary conjuncts `n-e ≤ Lmax ∧ b ≤ k+Lmax`）すべて sorryAx-free（`ZivThreading.lean`/`GreedyLongestPrefix.lean`/`Core.lean`、達成テーブル [lz78-facts.md](lz78-facts.md)「threading 配線」）。**次の open edge = composition**（両 atom を `obtain` で wire、tiling-hyp-free・a.s. の block 分解を産出）→ 以降 (W) empirical-profile（下記 grouping）→ (V) diagonalization → (Z) W2 discharge。
+
 - **gateway atom = per-step `markovFactor` conditional の (k-state, length)-grouping log-sum**（Cover-Thomas Lemma 13.5.5）。phrase を (k-state, length) で grouping し、per-step `markovFactor` の sub-distribution（`∑_a markovFactor(s,a)=1`、`Core.lean:327-361` 抽出 / `condContext_sum_le_one`）で log-sum → `c·log c ≤ negLogQk + overhead`。**vehicle は per-step markovFactor conditional**（joint `qkSingleton` を per-phrase marginal にするのは D8 反復、禁止）。
 - **k(n)→∞ diagonal**: `entropyRate_eq_lim_condEntropy`（H_k→H、`EntropyRate.lean:484`、nat 単位）で k-limit と n-limsup を交換、overhead `c·k(n)·log|α|/n → 0` を保つ。
 - **AEP 接続**: `qkSingleton_blockRV_eq_ofReal_exp_negLogQk` → `negLogQk_div_tendsto_condEntropyTail`（H_k AEP）→ `entropyRate_eq_lim_condEntropy`。
@@ -157,7 +159,7 @@ per-length **marginal** sub-distribution `∑_a P(a) ≤ 1` + per-group log-sum 
 
 **proof-log: no**。
 
-`ziv_aseventual_le_blockLogAvg₂`（`GreedyParsingImpl.lean:557`）の `sorry` を Phase 1–3（Phase 2c-ii = Q_k grafting 通過後）の合成で埋める。`∀ᵐ ω` の中で `0 < Pₙ`（a.s. regularity）+ `0 < n` を供給し、per-n 比較 → `limsup_le_limsup`。**signature は変えない**（statement は既に正しい Mathlib-shape）。完了後:
+`ziv_aseventual_le_blockLogAvg₂`（`GreedyParsingImpl.lean:556`）の `sorry` を Phase 1–3（composition + Phase 2c-ii = Q_k grafting 通過後）の合成で埋める。`∀ᵐ ω` の中で `0 < Pₙ`（a.s. regularity）+ `0 < n` を供給し、per-n 比較 → `limsup_le_limsup`。**signature は変えない**（statement は既に正しい Mathlib-shape）。完了後:
 
 - consumer `lz78GreedyImpl_achievability_ae`（合成本体 sorry-free）が **sorryAx-free 化** → `#print axioms ziv_aseventual_le_blockLogAvg₂` / `lz78GreedyImpl_achievability_ae` = `[propext, Classical.choice, Quot.sound]` を機械確認（DoD proof done）。
 - docstring の `@residual(wall:lz78-aseventual-ziv)` を除去し `@audit:ok` 化（**独立 honesty audit を要請** — 新 sorry 消滅 + signature honest 確認）。
