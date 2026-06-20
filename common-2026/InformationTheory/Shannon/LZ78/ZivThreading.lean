@@ -566,7 +566,14 @@ per-ω skeleton no conjunct was dropped — every partition/positivity conjunct 
 `bAbsorbed ≤ k` relaxed to the provable `≤ k+1`, two W2 boundary conjuncts added;
 non-vacuity genuine: `c + bAbsorbed = parseCount ∧ bAbsorbed ≤ k+1` forces `c > 0` for
 `parseCount > k+1`; wall slug `lz78-aseventual-ziv` correctly NOT on this closed decl —
-it lives at `ziv_aseventual_le_blockLogAvg₂`). -/
+it lives at `ziv_aseventual_le_blockLogAvg₂`).
+**Re-audit 2026-06-21 (commit `1ef7700`)**: the existential output was strengthened by
+appending one slice/content conjunct (`∀ j, (lz78PhraseStrings …)[bAbsorbed+j]? = some
+(slice)`, threaded sorryAx-free from `lz78_parse_tiling_positions`'s new conjunct). This
+is pure output-strengthening: input signature (`μ, [IsProbabilityMeasure μ], p, k, n`)
+unchanged, NO new input hypothesis / `*Hypothesis` predicate, all prior conjuncts
+preserved and still discharged, the new conjunct discharged genuinely (no sorry).
+Re-confirmed `#print axioms = [propext, Classical.choice, Quot.sound]`. `@audit:ok` holds. -/
 lemma lz78_block_tiling
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (k n : ℕ) :
@@ -617,9 +624,19 @@ exact `negLogQk = (leading boundary) + (per-phrase sum) + (trailing tail)` equal
 All of the tiling's structural/counting/boundary conjuncts are carried forward (the
 downstream M3 `(k-state, length)`-grouping / W2 limsup discharge needs the phrase count
 `c`, the non-vacuity anchor `c + bAbsorbed = parseCount`, and the boundary-length bounds
-`n - e ≤ Lmax`, `b ≤ k + Lmax`); only the per-position positivity `hposfac`, consumed
-internally to derive the equality, is dropped from the output existential. This is the
-bridge consumed by the M3 grouping / W2 limsup discharge. -/
+`n - e ≤ Lmax`, `b ≤ k + Lmax`); the per-position positivity `hposfac` is consumed
+internally both to derive the equality and to produce the per-phrase positivity conjunct
+`0 < (condQkState …).toReal` (via `condQkState_pos_of_markovFactor_pos`). The output also
+carries the slice/content correspondence conjunct (from `lz78_block_tiling`). This is the
+bridge consumed by the M3 grouping / W2 limsup discharge.
+
+@audit:ok (independent audit 2026-06-21, commit `1ef7700`, sorryAx-free `[propext,
+Classical.choice, Quot.sound]`; non-circular, non-bundled = only `[IsProbabilityMeasure μ]`
+regularity input + produces the existential, no `*Hypothesis` predicate; vs. the prior
+output two conjuncts were APPENDED (slice/content correspondence + per-phrase positivity),
+no input hypothesis added and no prior conjunct dropped or weakened = pure
+output-strengthening, both new conjuncts discharged genuinely from `lz78_block_tiling`'s
+`hslice` and the per-position `hposfac` respectively). -/
 lemma negLogQk_parse_threading
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (k n : ℕ) :
     ∀ᵐ ω ∂μ, ∃ (b c e bAbsorbed Lmax : ℕ) (N : Fin (c + 1) → ℕ),

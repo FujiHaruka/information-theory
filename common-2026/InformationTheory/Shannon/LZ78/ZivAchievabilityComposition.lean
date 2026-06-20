@@ -181,7 +181,16 @@ The `c = 0` boundary degenerates honestly to `0 ≤ 0`. The broader achievabilit
 `@residual(wall:lz78-aseventual-ziv)` (M3 variable-depth length-grouping AEP + W2 limsup
 discharge connecting to `entropyRate₂`) lives downstream at
 `ziv_aseventual_le_blockLogAvg₂` / `lz78GreedyImpl_achievability_ae`; this brick
-(`c·log c ≤ negLogQk + o(n)`) is no longer part of it. -/
+(`c·log c ≤ negLogQk + o(n)`) is no longer part of it.
+
+@audit:ok (independent audit 2026-06-21, commit `1ef7700`, sorryAx-free `[propext,
+Classical.choice, Quot.sound]` machine-verified; the prior `sorry` + `@residual(wall:
+lz78-aseventual-ziv)` (the (B) reindex bridge) is genuinely removed, conclusion unchanged
+(`c·log c ≤ negLogQk + (c·log(Ntot/c) + c + c·log((card α)^k))`), no input hypothesis added.
+The two sub-bounds are PROVEN (`hA = phraseSum_le_negLogQk`, `hB` from the genuine reindex
+onto the distinct-phrase `Finset` + `condState_grouping_bound_mean`), combined by `linarith`
+— sufficiency holds, nothing is asserted as a hypothesis. The wall slug correctly no longer
+sits here; it remains only on the downstream M3/W2 decls). -/
 theorem ziv_achievability_composition
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (k n : ℕ) :
     ∀ᵐ ω ∂μ, ∃ (c bAbsorbed Ntot : ℕ),
