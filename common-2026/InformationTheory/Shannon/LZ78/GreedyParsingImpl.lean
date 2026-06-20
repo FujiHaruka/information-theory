@@ -402,7 +402,15 @@ noncomputable def blockLogAvg₂
 
 Obtained from `shannon_mcmillan_breiman` (nat units) by dividing the
 convergence through by `Real.log 2`: this is the unit rescaling
-`entropyRate / Real.log 2 = entropyRate₂`, not new ergodic content. -/
+`entropyRate / Real.log 2 = entropyRate₂`, not new ergodic content.
+
+Independent honesty audit 2026-06-20 PASS (commit `876bcd0`, fresh
+subagent): `#print axioms shannon_mcmillan_breiman₂ = [propext,
+Classical.choice, Quot.sound]` (sorryAx-free, machine-verified). The body is
+a genuine unit rescaling (`Tendsto.div_const (Real.log 2)` then `simpa
+[blockLogAvg₂, entropyRate₂]`); both defs unfold to `… / Real.log 2`, so no
+degenerate rewrite. W1 of the M3 W1/W2 decomposition, genuinely closed.
+@audit:ok -/
 theorem shannon_mcmillan_breiman₂
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ, Filter.Tendsto
@@ -421,6 +429,23 @@ bound `c·log c ≤ 8·log(|α|+1)·n` with the length-grouping overhead control
 bit-rate is asymptotically dominated by `blockLogAvg₂`. Stated as an
 `a.s.-eventual` limsup comparison (the per-block form is FALSE, counterexample
 `a^16`).
+
+Independent honesty audit 2026-06-20 PASS (commit `876bcd0`, fresh
+subagent): this is the sole active sorry carrying the M3 wall. Four honesty
+checks PASS — (1) non-circular (body bare `sorry`, conclusion ≠ any hyp),
+(2) non-bundled (signature is `(μ, p)` + `[IsProbabilityMeasure μ]`
+regularity only, no `*Hypothesis`/`*Reduction` predicate), (3) non-degenerate
+(genuine limsup inequality over a non-trivial sequence), (4) sufficiency
+TRUE-as-framed (a.s.-eventual Ziv inequality, Cover–Thomas 13.5.5; per-block
+form correctly avoided; degenerate `entropyRate = 0` boundary stays alive).
+Wall classification `wall:lz78-aseventual-ziv` confirmed: the combinatorial
+core (`c·log c ≤ K·n`, `lz78PhraseStrings_mul_log_le`, sorryAx-free) only
+yields a CONSTANT limsup bound `≤ 8·log(|α|+1)/log 2`, never `≤ entropyRate₂`;
+the sole probabilistic bridge `blockProb_neg_log_ge_sum` is orphaned (0
+consumers, `dep_consumers.sh`) and spans `∑ⱼ -log qⱼ ≤ -log Pₙ`, NOT the
+missing `c·log c ≤ ∑ⱼ -log qⱼ + o(n)` variable-depth length-grouping AEP (D4
+`∑qⱼ≈c` trap). M3 gap genuinely absent from codebase + Mathlib. Verdict
+honest_residual (tier 2).
 
 @residual(wall:lz78-aseventual-ziv) -/
 theorem ziv_aseventual_le_blockLogAvg₂
