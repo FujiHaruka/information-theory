@@ -116,12 +116,49 @@ handoff スキルの通常状態に加え、relay 専用セクション:
 
 進捗台帳は (1) 無進捗検知の根拠、(2) ユーザーが連鎖を後追い監査する材料。
 
+## トリガー（ユーザー語彙）
+
+relay を carryon の通常自走から分ける鍵語は **「完遂まで / 最後まで / 無人で / セッションをまたいで」**。ただの「自走して」は carryon の通常挙動（停止条件内の自走）と紛れるので relay は起こさない（誤起動防止）。「タスク完遂まで自走して」は鍵語「完遂まで」を含むので relay トリガーとして適切。
+
+トリガー語（OR）:
+
+- 「<タスク> を完遂まで自走して」「最後まで自走して完遂して」
+- 「無人で最後までやって」「放っておいても完遂して」
+- 「セッションをまたいで完遂して」「リレーして」「何セッションかけても完遂して」
+- `/relay <タスク> [cap=N]`
+
+ユーザーは**初回だけ**「ゴール + 完遂までの自律指示」で起動する。以降の継続 leg は前 leg が自動で `/relay` を送るのでユーザーは打たない。
+
 ## 起動される側のブートストラップ
 
 - spawn 時に送るのは **`/relay`**（`/carryon` でなく）。relay の step 1 が「carryon で状態復元」なので carryon 機能を内包しつつ連鎖を再武装する。
 - relay は起動時に分岐:
   - handoff.md に `Relay: ON` の活きたブロックがあり、自セッションが fresh（作業履歴なし）→ **継続 leg** として carryon へ。
   - ユーザーが `/relay <タスク>` と明示引数で呼んだ → **初回 leg** として現セッションで直接着手（carryon 不要、relay ブロックを新規作成）。
+
+## carryon 合成メカニズム（「内部で carryon を読んで override」の実体）
+
+スキルは実行コードでなく **プロンプト断片**。「relay が内部で carryon を読む」とは、relay leg が Skill ツールで carryon を 1 ステップとして呼び、その上に relay の支配的指示を被せる prompt 合成のこと。tool-call 列で書くと:
+
+1. fresh セッション起動 → 入力 `/relay` を受信。
+2. `Skill(relay)` 発火 → relay SKILL.md が context にロード。
+3. relay の step 1「carryon で状態復元」に従い **`Skill(carryon)` を発火** → carryon SKILL.md がロードされ、その手順（handoff.md Read / Task 復元 / git 確認 / plan_lint / next step 宣言 / 自走開始）をそのまま実行。**carryon は復元ロジックの SoT のまま**（relay は再実装しない = DRY）。
+4. relay SKILL.md は context に居続け、**支配的指示**として宣言:「お前は relay leg。carryon stop #1/#2 は終端のまま、stop #3 は終端でなく refresh トリガに読み替えよ。追加終端 = 無進捗×2 / leg 上限」。
+5. 自走中に context 圧迫（= carryon stop #3 のシグナル）を感じたら、carryon の『止まって promote』分岐を**実行せず**、relay の refresh を実行（commit/push → 台帳追記 → `Skill(handoff)` で handoff.md を上書き → `tmux-new` 機構で次 leg 起動 + `/relay` 送信 → 確認 → idle）。
+
+### override が成り立つ根拠（soft だが二重化で堅くする）
+
+この override は code レベルの強制でなく **prompt の指示優先**（より外側・より具体の relay 指示が carryon の一般指示に勝つ）に依存する soft な仕組み。単独では context 劣化時に揺らぐので二重化する:
+
+- relay SKILL.md が carryon stop #3 を**逐語引用して**「この分岐は取るな、代わりに refresh せよ」と明示。
+- handoff.md の relay ブロック `Mode: ON` 自体が override のリマインダ。各 leg は起動時にこれを再読込するので、override が in-context のスキル文だけに依存せず**ファイルからも再注入**される（context が劣化しても handoff から復元される）。
+
+### 「上書き」は 2 つある（混同しやすい）
+
+- **(1) 挙動の override** — relay が carryon の stop #3 を読み替える（上記、prompt 優先）。「振る舞いの上書き」。
+- **(2) ファイルの上書き** — refresh 時に `Skill(handoff)` が `.claude/handoff.md` を**上書き**（handoff の単一ファイル上書き規約）。leg ごとに最新状態で塗り替える。「状態ファイルの上書き」。
+
+両者は別物。質問の「carryon を読んで上書き」は主に (1) を指す。
 
 ## 既存スキルとの合成 / 必要な最小改修
 
