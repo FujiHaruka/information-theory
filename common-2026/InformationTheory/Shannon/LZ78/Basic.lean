@@ -73,10 +73,13 @@ of the asymptotic optimality theorem:
   boundedness hypotheses — and *derives* the a.s. Tendsto via
   `tendsto_of_le_liminf_of_limsup_le`. The sandwich residual is distinct
   from the conclusion (`≤` bounds vs. `Tendsto … (𝓝 entropyRate)`). The
-  maximally-discharged chain-level form (residual = the genuine
-  Cover–Thomas Eq. 13.124 / 13.130 `blockLogAvg` inequalities, SMB
-  sandwich discharged internally) is `lz78_two_sided_optimality_ergodic`
-  in `LZ78FinalGlue.lean` (which imports this file).
+  two sandwich bounds `h_lower`/`h_upper` are **load-bearing** (the
+  Cover–Thomas Eq. 13.124 / 13.130 `blockLogAvg` substance of Thm 13.5.3);
+  their genuine discharge (Ziv inequality + SMB) is **M3/M4 research-level
+  scope-out** (`docs/textbook-roadmap.md`) and is absent from the codebase,
+  so the headline carries them as open named hypotheses — sorryAx-free but
+  not unconditional. (The earlier `lz78_two_sided_optimality_ergodic` /
+  `LZ78FinalGlue.lean` chain-level forms were deleted in the M3/M4 cleanup.)
 
 ## Re-use of existing infrastructure
 
@@ -317,35 +320,40 @@ converges almost surely to the entropy rate:
 lim_{n → ∞} (1/n) · lz78EncodingLength(X^n) = entropyRate μ p   a.s.
 ```
 
-This headline is **non-circular**: it does *not* take the conclusion
-(`Tendsto … (𝓝 entropyRate)`) as a hypothesis and wrap it. Instead it
-takes the genuine two-sided sandwich on `lz/n` — the liminf lower bound
-`entropyRate ≤ liminf (lz/n)`, the limsup upper bound
-`limsup (lz/n) ≤ entropyRate`, and the two boundedness hypotheses — and
-*derives* the a.s. Tendsto via `tendsto_of_le_liminf_of_limsup_le`.
+This headline is **non-circular** (it does not take the conclusion
+`Tendsto … (𝓝 entropyRate)` as a hypothesis and wrap it) but it is NOT
+unconditional: it takes the two-sided sandwich on `lz/n` and *derives*
+the a.s. Tendsto via `tendsto_of_le_liminf_of_limsup_le` (a 1-step
+squeeze).
 
-The hypothesis slots:
+**Honesty audit (2026-06-20).** The four hypotheses split into two
+load-bearing and two regularity slots:
 
-* `lz78EncodingLength` — the encoding-length function is taken as a
-*parameter*, not implemented in this file. Any function from
-`(Fin n → α) → ℕ` consistent with the LZ78 dictionary discharges it.
-* `h_lower` — the LZ78 converse direction `entropyRate ≤ liminf (lz/n)`
-a.s. This is *not* the conclusion; it is the genuine lower
-half of the sandwich, supplied downstream by
-`lz78_converse_lower_bound_with_chain` composed with the SMB liminf.
-* `h_upper` — the Ziv-inequality achievability bound
-`limsup (lz/n) ≤ entropyRate` a.s. Supplied downstream by
-`lz78_achievability_upper_bound_ergodic`.
-* `h_bdd_above` / `h_bdd_below` — boundedness of the per-symbol rate.
+* `lz78EncodingLength` — the encoding-length function, taken as a
+*parameter* (not regularity, not load-bearing: a generic function slot).
+* `h_lower` — the LZ78 converse `entropyRate ≤ liminf (lz/n)` a.s. and
+`h_upper` — the Ziv-inequality achievability `limsup (lz/n) ≤ entropyRate`
+a.s. are **load-bearing**: jointly they force `liminf = limsup =
+entropyRate`, i.e. they ARE the Cover–Thomas Thm 13.5.3 substance this
+headline claims to prove. They are not the verbatim conclusion, but the
+core-reconstruction test fails (granting both hands you the theorem; the
+body is a trivial combine). Their honest discharge — Ziv inequality + SMB
+liminf/limsup sandwich — is **research-level scope-out** (roadmap M3
+variable-depth tree AEP / M4 Barron a.s. lift). The same two bounds are
+published as the `IsZivInequalityPassthrough` / `IsLZ78ConversePassthrough`
+predicates in §2 above, tagged scope-out.
+* `h_bdd_above` / `h_bdd_below` — `Filter.IsBoundedUnder` boundedness of
+the per-symbol rate. These ARE regularity preconditions (0 ≤ lz/n ≤
+log|α|, from the integer-valued length).
 
-For the maximally-discharged chain-level form (where the residual is the
-genuine `IsLZ78AchievabilityChainHyp` / `IsLZ78ConverseChainHyp`
-Cover–Thomas Eq. 13.124 / 13.130 inequalities relating `lz/n` to
-`blockLogAvg`, with the SMB sandwich discharged internally), see
-`lz78_two_sided_optimality_ergodic` in `LZ78FinalGlue.lean`. That file
-imports this one, so the chain-level discharge cannot be routed back into
-this headline without a circular import; this file therefore publishes
-the sandwich-level (genuine, non-circular) form. -/
+Per the project honesty hierarchy the load-bearing `h_lower` / `h_upper`
+ought to be removed from the signature and replaced by `sorry +
+@residual`; that signature change is an owner task (the underlying bounds
+are a genuine scope-out wall, so this is not a defect to silent-fix). The
+chain-level / final-glue forms (`lz78_two_sided_optimality_ergodic`,
+`LZ78FinalGlue.lean`) referenced by earlier docstrings were **deleted** in
+the M3/M4 scope-out cleanup and no longer exist.
+`@audit:closed-by-successor(textbook-roadmap-m3-m4-scope-out)` -/
 @[entry_point]
 theorem lz78_asymptotic_optimality
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -389,19 +397,20 @@ theorem lz78_asymptotic_optimality
 omit [DecidableEq α] in
 /-- **LZ78 asymptotic optimality — two-sided combine form**.
 
-Public alias for `lz78_asymptotic_optimality` with the same four genuine
-sandwich ingredients — the liminf lower bound, the limsup upper bound, and
-the two boundedness hypotheses (`Filter.IsBoundedUnder` above and below).
-The Tendsto a.s. is assembled via `tendsto_of_le_liminf_of_limsup_le` (the
-same combine pattern as `shannon_mcmillan_breiman_of_sandwich` in
-`ShannonMcMillanBreiman.lean`). The body is a genuine application, not an
-identity wrap of the conclusion.
+Public alias for `lz78_asymptotic_optimality` with the same four
+hypotheses — the liminf lower bound, the limsup upper bound, and the two
+boundedness hypotheses (`Filter.IsBoundedUnder` above and below). The
+Tendsto a.s. is assembled via `tendsto_of_le_liminf_of_limsup_le` (the
+same combine pattern as `shannon_mcmillan_breiman_of_sandwich`). The body
+is a genuine application, not an identity wrap of the conclusion.
 
-This is the practical entry point when an upstream caller has the upper
-and lower bounds separately (typical exit shape of a Ziv-inequality +
-SMB sandwich pipeline). The four hypotheses are non-circular: the
-sandwich bounds relate `lz/n` to `entropyRate` via `≤`, distinct from the
-`Tendsto … (𝓝 entropyRate)` conclusion. -/
+**Honesty audit (2026-06-20).** `h_lower` / `h_upper` are **load-bearing**
+(the LZ78 converse + Ziv achievability halves, = the Cover–Thomas Thm
+13.5.3 core, research-level scope-out), not regularity; `h_bdd_above` /
+`h_bdd_below` are regularity. See `lz78_asymptotic_optimality` for the full
+load-bearing disclosure. Non-circular (the bounds relate `lz/n` to
+`entropyRate` via `≤`, distinct from the `Tendsto` conclusion) but not
+unconditional. `@audit:closed-by-successor(textbook-roadmap-m3-m4-scope-out)` -/
 @[entry_point]
 theorem lz78_asymptotic_optimality_two_sided
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -444,15 +453,18 @@ theorem lz78_asymptotic_optimality_two_sided
 omit [DecidableEq α] in
 /-- **LZ78 asymptotic optimality — combine from limsup and liminf alone**.
 
-Convenience helper that *does not* require the two `IsBoundedUnder`
-hypotheses, since they can often be obtained from the integer-valued
-nature of `lz78EncodingLength n` (bounded above by `n · log |α|` and
-below by `0`). When the caller can supply both `Filter.IsBoundedUnder`
-hypotheses elsewhere, this form is strictly weaker than
-`lz78_asymptotic_optimality_two_sided`. The single bundled hypothesis is
-the genuine four-way sandwich conjunction (lower / upper / above / below);
-the body is a genuine application of `lz78_asymptotic_optimality_two_sided`,
-not an identity wrap. -/
+Bundles the four sandwich ingredients into a single conjunction
+`h_combined` (lower / upper / above / below); the body destructures and
+forwards to `lz78_asymptotic_optimality_two_sided`, a genuine application,
+not an identity wrap.
+
+**Honesty audit (2026-06-20).** The bundled `h_combined` contains the two
+**load-bearing** conjuncts (LZ78 converse liminf bound + Ziv achievability
+limsup bound, = the Cover–Thomas Thm 13.5.3 core, research-level scope-out)
+plus the two **regularity** boundedness conjuncts. Packing them into one
+conjunction does not change that the core is supplied by hypothesis; see
+`lz78_asymptotic_optimality` for the full load-bearing disclosure.
+`@audit:closed-by-successor(textbook-roadmap-m3-m4-scope-out)` -/
 @[entry_point]
 theorem lz78_asymptotic_optimality_of_bounds
     (μ : Measure Ω) [IsProbabilityMeasure μ]

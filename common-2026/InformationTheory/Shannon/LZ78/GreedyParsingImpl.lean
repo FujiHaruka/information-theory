@@ -417,15 +417,33 @@ parameter `lz78EncodingLength` slot instantiated to the **genuine
 longest-prefix-match greedy** `lz78GreedyImplEncodingLength` (rather than
 the worst-case one-symbol form of
 `lz78_asymptotic_optimality_with_greedy_encoding`). After the headline
-de-circularization, this forwards the four genuine sandwich ingredients on
-`lz/n` (liminf lower / limsup upper / two boundedness) — no `True`
-pass-throughs, and the conclusion is *derived*, not wrapped. This wrapper
-is **pure variational pass-through** (Pilot Pattern V): the four sandwich
-ingredients (h_lower / h_upper / h_bdd_above / h_bdd_below) are regularity /
-boundedness hypotheses, not load-bearing predicate consumers, and the body
-simply forwards to `lz78_asymptotic_optimality` whose own body is the genuine
-1-step combine `tendsto_of_le_liminf_of_limsup_le`. No `@residual` tag is
-attached. -/
+de-circularization, this forwards the four sandwich ingredients on `lz/n`
+(liminf lower / limsup upper / two boundedness) — no `True` pass-throughs,
+and the conclusion is *derived*, not wrapped, via the genuine 1-step combine
+`tendsto_of_le_liminf_of_limsup_le`.
+
+**Honesty audit (2026-06-20), CORRECTING a prior docstring overstatement.**
+The four hypotheses are NOT uniformly regularity. They split:
+
+* `h_lower` (LZ78 converse `entropyRate ≤ liminf (lz/n)`) and `h_upper`
+  (Ziv-inequality achievability `limsup (lz/n) ≤ entropyRate`) are
+  **load-bearing** — jointly they squeeze `liminf = limsup = entropyRate`,
+  i.e. they ARE the Cover–Thomas Thm 13.5.3 substance the headline claims.
+  The body's combine is a trivial squeeze given them. Their honest discharge
+  (Ziv inequality + SMB sandwich) is **research-level scope-out** (textbook
+  roadmap M3 variable-depth tree AEP / M4 Barron a.s. lift); the same content
+  appears as the `IsZivInequalityPassthrough` / `IsLZ78ConversePassthrough`
+  predicates in `Basic.lean`, tagged scope-out.
+* `h_bdd_above` / `h_bdd_below` (`Filter.IsBoundedUnder`) ARE regularity
+  preconditions (boundedness of the integer-valued rate, 0 ≤ lz/n ≤ log|α|).
+
+The prior text "the four ingredients are regularity / boundedness
+hypotheses, not load-bearing predicate consumers" was a FALSE honesty claim
+(only h_bdd_* are regularity). Per the project honesty hierarchy the proper
+resting form is `sorry + @residual` with the two load-bearing bounds removed
+from the signature; that signature change is an owner task. Until then this
+is a tier-4/5 load-bearing headline whose load-bearing status is disclosed
+here. `@audit:closed-by-successor(textbook-roadmap-m3-m4-scope-out)` -/
 @[entry_point]
 theorem lz78_asymptotic_optimality_with_greedy_impl
     (μ : Measure Ω) [IsProbabilityMeasure μ]
