@@ -579,4 +579,40 @@ lemma lz78_block_tiling
   · -- `n - e ≤ Lmax`.
     rwa [hlen] at htail
 
+/-- The tiling-hypothesis-free a.s. threading identity for `negLogQk`, with arguments
+`μ, p, k, n` only. It is obtained by feeding the genuine parse tiling produced a.s. by
+`lz78_block_tiling` into the per-phrase decomposition `negLogQk_phrase_threading`: the
+tiling supplies the partition `N`, the boundary lengths, the parse-anchored phrase count,
+and the per-position positivity, which `negLogQk_phrase_threading` consumes to yield the
+exact `negLogQk = (leading boundary) + (per-phrase sum) + (trailing tail)` equality.
+
+All of the tiling's structural/counting/boundary conjuncts are carried forward (the
+downstream M3 `(k-state, length)`-grouping / W2 limsup discharge needs the phrase count
+`c`, the non-vacuity anchor `c + bAbsorbed = parseCount`, and the boundary-length bounds
+`n - e ≤ Lmax`, `b ≤ k + Lmax`); only the per-position positivity `hposfac`, consumed
+internally to derive the equality, is dropped from the output existential. This is the
+bridge consumed by the M3 grouping / W2 limsup discharge. -/
+lemma negLogQk_parse_threading
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (k n : ℕ) :
+    ∀ᵐ ω ∂μ, ∃ (b c e bAbsorbed Lmax : ℕ) (N : Fin (c + 1) → ℕ),
+      N 0 = b ∧ N (Fin.last c) = e ∧ e ≤ n ∧
+      (∀ j : Fin c, N j.castSucc + 1 ≤ N j.succ) ∧
+      (∀ j : Fin c, k < N j.castSucc) ∧
+      c + bAbsorbed = (lz78PhraseStrings (List.ofFn (fun i => p.blockRV n ω i))).length ∧
+      bAbsorbed ≤ k + 1 ∧ n - e ≤ Lmax ∧ b ≤ k + Lmax ∧
+      negLogQk μ p k n ω
+        = (∑ i ∈ Finset.range b, pmfLogCondMarkov μ p k i ω)
+          + (∑ j : Fin c,
+              - Real.log
+                (condQkState μ p k (windowState p k (N j.castSucc) ω)
+                  (N j.succ - N j.castSucc)
+                  (fun m => p.obs (N j.castSucc + m.val) ω)).toReal)
+          + ∑ i ∈ Finset.Ico e n, pmfLogCondMarkov μ p k i ω := by
+  filter_upwards [lz78_block_tiling μ p k n] with ω htiling
+  obtain ⟨b, c, e, bAbsorbed, Lmax, N, hNb, hNe, hen, hmono, hstart, hposfac, hcount, hbA,
+    hne_tail, hb_bound⟩ := htiling
+  refine ⟨b, c, e, bAbsorbed, Lmax, N, hNb, hNe, hen, hmono, hstart, hcount, hbA,
+    hne_tail, hb_bound, ?_⟩
+  exact negLogQk_phrase_threading μ p k n b c e ω N hNb hNe hen hmono hstart hposfac
+
 end InformationTheory.Shannon
