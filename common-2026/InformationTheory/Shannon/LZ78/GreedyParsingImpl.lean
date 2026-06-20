@@ -3,10 +3,13 @@ import InformationTheory.Shannon.LZ78.Basic
 import InformationTheory.Shannon.LZ78.GreedyParsing
 import InformationTheory.Shannon.LZ78.GreedyLongestPrefix
 import InformationTheory.Shannon.LZ78.ZivCountingBody
+import InformationTheory.Shannon.SMB.AlgoetCover.Liminf
 import Mathlib.Data.Nat.Log
 import Mathlib.Data.List.Basic
 import Mathlib.Data.List.Range
 import Mathlib.Analysis.SpecialFunctions.Log.Base
+import Mathlib.Topology.Order.LiminfLimsup
+import Mathlib.Topology.Algebra.GroupWithZero
 
 /-!
 # LZ78 greedy-parse encoding length + asymptotic-optimality bridge
@@ -384,6 +387,53 @@ theorem lz78GreedyImpl_converse_ae
           Filter.atTop := by
   sorry
 
+/-- **Per-symbol negative log-likelihood in bits**: `blockLogAvg / Real.log 2`.
+
+The base-2 (bit) version of `blockLogAvg`. SMB (`shannon_mcmillan_breiman`)
+converges `blockLogAvg → entropyRate` in nats; dividing through by `Real.log 2`
+gives the bit-unit version converging to `entropyRate₂`, the unit that matches
+the base-2 LZ78 bit-rate `lz78GreedyImplEncodingLength/n`. -/
+noncomputable def blockLogAvg₂
+    (μ : Measure Ω) (p : StationaryProcess μ α) (n : ℕ) : Ω → ℝ :=
+  fun ω => blockLogAvg μ p n ω / Real.log 2
+
+/-- **Shannon–McMillan–Breiman in bits**: `blockLogAvg₂` converges a.s. to
+`entropyRate₂`.
+
+Obtained from `shannon_mcmillan_breiman` (nat units) by dividing the
+convergence through by `Real.log 2`: this is the unit rescaling
+`entropyRate / Real.log 2 = entropyRate₂`, not new ergodic content. -/
+theorem shannon_mcmillan_breiman₂
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
+    ∀ᵐ ω ∂μ, Filter.Tendsto
+      (fun n => blockLogAvg₂ μ p.toStationaryProcess n ω)
+      Filter.atTop (𝓝 (entropyRate₂ μ p.toStationaryProcess)) := by
+  filter_upwards [shannon_mcmillan_breiman μ p] with ω hω
+  have := hω.div_const (Real.log 2)
+  simpa only [blockLogAvg₂, entropyRate₂] using this
+
+/-- **a.s.-eventual Ziv comparison**: the limsup of the greedy bit-rate is at
+most the limsup of `blockLogAvg₂`.
+
+The achievability crux (Cover–Thomas Lemma 13.5.5): combining the Ziv product
+bound `c·log c ≤ 8·log(|α|+1)·n` with the length-grouping overhead control
+`c = O(n/log n)` and the `-log Pₙ = n·blockLogAvg` identity, the greedy
+bit-rate is asymptotically dominated by `blockLogAvg₂`. Stated as an
+`a.s.-eventual` limsup comparison (the per-block form is FALSE, counterexample
+`a^16`).
+
+@residual(wall:lz78-aseventual-ziv) -/
+theorem ziv_aseventual_le_blockLogAvg₂
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
+    ∀ᵐ ω ∂μ,
+      Filter.limsup
+        (fun n => (lz78GreedyImplEncodingLength n
+            (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ))
+        Filter.atTop
+      ≤ Filter.limsup
+          (fun n => blockLogAvg₂ μ p.toStationaryProcess n ω) Filter.atTop := by
+  sorry
+
 /-- **Ziv-inequality achievability upper bound for the genuine greedy
 parser (Cover–Thomas Lemma 13.5.5 / Theorem 13.5.3 upper-bound half),
 a.s. form**.
@@ -409,13 +459,27 @@ layer") and `McMillanKraftBridge.lean`.
 After the 2026-06-20 def-fix (`lz78GreedyImplEncodingLength` now charges
 `c · bitLength c |α|` against the genuine distinct phrase count
 `c = (lz78PhraseStrings (List.ofFn x)).length`), this is a **genuine
-proposition** carrying real Ziv content. The genuine combinatorial core
-(`c · log c ≤ K · n` and `c = O(n / log n)`) is already established
-(`lz78PhraseStrings_mul_log_le` / `lz78PhraseStrings_count_isBigO`); what
-remains is the connection to `entropyRate₂`, which needs M3 (the
-variable-depth tree-node AEP for the LZ78 dictionary tree). This is a
-research-level ergodic wall, absent from both the codebase and Mathlib (see
-`docs/shannon/lz78-completion-roadmap.md`, M3).
+proposition** carrying real Ziv content.
+
+**Composition lemma (2026-06-20 W1/W2 decomposition).** The body of this
+theorem is now `sorry`-free: it is assembled from the two genuine halves of
+the achievability sandwich,
+
+* `shannon_mcmillan_breiman₂` (SMB in bits, **sorryAx-free**) — gives
+  `Tendsto blockLogAvg₂ → entropyRate₂` a.s., hence
+  `limsup blockLogAvg₂ = entropyRate₂` (`Filter.Tendsto.limsup_eq`);
+* `ziv_aseventual_le_blockLogAvg₂` (the a.s.-eventual Ziv comparison) —
+  gives `limsup (lz/n) ≤ limsup blockLogAvg₂` a.s.
+
+The transitive `sorryAx` of `lz78GreedyImpl_achievability_ae` therefore flows
+**only through `ziv_aseventual_le_blockLogAvg₂`** (the genuine M3 wall, the
+variable-depth tree-node AEP connecting the combinatorial `c · log c` to the
+probabilistic `-log Pₙ`). The genuine combinatorial core
+(`c · log c ≤ K · n` and `c = O(n / log n)`,
+`lz78PhraseStrings_mul_log_le` / `lz78PhraseStrings_count_isBigO`) and the
+SMB AEP (`shannon_mcmillan_breiman`) are both sorryAx-free; what remains is
+exactly the AEP connection (M3), absent from both the codebase and Mathlib
+(see `docs/shannon/lz78-completion-roadmap.md`, M3).
 
 This statement is TRUE-as-framed against the bit target `entropyRate₂` (the
 prior audit's units defect — false on a uniform i.i.d. source when stated
@@ -424,9 +488,8 @@ uniform i.i.d. source on A symbols the LZ78-optimal bit-rate limit is
 `log₂ A = entropyRate / Real.log 2 = entropyRate₂` exactly, so
 `limsup ≤ entropyRate₂` holds with equality in the limit (A=2: `1 ≤ 1`); on
 the degenerate `entropyRate = 0` boundary it reads `limsup ≤ 0` with
-`entropyRate₂ = 0`, again genuine. The remaining `sorry` carries exactly the
-M3 ergodic wall content (variable-depth tree-node AEP), not a units error.
-Signature takes only source data, no load-bearing hypothesis.
+`entropyRate₂ = 0`, again genuine. Signature takes only source data, no
+load-bearing hypothesis.
 
 Units fix independent audit 2026-06-20 PASS (commit `55e1cd9`, fresh
 subagent): this is the load-bearing-direction half — its prior false bound
@@ -434,9 +497,10 @@ subagent): this is the load-bearing-direction half — its prior false bound
 `limsup ≤ log₂ A = entropyRate₂` (true at equality, A=2: `1 ≤ 1`, A=3:
 `log₂ 3 ≤ log₂ 3`). The bit RHS is the sorryAx-free unit rescaling
 `entropyRate / Real.log 2`, not a degenerate def. The M3 wall stays genuine:
-the `/log 2` rescaling leaves the unproven Ziv→AEP content untouched; body
-remains bare `sorry`. Four honesty checks PASS (sufficiency now
-TRUE-as-framed). Verdict honest_residual (tier 2).
+the `/log 2` rescaling leaves the unproven Ziv→AEP content untouched; the
+wall residual now lives in `ziv_aseventual_le_blockLogAvg₂`, not in this
+theorem's body. Four honesty checks PASS (sufficiency now TRUE-as-framed).
+Verdict honest_residual (tier 2, inherited via `ziv_aseventual_le_blockLogAvg₂`).
 
 @residual(wall:lz78-aseventual-ziv) -/
 theorem lz78GreedyImpl_achievability_ae
@@ -450,7 +514,9 @@ theorem lz78GreedyImpl_achievability_ae
             / (n : ℝ))
         Filter.atTop
       ≤ entropyRate₂ μ p.toStationaryProcess := by
-  sorry
+  filter_upwards [shannon_mcmillan_breiman₂ μ p, ziv_aseventual_le_blockLogAvg₂ μ p]
+    with ω h_smb h_ziv
+  exact h_ziv.trans h_smb.limsup_eq.le
 
 /-- **LZ78 asymptotic optimality with the genuine greedy parsing
 implementation (Cover–Thomas Theorem 13.5.3)**.
