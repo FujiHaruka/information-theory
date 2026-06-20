@@ -349,6 +349,37 @@ neither false nor vacuous. Signature takes only source data (`μ`, `p`), no
 load-bearing hypothesis; wall slug verified (M4 Barron a.s. lift, roadmap-confirmed
 SMB-scale, loogle Found 0 for `entropyRate`+`liminf`).
 
+NOTE — the "non-vacuous" claim above is correct but INSUFFICIENT; the statement is
+in fact FALSE on a uniform i.i.d. source. See the units-defect note below.
+
+@audit:defect(false-statement)
+SECOND INDEPENDENT AUDIT 2026-06-20 (units defect, overturns the prior audit):
+this signature is UNITS-INCONSISTENT and the converse direction is FALSE on a
+uniform i.i.d. source. The per-symbol rate is in BITS: `lz78GreedyImplEncodingLength
+= c · bitLength c |α|` with `bitLength c a = Nat.log 2 (c+1) + Nat.log 2 a + 2`
+(base-2, see `LZ78Phrase.bitLength`), so `rate = lz/n` is bit/symbol, and its true
+limit is `H₂ = entropyRate / Real.log 2` (the bit entropy rate), confirmed by
+`lz78_impl_rate_le_const` carrying the `1/Real.log 2` factor. But `entropyRate` is in
+NATS: `entropyRate = limUnder(blockEntropy/n)`, `blockEntropy = entropy = ∑
+Real.negMulLog(...)`, and `Real.negMulLog x = -x · Real.log x` is natural log
+(verbatim Mathlib `NegMulLog.lean:164`). Concrete A=2 uniform i.i.d. refutation:
+`entropyRate = log 2 ≈ 0.693` (nat), but `liminf rate = log₂ 2 = 1` (bit). The
+converse `entropyRate ≤ liminf` happens to hold here (`0.693 ≤ 1`) — but the
+companion achievability `limsup ≤ entropyRate` = `1 ≤ 0.693` is FALSE, and the
+headline squeeze then forces `rate → entropyRate` = `rate → 0.693`, contradicting the
+true limit `rate → 1`. The correct RHS is `entropyRate₂ = entropyRate / Real.log 2`,
+exactly as `ZivEntropyBridge.lean:245-261` ("Base-2 (bit) layer — unit correction")
+and `McMillanKraftBridge.lean:204` (converse target `blockLogAvg₂`) already document.
+FIX: re-state this converse (and achievability + headline + the `entropyRate` slots in
+the base combinator `lz78_asymptotic_optimality`) against `entropyRate₂` (bit), or
+restate the rate divided by `Real.log 2`. The M4 wall content (Barron a.s. lift) is
+unaffected — only the unit of the RHS is wrong. Signature still in defect form
+(provisional marker awaiting the def-fix owner). First choice (def-fix to
+`entropyRate₂`) deferred: blast radius spans the base combinator's `entropyRate` slots
++ both halves + headline, and `entropyRate₂` is not yet a `def` (only documented prose
+in `ZivEntropyBridge.lean`). Successor: see `docs/shannon/lz78-completion-roadmap.md`
+(units correction).
+@audit:retract-candidate(units-mismatch-bit-vs-nat: RHS should be entropyRate₂, not entropyRate)
 @residual(wall:lz78-converse-aseventual) -/
 theorem lz78GreedyImpl_converse_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -398,6 +429,33 @@ uniform i.i.d. source and the degenerate `entropyRate = 0` boundary. Signature
 takes only source data, no load-bearing hypothesis; wall slug verified (M3
 variable-depth tree-node AEP, roadmap-confirmed research-level, loogle Found 0).
 
+NOTE — the prior audit confirmed "non-vacuous" but did NOT compute the value on a
+uniform i.i.d. source; this statement is in fact FALSE there. See the units-defect
+note below.
+
+@audit:defect(false-statement)
+SECOND INDEPENDENT AUDIT 2026-06-20 (units defect, overturns the prior audit):
+this signature is UNITS-INCONSISTENT and is FALSE on a uniform i.i.d. source. The
+rate `lz78GreedyImplEncodingLength/n` is in BITS (`bitLength` uses `Nat.log 2`,
+base-2 code length), so `limsup rate = H₂ = entropyRate / Real.log 2` (bit entropy
+rate). But `entropyRate` is in NATS (`entropy = ∑ Real.negMulLog`, natural log;
+Mathlib `negMulLog x = -x·log x`). For a uniform i.i.d. source on A = `|α|` symbols
+(each symbol prob `1/A`): `entropyRate = log A` (nat) and the LZ78-optimal limit
+`limsup rate = log₂ A = log A / log 2 ≈ 1.443·log A` (bit). Concrete A=2:
+`limsup rate = log₂ 2 = 1`, `entropyRate = log 2 ≈ 0.693`. The claimed
+`limsup ≤ entropyRate` is `1 ≤ 0.693` = **FALSE** (since `log₂ A > log A` for A ≥ 2,
+i.e. `1/log 2 ≈ 1.443 > 1`). The correct RHS is `entropyRate₂ = entropyRate /
+Real.log 2` (bit), exactly as `ZivEntropyBridge.lean:245-261` ("Base-2 (bit) layer —
+unit correction for the LZ78 headline") and `McMillanKraftBridge.lean:204` (converse
+target stated against `blockLogAvg₂`) already document. This is the
+load-bearing-direction half: the headline squeeze inherits this false bound. FIX:
+re-state achievability (+ converse + headline + the base combinator's `entropyRate`
+slots) against `entropyRate₂`. The M3 wall content (variable-depth tree-node AEP) is
+unaffected — only the unit of the RHS is wrong. Signature still in defect form
+(provisional marker awaiting def-fix owner); first choice (def-fix to `entropyRate₂`)
+deferred for the same blast-radius reason as the converse half (`entropyRate₂` is not
+yet a `def`). Successor: `docs/shannon/lz78-completion-roadmap.md` (units correction).
+@audit:retract-candidate(units-mismatch-bit-vs-nat: RHS should be entropyRate₂, not entropyRate)
 @residual(wall:lz78-aseventual-ziv) -/
 theorem lz78GreedyImpl_achievability_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -466,7 +524,27 @@ Four honesty checks PASS (non-circular: genuine forward to
 core stays in the two walls; non-degenerate: `C` finite, `n=0`/`|α|=1`/`c∈{0,1}`
 boundaries verified; sufficiency: rate bound machine-true, no counterexample).
 Headline `#print axioms` carries `sorryAx` exactly via the two walls — verdict
-`honest_residual` (tier 2). -/
+`honest_residual` (tier 2).
+
+@audit:defect(false-statement)
+SECOND INDEPENDENT AUDIT 2026-06-20 — the `honest_residual` verdict above is
+OVERTURNED. The prior audit's sufficiency check looked only at the boundedness
+discharge (`h_bdd_above`), not at the convergence TARGET. The convergence target
+`𝓝 (entropyRate μ p)` is in the WRONG UNIT: the rate `lz/n` is bit/symbol (`bitLength`
+uses `Nat.log 2`, base-2), but `entropyRate` is nat (`entropy = ∑ Real.negMulLog`,
+natural log). For a uniform i.i.d. source on A symbols the true limit is
+`limsup rate = log₂ A = entropyRate / Real.log 2` (e.g. A=2: rate → 1 bit), NOT
+`entropyRate = log A ≈ 0.693`. The headline forces convergence to `entropyRate` (nat)
+by squeezing via the two halves; since the achievability half `limsup ≤ entropyRate`
+is FALSE (`1 ≤ 0.693`), the headline statement is FALSE on a uniform i.i.d. source.
+The boundedness discharge is genuine and unaffected — the defect is purely the
+unit of the convergence target. FIX: change the `𝓝 (entropyRate …)` target to
+`𝓝 (entropyRate₂ …)` (bit) and re-state the base combinator `lz78_asymptotic_optimality`
+(`LZ78/Basic.lean:234`) `entropyRate` slots accordingly. See
+`ZivEntropyBridge.lean:245-261` for the documented unit-correction intent
+(`entropyRate₂ = entropyRate / Real.log 2`, not yet a `def`). Signature still in
+defect form (provisional marker).
+@audit:retract-candidate(units-mismatch-bit-vs-nat: convergence target should be entropyRate₂, not entropyRate) -/
 @[entry_point]
 theorem lz78_asymptotic_optimality_with_greedy_impl
     (μ : Measure Ω) [IsProbabilityMeasure μ]
