@@ -12,7 +12,7 @@ import Mathlib.Algebra.BigOperators.Field
 This file supplies the **analytic crux** behind the `o(n)` overhead estimate
 required by the LZ78 achievability wall `ziv_aseventual_le_blockLogAvg₂`
 (`InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`,
-`@residual(wall:lz78-aseventual-ziv)`).
+slug `lz78-aseventual-ziv`, CLOSED 2026-06-21).
 
 ## Approach
 

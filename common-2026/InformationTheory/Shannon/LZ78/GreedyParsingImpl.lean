@@ -900,7 +900,7 @@ Independent honesty audit 2026-06-21 PASS (commit `c22f2d5`, fresh
 subagent): the M3 wall `lz78-aseventual-ziv` is now CLOSED — the body is
 genuinely `sorry`-free (filter_upwards on `ziv_aseventual_le_entropyRate₂`
 + `shannon_mcmillan_breiman₂`, `rw [h_smb.limsup_eq]`, `exact h_ziv`). The
-prior stale `@residual(wall:lz78-aseventual-ziv)` is removed. `#print axioms`
+prior stale wall residual (slug `lz78-aseventual-ziv`) is removed. `#print axioms`
 = `[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified
 2026-06-21). The Ziv→AEP connection that was the M3 wall is supplied by the
 genuine composition `ziv_achievability_composition`
@@ -989,7 +989,7 @@ load-bearing hypothesis.
 
 Independent honesty audit 2026-06-21 PASS (commit `c22f2d5`, fresh
 subagent): the M3 wall `lz78-aseventual-ziv` is CLOSED, so the prior stale
-`@residual(wall:lz78-aseventual-ziv)` is removed. The body is sorry-free
+wall residual (slug `lz78-aseventual-ziv`) is removed. The body is sorry-free
 (filter_upwards on `shannon_mcmillan_breiman₂` + `ziv_aseventual_le_blockLogAvg₂`,
 `exact h_ziv.trans h_smb.limsup_eq.le`); `#print axioms` =
 `[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified

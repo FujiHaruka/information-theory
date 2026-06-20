@@ -9,7 +9,7 @@ import Mathlib.Data.Fin.Tuple.Basic
 This file builds the **threading foundation** for the LZ78 achievability wall
 `ziv_aseventual_le_blockLogAvg₂`
 (`InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`,
-`@residual(wall:lz78-aseventual-ziv)`, route LOCK = `markovFactor`).
+slug `lz78-aseventual-ziv`, CLOSED 2026-06-21, route LOCK = `markovFactor`).
 
 The genuine Ziv `(k-state, length)`-grouping (Cover-Thomas Lemma 13.5.5) needs to
 identify the `k`-Markov negative log-likelihood of a block,
@@ -41,7 +41,7 @@ the `lz78_block_tiling` atom, now **sorryAx-free**: the deterministic position
 tiling `lz78_parse_tiling_positions` (`GreedyLongestPrefix.lean`) supplies the
 length-only conjuncts and `markovFactor_blockRV_pos_ae` (`Core.lean`) supplies the
 a.s. per-position positivity. The remaining LZ78 achievability blocker
-(`@residual(wall:lz78-aseventual-ziv)`) is downstream: composing this a.s. threading
+(slug `lz78-aseventual-ziv`, now CLOSED) is downstream: composing this a.s. threading
 identity with the Ziv `c·log c` counting and the SMB rate, plus the boundary-length
 sub-blocker (`b ≤ k + Lmax`, `n - e ≤ Lmax`) noted on `lz78_block_tiling`.
 -/

@@ -11,7 +11,7 @@ import Mathlib.Data.ENNReal.BigOperators
 This file supplies the **conditional** analogue of the length-grouping measure
 bridge for the LZ78 achievability wall `ziv_aseventual_le_blockLogAvg₂`
 (`InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`,
-`@residual(wall:lz78-aseventual-ziv)`), route LOCK = `markovFactor`.
+slug `lz78-aseventual-ziv`, CLOSED 2026-06-21), route LOCK = `markovFactor`.
 
 ## Approach
 

@@ -8,7 +8,7 @@ import InformationTheory.Shannon.LZ78.ZivCondGrouping
 This file composes the two sorryAx-free upstream bricks of the LZ78 achievability
 wall `ziv_aseventual_le_blockLogAvg₂`
 (`InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`,
-`@residual(wall:lz78-aseventual-ziv)`):
+slug `lz78-aseventual-ziv`, CLOSED 2026-06-21):
 
 * `negLogQk_parse_threading` (`ZivThreading.lean`): the a.s. threading identity
   `negLogQk μ p k n ω = (leading boundary) + (per-phrase sum) + (trailing tail)`,
@@ -178,14 +178,14 @@ bridge from the position-indexed threading sum (`∑ j : Fin c`) onto the distin
   parse inverse, plus the per-phrase positivity `condQkState_pos_of_markovFactor_pos`.
 
 The `c = 0` boundary degenerates honestly to `0 ≤ 0`. The broader achievability wall
-`@residual(wall:lz78-aseventual-ziv)` (M3 variable-depth length-grouping AEP + W2 limsup
+(slug `lz78-aseventual-ziv`, CLOSED; M3 variable-depth length-grouping AEP + W2 limsup
 discharge connecting to `entropyRate₂`) lives downstream at
 `ziv_aseventual_le_blockLogAvg₂` / `lz78GreedyImpl_achievability_ae`; this brick
 (`c·log c ≤ negLogQk + o(n)`) is no longer part of it.
 
 @audit:ok (independent audit 2026-06-21, commit `1ef7700`, sorryAx-free `[propext,
-Classical.choice, Quot.sound]` machine-verified; the prior `sorry` + `@residual(wall:
-lz78-aseventual-ziv)` (the (B) reindex bridge) is genuinely removed, conclusion unchanged
+Classical.choice, Quot.sound]` machine-verified; the prior `sorry` + wall residual
+(slug `lz78-aseventual-ziv`, the (B) reindex bridge) is genuinely removed, conclusion unchanged
 (`c·log c ≤ negLogQk + (c·log(Ntot/c) + c + c·log((card α)^k))`), no input hypothesis added.
 The two sub-bounds are PROVEN (`hA = phraseSum_le_negLogQk`, `hB` from the genuine reindex
 onto the distinct-phrase `Finset` + `condState_grouping_bound_mean`), combined by `linarith`
