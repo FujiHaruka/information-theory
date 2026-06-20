@@ -632,6 +632,36 @@ private lemma markovFactor_blockRV_gt
     rw [h_arg, h_last]
 
 omit [DecidableEq α] in
+/-- **A.s. positivity of every per-position `markovFactor`** evaluated at the block
+random variable: for a probability-preserving stationary process, a.s. (in `ω`) the
+real-valued Markov factor `markovFactor μ p k i (blockRV (i+1) ω)` is strictly
+positive at *every* position `i`. This is the a.s. positivity input that the LZ78
+threading tiling discharges (the per-phrase `hposfac` precondition of
+`negLogQk_phrase_threading`). It follows from `cond_singleton_pos_ae` (the
+conditional kernel singleton mass is a.s. positive): for `i ≤ k` directly, and for
+`k < i` via the measure-preserving shift `T^[i-k]`. -/
+lemma markovFactor_blockRV_pos_ae
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (k : ℕ) :
+    ∀ᵐ ω ∂μ, ∀ i : ℕ,
+      0 < (markovFactor μ p k i (p.blockRV (i + 1) ω)).toReal := by
+  rw [MeasureTheory.ae_all_iff]
+  intro i
+  by_cases hik : i ≤ k
+  · -- i ≤ k: the factor is the conditional kernel singleton mass at position `i`.
+    filter_upwards [cond_singleton_pos_ae μ p i] with ω hpos
+    rw [markovFactor_blockRV_le μ p hik ω]
+    rwa [← measureReal_def]
+  · -- k < i: the factor is the shifted conditional kernel singleton mass at `T^[i-k] ω`.
+    have hki : k ≤ i := (not_le.mp hik).le
+    have h_shifted_pos : ∀ᵐ ω ∂μ, 0 < (condDistrib (p.obs k) (p.blockRV k) μ
+        (p.blockRV k (p.T^[i - k] ω))).real {p.obs k (p.T^[i - k] ω)} :=
+      (p.measurePreserving.iterate (i - k)).quasiMeasurePreserving.ae
+        (cond_singleton_pos_ae μ p k)
+    filter_upwards [h_shifted_pos] with ω hpos
+    rw [markovFactor_blockRV_gt μ p hki ω]
+    rwa [← measureReal_def]
+
+omit [DecidableEq α] in
 /-- **M1 (bridge for L1)**: a.s., `qkSingleton μ p k n (blockRV n ω)` equals
 `ofReal (exp (-negLogQk μ p k n ω))`. -/
 lemma qkSingleton_blockRV_eq_ofReal_exp_negLogQk

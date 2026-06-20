@@ -34,11 +34,16 @@ boundary (`O(k)`).
 This file proves that factor-level correspondence, assembles the per-phrase
 `negLogQk`-segment identity, and assembles the full block threading decomposition
 `negLogQk_phrase_threading` (sorryAx-free, conditional on an explicit tiling +
-per-position positivity supplied as regularity hypotheses). The remaining genuine
-blocker — turning the `List (List α)` greedy parse into an absolute-position
-`Fin`-tiling of the block (materializing `N`, `c`, and the tiling hypotheses) — is
-left to the `lz78_block_tiling` atom (`@residual(wall:lz78-aseventual-ziv)`); it
-inherits the LZ78 achievability wall slug.
+per-position positivity supplied as regularity hypotheses). The tiling itself —
+turning the `List (List α)` greedy parse into an absolute-position `Fin`-tiling of
+the block (materializing `N`, `c`, and the tiling hypotheses) — is supplied a.s. by
+the `lz78_block_tiling` atom, now **sorryAx-free**: the deterministic position
+tiling `lz78_parse_tiling_positions` (`GreedyLongestPrefix.lean`) supplies the
+length-only conjuncts and `markovFactor_blockRV_pos_ae` (`Core.lean`) supplies the
+a.s. per-position positivity. The remaining LZ78 achievability blocker
+(`@residual(wall:lz78-aseventual-ziv)`) is downstream: composing this a.s. threading
+identity with the Ziv `c·log c` counting and the SMB rate, plus the boundary-length
+sub-blocker (`b ≤ k + Lmax`, `n - e ≤ Lmax`) noted on `lz78_block_tiling`.
 -/
 
 namespace InformationTheory.Shannon
@@ -480,76 +485,61 @@ lemma negLogQk_phrase_threading
 
 /-! ## Tiling materialization from the greedy parse (genuine blocker) -/
 
-/-- **Tiling materialization from the LZ parse (genuine blocker).** For the block
-`blockRV n ω`, the greedy longest-prefix parse
-`lz78PhraseStrings (List.ofFn (fun i => blockRV n ω i))` yields the absolute-position
-tiling consumed by `negLogQk_phrase_threading`: a leading boundary length `b`, a phrase
-count `c`, a parse-covered length `e ≤ n`, and the cumulative-position function
-`N : Fin (c+1) → ℕ` with `N 0 = b`, `N (last c) = e`, the partition `[b, e)` strictly
-monotone (`hmono`), every phrase start `> k` (`hstart`, leading phrases below position
-`k` absorbed into the boundary), and the per-position positivity `hposfac`. Composing
-with `negLogQk_phrase_threading` then threads `negLogQk` over the genuine parse.
+/-- **Tiling materialization from the LZ parse (a.s. threading input).** For the
+block `blockRV n ω`, the greedy longest-prefix parse
+`lz78PhraseStrings (List.ofFn (fun i => blockRV n ω i))` yields, **a.s. in `ω`**, the
+absolute-position tiling consumed by `negLogQk_phrase_threading`: a leading boundary
+length `b`, a phrase count `c`, a parse-covered length `e ≤ n`, the absorbed-count
+`bAbsorbed`, and the cumulative-position function `N : Fin (c+1) → ℕ` with `N 0 = b`,
+`N (last c) = e`, the partition `[b, e)` strictly monotone (`hmono`), every phrase
+start `> k` (`hstart`, leading phrases below position `k` absorbed into the boundary),
+and the per-position positivity `hposfac`. Composing with `negLogQk_phrase_threading`
+threads `negLogQk` over the genuine parse.
 
-**What is de-risked (sorryAx-free assets in hand):**
-* The factor-level correspondence and per-phrase segment identity
-  (`markovFactor_blockRV_eq_window`, `negLogQk_segment_eq_condQkState`) are closed.
-* The trailing-tail mismatch is closed: `negLogQk_phrase_threading` now carries a
-  trailing boundary `[e, n)`, so the `≤`-slack of `lz78PhraseStrings_total_length_le`
-  is absorbed (no `N (last c) = n` constraint).
-* The reconstruction invariant `lz78PhraseStrings_flatten_prefix` (the parse phrases
-  concatenate to a prefix of the input, with the unfinished tail as the leftover)
-  furnishes the cumulative-position function `N` and the covered length `e`.
+**Three findings pinned into this signature (vs. the prior per-ω skeleton):**
+* **A.s., not per-ω.** The per-position positivity `hposfac` cannot hold for *all* `ω`
+  — `markovFactor`'s positivity comes only from `cond_singleton_pos_ae`, an a.s.
+  statement. So the whole tiling is an `∀ᵐ ω ∂μ, ∃ …`; positivity is then discharged
+  by `markovFactor_blockRV_pos_ae` (Core). The downstream M3/limsup argument is a.s.
+  anyway, so an a.s. threading identity is the correct shape.
+* **`bAbsorbed ≤ k + 1`, not `≤ k`.** When the leading phrases all have length `1`, the
+  least index whose cumulative length exceeds `k` is `k + 1`; the cumulative length
+  increases by `≥ 1` per phrase, so at most `k + 1` phrases fit below position `k`.
+* **Phrase *content* coherence is unnecessary.** `negLogQk_phrase_threading` reads
+  phrase content directly as `fun m => obs (N j.castSucc + m) ω`; it never references
+  the parse phrase *strings'* content, only the cumulative-length *positions*. So the
+  tiling needs only the phrase **lengths** (via `lz78_parse_tiling_positions`), not a
+  `List.flatten`-content-indexing chain.
 
-**What remains (the genuine multi-leg blocker, why `(1)` rewrite was infeasible here):**
-* **Per-phrase substring coherence.** Turning `lz78PhraseStrings_flatten_prefix`
-  (`flatten ++ tail = input`) into "phrase `j` equals `obs` on `[N j.castSucc, N j.succ)`"
-  needs a `List.flatten`-indexing chain (`List.getElem_flatten` / cumulative-length
-  bookkeeping) absent from the parse layer — phrase strings carry no absolute index, so
-  the content tuple `Z j = obs (N j.castSucc + m) ω` must be recovered from the flatten
-  decomposition position-by-position.
-* **Leading-`k` boundary absorption.** Phrases whose cumulative start is `≤ k` must be
-  folded into the leading boundary `[0, b)` to meet `hstart : k < N j.castSucc`; this
-  re-buckets a `Fin`-prefix of the phrase list.
-* **Per-position positivity `hposfac`.** `0 < (markovFactor …).toReal` along phrase
-  positions is `cond_singleton_pos_ae` — an a.s. statement, so the deterministic atom
-  carries it as a hypothesis; the a.s. wrapper discharges it at the use site.
-
-These are genuine combinatorial / measure-theoretic gaps (not a wiring issue), spanning
-the `List.flatten`-indexing scaffold + the a.s. positivity lift; isolated here as an
-honest `sorry`. Inherits the LZ78 achievability wall slug (route LOCK = `markovFactor`).
-
-**Audit caveat (2026-06-21, independent honesty audit, honest_residual): the symbol
-accounting `b`/`n - e` is dropped but is NOT optional downstream.** The threading
-identity (`negLogQk_phrase_threading`) leaves the leading-boundary sum over `[0, b)` and
-the trailing-tail sum over `[e, n)` as additive terms. The W2 limsup discharge (Phase 3/4)
-needs `b / n → 0` and `(n - e) / n → 0` to vanish those boundary contributions; the present
-signature provides no such bound (the existential may legitimately return `b = e = n` when
-`parseCount ≤ k`, and places no `O(k)` cap on `b` for long blocks). So `lz78_block_tiling`
-as stated is TRUE-as-framed and honest, but is **not yet a sufficient input for Phase 3 on
-its own** — it must be strengthened with `b ≤ k + (one phrase)` and `n - e ≤ (one phrase)`
-(or the equivalent `o(n)` bounds) before composing with the threading identity discharges
-W2. These bounds live in the *same* substring-coherence `sorry` blocker, so closing that
-blocker should add the boundary-length conjuncts, not defer them again. Progress so far =
-the threading mechanism + non-vacuity anchor (genuine, audited), not a complete tiling-to-W2
-input.
+The deterministic position tiling (`lz78_parse_tiling_positions`,
+`GreedyLongestPrefix.lean`, sorryAx-free) supplies `b c e bAbsorbed N` and the
+length-only conjuncts (monotonicity, `hstart`, `e ≤ n`, the parse-anchored count, and
+`bAbsorbed ≤ k + 1`); `markovFactor_blockRV_pos_ae` (Core, sorryAx-free) supplies the
+a.s. per-position positivity. The body assembles these — there is no remaining sorry on
+this leg.
 
 **Non-vacuity anchor.** The plain existence of *some* tiling is vacuously true (`c = 0`,
-empty partition), so the genuine content is encoded by anchoring the tiling to the *parse*:
-the phrase count `c` is the genuine distinct-phrase count of the parse minus the leading
-phrases absorbed below position `k`, pinned by `c + bAbsorbed = parseCount` with the
-absorbed-count `bAbsorbed` at most `k`. For a long block whose parse has `parseCount > k`
-phrases this forces `c > 0`, so the empty-tiling escape is unavailable and the statement
-carries genuine `parse → tiling` content (exactly what the Ziv `c·log c` counting consumes).
-The leading-boundary symbol length `b` and trailing tail `n - e` are left unconstrained in
-this signature (they are `O(k)` + one phrase by the absorption, but the precise symbol
-accounting is part of the substring-coherence sub-blocker and is deferred to the closure
-rather than asserted here as a fragile inequality).
+empty partition), so the genuine content is encoded by anchoring the tiling to the
+*parse*: the phrase count `c` is the genuine distinct-phrase count of the parse minus the
+leading phrases absorbed below position `k`, pinned by `c + bAbsorbed = parseCount` with
+the absorbed-count `bAbsorbed ≤ k + 1`. For a long block whose parse has `parseCount > k`
+phrases this forces `c > 0`, so the empty-tiling escape is unavailable.
 
-@residual(wall:lz78-aseventual-ziv) -/
+**Boundary-length bounds (supplied, for the W2 limsup discharge).** The threading
+identity (`negLogQk_phrase_threading`) leaves the leading-boundary sum over `[0, b)` and
+the trailing-tail sum over `[e, n)` as additive terms; the W2 limsup discharge (Phase 3/4)
+needs `b / n → 0` and `(n - e) / n → 0` to vanish those boundary contributions. This
+signature now carries `b ≤ k + Lmax` and `n - e ≤ Lmax` with `Lmax` the longest phrase
+length (from `lz78_parse_tiling_positions`, sorryAx-free): the leading boundary is one
+phrase past the `≤ k` absorbed prefix, and the un-emitted trailing tail is one dictionary
+phrase or empty (`lz78PhraseStrings_flatten_tail_mem`). For the W2 vanishing, the closure
+still needs `Lmax = o(n)` a.s. (the longest LZ78 phrase grows sublinearly), which is part
+of the achievability wall, not of this tiling atom. The present lemma is the a.s. threading
+mechanism + non-vacuity anchor + boundary-length bounds (genuine, sorryAx-free). -/
 lemma lz78_block_tiling
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
-    (k n : ℕ) (ω : Ω) :
-    ∃ (b c e bAbsorbed : ℕ) (N : Fin (c + 1) → ℕ),
+    (k n : ℕ) :
+    ∀ᵐ ω ∂μ, ∃ (b c e bAbsorbed Lmax : ℕ) (N : Fin (c + 1) → ℕ),
       -- the partition + boundary regularity consumed by `negLogQk_phrase_threading`
       N 0 = b ∧ N (Fin.last c) = e ∧ e ≤ n ∧
       (∀ j : Fin c, N j.castSucc + 1 ≤ N j.succ) ∧
@@ -558,10 +548,25 @@ lemma lz78_block_tiling
         0 < (markovFactor μ p k (N j.castSucc + m)
               (p.blockRV (N j.castSucc + m + 1) ω)).toReal) ∧
       -- non-vacuity: the tiling is the *parse* tiling (phrase count anchored to the
-      -- genuine distinct-phrase count, minus `bAbsorbed ≤ k` leading phrases).
+      -- genuine distinct-phrase count, minus `bAbsorbed ≤ k + 1` leading phrases).
       c + bAbsorbed
         = (lz78PhraseStrings (List.ofFn (fun i => p.blockRV n ω i))).length ∧
-      bAbsorbed ≤ k := by
-  sorry
+      bAbsorbed ≤ k + 1 ∧
+      -- boundary-length bounds for the W2 limsup discharge (`Lmax` = longest phrase).
+      n - e ≤ Lmax ∧
+      b ≤ k + Lmax := by
+  filter_upwards [markovFactor_blockRV_pos_ae μ p k] with ω hpos
+  obtain ⟨b, c, e, bAbsorbed, Lmax, N, hN0, hNlast, he_le, hmono, hstart, hcount, hbA,
+    htail, hbb⟩ := lz78_parse_tiling_positions (List.ofFn (fun i => p.blockRV n ω i)) k
+  have hlen : (List.ofFn (fun i => p.blockRV n ω i)).length = n := List.length_ofFn
+  refine ⟨b, c, e, bAbsorbed, Lmax, N, hN0, hNlast, ?_, hmono, hstart, ?_, hcount, hbA,
+    ?_, hbb⟩
+  · -- `e ≤ (List.ofFn …).length = n`.
+    rwa [hlen] at he_le
+  · -- per-position positivity from the a.s. asset.
+    intro j m _
+    exact hpos (N j.castSucc + m)
+  · -- `n - e ≤ Lmax`.
+    rwa [hlen] at htail
 
 end InformationTheory.Shannon

@@ -246,6 +246,61 @@ theorem lz78PhraseStrings_flatten_prefix (input : List α) :
     lz78PhraseStringsAux_flatten_conserve (input.length + 1) [] [] input (by omega)
   exact ⟨tail, by simpa using htail⟩
 
+/-- **Worker conserves the flattened string AND bounds the tail**: the unfinished
+tail at termination is the final candidate prefix `cur`, which the greedy invariant
+keeps as a dictionary entry (or empty). So the tail is a member of the returned
+phrase list (or `[]`), bounding its length by the longest phrase. Proved by induction
+on `fuel`, threading the invariant `cur ∈ dict ∨ cur = []` (preserved on both the
+keep-growing and emit branches). -/
+theorem lz78PhraseStringsAux_tail_mem :
+    ∀ (fuel : ℕ) (dict : List (List α)) (cur input : List α),
+      input.length < fuel →
+      (cur ∈ dict ∨ cur = []) →
+      ∃ tail : List α,
+        (lz78PhraseStringsAux fuel dict cur input).flatten ++ tail
+          = dict.flatten ++ cur ++ input ∧
+        (tail ∈ lz78PhraseStringsAux fuel dict cur input ∨ tail = [])
+  | 0, _, _, _, h, _ => by omega
+  | fuel + 1, dict, cur, [], _, hcur => by
+      refine ⟨cur, ?_, ?_⟩
+      · simp [lz78PhraseStringsAux]
+      · unfold lz78PhraseStringsAux; exact hcur
+  | fuel + 1, dict, cur, s :: rest, h, _ => by
+      unfold lz78PhraseStringsAux
+      by_cases hmem : (cur ++ [s]) ∈ dict
+      · simp only [hmem, if_true]
+        obtain ⟨tail, htail, hmem_tail⟩ :=
+          lz78PhraseStringsAux_tail_mem fuel dict (cur ++ [s]) rest
+            (by simp only [List.length_cons] at h; omega) (Or.inl hmem)
+        exact ⟨tail, by rw [htail]; simp, hmem_tail⟩
+      · simp only [hmem, if_false]
+        obtain ⟨tail, htail, hmem_tail⟩ := lz78PhraseStringsAux_tail_mem fuel
+          (dict.concat (cur ++ [s])) [] rest
+          (by simp only [List.length_cons] at h; omega) (Or.inr rfl)
+        exact ⟨tail, by rw [htail]; simp [List.concat_eq_append, List.flatten_append],
+          hmem_tail⟩
+
+/-- **Top-level tail membership**: the unfinished tail of the parse is a phrase string
+(a member of `lz78PhraseStrings input`) or empty. Hence its length is at most the
+longest phrase length, which bounds the un-emitted trailing tail `input.length - e`. -/
+theorem lz78PhraseStrings_flatten_tail_mem (input : List α) :
+    ∃ tail : List α, (lz78PhraseStrings input).flatten ++ tail = input ∧
+      (tail ∈ lz78PhraseStrings input ∨ tail = []) := by
+  obtain ⟨tail, htail, hmem⟩ :=
+    lz78PhraseStringsAux_tail_mem (input.length + 1) [] [] input (by omega) (Or.inr rfl)
+  exact ⟨tail, by simpa using htail, hmem⟩
+
+omit [DecidableEq α] in
+/-- **`flatten` length equals the additive `foldr` total**: bridges the
+reconstruction-invariant `List.flatten` length to the cumulative-length `foldr`
+accumulator used by the tiling. -/
+theorem length_flatten_eq_foldr_length (L : List (List α)) :
+    L.flatten.length = L.foldr (fun w acc => w.length + acc) 0 := by
+  rw [List.length_flatten]
+  induction L with
+  | nil => simp
+  | cons hd tl ih => simp only [List.map_cons, List.sum_cons, List.foldr_cons, ih]
+
 end Length
 
 /-! ## §4. Phrase count bound -/
@@ -303,6 +358,20 @@ theorem length_le_foldr_length_of_ne_nil (l : List (List α))
       have := ih htl
       omega
 
+omit [DecidableEq α] in
+/-- **Member length bounded by the `foldr max`**: every entry of a list of strings has
+length at most the longest entry length (the `Lmax` accumulator used to bound the
+leading-boundary and trailing-tail symbol lengths in the tiling). -/
+theorem length_le_foldr_max_of_mem (l : List (List α)) (w : List α) (h : w ∈ l) :
+    w.length ≤ l.foldr (fun w acc => max w.length acc) 0 := by
+  induction l with
+  | nil => simp at h
+  | cons hd tl ih =>
+      simp only [List.foldr_cons]
+      rcases List.mem_cons.mp h with h | h
+      · subst h; exact Nat.le_max_left _ _
+      · exact Nat.le_trans (ih h) (Nat.le_max_right _ _)
+
 /-- **Distinct phrase count bound**: the number of distinct
 phrases emitted by the genuine longest-prefix greedy parse is at most the
 input length. Combined with `lz78PhraseStrings_nodup` (the strings are
@@ -335,16 +404,24 @@ absorbed), the count is anchored to the genuine parse via
 `c + bAbsorbed = (parse).length`, and `bAbsorbed ≤ k + 1` (the cumulative length
 increases by `≥ 1` each step, so at most `k + 1` phrases fit below position `k`).
 
+**Boundary-length bounds** (for the downstream W2 limsup discharge): with `Lmax` the
+longest phrase length, the leading boundary `b ≤ k + Lmax` (the last absorbed phrase
+extends one phrase past the `≤ k` cumulative prefix) and the trailing tail
+`input.length - e ≤ Lmax` (the un-emitted tail is one dictionary phrase or empty,
+`lz78PhraseStrings_flatten_tail_mem`).
+
 This is the pure list-combinatorial heart of the LZ78 threading tiling: it carries
 the phrase *lengths* only (the downstream threading reads phrase content directly
 off the process, never the parse strings' content). -/
 theorem lz78_parse_tiling_positions (input : List α) (k : ℕ) :
-    ∃ (b c e bAbsorbed : ℕ) (N : Fin (c + 1) → ℕ),
+    ∃ (b c e bAbsorbed Lmax : ℕ) (N : Fin (c + 1) → ℕ),
       N 0 = b ∧ N (Fin.last c) = e ∧ e ≤ input.length ∧
       (∀ j : Fin c, N j.castSucc + 1 ≤ N j.succ) ∧
       (∀ j : Fin c, k < N j.castSucc) ∧
       c + bAbsorbed = (lz78PhraseStrings input).length ∧
-      bAbsorbed ≤ k + 1 := by
+      bAbsorbed ≤ k + 1 ∧
+      input.length - e ≤ Lmax ∧
+      b ≤ k + Lmax := by
   classical
   set L := lz78PhraseStrings input with hL_def
   set m := L.length with hm_def
@@ -429,7 +506,13 @@ theorem lz78_parse_tiling_positions (input : List α) (k : ℕ) :
   have hbA_spec : k < cumLen bAbsorbed ∨ bAbsorbed = m := Nat.find_spec hP_exists
   set c := m - bAbsorbed with hc_def
   set N : Fin (c + 1) → ℕ := fun j => cumLen (bAbsorbed + j.val) with hN_def
-  refine ⟨cumLen bAbsorbed, c, cumLen m, bAbsorbed, N, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  -- Longest phrase length: the boundary symbol-length cap.
+  set Lmax : ℕ := L.foldr (fun w acc => max w.length acc) 0 with hLmax_def
+  have hLmax_bound : ∀ j (h : j < m), (L[j]'h).length ≤ Lmax := by
+    intro j h
+    exact length_le_foldr_max_of_mem L (L[j]'h) (List.getElem_mem h)
+  refine ⟨cumLen bAbsorbed, c, cumLen m, bAbsorbed, Lmax, N,
+    ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · -- N 0 = cumLen bAbsorbed
     simp only [hN_def, Fin.val_zero, Nat.add_zero]
   · -- N (last c) = cumLen m
@@ -466,6 +549,34 @@ theorem lz78_parse_tiling_positions (input : List α) (k : ℕ) :
     omega
   · -- bAbsorbed ≤ k + 1
     exact hbA_le_k1
+  · -- input.length - e ≤ Lmax (trailing tail is one phrase or empty)
+    obtain ⟨tail, htail, hmem⟩ := lz78PhraseStrings_flatten_tail_mem input
+    -- flatten.length = cumLen m, so tail.length = input.length - cumLen m.
+    have hflat_len : L.flatten.length = cumLen m := by
+      rw [length_flatten_eq_foldr_length, hcumm_eq]
+    have htail_len : tail.length = input.length - cumLen m := by
+      have : L.flatten.length + tail.length = input.length := by
+        rw [← List.length_append, htail]
+      omega
+    have htail_le : tail.length ≤ Lmax := by
+      rcases hmem with hmem | hmem
+      · exact length_le_foldr_max_of_mem L tail hmem
+      · simp [hmem]
+    omega
+  · -- b = cumLen bAbsorbed ≤ k + Lmax (last absorbed phrase extends one phrase past `k`)
+    rcases Nat.eq_zero_or_pos bAbsorbed with hz | hpos
+    · -- bAbsorbed = 0 ⇒ b = cumLen 0 = 0.
+      rw [hz, hcum0]; omega
+    · -- bAbsorbed = (bAbsorbed - 1) + 1, with cumLen (bAbsorbed-1) ≤ k.
+      have hbm1_lt : bAbsorbed - 1 < m := by omega
+      have hbm1_below : cumLen (bAbsorbed - 1) ≤ k := hbA_below (bAbsorbed - 1) (by omega)
+      have hsucc : cumLen (bAbsorbed - 1 + 1)
+          = cumLen (bAbsorbed - 1) + (L[bAbsorbed - 1]'hbm1_lt).length :=
+        hcum_succ (bAbsorbed - 1) hbm1_lt
+      have hb_eq : cumLen bAbsorbed = cumLen (bAbsorbed - 1 + 1) := by
+        congr 1; omega
+      have hlen_le := hLmax_bound (bAbsorbed - 1) hbm1_lt
+      omega
 
 end Tiling
 
