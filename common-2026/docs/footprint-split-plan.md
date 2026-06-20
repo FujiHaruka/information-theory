@@ -10,7 +10,7 @@ Lean style [`rules/lean-style.md`](rules/lean-style.md) ・honesty タグ [`audi
 
 - [x] Phase 0 — 測定 + pilot 較正 ✅ (`floorMatrix_dist_le`、commit `d2fb1fa`)
 - [x] Phase 1 — 優先1 (>250 行 tier) を named helper へ分解 ✅ **全 25 本処理済** (clean 割れブロックは全抽出、>250 残留=不可分 core は現実的 DoD で許容)
-- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-18、>150: 91→47)
+- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-21、>150: 91→42)
 - [ ] Phase 3 — 最終再実測 + 裾縮小確認 📋
 - [ ] Phase 4 — **option C (>250 spine 攻略)** 🔨 (2026-06-14 着手。**3 本クリア >250: 15→12、両機構検証済**。残 12 本。下記 Phase 4 節)
 
@@ -205,11 +205,11 @@ file:line (footprint) sorry-count は §4.1 入力データを verbatim 使用 (
 sorryAx-free)。コード側の `@audit:ok`/`@residual`/sorry 数は全 13 本で機械検証して verbatim 保存
 (Assembly は既存 sorry+@residual を含め 1→1 保存)。
 
-## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-18 完了)
+## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-21 完了)
 
 **proof-log: no**。
 
-**状態 (2026-06-20)**: Wave 1-18 完了。**>150 tier: 91 → 47 (−44)、>250 は 0 維持** (official
+**状態 (2026-06-20)**: Wave 1-21 完了。**>150 tier: 91 → 42 (−49)、>250 は 0 維持** (official
 decl-to-next-decl metric で再実測)。各 Wave は全 Hard invariants (対象 sig byte-identical /
 `#print axioms` = `[propext, Classical.choice, Quot.sound]` 不変 / sorry 数不変 / `lake env lean`
 clean + 該当 build green) を orchestrator が独立機械検証済。**新規 sorry/residual なし (純リファクタ)
@@ -346,6 +346,27 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   `EPI/.../CsiszarProjection.lean` `csiszar_first_order_condition` 154→74 (helper 1 本
   `csiszar_segment_hasDerivAt` 90 = HasDerivAt φ D 0 の全微分計算 (hφ_deriv) ブロック切出)。
   計 2 helper 全 <150。>150 tier 49→47、>250 = 0 維持。
+- **Wave 19** (`4710e7b`): `ChannelCoding/Achievability/Main.lean` `channel_coding_achievability`
+  192→147 (helper 2 本: `channelCoding_entropy_exponent_eq` 39 = entropy exponent 同定 HZ-HX-HY=-I /
+  `complementProbReal_le_of_one_sub_le` 7 = 汎用補集合確率境界) +
+  `ChannelCoding/StrongConverse.lean` `channelCoding_average_success_le` 165→102 (helper 1 本:
+  `channelCoding_one_sub_avgErr_eq` 78 = Step1 代数恒等式 1-avgPe=(1/M)∑dec)。
+  計 3 helper 全 <150。>150 tier 47→45、>250 = 0 維持。
+- **Wave 20** (`c568a5b`): `EPI/Case1/RatioLimit/Assembly.lean`
+  `csiszarLogRatioGap_tendsto_zero_atTop` 165→<150 (helper 1 本:
+  `csiszarLogRatioGap_eventually_eq_logRatio` = h_eventually_eq の scaling 恒等式+log キャンセル、
+  NX/NY/NS set local を展開形で thread。Wave 18 hjensen と同様に dense set-local threading seam を攻略) +
+  `RateDistortion/AchievabilityPhaseD.lean` `source_avg_distortion_le_simpler` 158→117 (helper 1 本:
+  `integral_const_add_indicator_one` 19 = 確率測度上 ∫(a+m·1_B)=a+m·P.real B 汎用補題)。
+  既存 sorry 1 (`entropyPower_add_ge_case1_of_methodX` の @residual(plan:epi-debruijn-pertime-closure))
+  は target 外で verbatim 保存。計 2 helper 全 <150。>150 tier 45→43、>250 = 0 維持。
+- **Wave 21** (`a47961b`): `RateDistortion/AchievabilityPhaseEStrongFinal/Setup.lean`
+  `rate_distortion_achievability_witness_form_strong` 166→145 (helper 1 本:
+  `weighted_avg_bound` 24 = 汎用凸結合境界 ∀i f i≤a+m·g i ∧ ∑W·g≤B ⇒ ∑W·f≤a+m·B、Fintype 上) +
+  `LZ78/ZivCountingBody.lean` `total_length_ge_count_mul_log` (footprint 154) は **ARTIFACT 判定で抽出せず**
+  (実 body 137 行で既に <150、metric 154 は宣言間 12 行による膨張 = Wave 19 の
+  `integrable_indicator_mul_negLog_of_condExp` body148/metric157 と同パターン)。
+  計 1 helper <150。>150 tier 43→42、>250 = 0 維持。
 
 ### 計測ニュアンス (Phase 2 で確立、Wave 4+ でも適用)
 
@@ -357,57 +378,43 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   (Object.lean は docstring に 5 箇所、実 sorry tactic は 0)。ターゲット選定で sorry 持ち判定する際は実
   sorry tactic token を確認する (decl span の `grep sorry` は over-count)。
 
-### Wave 19+ への申し送り
+### Wave 22+ への申し送り
 
 - **触らない (option-C 済 floor 残留)**: Mass 249 / union_bound 245 / ConvEntropyDensity 245 等。
-- **計測アーティファクト — `convex_fisher_bound` (EPI/Blachman/Density 238) は候補から除外**:
-  この theorem の実 body は line 467〜603 の約 137 行で**既に <150**。footprint が 238 に膨れるのは、
-  直後に来る `structure IsBlachmanConvReady` (line 631) が footprint 計測スクリプト `footprint_v2.py` の
-  `decl_re` (`theorem|lemma|def` のみマッチ、`structure` は非マッチ) に拾われず、次の theorem
-  (`isBlachmanConvReady_symm` line 705) までが 1 宣言として測られるため。body を抽出で縮めても
-  宣言行 (467) から次 matched decl (705) までの距離は変わらず、measured footprint は下がらない → count-win
-  不能。**一般教訓**: `theorem` 直後に `structure`/`instance`/`abbrev` が挟まるケースは同種アーティファクト。
-  候補選定時は target の**実 body 末尾**と**次の matched decl** を Read で確認すること。
-- **中位 tier 151-157 の single-target disjoint 候補群 (小抽出で <150 到達見込み、ただし margin 薄く
-  net 削減を要確認、着手時 Read で実 body 末尾・次 matched decl を確認)**:
-  `integrable_indicator_mul_negLog_of_condExp` (BackwardIntegral 157) /
-  `total_length_ge_count_mul_log` (LZ78/ZivCountingBody 154) /
+- **計測 artifact floor クラス (重要な構造的知見)**: body は既に <150 だが decl-to-next metric が
+  >150 になる target 群。原因は次 decl の docstring / section 構造 / variable 宣言が宣言間に挟まること。
+  cosmetic に抽出して metric を下げるのは relabeling-adjacent ゆえ**やらない** (body <150 を実質達成と見なす方針)。
+  確認済 artifact: `integrable_indicator_mul_negLog_of_condExp` (BackwardIntegral, body148/metric157) /
+  `total_length_ge_count_mul_log` (LZ78, body137/metric154) /
+  `convex_fisher_bound` (EPI/Blachman/Density, body~137/metric238)。
+  **含意**: 残 42 のうち複数は同種 artifact の可能性大。特に 151-155 の thin-margin single は
+  **着手前に必ず body 末尾と次 matched decl を Read で確認** (artifact なら除外)。
+- **DoD への含意**: relay goal「>150 → 0」は (a) 不可分 >250 組立核 floor + (b) 計測 artifact floor の
+  二重 floor で 0 到達は構造的に不能。現実的完了 = 「genuine に splittable な target を全て分解済」。
+- **thin-margin single (151-155、着手前に body 確認必須)**:
+  `convDensityAdd_second_moment` 155 / `csiszarLogRatioGap_hasDerivAt` 155 /
   `birkhoffAverage_pmfLogCondMarkov_tendsto` (SMB/AlgoetCover/Core 154) /
   `birkhoffAverageReal_limsup_comp_T_ae` (BirkhoffErgodic 153) /
   `condEntropy_pi_eq_sum_of_memoryless_strong` (CondEntropyMemoryless 151)。
-  互いに別ファイルゆえ disjoint、1 agent 1 file で同時処理可。
-- **高 count single-target で未着手 (orchestrator scout 済)**:
-  `channel_coding_achievability` (Main.lean 192、2-seam = Step3 entropy 識別ブロック h_exp_eq ~37 行 +
-  別 seam の 2 helper 要)。
-- **教訓 (Wave 18)**: 重 threading seam (hjensen) が「μW μV + 型クラスを受け内部 set 再構築・a.e. 事実のみ
-  仮説受領」(= Wave 16 パターン) で解けた = 後回し扱いだった密結合 seam も同手法で攻略可能 (Core.lean
-  後回し卒業)。HasDerivAt 等の純解析計算ブロック (Csiszar hφ_deriv、80 行級) は大 seam で大マージン勝ち。
-- **後回し寄り (signature 密結合で抽出が重い)**: `entropy_power_inequality_of_density`
-  (EPI/DensityForm.lean 172) — signature ~40 行 + lift-space wiring 密結合で、抽出に lift/X'/Y'/ZX/ZY/Z
-  多数を thread する必要があり重い。優先度低。
-- **後回し候補 (高 count multi-target = 単独抽出で <150 未達、複数 seam/helper 要)**:
-  `codebookAvgFailureStrong_tendsto_zero` (RateDistortion/.../FailureTendsto 226、2+ helper 要・
-  ファイル末尾の宣言・set 重め) /
-  `integral_MRatioLowerZ_le_one` (SMB/AlgoetCover/TwoSidedRatio 231、同ファイルに condLExp... 179 同居 =
-  2 target 注意) /
-  `entropy_power_inequality_of_density_explicit` (EPI/Case1/SmoothingLimit 225、同ファイルに複数 >150 同居)。
-- **multi-target 同居ファイル群 (1 file 1 agent 規律で同時処理、別 agent に割らない)**:
-  `RandomCodebook` 3 件 (`random_codebook_E1_swap` 230 / `random_codebook_E2_swap` 215 ほか) /
-  `SmoothingLimit` 3 件 / `Mass` 3 件 / `AWGN Walls` 4 件 / `PairBound` 2 件 / `BackwardMartingale` 2 件 /
-  `TwoSidedRatio` 2 件。同一ファイル内の複数 target は編集領域が重なるため必ず同一 agent が直列処理する
-  (`.git/index.lock` 競合 + 行番号ドリフト回避)。
-  ※ `convJointLlr_integrable` (ConvEntropyDensity 229) は floor `negMulLog_convDensity_entropy_ge_density`
-  (245) と同居 = floor sibling、touch 注意。
-- **運用注記**: 上記 footprint はスナップショット値。同居 floor sibling (option-C 済 >250 残留や別 >150
-  target) の有無は Wave 着手時に target ファイルを Read して確認すること (Wave 13 までの計測アーティファクト
-  教訓 = 次 matched decl までの距離で測るため、同居宣言の有無で count-win 可否が変わる)。
+- **次 Wave 向け genuine 候補 (margin 厚め、artifact 可能性低)**:
+  multi-target 同居ファイル群を 1 agent で複数同時処理:
+  `Huffman/Basic.lean` (`huffmanStep` 161 + `kraftPerGroup_step` 157) /
+  `Stein.lean` (`stein_converse_finite_n` 156 + `stein_achievability` 153) /
+  `PairBound.lean` (`swErrorProb_total` 210 + `swError_EXY_strict` 170) /
+  `BlockwiseChannel.lean` (`isMarkovChain_outputs_cond_indep` 186 + `isMarkovChain_per_letter_input` 164) /
+  `AWGN/Walls.lean` 4 件 (`klDiv_perLetter_eq_capacity` 196 / `awgnConverseMarkov_holds` 183 /
+  `continuousAepGaussian_holds` 164 / `gaussian_shear_logRnDeriv_memLp_two` 158) /
+  `RandomCodebook.lean` 3 件 (`E1_swap` 230 / `E2_swap` 215 / `average_le` 177)。
+- **後回し寄り (signature 密結合)**: `entropy_power_inequality_of_density` (EPI/DensityForm.lean 172)
+  — signature ~40 行 + lift-space wiring 密結合、優先度低。
+- **後回し候補 (set-heavy multi-seam)**:
+  `codebookAvgFailureStrong_tendsto_zero` (FailureTendsto 226) /
+  `integral_MRatioLowerZ_le_one` (TwoSidedRatio 231、同ファイルに condLExp... 179 同居) /
+  `entropy_power_inequality_of_density_explicit` (SmoothingLimit 225、複数 >150 同居)。
+- **運用注記**: 上記 footprint はスナップショット値。同居 floor sibling の有無は着手時に Read で確認。
 - プロトコル: 並列 ≤ 2・1 ファイル 1 エージェント・orchestrator 検証は同一。
-- **process 申し送り (確定運用)**: worktree isolation 指定が **Wave 6・7 と 2 連続で機能せず**、
-  agent commit が main 直書きになった (分離ブランチが作られない)。Wave 7 では wave7a の WIP が
-  orchestrator の working tree に `M Mono.lean` として可視化された。確定した運用: (a) この環境では
-  worktree が効かない前提で、disjoint file を選べば main 直書きでも衝突しない、(b) orchestrator は各
-  agent の **commit 後** に検証する (WIP 中の `M` ファイルには触れない)、(c) 検証は HEAD に乗った状態で
-  per-file 実施。次回は worktree 指定を続けても良いが分離は期待しない。
+- **process 申し送り (確定運用)**: worktree が効かない前提で disjoint file を選べば main 直書きでも
+  衝突しない。orchestrator は各 agent の commit 後に検証 (WIP 中の M ファイルには触れない)。
 
 ### Phase 1 由来 dedup 候補 (全 4 件決着済、参考)
 
