@@ -527,6 +527,87 @@ theorem shannon_mcmillan_breiman₂
   have := hω.div_const (Real.log 2)
   simpa only [blockLogAvg₂, entropyRate₂] using this
 
+/-- Elementary log bound `log t ≤ 2 · √t` for `t > 0`, used to control the
+`c · log(Ntot / c)` boundary term of the achievability composition. -/
+private theorem log_le_two_sqrt (t : ℝ) (ht : 0 < t) :
+    Real.log t ≤ 2 * Real.sqrt t := by
+  have hlog : Real.log (Real.sqrt t) = Real.log t / 2 := Real.log_sqrt ht.le
+  nlinarith [Real.log_le_sub_one_of_pos (Real.sqrt_pos.mpr ht), Real.sqrt_nonneg t]
+
+/-- The `c · log(Ntot / c)` boundary term of the achievability composition,
+controlled by `2 · n · √(c' / n)`, where `c ≤ c'` and `Ntot ≤ n`. The `c = 0`
+boundary degenerates to `0 ≤ …`; otherwise `c · log(Ntot/c) ≤ c · log(n/c) =
+2 · √(c · n) ≤ 2 · √(c' · n) = 2 · n · √(c'/n)` via `log_le_two_sqrt`. -/
+private theorem clog_div_le_two_mul_sqrt
+    (c Ntot cp n : ℝ) (hc : 0 ≤ c) (hcCp : c ≤ cp) (hcn : c ≤ n) (hNn : Ntot ≤ n)
+    (hN0 : 0 ≤ Ntot) (hn : 0 < n) :
+    c * Real.log (Ntot / c) ≤ 2 * n * Real.sqrt (cp / n) := by
+  rcases eq_or_lt_of_le hc with hc0 | hcpos
+  · rw [← hc0]; simp; positivity
+  · have hCp_pos : 0 < cp := lt_of_lt_of_le hcpos hcCp
+    have hstep1 : c * Real.log (Ntot / c) ≤ c * Real.log (n / c) := by
+      rcases eq_or_lt_of_le hN0 with hN00 | hNpos
+      · rw [← hN00]; simp
+        have h1c : (1 : ℝ) ≤ n / c := by rw [le_div_iff₀ hcpos]; nlinarith
+        have := Real.log_nonneg h1c
+        positivity
+      · apply mul_le_mul_of_nonneg_left _ hc
+        apply Real.log_le_log (by positivity)
+        exact div_le_div_of_nonneg_right hNn hcpos.le
+    have hncpos : 0 < n / c := by positivity
+    have hlogbd : Real.log (n / c) ≤ 2 * Real.sqrt (n / c) := log_le_two_sqrt _ hncpos
+    have hstep2 : c * Real.log (n / c) ≤ c * (2 * Real.sqrt (n / c)) :=
+      mul_le_mul_of_nonneg_left hlogbd hc
+    have hcn_eq : c * Real.sqrt (n / c) = Real.sqrt (c * n) := by
+      rw [Real.sqrt_mul hcpos.le n, Real.sqrt_div' n hcpos.le, mul_div_assoc']
+      rw [div_eq_iff (Real.sqrt_pos.mpr hcpos).ne']
+      nlinarith [Real.mul_self_sqrt hcpos.le, Real.sqrt_nonneg n, Real.sqrt_nonneg c]
+    have hsqrt_eq : c * (2 * Real.sqrt (n / c)) = 2 * Real.sqrt (c * n) := by
+      rw [show c * (2 * Real.sqrt (n / c)) = 2 * (c * Real.sqrt (n / c)) by ring, hcn_eq]
+    rw [hsqrt_eq] at hstep2
+    have hn_eq : n * Real.sqrt (cp / n) = Real.sqrt (n * cp) := by
+      rw [Real.sqrt_mul hn.le cp, Real.sqrt_div' cp hn.le, mul_div_assoc']
+      rw [div_eq_iff (Real.sqrt_pos.mpr hn).ne']
+      nlinarith [Real.mul_self_sqrt hn.le, Real.sqrt_nonneg cp, Real.sqrt_nonneg n]
+    have hrhs_eq : 2 * n * Real.sqrt (cp / n) = 2 * Real.sqrt (n * cp) := by
+      rw [show 2 * n * Real.sqrt (cp / n) = 2 * (n * Real.sqrt (cp / n)) by ring, hn_eq]
+    rw [hrhs_eq]
+    have hmono : Real.sqrt (c * n) ≤ Real.sqrt (n * cp) :=
+      Real.sqrt_le_sqrt (by nlinarith)
+    calc c * Real.log (Ntot / c) ≤ 2 * Real.sqrt (c * n) := le_trans hstep1 hstep2
+      _ ≤ 2 * Real.sqrt (n * cp) := by linarith [hmono]
+
+/-- Reconcile term: with `cp = c + b`, `b ≤ K`, `1 ≤ c`, `cp ≤ n`, the genuine
+distinct-phrase product `cp · log cp` is bounded by the composition product
+`c · log c` plus the `o(n)` reconcile slack `K + K · log n`. Uses
+`log(1 + b/c) ≤ b/c`. -/
+private theorem cp_log_cp_le_reconcile
+    (c cp b n K : ℝ) (hc : 1 ≤ c) (hcp : cp = c + b) (hb : 0 ≤ b) (hbK : b ≤ K)
+    (hcpn : cp ≤ n) (hcppos : 1 ≤ cp) :
+    cp * Real.log cp ≤ c * Real.log c + (K + K * Real.log n) := by
+  have hcpos : 0 < c := lt_of_lt_of_le one_pos hc
+  have hcppos' : 0 < cp := lt_of_lt_of_le one_pos hcppos
+  have e1 : cp * Real.log cp = c * Real.log cp + b * Real.log cp := by rw [hcp]; ring
+  have e2 : c * Real.log cp = c * Real.log c + c * Real.log (cp / c) := by
+    rw [Real.log_div hcppos'.ne' hcpos.ne']; ring
+  have hbound1 : c * Real.log (cp / c) ≤ b := by
+    have hcpc : cp / c = 1 + b / c := by rw [hcp]; field_simp
+    rw [hcpc]
+    have hlog : Real.log (1 + b / c) ≤ b / c := by
+      have := Real.log_le_sub_one_of_pos (show (0 : ℝ) < 1 + b / c by positivity)
+      linarith [this]
+    calc c * Real.log (1 + b / c) ≤ c * (b / c) :=
+          mul_le_mul_of_nonneg_left hlog hcpos.le
+      _ = b := by field_simp
+  have hbound2 : b * Real.log cp ≤ K * Real.log n := by
+    have hlogcp_nn : 0 ≤ Real.log cp := Real.log_nonneg hcppos
+    have hlogcp_le : Real.log cp ≤ Real.log n := Real.log_le_log hcppos' hcpn
+    have hKnn : 0 ≤ K := le_trans hb hbK
+    calc b * Real.log cp ≤ K * Real.log cp :=
+          mul_le_mul_of_nonneg_right hbK hlogcp_nn
+      _ ≤ K * Real.log n := mul_le_mul_of_nonneg_left hlogcp_le hKnn
+  rw [e1, e2]; linarith
+
 /-- **Lemma 1 (core)**: for each fixed `k`, the a.s.-eventual limsup of the
 greedy bit-rate is at most the `k`-th conditional tail entropy in bits.
 
@@ -543,7 +624,240 @@ theorem ziv_aseventual_le_condEntropyTail_bits
             (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ))
         Filter.atTop
       ≤ conditionalEntropyTail μ p.toStationaryProcess k / Real.log 2 := by
-  sorry
+  classical
+  set q := p.toStationaryProcess with hq
+  set H : ℝ := conditionalEntropyTail μ q k with hH
+  set La : ℝ := Real.log (Fintype.card α) with hLa
+  set L : ℝ := (Nat.log 2 (Fintype.card α) : ℝ) with hL
+  have hℓ2 : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  have hLa_nn : (0 : ℝ) ≤ La := Real.log_nonneg (by
+    have : (1 : ℝ) ≤ (Fintype.card α : ℝ) := by exact_mod_cast Fintype.card_pos
+    linarith)
+  have hL_nn : (0 : ℝ) ≤ L := by rw [hL]; positivity
+  filter_upwards [negLogQk_div_tendsto_condEntropyTail μ p k,
+      (MeasureTheory.ae_all_iff.2 (fun n => ziv_achievability_composition μ q k n))]
+    with ω h_aep h_comp
+  -- Abbreviations: the genuine distinct phrase count `cp n`, the LZ78 bit-rate
+  -- `T n`, and the deterministic error sequence `E n`.
+  set cp : ℕ → ℝ :=
+    fun n => ((lz78PhraseStrings (List.ofFn (q.blockRV n ω))).length : ℝ) with hcp
+  set T : ℕ → ℝ :=
+    fun n => (lz78GreedyImplEncodingLength n (q.blockRV n ω) : ℝ) / (n : ℝ) with hT
+  set E : ℕ → ℝ := fun n =>
+    (2 * (n : ℝ) * Real.sqrt (cp n / (n : ℝ)) + cp n + cp n * ((k : ℝ) * La)
+      + ((k : ℝ) + 1) + ((k : ℝ) + 1) * Real.log (n : ℝ)
+      + (cp n * Real.log 2 + cp n * (L + 2))) / (Real.log 2 * (n : ℝ)) with hE
+  set U : ℕ → ℝ :=
+    fun n => (negLogQk μ q k n ω / (n : ℝ)) / Real.log 2 + E n with hU
+  -- `cp n ≥ 0` and `cp n / n → 0`.
+  have hcp_nn : ∀ n, 0 ≤ cp n := fun n => by simp only [hcp]; positivity
+  have hcp_div : Filter.Tendsto (fun n => cp n / (n : ℝ)) Filter.atTop (𝓝 0) := by
+    obtain ⟨C, hCb⟩ :=
+      (lz78PhraseStrings_count_isBigO (fun n => List.ofFn (q.blockRV n ω))
+        (fun n => List.length_ofFn)).bound
+    have hub : Filter.Tendsto (fun n : ℕ => C * (Real.log (n : ℝ))⁻¹)
+        Filter.atTop (𝓝 0) := by
+      have h1 : Filter.Tendsto (fun n : ℕ => Real.log (n : ℝ))
+          Filter.atTop Filter.atTop :=
+        Real.tendsto_log_atTop.comp tendsto_natCast_atTop_atTop
+      simpa using (tendsto_inv_atTop_zero.comp h1).const_mul C
+    refine squeeze_zero_norm' ?_ hub
+    filter_upwards [hCb, Filter.eventually_gt_atTop 1] with n hn hn1
+    have hnpos : (0 : ℝ) < (n : ℝ) := by positivity
+    have hlogpos : (0 : ℝ) < Real.log (n : ℝ) :=
+      Real.log_pos (by exact_mod_cast hn1)
+    rw [Real.norm_eq_abs, abs_of_nonneg (div_nonneg (hcp_nn n) hnpos.le)]
+    rw [Real.norm_eq_abs, abs_of_nonneg (hcp_nn n)] at hn
+    have hng : ‖(n : ℝ) / Real.log (n : ℝ)‖ = (n : ℝ) / Real.log (n : ℝ) := by
+      rw [Real.norm_eq_abs, abs_of_nonneg (le_of_lt (div_pos hnpos hlogpos))]
+    rw [hng] at hn
+    calc cp n / (n : ℝ) ≤ (C * ((n : ℝ) / Real.log (n : ℝ))) / (n : ℝ) :=
+          div_le_div_of_nonneg_right hn hnpos.le
+      _ = C * (Real.log (n : ℝ))⁻¹ := by
+          rw [mul_div_assoc, div_div, mul_comm (Real.log (n : ℝ)) (n : ℝ), ← div_div,
+            div_self hnpos.ne', one_div]
+  -- `E n → 0` (every summand divided by `log 2 · n` vanishes via `cp/n → 0`).
+  have hE_tend : Filter.Tendsto E Filter.atTop (𝓝 0) := by
+    have hsqrt : Filter.Tendsto (fun n : ℕ => Real.sqrt (cp n / (n : ℝ)))
+        Filter.atTop (𝓝 0) := by
+      have h := (Real.continuous_sqrt.tendsto 0).comp hcp_div
+      simp only [Function.comp_def, Real.sqrt_zero] at h
+      exact h
+    have hinv : Filter.Tendsto (fun n : ℕ => (1 : ℝ) / (n : ℝ))
+        Filter.atTop (𝓝 0) := tendsto_one_div_atTop_nhds_zero_nat
+    have hlogn : Filter.Tendsto (fun n : ℕ => Real.log (n : ℝ) / (n : ℝ))
+        Filter.atTop (𝓝 0) := by
+      have hR : Filter.Tendsto (fun x : ℝ => Real.log x ^ 1 / (1 * x + 0))
+          Filter.atTop (𝓝 0) := Real.tendsto_pow_log_div_mul_add_atTop 1 0 1 (by norm_num)
+      simpa using hR.comp tendsto_natCast_atTop_atTop
+    set g : ℕ → ℝ := fun n =>
+      (2 / Real.log 2) * Real.sqrt (cp n / (n : ℝ))
+      + (1 / Real.log 2) * (cp n / (n : ℝ))
+      + ((k : ℝ) * La / Real.log 2) * (cp n / (n : ℝ))
+      + (((k : ℝ) + 1) / Real.log 2) * ((1 : ℝ) / (n : ℝ))
+      + (((k : ℝ) + 1) / Real.log 2) * (Real.log (n : ℝ) / (n : ℝ))
+      + (cp n / (n : ℝ))
+      + ((L + 2) / Real.log 2) * (cp n / (n : ℝ)) with hg
+    have hg_tend : Filter.Tendsto g Filter.atTop (𝓝 0) := by
+      have t1 := hsqrt.const_mul (2 / Real.log 2)
+      have t2 := hcp_div.const_mul (1 / Real.log 2)
+      have t3 := hcp_div.const_mul ((k : ℝ) * La / Real.log 2)
+      have t4 := hinv.const_mul (((k : ℝ) + 1) / Real.log 2)
+      have t5 := hlogn.const_mul (((k : ℝ) + 1) / Real.log 2)
+      have t6 := hcp_div
+      have t7 := hcp_div.const_mul ((L + 2) / Real.log 2)
+      simpa [hg] using ((((((t1.add t2).add t3).add t4).add t5).add t6).add t7)
+    refine hg_tend.congr' ?_
+    filter_upwards [Filter.eventually_gt_atTop 0] with n hn
+    have hnpos : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+    rw [hg, hE]
+    field_simp
+    ring
+  -- `U n → H / log 2`.
+  have hU_tend : Filter.Tendsto U Filter.atTop (𝓝 (H / Real.log 2)) := by
+    have ha : Filter.Tendsto (fun n => negLogQk μ q k n ω / (n : ℝ) / Real.log 2)
+        Filter.atTop (𝓝 (H / Real.log 2)) := h_aep.div_const (Real.log 2)
+    have := ha.add hE_tend
+    simpa [hU] using this
+  -- Per-`n` bound: `T n ≤ U n` eventually.
+  have hTU : ∀ᶠ n in Filter.atTop, T n ≤ U n := by
+    filter_upwards [Filter.eventually_ge_atTop 1] with n hn1
+    obtain ⟨c, bAbsorbed, Ntot, hcount, hbA, hNtot, hbound⟩ := h_comp n
+    have hn : 0 < n := hn1
+    have hnR : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+    have hden_pos : (0 : ℝ) < Real.log 2 * (n : ℝ) := by positivity
+    -- Real-cast abbreviations.
+    set cR : ℝ := (c : ℝ) with hcR
+    set bR : ℝ := (bAbsorbed : ℝ) with hbR
+    set NtR : ℝ := (Ntot : ℝ) with hNtR
+    have hcR_nn : (0 : ℝ) ≤ cR := by positivity
+    have hbR_nn : (0 : ℝ) ≤ bR := by positivity
+    have hNtR_nn : (0 : ℝ) ≤ NtR := by positivity
+    -- `cp n = cR + bR`, so `cR ≤ cp n` and `cp n ≤ n`.
+    have hcount' : cp n = cR + bR := by
+      simp only [hcp, hcR, hbR]; rw [← Nat.cast_add, hcount]
+    have hbA' : bR ≤ (k : ℝ) + 1 := by rw [hbR]; exact_mod_cast hbA
+    have hNtot' : NtR ≤ (n : ℝ) := by rw [hNtR]; exact_mod_cast hNtot
+    have hcp_le_n : cp n ≤ (n : ℝ) := by
+      have := lz78GreedyImplPhraseCount_ofFn_le n (q.blockRV n ω)
+      simp only [hcp]; exact_mod_cast this
+    have hcR_le_cp : cR ≤ cp n := by rw [hcount']; linarith
+    have hcR_le_n : cR ≤ (n : ℝ) := le_trans hcR_le_cp hcp_le_n
+    -- Composition bound with `log((card α)^k) = k · log(card α)`.
+    have hlogpow : Real.log (((Fintype.card α) ^ k : ℕ) : ℝ) = (k : ℝ) * La := by
+      rw [hLa, Nat.cast_pow, Real.log_pow]
+    have hcomp : cR * Real.log cR ≤ negLogQk μ q k n ω
+        + (cR * Real.log (NtR / cR) + cR + cR * ((k : ℝ) * La)) := by
+      have := hbound
+      rw [hlogpow] at this
+      simpa [hcR, hNtR] using this
+    -- Boundary term bound: `cR · log(Ntot/cR) ≤ 2 n √(cp n / n)`.
+    have hbdry : cR * Real.log (NtR / cR) ≤ 2 * (n : ℝ) * Real.sqrt (cp n / (n : ℝ)) :=
+      clog_div_le_two_mul_sqrt cR NtR (cp n) (n : ℝ) hcR_nn hcR_le_cp hcR_le_n
+        hNtot' hNtR_nn hnR
+    -- `cp n · log(cp n) ≤ cR · log cR + reconcile`, handling the `cp n < 1` boundary.
+    have hrec : cp n * Real.log (cp n)
+        ≤ cR * Real.log cR + (((k : ℝ) + 1) + ((k : ℝ) + 1) * Real.log (n : ℝ)) := by
+      rcases lt_or_ge (cp n) 1 with hlt | hge
+      · -- `cp n < 1` ⇒ `cp n = 0` (it is a Nat cast) ⇒ `cR = 0` too.
+        have hcp0 : cp n = 0 := by
+          rcases Nat.eq_zero_or_pos (lz78PhraseStrings (List.ofFn (q.blockRV n ω))).length
+            with h0 | hpos
+          · simp only [hcp, h0]; simp
+          · exfalso; simp only [hcp] at hlt
+            have : (1 : ℝ) ≤ ((lz78PhraseStrings (List.ofFn (q.blockRV n ω))).length : ℝ) := by
+              exact_mod_cast hpos
+            linarith
+        have hcR0 : cR = 0 := le_antisymm (by linarith [hcR_le_cp, hcp0]) hcR_nn
+        rw [hcp0, hcR0]
+        simp only [Real.log_zero, mul_zero, zero_add]
+        have hlogn_nn : 0 ≤ Real.log (n : ℝ) := Real.log_nonneg (by exact_mod_cast hn1)
+        positivity
+      · -- `cp n ≥ 1`. Two cases on `cR`.
+        rcases lt_or_ge cR 1 with hcRlt | hcRge
+        · -- `cR < 1` ⇒ `cR = 0` (Nat cast) ⇒ `cp n = bR ≤ k+1`, so `cp n log cp n` is small.
+          have hcR0 : cR = 0 := by
+            rcases Nat.eq_zero_or_pos c with h0 | hpos
+            · rw [hcR, h0]; simp
+            · exfalso
+              have : (1 : ℝ) ≤ (c : ℝ) := by exact_mod_cast hpos
+              rw [hcR] at hcRlt; linarith
+          have hcp_eq_b : cp n = bR := by rw [hcount', hcR0]; ring
+          have hcp_le_k1 : cp n ≤ (k : ℝ) + 1 := by rw [hcp_eq_b]; exact hbA'
+          have hlogcp_le : Real.log (cp n) ≤ Real.log (n : ℝ) :=
+            Real.log_le_log (by linarith) hcp_le_n
+          have hlogcp_nn : 0 ≤ Real.log (cp n) := Real.log_nonneg hge
+          rw [hcR0]; simp only [Real.log_zero, mul_zero, zero_add]
+          calc cp n * Real.log (cp n) ≤ ((k : ℝ) + 1) * Real.log (n : ℝ) :=
+                mul_le_mul hcp_le_k1 hlogcp_le hlogcp_nn (by linarith [hbA'])
+            _ ≤ ((k : ℝ) + 1) + ((k : ℝ) + 1) * Real.log (n : ℝ) := by
+                have : 0 ≤ (k : ℝ) + 1 := by positivity
+                linarith
+        · -- `1 ≤ cR` and `1 ≤ cp n`: the generic reconcile lemma.
+          exact cp_log_cp_le_reconcile cR (cp n) bR (n : ℝ) ((k : ℝ) + 1) hcRge hcount'
+            hbR_nn hbA' hcp_le_n hge
+    -- Step A: `T n ≤ cp n · log(cp n)/(log 2 · n) + StepA-overhead/(log 2 · n)`.
+    have hstepA := lz78_impl_bitrate_le_clogc_plus_overhead n hn (q.blockRV n ω)
+    -- Assemble. Clear the common `log 2 · n` denominator and chain the bounds.
+    simp only [hU, hE]
+    -- The Step-A RHS, rewritten via `cp`.
+    have hstepA' : T n ≤ cp n * Real.log (cp n) / (Real.log 2 * (n : ℝ))
+        + (cp n * Real.log 2 + cp n * (L + 2)) / (Real.log 2 * (n : ℝ)) := by
+      simp only [hT, hcp, hL]; exact hstepA
+    -- Bound `cp n · log(cp n) ≤ negLogQk + boundary + reconcile + alphabet`.
+    have hclog : cp n * Real.log (cp n)
+        ≤ negLogQk μ q k n ω
+          + (2 * (n : ℝ) * Real.sqrt (cp n / (n : ℝ)) + cp n + cp n * ((k : ℝ) * La)
+            + ((k : ℝ) + 1) + ((k : ℝ) + 1) * Real.log (n : ℝ)) := by
+      have hcR_le_cp' : cR ≤ cp n := hcR_le_cp
+      -- `cR·log(Ntot/cR) + cR + cR·k·La ≤ boundary + cp n + cp n·k·La`.
+      have h1 : cR * Real.log (NtR / cR) + cR + cR * ((k : ℝ) * La)
+          ≤ 2 * (n : ℝ) * Real.sqrt (cp n / (n : ℝ)) + cp n + cp n * ((k : ℝ) * La) := by
+        have hmono_kLa : cR * ((k : ℝ) * La) ≤ cp n * ((k : ℝ) * La) :=
+          mul_le_mul_of_nonneg_right hcR_le_cp' (by positivity)
+        linarith [hbdry]
+      calc cp n * Real.log (cp n)
+          ≤ cR * Real.log cR + (((k : ℝ) + 1) + ((k : ℝ) + 1) * Real.log (n : ℝ)) := hrec
+        _ ≤ (negLogQk μ q k n ω
+              + (cR * Real.log (NtR / cR) + cR + cR * ((k : ℝ) * La)))
+            + (((k : ℝ) + 1) + ((k : ℝ) + 1) * Real.log (n : ℝ)) := by linarith [hcomp]
+        _ ≤ negLogQk μ q k n ω
+              + (2 * (n : ℝ) * Real.sqrt (cp n / (n : ℝ)) + cp n + cp n * ((k : ℝ) * La)
+                + ((k : ℝ) + 1) + ((k : ℝ) + 1) * Real.log (n : ℝ)) := by linarith [h1]
+    -- Divide `hclog` by the positive denominator and combine with Step A.
+    have hdiv : cp n * Real.log (cp n) / (Real.log 2 * (n : ℝ))
+        ≤ (negLogQk μ q k n ω
+            + (2 * (n : ℝ) * Real.sqrt (cp n / (n : ℝ)) + cp n + cp n * ((k : ℝ) * La)
+              + ((k : ℝ) + 1) + ((k : ℝ) + 1) * Real.log (n : ℝ)))
+          / (Real.log 2 * (n : ℝ)) :=
+      div_le_div_of_nonneg_right hclog hden_pos.le
+    -- Final: combine `hstepA'` + `hdiv`, splitting the RHS fraction.
+    have hgoal : (negLogQk μ q k n ω / (n : ℝ)) / Real.log 2
+        + (2 * (n : ℝ) * Real.sqrt (cp n / (n : ℝ)) + cp n + cp n * ((k : ℝ) * La)
+            + ((k : ℝ) + 1) + ((k : ℝ) + 1) * Real.log (n : ℝ)
+            + (cp n * Real.log 2 + cp n * (L + 2))) / (Real.log 2 * (n : ℝ))
+        = (negLogQk μ q k n ω
+            + (2 * (n : ℝ) * Real.sqrt (cp n / (n : ℝ)) + cp n + cp n * ((k : ℝ) * La)
+              + ((k : ℝ) + 1) + ((k : ℝ) + 1) * Real.log (n : ℝ)))
+          / (Real.log 2 * (n : ℝ))
+          + (cp n * Real.log 2 + cp n * (L + 2)) / (Real.log 2 * (n : ℝ)) := by
+      rw [div_div]
+      have : negLogQk μ q k n ω / ((n : ℝ) * Real.log 2)
+          = negLogQk μ q k n ω / (Real.log 2 * (n : ℝ)) := by rw [mul_comm]
+      rw [this, ← add_div]
+      ring
+    rw [hgoal]
+    linarith [hstepA', hdiv]
+  -- Conclude via `limsup_le_limsup`.
+  have hcobdd : Filter.IsCoboundedUnder (· ≤ ·) Filter.atTop T :=
+    Filter.isCoboundedUnder_le_of_le Filter.atTop
+      (fun n => lz78_impl_encoding_length_per_symbol_nonneg n (q.blockRV n ω))
+  have hbdd : Filter.IsBoundedUnder (· ≤ ·) Filter.atTop U :=
+    hU_tend.isBoundedUnder_le
+  have hlim_le : Filter.limsup T Filter.atTop ≤ Filter.limsup U Filter.atTop :=
+    Filter.limsup_le_limsup hTU hcobdd hbdd
+  rw [hU_tend.limsup_eq] at hlim_le
+  exact hlim_le
 
 /-- **Lemma 2 (diagonalization = inf over `k`)**: the a.s.-eventual limsup of
 the greedy bit-rate is at most the bit entropy rate.
