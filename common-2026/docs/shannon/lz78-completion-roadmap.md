@@ -8,23 +8,53 @@
 
 ---
 
-## 0. 現状 (2026-05-21、~35 エージェントの徹底診断後に確定)
+## 0. 現状 (2026-06-20、符号長 def-fix 後)
 
-### genuine 済 (全て sorryAx 非依存・commit 済・`lake build` clean)
+**headline は type-check done であって proof done でない。** entry_point
+`lz78_asymptotic_optimality_with_greedy_impl`
+(`InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`) は genuine 命題だが、
+`#print axioms` は genuine M3/M4 壁 2本経由で sorryAx 依存。SoT はコード側タグ
+(`@residual(wall:...)`)、本節は二次。
+
+### 確定事実 (符号長 def-fix、commit `5d08566` + 監査注記 `9b09790`)
+
+1. **符号長 = genuine longest-prefix parse 化済**。`lz78GreedyImplEncodingLength n x`
+   = genuine distinct phrase count `c = (lz78PhraseStrings (List.ofFn x)).length` を
+   語数とする `c · bitLength c |α|`。以前のダミー1シンボル parse (count=n, rate 発散)
+   は削除済。`c ≤ n`、genuine Ziv `c·log c ≤ K·n` (`lz78PhraseStrings_mul_log_le`、
+   sorryAx-free) で rate は `O(1)`。
+2. **2 headline sorry = genuine M3/M4 壁** (`GreedyParsingImpl.lean §3`):
+   - `lz78GreedyImpl_converse_ae` = `@residual(wall:lz78-converse-aseventual)`
+     (M4 Barron a.s. lift)。
+   - `lz78GreedyImpl_achievability_ae` = `@residual(wall:lz78-aseventual-ziv)`
+     (M3 variable-depth tree-node AEP)。
+   - いずれも符号データ (`μ`, `p`) のみを取る genuine 命題 (load-bearing hyp なし)。
+     ダミー parse 時代の converse=false-statement / achievability=degenerate defect
+     は def-fix で解消 (commit `caba26c` で旧 defect タグ済、その後 def-fix で消滅)。
+3. **`h_bdd_above` = 小さい open precondition**。headline は rate の
+   `IsBoundedUnder (·≤·)` を仮説で取る。def-fix で **TRUE-satisfiable な honest
+   regularity 仮説** (rate `O(1)`、core-reconstruction test PASS = limit 値 entropyRate
+   の情報を運ばないので load-bearing でない)。ただし discharge には `Nat.log↔Real.log`
+   bridge が要り、これが loogle Found 0 で self-build 要 → honest に open
+   (`docs/shannon/lz78-headline-bdd-discharge-plan.md`)。
+4. **完遂条件 = headline sorryAx-free** (M3 + M4 discharge + `h_bdd_above` 内製化)。
+
+### genuine 済の足場 (sorryAx 非依存・commit 済)
+
 | 層 | file | 内容 |
 |---|---|---|
-| base-2 単位 | `LZ78ZivEntropyBridge.lean` | `entropyRate₂ = entropyRate / Real.log 2`, `blockLogAvg₂`。lz=bit / entropy=nat の単位バグ訂正 (= CT 13.5.3 の真 statement) |
-| telescoping | `StationaryKernel.lean` | `prod_condPhraseProb_telescope`, `blockProb_le_prod_condPhraseProb` (`Pₙ ≤ ∏ⱼ qⱼ`, prefix monotonicity で無条件) |
-| tree-node 基盤 | `LZ78ZivTreeNode.lean` | T1 worker 不変 `lz78PhraseStringsAux_emit_context_mem` / T2 per-node sub-dist `condNode_sum_eq_one` (`∑_s q(node·s\|node) ≤ 1`) / T3 `node_logsum_step` (`∑_v k_v log k_v ≤ -log Q_c^{tree}`) |
-| path-prefix AEP | `LZ78TreeInducedAEP.lean` | `treeInducedProb_negLogb_div_limsup_le_entropyRate₂` (`Pₙ≤Q_c`+SMB)。**genuine だが achievability に直接効かない** (§2 D4) |
-| achievability frontier | `LZ78AsEventualAchievability.lean` | envelope reduction `lz78DistinctRate_le_countLogRate₂_add_slack` (**FALSE core 非依存**) + satisfiable hyp `IsLZ78ZivAsEventual` + headline `lz78_two_sided_optimality_distinct_aseventual` |
-| converse 期待値層 | `McMillanKraftBridge.lean` | `entropyD_le_expectedLength_of_uniquelyDecodable` (Mathlib `InformationTheory.kraft_mcmillan_inequality` を project Kraft/Gibbs に wire) |
-| **converse UD-object (M1 済)** | `LZ78ConverseUDObject.lean` | 汎用 `uniquelyDecodable_of_constantLength` (定長コード⟹UD、Mathlib 未収録) + 実 LZ78 `(parent,symbol)` token code (fixed-width `K=bitLength c \|α\|`, `(c+1)·\|α\| ≤ 2^K`) の UD 証明 → McMillan で `kraftSum 2 (fun _=>K) ≤ 1` + 期待値 converse `entropyD 2 P ≤ E[L]=K`。`#print axioms` sorryAx 非依存 |
-| 固定深さ k AEP (再利用元) | `SMBAlgoetCover.lean` | `qkSingleton`, `sum_qkSingleton_le_one`, `negLogQk_div_tendsto_condEntropyTail` (`-log qk/n → H_k`); `EntropyRate.lean` `conditionalEntropyTail_tendsto_entropyRate` (`H_k → H`) |
+| 符号長 + parent bridge | `GreedyParsingImpl.lean` §1-§2 | genuine longest-prefix 符号長 + CT 13.5.2 bit-length 上界 (`c ≤ n` × `bitLength` 単調)、per-symbol rate 上界・非負 |
+| Ziv 組合せ核 | `ZivCountingBody.lean` §4 | `lz78PhraseStrings_mul_log_le` (`c·log c ≤ K·n`)、`lz78PhraseStrings_count_isBigO` (`c = O(n/log n)`) |
+| base-2 単位 | `LZ78ZivEntropyBridge.lean` | `entropyRate₂ = entropyRate / Real.log 2`, `blockLogAvg₂` (lz=bit / entropy=nat 単位整合) |
+| tree-node 基盤 | `LZ78ZivTreeNode.lean` | T3 `node_logsum_step` (`∑_v k_v log k_v ≤ -log Q_c^{tree}`) 他 (M3 入力) |
+| converse UD-object (M1 済) | `LZ78ConverseUDObject.lean` | 汎用 `uniquelyDecodable_of_constantLength` + 実 LZ78 token code UD → McMillan 期待値 converse `entropyD 2 P ≤ E[L]=K` (M4 入力) |
+| 固定深さ k AEP (再利用元) | `SMBAlgoetCover.lean` / `EntropyRate.lean` | `negLogQk_div_tendsto_condEntropyTail` (`-log qk/n → H_k`)、`conditionalEntropyTail_tendsto_entropyRate` (`H_k → H`) (M3 入力) |
 
-### honest frontier (= 残る load-bearing 仮説、これらを discharge すれば完遂)
-- **achievability**: `IsLZ78ZivAsEventual` (satisfiable, a.s.-eventual `limsup (c·log₂c)/n ≤ entropyRate₂`)。
-- **converse**: `IsLZ78ConverseCodingLowerBound` (a.s.-eventual `liminf ... ≥ ...`)。
+### 旧 Phase 履歴 (圧縮)
+- 旧 `IsLZ78*` load-bearing 仮説路 (`IsLZ78ZivAsEventual` / `IsLZ78ConverseCodingLowerBound`
+  / passthrough predicate 3本) は def-fix + dead scaffolding 削除 (commit `602b1ad`)
+  で消滅、現在の SoT は `GreedyParsingImpl.lean` の wall sorry lemma 2本。
+- 旧 FALSE per-block `IsLZ78ZivCombinatorialCore` (反例 `a^16`) は撤回済 (§2 D1/D2)。
 
 ---
 
@@ -48,17 +78,17 @@
 
 ### M3 — 可変depth tree-node AEP 【支配項・要・腰据え】
 - **内容**: `-log₂ Q_c^{tree}(x^n)/n → H` a.s. を、固定深さ k AEP (`negLogQk_div_tendsto_condEntropyTail`, SMB 内) + `H_k → H` を **k↔n 連動の対角線/カットオフ論法** (CT 13.5.3 核心) で繋ぐ。`birkhoffAverage` (固定 f Cesàro) は直接効かない。
-- **deliverable**: M2 と合成して `IsLZ78ZivAsEventual` を discharge → **achievability 完遂**。
+- **deliverable**: M2 と合成して `lz78GreedyImpl_achievability_ae` (`@residual(wall:lz78-aseventual-ziv)`、`GreedyParsingImpl.lean`) の sorry を discharge → **achievability 完遂**。
 - **規模**: ~600–1200 行。**リスク: 高**。対角線論法に **Mathlib 測度論基盤の新規追加 (upstream 級)** が要る可能性 — 最大の不確実要因。route C (k-Markov sandwich) の誤差項 `δ_k(n)/n→0` の ω-uniform 性が crux (要・最初の手計算 gate)。
 
 ### M4 — converse Barron a.s. lift 【要・腰据え】
 - **内容**: M1 の期待値 converse `H_D ≤ E[lz]` を **a.s.-eventual pointwise `liminf lz/n ≥ entropyRate₂`** に持ち上げる (competitive-optimality / Barron 型エルゴード論法)。LZ78 は pointwise で Shannon code を破れるので **期待値↛pointwise**。
-- **deliverable**: `IsLZ78ConverseCodingLowerBound` を discharge → **converse 完遂**。
+- **deliverable**: `lz78GreedyImpl_converse_ae` (`@residual(wall:lz78-converse-aseventual)`、`GreedyParsingImpl.lean`) の sorry を discharge → **converse 完遂**。
 - **規模**: ~300–700 行。**リスク: 高** (a.s. エルゴード)。
 
-### M5 — 最終合成 【capstone】
-- **内容**: M3 + M4 で両 primitive discharge → 無引数 base-2 LZ78 optimality を publish、`#print axioms = [propext, Classical.choice, Quot.sound]` 確認。
-- **規模**: ~100–200 行 (配線)。**リスク: 低** (M3/M4 が閉じれば)。
+### M5 — 最終合成 + 完遂判定 【capstone】
+- **内容**: M3 + M4 で両 wall sorry lemma discharge + `h_bdd_above` を内製 (`Nat.log↔Real.log` bridge self-build、`lz78-headline-bdd-discharge-plan.md`) → headline `lz78_asymptotic_optimality_with_greedy_impl` を無条件化、`#print axioms = [propext, Classical.choice, Quot.sound]` (sorryAx 非依存) 確認 = 標準B 完遂。
+- **規模**: ~100–200 行 (配線 + bridge)。**リスク: 低** (M3/M4 が閉じれば)。
 
 ---
 
@@ -86,4 +116,4 @@
 ## 4. cross-link
 - main: `docs/textbook-roadmap.md` 判断ログ #6 (現行サマリ、~35 エージェントの経緯・全 disproof・honest frontier の記録は `git log -- docs/textbook-roadmap.md` の 2026-05-26 整理前 commit に旧 #17–#26 として残置)
 - 既存 plan (本 roadmap が incremental master として統合): `lz78-completion-plan.md`, `lz78-treeinduced-aep-plan.md`, `lz78-aseventual-achievability-plan.md`, `lz78-ziv-treenode-plan.md`, `lz78-blockrv-refactor-plan.md` + `-inventory.md`
-- 完遂判定: 全 `IsLZ78*` 仮説が discharge され、headline が `#print axioms` で sorryAx 非依存になった時点 = 標準B 完遂。
+- 完遂判定: `GreedyParsingImpl.lean` の wall sorry lemma 2本 (M3/M4) が discharge され + `h_bdd_above` が内製化され、headline `lz78_asymptotic_optimality_with_greedy_impl` が `#print axioms` で sorryAx 非依存になった時点 = 標準B 完遂。
