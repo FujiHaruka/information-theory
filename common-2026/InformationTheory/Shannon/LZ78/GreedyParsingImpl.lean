@@ -6,6 +6,7 @@ import InformationTheory.Shannon.LZ78.ZivCountingBody
 import Mathlib.Data.Nat.Log
 import Mathlib.Data.List.Basic
 import Mathlib.Data.List.Range
+import Mathlib.Analysis.SpecialFunctions.Log.Base
 
 /-!
 # LZ78 greedy-parse encoding length + asymptotic-optimality bridge
@@ -143,6 +144,121 @@ division is `0/0 = 0`). The numerator is a `ℕ` cast and the denominator a
 theorem lz78_impl_encoding_length_per_symbol_nonneg (n : ℕ) (x : Fin n → α) :
     (0 : ℝ) ≤ (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ) :=
   div_nonneg (by positivity) (by positivity)
+
+/-- **`ℕ`–`Real` base-`2` log bridge**: `(Nat.log 2 m : ℝ) · Real.log 2 ≤ Real.log m`
+for `m ≥ 1`, the inequality `Nat.log 2 m ≤ log m / log 2` cleared of the
+denominator. Used to convert the integer per-phrase code length
+`Nat.log 2 (c+1)` to the real `c·log c` Ziv product bound. -/
+theorem lz78_impl_natLog_mul_log_two_le (m : ℕ) :
+    (Nat.log 2 m : ℝ) * Real.log 2 ≤ Real.log m := by
+  have hbridge : (Nat.log 2 m : ℝ) ≤ Real.log m / Real.log 2 := by
+    have := Real.natLog_le_logb m 2
+    rwa [Real.logb, show ((2 : ℕ) : ℝ) = (2 : ℝ) from by norm_cast] at this
+  have hlog2 : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  rw [le_div_iff₀ hlog2] at hbridge
+  exact hbridge
+
+/-- **`n`- and `x`-uniform constant rate bound** for the genuine greedy
+parse: the per-symbol bit rate `lz78GreedyImplEncodingLength n x / n` is
+bounded by a deterministic constant depending only on `|α|`, for every `n`
+(including the degenerate `n = 0`, where the rate is `0`). The constant is
+`(1 + 8·log(|α|+1)/log 2) + (log₂|α| + 2)`, obtained from the Ziv product
+bound `c·log c ≤ 8·log(|α|+1)·n` (`lz78PhraseStrings_mul_log_le`) together
+with `c ≤ n` and the `ℕ`–`Real` log bridge. -/
+theorem lz78_impl_rate_le_const [Nonempty α] (n : ℕ) (x : Fin n → α) :
+    (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ)
+      ≤ (1 + 8 * Real.log (Fintype.card α + 1) / Real.log 2)
+          + ((Nat.log 2 (Fintype.card α) : ℝ) + 2) := by
+  set b : ℝ := Real.log (Fintype.card α + 1) with hb
+  set L : ℝ := (Nat.log 2 (Fintype.card α) : ℝ) with hL
+  have hℓ2 : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  have hb_nn : (0 : ℝ) ≤ b :=
+    Real.log_nonneg (by have : (0 : ℝ) ≤ (Fintype.card α : ℝ) := by positivity
+                        linarith)
+  have hL_nn : (0 : ℝ) ≤ L := by rw [hL]; exact Nat.cast_nonneg _
+  set C : ℝ := (1 + 8 * b / Real.log 2) + (L + 2) with hC
+  have hC_nn : (0 : ℝ) ≤ C := by
+    have : (0 : ℝ) ≤ 8 * b / Real.log 2 := by positivity
+    rw [hC]; linarith
+  -- Degenerate `n = 0`: the rate is `0/0 = 0 ≤ C`.
+  rcases Nat.eq_zero_or_pos n with hn0 | hn
+  · subst hn0
+    simp only [Nat.cast_zero, div_zero]
+    exact hC_nn
+  -- `n ≥ 1`. Abbreviate the distinct phrase count `c`.
+  set c : ℕ := (lz78PhraseStrings (List.ofFn x)).length with hc
+  have hcn : c ≤ n := lz78GreedyImplPhraseCount_ofFn_le n x
+  have hnR : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have hcR_nn : (0 : ℝ) ≤ (c : ℝ) := by positivity
+  have hcnR : (c : ℝ) ≤ (n : ℝ) := by exact_mod_cast hcn
+  -- The encoding length expanded via `bitLength_eq`.
+  have hlen : (lz78GreedyImplEncodingLength n x : ℝ)
+      = (c : ℝ) * ((Nat.log 2 (c + 1) : ℝ) + L + 2) := by
+    have hdef : lz78GreedyImplEncodingLength n x
+        = c * LZ78Phrase.bitLength c (Fintype.card α) := rfl
+    rw [hdef, LZ78Phrase.bitLength_eq]
+    push_cast [hL]
+    ring
+  rw [div_le_iff₀ hnR, hlen]
+  -- Bound `c · Nat.log 2 (c+1) ≤ n · (1 + 8·b/log 2)`.
+  have hterm1 : (c : ℝ) * (Nat.log 2 (c + 1) : ℝ)
+      ≤ (n : ℝ) * (1 + 8 * b / Real.log 2) := by
+    -- `c · Nat.log 2 (c+1) · log 2 ≤ c · log(c+1) ≤ n·log 2 + 8·b·n`.
+    have hbridge : (c : ℝ) * ((Nat.log 2 (c + 1) : ℝ) * Real.log 2)
+        ≤ (c : ℝ) * Real.log (c + 1) := by
+      apply mul_le_mul_of_nonneg_left _ hcR_nn
+      exact lz78_impl_natLog_mul_log_two_le (c + 1) |>.trans_eq (by push_cast; ring_nf)
+    -- `c · log(c+1) ≤ n · log 2 + 8·b·n`.
+    have hupper : (c : ℝ) * Real.log (c + 1) ≤ (n : ℝ) * Real.log 2 + 8 * b * (n : ℝ) := by
+      rcases Nat.eq_zero_or_pos c with hc0 | hcpos
+      · rw [hc0]
+        simp only [Nat.cast_zero, zero_mul]
+        have : (0 : ℝ) ≤ (n : ℝ) * Real.log 2 + 8 * b * (n : ℝ) := by positivity
+        linarith
+      · have hcRpos : (0 : ℝ) < (c : ℝ) := by exact_mod_cast hcpos
+        -- `log(c+1) ≤ log(2c) = log 2 + log c`.
+        have hlogc1 : Real.log (c + 1) ≤ Real.log 2 + Real.log c := by
+          have hstep : Real.log ((c : ℝ) + 1) ≤ Real.log (2 * (c : ℝ)) := by
+            apply Real.log_le_log (by positivity)
+            have : (1 : ℝ) ≤ (c : ℝ) := by exact_mod_cast hcpos
+            linarith
+          rw [Real.log_mul (by norm_num) (by positivity)] at hstep
+          exact hstep
+        -- `c·log(c+1) ≤ c·log 2 + c·log c`, and Ziv: `c·log c ≤ 8·b·n`.
+        have hziv : (c : ℝ) * Real.log c ≤ 8 * b * (n : ℝ) := by
+          have := lz78PhraseStrings_mul_log_le (List.ofFn x)
+          rw [← hc, List.length_ofFn] at this
+          exact this
+        calc (c : ℝ) * Real.log (c + 1)
+            ≤ (c : ℝ) * (Real.log 2 + Real.log c) :=
+              mul_le_mul_of_nonneg_left hlogc1 hcR_nn
+          _ = (c : ℝ) * Real.log 2 + (c : ℝ) * Real.log c := by ring
+          _ ≤ (n : ℝ) * Real.log 2 + 8 * b * (n : ℝ) := by
+              apply add_le_add _ hziv
+              exact mul_le_mul_of_nonneg_right hcnR hℓ2.le
+    -- Combine: divide the chain `c·Nat.log·log2 ≤ n·log2 + 8bn` by `log 2`.
+    have hchain : (c : ℝ) * ((Nat.log 2 (c + 1) : ℝ) * Real.log 2)
+        ≤ (n : ℝ) * Real.log 2 + 8 * b * (n : ℝ) := hbridge.trans hupper
+    have hrhs : (n : ℝ) * Real.log 2 + 8 * b * (n : ℝ)
+        = ((n : ℝ) * (1 + 8 * b / Real.log 2)) * Real.log 2 := by
+      field_simp
+    rw [hrhs] at hchain
+    -- `hchain : (c·Nat.log)·log2 ≤ (n·(1+8b/log2))·log2`; cancel `log2 > 0`.
+    have hchain' : ((c : ℝ) * (Nat.log 2 (c + 1) : ℝ)) * Real.log 2
+        ≤ ((n : ℝ) * (1 + 8 * b / Real.log 2)) * Real.log 2 := by
+      rw [mul_assoc]; exact hchain
+    exact le_of_mul_le_mul_right hchain' hℓ2
+  -- Bound `c · (L + 2) ≤ n · (L + 2)`.
+  have hterm2 : (c : ℝ) * (L + 2) ≤ (n : ℝ) * (L + 2) := by
+    apply mul_le_mul_of_nonneg_right hcnR
+    linarith
+  -- Assemble: `c·(Nat.log + L + 2) = c·Nat.log + c·(L+2) ≤ n·C`.
+  have hsplit : (c : ℝ) * ((Nat.log 2 (c + 1) : ℝ) + L + 2)
+      = (c : ℝ) * (Nat.log 2 (c + 1) : ℝ) + (c : ℝ) * (L + 2) := by ring
+  rw [hsplit, hC]
+  have : (n : ℝ) * (1 + 8 * b / Real.log 2) + (n : ℝ) * (L + 2)
+      = (n : ℝ) * ((1 + 8 * b / Real.log 2) + (L + 2)) := by ring
+  linarith [hterm1, hterm2]
 
 end EncodingLength
 
@@ -318,37 +434,27 @@ the generic combinator `lz78_asymptotic_optimality` (the genuine
 After the 2026-06-20 def-fix (`lz78GreedyImplEncodingLength` now charges
 `c · bitLength c |α|` against the genuine distinct phrase count of the
 longest-prefix-match parse), the per-symbol rate is data-dependent and
-asymptotically bounded by the genuine Ziv constant, so `h_bdd_above` is an
-**honest regularity precondition** — TRUE-satisfiable (the rate
-`c · bitLength c |α| / n` is asymptotically `≤ 8·log(|α|+1)/log 2 + log₂|α| + 2`
-via `lz78PhraseStrings_mul_log_le`), not a false hypothesis. It is left as a
-precondition here only because its discharge needs an `ℕ`-`Real` `log` bridge
-that is out of scope for this assembly file (a separate boundedness-discharge
-pass; `docs/shannon/lz78-headline-bdd-discharge-plan.md`). The two input
+**deterministically bounded above by an `n`- and `ω`-uniform constant**
+`(1 + 8·log(|α|+1)/log 2) + (log₂|α| + 2)` (via `lz78_impl_rate_le_const`,
+combining the Ziv product bound `c·log c ≤ 8·log(|α|+1)·n` with `c ≤ n` and the
+`ℕ`–`Real` `log` bridge). The upper-boundedness hypothesis is therefore **no
+longer a parameter**: it is supplied internally — even the `a.e.` envelope is
+unnecessary since the bound holds for every `ω` and every `n`. The two input
 halves remain genuine research-level walls (M3 / M4); see their docstrings.
 
-Independent honesty audit 2026-06-20 (post `5d08566` def-fix): type-check done,
-honest (not proof done). The headline is conditional on two genuine M3/M4 walls
-(supplied internally by the two `_ae` lemmas) plus `h_bdd_above`, which is an
-**honest regularity precondition, NOT load-bearing** — core-reconstruction test:
-granting `IsBoundedUnder (·≤·)` alone yields the rate is bounded above but supplies
-no information about the limit *value* `entropyRate`, so it does not encode the
-theorem's claim (the squeeze `tendsto_of_le_liminf_of_limsup_le` genuinely requires
-boundedness as a precondition). It is TRUE-satisfiable under the new genuine def
-(rate is `O(1)`), unlike the prior dummy-parse era where it was a false hypothesis
-(divergent rate, refuted by `rateSeq_not_isBoundedUnder_le` in the old version). The
-body forwards genuinely (no identity-wrap of the conclusion); `#print axioms` carries
-`sorryAx` exactly via the two M3/M4 walls (machine-verified). -/
+Independent honesty audit 2026-06-20 (post boundedness discharge): type-check
+done, honest (not proof done). The headline now takes only the source data
+(`μ`, `p`) — no `h_bdd_above` precondition. Both `IsBoundedUnder` witnesses
+(`(·≤·)` above and `(·≥·)` below) are constructed deterministically inside the
+body from `lz78_impl_rate_le_const` / `lz78_impl_encoding_length_per_symbol_nonneg`,
+so the squeeze `tendsto_of_le_liminf_of_limsup_le` is applied with all of its
+regularity inputs genuine. The remaining `sorryAx` is carried exactly via the
+two M3/M4 walls (`lz78GreedyImpl_converse_ae` / `lz78GreedyImpl_achievability_ae`,
+machine-verified); the boundedness discharge introduces no new `sorry`. -/
 @[entry_point]
 theorem lz78_asymptotic_optimality_with_greedy_impl
     (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (p : ErgodicProcess μ α)
-    (h_bdd_above : ∀ᵐ ω ∂μ,
-        Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
-          (fun n =>
-            (lz78GreedyImplEncodingLength n
-                (p.toStationaryProcess.blockRV n ω) : ℝ)
-              / (n : ℝ))) :
+    (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
       Filter.Tendsto
         (fun n =>
@@ -356,6 +462,17 @@ theorem lz78_asymptotic_optimality_with_greedy_impl
             / (n : ℝ))
         Filter.atTop
         (𝓝 (entropyRate μ p.toStationaryProcess)) := by
+  have h_bdd_above : ∀ᵐ ω ∂μ,
+      Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
+        (fun n =>
+          (lz78GreedyImplEncodingLength n
+              (p.toStationaryProcess.blockRV n ω) : ℝ)
+            / (n : ℝ)) := by
+    refine Filter.Eventually.of_forall (fun ω => ?_)
+    exact Filter.isBoundedUnder_of
+      ⟨(1 + 8 * Real.log (Fintype.card α + 1) / Real.log 2)
+          + ((Nat.log 2 (Fintype.card α) : ℝ) + 2),
+        fun n => lz78_impl_rate_le_const n _⟩
   have h_bdd_below : ∀ᵐ ω ∂μ,
       Filter.IsBoundedUnder (· ≥ ·) Filter.atTop
         (fun n =>
