@@ -224,6 +224,15 @@ expectation does not transfer to pointwise directly). This is a
 research-level ergodic wall, absent from both the codebase and Mathlib (see
 `docs/shannon/lz78-completion-roadmap.md`, M4).
 
+Independent honesty audit 2026-06-20 (post `5d08566` def-fix): genuine residual,
+not the prior false-statement defect. The new genuine longest-prefix def makes the
+rate `O(1)` (Ziv `c·log c ≤ 8·log(|α|+1)·n`, `lz78PhraseStrings_mul_log_le`), so the
+converse `entropyRate ≤ liminf` is a genuine unproven proposition on both a uniform
+i.i.d. source (`entropyRate > 0`) and the degenerate `entropyRate = 0` boundary —
+neither false nor vacuous. Signature takes only source data (`μ`, `p`), no
+load-bearing hypothesis; wall slug verified (M4 Barron a.s. lift, roadmap-confirmed
+SMB-scale, loogle Found 0 for `entropyRate`+`liminf`).
+
 @residual(wall:lz78-converse-aseventual) -/
 theorem lz78GreedyImpl_converse_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -264,6 +273,14 @@ remains is the connection to `entropyRate`, which needs M3 (the
 variable-depth tree-node AEP for the LZ78 dictionary tree). This is a
 research-level ergodic wall, absent from both the codebase and Mathlib (see
 `docs/shannon/lz78-completion-roadmap.md`, M3).
+
+Independent honesty audit 2026-06-20 (post `5d08566` def-fix): genuine residual,
+not the prior degenerate defect. With the genuine longest-prefix def the rate is
+`O(1)` (the Ziv `c·log c ≤ K·n` combinatorial core is established sorryAx-free), so
+the achievability `limsup ≤ entropyRate` is genuine and non-vacuous on both a
+uniform i.i.d. source and the degenerate `entropyRate = 0` boundary. Signature
+takes only source data, no load-bearing hypothesis; wall slug verified (M3
+variable-depth tree-node AEP, roadmap-confirmed research-level, loogle Found 0).
 
 @residual(wall:lz78-aseventual-ziv) -/
 theorem lz78GreedyImpl_achievability_ae
@@ -308,7 +325,20 @@ via `lz78PhraseStrings_mul_log_le`), not a false hypothesis. It is left as a
 precondition here only because its discharge needs an `ℕ`-`Real` `log` bridge
 that is out of scope for this assembly file (a separate boundedness-discharge
 pass; `docs/shannon/lz78-headline-bdd-discharge-plan.md`). The two input
-halves remain genuine research-level walls (M3 / M4); see their docstrings. -/
+halves remain genuine research-level walls (M3 / M4); see their docstrings.
+
+Independent honesty audit 2026-06-20 (post `5d08566` def-fix): type-check done,
+honest (not proof done). The headline is conditional on two genuine M3/M4 walls
+(supplied internally by the two `_ae` lemmas) plus `h_bdd_above`, which is an
+**honest regularity precondition, NOT load-bearing** — core-reconstruction test:
+granting `IsBoundedUnder (·≤·)` alone yields the rate is bounded above but supplies
+no information about the limit *value* `entropyRate`, so it does not encode the
+theorem's claim (the squeeze `tendsto_of_le_liminf_of_limsup_le` genuinely requires
+boundedness as a precondition). It is TRUE-satisfiable under the new genuine def
+(rate is `O(1)`), unlike the prior dummy-parse era where it was a false hypothesis
+(divergent rate, refuted by `rateSeq_not_isBoundedUnder_le` in the old version). The
+body forwards genuinely (no identity-wrap of the conclusion); `#print axioms` carries
+`sorryAx` exactly via the two M3/M4 walls (machine-verified). -/
 @[entry_point]
 theorem lz78_asymptotic_optimality_with_greedy_impl
     (μ : Measure Ω) [IsProbabilityMeasure μ]
