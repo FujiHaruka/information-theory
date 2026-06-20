@@ -113,6 +113,73 @@ lemma HuffmanGrouping.disjoint {s : Multiset (Finset α × ℝ)} (h : HuffmanGro
     {p q : Finset α × ℝ} (hp : p ∈ s) (hq : q ∈ s) (hpq : p ≠ q) :
     Disjoint p.1 q.1 := h.2.2 p hp q hq hpq
 
+omit [Fintype α] [LinearOrder α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+lemma huffmanMerged_notMem_eraseErase
+    {s : Multiset (Finset α × ℝ)} (hg : HuffmanGrouping s)
+    {x1 x2 : Finset α × ℝ} (hx1_mem : x1 ∈ s) (hx2_mem_s : x2 ∈ s) (hx12_ne : x1 ≠ x2) :
+    (x1.1 ∪ x2.1, x1.2 + x2.2) ∉ (s.erase x1).erase x2 := by
+  classical
+  let merged : Finset α × ℝ := (x1.1 ∪ x2.1, x1.2 + x2.2)
+  intro hmem_ee
+  -- q := merged ∈ erase erase ⊆ s
+  have hmem_s' : merged ∈ s.erase x1 := Multiset.mem_of_mem_erase hmem_ee
+  have hmem_s : merged ∈ s := Multiset.mem_of_mem_erase hmem_s'
+  -- merged ≠ x1: merged.1 = x1.1 ∪ x2.1, contains x2.1's elements,
+  --   while x1.1 disjoint from x2.1 (x1 ≠ x2 + HuffmanGrouping)
+  have h_merged_ne_x1 : merged ≠ x1 := by
+    intro heq
+    have hfst : merged.1 = x1.1 := by rw [heq]
+    -- merged.1 = x1.1 ∪ x2.1; x2.1 is nonempty; so x2.1 ⊆ x1.1
+    have hx2_ne : x2.1.Nonempty := hg.nonempty hx2_mem_s
+    obtain ⟨a, ha⟩ := hx2_ne
+    have ha_in_merged : a ∈ merged.1 := by
+      show a ∈ x1.1 ∪ x2.1
+      exact Finset.mem_union_right _ ha
+    rw [hfst] at ha_in_merged
+    have h_disj : Disjoint x1.1 x2.1 := hg.disjoint hx1_mem hx2_mem_s hx12_ne
+    exact (Finset.disjoint_left.mp h_disj ha_in_merged) ha
+  -- merged ≠ x2: symmetric
+  have h_merged_ne_x2 : merged ≠ x2 := by
+    intro heq
+    have hfst : merged.1 = x2.1 := by rw [heq]
+    have hx1_ne : x1.1.Nonempty := hg.nonempty hx1_mem
+    obtain ⟨a, ha⟩ := hx1_ne
+    have ha_in_merged : a ∈ merged.1 := by
+      show a ∈ x1.1 ∪ x2.1
+      exact Finset.mem_union_left _ ha
+    rw [hfst] at ha_in_merged
+    have h_disj : Disjoint x1.1 x2.1 := hg.disjoint hx1_mem hx2_mem_s hx12_ne
+    exact (Finset.disjoint_right.mp h_disj ha_in_merged) ha
+  -- HuffmanGrouping.disjoint gives Disjoint merged.1 x1.1,
+  -- but merged.1 ⊇ x1.1 and x1.1 is nonempty, contradiction.
+  have h_disj_merged_x1 : Disjoint merged.1 x1.1 :=
+    hg.disjoint hmem_s hx1_mem h_merged_ne_x1
+  have hx1_ne : x1.1.Nonempty := hg.nonempty hx1_mem
+  obtain ⟨a, ha⟩ := hx1_ne
+  have ha_in_merged : a ∈ merged.1 := by
+    show a ∈ x1.1 ∪ x2.1
+    exact Finset.mem_union_left _ ha
+  exact (Finset.disjoint_left.mp h_disj_merged_x1 ha_in_merged) ha
+
+omit [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
+    [MeasurableSpace α] [MeasurableSingletonClass α] in
+lemma kraftTerm_of_const_depth
+    {g : Finset α} (hg_ne : g.Nonempty) (f : α → ℤ) (d : ℤ)
+    (hconst : ∀ a ∈ g, f a = d) :
+    (∑ a ∈ g, (2 : ℝ) ^ (-(f a))) / (g.card : ℝ) = (2 : ℝ) ^ (-d) := by
+  have hcard_pos : (0 : ℝ) < g.card := by
+    exact_mod_cast Finset.card_pos.mpr hg_ne
+  have hsum : (∑ a ∈ g, (2 : ℝ) ^ (-(f a)))
+      = (g.card : ℝ) * (2 : ℝ) ^ (-d) := by
+    rw [show (g.card : ℝ) * (2 : ℝ) ^ (-d)
+        = ∑ _x ∈ g, (2 : ℝ) ^ (-d) by
+      rw [Finset.sum_const, nsmul_eq_mul]]
+    apply Finset.sum_congr rfl
+    intro a ha
+    rw [hconst a ha]
+  rw [hsum]
+  field_simp
+
 /-- One Huffman merge step: extracts the two minimum-`groupKey` groups from `s` and returns
 the merged multiset together with membership witnesses and the proof that `HuffmanGrouping`
 is preserved. Requires `s.card ≥ 2` and `HuffmanGrouping s`. -/
@@ -164,49 +231,9 @@ noncomputable def huffmanStep
     ((hg.nodup.erase x1).erase x2)
   -- Show that merged = (x1.1 ∪ x2.1, x1.2 + x2.2) is not in the double-erase multiset.
   let merged : Finset α × ℝ := (x1.1 ∪ x2.1, x1.2 + x2.2)
-  -- merged ≠ q for any q ∈ erase erase (uses disjointness + nonempty + Nodup)
   have h_merged_not_in :
-      merged ∉ ((s.erase x1).erase x2) := by
-    intro hmem_ee
-    -- q := merged ∈ erase erase ⊆ s
-    have hmem_s' : merged ∈ s' := Multiset.mem_of_mem_erase hmem_ee
-    have hmem_s : merged ∈ s := Multiset.mem_of_mem_erase hmem_s'
-    -- merged ≠ x1: merged.1 = x1.1 ∪ x2.1, contains x2.1's elements,
-    --   while x1.1 disjoint from x2.1 (x1 ≠ x2 + HuffmanGrouping)
-    have h_merged_ne_x1 : merged ≠ x1 := by
-      intro heq
-      have hfst : merged.1 = x1.1 := by rw [heq]
-      -- merged.1 = x1.1 ∪ x2.1; x2.1 is nonempty; so x2.1 ⊆ x1.1
-      have hx2_ne : x2.1.Nonempty := hg.nonempty hx2_mem_s
-      obtain ⟨a, ha⟩ := hx2_ne
-      have ha_in_merged : a ∈ merged.1 := by
-        show a ∈ x1.1 ∪ x2.1
-        exact Finset.mem_union_right _ ha
-      rw [hfst] at ha_in_merged
-      have h_disj : Disjoint x1.1 x2.1 := hg.disjoint hx1_mem hx2_mem_s hx12_ne
-      exact (Finset.disjoint_left.mp h_disj ha_in_merged) ha
-    -- merged ≠ x2: symmetric
-    have h_merged_ne_x2 : merged ≠ x2 := by
-      intro heq
-      have hfst : merged.1 = x2.1 := by rw [heq]
-      have hx1_ne : x1.1.Nonempty := hg.nonempty hx1_mem
-      obtain ⟨a, ha⟩ := hx1_ne
-      have ha_in_merged : a ∈ merged.1 := by
-        show a ∈ x1.1 ∪ x2.1
-        exact Finset.mem_union_left _ ha
-      rw [hfst] at ha_in_merged
-      have h_disj : Disjoint x1.1 x2.1 := hg.disjoint hx1_mem hx2_mem_s hx12_ne
-      exact (Finset.disjoint_right.mp h_disj ha_in_merged) ha
-    -- HuffmanGrouping.disjoint gives Disjoint merged.1 x1.1,
-    -- but merged.1 ⊇ x1.1 and x1.1 is nonempty, contradiction.
-    have h_disj_merged_x1 : Disjoint merged.1 x1.1 :=
-      hg.disjoint hmem_s hx1_mem h_merged_ne_x1
-    have hx1_ne : x1.1.Nonempty := hg.nonempty hx1_mem
-    obtain ⟨a, ha⟩ := hx1_ne
-    have ha_in_merged : a ∈ merged.1 := by
-      show a ∈ x1.1 ∪ x2.1
-      exact Finset.mem_union_left _ ha
-    exact (Finset.disjoint_left.mp h_disj_merged_x1 ha_in_merged) ha
+      merged ∉ ((s.erase x1).erase x2) :=
+    huffmanMerged_notMem_eraseErase hg hx1_mem hx2_mem_s hx12_ne
   refine ⟨(x1, x2, (x1.1 ∪ x2.1, x1.2 + x2.2) ::ₘ s'.erase x2), ?_, ?_, ?_, ?_⟩
   · exact hx1_mem
   · exact hx2_mem_s'
@@ -830,43 +857,22 @@ lemma kraftPerGroup_step
     omega
   have h_x1_term :
       (∑ a ∈ x1.1, (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ))) / (x1.1.card : ℝ)
-      = (2 : ℝ) ^ (-((d_m + 1 : ℕ) : ℤ)) := by
-    have : (∑ a ∈ x1.1, (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ)))
-        = (x1.1.card : ℝ) * (2 : ℝ) ^ (-((d_m + 1 : ℕ) : ℤ)) := by
-      rw [show (x1.1.card : ℝ) * (2 : ℝ) ^ (-((d_m + 1 : ℕ) : ℤ))
-          = ∑ _x ∈ x1.1, (2 : ℝ) ^ (-((d_m + 1 : ℕ) : ℤ)) by
-        rw [Finset.sum_const, nsmul_eq_mul]]
-      apply Finset.sum_congr rfl
-      intro a ha
-      rw [h_x1_aux a ha]
-    rw [this]
-    field_simp
+      = (2 : ℝ) ^ (-((d_m + 1 : ℕ) : ℤ)) :=
+    kraftTerm_of_const_depth (hg.nonempty hx1_mem) (fun a => (huffmanLengthAux s a : ℤ))
+      ((d_m + 1 : ℕ) : ℤ) (fun a ha => by
+        show (huffmanLengthAux s a : ℤ) = ((d_m + 1 : ℕ) : ℤ); exact_mod_cast h_x1_aux a ha)
   have h_x2_term :
       (∑ a ∈ x2.1, (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ))) / (x2.1.card : ℝ)
-      = (2 : ℝ) ^ (-((d_m + 1 : ℕ) : ℤ)) := by
-    have : (∑ a ∈ x2.1, (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ)))
-        = (x2.1.card : ℝ) * (2 : ℝ) ^ (-((d_m + 1 : ℕ) : ℤ)) := by
-      rw [show (x2.1.card : ℝ) * (2 : ℝ) ^ (-((d_m + 1 : ℕ) : ℤ))
-          = ∑ _x ∈ x2.1, (2 : ℝ) ^ (-((d_m + 1 : ℕ) : ℤ)) by
-        rw [Finset.sum_const, nsmul_eq_mul]]
-      apply Finset.sum_congr rfl
-      intro a ha
-      rw [h_x2_aux a ha]
-    rw [this]
-    field_simp
+      = (2 : ℝ) ^ (-((d_m + 1 : ℕ) : ℤ)) :=
+    kraftTerm_of_const_depth (hg.nonempty hx2_s) (fun a => (huffmanLengthAux s a : ℤ))
+      ((d_m + 1 : ℕ) : ℤ) (fun a ha => by
+        show (huffmanLengthAux s a : ℤ) = ((d_m + 1 : ℕ) : ℤ); exact_mod_cast h_x2_aux a ha)
   have h_merged_term :
       (∑ a ∈ merged.1, (2 : ℝ) ^ (-(huffmanLengthAux s'' a : ℤ))) / (merged.1.card : ℝ)
-      = (2 : ℝ) ^ (-(d_m : ℤ)) := by
-    have : (∑ a ∈ merged.1, (2 : ℝ) ^ (-(huffmanLengthAux s'' a : ℤ)))
-        = (merged.1.card : ℝ) * (2 : ℝ) ^ (-(d_m : ℤ)) := by
-      rw [show (merged.1.card : ℝ) * (2 : ℝ) ^ (-(d_m : ℤ))
-          = ∑ _x ∈ merged.1, (2 : ℝ) ^ (-(d_m : ℤ)) by
-        rw [Finset.sum_const, nsmul_eq_mul]]
-      apply Finset.sum_congr rfl
-      intro a ha
-      rw [h_merged_const a ha]
-    rw [this]
-    field_simp
+      = (2 : ℝ) ^ (-(d_m : ℤ)) :=
+    kraftTerm_of_const_depth hmerged_ne (fun a => (huffmanLengthAux s'' a : ℤ))
+      (d_m : ℤ) (fun a ha => by
+        show (huffmanLengthAux s'' a : ℤ) = (d_m : ℤ); exact_mod_cast h_merged_const a ha)
   rw [h_x1_term, h_x2_term, h_merged_term, h_ee_sum]
   -- Goal: 2^(-(d_m+1)) + (2^(-(d_m+1)) + rest) = 2^(-d_m) + rest
   -- i.e. 2^(-(d_m+1)) + 2^(-(d_m+1)) = 2^(-d_m)
