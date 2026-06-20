@@ -331,6 +331,24 @@ no absolute-position index, and may leave an unfinished tail
 the tiling hypotheses from the parse is the List↔Fin scaffold this leg leaves open;
 the per-phrase contributions are then discharged by `negLogQk_segment_eq_condQkState`.
 
+Independent honesty audit 2026-06-21 (PASS, honest tier-2 residual): non-circular
+(no hyp ≡ conclusion, body is `sorry`), non-bundled (`hNb`/`hNn`/`hmono`/`hstart`
+record the LZ-parse partition position bookkeeping — granting them yields a tiling
+of `[b, n)` but NOT the `negLogQk = ∑ condQkState` equality, whose substance is the
+factor-level correspondence proved sorryAx-free in `negLogQk_segment_eq_condQkState`),
+non-degenerate, and TRUE-as-framed. The `hstart : k ≤ N j.castSucc` (non-strict) is
+honest: the boundary `k = N j.castSucc` is well-defined (`windowState p k k ω` reduces
+to the genuine `k`-state `blockRV k ω`) and the per-phrase value identity still holds
+there (the `m = 0` position-`k` term coincides on both sides via the full-prefix
+`condDistrib (obs k) (blockRV k) μ` branch), so the statement is true and slightly more
+general than strict-start. NOTE for the eventual sorry-fill: `negLogQk_segment_eq_condQkState`
+currently routes every phrase position through `pmfLogCondMarkov_eq_neg_log_markovFactor`
+(needs `k < i`), so filling this sorry will either strengthen `hstart` to `k <` or extend
+the segment lemma's `m = 0, N = k` boundary — a provability detail, not a current defect.
+Classification `wall:lz78-aseventual-ziv` confirmed correct: this is the gateway-atom-first
+foundation for W2 `ziv_aseventual_le_blockLogAvg₂` (lz78-m2-plan Phase 2c-ii), not a
+misclassified plan/plumbing slug.
+
 @residual(wall:lz78-aseventual-ziv) -/
 lemma negLogQk_phrase_threading
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
