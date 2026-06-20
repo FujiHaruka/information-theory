@@ -336,6 +336,20 @@ lemma markovFactor_sum_eq_one
     rw [h_sum, measure_univ]
 
 omit [DecidableEq α] in
+/-- Per-state sub-distribution: summing `markovFactor μ p k n` over any finite subset
+`T` of continuations is at most `1` (subset sum ≤ full sum = `1`). This is the
+building block that the conditional Ziv grouping instantiates: a restricted set of
+continuations carries at most the full conditional probability mass. -/
+lemma markovFactor_sum_subset_le_one
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (k n : ℕ)
+    (z : Fin n → α) (T : Finset α) :
+    ∑ a ∈ T, markovFactor μ p k n (Fin.snoc z a) ≤ 1 := by
+  calc ∑ a ∈ T, markovFactor μ p k n (Fin.snoc z a)
+      ≤ ∑ a : α, markovFactor μ p k n (Fin.snoc z a) :=
+        Finset.sum_le_sum_of_subset (Finset.subset_univ T)
+    _ = 1 := markovFactor_sum_eq_one μ p k n z
+
+omit [DecidableEq α] in
 /-- `∑_y qkSingleton k n y ≤ 1`: the inductive product is bounded by 1 because each
 inner sum `∑_a (condDistrib ...){a} = 1` by `IsMarkovKernel`. -/
 lemma sum_qkSingleton_le_one
