@@ -21,6 +21,56 @@ open InformationTheory.Shannon.EPIL3Integration (csiszarLogRatioGap csiszarLogRa
 
 variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
 
+/-- Eventual equality between `csiszarLogRatioGap` and the log-ratio of rescaled
+entropy powers: for all sufficiently large `t > 0`, the gap equals
+`log N(W_S t) − log (N(W_X t) + N(W_Y t))` where the three `W`-paths are the
+scaled convolutions with noise. Proved by `entropyPower_path_scaling` cancellation. -/
+private theorem csiszarLogRatioGap_eventually_eq_logRatio
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hX : Measurable X) (hY : Measurable Y)
+    (hZX : Measurable Z_X) (hZY : Measurable Z_Y)
+    (h_scale_X : ∀ t : ℝ, 0 < t →
+      (P.map (fun ω => X ω / Real.sqrt t + Z_X ω)) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((P.map (fun ω => X ω / Real.sqrt t + Z_X ω)).rnDeriv volume x).toReal)) volume)
+    (h_scale_Y : ∀ t : ℝ, 0 < t →
+      (P.map (fun ω => Y ω / Real.sqrt t + Z_Y ω)) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((P.map (fun ω => Y ω / Real.sqrt t + Z_Y ω)).rnDeriv volume x).toReal)) volume)
+    (h_scale_sum : ∀ t : ℝ, 0 < t →
+      (P.map (fun ω => (X ω + Y ω) / Real.sqrt t + (Z_X ω + Z_Y ω))) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((P.map (fun ω => (X ω + Y ω) / Real.sqrt t
+            + (Z_X ω + Z_Y ω))).rnDeriv volume x).toReal)) volume) :
+    ∀ᶠ t in Filter.atTop,
+      csiszarLogRatioGap X Y Z_X Z_Y P t =
+        Real.log (entropyPower (P.map (fun ω => (X ω + Y ω) / Real.sqrt t + (Z_X ω + Z_Y ω)))) -
+        Real.log (entropyPower (P.map (fun ω => X ω / Real.sqrt t + Z_X ω)) +
+                  entropyPower (P.map (fun ω => Y ω / Real.sqrt t + Z_Y ω))) := by
+  filter_upwards [Filter.eventually_gt_atTop (0 : ℝ)] with t ht
+  have hsX := h_scale_X t ht
+  have hsY := h_scale_Y t ht
+  have hsS := h_scale_sum t ht
+  set NX := entropyPower (P.map (fun ω => X ω / Real.sqrt t + Z_X ω))
+  set NY := entropyPower (P.map (fun ω => Y ω / Real.sqrt t + Z_Y ω))
+  set NS := entropyPower (P.map (fun ω => (X ω + Y ω) / Real.sqrt t + (Z_X ω + Z_Y ω)))
+  have eqX : entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)) = t * NX :=
+    entropyPower_path_scaling X Z_X P hX hZX ht hsX.1 hsX.2
+  have eqY : entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)) = t * NY :=
+    entropyPower_path_scaling Y Z_Y P hY hZY ht hsY.1 hsY.2
+  have eqS : entropyPower (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω)))
+      = t * NS := by
+    have := entropyPower_path_scaling (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P
+      (hX.add hY) (hZX.add hZY) ht hsS.1 hsS.2
+    simpa using this
+  have hNX : 0 < NX := entropyPower_pos _
+  have hNY : 0 < NY := entropyPower_pos _
+  have hNS : 0 < NS := entropyPower_pos _
+  unfold csiszarLogRatioGap
+  rw [eqS, eqX, eqY, show t * NX + t * NY = t * (NX + NY) by ring]
+  rw [Real.log_mul ht.ne' hNS.ne', Real.log_mul ht.ne' (by positivity : (NX + NY) ≠ 0)]
+  ring
+
 /-! ## §4 — Main analytic deliverable
 
 `csiszarLogRatioGap_tendsto_zero_atTop`: composing §2 (cancellation), §3 (per-path
@@ -108,33 +158,9 @@ theorem csiszarLogRatioGap_tendsto_zero_atTop
   -- The rescaled gap agrees with `R` eventually (for `t > 0`) via §2 cancellation.
   have h_eventually_eq : ∀ᶠ t in Filter.atTop,
       csiszarLogRatioGap X Y Z_X Z_Y P t
-        = Real.log (NS t) - Real.log (NX t + NY t) := by
-    filter_upwards [Filter.eventually_gt_atTop (0 : ℝ)] with t ht
-    have hsX := h_scale_X t ht
-    have hsY := h_scale_Y t ht
-    have hsS := h_scale_sum t ht
-    -- Scaling identities: `N(path) = t · N(W)`.
-    have eqX : entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)) = t * NX t :=
-      entropyPower_path_scaling X Z_X P hX hZX ht hsX.1 hsX.2
-    have eqY : entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)) = t * NY t :=
-      entropyPower_path_scaling Y Z_Y P hY hZY ht hsY.1 hsY.2
-    have eqS : entropyPower (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω)))
-        = t * NS t := by
-      have := entropyPower_path_scaling (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P
-        (hX.add hY) (hZX.add hZY) ht hsS.1 hsS.2
-      simpa using this
-    -- Positivity for the `log` cancellation.
-    have ht_pos : (0 : ℝ) < t := ht
-    have hNXt : 0 < NX t := entropyPower_pos _
-    have hNYt : 0 < NY t := entropyPower_pos _
-    have hNSt : 0 < NS t := entropyPower_pos _
-    unfold csiszarLogRatioGap
-    rw [eqS, eqX, eqY]
-    -- `log (t·NS) − log (t·NX + t·NY) = log NS − log (NX + NY)`.
-    rw [show t * NX t + t * NY t = t * (NX t + NY t) by ring]
-    rw [Real.log_mul ht_pos.ne' hNSt.ne',
-        Real.log_mul ht_pos.ne' (by positivity : (NX t + NY t) ≠ 0)]
-    ring
+        = Real.log (NS t) - Real.log (NX t + NY t) :=
+    csiszarLogRatioGap_eventually_eq_logRatio X Y Z_X Z_Y P hX hY hZX hZY
+      h_scale_X h_scale_Y h_scale_sum
   -- Limit of the rescaled gap: both `log` arguments → `N(Z_X)+N(Z_Y)`.
   have h_lim_rescaled : Filter.Tendsto
       (fun t => Real.log (NS t) - Real.log (NX t + NY t))

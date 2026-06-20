@@ -162,6 +162,28 @@ lemma expectedJointDistortion_nonneg
 
 
 omit [DecidableEq α] [DecidableEq β] in
+/-- For a probability measure `P` on `S`, integrating `a + m · 1_B` yields `a + m · P.real B`. -/
+lemma integral_const_add_indicator_one
+    {S : Type*} [MeasurableSpace S]
+    (P : Measure S) [IsProbabilityMeasure P]
+    (B : Set S) (hB : MeasurableSet B) (a m : ℝ) :
+    ∫ x, a + m * (B.indicator (fun _ => (1 : ℝ)) x) ∂P = a + m * P.real B := by
+  have h_ind_eq :
+      (fun x : S => m * (B.indicator (fun _ => (1 : ℝ)) x))
+        = B.indicator (fun _ : S => m) := by
+    funext x
+    by_cases hxB : x ∈ B
+    · rw [Set.indicator_of_mem hxB, Set.indicator_of_mem hxB]; ring
+    · rw [Set.indicator_of_notMem hxB, Set.indicator_of_notMem hxB]; ring
+  have h_int_const : Integrable (fun _ : S => a) P := integrable_const a
+  have h_int_ind : Integrable (fun x : S => m * (B.indicator (fun _ => (1 : ℝ)) x)) P := by
+    rw [h_ind_eq]
+    exact (integrable_indicator_iff hB).mpr (integrable_const m)
+  rw [integral_add h_int_const h_int_ind, integral_const, smul_eq_mul,
+      h_ind_eq, integral_indicator_const m hB, smul_eq_mul]
+  simp [Measure.real, IsProbabilityMeasure.measure_univ, mul_comm]
+
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Codebook-fixed average distortion decomposition.**
 
 For a fixed deterministic codebook `c : Codebook M n β` and the joint-typical
@@ -287,48 +309,11 @@ theorem source_avg_distortion_le_simpler
       ∫ x, blockDistortion d n x (c (jointTypicalLossyEncoder μ Xs Ys hM ε c x)) ∂P_X
         ≤ ∫ x, Edδ + dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) ∂P_X :=
     integral_mono h_int_f h_int_g h_pointwise
-  -- Evaluate the RHS integral.
-  have h_int_const : ∫ _x : Fin n → α, Edδ ∂P_X = Edδ := by
-    rw [integral_const]; simp
-  have h_int_indicator_const :
-      ∫ x : Fin n → α, dMax * (B.indicator (fun _ => (1 : ℝ)) x) ∂P_X
-        = dMax * P_X.real B := by
-    have h_ind_eq :
-        (fun x : Fin n → α => dMax * (B.indicator (fun _ => (1 : ℝ)) x))
-          = B.indicator (fun _ : Fin n → α => dMax) := by
-      funext x
-      by_cases hxB : x ∈ B
-      · rw [Set.indicator_of_mem hxB, Set.indicator_of_mem hxB]; ring
-      · rw [Set.indicator_of_notMem hxB, Set.indicator_of_notMem hxB]; ring
-    rw [h_ind_eq, integral_indicator_const dMax h_B_meas]
-    rw [smul_eq_mul]; ring
+  -- Evaluate the RHS integral using `integral_const_add_indicator_one`.
   have h_int_split :
       ∫ x, Edδ + dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) ∂P_X
-        = Edδ + dMax * P_X.real B := by
-    have h_const_int : Integrable (fun _ : Fin n → α => Edδ) P_X := integrable_const Edδ
-    have h_ind_int : Integrable
-        (fun x : Fin n → α => dMax * (B.indicator (fun _ => (1 : ℝ)) x)) P_X := by
-      have h_meas' : Measurable
-          (fun x : Fin n → α => dMax * (B.indicator (fun _ => (1 : ℝ)) x)) :=
-        measurable_of_finite _
-      refine Integrable.mono' (g := fun _ => dMax) (integrable_const dMax)
-        h_meas'.aestronglyMeasurable ?_
-      refine Filter.Eventually.of_forall (fun x => ?_)
-      have h_ind_le : (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) ≤ 1 := by
-        by_cases hxB : x ∈ B
-        · rw [Set.indicator_of_mem hxB]
-        · rw [Set.indicator_of_notMem hxB]; linarith
-      have h_ind_nn : 0 ≤ (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) :=
-        Set.indicator_nonneg (fun _ _ => zero_le_one) x
-      have h_val_nn : 0 ≤ dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) :=
-        mul_nonneg h_dMax_nn h_ind_nn
-      have h_val_le : dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) ≤ dMax := by
-        calc dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x)
-            ≤ dMax * 1 := mul_le_mul_of_nonneg_left h_ind_le h_dMax_nn
-          _ = dMax := by ring
-      rw [Real.norm_eq_abs, abs_of_nonneg h_val_nn]
-      exact h_val_le
-    rw [integral_add h_const_int h_ind_int, h_int_const, h_int_indicator_const]
+        = Edδ + dMax * P_X.real B :=
+    integral_const_add_indicator_one P_X B h_B_meas Edδ dMax
   -- Combine.
   rw [h_int_split] at h_int_mono
   exact h_int_mono
