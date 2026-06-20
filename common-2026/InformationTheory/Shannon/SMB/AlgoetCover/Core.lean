@@ -262,6 +262,80 @@ noncomputable def qkSingleton
   | n + 1, y => qkSingleton μ p k n (Fin.init y) * markovFactor μ p k n y
 
 omit [DecidableEq α] in
+/-- Per-state, `markovFactor μ p k n` is a genuine probability distribution over the
+next symbol: summing over all continuations `a : α` of a fixed prefix `z` gives
+exactly `1`. This holds because `markovFactor` is a `condDistrib` kernel singleton
+mass and `condDistrib` is an `IsMarkovKernel` (so `kernel z univ = 1`). It is the
+enabler for the correct-direction conditional log-sum (the per-step factor of the
+`k`-Markov measure is a bona-fide sub-distribution that telescopes to `qkSingleton`). -/
+lemma markovFactor_sum_eq_one
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (k n : ℕ)
+    (z : Fin n → α) :
+    ∑ a : α, markovFactor μ p k n (Fin.snoc z a) = 1 := by
+  -- markovFactor only depends on (Fin.init (snoc z a)) = z and (snoc z a) (last n) = a.
+  -- For the prefix arg: either Fin.init (snoc z a) = z, or the window
+  -- `fun j => snoc z a ⟨n-k+j, _⟩`. Since n-k+j < n (when j < k ≤ n), these
+  -- indices fall in `castSucc` range, so `snoc z a` returns `z` at them.
+  -- Either way, the prefix arg depends only on z (not a). So we get
+  -- ∑_a, kernel(prefix(z)) {a} = (kernel(prefix(z))) univ = 1.
+  by_cases hnk : n ≤ k
+  · -- Branch n ≤ k: markovFactor = (cd (init (snoc z a))) {(snoc z a)(last n)}
+    --                            = (cd z) {a}.
+    have h_unfold : ∀ a : α, markovFactor μ p k n (Fin.snoc z a)
+        = (condDistrib (p.obs n) (p.blockRV n) μ z) {a} := by
+      intro a
+      unfold markovFactor
+      simp only [hnk, dif_pos, Fin.init_snoc, Fin.snoc_last]
+    simp_rw [h_unfold]
+    -- ∑_a kernel z {a} = kernel z univ = 1.
+    haveI : IsMarkovKernel (condDistrib (p.obs n) (p.blockRV n) μ) := inferInstance
+    have h_sum : ∑ a : α, (condDistrib (p.obs n) (p.blockRV n) μ z) {a}
+        = (condDistrib (p.obs n) (p.blockRV n) μ z) Set.univ := by
+      rw [show (Set.univ : Set α) = (Finset.univ : Finset α) from
+        (Finset.coe_univ).symm]
+      exact sum_measure_singleton
+    rw [h_sum, measure_univ]
+  · -- Branch n > k: window uses indices n-k+j where j < k, all < n, so window
+    -- only sees z; the kernel arg doesn't depend on a.
+    have hkn : k ≤ n := Nat.le_of_lt (Nat.lt_of_not_le hnk)
+    have h_unfold : ∀ a : α,
+        markovFactor μ p k n (Fin.snoc z a)
+          = (condDistrib (p.obs k) (p.blockRV k) μ
+              (fun j : Fin k => z ⟨n - k + j.val,
+                by have := j.isLt; omega⟩)) {a} := by
+      intro a
+      unfold markovFactor
+      simp only [hnk, dif_neg, not_false_iff]
+      -- Compute snoc at last n (singleton arg) and at castSucc indices (kernel arg).
+      -- Lock in non-dependent type for snoc: snoc z a : Fin (n+1) → α.
+      set sa : Fin (n + 1) → α := Fin.snoc z a with hsa_def
+      have h_arg : (fun j : Fin k =>
+            sa (⟨n - k + j.val, by have := j.isLt; omega⟩ : Fin (n + 1)))
+          = (fun j : Fin k => z ⟨n - k + j.val,
+              by have := j.isLt; omega⟩) := by
+        funext j
+        have h_lt : n - k + j.val < n := by have := j.isLt; omega
+        have h_eq : (⟨n - k + j.val,
+              (by have := j.isLt; omega : n - k + j.val < n + 1)⟩ : Fin (n + 1))
+            = Fin.castSucc ⟨n - k + j.val, h_lt⟩ := by
+          apply Fin.ext; simp [Fin.castSucc]
+        rw [h_eq]
+        show (Fin.snoc z a : Fin (n + 1) → α) (Fin.castSucc ⟨n - k + j.val, h_lt⟩)
+            = z ⟨n - k + j.val, h_lt⟩
+        exact Fin.snoc_castSucc _ _ _
+      have h_last : sa (Fin.last n) = a := Fin.snoc_last _ _
+      rw [h_arg, h_last]
+    simp_rw [h_unfold]
+    haveI : IsMarkovKernel (condDistrib (p.obs k) (p.blockRV k) μ) := inferInstance
+    set kern := condDistrib (p.obs k) (p.blockRV k) μ
+        (fun j : Fin k => z ⟨n - k + j.val, by have := j.isLt; omega⟩) with hkern_def
+    have h_sum : ∑ a : α, kern {a} = kern Set.univ := by
+      rw [show (Set.univ : Set α) = (Finset.univ : Finset α) from
+        (Finset.coe_univ).symm]
+      exact sum_measure_singleton
+    rw [h_sum, measure_univ]
+
+omit [DecidableEq α] in
 /-- `∑_y qkSingleton k n y ≤ 1`: the inductive product is bounded by 1 because each
 inner sum `∑_a (condDistrib ...){a} = 1` by `IsMarkovKernel`. -/
 lemma sum_qkSingleton_le_one
@@ -321,74 +395,9 @@ lemma sum_qkSingleton_le_one
           = qkSingleton μ p k n z * ∑ a : α, markovFactor μ p k n (Fin.snoc z a) := by
       intro z; rw [Finset.mul_sum]
     simp_rw [h_pull]
-    -- Inner sum over a: equals 1 by IsMarkovKernel (kernel univ = 1, on a finite alphabet
-    -- this means ∑_a kernel {a} = 1).
-    have h_inner : ∀ z : Fin n → α,
-        ∑ a : α, markovFactor μ p k n (Fin.snoc z a) = 1 := by
-      intro z
-      -- markovFactor only depends on (Fin.init (snoc z a)) = z and (snoc z a) (last n) = a.
-      -- For the prefix arg: either Fin.init (snoc z a) = z, or the window
-      -- `fun j => snoc z a ⟨n-k+j, _⟩`. Since n-k+j < n (when j < k ≤ n), these
-      -- indices fall in `castSucc` range, so `snoc z a` returns `z` at them.
-      -- Either way, the prefix arg depends only on z (not a). So we get
-      -- ∑_a, kernel(prefix(z)) {a} = (kernel(prefix(z))) univ = 1.
-      by_cases hnk : n ≤ k
-      · -- Branch n ≤ k: markovFactor = (cd (init (snoc z a))) {(snoc z a)(last n)}
-        --                            = (cd z) {a}.
-        have h_unfold : ∀ a : α, markovFactor μ p k n (Fin.snoc z a)
-            = (condDistrib (p.obs n) (p.blockRV n) μ z) {a} := by
-          intro a
-          unfold markovFactor
-          simp only [hnk, dif_pos, Fin.init_snoc, Fin.snoc_last]
-        simp_rw [h_unfold]
-        -- ∑_a kernel z {a} = kernel z univ = 1.
-        haveI : IsMarkovKernel (condDistrib (p.obs n) (p.blockRV n) μ) := inferInstance
-        have h_sum : ∑ a : α, (condDistrib (p.obs n) (p.blockRV n) μ z) {a}
-            = (condDistrib (p.obs n) (p.blockRV n) μ z) Set.univ := by
-          rw [show (Set.univ : Set α) = (Finset.univ : Finset α) from
-            (Finset.coe_univ).symm]
-          exact sum_measure_singleton
-        rw [h_sum, measure_univ]
-      · -- Branch n > k: window uses indices n-k+j where j < k, all < n, so window
-        -- only sees z; the kernel arg doesn't depend on a.
-        have hkn : k ≤ n := Nat.le_of_lt (Nat.lt_of_not_le hnk)
-        have h_unfold : ∀ a : α,
-            markovFactor μ p k n (Fin.snoc z a)
-              = (condDistrib (p.obs k) (p.blockRV k) μ
-                  (fun j : Fin k => z ⟨n - k + j.val,
-                    by have := j.isLt; omega⟩)) {a} := by
-          intro a
-          unfold markovFactor
-          simp only [hnk, dif_neg, not_false_iff]
-          -- Compute snoc at last n (singleton arg) and at castSucc indices (kernel arg).
-          -- Lock in non-dependent type for snoc: snoc z a : Fin (n+1) → α.
-          set sa : Fin (n + 1) → α := Fin.snoc z a with hsa_def
-          have h_arg : (fun j : Fin k =>
-                sa (⟨n - k + j.val, by have := j.isLt; omega⟩ : Fin (n + 1)))
-              = (fun j : Fin k => z ⟨n - k + j.val,
-                  by have := j.isLt; omega⟩) := by
-            funext j
-            have h_lt : n - k + j.val < n := by have := j.isLt; omega
-            have h_eq : (⟨n - k + j.val,
-                  (by have := j.isLt; omega : n - k + j.val < n + 1)⟩ : Fin (n + 1))
-                = Fin.castSucc ⟨n - k + j.val, h_lt⟩ := by
-              apply Fin.ext; simp [Fin.castSucc]
-            rw [h_eq]
-            show (Fin.snoc z a : Fin (n + 1) → α) (Fin.castSucc ⟨n - k + j.val, h_lt⟩)
-                = z ⟨n - k + j.val, h_lt⟩
-            exact Fin.snoc_castSucc _ _ _
-          have h_last : sa (Fin.last n) = a := Fin.snoc_last _ _
-          rw [h_arg, h_last]
-        simp_rw [h_unfold]
-        haveI : IsMarkovKernel (condDistrib (p.obs k) (p.blockRV k) μ) := inferInstance
-        set kern := condDistrib (p.obs k) (p.blockRV k) μ
-            (fun j : Fin k => z ⟨n - k + j.val, by have := j.isLt; omega⟩) with hkern_def
-        have h_sum : ∑ a : α, kern {a} = kern Set.univ := by
-          rw [show (Set.univ : Set α) = (Finset.univ : Finset α) from
-            (Finset.coe_univ).symm]
-          exact sum_measure_singleton
-        rw [h_sum, measure_univ]
-    simp_rw [h_inner, mul_one]
+    -- Inner sum over a: equals 1 by `markovFactor_sum_eq_one` (per-state probability
+    -- distribution over the next symbol, via `IsMarkovKernel`).
+    simp_rw [markovFactor_sum_eq_one, mul_one]
     exact ih
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
