@@ -483,21 +483,22 @@ example :
     (∀ n, (Fin n → α) → ℕ) := @lz78GreedyEncodingLength α _
 
 omit [DecidableEq α] in
-/-- **The concrete `lz78GreedyEncodingLength` threaded into the genuine
-two-sided `lz78_asymptotic_optimality` headline**.
+/-- **The worst-case one-symbol `lz78GreedyEncodingLength` threaded into
+the generic sandwich-combinator `lz78_asymptotic_optimality`**.
 
-After the headline de-circularization, `lz78_asymptotic_optimality` no
-longer takes the conclusion (`h_rate_bound`) nor the three `True`
-pass-throughs; it takes the genuine two-sided sandwich on `lz/n` and
-*derives* the a.s. Tendsto. This wrapper instantiates the encoding-length
-parameter to the concrete greedy `lz78GreedyEncodingLength` and forwards
-the four genuine sandwich ingredients. The body is a genuine application,
-not an identity wrap of the conclusion. This wrapper is **pure variational
-pass-through** (Pilot Pattern V): the four sandwich ingredients (h_lower /
-h_upper / h_bdd_above / h_bdd_below) are regularity / boundedness hypotheses,
-not load-bearing predicate consumers, and the body simply forwards to
-`lz78_asymptotic_optimality` whose own body is the genuine 1-step combine
-`tendsto_of_le_liminf_of_limsup_le`. No `@residual` tag is attached. -/
+This instantiates the generic combinator's encoding-length parameter to
+the concrete one-symbol-per-phrase `lz78GreedyEncodingLength` and forwards
+the four generic sandwich arguments (liminf lower / limsup upper / two
+`IsBoundedUnder` boundedness). Like the combinator it targets, this is a
+**generic forwarder**, *not* a standalone proof that the one-symbol
+encoding achieves the entropy rate: `h_lower` / `h_upper` are
+caller-supplied generic arguments. The body is a genuine application of
+`lz78_asymptotic_optimality` (whose own body is the 1-step squeeze
+`tendsto_of_le_liminf_of_limsup_le`), not an identity wrap. The genuine
+LZ78-optimality headline with the discharged sandwich lives in
+`lz78_asymptotic_optimality_with_greedy_impl` (for the genuine greedy
+parser), where the two load-bearing halves are carried as
+`sorry + @residual`. -/
 @[entry_point]
 theorem lz78_asymptotic_optimality_with_greedy_encoding
     (μ : Measure Ω) [IsProbabilityMeasure μ]

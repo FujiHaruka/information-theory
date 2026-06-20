@@ -409,69 +409,104 @@ right type to plug into the parent `lz78_asymptotic_optimality`
 `lz78EncodingLength : ∀ n, (Fin n → α) → ℕ` parameter slot. -/
 example : (∀ n, (Fin n → α) → ℕ) := @lz78GreedyImplEncodingLength α _ _
 
+/-- **LZ78 converse lower bound for the genuine greedy parser
+(Cover–Thomas Theorem 13.5.3, lower-bound half), a.s. form**.
 
-/-- **Main theorem with the genuine greedy parsing implementation**.
+For a stationary ergodic source `p` the per-symbol length of the genuine
+longest-prefix-match greedy LZ78 parse is, almost surely, asymptotically at
+least the entropy rate:
 
-Re-publishes the genuine two-sided `lz78_asymptotic_optimality` with the
-parameter `lz78EncodingLength` slot instantiated to the **genuine
-longest-prefix-match greedy** `lz78GreedyImplEncodingLength` (rather than
-the worst-case one-symbol form of
-`lz78_asymptotic_optimality_with_greedy_encoding`). After the headline
-de-circularization, this forwards the four sandwich ingredients on `lz/n`
-(liminf lower / limsup upper / two boundedness) — no `True` pass-throughs,
-and the conclusion is *derived*, not wrapped, via the genuine 1-step combine
-`tendsto_of_le_liminf_of_limsup_le`.
+```
+entropyRate μ p ≤ liminf_n (1/n) · lz78GreedyImplEncodingLength(X^n)   a.s.
+```
 
-**Honesty audit (2026-06-20), CORRECTING a prior docstring overstatement.**
-The four hypotheses are NOT uniformly regularity. They split:
+This is the lower-bound (converse) half of LZ78 asymptotic optimality —
+the harder direction (SMB liminf lower bound + arbitrary-prefix Kraft
+inequality + finite-alphabet bookkeeping). Its honest discharge is
+**research-level upstream scope-out** (textbook roadmap M3 variable-depth
+tree AEP / M4 Barron a.s. lift); the discharge machinery is absent from
+the codebase and not present in Mathlib.
 
-* `h_lower` (LZ78 converse `entropyRate ≤ liminf (lz/n)`) and `h_upper`
-  (Ziv-inequality achievability `limsup (lz/n) ≤ entropyRate`) are
-  **load-bearing** — jointly they squeeze `liminf = limsup = entropyRate`,
-  i.e. they ARE the Cover–Thomas Thm 13.5.3 substance the headline claims.
-  The body's combine is a trivial squeeze given them. Their honest discharge
-  (Ziv inequality + SMB sandwich) is **research-level scope-out** (textbook
-  roadmap M3 variable-depth tree AEP / M4 Barron a.s. lift); the same content
-  appears as the `IsZivInequalityPassthrough` / `IsLZ78ConversePassthrough`
-  predicates in `Basic.lean`, tagged scope-out.
-* `h_bdd_above` / `h_bdd_below` (`Filter.IsBoundedUnder`) ARE regularity
-  preconditions (boundedness of the integer-valued rate, 0 ≤ lz/n ≤ log|α|).
-
-The prior text "the four ingredients are regularity / boundedness
-hypotheses, not load-bearing predicate consumers" was a FALSE honesty claim
-(only h_bdd_* are regularity). Per the project honesty hierarchy the proper
-resting form is `sorry + @residual` with the two load-bearing bounds removed
-from the signature; that signature change is an owner task. Until then this
-is a tier-4/5 load-bearing headline whose load-bearing status is disclosed
-here. `@audit:closed-by-successor(textbook-roadmap-m3-m4-scope-out)` -/
-@[entry_point]
-theorem lz78_asymptotic_optimality_with_greedy_impl
+@residual(wall:lz78-converse-aseventual) -/
+theorem lz78GreedyImpl_converse_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (p : ErgodicProcess μ α)
-    (h_lower : ∀ᵐ ω ∂μ,
-        entropyRate μ p.toStationaryProcess
-        ≤ Filter.liminf
-            (fun n =>
-              (lz78GreedyImplEncodingLength n
-                  (p.toStationaryProcess.blockRV n ω) : ℝ)
-                / (n : ℝ))
-            Filter.atTop)
-    (h_upper : ∀ᵐ ω ∂μ,
-        Filter.limsup
+    (p : ErgodicProcess μ α) :
+    ∀ᵐ ω ∂μ,
+      entropyRate μ p.toStationaryProcess
+      ≤ Filter.liminf
           (fun n =>
             (lz78GreedyImplEncodingLength n
                 (p.toStationaryProcess.blockRV n ω) : ℝ)
               / (n : ℝ))
-          Filter.atTop
-        ≤ entropyRate μ p.toStationaryProcess)
+          Filter.atTop := by
+  sorry
+
+/-- **Ziv-inequality achievability upper bound for the genuine greedy
+parser (Cover–Thomas Lemma 13.5.5 / Theorem 13.5.3 upper-bound half),
+a.s. form**.
+
+For a stationary ergodic source `p` the per-symbol length of the genuine
+longest-prefix-match greedy LZ78 parse is, almost surely, asymptotically at
+most the entropy rate:
+
+```
+limsup_n (1/n) · lz78GreedyImplEncodingLength(X^n) ≤ entropyRate μ p   a.s.
+```
+
+This is the achievability (upper-bound) half of LZ78 asymptotic
+optimality, i.e. the a.s.-eventual Ziv inequality
+`limsup (c·log₂ c / n) ≤ H₂` combined with the SMB upper bound. Its
+honest discharge is **research-level upstream scope-out** (textbook
+roadmap M3 variable-depth tree AEP / M4 Barron a.s. lift); the discharge
+machinery is absent from the codebase and not present in Mathlib.
+
+@residual(wall:lz78-aseventual-ziv) -/
+theorem lz78GreedyImpl_achievability_ae
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (p : ErgodicProcess μ α) :
+    ∀ᵐ ω ∂μ,
+      Filter.limsup
+        (fun n =>
+          (lz78GreedyImplEncodingLength n
+              (p.toStationaryProcess.blockRV n ω) : ℝ)
+            / (n : ℝ))
+        Filter.atTop
+      ≤ entropyRate μ p.toStationaryProcess := by
+  sorry
+
+/-- **LZ78 asymptotic optimality with the genuine greedy parsing
+implementation (Cover–Thomas Theorem 13.5.3)**.
+
+For a stationary ergodic source `p : ErgodicProcess μ α` on a finite
+alphabet `α`, the per-symbol output length of the genuine
+longest-prefix-match greedy LZ78 parse converges almost surely to the
+entropy rate:
+
+```
+lim_{n → ∞} (1/n) · lz78GreedyImplEncodingLength(X^n) = entropyRate μ p   a.s.
+```
+
+This is the LZ78 optimality headline. The two halves of the sandwich —
+the converse lower bound and the Ziv achievability upper bound — are
+supplied internally by `lz78GreedyImpl_converse_ae` and
+`lz78GreedyImpl_achievability_ae`, each a research-level scope-out wall
+carried as `sorry + @residual` (so this theorem is *not* unconditional;
+it transitively depends on `sorryAx`). The lower boundedness
+(`IsBoundedUnder (· ≥ ·)`) is derived genuinely from the nonnegativity of
+the integer-valued rate. The upper boundedness `h_bdd_above`
+(`IsBoundedUnder (· ≤ ·)`) is a genuine **regularity precondition**
+(eventual boundedness of the rate, not the load-bearing entropy-rate
+content) — it is the only open argument and is not load-bearing.
+
+The a.s. convergence is assembled from these via the generic combinator
+`lz78_asymptotic_optimality` (the LZ78-flavored
+`tendsto_of_le_liminf_of_limsup_le` squeeze). -/
+@[entry_point]
+theorem lz78_asymptotic_optimality_with_greedy_impl
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (p : ErgodicProcess μ α)
     (h_bdd_above : ∀ᵐ ω ∂μ,
         Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
-          (fun n =>
-            (lz78GreedyImplEncodingLength n
-                (p.toStationaryProcess.blockRV n ω) : ℝ)
-              / (n : ℝ)))
-    (h_bdd_below : ∀ᵐ ω ∂μ,
-        Filter.IsBoundedUnder (· ≥ ·) Filter.atTop
           (fun n =>
             (lz78GreedyImplEncodingLength n
                 (p.toStationaryProcess.blockRV n ω) : ℝ)
@@ -482,9 +517,20 @@ theorem lz78_asymptotic_optimality_with_greedy_impl
           (lz78GreedyImplEncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
             / (n : ℝ))
         Filter.atTop
-        (𝓝 (entropyRate μ p.toStationaryProcess)) :=
-  lz78_asymptotic_optimality μ p (@lz78GreedyImplEncodingLength α _ _)
-    h_lower h_upper h_bdd_above h_bdd_below
+        (𝓝 (entropyRate μ p.toStationaryProcess)) := by
+  have h_bdd_below : ∀ᵐ ω ∂μ,
+      Filter.IsBoundedUnder (· ≥ ·) Filter.atTop
+        (fun n =>
+          (lz78GreedyImplEncodingLength n
+              (p.toStationaryProcess.blockRV n ω) : ℝ)
+            / (n : ℝ)) := by
+    refine Filter.Eventually.of_forall (fun ω => ?_)
+    exact Filter.isBoundedUnder_of
+      ⟨0, fun n => lz78_impl_encoding_length_per_symbol_nonneg n _⟩
+  exact lz78_asymptotic_optimality μ p (@lz78GreedyImplEncodingLength α _ _)
+    (lz78GreedyImpl_converse_ae μ p)
+    (lz78GreedyImpl_achievability_ae μ p)
+    h_bdd_above h_bdd_below
 
 end ParentBridge
 
