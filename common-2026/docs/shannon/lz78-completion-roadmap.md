@@ -46,10 +46,10 @@ SoT はコード側タグ (`@residual(wall:...)`)、本節は二次。
 |---|---|---|
 | 符号長 + parent bridge | `GreedyParsingImpl.lean` §1-§2 | genuine longest-prefix 符号長 + CT 13.5.2 bit-length 上界 (`c ≤ n` × `bitLength` 単調)、per-symbol rate 上界・非負 |
 | Ziv 組合せ核 | `ZivCountingBody.lean` §4 | `lz78PhraseStrings_mul_log_le` (`c·log c ≤ K·n`)、`lz78PhraseStrings_count_isBigO` (`c = O(n/log n)`) |
-| base-2 単位 | `LZ78ZivEntropyBridge.lean` | `entropyRate₂ = entropyRate / Real.log 2`, `blockLogAvg₂` (lz=bit / entropy=nat 単位整合) |
-| tree-node 基盤 | `LZ78ZivTreeNode.lean` | T3 `node_logsum_step` (`∑_v k_v log k_v ≤ -log Q_c^{tree}`) 他 (M3 入力) |
-| converse UD-object (M1 済) | `LZ78ConverseUDObject.lean` | 汎用 `uniquelyDecodable_of_constantLength` + 実 LZ78 token code UD → McMillan 期待値 converse `entropyD 2 P ≤ E[L]=K` (M4 入力) |
-| 固定深さ k AEP (再利用元) | `SMBAlgoetCover.lean` / `EntropyRate.lean` | `negLogQk_div_tendsto_condEntropyTail` (`-log qk/n → H_k`)、`conditionalEntropyTail_tendsto_entropyRate` (`H_k → H`) (M3 入力) |
+| base-2 単位 | `LZ78/ZivEntropyBridge.lean` | `entropyRate₂ = entropyRate / Real.log 2`, `blockLogAvg₂` (lz=bit / entropy=nat 単位整合) |
+| 無条件 SMB AEP (M3 限界供給) | `SMB/AlgoetCover/Liminf.lean` | `shannon_mcmillan_breiman` (`∀ᵐ ω, blockLogAvg μ p n ω → entropyRate μ p`、sorry-free entry_point)。M3 の **新たな限界対象** — `-log₂Pₙ/n → H₂` を free で供給 (旧 tree-node 基盤を obsolete 化、§3 校正参照) |
+| converse UD-object (M1 済) | `LZ78/ConverseUDObject.lean` | 汎用 `uniquelyDecodable_of_constantLength` + 実 LZ78 token code UD → McMillan 期待値 converse `entropyD 2 P ≤ E[L]=K` (M4 入力) |
+| 固定深さ k AEP (SMB 内部足場) | `SMB/AlgoetCover/Core.lean` / `EntropyRate.lean` | `negLogQk_div_tendsto_condEntropyTail` (`-log qk/n → H_k`)、`conditionalEntropyTail_tendsto_entropyRate` (`H_k → H`)。`shannon_mcmillan_breiman` の内部足場 (M3 が直接持ち上げる必要は無くなった) |
 
 ### 旧 Phase 履歴 (圧縮)
 - 旧 `IsLZ78*` load-bearing 仮説路 (`IsLZ78ZivAsEventual` / `IsLZ78ConverseCodingLowerBound`
@@ -64,7 +64,7 @@ SoT はコード側タグ (`@residual(wall:...)`)、本節は二次。
 ### M1 — converse UD-object 【✅ 済 (2026-05-21)】
 - **内容**: LZ78 符号化 (index, symbol) ストリームを定義し、**uniquely-decodable であることを証明** → Mathlib McMillan (`McMillanKraftBridge`) を**実 LZ78 code に適用** → 実コードの**期待値 converse `H_D ≤ E[lz]`** を genuine に。
 - **注意**: `lz78PhraseStrings` 自体は **prefix-complete で UD でない**。真の UD object は encoded stream (別構造、新規構築要)。`_nodup` は UD の必要条件にすぎず不十分。
-- **deliverable (実装済)**: `InformationTheory/Shannon/LZ78ConverseUDObject.lean` (sorryAx 非依存、`lake env lean` silent)。
+- **deliverable (実装済)**: `InformationTheory/Shannon/LZ78/ConverseUDObject.lean` (sorryAx 非依存、`lake env lean` silent)。
   - `uniquelyDecodable_of_constantLength` — 定長コード ⟹ UD (汎用、Mathlib 未収録、本 M1 の数学的核)。
   - `boolEncode`/`finBoolCode` — fixed-width binary code、`m < 2^K` で injective。
   - `lz78TokenCode c : Fin (c+1) × α → List Bool` (width `K = bitLength c |α|`) の injective + UD + `lz78TokenCode_kraftSum_le_one` + `lz78TokenCode_entropyD_le_expectedLength` (= `entropyD 2 P ≤ E[L] = K`)。
@@ -73,14 +73,37 @@ SoT はコード側タグ (`@residual(wall:...)`)、本節は二次。
 - **規模 (実績)**: ~270 行。**リスク: 低〜中 (組合せ的)** — 想定通り、初回 skeleton がほぼそのまま通過。
 
 ### M2 — length-grouping Ziv 組合せ核 【確度高】
-- **内容**: tree-node T3 (`∑_v k_v log k_v ≤ -log Q_c^{tree}`) を **長さ別グルーピング**で `c·log c ≤ -log Q_c^{tree} + c·H(length-dist)` に。overhead `c·H(length-dist) ≤ c·log(maxlen)`、`maxlen ≤ log_b n`、`(c·log log n)/n → 0` を `c/n` envelope (`lz78Distinct_count_div_le_envelope`) と合成。
-- **deliverable**: achievability の**組合せ部分** (非エルゴード) の genuine 不等式。これで残るは M3 のエルゴード一点に。
+- **内容**: distinct-phrase log-sum を **長さ別グルーピング** (D3: node-grouping は偽、必ず length-grouping) で `c·log c ≤ -log Pₙ + c·H(length-dist)` に。overhead `c·H(length-dist) ≤ c·log(maxlen)`、`maxlen ≤ log_b n`、`(c·log log n)/n → 0` を `c/n` envelope (`lz78Distinct_count_div_le_envelope`) と合成。**M3 framing realign 後はこの組合せ不等式が a.s.-eventual Ziv 核そのもの** — 旧 `Q_c^{tree}` tree-node T3 は obsolete (実 decl 不在)、`-log Pₙ` (= SMB が握る `blockLogAvg₂`) を直接 RHS に置く。
+- **deliverable**: achievability の**組合せ部分** (非エルゴード) の genuine a.s.-eventual 不等式。これを既証明 SMB に乗せる接続が M3。
 - **規模**: ~200–400 行。**リスク: 中** (正確な overhead 形・maxlen bound)。**必ず length-grouping で** (node-grouping は §2 D3 で偽)。
 
-### M3 — 可変depth tree-node AEP 【支配項・要・腰据え】
-- **内容**: `-log₂ Q_c^{tree}(x^n)/n → H` a.s. を、固定深さ k AEP (`negLogQk_div_tendsto_condEntropyTail`, SMB 内) + `H_k → H` を **k↔n 連動の対角線/カットオフ論法** (CT 13.5.3 核心) で繋ぐ。`birkhoffAverage` (固定 f Cesàro) は直接効かない。
-- **deliverable**: M2 と合成して `lz78GreedyImpl_achievability_ae` (`@residual(wall:lz78-aseventual-ziv)`、`GreedyParsingImpl.lean`) の sorry を discharge → **achievability 完遂**。
-- **規模**: ~600–1200 行。**リスク: 高**。対角線論法に **Mathlib 測度論基盤の新規追加 (upstream 級)** が要る可能性 — 最大の不確実要因。route C (k-Markov sandwich) の誤差項 `δ_k(n)/n→0` の ω-uniform 性が crux (要・最初の手計算 gate)。
+### M3 — a.s.-eventual Ziv 不等式を既証明 SMB に乗せる 【支配項・要・腰据え】
+> **2026-06-20 framing realign (feasibility gate 検証済)**: 旧 framing
+> (可変depth tree-node AEP + 固定深さ k AEP からの k↔n 連動 対角線/カットオフ
+> 持ち上げ + `Q_c^{tree}`) は **obsolete**。理由 = 無条件・sorry-free な
+> Shannon–McMillan–Breiman AEP `shannon_mcmillan_breiman`
+> (`SMB/AlgoetCover/Liminf.lean`、`∀ᵐ ω, blockLogAvg μ p n ω → entropyRate μ p`)
+> が既に存在し、`-log₂Pₙ/n → H₂` を free で供給する。可変深さ AEP 持ち上げ
+> sub-problem は SMB 完成で蒸発した (固定深さ k AEP `negLogQk_div_…` を M3 が
+> 直接対角線で持ち上げる必要は無い — それは SMB が内部で済ませている)。
+- **genuine な残ギャップ**: **決定論的 (または a.s.-eventual) な Ziv 不等式**
+  `c·log₂c ≤ -log₂Pₙ + o(n)` のみ。これを既証明 SMB に乗せる:
+  `c·log₂c ≤ -log₂Pₙ + o(n)` (Ziv 組合せ) → `-log₂Pₙ/n = blockLogAvg₂ → H₂`
+  (`shannon_mcmillan_breiman`、済) → `limsup (c·log₂c)/n ≤ H₂`。
+- **D1/D2 (§2) との整合 — 真の難所**: この Ziv 不等式は **a.s.-eventual / limsup 形で
+  なければならない**。per-block universal な clean 形 (`c·log c ≤ -log Pₙ` ∀n∀ω、D1)
+  も overhead 形 (D2) も **machine-disproof で FALSE** (反例 `a^16`)。genuine な
+  statement は a.s.-eventual のみ。realign で「決定論的」と書く際もこの per-block
+  偽性と矛盾しないこと。crux は **o(n)/誤差項の制御** (distinctness → length-grouping
+  log-sum step、M2 の overhead 形) であって、エルゴード持ち上げではない。
+- **deliverable**: M2 (a.s.-eventual Ziv 組合せ) と合成して `lz78GreedyImpl_achievability_ae`
+  (`@residual(wall:lz78-aseventual-ziv)`、`GreedyParsingImpl.lean`) の sorry を
+  discharge → **achievability 完遂**。
+- **規模/リスク**: ~150–800 行、**medium–high**。**feared upstream ergodic addition は
+  不要** (旧 framing の「Mathlib 測度論基盤の新規追加 (upstream 級) が要る可能性」は
+  obsolete — エルゴード次元は plumbing 級、SMB が済ませている)。残るは標準教科書の
+  組合せ Ziv 不等式 self-build (NOT upstream-research, NOT 未解決) で、D1/D2 の
+  per-block 偽性回避 (a.s.-eventual / limsup 形に収める o(n) 制御) が crux。
 
 ### M4 — converse Barron a.s. lift 【要・腰据え】
 - **内容**: M1 の期待値 converse `H_D ≤ E[lz]` を **a.s.-eventual pointwise `liminf lz/n ≥ entropyRate₂`** に持ち上げる (competitive-optimality / Barron 型エルゴード論法)。LZ78 は pointwise で Shannon code を破れるので **期待値↛pointwise**。
@@ -96,9 +119,9 @@ SoT はコード側タグ (`@residual(wall:...)`)、本節は二次。
 ## 2. 既知の地雷 (machine-disproof / 確定済み — 再探索禁止)
 
 - **D1**: per-block `c·log c ≤ -log Pₙ` (∀n∀ω, clean) は **FALSE**。反例 constant process `a^16` (c=5, `-log Pₙ=0`)。
-- **D2**: overhead 版 `c·log c ≤ -log Pₙ + c·log(\|α\|+1)` も **FALSE** (`Pₙ→1` family)。machine-disproof `not_isLZ78ZivCombinatorialCoreOverhead` (`LZ78ZivTreeBridge.lean`)。**per-block universal Ziv は誤った formulation** — genuine は a.s.-eventual のみ。
+- **D2**: overhead 版 `c·log c ≤ -log Pₙ + c·log(\|α\|+1)` も **FALSE** (`Pₙ→1` family)。当初 machine-disproof `not_isLZ78ZivCombinatorialCoreOverhead` で裏取り済 (反例 `n=16, Pₙ=1, c=5`)。**verdict は不変** だが、その refutation decl + 旧 FALSE predicate は def-fix cleanup (§0 旧 Phase 履歴、commit `602b1ad` 系) で in-tree 削除済 (現在 codebase 不在)。**per-block universal Ziv は誤った formulation** — genuine は a.s.-eventual のみ。**D1/D2 の per-block 偽性ゆえ M3 の Ziv 不等式は a.s.-eventual / limsup 形でなければならない** (§1 M3 realign 参照)。
 - **D3**: node-grouping overhead `(c·log D)/n` は D≈c で**定数収束 (vanish しない)**。**正しいのは length-grouping** (overhead が `c·log(maxlen)`, support が指数的に小さく vanish)。`log D=log c` を `log(n/c)≈log log n` と取り違えない。
-- **D4**: path-prefix `Q_c = ∏ condPhraseProb` の AEP は genuine (M0 で trivial と判明) **だが achievability に繋がらない** (`∑ⱼqⱼ≈c` の罠)。tree-node `Q_c^{tree}` (M3) が必要。
+- **D4**: path-prefix `Q_c = ∏ condPhraseProb` の AEP は genuine (M0 で trivial と判明) **だが achievability に繋がらない** (`∑ⱼqⱼ≈c` の罠)。**裏付け (2026-06-20)**: path-prefix route の decl (`condPhraseProb` / `blockProb_neg_log_ge_sum`、`LZ78/ZivEntropyBridge.lean`) は `dep_consumers.sh` で **0 direct consumers** = orphan 確認済 → D4 dead-start (`∑ⱼqⱼ≈c` trap) が機械裏取りされた。gateway atom はこの route を素通り (`∑qⱼ≈c` を経由せず length-grouping log-sum を直接 SMB の `-log Pₙ` に乗せる) こと。旧 framing が要求した tree-node `Q_c^{tree}` は M3 realign で obsolete (実 decl 不在)。
 - **D5**: McMillan は **Mathlib 既存** (`InformationTheory.kraft_mcmillan_inequality`)。再発明不要、wire 済 (M1 で使う)。
 - **D6**: converse の pointwise `2^{-lz} ≤ Pₙ` 経路は**不健全** (Shannon-code 補題、`lz ≥ shannonLength` は pointwise 偽 = LZ78 universality の核心)。M4 は期待値→a.s. lift で。
 - **D7**: Huffman 系の `mergedMeasure` 偽 core 等は別件 (本 roadmap 対象外、textbook-roadmap 判断ログ #6 + `huffman-fullB-structure-plan.md` 参照)。
@@ -107,10 +130,10 @@ SoT はコード側タグ (`@residual(wall:...)`)、本節は二次。
 
 ## 3. 校正・規模・リスク総括
 
-- **校正**: 既存 SMB (`SMBAlgoetCover.lean`) = 約 2800 行。M3/M4 のエルゴード持ち上げは各々 SMB の一部分〜同等規模。直感: **「LZ78 完遂 ≈ もう一本 SMB を建てる」**。
-- **総計**: おおよそ **~1300–2600 行** (桁感、構造を固めるまで上振れ得る)。
-- **数学的位置づけ**: LZ78 最適性は**標準教科書定理 (深い/未解決ではない)**。難しさの大半は「**既知だが Mathlib に無いエルゴード定理を一から建てる**」基盤コスト + 「形式化が容赦なく教科書の手抜きを露呈する」層。`/goal` 反復では届かず、**腰を据えた数学的形式化**が要る。
-- **進め方の推奨**: **M1 → M2** をまず確実に閉じて足場を固める (低〜中リスク、組合せ的)。**M3 → M4** はそれぞれ独立した dedicated セッションで (高リスク、エルゴード、各々 M0 feasibility gate 先行推奨)。M3 着手時はまず対角線/sandwich 誤差項の手計算 gate で go/no-go を取る。
+- **校正 (2026-06-20 realign)**: 既存 SMB (`SMB/AlgoetCover/` = `Core.lean` + `Liminf.lean` + `TwoSidedRatio.lean`、計 ~2800 行) は **完成済・sorry-free** で、headline `shannon_mcmillan_breiman` が `-log₂Pₙ/n → H₂` を free で供給する。直感 **「LZ78 完遂 ≈ もう一本 SMB を建てる」は M3 については over-estimate** — SMB は既存で、M3 のエルゴード次元は plumbing 級 (SMB が握っている)。**M3 risk 再評価**: 残るは決定論的/a.s.-eventual Ziv 不等式 self-build (~150–800 行、medium–high risk) のみで、crux は D1/D2 の per-block 偽性回避 (a.s.-eventual / limsup 形に収める o(n) 制御)。**M4 (converse Barron a.s. lift) は別途** (SMB-lower + 期待値→a.s. lift、本 realign の対象外、依然 high risk)。
+- **総計**: おおよそ **~500–1500 行** (M3 が SMB 既存ぶん縮小、M4 + M2 + 配線が主)。
+- **数学的位置づけ**: LZ78 最適性は**標準教科書定理 (深い/未解決ではない)**。**M3 のエルゴード基盤は SMB 完成で済んでいる** ので、残りの難しさは「組合せ Ziv 不等式 self-build + 形式化が教科書の手抜きを露呈する」層に絞られる (M3 については「Mathlib に無いエルゴード定理を一から建てる」基盤コストはもう無い)。M4 は依然エルゴード a.s. lift が残る。
+- **進め方の推奨**: **M1 → M2** をまず確実に閉じて足場を固める (低〜中リスク、組合せ的)。**M3 = a.s.-eventual Ziv 不等式を既証明 SMB に乗せる接続** で、推奨 gateway atom = `(c·log₂c)/n` を `blockLogAvg₂` (SMB が握る `-log₂Pₙ/n`) に橋渡しする **self-contained 比較補題** (a.s.-eventual / limsup 形、`∑qⱼ≈c` の D4 trap 回避、length-grouping overhead で o(n) 制御)。これが go/no-go gate。**M4** (converse Barron a.s. lift) は独立した dedicated セッションで (依然 high risk、エルゴード a.s.)。
 
 ---
 
