@@ -10,7 +10,8 @@
 - [x] Phase 2a — convexity grouping（length 別 Jensen）✅ **sorryAx-free**（`ZivLengthGrouping.lean`、commit `c472518`）— necessary scaffolding だが単独では不十分
 - [x] Phase 2b — marginal sub-distribution + log-sum 橋 ✅ **sorryAx-free**（`ZivMeasureBridge.lean`、commit `d1d55db`）— **marginal なので方向不一致、`-log Pₙ` に届かない**（判断ログ #4）
 - [x] Phase 2c-i — node-context conditional sub-distribution `∑_a q(v·a\|v) ≤ 1`（旧「次の genuine atom」）✅ **sorryAx-free**（`ZivCondContext.lean` `condContext_sum_le_one`/`condContext_card_mul_log_le_sum_neg_log`/chain-rule backbone、commit `cfe518b`/`6accdd2`、[lz78-facts.md](lz78-facts.md) 達成テーブル）— 第三の量は **既に建っている**
-- [ ] Phase 2c-ii — **genuine wall**: Ziv (k-state, length)-grouping + k(n)→∞ diagonal grafting 🔄 **medium**（Cover-Thomas Lemma 13.5.5、判断ログ #4）→ 達成まで `sorry` + `@residual(wall:lz78-aseventual-ziv)` 維持
+- [~] Phase 2c-ii — **genuine wall**: Ziv (k-state, length)-grouping + k(n)→∞ diagonal grafting 🔄 **medium**（Cover-Thomas Lemma 13.5.5、判断ログ #4）→ 達成まで `sorry` + `@residual(wall:lz78-aseventual-ziv)` 維持
+  - **threading foundation = leg 8 で gateway GO + 監査 PASS**（`ZivThreading.lean`、`bf78de9`/`bd198e2`）: phrase 位置対応 `markovFactor_blockRV_eq_window` + factor correspondence 5 補題 sorryAx-free、per-phrase segment 恒等式まで到達。残 1 sorry = `negLogQk_phrase_threading`（tiling 入力下の block 分解、`@residual(wall:lz78-aseventual-ziv)`）。残 gap = (a) body fill（tiling 下 sum-split、tractable）+ (b) tiling 材料化（`lz78PhraseStrings`→絶対位置 `N`、genuine blocker）。詳細 = [lz78-facts.md](lz78-facts.md) 達成テーブル「threading 配線」+ 判断ログ #5。
 - [ ] Phase 3 — overhead o(n) 制御 + limsup 合成 📋（Phase 2c-ii 通過後に着手）
 - [ ] Phase 4 — W2 discharge（`ziv_aseventual_le_blockLogAvg₂` の sorry を埋める）📋（達成まで `sorry` + `@residual(wall:lz78-aseventual-ziv)` 維持）
 
