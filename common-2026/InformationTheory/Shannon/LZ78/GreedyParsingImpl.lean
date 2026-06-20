@@ -896,24 +896,24 @@ bit-rate is asymptotically dominated by `blockLogAvg₂`. Stated as an
 `a.s.-eventual` limsup comparison (the per-block form is FALSE, counterexample
 `a^16`).
 
-Independent honesty audit 2026-06-20 PASS (commit `876bcd0`, fresh
-subagent): this is the sole active sorry carrying the M3 wall. Four honesty
-checks PASS — (1) non-circular (body bare `sorry`, conclusion ≠ any hyp),
-(2) non-bundled (signature is `(μ, p)` + `[IsProbabilityMeasure μ]`
-regularity only, no `*Hypothesis`/`*Reduction` predicate), (3) non-degenerate
-(genuine limsup inequality over a non-trivial sequence), (4) sufficiency
-TRUE-as-framed (a.s.-eventual Ziv inequality, Cover–Thomas 13.5.5; per-block
-form correctly avoided; degenerate `entropyRate = 0` boundary stays alive).
-Wall classification `wall:lz78-aseventual-ziv` confirmed: the combinatorial
-core (`c·log c ≤ K·n`, `lz78PhraseStrings_mul_log_le`, sorryAx-free) only
-yields a CONSTANT limsup bound `≤ 8·log(|α|+1)/log 2`, never `≤ entropyRate₂`;
-the sole probabilistic bridge `blockProb_neg_log_ge_sum` is orphaned (0
-consumers, `dep_consumers.sh`) and spans `∑ⱼ -log qⱼ ≤ -log Pₙ`, NOT the
-missing `c·log c ≤ ∑ⱼ -log qⱼ + o(n)` variable-depth length-grouping AEP (D4
-`∑qⱼ≈c` trap). M3 gap genuinely absent from codebase + Mathlib. Verdict
-honest_residual (tier 2).
+Independent honesty audit 2026-06-21 PASS (commit `c22f2d5`, fresh
+subagent): the M3 wall `lz78-aseventual-ziv` is now CLOSED — the body is
+genuinely `sorry`-free (filter_upwards on `ziv_aseventual_le_entropyRate₂`
++ `shannon_mcmillan_breiman₂`, `rw [h_smb.limsup_eq]`, `exact h_ziv`). The
+prior stale `@residual(wall:lz78-aseventual-ziv)` is removed. `#print axioms`
+= `[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified
+2026-06-21). The Ziv→AEP connection that was the M3 wall is supplied by the
+genuine composition `ziv_achievability_composition`
+(`c·log c ≤ negLogQk + o(n)`, sorryAx-free + audited) plus the AEP
+`negLogQk_div_tendsto_condEntropyTail`, assembled in
+`ziv_aseventual_le_condEntropyTail_bits`. Four honesty checks PASS —
+(1) non-circular (no `:= h`), (2) non-bundled (signature is `(μ, p)` +
+`[IsProbabilityMeasure μ]` regularity only), (3) non-degenerate (genuine
+limsup inequality), (4) sufficiency TRUE-as-framed (Cover–Thomas 13.5.5;
+per-block form correctly avoided; degenerate `entropyRate = 0` boundary
+stays alive).
 
-@residual(wall:lz78-aseventual-ziv) -/
+@audit:ok -/
 theorem ziv_aseventual_le_blockLogAvg₂
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
@@ -965,15 +965,17 @@ the achievability sandwich,
 * `ziv_aseventual_le_blockLogAvg₂` (the a.s.-eventual Ziv comparison) —
   gives `limsup (lz/n) ≤ limsup blockLogAvg₂` a.s.
 
-The transitive `sorryAx` of `lz78GreedyImpl_achievability_ae` therefore flows
-**only through `ziv_aseventual_le_blockLogAvg₂`** (the genuine M3 wall, the
-variable-depth tree-node AEP connecting the combinatorial `c · log c` to the
-probabilistic `-log Pₙ`). The genuine combinatorial core
-(`c · log c ≤ K · n` and `c = O(n / log n)`,
-`lz78PhraseStrings_mul_log_le` / `lz78PhraseStrings_count_isBigO`) and the
-SMB AEP (`shannon_mcmillan_breiman`) are both sorryAx-free; what remains is
-exactly the AEP connection (M3), absent from both the codebase and Mathlib
-(see `docs/shannon/lz78-completion-roadmap.md`, M3).
+`ziv_aseventual_le_blockLogAvg₂` is itself now sorryAx-free (the M3 wall
+`lz78-aseventual-ziv` is CLOSED): the Ziv→AEP connection — variable-depth
+tree-node AEP linking the combinatorial `c · log c` to the probabilistic
+`-log Pₙ` — is supplied by the genuine composition
+`ziv_achievability_composition` (`c · log c ≤ negLogQk + o(n)`) plus the AEP
+`negLogQk_div_tendsto_condEntropyTail`, assembled per-`k` in
+`ziv_aseventual_le_condEntropyTail_bits` and diagonalized in
+`ziv_aseventual_le_entropyRate₂`. The combinatorial core
+(`c · log c ≤ K · n`, `c = O(n / log n)`) and the SMB AEP
+(`shannon_mcmillan_breiman`) are all sorryAx-free; the whole achievability
+chain depends only on `[propext, Classical.choice, Quot.sound]`.
 
 This statement is TRUE-as-framed against the bit target `entropyRate₂` (the
 prior audit's units defect — false on a uniform i.i.d. source when stated
@@ -985,18 +987,21 @@ the degenerate `entropyRate = 0` boundary it reads `limsup ≤ 0` with
 `entropyRate₂ = 0`, again genuine. Signature takes only source data, no
 load-bearing hypothesis.
 
-Units fix independent audit 2026-06-20 PASS (commit `55e1cd9`, fresh
-subagent): this is the load-bearing-direction half — its prior false bound
-(`limsup = log₂ A ≤ log A = entropyRate`, false for A ≥ 2) is now
-`limsup ≤ log₂ A = entropyRate₂` (true at equality, A=2: `1 ≤ 1`, A=3:
-`log₂ 3 ≤ log₂ 3`). The bit RHS is the sorryAx-free unit rescaling
-`entropyRate / Real.log 2`, not a degenerate def. The M3 wall stays genuine:
-the `/log 2` rescaling leaves the unproven Ziv→AEP content untouched; the
-wall residual now lives in `ziv_aseventual_le_blockLogAvg₂`, not in this
-theorem's body. Four honesty checks PASS (sufficiency now TRUE-as-framed).
-Verdict honest_residual (tier 2, inherited via `ziv_aseventual_le_blockLogAvg₂`).
+Independent honesty audit 2026-06-21 PASS (commit `c22f2d5`, fresh
+subagent): the M3 wall `lz78-aseventual-ziv` is CLOSED, so the prior stale
+`@residual(wall:lz78-aseventual-ziv)` is removed. The body is sorry-free
+(filter_upwards on `shannon_mcmillan_breiman₂` + `ziv_aseventual_le_blockLogAvg₂`,
+`exact h_ziv.trans h_smb.limsup_eq.le`); `#print axioms` =
+`[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified
+2026-06-21). The bit RHS `entropyRate₂ = entropyRate / Real.log 2` resolves
+the prior units defect (the nat-unit bound was false for A ≥ 2; the bit bound
+holds at equality, A=2: `1 ≤ 1`, A=3: `log₂ 3 ≤ log₂ 3`). Four honesty checks
+PASS — non-circular, non-bundled (signature is `(μ, p)` +
+`[IsProbabilityMeasure μ]` regularity only), non-degenerate, sufficiency
+TRUE-as-framed; degenerate `entropyRate = 0` boundary reads `limsup ≤ 0` and
+stays alive.
 
-@residual(wall:lz78-aseventual-ziv) -/
+@audit:ok -/
 theorem lz78GreedyImpl_achievability_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α) :
@@ -1075,9 +1080,12 @@ inside the body from `lz78_impl_rate_le_const` /
 `lz78_impl_encoding_length_per_symbol_nonneg` (both unit-agnostic: they bound
 the bit-rate `lz/n` itself, so they are unaffected by the choice of `L`), so
 the squeeze `tendsto_of_le_liminf_of_limsup_le` is applied with all of its
-regularity inputs genuine. The remaining `sorryAx` is carried exactly via the
-two M3/M4 walls (`lz78GreedyImpl_converse_ae` / `lz78GreedyImpl_achievability_ae`,
-machine-verified); the boundedness discharge introduces no new `sorry`. -/
+regularity inputs genuine. The achievability half
+(`lz78GreedyImpl_achievability_ae`) is now sorryAx-free (the M3 wall
+`lz78-aseventual-ziv` is CLOSED, audited 2026-06-21); the remaining `sorryAx`
+is carried exactly via the M4 converse wall `lz78GreedyImpl_converse_ae`
+(`@residual(wall:lz78-converse-aseventual)`). The boundedness discharge
+introduces no new `sorry`. -/
 @[entry_point]
 theorem lz78_asymptotic_optimality_with_greedy_impl
     (μ : Measure Ω) [IsProbabilityMeasure μ]
