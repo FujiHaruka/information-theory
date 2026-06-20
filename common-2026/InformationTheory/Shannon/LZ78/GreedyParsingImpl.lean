@@ -318,15 +318,23 @@ example : (∀ n, (Fin n → α) → ℕ) := @lz78GreedyImplEncodingLength α _ 
 
 For a stationary ergodic source `p` the per-symbol length of the genuine
 longest-prefix-match greedy LZ78 parse is, almost surely, asymptotically at
-least the entropy rate:
+least the bit entropy rate:
 
 ```
-entropyRate μ p ≤ liminf_n (1/n) · lz78GreedyImplEncodingLength(X^n)   a.s.
+entropyRate₂ μ p ≤ liminf_n (1/n) · lz78GreedyImplEncodingLength(X^n)   a.s.
 ```
 
 This is the lower-bound (converse) half of LZ78 asymptotic optimality —
 the harder direction (SMB liminf lower bound + arbitrary-prefix Kraft
 inequality + finite-alphabet bookkeeping).
+
+Units: the encoding length is a base-2 code length
+(`lz78GreedyImplEncodingLength = c · bitLength c |α|`, `bitLength` uses
+`Nat.log 2`), so the per-symbol rate `lz/n` is in **bits**, and the correct
+RHS is the **bit** entropy rate `entropyRate₂ = entropyRate / Real.log 2`
+(not the nat-unit `entropyRate`), exactly the unit-correction documented in
+`ZivEntropyBridge.lean` ("Base-2 (bit) layer") and
+`McMillanKraftBridge.lean` (converse target `blockLogAvg₂`).
 
 After the 2026-06-20 def-fix (`lz78GreedyImplEncodingLength` now charges
 `c · bitLength c |α|` against the genuine distinct phrase count
@@ -340,52 +348,23 @@ expectation does not transfer to pointwise directly). This is a
 research-level ergodic wall, absent from both the codebase and Mathlib (see
 `docs/shannon/lz78-completion-roadmap.md`, M4).
 
-Independent honesty audit 2026-06-20 (post `5d08566` def-fix): genuine residual,
-not the prior false-statement defect. The new genuine longest-prefix def makes the
-rate `O(1)` (Ziv `c·log c ≤ 8·log(|α|+1)·n`, `lz78PhraseStrings_mul_log_le`), so the
-converse `entropyRate ≤ liminf` is a genuine unproven proposition on both a uniform
-i.i.d. source (`entropyRate > 0`) and the degenerate `entropyRate = 0` boundary —
-neither false nor vacuous. Signature takes only source data (`μ`, `p`), no
-load-bearing hypothesis; wall slug verified (M4 Barron a.s. lift, roadmap-confirmed
-SMB-scale, loogle Found 0 for `entropyRate`+`liminf`).
+This statement is TRUE-as-framed (the units defect found by the prior audit
+is resolved by stating the RHS against `entropyRate₂` rather than
+`entropyRate`): on a uniform i.i.d. source on A symbols the bit-rate limit
+is `log₂ A = entropyRate / Real.log 2 = entropyRate₂` exactly, so the
+converse `entropyRate₂ ≤ liminf` is the genuine LZ78 converse (e.g. A=2:
+`entropyRate₂ = log₂ 2 = 1 ≤ liminf`, with equality in the limit); on the
+degenerate `entropyRate = 0` boundary it reads `0 ≤ liminf` (`entropyRate₂ =
+0`), again genuine. The remaining `sorry` carries exactly the M4 ergodic
+wall content (a.s. Barron lift), not a units error. Signature takes only
+source data (`μ`, `p`), no load-bearing hypothesis.
 
-NOTE — the "non-vacuous" claim above is correct but INSUFFICIENT; the statement is
-in fact FALSE on a uniform i.i.d. source. See the units-defect note below.
-
-@audit:defect(false-statement)
-SECOND INDEPENDENT AUDIT 2026-06-20 (units defect, overturns the prior audit):
-this signature is UNITS-INCONSISTENT and the converse direction is FALSE on a
-uniform i.i.d. source. The per-symbol rate is in BITS: `lz78GreedyImplEncodingLength
-= c · bitLength c |α|` with `bitLength c a = Nat.log 2 (c+1) + Nat.log 2 a + 2`
-(base-2, see `LZ78Phrase.bitLength`), so `rate = lz/n` is bit/symbol, and its true
-limit is `H₂ = entropyRate / Real.log 2` (the bit entropy rate), confirmed by
-`lz78_impl_rate_le_const` carrying the `1/Real.log 2` factor. But `entropyRate` is in
-NATS: `entropyRate = limUnder(blockEntropy/n)`, `blockEntropy = entropy = ∑
-Real.negMulLog(...)`, and `Real.negMulLog x = -x · Real.log x` is natural log
-(verbatim Mathlib `NegMulLog.lean:164`). Concrete A=2 uniform i.i.d. refutation:
-`entropyRate = log 2 ≈ 0.693` (nat), but `liminf rate = log₂ 2 = 1` (bit). The
-converse `entropyRate ≤ liminf` happens to hold here (`0.693 ≤ 1`) — but the
-companion achievability `limsup ≤ entropyRate` = `1 ≤ 0.693` is FALSE, and the
-headline squeeze then forces `rate → entropyRate` = `rate → 0.693`, contradicting the
-true limit `rate → 1`. The correct RHS is `entropyRate₂ = entropyRate / Real.log 2`,
-exactly as `ZivEntropyBridge.lean:245-261` ("Base-2 (bit) layer — unit correction")
-and `McMillanKraftBridge.lean:204` (converse target `blockLogAvg₂`) already document.
-FIX: re-state this converse (and achievability + headline + the `entropyRate` slots in
-the base combinator `lz78_asymptotic_optimality`) against `entropyRate₂` (bit), or
-restate the rate divided by `Real.log 2`. The M4 wall content (Barron a.s. lift) is
-unaffected — only the unit of the RHS is wrong. Signature still in defect form
-(provisional marker awaiting the def-fix owner). First choice (def-fix to
-`entropyRate₂`) deferred: blast radius spans the base combinator's `entropyRate` slots
-+ both halves + headline, and `entropyRate₂` is not yet a `def` (only documented prose
-in `ZivEntropyBridge.lean`). Successor: see `docs/shannon/lz78-completion-roadmap.md`
-(units correction).
-@audit:retract-candidate(units-mismatch-bit-vs-nat: RHS should be entropyRate₂, not entropyRate)
 @residual(wall:lz78-converse-aseventual) -/
 theorem lz78GreedyImpl_converse_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
-      entropyRate μ p.toStationaryProcess
+      entropyRate₂ μ p.toStationaryProcess
       ≤ Filter.liminf
           (fun n =>
             (lz78GreedyImplEncodingLength n
@@ -400,15 +379,21 @@ a.s. form**.
 
 For a stationary ergodic source `p` the per-symbol length of the genuine
 longest-prefix-match greedy LZ78 parse is, almost surely, asymptotically at
-most the entropy rate:
+most the bit entropy rate:
 
 ```
-limsup_n (1/n) · lz78GreedyImplEncodingLength(X^n) ≤ entropyRate μ p   a.s.
+limsup_n (1/n) · lz78GreedyImplEncodingLength(X^n) ≤ entropyRate₂ μ p   a.s.
 ```
 
 This is the achievability (upper-bound) half of LZ78 asymptotic
 optimality, i.e. the a.s.-eventual Ziv inequality
 `limsup (c·log₂ c / n) ≤ H₂` combined with the SMB upper bound.
+
+Units: the encoding length is a base-2 code length (`bitLength` uses
+`Nat.log 2`), so the per-symbol rate `lz/n` is in **bits** and the correct
+RHS is the **bit** entropy rate `entropyRate₂ = entropyRate / Real.log 2`,
+the unit-correction documented in `ZivEntropyBridge.lean` ("Base-2 (bit)
+layer") and `McMillanKraftBridge.lean`.
 
 After the 2026-06-20 def-fix (`lz78GreedyImplEncodingLength` now charges
 `c · bitLength c |α|` against the genuine distinct phrase count
@@ -416,46 +401,22 @@ After the 2026-06-20 def-fix (`lz78GreedyImplEncodingLength` now charges
 proposition** carrying real Ziv content. The genuine combinatorial core
 (`c · log c ≤ K · n` and `c = O(n / log n)`) is already established
 (`lz78PhraseStrings_mul_log_le` / `lz78PhraseStrings_count_isBigO`); what
-remains is the connection to `entropyRate`, which needs M3 (the
+remains is the connection to `entropyRate₂`, which needs M3 (the
 variable-depth tree-node AEP for the LZ78 dictionary tree). This is a
 research-level ergodic wall, absent from both the codebase and Mathlib (see
 `docs/shannon/lz78-completion-roadmap.md`, M3).
 
-Independent honesty audit 2026-06-20 (post `5d08566` def-fix): genuine residual,
-not the prior degenerate defect. With the genuine longest-prefix def the rate is
-`O(1)` (the Ziv `c·log c ≤ K·n` combinatorial core is established sorryAx-free), so
-the achievability `limsup ≤ entropyRate` is genuine and non-vacuous on both a
-uniform i.i.d. source and the degenerate `entropyRate = 0` boundary. Signature
-takes only source data, no load-bearing hypothesis; wall slug verified (M3
-variable-depth tree-node AEP, roadmap-confirmed research-level, loogle Found 0).
+This statement is TRUE-as-framed against the bit target `entropyRate₂` (the
+prior audit's units defect — false on a uniform i.i.d. source when stated
+against the nat-unit `entropyRate` — is resolved by the bit RHS). On a
+uniform i.i.d. source on A symbols the LZ78-optimal bit-rate limit is
+`log₂ A = entropyRate / Real.log 2 = entropyRate₂` exactly, so
+`limsup ≤ entropyRate₂` holds with equality in the limit (A=2: `1 ≤ 1`); on
+the degenerate `entropyRate = 0` boundary it reads `limsup ≤ 0` with
+`entropyRate₂ = 0`, again genuine. The remaining `sorry` carries exactly the
+M3 ergodic wall content (variable-depth tree-node AEP), not a units error.
+Signature takes only source data, no load-bearing hypothesis.
 
-NOTE — the prior audit confirmed "non-vacuous" but did NOT compute the value on a
-uniform i.i.d. source; this statement is in fact FALSE there. See the units-defect
-note below.
-
-@audit:defect(false-statement)
-SECOND INDEPENDENT AUDIT 2026-06-20 (units defect, overturns the prior audit):
-this signature is UNITS-INCONSISTENT and is FALSE on a uniform i.i.d. source. The
-rate `lz78GreedyImplEncodingLength/n` is in BITS (`bitLength` uses `Nat.log 2`,
-base-2 code length), so `limsup rate = H₂ = entropyRate / Real.log 2` (bit entropy
-rate). But `entropyRate` is in NATS (`entropy = ∑ Real.negMulLog`, natural log;
-Mathlib `negMulLog x = -x·log x`). For a uniform i.i.d. source on A = `|α|` symbols
-(each symbol prob `1/A`): `entropyRate = log A` (nat) and the LZ78-optimal limit
-`limsup rate = log₂ A = log A / log 2 ≈ 1.443·log A` (bit). Concrete A=2:
-`limsup rate = log₂ 2 = 1`, `entropyRate = log 2 ≈ 0.693`. The claimed
-`limsup ≤ entropyRate` is `1 ≤ 0.693` = **FALSE** (since `log₂ A > log A` for A ≥ 2,
-i.e. `1/log 2 ≈ 1.443 > 1`). The correct RHS is `entropyRate₂ = entropyRate /
-Real.log 2` (bit), exactly as `ZivEntropyBridge.lean:245-261` ("Base-2 (bit) layer —
-unit correction for the LZ78 headline") and `McMillanKraftBridge.lean:204` (converse
-target stated against `blockLogAvg₂`) already document. This is the
-load-bearing-direction half: the headline squeeze inherits this false bound. FIX:
-re-state achievability (+ converse + headline + the base combinator's `entropyRate`
-slots) against `entropyRate₂`. The M3 wall content (variable-depth tree-node AEP) is
-unaffected — only the unit of the RHS is wrong. Signature still in defect form
-(provisional marker awaiting def-fix owner); first choice (def-fix to `entropyRate₂`)
-deferred for the same blast-radius reason as the converse half (`entropyRate₂` is not
-yet a `def`). Successor: `docs/shannon/lz78-completion-roadmap.md` (units correction).
-@audit:retract-candidate(units-mismatch-bit-vs-nat: RHS should be entropyRate₂, not entropyRate)
 @residual(wall:lz78-aseventual-ziv) -/
 theorem lz78GreedyImpl_achievability_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -467,7 +428,7 @@ theorem lz78GreedyImpl_achievability_ae
               (p.toStationaryProcess.blockRV n ω) : ℝ)
             / (n : ℝ))
         Filter.atTop
-      ≤ entropyRate μ p.toStationaryProcess := by
+      ≤ entropyRate₂ μ p.toStationaryProcess := by
   sorry
 
 /-- **LZ78 asymptotic optimality with the genuine greedy parsing
@@ -476,18 +437,29 @@ implementation (Cover–Thomas Theorem 13.5.3)**.
 For a stationary ergodic source `p : ErgodicProcess μ α` on a finite
 alphabet `α`, the per-symbol output length of the genuine
 longest-prefix-match greedy LZ78 parse converges almost surely to the
-entropy rate:
+**bit** entropy rate:
 
 ```
-lim_{n → ∞} (1/n) · lz78GreedyImplEncodingLength(X^n) = entropyRate μ p   a.s.
+lim_{n → ∞} (1/n) · lz78GreedyImplEncodingLength(X^n) = entropyRate₂ μ p   a.s.
 ```
+
+Units: the encoding length is a base-2 code length
+(`lz78GreedyImplEncodingLength = c · bitLength c |α|`, `bitLength` uses
+`Nat.log 2`), so the per-symbol rate is in **bits** and the convergence
+target is the **bit** entropy rate `entropyRate₂ = entropyRate / Real.log 2`
+(not the nat-unit `entropyRate`). This is the unit-correction documented in
+`ZivEntropyBridge.lean` ("Base-2 (bit) layer — unit correction for the LZ78
+headline"). On a uniform i.i.d. source on A symbols the bit-rate limit is
+`log₂ A = entropyRate₂` exactly (e.g. A=2: `rate → 1`), which is what the
+two TRUE-as-framed halves squeeze to.
 
 This is the LZ78 optimality headline. The two halves of the sandwich —
 the converse lower bound and the Ziv achievability upper bound — are
 supplied internally by `lz78GreedyImpl_converse_ae` and
-`lz78GreedyImpl_achievability_ae`. The a.s. convergence is assembled via
-the generic combinator `lz78_asymptotic_optimality` (the genuine
-`tendsto_of_le_liminf_of_limsup_le` squeeze).
+`lz78GreedyImpl_achievability_ae`, both now stated against the bit target
+`entropyRate₂`. The a.s. convergence is assembled via the generic
+combinator `lz78_asymptotic_optimality` instantiated at `L = entropyRate₂`
+(the genuine `tendsto_of_le_liminf_of_limsup_le` squeeze).
 
 After the 2026-06-20 def-fix (`lz78GreedyImplEncodingLength` now charges
 `c · bitLength c |α|` against the genuine distinct phrase count of the
@@ -500,51 +472,31 @@ longer a parameter**: it is supplied internally — even the `a.e.` envelope is
 unnecessary since the bound holds for every `ω` and every `n`. The two input
 halves remain genuine research-level walls (M3 / M4); see their docstrings.
 
-Independent honesty audit 2026-06-20 (post boundedness discharge): type-check
-done, honest (not proof done). The headline now takes only the source data
-(`μ`, `p`) — no `h_bdd_above` precondition. Both `IsBoundedUnder` witnesses
-(`(·≤·)` above and `(·≥·)` below) are constructed deterministically inside the
-body from `lz78_impl_rate_le_const` / `lz78_impl_encoding_length_per_symbol_nonneg`,
-so the squeeze `tendsto_of_le_liminf_of_limsup_le` is applied with all of its
+Units defect resolution 2026-06-20: an earlier units-mismatch defect (the
+convergence target was the nat-unit `entropyRate` while the bit-rate `lz/n`
+converges to the bit entropy rate, making the achievability half — and hence
+this headline — FALSE on a uniform i.i.d. source) is now resolved by stating
+the target against `entropyRate₂ = entropyRate / Real.log 2` (bit). With the
+bit target the headline is a **TRUE-as-framed proposition**: on a uniform
+i.i.d. source on A symbols the bit-rate limit is `log₂ A = entropyRate₂`
+exactly (A=2: `entropyRate₂ = log₂ 2 = 1`, so the two halves squeeze
+`rate → 1`, the genuine LZ78-optimal bit rate); on the degenerate
+`entropyRate = 0` boundary the target is `entropyRate₂ = 0` and the squeeze
+reads `rate → 0`, again genuine. Both halves
+(`lz78GreedyImpl_converse_ae` / `lz78GreedyImpl_achievability_ae`) are stated
+against `entropyRate₂`, and the base combinator `lz78_asymptotic_optimality`
+is instantiated at `L = entropyRate₂`.
+
+Type-check done, honest (not proof done). The headline takes only the source
+data (`μ`, `p`) — no `h_bdd_above` precondition. Both `IsBoundedUnder`
+witnesses (`(·≤·)` above and `(·≥·)` below) are constructed deterministically
+inside the body from `lz78_impl_rate_le_const` /
+`lz78_impl_encoding_length_per_symbol_nonneg` (both unit-agnostic: they bound
+the bit-rate `lz/n` itself, so they are unaffected by the choice of `L`), so
+the squeeze `tendsto_of_le_liminf_of_limsup_le` is applied with all of its
 regularity inputs genuine. The remaining `sorryAx` is carried exactly via the
 two M3/M4 walls (`lz78GreedyImpl_converse_ae` / `lz78GreedyImpl_achievability_ae`,
-machine-verified); the boundedness discharge introduces no new `sorry`.
-
-Independent auditor confirmation 2026-06-20 (commit `a1ae108`, fresh subagent):
-the `h_bdd_above` discharge is genuine, NOT vacuous/degenerate. The witness
-constant `C = (1 + 8·log(|α|+1)/log 2) + (log₂|α| + 2)` is a finite real and the
-bound `rate ≤ C` holds for every `ω` and every `n` (forall, not a.e.) via the
-sorryAx-free `lz78_impl_rate_le_const` (`#print axioms`
-= `[propext, Classical.choice, Quot.sound]`), whose only nontrivial input is the
-sorryAx-free Ziv core `lz78PhraseStrings_mul_log_le` plus `c ≤ n`. The bridge
-`lz78_impl_natLog_mul_log_two_le` is unconditionally true (both sides degenerate
-to 0 at `m ∈ {0,1}`; `Real.natLog_le_logb` has no precondition) — sorryAx-free.
-Four honesty checks PASS (non-circular: genuine forward to
-`lz78_asymptotic_optimality`, no identity-wrap; non-bundled: removed precondition,
-core stays in the two walls; non-degenerate: `C` finite, `n=0`/`|α|=1`/`c∈{0,1}`
-boundaries verified; sufficiency: rate bound machine-true, no counterexample).
-Headline `#print axioms` carries `sorryAx` exactly via the two walls — verdict
-`honest_residual` (tier 2).
-
-@audit:defect(false-statement)
-SECOND INDEPENDENT AUDIT 2026-06-20 — the `honest_residual` verdict above is
-OVERTURNED. The prior audit's sufficiency check looked only at the boundedness
-discharge (`h_bdd_above`), not at the convergence TARGET. The convergence target
-`𝓝 (entropyRate μ p)` is in the WRONG UNIT: the rate `lz/n` is bit/symbol (`bitLength`
-uses `Nat.log 2`, base-2), but `entropyRate` is nat (`entropy = ∑ Real.negMulLog`,
-natural log). For a uniform i.i.d. source on A symbols the true limit is
-`limsup rate = log₂ A = entropyRate / Real.log 2` (e.g. A=2: rate → 1 bit), NOT
-`entropyRate = log A ≈ 0.693`. The headline forces convergence to `entropyRate` (nat)
-by squeezing via the two halves; since the achievability half `limsup ≤ entropyRate`
-is FALSE (`1 ≤ 0.693`), the headline statement is FALSE on a uniform i.i.d. source.
-The boundedness discharge is genuine and unaffected — the defect is purely the
-unit of the convergence target. FIX: change the `𝓝 (entropyRate …)` target to
-`𝓝 (entropyRate₂ …)` (bit) and re-state the base combinator `lz78_asymptotic_optimality`
-(`LZ78/Basic.lean:234`) `entropyRate` slots accordingly. See
-`ZivEntropyBridge.lean:245-261` for the documented unit-correction intent
-(`entropyRate₂ = entropyRate / Real.log 2`, not yet a `def`). Signature still in
-defect form (provisional marker).
-@audit:retract-candidate(units-mismatch-bit-vs-nat: convergence target should be entropyRate₂, not entropyRate) -/
+machine-verified); the boundedness discharge introduces no new `sorry`. -/
 @[entry_point]
 theorem lz78_asymptotic_optimality_with_greedy_impl
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -555,7 +507,7 @@ theorem lz78_asymptotic_optimality_with_greedy_impl
           (lz78GreedyImplEncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
             / (n : ℝ))
         Filter.atTop
-        (𝓝 (entropyRate μ p.toStationaryProcess)) := by
+        (𝓝 (entropyRate₂ μ p.toStationaryProcess)) := by
   have h_bdd_above : ∀ᵐ ω ∂μ,
       Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
         (fun n =>
@@ -577,6 +529,7 @@ theorem lz78_asymptotic_optimality_with_greedy_impl
     exact Filter.isBoundedUnder_of
       ⟨0, fun n => lz78_impl_encoding_length_per_symbol_nonneg n _⟩
   exact lz78_asymptotic_optimality μ p (@lz78GreedyImplEncodingLength α _ _)
+    (entropyRate₂ μ p.toStationaryProcess)
     (lz78GreedyImpl_converse_ae μ p)
     (lz78GreedyImpl_achievability_ae μ p)
     h_bdd_above h_bdd_below

@@ -214,29 +214,36 @@ rates** (the LZ78-flavored wrapper of `tendsto_of_le_liminf_of_limsup_le`).
 
 This is **NOT** the LZ78 asymptotic-optimality claim itself. It is a
 generic combinator: given *any* encoding-length function
-`lz78EncodingLength` and a two-sided a.s. sandwich on its per-symbol rate
-(`entropyRate ≤ liminf` and `limsup ≤ entropyRate`, plus a.s.
-boundedness), it derives a.s. convergence of `lz/n` to `entropyRate` via
+`lz78EncodingLength`, *any* limit value `L : ℝ`, and a two-sided a.s.
+sandwich on the per-symbol rate (`L ≤ liminf` and `limsup ≤ L`, plus a.s.
+boundedness), it derives a.s. convergence of `lz/n` to `L` via
 `tendsto_of_le_liminf_of_limsup_le` (a 1-step squeeze). The hypotheses
 `h_lower` / `h_upper` are **generic caller-supplied arguments**, not a
-claim that any particular encoding achieves the entropy rate — the caller
-is responsible for supplying them (for the concrete greedy LZ78 parser
-that supply is the genuine M3/M4 scope-out content, carried as `sorry +
-@residual` in `lz78_asymptotic_optimality_with_greedy_impl`).
+claim that any particular encoding achieves any particular limit — the
+caller is responsible for supplying them (for the concrete greedy LZ78
+parser, with `L = entropyRate₂` the bit-rate target, that supply is the
+genuine M3/M4 scope-out content, carried as `sorry + @residual` in
+`lz78_asymptotic_optimality_with_greedy_impl`).
+
+The limit `L` is a generic parameter (not hard-wired to `entropyRate`):
+the worst-case forwarder `lz78_asymptotic_optimality_with_greedy_encoding`
+instantiates it with the nat-unit `entropyRate`, while the genuine
+bit-rate headline `lz78_asymptotic_optimality_with_greedy_impl`
+instantiates it with the bit-unit `entropyRate₂`.
 
 The body is a genuine application of the Mathlib squeeze, not an identity
-wrap of the conclusion (the sandwich bounds relate `lz/n` to
-`entropyRate` via `≤`, distinct from the `Tendsto … (𝓝 entropyRate)`
-conclusion). The chain-level / final-glue forms
-(`lz78_two_sided_optimality_ergodic`, `LZ78FinalGlue.lean`) referenced by
-earlier docstrings were deleted in the M3/M4 scope-out cleanup and no
-longer exist. -/
+wrap of the conclusion (the sandwich bounds relate `lz/n` to `L` via `≤`,
+distinct from the `Tendsto … (𝓝 L)` conclusion). The chain-level /
+final-glue forms (`lz78_two_sided_optimality_ergodic`,
+`LZ78FinalGlue.lean`) referenced by earlier docstrings were deleted in the
+M3/M4 scope-out cleanup and no longer exist. -/
 theorem lz78_asymptotic_optimality
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
     (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
+    (L : ℝ)
     (h_lower : ∀ᵐ ω ∂μ,
-        entropyRate μ p.toStationaryProcess
+        L
         ≤ Filter.liminf
             (fun n =>
               (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
@@ -248,7 +255,7 @@ theorem lz78_asymptotic_optimality
             (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
               / (n : ℝ))
           Filter.atTop
-        ≤ entropyRate μ p.toStationaryProcess)
+        ≤ L)
     (h_bdd_above : ∀ᵐ ω ∂μ,
         Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
           (fun n =>
@@ -265,7 +272,7 @@ theorem lz78_asymptotic_optimality
           (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
             / (n : ℝ))
         Filter.atTop
-        (𝓝 (entropyRate μ p.toStationaryProcess)) := by
+        (𝓝 L) := by
   filter_upwards [h_lower, h_upper, h_bdd_above, h_bdd_below]
     with ω hl hu hba hbb
   exact tendsto_of_le_liminf_of_limsup_le hl hu hba hbb
@@ -315,6 +322,7 @@ theorem lz78_asymptotic_optimality_two_sided
         Filter.atTop
         (𝓝 (entropyRate μ p.toStationaryProcess)) :=
   lz78_asymptotic_optimality μ p lz78EncodingLength
+    (entropyRate μ p.toStationaryProcess)
     h_lower h_upper h_bdd_above h_bdd_below
 
 omit [DecidableEq α] in

@@ -67,6 +67,15 @@ proven by `entropyRate_exists_of_stationary`. -/
 noncomputable def entropyRate (μ : Measure Ω) (p : StationaryProcess μ α) : ℝ :=
   Filter.atTop.limUnder (fun n : ℕ => blockEntropy μ p n / n)
 
+/-- **Base-2 (bit) entropy rate**: the natural-log `entropyRate` divided by
+`Real.log 2`, i.e. the entropy rate measured in bits/symbol. This is the
+target the LZ78 bit-rate `lz78GreedyImplEncodingLength/n` converges to (the
+LZ78 encoding length uses `LZ78Phrase.bitLength = Nat.log 2 …`, a base-2 code
+length, so its per-symbol rate is in bits, whereas `entropyRate` is in nats). -/
+@[entry_point]
+noncomputable def entropyRate₂ (μ : Measure Ω) (p : StationaryProcess μ α) : ℝ :=
+  entropyRate μ p / Real.log 2
+
 /-! ## Chain rule
 
 `H_{n+1} = H_n + H(X_n | X_{<n})`, the engine of the existence proof.

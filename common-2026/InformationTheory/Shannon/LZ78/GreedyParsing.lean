@@ -502,7 +502,16 @@ caller-supplied generic arguments. The body is a genuine application of
 LZ78-optimality headline with the discharged sandwich lives in
 `lz78_asymptotic_optimality_with_greedy_impl` (for the genuine greedy
 parser), where the two load-bearing halves are carried as
-`sorry + @residual`. -/
+`sorry + @residual`.
+
+NOTE on units: this forwarder keeps the nat-unit `entropyRate` target only
+because its `h_lower` / `h_upper` are caller-supplied generic arguments
+(the worst-case one-symbol parse has `rate → ∞`, so `h_upper` is
+unsatisfiable = vacuous and the statement stays TRUE). When an actual
+bit-code LZ78 sandwich is to be discharged, the correct convergence target
+is the bit entropy rate `entropyRate₂ = entropyRate / Real.log 2` (the
+greedy bit-rate `lz/n` is in bits), as in
+`lz78_asymptotic_optimality_with_greedy_impl`. -/
 @[entry_point]
 theorem lz78_asymptotic_optimality_with_greedy_encoding
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -544,6 +553,7 @@ theorem lz78_asymptotic_optimality_with_greedy_encoding
         (𝓝 (entropyRate μ p.toStationaryProcess)) := by
   classical
   exact lz78_asymptotic_optimality μ p (@lz78GreedyEncodingLength α _)
+    (entropyRate μ p.toStationaryProcess)
     h_lower h_upper h_bdd_above h_bdd_below
 
 end ParentCompat
