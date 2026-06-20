@@ -143,6 +143,23 @@ This is the input to the downstream "divide by `n`, limsup, diagonalize `k → �
 step: divide by `n`, the overhead is `o(n)` (mean length `~ log n`, `c = O(n/log n)`),
 and the boundary terms vanish.
 
+Independent honesty audit (2026-06-21, commit `65afc03`): verdict honest_residual
+(tier 2). Four checks PASS — (1) non-circular (body `filter_upwards … sorry` for
+sub-step (B), conclusion ≠ any hypothesis); (2) non-bundled (signature is `(μ, p, k, n)`
++ `[IsProbabilityMeasure μ]` regularity only, no `*Hypothesis`/`*Reduction` predicate —
+the proof core flows from the two sorryAx-free upstream bricks `negLogQk_parse_threading`
++ `condState_grouping_bound_mean`, not from a hypothesis); (3) non-degenerate (genuine
+inequality; `c = 0` boundary stays alive `0 ≤ negLogQk` and honest); (4) sufficiency
+TRUE-as-framed — the conclusion follows once (B) is discharged, and (B) is a genuine
+content/reindex bridge (position-indexed `condQkState (windowState …) (…) (fun m =>
+p.obs …)` ↦ string-indexed `condQkState (st w) |w| (toFinVec |w| w)` over the
+distinct-phrase `Finset`, with `c = #phrases` from `lz78PhraseStrings_nodup` and
+`Ntot = ∑_{w} |w|`), not a hidden false claim. Wall classification `wall:lz78-aseventual-ziv`
+confirmed: the content-correspondence bridge is genuinely ABSENT in-tree (only `toFinVec`
+length-fiber injection + flatten reconstruction exist, no position↔string content lemma)
+and is part of the same M3 variable-depth length-grouping AEP; consistent with the sibling
+`ziv_aseventual_le_blockLogAvg₂`, not a mis-slug.
+
 @residual(wall:lz78-aseventual-ziv) -/
 theorem ziv_achievability_composition
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (k n : ℕ) :
