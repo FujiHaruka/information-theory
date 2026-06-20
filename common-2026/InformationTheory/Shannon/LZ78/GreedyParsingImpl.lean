@@ -3,6 +3,7 @@ import InformationTheory.Shannon.LZ78.Basic
 import InformationTheory.Shannon.LZ78.GreedyParsing
 import InformationTheory.Shannon.LZ78.GreedyLongestPrefix
 import InformationTheory.Shannon.LZ78.ZivCountingBody
+import InformationTheory.Shannon.LZ78.ZivAchievabilityComposition
 import InformationTheory.Shannon.SMB.AlgoetCover.Liminf
 import Mathlib.Data.Nat.Log
 import Mathlib.Data.List.Basic
@@ -526,6 +527,51 @@ theorem shannon_mcmillan_breiman₂
   have := hω.div_const (Real.log 2)
   simpa only [blockLogAvg₂, entropyRate₂] using this
 
+/-- **Lemma 1 (core)**: for each fixed `k`, the a.s.-eventual limsup of the
+greedy bit-rate is at most the `k`-th conditional tail entropy in bits.
+
+This is the per-`k` Ziv bound: combining the achievability composition
+`ziv_achievability_composition` (the `c·log c ≤ negLogQk + o(n)` brick) with
+the AEP `negLogQk_div_tendsto_condEntropyTail` and the deterministic
+overhead-vanishing `c = O(n/log n)`, the per-symbol greedy rate is dominated
+by `negLogQk/(log 2 · n) → H_k/log 2`. -/
+theorem ziv_aseventual_le_condEntropyTail_bits
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) (k : ℕ) :
+    ∀ᵐ ω ∂μ,
+      Filter.limsup
+        (fun n => (lz78GreedyImplEncodingLength n
+            (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ))
+        Filter.atTop
+      ≤ conditionalEntropyTail μ p.toStationaryProcess k / Real.log 2 := by
+  sorry
+
+/-- **Lemma 2 (diagonalization = inf over `k`)**: the a.s.-eventual limsup of
+the greedy bit-rate is at most the bit entropy rate.
+
+From Lemma 1 (`ziv_aseventual_le_condEntropyTail_bits`) for all `k`
+(countable intersection) plus the limit `conditionalEntropyTail → entropyRate`
+(`entropyRate_eq_lim_condEntropy`), rescaled by `/Real.log 2`. The LHS is a
+`k`-independent constant, so `le_of_tendsto` closes it. -/
+theorem ziv_aseventual_le_entropyRate₂
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
+    ∀ᵐ ω ∂μ,
+      Filter.limsup
+        (fun n => (lz78GreedyImplEncodingLength n
+            (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ))
+        Filter.atTop
+      ≤ entropyRate₂ μ p.toStationaryProcess := by
+  filter_upwards
+    [(MeasureTheory.ae_all_iff.2
+        (fun k => ziv_aseventual_le_condEntropyTail_bits μ p k))] with ω hω
+  -- `hω : ∀ k, limsup (lz/n) ≤ conditionalEntropyTail μ p k / log 2`.
+  have h_tend : Filter.Tendsto
+      (fun k => conditionalEntropyTail μ p.toStationaryProcess k / Real.log 2)
+      Filter.atTop (𝓝 (entropyRate₂ μ p.toStationaryProcess)) := by
+    have h := (entropyRate_eq_lim_condEntropy μ p.toStationaryProcess).div_const
+      (Real.log 2)
+    simpa only [entropyRate₂] using h
+  exact ge_of_tendsto h_tend (Filter.Eventually.of_forall hω)
+
 /-- **a.s.-eventual Ziv comparison**: the limsup of the greedy bit-rate is at
 most the limsup of `blockLogAvg₂`.
 
@@ -563,7 +609,10 @@ theorem ziv_aseventual_le_blockLogAvg₂
         Filter.atTop
       ≤ Filter.limsup
           (fun n => blockLogAvg₂ μ p.toStationaryProcess n ω) Filter.atTop := by
-  sorry
+  filter_upwards [ziv_aseventual_le_entropyRate₂ μ p, shannon_mcmillan_breiman₂ μ p]
+    with ω h_ziv h_smb
+  rw [h_smb.limsup_eq]
+  exact h_ziv
 
 /-- **Ziv-inequality achievability upper bound for the genuine greedy
 parser (Cover–Thomas Lemma 13.5.5 / Theorem 13.5.3 upper-bound half),
