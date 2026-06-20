@@ -568,13 +568,10 @@ theorem klDiv_perLetter_eq_capacity
       (Filter.Eventually.of_forall hfib_ac)
   -- **Per-fibre KL finiteness + closed form** (`gaussianReal x N ≪ gaussianReal 0 (P'+N)`,
   -- both with integrable llr): `klDiv (κ x) μY ≠ ⊤`.
-  have hfib_int : ∀ x : ℝ, Integrable (llr (κ x) μY) (κ x) := by
-    intro x
-    rw [hκ_apply, hμY_def]
-    exact gaussianReal_llr_integrable x 0 hN_nn hPN_ne
-  have hfib_ne_top : ∀ x : ℝ, klDiv (κ x) μY ≠ ⊤ := by
-    intro x
-    exact klDiv_ne_top (hfib_ac x |>.trans (by rw [Kernel.const_apply])) (hfib_int x)
+  have hfib_int : ∀ x : ℝ, Integrable (llr (κ x) μY) (κ x) := fun x => by
+    rw [hκ_apply, hμY_def]; exact gaussianReal_llr_integrable x 0 hN_nn hPN_ne
+  have hfib_ne_top : ∀ x : ℝ, klDiv (κ x) μY ≠ ⊤ := fun x =>
+    klDiv_ne_top (hfib_ac x |>.trans (by rw [Kernel.const_apply])) (hfib_int x)
   -- **Joint KL finiteness via the lintegral form** (`klDiv_compProd_lintegral`): the integral
   -- of the per-fibre KL (a quadratic in `x`) against the Gaussian `μX` is finite.
   have hjoint_lint : klDiv (μX ⊗ₘ κ) (μX ⊗ₘ (Kernel.const ℝ μY))
@@ -629,10 +626,8 @@ theorem klDiv_perLetter_eq_capacity
   --   + x²/(P'+N) - 1)`.
   have hfib_kl : ∀ x : ℝ, (klDiv (κ x) μY).toReal
       = (1/2) * (Real.log ((P' + N : ℝ≥0) / N) + (N : ℝ) / (P' + N : ℝ≥0)
-                  + x ^ 2 / (P' + N : ℝ≥0) - 1) := by
-    intro x
-    rw [hκ_apply, hμY_def]
-    exact perFibre_klDiv_toReal_quadratic P' N hN_nn hPN_ne x
+                  + x ^ 2 / (P' + N : ℝ≥0) - 1) := fun x => by
+    have := hfib_klDiv_real x; rwa [Kernel.const_apply] at this
   simp only [hfib_kl]
   -- integrate the per-fibre closed form over `μX` (mean 0, variance `P'`).
   exact integral_perFibre_klDiv_quadratic_eq_capacity P P' N hP'_coe hN_nn hPN_ne
@@ -1119,6 +1114,55 @@ theorem awgn_changeOfMeasure_pi_mass_le {P' N : ℝ≥0} (hP'_ne : P' ≠ 0) (hN
               mul_le_mul_right prob_le_one _
           _ = ENNReal.ofReal (Real.exp _) := mul_one _
 
+private theorem awgn_continuousAep_productMass_bound (P : ℝ) (N : ℝ≥0)
+    (hP_ne : P.toNNReal ≠ 0) (hN_ne : N ≠ 0)
+    (n : ℕ) (hn0 : 0 < n) {δ : ℝ} (hδ : 0 < δ)
+    (J₁ Q₁ : Measure (ℝ × ℝ)) [IsProbabilityMeasure J₁] [IsProbabilityMeasure Q₁]
+    (hJ₁_def : J₁ = ((gaussianReal 0 P.toNNReal).prod (gaussianReal 0 N)).map
+      (fun p => (p.1, p.1 + p.2)))
+    (hQ₁_def : Q₁ = (gaussianReal 0 P.toNNReal).prod (gaussianReal 0 (P.toNNReal + N)))
+    (φ : ℝ × ℝ → ℝ) (hφ_def : φ = fun p => Real.log ((J₁.rnDeriv Q₁ p).toReal))
+    (e : (Fin n → ℝ × ℝ) ≃ᵐ (Fin n → ℝ) × (Fin n → ℝ))
+    (he_def : e = MeasurableEquiv.arrowProdEquivProdArrow ℝ ℝ (Fin n))
+    (B : Set (Fin n → ℝ × ℝ))
+    (hB_def : B = {w : Fin n → ℝ × ℝ | |(∑ i, φ (w i)) / (n : ℝ) - J₁[φ]| < δ})
+    (hB_meas : MeasurableSet B) :
+    ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+        (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N)))) (e.symm ⁻¹' B)
+      ≤ ENNReal.ofReal (Real.exp (-(
+          (klDiv
+              (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+                  (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
+                (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i)))
+              ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+                (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))))).toReal
+            - (n : ℝ) * (3 * δ)))) := by
+  -- the n-fold KL `.toReal` is `n · (klDiv J₁ Q₁).toReal`.
+  have hkl_n : (klDiv
+          (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+              (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
+            (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i)))
+          ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+            (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))))).toReal
+      = (n : ℝ) * (klDiv J₁ Q₁).toReal := by
+    rw [hJ₁_def, hQ₁_def]; exact klDiv_nFold_eq_nsmul P N
+  -- reshape the signature's product law to `(Measure.pi Q₁).map e`.
+  have hQ_eq :
+      (Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
+          (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N)))
+        = (Measure.pi (fun _ : Fin n => Q₁)).map e := by
+    have hmp := measurePreserving_arrowProdEquivProdArrow ℝ ℝ (Fin n)
+      (fun _ : Fin n => gaussianReal 0 P.toNNReal)
+      (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))
+    rw [hQ₁_def, he_def, ← hmp.map_eq]
+  -- rewrite the exponent (klDiv) first, then reshape the product-law application.
+  rw [hkl_n, hQ_eq, Measure.map_apply e.measurable (e.symm.measurable hB_meas)]
+  have he_preim : e ⁻¹' (e.symm ⁻¹' B) = B := by
+    ext w; simp [Set.mem_preimage, MeasurableEquiv.symm_apply_apply]
+  rw [he_preim]
+  exact awgn_changeOfMeasure_pi_mass_le hP_ne hN_ne n hn0 hδ J₁ Q₁ hJ₁_def hQ₁_def φ hφ_def
+    B hB_def
+
 /-- Continuous AEP for the `n`-dimensional Gaussian.
 
 Given `P : ℝ`, `N : ℝ≥0`, a typicality slack `δ > 0`, and an error tolerance `ε > 0`
@@ -1255,42 +1299,11 @@ theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
       ext w; simp [Set.mem_preimage, MeasurableEquiv.symm_apply_apply]
     rw [he_preim]
     exact hN₀ (le_of_max_le_left hn)
-  · -- (iii) product mass `≤ exp(−(klDiv_n − n·3δ))` via change of measure.
-    -- **Reduction wiring (sorryAx-free):** the n-letter KL exponent is normalized to
-    -- `n·(klDiv J₁ Q₁).toReal` via the shared `klDiv_nFold_eq_nsmul`, and the signature's
-    -- product law `Q_n (e.symm ⁻¹' B)` is reshaped to `(Measure.pi Q₁) B` exactly as the
-    -- joint identity `hJ_eq` (Q side has no inner map). The remaining **change-of-measure
-    -- core** (the n-fold RN-derivative tensorization `d(pi Q₁)/d(pi J₁) =ᵐ exp(−∑φ)`, then
-    -- `(pi Q₁) B = ∫_B exp(−∑φ) d(pi J₁) ≤ exp(−n(J₁[φ]−δ))`) is the genuine Mathlib-absent
-    -- atom (loogle `rnDeriv (pi _) (pi _)` → Found 0 in all forms; G-2 of
-    -- `awgn-deep-atoms-bridge1-kldiv-inventory.md`), isolated below.
-    -- the n-fold KL `.toReal` is `n · (klDiv J₁ Q₁).toReal`.
-    have hkl_n : (klDiv
-            (((Measure.pi (fun _ : Fin n => μX)).prod (Measure.pi (fun _ : Fin n => μZ))).map
-              (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i)))
-            ((Measure.pi (fun _ : Fin n => μX)).prod
-              (Measure.pi (fun _ : Fin n => μY)))).toReal
-        = (n : ℝ) * (klDiv J₁ Q₁).toReal := by
-      rw [hμX_def, hμZ_def, hμY_def, hJ₁_def, hQ₁_def, hμX_def, hμY_def]
-      exact klDiv_nFold_eq_nsmul P N
-    -- reshape the signature's product law to `(Measure.pi Q₁).map e`.
-    have hQ_eq :
-        (Measure.pi (fun _ : Fin n => μX)).prod (Measure.pi (fun _ : Fin n => μY))
-          = (Measure.pi (fun _ : Fin n => Q₁)).map e := by
-      have hmp := measurePreserving_arrowProdEquivProdArrow ℝ ℝ (Fin n)
-        (fun _ : Fin n => μX) (fun _ : Fin n => μY)
-      rw [hQ₁_def, he_def, ← hmp.map_eq]
-    -- rewrite the exponent (klDiv) first, then reshape the product-law application.
-    rw [hkl_n, hQ_eq, Measure.map_apply e.measurable (e.symm.measurable hB_meas)]
-    have he_preim : e ⁻¹' (e.symm ⁻¹' B) = B := by
-      ext w; simp [Set.mem_preimage, MeasurableEquiv.symm_apply_apply]
-    rw [he_preim]
-    -- **Change-of-measure core** (`awgn_changeOfMeasure_pi_mass_le`, G-2 via `pi_withDensity`):
-    -- `Q₁ ≪ J₁`, so `pi Q₁ = (pi J₁).withDensity (∏ᵢ Q₁.rnDeriv J₁ (wᵢ))`; on `B` the
-    -- product density `= exp(−∑φ) ≤ exp(−n(J₁[φ]−δ))` with `J₁[φ] = (klDiv J₁ Q₁).toReal`,
-    -- giving `(pi Q₁) B ≤ exp(−(n·I − n·3δ))` since `δ ≤ 3δ`.
-    exact awgn_changeOfMeasure_pi_mass_le hP_ne hN_ne n hn0 hδ J₁ Q₁ hJ₁_def hQ₁_def φ hφ_def
-      B hB_def
+  · -- (iii) product mass `≤ exp(−(klDiv_n − n·3δ))` via change of measure: exponent
+    -- normalization (`klDiv_nFold_eq_nsmul`) + product-law reshape + the change-of-measure
+    -- core (`awgn_changeOfMeasure_pi_mass_le`), bundled in the helper below.
+    exact awgn_continuousAep_productMass_bound P N hP_ne hN_ne n hn0 hδ J₁ Q₁
+      hJ₁_def hQ₁_def φ hφ_def e he_def B hB_def hB_meas
 
 /-! ## Per-codeword power constraint -/
 
@@ -3308,6 +3321,80 @@ theorem awgnContinuousMIChainRule_holds
 
 /-! ### Markov factorization -/
 
+private theorem converseMarkov_marginalA
+    {N : ℝ≥0} {h_meas : IsAwgnChannelMeasurable N} {M n : ℕ} [NeZero M] {P : ℝ}
+    {c : AwgnCode M n P}
+    (Wg : Kernel (Fin M) (Fin n → ℝ))
+    (hWg_def : Wg = (ChannelCoding.Channel.toBlock (awgnChannel N h_meas) n).comap c.encoder
+      (Measurable.of_discrete))
+    (h_map_Xs : (converseJointInline h_meas c).map (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
+      = ((Fintype.card (Fin M) : ℝ≥0∞)⁻¹) • ∑ m : Fin M, (Measure.dirac m)) :
+    converseJointInline h_meas c
+      = ((converseJointInline h_meas c).map (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)) ⊗ₘ Wg := by
+  haveI : IsMarkovKernel Wg := by rw [hWg_def]; infer_instance
+  refine Measure.ext_of_lintegral _ fun f hf => ?_
+  rw [Measure.lintegral_compProd hf, h_map_Xs, lintegral_smul_measure,
+    lintegral_finsetSum_measure]
+  have hRHS_summand : ∀ m : Fin M,
+      ∫⁻ a : Fin M, ∫⁻ y : Fin n → ℝ, f (a, y) ∂(Wg a) ∂(Measure.dirac m)
+        = ∫⁻ y : Fin n → ℝ, f (m, y)
+            ∂(Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))) := by
+    intro m
+    rw [lintegral_dirac, hWg_def]
+    rfl
+  simp_rw [hRHS_summand]
+  rw [converseJointInline, lintegral_smul_measure, lintegral_finsetSum_measure]
+  have hLHS_summand : ∀ m : Fin M,
+      ∫⁻ ω : Fin M × (Fin n → ℝ), f ω
+          ∂((Measure.dirac m).prod
+            (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))))
+        = ∫⁻ y : Fin n → ℝ, f (m, y)
+            ∂(Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))) := by
+    intro m
+    rw [lintegral_prod _ hf.aemeasurable, lintegral_dirac]
+  simp_rw [hLHS_summand]
+
+private theorem converseMarkov_pairLaw
+    {N : ℝ≥0} {h_meas : IsAwgnChannelMeasurable N} {M n : ℕ} [NeZero M] {P : ℝ}
+    {c : AwgnCode M n P}
+    (Zc : Fin M × (Fin n → ℝ) → (Fin n → ℝ)) (hZc_def : Zc = fun ω => c.encoder ω.1)
+    (hZc_meas : Measurable Zc)
+    (Yo : Fin M × (Fin n → ℝ) → (Fin n → ℝ)) (hYo_def : Yo = Prod.snd)
+    (hYo_meas : Measurable Yo)
+    (W : Kernel (Fin n → ℝ) (Fin n → ℝ))
+    (hW_def : W = ChannelCoding.Channel.toBlock (awgnChannel N h_meas) n)
+    (h_map_Zc : (converseJointInline h_meas c).map Zc
+      = ((Fintype.card (Fin M) : ℝ≥0∞)⁻¹) • ∑ m : Fin M, (Measure.dirac (c.encoder m))) :
+    (converseJointInline h_meas c).map (fun ω => (Zc ω, Yo ω))
+      = ((converseJointInline h_meas c).map Zc) ⊗ₘ W := by
+  haveI : IsMarkovKernel W := by rw [hW_def]; infer_instance
+  haveI : IsProbabilityMeasure ((converseJointInline h_meas c).map Zc) :=
+    Measure.isProbabilityMeasure_map hZc_meas.aemeasurable
+  refine Measure.ext_of_lintegral _ fun f hf => ?_
+  rw [Measure.lintegral_compProd hf, h_map_Zc, lintegral_smul_measure,
+    lintegral_finsetSum_measure]
+  have hRHS_summand : ∀ m : Fin M,
+      ∫⁻ z : Fin n → ℝ, ∫⁻ y : Fin n → ℝ, f (z, y) ∂(W z) ∂(Measure.dirac (c.encoder m))
+        = ∫⁻ y : Fin n → ℝ, f (c.encoder m, y)
+            ∂(Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))) := by
+    intro m
+    rw [lintegral_dirac' _
+      (Measurable.lintegral_kernel_prod_right' (κ := W) hf), hW_def]
+    rfl
+  simp_rw [hRHS_summand]
+  rw [lintegral_map hf (hZc_meas.prodMk hYo_meas), converseJointInline,
+    lintegral_smul_measure, lintegral_finsetSum_measure]
+  have hLHS_summand : ∀ m : Fin M,
+      ∫⁻ ω : Fin M × (Fin n → ℝ), f (Zc ω, Yo ω)
+          ∂((Measure.dirac m).prod
+            (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))))
+        = ∫⁻ y : Fin n → ℝ, f (c.encoder m, y)
+            ∂(Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))) := by
+    intro m
+    rw [lintegral_prod (fun ω : Fin M × (Fin n → ℝ) => f (Zc ω, Yo ω))
+      (hf.comp (hZc_meas.prodMk hYo_meas)).aemeasurable, hZc_def, hYo_def, lintegral_dirac]
+  simp_rw [hLHS_summand]
+
 /-- Markov chain `W → encoder ∘ W → Y^n` factorization.
 
 `IsMarkovChain (converseJointInline h_meas c) Prod.fst (encoder ∘ fst) Prod.snd`, the
@@ -3361,30 +3448,8 @@ theorem awgnConverseMarkov_holds
     rw [Measure.map_fst_prod]
     simp
   have h_marginalA : μ = (μ.map Xs) ⊗ₘ Wg := by
-    refine Measure.ext_of_lintegral _ fun f hf => ?_
-    -- RHS via compProd, then h_map_Xs (do RHS first, before unfolding μ on LHS).
-    rw [Measure.lintegral_compProd hf, h_map_Xs, lintegral_smul_measure,
-      lintegral_finsetSum_measure]
-    have hRHS_summand : ∀ m : Fin M,
-        ∫⁻ a : Fin M, ∫⁻ y : Fin n → ℝ, f (a, y) ∂(Wg a) ∂(Measure.dirac m)
-          = ∫⁻ y : Fin n → ℝ, f (m, y)
-              ∂(Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))) := by
-      intro m
-      rw [lintegral_dirac]
-      rfl
-    simp_rw [hRHS_summand]
-    -- LHS over the mixture.
-    rw [hμ_def, converseJointInline, lintegral_smul_measure,
-      lintegral_finsetSum_measure]
-    have hLHS_summand : ∀ m : Fin M,
-        ∫⁻ ω : Fin M × (Fin n → ℝ), f ω
-            ∂((Measure.dirac m).prod
-              (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))))
-          = ∫⁻ y : Fin n → ℝ, f (m, y)
-              ∂(Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))) := by
-      intro m
-      rw [lintegral_prod _ hf.aemeasurable, lintegral_dirac]
-    simp_rw [hLHS_summand]
+    rw [hμ_def, hXs_def]
+    exact converseMarkov_marginalA Wg hWg_def (by rw [← hμ_def, ← hXs_def]; exact h_map_Xs)
   -- `μ.map Zc = (1/M) • ∑ₘ δ_(encoder m)` (codeword law).
   have h_map_Zc : μ.map Zc
       = ((Fintype.card (Fin M) : ℝ≥0∞)⁻¹) • ∑ m : Fin M, (Measure.dirac (c.encoder m)) := by
@@ -3397,32 +3462,9 @@ theorem awgnConverseMarkov_holds
     rw [Measure.map_dirac' Measurable.of_discrete]
   -- Linchpin marginal: `μ.map (Zc, Yo) = (μ.map Zc) ⊗ₘ W`.
   have h_pair_eq : μ.map (fun ω => (Zc ω, Yo ω)) = (μ.map Zc) ⊗ₘ W := by
-    refine Measure.ext_of_lintegral _ fun f hf => ?_
-    -- RHS via compProd + h_map_Zc.
-    rw [Measure.lintegral_compProd hf, h_map_Zc, lintegral_smul_measure,
-      lintegral_finsetSum_measure]
-    have hRHS_summand : ∀ m : Fin M,
-        ∫⁻ z : Fin n → ℝ, ∫⁻ y : Fin n → ℝ, f (z, y) ∂(W z) ∂(Measure.dirac (c.encoder m))
-          = ∫⁻ y : Fin n → ℝ, f (c.encoder m, y)
-              ∂(Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))) := by
-      intro m
-      rw [lintegral_dirac' _
-        (Measurable.lintegral_kernel_prod_right' (κ := W) hf)]
-      rfl
-    simp_rw [hRHS_summand]
-    -- LHS over the mixture.
-    rw [lintegral_map hf (hZc_meas.prodMk hYo_meas), hμ_def, converseJointInline,
-      lintegral_smul_measure, lintegral_finsetSum_measure]
-    have hLHS_summand : ∀ m : Fin M,
-        ∫⁻ ω : Fin M × (Fin n → ℝ), f (Zc ω, Yo ω)
-            ∂((Measure.dirac m).prod
-              (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))))
-          = ∫⁻ y : Fin n → ℝ, f (c.encoder m, y)
-              ∂(Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))) := by
-      intro m
-      rw [lintegral_prod (fun ω : Fin M × (Fin n → ℝ) => f (Zc ω, Yo ω))
-        (hf.comp (hZc_meas.prodMk hYo_meas)).aemeasurable, lintegral_dirac]
-    simp_rw [hLHS_summand]
+    rw [hμ_def]
+    exact converseMarkov_pairLaw Zc hZc_def hZc_meas Yo hYo_def hYo_meas W hW_def
+      (by rw [← hμ_def]; exact h_map_Zc)
   -- Identify `condDistrib Yo Zc μ =ᵐ[μ.map Zc] W`.
   haveI : IsProbabilityMeasure (μ.map Zc) := Measure.isProbabilityMeasure_map hZc_meas.aemeasurable
   have hK_Y_eq : condDistrib Yo Zc μ =ᵐ[μ.map Zc] W :=
