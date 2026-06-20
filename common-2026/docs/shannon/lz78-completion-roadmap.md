@@ -46,7 +46,7 @@ sorryAx-free は M4 converse discharge のみ残る。**
      bare sorry) = `@residual(wall:lz78-converse-aseventual)` (M4 Barron a.s. lift)。
    - `lz78GreedyImpl_achievability_ae` (`limsup (lz/n) ≤ entropyRate₂`、`:1005`) は
      **leg 11 で CLOSED** (`c22f2d5`、sorryAx-free + `@audit:ok` + 独立監査 PASS)。
-     `wall:lz78-aseventual-ziv` は解消済。
+     achievability 壁 `lz78-aseventual-ziv` は解消済 (CLOSED leg 11、`c22f2d5`)。
    - 符号データ (`μ`, `p`) のみを取る genuine 命題 (load-bearing hyp なし)。
      `entropyRate₂` target で **TRUE-as-framed**。ダミー parse 時代の defect は
      def-fix で、bit-vs-nat units defect は `entropyRate₂` 化で解消済。
@@ -77,7 +77,7 @@ sorryAx-free は M4 converse discharge のみ残る。**
    - gateway (単位整合) は plumbing で closed (`lz78_impl_bitrate_le_clogc_plus_overhead`、
      sorryAx-free)、convexity grouping (`ZivLengthGrouping.lean`) + marginal sub-distribution 橋
      (`ZivMeasureBridge.lean`) + node-context conditional (`ZivCondContext.lean`) も sorryAx-free
-     (necessary scaffolding、§0 genuine 足場テーブル)。壁 `wall:lz78-aseventual-ziv` は honest に維持。
+     (necessary scaffolding、§0 genuine 足場テーブル)。achievability 壁 `lz78-aseventual-ziv` は CLOSED (leg 11、`c22f2d5`)。
      treenode plan は **部分 un-park** (旧 T2 conditional sub-distribution = leg 5 で `condContext_sum_le_one`
      として建った、旧 T3 naive node-grouping assembly は D3 で dead、§4)。詳細 = §1 M3 / §3 / sub-plan
      [`lz78-m2-plan.md`](lz78-m2-plan.md) 判断ログ #4。
