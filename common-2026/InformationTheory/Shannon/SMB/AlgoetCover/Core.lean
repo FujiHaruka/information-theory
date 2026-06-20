@@ -335,6 +335,109 @@ lemma markovFactor_sum_eq_one
       exact sum_measure_singleton
     rw [h_sum, measure_univ]
 
+/-- The `k`-Markov conditional mass of a length-`ℓ` continuation `w : Fin ℓ → α`
+extending a fixed prefix `z : Fin start → α`, defined as the product of
+`markovFactor`s at the absolute positions `start, start+1, …, start+ℓ-1`. The tuple
+fed to each `markovFactor (start+m)` is the combined prefix `Fin.append z (init…w)`
+recast to `Fin ((start+m)+1) → α`. At `ℓ = 0` this is `1`; the recursion peels the
+last symbol of `w` via `Fin.init`, matching `qkSingleton`'s chain-rule structure so
+the product telescopes to `qkSingleton (start+ℓ) / qkSingleton start`. -/
+noncomputable def condQk
+    (μ : Measure Ω) [IsFiniteMeasure μ] (p : StationaryProcess μ α) (k start : ℕ)
+    (z : Fin start → α) :
+    (ℓ : ℕ) → (Fin ℓ → α) → ℝ≥0∞
+  | 0, _ => 1
+  | ℓ + 1, w =>
+      condQk μ p k start z ℓ (Fin.init w)
+        * markovFactor μ p k (start + ℓ)
+            (Fin.append z w ∘ Fin.cast (by omega))
+
+omit [DecidableEq α] in
+/-- **Conditional product sub-distribution from a fixed prefix**: for any prefix
+`z : Fin start → α`, the `k`-Markov conditional masses of all length-`ℓ`
+continuations sum to at most `1`. The non-empty-start generalization of
+`sum_qkSingleton_le_one` (which is the `start = 0` case): same induction on `ℓ`,
+each step reindexing via `Fin.snocEquiv` and collapsing the inner symbol sum with
+`markovFactor_sum_eq_one` (which holds for an arbitrary prefix, hence works from a
+non-empty start). This is the per-fixed-context sub-distribution the conditional Ziv
+`(k-state, length)` grouping instantiates. -/
+lemma condQk_sum_le_one
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
+    (k start : ℕ) (z : Fin start → α) (ℓ : ℕ) :
+    ∑ w : Fin ℓ → α, condQk μ p k start z ℓ w ≤ 1 := by
+  induction ℓ with
+  | zero =>
+    -- `Fin 0 → α` has a unique element; condQk = 1.
+    simp [condQk]
+  | succ ℓ ih =>
+    -- Same shape as `sum_qkSingleton_le_one`: reindex via snocEquiv, the inner
+    -- symbol sum collapses by `markovFactor_sum_eq_one`.
+    have h_eq : ∀ w : Fin (ℓ + 1) → α,
+        condQk μ p k start z (ℓ + 1) w
+          = condQk μ p k start z ℓ (Fin.init w)
+              * markovFactor μ p k (start + ℓ)
+                  (Fin.append z w ∘ Fin.cast (by omega)) := fun w => rfl
+    rw [show (∑ w : Fin (ℓ + 1) → α, condQk μ p k start z (ℓ + 1) w)
+          = ∑ w : Fin (ℓ + 1) → α,
+              condQk μ p k start z ℓ (Fin.init w)
+                * markovFactor μ p k (start + ℓ)
+                    (Fin.append z w ∘ Fin.cast (by omega))
+        from Finset.sum_congr rfl (fun w _ => h_eq w)]
+    -- Reindex via snocEquiv: w ↔ (a, w') with w' = init w, a = w (last ℓ).
+    let e : α × (Fin ℓ → α) ≃ (Fin (ℓ + 1) → α) :=
+      (Fin.snocEquiv (fun _ : Fin (ℓ + 1) => α))
+    have h_reindex : ∑ w : Fin (ℓ + 1) → α,
+          condQk μ p k start z ℓ (Fin.init w)
+            * markovFactor μ p k (start + ℓ) (Fin.append z w ∘ Fin.cast (by omega))
+        = ∑ q : α × (Fin ℓ → α),
+            condQk μ p k start z ℓ (Fin.init (e q))
+              * markovFactor μ p k (start + ℓ)
+                  (Fin.append z (e q) ∘ Fin.cast (by omega)) := by
+      symm
+      exact Fintype.sum_equiv e _ _ (fun _ => rfl)
+    rw [h_reindex]
+    have h_apply : ∀ (a : α) (w' : Fin ℓ → α),
+        e (a, w') = Fin.snoc w' a := fun a w' => by
+      funext i; simp [e, Fin.snocEquiv]
+    -- Convert ∑_{(a, w')} to ∑_{w'} ∑_a and rewrite the kernel arg into snoc form
+    -- (so markovFactor only sees `a` at the last position, prefix depends on w' only).
+    have h_split :
+        ∑ q : α × (Fin ℓ → α),
+            condQk μ p k start z ℓ (Fin.init (e q))
+              * markovFactor μ p k (start + ℓ) (Fin.append z (e q) ∘ Fin.cast (by omega))
+          = ∑ w' : Fin ℓ → α, ∑ a : α,
+              condQk μ p k start z ℓ w'
+                * markovFactor μ p k (start + ℓ)
+                    (Fin.snoc (Fin.append z w' ∘ Fin.cast (by omega)) a) := by
+      rw [Fintype.sum_prod_type, Finset.sum_comm]
+      refine Finset.sum_congr rfl ?_
+      intro w' _
+      refine Finset.sum_congr rfl ?_
+      intro a _
+      rw [h_apply, Fin.init_snoc]
+      -- Identify the combined tuple `append z (snoc w' a) ∘ cast` with
+      -- `snoc (append z w' ∘ cast) a`, then markovFactor agrees. The core is
+      -- `Fin.append_snoc : append z (snoc w' a) = snoc (append z w') a` (the two
+      -- sides have defeq lengths `start+(ℓ+1)` vs `(start+ℓ)+1`).
+      have htuple : (Fin.append z (Fin.snoc w' a)
+              ∘ Fin.cast (by omega : start + (ℓ + 1) = start + ℓ + 1))
+          = Fin.snoc (Fin.append z w'
+              ∘ Fin.cast (by omega : start + ℓ = start + ℓ)) a := by
+        rw [Fin.cast_refl, Function.comp_id, Fin.append_snoc, Fin.cast_refl,
+          Function.comp_id]
+      rw [htuple]
+    rw [h_split]
+    have h_pull : ∀ w' : Fin ℓ → α,
+        (∑ a : α, condQk μ p k start z ℓ w'
+            * markovFactor μ p k (start + ℓ)
+                (Fin.snoc (Fin.append z w' ∘ Fin.cast (by omega)) a))
+          = condQk μ p k start z ℓ w'
+              * ∑ a : α, markovFactor μ p k (start + ℓ)
+                  (Fin.snoc (Fin.append z w' ∘ Fin.cast (by omega)) a) := by
+      intro w'; rw [Finset.mul_sum]
+    simp_rw [h_pull, markovFactor_sum_eq_one, mul_one]
+    exact ih
+
 omit [DecidableEq α] in
 /-- Per-state sub-distribution: summing `markovFactor μ p k n` over any finite subset
 `T` of continuations is at most `1` (subset sum ≤ full sum = `1`). This is the
