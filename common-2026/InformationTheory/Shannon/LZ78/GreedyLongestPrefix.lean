@@ -3,6 +3,8 @@ import InformationTheory.Shannon.LZ78.Basic
 import InformationTheory.Shannon.LZ78.GreedyParsing
 import Mathlib.Data.List.Nodup
 import Mathlib.Data.List.Basic
+import Mathlib.Data.Nat.Find
+import Mathlib.Data.Fin.Basic
 
 /-!
 # LZ78 longest-prefix greedy parsing — distinct-phrase invariant
@@ -313,5 +315,158 @@ theorem lz78PhraseStrings_count_le (input : List α) :
     (lz78PhraseStrings_total_length_le input)
 
 end CountBound
+
+/-! ## §5. Absolute-position tiling of the parse -/
+
+section Tiling
+
+variable {α : Type*} [DecidableEq α]
+
+/-- **Deterministic absolute-position tiling from the greedy parse.** For an
+input list and a Markov order `k`, the greedy longest-prefix parse furnishes an
+absolute-position partition of the input prefix it covers: a leading boundary
+length `b`, a phrase count `c`, a covered length `e ≤ input.length`, the count
+`bAbsorbed` of leading phrases absorbed into `[0, b)` (those whose cumulative end
+is `≤ k`), and the cumulative-position function `N : Fin (c + 1) → ℕ`.
+
+The partition `[b, e)` is strictly monotone (each phrase consumes `≥ 1` symbol),
+every phrase start `N j.castSucc` exceeds `k` (the leading `≤ k` phrases are
+absorbed), the count is anchored to the genuine parse via
+`c + bAbsorbed = (parse).length`, and `bAbsorbed ≤ k + 1` (the cumulative length
+increases by `≥ 1` each step, so at most `k + 1` phrases fit below position `k`).
+
+This is the pure list-combinatorial heart of the LZ78 threading tiling: it carries
+the phrase *lengths* only (the downstream threading reads phrase content directly
+off the process, never the parse strings' content). -/
+theorem lz78_parse_tiling_positions (input : List α) (k : ℕ) :
+    ∃ (b c e bAbsorbed : ℕ) (N : Fin (c + 1) → ℕ),
+      N 0 = b ∧ N (Fin.last c) = e ∧ e ≤ input.length ∧
+      (∀ j : Fin c, N j.castSucc + 1 ≤ N j.succ) ∧
+      (∀ j : Fin c, k < N j.castSucc) ∧
+      c + bAbsorbed = (lz78PhraseStrings input).length ∧
+      bAbsorbed ≤ k + 1 := by
+  classical
+  set L := lz78PhraseStrings input with hL_def
+  set m := L.length with hm_def
+  -- Cumulative length of the first `j` phrases.
+  set cumLen : ℕ → ℕ := fun j => (L.take j).foldr (fun w acc => w.length + acc) 0
+    with hcum_def
+  -- cumLen 0 = 0.
+  have hcum0 : cumLen 0 = 0 := by simp [hcum_def]
+  -- One-step recurrence for `j < m`.
+  have hcum_succ : ∀ (j : ℕ) (h : j < m), cumLen (j + 1) = cumLen j + (L[j]'h).length := by
+    intro j h
+    simp only [hcum_def]
+    rw [List.take_succ_eq_append_getElem h, foldr_length_append_singleton]
+  -- Each phrase length ≥ 1.
+  have hphrase_pos : ∀ j (h : j < m), 1 ≤ (L[j]'h).length := by
+    intro j h
+    have hmem : L[j]'h ∈ L := List.getElem_mem h
+    have hne : L[j]'h ≠ [] := lz78PhraseStrings_forall_ne_nil input _ hmem
+    exact List.length_pos_iff.mpr hne
+  -- One-step monotonicity for all `i` (constant past `m`).
+  have hcum_step : ∀ i, cumLen i ≤ cumLen (i + 1) := by
+    intro i
+    by_cases h : i < m
+    · rw [hcum_succ i h]; omega
+    · -- i ≥ m: take i L = L and take (i+1) L = L, so cumLen constant.
+      have hge : m ≤ i := Nat.not_lt.mp h
+      have h1 : L.take i = L := List.take_of_length_le (by omega)
+      have h2 : L.take (i + 1) = L := List.take_of_length_le (by omega)
+      simp only [hcum_def, h1, h2, le_refl]
+  -- cumLen monotone (≤).
+  have hcum_mono : ∀ i j, i ≤ j → cumLen i ≤ cumLen j := by
+    intro i j hij
+    induction j with
+    | zero => simp_all
+    | succ j ihj =>
+      rcases Nat.lt_or_ge i (j + 1) with h | h
+      · exact (ihj (Nat.lt_succ_iff.mp h)).trans (hcum_step j)
+      · have : i = j + 1 := le_antisymm hij h
+        subst this; exact le_refl _
+  -- cumLen j ≥ j for j ≤ m (each step adds ≥1).
+  have hcum_ge : ∀ j, j ≤ m → j ≤ cumLen j := by
+    intro j hj
+    induction j with
+    | zero => simp
+    | succ j ihj =>
+      have hjm : j < m := by omega
+      have := ihj (by omega)
+      rw [hcum_succ j hjm]
+      have := hphrase_pos j hjm
+      omega
+  -- cumLen m = total ≤ input.length.
+  have hcumm_eq : cumLen m = L.foldr (fun w acc => w.length + acc) 0 := by
+    simp only [hcum_def, hm_def, List.take_length]
+  have hcumm_le : cumLen m ≤ input.length := by
+    rw [hcumm_eq, hL_def]
+    exact lz78PhraseStrings_total_length_le input
+  -- The absorption predicate: least index whose cumulative length exceeds `k`,
+  -- or `m` (the parse end) if none.
+  set P : ℕ → Prop := fun j => k < cumLen j ∨ j = m with hP_def
+  have hP_exists : ∃ j, P j := ⟨m, Or.inr rfl⟩
+  set bAbsorbed := Nat.find hP_exists with hbA_def
+  have hbA_le_m : bAbsorbed ≤ m := Nat.find_min' hP_exists (Or.inr rfl)
+  have hbA_le_k1 : bAbsorbed ≤ k + 1 := by
+    -- `P (min (k+1) m)` holds, so `bAbsorbed ≤ min (k+1) m ≤ k+1`.
+    have hPmin : P (min (k + 1) m) := by
+      rcases le_or_gt m (k + 1) with hle | hlt
+      · -- min = m
+        rw [min_eq_right hle]; exact Or.inr rfl
+      · -- min = k+1 ≤ m, and cumLen (k+1) ≥ k+1 > k
+        rw [min_eq_left hlt.le]
+        have : k + 1 ≤ cumLen (k + 1) := hcum_ge (k + 1) hlt.le
+        exact Or.inl (by omega)
+    have := Nat.find_min' hP_exists hPmin
+    omega
+  -- For j < bAbsorbed, cumLen j ≤ k (and j ≠ m).
+  have hbA_below : ∀ j, j < bAbsorbed → cumLen j ≤ k := by
+    intro j hj
+    have hnot : ¬ P j := Nat.find_min hP_exists hj
+    simp only [hP_def, not_or, not_lt] at hnot
+    exact hnot.1
+  -- Either k < cumLen bAbsorbed, or bAbsorbed = m.
+  have hbA_spec : k < cumLen bAbsorbed ∨ bAbsorbed = m := Nat.find_spec hP_exists
+  set c := m - bAbsorbed with hc_def
+  set N : Fin (c + 1) → ℕ := fun j => cumLen (bAbsorbed + j.val) with hN_def
+  refine ⟨cumLen bAbsorbed, c, cumLen m, bAbsorbed, N, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · -- N 0 = cumLen bAbsorbed
+    simp only [hN_def, Fin.val_zero, Nat.add_zero]
+  · -- N (last c) = cumLen m
+    simp only [hN_def, Fin.val_last]
+    congr 1
+    omega
+  · -- cumLen m ≤ input.length
+    exact hcumm_le
+  · -- hmono: N j.castSucc + 1 ≤ N j.succ
+    intro j
+    simp only [hN_def, Fin.val_castSucc, Fin.val_succ, ← Nat.add_assoc]
+    -- bAbsorbed + j < m, so the next step grows by ≥ 1.
+    have hjm : bAbsorbed + j.val < m := by
+      have := j.isLt; omega
+    have hsucc : cumLen (bAbsorbed + j.val + 1)
+        = cumLen (bAbsorbed + j.val) + (L[bAbsorbed + j.val]'hjm).length :=
+      hcum_succ (bAbsorbed + j.val) hjm
+    have hlen := hphrase_pos (bAbsorbed + j.val) hjm
+    omega
+  · -- hstart: k < N j.castSucc
+    intro j
+    simp only [hN_def, Fin.val_castSucc]
+    -- k < cumLen bAbsorbed ≤ cumLen (bAbsorbed + j).
+    have hkb : k < cumLen bAbsorbed := by
+      rcases hbA_spec with h | h
+      · exact h
+      · -- bAbsorbed = m forces c = 0, contradicting `j : Fin c`.
+        exfalso
+        have hc0 : c = 0 := by omega
+        exact absurd j.isLt (by omega)
+    have hmono := hcum_mono bAbsorbed (bAbsorbed + j.val) (Nat.le_add_right _ _)
+    omega
+  · -- c + bAbsorbed = m
+    omega
+  · -- bAbsorbed ≤ k + 1
+    exact hbA_le_k1
+
+end Tiling
 
 end InformationTheory.Shannon
