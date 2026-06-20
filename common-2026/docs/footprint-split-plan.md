@@ -10,7 +10,7 @@ Lean style [`rules/lean-style.md`](rules/lean-style.md) ・honesty タグ [`audi
 
 - [x] Phase 0 — 測定 + pilot 較正 ✅ (`floorMatrix_dist_le`、commit `d2fb1fa`)
 - [x] Phase 1 — 優先1 (>250 行 tier) を named helper へ分解 ✅ **全 25 本処理済** (clean 割れブロックは全抽出、>250 残留=不可分 core は現実的 DoD で許容)
-- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-21、>150: 91→42)
+- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-22、>150: 91→38)
 - [ ] Phase 3 — 最終再実測 + 裾縮小確認 📋
 - [ ] Phase 4 — **option C (>250 spine 攻略)** 🔨 (2026-06-14 着手。**3 本クリア >250: 15→12、両機構検証済**。残 12 本。下記 Phase 4 節)
 
@@ -205,11 +205,11 @@ file:line (footprint) sorry-count は §4.1 入力データを verbatim 使用 (
 sorryAx-free)。コード側の `@audit:ok`/`@residual`/sorry 数は全 13 本で機械検証して verbatim 保存
 (Assembly は既存 sorry+@residual を含め 1→1 保存)。
 
-## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-21 完了)
+## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-22 完了)
 
 **proof-log: no**。
 
-**状態 (2026-06-20)**: Wave 1-21 完了。**>150 tier: 91 → 42 (−49)、>250 は 0 維持** (official
+**状態 (2026-06-20)**: Wave 1-22 完了。**>150 tier: 91 → 38 (−53)、>250 は 0 維持** (official
 decl-to-next-decl metric で再実測)。各 Wave は全 Hard invariants (対象 sig byte-identical /
 `#print axioms` = `[propext, Classical.choice, Quot.sound]` 不変 / sorry 数不変 / `lake env lean`
 clean + 該当 build green) を orchestrator が独立機械検証済。**新規 sorry/residual なし (純リファクタ)
@@ -367,6 +367,13 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   (実 body 137 行で既に <150、metric 154 は宣言間 12 行による膨張 = Wave 19 の
   `integrable_indicator_mul_negLog_of_condExp` body148/metric157 と同パターン)。
   計 1 helper <150。>150 tier 43→42、>250 = 0 維持。
+- **Wave 22** (`e992887`/`d96481c`): `ChannelCoding/.../BlockwiseChannel.lean`
+  (`isMarkovChain_outputs_cond_indep` 186→96 / `isMarkovChain_per_letter_input` 164→148。helper 2 本:
+  `toBlock_split_kernel_eq` 112 = `h_kernel_eq` ブロック ~95 行を生項展開形で抽出 /
+  `measurable_lintegral_channel_snd_arg` 23 = `hG_meas` ブロック抽出) +
+  `SlepianWolf/FullRateRegion/PairBound.lean`
+  (`swErrorProb_total_expectation_le` 210→145 / `swError_EXY_strict_expectation_le` 170→139。helper 4 本、全 <150)。
+  計 6 helper 全 <150。>150 tier 42→38 (−4)、>250 = 0 維持。
 
 ### 計測ニュアンス (Phase 2 で確立、Wave 4+ でも適用)
 
@@ -387,7 +394,7 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   確認済 artifact: `integrable_indicator_mul_negLog_of_condExp` (BackwardIntegral, body148/metric157) /
   `total_length_ge_count_mul_log` (LZ78, body137/metric154) /
   `convex_fisher_bound` (EPI/Blachman/Density, body~137/metric238)。
-  **含意**: 残 42 のうち複数は同種 artifact の可能性大。特に 151-155 の thin-margin single は
+  **含意**: 残 38 のうち複数は同種 artifact の可能性大。特に 151-155 の thin-margin single は
   **着手前に必ず body 末尾と次 matched decl を Read で確認** (artifact なら除外)。
 - **DoD への含意**: relay goal「>150 → 0」は (a) 不可分 >250 組立核 floor + (b) 計測 artifact floor の
   二重 floor で 0 到達は構造的に不能。現実的完了 = 「genuine に splittable な target を全て分解済」。
@@ -396,15 +403,13 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   `birkhoffAverage_pmfLogCondMarkov_tendsto` (SMB/AlgoetCover/Core 154) /
   `birkhoffAverageReal_limsup_comp_T_ae` (BirkhoffErgodic 153) /
   `condEntropy_pi_eq_sum_of_memoryless_strong` (CondEntropyMemoryless 151)。
+- **Wave 23 着手中**: `RandomCodebook.lean` 3 件 (`E1_swap` 230 / `E2_swap` 215 / `average_le` 177) +
+  `AWGN/Walls.lean` 4 件 (`klDiv_perLetter_eq_capacity` 196 / `awgnConverseMarkov_holds` 183 /
+  `continuousAepGaussian_holds` 164 / `gaussian_shear_logRnDeriv_memLp_two` 158)。両ファイル sorryAx-free 確認済。
 - **次 Wave 向け genuine 候補 (margin 厚め、artifact 可能性低)**:
   multi-target 同居ファイル群を 1 agent で複数同時処理:
   `Huffman/Basic.lean` (`huffmanStep` 161 + `kraftPerGroup_step` 157) /
-  `Stein.lean` (`stein_converse_finite_n` 156 + `stein_achievability` 153) /
-  `PairBound.lean` (`swErrorProb_total` 210 + `swError_EXY_strict` 170) /
-  `BlockwiseChannel.lean` (`isMarkovChain_outputs_cond_indep` 186 + `isMarkovChain_per_letter_input` 164) /
-  `AWGN/Walls.lean` 4 件 (`klDiv_perLetter_eq_capacity` 196 / `awgnConverseMarkov_holds` 183 /
-  `continuousAepGaussian_holds` 164 / `gaussian_shear_logRnDeriv_memLp_two` 158) /
-  `RandomCodebook.lean` 3 件 (`E1_swap` 230 / `E2_swap` 215 / `average_le` 177)。
+  `Stein.lean` (`stein_converse_finite_n` 156 + `stein_achievability` 153)。
 - **後回し寄り (signature 密結合)**: `entropy_power_inequality_of_density` (EPI/DensityForm.lean 172)
   — signature ~40 行 + lift-space wiring 密結合、優先度低。
 - **後回し候補 (set-heavy multi-seam)**:
