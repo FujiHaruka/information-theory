@@ -417,82 +417,12 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 variable {Ω : Type*} [MeasurableSpace Ω]
 
 open MeasureTheory ProbabilityTheory
+open scoped ENNReal
 
 /-- **Type-check witness**: the genuine greedy encoding length has the
 right type to plug into the parent `lz78_asymptotic_optimality`
 `lz78EncodingLength : ∀ n, (Fin n → α) → ℕ` parameter slot. -/
 example : (∀ n, (Fin n → α) → ℕ) := @lz78GreedyImplEncodingLength α _ _
-
-/-- **LZ78 converse lower bound for the genuine greedy parser
-(Cover–Thomas Theorem 13.5.3, lower-bound half), a.s. form**.
-
-For a stationary ergodic source `p` the per-symbol length of the genuine
-longest-prefix-match greedy LZ78 parse is, almost surely, asymptotically at
-least the bit entropy rate:
-
-```
-entropyRate₂ μ p ≤ liminf_n (1/n) · lz78GreedyImplEncodingLength(X^n)   a.s.
-```
-
-This is the lower-bound (converse) half of LZ78 asymptotic optimality —
-the harder direction (SMB liminf lower bound + arbitrary-prefix Kraft
-inequality + finite-alphabet bookkeeping).
-
-Units: the encoding length is a base-2 code length
-(`lz78GreedyImplEncodingLength = c · bitLength c |α|`, `bitLength` uses
-`Nat.log 2`), so the per-symbol rate `lz/n` is in **bits**, and the correct
-RHS is the **bit** entropy rate `entropyRate₂ = entropyRate / Real.log 2`
-(not the nat-unit `entropyRate`), exactly the unit-correction documented in
-`ZivEntropyBridge.lean` ("Base-2 (bit) layer") and
-`McMillanKraftBridge.lean` (converse target `blockLogAvg₂`).
-
-After the 2026-06-20 def-fix (`lz78GreedyImplEncodingLength` now charges
-`c · bitLength c |α|` against the genuine distinct phrase count
-`c = (lz78PhraseStrings (List.ofFn x)).length` of the genuine
-longest-prefix-match parse, with `c ≤ n` and `c = O(n / log n)`), this is a
-**genuine proposition**: the a.s.-eventual converse lower bound for the real
-longest-prefix LZ78 parse. Discharging it requires M4 (the expectation-level
-converse `H_D ≤ E[lz]` lifted to an a.s.-eventual pointwise `liminf`, a
-Barron-type ergodic argument; LZ78 beats the Shannon code pointwise so
-expectation does not transfer to pointwise directly). This is a
-research-level ergodic wall, absent from both the codebase and Mathlib (see
-`docs/shannon/lz78-completion-roadmap.md`, M4).
-
-This statement is TRUE-as-framed (the units defect found by the prior audit
-is resolved by stating the RHS against `entropyRate₂` rather than
-`entropyRate`): on a uniform i.i.d. source on A symbols the bit-rate limit
-is `log₂ A = entropyRate / Real.log 2 = entropyRate₂` exactly, so the
-converse `entropyRate₂ ≤ liminf` is the genuine LZ78 converse (e.g. A=2:
-`entropyRate₂ = log₂ 2 = 1 ≤ liminf`, with equality in the limit); on the
-degenerate `entropyRate = 0` boundary it reads `0 ≤ liminf` (`entropyRate₂ =
-0`), again genuine. The remaining `sorry` carries exactly the M4 ergodic
-wall content (a.s. Barron lift), not a units error. Signature takes only
-source data (`μ`, `p`), no load-bearing hypothesis.
-
-Units fix independent audit 2026-06-20 PASS (commit `55e1cd9`, fresh
-subagent): the prior `@audit:defect(false-statement)` is genuinely resolved
-by the bit RHS — `entropyRate₂` is a sorryAx-free unit rescaling
-(`entropyRate / Real.log 2`, machine-verified `#print axioms`), not a
-degenerate definition. Units re-checked at A=2 (`entropyRate₂ = log₂ 2 = 1`),
-A=3 (`entropyRate₂ = log₂ 3`, the bit-rate limit) and the degenerate
-`entropyRate = 0` boundary (`entropyRate₂ = 0`, non-vacuous). The M4 wall
-stays genuine: the `/log 2` rescaling does not touch the unproven ergodic
-content; body remains bare `sorry`. Four honesty checks PASS (non-circular,
-non-bundled, non-degenerate, sufficiency now TRUE-as-framed).
-
-@residual(wall:lz78-converse-aseventual) -/
-theorem lz78GreedyImpl_converse_ae
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (p : ErgodicProcess μ α) :
-    ∀ᵐ ω ∂μ,
-      entropyRate₂ μ p.toStationaryProcess
-      ≤ Filter.liminf
-          (fun n =>
-            (lz78GreedyImplEncodingLength n
-                (p.toStationaryProcess.blockRV n ω) : ℝ)
-              / (n : ℝ))
-          Filter.atTop := by
-  sorry
 
 /-- **Per-symbol negative log-likelihood in bits**: `blockLogAvg / Real.log 2`.
 
@@ -526,6 +456,404 @@ theorem shannon_mcmillan_breiman₂
   filter_upwards [shannon_mcmillan_breiman μ p] with ω hω
   have := hω.div_const (Real.log 2)
   simpa only [blockLogAvg₂, entropyRate₂] using this
+
+/-- **G2 — polynomial `n`-block Kraft for the genuine greedy parse (the
+genuine combinatorial converse brick)**.
+
+The Kraft sum of `2^{-L_n(x)}` over all `n`-tuples `x : Fin n → α` is bounded
+by a polynomial in `n`:
+
+```
+∑_{x : Fin n → α} (1/2)^{lz78GreedyImplEncodingLength n x} ≤ (n + 1)^2.
+```
+
+**Why a polynomial and not the exact Kraft `≤ 1`.** The greedy
+longest-prefix-match parse is *not complete* — `lz78PhraseStrings_flatten` is a
+genuine *prefix* of the input, and the unfinished tail (`flatten ++ tail =
+input`, with `tail ≠ []` possible and `tail` a prefix of an existing phrase)
+is *not* charged a fresh `(parent, symbol)` token. Hence
+`lz78GreedyImplEncodingLength n x = c · bitLength c |α|` is the cost of only
+the `c` completed phrases and is **not a lossless code length** for `x`, so the
+exact Kraft inequality `∑ 2^{-L_n} ≤ 1` is **FALSE**. The polynomial bound is
+the honest statement: the number of distinct parse *structures* with `c`
+phrases is `≤ c! · |α|^c`, and `2^{-c·bitLength(c,|α|)} ≈ (c+1)^{-c}|α|^{-c}4^{-c}`,
+so the structure-Kraft sum `∑_c (#structures)·2^{-c·bitLength} = O(1)`; the
+unfinished tail contributes a multiplicity `≤ n + 1`, giving `O(n) ≤ (n+1)^2`.
+
+The math is `O(n)`, so any polynomial degree `≥ 1` is a true bound; the degree
+`2` here gives the summable `μ(B_n) ≤ 1/n^2` in the Barron Markov +
+Borel–Cantelli lift (`blockLogAvg₂_minus_error_le_rate_ae`).
+
+This is the genuine combinatorial new-math brick of the LZ78 converse
+(Cover–Thomas Thm 13.5.3 lower bound, distinct-phrase counting); it carries
+the converse residual and is left as an honest `sorry`.
+
+@residual(wall:lz78-converse-aseventual) -/
+theorem lz78_block_kraft_poly (n : ℕ) :
+    ∑ x : Fin n → α, (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x)
+      ≤ ((n : ℝ) + 1) ^ 2 := by
+  sorry
+
+/-- **Per-`n` bad-set measure bound (Markov on the discrete block law + G2)**.
+
+For `n ≥ 1`, the LZ78 converse bad set
+`B_n = {ω : lz/n < blockLogAvg₂ n ω − err_n}`
+has `μ`-measure at most `1/n²`, where
+`err_n = (2 log n + 2 log(n+1))/(n log 2)`.
+
+This is the genuine Markov step of the Barron lift. The bad set factors through
+the block random variable (`lz` and `blockLogAvg₂` depend on `ω` only via
+`block_n ω`), so `μ(B_n) = (μ.map block_n)(S_n) = ∑_{x ∈ S_n} Pₙ(x)` over the
+discrete block law `Pₙ = μ.map block_n`. For each `x ∈ S_n` with `Pₙ(x) > 0`
+the defining inequality (cleared of denominators) gives
+`Pₙ(x) < 2^{−Lₙ(x)}·2^{−n·err_n}`, and `2^{−n·err_n} = 1/(n²(n+1)²)`. Summing
+and applying G2 (`lz78_block_kraft_poly`: `∑_x 2^{−Lₙ(x)} ≤ (n+1)²`) gives
+`μ(B_n) ≤ (n+1)²/(n²(n+1)²) = 1/n²`. The genuine combinatorial residual lives
+entirely in G2; this lemma is its measure-theoretic plumbing. -/
+theorem lz78_converse_bad_set_measure_le
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (p : ErgodicProcess μ α) (n : ℕ) (hn : 1 ≤ n) :
+    μ {ω | (lz78GreedyImplEncodingLength n
+            (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ)
+          < blockLogAvg₂ μ p.toStationaryProcess n ω
+            - (2 * Real.log n + 2 * Real.log (n + 1)) / ((n : ℝ) * Real.log 2)}
+      ≤ (1 : ℝ≥0∞) / ((n : ℝ≥0∞) ^ 2) := by
+  classical
+  set q := p.toStationaryProcess with hq
+  have hnR : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have hℓ2 : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  set Pn : Measure (Fin n → α) := μ.map (q.blockRV n) with hPn
+  have hB_meas : Measurable (q.blockRV n) := q.measurable_blockRV n
+  have hPn_prob : IsProbabilityMeasure Pn :=
+    Measure.isProbabilityMeasure_map hB_meas.aemeasurable
+  -- The bad set on the discrete block alphabet.
+  set rateX : (Fin n → α) → ℝ :=
+    fun x => (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ) with hrateX
+  set bla₂X : (Fin n → α) → ℝ :=
+    fun x => (-(1 / (n : ℝ)) * Real.log (Pn.real {x})) / Real.log 2 with hbla₂X
+  set errR : ℝ := (2 * Real.log n + 2 * Real.log (n + 1)) / ((n : ℝ) * Real.log 2) with herrR
+  set S : Finset (Fin n → α) :=
+    Finset.univ.filter (fun x => rateX x < bla₂X x - errR) with hS
+  -- `blockLogAvg₂ μ q n ω = bla₂X (block_n ω)` (depends on `ω` only via `block_n`).
+  have h_bla_factor : ∀ ω, blockLogAvg₂ μ q n ω = bla₂X (q.blockRV n ω) := by
+    intro ω; rw [hbla₂X]; simp only [blockLogAvg₂, blockLogAvg, hPn]
+  -- The bad set is the preimage of `S` under `block_n`.
+  have h_setEq : {ω | (lz78GreedyImplEncodingLength n (q.blockRV n ω) : ℝ) / (n : ℝ)
+        < blockLogAvg₂ μ q n ω
+          - (2 * Real.log n + 2 * Real.log (n + 1)) / ((n : ℝ) * Real.log 2)}
+      = (q.blockRV n) ⁻¹' (S : Set (Fin n → α)) := by
+    ext ω
+    rw [Set.mem_preimage, Finset.mem_coe, hS, Finset.mem_filter]
+    simp only [Set.mem_setOf_eq, Finset.mem_univ, true_and, hrateX, hbla₂X, herrR,
+      h_bla_factor ω]
+  rw [h_setEq]
+  -- Pushforward: `μ(block⁻¹ S) = Pn(S) = ∑_{x∈S} Pn.real{x}`.
+  have h_meas_S : MeasurableSet (S : Set (Fin n → α)) := S.measurableSet
+  have h_push : μ ((q.blockRV n) ⁻¹' (S : Set (Fin n → α)))
+      = Pn (S : Set (Fin n → α)) := by
+    rw [hPn, Measure.map_apply hB_meas h_meas_S]
+  rw [h_push]
+  -- Work with the real-valued measure (`Pn` is finite).
+  have h_toReal : (Pn (S : Set (Fin n → α))).toReal ≤ 1 / (n : ℝ) ^ 2 := by
+    -- `Pn(S) = ∑_{x∈S} Pn.real{x}`.
+    have h_sum : (Pn (S : Set (Fin n → α))).toReal = ∑ x ∈ S, Pn.real {x} := by
+      rw [← measureReal_def, ← sum_measureReal_singleton]
+    rw [h_sum]
+    -- Per-element bound: `Pn.real{x} ≤ (1/2)^{Lₙ(x)} · (1/(n²(n+1)²))` for `x ∈ S`.
+    have h_elt : ∀ x ∈ S, Pn.real {x}
+        ≤ (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x)
+            * (1 / ((n : ℝ) ^ 2 * ((n : ℝ) + 1) ^ 2)) := by
+      intro x hxS
+      have hxlt : rateX x < bla₂X x - errR := by
+        rw [hS, Finset.mem_filter] at hxS; exact hxS.2
+      simp only [hrateX, hbla₂X] at hxlt
+      set P := Pn.real {x} with hP
+      have hP_nn : 0 ≤ P := by rw [hP]; exact measureReal_nonneg
+      have hcoef_pos : (0 : ℝ) < 1 / ((n : ℝ) ^ 2 * ((n : ℝ) + 1) ^ 2) := by positivity
+      have hpow_pos : (0 : ℝ) < (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x) := by
+        positivity
+      rcases eq_or_lt_of_le hP_nn with hP0 | hPpos
+      · -- `P = 0`: the bound is trivial (RHS > 0).
+        rw [← hP0]; positivity
+      · -- `P > 0`: clear denominators and exponentiate.
+        -- `n · errR · log 2 = 2 log n + 2 log(n+1)`.
+        have h_nerr : (n : ℝ) * errR * Real.log 2
+            = 2 * Real.log n + 2 * Real.log (n + 1) := by
+          rw [herrR]; field_simp
+        -- From `L/n < (-(1/n) log P)/log2 - errR`, multiply by `n · log 2 > 0`
+        -- to get `L · log 2 < -log P - (2 log n + 2 log(n+1))`.
+        have hLn : (lz78GreedyImplEncodingLength n x : ℝ) * Real.log 2
+            < -Real.log P - (2 * Real.log n + 2 * Real.log (n + 1)) := by
+          have h1 : (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ)
+                * ((n : ℝ) * Real.log 2)
+              < ((-(1 / (n : ℝ)) * Real.log P) / Real.log 2 - errR)
+                * ((n : ℝ) * Real.log 2) :=
+            mul_lt_mul_of_pos_right hxlt (by positivity)
+          have hlhs : (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ)
+              * ((n : ℝ) * Real.log 2)
+              = (lz78GreedyImplEncodingLength n x : ℝ) * Real.log 2 := by
+            field_simp
+          have hrhs : ((-(1 / (n : ℝ)) * Real.log P) / Real.log 2 - errR)
+              * ((n : ℝ) * Real.log 2)
+              = -Real.log P - (n : ℝ) * errR * Real.log 2 := by
+            field_simp
+          rw [hlhs, hrhs, h_nerr] at h1
+          exact h1
+        -- Take `exp` of both sides: `P < 2^{-Lₙ} · 1/(n²(n+1)²)`.
+        have hlogP_lt : Real.log P
+            < Real.log ((1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x)
+                * (1 / ((n : ℝ) ^ 2 * ((n : ℝ) + 1) ^ 2))) := by
+          rw [Real.log_mul hpow_pos.ne' hcoef_pos.ne', Real.log_pow]
+          have h_log_half : Real.log (1 / 2 : ℝ) = -Real.log 2 := by
+            rw [one_div, Real.log_inv]
+          have h_log_coef : Real.log (1 / ((n : ℝ) ^ 2 * ((n : ℝ) + 1) ^ 2))
+              = -(2 * Real.log n + 2 * Real.log (n + 1)) := by
+            rw [one_div, Real.log_inv, Real.log_mul (by positivity) (by positivity),
+              Real.log_pow, Real.log_pow]
+            push_cast; ring
+          rw [h_log_half, h_log_coef]
+          have : (lz78GreedyImplEncodingLength n x : ℝ) * -Real.log 2
+              = -((lz78GreedyImplEncodingLength n x : ℝ) * Real.log 2) := by ring
+          nlinarith [hLn, hℓ2]
+        have := (Real.log_lt_log_iff hPpos (by positivity)).mp hlogP_lt
+        exact le_of_lt this
+    -- Sum the per-element bound and apply G2.
+    calc ∑ x ∈ S, Pn.real {x}
+        ≤ ∑ x ∈ S, (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x)
+            * (1 / ((n : ℝ) ^ 2 * ((n : ℝ) + 1) ^ 2)) :=
+          Finset.sum_le_sum h_elt
+      _ = (∑ x ∈ S, (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x))
+            * (1 / ((n : ℝ) ^ 2 * ((n : ℝ) + 1) ^ 2)) := by
+          rw [← Finset.sum_mul]
+      _ ≤ (∑ x : Fin n → α, (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x))
+            * (1 / ((n : ℝ) ^ 2 * ((n : ℝ) + 1) ^ 2)) := by
+          apply mul_le_mul_of_nonneg_right _ (by positivity)
+          apply Finset.sum_le_sum_of_subset_of_nonneg (Finset.subset_univ S)
+          intro x _ _; positivity
+      _ ≤ ((n : ℝ) + 1) ^ 2 * (1 / ((n : ℝ) ^ 2 * ((n : ℝ) + 1) ^ 2)) := by
+          apply mul_le_mul_of_nonneg_right (lz78_block_kraft_poly n) (by positivity)
+      _ = 1 / (n : ℝ) ^ 2 := by
+          have hn1 : ((n : ℝ) + 1) ^ 2 ≠ 0 := by positivity
+          field_simp
+  -- Convert the real bound back to `ℝ≥0∞`.
+  have h_ne_top : Pn (S : Set (Fin n → α)) ≠ ∞ := measure_ne_top _ _
+  rw [← ENNReal.ofReal_toReal h_ne_top]
+  rw [show (1 : ℝ≥0∞) / ((n : ℝ≥0∞) ^ 2)
+      = ENNReal.ofReal (1 / (n : ℝ) ^ 2) by
+    rw [ENNReal.ofReal_div_of_pos (by positivity), ENNReal.ofReal_one,
+      show (n : ℝ) ^ 2 = ((n ^ 2 : ℕ) : ℝ) by push_cast; ring,
+      ENNReal.ofReal_natCast]; push_cast; ring]
+  exact ENNReal.ofReal_le_ofReal h_toReal
+
+/-- **G3 — Barron a.s.-eventual lift**: the per-realization, a.s.-eventual
+converse lower bound on the greedy bit-rate by `blockLogAvg₂` minus an `o(1)`
+error term.
+
+For a stationary process `p`, almost surely the greedy bit-rate
+`lz78GreedyImplEncodingLength n (block_n ω) / n` is, eventually in `n`, at
+least `blockLogAvg₂ n ω` minus the vanishing error
+`(2 log n + 2 log(n+1))/(n log 2)`:
+
+```
+∀ᵐ ω, ∀ᶠ n,  blockLogAvg₂ n ω − (2 log n + 2 log(n+1))/(n log 2) ≤ lz/n.
+```
+
+This is the Barron competitive-optimality a.s. lift (Cover–Thomas Thm 13.5.3):
+a per-realization LZ78 codeword can be *shorter* than `−log₂ Pₙ{xⁿ}`, so the
+expectation-level converse `H_D ≤ E[L]` does not transfer pointwise. The lift
+is a Markov + first Borel–Cantelli argument on the bad set
+`B_n = {ω : lz/n < blockLogAvg₂ n ω − err_n}`: by G2 (`lz78_block_kraft_poly`),
+`μ(B_n) = Pₙ{xⁿ : Pₙ(xⁿ) < 2^{−Lₙ}·2^{−n·err}} ≤ 2^{−n·err}·∑ 2^{−Lₙ} ≤
+2^{−n·err}·(n+1)²`, and with `n·err = 2 log₂(n+1) + 2 log₂ n` this is `≤ 1/n²`,
+summable, so first Borel–Cantelli gives `∀ᵐ ω, ∀ᶠ n, ω ∉ B_n`.
+
+Modeled on the Z-side `blockLogAvgZ_ge_negLogQInftyZ_minus_error`
+(`SMB/AlgoetCover/Liminf.lean`) — the same Markov + p-series + Borel–Cantelli
+template. The body is **`sorry`-free**: the Markov + Borel–Cantelli lift is
+genuinely proven; it consumes the genuine combinatorial brick G2
+(`lz78_block_kraft_poly`) through the per-`n` bad-set measure bound
+`lz78_converse_bad_set_measure_le`. The only remaining converse residual is
+isolated in G2 (`@residual(wall:lz78-converse-aseventual)`); this lemma
+inherits that residual transitively (its `#print axioms` shows `sorryAx`) but
+introduces no new `sorry`. -/
+theorem blockLogAvg₂_minus_error_le_rate_ae
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (p : ErgodicProcess μ α) :
+    ∀ᵐ ω ∂μ, ∀ᶠ n in Filter.atTop,
+      blockLogAvg₂ μ p.toStationaryProcess n ω
+          - (2 * Real.log n + 2 * Real.log (n + 1)) / ((n : ℝ) * Real.log 2)
+        ≤ (lz78GreedyImplEncodingLength n
+              (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ) := by
+  set q := p.toStationaryProcess with hq
+  -- The bad set at scale `n`: the realizations where the greedy bit-rate
+  -- undershoots `blockLogAvg₂ − err` by more than the error margin.
+  set err : ℕ → ℝ :=
+    fun n => (2 * Real.log n + 2 * Real.log (n + 1)) / ((n : ℝ) * Real.log 2) with herr
+  set B : ℕ → Set Ω :=
+    fun n => {ω | (lz78GreedyImplEncodingLength n (q.blockRV n ω) : ℝ) / (n : ℝ)
+        < blockLogAvg₂ μ q n ω - err n} with hB
+  -- Per-`n` bad-set measure bound `μ(B n) ≤ 1/n²` (Markov on the discrete
+  -- block law + G2 polynomial Kraft); summable, so first Borel–Cantelli.
+  have h_bound : ∀ n, 1 ≤ n → μ (B n) ≤ (1 : ℝ≥0∞) / ((n : ℝ≥0∞) ^ 2) :=
+    fun n hn => lz78_converse_bad_set_measure_le μ p n hn
+  -- ∑' n, μ (B n) < ∞ (p-series), via the same machinery as
+  -- `MRatioLowerZ_le_sq_eventually`.
+  have h_tsum : ∑' n, μ (B n) ≠ ∞ := by
+    rw [tsum_eq_zero_add' ENNReal.summable]
+    refine ENNReal.add_ne_top.mpr ⟨measure_ne_top _ _, ?_⟩
+    have h_le : (∑' n : ℕ, μ (B (n + 1)))
+        ≤ ∑' n : ℕ, (1 : ℝ≥0∞) / (((n + 1 : ℕ) : ℝ≥0∞) ^ 2) :=
+      ENNReal.tsum_le_tsum (fun n => h_bound (n + 1) (Nat.succ_le_succ (Nat.zero_le _)))
+    refine ne_top_of_le_ne_top ?_ h_le
+    have h_summable_real : Summable (fun n : ℕ => (1 : ℝ) / ((n + 1 : ℕ) : ℝ) ^ 2) :=
+      (summable_nat_add_iff 1).mpr ((Real.summable_one_div_nat_pow (p := 2)).mpr (by norm_num))
+    have h_nonneg : ∀ n : ℕ, (0 : ℝ) ≤ (1 : ℝ) / ((n + 1 : ℕ) : ℝ) ^ 2 := fun _ => by positivity
+    have h_ennreal_tsum : ∑' n : ℕ,
+        ENNReal.ofReal ((1 : ℝ) / ((n + 1 : ℕ) : ℝ) ^ 2) ≠ ∞ := by
+      rw [← ENNReal.ofReal_tsum_of_nonneg h_nonneg h_summable_real]
+      exact ENNReal.ofReal_ne_top
+    have h_pointwise : ∀ n : ℕ,
+        (1 : ℝ≥0∞) / (((n + 1 : ℕ) : ℝ≥0∞) ^ 2) =
+          ENNReal.ofReal ((1 : ℝ) / ((n + 1 : ℕ) : ℝ) ^ 2) := by
+      intro n
+      have h_pos : (0 : ℝ) < ((n + 1 : ℕ) : ℝ) ^ 2 := by positivity
+      rw [ENNReal.ofReal_div_of_pos h_pos, ENNReal.ofReal_one,
+        show ((n + 1 : ℕ) : ℝ) ^ 2 = (((n + 1)^2 : ℕ) : ℝ) by push_cast; ring,
+        ENNReal.ofReal_natCast]
+      push_cast; ring_nf
+    rw [tsum_congr h_pointwise]
+    exact h_ennreal_tsum
+  -- First Borel–Cantelli: a.s. `ω ∉ B n` eventually.
+  have h_BC := MeasureTheory.ae_eventually_notMem h_tsum
+  filter_upwards [h_BC] with ω hx
+  filter_upwards [hx] with n hn
+  -- `ω ∉ B n` is exactly the desired inequality.
+  simp only [hB, Set.mem_setOf_eq, not_lt] at hn
+  exact hn
+
+/-- **LZ78 converse lower bound for the genuine greedy parser
+(Cover–Thomas Theorem 13.5.3, lower-bound half), a.s. form**.
+
+For a stationary ergodic source `p` the per-symbol length of the genuine
+longest-prefix-match greedy LZ78 parse is, almost surely, asymptotically at
+least the bit entropy rate:
+
+```
+entropyRate₂ μ p ≤ liminf_n (1/n) · lz78GreedyImplEncodingLength(X^n)   a.s.
+```
+
+This is the lower-bound (converse) half of LZ78 asymptotic optimality —
+the harder direction (SMB liminf lower bound + arbitrary-prefix Kraft
+inequality + finite-alphabet bookkeeping).
+
+Units: the encoding length is a base-2 code length
+(`lz78GreedyImplEncodingLength = c · bitLength c |α|`, `bitLength` uses
+`Nat.log 2`), so the per-symbol rate `lz/n` is in **bits**, and the correct
+RHS is the **bit** entropy rate `entropyRate₂ = entropyRate / Real.log 2`
+(not the nat-unit `entropyRate`), exactly the unit-correction documented in
+`ZivEntropyBridge.lean` ("Base-2 (bit) layer") and
+`McMillanKraftBridge.lean` (converse target `blockLogAvg₂`).
+
+**Dependency shape (Barron reduction, 2026-06-21).** The body is no longer a
+bare `sorry`: it is genuinely wired from two bricks plus the bit SMB
+convergence,
+
+* `shannon_mcmillan_breiman₂` (SMB in bits, **sorryAx-free**) — gives
+  `Tendsto blockLogAvg₂ → entropyRate₂` a.s.;
+* `blockLogAvg₂_minus_error_le_rate_ae` (G3, Barron a.s.-eventual lift) —
+  gives `∀ᶠ n, blockLogAvg₂ n ω − err_n ≤ lz/n` a.s., with `err_n → 0`;
+
+assembled by `Filter.liminf_le_liminf` between the lower sequence
+`Low n = blockLogAvg₂ n ω − err_n` (which `→ entropyRate₂`, so
+`liminf Low = entropyRate₂`) and `lz/n` (bounded above by
+`lz78_impl_rate_le_const`, hence cobounded below). The genuine converse
+content (the Barron competitive-optimality lift) is **isolated** in G3,
+which in turn consumes the genuine combinatorial brick G2
+(`lz78_block_kraft_poly`, the polynomial `n`-block Kraft bound). The whole
+remaining `sorry` is carried transitively by G2 (and, for now, G3); the
+assembly here introduces no new `sorry`.
+
+This statement is TRUE-as-framed (the units defect found by the prior audit
+is resolved by stating the RHS against `entropyRate₂` rather than
+`entropyRate`): on a uniform i.i.d. source on A symbols the bit-rate limit
+is `log₂ A = entropyRate / Real.log 2 = entropyRate₂` exactly, so the
+converse `entropyRate₂ ≤ liminf` is the genuine LZ78 converse (e.g. A=2:
+`entropyRate₂ = log₂ 2 = 1 ≤ liminf`, with equality in the limit); on the
+degenerate `entropyRate = 0` boundary it reads `0 ≤ liminf` (`entropyRate₂ =
+0`), again genuine. Signature takes only source data (`μ`, `p`), no
+load-bearing hypothesis. -/
+theorem lz78GreedyImpl_converse_ae
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (p : ErgodicProcess μ α) :
+    ∀ᵐ ω ∂μ,
+      entropyRate₂ μ p.toStationaryProcess
+      ≤ Filter.liminf
+          (fun n =>
+            (lz78GreedyImplEncodingLength n
+                (p.toStationaryProcess.blockRV n ω) : ℝ)
+              / (n : ℝ))
+          Filter.atTop := by
+  set q := p.toStationaryProcess with hq
+  -- The greedy bit-rate sequence and its eventual lower envelope.
+  set rate : Ω → ℕ → ℝ :=
+    fun ω n => (lz78GreedyImplEncodingLength n (q.blockRV n ω) : ℝ) / (n : ℝ) with hrate
+  set err : ℕ → ℝ :=
+    fun n => (2 * Real.log n + 2 * Real.log (n + 1)) / ((n : ℝ) * Real.log 2) with herr
+  -- `err n → 0` (each `log n / n → 0`).
+  have h_err_tend : Filter.Tendsto err Filter.atTop (𝓝 0) := by
+    have hℓ2 : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+    have hlogn : Filter.Tendsto (fun n : ℕ => Real.log (n : ℝ) / (n : ℝ))
+        Filter.atTop (𝓝 0) := by
+      have hR : Filter.Tendsto (fun x : ℝ => Real.log x ^ 1 / (1 * x + 0))
+          Filter.atTop (𝓝 0) := Real.tendsto_pow_log_div_mul_add_atTop 1 0 1 (by norm_num)
+      simpa using hR.comp tendsto_natCast_atTop_atTop
+    have hlogn1 : Filter.Tendsto (fun n : ℕ => Real.log ((n : ℝ) + 1) / (n : ℝ))
+        Filter.atTop (𝓝 0) := by
+      have hR : Filter.Tendsto (fun x : ℝ => Real.log x ^ 1 / (1 * x + (-1)))
+          Filter.atTop (𝓝 0) := Real.tendsto_pow_log_div_mul_add_atTop 1 (-1) 1 (by norm_num)
+      have hcomp := hR.comp (Filter.tendsto_atTop_add_const_right Filter.atTop (1 : ℝ)
+        tendsto_natCast_atTop_atTop)
+      refine hcomp.congr' ?_
+      filter_upwards [Filter.eventually_gt_atTop 0] with n hn
+      simp only [Function.comp_apply, pow_one]
+      rw [show (1 : ℝ) * ((n : ℝ) + 1) + (-1) = (n : ℝ) by ring]
+    set g : ℕ → ℝ := fun n =>
+      (2 / Real.log 2) * (Real.log (n : ℝ) / (n : ℝ))
+      + (2 / Real.log 2) * (Real.log ((n : ℝ) + 1) / (n : ℝ)) with hg
+    have hg_tend : Filter.Tendsto g Filter.atTop (𝓝 0) := by
+      have t1 := hlogn.const_mul (2 / Real.log 2)
+      have t2 := hlogn1.const_mul (2 / Real.log 2)
+      simpa [hg] using t1.add t2
+    refine hg_tend.congr' ?_
+    filter_upwards [Filter.eventually_gt_atTop 0] with n hn
+    have hnpos : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+    rw [hg, herr]
+    field_simp
+  filter_upwards [shannon_mcmillan_breiman₂ μ p,
+      blockLogAvg₂_minus_error_le_rate_ae μ p] with ω h_smb h_lift
+  -- The lower sequence `Low n = blockLogAvg₂ n ω − err n` tends to `entropyRate₂`.
+  set Low : ℕ → ℝ := fun n => blockLogAvg₂ μ q n ω - err n with hLow
+  have h_Low_tend : Filter.Tendsto Low Filter.atTop
+      (𝓝 (entropyRate₂ μ q)) := by
+    have := h_smb.sub h_err_tend
+    simpa only [hLow, hq, sub_zero] using this
+  -- The rate `lz/n` is bounded above (deterministic constant), hence cobounded below.
+  have h_rate_bdd : Filter.IsBoundedUnder (· ≤ ·) Filter.atTop (rate ω) :=
+    Filter.isBoundedUnder_of
+      ⟨(1 + 8 * Real.log (Fintype.card α + 1) / Real.log 2)
+          + ((Nat.log 2 (Fintype.card α) : ℝ) + 2),
+        fun n => lz78_impl_rate_le_const n _⟩
+  -- `Low n ≤ rate ω n` eventually, from G3.
+  have h_le : ∀ᶠ n in Filter.atTop, Low n ≤ rate ω n := by
+    filter_upwards [h_lift] with n hn
+    simpa only [hLow, hrate, hq] using hn
+  -- Assemble via `liminf_le_liminf`, with `liminf Low = entropyRate₂`.
+  have h_liminf_le : Filter.liminf Low Filter.atTop
+      ≤ Filter.liminf (rate ω) Filter.atTop :=
+    Filter.liminf_le_liminf h_le (hu := h_Low_tend.isBoundedUnder_ge)
+      (hv := h_rate_bdd.isCoboundedUnder_ge)
+  rw [h_Low_tend.liminf_eq] at h_liminf_le
+  exact h_liminf_le
 
 /-- Elementary log bound `log t ≤ 2 · √t` for `t > 0`, used to control the
 `c · log(Ntot / c)` boundary term of the achievability composition. -/
