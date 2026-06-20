@@ -453,6 +453,56 @@ lemma markovFactor_sum_subset_le_one
     _ = 1 := markovFactor_sum_eq_one μ p k n z
 
 omit [DecidableEq α] in
+/-- **Position invariance of `markovFactor` (the `n > k` branch).** For `n₁, n₂ > k`,
+`markovFactor μ p k n` depends only on the last `k + 1` symbols of its argument (the
+`k`-symbol window plus the last symbol), not on the absolute position `n`. This is the
+foundation of the conditional Ziv `(k-state, length)` grouping: the conditional mass of
+a phrase depends only on its trailing `k`-state, so phrases sharing a `k`-state may be
+grouped regardless of where they occur. The `n > k` branch of `markovFactor` uses the
+fixed kernel `condDistrib (obs k) (blockRV k) μ`, whose argument is the window and whose
+singleton set is the last symbol; both agree across `n₁, n₂` under the window/last
+hypotheses, so the two factors are equal. -/
+lemma markovFactor_eq_of_window_eq
+    (μ : Measure Ω) [IsFiniteMeasure μ] (p : StationaryProcess μ α) (k : ℕ)
+    {n₁ n₂ : ℕ} (h₁ : k < n₁) (h₂ : k < n₂)
+    (y₁ : Fin (n₁ + 1) → α) (y₂ : Fin (n₂ + 1) → α)
+    (hwin : ∀ j : Fin k, y₁ ⟨n₁ - k + j.val, by have := j.isLt; omega⟩
+                       = y₂ ⟨n₂ - k + j.val, by have := j.isLt; omega⟩)
+    (hlast : y₁ (Fin.last n₁) = y₂ (Fin.last n₂)) :
+    markovFactor μ p k n₁ y₁ = markovFactor μ p k n₂ y₂ := by
+  -- Both `n₁, n₂ > k`, so both unfold to the `n > k` (else) branch with the same
+  -- fixed kernel `condDistrib (obs k) (blockRV k) μ`. The window argument agrees by
+  -- `hwin` (pointwise) and the singleton set agrees by `hlast`.
+  have hnk₁ : ¬ n₁ ≤ k := Nat.not_le.mpr h₁
+  have hnk₂ : ¬ n₂ ≤ k := Nat.not_le.mpr h₂
+  unfold markovFactor
+  rw [dif_neg hnk₁, dif_neg hnk₂]
+  -- The window-functions are equal:
+  have h_arg : (fun j : Fin k => y₁ ⟨n₁ - k + j.val, by have := j.isLt; omega⟩)
+      = (fun j : Fin k => y₂ ⟨n₂ - k + j.val, by have := j.isLt; omega⟩) := by
+    funext j
+    exact hwin j
+  rw [h_arg, hlast]
+
+/-- The `k`-Markov conditional masses started from a fixed `k`-state `s : Fin k → α`.
+This is `condQk` specialized to `start = k`: the per-`k`-state conditional product
+sub-distribution that the `(k-state, length)` Ziv grouping instantiates. -/
+noncomputable def condQkState
+    (μ : Measure Ω) [IsFiniteMeasure μ] (p : StationaryProcess μ α) (k : ℕ)
+    (s : Fin k → α) : (ℓ : ℕ) → (Fin ℓ → α) → ℝ≥0∞ :=
+  condQk μ p k k s
+
+omit [DecidableEq α] in
+/-- The per-`k`-state conditional masses sum to at most `1`: the `start = k`
+specialization of `condQk_sum_le_one`. -/
+lemma condQkState_sum_le_one
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
+    (k : ℕ) (s : Fin k → α) (ℓ : ℕ) :
+    ∑ w : Fin ℓ → α, condQkState μ p k s ℓ w ≤ 1 := by
+  unfold condQkState
+  exact condQk_sum_le_one μ p k k s ℓ
+
+omit [DecidableEq α] in
 /-- `∑_y qkSingleton k n y ≤ 1`: the inductive product is bounded by 1 because each
 inner sum `∑_a (condDistrib ...){a} = 1` by `IsMarkovKernel`. -/
 lemma sum_qkSingleton_le_one
