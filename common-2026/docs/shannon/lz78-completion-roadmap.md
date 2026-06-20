@@ -8,30 +8,44 @@
 
 ---
 
-## 0. 現状 (2026-06-20、符号長 def-fix 後)
+## 0. 現状 (2026-06-20、符号長 def-fix + units-mismatch fix 後)
 
 **headline は type-check done であって proof done でない。** entry_point
 `lz78_asymptotic_optimality_with_greedy_impl`
 (`InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`) は genuine 命題で、
 仮説引数は `μ`, `p` のみ。`#print axioms` の sorryAx 依存は genuine M3/M4 壁 2本
 経由のみ (`h_bdd_above` は内製 discharge 済 = 引数から除去、commit `a1ae108`)。
+**headline + 2壁の target は base-2 (bit) entropy rate `entropyRate₂` であって
+nat 単位の `entropyRate` ではない** (units-mismatch defect 修正後、下記確定事実)。
 SoT はコード側タグ (`@residual(wall:...)`)、本節は二次。
 
-### 確定事実 (符号長 def-fix、commit `5d08566` + 監査注記 `9b09790`)
+### 確定事実 (符号長 def-fix `5d08566` → units-mismatch fix `55e1cd9`)
 
 1. **符号長 = genuine longest-prefix parse 化済**。`lz78GreedyImplEncodingLength n x`
    = genuine distinct phrase count `c = (lz78PhraseStrings (List.ofFn x)).length` を
    語数とする `c · bitLength c |α|`。以前のダミー1シンボル parse (count=n, rate 発散)
    は削除済。`c ≤ n`、genuine Ziv `c·log c ≤ K·n` (`lz78PhraseStrings_mul_log_le`、
-   sorryAx-free) で rate は `O(1)`。
-2. **2 headline sorry = genuine M3/M4 壁** (`GreedyParsingImpl.lean §3`):
-   - `lz78GreedyImpl_converse_ae` = `@residual(wall:lz78-converse-aseventual)`
-     (M4 Barron a.s. lift)。
-   - `lz78GreedyImpl_achievability_ae` = `@residual(wall:lz78-aseventual-ziv)`
-     (M3 variable-depth tree-node AEP)。
+   sorryAx-free) で rate は `O(1)`。符号長は **base-2 code** (`bitLength = Nat.log 2 …`)
+   ゆえ per-symbol rate `lz78GreedyImplEncodingLength/n` は **bit 単位**。
+2. **bit-vs-nat units defect を発見・`entropyRate₂` 化で修正** (commit `55e1cd9`、
+   再監査 PASS)。符号長 def-fix 後、独立監査が **second defect = bit-vs-nat units
+   mismatch** を発覚: `lz78GreedyImplEncodingLength/n` は bit-rate だが、headline +
+   2壁の sandwich target が nat 単位の `entropyRate` のままで、正entropy源 A≥2 では
+   `limsup = log₂A > logA` = **false-statement** (prior audit `9b09790` はこの units
+   ずれを見落とし overturn された)。`99acb58` で `@audit:defect(false-statement)`
+   確定 → `55e1cd9` で headline + 2壁の target を `entropyRate₂ = entropyRate/Real.log 2`
+   (bit) に置換し TRUE-as-framed に修正、再監査 PASS。**sandwich target は `entropyRate₂`**
+   で、`lz78GreedyImplEncodingLength/n` (bit) の真の極限 (`A=2` で `→ 1` 等) と整合する。
+3. **2 headline sorry = genuine M3/M4 壁** (`GreedyParsingImpl.lean §3`、target =
+   `entropyRate₂`):
+   - `lz78GreedyImpl_converse_ae` (`entropyRate₂ ≤ liminf (lz/n)`)
+     = `@residual(wall:lz78-converse-aseventual)` (M4 Barron a.s. lift)。
+   - `lz78GreedyImpl_achievability_ae` (`limsup (lz/n) ≤ entropyRate₂`)
+     = `@residual(wall:lz78-aseventual-ziv)` (M3 variable-depth tree-node AEP)。
    - いずれも符号データ (`μ`, `p`) のみを取る genuine 命題 (load-bearing hyp なし)。
-     ダミー parse 時代の converse=false-statement / achievability=degenerate defect
-     は def-fix で解消 (commit `caba26c` で旧 defect タグ済、その後 def-fix で消滅)。
+     `entropyRate₂` target で **TRUE-as-framed** (units fix で TRUE 化しただけで
+     discharge ではない、a.s.-eventual Ziv/converse 内容は未証明)。ダミー parse 時代の
+     defect は def-fix で、bit-vs-nat units defect は `entropyRate₂` 化で解消済。
 3. **`h_bdd_above` = 内製 discharge 済** (commit `a1ae108`、独立監査 all OK)。
    rate の `IsBoundedUnder (·≤·)` witness を proof body 内の `have` で構成し、
    **headline の仮説引数から除去した** (引数は `μ`, `p` のみ)。`O(1)` per-symbol
@@ -46,7 +60,7 @@ SoT はコード側タグ (`@residual(wall:...)`)、本節は二次。
 |---|---|---|
 | 符号長 + parent bridge | `GreedyParsingImpl.lean` §1-§2 | genuine longest-prefix 符号長 + CT 13.5.2 bit-length 上界 (`c ≤ n` × `bitLength` 単調)、per-symbol rate 上界・非負 |
 | Ziv 組合せ核 | `ZivCountingBody.lean` §4 | `lz78PhraseStrings_mul_log_le` (`c·log c ≤ K·n`)、`lz78PhraseStrings_count_isBigO` (`c = O(n/log n)`) |
-| base-2 単位 | `LZ78/ZivEntropyBridge.lean` | `entropyRate₂ = entropyRate / Real.log 2`, `blockLogAvg₂` (lz=bit / entropy=nat 単位整合) |
+| base-2 単位 | `EntropyRate.lean` + `LZ78/ZivEntropyBridge.lean` | `entropyRate₂ = entropyRate / Real.log 2` を `EntropyRate.lean` に `@[entry_point]` def 化 (units fix `55e1cd9` で旧 prose のみ → 実 def 化、headline + 2壁の target)。`ZivEntropyBridge.lean` は `blockLogAvg₂ = blockLogAvg / log 2` 等の unit-conversion prose (lz=bit / entropy=nat 単位整合) |
 | 無条件 SMB AEP (M3 限界供給) | `SMB/AlgoetCover/Liminf.lean` | `shannon_mcmillan_breiman` (`∀ᵐ ω, blockLogAvg μ p n ω → entropyRate μ p`、sorry-free entry_point)。M3 の **新たな限界対象** — `-log₂Pₙ/n → H₂` を free で供給 (旧 tree-node 基盤を obsolete 化、§3 校正参照) |
 | converse UD-object (M1 済) | `LZ78/ConverseUDObject.lean` | 汎用 `uniquelyDecodable_of_constantLength` + 実 LZ78 token code UD → McMillan 期待値 converse `entropyD 2 P ≤ E[L]=K` (M4 入力) |
 | 固定深さ k AEP (SMB 内部足場) | `SMB/AlgoetCover/Core.lean` / `EntropyRate.lean` | `negLogQk_div_tendsto_condEntropyTail` (`-log qk/n → H_k`)、`conditionalEntropyTail_tendsto_entropyRate` (`H_k → H`)。`shannon_mcmillan_breiman` の内部足場 (M3 が直接持ち上げる必要は無くなった) |
@@ -90,6 +104,10 @@ SoT はコード側タグ (`@residual(wall:...)`)、本節は二次。
   `c·log₂c ≤ -log₂Pₙ + o(n)` のみ。これを既証明 SMB に乗せる:
   `c·log₂c ≤ -log₂Pₙ + o(n)` (Ziv 組合せ) → `-log₂Pₙ/n = blockLogAvg₂ → H₂`
   (`shannon_mcmillan_breiman`、済) → `limsup (c·log₂c)/n ≤ H₂`。
+  ここで **`H₂` = `entropyRate₂`** (= SMB が `blockLogAvg₂` の極限として握る bit
+  entropy rate) で、これは壁補題 `lz78GreedyImpl_achievability_ae` の RHS
+  `entropyRate₂` そのもの。units fix 後の gateway atom (`c·log₂c/n` を
+  `blockLogAvg₂` に橋渡し → SMB で `entropyRate₂`) は壁 target と整合する。
 - **D1/D2 (§2) との整合 — 真の難所**: この Ziv 不等式は **a.s.-eventual / limsup 形で
   なければならない**。per-block universal な clean 形 (`c·log c ≤ -log Pₙ` ∀n∀ω、D1)
   も overhead 形 (D2) も **machine-disproof で FALSE** (反例 `a^16`)。genuine な
