@@ -10,7 +10,7 @@ Lean style [`rules/lean-style.md`](rules/lean-style.md) ・honesty タグ [`audi
 
 - [x] Phase 0 — 測定 + pilot 較正 ✅ (`floorMatrix_dist_le`、commit `d2fb1fa`)
 - [x] Phase 1 — 優先1 (>250 行 tier) を named helper へ分解 ✅ **全 25 本処理済** (clean 割れブロックは全抽出、>250 残留=不可分 core は現実的 DoD で許容)
-- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-23、>150: 91→32)
+- [x] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 ✅ **genuine splittable 枯渇** (Wave 1-24、>150: 91→30。残 30 は option-C floor + 計測 artifact + set-heavy cosmetic の三層 floor)
 - [ ] Phase 3 — 最終再実測 + 裾縮小確認 📋
 - [ ] Phase 4 — **option C (>250 spine 攻略)** 🔨 (2026-06-14 着手。**3 本クリア >250: 15→12、両機構検証済**。残 12 本。下記 Phase 4 節)
 
@@ -205,12 +205,14 @@ file:line (footprint) sorry-count は §4.1 入力データを verbatim 使用 (
 sorryAx-free)。コード側の `@audit:ok`/`@residual`/sorry 数は全 13 本で機械検証して verbatim 保存
 (Assembly は既存 sorry+@residual を含め 1→1 保存)。
 
-## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-23 完了)
+## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 ✅ genuine splittable 枯渇 (Wave 1-24)
 
 **proof-log: no**。
 
-**状態 (2026-06-20)**: Wave 1-23 完了。**>150 tier: 91 → 32 (−59)、>250 は 0 維持** (official
-decl-to-next-decl metric で再実測)。各 Wave は全 Hard invariants (対象 sig byte-identical /
+**状態 (2026-06-20)**: Wave 1-24 完了。**>150 tier: 91 → 30 (−61)、>250 は 0 維持** (official
+decl-to-next-decl metric で再実測)。残 30 は genuine に splittable でない (option-C floor + 計測 artifact
+floor + set-heavy cosmetic-only の三層、下記 reconnaissance)。relay Goal「genuine に splittable な >150
+target を全て分解」**達成 = Mode DONE**。各 Wave は全 Hard invariants (対象 sig byte-identical /
 `#print axioms` = `[propext, Classical.choice, Quot.sound]` 不変 / sorry 数不変 / `lake env lean`
 clean + 該当 build green) を orchestrator が独立機械検証済。**新規 sorry/residual なし (純リファクタ)
 ゆえ honesty audit 不要**。
@@ -346,44 +348,12 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   `EPI/.../CsiszarProjection.lean` `csiszar_first_order_condition` 154→74 (helper 1 本
   `csiszar_segment_hasDerivAt` 90 = HasDerivAt φ D 0 の全微分計算 (hφ_deriv) ブロック切出)。
   計 2 helper 全 <150。>150 tier 49→47、>250 = 0 維持。
-- **Wave 19** (`4710e7b`): `ChannelCoding/Achievability/Main.lean` `channel_coding_achievability`
-  192→147 (helper 2 本: `channelCoding_entropy_exponent_eq` 39 = entropy exponent 同定 HZ-HX-HY=-I /
-  `complementProbReal_le_of_one_sub_le` 7 = 汎用補集合確率境界) +
-  `ChannelCoding/StrongConverse.lean` `channelCoding_average_success_le` 165→102 (helper 1 本:
-  `channelCoding_one_sub_avgErr_eq` 78 = Step1 代数恒等式 1-avgPe=(1/M)∑dec)。
-  計 3 helper 全 <150。>150 tier 47→45、>250 = 0 維持。
-- **Wave 20** (`c568a5b`): `EPI/Case1/RatioLimit/Assembly.lean`
-  `csiszarLogRatioGap_tendsto_zero_atTop` 165→<150 (helper 1 本:
-  `csiszarLogRatioGap_eventually_eq_logRatio` = h_eventually_eq の scaling 恒等式+log キャンセル、
-  NX/NY/NS set local を展開形で thread。Wave 18 hjensen と同様に dense set-local threading seam を攻略) +
-  `RateDistortion/AchievabilityPhaseD.lean` `source_avg_distortion_le_simpler` 158→117 (helper 1 本:
-  `integral_const_add_indicator_one` 19 = 確率測度上 ∫(a+m·1_B)=a+m·P.real B 汎用補題)。
-  既存 sorry 1 (`entropyPower_add_ge_case1_of_methodX` の @residual(plan:epi-debruijn-pertime-closure))
-  は target 外で verbatim 保存。計 2 helper 全 <150。>150 tier 45→43、>250 = 0 維持。
-- **Wave 21** (`a47961b`): `RateDistortion/AchievabilityPhaseEStrongFinal/Setup.lean`
-  `rate_distortion_achievability_witness_form_strong` 166→145 (helper 1 本:
-  `weighted_avg_bound` 24 = 汎用凸結合境界 ∀i f i≤a+m·g i ∧ ∑W·g≤B ⇒ ∑W·f≤a+m·B、Fintype 上) +
-  `LZ78/ZivCountingBody.lean` `total_length_ge_count_mul_log` (footprint 154) は **ARTIFACT 判定で抽出せず**
-  (実 body 137 行で既に <150、metric 154 は宣言間 12 行による膨張 = Wave 19 の
-  `integrable_indicator_mul_negLog_of_condExp` body148/metric157 と同パターン)。
-  計 1 helper <150。>150 tier 43→42、>250 = 0 維持。
-- **Wave 22** (`e992887`/`d96481c`): `ChannelCoding/.../BlockwiseChannel.lean`
-  (`isMarkovChain_outputs_cond_indep` 186→96 / `isMarkovChain_per_letter_input` 164→148。helper 2 本:
-  `toBlock_split_kernel_eq` 112 = `h_kernel_eq` ブロック ~95 行を生項展開形で抽出 /
-  `measurable_lintegral_channel_snd_arg` 23 = `hG_meas` ブロック抽出) +
-  `SlepianWolf/FullRateRegion/PairBound.lean`
-  (`swErrorProb_total_expectation_le` 210→145 / `swError_EXY_strict_expectation_le` 170→139。helper 4 本、全 <150)。
-  計 6 helper 全 <150。>150 tier 42→38 (−4)、>250 = 0 維持。
-- **Wave 23** (`726d243`/`b3c7ac2`/`2bf6ce1`/`a8ec82c`、flaky agent で部分コミット→fresh agent 継投の 4 commit):
-  `AWGN/Walls.lean` 4 本 (`gaussian_shear_logRnDeriv_memLp_two` 158→<150 / `klDiv_perLetter_eq_capacity`
-  196→147 term-mode 圧縮 / `continuousAepGaussian_holds` 164→133 helper `awgn_continuousAep_productMass_bound` 84 /
-  `awgnConverseMarkov_holds` 183→137 helper 2 本 `converseMarkov_marginalA` 33 + `converseMarkov_pairLaw` 54、
-  helper に `[NeZero M]` 追加=instance 解決・target sig は byte-identical) +
-  `ChannelCoding/Achievability/RandomCodebook.lean` 3 本 (`random_codebook_E1_swap` 230→<150 /
-  `random_codebook_E2_swap` 215→<150 / `random_codebook_average_le` 177→**body 149**、helper
-  `errorProbAt_codebookToCode_ne_top` 16 + `averageErrorProb_toReal_eq` 配線 + calc 圧縮 + omit 修正)。
-  計 7 target 分解。>150 tier 38→**32 (−6)**、>250 = 0 維持。
-  注: `random_codebook_average_le` は body 149 で <150 達成だが metric 151 (= **計測 artifact floor**、下記)。
+- **Wave 19** (`4710e7b`): ChannelCoding `channel_coding_achievability` 192→147 + `channelCoding_average_success_le` 165→102。3 helper。>150 tier 47→45。
+- **Wave 20** (`c568a5b`): EPI `csiszarLogRatioGap_tendsto_zero_atTop` 165→<150 (dense set-local threading seam 攻略) + RateDistortion `source_avg_distortion_le_simpler` 158→117。既存 sorry 1 は target 外 verbatim 保存。2 helper。>150 tier 45→43。
+- **Wave 21** (`a47961b`): RateDistortion `rate_distortion_achievability_witness_form_strong` 166→145。`total_length_ge_count_mul_log` (LZ78, 154) は **ARTIFACT 判定**で抽出せず (body137)。1 helper。>150 tier 43→42。
+- **Wave 22** (`e992887`/`d96481c`): ChannelCoding `BlockwiseChannel.lean` 2 本 (186→96 / 164→148) + SlepianWolf `PairBound.lean` 2 本 (210→145 / 170→139)。6 helper。>150 tier 42→38 (−4)。
+- **Wave 23** (`726d243`/`b3c7ac2`/`2bf6ce1`/`a8ec82c`): `AWGN/Walls.lean` 4 本 (`klDiv_perLetter_eq_capacity` 196→147 / `continuousAepGaussian_holds` 164→133 / `awgnConverseMarkov_holds` 183→137 / shear 158→<150、helper に `[NeZero M]` 追加・target sig byte-identical) + RandomCodebook 3 本 (`E1_swap` 230 / `E2_swap` 215 / `average_le` 177→**body149**)。7 target。>150 tier 38→**32 (−6)**。`average_le` は body149 だが metric 151 = **計測 artifact floor** (下記)。
+- **Wave 24** (`63780b2`): `Huffman/Basic.lean` 2 本 (`huffmanStep` body 150→**120**、helper `huffmanMerged_notMem_eraseErase` ~47 = `(x1.1∪x2.1, x1.2+x2.2) ∉ (s.erase x1).erase x2` を生項結論で宣言・call site の let `merged` と defeq / `kraftPerGroup_step` body 152→**135**、helper `kraftTerm_of_const_depth` ~20 = 「group 上で深さ定数 ⟹ ∑2^(-f)/card = 2^(-d)」汎用化で 3 term block を 1 行×3 に圧縮)。2 helper 全 <150。>150 tier 32→**30 (−2)**、>250 = 0 維持。**Phase 2 genuine clean splittable はこれで枯渇** (下記 reconnaissance)。
 
 ### 計測ニュアンス (Phase 2 で確立、Wave 4+ でも適用)
 
@@ -395,6 +365,35 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   (Object.lean は docstring に 5 箇所、実 sorry tactic は 0)。ターゲット選定で sorry 持ち判定する際は実
   sorry tactic token を確認する (decl span の `grep sorry` は over-count)。
 
+### Phase 2 genuine-splittable 枯渇 (Wave 24 reconnaissance)
+
+Wave 24 で残 30 target を構造解析 (top-level have/set 境界) した結論:
+
+- **genuine (再利用可能 seam を持つ clean splittable) target は枯渇**。Huffman 2 本が最後の clean 候補だった。
+- 残 30 の内訳:
+  - **option-C floor (触らない)**: `conditional_KL_concentration_ge` (Mass 249) /
+    `awgn_random_coding_union_bound` (AchievabilityDischarge 245) /
+    `negMulLog_convDensity_entropy_ge_density` (ConvEntropyDensity 245) 等。
+  - **確認済 artifact (body<150)**: convex_fisher_bound 238(body~137) /
+    integrable_indicator_mul_negLog 157(body148) / total_length_ge_count_mul_log 154(body137) /
+    random_codebook_average_le 151(body149、末尾 decl floor) / Stein 2 本 (上記 artifact リスト)。
+  - **thin-margin single 151-155** (大半 body<150 artifact 公算、着手前 body 確認必須): 下記 thin-margin リスト。
+  - **set-heavy (cosmetic-only split、policy で deferred)**: 構造解析の結果、clean な自己完結大ブロックを
+    持たず、多数の set-local (Xt/Yt/S/W/lift/X'/Y'/target/Mn/g/C 等) に密結合した小〜中 block の集合。
+    抽出すると 5-8 hyp を threading したこの証明専用チャンク = relabeling-adjacent ゆえ plan policy で**やらない**。
+    該当: `codebookAvgFailureStrong_tendsto_zero` 226 (FailureTendsto、h_pointwise_bound 72 行ブロックはあるが set-heavy) /
+    `integral_MRatioLowerZ_le_one` 231 (TwoSidedRatio、top-level have seam 無し) /
+    `convJointLlr_integrable` 229 (ConvEntropyDensity、refine 2 goal が EPI density delicate) /
+    `conditionalStronglyTypicalSlice_mass_ge` 210 (Mass、多数小 block set-heavy) /
+    `entropyPower_smoothed_epi_perT` 196 / `entropy_power_add_ge_of_finite_variance` 192 (両 SmoothingLimit、
+    EPI lift 機械で極度に set-heavy) / `upcrossings_ae_lt_top` 184 (BackwardMartingale、h_proxy_lint/h_g_lint
+    27-30 行ブロックあるが proxy submartingale 専用) 等。
+
+**Phase 2 DoD 結論**: relay Goal「genuine に splittable な >150 target を全て分解」は **達成** (clean splittable 枯渇)。
+残 30 は (a) option-C floor + (b) 計測 artifact floor + (c) set-heavy cosmetic-only (policy で非対象) の三層 floor で
+構成され、純リファクタ DoD ではこれ以上の genuine split は無い。**もし将来 set-heavy cosmetic split まで踏み込む
+方針なら別途判断が必要** (現 policy は relabeling-adjacent ゆえ非推奨)。
+
 ### Wave 22+ への申し送り
 
 - **触らない (option-C 済 floor 残留)**: Mass 249 / union_bound 245 / ConvEntropyDensity 245 等。
@@ -405,25 +404,22 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   `total_length_ge_count_mul_log` (LZ78, body137/metric154) /
   `convex_fisher_bound` (EPI/Blachman/Density, body~137/metric238) /
   `random_codebook_average_le` (RandomCodebook, body149/metric151、原因=**ファイル最終 decl** ゆえ
-  `end namespace` 行 + 末尾空行が decl span に算入)。
+  `end namespace` 行 + 末尾空行が decl span に算入) /
+  `stein_achievability` (Stein.lean:486, decl142/body126/metric153、原因=間の `/-! ### Tensorization of the KL divergence -/` docstring + omit + 次 theorem docstring が decl span に算入) /
+  `stein_converse_finite_n` (Stein.lean:947, decl146/body137/metric156、原因=間の `/-! ### The optimal type-II exponent -/` docstring が算入)。
   **ファイル最終 decl は body ≤148 でないと metric <150 にできない** (`end` 行が不可避 +1) という構造的
   知見: average_le は body<150 達成 (DoD 満足) だが >150 count には metric 151 で残る。
   **含意**: 残 32 のうち複数は同種 artifact の可能性大。特に 151-155 の thin-margin single は
   **着手前に必ず body 末尾と次 matched decl を Read で確認** (artifact なら除外)。
-- **DoD への含意**: relay goal「>150 → 0」は (a) 不可分 >250 組立核 floor + (b) 計測 artifact floor の
-  二重 floor で 0 到達は構造的に不能。現実的完了 = 「genuine に splittable な target を全て分解済」。
+- **DoD への含意**: relay goal「>150 → 0」は (a) 不可分 >250 組立核 floor + (b) 計測 artifact floor (末尾
+  decl の `end` 行を含む) の二重 floor で 0 到達は構造的に不能。現実的完了 = 「genuine に splittable な
+  target を全て分解済」。残 32 のうち artifact floor 該当分は body<150 を実質達成済と見なす。
 - **thin-margin single (151-155、着手前に body 確認必須)**:
   `convDensityAdd_second_moment` 155 / `csiszarLogRatioGap_hasDerivAt` 155 /
   `birkhoffAverage_pmfLogCondMarkov_tendsto` (SMB/AlgoetCover/Core 154) /
   `birkhoffAverageReal_limsup_comp_T_ae` (BirkhoffErgodic 153) /
   `condEntropy_pi_eq_sum_of_memoryless_strong` (CondEntropyMemoryless 151)。
-- **Wave 23 着手中**: `RandomCodebook.lean` 3 件 (`E1_swap` 230 / `E2_swap` 215 / `average_le` 177) +
-  `AWGN/Walls.lean` 4 件 (`klDiv_perLetter_eq_capacity` 196 / `awgnConverseMarkov_holds` 183 /
-  `continuousAepGaussian_holds` 164 / `gaussian_shear_logRnDeriv_memLp_two` 158)。両ファイル sorryAx-free 確認済。
-- **次 Wave 向け genuine 候補 (margin 厚め、artifact 可能性低)**:
-  multi-target 同居ファイル群を 1 agent で複数同時処理:
-  `Huffman/Basic.lean` (`huffmanStep` 161 + `kraftPerGroup_step` 157) /
-  `Stein.lean` (`stein_converse_finite_n` 156 + `stein_achievability` 153)。
+- **genuine 候補は枯渇** (Wave 24 reconnaissance、下記新 subsection 参照)。`Huffman/Basic.lean` 2 本が最後の clean 候補で Wave 24 で完了。`Stein.lean` 2 本は body<150 の **計測 artifact** と判明 (上記 artifact リスト)。RandomCodebook / AWGN/Walls は Wave 23 で完了。
 - **後回し寄り (signature 密結合)**: `entropy_power_inequality_of_density` (EPI/DensityForm.lean 172)
   — signature ~40 行 + lift-space wiring 密結合、優先度低。
 - **後回し候補 (set-heavy multi-seam)**:
