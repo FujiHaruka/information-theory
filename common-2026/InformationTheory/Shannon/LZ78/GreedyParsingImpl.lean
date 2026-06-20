@@ -488,7 +488,18 @@ This is the genuine combinatorial new-math brick of the LZ78 converse
 (Cover–Thomas Thm 13.5.3 lower bound, distinct-phrase counting); it carries
 the converse residual and is left as an honest `sorry`.
 
-@residual(wall:lz78-converse-aseventual) -/
+Classification (independent audit 2026-06-21): a project-internal
+combinatorial brick with a concrete discharge plan (`docs/shannon/lz78-m4-plan.md`,
+G2; ~150–300 lines estimated), **not** a Mathlib-absent research wall — the
+prior `wall:lz78-converse-aseventual` "research-level scope-out" verdict was
+overturned this session (gateway-atom-first inventory). Reclassified
+`wall:lz78-converse-aseventual` → `plan:lz78-m4-plan` to reflect the closure
+route. The statement is TRUE-as-framed: the polynomial bound `≤ (n+1)²` was
+checked numerically (α=Bool, α=Fin 8, n≤6) to hold with large slack, and the
+`n = 0` boundary is exactly `1 ≤ 1`. Closability remains a `human-judgment`
+estimate (the body is still an unproven `sorry`) pending the full G2 build.
+
+@residual(plan:lz78-m4-plan) -/
 theorem lz78_block_kraft_poly (n : ℕ) :
     ∑ x : Fin n → α, (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x)
       ≤ ((n : ℝ) + 1) ^ 2 := by
@@ -673,7 +684,7 @@ template. The body is **`sorry`-free**: the Markov + Borel–Cantelli lift is
 genuinely proven; it consumes the genuine combinatorial brick G2
 (`lz78_block_kraft_poly`) through the per-`n` bad-set measure bound
 `lz78_converse_bad_set_measure_le`. The only remaining converse residual is
-isolated in G2 (`@residual(wall:lz78-converse-aseventual)`); this lemma
+isolated in G2 (`@residual(plan:lz78-m4-plan)`); this lemma
 inherits that residual transitively (its `#print axioms` shows `sorryAx`) but
 introduces no new `sorry`. -/
 theorem blockLogAvg₂_minus_error_le_rate_ae
@@ -1411,8 +1422,10 @@ the squeeze `tendsto_of_le_liminf_of_limsup_le` is applied with all of its
 regularity inputs genuine. The achievability half
 (`lz78GreedyImpl_achievability_ae`) is now sorryAx-free (the M3 wall
 `lz78-aseventual-ziv` is CLOSED, audited 2026-06-21); the remaining `sorryAx`
-is carried exactly via the M4 converse wall `lz78GreedyImpl_converse_ae`
-(`@residual(wall:lz78-converse-aseventual)`). The boundedness discharge
+is carried exactly via the M4 converse residual `lz78GreedyImpl_converse_ae`,
+isolated in the G2 brick `lz78_block_kraft_poly`
+(`@residual(plan:lz78-m4-plan)`, reclassified from the overturned
+`wall:lz78-converse-aseventual`). The boundedness discharge
 introduces no new `sorry`. -/
 @[entry_point]
 theorem lz78_asymptotic_optimality_with_greedy_impl

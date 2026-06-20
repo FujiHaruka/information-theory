@@ -46,8 +46,10 @@ lower bound) — are the **single source of truth** in the two scope-out
 `sorry + @residual` lemmas
 `lz78GreedyImpl_achievability_ae` / `lz78GreedyImpl_converse_ae`
 in `InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`
-(slug `lz78-aseventual-ziv` CLOSED 2026-06-21 / `@residual(wall:lz78-converse-aseventual)`,
-M3/M4 research-level scope-out, `docs/textbook-roadmap.md`). The earlier
+(M3 achievability `lz78-aseventual-ziv` CLOSED 2026-06-21; M4 converse
+reclassified to `@residual(plan:lz78-m4-plan)` — overturned from the prior
+`wall:lz78-converse-aseventual` scope-out, now a closeable G2 combinatorial
+brick, `docs/shannon/lz78-m4-plan.md` / `docs/textbook-roadmap.md`). The earlier
 statement-only passthrough predicates (`IsZivInequalityPassthrough`,
 `IsLZ78ConversePassthrough`, `IsSMBSandwichPassthrough`) that duplicated
 these statements as dead scaffolding were removed; the SMB sandwich itself

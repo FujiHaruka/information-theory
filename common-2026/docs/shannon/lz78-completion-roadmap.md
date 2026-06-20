@@ -21,7 +21,10 @@ commit `a1ae108`)。
 **headline + 残壁の target は base-2 (bit) entropy rate `entropyRate₂` であって
 nat 単位の `entropyRate` ではない** (units-mismatch defect 修正後、下記確定事実)。
 SoT はコード側タグ (`@residual(wall:...)`)、本節は二次。**完遂条件 = headline
-sorryAx-free は M4 converse discharge のみ残る。**
+sorryAx-free は M4 converse discharge のみ残る。** M4 は **verdict OVERTURN
+(2026-06-21、gateway-atom-first 読み取り在庫)**: 旧「research-level 壁・scope-out」を
+反証し、**Barron + polynomial n-block Kraft で closeable、進行中** (sub-plan
+[`lz78-m4-plan.md`](lz78-m4-plan.md)、dominant 残 = G2 polynomial Kraft brick のみ)。
 
 ### 確定事実 (符号長 def-fix `5d08566` → units-mismatch fix `55e1cd9`)
 
@@ -43,7 +46,9 @@ sorryAx-free は M4 converse discharge のみ残る。**
 3. **headline sorry = M4 converse 壁 1本のみ** (`GreedyParsingImpl.lean §3`、target =
    `entropyRate₂`):
    - `lz78GreedyImpl_converse_ae` (`entropyRate₂ ≤ liminf (lz/n)`、`:484`、唯一の live
-     bare sorry) = `@residual(wall:lz78-converse-aseventual)` (M4 Barron a.s. lift)。
+     bare sorry) = `@residual(plan:lz78-m4-plan)` (M4 Barron a.s. lift、**verdict OVERTURN:
+     旧 wall 判定から reclassify 済、Barron + polynomial n-block Kraft で closeable、進行中**
+     [`lz78-m4-plan.md`](lz78-m4-plan.md))。
    - `lz78GreedyImpl_achievability_ae` (`limsup (lz/n) ≤ entropyRate₂`、`:1005`) は
      **leg 11 で CLOSED** (`c22f2d5`、sorryAx-free + `@audit:ok` + 独立監査 PASS)。
      achievability 壁 `lz78-aseventual-ziv` は解消済 (CLOSED leg 11、`c22f2d5`)。
@@ -188,10 +193,16 @@ sorryAx-free は M4 converse discharge のみ残る。**
   (k-limit/n-limsup 交換)」と評価していたが、対角化回避で plumbing 級に縮小。攻略 path =
   [`lz78-m2-plan.md`](lz78-m2-plan.md) (目標達成)。
 
-### M4 — converse Barron a.s. lift 【要・腰据え】
-- **内容**: M1 の期待値 converse `H_D ≤ E[lz]` を **a.s.-eventual pointwise `liminf lz/n ≥ entropyRate₂`** に持ち上げる (competitive-optimality / Barron 型エルゴード論法)。LZ78 は pointwise で Shannon code を破れるので **期待値↛pointwise**。
-- **deliverable**: `lz78GreedyImpl_converse_ae` (`@residual(wall:lz78-converse-aseventual)`、`GreedyParsingImpl.lean`) の sorry を discharge → **converse 完遂**。
-- **規模**: ~300–700 行。**リスク: 高** (a.s. エルゴード)。
+### M4 — converse Barron a.s. lift 【🔄 verdict OVERTURN: closable via Barron + polynomial n-block Kraft、進行中 (sub-plan [`lz78-m4-plan.md`](lz78-m4-plan.md))】
+- **内容**: M1 の期待値 converse `H_D ≤ E[lz]` を **a.s.-eventual pointwise `liminf lz/n ≥ entropyRate₂`** に持ち上げる (Barron 型エルゴード論法)。LZ78 は pointwise で Shannon code を破れるので **期待値↛pointwise**。
+- **verdict OVERTURN (2026-06-21、gateway-atom-first 読み取り在庫)**: 旧 framing「research-level エルゴード壁・codebase + Mathlib 不在・scope-out」を**反証**。M4 = **既存 sorry-free 資産の配線 + 1 genuine 組合せ brick で closeable**、4 brick に分解 ([`lz78-m4-plan.md`](lz78-m4-plan.md)):
+  - **G4 (PURE WIRING、high)**: `algoet_cover_liminf_bound` (`SMB/AlgoetCover/Liminf.lean:384`、nat) を /log 2 で bit 化 → `entropyRate₂ ≤ liminf blockLogAvg₂`、`Filter.liminf_le_liminf` で G3 と連鎖。Z-side `liminf_blockLogAvgZ_ge_entropyRate` (`Liminf.lean:334`) 同型。
+  - **G3 (Z-side テンプレ複写、medium)**: `MRatioLowerZ_le_sq_eventually` (`Liminf.lean:25`) + `blockLogAvgZ_ge_negLogQInftyZ_minus_error` (`:98`) を複写。尤度比 `2^{-L_n}/P_n` の Markov + first Borel–Cantelli + p-series → `∀ᵐ ω, ∀ᶠ n, blockLogAvg₂ - error_n ≤ L_n/n`。唯一の外部入力 = G2。
+  - **G2 (THE GENUINE NEW BRICK、medium = 真の残作業)**: `∑ x, (1/2)^lz ≤ (n+1)^K`。**在庫発見: parse は complete でない** (`lz78PhraseStrings_flatten_prefix`: `flatten ++ tail = input`) ゆえ exact Kraft `∑ 2^{-lz} ≤ 1` は **likely FALSE**。正しいのは polynomial (tail-multiplicity ≤ (n+1) × structure-Kraft 収束)、slack は G3 の `log poly/n → 0` で吸収。~150–300 行 genuine LZ78 組合せ、**NOT a wall**。
+  - **G1 (G2 支援)**: `lz78PhraseStrings_nodup` (`:125`) / `_flatten_prefix` (`:243`) / `_flatten_tail_mem` (`:290`) / `LZ78Phrase.bitLength_eq` (`GreedyParsing.lean:115`) 再利用の phrase-structure counting。
+- **honesty**: G2 は **shared sorry lemma** として独立切り出し、G3 が forward reference で消費 (sanctioned tier-2、main signature `(μ,p)` 不変 = load-bearing bundling ではない)。
+- **deliverable**: `lz78GreedyImpl_converse_ae` (`@residual(plan:lz78-m4-plan)` = 旧 wall 判定から reclassify 済、`GreedyParsingImpl.lean:484`) の sorry を discharge → **converse 完遂**。
+- **規模/リスク是正**: 旧「~300–700 行・高 (a.s. エルゴード)」→ 新「ergodic machinery は全て既存 sorry-free、dominant 残 = G2 polynomial Kraft (~150–300 行、medium)」。confidence は依然 `human-judgment` (機械裏取り前) → sub-plan leg 1 で G4 gateway + G2 small-case 数値裏取りで格上げ予定。sub-plan = [`lz78-m4-plan.md`](lz78-m4-plan.md)。
 
 ### M5 — 最終合成 + 完遂判定 【capstone】
 - **内容**: M3 achievability は leg 11 で discharge 済 → 残る M4 converse wall sorry lemma discharge → headline `lz78_asymptotic_optimality_with_greedy_impl` を無条件化、`#print axioms = [propext, Classical.choice, Quot.sound]` (sorryAx 非依存) 確認 = 標準B 完遂。`h_bdd_above` 内製化は済 (commit `a1ae108`、`lz78-headline-bdd-discharge-plan.md` ✅ CLOSED)、もう完遂条件ではない。
@@ -214,14 +225,16 @@ sorryAx-free は M4 converse discharge のみ残る。**
 
 ## 3. 校正・規模・リスク総括
 
-- **校正 (2026-06-21 leg 11、achievability 完遂)**: 既存 SMB (`SMB/AlgoetCover/` = `Core.lean` + `Liminf.lean` + `TwoSidedRatio.lean`、計 ~2800 行) は **完成済・sorry-free** で、headline `shannon_mcmillan_breiman` が `-log₂Pₙ/n → H₂` を free で供給する (source entropy limit のみ)。両単純 grouping (node-position = D3 trap / marginal = D8 方向不一致) は machine-ruled-out (§2、再探索禁止)。leg 5 route 是正 → leg 8–10 composition brick CLOSED → **leg 11 で (V) diagonalization + (Z) W2 discharge が CLOSED sorryAx-free + 独立監査 PASS** (`ziv_aseventual_le_blockLogAvg₂` / `lz78GreedyImpl_achievability_ae` `@audit:ok`、`c22f2d5`)。**(V) は対角化不要と判明** — 最終 LHS が k 非依存ゆえ各固定 k bound (Lemma 1) + inf over k を RHS だけで取る (Lemma 2) で足り、「最大リスク = k-limit/n-limsup 交換」は回避された (cause:single-route)。**achievability 完遂、残る headline 壁 = M4 converse のみ** (SMB-lower + 期待値→a.s. lift、依然 high risk)。
-- **総計**: 残りは **M4 converse (~300–700 行、high) + M5 最終合成 (~50–100 行、低)** のみ。M1 + M2/M3 achievability は全て CLOSED。
-- **数学的位置づけ**: LZ78 最適性は**標準教科書定理 (深い/未解決ではない)**。**SMB が source entropy limit を、Q_k 資産が k-Markov measure/AEP/sub-distribution を握り、composition brick が Ziv 組合せ核 `c·log c ≤ negLogQk + o(n)` を閉じ、leg 11 で各 k bound + inf over k (対角化なし) が achievability を完遂した**。残りの難しさは M4 converse の「期待値→a.s. lift (Barron 型エルゴード)」層に絞られる。
-- **進め方の推奨**: **M1 + M2 = M3 (achievability) は完遂**。残る支配項は **M4 converse (Barron a.s. lift、high)** で独立した dedicated セッションで攻める。`lz78-ziv-treenode-plan.md` は **部分 un-park** (旧 T2 conditional sub-distribution = leg 5 で `condContext_sum_le_one` として建った、旧 T3 naive node-grouping assembly は D3 で dead)。
+- **校正 (2026-06-21 leg 11、achievability 完遂)**: 既存 SMB (`SMB/AlgoetCover/` = `Core.lean` + `Liminf.lean` + `TwoSidedRatio.lean`、計 ~2800 行) は **完成済・sorry-free** で、headline `shannon_mcmillan_breiman` が `-log₂Pₙ/n → H₂` を free で供給する (source entropy limit のみ)。両単純 grouping (node-position = D3 trap / marginal = D8 方向不一致) は machine-ruled-out (§2、再探索禁止)。leg 5 route 是正 → leg 8–10 composition brick CLOSED → **leg 11 で (V) diagonalization + (Z) W2 discharge が CLOSED sorryAx-free + 独立監査 PASS** (`ziv_aseventual_le_blockLogAvg₂` / `lz78GreedyImpl_achievability_ae` `@audit:ok`、`c22f2d5`)。**(V) は対角化不要と判明** — 最終 LHS が k 非依存ゆえ各固定 k bound (Lemma 1) + inf over k を RHS だけで取る (Lemma 2) で足り、「最大リスク = k-limit/n-limsup 交換」は回避された (cause:single-route)。**achievability 完遂、残る headline 壁 = M4 converse のみ**。
+- **M4 verdict OVERTURN (2026-06-21、gateway-atom-first 読み取り在庫)**: M4 を「research-level エルゴード壁・scope-out」とした旧 framing を**反証**。ergodic machinery (`algoet_cover_liminf_bound` G4 + Z-side Barron テンプレ G3 + Q_k AEP) は**全て既存 sorry-free**、dominant 残 = **G2 polynomial n-block Kraft brick (~150–300 行、medium、genuine、NOT a wall)** のみ。在庫が parse incomplete (`flatten ++ tail = input`) を踏まえ exact Kraft `∑ 2^{-lz} ≤ 1` の likely FALSE 性 + polynomial slack 設計を提示。sub-plan [`lz78-m4-plan.md`](lz78-m4-plan.md)。
+- **総計**: 残りは **M4 converse (dominant = G2 polynomial Kraft ~150–300 行 medium + G4/G3/G1 配線・テンプレ複写) + M5 最終合成 (~50–100 行、低)** のみ。M1 + M2/M3 achievability は全て CLOSED。
+- **数学的位置づけ**: LZ78 最適性は**標準教科書定理 (深い/未解決ではない)**。**SMB が source entropy limit を、Q_k 資産が k-Markov measure/AEP/sub-distribution を握り、composition brick が Ziv 組合せ核を閉じ、leg 11 で achievability を完遂した**。M4 converse も同じ既存 ergodic 資産 (`algoet_cover_liminf_bound` + Z-side Barron テンプレ) に乗り、残る難しさは G2 polynomial Kraft の組合せ核 1 本に絞られる。
+- **進め方の推奨**: **M1 + M2 = M3 (achievability) は完遂**。残る支配項は **M4 converse (Barron + polynomial Kraft、進行中 [`lz78-m4-plan.md`](lz78-m4-plan.md))** で独立した dedicated セッションで攻める (leg 1 = G4 配線 + G3 テンプレ複写 + G2 isolate、leg 2+ = G2 discharge)。`lz78-ziv-treenode-plan.md` は **部分 un-park** (旧 T2 conditional sub-distribution = leg 5 で `condContext_sum_le_one` として建った、旧 T3 naive node-grouping assembly は D3 で dead)。
 
 ---
 
 ## 4. cross-link
+- **sub-plan (M4 converse = 🚧 進行中、verdict OVERTURN)**: [`lz78-m4-plan.md`](lz78-m4-plan.md) — M4 Barron a.s. lift = `lz78GreedyImpl_converse_ae` (`GreedyParsingImpl.lean:484`、`@residual(plan:lz78-m4-plan)` = 旧 wall 判定から reclassify 済) discharge 計画。**verdict OVERTURN (2026-06-21、gateway-atom-first 読み取り在庫)**: 旧「research-level 壁・scope-out」を反証、Barron + polynomial n-block Kraft で closeable。4 brick (G4 SMB-liminf 配線 high / G3 Z-side Barron テンプレ medium / **G2 polynomial Kraft = dominant 残作業 medium genuine** / G1 scaffolding)。在庫発見: parse incomplete (`flatten ++ tail = input`) ゆえ exact Kraft `∑ 2^{-lz} ≤ 1` likely FALSE → polynomial slack 設計。G2 は shared sorry lemma で isolate (honesty: main signature `(μ,p)` 不変、bundling 回避)。
 - **sub-plan (M2/M3 achievability = ✅ CLOSED leg 11)**: [`lz78-m2-plan.md`](lz78-m2-plan.md) — M2/M3 Ziv 組合せ核 (Q_k grafting) = W2 `ziv_aseventual_le_blockLogAvg₂` (`GreedyParsingImpl.lean:917`、`@audit:ok`) discharge 計画。W1 SMB-in-bits は leg 3 で閉鎖済。**status: 全 Phase CLOSED — Phase 1 gateway + Phase 2a/2b/2c-i 足場 + Phase 2c-ii composition brick (leg 8–10) + Phase 3 (V) diagonalization + Phase 4 (Z) W2 discharge (leg 11、`c22f2d5`)**。両単純 grouping (node-position D3 / marginal D8) machine-ruled-out。**leg 11: (V) は対角化不要と判明** (最終 LHS が k 非依存 → 各固定 k bound Lemma 1 `ziv_aseventual_le_condEntropyTail_bits` + inf over k Lemma 2 `ziv_aseventual_le_entropyRate₂` で足る、k(n)→∞ 交換も `Lmax=o(n)` も不要、cause:single-route、[lz78-facts.md](lz78-facts.md) 判断ログ #6)。consumer `lz78GreedyImpl_achievability_ae` sorryAx-free → **achievability 完遂、本サブ計画の目標達成**。
 - **settled-facts ledger**: [`lz78-facts.md`](lz78-facts.md) — Q_k 資産 7 件 + node-context conditional 4 件 + Ziv 核 + route 確定 (D3/D4/D8) の機械裏取り台帳 (family `lz78` の SoT、`#print axioms` で再導出)。
 - **in-stock**: [`lz78-m3-treenode-inventory.md`](lz78-m3-treenode-inventory.md) — route 比較の機械裏取り在庫 (leg 4)。node-position-grouping = D3 trap で死ぬ、を確定。
