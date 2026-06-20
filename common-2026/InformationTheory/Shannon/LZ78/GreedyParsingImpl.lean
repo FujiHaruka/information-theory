@@ -359,6 +359,17 @@ degenerate `entropyRate = 0` boundary it reads `0 ≤ liminf` (`entropyRate₂ =
 wall content (a.s. Barron lift), not a units error. Signature takes only
 source data (`μ`, `p`), no load-bearing hypothesis.
 
+Units fix independent audit 2026-06-20 PASS (commit `55e1cd9`, fresh
+subagent): the prior `@audit:defect(false-statement)` is genuinely resolved
+by the bit RHS — `entropyRate₂` is a sorryAx-free unit rescaling
+(`entropyRate / Real.log 2`, machine-verified `#print axioms`), not a
+degenerate definition. Units re-checked at A=2 (`entropyRate₂ = log₂ 2 = 1`),
+A=3 (`entropyRate₂ = log₂ 3`, the bit-rate limit) and the degenerate
+`entropyRate = 0` boundary (`entropyRate₂ = 0`, non-vacuous). The M4 wall
+stays genuine: the `/log 2` rescaling does not touch the unproven ergodic
+content; body remains bare `sorry`. Four honesty checks PASS (non-circular,
+non-bundled, non-degenerate, sufficiency now TRUE-as-framed).
+
 @residual(wall:lz78-converse-aseventual) -/
 theorem lz78GreedyImpl_converse_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -416,6 +427,16 @@ the degenerate `entropyRate = 0` boundary it reads `limsup ≤ 0` with
 `entropyRate₂ = 0`, again genuine. The remaining `sorry` carries exactly the
 M3 ergodic wall content (variable-depth tree-node AEP), not a units error.
 Signature takes only source data, no load-bearing hypothesis.
+
+Units fix independent audit 2026-06-20 PASS (commit `55e1cd9`, fresh
+subagent): this is the load-bearing-direction half — its prior false bound
+(`limsup = log₂ A ≤ log A = entropyRate`, false for A ≥ 2) is now
+`limsup ≤ log₂ A = entropyRate₂` (true at equality, A=2: `1 ≤ 1`, A=3:
+`log₂ 3 ≤ log₂ 3`). The bit RHS is the sorryAx-free unit rescaling
+`entropyRate / Real.log 2`, not a degenerate def. The M3 wall stays genuine:
+the `/log 2` rescaling leaves the unproven Ziv→AEP content untouched; body
+remains bare `sorry`. Four honesty checks PASS (sufficiency now
+TRUE-as-framed). Verdict honest_residual (tier 2).
 
 @residual(wall:lz78-aseventual-ziv) -/
 theorem lz78GreedyImpl_achievability_ae
