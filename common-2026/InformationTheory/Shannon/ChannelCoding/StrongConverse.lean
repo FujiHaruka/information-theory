@@ -165,6 +165,74 @@ theorem channelCoding_per_codeword_decomposition
 /-! ### Codeword-average Verdú-Han lower bound -/
 
 omit [Fintype α] [DecidableEq α] [MeasurableSingletonClass α] [Nonempty β] in
+/-- Algebraic identity: `1 - avgErrorProb = (1/M) · ∑_m Pm(decodingRegion m)`,
+where `Pm = Measure.pi (fun i => W (encoder m i))`. -/
+lemma channelCoding_one_sub_avgErr_eq
+    {M : ℕ} (hM : 0 < M) {n : ℕ}
+    (W : Channel α β) [IsMarkovKernel W] (c : Code M n α β) :
+    (1 - (c.averageErrorProb W).toReal)
+      = (1 / M : ℝ) * ∑ m : Fin M,
+          (Measure.pi (fun i => W (c.encoder m i))).real (c.decodingRegion m) := by
+  have h_M_R_pos : (0 : ℝ) < M := by exact_mod_cast hM
+  have hM_ne : (M : ℝ) ≠ 0 := h_M_R_pos.ne'
+  let Pm : Fin M → Measure (Fin n → β) :=
+    fun m => Measure.pi (fun i => W (c.encoder m i))
+  have h_pm_prob : ∀ m : Fin M, IsProbabilityMeasure (Pm m) := fun m => by
+    show IsProbabilityMeasure (Measure.pi (fun i => W (c.encoder m i)))
+    infer_instance
+  have h_dec_meas : ∀ m : Fin M, MeasurableSet (c.decodingRegion m) :=
+    fun m => c.measurableSet_decodingRegion m
+  have h_err_eq_one_sub : ∀ m : Fin M,
+      ((Pm m) (c.errorEvent m)).toReal
+        = 1 - ((Pm m) (c.decodingRegion m)).toReal := by
+    intro m
+    have hP : IsProbabilityMeasure (Pm m) := h_pm_prob m
+    have h_compl : c.errorEvent m = (c.decodingRegion m)ᶜ := rfl
+    rw [h_compl, MeasureTheory.prob_compl_eq_one_sub (h_dec_meas m)]
+    rw [ENNReal.toReal_sub_of_le prob_le_one (by simp)]
+    simp
+  have h_avgPe_def : c.averageErrorProb W
+      = (M : ℝ≥0∞)⁻¹ * ∑ m : Fin M, c.errorProbAt W m := by
+    unfold Code.averageErrorProb
+    simp [hM.ne']
+  have h_errProbAt : ∀ m : Fin M,
+      c.errorProbAt W m = (Pm m) (c.errorEvent m) := fun _ => rfl
+  have h_sum_errProb_toReal :
+      (∑ m : Fin M, c.errorProbAt W m).toReal
+        = ∑ m : Fin M, ((Pm m) (c.errorEvent m)).toReal := by
+    have h_ne_top : ∀ m ∈ Finset.univ, c.errorProbAt W m ≠ ∞ :=
+      fun m _ => measure_ne_top _ _
+    rw [ENNReal.toReal_sum h_ne_top]
+    refine Finset.sum_congr rfl fun m _ => ?_
+    rw [h_errProbAt m]
+  have h_avgPe_toReal :
+      (c.averageErrorProb W).toReal
+        = (1 / M : ℝ) * ∑ m : Fin M, ((Pm m) (c.errorEvent m)).toReal := by
+    rw [h_avgPe_def, ENNReal.toReal_mul, ENNReal.toReal_inv,
+        ENNReal.toReal_natCast, h_sum_errProb_toReal]
+    ring
+  rw [h_avgPe_toReal]
+  have h_sum_err_rewrite :
+      ∑ m : Fin M, ((Pm m) (c.errorEvent m)).toReal
+        = (M : ℝ) - ∑ m : Fin M, ((Pm m) (c.decodingRegion m)).toReal := by
+    have h_step :
+        ∑ m : Fin M, ((Pm m) (c.errorEvent m)).toReal
+          = ∑ m : Fin M, (1 - ((Pm m) (c.decodingRegion m)).toReal) := by
+      refine Finset.sum_congr rfl fun m _ => h_err_eq_one_sub m
+    rw [h_step, Finset.sum_sub_distrib]
+    rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul, mul_one]
+  rw [h_sum_err_rewrite]
+  set X : ℝ := ∑ m : Fin M, ((Pm m) (c.decodingRegion m)).toReal with hX
+  have h_one_div_M : (1 / M : ℝ) * (M : ℝ) = 1 := by field_simp
+  have h_arith : 1 - (1 / M : ℝ) * ((M : ℝ) - X) = (1 / M : ℝ) * X := by
+    have : (1 / M : ℝ) * ((M : ℝ) - X) = (1 / M : ℝ) * (M : ℝ) - (1 / M : ℝ) * X := by
+      ring
+    rw [this, h_one_div_M]
+    ring
+  rw [h_arith]
+  rfl
+
+omit [Fintype α] [DecidableEq α] [MeasurableSingletonClass α] [Nonempty β] in
 /-- **Average-codeword Verdú-Han bound**:
 Average the per-codeword decomposition over the uniform message distribution
 to get the strong-converse-style lower bound on success probability `1 - avgPe`:
@@ -193,69 +261,7 @@ theorem channelCoding_average_success_le
   let Pm : Fin M → Measure (Fin n → β) :=
     fun m => Measure.pi (fun i => W (c.encoder m i))
   -- Step 1: 1 - avgPe = (1/M) · ∑_m Pm m (decodingRegion m).
-  have h_pm_prob : ∀ m : Fin M, IsProbabilityMeasure (Pm m) := fun m => by
-    show IsProbabilityMeasure (Measure.pi (fun i => W (c.encoder m i)))
-    infer_instance
-  have h_dec_meas : ∀ m : Fin M, MeasurableSet (c.decodingRegion m) :=
-    fun m => c.measurableSet_decodingRegion m
-  have h_err_eq_one_sub : ∀ m : Fin M,
-      ((Pm m) (c.errorEvent m)).toReal
-        = 1 - ((Pm m) (c.decodingRegion m)).toReal := by
-    intro m
-    have hP : IsProbabilityMeasure (Pm m) := h_pm_prob m
-    have h_compl : c.errorEvent m = (c.decodingRegion m)ᶜ := rfl
-    rw [h_compl, MeasureTheory.prob_compl_eq_one_sub (h_dec_meas m)]
-    rw [ENNReal.toReal_sub_of_le prob_le_one (by simp)]
-    simp
-  have h_succ_eq : (1 - (c.averageErrorProb W).toReal)
-      = (1 / M : ℝ) * ∑ m : Fin M, (Pm m).real (c.decodingRegion m) := by
-    have h_avgPe_def : c.averageErrorProb W
-        = (M : ℝ≥0∞)⁻¹ * ∑ m : Fin M, c.errorProbAt W m := by
-      unfold Code.averageErrorProb
-      simp [hM.ne']
-    -- Pm m (errorEvent m) = errorProbAt m by definition.
-    have h_errProbAt : ∀ m : Fin M,
-        c.errorProbAt W m = (Pm m) (c.errorEvent m) := fun _ => rfl
-    have h_sum_errProb_toReal :
-        (∑ m : Fin M, c.errorProbAt W m).toReal
-          = ∑ m : Fin M, ((Pm m) (c.errorEvent m)).toReal := by
-      have h_ne_top : ∀ m ∈ Finset.univ, c.errorProbAt W m ≠ ∞ :=
-        fun m _ => measure_ne_top _ _
-      rw [ENNReal.toReal_sum h_ne_top]
-      refine Finset.sum_congr rfl fun m _ => ?_
-      rw [h_errProbAt m]
-    have h_avgPe_toReal :
-        (c.averageErrorProb W).toReal
-          = (1 / M : ℝ) * ∑ m : Fin M, ((Pm m) (c.errorEvent m)).toReal := by
-      rw [h_avgPe_def, ENNReal.toReal_mul, ENNReal.toReal_inv,
-          ENNReal.toReal_natCast, h_sum_errProb_toReal]
-      ring
-    rw [h_avgPe_toReal]
-    -- Use h_err_eq_one_sub for each term:
-    -- ∑_m err = (∑_m 1) - ∑_m dec = M - ∑_m dec.
-    -- → 1 - (1/M) (M - ∑ dec) = (1/M) ∑ dec.
-    have h_sum_err_rewrite :
-        ∑ m : Fin M, ((Pm m) (c.errorEvent m)).toReal
-          = (M : ℝ) - ∑ m : Fin M, ((Pm m) (c.decodingRegion m)).toReal := by
-      have h_step :
-          ∑ m : Fin M, ((Pm m) (c.errorEvent m)).toReal
-            = ∑ m : Fin M, (1 - ((Pm m) (c.decodingRegion m)).toReal) := by
-        refine Finset.sum_congr rfl fun m _ => h_err_eq_one_sub m
-      rw [h_step, Finset.sum_sub_distrib]
-      rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul, mul_one]
-    rw [h_sum_err_rewrite]
-    -- 1 - (1/M) (M - X) = X / M.
-    set X : ℝ := ∑ m : Fin M, ((Pm m) (c.decodingRegion m)).toReal with hX
-    have h_one_div_M : (1 / M : ℝ) * (M : ℝ) = 1 := by field_simp
-    have h_arith : 1 - (1 / M : ℝ) * ((M : ℝ) - X) = (1 / M : ℝ) * X := by
-      have : (1 / M : ℝ) * ((M : ℝ) - X) = (1 / M : ℝ) * (M : ℝ) - (1 / M : ℝ) * X := by
-        ring
-      rw [this, h_one_div_M]
-      ring
-    rw [h_arith]
-    -- Note: (Pm m).real (c.decodingRegion m) = ((Pm m) (c.decodingRegion m)).toReal.
-    rfl
-  rw [h_succ_eq]
+  rw [channelCoding_one_sub_avgErr_eq hM W c]
   -- Step 2: apply per-codeword decomposition.
   have h_per_m : ∀ m : Fin M,
       (Pm m).real (c.decodingRegion m)

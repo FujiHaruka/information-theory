@@ -149,6 +149,60 @@ of `(p, W)` on `Ω := ℕ → α × β`, `μ := iidAmbientMeasure p W`,
   = −(mutualInfoOfChannel p W).toReal` is the entropy-MI three-term identity
   `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ` (chain rule + commutativity). -/
 
+/-! ### Shared helpers for the main theorem -/
+
+omit [DecidableEq α] [DecidableEq β] in
+/-- The entropy exponent identity for the i.i.d. ambient measure:
+`H(Z₀) - H(X₀) - H(Y₀) = -(mutualInfoOfChannel p W).toReal`,
+where `(X₀, Y₀, Z₀)` are the 0-th marginals of the i.i.d. extension. -/
+theorem channelCoding_entropy_exponent_eq
+    (W : Channel α β) [IsMarkovKernel W]
+    (p : Measure α) [IsProbabilityMeasure p] :
+    InformationTheory.Shannon.entropy (iidAmbientMeasure p W)
+        (jointSequence (α := α) (β := β) iidXs iidYs 0)
+      - InformationTheory.Shannon.entropy (iidAmbientMeasure p W) (iidXs (α := α) (β := β) 0)
+      - InformationTheory.Shannon.entropy (iidAmbientMeasure p W) (iidYs (α := α) (β := β) 0)
+      = -(mutualInfoOfChannel p W).toReal := by
+  have h_entZ : InformationTheory.Shannon.entropy (iidAmbientMeasure p W)
+      (jointSequence (α := α) (β := β) iidXs iidYs 0)
+        = InformationTheory.Shannon.entropy (jointDistribution p W) id := by
+    refine InformationTheory.Shannon.entropy_eq_of_identDistrib (iidAmbientMeasure p W)
+      (jointDistribution p W) (jointSequence iidXs iidYs 0) id ?_
+    refine ⟨(measurable_jointSequence iidXs iidYs measurable_iidXs measurable_iidYs 0).aemeasurable,
+      measurable_id.aemeasurable, ?_⟩
+    rw [iidAmbient_map_jointSequence, Measure.map_id]
+  have h_entX : InformationTheory.Shannon.entropy (iidAmbientMeasure p W)
+        (iidXs (α := α) (β := β) 0)
+        = InformationTheory.Shannon.entropy (jointDistribution p W) Prod.fst := by
+    refine InformationTheory.Shannon.entropy_eq_of_identDistrib (iidAmbientMeasure p W)
+      (jointDistribution p W) (iidXs 0) Prod.fst ?_
+    refine ⟨(measurable_iidXs 0).aemeasurable, measurable_fst.aemeasurable, ?_⟩
+    rw [iidAmbient_map_iidXs]
+    show p = (jointDistribution p W).map Prod.fst
+    rw [show ((jointDistribution p W).map Prod.fst) = (jointDistribution p W).fst from rfl,
+        jointDistribution_def]
+    exact (Measure.fst_compProd p W).symm
+  have h_entY : InformationTheory.Shannon.entropy (iidAmbientMeasure p W)
+        (iidYs (α := α) (β := β) 0)
+        = InformationTheory.Shannon.entropy (jointDistribution p W) Prod.snd := by
+    refine InformationTheory.Shannon.entropy_eq_of_identDistrib (iidAmbientMeasure p W)
+      (jointDistribution p W) (iidYs 0) Prod.snd ?_
+    refine ⟨(measurable_iidYs 0).aemeasurable, measurable_snd.aemeasurable, ?_⟩
+    rw [iidAmbient_map_iidYs]
+    rfl
+  rw [h_entZ, h_entX, h_entY]
+  have hMI := mutualInfoOfChannel_eq_HX_add_HY_sub_HZ p W
+  linarith
+
+/-- In a probability space, if `1 - b ≤ (μ s).toReal` then `μ.real sᶜ ≤ b`. -/
+theorem complementProbReal_le_of_one_sub_le
+    {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} [IsProbabilityMeasure μ]
+    {s : Set Ω} (hs : MeasurableSet s) {b : ℝ}
+    (h : 1 - b ≤ (μ s).toReal) : μ.real sᶜ ≤ b := by
+  rw [probReal_compl_eq_one_sub hs]
+  have h_real : μ.real s = (μ s).toReal := rfl
+  linarith [h_real ▸ h]
+
 /-! ### Main theorem -/
 
 omit [DecidableEq α] [DecidableEq β] in
@@ -232,43 +286,12 @@ theorem channel_coding_achievability
   have h_match_Z : μ.map (jointSequence (α := α) (β := β) iidXs iidYs 0)
         = jointDistribution p W :=
     iidAmbient_map_jointSequence p W 0
-  -- Step 3: identify the entropy exponent with `-I.toReal`.
-  -- entropy μ (jointSequence iidXs iidYs 0) - entropy μ (iidXs 0) - entropy μ (iidYs 0) = -I.
-  have h_entZ : InformationTheory.Shannon.entropy μ
-      (jointSequence (α := α) (β := β) iidXs iidYs 0)
-        = InformationTheory.Shannon.entropy (jointDistribution p W) id := by
-    refine InformationTheory.Shannon.entropy_eq_of_identDistrib μ (jointDistribution p W)
-      (jointSequence iidXs iidYs 0) id ?_
-    refine ⟨(measurable_jointSequence iidXs iidYs measurable_iidXs measurable_iidYs 0).aemeasurable,
-      measurable_id.aemeasurable, ?_⟩
-    rw [iidAmbient_map_jointSequence, Measure.map_id]
-  have h_entX : InformationTheory.Shannon.entropy μ (iidXs (α := α) (β := β) 0)
-        = InformationTheory.Shannon.entropy (jointDistribution p W) Prod.fst := by
-    refine InformationTheory.Shannon.entropy_eq_of_identDistrib μ (jointDistribution p W)
-      (iidXs 0) Prod.fst ?_
-    refine ⟨(measurable_iidXs 0).aemeasurable, measurable_fst.aemeasurable, ?_⟩
-    -- (μ.map (iidXs 0)) = p, and (jointDistribution p W).map Prod.fst = p.
-    rw [iidAmbient_map_iidXs]
-    show p = (jointDistribution p W).map Prod.fst
-    rw [show ((jointDistribution p W).map Prod.fst) = (jointDistribution p W).fst from rfl,
-        jointDistribution_def]
-    exact (Measure.fst_compProd p W).symm
-  have h_entY : InformationTheory.Shannon.entropy μ (iidYs (α := α) (β := β) 0)
-        = InformationTheory.Shannon.entropy (jointDistribution p W) Prod.snd := by
-    refine InformationTheory.Shannon.entropy_eq_of_identDistrib μ (jointDistribution p W)
-      (iidYs 0) Prod.snd ?_
-    refine ⟨(measurable_iidYs 0).aemeasurable, measurable_snd.aemeasurable, ?_⟩
-    rw [iidAmbient_map_iidYs]
-    rfl
-  -- Combine: HZ - HX - HY = -I.
+  -- Step 3: identify the entropy exponent with `-I`.
   have h_exp_eq : InformationTheory.Shannon.entropy μ
         (jointSequence (α := α) (β := β) iidXs iidYs 0)
       - InformationTheory.Shannon.entropy μ (iidXs 0)
-      - InformationTheory.Shannon.entropy μ (iidYs 0) = -I := by
-    rw [h_entZ, h_entX, h_entY]
-    have hMI := mutualInfoOfChannel_eq_HX_add_HY_sub_HZ p W
-    rw [← hI_def] at hMI
-    linarith
+      - InformationTheory.Shannon.entropy μ (iidYs 0) = -I :=
+    hμ_def ▸ hI_def ▸ channelCoding_entropy_exponent_eq W p
   -- Step 4-5: AEP closed-form `N₁` via `jointlyTypicalSet_prob_ge_of_rate`.
   -- Gives `1 - ε'/2 ≤ (μ {good n}).toReal` for all `n ≥ N₁`.
   have hε'_half : 0 < ε' / 2 := by linarith
@@ -322,28 +345,15 @@ theorem channel_coding_achievability
       (InformationTheory.Shannon.measurable_jointRV iidXs hXs n).prodMk
         (InformationTheory.Shannon.measurable_jointRV iidYs hYs n)
     exact h_meas_pair (measurableSet_jointlyTypicalSet _ _ _ _ _)
-  -- Closed-form `hN₁` is `1 - ε'/2 ≤ (μ {good}).toReal`; rewrite `E1 = 1 - μ.real {good}`.
+  -- Closed-form `hN₁` is `1 - ε'/2 ≤ (μ {good}).toReal`; bound `E1` via complement.
   have hE1_le : E1 ≤ ε' / 2 := by
-    have h_good_ge := hN₁ n hn_N₁
-    rw [hE1_def]
-    have h_compl_eq :
-        {ω | (InformationTheory.Shannon.jointRV (α := α) iidXs n ω,
-              InformationTheory.Shannon.jointRV (α := β) iidYs n ω) ∉
-            jointlyTypicalSet μ iidXs iidYs n ε}
-          = {ω | (InformationTheory.Shannon.jointRV iidXs n ω,
-                InformationTheory.Shannon.jointRV iidYs n ω) ∈
-              jointlyTypicalSet μ iidXs iidYs n ε}ᶜ := rfl
-    rw [h_compl_eq, probReal_compl_eq_one_sub h_meas_good]
-    -- `μ.real S = (μ S).toReal`; `1 - (μ {good}).toReal ≤ ε'/2 ⇐ 1 - ε'/2 ≤ (μ {good}).toReal`.
-    have h_good_real_eq : μ.real
-        {ω | (InformationTheory.Shannon.jointRV iidXs n ω,
-              InformationTheory.Shannon.jointRV iidYs n ω) ∈
-            jointlyTypicalSet μ iidXs iidYs n ε}
-        = (μ {ω | (InformationTheory.Shannon.jointRV iidXs n ω,
-              InformationTheory.Shannon.jointRV iidYs n ω) ∈
-            jointlyTypicalSet μ iidXs iidYs n ε}).toReal := rfl
-    rw [h_good_real_eq]
-    linarith
+    rw [hE1_def, show {ω | (InformationTheory.Shannon.jointRV (α := α) iidXs n ω,
+          InformationTheory.Shannon.jointRV (α := β) iidYs n ω) ∉
+        jointlyTypicalSet μ iidXs iidYs n ε}
+      = {ω | (InformationTheory.Shannon.jointRV iidXs n ω,
+            InformationTheory.Shannon.jointRV iidYs n ω) ∈
+          jointlyTypicalSet μ iidXs iidYs n ε}ᶜ from rfl]
+    exact complementProbReal_le_of_one_sub_le h_meas_good (hN₁ n hn_N₁)
   -- Closed-form `hN₂` is directly `(M-1) · exp(n·(-I+3ε)) < ε'/2`.
   have hE2_lt : E2 < ε' / 2 := by
     rw [h_E2_simp]
