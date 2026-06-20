@@ -251,7 +251,11 @@ tail at termination is the final candidate prefix `cur`, which the greedy invari
 keeps as a dictionary entry (or empty). So the tail is a member of the returned
 phrase list (or `[]`), bounding its length by the longest phrase. Proved by induction
 on `fuel`, threading the invariant `cur ∈ dict ∨ cur = []` (preserved on both the
-keep-growing and emit branches). -/
+keep-growing and emit branches).
+
+@audit:ok (independent audit 2026-06-21, sorryAx-free `[propext, Classical.choice,
+Quot.sound]`; genuine fuel-induction establishing the tail ∈ dict ∪ {[]} invariant, no
+sorry). -/
 theorem lz78PhraseStringsAux_tail_mem :
     ∀ (fuel : ℕ) (dict : List (List α)) (cur input : List α),
       input.length < fuel →
@@ -412,7 +416,15 @@ extends one phrase past the `≤ k` cumulative prefix) and the trailing tail
 
 This is the pure list-combinatorial heart of the LZ78 threading tiling: it carries
 the phrase *lengths* only (the downstream threading reads phrase content directly
-off the process, never the parse strings' content). -/
+off the process, never the parse strings' content).
+
+@audit:ok (independent audit 2026-06-21, sorryAx-free `[propext, Classical.choice,
+Quot.sound]`; pure list-combinatorial core, no hypothesis bundling; non-vacuity genuine —
+`c := parseCount - bAbsorbed` with `bAbsorbed = Nat.find` (least index with cumulative
+length `> k`), so `c > 0` whenever `parseCount > k+1`, not an empty tiling; `bAbsorbed ≤
+k+1` and the boundary bounds `n - e ≤ Lmax` / `b ≤ k + Lmax` are genuinely proved (tail
+∈ phrases-or-empty via `lz78PhraseStrings_flatten_tail_mem`, last-absorbed-phrase argument),
+not vacuous tautologies). -/
 theorem lz78_parse_tiling_positions (input : List α) (k : ℕ) :
     ∃ (b c e bAbsorbed Lmax : ℕ) (N : Fin (c + 1) → ℕ),
       N 0 = b ∧ N (Fin.last c) = e ∧ e ≤ input.length ∧

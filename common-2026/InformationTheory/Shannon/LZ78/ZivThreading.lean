@@ -535,7 +535,17 @@ phrase past the `≤ k` absorbed prefix, and the un-emitted trailing tail is one
 phrase or empty (`lz78PhraseStrings_flatten_tail_mem`). For the W2 vanishing, the closure
 still needs `Lmax = o(n)` a.s. (the longest LZ78 phrase grows sublinearly), which is part
 of the achievability wall, not of this tiling atom. The present lemma is the a.s. threading
-mechanism + non-vacuity anchor + boundary-length bounds (genuine, sorryAx-free). -/
+mechanism + non-vacuity anchor + boundary-length bounds (genuine, sorryAx-free).
+
+@audit:ok (independent audit 2026-06-21, sorryAx-free `[propext, Classical.choice,
+Quot.sound]`; non-circular, non-bundled = only `[IsProbabilityMeasure μ]` regularity +
+produces the existential; the a.s. `∀ᵐ ω, ∃ …` shape is the genuinely-provable form
+(per-ω positivity is false — it comes only from `cond_singleton_pos_ae`); vs. the prior
+per-ω skeleton no conjunct was dropped — every partition/positivity conjunct preserved,
+`bAbsorbed ≤ k` relaxed to the provable `≤ k+1`, two W2 boundary conjuncts added;
+non-vacuity genuine: `c + bAbsorbed = parseCount ∧ bAbsorbed ≤ k+1` forces `c > 0` for
+`parseCount > k+1`; wall slug `lz78-aseventual-ziv` correctly NOT on this closed decl —
+it lives at `ziv_aseventual_le_blockLogAvg₂`). -/
 lemma lz78_block_tiling
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (k n : ℕ) :

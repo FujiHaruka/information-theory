@@ -639,7 +639,13 @@ positive at *every* position `i`. This is the a.s. positivity input that the LZ7
 threading tiling discharges (the per-phrase `hposfac` precondition of
 `negLogQk_phrase_threading`). It follows from `cond_singleton_pos_ae` (the
 conditional kernel singleton mass is a.s. positive): for `i ≤ k` directly, and for
-`k < i` via the measure-preserving shift `T^[i-k]`. -/
+`k < i` via the measure-preserving shift `T^[i-k]`.
+
+@audit:ok (independent audit 2026-06-21, sorryAx-free `[propext, Classical.choice,
+Quot.sound]`; honest a.s. positivity `0 < (…).toReal`, not a degenerate `0 < (∞).toReal`
+— genuinely derived from `cond_singleton_pos_ae` (ChainRule.lean:227, itself sorryAx-free)
+via the two `markovFactor_blockRV_le/gt` branches plus the measure-preserving-shift
+transport for `k < i`; only `[IsProbabilityMeasure μ]` regularity, no bundling). -/
 lemma markovFactor_blockRV_pos_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (k : ℕ) :
     ∀ᵐ ω ∂μ, ∀ i : ℕ,
