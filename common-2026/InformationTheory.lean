@@ -221,6 +221,7 @@ import InformationTheory.Shannon.Hoeffding.LagrangeIVTBody
 import InformationTheory.Shannon.LZ78.PhraseCountAsymptoticBody
 import InformationTheory.Shannon.LZ78.ZivCountingBody
 import InformationTheory.Shannon.LZ78.ZivLengthGrouping
+import InformationTheory.Shannon.LZ78.ZivMeasureBridge
 import InformationTheory.Shannon.WynerZiv.ObjectiveConvexityBody
 import InformationTheory.Shannon.GaussianPDFVarianceDerivBody
 import InformationTheory.Shannon.FisherDeBruijnGaussianWitness
