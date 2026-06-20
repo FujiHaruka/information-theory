@@ -1,53 +1,43 @@
 # LZ78 headline: `h_bdd_above` internal discharge サブ計画
 
-**Status**: 🚧 OPEN — `h_bdd_above` は現 headline で genuinely open。
-**SoT**: コード側 (`InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean` の
-`lz78_asymptotic_optimality_with_greedy_impl` 仮説引数)。詳細履歴は git。
+**Status**: ✅ CLOSED — `h_bdd_above` は内製 discharge 済 (commit `a1ae108`、独立監査 all OK)。
+`h_bdd_above` は headline `lz78_asymptotic_optimality_with_greedy_impl` の
+**signature 引数から除去された** (引数は `μ`, `p` のみ)。
+**SoT**: コード側 (`InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`)。詳細履歴は git。
 
 > **Parent**: `docs/textbook-roadmap.md` §13 Ch.13 LZ78
 
-## 要点
+## 要点 (CLOSED)
 
 - 符号長 def-fix (commit `5d08566`、`lz78GreedyImplEncodingLength` を genuine
-  longest-prefix parse 化) 後、headline は per-symbol rate
-  `c · bitLength c |α| / n` の `IsBoundedUnder (·≤·)` を `h_bdd_above` 仮説で取る。
-  def-fix で rate は `O(1)` (genuine Ziv `c·log c ≤ K·n` 依存) なので
-  `h_bdd_above` は **TRUE-satisfiable な honest regularity precondition**
-  (core-reconstruction test PASS、limit 値 entropyRate の情報を運ばないので
-  load-bearing でない)。
-- **ただし現 headline では discharge 未着手 = genuinely open**。internal 化には
-  `c · bitLength c |α| / n ≤ 8·log(|α|+1)/log 2 + log₂|α| + 2` を示す必要があり、
-  これは genuine Ziv 上界 (`lz78PhraseStrings_mul_log_le`、`ℕ`-値) を per-symbol
-  rate (`ℝ`-値) の bound に翻訳する **`Nat.log↔Real.log` bridge** を要する。
-  loogle Found 0 (`Nat.log` ↔ `Real.log` の直接 bridge 補題は Mathlib 不在) で
-  self-build が要る点が discharge の crux。
+  longest-prefix parse 化) 後、per-symbol rate `c · bitLength c |α| / n` は
+  `O(1)` (genuine Ziv `c·log c ≤ K·n` 依存)。この定数上界を内製して
+  `h_bdd_above` (`IsBoundedUnder (·≤·)`) を proof body 内の `have` で供給し、
+  headline の仮説引数から外した (commit `a1ae108`)。
+- **crux 訂正**: 計画当初は `Nat.log↔Real.log` bridge を loogle Found 0 ゆえ
+  self-build 必須と見ていたが、これは **誤判定**。Mathlib 既存
+  `Real.natLog_le_logb` (`Mathlib.Analysis.SpecialFunctions.Log.Base`、前提なし)
+  で解決した (self-build 不要)。in-file の bridge `lz78_impl_natLog_mul_log_two_le`
+  はこの Mathlib 補題の薄い wrapper。
 - M3/M4 scope-out (genuine 研究級壁 `lz78GreedyImpl_achievability_ae` /
   `lz78GreedyImpl_converse_ae`) は本 plan の対象外、撤回しない。`h_bdd_above` を
-  内製できても headline は M3/M4 壁経由で sorryAx 依存のまま (= type-check done、
+  内製しても headline は M3/M4 壁経由で sorryAx 依存のまま (= type-check done、
   proof done ではない)。
 
-## Approach
+## Approach (履歴)
 
-`Nat.log`-値の genuine Ziv 上界を `Real.log` per-symbol rate bound に持ち上げる
-bridge 補題を self-build する。`bitLength c |α| = log₂(c+1) + log₂|α| + 2` の
-`ℕ → ℝ` キャスト + `lz78PhraseStrings_mul_log_le` (`c·log c ≤ K·n`) から
-`c · bitLength c |α| / n` の漸近 `O(1)` 上界を出し、`h_bdd_above` を内製
-(`Filter.IsBoundedUnder` witness 構成)。
+`O(1)` per-symbol rate 上界 `lz78_impl_rate_le_const`
+(`C = (1 + 8·log(|α|+1)/log 2) + (log₂|α| + 2)`、∀ω∀n で成立、sorryAx-free) を
+内製し、`Filter.isBoundedUnder_of` で `h_bdd_above` witness を構成 → headline の
+proof body に `have` として埋め込み、仮説引数から除去。Ziv 核
+`lz78PhraseStrings_mul_log_le` + `c ≤ n` + Mathlib `Real.natLog_le_logb` のみが
+非自明入力。
 
-## Steps
+## 結果 (commit `a1ae108` + 監査 `3e8a550`)
 
-1. `Nat.log 2 m` と `Real.logb 2 m` (= `Real.log m / Real.log 2`) の bridge 補題
-   を self-build (`Nat.log` の単調性 + `Real.log` 単調性、`Nat.log_le` 系)。
-   loogle Found 0 なので新規。
-2. per-symbol rate `c · bitLength c |α| / n` の `ℝ`-値漸近上界を
-   `lz78PhraseStrings_mul_log_le` + step 1 で導出。
-3. `Filter.IsBoundedUnder (·≤·) atTop (rate)` の witness を構成し、headline の
-   `h_bdd_above` を内部で供給 (引数から外す or `∀ᵐ` で内製)。
-4. 検証: `lake env lean GreedyParsingImpl.lean` silent + `h_bdd_above` 削除後の
-   `#print axioms` が M3/M4 壁 2本のみ sorryAx 依存 (h_bdd_above 由来の追加依存なし)。
-
-## 注意
-
-- 本 plan は **proof done を進めない** (M3/M4 壁が残る)。`h_bdd_above` を仮説から
-  消して headline の表面積を縮小する honesty hygiene + precondition 内製。
-- step 1 の bridge は LZ78 外でも再利用しうる汎用補題 (`Nat.log`↔`Real.log`)。
+- headline 引数は `μ`, `p` のみ (`h_bdd_above` / `h_bdd_below` 共に proof body の
+  `have` で内製)。
+- 独立監査 all OK (4 観点 PASS: 非循環 / 非バンドル / 非退化 / sufficiency)、新規
+  sorry なし、`lz78_impl_rate_le_const` / bridge は sorryAx-free。
+- headline `#print axioms` の sorryAx は M3/M4 壁 2 本経由のみ
+  (`lz78GreedyImpl_converse_ae` / `lz78GreedyImpl_achievability_ae`)。

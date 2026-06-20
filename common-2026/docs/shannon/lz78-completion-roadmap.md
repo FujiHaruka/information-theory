@@ -12,9 +12,10 @@
 
 **headline は type-check done であって proof done でない。** entry_point
 `lz78_asymptotic_optimality_with_greedy_impl`
-(`InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`) は genuine 命題だが、
-`#print axioms` は genuine M3/M4 壁 2本経由で sorryAx 依存。SoT はコード側タグ
-(`@residual(wall:...)`)、本節は二次。
+(`InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`) は genuine 命題で、
+仮説引数は `μ`, `p` のみ。`#print axioms` の sorryAx 依存は genuine M3/M4 壁 2本
+経由のみ (`h_bdd_above` は内製 discharge 済 = 引数から除去、commit `a1ae108`)。
+SoT はコード側タグ (`@residual(wall:...)`)、本節は二次。
 
 ### 確定事実 (符号長 def-fix、commit `5d08566` + 監査注記 `9b09790`)
 
@@ -31,13 +32,13 @@
    - いずれも符号データ (`μ`, `p`) のみを取る genuine 命題 (load-bearing hyp なし)。
      ダミー parse 時代の converse=false-statement / achievability=degenerate defect
      は def-fix で解消 (commit `caba26c` で旧 defect タグ済、その後 def-fix で消滅)。
-3. **`h_bdd_above` = 小さい open precondition**。headline は rate の
-   `IsBoundedUnder (·≤·)` を仮説で取る。def-fix で **TRUE-satisfiable な honest
-   regularity 仮説** (rate `O(1)`、core-reconstruction test PASS = limit 値 entropyRate
-   の情報を運ばないので load-bearing でない)。ただし discharge には `Nat.log↔Real.log`
-   bridge が要り、これが loogle Found 0 で self-build 要 → honest に open
-   (`docs/shannon/lz78-headline-bdd-discharge-plan.md`)。
-4. **完遂条件 = headline sorryAx-free** (M3 + M4 discharge + `h_bdd_above` 内製化)。
+3. **`h_bdd_above` = 内製 discharge 済** (commit `a1ae108`、独立監査 all OK)。
+   rate の `IsBoundedUnder (·≤·)` witness を proof body 内の `have` で構成し、
+   **headline の仮説引数から除去した** (引数は `μ`, `p` のみ)。`O(1)` per-symbol
+   rate 上界 `lz78_impl_rate_le_const` (sorryAx-free) を内製。当初 self-build 要と
+   見ていた `Nat.log↔Real.log` bridge は Mathlib 既存 `Real.natLog_le_logb` で
+   解決 (loogle Found 0 は誤判定、`docs/shannon/lz78-headline-bdd-discharge-plan.md`)。
+4. **完遂条件 = headline sorryAx-free** (M3 + M4 discharge で達成)。
 
 ### genuine 済の足場 (sorryAx 非依存・commit 済)
 
@@ -87,8 +88,8 @@
 - **規模**: ~300–700 行。**リスク: 高** (a.s. エルゴード)。
 
 ### M5 — 最終合成 + 完遂判定 【capstone】
-- **内容**: M3 + M4 で両 wall sorry lemma discharge + `h_bdd_above` を内製 (`Nat.log↔Real.log` bridge self-build、`lz78-headline-bdd-discharge-plan.md`) → headline `lz78_asymptotic_optimality_with_greedy_impl` を無条件化、`#print axioms = [propext, Classical.choice, Quot.sound]` (sorryAx 非依存) 確認 = 標準B 完遂。
-- **規模**: ~100–200 行 (配線 + bridge)。**リスク: 低** (M3/M4 が閉じれば)。
+- **内容**: M3 + M4 で両 wall sorry lemma discharge → headline `lz78_asymptotic_optimality_with_greedy_impl` を無条件化、`#print axioms = [propext, Classical.choice, Quot.sound]` (sorryAx 非依存) 確認 = 標準B 完遂。`h_bdd_above` 内製化は済 (commit `a1ae108`、`lz78-headline-bdd-discharge-plan.md` ✅ CLOSED)、もう完遂条件ではない。
+- **規模**: ~50–100 行 (配線のみ)。**リスク: 低** (M3/M4 が閉じれば)。
 
 ---
 
@@ -116,4 +117,4 @@
 ## 4. cross-link
 - main: `docs/textbook-roadmap.md` 判断ログ #6 (現行サマリ、~35 エージェントの経緯・全 disproof・honest frontier の記録は `git log -- docs/textbook-roadmap.md` の 2026-05-26 整理前 commit に旧 #17–#26 として残置)
 - 既存 plan (本 roadmap が incremental master として統合): `lz78-completion-plan.md`, `lz78-treeinduced-aep-plan.md`, `lz78-aseventual-achievability-plan.md`, `lz78-ziv-treenode-plan.md`, `lz78-blockrv-refactor-plan.md` + `-inventory.md`
-- 完遂判定: `GreedyParsingImpl.lean` の wall sorry lemma 2本 (M3/M4) が discharge され + `h_bdd_above` が内製化され、headline `lz78_asymptotic_optimality_with_greedy_impl` が `#print axioms` で sorryAx 非依存になった時点 = 標準B 完遂。
+- 完遂判定: `GreedyParsingImpl.lean` の wall sorry lemma 2本 (M3/M4) が discharge され、headline `lz78_asymptotic_optimality_with_greedy_impl` が `#print axioms` で sorryAx 非依存になった時点 = 標準B 完遂 (`h_bdd_above` 内製化は commit `a1ae108` で済、完遂条件から除外)。
