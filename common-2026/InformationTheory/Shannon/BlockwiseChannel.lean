@@ -616,6 +616,25 @@ private lemma map_xn_yi_eq_compProd_comap
           (measurable_pi_apply i)]
   exact h_eq
 
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
+private lemma measurable_lintegral_channel_snd_arg
+    (W : Channel α β) [IsMarkovKernel W] (n : ℕ)
+    (f : α × (Fin n → α) × β → ℝ≥0∞) (hf : Measurable f) :
+    Measurable (fun p : α × (Fin n → α) => ∫⁻ b : β, f (p.1, p.2, b) ∂(W p.1)) := by
+  -- Factor `p.1` out via `K' := W.comap Prod.fst`, then `lintegral_kernel_prod_right'`.
+  let K' : Kernel (α × (Fin n → α)) β :=
+    W.comap (Prod.fst : α × (Fin n → α) → α) measurable_fst
+  have h_eq_K' : (fun p : α × (Fin n → α) => ∫⁻ b : β, f (p.1, p.2, b) ∂(W p.1))
+      = fun p : α × (Fin n → α) => ∫⁻ b : β, f (p.1, p.2, b) ∂(K' p) := by
+    funext p
+    simp [K', Kernel.comap_apply]
+  rw [h_eq_K']
+  exact Measurable.lintegral_kernel_prod_right' (κ := K')
+    (f := fun pp : (α × (Fin n → α)) × β => f (pp.1.1, pp.1.2, pp.2))
+    (hf.comp (((measurable_fst.comp measurable_fst).prodMk
+      ((measurable_snd.comp measurable_fst).prodMk measurable_snd))))
+
 omit [DecidableEq α] [DecidableEq β] in
 /-- IsMarkovChain `(X^n) → X_i → Y_i` under `μ := q ⊗ₘ (toBlock W n)`.
 
@@ -710,28 +729,12 @@ private lemma isMarkovChain_per_letter_input
   --                                            = ∫⁻ p ∂(q.map (fun x => (x i, x))), G p.
   set G : α × (Fin n → α) → ℝ≥0∞ :=
     fun p => ∫⁻ b : β, f (p.1, p.2, b) ∂(W p.1) with hG_def
-  have hG_meas : Measurable G := by
-    -- G p = ∫⁻ b, f (p.1, p.2, b) ∂(W p.1).
-    -- Treat as a composition: factor `p.1` out via `W.comap Prod.fst`.
-    -- Let K' : Kernel (α × (Fin n → α)) β := W.comap Prod.fst measurable_fst.
-    -- Then G p = ∫⁻ b, f (p.1, p.2, b) ∂(K' p), which is `Measurable.lintegral_kernel_prod_right'`.
-    let K' : Kernel (α × (Fin n → α)) β :=
-      W.comap (Prod.fst : α × (Fin n → α) → α) measurable_fst
-    have h_eq_K' : G = fun p : α × (Fin n → α) =>
-        ∫⁻ b : β, f (p.1, p.2, b) ∂(K' p) := by
-      funext p
-      simp [G, K', Kernel.comap_apply]
-    rw [h_eq_K']
-    exact Measurable.lintegral_kernel_prod_right' (κ := K')
-      (f := fun pp : (α × (Fin n → α)) × β => f (pp.1.1, pp.1.2, pp.2))
-      (hf.comp (((measurable_fst.comp measurable_fst).prodMk
-        ((measurable_snd.comp measurable_fst).prodMk measurable_snd))))
+  have hG_meas : Measurable G :=
+    hG_def ▸ measurable_lintegral_channel_snd_arg W n f hf
   -- LHS = ∫⁻ x ∂q, G (x i, x).
   have h_LHS_via_G :
       ∫⁻ x : Fin n → α, ∫⁻ b : β, f (x i, x, b) ∂(W (x i)) ∂q
-        = ∫⁻ x : Fin n → α, G (x i, x) ∂q := by
-    refine lintegral_congr fun x => ?_
-    rfl
+        = ∫⁻ x : Fin n → α, G (x i, x) ∂q := lintegral_congr fun _ => rfl
   rw [h_LHS_via_G]
   -- Rewrite as ∫⁻ p ∂(q.map (fun x => (x i, x))), G p.
   have h_map_pair :
@@ -815,6 +818,113 @@ private lemma map_xn_yNoI_eq_compProd_pi
   rw [Kernel.map_apply _ hmeas_proj]
   symm
   exact lintegral_map (hf.comp (measurable_const.prodMk measurable_id)) hmeas_proj
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [DecidableEq β] [Nonempty β] in
+private lemma toBlock_split_kernel_eq
+    (W : Channel α β) [IsMarkovKernel W] (n : ℕ) (i : Fin n) :
+    ((Channel.toBlock W n).map
+        (fun y : Fin n → β => fun j : {j : Fin n // j ≠ i} => y j.val))
+      ×ₖ (W.comap (fun x : Fin n → α => x i) (measurable_pi_apply i))
+      = (Channel.toBlock W n).map
+          (fun y : Fin n → β => ((fun j : {j : Fin n // j ≠ i} => y j.val), y i)) := by
+  -- Pointwise equality at each x; both sides are probability measures on a finite space.
+  classical
+  have hmap_pair : Measurable (fun y : Fin n → β =>
+      ((fun j : {j : Fin n // j ≠ i} => y j.val), y i)) :=
+    (measurable_pi_iff.mpr (fun j => measurable_pi_apply j.val)).prodMk (measurable_pi_apply i)
+  refine Kernel.ext (fun x => ?_)
+  refine Measure.ext_of_singleton (fun yb => ?_)
+  obtain ⟨y', b⟩ := yb
+  -- Compute LHS as singleton-product:
+  have h_LHS_compute :
+      ((((Channel.toBlock W n).map
+            (fun y : Fin n → β => fun j : {j : Fin n // j ≠ i} => y j.val))
+          ×ₖ (W.comap (fun x : Fin n → α => x i) (measurable_pi_apply i))) x) {(y', b)}
+        = (∏ j : Fin n, W (x j)
+            (if h : j = i then (Set.univ : Set β) else ({y' ⟨j, h⟩} : Set β))) *
+          W (x i) ({b} : Set β) := by
+    rw [Kernel.prod_apply]
+    rw [show ({(y', b)} : Set (({j : Fin n // j ≠ i} → β) × β))
+        = ({y'} : Set _) ×ˢ ({b} : Set β) from by
+      ext ⟨p, c⟩; simp [Prod.ext_iff]]
+    rw [Measure.prod_prod]
+    rw [Kernel.map_apply _ (measurable_pi_iff.mpr (fun j => measurable_pi_apply j.val))]
+    rw [Kernel.comap_apply, Channel.toBlock_apply]
+    rw [Measure.map_apply (measurable_pi_iff.mpr (fun j => measurable_pi_apply j.val))
+        (measurableSet_singleton _)]
+    have h_LHS_inner_set :
+        (fun y : Fin n → β => fun j : {j : Fin n // j ≠ i} => y j.val) ⁻¹'
+          ({y'} : Set ({j : Fin n // j ≠ i} → β))
+          = Set.univ.pi (fun j : Fin n =>
+            if h : j = i then (Set.univ : Set β) else ({y' ⟨j, h⟩} : Set β)) := by
+      ext y
+      simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_pi, Set.mem_univ,
+                 true_imp_iff]
+      refine ⟨?_, ?_⟩
+      · intro hy j; by_cases h : j = i
+        · simp [h]
+        · have := congrFun hy ⟨j, h⟩; simp [h, this]
+      · intro h; funext ⟨j, hj⟩
+        have := h j; simp only [hj, ↓reduceDIte, ne_eq, Set.mem_singleton_iff] at this; exact this
+    rw [h_LHS_inner_set, Measure.pi_pi]
+  -- Compute RHS as singleton:
+  have h_RHS_compute :
+      ((Channel.toBlock W n).map
+          (fun y : Fin n → β => ((fun j : {j : Fin n // j ≠ i} => y j.val), y i)) x)
+            {(y', b)}
+        = ∏ j : Fin n, W (x j)
+            (if h : j = i then ({b} : Set β) else ({y' ⟨j, h⟩} : Set β)) := by
+    rw [Kernel.map_apply _ hmap_pair]
+    rw [Measure.map_apply hmap_pair (measurableSet_singleton _)]
+    rw [Channel.toBlock_apply]
+    have h_RHS_preimage :
+        (fun y : Fin n → β => ((fun j : {j : Fin n // j ≠ i} => y j.val), y i)) ⁻¹'
+          ({(y', b)} : Set (({j : Fin n // j ≠ i} → β) × β))
+          = Set.univ.pi (fun j : Fin n =>
+            if h : j = i then ({b} : Set β) else ({y' ⟨j, h⟩} : Set β)) := by
+      ext y
+      simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.mk.injEq, Set.mem_pi,
+                 Set.mem_univ, true_imp_iff]
+      refine ⟨?_, ?_⟩
+      · rintro ⟨hy', hy_i⟩ j; by_cases h : j = i
+        · subst h; simp [hy_i]
+        · have := congrFun hy' ⟨j, h⟩; simp [h, this]
+      · intro h; refine ⟨?_, ?_⟩
+        · funext ⟨j, hj⟩; have := h j
+          simp only [hj, ↓reduceDIte, ne_eq, Set.mem_singleton_iff] at this; exact this
+        · have := h i; simp only [↓reduceDIte, Set.mem_singleton_iff] at this; exact this
+    rw [h_RHS_preimage, Measure.pi_pi]
+  rw [h_LHS_compute, h_RHS_compute]
+  -- LHS: (∏ j, W (x j) (if h : j = i then univ else {y' ⟨j, h⟩})) * W (x i) {b}
+  -- RHS: ∏ j, W (x j) (if h : j = i then {b} else {y' ⟨j, h⟩})
+  -- Split the products at j = i.
+  rw [show ∏ j : Fin n, W (x j)
+          (if h : j = i then ({b} : Set β) else ({y' ⟨j, h⟩} : Set β))
+      = W (x i) ({b} : Set β) *
+          ∏ j : Fin n, W (x j)
+            (if h : j = i then (Set.univ : Set β) else ({y' ⟨j, h⟩} : Set β)) from ?_]
+  · ring
+  · -- Pull out the j = i factor.
+    have h_i_mem : i ∈ (Finset.univ : Finset (Fin n)) := Finset.mem_univ i
+    rw [← Finset.mul_prod_erase _ _ h_i_mem]
+    rw [← Finset.mul_prod_erase _ (fun j : Fin n => W (x j)
+      (if h : j = i then (Set.univ : Set β) else ({y' ⟨j, h⟩} : Set β))) h_i_mem]
+    have h_at_i_LHS : W (x i)
+        (if h : i = i then ({b} : Set β) else ({y' ⟨i, h⟩} : Set β))
+          = W (x i) ({b} : Set β) := by simp
+    have h_at_i_RHS : W (x i)
+        (if h : i = i then (Set.univ : Set β) else ({y' ⟨i, h⟩} : Set β))
+          = W (x i) (Set.univ : Set β) := by simp
+    have h_RHS_univ : W (x i) (Set.univ : Set β) = 1 := measure_univ
+    rw [h_at_i_LHS, h_at_i_RHS, h_RHS_univ]
+    -- Goal: W (x i) {b} * ∏ (j ∈ erase i), ... = W (x i) {b} * (1 * ∏ (j ∈ erase i), ...)
+    rw [one_mul]
+    congr 1
+    apply Finset.prod_congr rfl
+    intro j hj
+    have hj_ne : j ≠ i := Finset.ne_of_mem_erase hj
+    simp [hj_ne]
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] [DecidableEq β] in
 /-- IsMarkovChain `Y^{≠i} → X^n → Y_i` under `μ := q ⊗ₘ (toBlock W n)`.
@@ -904,98 +1014,8 @@ private lemma isMarkovChain_outputs_cond_indep
   have h_kernel_eq :
       W_noI ×ₖ W_i = (Channel.toBlock W n).map
           (fun y : Fin n → β => ((fun j : {j : Fin n // j ≠ i} => y j.val), y i)) := by
-    -- Pointwise equality at each x; both sides are probability measures on a finite space.
-    classical
-    refine Kernel.ext (fun x => ?_)
-    refine Measure.ext_of_singleton (fun yb => ?_)
-    obtain ⟨y', b⟩ := yb
-    -- Compute LHS as singleton-product:
-    have h_LHS_compute :
-        ((W_noI ×ₖ W_i) x) {(y', b)}
-          = (∏ j : Fin n, W (x j)
-              (if h : j = i then (Set.univ : Set β) else ({y' ⟨j, h⟩} : Set β))) *
-            W (x i) ({b} : Set β) := by
-      rw [Kernel.prod_apply]
-      rw [show ({(y', b)} : Set (({j : Fin n // j ≠ i} → β) × β))
-          = ({y'} : Set _) ×ˢ ({b} : Set β) from by
-        ext ⟨p, c⟩; simp [Prod.ext_iff]]
-      rw [Measure.prod_prod, hW_noI_def, hW_i_def]
-      rw [Kernel.map_apply _ (measurable_pi_iff.mpr (fun j => measurable_pi_apply j.val))]
-      rw [Kernel.comap_apply, Channel.toBlock_apply]
-      rw [Measure.map_apply (measurable_pi_iff.mpr (fun j => measurable_pi_apply j.val))
-          (measurableSet_singleton _)]
-      have h_LHS_inner_set :
-          (fun y : Fin n → β => fun j : {j : Fin n // j ≠ i} => y j.val) ⁻¹'
-            ({y'} : Set ({j : Fin n // j ≠ i} → β))
-            = Set.univ.pi (fun j : Fin n =>
-              if h : j = i then (Set.univ : Set β) else ({y' ⟨j, h⟩} : Set β)) := by
-        ext y
-        simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_pi, Set.mem_univ,
-                   true_imp_iff]
-        refine ⟨?_, ?_⟩
-        · intro hy j; by_cases h : j = i
-          · simp [h]
-          · have := congrFun hy ⟨j, h⟩; simp [h, this]
-        · intro h; funext ⟨j, hj⟩
-          have := h j; simp only [hj, ↓reduceDIte, ne_eq, Set.mem_singleton_iff] at this; exact this
-      rw [h_LHS_inner_set, Measure.pi_pi]
-    -- Compute RHS as singleton:
-    have h_RHS_compute :
-        ((Channel.toBlock W n).map
-            (fun y : Fin n → β => ((fun j : {j : Fin n // j ≠ i} => y j.val), y i)) x)
-              {(y', b)}
-          = ∏ j : Fin n, W (x j)
-              (if h : j = i then ({b} : Set β) else ({y' ⟨j, h⟩} : Set β)) := by
-      rw [Kernel.map_apply _ hmap_pair]
-      rw [Measure.map_apply hmap_pair (measurableSet_singleton _)]
-      rw [Channel.toBlock_apply]
-      have h_RHS_preimage :
-          (fun y : Fin n → β => ((fun j : {j : Fin n // j ≠ i} => y j.val), y i)) ⁻¹'
-            ({(y', b)} : Set (({j : Fin n // j ≠ i} → β) × β))
-            = Set.univ.pi (fun j : Fin n =>
-              if h : j = i then ({b} : Set β) else ({y' ⟨j, h⟩} : Set β)) := by
-        ext y
-        simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.mk.injEq, Set.mem_pi,
-                   Set.mem_univ, true_imp_iff]
-        refine ⟨?_, ?_⟩
-        · rintro ⟨hy', hy_i⟩ j; by_cases h : j = i
-          · subst h; simp [hy_i]
-          · have := congrFun hy' ⟨j, h⟩; simp [h, this]
-        · intro h; refine ⟨?_, ?_⟩
-          · funext ⟨j, hj⟩; have := h j
-            simp only [hj, ↓reduceDIte, ne_eq, Set.mem_singleton_iff] at this; exact this
-          · have := h i; simp only [↓reduceDIte, Set.mem_singleton_iff] at this; exact this
-      rw [h_RHS_preimage, Measure.pi_pi]
-    rw [h_LHS_compute, h_RHS_compute]
-    -- LHS: (∏ j, W (x j) (if h : j = i then univ else {y' ⟨j, h⟩})) * W (x i) {b}
-    -- RHS: ∏ j, W (x j) (if h : j = i then {b} else {y' ⟨j, h⟩})
-    -- Split the products at j = i.
-    rw [show ∏ j : Fin n, W (x j)
-            (if h : j = i then ({b} : Set β) else ({y' ⟨j, h⟩} : Set β))
-        = W (x i) ({b} : Set β) *
-            ∏ j : Fin n, W (x j)
-              (if h : j = i then (Set.univ : Set β) else ({y' ⟨j, h⟩} : Set β)) from ?_]
-    · ring
-    · -- Pull out the j = i factor.
-      have h_i_mem : i ∈ (Finset.univ : Finset (Fin n)) := Finset.mem_univ i
-      rw [← Finset.mul_prod_erase _ _ h_i_mem]
-      rw [← Finset.mul_prod_erase _ (fun j : Fin n => W (x j)
-        (if h : j = i then (Set.univ : Set β) else ({y' ⟨j, h⟩} : Set β))) h_i_mem]
-      have h_at_i_LHS : W (x i)
-          (if h : i = i then ({b} : Set β) else ({y' ⟨i, h⟩} : Set β))
-            = W (x i) ({b} : Set β) := by simp
-      have h_at_i_RHS : W (x i)
-          (if h : i = i then (Set.univ : Set β) else ({y' ⟨i, h⟩} : Set β))
-            = W (x i) (Set.univ : Set β) := by simp
-      have h_RHS_univ : W (x i) (Set.univ : Set β) = 1 := measure_univ
-      rw [h_at_i_LHS, h_at_i_RHS, h_RHS_univ]
-      -- Goal: W (x i) {b} * ∏ (j ∈ erase i), ... = W (x i) {b} * (1 * ∏ (j ∈ erase i), ...)
-      rw [one_mul]
-      congr 1
-      apply Finset.prod_congr rfl
-      intro j hj
-      have hj_ne : j ≠ i := Finset.ne_of_mem_erase hj
-      simp [hj_ne]
+    rw [hW_noI_def, hW_i_def]
+    exact toBlock_split_kernel_eq W n i
   -- Apply compProd_map.
   rw [h_kernel_eq, Measure.compProd_map hmap_pair]
   -- Goal: μ.map (...) = (q ⊗ₘ toBlock W n).map (Prod.map id (fun y => (y ∘ ↑, y i)))
