@@ -206,6 +206,60 @@ applies `binning_pair_alias_expectation_le_aux` per `ω`, and closes with
 `jointlyTypicalSet_card_le`. -/
 
 omit [DecidableEq α] [DecidableEq β] in
+private lemma binning_EXY_strict_per_omega_le
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    {n M_X M_Y : ℕ} [NeZero M_X] [NeZero M_Y] (ε : ℝ) (C : ℝ)
+    (hS_card_le :
+      ((jointlyTypicalSet μ Xs Ys n ε).toFinite.toFinset.card : ℝ) ≤ C)
+    (ω : Ω) :
+    ((binningMeasure α n M_X).prod (binningMeasure β n M_Y)).real
+        {fg : ((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y)
+          | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2}
+      ≤ C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by
+  classical
+  set B_X : Measure ((Fin n → α) → Fin M_X) := binningMeasure α n M_X with hB_X_def
+  set B_Y : Measure ((Fin n → β) → Fin M_Y) := binningMeasure β n M_Y with hB_Y_def
+  set BP : Measure (((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y)) :=
+    B_X.prod B_Y with hBP_def
+  set S : Finset ((Fin n → α) × (Fin n → β)) :=
+    (jointlyTypicalSet μ Xs Ys n ε).toFinite.toFinset with hS_def
+  have hMxinv_nn : (0 : ℝ) ≤ ((M_X : ℝ))⁻¹ :=
+    inv_nonneg.mpr (by exact_mod_cast Nat.zero_le _)
+  have hMyinv_nn : (0 : ℝ) ≤ ((M_Y : ℝ))⁻¹ :=
+    inv_nonneg.mpr (by exact_mod_cast Nat.zero_le _)
+  set truth_x : Fin n → α := jointRV Xs n ω
+  set truth_y : Fin n → β := jointRV Ys n ω
+  -- Rewrite the per-ω set into the binning_pair_alias form.
+  have h_set_eq : {fg : ((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y)
+            | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2}
+        = {fg | ∃ p ∈ S, p.1 ≠ truth_x ∧ p.2 ≠ truth_y
+              ∧ fg.1 p.1 = fg.1 truth_x ∧ fg.2 p.2 = fg.2 truth_y} := by
+    ext fg
+    simp only [Set.mem_setOf_eq, swError_EXY_strict, hS_def, Set.Finite.mem_toFinset]
+    constructor
+    · rintro ⟨p, hp1, hp2, hfx, hfy, hpJTS⟩
+      exact ⟨p, hpJTS, hp1, hp2, hfx, hfy⟩
+    · rintro ⟨p, hpJTS, hp1, hp2, hfx, hfy⟩
+      exact ⟨p, hp1, hp2, hfx, hfy, hpJTS⟩
+  rw [h_set_eq]
+  have hA : BP.real {fg | ∃ p ∈ S, p.1 ≠ truth_x ∧ p.2 ≠ truth_y
+                ∧ fg.1 p.1 = fg.1 truth_x ∧ fg.2 p.2 = fg.2 truth_y}
+      ≤ (S.card : ℝ) * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by
+    simpa [BP, B_X, B_Y] using
+      binning_pair_alias_expectation_le_aux (M_X := M_X) (M_Y := M_Y) truth_x truth_y S
+  calc BP.real {fg | ∃ p ∈ S, p.1 ≠ truth_x ∧ p.2 ≠ truth_y
+                ∧ fg.1 p.1 = fg.1 truth_x ∧ fg.2 p.2 = fg.2 truth_y}
+      ≤ (S.card : ℝ) * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := hA
+    _ ≤ C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by
+        have hMxinv_my_nn : 0 ≤ ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ :=
+          mul_nonneg hMxinv_nn hMyinv_nn
+        have := mul_le_mul_of_nonneg_right hS_card_le hMxinv_my_nn
+        calc (S.card : ℝ) * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹
+            = (S.card : ℝ) * (((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) := by ring
+          _ ≤ C * (((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) := this
+          _ = C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by ring
+
+omit [DecidableEq α] [DecidableEq β] in
 set_option linter.unusedVariables false in
 @[entry_point]
 theorem swError_EXY_strict_expectation_le
@@ -253,43 +307,12 @@ theorem swError_EXY_strict_expectation_le
   have hS_card_le : (S.card : ℝ) ≤ C := by
     rw [hS_def, hC_def]
     exact jointlyTypicalSet_card_le μ Xs Ys hXs hYs hposZ n hε
-  -- Per-ω slice bound on BP.real.
+  -- Per-ω slice bound on BP.real (extracted to `binning_EXY_strict_per_omega_le`).
   have h_per_omega : ∀ ω : Ω,
       BP.real {fg : ((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y)
                 | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2}
-        ≤ C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by
-    intro ω
-    set truth_x : Fin n → α := jointRV Xs n ω
-    set truth_y : Fin n → β := jointRV Ys n ω
-    -- Rewrite the per-ω set into the binning_pair_alias form.
-    have h_set_eq : {fg : ((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y)
-              | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2}
-          = {fg | ∃ p ∈ S, p.1 ≠ truth_x ∧ p.2 ≠ truth_y
-                ∧ fg.1 p.1 = fg.1 truth_x ∧ fg.2 p.2 = fg.2 truth_y} := by
-      ext fg
-      simp only [Set.mem_setOf_eq, swError_EXY_strict, hS_def, Set.Finite.mem_toFinset]
-      constructor
-      · rintro ⟨p, hp1, hp2, hfx, hfy, hpJTS⟩
-        exact ⟨p, hpJTS, hp1, hp2, hfx, hfy⟩
-      · rintro ⟨p, hpJTS, hp1, hp2, hfx, hfy⟩
-        exact ⟨p, hp1, hp2, hfx, hfy, hpJTS⟩
-    rw [h_set_eq]
-    have hA : BP.real {fg | ∃ p ∈ S, p.1 ≠ truth_x ∧ p.2 ≠ truth_y
-                  ∧ fg.1 p.1 = fg.1 truth_x ∧ fg.2 p.2 = fg.2 truth_y}
-        ≤ (S.card : ℝ) * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by
-      simpa [BP, B_X, B_Y] using
-        binning_pair_alias_expectation_le_aux (M_X := M_X) (M_Y := M_Y) truth_x truth_y S
-    calc BP.real {fg | ∃ p ∈ S, p.1 ≠ truth_x ∧ p.2 ≠ truth_y
-                  ∧ fg.1 p.1 = fg.1 truth_x ∧ fg.2 p.2 = fg.2 truth_y}
-        ≤ (S.card : ℝ) * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := hA
-      _ ≤ C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by
-          have hMxinv_my_nn : 0 ≤ ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ :=
-            mul_nonneg hMxinv_nn hMyinv_nn
-          have := mul_le_mul_of_nonneg_right hS_card_le hMxinv_my_nn
-          calc (S.card : ℝ) * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹
-              = (S.card : ℝ) * (((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) := by ring
-            _ ≤ C * (((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) := this
-            _ = C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by ring
+        ≤ C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := fun ω =>
+    binning_EXY_strict_per_omega_le μ Xs Ys ε C hS_card_le ω
   -- Build the product set E ⊆ (BP-space) × Ω.
   set E : Set ((((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y)) × Ω) :=
     {q | q.2 ∈ swError_EXY_strict μ Xs Ys n ε q.1.1 q.1.2} with hE_def
@@ -613,6 +636,67 @@ lemma integral_swError_outer_split
   rw [integral_const_mul]
   rw [integral_const, probReal_univ, smul_eq_mul, one_mul]
 
+private lemma le_E0_2EX_2EY_EXY_of_split
+    {lhs aggregate e0 eX eY eXY bX bY bXY : ℝ}
+    (h_mono : lhs ≤ aggregate)
+    (h_split : aggregate = e0 + 2 * eX + 2 * eY + eXY)
+    (hX : eX ≤ bX) (hY : eY ≤ bY) (hXY : eXY ≤ bXY) :
+    lhs ≤ e0 + 2 * bX + 2 * bY + bXY := by
+  have h2 : (0 : ℝ) ≤ 2 := by norm_num
+  have hmX := mul_le_mul_of_nonneg_left hX h2
+  have hmY := mul_le_mul_of_nonneg_left hY h2
+  linarith [h_mono, h_split.le, h_split.ge, hmX, hmY, hXY]
+
+private lemma integrable_measureReal_of_discrete {γ : Type*}
+    [MeasurableSpace γ] [DiscreteMeasurableSpace γ]
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (ν : Measure γ) [IsFiniteMeasure ν]
+    (A : γ → Set Ω) :
+    Integrable (fun g => μ.real (A g)) ν :=
+  integrable_of_nonneg_le_one_of_discrete ν _
+    (fun _ => measureReal_nonneg)
+    (fun g => by
+      have h_le : μ (A g) ≤ 1 := prob_le_one
+      unfold Measure.real
+      exact (ENNReal.toReal_le_toReal (measure_ne_top _ _) (by simp)).mpr h_le)
+
+omit [DecidableEq α] [DecidableEq β] in
+private lemma swErrorProb_le_E0_2EX_2EY_EXYstrict
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    {n M_X M_Y : ℕ} (ε : ℝ)
+    (f_X : (Fin n → α) → Fin M_X) (f_Y : (Fin n → β) → Fin M_Y) :
+    swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+          (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
+      ≤ μ.real (swError_E0 μ Xs Ys n ε)
+        + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
+        + 2 * μ.real (swError_EY μ Xs Ys n ε f_Y)
+        + μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) := by
+  have h_D := swErrorProb_le_E0_plus_EX_plus_EY_plus_EXY
+    μ Xs Ys hXs hYs ε f_X f_Y
+  have h_EXY_subset :
+      μ.real (swError_EXY μ Xs Ys n ε f_X f_Y)
+        ≤ μ.real (swError_EX μ Xs Ys n ε f_X)
+          + μ.real (swError_EY μ Xs Ys n ε f_Y)
+          + μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) := by
+    have h_sub := swError_EXY_subset_union μ Xs Ys ε f_X f_Y
+    calc μ.real (swError_EXY μ Xs Ys n ε f_X f_Y)
+        ≤ μ.real (swError_EX μ Xs Ys n ε f_X
+              ∪ swError_EY μ Xs Ys n ε f_Y
+              ∪ swError_EXY_strict μ Xs Ys n ε f_X f_Y) :=
+          measureReal_mono h_sub (measure_ne_top _ _)
+      _ ≤ μ.real (swError_EX μ Xs Ys n ε f_X
+              ∪ swError_EY μ Xs Ys n ε f_Y)
+            + μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) :=
+          measureReal_union_le _ _
+      _ ≤ μ.real (swError_EX μ Xs Ys n ε f_X)
+            + μ.real (swError_EY μ Xs Ys n ε f_Y)
+            + μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) := by
+          have := measureReal_union_le (μ := μ)
+            (swError_EX μ Xs Ys n ε f_X) (swError_EY μ Xs Ys n ε f_Y)
+          linarith
+  linarith
+
 omit [DecidableEq α] [DecidableEq β] in
 /-- The total binning-expectation bound, combining the four-event decomposition
 with the `swError_EXY` subset absorption. The factor `2` absorbs the double count
@@ -676,7 +760,8 @@ private theorem swErrorProb_total_expectation_le
           * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ :=
     swError_EXY_strict_expectation_le μ Xs Ys hXs hYs hposZ hε
   -- Pointwise inequality: the swErrorProb (as a function of f_X, f_Y) is bounded
-  -- by the sum of the four μ.real terms (D main decomposition + EXY subset).
+  -- by the sum of the four μ.real terms (extracted to
+  -- `swErrorProb_le_E0_2EX_2EY_EXYstrict`).
   have h_pointwise : ∀ (f_X : (Fin n → α) → Fin M_X)
       (f_Y : (Fin n → β) → Fin M_Y),
       swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
@@ -684,32 +769,8 @@ private theorem swErrorProb_total_expectation_le
         ≤ μ.real (swError_E0 μ Xs Ys n ε)
           + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
           + 2 * μ.real (swError_EY μ Xs Ys n ε f_Y)
-          + μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) := by
-    intro f_X f_Y
-    have h_D := swErrorProb_le_E0_plus_EX_plus_EY_plus_EXY
-      μ Xs Ys hXs hYs ε f_X f_Y
-    have h_EXY_subset :
-        μ.real (swError_EXY μ Xs Ys n ε f_X f_Y)
-          ≤ μ.real (swError_EX μ Xs Ys n ε f_X)
-            + μ.real (swError_EY μ Xs Ys n ε f_Y)
-            + μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) := by
-      have h_sub := swError_EXY_subset_union μ Xs Ys ε f_X f_Y
-      calc μ.real (swError_EXY μ Xs Ys n ε f_X f_Y)
-          ≤ μ.real (swError_EX μ Xs Ys n ε f_X
-                ∪ swError_EY μ Xs Ys n ε f_Y
-                ∪ swError_EXY_strict μ Xs Ys n ε f_X f_Y) :=
-            measureReal_mono h_sub (measure_ne_top _ _)
-        _ ≤ μ.real (swError_EX μ Xs Ys n ε f_X
-                ∪ swError_EY μ Xs Ys n ε f_Y)
-              + μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) :=
-            measureReal_union_le _ _
-        _ ≤ μ.real (swError_EX μ Xs Ys n ε f_X)
-              + μ.real (swError_EY μ Xs Ys n ε f_Y)
-              + μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) := by
-            have := measureReal_union_le (μ := μ)
-              (swError_EX μ Xs Ys n ε f_X) (swError_EY μ Xs Ys n ε f_Y)
-            linarith
-    linarith
+          + μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) := fun f_X f_Y =>
+    swErrorProb_le_E0_2EX_2EY_EXYstrict μ Xs Ys hXs hYs ε f_X f_Y
   -- Integrability facts for the per-summand sub-integrands (bounded by 1, discrete).
   have hInt_swErr_inner : ∀ f_X : (Fin n → α) → Fin M_X,
       Integrable (fun f_Y => swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
@@ -718,19 +779,11 @@ private theorem swErrorProb_total_expectation_le
       (fun _ => by unfold swErrorProb; exact measureReal_nonneg)
       (fun f_Y => swErrorProb_le_one μ Xs Ys ε f_X f_Y)
   have hInt_EX : Integrable
-      (fun f_X => μ.real (swError_EX μ Xs Ys n ε f_X)) B_X := by
-    refine integrable_of_nonneg_le_one_of_discrete B_X _
-      (fun _ => measureReal_nonneg) (fun f_X => ?_)
-    have h_le : μ (swError_EX μ Xs Ys n ε f_X) ≤ 1 := prob_le_one
-    unfold Measure.real
-    exact (ENNReal.toReal_le_toReal (measure_ne_top _ _) (by simp)).mpr h_le
+      (fun f_X => μ.real (swError_EX μ Xs Ys n ε f_X)) B_X :=
+    integrable_measureReal_of_discrete μ B_X (fun f_X => swError_EX μ Xs Ys n ε f_X)
   have hInt_EY : Integrable
-      (fun f_Y => μ.real (swError_EY μ Xs Ys n ε f_Y)) B_Y := by
-    refine integrable_of_nonneg_le_one_of_discrete B_Y _
-      (fun _ => measureReal_nonneg) (fun f_Y => ?_)
-    have h_le : μ (swError_EY μ Xs Ys n ε f_Y) ≤ 1 := prob_le_one
-    unfold Measure.real
-    exact (ENNReal.toReal_le_toReal (measure_ne_top _ _) (by simp)).mpr h_le
+      (fun f_Y => μ.real (swError_EY μ Xs Ys n ε f_Y)) B_Y :=
+    integrable_measureReal_of_discrete μ B_Y (fun f_Y => swError_EY μ Xs Ys n ε f_Y)
   have hInt_EXY_strict_inner : ∀ f_X : (Fin n → α) → Fin M_X,
       Integrable (fun f_Y => μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y)) B_Y :=
     fun f_X => integrable_measureReal_swError_EXY_strict_inner μ Xs Ys ε f_X
@@ -787,41 +840,7 @@ private theorem swErrorProb_total_expectation_le
           + ∫ f_X, ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ∂B_Y ∂B_X :=
     integral_swError_outer_split μ Xs Ys ε hInt_EX hInt_EXY_strict_outer
   -- Combine the outer monotone bound with the split + E.2/E.3/E.4.
-  calc ∫ f_X, ∫ f_Y, swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
-                      (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) ∂B_Y ∂B_X
-      ≤ ∫ f_X, (μ.real (swError_E0 μ Xs Ys n ε)
-              + 2 * μ.real (swError_EX μ Xs Ys n ε f_X)
-              + 2 * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y) ∂B_Y)
-              + ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ∂B_Y) ∂B_X :=
-        h_outer_mono
-    _ = μ.real (swError_E0 μ Xs Ys n ε)
-          + 2 * (∫ f_X, μ.real (swError_EX μ Xs Ys n ε f_X) ∂B_X)
-          + 2 * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y) ∂B_Y)
-          + ∫ f_X, ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y) ∂B_Y ∂B_X :=
-        h_outer_split
-    _ ≤ μ.real (swError_E0 μ Xs Ys n ε)
-          + 2 * (Real.exp ((n : ℝ) *
-              (entropy μ (jointSequence Xs Ys 0) - entropy μ (Ys 0) + 2 * ε))
-                * ((M_X : ℝ))⁻¹)
-          + 2 * (Real.exp ((n : ℝ) *
-              (entropy μ (jointSequence Xs Ys 0) - entropy μ (Xs 0) + 2 * ε))
-                * ((M_Y : ℝ))⁻¹)
-          + Real.exp ((n : ℝ) * (entropy μ (jointSequence Xs Ys 0) + ε))
-              * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by
-          have h2 : (0 : ℝ) ≤ 2 := by norm_num
-          have hmono_E2 :
-              2 * (∫ f_X, μ.real (swError_EX μ Xs Ys n ε f_X) ∂B_X)
-                ≤ 2 * (Real.exp ((n : ℝ) *
-                    (entropy μ (jointSequence Xs Ys 0) - entropy μ (Ys 0) + 2 * ε))
-                  * ((M_X : ℝ))⁻¹) :=
-            mul_le_mul_of_nonneg_left hE2 h2
-          have hmono_E3 :
-              2 * (∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y) ∂B_Y)
-                ≤ 2 * (Real.exp ((n : ℝ) *
-                    (entropy μ (jointSequence Xs Ys 0) - entropy μ (Xs 0) + 2 * ε))
-                  * ((M_Y : ℝ))⁻¹) :=
-            mul_le_mul_of_nonneg_left hE3 h2
-          linarith [hmono_E2, hmono_E3, hE4]
+  exact le_E0_2EX_2EY_EXY_of_split h_outer_mono h_outer_split hE2 hE3 hE4
 
 omit [DecidableEq α] [DecidableEq β] in
 /-- Pigeonhole: from a double-integral bound `≤ δ`, extract a deterministic encoder
