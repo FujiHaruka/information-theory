@@ -10,7 +10,7 @@ Lean style [`rules/lean-style.md`](rules/lean-style.md) ・honesty タグ [`audi
 
 - [x] Phase 0 — 測定 + pilot 較正 ✅ (`floorMatrix_dist_le`、commit `d2fb1fa`)
 - [x] Phase 1 — 優先1 (>250 行 tier) を named helper へ分解 ✅ **全 25 本処理済** (clean 割れブロックは全抽出、>250 残留=不可分 core は現実的 DoD で許容)
-- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-22、>150: 91→38)
+- [ ] Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-23、>150: 91→32)
 - [ ] Phase 3 — 最終再実測 + 裾縮小確認 📋
 - [ ] Phase 4 — **option C (>250 spine 攻略)** 🔨 (2026-06-14 着手。**3 本クリア >250: 15→12、両機構検証済**。残 12 本。下記 Phase 4 節)
 
@@ -205,11 +205,11 @@ file:line (footprint) sorry-count は §4.1 入力データを verbatim 使用 (
 sorryAx-free)。コード側の `@audit:ok`/`@residual`/sorry 数は全 13 本で機械検証して verbatim 保存
 (Assembly は既存 sorry+@residual を含め 1→1 保存)。
 
-## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-22 完了)
+## Phase 2 — 優先2 (>150 tier) を機会主義的に分解 🔨 進行中 (Wave 1-23 完了)
 
 **proof-log: no**。
 
-**状態 (2026-06-20)**: Wave 1-22 完了。**>150 tier: 91 → 38 (−53)、>250 は 0 維持** (official
+**状態 (2026-06-20)**: Wave 1-23 完了。**>150 tier: 91 → 32 (−59)、>250 は 0 維持** (official
 decl-to-next-decl metric で再実測)。各 Wave は全 Hard invariants (対象 sig byte-identical /
 `#print axioms` = `[propext, Classical.choice, Quot.sound]` 不変 / sorry 数不変 / `lake env lean`
 clean + 該当 build green) を orchestrator が独立機械検証済。**新規 sorry/residual なし (純リファクタ)
@@ -374,6 +374,16 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   `SlepianWolf/FullRateRegion/PairBound.lean`
   (`swErrorProb_total_expectation_le` 210→145 / `swError_EXY_strict_expectation_le` 170→139。helper 4 本、全 <150)。
   計 6 helper 全 <150。>150 tier 42→38 (−4)、>250 = 0 維持。
+- **Wave 23** (`726d243`/`b3c7ac2`/`2bf6ce1`/`a8ec82c`、flaky agent で部分コミット→fresh agent 継投の 4 commit):
+  `AWGN/Walls.lean` 4 本 (`gaussian_shear_logRnDeriv_memLp_two` 158→<150 / `klDiv_perLetter_eq_capacity`
+  196→147 term-mode 圧縮 / `continuousAepGaussian_holds` 164→133 helper `awgn_continuousAep_productMass_bound` 84 /
+  `awgnConverseMarkov_holds` 183→137 helper 2 本 `converseMarkov_marginalA` 33 + `converseMarkov_pairLaw` 54、
+  helper に `[NeZero M]` 追加=instance 解決・target sig は byte-identical) +
+  `ChannelCoding/Achievability/RandomCodebook.lean` 3 本 (`random_codebook_E1_swap` 230→<150 /
+  `random_codebook_E2_swap` 215→<150 / `random_codebook_average_le` 177→**body 149**、helper
+  `errorProbAt_codebookToCode_ne_top` 16 + `averageErrorProb_toReal_eq` 配線 + calc 圧縮 + omit 修正)。
+  計 7 target 分解。>150 tier 38→**32 (−6)**、>250 = 0 維持。
+  注: `random_codebook_average_le` は body 149 で <150 達成だが metric 151 (= **計測 artifact floor**、下記)。
 
 ### 計測ニュアンス (Phase 2 で確立、Wave 4+ でも適用)
 
@@ -393,8 +403,12 @@ clean + 該当 build green) を orchestrator が独立機械検証済。**新規
   cosmetic に抽出して metric を下げるのは relabeling-adjacent ゆえ**やらない** (body <150 を実質達成と見なす方針)。
   確認済 artifact: `integrable_indicator_mul_negLog_of_condExp` (BackwardIntegral, body148/metric157) /
   `total_length_ge_count_mul_log` (LZ78, body137/metric154) /
-  `convex_fisher_bound` (EPI/Blachman/Density, body~137/metric238)。
-  **含意**: 残 38 のうち複数は同種 artifact の可能性大。特に 151-155 の thin-margin single は
+  `convex_fisher_bound` (EPI/Blachman/Density, body~137/metric238) /
+  `random_codebook_average_le` (RandomCodebook, body149/metric151、原因=**ファイル最終 decl** ゆえ
+  `end namespace` 行 + 末尾空行が decl span に算入)。
+  **ファイル最終 decl は body ≤148 でないと metric <150 にできない** (`end` 行が不可避 +1) という構造的
+  知見: average_le は body<150 達成 (DoD 満足) だが >150 count には metric 151 で残る。
+  **含意**: 残 32 のうち複数は同種 artifact の可能性大。特に 151-155 の thin-margin single は
   **着手前に必ず body 末尾と次 matched decl を Read で確認** (artifact なら除外)。
 - **DoD への含意**: relay goal「>150 → 0」は (a) 不可分 >250 組立核 floor + (b) 計測 artifact floor の
   二重 floor で 0 到達は構造的に不能。現実的完了 = 「genuine に splittable な target を全て分解済」。
