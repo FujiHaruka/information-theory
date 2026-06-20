@@ -156,6 +156,7 @@ SoT はコード側タグ (`@residual(wall:...)`)、本節は二次。
 ---
 
 ## 4. cross-link
+- **sub-plan**: [`lz78-m2-plan.md`](lz78-m2-plan.md) — M2 length-grouping Ziv 組合せ核 = W2 `ziv_aseventual_le_blockLogAvg₂` (`@residual(wall:lz78-aseventual-ziv)`) discharge 計画 (W1 SMB-in-bits は leg 3 で閉鎖済、本サブ計画は achievability の残壁 W2 を担当)。
 - main: `docs/textbook-roadmap.md` 判断ログ #6 (現行サマリ、~35 エージェントの経緯・全 disproof・honest frontier の記録は `git log -- docs/textbook-roadmap.md` の 2026-05-26 整理前 commit に旧 #17–#26 として残置)
 - 既存 plan (本 roadmap が incremental master として統合): `lz78-completion-plan.md`, `lz78-treeinduced-aep-plan.md`, `lz78-aseventual-achievability-plan.md`, `lz78-ziv-treenode-plan.md`, `lz78-blockrv-refactor-plan.md` + `-inventory.md`
 - 完遂判定: `GreedyParsingImpl.lean` の wall sorry lemma 2本 (M3/M4) が discharge され、headline `lz78_asymptotic_optimality_with_greedy_impl` が `#print axioms` で sorryAx 非依存になった時点 = 標準B 完遂 (`h_bdd_above` 内製化は commit `a1ae108` で済、完遂条件から除外)。
