@@ -226,6 +226,7 @@ import InformationTheory.Shannon.LZ78.ZivMeasureBridge
 import InformationTheory.Shannon.LZ78.ZivCondContext
 import InformationTheory.Shannon.LZ78.ZivCondGrouping
 import InformationTheory.Shannon.LZ78.ZivThreading
+import InformationTheory.Shannon.LZ78.ZivAchievabilityComposition
 import InformationTheory.Shannon.WynerZiv.ObjectiveConvexityBody
 import InformationTheory.Shannon.GaussianPDFVarianceDerivBody
 import InformationTheory.Shannon.FisherDeBruijnGaussianWitness
