@@ -1,5 +1,8 @@
 import InformationTheory.Shannon.AWGN.Basic
-import InformationTheory.Shannon.AWGN.AchievabilityDischarge
+import InformationTheory.Shannon.AWGN.AchievabilityCodebook
+import InformationTheory.Shannon.AWGN.AchievabilityTypicalDecoder
+import InformationTheory.Shannon.AWGN.AchievabilityExpurgation
+import InformationTheory.Shannon.AWGN.AchievabilityCodeExistence
 
 /-!
 # AWGN channel coding theorem — achievability

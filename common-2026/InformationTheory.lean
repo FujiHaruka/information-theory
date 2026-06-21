@@ -127,7 +127,10 @@ import InformationTheory.Shannon.AWGN.Achievability
 import InformationTheory.Shannon.AWGN.Converse
 import InformationTheory.Shannon.AWGN.Main
 import InformationTheory.Shannon.AWGN.ChannelMeasurability
-import InformationTheory.Shannon.AWGN.AchievabilityDischarge
+import InformationTheory.Shannon.AWGN.AchievabilityCodebook
+import InformationTheory.Shannon.AWGN.AchievabilityTypicalDecoder
+import InformationTheory.Shannon.AWGN.AchievabilityExpurgation
+import InformationTheory.Shannon.AWGN.AchievabilityCodeExistence
 import InformationTheory.Shannon.AWGN.ConverseDischarge
 import InformationTheory.Shannon.AWGN.KLCapacityAndAEP
 import InformationTheory.Shannon.AWGN.PerCodewordPowerConstraint
