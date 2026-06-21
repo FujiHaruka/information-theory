@@ -9,14 +9,14 @@ import Mathlib.Analysis.Calculus.Deriv.Comp
 import Mathlib.Analysis.Calculus.LogDeriv
 import InformationTheory.Shannon.FisherInfo.V2
 import InformationTheory.Shannon.FisherInfo.V2DeBruijn
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnBody
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnHeatFlow
 import InformationTheory.Shannon.FisherInfo.Gaussian
 import InformationTheory.Shannon.DifferentialEntropy
 
 /-!
-# Fisher information V2 — heat-flow body
+# Fisher information V2 — heat flow
 
-Sub-decomposes the heat-flow side of the de Bruijn body. The heat equation
+Sub-decomposes the heat-flow side of the de Bruijn identity. The heat equation
 `∂_t p = (1/2) Δ_x p` is exposed for the Gaussian heat kernel
 `heatKernel t x = gaussianPDFReal 0 ⟨t, _⟩ x` by giving its first and second spatial
 derivatives in closed form, and the monolithic `heat_equation` field of `IsHeatFlowDensity` is
@@ -180,7 +180,7 @@ def IsHeatFlowDensity_of_sub_predicates {Ω : Type*} [MeasurableSpace Ω]
 
 /-! ## Measure-level Gaussian heat semigroup composition -/
 
-/-! ## de Bruijn body bridge re-publish (from sub-predicates) -/
+/-! ## de Bruijn identity bridge re-publish (from sub-predicates) -/
 
 /-- The de Bruijn identity from the sub-predicate decomposition: given the convolution and
 time-derivative sub-predicates (which re-assemble into an `IsHeatFlowDensity`) and the IBP

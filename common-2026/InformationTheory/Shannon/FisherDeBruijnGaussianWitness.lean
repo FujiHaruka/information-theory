@@ -1,7 +1,7 @@
 import InformationTheory.Shannon.FisherInfo.V2
 import InformationTheory.Shannon.FisherInfo.V2DeBruijn
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnBody
-import InformationTheory.Shannon.FisherInfo.V2HeatFlowBody
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnHeatFlow
+import InformationTheory.Shannon.FisherInfo.V2HeatFlow
 import InformationTheory.Shannon.GaussianPDFVarianceDerivative
 
 /-!
@@ -11,7 +11,7 @@ Assembles the Gaussian heat-kernel derivative facts into a de Bruijn heat-flow w
 
 Both analytic halves of `∂_t g_t = (1/2) Δ_x g_t` for the centred Gaussian heat kernel
 `g_t = heatKernel t` are proved internally:
-- spatial: `isHeatSpatialDerivHyp_gaussian` (`FisherInfoV2HeatFlowBody.lean`)
+- spatial: `isHeatSpatialDerivHyp_gaussian` (`FisherInfoV2HeatFlow.lean`)
 - time: `isHeatTimeDerivHyp_gaussian` (`GaussianPDFVarianceDerivative.lean`)
 
 ## Main statements

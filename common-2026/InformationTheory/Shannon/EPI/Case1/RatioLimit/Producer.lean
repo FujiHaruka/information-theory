@@ -109,7 +109,7 @@ input regularity. Since PB-1 fixes the noise to `𝒩(0,1)`, the unit-variance `
 required by `IsRegularDeBruijnHypV2` is satisfied directly (no reparametrization needed for
 the X / Y singletons; the sum-instance `𝒩(0,2)` is the only reparam case, deferred to a
 later wave). The `pX`-witness fields are the same plumbing as `IsRegularDeBruijnHypV2.ofHeatFlow`
-(`FisherInfoV2DeBruijnBody.lean`); the conv-pin `density_path` reuses the genuine density
+(`FisherInfoV2DeBruijnHeatFlow.lean`); the conv-pin `density_path` reuses the genuine density
 of `P.map (X + √t·Z)`. -/
 
 /-- **PB-3 producer (X / Y, unit-noise direct)**: from method-X input regularity (`X`
@@ -164,7 +164,7 @@ moment) are regularity, NOT load-bearing; the `IsDeBruijnRegularityHyp` structur
 `density_t_eq` anti-trivial-zero pin keeps the conclusion non-degenerate.
 @audit-note: independent honesty audit.
 Verified: (i) `pX` series (pX_nn/pX_meas/pX_law/pX_mom) is a verbatim mirror of
-`IsRegularDeBruijnHypV2.ofHeatFlow`'s `@audit:ok` plumbing (`FisherInfoV2DeBruijnBody.lean:275-`,
+`IsRegularDeBruijnHypV2.ofHeatFlow`'s `@audit:ok` plumbing (`FisherInfoV2DeBruijnHeatFlow.lean:275-`,
 `withDensity_rnDeriv_eq` + `integrable_map_measure`), derived from `hX_ac`/`h_mom_X`,
 NON-circular. (ii) `reg_at` fields are all regularity/witness (the structure
 `IsRegularDeBruijnHypV2` carries NO analytic-core field — de Bruijn is delivered externally by

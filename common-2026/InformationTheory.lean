@@ -198,7 +198,7 @@ import InformationTheory.Shannon.EPI.G2.KLVariationalLower
 import InformationTheory.Shannon.EPI.Stam.ToBridge
 import InformationTheory.Shannon.EPI.NoiseExtension
 import InformationTheory.Shannon.EPI.Stam.InequalityBody
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnBody
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnHeatFlow
 import InformationTheory.Shannon.LZ78.ConverseAsymptotic
 import InformationTheory.Draft.Shannon.HoeffdingInteriorBody
 import InformationTheory.Shannon.GeneralDMC.Extension
@@ -207,7 +207,7 @@ import InformationTheory.Shannon.EPI.Stam.Step12Body
 import InformationTheory.Shannon.StamGaussianBound
 import InformationTheory.Shannon.FisherConvBound
 import InformationTheory.Shannon.EPI.Stam.Step3Body
-import InformationTheory.Shannon.FisherInfo.V2HeatFlowBody
+import InformationTheory.Shannon.FisherInfo.V2HeatFlow
 import InformationTheory.Shannon.LZ78.GreedyParsingImpl
 import InformationTheory.Shannon.LZ78.GreedyLongestPrefix
 import InformationTheory.Shannon.Hoeffding.InteriorGradientBody

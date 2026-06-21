@@ -14,9 +14,9 @@ import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPI.Conv.Density
 
 /-!
-# Fisher information V2 — de Bruijn body
+# Fisher information V2 — de Bruijn heat flow
 
-Body-side scaffolding for the general-`X` de Bruijn identity (Cover–Thomas 17.7.2's
+Heat-flow scaffolding for the general-`X` de Bruijn identity (Cover–Thomas 17.7.2's
 differentiate-under-the-integral via heat equation plus integration by parts), built on the
 definitions of `FisherInfoV2DeBruijn.lean`. The heat equation and the integration-by-parts step
 are exposed as predicates that compose into the de Bruijn statement.
@@ -140,7 +140,7 @@ def IsIBPHypothesis {Ω : Type*} [MeasurableSpace Ω]
     ((1/2) * fisherInfoOfDensityReal (p t))
     t
 
-/-! ## Body discharge -/
+/-! ## Heat-flow discharge -/
 
 /-- The `IsRegularDeBruijnHypV2` constructor from a heat-flow density. The two extra
 preconditions are regularity of `X` itself, which `IsHeatFlowDensity` (carrying only the path
