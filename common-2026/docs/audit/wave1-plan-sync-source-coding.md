@@ -155,11 +155,11 @@ huffman-t1apprime-partial-moonshot) で**同じ 2 hypothesis** (`SwapNormalizati
   | `lz78_converse_lower_bound_ergodic` / `_of_bridge` | converse lower bound assembly (genuine + SMB discharge) | `LZ78SMBSandwich.lean:396, :418` |
   | `lz78_converse_lower_bound_ergodic_greedy` | greedy 版 converse compat | `LZ78SMBSandwich.lean:468` |
   | `lz78_two_sided_optimality_distinct_bdd_free` | distinct headline (boundedness 内部 discharge 済) | `LZ78DistinctEncoding.lean:413` |
-  | `lz78_asymptotic_optimality_with_greedy_encoding` | greedy 名 instantiation | `LZ78GreedyParsing.lean:518` |
-  | `lz78_asymptotic_optimality_with_greedy_impl` | greedy-impl 名 instantiation | `LZ78AsymptoticOptimality.lean:422` |
+  | `lz78_asymptotic_optimality_with_greedy` | genuine greedy 名 instantiation (worst-case greedy-encoding 版は 073c48a で退役・削除) | `LZ78AsymptoticOptimality.lean:422` |
   | `lz78_two_sided_optimality_distinct_aseventual` | satisfiable a.s.-eventual hyp 経由 (FALSE core 修正版) | `LZ78AsEventualAchievability.lean:334` |
 
 - **整合性 a/b/c**: in-plan orphan = 0、**drop 漏れ = 16 (全部)**、件数一致 = ✅
+  (注: 集計は監査時点の snapshot。うち worst-case greedy-encoding 版 instantiation は 073c48a で退役・削除済のため上表からは除外、genuine greedy 版のみ残置)
 - **観察**:
   - **plan は当初の pass-through 設計 (Prop := True / `:= h_rate_bound`)**、suspect は
     **後続 plan (achievability-converse / blockrv-refactor / aseventual / distinct-encoding) で

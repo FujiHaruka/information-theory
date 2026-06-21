@@ -3,22 +3,22 @@
 > **Parent**: [`lz78-completion-roadmap.md`](lz78-completion-roadmap.md) §1 M2 / M3
 > （achievability 壁 `lz78-aseventual-ziv` CLOSED leg 11、W2 = `ziv_aseventual_le_blockLogAvg₂`）
 
-✅ **CLOSED (leg 11)**: W2 `ziv_aseventual_le_blockLogAvg₂` sorryAx-free + 独立 honesty 監査 PASS (`c22f2d5`、`@audit:ok`)。consumer `lz78GreedyImpl_achievability_ae` も sorryAx-free → **achievability 完遂**。achievability 壁 `lz78-aseventual-ziv` は CLOSED (leg 11、`c22f2d5`)。本サブ計画の目標は達成。headline の M4 converse も `bd28e0e` (fiber-card brick) で closed 済 → headline は proof done = sorryAx-free ([lz78-facts.md](lz78-facts.md) 達成テーブルが SoT)。
+✅ **CLOSED (leg 11)**: W2 `ziv_aseventual_le_blockLogAvg₂` sorryAx-free + 独立 honesty 監査 PASS (`c22f2d5`、`@audit:ok`)。consumer `lz78Greedy_achievability_ae` も sorryAx-free → **achievability 完遂**。achievability 壁 `lz78-aseventual-ziv` は CLOSED (leg 11、`c22f2d5`)。本サブ計画の目標は達成。headline の M4 converse も `bd28e0e` (fiber-card brick) で closed 済 → headline は proof done = sorryAx-free ([lz78-facts.md](lz78-facts.md) 達成テーブルが SoT)。
 
 ## 進捗
 
 - [x] M0 在庫確認（leg 3 `lz78-m3-inventory.md` + leg 4 `lz78-m3-treenode-inventory.md` の route A/B 比較）✅
-- [x] Phase 1 — gateway atom（Step A 符号長 bit-rate 展開）✅ **GO**（`lz78_impl_bitrate_le_clogc_plus_overhead`、`AsymptoticOptimality.lean:286`、sorryAx-free、commit `7171707`）→ 単位整合は壁でないと確定
+- [x] Phase 1 — gateway atom（Step A 符号長 bit-rate 展開）✅ **GO**（`lz78_bitrate_le_clogc_plus_overhead`、`AsymptoticOptimality.lean:286`、sorryAx-free、commit `7171707`）→ 単位整合は壁でないと確定
 - [x] Phase 2a — convexity grouping（length 別 Jensen）✅ **sorryAx-free**（`ZivLengthGrouping.lean`、commit `c472518`）— necessary scaffolding だが単独では不十分
 - [x] Phase 2b — marginal sub-distribution + log-sum 橋 ✅ **sorryAx-free**（`ZivMeasureBridge.lean`、commit `d1d55db`）— **marginal なので方向不一致、`-log Pₙ` に届かない**（判断ログ #4）
 - [x] Phase 2c-i — node-context conditional sub-distribution `∑_a q(v·a\|v) ≤ 1`（旧「次の genuine atom」）✅ **sorryAx-free**（`ZivCondContext.lean` `condContext_sum_le_one`/`condContext_card_mul_log_le_sum_neg_log`/chain-rule backbone、commit `cfe518b`/`6accdd2`、[lz78-facts.md](lz78-facts.md) 達成テーブル）— 第三の量は **既に建っている**
 - [x] Phase 2c-ii — Ziv (k-state, length)-grouping + composition brick ✅ **CLOSED sorryAx-free + 全監査 PASS（leg 8–10）**。threading foundation + tiling 材料化（leg 8–9、`bf78de9`/`29280cf`/`7b0ecbb`）に続き、**leg 10 で `c·log c ≤ negLogQk + o(n)` composition brick 全体が CLOSED**（`ziv_achievability_composition`、新 file `ZivAchievabilityComposition.lean:194`、`@audit:ok`、`19314ee`/`65afc03`/`a25fd25`/`1ef7700`/`3867a29`）。(W) empirical-overhead brick `condState_grouping_bound_mean`（`ZivCondGrouping.lean:340`、worst-case `c·log D` を manifestly-o(n) mean-length に supersede、旧 `condState_grouping_bound` は consumer-less → retract-candidate）+ sub-step (A) `phraseSum_le_negLogQk`（+ unconditional `pmfLogCondMarkov_nonneg`）+ sub-step (B) reindex（`flatten_drop_take_getElem`/`condQkState_pos_of_markovFactor_pos`/`condQkState_congr_length`）。3 sig-strengthening は output-strengthening と再監査済。詳細 = [lz78-facts.md](lz78-facts.md)「threading 配線」「grouping bridge + overhead 制御」+ 判断ログ。
 - [x] Phase 3 — (V) diagonalization ✅ **CLOSED (leg 11、`c22f2d5`)**: 各固定 k で `limsup(lz/n) ≤ conditionalEntropyTail k / log2` (Lemma 1 `ziv_aseventual_le_condEntropyTail_bits`、`:619`) + inf over k で `limsup(lz/n) ≤ entropyRate₂` (Lemma 2 `ziv_aseventual_le_entropyRate₂`、`:869`)、両 sorryAx-free。**「最大リスク = k-limit/n-limsup 交換 (k(n)→∞ 対角化)」は不要だった** — 最終 LHS `limsup(lz/n)` が k 非依存ゆえ k→∞ は RHS だけで `inf_k H_k = entropyRate` を取れば足り、対角化も `Lmax = o(n)` known sub-task も回避された (判断ログ参照)。overhead vanishing は全て `c/n → 0` + `x·log(1/x) → 0` boundary に帰着 (private helper `clog_div_le_two_mul_sqrt`/`cp_log_cp_le_reconcile`)。
-- [x] Phase 4 — (Z) W2 discharge ✅ **CLOSED (leg 11、`c22f2d5`)**: `ziv_aseventual_le_blockLogAvg₂` (`:917`、`@audit:ok`) を Lemma 2 + `shannon_mcmillan_breiman₂` の `filter_upwards` 合成で sorryAx-free 化 → consumer `lz78GreedyImpl_achievability_ae` (`:1005`、`@audit:ok`) も sorryAx-free → achievability 完遂。signature 不変 (ripple ゼロ)。
+- [x] Phase 4 — (Z) W2 discharge ✅ **CLOSED (leg 11、`c22f2d5`)**: `ziv_aseventual_le_blockLogAvg₂` (`:917`、`@audit:ok`) を Lemma 2 + `shannon_mcmillan_breiman₂` の `filter_upwards` 合成で sorryAx-free 化 → consumer `lz78Greedy_achievability_ae` (`:1005`、`@audit:ok`) も sorryAx-free → achievability 完遂。signature 不変 (ripple ゼロ)。
 
 ## ゴール
 
-W1（`shannon_mcmillan_breiman₂`、SMB-in-bits 橋）は leg 3 で **閉鎖済**（`@audit:ok`、sorryAx-free、`AsymptoticOptimality.lean:520`）。本サブ計画のゴール **W2 = `ziv_aseventual_le_blockLogAvg₂`**（`AsymptoticOptimality.lean:917`、`@audit:ok`）の discharge は **leg 11 で達成（`c22f2d5`、sorryAx-free + 独立監査 PASS）**。consumer `lz78GreedyImpl_achievability_ae`（`@audit:ok`）も sorryAx-free 化され **achievability 完遂**。headline の M4 converse（`lz78GreedyImpl_converse_ae`）も `bd28e0e` (fiber-card brick) で closed 済 → headline は proof done = sorryAx-free。**本サブ計画の目標は達成。**
+W1（`shannon_mcmillan_breiman₂`、SMB-in-bits 橋）は leg 3 で **閉鎖済**（`@audit:ok`、sorryAx-free、`AsymptoticOptimality.lean:520`）。本サブ計画のゴール **W2 = `ziv_aseventual_le_blockLogAvg₂`**（`AsymptoticOptimality.lean:917`、`@audit:ok`）の discharge は **leg 11 で達成（`c22f2d5`、sorryAx-free + 独立監査 PASS）**。consumer `lz78Greedy_achievability_ae`（`@audit:ok`）も sorryAx-free 化され **achievability 完遂**。headline の M4 converse（`lz78Greedy_converse_ae`）も `bd28e0e` (fiber-card brick) で closed 済 → headline は proof done = sorryAx-free。**本サブ計画の目標は達成。**
 
 **status（leg 11 後、achievability 完遂）**: **残 active edge = none（本サブ計画の目標達成）**。Phase 1 gateway + Phase 2a/2b/2c-i 足場 + Phase 2c-ii（threading + tiling + composition brick）= sorryAx-free（leg 8–10）。Phase 3 (V) diagonalization + Phase 4 (Z) W2 discharge = leg 11 で CLOSED。Q_k 資産発見（leg 5）による route 是正と composition の「Ziv 組合せ核を既存 Q_k に grafting」が完遂された上で、(V) は**対角化不要**と判明し（最終 LHS が k 非依存）残りは各 k bound + inf over k で閉じた。背景（旧 plan の「conditional-context AEP を一から構築 = Q_k from scratch research-level」は過大評価で、**kth-order Markov 測度 Q_k とその AEP + sub-distribution 境界が既に sorry-free で存在**する、[lz78-facts.md](lz78-facts.md) 達成テーブル、機械裏取り済）:
 
@@ -41,7 +41,7 @@ theorem ziv_aseventual_le_blockLogAvg₂
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
       Filter.limsup
-        (fun n => (lz78GreedyImplEncodingLength n
+        (fun n => (lz78GreedyEncodingLength n
             (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ))
         Filter.atTop
       ≤ Filter.limsup
@@ -49,7 +49,7 @@ theorem ziv_aseventual_le_blockLogAvg₂
   sorry
 ```
 
-**ripple（機械確認、`dep_consumers.sh`、本セッション）**: `ziv_aseventual_le_blockLogAvg₂` の direct consumer は **1 decl / 1 file のみ**（`lz78GreedyImpl_achievability_ae`、同 file）。consumer は W2 の **statement** にのみ依存し（body は sorry）、本サブ計画は W2 の body を埋めるだけで signature を変えない → **ripple ゼロ**。signature threading / 引数追加は不要・禁止（hypothesis bundling 防止）。
+**ripple（機械確認、`dep_consumers.sh`、本セッション）**: `ziv_aseventual_le_blockLogAvg₂` の direct consumer は **1 decl / 1 file のみ**（`lz78Greedy_achievability_ae`、同 file）。consumer は W2 の **statement** にのみ依存し（body は sorry）、本サブ計画は W2 の body を埋めるだけで signature を変えない → **ripple ゼロ**。signature threading / 引数追加は不要・禁止（hypothesis bundling 防止）。
 
 ## Approach
 
@@ -63,12 +63,12 @@ textbook の `c·log c ≤ -log Pₙ` を **そのまま def 化しない**。SM
 W2 の RHS は既に `limsup blockLogAvg₂`（W1 の握る量そのもの）になっており、これが **正しい Mathlib-shape**。よって M2 が建てるべきは、**per-n の比較不等式**
 
 ```
-lz78GreedyImplEncodingLength n (blockRV n ω) / n  ≤  blockLogAvg₂ μ p n ω + err(n, ω)
+lz78GreedyEncodingLength n (blockRV n ω) / n  ≤  blockLogAvg₂ μ p n ω + err(n, ω)
 ```
 
 を、各 ω で **a.s.-eventual に**（`∀ᶠ n`）成立させ、`err(n) → 0`（o(1)）を示す形。これを `Filter.limsup_le_limsup`（`Mathlib/Order/LiminfLimsup.lean:198`、verbatim 在庫済）に乗せれば W2 が閉じる。
 
-**単位の選択（verbatim 確認して bit 単位で建てる）**: SMB-in-bits は既に `blockLogAvg₂`（bit）で握る。符号長 `lz78GreedyImplEncodingLength = c · bitLength c |α|`（`bitLength = Nat.log 2(c+1) + Nat.log 2|α| + 2`、`GreedyParsing.lean:112/115` verbatim）は **base-2 code length**。一方 Ziv 組合せ核 `lz78PhraseStrings_mul_log_le`（`ZivCountingBody.lean:357`、verbatim）は **nat 単位** `c·log c ≤ 8·log(|α|+1)·n`（`Real.log`）。`-log Pₙ`（`blockLogAvg_eq_neg_log_blockProb`）も **nat**。
+**単位の選択（verbatim 確認して bit 単位で建てる）**: SMB-in-bits は既に `blockLogAvg₂`（bit）で握る。符号長 `lz78GreedyEncodingLength = c · bitLength c |α|`（`bitLength = Nat.log 2(c+1) + Nat.log 2|α| + 2`、`GreedyParsing.lean:112/115` verbatim）は **base-2 code length**。一方 Ziv 組合せ核 `lz78PhraseStrings_mul_log_le`（`ZivCountingBody.lean:357`、verbatim）は **nat 単位** `c·log c ≤ 8·log(|α|+1)·n`（`Real.log`）。`-log Pₙ`（`blockLogAvg_eq_neg_log_blockProb`）も **nat**。
 
 → **bit 単位の target に nat 量を持ち込む際は両辺を `Real.log 2` で割る**。`c·Nat.log 2(c+1)` → `c·log(c+1)/log 2`（`natLog_mul_log_two_le`、`AsymptoticOptimality.lean:155` verbatim で `Nat.log 2 m · log 2 ≤ log m`）。`blockLogAvg₂ = blockLogAvg/log 2 = (-log Pₙ)/(n·log 2)`。**bit 版で `c·log₂c ≤ -log₂Pₙ + o(n)` を建て、両辺の `/log 2` は定数なので機械的に整合**（`div_le_div_of_nonneg_right`）。
 
@@ -76,11 +76,11 @@ lz78GreedyImplEncodingLength n (blockRV n ω) / n  ≤  blockLogAvg₂ μ p n ω
 
 genuine missing piece = `c·log c`（組合せ phrase count）を `-log Pₙ`（source 確率）に繋ぐ不等式 + overhead 制御。**leg 5 で Q_k 資産（kth-order Markov 測度の measure/AEP/sub-distribution + node-context conditional）が既存 sorry-free と機械裏取りされた**ので、骨子は「Q_k から一から構築」ではなく「既存 Q_k 資産への grafting」に絞られる:
 
-1. **Step A（gateway、closed）**: 符号長 bit-rate を `c·log₂c/n` 型に展開（`lz78_impl_bitrate_le_clogc_plus_overhead`、sorryAx-free）。
+1. **Step A（gateway、closed）**: 符号長 bit-rate を `c·log₂c/n` 型に展開（`lz78_bitrate_le_clogc_plus_overhead`、sorryAx-free）。
 2. **Step B-naive（両 ruled-out、再探索禁止）**: 単純な length-grouping で `c·log₂c ≤ -log₂Pₙ + overhead` を直接建てる路は **両方死ぬ** — (i) **node-position-grouping**（overhead `c·log(#nodes)≈c·log c`、D3 で非 vanish）、(ii) **marginal-length-grouping**（marginal sub-distribution `∑_a P(a)≤1` 経由の log-sum は `∑ -log P_marginal ≥ -log Pₙ` = **方向が逆**、D8）。
 3. **Step B-genuine = Q_k grafting（composition brick CLOSED、leg 8–10）**: kth-order Markov 測度 `Q_k` に乗せた `c·log c ≤ negLogQk + o(n)` の **composition brick 全体が sorryAx-free + 全監査 PASS**（`ziv_achievability_composition`、`@audit:ok`）。Ziv 組合せ核 (Cover-Thomas Lemma 13.5.5) の (k-state,length)-grouping log-sum（vehicle = per-step `markovFactor` conditional）+ (W) empirical-overhead `condState_grouping_bound_mean`（manifestly-o(n) mean-length 形）+ (A) `phraseSum_le_negLogQk` + (B) reindex がすべて閉じた。
 4. **Step C = (V) diagonalization（leg 11 CLOSED、対角化不要と判明）**: composition brick `c·log c ≤ negLogQk + o(n)` を `entropyRate₂` に持ち上げる。AEP 接続 `qkSingleton_blockRV_eq_ofReal_exp_negLogQk`（joint→negLogQk）→ `negLogQk_div_tendsto_condEntropyTail`（→H_k）→ `entropyRate_eq_lim_condEntropy`（→H）。**Phase 3 が「最大リスク」とした k-limit/n-limsup 交換（k(n)→∞ diagonal）は回避された** — 最終 LHS `limsup(lz/n)` が k に依存しないため、各固定 k で `limsup ≤ H_k/log2`（Lemma 1）を示し、k→∞ は **RHS だけ** で `inf_k H_k = entropyRate`（Lemma 2）を取れば足りる。k(n)→∞ の対角化も `Lmax = o(n)` a.s. も不要（overhead は全て `c/n → 0` + `x·log(1/x) → 0` boundary に帰着）。bit 化は `/Real.log 2` で機械整合。
-5. **Step D（合成）**: per-n 比較不等式を `Filter.limsup_le_limsup` に乗せる。cobounded/bounded auto 引数は `lz78_impl_rate_le_const`（上界）+ `per_symbol_nonneg`（下界）で供給（headline `h_bdd_above` 既実証手法）。
+5. **Step D（合成）**: per-n 比較不等式を `Filter.limsup_le_limsup` に乗せる。cobounded/bounded auto 引数は `lz78_rate_le_const`（上界）+ `per_symbol_nonneg`（下界）で供給（headline `h_bdd_above` 既実証手法）。
 
 **vehicle は per-step `markovFactor` conditional**。**joint `qkSingleton` を per-phrase marginal として `∑ -log qkSingleton(phrase)` するのは leg 4 marginal route と同じ方向逆 dead-end（D8 反復、禁止）**。**D4 path-prefix route（`condPhraseProb` / `blockProb_neg_log_ge_sum`、0 consumers）も `∑qⱼ≈c` trap で素通り**。leg 4 の `ZivMeasureBridge.lean` sub-distribution 機構（disjoint-cylinder 論法）は per-step conditional 版へ転用できる足場。
 
@@ -92,7 +92,7 @@ leg 3 在庫 `lz78-m3-inventory.md`（§A SMB / §B 符号長 / §C Ziv 核 / §
 
 ### Phase 1 — gateway atom: Step A 符号長 bit-rate 展開（✅ GO、leg 3）
 
-**結果（leg 3、commit `7171707`、sorryAx-free）**: `lz78_impl_bitrate_le_clogc_plus_overhead`（`AsymptoticOptimality.lean:286`、`[Nonempty α]` 追加）が **GO**。符号長 bit-rate を `c·log c/(log2·n) + overhead`（overhead = `(c·log 2 + c·(log₂|α|+2))/(log2·n)`）に分解、`natLog_mul_log_two_le` + `bitLength_eq` で nat↔bit 単位整合を機械的に処理。**判定: nat↔bit 単位整合は壁でないと確定**（plumbing 級、想定外コスト無し）。proof-log 済。
+**結果（leg 3、commit `7171707`、sorryAx-free）**: `lz78_bitrate_le_clogc_plus_overhead`（`AsymptoticOptimality.lean:286`、`[Nonempty α]` 追加）が **GO**。符号長 bit-rate を `c·log c/(log2·n) + overhead`（overhead = `(c·log 2 + c·(log₂|α|+2))/(log2·n)`）に分解、`natLog_mul_log_two_le` + `bitLength_eq` で nat↔bit 単位整合を機械的に処理。**判定: nat↔bit 単位整合は壁でないと確定**（plumbing 級、想定外コスト無し）。proof-log 済。
 
 **proof-log: yes**（gateway の go/no-go 記録、済）。
 
@@ -100,17 +100,17 @@ leg 3 在庫 `lz78-m3-inventory.md`（§A SMB / §B 符号長 / §C Ziv 核 / §
 
 ```lean
 -- a.s.-eventual ではなく決定論的・per-n の代数展開（ω は blockRV 経由で input に固定）
-theorem lz78_impl_bitrate_le_clogc_plus_overhead
+theorem lz78_bitrate_le_clogc_plus_overhead
     (n : ℕ) (hn : 0 < n) (x : Fin n → α) :
-    (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ)
+    (lz78GreedyEncodingLength n x : ℝ) / (n : ℝ)
       ≤ ((c : ℝ) * Real.log (c : ℝ)) / (Real.log 2 * n)
           + ((Nat.log 2 (Fintype.card α) : ℝ) + 2 + (c : ℝ) / (n : ℝ)) / 1
     -- c := (lz78PhraseStrings (List.ofFn x)).length
 ```
 
-- **供給資産**: `lz78_impl_rate_le_const` の証明内 `hlen`（`bitLength_eq` で `lz/n = c·(Nat.log 2(c+1)+log₂|α|+2)/n`）+ `natLog_mul_log_two_le`（`Nat.log 2(c+1)·log 2 ≤ log(c+1)`）。`c·log(c+1) ≤ c·log c + c`（`log(c+1) ≤ log c + 1` を `c≥1` で、または `c·log(2c)=c·log2+c·log c`）。
-- **novel か**: いいえ。`lz78_impl_rate_le_const`（`AsymptoticOptimality.lean:171`）の中身の切り出し + bit 化。
-- **gateway 判定**: これが通れば nat↔bit 単位整合に想定外コストが無い = M2 tractable のシグナル。`+1` ずれ・`c=0` 退化に注意（`lz78_impl_rate_le_const` が既に処理済の手法を流用）。
+- **供給資産**: `lz78_rate_le_const` の証明内 `hlen`（`bitLength_eq` で `lz/n = c·(Nat.log 2(c+1)+log₂|α|+2)/n`）+ `natLog_mul_log_two_le`（`Nat.log 2(c+1)·log 2 ≤ log(c+1)`）。`c·log(c+1) ≤ c·log c + c`（`log(c+1) ≤ log c + 1` を `c≥1` で、または `c·log(2c)=c·log2+c·log c`）。
+- **novel か**: いいえ。`lz78_rate_le_const`（`AsymptoticOptimality.lean:171`）の中身の切り出し + bit 化。
+- **gateway 判定**: これが通れば nat↔bit 単位整合に想定外コストが無い = M2 tractable のシグナル。`+1` ずれ・`c=0` 退化に注意（`lz78_rate_le_const` が既に処理済の手法を流用）。
 
 ### Phase 2 — genuine core（2a/2b/2c-i sorryAx-free 済、2c-ii = genuine wall）
 
@@ -152,7 +152,7 @@ composition brick `c·log c ≤ negLogQk + o(n)`（CLOSED）を `entropyRate₂`
 
 ### Phase 4 — (Z) W2 discharge ✅ CLOSED（leg 11、`c22f2d5`）
 
-`ziv_aseventual_le_blockLogAvg₂`（`AsymptoticOptimality.lean:917`、`@audit:ok`）を `filter_upwards [ziv_aseventual_le_entropyRate₂, shannon_mcmillan_breiman₂]` + `h_smb.limsup_eq`（RHS を `entropyRate₂` に書換え）で sorryAx-free 化。consumer `lz78GreedyImpl_achievability_ae`（`:1005`、`@audit:ok`）も sorryAx-free → **achievability 完遂**。signature 不変（ripple ゼロ）、docstring は achievability 壁 `lz78-aseventual-ziv` の `@residual` を除去 → `@audit:ok`、独立 honesty audit PASS。`#print axioms` = `[propext, Classical.choice, Quot.sound]`（再検証コマンドは [lz78-facts.md](lz78-facts.md) 達成テーブル）。
+`ziv_aseventual_le_blockLogAvg₂`（`AsymptoticOptimality.lean:917`、`@audit:ok`）を `filter_upwards [ziv_aseventual_le_entropyRate₂, shannon_mcmillan_breiman₂]` + `h_smb.limsup_eq`（RHS を `entropyRate₂` に書換え）で sorryAx-free 化。consumer `lz78Greedy_achievability_ae`（`:1005`、`@audit:ok`）も sorryAx-free → **achievability 完遂**。signature 不変（ripple ゼロ）、docstring は achievability 壁 `lz78-aseventual-ziv` の `@residual` を除去 → `@audit:ok`、独立 honesty audit PASS。`#print axioms` = `[propext, Classical.choice, Quot.sound]`（再検証コマンドは [lz78-facts.md](lz78-facts.md) 達成テーブル）。
 
 ## 地雷の不変条件（再探索禁止、各 atom が抵触しないこと）
 
@@ -166,7 +166,7 @@ composition brick `c·log c ≤ negLogQk + o(n)`（CLOSED）を `entropyRate₂`
 
 ## gateway atom 結果
 
-**Phase 1（単位整合 gateway）= `lz78_impl_bitrate_le_clogc_plus_overhead` = GO**（commit `7171707`、sorryAx-free）。nat↔bit 単位整合は壁でないと確定（plumbing 級）。
+**Phase 1（単位整合 gateway）= `lz78_bitrate_le_clogc_plus_overhead` = GO**（commit `7171707`、sorryAx-free）。nat↔bit 単位整合は壁でないと確定（plumbing 級）。
 
 **Phase 2a/2b（convexity grouping + marginal sub-dist 橋）= 両 sorryAx-free だが genuine core を閉じない**（commit `c472518`/`d1d55db`、necessary scaffolding）。
 
@@ -190,8 +190,8 @@ composition brick `c·log c ≤ negLogQk + o(n)`（CLOSED）を `entropyRate₂`
 
 1. **W1 は閉鎖済として扱う（在庫の W1 自前 closure 想定は obsolete）**: 在庫 `lz78-m3-inventory.md` は W1（SMB-in-bits 橋）を「自前 closure 対象（~30–60 行）」と書くが、leg 3 で `shannon_mcmillan_breiman₂`（`AsymptoticOptimality.lean:520`、`@audit:ok`、sorryAx-free）として **既に閉じた**。本サブ計画の対象は W2 のみ。
 2. **bit 単位で建てる（verbatim 確認の帰結）**: SMB-in-bits が既に `blockLogAvg₂`（bit）で握り、W2 RHS も `limsup blockLogAvg₂`。target を bit 形 `c·log₂c ≤ -log₂Pₙ + o(n)` で建て、nat 量（`lz78PhraseStrings_mul_log_le`、`blockLogAvg_eq_neg_log_blockProb`）は `/Real.log 2` で機械整合。`c·log c ≤ -log Pₙ`（nat）を直接 def 化しない（W2 の Mathlib-shape は bit）。
-3. **ripple ゼロ（機械確認）**: `ziv_aseventual_le_blockLogAvg₂` の direct consumer は 1 decl（`lz78GreedyImpl_achievability_ae`、同 file、statement 依存のみ）。W2 の body を埋めるだけで signature 不変 → 配線変更不要。`blockProb_neg_log_ge_sum`（D4）は 0 consumers（dead-start 裏取り）。
-5. **achievability W2 CLOSED + 対角化回避（leg 11、`c22f2d5`、独立監査 PASS）**: W2 `ziv_aseventual_le_blockLogAvg₂` を sorryAx-free 化し（`@audit:ok`）、consumer `lz78GreedyImpl_achievability_ae` も sorryAx-free → achievability 完遂。**Phase 3 が「最大リスク」とした k-limit/n-limsup 交換（k(n)→∞ 対角化）は不要だった** — 最終 LHS `limsup(lz/n)` が k に依存しないため、LHS を k 固定の AEP に乗せる必要がなく、各固定 k で `limsup ≤ H_k/log2`（Lemma 1）を示し k→∞ は **RHS だけ** で `inf_k H_k = entropyRate`（Lemma 2）を取れば足りた。連動して known sub-task `Lmax = o(n)` a.s. も不要（overhead vanishing は `c/n → 0` + `x·log(1/x) → 0` boundary に帰着）。plan/facts/roadmap が固めていた「対角化必須・最大リスク」framing は単一ルート過大評価で、構造を見直すと回避できた（cause:single-route）。残 headline 壁だった M4 converse も後に `bd28e0e` で CLOSED → headline proof done。
+3. **ripple ゼロ（機械確認）**: `ziv_aseventual_le_blockLogAvg₂` の direct consumer は 1 decl（`lz78Greedy_achievability_ae`、同 file、statement 依存のみ）。W2 の body を埋めるだけで signature 不変 → 配線変更不要。`blockProb_neg_log_ge_sum`（D4）は 0 consumers（dead-start 裏取り）。
+5. **achievability W2 CLOSED + 対角化回避（leg 11、`c22f2d5`、独立監査 PASS）**: W2 `ziv_aseventual_le_blockLogAvg₂` を sorryAx-free 化し（`@audit:ok`）、consumer `lz78Greedy_achievability_ae` も sorryAx-free → achievability 完遂。**Phase 3 が「最大リスク」とした k-limit/n-limsup 交換（k(n)→∞ 対角化）は不要だった** — 最終 LHS `limsup(lz/n)` が k に依存しないため、LHS を k 固定の AEP に乗せる必要がなく、各固定 k で `limsup ≤ H_k/log2`（Lemma 1）を示し k→∞ は **RHS だけ** で `inf_k H_k = entropyRate`（Lemma 2）を取れば足りた。連動して known sub-task `Lmax = o(n)` a.s. も不要（overhead vanishing は `c/n → 0` + `x·log(1/x) → 0` boundary に帰着）。plan/facts/roadmap が固めていた「対角化必須・最大リスク」framing は単一ルート過大評価で、構造を見直すと回避できた（cause:single-route）。残 headline 壁だった M4 converse も後に `bd28e0e` で CLOSED → headline proof done。
 
 4. **composition brick CLOSED → 残 active = (V)+(Z)（leg 10、`19314ee`/`65afc03`/`a25fd25`/`1ef7700`/`3867a29`）**: leg 5 の route 是正（Q_k grafting、Q_k 資産は既存 sorry-free）を踏まえ、leg 8–10 で **`c·log c ≤ negLogQk + o(n)` composition brick 全体が CLOSED sorryAx-free + 独立監査 PASS**（`ziv_achievability_composition` `@audit:ok`、[lz78-facts.md](lz78-facts.md) が SoT）。Cover-Thomas Lemma 13.5.5 の (k-state,length)-grouping log-sum + (W) empirical-overhead `condState_grouping_bound_mean`（worst-case `c·log D` を supersede、旧 `condState_grouping_bound` retract-candidate）+ (A) `phraseSum_le_negLogQk`（unconditional `pmfLogCondMarkov_nonneg`）+ (B) reindex（`flatten_drop_take_getElem` 等）がすべて閉じた。3 sig-strengthening は output-strengthening と再監査済。**vehicle は per-step markovFactor conditional**（joint qkSingleton-per-phrase-marginal は D8 反復で禁止、遵守済）。両単純 grouping（node-position D3 / marginal D8）は依然 machine-ruled-out（再探索禁止）。**残 active = Phase 3 (V) diagonalization（k-limit/n-limsup 交換 + `Lmax = o(n)` a.s.、highest risk）→ Phase 4 (Z) W2 discharge** のみ。achievability 壁 `lz78-aseventual-ziv` はこの時点では honest に維持されていた（TRUE-as-framed、(V) 未証明）が、leg 11 で CLOSED（`c22f2d5`）。
    - **記録のみ（コード触らない）**: `isLZ78PerPathParsingFactorization_of_pos` が `ZivEntropyBridge.lean`/`Stationary/Kernel.lean` の docstring で「genuinely constructed」と記載されているが実在 decl が無い（phantom 確認）。コード docstring fact error、別途修正候補（SoT はコード側、今回は記録のみ）。

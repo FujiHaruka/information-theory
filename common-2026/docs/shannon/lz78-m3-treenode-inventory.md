@@ -19,7 +19,7 @@
 theorem ziv_aseventual_le_blockLogAvg₂
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
-      Filter.limsup (fun n => (lz78GreedyImplEncodingLength n
+      Filter.limsup (fun n => (lz78GreedyEncodingLength n
           (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ)) Filter.atTop
       ≤ Filter.limsup (fun n => blockLogAvg₂ μ p.toStationaryProcess n ω) Filter.atTop
 ```
@@ -84,7 +84,7 @@ limsup 合成: Filter.limsup_le_limsup で err(n)→0 を吸収               --
 | 同じ長さ ≤L の distinct string は ≤ `(|α|+1)^(L+1)` 個 | `ZivCountingBody.lean:111` | `theorem card_short_le (ws : List (List α)) (hnodup : ws.Nodup) (hlen : ∀ w ∈ ws, w.length ≤ L) :` <br> section `[Fintype α]` | `ws.length ≤ (Fintype.card α + 1) ^ (L + 1)` | — | **A (「同じ ℓ の distinct phrase ≤ |α|^ℓ」を握る既存核)** |
 | nat-level packing | `ZivCountingBody.lean:138` | `theorem packing_nat (ws : List (List α)) (hnodup : ws.Nodup) (L : ℕ) :` <br> section `[Fintype α] [Nonempty α]` | `(L + 1) * (ws.length - (Fintype.card α + 1) ^ (L + 1)) ≤ (ws.map List.length).sum` | — | A |
 | **packing 核 `c·log c ≤ 8·log(|α|+1)·T`** | `ZivCountingBody.lean:190` | `theorem total_length_ge_count_mul_log (ws : List (List α)) (hnodup : ws.Nodup) (hne : ∀ w ∈ ws, w ≠ []) :` <br> section `[Fintype α] [Nonempty α]` | `(ws.length : ℝ) * Real.log (ws.length : ℝ) ≤ 8 * Real.log (Fintype.card α + 1) * ((ws.map List.length).sum : ℝ)` | 1 (`lz78PhraseStrings_mul_log_le`) | A (length-group packing の証明済 template) |
-| 文字列ファミリ版 `c·log c ≤ K·n` | `ZivCountingBody.lean:357` | `theorem lz78PhraseStrings_mul_log_le [Nonempty α] (input : List α) :` | `((lz78PhraseStrings input).length : ℝ) * Real.log ((lz78PhraseStrings input).length : ℝ) ≤ 8 * Real.log (Fintype.card α + 1) * (input.length : ℝ)` | 2 (`lz78_impl_rate_le_const`, `_of_length`) | A/B (gateway 経由で既使用) |
+| 文字列ファミリ版 `c·log c ≤ K·n` | `ZivCountingBody.lean:357` | `theorem lz78PhraseStrings_mul_log_le [Nonempty α] (input : List α) :` | `((lz78PhraseStrings input).length : ℝ) * Real.log ((lz78PhraseStrings input).length : ℝ) ≤ 8 * Real.log (Fintype.card α + 1) * (input.length : ℝ)` | 2 (`lz78_rate_le_const`, `_of_length`) | A/B (gateway 経由で既使用) |
 | `c = O(n/log n)` (envelope) | `ZivCountingBody.lean:410` | `theorem lz78PhraseStrings_count_isBigO (input : ℕ → List α) (hlen : ∀ n, (input n).length = n) :` <br> section `[Fintype α] [DecidableEq α] [Nonempty α]` | `(fun n => ((lz78PhraseStrings (input n)).length : ℝ)) =O[atTop] (fun n => (n : ℝ) / Real.log (n : ℝ))` | — | **A/B (overhead → 0 の分母、envelope = `n/Real.log n`)** |
 
 **finding (§C)**:
@@ -138,7 +138,7 @@ worker `lz78PhraseStringsAux` (`GreedyLongestPrefix.lean:77`) を精読した結
 - **`ziv_aseventual_le_blockLogAvg₂` の `0 < Pₙ` (observed cylinder 正質量)**: `blockProb_neg_log_ge_sum` / `blockLogAvg_eq_neg_log_blockProb` 経由で `-log Pₙ` を扱う全 path が `0 < Pₙ` を要求 (`hPn` / `field_simp`)。これは **a.s. regularity** (`∀ᵐ ω` の中で供給)。per-block `∀ω` では成立しない (`Pₙ = 0` の null set がある)。
 - **`ConvexOn.map_sum_le` の weight 正規化 `∑ w i = 1`**: log-sum 適用時、weights は `bᵢ/(∑b)` 形にして `∑ = 1` を満たす (in-project `log_sum_inequality` が既に処理済 — Mathlib Jensen を直接叩かず `log_sum_inequality` を使えばこの前提は隠蔽される)。
 - **per-block 形 (`∀n∀ω`) は FALSE** (D1: 反例 `a^16`, c=5, -log Pₙ=0; D2: overhead 定数版も `Pₙ→1` family で FALSE)。**limsup 形で o(n) を吸収して初めて成立** — clean `c·log c ≤ -log Pₙ` (∀n∀ω) や定数 overhead 付き (∀n∀ω) を書いた瞬間に即撤退。
-- **`Filter.limsup_le_limsup` (`Mathlib/Order/LiminfLimsup.lean:198`) の cobounded/bounded witness**: `[ConditionallyCompleteLattice β]`、引数 `(hu : f.IsCoboundedUnder (· ≤ ·) u := by isBoundedDefault)` / `(hv : f.IsBoundedUnder (· ≤ ·) v := by isBoundedDefault)` は autoparam だが、`atTop` + 非自明列で発火しないことがある。witness = `lz78_impl_rate_le_const` (上界) + `per_symbol_nonneg` (下界)、headline `h_bdd_above` の実証手法を流用。
+- **`Filter.limsup_le_limsup` (`Mathlib/Order/LiminfLimsup.lean:198`) の cobounded/bounded witness**: `[ConditionallyCompleteLattice β]`、引数 `(hu : f.IsCoboundedUnder (· ≤ ·) u := by isBoundedDefault)` / `(hv : f.IsBoundedUnder (· ≤ ·) v := by isBoundedDefault)` は autoparam だが、`atTop` + 非自明列で発火しないことがある。witness = `lz78_rate_le_const` (上界) + `per_symbol_nonneg` (下界)、headline `h_bdd_above` の実証手法を流用。
 
 ---
 
@@ -169,7 +169,7 @@ worker `lz78PhraseStringsAux` (`GreedyLongestPrefix.lean:77`) を精読した結
 | 可変深さ length-grouping AEP `c·log c ≤ ∑(per-group entropy) + o(n)` | `loogle "?c * Real.log ?c ≤ Finset.sum _ _"` → `Of these, 0 match your pattern(s)` (Real×log×Finset.sum 6 decl 中 0 match) | **genuine missing core** (codebase + Mathlib 不在、= 壁 `lz78-aseventual-ziv` の核) |
 | limsup over per-symbol rate の AEP bridge | `loogle "Filter.limsup (fun _ => _ / _), Real.log"` → `Found 0 declarations`; `loogle "Filter.limsup, Nat.log"` → `Found 0 declarations` | **genuine wall** (Mathlib 不在) |
 
-**shared sorry-lemma 推奨**: `ziv_aseventual_le_blockLogAvg₂` の壁は **既に単一の sorry に集約済** (`AsymptoticOptimality.lean:557`、`@residual(wall:lz78-aseventual-ziv)`)。`lz78GreedyImpl_achievability_ae` (`:637`) は `shannon_mcmillan_breiman₂` (sorryAx-free) + `ziv_aseventual_le_blockLogAvg₂` の合成で **body は sorry-free** (W1/W2 decomposition、`876bcd0`)。よって **wall は 1 箇所のみで散在していない** — これ以上の consolidation は不要 (新たな shared sorry lemma の追加は逆に冗長)。D4 path-prefix の `blockProb_neg_log_ge_sum` (0 consumers) は壁の核ではない dead-start なので、これを shared lemma 化する必要もない。
+**shared sorry-lemma 推奨**: `ziv_aseventual_le_blockLogAvg₂` の壁は **既に単一の sorry に集約済** (`AsymptoticOptimality.lean:557`、`@residual(wall:lz78-aseventual-ziv)`)。`lz78Greedy_achievability_ae` (`:637`) は `shannon_mcmillan_breiman₂` (sorryAx-free) + `ziv_aseventual_le_blockLogAvg₂` の合成で **body は sorry-free** (W1/W2 decomposition、`876bcd0`)。よって **wall は 1 箇所のみで散在していない** — これ以上の consolidation は不要 (新たな shared sorry lemma の追加は逆に冗長)。D4 path-prefix の `blockProb_neg_log_ge_sum` (0 consumers) は壁の核ではない dead-start なので、これを shared lemma 化する必要もない。
 
 ---
 
@@ -182,8 +182,8 @@ worker `lz78PhraseStringsAux` (`GreedyLongestPrefix.lean:77`) を精読した結
 **判定: 既に発動済 (leg 3, commit `7171707`)**。本在庫はこの判定を **覆さない** (= 在庫ベースでも genuine 壁を確認):
 
 - 本在庫の機械裏取り (loogle Found 0 × 3 / `c·log c ≤ ∑` grouping AEP の 0 match / `blockProb_neg_log_ge_sum` 0 consumers) は m2-plan leg 3 の「Phase 2b = single in-session plan で閉じない genuine research-level 壁」を **再確認** する。
-- gateway (Phase 1 = `lz78_impl_bitrate_le_clogc_plus_overhead`, sorryAx-free) は GO のままで「gateway 不通」撤退条件には該当しない。
-- **ripple ゼロ (機械裏取り)**: `ziv_aseventual_le_blockLogAvg₂` の direct consumer は `lz78GreedyImpl_achievability_ae` 1 decl (同 file、statement 依存のみ)。W2 body を埋めるだけで signature 不変 → 配線変更不要。
+- gateway (Phase 1 = `lz78_bitrate_le_clogc_plus_overhead`, sorryAx-free) は GO のままで「gateway 不通」撤退条件には該当しない。
+- **ripple ゼロ (機械裏取り)**: `ziv_aseventual_le_blockLogAvg₂` の direct consumer は `lz78Greedy_achievability_ae` 1 decl (同 file、statement 依存のみ)。W2 body を埋めるだけで signature 不変 → 配線変更不要。
 
 **現状の撤退 exit は honest (tier 2)**: `sorry` + `@residual(wall:lz78-aseventual-ziv)`、hypothesis bundling なし、signature は source data (`μ`, `p`) + `[IsProbabilityMeasure μ]` regularity のみ。**新たな degenerate fallback の追加は不要** (既存 exit が正しい retreat 形)。在庫は「壁を縮退させる degenerate boundary」ではなく「route A が route B より既存資産で組みやすい」という攻略 path 選定材料を供給する。
 
@@ -226,7 +226,7 @@ theorem lz78_clogc_le_neg_log_blockProb_aseventual
 theorem ziv_aseventual_le_blockLogAvg₂
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
-      Filter.limsup (fun n => (lz78GreedyImplEncodingLength n
+      Filter.limsup (fun n => (lz78GreedyEncodingLength n
           (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ)) Filter.atTop
       ≤ Filter.limsup
           (fun n => blockLogAvg₂ μ p.toStationaryProcess n ω) Filter.atTop := by
