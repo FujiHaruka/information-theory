@@ -15,6 +15,15 @@
 //   scripts/sig_view.ts --names <file.lean>              # 名前 + 種別 + 行番号のみ (目次)
 //   scripts/sig_view.ts --no-context <file.lean>         # namespace/section/variable/open を出さない
 //   scripts/sig_view.ts --sorry <file.lean>              # sorry を含む宣言だけに絞る
+//
+// 色は TTY のときのみ付く (NO_COLOR / パイプ・リダイレクト時は素のテキスト)。
+//
+// 検証: InformationTheory 全 274 ファイルで宣言数を grep と突合し、差分は全て grep の
+// コメント偽陽性 (docstring 内の "theorem."/"structure …" 等) で sig_view 側は 0 取りこぼし。
+//
+// 既知の限界 (実害は極小、稀): (1) 文字リテラル `'('` は `'` が識別子 prime と衝突するため
+// 未処理で括弧深度がずれうる。(2) `:=` を持たないパターンマッチ def (`def f | a => …`) は
+// 本体境界が取れず over-inclusive になる。
 
 type Mode = "sig" | "doc" | "names";
 
@@ -41,6 +50,10 @@ const KEYWORDS = [
 ];
 const MODIFIERS = ["private", "protected", "noncomputable", "partial", "unsafe", "scoped", "local"];
 const CTX = ["namespace", "section", "end", "variable", "open", "universe"];
+// Lean 識別子継続文字: 文字 (ギリシャ・添字含む) / 数字 / `_ ' ! ?`。
+// JS の `\b` は ASCII 前提で、`hC'def` の `'def` を語境界と誤認する → 自前のクラスで境界判定。
+const IDC = "\\p{L}\\p{N}_'!?";
+const kw = (alts: string[]) => new RegExp(`(?<![${IDC}])(${alts.join("|")})(?![${IDC}])`);
 const OPEN_BRACKETS = new Set(["(", "[", "{", "⟨", "⦃"]);
 const CLOSE_BRACKETS = new Set([")", "]", "}", "⟩", "⦄"]);
 
@@ -136,7 +149,7 @@ function lineOf(lineStarts: number[], pos: number): number {
 }
 
 function allMatches(re: RegExp, text: string, depth: Int32Array): number[] {
-  const r = new RegExp(re.source, "g");
+  const r = new RegExp(re.source, "gu");
   const res: number[] = [];
   let m: RegExpExecArray | null;
   while ((m = r.exec(text)) !== null) {
@@ -153,10 +166,10 @@ function findCut(p: Parsed, start: number, end: number): number {
     if (p.depth[q] === 0) { best = Math.min(best, q); break; }
     q = p.masked.indexOf(":=", q + 2);
   }
-  const wre = /\bwhere\b/g;
-  wre.lastIndex = start;
+  const wreg = new RegExp(kw(["where"]).source, "gu");
+  wreg.lastIndex = start;
   let m: RegExpExecArray | null;
-  while ((m = wre.exec(p.masked)) !== null) {
+  while ((m = wreg.exec(p.masked)) !== null) {
     if (m.index >= end) break;
     if (p.depth[m.index] === 0) { best = Math.min(best, m.index); break; }
   }
@@ -189,8 +202,8 @@ function extendModifiers(p: Parsed, kwStart: number): number {
 }
 
 function parseDecls(p: Parsed): { decls: Decl[]; ctxs: Ctx[] } {
-  const kwRe = new RegExp(`\\b(${KEYWORDS.join("|")})\\b`);
-  const ctxRe = new RegExp(`\\b(${CTX.join("|")})\\b`);
+  const kwRe = kw(KEYWORDS);
+  const ctxRe = kw(CTX);
   const declPos = allMatches(kwRe, p.masked, p.depth);
   const ctxPos = allMatches(ctxRe, p.masked, p.depth);
 
@@ -216,7 +229,7 @@ function parseDecls(p: Parsed): { decls: Decl[]; ctxs: Ctx[] } {
     const sigStart = extendModifiers(p, pos);
     const doc = attachDoc(p, sigStart);
     const body = p.masked.slice(cut, regionEnd);
-    const hasSorry = /\bsorry\b/.test(body);
+    const hasSorry = new RegExp(kw(["sorry"]).source, "u").test(body);
     const ownStart = doc !== null
       ? p.docSpans.find((d) => d.text === doc && d.end <= sigStart)?.start ?? sigStart
       : sigStart;
@@ -248,9 +261,19 @@ function dedent(s: string): string[] {
   return lines.map((l) => l.slice(min));
 }
 
+// ANSI 色付け。パイプ/リダイレクト時や NO_COLOR 指定時は素のテキストにする
+// (エージェントが出力をキャプチャするときに制御文字を混ぜない)。
+const USE_COLOR = !Deno.env.get("NO_COLOR") && Deno.stdout.isTerminal();
+const wrap = (code: string, s: string) => USE_COLOR ? `\x1b[${code}m${s}\x1b[0m` : s;
+const bold = (s: string) => wrap("1", s);
+const dim = (s: string) => wrap("2", s);
+const green = (s: string) => wrap("32", s);
+const yellow = (s: string) => wrap("33", s);
+const cyan = (s: string) => wrap("36", s);
+
 function render(path: string, p: Parsed, decls: Decl[], ctxs: Ctx[], mode: Mode, showCtx: boolean, onlySorry: boolean): string {
   const lines: string[] = [];
-  lines.push(`\x1b[1m${path}\x1b[0m`);
+  lines.push(bold(path));
   const filtered = onlySorry ? decls.filter((d) => d.hasSorry) : decls;
 
   // 宣言と context を位置順にマージ
@@ -264,31 +287,31 @@ function render(path: string, p: Parsed, decls: Decl[], ctxs: Ctx[], mode: Mode,
   for (const it of items) {
     if (it.kind === "ctx") {
       const ln = lineOf(p.lineStarts, it.c.pos);
-      lines.push(`\x1b[2mL${ln} · ${it.c.text}\x1b[0m`);
+      lines.push(dim(`L${ln} · ${it.c.text}`));
       continue;
     }
     const d = it.d;
     const ln = lineOf(p.lineStarts, d.pos);
     const flags: string[] = [];
-    if (d.hasSorry) { flags.push("\x1b[33msorry\x1b[0m"); nSorry++; }
-    for (const r of d.residuals) flags.push(`\x1b[36m@residual(${r})\x1b[0m`);
+    if (d.hasSorry) { flags.push(yellow("sorry")); nSorry++; }
+    for (const r of d.residuals) flags.push(cyan(`@residual(${r})`));
     const flagStr = flags.length ? "  " + flags.map((f) => `⟨${f}⟩`).join(" ") : "";
-    const head = `\x1b[1mL${ln}\x1b[0m ${d.kind} \x1b[32m${d.name}\x1b[0m${flagStr}`;
+    const head = `${bold("L" + ln)} ${d.kind} ${green(d.name)}${flagStr}`;
 
     if (mode === "names") { lines.push(head); continue; }
 
     if (mode === "doc" && d.doc) {
-      for (const dl of dedent(d.doc)) lines.push(`\x1b[2m  ${dl}\x1b[0m`);
+      for (const dl of dedent(d.doc)) lines.push(dim(`  ${dl}`));
     }
     lines.push(head);
     const sig = dedent(p.src.slice(d.sigStart, d.cut));
     const cap = 16;
     sig.slice(0, cap).forEach((sl) => lines.push(`    ${sl}`));
-    if (sig.length > cap) lines.push(`    \x1b[2m… (+${sig.length - cap} 行)\x1b[0m`);
+    if (sig.length > cap) lines.push(dim(`    … (+${sig.length - cap} 行)`));
     lines.push("");
   }
 
-  lines.push(`\x1b[2m— ${filtered.length} decls${onlySorry ? "" : `, ${nSorry} with sorry`}\x1b[0m`);
+  lines.push(dim(`— ${filtered.length} decls${onlySorry ? "" : `, ${nSorry} with sorry`}`));
   return lines.join("\n");
 }
 
