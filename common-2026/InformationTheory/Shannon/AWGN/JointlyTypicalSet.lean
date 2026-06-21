@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.AWGN.F1Discharge
+import InformationTheory.Shannon.AWGN.ChannelMeasurability
 
 /-!
 # AWGN jointly typical set and capacity re-publish

@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.AWGN.BindConvBody
+import InformationTheory.Shannon.AWGN.BindConvolution
 import InformationTheory.Shannon.AWGN.ContChannelMIDecomp
 
 /-!
@@ -11,12 +11,12 @@ hypothesis `h_bridge`) has been **retired**; its log-algebra was inlined into
 `AWGNMIBridge.awgn_mi_gaussian_closed_form_of_primitives`, where the bridge is
 genuinely discharged. The genuine machinery that discharges the bridge lives strictly
 **downstream** of `AWGN.lean` (the MI-decomposition wall in `AwgnWalls.lean`, the
-output-Gaussian bind/conv bridge in `AWGNBindConvBody.lean`, and the assembled
+output-Gaussian bind/conv bridge in `AWGNBindConvolution.lean`, and the assembled
 `awgn_mi_gaussian_closed_form_of_out` in `ContChannelMIDecomp.lean`), so the
 closed form must be **relocated** to the lowest file that can see both genuine
 producers.
 
-`AWGNBindConvBody` and `ContChannelMIDecomp` are non-importing siblings (both sit
+`AWGNBindConvolution` and `ContChannelMIDecomp` are non-importing siblings (both sit
 directly under `AWGNMutualInfoBridge`), so this NEW file imports both and is the
 sole place where the hypothesis-free wrapper can be assembled.
 

@@ -1,8 +1,8 @@
 import InformationTheory.Shannon.ChannelCoding.Basic
 import InformationTheory.Shannon.ChannelCoding.MIDecomp
 import InformationTheory.Shannon.DifferentialEntropy
-import InformationTheory.Shannon.AWGN.MIDecompBody
-import InformationTheory.Shannon.AWGN.BindConvBody
+import InformationTheory.Shannon.AWGN.MutualInfoDecomposition
+import InformationTheory.Shannon.AWGN.BindConvolution
 import InformationTheory.Shannon.AWGN.Walls
 import Mathlib.InformationTheory.KullbackLeibler.Basic
 import Mathlib.Probability.Kernel.Composition.RadonNikodym
@@ -15,7 +15,7 @@ import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
 # Continuous-channel mutual-information chain rule
 
 This file applies the **continuous-channel MI chain rule**
-`I(X;Y) = h(Y) − h(Y|X)` (`AWGNMIDecompBody.IsContChannelMIDecompHyp`) at the AWGN
+`I(X;Y) = h(Y) − h(Y|X)` (`IsContChannelMIDecompHyp`) at the AWGN
 channel, with `h(Y|X)` realized as the integral of fibrewise differential entropies.
 
 The AWGN-independent generic core (the `InformationTheory.Shannon.ChannelCoding.*`

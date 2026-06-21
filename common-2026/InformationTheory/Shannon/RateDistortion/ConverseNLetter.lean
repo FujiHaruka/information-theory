@@ -1,7 +1,9 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.RateDistortion.ConverseMonotone
 import InformationTheory.Shannon.RateDistortion.Achievability
-import InformationTheory.Shannon.RateDistortion.ConvexityDischarge
+import InformationTheory.Shannon.RateDistortion.Convexity
+import InformationTheory.Shannon.Sanov.Basic
+import Mathlib.InformationTheory.KullbackLeibler.KLFun
 import InformationTheory.Shannon.CondEntropyMemoryless
 import InformationTheory.Shannon.AEP.Basic.Converse
 import InformationTheory.Shannon.Bridge

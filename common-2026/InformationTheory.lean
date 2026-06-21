@@ -80,7 +80,6 @@ import InformationTheory.Shannon.GeneralDMC.Basic
 import InformationTheory.Shannon.RateDistortion.Converse
 import InformationTheory.Shannon.RateDistortion.ConverseMonotone
 import InformationTheory.Shannon.RateDistortion.Convexity
-import InformationTheory.Shannon.RateDistortion.ConvexityDischarge
 import InformationTheory.Shannon.RateDistortion.Achievability
 import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseB
 import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseC
@@ -126,13 +125,12 @@ import InformationTheory.Shannon.AWGN.Basic
 import InformationTheory.Shannon.AWGN.Achievability
 import InformationTheory.Shannon.AWGN.Converse
 import InformationTheory.Shannon.AWGN.Main
-import InformationTheory.Shannon.AWGN.F1Discharge
+import InformationTheory.Shannon.AWGN.ChannelMeasurability
 import InformationTheory.Shannon.AWGN.AchievabilityDischarge
 import InformationTheory.Shannon.AWGN.ConverseDischarge
 import InformationTheory.Shannon.AWGN.Walls
 import InformationTheory.Shannon.AWGN.AchievabilityAEP
 import InformationTheory.Shannon.ParallelGaussian.Basic
-import InformationTheory.Shannon.ParallelGaussian.L_PG0Discharge
 import InformationTheory.Shannon.EntropyPower.Ext
 import InformationTheory.Shannon.EPI.Unconditional.MixedCase
 import InformationTheory.Shannon.EntropyPower.Inequality
@@ -176,7 +174,7 @@ import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Derivatives
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Assembly
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnGenuine
-import InformationTheory.Shannon.AWGN.F2F3Discharge
+import InformationTheory.Shannon.AWGN.JointlyTypicalSet
 -- Wave5 gap-close
 import InformationTheory.Shannon.Cramer.LC2PhaseC
 import InformationTheory.Shannon.MeasurePiTiltedFactorization
@@ -204,7 +202,7 @@ import InformationTheory.Shannon.FisherInfo.V2DeBruijnBody
 import InformationTheory.Shannon.LZ78.ConverseAsymptotic
 import InformationTheory.Draft.Shannon.HoeffdingInteriorBody
 import InformationTheory.Shannon.GeneralDMC.Extension
-import InformationTheory.Shannon.AWGN.BindConvBody
+import InformationTheory.Shannon.AWGN.BindConvolution
 import InformationTheory.Shannon.EPI.Stam.Step12Body
 import InformationTheory.Shannon.StamGaussianBound
 import InformationTheory.Shannon.FisherConvBound
@@ -213,7 +211,7 @@ import InformationTheory.Shannon.FisherInfo.V2HeatFlowBody
 import InformationTheory.Shannon.LZ78.GreedyParsingImpl
 import InformationTheory.Shannon.LZ78.GreedyLongestPrefix
 import InformationTheory.Shannon.Hoeffding.InteriorGradientBody
-import InformationTheory.Shannon.AWGN.MIDecompBody
+import InformationTheory.Shannon.AWGN.MutualInfoDecomposition
 import InformationTheory.Shannon.AWGN.ContChannelMIDecomp
 import InformationTheory.Shannon.AWGN.CapacityConverseMaxent
 import InformationTheory.Shannon.AWGN.MIClosedForm

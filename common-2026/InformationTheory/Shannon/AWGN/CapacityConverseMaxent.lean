@@ -7,7 +7,7 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.ChannelCoding.Basic
 import InformationTheory.Shannon.AWGN.Basic
-import InformationTheory.Shannon.AWGN.BindConvBody
+import InformationTheory.Shannon.AWGN.BindConvolution
 import InformationTheory.Shannon.AWGN.ContChannelMIDecomp
 
 /-!
