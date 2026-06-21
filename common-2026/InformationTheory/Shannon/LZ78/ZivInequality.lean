@@ -44,7 +44,7 @@ of LZ78 optimality is scoped out as `lz78GreedyImpl_achievability_ae` in
 ## Pattern source
 
 The "extract the most tractable fragments" pattern is the same as
-`InformationTheory/Shannon/WynerZivDischarge.lean`:
+`InformationTheory/Shannon/WynerZiv/RateMonotonicity.lean`:
 the parent placeholder is not fully discharged; the file publishes the
 fragments that are tractable now plus a real-valued predicate exposing
 the layered shape, with `.trivial` bridges to the parent placeholder.

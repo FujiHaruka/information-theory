@@ -1,16 +1,16 @@
 import InformationTheory.Fano.BinaryJensen -- mul_negMulLog_div
 import InformationTheory.Fano.DPI          -- log_sum_inequality_negMulLog
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.WynerZiv.ObjectiveConvexityBody
+import InformationTheory.Shannon.WynerZiv.ObjectiveConvexity
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import Mathlib.Analysis.Convex.Jensen
 import Mathlib.Algebra.BigOperators.Field
 
 /-!
-# Wyner–Ziv conditional-entropy-difference convexity — full discharge
+# Wyner–Ziv conditional-entropy-difference convexity
 
 This file discharges the irreducible Lemma-15.9 core
-`WynerZivCondEntDiffConvex` (`WynerZivObjectiveConvexityBody.lean:212`)
+`WynerZivCondEntDiffConvex` (`WynerZiv/ObjectiveConvexity.lean:212`)
 *unconditionally* (only `P_XY ≥ 0`, supplied at rate level by
 `P_XY ∈ stdSimplex`).
 

@@ -2,7 +2,7 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.LZ78.Basic
 import InformationTheory.Shannon.LZ78.GreedyParsing
 import InformationTheory.Shannon.LZ78.GreedyLongestPrefix
-import InformationTheory.Shannon.LZ78.ZivCountingBody
+import InformationTheory.Shannon.LZ78.PhraseCounting
 import InformationTheory.Shannon.LZ78.ZivAchievabilityComposition
 import InformationTheory.Shannon.SMB.AlgoetCover.Liminf
 import Mathlib.Data.Nat.Log

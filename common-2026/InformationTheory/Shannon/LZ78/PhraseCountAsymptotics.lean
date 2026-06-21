@@ -8,7 +8,7 @@ import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Order.Filter.AtTopBot.Basic
 
 /-!
-# LZ78 phrase-count asymptotic envelope — genuine `IsBigO` discharge
+# LZ78 phrase-count asymptotic envelope — genuine `IsBigO` bound
 
 This file discharges the predicate `IsLZ78PhraseCountAsymptotic p B`
 (published in `InformationTheory/Shannon/LZ78ConverseAsymptotic.lean`) with

@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.LZ78.GreedyLongestPrefix
-import InformationTheory.Shannon.LZ78.PhraseCountAsymptoticBody
+import InformationTheory.Shannon.LZ78.PhraseCountAsymptotics
 import Mathlib.Data.Nat.Log
 import Mathlib.Data.List.Nodup
 import Mathlib.Data.Fintype.Card
@@ -28,7 +28,7 @@ c · log c ≤ K · T          (K = 4·log(|α|+1),  T = total symbol count)
 which, instantiated at `lz78PhraseStrings input` with `T ≤ input.length`,
 gives the Ziv product bound `c(n) · log c(n) ≤ K·n` (★). Composed with the
 inversion `isBigO_natCast_div_log_of_mul_log_le`
-(`LZ78PhraseCountAsymptoticBody.lean`), this yields `c(n) = O(n / log n)`.
+(`LZ78/PhraseCountAsymptotics.lean`), this yields `c(n) = O(n / log n)`.
 
 ## Approach
 
@@ -402,7 +402,7 @@ theorem lz78PhraseStrings_mul_log_le_of_length
 `c(n) = O(n / log n)`**: combining the product bound `(★)`
 (`lz78PhraseStrings_mul_log_le`) with the genuine inversion lemma
 `isBigO_natCast_div_log_of_mul_log_le`
-(`LZ78PhraseCountAsymptoticBody.lean`), the *genuine longest-prefix
+(`LZ78/PhraseCountAsymptotics.lean`), the *genuine longest-prefix
 greedy* distinct phrase count is `O(n / log n)`. This connects the
 distinct invariant to the Cover–Thomas Eq. 13.124 envelope with
 no honest hypothesis. -/

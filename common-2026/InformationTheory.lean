@@ -138,7 +138,7 @@ import InformationTheory.Shannon.EPI.Plumbing
 import InformationTheory.Shannon.ShannonHartley
 import InformationTheory.Shannon.WhittakerShannonPartial
 import InformationTheory.Shannon.WynerZiv.Basic
-import InformationTheory.Shannon.WynerZiv.Discharge
+import InformationTheory.Shannon.WynerZiv.RateMonotonicity
 import InformationTheory.Shannon.Stationary.Basic
 import InformationTheory.Shannon.EntropyRate
 import InformationTheory.Shannon.SMB.McMillanBreiman
@@ -185,7 +185,7 @@ import InformationTheory.Shannon.ParallelGaussian.KKT
 import InformationTheory.Shannon.EPI.L3Integration
 -- Wave6 gap-close
 import InformationTheory.Shannon.Hoeffding.SandwichBody
-import InformationTheory.Shannon.WynerZiv.ConvexityBody
+import InformationTheory.Shannon.WynerZiv.FactorizableRate
 -- Wave7 parallel-10 + gap-close
 import InformationTheory.Shannon.AWGN.MutualInfoBridge
 import InformationTheory.Shannon.CondKLIntegral
@@ -216,8 +216,8 @@ import InformationTheory.Shannon.AWGN.ContChannelMIDecomp
 import InformationTheory.Shannon.AWGN.CapacityConverseMaxent
 import InformationTheory.Shannon.AWGN.MIClosedForm
 import InformationTheory.Shannon.Hoeffding.LagrangeIVTBody
-import InformationTheory.Shannon.LZ78.PhraseCountAsymptoticBody
-import InformationTheory.Shannon.LZ78.ZivCountingBody
+import InformationTheory.Shannon.LZ78.PhraseCountAsymptotics
+import InformationTheory.Shannon.LZ78.PhraseCounting
 import InformationTheory.Shannon.LZ78.ZivLengthGrouping
 import InformationTheory.Shannon.LZ78.EmpiricalEntropyMean
 import InformationTheory.Shannon.LZ78.ZivMeasureBridge
@@ -225,8 +225,8 @@ import InformationTheory.Shannon.LZ78.ZivCondContext
 import InformationTheory.Shannon.LZ78.ZivCondGrouping
 import InformationTheory.Shannon.LZ78.ZivThreading
 import InformationTheory.Shannon.LZ78.ZivAchievabilityComposition
-import InformationTheory.Shannon.WynerZiv.ObjectiveConvexityBody
-import InformationTheory.Shannon.GaussianPDFVarianceDerivBody
+import InformationTheory.Shannon.WynerZiv.ObjectiveConvexity
+import InformationTheory.Shannon.GaussianPDFVarianceDerivative
 import InformationTheory.Shannon.FisherDeBruijnGaussianWitness
 import InformationTheory.Shannon.Hoeffding.MinimizerAttainment
 import InformationTheory.Shannon.Hoeffding.SandwichDischarge
@@ -235,7 +235,7 @@ import InformationTheory.Shannon.LZ78.ZivEntropyBridge
 import InformationTheory.Shannon.Stationary.Kernel
 import InformationTheory.Shannon.LZ78.ConverseUDObject
 import InformationTheory.Shannon.EPI.Stam.DeBruijnConclusion
-import InformationTheory.Shannon.WynerZiv.CondEntDiffConvexBody
+import InformationTheory.Shannon.WynerZiv.ConditionalEntropyConvexity
 import InformationTheory.Shannon.MultivariateDiffEntropy
 import InformationTheory.Shannon.ParallelGaussian.PerCoord
 import InformationTheory.Shannon.ParallelGaussian.Converse.Core

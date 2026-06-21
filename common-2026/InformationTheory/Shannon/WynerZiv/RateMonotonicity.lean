@@ -2,11 +2,11 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.WynerZiv.Basic
 
 /-!
-# Wyner–Ziv body: monotonicity and affine plumbing
+# Wyner–Ziv rate monotonicity and affine plumbing
 
 Monotonicity of the Wyner–Ziv rate function in the distortion budget, together
 with the affine building blocks and boundedness facts used by the convexity
-development in `ConvexityBody.lean`.
+development in `FactorizableRate.lean`.
 
 ## Main statements
 

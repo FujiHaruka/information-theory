@@ -1,11 +1,11 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.WynerZiv.ConvexityBody
+import InformationTheory.Shannon.WynerZiv.FactorizableRate
 
 /-!
-# Wyner–Ziv objective convexity discharge (Cover–Thomas Lemma 15.9)
+# Wyner–Ziv objective convexity (Cover–Thomas Lemma 15.9)
 
 This file discharges the `h_obj_convex` hypothesis carried by
-`WynerZivConvexityBody.lean` (`wynerZivRateFactorizable_convex`,
+`WynerZiv/FactorizableRate.lean` (`wynerZivRateFactorizable_convex`,
 `wynerZivRateFactorizable_convex_in_D`): the convexity of the Wyner–Ziv
 objective `I(X;U) − I(Y;U)` in the joint pmf `q`, along convex combinations
 of *factorisable* joints `q = κ(u|x)·P_XY(x,y)`.
@@ -233,7 +233,7 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 Given `WynerZivCondEntDiffConvex` (the Lemma-15.9 core), the Wyner–Ziv
 objective `I(X;U) − I(Y;U)` is convex along factorisable convex
 combinations — i.e. exactly the `h_obj_convex` hypothesis consumed by
-`WynerZivConvexityBody.lean`.
+`WynerZiv/FactorizableRate.lean`.
 
 `@audit:superseded-by(wynerZivCondEntDiffConvex_holds)` -/
 @[entry_point]

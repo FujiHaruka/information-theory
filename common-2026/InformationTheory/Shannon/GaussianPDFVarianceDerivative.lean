@@ -169,7 +169,7 @@ theorem hasDerivAt_heatKernel_time {t : ℝ} (ht : 0 < t) (x : ℝ) :
   rw [InformationTheory.Shannon.FisherInfoV2.heatKernel_def_gaussianPDFReal hs,
     ← gaussianPDFRealVar_eq_gaussianPDFReal 0 hs]
 
-/-! ## Discharge of `IsHeatTimeDerivHyp` -/
+/-! ## Proof of `IsHeatTimeDerivHyp` -/
 
 /-- **Gaussian heat kernel satisfies the time-derivative sub-predicate.**
 

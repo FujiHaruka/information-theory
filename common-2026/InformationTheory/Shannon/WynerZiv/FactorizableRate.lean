@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.WynerZiv.Discharge
+import InformationTheory.Shannon.WynerZiv.RateMonotonicity
 
 /-!
 # Wyner–Ziv convexity under the factorization predicate
@@ -475,7 +475,7 @@ variable [Fintype α] [Fintype β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
 /-- **The factorisable image is `BddBelow`.** Same simplex-projection route
-as in `WynerZivDischarge.lean`: the factorisable image is contained in the
+as in `WynerZiv/RateMonotonicity.lean`: the factorisable image is contained in the
 raw image (modulo the side conditions in `factorisable_subset_constraint`),
 which is contained in `objective '' stdSimplex`, which is compact and
 hence bounded below. -/
