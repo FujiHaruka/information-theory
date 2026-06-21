@@ -1,17 +1,15 @@
-import InformationTheory.Draft.Shannon.RateDistortionAchievabilityPhaseE
-import InformationTheory.Draft.Shannon.RateDistortionAchievabilityPhaseEDischarge
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.ConditionalMethodOfTypes
-import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseC
-import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseD
-import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseEStrong
+import InformationTheory.Shannon.RateDistortion.AchievabilityCodebookMatchProbability
+import InformationTheory.Shannon.RateDistortion.AchievabilityAsymptoticFailureDecay
+import InformationTheory.Shannon.RateDistortion.AchievabilityJointStrongTypicality
 
 /-!
-# Rate-distortion achievability (strong-typicality variant) — supporting layer
+# Rate-distortion achievability (strong-typicality variant) — supporting bounds
 
 The per-source match-probability and encoder-failure bounds, the
 generic-encoder distortion decomposition, the strong lossy-code bundle, the
-witness-form and partial-discharge wrappers, `codebookAvgFailureStrong`, and the
+witness-form and ambient-measure wrappers, `codebookAvgFailureStrong`, and the
 `rdAmbient` entropy / block-law bridges.
 -/
 

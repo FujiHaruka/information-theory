@@ -1,18 +1,16 @@
-import InformationTheory.Draft.Shannon.RateDistortionAchievabilityPhaseE
-import InformationTheory.Draft.Shannon.RateDistortionAchievabilityPhaseEDischarge
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.ConditionalMethodOfTypes
-import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseC
-import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseD
-import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseEStrong
-import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseEStrongFinal.Setup
+import InformationTheory.Shannon.RateDistortion.AchievabilityCodebookMatchProbability
+import InformationTheory.Shannon.RateDistortion.AchievabilityAsymptoticFailureDecay
+import InformationTheory.Shannon.RateDistortion.AchievabilityJointStrongTypicality
+import InformationTheory.Shannon.RateDistortion.AchievabilityStrongTypicality.SupportingBounds
 
 /-!
-# Rate-distortion achievability (strong final) — FailureTendsto part
+# Rate-distortion achievability (strong-typicality variant) — failure probability tends to zero
 
 The main probabilistic content `codebookAvgFailureStrong_tendsto_zero`.
-Split out from `AchievabilityPhaseEStrongFinal.lean` for the 1500-line-per-file
-convention; proof is unchanged.
+Carries the codebook-averaged random-coding failure probability to zero; the
+final assembly lives in `AchievabilityStrongTypicality.lean`.
 -/
 
 namespace InformationTheory.Shannon

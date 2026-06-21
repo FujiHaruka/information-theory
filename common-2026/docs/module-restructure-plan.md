@@ -7,8 +7,8 @@
 
 ## 進捗
 
-- [~] Phase 0 — 測定 + 改名マッピング確定 + pilot 1 本で較正 (bisection 完了、pilot 進行中) 🔄
-- [ ] Phase 1a — path-only 改名 + 空スタブ削除 (低リスク、機械的) 📋
+- [x] Phase 0 — 測定 + 改名マッピング確定 + pilot 1 本で較正 (bisection 完了、pilot `MIBridgeDischarge → MutualInfoBridge` 完了) ✅
+- [~] Phase 1a — path-only 改名 + 空スタブ削除 (低リスク、機械的)。pilot+AWGN群 / batch2 WynerZiv·LZ78·Gaussian / FisherInfo Body 除去 / ChannelCoding dir 改名 + 空スタブ 2 本 完了。**残 = RateDistortion PhaseE family (最終ターゲット、本 leg)** 🔄
 - [ ] Phase 1b — namespace-also 改名 (dep_consumers 必須、共有 ns グループは一括 commit) 📋
 - [ ] Phase 2 — `AWGN/Walls.lean` (3549 行) を概念単位に分割 + 改名 📋
 - [ ] Phase 3 — 残り 1200+ 行ファイルを概念単位に分割 (AchievabilityDischarge/ConverseDischarge も含む) 📋
@@ -88,7 +88,7 @@ namespace が既に clean (`InformationTheory.Shannon[.AWGN|.RateDistortion|...]
 
 | 現ファイル | 候補概念名 / 移設先 | 備考 |
 |---|---|---|
-| `AWGN/MIBridgeDischarge.lean` (124) | `AWGN/MutualInfoBridge` | **pilot (進行中)** |
+| `AWGN/MIBridgeDischarge.lean` (124) | `AWGN/MutualInfoBridge` | **pilot 完了** |
 | `AWGN/F1Discharge.lean` (129) | `AWGN/` 概念名 (実行時 Read で確定) | ns `...AWGN` |
 | `AWGN/F2F3Discharge.lean` (145) | `AWGN/CapacityClosedForm` 等 | ns `...AWGN` |
 | `AWGN/BindConvBody.lean` | `AWGN/` 概念名 (実行時確定) | ns `...AWGN` |
@@ -103,11 +103,15 @@ namespace が既に clean (`InformationTheory.Shannon[.AWGN|.RateDistortion|...]
 | `WynerZiv/CondEntDiffConvexBody.lean` | 概念名 (実行時確定) | ns `...Shannon` |
 | `WynerZiv/ConvexityBody.lean` | 概念名 (実行時確定) | ns `...Shannon` |
 | `WynerZiv/ObjectiveConvexityBody.lean` | 概念名 (実行時確定) | ns `...Shannon` |
-| `Draft/Shannon/RateDistortionAchievabilityPhaseE.lean` (29) | `RateDistortion/` 配下の概念名 | ns `...Shannon`、Draft 解消 |
-| `Draft/Shannon/RateDistortionAchievabilityPhaseEDischarge.lean` (270) | `RateDistortion/` 配下 | ns `...Shannon`、Draft 解消 |
-| `RateDistortion/AchievabilityPhaseEStrong.lean` | 概念名 (実行時確定) | ns `...Shannon` |
-| `RateDistortion/AchievabilityPhaseEStrongFinal.lean` | 概念名 (実行時確定) | ns `...Shannon` |
-| `RateDistortion/AchievabilityPhaseEStrongFinal/Setup.lean` | 概念名 (実行時確定) | ns `...Shannon` |
+| `Shannon/RateDistortion/AchievabilityPhaseB.lean` | `AchievabilityJointTypicalEncoder` | joint-typical lossy encoder + distortion typical set。ns `...Shannon` flat |
+| `Shannon/RateDistortion/AchievabilityPhaseC.lean` | `AchievabilityCodebookMatchProbability` | codebook-level match probability |
+| `Shannon/RateDistortion/AchievabilityPhaseD.lean` | `AchievabilityAsymptoticFailureDecay` | asymptotic decay + distortion decomposition |
+| `Draft/Shannon/RateDistortionAchievabilityPhaseE.lean` (0 decl) | **削除 + redirect** → renamed PhaseD | 空 conduit (下記 空スタブ表) |
+| `Draft/Shannon/RateDistortionAchievabilityPhaseEDischarge.lean` (270) | `Shannon/RateDistortion/AchievabilityAmbientMeasure` | i.i.d. ambient measure (rdAmbient) + witness discharge。Draft 解消 |
+| `Shannon/RateDistortion/AchievabilityPhaseEStrong.lean` | `AchievabilityJointStrongTypicality` | joint strong-typicality apparatus (Strong = 数学概念、判断ログ参照) |
+| `Shannon/RateDistortion/AchievabilityPhaseEStrongFinal/Setup.lean` | `AchievabilityStrongTypicality/SupportingBounds` | strong supporting bounds + witness |
+| `Shannon/RateDistortion/AchievabilityPhaseEStrongFinal/FailureTendsto.lean` | `AchievabilityStrongTypicality/FailureTendstoZero` | codebook-avg failure → 0 |
+| `Shannon/RateDistortion/AchievabilityPhaseEStrongFinal.lean` | `AchievabilityStrongTypicality` (+ dir) | final assembly → `rate_distortion_achievability` |
 | `FisherInfo/V2DeBruijnBody.lean` | `FisherInfo/` 概念名 (Body 除去のみ) | ns `...FisherInfoV2`、V2 ns cleanup は Phase 1b |
 | `FisherInfo/V2HeatFlowBody.lean` | `FisherInfo/` 概念名 (Body 除去のみ) | 同上 |
 | `Hoeffding/SandwichDischarge.lean` (177) | 概念名 (実行時確定) | ns `...HoeffdingSandwichDischarge` → **namespace-also**、Phase 1b へ |
@@ -120,6 +124,7 @@ namespace が既に clean (`InformationTheory.Shannon[.AWGN|.RateDistortion|...]
 |---|---|---|
 | `RateDistortion/ConvexityDischarge.lean` (0 decl) | `RateDistortion/ConverseNLetter.lean` | transitive imports (`RateDistortion.Convexity`/`Sanov.Basic`/`Mathlib.InformationTheory.KullbackLeibler.KLFun`) を ConverseNLetter に直接追加 → stub 削除 + root 登録削除 |
 | `ParallelGaussian/L_PG0Discharge.lean` (0 decl) | `ParallelGaussian/KKT.lean` (既に `ParallelGaussian.Basic` を直 import) | KKT の `import ...L_PG0Discharge` 行を削除 → stub 削除 + root 登録削除 |
+| `Draft/Shannon/RateDistortionAchievabilityPhaseE.lean` (0 decl, transitive import 専用 conduit) | importer は改名後 PhaseD へ redirect | importer の `import ...RateDistortionAchievabilityPhaseE` を改名後 PhaseD (`AchievabilityAsymptoticFailureDecay`) へ向け直し → stub 削除 + root 登録削除 + Draft 解消 |
 
 ### Phase 1b ターゲット — namespace-also 改名 (ns にプロセス語彙 → decl 参照に波及)
 
@@ -190,12 +195,15 @@ namespace が既に clean (`InformationTheory.Shannon[.AWGN|.RateDistortion|...]
    各 Phase 完了時に full `lake build InformationTheory` が 0 error。
 5. **プロセス語彙 0**: 新ファイル名・新 namespace に `Discharge`/`Walls`/`Draft`/`Body`/`Complete`/`Full`/
    `Strong`/`Pure`/`Partial`/`Setup`/`Witness` 及び task-code (`F1`/`LC2`/`L_PG0` 等) を使わない。
+   **whitelist — `StrongTypicality`/`StronglyTypical`** は `Strong` が staging でなく数学概念 (Cover–Thomas
+   strong typicality、既存正規ファイル `Shannon/StrongTypicality.lean` が先例) ゆえ許容。bare `Strong` grep
+   (Phase 4) はこの 2 token を除外する (false positive 防止)。
 6. **root 登録の整合**: 新ファイルは `InformationTheory.lean` に import 登録、消したファイルは登録削除
    (pre-commit が「新ファイルの import 未登録」を WARN)。
 
 ## Phases
 
-### Phase 0 — 測定 + 改名マッピング確定 + pilot 📋
+### Phase 0 — 測定 + 改名マッピング確定 + pilot ✅
 
 **proof-log: no** (純構造リファクタ)。
 
@@ -204,21 +212,26 @@ namespace が既に clean (`InformationTheory.Shannon[.AWGN|.RateDistortion|...]
    `scripts/dep_consumers.sh <FQ名> --transitive` で blast radius を確定。
 2. 上記マッピング表の候補概念名を、各ファイルの headline を Read して確定 ([`rules/naming.md`](rules/naming.md))。
 3. **pilot**: `AWGN/MIBridgeDischarge.lean` (124 行、path-only) で「git mv → import 行置換 → full build green →
-   #print axioms 不変」の手順を較正。**進行中** (本 commit 直前の session で開始)。
+   #print axioms 不変」の手順を較正。**完了** (`MutualInfoBridge` へ改名済)。
 
 **進捗 (2026-06-21)**: bisection 実測完了 (path-only ~25 本、namespace-also ~16 本、空スタブ 2 本)。
-pilot `MIBridgeDischarge → MutualInfoBridge` 進行中。
+pilot `MIBridgeDischarge → MutualInfoBridge` 完了 (手順較正済)。
 
-### Phase 1a — path-only 改名 + 空スタブ削除 📋
+### Phase 1a — path-only 改名 + 空スタブ削除 🔄
 
-**proof-log: no**。低リスク・機械的。
+**proof-log: no**。低リスク・機械的。**進捗**: pilot+AWGN 群 / batch2 (WynerZiv·LZ78·Gaussian) /
+FisherInfo Body 除去 / ChannelCoding dir 改名 + 空スタブ 2 本 (`ConvexityDischarge`/`L_PG0Discharge`) 削除 完了。
+残るは RateDistortion PhaseE family 1 件 (本 leg、これで Phase 1a 完了 → Phase 1b へ)。
 
 - **空スタブ 2 本を削除**: `ConvexityDischarge` + `L_PG0Discharge` (各 0 decl) — 改名でなく
   importer redirect + ファイル削除 + root 登録削除 (上記 Phase 1a 空スタブ表参照)。
 - **path-only 改名**: 上記 Phase 1a 表の各ターゲットを `git mv` + import 行置換 + root 登録更新。
   `AchievabilityDischarge`/`ConverseDischarge` (>1200 行) は改名せず Phase 3 (分割と同時に改名)。
-- **Draft/ のうち path-only 2 本** (`RateDistortionAchievabilityPhaseE` / `...Discharge`) を
-  `RateDistortion/` へ移設 + 概念名化。
+- **RateDistortion PhaseE family (Phase 1a 最終ターゲット)**: B→C→D→E→EStrong→EStrongFinal の同一 staging
+  ladder を一括改名 (上記 Phase 1a 表)。`PhaseEDischarge` (Draft, 270 行) は `RateDistortion/` へ移設 +
+  概念名化、空 conduit `RateDistortionAchievabilityPhaseE` (0 decl) は削除 + importer を改名後 PhaseD へ redirect。
+  `StrongTypicality`/`StronglyTypical` の "Strong" は数学概念 (Cover–Thomas strong typicality) ゆえ残す
+  (判断ログ・invariant 5 whitelist 参照)。
 - disjoint import のものから並列 ≤ 2。各 commit 前に full build (or 局所 `lake build <module>`) green。
 
 ### Phase 1b — namespace-also 改名 📋
@@ -261,6 +274,7 @@ pilot `MIBridgeDischarge → MutualInfoBridge` 進行中。
 
 1. full `lake build InformationTheory` green。
 2. プロセス語彙ファイル名 0 を確認 (`find InformationTheory -name '*.lean' | grep -iE 'Discharge|Walls|Draft|Body|...'` 空)。
+   bare `Strong` grep は `StrongTypicality`/`StronglyTypical` を除外 (数学概念、invariant 5 whitelist)。
 3. ファイル行数分布再実測 (gap doc 再実測コマンド)。1200 行超件数 + max の縮小を進捗指標として記録
    (footprint plan 同様、不可分 1 概念の大ファイルは pass/fail ゲートにしない)。
 4. `@residual`/`@audit:` タグ総数がパス前後で不変を再集計。
@@ -324,3 +338,15 @@ pilot `MIBridgeDischarge → MutualInfoBridge` 進行中。
    (b) 空スタブ 2 本 (`ConvexityDischarge`/`L_PG0Discharge`) は decl 0 のため改名でなく削除 + redirect;
    (c) Phase 1 を **Phase 1a (path-only + 削除)** / **Phase 1b (namespace-also)** に分離し、
    1a を低リスク先行、1b を dep_consumers 必須の後続に再編。マッピング表を bisection 結果で全面更新。
+
+3. **2026-06-21 RateDistortion PhaseE family (Phase 1a 最終ターゲット) の確定**:
+   (a) **path 修正**: 正規 dir は `InformationTheory/Shannon/RateDistortion/` (旧プランは `Shannon/` segment 欠落)。
+   (b) **scope 修正 — PhaseB/C/D 包含**: 同一 ladder (B→C→D→E→EStrong→EStrongFinal、rate-distortion achievability
+   構築) ゆえ一括改名。旧プランが PhaseE のみ列挙だったのは bisection が `*Discharge`/`*Strong`/`*Final` token +
+   `Draft/` で探索し bare `PhaseX` を取りこぼしたため (プラン目標に整合する補完であり逸脱でない)。
+   (c) **空 conduit 削除**: `Draft/Shannon/RateDistortionAchievabilityPhaseE.lean` は 0 decl (transitive import 専用)
+   → 改名でなく削除 + importer を改名後 PhaseD (`AchievabilityAsymptoticFailureDecay`) へ redirect
+   (`ConvexityDischarge`/`L_PG0Discharge` 空スタブと同手法)。
+   (d) **"Strong" nuance + whitelist**: `StrongTypicality`/`StronglyTypical` の "Strong" は Cover–Thomas の数学概念
+   *strong typicality* (先例: 既存正規ファイル `Shannon/StrongTypicality.lean`) で staging 語彙でない。
+   invariant 5 / Phase 4 の bare `Strong` grep はこの 2 token を whitelist (false positive 防止)。

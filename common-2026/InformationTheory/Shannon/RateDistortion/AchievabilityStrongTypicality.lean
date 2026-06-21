@@ -1,31 +1,29 @@
-import InformationTheory.Draft.Shannon.RateDistortionAchievabilityPhaseE
-import InformationTheory.Draft.Shannon.RateDistortionAchievabilityPhaseEDischarge
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.ConditionalMethodOfTypes
-import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseC
-import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseD
-import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseEStrong
-import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseEStrongFinal.Setup
-import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseEStrongFinal.FailureTendsto
+import InformationTheory.Shannon.RateDistortion.AchievabilityCodebookMatchProbability
+import InformationTheory.Shannon.RateDistortion.AchievabilityAsymptoticFailureDecay
+import InformationTheory.Shannon.RateDistortion.AchievabilityJointStrongTypicality
+import InformationTheory.Shannon.RateDistortion.AchievabilityStrongTypicality.SupportingBounds
+import InformationTheory.Shannon.RateDistortion.AchievabilityStrongTypicality.FailureTendstoZero
 
 /-!
-# Rate-distortion achievability — final assembly (strong-typicality variant)
+# Rate-distortion achievability — assembly (strong-typicality variant)
 
-The full rate-distortion achievability theorem, assembled from the
+The rate-distortion achievability theorem, assembled from the
 strong-encoder random-coding chain via `conditionalStronglyTypicalSlice_mass_ge`
 (`ConditionalMethodOfTypes.lean`), the Cover–Thomas 10.6.1 strong-typicality
 conditional slice mass lower bound.
 
 ## Architectural note
 
-The `_partial_discharge` wrapper (in `RateDistortionAchievabilityPhaseEDischarge.lean`)
-and the underlying `_witness_form` (in `RateDistortionAchievabilityPhaseE.lean`)
-hard-code the **weak** joint-typical lossy encoder `jointTypicalLossyEncoder`.
-The strong-typicality random-coding analysis requires the **strong** encoder
-`jointStronglyTypicalLossyEncoder` (from `PhaseEStrong.lean`).
+The ambient-measure and witness-form wrappers (in
+`AchievabilityAmbientMeasure.lean`) hard-code the **weak** joint-typical lossy
+encoder `jointTypicalLossyEncoder`. The strong-typicality random-coding analysis
+requires the **strong** encoder `jointStronglyTypicalLossyEncoder` (from
+`AchievabilityJointStrongTypicality.lean`).
 
 To avoid invasive refactoring of those weak-encoder-bound proofs, this file
-**duplicates** the witness-form / partial-discharge layers with the strong
+**duplicates** the witness-form / ambient-measure layers with the strong
 encoder swapped in. The duplication is mechanical: the proofs are
 encoder-agnostic — only `blockDistortion_le_distortionMax` and
 `blockDistortion_le_of_mem_distortionTypicalSet` are used.

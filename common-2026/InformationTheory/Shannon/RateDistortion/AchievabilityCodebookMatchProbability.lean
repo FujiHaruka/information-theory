@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseB
+import InformationTheory.Shannon.RateDistortion.AchievabilityJointTypicalEncoder
 
 /-!
 # Rate-distortion achievability — codebook-level match probability

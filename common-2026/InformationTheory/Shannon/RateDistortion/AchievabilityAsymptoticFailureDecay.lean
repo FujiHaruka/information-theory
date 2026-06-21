@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseC
+import InformationTheory.Shannon.RateDistortion.AchievabilityCodebookMatchProbability
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Order.Filter.AtTopBot.Basic
 

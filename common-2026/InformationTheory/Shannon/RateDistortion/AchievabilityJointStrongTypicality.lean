@@ -1,7 +1,7 @@
-import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseB
+import InformationTheory.Shannon.RateDistortion.AchievabilityJointTypicalEncoder
 import InformationTheory.Shannon.StrongTypicality
 import InformationTheory.Shannon.IIDProductInput.Joint
-import InformationTheory.Draft.Shannon.RateDistortionAchievabilityPhaseEDischarge
+import InformationTheory.Shannon.RateDistortion.AchievabilityAmbientMeasure
 
 /-!
 # Rate-distortion achievability — joint strong-typicality apparatus
@@ -668,8 +668,8 @@ lemma mem_conditionalStronglyTypicalSlice_iff
       (x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε := Iff.rfl
 
 
-/-! The full rate-distortion achievability theorem is assembled in
-`AchievabilityPhaseEStrongFinal.lean` via the strong-encoder track
+/-! The rate-distortion achievability theorem is assembled in
+`AchievabilityStrongTypicality.lean` via the strong-encoder track
 (`codebookAvgFailureStrong_tendsto_zero` + `rate_distortion_achievability_strong`),
 which uses the conditional method-of-types directly; the public theorem
 `rate_distortion_achievability` lives in that file. -/

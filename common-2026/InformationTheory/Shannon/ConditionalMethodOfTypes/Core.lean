@@ -2,7 +2,7 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.StrongTypicality
 import InformationTheory.Shannon.Sanov.LDPEquality
 import InformationTheory.Shannon.TypeClassLowerBound
-import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseEStrong
+import InformationTheory.Shannon.RateDistortion.AchievabilityJointStrongTypicality
 
 /-!
 # Conditional method of types — Core

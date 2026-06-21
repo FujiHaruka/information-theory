@@ -1,20 +1,20 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Draft.Shannon.RateDistortionAchievabilityPhaseE
+import InformationTheory.Shannon.RateDistortion.AchievabilityAsymptoticFailureDecay
 import InformationTheory.Shannon.IIDProductInput.Joint
 import InformationTheory.Shannon.ChannelCoding.ShannonTheorem
 
 /-!
-# Rate-distortion achievability — partial discharge of the witness form
+# Rate-distortion achievability — i.i.d. ambient measure instantiation
 
 The witness form of the rate-distortion achievability theorem carries the ambient i.i.d.
 construction (`μ, Xs, Ys`) and several entropy / distortion-bridge hypotheses as
-pass-throughs. This file internally discharges those pass-throughs by instantiating the
-ambient with `iidAmbientJointMeasure (pmfToMeasure qStar)`, where `qStar` is a feasible
-joint pmf. The only remaining external hypothesis is the codebook-averaged random-coding
-failure sequence, which requires strong-typicality machinery beyond the weak (entropy-only)
-typicality available here.
+pass-throughs. This file fixes the ambient as `iidAmbientJointMeasure (pmfToMeasure qStar)`,
+where `qStar` is a feasible joint pmf, and derives those pass-through hypotheses from that
+concrete choice. The only remaining external hypothesis is the codebook-averaged
+random-coding failure sequence, which requires strong-typicality machinery beyond the weak
+(entropy-only) typicality available here.
 
-## What is discharged here
+## Hypotheses derived from the concrete ambient
 
 * `μ := iidAmbientJointMeasure (pmfToMeasure qStar)` — i.i.d. ambient.
 * `Xs := iidXs`, `Ys := iidYs` — coordinate projections.
@@ -25,7 +25,7 @@ typicality available here.
   via the dirac/atom decomposition of `pmfToMeasure`.
 * Marginal-source identity: `μ.map (Xs 0) = pmfToMeasure (marginalFst qStar)`.
 
-## What is *not* discharged here
+## Hypothesis left external
 
 * `h_codebook_avg_failure`: requires strong typicality (joint type ~ q*) to
   bound the per-codebook conditional failure probability via the product law.
