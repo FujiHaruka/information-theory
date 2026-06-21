@@ -67,7 +67,7 @@ import InformationTheory.Shannon.ChannelCoding.ConverseMemorylessMarkov
 import InformationTheory.Shannon.ChannelCoding.ConverseMemoryless
 import InformationTheory.Shannon.ChannelCoding.StrongConverse
 import InformationTheory.Shannon.ChannelCoding.Feedback
-import InformationTheory.Shannon.ChannelCoding.FeedbackComplete
+import InformationTheory.Shannon.ChannelCoding.FeedbackMemoryless
 import InformationTheory.Shannon.ChannelCoding.ShannonTheorem
 import InformationTheory.Shannon.ChannelCoding.ShannonTheoremGeneral
 import InformationTheory.Shannon.ChannelCoding.ShannonTheoremMaxError.SeedLemmas
