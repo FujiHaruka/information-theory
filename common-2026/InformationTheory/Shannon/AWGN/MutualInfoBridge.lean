@@ -38,10 +38,10 @@ single Gaussian.
 
 The middle step — that the AWGN kernel composition coincides with additive
 convolution — is a generic translation-kernel identity that is independent of the
-AWGN specifics. Discharging it inline through the characteristic-function route would
+AWGN specifics. Proving it inline through the characteristic-function route would
 inflate the file by roughly 80–100 lines (`lintegral` expansion, Fubini, change of
 variables), so it is exposed as the single named hypothesis `IsAwgnBindEqConv` and
-discharged separately.
+proved separately.
 -/
 
 namespace InformationTheory.Shannon.AWGN

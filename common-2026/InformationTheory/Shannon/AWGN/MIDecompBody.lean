@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.AWGN.MIBridgeDischarge
+import InformationTheory.Shannon.AWGN.MutualInfoBridge
 
 /-!
 # AWGN mutual-information decomposition

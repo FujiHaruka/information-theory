@@ -189,7 +189,7 @@ import InformationTheory.Shannon.EPI.L3Integration
 import InformationTheory.Shannon.Hoeffding.SandwichBody
 import InformationTheory.Shannon.WynerZiv.ConvexityBody
 -- Wave7 parallel-10 + gap-close
-import InformationTheory.Shannon.AWGN.MIBridgeDischarge
+import InformationTheory.Shannon.AWGN.MutualInfoBridge
 import InformationTheory.Shannon.CondKLIntegral
 import InformationTheory.Shannon.EPI.G2.BridgeDensityHelpers
 import InformationTheory.Shannon.EPI.G2.ConvEntropyMonotone

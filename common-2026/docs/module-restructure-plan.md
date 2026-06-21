@@ -7,10 +7,11 @@
 
 ## 進捗
 
-- [ ] Phase 0 — 測定 + 改名マッピング確定 + pilot 1 本で較正 📋
-- [ ] Phase 1 — `Draft/` 解消 + 純プロセス語彙ファイル名の概念名化 (path-only 改名中心、低リスク) 📋
+- [~] Phase 0 — 測定 + 改名マッピング確定 + pilot 1 本で較正 (bisection 完了、pilot 進行中) 🔄
+- [ ] Phase 1a — path-only 改名 + 空スタブ削除 (低リスク、機械的) 📋
+- [ ] Phase 1b — namespace-also 改名 (dep_consumers 必須、共有 ns グループは一括 commit) 📋
 - [ ] Phase 2 — `AWGN/Walls.lean` (3549 行) を概念単位に分割 + 改名 📋
-- [ ] Phase 3 — 残り 1200+ 行ファイルを概念単位に分割 📋
+- [ ] Phase 3 — 残り 1200+ 行ファイルを概念単位に分割 (AchievabilityDischarge/ConverseDischarge も含む) 📋
 - [ ] Phase 4 — 最終再実測 + full build green 📋
 
 ## Context
@@ -40,13 +41,15 @@ namespace は大半が**ディレクトリ由来** (`namespace InformationTheory
   **consumer 側の decl 参照は一切壊れない**。波及するのは `import <path>` 行**だけ**。
 - 実測した import 波及: `AWGN.Walls` を import = **4 ファイル** / `AchievabilityDischarge` = 2 / 全 `*Discharge`
   合計 = **29 ファイル** / `Draft.*` = 8 ファイル (root + 7 実 consumer)。
-- **例外 (高リスク)**: namespace **自体**にプロセス語彙を持つファイルがある:
-  `Draft/.../HoeffdingInteriorBody.lean` は `namespace InformationTheory.Shannon.HoeffdingInteriorBody`、
-  `Draft/.../ChannelCodingConverseGeneralComplete.lean` は `namespace ...ChannelCodingConverseGeneral`。
-  これらの namespace を直すと **decl 参照に波及**する → 必ず `scripts/dep_consumers.sh <FQ名>` を先に取る。
+- **高リスク group (実測で判明)**: namespace **自体**にプロセス語彙を持つファイルが **~16 本** (当初「例外 2 本」
+  という見積もりは過小 — 後述の実測 bisection 参照)。これらの namespace を直すと **decl 参照に波及**する →
+  必ず `scripts/dep_consumers.sh <FQ名> --transitive` を先に取る。namespace を複数ファイルが共有している
+  グループ (例: `...ChannelCodingConverseGeneral` ×3 本、`...Cramer.Discharge` ×2 本) は**グループ全体を
+  同一 commit で移動**しないと build が壊れる。
+- **空スタブ 2 本** (宣言 0) が判明 → 改名ではなく**削除 + importer redirect** で処理 (後述)。
 
-→ 含意: **path-only 改名 (namespace 既に clean) は import 行のみ = 低リスク・機械的**。
-**namespace-also 改名は dep 波及あり = consumer 確認必須**。Phase 1 は前者を優先する。
+→ 含意: **path-only 改名 (namespace 既に clean) は import 行のみ = 低リスク・機械的** → Phase 1a 優先。
+**namespace-also 改名は dep 波及あり = consumer 確認必須** → Phase 1b に分離。
 
 ## Approach
 
@@ -73,37 +76,77 @@ namespace は大半が**ディレクトリ由来** (`namespace InformationTheory
 **並列時は import を共有しないターゲットを選ぶ** (同一 importer を持つ 2 ファイルを別エージェントに振らない)。
 本質的に逐次寄り (full build が arbiter ゆえ commit 前に毎回 full build)。**オーケストレータが full build 検証 + commit**。
 
-## 改名 / 分割マッピング (実行時に Read で最終確定、ここは候補)
-
-### Phase 1 ターゲット — path-only 改名 + Draft 解消
-
-namespace が既に clean (`InformationTheory.Shannon[.AWGN|.RateDistortion|...]`) なものは **import 行のみ波及**。
-
-| 現ファイル | headline (概念の手がかり) | 候補概念名 / 移設先 | 波及 |
-|---|---|---|---|
-| `Draft/Shannon/RateDistortionAchievabilityPhaseE.lean` (29) | (薄い wrapper) | `RateDistortion/` 配下の概念名 | path-only |
-| `Draft/Shannon/RateDistortionAchievabilityPhaseEDischarge.lean` (270) | `pmfToMeasure_real_singleton_pos` 系 | `RateDistortion/` 配下 | path-only |
-| `Draft/Shannon/ChannelCodingConverseGeneralComplete.lean` (273) | `condMutualInfo_le_of_markov_joint` | `ChannelCoding/` 配下 (例 `ConverseGeneralMarkov`) | **namespace も** (`...ChannelCodingConverseGeneral`)→ dep 確認 |
-| `Draft/Shannon/HoeffdingInteriorBody.lean` (220) | `hoeffding_minimizer_ge_at_interior` 等 | `Hoeffding/` 配下 (例 `InteriorMinimizer`) | **namespace も** (`...HoeffdingInteriorBody`)→ dep 確認 |
-| `AWGN/AchievabilityDischarge.lean` (1997) | `awgn_avg_error_union_bound` / `gaussianCodebook_*` | 分割対象 (Phase 3 へ送る、>1200) | import 2 |
-| `AWGN/ConverseDischarge.lean` (1756) | `perLetterMI`/`jointMIXnYn` 系 def | 分割対象 (Phase 3 へ送る、>1200) | — |
-| `AWGN/F1Discharge.lean` (129) | `awgn_theorem_F1_discharged` 等 | `AWGN/` 概念名 (F1=?, 内容で確定) | path-only |
-| `AWGN/F2F3Discharge.lean` (145) | `awgn_capacity_closed_form_of_maxent_hypotheses` | `AWGN/` 概念名 | path-only |
-| `AWGN/MIBridgeDischarge.lean` (124) | `awgn_output_gaussian_of_bind_eq_conv` | `AWGN/MutualInfoBridge` 等 | path-only |
-| `Hoeffding/SandwichDischarge.lean` (177) | `hoeffding_tradeoff_achievability_at_boundary` | `Hoeffding/` 概念名 | path-only |
-| `RateDistortion/ConvexityDischarge.lean` (15) | (薄い) | `RateDistortion/` 概念名 or 親へ吸収 | path-only |
-| `WynerZiv/Discharge.lean` (327) | `wynerZivRatePmf_antitone` 等 | `WynerZiv/RateMonotone` 等 | path-only |
-| `ParallelGaussian/L_PG0Discharge.lean` (25) | (薄い) | `ParallelGaussian/` 概念名 | path-only |
-| `Cramer/LC2Discharge.lean` (147) | `cgf_eval_eq_cgf_base` | `Cramer/` 概念名 (cgf 系) | path-only |
-| `Cramer/LC2DischargeExt.lean` (217) | `tilted_lln_*` | `Cramer/TiltedLLN` 等 | path-only |
-| `ChannelCoding/ShannonTheoremFullDischarge.lean` (70) | `shannon_noisy_channel_coding_theorem_general_full` | `ChannelCoding/` 概念名 or 親へ吸収 | path-only |
-| `EPI/Stam/Discharge.lean` (544) | `epi_via_stam` 系 | `EPI/Stam/EpiViaStam` 等 | path-only |
-| `*Body.lean` 群 (~13: `GaussianPDFVarianceDerivBody`/`BindConvBody`/`MIDecompBody`/`SandwichBody`/`LagrangeIVTBody`/`InteriorGradientBody`/`ZivCountingBody`/`PhraseCountAsymptoticBody`/`CondEntDiffConvexBody`/`ObjectiveConvexityBody`/`ConvexityBody`/`V2DeBruijnBody`/`V2HeatFlowBody`) | 各 headline | `Body` を外した概念名 | path-only (namespace 要確認) |
-| `*Complete`/`*Partial`/`*Pure`/`*Setup`/`*Witness`/`*Final` 系 | 各 headline | 概念名へ (`FeedbackComplete`→?, `ConverseMemorylessPure`→?, `WhittakerShannonPartial`→?) | 個別確認 |
+## 改名 / 分割マッピング (実測 bisection 結果 — 実行時に Read で概念名を最終確定)
 
 > 注: `Converse`/`Achievability` は情報理論の**数学概念**ゆえ語として残してよい (達成可能性・逆定理)。
 > 除去対象は `Discharge`/`Body`/`Draft`/`Complete`/`Full`/`Strong`/`Pure`/`Partial`/`Setup` 等の**開発段階語**。
 > `F1`/`F2F3`/`LC2`/`L_PG0` 等の **task-code** も数学概念名へ (docstring-tidyup の dev-slug 除去と同方針)。
+
+### Phase 1a ターゲット — path-only 改名 (namespace clean → import 行のみ波及、低リスク)
+
+namespace が既に clean (`InformationTheory.Shannon[.AWGN|.RateDistortion|...]` 等) なもの。
+
+| 現ファイル | 候補概念名 / 移設先 | 備考 |
+|---|---|---|
+| `AWGN/MIBridgeDischarge.lean` (124) | `AWGN/MutualInfoBridge` | **pilot (進行中)** |
+| `AWGN/F1Discharge.lean` (129) | `AWGN/` 概念名 (実行時 Read で確定) | ns `...AWGN` |
+| `AWGN/F2F3Discharge.lean` (145) | `AWGN/CapacityClosedForm` 等 | ns `...AWGN` |
+| `AWGN/BindConvBody.lean` | `AWGN/` 概念名 (実行時確定) | ns `...AWGN` |
+| `AWGN/MIDecompBody.lean` | `AWGN/` 概念名 (実行時確定) | ns `...AWGN` |
+| `AWGN/AchievabilityDischarge.lean` (1997) | 分割対象 → Phase 3 へ | >1200、ns `...AWGN`、分割時は path-only |
+| `AWGN/ConverseDischarge.lean` (1756) | 分割対象 → Phase 3 へ | >1200、ns `...AWGN`、分割時は path-only |
+| `ChannelCoding/ShannonTheoremFullDischarge.lean` (70) | `ChannelCoding/` 概念名 (実行時確定) | ns `...ChannelCoding` |
+| `GaussianPDFVarianceDerivBody.lean` | 概念名 (実行時確定) | ns `...Shannon` |
+| `LZ78/PhraseCountAsymptoticBody.lean` | 概念名 (実行時確定) | ns `...Shannon` |
+| `LZ78/ZivCountingBody.lean` | 概念名 (実行時確定) | ns `...Shannon` |
+| `WynerZiv/Discharge.lean` (327) | `WynerZiv/RateMonotone` 等 | ns `...Shannon` |
+| `WynerZiv/CondEntDiffConvexBody.lean` | 概念名 (実行時確定) | ns `...Shannon` |
+| `WynerZiv/ConvexityBody.lean` | 概念名 (実行時確定) | ns `...Shannon` |
+| `WynerZiv/ObjectiveConvexityBody.lean` | 概念名 (実行時確定) | ns `...Shannon` |
+| `Draft/Shannon/RateDistortionAchievabilityPhaseE.lean` (29) | `RateDistortion/` 配下の概念名 | ns `...Shannon`、Draft 解消 |
+| `Draft/Shannon/RateDistortionAchievabilityPhaseEDischarge.lean` (270) | `RateDistortion/` 配下 | ns `...Shannon`、Draft 解消 |
+| `RateDistortion/AchievabilityPhaseEStrong.lean` | 概念名 (実行時確定) | ns `...Shannon` |
+| `RateDistortion/AchievabilityPhaseEStrongFinal.lean` | 概念名 (実行時確定) | ns `...Shannon` |
+| `RateDistortion/AchievabilityPhaseEStrongFinal/Setup.lean` | 概念名 (実行時確定) | ns `...Shannon` |
+| `FisherInfo/V2DeBruijnBody.lean` | `FisherInfo/` 概念名 (Body 除去のみ) | ns `...FisherInfoV2`、V2 ns cleanup は Phase 1b |
+| `FisherInfo/V2HeatFlowBody.lean` | `FisherInfo/` 概念名 (Body 除去のみ) | 同上 |
+| `Hoeffding/SandwichDischarge.lean` (177) | 概念名 (実行時確定) | ns `...HoeffdingSandwichDischarge` → **namespace-also**、Phase 1b へ |
+
+> `Hoeffding/SandwichDischarge` は後段の表で再掲 (ns にプロセス語彙あり)。上表からは除外扱い。
+
+### Phase 1a — 空スタブ削除 (宣言 0 → 改名でなく削除 + importer redirect)
+
+| 現ファイル | sole importer | 処理 |
+|---|---|---|
+| `RateDistortion/ConvexityDischarge.lean` (0 decl) | `RateDistortion/ConverseNLetter.lean` | transitive imports (`RateDistortion.Convexity`/`Sanov.Basic`/`Mathlib.InformationTheory.KullbackLeibler.KLFun`) を ConverseNLetter に直接追加 → stub 削除 + root 登録削除 |
+| `ParallelGaussian/L_PG0Discharge.lean` (0 decl) | `ParallelGaussian/KKT.lean` (既に `ParallelGaussian.Basic` を直 import) | KKT の `import ...L_PG0Discharge` 行を削除 → stub 削除 + root 登録削除 |
+
+### Phase 1b ターゲット — namespace-also 改名 (ns にプロセス語彙 → decl 参照に波及)
+
+各グループで `scripts/dep_consumers.sh <FQ名> --transitive` を事前実行し blast radius を確定してから移動。
+**namespace を共有するグループは同一 commit で全ファイル移動**。
+
+| namespace (変更前) | 対象ファイル群 | 概念名候補 | 注記 |
+|---|---|---|---|
+| `...Cramer.Discharge` | `Cramer/LC2Discharge.lean`, `Cramer/LC2DischargeExt.lean` | 概念名 (実行時確定; `cgf` 系 / `tilted_lln` 系) | 2 ファイル共有、同一 commit |
+| `...EPIStamDischarge` | `EPI/Stam/Discharge.lean` | `EPI/Stam/` 概念名 (実行時確定) | |
+| `...EPIStamInequalityBody` | `EPI/Stam/InequalityBody.lean` | 概念名 (実行時確定) | |
+| `...EPIStamStep12Body` | `EPI/Stam/Step12Body.lean` | 概念名 (実行時確定) | |
+| `...EPIStamStep3Body` | `EPI/Stam/Step3Body.lean` | 概念名 (実行時確定) | |
+| `...HoeffdingInteriorGradientBody` | `Hoeffding/InteriorGradientBody.lean` | 概念名 (実行時確定) | |
+| `...HoeffdingLagrangeIVTBody` | `Hoeffding/LagrangeIVTBody.lean` | 概念名 (実行時確定) | |
+| `...HoeffdingSandwichBody` | `Hoeffding/SandwichBody.lean` | 概念名 (実行時確定) | |
+| `...HoeffdingSandwichDischarge` | `Hoeffding/SandwichDischarge.lean` | 概念名 (実行時確定) | |
+| `...HoeffdingInteriorBody` | `Draft/Shannon/HoeffdingInteriorBody.lean` | `Hoeffding/` 配下概念名 (例 `InteriorMinimizer`) + Draft 解消 | |
+| `...ChannelCodingConverseGeneral` | `Draft/Shannon/ChannelCodingConverseGeneralComplete.lean`, `ChannelCoding/ConverseGeneralStrong.lean`, `ChannelCoding/ConverseMemorylessPure.lean` | `ChannelCoding/` 概念名 (実行時確定) | **3 ファイル共有**、同一 commit + Draft 解消 |
+| `...ChannelCodingFeedback` | `ChannelCoding/FeedbackComplete.lean` | 概念名 (実行時確定) | |
+| `...EPIBlachmanGaussianWitness` | `EPI/Blachman/GaussianWitness.lean` | 概念名 (実行時確定) | |
+| `...WhittakerShannonPartial` | `WhittakerShannonPartial.lean` | 概念名 (実行時確定) | |
+| `...FisherInfoV2` | `FisherInfo/V2DeBruijnBody.lean`, `FisherInfo/V2HeatFlowBody.lean` (+ `FisherDeBruijnGaussianWitness`) | `V2` token 除去 (例 `FisherInfo`) | Body 除去は Phase 1a で先行、V2 ns cleanup はここ |
+
+> flat namespace (e.g. `EPIStamDischarge`) はディレクトリ構造由来でなく手書き。変更方針: プロセス語彙 token
+> だけを strip して概念名化 (e.g. `EPIStamInequalityBody` → headline を Read して概念名を決定)。
+> ディレクトリ由来の階層 (`EPI.Stam`) への折り畳みは decl 名衝突リスクがあるため**行わない**。
 
 ### Phase 2 ターゲット — `AWGN/Walls.lean` (3549 行) の概念分割
 
@@ -157,22 +200,42 @@ namespace が既に clean (`InformationTheory.Shannon[.AWGN|.RateDistortion|...]
 **proof-log: no** (純構造リファクタ)。
 
 1. 改名対象を全列挙し、各ファイルの namespace を確認 (`rg '^namespace'`) して **path-only / namespace-also** に
-   二分する。namespace-also は `scripts/dep_consumers.sh <FQ名>` で blast radius を確定。
+   二分する (実測 bisection 結果は上記マッピング表に反映済)。namespace-also は実行時に
+   `scripts/dep_consumers.sh <FQ名> --transitive` で blast radius を確定。
 2. 上記マッピング表の候補概念名を、各ファイルの headline を Read して確定 ([`rules/naming.md`](rules/naming.md))。
-3. **pilot**: 最小の path-only 改名 1 本 (例 `ParallelGaussian/L_PG0Discharge.lean` 25 行 or
-   `RateDistortion/ConvexityDischarge.lean` 15 行) で「git mv → import 行置換 → full build green →
-   #print axioms 不変」の手順を較正し、gotcha を本節に記録。
+3. **pilot**: `AWGN/MIBridgeDischarge.lean` (124 行、path-only) で「git mv → import 行置換 → full build green →
+   #print axioms 不変」の手順を較正。**進行中** (本 commit 直前の session で開始)。
 
-### Phase 1 — Draft/ 解消 + 純プロセス語彙ファイル名の改名 📋
+**進捗 (2026-06-21)**: bisection 実測完了 (path-only ~25 本、namespace-also ~16 本、空スタブ 2 本)。
+pilot `MIBridgeDischarge → MutualInfoBridge` 進行中。
 
-**proof-log: no**。低リスク (path-only 中心)。
+### Phase 1a — path-only 改名 + 空スタブ削除 📋
 
-- **Draft/ ディレクトリを消す**: 4 ファイルを正規の math サブツリー (`RateDistortion/`/`ChannelCoding/`/
-  `Hoeffding/`) へ移設 + 概念名化。`Draft` は「下書き」を含意するが実 consumer (7 本) を持つ = 本採用ゆえ
-  正規化する。namespace-also の 2 本 (`HoeffdingInteriorBody`/`ChannelCodingConverseGeneral`) は dep 追従。
-- **`*Discharge.lean` ×15 を概念名化** (>1200 の Achievability/Converse は除き Phase 3 へ送る)。
-- **`*Body`/`*Complete`/`*Pure`/`*Partial`/`*Setup`/`*Witness`/`*Final` 系**を概念名化。
-- マッピング表の波及列に従い、disjoint import のものから並列 ≤ 2 で。各 commit 前に full build green。
+**proof-log: no**。低リスク・機械的。
+
+- **空スタブ 2 本を削除**: `ConvexityDischarge` + `L_PG0Discharge` (各 0 decl) — 改名でなく
+  importer redirect + ファイル削除 + root 登録削除 (上記 Phase 1a 空スタブ表参照)。
+- **path-only 改名**: 上記 Phase 1a 表の各ターゲットを `git mv` + import 行置換 + root 登録更新。
+  `AchievabilityDischarge`/`ConverseDischarge` (>1200 行) は改名せず Phase 3 (分割と同時に改名)。
+- **Draft/ のうち path-only 2 本** (`RateDistortionAchievabilityPhaseE` / `...Discharge`) を
+  `RateDistortion/` へ移設 + 概念名化。
+- disjoint import のものから並列 ≤ 2。各 commit 前に full build (or 局所 `lake build <module>`) green。
+
+### Phase 1b — namespace-also 改名 📋
+
+**proof-log: no**。namespace 変更 → decl 参照に波及 → 事前 dep 確認必須。
+
+- 上記 Phase 1b 表の各グループを順番に処理:
+  1. `scripts/dep_consumers.sh <FQ名> --transitive` で blast radius 取得。
+  2. namespace を概念名に変更 + 全参照ファイルを追従更新。
+  3. 共有 namespace グループ (×3 `ChannelCodingConverseGeneral`、×2 `Cramer.Discharge`) は
+     グループ全体を同一 commit で移動 (build が途中で壊れないよう)。
+  4. **Draft/ のうち namespace-also 2 本** (`HoeffdingInteriorBody`/`ChannelCodingConverseGeneral 系`) も
+     ここで正規サブツリーへ移設 (Draft 解消を兼ねる)。
+  5. 各 commit 前に full build green。
+- `FisherInfoV2` の `V2` 除去は Phase 1b の最後: `FisherInfo/V2DeBruijnBody`/`V2HeatFlowBody` の
+  Body 除去 (Phase 1a で先行) 後、ns `FisherInfoV2` → 概念名に変更。`FisherDeBruijnGaussianWitness` も
+  同一 ns を共有するなら同一 commit。
 
 ### Phase 2 — `AWGN/Walls.lean` (3549 行) 概念分割 📋
 
@@ -227,9 +290,10 @@ namespace が既に clean (`InformationTheory.Shannon[.AWGN|.RateDistortion|...]
 
 ## Risks & mitigations
 
-- **R1: namespace-also 改名で decl 参照が壊れる** (`HoeffdingInteriorBody` 等)。→ 改名前に
+- **R1: namespace-also 改名で decl 参照が壊れる** (実測 ~16 本、うち共有 ns グループあり)。→ 改名前に
   `scripts/dep_consumers.sh <FQ名> --transitive` で全参照を確定、namespace + 参照を同一 commit で追従更新。
-  迷ったら **namespace は据え置き path のみ改名** (低リスク優先)。
+  共有 ns グループ (×3 `ChannelCodingConverseGeneral`、×2 `Cramer.Discharge`) は全ファイルを同一 commit。
+  迷ったら **namespace は据え置き path のみ改名** (低リスク優先) → Phase 1b 後回し。
 - **R2: import 行の置換漏れで build が壊れる**。→ full build を arbiter にする (invariant 4)。phantom な
   `unknown identifier` は stale olean ゆえ `lake build <module>` で refresh (footprint plan 教訓)。
 - **R3: 分割で `@residual`/`@audit` タグが宙に浮く / ファイルを跨いで失われる**。→ タグ持ち decl は移動先へ
@@ -252,3 +316,11 @@ namespace が既に clean (`InformationTheory.Shannon[.AWGN|.RateDistortion|...]
    import 行のみ波及 (Walls 4 / 全 Discharge 29)、ライブラリ名 rename の 552 波及とは桁違いに小」。
    path-only / namespace-also の二分でリスク管理し、低リスクの Phase 1 から。Copyright ヘッダ (§4-3) は
    従来通り upstream まで保留 (本パス対象外)。
+
+2. **2026-06-21 実測 bisection による修正**: 初期プランの「namespace-also 例外 = 2 本」は過小。
+   実測で **~16 本** が namespace にプロセス語彙を持つことが判明 (旧 Risk R1 の規模想定をほぼ 3 倍化)。
+   加えて: (a) flat な手書き namespace (ディレクトリ由来でない) が多い (`EPIStamDischarge`等) — 
+   最小変更方針: namespace を directory 形 (`EPI.Stam`) に折り畳まず、プロセス語彙 token だけを strip する;
+   (b) 空スタブ 2 本 (`ConvexityDischarge`/`L_PG0Discharge`) は decl 0 のため改名でなく削除 + redirect;
+   (c) Phase 1 を **Phase 1a (path-only + 削除)** / **Phase 1b (namespace-also)** に分離し、
+   1a を低リスク先行、1b を dep_consumers 必須の後続に再編。マッピング表を bisection 結果で全面更新。

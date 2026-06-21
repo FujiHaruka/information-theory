@@ -17,7 +17,7 @@ closed form must be **relocated** to the lowest file that can see both genuine
 producers.
 
 `AWGNBindConvBody` and `ContChannelMIDecomp` are non-importing siblings (both sit
-directly under `AWGNMIBridgeDischarge`), so this NEW file imports both and is the
+directly under `AWGNMutualInfoBridge`), so this NEW file imports both and is the
 sole place where the hypothesis-free wrapper can be assembled.
 
 The MI-decomposition is assembled genuinely from local helpers via
