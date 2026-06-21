@@ -775,7 +775,7 @@ theorem klDiv_gaussianReal_gaussianReal_eq
 /-! ## Helper — concavity of `x ↦ log(1 + x/N)` on `Ici 0`
 
 Affine-substitution concavity used by AWGN converse C-1c
-(`AWGNConverseDischarge.sum_log_one_add_le_n_log_one_add_avg`).
+(`ConverseCapacityBound.sum_log_one_add_le_n_log_one_add_avg`).
 
 Built by composing `Real.strictConcaveOn_log_Ioi.concaveOn` (concavity of `Real.log`
 on `Ioi 0`) with the affine map `x ↦ 1 + x/N`, then restricting via `ConcaveOn.subset`

@@ -11,7 +11,7 @@ import Mathlib.Tactic.Ring
 /-!
 # Stam inequality Step 1 (score-convolution) + Step 2 (Cauchy-Schwarz) body
 
-`InformationTheory/Shannon/StamInequality.lean` introduced the 4-step
+`InformationTheory/Shannon/EPI/Stam/Inequality.lean` introduced the 4-step
 Stam-inequality proof skeleton (Cover-Thomas Lemma 17.7.2 / Blachman 1965):
 
 1. **Step 1 — score-convolution** (Blachman): `s_Z(z) = E[s_X(X) | X+Y = z]`.

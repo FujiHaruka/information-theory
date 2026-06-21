@@ -8,7 +8,7 @@ import Mathlib.Probability.Independence.InfinitePi
 This file provides the **i.i.d. ambient probability space** consumed by the
 abstract `random_codebook_average_le` and the main theorem
 `channel_coding_achievability` of
-`InformationTheory/Shannon/ChannelCodingAchievability.lean`.
+`InformationTheory/Shannon/ChannelCoding/Achievability.lean`.
 
 ## Construction
 

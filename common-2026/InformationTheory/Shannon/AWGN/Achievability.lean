@@ -16,10 +16,10 @@ continuous joint typicality, Gaussian random codebook).
 
 ## Implementation notes
 
-The body is a direct call to `AchievabilityDischarge.isAwgnTypicalityHypothesis`, a
-genuine assembly that lives in `AchievabilityDischarge.lean` (the continuous joint
+The body is a direct call to `isAwgnTypicalityHypothesis`, a
+genuine assembly that lives in `AchievabilityCodeExistence.lean` (the continuous joint
 typical set on `ℝⁿ × ℝⁿ`, the Gaussian random codebook, the three continuous-AEP bounds,
-and the sphere volume formula). This file imports `AchievabilityDischarge`.
+and the sphere volume formula). This file imports the `Achievability*` discharge modules.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -39,7 +39,7 @@ power ≤ `P`, measurable decoder) with `M ≥ ⌈exp(nR)⌉` messages whose per
 probability is below `ε`.
 
 The body is a direct call to
-`AchievabilityDischarge.isAwgnTypicalityHypothesis P hP N hN h_meas hR_pos hR hε`, a
+`isAwgnTypicalityHypothesis P hP N hN h_meas hR_pos hR hε`, a
 genuine assembly (sphere packing, Gaussian random codebook, the three continuous-AEP
 bounds, and the union bound).
 

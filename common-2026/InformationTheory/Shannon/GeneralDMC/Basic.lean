@@ -56,7 +56,7 @@ as an explicit argument).
 
 ## References
 
-* `InformationTheory/Shannon/BlockwiseChannel.lean`
+* `InformationTheory/Shannon/BlockwiseChannel/Definition.lean`
 -/
 
 namespace InformationTheory.Shannon.GeneralDMC

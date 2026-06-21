@@ -10,7 +10,7 @@ import Mathlib.Order.Filter.AtTopBot.Basic
 
 This file publishes the **asymptotic-body** layer on top of the
 combinatorial `ZivCountingBound` predicate already published in
-`InformationTheory/Shannon/LZ78ZivInequality.lean`. It is a *predicate-level*
+`InformationTheory/Shannon/LZ78/ZivInequality.lean`. It is a *predicate-level*
 extension: the per-`n` real-valued bound `(p.count : ℝ) ≤ B` is lifted
 to families `(p : ℕ → LZ78Parsing α)` indexed by the block length, and
 the asymptotic shape `c(n) · log c(n) ≤ n · log b + O(1)` (Cover–Thomas
@@ -37,7 +37,7 @@ plug in. The genuine a.s. achievability residual is scoped out as
 ## Pattern source
 
 Follows the same "predicate + .trivial + bridge" pattern as
-`LZ78ZivInequality.lean` and `LZ78ConverseDischarge.lean`. The asymptotic
+`ZivInequality.lean`. The asymptotic
 layer is wrapped in `Asymptotics.IsBigO` notation so downstream callers can
 plug `Mathlib.Analysis.Asymptotics` lemmas directly without re-shaping.
 -/

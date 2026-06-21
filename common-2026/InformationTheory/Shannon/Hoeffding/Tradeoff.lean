@@ -17,7 +17,7 @@ Scaffolding towards Cover-Thomas Theorem 11.7.x:
 ```
 
 `hoeffdingE2`, `hoeffdingE2_attained`, and `hoeffdingE2_unique` are published in
-`InformationTheory/Shannon/Chernoff.lean`. This file adds the pmf-form infrastructure
+`InformationTheory/Shannon/Chernoff/Basic.lean`. This file adds the pmf-form infrastructure
 and the Pythagoras-based minimizer bound.
 
 ## Main definitions

@@ -134,14 +134,14 @@ lemma pi_withDensity {n : ℕ} {E : Fin n → Type*}
 /-! ### Per-letter AWGN KL closed form and n-fold identity
 
 Two shared lemmas consumed by the achievability development (`continuousAepGaussian_holds`
-below and `awgn_random_coding_union_bound` in `AchievabilityDischarge.lean`).
+below and `awgn_random_coding_union_bound` in `AchievabilityTypicalDecoder.lean`).
 
 * `klDiv_perLetter_eq_capacity`: the per-letter joint `J₁`/product `Q₁` KL equals the
   AWGN capacity `(1/2) log(1 + P/N)`. Routed through the conditional-KL integral
   (`klDiv_compProd_const_toReal_integral`, `CondKLIntegral.lean`) + the 1-D Gaussian KL
   closed form (`klDiv_gaussianReal_gaussianReal_eq`, `DifferentialEntropy.lean`), **avoiding
   `mutualInfoOfChannel` / `MIClosedForm.lean`** which would create the import cycle
-  `Walls → MIClosedForm → ContChannelMIDecomp → Walls`.
+  `KLCapacityAndAEP → MIClosedForm → ContChannelMIDecomp → KLCapacityAndAEP`.
 * `klDiv_nFold_eq_nsmul`: `klDiv(J_n,Q_n).toReal = n · klDiv(J₁,Q₁).toReal`, via the
   `arrowProdEquivProdArrow` reshape (`klDiv_map_measurableEquiv`) + `klDiv_pi_eq_sum`
   + i.i.d. `Finset.sum_const` collapse. -/
@@ -478,7 +478,7 @@ per-letter capacity `(1/2) log(1 + P/N)` (nondegenerate `P > 0`, `N ≠ 0`). Rou
 conditional-KL integral (`klDiv_compProd_const_toReal_integral`) + the 1-D Gaussian KL closed
 form (`klDiv_gaussianReal_gaussianReal_eq`), integrating the per-fibre quadratic against the
 mean-0 variance-`P'` input — deliberately **avoiding `mutualInfoOfChannel` / `MIClosedForm`**
-(import cycle `Walls → MIClosedForm → ContChannelMIDecomp → Walls`).
+(import cycle `KLCapacityAndAEP → MIClosedForm → ContChannelMIDecomp → KLCapacityAndAEP`).
 
 The signature carries the genuine preconditions
 `0 < P` / `(N:ℝ) ≠ 0` (the union-bound consumer derives both before invoking); no

@@ -3,7 +3,7 @@
 
 Produces the `h_stam_supply` clause demanded by
 `EPICase1TwoTime.entropyPower_add_ge_case1_of_regular_twotime`
-(`InformationTheory/Shannon/EPICase1TwoTime.lean:1620`): for noises `Z_X Z_Y Z`
+(`InformationTheory/Shannon/EPI/Case1/TwoTime/EntropyPowerInequality.lean`): for noises `Z_X Z_Y Z`
 (all unit, the sum perturbed by a **separate** unit noise `Z`) and de Bruijn
 regularity hyps `h_reg_X`, `h_reg_Y`, `h_reg_sum`, at every pair of matched times
 `σ, τ > 0` the three smoothed Fisher informations are positive and the inverse-Stam

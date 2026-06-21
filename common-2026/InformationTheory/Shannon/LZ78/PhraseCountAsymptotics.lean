@@ -11,7 +11,7 @@ import Mathlib.Order.Filter.AtTopBot.Basic
 # LZ78 phrase-count asymptotic envelope — genuine `IsBigO` bound
 
 This file discharges the predicate `IsLZ78PhraseCountAsymptotic p B`
-(published in `InformationTheory/Shannon/LZ78ConverseAsymptotic.lean`) with
+(published in `InformationTheory/Shannon/LZ78/ConverseAsymptotic.lean`) with
 **genuine real-analysis content** rather than a hypothesis pass-through.
 
 The target predicate unfolds to

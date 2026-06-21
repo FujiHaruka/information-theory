@@ -418,7 +418,8 @@ theorem isAwgnTypicalityHypothesis
   classical
   -- The shared slack variance `P'` (strict `P' < P`) comes from
   -- `awgnPowerWitness_exists`; the three sub-bounds at `P'` come from the lemmas
-  -- in `Walls.lean`. The assembly below consumes `h_aep' / h_rand' / h_power'`.
+  -- in the former `Walls.lean` (now `KLCapacityAndAEP.lean` / `PerCodewordPowerConstraint.lean`).
+  -- The assembly below consumes `h_aep' / h_rand' / h_power'`.
   obtain ⟨P', hP'_pos, hP'_lt_P_strict, hR_lt_P'C⟩ :=
     awgnPowerWitness_exists P hP N hN hR_pos hR
   -- Non-strict slack kept under the original name for the verbatim assembly.

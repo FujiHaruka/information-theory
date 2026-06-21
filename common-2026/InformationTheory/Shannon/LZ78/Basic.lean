@@ -71,7 +71,7 @@ discharged upstream (`shannon_mcmillan_breiman`).
 
 ## Re-use of existing infrastructure
 
-`InformationTheory/Shannon/Stationary.lean` (StationaryProcess / ErgodicProcess /
+`InformationTheory/Shannon/Stationary/Basic.lean` (StationaryProcess / ErgodicProcess /
 blockRV), `InformationTheory/Shannon/EntropyRate.lean` (`entropyRate`,
 `entropyRate_exists_of_stationary`), and `InformationTheory/Shannon/
 ShannonMcMillanBreiman.lean` (`blockLogAvg`,

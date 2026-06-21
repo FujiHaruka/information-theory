@@ -6,7 +6,7 @@ import InformationTheory.Shannon.FisherInfo.OfDensity
 
 `convDensityAdd_hasDerivAt_of_integrable_smoothKernel` is the `fX`-integrable-only
 variant of `convDensityAdd_hasDerivAt_of_regular`
-(`InformationTheory/Shannon/EPIConvDensity.lean:187`). The smoothness regularity on `fX`
+(`InformationTheory/Shannon/EPI/Conv/Density.lean`). The smoothness regularity on `fX`
 is dropped: differentiation is carried entirely by the Gaussian kernel `fY`
 (`hregY : IsRegularDensityV2 fY` + bounded `fY` / `deriv fY`). `fX` only needs
 `Integrable fX volume`, used for `aestronglyMeasurable` (via

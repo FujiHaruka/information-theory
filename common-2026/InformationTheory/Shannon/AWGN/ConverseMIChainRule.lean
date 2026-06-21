@@ -36,9 +36,9 @@ The converse-side analytic facts: per-letter log-density integrability, the memo
 MI chain rule, and the deterministic-encoder Markov factorization.
 
 The old predicate bodies referenced `awgnConverseJoint` / `perLetterYLaw` / `perLetterMI`
-/ `jointMIXnYn`, all defined in `AWGNConverseDischarge.lean`. Referencing those named defs
+/ `jointMIXnYn`, all defined in `ConverseMutualInfoFiniteness.lean`. Referencing those named defs
 from this file directly would create the import cycle
-`Walls → ConverseDischarge → Walls`, so the body of `awgnConverseJoint` is inlined here as
+`ConverseMIChainRule → ConverseMutualInfoFiniteness → ConverseMIChainRule`, so the body of `awgnConverseJoint` is inlined here as
 the private mirror def `converseJointInline`. The two defs share the same RHS, so they are
 definitionally equal: on the consumer side `unfold awgnConverseJoint perLetterYLaw …`
 reduces the goal to the inline form here, where the shared lemmas apply. -/
@@ -57,7 +57,7 @@ private noncomputable def converseJointInline
 
 /-- `converseJointInline` is a probability measure for `M ≥ 1` (mixture with weights
 `1/M` summing to 1). Mirror of `awgnConverseJoint.instIsProbabilityMeasure`
-(`AWGNConverseDischarge.lean:77`); needed so `IsMarkovChain`'s `[IsFiniteMeasure μ]`
+(`ConverseMutualInfoFiniteness.lean:74`); needed so `IsMarkovChain`'s `[IsFiniteMeasure μ]`
 prerequisite resolves on the inlined joint. -/
 private instance converseJointInline.instIsProbabilityMeasure
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
@@ -430,7 +430,7 @@ gap (X-input route) is sidestepped. Pieces:
   giving `I(X_i;Y_i).toReal = h(Y_i) − h(noise)`.
 
 The block regularity machinery mirrors the per-letter Wall-4 closure above and the
-`AWGNConverseDischarge.lean` block infrastructure. -/
+`ConverseMutualInfoFiniteness.lean` block infrastructure. -/
 
 /-- Discrete-input block kernel `K m := pi (gaussianReal (encoder m i) N)` (`Fin M → Y^n`).
 Measurability is free (`measurable_of_countable`, input `Fin M`). -/
@@ -669,7 +669,7 @@ private lemma blockRealDensityInline_le_sup
 
 /-- Per-component output log-density integrability (n-dim) against the m-th product-Gaussian
 fibre `pi (gaussianReal (encoder m i) N)`. Mirror of
-`AWGNConverseDischarge.integrable_log_blockYLaw_on_component`. -/
+`ConverseMutualInfoFiniteness.integrable_log_blockYLaw_on_component`. -/
 private lemma integrable_log_blockYLawInline_on_component
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (m : Fin M) :

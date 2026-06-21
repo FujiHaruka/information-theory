@@ -39,7 +39,7 @@ open scoped ENNReal NNReal BigOperators Topology
 /-! ## Continuous AEP for the n-dimensional Gaussian
 
 The continuous AEP is the lemma `continuousAepGaussian_holds` in
-`InformationTheory/Shannon/AWGN/Walls.lean`. Consumers in this file call that
+`InformationTheory/Shannon/AWGN/KLCapacityAndAEP.lean`. Consumers in this file call that
 lemma directly instead of taking a predicate hypothesis. -/
 
 /-! ## Joint typical decoder and union bound -/

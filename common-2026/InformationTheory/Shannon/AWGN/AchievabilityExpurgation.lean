@@ -113,7 +113,7 @@ theorem awgn_expurgate_worst_half
 /-! ## Power constraint and feasibility witness
 
 The per-codeword power-constraint bound `awgnPowerConstraintPerCodeword_holds`
-lives in `InformationTheory/Shannon/AWGN/Walls.lean`. The achievability assembly
+lives in `InformationTheory/Shannon/AWGN/PerCodewordPowerConstraint.lean`. The achievability assembly
 also needs a shared slack witness `∃ P' ∈ (0, P)` with `R < capacity(P')`,
 supplied by `awgnPowerWitness_exists` below, which returns a strict `P' < P` (the
 variance-level slack `(P'.toNNReal : ℝ) < P` required by the per-codeword

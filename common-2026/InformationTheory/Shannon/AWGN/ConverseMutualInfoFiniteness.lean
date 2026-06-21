@@ -130,7 +130,7 @@ noncomputable def jointMIXnYn
 
 The three analytic sub-bounds (per-letter log-density integrability, the continuous
 mutual-information chain rule, and the Markov-chain factorization) live as lemmas in
-`InformationTheory/Shannon/AwgnWalls.lean` and are invoked here as ordinary lemma calls. -/
+`InformationTheory/Shannon/AWGN/ConverseMIChainRule.lean` and are invoked here as ordinary lemma calls. -/
 
 /-! ## Fano dispatch
 

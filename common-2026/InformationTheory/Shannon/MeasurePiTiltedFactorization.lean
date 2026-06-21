@@ -10,7 +10,7 @@ import InformationTheory.Meta.EntryPoint
 
 This file builds the **finite-product tilt factorization** lemma, a building block
 for the `IsMeasureInfinitePiTiltedEq` reduction in
-`InformationTheory/Shannon/CramerLC2PhaseC.lean`.
+`InformationTheory/Shannon/Cramer/LC2PhaseC.lean`.
 
 The key result is `pi_tilted_sum_eq_pi_tilted`:
 ```

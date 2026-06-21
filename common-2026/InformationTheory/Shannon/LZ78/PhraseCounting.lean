@@ -12,7 +12,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.Basic
 /-!
 # LZ78 distinct-phrase counting bound — `c · log c ≤ K·n`
 
-`InformationTheory/Shannon/LZ78GreedyLongestPrefix.lean` establishes
+`InformationTheory/Shannon/LZ78/GreedyLongestPrefix.lean` establishes
 the genuine longest-prefix greedy parse `lz78PhraseStrings` together with
 its **distinct invariant** `lz78PhraseStrings_nodup` and the
 total-length conservation `lz78PhraseStrings_total_length_le`.

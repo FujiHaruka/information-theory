@@ -3,7 +3,7 @@ import InformationTheory.Shannon.GeneralDMC.Basic
 /-!
 # General DMC capacity — extension layer
 
-This file extends `InformationTheory/Shannon/GeneralDMC.lean` with three families of
+This file extends `InformationTheory/Shannon/GeneralDMC/Basic.lean` with three families of
 **hypothesis-form** publish theorems aimed at downstream modules that need
 capacity-limit reasoning beyond the memoryless DMC case.
 
@@ -59,7 +59,7 @@ unfolding `capacity_lim` itself.
 
 ## References
 
-* `InformationTheory/Shannon/GeneralDMC.lean`
+* `InformationTheory/Shannon/GeneralDMC/Basic.lean`
 * Verdú & Han, "A general formula for channel capacity" (IEEE TIT 1994).
 -/
 
