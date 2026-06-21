@@ -1,6 +1,6 @@
 # LZ78 headline: `h_bdd_above` internal discharge サブ計画
 
-**Status**: ✅ CLOSED — `h_bdd_above` は内製 discharge 済 (commit `a1ae108`、独立監査 all OK)。
+**Status**: ✅ CLOSED — `h_bdd_above` は内製 discharge 済 (commit `a1ae108`、独立監査 all OK)。headline `lz78_asymptotic_optimality_with_greedy_impl` は M3/M4 壁 closure (`bd28e0e`) と合わせ **proof done = sorryAx-free** (2026-06-21 機械再確認)。
 `h_bdd_above` は headline `lz78_asymptotic_optimality_with_greedy_impl` の
 **signature 引数から除去された** (引数は `μ`, `p` のみ)。
 **SoT**: コード側 (`InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`)。詳細履歴は git。
@@ -17,12 +17,14 @@
 - **crux 訂正**: 計画当初は `Nat.log↔Real.log` bridge を loogle Found 0 ゆえ
   self-build 必須と見ていたが、これは **誤判定**。Mathlib 既存
   `Real.natLog_le_logb` (`Mathlib.Analysis.SpecialFunctions.Log.Base`、前提なし)
-  で解決した (self-build 不要)。in-file の bridge `lz78_impl_natLog_mul_log_two_le`
-  はこの Mathlib 補題の薄い wrapper。
-- M3/M4 scope-out (genuine 研究級壁 `lz78GreedyImpl_achievability_ae` /
-  `lz78GreedyImpl_converse_ae`) は本 plan の対象外、撤回しない。`h_bdd_above` を
-  内製しても headline は M3/M4 壁経由で sorryAx 依存のまま (= type-check done、
-  proof done ではない)。
+  で解決した (self-build 不要)。in-file の wrapper `natLog_mul_log_two_le`
+  (旧 `lz78_impl_natLog_mul_log_two_le`、2026-06-21 にプロセス接頭辞を除去) は
+  この Mathlib 補題の薄い restatement。
+- M3/M4 (achievability `lz78GreedyImpl_achievability_ae` / converse
+  `lz78GreedyImpl_converse_ae`) は当初 research-level scope-out と見ていたが
+  両壁とも genuine closure 済 (M3 = Q_k grafting `c22f2d5`、M4 = fiber-card
+  brick `bd28e0e`)。`h_bdd_above` 内製 (`a1ae108`) と合わせ headline は
+  **proof done = 完全 sorryAx-free**。
 
 ## Approach (履歴)
 
@@ -39,5 +41,5 @@ proof body に `have` として埋め込み、仮説引数から除去。Ziv 核
   `have` で内製)。
 - 独立監査 all OK (4 観点 PASS: 非循環 / 非バンドル / 非退化 / sufficiency)、新規
   sorry なし、`lz78_impl_rate_le_const` / bridge は sorryAx-free。
-- headline `#print axioms` の sorryAx は M3/M4 壁 2 本経由のみ
-  (`lz78GreedyImpl_converse_ae` / `lz78GreedyImpl_achievability_ae`)。
+- headline `#print axioms = [propext, Classical.choice, Quot.sound]` (完全
+  sorryAx-free)。M3/M4 壁 2 本も `c22f2d5` / `bd28e0e` で closed 済。

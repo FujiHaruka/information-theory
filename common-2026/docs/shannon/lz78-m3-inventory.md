@@ -4,6 +4,9 @@
 > 攻略対象壁: `lz78GreedyImpl_achievability_ae`（`@residual(wall:lz78-aseventual-ziv)`、
 > `InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean:442`）。
 > 本ファイルは在庫調査（実装・プラン草案はしない）。コード側タグが SoT、本ファイルは二次。
+>
+> **✅ CLOSED (2026-06-21)**: 攻略対象壁 `lz78GreedyImpl_achievability_ae` は M3 achievability
+> closure (`c22f2d5`) で sorryAx-free 化済、headline は proof done。本在庫はその達成過程の記録。
 
 ## 一行サマリ
 
@@ -18,7 +21,7 @@ SMB に乗せる」自前不等式（推定 ~150–400 行、medium）。**
 具体的に self-build が要るのは 3 件:
 1. **SMB-in-bits 橋** `blockLogAvg₂ → entropyRate₂`（または直接 SMB の Tendsto を `/log 2`）— ~30–60 行、低リスク。
 2. **a.s.-eventual Ziv 比較不等式** `limsup (lz/n) ≤ limsup blockLogAvg₂ + o(n)`（D1/D2 の per-block 偽性を回避する length-grouping overhead 制御）— ~150–400 行、medium。
-3. **`Nat.log 2`（bitLength）→ `Real.log₂`（blockLogAvg₂）の符号長単位整合** — ~20–50 行、低リスク（既存 `lz78_impl_natLog_mul_log_two_le` を再利用）。
+3. **`Nat.log 2`（bitLength）→ `Real.log₂`（blockLogAvg₂）の符号長単位整合** — ~20–50 行、低リスク（既存 `natLog_mul_log_two_le` を再利用）。
 
 ---
 
@@ -84,7 +87,7 @@ calc limsup (lz/n) ≤ limsup blockLogAvg₂ := h_ziv      -- Step B
 | 定数 rate 上界 | `lz78_impl_rate_le_const`<br>`AsymptoticOptimality.lean:168` | `[Nonempty α] (n : ℕ) (x : Fin n → α)` | `(lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ) ≤ (1 + 8 * Real.log (Fintype.card α + 1) / Real.log 2) + ((Nat.log 2 (Fintype.card α) : ℝ) + 2)` | bit | headline の `h_bdd_above` 内製に使用済。M3 では limsup 有界性（cobounded）に再利用可 |
 | per-symbol 上界 | `lz78_impl_encoding_length_per_symbol_le`<br>`AsymptoticOptimality.lean:125` | `(n : ℕ) (hn : 0 < n) (x : Fin n → α)` | `(lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ) ≤ (Nat.log 2 (n + 1) : ℝ) + (Nat.log 2 (Fintype.card α) : ℝ) + 2` | bit | 参考 |
 | per-symbol 非負 | `lz78_impl_encoding_length_per_symbol_nonneg`<br>`AsymptoticOptimality.lean:144` | `(n : ℕ) (x : Fin n → α)` | `(0 : ℝ) ≤ (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ)` | — | limsup 下界・cobounded |
-| `Nat.log 2 → Real.log` 橋 | `lz78_impl_natLog_mul_log_two_le`<br>`AsymptoticOptimality.lean:152` | `(m : ℕ)` | `(Nat.log 2 m : ℝ) * Real.log 2 ≤ Real.log m` | nat↔bit 変換 | **Step A/C の単位整合の核**。`Nat.log 2 (c+1)` を `Real.log (c+1)/Real.log 2` に降ろす |
+| `Nat.log 2 → Real.log` 橋 | `natLog_mul_log_two_le`<br>`AsymptoticOptimality.lean:152` | `(m : ℕ)` | `(Nat.log 2 m : ℝ) * Real.log 2 ≤ Real.log m` | nat↔bit 変換 | **Step A/C の単位整合の核**。`Nat.log 2 (c+1)` を `Real.log (c+1)/Real.log 2` に降ろす |
 
 ---
 
@@ -101,7 +104,7 @@ calc limsup (lz/n) ≤ limsup blockLogAvg₂ := h_ziv      -- Step B
 
 **注**: 組合せ核は `Real.log`（nat 単位）で `c·log c ≤ K·n`。M3 Step B では bit 版
 `c·log₂ c = c·log c / log 2` に落として `blockLogAvg₂ = -log₂Pₙ/n` と比較する。`/log 2` は両辺定数なので
-`lz78_impl_natLog_mul_log_two_le` または単純な `div_le_div_of_nonneg_right` で機械的。
+`natLog_mul_log_two_le` または単純な `div_le_div_of_nonneg_right` で機械的。
 
 ---
 
@@ -169,13 +172,13 @@ calc limsup (lz/n) ≤ limsup blockLogAvg₂ := h_ziv      -- Step B
 ### 2. **a.s.-eventual Ziv 比較不等式**（~150–400 行 / medium — M3 の crux）
 
 - 内容: `∀ᵐ ω ∂μ, limsup (fun n => lz/n) atTop ≤ limsup (fun n => blockLogAvg₂ μ p n ω) atTop`、または直接 `≤ entropyRate₂`。
-- 推奨: Step A で `lz/n ≤ (c·log₂c + c·(log₂|α|+2))/n` に展開（`bitLength_eq` + `lz78_impl_natLog_mul_log_two_le`）→ `c·log₂c/n` を `blockLogAvg₂ = -log₂Pₙ/n` と比較。**length-grouping overhead `c·log(maxlen)/n`（D3、`maxlen ≤ log_b n`、`(c·log log n)/n → 0` via `count_isBigO`）で o(n) を制御**。
+- 推奨: Step A で `lz/n ≤ (c·log₂c + c·(log₂|α|+2))/n` に展開（`bitLength_eq` + `natLog_mul_log_two_le`）→ `c·log₂c/n` を `blockLogAvg₂ = -log₂Pₙ/n` と比較。**length-grouping overhead `c·log(maxlen)/n`（D3、`maxlen ≤ log_b n`、`(c·log log n)/n → 0` via `count_isBigO`）で o(n) を制御**。
 - 落とし穴: **per-block 形（∀n∀ω）にしてはいけない**（D1/D2 で FALSE、反例 `a^16`）。必ず limsup / a.s.-eventual。`-log Pₙ` を直接 RHS に置く（D4 の `condPhraseProb`/`blockProb_neg_log_ge_sum` path-prefix route は素通り、§F wall D4）。`lz78PhraseStrings_mul_log_le` の `Real.log`（nat）を `/log 2` で bit 化する単位整合を忘れない。
 
 ### 3. **bitLength → blockLogAvg₂ 単位整合補題**（~20–50 行 / 低リスク）
 
 - 内容: `lz78GreedyImplEncodingLength n x / n ≤ (c·Real.log₂ c)/n + (log₂|α| + 2)`（`Real.log₂ = Real.log / Real.log 2`）。
-- 推奨: `lz78_impl_rate_le_const` の証明内 `hlen`（`bitLength_eq` 展開）+ `hterm1`（`lz78_impl_natLog_mul_log_two_le`）をそのまま切り出して bit 版に。
+- 推奨: `lz78_impl_rate_le_const` の証明内 `hlen`（`bitLength_eq` 展開）+ `hterm1`（`natLog_mul_log_two_le`）をそのまま切り出して bit 版に。
 - 落とし穴: `Nat.log 2 (c+1)` vs `Real.log₂ c` の `+1` ずれ・`c = 0` 退化。
 
 工数感: 全体 ~200–500 行。最大リスクは要素 2（組合せ Ziv の o(n) 制御、D1/D2 回避）。
