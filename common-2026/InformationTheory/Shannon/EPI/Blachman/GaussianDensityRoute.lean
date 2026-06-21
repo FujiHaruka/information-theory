@@ -10,7 +10,7 @@ import InformationTheory.Shannon.EPI.Conv.Density
 import InformationTheory.Shannon.EPI.Blachman.Density
 
 /-!
-# Gaussian witness for `IsBlachmanConvReady` / `IsRegularDensityV2`
+# Gaussian density route for `IsBlachmanConvReady` / `IsRegularDensityV2`
 
 A proven inhabitant of `IsBlachmanConvReady (gaussianPDFReal mX vX) (gaussianPDFReal mY vY)`
 and `IsRegularDensityV2 (gaussianPDFReal m v)`, built from the existing Gaussian
@@ -22,7 +22,7 @@ convolution closed form `convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal
 = gaussianPDFReal (mX+mY) (vX+vY)`, which the `int_fisherZ` field needs.
 -/
 
-namespace InformationTheory.Shannon.EPIBlachmanGaussianWitness
+namespace InformationTheory.Shannon.EPIGaussianDensityRoute
 
 open MeasureTheory Real ProbabilityTheory
 open InformationTheory.Shannon.FisherInfoV2
@@ -740,4 +740,4 @@ theorem convex_fisher_bound_gaussian_via_density_route_closed_form
     NNReal.coe_add] at hbnd
   exact hbnd
 
-end InformationTheory.Shannon.EPIBlachmanGaussianWitness
+end InformationTheory.Shannon.EPIGaussianDensityRoute

@@ -256,7 +256,7 @@ import InformationTheory.Shannon.EPI.Conv.DensityNormalization
 import InformationTheory.Shannon.EPI.Conv.DensityGaussianGateway
 import InformationTheory.Shannon.EPI.Conv.DensitySecondDeriv
 import InformationTheory.Shannon.EPI.Blachman.Density
-import InformationTheory.Shannon.EPI.Blachman.GaussianWitness
+import InformationTheory.Shannon.EPI.Blachman.GaussianDensityRoute
 import InformationTheory.Shannon.EPI.Conv.DensityRegular
 import InformationTheory.Shannon.EPI.Conv.DensityAssoc
 import InformationTheory.Shannon.EPI.Blachman.GeneralDensity

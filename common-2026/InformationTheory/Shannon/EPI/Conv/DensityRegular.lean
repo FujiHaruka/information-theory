@@ -1,7 +1,7 @@
 import InformationTheory.Shannon.EPI.Conv.DensityGaussianGateway
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly
-import InformationTheory.Shannon.EPI.Blachman.GaussianWitness
+import InformationTheory.Shannon.EPI.Blachman.GaussianDensityRoute
 import InformationTheory.Shannon.FisherInfo.Gaussian
 import Mathlib.Analysis.Convolution
 
@@ -113,7 +113,7 @@ theorem deriv_convDensityAdd_eq {pX : ℝ → ℝ} {t : ℝ} (ht : 0 < t)
     intro h; exact ht.ne' (congrArg NNReal.toReal h)
   set g : ℝ → ℝ := gaussianPDFReal 0 ⟨t, ht.le⟩ with hg
   have hregY : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 g :=
-    InformationTheory.Shannon.EPIBlachmanGaussianWitness.isRegularDensityV2_gaussianPDFReal hv_ne
+    InformationTheory.Shannon.EPIGaussianDensityRoute.isRegularDensityV2_gaussianPDFReal hv_ne
   have hY_bdd : ∃ M : ℝ, ∀ w, |g w| ≤ M :=
     ⟨_, gaussianPDFReal_abs_le ⟨t, ht.le⟩⟩
   have hY'_bdd : ∃ M : ℝ, ∀ w, |deriv g w| ≤ M := deriv_gaussianPDFReal_abs_le hv_ne
@@ -191,7 +191,7 @@ theorem isRegularDensityV2_convDensityAdd_gaussian (pX : ℝ → ℝ) {t : ℝ} 
     intro h; exact ht.ne' (congrArg NNReal.toReal h)
   set g : ℝ → ℝ := gaussianPDFReal 0 ⟨t, ht.le⟩ with hg
   have hregY : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 g :=
-    InformationTheory.Shannon.EPIBlachmanGaussianWitness.isRegularDensityV2_gaussianPDFReal hv_ne
+    InformationTheory.Shannon.EPIGaussianDensityRoute.isRegularDensityV2_gaussianPDFReal hv_ne
   have hY_bdd : ∃ M : ℝ, ∀ w, |g w| ≤ M :=
     ⟨_, gaussianPDFReal_abs_le ⟨t, ht.le⟩⟩
   have hY'_bdd : ∃ M : ℝ, ∀ w, |deriv g w| ≤ M := deriv_gaussianPDFReal_abs_le hv_ne
@@ -322,7 +322,7 @@ theorem fisherInfoOfDensityReal_convDensityAdd_pos (pX : ℝ → ℝ) {t : ℝ} 
       rw [Real.norm_eq_abs]; exact hM x
     have hg'_cont : Continuous (deriv g) := by
       rw [hg]
-      exact InformationTheory.Shannon.EPIBlachmanGaussianWitness.continuous_deriv_gaussianPDFReal hv_ne
+      exact InformationTheory.Shannon.EPIGaussianDensityRoute.continuous_deriv_gaussianPDFReal hv_ne
     exact BddAbove.continuous_convolution_right_of_integrable
       (L := ContinuousLinearMap.mul ℝ ℝ) hbdd hpX_int hg'_cont
   -- non-vanishing of `J(f)`

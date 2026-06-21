@@ -5,7 +5,7 @@ import InformationTheory.Shannon.EPI.Stam.EPIBridge
 import InformationTheory.Shannon.FisherInfo.V2DeBruijn
 import InformationTheory.Shannon.FisherInfo.V2
 import InformationTheory.Shannon.FisherInfo.Gaussian
-import InformationTheory.Shannon.EPI.Blachman.GaussianWitness
+import InformationTheory.Shannon.EPI.Blachman.GaussianDensityRoute
 import InformationTheory.Shannon.DifferentialEntropy
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
@@ -59,7 +59,7 @@ open scoped ENNReal NNReal Topology
 open InformationTheory.Shannon.EntropyPowerInequality
 open InformationTheory.Shannon.StamEPIBridge
 open InformationTheory.Shannon.EPIConvDensity (convDensityAdd)
-open InformationTheory.Shannon.EPIBlachmanGaussianWitness (convDensityAdd_gaussian_closed_form)
+open InformationTheory.Shannon.EPIGaussianDensityRoute (convDensityAdd_gaussian_closed_form)
 
 /-! ## Integrated pipeline predicate -/
 

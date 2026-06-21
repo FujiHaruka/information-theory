@@ -98,7 +98,7 @@ noncomputable def isDeBruijnRegularityHyp_of_explicitDensity
         simp only [ne_eq, Real.toNNReal_eq_zero, not_le]; exact htpos
       have hregY : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
           (gaussianPDFReal 0 t.toNNReal) :=
-        InformationTheory.Shannon.EPIBlachmanGaussianWitness.isRegularDensityV2_gaussianPDFReal hv_ne
+        InformationTheory.Shannon.EPIGaussianDensityRoute.isRegularDensityV2_gaussianPDFReal hv_ne
       have hnormY : ∫ x, gaussianPDFReal 0 t.toNNReal x ∂volume = 1 :=
         ProbabilityTheory.integral_gaussianPDFReal_eq_one 0 hv_ne
       have hmono := fisherInfoOfDensity_convDensityAdd_le pX (gaussianPDFReal 0 t.toNNReal)

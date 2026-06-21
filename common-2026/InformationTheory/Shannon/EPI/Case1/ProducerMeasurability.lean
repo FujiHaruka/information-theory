@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EPI.Conv.Density
 import InformationTheory.Shannon.EPI.Conv.DensityGaussianGateway
-import InformationTheory.Shannon.EPI.Blachman.GaussianWitness
+import InformationTheory.Shannon.EPI.Blachman.GaussianDensityRoute
 import InformationTheory.Shannon.FisherInfo.V2
 import Mathlib.Analysis.Calculus.LogDeriv
 import Mathlib.MeasureTheory.Integral.Prod
@@ -148,10 +148,10 @@ theorem deriv_convDensityAdd_gaussian_eq_scoreNum
   · -- t > 0: the Gaussian kernel is regular; differentiation under the integral fires.
     have hv_ne : t.toNNReal ≠ 0 := by
       simp only [ne_eq, Real.toNNReal_eq_zero, not_le]; exact ht
-    have hregY := EPIBlachmanGaussianWitness.isRegularDensityV2_gaussianPDFReal
+    have hregY := EPIGaussianDensityRoute.isRegularDensityV2_gaussianPDFReal
       (m := 0) hv_ne
-    have hY_bdd := EPIBlachmanGaussianWitness.bdd_gaussianPDFReal 0 t.toNNReal
-    have hY'_bdd := EPIBlachmanGaussianWitness.bdd_deriv_gaussianPDFReal (m := 0) hv_ne
+    have hY_bdd := EPIGaussianDensityRoute.bdd_gaussianPDFReal 0 t.toNNReal
+    have hY'_bdd := EPIGaussianDensityRoute.bdd_deriv_gaussianPDFReal (m := 0) hv_ne
     have hderiv := EPIConvDensityGaussianGateway.convDensityAdd_hasDerivAt_of_integrable_smoothKernel
       pX (gaussianPDFReal 0 t.toNNReal) z hpX_int hregY hY_bdd hY'_bdd
     rw [hderiv.deriv]

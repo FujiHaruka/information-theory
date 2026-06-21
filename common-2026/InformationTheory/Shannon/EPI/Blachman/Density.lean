@@ -625,7 +625,7 @@ takes individually (see `convex_fisher_bound_of_ready`). The
 assert only `Integrable (…)` of the verbatim integrands, not the value of any
 integral nor any inequality, so none bundles the convex Fisher inequality core
 (which lives inside `convex_fisher_bound`'s body). A proven Gaussian inhabitant
-`isBlachmanConvReady_gaussianPDFReal` (`EPIBlachmanGaussianWitness.lean`, sorryAx-free)
+`isBlachmanConvReady_gaussianPDFReal` (`GaussianDensityRoute.lean`, sorryAx-free)
 establishes non-vacuousness.
 @audit:ok -/
 structure IsBlachmanConvReady (fX fY : ℝ → ℝ) : Prop where
