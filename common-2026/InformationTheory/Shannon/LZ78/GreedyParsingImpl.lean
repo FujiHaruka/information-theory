@@ -532,43 +532,306 @@ theorem two_pow_bitLength_ge (c a : ℕ) :
         Nat.mul_le_mul hc1 ha
     _ = 4 * 2 ^ Nat.log 2 (c + 1) * 2 ^ Nat.log 2 a := by ring
 
+/-- **Parent-index type cardinality**: the dependent function type assigning
+each phrase position `j : Fin c` a parent index in `Fin (j+1)` (one of the `j`
+earlier phrases or the empty prefix) has exactly `c!` elements. -/
+theorem fintype_card_parentIdx (c : ℕ) :
+    Fintype.card ((j : Fin c) → Fin (j.val + 1)) = c.factorial := by
+  rw [Fintype.card_pi]
+  simp only [Fintype.card_fin]
+  rw [Fin.prod_univ_eq_prod_range (fun i => i + 1) c]
+  exact Finset.prod_range_add_one_eq_factorial c
+
+/-- **Fiber-cardinality count is bounded by the parent-data target** (nat form):
+the map sending `x` (in the `c`-phrase fiber) to its parent indices, phrase
+symbols, and tail index is injective, so the fiber injects into
+`((j : Fin c) → Fin (j+1)) × (Fin c → α) × Fin (c+1)`, whose cardinality is
+`c! · |α|^c · (c+1)`. Injectivity uses the parent-extension invariant
+`lz78PhraseStrings_dropLast_earlier` (each phrase's `dropLast` is an earlier
+phrase or empty) to reconstruct the phrase list by strong induction on the
+position, and `lz78PhraseStrings_flatten_prefix` + `List.ofFn_injective` to
+recover `x` from the phrase list and tail. -/
+theorem lz78_phrase_count_fiber_card_le_nat (n c : ℕ) :
+    (Finset.univ.filter
+          (fun x : Fin n → α => (lz78PhraseStrings (List.ofFn x)).length = c)).card
+      ≤ c.factorial * (Fintype.card α) ^ c * (c + 1) := by
+  classical
+  -- Encoding target: parent indices, phrase symbols, tail index.
+  let D := ((j : Fin c) → Fin (j.val + 1)) × (Fin c → α) × Fin (c + 1)
+  -- For a tuple `x`, its phrase list.
+  let P : (Fin n → α) → List (List α) := fun x => lz78PhraseStrings (List.ofFn x)
+  -- Parent index of phrase `j` of `x`: the first index of `(P x)[j].dropLast`
+  -- in `P x`, capped to `Fin (j+1)` (value `j` marks the empty parent).
+  let parent : (Fin n → α) → (j : Fin c) → Fin (j.val + 1) := fun x j =>
+    ⟨min ((P x).idxOf ((((P x)[j.val]?).getD []).dropLast)) j.val, by
+      have : min ((P x).idxOf ((((P x)[j.val]?).getD []).dropLast)) j.val ≤ j.val :=
+        min_le_right _ _
+      omega⟩
+  -- Last symbol of phrase `j` of `x`.
+  let sym : (Fin n → α) → Fin c → α := fun x j =>
+    ((P x)[j.val]?.getD []).getLastD (Classical.arbitrary α)
+  -- Tail index of `x`: index of the unfinished tail in `P x` (or `c` for empty).
+  let tailIdx : (Fin n → α) → Fin (c + 1) := fun x =>
+    ⟨min ((P x).idxOf (Classical.choose (lz78PhraseStrings_flatten_tail_mem (List.ofFn x)))) c, by
+      have : min ((P x).idxOf (Classical.choose (lz78PhraseStrings_flatten_tail_mem
+        (List.ofFn x)))) c ≤ c := min_le_right _ _
+      omega⟩
+  let Φ : (Fin n → α) → D := fun x => (parent x, sym x, tailIdx x)
+  -- The fiber injects into `D` via `Φ`.
+  have hcard : (Finset.univ.filter
+        (fun x : Fin n → α => (lz78PhraseStrings (List.ofFn x)).length = c)).card
+      ≤ Fintype.card D := by
+    rw [← Finset.card_univ (α := D)]
+    refine Finset.card_le_card_of_injOn Φ (fun x _ => Finset.mem_univ _) ?_
+    -- injectivity on the fiber
+    intro x hx y hy hΦ
+    simp only [Finset.coe_filter, Set.mem_setOf_eq, Finset.mem_univ, true_and] at hx hy
+    -- both phrase lists have length `c`
+    have hPx_len : (P x).length = c := hx
+    have hPy_len : (P y).length = c := hy
+    -- componentwise equality of the encoding
+    have hpar : parent x = parent y := congrArg Prod.fst hΦ
+    have hsym : sym x = sym y := congrArg (fun t => t.2.1) hΦ
+    have htail : tailIdx x = tailIdx y := congrArg (fun t => t.2.2) hΦ
+    -- all phrases non-empty
+    have hne_x : ∀ w ∈ P x, w ≠ [] := lz78PhraseStrings_forall_ne_nil (List.ofFn x)
+    have hne_y : ∀ w ∈ P y, w ≠ [] := lz78PhraseStrings_forall_ne_nil (List.ofFn y)
+    -- [] is never a phrase, so its idxOf equals the length
+    have hidx_nil_x : (P x).idxOf [] = (P x).length := by
+      rw [List.idxOf_eq_length_iff]
+      intro h; exact (hne_x [] h) rfl
+    have hidx_nil_y : (P y).idxOf [] = (P y).length := by
+      rw [List.idxOf_eq_length_iff]
+      intro h; exact (hne_y [] h) rfl
+    -- `sym x j = (P x)[j].getLast` on the fiber (and same for y)
+    have hgetLast_x : ∀ j (hj : j < c), sym x ⟨j, hj⟩
+        = ((P x)[j]'(by omega)).getLast (hne_x _ (List.getElem_mem _)) := by
+      intro j hj
+      have hget? : (P x)[j]? = some ((P x)[j]'(by omega)) :=
+        List.getElem?_eq_getElem (by omega)
+      simp only [sym, hget?, Option.getD_some]
+      rw [List.getLastD_eq_getLast?,
+        List.getLast?_eq_some_getLast (hne_x _ (List.getElem_mem _)), Option.getD_some]
+    have hgetLast_y : ∀ j (hj : j < c), sym y ⟨j, hj⟩
+        = ((P y)[j]'(by omega)).getLast (hne_y _ (List.getElem_mem _)) := by
+      intro j hj
+      have hget? : (P y)[j]? = some ((P y)[j]'(by omega)) :=
+        List.getElem?_eq_getElem (by omega)
+      simp only [sym, hget?, Option.getD_some]
+      rw [List.getLastD_eq_getLast?,
+        List.getLast?_eq_some_getLast (hne_y _ (List.getElem_mem _)), Option.getD_some]
+    -- `parent x j = min (idxOf (P x)[j].dropLast) j` on the fiber (and same for y)
+    have hpar_x : ∀ j (hj : j < c), (parent x ⟨j, hj⟩ : ℕ)
+        = min ((P x).idxOf (((P x)[j]'(by omega)).dropLast)) j := by
+      intro j hj
+      have hget? : (P x)[j]? = some ((P x)[j]'(by omega)) :=
+        List.getElem?_eq_getElem (by omega)
+      simp only [parent, hget?, Option.getD_some]
+    have hpar_y : ∀ j (hj : j < c), (parent y ⟨j, hj⟩ : ℕ)
+        = min ((P y).idxOf (((P y)[j]'(by omega)).dropLast)) j := by
+      intro j hj
+      have hget? : (P y)[j]? = some ((P y)[j]'(by omega)) :=
+        List.getElem?_eq_getElem (by omega)
+      simp only [parent, hget?, Option.getD_some]
+    -- the dropLast-earlier invariant for both
+    have hinv_x := lz78PhraseStrings_dropLast_earlier (List.ofFn x)
+    have hinv_y := lz78PhraseStrings_dropLast_earlier (List.ofFn y)
+    -- KEY: phrase lists agree, by strong induction on the position.
+    have hPeq : ∀ j (hj : j < c),
+        (P x)[j]'(by omega) = (P y)[j]'(by omega) := by
+      intro j
+      induction j using Nat.strong_induction_on with
+      | _ j IH =>
+        intro hj
+        -- step 1: dropLast agree at j
+        have hdl : ((P x)[j]'(by omega)).dropLast = ((P y)[j]'(by omega)).dropLast := by
+          -- parent index agreement at j (as naturals)
+          have hpeq : min ((P x).idxOf (((P x)[j]'(by omega)).dropLast)) j
+              = min ((P y).idxOf (((P y)[j]'(by omega)).dropLast)) j := by
+            have := congrArg (fun f => (f ⟨j, hj⟩ : ℕ)) hpar
+            simp only at this
+            rw [hpar_x j hj, hpar_y j hj] at this
+            exact this
+          -- the dropLast-earlier invariants at j
+          have hix : ((P x)[j]'(by omega)).dropLast ∈ (P x).take j
+              ∨ ((P x)[j]'(by omega)).dropLast = [] := hinv_x j (by omega)
+          have hiy : ((P y)[j]'(by omega)).dropLast ∈ (P y).take j
+              ∨ ((P y)[j]'(by omega)).dropLast = [] := hinv_y j (by omega)
+          set dx := ((P x)[j]'(by omega)).dropLast with hdx_def
+          set dy := ((P y)[j]'(by omega)).dropLast with hdy_def
+          rcases hix with hix | hix
+          · -- dx ∈ take j: idxOf dx < j, so parent picks dx = (P x)[idxOf dx]
+            have hidx_x : (P x).idxOf dx < j := (List.mem_take_iff_idxOf_lt
+              (List.mem_of_mem_take hix)).mp hix
+            have hpx_eq : min ((P x).idxOf dx) j = (P x).idxOf dx := min_eq_left (by omega)
+            -- from hpeq, min (idxOf dy) j = idxOf dx < j ⇒ idxOf dy < j too
+            rw [hpx_eq] at hpeq
+            have hidx_y : (P y).idxOf dy < j := by
+              by_contra hge
+              rw [min_eq_right (by omega : j ≤ (P y).idxOf dy)] at hpeq
+              omega
+            have hpy_eq : min ((P y).idxOf dy) j = (P y).idxOf dy :=
+              min_eq_left (by omega)
+            rw [hpy_eq] at hpeq
+            -- p := idxOf dx = idxOf dy < j; recover dx, dy via getElem_idxOf
+            set p := (P x).idxOf dx with hp_def
+            have hp_lt_x : p < (P x).length := by omega
+            have hp_lt_y : (P y).idxOf dy < (P y).length := by omega
+            have hgx : (P x)[p]'hp_lt_x = dx := List.getElem_idxOf hp_lt_x
+            have hgy : (P y)[(P y).idxOf dy]'hp_lt_y = dy := List.getElem_idxOf hp_lt_y
+            -- IH at p < j
+            have hpeq' : (P y).idxOf dy = p := hpeq.symm
+            have hIH := IH p (by omega) (by omega)
+            rw [← hgx, ← hgy]
+            -- goal: (P x)[p] = (P y)[idxOf dy]; reindex idxOf dy → p, then IH
+            rw [getElem_congr rfl hpeq' hp_lt_y]
+            exact hIH
+          · -- dx = []: idxOf [] = length = c ≥ j, so parent = j, forcing dy = []
+            rw [hix]
+            rw [hix, hidx_nil_x, hPx_len] at hpeq
+            rw [min_eq_right (by omega : j ≤ c)] at hpeq
+            -- hpeq : j = min (idxOf dy) j  ⇒ idxOf dy ≥ j
+            have hge : j ≤ (P y).idxOf dy := by
+              by_contra hlt
+              rw [min_eq_left (by omega)] at hpeq
+              omega
+            -- so dy ∉ take j, hence dy = []
+            rcases hiy with hiy | hiy
+            · exfalso
+              have := (List.mem_take_iff_idxOf_lt (List.mem_of_mem_take hiy)).mp hiy
+              omega
+            · exact hiy.symm
+        -- step 2: getLast agree at j (from sym equality)
+        have hgl : ((P x)[j]'(by omega)).getLast (hne_x _ (List.getElem_mem _))
+            = ((P y)[j]'(by omega)).getLast (hne_y _ (List.getElem_mem _)) := by
+          rw [← hgetLast_x j hj, ← hgetLast_y j hj, hsym]
+        -- assemble: phrase = dropLast ++ [getLast]
+        rw [← List.dropLast_append_getLast (hne_x _ (List.getElem_mem _)),
+          ← List.dropLast_append_getLast (hne_y _ (List.getElem_mem _)), hdl, hgl]
+    -- phrase lists equal as lists
+    have hPlist : P x = P y := by
+      apply List.ext_getElem (by rw [hPx_len, hPy_len])
+      intro j h1 h2
+      have hjc : j < c := by rw [← hPx_len]; exact h1
+      exact hPeq j hjc
+    -- step C: tails agree, hence inputs agree.
+    set tx := Classical.choose (lz78PhraseStrings_flatten_tail_mem (List.ofFn x)) with htx_def
+    set ty := Classical.choose (lz78PhraseStrings_flatten_tail_mem (List.ofFn y)) with hty_def
+    obtain ⟨htx_flat, htx_mem⟩ :=
+      Classical.choose_spec (lz78PhraseStrings_flatten_tail_mem (List.ofFn x))
+    obtain ⟨hty_flat, hty_mem⟩ :=
+      Classical.choose_spec (lz78PhraseStrings_flatten_tail_mem (List.ofFn y))
+    rw [← htx_def] at htx_flat htx_mem
+    rw [← hty_def] at hty_flat hty_mem
+    -- tail index value equality (as naturals), with `P x = P y`
+    have htvx : (tailIdx x).val = min ((P x).idxOf tx) c := by
+      simp only [tailIdx, ← htx_def]
+    have htvy : (tailIdx y).val = min ((P y).idxOf ty) c := by
+      simp only [tailIdx, ← hty_def]
+    have htailval : min ((P x).idxOf tx) c = min ((P x).idxOf ty) c := by
+      have hval : (tailIdx x).val = (tailIdx y).val := congrArg Fin.val htail
+      rw [htvx, htvy, ← hPlist] at hval
+      exact hval
+    -- [] never a phrase, so its idxOf = length = c (for `P x`)
+    have hidx_nil : (P x).idxOf [] = c := by rw [hidx_nil_x, hPx_len]
+    -- the tails coincide
+    have htxy : tx = ty := by
+      rcases htx_mem with htx_mem | htx_mem
+      · -- tx ∈ P x: idxOf tx < c, so min = idxOf tx, forcing idxOf ty = idxOf tx < c
+        have hlt_x : (P x).idxOf tx < (P x).length := List.idxOf_lt_length_of_mem htx_mem
+        have hlt_x' : (P x).idxOf tx < c := by rw [← hPx_len]; exact hlt_x
+        rw [min_eq_left (by omega)] at htailval
+        have hlt_y : (P x).idxOf ty < c := by
+          by_contra hge
+          rw [min_eq_right (by omega)] at htailval
+          omega
+        rw [min_eq_left (by omega)] at htailval
+        -- idxOf tx = idxOf ty in P x; recover both via getElem_idxOf
+        have hgx : (P x)[(P x).idxOf tx]'(by omega) = tx := List.getElem_idxOf (by omega)
+        have hgy : (P x)[(P x).idxOf ty]'(by omega) = ty := List.getElem_idxOf (by omega)
+        rw [← hgx, ← hgy, getElem_congr rfl htailval (by omega)]
+      · -- tx = []: idxOf tx = c, min = c, forcing idxOf ty ≥ c, so ty ∉ P x ⇒ ty = []
+        rw [htx_mem, hidx_nil, min_self] at htailval
+        have hge : c ≤ (P x).idxOf ty := by
+          by_contra hlt
+          rw [min_eq_left (by omega)] at htailval
+          omega
+        rcases hty_mem with hty_mem | hty_mem
+        · exfalso
+          have hmem' : ty ∈ P x := by rw [hPlist]; exact hty_mem
+          have hlt := List.idxOf_lt_length_of_mem hmem'
+          rw [hPx_len] at hlt
+          omega
+        · rw [htx_mem, hty_mem]
+    -- assemble the inputs
+    have hinput : List.ofFn x = List.ofFn y := by
+      rw [← htx_flat, ← hty_flat]
+      rw [htxy]
+      exact congrArg (· ++ ty) (congrArg List.flatten hPlist)
+    exact List.ofFn_injective hinput
+  refine hcard.trans ?_
+  -- `Fintype.card D = c! · |α|^c · (c+1)`.
+  have hcardD : Fintype.card D = c.factorial * (Fintype.card α) ^ c * (c + 1) := by
+    show Fintype.card (((j : Fin c) → Fin (j.val + 1)) × (Fin c → α) × Fin (c + 1)) = _
+    rw [Fintype.card_prod, Fintype.card_prod, fintype_card_parentIdx,
+      Fintype.card_pi]
+    simp only [Fintype.card_fin, Finset.prod_const, Finset.card_univ]
+    ring
+  omega
+
 /-- **Distinct-phrase fiber-cardinality count (the genuine combinatorial
 counting core of G2)**.
 
 The number of `n`-tuples `x : Fin n → α` whose genuine greedy parse emits
 exactly `c` distinct phrases is bounded by `(n + 1) · c! · |α|^c`. This is the
-load-bearing counting fact behind the polynomial Kraft bound
-`lz78_block_kraft_poly`: the map `x ↦ (lz78PhraseStrings (List.ofFn x), tail)`
-is injective (`lz78PhraseStrings_flatten_prefix` reconstructs `List.ofFn x`, and
-`List.ofFn` is injective), and the parent-extension dictionary structure makes
-the `j`-th phrase one of the `j` earlier entries (or the empty prefix) extended
-by one symbol, giving `≤ c! · |α|^c` valid phrase-lists; the unfinished tail
-(`lz78PhraseStrings_flatten_tail_mem`, a dictionary member or empty) contributes
-a multiplicity `≤ n + 1`.
+counting fact behind the polynomial Kraft bound `lz78_block_kraft_poly`: the
+map `x ↦ (lz78PhraseStrings (List.ofFn x), tail)` is injective
+(`lz78PhraseStrings_flatten_prefix` reconstructs `List.ofFn x`, and
+`List.ofFn_injective`), and the parent-extension dictionary structure
+(`lz78PhraseStrings_dropLast_earlier`: each phrase's `dropLast` is an earlier
+entry or empty) makes the `j`-th phrase one of the `j` earlier entries (or the
+empty prefix) extended by one symbol, giving `≤ c! · |α|^c` valid phrase-lists;
+the unfinished tail (`lz78PhraseStrings_flatten_tail_mem`, a dictionary member
+or empty) contributes a multiplicity `≤ c + 1 ≤ n + 1` (since `c ≤ n`).
 
-The parent-extension invariant `(emitted phrase = earlier entry ++ symbol)` and
-the `Fintype.card`-injection counting are not yet in the codebase
-(`GreedyLongestPrefix.lean` has the distinct / flatten / tail invariants but not
-the dictionary parent-extension structure), so this is isolated as the single
-finite-combinatorial residual on which `lz78_block_kraft_poly` (Parts A + C) is
-proven unconditionally. Numerically verified for `α = Bool`, `n ≤ 6`,
-`c ≤ n` (`#fiber(n,c) ≤ (n+1)·c!·|α|^c` holds with slack).
-
-Independent honesty audit 2026-06-21 PASS: a standalone finite cardinality
-bound (no measure / liminf / `μ`,`p` content — pure finite combinatorics on
-the project-internal greedy parse), NOT the converse conclusion repackaged and
-NOT a load-bearing hypothesis (the obligation is an exposed `sorry`, tier 2).
-TRUE-as-framed: replicating the actual `lz78PhraseStringsAux` parse and
-counting real fiber sizes for `(n,A)` over `n≤7,A∈{2,3,8}` gives 0 violations
-(only `n=0` tight at `1≤1`, large slack elsewhere). Classification `plan:` is
-correct (project-internal LZ78 combinatorics with a discharge plan, not a
-Mathlib-absent wall); `docs/shannon/lz78-m4-plan.md` G2 schedules it.
-@residual(plan:lz78-m4-plan) -/
+Proved unconditionally in `lz78_phrase_count_fiber_card_le_nat` via
+`Finset.card_le_card_of_injOn` into the parent-data Fintype
+`((j : Fin c) → Fin (j+1)) × (Fin c → α) × Fin (c+1)` (cardinality
+`fintype_card_parentIdx` = `c!`, times `|α|^c`, times `c+1`), with the empty
+fiber for `c > n` handled by `lz78PhraseStrings_count_le`. -/
 theorem lz78_phrase_count_fiber_card_le (n c : ℕ) :
     ((Finset.univ.filter
           (fun x : Fin n → α => (lz78PhraseStrings (List.ofFn x)).length = c)).card : ℝ)
       ≤ ((n : ℝ) + 1) * (c.factorial : ℝ) * (Fintype.card α : ℝ) ^ c := by
-  sorry
+  -- The fiber is empty once `c > n` (the parse emits `≤ n` phrases), so `c ≤ n`
+  -- whenever the fiber is non-empty; combine with the nat-form count bound.
+  set S := Finset.univ.filter
+    (fun x : Fin n → α => (lz78PhraseStrings (List.ofFn x)).length = c) with hS
+  rcases Nat.lt_or_ge n c with hcn | hcn
+  · -- c > n: the fiber is empty (the parse emits at most `n` phrases).
+    have hempty : S = ∅ := by
+      rw [hS, Finset.filter_eq_empty_iff]
+      intro x _ hlen
+      have hle : (lz78PhraseStrings (List.ofFn x)).length ≤ (List.ofFn x).length :=
+        lz78PhraseStrings_count_le _
+      rw [hlen, List.length_ofFn] at hle
+      omega
+    rw [hempty]
+    simp only [Finset.card_empty, Nat.cast_zero]
+    positivity
+  · -- c ≤ n: `(c+1) ≤ (n+1)` upgrades the nat bound's tail factor.
+    have hnat := lz78_phrase_count_fiber_card_le_nat (α := α) n c
+    have hcast : (S.card : ℝ) ≤ (c.factorial * (Fintype.card α) ^ c * (c + 1) : ℕ) := by
+      exact_mod_cast hnat
+    refine hcast.trans ?_
+    push_cast
+    have hc1 : ((c : ℝ) + 1) ≤ (n : ℝ) + 1 := by exact_mod_cast Nat.succ_le_succ hcn
+    have hfac_nn : (0 : ℝ) ≤ (c.factorial : ℝ) := by positivity
+    have hpow_nn : (0 : ℝ) ≤ (Fintype.card α : ℝ) ^ c := by positivity
+    calc (c.factorial : ℝ) * (Fintype.card α : ℝ) ^ c * ((c : ℝ) + 1)
+        ≤ (c.factorial : ℝ) * (Fintype.card α : ℝ) ^ c * ((n : ℝ) + 1) := by
+          apply mul_le_mul_of_nonneg_left hc1; positivity
+      _ = ((n : ℝ) + 1) * (c.factorial : ℝ) * (Fintype.card α : ℝ) ^ c := by ring
 
 /-- **Per-`c` Kraft term bound (Part C, geometric collapse)**.
 
@@ -671,43 +934,25 @@ Borel–Cantelli lift (`blockLogAvg₂_minus_error_le_rate_ae`).
 This is the genuine combinatorial new-math brick of the LZ78 converse
 (Cover–Thomas Thm 13.5.3 lower bound, distinct-phrase counting).
 
-**Proof structure (Parts A + C proven, Part B isolated).** The body here is
-`sorry`-free: it is assembled from
+**Proof structure (Parts A + B + C, all proven, sorryAx-free).** Assembled from
 * **Part A** — fiberwise regrouping of the Kraft sum by the distinct-phrase
   count `c = φ x` (`Finset.sum_fiberwise_of_maps_to'`, `φ x ≤ n`);
+* **Part B** — the finite counting fact `lz78_phrase_count_fiber_card_le`
+  (`#fiber(c) ≤ (n+1)·c!·|α|^c`), proved via the LZ78 dictionary
+  parent-extension invariant (`lz78PhraseStrings_dropLast_earlier`) and a
+  `Fintype.card` injection into `((j:Fin c)→Fin (j+1)) × (Fin c → α) × Fin (c+1)`;
 * **Part C** — the per-`c` geometric collapse `lz78_block_kraft_term_le`
   (`#fiber(c)·2^{-c·bitLength} ≤ (n+1)·(1/2)^c`, built from the bit-length decay
   `two_pow_bitLength_ge` and the factorial-power decay
-  `factorial_two_pow_le_succ_pow`, both `sorryAx`-free), then
-  `sum_geometric_two_le` and `(n+1)·2 ≤ (n+1)²` (with the `n = 0` boundary
-  `1 ≤ 1`).
+  `factorial_two_pow_le_succ_pow`), then `sum_geometric_two_le` and
+  `(n+1)·2 ≤ (n+1)²` (with the `n = 0` boundary `1 ≤ 1`).
 
-The **single remaining residual** is **Part B**, the finite counting fact
-`lz78_phrase_count_fiber_card_le` (`#fiber(c) ≤ (n+1)·c!·|α|^c`), isolated as a
-clean stated-but-unproven lemma carrying `@residual(plan:lz78-m4-plan)`. G2 is
-therefore reduced to that one finite-combinatorial statement (no analysis left);
-this theorem inherits its `sorryAx` transitively.
-
-Classification (independent audit 2026-06-21): a project-internal
-combinatorial brick with a concrete discharge plan (`docs/shannon/lz78-m4-plan.md`,
-G2), **not** a Mathlib-absent research wall — the prior
-`wall:lz78-converse-aseventual` "research-level scope-out" verdict was overturned
-this session (gateway-atom-first inventory). The statement is TRUE-as-framed: the
-polynomial bound `≤ (n+1)²` was checked numerically (α=Bool, n≤6) to hold with
-large slack, and the `n = 0` boundary is exactly `1 ≤ 1`. The residual now lives
-entirely in the Part B counting lemma `lz78_phrase_count_fiber_card_le`, whose
-closure needs the LZ78 dictionary parent-extension invariant (each emitted phrase
-= an earlier entry or empty ++ one symbol) — absent from `GreedyLongestPrefix.lean`
-(which has the distinct / flatten / tail invariants but not the parent-extension
-structure) — plus the `Fintype.card`-injection counting on top.
-
-This theorem's body is `sorry`-free; it carries no own `@residual`. The sole
-residual is the Part B counting lemma `lz78_phrase_count_fiber_card_le`
-(`@residual(plan:lz78-m4-plan)`), inherited here transitively (its
-`#print axioms` shows `sorryAx`), exactly as for the downstream consumers
-(`lz78_converse_bad_set_measure_le`, `blockLogAvg₂_minus_error_le_rate_ae`,
-`lz78GreedyImpl_converse_ae`), which likewise carry no own `@residual`.
-Independent honesty audit 2026-06-21 PASS. -/
+The prior `wall:lz78-converse-aseventual` "research-level scope-out" verdict was
+overturned (gateway-atom-first inventory, `docs/shannon/lz78-m4-plan.md` G2) and
+the genuine combinatorial brick (Part B) is now closed: this theorem is fully
+`sorryAx`-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`),
+carrying no `@residual`. The statement is TRUE-as-framed (numerically checked
+α=Bool, n≤6, with large slack; `n = 0` boundary exactly `1 ≤ 1`). -/
 theorem lz78_block_kraft_poly (n : ℕ) :
     ∑ x : Fin n → α, (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x)
       ≤ ((n : ℝ) + 1) ^ 2 := by
@@ -952,10 +1197,9 @@ Modeled on the Z-side `blockLogAvgZ_ge_negLogQInftyZ_minus_error`
 template. The body is **`sorry`-free**: the Markov + Borel–Cantelli lift is
 genuinely proven; it consumes the genuine combinatorial brick G2
 (`lz78_block_kraft_poly`) through the per-`n` bad-set measure bound
-`lz78_converse_bad_set_measure_le`. The only remaining converse residual is
-isolated in G2 (`@residual(plan:lz78-m4-plan)`); this lemma
-inherits that residual transitively (its `#print axioms` shows `sorryAx`) but
-introduces no new `sorry`. -/
+`lz78_converse_bad_set_measure_le`. G2 (and hence its Part B counting lemma
+`lz78_phrase_count_fiber_card_le`) is now closed, so this lemma is fully
+`sorryAx`-free. -/
 theorem blockLogAvg₂_minus_error_le_rate_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α) :
@@ -1047,11 +1291,11 @@ assembled by `Filter.liminf_le_liminf` between the lower sequence
 `Low n = blockLogAvg₂ n ω − err_n` (which `→ entropyRate₂`, so
 `liminf Low = entropyRate₂`) and `lz/n` (bounded above by
 `lz78_impl_rate_le_const`, hence cobounded below). The genuine converse
-content (the Barron competitive-optimality lift) is **isolated** in G3,
-which in turn consumes the genuine combinatorial brick G2
-(`lz78_block_kraft_poly`, the polynomial `n`-block Kraft bound). The whole
-remaining `sorry` is carried transitively by G2 (and, for now, G3); the
-assembly here introduces no new `sorry`.
+content (the Barron competitive-optimality lift) is in G3, which in turn
+consumes the genuine combinatorial brick G2 (`lz78_block_kraft_poly`, the
+polynomial `n`-block Kraft bound). G2's Part B counting lemma
+(`lz78_phrase_count_fiber_card_le`) is now closed, so this converse is fully
+`sorryAx`-free.
 
 This statement is TRUE-as-framed (the units defect found by the prior audit
 is resolved by stating the RHS against `entropyRate₂` rather than
@@ -1681,21 +1925,20 @@ reads `rate → 0`, again genuine. Both halves
 against `entropyRate₂`, and the base combinator `lz78_asymptotic_optimality`
 is instantiated at `L = entropyRate₂`.
 
-Type-check done, honest (not proof done). The headline takes only the source
+**Proof done (Standard B): fully `sorryAx`-free** (`#print axioms` =
+`[propext, Classical.choice, Quot.sound]`). The headline takes only the source
 data (`μ`, `p`) — no `h_bdd_above` precondition. Both `IsBoundedUnder`
 witnesses (`(·≤·)` above and `(·≥·)` below) are constructed deterministically
 inside the body from `lz78_impl_rate_le_const` /
 `lz78_impl_encoding_length_per_symbol_nonneg` (both unit-agnostic: they bound
 the bit-rate `lz/n` itself, so they are unaffected by the choice of `L`), so
 the squeeze `tendsto_of_le_liminf_of_limsup_le` is applied with all of its
-regularity inputs genuine. The achievability half
-(`lz78GreedyImpl_achievability_ae`) is now sorryAx-free (the M3 wall
-`lz78-aseventual-ziv` is CLOSED, audited 2026-06-21); the remaining `sorryAx`
-is carried exactly via the M4 converse residual `lz78GreedyImpl_converse_ae`,
-isolated in the G2 brick `lz78_block_kraft_poly`
-(`@residual(plan:lz78-m4-plan)`, reclassified from the overturned
-`wall:lz78-converse-aseventual`). The boundedness discharge
-introduces no new `sorry`. -/
+regularity inputs genuine. Both halves are now genuine: the achievability half
+(`lz78GreedyImpl_achievability_ae`, M3 wall `lz78-aseventual-ziv` CLOSED) and
+the converse half (`lz78GreedyImpl_converse_ae`, M4 — its sole combinatorial
+brick `lz78_block_kraft_poly` / `lz78_phrase_count_fiber_card_le` is closed via
+the LZ78 dictionary parent-extension invariant). LZ78 asymptotic optimality is
+fully proven. -/
 @[entry_point]
 theorem lz78_asymptotic_optimality_with_greedy_impl
     (μ : Measure Ω) [IsProbabilityMeasure μ]

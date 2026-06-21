@@ -347,6 +347,84 @@ theorem flatten_drop_take_getElem (L : List (List α)) (j : ℕ) (hj : j < L.len
 
 end Length
 
+/-! ## §3b. Parent-extension invariant -/
+
+section ParentExtension
+
+variable {α : Type*} [DecidableEq α]
+
+/-- **Worker maintains the parent-extension invariant**: every emitted phrase
+string is `(an earlier dictionary entry) ++ [symbol]` or `[symbol]`. Stated
+positionally: for the worker output `D`, each `D[j].dropLast` either equals
+`[]` or appears strictly earlier in `D` (i.e. in `D.take j`).
+
+This is the dictionary structure behind the LZ78 phrase-count bound: at each
+step the worker emits `cur ++ [s]` where `cur` is a current dictionary entry
+(or `[]`), and dictionaries only grow by appending, so `cur` sits strictly
+before the emitted phrase. Threaded with the running invariant
+`cur ∈ dict ∨ cur = []`. -/
+theorem lz78PhraseStringsAux_dropLast_earlier :
+    ∀ (fuel : ℕ) (dict : List (List α)) (cur input : List α),
+      (cur ∈ dict ∨ cur = []) →
+      (∀ j, ∀ h : j < dict.length,
+        (dict[j]'h).dropLast ∈ dict.take j ∨ (dict[j]'h).dropLast = []) →
+      ∀ j, ∀ h : j < (lz78PhraseStringsAux fuel dict cur input).length,
+        ((lz78PhraseStringsAux fuel dict cur input)[j]'h).dropLast
+            ∈ (lz78PhraseStringsAux fuel dict cur input).take j
+          ∨ ((lz78PhraseStringsAux fuel dict cur input)[j]'h).dropLast = [] := by
+  intro fuel
+  induction fuel with
+  | zero => intro dict _ _ _ hdict; simpa [lz78PhraseStringsAux] using hdict
+  | succ fuel ih =>
+      intro dict cur input hcur hdict
+      cases input with
+      | nil => simpa [lz78PhraseStringsAux] using hdict
+      | cons s rest =>
+          unfold lz78PhraseStringsAux
+          by_cases hmem : (cur ++ [s]) ∈ dict
+          · -- still in dictionary: dict unchanged, cur := cur ++ [s] ∈ dict
+            simp only [hmem, if_true]
+            exact ih dict (cur ++ [s]) rest (Or.inl hmem) hdict
+          · -- emit `cur ++ [s]`: dict grows, cur resets to []
+            simp only [hmem, if_false]
+            refine ih (dict.concat (cur ++ [s])) [] rest (Or.inr rfl) ?_
+            -- positional invariant for the grown dictionary `dict.concat (cur ++ [s])`
+            intro j hj
+            simp only [List.concat_eq_append] at hj ⊢
+            rw [List.length_append, List.length_singleton] at hj
+            rcases Nat.lt_or_ge j dict.length with hjlt | hjge
+            · -- j < dict.length: identical to the old entry / take
+              have hget : (dict ++ [cur ++ [s]])[j]'(by rw [List.length_append]; omega)
+                  = dict[j]'hjlt :=
+                List.getElem_append_left hjlt
+              have htake : (dict ++ [cur ++ [s]]).take j = dict.take j := by
+                rw [List.take_append_of_le_length (by omega)]
+              rw [hget, htake]
+              exact hdict j hjlt
+            · -- j = dict.length: the new entry is `cur ++ [s]`, dropLast = cur
+              have hjeq : j = dict.length := by omega
+              subst hjeq
+              have hget : (dict ++ [cur ++ [s]])[dict.length]'(by
+                  rw [List.length_append]; omega) = cur ++ [s] := by
+                rw [List.getElem_append_right (le_refl _)]
+                simp
+              have htake : (dict ++ [cur ++ [s]]).take dict.length = dict := by
+                rw [List.take_append_of_le_length (le_refl _), List.take_length]
+              rw [hget, htake, List.dropLast_concat]
+              exact hcur
+
+/-- **Top-level parent-extension invariant**: for the genuine longest-prefix
+greedy parse, each emitted phrase's `dropLast` is either `[]` or an earlier
+emitted phrase. -/
+theorem lz78PhraseStrings_dropLast_earlier (input : List α) :
+    ∀ j, ∀ h : j < (lz78PhraseStrings input).length,
+      ((lz78PhraseStrings input)[j]'h).dropLast ∈ (lz78PhraseStrings input).take j
+        ∨ ((lz78PhraseStrings input)[j]'h).dropLast = [] :=
+  lz78PhraseStringsAux_dropLast_earlier (input.length + 1) [] [] input (Or.inr rfl)
+    (by intro j h; simp at h)
+
+end ParentExtension
+
 /-! ## §4. Phrase count bound -/
 
 section CountBound
