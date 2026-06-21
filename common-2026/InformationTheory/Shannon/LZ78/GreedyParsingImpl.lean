@@ -538,6 +538,180 @@ theorem fintype_card_parentIdx (c : ℕ) :
   rw [Fin.prod_univ_eq_prod_range (fun i => i + 1) c]
   exact Finset.prod_range_add_one_eq_factorial c
 
+theorem lz78PhraseStrings_getElem_eq_of_parentData_eq {n c : ℕ} (x y : Fin n → α)
+    (hPx_len : (lz78PhraseStrings (List.ofFn x)).length = c)
+    (hPy_len : (lz78PhraseStrings (List.ofFn y)).length = c)
+    (hparent : ∀ j (hj : j < c),
+      min ((lz78PhraseStrings (List.ofFn x)).idxOf
+            (((lz78PhraseStrings (List.ofFn x))[j]'(by omega)).dropLast)) j
+        = min ((lz78PhraseStrings (List.ofFn y)).idxOf
+            (((lz78PhraseStrings (List.ofFn y))[j]'(by omega)).dropLast)) j)
+    (hsym : ∀ j (hj : j < c),
+      ((lz78PhraseStrings (List.ofFn x))[j]'(by omega)).getLast
+          (lz78PhraseStrings_forall_ne_nil (List.ofFn x) _ (List.getElem_mem _))
+        = ((lz78PhraseStrings (List.ofFn y))[j]'(by omega)).getLast
+          (lz78PhraseStrings_forall_ne_nil (List.ofFn y) _ (List.getElem_mem _))) :
+    lz78PhraseStrings (List.ofFn x) = lz78PhraseStrings (List.ofFn y) := by
+  classical
+  let P : (Fin n → α) → List (List α) := fun z => lz78PhraseStrings (List.ofFn z)
+  have hPx_len : (P x).length = c := hPx_len
+  have hPy_len : (P y).length = c := hPy_len
+  have hparent : ∀ j (hj : j < c),
+      min ((P x).idxOf (((P x)[j]'(by omega)).dropLast)) j
+        = min ((P y).idxOf (((P y)[j]'(by omega)).dropLast)) j := hparent
+  have hsym : ∀ j (hj : j < c),
+      ((P x)[j]'(by omega)).getLast (lz78PhraseStrings_forall_ne_nil (List.ofFn x) _ (List.getElem_mem _))
+        = ((P y)[j]'(by omega)).getLast (lz78PhraseStrings_forall_ne_nil (List.ofFn y) _ (List.getElem_mem _)) :=
+    hsym
+  have hne_x : ∀ w ∈ P x, w ≠ [] := lz78PhraseStrings_forall_ne_nil (List.ofFn x)
+  have hne_y : ∀ w ∈ P y, w ≠ [] := lz78PhraseStrings_forall_ne_nil (List.ofFn y)
+  have hidx_nil_x : (P x).idxOf [] = (P x).length := by
+    rw [List.idxOf_eq_length_iff]
+    intro h; exact (hne_x [] h) rfl
+  have hinv_x := lz78PhraseStrings_dropLast_earlier (List.ofFn x)
+  have hinv_y := lz78PhraseStrings_dropLast_earlier (List.ofFn y)
+  -- KEY: phrase lists agree, by strong induction on the position.
+  have hPeq : ∀ j (hj : j < c),
+      (P x)[j]'(by omega) = (P y)[j]'(by omega) := by
+    intro j
+    induction j using Nat.strong_induction_on with
+    | _ j IH =>
+      intro hj
+      -- step 1: dropLast agree at j
+      have hdl : ((P x)[j]'(by omega)).dropLast = ((P y)[j]'(by omega)).dropLast := by
+        -- parent index agreement at j (as naturals)
+        have hpeq : min ((P x).idxOf (((P x)[j]'(by omega)).dropLast)) j
+            = min ((P y).idxOf (((P y)[j]'(by omega)).dropLast)) j := hparent j hj
+        -- the dropLast-earlier invariants at j
+        have hix : ((P x)[j]'(by omega)).dropLast ∈ (P x).take j
+            ∨ ((P x)[j]'(by omega)).dropLast = [] := hinv_x j (by omega)
+        have hiy : ((P y)[j]'(by omega)).dropLast ∈ (P y).take j
+            ∨ ((P y)[j]'(by omega)).dropLast = [] := hinv_y j (by omega)
+        set dx := ((P x)[j]'(by omega)).dropLast with hdx_def
+        set dy := ((P y)[j]'(by omega)).dropLast with hdy_def
+        rcases hix with hix | hix
+        · -- dx ∈ take j: idxOf dx < j, so parent picks dx = (P x)[idxOf dx]
+          have hidx_x : (P x).idxOf dx < j := (List.mem_take_iff_idxOf_lt
+            (List.mem_of_mem_take hix)).mp hix
+          have hpx_eq : min ((P x).idxOf dx) j = (P x).idxOf dx := min_eq_left (by omega)
+          -- from hpeq, min (idxOf dy) j = idxOf dx < j ⇒ idxOf dy < j too
+          rw [hpx_eq] at hpeq
+          have hidx_y : (P y).idxOf dy < j := by
+            by_contra hge
+            rw [min_eq_right (by omega : j ≤ (P y).idxOf dy)] at hpeq
+            omega
+          have hpy_eq : min ((P y).idxOf dy) j = (P y).idxOf dy :=
+            min_eq_left (by omega)
+          rw [hpy_eq] at hpeq
+          -- p := idxOf dx = idxOf dy < j; recover dx, dy via getElem_idxOf
+          set p := (P x).idxOf dx with hp_def
+          have hp_lt_x : p < (P x).length := by omega
+          have hp_lt_y : (P y).idxOf dy < (P y).length := by omega
+          have hgx : (P x)[p]'hp_lt_x = dx := List.getElem_idxOf hp_lt_x
+          have hgy : (P y)[(P y).idxOf dy]'hp_lt_y = dy := List.getElem_idxOf hp_lt_y
+          -- IH at p < j
+          have hpeq' : (P y).idxOf dy = p := hpeq.symm
+          have hIH := IH p (by omega) (by omega)
+          rw [← hgx, ← hgy]
+          -- goal: (P x)[p] = (P y)[idxOf dy]; reindex idxOf dy → p, then IH
+          rw [getElem_congr rfl hpeq' hp_lt_y]
+          exact hIH
+        · -- dx = []: idxOf [] = length = c ≥ j, so parent = j, forcing dy = []
+          rw [hix]
+          rw [hix, hidx_nil_x, hPx_len] at hpeq
+          rw [min_eq_right (by omega : j ≤ c)] at hpeq
+          -- hpeq : j = min (idxOf dy) j  ⇒ idxOf dy ≥ j
+          have hge : j ≤ (P y).idxOf dy := by
+            by_contra hlt
+            rw [min_eq_left (by omega)] at hpeq
+            omega
+          -- so dy ∉ take j, hence dy = []
+          rcases hiy with hiy | hiy
+          · exfalso
+            have := (List.mem_take_iff_idxOf_lt (List.mem_of_mem_take hiy)).mp hiy
+            omega
+          · exact hiy.symm
+      -- step 2: getLast agree at j (from sym equality)
+      have hgl : ((P x)[j]'(by omega)).getLast (hne_x _ (List.getElem_mem _))
+          = ((P y)[j]'(by omega)).getLast (hne_y _ (List.getElem_mem _)) := hsym j hj
+      -- assemble: phrase = dropLast ++ [getLast]
+      rw [← List.dropLast_append_getLast (hne_x _ (List.getElem_mem _)),
+        ← List.dropLast_append_getLast (hne_y _ (List.getElem_mem _)), hdl, hgl]
+  -- phrase lists equal as lists
+  apply List.ext_getElem (by rw [hPx_len, hPy_len])
+  intro j h1 h2
+  have hjc : j < c := by rw [← hPx_len]; exact h1
+  exact hPeq j hjc
+
+theorem lz78PhraseStrings_tail_eq_of_tailIdx_eq {n c : ℕ} (x y : Fin n → α)
+    (hPlist : lz78PhraseStrings (List.ofFn x) = lz78PhraseStrings (List.ofFn y))
+    (hPx_len : (lz78PhraseStrings (List.ofFn x)).length = c)
+    (htx_mem : Classical.choose (lz78PhraseStrings_flatten_tail_mem (List.ofFn x))
+        ∈ lz78PhraseStrings (List.ofFn x)
+      ∨ Classical.choose (lz78PhraseStrings_flatten_tail_mem (List.ofFn x)) = [])
+    (hty_mem : Classical.choose (lz78PhraseStrings_flatten_tail_mem (List.ofFn y))
+        ∈ lz78PhraseStrings (List.ofFn y)
+      ∨ Classical.choose (lz78PhraseStrings_flatten_tail_mem (List.ofFn y)) = [])
+    (htailval :
+      min ((lz78PhraseStrings (List.ofFn x)).idxOf
+          (Classical.choose (lz78PhraseStrings_flatten_tail_mem (List.ofFn x)))) c
+        = min ((lz78PhraseStrings (List.ofFn x)).idxOf
+          (Classical.choose (lz78PhraseStrings_flatten_tail_mem (List.ofFn y)))) c) :
+    Classical.choose (lz78PhraseStrings_flatten_tail_mem (List.ofFn x))
+      = Classical.choose (lz78PhraseStrings_flatten_tail_mem (List.ofFn y)) := by
+  classical
+  set tx := Classical.choose (lz78PhraseStrings_flatten_tail_mem (List.ofFn x)) with htx_def
+  set ty := Classical.choose (lz78PhraseStrings_flatten_tail_mem (List.ofFn y)) with hty_def
+  -- [] is never a phrase, so its idxOf = length = c (for `P x`)
+  have hne_x : ∀ w ∈ lz78PhraseStrings (List.ofFn x), w ≠ [] :=
+    lz78PhraseStrings_forall_ne_nil (List.ofFn x)
+  have hidx_nil_x : (lz78PhraseStrings (List.ofFn x)).idxOf []
+      = (lz78PhraseStrings (List.ofFn x)).length := by
+    rw [List.idxOf_eq_length_iff]
+    intro h; exact (hne_x [] h) rfl
+  have hidx_nil : (lz78PhraseStrings (List.ofFn x)).idxOf [] = c := by
+    rw [hidx_nil_x, hPx_len]
+  rcases htx_mem with htx_mem | htx_mem
+  · -- tx ∈ P x: idxOf tx < c, so min = idxOf tx, forcing idxOf ty = idxOf tx < c
+    have hlt_x : (lz78PhraseStrings (List.ofFn x)).idxOf tx
+        < (lz78PhraseStrings (List.ofFn x)).length := List.idxOf_lt_length_of_mem htx_mem
+    have hlt_x' : (lz78PhraseStrings (List.ofFn x)).idxOf tx < c := by
+      rw [← hPx_len]; exact hlt_x
+    rw [min_eq_left (by omega)] at htailval
+    have hlt_y : (lz78PhraseStrings (List.ofFn x)).idxOf ty < c := by
+      by_contra hge
+      rw [min_eq_right (by omega)] at htailval
+      omega
+    rw [min_eq_left (by omega)] at htailval
+    -- idxOf tx = idxOf ty in P x; recover both via getElem_idxOf
+    have hgx : (lz78PhraseStrings (List.ofFn x))[(lz78PhraseStrings (List.ofFn x)).idxOf tx]'(by omega)
+        = tx := List.getElem_idxOf (by omega)
+    have hgy : (lz78PhraseStrings (List.ofFn x))[(lz78PhraseStrings (List.ofFn x)).idxOf ty]'(by omega)
+        = ty := List.getElem_idxOf (by omega)
+    rw [← hgx, ← hgy, getElem_congr rfl htailval (by omega)]
+  · -- tx = []: idxOf tx = c, min = c, forcing idxOf ty ≥ c, so ty ∉ P x ⇒ ty = []
+    rw [htx_mem, hidx_nil, min_self] at htailval
+    have hge : c ≤ (lz78PhraseStrings (List.ofFn x)).idxOf ty := by
+      by_contra hlt
+      rw [min_eq_left (by omega)] at htailval
+      omega
+    rcases hty_mem with hty_mem | hty_mem
+    · exfalso
+      have hmem' : ty ∈ lz78PhraseStrings (List.ofFn x) := by rw [hPlist]; exact hty_mem
+      have hlt := List.idxOf_lt_length_of_mem hmem'
+      rw [hPx_len] at hlt
+      omega
+    · rw [htx_mem, hty_mem]
+
+theorem fintype_card_parentData_eq (c : ℕ) :
+    Fintype.card
+        (((j : Fin c) → Fin (j.val + 1)) × (Fin c → α) × Fin (c + 1))
+      = c.factorial * (Fintype.card α) ^ c * (c + 1) := by
+  rw [Fintype.card_prod, Fintype.card_prod, fintype_card_parentIdx,
+    Fintype.card_pi]
+  simp only [Fintype.card_fin, Finset.prod_const, Finset.card_univ]
+  ring
+
 /-- **Fiber-cardinality count is bounded by the parent-data target** (nat form):
 the map sending `x` (in the `c`-phrase fiber) to its parent indices, phrase
 symbols, and tail index is injective, so the fiber injects into
@@ -592,13 +766,6 @@ theorem lz78_phrase_count_fiber_card_le_nat (n c : ℕ) :
     -- all phrases non-empty
     have hne_x : ∀ w ∈ P x, w ≠ [] := lz78PhraseStrings_forall_ne_nil (List.ofFn x)
     have hne_y : ∀ w ∈ P y, w ≠ [] := lz78PhraseStrings_forall_ne_nil (List.ofFn y)
-    -- [] is never a phrase, so its idxOf equals the length
-    have hidx_nil_x : (P x).idxOf [] = (P x).length := by
-      rw [List.idxOf_eq_length_iff]
-      intro h; exact (hne_x [] h) rfl
-    have hidx_nil_y : (P y).idxOf [] = (P y).length := by
-      rw [List.idxOf_eq_length_iff]
-      intro h; exact (hne_y [] h) rfl
     -- `sym x j = (P x)[j].getLast` on the fiber (and same for y)
     have hgetLast_x : ∀ j (hj : j < c), sym x ⟨j, hj⟩
         = ((P x)[j]'(by omega)).getLast (hne_x _ (List.getElem_mem _)) := by
@@ -629,87 +796,27 @@ theorem lz78_phrase_count_fiber_card_le_nat (n c : ℕ) :
       have hget? : (P y)[j]? = some ((P y)[j]'(by omega)) :=
         List.getElem?_eq_getElem (by omega)
       simp only [parent, hget?, Option.getD_some]
-    -- the dropLast-earlier invariant for both
-    have hinv_x := lz78PhraseStrings_dropLast_earlier (List.ofFn x)
-    have hinv_y := lz78PhraseStrings_dropLast_earlier (List.ofFn y)
-    -- KEY: phrase lists agree, by strong induction on the position.
-    have hPeq : ∀ j (hj : j < c),
-        (P x)[j]'(by omega) = (P y)[j]'(by omega) := by
-      intro j
-      induction j using Nat.strong_induction_on with
-      | _ j IH =>
-        intro hj
-        -- step 1: dropLast agree at j
-        have hdl : ((P x)[j]'(by omega)).dropLast = ((P y)[j]'(by omega)).dropLast := by
-          -- parent index agreement at j (as naturals)
-          have hpeq : min ((P x).idxOf (((P x)[j]'(by omega)).dropLast)) j
-              = min ((P y).idxOf (((P y)[j]'(by omega)).dropLast)) j := by
-            have := congrArg (fun f => (f ⟨j, hj⟩ : ℕ)) hpar
-            simp only at this
-            rw [hpar_x j hj, hpar_y j hj] at this
-            exact this
-          -- the dropLast-earlier invariants at j
-          have hix : ((P x)[j]'(by omega)).dropLast ∈ (P x).take j
-              ∨ ((P x)[j]'(by omega)).dropLast = [] := hinv_x j (by omega)
-          have hiy : ((P y)[j]'(by omega)).dropLast ∈ (P y).take j
-              ∨ ((P y)[j]'(by omega)).dropLast = [] := hinv_y j (by omega)
-          set dx := ((P x)[j]'(by omega)).dropLast with hdx_def
-          set dy := ((P y)[j]'(by omega)).dropLast with hdy_def
-          rcases hix with hix | hix
-          · -- dx ∈ take j: idxOf dx < j, so parent picks dx = (P x)[idxOf dx]
-            have hidx_x : (P x).idxOf dx < j := (List.mem_take_iff_idxOf_lt
-              (List.mem_of_mem_take hix)).mp hix
-            have hpx_eq : min ((P x).idxOf dx) j = (P x).idxOf dx := min_eq_left (by omega)
-            -- from hpeq, min (idxOf dy) j = idxOf dx < j ⇒ idxOf dy < j too
-            rw [hpx_eq] at hpeq
-            have hidx_y : (P y).idxOf dy < j := by
-              by_contra hge
-              rw [min_eq_right (by omega : j ≤ (P y).idxOf dy)] at hpeq
-              omega
-            have hpy_eq : min ((P y).idxOf dy) j = (P y).idxOf dy :=
-              min_eq_left (by omega)
-            rw [hpy_eq] at hpeq
-            -- p := idxOf dx = idxOf dy < j; recover dx, dy via getElem_idxOf
-            set p := (P x).idxOf dx with hp_def
-            have hp_lt_x : p < (P x).length := by omega
-            have hp_lt_y : (P y).idxOf dy < (P y).length := by omega
-            have hgx : (P x)[p]'hp_lt_x = dx := List.getElem_idxOf hp_lt_x
-            have hgy : (P y)[(P y).idxOf dy]'hp_lt_y = dy := List.getElem_idxOf hp_lt_y
-            -- IH at p < j
-            have hpeq' : (P y).idxOf dy = p := hpeq.symm
-            have hIH := IH p (by omega) (by omega)
-            rw [← hgx, ← hgy]
-            -- goal: (P x)[p] = (P y)[idxOf dy]; reindex idxOf dy → p, then IH
-            rw [getElem_congr rfl hpeq' hp_lt_y]
-            exact hIH
-          · -- dx = []: idxOf [] = length = c ≥ j, so parent = j, forcing dy = []
-            rw [hix]
-            rw [hix, hidx_nil_x, hPx_len] at hpeq
-            rw [min_eq_right (by omega : j ≤ c)] at hpeq
-            -- hpeq : j = min (idxOf dy) j  ⇒ idxOf dy ≥ j
-            have hge : j ≤ (P y).idxOf dy := by
-              by_contra hlt
-              rw [min_eq_left (by omega)] at hpeq
-              omega
-            -- so dy ∉ take j, hence dy = []
-            rcases hiy with hiy | hiy
-            · exfalso
-              have := (List.mem_take_iff_idxOf_lt (List.mem_of_mem_take hiy)).mp hiy
-              omega
-            · exact hiy.symm
-        -- step 2: getLast agree at j (from sym equality)
-        have hgl : ((P x)[j]'(by omega)).getLast (hne_x _ (List.getElem_mem _))
-            = ((P y)[j]'(by omega)).getLast (hne_y _ (List.getElem_mem _)) := by
-          rw [← hgetLast_x j hj, ← hgetLast_y j hj, hsym]
-        -- assemble: phrase = dropLast ++ [getLast]
-        rw [← List.dropLast_append_getLast (hne_x _ (List.getElem_mem _)),
-          ← List.dropLast_append_getLast (hne_y _ (List.getElem_mem _)), hdl, hgl]
-    -- phrase lists equal as lists
-    have hPlist : P x = P y := by
-      apply List.ext_getElem (by rw [hPx_len, hPy_len])
-      intro j h1 h2
-      have hjc : j < c := by rw [← hPx_len]; exact h1
-      exact hPeq j hjc
+    -- KEY: phrase lists agree, via the parent-data reconstruction helper. The
+    -- parent-index and last-symbol agreements come from `hpar`/`hsym`.
+    have hparent : ∀ j (hj : j < c),
+        min ((lz78PhraseStrings (List.ofFn x)).idxOf
+              (((lz78PhraseStrings (List.ofFn x))[j]'(by omega)).dropLast)) j
+          = min ((lz78PhraseStrings (List.ofFn y)).idxOf
+              (((lz78PhraseStrings (List.ofFn y))[j]'(by omega)).dropLast)) j := by
+      intro j hj
+      have := congrArg (fun f => (f ⟨j, hj⟩ : ℕ)) hpar
+      simp only at this
+      rw [hpar_x j hj, hpar_y j hj] at this
+      exact this
+    have hsymeq : ∀ j (hj : j < c),
+        ((lz78PhraseStrings (List.ofFn x))[j]'(by omega)).getLast
+            (lz78PhraseStrings_forall_ne_nil (List.ofFn x) _ (List.getElem_mem _))
+          = ((lz78PhraseStrings (List.ofFn y))[j]'(by omega)).getLast
+            (lz78PhraseStrings_forall_ne_nil (List.ofFn y) _ (List.getElem_mem _)) := by
+      intro j hj
+      rw [← hgetLast_x j hj, ← hgetLast_y j hj, hsym]
+    have hPlist : P x = P y :=
+      lz78PhraseStrings_getElem_eq_of_parentData_eq x y hPx_len hPy_len hparent hsymeq
     -- step C: tails agree, hence inputs agree.
     set tx := Classical.choose (lz78PhraseStrings_flatten_tail_mem (List.ofFn x)) with htx_def
     set ty := Classical.choose (lz78PhraseStrings_flatten_tail_mem (List.ofFn y)) with hty_def
@@ -728,37 +835,9 @@ theorem lz78_phrase_count_fiber_card_le_nat (n c : ℕ) :
       have hval : (tailIdx x).val = (tailIdx y).val := congrArg Fin.val htail
       rw [htvx, htvy, ← hPlist] at hval
       exact hval
-    -- [] never a phrase, so its idxOf = length = c (for `P x`)
-    have hidx_nil : (P x).idxOf [] = c := by rw [hidx_nil_x, hPx_len]
-    -- the tails coincide
-    have htxy : tx = ty := by
-      rcases htx_mem with htx_mem | htx_mem
-      · -- tx ∈ P x: idxOf tx < c, so min = idxOf tx, forcing idxOf ty = idxOf tx < c
-        have hlt_x : (P x).idxOf tx < (P x).length := List.idxOf_lt_length_of_mem htx_mem
-        have hlt_x' : (P x).idxOf tx < c := by rw [← hPx_len]; exact hlt_x
-        rw [min_eq_left (by omega)] at htailval
-        have hlt_y : (P x).idxOf ty < c := by
-          by_contra hge
-          rw [min_eq_right (by omega)] at htailval
-          omega
-        rw [min_eq_left (by omega)] at htailval
-        -- idxOf tx = idxOf ty in P x; recover both via getElem_idxOf
-        have hgx : (P x)[(P x).idxOf tx]'(by omega) = tx := List.getElem_idxOf (by omega)
-        have hgy : (P x)[(P x).idxOf ty]'(by omega) = ty := List.getElem_idxOf (by omega)
-        rw [← hgx, ← hgy, getElem_congr rfl htailval (by omega)]
-      · -- tx = []: idxOf tx = c, min = c, forcing idxOf ty ≥ c, so ty ∉ P x ⇒ ty = []
-        rw [htx_mem, hidx_nil, min_self] at htailval
-        have hge : c ≤ (P x).idxOf ty := by
-          by_contra hlt
-          rw [min_eq_left (by omega)] at htailval
-          omega
-        rcases hty_mem with hty_mem | hty_mem
-        · exfalso
-          have hmem' : ty ∈ P x := by rw [hPlist]; exact hty_mem
-          have hlt := List.idxOf_lt_length_of_mem hmem'
-          rw [hPx_len] at hlt
-          omega
-        · rw [htx_mem, hty_mem]
+    -- the tails coincide, via the tail-index reconstruction helper.
+    have htxy : tx = ty :=
+      lz78PhraseStrings_tail_eq_of_tailIdx_eq x y hPlist hPx_len htx_mem hty_mem htailval
     -- assemble the inputs
     have hinput : List.ofFn x = List.ofFn y := by
       rw [← htx_flat, ← hty_flat]
@@ -767,12 +846,8 @@ theorem lz78_phrase_count_fiber_card_le_nat (n c : ℕ) :
     exact List.ofFn_injective hinput
   refine hcard.trans ?_
   -- `Fintype.card D = c! · |α|^c · (c+1)`.
-  have hcardD : Fintype.card D = c.factorial * (Fintype.card α) ^ c * (c + 1) := by
-    show Fintype.card (((j : Fin c) → Fin (j.val + 1)) × (Fin c → α) × Fin (c + 1)) = _
-    rw [Fintype.card_prod, Fintype.card_prod, fintype_card_parentIdx,
-      Fintype.card_pi]
-    simp only [Fintype.card_fin, Finset.prod_const, Finset.card_univ]
-    ring
+  have hcardD : Fintype.card D = c.factorial * (Fintype.card α) ^ c * (c + 1) :=
+    fintype_card_parentData_eq c
   omega
 
 /-- **Distinct-phrase fiber-cardinality count (the genuine combinatorial
@@ -1471,6 +1546,105 @@ private theorem cp_log_cp_le_reconcile
       _ ≤ K * Real.log n := mul_le_mul_of_nonneg_left hlogcp_le hKnn
   rw [e1, e2]; linarith
 
+theorem cp_log_cp_le_reconcile_cases (cR cp bR n K : ℝ)
+    (hcR_nn : 0 ≤ cR) (hcount : cp = cR + bR) (hbR_nn : 0 ≤ bR) (hbA : bR ≤ K)
+    (hcp_le_n : cp ≤ n) (hlogn_nn : 0 ≤ Real.log n) (hK_nn : 0 ≤ K)
+    (hcp_zero : cp < 1 → cp = 0) (hcR_zero : cR < 1 → cR = 0) :
+    cp * Real.log cp ≤ cR * Real.log cR + (K + K * Real.log n) := by
+  have hcR_le_cp : cR ≤ cp := by rw [hcount]; linarith
+  rcases lt_or_ge cp 1 with hlt | hge
+  · -- `cp < 1` ⇒ `cp = 0` ⇒ `cR = 0` too.
+    have hcp0 : cp = 0 := hcp_zero hlt
+    have hcR0 : cR = 0 := le_antisymm (by linarith [hcR_le_cp, hcp0]) hcR_nn
+    rw [hcp0, hcR0]
+    simp only [Real.log_zero, mul_zero, zero_add]
+    positivity
+  · -- `cp ≥ 1`. Two cases on `cR`.
+    rcases lt_or_ge cR 1 with hcRlt | hcRge
+    · -- `cR < 1` ⇒ `cR = 0` ⇒ `cp = bR ≤ K`, so `cp log cp` is small.
+      have hcR0 : cR = 0 := hcR_zero hcRlt
+      have hcp_eq_b : cp = bR := by rw [hcount, hcR0]; ring
+      have hcp_le_k1 : cp ≤ K := by rw [hcp_eq_b]; exact hbA
+      have hlogcp_le : Real.log cp ≤ Real.log n :=
+        Real.log_le_log (by linarith) hcp_le_n
+      have hlogcp_nn : 0 ≤ Real.log cp := Real.log_nonneg hge
+      rw [hcR0]; simp only [Real.log_zero, mul_zero, zero_add]
+      calc cp * Real.log cp ≤ K * Real.log n :=
+            mul_le_mul hcp_le_k1 hlogcp_le hlogcp_nn hK_nn
+        _ ≤ K + K * Real.log n := by linarith
+    · -- `1 ≤ cR` and `1 ≤ cp`: the generic reconcile lemma.
+      exact cp_log_cp_le_reconcile cR cp bR n K hcRge hcount hbR_nn hbA hcp_le_n hge
+
+theorem ziv_cp_div_tendsto_zero (cp : ℕ → ℝ) (hcp_nn : ∀ n, 0 ≤ cp n)
+    (hBigO : cp =O[Filter.atTop] (fun n : ℕ => (n : ℝ) / Real.log (n : ℝ))) :
+    Filter.Tendsto (fun n => cp n / (n : ℝ)) Filter.atTop (𝓝 0) := by
+  obtain ⟨C, hCb⟩ := hBigO.bound
+  have hub : Filter.Tendsto (fun n : ℕ => C * (Real.log (n : ℝ))⁻¹)
+      Filter.atTop (𝓝 0) := by
+    have h1 : Filter.Tendsto (fun n : ℕ => Real.log (n : ℝ))
+        Filter.atTop Filter.atTop :=
+      Real.tendsto_log_atTop.comp tendsto_natCast_atTop_atTop
+    simpa using (tendsto_inv_atTop_zero.comp h1).const_mul C
+  refine squeeze_zero_norm' ?_ hub
+  filter_upwards [hCb, Filter.eventually_gt_atTop 1] with n hn hn1
+  have hnpos : (0 : ℝ) < (n : ℝ) := by positivity
+  have hlogpos : (0 : ℝ) < Real.log (n : ℝ) :=
+    Real.log_pos (by exact_mod_cast hn1)
+  rw [Real.norm_eq_abs, abs_of_nonneg (div_nonneg (hcp_nn n) hnpos.le)]
+  rw [Real.norm_eq_abs, abs_of_nonneg (hcp_nn n)] at hn
+  have hng : ‖(n : ℝ) / Real.log (n : ℝ)‖ = (n : ℝ) / Real.log (n : ℝ) := by
+    rw [Real.norm_eq_abs, abs_of_nonneg (le_of_lt (div_pos hnpos hlogpos))]
+  rw [hng] at hn
+  calc cp n / (n : ℝ) ≤ (C * ((n : ℝ) / Real.log (n : ℝ))) / (n : ℝ) :=
+        div_le_div_of_nonneg_right hn hnpos.le
+    _ = C * (Real.log (n : ℝ))⁻¹ := by
+        rw [mul_div_assoc, div_div, mul_comm (Real.log (n : ℝ)) (n : ℝ), ← div_div,
+          div_self hnpos.ne', one_div]
+
+theorem ziv_error_seq_tendsto_zero (cp : ℕ → ℝ) (k : ℕ) (La L : ℝ)
+    (hcp_div : Filter.Tendsto (fun n => cp n / (n : ℝ)) Filter.atTop (𝓝 0)) :
+    Filter.Tendsto
+      (fun n : ℕ =>
+        (2 * (n : ℝ) * Real.sqrt (cp n / (n : ℝ)) + cp n + cp n * ((k : ℝ) * La)
+          + ((k : ℝ) + 1) + ((k : ℝ) + 1) * Real.log (n : ℝ)
+          + (cp n * Real.log 2 + cp n * (L + 2))) / (Real.log 2 * (n : ℝ)))
+      Filter.atTop (𝓝 0) := by
+  have hsqrt : Filter.Tendsto (fun n : ℕ => Real.sqrt (cp n / (n : ℝ)))
+      Filter.atTop (𝓝 0) := by
+    have h := (Real.continuous_sqrt.tendsto 0).comp hcp_div
+    simp only [Function.comp_def, Real.sqrt_zero] at h
+    exact h
+  have hinv : Filter.Tendsto (fun n : ℕ => (1 : ℝ) / (n : ℝ))
+      Filter.atTop (𝓝 0) := tendsto_one_div_atTop_nhds_zero_nat
+  have hlogn : Filter.Tendsto (fun n : ℕ => Real.log (n : ℝ) / (n : ℝ))
+      Filter.atTop (𝓝 0) := by
+    have hR : Filter.Tendsto (fun x : ℝ => Real.log x ^ 1 / (1 * x + 0))
+        Filter.atTop (𝓝 0) := Real.tendsto_pow_log_div_mul_add_atTop 1 0 1 (by norm_num)
+    simpa using hR.comp tendsto_natCast_atTop_atTop
+  set g : ℕ → ℝ := fun n =>
+    (2 / Real.log 2) * Real.sqrt (cp n / (n : ℝ))
+    + (1 / Real.log 2) * (cp n / (n : ℝ))
+    + ((k : ℝ) * La / Real.log 2) * (cp n / (n : ℝ))
+    + (((k : ℝ) + 1) / Real.log 2) * ((1 : ℝ) / (n : ℝ))
+    + (((k : ℝ) + 1) / Real.log 2) * (Real.log (n : ℝ) / (n : ℝ))
+    + (cp n / (n : ℝ))
+    + ((L + 2) / Real.log 2) * (cp n / (n : ℝ)) with hg
+  have hg_tend : Filter.Tendsto g Filter.atTop (𝓝 0) := by
+    have t1 := hsqrt.const_mul (2 / Real.log 2)
+    have t2 := hcp_div.const_mul (1 / Real.log 2)
+    have t3 := hcp_div.const_mul ((k : ℝ) * La / Real.log 2)
+    have t4 := hinv.const_mul (((k : ℝ) + 1) / Real.log 2)
+    have t5 := hlogn.const_mul (((k : ℝ) + 1) / Real.log 2)
+    have t6 := hcp_div
+    have t7 := hcp_div.const_mul ((L + 2) / Real.log 2)
+    simpa [hg] using ((((((t1.add t2).add t3).add t4).add t5).add t6).add t7)
+  refine hg_tend.congr' ?_
+  filter_upwards [Filter.eventually_gt_atTop 0] with n hn
+  have hnpos : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  rw [hg]
+  field_simp
+  ring
+
 /-- **Lemma 1 (core)**: for each fixed `k`, the a.s.-eventual limsup of the
 greedy bit-rate is at most the `k`-th conditional tail entropy in bits.
 
@@ -1514,68 +1688,13 @@ theorem ziv_aseventual_le_condEntropyTail_bits
     fun n => (negLogQk μ q k n ω / (n : ℝ)) / Real.log 2 + E n with hU
   -- `cp n ≥ 0` and `cp n / n → 0`.
   have hcp_nn : ∀ n, 0 ≤ cp n := fun n => by simp only [hcp]; positivity
-  have hcp_div : Filter.Tendsto (fun n => cp n / (n : ℝ)) Filter.atTop (𝓝 0) := by
-    obtain ⟨C, hCb⟩ :=
+  have hcp_div : Filter.Tendsto (fun n => cp n / (n : ℝ)) Filter.atTop (𝓝 0) :=
+    ziv_cp_div_tendsto_zero cp hcp_nn
       (lz78PhraseStrings_count_isBigO (fun n => List.ofFn (q.blockRV n ω))
-        (fun n => List.length_ofFn)).bound
-    have hub : Filter.Tendsto (fun n : ℕ => C * (Real.log (n : ℝ))⁻¹)
-        Filter.atTop (𝓝 0) := by
-      have h1 : Filter.Tendsto (fun n : ℕ => Real.log (n : ℝ))
-          Filter.atTop Filter.atTop :=
-        Real.tendsto_log_atTop.comp tendsto_natCast_atTop_atTop
-      simpa using (tendsto_inv_atTop_zero.comp h1).const_mul C
-    refine squeeze_zero_norm' ?_ hub
-    filter_upwards [hCb, Filter.eventually_gt_atTop 1] with n hn hn1
-    have hnpos : (0 : ℝ) < (n : ℝ) := by positivity
-    have hlogpos : (0 : ℝ) < Real.log (n : ℝ) :=
-      Real.log_pos (by exact_mod_cast hn1)
-    rw [Real.norm_eq_abs, abs_of_nonneg (div_nonneg (hcp_nn n) hnpos.le)]
-    rw [Real.norm_eq_abs, abs_of_nonneg (hcp_nn n)] at hn
-    have hng : ‖(n : ℝ) / Real.log (n : ℝ)‖ = (n : ℝ) / Real.log (n : ℝ) := by
-      rw [Real.norm_eq_abs, abs_of_nonneg (le_of_lt (div_pos hnpos hlogpos))]
-    rw [hng] at hn
-    calc cp n / (n : ℝ) ≤ (C * ((n : ℝ) / Real.log (n : ℝ))) / (n : ℝ) :=
-          div_le_div_of_nonneg_right hn hnpos.le
-      _ = C * (Real.log (n : ℝ))⁻¹ := by
-          rw [mul_div_assoc, div_div, mul_comm (Real.log (n : ℝ)) (n : ℝ), ← div_div,
-            div_self hnpos.ne', one_div]
+        (fun n => List.length_ofFn))
   -- `E n → 0` (every summand divided by `log 2 · n` vanishes via `cp/n → 0`).
   have hE_tend : Filter.Tendsto E Filter.atTop (𝓝 0) := by
-    have hsqrt : Filter.Tendsto (fun n : ℕ => Real.sqrt (cp n / (n : ℝ)))
-        Filter.atTop (𝓝 0) := by
-      have h := (Real.continuous_sqrt.tendsto 0).comp hcp_div
-      simp only [Function.comp_def, Real.sqrt_zero] at h
-      exact h
-    have hinv : Filter.Tendsto (fun n : ℕ => (1 : ℝ) / (n : ℝ))
-        Filter.atTop (𝓝 0) := tendsto_one_div_atTop_nhds_zero_nat
-    have hlogn : Filter.Tendsto (fun n : ℕ => Real.log (n : ℝ) / (n : ℝ))
-        Filter.atTop (𝓝 0) := by
-      have hR : Filter.Tendsto (fun x : ℝ => Real.log x ^ 1 / (1 * x + 0))
-          Filter.atTop (𝓝 0) := Real.tendsto_pow_log_div_mul_add_atTop 1 0 1 (by norm_num)
-      simpa using hR.comp tendsto_natCast_atTop_atTop
-    set g : ℕ → ℝ := fun n =>
-      (2 / Real.log 2) * Real.sqrt (cp n / (n : ℝ))
-      + (1 / Real.log 2) * (cp n / (n : ℝ))
-      + ((k : ℝ) * La / Real.log 2) * (cp n / (n : ℝ))
-      + (((k : ℝ) + 1) / Real.log 2) * ((1 : ℝ) / (n : ℝ))
-      + (((k : ℝ) + 1) / Real.log 2) * (Real.log (n : ℝ) / (n : ℝ))
-      + (cp n / (n : ℝ))
-      + ((L + 2) / Real.log 2) * (cp n / (n : ℝ)) with hg
-    have hg_tend : Filter.Tendsto g Filter.atTop (𝓝 0) := by
-      have t1 := hsqrt.const_mul (2 / Real.log 2)
-      have t2 := hcp_div.const_mul (1 / Real.log 2)
-      have t3 := hcp_div.const_mul ((k : ℝ) * La / Real.log 2)
-      have t4 := hinv.const_mul (((k : ℝ) + 1) / Real.log 2)
-      have t5 := hlogn.const_mul (((k : ℝ) + 1) / Real.log 2)
-      have t6 := hcp_div
-      have t7 := hcp_div.const_mul ((L + 2) / Real.log 2)
-      simpa [hg] using ((((((t1.add t2).add t3).add t4).add t5).add t6).add t7)
-    refine hg_tend.congr' ?_
-    filter_upwards [Filter.eventually_gt_atTop 0] with n hn
-    have hnpos : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
-    rw [hg, hE]
-    field_simp
-    ring
+    rw [hE]; exact ziv_error_seq_tendsto_zero cp k La L hcp_div
   -- `U n → H / log 2`.
   have hU_tend : Filter.Tendsto U Filter.atTop (𝓝 (H / Real.log 2)) := by
     have ha : Filter.Tendsto (fun n => negLogQk μ q k n ω / (n : ℝ) / Real.log 2)
@@ -1619,46 +1738,29 @@ theorem ziv_aseventual_le_condEntropyTail_bits
       clog_div_le_two_mul_sqrt cR NtR (cp n) (n : ℝ) hcR_nn hcR_le_cp hcR_le_n
         hNtot' hNtR_nn hnR
     -- `cp n · log(cp n) ≤ cR · log cR + reconcile`, handling the `cp n < 1` boundary.
+    -- nat-ness of the phrase counts: a value `< 1` collapses to `0`.
+    have hcp_zero : cp n < 1 → cp n = 0 := by
+      intro hlt
+      rcases Nat.eq_zero_or_pos (lz78PhraseStrings (List.ofFn (q.blockRV n ω))).length
+        with h0 | hpos
+      · simp only [hcp, h0]; simp
+      · exfalso; simp only [hcp] at hlt
+        have : (1 : ℝ) ≤ ((lz78PhraseStrings (List.ofFn (q.blockRV n ω))).length : ℝ) := by
+          exact_mod_cast hpos
+        linarith
+    have hcR_zero : cR < 1 → cR = 0 := by
+      intro hcRlt
+      rcases Nat.eq_zero_or_pos c with h0 | hpos
+      · rw [hcR, h0]; simp
+      · exfalso
+        have : (1 : ℝ) ≤ (c : ℝ) := by exact_mod_cast hpos
+        rw [hcR] at hcRlt; linarith
+    -- `cp n · log(cp n) ≤ cR · log cR + reconcile`, handling the `cp n < 1` boundary.
     have hrec : cp n * Real.log (cp n)
-        ≤ cR * Real.log cR + (((k : ℝ) + 1) + ((k : ℝ) + 1) * Real.log (n : ℝ)) := by
-      rcases lt_or_ge (cp n) 1 with hlt | hge
-      · -- `cp n < 1` ⇒ `cp n = 0` (it is a Nat cast) ⇒ `cR = 0` too.
-        have hcp0 : cp n = 0 := by
-          rcases Nat.eq_zero_or_pos (lz78PhraseStrings (List.ofFn (q.blockRV n ω))).length
-            with h0 | hpos
-          · simp only [hcp, h0]; simp
-          · exfalso; simp only [hcp] at hlt
-            have : (1 : ℝ) ≤ ((lz78PhraseStrings (List.ofFn (q.blockRV n ω))).length : ℝ) := by
-              exact_mod_cast hpos
-            linarith
-        have hcR0 : cR = 0 := le_antisymm (by linarith [hcR_le_cp, hcp0]) hcR_nn
-        rw [hcp0, hcR0]
-        simp only [Real.log_zero, mul_zero, zero_add]
-        have hlogn_nn : 0 ≤ Real.log (n : ℝ) := Real.log_nonneg (by exact_mod_cast hn1)
-        positivity
-      · -- `cp n ≥ 1`. Two cases on `cR`.
-        rcases lt_or_ge cR 1 with hcRlt | hcRge
-        · -- `cR < 1` ⇒ `cR = 0` (Nat cast) ⇒ `cp n = bR ≤ k+1`, so `cp n log cp n` is small.
-          have hcR0 : cR = 0 := by
-            rcases Nat.eq_zero_or_pos c with h0 | hpos
-            · rw [hcR, h0]; simp
-            · exfalso
-              have : (1 : ℝ) ≤ (c : ℝ) := by exact_mod_cast hpos
-              rw [hcR] at hcRlt; linarith
-          have hcp_eq_b : cp n = bR := by rw [hcount', hcR0]; ring
-          have hcp_le_k1 : cp n ≤ (k : ℝ) + 1 := by rw [hcp_eq_b]; exact hbA'
-          have hlogcp_le : Real.log (cp n) ≤ Real.log (n : ℝ) :=
-            Real.log_le_log (by linarith) hcp_le_n
-          have hlogcp_nn : 0 ≤ Real.log (cp n) := Real.log_nonneg hge
-          rw [hcR0]; simp only [Real.log_zero, mul_zero, zero_add]
-          calc cp n * Real.log (cp n) ≤ ((k : ℝ) + 1) * Real.log (n : ℝ) :=
-                mul_le_mul hcp_le_k1 hlogcp_le hlogcp_nn (by linarith [hbA'])
-            _ ≤ ((k : ℝ) + 1) + ((k : ℝ) + 1) * Real.log (n : ℝ) := by
-                have : 0 ≤ (k : ℝ) + 1 := by positivity
-                linarith
-        · -- `1 ≤ cR` and `1 ≤ cp n`: the generic reconcile lemma.
-          exact cp_log_cp_le_reconcile cR (cp n) bR (n : ℝ) ((k : ℝ) + 1) hcRge hcount'
-            hbR_nn hbA' hcp_le_n hge
+        ≤ cR * Real.log cR + (((k : ℝ) + 1) + ((k : ℝ) + 1) * Real.log (n : ℝ)) :=
+      cp_log_cp_le_reconcile_cases cR (cp n) bR (n : ℝ) ((k : ℝ) + 1) hcR_nn hcount'
+        hbR_nn hbA' hcp_le_n (Real.log_nonneg (by exact_mod_cast hn1)) (by positivity)
+        hcp_zero hcR_zero
     -- Step A: `T n ≤ cp n · log(cp n)/(log 2 · n) + StepA-overhead/(log 2 · n)`.
     have hstepA := lz78_impl_bitrate_le_clogc_plus_overhead n hn (q.blockRV n ω)
     -- Assemble. Clear the common `log 2 · n` denominator and chain the bounds.

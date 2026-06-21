@@ -149,6 +149,151 @@ theorem condQkState_congr_length
   funext i
   simpa using hZ i
 
+theorem parseTiling_totalLength_le
+    (c e n b : ℕ) (N : Fin (c + 1) → ℕ)
+    (hNb : N 0 = b) (hNe : N (Fin.last c) = e) (hen : e ≤ n)
+    (hmono : ∀ j : Fin c, N j.castSucc + 1 ≤ N j.succ) :
+    (∑ j : Fin c, (N j.succ - N j.castSucc)) ≤ n := by
+  -- Extend `N` to a total monotone `M` to telescope (idiom from `negLogQk_phrase_threading`).
+  set M : ℕ → ℕ := fun i => if h : i < c + 1 then N ⟨i, h⟩ else e with hM_def
+  have hMN : ∀ (i : ℕ) (h : i < c + 1), M i = N ⟨i, h⟩ := by
+    intro i h; simp only [hM_def, h, dif_pos]
+  have hMcastSucc : ∀ j : Fin c, M j.val = N j.castSucc := by
+    intro j; rw [hMN j.val (by omega)]; congr 1
+  have hMsucc : ∀ j : Fin c, M (j.val + 1) = N j.succ := by
+    intro j; rw [hMN (j.val + 1) (by omega)]; congr 1
+  have hM0 : M 0 = b := by rw [hMN 0 (by omega), ← hNb]; congr 1
+  have hMc : M c = e := by rw [hMN c (by omega), ← hNe]; congr 1
+  have hMmono : ∀ i, M i ≤ M (i + 1) := by
+    intro i
+    by_cases hic : i + 1 < c + 1
+    · have hi : i < c := by omega
+      have h1 : M i = N (⟨i, hi⟩ : Fin c).castSucc := hMN i (by omega)
+      have h2 : M (i + 1) = N (⟨i, hi⟩ : Fin c).succ := hMN (i + 1) (by omega)
+      rw [h1, h2]; exact le_of_lt (hmono ⟨i, hi⟩)
+    · have hMi1 : M (i + 1) = e := by
+        simp only [hM_def, Nat.not_lt.mpr (Nat.not_lt.mp hic), dif_neg, not_false_eq_true]
+      rcases Nat.lt_or_ge i (c + 1) with hi | hi
+      · have hieq : i = c := by omega
+        rw [hMi1, ← hMc, hieq]
+      · have hMi : M i = e := by
+          simp only [hM_def, Nat.not_lt.mpr hi, dif_neg, not_false_eq_true]
+        rw [hMi, hMi1]
+  -- Telescoping of differences: `∑_{j<c} (M (j+1) - M j) = M c - M 0`.
+  have htel : (∑ j ∈ Finset.range c, (M (j + 1) - M j)) = M c - M 0 :=
+    sum_range_consecutive_sub_of_monotone M hMmono c
+  -- Rewrite the goal sum over `range c` matching `M`.
+  have hNtot_range :
+      (∑ j : Fin c, (N j.succ - N j.castSucc)) = ∑ j ∈ Finset.range c, (M (j + 1) - M j) := by
+    rw [Finset.sum_range fun j => M (j + 1) - M j]
+    refine Finset.sum_congr rfl ?_
+    intro j _
+    rw [hMcastSucc j, hMsucc j]
+  rw [hNtot_range, htel, hM0, hMc]
+  omega
+
+omit [Fintype α] [Nonempty α] [MeasurableSingletonClass α] in
+theorem parseTiling_phrase_slice_injective
+    (μ : Measure Ω) (p : StationaryProcess μ α) (n : ℕ) (ω : Ω)
+    (c e bAbsorbed : ℕ) (N : Fin (c + 1) → ℕ)
+    (hNe : N (Fin.last c) = e) (hen : e ≤ n)
+    (hmono : ∀ j : Fin c, N j.castSucc + 1 ≤ N j.succ)
+    (hslice : ∀ j : Fin c,
+      (lz78PhraseStrings (List.ofFn (fun i => p.blockRV n ω i)))[bAbsorbed + j.val]?
+        = some (((List.ofFn (fun i => p.blockRV n ω i)).drop (N j.castSucc)).take
+            (N j.succ - N j.castSucc))) :
+    (∀ j : Fin c,
+        (((List.ofFn (fun i => p.blockRV n ω i)).drop (N j.castSucc)).take
+            (N j.succ - N j.castSucc)).length = N j.succ - N j.castSucc) ∧
+      (∀ (j : Fin c) (m : ℕ), m < N j.succ - N j.castSucc →
+        (((List.ofFn (fun i => p.blockRV n ω i)).drop (N j.castSucc)).take
+            (N j.succ - N j.castSucc))[m]? = some (p.obs (N j.castSucc + m) ω)) ∧
+      Function.Injective (fun j : Fin c =>
+        ((List.ofFn (fun i => p.blockRV n ω i)).drop (N j.castSucc)).take
+          (N j.succ - N j.castSucc)) := by
+  classical
+  set input : List α := List.ofFn (fun i => p.blockRV n ω i) with hinput_def
+  set phrase : Fin c → List α :=
+    fun j => (input.drop (N j.castSucc)).take (N j.succ - N j.castSucc) with hphrase_def
+  -- Monotonicity `N j.succ ≤ e` (so each phrase fits inside `[0, n)`).
+  have hN_mono_nat : ∀ (i j : ℕ) (hi : i < c + 1) (hj : j < c + 1), i ≤ j →
+      N ⟨i, hi⟩ ≤ N ⟨j, hj⟩ := by
+    intro i j hi hj hij
+    induction j with
+    | zero => simp_all
+    | succ j ihj =>
+      rcases Nat.lt_or_ge i (j + 1) with h | h
+      · have hjc : j < c := by omega
+        have hstep : N (⟨j, by omega⟩ : Fin c).castSucc + 1
+            ≤ N (⟨j, by omega⟩ : Fin c).succ := hmono ⟨j, by omega⟩
+        have hcast : (⟨j, by omega⟩ : Fin c).castSucc = (⟨j, by omega⟩ : Fin (c + 1)) := by
+          apply Fin.ext; simp
+        have hsucc : (⟨j, by omega⟩ : Fin c).succ = (⟨j + 1, by omega⟩ : Fin (c + 1)) := by
+          apply Fin.ext; simp
+        rw [hcast, hsucc] at hstep
+        exact (ihj (by omega) (Nat.lt_succ_iff.mp h)).trans (by omega)
+      · have : i = j + 1 := le_antisymm hij h
+        subst this; exact le_refl _
+  have hNsucc_le_e : ∀ j : Fin c, N j.succ ≤ e := by
+    intro j
+    rw [← hNe]
+    have h1 : N j.succ = N (⟨j.val + 1, by omega⟩ : Fin (c + 1)) := by
+      congr 1
+    have h2 : N (Fin.last c) = N (⟨c, by omega⟩ : Fin (c + 1)) := by
+      congr 1
+    rw [h1, h2]
+    exact hN_mono_nat (j.val + 1) c (by omega) (by omega) (by have := j.isLt; omega)
+  -- Each tiled slice has the prescribed length `N j.succ - N j.castSucc`.
+  have hinput_len : input.length = n := by rw [hinput_def]; exact List.length_ofFn
+  have hphrase_len : ∀ j : Fin c, (phrase j).length = N j.succ - N j.castSucc := by
+    intro j
+    rw [hphrase_def]
+    simp only [List.length_take, List.length_drop, hinput_len]
+    have h1 : N j.succ ≤ e := hNsucc_le_e j
+    have h2 : N j.castSucc + 1 ≤ N j.succ := hmono j
+    omega
+  -- The slice content reads off `obs` (the obs-coherence half).
+  have hphrase_get : ∀ (j : Fin c) (m : ℕ), m < N j.succ - N j.castSucc →
+      (phrase j)[m]? = some (p.obs (N j.castSucc + m) ω) := by
+    intro j m hm
+    rw [hphrase_def]
+    rw [List.getElem?_take_of_lt hm, List.getElem?_drop]
+    have hlt : N j.castSucc + m < n := by
+      have h1 : N j.succ ≤ e := hNsucc_le_e j
+      omega
+    have hlt' : N j.castSucc + m < input.length := by rw [hinput_len]; exact hlt
+    rw [List.getElem?_eq_getElem hlt']
+    congr 1
+    simp only [hinput_def, List.getElem_ofFn]
+    rfl
+  -- Injectivity of `phrase` (the slices are distinct phrase strings, `Nodup`).
+  have hLnodup : (lz78PhraseStrings input).Nodup := lz78PhraseStrings_nodup input
+  have hphrase_idx : ∀ j : Fin c,
+      ∃ (h : bAbsorbed + j.val < (lz78PhraseStrings input).length),
+        (lz78PhraseStrings input)[bAbsorbed + j.val] = phrase j := by
+    intro j
+    have := hslice j
+    rw [List.getElem?_eq_some_iff] at this
+    obtain ⟨h, heq⟩ := this
+    exact ⟨h, heq⟩
+  have hphrase_inj : Function.Injective phrase := by
+    intro j₁ j₂ heq
+    obtain ⟨h₁, he₁⟩ := hphrase_idx j₁
+    obtain ⟨h₂, he₂⟩ := hphrase_idx j₂
+    have hval : (lz78PhraseStrings input)[bAbsorbed + j₁.val]
+        = (lz78PhraseStrings input)[bAbsorbed + j₂.val] := by
+      rw [he₁, he₂, heq]
+    have hget : (lz78PhraseStrings input).get ⟨bAbsorbed + j₁.val, h₁⟩
+        = (lz78PhraseStrings input).get ⟨bAbsorbed + j₂.val, h₂⟩ := by
+      simpa [List.get_eq_getElem] using hval
+    have hidx : (⟨bAbsorbed + j₁.val, h₁⟩ : Fin _) = ⟨bAbsorbed + j₂.val, h₂⟩ :=
+      (hLnodup.get_inj_iff).mp hget
+    have : j₁.val = j₂.val := by
+      have := Fin.mk.inj_iff.mp hidx
+      omega
+    exact Fin.ext this
+  exact ⟨hphrase_len, hphrase_get, hphrase_inj⟩
+
 /-! ## Sub-step (B): the achievability composition lemma -/
 
 /-- **LZ78 achievability composition** (a.s. form): for a.e. `ω`, the tiled phrase
@@ -209,42 +354,8 @@ theorem ziv_achievability_composition
   set Ntot : ℕ := ∑ j : Fin c, (N j.succ - N j.castSucc) with hNtot_def
   refine ⟨c, bAbsorbed, Ntot, hcount, hbA, ?_, ?_⟩
   · -- `Ntot ≤ n`: the per-phrase lengths sum to `e - b ≤ e ≤ n` (telescoping).
-    -- Extend `N` to a total monotone `M` to telescope (idiom from `negLogQk_phrase_threading`).
-    set M : ℕ → ℕ := fun i => if h : i < c + 1 then N ⟨i, h⟩ else e with hM_def
-    have hMN : ∀ (i : ℕ) (h : i < c + 1), M i = N ⟨i, h⟩ := by
-      intro i h; simp only [hM_def, h, dif_pos]
-    have hMcastSucc : ∀ j : Fin c, M j.val = N j.castSucc := by
-      intro j; rw [hMN j.val (by omega)]; congr 1
-    have hMsucc : ∀ j : Fin c, M (j.val + 1) = N j.succ := by
-      intro j; rw [hMN (j.val + 1) (by omega)]; congr 1
-    have hM0 : M 0 = b := by rw [hMN 0 (by omega), ← hNb]; congr 1
-    have hMc : M c = e := by rw [hMN c (by omega), ← hNe]; congr 1
-    have hMmono : ∀ i, M i ≤ M (i + 1) := by
-      intro i
-      by_cases hic : i + 1 < c + 1
-      · have hi : i < c := by omega
-        have h1 : M i = N (⟨i, hi⟩ : Fin c).castSucc := hMN i (by omega)
-        have h2 : M (i + 1) = N (⟨i, hi⟩ : Fin c).succ := hMN (i + 1) (by omega)
-        rw [h1, h2]; exact le_of_lt (hmono ⟨i, hi⟩)
-      · have hMi1 : M (i + 1) = e := by
-          simp only [hM_def, Nat.not_lt.mpr (Nat.not_lt.mp hic), dif_neg, not_false_eq_true]
-        rcases Nat.lt_or_ge i (c + 1) with hi | hi
-        · have hieq : i = c := by omega
-          rw [hMi1, ← hMc, hieq]
-        · have hMi : M i = e := by
-            simp only [hM_def, Nat.not_lt.mpr hi, dif_neg, not_false_eq_true]
-          rw [hMi, hMi1]
-    -- Telescoping of differences: `∑_{j<c} (M (j+1) - M j) = M c - M 0`.
-    have htel : (∑ j ∈ Finset.range c, (M (j + 1) - M j)) = M c - M 0 :=
-      sum_range_consecutive_sub_of_monotone M hMmono c
-    -- Rewrite `Ntot` over `range c` matching `M`.
-    have hNtot_range : Ntot = ∑ j ∈ Finset.range c, (M (j + 1) - M j) := by
-      rw [hNtot_def, Finset.sum_range fun j => M (j + 1) - M j]
-      refine Finset.sum_congr rfl ?_
-      intro j _
-      rw [hMcastSucc j, hMsucc j]
-    rw [hNtot_range, htel, hM0, hMc]
-    omega
+    rw [hNtot_def]
+    exact parseTiling_totalLength_le c e n b N hNb hNe hen hmono
   · -- The Ziv lower bound.  (A) gives `phraseSum ≤ negLogQk`; the reindex + grouping
     -- step (B) gives `c·log c ≤ phraseSum + overhead`.  Chain the two.
     have hA :
@@ -261,83 +372,9 @@ theorem ziv_achievability_composition
     -- The `j`-th phrase string is the tiled slice (from `hslice`).
     set phrase : Fin c → List α :=
       fun j => (input.drop (N j.castSucc)).take (N j.succ - N j.castSucc) with hphrase_def
-    -- Monotonicity `N j.succ ≤ e` (so each phrase fits inside `[0, n)`).
-    have hN_mono_nat : ∀ (i j : ℕ) (hi : i < c + 1) (hj : j < c + 1), i ≤ j →
-        N ⟨i, hi⟩ ≤ N ⟨j, hj⟩ := by
-      intro i j hi hj hij
-      induction j with
-      | zero => simp_all
-      | succ j ihj =>
-        rcases Nat.lt_or_ge i (j + 1) with h | h
-        · have hjc : j < c := by omega
-          have hstep : N (⟨j, by omega⟩ : Fin c).castSucc + 1
-              ≤ N (⟨j, by omega⟩ : Fin c).succ := hmono ⟨j, by omega⟩
-          have hcast : (⟨j, by omega⟩ : Fin c).castSucc = (⟨j, by omega⟩ : Fin (c + 1)) := by
-            apply Fin.ext; simp
-          have hsucc : (⟨j, by omega⟩ : Fin c).succ = (⟨j + 1, by omega⟩ : Fin (c + 1)) := by
-            apply Fin.ext; simp
-          rw [hcast, hsucc] at hstep
-          exact (ihj (by omega) (Nat.lt_succ_iff.mp h)).trans (by omega)
-        · have : i = j + 1 := le_antisymm hij h
-          subst this; exact le_refl _
-    have hNsucc_le_e : ∀ j : Fin c, N j.succ ≤ e := by
-      intro j
-      rw [← hNe]
-      have h1 : N j.succ = N (⟨j.val + 1, by omega⟩ : Fin (c + 1)) := by
-        congr 1
-      have h2 : N (Fin.last c) = N (⟨c, by omega⟩ : Fin (c + 1)) := by
-        congr 1
-      rw [h1, h2]
-      exact hN_mono_nat (j.val + 1) c (by omega) (by omega) (by have := j.isLt; omega)
-    -- Each tiled slice has the prescribed length `N j.succ - N j.castSucc`.
-    have hinput_len : input.length = n := by rw [hinput_def]; exact List.length_ofFn
-    have hphrase_len : ∀ j : Fin c, (phrase j).length = N j.succ - N j.castSucc := by
-      intro j
-      rw [hphrase_def]
-      simp only [List.length_take, List.length_drop, hinput_len]
-      have h1 : N j.succ ≤ e := hNsucc_le_e j
-      have h2 : N j.castSucc + 1 ≤ N j.succ := hmono j
-      omega
-    -- The slice content reads off `obs` (the obs-coherence half).
-    have hphrase_get : ∀ (j : Fin c) (m : ℕ), m < N j.succ - N j.castSucc →
-        (phrase j)[m]? = some (p.obs (N j.castSucc + m) ω) := by
-      intro j m hm
-      rw [hphrase_def]
-      rw [List.getElem?_take_of_lt hm, List.getElem?_drop]
-      have hlt : N j.castSucc + m < n := by
-        have h1 : N j.succ ≤ e := hNsucc_le_e j
-        omega
-      have hlt' : N j.castSucc + m < input.length := by rw [hinput_len]; exact hlt
-      rw [List.getElem?_eq_getElem hlt']
-      congr 1
-      simp only [hinput_def, List.getElem_ofFn]
-      rfl
-    -- Injectivity of `phrase` (the slices are distinct phrase strings, `Nodup`).
-    have hLnodup : (lz78PhraseStrings input).Nodup := lz78PhraseStrings_nodup input
-    have hphrase_idx : ∀ j : Fin c,
-        ∃ (h : bAbsorbed + j.val < (lz78PhraseStrings input).length),
-          (lz78PhraseStrings input)[bAbsorbed + j.val] = phrase j := by
-      intro j
-      have := hslice j
-      rw [List.getElem?_eq_some_iff] at this
-      obtain ⟨h, heq⟩ := this
-      exact ⟨h, heq⟩
-    have hphrase_inj : Function.Injective phrase := by
-      intro j₁ j₂ heq
-      obtain ⟨h₁, he₁⟩ := hphrase_idx j₁
-      obtain ⟨h₂, he₂⟩ := hphrase_idx j₂
-      have hval : (lz78PhraseStrings input)[bAbsorbed + j₁.val]
-          = (lz78PhraseStrings input)[bAbsorbed + j₂.val] := by
-        rw [he₁, he₂, heq]
-      have hget : (lz78PhraseStrings input).get ⟨bAbsorbed + j₁.val, h₁⟩
-          = (lz78PhraseStrings input).get ⟨bAbsorbed + j₂.val, h₂⟩ := by
-        simpa [List.get_eq_getElem] using hval
-      have hidx : (⟨bAbsorbed + j₁.val, h₁⟩ : Fin _) = ⟨bAbsorbed + j₂.val, h₂⟩ :=
-        (hLnodup.get_inj_iff).mp hget
-      have : j₁.val = j₂.val := by
-        have := Fin.mk.inj_iff.mp hidx
-        omega
-      exact Fin.ext this
+    -- The slice map's prescribed lengths, obs-coherence, and injectivity (from the tiling).
+    obtain ⟨hphrase_len, hphrase_get, hphrase_inj⟩ :=
+      parseTiling_phrase_slice_injective μ p n ω c e bAbsorbed N hNe hen hmono hslice
     have hB :
         (c : ℝ) * Real.log (c : ℝ)
           ≤ (∑ j : Fin c,
