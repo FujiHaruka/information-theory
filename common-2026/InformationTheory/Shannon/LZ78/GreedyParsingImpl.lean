@@ -798,7 +798,17 @@ Proved unconditionally in `lz78_phrase_count_fiber_card_le_nat` via
 `Finset.card_le_card_of_injOn` into the parent-data Fintype
 `((j : Fin c) → Fin (j+1)) × (Fin c → α) × Fin (c+1)` (cardinality
 `fintype_card_parentIdx` = `c!`, times `|α|^c`, times `c+1`), with the empty
-fiber for `c > n` handled by `lz78PhraseStrings_count_le`. -/
+fiber for `c > n` handled by `lz78PhraseStrings_count_le`.
+
+@audit:ok (FINAL completion audit 2026-06-21, commit `bd28e0e`, independent
+subagent). Genuine counting bound — the injection `x ↦ (parent, sym, tailIdx)`
+in `lz78_phrase_count_fiber_card_le_nat` is really injective (strong induction
+reconstructs each phrase's `dropLast` from the parent index via the
+parent-extension invariant, recovers the last symbol from `sym`, reassembles
+the phrase, then recovers `x` via `flatten ++ tail` + `List.ofFn_injective`);
+no smuggling. Non-circular, non-degenerate; the `(c+1) ≤ (n+1)` cast upgrade
++ empty-fiber-for-`c>n` are genuine. `#print axioms =
+[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-confirmed). -/
 theorem lz78_phrase_count_fiber_card_le (n c : ℕ) :
     ((Finset.univ.filter
           (fun x : Fin n → α => (lz78PhraseStrings (List.ofFn x)).length = c)).card : ℝ)
@@ -1305,7 +1315,15 @@ converse `entropyRate₂ ≤ liminf` is the genuine LZ78 converse (e.g. A=2:
 `entropyRate₂ = log₂ 2 = 1 ≤ liminf`, with equality in the limit); on the
 degenerate `entropyRate = 0` boundary it reads `0 ≤ liminf` (`entropyRate₂ =
 0`), again genuine. Signature takes only source data (`μ`, `p`), no
-load-bearing hypothesis. -/
+load-bearing hypothesis.
+
+@audit:ok (FINAL completion audit 2026-06-21, commit `bd28e0e`, independent
+subagent). Non-circular, non-bundled (signature `(μ, p)` +
+`[IsProbabilityMeasure μ]` only), non-degenerate, sufficiency TRUE-as-framed:
+the body genuinely wires SMB-in-bits (`Low n → entropyRate₂`) with the Barron
+a.s.-eventual lift (`Low n ≤ lz/n` eventually, `err_n → 0` proven) via
+`liminf_le_liminf`. `#print axioms = [propext, Classical.choice, Quot.sound]`
+(sorryAx-free, machine-confirmed). -/
 theorem lz78GreedyImpl_converse_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α) :
@@ -1938,7 +1956,16 @@ regularity inputs genuine. Both halves are now genuine: the achievability half
 the converse half (`lz78GreedyImpl_converse_ae`, M4 — its sole combinatorial
 brick `lz78_block_kraft_poly` / `lz78_phrase_count_fiber_card_le` is closed via
 the LZ78 dictionary parent-extension invariant). LZ78 asymptotic optimality is
-fully proven. -/
+fully proven.
+
+@audit:ok (FINAL completion audit 2026-06-21, commit `bd28e0e`, independent
+subagent not involved in implementation). Four honesty checks PASS: non-circular,
+non-bundled (signature is `(μ, p)` + `[IsProbabilityMeasure μ]` only; both
+`IsBoundedUnder` witnesses + both sandwich halves are constructed internally),
+non-degenerate, sufficiency TRUE-as-framed (bit `entropyRate₂` target, genuine
+`tendsto_of_le_liminf_of_limsup_le` squeeze via `lz78_asymptotic_optimality`).
+`#print axioms = [propext, Classical.choice, Quot.sound]` (sorryAx-free,
+machine-confirmed; both files compile with 0 sorry warnings). -/
 @[entry_point]
 theorem lz78_asymptotic_optimality_with_greedy_impl
     (μ : Measure Ω) [IsProbabilityMeasure μ]

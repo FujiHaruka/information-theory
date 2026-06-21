@@ -1,9 +1,14 @@
 # LZ78 passthrough scaffolding consolidation plan
 
 **Status**: ✅ CLOSED (commit `602b1ad`) — dead scope-out passthrough scaffolding
-削除済。漸近最適性核心は `GreedyParsingImpl.lean` の wall sorry lemma 2本
-(`lz78GreedyImpl_converse_ae` = `wall:lz78-converse-aseventual` /
-`lz78GreedyImpl_achievability_ae` = `wall:lz78-aseventual-ziv`) に一本化。
+削除済。漸近最適性核心は `GreedyParsingImpl.lean` の 2 本の sorry lemma
+(`lz78GreedyImpl_converse_ae` / `lz78GreedyImpl_achievability_ae`) に一本化していた。
+**後日談 (本 plan の対象外、参考)**: 当該 2 本はいずれも genuine に CLOSED 済 —
+achievability `lz78GreedyImpl_achievability_ae` は leg 11 で sorryAx-free
+(commit `c22f2d5`、旧 `wall:lz78-aseventual-ziv` 解消)、converse
+`lz78GreedyImpl_converse_ae` は M4 で sorryAx-free (commit `bd28e0e`、旧
+`plan:lz78-m4-plan` discharge) → headline `lz78_asymptotic_optimality_with_greedy_impl`
+sorryAx-free = LZ78 漸近最適性 完遂。詳細 → `docs/shannon/lz78-completion-roadmap.md`。
 
 **Parent**: `docs/textbook-roadmap.md` (Ch.13 Universal Coding)
 

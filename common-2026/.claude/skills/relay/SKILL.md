@@ -68,6 +68,7 @@ context 圧迫 / malformed 2 度目を感じたら:
    # 起動完了（⏵⏵ auto mode on + /rc active）を capture-pane で確認後:
    tmux send-keys -t <goal>-r<N+1> '/relay' Enter
    ```
+   **permission classifier に拒否されたら（`--permission-mode auto` の新 claude session 起動は "Create Unsafe Agents" として弾かれることがある）**: 勝手に回避しようとせず、また黙って失敗扱いにもしない。**PushNotification でユーザーに「次 leg 起動が classifier に拒否された。続行するには新 claude session の作成を明示許可してほしい（許可 → この leg がそのまま次 leg を起こす / または手動で `/clear`→`/carryon`）」と通知**して、ユーザーの明示許可を促す。handoff (`Mode: ON`) は既に書いてあるので、許可が来れば step 6 を再試行、来なければ人手で carryon 継投できる。これは終端ではない（DONE/PAUSED/ABORTED にしない）— 起動待ちの保留状態。
 7. **後続の走り出しを確認** — capture-pane で次 leg が `/relay` → carryon 復元を始めたのを確認。
 8. **自 leg は idle 化** — 以降ツール呼び出しをしない（git 競合回避）。後続が step 2 で自分を kill する。
 
