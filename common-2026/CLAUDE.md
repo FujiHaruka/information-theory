@@ -67,6 +67,22 @@ Mechanically look up dependency relations among in-project declarations. The imp
 
 Note: all of them read the root olean. If a recently added decl shows up as an "unknown declaration", the root is stale → refresh with `lake build InformationTheory` and re-run. `-h` on each for the option list.
 
+## File signature view (`scripts/sig_view.ts`)
+
+Show a Lean file's declaration **signatures with proof bodies stripped** — an orientation tool for large files (the codebase has many 1000–3500-line files). Use it to see *what a file provides* (decl names, types, remaining sorries + their `@residual` class) **without reading proof bodies into context**, before deciding which `sorry` to fill or which lemma to reuse. Complements `scripts/dep_*.sh` (those map cross-decl reference graphs; this is one file's API surface).
+
+A text-scanner that masks comments/strings and cuts at the `:=`/`where` body boundary by bracket depth — **not** a Lean parser, so it needs no olean and works on uncompiled / `sorry`-laden files. ~0.08s even on the largest file. Because it masks comments, a keyword word in prose (`-- the theorem states…`) is not miscounted as a decl (verified across all InformationTheory files: 0 false pos / 0 false neg vs the real decls).
+
+```bash
+scripts/sig_view.ts <file.lean>          # signatures only (default)
+scripts/sig_view.ts --doc   <file.lean>  # + docstrings
+scripts/sig_view.ts --names <file.lean>  # names + kind + line no. only (table of contents)
+scripts/sig_view.ts --sorry <file.lean>  # only decls whose body has a sorry
+scripts/sig_view.ts --no-context <file.lean>  # drop namespace/section/variable/open lines
+```
+
+Each decl is shown with its `Lnnn` line number (jump with `Read`), and flagged `⟨sorry⟩` / `⟨@residual(...)⟩` where present. Direct-executable via shebang (`scripts/sig_view.ts …`) or `deno run -A scripts/sig_view.ts …`.
+
 ## Subagent Inventory of Mathlib Lemmas
 
 When delegating Mathlib API inventory to a subagent ("find candidate lemmas for X"), require **structured per-lemma output**, not prose summaries. For each candidate, the subagent must record:
