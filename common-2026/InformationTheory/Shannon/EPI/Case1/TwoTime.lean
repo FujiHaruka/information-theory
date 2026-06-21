@@ -1,6 +1,8 @@
 import InformationTheory.Shannon.EPI.Case1.TwoTime.Core
 import InformationTheory.Shannon.EPI.Case1.TwoTime.Paths
-import InformationTheory.Shannon.EPI.Case1.TwoTime.Object
+import InformationTheory.Shannon.EPI.Case1.TwoTime.GapDerivative
+import InformationTheory.Shannon.EPI.Case1.TwoTime.MonotonicityAndSaturation
+import InformationTheory.Shannon.EPI.Case1.TwoTime.EntropyPowerInequality
 
 /-!
 # EPI case-1 sum frontier — two-time object skeleton
