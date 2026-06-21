@@ -226,7 +226,7 @@ import InformationTheory.Shannon.StamGaussianBound
 import InformationTheory.Shannon.FisherConvBound
 import InformationTheory.Shannon.EPI.Stam.FisherCoupling
 import InformationTheory.Shannon.FisherInfo.HeatFlow
-import InformationTheory.Shannon.LZ78.GreedyParsingImpl
+import InformationTheory.Shannon.LZ78.AsymptoticOptimality
 import InformationTheory.Shannon.LZ78.GreedyLongestPrefix
 import InformationTheory.Shannon.Hoeffding.Tilt
 import InformationTheory.Shannon.AWGN.MutualInfoDecomposition
