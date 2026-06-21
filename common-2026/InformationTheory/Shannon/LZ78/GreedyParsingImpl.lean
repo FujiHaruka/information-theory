@@ -457,6 +457,181 @@ theorem shannon_mcmillan_breiman₂
   have := hω.div_const (Real.log 2)
   simpa only [blockLogAvg₂, entropyRate₂] using this
 
+/-- **Factorial-power decay** `c! · 2^c ≤ (c+1)^c` (real form). The per-`c`
+structure-Kraft term `c!/(c+1)^c` is geometrically small. Proved by induction;
+the step uses Bernoulli `2·(c+1)^(c+1) ≤ (c+2)^(c+1)`. -/
+theorem factorial_two_pow_le_succ_pow (c : ℕ) :
+    (c.factorial : ℝ) * 2 ^ c ≤ ((c : ℝ) + 1) ^ c := by
+  induction c with
+  | zero => simp
+  | succ c ih =>
+      -- `(c+1)!·2^(c+1) = 2(c+1)·(c!·2^c) ≤ 2(c+1)·(c+1)^c = 2·(c+1)^(c+1)`.
+      have hcpos : (0 : ℝ) ≤ (c : ℝ) + 1 := by positivity
+      have hstep1 : ((c + 1).factorial : ℝ) * 2 ^ (c + 1)
+          ≤ 2 * ((c : ℝ) + 1) ^ (c + 1) := by
+        have hfac : ((c + 1).factorial : ℝ) = ((c : ℝ) + 1) * (c.factorial : ℝ) := by
+          rw [Nat.factorial_succ]; push_cast; ring
+        rw [hfac]
+        calc ((c : ℝ) + 1) * (c.factorial : ℝ) * 2 ^ (c + 1)
+            = (2 * ((c : ℝ) + 1)) * ((c.factorial : ℝ) * 2 ^ c) := by ring
+          _ ≤ (2 * ((c : ℝ) + 1)) * (((c : ℝ) + 1) ^ c) := by
+              apply mul_le_mul_of_nonneg_left ih; positivity
+          _ = 2 * ((c : ℝ) + 1) ^ (c + 1) := by ring
+      -- Bernoulli: `2·(c+1)^(c+1) ≤ (c+2)^(c+1)`.
+      have hcne : ((c : ℝ) + 1) ≠ 0 := by positivity
+      have hcpos' : (0 : ℝ) < (c : ℝ) + 1 := by positivity
+      have hbern : 2 * ((c : ℝ) + 1) ^ (c + 1) ≤ ((c : ℝ) + 2) ^ (c + 1) := by
+        -- Bernoulli with `a = 1/(c+1)`, `n = c+1`: `1 + (c+1)·a ≤ (1+a)^(c+1)`.
+        have hb := one_add_mul_le_pow (a := 1 / ((c : ℝ) + 1)) (by
+          have : (0 : ℝ) ≤ 1 / ((c : ℝ) + 1) := by positivity
+          linarith) (c + 1)
+        -- LHS `1 + ↑(c+1)·(1/(c+1)) = 2`.
+        have hlhs : (1 : ℝ) + ((c + 1 : ℕ) : ℝ) * (1 / ((c : ℝ) + 1)) = 2 := by
+          push_cast; field_simp; ring
+        rw [hlhs] at hb
+        -- RHS `(1 + 1/(c+1))^(c+1) = (c+2)^(c+1)/(c+1)^(c+1)`.
+        have hrhs : (1 + 1 / ((c : ℝ) + 1)) ^ (c + 1)
+            = ((c : ℝ) + 2) ^ (c + 1) / ((c : ℝ) + 1) ^ (c + 1) := by
+          rw [← div_pow]
+          congr 1
+          field_simp; ring
+        rw [hrhs] at hb
+        have hden : (0 : ℝ) < ((c : ℝ) + 1) ^ (c + 1) := by positivity
+        rw [le_div_iff₀ hden] at hb
+        linarith [hb]
+      calc ((c + 1).factorial : ℝ) * 2 ^ (c + 1)
+          ≤ 2 * ((c : ℝ) + 1) ^ (c + 1) := hstep1
+        _ ≤ ((c : ℝ) + 2) ^ (c + 1) := hbern
+        _ = ((↑(c + 1) : ℝ) + 1) ^ (c + 1) := by push_cast; ring
+
+/-- **Bit-length decay (nat form)** `2^{bitLength c a} ≥ (c+1)·a`. The per-phrase
+bit cost is large enough that `2^{-bitLength}` collapses the dictionary-size and
+alphabet-size factors. From `Nat.lt_pow_succ_log_self`: `m + 1 ≤ 2·2^{log₂ m}`. -/
+theorem two_pow_bitLength_ge (c a : ℕ) :
+    (c + 1) * a ≤ 2 ^ LZ78Phrase.bitLength c a := by
+  -- `2^{bitLength c a} = 4 · 2^{log₂(c+1)} · 2^{log₂ a}`.
+  have hbit : 2 ^ LZ78Phrase.bitLength c a
+      = 4 * 2 ^ Nat.log 2 (c + 1) * 2 ^ Nat.log 2 a := by
+    rw [LZ78Phrase.bitLength_eq]
+    rw [show Nat.log 2 (c + 1) + Nat.log 2 a + 2
+          = 2 + Nat.log 2 (c + 1) + Nat.log 2 a from by ring]
+    rw [pow_add, pow_add]
+    ring
+  rw [hbit]
+  -- `c+1 ≤ 2·2^{log₂(c+1)}` and `a ≤ 2·2^{log₂ a}`, then multiply.
+  have hc1 : c + 1 ≤ 2 * 2 ^ Nat.log 2 (c + 1) := by
+    have := Nat.lt_pow_succ_log_self (b := 2) (by norm_num) (c + 1)
+    rw [pow_succ] at this
+    omega
+  have ha : a ≤ 2 * 2 ^ Nat.log 2 a := by
+    have := Nat.lt_pow_succ_log_self (b := 2) (by norm_num) a
+    rw [pow_succ] at this
+    omega
+  calc (c + 1) * a
+      ≤ (2 * 2 ^ Nat.log 2 (c + 1)) * (2 * 2 ^ Nat.log 2 a) :=
+        Nat.mul_le_mul hc1 ha
+    _ = 4 * 2 ^ Nat.log 2 (c + 1) * 2 ^ Nat.log 2 a := by ring
+
+/-- **Distinct-phrase fiber-cardinality count (the genuine combinatorial
+counting core of G2)**.
+
+The number of `n`-tuples `x : Fin n → α` whose genuine greedy parse emits
+exactly `c` distinct phrases is bounded by `(n + 1) · c! · |α|^c`. This is the
+load-bearing counting fact behind the polynomial Kraft bound
+`lz78_block_kraft_poly`: the map `x ↦ (lz78PhraseStrings (List.ofFn x), tail)`
+is injective (`lz78PhraseStrings_flatten_prefix` reconstructs `List.ofFn x`, and
+`List.ofFn` is injective), and the parent-extension dictionary structure makes
+the `j`-th phrase one of the `j` earlier entries (or the empty prefix) extended
+by one symbol, giving `≤ c! · |α|^c` valid phrase-lists; the unfinished tail
+(`lz78PhraseStrings_flatten_tail_mem`, a dictionary member or empty) contributes
+a multiplicity `≤ n + 1`.
+
+The parent-extension invariant `(emitted phrase = earlier entry ++ symbol)` and
+the `Fintype.card`-injection counting are not yet in the codebase
+(`GreedyLongestPrefix.lean` has the distinct / flatten / tail invariants but not
+the dictionary parent-extension structure), so this is isolated as the single
+finite-combinatorial residual on which `lz78_block_kraft_poly` (Parts A + C) is
+proven unconditionally. Numerically verified for `α = Bool`, `n ≤ 6`,
+`c ≤ n` (`#fiber(n,c) ≤ (n+1)·c!·|α|^c` holds with slack).
+
+@residual(plan:lz78-m4-plan) -/
+theorem lz78_phrase_count_fiber_card_le (n c : ℕ) :
+    ((Finset.univ.filter
+          (fun x : Fin n → α => (lz78PhraseStrings (List.ofFn x)).length = c)).card : ℝ)
+      ≤ ((n : ℝ) + 1) * (c.factorial : ℝ) * (Fintype.card α : ℝ) ^ c := by
+  sorry
+
+/-- **Per-`c` Kraft term bound (Part C, geometric collapse)**.
+
+The fiber sum over `n`-tuples with `c` distinct phrases is geometrically small:
+`#fiber(c) · (1/2)^{c·bitLength(c,|α|)} ≤ (n+1)·(1/2)^c`. Combines the counting
+bound `lz78_phrase_count_fiber_card_le` (`#fiber(c) ≤ (n+1)·c!·|α|^c`) with the
+bit-length decay `2^{c·bitLength(c,|α|)} ≥ ((c+1)·|α|)^c` (from
+`Nat.lt_pow_succ_log_self`), giving `#fiber·2^{-...} ≤ (n+1)·c!/(c+1)^c` and the
+elementary inequality `c!·2^c ≤ (c+1)^c`. -/
+theorem lz78_block_kraft_term_le (n c : ℕ) :
+    (((Finset.univ.filter
+          (fun x : Fin n → α => (lz78PhraseStrings (List.ofFn x)).length = c)).card : ℝ)
+        * (1 / 2 : ℝ) ^ (c * LZ78Phrase.bitLength c (Fintype.card α)))
+      ≤ ((n : ℝ) + 1) * (1 / 2 : ℝ) ^ c := by
+  set F : ℝ := ((Finset.univ.filter
+          (fun x : Fin n → α => (lz78PhraseStrings (List.ofFn x)).length = c)).card : ℝ) with hF
+  set a : ℕ := Fintype.card α with ha
+  set B : ℕ := LZ78Phrase.bitLength c a with hB
+  have hF_nn : 0 ≤ F := by rw [hF]; positivity
+  have ha1 : 1 ≤ (a : ℝ) := by
+    rw [ha]; exact_mod_cast Fintype.card_pos
+  have haR_pos : (0 : ℝ) < (a : ℝ) := by linarith
+  have hn1 : (0 : ℝ) ≤ (n : ℝ) + 1 := by positivity
+  -- Step 1: counting residual `F ≤ (n+1)·c!·a^c`.
+  have hcount : F ≤ ((n : ℝ) + 1) * (c.factorial : ℝ) * (a : ℝ) ^ c :=
+    lz78_phrase_count_fiber_card_le n c
+  -- Step 2: `(1/2)^(c·B) = ((1/2)^B)^c`, and `(1/2)^B ≤ 1/((c+1)·a)`.
+  have hpow_rw : (1 / 2 : ℝ) ^ (c * B) = ((1 / 2 : ℝ) ^ B) ^ c := by
+    rw [pow_mul, ← pow_mul, Nat.mul_comm, pow_mul]
+  -- `(c+1)·a ≤ 2^B`, so `a·(1/2)^B ≤ 1/(c+1)`.
+  have hbit : ((c : ℝ) + 1) * (a : ℝ) ≤ (2 : ℝ) ^ B := by
+    have := two_pow_bitLength_ge c a
+    have hcast : (((c + 1) * a : ℕ) : ℝ) ≤ ((2 ^ B : ℕ) : ℝ) := by exact_mod_cast this
+    push_cast at hcast
+    convert hcast using 2
+  have h2Bpos : (0 : ℝ) < (2 : ℝ) ^ B := by positivity
+  have hhalfB : (1 / 2 : ℝ) ^ B = 1 / (2 : ℝ) ^ B := by
+    rw [div_pow, one_pow]
+  -- `a·(1/2)^B ≤ 1/(c+1)`.
+  have haB_le : (a : ℝ) * (1 / 2 : ℝ) ^ B ≤ 1 / ((c : ℝ) + 1) := by
+    rw [hhalfB, mul_one_div, le_div_iff₀ (by positivity : (0:ℝ) < (c:ℝ) + 1),
+      div_mul_eq_mul_div, div_le_one (by positivity : (0:ℝ) < (2:ℝ) ^ B)]
+    -- `a · (c+1) ≤ 2^B`
+    calc (a : ℝ) * ((c : ℝ) + 1) = ((c : ℝ) + 1) * (a : ℝ) := by ring
+      _ ≤ (2 : ℝ) ^ B := hbit
+  have haB_nn : 0 ≤ (a : ℝ) * (1 / 2 : ℝ) ^ B := by positivity
+  -- Step 3: `c!·(a·(1/2)^B)^c ≤ c!·(1/(c+1))^c = c!/(c+1)^c ≤ (1/2)^c`.
+  have hcore : (c.factorial : ℝ) * ((a : ℝ) * (1 / 2 : ℝ) ^ B) ^ c
+      ≤ (1 / 2 : ℝ) ^ c := by
+    have hpow_le : ((a : ℝ) * (1 / 2 : ℝ) ^ B) ^ c ≤ (1 / ((c : ℝ) + 1)) ^ c :=
+      pow_le_pow_left₀ haB_nn haB_le c
+    have hfac_nn : (0 : ℝ) ≤ (c.factorial : ℝ) := by positivity
+    calc (c.factorial : ℝ) * ((a : ℝ) * (1 / 2 : ℝ) ^ B) ^ c
+        ≤ (c.factorial : ℝ) * (1 / ((c : ℝ) + 1)) ^ c :=
+          mul_le_mul_of_nonneg_left hpow_le hfac_nn
+      _ = (c.factorial : ℝ) / ((c : ℝ) + 1) ^ c := by
+          rw [div_pow, one_pow, mul_one_div]
+      _ ≤ (1 / 2 : ℝ) ^ c := by
+          rw [div_le_iff₀ (by positivity : (0:ℝ) < ((c:ℝ) + 1) ^ c), div_pow, one_pow,
+            div_mul_eq_mul_div, le_div_iff₀ (by positivity : (0:ℝ) < (2:ℝ) ^ c), one_mul]
+          -- `c!·2^c ≤ (c+1)^c`
+          exact factorial_two_pow_le_succ_pow c
+  -- Assemble: `F·(1/2)^(cB) ≤ (n+1)·c!·a^c·(1/2)^(cB) = (n+1)·c!·(a·(1/2)^B)^c ≤ (n+1)·(1/2)^c`.
+  have hpow_cB_nn : (0 : ℝ) ≤ (1 / 2 : ℝ) ^ (c * B) := by positivity
+  calc F * (1 / 2 : ℝ) ^ (c * B)
+      ≤ (((n : ℝ) + 1) * (c.factorial : ℝ) * (a : ℝ) ^ c) * (1 / 2 : ℝ) ^ (c * B) :=
+        mul_le_mul_of_nonneg_right hcount hpow_cB_nn
+    _ = ((n : ℝ) + 1) * ((c.factorial : ℝ) * ((a : ℝ) * (1 / 2 : ℝ) ^ B) ^ c) := by
+        rw [hpow_rw, mul_pow]; ring
+    _ ≤ ((n : ℝ) + 1) * (1 / 2 : ℝ) ^ c :=
+        mul_le_mul_of_nonneg_left hcore hn1
+
 /-- **G2 — polynomial `n`-block Kraft for the genuine greedy parse (the
 genuine combinatorial converse brick)**.
 
@@ -485,25 +660,104 @@ The math is `O(n)`, so any polynomial degree `≥ 1` is a true bound; the degree
 Borel–Cantelli lift (`blockLogAvg₂_minus_error_le_rate_ae`).
 
 This is the genuine combinatorial new-math brick of the LZ78 converse
-(Cover–Thomas Thm 13.5.3 lower bound, distinct-phrase counting); it carries
-the converse residual and is left as an honest `sorry`.
+(Cover–Thomas Thm 13.5.3 lower bound, distinct-phrase counting).
+
+**Proof structure (Parts A + C proven, Part B isolated).** The body here is
+`sorry`-free: it is assembled from
+* **Part A** — fiberwise regrouping of the Kraft sum by the distinct-phrase
+  count `c = φ x` (`Finset.sum_fiberwise_of_maps_to'`, `φ x ≤ n`);
+* **Part C** — the per-`c` geometric collapse `lz78_block_kraft_term_le`
+  (`#fiber(c)·2^{-c·bitLength} ≤ (n+1)·(1/2)^c`, built from the bit-length decay
+  `two_pow_bitLength_ge` and the factorial-power decay
+  `factorial_two_pow_le_succ_pow`, both `sorryAx`-free), then
+  `sum_geometric_two_le` and `(n+1)·2 ≤ (n+1)²` (with the `n = 0` boundary
+  `1 ≤ 1`).
+
+The **single remaining residual** is **Part B**, the finite counting fact
+`lz78_phrase_count_fiber_card_le` (`#fiber(c) ≤ (n+1)·c!·|α|^c`), isolated as a
+clean stated-but-unproven lemma carrying `@residual(plan:lz78-m4-plan)`. G2 is
+therefore reduced to that one finite-combinatorial statement (no analysis left);
+this theorem inherits its `sorryAx` transitively.
 
 Classification (independent audit 2026-06-21): a project-internal
 combinatorial brick with a concrete discharge plan (`docs/shannon/lz78-m4-plan.md`,
-G2; ~150–300 lines estimated), **not** a Mathlib-absent research wall — the
-prior `wall:lz78-converse-aseventual` "research-level scope-out" verdict was
-overturned this session (gateway-atom-first inventory). Reclassified
-`wall:lz78-converse-aseventual` → `plan:lz78-m4-plan` to reflect the closure
-route. The statement is TRUE-as-framed: the polynomial bound `≤ (n+1)²` was
-checked numerically (α=Bool, α=Fin 8, n≤6) to hold with large slack, and the
-`n = 0` boundary is exactly `1 ≤ 1`. Closability remains a `human-judgment`
-estimate (the body is still an unproven `sorry`) pending the full G2 build.
+G2), **not** a Mathlib-absent research wall — the prior
+`wall:lz78-converse-aseventual` "research-level scope-out" verdict was overturned
+this session (gateway-atom-first inventory). The statement is TRUE-as-framed: the
+polynomial bound `≤ (n+1)²` was checked numerically (α=Bool, n≤6) to hold with
+large slack, and the `n = 0` boundary is exactly `1 ≤ 1`. The residual now lives
+entirely in the Part B counting lemma `lz78_phrase_count_fiber_card_le`, whose
+closure needs the LZ78 dictionary parent-extension invariant (each emitted phrase
+= an earlier entry or empty ++ one symbol) — absent from `GreedyLongestPrefix.lean`
+(which has the distinct / flatten / tail invariants but not the parent-extension
+structure) — plus the `Fintype.card`-injection counting on top.
 
 @residual(plan:lz78-m4-plan) -/
 theorem lz78_block_kraft_poly (n : ℕ) :
     ∑ x : Fin n → α, (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x)
       ≤ ((n : ℝ) + 1) ^ 2 := by
-  sorry
+  classical
+  -- Part A: group the Kraft sum by the distinct-phrase count `c = φ x`.
+  set φ : (Fin n → α) → ℕ := fun x => (lz78PhraseStrings (List.ofFn x)).length with hφ
+  -- The encoding length depends on `x` only through `c = φ x`.
+  have hLfac : ∀ x : Fin n → α,
+      lz78GreedyImplEncodingLength n x = φ x * LZ78Phrase.bitLength (φ x) (Fintype.card α) := by
+    intro x; rfl
+  -- `φ x ≤ n`, so `φ x ∈ Finset.range (n+1)`.
+  have hmaps : ∀ x ∈ (Finset.univ : Finset (Fin n → α)), φ x ∈ Finset.range (n + 1) := by
+    intro x _
+    rw [Finset.mem_range]
+    have hle : φ x ≤ n := lz78GreedyImplPhraseCount_ofFn_le n x
+    omega
+  -- Fiberwise regrouping: ∑_x f(φ x) = ∑_{c∈range(n+1)} ∑_{x : φ x = c} f(φ x).
+  have hfiber :
+      ∑ x : Fin n → α, (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x)
+        = ∑ c ∈ Finset.range (n + 1),
+            ∑ x ∈ Finset.univ.filter (fun x => φ x = c),
+              (1 / 2 : ℝ) ^ (c * LZ78Phrase.bitLength c (Fintype.card α)) := by
+    -- `(1/2)^(L_n x) = f (φ x)` with `f c = (1/2)^(c·bitLength c |α|)`.
+    have hrw : ∀ x : Fin n → α, (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x)
+        = (fun c => (1 / 2 : ℝ) ^ (c * LZ78Phrase.bitLength c (Fintype.card α))) (φ x) := by
+      intro x; rw [hLfac x]
+    -- On each fiber `φ x = c`, the summand `f (φ x)` collapses to `f c`.
+    rw [Finset.sum_congr rfl (fun x _ => hrw x),
+      ← Finset.sum_fiberwise_of_maps_to' hmaps
+        (fun c => (1 / 2 : ℝ) ^ (c * LZ78Phrase.bitLength c (Fintype.card α)))]
+  rw [hfiber]
+  -- Part B + C: each per-`c` term is ≤ (n+1)·(1/2)^c, then sum the geometric series.
+  have hterm : ∀ c ∈ Finset.range (n + 1),
+      (∑ x ∈ Finset.univ.filter (fun x => φ x = c),
+          (1 / 2 : ℝ) ^ (c * LZ78Phrase.bitLength c (Fintype.card α)))
+        ≤ ((n : ℝ) + 1) * (1 / 2 : ℝ) ^ c := by
+    intro c _
+    -- The inner summand is constant on the fiber, so the sum is `#fiber · (1/2)^…`.
+    rw [Finset.sum_const, nsmul_eq_mul]
+    exact lz78_block_kraft_term_le n c
+  calc
+    ∑ c ∈ Finset.range (n + 1),
+        ∑ x ∈ Finset.univ.filter (fun x => φ x = c),
+          (1 / 2 : ℝ) ^ (c * LZ78Phrase.bitLength c (Fintype.card α))
+      ≤ ∑ c ∈ Finset.range (n + 1), ((n : ℝ) + 1) * (1 / 2 : ℝ) ^ c :=
+        Finset.sum_le_sum hterm
+    _ = ((n : ℝ) + 1) * ∑ c ∈ Finset.range (n + 1), (1 / 2 : ℝ) ^ c := by
+        rw [Finset.mul_sum]
+    _ ≤ ((n : ℝ) + 1) ^ 2 := by
+        rcases Nat.eq_zero_or_pos n with hn0 | hn1
+        · -- n = 0: the sum has one term `(1/2)^0 = 1`, giving `1·1 = 1 ≤ 1`.
+          subst hn0; norm_num
+        · -- n ≥ 1: `∑_{c<n+1}(1/2)^c ≤ 2` and `(n+1)·2 ≤ (n+1)^2` since `2 ≤ n+1`.
+          have hgeom : (∑ c ∈ Finset.range (n + 1), (1 / 2 : ℝ) ^ c) ≤ 2 :=
+            sum_geometric_two_le (n + 1)
+          have hnpos : (0 : ℝ) ≤ (n : ℝ) + 1 := by positivity
+          have h2le : (2 : ℝ) ≤ (n : ℝ) + 1 := by
+            have : (1 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn1
+            linarith
+          calc ((n : ℝ) + 1) * ∑ c ∈ Finset.range (n + 1), (1 / 2 : ℝ) ^ c
+              ≤ ((n : ℝ) + 1) * 2 := by
+                exact mul_le_mul_of_nonneg_left hgeom hnpos
+            _ ≤ ((n : ℝ) + 1) * ((n : ℝ) + 1) := by
+                exact mul_le_mul_of_nonneg_left h2le hnpos
+            _ = ((n : ℝ) + 1) ^ 2 := by ring
 
 /-- **Per-`n` bad-set measure bound (Markov on the discrete block law + G2)**.
 
