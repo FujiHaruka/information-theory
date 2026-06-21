@@ -1,4 +1,7 @@
-import InformationTheory.Shannon.SMB.AlgoetCover.Core
+import InformationTheory.Shannon.SMB.AlgoetCover.KMarkovApproximation
+import InformationTheory.Shannon.SMB.AlgoetCover.MarkovLikelihoodRatio
+import InformationTheory.Shannon.SMB.AlgoetCover.Limsup
+import InformationTheory.Shannon.SMB.AlgoetCover.Boundedness
 import InformationTheory.Shannon.SMB.AlgoetCover.TwoSidedRatio
 import InformationTheory.Shannon.SMB.AlgoetCover.Liminf
 

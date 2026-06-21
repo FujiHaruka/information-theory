@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.SMB.AlgoetCover.Core
+import InformationTheory.Shannon.SMB.AlgoetCover.MarkovLikelihoodRatio
 import InformationTheory.Shannon.LZ78.GreedyLongestPrefix
 import Mathlib.Data.Fin.Tuple.Basic
 

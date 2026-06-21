@@ -2,7 +2,7 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.LZ78.ZivMeasureBridge
 import InformationTheory.Shannon.LZ78.ZivLengthGrouping
 import InformationTheory.Shannon.LZ78.EmpiricalEntropyMean
-import InformationTheory.Shannon.SMB.AlgoetCover.Core
+import InformationTheory.Shannon.SMB.AlgoetCover.MarkovLikelihoodRatio
 import Mathlib.Data.ENNReal.BigOperators
 
 /-!

@@ -6,7 +6,7 @@ import Mathlib.MeasureTheory.OuterMeasure.BorelCantelli
 import Mathlib.MeasureTheory.Integral.Lebesgue.Markov
 import Mathlib.Analysis.PSeries
 import Mathlib.Topology.Algebra.Order.LiminfLimsup
-import InformationTheory.Shannon.SMB.AlgoetCover.Core
+import InformationTheory.Shannon.SMB.AlgoetCover.Boundedness
 import InformationTheory.Shannon.SMB.AlgoetCover.TwoSidedRatio
 
 namespace InformationTheory.Shannon
