@@ -25,7 +25,7 @@ full-support assumption `hW_pos`. The smoothed channel is
 ## Implementation notes
 
 The main theorem `shannon_noisy_channel_coding_theorem_general` is in
-`ShannonTheoremFullDischarge`, which imports this file for the smoothing infrastructure.
+`ShannonTheoremMaxError`, which imports this file for the smoothing infrastructure.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding

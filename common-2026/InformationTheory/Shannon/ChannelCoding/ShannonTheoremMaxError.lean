@@ -3,26 +3,26 @@ import InformationTheory.Shannon.ChannelCoding.ShannonTheorem
 import InformationTheory.Shannon.ChannelCoding.ShannonTheoremGeneral
 import InformationTheory.Shannon.IIDProductInput.Basic
 import InformationTheory.Shannon.AEP.Rate
-import InformationTheory.Shannon.ChannelCoding.ShannonTheoremFullDischarge.SeedLemmas
-import InformationTheory.Shannon.ChannelCoding.ShannonTheoremFullDischarge.PmfLogBounds
-import InformationTheory.Shannon.ChannelCoding.ShannonTheoremFullDischarge.SmoothInstantiation
-import InformationTheory.Shannon.ChannelCoding.ShannonTheoremFullDischarge.OuterN
+import InformationTheory.Shannon.ChannelCoding.ShannonTheoremMaxError.SeedLemmas
+import InformationTheory.Shannon.ChannelCoding.ShannonTheoremMaxError.PmfLogBounds
+import InformationTheory.Shannon.ChannelCoding.ShannonTheoremMaxError.SmoothInstantiation
+import InformationTheory.Shannon.ChannelCoding.ShannonTheoremMaxError.OuterN
 import Mathlib.Analysis.Convex.StdSimplex
 import Mathlib.Topology.Order.Compact
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 
 /-!
-# Shannon noisy channel coding theorem — fully discharged (umbrella)
+# Shannon noisy channel coding theorem — max-error achievability (umbrella)
 
-Umbrella module for the fully-discharged Shannon noisy channel coding theorem.
+Umbrella module for the max-error form of the Shannon noisy channel coding theorem.
 Supporting lemmas are split into part files:
 
-* `ShannonTheoremFullDischarge/SeedLemmas.lean` — smooth input distribution and
+* `ShannonTheoremMaxError/SeedLemmas.lean` — smooth input distribution and
   capacity lower bound construction.
-* `ShannonTheoremFullDischarge/PmfLogBounds.lean` — closed-form pmfLog variance bounds.
-* `ShannonTheoremFullDischarge/SmoothInstantiation.lean` — achievability at the smooth
+* `ShannonTheoremMaxError/PmfLogBounds.lean` — closed-form pmfLog variance bounds.
+* `ShannonTheoremMaxError/SmoothInstantiation.lean` — achievability at the smooth
   channel with explicit `N` formula.
-* `ShannonTheoremFullDischarge/OuterN.lean` — outer `N` construction combining TV bound
+* `ShannonTheoremMaxError/OuterN.lean` — outer `N` construction combining TV bound
   and smooth achievability.
 
 This file contains only the main theorem
@@ -41,7 +41,7 @@ variable {α β : Type*}
 /-! ## Main theorem -/
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Shannon noisy channel coding theorem (fully discharged)**: for `R < capacity W`
+/-- **Shannon noisy channel coding theorem (max-error achievability)**: for `R < capacity W`
 and any `ε > 0`, there exists `N` such that for all `n ≥ N` there is a code with
 `M ≥ ⌈exp(nR)⌉` codewords achieving max-error less than `ε`. -/
 @[entry_point]

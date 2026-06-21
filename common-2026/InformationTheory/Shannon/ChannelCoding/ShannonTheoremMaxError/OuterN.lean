@@ -3,9 +3,9 @@ import InformationTheory.Shannon.ChannelCoding.ShannonTheorem
 import InformationTheory.Shannon.ChannelCoding.ShannonTheoremGeneral
 import InformationTheory.Shannon.IIDProductInput.Basic
 import InformationTheory.Shannon.AEP.Rate
-import InformationTheory.Shannon.ChannelCoding.ShannonTheoremFullDischarge.SeedLemmas
-import InformationTheory.Shannon.ChannelCoding.ShannonTheoremFullDischarge.PmfLogBounds
-import InformationTheory.Shannon.ChannelCoding.ShannonTheoremFullDischarge.SmoothInstantiation
+import InformationTheory.Shannon.ChannelCoding.ShannonTheoremMaxError.SeedLemmas
+import InformationTheory.Shannon.ChannelCoding.ShannonTheoremMaxError.PmfLogBounds
+import InformationTheory.Shannon.ChannelCoding.ShannonTheoremMaxError.SmoothInstantiation
 import Mathlib.Analysis.Convex.StdSimplex
 import Mathlib.Topology.Order.Compact
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
@@ -13,7 +13,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 /-!
 # Outer `N` construction — max-error closed form
 
-Part file split from `ShannonTheoremFullDischarge`. Constructs the outer `N₀` that
+Part file split from `ShannonTheoremMaxError`. Constructs the outer `N₀` that
 simultaneously controls the TV smoothing error and the smooth-channel achievability.
 -/
 

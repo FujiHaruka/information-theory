@@ -10,7 +10,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 /-!
 # Achievability at the smooth channel — closed-form N
 
-Part file split from `ShannonTheoremFullDischarge`. Instantiates
+Part file split from `ShannonTheoremMaxError`. Instantiates
 `channel_coding_achievability` at the smooth channel with an explicit `N` formula.
 -/
 

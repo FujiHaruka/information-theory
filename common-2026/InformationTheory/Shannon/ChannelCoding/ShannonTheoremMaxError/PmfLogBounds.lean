@@ -10,7 +10,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 /-!
 # δ-asymptotic `pmfLog` bounds for the smooth channel
 
-Part file split from `ShannonTheoremFullDischarge`. Provides pointwise `pmfLog` bounds
+Part file split from `ShannonTheoremMaxError`. Provides pointwise `pmfLog` bounds
 for `iidXs`, `iidYs`, and `jointSequence` under `iidAmbientMeasure p (Channel.smooth W δ)`,
 and analytic lemmas `exists_N_log_sq_le_n` / `exists_N_log_sq_plus_const_le_n`.
 -/
