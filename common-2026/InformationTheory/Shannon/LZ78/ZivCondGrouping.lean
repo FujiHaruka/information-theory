@@ -11,16 +11,16 @@ import Mathlib.Data.ENNReal.BigOperators
 This file supplies the **conditional** analogue of the length-grouping measure
 bridge for the LZ78 achievability wall `ziv_aseventual_le_blockLogAvg₂`
 (`InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`,
-slug `lz78-aseventual-ziv`, CLOSED 2026-06-21), route LOCK = `markovFactor`.
+slug `lz78-aseventual-ziv`), via the `markovFactor` route.
 
 ## Approach
 
 The dead marginal route (`ZivMeasureBridge.lean`,
 `lz78PhraseStrings_mul_log_le_sum_neg_log_marginal_add_overhead`) fibers phrases
 by `List.length` and lower-bounds the entropy by `∑ -log P_ℓ` for the *marginal*
-`P_ℓ`. That direction is D8-dead (the marginal sum bound runs the wrong way for
+`P_ℓ`. That direction is dead (the marginal sum bound runs the wrong way for
 the Ziv connection). This file instead uses the **conditional** per-`k`-state
-product sub-distribution `condQkState μ p k s` (from `markovFactor`, leg 7) as
+product sub-distribution `condQkState μ p k s` (from `markovFactor`) as
 the grouping vehicle, fibering phrases by the **pair** `(k-state, length)`:
 
 1. **Outer grouping** over `ι = (Fin k → α) × ℕ`: apply

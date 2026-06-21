@@ -32,28 +32,22 @@ This single file publishes:
   `tendsto_of_le_liminf_of_limsup_le`. This is **not** the LZ78
   optimality claim itself; it derives a.s. convergence from a
   caller-supplied two-sided sandwich. The genuine optimality headline
-  (with the sandwich halves discharged as scope-out `sorry + @residual`)
+  (with the sandwich halves discharged as proven theorems, sorryAx-free)
   is `lz78_asymptotic_optimality_with_greedy_impl` in
   `InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`.
 
-## Scope-out of the asymptotic-optimality core
+## The asymptotic-optimality core
 
-The two genuine residuals of LZ78 asymptotic optimality — the
-achievability upper bound `∀ᵐ ω, limsup (lz/n) ≤ entropyRate`
+The two halves of LZ78 asymptotic optimality — the achievability upper
+bound `∀ᵐ ω, limsup (lz/n) ≤ entropyRate₂`
 (Ziv's inequality, Cover–Thomas Lemma 13.5.5) and the converse lower
-bound `∀ᵐ ω, entropyRate ≤ liminf (lz/n)` (Cover–Thomas Theorem 13.5.3
-lower bound) — are the **single source of truth** in the two scope-out
-`sorry + @residual` lemmas
+bound `∀ᵐ ω, entropyRate₂ ≤ liminf (lz/n)` (Cover–Thomas Theorem 13.5.3
+lower bound) — are the **single source of truth** in the two proven
+theorems
 `lz78GreedyImpl_achievability_ae` / `lz78GreedyImpl_converse_ae`
 in `InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`
-(M3 achievability `lz78-aseventual-ziv` CLOSED 2026-06-21; M4 converse
-reclassified to `@residual(plan:lz78-m4-plan)` — overturned from the prior
-`wall:lz78-converse-aseventual` scope-out, now a closeable G2 combinatorial
-brick, `docs/shannon/lz78-m4-plan.md` / `docs/textbook-roadmap.md`). The earlier
-statement-only passthrough predicates (`IsZivInequalityPassthrough`,
-`IsLZ78ConversePassthrough`, `IsSMBSandwichPassthrough`) that duplicated
-these statements as dead scaffolding were removed; the SMB sandwich itself
-is fully discharged upstream (`shannon_mcmillan_breiman`).
+(both sorryAx-free, `@audit:ok`). The SMB sandwich itself is fully
+discharged upstream (`shannon_mcmillan_breiman`).
 
 ## Statement-level structure
 
@@ -71,12 +65,9 @@ is fully discharged upstream (`shannon_mcmillan_breiman`).
   built-in claim that any encoding achieves the entropy rate. For the
   genuine greedy LZ78 parser those two halves are the Cover–Thomas
   Eq. 13.124 / 13.130 substance of Thm 13.5.3, whose genuine discharge
-  (Ziv inequality + SMB) is **M3/M4 research-level scope-out**
-  (`docs/textbook-roadmap.md`); they are carried as `sorry + @residual`
+  (Ziv inequality + SMB) is proven (sorryAx-free)
   in `lz78_asymptotic_optimality_with_greedy_impl`
   (`lz78GreedyImpl_converse_ae` / `lz78GreedyImpl_achievability_ae`).
-  (The earlier `lz78_two_sided_optimality_ergodic` / `LZ78FinalGlue.lean`
-  chain-level forms were deleted in the M3/M4 cleanup.)
 
 ## Re-use of existing infrastructure
 
@@ -97,7 +88,7 @@ The §2 combinator is a genuine two-sided-sandwich derivation via
 *not* an identity-wrap pass-through, and *not* the LZ78 optimality claim
 (its sandwich arguments are generic and caller-supplied). The genuine
 two-sided sandwich on `lz/n` — the actual achievability / converse
-residual — lives as scope-out `sorry + @residual` in
+halves — is proven (sorryAx-free) in
 `GreedyParsingImpl.lean` (`lz78GreedyImpl_achievability_ae` /
 `lz78GreedyImpl_converse_ae`), the single source of truth.
 -/
@@ -224,7 +215,7 @@ boundedness), it derives a.s. convergence of `lz/n` to `L` via
 claim that any particular encoding achieves any particular limit — the
 caller is responsible for supplying them (for the concrete greedy LZ78
 parser, with `L = entropyRate₂` the bit-rate target, that supply is the
-genuine M3/M4 scope-out content, carried as `sorry + @residual` in
+genuine achievability / converse content, proven (sorryAx-free) in
 `lz78_asymptotic_optimality_with_greedy_impl`).
 
 The limit `L` is a generic parameter (not hard-wired to `entropyRate`):
@@ -235,10 +226,7 @@ instantiates it with the bit-unit `entropyRate₂`.
 
 The body is a genuine application of the Mathlib squeeze, not an identity
 wrap of the conclusion (the sandwich bounds relate `lz/n` to `L` via `≤`,
-distinct from the `Tendsto … (𝓝 L)` conclusion). The chain-level /
-final-glue forms (`lz78_two_sided_optimality_ergodic`,
-`LZ78FinalGlue.lean`) referenced by earlier docstrings were deleted in the
-M3/M4 scope-out cleanup and no longer exist. -/
+distinct from the `Tendsto … (𝓝 L)` conclusion). -/
 theorem lz78_asymptotic_optimality
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)

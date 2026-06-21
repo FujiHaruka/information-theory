@@ -12,7 +12,7 @@ import InformationTheory.Fano.CondEntropy
 import InformationTheory.Fano.Core
 import InformationTheory.Fano.DPI
 import InformationTheory.Fano.Measure
--- Shannon converse (Phase 4)
+-- Shannon converse
 import InformationTheory.Shannon.MutualInfo
 import InformationTheory.Shannon.DPI
 import InformationTheory.Shannon.Bridge

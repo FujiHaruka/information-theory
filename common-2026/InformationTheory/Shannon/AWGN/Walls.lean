@@ -491,10 +491,10 @@ form (`klDiv_gaussianReal_gaussianReal_eq`), integrating the per-fibre quadratic
 mean-0 variance-`P'` input — deliberately **avoiding `mutualInfoOfChannel` / `MIClosedForm`**
 (import cycle `Walls → MIClosedForm → ContChannelMIDecomp → Walls`).
 
-Independently audited 2026-06-12: sorryAx-free (`#print axioms` =
-`[propext, Classical.choice, Quot.sound]`); signature carries the genuine preconditions
+The signature carries the genuine preconditions
 `0 < P` / `(N:ℝ) ≠ 0` (the union-bound consumer derives both before invoking); no
 circularity / bundling / degenerate-def.
+
 @audit:ok -/
 theorem klDiv_perLetter_eq_capacity
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0) :
@@ -638,10 +638,10 @@ n-letter joint/product measures from the `continuousAepGaussian_holds` signature
 `arrowProdEquivProdArrow` reshape (`klDiv_map_measurableEquiv`) + `klDiv_pi_eq_sum`
 + i.i.d. `Finset.sum_const`.
 
-Independently audited 2026-06-12: sorryAx-free (`#print axioms` =
-`[propext, Classical.choice, Quot.sound]`); unconditional measure identity (no `P`/`N`
+Unconditional measure identity (no `P`/`N`
 precondition — holds even in the degenerate cases, both sides equal); no circularity /
 bundling / degenerate-def.
+
 @audit:ok -/
 theorem klDiv_nFold_eq_nsmul (P : ℝ) (N : ℝ≥0) {n : ℕ} :
     (klDiv

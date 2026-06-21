@@ -501,8 +501,7 @@ caller-supplied generic arguments. The body is a genuine application of
 `tendsto_of_le_liminf_of_limsup_le`), not an identity wrap. The genuine
 LZ78-optimality headline with the discharged sandwich lives in
 `lz78_asymptotic_optimality_with_greedy_impl` (for the genuine greedy
-parser), where the two load-bearing halves are carried as
-`sorry + @residual`.
+parser), where the two halves are proven (sorryAx-free).
 
 NOTE on units: this forwarder keeps the nat-unit `entropyRate` target only
 because its `h_lower` / `h_upper` are caller-supplied generic arguments

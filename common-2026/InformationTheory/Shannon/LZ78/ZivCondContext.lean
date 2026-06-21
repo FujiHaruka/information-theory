@@ -10,11 +10,11 @@ import Mathlib.MeasureTheory.Measure.Typeclasses.Probability
 This file supplies the first measure-theoretic atom of the **conditional-context**
 route for the LZ78 achievability wall `ziv_aseventual_le_blockLogAvg₂`
 (`InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`,
-slug `lz78-aseventual-ziv`, CLOSED 2026-06-21).
+slug `lz78-aseventual-ziv`).
 
 ## Background
 
-Leg 4 ruled out the two simple grouping routes: node-position grouping (the D3
+The two simple grouping routes are ruled out: node-position grouping (the
 overhead trap) and marginal-length grouping (`ZivMeasureBridge.lean`, the
 direction is wrong since `∑ -log P_marginal ≥ -log Pₙ` for sources with memory).
 The genuine surviving structure is the **conditional** sub-distribution
@@ -27,7 +27,7 @@ sub-distribution `∑_a q(v · a | v) ≤ 1`.
 * `condContextProb` — the fixed-tuple conditional probability
   `q(v, a) = P(blockRV (m+1) = Fin.snoc v a) / P(blockRV m = v)`, the
   ω-independent node-context conditional (NOT the path-prefix `condPhraseProb`,
-  which is observation-dependent and a dead start, D4).
+  which is observation-dependent and a dead start).
 
 ## Main results
 
@@ -147,7 +147,7 @@ the conditional mass of the extended block `Fin.snoc v a` given the context bloc
 
 This is the genuine conditional `q(symbol | context)` the LZ78 achievability
 chain rule requires — NOT the path-prefix ratio `condPhraseProb`, which is
-observation-dependent and a dead start (`∑ⱼ qⱼ ≈ c`, D4). -/
+observation-dependent and a dead start (`∑ⱼ qⱼ ≈ c`). -/
 noncomputable def condContextProb
     (μ : Measure Ω) (p : StationaryProcess μ α)
     {m : ℕ} (v : Fin m → α) (a : α) : ℝ :=
@@ -266,7 +266,7 @@ theorem prod_condContextProb_path_telescope
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- **Conditional chain rule reaches `-log Pₙ`** (genuine, equality): unlike the
-marginal route (direction-mismatched, D8), the node-context conditional sum
+marginal route (direction-mismatched), the node-context conditional sum
 reaches the block neg-log-probability exactly,
 `∑_{m<n} -log q_cond = -log Pₙ{block ω}`. -/
 theorem sum_neg_log_condContextProb_path_eq

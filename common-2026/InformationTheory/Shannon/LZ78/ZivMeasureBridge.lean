@@ -11,11 +11,11 @@ This file supplies the **measure-theoretic + log-sum** layer of the
 length-grouping route for the LZ78 achievability wall
 `ziv_aseventual_le_blockLogAvg₂`
 (`InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`,
-slug `lz78-aseventual-ziv`, CLOSED 2026-06-21).
+slug `lz78-aseventual-ziv`).
 
 ## Approach
 
-Leg 4 (`ZivLengthGrouping.lean`) produced the abstract grouping inequality
+`ZivLengthGrouping.lean` produced the abstract grouping inequality
 
 ```
 c · log c ≤ ∑_ℓ c_ℓ · log c_ℓ + c · log D
@@ -38,7 +38,7 @@ terms into negative-log marginal probabilities and aggregates:
    gives `card S · log (card S) ≤ ∑_{Z ∈ S} -log P_ℓ(Z)`.
 
 3. **Aggregation** (`lz78PhraseStrings_mul_log_le_sum_neg_log_marginal_add_overhead`):
-   combine leg 4's grouping inequality with step 2 applied per length group,
+   combine the grouping inequality with step 2 applied per length group,
    instantiating `P_ℓ` at the actual phrase marginals via the injection
    `w ↦ (w[·]) : List α → (Fin ℓ → α)` (injective on length-`ℓ` lists), giving
 
@@ -166,7 +166,7 @@ theorem toFinVec_injOn (ℓ : ℕ) :
 omit [Fintype α] in
 /-- **Length-grouped marginal entropy bound for the LZ78 phrase set**.
 
-Instantiating the abstract grouping inequality (leg 4) at the actual
+Instantiating the abstract grouping inequality at the actual
 length-`ℓ` marginals, with `c = #phrases`, `D = #distinct lengths`:
 
 ```
@@ -251,7 +251,7 @@ theorem lz78PhraseStrings_mul_log_le_sum_neg_log_marginal_add_overhead
     rw [hGdef]
     exact Finset.sum_fiberwise_of_maps_to (fun w hw =>
       Finset.mem_image_of_mem List.length hw) _
-  -- Combine leg 4's grouping inequality with the per-group log-sum bound.
+  -- Combine the grouping inequality with the per-group log-sum bound.
   have hleg4 := lz78PhraseStrings_card_mul_log_le_sum_length_group (α := α) input
   simp only at hleg4
   calc ((lz78PhraseStrings input).length : ℝ)
