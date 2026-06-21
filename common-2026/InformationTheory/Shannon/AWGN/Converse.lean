@@ -1,6 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.AWGN.Basic
-import InformationTheory.Shannon.AWGN.ConverseDischarge
+import InformationTheory.Shannon.AWGN.ConverseMutualInfoFiniteness
+import InformationTheory.Shannon.AWGN.ConverseCapacityBound
 import InformationTheory.Shannon.ChannelCoding.MIDecomp
 
 /-!

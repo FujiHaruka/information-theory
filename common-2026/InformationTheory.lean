@@ -133,7 +133,8 @@ import InformationTheory.Shannon.AWGN.AchievabilityCodebook
 import InformationTheory.Shannon.AWGN.AchievabilityTypicalDecoder
 import InformationTheory.Shannon.AWGN.AchievabilityExpurgation
 import InformationTheory.Shannon.AWGN.AchievabilityCodeExistence
-import InformationTheory.Shannon.AWGN.ConverseDischarge
+import InformationTheory.Shannon.AWGN.ConverseMutualInfoFiniteness
+import InformationTheory.Shannon.AWGN.ConverseCapacityBound
 import InformationTheory.Shannon.AWGN.KLCapacityAndAEP
 import InformationTheory.Shannon.AWGN.PerCodewordPowerConstraint
 import InformationTheory.Shannon.AWGN.ConverseMIChainRule
