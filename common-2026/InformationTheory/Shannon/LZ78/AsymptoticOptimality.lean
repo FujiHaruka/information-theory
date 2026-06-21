@@ -148,26 +148,42 @@ theorem lz78_impl_encoding_length_per_symbol_nonneg (n : ℕ) (x : Fin n → α)
     (0 : ℝ) ≤ (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ) :=
   div_nonneg (by positivity) (by positivity)
 
-/-- **`ℕ`–`Real` base-`2` log bridge**: `(Nat.log 2 m : ℝ) · Real.log 2 ≤ Real.log m`
-for `m ≥ 1`, the inequality `Nat.log 2 m ≤ log m / log 2` cleared of the
-denominator. Used to convert the integer per-phrase code length
-`Nat.log 2 (c+1)` to the real `c·log c` Ziv product bound. -/
-theorem lz78_impl_natLog_mul_log_two_le (m : ℕ) :
+/-- `(Nat.log 2 m : ℝ) * Real.log 2 ≤ Real.log m`: the integer base-`2`
+logarithm bounded by `Real.log m / Real.log 2` with the denominator cleared.
+A real-valued restatement of `Real.natLog_le_logb`. -/
+theorem natLog_mul_log_two_le (m : ℕ) :
     (Nat.log 2 m : ℝ) * Real.log 2 ≤ Real.log m := by
-  have hbridge : (Nat.log 2 m : ℝ) ≤ Real.log m / Real.log 2 := by
+  have hbound : (Nat.log 2 m : ℝ) ≤ Real.log m / Real.log 2 := by
     have := Real.natLog_le_logb m 2
     rwa [Real.logb, show ((2 : ℕ) : ℝ) = (2 : ℝ) from by norm_cast] at this
   have hlog2 : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
-  rw [le_div_iff₀ hlog2] at hbridge
-  exact hbridge
+  rw [le_div_iff₀ hlog2] at hbound
+  exact hbound
 
-/-- **`n`- and `x`-uniform constant rate bound** for the genuine greedy
-parse: the per-symbol bit rate `lz78GreedyImplEncodingLength n x / n` is
+/-- `(c : ℝ) * Real.log (c + 1) ≤ (c : ℝ) * Real.log 2 + (c : ℝ) * Real.log c`:
+the per-phrase `+1`-shift slack, from `Real.log (c + 1) ≤ Real.log 2 + Real.log c`
+(via `Real.log (c + 1) ≤ Real.log (2 * c)` for `c ≥ 1`; trivial for `c = 0`). -/
+theorem mul_log_succ_le (c : ℕ) :
+    (c : ℝ) * Real.log (c + 1) ≤ (c : ℝ) * Real.log 2 + (c : ℝ) * Real.log c := by
+  rcases Nat.eq_zero_or_pos c with hc0 | hcpos
+  · simp [hc0]
+  · have hcR_nn : (0 : ℝ) ≤ (c : ℝ) := by positivity
+    have hc1 : (1 : ℝ) ≤ (c : ℝ) := by exact_mod_cast hcpos
+    have hstep : Real.log ((c : ℝ) + 1) ≤ Real.log 2 + Real.log c := by
+      have h1 : Real.log ((c : ℝ) + 1) ≤ Real.log (2 * (c : ℝ)) := by
+        apply Real.log_le_log (by positivity)
+        linarith
+      rwa [Real.log_mul (by norm_num) (by positivity)] at h1
+    calc (c : ℝ) * Real.log (c + 1)
+        ≤ (c : ℝ) * (Real.log 2 + Real.log c) := mul_le_mul_of_nonneg_left hstep hcR_nn
+      _ = (c : ℝ) * Real.log 2 + (c : ℝ) * Real.log c := by ring
+
+/-- The per-symbol greedy bit rate `lz78GreedyImplEncodingLength n x / n` is
 bounded by a deterministic constant depending only on `|α|`, for every `n`
-(including the degenerate `n = 0`, where the rate is `0`). The constant is
-`(1 + 8·log(|α|+1)/log 2) + (log₂|α| + 2)`, obtained from the Ziv product
-bound `c·log c ≤ 8·log(|α|+1)·n` (`lz78PhraseStrings_mul_log_le`) together
-with `c ≤ n` and the `ℕ`–`Real` log bridge. -/
+(including the degenerate `n = 0`, where the rate is `0`). The constant
+`(1 + 8 * Real.log (|α| + 1) / Real.log 2) + (Nat.log 2 |α| + 2)` comes from the
+Ziv product bound `c * Real.log c ≤ 8 * Real.log (|α| + 1) * n`
+(`lz78PhraseStrings_mul_log_le`), `c ≤ n`, and `natLog_mul_log_two_le`. -/
 theorem lz78_impl_rate_le_const [Nonempty α] (n : ℕ) (x : Fin n → α) :
     (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ)
       ≤ (1 + 8 * Real.log (Fintype.card α + 1) / Real.log 2)
@@ -210,35 +226,16 @@ theorem lz78_impl_rate_le_const [Nonempty α] (n : ℕ) (x : Fin n → α) :
     have hbridge : (c : ℝ) * ((Nat.log 2 (c + 1) : ℝ) * Real.log 2)
         ≤ (c : ℝ) * Real.log (c + 1) := by
       apply mul_le_mul_of_nonneg_left _ hcR_nn
-      exact lz78_impl_natLog_mul_log_two_le (c + 1) |>.trans_eq (by push_cast; ring_nf)
-    -- `c · log(c+1) ≤ n · log 2 + 8·b·n`.
-    have hupper : (c : ℝ) * Real.log (c + 1) ≤ (n : ℝ) * Real.log 2 + 8 * b * (n : ℝ) := by
-      rcases Nat.eq_zero_or_pos c with hc0 | hcpos
-      · rw [hc0]
-        simp only [Nat.cast_zero, zero_mul]
-        have : (0 : ℝ) ≤ (n : ℝ) * Real.log 2 + 8 * b * (n : ℝ) := by positivity
-        linarith
-      · have hcRpos : (0 : ℝ) < (c : ℝ) := by exact_mod_cast hcpos
-        -- `log(c+1) ≤ log(2c) = log 2 + log c`.
-        have hlogc1 : Real.log (c + 1) ≤ Real.log 2 + Real.log c := by
-          have hstep : Real.log ((c : ℝ) + 1) ≤ Real.log (2 * (c : ℝ)) := by
-            apply Real.log_le_log (by positivity)
-            have : (1 : ℝ) ≤ (c : ℝ) := by exact_mod_cast hcpos
-            linarith
-          rw [Real.log_mul (by norm_num) (by positivity)] at hstep
-          exact hstep
-        -- `c·log(c+1) ≤ c·log 2 + c·log c`, and Ziv: `c·log c ≤ 8·b·n`.
-        have hziv : (c : ℝ) * Real.log c ≤ 8 * b * (n : ℝ) := by
-          have := lz78PhraseStrings_mul_log_le (List.ofFn x)
-          rw [← hc, List.length_ofFn] at this
-          exact this
-        calc (c : ℝ) * Real.log (c + 1)
-            ≤ (c : ℝ) * (Real.log 2 + Real.log c) :=
-              mul_le_mul_of_nonneg_left hlogc1 hcR_nn
-          _ = (c : ℝ) * Real.log 2 + (c : ℝ) * Real.log c := by ring
-          _ ≤ (n : ℝ) * Real.log 2 + 8 * b * (n : ℝ) := by
-              apply add_le_add _ hziv
-              exact mul_le_mul_of_nonneg_right hcnR hℓ2.le
+      exact natLog_mul_log_two_le (c + 1) |>.trans_eq (by push_cast; ring_nf)
+    have hziv : (c : ℝ) * Real.log c ≤ 8 * b * (n : ℝ) := by
+      have := lz78PhraseStrings_mul_log_le (List.ofFn x)
+      rw [← hc, List.length_ofFn] at this
+      exact this
+    have hupper : (c : ℝ) * Real.log (c + 1) ≤ (n : ℝ) * Real.log 2 + 8 * b * (n : ℝ) :=
+      calc (c : ℝ) * Real.log (c + 1)
+          ≤ (c : ℝ) * Real.log 2 + (c : ℝ) * Real.log c := mul_log_succ_le c
+        _ ≤ (n : ℝ) * Real.log 2 + 8 * b * (n : ℝ) :=
+            add_le_add (mul_le_mul_of_nonneg_right hcnR hℓ2.le) hziv
     -- Combine: divide the chain `c·Nat.log·log2 ≤ n·log2 + 8bn` by `log 2`.
     have hchain : (c : ℝ) * ((Nat.log 2 (c + 1) : ℝ) * Real.log 2)
         ≤ (n : ℝ) * Real.log 2 + 8 * b * (n : ℝ) := hbridge.trans hupper
@@ -314,21 +311,9 @@ theorem lz78_impl_bitrate_le_clogc_plus_overhead [Nonempty α]
       ≤ (c : ℝ) * Real.log (c + 1) := by
     rw [mul_assoc]
     apply mul_le_mul_of_nonneg_left _ hcR_nn
-    exact lz78_impl_natLog_mul_log_two_le (c + 1) |>.trans_eq (by push_cast; ring_nf)
-  -- `log(c+1) ≤ log 2 + log c` for `c ≥ 1`; for `c = 0`, `log 1 = 0 ≤ log 2`.
+    exact natLog_mul_log_two_le (c + 1) |>.trans_eq (by push_cast; ring_nf)
   have hlogc1 : (c : ℝ) * Real.log (c + 1)
-      ≤ (c : ℝ) * Real.log 2 + (c : ℝ) * Real.log c := by
-    rcases Nat.eq_zero_or_pos c with hc0 | hcpos
-    · simp [hc0]
-    · have hcpos' : (1 : ℝ) ≤ (c : ℝ) := by exact_mod_cast hcpos
-      have hstep : Real.log ((c : ℝ) + 1) ≤ Real.log 2 + Real.log c := by
-        have h1 : Real.log ((c : ℝ) + 1) ≤ Real.log (2 * (c : ℝ)) := by
-          apply Real.log_le_log (by positivity); linarith
-        rwa [Real.log_mul (by norm_num) (by positivity)] at h1
-      calc (c : ℝ) * Real.log (c + 1)
-          ≤ (c : ℝ) * (Real.log 2 + Real.log c) :=
-            mul_le_mul_of_nonneg_left hstep hcR_nn
-        _ = (c : ℝ) * Real.log 2 + (c : ℝ) * Real.log c := by ring
+      ≤ (c : ℝ) * Real.log 2 + (c : ℝ) * Real.log c := mul_log_succ_le c
   -- The per-`c` term bound after clearing the common `log 2 · n` denominator.
   have hkey : ((c : ℝ) * ((Nat.log 2 (c + 1) : ℝ) + L + 2)) * Real.log 2
       ≤ (c : ℝ) * Real.log c + ((c : ℝ) * Real.log 2 + (c : ℝ) * (L + 2)) := by
