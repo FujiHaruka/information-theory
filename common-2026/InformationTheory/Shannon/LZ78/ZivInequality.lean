@@ -16,7 +16,7 @@ layer (Nat-level phrase-space cardinality bound) as concrete `theorem`s,
 consumed by the `IsLZ78PhraseCountAsymptotic` asymptotic layer; the
 *entropy* layer (`H(X^n) ≤ Σ H(phrase_i)`) and the *log-sum* layer (final
 Ziv form) are developed elsewhere. The genuine a.s. achievability residual
-of LZ78 optimality is scoped out as `lz78GreedyImpl_achievability_ae` in
+of LZ78 optimality is scoped out as `lz78Greedy_achievability_ae` in
 `AsymptoticOptimality.lean`.
 
 ## File layout

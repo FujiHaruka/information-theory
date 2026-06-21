@@ -22,7 +22,7 @@ distinct-phrase invariants `lz78PhraseStrings_nodup` /
 `lz78PhraseStrings_count_le`). This file builds the **encoding-length and
 parent-theorem bridge** on top of that genuine parse:
 
-* `lz78GreedyImplEncodingLength n x` charges `c · bitLength c |α|` bits
+* `lz78GreedyEncodingLength n x` charges `c · bitLength c |α|` bits
   against the genuine distinct phrase count
   `c = (lz78PhraseStrings (List.ofFn x)).length` (each of the `c` phrases
   costs at most `bitLength c |α|` bits at the final dictionary size);
@@ -31,7 +31,7 @@ parent-theorem bridge** on top of that genuine parse:
   `bitLength`-monotonicity;
 * the encoding length plugs into the parent
   `lz78_asymptotic_optimality` parameter slot, publishing the main theorem
-  as `lz78_asymptotic_optimality_with_greedy_impl`.
+  as `lz78_asymptotic_optimality_with_greedy`.
 
 The two a.s.-eventual halves of the sandwich are the converse lower bound and
 the Ziv achievability upper bound; both carry genuine ergodic content and are
@@ -40,18 +40,20 @@ proved here (`sorryAx`-free).
 ## File layout
 
 * **§1. Encoding length + parent-theorem bridge** —
-  `lz78GreedyImplEncodingLength`, its distinct-phrase count bound, and the
+  `lz78GreedyEncodingLength`, its distinct-phrase count bound, and the
   Cover–Thomas bit-length / per-symbol-rate bounds.
-* **§2. `IsLZ78EncodingLengthBoundPassthrough` analogue** — the impl-side
+* **§2. `IsLZ78EncodingLengthBoundPassthrough`** — the
   upper-bound pass-through predicate and its canonical discharge.
 * **§3. Parent-theorem bridge** — the two a.s.-eventual halves and the
-  `lz78_asymptotic_optimality_with_greedy_impl` headline.
+  `lz78_asymptotic_optimality_with_greedy` headline.
 
 ## Pattern source
 
-Layering follows `LZ78GreedyParsing.lean` (worst-case form); the
-parent-theorem bridge mirrors
-`lz78_asymptotic_optimality_with_greedy_encoding`.
+The per-phrase bit cost is reused from `LZ78/GreedyParsing.lean`
+(`LZ78Phrase.bitLength`); the parent-theorem bridge instantiates the
+generic sandwich combinator `lz78_asymptotic_optimality` with the
+genuine greedy encoding length and discharges its two a.s.-eventual
+halves.
 -/
 
 namespace InformationTheory.Shannon
@@ -78,13 +80,13 @@ The phrase count `c = (lz78PhraseStrings (List.ofFn x)).length` is the genuine
 distinct-phrase count (`c ≤ n` always, `c = O(n / log n)` asymptotically via
 `lz78PhraseStrings_count_isBigO`), so the per-symbol rate is data-dependent and
 asymptotically bounded — unlike a one-symbol-per-phrase parse. -/
-def lz78GreedyImplEncodingLength (n : ℕ) (x : Fin n → α) : ℕ :=
+def lz78GreedyEncodingLength (n : ℕ) (x : Fin n → α) : ℕ :=
   let c := (lz78PhraseStrings (List.ofFn x)).length
   c * LZ78Phrase.bitLength c (Fintype.card α)
 
-@[simp] lemma lz78GreedyImplEncodingLength_zero (x : Fin 0 → α) :
-    lz78GreedyImplEncodingLength 0 x = 0 := by
-  unfold lz78GreedyImplEncodingLength
+@[simp] lemma lz78GreedyEncodingLength_zero (x : Fin 0 → α) :
+    lz78GreedyEncodingLength 0 x = 0 := by
+  unfold lz78GreedyEncodingLength
   rw [show (List.ofFn x : List α) = [] from by simp]
   have hc : (lz78PhraseStrings ([] : List α)).length = 0 := by
     have := lz78PhraseStrings_count_le ([] : List α)
@@ -94,7 +96,7 @@ def lz78GreedyImplEncodingLength (n : ℕ) (x : Fin n → α) : ℕ :=
 /-- **Distinct phrase count of the genuine greedy parse on an `n`-tuple is
 `≤ n`**: the genuine longest-prefix parse of `List.ofFn x` emits at most `n`
 distinct phrases (`lz78PhraseStrings_count_le` plus `List.length_ofFn`). -/
-theorem lz78GreedyImplPhraseCount_ofFn_le (n : ℕ) (x : Fin n → α) :
+theorem lz78GreedyPhraseCount_ofFn_le (n : ℕ) (x : Fin n → α) :
     (lz78PhraseStrings (List.ofFn x)).length ≤ n := by
   have := lz78PhraseStrings_count_le (List.ofFn x)
   rwa [List.length_ofFn] at this
@@ -107,12 +109,12 @@ The genuine greedy encoding length for `x : Fin n → α` is bounded by
 each costing at most `bitLength n |α|` bits. Combines the distinct-phrase
 count bound `c ≤ n` with `bitLength`-monotonicity in the dictionary size. -/
 @[entry_point]
-theorem lz78_impl_encoding_length_le_n_log_n_plus_const (n : ℕ) (x : Fin n → α) :
-    lz78GreedyImplEncodingLength n x ≤
+theorem lz78_encoding_length_le_n_log_n_plus_const (n : ℕ) (x : Fin n → α) :
+    lz78GreedyEncodingLength n x ≤
       n * (Nat.log 2 (n + 1) + Nat.log 2 (Fintype.card α) + 2) := by
-  unfold lz78GreedyImplEncodingLength
+  unfold lz78GreedyEncodingLength
   set c := (lz78PhraseStrings (List.ofFn x)).length with hc
-  have hcn : c ≤ n := lz78GreedyImplPhraseCount_ofFn_le n x
+  have hcn : c ≤ n := lz78GreedyPhraseCount_ofFn_le n x
   have hbit : LZ78Phrase.bitLength c (Fintype.card α)
       ≤ LZ78Phrase.bitLength n (Fintype.card α) :=
     LZ78Phrase.bitLength_mono_left hcn
@@ -125,14 +127,14 @@ theorem lz78_impl_encoding_length_le_n_log_n_plus_const (n : ℕ) (x : Fin n →
 /-- **Per-symbol asymptotic bit-rate bound on `ℝ`** for the genuine
 greedy parse: dividing by `n` gives `≤ log(n+1) + log|α| + 2`. -/
 @[entry_point]
-theorem lz78_impl_encoding_length_per_symbol_le (n : ℕ) (hn : 0 < n)
+theorem lz78_encoding_length_per_symbol_le (n : ℕ) (hn : 0 < n)
     (x : Fin n → α) :
-    (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ)
+    (lz78GreedyEncodingLength n x : ℝ) / (n : ℝ)
       ≤ (Nat.log 2 (n + 1) : ℝ) + (Nat.log 2 (Fintype.card α) : ℝ) + 2 := by
-  have hle := lz78_impl_encoding_length_le_n_log_n_plus_const n x
+  have hle := lz78_encoding_length_le_n_log_n_plus_const n x
   have hn' : (n : ℝ) > 0 := by exact_mod_cast hn
   rw [div_le_iff₀ hn']
-  have : (lz78GreedyImplEncodingLength n x : ℝ)
+  have : (lz78GreedyEncodingLength n x : ℝ)
       ≤ (n * (Nat.log 2 (n + 1) + Nat.log 2 (Fintype.card α) + 2) : ℕ) := by
     exact_mod_cast hle
   refine this.trans (le_of_eq ?_)
@@ -144,8 +146,8 @@ divided by `n` is `≥ 0` for every `n` (including `n = 0`, where the
 division is `0/0 = 0`). The numerator is a `ℕ` cast and the denominator a
 `ℕ` cast, so the quotient is a nonnegative real. -/
 @[entry_point]
-theorem lz78_impl_encoding_length_per_symbol_nonneg (n : ℕ) (x : Fin n → α) :
-    (0 : ℝ) ≤ (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ) :=
+theorem lz78_encoding_length_per_symbol_nonneg (n : ℕ) (x : Fin n → α) :
+    (0 : ℝ) ≤ (lz78GreedyEncodingLength n x : ℝ) / (n : ℝ) :=
   div_nonneg (by positivity) (by positivity)
 
 /-- `(Nat.log 2 m : ℝ) * Real.log 2 ≤ Real.log m`: the integer base-`2`
@@ -178,14 +180,14 @@ theorem mul_log_succ_le (c : ℕ) :
         ≤ (c : ℝ) * (Real.log 2 + Real.log c) := mul_le_mul_of_nonneg_left hstep hcR_nn
       _ = (c : ℝ) * Real.log 2 + (c : ℝ) * Real.log c := by ring
 
-/-- The per-symbol greedy bit rate `lz78GreedyImplEncodingLength n x / n` is
+/-- The per-symbol greedy bit rate `lz78GreedyEncodingLength n x / n` is
 bounded by a deterministic constant depending only on `|α|`, for every `n`
 (including the degenerate `n = 0`, where the rate is `0`). The constant
 `(1 + 8 * Real.log (|α| + 1) / Real.log 2) + (Nat.log 2 |α| + 2)` comes from the
 Ziv product bound `c * Real.log c ≤ 8 * Real.log (|α| + 1) * n`
 (`lz78PhraseStrings_mul_log_le`), `c ≤ n`, and `natLog_mul_log_two_le`. -/
-theorem lz78_impl_rate_le_const [Nonempty α] (n : ℕ) (x : Fin n → α) :
-    (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ)
+theorem lz78_rate_le_const [Nonempty α] (n : ℕ) (x : Fin n → α) :
+    (lz78GreedyEncodingLength n x : ℝ) / (n : ℝ)
       ≤ (1 + 8 * Real.log (Fintype.card α + 1) / Real.log 2)
           + ((Nat.log 2 (Fintype.card α) : ℝ) + 2) := by
   set b : ℝ := Real.log (Fintype.card α + 1) with hb
@@ -206,14 +208,14 @@ theorem lz78_impl_rate_le_const [Nonempty α] (n : ℕ) (x : Fin n → α) :
     exact hC_nn
   -- `n ≥ 1`. Abbreviate the distinct phrase count `c`.
   set c : ℕ := (lz78PhraseStrings (List.ofFn x)).length with hc
-  have hcn : c ≤ n := lz78GreedyImplPhraseCount_ofFn_le n x
+  have hcn : c ≤ n := lz78GreedyPhraseCount_ofFn_le n x
   have hnR : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
   have hcR_nn : (0 : ℝ) ≤ (c : ℝ) := by positivity
   have hcnR : (c : ℝ) ≤ (n : ℝ) := by exact_mod_cast hcn
   -- The encoding length expanded via `bitLength_eq`.
-  have hlen : (lz78GreedyImplEncodingLength n x : ℝ)
+  have hlen : (lz78GreedyEncodingLength n x : ℝ)
       = (c : ℝ) * ((Nat.log 2 (c + 1) : ℝ) + L + 2) := by
-    have hdef : lz78GreedyImplEncodingLength n x
+    have hdef : lz78GreedyEncodingLength n x
         = c * LZ78Phrase.bitLength c (Fintype.card α) := rfl
     rw [hdef, LZ78Phrase.bitLength_eq]
     push_cast [hL]
@@ -277,12 +279,12 @@ parent-index constant cost. The first term is the genuine combinatorial
 the overhead is `o(1)` since `c = O(n/log n)` (`lz78PhraseStrings_count_isBigO`).
 
 This is the unit-coherent (`Nat.log 2 → Real.log / log 2`) restatement of the
-encoding-length expansion inside `lz78_impl_rate_le_const`; the bit-rate is
+encoding-length expansion inside `lz78_rate_le_const`; the bit-rate is
 left exactly as `c·log c/(log 2 · n) + overhead`, so the dominant term is
 available for the a.s.-eventual limsup comparison. -/
-theorem lz78_impl_bitrate_le_clogc_plus_overhead [Nonempty α]
+theorem lz78_bitrate_le_clogc_plus_overhead [Nonempty α]
     (n : ℕ) (hn : 0 < n) (x : Fin n → α) :
-    (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ)
+    (lz78GreedyEncodingLength n x : ℝ) / (n : ℝ)
       ≤ ((lz78PhraseStrings (List.ofFn x)).length : ℝ)
             * Real.log ((lz78PhraseStrings (List.ofFn x)).length : ℝ)
             / (Real.log 2 * (n : ℝ))
@@ -295,12 +297,12 @@ theorem lz78_impl_bitrate_le_clogc_plus_overhead [Nonempty α]
   have hℓ2 : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
   have hnR : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
   have hden_pos : (0 : ℝ) < Real.log 2 * (n : ℝ) := by positivity
-  have hcn : c ≤ n := lz78GreedyImplPhraseCount_ofFn_le n x
+  have hcn : c ≤ n := lz78GreedyPhraseCount_ofFn_le n x
   have hcR_nn : (0 : ℝ) ≤ (c : ℝ) := by positivity
-  -- Encoding length expanded via `bitLength_eq` (same as `lz78_impl_rate_le_const`).
-  have hlen : (lz78GreedyImplEncodingLength n x : ℝ)
+  -- Encoding length expanded via `bitLength_eq` (same as `lz78_rate_le_const`).
+  have hlen : (lz78GreedyEncodingLength n x : ℝ)
       = (c : ℝ) * ((Nat.log 2 (c + 1) : ℝ) + L + 2) := by
-    have hdef : lz78GreedyImplEncodingLength n x
+    have hdef : lz78GreedyEncodingLength n x
         = c * LZ78Phrase.bitLength c (Fintype.card α) := rfl
     rw [hdef, LZ78Phrase.bitLength_eq]
     push_cast [hL]
@@ -356,41 +358,40 @@ theorem lz78_impl_bitrate_le_clogc_plus_overhead [Nonempty α]
 
 end EncodingLength
 
-/-! ## §2. `IsLZ78EncodingLengthBoundPassthrough` analogue -/
+/-! ## §2. `IsLZ78EncodingLengthBoundPassthrough` -/
 
-section ImplBoundPassthrough
+section EncodingLengthBoundPassthrough
 
 variable (α : Type*) [Fintype α] [DecidableEq α]
 
-/-- **`IsLZ78ImplEncodingLengthBoundPassthrough B`** — hypothesis
-pass-through for an upper bound `B : ℕ → ℕ` on the *genuine* greedy
-encoding length (the analogue of
-`IsLZ78EncodingLengthBoundPassthrough` for the genuine greedy parse). -/
-def IsLZ78ImplEncodingLengthBoundPassthrough (B : ℕ → ℕ) : Prop :=
-  ∀ (n : ℕ) (x : Fin n → α), lz78GreedyImplEncodingLength n x ≤ B n
+/-- **`IsLZ78EncodingLengthBoundPassthrough B`** — hypothesis
+pass-through for an upper bound `B : ℕ → ℕ` on the genuine greedy
+encoding length `lz78GreedyEncodingLength`. -/
+def IsLZ78EncodingLengthBoundPassthrough (B : ℕ → ℕ) : Prop :=
+  ∀ (n : ℕ) (x : Fin n → α), lz78GreedyEncodingLength n x ≤ B n
 
-@[simp] lemma isLZ78ImplEncodingLengthBoundPassthrough_def (B : ℕ → ℕ) :
-    IsLZ78ImplEncodingLengthBoundPassthrough α B ↔
-      ∀ (n : ℕ) (x : Fin n → α), lz78GreedyImplEncodingLength n x ≤ B n := Iff.rfl
+@[simp] lemma isLZ78EncodingLengthBoundPassthrough_def (B : ℕ → ℕ) :
+    IsLZ78EncodingLengthBoundPassthrough α B ↔
+      ∀ (n : ℕ) (x : Fin n → α), lz78GreedyEncodingLength n x ≤ B n := Iff.rfl
 
-/-- **Cover–Thomas Lemma 13.5.2 form discharges the impl bound
+/-- **Cover–Thomas Lemma 13.5.2 form discharges the bound
 pass-through** with the canonical bound `n · (log(n+1) + log|α| + 2)`. -/
 @[entry_point]
-theorem IsLZ78ImplEncodingLengthBoundPassthrough.canonical :
-    IsLZ78ImplEncodingLengthBoundPassthrough α
+theorem IsLZ78EncodingLengthBoundPassthrough.canonical :
+    IsLZ78EncodingLengthBoundPassthrough α
       (fun n => n * (Nat.log 2 (n + 1) + Nat.log 2 (Fintype.card α) + 2)) := by
   intro n x
-  exact lz78_impl_encoding_length_le_n_log_n_plus_const n x
+  exact lz78_encoding_length_le_n_log_n_plus_const n x
 
-/-- **Monotonicity** of the impl bound pass-through. -/
+/-- **Monotonicity** of the bound pass-through. -/
 @[entry_point]
-theorem IsLZ78ImplEncodingLengthBoundPassthrough.mono {B₁ B₂ : ℕ → ℕ}
-    (h : IsLZ78ImplEncodingLengthBoundPassthrough α B₁) (hB : ∀ n, B₁ n ≤ B₂ n) :
-    IsLZ78ImplEncodingLengthBoundPassthrough α B₂ := by
+theorem IsLZ78EncodingLengthBoundPassthrough.mono {B₁ B₂ : ℕ → ℕ}
+    (h : IsLZ78EncodingLengthBoundPassthrough α B₁) (hB : ∀ n, B₁ n ≤ B₂ n) :
+    IsLZ78EncodingLengthBoundPassthrough α B₂ := by
   intro n x
   exact (h n x).trans (hB n)
 
-end ImplBoundPassthrough
+end EncodingLengthBoundPassthrough
 
 /-! ## §3. Parent-theorem bridge -/
 
@@ -406,14 +407,14 @@ open scoped ENNReal
 /-- **Type-check witness**: the genuine greedy encoding length has the
 right type to plug into the parent `lz78_asymptotic_optimality`
 `lz78EncodingLength : ∀ n, (Fin n → α) → ℕ` parameter slot. -/
-example : (∀ n, (Fin n → α) → ℕ) := @lz78GreedyImplEncodingLength α _ _
+example : (∀ n, (Fin n → α) → ℕ) := @lz78GreedyEncodingLength α _ _
 
 /-- **Per-symbol negative log-likelihood in bits**: `blockLogAvg / Real.log 2`.
 
 The base-2 (bit) version of `blockLogAvg`. SMB (`shannon_mcmillan_breiman`)
 converges `blockLogAvg → entropyRate` in nats; dividing through by `Real.log 2`
 gives the bit-unit version converging to `entropyRate₂`, the unit that matches
-the base-2 LZ78 bit-rate `lz78GreedyImplEncodingLength/n`. -/
+the base-2 LZ78 bit-rate `lz78GreedyEncodingLength/n`. -/
 noncomputable def blockLogAvg₂
     (μ : Measure Ω) (p : StationaryProcess μ α) (n : ℕ) : Ω → ℝ :=
   fun ω => blockLogAvg μ p n ω / Real.log 2
@@ -977,7 +978,7 @@ The Kraft sum of `2^{-L_n(x)}` over all `n`-tuples `x : Fin n → α` is bounded
 by a polynomial in `n`:
 
 ```
-∑_{x : Fin n → α} (1/2)^{lz78GreedyImplEncodingLength n x} ≤ (n + 1)^2.
+∑_{x : Fin n → α} (1/2)^{lz78GreedyEncodingLength n x} ≤ (n + 1)^2.
 ```
 
 **Why a polynomial and not the exact Kraft `≤ 1`.** The greedy
@@ -985,7 +986,7 @@ longest-prefix-match parse is *not complete* — `lz78PhraseStrings_flatten` is 
 genuine *prefix* of the input, and the unfinished tail (`flatten ++ tail =
 input`, with `tail ≠ []` possible and `tail` a prefix of an existing phrase)
 is *not* charged a fresh `(parent, symbol)` token. Hence
-`lz78GreedyImplEncodingLength n x = c · bitLength c |α|` is the cost of only
+`lz78GreedyEncodingLength n x = c · bitLength c |α|` is the cost of only
 the `c` completed phrases and is **not a lossless code length** for `x`, so the
 exact Kraft inequality `∑ 2^{-L_n} ≤ 1` is **FALSE**. The polynomial bound is
 the honest statement: the number of distinct parse *structures* with `c`
@@ -1018,29 +1019,29 @@ The genuine combinatorial brick (Part B) is closed, so this theorem is fully
 carrying no `@residual`. The statement is TRUE-as-framed (numerically checked
 α=Bool, n≤6, with large slack; `n = 0` boundary exactly `1 ≤ 1`). -/
 theorem lz78_block_kraft_poly (n : ℕ) :
-    ∑ x : Fin n → α, (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x)
+    ∑ x : Fin n → α, (1 / 2 : ℝ) ^ (lz78GreedyEncodingLength n x)
       ≤ ((n : ℝ) + 1) ^ 2 := by
   classical
   -- Part A: group the Kraft sum by the distinct-phrase count `c = φ x`.
   set φ : (Fin n → α) → ℕ := fun x => (lz78PhraseStrings (List.ofFn x)).length with hφ
   -- The encoding length depends on `x` only through `c = φ x`.
   have hLfac : ∀ x : Fin n → α,
-      lz78GreedyImplEncodingLength n x = φ x * LZ78Phrase.bitLength (φ x) (Fintype.card α) := by
+      lz78GreedyEncodingLength n x = φ x * LZ78Phrase.bitLength (φ x) (Fintype.card α) := by
     intro x; rfl
   -- `φ x ≤ n`, so `φ x ∈ Finset.range (n+1)`.
   have hmaps : ∀ x ∈ (Finset.univ : Finset (Fin n → α)), φ x ∈ Finset.range (n + 1) := by
     intro x _
     rw [Finset.mem_range]
-    have hle : φ x ≤ n := lz78GreedyImplPhraseCount_ofFn_le n x
+    have hle : φ x ≤ n := lz78GreedyPhraseCount_ofFn_le n x
     omega
   -- Fiberwise regrouping: ∑_x f(φ x) = ∑_{c∈range(n+1)} ∑_{x : φ x = c} f(φ x).
   have hfiber :
-      ∑ x : Fin n → α, (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x)
+      ∑ x : Fin n → α, (1 / 2 : ℝ) ^ (lz78GreedyEncodingLength n x)
         = ∑ c ∈ Finset.range (n + 1),
             ∑ x ∈ Finset.univ.filter (fun x => φ x = c),
               (1 / 2 : ℝ) ^ (c * LZ78Phrase.bitLength c (Fintype.card α)) := by
     -- `(1/2)^(L_n x) = f (φ x)` with `f c = (1/2)^(c·bitLength c |α|)`.
-    have hrw : ∀ x : Fin n → α, (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x)
+    have hrw : ∀ x : Fin n → α, (1 / 2 : ℝ) ^ (lz78GreedyEncodingLength n x)
         = (fun c => (1 / 2 : ℝ) ^ (c * LZ78Phrase.bitLength c (Fintype.card α))) (φ x) := by
       intro x; rw [hLfac x]
     -- On each fiber `φ x = c`, the summand `f (φ x)` collapses to `f c`.
@@ -1102,7 +1103,7 @@ entirely in G2; this lemma is its measure-theoretic plumbing. -/
 theorem lz78_converse_bad_set_measure_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α) (n : ℕ) (hn : 1 ≤ n) :
-    μ {ω | (lz78GreedyImplEncodingLength n
+    μ {ω | (lz78GreedyEncodingLength n
             (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ)
           < blockLogAvg₂ μ p.toStationaryProcess n ω
             - (2 * Real.log n + 2 * Real.log (n + 1)) / ((n : ℝ) * Real.log 2)}
@@ -1117,7 +1118,7 @@ theorem lz78_converse_bad_set_measure_le
     Measure.isProbabilityMeasure_map hB_meas.aemeasurable
   -- The bad set on the discrete block alphabet.
   set rateX : (Fin n → α) → ℝ :=
-    fun x => (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ) with hrateX
+    fun x => (lz78GreedyEncodingLength n x : ℝ) / (n : ℝ) with hrateX
   set bla₂X : (Fin n → α) → ℝ :=
     fun x => (-(1 / (n : ℝ)) * Real.log (Pn.real {x})) / Real.log 2 with hbla₂X
   set errR : ℝ := (2 * Real.log n + 2 * Real.log (n + 1)) / ((n : ℝ) * Real.log 2) with herrR
@@ -1127,7 +1128,7 @@ theorem lz78_converse_bad_set_measure_le
   have h_bla_factor : ∀ ω, blockLogAvg₂ μ q n ω = bla₂X (q.blockRV n ω) := by
     intro ω; rw [hbla₂X]; simp only [blockLogAvg₂, blockLogAvg, hPn]
   -- The bad set is the preimage of `S` under `block_n`.
-  have h_setEq : {ω | (lz78GreedyImplEncodingLength n (q.blockRV n ω) : ℝ) / (n : ℝ)
+  have h_setEq : {ω | (lz78GreedyEncodingLength n (q.blockRV n ω) : ℝ) / (n : ℝ)
         < blockLogAvg₂ μ q n ω
           - (2 * Real.log n + 2 * Real.log (n + 1)) / ((n : ℝ) * Real.log 2)}
       = (q.blockRV n) ⁻¹' (S : Set (Fin n → α)) := by
@@ -1150,7 +1151,7 @@ theorem lz78_converse_bad_set_measure_le
     rw [h_sum]
     -- Per-element bound: `Pn.real{x} ≤ (1/2)^{Lₙ(x)} · (1/(n²(n+1)²))` for `x ∈ S`.
     have h_elt : ∀ x ∈ S, Pn.real {x}
-        ≤ (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x)
+        ≤ (1 / 2 : ℝ) ^ (lz78GreedyEncodingLength n x)
             * (1 / ((n : ℝ) ^ 2 * ((n : ℝ) + 1) ^ 2)) := by
       intro x hxS
       have hxlt : rateX x < bla₂X x - errR := by
@@ -1159,7 +1160,7 @@ theorem lz78_converse_bad_set_measure_le
       set P := Pn.real {x} with hP
       have hP_nn : 0 ≤ P := by rw [hP]; exact measureReal_nonneg
       have hcoef_pos : (0 : ℝ) < 1 / ((n : ℝ) ^ 2 * ((n : ℝ) + 1) ^ 2) := by positivity
-      have hpow_pos : (0 : ℝ) < (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x) := by
+      have hpow_pos : (0 : ℝ) < (1 / 2 : ℝ) ^ (lz78GreedyEncodingLength n x) := by
         positivity
       rcases eq_or_lt_of_le hP_nn with hP0 | hPpos
       · -- `P = 0`: the bound is trivial (RHS > 0).
@@ -1171,16 +1172,16 @@ theorem lz78_converse_bad_set_measure_le
           rw [herrR]; field_simp
         -- From `L/n < (-(1/n) log P)/log2 - errR`, multiply by `n · log 2 > 0`
         -- to get `L · log 2 < -log P - (2 log n + 2 log(n+1))`.
-        have hLn : (lz78GreedyImplEncodingLength n x : ℝ) * Real.log 2
+        have hLn : (lz78GreedyEncodingLength n x : ℝ) * Real.log 2
             < -Real.log P - (2 * Real.log n + 2 * Real.log (n + 1)) := by
-          have h1 : (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ)
+          have h1 : (lz78GreedyEncodingLength n x : ℝ) / (n : ℝ)
                 * ((n : ℝ) * Real.log 2)
               < ((-(1 / (n : ℝ)) * Real.log P) / Real.log 2 - errR)
                 * ((n : ℝ) * Real.log 2) :=
             mul_lt_mul_of_pos_right hxlt (by positivity)
-          have hlhs : (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ)
+          have hlhs : (lz78GreedyEncodingLength n x : ℝ) / (n : ℝ)
               * ((n : ℝ) * Real.log 2)
-              = (lz78GreedyImplEncodingLength n x : ℝ) * Real.log 2 := by
+              = (lz78GreedyEncodingLength n x : ℝ) * Real.log 2 := by
             field_simp
           have hrhs : ((-(1 / (n : ℝ)) * Real.log P) / Real.log 2 - errR)
               * ((n : ℝ) * Real.log 2)
@@ -1190,7 +1191,7 @@ theorem lz78_converse_bad_set_measure_le
           exact h1
         -- Take `exp` of both sides: `P < 2^{-Lₙ} · 1/(n²(n+1)²)`.
         have hlogP_lt : Real.log P
-            < Real.log ((1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x)
+            < Real.log ((1 / 2 : ℝ) ^ (lz78GreedyEncodingLength n x)
                 * (1 / ((n : ℝ) ^ 2 * ((n : ℝ) + 1) ^ 2))) := by
           rw [Real.log_mul hpow_pos.ne' hcoef_pos.ne', Real.log_pow]
           have h_log_half : Real.log (1 / 2 : ℝ) = -Real.log 2 := by
@@ -1201,20 +1202,20 @@ theorem lz78_converse_bad_set_measure_le
               Real.log_pow, Real.log_pow]
             push_cast; ring
           rw [h_log_half, h_log_coef]
-          have : (lz78GreedyImplEncodingLength n x : ℝ) * -Real.log 2
-              = -((lz78GreedyImplEncodingLength n x : ℝ) * Real.log 2) := by ring
+          have : (lz78GreedyEncodingLength n x : ℝ) * -Real.log 2
+              = -((lz78GreedyEncodingLength n x : ℝ) * Real.log 2) := by ring
           nlinarith [hLn, hℓ2]
         have := (Real.log_lt_log_iff hPpos (by positivity)).mp hlogP_lt
         exact le_of_lt this
     -- Sum the per-element bound and apply G2.
     calc ∑ x ∈ S, Pn.real {x}
-        ≤ ∑ x ∈ S, (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x)
+        ≤ ∑ x ∈ S, (1 / 2 : ℝ) ^ (lz78GreedyEncodingLength n x)
             * (1 / ((n : ℝ) ^ 2 * ((n : ℝ) + 1) ^ 2)) :=
           Finset.sum_le_sum h_elt
-      _ = (∑ x ∈ S, (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x))
+      _ = (∑ x ∈ S, (1 / 2 : ℝ) ^ (lz78GreedyEncodingLength n x))
             * (1 / ((n : ℝ) ^ 2 * ((n : ℝ) + 1) ^ 2)) := by
           rw [← Finset.sum_mul]
-      _ ≤ (∑ x : Fin n → α, (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x))
+      _ ≤ (∑ x : Fin n → α, (1 / 2 : ℝ) ^ (lz78GreedyEncodingLength n x))
             * (1 / ((n : ℝ) ^ 2 * ((n : ℝ) + 1) ^ 2)) := by
           apply mul_le_mul_of_nonneg_right _ (by positivity)
           apply Finset.sum_le_sum_of_subset_of_nonneg (Finset.subset_univ S)
@@ -1239,7 +1240,7 @@ converse lower bound on the greedy bit-rate by `blockLogAvg₂` minus an `o(1)`
 error term.
 
 For a stationary process `p`, almost surely the greedy bit-rate
-`lz78GreedyImplEncodingLength n (block_n ω) / n` is, eventually in `n`, at
+`lz78GreedyEncodingLength n (block_n ω) / n` is, eventually in `n`, at
 least `blockLogAvg₂ n ω` minus the vanishing error
 `(2 log n + 2 log(n+1))/(n log 2)`:
 
@@ -1270,7 +1271,7 @@ theorem blockLogAvg₂_minus_error_le_rate_ae
     ∀ᵐ ω ∂μ, ∀ᶠ n in Filter.atTop,
       blockLogAvg₂ μ p.toStationaryProcess n ω
           - (2 * Real.log n + 2 * Real.log (n + 1)) / ((n : ℝ) * Real.log 2)
-        ≤ (lz78GreedyImplEncodingLength n
+        ≤ (lz78GreedyEncodingLength n
               (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ) := by
   set q := p.toStationaryProcess with hq
   -- The bad set at scale `n`: the realizations where the greedy bit-rate
@@ -1278,7 +1279,7 @@ theorem blockLogAvg₂_minus_error_le_rate_ae
   set err : ℕ → ℝ :=
     fun n => (2 * Real.log n + 2 * Real.log (n + 1)) / ((n : ℝ) * Real.log 2) with herr
   set B : ℕ → Set Ω :=
-    fun n => {ω | (lz78GreedyImplEncodingLength n (q.blockRV n ω) : ℝ) / (n : ℝ)
+    fun n => {ω | (lz78GreedyEncodingLength n (q.blockRV n ω) : ℝ) / (n : ℝ)
         < blockLogAvg₂ μ q n ω - err n} with hB
   -- Per-`n` bad-set measure bound `μ(B n) ≤ 1/n²` (Markov on the discrete
   -- block law + G2 polynomial Kraft); summable, so first Borel–Cantelli.
@@ -1327,7 +1328,7 @@ longest-prefix-match greedy LZ78 parse is, almost surely, asymptotically at
 least the bit entropy rate:
 
 ```
-entropyRate₂ μ p ≤ liminf_n (1/n) · lz78GreedyImplEncodingLength(X^n)   a.s.
+entropyRate₂ μ p ≤ liminf_n (1/n) · lz78GreedyEncodingLength(X^n)   a.s.
 ```
 
 This is the lower-bound (converse) half of LZ78 asymptotic optimality —
@@ -1335,7 +1336,7 @@ the harder direction (SMB liminf lower bound + arbitrary-prefix Kraft
 inequality + finite-alphabet bookkeeping).
 
 Units: the encoding length is a base-2 code length
-(`lz78GreedyImplEncodingLength = c · bitLength c |α|`, `bitLength` uses
+(`lz78GreedyEncodingLength = c · bitLength c |α|`, `bitLength` uses
 `Nat.log 2`), so the per-symbol rate `lz/n` is in **bits**, and the correct
 RHS is the **bit** entropy rate `entropyRate₂ = entropyRate / Real.log 2`
 (not the nat-unit `entropyRate`), exactly the unit-correction documented in
@@ -1353,7 +1354,7 @@ bricks plus the bit SMB convergence,
 assembled by `Filter.liminf_le_liminf` between the lower sequence
 `Low n = blockLogAvg₂ n ω − err_n` (which `→ entropyRate₂`, so
 `liminf Low = entropyRate₂`) and `lz/n` (bounded above by
-`lz78_impl_rate_le_const`, hence cobounded below). The genuine converse
+`lz78_rate_le_const`, hence cobounded below). The genuine converse
 content (the Barron competitive-optimality lift) is in G3, which in turn
 consumes the genuine combinatorial brick G2 (`lz78_block_kraft_poly`, the
 polynomial `n`-block Kraft bound). G2's Part B counting lemma
@@ -1377,21 +1378,21 @@ the body genuinely wires SMB-in-bits (`Low n → entropyRate₂`) with the Barro
 a.s.-eventual lift (`Low n ≤ lz/n` eventually, `err_n → 0` proven) via
 `liminf_le_liminf`. `#print axioms = [propext, Classical.choice, Quot.sound]`
 (sorryAx-free, machine-confirmed). -/
-theorem lz78GreedyImpl_converse_ae
+theorem lz78Greedy_converse_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
       entropyRate₂ μ p.toStationaryProcess
       ≤ Filter.liminf
           (fun n =>
-            (lz78GreedyImplEncodingLength n
+            (lz78GreedyEncodingLength n
                 (p.toStationaryProcess.blockRV n ω) : ℝ)
               / (n : ℝ))
           Filter.atTop := by
   set q := p.toStationaryProcess with hq
   -- The greedy bit-rate sequence and its eventual lower envelope.
   set rate : Ω → ℕ → ℝ :=
-    fun ω n => (lz78GreedyImplEncodingLength n (q.blockRV n ω) : ℝ) / (n : ℝ) with hrate
+    fun ω n => (lz78GreedyEncodingLength n (q.blockRV n ω) : ℝ) / (n : ℝ) with hrate
   set err : ℕ → ℝ :=
     fun n => (2 * Real.log n + 2 * Real.log (n + 1)) / ((n : ℝ) * Real.log 2) with herr
   -- `err n → 0` (each `log n / n → 0`).
@@ -1437,7 +1438,7 @@ theorem lz78GreedyImpl_converse_ae
     Filter.isBoundedUnder_of
       ⟨(1 + 8 * Real.log (Fintype.card α + 1) / Real.log 2)
           + ((Nat.log 2 (Fintype.card α) : ℝ) + 2),
-        fun n => lz78_impl_rate_le_const n _⟩
+        fun n => lz78_rate_le_const n _⟩
   -- `Low n ≤ rate ω n` eventually, from G3.
   have h_le : ∀ᶠ n in Filter.atTop, Low n ≤ rate ω n := by
     filter_upwards [h_lift] with n hn
@@ -1642,7 +1643,7 @@ theorem ziv_aseventual_le_condEntropyTail_bits
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) (k : ℕ) :
     ∀ᵐ ω ∂μ,
       Filter.limsup
-        (fun n => (lz78GreedyImplEncodingLength n
+        (fun n => (lz78GreedyEncodingLength n
             (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ))
         Filter.atTop
       ≤ conditionalEntropyTail μ p.toStationaryProcess k / Real.log 2 := by
@@ -1664,7 +1665,7 @@ theorem ziv_aseventual_le_condEntropyTail_bits
   set cp : ℕ → ℝ :=
     fun n => ((lz78PhraseStrings (List.ofFn (q.blockRV n ω))).length : ℝ) with hcp
   set T : ℕ → ℝ :=
-    fun n => (lz78GreedyImplEncodingLength n (q.blockRV n ω) : ℝ) / (n : ℝ) with hT
+    fun n => (lz78GreedyEncodingLength n (q.blockRV n ω) : ℝ) / (n : ℝ) with hT
   set E : ℕ → ℝ := fun n =>
     (2 * (n : ℝ) * Real.sqrt (cp n / (n : ℝ)) + cp n + cp n * ((k : ℝ) * La)
       + ((k : ℝ) + 1) + ((k : ℝ) + 1) * Real.log (n : ℝ)
@@ -1706,7 +1707,7 @@ theorem ziv_aseventual_le_condEntropyTail_bits
     have hbA' : bR ≤ (k : ℝ) + 1 := by rw [hbR]; exact_mod_cast hbA
     have hNtot' : NtR ≤ (n : ℝ) := by rw [hNtR]; exact_mod_cast hNtot
     have hcp_le_n : cp n ≤ (n : ℝ) := by
-      have := lz78GreedyImplPhraseCount_ofFn_le n (q.blockRV n ω)
+      have := lz78GreedyPhraseCount_ofFn_le n (q.blockRV n ω)
       simp only [hcp]; exact_mod_cast this
     have hcR_le_cp : cR ≤ cp n := by rw [hcount']; linarith
     have hcR_le_n : cR ≤ (n : ℝ) := le_trans hcR_le_cp hcp_le_n
@@ -1747,7 +1748,7 @@ theorem ziv_aseventual_le_condEntropyTail_bits
         hbR_nn hbA' hcp_le_n (Real.log_nonneg (by exact_mod_cast hn1)) (by positivity)
         hcp_zero hcR_zero
     -- Step A: `T n ≤ cp n · log(cp n)/(log 2 · n) + StepA-overhead/(log 2 · n)`.
-    have hstepA := lz78_impl_bitrate_le_clogc_plus_overhead n hn (q.blockRV n ω)
+    have hstepA := lz78_bitrate_le_clogc_plus_overhead n hn (q.blockRV n ω)
     -- Assemble. Clear the common `log 2 · n` denominator and chain the bounds.
     simp only [hU, hE]
     -- The Step-A RHS, rewritten via `cp`.
@@ -1801,7 +1802,7 @@ theorem ziv_aseventual_le_condEntropyTail_bits
   -- Conclude via `limsup_le_limsup`.
   have hcobdd : Filter.IsCoboundedUnder (· ≤ ·) Filter.atTop T :=
     Filter.isCoboundedUnder_le_of_le Filter.atTop
-      (fun n => lz78_impl_encoding_length_per_symbol_nonneg n (q.blockRV n ω))
+      (fun n => lz78_encoding_length_per_symbol_nonneg n (q.blockRV n ω))
   have hbdd : Filter.IsBoundedUnder (· ≤ ·) Filter.atTop U :=
     hU_tend.isBoundedUnder_le
   have hlim_le : Filter.limsup T Filter.atTop ≤ Filter.limsup U Filter.atTop :=
@@ -1820,7 +1821,7 @@ theorem ziv_aseventual_le_entropyRate₂
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
       Filter.limsup
-        (fun n => (lz78GreedyImplEncodingLength n
+        (fun n => (lz78GreedyEncodingLength n
             (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ))
         Filter.atTop
       ≤ entropyRate₂ μ p.toStationaryProcess := by
@@ -1862,7 +1863,7 @@ theorem ziv_aseventual_le_blockLogAvg₂
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
       Filter.limsup
-        (fun n => (lz78GreedyImplEncodingLength n
+        (fun n => (lz78GreedyEncodingLength n
             (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ))
         Filter.atTop
       ≤ Filter.limsup
@@ -1881,7 +1882,7 @@ longest-prefix-match greedy LZ78 parse is, almost surely, asymptotically at
 most the bit entropy rate:
 
 ```
-limsup_n (1/n) · lz78GreedyImplEncodingLength(X^n) ≤ entropyRate₂ μ p   a.s.
+limsup_n (1/n) · lz78GreedyEncodingLength(X^n) ≤ entropyRate₂ μ p   a.s.
 ```
 
 This is the achievability (upper-bound) half of LZ78 asymptotic
@@ -1894,7 +1895,7 @@ RHS is the **bit** entropy rate `entropyRate₂ = entropyRate / Real.log 2`,
 the unit-correction documented in `ZivEntropyBridge.lean` ("Base-2 (bit)
 layer") and `McMillanKraftBridge.lean`.
 
-`lz78GreedyImplEncodingLength` charges `c · bitLength c |α|` against the
+`lz78GreedyEncodingLength` charges `c · bitLength c |α|` against the
 genuine distinct phrase count `c = (lz78PhraseStrings (List.ofFn x)).length`,
 so this is a **genuine proposition** carrying real Ziv content.
 
@@ -1940,13 +1941,13 @@ nat-unit bound is false for A ≥ 2; the bit bound holds at equality, A=2:
 `[IsProbabilityMeasure μ]` regularity only), non-degenerate, sufficiency
 TRUE-as-framed; degenerate `entropyRate = 0` boundary reads `limsup ≤ 0` and
 stays alive). -/
-theorem lz78GreedyImpl_achievability_ae
+theorem lz78Greedy_achievability_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
       Filter.limsup
         (fun n =>
-          (lz78GreedyImplEncodingLength n
+          (lz78GreedyEncodingLength n
               (p.toStationaryProcess.blockRV n ω) : ℝ)
             / (n : ℝ))
         Filter.atTop
@@ -1964,11 +1965,11 @@ longest-prefix-match greedy LZ78 parse converges almost surely to the
 **bit** entropy rate:
 
 ```
-lim_{n → ∞} (1/n) · lz78GreedyImplEncodingLength(X^n) = entropyRate₂ μ p   a.s.
+lim_{n → ∞} (1/n) · lz78GreedyEncodingLength(X^n) = entropyRate₂ μ p   a.s.
 ```
 
 Units: the encoding length is a base-2 code length
-(`lz78GreedyImplEncodingLength = c · bitLength c |α|`, `bitLength` uses
+(`lz78GreedyEncodingLength = c · bitLength c |α|`, `bitLength` uses
 `Nat.log 2`), so the per-symbol rate is in **bits** and the convergence
 target is the **bit** entropy rate `entropyRate₂ = entropyRate / Real.log 2`
 (not the nat-unit `entropyRate`). This is the unit-correction documented in
@@ -1979,17 +1980,17 @@ two TRUE-as-framed halves squeeze to.
 
 This is the LZ78 optimality headline. The two halves of the sandwich —
 the converse lower bound and the Ziv achievability upper bound — are
-supplied internally by `lz78GreedyImpl_converse_ae` and
-`lz78GreedyImpl_achievability_ae`, both now stated against the bit target
+supplied internally by `lz78Greedy_converse_ae` and
+`lz78Greedy_achievability_ae`, both now stated against the bit target
 `entropyRate₂`. The a.s. convergence is assembled via the generic
 combinator `lz78_asymptotic_optimality` instantiated at `L = entropyRate₂`
 (the genuine `tendsto_of_le_liminf_of_limsup_le` squeeze).
 
-`lz78GreedyImplEncodingLength` charges `c · bitLength c |α|` against the
+`lz78GreedyEncodingLength` charges `c · bitLength c |α|` against the
 genuine distinct phrase count of the longest-prefix-match parse, so the
 per-symbol rate is data-dependent and
 **deterministically bounded above by an `n`- and `ω`-uniform constant**
-`(1 + 8·log(|α|+1)/log 2) + (log₂|α| + 2)` (via `lz78_impl_rate_le_const`,
+`(1 + 8·log(|α|+1)/log 2) + (log₂|α| + 2)` (via `lz78_rate_le_const`,
 combining the Ziv product bound `c·log c ≤ 8·log(|α|+1)·n` with `c ≤ n` and the
 `ℕ`–`Real` `log` bridge). The upper-boundedness hypothesis is therefore **no
 longer a parameter**: it is supplied internally — even the `a.e.` envelope is
@@ -2006,7 +2007,7 @@ exactly (A=2: `entropyRate₂ = log₂ 2 = 1`, so the two halves squeeze
 `rate → 1`, the genuine LZ78-optimal bit rate); on the degenerate
 `entropyRate = 0` boundary the target is `entropyRate₂ = 0` and the squeeze
 reads `rate → 0`, again genuine. Both halves
-(`lz78GreedyImpl_converse_ae` / `lz78GreedyImpl_achievability_ae`) are stated
+(`lz78Greedy_converse_ae` / `lz78Greedy_achievability_ae`) are stated
 against `entropyRate₂`, and the base combinator `lz78_asymptotic_optimality`
 is instantiated at `L = entropyRate₂`.
 
@@ -2014,13 +2015,13 @@ is instantiated at `L = entropyRate₂`.
 `[propext, Classical.choice, Quot.sound]`). The headline takes only the source
 data (`μ`, `p`) — no `h_bdd_above` precondition. Both `IsBoundedUnder`
 witnesses (`(·≤·)` above and `(·≥·)` below) are constructed deterministically
-inside the body from `lz78_impl_rate_le_const` /
-`lz78_impl_encoding_length_per_symbol_nonneg` (both unit-agnostic: they bound
+inside the body from `lz78_rate_le_const` /
+`lz78_encoding_length_per_symbol_nonneg` (both unit-agnostic: they bound
 the bit-rate `lz/n` itself, so they are unaffected by the choice of `L`), so
 the squeeze `tendsto_of_le_liminf_of_limsup_le` is applied with all of its
 regularity inputs genuine. Both halves are genuine: the achievability half
-(`lz78GreedyImpl_achievability_ae`) and the converse half
-(`lz78GreedyImpl_converse_ae`, whose sole combinatorial brick
+(`lz78Greedy_achievability_ae`) and the converse half
+(`lz78Greedy_converse_ae`, whose sole combinatorial brick
 `lz78_block_kraft_poly` / `lz78_phrase_count_fiber_card_le` is closed via
 the LZ78 dictionary parent-extension invariant). LZ78 asymptotic optimality is
 fully proven.
@@ -2034,40 +2035,40 @@ non-degenerate, sufficiency TRUE-as-framed (bit `entropyRate₂` target, genuine
 `#print axioms = [propext, Classical.choice, Quot.sound]` (sorryAx-free,
 machine-confirmed; both files compile with 0 sorry warnings). -/
 @[entry_point]
-theorem lz78_asymptotic_optimality_with_greedy_impl
+theorem lz78_asymptotic_optimality_with_greedy
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
       Filter.Tendsto
         (fun n =>
-          (lz78GreedyImplEncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
+          (lz78GreedyEncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
             / (n : ℝ))
         Filter.atTop
         (𝓝 (entropyRate₂ μ p.toStationaryProcess)) := by
   have h_bdd_above : ∀ᵐ ω ∂μ,
       Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
         (fun n =>
-          (lz78GreedyImplEncodingLength n
+          (lz78GreedyEncodingLength n
               (p.toStationaryProcess.blockRV n ω) : ℝ)
             / (n : ℝ)) := by
     refine Filter.Eventually.of_forall (fun ω => ?_)
     exact Filter.isBoundedUnder_of
       ⟨(1 + 8 * Real.log (Fintype.card α + 1) / Real.log 2)
           + ((Nat.log 2 (Fintype.card α) : ℝ) + 2),
-        fun n => lz78_impl_rate_le_const n _⟩
+        fun n => lz78_rate_le_const n _⟩
   have h_bdd_below : ∀ᵐ ω ∂μ,
       Filter.IsBoundedUnder (· ≥ ·) Filter.atTop
         (fun n =>
-          (lz78GreedyImplEncodingLength n
+          (lz78GreedyEncodingLength n
               (p.toStationaryProcess.blockRV n ω) : ℝ)
             / (n : ℝ)) := by
     refine Filter.Eventually.of_forall (fun ω => ?_)
     exact Filter.isBoundedUnder_of
-      ⟨0, fun n => lz78_impl_encoding_length_per_symbol_nonneg n _⟩
-  exact lz78_asymptotic_optimality μ p (@lz78GreedyImplEncodingLength α _ _)
+      ⟨0, fun n => lz78_encoding_length_per_symbol_nonneg n _⟩
+  exact lz78_asymptotic_optimality μ p (@lz78GreedyEncodingLength α _ _)
     (entropyRate₂ μ p.toStationaryProcess)
-    (lz78GreedyImpl_converse_ae μ p)
-    (lz78GreedyImpl_achievability_ae μ p)
+    (lz78Greedy_converse_ae μ p)
+    (lz78Greedy_achievability_ae μ p)
     h_bdd_above h_bdd_below
 
 end ParentBridge

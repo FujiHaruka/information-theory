@@ -325,7 +325,7 @@ bridge from the position-indexed threading sum (`∑ j : Fin c`) onto the distin
 The `c = 0` boundary degenerates honestly to `0 ≤ 0`. The broader achievability wall
 (slug `lz78-aseventual-ziv`, the variable-depth length-grouping AEP + the limsup
 discharge connecting to `entropyRate₂`) lives downstream at
-`ziv_aseventual_le_blockLogAvg₂` / `lz78GreedyImpl_achievability_ae`; this brick
+`ziv_aseventual_le_blockLogAvg₂` / `lz78Greedy_achievability_ae`; this brick
 (`c·log c ≤ negLogQk + o(n)`) is no longer part of it.
 
 @audit:ok (non-circular, non-bundled: conclusion is the unchanged inequality

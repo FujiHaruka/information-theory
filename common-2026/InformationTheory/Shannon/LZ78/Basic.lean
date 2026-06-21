@@ -33,7 +33,7 @@ This single file publishes:
   optimality claim itself; it derives a.s. convergence from a
   caller-supplied two-sided sandwich. The genuine optimality headline
   (with the sandwich halves discharged as proven theorems, sorryAx-free)
-  is `lz78_asymptotic_optimality_with_greedy_impl` in
+  is `lz78_asymptotic_optimality_with_greedy` in
   `InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`.
 
 ## The asymptotic-optimality core
@@ -44,7 +44,7 @@ bound `∀ᵐ ω, limsup (lz/n) ≤ entropyRate₂`
 bound `∀ᵐ ω, entropyRate₂ ≤ liminf (lz/n)` (Cover–Thomas Theorem 13.5.3
 lower bound) — are the **single source of truth** in the two proven
 theorems
-`lz78GreedyImpl_achievability_ae` / `lz78GreedyImpl_converse_ae`
+`lz78Greedy_achievability_ae` / `lz78Greedy_converse_ae`
 in `InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`
 (both sorryAx-free, `@audit:ok`). The SMB sandwich itself is fully
 discharged upstream (`shannon_mcmillan_breiman`).
@@ -66,8 +66,8 @@ discharged upstream (`shannon_mcmillan_breiman`).
   genuine greedy LZ78 parser those two halves are the Cover–Thomas
   Eq. 13.124 / 13.130 substance of Thm 13.5.3, whose genuine discharge
   (Ziv inequality + SMB) is proven (sorryAx-free)
-  in `lz78_asymptotic_optimality_with_greedy_impl`
-  (`lz78GreedyImpl_converse_ae` / `lz78GreedyImpl_achievability_ae`).
+  in `lz78_asymptotic_optimality_with_greedy`
+  (`lz78Greedy_converse_ae` / `lz78Greedy_achievability_ae`).
 
 ## Re-use of existing infrastructure
 
@@ -89,8 +89,8 @@ The §2 combinator is a genuine two-sided-sandwich derivation via
 (its sandwich arguments are generic and caller-supplied). The genuine
 two-sided sandwich on `lz/n` — the actual achievability / converse
 halves — is proven (sorryAx-free) in
-`AsymptoticOptimality.lean` (`lz78GreedyImpl_achievability_ae` /
-`lz78GreedyImpl_converse_ae`), the single source of truth.
+`AsymptoticOptimality.lean` (`lz78Greedy_achievability_ae` /
+`lz78Greedy_converse_ae`), the single source of truth.
 -/
 
 namespace InformationTheory.Shannon
@@ -216,12 +216,10 @@ claim that any particular encoding achieves any particular limit — the
 caller is responsible for supplying them (for the concrete greedy LZ78
 parser, with `L = entropyRate₂` the bit-rate target, that supply is the
 genuine achievability / converse content, proven (sorryAx-free) in
-`lz78_asymptotic_optimality_with_greedy_impl`).
+`lz78_asymptotic_optimality_with_greedy`).
 
 The limit `L` is a generic parameter (not hard-wired to `entropyRate`):
-the worst-case forwarder `lz78_asymptotic_optimality_with_greedy_encoding`
-instantiates it with the nat-unit `entropyRate`, while the genuine
-bit-rate headline `lz78_asymptotic_optimality_with_greedy_impl`
+the genuine bit-rate headline `lz78_asymptotic_optimality_with_greedy`
 instantiates it with the bit-unit `entropyRate₂`.
 
 The body is a genuine application of the Mathlib squeeze, not an identity
