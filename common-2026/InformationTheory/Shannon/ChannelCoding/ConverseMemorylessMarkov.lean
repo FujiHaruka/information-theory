@@ -1,4 +1,4 @@
-import InformationTheory.Draft.Shannon.ChannelCodingConverseGeneralComplete
+import InformationTheory.Shannon.ChannelCoding.ConverseMemorylessChainRule
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.CondEntropyMemoryless
 import Mathlib.MeasureTheory.MeasurableSpace.Embedding

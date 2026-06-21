@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.ChannelCoding.ConverseGeneralStrong
+import InformationTheory.Shannon.ChannelCoding.ConverseMemorylessMarkov
 
 /-!
 # Channel coding converse — pure `IsMemorylessChannel` form

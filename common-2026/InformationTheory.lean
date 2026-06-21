@@ -61,10 +61,10 @@ import InformationTheory.Shannon.ChannelCoding.Achievability.Main
 import InformationTheory.Shannon.ChannelCoding.Achievability
 import InformationTheory.Shannon.ChannelCoding.Converse
 import InformationTheory.Shannon.ChannelCoding.ConverseGeneral
-import InformationTheory.Draft.Shannon.ChannelCodingConverseGeneralComplete
+import InformationTheory.Shannon.ChannelCoding.ConverseMemorylessChainRule
 import InformationTheory.Shannon.CondEntropyMemoryless
-import InformationTheory.Shannon.ChannelCoding.ConverseGeneralStrong
-import InformationTheory.Shannon.ChannelCoding.ConverseMemorylessPure
+import InformationTheory.Shannon.ChannelCoding.ConverseMemorylessMarkov
+import InformationTheory.Shannon.ChannelCoding.ConverseMemoryless
 import InformationTheory.Shannon.ChannelCoding.StrongConverse
 import InformationTheory.Shannon.ChannelCoding.Feedback
 import InformationTheory.Shannon.ChannelCoding.FeedbackComplete
