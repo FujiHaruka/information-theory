@@ -144,9 +144,9 @@ namespace が既に clean (`InformationTheory.Shannon[.AWGN|.RateDistortion|...]
 | `...HoeffdingSandwichDischarge` | `Hoeffding/SandwichDischarge.lean` | 概念名 (実行時確定) | |
 | `...HoeffdingInteriorBody` | `Draft/Shannon/HoeffdingInteriorBody.lean` | `Hoeffding/` 配下概念名 (例 `InteriorMinimizer`) + Draft 解消 | |
 | `...ChannelCodingConverseGeneral` | `Draft/Shannon/ChannelCodingConverseGeneralComplete.lean`, `ChannelCoding/ConverseGeneralStrong.lean`, `ChannelCoding/ConverseMemorylessPure.lean` | `ChannelCoding/` 概念名 (実行時確定) | **3 ファイル共有**、同一 commit + Draft 解消 |
-| `...ChannelCodingFeedback` | `ChannelCoding/FeedbackComplete.lean` | 概念名 (実行時確定) | |
+| `...ChannelCodingFeedback` | `ChannelCoding/FeedbackComplete.lean` | 概念名 (実行時確定) | ⚠ 既存 `ChannelCoding/Feedback.lean` と衝突 (→ `FeedbackComplete`→`Feedback` 不可)・consumer は `Feedback.lean`。content-based 命名要 |
 | `...EPIBlachmanGaussianWitness` | `EPI/Blachman/GaussianWitness.lean` | 概念名 (実行時確定) | |
-| `...WhittakerShannonPartial` | `WhittakerShannonPartial.lean` | 概念名 (実行時確定) | |
+| ~~`...WhittakerShannonPartial`~~ | ~~`WhittakerShannonPartial.lean`~~ | **✅ DONE → `NormalizedSinc`** | `Partial` は load-bearing (Mathlib にある WS の部分集合のみ; L²直交/Poisson は out-of-scope) ゆえ bare `WhittakerShannon` は over-claim → primary object `sincN` で命名。consumer=root のみ |
 | `...FisherInfoV2` | `FisherInfo/V2DeBruijnBody.lean`, `FisherInfo/V2HeatFlowBody.lean` (+ `FisherDeBruijnGaussianWitness`) | `V2` token 除去 (例 `FisherInfo`) | Body 除去は Phase 1a で先行、V2 ns cleanup はここ |
 
 > flat namespace (e.g. `EPIStamDischarge`) はディレクトリ構造由来でなく手書き。変更方針: プロセス語彙 token

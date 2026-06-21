@@ -31,7 +31,7 @@ rectangular pulse and Plancherel; Poisson summation requires Schwartz-class resu
 Neither is available in Mathlib, so both are out of scope here.
 -/
 
-namespace InformationTheory.Shannon.WhittakerShannonPartial
+namespace InformationTheory.Shannon.NormalizedSinc
 
 set_option linter.unusedVariables false
 
@@ -152,4 +152,4 @@ theorem continuous_sincN_sample_term (W : ℝ) (n : ℤ) :
     Continuous (fun t : ℝ => sincN ((2 * W) * t - (n : ℝ))) := by
   fun_prop
 
-end InformationTheory.Shannon.WhittakerShannonPartial
+end InformationTheory.Shannon.NormalizedSinc
