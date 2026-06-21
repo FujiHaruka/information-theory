@@ -44,7 +44,9 @@ import InformationTheory.Shannon.AEP.Basic.Converse
 import InformationTheory.Shannon.AEP.Basic.Achievability
 import InformationTheory.Shannon.AEP.Basic
 import InformationTheory.Shannon.AEP.Rate
-import InformationTheory.Shannon.Stein
+import InformationTheory.Shannon.Stein.Achievability
+import InformationTheory.Shannon.Stein.Converse
+import InformationTheory.Shannon.Stein.OptimalExponent
 import InformationTheory.Shannon.StrongStein
 import InformationTheory.Shannon.MaxEntropy.Basic
 import InformationTheory.Shannon.MaxEntropy.Constrained

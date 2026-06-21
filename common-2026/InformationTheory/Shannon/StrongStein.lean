@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.Stein
+import InformationTheory.Shannon.Stein.OptimalExponent
 import Mathlib.Topology.Order.LiminfLimsup
 
 /-!
