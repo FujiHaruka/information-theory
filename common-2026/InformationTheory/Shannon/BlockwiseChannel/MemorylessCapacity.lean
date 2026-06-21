@@ -1,4 +1,5 @@
 import InformationTheory.Meta.EntryPoint
+import InformationTheory.Shannon.BlockwiseChannel.Definition
 import InformationTheory.Shannon.ChannelCoding.Basic
 import InformationTheory.Shannon.ChannelCoding.ShannonTheorem
 import InformationTheory.Shannon.MIChainRule
@@ -9,134 +10,31 @@ import Mathlib.MeasureTheory.MeasurableSpace.Pi
 import Mathlib.MeasureTheory.Integral.Lebesgue.Countable
 
 /-!
-# Blockwise channel + capacity limit form
+# Memoryless blockwise capacity: the per-`n` equality
 
-A `BlockwiseChannel α β` is a sequence of kernels
-`W_n : Kernel (Fin n → α) (Fin n → β)` (one per block length). The **general**
-DMC capacity is the asymptotic per-letter capacity
+For memoryless DMC (`ofMemoryless W`, with all `W_n := ⊗_n W`), the per-block
+capacity reduces to `n · capacity W`. This file establishes that per-`n`
+equality `capacityN_ofMemoryless_eq` via:
 
-  capacity_lim W := lim_{n → ∞} (1/n) · sup_{p^n} I(X^n; Y^n)
-
-For memoryless DMC (`ofMemoryless W`, with all `W_n := ⊗_n W`), this reduces
-to the single-letter formula `capacity W` via Fekete's lemma applied to the
-(here linear in `n`) sequence `capacityN W n`.
-
-## Main definitions
-
-* `BlockwiseChannel α β := (n : ℕ) → Kernel (Fin n → α) (Fin n → β)`
-* `Channel.toBlock W n` — direct `Measure.pi` product kernel `W^{⊗n}`.
-* `BlockwiseChannel.ofMemoryless W := fun n => W.toBlock n` — memoryless extension.
-* `BlockwiseChannel.capacityN W n : ℝ≥0∞` — per-block capacity (`sSup` MI over
-  probability inputs).
-* `BlockwiseChannel.capacity_lim W : ℝ` — asymptotic per-letter capacity.
+* the structural bridge `toBlock_compProd_pi_factor` (`compProd ↔ pi`),
+* i.i.d. input MI multiplicativity `mutualInfoOfChannel_pi_iid_eq_nsmul`
+  (the ≥ direction),
+* the per-letter marginal bridge and Cover-Thomas Thm 7.9 chain
+  (the ≤ direction).
 
 ## Main results
 
 * `capacityN_ofMemoryless_eq` — `(ofMemoryless W).capacityN n` matches
-  `n · capacity W` (per-`n` equality, via `mutualInfo_iid_eq_nsmul`).
-* `capacity_lim_eq_capacity_of_memoryless` — limit form matches the
-  single-letter capacity.
+  `n · capacity W` (per-`n` equality).
 
-Design notes:
-
-* `BlockwiseChannel` is the **function form** `(n : ℕ) → Kernel _ _`. No marginal
-  consistency axiom; sufficient for the memoryless extension.
-* `Channel.toBlock` is defined directly via `Measure.pi`: this makes
-  the `compProd ↔ pi` bridge (`toBlock_compProd_pi_factor`) almost definitional
-  via `measurePreserving_arrowProdEquivProdArrow`, instead of an inductive
-  `MeasurableEquiv.piFinSuccAbove` construction whose bridge would require
-  substantial self-written plumbing.
+The asymptotic limit form `capacity_lim_eq_capacity_of_memoryless` is in
+`BlockwiseChannel.CapacityLimit`.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
 
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal BigOperators Topology
-
-/-! ## `BlockwiseChannel` definition -/
-
-variable {α β : Type*}
-
-/-- A **blockwise channel** is a sequence of kernels, one per block length `n`. -/
-def BlockwiseChannel (α β : Type*) [MeasurableSpace α] [MeasurableSpace β] : Type _ :=
-  (n : ℕ) → Kernel (Fin n → α) (Fin n → β)
-
-variable [MeasurableSpace α] [MeasurableSpace β]
-
-/-! ## `Channel.toBlock W` : the i.i.d. block extension of `W`
-
-Defined directly as `Kernel.mk (fun x => Measure.pi (fun i => W (x i)))` with
-explicit measurability proof. This makes the `compProd ↔ pi` bridge below
-definitionally tractable via `measurePreserving_arrowProdEquivProdArrow`. -/
-
-/-- The block kernel `W^{⊗n}` of `W`, defined as `Measure.pi` of per-coordinate
-applications of `W`. Requires `[IsMarkovKernel W]` so each fibre measure is a
-probability measure (used in the measurability proof via the π-system route). -/
-noncomputable def Channel.toBlock (W : Channel α β) [IsMarkovKernel W] (n : ℕ) :
-    Kernel (Fin n → α) (Fin n → β) where
-  toFun x := Measure.pi (fun i : Fin n => W (x i))
-  measurable' := by
-    -- `Measure.pi (fun i => W (x i))` is a probability measure for each `x`, so use
-    -- `Measurable.measure_of_isPiSystem_of_isProbabilityMeasure` on the cylinder
-    -- π-system `pi univ '' pi univ {MeasurableSet}` generating `MeasurableSpace.pi`.
-    refine Measurable.measure_of_isPiSystem_of_isProbabilityMeasure
-      (S := Set.pi Set.univ '' Set.pi Set.univ
-        (fun i : Fin n => { s : Set β | MeasurableSet s }))
-      generateFrom_pi.symm isPiSystem_pi ?_
-    rintro _ ⟨t, ht, rfl⟩
-    simp only [Set.mem_pi, Set.mem_univ, true_imp_iff] at ht
-    -- On `Set.univ.pi t`, `Measure.pi (...) = ∏ i, W (x i) (t i)` by `pi_pi`.
-    have h_eval : ∀ x : Fin n → α,
-        Measure.pi (fun i : Fin n => W (x i)) (Set.univ.pi t)
-          = ∏ i : Fin n, (W (x i)) (t i) := by
-      intro x; rw [Measure.pi_pi]
-    simp_rw [h_eval]
-    refine Finset.measurable_prod _ ?_
-    intro i _
-    exact (Kernel.measurable_coe W (ht i)).comp (measurable_pi_apply i)
-
-/-- `Channel.toBlock W n` is a Markov kernel when `W` is. -/
-instance Channel.toBlock.instIsMarkovKernel (W : Channel α β) [IsMarkovKernel W] (n : ℕ) :
-    IsMarkovKernel (Channel.toBlock W n) where
-  isProbabilityMeasure x := by
-    show IsProbabilityMeasure (Measure.pi (fun i : Fin n => W (x i)))
-    infer_instance
-
-@[simp] lemma Channel.toBlock_apply (W : Channel α β) [IsMarkovKernel W] (n : ℕ)
-    (x : Fin n → α) :
-    (Channel.toBlock W n) x = Measure.pi (fun i : Fin n => W (x i)) := rfl
-
-/-! ## `BlockwiseChannel.ofMemoryless` -/
-
-/-- Memoryless block extension: `ofMemoryless W n := W.toBlock n`. -/
-noncomputable def BlockwiseChannel.ofMemoryless
-    (W : Channel α β) [IsMarkovKernel W] : BlockwiseChannel α β :=
-  fun n => W.toBlock n
-
-instance BlockwiseChannel.ofMemoryless.instIsMarkovKernel
-    (W : Channel α β) [IsMarkovKernel W] (n : ℕ) :
-    IsMarkovKernel ((BlockwiseChannel.ofMemoryless W) n) :=
-  Channel.toBlock.instIsMarkovKernel W n
-
-/-! ## `capacityN` and `capacity_lim` -/
-
-/-- Per-block capacity: `sup_{p : prob measure on (Fin n → α)} I(p; W_n)`.
-Type is `ℝ≥0∞` to match `mutualInfoOfChannel`. -/
-@[entry_point]
-noncomputable def BlockwiseChannel.capacityN
-    (W : BlockwiseChannel α β) (n : ℕ) : ℝ≥0∞ :=
-  sSup ((fun p : Measure (Fin n → α) => mutualInfoOfChannel p (W n)) ''
-        { p : Measure (Fin n → α) | IsProbabilityMeasure p })
-
-@[entry_point]
-theorem BlockwiseChannel.capacityN_nonneg (W : BlockwiseChannel α β) (n : ℕ) :
-    0 ≤ W.capacityN n := bot_le
-
-/-- The asymptotic per-letter capacity:
-`capacity_lim W := lim_{n → ∞} (capacityN W n).toReal / n`. -/
-@[entry_point]
-noncomputable def BlockwiseChannel.capacity_lim (W : BlockwiseChannel α β) : ℝ :=
-  Filter.atTop.limUnder (fun n : ℕ => (W.capacityN n).toReal / n)
 
 /-! ## Structural bridge `toBlock_compProd_pi_factor`
 
@@ -1199,41 +1097,5 @@ theorem capacityN_ofMemoryless_eq
     (BlockwiseChannel.ofMemoryless W).capacityN n
       = ENNReal.ofReal ((n : ℝ) * capacity W) :=
   le_antisymm (capacityN_ofMemoryless_le W n _hn) (capacityN_ofMemoryless_ge W n _hn)
-
-/-! ## `capacity_lim_eq_capacity_of_memoryless` -/
-
-/-- Limit form matches the single-letter `capacity W` in the memoryless case.
-Direct from the per-`n` equality (the sequence is eventually the constant
-`capacity W`). -/
-@[entry_point]
-theorem capacity_lim_eq_capacity_of_memoryless
-    {α β : Type*}
-    [Fintype α] [Nonempty α]
-      [MeasurableSpace α] [MeasurableSingletonClass α] [StandardBorelSpace α]
-    [Fintype β] [Nonempty β]
-      [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
-    (W : Channel α β) [IsMarkovKernel W] :
-    (BlockwiseChannel.ofMemoryless W).capacity_lim = capacity W := by
-  classical
-  have hC_nn : 0 ≤ capacity W := capacity_nonneg W
-  have h_eq_eventually :
-      ∀ᶠ n : ℕ in Filter.atTop,
-        ((BlockwiseChannel.ofMemoryless W).capacityN n).toReal / (n : ℝ) = capacity W := by
-    refine Filter.eventually_atTop.mpr ⟨1, fun n hn => ?_⟩
-    have hn_pos : 0 < n := hn
-    have hn_real_pos : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn_pos
-    have hN := capacityN_ofMemoryless_eq W n hn_pos
-    rw [hN]
-    have hmul_nn : 0 ≤ (n : ℝ) * capacity W := mul_nonneg (by exact_mod_cast hn_pos.le) hC_nn
-    rw [ENNReal.toReal_ofReal hmul_nn]
-    field_simp
-  have h_tendsto :
-      Filter.Tendsto
-        (fun n : ℕ => ((BlockwiseChannel.ofMemoryless W).capacityN n).toReal / (n : ℝ))
-        Filter.atTop (nhds (capacity W)) := by
-    refine (tendsto_const_nhds (x := capacity W)).congr' ?_
-    exact h_eq_eventually.mono (fun n hn => hn.symm)
-  unfold BlockwiseChannel.capacity_lim
-  exact h_tendsto.limUnder_eq
 
 end InformationTheory.Shannon.ChannelCoding

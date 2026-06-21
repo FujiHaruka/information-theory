@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.BlockwiseChannel
+import InformationTheory.Shannon.BlockwiseChannel.CapacityLimit
 import Mathlib.Analysis.Subadditive
 
 /-!

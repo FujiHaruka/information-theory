@@ -75,7 +75,9 @@ import InformationTheory.Shannon.ChannelCoding.ShannonTheoremMaxError.PmfLogBoun
 import InformationTheory.Shannon.ChannelCoding.ShannonTheoremMaxError.SmoothInstantiation
 import InformationTheory.Shannon.ChannelCoding.ShannonTheoremMaxError.OuterN
 import InformationTheory.Shannon.ChannelCoding.ShannonTheoremMaxError
-import InformationTheory.Shannon.BlockwiseChannel
+import InformationTheory.Shannon.BlockwiseChannel.Definition
+import InformationTheory.Shannon.BlockwiseChannel.MemorylessCapacity
+import InformationTheory.Shannon.BlockwiseChannel.CapacityLimit
 import InformationTheory.Shannon.GeneralDMC.Basic
 import InformationTheory.Shannon.RateDistortion.Converse
 import InformationTheory.Shannon.RateDistortion.ConverseMonotone
