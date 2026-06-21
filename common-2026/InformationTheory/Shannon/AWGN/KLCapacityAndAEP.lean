@@ -1,7 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.AWGN.Basic
 import InformationTheory.Shannon.AWGN.AchievabilityAEP
-import InformationTheory.Shannon.BlockwiseChannel.CapacityLimit
 import InformationTheory.Shannon.ChannelCoding.MIDecomp
 import InformationTheory.Shannon.MIChainRule
 import InformationTheory.Shannon.DifferentialEntropy
