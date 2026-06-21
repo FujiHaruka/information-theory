@@ -1,7 +1,7 @@
 # LZ78 M3 achievability 壁 (`ziv_aseventual_le_blockLogAvg₂`) のための構造化在庫
 
 > 対象壁: `ziv_aseventual_le_blockLogAvg₂`
-> (`InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean:557`, `@residual(wall:lz78-aseventual-ziv)`)
+> (`InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean:557`, `@residual(wall:lz78-aseventual-ziv)`)
 > 親計画: [`lz78-m2-plan.md`](lz78-m2-plan.md) (route A) / [`lz78-ziv-treenode-plan.md`](lz78-ziv-treenode-plan.md) (route B) / roadmap [`lz78-completion-roadmap.md`](lz78-completion-roadmap.md) M3
 > 本ファイルは **在庫専任**。plan 作成・実装はしない。
 >
@@ -59,7 +59,7 @@ limsup 合成: Filter.limsup_le_limsup で err(n)→0 を吸収               --
 1. **`condPhraseProb` は観測 `ω` 依存に固定**。signature `(μ, p, n, ω, j)` で固定 tuple `v` で parametrize できない。各 `j` は「観測 path の `j` 番目 boundary における prefix ratio」であって、node-context 横断 (同一 node の異なる child を集約する) 形ではない。→ **route B (node-grouping) が要求する「per-node sub-distribution `∑_a q(node·a|node) ≤ 1`」を現 `condPhraseProb` から直接は取り出せない** (`condPhraseProb` は path-prefix ratio で、telescoping すると `∏ = prefixBlockProb` になり、`∑qⱼ≈1` ではなく `∑qⱼ≈c`)。
 2. **`blockProb_le_prod_condPhraseProb` (route B 上端) は 0 consumers = dead-start**。`blockProb_neg_log_ge_sum` (D4 path-prefix log) も **0 consumers** (本セッション `dep_consumers.sh` 機械裏取り)。両者とも握るのは `∑ⱼ -log qⱼ ≤ -log Pₙ` であって、missing core の `c·log c ≤ ∑ⱼ -log qⱼ + o(n)` ではない (D4 `∑qⱼ≈c` trap)。
 3. **`isLZ78PerPathParsingFactorization_of_pos` は phantom**: `ZivEntropyBridge.lean` / `Kernel.lean` docstring が複数箇所参照しているが、**decl として存在しない** (rg 0-hit、本セッション)。route B が「positivity から factorization を構築」する際にこの constructor が要るが未実装 (= self-build 要、route B コストに加算)。
-4. **A/B 共通の target 接続点 = `blockLogAvg_eq_neg_log_blockProb`** (`ZivEntropyBridge.lean:126`)。`-log Pₙ = n·blockLogAvg` を `blockLogAvg₂ = blockLogAvg/log 2` (`GreedyParsingImpl.lean:502`) に乗せる橋。これは存在し sorryAx-free。
+4. **A/B 共通の target 接続点 = `blockLogAvg_eq_neg_log_blockProb`** (`ZivEntropyBridge.lean:126`)。`-log Pₙ = n·blockLogAvg` を `blockLogAvg₂ = blockLogAvg/log 2` (`AsymptoticOptimality.lean:502`) に乗せる橋。これは存在し sorryAx-free。
 
 ---
 
@@ -169,7 +169,7 @@ worker `lz78PhraseStringsAux` (`GreedyLongestPrefix.lean:77`) を精読した結
 | 可変深さ length-grouping AEP `c·log c ≤ ∑(per-group entropy) + o(n)` | `loogle "?c * Real.log ?c ≤ Finset.sum _ _"` → `Of these, 0 match your pattern(s)` (Real×log×Finset.sum 6 decl 中 0 match) | **genuine missing core** (codebase + Mathlib 不在、= 壁 `lz78-aseventual-ziv` の核) |
 | limsup over per-symbol rate の AEP bridge | `loogle "Filter.limsup (fun _ => _ / _), Real.log"` → `Found 0 declarations`; `loogle "Filter.limsup, Nat.log"` → `Found 0 declarations` | **genuine wall** (Mathlib 不在) |
 
-**shared sorry-lemma 推奨**: `ziv_aseventual_le_blockLogAvg₂` の壁は **既に単一の sorry に集約済** (`GreedyParsingImpl.lean:557`、`@residual(wall:lz78-aseventual-ziv)`)。`lz78GreedyImpl_achievability_ae` (`:637`) は `shannon_mcmillan_breiman₂` (sorryAx-free) + `ziv_aseventual_le_blockLogAvg₂` の合成で **body は sorry-free** (W1/W2 decomposition、`876bcd0`)。よって **wall は 1 箇所のみで散在していない** — これ以上の consolidation は不要 (新たな shared sorry lemma の追加は逆に冗長)。D4 path-prefix の `blockProb_neg_log_ge_sum` (0 consumers) は壁の核ではない dead-start なので、これを shared lemma 化する必要もない。
+**shared sorry-lemma 推奨**: `ziv_aseventual_le_blockLogAvg₂` の壁は **既に単一の sorry に集約済** (`AsymptoticOptimality.lean:557`、`@residual(wall:lz78-aseventual-ziv)`)。`lz78GreedyImpl_achievability_ae` (`:637`) は `shannon_mcmillan_breiman₂` (sorryAx-free) + `ziv_aseventual_le_blockLogAvg₂` の合成で **body は sorry-free** (W1/W2 decomposition、`876bcd0`)。よって **wall は 1 箇所のみで散在していない** — これ以上の consolidation は不要 (新たな shared sorry lemma の追加は逆に冗長)。D4 path-prefix の `blockProb_neg_log_ge_sum` (0 consumers) は壁の核ではない dead-start なので、これを shared lemma 化する必要もない。
 
 ---
 
@@ -194,7 +194,7 @@ worker `lz78PhraseStringsAux` (`GreedyLongestPrefix.lean:77`) を精読した結
 `ziv_aseventual_le_blockLogAvg₂` の body を埋める方向の skeleton (signature 不変、helper を sorry で stub):
 
 ```lean
--- InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean (既存 file への追補)
+-- InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean (既存 file への追補)
 -- imports は既存 (ZivEntropyBridge / ZivCountingBody / Stationary.Kernel / Mathlib.Order.LiminfLimsup
 --   / Mathlib.Analysis.Convex.Jensen は ZivEntropyBridge 経由で取得済)
 

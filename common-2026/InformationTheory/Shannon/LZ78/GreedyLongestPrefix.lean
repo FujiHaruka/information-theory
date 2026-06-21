@@ -39,7 +39,7 @@ symbol), recorded in the cheapest shape for the invariant proof.
 
 We track only the **phrase strings** here — that is the object the
 counting bound reasons about. The back-pointer
-`LZ78Parsing`/`inRange` structure of `LZ78GreedyParsingImpl.lean` is left
+`LZ78Parsing`/`inRange` structure of `LZ78AsymptoticOptimality.lean` is left
 untouched.
 
 ## File layout

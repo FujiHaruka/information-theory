@@ -140,7 +140,7 @@ huffman-t1apprime-partial-moonshot) で**同じ 2 hypothesis** (`SwapNormalizati
   撤退 5 本全発動 (L-LZ1〜L-LZ5)、Arithmetic coding + Kolmogorov complexity scope-out (L-LZ6/L-LZ7)。
 - **code suspect 件数**: **16** (`LZ78AchievabilityLimsup.lean` 2 / `LZ78FinalGlue.lean` 5 /
   `LZ78SMBSandwich.lean` 3 / `LZ78DistinctEncoding.lean` 1 / `LZ78ConverseKraft.lean` 1 /
-  `LZ78GreedyParsing.lean` 1 / `LZ78GreedyParsingImpl.lean` 1 / `LZ78AsEventualAchievability.lean` 2)
+  `LZ78GreedyParsing.lean` 1 / `LZ78AsymptoticOptimality.lean` 1 / `LZ78AsEventualAchievability.lean` 2)
 - **Phase 別分布** — plan の予定 Phase A-F (`LempelZiv78.lean` 内 publish のみ) を **大幅に超えた
   後継 work (lz78-achievability-converse-plan / lz78-blockrv-refactor-plan 経由)** の suspect が
   本 plan slug に集約:
@@ -156,7 +156,7 @@ huffman-t1apprime-partial-moonshot) で**同じ 2 hypothesis** (`SwapNormalizati
   | `lz78_converse_lower_bound_ergodic_greedy` | greedy 版 converse compat | `LZ78SMBSandwich.lean:468` |
   | `lz78_two_sided_optimality_distinct_bdd_free` | distinct headline (boundedness 内部 discharge 済) | `LZ78DistinctEncoding.lean:413` |
   | `lz78_asymptotic_optimality_with_greedy_encoding` | greedy 名 instantiation | `LZ78GreedyParsing.lean:518` |
-  | `lz78_asymptotic_optimality_with_greedy_impl` | greedy-impl 名 instantiation | `LZ78GreedyParsingImpl.lean:422` |
+  | `lz78_asymptotic_optimality_with_greedy_impl` | greedy-impl 名 instantiation | `LZ78AsymptoticOptimality.lean:422` |
   | `lz78_two_sided_optimality_distinct_aseventual` | satisfiable a.s.-eventual hyp 経由 (FALSE core 修正版) | `LZ78AsEventualAchievability.lean:334` |
 
 - **整合性 a/b/c**: in-plan orphan = 0、**drop 漏れ = 16 (全部)**、件数一致 = ✅

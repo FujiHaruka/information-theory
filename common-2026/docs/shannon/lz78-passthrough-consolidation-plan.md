@@ -1,7 +1,7 @@
 # LZ78 passthrough scaffolding consolidation plan
 
 **Status**: ✅ CLOSED (commit `602b1ad`) — dead scope-out passthrough scaffolding
-削除済。漸近最適性核心は `GreedyParsingImpl.lean` の 2 本の sorry lemma
+削除済。漸近最適性核心は `AsymptoticOptimality.lean` の 2 本の sorry lemma
 (`lz78GreedyImpl_converse_ae` / `lz78GreedyImpl_achievability_ae`) に一本化していた。
 **後日談 (本 plan の対象外、参考)**: 当該 2 本はいずれも genuine に CLOSED 済 —
 achievability `lz78GreedyImpl_achievability_ae` は leg 11 で sorryAx-free
@@ -19,7 +19,7 @@ cleanup。`Basic.lean §2` の dead statement-only predicate 3本
 (`IsZivInequalityPassthrough` / `IsLZ78ConversePassthrough` /
 `IsSMBSandwichPassthrough`、tier-4 legacy) と唯一の consumer
 `IsLZ78PhraseCountAsymptotic.of_passthrough` (`_h` discard の dead-hyp bridge) を
-物理削除し、漸近最適性の「honest 残課題マーカー」を `GreedyParsingImpl.lean` の
+物理削除し、漸近最適性の「honest 残課題マーカー」を `AsymptoticOptimality.lean` の
 wall sorry lemma 2本に集約。実 sorry 数は不変 (2)。
 
 その後の符号長 def-fix (commit `5d08566`) で当該 2 sorry は dummy parse 時代の

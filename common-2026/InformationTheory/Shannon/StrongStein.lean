@@ -19,7 +19,7 @@ for any `ε ∈ (0, 1)`,
 The proof uses an LLR-typicality route (no Pinsker/Sanov). The key step is a
 lower bound `Q^n(s) ≥ exp(-n(K+δ)) · (P^n(T_n^δ) - ε)` for any α-level test `s`,
 derived by restricting to the Stein-typical set. Together with the existing achievability
-upper bound, this sandwiches the limit. The existing `Stein.lean` API is reused without
+upper bound, this sandwiches the limit. The existing `Stein/` API is reused without
 modification.
 -/
 

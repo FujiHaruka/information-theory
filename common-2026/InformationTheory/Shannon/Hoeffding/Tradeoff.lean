@@ -88,7 +88,7 @@ lemma pmfToMeasure_real_singleton
 
 `s : Finset (Fin n → α)` is the **acceptance region for H₀**. The Type I error is
 `1 - ∑_{x ∈ s} ∏ P₁(x_i)` and the Type II error is `∑_{x ∈ s} ∏ P₂(x_i)`.
-Convention matches `Stein.lean :: steinBetaSet` (Measure path) with `Finset`
+Convention matches `Stein/OptimalExponent.lean :: steinBetaSet` (Measure path) with `Finset`
 instead of `Set + MeasurableSet`. -/
 noncomputable def steinBetaSet_pmf (P₁ P₂ : α → ℝ) (n : ℕ) (alpha : ℝ) : Set ℝ :=
   { β : ℝ | ∃ (s : Finset (Fin n → α)),

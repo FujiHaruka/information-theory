@@ -10,7 +10,7 @@ import Mathlib.MeasureTheory.Measure.Typeclasses.Probability
 This file supplies the **measure-theoretic + log-sum** layer of the
 length-grouping route for the LZ78 achievability wall
 `ziv_aseventual_le_blockLogAvg₂`
-(`InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`,
+(`InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`,
 slug `lz78-aseventual-ziv`).
 
 ## Approach

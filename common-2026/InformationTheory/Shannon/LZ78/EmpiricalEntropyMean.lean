@@ -11,7 +11,7 @@ import Mathlib.Algebra.BigOperators.Field
 
 This file supplies the **analytic crux** behind the `o(n)` overhead estimate
 required by the LZ78 achievability bound `ziv_aseventual_le_blockLogAvg₂`
-(`InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`).
+(`InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`).
 
 ## Approach
 

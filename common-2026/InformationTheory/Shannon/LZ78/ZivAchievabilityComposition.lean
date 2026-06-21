@@ -7,7 +7,7 @@ import InformationTheory.Shannon.LZ78.ZivCondGrouping
 
 This file composes the two sorryAx-free upstream bricks of the LZ78 achievability
 wall `ziv_aseventual_le_blockLogAvg₂`
-(`InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`,
+(`InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`,
 slug `lz78-aseventual-ziv`):
 
 * `negLogQk_parse_threading` (`ZivThreading.lean`): the a.s. threading identity

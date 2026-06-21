@@ -34,7 +34,7 @@ This single file publishes:
   caller-supplied two-sided sandwich. The genuine optimality headline
   (with the sandwich halves discharged as proven theorems, sorryAx-free)
   is `lz78_asymptotic_optimality_with_greedy_impl` in
-  `InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`.
+  `InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`.
 
 ## The asymptotic-optimality core
 
@@ -45,7 +45,7 @@ bound `∀ᵐ ω, entropyRate₂ ≤ liminf (lz/n)` (Cover–Thomas Theorem 13.5
 lower bound) — are the **single source of truth** in the two proven
 theorems
 `lz78GreedyImpl_achievability_ae` / `lz78GreedyImpl_converse_ae`
-in `InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`
+in `InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`
 (both sorryAx-free, `@audit:ok`). The SMB sandwich itself is fully
 discharged upstream (`shannon_mcmillan_breiman`).
 
@@ -89,7 +89,7 @@ The §2 combinator is a genuine two-sided-sandwich derivation via
 (its sandwich arguments are generic and caller-supplied). The genuine
 two-sided sandwich on `lz/n` — the actual achievability / converse
 halves — is proven (sorryAx-free) in
-`GreedyParsingImpl.lean` (`lz78GreedyImpl_achievability_ae` /
+`AsymptoticOptimality.lean` (`lz78GreedyImpl_achievability_ae` /
 `lz78GreedyImpl_converse_ae`), the single source of truth.
 -/
 

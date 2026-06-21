@@ -8,7 +8,7 @@ import Mathlib.Data.Fin.Tuple.Basic
 
 This file builds the **threading foundation** for the LZ78 achievability bound
 `ziv_aseventual_le_blockLogAvg₂`
-(`InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`,
+(`InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`,
 slug `lz78-aseventual-ziv`).
 
 The genuine Ziv `(k-state, length)`-grouping (Cover-Thomas Lemma 13.5.5) needs to

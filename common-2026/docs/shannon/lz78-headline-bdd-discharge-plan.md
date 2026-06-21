@@ -3,7 +3,7 @@
 **Status**: ✅ CLOSED — `h_bdd_above` は内製 discharge 済 (commit `a1ae108`、独立監査 all OK)。
 `h_bdd_above` は headline `lz78_asymptotic_optimality_with_greedy_impl` の
 **signature 引数から除去された** (引数は `μ`, `p` のみ)。
-**SoT**: コード側 (`InformationTheory/Shannon/LZ78/GreedyParsingImpl.lean`)。詳細履歴は git。
+**SoT**: コード側 (`InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`)。詳細履歴は git。
 
 > **Parent**: `docs/textbook-roadmap.md` §13 Ch.13 LZ78
 

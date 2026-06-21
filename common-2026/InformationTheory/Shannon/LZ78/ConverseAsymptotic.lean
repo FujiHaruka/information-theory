@@ -17,7 +17,7 @@ the asymptotic shape `c(n) · log c(n) ≤ n · log b + O(1)` (Cover–Thomas
 Eq. 13.124, the Ziv-counting asymptotic) is exposed as a hypothesis
 pass-through `IsLZ78PhraseCountAsymptotic` that future discharges can
 plug in. The genuine a.s. achievability residual is scoped out as
-`lz78GreedyImpl_achievability_ae` in `GreedyParsingImpl.lean`.
+`lz78GreedyImpl_achievability_ae` in `AsymptoticOptimality.lean`.
 
 ## Scope
 
