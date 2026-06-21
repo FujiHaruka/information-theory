@@ -162,7 +162,7 @@ import InformationTheory.Shannon.TypedRV
 -- Asymptotic / exponent framework (I-3)
 import InformationTheory.Asymptotic
 -- Wave5 parallel-10 publish
-import InformationTheory.Shannon.EPI.Stam.Discharge
+import InformationTheory.Shannon.EPI.Stam.EPIBridge
 import InformationTheory.Shannon.MaxEntropy.ConstrainedKKT
 import InformationTheory.Shannon.LZ78.GreedyParsing
 import InformationTheory.Shannon.FisherInfo.V2DeBruijn
@@ -196,16 +196,16 @@ import InformationTheory.Shannon.EPI.G2.KLFatouLSC
 import InformationTheory.Shannon.EPI.G2.KLVariationalLower
 import InformationTheory.Shannon.EPI.Stam.ToBridge
 import InformationTheory.Shannon.EPI.NoiseExtension
-import InformationTheory.Shannon.EPI.Stam.InequalityBody
+import InformationTheory.Shannon.EPI.Stam.Inequality
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnHeatFlow
 import InformationTheory.Shannon.LZ78.ConverseAsymptotic
 import InformationTheory.Shannon.Hoeffding.InteriorMinimizer
 import InformationTheory.Shannon.GeneralDMC.Extension
 import InformationTheory.Shannon.AWGN.BindConvolution
-import InformationTheory.Shannon.EPI.Stam.Step12Body
+import InformationTheory.Shannon.EPI.Stam.ConditionalCauchySchwarz
 import InformationTheory.Shannon.StamGaussianBound
 import InformationTheory.Shannon.FisherConvBound
-import InformationTheory.Shannon.EPI.Stam.Step3Body
+import InformationTheory.Shannon.EPI.Stam.FisherCoupling
 import InformationTheory.Shannon.FisherInfo.V2HeatFlow
 import InformationTheory.Shannon.LZ78.GreedyParsingImpl
 import InformationTheory.Shannon.LZ78.GreedyLongestPrefix

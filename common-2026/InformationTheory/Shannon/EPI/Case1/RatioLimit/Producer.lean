@@ -218,7 +218,7 @@ noncomputable def isDeBruijnRegularityHyp_of_methodX_unitnoise
     (hready_pX : ∀ v : ℝ≥0, v ≠ 0 →
         InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady
           (fun x => ((P.map X).rnDeriv volume x).toReal) (gaussianPDFReal 0 v)) :
-    InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P := by
+    InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp X Z_X P := by
   classical
   -- Real density witness for `X` from a.c.
   set pX : ℝ → ℝ := fun x => ((P.map X).rnDeriv volume x).toReal with hpX_def

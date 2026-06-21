@@ -1,6 +1,6 @@
 import InformationTheory.Shannon.EPI.Case1.RatioLimit
 import InformationTheory.Shannon.EPI.NoiseExtension
-import InformationTheory.Shannon.EPI.Stam.Step3Body
+import InformationTheory.Shannon.EPI.Stam.FisherCoupling
 import InformationTheory.Shannon.EPI.Conv.DensityRegular
 import InformationTheory.Shannon.EPI.Blachman.GeneralDensity
 import InformationTheory.Shannon.EPI.Conv.DensityAssoc
@@ -474,15 +474,15 @@ theorem entropy_power_inequality_of_density
   have hrn_XY : (fun x => ((lift.map (fun p => X' p + Y' p)).rnDeriv volume x).toReal)
       = (fun x => ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) := by rw [hmap_sum']
   -- de Bruijn group (producer, all three unit-noise → genuine)
-  have h_reg_X : EPIStamDischarge.IsDeBruijnRegularityHyp X' ZX lift :=
+  have h_reg_X : StamEPIBridge.IsDeBruijnRegularityHyp X' ZX lift :=
     isDeBruijnRegularityHyp_of_methodX_unitnoise X' ZX lift hX'_meas hZX_meas hXZX hZX_law
       hX'_ac h_mom_X' (hrn_X ▸ h_fisher_X) (hrn_X ▸ hreg_pX) (hrn_X ▸ hnorm_pX)
       (hrn_X ▸ hready_pX)
-  have h_reg_Y : EPIStamDischarge.IsDeBruijnRegularityHyp Y' ZY lift :=
+  have h_reg_Y : StamEPIBridge.IsDeBruijnRegularityHyp Y' ZY lift :=
     isDeBruijnRegularityHyp_of_methodX_unitnoise Y' ZY lift hY'_meas hZY_meas hYZY hZY_law
       hY'_ac h_mom_Y' (hrn_Y ▸ h_fisher_Y) (hrn_Y ▸ hreg_pY) (hrn_Y ▸ hnorm_pY)
       (hrn_Y ▸ hready_pY)
-  have h_reg_sum : EPIStamDischarge.IsDeBruijnRegularityHyp
+  have h_reg_sum : StamEPIBridge.IsDeBruijnRegularityHyp
       (fun p => X' p + Y' p) Z lift :=
     isDeBruijnRegularityHyp_of_methodX_unitnoise (fun p => X' p + Y' p) Z lift
       (hX'_meas.add hY'_meas) hZ_meas hXYZ hZ_law hXY'_ac h_mom_XY'

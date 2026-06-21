@@ -1,8 +1,8 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EntropyPower.Inequality
 import InformationTheory.Shannon.EPI.Plumbing
-import InformationTheory.Shannon.EPI.Stam.Discharge
-import InformationTheory.Shannon.EPI.Stam.InequalityBody
+import InformationTheory.Shannon.EPI.Stam.EPIBridge
+import InformationTheory.Shannon.EPI.Stam.Inequality
 import InformationTheory.Shannon.FisherInfo.V2
 import InformationTheory.Shannon.FisherInfo.V2DeBruijn
 import InformationTheory.Shannon.FisherInfo.Gaussian
@@ -33,14 +33,14 @@ the symmetric Fisher coupling and bridging into the optimization — explicit.
 
 The genuine analytic content of Steps 2-3 — the conditional Cauchy–Schwarz integrated against `p_Z`
 giving the convex Fisher bound and its `λ`-optimum — is localized to the single lemma
-`EPIStamInequalityBody.stam_step2_density_wall`, which takes regularity preconditions only.
+`StamInequality.stam_step2_density_wall`, which takes regularity preconditions only.
 
 ## References
 
 [CoverThomas2006] Lemma 17.7.2; [Stam1959]; [Blachman1965].
 -/
 
-namespace InformationTheory.Shannon.EPIStamStep3Body
+namespace InformationTheory.Shannon.StamFisherCoupling
 
 set_option linter.unusedVariables false
 set_option linter.unusedSectionVars false
@@ -48,8 +48,8 @@ set_option linter.unusedSectionVars false
 open MeasureTheory ProbabilityTheory Real
 open scoped ENNReal NNReal Topology
 open InformationTheory.Shannon.EntropyPowerInequality
-open InformationTheory.Shannon.EPIStamDischarge
-open InformationTheory.Shannon.EPIStamInequalityBody
+open InformationTheory.Shannon.StamEPIBridge
+open InformationTheory.Shannon.StamInequality
 
 /-! ## §1 — Optimal λ membership (arithmetic) -/
 
@@ -116,4 +116,4 @@ theorem epi_via_stam_step3_gaussian
 
 /-! ## §8 — Sanity check / regression theorems -/
 
-end InformationTheory.Shannon.EPIStamStep3Body
+end InformationTheory.Shannon.StamFisherCoupling

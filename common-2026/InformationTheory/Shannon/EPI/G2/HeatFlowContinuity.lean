@@ -12,7 +12,7 @@ import Mathlib.Order.Monotone.Basic
 import Mathlib.Order.Filter.AtTopBot.CountablyGenerated
 import InformationTheory.Shannon.EntropyPower.Inequality
 import InformationTheory.Shannon.DifferentialEntropy
-import InformationTheory.Shannon.EPI.Stam.Discharge
+import InformationTheory.Shannon.EPI.Stam.EPIBridge
 import InformationTheory.Shannon.EPI.Conv.Density
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly

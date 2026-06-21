@@ -134,10 +134,10 @@ namespace が既に clean (`InformationTheory.Shannon[.AWGN|.RateDistortion|...]
 | namespace (変更前) | 対象ファイル群 | 概念名候補 | 注記 |
 |---|---|---|---|
 | `...Cramer.Discharge` | `Cramer/LC2Discharge.lean`, `Cramer/LC2DischargeExt.lean` | 概念名 (実行時確定; `cgf` 系 / `tilted_lln` 系) | 2 ファイル共有、同一 commit |
-| `...EPIStamDischarge` | `EPI/Stam/Discharge.lean` | `EPI/Stam/` 概念名 (実行時確定) | |
-| `...EPIStamInequalityBody` | `EPI/Stam/InequalityBody.lean` | 概念名 (実行時確定) | |
-| `...EPIStamStep12Body` | `EPI/Stam/Step12Body.lean` | 概念名 (実行時確定) | |
-| `...EPIStamStep3Body` | `EPI/Stam/Step3Body.lean` | 概念名 (実行時確定) | |
+| ~~`...EPIStamDischarge`~~ | ~~`EPI/Stam/Discharge.lean`~~ | **✅ DONE → `StamEPIBridge` / `EPIBridge.lean`** | EPI via Stam + de Bruijn (16-consumer hub) |
+| ~~`...EPIStamInequalityBody`~~ | ~~`EPI/Stam/InequalityBody.lean`~~ | **✅ DONE → `StamInequality` / `Inequality.lean`** | Stam inequality body (CS/convolution-score path) |
+| ~~`...EPIStamStep12Body`~~ | ~~`EPI/Stam/Step12Body.lean`~~ | **✅ DONE → `StamConditionalCauchySchwarz` / `ConditionalCauchySchwarz.lean`** | Step1 score-conv + Step2 conditional CS |
+| ~~`...EPIStamStep3Body`~~ | ~~`EPI/Stam/Step3Body.lean`~~ | **✅ DONE → `StamFisherCoupling` / `FisherCoupling.lean`** | Step3 symmetric Fisher coupling |
 | ~~`...HoeffdingInteriorGradientBody`~~ | ~~`Hoeffding/InteriorGradientBody.lean`~~ | **✅ DONE → `HoeffdingTilt` / `Tilt.lean`** | tilt object + gradient stationarity |
 | ~~`...HoeffdingLagrangeIVTBody`~~ | ~~`Hoeffding/LagrangeIVTBody.lean`~~ | **✅ DONE → `HoeffdingLagrange` / `Lagrange.lean`** | IVT constraint-match + Lagrange hyp 構築 |
 | ~~`...HoeffdingSandwichBody`~~ | ~~`Hoeffding/SandwichBody.lean`~~ | **✅ DONE → `HoeffdingBoundaryMinimizer` / `BoundaryMinimizer.lean`** | full-support predicate + boundary discharge |

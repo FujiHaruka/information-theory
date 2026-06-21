@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EntropyPower.Inequality
-import InformationTheory.Shannon.EPI.Stam.Discharge
+import InformationTheory.Shannon.EPI.Stam.EPIBridge
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnGenuine
 import InformationTheory.Shannon.EPI.L3Integration
 import InformationTheory.Shannon.EPI.Stam.ToBridge
@@ -36,7 +36,7 @@ namespace InformationTheory.Shannon.EPICase1TwoTime
 
 open InformationTheory.Shannon
 open InformationTheory.Shannon.EntropyPowerInequality
-open InformationTheory.Shannon.EPIStamDischarge
+open InformationTheory.Shannon.StamEPIBridge
 open InformationTheory.Shannon.EPIL3Integration (csiszarLogRatioGap)
 open InformationTheory.Shannon.EPIStamToBridge (entropyPower_hasDerivAt_of_diffEnt_hasDerivAt)
 open InformationTheory.Shannon.EPICase1RatioLimit
@@ -605,9 +605,9 @@ theorem twoTimeLogRatioGap_antitoneOn_Ici_zero
     (hZX_ZY : IndepFun Z_X Z_Y P)
     (h_path_X : IsMatchedTimePath X Z_X P J_X s)
     (h_path_Y : IsMatchedTimePath Y Z_Y P J_Y r)
-    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
-    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
-    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+    (h_reg_X : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp Y Z_Y P)
+    (h_reg_sum : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp
                     (fun ω => X ω + Y ω) Z P)
     (h_endpt_sum : IsHeatFlowEndpointRegular (fun ω => X ω + Y ω) Z P)
     (h_pos : ∀ t : ℝ, 0 < t → 0 < s t ∧ 0 < r t)

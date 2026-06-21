@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EntropyPower.Inequality
 import InformationTheory.Shannon.EPI.Plumbing
-import InformationTheory.Shannon.EPI.Stam.Discharge
+import InformationTheory.Shannon.EPI.Stam.EPIBridge
 import InformationTheory.Shannon.EPI.L3Integration
 import InformationTheory.Shannon.FisherInfo.V2
 import InformationTheory.Shannon.FisherInfo.V2DeBruijn
@@ -19,7 +19,7 @@ import Mathlib.Analysis.InnerProductSpace.Basic
 # Stam inequality body discharge (Cauchy–Schwarz / convolution-score path)
 
 This file builds the body of the Stam inequality `1 / J(X + Y) ≥ 1 / J(X) + 1 / J(Y)` (published as
-`IsStamInequalityHyp` in `EPIStamDischarge`) along the Cauchy–Schwarz / convolution-score path.
+`IsStamInequalityHyp` in `StamEPIBridge`) along the Cauchy–Schwarz / convolution-score path.
 
 ## Main definitions
 
@@ -49,7 +49,7 @@ expectation giving `J(Z) ≤ λ² J(X) + (1 - λ)² J(Y)`, and optimization over
 [CoverThomas2006] Lemmas 17.7.1, 17.7.2; [Blachman1965].
 -/
 
-namespace InformationTheory.Shannon.EPIStamInequalityBody
+namespace InformationTheory.Shannon.StamInequality
 
 set_option linter.unusedVariables false
 set_option linter.unusedSectionVars false
@@ -57,7 +57,7 @@ set_option linter.unusedSectionVars false
 open MeasureTheory ProbabilityTheory Real
 open scoped ENNReal NNReal Topology
 open InformationTheory.Shannon.EntropyPowerInequality
-open InformationTheory.Shannon.EPIStamDischarge
+open InformationTheory.Shannon.StamEPIBridge
 
 /-! ## §1 — Convolution score representation predicate (Step 1) -/
 
@@ -249,7 +249,7 @@ theorem stam_step2_density_wall
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P) :
     IsStamCauchySchwarzOptimal X Y P := by
-  -- `IsStamCondExpCSHyp` lives downstream (`EPIStamStep12Body` imports this file), so we
+  -- `IsStamCondExpCSHyp` lives downstream (`StamConditionalCauchySchwarz` imports this file), so we
   -- inline the `∀λ`-bound ⇒ optimal reduction here (the λ-optimization is `stam_lambda_min`,
   -- available in this file) rather than routing through `stamCauchySchwarzOptimal_of_condExpCSHyp`.
   intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
@@ -331,7 +331,7 @@ The genuine Gaussian entropy power inequality runs via `entropyPower_gaussian_ad
 
 /-- **Stam-to-EPI bridge via body discharge** (Gaussian case): combine
 the body-derived Stam inequality with the Stam-to-EPI bridge from
-`EPIStamDischarge.isStamToEPIBridgeHyp_of_gaussian`. -/
+`StamEPIBridge.isStamToEPIBridgeHyp_of_gaussian`. -/
 @[entry_point]
 theorem isStamToEPIBridgeHyp_via_body_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -454,4 +454,4 @@ theorem stam_lambda_at_zero (a b : ℝ) :
 theorem stam_lambda_at_one (a b : ℝ) :
     (1 : ℝ) ^ 2 * a + (1 - 1) ^ 2 * b = a := by ring
 
-end InformationTheory.Shannon.EPIStamInequalityBody
+end InformationTheory.Shannon.StamInequality

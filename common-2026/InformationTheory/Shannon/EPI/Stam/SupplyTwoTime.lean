@@ -33,7 +33,7 @@ is honest: the consumed object is the pointwise-pinned smooth `density_t`, the a
 seam lives only at the un-smoothed input density.
 -/
 import InformationTheory.Shannon.EPI.Case1.TwoTime
-import InformationTheory.Shannon.EPI.Stam.Step3Body
+import InformationTheory.Shannon.EPI.Stam.FisherCoupling
 import InformationTheory.Shannon.EPI.Conv.DensityRegular
 import InformationTheory.Shannon.EPI.Blachman.GeneralDensity
 import InformationTheory.Shannon.EPI.Conv.DensityAssoc
@@ -661,9 +661,9 @@ private lemma reg_density_t_sum_eq_convDensityAdd
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y Z_X Z_Y Z : Ω → ℝ)
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (h_reg_X : EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
-    (h_reg_Y : EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
-    (h_reg_sum : EPIStamDischarge.IsDeBruijnRegularityHyp (fun ω => X ω + Y ω) Z P)
+    (h_reg_X : StamEPIBridge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : StamEPIBridge.IsDeBruijnRegularityHyp Y Z_Y P)
+    (h_reg_sum : StamEPIBridge.IsDeBruijnRegularityHyp (fun ω => X ω + Y ω) Z P)
     (σ τ : ℝ) (hσ : 0 < σ) (hτ : 0 < τ) :
     ∀ x, (h_reg_sum.reg_at (σ + τ) (add_pos hσ hτ)).density_t x
       = convDensityAdd (h_reg_X.reg_at σ hσ).density_t (h_reg_Y.reg_at τ hτ).density_t x := by
@@ -777,9 +777,9 @@ theorem twoTime_stam_supply {Ω : Type*} [MeasurableSpace Ω]
     (_hX_ac : (P.map X) ≪ volume) (_hY_ac : (P.map Y) ≪ volume)
     (_hmomX : Integrable (fun ω => (X ω) ^ 2) P)
     (_hmomY : Integrable (fun ω => (Y ω) ^ 2) P)
-    (h_reg_X : EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
-    (h_reg_Y : EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
-    (h_reg_sum : EPIStamDischarge.IsDeBruijnRegularityHyp (fun ω => X ω + Y ω) Z P) :
+    (h_reg_X : StamEPIBridge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : StamEPIBridge.IsDeBruijnRegularityHyp Y Z_Y P)
+    (h_reg_sum : StamEPIBridge.IsDeBruijnRegularityHyp (fun ω => X ω + Y ω) Z P) :
     ∀ (σ τ : ℝ) (hσ : 0 < σ) (hτ : 0 < τ),
       0 < fisherInfoOfDensityReal ((h_reg_X.reg_at σ hσ).density_t) ∧
       0 < fisherInfoOfDensityReal ((h_reg_Y.reg_at τ hτ).density_t) ∧
@@ -849,8 +849,8 @@ theorem twoTime_stam_supply {Ω : Type*} [MeasurableSpace Ω]
     have := hpair_indep.comp hcombA hcombB
     simpa [Function.comp, A, B] using this
   -- genuine Stam hyp via step3
-  have hStam : EPIStamDischarge.IsStamInequalityHyp A B P :=
-    EPIStamStep3Body.isStamInequalityHyp_via_step3 P A B hA_meas hB_meas hAB_indep
+  have hStam : StamEPIBridge.IsStamInequalityHyp A B P :=
+    StamFisherCoupling.isStamInequalityHyp_via_step3 P A B hA_meas hB_meas hAB_indep
   -- per-time regularity of the three `density_t`s (= conv-Gaussian densities)
   have hregX : IsRegularDensityV2 RX.density_t := by
     rw [hpinX]

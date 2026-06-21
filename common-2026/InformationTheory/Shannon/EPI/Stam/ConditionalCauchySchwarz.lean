@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.EPI.Stam.Discharge
-import InformationTheory.Shannon.EPI.Stam.InequalityBody
+import InformationTheory.Shannon.EPI.Stam.EPIBridge
+import InformationTheory.Shannon.EPI.Stam.Inequality
 import InformationTheory.Shannon.FisherInfo.V2
 import InformationTheory.Shannon.FisherInfo.V2DeBruijn
 import InformationTheory.Shannon.EPI.Conv.Density
@@ -11,13 +11,13 @@ import Mathlib.Tactic.Ring
 /-!
 # Stam inequality Step 1 (score-convolution) + Step 2 (Cauchy-Schwarz) body
 
-`InformationTheory/Shannon/EPIStamInequalityBody.lean` introduced the 4-step
+`InformationTheory/Shannon/StamInequality.lean` introduced the 4-step
 Stam-inequality proof skeleton (Cover-Thomas Lemma 17.7.2 / Blachman 1965):
 
 1. **Step 1 — score-convolution** (Blachman): `s_Z(z) = E[s_X(X) | X+Y = z]`.
 2. **Step 2 — Cauchy-Schwarz** on `condExp`: `s_Z(z)² ≤ E[(λ s_X + (1-λ) s_Y)² | …]`.
 3. **Step 3 — total expectation**: `J(Z) ≤ λ² J(X) + (1-λ)² J(Y)`.
-4. **Step 4 — λ optimization**: fully discharged in `EPIStamInequalityBody.lean`
+4. **Step 4 — λ optimization**: fully discharged in `StamInequality.lean`
    (`stam_lambda_min`, `stam_lambda_lower_bound`,
    `stam_inverse_form_of_harmonic_mean`).
 
@@ -82,15 +82,15 @@ Steps 1-3); the score-convolution identity is reified as the existence of the op
 in `IsStamScoreConvHyp`.
 -/
 
-namespace InformationTheory.Shannon.EPIStamStep12Body
+namespace InformationTheory.Shannon.StamConditionalCauchySchwarz
 
 set_option linter.unusedVariables false
 set_option linter.unusedSectionVars false
 
 open MeasureTheory ProbabilityTheory Real
 open scoped ENNReal NNReal Topology
-open InformationTheory.Shannon.EPIStamDischarge
-open InformationTheory.Shannon.EPIStamInequalityBody
+open InformationTheory.Shannon.StamEPIBridge
+open InformationTheory.Shannon.StamInequality
 
 /-! ## §1 — Pointwise / convex Cauchy-Schwarz (genuine analytic core, fully discharged)
 
@@ -362,4 +362,4 @@ theorem stam_jensen_gap {lam : ℝ} (u v : ℝ) :
     lam * u ^ 2 + (1 - lam) * v ^ 2 - (lam * u + (1 - lam) * v) ^ 2
       = lam * (1 - lam) * (u - v) ^ 2 := by ring
 
-end InformationTheory.Shannon.EPIStamStep12Body
+end InformationTheory.Shannon.StamConditionalCauchySchwarz

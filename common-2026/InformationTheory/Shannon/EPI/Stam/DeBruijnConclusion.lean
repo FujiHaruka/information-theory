@@ -1,10 +1,10 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EntropyPower.Inequality
-import InformationTheory.Shannon.EPI.Stam.Discharge
+import InformationTheory.Shannon.EPI.Stam.EPIBridge
 import InformationTheory.Shannon.EPI.L3Integration
 import InformationTheory.Shannon.EPI.Stam.ToBridge
-import InformationTheory.Shannon.EPI.Stam.InequalityBody
-import InformationTheory.Shannon.EPI.Stam.Step3Body
+import InformationTheory.Shannon.EPI.Stam.Inequality
+import InformationTheory.Shannon.EPI.Stam.FisherCoupling
 import InformationTheory.Shannon.FisherInfo.V2
 import InformationTheory.Shannon.FisherInfo.V2DeBruijn
 import InformationTheory.Shannon.FisherInfo.Gaussian
@@ -20,10 +20,10 @@ The EPI proof pieces:
 
 * **Stam inequality** (Cover-Thomas Lemma 17.7.2). Step 4 (λ-optimization closed
   form `J_sum ≤ J_X J_Y / (J_X + J_Y)`) is *fully arithmetic*, in
-  `EPIStamInequalityBody.lean` (`stam_lambda_min`, `stam_lambda_lower_bound`,
+  `StamInequality.lean` (`stam_lambda_min`, `stam_lambda_lower_bound`,
   `stam_inverse_form_of_harmonic_mean`). The Step 2-3 analytic core (the
   conditional Cauchy-Schwarz + convex Fisher bound) is localized to the single
-  lemma `EPIStamInequalityBody.stam_step2_density_wall`, via
+  lemma `StamInequality.stam_step2_density_wall`, via
   `convex_fisher_bound_of_ready` (regularity preconditions only).
   The chain `isStamInequalityHyp_via_step3` discharges `IsStamInequalityHyp` from
   regularity alone via that lemma.
@@ -68,7 +68,7 @@ closed (`@audit:ok`) via
 `convex_fisher_bound_of_ready`. The remaining residual is the regularity-precondition
 signature gap on the published `IsStamInequalityHyp`, localized to
 `isStamInequalityHyp_via_body` (`@residual(plan:epi-wall-reattack-plan)`,
-`EPIStamInequalityBody.lean`), an owner-level pivot — not a Mathlib wall. The
+`StamInequality.lean`), an owner-level pivot — not a Mathlib wall. The
 Stam→EPI bridge
 (`IsStamToEPIBridgeHyp`, Csiszár scaling-path coupling, Lemma 17.7.3) is
 discharged internally by consumers via the shared sorry lemma
@@ -92,11 +92,11 @@ set_option linter.unusedSectionVars false
 open MeasureTheory ProbabilityTheory Real
 open scoped ENNReal NNReal Topology
 open InformationTheory.Shannon.EntropyPowerInequality
-open InformationTheory.Shannon.EPIStamDischarge
+open InformationTheory.Shannon.StamEPIBridge
 open InformationTheory.Shannon.EPIL3Integration
 open InformationTheory.Shannon.EPIStamToBridge
-open InformationTheory.Shannon.EPIStamInequalityBody
-open InformationTheory.Shannon.EPIStamStep3Body
+open InformationTheory.Shannon.StamInequality
+open InformationTheory.Shannon.StamFisherCoupling
 open InformationTheory.Shannon.FisherInfoV2
 
 /-! ## §1 — de Bruijn gap-monotonicity engine -/

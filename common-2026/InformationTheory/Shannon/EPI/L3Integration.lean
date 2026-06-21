@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EntropyPower.Inequality
 import InformationTheory.Shannon.EPI.Plumbing
-import InformationTheory.Shannon.EPI.Stam.Discharge
+import InformationTheory.Shannon.EPI.Stam.EPIBridge
 import InformationTheory.Shannon.FisherInfo.V2DeBruijn
 import InformationTheory.Shannon.FisherInfo.V2
 import InformationTheory.Shannon.FisherInfo.Gaussian
@@ -20,7 +20,7 @@ import Mathlib.Order.Filter.AtTopBot.Group
 /-!
 # Entropy power inequality — final integration
 
-This file integrates the building blocks from `EPIPlumbing`, `EPIStamDischarge`,
+This file integrates the building blocks from `EPIPlumbing`, `StamEPIBridge`,
 and `FisherInfoV2DeBruijn` to assemble `IsEPIL3IntegratedPipeline` and derive the
 entropy power inequality.
 
@@ -57,7 +57,7 @@ set_option linter.unusedSectionVars false
 open MeasureTheory ProbabilityTheory Real Filter
 open scoped ENNReal NNReal Topology
 open InformationTheory.Shannon.EntropyPowerInequality
-open InformationTheory.Shannon.EPIStamDischarge
+open InformationTheory.Shannon.StamEPIBridge
 open InformationTheory.Shannon.EPIConvDensity (convDensityAdd)
 open InformationTheory.Shannon.EPIBlachmanGaussianWitness (convDensityAdd_gaussian_closed_form)
 

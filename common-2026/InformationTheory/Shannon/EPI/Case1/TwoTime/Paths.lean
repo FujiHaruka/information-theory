@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EntropyPower.Inequality
-import InformationTheory.Shannon.EPI.Stam.Discharge
+import InformationTheory.Shannon.EPI.Stam.EPIBridge
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnGenuine
 import InformationTheory.Shannon.EPI.L3Integration
 import InformationTheory.Shannon.EPI.Stam.ToBridge
@@ -33,7 +33,7 @@ namespace InformationTheory.Shannon.EPICase1TwoTime
 
 open InformationTheory.Shannon
 open InformationTheory.Shannon.EntropyPowerInequality
-open InformationTheory.Shannon.EPIStamDischarge
+open InformationTheory.Shannon.StamEPIBridge
 open InformationTheory.Shannon.EPIL3Integration (csiszarLogRatioGap)
 open InformationTheory.Shannon.EPIStamToBridge (entropyPower_hasDerivAt_of_diffEnt_hasDerivAt)
 open InformationTheory.Shannon.EPICase1RatioLimit

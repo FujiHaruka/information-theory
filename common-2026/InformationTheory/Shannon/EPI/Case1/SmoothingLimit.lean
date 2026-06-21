@@ -59,7 +59,7 @@ noncomputable def isDeBruijnRegularityHyp_of_explicitDensity
     (hnorm_pX : ∫ x, pX x ∂volume = 1)
     (hready_pX : ∀ v : ℝ≥0, v ≠ 0 →
         InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady pX (gaussianPDFReal 0 v)) :
-    InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P := by
+    InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp X Z_X P := by
   classical
   refine
     { density_path := fun t => InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
@@ -314,13 +314,13 @@ theorem entropy_power_inequality_of_density_explicit
       = volume.withDensity (fun x => ENNReal.ofReal (pXY x)) := by
     rw [hmap_sum']; exact hpXY_law
   -- de Bruijn group (explicit-density producer, all three unit-noise → genuine)
-  have h_reg_X : EPIStamDischarge.IsDeBruijnRegularityHyp X' ZX lift :=
+  have h_reg_X : StamEPIBridge.IsDeBruijnRegularityHyp X' ZX lift :=
     isDeBruijnRegularityHyp_of_explicitDensity X' ZX lift hZX_law
       pX hpX_nn hpX_meas hpX_int hpX_law' hpX_mom hreg_pX hnorm_pX hready_pX
-  have h_reg_Y : EPIStamDischarge.IsDeBruijnRegularityHyp Y' ZY lift :=
+  have h_reg_Y : StamEPIBridge.IsDeBruijnRegularityHyp Y' ZY lift :=
     isDeBruijnRegularityHyp_of_explicitDensity Y' ZY lift hZY_law
       pY hpY_nn hpY_meas hpY_int hpY_law' hpY_mom hreg_pY hnorm_pY hready_pY
-  have h_reg_sum : EPIStamDischarge.IsDeBruijnRegularityHyp
+  have h_reg_sum : StamEPIBridge.IsDeBruijnRegularityHyp
       (fun p => X' p + Y' p) Z lift :=
     isDeBruijnRegularityHyp_of_explicitDensity (fun p => X' p + Y' p) Z lift
       hZ_law

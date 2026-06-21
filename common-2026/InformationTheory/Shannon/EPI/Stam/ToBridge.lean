@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EntropyPower.Inequality
-import InformationTheory.Shannon.EPI.Stam.Discharge
+import InformationTheory.Shannon.EPI.Stam.EPIBridge
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnGenuine
 import InformationTheory.Shannon.EPI.L3Integration
 import InformationTheory.Shannon.EPI.Plumbing
@@ -39,7 +39,7 @@ set_option linter.unusedSectionVars false
 open MeasureTheory ProbabilityTheory Real
 open scoped ENNReal NNReal Topology
 open InformationTheory.Shannon.EntropyPowerInequality
-open InformationTheory.Shannon.EPIStamDischarge
+open InformationTheory.Shannon.StamEPIBridge
 open InformationTheory.Shannon.EPIL3Integration
 
 /-! ## §2'' — Path-derivative of the 1-source gap -/
@@ -109,10 +109,10 @@ theorem csiszarLogRatioGap_hasDerivAt
     (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
     (hY : Measurable Y) (hZY : Measurable Z_Y) (hYZY : IndepFun Y Z_Y P)
     (hXYZXY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
-    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+    (h_reg_sum : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp
                     (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
-    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
-    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
+    (h_reg_X : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp Y Z_Y P)
     {t : ℝ} (ht : 0 < t) :
     HasDerivAt (fun s : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
         X Y Z_X Z_Y P s)
@@ -261,10 +261,10 @@ producer; none of the preconditions bundle it.
 theorem csiszarLogRatioGap_deriv_le_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
-    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+    (h_reg_sum : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp
                     (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
-    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
-    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
+    (h_reg_X : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp Y Z_Y P)
     {t : ℝ} (ht : 0 < t)
     (hJX_pos : 0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
                       ((h_reg_X.reg_at t ht).density_t))
@@ -272,7 +272,7 @@ theorem csiszarLogRatioGap_deriv_le_zero
                       ((h_reg_Y.reg_at t ht).density_t))
     (hJsum_pos : 0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
                         ((h_reg_sum.reg_at t ht).density_t))
-    (h_stam : InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
+    (h_stam : InformationTheory.Shannon.StamEPIBridge.IsStamInequalityHyp
                 (fun ω => X ω + Real.sqrt t * Z_X ω)
                 (fun ω => Y ω + Real.sqrt t * Z_Y ω) P)
     -- caller-supplied regularity preconditions for applying `h_stam`.
@@ -371,10 +371,10 @@ theorem csiszarLogRatioGap_differentiableOn_interior
     (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
     (hY : Measurable Y) (hZY : Measurable Z_Y) (hYZY : IndepFun Y Z_Y P)
     (hXYZXY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
-    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+    (h_reg_sum : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp
                     (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
-    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
-    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P) :
+    (h_reg_X : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp Y Z_Y P) :
     DifferentiableOn ℝ
       (fun t : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
         X Y Z_X Z_Y P t)
@@ -421,10 +421,10 @@ theorem csiszarLogRatioGap_antitoneOn_Ici_zero
     (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
     (hY : Measurable Y) (hZY : Measurable Z_Y) (hYZY : IndepFun Y Z_Y P)
     (hXYZXY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
-    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+    (h_reg_sum : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp
                     (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
-    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
-    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
+    (h_reg_X : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp Y Z_Y P)
     (h_endpt_sum : InformationTheory.Shannon.IsHeatFlowEndpointRegular
                     (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
     (h_endpt_X : InformationTheory.Shannon.IsHeatFlowEndpointRegular X Z_X P)
@@ -436,7 +436,7 @@ theorem csiszarLogRatioGap_antitoneOn_Ici_zero
               ((h_reg_Y.reg_at t ht).density_t)) ∧
       (0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
               ((h_reg_sum.reg_at t ht).density_t)) ∧
-      InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
+      InformationTheory.Shannon.StamEPIBridge.IsStamInequalityHyp
         (fun ω => X ω + Real.sqrt t * Z_X ω)
         (fun ω => Y ω + Real.sqrt t * Z_Y ω) P ∧
       -- per-`t` caller-supplied regularity preconditions threaded to the derivative-bound lemma.

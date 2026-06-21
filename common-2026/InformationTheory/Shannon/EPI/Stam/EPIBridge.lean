@@ -44,7 +44,7 @@ inequality to their genuine signatures and assembles them into a pipeline.
 [CoverThomas2006] Lemma 17.7.2; [Stam1959]; [Blachman1965].
 -/
 
-namespace InformationTheory.Shannon.EPIStamDischarge
+namespace InformationTheory.Shannon.StamEPIBridge
 
 set_option linter.unusedVariables false
 set_option linter.unusedSectionVars false
@@ -542,4 +542,4 @@ theorem epi_via_stam_recovers_predicate
     IsEntropyPowerInequalityHypothesis X Y P :=
   h_bridge h_stam
 
-end InformationTheory.Shannon.EPIStamDischarge
+end InformationTheory.Shannon.StamEPIBridge

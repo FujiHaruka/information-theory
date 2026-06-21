@@ -242,10 +242,10 @@ theorem entropyPower_add_ge_case1_of_regular
     (hZX_ac : (P.map Z_X) ≪ volume) (hZY_ac : (P.map Z_Y) ≪ volume)
     (hZXZY_ac : (P.map (fun ω => Z_X ω + Z_Y ω)) ≪ volume)
     -- ratio-antitone density-witness + de Bruijn regularity bundles
-    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+    (h_reg_sum : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp
                     (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
-    (h_reg_X' : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
-    (h_reg_Y' : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
+    (h_reg_X' : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y' : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp Y Z_Y P)
     (h_endpt_sum : InformationTheory.Shannon.IsHeatFlowEndpointRegular
                     (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
     (h_endpt_X : InformationTheory.Shannon.IsHeatFlowEndpointRegular X Z_X P)
@@ -257,7 +257,7 @@ theorem entropyPower_add_ge_case1_of_regular
               ((h_reg_Y'.reg_at t ht).density_t)) ∧
       (0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
               ((h_reg_sum.reg_at t ht).density_t)) ∧
-      InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
+      InformationTheory.Shannon.StamEPIBridge.IsStamInequalityHyp
         (fun ω => X ω + Real.sqrt t * Z_X ω)
         (fun ω => Y ω + Real.sqrt t * Z_Y ω) P ∧
       InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
@@ -494,10 +494,10 @@ theorem entropyPower_add_ge_case1_of_methodX
     (h_iIndep : iIndepFun ![X, Y, Z_X, Z_Y] P)
     -- de Bruijn per-time regularity (NOT supply-able from method-X data)
     -- @residual(plan:epi-debruijn-pertime-closure)
-    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+    (h_reg_sum : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp
                     (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
-    (h_reg_X' : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
-    (h_reg_Y' : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
+    (h_reg_X' : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y' : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp Y Z_Y P)
     (h_endpt_sum : InformationTheory.Shannon.IsHeatFlowEndpointRegular
                     (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
     (h_endpt_X : InformationTheory.Shannon.IsHeatFlowEndpointRegular X Z_X P)
@@ -509,7 +509,7 @@ theorem entropyPower_add_ge_case1_of_methodX
               ((h_reg_Y'.reg_at t ht).density_t)) ∧
       (0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
               ((h_reg_sum.reg_at t ht).density_t)) ∧
-      InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
+      InformationTheory.Shannon.StamEPIBridge.IsStamInequalityHyp
         (fun ω => X ω + Real.sqrt t * Z_X ω)
         (fun ω => Y ω + Real.sqrt t * Z_Y ω) P ∧
       InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
