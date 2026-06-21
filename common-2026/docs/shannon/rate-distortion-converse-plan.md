@@ -1,5 +1,7 @@
 # Rate-distortion converse (single-shot) ムーンショット計画 🌙
 
+**Status**: CLOSED ✅ (2026-06-10) — single-shot headline + E-4' + E-4'' 凸性 + n-letter converse 全 genuine。詳細は下のブロック。
+
 > 実態整合 (2026-06-10): DONE-UNCOND (single-shot) — headline `rate_distortion_converse_single_shot`
 > (`InformationTheory/Shannon/RateDistortion/Converse.lean:135`) は DPI + Fano + max-entropy 連鎖の実証明 (0 sorry) で publish、
 > 副条件は `hMI_W_finite` (MI 有限性) のみで honest。E-4' `rate_distortion_converse_single_shot_specified`

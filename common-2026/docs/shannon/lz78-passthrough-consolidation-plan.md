@@ -7,7 +7,7 @@
 (`lz78Greedy_converse_ae` / `lz78Greedy_achievability_ae`) に一本化していた。
 **後日談 (本 plan の対象外、参考)**: 当該 2 本はいずれも genuine に CLOSED 済 —
 achievability `lz78Greedy_achievability_ae` は leg 11 で sorryAx-free
-(commit `c22f2d5`、旧 `wall:lz78-aseventual-ziv` 解消)、converse
+(commit `c22f2d5`、旧 lz78-aseventual-ziv 壁 解消)、converse
 `lz78Greedy_converse_ae` は M4 で sorryAx-free (commit `bd28e0e`、旧
 `plan:lz78-m4-plan` discharge) → headline `lz78_asymptotic_optimality_with_greedy`
 sorryAx-free = LZ78 漸近最適性 完遂。詳細 → `docs/shannon/lz78-completion-roadmap.md`。

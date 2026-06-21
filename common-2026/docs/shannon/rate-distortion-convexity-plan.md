@@ -1,5 +1,7 @@
 # Rate-distortion convexity + n-letter regulated-distortion form (E-4'' deferred)
 
+**Status**: CLOSED ✅ (2026-06-10) — `rateDistortionFunction_convexOn` genuine proof done (sorryAx-free、監査 `@audit:ok`)。詳細は下のブロック。
+
 > 実態整合 (2026-06-10): **genuine proof done** — `rateDistortionFunction_convexOn`
 > (`InformationTheory/Shannon/RateDistortion/Convexity.lean:390`) は
 > **DPI selector-forget 経路で genuine に閉じた** (一般 Measure 形、有限アルファベット仮定なし)。

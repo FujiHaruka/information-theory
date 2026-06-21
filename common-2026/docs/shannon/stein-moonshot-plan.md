@@ -13,7 +13,7 @@
 > **Status (2026-05-11)**: 起草。シードカード [Seed 5](../moonshot-seeds.md#seed-5-stein-の補題仮説検定の最適-error-exponent) を膨らませた 3〜4 週間ムーンショット。AEP (Seed 4 Phase A〜C) 完了を起点に、漸近 plumbing の 70〜80% を AEP 既存補題の **2 分布化**で再利用する設計。
 > **撤退ライン**: Phase A〜C 完了 (= Stein lower bound = achievability) で publish 価値あり。Phase D (upper bound = converse + 統合形) はそこから separable に切り出せる。
 >
-> **実態整合 (2026-05-20): DONE-UNCOND (sandwich 形)** — Phase A〜B (achievability) に加え、`InformationTheory/Shannon/Stein.lean:1390` に `stein_lemma` が **liminf/limsup sandwich 形** (`K ≤ liminf ∧ limsup ≤ K/(1-ε)`、std binders のみ、pass-through なし) で **完了**。Phase C/D は子 plan `stein-converse-plan.md` で実装済 (本 plan の Goal 部の strict `Tendsto` 形は子 plan で sandwich に着地、strict 形は `strong-stein-moonshot-plan.md` の `stein_strong_lemma` で別途達成)。`Stein.lean` 全体 0 sorry / 0 `:=True`。converse は `stein_converse_finite_n` (Stein.lean:975)。
+> **実態整合 (2026-05-20): DONE-UNCOND (sandwich 形)** — Phase A〜B (achievability) に加え、sandwich 形 (`K ≤ liminf ∧ limsup ≤ K/(1-ε)`、std binders のみ、pass-through なし) で **完了**。(module-restructure で `Stein.lean` は 3 分割され、当時の単一 `stein_lemma` は 2 本の bound `steinOptimalBeta_log_ge_of_achievability` / `steinOptimalBeta_log_le_of_converse` (`InformationTheory/Shannon/Stein/OptimalExponent.lean`) に分かれた。) Phase C/D は子 plan `stein-converse-plan.md` で実装済 (本 plan の Goal 部の strict `Tendsto` 形は子 plan で sandwich に着地、strict 形は `strong-stein-moonshot-plan.md` の `stein_strong_lemma` で別途達成)。Stein 系 0 sorry / 0 `:=True`。converse は `stein_converse_finite_n` (`InformationTheory/Shannon/Stein/Converse.lean`)。
 
 ## 進捗
 

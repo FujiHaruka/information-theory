@@ -15,7 +15,7 @@ declaration-level load-bearing predicate を Honesty 階層 Tier 3 (`@audit:retr
 
 **3 ルート分類 (再開時の設計枠組み)**:
 - Route A — predicate 純削除 (hypothesis-form active consumer 0 の empty-consumers)。
-- Route B — 既存 shared wall lemma に委任。de Bruijn 系 → `debruijnIdentityV2_holds` (`wall:debruijn-integration`) / Stam-scaling 系 → `stamToEPIBridge_holds` or Phase A `csiszarGap_antitoneOn_*`。**regularity precondition (`Measurable`/`IndepFun`/`IsProbabilityMeasure`/Gaussian law) は残す** (load-bearing ではない)。
+- Route B — 既存 shared wall lemma に委任。de Bruijn 系 → `debruijnIdentityV2_holds` (debruijn-integration 壁、現 CLOSED) / Stam-scaling 系 → `stamToEPIBridge_holds` (legacy Stam route 削除済) or Phase A `csiszarGap_antitoneOn_*`。**regularity precondition (`Measurable`/`IndepFun`/`IsProbabilityMeasure`/Gaussian law) は残す** (load-bearing ではない)。
 - Route C — bundle `IsEPIL3IntegratedPipeline` の `bridge` field を非 load-bearing 化 (bundle structure は残し field のみ除去)、consumer は `stamToEPIBridge_holds` を内部呼出。
 
 **着地内容**: scope = 6 file (`EPIL3Integration` / `EPIStamToBridge` / `EPIStamDischarge` / `EntropyPowerInequality` + 構成子 file `EPIStamDeBruijnConclusion` / `EPIStamInequalityBody`、ripple `EPIPlumbing` / `HeatFlowPath`)。3 並列 Group (pipeline bundle / Stam-scaling / de Bruijn) で landing。新規 shared sorry 補題 4 件補充、新規 wall file 0 / 新規 wall name 0 (デフォルト plan slug `epi-stam-to-conclusion-phaseA-plan` で揃え、`docs/audit/audit-tags.md` 無変更)。

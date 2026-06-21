@@ -138,7 +138,7 @@ proof done を目指す (PB-4 sum が park の場合は X/Y 系 proof done + sum
 - `EPIG2HeatFlowContinuity.lean:488` / `EPIStamToBridge.lean:1435-1452` — `IsHeatFlowEndpointRegular` (一般 v_Z) + producer pattern
 - `EPIStamToBridge.lean:1346,1352-1353` — `isStamToEPIScalingHyp_of_stam_debruijn` (unit-noise 要求 = PB-1 根拠)
 - `EPIStamStep3Body.lean:119` — `isStamInequalityHyp_via_step3` (Stam conjunct、genuine)
-- `FisherConvBound.lean:385` — `gaussianConv_fisher_le_inv_var` (`integrable_deriv` Fisher 有界、`wall:fisher-finiteness` CLOSED)
+- `FisherConvBound.lean:385` — `gaussianConv_fisher_le_inv_var` (`integrable_deriv` Fisher 有界、fisher-finiteness 壁は CLOSED、ホスト `FisherConvBound.lean` は legacy Stam route 削除で消滅済)
 - `FisherInfoV2DeBruijnBody.lean:209` — `IsIBPHypothesis` (PB-7 retract 対象)
 - `Mathlib/Data/Real/Sqrt.lean:352` — `Real.sqrt_mul` (PB-2)
 

@@ -1,5 +1,7 @@
 # AWGN MI bridge — `mutualInfoOfChannel` ↔ `h(Y) − h(Y|X)` plan (stub)
 
+**Status**: CLOSED ✅ (2026-06-11、genuine) — per-letter bridge + density chain-rule すべて genuine discharge 済。詳細は下のブロック。
+
 > **Status (2026-06-11)**: **CLOSED (genuine)**。① per-letter bridge は
 > `awgn_per_letter_mi_bridge_genuine` (`AWGN/Converse.lean:552`、`@audit:ok`) で genuine 化済
 > (mixture→compProd 因子分解 + generic continuous-channel MI chain rule asset + 混合 log-density

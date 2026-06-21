@@ -1,4 +1,6 @@
-# LZ78 Ziv combinatorial core — tree-node-context discharge サブ計画 ⚠ 部分 UN-PARK
+# LZ78 Ziv combinatorial core — tree-node-context discharge サブ計画
+
+**Status**: CLOSED ✅ — M3 achievability 壁 lz78-aseventual-ziv はその後 Q_k grafting (commit `c22f2d5`) で genuine closure 済、headline `lz78_asymptotic_optimality_with_greedy` は proof done = sorryAx-free。本 plan の tree-node-context route は不要になった (以下は当時の characterization 履歴)。
 
 > **Parent**:
 > - [`lz78-completion-roadmap.md`](lz78-completion-roadmap.md) §1 M3
@@ -8,7 +10,7 @@
 
 ## ⚠ 部分 UN-PARK (leg 4 後半 gateway-atom-first probe による精密 characterization)
 
-leg 4 後半の probe で M3 achievability 壁 `ziv_aseventual_le_blockLogAvg₂`（`@residual(wall:lz78-aseventual-ziv)`）は **genuine research-level** と機械裏取りされ、**2 つの単純 grouping が両方 machine-ruled-out** された。これにより本計画は「完全 park」から **部分 un-park** に修正される:
+leg 4 後半の probe で M3 achievability 壁 `ziv_aseventual_le_blockLogAvg₂`（当時 lz78-aseventual-ziv 壁、現 CLOSED）は **genuine research-level** と機械裏取りされ、**2 つの単純 grouping が両方 machine-ruled-out** された。これにより本計画は「完全 park」から **部分 un-park** に修正された (その後 Q_k grafting で完全 closure):
 
 - **un-park: per-node conditional sub-distribution `∑_a q(node·a|node) ≤ 1`（旧 T2）は genuine に必要な核**。leg 4 で確認 — path-prefix `condPhraseProb`（D4 trap）でも marginal（方向逆）でも届かない **第三の量**で、conditional chain rule で `-log Pₙ` に到達するための measure-theoretic 核（codebase + Mathlib 不在）。
 - **dead: 旧 T3 の naive node-grouping assembly（`c·log c ≤ ∑_v k_v·log k_v + c·log #nodes`）は D3 trap で死ぬ**。LZ tree で #nodes≈c なので overhead `c·log #nodes ≈ c·log c` = main term と同オーダーで vanish しない。`sorryAx-free 組合せ核 `lz78PhraseStrings_mul_log_le`（`c·log c ≤ K·n`、`ZivCountingBody.lean:357`）で order が残り `entropyRate₂` 超過 = 細工不能。「再利用」と書いた node-context 基盤資産も削除済（dead、下記）。

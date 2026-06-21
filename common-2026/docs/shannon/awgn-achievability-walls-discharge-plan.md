@@ -1,5 +1,7 @@
 # AWGN achievability — 3 shared 壁 discharge + statement-fix サブ計画
 
+**Status**: CLOSED ✅ (2026-06-12) — achievability stack 全体 proof done / 解析核 genuine。詳細は下の進捗ブロック。
+
 > **Parent**: [`awgn-moonshot-plan.md`](awgn-moonshot-plan.md) F-1 (achievability typicality)。
 > **Sibling (history)**: [`awgn-achievability-typicality-plan.md`](awgn-achievability-typicality-plan.md) (DONE、3 壁を staged/shared sorry 化した元 plan) / [`awgn-power-constraint-realizable-pivot-plan.md`](awgn-power-constraint-realizable-pivot-plan.md) (judgment #7 = 1 回目の power-constraint pivot)。
 > **Facts ledger**: [`awgn-facts.md`](awgn-facts.md) (壁 overturn / 残存壁 / 確定事実の SoT)。

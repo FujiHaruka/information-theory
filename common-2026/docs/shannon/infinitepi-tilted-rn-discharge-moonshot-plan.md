@@ -1,5 +1,7 @@
 # infinitePi-tilted RN discharge ムーンショット計画 🌙 (T1-C Cramér Phase C + Chernoff converse 同根 frontier)
 
+**Status**: CLOSED ✅ (2026-05-20) — Phase 1-4 全達成。詳細は下の実態整合ブロック。
+
 > 実態整合 (2026-05-20): **DONE — Phase 1-4 全達成、当初の「最低保証」を大きく超過**。進捗ブロックと
 > 判断ログが起草時のまま (Phase 0-V 全 [ ]、判断ログは起草 2 件のみ) で **重度に陳腐化**。実態:
 > - Phase 1 本丸 `pi_tilted_sum_eq_pi_tilted` ✅ `InformationTheory/Shannon/MeasurePiTiltedFactorization.lean:121`
