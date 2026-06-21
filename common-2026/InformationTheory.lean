@@ -102,7 +102,9 @@ import InformationTheory.Shannon.RateDistortion.AchievabilityStrongTypicality
 import InformationTheory.Shannon.ShannonCode.Basic
 import InformationTheory.Shannon.ShannonCode.KraftReverse
 import InformationTheory.Shannon.McMillanKraftBridge
-import InformationTheory.Shannon.Huffman.Basic
+import InformationTheory.Shannon.Huffman.Length
+import InformationTheory.Shannon.Huffman.KraftSum
+import InformationTheory.Shannon.Huffman.ExpectedLength
 import InformationTheory.Shannon.Huffman.Optimality
 import InformationTheory.Shannon.CsiszarProjection
 import InformationTheory.Shannon.Chernoff.Basic

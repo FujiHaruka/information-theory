@@ -6,7 +6,9 @@ import Mathlib.Data.Fintype.EquivFin
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.MeasureTheory.Measure.Real
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.Huffman.Basic
+import InformationTheory.Shannon.Huffman.Length
+import InformationTheory.Shannon.Huffman.KraftSum
+import InformationTheory.Shannon.Huffman.ExpectedLength
 
 /-!
 # Huffman optimality — Cover–Thomas Theorem 5.8.1
