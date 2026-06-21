@@ -14,8 +14,8 @@ import InformationTheory.Shannon.EntropyPower.Inequality
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPI.Stam.EPIBridge
 import InformationTheory.Shannon.EPI.Conv.Density
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly
+import InformationTheory.Shannon.FisherInfo.DeBruijnPerTime
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly
 import InformationTheory.Shannon.EPI.Vitali.UI
 import InformationTheory.Shannon.EPI.G2.KLFatouLSC
 import InformationTheory.Shannon.EPI.G2.ConvEntropyDensity
@@ -65,7 +65,7 @@ precondition on the input distribution, not a load-bearing conclusion. -/
 For each `t > 0`, `negMulLog (convDensityAdd pX g_t)` is `volume`-integrable.
 
 Delegates verbatim to the in-tree asset
-`FisherInfoV2.convDensityAdd_negMulLog_integrable` (same conclusion type); pure
+`FisherInfo.convDensityAdd_negMulLog_integrable` (same conclusion type); pure
 plumbing, no new analytic content.
 @audit:ok -/
 theorem convDensityAdd_negMulLog_integrable_pub
@@ -74,7 +74,7 @@ theorem convDensityAdd_negMulLog_integrable_pub
     (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume) {t : ℝ} (ht : 0 < t) :
     Integrable (fun x =>
       Real.negMulLog (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x)) volume :=
-  InformationTheory.Shannon.FisherInfoV2.convDensityAdd_negMulLog_integrable
+  InformationTheory.Shannon.FisherInfo.convDensityAdd_negMulLog_integrable
     pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
 
 /-! ## Two-sided sandwich for the entropy-integral limit
@@ -278,10 +278,10 @@ theorem heatFlowDifferentialEntropy_continuousWithinAt_zero
     -- `P.map (X + √t·Z) = P.map (gaussianConvolution X Z t)` (defeq).
     have hpath_eq :
         (fun ω => X ω + Real.sqrt t * Z ω)
-          = InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z t := rfl
+          = InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z t := rfl
     rw [hpath_eq]
     -- density identification
-    have hrn := InformationTheory.Shannon.FisherInfoV2.pPath_eq_convDensityAdd
+    have hrn := InformationTheory.Shannon.FisherInfo.pPath_eq_convDensityAdd
       X Z hX_meas hZ_meas hXZ_indep v_Z hv_Z_pos hZ_law pX hpX_nn hpX_meas hpX_law ht
     unfold differentialEntropy
     -- push the a.e. density identity into the integrand.

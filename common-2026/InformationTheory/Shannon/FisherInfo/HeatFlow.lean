@@ -7,9 +7,9 @@ import Mathlib.Analysis.Calculus.Deriv.Add
 import Mathlib.Analysis.Calculus.Deriv.Mul
 import Mathlib.Analysis.Calculus.Deriv.Comp
 import Mathlib.Analysis.Calculus.LogDeriv
-import InformationTheory.Shannon.FisherInfo.V2
-import InformationTheory.Shannon.FisherInfo.V2DeBruijn
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnHeatFlow
+import InformationTheory.Shannon.FisherInfo.OfDensity
+import InformationTheory.Shannon.FisherInfo.DeBruijn
+import InformationTheory.Shannon.FisherInfo.DeBruijnHeatFlow
 import InformationTheory.Shannon.FisherInfo.Gaussian
 import InformationTheory.Shannon.DifferentialEntropy
 
@@ -48,7 +48,7 @@ The time-derivative and convolution-representation sub-predicates are kept as pa
 hypotheses because the variance-derivative `∂_t gaussianPDFReal 0 ⟨t, _⟩ x` is not in Mathlib.
 -/
 
-namespace InformationTheory.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfo
 
 set_option linter.unusedSectionVars false
 
@@ -229,4 +229,4 @@ noncomputable def IsRegularDeBruijnHypV2.ofHeatSubhyp
   IsRegularDeBruijnHypV2.ofHeatFlow hX hZ hXZ hX_ac h_mom_X ht
     (IsHeatFlowDensity_of_sub_predicates h_conv h_time)
 
-end InformationTheory.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfo

@@ -55,7 +55,7 @@ noncomputable def isDeBruijnRegularityHyp_of_explicitDensity
     (hpX_int : Integrable pX volume)
     (hpX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x)))
     (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
-    (hreg_pX : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 pX)
+    (hreg_pX : InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 pX)
     (hnorm_pX : ∫ x, pX x ∂volume = 1)
     (hready_pX : ∀ v : ℝ≥0, v ≠ 0 →
         InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady pX (gaussianPDFReal 0 v)) :
@@ -85,18 +85,18 @@ noncomputable def isDeBruijnRegularityHyp_of_explicitDensity
     -- `(1/2)·J(density_t).toReal ≤ (1/2)·J(pX).toReal =: C` for every `t ∈ Ioc 0 T`. The
     -- `t`-measurability of the integrand is supplied by `aestronglyMeasurable_fisherInfo_t`.
     intro T hT
-    simp only [InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2_def]
+    simp only [InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2_def]
     set C : ℝ := (1 / 2) *
-      (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity pX).toReal with hC_def
+      (InformationTheory.Shannon.FisherInfo.fisherInfoOfDensity pX).toReal with hC_def
     have hbound : ∀ t ∈ Set.Ioc (0 : ℝ) T,
-        (1 / 2) * (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity
+        (1 / 2) * (InformationTheory.Shannon.FisherInfo.fisherInfoOfDensity
             (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
               (gaussianPDFReal 0 t.toNNReal))).toReal ≤ C := by
       intro t ht
       have htpos : 0 < t := ht.1
       have hv_ne : t.toNNReal ≠ 0 := by
         simp only [ne_eq, Real.toNNReal_eq_zero, not_le]; exact htpos
-      have hregY : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
+      have hregY : InformationTheory.Shannon.FisherInfo.IsRegularDensityV2
           (gaussianPDFReal 0 t.toNNReal) :=
         InformationTheory.Shannon.EPIGaussianDensityRoute.isRegularDensityV2_gaussianPDFReal hv_ne
       have hnormY : ∫ x, gaussianPDFReal 0 t.toNNReal x ∂volume = 1 :=
@@ -116,7 +116,7 @@ noncomputable def isDeBruijnRegularityHyp_of_explicitDensity
     · refine (ae_restrict_iff' measurableSet_Ioc).mpr (Filter.Eventually.of_forall ?_)
       intro t ht
       have hnn : (0 : ℝ) ≤ (1 / 2) *
-          (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity
+          (InformationTheory.Shannon.FisherInfo.fisherInfoOfDensity
             (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
               (gaussianPDFReal 0 t.toNNReal))).toReal :=
         mul_nonneg (by norm_num) ENNReal.toReal_nonneg
@@ -199,7 +199,7 @@ theorem entropy_power_inequality_of_density_explicit
     (hpX_int : Integrable pX volume)
     (hpX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x)))
     (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
-    (hreg_pX : FisherInfoV2.IsRegularDensityV2 pX)
+    (hreg_pX : FisherInfo.IsRegularDensityV2 pX)
     (hnorm_pX : ∫ x, pX x ∂volume = 1)
     (hready_pX : ∀ v : ℝ≥0, v ≠ 0 →
         EPIBlachmanDensity.IsBlachmanConvReady pX (gaussianPDFReal 0 v))
@@ -209,7 +209,7 @@ theorem entropy_power_inequality_of_density_explicit
     (hpY_int : Integrable pY volume)
     (hpY_law : P.map Y = volume.withDensity (fun x => ENNReal.ofReal (pY x)))
     (hpY_mom : Integrable (fun y => y ^ 2 * pY y) volume)
-    (hreg_pY : FisherInfoV2.IsRegularDensityV2 pY)
+    (hreg_pY : FisherInfo.IsRegularDensityV2 pY)
     (hnorm_pY : ∫ x, pY x ∂volume = 1)
     (hready_pY : ∀ v : ℝ≥0, v ≠ 0 →
         EPIBlachmanDensity.IsBlachmanConvReady pY (gaussianPDFReal 0 v))
@@ -220,7 +220,7 @@ theorem entropy_power_inequality_of_density_explicit
     (hpXY_law : P.map (fun ω => X ω + Y ω)
         = volume.withDensity (fun x => ENNReal.ofReal (pXY x)))
     (hpXY_mom : Integrable (fun y => y ^ 2 * pXY y) volume)
-    (hreg_pXY : FisherInfoV2.IsRegularDensityV2 pXY)
+    (hreg_pXY : FisherInfo.IsRegularDensityV2 pXY)
     (hnorm_pXY : ∫ x, pXY x ∂volume = 1)
     (hready_pXY : ∀ v : ℝ≥0, v ≠ 0 →
         EPIBlachmanDensity.IsBlachmanConvReady pXY (gaussianPDFReal 0 v))
@@ -506,9 +506,9 @@ lemma map_smoothed_eq_withDensity_convDensityAdd
       = volume.withDensity (fun x => ENNReal.ofReal
           (InformationTheory.Shannon.EPIConvDensity.convDensityAdd p_base
             (gaussianPDFReal 0 ⟨t * (v_Z : ℝ), by positivity⟩) x)) := by
-  have hgconv : InformationTheory.Shannon.FisherInfoV2.gaussianConvolution U Zw t
+  have hgconv : InformationTheory.Shannon.FisherInfo.gaussianConvolution U Zw t
       = fun ω => U ω + Real.sqrt t * Zw ω := rfl
-  have hrn := InformationTheory.Shannon.FisherInfoV2.pPath_eq_convDensityAdd
+  have hrn := InformationTheory.Shannon.FisherInfo.pPath_eq_convDensityAdd
     U Zw hU hZw hUZw v_Z hv_Z hZw_law p_base hp_nn hp_meas hp_law (s := t) ht
   rw [hgconv] at hrn
   have hself : P.map (fun ω => U ω + Real.sqrt t * Zw ω)
@@ -549,7 +549,7 @@ lemma smoothing_density_regularity
     (hp_int : Integrable p_base volume) (hp_mass : (∫ y, p_base y ∂volume) = 1)
     (hp_mom : Integrable (fun y => y ^ 2 * p_base y) volume)
     {τ : ℝ} (hτ : 0 < τ) :
-    FisherInfoV2.IsRegularDensityV2
+    FisherInfo.IsRegularDensityV2
         (InformationTheory.Shannon.EPIConvDensity.convDensityAdd p_base
           (gaussianPDFReal 0 ⟨τ, hτ.le⟩)) ∧
       (∀ x, 0 ≤ InformationTheory.Shannon.EPIConvDensity.convDensityAdd p_base

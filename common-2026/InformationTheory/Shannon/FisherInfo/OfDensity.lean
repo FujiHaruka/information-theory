@@ -35,7 +35,7 @@ avoids that.
   `fisherInfoOfDensity (gaussianPDFReal m v) = ENNReal.ofReal (1 / v)`.
 -/
 
-namespace InformationTheory.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfo
 
 set_option linter.unusedSectionVars false
 
@@ -232,4 +232,4 @@ theorem fisherInfoOfDensityReal_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v 
   rw [fisherInfoOfDensity_gaussianPDFReal m hv]
   rw [ENNReal.toReal_ofReal (by positivity)]
 
-end InformationTheory.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfo

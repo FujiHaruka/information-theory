@@ -9,7 +9,7 @@
 
 - [x] Phase 0 — 測定 + 改名マッピング確定 + pilot 1 本で較正 (bisection 完了、pilot `MIBridgeDischarge → MutualInfoBridge` 完了) ✅
 - [~] Phase 1a — path-only 改名 + 空スタブ削除 (低リスク、機械的)。pilot+AWGN群 / batch2 WynerZiv·LZ78·Gaussian / FisherInfo Body 除去 / ChannelCoding dir 改名 + 空スタブ 2 本 完了。**残 = RateDistortion PhaseE family (最終ターゲット、本 leg)** 🔄
-- [ ] Phase 1b — namespace-also 改名 (dep_consumers 必須、共有 ns グループは一括 commit) 📋
+- [x] Phase 1b — namespace-also 改名 (全 8 family DONE: WhittakerShannon/Hoeffding×5/EPI-Stam×4/Cramer/Blachman/ChannelCodingConverseGeneral/ChannelCodingFeedback/FisherInfoV2)。Draft/ dir 完全解消 ✅
 - [ ] Phase 2 — `AWGN/Walls.lean` (3549 行) を概念単位に分割 + 改名 📋
 - [ ] Phase 3 — 残り 1200+ 行ファイルを概念単位に分割 (AchievabilityDischarge/ConverseDischarge も含む) 📋
 - [ ] Phase 4 — 最終再実測 + full build green 📋
@@ -147,7 +147,7 @@ namespace が既に clean (`InformationTheory.Shannon[.AWGN|.RateDistortion|...]
 | ~~`...ChannelCodingFeedback`~~ | ~~`ChannelCoding/FeedbackComplete.lean`~~ | **✅ DONE → `FeedbackMemoryless.lean`** | ns clean=不変 (ファイル改名のみ)。`Feedback.lean` 衝突回避 + content 命名 (memoryless feedback 変種)。importer は root のみ (依存方向は FeedbackComplete→Feedback、plan の consumer=Feedback.lean は誤り) |
 | ~~`...EPIBlachmanGaussianWitness`~~ | ~~`EPI/Blachman/GaussianWitness.lean`~~ | **✅ DONE → `EPIGaussianDensityRoute` / `GaussianDensityRoute.lean`** | Gaussian density-route inhabitant (非空性) |
 | ~~`...WhittakerShannonPartial`~~ | ~~`WhittakerShannonPartial.lean`~~ | **✅ DONE → `NormalizedSinc`** | `Partial` は load-bearing (Mathlib にある WS の部分集合のみ; L²直交/Poisson は out-of-scope) ゆえ bare `WhittakerShannon` は over-claim → primary object `sincN` で命名。consumer=root のみ |
-| `...FisherInfoV2` | `FisherInfo/V2DeBruijnBody.lean`, `FisherInfo/V2HeatFlowBody.lean` (+ `FisherDeBruijnGaussianWitness`) | `V2` token 除去 (例 `FisherInfo`) | Body 除去は Phase 1a で先行、V2 ns cleanup はここ |
+| ~~`...FisherInfoV2`~~ | ~~`FisherInfo/V2*.lean` 群 (7本) + `FisherDeBruijnGaussianWitness`~~ | **✅ DONE → ns `FisherInfo` + ファイル `OfDensity`/`DeBruijn`/`DeBruijnGeneral`/`DeBruijnHeatFlow`/`DeBruijnPerTime`/`HeatFlow`/`DeBruijnAssembly`(+dir)/`FisherDeBruijnGaussian`** | **想定より大: ns 宣言13本 + 置換46ファイル/303箇所 + import 39+root**。decl 名の V2 (`fisherInfoOfMeasureV2` 等) は out-of-scope で保存。Witness=禁止語ゆえ同時除去。sorry 107・tag 不変 |
 
 > flat namespace (e.g. `EPIStamDischarge`) はディレクトリ構造由来でなく手書き。変更方針: プロセス語彙 token
 > だけを strip して概念名化 (e.g. `EPIStamInequalityBody` → headline を Read して概念名を決定)。

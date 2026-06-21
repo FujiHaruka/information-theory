@@ -119,7 +119,7 @@ import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.DeLaValleePoussin
 import InformationTheory.Shannon.FisherInfo.Basic
 import InformationTheory.Shannon.FisherInfo.Gaussian
-import InformationTheory.Shannon.FisherInfo.V2
+import InformationTheory.Shannon.FisherInfo.OfDensity
 import InformationTheory.Shannon.AWGN.Basic
 import InformationTheory.Shannon.AWGN.Achievability
 import InformationTheory.Shannon.AWGN.Converse
@@ -165,14 +165,14 @@ import InformationTheory.Asymptotic
 import InformationTheory.Shannon.EPI.Stam.EPIBridge
 import InformationTheory.Shannon.MaxEntropy.ConstrainedKKT
 import InformationTheory.Shannon.LZ78.GreedyParsing
-import InformationTheory.Shannon.FisherInfo.V2DeBruijn
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Core
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Domination
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Derivatives
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Assembly
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnGenuine
+import InformationTheory.Shannon.FisherInfo.DeBruijn
+import InformationTheory.Shannon.FisherInfo.DeBruijnPerTime
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly.Core
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly.Domination
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly.Derivatives
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly.Assembly
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly
+import InformationTheory.Shannon.FisherInfo.DeBruijnGeneral
 import InformationTheory.Shannon.AWGN.JointlyTypicalSet
 -- Wave5 gap-close
 import InformationTheory.Shannon.Cramer.LC2PhaseC
@@ -197,7 +197,7 @@ import InformationTheory.Shannon.EPI.G2.KLVariationalLower
 import InformationTheory.Shannon.EPI.Stam.ToBridge
 import InformationTheory.Shannon.EPI.NoiseExtension
 import InformationTheory.Shannon.EPI.Stam.Inequality
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnHeatFlow
+import InformationTheory.Shannon.FisherInfo.DeBruijnHeatFlow
 import InformationTheory.Shannon.LZ78.ConverseAsymptotic
 import InformationTheory.Shannon.Hoeffding.InteriorMinimizer
 import InformationTheory.Shannon.GeneralDMC.Extension
@@ -206,7 +206,7 @@ import InformationTheory.Shannon.EPI.Stam.ConditionalCauchySchwarz
 import InformationTheory.Shannon.StamGaussianBound
 import InformationTheory.Shannon.FisherConvBound
 import InformationTheory.Shannon.EPI.Stam.FisherCoupling
-import InformationTheory.Shannon.FisherInfo.V2HeatFlow
+import InformationTheory.Shannon.FisherInfo.HeatFlow
 import InformationTheory.Shannon.LZ78.GreedyParsingImpl
 import InformationTheory.Shannon.LZ78.GreedyLongestPrefix
 import InformationTheory.Shannon.Hoeffding.Tilt
@@ -226,7 +226,7 @@ import InformationTheory.Shannon.LZ78.ZivThreading
 import InformationTheory.Shannon.LZ78.ZivAchievabilityComposition
 import InformationTheory.Shannon.WynerZiv.ObjectiveConvexity
 import InformationTheory.Shannon.GaussianPDFVarianceDerivative
-import InformationTheory.Shannon.FisherDeBruijnGaussianWitness
+import InformationTheory.Shannon.FisherDeBruijnGaussian
 import InformationTheory.Shannon.Hoeffding.MinimizerAttainment
 import InformationTheory.Shannon.Hoeffding.MinimizerExistence
 import InformationTheory.Shannon.Hoeffding.TradeoffExp

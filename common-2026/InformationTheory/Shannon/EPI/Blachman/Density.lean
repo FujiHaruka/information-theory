@@ -1,5 +1,5 @@
 import InformationTheory.Shannon.EPI.Conv.Density
-import InformationTheory.Shannon.FisherInfo.V2
+import InformationTheory.Shannon.FisherInfo.OfDensity
 import Mathlib.Analysis.Calculus.LogDeriv
 import Mathlib.MeasureTheory.Group.Integral
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
@@ -39,7 +39,7 @@ namespace InformationTheory.Shannon.EPIBlachmanDensity
 
 open MeasureTheory Real
 open scoped ENNReal NNReal
-open InformationTheory.Shannon.FisherInfoV2
+open InformationTheory.Shannon.FisherInfo
 open InformationTheory.Shannon.EPIConvDensity
 
 /-- **Conditional density** `p_{X|Z}(x|z) := fX(x) · fY(z - x) / p_Z(z)`, where

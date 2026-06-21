@@ -1,11 +1,11 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
+import InformationTheory.Shannon.FisherInfo.DeBruijnPerTime
 import InformationTheory.Shannon.FisherConvBound
 import InformationTheory.Shannon.EPI.Conv.DensitySecondDeriv
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Core
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Domination
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly.Core
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly.Domination
 
-namespace InformationTheory.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfo
 
 open MeasureTheory ProbabilityTheory Filter Topology Real
 open scoped ENNReal NNReal
@@ -1083,4 +1083,4 @@ theorem convDensityAdd_negMulLog_integrable
       ≤ p_t x * (A + 1 + B * x ^ 2) := mul_le_mul_of_nonneg_left hlog_abs (hp_nn x)
     _ = (A + 1) * p_t x + B * (x ^ 2 * p_t x) := by ring
 
-end InformationTheory.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfo

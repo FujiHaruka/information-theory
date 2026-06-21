@@ -1,7 +1,7 @@
-import InformationTheory.Shannon.FisherInfo.V2
-import InformationTheory.Shannon.FisherInfo.V2DeBruijn
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnHeatFlow
-import InformationTheory.Shannon.FisherInfo.V2HeatFlow
+import InformationTheory.Shannon.FisherInfo.OfDensity
+import InformationTheory.Shannon.FisherInfo.DeBruijn
+import InformationTheory.Shannon.FisherInfo.DeBruijnHeatFlow
+import InformationTheory.Shannon.FisherInfo.HeatFlow
 import InformationTheory.Shannon.GaussianPDFVarianceDerivative
 
 /-!
@@ -11,7 +11,7 @@ Assembles the Gaussian heat-kernel derivative facts into a de Bruijn heat-flow w
 
 Both analytic halves of `∂_t g_t = (1/2) Δ_x g_t` for the centred Gaussian heat kernel
 `g_t = heatKernel t` are proved internally:
-- spatial: `isHeatSpatialDerivHyp_gaussian` (`FisherInfoV2HeatFlow.lean`)
+- spatial: `isHeatSpatialDerivHyp_gaussian` (`FisherInfoHeatFlow.lean`)
 - time: `isHeatTimeDerivHyp_gaussian` (`GaussianPDFVarianceDerivative.lean`)
 
 ## Main statements
@@ -31,7 +31,7 @@ Remaining open hypotheses consumed as arguments:
 - `IsIBPHypothesis` — integration-by-parts / dominated-convergence step (Cover-Thomas 17.7.2).
 -/
 
-namespace InformationTheory.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfo
 
 set_option linter.unusedSectionVars false
 
@@ -46,4 +46,4 @@ open scoped ENNReal NNReal Real
 
 /-! ## Final glue — Gaussian de Bruijn witness -/
 
-end InformationTheory.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfo

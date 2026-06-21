@@ -1,5 +1,5 @@
 import InformationTheory.Shannon.EPI.Conv.Density
-import InformationTheory.Shannon.FisherInfo.V2
+import InformationTheory.Shannon.FisherInfo.OfDensity
 
 /-!
 # Convolution density gateway — `pX` integrable-only + Gaussian-kernel-smooth variant
@@ -33,7 +33,7 @@ derived via the gateway, not assumed.
 @audit:ok -/
 theorem convDensityAdd_hasDerivAt_of_integrable_smoothKernel (fX fY : ℝ → ℝ) (z₀ : ℝ)
     (hX_int : Integrable fX volume)
-    (hregY : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fY)
+    (hregY : InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fY)
     (hY_bdd : ∃ M : ℝ, ∀ w, |fY w| ≤ M)
     (hY'_bdd : ∃ M : ℝ, ∀ w, |deriv fY w| ≤ M) :
     HasDerivAt (InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY)
@@ -114,7 +114,7 @@ for the `diff` field of downstream regular-density witnesses.
 @audit:ok -/
 theorem convDensityAdd_differentiable_of_integrable_smoothKernel (fX fY : ℝ → ℝ)
     (hX_int : Integrable fX volume)
-    (hregY : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fY)
+    (hregY : InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fY)
     (hY_bdd : ∃ M : ℝ, ∀ w, |fY w| ≤ M)
     (hY'_bdd : ∃ M : ℝ, ∀ w, |deriv fY w| ≤ M) :
     Differentiable ℝ (InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY) :=

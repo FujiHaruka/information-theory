@@ -1,6 +1,6 @@
 import InformationTheory.Shannon.EPI.Conv.DensityGaussianGateway
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly
+import InformationTheory.Shannon.FisherInfo.DeBruijnPerTime
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly
 import InformationTheory.Shannon.EPI.Blachman.GaussianDensityRoute
 import InformationTheory.Shannon.FisherInfo.Gaussian
 import Mathlib.Analysis.Convolution
@@ -12,7 +12,7 @@ For an arbitrary probability density `pX` (nonnegativity + measurability +
 integrability + positive mass) and the Gaussian heat kernel
 `g_t = gaussianPDFReal 0 ⟨t, _⟩` (`t > 0`), the convolution density
 `convDensityAdd pX g_t` is a *regular density* in the V2 sense
-(`InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2`).
+(`InformationTheory.Shannon.FisherInfo.IsRegularDensityV2`).
 
 All six fields are discharged from existing `@audit:ok` infrastructure:
 
@@ -112,7 +112,7 @@ theorem deriv_convDensityAdd_eq {pX : ℝ → ℝ} {t : ℝ} (ht : 0 < t)
   have hv_ne : (⟨t, ht.le⟩ : ℝ≥0) ≠ 0 := by
     intro h; exact ht.ne' (congrArg NNReal.toReal h)
   set g : ℝ → ℝ := gaussianPDFReal 0 ⟨t, ht.le⟩ with hg
-  have hregY : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 g :=
+  have hregY : InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 g :=
     InformationTheory.Shannon.EPIGaussianDensityRoute.isRegularDensityV2_gaussianPDFReal hv_ne
   have hY_bdd : ∃ M : ℝ, ∀ w, |g w| ≤ M :=
     ⟨_, gaussianPDFReal_abs_le ⟨t, ht.le⟩⟩
@@ -184,13 +184,13 @@ theorem isRegularDensityV2_convDensityAdd_gaussian (pX : ℝ → ℝ) {t : ℝ} 
     (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume)
     (hpX_mass : 0 < ∫ x, pX x ∂volume) :
-    InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
+    InformationTheory.Shannon.FisherInfo.IsRegularDensityV2
       (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
         (ProbabilityTheory.gaussianPDFReal 0 ⟨t, ht.le⟩)) := by
   have hv_ne : (⟨t, ht.le⟩ : ℝ≥0) ≠ 0 := by
     intro h; exact ht.ne' (congrArg NNReal.toReal h)
   set g : ℝ → ℝ := gaussianPDFReal 0 ⟨t, ht.le⟩ with hg
-  have hregY : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 g :=
+  have hregY : InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 g :=
     InformationTheory.Shannon.EPIGaussianDensityRoute.isRegularDensityV2_gaussianPDFReal hv_ne
   have hY_bdd : ∃ M : ℝ, ∀ w, |g w| ≤ M :=
     ⟨_, gaussianPDFReal_abs_le ⟨t, ht.le⟩⟩
@@ -215,7 +215,7 @@ theorem isRegularDensityV2_convDensityAdd_gaussian (pX : ℝ → ℝ) {t : ℝ} 
         pX g hpX_int hregY hY_bdd hY'_bdd
   · -- pos
     intro x
-    exact InformationTheory.Shannon.FisherInfoV2.convDensityAdd_pos
+    exact InformationTheory.Shannon.FisherInfo.convDensityAdd_pos
       pX hpX_nn hpX_int hpX_mass ht x
   · -- tail_bot
     exact tendsto_convDensityAdd_gaussian_zero hv_ne hpX_nn hpX_int (Or.inr Filter.tendsto_id)
@@ -223,7 +223,7 @@ theorem isRegularDensityV2_convDensityAdd_gaussian (pX : ℝ → ℝ) {t : ℝ} 
     exact tendsto_convDensityAdd_gaussian_zero hv_ne hpX_nn hpX_int (Or.inl Filter.tendsto_id)
   · -- integrable_deriv
     rw [hderiv_eq]
-    exact InformationTheory.Shannon.FisherInfoV2.convDensityAdd_envelope_integrable
+    exact InformationTheory.Shannon.FisherInfo.convDensityAdd_envelope_integrable
       pX (deriv g) hpX_int hpX_meas hg'_int hg'_meas
   · -- integral_deriv_eq_zero
     rw [hderiv_eq]
@@ -283,7 +283,7 @@ All `pX` hypotheses are regularity preconditions (probability-density normalizat
 theorem fisherInfoOfDensityReal_convDensityAdd_pos (pX : ℝ → ℝ) {t : ℝ} (ht : 0 < t)
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)
     (hpX_norm : (∫ x, pX x ∂volume) = 1) :
-    0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+    0 < InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
           (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
             (ProbabilityTheory.gaussianPDFReal 0 ⟨t, ht.le⟩)) := by
   have hpX_mass : (0 : ℝ) < ∫ x, pX x ∂volume := by rw [hpX_norm]; norm_num
@@ -292,17 +292,17 @@ theorem fisherInfoOfDensityReal_convDensityAdd_pos (pX : ℝ → ℝ) {t : ℝ} 
   set g : ℝ → ℝ := gaussianPDFReal 0 ⟨t, ht.le⟩ with hg
   set f : ℝ → ℝ := convDensityAdd pX g with hf
   -- regularity of `f` (gives `diff` + `tail_bot`)
-  have hreg : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 f :=
+  have hreg : InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 f :=
     isRegularDensityV2_convDensityAdd_gaussian pX ht hpX_nn hpX_meas hpX_int hpX_mass
   -- pointwise positivity of `f`
   have hf_pos : ∀ x, 0 < f x := fun x =>
-    InformationTheory.Shannon.FisherInfoV2.convDensityAdd_pos pX hpX_nn hpX_int hpX_mass ht x
+    InformationTheory.Shannon.FisherInfo.convDensityAdd_pos pX hpX_nn hpX_int hpX_mass ht x
   -- finiteness of `J(f)`
-  have hfin : InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity f
+  have hfin : InformationTheory.Shannon.FisherInfo.fisherInfoOfDensity f
       ≤ ENNReal.ofReal (1 / t) :=
-    InformationTheory.Shannon.FisherInfoV2.gaussianConv_fisher_le_inv_var
+    InformationTheory.Shannon.FisherInfo.gaussianConv_fisher_le_inv_var
       pX hpX_nn hpX_meas hpX_int hpX_norm ht
-  have hfin' : InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity f ≠ ⊤ :=
+  have hfin' : InformationTheory.Shannon.FisherInfo.fisherInfoOfDensity f ≠ ⊤ :=
     (lt_of_le_of_lt hfin ENNReal.ofReal_lt_top).ne
   -- `deriv f = convDensityAdd pX (deriv g)` and this is continuous
   have hderiv_eq : deriv f = convDensityAdd pX (deriv g) := deriv_convDensityAdd_eq ht hpX_int
@@ -326,7 +326,7 @@ theorem fisherInfoOfDensityReal_convDensityAdd_pos (pX : ℝ → ℝ) {t : ℝ} 
     exact BddAbove.continuous_convolution_right_of_integrable
       (L := ContinuousLinearMap.mul ℝ ℝ) hbdd hpX_int hg'_cont
   -- non-vanishing of `J(f)`
-  have hne0 : InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity f ≠ 0 := by
+  have hne0 : InformationTheory.Shannon.FisherInfo.fisherInfoOfDensity f ≠ 0 := by
     intro hJ0
     -- the lintegrand vanishes a.e.
     have hlogderiv_meas : Measurable (logDeriv f) := by
@@ -338,7 +338,7 @@ theorem fisherInfoOfDensityReal_convDensityAdd_pos (pX : ℝ → ℝ) {t : ℝ} 
       (((hlogderiv_meas.pow_const 2).ennreal_ofReal).mul
         (hf_meas.ennreal_ofReal)).aemeasurable
     have hJ0' : (∫⁻ x, ENNReal.ofReal ((logDeriv f x) ^ 2) * ENNReal.ofReal (f x) ∂volume) = 0 := by
-      rw [← InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity]; exact hJ0
+      rw [← InformationTheory.Shannon.FisherInfo.fisherInfoOfDensity]; exact hJ0
     have hae0 : (fun x => ENNReal.ofReal ((logDeriv f x) ^ 2) * ENNReal.ofReal (f x))
         =ᵐ[volume] 0 :=
       (MeasureTheory.lintegral_eq_zero_iff' hintegrand_meas).mp hJ0'
@@ -374,7 +374,7 @@ theorem fisherInfoOfDensityReal_convDensityAdd_pos (pX : ℝ → ℝ) {t : ℝ} 
       rw [this]; exact tendsto_const_nhds
     have hf0_eq : f 0 = 0 := tendsto_nhds_unique hconst_tail htail
     exact (hf_pos 0).ne' hf0_eq
-  rw [InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal]
+  rw [InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal]
   exact ENNReal.toReal_pos hne0 hfin'
 
 end InformationTheory.Shannon.EPIConvDensityRegular

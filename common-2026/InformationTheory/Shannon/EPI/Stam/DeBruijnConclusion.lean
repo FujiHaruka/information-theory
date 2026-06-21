@@ -5,8 +5,8 @@ import InformationTheory.Shannon.EPI.L3Integration
 import InformationTheory.Shannon.EPI.Stam.ToBridge
 import InformationTheory.Shannon.EPI.Stam.Inequality
 import InformationTheory.Shannon.EPI.Stam.FisherCoupling
-import InformationTheory.Shannon.FisherInfo.V2
-import InformationTheory.Shannon.FisherInfo.V2DeBruijn
+import InformationTheory.Shannon.FisherInfo.OfDensity
+import InformationTheory.Shannon.FisherInfo.DeBruijn
 import InformationTheory.Shannon.FisherInfo.Gaussian
 import InformationTheory.Shannon.DifferentialEntropy
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
@@ -97,7 +97,7 @@ open InformationTheory.Shannon.EPIL3Integration
 open InformationTheory.Shannon.EPIStamToBridge
 open InformationTheory.Shannon.StamInequality
 open InformationTheory.Shannon.StamFisherCoupling
-open InformationTheory.Shannon.FisherInfoV2
+open InformationTheory.Shannon.FisherInfo
 
 /-! ## §1 — de Bruijn gap-monotonicity engine -/
 

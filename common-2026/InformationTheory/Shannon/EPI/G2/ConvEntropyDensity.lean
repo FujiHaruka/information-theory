@@ -6,7 +6,7 @@ import Mathlib.MeasureTheory.Measure.Prod
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPI.Conv.Density
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly
 import InformationTheory.Shannon.EPI.G2.ConvEntropyMonotone
 import InformationTheory.Meta.EntryPoint
 
@@ -40,7 +40,7 @@ from the canonical construction:
 * the **two cross terms** (per-fibre (5) + outer (7)): closed via the `s`-uniform
   polynomial majorant `|log p_t| ≤ A + B·x²`
   (`convDensityAdd_logFactor_poly_majorant`, made public in
-  `FisherInfoV2DeBruijnAssembly`) integrated against `pX`'s translate moments
+  `FisherInfoDeBruijnAssembly`) integrated against `pX`'s translate moments
   (the standalone `convCrossEntropy_perFibre_integrable` / `convCrossEntropy_zAvg_integrable`,
   fed the a.e. identifications `hLog` / `hfib_eq` in the proof body);
 * marginal log-density integrability (`∫ negMulLog p_t < ∞`, the genuine
@@ -158,7 +158,7 @@ theorem convCrossEntropy_perFibre_integrable
   set g : ℝ → ℝ := convDensityAdd pX (gaussianPDFReal 0 v) with hg_def
   -- Polynomial majorant `|log g| ≤ (A+1) + B·x²` a.e., at the single point `s = v`.
   obtain ⟨A, B, hB_nn, hLog0⟩ :=
-    InformationTheory.Shannon.FisherInfoV2.convDensityAdd_logFactor_poly_majorant
+    InformationTheory.Shannon.FisherInfo.convDensityAdd_logFactor_poly_majorant
       pX hpX_nn hpX_meas hpX_int hpX_mass hv
   have hv_mem : (v : ℝ) ∈ Set.Ioo ((v : ℝ) / 2) (2 * v) :=
     ⟨by linarith [(show (0:ℝ) < v from hv)], by linarith [(show (0:ℝ) < v from hv)]⟩
@@ -231,7 +231,7 @@ theorem convCrossEntropy_zAvg_integrable
   set g : ℝ → ℝ := convDensityAdd pX (gaussianPDFReal 0 v) with hg_def
   -- Polynomial majorant `|log g| ≤ (A+1) + B·x²` a.e.
   obtain ⟨A, B, hB_nn, hLog0⟩ :=
-    InformationTheory.Shannon.FisherInfoV2.convDensityAdd_logFactor_poly_majorant
+    InformationTheory.Shannon.FisherInfo.convDensityAdd_logFactor_poly_majorant
       pX hpX_nn hpX_meas hpX_int hpX_mass hv
   have hv_mem : (v : ℝ) ∈ Set.Ioo ((v : ℝ) / 2) (2 * v) :=
     ⟨by linarith [(show (0:ℝ) < v from hv)], by linarith [(show (0:ℝ) < v from hv)]⟩
@@ -775,8 +775,8 @@ theorem negMulLog_convDensity_entropy_ge_density
   set p_t : ℝ → ℝ := convDensityAdd pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩) with hp_t_def
   -- Density of the marginal `μ.map W`: `(μ.map W).rnDeriv volume x = ofReal (p_t x)`.
   have hqW : (μ.map W).rnDeriv volume =ᵐ[volume] fun x => ENNReal.ofReal (p_t x) := by
-    have hpath : W = InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z s := rfl
-    have hrn := InformationTheory.Shannon.FisherInfoV2.pPath_eq_convDensityAdd
+    have hpath : W = InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z s := rfl
+    have hrn := InformationTheory.Shannon.FisherInfo.pPath_eq_convDensityAdd
       X Z hX hZ hXZ v_Z hv_Z_pos hZ_law pX hpX_nn hpX_meas hpX_law hs
     rw [hpath]
     filter_upwards [hrn] with x hx
@@ -784,7 +784,7 @@ theorem negMulLog_convDensity_entropy_ge_density
   -- Non-negativity / measurability of `p_t`.
   have hpX_pos : 0 < ∫ y, pX y ∂volume := by rw [hpX_mass]; norm_num
   have hp_t_nn : ∀ x, 0 ≤ p_t x := fun x =>
-    (InformationTheory.Shannon.FisherInfoV2.convDensityAdd_pos
+    (InformationTheory.Shannon.FisherInfo.convDensityAdd_pos
       pX hpX_nn hpX_int hpX_pos (hu_pos n) x).le
   have hp_t_meas : Measurable p_t := by
     rw [hp_t_def]
@@ -800,7 +800,7 @@ theorem negMulLog_convDensity_entropy_ge_density
   -- Marginal `μ.map W = withDensity (ofReal p_t)` and `volume ≪ μ.map W` (full support).
   have hW_ac : (μ.map W) ≪ volume := by
     have hW_law : μ.map W = (μ.map X) ∗ gaussianReal 0 ⟨s * (v_Z : ℝ), by positivity⟩ :=
-      InformationTheory.Shannon.FisherInfoV2.gaussianConvolution_law_conv
+      InformationTheory.Shannon.FisherInfo.gaussianConvolution_law_conv
         X Z hX hZ hXZ v_Z hZ_law hs.le
     have hsv_ne : (⟨s * (v_Z : ℝ), by positivity⟩ : ℝ≥0) ≠ 0 := by
       intro h; exact (mul_pos hs hv_Z_pos').ne' (congrArg NNReal.toReal h)
@@ -815,14 +815,14 @@ theorem negMulLog_convDensity_entropy_ge_density
     refine withDensity_absolutelyContinuous' hp_t_meas.ennreal_ofReal.aemeasurable ?_
     exact ae_of_all _ (fun x => by
       simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]
-      exact (InformationTheory.Shannon.FisherInfoV2.convDensityAdd_pos
+      exact (InformationTheory.Shannon.FisherInfo.convDensityAdd_pos
         pX hpX_nn hpX_int hpX_pos (hu_pos n) x))
   -- ============ Shared analytic facts for the 3 coupled preconditions ============
   -- (A) `s`-uniform polynomial majorant for `|log p_t|`.  Take the majorant at `t := u n`,
   -- evaluated at the single point `s = u n ∈ Ioo (u n / 2, 2·u n)`:
   -- `‖-log p_t - 1‖ ≤ A + B·x²`, hence `|log p_t x| ≤ (A+1) + B·x²` for a.e. `x`.
   obtain ⟨A, B, hB_nn, hLog0⟩ :=
-    InformationTheory.Shannon.FisherInfoV2.convDensityAdd_logFactor_poly_majorant
+    InformationTheory.Shannon.FisherInfo.convDensityAdd_logFactor_poly_majorant
       pX hpX_nn hpX_meas hpX_int hpX_mass (hu_pos n)
   have hLog : ∀ᵐ x ∂volume, |Real.log (p_t x)| ≤ (A + 1) + B * x ^ 2 :=
     abs_log_convDensityAdd_le_of_majorant (hu_pos n) hLog0
@@ -909,7 +909,7 @@ theorem negMulLog_convDensity_entropy_ge_density
   -- the genuine marginal entropy integrability `∫ negMulLog p_t < ∞`.
   have h_negMulLog_p_t : Integrable (fun x => Real.negMulLog (p_t x)) volume := by
     rw [hp_t_def]
-    exact InformationTheory.Shannon.FisherInfoV2.convDensityAdd_negMulLog_integrable
+    exact InformationTheory.Shannon.FisherInfo.convDensityAdd_negMulLog_integrable
       pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom (hu_pos n)
   have h_logq_int : Integrable
       (fun x => Real.log (((μ.map W).rnDeriv volume x).toReal)) (μ.map W) := by

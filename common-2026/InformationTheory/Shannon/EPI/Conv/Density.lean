@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.FisherInfo.V2
+import InformationTheory.Shannon.FisherInfo.OfDensity
 import Mathlib.Analysis.Calculus.ParametricIntegral   -- hasDerivAt_integral_of_dominated_loc_of_deriv_le
 import Mathlib.Analysis.Calculus.LogDeriv
 import Mathlib.MeasureTheory.Group.Integral           -- integral_sub_left_eq_self (reflection)
@@ -161,8 +161,8 @@ not assumed. The Gaussian instance satisfies all three. -/
 `IsRegularDensityV2 fX/fY` plus per-factor boundedness/integrability preconditions.
 @audit:ok -/
 theorem convDensityAdd_hasDerivAt_of_regular (fX fY : ℝ → ℝ) (z₀ : ℝ)
-    (hregX : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fX)
-    (hregY : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fY)
+    (hregX : InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fX)
+    (hregY : InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fY)
     (hX_int : Integrable fX volume)
     (hY_bdd : ∃ M : ℝ, ∀ w, |fY w| ≤ M)
     (hY'_bdd : ∃ M : ℝ, ∀ w, |deriv fY w| ≤ M) :

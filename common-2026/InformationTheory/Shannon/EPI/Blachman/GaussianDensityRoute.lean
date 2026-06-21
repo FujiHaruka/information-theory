@@ -4,7 +4,7 @@ import Mathlib.MeasureTheory.Measure.WithDensity
 import Mathlib.MeasureTheory.Group.Prod
 import Mathlib.MeasureTheory.Integral.Prod
 import Mathlib.Analysis.LConvolution
-import InformationTheory.Shannon.FisherInfo.V2
+import InformationTheory.Shannon.FisherInfo.OfDensity
 import InformationTheory.Shannon.FisherInfo.Gaussian
 import InformationTheory.Shannon.EPI.Conv.Density
 import InformationTheory.Shannon.EPI.Blachman.Density
@@ -25,7 +25,7 @@ convolution closed form `convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal
 namespace InformationTheory.Shannon.EPIGaussianDensityRoute
 
 open MeasureTheory Real ProbabilityTheory
-open InformationTheory.Shannon.FisherInfoV2
+open InformationTheory.Shannon.FisherInfo
 open InformationTheory.Shannon.EPIConvDensity
 open InformationTheory.Shannon.EPIBlachmanDensity
 open scoped ENNReal NNReal

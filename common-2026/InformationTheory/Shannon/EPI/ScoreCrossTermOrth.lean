@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.FisherInfo.V2
+import InformationTheory.Shannon.FisherInfo.OfDensity
 import Mathlib.Probability.Independence.Integration   -- IndepFun.integral_fun_mul_eq_mul_integral
 import Mathlib.Probability.Independence.Basic          -- IndepFun.comp
 
@@ -10,7 +10,7 @@ import Mathlib.Probability.Independence.Basic          -- IndepFun.comp
 one Stam/Blachman sub-piece that re-verification (2026-05-30,
 `epi-wall-reattack-inventory.md` §2) found to be Mathlib-buildable:
 `IndepFun.integral_fun_mul_eq_mul_integral` (`Integration.lean:253`) + repo
-score-mean-zero (`FisherInfoV2.integral_logDeriv_density_eq_zero`). Earlier
+score-mean-zero (`FisherInfo.integral_logDeriv_density_eq_zero`). Earlier
 inventories (`epi-stam-condexp-score-discharge-mathlib-inventory.md:149`)
 mis-flagged this as `Found 0` — the bare-identifier loogle query
 `condExp_indep` simply failed; `MeasureTheory.condExp_indep_eq` is real and

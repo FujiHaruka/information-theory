@@ -1,12 +1,12 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly
 
 /-!
 # de Bruijn identity (V2)
 
 The per-time de Bruijn identity and its integrated form, delegating to the assembled
 per-time identity `debruijnIdentityV2_holds_assembled`. These consumers live downstream of
-the assembly file because the assembly transitively imports `FisherInfoV2DeBruijn.lean`,
+the assembly file because the assembly transitively imports `FisherInfoDeBruijn.lean`,
 so they cannot call the assembled identity from there without an import cycle.
 
 ## Main statements
@@ -16,7 +16,7 @@ so they cannot call the assembled identity from there without an import cycle.
 * `debruijnIntegrationIdentity_holds` — its integrated form along the heat-flow path.
 -/
 
-namespace InformationTheory.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfo
 
 set_option linter.unusedSectionVars false
 
@@ -101,4 +101,4 @@ theorem debruijnIntegrationIdentity_holds
       = ∫ t in Set.Ioo 0 T, f' t ∂volume
   rw [← h_f0, ← h_ftc, h_ioc, h_ioo_eq_ioc]
 
-end InformationTheory.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfo

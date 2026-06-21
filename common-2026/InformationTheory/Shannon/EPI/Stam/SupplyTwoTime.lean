@@ -38,13 +38,13 @@ import InformationTheory.Shannon.EPI.Conv.DensityRegular
 import InformationTheory.Shannon.EPI.Blachman.GeneralDensity
 import InformationTheory.Shannon.EPI.Conv.DensityAssoc
 import InformationTheory.Shannon.EPI.Conv.DensityNormalization
-import InformationTheory.Shannon.FisherInfo.V2DeBruijn
+import InformationTheory.Shannon.FisherInfo.DeBruijn
 
 namespace InformationTheory.Shannon.EPIStamSupplyTwoTime
 
 open MeasureTheory Real ProbabilityTheory
 open InformationTheory.Shannon
-open InformationTheory.Shannon.FisherInfoV2
+open InformationTheory.Shannon.FisherInfo
 open InformationTheory.Shannon.EPIConvDensity
 open InformationTheory.Shannon.EPIConvDensityRegular
 open InformationTheory.Shannon.EPIBlachmanDensity

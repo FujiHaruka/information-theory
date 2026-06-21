@@ -1,8 +1,8 @@
 import InformationTheory.Shannon.EPI.Conv.Density
 import InformationTheory.Shannon.EPI.Conv.DensitySecondDeriv          -- convDensityAdd_deriv1_gaussian_eq
-import InformationTheory.Shannon.FisherInfo.V2
-import InformationTheory.Shannon.FisherInfo.V2DeBruijn   -- V2 Gaussian closed form J(𝒩(0,s))=1/s
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime        -- convDensityAdd_pos / fisher_from_logDeriv
+import InformationTheory.Shannon.FisherInfo.OfDensity
+import InformationTheory.Shannon.FisherInfo.DeBruijn   -- V2 Gaussian closed form J(𝒩(0,s))=1/s
+import InformationTheory.Shannon.FisherInfo.DeBruijnPerTime        -- convDensityAdd_pos / fisher_from_logDeriv
 import InformationTheory.Shannon.StamGaussianBound       -- stam_fisher_arith
 import Mathlib.MeasureTheory.Integral.Bochner.Basic          -- integral_mul_le_Lp_mul_Lq_of_nonneg
 import Mathlib.MeasureTheory.Measure.Prod                    -- lintegral_lintegral_swap
@@ -26,7 +26,7 @@ inequality with `p = q = 2` bounds `(logDeriv p_s x)² · p_s x` pointwise, and
 Tonelli's theorem plus the Gaussian second moment `∫ u² g_s u du = s` closes the bound.
 -/
 
-namespace InformationTheory.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfo
 
 set_option linter.unusedSectionVars false
 
@@ -445,4 +445,4 @@ theorem gaussianConv_fisher_le_inv_var
   refine le_of_eq (congrArg ENNReal.ofReal ?_)
   field_simp
 
-end InformationTheory.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfo

@@ -1,10 +1,10 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
+import InformationTheory.Shannon.FisherInfo.DeBruijnPerTime
 import InformationTheory.Shannon.FisherConvBound
 import InformationTheory.Shannon.EPI.Conv.DensitySecondDeriv
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Core
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly.Core
 
-namespace InformationTheory.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfo
 
 open MeasureTheory ProbabilityTheory Filter Topology Real
 open scoped ENNReal NNReal
@@ -359,4 +359,4 @@ theorem debruijnIdentityV2_holds_assembled_chain_domination
           ≤ (A + B * x ^ 2) * ((1/2) * E x) := by
             apply mul_le_mul hlf hhalf (norm_nonneg _) hLog_nn
 
-end InformationTheory.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfo

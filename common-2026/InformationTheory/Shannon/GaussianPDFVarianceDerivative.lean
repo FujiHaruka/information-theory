@@ -7,8 +7,8 @@ import Mathlib.Analysis.Calculus.Deriv.Mul
 import Mathlib.Analysis.Calculus.Deriv.Add
 import Mathlib.Analysis.Calculus.Deriv.Comp
 import InformationTheory.Shannon.FisherInfo.Gaussian
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnHeatFlow
-import InformationTheory.Shannon.FisherInfo.V2HeatFlow
+import InformationTheory.Shannon.FisherInfo.DeBruijnHeatFlow
+import InformationTheory.Shannon.FisherInfo.HeatFlow
 
 /-!
 # Gaussian PDF variance (time) derivative — de Bruijn FTC core
@@ -150,15 +150,15 @@ heat equation `∂_t p = (1/2) Δ_x p`. This is the `m = 0` specialization of
 `spatialLaplacianHeatKernel`. -/
 @[entry_point]
 theorem hasDerivAt_heatKernel_time {t : ℝ} (ht : 0 < t) (x : ℝ) :
-    HasDerivAt (fun s => InformationTheory.Shannon.FisherInfoV2.heatKernel s x)
-      ((1 / 2) * InformationTheory.Shannon.FisherInfoV2.spatialLaplacianHeatKernel t x) t := by
+    HasDerivAt (fun s => InformationTheory.Shannon.FisherInfo.heatKernel s x)
+      ((1 / 2) * InformationTheory.Shannon.FisherInfo.spatialLaplacianHeatKernel t x) t := by
   -- variance-derivative of `gaussianPDFRealVar 0 · x` at `t` (m = 0)
   have hvar := hasDerivAt_gaussianPDFRealVar_variance 0 x ht
   -- the derivative value equals `(1/2) · spatialLaplacianHeatKernel t x`
   have hval : ((x - 0) ^ 2 / (2 * t ^ 2) - 1 / (2 * t)) * gaussianPDFRealVar 0 t x
-      = (1 / 2) * InformationTheory.Shannon.FisherInfoV2.spatialLaplacianHeatKernel t x := by
-    rw [InformationTheory.Shannon.FisherInfoV2.spatialLaplacianHeatKernel,
-      InformationTheory.Shannon.FisherInfoV2.heatKernel_def_gaussianPDFReal ht,
+      = (1 / 2) * InformationTheory.Shannon.FisherInfo.spatialLaplacianHeatKernel t x := by
+    rw [InformationTheory.Shannon.FisherInfo.spatialLaplacianHeatKernel,
+      InformationTheory.Shannon.FisherInfo.heatKernel_def_gaussianPDFReal ht,
       ← gaussianPDFRealVar_eq_gaussianPDFReal 0 ht]
     ring
   rw [hval] at hvar
@@ -166,7 +166,7 @@ theorem hasDerivAt_heatKernel_time {t : ℝ} (ht : 0 < t) (x : ℝ) :
   refine hvar.congr_of_eventuallyEq ?_
   have h_nhds : Set.Ioi (0 : ℝ) ∈ nhds t := isOpen_Ioi.mem_nhds ht
   filter_upwards [h_nhds] with s hs
-  rw [InformationTheory.Shannon.FisherInfoV2.heatKernel_def_gaussianPDFReal hs,
+  rw [InformationTheory.Shannon.FisherInfo.heatKernel_def_gaussianPDFReal hs,
     ← gaussianPDFRealVar_eq_gaussianPDFReal 0 hs]
 
 /-! ## Proof of `IsHeatTimeDerivHyp` -/
@@ -177,9 +177,9 @@ theorem hasDerivAt_heatKernel_time {t : ℝ} (ht : 0 < t) (x : ℝ) :
 `Δp t x := spatialLaplacianHeatKernel t x`. -/
 @[entry_point]
 theorem isHeatTimeDerivHyp_gaussian :
-    InformationTheory.Shannon.FisherInfoV2.IsHeatTimeDerivHyp
-      (fun t x => InformationTheory.Shannon.FisherInfoV2.heatKernel t x)
-      (fun t x => InformationTheory.Shannon.FisherInfoV2.spatialLaplacianHeatKernel t x) := by
+    InformationTheory.Shannon.FisherInfo.IsHeatTimeDerivHyp
+      (fun t x => InformationTheory.Shannon.FisherInfo.heatKernel t x)
+      (fun t x => InformationTheory.Shannon.FisherInfo.spatialLaplacianHeatKernel t x) := by
   intro t ht x
   exact hasDerivAt_heatKernel_time ht x
 

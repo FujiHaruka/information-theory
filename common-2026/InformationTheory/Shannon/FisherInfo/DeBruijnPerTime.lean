@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EPI.Conv.Density
-import InformationTheory.Shannon.FisherInfo.V2DeBruijn
+import InformationTheory.Shannon.FisherInfo.DeBruijn
 import InformationTheory.Shannon.DifferentialEntropy
 import Mathlib.Analysis.Calculus.ParametricIntegral
 import Mathlib.MeasureTheory.Integral.IntegralEqImproper
@@ -13,7 +13,7 @@ import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 # Per-time de Bruijn identity — analytic-core atoms
 
 The analytic-core atoms of the per-time de Bruijn identity for a general `X`, decomposed for the
-assembly `debruijnIdentityV2_holds_assembled` in `FisherInfoV2DeBruijnAssembly.lean`.
+assembly `debruijnIdentityV2_holds_assembled` in `FisherInfoDeBruijnAssembly.lean`.
 
 ## Main statements
 
@@ -29,7 +29,7 @@ assembly `debruijnIdentityV2_holds_assembled` in `FisherInfoV2DeBruijnAssembly.l
   information.
 -/
 
-namespace InformationTheory.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfo
 
 open MeasureTheory ProbabilityTheory Filter Topology Real
 open scoped ENNReal NNReal
@@ -799,4 +799,4 @@ theorem convDensityAdd_lower_bound_gaussian
     _ ≤ ∫ y, F y ∂volume := hbox_le
     _ = convDensityAdd pX g x := rfl
 
-end InformationTheory.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfo

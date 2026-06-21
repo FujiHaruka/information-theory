@@ -202,7 +202,7 @@ theorem convDensity_condTrunc_le_const_mul (P : Measure Ω) [IsProbabilityMeasur
   -- Step 2 prerequisite: for a.e. `z`, the convolution slice `x ↦ pX x · pY (z - x)`
   -- is integrable. Established via 2D integrability + `Integrable.prod_right_ae`.
   -- Layout: `f (z, x) = pX x · pY (z - x)` (first coord `z`, second coord `x`). This is the
-  -- `convKernel_envelope_integrable` shape (`FisherInfoV2DeBruijnAssembly.lean:791`) with
+  -- `convKernel_envelope_integrable` shape (`FisherInfoDeBruijnAssembly.lean:791`) with
   -- `K = pY` and the kernel-density being `pX`.
   have hslice_int : ∀ᵐ z ∂volume, Integrable (fun x => pX x * pY (z - x)) volume := by
     -- the 2D integrand `f (z, x) = pX x · pY (z - x)`.

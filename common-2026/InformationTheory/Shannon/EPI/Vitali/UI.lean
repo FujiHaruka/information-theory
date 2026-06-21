@@ -9,7 +9,7 @@ import InformationTheory.Shannon.EPI.Conv.DensityAssoc
 import InformationTheory.Shannon.EPI.Conv.DensityNormalization
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPI.Vitali.UnifTight
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly
 
 /-!
 # EPI G2 Vitali witness — UnifIntegrable (UI), standalone genuine attempt
@@ -152,7 +152,7 @@ theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
       rw [neg_div]; exact neg_nonpos.mpr (by positivity)
   have hsq_mom_int : Integrable (fun u => u ^ 2 * g u) volume := by
     simpa [hg_def] using
-      InformationTheory.Shannon.FisherInfoV2.integrable_sq_mul_gaussianPDFReal ht
+      InformationTheory.Shannon.FisherInfo.integrable_sq_mul_gaussianPDFReal ht
   -- ── Step A: lift LHS to a double lintegral over `(x,y)`. ──
   have hLHS_inner : ∀ x, x ^ 2 * p_t x = ∫ y, K x y ∂volume := by
     intro x
@@ -212,7 +212,7 @@ theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
       _ = 0 := ProbabilityTheory.integral_id_gaussianReal
   have hsq_mom0 : ∫ x, x ^ 2 * g x ∂volume = t := by
     simpa [hg_def] using
-      InformationTheory.Shannon.FisherInfoV2.integral_sq_mul_gaussianPDFReal ht
+      InformationTheory.Shannon.FisherInfo.integral_sq_mul_gaussianPDFReal ht
   have hg_mom0 : ∫ x, g x ∂volume = 1 := by
     rw [hg_def]; exact integral_gaussianPDFReal_eq_one 0 hv_ne
   have hshift : ∀ y, ∫ x, x ^ 2 * g (x - y) ∂volume = y ^ 2 + t := by
@@ -424,7 +424,7 @@ theorem negMulLog_convDensityAdd_gaussian_entropy_upper {pX : ℝ → ℝ}
       rw [hμ_def]; exact Measure.rnDeriv_withDensity volume (ENNReal.measurable_ofReal.comp hf_meas)
     have hbase : Integrable (fun x => Real.negMulLog (f x)) volume := by
       rw [hf_def]
-      exact InformationTheory.Shannon.FisherInfoV2.convDensityAdd_negMulLog_integrable
+      exact InformationTheory.Shannon.FisherInfo.convDensityAdd_negMulLog_integrable
         pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
     refine hbase.congr ?_
     filter_upwards [hrn] with x hx

@@ -819,7 +819,7 @@ theorem negMulLog_convDensity_limsup_le {pX : ℝ → ℝ}
   have hlogp_int : ∀ n, Integrable
       (fun x => f n x * Real.log (f n x)) volume := fun n =>
     integrable_mul_log_self_of_negMulLog_integrable
-      (InformationTheory.Shannon.FisherInfoV2.convDensityAdd_negMulLog_integrable
+      (InformationTheory.Shannon.FisherInfo.convDensityAdd_negMulLog_integrable
         pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom (hu_pos n))
   -- The `log p` integrability for `μ = pX`.
   have hlogp_int_μ : Integrable (fun x => pX x * Real.log (pX x)) volume :=

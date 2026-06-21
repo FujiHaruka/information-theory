@@ -172,16 +172,16 @@ lemma rescaled_path_absolutelyContinuous_and_negMulLog_integrable
   have hv_B_pos : (0 : ℝ≥0) < v_B := pos_iff_ne_zero.mpr hv_B
   obtain ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom⟩ :=
     rescaledInput_density_witness A μ hA hA_ac h_mom_A ht
-  have hgconv : InformationTheory.Shannon.FisherInfoV2.gaussianConvolution Zt B 1
+  have hgconv : InformationTheory.Shannon.FisherInfo.gaussianConvolution Zt B 1
       = fun ω => Zt ω + B ω := by
     funext ω
-    simp only [InformationTheory.Shannon.FisherInfoV2.gaussianConvolution,
+    simp only [InformationTheory.Shannon.FisherInfo.gaussianConvolution,
       Real.sqrt_one, one_mul]
   have h_path_rnDeriv : (μ.map (fun ω => Zt ω + B ω)).rnDeriv volume
       =ᵐ[volume] fun z => ENNReal.ofReal
         (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
           (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) z) := by
-    have := InformationTheory.Shannon.FisherInfoV2.pPath_eq_convDensityAdd
+    have := InformationTheory.Shannon.FisherInfo.pPath_eq_convDensityAdd
       Zt B hZt_meas hB h_indep v_B hv_B_pos hB_law pX hpX_nn hpX_meas hpX_law
       (s := 1) one_pos
     rwa [hgconv] at this
@@ -392,26 +392,26 @@ theorem entropy_power_inequality_of_density
     (h_mom_X : Integrable (fun ω => (X ω) ^ 2) P)
     (h_mom_Y : Integrable (fun ω => (Y ω) ^ 2) P)
     -- input-density regularity (producer precondition, not load-bearing)
-    (h_fisher_X : FisherInfoV2.fisherInfoOfDensity
+    (h_fisher_X : FisherInfo.fisherInfoOfDensity
         (fun x => ((P.map X).rnDeriv volume x).toReal) ≠ ∞)
-    (hreg_pX : FisherInfoV2.IsRegularDensityV2
+    (hreg_pX : FisherInfo.IsRegularDensityV2
         (fun x => ((P.map X).rnDeriv volume x).toReal))
     (hnorm_pX : ∫ x, ((P.map X).rnDeriv volume x).toReal ∂volume = 1)
     (hready_pX : ∀ v : ℝ≥0, v ≠ 0 →
         EPIBlachmanDensity.IsBlachmanConvReady
           (fun x => ((P.map X).rnDeriv volume x).toReal) (gaussianPDFReal 0 v))
-    (h_fisher_Y : FisherInfoV2.fisherInfoOfDensity
+    (h_fisher_Y : FisherInfo.fisherInfoOfDensity
         (fun x => ((P.map Y).rnDeriv volume x).toReal) ≠ ∞)
-    (hreg_pY : FisherInfoV2.IsRegularDensityV2
+    (hreg_pY : FisherInfo.IsRegularDensityV2
         (fun x => ((P.map Y).rnDeriv volume x).toReal))
     (hnorm_pY : ∫ x, ((P.map Y).rnDeriv volume x).toReal ∂volume = 1)
     (hready_pY : ∀ v : ℝ≥0, v ≠ 0 →
         EPIBlachmanDensity.IsBlachmanConvReady
           (fun x => ((P.map Y).rnDeriv volume x).toReal) (gaussianPDFReal 0 v))
     -- sum-density regularity (honest precondition for the 3-noise route, parallel to X/Y)
-    (h_fisher_XY : FisherInfoV2.fisherInfoOfDensity
+    (h_fisher_XY : FisherInfo.fisherInfoOfDensity
         (fun x => ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) ≠ ∞)
-    (hreg_pXY : FisherInfoV2.IsRegularDensityV2
+    (hreg_pXY : FisherInfo.IsRegularDensityV2
         (fun x => ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal))
     (hnorm_pXY : ∫ x, ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal ∂volume = 1)
     (hready_pXY : ∀ v : ℝ≥0, v ≠ 0 →

@@ -1,9 +1,9 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
+import InformationTheory.Shannon.FisherInfo.DeBruijnPerTime
 import InformationTheory.Shannon.FisherConvBound
 import InformationTheory.Shannon.EPI.Conv.DensitySecondDeriv
 
-namespace InformationTheory.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfo
 
 open MeasureTheory ProbabilityTheory Filter Topology Real
 open scoped ENNReal NNReal
@@ -759,4 +759,4 @@ theorem kernel_x_deriv2_global_bound {s : ℝ} (hs : 0 < s) :
     _ ≤ 2 * Real.exp (-1) / s + 1 / s := by linarith [ht1, ht2]
     _ = (2 * Real.exp (-1) + 1) / s := by ring
 
-end InformationTheory.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfo

@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EntropyPower.Inequality
 import InformationTheory.Shannon.EPI.Stam.EPIBridge
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnGenuine
+import InformationTheory.Shannon.FisherInfo.DeBruijnGeneral
 import InformationTheory.Shannon.EPI.L3Integration
 import InformationTheory.Shannon.EPI.Plumbing
 import InformationTheory.Shannon.DifferentialEntropy
@@ -116,13 +116,13 @@ theorem csiszarLogRatioGap_hasDerivAt
     {t : ℝ} (ht : 0 < t) :
     HasDerivAt (fun s : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
         X Y Z_X Z_Y P s)
-      (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+      (InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
             ((h_reg_sum.reg_at t ht).density_t)
         - (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
-              * InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              * InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
                   ((h_reg_X.reg_at t ht).density_t)
             + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω))
-              * InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              * InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
                   ((h_reg_Y.reg_at t ht).density_t))
           / (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
             + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)))) t := by
@@ -131,27 +131,27 @@ theorem csiszarLogRatioGap_hasDerivAt
   have h_dB_X :
       HasDerivAt
         (fun s : ℝ => InformationTheory.Shannon.differentialEntropy
-          (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z_X s)))
-        ((1/2) * InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+          (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z_X s)))
+        ((1/2) * InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
           ((h_reg_X.reg_at t ht).density_t)) t :=
-    InformationTheory.Shannon.FisherInfoV2.deBruijn_identity_v2 X Z_X hX hZX hXZX ht
+    InformationTheory.Shannon.FisherInfo.deBruijn_identity_v2 X Z_X hX hZX hXZX ht
       (h_reg_X.reg_at t ht)
   have h_dB_Y :
       HasDerivAt
         (fun s : ℝ => InformationTheory.Shannon.differentialEntropy
-          (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution Y Z_Y s)))
-        ((1/2) * InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+          (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution Y Z_Y s)))
+        ((1/2) * InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
           ((h_reg_Y.reg_at t ht).density_t)) t :=
-    InformationTheory.Shannon.FisherInfoV2.deBruijn_identity_v2 Y Z_Y hY hZY hYZY ht
+    InformationTheory.Shannon.FisherInfo.deBruijn_identity_v2 Y Z_Y hY hZY hYZY ht
       (h_reg_Y.reg_at t ht)
   have h_dB_sum :
       HasDerivAt
         (fun s : ℝ => InformationTheory.Shannon.differentialEntropy
-          (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution
+          (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution
                     (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) s)))
-        ((1/2) * InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+        ((1/2) * InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
           ((h_reg_sum.reg_at t ht).density_t)) t :=
-    InformationTheory.Shannon.FisherInfoV2.deBruijn_identity_v2
+    InformationTheory.Shannon.FisherInfo.deBruijn_identity_v2
       (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω)
       (hX.add hY) (hZX.add hZY) hXYZXY ht (h_reg_sum.reg_at t ht)
   -- Lift to entropy-power form via the A-2-2 chain rule.
@@ -159,11 +159,11 @@ theorem csiszarLogRatioGap_hasDerivAt
   have h_eP_Y := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB_Y
   have h_eP_sum := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB_sum
   -- Abbreviations.
-  set J_X := InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+  set J_X := InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
       ((h_reg_X.reg_at t ht).density_t) with hJX_def
-  set J_Y := InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+  set J_Y := InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
       ((h_reg_Y.reg_at t ht).density_t) with hJY_def
-  set J_sum := InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+  set J_sum := InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
       ((h_reg_sum.reg_at t ht).density_t) with hJsum_def
   -- Normalize each per-term derivative to `entropyPower (P.map path_i) · J_i`.
   -- `entropyPower μ = exp (2 * differentialEntropy μ)` is rfl, and
@@ -176,9 +176,9 @@ theorem csiszarLogRatioGap_hasDerivAt
     have h_val :
         entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)) * J_X
           = Real.exp (2 * InformationTheory.Shannon.differentialEntropy
-              (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z_X t)))
+              (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z_X t)))
             * (2 * ((1/2) * J_X)) := by
-      unfold entropyPower InformationTheory.Shannon.FisherInfoV2.gaussianConvolution
+      unfold entropyPower InformationTheory.Shannon.FisherInfo.gaussianConvolution
       ring
     rw [h_val]
     exact h_eP_X
@@ -188,9 +188,9 @@ theorem csiszarLogRatioGap_hasDerivAt
     have h_val :
         entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)) * J_Y
           = Real.exp (2 * InformationTheory.Shannon.differentialEntropy
-              (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution Y Z_Y t)))
+              (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution Y Z_Y t)))
             * (2 * ((1/2) * J_Y)) := by
-      unfold entropyPower InformationTheory.Shannon.FisherInfoV2.gaussianConvolution
+      unfold entropyPower InformationTheory.Shannon.FisherInfo.gaussianConvolution
       ring
     rw [h_val]
     exact h_eP_Y
@@ -201,10 +201,10 @@ theorem csiszarLogRatioGap_hasDerivAt
     have h_val :
         entropyPower (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))) * J_sum
           = Real.exp (2 * InformationTheory.Shannon.differentialEntropy
-              (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution
+              (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution
                         (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) t)))
             * (2 * ((1/2) * J_sum)) := by
-      unfold entropyPower InformationTheory.Shannon.FisherInfoV2.gaussianConvolution
+      unfold entropyPower InformationTheory.Shannon.FisherInfo.gaussianConvolution
       ring
     rw [h_val]
     exact h_eP_sum
@@ -266,19 +266,19 @@ theorem csiszarLogRatioGap_deriv_le_zero
     (h_reg_X : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp X Z_X P)
     (h_reg_Y : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp Y Z_Y P)
     {t : ℝ} (ht : 0 < t)
-    (hJX_pos : 0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+    (hJX_pos : 0 < InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
                       ((h_reg_X.reg_at t ht).density_t))
-    (hJY_pos : 0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+    (hJY_pos : 0 < InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
                       ((h_reg_Y.reg_at t ht).density_t))
-    (hJsum_pos : 0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+    (hJsum_pos : 0 < InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
                         ((h_reg_sum.reg_at t ht).density_t))
     (h_stam : InformationTheory.Shannon.StamEPIBridge.IsStamInequalityHyp
                 (fun ω => X ω + Real.sqrt t * Z_X ω)
                 (fun ω => Y ω + Real.sqrt t * Z_Y ω) P)
     -- caller-supplied regularity preconditions for applying `h_stam`.
-    (h_regdens_X : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
+    (h_regdens_X : InformationTheory.Shannon.FisherInfo.IsRegularDensityV2
                       ((h_reg_X.reg_at t ht).density_t))
-    (h_regdens_Y : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
+    (h_regdens_Y : InformationTheory.Shannon.FisherInfo.IsRegularDensityV2
                       ((h_reg_Y.reg_at t ht).density_t))
     (h_norm_X : ∫ x, (h_reg_X.reg_at t ht).density_t x ∂MeasureTheory.volume = 1)
     (h_norm_Y : ∫ x, (h_reg_Y.reg_at t ht).density_t x ∂MeasureTheory.volume = 1)
@@ -289,23 +289,23 @@ theorem csiszarLogRatioGap_deriv_le_zero
     (h_blachman : InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady
                     ((h_reg_X.reg_at t ht).density_t)
                     ((h_reg_Y.reg_at t ht).density_t)) :
-    InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+    InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
           ((h_reg_sum.reg_at t ht).density_t)
         - (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
-              * InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              * InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
                   ((h_reg_X.reg_at t ht).density_t)
             + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω))
-              * InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              * InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
                   ((h_reg_Y.reg_at t ht).density_t))
           / (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
             + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)))
       ≤ 0 := by
   -- Abbreviations for the three Fisher infos and two entropy powers.
-  set J_X := InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+  set J_X := InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
       ((h_reg_X.reg_at t ht).density_t) with hJX_def
-  set J_Y := InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+  set J_Y := InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
       ((h_reg_Y.reg_at t ht).density_t) with hJY_def
-  set J_sum := InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+  set J_sum := InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
       ((h_reg_sum.reg_at t ht).density_t) with hJsum_def
   set N_X := entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)) with hNX_def
   set N_Y := entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)) with hNY_def
@@ -430,19 +430,19 @@ theorem csiszarLogRatioGap_antitoneOn_Ici_zero
     (h_endpt_X : InformationTheory.Shannon.IsHeatFlowEndpointRegular X Z_X P)
     (h_endpt_Y : InformationTheory.Shannon.IsHeatFlowEndpointRegular Y Z_Y P)
     (h_pos_stam : ∀ (t : ℝ) (ht : 0 < t),
-      (0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+      (0 < InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
               ((h_reg_X.reg_at t ht).density_t)) ∧
-      (0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+      (0 < InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
               ((h_reg_Y.reg_at t ht).density_t)) ∧
-      (0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+      (0 < InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
               ((h_reg_sum.reg_at t ht).density_t)) ∧
       InformationTheory.Shannon.StamEPIBridge.IsStamInequalityHyp
         (fun ω => X ω + Real.sqrt t * Z_X ω)
         (fun ω => Y ω + Real.sqrt t * Z_Y ω) P ∧
       -- per-`t` caller-supplied regularity preconditions threaded to the derivative-bound lemma.
-      InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
+      InformationTheory.Shannon.FisherInfo.IsRegularDensityV2
         ((h_reg_X.reg_at t ht).density_t) ∧
-      InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
+      InformationTheory.Shannon.FisherInfo.IsRegularDensityV2
         ((h_reg_Y.reg_at t ht).density_t) ∧
       (∫ x, (h_reg_X.reg_at t ht).density_t x ∂MeasureTheory.volume = 1) ∧
       (∫ x, (h_reg_Y.reg_at t ht).density_t x ∂MeasureTheory.volume = 1) ∧

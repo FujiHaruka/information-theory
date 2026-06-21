@@ -7,9 +7,9 @@ import Mathlib.Analysis.Calculus.Deriv.Add
 import Mathlib.Analysis.Calculus.Deriv.Mul
 import Mathlib.Analysis.Calculus.Deriv.Comp
 import Mathlib.Analysis.Calculus.LogDeriv
-import InformationTheory.Shannon.FisherInfo.V2
-import InformationTheory.Shannon.FisherInfo.V2DeBruijn
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnGenuine
+import InformationTheory.Shannon.FisherInfo.OfDensity
+import InformationTheory.Shannon.FisherInfo.DeBruijn
+import InformationTheory.Shannon.FisherInfo.DeBruijnGeneral
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPI.Conv.Density
 
@@ -18,7 +18,7 @@ import InformationTheory.Shannon.EPI.Conv.Density
 
 Heat-flow scaffolding for the general-`X` de Bruijn identity (Cover–Thomas 17.7.2's
 differentiate-under-the-integral via heat equation plus integration by parts), built on the
-definitions of `FisherInfoV2DeBruijn.lean`. The heat equation and the integration-by-parts step
+definitions of `FisherInfoDeBruijn.lean`. The heat equation and the integration-by-parts step
 are exposed as predicates that compose into the de Bruijn statement.
 
 ## Main definitions
@@ -45,7 +45,7 @@ conclusion expected by `HasDerivAt.congr_of_eventuallyEq`, so the two compose wi
 `deBruijn_identity_v2` without bridging lemmas.
 -/
 
-namespace InformationTheory.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfo
 
 set_option linter.unusedSectionVars false
 
@@ -240,4 +240,4 @@ theorem deBruijn_identity_v2_of_heat_flow
   deBruijn_identity_v2 X Z hX hZ hXZ ht
     (IsRegularDeBruijnHypV2.ofHeatFlow hX hZ hXZ hX_ac h_mom_X ht h_heat)
 
-end InformationTheory.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfo

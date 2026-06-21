@@ -1,9 +1,9 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EntropyPower.Inequality
 import InformationTheory.Shannon.EPI.Plumbing
-import InformationTheory.Shannon.FisherInfo.V2
-import InformationTheory.Shannon.FisherInfo.V2DeBruijn
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnGenuine
+import InformationTheory.Shannon.FisherInfo.OfDensity
+import InformationTheory.Shannon.FisherInfo.DeBruijn
+import InformationTheory.Shannon.FisherInfo.DeBruijnGeneral
 import InformationTheory.Shannon.FisherInfo.Gaussian
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPI.Conv.Density
@@ -70,12 +70,12 @@ Gaussian witness inhabits the `IsBlachmanConvReady` bundle), so the predicate is
 def IsStamInequalityHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
-    J_X = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
-    J_Y = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
-    J_sum = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+    J_X = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
+    J_Y = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
+    J_sum = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2
               (P.map (fun ω => X ω + Y ω)) fXY).toReal →
-    InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fX →
-    InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fY →
+    InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fX →
+    InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fY →
     (∫ x, fX x ∂MeasureTheory.volume = 1) →
     (∫ x, fY x ∂MeasureTheory.volume = 1) →
     (∀ x, fXY x =
@@ -131,7 +131,7 @@ structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
   sense (V2 form, RHS keyed on V2 Fisher info; `IsRegularDeBruijnHypV2` carries
   its own internal `density_t` witness — that internal witness is pinned to
   the top-level `density_path t` by `density_t_eq` below). -/
-  reg_at : ∀ t : ℝ, 0 < t → InformationTheory.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2 X Z P t
+  reg_at : ∀ t : ℝ, 0 < t → InformationTheory.Shannon.FisherInfo.IsRegularDeBruijnHypV2 X Z P t
   /-- Pin the `IsRegularDeBruijnHypV2`-internal `density_t` of `reg_at t ht` to the top-level
   `density_path t`. This shared witness closes the trivial-zero bypass: `density_path = 0` forces
   `(reg_at t ht).density_t = 0`, hence the de Bruijn identity's RHS to `0`, contradicting the true
@@ -146,7 +146,7 @@ structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
     ∀ T : ℝ, 0 < T →
       IntervalIntegrable
         (fun t : ℝ => (1/2)
-          * (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+          * (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2
               (P.map (fun ω => X ω + Real.sqrt t * Z ω)) (density_path t)).toReal)
         volume 0 T
 
@@ -171,7 +171,7 @@ def IsDeBruijnIntegrationHyp {Ω : Type*} [MeasurableSpace Ω]
                   (P.map (fun ω => X ω + Real.sqrt T * Z ω)) →
       h_target - h_X
         = ∫ t in Set.Ioo 0 T, (1/2)
-          * (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+          * (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2
               (P.map (fun ω => X ω + Real.sqrt t * Z ω)) (fPath t)).toReal ∂volume
 
 /-- Trivial degenerate case: when `T ≤ 0` the integration interval `(0, T)` is
@@ -210,9 +210,9 @@ theorem isDeBruijnIntegrationHyp_holds
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
     (T : ℝ) (hT : 0 ≤ T)
-    (h_path : InformationTheory.Shannon.FisherInfoV2.IsDeBruijnPathRegular X Z P T) :
+    (h_path : InformationTheory.Shannon.FisherInfo.IsDeBruijnPathRegular X Z P T) :
     IsDeBruijnIntegrationHyp X Z P T :=
-  InformationTheory.Shannon.FisherInfoV2.debruijnIntegrationIdentity_holds X Z hX hZ hXZ T hT h_path
+  InformationTheory.Shannon.FisherInfo.debruijnIntegrationIdentity_holds X Z hX hZ hXZ T hT h_path
 
 /-! ## §5 — Gaussian saturation full discharge of the upstream hypotheses
 
@@ -359,25 +359,25 @@ is translation-invariant) is in the downstream discharge plan. -/
 theorem isStamInequalityHyp_of_fisherInfo_eq
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y X' Y' : Ω → ℝ} {P : Measure Ω}
-    (hJX : ∀ f : ℝ → ℝ, InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) f
-          = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X') f)
-    (hJY : ∀ f : ℝ → ℝ, InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) f
-          = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y') f)
+    (hJX : ∀ f : ℝ → ℝ, InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map X) f
+          = InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map X') f)
+    (hJY : ∀ f : ℝ → ℝ, InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map Y) f
+          = InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map Y') f)
     (hJsum : ∀ f : ℝ → ℝ,
-        InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map (fun ω => X ω + Y ω)) f
-          = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+        InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map (fun ω => X ω + Y ω)) f
+          = InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2
               (P.map (fun ω => X' ω + Y' ω)) f)
     (h : IsStamInequalityHyp X Y P) :
     IsStamInequalityHyp X' Y' P := by
   intro J_X J_Y J_sum fX fY fXY hJX_pos hJY_pos hJsum_pos hJX_def hJY_def hJsum_def
   have hJX_def' :
-      J_X = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal := by
+      J_X = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map X) fX).toReal := by
     rw [hJX_def, hJX]
   have hJY_def' :
-      J_Y = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal := by
+      J_Y = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map Y) fY).toReal := by
     rw [hJY_def, hJY]
   have hJsum_def' :
-      J_sum = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+      J_sum = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2
               (P.map (fun ω => X ω + Y ω)) fXY).toReal := by
     rw [hJsum_def, hJsum]
   exact h J_X J_Y J_sum fX fY fXY hJX_pos hJY_pos hJsum_pos hJX_def' hJY_def' hJsum_def'

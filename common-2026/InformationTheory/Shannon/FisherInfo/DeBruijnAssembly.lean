@@ -1,14 +1,14 @@
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Core
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Domination
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Derivatives
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Assembly
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly.Core
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly.Domination
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly.Derivatives
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly.Assembly
 
 /-!
 # Per-time de Bruijn identity — assembly
 
 Aggregates the submodules that prove the per-time de Bruijn identity
 `debruijnIdentityV2_holds_assembled` for a general `X`. This file is placed downstream of
-the atom supplier `FisherInfoV2DeBruijnPerTime.lean` (which imports `FisherInfoV2DeBruijn`)
+the atom supplier `FisherInfoDeBruijnPerTime.lean` (which imports `FisherInfoDeBruijn`)
 so that the assembly can use those atoms without an import cycle.
 
 ## Implementation notes

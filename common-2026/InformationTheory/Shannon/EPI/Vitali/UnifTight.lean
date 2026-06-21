@@ -63,7 +63,7 @@ private theorem integral_sq_mul_gaussianPDFReal_shift {t : ℝ} (ht : 0 < t) (y 
   have hg_int : Integrable (gaussianPDFReal 0 ⟨t, ht.le⟩) volume :=
     integrable_gaussianPDFReal 0 ⟨t, ht.le⟩
   have hsq_int : Integrable (fun x => x ^ 2 * gaussianPDFReal 0 ⟨t, ht.le⟩ x) volume :=
-    InformationTheory.Shannon.FisherInfoV2.integrable_sq_mul_gaussianPDFReal ht
+    InformationTheory.Shannon.FisherInfo.integrable_sq_mul_gaussianPDFReal ht
   have hid_int : Integrable (fun x => x * gaussianPDFReal 0 ⟨t, ht.le⟩ x) volume := by
     -- `id ∈ L¹(gaussianReal)`, transported to `volume` via the withDensity bridge.
     have hmem : MemLp (id : ℝ → ℝ) 1 (gaussianReal 0 ⟨t, ht.le⟩) := memLp_id_gaussianReal 1
@@ -86,7 +86,7 @@ private theorem integral_sq_mul_gaussianPDFReal_shift {t : ℝ} (ht : 0 < t) (y 
   rw [integral_add (by exact hsq_int.add ((hid_int.const_mul (2 * y)))) (hg_int.const_mul (y ^ 2)),
     integral_add hsq_int (hid_int.const_mul (2 * y)),
     integral_const_mul, integral_const_mul]
-  rw [InformationTheory.Shannon.FisherInfoV2.integral_sq_mul_gaussianPDFReal ht,
+  rw [InformationTheory.Shannon.FisherInfo.integral_sq_mul_gaussianPDFReal ht,
     integral_id_mul_gaussianPDFReal ht, integral_gaussianPDFReal_eq_one 0 hv_ne]
   ring
 
@@ -130,7 +130,7 @@ theorem convDensityAdd_second_moment
   -- The shifted second-moment integrability for fixed `y`: `x ↦ x²·g(x-y)`.
   have hsq_mom_int : Integrable (fun u => u ^ 2 * g u) volume := by
     simpa [hg_def] using
-      InformationTheory.Shannon.FisherInfoV2.integrable_sq_mul_gaussianPDFReal ht
+      InformationTheory.Shannon.FisherInfo.integrable_sq_mul_gaussianPDFReal ht
   -- ── Step A: lift LHS to a double lintegral over `(x,y)`. ──
   -- `∫ x, x²·p_t x = ∫ x, ∫ y, K x y` (linearity of inner integral), and both sides nonneg.
   have hLHS_inner : ∀ x, x ^ 2 * p_t x = ∫ y, K x y ∂volume := by

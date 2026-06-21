@@ -9,7 +9,7 @@ import Mathlib.InformationTheory.KullbackLeibler.Basic
 import Mathlib.Probability.Kernel.Composition.Lemmas
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPI.Conv.Density
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
+import InformationTheory.Shannon.FisherInfo.DeBruijnPerTime
 import InformationTheory.Shannon.CondKLIntegral
 import InformationTheory.Shannon.EPI.G2.BridgeDensityHelpers
 
@@ -470,7 +470,7 @@ theorem negMulLog_convDensity_entropy_ge
   -- Law of the heat-flow path and its absolute continuity.
   set W : Ω → ℝ := fun ω => X ω + Real.sqrt s * Z ω with hW
   have hW_law : μ.map W = (μ.map X) ∗ gaussianReal 0 ⟨s * (v_Z : ℝ), by positivity⟩ :=
-    InformationTheory.Shannon.FisherInfoV2.gaussianConvolution_law_conv
+    InformationTheory.Shannon.FisherInfo.gaussianConvolution_law_conv
       X Z hX hZ hXZ v_Z hZ_law hs.le
   have hsv_ne : (⟨s * (v_Z : ℝ), by positivity⟩ : ℝ≥0) ≠ 0 := by
     intro h
@@ -489,12 +489,12 @@ theorem negMulLog_convDensity_entropy_ge
     refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
     simp only [ENNReal.toReal_ofReal (hpX_nn x)]
   -- Rewrite RHS `h(μ.map W) = ∫ negMulLog (convDensityAdd pX g_{u n})`.
-  have hrn := InformationTheory.Shannon.FisherInfoV2.pPath_eq_convDensityAdd
+  have hrn := InformationTheory.Shannon.FisherInfo.pPath_eq_convDensityAdd
     X Z hX hZ hXZ v_Z hv_Z_pos hZ_law pX hpX_nn hpX_meas hpX_law hs
   have h_rhs : differentialEntropy (μ.map W)
       = ∫ x, Real.negMulLog
           (convDensityAdd pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩) x) ∂volume := by
-    have hpath_eq : W = InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z s := rfl
+    have hpath_eq : W = InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z s := rfl
     unfold differentialEntropy
     rw [hpath_eq]
     refine integral_congr_ae ?_

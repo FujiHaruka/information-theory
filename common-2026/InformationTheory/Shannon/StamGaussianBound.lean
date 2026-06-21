@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.FisherInfo.V2DeBruijn
+import InformationTheory.Shannon.FisherInfo.DeBruijn
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic
 import Mathlib.Tactic.Positivity
@@ -26,7 +26,7 @@ out of scope here.
   `gaussianReal_add_gaussianReal_of_indepFun`
 -/
 
-namespace InformationTheory.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfo
 
 set_option linter.unusedSectionVars false
 set_option linter.unusedVariables false
@@ -81,4 +81,4 @@ theorem stam_convex_fisher_bound_gaussian
   rw [mul_one_div, mul_one_div]
   exact this
 
-end InformationTheory.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfo

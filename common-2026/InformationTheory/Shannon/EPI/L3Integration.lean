@@ -2,8 +2,8 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EntropyPower.Inequality
 import InformationTheory.Shannon.EPI.Plumbing
 import InformationTheory.Shannon.EPI.Stam.EPIBridge
-import InformationTheory.Shannon.FisherInfo.V2DeBruijn
-import InformationTheory.Shannon.FisherInfo.V2
+import InformationTheory.Shannon.FisherInfo.DeBruijn
+import InformationTheory.Shannon.FisherInfo.OfDensity
 import InformationTheory.Shannon.FisherInfo.Gaussian
 import InformationTheory.Shannon.EPI.Blachman.GaussianDensityRoute
 import InformationTheory.Shannon.DifferentialEntropy
@@ -21,7 +21,7 @@ import Mathlib.Order.Filter.AtTopBot.Group
 # Entropy power inequality — final integration
 
 This file integrates the building blocks from `EPIPlumbing`, `StamEPIBridge`,
-and `FisherInfoV2DeBruijn` to assemble `IsEPIL3IntegratedPipeline` and derive the
+and `FisherInfoDeBruijn` to assemble `IsEPIL3IntegratedPipeline` and derive the
 entropy power inequality.
 
 ## Main definitions
@@ -43,7 +43,7 @@ The Stam-to-EPI bridge (Cover–Thomas Lemma 17.7.3, Csiszár-style coupling) is
 from Mathlib. The current design:
 - The Stam inequality is received as a genuine `IsStamInequalityHyp X Y P`.
 - de Bruijn integration uses `IsDeBruijnIntegrationHyp` and
-  `FisherInfoV2DeBruijn.deBruijn_identity_v2_gaussian` for the Gaussian case.
+  `FisherInfoDeBruijn.deBruijn_identity_v2_gaussian` for the Gaussian case.
 - The Stam-to-EPI coupling is discharged internally by consumers via the shared
   sorry lemma `EntropyPowerInequality.stamToEPIBridge_holds`; the Gaussian
   saturation case is fully discharged.
@@ -162,7 +162,7 @@ theorem integrated_pipeline_roundtrip
 
 This section provides the family-level de Bruijn lift and the bounded-T Gaussian
 FTC application. The genuine `HasDerivAt` content is available through
-`FisherInfoV2.deBruijn_identity_v2_gaussian`; a non-Gaussian extension routes
+`FisherInfo.deBruijn_identity_v2_gaussian`; a non-Gaussian extension routes
 through the genuine de Bruijn lemma `debruijnIdentityV2_holds_assembled`.
 
 The §1–§11 pipeline wrappers take only the single-field Stam-residual bundle and
@@ -216,7 +216,7 @@ structure IsDeBruijnTailHyp {Ω : Type*} [MeasurableSpace Ω]
     Tendsto
       (fun T : ℝ => Real.toEReal
         (InformationTheory.Shannon.differentialEntropy
-          (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z T))))
+          (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z T))))
       atTop (𝓝 h_inf)
 
 -- (Gaussian discharge `isDeBruijnTailHyp_of_gaussian` is stated below, after the
@@ -227,14 +227,14 @@ structure IsDeBruijnTailHyp {Ω : Type*} [MeasurableSpace Ω]
 /-- `gaussianConvolution X Z 0 = X` pointwise (uses `Real.sqrt 0 = 0`). -/
 @[entry_point]
 theorem gaussianConvolution_at_zero {Ω : Type*} (X Z : Ω → ℝ) :
-    InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z 0 = X := by
+    InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z 0 = X := by
   funext ω
-  simp [InformationTheory.Shannon.FisherInfoV2.gaussianConvolution]
+  simp [InformationTheory.Shannon.FisherInfo.gaussianConvolution]
 
 /-- `P.map (gaussianConvolution X Z 0) = P.map X`. -/
 theorem map_gaussianConvolution_at_zero {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) :
-    P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z 0) = P.map X := by
+    P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z 0) = P.map X := by
   rw [gaussianConvolution_at_zero]
 
 /-- `differentialEntropy (P.map (gaussianConvolution X Z 0)) =
@@ -242,7 +242,7 @@ differentialEntropy (P.map X)`. -/
 theorem differentialEntropy_gaussianConvolution_at_zero
     {Ω : Type*} [MeasurableSpace Ω] (X Z : Ω → ℝ) (P : Measure Ω) :
     InformationTheory.Shannon.differentialEntropy
-      (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z 0))
+      (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z 0))
       = InformationTheory.Shannon.differentialEntropy (P.map X) := by
   rw [map_gaussianConvolution_at_zero]
 
@@ -256,7 +256,7 @@ holds for every `t > 0`, with explicit density witness
 `gaussianPDFReal m (v + ⟨t, ht.le⟩)`.
 
 The witness is constructed by routing
-`FisherInfoV2.deBruijn_identity_v2_gaussian` (which gives the `HasDerivAt`
+`FisherInfo.deBruijn_identity_v2_gaussian` (which gives the `HasDerivAt`
 directly) into the structure constructor.
 
 (Returns `Type`, not `Prop`, because `IsRegularDeBruijnHypV2` carries a
@@ -271,7 +271,7 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
     (_hX_law : P.map X = gaussianReal m v)
     (hZ_law : P.map Z = gaussianReal 0 1) :
     ∀ t : ℝ, 0 < t →
-      InformationTheory.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2 X Z P t := by
+      InformationTheory.Shannon.FisherInfo.IsRegularDeBruijnHypV2 X Z P t := by
   intro t ht
   -- `IsRegularDeBruijnHypV2` is 2-field (regularity only). The
   -- `derivAt_entropy_eq_half_fisher_v2` discharge is downstream, via the genuine
@@ -330,11 +330,11 @@ theorem differentialEntropy_gaussianConvolution_of_gaussian
     (hZ_law : P.map Z = gaussianReal 0 1)
     {T : ℝ} (hT : 0 ≤ T) :
     InformationTheory.Shannon.differentialEntropy
-      (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z T))
+      (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z T))
       = (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + T)) := by
-  rw [InformationTheory.Shannon.FisherInfoV2.gaussianConvolution_law_of_gaussian
+  rw [InformationTheory.Shannon.FisherInfo.gaussianConvolution_law_of_gaussian
         hX hZ hXZ hX_law hZ_law hT]
-  exact InformationTheory.Shannon.FisherInfoV2.differentialEntropy_gaussianReal_heat_path
+  exact InformationTheory.Shannon.FisherInfo.differentialEntropy_gaussianReal_heat_path
     m hv hT
 
 /-! ### Gaussian discharge of `IsDeBruijnTailHyp`
@@ -397,7 +397,7 @@ noncomputable def isDeBruijnTailHyp_of_gaussian
     -- Congr with entropy form on `T ≥ 0`.
     have h_entropy : Tendsto
         (fun T : ℝ => InformationTheory.Shannon.differentialEntropy
-            (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z T))) atTop atTop := by
+            (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z T))) atTop atTop := by
       refine h_closed.congr' ?_
       filter_upwards [Filter.eventually_ge_atTop (0 : ℝ)] with T hT
       exact
@@ -430,7 +430,7 @@ theorem hasDerivAt_differentialEntropy_heat_flow_gaussian
     {s : ℝ} (hs : 0 < s) :
     HasDerivAt
       (fun s' => InformationTheory.Shannon.differentialEntropy
-                  (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z s')))
+                  (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z s')))
       (1 / (2 * ((v : ℝ) + s))) s := by
   -- Step 1: re-derive the LHS identification (same approach as
   -- `deBruijn_identity_v2_gaussian`'s proof). We want
@@ -443,7 +443,7 @@ theorem hasDerivAt_differentialEntropy_heat_flow_gaussian
     linarith
   have h_pos_nbhd : ∀ᶠ s' in nhds s, (0 : ℝ) < s' := eventually_gt_nhds hs
   have h_eventually : (fun s' => InformationTheory.Shannon.differentialEntropy
-        (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z s')))
+        (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z s')))
         =ᶠ[nhds s] (fun s' => (1/2 : ℝ) * Real.log
             (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s'))) := by
     refine h_pos_nbhd.mono fun s' hs' => ?_
@@ -451,7 +451,7 @@ theorem hasDerivAt_differentialEntropy_heat_flow_gaussian
       hX hZ hXZ hv hX_law hZ_law hs'.le
   -- Step 2: derivative of the log form.
   have h_log_deriv :=
-    InformationTheory.Shannon.FisherInfoV2.hasDerivAt_half_log_gaussian_entropy
+    InformationTheory.Shannon.FisherInfo.hasDerivAt_half_log_gaussian_entropy
       (v := v) (s := s) hvs_pos
   -- Transfer. `congr_of_eventuallyEq` expects `f_entropy =ᶠ f_log`, which is
   -- our `h_eventually` (no `.symm` needed).
@@ -487,13 +487,13 @@ theorem continuousOn_differentialEntropy_heat_flow_gaussian
     {T : ℝ} (hT : 0 ≤ T) :
     ContinuousOn
       (fun s' => InformationTheory.Shannon.differentialEntropy
-                  (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z s')))
+                  (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z s')))
       (Set.Icc 0 T) := by
   -- For `s' ∈ [0, T]` (so `s' ≥ 0`), the entropy equals the closed form
   -- `(1/2) log (2π e (v + s'))`, which is continuous.
   have h_eq_on : Set.EqOn
       (fun s' => InformationTheory.Shannon.differentialEntropy
-        (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z s')))
+        (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z s')))
       (fun s' => (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s')))
       (Set.Icc 0 T) := by
     intro s' hs'
@@ -545,11 +545,11 @@ theorem bounded_T_ftc_gaussian
     (hZ_law : P.map Z = gaussianReal 0 1)
     {T : ℝ} (hT : 0 ≤ T) :
     InformationTheory.Shannon.differentialEntropy
-        (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z T))
+        (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z T))
       - InformationTheory.Shannon.differentialEntropy (P.map X)
       = ∫ t in Set.Ioo 0 T, 1 / (2 * ((v : ℝ) + t)) ∂volume := by
   set f : ℝ → ℝ := fun s => InformationTheory.Shannon.differentialEntropy
-    (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z s)) with hf_def
+    (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z s)) with hf_def
   set f' : ℝ → ℝ := fun s => 1 / (2 * ((v : ℝ) + s)) with hf'_def
   -- Step 1: continuity of `f` on `[0, T]`.
   have h_cont : ContinuousOn f (Set.Icc 0 T) :=

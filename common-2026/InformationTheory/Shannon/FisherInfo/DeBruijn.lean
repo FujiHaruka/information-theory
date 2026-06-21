@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.FisherInfo.V2
+import InformationTheory.Shannon.FisherInfo.OfDensity
 import InformationTheory.Shannon.EPI.Conv.Density
 import Mathlib.Analysis.Calculus.LogDeriv
 import Mathlib.Analysis.SpecialFunctions.Log.Deriv
@@ -12,7 +12,7 @@ import Mathlib.Probability.Independence.Basic
 /-!
 # Fisher information V2 — measure-keyed wrapper and de Bruijn identity
 
-Builds on the density-as-input Fisher information of `FisherInfoV2.lean` to define a
+Builds on the density-as-input Fisher information of `FisherInfo.lean` to define a
 measure-keyed wrapper, the heat-flow convolution path `X + √t · Z`, the V2 de Bruijn
 regularity predicate, and the Gaussian discharge of the de Bruijn identity.
 
@@ -35,7 +35,7 @@ regularity predicate, and the Gaussian discharge of the de Bruijn identity.
   `(d/dt) h(X + √t · Z) = 1 / (2(v + t))`.
 -/
 
-namespace InformationTheory.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfo
 
 set_option linter.unusedSectionVars false
 
@@ -344,4 +344,4 @@ theorem deBruijn_identity_v2_gaussian
   rw [h_eq_rhs]
   exact h_deriv'
 
-end InformationTheory.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfo

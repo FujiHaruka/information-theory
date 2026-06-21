@@ -35,11 +35,11 @@ non-degeneracy precondition (excludes the `√0 = 0` division), NOT load-bearing
 `map_gaussianConvolution_rescale_eq` likewise `@audit:ok` (single `rw`). -/
 theorem gaussianConvolution_rescale_eq {α : Type*}
     (X Z : α → ℝ) (v : ℝ) (hv : 0 < v) (t : ℝ) (ht : 0 ≤ t) :
-    InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X
+    InformationTheory.Shannon.FisherInfo.gaussianConvolution X
         (fun ω => Z ω / Real.sqrt v) (t * v)
-      = InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z t := by
+      = InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z t := by
   funext ω
-  unfold InformationTheory.Shannon.FisherInfoV2.gaussianConvolution
+  unfold InformationTheory.Shannon.FisherInfo.gaussianConvolution
   rw [Real.sqrt_mul ht v]
   have hsv : Real.sqrt v ≠ 0 := (Real.sqrt_ne_zero' (x := v)).mpr hv
   field_simp
@@ -48,9 +48,9 @@ theorem gaussianConvolution_rescale_eq {α : Type*}
 and the original path coincide (consequence of the pointwise identity). -/
 theorem map_gaussianConvolution_rescale_eq {α : Type*} [MeasurableSpace α]
     (P : Measure α) (X Z : α → ℝ) (v : ℝ) (hv : 0 < v) (t : ℝ) (ht : 0 ≤ t) :
-    P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X
+    P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X
         (fun ω => Z ω / Real.sqrt v) (t * v))
-      = P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z t) := by
+      = P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z t) := by
   rw [gaussianConvolution_rescale_eq X Z v hv t ht]
 
 /-! ## PB-2b — Fisher monotonicity under Gaussian convolution (Stam corollary)
@@ -90,14 +90,14 @@ Genuine derivation: specialize `convex_fisher_bound_of_ready` at `lam = 1` (RHS 
 — the inequality core is supplied by the `@audit:ok` `convex_fisher_bound_of_ready`. -/
 theorem fisherInfoOfDensity_convDensityAdd_le
     (fX fY : ℝ → ℝ)
-    (hregX : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fX)
-    (hregY : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fY)
+    (hregX : InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fX)
+    (hregY : InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fY)
     (hnormX : ∫ x, fX x ∂MeasureTheory.volume = 1)
     (hnormY : ∫ x, fY x ∂MeasureTheory.volume = 1)
     (hready : InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady fX fY) :
-    (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity
+    (InformationTheory.Shannon.FisherInfo.fisherInfoOfDensity
         (InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY)).toReal
-      ≤ (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity fX).toReal := by
+      ≤ (InformationTheory.Shannon.FisherInfo.fisherInfoOfDensity fX).toReal := by
   have h := InformationTheory.Shannon.EPIBlachmanDensity.convex_fisher_bound_of_ready
     fX fY 1 (by norm_num) (le_refl 1) hregX hregY hnormX hnormY hready
   simpa using h
@@ -109,7 +109,7 @@ input regularity. Since PB-1 fixes the noise to `𝒩(0,1)`, the unit-variance `
 required by `IsRegularDeBruijnHypV2` is satisfied directly (no reparametrization needed for
 the X / Y singletons; the sum-instance `𝒩(0,2)` is the only reparam case, deferred to a
 later wave). The `pX`-witness fields are the same plumbing as `IsRegularDeBruijnHypV2.ofHeatFlow`
-(`FisherInfoV2DeBruijnHeatFlow.lean`); the conv-pin `density_path` reuses the genuine density
+(`FisherInfoDeBruijnHeatFlow.lean`); the conv-pin `density_path` reuses the genuine density
 of `P.map (X + √t·Z)`. -/
 
 /-- **PB-3 producer (X / Y, unit-noise direct)**: from method-X input regularity (`X`
@@ -164,7 +164,7 @@ moment) are regularity, NOT load-bearing; the `IsDeBruijnRegularityHyp` structur
 `density_t_eq` anti-trivial-zero pin keeps the conclusion non-degenerate.
 @audit-note: independent honesty audit.
 Verified: (i) `pX` series (pX_nn/pX_meas/pX_law/pX_mom) is a verbatim mirror of
-`IsRegularDeBruijnHypV2.ofHeatFlow`'s `@audit:ok` plumbing (`FisherInfoV2DeBruijnHeatFlow.lean:275-`,
+`IsRegularDeBruijnHypV2.ofHeatFlow`'s `@audit:ok` plumbing (`FisherInfoDeBruijnHeatFlow.lean:275-`,
 `withDensity_rnDeriv_eq` + `integrable_map_measure`), derived from `hX_ac`/`h_mom_X`,
 NON-circular. (ii) `reg_at` fields are all regularity/witness (the structure
 `IsRegularDeBruijnHypV2` carries NO analytic-core field — de Bruijn is delivered externally by
@@ -191,7 +191,7 @@ through `hready_pX` — it is produced by `convex_fisher_bound_of_ready` (`@audi
 `f_mble : AEStronglyMeasurable` (now GENUINE, see below), `f_bdd` (discharged from `hbound`).
 `hbound` fires PB-2b on `pX`/`g_t` with `t.toNNReal≠0` genuinely from `t>0`, giving a uniform
 `t`-independent finite bound `C=(1/2)·J(pX).toReal`; the rfl bridge `fisherInfoOfMeasureV2_def`
-(`FisherInfoV2DeBruijn.lean:90`, genuine `rfl`) is legitimate. (3) sufficiency: non-circular
+(`FisherInfoDeBruijn.lean:90`, genuine `rfl`) is legitimate. (3) sufficiency: non-circular
 (conclusion ≢ any hyp), non-degenerate (`density_t_eq:=fun _ _=>rfl` genuine, no `:True` slot).
 (4) the `f_mble` `t`-measurability is
 discharged by `EPICase1ProducerMeasurability.aestronglyMeasurable_fisherInfo_t`
@@ -205,14 +205,14 @@ noncomputable def isDeBruijnRegularityHyp_of_methodX_unitnoise
     (hX : Measurable X) (_hZX : Measurable Z_X) (_hXZX : IndepFun X Z_X P)
     (hZX_law : P.map Z_X = gaussianReal 0 1)
     (hX_ac : (P.map X) ≪ volume) (h_mom_X : Integrable (fun ω => (X ω) ^ 2) P)
-    (_h_fisher_X : InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity
+    (_h_fisher_X : InformationTheory.Shannon.FisherInfo.fisherInfoOfDensity
         (fun x => ((P.map X).rnDeriv volume x).toReal) ≠ ∞)
     -- Design (b) input-regularity preconditions (regularity, NOT load-bearing):
     -- they assert only that the input density `pX` is a *regular* L¹ density (differentiable,
     -- strictly positive, tails → 0, integrable derivative), is normalized, and satisfies the
     -- `Integrable`/boundedness/positivity bundle `IsBlachmanConvReady` against any centered
     -- Gaussian. None of them encode the de Bruijn / Fisher-monotonicity inequality core.
-    (hreg_pX : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
+    (hreg_pX : InformationTheory.Shannon.FisherInfo.IsRegularDensityV2
         (fun x => ((P.map X).rnDeriv volume x).toReal))
     (hnorm_pX : ∫ x, ((P.map X).rnDeriv volume x).toReal ∂volume = 1)
     (hready_pX : ∀ v : ℝ≥0, v ≠ 0 →
@@ -272,20 +272,20 @@ noncomputable def isDeBruijnRegularityHyp_of_methodX_unitnoise
     -- `EPICase1ProducerMeasurability.aestronglyMeasurable_fisherInfo_t`.
     intro T hT
     -- bridge (item 1): `fisherInfoOfMeasureV2 _ f = fisherInfoOfDensity f` (rfl, measure dropped).
-    simp only [InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2_def]
+    simp only [InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2_def]
     set C : ℝ := (1 / 2) *
-      (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity pX).toReal with hC_def
+      (InformationTheory.Shannon.FisherInfo.fisherInfoOfDensity pX).toReal with hC_def
     -- uniform pointwise bound on `Ioc 0 T`: each `t > 0` gives `t.toNNReal ≠ 0`, so the Gaussian
     -- `g_t := gaussianPDFReal 0 t.toNNReal` is a regular normalized density, and PB-2b fires.
     have hbound : ∀ t ∈ Set.Ioc (0 : ℝ) T,
-        (1 / 2) * (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity
+        (1 / 2) * (InformationTheory.Shannon.FisherInfo.fisherInfoOfDensity
             (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
               (gaussianPDFReal 0 t.toNNReal))).toReal ≤ C := by
       intro t ht
       have htpos : 0 < t := ht.1
       have hv_ne : t.toNNReal ≠ 0 := by
         simp only [ne_eq, Real.toNNReal_eq_zero, not_le]; exact htpos
-      have hregY : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
+      have hregY : InformationTheory.Shannon.FisherInfo.IsRegularDensityV2
           (gaussianPDFReal 0 t.toNNReal) :=
         InformationTheory.Shannon.EPIGaussianDensityRoute.isRegularDensityV2_gaussianPDFReal hv_ne
       have hnormY : ∫ x, gaussianPDFReal 0 t.toNNReal x ∂volume = 1 :=
@@ -313,7 +313,7 @@ noncomputable def isDeBruijnRegularityHyp_of_methodX_unitnoise
       refine (ae_restrict_iff' measurableSet_Ioc).mpr (Filter.Eventually.of_forall ?_)
       intro t ht
       have hnn : (0 : ℝ) ≤ (1 / 2) *
-          (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity
+          (InformationTheory.Shannon.FisherInfo.fisherInfoOfDensity
             (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
               (gaussianPDFReal 0 t.toNNReal))).toReal :=
         mul_nonneg (by norm_num) ENNReal.toReal_nonneg

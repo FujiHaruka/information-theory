@@ -1,8 +1,8 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EPI.Stam.EPIBridge
 import InformationTheory.Shannon.EPI.Stam.Inequality
-import InformationTheory.Shannon.FisherInfo.V2
-import InformationTheory.Shannon.FisherInfo.V2DeBruijn
+import InformationTheory.Shannon.FisherInfo.OfDensity
+import InformationTheory.Shannon.FisherInfo.DeBruijn
 import InformationTheory.Shannon.EPI.Conv.Density
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.Positivity
@@ -32,7 +32,7 @@ honestly-named hypothesis field.
 ## Approach
 
 The genuine bottleneck is that the project's Fisher information abstraction
-(`InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity f = ∫⁻ (logDeriv f)² · f`)
+(`InformationTheory.Shannon.FisherInfo.fisherInfoOfDensity f = ∫⁻ (logDeriv f)² · f`)
 has **no conditional-expectation hooks**: there is no joint measure on `ℝ × ℝ`,
 no sum-level sub-σ-algebra, and no `condExp`-of-score lemma tying `logDeriv` of a
 convolution density to a conditional expectation. Building that apparatus is a
@@ -147,8 +147,8 @@ satisfiable (`isStamScoreConvHyp_intro`). -/
 def IsStamScoreConvHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y : ℝ) (fX fY : ℝ → ℝ), 0 < J_X → 0 < J_Y →
-    J_X = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
-    J_Y = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
+    J_X = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
+    J_Y = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
     ∃ lam : ℝ, 0 ≤ lam ∧ lam ≤ 1 ∧ lam = J_Y / (J_X + J_Y)
 
 /-- The score-convolution predicate holds: the optimal `λ`-witness `J_Y / (J_X + J_Y)` always lies
@@ -182,12 +182,12 @@ load-bearing wall.
 def IsStamCondExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
-    J_X = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
-    J_Y = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
-    J_sum = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+    J_X = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
+    J_Y = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
+    J_sum = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2
               (P.map (fun ω => X ω + Y ω)) fXY).toReal →
-    InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fX →
-    InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fY →
+    InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fX →
+    InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fY →
     (∫ x, fX x ∂MeasureTheory.volume = 1) →
     (∫ x, fY x ∂MeasureTheory.volume = 1) →
     (∀ x, fXY x =
@@ -319,7 +319,7 @@ theorem isStamCauchySchwarz_of_step12 {Ω : Type*} [MeasurableSpace Ω]
 
 The genuine Gaussian EPI runs via `entropyPower_gaussian_additivity`; the genuine
 *non-vacuous* Gaussian convex Fisher bound (keyed on the V2 Fisher information) is
-`InformationTheory.Shannon.FisherInfoV2.stam_convex_fisher_bound_gaussian`
+`InformationTheory.Shannon.FisherInfo.stam_convex_fisher_bound_gaussian`
 (`StamGaussianBound.lean`).
 
 Step 1 (`IsStamScoreConvHyp`) is a witness-construction predicate and discharges

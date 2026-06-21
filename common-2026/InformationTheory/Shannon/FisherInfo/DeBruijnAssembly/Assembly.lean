@@ -1,12 +1,12 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
+import InformationTheory.Shannon.FisherInfo.DeBruijnPerTime
 import InformationTheory.Shannon.FisherConvBound
 import InformationTheory.Shannon.EPI.Conv.DensitySecondDeriv
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Core
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Domination
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Derivatives
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly.Core
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly.Domination
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly.Derivatives
 
-namespace InformationTheory.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfo
 
 open MeasureTheory ProbabilityTheory Filter Topology Real
 open scoped ENNReal NNReal
@@ -652,4 +652,4 @@ theorem debruijnIdentityV2_holds_assembled
     at h_ent
   exact h_ent
 
-end InformationTheory.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfo

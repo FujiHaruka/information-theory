@@ -1,7 +1,7 @@
 import InformationTheory.Shannon.EPI.Conv.Density
 import InformationTheory.Shannon.EPI.Conv.DensityNormalization
 import InformationTheory.Shannon.EPI.Blachman.GaussianDensityRoute
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly
+import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly
 import Mathlib.Analysis.Convolution
 import Mathlib.MeasureTheory.Group.Prod
 
@@ -153,7 +153,7 @@ theorem convDensityAdd_pXpY_integrable (pX pY : ℝ → ℝ)
     (hpX_int : Integrable pX volume) (hpX_meas : Measurable pX)
     (hpY_int : Integrable pY volume) (hpY_meas : Measurable pY) :
     Integrable (convDensityAdd pX pY) volume :=
-  InformationTheory.Shannon.FisherInfoV2.convDensityAdd_envelope_integrable
+  InformationTheory.Shannon.FisherInfo.convDensityAdd_envelope_integrable
     pX pY hpX_int hpX_meas hpY_int hpY_meas
 
 /-- `∫ convDensityAdd pX pY = (∫ pX)·(∫ pY)`; with both normalized, `= 1`. -/

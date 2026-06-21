@@ -51,7 +51,7 @@ open scoped NNReal
 open InformationTheory.Shannon.EPIConvDensity
 open InformationTheory.Shannon.EPIBlachmanDensity
 open InformationTheory.Shannon.EPIConvDensityRegular
-open InformationTheory.Shannon.FisherInfoV2
+open InformationTheory.Shannon.FisherInfo
 
 /-- **Fisher integrand integrability for a conv-with-Gaussian density** (public form).
 
@@ -141,7 +141,7 @@ theorem convDensityAdd_gaussian_integrable
     Integrable (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)) volume := by
   have hv_ne : (⟨t, ht.le⟩ : ℝ≥0) ≠ 0 := by
     intro h; exact ht.ne' (congrArg NNReal.toReal h)
-  exact InformationTheory.Shannon.FisherInfoV2.convDensityAdd_envelope_integrable
+  exact InformationTheory.Shannon.FisherInfo.convDensityAdd_envelope_integrable
     pX (gaussianPDFReal 0 ⟨t, ht.le⟩) hpX_int hpX_meas
     (ProbabilityTheory.integrable_gaussianPDFReal 0 ⟨t, ht.le⟩)
     (measurable_gaussianPDFReal 0 ⟨t, ht.le⟩)

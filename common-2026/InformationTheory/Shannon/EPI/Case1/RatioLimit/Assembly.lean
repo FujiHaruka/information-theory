@@ -251,18 +251,18 @@ theorem entropyPower_add_ge_case1_of_regular
     (h_endpt_X : InformationTheory.Shannon.IsHeatFlowEndpointRegular X Z_X P)
     (h_endpt_Y : InformationTheory.Shannon.IsHeatFlowEndpointRegular Y Z_Y P)
     (h_pos_stam : ∀ (t : ℝ) (ht : 0 < t),
-      (0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+      (0 < InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
               ((h_reg_X'.reg_at t ht).density_t)) ∧
-      (0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+      (0 < InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
               ((h_reg_Y'.reg_at t ht).density_t)) ∧
-      (0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+      (0 < InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
               ((h_reg_sum.reg_at t ht).density_t)) ∧
       InformationTheory.Shannon.StamEPIBridge.IsStamInequalityHyp
         (fun ω => X ω + Real.sqrt t * Z_X ω)
         (fun ω => Y ω + Real.sqrt t * Z_Y ω) P ∧
-      InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
+      InformationTheory.Shannon.FisherInfo.IsRegularDensityV2
         ((h_reg_X'.reg_at t ht).density_t) ∧
-      InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
+      InformationTheory.Shannon.FisherInfo.IsRegularDensityV2
         ((h_reg_Y'.reg_at t ht).density_t) ∧
       (∫ x, (h_reg_X'.reg_at t ht).density_t x ∂MeasureTheory.volume = 1) ∧
       (∫ x, (h_reg_Y'.reg_at t ht).density_t x ∂MeasureTheory.volume = 1) ∧
@@ -392,16 +392,16 @@ theorem rescaledPath_ac_and_negMulLog_integrable
   have hv_B_pos : (0 : ℝ≥0) < v_B := pos_iff_ne_zero.mpr hv_B
   obtain ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom⟩ :=
     rescaledInput_density_witness A P hA hA_ac h_mom_A ht
-  have hgconv : InformationTheory.Shannon.FisherInfoV2.gaussianConvolution Zt B 1
+  have hgconv : InformationTheory.Shannon.FisherInfo.gaussianConvolution Zt B 1
       = fun ω => Zt ω + B ω := by
     funext ω
-    simp only [InformationTheory.Shannon.FisherInfoV2.gaussianConvolution,
+    simp only [InformationTheory.Shannon.FisherInfo.gaussianConvolution,
       Real.sqrt_one, one_mul]
   have h_path_rnDeriv : (P.map (fun ω => Zt ω + B ω)).rnDeriv volume
       =ᵐ[volume] fun z => ENNReal.ofReal
         (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
           (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) z) := by
-    have := InformationTheory.Shannon.FisherInfoV2.pPath_eq_convDensityAdd
+    have := InformationTheory.Shannon.FisherInfo.pPath_eq_convDensityAdd
       Zt B hZt_meas hB h_indep v_B hv_B_pos hB_law pX hpX_nn hpX_meas hpX_law
       (s := 1) one_pos
     rwa [hgconv] at this
@@ -439,7 +439,7 @@ re-introduces `v_X v_Y := (1 : ℝ≥0)` existentially to keep the `_of_regular`
 @audit-note: independent honesty audit.
 The unit-noise restate resolves the latent vacuity defect. The old signature
 took arbitrary nonzero `v_X v_Y` while threading `IsDeBruijnRegularityHyp X Z_X P`, whose
-`reg_at t ht .Z_law` (= `IsRegularDeBruijnHypV2.Z_law`, `FisherInfoV2DeBruijn.lean:210`)
+`reg_at t ht .Z_law` (= `IsRegularDeBruijnHypV2.Z_law`, `FisherInfoDeBruijn.lean:210`)
 hardcodes `P.map Z_X = gaussianReal 0 1` — so for `v_X ≠ 1` the hypotheses `hZX_law` and
 `Z_law` were mutually unsatisfiable, making the theorem vacuously true (premises never
 jointly inhabitable). Fixing `hZX_law : P.map Z_X = gaussianReal 0 1` removes the
@@ -503,18 +503,18 @@ theorem entropyPower_add_ge_case1_of_methodX
     (h_endpt_X : InformationTheory.Shannon.IsHeatFlowEndpointRegular X Z_X P)
     (h_endpt_Y : InformationTheory.Shannon.IsHeatFlowEndpointRegular Y Z_Y P)
     (h_pos_stam : ∀ (t : ℝ) (ht : 0 < t),
-      (0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+      (0 < InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
               ((h_reg_X'.reg_at t ht).density_t)) ∧
-      (0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+      (0 < InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
               ((h_reg_Y'.reg_at t ht).density_t)) ∧
-      (0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+      (0 < InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
               ((h_reg_sum.reg_at t ht).density_t)) ∧
       InformationTheory.Shannon.StamEPIBridge.IsStamInequalityHyp
         (fun ω => X ω + Real.sqrt t * Z_X ω)
         (fun ω => Y ω + Real.sqrt t * Z_Y ω) P ∧
-      InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
+      InformationTheory.Shannon.FisherInfo.IsRegularDensityV2
         ((h_reg_X'.reg_at t ht).density_t) ∧
-      InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
+      InformationTheory.Shannon.FisherInfo.IsRegularDensityV2
         ((h_reg_Y'.reg_at t ht).density_t) ∧
       (∫ x, (h_reg_X'.reg_at t ht).density_t x ∂MeasureTheory.volume = 1) ∧
       (∫ x, (h_reg_Y'.reg_at t ht).density_t x ∂MeasureTheory.volume = 1) ∧

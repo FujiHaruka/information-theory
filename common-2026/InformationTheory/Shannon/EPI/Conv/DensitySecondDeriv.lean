@@ -1,5 +1,5 @@
 import InformationTheory.Shannon.EPI.Conv.Density
-import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
+import InformationTheory.Shannon.FisherInfo.DeBruijnPerTime
 import InformationTheory.Shannon.FisherInfo.Gaussian
 
 /-!
@@ -24,14 +24,14 @@ The conclusion is an **equality** (not a `HasDerivAt`) so that the triangle boun
 in GAP② can `rw` it directly. We reach it by applying the parametric-integral
 gateway `hasDerivAt_integral_of_dominated_loc_of_deriv_le` twice (1st then 2nd
 spatial derivative), mirroring the genuine STEP D code in
-`FisherInfoV2DeBruijnPerTime.heatFlow_density_heat_equation`. The Gaussian-tail
+`FisherInfoDeBruijnPerTime.heatFlow_density_heat_equation`. The Gaussian-tail
 domination of the polynomial×Gaussian integrand is supplied as **honest
 regularity preconditions** in the exact shape the gateway consumes — NOT a
 load-bearing bundling of the second-derivative conclusion, which is *derived*.
 
 The per-`y` kernel derivative closed forms are the `@audit:ok` atoms
 `heatFlow_density_heat_equation_kernel_x_deriv1` / `_x_deriv2`
-(`FisherInfoV2DeBruijnPerTime.lean`), and `heatFlow_density_heat_equation_kernel_eq`
+(`FisherInfoDeBruijnPerTime.lean`), and `heatFlow_density_heat_equation_kernel_eq`
 bridges them to `gaussianPDFReal`.
 -/
 
@@ -39,7 +39,7 @@ namespace InformationTheory.Shannon.EPIConvDensitySecondDeriv
 
 open MeasureTheory Real ProbabilityTheory
 open InformationTheory.Shannon.EPIConvDensity
-open InformationTheory.Shannon.FisherInfoV2
+open InformationTheory.Shannon.FisherInfo
 
 /-- **Spatial first-derivative identification (as a function).** Under
 Gaussian-tail domination preconditions, the spatial first derivative of the

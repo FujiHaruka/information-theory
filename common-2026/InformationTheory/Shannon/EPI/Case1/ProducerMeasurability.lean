@@ -2,7 +2,7 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EPI.Conv.Density
 import InformationTheory.Shannon.EPI.Conv.DensityGaussianGateway
 import InformationTheory.Shannon.EPI.Blachman.GaussianDensityRoute
-import InformationTheory.Shannon.FisherInfo.V2
+import InformationTheory.Shannon.FisherInfo.OfDensity
 import Mathlib.Analysis.Calculus.LogDeriv
 import Mathlib.MeasureTheory.Integral.Prod
 import Mathlib.MeasureTheory.Measure.Prod
@@ -197,7 +197,7 @@ field needs, in the exact `Measure.integrableOn_of_bounded` shape (over `volume`
 theorem aestronglyMeasurable_fisherInfo_t
     {pX : ℝ → ℝ} (hpX : Measurable pX) (hpX_int : Integrable pX volume) :
     AEStronglyMeasurable (fun t : ℝ =>
-      (1 / 2) * (FisherInfoV2.fisherInfoOfDensity
+      (1 / 2) * (FisherInfo.fisherInfoOfDensity
         (EPIConvDensity.convDensityAdd pX (gaussianPDFReal 0 t.toNNReal))).toReal)
       volume := by
   -- Unfold `fisherInfoOfDensity` into its lintegral and apply parameter measurability.
@@ -220,9 +220,9 @@ theorem aestronglyMeasurable_fisherInfo_t
     simpa [Function.uncurry] using h1.mul h2
   -- `t ↦ J(conv_t) = ∫⁻ x, integrand t x` is measurable.
   have hlint : Measurable (fun t : ℝ =>
-      FisherInfoV2.fisherInfoOfDensity
+      FisherInfo.fisherInfoOfDensity
         (EPIConvDensity.convDensityAdd pX (gaussianPDFReal 0 t.toNNReal))) := by
-    simp only [FisherInfoV2.fisherInfoOfDensity]
+    simp only [FisherInfo.fisherInfoOfDensity]
     exact Measurable.lintegral_prod_right hintegrand
   exact (((hlint.ennreal_toReal).const_mul (1 / 2))).aestronglyMeasurable
 

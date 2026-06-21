@@ -443,16 +443,16 @@ theorem rescaledPath_density_rnDeriv_eq
     rw [this]
     exact hAB.comp (measurable_id.div_const _) measurable_id
   have hpath_eq : (fun ω => B ω + Zt ω)
-      = InformationTheory.Shannon.FisherInfoV2.gaussianConvolution Zt B 1 := by
+      = InformationTheory.Shannon.FisherInfo.gaussianConvolution Zt B 1 := by
     funext ω
-    simp only [InformationTheory.Shannon.FisherInfoV2.gaussianConvolution,
+    simp only [InformationTheory.Shannon.FisherInfo.gaussianConvolution,
       Real.sqrt_one, one_mul]; ring
   have h_path_rnDeriv : (P.map (fun ω => B ω + Zt ω)).rnDeriv volume
       =ᵐ[volume] fun z => ENNReal.ofReal
         (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
           (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) z) := by
     rw [hpath_eq]
-    exact InformationTheory.Shannon.FisherInfoV2.pPath_eq_convDensityAdd
+    exact InformationTheory.Shannon.FisherInfo.pPath_eq_convDensityAdd
       Zt B hZt_meas hB h_indep_ZtB v_B hv_B_pos hB_law pX hpX_nn hpX_meas hpX_law
       (s := 1) one_pos
   exact ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom, h_path_rnDeriv⟩
@@ -651,7 +651,7 @@ theorem volume_absolutelyContinuous_map_indep_gaussian_add
   have hg_pos : ∀ x, 0 < InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
       (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x := by
     intro x
-    exact InformationTheory.Shannon.FisherInfoV2.convDensityAdd_pos pX hpX_nn hpX_int
+    exact InformationTheory.Shannon.FisherInfo.convDensityAdd_pos pX hpX_nn hpX_int
       (by rw [hpX_mass]; norm_num) (by positivity) x
   have hW_density : (P.map (fun ω => B ω + Zt ω))
       = volume.withDensity (fun x => ENNReal.ofReal
@@ -905,7 +905,7 @@ theorem integrable_llr_compProd_condDistrib_indep_gaussian_add
     unfold gaussianPDFReal; simp [sub_zero]
   -- majorant `|log g| ≤ (A+1) + B·x²`.
   obtain ⟨Amaj, Bmaj, hBmaj_nn, hLog0⟩ :=
-    InformationTheory.Shannon.FisherInfoV2.convDensityAdd_logFactor_poly_majorant
+    InformationTheory.Shannon.FisherInfo.convDensityAdd_logFactor_poly_majorant
       pX hpX_nn hpX_meas hpX_int hpX_mass hv_B_pos
   have hv_mem : (v_B : ℝ) ∈ Set.Ioo ((v_B : ℝ) / 2) (2 * v_B) :=
     ⟨by linarith [(show (0:ℝ) < v_B from hv_B_pos)],
