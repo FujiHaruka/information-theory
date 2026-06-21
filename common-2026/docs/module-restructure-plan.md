@@ -155,20 +155,28 @@ namespace が既に clean (`InformationTheory.Shannon[.AWGN|.RateDistortion|...]
 
 ### Phase 2 ターゲット — `AWGN/Walls.lean` (3549 行) の概念分割
 
-実測したセクション境界 (= 概念の継ぎ目、namespace は全体 `InformationTheory.Shannon.AWGN` ゆえ分割で decl 不変):
+**R4 verbatim 確認結果 (leg6)**: 当初の 6 セクション境界で分割しようとすると `private` ヘルパーが
+セクションを跨ぐ。実測した跨ぎ:
+- `map_shear_withDensity`/`lintegral_pi_prod_eq_prod` (AEP @52,80) が PerLetterKL 内 (265,825,1188) で使用
+  → **AEP + PerLetterKL は private 結合**。
+- `converseJointInline` (@1459) が Integrability/MIChainRule/Markov 全域 (1520〜3443) で、
+  `perLetterMixtureDensity` (@1503) が MIChainRule (2863〜3084) で使用
+  → **Converse-shared + Integrability + MIChainRule + Markov は `converseJointInline` を中心に private 結合**。
 
-| 行範囲 | セクション (現 `/-! -/`) | 分割先候補 |
-|---|---|---|
-| 44–144 | `## Continuous Gaussian AEP` | `AWGN/ContinuousGaussianAEP.lean` |
-| 145–1307 | `### Per-letter AWGN KL closed form and n-fold identity` | `AWGN/PerLetterKL.lean` (最大塊、要更分割検討) |
-| 1308–1442 | `## Per-codeword power constraint` | `AWGN/PerCodewordPowerConstraint.lean` |
-| 1489–1822 | `### Per-letter log-density integrability` | `AWGN/PerLetterLogDensityIntegrable.lean` |
-| 1823–3321 | `### Memoryless MI chain rule` | `AWGN/MemorylessMIChainRule.lean` (最大塊、要更分割検討) |
-| 3322–3548 | `### Markov factorization` | `AWGN/MarkovFactorization.lean` |
+R4 の対処 (a) de-private 化 / (b) private共有群を同一ファイルに保つ のうち、**(b) を採用**
+(path-only 不変を完全保持・public API surface 不変・de-private のリスク/命名コスト回避、footprint
+「不可分1概念の大ファイル許容」)。よって **clean cut は seam=1308, 1443 の 3 ファイル**:
+
+| 行範囲 | 含むセクション | 分割先 | headline (@[entry_point]) |
+|---|---|---|---|
+| 44–1307 | Continuous Gaussian AEP + Per-letter/n-fold KL | `AWGN/KLCapacityAndAEP.lean` | `klDiv_perLetter_eq_capacity` / `klDiv_nFold_eq_nsmul` / `continuousAepGaussian_holds` |
+| 1308–1442 | Per-codeword power constraint (private-free) | `AWGN/PerCodewordPowerConstraint.lean` | `awgnPowerConstraintPerCodeword_holds` |
+| 1443–3549 | Converse-shared + log-density integrability + memoryless MI chain rule + Markov | `AWGN/ConverseMIChainRule.lean` | `awgnPerLetterIntegrability_holds` / `awgnContinuousMIChainRule_holds` / `awgnConverseMarkov_holds` |
 
 `Walls.lean` 自体は消す (薄い re-export も残さない方針 = Mathlib に re-export hub の慣習なし)。
-分割後の各ファイルが依然 >1200 なら Phase 3 で更分割。`import ...AWGN.Walls` を持つ 4 importer は
-分割後の必要ファイル群への import に展開する。
+`ConverseMIChainRule` は ~2107 行と大きいが、`converseJointInline` 中心の private 群が**不可分**ゆえ
+据え置き (更分割には de-private 化が必要 = 別 Phase 候補)。`import ...AWGN.Walls` を持つ 3 importer
+(ConverseDischarge / ContChannelMIDecomp / AchievabilityDischarge) は分割後の必要ファイル群への import に展開。
 
 ### Phase 3 ターゲット — 残り 1200+ 行ファイル (14 本、Walls 除く 13 本)
 

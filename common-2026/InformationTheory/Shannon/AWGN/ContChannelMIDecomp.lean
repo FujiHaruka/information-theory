@@ -3,7 +3,9 @@ import InformationTheory.Shannon.ChannelCoding.MIDecomp
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.AWGN.MutualInfoDecomposition
 import InformationTheory.Shannon.AWGN.BindConvolution
-import InformationTheory.Shannon.AWGN.Walls
+import InformationTheory.Shannon.AWGN.KLCapacityAndAEP
+import InformationTheory.Shannon.AWGN.PerCodewordPowerConstraint
+import InformationTheory.Shannon.AWGN.ConverseMIChainRule
 import Mathlib.InformationTheory.KullbackLeibler.Basic
 import Mathlib.Probability.Kernel.Composition.RadonNikodym
 import Mathlib.Probability.Kernel.Composition.IntegralCompProd

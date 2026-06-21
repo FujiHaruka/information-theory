@@ -127,7 +127,9 @@ import InformationTheory.Shannon.AWGN.Main
 import InformationTheory.Shannon.AWGN.ChannelMeasurability
 import InformationTheory.Shannon.AWGN.AchievabilityDischarge
 import InformationTheory.Shannon.AWGN.ConverseDischarge
-import InformationTheory.Shannon.AWGN.Walls
+import InformationTheory.Shannon.AWGN.KLCapacityAndAEP
+import InformationTheory.Shannon.AWGN.PerCodewordPowerConstraint
+import InformationTheory.Shannon.AWGN.ConverseMIChainRule
 import InformationTheory.Shannon.AWGN.AchievabilityAEP
 import InformationTheory.Shannon.ParallelGaussian.Basic
 import InformationTheory.Shannon.EntropyPower.Ext

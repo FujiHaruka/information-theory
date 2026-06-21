@@ -1,6 +1,8 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.AWGN.Basic
-import InformationTheory.Shannon.AWGN.Walls
+import InformationTheory.Shannon.AWGN.KLCapacityAndAEP
+import InformationTheory.Shannon.AWGN.PerCodewordPowerConstraint
+import InformationTheory.Shannon.AWGN.ConverseMIChainRule
 import InformationTheory.Shannon.Converse
 import InformationTheory.Shannon.CondMutualInfo
 import InformationTheory.Shannon.DifferentialEntropy
