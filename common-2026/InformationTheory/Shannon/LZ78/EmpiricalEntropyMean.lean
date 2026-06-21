@@ -123,6 +123,114 @@ theorem sum_geom_shift_le_inv
   rw [tsum_geometric_of_lt_one hθ0.le hθ1] at hle
   exact hle
 
+theorem empirical_entropy_le_log_mean_of_lt
+    (L : Finset ℕ) (cf : ℕ → ℝ)
+    (hpos : ∀ l ∈ L, 0 < cf l)
+    (hl1 : ∀ l ∈ L, 1 ≤ l)
+    (hC : 0 < ∑ l ∈ L, cf l)
+    (hCN_lt : (∑ l ∈ L, cf l) < ∑ l ∈ L, (l : ℝ) * cf l)
+    (hLHS : (∑ l ∈ L, cf l * Real.log ((∑ l ∈ L, cf l) / cf l))
+      = (∑ l ∈ L, cf l) * Real.log (∑ l ∈ L, cf l)
+        - ∑ l ∈ L, cf l * Real.log (cf l)) :
+    (∑ l ∈ L, cf l * Real.log ((∑ l ∈ L, cf l) / cf l))
+      ≤ (∑ l ∈ L, cf l) * Real.log ((∑ l ∈ L, (l : ℝ) * cf l) / (∑ l ∈ L, cf l))
+        + (∑ l ∈ L, cf l) := by
+  classical
+  set C : ℝ := ∑ l ∈ L, cf l with hC_def
+  set N : ℝ := ∑ l ∈ L, (l : ℝ) * cf l with hN_def
+  have hC_pos : 0 < C := hC
+  have hC_ne : C ≠ 0 := hC_pos.ne'
+  -- Main case `C < N`: geometric reference at mean `N/C`.
+  have hN_pos : 0 < N := lt_trans hC_pos hCN_lt
+  have hN_ne : N ≠ 0 := hN_pos.ne'
+  set θ : ℝ := 1 - C / N with hθ_def
+  have hCN_div : C / N < 1 := (div_lt_one hN_pos).mpr hCN_lt
+  have hθ0 : 0 < θ := by rw [hθ_def]; linarith
+  have hθ1 : θ < 1 := by
+    rw [hθ_def]; have : 0 < C / N := div_pos hC_pos hN_pos; linarith
+  have hθ_ne : θ ≠ 0 := hθ0.ne'
+  have h1subθ : 1 - θ = C / N := by rw [hθ_def]; ring
+  -- Apply the log-sum inequality with `a = cf`, `b l = θ^(l-1)`.
+  have hb_pos : ∀ l ∈ L, 0 < θ ^ (l - 1) := fun l _ => by positivity
+  have hlogsum := logSumInequality L cf (fun l => θ ^ (l - 1))
+    (fun l hl => (hpos l hl).le) hb_pos
+  -- `∑ a = C`.
+  rw [← hC_def] at hlogsum
+  -- Rewrite the RHS of `hlogsum`:
+  -- `∑ cf l · log (cf l / θ^(l-1)) = ∑ cf l log cf l − (N − C) · log θ`.
+  have hrhs : (∑ l ∈ L, cf l * Real.log (cf l / θ ^ (l - 1)))
+      = (∑ l ∈ L, cf l * Real.log (cf l)) - (N - C) * Real.log θ := by
+    have hstep : ∀ l ∈ L, cf l * Real.log (cf l / θ ^ (l - 1))
+        = cf l * Real.log (cf l) - ((l : ℝ) - 1) * cf l * Real.log θ := by
+      intro l hl
+      have hcfl : cf l ≠ 0 := (hpos l hl).ne'
+      have hpow : (θ ^ (l - 1)) ≠ 0 := (hb_pos l hl).ne'
+      rw [Real.log_div hcfl hpow, Real.log_pow]
+      have hl1' : 1 ≤ l := hl1 l hl
+      have hcast : ((l - 1 : ℕ) : ℝ) = (l : ℝ) - 1 := by
+        rw [Nat.cast_sub hl1']; norm_num
+      rw [hcast]; ring
+    rw [Finset.sum_congr rfl hstep, Finset.sum_sub_distrib]
+    congr 1
+    -- `∑ (l − 1) · cf l · log θ = (N − C) · log θ`.
+    rw [← Finset.sum_mul]
+    congr 1
+    rw [hN_def, hC_def, ← Finset.sum_sub_distrib]
+    refine Finset.sum_congr rfl (fun l hl => ?_)
+    ring
+  rw [hrhs] at hlogsum
+  -- LHS of `hlogsum`: `C · log (C / ∑θ^(l-1))`.
+  -- `L` is nonempty since `C = ∑ cf > 0`.
+  have hL_ne : L.Nonempty := by
+    rcases L.eq_empty_or_nonempty with h | h
+    · rw [hC_def, h] at hC_pos; simp at hC_pos
+    · exact h
+  set S : ℝ := ∑ l ∈ L, θ ^ (l - 1) with hS_def
+  have hS_pos : 0 < S := Finset.sum_pos hb_pos hL_ne
+  have hS_ne : S ≠ 0 := hS_pos.ne'
+  -- `hlogsum : C · log (C / S) ≤ ∑ cf l log cf l − (N − C) · log θ`.
+  -- Move to the target LHS via `hLHS` and `log (C/S) = log C − log S`.
+  rw [Real.log_div hC_ne hS_ne] at hlogsum
+  -- `C·(log C − log S) ≤ ∑ cf log cf − (N−C)·log θ`
+  -- ⟹ target_LHS = C·log C − ∑ cf log cf ≤ C·log S − (N−C)·log θ.
+  have hchain : (∑ l ∈ L, cf l * Real.log (C / cf l))
+      ≤ C * Real.log S - (N - C) * Real.log θ := by
+    rw [hLHS]; nlinarith [hlogsum]
+  -- Bound `C · log S ≤ C · log (N/C)`.
+  have hgeom := sum_geom_shift_le_inv L θ hθ0 hθ1 hl1
+  rw [← hS_def] at hgeom
+  have hSlog : C * Real.log S ≤ C * Real.log (N / C) := by
+    have hmono : Real.log S ≤ Real.log ((1 - θ)⁻¹) :=
+      Real.log_le_log hS_pos hgeom
+    have hinv : Real.log ((1 - θ)⁻¹) = Real.log (N / C) := by
+      rw [Real.log_inv, h1subθ]
+      rw [Real.log_div hC_ne hN_ne, Real.log_div hN_ne hC_ne]
+      ring
+    rw [hinv] at hmono
+    exact mul_le_mul_of_nonneg_left hmono hC_pos.le
+  -- Bound `−(N−C)·log θ ≤ C` via `−log θ ≤ 1/θ − 1 = C/(N−C)`.
+  have hNCpos : 0 < N - C := by linarith
+  have hlogθ : -Real.log θ ≤ C / (N - C) := by
+    have hle : Real.log (1 / θ) ≤ 1 / θ - 1 :=
+      Real.log_le_sub_one_of_pos (by positivity)
+    rw [Real.log_div one_ne_zero hθ_ne, Real.log_one, zero_sub] at hle
+    -- `1/θ − 1 = (1−θ)/θ = (C/N)/((N−C)/N) = C/(N−C)`.
+    have hθval : θ = (N - C) / N := by rw [hθ_def]; field_simp
+    have hval : (1 : ℝ) / θ - 1 = C / (N - C) := by
+      rw [hθval, eq_div_iff hNCpos.ne']
+      field_simp
+      ring
+    rw [hval] at hle
+    exact hle
+  have hθbound : -(N - C) * Real.log θ ≤ C := by
+    have := mul_le_mul_of_nonneg_left hlogθ hNCpos.le
+    rw [mul_div_cancel₀ _ hNCpos.ne'] at this
+    nlinarith [this]
+  -- Combine.
+  calc (∑ l ∈ L, cf l * Real.log (C / cf l))
+      ≤ C * Real.log S - (N - C) * Real.log θ := hchain
+    _ ≤ C * Real.log (N / C) + C := by nlinarith [hSlog, hθbound]
+
 /-- **Empirical-entropy / mean bound** (LZ78 overhead crux).
 
 For a length profile `cf : ℕ → ℝ` supported on a finite set `L` of positive
@@ -208,95 +316,8 @@ theorem empirical_entropy_le_log_mean
       exact hC_pos.le
     -- align with the set-folded RHS (still over `{1}` after `rw [hLeq]`).
     simpa [hLeq, Finset.sum_singleton, hcf1] using this
-  · -- Main case `C < N`: geometric reference at mean `N/C`.
-    have hN_pos : 0 < N := lt_trans hC_pos hCN_lt
-    have hN_ne : N ≠ 0 := hN_pos.ne'
-    set θ : ℝ := 1 - C / N with hθ_def
-    have hCN_div : C / N < 1 := (div_lt_one hN_pos).mpr hCN_lt
-    have hθ0 : 0 < θ := by rw [hθ_def]; linarith
-    have hθ1 : θ < 1 := by
-      rw [hθ_def]; have : 0 < C / N := div_pos hC_pos hN_pos; linarith
-    have hθ_ne : θ ≠ 0 := hθ0.ne'
-    have h1subθ : 1 - θ = C / N := by rw [hθ_def]; ring
-    -- Apply the log-sum inequality with `a = cf`, `b l = θ^(l-1)`.
-    have hb_pos : ∀ l ∈ L, 0 < θ ^ (l - 1) := fun l _ => by positivity
-    have hlogsum := logSumInequality L cf (fun l => θ ^ (l - 1))
-      (fun l hl => (hpos l hl).le) hb_pos
-    -- `∑ a = C`.
-    rw [← hC_def] at hlogsum
-    -- Rewrite the RHS of `hlogsum`:
-    -- `∑ cf l · log (cf l / θ^(l-1)) = ∑ cf l log cf l − (N − C) · log θ`.
-    have hrhs : (∑ l ∈ L, cf l * Real.log (cf l / θ ^ (l - 1)))
-        = (∑ l ∈ L, cf l * Real.log (cf l)) - (N - C) * Real.log θ := by
-      have hstep : ∀ l ∈ L, cf l * Real.log (cf l / θ ^ (l - 1))
-          = cf l * Real.log (cf l) - ((l : ℝ) - 1) * cf l * Real.log θ := by
-        intro l hl
-        have hcfl : cf l ≠ 0 := (hpos l hl).ne'
-        have hpow : (θ ^ (l - 1)) ≠ 0 := (hb_pos l hl).ne'
-        rw [Real.log_div hcfl hpow, Real.log_pow]
-        have hl1' : 1 ≤ l := hl1 l hl
-        have hcast : ((l - 1 : ℕ) : ℝ) = (l : ℝ) - 1 := by
-          rw [Nat.cast_sub hl1']; norm_num
-        rw [hcast]; ring
-      rw [Finset.sum_congr rfl hstep, Finset.sum_sub_distrib]
-      congr 1
-      -- `∑ (l − 1) · cf l · log θ = (N − C) · log θ`.
-      rw [← Finset.sum_mul]
-      congr 1
-      rw [hN_def, hC_def, ← Finset.sum_sub_distrib]
-      refine Finset.sum_congr rfl (fun l hl => ?_)
-      ring
-    rw [hrhs] at hlogsum
-    -- LHS of `hlogsum`: `C · log (C / ∑θ^(l-1))`.
-    -- `L` is nonempty since `C = ∑ cf > 0`.
-    have hL_ne : L.Nonempty := by
-      rcases L.eq_empty_or_nonempty with h | h
-      · rw [hC_def, h] at hC_pos; simp at hC_pos
-      · exact h
-    set S : ℝ := ∑ l ∈ L, θ ^ (l - 1) with hS_def
-    have hS_pos : 0 < S := Finset.sum_pos hb_pos hL_ne
-    have hS_ne : S ≠ 0 := hS_pos.ne'
-    -- `hlogsum : C · log (C / S) ≤ ∑ cf l log cf l − (N − C) · log θ`.
-    -- Move to the target LHS via `hLHS` and `log (C/S) = log C − log S`.
-    rw [Real.log_div hC_ne hS_ne] at hlogsum
-    -- `C·(log C − log S) ≤ ∑ cf log cf − (N−C)·log θ`
-    -- ⟹ target_LHS = C·log C − ∑ cf log cf ≤ C·log S − (N−C)·log θ.
-    have hchain : (∑ l ∈ L, cf l * Real.log (C / cf l))
-        ≤ C * Real.log S - (N - C) * Real.log θ := by
-      rw [hLHS]; nlinarith [hlogsum]
-    -- Bound `C · log S ≤ C · log (N/C)`.
-    have hgeom := sum_geom_shift_le_inv L θ hθ0 hθ1 hl1
-    rw [← hS_def] at hgeom
-    have hSlog : C * Real.log S ≤ C * Real.log (N / C) := by
-      have hmono : Real.log S ≤ Real.log ((1 - θ)⁻¹) :=
-        Real.log_le_log hS_pos hgeom
-      have hinv : Real.log ((1 - θ)⁻¹) = Real.log (N / C) := by
-        rw [Real.log_inv, h1subθ]
-        rw [Real.log_div hC_ne hN_ne, Real.log_div hN_ne hC_ne]
-        ring
-      rw [hinv] at hmono
-      exact mul_le_mul_of_nonneg_left hmono hC_pos.le
-    -- Bound `−(N−C)·log θ ≤ C` via `−log θ ≤ 1/θ − 1 = C/(N−C)`.
-    have hNCpos : 0 < N - C := by linarith
-    have hlogθ : -Real.log θ ≤ C / (N - C) := by
-      have hle : Real.log (1 / θ) ≤ 1 / θ - 1 :=
-        Real.log_le_sub_one_of_pos (by positivity)
-      rw [Real.log_div one_ne_zero hθ_ne, Real.log_one, zero_sub] at hle
-      -- `1/θ − 1 = (1−θ)/θ = (C/N)/((N−C)/N) = C/(N−C)`.
-      have hθval : θ = (N - C) / N := by rw [hθ_def]; field_simp
-      have hval : (1 : ℝ) / θ - 1 = C / (N - C) := by
-        rw [hθval, eq_div_iff hNCpos.ne']
-        field_simp
-        ring
-      rw [hval] at hle
-      exact hle
-    have hθbound : -(N - C) * Real.log θ ≤ C := by
-      have := mul_le_mul_of_nonneg_left hlogθ hNCpos.le
-      rw [mul_div_cancel₀ _ hNCpos.ne'] at this
-      nlinarith [this]
-    -- Combine.
-    calc (∑ l ∈ L, cf l * Real.log (C / cf l))
-        ≤ C * Real.log S - (N - C) * Real.log θ := hchain
-      _ ≤ C * Real.log (N / C) + C := by nlinarith [hSlog, hθbound]
+  · -- Main case `C < N`: geometric reference at mean `N/C` (extracted helper).
+    rw [hC_def, hN_def]
+    exact empirical_entropy_le_log_mean_of_lt L cf hpos hl1 hC hCN_lt hLHS
 
 end InformationTheory.Shannon

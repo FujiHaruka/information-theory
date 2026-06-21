@@ -41,6 +41,79 @@ theorem measurable_pmfLogCondMarkov
     exact (measurable_pmfLogCond μ p k).comp (p.measurable_iterate (i - k))
 
 omit [DecidableEq α] in
+theorem pmfLogCondMarkov_sum_div_eq_add_birkhoffAverageReal
+    (μ : Measure Ω) [IsFiniteMeasure μ] (p : StationaryProcess μ α) (k : ℕ) (ω : Ω)
+    {n : ℕ} (hkn : k ≤ n) :
+    (∑ i ∈ Finset.range (n + 1), pmfLogCondMarkov μ p k i ω) / (n + 1 : ℝ)
+      = ((∑ i ∈ Finset.range (k + 1), pmfLogCond μ p i ω)
+            - pmfLogCond μ p k ω) / (n + 1 : ℝ)
+        + ((n - k + 1 : ℕ) : ℝ) / (n + 1 : ℝ)
+          * birkhoffAverageReal p.T (pmfLogCond μ p k) (n - k) ω := by
+  -- Split Finset.range (n+1) = range (k+1) ∪ Ico (k+1) (n+1).
+  have h_sum_split :
+      ∑ i ∈ Finset.range (n + 1), pmfLogCondMarkov μ p k i ω
+        = (∑ i ∈ Finset.range (k + 1), pmfLogCondMarkov μ p k i ω)
+          + ∑ i ∈ Finset.Ico (k + 1) (n + 1), pmfLogCondMarkov μ p k i ω := by
+    rw [← Finset.sum_range_add_sum_Ico _ (Nat.succ_le_succ hkn)]
+  -- First piece: i ≤ k ⇒ pmfLogCondMarkov = pmfLogCond μ p i.
+  have h_first :
+      ∑ i ∈ Finset.range (k + 1), pmfLogCondMarkov μ p k i ω
+        = ∑ i ∈ Finset.range (k + 1), pmfLogCond μ p i ω := by
+    refine Finset.sum_congr rfl ?_
+    intro i hi
+    have hi_le : i ≤ k := Nat.lt_succ_iff.mp (Finset.mem_range.mp hi)
+    show (if i ≤ k then pmfLogCond μ p i ω
+      else pmfLogCond μ p k (p.T^[i - k] ω))
+        = pmfLogCond μ p i ω
+    simp [hi_le]
+  -- Second piece: reindex j = i - (k+1), so i = j + k + 1 and j ∈ range (n-k).
+  have h_second :
+      ∑ i ∈ Finset.Ico (k + 1) (n + 1), pmfLogCondMarkov μ p k i ω
+        = ∑ j ∈ Finset.range (n - k), pmfLogCond μ p k (p.T^[j + 1] ω) := by
+    -- Apply Finset.sum_Ico_eq_sum_range.
+    rw [Finset.sum_Ico_eq_sum_range]
+    have h_len : n + 1 - (k + 1) = n - k := by omega
+    rw [h_len]
+    refine Finset.sum_congr rfl ?_
+    intro j _
+    -- i = (k+1) + j, so i ≤ k is false (since i ≥ k+1), and i - k = j + 1.
+    show (if (k + 1) + j ≤ k then pmfLogCond μ p ((k+1)+j) ω
+      else pmfLogCond μ p k (p.T^[(k+1)+j - k] ω))
+        = pmfLogCond μ p k (p.T^[j + 1] ω)
+    have h_not_le : ¬ (k + 1 + j ≤ k) := by omega
+    have h_sub : (k + 1 + j) - k = j + 1 := by omega
+    simp [h_not_le, h_sub]
+  -- Now: second piece = ∑_{j=0}^{n-k-1} f(T^[j+1] ω)
+  --     = (∑_{j=0}^{n-k} f(T^[j] ω)) - f(T^[0] ω)
+  --     = (n-k+1) · birkhoffAverageReal T f (n-k) ω - f ω.
+  have h_second_eq :
+      ∑ j ∈ Finset.range (n - k), pmfLogCond μ p k (p.T^[j + 1] ω)
+        = ((n - k + 1 : ℕ) : ℝ) * birkhoffAverageReal p.T (pmfLogCond μ p k) (n - k) ω
+            - pmfLogCond μ p k ω := by
+    have h_partial : (∑ j ∈ Finset.range (n - k + 1), pmfLogCond μ p k (p.T^[j] ω))
+        = ((n - k + 1 : ℕ) : ℝ)
+            * birkhoffAverageReal p.T (pmfLogCond μ p k) (n - k) ω := by
+      unfold birkhoffAverageReal
+      have h_ne : ((n - k : ℕ) : ℝ) + 1 ≠ 0 := by
+        have : (0 : ℝ) ≤ ((n - k : ℕ) : ℝ) := Nat.cast_nonneg _
+        linarith
+      have h_cast : ((n - k + 1 : ℕ) : ℝ) = ((n - k : ℕ) : ℝ) + 1 := by push_cast; ring
+      rw [h_cast]
+      field_simp
+    have h_shift : (∑ j ∈ Finset.range (n - k + 1), pmfLogCond μ p k (p.T^[j] ω))
+        = pmfLogCond μ p k (p.T^[0] ω)
+          + ∑ j ∈ Finset.range (n - k), pmfLogCond μ p k (p.T^[j + 1] ω) := by
+      rw [Finset.sum_range_succ']
+      ring
+    have h_T0 : p.T^[0] ω = ω := by rfl
+    rw [h_T0] at h_shift
+    linarith [h_partial, h_shift]
+  rw [h_sum_split, h_first, h_second, h_second_eq]
+  -- (C + (... - f ω)) / (n+1) = (C - f ω)/(n+1) + (n-k+1)/(n+1) * avg
+  field_simp
+  ring
+
+omit [DecidableEq α] in
 /-- Cesàro average of the `k`-Markov approximation converges a.s. to
 `conditionalEntropyTail μ p k` (Birkhoff applied to `pmfLogCond μ p k`). -/
 theorem birkhoffAverage_pmfLogCondMarkov_tendsto
@@ -74,70 +147,8 @@ theorem birkhoffAverage_pmfLogCondMarkov_tendsto
           + ((n - k + 1 : ℕ) : ℝ) / (n + 1 : ℝ)
             * birkhoffAverageReal p.T f (n - k) ω := by
     intro n hkn
-    -- Split Finset.range (n+1) = range (k+1) ∪ Ico (k+1) (n+1).
-    have h_sum_split :
-        ∑ i ∈ Finset.range (n + 1),
-          pmfLogCondMarkov μ p.toStationaryProcess k i ω
-          = (∑ i ∈ Finset.range (k + 1),
-              pmfLogCondMarkov μ p.toStationaryProcess k i ω)
-            + ∑ i ∈ Finset.Ico (k + 1) (n + 1),
-                pmfLogCondMarkov μ p.toStationaryProcess k i ω := by
-      rw [← Finset.sum_range_add_sum_Ico _ (Nat.succ_le_succ hkn)]
-    -- First piece: i ≤ k ⇒ pmfLogCondMarkov = pmfLogCond μ p i.
-    have h_first :
-        ∑ i ∈ Finset.range (k + 1),
-            pmfLogCondMarkov μ p.toStationaryProcess k i ω = C := by
-      refine Finset.sum_congr rfl ?_
-      intro i hi
-      have hi_le : i ≤ k := Nat.lt_succ_iff.mp (Finset.mem_range.mp hi)
-      show (if i ≤ k then pmfLogCond μ p.toStationaryProcess i ω
-        else pmfLogCond μ p.toStationaryProcess k (p.T^[i - k] ω))
-          = pmfLogCond μ p.toStationaryProcess i ω
-      simp [hi_le]
-    -- Second piece: reindex j = i - (k+1), so i = j + k + 1 and j ∈ range (n-k).
-    have h_second :
-        ∑ i ∈ Finset.Ico (k + 1) (n + 1),
-            pmfLogCondMarkov μ p.toStationaryProcess k i ω
-          = ∑ j ∈ Finset.range (n - k), f (p.T^[j + 1] ω) := by
-      -- Apply Finset.sum_Ico_eq_sum_range.
-      rw [Finset.sum_Ico_eq_sum_range]
-      have h_len : n + 1 - (k + 1) = n - k := by omega
-      rw [h_len]
-      refine Finset.sum_congr rfl ?_
-      intro j _
-      -- i = (k+1) + j, so i ≤ k is false (since i ≥ k+1), and i - k = j + 1.
-      show (if (k + 1) + j ≤ k then pmfLogCond μ p.toStationaryProcess ((k+1)+j) ω
-        else pmfLogCond μ p.toStationaryProcess k (p.T^[(k+1)+j - k] ω))
-          = f (p.T^[j + 1] ω)
-      have h_not_le : ¬ (k + 1 + j ≤ k) := by omega
-      have h_sub : (k + 1 + j) - k = j + 1 := by omega
-      simp [h_not_le, h_sub, hf_def]
-    -- Now: second piece = ∑_{j=0}^{n-k-1} f(T^[j+1] ω)
-    --     = (∑_{j=0}^{n-k} f(T^[j] ω)) - f(T^[0] ω)
-    --     = (n-k+1) · birkhoffAverageReal T f (n-k) ω - f ω.
-    have h_second_eq :
-        ∑ j ∈ Finset.range (n - k), f (p.T^[j + 1] ω)
-          = ((n - k + 1 : ℕ) : ℝ) * birkhoffAverageReal p.T f (n - k) ω - f ω := by
-      have h_partial : (∑ j ∈ Finset.range (n - k + 1), f (p.T^[j] ω))
-          = ((n - k + 1 : ℕ) : ℝ) * birkhoffAverageReal p.T f (n - k) ω := by
-        unfold birkhoffAverageReal
-        have h_ne : ((n - k : ℕ) : ℝ) + 1 ≠ 0 := by
-          have : (0 : ℝ) ≤ ((n - k : ℕ) : ℝ) := Nat.cast_nonneg _
-          linarith
-        have h_cast : ((n - k + 1 : ℕ) : ℝ) = ((n - k : ℕ) : ℝ) + 1 := by push_cast; ring
-        rw [h_cast]
-        field_simp
-      have h_shift : (∑ j ∈ Finset.range (n - k + 1), f (p.T^[j] ω))
-          = f (p.T^[0] ω) + ∑ j ∈ Finset.range (n - k), f (p.T^[j + 1] ω) := by
-        rw [Finset.sum_range_succ']
-        ring
-      have h_T0 : p.T^[0] ω = ω := by rfl
-      rw [h_T0] at h_shift
-      linarith [h_partial, h_shift]
-    rw [h_sum_split, h_first, h_second, h_second_eq]
-    -- (C + (... - f ω)) / (n+1) = (C - f ω)/(n+1) + (n-k+1)/(n+1) * avg
-    field_simp
-    ring
+    rw [hC_def, hf_def]
+    exact pmfLogCondMarkov_sum_div_eq_add_birkhoffAverageReal μ p.toStationaryProcess k ω hkn
   -- Now establish three convergence facts.
   -- (a) (C - f ω) / (n+1) → 0.
   have h_inv : Filter.Tendsto
