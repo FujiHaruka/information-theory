@@ -1,10 +1,10 @@
-import InformationTheory.Shannon.Hoeffding.LagrangeIVTBody
+import InformationTheory.Shannon.Hoeffding.Lagrange
 import InformationTheory.Meta.EntryPoint
 
 /-!
 # Hoeffding I-projection minimizer attainment — `IsHoeffdingTiltMinimal` discharge
 
-`HoeffdingLagrangeIVTBody.lean` discharged the `mem` half of
+`HoeffdingLagrange.lean` discharged the `mem` half of
 `IsHoeffdingLagrangeHyp` from the IVT and reduced the `realises` half to the
 strictly-primitive predicate
 
@@ -68,9 +68,9 @@ open Set Real InformationTheory Filter
 open InformationTheory.Shannon.Chernoff
 open InformationTheory.Shannon.CsiszarProjection
 open InformationTheory.Shannon InformationTheory.Shannon.HoeffdingTradeoff
-open InformationTheory.Shannon.HoeffdingInteriorBody
-open InformationTheory.Shannon.HoeffdingInteriorGradientBody
-open InformationTheory.Shannon.HoeffdingLagrangeIVTBody
+open InformationTheory.Shannon.HoeffdingInteriorMinimizer
+open InformationTheory.Shannon.HoeffdingTilt
+open InformationTheory.Shannon.HoeffdingLagrange
 open scoped BigOperators Topology
 
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]

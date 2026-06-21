@@ -5,7 +5,7 @@ import InformationTheory.Shannon.KLDivContinuous
 import InformationTheory.Shannon.CsiszarProjection
 import InformationTheory.Shannon.Chernoff.Basic
 import InformationTheory.Shannon.Hoeffding.Tradeoff
-import InformationTheory.Shannon.Hoeffding.SandwichDischarge
+import InformationTheory.Shannon.Hoeffding.MinimizerExistence
 
 /-!
 # Hoeffding tradeoff — exponential-level redefinition
@@ -29,7 +29,7 @@ open InformationTheory.Shannon
 open InformationTheory.Shannon.Chernoff
 open InformationTheory.Shannon.CsiszarProjection
 open InformationTheory.Shannon.HoeffdingTradeoff
-open InformationTheory.Shannon.HoeffdingSandwichDischarge
+open InformationTheory.Shannon.HoeffdingMinimizerExistence
 open scoped BigOperators Topology ENNReal
 
 set_option linter.unusedSectionVars false

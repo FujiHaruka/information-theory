@@ -1,10 +1,10 @@
-import InformationTheory.Shannon.Hoeffding.SandwichBody
+import InformationTheory.Shannon.Hoeffding.BoundaryMinimizer
 import InformationTheory.Meta.EntryPoint
 
 /-!
 # Hoeffding tradeoff — interior body extension
 
-`HoeffdingSandwichBody` discharges the boundary cases of the
+`HoeffdingBoundaryMinimizer` discharges the boundary cases of the
 `IsHoeffdingMinimizerFullSupport` predicate:
 
 * `α = 0` — the constraint set collapses to `{P₁}` and full support is `hP₁_pos`.
@@ -41,7 +41,7 @@ for some `λ* ∈ (0, 1)` chosen so that `klDivPmf Qstar P₁ = α`.
 
 Both interior pieces are bundled into `Prop`-valued predicates so callers can either supply
 a direct full-support proof for a specific `Qstar`, or chain the predicates into
-`IsHoeffdingMinimizerFullSupport`. `HoeffdingSandwichBody` is left unmodified; the predicates
+`IsHoeffdingMinimizerFullSupport`. `HoeffdingBoundaryMinimizer` is left unmodified; the predicates
 plug into its `IsHoeffdingMinimizerFullSupport` constructor. The full `HasDerivAt`
 singularity proof and the Lagrangian existence proof are deferred to a follow-up; this file
 fixes their interfaces. The production path is the exponential-level `hoeffding_tradeoff_exp`
@@ -49,7 +49,7 @@ fixes their interfaces. The production path is the exponential-level `hoeffding_
 Pythagorean argument.
 -/
 
-namespace InformationTheory.Shannon.HoeffdingInteriorBody
+namespace InformationTheory.Shannon.HoeffdingInteriorMinimizer
 
 set_option linter.unusedSectionVars false
 
@@ -58,7 +58,7 @@ open InformationTheory.Shannon.Chernoff
 open InformationTheory.Shannon.CsiszarProjection
 open InformationTheory.Shannon InformationTheory.Shannon.HoeffdingTradeoff
 open InformationTheory.Shannon.HoeffdingSandwich
-open InformationTheory.Shannon.HoeffdingSandwichBody
+open InformationTheory.Shannon.HoeffdingBoundaryMinimizer
 open scoped BigOperators Topology
 
 variable {α : Type*} [Fintype α] [Nonempty α]
@@ -122,7 +122,7 @@ lemma IsHoeffdingInteriorMinimizer.mk'
 /-! ## Bridge: interior predicate ⇒ full-support predicate -/
 
 /-- From `IsHoeffdingInteriorMinimizer`, the `IsHoeffdingMinimizerFullSupport` predicate of
-`HoeffdingSandwichBody` holds directly. This is the principal hand-off from the interior layer
+`HoeffdingBoundaryMinimizer` holds directly. This is the principal hand-off from the interior layer
 to the sandwich-body layer. -/
 @[entry_point]
 lemma isHoeffdingMinimizerFullSupport_of_interior
@@ -217,4 +217,4 @@ theorem hoeffding_minimizer_ge_at_interior
     (isHoeffdingMinimizerFullSupport_of_interior hQs_interior)
     hQs_interior.realises hP_mem hP_pos
 
-end InformationTheory.Shannon.HoeffdingInteriorBody
+end InformationTheory.Shannon.HoeffdingInteriorMinimizer

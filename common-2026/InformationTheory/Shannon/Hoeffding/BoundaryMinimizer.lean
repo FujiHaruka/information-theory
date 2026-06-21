@@ -8,7 +8,7 @@ import InformationTheory.Meta.EntryPoint
 
 This file publishes the **`IsHoeffdingMinimizerFullSupport`** predicate plus the
 **boundary full-support discharges** (`α = 0` and `α ≥ klDivPmf P₂ P₁`) used by
-the constructive minimizer of `HoeffdingSandwichDischarge.lean` and the
+the constructive minimizer of `HoeffdingMinimizerExistence.lean` and the
 exponential-level closure `hoeffding_tradeoff_exp` (`HoeffdingTradeoffExp.lean`).
 
 The fixed-`alpha` rate targets `D(P₁‖P₂)`, not the Hoeffding tradeoff curve
@@ -58,7 +58,7 @@ proof or from the boundary discharges above. The boundary discharges assume
 needs `klDivPmf_eq_zero_iff_pmf` from `MaxEntropyConstrained.lean`.
 -/
 
-namespace InformationTheory.Shannon.HoeffdingSandwichBody
+namespace InformationTheory.Shannon.HoeffdingBoundaryMinimizer
 
 set_option linter.unusedSectionVars false
 
@@ -209,4 +209,4 @@ lemma hoeffding_minimizer_ge_via_predicate
   exact hoeffding_minimizer_ge P₁ P₂ hP₁_pos hP₂_pos hP₁_sum hP₂_sum alpha h_alpha_nn
     hQs_mem hQs_full.pos hQs_min hP_mem hP_pos
 
-end InformationTheory.Shannon.HoeffdingSandwichBody
+end InformationTheory.Shannon.HoeffdingBoundaryMinimizer

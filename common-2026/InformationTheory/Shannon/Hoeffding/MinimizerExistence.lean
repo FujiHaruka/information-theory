@@ -1,9 +1,9 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.Hoeffding.Tradeoff
 import InformationTheory.Shannon.Hoeffding.Sandwich
-import InformationTheory.Shannon.Hoeffding.SandwichBody
-import InformationTheory.Draft.Shannon.HoeffdingInteriorBody
-import InformationTheory.Shannon.Hoeffding.InteriorGradientBody
+import InformationTheory.Shannon.Hoeffding.BoundaryMinimizer
+import InformationTheory.Shannon.Hoeffding.InteriorMinimizer
+import InformationTheory.Shannon.Hoeffding.Tilt
 import InformationTheory.Shannon.Hoeffding.MinimizerAttainment
 import InformationTheory.Shannon.Chernoff.Basic
 import InformationTheory.Shannon.CsiszarProjection
@@ -31,7 +31,7 @@ All three cases are constructive, so `Qstar` full support is constructive — th
 abstract log-singularity gradient argument is avoided.
 -/
 
-namespace InformationTheory.Shannon.HoeffdingSandwichDischarge
+namespace InformationTheory.Shannon.HoeffdingMinimizerExistence
 
 set_option linter.unusedSectionVars false
 
@@ -39,9 +39,9 @@ open Set Real InformationTheory Filter MeasureTheory
 open InformationTheory.Shannon InformationTheory.Shannon.Chernoff
 open InformationTheory.Shannon.CsiszarProjection
 open InformationTheory.Shannon.HoeffdingTradeoff
-open InformationTheory.Shannon.HoeffdingInteriorGradientBody
+open InformationTheory.Shannon.HoeffdingTilt
 open InformationTheory.Shannon.HoeffdingMinimizerAttainment
-open InformationTheory.Shannon.HoeffdingSandwichBody
+open InformationTheory.Shannon.HoeffdingBoundaryMinimizer
 open scoped BigOperators Topology ENNReal
 
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
@@ -174,4 +174,4 @@ declarations — the constructive minimizer `exists_hoeffding_minimizer_full_sup
 (consumed by `HoeffdingTradeoffExp.lean`) and the boundary achievability
 `hoeffding_tradeoff_achievability_at_boundary` — are both genuine. -/
 
-end InformationTheory.Shannon.HoeffdingSandwichDischarge
+end InformationTheory.Shannon.HoeffdingMinimizerExistence

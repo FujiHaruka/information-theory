@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.Hoeffding.InteriorGradientBody
+import InformationTheory.Shannon.Hoeffding.Tilt
 import InformationTheory.Meta.EntryPoint
 import Mathlib.Topology.Order.IntermediateValue
 
@@ -6,7 +6,7 @@ import Mathlib.Topology.Order.IntermediateValue
 # Hoeffding tradeoff — Lagrange constraint-match via IVT
 
 The interior Csiszár characterization `IsHoeffdingLagrangeHyp`
-(`HoeffdingInteriorGradientBody.lean`) is a `structure` with two fields:
+(`HoeffdingTilt.lean`) is a `structure` with two fields:
 
 * `mem` — the tilt at `lam` lies in the constraint set `K(α)`
   (`klDivPmf (tilt) P₁ ≤ alpha`);
@@ -14,7 +14,7 @@ The interior Csiszár characterization `IsHoeffdingLagrangeHyp`
   (`hoeffdingE2 = klDivPmf (tilt) P₂`).
 
 The companion gradient sub-predicate `IsKLGradientHyp` is discharged in
-`HoeffdingInteriorGradientBody.lean` (`isKLGradientHyp_tilt`). This file
+`HoeffdingTilt.lean` (`isKLGradientHyp_tilt`). This file
 discharges the **`mem`** half — the *constraint-match* — from the
 **Intermediate Value Theorem**, and reduces the remaining **`realises`** half to
 a strictly-more-primitive *minimality* predicate `IsHoeffdingTiltMinimal` (the
@@ -68,7 +68,7 @@ is the analytic content carried as the primitive through
 `isHoeffdingLagrangeHyp_of_minimal`. The `mem` half is fully constructive.
 -/
 
-namespace InformationTheory.Shannon.HoeffdingLagrangeIVTBody
+namespace InformationTheory.Shannon.HoeffdingLagrange
 
 set_option linter.unusedSectionVars false
 
@@ -76,8 +76,8 @@ open Set Real InformationTheory Filter
 open InformationTheory.Shannon.Chernoff
 open InformationTheory.Shannon.CsiszarProjection
 open InformationTheory.Shannon InformationTheory.Shannon.HoeffdingTradeoff
-open InformationTheory.Shannon.HoeffdingInteriorBody
-open InformationTheory.Shannon.HoeffdingInteriorGradientBody
+open InformationTheory.Shannon.HoeffdingInteriorMinimizer
+open InformationTheory.Shannon.HoeffdingTilt
 open scoped BigOperators Topology
 
 variable {α : Type*} [Fintype α] [Nonempty α]
@@ -270,4 +270,4 @@ theorem exists_isHoeffdingLagrangeHyp_of_minimal
   exact isHoeffdingLagrangeHyp_of_minimal P₁ P₂ hP₁_pos hP₂_pos hlam_kl
     (h_min lam hlam_mem hlam_kl)
 
-end InformationTheory.Shannon.HoeffdingLagrangeIVTBody
+end InformationTheory.Shannon.HoeffdingLagrange

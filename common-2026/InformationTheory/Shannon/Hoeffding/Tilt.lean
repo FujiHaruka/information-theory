@@ -1,4 +1,4 @@
-import InformationTheory.Draft.Shannon.HoeffdingInteriorBody
+import InformationTheory.Shannon.Hoeffding.InteriorMinimizer
 import InformationTheory.Meta.EntryPoint
 
 /-!
@@ -49,7 +49,7 @@ The interior characterization decomposes into two sub-predicates:
   (purely constructive from `hoeffdingTilt_pos`).
 -/
 
-namespace InformationTheory.Shannon.HoeffdingInteriorGradientBody
+namespace InformationTheory.Shannon.HoeffdingTilt
 
 set_option linter.unusedSectionVars false
 
@@ -58,8 +58,8 @@ open InformationTheory.Shannon.Chernoff
 open InformationTheory.Shannon.CsiszarProjection
 open InformationTheory.Shannon InformationTheory.Shannon.HoeffdingTradeoff
 open InformationTheory.Shannon.HoeffdingSandwich
-open InformationTheory.Shannon.HoeffdingSandwichBody
-open InformationTheory.Shannon.HoeffdingInteriorBody
+open InformationTheory.Shannon.HoeffdingBoundaryMinimizer
+open InformationTheory.Shannon.HoeffdingInteriorMinimizer
 open scoped BigOperators Topology
 
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
@@ -228,4 +228,4 @@ theorem isHoeffdingMinimizerFullSupport_of_lagrange
   exact IsHoeffdingMinimizerFullSupport.of_pos
     (hoeffdingTilt_pos P₁ P₂ hP₁_pos hP₂_pos lam)
 
-end InformationTheory.Shannon.HoeffdingInteriorGradientBody
+end InformationTheory.Shannon.HoeffdingTilt

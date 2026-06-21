@@ -183,7 +183,7 @@ import InformationTheory.Shannon.AWGN.MIBridge
 import InformationTheory.Shannon.ParallelGaussian.KKT
 import InformationTheory.Shannon.EPI.L3Integration
 -- Wave6 gap-close
-import InformationTheory.Shannon.Hoeffding.SandwichBody
+import InformationTheory.Shannon.Hoeffding.BoundaryMinimizer
 import InformationTheory.Shannon.WynerZiv.FactorizableRate
 -- Wave7 parallel-10 + gap-close
 import InformationTheory.Shannon.AWGN.MutualInfoBridge
@@ -199,7 +199,7 @@ import InformationTheory.Shannon.EPI.NoiseExtension
 import InformationTheory.Shannon.EPI.Stam.InequalityBody
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnHeatFlow
 import InformationTheory.Shannon.LZ78.ConverseAsymptotic
-import InformationTheory.Draft.Shannon.HoeffdingInteriorBody
+import InformationTheory.Shannon.Hoeffding.InteriorMinimizer
 import InformationTheory.Shannon.GeneralDMC.Extension
 import InformationTheory.Shannon.AWGN.BindConvolution
 import InformationTheory.Shannon.EPI.Stam.Step12Body
@@ -209,12 +209,12 @@ import InformationTheory.Shannon.EPI.Stam.Step3Body
 import InformationTheory.Shannon.FisherInfo.V2HeatFlow
 import InformationTheory.Shannon.LZ78.GreedyParsingImpl
 import InformationTheory.Shannon.LZ78.GreedyLongestPrefix
-import InformationTheory.Shannon.Hoeffding.InteriorGradientBody
+import InformationTheory.Shannon.Hoeffding.Tilt
 import InformationTheory.Shannon.AWGN.MutualInfoDecomposition
 import InformationTheory.Shannon.AWGN.ContChannelMIDecomp
 import InformationTheory.Shannon.AWGN.CapacityConverseMaxent
 import InformationTheory.Shannon.AWGN.MIClosedForm
-import InformationTheory.Shannon.Hoeffding.LagrangeIVTBody
+import InformationTheory.Shannon.Hoeffding.Lagrange
 import InformationTheory.Shannon.LZ78.PhraseCountAsymptotics
 import InformationTheory.Shannon.LZ78.PhraseCounting
 import InformationTheory.Shannon.LZ78.ZivLengthGrouping
@@ -228,7 +228,7 @@ import InformationTheory.Shannon.WynerZiv.ObjectiveConvexity
 import InformationTheory.Shannon.GaussianPDFVarianceDerivative
 import InformationTheory.Shannon.FisherDeBruijnGaussianWitness
 import InformationTheory.Shannon.Hoeffding.MinimizerAttainment
-import InformationTheory.Shannon.Hoeffding.SandwichDischarge
+import InformationTheory.Shannon.Hoeffding.MinimizerExistence
 import InformationTheory.Shannon.Hoeffding.TradeoffExp
 import InformationTheory.Shannon.LZ78.ZivEntropyBridge
 import InformationTheory.Shannon.Stationary.Kernel

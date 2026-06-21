@@ -138,11 +138,11 @@ namespace が既に clean (`InformationTheory.Shannon[.AWGN|.RateDistortion|...]
 | `...EPIStamInequalityBody` | `EPI/Stam/InequalityBody.lean` | 概念名 (実行時確定) | |
 | `...EPIStamStep12Body` | `EPI/Stam/Step12Body.lean` | 概念名 (実行時確定) | |
 | `...EPIStamStep3Body` | `EPI/Stam/Step3Body.lean` | 概念名 (実行時確定) | |
-| `...HoeffdingInteriorGradientBody` | `Hoeffding/InteriorGradientBody.lean` | 概念名 (実行時確定) | |
-| `...HoeffdingLagrangeIVTBody` | `Hoeffding/LagrangeIVTBody.lean` | 概念名 (実行時確定) | |
-| `...HoeffdingSandwichBody` | `Hoeffding/SandwichBody.lean` | 概念名 (実行時確定) | |
-| `...HoeffdingSandwichDischarge` | `Hoeffding/SandwichDischarge.lean` | 概念名 (実行時確定) | |
-| `...HoeffdingInteriorBody` | `Draft/Shannon/HoeffdingInteriorBody.lean` | `Hoeffding/` 配下概念名 (例 `InteriorMinimizer`) + Draft 解消 | |
+| ~~`...HoeffdingInteriorGradientBody`~~ | ~~`Hoeffding/InteriorGradientBody.lean`~~ | **✅ DONE → `HoeffdingTilt` / `Tilt.lean`** | tilt object + gradient stationarity |
+| ~~`...HoeffdingLagrangeIVTBody`~~ | ~~`Hoeffding/LagrangeIVTBody.lean`~~ | **✅ DONE → `HoeffdingLagrange` / `Lagrange.lean`** | IVT constraint-match + Lagrange hyp 構築 |
+| ~~`...HoeffdingSandwichBody`~~ | ~~`Hoeffding/SandwichBody.lean`~~ | **✅ DONE → `HoeffdingBoundaryMinimizer` / `BoundaryMinimizer.lean`** | full-support predicate + boundary discharge |
+| ~~`...HoeffdingSandwichDischarge`~~ | ~~`Hoeffding/SandwichDischarge.lean`~~ | **✅ DONE → `HoeffdingMinimizerExistence` / `MinimizerExistence.lean`** | constructive minimizer 存在 + achievability |
+| ~~`...HoeffdingInteriorBody`~~ | ~~`Draft/Shannon/HoeffdingInteriorBody.lean`~~ | **✅ DONE → `HoeffdingInteriorMinimizer` / `Hoeffding/InteriorMinimizer.lean`** | interior minimizer + Draft 解消 |
 | `...ChannelCodingConverseGeneral` | `Draft/Shannon/ChannelCodingConverseGeneralComplete.lean`, `ChannelCoding/ConverseGeneralStrong.lean`, `ChannelCoding/ConverseMemorylessPure.lean` | `ChannelCoding/` 概念名 (実行時確定) | **3 ファイル共有**、同一 commit + Draft 解消 |
 | `...ChannelCodingFeedback` | `ChannelCoding/FeedbackComplete.lean` | 概念名 (実行時確定) | ⚠ 既存 `ChannelCoding/Feedback.lean` と衝突 (→ `FeedbackComplete`→`Feedback` 不可)・consumer は `Feedback.lean`。content-based 命名要 |
 | `...EPIBlachmanGaussianWitness` | `EPI/Blachman/GaussianWitness.lean` | 概念名 (実行時確定) | |
