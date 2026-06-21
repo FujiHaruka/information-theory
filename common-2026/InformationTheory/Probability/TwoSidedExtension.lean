@@ -1,6 +1,7 @@
 import InformationTheory.Probability.TwoSidedExtension.Core
 import InformationTheory.Probability.TwoSidedExtension.Backward
-import InformationTheory.Probability.TwoSidedExtension.BackwardIntegral
+import InformationTheory.Probability.TwoSidedExtension.PastBlockJointLaw
+import InformationTheory.Probability.TwoSidedExtension.LogCondIntegral
 import InformationTheory.Probability.TwoSidedExtension.CondExpMeasurePreserving
 
 /-!
@@ -22,7 +23,8 @@ Hahn–Kolmogorov extension on the cylinder semiring.
 ## Structure
 
 The development splits across `TwoSidedExtension/Core.lean`,
-`TwoSidedExtension/Backward.lean`, and `TwoSidedExtension/BackwardIntegral.lean`:
+`TwoSidedExtension/Backward.lean`, `TwoSidedExtension/PastBlockJointLaw.lean`,
+and `TwoSidedExtension/LogCondIntegral.lean`:
 
 * `shiftedMarginal`, the family of finite-dimensional marginals obtained from
   the one-sided stationary distribution by translating any finite index set

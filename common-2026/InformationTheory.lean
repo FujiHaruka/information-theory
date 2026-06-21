@@ -170,7 +170,8 @@ import InformationTheory.Shannon.BackwardMartingale
 import InformationTheory.Shannon.BirkhoffErgodic
 import InformationTheory.Probability.TwoSidedExtension.Core
 import InformationTheory.Probability.TwoSidedExtension.Backward
-import InformationTheory.Probability.TwoSidedExtension.BackwardIntegral
+import InformationTheory.Probability.TwoSidedExtension.PastBlockJointLaw
+import InformationTheory.Probability.TwoSidedExtension.LogCondIntegral
 import InformationTheory.Probability.TwoSidedExtension.CondExpMeasurePreserving
 import InformationTheory.Probability.TwoSidedExtension
 -- Typed Random Variable API (I-1)
