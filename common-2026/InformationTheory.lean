@@ -108,8 +108,8 @@ import InformationTheory.Shannon.CsiszarProjection
 import InformationTheory.Shannon.Chernoff.Basic
 import InformationTheory.Shannon.Chernoff.NLetterZSum
 import InformationTheory.Shannon.Cramer.Cramer
-import InformationTheory.Shannon.Cramer.LC2Discharge
-import InformationTheory.Shannon.Cramer.LC2DischargeExt
+import InformationTheory.Shannon.Cramer.TiltedIID
+import InformationTheory.Shannon.Cramer.TiltedLLN
 import InformationTheory.Shannon.CramerBoundaryUpstream
 import InformationTheory.Shannon.CramerCltBoundaryClosure
 import InformationTheory.Shannon.CramerGeneralLower

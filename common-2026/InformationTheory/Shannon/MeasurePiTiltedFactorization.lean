@@ -34,7 +34,7 @@ product factorization which we prove by `Fin n` induction mirroring
 * `pi_tilted_sum_eq_pi_tilted` — the finite tilt factorization.
 -/
 
-namespace InformationTheory.Shannon.Cramer.Discharge
+namespace InformationTheory.Shannon.Cramer.TiltedLLN
 
 open MeasureTheory ProbabilityTheory Real Filter
 open scoped Topology BigOperators ENNReal
@@ -156,4 +156,4 @@ theorem pi_tilted_sum_eq_pi_tilted {n : ℕ} {μ₀ : Measure Ω₀} [IsProbabil
   refine Finset.prod_congr rfl (fun i _ => ?_)
   rw [tilted_apply' _ _ (hs i)]
 
-end InformationTheory.Shannon.Cramer.Discharge
+end InformationTheory.Shannon.Cramer.TiltedLLN

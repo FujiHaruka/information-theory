@@ -12,8 +12,8 @@ CLT-boundary headline `cramer_lower_boundary_unconditional`
 The chain previously lived in `InformationTheory/Shannon/Cramer/Cramer.lean`,
 upstream of the headline.  Discharging `cramer_lower` against the headline there
 is impossible: the transitive import
-`CramerCltBoundaryClosure → CramerBoundaryUpstream → LC2DischargeExt →
-LC2Discharge → Cramer` means the headline already imports `Cramer.lean`, so a
+`CramerCltBoundaryClosure → CramerBoundaryUpstream → TiltedLLN →
+TiltedIID → Cramer` means the headline already imports `Cramer.lean`, so a
 back-import would create a cycle.  Relocating the chain into this downstream
 module (keeping the namespace `InformationTheory.Shannon.Cramer` so that
 consumer references resolve by name) breaks the cycle.
@@ -116,7 +116,7 @@ theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
   have hX0_meas : ∀ i, Measurable (X0 i) := fun i =>
     (h_meas 0).comp (measurable_pi_apply i)
   have hX0_indep : iIndepFun X0 P :=
-    Cramer.Discharge.iIndepFun_eval_under_infinitePi (h_meas 0)
+    Cramer.TiltedLLN.iIndepFun_eval_under_infinitePi (h_meas 0)
   set g₀ : (ℕ → Ω) → (ℕ → ℝ) := fun ω i => X 0 (ω i) with hg₀
   have hg₀_meas : Measurable g₀ := measurable_pi_lambda _ (fun i => hX0_meas i)
   have hjoint0 : P.map g₀ = Measure.infinitePi (fun _ : ℕ => ν) := by
@@ -174,7 +174,7 @@ theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
   have hcgf : cgf (X 0) μ
       = cgf (fun ω : ℕ → Ω => X 0 (ω 0)) P := by
     funext t
-    exact (Cramer.Discharge.cgf_eval_eq_cgf_base (h_meas 0) 0 t).symm
+    exact (Cramer.TiltedLLN.cgf_eval_eq_cgf_base (h_meas 0) 0 t).symm
   rw [hcgf]
   have h_deriv' : deriv (cgf (fun ω : ℕ → Ω => X 0 (ω 0)) P) lam = a := by
     rw [← hcgf]; exact h_deriv

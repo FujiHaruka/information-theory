@@ -1,5 +1,5 @@
 import InformationTheory.Shannon.MeasurePiTiltedFactorization
-import InformationTheory.Shannon.Cramer.LC2DischargeExt
+import InformationTheory.Shannon.Cramer.TiltedLLN
 import Mathlib.Probability.ProductMeasure
 import InformationTheory.Meta.EntryPoint
 
@@ -36,7 +36,7 @@ All hoisted declarations are sorry-free and were moved verbatim. No new proof is
 introduced here (pure wiring).
 -/
 
-namespace InformationTheory.Shannon.Cramer.Discharge
+namespace InformationTheory.Shannon.Cramer.TiltedLLN
 
 open MeasureTheory ProbabilityTheory Real Filter
 open scoped Topology BigOperators ENNReal Function
@@ -416,4 +416,4 @@ theorem tiltedMean_eq_deriv_cgf
     exact Set.mem_univ lam
   exact integral_tilted_mul_self hmem
 
-end InformationTheory.Shannon.Cramer.Discharge
+end InformationTheory.Shannon.Cramer.TiltedLLN

@@ -133,7 +133,7 @@ namespace が既に clean (`InformationTheory.Shannon[.AWGN|.RateDistortion|...]
 
 | namespace (変更前) | 対象ファイル群 | 概念名候補 | 注記 |
 |---|---|---|---|
-| `...Cramer.Discharge` | `Cramer/LC2Discharge.lean`, `Cramer/LC2DischargeExt.lean` | 概念名 (実行時確定; `cgf` 系 / `tilted_lln` 系) | 2 ファイル共有、同一 commit |
+| ~~`...Cramer.Discharge`~~ | ~~`Cramer/LC2Discharge.lean`, `Cramer/LC2DischargeExt.lean`~~ | **✅ DONE → `Cramer.TiltedLLN` / `TiltedIID.lean`+`TiltedLLN.lean`** | 共有 ns は実は6ファイルで宣言 (LC2PhaseC/InfinitePiTiltedChangeOfMeasure/MeasurePiTiltedFactorization/CramerBoundaryUpstream も) → 一括 migrate |
 | ~~`...EPIStamDischarge`~~ | ~~`EPI/Stam/Discharge.lean`~~ | **✅ DONE → `StamEPIBridge` / `EPIBridge.lean`** | EPI via Stam + de Bruijn (16-consumer hub) |
 | ~~`...EPIStamInequalityBody`~~ | ~~`EPI/Stam/InequalityBody.lean`~~ | **✅ DONE → `StamInequality` / `Inequality.lean`** | Stam inequality body (CS/convolution-score path) |
 | ~~`...EPIStamStep12Body`~~ | ~~`EPI/Stam/Step12Body.lean`~~ | **✅ DONE → `StamConditionalCauchySchwarz` / `ConditionalCauchySchwarz.lean`** | Step1 score-conv + Step2 conditional CS |

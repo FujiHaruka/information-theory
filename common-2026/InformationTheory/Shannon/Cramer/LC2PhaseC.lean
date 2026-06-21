@@ -1,6 +1,6 @@
 import InformationTheory.Shannon.Cramer.Cramer
-import InformationTheory.Shannon.Cramer.LC2Discharge
-import InformationTheory.Shannon.Cramer.LC2DischargeExt
+import InformationTheory.Shannon.Cramer.TiltedIID
+import InformationTheory.Shannon.Cramer.TiltedLLN
 import InformationTheory.Shannon.CramerBoundaryUpstream
 import InformationTheory.Shannon.CramerCltBoundaryClosure
 import Mathlib.Probability.StrongLaw
@@ -31,7 +31,7 @@ on cylinders of width `n`, identified through the predicate
 * `cramer_tendsto_phaseC_partial_discharge` — the two-sided `Tendsto` form.
 -/
 
-namespace InformationTheory.Shannon.Cramer.Discharge
+namespace InformationTheory.Shannon.Cramer.TiltedLLN
 
 open MeasureTheory ProbabilityTheory Real Filter
 open scoped Topology BigOperators ENNReal Function
@@ -46,7 +46,7 @@ infinite product `μ := Measure.infinitePi (fun _ => μ₀)`: the asymptotic lim
 lower bound at threshold `a` and tilt `lam`.
 
 The ambient i.i.d. hypotheses are discharged using the plumbing from
-`LC2Discharge`; the change-of-measure step is discharged by the headline
+`TiltedIID`; the change-of-measure step is discharged by the headline
 `CramerCltBoundary.cramer_lower_boundary_unconditional`. The optimal-tilt
 hypothesis `h_deriv : deriv (cgf (Y∘·0) (infinitePi μ₀)) lam = a` is required for
 truth: without it the per-`lam` bound fails for general `a` (e.g.
@@ -225,4 +225,4 @@ lemma isMeasureInfinitePiTiltedEq_iff (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ
                 {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)} :=
   Iff.rfl
 
-end InformationTheory.Shannon.Cramer.Discharge
+end InformationTheory.Shannon.Cramer.TiltedLLN

@@ -1,5 +1,5 @@
 import InformationTheory.Shannon.MeasurePiTiltedFactorization
-import InformationTheory.Shannon.Cramer.LC2DischargeExt
+import InformationTheory.Shannon.Cramer.TiltedLLN
 import InformationTheory.Shannon.Cramer.LC2PhaseC
 import Mathlib.Probability.ProductMeasure
 import InformationTheory.Meta.EntryPoint
@@ -22,7 +22,7 @@ infinite-product change-of-measure machinery behind the Cramér lower bound.
   is eventually `≥ 1/2` when the cgf derivative lands strictly inside the window.
 -/
 
-namespace InformationTheory.Shannon.Cramer.Discharge
+namespace InformationTheory.Shannon.Cramer.TiltedLLN
 
 open MeasureTheory ProbabilityTheory Real Filter
 open scoped Topology BigOperators ENNReal Function
@@ -193,4 +193,4 @@ theorem tiltedWindow_eventually_large_of_cgfDeriv_interior
   · rw [hbridge]; exact h_lo
   · rw [hbridge]; exact h_hi
 
-end InformationTheory.Shannon.Cramer.Discharge
+end InformationTheory.Shannon.Cramer.TiltedLLN

@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.Cramer.LC2Discharge
+import InformationTheory.Shannon.Cramer.TiltedIID
 import Mathlib.Probability.StrongLaw
 import Mathlib.Probability.Independence.InfinitePi
 import Mathlib.Probability.ProductMeasure
@@ -8,7 +8,7 @@ import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 /-!
 # Cramér lower-bound extension: tilted-side law of large numbers
 
-This file extends `InformationTheory/Shannon/Cramer/LC2Discharge.lean` with the
+This file extends `InformationTheory/Shannon/Cramer/TiltedIID.lean` with the
 tilted-side law of large numbers for the coordinate-eval family on the infinite
 product measure.
 
@@ -31,7 +31,7 @@ per-coordinate `μ₀.tilted` factor through the `fun _ : ℕ => …` wrapper wh
 looking up `IsProbabilityMeasure (Measure.infinitePi (fun _ : ℕ => μ₀.tilted ...))`.
 -/
 
-namespace InformationTheory.Shannon.Cramer.Discharge
+namespace InformationTheory.Shannon.Cramer.TiltedLLN
 
 open MeasureTheory ProbabilityTheory Real Filter
 open scoped Topology BigOperators ENNReal Function
@@ -214,4 +214,4 @@ theorem tilted_lln_in_probability_real
   -- For real-valued functions, `‖f - g‖ = |f - g|`, so the two sets agree.
   exact h_real
 
-end InformationTheory.Shannon.Cramer.Discharge
+end InformationTheory.Shannon.Cramer.TiltedLLN

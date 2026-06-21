@@ -121,18 +121,18 @@ theorem tilted_halfline_tendsto_gaussian
         (Set.Ici (0 : ℝ)))) := by
   haveI hP : IsProbabilityMeasure
       (Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))) :=
-    Cramer.Discharge.isProbabilityMeasure_infinitePi_tilted_of_bounded hY h_bdd lam
+    Cramer.TiltedLLN.isProbabilityMeasure_infinitePi_tilted_of_bounded hY h_bdd lam
   set P : Measure (ℕ → Ω₀) :=
     Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω)) with hPdef
   set X : ℕ → (ℕ → Ω₀) → ℝ := fun i ω => Y (ω i) with hXdef
   set v : ℝ := Var[fun ω : ℕ → Ω₀ => Y (ω 0); P] with hvdef
   -- `P[X 0] = m := ∫ Y ∂tilted`.
   have hmean : P[X 0] = ∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)) :=
-    Cramer.Discharge.integral_eval_under_infinitePi_tilted hY h_bdd lam
+    Cramer.TiltedLLN.integral_eval_under_infinitePi_tilted hY h_bdd lam
   -- CLT ingredients.
-  have hindep : iIndepFun X P := Cramer.Discharge.iIndepFun_tilted_ambient hY h_bdd lam
+  have hindep : iIndepFun X P := Cramer.TiltedLLN.iIndepFun_tilted_ambient hY h_bdd lam
   have hident : ∀ i : ℕ, IdentDistrib (X i) (X 0) P P :=
-    fun i => Cramer.Discharge.identDistrib_tilted_ambient hY h_bdd lam i
+    fun i => Cramer.TiltedLLN.identDistrib_tilted_ambient hY h_bdd lam i
   -- `MemLp (X 0) 2 P` from boundedness.
   have hMemLp : MemLp (X 0) 2 P := by
     obtain ⟨M, hM⟩ := h_bdd
@@ -254,7 +254,7 @@ theorem tiltedWindow_eventually_large_of_boundary
                 < ((∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω))) + ε) * n} := by
   haveI hP : IsProbabilityMeasure
       (Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))) :=
-    Cramer.Discharge.isProbabilityMeasure_infinitePi_tilted_of_bounded hY h_bdd lam
+    Cramer.TiltedLLN.isProbabilityMeasure_infinitePi_tilted_of_bounded hY h_bdd lam
   set P : Measure (ℕ → Ω₀) :=
     Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω)) with hPdef
   set m : ℝ := ∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)) with hmdef
@@ -278,7 +278,7 @@ theorem tiltedWindow_eventually_large_of_boundary
     tilted_halfline_tendsto_half hY h_bdd lam hVar
   -- Upper half-line mass → 0, dominated by the LLN bad set `{ε ≤ |S̄_n − m|}`.
   have hupper : Tendsto (fun n : ℕ => P.real (U n)) atTop (𝓝 0) := by
-    have hbad := Cramer.Discharge.tilted_lln_in_probability_real
+    have hbad := Cramer.TiltedLLN.tilted_lln_in_probability_real
       (μ₀ := μ₀) hY h_bdd lam (ε := ε) hε
     rw [← hPdef, ← hmdef] at hbad
     refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hbad ?_ ?_
@@ -344,17 +344,17 @@ theorem tilted_window_lower_to_halfline
   -- Cylinder lift, un-tilted side: half-line event.
   have hPE : MeasurableSet {r : ℝ | a * (n : ℝ) ≤ r} :=
     measurableSet_le measurable_const measurable_id
-  have hlift_E := Cramer.Discharge.infinitePi_partialSum_event_eq_pi (ν := μ₀) hY n
+  have hlift_E := Cramer.TiltedLLN.infinitePi_partialSum_event_eq_pi (ν := μ₀) hY n
       (fun r => a * (n : ℝ) ≤ r) hPE
   -- Cylinder lift, tilted side: window event.
   have hPW : MeasurableSet {r : ℝ | a * (n : ℝ) ≤ r ∧ r < (a + ε) * n} :=
     (measurableSet_le measurable_const measurable_id).inter
       (measurableSet_lt measurable_id measurable_const)
-  have hlift_W := Cramer.Discharge.infinitePi_partialSum_event_eq_pi
+  have hlift_W := Cramer.TiltedLLN.infinitePi_partialSum_event_eq_pi
       (ν := μ₀.tilted (fun ω => lam * Y ω)) hY n
       (fun r => a * (n : ℝ) ≤ r ∧ r < (a + ε) * n) hPW
   -- Change-of-measure at the finite level.
-  have hcm := Cramer.Discharge.change_of_measure_lower_bound_pi
+  have hcm := Cramer.TiltedLLN.change_of_measure_lower_bound_pi
     (n := n) (μ₀ := μ₀) hY h_bdd a ε lam hlam
   have hfin_E : (Measure.pi (fun _ : Fin n => μ₀))
       {x : Fin n → Ω₀ | a * n ≤ ∑ i, Y (x i)} ≠ ⊤ := (measure_ne_top _ _)
@@ -528,7 +528,7 @@ theorem cramer_lower_boundary
 
 /-- **Cramér lower bound, boundary closure — consumer form**. The
 infinitePi-side restatement of `cramer_lower_boundary` matching the conclusion shape of
-`Cramer.Discharge.cramer_lower_phaseC_partial_discharge`: the cgf is written on the
+`Cramer.TiltedLLN.cramer_lower_phaseC_partial_discharge`: the cgf is written on the
 coordinate-eval family `Y ∘ eval 0` under the un-tilted product, and the threshold is the
 optimal tilt `a = deriv (cgf (Y∘eval 0) (infinitePi μ₀)) lam`. The optimal-tilt hypothesis
 `h_deriv` (the same regularity precondition carried by the consumer root) pins
@@ -564,11 +564,11 @@ theorem cramer_lower_boundary_unconditional
   have hcgf_fun : cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
       (Measure.infinitePi (fun _ : ℕ => μ₀)) = cgf Y μ₀ := by
     funext t
-    exact Cramer.Discharge.cgf_eval_eq_cgf_base hY 0 t
+    exact Cramer.TiltedLLN.cgf_eval_eq_cgf_base hY 0 t
   -- Hence `a = deriv (cgf Y μ₀) lam = ∫ Y ∂tilted = m`.
   have ham : a = ∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)) := by
     rw [← h_deriv, hcgf_fun]
-    exact (Cramer.Discharge.tiltedMean_eq_deriv_cgf hY h_bdd lam).symm
+    exact (Cramer.TiltedLLN.tiltedMean_eq_deriv_cgf hY h_bdd lam).symm
   -- Rewrite the goal at `a = m`, then identify the cgf, and apply the boundary lower bound.
   subst ham
   rw [hcgf_fun]

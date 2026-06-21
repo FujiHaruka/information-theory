@@ -23,7 +23,7 @@ discharge the tilted-side lower-bound hypothesis of the Cramér lower bound.
   `bounded_eval_family` — the same plumbing under the un-tilted base product.
 -/
 
-namespace InformationTheory.Shannon.Cramer.Discharge
+namespace InformationTheory.Shannon.Cramer.TiltedLLN
 
 open MeasureTheory ProbabilityTheory Real Filter
 open scoped Topology BigOperators ENNReal Function
@@ -135,11 +135,11 @@ lemma identDistrib_eval_under_infinitePi
     exact Measure.infinitePi_map_eval _ k
   rw [h_push i, h_push 0]
 
-end InformationTheory.Shannon.Cramer.Discharge
+end InformationTheory.Shannon.Cramer.TiltedLLN
 
 /-- The coordinate-eval family `X i ω := Y (ω i)` is bounded by the same `M`
 that bounds `Y`. -/
-lemma InformationTheory.Shannon.Cramer.Discharge.bounded_eval_family
+lemma InformationTheory.Shannon.Cramer.TiltedLLN.bounded_eval_family
     {Ω₀ : Type*} {Y : Ω₀ → ℝ} (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) :
     ∃ M, ∀ i : ℕ, ∀ ω : ℕ → Ω₀, |Y (ω i)| ≤ M := by
   obtain ⟨M, hM⟩ := h_bdd
