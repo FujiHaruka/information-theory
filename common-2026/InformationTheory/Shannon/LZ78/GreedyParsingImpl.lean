@@ -554,6 +554,15 @@ finite-combinatorial residual on which `lz78_block_kraft_poly` (Parts A + C) is
 proven unconditionally. Numerically verified for `α = Bool`, `n ≤ 6`,
 `c ≤ n` (`#fiber(n,c) ≤ (n+1)·c!·|α|^c` holds with slack).
 
+Independent honesty audit 2026-06-21 PASS: a standalone finite cardinality
+bound (no measure / liminf / `μ`,`p` content — pure finite combinatorics on
+the project-internal greedy parse), NOT the converse conclusion repackaged and
+NOT a load-bearing hypothesis (the obligation is an exposed `sorry`, tier 2).
+TRUE-as-framed: replicating the actual `lz78PhraseStringsAux` parse and
+counting real fiber sizes for `(n,A)` over `n≤7,A∈{2,3,8}` gives 0 violations
+(only `n=0` tight at `1≤1`, large slack elsewhere). Classification `plan:` is
+correct (project-internal LZ78 combinatorics with a discharge plan, not a
+Mathlib-absent wall); `docs/shannon/lz78-m4-plan.md` G2 schedules it.
 @residual(plan:lz78-m4-plan) -/
 theorem lz78_phrase_count_fiber_card_le (n c : ℕ) :
     ((Finset.univ.filter
@@ -692,7 +701,13 @@ closure needs the LZ78 dictionary parent-extension invariant (each emitted phras
 (which has the distinct / flatten / tail invariants but not the parent-extension
 structure) — plus the `Fintype.card`-injection counting on top.
 
-@residual(plan:lz78-m4-plan) -/
+This theorem's body is `sorry`-free; it carries no own `@residual`. The sole
+residual is the Part B counting lemma `lz78_phrase_count_fiber_card_le`
+(`@residual(plan:lz78-m4-plan)`), inherited here transitively (its
+`#print axioms` shows `sorryAx`), exactly as for the downstream consumers
+(`lz78_converse_bad_set_measure_le`, `blockLogAvg₂_minus_error_le_rate_ae`,
+`lz78GreedyImpl_converse_ae`), which likewise carry no own `@residual`.
+Independent honesty audit 2026-06-21 PASS. -/
 theorem lz78_block_kraft_poly (n : ℕ) :
     ∑ x : Fin n → α, (1 / 2 : ℝ) ^ (lz78GreedyImplEncodingLength n x)
       ≤ ((n : ℝ) + 1) ^ 2 := by
