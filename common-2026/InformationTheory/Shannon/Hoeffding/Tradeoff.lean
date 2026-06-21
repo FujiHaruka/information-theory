@@ -1,7 +1,7 @@
 import InformationTheory.Shannon.Chernoff.Basic
 import InformationTheory.Shannon.CsiszarProjection
 import InformationTheory.Shannon.KLDivContinuous
-import InformationTheory.Shannon.Sanov.LDPEquality
+import InformationTheory.Shannon.Sanov.TendstoSandwich
 import InformationTheory.Asymptotic
 import Mathlib.Probability.ProbabilityMassFunction.Basic
 import Mathlib.Probability.ProbabilityMassFunction.Constructions

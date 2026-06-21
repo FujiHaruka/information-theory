@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.Sanov.LDP
-import InformationTheory.Shannon.Sanov.LDPEquality
+import InformationTheory.Shannon.Sanov.TendstoSandwich
 import InformationTheory.Shannon.KLDivContinuous
 import InformationTheory.Shannon.CsiszarProjection
 import InformationTheory.Shannon.Chernoff.Basic

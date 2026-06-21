@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.Sanov.LDPEquality
+import InformationTheory.Shannon.Sanov.TendstoSandwich
 
 /-!
 # Type-class size lower bound (Cover-Thomas 11.1.3)

@@ -7,7 +7,7 @@ import InformationTheory.Shannon.Hoeffding.Tilt
 import InformationTheory.Shannon.Hoeffding.MinimizerAttainment
 import InformationTheory.Shannon.Chernoff.Basic
 import InformationTheory.Shannon.CsiszarProjection
-import InformationTheory.Shannon.Sanov.LDPEquality
+import InformationTheory.Shannon.Sanov.TendstoSandwich
 import InformationTheory.Shannon.StrongStein
 import InformationTheory.Shannon.KLDivContinuous
 import Mathlib.Topology.Order.LiminfLimsup

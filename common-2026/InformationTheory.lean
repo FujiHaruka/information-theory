@@ -92,7 +92,10 @@ import InformationTheory.Shannon.RateDistortion.ConverseNLetter
 import InformationTheory.Shannon.Sanov.Basic
 import InformationTheory.Shannon.Sanov.LDP
 import InformationTheory.Shannon.KLDivContinuous
-import InformationTheory.Shannon.Sanov.LDPEquality
+import InformationTheory.Shannon.Sanov.RoundedTypeSequence
+import InformationTheory.Shannon.Sanov.MultinomialLowerBound
+import InformationTheory.Shannon.Sanov.LiminfBound
+import InformationTheory.Shannon.Sanov.TendstoSandwich
 import InformationTheory.Shannon.TypeClassLowerBound
 import InformationTheory.Shannon.StrongTypicality
 import InformationTheory.Shannon.ConditionalMethodOfTypes.Core
