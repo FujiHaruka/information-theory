@@ -146,6 +146,48 @@ theorem foldr_length_append_singleton (l : List (List α)) (w : List α) :
   | nil => simp
   | cons hd tl ih => simp only [List.cons_append, List.foldr_cons, ih]; omega
 
+omit [DecidableEq α] in
+theorem foldrLength_take_succ (L : List (List α)) (j : ℕ) (h : j < L.length) :
+    ((L.take (j + 1)).foldr (fun w acc => w.length + acc) 0)
+      = ((L.take j).foldr (fun w acc => w.length + acc) 0) + (L[j]'h).length := by
+  rw [List.take_succ_eq_append_getElem h, foldr_length_append_singleton]
+
+omit [DecidableEq α] in
+theorem foldrLength_take_mono (L : List (List α)) {i j : ℕ} (hij : i ≤ j) :
+    ((L.take i).foldr (fun w acc => w.length + acc) 0)
+      ≤ ((L.take j).foldr (fun w acc => w.length + acc) 0) := by
+  have hstep : ∀ i : ℕ,
+      ((L.take i).foldr (fun w acc => w.length + acc) 0)
+        ≤ ((L.take (i + 1)).foldr (fun w acc => w.length + acc) 0) := by
+    intro i
+    by_cases h : i < L.length
+    · rw [foldrLength_take_succ L i h]; omega
+    · have hge : L.length ≤ i := Nat.not_lt.mp h
+      have h1 : L.take i = L := List.take_of_length_le (by omega)
+      have h2 : L.take (i + 1) = L := List.take_of_length_le (by omega)
+      simp only [h1, h2, le_refl]
+  induction j with
+  | zero => simp_all
+  | succ j ihj =>
+    rcases Nat.lt_or_ge i (j + 1) with h | h
+    · exact (ihj (Nat.lt_succ_iff.mp h)).trans (hstep j)
+    · have : i = j + 1 := le_antisymm hij h
+      subst this; exact le_refl _
+
+omit [DecidableEq α] in
+theorem foldrLength_take_ge_of_forall_ne_nil (L : List (List α))
+    (hne : ∀ w ∈ L, w ≠ []) {j : ℕ} (hj : j ≤ L.length) :
+    j ≤ (L.take j).foldr (fun w acc => w.length + acc) 0 := by
+  induction j with
+  | zero => simp
+  | succ j ihj =>
+    have hjm : j < L.length := by omega
+    have := ihj (by omega)
+    rw [foldrLength_take_succ L j hjm]
+    have hpos : 1 ≤ (L[j]'hjm).length :=
+      List.length_pos_iff.mpr (hne _ (List.getElem_mem hjm))
+    omega
+
 /-- **Total symbol count across emitted phrases plus the unfinished tail
 equals the input length** (worker form): the symbols consumed so far are
 `(dict total length) + cur.length`, and the worker conserves
@@ -344,6 +386,40 @@ theorem flatten_drop_take_getElem (L : List (List α)) (j : ℕ) (hj : j < L.len
         show hd.length + (List.take i tl).foldr (fun w acc => w.length + acc) 0 - hd.length
           = (List.take i tl).foldr (fun w acc => w.length + acc) 0 from by omega]
       exact ih i hi
+
+omit [DecidableEq α] in
+theorem getElem?_eq_some_drop_take_of_flatten_prefix (L : List (List α))
+    {input : List α} {tail : List α} (htail : L.flatten ++ tail = input)
+    (idx : ℕ) (hidx : idx < L.length) :
+    L[idx]? = some ((input.drop ((L.take idx).foldr (fun w acc => w.length + acc) 0)).take
+      (((L.take (idx + 1)).foldr (fun w acc => w.length + acc) 0)
+        - ((L.take idx).foldr (fun w acc => w.length + acc) 0))) := by
+  -- One-step cumulative length recurrence: the step length is `L[idx].length`, so the
+  -- take amount simplifies to `L[idx].length`.
+  have hstep := foldrLength_take_succ L idx hidx
+  rw [hstep, Nat.add_sub_cancel_left]
+  -- `getElem?` of `L` at `idx` is `some (L[idx])`.
+  rw [List.getElem?_eq_getElem hidx]
+  -- `cum (idx + 1) ≤ L.flatten.length`, hence both `cum idx ≤ L.flatten.length` and
+  -- `cum idx + L[idx].length ≤ L.flatten.length`.
+  have hbound : (L.take (idx + 1)).foldr (fun w acc => w.length + acc) 0 ≤ L.flatten.length := by
+    rw [length_flatten_eq_foldr_length L]
+    calc (L.take (idx + 1)).foldr (fun w acc => w.length + acc) 0
+        ≤ (L.take L.length).foldr (fun w acc => w.length + acc) 0 :=
+          foldrLength_take_mono L (by omega)
+      _ = L.foldr (fun w acc => w.length + acc) 0 := by rw [List.take_length]
+  have hcumidx_le : (L.take idx).foldr (fun w acc => w.length + acc) 0 ≤ L.flatten.length := by
+    omega
+  -- On `input = L.flatten ++ tail`, dropping `cum idx` then taking `L[idx].length`
+  -- only sees the flatten part.
+  have hslice : (input.drop ((L.take idx).foldr (fun w acc => w.length + acc) 0)).take
+        ((L[idx]'hidx).length)
+      = (L.flatten.drop ((L.take idx).foldr (fun w acc => w.length + acc) 0)).take
+        ((L[idx]'hidx).length) := by
+    conv_lhs => rw [show input = L.flatten ++ tail from htail.symm]
+    rw [List.drop_append_of_le_length hcumidx_le,
+      List.take_append_of_le_length (by rw [List.length_drop]; omega)]
+  rw [hslice, flatten_drop_take_getElem L idx hidx]
 
 end Length
 
@@ -580,44 +656,24 @@ theorem lz78_parse_tiling_positions (input : List α) (k : ℕ) :
   have hcum_succ : ∀ (j : ℕ) (h : j < m), cumLen (j + 1) = cumLen j + (L[j]'h).length := by
     intro j h
     simp only [hcum_def]
-    rw [List.take_succ_eq_append_getElem h, foldr_length_append_singleton]
+    exact foldrLength_take_succ L j h
   -- Each phrase length ≥ 1.
   have hphrase_pos : ∀ j (h : j < m), 1 ≤ (L[j]'h).length := by
     intro j h
     have hmem : L[j]'h ∈ L := List.getElem_mem h
     have hne : L[j]'h ≠ [] := lz78PhraseStrings_forall_ne_nil input _ hmem
     exact List.length_pos_iff.mpr hne
-  -- One-step monotonicity for all `i` (constant past `m`).
-  have hcum_step : ∀ i, cumLen i ≤ cumLen (i + 1) := by
-    intro i
-    by_cases h : i < m
-    · rw [hcum_succ i h]; omega
-    · -- i ≥ m: take i L = L and take (i+1) L = L, so cumLen constant.
-      have hge : m ≤ i := Nat.not_lt.mp h
-      have h1 : L.take i = L := List.take_of_length_le (by omega)
-      have h2 : L.take (i + 1) = L := List.take_of_length_le (by omega)
-      simp only [hcum_def, h1, h2, le_refl]
   -- cumLen monotone (≤).
   have hcum_mono : ∀ i j, i ≤ j → cumLen i ≤ cumLen j := by
     intro i j hij
-    induction j with
-    | zero => simp_all
-    | succ j ihj =>
-      rcases Nat.lt_or_ge i (j + 1) with h | h
-      · exact (ihj (Nat.lt_succ_iff.mp h)).trans (hcum_step j)
-      · have : i = j + 1 := le_antisymm hij h
-        subst this; exact le_refl _
+    simp only [hcum_def]
+    exact foldrLength_take_mono L hij
   -- cumLen j ≥ j for j ≤ m (each step adds ≥1).
   have hcum_ge : ∀ j, j ≤ m → j ≤ cumLen j := by
     intro j hj
-    induction j with
-    | zero => simp
-    | succ j ihj =>
-      have hjm : j < m := by omega
-      have := ihj (by omega)
-      rw [hcum_succ j hjm]
-      have := hphrase_pos j hjm
-      omega
+    simp only [hcum_def]
+    exact foldrLength_take_ge_of_forall_ne_nil L
+      (lz78PhraseStrings_forall_ne_nil input) (by rw [← hm_def]; exact hj)
   -- cumLen m = total ≤ input.length.
   have hcumm_eq : cumLen m = L.foldr (fun w acc => w.length + acc) 0 := by
     simp only [hcum_def, hm_def, List.take_length]
@@ -733,35 +789,10 @@ theorem lz78_parse_tiling_positions (input : List α) (k : ℕ) :
     have hNsucc : N j.succ = cumLen (idx + 1) := by
       simp only [hN_def, Fin.val_succ, hidx_def]
       congr 1
-    -- One-step cumulative length recurrence: the step length is `L[idx].length`.
-    have hstep : cumLen (idx + 1) = cumLen idx + (L[idx]'hidx_lt).length :=
-      hcum_succ idx hidx_lt
-    -- `getElem?` of `L` at `idx` is `some (L[idx])`.
-    have hget? : L[idx]? = some (L[idx]'hidx_lt) := List.getElem?_eq_getElem hidx_lt
     -- Prefix reconstruction `L.flatten ++ tail = input`.
     obtain ⟨tail, htail⟩ := lz78PhraseStrings_flatten_prefix input
-    have hflat_len : L.flatten.length = cumLen m := by
-      rw [length_flatten_eq_foldr_length, hcumm_eq]
-    -- `cumLen idx + L[idx].length = cumLen (idx+1) ≤ cumLen m = L.flatten.length`.
-    have hbound : cumLen idx + (L[idx]'hidx_lt).length ≤ L.flatten.length := by
-      rw [hflat_len, ← hstep]
-      exact hcum_mono (idx + 1) m (by omega)
-    -- On `input = L.flatten ++ tail`, dropping `cumLen idx` then taking `L[idx].length`
-    -- only sees the flatten part.
-    have hcumidx_le : cumLen idx ≤ L.flatten.length := by
-      rw [hflat_len]; exact hcum_mono idx m (by omega)
-    have hslice : (input.drop (cumLen idx)).take ((L[idx]'hidx_lt).length)
-        = (L.flatten.drop (cumLen idx)).take ((L[idx]'hidx_lt).length) := by
-      conv_lhs => rw [show input = L.flatten ++ tail from htail.symm]
-      rw [List.drop_append_of_le_length hcumidx_le,
-        List.take_append_of_le_length (by rw [List.length_drop]; omega)]
-    -- Content half: the flatten slice is exactly `L[idx]`.
-    have hcontent : (L.flatten.drop (cumLen idx)).take ((L[idx]'hidx_lt).length)
-        = L[idx]'hidx_lt := by
-      have := flatten_drop_take_getElem L idx hidx_lt
-      simpa only [hcum_def] using this
-    -- Assemble.
-    rw [hNcast, hNsucc, hstep, Nat.add_sub_cancel_left, hslice, hcontent, hget?]
+    rw [hNcast, hNsucc, hcum_def]
+    exact getElem?_eq_some_drop_take_of_flatten_prefix L htail idx hidx_lt
 
 end Tiling
 
