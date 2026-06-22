@@ -31,6 +31,10 @@ in `CramerGeneralLower.lean`.
 * `cramer_upper`, `cramer_upper_legendre` — the limsup-form upper bound.
 * `integral_tilted_eq_deriv_cgf`, `klDiv_tilted_eq` — tilted change-of-measure
   identities used by the lower bound.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 11.4.1.
 -/
 
 namespace InformationTheory.Shannon.Cramer
@@ -139,14 +143,9 @@ lemma cgf_sum_eq_nsmul {X : ℕ → Ω → ℝ}
 
 /-! ## Cramér upper bound: per-`n` Chernoff bound (i.i.d. strengthening) -/
 
-/-- Per-n Chernoff bound for the upper tail of an i.i.d. sum of bounded real
-random variables (Cover-Thomas 11.4.1 upper half, point-wise in `n`).
-
-We specialise Mathlib's single-variable Chernoff bound `measure_ge_le_exp_cgf`
-at `X := ∑ i ∈ range n, X i` and fold in the i.i.d. cgf-sum identity
-`cgf_sum_eq_nsmul`. The resulting bound is the headline statement of
-Cover-Thomas's upper Cramér: tilt by any `lam ≥ 0` and the upper-tail
-probability decays exponentially with rate at least `lam * a − Λ(lam)`. -/
+/-- Per-`n` Chernoff bound for the upper tail of an i.i.d. sum of bounded real
+random variables: tilting by any `lam ≥ 0`, the upper-tail probability decays
+exponentially with rate at least `lam * a − Λ(lam)`. -/
 lemma chernoff_bound_n_iid [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
     (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
@@ -212,14 +211,9 @@ lemma chernoff_bound_n_iid [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
   apply Real.exp_le_exp.mpr
   linarith
 
-/-- Per-n Cramér upper bound, log form: for each `n ≥ 1` with positive tail
+/-- Per-`n` Cramér upper bound, log form: for each `n ≥ 1` with positive tail
 probability, `(1/n) · log P[a·n ≤ Sₙ] ≤ -(lam · a − Λ(lam))` for every
-`lam ≥ 0`.
-
-This is the log-form rearrangement of `chernoff_bound_n_iid`; taking the
-supremum over `lam ≥ 0` would give `(1/n) log P ≤ -legendre Λ a` (provided the
-Legendre transform is well-defined), but the supremum is left as a Tier 2
-follow-up. -/
+`lam ≥ 0`. -/
 lemma cramer_log_bound_n_iid [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
     (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
@@ -250,16 +244,11 @@ lemma cramer_log_bound_n_iid [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
 
 /-! ## Cramér upper bound: limsup form -/
 
-/-- Cramér upper bound, limsup form (Cover-Thomas 11.4.1 upper half).
-
-For each `lam ≥ 0`, the upper-tail probability of the i.i.d. sample sum decays
-at exponential rate at least `lam * a − Λ(lam)`:
+/-- **Cramér's theorem** (upper bound, limsup form): for each `lam ≥ 0`, the
+upper-tail probability of the i.i.d. sample sum decays at exponential rate at
+least `lam * a − Λ(lam)`:
 
 `limsup_n (1/n) log P[a·n ≤ Sₙ] ≤ -(lam · a − Λ(lam))`.
-
-Taking the supremum over `lam ≥ 0` (and then justifying the agreement with the
-unrestricted Legendre transform under `a ≥ 𝔼[X]`) recovers the textbook
-`-cramerRate (X 0) μ a`; that supremum step is left for follow-up work.
 
 Two technical hypotheses make the result clean:
 * `h_pos` — the tail probability is eventually positive (e.g. when `a ≤ ess sup
@@ -293,17 +282,16 @@ theorem cramer_upper [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
       lam hlam
   exact Filter.limsup_le_of_le h_cobdd h_eventually
 
-/-- Cramér upper bound, Legendre form (Cover-Thomas 11.4.1 upper half,
-asymptotic statement).
-
-If the Legendre transform of `Λ = cgf (X 0) μ` at `a` is attained by some
-non-negative `lam` (`hlam_opt`), then
+/-- **Cramér's theorem** (upper bound, Legendre form): if the Legendre transform
+of `Λ = cgf (X 0) μ` at `a` is attained by some non-negative `lam` (`hlam_opt`),
+then
 
 `limsup_n (1/n) log P[a·n ≤ Sₙ] ≤ -cramerRate (X 0) μ a`.
 
 `hlam_opt` is a regularity precondition (it holds for `a ≥ 𝔼[X]` by convexity of
-the Legendre transform), not part of the proof core; the result is a constructive
-specialization of `cramer_upper`. -/
+the Legendre transform), not part of the proof core.
+
+See also `cramer_upper`. -/
 theorem cramer_upper_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
     (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)

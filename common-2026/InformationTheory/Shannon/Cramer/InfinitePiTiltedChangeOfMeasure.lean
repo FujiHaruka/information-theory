@@ -120,23 +120,16 @@ theorem pi_tilted_sum_eq_pi_tilted_fintype {ι : Type*} [Fintype ι]
   refine Finset.prod_congr rfl (fun i _ ↦ ?_)
   rw [tilted_apply' _ _ (hs i)]
 
-/-! ## End-to-end Cramér lower bound from the residual predicate
-
-Several supporting declarations (`infinitePi_partialSum_event_eq_pi`,
-`change_of_measure_lower_bound_pi`, `IsTiltedWindowEventuallyLarge`,
-`isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge`,
-`tiltedWindow_eventually_tendsto_one`, `tiltedWindow_eventually_large_of_interior`,
-`tiltedMean_eq_deriv_cgf`) live in
-`InformationTheory/Shannon/CramerBoundaryUpstream.lean` and are available here
-transitively. -/
+/-! ## End-to-end Cramér lower bound from the residual predicate -/
 
 /-- The Cramér lower bound, end-to-end from the cgf-derivative and cobounded
 inputs: the liminf lower bound `-(lam·a − Λ(lam)) ≤ liminf (1/n) log P[S_n ≥ a·n]`
 from the optimal-tilt inputs (`h_deriv : deriv (cgf …) lam = a`, non-degeneracy
-`hVar`, and the cobounded-below regularity `h_coboundedBelow`); the body is a
-single pass-through to `cramer_lower_phaseC_partial_discharge`. The hypotheses
+`hVar`, and the cobounded-below regularity `h_coboundedBelow`). The hypotheses
 `hVar` and `h_coboundedBelow` are regularity preconditions, not part of the proof
 core.
+
+See also `cramer_lower_phaseC_partial_discharge`.
 
 @audit:ok -/
 @[entry_point]
@@ -165,18 +158,15 @@ theorem cramer_lower_phaseC_residual_discharge
 
 /-- Per-instance tilted window mass ≥ 1/2 (cgf-derivative interior case).
 
-cgf-calculus restatement of `tiltedWindow_eventually_large_of_interior`: the
-interior condition `a < tilted mean < a + ε` is rewritten via the
-cgf-derivative bridge `tiltedMean_eq_deriv_cgf` as `a < deriv (cgf Y μ₀) lam`,
-`deriv (cgf Y μ₀) lam < a + ε`. Whenever the cgf derivative at `lam` lands
-strictly inside the window, the tilted infinite-product window mass is
+Whenever the cgf derivative at `lam` lands strictly inside the window
+`a < deriv (cgf Y μ₀) lam < a + ε`, the tilted infinite-product window mass is
 eventually `≥ 1/2` (indeed `→ 1`).
 
-The only residual gap left after this lemma is the CLT boundary case
-`a = deriv (cgf Y μ₀) lam` (= tilted mean): squeezing the window mass to `1/2`
-there requires a central-limit-theorem refinement, not the law of large numbers.
-The interior `a < deriv (cgf Y μ₀) lam < a + ε` is fully discharged here, with
-the window mass tending to `1`. -/
+This covers the interior case; the boundary case `a = deriv (cgf Y μ₀) lam`
+(= tilted mean) requires a central-limit-theorem refinement rather than the law
+of large numbers.
+
+See also `tiltedWindow_eventually_large_of_interior`. -/
 @[entry_point]
 theorem tiltedWindow_eventually_large_of_cgfDeriv_interior
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]

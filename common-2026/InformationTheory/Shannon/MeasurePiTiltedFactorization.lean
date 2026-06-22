@@ -18,20 +18,20 @@ The key result is `pi_tilted_sum_eq_pi_tilted`:
   = Measure.pi (fun _ : Fin n => μ₀.tilted (fun ω => lam * Y ω))
 ```
 
-Mathlib has no `Measure.pi × tilted` / `Measure.pi × withDensity` compatibility
-lemma. We build it from `Measure.pi_eq` (a measure on a finite product equals the
-product measure if they agree on rectangles), reducing to a box-wise lintegral
-product factorization which we prove by `Fin n` induction mirroring
-`MeasureTheory.integral_fin_nat_prod_eq_prod`.
-
-## Outline
+## Main statements
 
 * `lintegral_pi_prod` — unrestricted lintegral Fubini for `Measure.pi` of a
-  per-coordinate product, by `Fin n` induction.
-* `setLIntegral_pi_prod_factor` — box-restricted version via the indicator
-  trick.
+  per-coordinate product.
+* `setLIntegral_pi_prod_factor` — box-restricted version.
 * `integral_exp_sum_pi_eq_pow` — normalization constant `Z^n`.
 * `pi_tilted_sum_eq_pi_tilted` — the finite tilt factorization.
+
+## Implementation notes
+
+The factorization is built from `Measure.pi_eq` (a measure on a finite product
+equals the product measure if they agree on rectangles), reducing to a box-wise
+lintegral product factorization proved by `Fin n` induction mirroring
+`MeasureTheory.integral_fin_nat_prod_eq_prod`.
 -/
 
 namespace InformationTheory.Shannon.Cramer.TiltedLLN
@@ -44,8 +44,8 @@ variable {Ω₀ : Type*} [MeasurableSpace Ω₀]
 /-! ## Lintegral product factorization over `Measure.pi` -/
 
 /-- Unrestricted lintegral Fubini for `Measure.pi` of a per-coordinate
-product of nonnegative measurable functions. The lintegral analogue of
-`MeasureTheory.integral_fin_nat_prod_eq_prod`; not present in Mathlib. -/
+product of nonnegative measurable functions, the lintegral analogue of
+`MeasureTheory.integral_fin_nat_prod_eq_prod`. -/
 @[entry_point]
 theorem lintegral_pi_prod {n : ℕ} {E : Fin n → Type*}
     {mE : ∀ i, MeasurableSpace (E i)} {μ : (i : Fin n) → Measure (E i)}

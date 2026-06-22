@@ -45,11 +45,8 @@ variable {Ω₀ : Type*} [MeasurableSpace Ω₀]
 infinite product `μ := Measure.infinitePi (fun _ => μ₀)`: the asymptotic liminf
 lower bound at threshold `a` and tilt `lam`.
 
-The ambient i.i.d. hypotheses are discharged using the plumbing from
-`TiltedIID`; the change-of-measure step is discharged by the headline
-`CramerCltBoundary.cramer_lower_boundary_unconditional`. The optimal-tilt
-hypothesis `h_deriv : deriv (cgf (Y∘·0) (infinitePi μ₀)) lam = a` is required for
-truth: without it the per-`lam` bound fails for general `a` (e.g.
+The optimal-tilt hypothesis `h_deriv : deriv (cgf (Y∘·0) (infinitePi μ₀)) lam = a`
+is required for truth: without it the per-`lam` bound fails for general `a` (e.g.
 `μ₀ = Bernoulli(1/2)`, `Y(0)=0, Y(1)=1`, `lam=0`, `a=0.9`); the bound is tight
 precisely at the optimal tilt, where `lam·a − Λ(lam) = cramerRate a`. The
 non-degeneracy hypothesis `hVar` and the cobounded-below hypothesis
@@ -122,11 +119,11 @@ theorem cramer_lower_legendre_phaseC_partial_discharge
     (μ₀ := μ₀) hY_meas h_bdd a lam hlam h_deriv hVar h_coboundedBelow
   rw [← hlam_opt]; exact h
 
-/-- Cramér's theorem in `Tendsto` form: the empirical log-tail rate converges to
-`-cramerRate a`. The proof is a sandwich of `cramer_upper_legendre`
-(constructive, upper bound) and `cramer_lower_legendre_phaseC_partial_discharge`
-(lower bound). All hypotheses are regularity preconditions or cobounded
+/-- **Cramér's theorem** (`Tendsto` form): the empirical log-tail rate converges
+to `-cramerRate a`. All hypotheses are regularity preconditions or cobounded
 side-conditions.
+
+See also `cramer_upper_legendre` and `cramer_lower_legendre_phaseC_partial_discharge`.
 
 @audit:ok (genuine `le_antisymm`-style sandwich of `cramer_upper_legendre` and
 `cramer_lower_legendre_phaseC_partial_discharge`. All hypotheses are regularity

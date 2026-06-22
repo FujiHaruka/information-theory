@@ -2,45 +2,35 @@ import InformationTheory.Shannon.CramerCltBoundaryClosure
 import InformationTheory.Shannon.Cramer.Cramer
 
 /-!
-# Cramér lower bound — general i.i.d. wiring (root B)
+# Cramér lower bound — general i.i.d.
 
-This module relocates the root B Cramér lower-bound chain
-(`cramer_lower` / `cramer_lower_legendre` / `cramer_tendsto`) downstream of the
-CLT-boundary headline `cramer_lower_boundary_unconditional`
-(`CramerCltBoundaryClosure.lean`).
+The Cramér lower-bound chain (`cramer_lower` / `cramer_lower_legendre` /
+`cramer_tendsto`) for the general i.i.d. statement on an arbitrary bounded
+`μ : Measure Ω`, `X : ℕ → Ω → ℝ`, discharged against the CLT-boundary headline
+`cramer_lower_boundary_unconditional`.
 
-The chain previously lived in `InformationTheory/Shannon/Cramer/Cramer.lean`,
-upstream of the headline.  Discharging `cramer_lower` against the headline there
-is impossible: the transitive import
-`CramerCltBoundaryClosure → CramerBoundaryUpstream → TiltedLLN →
-TiltedIID → Cramer` means the headline already imports `Cramer.lean`, so a
-back-import would create a cycle.  Relocating the chain into this downstream
-module (keeping the namespace `InformationTheory.Shannon.Cramer` so that
-consumer references resolve by name) breaks the cycle.
+## Main statements
 
-## Transport (root B → headline)
+* `cramer_lower`, `cramer_lower_legendre` — the liminf lower bound at threshold
+  `a` and optimal tilt `lam`, in Chernoff-exponent and Legendre forms.
+* `cramer_tendsto` — the two-sided `Tendsto` form of Cramér's theorem.
 
-Root B is the general i.i.d. statement on an arbitrary bounded `μ : Measure Ω`,
-`X : ℕ → Ω → ℝ`.  The headline is the canonical infinitePi specialization.  We
-transport via:
+## Implementation notes
 
-* The joint law equals an infinite product — `iIndepFun_iff_map_fun_eq_infinitePi_map`
-  (Mathlib, only `[IsProbabilityMeasure μ]`): the joint law of `X` equals
-  `infinitePi (fun i => μ.map (X i))`.
-* Identical marginals — `IdentDistrib.map_eq` unifies the marginals to
-  `ν := μ.map (X 0)`.
-* Event transport — the partial-sum event pulls back through the joint map
-  `g := fun ω i => X i ω`, so `μ.real {ω | a·n ≤ ∑ X i ω}` equals the
-  coordinate-event mass on `infinitePi (fun _ => ν)`.
-* The cgf transports — `cgf (fun ω => ω 0) (infinitePi (fun _ => ν)) = cgf (X 0) μ`,
-  a ~10-line self-build (the in-project precedent `cgf_eval_eq_cgf_base` does the
-  same kind of move).
+The general i.i.d. statement transports to the canonical infinitePi
+specialization: the joint law of `X` equals an infinite product
+(`iIndepFun_iff_map_fun_eq_infinitePi_map`), the identical marginals unify to
+`ν := μ.map (X 0)` (`IdentDistrib.map_eq`), the partial-sum event masses agree by
+pullback through the two joint maps, and the cgf transports through the
+coordinate-evaluation bridge `cgf_eval_eq_cgf_base`.
 
-The non-degeneracy variance precondition `hVar` (carried by the headline) is
-added to `cramer_lower` as a regularity precondition and threaded through
-`cramer_lower_legendre` / `cramer_tendsto`.  This excludes the degenerate
+The non-degeneracy variance precondition `hVar` excludes the degenerate
 constant-RV case (`Var = 0`), where the Cramér boundary argument genuinely
 breaks (Gaussian median `1/2` / window mass `1/4` lower bounds collapse).
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 11.4.1.
 -/
 
 namespace InformationTheory.Shannon.Cramer
@@ -50,22 +40,13 @@ open scoped Topology BigOperators
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
 
-/-- The Cramér lower bound (general i.i.d.), root B form, transported to the
-CLT-boundary headline `cramer_lower_boundary_unconditional`.
+/-- **Cramér's theorem** (lower bound, general i.i.d.).
 
 The optimal-tilt hypothesis `h_deriv : deriv (cgf (X 0) μ) lam = a` makes the
 per-`lam` Chernoff exponent `-(lam·a − Λ(lam))` a genuine lower bound for the
-tail rate.
-
-`hVar` (non-degenerate variance) is a regularity precondition; the body is
-discharged by transport to the headline (`Ω₀ := Ω`, `μ₀ := μ`, `Y := X 0`).  The
-transport identifies the joint law of the general i.i.d. family `X` with the
-canonical i.i.d. copies `X 0 ∘ eval i` under `infinitePi (fun _ => μ)`, via
-`iIndepFun_iff_map_fun_eq_infinitePi_map` and `IdentDistrib.map_eq`; the
-partial-sum event masses agree by pullback through the two joint maps.  `hVar` is
-a precondition, not a load-bearing core — the window-mass core is supplied
-internally by the CLT inside the headline; this statement only transports +
-`exact`.
+tail rate. `hVar` (non-degenerate variance) is a regularity precondition, not a
+load-bearing core — the window-mass core is supplied internally by the CLT inside
+the headline.
 
 @audit:ok (Transport is a GENUINE reduction (not a false implication): both the
 general-iid joint law `μ.map g` and the canonical copy `P.map g₀` push forward to
@@ -182,7 +163,9 @@ theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
   exact CramerCltBoundary.cramer_lower_boundary_unconditional
     (μ₀ := μ) (Y := X 0) (h_meas 0) h_bdd0 a lam hlam h_deriv' hVar h_coboundedBelow
 
-/-- The Cramér lower bound, Legendre form. Threads `hVar` to `cramer_lower`.
+/-- **Cramér's theorem** (lower bound, Legendre form).
+
+See also `cramer_lower`.
 
 @audit:ok (rewrites conclusion via the `hlam_opt` Legendre-attainment precondition,
 all hypotheses are regularity preconditions threaded to `cramer_lower`.) -/
@@ -207,9 +190,10 @@ theorem cramer_lower_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     h_deriv hVar h_coboundedBelow
   rw [← hlam_opt]; exact h
 
-/-- Cramér's theorem (`Tendsto` form, Cover-Thomas 11.4.1). Sandwich of
-the upper bound `cramer_upper_legendre` and the lower bound `cramer_lower_legendre`.
-Threads `hVar` to the lower-bound side.
+/-- **Cramér's theorem** (`Tendsto` form): the empirical log-tail rate converges
+to `-cramerRate (X 0) μ a`.
+
+See also `cramer_upper_legendre` and `cramer_lower_legendre`.
 
 @audit:ok (genuine sandwich of the constructive upper bound and the headline-backed
 lower bound. All hypotheses are regularity preconditions / cobounded-bounded

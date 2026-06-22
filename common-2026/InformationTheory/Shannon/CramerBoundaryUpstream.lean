@@ -4,36 +4,29 @@ import Mathlib.Probability.ProductMeasure
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# Cramér boundary-closure upstream module (cycle-break hoist target)
+# Cramér boundary-closure upstream module
 
-This file hoists the `IsMeasureInfinitePiTiltedEq` predicate (formerly in
-`InformationTheory/Shannon/Cramer/LC2PhaseC.lean`) together with the seven
-change-of-measure / tilted-LLN-window theorems (formerly in
-`InformationTheory/Shannon/Cramer/InfinitePiTiltedChangeOfMeasure.lean`) into a
-single upstream module that does NOT import `CramerLC2PhaseC.lean`.
+The `IsMeasureInfinitePiTiltedEq` predicate together with the change-of-measure
+and tilted-LLN-window theorems behind the Cramér lower bound: the cylinder lift
+from the infinite product to `Measure.pi (Fin n)`, the finite-level density-bound
+change-of-measure inequality, and the interior-case window-mass concentration.
 
-## Why this module exists (import-cycle break)
+## Main definitions
 
-The CLT-boundary headline
-`InformationTheory.Shannon.CramerCltBoundary.cramer_lower_boundary_unconditional`
-(in `CramerCltBoundaryClosure.lean`) is forward-independent of the two root
-sorries `cramer_lower_phaseC_partial_discharge` (root A) and `cramer_lower`
-(root B), so it can be used to discharge them. But discharging root A in place
-needs `CramerLC2PhaseC.lean` to import the headline file, while the headline file
-previously imported `InfinitePiTiltedChangeOfMeasure.lean`, which imports
-`CramerLC2PhaseC.lean` — an import cycle.
+* `IsMeasureInfinitePiTiltedEq μ₀ Y lam` — the n-letter change-of-measure
+  predicate identifying the tilted infinite product with the cylinder tilt of the
+  un-tilted product.
+* `IsTiltedWindowEventuallyLarge μ₀ Y lam` — the tilted infinite-product window
+  mass is eventually `≥ 1/2`.
 
-Hoisting the eight declarations the headline forward-depends on (the
-`IsMeasureInfinitePiTiltedEq` def plus the seven window/change-of-measure
-theorems) into this upstream module breaks the cycle: the new linear DAG is
+## Main statements
 
-```
-Cramer → CramerBoundaryUpstream → CramerCltBoundaryClosure
-       → CramerLC2PhaseC → InfinitePiTiltedChangeOfMeasure
-```
-
-All hoisted declarations are sorry-free and were moved verbatim. No new proof is
-introduced here (pure wiring).
+* `change_of_measure_lower_bound_pi` — the finite-level change-of-measure lower
+  bound at the `Measure.pi` level.
+* `isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge` — the window-largeness
+  predicate implies the full n-letter change-of-measure predicate.
+* `tiltedWindow_eventually_tendsto_one`, `tiltedMean_eq_deriv_cgf` — interior-case
+  window concentration and the cgf-derivative bridge.
 -/
 
 namespace InformationTheory.Shannon.Cramer.TiltedLLN
@@ -45,24 +38,20 @@ variable {Ω₀ : Type*} [MeasurableSpace Ω₀]
 
 /-! ## n-letter RN-deriv identification predicate (hoisted) -/
 
-/-- The Cramér n-letter change-of-measure predicate (Mathlib gap abstraction).
+/-- The Cramér n-letter change-of-measure predicate.
 
-Captures the missing Mathlib compatibility lemma
-`Measure.infinitePi (fun _ => μ₀.tilted (lam * Y ·)) ↔
-(Measure.infinitePi μ₀).tilted (∑ lam * Y ∘ eval i)`
-on cylinders of width `n`, in the form usable as input to Cramér's lower-bound
-change-of-measure step.
+Captures the cylinder-`n` compatibility between
+`Measure.infinitePi (fun _ => μ₀.tilted (lam * Y ·))` and
+`(Measure.infinitePi μ₀).tilted (∑ lam * Y ∘ eval i)`, in the form usable as
+input to Cramér's lower-bound change-of-measure step.
 
 The intended interpretation: for every `n` and every measurable event
 `E ⊆ {ω | a·n ≤ ∑ i ∈ Finset.range n, Y (ω i)}`, the un-tilted product measure
 of `E` admits the Chernoff-style lower bound
 `exp(-n · (lam · a − Λ(lam))) · μ_tilt(E) − o(1) ≤ μ.real E`,
 where `μ_tilt := Measure.infinitePi (fun _ => μ₀.tilted (lam * Y ·))` and
-`Λ := cgf Y μ₀`.
-
-In the textbook setting this follows from `(dμ_tilt / dμ)|_{cylinder n}
-= exp(lam · ∑ Y(ω_i) − n·Λ(lam))`, but the n-letter RN-deriv identification is
-not yet in Mathlib. -/
+`Λ := cgf Y μ₀`. This is the textbook density identity
+`(dμ_tilt / dμ)|_{cylinder n} = exp(lam · ∑ Y(ω_i) − n·Λ(lam))`. -/
 def IsMeasureInfinitePiTiltedEq (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam : ℝ) : Prop :=
   ∀ a ε : ℝ, 0 < ε →
     ∃ C > 0, ∀ᶠ n : ℕ in atTop,
@@ -215,12 +204,12 @@ theorem change_of_measure_lower_bound_pi {n : ℕ} {μ₀ : Measure Ω₀} [IsPr
 
 /-! ## Residual predicate + reduction to `IsMeasureInfinitePiTiltedEq` (hoisted) -/
 
-/-- The residual predicate: the tilted infinite-product
-window mass is eventually at least `1/2`. This is the *only* piece left after the
-change-of-measure machinery is discharged; it holds precisely when
-the tilted mean `∫ Y ∂μ₀.tilted` lies in the window `[a, a+ε)`, which is the
-Cramér optimality condition `∫ Y ∂μ₀.tilted = a`. It follows from the existing
-tilted-side LLN `tilted_lln_in_probability_real` under that condition. -/
+/-- The residual predicate: the tilted infinite-product window mass is eventually
+at least `1/2`. It holds precisely when the tilted mean `∫ Y ∂μ₀.tilted` lies in
+the window `[a, a+ε)`, which is the Cramér optimality condition
+`∫ Y ∂μ₀.tilted = a`.
+
+See also `tilted_lln_in_probability_real`. -/
 def IsTiltedWindowEventuallyLarge (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam : ℝ) : Prop :=
   ∀ a ε : ℝ, 0 < ε →
     ∀ᶠ n : ℕ in atTop,
@@ -229,9 +218,7 @@ def IsTiltedWindowEventuallyLarge (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (l
             ∧ ∑ i ∈ Finset.range n, Y (ω i) < (a + ε) * n}
 
 /-- The residual reduction: the residual window predicate implies the full
-n-letter RN-deriv predicate `IsMeasureInfinitePiTiltedEq`. The change-of-measure
-lower bound plus the cylinder lift reduce the predicate to
-the eventual largeness of the tilted window mass, discharged here with `C = 1/2`.
+n-letter RN-deriv predicate `IsMeasureInfinitePiTiltedEq`.
 
 @audit:ok (`h_res` is genuinely consumed (`filter_upwards [h_res a ε hε]`) to
 supply the window-mass input, not a vacuous bundle.) -/
@@ -305,12 +292,7 @@ The `∀a∀ε` predicate `IsTiltedWindowEventuallyLarge` is *false* in general 
 statement is the per-instance one: when the tilted mean
 `m := ∫ Y ∂(μ₀.tilted (lam·Y))` lies strictly inside the window `(a, a+ε)`, the
 tilted infinite-product mass of `{ω | a·n ≤ ∑_{i<n} Y(ω i) < (a+ε)·n}` tends to
-`1`.
-
-Proof: with `δ := min (m − a) (a + ε − m) > 0`, the in-probability LLN
-(`tilted_lln_in_probability_real`) sends the bad-set mass `{|S̄_n − m| ≥ δ}` to
-`0`, so the complement `{|S̄_n − m| < δ}` mass → 1; that complement is contained
-in the window for `n ≥ 1`, and the window mass is ≤ 1, so it is squeezed to 1. -/
+`1`. -/
 theorem tiltedWindow_eventually_tendsto_one
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ)
@@ -373,11 +355,11 @@ theorem tiltedWindow_eventually_tendsto_one
   · -- always `μ.real (window n) ≤ 1`
     exact Eventually.of_forall (fun n ↦ measureReal_le_one)
 
-/-- The per-instance tilted window mass is `≥ 1/2` (interior case, `≥ 1/2` corollary).
+/-- The per-instance tilted window mass is eventually `≥ 1/2` (interior case).
+This is the per-instance replacement for the (generally false) `∀a∀ε`
+`IsTiltedWindowEventuallyLarge` predicate.
 
-Immediate from `tiltedWindow_eventually_tendsto_one` and `1/2 < 1`: the window
-mass is eventually ≥ 1/2. This is the per-instance replacement for the
-(generally false) `∀a∀ε` `IsTiltedWindowEventuallyLarge` predicate. -/
+See also `tiltedWindow_eventually_tendsto_one`. -/
 theorem tiltedWindow_eventually_large_of_interior
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ)
@@ -399,11 +381,9 @@ For a bounded measurable `Y` under a probability measure `μ₀`, the tilted mea
 `∫ Y ∂(μ₀.tilted (lam·Y))` equals the first derivative of the cgf at `lam`:
 `∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)) = deriv (cgf Y μ₀) lam`.
 
-This is Mathlib's `ProbabilityTheory.integral_tilted_mul_self`, whose interior
-side condition `lam ∈ interior (integrableExpSet Y μ₀)` is discharged for free
-here: boundedness of `Y` makes `exp (t·Y)` integrable for *every* `t`
-(`Cramer.integrable_exp_mul_of_bounded`), so `integrableExpSet Y μ₀ = Set.univ`
-and its interior is again `Set.univ`.
+The interior side condition `lam ∈ interior (integrableExpSet Y μ₀)` holds
+because boundedness of `Y` makes `exp (t·Y)` integrable for *every* `t`, so
+`integrableExpSet Y μ₀ = Set.univ` and its interior is again `Set.univ`.
 
 @audit:ok -/
 theorem tiltedMean_eq_deriv_cgf
