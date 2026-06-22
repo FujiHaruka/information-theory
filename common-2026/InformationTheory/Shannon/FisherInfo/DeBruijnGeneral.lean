@@ -14,6 +14,10 @@ so they cannot call the assembled identity from there without an import cycle.
 * `deBruijn_identity_v2` — the per-time de Bruijn identity
   `(d/dt) h(X + √t · Z) = (1/2) · J(X + √t · Z)` with the V2 Fisher information.
 * `debruijnIntegrationIdentity_holds` — its integrated form along the heat-flow path.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 17.7.2.
 -/
 
 namespace InformationTheory.Shannon.FisherInfo
@@ -24,7 +28,7 @@ open MeasureTheory Real ProbabilityTheory InformationTheory
 open InformationTheory.Shannon.EPIConvDensity (convDensityAdd)
 open scoped ENNReal NNReal Real
 
-/-- The de Bruijn identity (V2 form): for `X ⊥ Z` with `Z ∼ 𝒩(0, 1)`,
+/-- The **de Bruijn identity** (V2 form): for `X ⊥ Z` with `Z ∼ 𝒩(0, 1)`,
 `(d/dt) h(X + √t · Z) = (1/2) · J(X + √t · Z)`, stated with the V2 Fisher information
 `fisherInfoOfDensityReal` on the right. Delegates to `debruijnIdentityV2_holds_assembled`;
 `h_reg` is the regularity precondition. -/
@@ -41,7 +45,7 @@ theorem deBruijn_identity_v2
       t :=
   debruijnIdentityV2_holds_assembled X Z hX hZ hXZ ht h_reg
 
-/-- The integrated de Bruijn identity: integrating the per-time identity
+/-- The integrated **de Bruijn identity**: integrating the per-time identity
 `debruijnIdentityV2_holds_assembled` along the heat-flow path `(0, T)` via FTC gives
 `h(X + √T·Z) − h(X) = ∫₀ᵀ (1/2)·J(X + √t·Z) dt`. Here `hT : 0 ≤ T` and the path-regularity
 bundle `h_path : IsDeBruijnPathRegular` are regularity and integrability preconditions. -/

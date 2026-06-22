@@ -33,6 +33,10 @@ regularity predicate, and the Gaussian discharge of the de Bruijn identity.
   is Gaussian and `X ⊥ Z`.
 * `deBruijn_identity_v2_gaussian` — the de Bruijn identity for a Gaussian `X`,
   `(d/dt) h(X + √t · Z) = 1 / (2(v + t))`.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 17.7.2.
 -/
 
 namespace InformationTheory.Shannon.FisherInfo
@@ -85,7 +89,7 @@ theorem fisherInfoOfMeasureV2Real_gaussianReal
 /-! ## Heat-flow path -/
 
 /-- The heat-flow convolution path `X + √t · Z`, the `t`-parametrised family underlying the
-de Bruijn identity (Cover–Thomas 17.7.2). For `Z ∼ 𝒩(0, 1)` and `X ⊥ Z`, the law
+de Bruijn identity. For `Z ∼ 𝒩(0, 1)` and `X ⊥ Z`, the law
 `P.map (gaussianConvolution X Z t)` is the convolution of `P.map X` with `𝒩(0, t)`. -/
 noncomputable def gaussianConvolution {α : Type*} (X Z : α → ℝ) (t : ℝ) : α → ℝ :=
   fun ω ↦ X ω + Real.sqrt t * Z ω
@@ -275,7 +279,7 @@ theorem differentialEntropy_gaussianReal_heat_path
   -- The `(v + ⟨s, hs⟩ : ℝ≥0).toReal = (v : ℝ) + s` step.
   rw [show ((v + ⟨s, hs⟩ : ℝ≥0) : ℝ) = (v : ℝ) + s from NNReal.coe_add v ⟨s, hs⟩]
 
-/-- The de Bruijn identity for a Gaussian `X` (hypothesis-free): for `X ∼ 𝒩(m, v)`,
+/-- The **de Bruijn identity** for a Gaussian `X` (hypothesis-free): for `X ∼ 𝒩(m, v)`,
 `Z ∼ 𝒩(0, 1)`, `X ⊥ Z`, and `t > 0`,
 `(d/dt) h(X + √t · Z) = (1/2) · J(𝒩(m, v + t)) = 1 / (2(v + t))`. -/
 @[entry_point]
