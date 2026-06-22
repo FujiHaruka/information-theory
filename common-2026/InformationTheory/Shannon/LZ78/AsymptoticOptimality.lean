@@ -24,8 +24,7 @@ parent-theorem bridge** on top of that genuine parse:
   as `lz78_asymptotic_optimality_with_greedy`.
 
 The two a.s.-eventual halves of the sandwich are the converse lower bound and
-the Ziv achievability upper bound; both carry genuine ergodic content and are
-proved here (`sorryAx`-free).
+the Ziv achievability upper bound; both carry genuine ergodic content.
 
 ## File layout
 

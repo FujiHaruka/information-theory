@@ -550,63 +550,15 @@ bit entropy rate:
 lim_{n → ∞} (1/n) · lz78GreedyEncodingLength(X^n) = entropyRate₂ μ p   a.s.
 ```
 
-Units: the encoding length is a base-2 code length
+The convergence target is the bit entropy rate
+`entropyRate₂ = entropyRate / Real.log 2`, not the nat-unit `entropyRate`,
+because the encoding length is a base-2 code length
 (`lz78GreedyEncodingLength = c · bitLength c |α|`, `bitLength` uses
-`Nat.log 2`), so the per-symbol rate is in bits and the convergence
-target is the bit entropy rate `entropyRate₂ = entropyRate / Real.log 2`
-(not the nat-unit `entropyRate`). This is the unit-correction documented in
-`ZivEntropyBridge.lean` ("Base-2 (bit) layer — unit correction for the LZ78
-headline"). On a uniform i.i.d. source on A symbols the bit-rate limit is
-`log₂ A = entropyRate₂` exactly (e.g. A=2: `rate → 1`), which is what the
-two TRUE-as-framed halves squeeze to.
-
-This is the LZ78 optimality headline. The two halves of the sandwich —
-the converse lower bound and the Ziv achievability upper bound — are
-supplied internally by `lz78Greedy_converse_ae` and
-`lz78Greedy_achievability_ae`, both now stated against the bit target
-`entropyRate₂`. The a.s. convergence is assembled via the generic
-combinator `lz78_asymptotic_optimality` instantiated at `L = entropyRate₂`
-(the genuine `tendsto_of_le_liminf_of_limsup_le` squeeze).
-
-`lz78GreedyEncodingLength` charges `c · bitLength c |α|` against the
-genuine distinct phrase count of the longest-prefix-match parse, so the
-per-symbol rate is data-dependent and
-deterministically bounded above by an `n`- and `ω`-uniform constant
-`(1 + 8·log(|α|+1)/log 2) + (log₂|α| + 2)` (via `lz78_rate_le_const`,
-combining the Ziv product bound `c·log c ≤ 8·log(|α|+1)·n` with `c ≤ n` and the
-`ℕ`–`Real` `log` bridge). The upper-boundedness hypothesis is therefore **no
-longer a parameter**: it is supplied internally — even the `a.e.` envelope is
-unnecessary since the bound holds for every `ω` and every `n`.
-
-Units: the convergence target is the bit entropy rate
-`entropyRate₂ = entropyRate / Real.log 2`, not the nat-unit `entropyRate`.
-Against the nat-unit target the achievability half — and hence this headline —
-would be FALSE on a uniform i.i.d. source (the bit-rate `lz/n` converges to the
-bit entropy rate). With the
-bit target the headline is a true-as-framed proposition: on a uniform
-i.i.d. source on A symbols the bit-rate limit is `log₂ A = entropyRate₂`
-exactly (A=2: `entropyRate₂ = log₂ 2 = 1`, so the two halves squeeze
-`rate → 1`, the genuine LZ78-optimal bit rate); on the degenerate
-`entropyRate = 0` boundary the target is `entropyRate₂ = 0` and the squeeze
-reads `rate → 0`, again genuine. Both halves
-(`lz78Greedy_converse_ae` / `lz78Greedy_achievability_ae`) are stated
-against `entropyRate₂`, and the base combinator `lz78_asymptotic_optimality`
-is instantiated at `L = entropyRate₂`.
-
-Proof done (Standard B): fully `sorryAx`-free (`#print axioms` =
-`[propext, Classical.choice, Quot.sound]`). The headline takes only the source
-data (`μ`, `p`) — no `h_bdd_above` precondition. Both `IsBoundedUnder`
-witnesses (`(·≤·)` above and `(·≥·)` below) are constructed deterministically
-inside the body from `lz78_rate_le_const` /
-`lz78_encoding_length_per_symbol_nonneg` (both unit-agnostic: they bound
-the bit-rate `lz/n` itself, so they are unaffected by the choice of `L`), so
-the squeeze `tendsto_of_le_liminf_of_limsup_le` is applied with all of its
-regularity inputs genuine. Both halves are genuine: the achievability half
-(`lz78Greedy_achievability_ae`) and the converse half
-(`lz78Greedy_converse_ae`, whose sole combinatorial brick
-`lz78_block_kraft_poly` / `lz78_phrase_count_fiber_card_le` is closed via
-the LZ78 dictionary parent-extension invariant). LZ78 asymptotic optimality is
-fully proven.
+`Nat.log 2`). Against the nat-unit target the headline would be false on a
+uniform i.i.d. source; against the bit target it is true-as-framed, since on a
+uniform i.i.d. source on A symbols the bit-rate limit is `log₂ A = entropyRate₂`
+exactly, and on the degenerate `entropyRate = 0` boundary the target is
+`entropyRate₂ = 0`.
 
 @audit:ok (FINAL completion audit 2026-06-21, commit `bd28e0e`, independent
 subagent not involved in implementation). Four honesty checks PASS: non-circular,
