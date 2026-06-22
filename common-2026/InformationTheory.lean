@@ -230,6 +230,9 @@ import InformationTheory.Shannon.StamGaussianBound
 import InformationTheory.Shannon.FisherConvBound
 import InformationTheory.Shannon.EPI.Stam.FisherCoupling
 import InformationTheory.Shannon.FisherInfo.HeatFlow
+import InformationTheory.Shannon.LZ78.AsymptoticOptimality.EncodingLength
+import InformationTheory.Shannon.LZ78.AsymptoticOptimality.ParentBridgeConverse
+import InformationTheory.Shannon.LZ78.AsymptoticOptimality.ParentBridgeAchievability
 import InformationTheory.Shannon.LZ78.AsymptoticOptimality
 import InformationTheory.Shannon.LZ78.GreedyLongestPrefix
 import InformationTheory.Shannon.Hoeffding.Tilt
