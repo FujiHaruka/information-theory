@@ -273,7 +273,7 @@ theorem source_coding_per_n_bound
 /-! ### Converse theorem in `Filter.liminf` form -/
 
 omit [DecidableEq α] in
-/-- Source coding theorem, weak converse:
+/-- **Source coding theorem** (weak converse):
 For any block code `(c_n, d_n)` with `M_n` codewords and i.i.d. discrete source,
 if the error probability vanishes then the rate is at least the entropy.
 

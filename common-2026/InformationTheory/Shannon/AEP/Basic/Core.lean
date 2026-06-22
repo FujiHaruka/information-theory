@@ -132,9 +132,10 @@ lemma indepFun_logLikelihood
   simpa [logLikelihood_eq_comp] using h.comp hpf hpf
 
 omit [DecidableEq α] [Nonempty α] in
-/-- Probability AEP — almost sure version: for an i.i.d. discrete sequence
-`Xs : ℕ → Ω → α` with finite alphabet `α`, the empirical entropy estimator
-`(1/n) ∑ i, (−log P(Xs i ω))` converges almost surely to the entropy `H(Xs 0)`. -/
+/-- **Asymptotic equipartition property** (almost-sure form): for an i.i.d.
+discrete sequence `Xs : ℕ → Ω → α` with finite alphabet `α`, the empirical
+entropy estimator `(1/n) ∑ i, (−log P(Xs i ω))` converges almost surely to the
+entropy `H(Xs 0)`. -/
 @[entry_point]
 theorem aep_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -162,8 +163,8 @@ theorem aep_ae
   simpa [h_int_eq] using hω
 
 omit [DecidableEq α] [Nonempty α] in
-/-- Probability AEP — convergence in probability: the empirical entropy estimator
-converges to `entropy μ (Xs 0)` in probability. -/
+/-- **Asymptotic equipartition property** (in probability): the empirical entropy
+estimator converges to `entropy μ (Xs 0)` in probability. -/
 @[entry_point]
 theorem aep_inProbability
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -359,9 +360,7 @@ theorem typicalSet_card_le
 omit [DecidableEq α] [Nonempty α] in
 /-- Typicality probability: `P(jointRV Xs n ∈ T_ε^n) → 1`.
 
-The event `{ω | jointRV Xs n ω ∈ typicalSet μ Xs n ε}` is the complement of
-`{ω | ε ≤ |...|}` from `aep_inProbability`, so the probability tends to
-`1 − 0 = 1`. -/
+See also `aep_inProbability`. -/
 @[entry_point]
 theorem typicalSet_prob_tendsto_one
     (μ : Measure Ω) [IsProbabilityMeasure μ]
