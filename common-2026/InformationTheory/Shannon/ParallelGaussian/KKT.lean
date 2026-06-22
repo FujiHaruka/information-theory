@@ -15,17 +15,17 @@ Gaussian channel (Cover–Thomas, Theorem 9.4.1).
 ## Main statements
 
 * `exists_waterFillingKKT_of_pos` — for `P > 0` and at least one coordinate, a water level
-  `ν` exists with `IsWaterFillingKKT P N ν` (the allocation uses up the budget). Obtained
-  from continuity and monotonicity of `ν ↦ ∑_i max(0, ν - N_i)` and the intermediate value
-  theorem.
+  `ν` exists with `IsWaterFillingKKT P N ν` (the allocation uses up the budget).
 * `isWaterFillingOptimal_of_kkt` — given a KKT water level, the water-filling allocation
   maximizes the constrained per-coordinate log-sum, i.e. `IsWaterFillingOptimal P N ν`.
 
 ## Implementation notes
 
-The optimality proof uses the common KKT multiplier `λ = 1/(2ν)`: the per-coordinate
-tangent upper bound `waterFillingCost_tangent_le` (from `log u ≤ u - 1`) summed over
-coordinates, with complementary slackness and `λ ≥ 0` killing the linear remainder.
+The existence of the KKT water level is the intermediate value theorem applied to the
+continuous, monotone `ν ↦ ∑_i max(0, ν - N_i)`. The optimality proof uses the common KKT
+multiplier `λ = 1/(2ν)`: the per-coordinate tangent upper bound `waterFillingCost_tangent_le`
+(from `log u ≤ u - 1`) summed over coordinates, with complementary slackness and `λ ≥ 0`
+killing the linear remainder.
 -/
 
 namespace InformationTheory.Shannon.ParallelGaussian
@@ -87,8 +87,7 @@ lemma waterFillingPower_sum_ge_of_all_active {n : ℕ} (N : Fin n → ℝ≥0)
 
 /-- Existence of a KKT water level. For positive total power `P > 0` and at least one
 coordinate, there is a water level `ν` whose water-filling allocation exactly uses up the
-power, `∑_i max(0, ν - N_i) = P`. Proved by the intermediate value theorem applied to the
-continuous, monotone `ν ↦ ∑_i waterFillingPower ν N i`. -/
+power, `∑_i max(0, ν - N_i) = P`. -/
 @[entry_point]
 theorem exists_waterFillingKKT_of_pos {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) :
@@ -186,10 +185,7 @@ lemma waterFillingKKT_level_pos {n : ℕ} (P : ℝ) (hP : 0 < P) (N : Fin n → 
 
 /-- Per-coordinate tangent (KKT-stationarity) upper bound. For the common KKT multiplier
 `λ = 1/(2ν)`, the per-coordinate cost `g_i(t) = (1/2) log(1 + t/N_i)` satisfies
-`g_i(P'_i) ≤ g_i(P*_i) + λ·(P'_i - P*_i)` where `P*_i = waterFillingPower ν N i`. Derived
-from the tangent inequality `log u ≤ u - 1` at `u = (N_i + P'_i)/(N_i + P*_i)`, bounding the
-slope by `λ` in both the active (`N_i + P*_i = ν`) and inactive (`N_i + P*_i = N_i ≥ ν`)
-cases. -/
+`g_i(P'_i) ≤ g_i(P*_i) + λ·(P'_i - P*_i)` where `P*_i = waterFillingPower ν N i`. -/
 lemma waterFillingCost_tangent_le {n : ℕ} (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (ν : ℝ) (hν : 0 < ν) (i : Fin n) {P'i : ℝ} (hP'i : 0 ≤ P'i) :
     (1/2) * Real.log (1 + P'i / (N i : ℝ))
@@ -264,15 +260,10 @@ lemma waterFillingCost_tangent_le {n : ℕ} (N : Fin n → ℝ≥0) (hN : ∀ i,
     _ ≤ (1/2) * (Real.log (a + Pstar) - Real.log a)
         + (1 / (2 * ν)) * (P'i - Pstar) := by linarith [h_slope]
 
-/-- Water-filling optimality from the KKT level. Given a KKT water level `ν`
+/-- **Water-filling optimality**. Given a KKT water level `ν`
 (`h_kkt : ∑ max(0, ν - N_i) = P`), the water-filling allocation `P_i^* = max(0, ν - N_i)`
 maximizes the per-coordinate sum `∑ (1/2) log(1 + P_i / N_i)` over the feasible set
 `{P' | ∀ i, 0 ≤ P'_i ∧ ∑_i P'_i ≤ P}`, i.e. `IsWaterFillingOptimal P N ν`.
-
-Proof: the common KKT multiplier `λ = 1/(2ν)` gives the per-coordinate tangent bound
-`waterFillingCost_tangent_le`; summing over `i`, complementary slackness `∑ P*_i = P`
-(`h_kkt`) and feasibility `∑ P'_i ≤ P` make the linear remainder `λ·(∑P'_i - P) ≤ 0`
-(with `λ ≥ 0` from `ν > 0`, `waterFillingKKT_level_pos`).
 
 @audit:ok -/
 @[entry_point]

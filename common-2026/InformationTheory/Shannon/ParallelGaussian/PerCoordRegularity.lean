@@ -22,9 +22,8 @@ formula in hypothesis-minimal form.
 
 ## Main statements
 
-* `isParallelGaussianPerCoordRegularity_of_pieces` — the constructor: `achiever_mi` from
-  `parallelGaussianCapacity_achiever_mi`, `bddAbove` from `parallel_bddAbove_miImage`,
-  `max_ent` from `parallel_per_input_mi_le_sum`.
+* `isParallelGaussianPerCoordRegularity_of_pieces` — assembles the regularity bundle from
+  its three constituent fields.
 * `parallel_gaussian_capacity_formula_minimal` — the capacity formula with the regularity
   bundle assembled internally, so its only inputs are the KKT condition `h_kkt` and the
   power-positivity / measurability preconditions.
@@ -42,9 +41,8 @@ open scoped ENNReal NNReal BigOperators Topology
 
 /-! ## Regularity bundle constructor -/
 
-/-- Assemble `IsParallelGaussianPerCoordRegularity` from named lemmas: `achiever_mi` from
-`parallelGaussianCapacity_achiever_mi`, `bddAbove` from `parallel_bddAbove_miImage`, and
-`max_ent` from `parallel_per_input_mi_le_sum`. -/
+/-- Assemble the regularity bundle `IsParallelGaussianPerCoordRegularity` from its three
+constituent fields. -/
 @[entry_point]
 theorem isParallelGaussianPerCoordRegularity_of_pieces {n : ℕ}
     (P : ℝ) (hP : 0 ≤ P) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
@@ -68,11 +66,10 @@ theorem isParallelGaussianPerCoordRegularity_of_pieces {n : ℕ}
 
 /-! ## Hypothesis-minimal headline -/
 
-/-- Hypothesis-minimal capacity formula. The parallel Gaussian capacity equals the
-water-filling sum at the KKT water level `ν`. The regularity bundle is assembled internally
-via `isParallelGaussianPerCoordRegularity_of_pieces` and water-filling optimality is derived
-from `h_kkt`, so the only inputs are the KKT condition `h_kkt` and the preconditions
-`hP` / `hN` / `h_meas` / `h_parallel_meas`. -/
+/-- **Parallel Gaussian channel capacity** (water-filling), hypothesis-minimal form. The
+parallel Gaussian capacity equals the water-filling sum at the KKT water level `ν`. The
+regularity bundle is assembled internally, so the only inputs are the KKT condition `h_kkt`
+and the preconditions `hP` / `hN` / `h_meas` / `h_parallel_meas`. -/
 @[entry_point]
 theorem parallel_gaussian_capacity_formula_minimal {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)

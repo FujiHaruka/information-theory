@@ -29,13 +29,9 @@ sup-sandwich mirroring the single-coordinate `AWGN.awgnCapacity_eq`.
 
 ## Main statements
 
-* `parallel_gaussian_capacity_formula` — the capacity equals the water-filling sum
-  (Cover–Thomas, Theorem 9.4.1), derived as `le_antisymm` of the achiever lower bound
-  `parallelGaussianCapacity_ge_sum` and the max-entropy upper bound
-  `parallelGaussianCapacity_le_sum`.
+* `parallel_gaussian_capacity_formula` — the capacity equals the water-filling sum.
 * `parallelGaussianCapacity_achiever_mi` — the product-Gaussian achiever attains the
-  per-coordinate sum, via the per-channel mutual-information decomposition
-  `parallelGaussian_achiever_mi_eq_sum_perChannel` and the per-coordinate AWGN closed form.
+  per-coordinate sum.
 * `lintegral_fin_nat_prod_eq_prod` — the `ℝ≥0∞` analogue of `n`-variate Fubini.
 
 ## Implementation notes
@@ -173,8 +169,7 @@ structure IsParallelGaussianPerCoordRegularity {n : ℕ} (P : ℝ)
 /-! ## Sup-sandwich -/
 
 /-- Lower bound (achiever). The independent Gaussian product input is feasible and
-achieves the per-coordinate sum, so the capacity is at least that sum (modulo the
-`bddAbove` and `achiever_mi` fields of the regularity bundle). -/
+achieves the per-coordinate sum, so the capacity is at least that sum. -/
 theorem parallelGaussianCapacity_ge_sum {n : ℕ} (P : ℝ)
     (N : Fin n → ℝ≥0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -191,8 +186,7 @@ theorem parallelGaussianCapacity_ge_sum {n : ℕ} (P : ℝ)
   exact ⟨gaussianProductInput Q, h_mem, rfl⟩
 
 /-- Upper bound (max-entropy and water-filling). Every constrained input has MI bounded
-by the water-filling sum, via the per-coordinate max-entropy bound (`max_ent` field)
-followed by water-filling optimality (`h_opt`). -/
+by the water-filling sum. -/
 theorem parallelGaussianCapacity_le_sum {n : ℕ} (P : ℝ)
     (N : Fin n → ℝ≥0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -223,9 +217,8 @@ theorem parallelGaussianCapacity_le_sum {n : ℕ} (P : ℝ)
 
 open InformationTheory.Shannon in
 /-- `max_ent` from subadditivity. With the channel MI written as `h(Yⁿ) - condTerm`
-(`h_decomp`), output-entropy subadditivity `h(Yⁿ) ≤ ∑ h(Yᵢ)`
-(`jointDifferentialEntropyPi_le_sum`) and the per-coordinate water-filling allocation
-bound `h_perCoord` give `I ≤ ∑ᵢ (1/2) log(1 + P'ᵢ/Nᵢ)`. -/
+(`h_decomp`), output-entropy subadditivity `h(Yⁿ) ≤ ∑ h(Yᵢ)` and the per-coordinate
+water-filling allocation bound `h_perCoord` give `I ≤ ∑ᵢ (1/2) log(1 + P'ᵢ/Nᵢ)`. -/
 theorem parallelGaussian_max_ent_le_of_subadditivity {n : ℕ}
     (μY : Measure (Fin n → ℝ)) [IsProbabilityMeasure μY]
     [∀ i, IsProbabilityMeasure (μY.map (fun z ↦ z i))]
@@ -258,8 +251,8 @@ theorem parallelGaussian_max_ent_le_of_subadditivity {n : ℕ}
 /-! ## Per-coordinate reduction -/
 
 /-- The capacity equals the per-coordinate water-filling sum (the analytic regularity
-hypotheses bundled in `IsParallelGaussianPerCoordRegularity`), as a `le_antisymm`
-sup-sandwich. Inhabits `IsParallelGaussianPerCoordReduction P N h_meas h_parallel_meas ν`. -/
+hypotheses bundled in `IsParallelGaussianPerCoordRegularity`). Inhabits
+`IsParallelGaussianPerCoordReduction P N h_meas h_parallel_meas ν`. -/
 theorem isParallelGaussianPerCoordReduction_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -294,16 +287,15 @@ theorem isParallelGaussianPerCoordReduction_discharged {n : ℕ}
 
 /-! ## Headline capacity formula -/
 
-/-- Parallel Gaussian capacity formula (Cover–Thomas, Theorem 9.4.1). For parallel AWGN
+/-- **Parallel Gaussian channel capacity** (water-filling). For parallel AWGN
 channels `Y_i = X_i + Z_i`, `Z_i ∼ 𝒩(0, N_i)` (`i : Fin (n+1)`) under the total power
 constraint `∑_i E[X_i²] ≤ P`, the information capacity equals the water-filling sum
 
 `C = ∑_i (1/2) log(1 + max(0, ν - N_i) / N_i)`
 
-at the KKT water level `ν`. The equality is derived via
-`isParallelGaussianPerCoordReduction_discharged` (a `le_antisymm` sup-sandwich); the
-hypotheses are the KKT budget condition `h_kkt` and the analytic regularity bundle
-`h_reg`. Water-filling optimality is obtained internally from `h_kkt` rather than assumed. -/
+at the KKT water level `ν`. The hypotheses are the KKT budget condition `h_kkt` and the
+analytic regularity bundle `h_reg`; water-filling optimality is obtained internally from
+`h_kkt` rather than assumed. -/
 theorem parallel_gaussian_capacity_formula {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -547,9 +539,7 @@ theorem parallelGaussian_achiever_mi_eq_sum_perChannel_enn {n : ℕ}
 
 open InformationTheory.Shannon InformationTheory.Shannon.AWGN in
 /-- AWGN single-channel mutual information is finite. The channel MI of the Gaussian
-input through a single AWGN channel is a finite `ENNReal` (`≠ ⊤`), via `klDiv_ne_top`
-applied to the joint `gaussianReal 0 P ⊗ₘ awgnChannel N` against the product of its
-marginals (joint absolute continuity plus llr integrability via the Bayes split).
+input through a single AWGN channel is a finite `ENNReal` (`≠ ⊤`).
 
 The `N ≠ 0` hypothesis is required: for `N = 0` the channel is deterministic
 (`W x = dirac x`), the joint lives on the diagonal graph (`p.prod q`-null for a continuous
@@ -623,8 +613,7 @@ theorem awgn_mutualInfoOfChannel_ne_top (N : ℝ≥0) (hN : N ≠ 0)
 
 open InformationTheory.Shannon InformationTheory.Shannon.AWGN in
 /-- Per-channel MI decomposition of the product achiever, in `.toReal` form. The
-per-coordinate finiteness used for the `.toReal`/`∑` exchange comes from
-`awgn_mutualInfoOfChannel_ne_top`, which needs `N i ≠ 0`. -/
+per-coordinate finiteness needed for the `.toReal`/`∑` exchange requires `N i ≠ 0`. -/
 theorem parallelGaussian_achiever_mi_eq_sum_perChannel {n : ℕ}
     (Q : Fin n → ℝ≥0) (N : Fin n → ℝ≥0) (hN : ∀ i, N i ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -681,10 +670,8 @@ theorem awgn_perCoord_mi_closed_form (Q N : ℝ≥0) (hN : N ≠ 0)
     exact h
 
 open InformationTheory.Shannon InformationTheory.Shannon.AWGN in
-/-- The achiever MI value equals the per-coordinate water-filling sum, from the per-channel
-decomposition `parallelGaussian_achiever_mi_eq_sum_perChannel` and the per-coordinate AWGN
-closed form `awgn_perCoord_mi_closed_form`. Inhabits the `achiever_mi` field of
-`IsParallelGaussianPerCoordRegularity`. -/
+/-- The achiever MI value equals the per-coordinate water-filling sum. Inhabits the
+`achiever_mi` field of `IsParallelGaussianPerCoordRegularity`. -/
 theorem parallelGaussianCapacity_achiever_mi {n : ℕ}
     (Q : Fin n → ℝ≥0) (N : Fin n → ℝ≥0) (hN : ∀ i, N i ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)

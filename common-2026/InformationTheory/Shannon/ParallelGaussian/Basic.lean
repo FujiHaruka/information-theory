@@ -41,6 +41,11 @@ solution (Cover–Thomas, Theorem 9.4.1).
   non-integrable integrand, so the naive Bochner constraint would admit heavy-tailed
   inputs with infinite second moment; the lower integral forces genuine integrability of
   every `(x i)²`.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
+  Theorem 9.4.1.
 -/
 
 namespace InformationTheory.Shannon.ParallelGaussian
@@ -92,8 +97,7 @@ instance parallelGaussianChannel.instIsMarkovKernel {n : ℕ}
 /-! ## Water-filling power allocation -/
 
 /-- The water-filling power allocation: for water level `ν : ℝ` and noise vector
-`N : Fin n → ℝ≥0`, coordinate `i` is allocated `max(0, ν - N_i)` (Cover–Thomas,
-Theorem 9.4.1). -/
+`N : Fin n → ℝ≥0`, coordinate `i` is allocated `max(0, ν - N_i)`. -/
 noncomputable def waterFillingPower {n : ℕ} (ν : ℝ) (N : Fin n → ℝ≥0) :
     Fin n → ℝ :=
   fun i ↦ max 0 (ν - (N i : ℝ))
@@ -207,9 +211,9 @@ def IsWaterFillingOptimal {n : ℕ} (P : ℝ) (N : Fin n → ℝ≥0) (ν : ℝ)
 the per-coordinate water-filling sum `∑_i (1/2) log(1 + max(0, ν - N_i) / N_i)`.
 
 This predicate is the capacity equality itself, so it is intended to be *derived* (not
-taken as a hypothesis). The genuine, non-circular producer is
-`ParallelGaussianPerCoord.isParallelGaussianPerCoordReduction_discharged`, a sup-sandwich
-from the regularity bundle `IsParallelGaussianPerCoordRegularity`. -/
+taken as a hypothesis).
+
+See also `isParallelGaussianPerCoordReduction_discharged`. -/
 def IsParallelGaussianPerCoordReduction {n : ℕ} (P : ℝ)
     (N : Fin n → ℝ≥0) (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N) (ν : ℝ) : Prop :=
