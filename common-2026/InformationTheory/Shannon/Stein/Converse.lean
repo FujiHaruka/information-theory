@@ -317,7 +317,8 @@ theorem stein_converse_finite_n
   -- Key bounds:
   --   (i) Qn.real sᶜ ≤ 1, so log Qn.real sᶜ ≤ 0, so -(Pn.real sᶜ)(log Qn.real sᶜ) ≥ 0.
   --   (ii) Qn.real s ≤ 1, so log Qn.real s ≤ 0, so -log Qn.real s ≥ 0.
-  --   (iii) (Pn.real s) log Pn.real s + (Pn.real sᶜ) log Pn.real sᶜ = -binEntropy(Pn.real s) ≥ -log 2.
+  --   (iii) (Pn.real s) log Pn.real s + (Pn.real sᶜ) log Pn.real sᶜ
+  --         = -binEntropy(Pn.real s) ≥ -log 2.
   have h_Qn_sc_le_one : Qn.real sᶜ ≤ 1 := by
     have : Qn.real sᶜ ≤ Qn.real Set.univ := MeasureTheory.measureReal_mono (Set.subset_univ _)
     rw [show Qn.real Set.univ = 1 from probReal_univ] at this

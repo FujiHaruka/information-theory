@@ -94,9 +94,11 @@ theorem jointEntropy_chain_rule
         (MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) => α) (Fin.last n))
       have hjoint_meas : Measurable (fun ω (i : Fin (n + 1)) => Xs i ω) :=
         measurable_pi_iff.mpr (fun i => hXs i)
-      -- For each ω, e maps `fun i => Xs i ω` to `(Xs (last n) ω, fun j => Xs (succAbove (last n) j) ω)`.
+      -- For each ω, e maps `fun i => Xs i ω` to
+      -- `(Xs (last n) ω, fun j => Xs (succAbove (last n) j) ω)`.
       -- And `succAbove (last n) j = j.castSucc`.
-      have h_e_eq : ∀ ω, e (fun i => Xs i ω) = (Xs (Fin.last n) ω, fun (j : Fin n) => Xs j.castSucc ω) := by
+      have h_e_eq : ∀ ω,
+          e (fun i => Xs i ω) = (Xs (Fin.last n) ω, fun (j : Fin n) => Xs j.castSucc ω) := by
         intro ω
         apply Prod.ext
         · simp [e, MeasurableEquiv.piFinSuccAbove_apply]

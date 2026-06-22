@@ -113,7 +113,8 @@ theorem awgn_expurgate_worst_half
 /-! ## Power constraint and feasibility witness
 
 The per-codeword power-constraint bound `awgnPowerConstraintPerCodeword_holds`
-lives in `InformationTheory/Shannon/AWGN/PerCodewordPowerConstraint.lean`. The achievability assembly
+lives in `InformationTheory/Shannon/AWGN/PerCodewordPowerConstraint.lean`. The
+achievability assembly
 also needs a shared slack witness `∃ P' ∈ (0, P)` with `R < capacity(P')`,
 supplied by `awgnPowerWitness_exists` below, which returns a strict `P' < P` (the
 variance-level slack `(P'.toNNReal : ℝ) < P` required by the per-codeword
@@ -257,7 +258,8 @@ lemma exists_two_mul_ceil_exp_le_ceil_exp_of_lt {R R'' : ℝ} (hR_nonneg : 0 ≤
       linarith
     have := Real.exp_le_exp.mpr h_n_delta
     rwa [Real.exp_log (by norm_num : (0 : ℝ) < 4)] at this
-  have h_exp_R''_ge : Real.exp ((n : ℝ) * R'') = Real.exp ((n : ℝ) * R) * Real.exp ((n : ℝ) * δd) := by
+  have h_exp_R''_ge : Real.exp ((n : ℝ) * R'') =
+      Real.exp ((n : ℝ) * R) * Real.exp ((n : ℝ) * δd) := by
     rw [← Real.exp_add]; congr 1; ring
   have h_exp_R_pos : 0 < Real.exp ((n : ℝ) * R) := Real.exp_pos _
   have h_exp_R_ge_one : 1 ≤ Real.exp ((n : ℝ) * R) := by

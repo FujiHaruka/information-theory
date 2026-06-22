@@ -37,7 +37,8 @@ theorem integral_exp_sub_llr_le [IsProbabilityMeasure μ] [IsProbabilityMeasure 
     (hμν : μ ≪ ν) {g : α → ℝ} (hg_meas : Measurable g) {C : ℝ} (hg_bdd : ∀ x, |g x| ≤ C) :
     ∫ x, Real.exp (g x - llr μ ν x) ∂μ ≤ ∫ x, Real.exp (g x) ∂ν := by
   set r : α → ℝ := fun x => (μ.rnDeriv ν x).toReal with hr
-  -- `exp g` is bounded by `exp C`, hence `Real.exp (g ·)` is integrable wrt any probability measure.
+  -- `exp g` is bounded by `exp C`, hence `Real.exp (g ·)` is integrable wrt any
+  -- probability measure.
   have hexpg_meas : Measurable (fun x => Real.exp (g x)) := Real.measurable_exp.comp hg_meas
   have hbound_exp : ∀ x, ‖Real.exp (g x)‖ ≤ Real.exp C := by
     intro x
@@ -101,7 +102,8 @@ theorem klDiv_variational_lower_bound [IsProbabilityMeasure μ] [IsProbabilityMe
   -- `exp (g − llr)` is integrable wrt μ (via change of measure: bounded after pushing to ν).
   have hr_pos : ∀ᵐ x ∂μ, 0 < μ.rnDeriv ν x := μ.rnDeriv_pos hμν
   have hr_ne_top : ∀ᵐ x ∂μ, μ.rnDeriv ν x ≠ ∞ := hμν.ae_le (μ.rnDeriv_ne_top ν)
-  have hexp_sub_eq : (fun x => Real.exp (g x - llr μ ν x)) =ᵐ[μ] fun x => Real.exp (g x) * (r x)⁻¹ := by
+  have hexp_sub_eq : (fun x => Real.exp (g x - llr μ ν x)) =ᵐ[μ]
+      fun x => Real.exp (g x) * (r x)⁻¹ := by
     filter_upwards [hr_pos, hr_ne_top] with x hx hx_top
     have hrx : 0 < r x := ENNReal.toReal_pos hx.ne' hx_top
     rw [llr, sub_eq_add_neg, Real.exp_add, ← Real.log_inv, Real.exp_log (by positivity)]

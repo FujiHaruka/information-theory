@@ -73,7 +73,8 @@ theorem pi_absolutelyContinuous_reverse {n : ℕ} (ν : Fin n → Measure ℝ)
     exact pi_withDensity_fin (fun _ : Fin n => (volume : Measure ℝ)) hf_meas
   rw [h_pi_eq, ← volume_pi]
   refine withDensity_absolutelyContinuous' ?_ ?_
-  · exact (Finset.measurable_prod _ (fun i _ => (hf_meas i).comp (measurable_pi_apply i))).aemeasurable
+  · exact (Finset.measurable_prod _
+      (fun i _ => (hf_meas i).comp (measurable_pi_apply i))).aemeasurable
   · -- each `rnDeriv (ν i) volume` is a.e.-positive on `volume` (reverse AC)
     have h_pos : ∀ i, ∀ᵐ z ∂(volume : Measure ℝ), f i z ≠ 0 := by
       intro i
@@ -116,7 +117,8 @@ theorem volume_absolutelyContinuous_pi_gaussian {n : ℕ}
     exact pi_withDensity_fin (fun _ : Fin n => (volume : Measure ℝ)) hf_meas
   rw [h_pi_eq, ← volume_pi]
   refine withDensity_absolutelyContinuous' ?_ ?_
-  · exact (Finset.measurable_prod _ (fun i _ => (hf_meas i).comp (measurable_pi_apply i))).aemeasurable
+  · exact (Finset.measurable_prod _
+      (fun i _ => (hf_meas i).comp (measurable_pi_apply i))).aemeasurable
   · -- the product density is everywhere `≠ 0` since each Gaussian pdf is positive
     refine Filter.Eventually.of_forall (fun z => ?_)
     refine Finset.prod_ne_zero_iff.mpr (fun i _ => ?_)

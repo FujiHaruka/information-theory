@@ -230,7 +230,8 @@ private lemma sum_floorMatrix_erase_le
   classical
   set qXa : ℝ := ∑ b'' : β, qZ (a, b'') with hqXa_def
   have hqXa_nn : 0 ≤ qXa := Finset.sum_nonneg fun b'' _ => hqZ_nn (a, b'')
-  -- Each summand is ≤ (typeCount x a : ℝ) · (qZ(a,b')/qXa); sum ≤ (typeCount x a) · 1 = typeCount x a.
+  -- Each summand is ≤ (typeCount x a : ℝ) · (qZ(a,b')/qXa);
+  -- sum ≤ (typeCount x a) · 1 = typeCount x a.
   have h_real_le :
       (∑ b' ∈ Finset.univ.erase (absorberLetterβ β),
           ((Nat.floor ((typeCount x a : ℝ)
@@ -727,7 +728,8 @@ lemma conditionalTypeClass_card_eq_prod_typeClass
   let ψ : {y // P y} ≃ {g // Q g} := φ.subtypeEquiv hPQ
   -- χ : {g // Q g} ≃ ∀ a, {ga : Sa a → β // per-row count condition}
   let χ : {g : ∀ a, Sa a → β // Q g} ≃
-      ∀ a, {ga : Sa a → β // ∀ b, (Finset.univ.filter (fun i : Sa a => ga i = b)).card = c (a, b)} :=
+      ∀ a, {ga : Sa a → β // ∀ b,
+        (Finset.univ.filter (fun i : Sa a => ga i = b)).card = c (a, b)} :=
     { toFun := fun g a => ⟨g.val a, fun b => g.property a b⟩
       invFun := fun g => ⟨fun a => (g a).val, fun a b => (g a).property b⟩
       left_inv := fun _ => rfl

@@ -102,7 +102,8 @@ Proof via Mathlib's conditional independence API:
 - (A) `IsSufficientStatistic` (γ-form joint factorization) ↔ `Xs ⟂ᵢ[f∘Xs] θ`
   via `condIndepFun_iff_map_prod_eq_prod_condDistrib_prod_condDistrib` + `compProd_eq_comp_prod`.
 - (B) `Xs ⟂ᵢ[f∘Xs] θ` ↔ `θ ⟂ᵢ[f∘Xs] Xs` via `CondIndepFun.symm`.
-- (C) `θ ⟂ᵢ[f∘Xs] Xs` ↔ factorization form via `condIndepFun_iff_condDistrib_prod_ae_eq_prodMkRight`.
+- (C) `θ ⟂ᵢ[f∘Xs] Xs` ↔ factorization form
+  via `condIndepFun_iff_condDistrib_prod_ae_eq_prodMkRight`.
 @audit:ok -/
 @[entry_point]
 theorem isSufficient_iff_factorized

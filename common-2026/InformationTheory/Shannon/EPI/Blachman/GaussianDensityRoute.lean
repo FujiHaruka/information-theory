@@ -243,7 +243,8 @@ theorem convDensityAdd_gaussian_closed_form
       (fun z => ?_) (fun z => Filter.Eventually.of_forall fun a => ?_)
       ((integrable_gaussianPDFReal mX vX).const_mul C)
       (Filter.Eventually.of_forall fun a => ?_)
-    · exact (InformationTheory.Shannon.differentiable_gaussianPDFReal mX vX).continuous.aestronglyMeasurable.mul
+    · exact ((InformationTheory.Shannon.differentiable_gaussianPDFReal mX vX).continuous
+          ).aestronglyMeasurable.mul
         (((InformationTheory.Shannon.differentiable_gaussianPDFReal mY vY).continuous.comp
           (continuous_const.sub continuous_id)).aestronglyMeasurable)
     · -- ‖fX a * fY (z - a)‖ ≤ C * fX a
@@ -258,7 +259,8 @@ theorem convDensityAdd_gaussian_closed_form
         ((InformationTheory.Shannon.differentiable_gaussianPDFReal mY vY).continuous.comp
           (continuous_id.sub continuous_const))
   exact (h_cont_conv.ae_eq_iff_eq volume
-    (InformationTheory.Shannon.differentiable_gaussianPDFReal (mX + mY) (vX + vY)).continuous).mp h_ae_real
+    (InformationTheory.Shannon.differentiable_gaussianPDFReal (mX + mY) (vX + vY)).continuous).mp
+    h_ae_real
 
 /-! ## Step 1 — `IsRegularDensityV2 (gaussianPDFReal m v)` (6 fields, all direct) -/
 

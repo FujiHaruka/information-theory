@@ -48,7 +48,8 @@ variable {Ω₀ : Type*} [MeasurableSpace Ω₀]
 /-- **Cramér n-letter change-of-measure predicate** (Mathlib gap abstraction).
 
 Captures the missing Mathlib compatibility lemma
-`Measure.infinitePi (fun _ => μ₀.tilted (lam * Y ·)) ↔ (Measure.infinitePi μ₀).tilted (∑ lam * Y ∘ eval i)`
+`Measure.infinitePi (fun _ => μ₀.tilted (lam * Y ·)) ↔
+(Measure.infinitePi μ₀).tilted (∑ lam * Y ∘ eval i)`
 on cylinders of width `n`, in the form usable as input to Cramér's lower-bound
 change-of-measure step.
 
@@ -247,7 +248,8 @@ theorem isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge
   -- The tilted window mass is eventually ≥ 1/2.
   filter_upwards [h_res a ε hε] with n hn
   -- Cylinder lift, un-tilted side: half-line event.
-  have hPE : MeasurableSet {r : ℝ | a * (n : ℝ) ≤ r} := measurableSet_le measurable_const measurable_id
+  have hPE : MeasurableSet {r : ℝ | a * (n : ℝ) ≤ r} :=
+    measurableSet_le measurable_const measurable_id
   have hlift_E := infinitePi_partialSum_event_eq_pi (ν := μ₀) hY n
       (fun r => a * (n : ℝ) ≤ r) hPE
   -- Cylinder lift, tilted side: window event.

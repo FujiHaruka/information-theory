@@ -179,8 +179,9 @@ input-regularity preconditions `hreg_pX`/`hnorm_pX`/`hready_pX`/`h_fisher_X`). A
 preconditions are regularity (regular density / normalization / Integrable-boundedness bundle /
 finite Fisher), NOT load-bearing — they do not encode the inequality core.
 @audit-note: INDEPENDENT honesty audit of the design-(b) change. (1) The 3 added preconditions
-are genuine regularity, NOT load-bearing: `hreg_pX` = 7-field `IsRegularDensityV2` (diff / pos / tails→0 /
-integrable-deriv / ∫deriv=0); `hnorm_pX` = normalization; `hready_pX` = the 19-field
+are genuine regularity, NOT load-bearing: `hreg_pX` = 7-field `IsRegularDensityV2`
+(diff / pos / tails→0 / integrable-deriv / ∫deriv=0); `hnorm_pX` = normalization;
+`hready_pX` = the 19-field
 `IsBlachmanConvReady` bundle (`EPIBlachmanDensity.lean:712-761`, read verbatim) whose every field
 is `Integrable (…)` / `∃ M, |·| ≤ M` / `0 < …` — the `int_inner`/`int_prod{1,2,3}`/`int_W`/
 `int_Wsq` fields assert only INTEGRABILITY of the Tonelli-expansion integrands, never their
@@ -307,7 +308,7 @@ noncomputable def isDeBruijnRegularityHyp_of_methodX_unitnoise
       have hpX_int : Integrable pX volume := by
         rw [hpX_def]
         exact MeasureTheory.Measure.integrable_toReal_rnDeriv
-      exact InformationTheory.Shannon.EPICase1ProducerMeasurability.aestronglyMeasurable_fisherInfo_t
+      exact EPICase1ProducerMeasurability.aestronglyMeasurable_fisherInfo_t
         hpX_meas hpX_int
     · -- pointwise bound from the genuine `hbound`, transported to the `Ioc`-restricted measure.
       refine (ae_restrict_iff' measurableSet_Ioc).mpr (Filter.Eventually.of_forall ?_)

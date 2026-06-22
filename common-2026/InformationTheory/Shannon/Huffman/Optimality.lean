@@ -641,7 +641,9 @@ lemma initMultiset_mergedMeasure_snd_map_eq
   rw [hRHS', hsplit, Finset.erase_right_comm]
 
 omit [Nonempty α] in
-/-- Cost-level bridge: `expectedLength P (huffmanLength P) = expectedLength (mergedMeasure P a b hab) (huffmanLength (mergedMeasure P a b hab)) + (P.real {a} + P.real {b})`.
+/-- Cost-level bridge:
+`expectedLength P (huffmanLength P) = expectedLength (mergedMeasure P a b hab)
+(huffmanLength (mergedMeasure P a b hab)) + (P.real {a} + P.real {b})`.
 @audit:ok -/
 lemma expectedLength_merged_cost_bridge
     (P : Measure α) [IsProbabilityMeasure P] (_hP : ∀ a, 0 < P.real {a})
@@ -955,7 +957,8 @@ theorem huffmanLength_optimal_aux (n : ℕ)
       obtain ⟨l_norm, hln_pos, hln_kraft, hln_eq_ab, hln_le⟩ :=
         h_swap P l hl_pos hl_kraft a b hab h_a_min h_b_min h_card_ge_3
       have hln_a_ge_2 : 2 ≤ l_norm a :=
-        two_le_normalizedLength_of_card_ge_three l_norm hln_pos a b hab hln_eq_ab hln_kraft h_card_ge_3
+        two_le_normalizedLength_of_card_ge_three l_norm hln_pos a b hab hln_eq_ab hln_kraft
+          h_card_ge_3
       obtain ⟨l', hl'_pos, hl'_kraft, hl'_eq⟩ :=
         expectedLength_bridge_R P l_norm hln_pos a b hab hln_eq_ab hln_a_ge_2 hln_kraft
       have hP'_inst : IsProbabilityMeasure (mergedMeasure P a b hab) :=
