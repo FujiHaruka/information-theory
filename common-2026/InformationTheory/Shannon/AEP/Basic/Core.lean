@@ -26,7 +26,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
 /-- Block joint random variable: `jointRV Xs n ω = (Xs 0 ω, Xs 1 ω, …, Xs (n-1) ω)`. -/
 def jointRV (Xs : ℕ → Ω → α) (n : ℕ) : Ω → (Fin n → α) :=
-  fun ω i => Xs i ω
+  fun ω i ↦ Xs i ω
 
 omit [MeasurableSpace Ω] [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
   [MeasurableSingletonClass α] in
@@ -36,7 +36,7 @@ omit [MeasurableSpace Ω] [Fintype α] [DecidableEq α] [Nonempty α] [Measurabl
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 lemma measurable_jointRV (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (n : ℕ) :
     Measurable (jointRV Xs n) :=
-  measurable_pi_lambda _ fun i => hXs i
+  measurable_pi_lambda _ fun i ↦ hXs i
 
 /-! ### Probability AEP
 
@@ -49,7 +49,7 @@ by composition with the (always-measurable, finite-domain) `pmfLog`.
 
 /-- Alphabet-side `−log p(x)` function (independent of `i`). -/
 noncomputable def pmfLog (μ : Measure Ω) (Xs : ℕ → Ω → α) : α → ℝ :=
-  fun x => -Real.log ((μ.map (Xs 0)).real {x})
+  fun x ↦ -Real.log ((μ.map (Xs 0)).real {x})
 
 omit [DecidableEq α] [Nonempty α] in
 lemma measurable_pmfLog (μ : Measure Ω) (Xs : ℕ → Ω → α) :
@@ -61,7 +61,7 @@ lemma measurable_pmfLog (μ : Measure Ω) (Xs : ℕ → Ω → α) :
 /-- Per-symbol log-likelihood: `(−log P(Xs i ω))`. -/
 noncomputable def logLikelihood
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (i : ℕ) : Ω → ℝ :=
-  fun ω => pmfLog μ Xs (Xs i ω)
+  fun ω ↦ pmfLog μ Xs (Xs i ω)
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 @[entry_point]
@@ -107,7 +107,7 @@ lemma integral_logLikelihood_zero
   -- Step 3: rewrite each summand `(μ.map Xs 0).real {x} • pmfLog μ Xs x`
   -- as `Real.negMulLog ((μ.map Xs 0).real {x})`.
   unfold entropy
-  refine Finset.sum_congr rfl fun x _ => ?_
+  refine Finset.sum_congr rfl fun x _ ↦ ?_
   show (μ.map (Xs 0)).real {x} • pmfLog μ Xs x
       = Real.negMulLog ((μ.map (Xs 0)).real {x})
   rw [pmfLog, Real.negMulLog]
@@ -123,8 +123,8 @@ lemma identDistrib_logLikelihood
 omit [DecidableEq α] [Nonempty α] in
 lemma indepFun_logLikelihood
     (μ : Measure Ω) (Xs : ℕ → Ω → α)
-    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j) :
-    Pairwise fun i j =>
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j) :
+    Pairwise fun i j ↦
       logLikelihood μ Xs i ⟂ᵢ[μ] logLikelihood μ Xs j := by
   intro i j hij
   have h := hindep hij
@@ -139,17 +139,17 @@ omit [DecidableEq α] [Nonempty α] in
 theorem aep_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ) :
     ∀ᵐ ω ∂μ, Tendsto
-      (fun n : ℕ => (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n)
+      (fun n : ℕ ↦ (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n)
       atTop
       (𝓝 (entropy μ (Xs 0))) := by
   -- Apply `strong_law_ae_real` with `Y i := logLikelihood μ Xs i`, then rewrite the
   -- limit using `integral_logLikelihood_zero`.
   have hint : Integrable (logLikelihood μ Xs 0) μ :=
     integrable_logLikelihood μ Xs hXs 0
-  have hindLL : Pairwise fun i j =>
+  have hindLL : Pairwise fun i j ↦
       logLikelihood μ Xs i ⟂ᵢ[μ] logLikelihood μ Xs j :=
     indepFun_logLikelihood μ Xs hindep
   have hidLL : ∀ i, IdentDistrib (logLikelihood μ Xs i) (logLikelihood μ Xs 0) μ μ :=
@@ -168,31 +168,31 @@ converges to `entropy μ (Xs 0)` in probability. -/
 theorem aep_inProbability
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     {ε : ℝ} (hε : 0 < ε) :
     Tendsto
-      (fun n : ℕ => μ {ω | ε ≤ |((∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n)
+      (fun n : ℕ ↦ μ {ω | ε ≤ |((∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n)
                                   - entropy μ (Xs 0)|})
       atTop
       (𝓝 0) := by
   -- Set up the Cesàro mean and the constant limit as functions of ω.
   set f : ℕ → Ω → ℝ :=
-    fun n ω => (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n with hf_def
-  set g : Ω → ℝ := fun _ => entropy μ (Xs 0) with hg_def
+    fun n ω ↦ (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n with hf_def
+  set g : Ω → ℝ := fun _ ↦ entropy μ (Xs 0) with hg_def
   -- AEStronglyMeasurable for `f n` and `g`.
   have h_meas_f : ∀ n, AEStronglyMeasurable (f n) μ := by
     intro n
     have h_sum_meas : Measurable
-        (fun ω => ∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) :=
-      Finset.measurable_sum _ fun i _ => measurable_logLikelihood μ Xs hXs i
+        (fun ω ↦ ∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) :=
+      Finset.measurable_sum _ fun i _ ↦ measurable_logLikelihood μ Xs hXs i
     have h_meas : Measurable (f n) := by
-      change Measurable (fun ω => (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n)
+      change Measurable (fun ω ↦ (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n)
       exact h_sum_meas.div_const _
     exact h_meas.aestronglyMeasurable
   -- a.s. convergence from `aep_ae`.
   have h_ae := aep_ae μ Xs hXs hindep hident
-  have h_ae' : ∀ᵐ ω ∂μ, Tendsto (fun n => f n ω) atTop (𝓝 (g ω)) := h_ae
+  have h_ae' : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ f n ω) atTop (𝓝 (g ω)) := h_ae
   -- Convert to convergence in measure.
   have h_inm : TendstoInMeasure μ f atTop g :=
     tendstoInMeasure_of_tendsto_ae h_meas_f h_ae'
@@ -200,7 +200,7 @@ theorem aep_inProbability
   rw [tendstoInMeasure_iff_dist] at h_inm
   have h_target := h_inm ε hε
   -- Rewrite `dist (f n ω) (g ω)` as `|f n ω - g ω|`.
-  refine Tendsto.congr (fun n => ?_) h_target
+  refine Tendsto.congr (fun n ↦ ?_) h_target
   apply congrArg μ
   ext ω
   show ε ≤ dist (f n ω) (g ω) ↔ ε ≤ |f n ω - g ω|
@@ -251,7 +251,7 @@ theorem typicalSet_card_le
     ((typicalSet μ Xs n ε).toFinite.toFinset.card : ℝ) ≤
       Real.exp ((n : ℝ) * (entropy μ (Xs 0) + ε)) := by
   -- Notation: write `P x := (μ.map (Xs 0)).real {x}` for the marginal pmf.
-  set P : α → ℝ := fun x => (μ.map (Xs 0)).real {x} with hP_def
+  set P : α → ℝ := fun x ↦ (μ.map (Xs 0)).real {x} with hP_def
   -- Key fact 1: `pmfLog μ Xs x = -Real.log (P x)`, so `exp (-pmfLog μ Xs x) = P x`
   -- (using `hpos x` so `P x > 0` and `Real.exp_log` applies).
   have hP_pos : ∀ x, 0 < P x := hpos
@@ -283,7 +283,7 @@ theorem typicalSet_card_le
     have hcard_le : ((typicalSet μ Xs 0 ε).toFinite.toFinset.card : ℝ) ≤ 1 := by
       have h_le : (typicalSet μ Xs 0 ε).toFinite.toFinset.card ≤ 1 := by
         have h_sub : (typicalSet μ Xs 0 ε).toFinite.toFinset ⊆ (Finset.univ : Finset (Fin 0 → α)) :=
-          fun x _ => Finset.mem_univ x
+          fun x _ ↦ Finset.mem_univ x
         calc (typicalSet μ Xs 0 ε).toFinite.toFinset.card
             ≤ (Finset.univ : Finset (Fin 0 → α)).card := Finset.card_le_card h_sub
           _ = Fintype.card (Fin 0 → α) := rfl
@@ -317,7 +317,7 @@ theorem typicalSet_card_le
       have h_rhs : Real.exp (-(∑ i : Fin n, pmfLog μ Xs (x i)))
           = ∏ i : Fin n, P (x i) := by
         rw [← Finset.sum_neg_distrib, Real.exp_sum]
-        exact Finset.prod_congr rfl fun i _ => hexp_pmfLog (x i)
+        exact Finset.prod_congr rfl fun i _ ↦ hexp_pmfLog (x i)
       rw [h_rhs] at hexp_lt
       exact hexp_lt.le
     -- Step 2: `∑ x ∈ T, ∏ i, P (x i) ≤ ∑ x : Fin n → α, ∏ i, P (x i) = 1`.
@@ -327,7 +327,7 @@ theorem typicalSet_card_le
       simp [hsum_P]
     have h_nonneg : ∀ x : Fin n → α, 0 ≤ ∏ i : Fin n, P (x i) := by
       intro x
-      exact Finset.prod_nonneg (fun i _ => (hP_pos (x i)).le)
+      exact Finset.prod_nonneg (fun i _ ↦ (hP_pos (x i)).le)
     have h_sum_T_le : (∑ x ∈ (typicalSet μ Xs n ε).toFinite.toFinset,
         ∏ i : Fin n, P (x i)) ≤ 1 := by
       calc (∑ x ∈ (typicalSet μ Xs n ε).toFinite.toFinset, ∏ i : Fin n, P (x i))
@@ -366,16 +366,16 @@ The event `{ω | jointRV Xs n ω ∈ typicalSet μ Xs n ε}` is the complement o
 theorem typicalSet_prob_tendsto_one
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     {ε : ℝ} (hε : 0 < ε) :
     Tendsto
-      (fun n : ℕ => μ {ω | jointRV Xs n ω ∈ typicalSet μ Xs n ε})
+      (fun n : ℕ ↦ μ {ω | jointRV Xs n ω ∈ typicalSet μ Xs n ε})
       atTop
       (𝓝 1) := by
   -- The "bad" event from `aep_inProbability`.
   set bad : ℕ → Set Ω :=
-    fun n => {ω | ε ≤ |((∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n)
+    fun n ↦ {ω | ε ≤ |((∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n)
                        - entropy μ (Xs 0)|} with hbad_def
   -- The typical event = complement of `bad n`. We rewrite the sum from
   -- `Finset.range n` (via `pmfLog ∘ Xs i`) to `Finset.univ` over `Fin n`
@@ -388,44 +388,44 @@ theorem typicalSet_prob_tendsto_one
     -- ∑ i : Fin n, pmfLog … (Xs i ω) = ∑ i ∈ Finset.range n, logLikelihood μ Xs i ω
     have h_sum : (∑ i : Fin n, pmfLog μ Xs (Xs i ω))
         = ∑ i ∈ Finset.range n, logLikelihood μ Xs i ω :=
-      Fin.sum_univ_eq_sum_range (fun i => pmfLog μ Xs (Xs i ω)) n
+      Fin.sum_univ_eq_sum_range (fun i ↦ pmfLog μ Xs (Xs i ω)) n
     rw [h_sum]
   -- Reduce to `μ (bad n) → 0`.
-  have h_bad : Tendsto (fun n => μ (bad n)) atTop (𝓝 0) :=
+  have h_bad : Tendsto (fun n ↦ μ (bad n)) atTop (𝓝 0) :=
     aep_inProbability μ Xs hXs hindep hident hε
   -- Each `bad n` is measurable.
   have h_meas_bad : ∀ n, MeasurableSet (bad n) := by
     intro n
     have h_sum_meas : Measurable
-        (fun ω => ∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) :=
-      Finset.measurable_sum _ fun i _ => measurable_logLikelihood μ Xs hXs i
+        (fun ω ↦ ∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) :=
+      Finset.measurable_sum _ fun i _ ↦ measurable_logLikelihood μ Xs hXs i
     have h_div : Measurable
-        (fun ω => (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n) :=
+        (fun ω ↦ (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n) :=
       h_sum_meas.div_const _
     have h_diff : Measurable
-        (fun ω => (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n
+        (fun ω ↦ (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n
                     - entropy μ (Xs 0)) :=
       h_div.sub_const _
     have h_abs : Measurable
-        (fun ω => |((∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n
+        (fun ω ↦ |((∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n
                     - entropy μ (Xs 0))|) :=
       _root_.continuous_abs.measurable.comp h_diff
     exact measurableSet_le measurable_const h_abs
   -- Pass from `μ (bad n) → 0` to `μ (bad n)ᶜ → 1`.
-  have h_compl : Tendsto (fun n => μ (bad n)ᶜ) atTop (𝓝 1) := by
+  have h_compl : Tendsto (fun n ↦ μ (bad n)ᶜ) atTop (𝓝 1) := by
     have h_id : ∀ n, μ ((bad n)ᶜ) = 1 - μ (bad n) := by
       intro n
       rw [measure_compl (h_meas_bad n) (measure_ne_top μ _),
         measure_univ]
-    refine Tendsto.congr (fun n => (h_id n).symm) ?_
+    refine Tendsto.congr (fun n ↦ (h_id n).symm) ?_
     -- (1 - ·) is continuous on ℝ≥0∞, and `1 - 0 = 1`.
-    have h_cont : Continuous (fun x : ℝ≥0∞ => (1 : ℝ≥0∞) - x) :=
+    have h_cont : Continuous (fun x : ℝ≥0∞ ↦ (1 : ℝ≥0∞) - x) :=
       ENNReal.continuous_sub_left (by simp)
-    have h_step : Tendsto (fun n => (1 : ℝ≥0∞) - μ (bad n)) atTop
+    have h_step : Tendsto (fun n ↦ (1 : ℝ≥0∞) - μ (bad n)) atTop
         (𝓝 ((1 : ℝ≥0∞) - 0)) := h_cont.tendsto _ |>.comp h_bad
     simpa using h_step
   -- Rewrite the goal via `h_event_eq`.
-  refine Tendsto.congr (fun n => ?_) h_compl
+  refine Tendsto.congr (fun n ↦ ?_) h_compl
   rw [h_event_eq n]
 
 

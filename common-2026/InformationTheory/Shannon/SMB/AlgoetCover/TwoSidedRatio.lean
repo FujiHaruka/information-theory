@@ -37,12 +37,12 @@ open InformationTheory.Shannon.TwoSided
 
 /-- **First-`n` block projection on the 2-sided side**: pulls out `x_0, …, x_{n-1}`. -/
 noncomputable def firstBlockZ (n : ℕ) : (∀ _ : ℤ, α) → (Fin n → α) :=
-  fun x i => x (i.val : ℤ)
+  fun x i ↦ x (i.val : ℤ)
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 lemma measurable_firstBlockZ (n : ℕ) :
     Measurable (firstBlockZ (α := α) n) :=
-  measurable_pi_iff.mpr (fun _ => measurable_pi_apply _)
+  measurable_pi_iff.mpr (fun _ ↦ measurable_pi_apply _)
 
 omit [DecidableEq α] [Nonempty α] in
 /-- The first-`n` block on the 2-sided side has the same law as `blockRV n` on Ω. -/
@@ -89,7 +89,7 @@ omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 noncomputable def blockLogAvgZ
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) :
     (∀ _ : ℤ, α) → ℝ :=
-  fun x => -(1 / (n : ℝ)) *
+  fun x ↦ -(1 / (n : ℝ)) *
     Real.log (((μZ μ p).map (firstBlockZ (α := α) n)).real {firstBlockZ n x})
 
 omit [DecidableEq α] [Nonempty α] in
@@ -100,12 +100,12 @@ omit [DecidableEq α] [Nonempty α] in
 lemma blockLogAvgZ_natExt_eq
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) (ω : Ω) :
     blockLogAvgZ μ p n
-        (fun i : ℤ => p.obs i.toNat ω) = blockLogAvg μ p n ω := by
+        (fun i : ℤ ↦ p.obs i.toNat ω) = blockLogAvg μ p n ω := by
   classical
   -- The 2-sided extension at integer coord `i ≥ 0` is `p.obs i ω`.
   unfold blockLogAvgZ blockLogAvg
   -- The argument: `firstBlockZ n (extension ω) = blockRV n ω`.
-  have h_args : (firstBlockZ (α := α) n) (fun i : ℤ => p.obs i.toNat ω)
+  have h_args : (firstBlockZ (α := α) n) (fun i : ℤ ↦ p.obs i.toNat ω)
       = p.blockRV n ω := by
     funext i
     show p.obs ((i.val : ℤ).toNat) ω = p.obs i.val ω
@@ -119,14 +119,14 @@ omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 noncomputable def negLogQInftyZ
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) :
     (∀ _ : ℤ, α) → ℝ :=
-  fun x => ∑ i ∈ Finset.range n, pmfLogCondInfty μ p (shiftZ^[i] x)
+  fun x ↦ ∑ i ∈ Finset.range n, pmfLogCondInfty μ p (shiftZ^[i] x)
 
 /-- **The Z-side lower-bound likelihood ratio**: `exp(negLogQ∞ - n · blockLogAvgZ)`,
 which represents `P_n/q_∞` lifted to `ℝ≥0∞`. -/
 noncomputable def MRatioLowerZ
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) :
     (∀ _ : ℤ, α) → ℝ≥0∞ :=
-  fun x => ENNReal.ofReal (Real.exp (negLogQInftyZ μ p n x - (n : ℝ) * blockLogAvgZ μ p n x))
+  fun x ↦ ENNReal.ofReal (Real.exp (negLogQInftyZ μ p n x - (n : ℝ) * blockLogAvgZ μ p n x))
 
 /-! ### Inductive-step infrastructure for `integral_MRatioLowerZ_le_one` -/
 
@@ -146,7 +146,7 @@ omit [DecidableEq α] [Nonempty α] in
 lemma measurable_blockCondRatio_apply
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (n : ℕ) (a : α) :
-    Measurable (fun s : Fin n → α => blockCondRatio μ p n s a) :=
+    Measurable (fun s : Fin n → α ↦ blockCondRatio μ p n s a) :=
   measurable_of_finite _
 
 omit [DecidableEq α] [Nonempty α] in
@@ -194,7 +194,7 @@ private lemma sum_blockCondRatio
         funext x i
         exact (h_init x).symm.symm ▸ rfl
       have h_init_meas : Measurable (Fin.init : (Fin (n + 1) → α) → (Fin n → α)) :=
-        measurable_pi_iff.mpr (fun _ => measurable_pi_apply _)
+        measurable_pi_iff.mpr (fun _ ↦ measurable_pi_apply _)
       rw [h_factor, ← Measure.map_map h_init_meas (measurable_firstBlockZ (n + 1))]
       rw [Measure.real, Measure.map_apply h_init_meas (measurableSet_singleton _),
         ← Measure.real]
@@ -215,7 +215,7 @@ private lemma sum_blockCondRatio
     -- Now `(μZ.map firstBlockZ (n+1)) (⋃_a {snoc s a})
     --   = ∑_a (μZ.map firstBlockZ (n+1)) {snoc s a}`.
     -- `Fin.snoc s` is injective in `a` (since `(snoc s a) (Fin.last n) = a`).
-    have h_inj : Function.Injective (fun a : α => (Fin.snoc s a : Fin (n + 1) → α)) := by
+    have h_inj : Function.Injective (fun a : α ↦ (Fin.snoc s a : Fin (n + 1) → α)) := by
       intro a₁ a₂ h_eq_snoc
       have := congr_fun h_eq_snoc (Fin.last n)
       simp only [Fin.snoc_last] at this
@@ -223,7 +223,7 @@ private lemma sum_blockCondRatio
     -- Singletons are pairwise disjoint.
     have h_disj :
         Pairwise (Function.onFun Disjoint
-          (fun a : α => ({Fin.snoc s a} : Set (Fin (n + 1) → α)))) := by
+          (fun a : α ↦ ({Fin.snoc s a} : Set (Fin (n + 1) → α)))) := by
       intro a₁ a₂ hab
       simp only [Function.onFun, Set.disjoint_singleton]
       intro h
@@ -234,8 +234,8 @@ private lemma sum_blockCondRatio
           = ⋃ a ∈ (Finset.univ : Finset α), ({Fin.snoc s a} : Set _) := by
       ext t; simp
     rw [h_iUnion_to_biUnion]
-    rw [measureReal_biUnion_finset (fun a _ b _ hab => h_disj hab)
-      (fun a _ => measurableSet_singleton _)]
+    rw [measureReal_biUnion_finset (fun a _ b _ hab ↦ h_disj hab)
+      (fun a _ ↦ measurableSet_singleton _)]
   rw [h_sum, div_self hP_n_ne]
 
 omit [DecidableEq α] [Nonempty α] in
@@ -420,14 +420,14 @@ private lemma lintegral_indicator_mul_eq
     {Ω : Type*} {m₀ m : MeasurableSpace Ω} (hm : m ≤ m₀) (μ : @Measure Ω m₀)
     [SigmaFinite (μ.trim hm)]
     {B : Set Ω} (hB : MeasurableSet[m] B) (f : Ω → ℝ≥0∞) :
-    ∫⁻ x, B.indicator (fun _ => (1 : ℝ≥0∞)) x * f x ∂μ
-      = ∫⁻ x, B.indicator (fun _ => (1 : ℝ≥0∞)) x * μ⁻[f|m] x ∂μ := by
+    ∫⁻ x, B.indicator (fun _ ↦ (1 : ℝ≥0∞)) x * f x ∂μ
+      = ∫⁻ x, B.indicator (fun _ ↦ (1 : ℝ≥0∞)) x * μ⁻[f|m] x ∂μ := by
   -- LHS = ∫⁻ x in B, f dμ via indicator/restrict, then setLIntegral_condLExp.
   have h_rw : ∀ (h : Ω → ℝ≥0∞),
-      ∫⁻ x, B.indicator (fun _ => (1 : ℝ≥0∞)) x * h x ∂μ = ∫⁻ x in B, h x ∂μ := by
+      ∫⁻ x, B.indicator (fun _ ↦ (1 : ℝ≥0∞)) x * h x ∂μ = ∫⁻ x in B, h x ∂μ := by
     intro h
-    rw [show (fun x => B.indicator (fun _ => (1 : ℝ≥0∞)) x * h x)
-          = B.indicator (fun x => 1 * h x) from ?_]
+    rw [show (fun x ↦ B.indicator (fun _ ↦ (1 : ℝ≥0∞)) x * h x)
+          = B.indicator (fun x ↦ 1 * h x) from ?_]
     · rw [MeasureTheory.lintegral_indicator (hm _ hB)]
       simp
     · funext x
@@ -447,84 +447,84 @@ lemma lintegral_mul_eq_lintegral_mul_condLExp
   classical
   -- Approximate g by m-simple functions sn ↑ g.
   set sn : ℕ → @SimpleFunc Ω m ℝ≥0∞ := SimpleFunc.eapprox g with hsn_def
-  have h_sn_mono : ∀ x, Monotone (fun n => (sn n : Ω → ℝ≥0∞) x) :=
-    fun x i j hij => SimpleFunc.monotone_eapprox _ hij x
+  have h_sn_mono : ∀ x, Monotone (fun n ↦ (sn n : Ω → ℝ≥0∞) x) :=
+    fun x i j hij ↦ SimpleFunc.monotone_eapprox _ hij x
   have h_g_iSup : ∀ x, g x = ⨆ n, (sn n : Ω → ℝ≥0∞) x :=
-    fun x => (SimpleFunc.iSup_eapprox_apply hg x).symm
+    fun x ↦ (SimpleFunc.iSup_eapprox_apply hg x).symm
   have h_sn_meas_m₀ : ∀ n, @Measurable Ω ℝ≥0∞ m₀ _ (sn n : Ω → ℝ≥0∞) :=
-    fun n => ((sn n).measurable).mono hm le_rfl
+    fun n ↦ ((sn n).measurable).mono hm le_rfl
   have h_cL_meas : Measurable[m] (μ⁻[f|m]) := MeasureTheory.measurable_condLExp m μ f
   have h_cL_meas_m₀ : @Measurable Ω ℝ≥0∞ m₀ _ (μ⁻[f|m]) := h_cL_meas.mono hm le_rfl
   -- Pointwise: g x * h x = ⨆ n, (sn n x) * h x (since ⨆ commutes with mul).
-  have h_g_mul_iSup : ∀ (h : Ω → ℝ≥0∞), (fun x => g x * h x)
-      = fun x => ⨆ n, (sn n : Ω → ℝ≥0∞) x * h x := by
+  have h_g_mul_iSup : ∀ (h : Ω → ℝ≥0∞), (fun x ↦ g x * h x)
+      = fun x ↦ ⨆ n, (sn n : Ω → ℝ≥0∞) x * h x := by
     intro h
     funext x
     rw [h_g_iSup, ENNReal.iSup_mul]
-  have h_mono_mul : ∀ (h : Ω → ℝ≥0∞) x, Monotone (fun n => (sn n : Ω → ℝ≥0∞) x * h x) := by
+  have h_mono_mul : ∀ (h : Ω → ℝ≥0∞) x, Monotone (fun n ↦ (sn n : Ω → ℝ≥0∞) x * h x) := by
     intro h x i j hij
     have h_nn : (0 : ℝ≥0∞) ≤ h x := bot_le
     exact mul_le_mul_of_nonneg_right (h_sn_mono x hij) h_nn
   have h_meas_mul : ∀ (h : Ω → ℝ≥0∞), @Measurable Ω ℝ≥0∞ m₀ _ h →
-      ∀ n, @Measurable Ω ℝ≥0∞ m₀ _ (fun x => (sn n : Ω → ℝ≥0∞) x * h x) :=
-    fun h hh n => Measurable.mul (h_sn_meas_m₀ n) hh
+      ∀ n, @Measurable Ω ℝ≥0∞ m₀ _ (fun x ↦ (sn n : Ω → ℝ≥0∞) x * h x) :=
+    fun h hh n ↦ Measurable.mul (h_sn_meas_m₀ n) hh
   -- Step A: each simple function step holds, using linearity + lintegral_indicator_mul_eq.
   have h_step : ∀ n, ∫⁻ x, (sn n : Ω → ℝ≥0∞) x * f x ∂μ
       = ∫⁻ x, (sn n : Ω → ℝ≥0∞) x * μ⁻[f|m] x ∂μ := by
     intro n
     -- Decompose sn n via its range.
     have h_sn_decomp : ∀ x, (sn n : Ω → ℝ≥0∞) x
-        = ∑ c ∈ (sn n).range, c * ((sn n) ⁻¹' {c}).indicator (fun _ => (1 : ℝ≥0∞)) x := by
+        = ∑ c ∈ (sn n).range, c * ((sn n) ⁻¹' {c}).indicator (fun _ ↦ (1 : ℝ≥0∞)) x := by
       intro x
       rw [Finset.sum_eq_single (sn n x)]
       · simp
       · intro c _ hc
-        have h_notmem : x ∉ (sn n) ⁻¹' {c} := fun hx => hc hx.symm
+        have h_notmem : x ∉ (sn n) ⁻¹' {c} := fun hx ↦ hc hx.symm
         simp [Set.indicator_of_notMem h_notmem]
       · intro hcontra
         exact absurd (SimpleFunc.mem_range_self _ x) hcontra
     have h_decomp : ∀ x (h : Ω → ℝ≥0∞), (sn n : Ω → ℝ≥0∞) x * h x
-        = ∑ c ∈ (sn n).range, (c * ((sn n) ⁻¹' {c}).indicator (fun _ => (1 : ℝ≥0∞)) x) * h x := by
+        = ∑ c ∈ (sn n).range, (c * ((sn n) ⁻¹' {c}).indicator (fun _ ↦ (1 : ℝ≥0∞)) x) * h x := by
       intro x h
       rw [h_sn_decomp x, Finset.sum_mul]
     have h_preim_meas : ∀ c, MeasurableSet[m] ((sn n) ⁻¹' {c}) :=
-      fun c => (sn n).measurableSet_fiber c
+      fun c ↦ (sn n).measurableSet_fiber c
     have h_preim_lt_top : ∀ c ∈ (sn n).range, c ≠ ∞ := by
       intro c hc
       rcases SimpleFunc.mem_range.mp hc with ⟨x, rfl⟩
       exact (SimpleFunc.eapprox_lt_top g n x).ne
     have h_per_c_LHS : ∀ c (h : Ω → ℝ≥0∞), c ≠ ∞ →
-        ∫⁻ x, (c * ((sn n) ⁻¹' {c}).indicator (fun _ => (1 : ℝ≥0∞)) x) * h x ∂μ
-          = c * ∫⁻ x, ((sn n) ⁻¹' {c}).indicator (fun _ => (1 : ℝ≥0∞)) x * h x ∂μ := by
+        ∫⁻ x, (c * ((sn n) ⁻¹' {c}).indicator (fun _ ↦ (1 : ℝ≥0∞)) x) * h x ∂μ
+          = c * ∫⁻ x, ((sn n) ⁻¹' {c}).indicator (fun _ ↦ (1 : ℝ≥0∞)) x * h x ∂μ := by
       intro c h hc_ne_top
-      rw [show (fun x => c * ((sn n) ⁻¹' {c}).indicator (fun _ => (1 : ℝ≥0∞)) x * h x)
-          = fun x => c * (((sn n) ⁻¹' {c}).indicator (fun _ => (1 : ℝ≥0∞)) x * h x) from
-            funext (fun _ => by ring)]
+      rw [show (fun x ↦ c * ((sn n) ⁻¹' {c}).indicator (fun _ ↦ (1 : ℝ≥0∞)) x * h x)
+          = fun x ↦ c * (((sn n) ⁻¹' {c}).indicator (fun _ ↦ (1 : ℝ≥0∞)) x * h x) from
+            funext (fun _ ↦ by ring)]
       rw [MeasureTheory.lintegral_const_mul' _ _ hc_ne_top]
     -- Apply per-c rewriting on both sides.
-    rw [show (fun x => (sn n : Ω → ℝ≥0∞) x * f x)
-        = fun x => ∑ c ∈ (sn n).range,
-          (c * ((sn n) ⁻¹' {c}).indicator (fun _ => (1 : ℝ≥0∞)) x) * f x from
-            funext (fun x => h_decomp x f)]
-    rw [show (fun x => (sn n : Ω → ℝ≥0∞) x * μ⁻[f|m] x)
-        = fun x => ∑ c ∈ (sn n).range,
-          (c * ((sn n) ⁻¹' {c}).indicator (fun _ => (1 : ℝ≥0∞)) x) * μ⁻[f|m] x from
-            funext (fun x => h_decomp x _)]
-    rw [MeasureTheory.lintegral_finsetSum _ (fun c _ =>
+    rw [show (fun x ↦ (sn n : Ω → ℝ≥0∞) x * f x)
+        = fun x ↦ ∑ c ∈ (sn n).range,
+          (c * ((sn n) ⁻¹' {c}).indicator (fun _ ↦ (1 : ℝ≥0∞)) x) * f x from
+            funext (fun x ↦ h_decomp x f)]
+    rw [show (fun x ↦ (sn n : Ω → ℝ≥0∞) x * μ⁻[f|m] x)
+        = fun x ↦ ∑ c ∈ (sn n).range,
+          (c * ((sn n) ⁻¹' {c}).indicator (fun _ ↦ (1 : ℝ≥0∞)) x) * μ⁻[f|m] x from
+            funext (fun x ↦ h_decomp x _)]
+    rw [MeasureTheory.lintegral_finsetSum _ (fun c _ ↦
       ((Measurable.indicator measurable_const (hm _ (h_preim_meas c))).const_mul c).mul hf)]
-    rw [MeasureTheory.lintegral_finsetSum _ (fun c _ =>
+    rw [MeasureTheory.lintegral_finsetSum _ (fun c _ ↦
       ((Measurable.indicator measurable_const (hm _ (h_preim_meas c))).const_mul c).mul
         h_cL_meas_m₀)]
-    refine Finset.sum_congr rfl (fun c hc => ?_)
+    refine Finset.sum_congr rfl (fun c hc ↦ ?_)
     rw [h_per_c_LHS c f (h_preim_lt_top c hc),
         h_per_c_LHS c (μ⁻[f|m]) (h_preim_lt_top c hc),
         lintegral_indicator_mul_eq hm μ (h_preim_meas c) f]
   -- Step B: pass to MCT via lintegral_iSup.
   rw [h_g_mul_iSup f, h_g_mul_iSup (μ⁻[f|m])]
-  rw [MeasureTheory.lintegral_iSup (fun n => h_meas_mul f hf n)
-        (fun i j hij x => h_mono_mul f x hij)]
-  rw [MeasureTheory.lintegral_iSup (fun n => h_meas_mul (μ⁻[f|m]) h_cL_meas_m₀ n)
-    (fun i j hij x => h_mono_mul _ x hij)]
+  rw [MeasureTheory.lintegral_iSup (fun n ↦ h_meas_mul f hf n)
+        (fun i j hij x ↦ h_mono_mul f x hij)]
+  rw [MeasureTheory.lintegral_iSup (fun n ↦ h_meas_mul (μ⁻[f|m]) h_cL_meas_m₀ n)
+    (fun i j hij x ↦ h_mono_mul _ x hij)]
   exact iSup_congr h_step
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
@@ -544,7 +544,7 @@ omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 lemma measurable_condProbInfty_comp_shift_shiftedPastSigma
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) (a : α) :
     @Measurable _ _ (shiftedPastSigma (α := α) n) _
-      (fun x => condProbInfty μ p a (shiftZ^[n] x)) := by
+      (fun x ↦ condProbInfty μ p a (shiftZ^[n] x)) := by
   have h_sm_negPast : StronglyMeasurable[negPastSigma (α := α)] (condProbInfty μ p a) := by
     have h := stronglyMeasurable_condProbInfty μ p a
     rw [show (⨆ n : ℕ, (pastFiltration (α := α)) n)
@@ -553,7 +553,7 @@ lemma measurable_condProbInfty_comp_shift_shiftedPastSigma
   have h_meas_negPast : @Measurable _ _ (negPastSigma (α := α)) _ (condProbInfty μ p a) :=
     h_sm_negPast.measurable
   intro s hs
-  show MeasurableSet[shiftedPastSigma n] ((fun x => condProbInfty μ p a (shiftZ^[n] x)) ⁻¹' s)
+  show MeasurableSet[shiftedPastSigma n] ((fun x ↦ condProbInfty μ p a (shiftZ^[n] x)) ⁻¹' s)
   refine ⟨condProbInfty μ p a ⁻¹' s, h_meas_negPast hs, ?_⟩
   rfl
 
@@ -614,9 +614,9 @@ private lemma shiftZSymm_iterate_apply (n : ℕ) (y : ∀ _ : ℤ, α) (i : ℤ)
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- Coordinate projection `(· k)` is `negPastSigma`-measurable when `k ≤ -1`. -/
 lemma measurable_coord_negPastSigma {k : ℤ} (hk : k ≤ -1) :
-    @Measurable _ _ (negPastSigma (α := α)) _ (fun y : (∀ _ : ℤ, α) => y k) := by
+    @Measurable _ _ (negPastSigma (α := α)) _ (fun y : (∀ _ : ℤ, α) ↦ y k) := by
   -- `negPastSigma = cylinderEvents {i ≤ -1}`, so coord-k for k ≤ -1 is a generator.
-  exact measurable_cylinderEvent_apply (X := fun _ : ℤ => α) (Δ := {i : ℤ | i ≤ -1})
+  exact measurable_cylinderEvent_apply (X := fun _ : ℤ ↦ α) (Δ := {i : ℤ | i ≤ -1})
     (i := k) hk
 
 omit [DecidableEq α] [Nonempty α] in
@@ -628,7 +628,7 @@ lemma measurable_MRatioLowerZ_shiftedPastSigma
   classical
   -- Factor MRatio(n) through shift^n: MRatio(n) x = G (shift^n x) where
   -- G y := MRatio(n) (shiftZSymm^[n] y). Show G is negPastSigma-measurable.
-  set G : (∀ _ : ℤ, α) → ℝ≥0∞ := fun y => MRatioLowerZ μ p n (shiftZSymm^[n] y)
+  set G : (∀ _ : ℤ, α) → ℝ≥0∞ := fun y ↦ MRatioLowerZ μ p n (shiftZSymm^[n] y)
     with hG_def
   have h_factor : MRatioLowerZ μ p n = G ∘ shiftZ^[n] := by
     funext x
@@ -637,9 +637,9 @@ lemma measurable_MRatioLowerZ_shiftedPastSigma
   refine measurable_shiftedPastSigma_of_eq_comp n _ ?_ h_factor
   -- Show G is negPastSigma-measurable: unfold and prove piece by piece.
   show @Measurable _ _ (negPastSigma (α := α)) _
-    (fun y => MRatioLowerZ μ p n (shiftZSymm^[n] y))
+    (fun y ↦ MRatioLowerZ μ p n (shiftZSymm^[n] y))
   show @Measurable _ _ (negPastSigma (α := α)) _
-    (fun y => ENNReal.ofReal (Real.exp (negLogQInftyZ μ p n (shiftZSymm^[n] y) -
+    (fun y ↦ ENNReal.ofReal (Real.exp (negLogQInftyZ μ p n (shiftZSymm^[n] y) -
       (n : ℝ) * blockLogAvgZ μ p n (shiftZSymm^[n] y))))
   refine ENNReal.measurable_ofReal.comp ?_
   refine Real.measurable_exp.comp ?_
@@ -647,15 +647,15 @@ lemma measurable_MRatioLowerZ_shiftedPastSigma
   refine Measurable.sub ?_ ?_
   · -- negLogQInftyZ n (shiftZSymm^[n] y) = ∑_{i<n} pmfLogCondInfty(shift^i(shiftZSymm^[n] y)).
     unfold negLogQInftyZ
-    refine Finset.measurable_sum _ (fun i hi => ?_)
+    refine Finset.measurable_sum _ (fun i hi ↦ ?_)
     have hi_lt : i < n := Finset.mem_range.mp hi
     -- pmfLogCondInfty(shift^i ∘ shiftZSymm^[n] y): depends on y at coords ≤ -1.
     -- Build by hand.
     show @Measurable _ _ (negPastSigma (α := α)) _
-      (fun y => pmfLogCondInfty μ p (shiftZ^[i] (shiftZSymm^[n] y)))
+      (fun y ↦ pmfLogCondInfty μ p (shiftZ^[i] (shiftZSymm^[n] y)))
     unfold pmfLogCondInfty
     refine (Real.measurable_log.comp ?_).neg
-    refine Finset.measurable_sum _ (fun a _ => ?_)
+    refine Finset.measurable_sum _ (fun a _ ↦ ?_)
     refine Measurable.mul ?_ ?_
     · -- indicator (coord0 ⁻¹' {a}) (1 : ℝ) at shift^i (shiftZSymm^[n] y)
       -- = if (shift^i (shiftZSymm^[n] y)) 0 = a then 1 else 0
@@ -669,24 +669,24 @@ lemma measurable_MRatioLowerZ_shiftedPastSigma
         rw [shiftZSymm_iterate_apply]
         congr 1; ring
       have h_indicator_eq : ∀ y : ∀ _ : ℤ, α,
-          Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) (shiftZ^[i] (shiftZSymm^[n] y))
-            = Set.indicator (((fun y : (∀ _ : ℤ, α) => y (((i : ℤ)) - (n : ℤ))) ⁻¹' {a}))
-                (fun _ => (1 : ℝ)) y := by
+          Set.indicator (coord0 ⁻¹' {a}) (fun _ ↦ (1 : ℝ)) (shiftZ^[i] (shiftZSymm^[n] y))
+            = Set.indicator (((fun y : (∀ _ : ℤ, α) ↦ y (((i : ℤ)) - (n : ℤ))) ⁻¹' {a}))
+                (fun _ ↦ (1 : ℝ)) y := by
         intro y
         have h_cy := h_coord_eq y
         by_cases hy : (shiftZ^[i] (shiftZSymm^[n] y)) 0 = a
         · have hy' : y (((i : ℤ)) - (n : ℤ)) = a := by rw [← h_cy]; exact hy
           have h1 : shiftZ^[i] (shiftZSymm^[n] y) ∈ coord0 ⁻¹' {a} := hy
-          have h2 : y ∈ ((fun y : (∀ _ : ℤ, α) => y (((i : ℤ)) - (n : ℤ))) ⁻¹' {a}) := hy'
+          have h2 : y ∈ ((fun y : (∀ _ : ℤ, α) ↦ y (((i : ℤ)) - (n : ℤ))) ⁻¹' {a}) := hy'
           rw [Set.indicator_of_mem h1, Set.indicator_of_mem h2]
         · have hy' : ¬ y (((i : ℤ)) - (n : ℤ)) = a := by rw [← h_cy]; exact hy
           have h1 : shiftZ^[i] (shiftZSymm^[n] y) ∉ coord0 ⁻¹' {a} := hy
-          have h2 : y ∉ ((fun y : (∀ _ : ℤ, α) => y (((i : ℤ)) - (n : ℤ))) ⁻¹' {a}) := hy'
+          have h2 : y ∉ ((fun y : (∀ _ : ℤ, α) ↦ y (((i : ℤ)) - (n : ℤ))) ⁻¹' {a}) := hy'
           rw [Set.indicator_of_notMem h1, Set.indicator_of_notMem h2]
-      rw [show (fun y => Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ))
+      rw [show (fun y ↦ Set.indicator (coord0 ⁻¹' {a}) (fun _ ↦ (1 : ℝ))
               (shiftZ^[i] (shiftZSymm^[n] y)))
-          = fun y => Set.indicator (((fun y : (∀ _ : ℤ, α) => y (((i : ℤ)) - (n : ℤ))) ⁻¹' {a}))
-                (fun _ => (1 : ℝ)) y from funext h_indicator_eq]
+          = fun y ↦ Set.indicator (((fun y : (∀ _ : ℤ, α) ↦ y (((i : ℤ)) - (n : ℤ))) ⁻¹' {a}))
+                (fun _ ↦ (1 : ℝ)) y from funext h_indicator_eq]
       refine Measurable.indicator measurable_const ?_
       -- coord (i - n) for i < n is at index ≤ -1.
       have h_le : ((i : ℤ)) - (n : ℤ) ≤ -1 := by
@@ -708,7 +708,7 @@ lemma measurable_MRatioLowerZ_shiftedPastSigma
       -- Use measurable_cylinderEvents_iff: it suffices that each coord-k for k ≤ -1
       -- composed gives a coord at index k + i - n ≤ -1, which is negPastSigma-measurable.
       have h_shift_comp_meas : @Measurable _ _ (negPastSigma (α := α)) (negPastSigma (α := α))
-          (fun y : (∀ _ : ℤ, α) => shiftZ^[i] (shiftZSymm^[n] y)) := by
+          (fun y : (∀ _ : ℤ, α) ↦ shiftZ^[i] (shiftZSymm^[n] y)) := by
         refine measurable_cylinderEvents_iff.mpr ?_
         intro k hk
         -- Need: y ↦ (shiftZ^[i] (shiftZSymm^[n] y)) k is `negPastSigma`-measurable.
@@ -716,8 +716,8 @@ lemma measurable_MRatioLowerZ_shiftedPastSigma
             (shiftZ^[i] (shiftZSymm^[n] y)) k = y (k + (i : ℤ) - (n : ℤ)) := by
           intro y
           rw [shiftZ_iterate_apply, shiftZSymm_iterate_apply]
-        rw [show (fun y : (∀ _ : ℤ, α) => (shiftZ^[i] (shiftZSymm^[n] y)) k)
-            = fun y : (∀ _ : ℤ, α) => y (k + (i : ℤ) - (n : ℤ)) from funext h_apply_eq]
+        rw [show (fun y : (∀ _ : ℤ, α) ↦ (shiftZ^[i] (shiftZSymm^[n] y)) k)
+            = fun y : (∀ _ : ℤ, α) ↦ y (k + (i : ℤ) - (n : ℤ)) from funext h_apply_eq]
         have h_idx_le : k + (i : ℤ) - (n : ℤ) ≤ -1 := by
           have hi_lt' : (i : ℤ) + 1 ≤ (n : ℤ) := by exact_mod_cast hi_lt
           have hk_le : k ≤ -1 := hk
@@ -733,25 +733,25 @@ lemma measurable_MRatioLowerZ_shiftedPastSigma
     -- negPastSigma-measurable.
     -- The composition: y ↦ shiftZSymm^[n] y ↦ firstBlockZ n (shiftZSymm^[n] y) ↦ ...
     -- firstBlockZ n (shiftZSymm^[n] y) j = y (j.val - n : ℤ) for j ∈ Fin n.
-    have h_disc : Measurable (fun s : Fin n → α =>
+    have h_disc : Measurable (fun s : Fin n → α ↦
         (((μZ μ p).map (firstBlockZ (α := α) n)).real {s})) := measurable_of_finite _
     refine h_disc.comp ?_
     -- Now: y ↦ firstBlockZ n (shiftZSymm^[n] y) is negPastSigma → pi-measurable.
     show @Measurable _ _ (negPastSigma (α := α)) MeasurableSpace.pi
-      (fun y => firstBlockZ (α := α) n (shiftZSymm^[n] y))
-    refine (@measurable_pi_iff (∀ _ : ℤ, α) (Fin n) (fun _ => α) (negPastSigma (α := α))
+      (fun y ↦ firstBlockZ (α := α) n (shiftZSymm^[n] y))
+    refine (@measurable_pi_iff (∀ _ : ℤ, α) (Fin n) (fun _ ↦ α) (negPastSigma (α := α))
       _ _).mpr ?_
     intro j
     -- (firstBlockZ n (shiftZSymm^[n] y)) j = (shiftZSymm^[n] y) (j.val : ℤ) = y ((j.val : ℤ) - n).
-    show @Measurable _ _ (negPastSigma (α := α)) _ (fun y => firstBlockZ (α := α) n
+    show @Measurable _ _ (negPastSigma (α := α)) _ (fun y ↦ firstBlockZ (α := α) n
       (shiftZSymm^[n] y) j)
     have h_eq : ∀ y : (∀ _ : ℤ, α),
         firstBlockZ (α := α) n (shiftZSymm^[n] y) j = y (((j.val : ℕ) : ℤ) - (n : ℤ)) := by
       intro y
       show (shiftZSymm^[n] y) ((j.val : ℕ) : ℤ) = y (((j.val : ℕ) : ℤ) - (n : ℤ))
       rw [shiftZSymm_iterate_apply]
-    rw [show (fun y => firstBlockZ (α := α) n (shiftZSymm^[n] y) j)
-        = fun y : (∀ _ : ℤ, α) => y (((j.val : ℕ) : ℤ) - (n : ℤ)) from funext h_eq]
+    rw [show (fun y ↦ firstBlockZ (α := α) n (shiftZSymm^[n] y) j)
+        = fun y : (∀ _ : ℤ, α) ↦ y (((j.val : ℕ) : ℤ) - (n : ℤ)) from funext h_eq]
     have h_idx_le : ((j.val : ℕ) : ℤ) - (n : ℤ) ≤ -1 := by
       have hj : j.val < n := j.isLt
       have hj' : (j.val : ℤ) + 1 ≤ (n : ℤ) := by exact_mod_cast hj
@@ -771,9 +771,9 @@ identity `setIntegral_condExp` for `condProbInfty(a)`, converted to ENNReal via
 `integral_eq_lintegral_of_nonneg_ae` + finiteness. -/
 lemma condLExp_indicator_coord_n_eq_ofReal_condProbInfty_shift
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) (a : α) :
-    (fun x => ENNReal.ofReal (condProbInfty μ p a (shiftZ^[n] x)))
+    (fun x ↦ ENNReal.ofReal (condProbInfty μ p a (shiftZ^[n] x)))
       =ᵐ[μZ μ p]
-      (μZ μ p)⁻[((shiftZ^[n])⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))
+      (μZ μ p)⁻[((shiftZ^[n])⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞))
         | shiftedPastSigma (α := α) n] := by
   classical
   have hm : (shiftedPastSigma (α := α) n) ≤ MeasurableSpace.pi := shiftedPastSigma_le n
@@ -782,12 +782,12 @@ lemma condLExp_indicator_coord_n_eq_ofReal_condProbInfty_shift
     infer_instance
   -- Indicators in ℝ and ℝ≥0∞.
   set indR : (∀ _ : ℤ, α) → ℝ :=
-    (coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ)) with hindR_def
+    (coord0 ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ)) with hindR_def
   set indENN₀ : (∀ _ : ℤ, α) → ℝ≥0∞ :=
-    (coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ≥0∞)) with hindENN₀_def
+    (coord0 ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ≥0∞)) with hindENN₀_def
   -- Candidate Y.
   set Y : (∀ _ : ℤ, α) → ℝ≥0∞ :=
-    (fun x => ENNReal.ofReal (condProbInfty μ p a (shiftZ^[n] x))) with hY_def
+    (fun x ↦ ENNReal.ofReal (condProbInfty μ p a (shiftZ^[n] x))) with hY_def
   -- (i) Y is shiftedPastSigma n-measurable.
   have hY_meas : Measurable[shiftedPastSigma (α := α) n] Y :=
     ENNReal.measurable_ofReal.comp
@@ -797,7 +797,7 @@ lemma condLExp_indicator_coord_n_eq_ofReal_condProbInfty_shift
     (measurePreserving_shiftZ μ p).iterate n
   -- Pointwise: indicator at shift = indicator at coord0, after shift.
   have h_indENN_factor : ∀ x : (∀ _ : ℤ, α),
-      ((shiftZ^[n])⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞)) x
+      ((shiftZ^[n])⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞)) x
         = indENN₀ (shiftZ^[n] x) := by
     intro x
     by_cases hx : shiftZ^[n] x ∈ coord0 ⁻¹' {a}
@@ -808,19 +808,19 @@ lemma condLExp_indicator_coord_n_eq_ofReal_condProbInfty_shift
   -- Measurable maps for the lintegral_comp.
   have h_meas_condProbInfty : Measurable (condProbInfty μ p a) :=
     (stronglyMeasurable_condProbInfty μ p a).measurable.mono
-      (iSup_le (fun k => (pastFiltration (α := α)).le k)) le_rfl
-  have h_meas_ofReal_cP : Measurable (fun y => ENNReal.ofReal (condProbInfty μ p a y)) :=
+      (iSup_le (fun k ↦ (pastFiltration (α := α)).le k)) le_rfl
+  have h_meas_ofReal_cP : Measurable (fun y ↦ ENNReal.ofReal (condProbInfty μ p a y)) :=
     ENNReal.measurable_ofReal.comp h_meas_condProbInfty
   have h_indENN₀_meas : Measurable indENN₀ :=
     Measurable.indicator measurable_const (measurableSet_coord0_eq a)
   -- (ii) Set-integral equality on each s ∈ shiftedPastSigma n.
   refine ae_eq_condLExp hm (μZ μ p)
-    (((shiftZ^[n])⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))) hY_meas ?_
+    (((shiftZ^[n])⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞))) hY_meas ?_
   intro s hs
   obtain ⟨t, ht_neg, hts⟩ := hs
   subst hts
   have h_meas_t_pi : MeasurableSet t :=
-    cylinderEvents_le_pi (X := fun _ : ℤ => α) _ ht_neg
+    cylinderEvents_le_pi (X := fun _ : ℤ ↦ α) _ ht_neg
   -- LHS: ∫⁻ x in (shift^n)⁻¹' t, Y x ∂μZ = ∫⁻ y in t, ofReal(condProbInfty a y) ∂μZ.
   have h_LHS : ∫⁻ x in (shiftZ^[n]) ⁻¹' t, Y x ∂(μZ μ p)
       = ∫⁻ y in t, ENNReal.ofReal (condProbInfty μ p a y) ∂(μZ μ p) :=
@@ -828,11 +828,11 @@ lemma condLExp_indicator_coord_n_eq_ofReal_condProbInfty_shift
   -- RHS: ∫⁻ x in (shift^n)⁻¹' t, indENN x ∂μZ = ∫⁻ y in t, indENN₀ y ∂μZ.
   have h_RHS :
       ∫⁻ x in (shiftZ^[n]) ⁻¹' t, ((shiftZ^[n])⁻¹' (coord0 ⁻¹' {a})).indicator
-        (fun _ => (1 : ℝ≥0∞)) x ∂(μZ μ p)
+        (fun _ ↦ (1 : ℝ≥0∞)) x ∂(μZ μ p)
         = ∫⁻ y in t, indENN₀ y ∂(μZ μ p) := by
-    rw [show (fun x => ((shiftZ^[n])⁻¹' (coord0 ⁻¹' {a})).indicator
-            (fun _ => (1 : ℝ≥0∞)) x)
-        = fun x => indENN₀ (shiftZ^[n] x) from funext h_indENN_factor]
+    rw [show (fun x ↦ ((shiftZ^[n])⁻¹' (coord0 ⁻¹' {a})).indicator
+            (fun _ ↦ (1 : ℝ≥0∞)) x)
+        = fun x ↦ indENN₀ (shiftZ^[n] x) from funext h_indENN_factor]
     exact h_mp_shift.setLIntegral_comp_preimage h_meas_t_pi h_indENN₀_meas
   rw [h_LHS, h_RHS]
   -- Reduce to real condExp identity for condProbInfty(a).
@@ -867,7 +867,7 @@ lemma condLExp_indicator_coord_n_eq_ofReal_condProbInfty_shift
   -- Convert real integral equality to lintegral equality.
   have h_cP_nn : 0 ≤ᵐ[μZ μ p] condProbInfty μ p a := ae_zero_le_condProbInfty μ p a
   have h_indR_nn : 0 ≤ᵐ[μZ μ p] indR :=
-    Filter.Eventually.of_forall (fun x => indicator_coord0_eq_nonneg a x)
+    Filter.Eventually.of_forall (fun x ↦ indicator_coord0_eq_nonneg a x)
   have h_indR_int : Integrable indR (μZ μ p) := integrable_indicator_coord0_eq μ p a
   have h_cP_int : Integrable (condProbInfty μ p a) (μZ μ p) := by
     refine ⟨h_meas_condProbInfty.aestronglyMeasurable, ?_⟩
@@ -951,9 +951,9 @@ omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 lemma indicator_mul_ofReal_exp_pmf_eq
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) (a : α)
     (x : ∀ _ : ℤ, α) :
-    (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))) x
+    (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞))) x
         * ENNReal.ofReal (Real.exp (pmfLogCondInfty μ p (shiftZ^[n] x)))
-      = (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))) x
+      = (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞))) x
         * ENNReal.ofReal (Real.exp (-Real.log (condProbInfty μ p a (shiftZ^[n] x)))) := by
   by_cases hx : x ∈ (shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})
   · -- coord0(shift^n x) = a; pmfLogCondInfty(shift^n x) = -log(condProbInfty(a)(shift^n x)).
@@ -962,7 +962,7 @@ lemma indicator_mul_ofReal_exp_pmf_eq
         = -Real.log (condProbInfty μ p a (shiftZ^[n] x)) := by
       unfold pmfLogCondInfty
       rw [pmfLogCondPast_inner_eq_self
-        (fun a' => condProbInfty μ p a' (shiftZ^[n] x)) (shiftZ^[n] x)]
+        (fun a' ↦ condProbInfty μ p a' (shiftZ^[n] x)) (shiftZ^[n] x)]
       rw [h_coord]
     rw [h_pmf_eq]
   · -- Off support: indicator = 0, both sides 0.
@@ -993,12 +993,12 @@ lemma measurable_pmfLogCondInfty
   classical
   unfold pmfLogCondInfty
   refine (Real.measurable_log.comp ?_).neg
-  refine Finset.measurable_sum _ (fun a _ => ?_)
+  refine Finset.measurable_sum _ (fun a _ ↦ ?_)
   refine Measurable.mul ?_ ?_
   · refine Measurable.indicator measurable_const ?_
     exact measurableSet_coord0_eq a
   · exact ((stronglyMeasurable_condProbInfty μ p a).mono
-      (iSup_le (fun n => (pastFiltration (α := α)).le n))).measurable
+      (iSup_le (fun n ↦ (pastFiltration (α := α)).le n))).measurable
 
 omit [DecidableEq α] [Nonempty α] in
 lemma measurable_MRatioLowerZ
@@ -1010,20 +1010,20 @@ lemma measurable_MRatioLowerZ
   refine Real.measurable_exp.comp ?_
   refine Measurable.sub ?_ ?_
   · unfold negLogQInftyZ
-    refine Finset.measurable_sum _ (fun i _ => ?_)
+    refine Finset.measurable_sum _ (fun i _ ↦ ?_)
     exact (measurable_pmfLogCondInfty μ p).comp ((measurable_shiftZ).iterate i)
   · refine measurable_const.mul ?_
     unfold blockLogAvgZ
     refine measurable_const.mul ?_
     refine Real.measurable_log.comp ?_
-    have h_disc : Measurable (fun y : Fin n → α =>
+    have h_disc : Measurable (fun y : Fin n → α ↦
         (((μZ μ p).map (firstBlockZ (α := α) n)).real {y})) := measurable_of_finite _
     exact h_disc.comp (measurable_firstBlockZ n)
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 lemma eq_sum_indicator_preimage_mul {β : Type*} (φ : β → α) (x : β)
     (f : α → ℝ≥0∞) :
-    f (φ x) = ∑ a, ((φ ⁻¹' {a}).indicator (fun _ => (1 : ℝ≥0∞))) x * f a := by
+    f (φ x) = ∑ a, ((φ ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ≥0∞))) x * f a := by
   classical
   rw [Finset.sum_eq_single (φ x)]
   · rw [Set.indicator_of_mem (by rfl : x ∈ φ ⁻¹' {φ x}), one_mul]
@@ -1036,7 +1036,7 @@ lemma mRatioLowerZ_succ_ae_eq_sum
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) :
     ∀ᵐ x ∂(μZ μ p),
       MRatioLowerZ μ p (n + 1) x
-        = ∑ a, (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))) x
+        = ∑ a, (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞))) x
             * MRatioLowerZ μ p n x
             * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a)
             * ENNReal.ofReal (Real.exp (pmfLogCondInfty μ p (shiftZ^[n] x))) := by
@@ -1053,16 +1053,16 @@ lemma mRatioLowerZ_succ_ae_eq_sum
   have h_sum_indicator :
       ∀ (f : α → ℝ≥0∞),
         f (coord0 (shiftZ^[n] x))
-          = ∑ a, (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))) x
+          = ∑ a, (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞))) x
               * f a :=
-    fun f => eq_sum_indicator_preimage_mul (fun y => coord0 (shiftZ^[n] y)) x f
+    fun f ↦ eq_sum_indicator_preimage_mul (fun y ↦ coord0 (shiftZ^[n] y)) x f
   have h_combined :
       ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) (coord0 (shiftZ^[n] x)))
         * ENNReal.ofReal (Real.exp (pmfLogCondInfty μ p (shiftZ^[n] x)))
-        = ∑ a, (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))) x
+        = ∑ a, (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞))) x
             * (ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a)
               * ENNReal.ofReal (Real.exp (pmfLogCondInfty μ p (shiftZ^[n] x)))) := by
-    have := h_sum_indicator (fun a =>
+    have := h_sum_indicator (fun a ↦
       ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a)
         * ENNReal.ofReal (Real.exp (pmfLogCondInfty μ p (shiftZ^[n] x))))
     exact this
@@ -1082,7 +1082,7 @@ omit [DecidableEq α] [Nonempty α] in
 lemma measurable_perA_integrand_shiftedPastSigma
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) (a : α) :
     Measurable[shiftedPastSigma (α := α) n]
-      (fun x => MRatioLowerZ μ p n x
+      (fun x ↦ MRatioLowerZ μ p n x
         * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a)
         * ENNReal.ofReal (Real.exp
             (-Real.log (condProbInfty μ p a (shiftZ^[n] x))))) := by
@@ -1095,15 +1095,15 @@ lemma measurable_perA_integrand_shiftedPastSigma
       refine (measurable_blockCondRatio_apply μ p n a).comp ?_
       -- firstBlockZ n is m-measurable.
       show @Measurable _ _ (shiftedPastSigma (α := α) n) _ (firstBlockZ (α := α) n)
-      refine (@measurable_pi_iff (∀ _ : ℤ, α) (Fin n) (fun _ => α)
+      refine (@measurable_pi_iff (∀ _ : ℤ, α) (Fin n) (fun _ ↦ α)
         (shiftedPastSigma (α := α) n) _ _).mpr ?_
       intro j
       show @Measurable _ _ (shiftedPastSigma (α := α) n) _
-        (fun x : (∀ _ : ℤ, α) => firstBlockZ (α := α) n x j)
+        (fun x : (∀ _ : ℤ, α) ↦ firstBlockZ (α := α) n x j)
       show @Measurable _ _ (shiftedPastSigma (α := α) n) _
-        (fun x : (∀ _ : ℤ, α) => x ((j.val : ℕ) : ℤ))
+        (fun x : (∀ _ : ℤ, α) ↦ x ((j.val : ℕ) : ℤ))
       refine measurable_shiftedPastSigma_of_eq_comp n _
-        (g := fun y : (∀ _ : ℤ, α) => y (((j.val : ℕ) : ℤ) - (n : ℤ))) ?_ ?_
+        (g := fun y : (∀ _ : ℤ, α) ↦ y (((j.val : ℕ) : ℤ) - (n : ℤ))) ?_ ?_
       · have h_idx_le : ((j.val : ℕ) : ℤ) - (n : ℤ) ≤ -1 := by
           have hj : j.val < n := j.isLt
           have hj' : (j.val : ℤ) + 1 ≤ (n : ℤ) := by exact_mod_cast hj
@@ -1167,7 +1167,7 @@ theorem integral_MRatioLowerZ_le_one
       calc ∫⁻ x, MRatioLowerZ μ p 0 x ∂(μZ μ p)
           = ∫⁻ _, (1 : ℝ≥0∞) ∂(μZ μ p) := by
             refine lintegral_congr_ae ?_
-            exact Filter.Eventually.of_forall (fun x => by rw [h_const x])
+            exact Filter.Eventually.of_forall (fun x ↦ by rw [h_const x])
         _ = (μZ μ p) Set.univ := by rw [lintegral_one]
         _ = 1 := measure_univ
     rw [h_int_eq]
@@ -1221,18 +1221,18 @@ theorem integral_MRatioLowerZ_le_one
     -- Reference: Algoet–Cover (1988), Sandwich Theorem proof.
     classical
     -- Shorthand for the per-a integrand.
-    set F : α → (∀ _ : ℤ, α) → ℝ≥0∞ := fun a x =>
-      (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))) x
+    set F : α → (∀ _ : ℤ, α) → ℝ≥0∞ := fun a x ↦
+      (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞))) x
         * MRatioLowerZ μ p n x
         * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a)
         * ENNReal.ofReal (Real.exp (pmfLogCondInfty μ p (shiftZ^[n] x))) with hF_def
     -- Step 1: pointwise (a.s.) decomposition `MRatio(n+1) =ᵐ ∑_a F a`.
     have h_pmf_meas : Measurable
-        (fun x : (∀ _ : ℤ, α) => Real.exp (pmfLogCondInfty μ p (shiftZ^[n] x))) :=
+        (fun x : (∀ _ : ℤ, α) ↦ Real.exp (pmfLogCondInfty μ p (shiftZ^[n] x))) :=
       Real.measurable_exp.comp ((measurable_pmfLogCondInfty μ p).comp
         (measurable_shiftZ.iterate n))
     have h_MR_meas : ∀ k, Measurable (MRatioLowerZ μ p k) :=
-      fun k => measurable_MRatioLowerZ μ p k
+      fun k ↦ measurable_MRatioLowerZ μ p k
     -- All a.s. statements collected up front.
     have h_decomp : ∀ᵐ x ∂(μZ μ p),
         MRatioLowerZ μ p (n + 1) x = ∑ a, F a x := by
@@ -1247,31 +1247,31 @@ theorem integral_MRatioLowerZ_le_one
       -- Rewrite F a x using indicator-support collapse: replace exp(pmf shift^n)
       -- with exp(-log condProbInfty(a) shift^n) on the support.
       have h_F_rewrite : ∀ x, F a x =
-          (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))) x
+          (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞))) x
             * MRatioLowerZ μ p n x
             * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a)
             * ENNReal.ofReal (Real.exp
                 (-Real.log (condProbInfty μ p a (shiftZ^[n] x)))) := by
         intro x
-        show (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))) x
+        show (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞))) x
               * MRatioLowerZ μ p n x
               * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a)
               * ENNReal.ofReal (Real.exp (pmfLogCondInfty μ p (shiftZ^[n] x))) = _
         have h := indicator_mul_ofReal_exp_pmf_eq μ p n a x
-        rw [show (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))) x
+        rw [show (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞))) x
               * MRatioLowerZ μ p n x
               * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a)
               * ENNReal.ofReal (Real.exp (pmfLogCondInfty μ p (shiftZ^[n] x)))
             = MRatioLowerZ μ p n x
               * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a)
-              * ((((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))) x
+              * ((((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞))) x
                 * ENNReal.ofReal (Real.exp (pmfLogCondInfty μ p (shiftZ^[n] x)))) by ring]
         rw [h]
         ring
       rw [lintegral_congr_ae (Filter.Eventually.of_forall h_F_rewrite)]
       -- Now express integrand as g(x) · 1[x n = a](x), with
       --   g := MRatio(n) · ratio_a · exp(-log c_a shift^n).
-      set g : (∀ _ : ℤ, α) → ℝ≥0∞ := fun x =>
+      set g : (∀ _ : ℤ, α) → ℝ≥0∞ := fun x ↦
         MRatioLowerZ μ p n x
           * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a)
           * ENNReal.ofReal (Real.exp
@@ -1279,16 +1279,16 @@ theorem integral_MRatioLowerZ_le_one
       have h_g_meas_m : Measurable[shiftedPastSigma (α := α) n] g :=
         measurable_perA_integrand_shiftedPastSigma μ p n a
       have h_indicator_meas : @Measurable _ _ MeasurableSpace.pi _
-          (fun x : (∀ _ : ℤ, α) =>
-            (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))) x) := by
+          (fun x : (∀ _ : ℤ, α) ↦
+            (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞))) x) := by
         refine Measurable.indicator measurable_const ?_
         exact ((measurable_shiftZ).iterate n) (measurableSet_coord0_eq a)
       -- Pull out via lintegral_mul_eq_lintegral_mul_condLExp.
       have h_pull_out :
           ∫⁻ x, g x * (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator
-              (fun _ => (1 : ℝ≥0∞))) x ∂(μZ μ p)
+              (fun _ ↦ (1 : ℝ≥0∞))) x ∂(μZ μ p)
             = ∫⁻ x, g x * ((μZ μ p)⁻[
-                (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞)))
+                (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞)))
                   | shiftedPastSigma (α := α) n] x) ∂(μZ μ p) := by
         haveI : SigmaFinite ((μZ μ p).trim (shiftedPastSigma_le n)) := by
           haveI : IsFiniteMeasure ((μZ μ p).trim (shiftedPastSigma_le n)) :=
@@ -1299,14 +1299,14 @@ theorem integral_MRatioLowerZ_le_one
       -- The integrand: g x · indicator x. Compare to F a x:
       --   F a x = indicator x · MRatio · ratio · exp(...)
       -- After rewrite, it's indicator · g.
-      rw [show (fun x => (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))) x
+      rw [show (fun x ↦ (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞))) x
             * MRatioLowerZ μ p n x
             * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a)
             * ENNReal.ofReal (Real.exp (-Real.log (condProbInfty μ p a (shiftZ^[n] x)))))
-        = fun x => g x
-          * (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))) x from
-        funext (fun x => by
-          show (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))) x
+        = fun x ↦ g x
+          * (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞))) x from
+        funext (fun x ↦ by
+          show (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞))) x
                 * MRatioLowerZ μ p n x
                 * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a)
                 * ENNReal.ofReal (Real.exp
@@ -1315,14 +1315,14 @@ theorem integral_MRatioLowerZ_le_one
                   * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a)
                   * ENNReal.ofReal (Real.exp
                       (-Real.log (condProbInfty μ p a (shiftZ^[n] x)))))
-                * (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))) x
+                * (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞))) x
           ring)]
       rw [h_pull_out]
       -- Substitute the condLExp via substep A.
       have h_subA := condLExp_indicator_coord_n_eq_ofReal_condProbInfty_shift μ p n a
       have h_lint_eq :
           ∫⁻ x, g x * ((μZ μ p)⁻[
-              (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞)))
+              (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞)))
                 | shiftedPastSigma (α := α) n] x) ∂(μZ μ p)
             = ∫⁻ x, g x
                 * ENNReal.ofReal (condProbInfty μ p a (shiftZ^[n] x)) ∂(μZ μ p) := by
@@ -1344,8 +1344,8 @@ theorem integral_MRatioLowerZ_le_one
           rw [MeasureTheory.lintegral_finsetSum]
           intro a _
           -- Measurability of F a x as m₀-measurable. F a x is a product of 4 factors.
-          show Measurable (fun x =>
-            (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))) x
+          show Measurable (fun x ↦
+            (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ ↦ (1 : ℝ≥0∞))) x
               * MRatioLowerZ μ p n x
               * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a)
               * ENNReal.ofReal (Real.exp (pmfLogCondInfty μ p (shiftZ^[n] x))))
@@ -1361,7 +1361,7 @@ theorem integral_MRatioLowerZ_le_one
           · exact ENNReal.measurable_ofReal.comp h_pmf_meas
       _ ≤ ∑ a, ∫⁻ x, MRatioLowerZ μ p n x
               * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a) ∂(μZ μ p) :=
-            Finset.sum_le_sum (fun a _ => h_per_a a)
+            Finset.sum_le_sum (fun a _ ↦ h_per_a a)
       _ = ∫⁻ x, ∑ a, MRatioLowerZ μ p n x
               * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a) ∂(μZ μ p) := by
           rw [MeasureTheory.lintegral_finsetSum]

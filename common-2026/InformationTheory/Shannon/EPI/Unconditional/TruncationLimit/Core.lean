@@ -65,7 +65,7 @@ measurable set `s` of positive mass,
 theorem rnDeriv_cond_eq (μ : Measure ℝ) [IsProbabilityMeasure μ] {s : Set ℝ}
     (hs : MeasurableSet s) (hpos : μ s ≠ 0) :
     (ProbabilityTheory.cond μ s).rnDeriv volume
-      =ᵐ[volume] fun x => (μ s)⁻¹ * s.indicator (μ.rnDeriv volume) x := by
+      =ᵐ[volume] fun x ↦ (μ s)⁻¹ * s.indicator (μ.rnDeriv volume) x := by
   have hr : (μ s)⁻¹ ≠ ∞ := ENNReal.inv_ne_top.mpr hpos
   have h1 : (ProbabilityTheory.cond μ s).rnDeriv volume
       =ᵐ[volume] (μ s)⁻¹ • (μ.restrict s).rnDeriv volume := by
@@ -89,9 +89,9 @@ theorem map_truncW_add_le_smul_map_add
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (n : ℕ)
     (_hn : P {ω | |W ω| ≤ (n : ℝ)} ≠ 0) :
-    (truncW P W n).map (fun ω => W ω + V ω)
-      ≤ (P {ω | |W ω| ≤ (n : ℝ)})⁻¹ • P.map (fun ω => W ω + V ω) := by
-  set g : Ω → ℝ := fun ω => W ω + V ω with hg_def
+    (truncW P W n).map (fun ω ↦ W ω + V ω)
+      ≤ (P {ω | |W ω| ≤ (n : ℝ)})⁻¹ • P.map (fun ω ↦ W ω + V ω) := by
+  set g : Ω → ℝ := fun ω ↦ W ω + V ω with hg_def
   have hg : Measurable g := hW.add hV
   set E : Set Ω := {ω | |W ω| ≤ (n : ℝ)} with hE_def
   -- Expand `truncW P W n = cond P E = (P E)⁻¹ • P.restrict E`, push forward, and dominate.
@@ -116,7 +116,7 @@ theorem map_truncW_add_absolutelyContinuous_map_add
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (n : ℕ)
     (hn : P {ω | |W ω| ≤ (n : ℝ)} ≠ 0) :
-    (truncW P W n).map (fun ω => W ω + V ω) ≪ P.map (fun ω => W ω + V ω) := by
+    (truncW P W n).map (fun ω ↦ W ω + V ω) ≪ P.map (fun ω ↦ W ω + V ω) := by
   exact Measure.absolutelyContinuous_of_le_smul
     (map_truncW_add_le_smul_map_add W V P hW hV n hn)
 
@@ -159,7 +159,7 @@ theorem crossPos_self (ν : Measure ℝ) [SigmaFinite ν] (hν : ν ≪ volume) 
   rw [crossPos]
   -- change of measure: `∫⁻ f ∂ν = ∫⁻ (ν.rnDeriv vol)·f ∂vol`.
   rw [← lintegral_rnDeriv_mul hν
-    (f := fun x => ENNReal.ofReal (-Real.log ((ν.rnDeriv volume x).toReal)))
+    (f := fun x ↦ ENNReal.ofReal (-Real.log ((ν.rnDeriv volume x).toReal)))
     ((Real.measurable_log.comp
       (ν.measurable_rnDeriv volume).ennreal_toReal).neg.ennreal_ofReal.aemeasurable)]
   -- pointwise: `(ν.rnDeriv vol x)·ofReal(-log fν) = ofReal(negMulLog fν)` a.e. vol.
@@ -184,7 +184,7 @@ theorem crossNeg_self (ν : Measure ℝ) [SigmaFinite ν] (hν : ν ≪ volume) 
   rw [crossNeg]
   -- change of measure: `∫⁻ f ∂ν = ∫⁻ (ν.rnDeriv vol)·f ∂vol`.
   rw [← lintegral_rnDeriv_mul hν
-    (f := fun x => ENNReal.ofReal (Real.log ((ν.rnDeriv volume x).toReal)))
+    (f := fun x ↦ ENNReal.ofReal (Real.log ((ν.rnDeriv volume x).toReal)))
     ((Real.measurable_log.comp
       (ν.measurable_rnDeriv volume).ennreal_toReal).ennreal_ofReal.aemeasurable)]
   -- pointwise: `(ν.rnDeriv vol x)·ofReal(log fν) = ofReal(-(negMulLog fν))` a.e. vol.
@@ -226,8 +226,8 @@ consumer form `ennreal_gibbs_rearranged`.
 private theorem ennreal_gibbs_rearranged_of_finite_ent {μ ν : Measure ℝ}
     [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (hμ_ac : μ ≪ volume) (hν_ac : ν ≪ volume) (hμν : μ ≪ ν)
-    (hμ_ent : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume)
-    (h_cross_int : Integrable (fun x => Real.log ((ν.rnDeriv volume x).toReal)) μ) :
+    (hμ_ent : Integrable (fun x ↦ Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume)
+    (h_cross_int : Integrable (fun x ↦ Real.log ((ν.rnDeriv volume x).toReal)) μ) :
     (∫⁻ x, ENNReal.ofReal (Real.negMulLog ((μ.rnDeriv volume x).toReal)) ∂volume)
         + crossNeg μ ν
       ≤ crossPos μ ν
@@ -242,7 +242,7 @@ private theorem ennreal_gibbs_rearranged_of_finite_ent {μ ν : Measure ℝ}
   have hbound : ∀ (f : ℝ → ℝ) (m : Measure ℝ), Integrable f m →
       (∫⁻ x, ENNReal.ofReal (f x) ∂m) ≠ ⊤ := by
     intro f m hf
-    refine ne_top_of_le_ne_top hf.hasFiniteIntegral.ne (lintegral_mono fun x => ?_)
+    refine ne_top_of_le_ne_top hf.hasFiniteIntegral.ne (lintegral_mono fun x ↦ ?_)
     rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs]
     exact ENNReal.ofReal_le_ofReal (le_abs_self _)
   have hA_fin : A ≠ ⊤ := hbound _ _ hμ_ent
@@ -304,7 +304,7 @@ theorem ennreal_gibbs_rearranged {μ ν : Measure ℝ}
     -- = klFun ≥ 0 content). This needs no finiteness precondition.
     have hCP_top : crossPos μ ν = ⊤ := by
       -- The `dμ/dν` density as a real and the `μ`-a.e. chain `log fμ = log r + log fν`.
-      set r : ℝ → ℝ := fun x => (μ.rnDeriv ν x).toReal with hr_def
+      set r : ℝ → ℝ := fun x ↦ (μ.rnDeriv ν x).toReal with hr_def
       have h_rn_chain_μ : μ.rnDeriv ν * ν.rnDeriv volume =ᵐ[μ] μ.rnDeriv volume :=
         hμ_ac.ae_le (Measure.rnDeriv_mul_rnDeriv hμν)
       have h_rn_μν_pos : ∀ᵐ x ∂μ, 0 < μ.rnDeriv ν x := Measure.rnDeriv_pos hμν
@@ -352,7 +352,7 @@ theorem ennreal_gibbs_rearranged {μ ν : Measure ℝ}
       have hneg_le_one : (∫⁻ x, ENNReal.ofReal (-Real.log (r x)) ∂μ) ≤ 1 := by
         -- change of measure to ν: `∫⁻ f ∂μ = ∫⁻ (μ.rnDeriv ν)·f ∂ν`.
         rw [← lintegral_rnDeriv_mul hμν
-          (f := fun x => ENNReal.ofReal (-Real.log (r x)))
+          (f := fun x ↦ ENNReal.ofReal (-Real.log (r x)))
           ((Real.measurable_log.comp (μ.measurable_rnDeriv ν).ennreal_toReal).neg
             |>.ennreal_ofReal.aemeasurable)]
         calc (∫⁻ x, μ.rnDeriv ν x * ENNReal.ofReal (-Real.log (r x)) ∂ν)
@@ -395,7 +395,7 @@ theorem ennreal_gibbs_rearranged {μ ν : Measure ℝ}
       exact this.ne (top_le_iff.1 hA_le)
     rw [hCP_top, top_add]; exact le_top
   · -- A(μ) < ⊤ branch: derive finite differential entropy of μ, delegate to `_of_finite_ent`.
-    have hμ_ent : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume := by
+    have hμ_ent : Integrable (fun x ↦ Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume := by
       refine integrable_of_lintegral_ofReal_pos_neg_ne_top
         ((Real.continuous_negMulLog.measurable.comp
           (μ.measurable_rnDeriv volume).ennreal_toReal).aestronglyMeasurable) ?_ ?_
@@ -405,7 +405,7 @@ theorem ennreal_gibbs_rearranged {μ ν : Measure ℝ}
     · rw [hCP_top, top_add]; exact le_top
     · -- crossPos μ ν < ⊤: derive cross-entropy integrability, delegate.
       have h_cross_int :
-          Integrable (fun x => Real.log ((ν.rnDeriv volume x).toReal)) μ := by
+          Integrable (fun x ↦ Real.log ((ν.rnDeriv volume x).toReal)) μ := by
         refine integrable_of_lintegral_ofReal_pos_neg_ne_top
           ((Real.measurable_log.comp
             (ν.measurable_rnDeriv volume).ennreal_toReal).aestronglyMeasurable) ?_ ?_
@@ -420,21 +420,21 @@ integrable for `ν ≪ volume`, then so is the corresponding integrand for the t
 @audit:ok -/
 theorem integrable_negMulLog_rnDeriv_map_add_const
     {ν : Measure ℝ} [SigmaFinite ν] (y : ℝ)
-    (hν_ent : Integrable (fun x => Real.negMulLog ((ν.rnDeriv volume x).toReal)) volume) :
+    (hν_ent : Integrable (fun x ↦ Real.negMulLog ((ν.rnDeriv volume x).toReal)) volume) :
     Integrable
-      (fun x => Real.negMulLog (((ν.map (fun x => x + y)).rnDeriv volume x).toReal)) volume := by
-  have hf : MeasurableEmbedding (fun x : ℝ => x + y) := measurableEmbedding_addRight y
-  have h_map_vol : (volume : Measure ℝ).map (fun x => x + y) = volume :=
+      (fun x ↦ Real.negMulLog (((ν.map (fun x ↦ x + y)).rnDeriv volume x).toReal)) volume := by
+  have hf : MeasurableEmbedding (fun x : ℝ ↦ x + y) := measurableEmbedding_addRight y
+  have h_map_vol : (volume : Measure ℝ).map (fun x ↦ x + y) = volume :=
     MeasureTheory.map_add_right_eq_self (μ := (volume : Measure ℝ)) y
   -- `(· + y)` is measure-preserving on Lebesgue.
-  have hmp : MeasurePreserving (fun x : ℝ => x + y) volume volume :=
+  have hmp : MeasurePreserving (fun x : ℝ ↦ x + y) volume volume :=
     ⟨hf.measurable, h_map_vol⟩
   -- rnDeriv after the shift, evaluated at `x + y`, equals rnDeriv before the shift.
   have h_rn := hf.rnDeriv_map ν (volume : Measure ℝ)
   rw [h_map_vol] at h_rn
   -- It suffices to prove integrability of the composition `g ∘ (· + y)` and then transfer.
   have hcomp_int : Integrable
-      (fun x => Real.negMulLog ((((ν.map (fun x => x + y)).rnDeriv volume) (x + y)).toReal))
+      (fun x ↦ Real.negMulLog ((((ν.map (fun x ↦ x + y)).rnDeriv volume) (x + y)).toReal))
       volume := by
     refine hν_ent.congr ?_
     filter_upwards [h_rn] with x hx
@@ -453,25 +453,25 @@ a.c.), this only needs `μW` a.c.; `μV` is a general (probability) measure.
 theorem conv_eq_withDensity_translate_average
     (μW μV : Measure ℝ) [SFinite μW] [SFinite μV] (hμW : μW ≪ volume) :
     μW ∗ μV
-      = (volume : Measure ℝ).withDensity (fun z => ∫⁻ v, μW.rnDeriv volume (z - v) ∂μV) := by
+      = (volume : Measure ℝ).withDensity (fun z ↦ ∫⁻ v, μW.rnDeriv volume (z - v) ∂μV) := by
   set g : ℝ → ℝ≥0∞ := μW.rnDeriv volume with hg_def
   have hg_meas : Measurable g := Measure.measurable_rnDeriv _ _
   have hμW_wd : μW = (volume : Measure ℝ).withDensity g :=
     (Measure.withDensity_rnDeriv_eq μW volume hμW).symm
-  refine Measure.ext fun A hA => ?_
+  refine Measure.ext fun A hA ↦ ?_
   have hind : Measurable (A.indicator (1 : ℝ → ℝ≥0∞)) := measurable_one.indicator hA
-  have hinner_meas : Measurable (fun x => ∫⁻ v, A.indicator 1 (x + v) ∂μV) :=
+  have hinner_meas : Measurable (fun x ↦ ∫⁻ v, A.indicator 1 (x + v) ∂μV) :=
     (hind.comp (measurable_fst.add measurable_snd)).lintegral_prod_right'
   have hL : (μW ∗ μV) A = ∫⁻ x, (∫⁻ v, A.indicator 1 (x + v) ∂μV) ∂μW := by
     rw [← lintegral_indicator_one hA, Measure.lintegral_conv hind]
-  have hR : ((volume : Measure ℝ).withDensity (fun z => ∫⁻ v, g (z - v) ∂μV)) A
+  have hR : ((volume : Measure ℝ).withDensity (fun z ↦ ∫⁻ v, g (z - v) ∂μV)) A
       = ∫⁻ z, A.indicator 1 z * (∫⁻ v, g (z - v) ∂μV) ∂volume := by
     rw [withDensity_apply _ hA, ← lintegral_indicator hA]
     apply lintegral_congr; intro z
     by_cases hz : z ∈ A <;> simp [Set.indicator_of_mem, Set.indicator_of_notMem, hz]
   rw [hL, hR, hμW_wd,
     lintegral_withDensity_eq_lintegral_mul₀ hg_meas.aemeasurable hinner_meas.aemeasurable]
-  calc ∫⁻ x, (g * fun x => ∫⁻ v, A.indicator 1 (x + v) ∂μV) x ∂volume
+  calc ∫⁻ x, (g * fun x ↦ ∫⁻ v, A.indicator 1 (x + v) ∂μV) x ∂volume
       = ∫⁻ x, ∫⁻ v, g x * A.indicator 1 (x + v) ∂μV ∂volume := by
         apply lintegral_congr; intro x
         rw [Pi.mul_apply]
@@ -484,7 +484,7 @@ theorem conv_eq_withDensity_translate_average
     _ = ∫⁻ v, ∫⁻ z, g (z - v) * A.indicator 1 z ∂volume ∂μV := by
         apply lintegral_congr; intro v
         rw [← lintegral_add_right_eq_self
-          (μ := (volume : Measure ℝ)) (fun z => g (z - v) * A.indicator 1 z) v]
+          (μ := (volume : Measure ℝ)) (fun z ↦ g (z - v) * A.indicator 1 z) v]
         apply lintegral_congr; intro x; rw [add_sub_cancel_right]
     _ = ∫⁻ v, ∫⁻ z, A.indicator 1 z * g (z - v) ∂volume ∂μV := by
         apply lintegral_congr; intro v; apply lintegral_congr; intro z; rw [mul_comm]
@@ -501,14 +501,14 @@ vol.withDensity (f (·-z))`. Lebesgue translation invariance. Used to express th
 affine-shift fibre `(Q.map W).map(·+z)` as a `withDensity` for the per-fibre a.c. argument.
 @audit:ok -/
 theorem map_add_const_withDensity (f : ℝ → ℝ≥0∞) (z : ℝ) :
-    ((volume : Measure ℝ).withDensity f).map (fun x => x + z)
-      = (volume : Measure ℝ).withDensity (fun x => f (x - z)) := by
-  have hmap : Measurable (fun x : ℝ => x + z) := measurable_id.add_const z
-  refine Measure.ext fun A hA => ?_
+    ((volume : Measure ℝ).withDensity f).map (fun x ↦ x + z)
+      = (volume : Measure ℝ).withDensity (fun x ↦ f (x - z)) := by
+  have hmap : Measurable (fun x : ℝ ↦ x + z) := measurable_id.add_const z
+  refine Measure.ext fun A hA ↦ ?_
   rw [Measure.map_apply hmap hA, withDensity_apply _ (hmap hA), withDensity_apply _ hA,
     ← lintegral_indicator (hmap hA), ← lintegral_indicator hA]
   rw [← lintegral_add_right_eq_self
-    (μ := (volume : Measure ℝ)) (fun x => A.indicator (fun y => f (y - z)) x) z]
+    (μ := (volume : Measure ℝ)) (fun x ↦ A.indicator (fun y ↦ f (y - z)) x) z]
   apply lintegral_congr; intro x
   by_cases hx : x + z ∈ A
   · rw [Set.indicator_of_mem hx, Set.indicator_of_mem (by simpa using hx), add_sub_cancel_right]
@@ -529,19 +529,19 @@ between the `withDensity` measures.
 @audit:ok -/
 theorem condDistrib_ae_absolutelyContinuous_indep_add
     {μW μV : Measure ℝ} [SFinite μW] [SFinite μV] [IsProbabilityMeasure μV] (hμW_ac : μW ≪ volume) :
-    ∀ᵐ z ∂μV, (μW.map (fun x => x + z)) ≪ (μW ∗ μV) := by
+    ∀ᵐ z ∂μV, (μW.map (fun x ↦ x + z)) ≪ (μW ∗ μV) := by
   have hconv : μW ∗ μV
-      = (volume : Measure ℝ).withDensity (fun z => ∫⁻ v, μW.rnDeriv volume (z - v) ∂μV) :=
+      = (volume : Measure ℝ).withDensity (fun z ↦ ∫⁻ v, μW.rnDeriv volume (z - v) ∂μV) :=
     conv_eq_withDensity_translate_average μW μV hμW_ac
-  have htrans : ∀ z : ℝ, μW.map (fun x => x + z)
-      = (volume : Measure ℝ).withDensity (fun x => μW.rnDeriv volume (x - z)) := by
+  have htrans : ∀ z : ℝ, μW.map (fun x ↦ x + z)
+      = (volume : Measure ℝ).withDensity (fun x ↦ μW.rnDeriv volume (x - z)) := by
     intro z
     conv_lhs => rw [show μW = (volume : Measure ℝ).withDensity (μW.rnDeriv volume) from
       (Measure.withDensity_rnDeriv_eq μW volume hμW_ac).symm]
     rw [map_add_const_withDensity (μW.rnDeriv volume) z]
   set f : ℝ → ℝ≥0∞ := μW.rnDeriv volume with hf_def
   have hf_meas : Measurable f := Measure.measurable_rnDeriv _ _
-  set r : ℝ → ℝ≥0∞ := fun z => ∫⁻ v, f (z - v) ∂μV with hr_def
+  set r : ℝ → ℝ≥0∞ := fun z ↦ ∫⁻ v, f (z - v) ∂μV with hr_def
   have hr_meas : Measurable r :=
     (hf_meas.comp (measurable_fst.sub measurable_snd)).lintegral_prod_right'
   set S : Set (ℝ × ℝ) := {p : ℝ × ℝ | r p.2 = 0 ∧ 0 < f (p.2 - p.1)} with hS_def
@@ -554,20 +554,20 @@ theorem condDistrib_ae_absolutelyContinuous_indep_add
     · have hfae : ∀ᵐ v ∂μV, f (x - v) = 0 :=
         (lintegral_eq_zero_iff (hf_meas.comp (measurable_const.sub measurable_id))).mp hrx
       have hfzero : μV {v | ¬ (f (x - v) = 0)} = 0 := hfae
-      exact measure_mono_null (fun v hv => pos_iff_ne_zero.mp hv.2) hfzero
+      exact measure_mono_null (fun v hv ↦ pos_iff_ne_zero.mp hv.2) hfzero
     · have : {v | r x = 0 ∧ 0 < f (x - v)} = ∅ := by ext v; simp [hrx]
       rw [this]; simp
   have hkey : ∫⁻ z, (volume : Measure ℝ) (Prod.mk z ⁻¹' S) ∂μV = 0 := by
     rw [← Measure.prod_apply hSmeas, Measure.prod_apply_symm hSmeas]
-    simp_rw [show ∀ x : ℝ, (fun v => (v, x)) ⁻¹' S = {v | r x = 0 ∧ 0 < f (x - v)} from
-        fun _ => rfl,
+    simp_rw [show ∀ x : ℝ, (fun v ↦ (v, x)) ⁻¹' S = {v | r x = 0 ∧ 0 < f (x - v)} from
+        fun _ ↦ rfl,
       hslice_x, lintegral_zero]
   have hae_slice : ∀ᵐ z ∂μV, (volume : Measure ℝ) (Prod.mk z ⁻¹' S) = 0 :=
     (lintegral_eq_zero_iff (measurable_measure_prodMk_left hSmeas)).mp hkey
   filter_upwards [hae_slice] with z hz
   rw [htrans z, hconv]
-  have hfz_meas : Measurable (fun x : ℝ => f (x - z)) := hf_meas.comp (measurable_id.sub_const z)
-  refine Measure.AbsolutelyContinuous.mk fun A hA hA0 => ?_
+  have hfz_meas : Measurable (fun x : ℝ ↦ f (x - z)) := hf_meas.comp (measurable_id.sub_const z)
+  refine Measure.AbsolutelyContinuous.mk fun A hA hA0 ↦ ?_
   rw [withDensity_apply _ hA] at hA0 ⊢
   rw [setLIntegral_eq_zero_iff hA hr_meas] at hA0
   rw [setLIntegral_eq_zero_iff hA hfz_meas]
@@ -583,35 +583,35 @@ theorem condDistrib_ae_absolutelyContinuous_indep_add
 `fW = toReal ∘ μW.rnDeriv`, `r = toReal ∘ (μW ∗ μV).rnDeriv`. -/
 theorem convDensity_jensen_negMulLog_ae_bound
     (μW μV : Measure ℝ) [IsFiniteMeasure μW] [IsProbabilityMeasure μV]
-    (hr_conv : (fun x => ((μW ∗ μV).rnDeriv volume x).toReal)
-      =ᵐ[volume] fun z => ∫ v, (μW.rnDeriv volume (z - v)).toReal ∂μV)
+    (hr_conv : (fun x ↦ ((μW ∗ μV).rnDeriv volume x).toReal)
+      =ᵐ[volume] fun z ↦ ∫ v, (μW.rnDeriv volume (z - v)).toReal ∂μV)
     (hsec_Cq : ∀ᵐ z ∂volume,
-      Integrable (fun v => max ((μW.rnDeriv volume (z - v)).toReal
+      Integrable (fun v ↦ max ((μW.rnDeriv volume (z - v)).toReal
         * Real.log ((μW.rnDeriv volume (z - v)).toReal)) 0) μV)
     (hsec_fW : ∀ᵐ z ∂volume,
-      Integrable (fun v => (μW.rnDeriv volume (z - v)).toReal) μV) :
+      Integrable (fun v ↦ (μW.rnDeriv volume (z - v)).toReal) μV) :
     ∀ᵐ z ∂volume,
       max (((μW ∗ μV).rnDeriv volume z).toReal * Real.log (((μW ∗ μV).rnDeriv volume z).toReal)) 0
         ≤ ∫ v, max ((μW.rnDeriv volume (z - v)).toReal
             * Real.log ((μW.rnDeriv volume (z - v)).toReal)) 0 ∂μV := by
-  set fW : ℝ → ℝ := fun x => (μW.rnDeriv volume x).toReal with hfW_def
-  set r : ℝ → ℝ := fun x => ((μW ∗ μV).rnDeriv volume x).toReal with hr_def
-  set φ : ℝ → ℝ := fun t => t * Real.log t with hφ_def
+  set fW : ℝ → ℝ := fun x ↦ (μW.rnDeriv volume x).toReal with hfW_def
+  set r : ℝ → ℝ := fun x ↦ ((μW ∗ μV).rnDeriv volume x).toReal with hr_def
+  set φ : ℝ → ℝ := fun t ↦ t * Real.log t with hφ_def
   have hφ_eq : ∀ t, -(Real.negMulLog t) = φ t := by
     intro t; show -(-t * Real.log t) = t * Real.log t; ring
   have hfW_meas : Measurable fW := (Measure.measurable_rnDeriv _ _).ennreal_toReal
-  have hfW_nn : ∀ x, 0 ≤ fW x := fun _ => ENNReal.toReal_nonneg
+  have hfW_nn : ∀ x, 0 ≤ fW x := fun _ ↦ ENNReal.toReal_nonneg
   have hφ_meas : Measurable φ := measurable_id.mul (Real.measurable_log.comp measurable_id)
-  set Cq : ℝ → ℝ := fun w => max (φ (fW w)) 0 with hCq_def
-  have hCq_nn : ∀ w, 0 ≤ Cq w := fun _ => le_max_right _ _
-  set G : ℝ → ℝ := fun z => max (φ (r z)) 0 with hG_def
+  set Cq : ℝ → ℝ := fun w ↦ max (φ (fW w)) 0 with hCq_def
+  have hCq_nn : ∀ w, 0 ≤ Cq w := fun _ ↦ le_max_right _ _
+  set G : ℝ → ℝ := fun z ↦ max (φ (r z)) 0 with hG_def
   filter_upwards [hr_conv, hsec_Cq, hsec_fW] with z hz hzCq hzfW
   -- abbreviation `f v = fW (z - v)`.
-  set f : ℝ → ℝ := fun v => fW (z - v) with hf_def
-  have hf_nn : ∀ v, 0 ≤ f v := fun _ => hfW_nn _
+  set f : ℝ → ℝ := fun v ↦ fW (z - v) with hf_def
+  have hf_nn : ∀ v, 0 ≤ f v := fun _ ↦ hfW_nn _
   -- `max (φ (f v)) 0 = Cq (z - v)` and `(φ∘f)⁻ = Cm (z - v)`.
-  have hCqf_int : Integrable (fun v => max (φ (f v)) 0) μV := hzCq
-  set Cm : ℝ → ℝ := fun v => max (-(φ (f v))) 0 with hCm_def
+  have hCqf_int : Integrable (fun v ↦ max (φ (f v)) 0) μV := hzCq
+  set Cm : ℝ → ℝ := fun v ↦ max (-(φ (f v))) 0 with hCm_def
   -- `Cm v = (negMulLog (f v))⁺ ≤ 1` pointwise (since `negMulLog t ≤ 1 - t ≤ 1` for `t ≥ 0`),
   -- and constant `1` is integrable over the **probability** measure `μV`.
   have hCm_meas : Measurable Cm :=
@@ -630,14 +630,14 @@ theorem convDensity_jensen_negMulLog_ae_bound
     rw [Real.norm_eq_abs, abs_of_nonneg (le_max_right _ _)]
     exact hCm_le_one v
   -- `φ ∘ f = (φ∘f)⁺ - (φ∘f)⁻`, hence integrable.
-  have hφf_eq : (fun v => φ (f v)) = fun v => max (φ (f v)) 0 - Cm v := by
+  have hφf_eq : (fun v ↦ φ (f v)) = fun v ↦ max (φ (f v)) 0 - Cm v := by
     funext v
     show φ (f v) = max (φ (f v)) 0 - max (-(φ (f v))) 0
     rcases le_or_gt 0 (φ (f v)) with h | h
     · rw [max_eq_left h, max_eq_right (by linarith : -(φ (f v)) ≤ 0)]; ring
     · rw [max_eq_right h.le, max_eq_left (by linarith : 0 ≤ -(φ (f v)))]; ring
   have hf_int : Integrable f μV := hzfW
-  have hφf_int : Integrable (fun v => φ (f v)) μV := by
+  have hφf_int : Integrable (fun v ↦ φ (f v)) μV := by
     rw [hφf_eq]; exact hCqf_int.sub hCm_int
   -- Jensen:  `φ (∫ f ∂μV) ≤ ∫ φ∘f ∂μV`.
   have hjz : φ (∫ v, f v ∂μV) ≤ ∫ v, φ (f v) ∂μV := by
@@ -645,17 +645,17 @@ theorem convDensity_jensen_negMulLog_ae_bound
       (μ := μV) (f := f) (g := φ)
       Real.continuous_mul_log.continuousOn
       isClosed_Ici
-      (Filter.Eventually.of_forall (fun v => hf_nn v))
+      (Filter.Eventually.of_forall (fun v ↦ hf_nn v))
       hf_int hφf_int
     simpa only [hφ_def] using this
   -- `r z = ∫ v, f v ∂μV`  (the convolution-density identity `hz`).
   have hrz_eq : r z = ∫ v, f v ∂μV := hz
   have hstep1 : φ (r z) ≤ ∫ v, φ (f v) ∂μV := by rw [hrz_eq]; exact hjz
   have hstep2 : (∫ v, φ (f v) ∂μV) ≤ ∫ v, max (φ (f v)) 0 ∂μV :=
-    integral_mono hφf_int hCqf_int (fun v => le_max_left _ _)
+    integral_mono hφf_int hCqf_int (fun v ↦ le_max_left _ _)
   have hstep3 : (∫ v, max (φ (f v)) 0 ∂μV) = ∫ v, Cq (z - v) ∂μV := rfl
   have hCq_int_z : (0 : ℝ) ≤ ∫ v, Cq (z - v) ∂μV :=
-    integral_nonneg (fun v => hCq_nn _)
+    integral_nonneg (fun v ↦ hCq_nn _)
   show max (φ (r z)) 0 ≤ ∫ v, Cq (z - v) ∂μV
   exact max_le (by rw [← hstep3]; exact le_trans hstep1 hstep2) hCq_int_z
 
@@ -673,20 +673,20 @@ theorem negPart_negMulLog_conv_single_ne_top
     (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (((μW ∗ μV).rnDeriv volume x).toReal)))
       ∂volume) ≠ ⊤ := by
   -- densities and `φ t = t log t = -(negMulLog t)`.
-  set fW : ℝ → ℝ := fun x => (μW.rnDeriv volume x).toReal with hfW_def
-  set r : ℝ → ℝ := fun x => ((μW ∗ μV).rnDeriv volume x).toReal with hr_def
-  set φ : ℝ → ℝ := fun t => t * Real.log t with hφ_def
+  set fW : ℝ → ℝ := fun x ↦ (μW.rnDeriv volume x).toReal with hfW_def
+  set r : ℝ → ℝ := fun x ↦ ((μW ∗ μV).rnDeriv volume x).toReal with hr_def
+  set φ : ℝ → ℝ := fun t ↦ t * Real.log t with hφ_def
   have hφ_eq : ∀ t, -(Real.negMulLog t) = φ t := by
     intro t; show -(-t * Real.log t) = t * Real.log t; ring
   -- basic measurability / nonnegativity.
   have hfW_meas : Measurable fW := (Measure.measurable_rnDeriv _ _).ennreal_toReal
-  have hfW_nn : ∀ x, 0 ≤ fW x := fun _ => ENNReal.toReal_nonneg
+  have hfW_nn : ∀ x, 0 ≤ fW x := fun _ ↦ ENNReal.toReal_nonneg
   have hr_meas : Measurable r := (Measure.measurable_rnDeriv _ _).ennreal_toReal
-  have hr_nn : ∀ x, 0 ≤ r x := fun _ => ENNReal.toReal_nonneg
+  have hr_nn : ∀ x, 0 ≤ r x := fun _ ↦ ENNReal.toReal_nonneg
   have hφ_meas : Measurable φ := measurable_id.mul (Real.measurable_log.comp measurable_id)
   -- `Cq w = (φ (fW w))⁺`.  `C = ∫⁻ ofReal Cq = ∫⁻ ofReal (-(negMulLog fW)) = hμW_negPart_fin`.
-  set Cq : ℝ → ℝ := fun w => max (φ (fW w)) 0 with hCq_def
-  have hCq_nn : ∀ w, 0 ≤ Cq w := fun _ => le_max_right _ _
+  set Cq : ℝ → ℝ := fun w ↦ max (φ (fW w)) 0 with hCq_def
+  have hCq_nn : ∀ w, 0 ≤ Cq w := fun _ ↦ le_max_right _ _
   have hCq_meas : Measurable Cq := (hφ_meas.comp hfW_meas).max measurable_const
   set C : ℝ≥0∞ := ∫⁻ w, ENNReal.ofReal (Cq w) ∂volume with hC_def
   -- `∫⁻ ofReal Cq = ∫⁻ ofReal (-(negMulLog fW))`  (the `max ... 0` is killed by `ofReal`).
@@ -702,21 +702,21 @@ theorem negPart_negMulLog_conv_single_ne_top
   set fWe : ℝ → ℝ≥0∞ := μW.rnDeriv volume with hfWe_def
   have hfWe_meas : Measurable fWe := Measure.measurable_rnDeriv _ _
   have hconv : μW ∗ μV
-      = (volume : Measure ℝ).withDensity (fun z => ∫⁻ v, fWe (z - v) ∂μV) :=
+      = (volume : Measure ℝ).withDensity (fun z ↦ ∫⁻ v, fWe (z - v) ∂μV) :=
     conv_eq_withDensity_translate_average μW μV hμW
-  have hrho_meas : Measurable (fun z => ∫⁻ v, fWe (z - v) ∂μV) :=
+  have hrho_meas : Measurable (fun z ↦ ∫⁻ v, fWe (z - v) ∂μV) :=
     (hfWe_meas.comp (measurable_fst.sub measurable_snd)).lintegral_prod_right'
   -- `r =ᵐ[vol] fun z => ∫ v, fW (z-v) ∂μV`
   -- (toReal of the convolution density, μV is a prob measure).
-  have hr_conv : r =ᵐ[volume] fun z => ∫ v, fW (z - v) ∂μV := by
-    have h_rn : (μW ∗ μV).rnDeriv volume =ᵐ[volume] fun z => ∫⁻ v, fWe (z - v) ∂μV := by
+  have hr_conv : r =ᵐ[volume] fun z ↦ ∫ v, fW (z - v) ∂μV := by
+    have h_rn : (μW ∗ μV).rnDeriv volume =ᵐ[volume] fun z ↦ ∫⁻ v, fWe (z - v) ∂μV := by
       rw [hconv]; exact Measure.rnDeriv_withDensity volume hrho_meas
     have h_lt : ∀ᵐ z ∂volume, (μW ∗ μV).rnDeriv volume z < ∞ :=
       Measure.rnDeriv_lt_top (μW ∗ μV) volume
     filter_upwards [h_rn, h_lt] with z hz hz_lt
     show ((μW ∗ μV).rnDeriv volume z).toReal = ∫ v, fW (z - v) ∂μV
     -- `∫⁻ v, fWe(z-v) ∂μV < ∞` ⟹ `fWe(z-v) < ∞` μV-a.e. (finite integral ⟹ a.e. finite).
-    have hfWe_z_meas : Measurable (fun v => fWe (z - v)) := by fun_prop
+    have hfWe_z_meas : Measurable (fun v ↦ fWe (z - v)) := by fun_prop
     have hint_lt : (∫⁻ v, fWe (z - v) ∂μV) < ∞ := hz ▸ hz_lt
     have hae_lt : ∀ᵐ v ∂μV, fWe (z - v) < ∞ :=
       ae_lt_top' hfWe_z_meas.aemeasurable hint_lt.ne
@@ -737,34 +737,34 @@ theorem negPart_negMulLog_conv_single_ne_top
       exact (hg.comp (measurable_fst.sub measurable_snd)).ennreal_ofReal.aemeasurable
     rw [hswap]
     have hinner : ∀ v, ∫⁻ z, ENNReal.ofReal (g (z - v)) ∂volume
-        = ∫⁻ w, ENNReal.ofReal (g w) ∂volume := fun v =>
-      lintegral_sub_right_eq_self (fun w => ENNReal.ofReal (g w)) v
+        = ∫⁻ w, ENNReal.ofReal (g w) ∂volume := fun v ↦
+      lintegral_sub_right_eq_self (fun w ↦ ENNReal.ofReal (g w)) v
     simp_rw [hinner]
     rw [lintegral_const, mul_comm]
   -- product-measure integrability of `K (z, v) = fW (z - v)` (needed for the per-z section
   -- integrability of `v ↦ Cq (z - v)`).
   have hkernel_int : ∀ g : ℝ → ℝ, Measurable g → (∀ w, 0 ≤ g w) →
       (∫⁻ w, ENNReal.ofReal (g w) ∂volume) ≠ ⊤ →
-      Integrable (fun p : ℝ × ℝ => g (p.1 - p.2)) (volume.prod μV) := by
+      Integrable (fun p : ℝ × ℝ ↦ g (p.1 - p.2)) (volume.prod μV) := by
     intro g hg hg_nn hg_fin
-    have hgp_meas : Measurable (fun p : ℝ × ℝ => g (p.1 - p.2)) :=
+    have hgp_meas : Measurable (fun p : ℝ × ℝ ↦ g (p.1 - p.2)) :=
       hg.comp (measurable_fst.sub measurable_snd)
     refine ⟨hgp_meas.aestronglyMeasurable, ?_⟩
     have hnn : ∀ᵐ p : ℝ × ℝ ∂(volume.prod μV), 0 ≤ g (p.1 - p.2) :=
-      Filter.Eventually.of_forall (fun p => hg_nn _)
+      Filter.Eventually.of_forall (fun p ↦ hg_nn _)
     rw [hasFiniteIntegral_iff_ofReal hnn,
       lintegral_prod _ hgp_meas.ennreal_ofReal.aemeasurable,
       hkernel_lint g hg hg_nn, measure_univ, one_mul]
     exact lt_of_le_of_ne le_top hg_fin
   -- per-`z` section integrability: `v ↦ Cq (z - v)` integrable w.r.t. `μV`  (a.e. `z`).
-  have hsec_Cq : ∀ᵐ z ∂volume, Integrable (fun v => Cq (z - v)) μV := by
+  have hsec_Cq : ∀ᵐ z ∂volume, Integrable (fun v ↦ Cq (z - v)) μV := by
     have := (hkernel_int Cq hCq_meas hCq_nn (by rw [← hC_def]; exact hC_lt_top)).prod_right_ae
     exact this
   -- per-`z` section integrability of `v ↦ fW (z - v)` (the Jensen integrand `f`).
-  have hsec_fW : ∀ᵐ z ∂volume, Integrable (fun v => fW (z - v)) μV := by
+  have hsec_fW : ∀ᵐ z ∂volume, Integrable (fun v ↦ fW (z - v)) μV := by
     have := (hkernel_int fW hfW_meas hfW_nn (by
       -- `∫⁻ ofReal fW = μW univ = 1`  (probability density of `μW`).
-      have hae_eq : (fun x => ENNReal.ofReal (fW x)) =ᵐ[volume] μW.rnDeriv volume := by
+      have hae_eq : (fun x ↦ ENNReal.ofReal (fW x)) =ᵐ[volume] μW.rnDeriv volume := by
         filter_upwards [μW.rnDeriv_ne_top volume] with x hx
         rw [hfW_def]; exact ENNReal.ofReal_toReal hx
       rw [lintegral_congr_ae hae_eq, Measure.lintegral_rnDeriv hμW]
@@ -773,8 +773,8 @@ theorem negPart_negMulLog_conv_single_ne_top
   -- ============================================================================
   -- per-`z` Jensen bound:  `max (φ (r z)) 0 ≤ ∫ v, Cq (z - v) ∂μV`  (a.e. `z`).
   -- ============================================================================
-  set G : ℝ → ℝ := fun z => max (φ (r z)) 0 with hG_def
-  have hG_nn : ∀ z, 0 ≤ G z := fun _ => le_max_right _ _
+  set G : ℝ → ℝ := fun z ↦ max (φ (r z)) 0 with hG_def
+  have hG_nn : ∀ z, 0 ≤ G z := fun _ ↦ le_max_right _ _
   have hjensen : ∀ᵐ z ∂volume, G z ≤ ∫ v, Cq (z - v) ∂μV :=
     convDensity_jensen_negMulLog_ae_bound μW μV hr_conv hsec_Cq hsec_fW
   -- ============================================================================
@@ -799,7 +799,7 @@ theorem negPart_negMulLog_conv_single_ne_top
           calc ENNReal.ofReal (∫ v, Cq (z - v) ∂μV)
               = ∫⁻ v, ENNReal.ofReal (Cq (z - v)) ∂μV := by
                 rw [ofReal_integral_eq_lintegral_ofReal hz
-                  (Filter.Eventually.of_forall (fun v => hCq_nn _))]
+                  (Filter.Eventually.of_forall (fun v ↦ hCq_nn _))]
             _ ≤ _ := le_refl _
       _ = (μV Set.univ) * C := by rw [hkernel_lint Cq hCq_meas hCq_nn, hC_def]
   refine ne_top_of_le_ne_top ?_ hfinal

@@ -58,7 +58,7 @@ noncomputable def binningMeasure
     (α : Type*) [Fintype α] [MeasurableSpace α]
     (n M : ℕ) [NeZero M] :
     Measure ((Fin n → α) → Fin M) :=
-  Measure.pi (fun _ : (Fin n → α) => uniformOn (Set.univ : Set (Fin M)))
+  Measure.pi (fun _ : (Fin n → α) ↦ uniformOn (Set.univ : Set (Fin M)))
 
 /-- The random binning measure is a probability measure. -/
 instance binningMeasure.instIsProbabilityMeasure
@@ -89,7 +89,7 @@ lemma binningMeasure_singleton_real
     rw [Measure.count_singleton, Fintype.card_fin]
     rw [ENNReal.toReal_div]
     simp
-  rw [Finset.prod_congr rfl (fun x _ => h_factor x)]
+  rw [Finset.prod_congr rfl (fun x _ ↦ h_factor x)]
   rw [Finset.prod_const]
   rfl
 
@@ -127,13 +127,13 @@ theorem binning_collision_prob
     -- {f | f x = f x'} = (Finset.univ.filter (fun f => f x = f x')).toSet.
     -- Use sum_measureReal_singleton.
     have h_finite : {f : HashFn | f x = f x'}.Finite := Set.toFinite _
-    set S : Finset HashFn := (Finset.univ : Finset HashFn).filter (fun f => f x = f x')
+    set S : Finset HashFn := (Finset.univ : Finset HashFn).filter (fun f ↦ f x = f x')
     have h_S_eq : (S : Set HashFn) = {f : HashFn | f x = f x'} := by
       ext f; simp [S]
     rw [← h_S_eq, ← sum_measureReal_singleton (μ := binningMeasure α n M) S]
     -- Convert filter sum back to univ sum with indicator.
     rw [Finset.sum_filter]
-    refine Finset.sum_congr rfl (fun f _ => ?_)
+    refine Finset.sum_congr rfl (fun f _ ↦ ?_)
     split_ifs with hfx
     · rw [mul_one]
     · rw [mul_zero]
@@ -145,7 +145,7 @@ theorem binning_collision_prob
             (if f x = f x' then (1 : ℝ) else 0) := by
     intro f
     rw [binningMeasure_singleton_real n M f]
-  rw [Finset.sum_congr rfl (fun f _ => h_sub f)]
+  rw [Finset.sum_congr rfl (fun f _ ↦ h_sub f)]
   rw [← Finset.mul_sum]
   -- Count #{f : HashFn | f x = f x'}.
   -- These functions are arbitrary on the `|α|^n - 1` indices other than `x'`
@@ -174,9 +174,9 @@ theorem binning_collision_prob
   --   (forward) f ↦ restriction of f to `{y ≠ x'}`.
   --   (backward) g ↦ define f y := g ⟨y, hyp⟩ if `y ≠ x'`, and f x' := f x = g ⟨x, h.symm⟩.
   let toFun : {f : HashFn // f x = f x'} → ({y : Fin n → α // y ≠ x'} → Fin M) :=
-    fun ⟨f, _⟩ y => f y.1
+    fun ⟨f, _⟩ y ↦ f y.1
   let invFun : ({y : Fin n → α // y ≠ x'} → Fin M) → {f : HashFn // f x = f x'} :=
-    fun g => ⟨fun y => if hy : y = x' then g ⟨x, h⟩ else g ⟨y, hy⟩, by
+    fun g ↦ ⟨fun y ↦ if hy : y = x' then g ⟨x, h⟩ else g ⟨y, hy⟩, by
       -- Need: (if hyp : x = x' then g ⟨x, h⟩ else g ⟨x, hyp⟩)
       --   = (if h_x_eq_x' : x' = x' then g ⟨x, h⟩ else g ⟨x', h_x_eq_x'⟩).
       -- LHS: x = x' iff false (h : x ≠ x'), so LHS = g ⟨x, h⟩.

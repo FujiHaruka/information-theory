@@ -67,7 +67,7 @@ noncomputable def swTrivialEncoderY (n : ℕ) :
 noncomputable def swTrivialDecoder (n : ℕ) :
     Fin (Fintype.card (Fin n → α)) × Fin (Fintype.card (Fin n → β)) →
       (Fin n → α) × (Fin n → β) :=
-  fun p => ((Fintype.equivFin (Fin n → α)).invFun p.1,
+  fun p ↦ ((Fintype.equivFin (Fin n → α)).invFun p.1,
             (Fintype.equivFin (Fin n → β)).invFun p.2)
 
 /-! ## Sum bound via the Y-side AEP encoder
@@ -91,19 +91,19 @@ theorem slepian_wolf_achievability_via_Y_aep
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hYs : ∀ i, Measurable (Ys i))
     (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
-    (hindepY_full : iIndepFun (fun i => Ys i) μ)
+    (hindepY_full : iIndepFun (fun i ↦ Ys i) μ)
     (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
     {R_Y : ℝ} (hR_Y : entropy μ (Ys 0) < R_Y) :
     ∃ M_Y : ℕ → ℕ, ∃ _hM_Y_pos : ∀ n, 0 < M_Y n,
     ∃ f_Y : ∀ n, (Fin n → β) → Fin (M_Y n),
     ∃ d_Y : ∀ n, Fin (M_Y n) → (Fin n → β),
-      Tendsto (fun n => Real.log (M_Y n : ℝ) / n) atTop (𝓝 R_Y) ∧
+      Tendsto (fun n ↦ Real.log (M_Y n : ℝ) / n) atTop (𝓝 R_Y) ∧
       Tendsto
-        (fun n => swErrorProb μ
+        (fun n ↦ swErrorProb μ
                     (jointRV Xs n) (jointRV Ys n)
                     (swTrivialEncoderX n)
                     (f_Y n)
-                    (fun p => ((Fintype.equivFin (Fin n → α)).invFun p.1, d_Y n p.2)))
+                    (fun p ↦ ((Fintype.equivFin (Fin n → α)).invFun p.1, d_Y n p.2)))
         atTop (𝓝 0) := by
   classical
   -- Apply Y-side AEP source coding achievability.
@@ -116,9 +116,9 @@ theorem slepian_wolf_achievability_via_Y_aep
   have h_eq : ∀ n,
       swErrorProb μ (jointRV Xs n) (jointRV Ys n)
           (swTrivialEncoderX n) (c_Y n)
-          (fun p => ((Fintype.equivFin (Fin n → α)).invFun p.1, d_Y n p.2))
+          (fun p ↦ ((Fintype.equivFin (Fin n → α)).invFun p.1, d_Y n p.2))
         = InformationTheory.MeasureFano.errorProb μ
-            (jointRV Ys n) (fun ω => c_Y n (jointRV Ys n ω)) (d_Y n) := by
+            (jointRV Ys n) (fun ω ↦ c_Y n (jointRV Ys n ω)) (d_Y n) := by
     intro n
     unfold swErrorProb InformationTheory.MeasureFano.errorProb
     -- The two error events are equal as sets.
@@ -150,7 +150,7 @@ theorem slepian_wolf_achievability_via_Y_aep
         (Prod.mk.inj hPair).2
       exact h hY_eq.symm
   -- Convert tendsto via the equality.
-  refine Tendsto.congr (fun n => (h_eq n).symm) ?_
+  refine Tendsto.congr (fun n ↦ (h_eq n).symm) ?_
   -- hPe gives the tendsto.
   -- hPe : Tendsto (fun n => errorProb μ (jointRV Ys n) (fun ω => c_Y n (jointRV Ys n ω)) (d_Y n))
   --          atTop (𝓝 0)

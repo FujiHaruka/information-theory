@@ -48,7 +48,7 @@ Mathlib has no general Legendre-transform / convex-conjugate API, so this is the
 textbook `sSup` form. When the image set is not `BddAbove`, Mathlib returns
 `sSup = 0`, so the basic properties below take an explicit `BddAbove` hypothesis. -/
 noncomputable def legendre (Λ : ℝ → ℝ) (a : ℝ) : ℝ :=
-  sSup ((fun lam : ℝ => lam * a - Λ lam) '' Set.univ)
+  sSup ((fun lam : ℝ ↦ lam * a - Λ lam) '' Set.univ)
 
 /-- **Cramér rate function** `I(a) := Λ^*(a)` for `Λ := cgf X μ`. -/
 noncomputable def cramerRate (X : Ω → ℝ) (μ : Measure Ω) (a : ℝ) : ℝ :=
@@ -56,7 +56,7 @@ noncomputable def cramerRate (X : Ω → ℝ) (μ : Measure Ω) (a : ℝ) : ℝ 
 
 /-- Each linear-minus-`Λ` value is ≤ the Legendre transform. -/
 lemma legendre_apply_le (Λ : ℝ → ℝ) (a : ℝ)
-    (h_bdd : BddAbove ((fun lam : ℝ => lam * a - Λ lam) '' Set.univ))
+    (h_bdd : BddAbove ((fun lam : ℝ ↦ lam * a - Λ lam) '' Set.univ))
     (lam : ℝ) :
     lam * a - Λ lam ≤ legendre Λ a := by
   refine le_csSup h_bdd ?_
@@ -65,7 +65,7 @@ lemma legendre_apply_le (Λ : ℝ → ℝ) (a : ℝ)
 /-- If `Λ 0 = 0` (e.g. `Λ = cgf X μ` for a probability measure), the Legendre
 transform is non-negative whenever the supremum exists. -/
 lemma legendre_nonneg (Λ : ℝ → ℝ) (hΛ0 : Λ 0 = 0) (a : ℝ)
-    (h_bdd : BddAbove ((fun lam : ℝ => lam * a - Λ lam) '' Set.univ)) :
+    (h_bdd : BddAbove ((fun lam : ℝ ↦ lam * a - Λ lam) '' Set.univ)) :
     0 ≤ legendre Λ a := by
   have h := legendre_apply_le Λ a h_bdd 0
   simpa [hΛ0] using h
@@ -73,7 +73,7 @@ lemma legendre_nonneg (Λ : ℝ → ℝ) (hΛ0 : Λ 0 = 0) (a : ℝ)
 /-- Cramér rate-function version of `legendre_apply_le`. -/
 @[entry_point]
 lemma cramerRate_apply_le (X : Ω → ℝ) (μ : Measure Ω) (a : ℝ)
-    (h_bdd : BddAbove ((fun lam : ℝ => lam * a - cgf X μ lam) '' Set.univ))
+    (h_bdd : BddAbove ((fun lam : ℝ ↦ lam * a - cgf X μ lam) '' Set.univ))
     (lam : ℝ) :
     lam * a - cgf X μ lam ≤ cramerRate X μ a :=
   legendre_apply_le _ a h_bdd lam
@@ -82,7 +82,7 @@ lemma cramerRate_apply_le (X : Ω → ℝ) (μ : Measure Ω) (a : ℝ)
 for a probability measure (then `cgf X μ 0 = 0`). -/
 @[entry_point]
 lemma cramerRate_nonneg [IsProbabilityMeasure μ] (X : Ω → ℝ) (a : ℝ)
-    (h_bdd : BddAbove ((fun lam : ℝ => lam * a - cgf X μ lam) '' Set.univ)) :
+    (h_bdd : BddAbove ((fun lam : ℝ ↦ lam * a - cgf X μ lam) '' Set.univ)) :
     0 ≤ cramerRate X μ a :=
   legendre_nonneg _ (cgf_zero) a h_bdd
 
@@ -95,7 +95,7 @@ from the main statements. -/
 lemma integrable_exp_mul_of_bounded
     [IsFiniteMeasure μ] {Y : Ω → ℝ}
     (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (t : ℝ) :
-    Integrable (fun ω => Real.exp (t * Y ω)) μ := by
+    Integrable (fun ω ↦ Real.exp (t * Y ω)) μ := by
   obtain ⟨M, hM⟩ := h_bdd
   have hC : ∀ ω, |Real.exp (t * Y ω)| ≤ Real.exp (|t| * M) := by
     intro ω
@@ -107,7 +107,7 @@ lemma integrable_exp_mul_of_bounded
     have h_exp_nonneg : 0 ≤ Real.exp (t * Y ω) := (Real.exp_pos _).le
     rw [abs_of_nonneg h_exp_nonneg]
     exact Real.exp_le_exp.mpr h_le
-  have h_meas : AEStronglyMeasurable (fun ω => Real.exp (t * Y ω)) μ :=
+  have h_meas : AEStronglyMeasurable (fun ω ↦ Real.exp (t * Y ω)) μ :=
     ((measurable_const.mul hY_meas).exp).aestronglyMeasurable
   refine Integrable.mono' (integrable_const (Real.exp (|t| * M))) h_meas ?_
   exact Filter.Eventually.of_forall hC
@@ -118,7 +118,7 @@ every `i`), `cgf (∑ i ∈ range n, X i) μ t = n · cgf (X 0) μ t`. -/
 lemma cgf_sum_eq_nsmul {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
     (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
-    (h_int : ∀ t i, Integrable (fun ω => Real.exp (t * X i ω)) μ)
+    (h_int : ∀ t i, Integrable (fun ω ↦ Real.exp (t * X i ω)) μ)
     (t : ℝ) (n : ℕ) :
     cgf (∑ i ∈ Finset.range n, X i) μ t = (n : ℝ) * cgf (X 0) μ t := by
   -- Step 1: i.i.d. cgf-sum identity gives `∑ i ∈ range n, cgf (X i) μ t`.
@@ -132,7 +132,7 @@ lemma cgf_sum_eq_nsmul {X : ℕ → Ω → ℝ}
     intro i _
     -- `mgf X μ = mgf Y μ'` from `IdentDistrib`, then `cgf` follows.
     have h_mgf : mgf (X i) μ = mgf (X 0) μ := mgf_congr_identDistrib (h_ident i)
-    have : mgf (X i) μ t = mgf (X 0) μ t := congrArg (fun f => f t) h_mgf
+    have : mgf (X i) μ t = mgf (X 0) μ t := congrArg (fun f ↦ f t) h_mgf
     simp [cgf, this]
   rw [h_sum, Finset.sum_congr rfl h_each, Finset.sum_const, Finset.card_range,
     nsmul_eq_mul]
@@ -155,13 +155,13 @@ lemma chernoff_bound_n_iid [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}
       ≤ Real.exp (-(n : ℝ) * (lam * a - cgf (X 0) μ lam)) := by
   -- Hypothesis pass-through: bounded RVs ⇒ all exponential moments integrable.
-  have h_int : ∀ t i, Integrable (fun ω => Real.exp (t * X i ω)) μ := by
+  have h_int : ∀ t i, Integrable (fun ω ↦ Real.exp (t * X i ω)) μ := by
     intro t i
     obtain ⟨M, hM⟩ := h_bdd
     exact integrable_exp_mul_of_bounded (h_meas i) ⟨M, hM i⟩ t
   -- Build the integrability of `exp (lam * (∑ X i))` directly.
-  have h_sum_meas_pt : Measurable (fun ω => ∑ i ∈ Finset.range n, X i ω) :=
-    Finset.measurable_sum _ (fun i _ => h_meas i)
+  have h_sum_meas_pt : Measurable (fun ω ↦ ∑ i ∈ Finset.range n, X i ω) :=
+    Finset.measurable_sum _ (fun i _ ↦ h_meas i)
   have h_sum_bdd_pt :
       ∃ M', ∀ ω, |∑ i ∈ Finset.range n, X i ω| ≤ M' := by
     obtain ⟨M, hM⟩ := h_bdd
@@ -170,23 +170,23 @@ lemma chernoff_bound_n_iid [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     have h_le : |∑ i ∈ Finset.range n, X i ω| ≤ ∑ i ∈ Finset.range n, |X i ω| :=
       Finset.abs_sum_le_sum_abs _ _
     have h_each : ∑ i ∈ Finset.range n, |X i ω| ≤ ∑ _i ∈ Finset.range n, M :=
-      Finset.sum_le_sum (fun i _ => hM i ω)
+      Finset.sum_le_sum (fun i _ ↦ hM i ω)
     have h_const : ∑ _i ∈ Finset.range n, M = (n : ℝ) * M := by
       rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
     exact h_le.trans (h_each.trans h_const.le)
   have h_int_sum_pt :
-      Integrable (fun ω => Real.exp (lam * ∑ i ∈ Finset.range n, X i ω)) μ :=
+      Integrable (fun ω ↦ Real.exp (lam * ∑ i ∈ Finset.range n, X i ω)) μ :=
     integrable_exp_mul_of_bounded h_sum_meas_pt h_sum_bdd_pt lam
   -- Apply Mathlib Chernoff bound to the pointwise-sum at threshold `ε := a * n`.
   -- Convert `(∑ Xi) ω` and `∑ Xi ω` freely via `Finset.sum_apply`.
   have h_fun_eq :
-      (fun ω => (∑ i ∈ Finset.range n, X i) ω)
-        = fun ω => ∑ i ∈ Finset.range n, X i ω := by
+      (fun ω ↦ (∑ i ∈ Finset.range n, X i) ω)
+        = fun ω ↦ ∑ i ∈ Finset.range n, X i ω := by
     funext ω; rw [Finset.sum_apply]
   have h_int_sum : Integrable
-      (fun ω => Real.exp (lam * (∑ i ∈ Finset.range n, X i) ω)) μ := by
-    have : (fun ω => Real.exp (lam * (∑ i ∈ Finset.range n, X i) ω))
-        = fun ω => Real.exp (lam * ∑ i ∈ Finset.range n, X i ω) := by
+      (fun ω ↦ Real.exp (lam * (∑ i ∈ Finset.range n, X i) ω)) μ := by
+    have : (fun ω ↦ Real.exp (lam * (∑ i ∈ Finset.range n, X i) ω))
+        = fun ω ↦ Real.exp (lam * ∑ i ∈ Finset.range n, X i ω) := by
       funext ω; rw [Finset.sum_apply]
     rw [this]; exact h_int_sum_pt
   have h_chernoff :
@@ -275,10 +275,10 @@ theorem cramer_upper [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_pos : ∀ᶠ n : ℕ in atTop,
       0 < μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})
     (h_cobdd : Filter.IsCoboundedUnder (· ≤ ·) atTop
-      (fun n : ℕ =>
+      (fun n : ℕ ↦
         (1 / (n : ℝ)) * Real.log
           (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}))) :
-    limsup (fun n : ℕ =>
+    limsup (fun n : ℕ ↦
         (1 / (n : ℝ)) * Real.log
           (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop
       ≤ -(lam * a - cgf (X 0) μ lam) := by
@@ -313,10 +313,10 @@ theorem cramer_upper_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_pos : ∀ᶠ n : ℕ in atTop,
       0 < μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})
     (h_cobdd : Filter.IsCoboundedUnder (· ≤ ·) atTop
-      (fun n : ℕ =>
+      (fun n : ℕ ↦
         (1 / (n : ℝ)) * Real.log
           (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}))) :
-    limsup (fun n : ℕ =>
+    limsup (fun n : ℕ ↦
         (1 / (n : ℝ)) * Real.log
           (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop
       ≤ -cramerRate (X 0) μ a := by
@@ -354,7 +354,7 @@ lemma mem_interior_integrableExpSet_of_bounded
 /-- The tilted measure of a bounded random variable is a probability measure. -/
 lemma isProbabilityMeasure_tilted_of_bounded [IsProbabilityMeasure μ]
     {Y : Ω → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) :
-    IsProbabilityMeasure (μ.tilted (fun ω => lam * Y ω)) :=
+    IsProbabilityMeasure (μ.tilted (fun ω ↦ lam * Y ω)) :=
   isProbabilityMeasure_tilted (integrable_exp_mul_of_bounded hY_meas h_bdd lam)
 
 /-- For a bounded random variable `Y`, the expectation of `Y` under
@@ -362,7 +362,7 @@ lemma isProbabilityMeasure_tilted_of_bounded [IsProbabilityMeasure μ]
 @[entry_point]
 lemma integral_tilted_eq_deriv_cgf [IsProbabilityMeasure μ]
     {Y : Ω → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) :
-    ∫ ω, Y ω ∂(μ.tilted (fun ω => lam * Y ω)) = deriv (cgf Y μ) lam :=
+    ∫ ω, Y ω ∂(μ.tilted (fun ω ↦ lam * Y ω)) = deriv (cgf Y μ) lam :=
   integral_tilted_mul_self (mem_interior_integrableExpSet_of_bounded hY_meas h_bdd lam)
 
 /-- KL-of-tilted identity.
@@ -380,24 +380,24 @@ We work directly with the `∫ log (rnDeriv)` representation rather than the
 lemma klDiv_tilted_eq [IsProbabilityMeasure μ] (X : Ω → ℝ) (hX_meas : Measurable X)
     (h_bdd : ∃ M, ∀ ω, |X ω| ≤ M)
     (lam : ℝ) :
-    ∫ ω, Real.log ((μ.tilted (fun ω' => lam * X ω')).rnDeriv μ ω).toReal
-        ∂(μ.tilted (fun ω' => lam * X ω'))
-      = lam * ∫ ω, X ω ∂(μ.tilted (fun ω' => lam * X ω')) - cgf X μ lam := by
+    ∫ ω, Real.log ((μ.tilted (fun ω' ↦ lam * X ω')).rnDeriv μ ω).toReal
+        ∂(μ.tilted (fun ω' ↦ lam * X ω'))
+      = lam * ∫ ω, X ω ∂(μ.tilted (fun ω' ↦ lam * X ω')) - cgf X μ lam := by
   -- The function `f` in `Measure.tilted` is `(fun ω => lam * X ω)`.
-  set f : Ω → ℝ := fun ω => lam * X ω with hf_def
-  have h_int : Integrable (fun ω => Real.exp (f ω)) μ :=
+  set f : Ω → ℝ := fun ω ↦ lam * X ω with hf_def
+  have h_int : Integrable (fun ω ↦ Real.exp (f ω)) μ :=
     integrable_exp_mul_of_bounded hX_meas h_bdd lam
   -- Bounded RV ⇒ lam in interior of integrableExpSet X μ.
   have h_mem : lam ∈ interior (integrableExpSet X μ) :=
     mem_interior_integrableExpSet_of_bounded hX_meas h_bdd lam
   -- Step 1: `log rnDeriv = f − log (∫ exp f ∂μ)` μ-a.e.
-  have h_rn_eq : (fun ω => Real.log ((μ.tilted f).rnDeriv μ ω).toReal)
-      =ᵐ[μ] fun ω => f ω - Real.log (∫ x, Real.exp (f x) ∂μ) :=
+  have h_rn_eq : (fun ω ↦ Real.log ((μ.tilted f).rnDeriv μ ω).toReal)
+      =ᵐ[μ] fun ω ↦ f ω - Real.log (∫ x, Real.exp (f x) ∂μ) :=
     log_rnDeriv_tilted_left_self h_int
   -- Step 2: transfer the a.e.-equality from `μ` to `μ.tilted f`.
   have h_ac : μ.tilted f ≪ μ := tilted_absolutelyContinuous μ f
-  have h_rn_eq' : (fun ω => Real.log ((μ.tilted f).rnDeriv μ ω).toReal)
-      =ᵐ[μ.tilted f] fun ω => f ω - Real.log (∫ x, Real.exp (f x) ∂μ) :=
+  have h_rn_eq' : (fun ω ↦ Real.log ((μ.tilted f).rnDeriv μ ω).toReal)
+      =ᵐ[μ.tilted f] fun ω ↦ f ω - Real.log (∫ x, Real.exp (f x) ∂μ) :=
     h_ac.ae_eq h_rn_eq
   -- Step 3: rewrite the LHS integral using h_rn_eq'.
   have h_lhs :
@@ -411,7 +411,7 @@ lemma klDiv_tilted_eq [IsProbabilityMeasure μ] (X : Ω → ℝ) (hX_meas : Meas
     have h_memLp : MemLp X 1 (μ.tilted f) := memLp_tilted_mul h_mem 1
     exact memLp_one_iff_integrable.mp h_memLp
   have h_int_f : Integrable f (μ.tilted f) := by
-    show Integrable (fun ω => lam * X ω) (μ.tilted f)
+    show Integrable (fun ω ↦ lam * X ω) (μ.tilted f)
     exact h_int_X.const_mul lam
   rw [h_lhs, integral_sub h_int_f (integrable_const _), integral_const,
     probReal_univ, one_smul]

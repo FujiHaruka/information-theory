@@ -38,43 +38,43 @@ continuous-AEP mass sub-bound (i). -/
 theorem pi_empirical_mean_concentration
     {α : Type*} [MeasurableSpace α] (μ : Measure α) [IsProbabilityMeasure μ]
     {φ : α → ℝ} (hφ : MemLp φ 2 μ) {ε : ℝ} (hε : 0 < ε) {n : ℕ} (hn : 0 < n) :
-    (Measure.pi (fun _ : Fin n => μ))
+    (Measure.pi (fun _ : Fin n ↦ μ))
         {x : Fin n → α | ε ≤ |(∑ i, φ (x i)) / (n : ℝ) - μ[φ]|}
       ≤ ENNReal.ofReal (variance φ μ / ((n : ℝ) * ε ^ 2)) := by
   classical
-  set ν : Measure (Fin n → α) := Measure.pi (fun _ : Fin n => μ) with hν
+  set ν : Measure (Fin n → α) := Measure.pi (fun _ : Fin n ↦ μ) with hν
   -- The empirical sum as a sum of coordinate evaluations.
-  set S : (Fin n → α) → ℝ := fun x => ∑ i, φ (x i) with hS
+  set S : (Fin n → α) → ℝ := fun x ↦ ∑ i, φ (x i) with hS
   have hnR : (0 : ℝ) < n := by exact_mod_cast hn
   -- Each coordinate evaluation is `φ ∘ eval i`, MemLp 2 under ν.
-  have hmemcoord : ∀ i : Fin n, MemLp (fun x : Fin n → α => φ (x i)) 2 ν := by
+  have hmemcoord : ∀ i : Fin n, MemLp (fun x : Fin n → α ↦ φ (x i)) 2 ν := by
     intro i
     have hmp : MeasurePreserving (Function.eval i) ν (μ) :=
-      measurePreserving_eval (fun _ : Fin n => μ) i
+      measurePreserving_eval (fun _ : Fin n ↦ μ) i
     exact hφ.comp_measurePreserving hmp
   -- `MemLp S 2 ν` as a finite sum of the coordinate functions.
   have hSmem : MemLp S 2 ν := by
     have := memLp_finsetSum (μ := ν) (p := (2 : ℝ≥0∞)) Finset.univ
-      (f := fun (i : Fin n) (x : Fin n → α) => φ (x i)) (fun i _ => hmemcoord i)
+      (f := fun (i : Fin n) (x : Fin n → α) ↦ φ (x i)) (fun i _ ↦ hmemcoord i)
     simpa [hS] using this
   -- Variance of S = n * variance φ μ.
   have hVarS : variance S ν = (n : ℝ) * variance φ μ := by
-    have hpi := variance_sum_pi (ι := Fin n) (Ω := fun _ : Fin n => α)
-      (μ := fun _ : Fin n => μ) (X := fun _ : Fin n => φ) (fun i => hφ)
+    have hpi := variance_sum_pi (ι := Fin n) (Ω := fun _ : Fin n ↦ α)
+      (μ := fun _ : Fin n ↦ μ) (X := fun _ : Fin n ↦ φ) (fun i ↦ hφ)
     -- `hpi : Var[∑ i, fun ω ↦ φ (ω i); ν] = ∑ i, Var[φ; μ]`
     rw [hS]
-    rw [show (fun x : Fin n → α => ∑ i, φ (x i))
-        = (∑ i, fun ω : Fin n → α => φ (ω i)) by
+    rw [show (fun x : Fin n → α ↦ ∑ i, φ (x i))
+        = (∑ i, fun ω : Fin n → α ↦ φ (ω i)) by
       funext x; simp [Finset.sum_apply]]
     rw [hpi]
     simp [Finset.sum_const, Finset.card_univ]
   -- Mean of S = n * μ[φ].
   have hmeanS : ν[S] = (n : ℝ) * μ[φ] := by
-    have hint : ∀ i : Fin n, ν[fun x : Fin n → α => φ (x i)] = μ[φ] := by
+    have hint : ∀ i : Fin n, ν[fun x : Fin n → α ↦ φ (x i)] = μ[φ] := by
       intro i
       have hmp : MeasurePreserving (Function.eval i) ν (μ) :=
-        measurePreserving_eval (fun _ : Fin n => μ) i
-      calc ν[fun x : Fin n → α => φ (x i)]
+        measurePreserving_eval (fun _ : Fin n ↦ μ) i
+      calc ν[fun x : Fin n → α ↦ φ (x i)]
           = ∫ x, φ (Function.eval i x) ∂ν := rfl
         _ = ∫ y, φ y ∂(Measure.map (Function.eval i) ν) := by
               rw [integral_map (hmp.measurable.aemeasurable)]
@@ -132,15 +132,15 @@ theorem pi_empirical_mean_typical_mass
     {φ : α → ℝ} (hφ : MemLp φ 2 μ) {ε η : ℝ} (hε : 0 < ε) (hη : 0 < η) :
     ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n →
       ENNReal.ofReal (1 - η) ≤
-        (Measure.pi (fun _ : Fin n => μ))
+        (Measure.pi (fun _ : Fin n ↦ μ))
           {x : Fin n → α | |(∑ i, φ (x i)) / (n : ℝ) - μ[φ]| < ε} := by
   classical
   -- Choose `N₀` so that `Var[φ]/(N₀ ε²) ≤ η`, i.e. `N₀ ≥ Var[φ]/(η ε²)`.
   obtain ⟨N₀, hN₀⟩ := exists_nat_gt (variance φ μ / (η * ε ^ 2))
-  refine ⟨N₀ + 1, fun n hn => ?_⟩
+  refine ⟨N₀ + 1, fun n hn ↦ ?_⟩
   have hn0 : 0 < n := lt_of_lt_of_le (Nat.succ_pos N₀) hn
   have hnR : (0 : ℝ) < n := by exact_mod_cast hn0
-  set ν : Measure (Fin n → α) := Measure.pi (fun _ : Fin n => μ) with hν
+  set ν : Measure (Fin n → α) := Measure.pi (fun _ : Fin n ↦ μ) with hν
   -- The "atypical" deviation set and the typical set are complementary.
   set A : Set (Fin n → α) :=
     {x : Fin n → α | ε ≤ |(∑ i, φ (x i)) / (n : ℝ) - μ[φ]|} with hA
@@ -149,26 +149,26 @@ theorem pi_empirical_mean_typical_mass
   have hBA : B = Aᶜ := by
     rw [hA, hB]; ext x; simp [not_le]
   -- `A` is null-measurable (its defining function is `AEStronglyMeasurable` under ν).
-  have hmemcoord : ∀ i : Fin n, MemLp (fun x : Fin n → α => φ (x i)) 2 ν := by
+  have hmemcoord : ∀ i : Fin n, MemLp (fun x : Fin n → α ↦ φ (x i)) 2 ν := by
     intro i
-    exact hφ.comp_measurePreserving (measurePreserving_eval (fun _ : Fin n => μ) i)
-  have hSmem : MemLp (fun x : Fin n → α => ∑ i, φ (x i)) 2 ν := by
+    exact hφ.comp_measurePreserving (measurePreserving_eval (fun _ : Fin n ↦ μ) i)
+  have hSmem : MemLp (fun x : Fin n → α ↦ ∑ i, φ (x i)) 2 ν := by
     have := memLp_finsetSum (μ := ν) (p := (2 : ℝ≥0∞)) Finset.univ
-      (f := fun (i : Fin n) (x : Fin n → α) => φ (x i))
-      (fun i _ => hmemcoord i)
+      (f := fun (i : Fin n) (x : Fin n → α) ↦ φ (x i))
+      (fun i _ ↦ hmemcoord i)
     simpa using this
-  have hS0 : AEMeasurable (fun x : Fin n → α => ∑ i, φ (x i)) ν :=
+  have hS0 : AEMeasurable (fun x : Fin n → α ↦ ∑ i, φ (x i)) ν :=
     (MemLp.aestronglyMeasurable hSmem).aemeasurable
   have hAnull : NullMeasurableSet A ν := by
     -- `A` is the preimage of the measurable target set `{r : ℝ | ε ≤ |r|}`
     -- under the AEMeasurable map `y := (∑ φ(xᵢ))/n - μ[φ]`.
     have hy : AEMeasurable
-        (fun x : Fin n → α => (∑ i, φ (x i)) / (n : ℝ) - μ[φ]) ν :=
+        (fun x : Fin n → α ↦ (∑ i, φ (x i)) / (n : ℝ) - μ[φ]) ν :=
       (hS0.div_const _).sub_const _
     have hT : MeasurableSet {r : ℝ | ε ≤ |r|} :=
       measurableSet_le measurable_const measurable_norm
     have : NullMeasurableSet
-        ((fun x : Fin n → α => (∑ i, φ (x i)) / (n : ℝ) - μ[φ]) ⁻¹' {r : ℝ | ε ≤ |r|}) ν :=
+        ((fun x : Fin n → α ↦ (∑ i, φ (x i)) / (n : ℝ) - μ[φ]) ⁻¹' {r : ℝ | ε ≤ |r|}) ν :=
       hy.nullMeasurableSet_preimage hT
     simpa [hA, Set.preimage, Set.mem_setOf_eq] using this
   -- Mass of the typical set via complement.

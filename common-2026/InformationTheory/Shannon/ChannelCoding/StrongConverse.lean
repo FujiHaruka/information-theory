@@ -44,7 +44,7 @@ noncomputable def highLLRSet
     {M n : ℕ} (W : Channel α β) (c : Code M n α β)
     (Q : Measure (Fin n → β)) (threshold : ℝ) (m : Fin M) :
     Set (Fin n → β) :=
-  { y | (Measure.pi (fun i => W (c.encoder m i))).real {y}
+  { y | (Measure.pi (fun i ↦ W (c.encoder m i))).real {y}
           > Real.exp threshold * Q.real {y} }
 
 omit [Fintype α] [DecidableEq α] [MeasurableSingletonClass α] [Nonempty β] in
@@ -62,13 +62,13 @@ theorem channelCoding_per_codeword_markov_bound
     (Q : Measure (Fin n → β)) [IsFiniteMeasure Q]
     (threshold : ℝ) (m : Fin M)
     (s : Set (Fin n → β)) (_hs : MeasurableSet s) :
-    ((Measure.pi (fun i => W (c.encoder m i))).real
+    ((Measure.pi (fun i ↦ W (c.encoder m i))).real
         (s \ highLLRSet W c Q threshold m))
       ≤ Real.exp threshold * Q.real s := by
   classical
   -- Pm = product of Markov kernel applications = probability measure (→ SigmaFinite).
   have hPm_prob : IsProbabilityMeasure
-      (Measure.pi (fun i => W (c.encoder m i))) := by infer_instance
+      (Measure.pi (fun i ↦ W (c.encoder m i))) := by infer_instance
   -- s \ highLLR is finite (Fin n → β is finite).
   set H : Set (Fin n → β) := highLLRSet W c Q threshold m with hH_def
   have hs'_finite : (s \ H).Finite := Set.toFinite _
@@ -77,7 +77,7 @@ theorem channelCoding_per_codeword_markov_bound
     simp [Fs']
   -- Per-point bound on Fs': y ∉ H means P {y} ≤ exp(threshold) Q {y}.
   have h_per_point : ∀ y ∈ Fs',
-      (Measure.pi (fun i => W (c.encoder m i))).real {y}
+      (Measure.pi (fun i ↦ W (c.encoder m i))).real {y}
         ≤ Real.exp threshold * Q.real {y} := by
     intro y hy
     have hy_s' : y ∈ s \ H := (Set.Finite.mem_toFinset _).mp hy
@@ -86,7 +86,7 @@ theorem channelCoding_per_codeword_markov_bound
     exact hy_notH (not_le.mp h_neg)
   -- Sum the bounds.
   have h_sum_le :
-      ∑ y ∈ Fs', (Measure.pi (fun i => W (c.encoder m i))).real {y}
+      ∑ y ∈ Fs', (Measure.pi (fun i ↦ W (c.encoder m i))).real {y}
         ≤ ∑ y ∈ Fs', Real.exp threshold * Q.real {y} :=
     Finset.sum_le_sum h_per_point
   rw [← Finset.mul_sum] at h_sum_le
@@ -101,7 +101,7 @@ theorem channelCoding_per_codeword_markov_bound
     apply ENNReal.toReal_mono (measure_ne_top _ _)
     exact measure_mono Set.diff_subset
   have h_exp_nn : 0 ≤ Real.exp threshold := (Real.exp_pos _).le
-  calc (Measure.pi (fun i => W (c.encoder m i))).real (s \ H)
+  calc (Measure.pi (fun i ↦ W (c.encoder m i))).real (s \ H)
       ≤ Real.exp threshold * Q.real (s \ H) := h_sum_le
     _ ≤ Real.exp threshold * Q.real s :=
         mul_le_mul_of_nonneg_left h_Q_mono h_exp_nn
@@ -123,12 +123,12 @@ theorem channelCoding_per_codeword_decomposition
     (Q : Measure (Fin n → β)) [IsFiniteMeasure Q]
     (threshold : ℝ) (m : Fin M)
     (s : Set (Fin n → β)) (hs : MeasurableSet s) :
-    (Measure.pi (fun i => W (c.encoder m i))).real s
+    (Measure.pi (fun i ↦ W (c.encoder m i))).real s
       ≤ Real.exp threshold * Q.real s
-        + (Measure.pi (fun i => W (c.encoder m i))).real
+        + (Measure.pi (fun i ↦ W (c.encoder m i))).real
             (highLLRSet W c Q threshold m) := by
   classical
-  set Pm : Measure (Fin n → β) := Measure.pi (fun i => W (c.encoder m i))
+  set Pm : Measure (Fin n → β) := Measure.pi (fun i ↦ W (c.encoder m i))
   set H : Set (Fin n → β) := highLLRSet W c Q threshold m
   have hH_meas : MeasurableSet H := measurableSet_highLLRSet W c Q threshold m
   -- Split s = (s \ H) ⊎ (s ∩ H).
@@ -172,16 +172,16 @@ lemma channelCoding_one_sub_avgErr_eq
     (W : Channel α β) [IsMarkovKernel W] (c : Code M n α β) :
     (1 - (c.averageErrorProb W).toReal)
       = (1 / M : ℝ) * ∑ m : Fin M,
-          (Measure.pi (fun i => W (c.encoder m i))).real (c.decodingRegion m) := by
+          (Measure.pi (fun i ↦ W (c.encoder m i))).real (c.decodingRegion m) := by
   have h_M_R_pos : (0 : ℝ) < M := by exact_mod_cast hM
   have hM_ne : (M : ℝ) ≠ 0 := h_M_R_pos.ne'
   let Pm : Fin M → Measure (Fin n → β) :=
-    fun m => Measure.pi (fun i => W (c.encoder m i))
-  have h_pm_prob : ∀ m : Fin M, IsProbabilityMeasure (Pm m) := fun m => by
-    show IsProbabilityMeasure (Measure.pi (fun i => W (c.encoder m i)))
+    fun m ↦ Measure.pi (fun i ↦ W (c.encoder m i))
+  have h_pm_prob : ∀ m : Fin M, IsProbabilityMeasure (Pm m) := fun m ↦ by
+    show IsProbabilityMeasure (Measure.pi (fun i ↦ W (c.encoder m i)))
     infer_instance
   have h_dec_meas : ∀ m : Fin M, MeasurableSet (c.decodingRegion m) :=
-    fun m => c.measurableSet_decodingRegion m
+    fun m ↦ c.measurableSet_decodingRegion m
   have h_err_eq_one_sub : ∀ m : Fin M,
       ((Pm m) (c.errorEvent m)).toReal
         = 1 - ((Pm m) (c.decodingRegion m)).toReal := by
@@ -196,14 +196,14 @@ lemma channelCoding_one_sub_avgErr_eq
     unfold Code.averageErrorProb
     simp [hM.ne']
   have h_errProbAt : ∀ m : Fin M,
-      c.errorProbAt W m = (Pm m) (c.errorEvent m) := fun _ => rfl
+      c.errorProbAt W m = (Pm m) (c.errorEvent m) := fun _ ↦ rfl
   have h_sum_errProb_toReal :
       (∑ m : Fin M, c.errorProbAt W m).toReal
         = ∑ m : Fin M, ((Pm m) (c.errorEvent m)).toReal := by
     have h_ne_top : ∀ m ∈ Finset.univ, c.errorProbAt W m ≠ ∞ :=
-      fun m _ => measure_ne_top _ _
+      fun m _ ↦ measure_ne_top _ _
     rw [ENNReal.toReal_sum h_ne_top]
-    refine Finset.sum_congr rfl fun m _ => ?_
+    refine Finset.sum_congr rfl fun m _ ↦ ?_
     rw [h_errProbAt m]
   have h_avgPe_toReal :
       (c.averageErrorProb W).toReal
@@ -218,7 +218,7 @@ lemma channelCoding_one_sub_avgErr_eq
     have h_step :
         ∑ m : Fin M, ((Pm m) (c.errorEvent m)).toReal
           = ∑ m : Fin M, (1 - ((Pm m) (c.decodingRegion m)).toReal) := by
-      refine Finset.sum_congr rfl fun m _ => h_err_eq_one_sub m
+      refine Finset.sum_congr rfl fun m _ ↦ h_err_eq_one_sub m
     rw [h_step, Finset.sum_sub_distrib]
     rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul, mul_one]
   rw [h_sum_err_rewrite]
@@ -252,28 +252,28 @@ theorem channelCoding_average_success_le
     (threshold : ℝ) :
     (1 - (c.averageErrorProb W).toReal)
       ≤ Real.exp threshold / M + (1 / M : ℝ) *
-          ∑ m : Fin M, (Measure.pi (fun i => W (c.encoder m i))).real
+          ∑ m : Fin M, (Measure.pi (fun i ↦ W (c.encoder m i))).real
             (highLLRSet W c Q threshold m) := by
   classical
   have h_M_R_pos : (0 : ℝ) < M := by exact_mod_cast hM
   have hM_ne : (M : ℝ) ≠ 0 := h_M_R_pos.ne'
   -- Notation.
   let Pm : Fin M → Measure (Fin n → β) :=
-    fun m => Measure.pi (fun i => W (c.encoder m i))
+    fun m ↦ Measure.pi (fun i ↦ W (c.encoder m i))
   -- Step 1: 1 - avgPe = (1/M) · ∑_m Pm m (decodingRegion m).
   rw [channelCoding_one_sub_avgErr_eq hM W c]
   -- Step 2: apply per-codeword decomposition.
   have h_per_m : ∀ m : Fin M,
       (Pm m).real (c.decodingRegion m)
         ≤ Real.exp threshold * Q.real (c.decodingRegion m)
-          + (Pm m).real (highLLRSet W c Q threshold m) := fun m =>
+          + (Pm m).real (highLLRSet W c Q threshold m) := fun m ↦
     channelCoding_per_codeword_decomposition W c Q threshold m
       (c.decodingRegion m) (c.measurableSet_decodingRegion m)
   have h_sum_le :
       ∑ m : Fin M, (Pm m).real (c.decodingRegion m)
         ≤ ∑ m : Fin M, (Real.exp threshold * Q.real (c.decodingRegion m)
             + (Pm m).real (highLLRSet W c Q threshold m)) :=
-    Finset.sum_le_sum (fun m _ => h_per_m m)
+    Finset.sum_le_sum (fun m _ ↦ h_per_m m)
   have h_sum_split :
       ∑ m : Fin M, (Real.exp threshold * Q.real (c.decodingRegion m)
           + (Pm m).real (highLLRSet W c Q threshold m))
@@ -282,7 +282,7 @@ theorem channelCoding_average_success_le
     rw [Finset.sum_add_distrib, ← Finset.mul_sum]
   rw [h_sum_split] at h_sum_le
   -- Decoding regions are pairwise disjoint.
-  have h_pairwise_disj : Pairwise (fun m m' : Fin M =>
+  have h_pairwise_disj : Pairwise (fun m m' : Fin M ↦
       Disjoint (c.decodingRegion m) (c.decodingRegion m')) := by
     intro m m' hmm'
     rw [Set.disjoint_iff]
@@ -295,12 +295,12 @@ theorem channelCoding_average_success_le
     have h_union_eq_tsum :
         Q (⋃ m : Fin M, c.decodingRegion m)
           = ∑' m : Fin M, Q (c.decodingRegion m) :=
-      measure_iUnion (fun m m' hmm' => h_pairwise_disj hmm')
-        (fun m => c.measurableSet_decodingRegion m)
+      measure_iUnion (fun m m' hmm' ↦ h_pairwise_disj hmm')
+        (fun m ↦ c.measurableSet_decodingRegion m)
     have h_tsum_eq_sum :
         (∑' m : Fin M, Q (c.decodingRegion m))
           = ∑ m : Fin M, Q (c.decodingRegion m) :=
-      tsum_eq_sum (fun m hm => absurd (Finset.mem_univ m) hm)
+      tsum_eq_sum (fun m hm ↦ absurd (Finset.mem_univ m) hm)
     have h_union_eq :
         Q (⋃ m : Fin M, c.decodingRegion m)
           = ∑ m : Fin M, Q (c.decodingRegion m) := by
@@ -311,7 +311,7 @@ theorem channelCoding_average_success_le
     have h_le_one_ennreal : (∑ m : Fin M, Q (c.decodingRegion m)) ≤ 1 := by
       rw [← h_union_eq]; rw [← h_univ_eq_one]; exact h_le_univ
     have h_each_ne_top : ∀ m ∈ Finset.univ, Q (c.decodingRegion m) ≠ ∞ :=
-      fun m _ => measure_ne_top _ _
+      fun m _ ↦ measure_ne_top _ _
     have h_toReal_sum :
         (∑ m : Fin M, Q (c.decodingRegion m)).toReal
           = ∑ m : Fin M, (Q (c.decodingRegion m)).toReal :=

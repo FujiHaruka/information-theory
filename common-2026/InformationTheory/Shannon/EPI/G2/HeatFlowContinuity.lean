@@ -71,8 +71,8 @@ plumbing, no new analytic content.
 theorem convDensityAdd_negMulLog_integrable_pub
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume) {t : ℝ} (ht : 0 < t) :
-    Integrable (fun x =>
+    (hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume) {t : ℝ} (ht : 0 < t) :
+    Integrable (fun x ↦
       Real.negMulLog (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x)) volume :=
   InformationTheory.Shannon.FisherInfo.convDensityAdd_negMulLog_integrable
     pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
@@ -106,10 +106,10 @@ converge to the entropy integral of `pX` as `t → 0⁺`:
 theorem differentialEntropy_convDensity_integral_tendsto
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
-    (hpX_ent : Integrable (fun x => Real.negMulLog (pX x)) volume) :
+    (hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume)
+    (hpX_ent : Integrable (fun x ↦ Real.negMulLog (pX x)) volume) :
     Tendsto
-      (fun t : ℝ =>
+      (fun t : ℝ ↦
         ∫ x, Real.negMulLog (convDensityAdd pX (gaussianPDFReal 0 t.toNNReal) x)
           ∂volume)
       (𝓝[Set.Ioi 0] 0)
@@ -126,7 +126,7 @@ theorem differentialEntropy_convDensity_integral_tendsto
   -- Build a strictly-positive surrogate sequence `v` agreeing with `u` eventually,
   -- then transfer the limit by congruence.
   classical
-  set v : ℕ → ℝ := fun n => if 0 < u n then u n else 1 with hv_def
+  set v : ℕ → ℝ := fun n ↦ if 0 < u n then u n else 1 with hv_def
   have hv_pos : ∀ n, 0 < v n := by
     intro n; simp only [hv_def]; split
     · assumption
@@ -136,9 +136,9 @@ theorem differentialEntropy_convDensity_integral_tendsto
     simp only [hv_def, if_pos hn]
   -- Abbreviations.
   set F : ℕ → ℝ → ℝ :=
-    fun n x => Real.negMulLog (convDensityAdd pX (gaussianPDFReal 0 ⟨v n, (hv_pos n).le⟩) x)
+    fun n x ↦ Real.negMulLog (convDensityAdd pX (gaussianPDFReal 0 ⟨v n, (hv_pos n).le⟩) x)
     with hF_def
-  set g : ℝ → ℝ := fun x => Real.negMulLog (pX x) with hg_def
+  set g : ℝ → ℝ := fun x ↦ Real.negMulLog (pX x) with hg_def
   -- Per-time integrability of the entropy integrands (also yields measurability).
   have hFint : ∀ n, Integrable (F n) volume := by
     intro n
@@ -147,7 +147,7 @@ theorem differentialEntropy_convDensity_integral_tendsto
       (hv_pos n)
   -- `v → 0⁺`: agrees with `u` eventually, and `u → 0⁺`.
   have hv_lim : Tendsto v atTop (𝓝[Set.Ioi 0] 0) :=
-    hu_lim.congr' (hv_eq.mono fun n hn => hn.symm)
+    hu_lim.congr' (hv_eq.mono fun n hn ↦ hn.symm)
   -- `v` converges, hence its range is bounded above.
   have hv_bdd : BddAbove (Set.range v) :=
     (hv_lim.mono_right nhdsWithin_le_nhds).bddAbove_range
@@ -162,7 +162,7 @@ theorem differentialEntropy_convDensity_integral_tendsto
       hpX_ent (v_Z := 1) one_pos v hv_pos n
   -- **(α) limsup upper bound** (`negMulLog_convDensity_limsup_le`):
   -- `limsup (∫ F ·) ≤ ∫ negMulLog pX = a`.
-  have hα : Filter.limsup (fun n => ∫ x, F n x ∂volume) atTop ≤ a := by
+  have hα : Filter.limsup (fun n ↦ ∫ x, F n x ∂volume) atTop ≤ a := by
     rw [ha_def, hg_def]
     have hlim := InformationTheory.EPIG2KLFatou.negMulLog_convDensity_limsup_le
       hpX_nn hpX_meas hpX_int hpX_mass hpX_mom hpX_ent (σ2 := 1) one_ne_zero v hv_pos hv_lim
@@ -179,10 +179,10 @@ theorem differentialEntropy_convDensity_integral_tendsto
     set Vr : ℝ := (∫ x, x ^ 2 * pX x ∂volume) + B + 1 with hVr_def
     have hVr_pos : (0 : ℝ) < Vr := by
       have hmom_nn : (0 : ℝ) ≤ ∫ x, x ^ 2 * pX x ∂volume :=
-        integral_nonneg fun x => mul_nonneg (sq_nonneg x) (hpX_nn x)
+        integral_nonneg fun x ↦ mul_nonneg (sq_nonneg x) (hpX_nn x)
       have : (0 : ℝ) < (∫ x, x ^ 2 * pX x ∂volume) + B + 1 := by positivity
       rwa [hVr_def]
-    refine ⟨(1/2) * Real.log (2 * Real.pi * Real.exp 1 * Vr), fun n => ?_⟩
+    refine ⟨(1/2) * Real.log (2 * Real.pi * Real.exp 1 * Vr), fun n ↦ ?_⟩
     have hVnn : (0 : ℝ≥0) ≠ Vr.toNNReal := by
       intro h; exact hVr_pos.ne' (by rw [← Real.coe_toNNReal Vr hVr_pos.le, ← h]; rfl)
     have hVle : (∫ x, x ^ 2 * pX x ∂volume) + v n ≤ (Vr.toNNReal : ℝ) := by
@@ -200,16 +200,16 @@ theorem differentialEntropy_convDensity_integral_tendsto
       _ = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * Vr) := by
             rw [Real.coe_toNNReal Vr hVr_pos.le]
   -- Boundedness witnesses for the squeeze.
-  have hbdd_le : Filter.IsBoundedUnder (· ≤ ·) atTop (fun n => ∫ x, F n x ∂volume) :=
+  have hbdd_le : Filter.IsBoundedUnder (· ≤ ·) atTop (fun n ↦ ∫ x, F n x ∂volume) :=
     isBoundedUnder_of_eventually_le (Eventually.of_forall hC)
-  have hbdd_ge : Filter.IsBoundedUnder (· ≥ ·) atTop (fun n => ∫ x, F n x ∂volume) :=
+  have hbdd_ge : Filter.IsBoundedUnder (· ≥ ·) atTop (fun n ↦ ∫ x, F n x ∂volume) :=
     isBoundedUnder_of_eventually_ge (Eventually.of_forall hβ)
   -- `a ≤ liminf (∫ F ·)` from the (β) lower bound.
-  have hliminf : a ≤ Filter.liminf (fun n => ∫ x, F n x ∂volume) atTop :=
+  have hliminf : a ≤ Filter.liminf (fun n ↦ ∫ x, F n x ∂volume) atTop :=
     le_liminf_of_le (Filter.isCoboundedUnder_ge_of_le atTop hC) (Eventually.of_forall hβ)
   -- Squeeze: `∫ F n → a`.
   have hL1 :
-      Tendsto (fun n => ∫ x, F n x ∂volume) atTop (𝓝 a) :=
+      Tendsto (fun n ↦ ∫ x, F n x ∂volume) atTop (𝓝 a) :=
     tendsto_of_le_liminf_of_limsup_le hliminf hα hbdd_le hbdd_ge
   -- The goal's target `𝓝 (∫ negMulLog pX)` is already `𝓝 a` (folded via `g`/`a`).
   -- Transfer back from `v` to `u` (they agree eventually). The goal's per-`n`
@@ -245,28 +245,28 @@ theorem heatFlowDifferentialEntropy_continuousWithinAt_zero
     (hX_meas : Measurable X) (hZ_meas : Measurable Z) (hXZ_indep : IndepFun X Z P)
     (v_Z : ℝ≥0) (hv_Z_pos : 0 < v_Z) (hZ_law : P.map Z = gaussianReal 0 v_Z)
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x)))
+    (hpX_law : P.map X = volume.withDensity (fun x ↦ ENNReal.ofReal (pX x)))
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
-    (hpX_ent : Integrable (fun x => Real.negMulLog (pX x)) volume) :
+    (hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume)
+    (hpX_ent : Integrable (fun x ↦ Real.negMulLog (pX x)) volume) :
     ContinuousWithinAt
-      (fun t : ℝ => differentialEntropy (P.map (fun ω => X ω + Real.sqrt t * Z ω)))
+      (fun t : ℝ ↦ differentialEntropy (P.map (fun ω ↦ X ω + Real.sqrt t * Z ω)))
       (Set.Ioi 0) 0 := by
   have hv_Z_pos' : (0 : ℝ) < v_Z := hv_Z_pos
   -- Endpoint value: `f 0 = differentialEntropy (P.map X) = ∫ negMulLog pX`.
-  have h_path0 : (fun ω => X ω + Real.sqrt (0 : ℝ) * Z ω) = X := by
+  have h_path0 : (fun ω ↦ X ω + Real.sqrt (0 : ℝ) * Z ω) = X := by
     funext ω; simp [Real.sqrt_zero]
   have h_end_val :
-      differentialEntropy (P.map (fun ω => X ω + Real.sqrt (0 : ℝ) * Z ω))
+      differentialEntropy (P.map (fun ω ↦ X ω + Real.sqrt (0 : ℝ) * Z ω))
         = ∫ x, Real.negMulLog (pX x) ∂volume := by
     rw [h_path0, hpX_law,
       differentialEntropy_eq_integral_withDensity hpX_meas.ennreal_ofReal]
-    refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
+    refine integral_congr_ae (Filter.Eventually.of_forall fun x ↦ ?_)
     simp only [ENNReal.toReal_ofReal (hpX_nn x)]
   -- Per-`t > 0`, the inner differential entropy equals the `convDensityAdd`
   -- entropy integral with variance `t·v_Z`.
   have h_perT : ∀ t : ℝ, 0 < t →
-      differentialEntropy (P.map (fun ω => X ω + Real.sqrt t * Z ω))
+      differentialEntropy (P.map (fun ω ↦ X ω + Real.sqrt t * Z ω))
         = ∫ x, Real.negMulLog
             (convDensityAdd pX (gaussianPDFReal 0 (t * v_Z).toNNReal) x) ∂volume := by
     intro t ht
@@ -277,7 +277,7 @@ theorem heatFlowDifferentialEntropy_continuousWithinAt_zero
     rw [hwit]
     -- `P.map (X + √t·Z) = P.map (gaussianConvolution X Z t)` (defeq).
     have hpath_eq :
-        (fun ω => X ω + Real.sqrt t * Z ω)
+        (fun ω ↦ X ω + Real.sqrt t * Z ω)
           = InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z t := rfl
     rw [hpath_eq]
     -- density identification
@@ -289,13 +289,13 @@ theorem heatFlowDifferentialEntropy_continuousWithinAt_zero
     filter_upwards [hrn] with x hx
     rw [hx, ENNReal.toReal_ofReal]
     unfold convDensityAdd
-    exact integral_nonneg fun y =>
+    exact integral_nonneg fun y ↦
       mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _)
   -- Reparameterise the entropy-integral limit `t' := t·v_Z`. First the inner reparam.
-  have h_reparam : Tendsto (fun t : ℝ => t * (v_Z : ℝ)) (𝓝[Set.Ioi 0] 0) (𝓝[Set.Ioi 0] 0) := by
+  have h_reparam : Tendsto (fun t : ℝ ↦ t * (v_Z : ℝ)) (𝓝[Set.Ioi 0] 0) (𝓝[Set.Ioi 0] 0) := by
     rw [tendsto_nhdsWithin_iff]
     constructor
-    · have : Tendsto (fun t : ℝ => t * (v_Z : ℝ)) (𝓝 0) (𝓝 (0 * (v_Z : ℝ))) :=
+    · have : Tendsto (fun t : ℝ ↦ t * (v_Z : ℝ)) (𝓝 0) (𝓝 (0 * (v_Z : ℝ))) :=
         (continuous_mul_const (v_Z : ℝ)).tendsto 0
       simpa using this.mono_left nhdsWithin_le_nhds
     · filter_upwards [self_mem_nhdsWithin] with t ht
@@ -303,7 +303,7 @@ theorem heatFlowDifferentialEntropy_continuousWithinAt_zero
   have h_layer2 := differentialEntropy_convDensity_integral_tendsto
     hpX_nn hpX_meas hpX_int hpX_mass hpX_mom hpX_ent
   have h_tendsto :
-      Tendsto (fun t : ℝ => ∫ x, Real.negMulLog
+      Tendsto (fun t : ℝ ↦ ∫ x, Real.negMulLog
         (convDensityAdd pX (gaussianPDFReal 0 (t * v_Z).toNNReal) x) ∂volume)
         (𝓝[Set.Ioi 0] 0) (𝓝 (∫ x, Real.negMulLog (pX x) ∂volume)) :=
     h_layer2.comp h_reparam
@@ -331,8 +331,8 @@ theorem _root_.AntitoneOn.insert_of_continuousWithinAt
     (h'x : ContinuousWithinAt f s x) :
     AntitoneOn f (insert x s) := by
   -- `AntitoneOn f s` is `MonotoneOn (toDual ∘ f) s`; apply the monotone insert.
-  have hmono : MonotoneOn (fun a => OrderDual.toDual (f a)) s := hf.dual_right
-  have hcont : ContinuousWithinAt (fun a => OrderDual.toDual (f a)) s x :=
+  have hmono : MonotoneOn (fun a ↦ OrderDual.toDual (f a)) s := hf.dual_right
+  have hcont : ContinuousWithinAt (fun a ↦ OrderDual.toDual (f a)) s x :=
     continuous_toDual.continuousWithinAt.comp h'x (Set.mapsTo_univ _ _)
   exact (hmono.insert_of_continuousWithinAt hx hcont).dual_right
 
@@ -370,11 +370,11 @@ structure IsHeatFlowEndpointRegular {Ω : Type*} [MeasurableSpace Ω]
   pX : ℝ → ℝ
   hpX_nn : ∀ x, 0 ≤ pX x
   hpX_meas : Measurable pX
-  hpX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x))
+  hpX_law : P.map X = volume.withDensity (fun x ↦ ENNReal.ofReal (pX x))
   hpX_int : Integrable pX volume
   hpX_mass : (∫ y, pX y ∂volume) = 1
-  hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume
-  hpX_ent : Integrable (fun x => Real.negMulLog (pX x)) volume
+  hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume
+  hpX_ent : Integrable (fun x ↦ Real.negMulLog (pX x)) volume
 
 /-- **Heat-flow entropy-power endpoint continuity.**
 
@@ -400,14 +400,14 @@ theorem heatFlowEntropyPower_continuousWithinAt_zero
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (h_endpt : IsHeatFlowEndpointRegular X Z P) :
     ContinuousWithinAt
-      (fun t : ℝ => entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z ω)))
+      (fun t : ℝ ↦ entropyPower (P.map (fun ω ↦ X ω + Real.sqrt t * Z ω)))
       (Set.Ioi (0 : ℝ)) 0 := by
   -- Genuine reduction: `entropyPower = exp ∘ (2 · differentialEntropy)`, so the
   -- endpoint continuity follows from the endpoint continuity of the inner
   -- differential entropy via `Real.continuous_exp`.
   have key :
       ContinuousWithinAt
-        (fun t : ℝ => differentialEntropy (P.map (fun ω => X ω + Real.sqrt t * Z ω)))
+        (fun t : ℝ ↦ differentialEntropy (P.map (fun ω ↦ X ω + Real.sqrt t * Z ω)))
         (Set.Ioi (0 : ℝ)) 0 :=
     heatFlowDifferentialEntropy_continuousWithinAt_zero X Z P
       h_endpt.hX_meas h_endpt.hZ_meas h_endpt.hXZ_indep
@@ -416,8 +416,8 @@ theorem heatFlowEntropyPower_continuousWithinAt_zero
       h_endpt.hpX_int h_endpt.hpX_mass h_endpt.hpX_mom h_endpt.hpX_ent
   have hcomp :
       ContinuousWithinAt
-        (fun t : ℝ => Real.exp (2 *
-          differentialEntropy (P.map (fun ω => X ω + Real.sqrt t * Z ω))))
+        (fun t : ℝ ↦ Real.exp (2 *
+          differentialEntropy (P.map (fun ω ↦ X ω + Real.sqrt t * Z ω))))
         (Set.Ioi (0 : ℝ)) 0 :=
     ((key.const_smul (2 : ℝ)).rexp)
   -- `entropyPower μ = exp (2 * differentialEntropy μ)` definitionally.

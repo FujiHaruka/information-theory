@@ -59,7 +59,7 @@ source word `x`. Falls back to `⟨0, hM⟩` if no such `m` exists. -/
 noncomputable def jointTypicalLossyEncoder
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     {M n : ℕ} (hM : 0 < M) (ε : ℝ) (c : Codebook M n β) :
-    (Fin n → α) → Fin M := fun x =>
+    (Fin n → α) → Fin M := fun x ↦
   haveI : Decidable (∃ m : Fin M, (x, c m) ∈ jointlyTypicalSet μ Xs Ys n ε) :=
     Classical.propDecidable _
   if h : ∃ m : Fin M, (x, c m) ∈ jointlyTypicalSet μ Xs Ys n ε
@@ -130,7 +130,7 @@ private theorem jointlyTypicalSet_card_ge
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindepZ_full : iIndepFun (fun i => ChannelCoding.jointSequence Xs Ys i) μ)
+    (hindepZ_full : iIndepFun (fun i ↦ ChannelCoding.jointSequence Xs Ys i) μ)
     (hidentZ : ∀ i, IdentDistrib (ChannelCoding.jointSequence Xs Ys i)
                       (ChannelCoding.jointSequence Xs Ys 0) μ μ)
     (hposZ : ∀ p : α × β,
@@ -144,11 +144,11 @@ private theorem jointlyTypicalSet_card_ge
       ≤ ((jointlyTypicalSet μ Xs Ys n ε).toFinite.toFinset.card : ℝ) := by
   classical
   set Zs : ℕ → Ω → α × β := ChannelCoding.jointSequence Xs Ys with hZs_def
-  have hZs : ∀ i, Measurable (Zs i) := fun i =>
+  have hZs : ∀ i, Measurable (Zs i) := fun i ↦
     ChannelCoding.measurable_jointSequence Xs Ys hXs hYs i
   -- φ : (Fin n → α) × (Fin n → β) → Fin n → α × β reshapes pair into joint.
   let φ : (Fin n → α) × (Fin n → β) → (Fin n → α × β) :=
-    fun p i => (p.1 i, p.2 i)
+    fun p i ↦ (p.1 i, p.2 i)
   have hφ_inj : Function.Injective φ := by
     intro p q hpq
     apply Prod.ext
@@ -253,11 +253,11 @@ theorem jointlyTypicalSet_indep_prob_ge
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindepX_full : iIndepFun (fun i => Xs i) μ)
+    (hindepX_full : iIndepFun (fun i ↦ Xs i) μ)
     (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
-    (hindepY_full : iIndepFun (fun i => Ys i) μ)
+    (hindepY_full : iIndepFun (fun i ↦ Ys i) μ)
     (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
-    (hindepZ_full : iIndepFun (fun i => ChannelCoding.jointSequence Xs Ys i) μ)
+    (hindepZ_full : iIndepFun (fun i ↦ ChannelCoding.jointSequence Xs Ys i) μ)
     (hidentZ : ∀ i, IdentDistrib (ChannelCoding.jointSequence Xs Ys i)
                       (ChannelCoding.jointSequence Xs Ys 0) μ μ)
     (hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})

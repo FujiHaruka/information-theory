@@ -70,14 +70,14 @@ omit [Fintype E] [Fintype Y] in
 /-- Each `(E, Y)` marginal is non-negative when the joint mass is. -/
 lemma marginalEY_nonneg (μ : X → E → Y → ℝ) (h_nn : ∀ x e y, 0 ≤ μ x e y)
     (e : E) (y : Y) : 0 ≤ marginalEY μ e y :=
-  Finset.sum_nonneg (fun x _ => h_nn x e y)
+  Finset.sum_nonneg (fun x _ ↦ h_nn x e y)
 
 omit [Fintype Y] in
 /-- The `Y` marginal is non-negative when the joint mass is. -/
 lemma marginalY_nonneg (μ : X → E → Y → ℝ) (h_nn : ∀ x e y, 0 ≤ μ x e y)
     (y : Y) : 0 ≤ marginalY μ y :=
   Finset.sum_nonneg
-    (fun x _ => Finset.sum_nonneg (fun e _ => h_nn x e y))
+    (fun x _ ↦ Finset.sum_nonneg (fun e _ ↦ h_nn x e y))
 
 /-- For a binary `E = Bool`, the `Y` marginal splits as the sum of the
 two `(E, Y)` marginals. -/
@@ -86,7 +86,7 @@ lemma marginalY_eq_marginalEY_true_add_false {X Y : Type*}
     marginalY μ y = marginalEY μ true y + marginalEY μ false y := by
   unfold marginalY marginalEY
   rw [← Finset.sum_add_distrib]
-  refine Finset.sum_congr rfl (fun x _ => ?_)
+  refine Finset.sum_congr rfl (fun x _ ↦ ?_)
   exact Fintype.sum_bool _
 
 /-! ### Conditional entropies (defined as entropy differences) -/
@@ -141,9 +141,9 @@ theorem condE_XY_zero_of_deterministic [DecidableEq E]
   -- Collapse the joint entropy sum to the (X, Y) marginal entropy.
   have hjoint_eq_xy : jointEntropy μ = xyEntropy μ := by
     unfold jointEntropy xyEntropy
-    refine Finset.sum_congr rfl (fun x _ => ?_)
+    refine Finset.sum_congr rfl (fun x _ ↦ ?_)
     rw [Finset.sum_comm]
-    refine Finset.sum_congr rfl (fun y _ => ?_)
+    refine Finset.sum_congr rfl (fun y _ ↦ ?_)
     exact hfix x y
   unfold condE_XY
   linarith

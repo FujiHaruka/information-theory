@@ -33,7 +33,7 @@ lemma integrable_of_nonneg_le_one_of_discrete {γ : Type*}
     exact_mod_cast h_le x
   calc ∫⁻ x, ‖g x‖ₑ ∂ν
       ≤ ∫⁻ _, 1 ∂ν := by
-        refine lintegral_mono fun x => ?_
+        refine lintegral_mono fun x ↦ ?_
         have hb := h_bound x
         rw [show ‖g x‖ₑ = ((‖g x‖₊ : ℝ≥0∞)) from rfl]
         have : ((‖g x‖₊ : ℝ≥0∞)) ≤ ((1 : ℝ≥0) : ℝ≥0∞) := by exact_mod_cast hb
@@ -65,7 +65,7 @@ lemma lintegral_ofReal_measureReal_eq_lintegral_measure {Ω' γ : Type*}
     [MeasurableSpace Ω'] [MeasurableSpace γ]
     (μ : Measure Ω') [IsFiniteMeasure μ] (ν : Measure γ) (s : γ → Set Ω') :
     ∫⁻ x, ENNReal.ofReal (μ.real (s x)) ∂ν = ∫⁻ x, μ (s x) ∂ν := by
-  refine lintegral_congr (fun x => ?_)
+  refine lintegral_congr (fun x ↦ ?_)
   have hne_top : μ (s x) ≠ ∞ := measure_ne_top _ _
   rw [show μ.real (s x) = (μ (s x)).toReal from rfl, ENNReal.ofReal_toReal hne_top]
 
@@ -183,9 +183,9 @@ theorem swError_EX_expectation_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindepY_full : iIndepFun (fun i => Ys i) μ)
+    (hindepY_full : iIndepFun (fun i ↦ Ys i) μ)
     (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
-    (hindepZ_full : iIndepFun (fun i => jointSequence Xs Ys i) μ)
+    (hindepZ_full : iIndepFun (fun i ↦ jointSequence Xs Ys i) μ)
     (hidentZ : ∀ i,
       IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
     (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
@@ -213,7 +213,7 @@ theorem swError_EX_expectation_le
   have hYn : Measurable (jointRV Ys n) := measurable_jointRV Ys hYs n
   -- Each `swError_EX μ ... f_X` is measurable in ω.
   have h_meas_EX : ∀ f_X : (Fin n → α) → Fin M_X,
-      MeasurableSet (swError_EX μ Xs Ys n ε f_X) := fun f_X =>
+      MeasurableSet (swError_EX μ Xs Ys n ε f_X) := fun f_X ↦
     measurableSet_swError_EX hXs hYs μ n ε f_X
   -- Pointwise bound on each per-`f_X` slice (Step 1, no integration yet):
   -- Per-`ω`-slice in `f_X` (the "set of bad hashes for ω") has B_X-measure
@@ -268,29 +268,29 @@ theorem swError_EX_expectation_le
       ext ⟨g, ω⟩
       simp [E]
     rw [h_decomp]
-    refine MeasurableSet.iUnion (fun f_X => ?_)
+    refine MeasurableSet.iUnion (fun f_X ↦ ?_)
     exact (measurableSet_singleton _).prod (h_meas_EX f_X)
   -- Step 3: Fubini swap ∫⁻ f_X, μ (slice f_X) ∂B_X = ∫⁻ ω, B_X (slice ω) ∂μ.
   have h_swap :
       ∫⁻ f_X, μ (swError_EX μ Xs Ys n ε f_X) ∂B_X
         = ∫⁻ ω, B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X} ∂μ :=
     lintegral_measure_swap_of_prod_measurableSet B_X μ
-      (fun f_X => swError_EX μ Xs Ys n ε f_X) hE_meas
+      (fun f_X ↦ swError_EX μ Xs Ys n ε f_X) hE_meas
   -- Step 4: bound the inner B_X-mass uniformly in ω, integrated against μ.
   have h_lint_le :
       ∫⁻ ω, B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X} ∂μ
         ≤ ENNReal.ofReal (C * ((M_X : ℝ))⁻¹) :=
     lintegral_measure_le_ofReal_of_measureReal_le B_X μ
-      (fun ω => {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X}) h_per_omega
+      (fun ω ↦ {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X}) h_per_omega
   -- Step 5: convert Bochner outer integral to lintegral and conclude.
   -- Outer integrand `f_X ↦ μ.real (swError_EX ... f_X)` is non-negative.
-  have h_int_nn : 0 ≤ᵐ[B_X] fun f_X => μ.real (swError_EX μ Xs Ys n ε f_X) := by
-    refine Filter.Eventually.of_forall (fun f_X => ?_)
+  have h_int_nn : 0 ≤ᵐ[B_X] fun f_X ↦ μ.real (swError_EX μ Xs Ys n ε f_X) := by
+    refine Filter.Eventually.of_forall (fun f_X ↦ ?_)
     exact measureReal_nonneg
   -- Strong measurability via Fintype + every-set-is-measurable.
   have h_int_meas :
       AEStronglyMeasurable
-        (fun f_X : (Fin n → α) → Fin M_X => μ.real (swError_EX μ Xs Ys n ε f_X)) B_X := by
+        (fun f_X : (Fin n → α) → Fin M_X ↦ μ.real (swError_EX μ Xs Ys n ε f_X)) B_X := by
     -- Domain is finite + every set measurable → every function is measurable.
     apply Measurable.aestronglyMeasurable
     refine Measurable.of_discrete
@@ -301,7 +301,7 @@ theorem swError_EX_expectation_le
       ∫⁻ f_X, ENNReal.ofReal (μ.real (swError_EX μ Xs Ys n ε f_X)) ∂B_X
         = ∫⁻ f_X, μ (swError_EX μ Xs Ys n ε f_X) ∂B_X :=
     lintegral_ofReal_measureReal_eq_lintegral_measure μ B_X
-      (fun f_X => swError_EX μ Xs Ys n ε f_X)
+      (fun f_X ↦ swError_EX μ Xs Ys n ε f_X)
   rw [h_lint_eq, h_swap]
   -- Goal: (∫⁻ ω, B_X (...) ∂μ).toReal ≤ C * (M_X)⁻¹.
   have h_rhs_nn : 0 ≤ C * ((M_X : ℝ))⁻¹ := mul_nonneg hC_nn hMinv_nn
@@ -360,25 +360,25 @@ lemma measureReal_map_jointRV_proj_fst_eq
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
     (n : ℕ) (x : Fin n → α) :
     (μ.map (jointRV (jointSequence Xs Ys) n)).real
-        ((fun z i => (z i).1) ⁻¹' ({x} : Set (Fin n → α)))
+        ((fun z i ↦ (z i).1) ⁻¹' ({x} : Set (Fin n → α)))
       = (μ.map (jointRV Xs n)).real ({x} : Set (Fin n → α)) := by
   classical
-  have hZs : ∀ i, Measurable (jointSequence Xs Ys i) := fun i =>
+  have hZs : ∀ i, Measurable (jointSequence Xs Ys i) := fun i ↦
     measurable_jointSequence Xs Ys hXs hYs i
-  have hproj_meas : Measurable (fun z : Fin n → α × β => fun i => (z i).1) := by
+  have hproj_meas : Measurable (fun z : Fin n → α × β ↦ fun i ↦ (z i).1) := by
     apply measurable_pi_lambda
     intro i
     exact (measurable_pi_apply i).fst
   have h_meas_x : MeasurableSet ({x} : Set (Fin n → α)) := measurableSet_singleton x
   have h_meas_pre : MeasurableSet
-      ((fun z : Fin n → α × β => fun i => (z i).1) ⁻¹' ({x} : Set (Fin n → α))) :=
+      ((fun z : Fin n → α × β ↦ fun i ↦ (z i).1) ⁻¹' ({x} : Set (Fin n → α))) :=
     hproj_meas h_meas_x
   have hZmeas : Measurable (jointRV (jointSequence Xs Ys) n) :=
     measurable_jointRV (jointSequence Xs Ys) hZs n
   have hXmeas : Measurable (jointRV Xs n) := measurable_jointRV Xs hXs n
   have hpre_eq :
       jointRV (jointSequence Xs Ys) n ⁻¹'
-          ((fun z : Fin n → α × β => fun i => (z i).1) ⁻¹' ({x} : Set (Fin n → α)))
+          ((fun z : Fin n → α × β ↦ fun i ↦ (z i).1) ⁻¹' ({x} : Set (Fin n → α)))
         = jointRV Xs n ⁻¹' ({x} : Set (Fin n → α)) := by
     ext ω
     simp only [Set.mem_preimage, Set.mem_singleton_iff]
@@ -396,9 +396,9 @@ private theorem conditionalTypicalSliceY_card_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindepX_full : iIndepFun (fun i => Xs i) μ)
+    (hindepX_full : iIndepFun (fun i ↦ Xs i) μ)
     (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
-    (hindepZ_full : iIndepFun (fun i => jointSequence Xs Ys i) μ)
+    (hindepZ_full : iIndepFun (fun i ↦ jointSequence Xs Ys i) μ)
     (hidentZ : ∀ i,
       IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
     (hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
@@ -411,7 +411,7 @@ private theorem conditionalTypicalSliceY_card_le
           (entropy μ (jointSequence Xs Ys 0) - entropy μ (Xs 0) + 2 * ε)) := by
   classical
   set Zs : ℕ → Ω → α × β := jointSequence Xs Ys with hZs_def
-  have hZs : ∀ i, Measurable (Zs i) := fun i =>
+  have hZs : ∀ i, Measurable (Zs i) := fun i ↦
     measurable_jointSequence Xs Ys hXs hYs i
   set HZ : ℝ := entropy μ (Zs 0) with hHZ_def
   set HX : ℝ := entropy μ (Xs 0) with hHX_def
@@ -420,7 +420,7 @@ private theorem conditionalTypicalSliceY_card_le
   by_cases hxT : x ∈ InformationTheory.Shannon.typicalSet μ Xs n ε
   · -- X-typical: full argument.
     -- Embedding `embed : (Fin n → β) → (Fin n → α × β)`, `embed y i := (x i, y i)`.
-    let embed : (Fin n → β) → (Fin n → α × β) := fun y i => (x i, y i)
+    let embed : (Fin n → β) → (Fin n → α × β) := fun y i ↦ (x i, y i)
     have hembed_inj : Function.Injective embed := by
       intro y y' hyy
       funext i
@@ -473,7 +473,7 @@ private theorem conditionalTypicalSliceY_card_le
           = (μ.map (jointRV Zs n)).real (FimgZ : Set (Fin n → α × β)) :=
       sum_measureReal_singleton (μ := μ.map (jointRV Zs n)) FimgZ
     -- Step 4: `FimgZ ⊆ proj_X ⁻¹' {x}`, so its measure ≤ (μ.map (jointRV Xs n)).real {x}.
-    let proj_X : (Fin n → α × β) → (Fin n → α) := fun z i => (z i).1
+    let proj_X : (Fin n → α × β) → (Fin n → α) := fun z i ↦ (z i).1
     have hproj_subset :
         (FimgZ : Set (Fin n → α × β)) ⊆ proj_X ⁻¹' ({x} : Set (Fin n → α)) := by
       intro z hz
@@ -526,9 +526,9 @@ theorem swError_EY_expectation_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindepX_full : iIndepFun (fun i => Xs i) μ)
+    (hindepX_full : iIndepFun (fun i ↦ Xs i) μ)
     (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
-    (hindepZ_full : iIndepFun (fun i => jointSequence Xs Ys i) μ)
+    (hindepZ_full : iIndepFun (fun i ↦ jointSequence Xs Ys i) μ)
     (hidentZ : ∀ i,
       IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
     (hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
@@ -554,7 +554,7 @@ theorem swError_EY_expectation_le
   have hXn : Measurable (jointRV Xs n) := measurable_jointRV Xs hXs n
   have hYn : Measurable (jointRV Ys n) := measurable_jointRV Ys hYs n
   have h_meas_EY : ∀ f_Y : (Fin n → β) → Fin M_Y,
-      MeasurableSet (swError_EY μ Xs Ys n ε f_Y) := fun f_Y =>
+      MeasurableSet (swError_EY μ Xs Ys n ε f_Y) := fun f_Y ↦
     measurableSet_swError_EY hXs hYs μ n ε f_Y
   -- Per-`ω` slice bound.
   have h_per_omega : ∀ ω : Ω,
@@ -598,7 +598,7 @@ theorem swError_EY_expectation_le
       ext ⟨g, ω⟩
       simp [E]
     rw [h_decomp]
-    refine MeasurableSet.iUnion (fun f_Y => ?_)
+    refine MeasurableSet.iUnion (fun f_Y ↦ ?_)
     exact (measurableSet_singleton _).prod (h_meas_EY f_Y)
   -- Step 3: Fubini.
   have h_fubini1 :
@@ -641,12 +641,12 @@ theorem swError_EY_expectation_le
       _ = ENNReal.ofReal (C * ((M_Y : ℝ))⁻¹) := by
           rw [measure_univ, mul_one]
   -- Step 5: Bochner integral lift.
-  have h_int_nn : 0 ≤ᵐ[B_Y] fun f_Y => μ.real (swError_EY μ Xs Ys n ε f_Y) := by
-    refine Filter.Eventually.of_forall (fun f_Y => ?_)
+  have h_int_nn : 0 ≤ᵐ[B_Y] fun f_Y ↦ μ.real (swError_EY μ Xs Ys n ε f_Y) := by
+    refine Filter.Eventually.of_forall (fun f_Y ↦ ?_)
     exact measureReal_nonneg
   have h_int_meas :
       AEStronglyMeasurable
-        (fun f_Y : (Fin n → β) → Fin M_Y => μ.real (swError_EY μ Xs Ys n ε f_Y)) B_Y := by
+        (fun f_Y : (Fin n → β) → Fin M_Y ↦ μ.real (swError_EY μ Xs Ys n ε f_Y)) B_Y := by
     apply Measurable.aestronglyMeasurable
     refine Measurable.of_discrete
   rw [integral_eq_lintegral_of_nonneg_ae h_int_nn h_int_meas]
@@ -661,7 +661,7 @@ theorem swError_EY_expectation_le
   have h_lint_eq :
       ∫⁻ f_Y, ENNReal.ofReal (μ.real (swError_EY μ Xs Ys n ε f_Y)) ∂B_Y
         = ∫⁻ f_Y, μ (swError_EY μ Xs Ys n ε f_Y) ∂B_Y := by
-    refine lintegral_congr (fun f_Y => ?_)
+    refine lintegral_congr (fun f_Y ↦ ?_)
     exact h_ofReal_eq f_Y
   rw [h_lint_eq, h_swap]
   have h_rhs_nn : 0 ≤ C * ((M_Y : ℝ))⁻¹ := mul_nonneg hC_nn hMinv_nn

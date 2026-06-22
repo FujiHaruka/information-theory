@@ -59,7 +59,7 @@ local lemma in `EPIDensityForm.lean:321-340`, lifted to a top-level helper.
 theorem density_int_mass {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω}
     [IsProbabilityMeasure P] (W : Ω → ℝ) (p : ℝ → ℝ)
     (hW : Measurable W) (hp_nn : ∀ x, 0 ≤ p x) (hp_meas : Measurable p)
-    (hp_law : P.map W = volume.withDensity (fun x => ENNReal.ofReal (p x))) :
+    (hp_law : P.map W = volume.withDensity (fun x ↦ ENNReal.ofReal (p x))) :
     Integrable p volume ∧ (∫ x, p x ∂volume) = 1 := by
   have hprob : IsProbabilityMeasure (P.map W) :=
     MeasureTheory.Measure.isProbabilityMeasure_map hW.aemeasurable
@@ -92,30 +92,30 @@ theorem indepSum_density_ae {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω}
     (pX pY pXY : ℝ → ℝ)
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpY_nn : ∀ x, 0 ≤ pY x) (hpY_meas : Measurable pY)
-    (hpX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x)))
-    (hpY_law : P.map Y = volume.withDensity (fun x => ENNReal.ofReal (pY x)))
-    (hpXY_law : P.map (fun ω => X ω + Y ω)
-      = volume.withDensity (fun x => ENNReal.ofReal (pXY x)))
+    (hpX_law : P.map X = volume.withDensity (fun x ↦ ENNReal.ofReal (pX x)))
+    (hpY_law : P.map Y = volume.withDensity (fun x ↦ ENNReal.ofReal (pY x)))
+    (hpXY_law : P.map (fun ω ↦ X ω + Y ω)
+      = volume.withDensity (fun x ↦ ENNReal.ofReal (pXY x)))
     (hpXY_nn : ∀ x, 0 ≤ pXY x) (hpXY_meas : Measurable pXY)
     (_hpX_int : Integrable pX volume) (_hpY_int : Integrable pY volume)
     (hpXY_lmass : (∫⁻ x, ENNReal.ofReal (pXY x) ∂volume) ≠ ⊤)
     (hpX_lmass : (∫⁻ x, ENNReal.ofReal (pX x) ∂volume) = 1)
     (hpY_lmass : (∫⁻ x, ENNReal.ofReal (pY x) ∂volume) = 1) :
     pXY =ᵐ[volume] convDensityAdd pX pY := by
-  set F : ℝ → ℝ≥0∞ := fun x => ENNReal.ofReal (pX x) with hF
-  set G : ℝ → ℝ≥0∞ := fun x => ENNReal.ofReal (pY x) with hG
+  set F : ℝ → ℝ≥0∞ := fun x ↦ ENNReal.ofReal (pX x) with hF
+  set G : ℝ → ℝ≥0∞ := fun x ↦ ENNReal.ofReal (pY x) with hG
   have hF_meas : Measurable F := hpX_meas.ennreal_ofReal
   have hG_meas : Measurable G := hpY_meas.ennreal_ofReal
   -- Step 1: `P.map (X+Y) = withDensity F ∗ withDensity G = withDensity (F ⋆ₗ G)`.
-  have hmap : P.map (fun ω => X ω + Y ω)
+  have hmap : P.map (fun ω ↦ X ω + Y ω)
       = volume.withDensity (F ⋆ₗ[volume] G) := by
-    rw [show (fun ω => X ω + Y ω) = X + Y from rfl,
+    rw [show (fun ω ↦ X ω + Y ω) = X + Y from rfl,
       hXY.map_add_eq_map_conv_map hX hY, hpX_law, hpY_law,
       conv_withDensity_eq_lconvolution hF_meas hG_meas]
   -- Step 2: `ofReal∘pXY =ᵐ F ⋆ₗ G` by `withDensity` a.e.-uniqueness.
-  have hwd_eq : volume.withDensity (fun x => ENNReal.ofReal (pXY x))
+  have hwd_eq : volume.withDensity (fun x ↦ ENNReal.ofReal (pXY x))
       = volume.withDensity (F ⋆ₗ[volume] G) := by rw [← hpXY_law, hmap]
-  have hae1 : (fun x => ENNReal.ofReal (pXY x)) =ᵐ[volume] (F ⋆ₗ[volume] G) :=
+  have hae1 : (fun x ↦ ENNReal.ofReal (pXY x)) =ᵐ[volume] (F ⋆ₗ[volume] G) :=
     (withDensity_eq_iff hpXY_meas.ennreal_ofReal.aemeasurable
       (MeasureTheory.measurable_lconvolution volume hF_meas hG_meas).aemeasurable
       hpXY_lmass).mp hwd_eq
@@ -123,7 +123,7 @@ theorem indepSum_density_ae {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω}
   -- a.e.-z finiteness of the inner `∫⁻ y, F y * G (-y+z)` (Tonelli: total mass `= 1·1`),
   -- then a.e.-z `ofReal_integral_eq_lintegral_ofReal`.
   have hae2 : (F ⋆ₗ[volume] G) =ᵐ[volume]
-      fun z => ENNReal.ofReal (convDensityAdd pX pY z) := by
+      fun z ↦ ENNReal.ofReal (convDensityAdd pX pY z) := by
     -- finiteness of the total lconvolution mass (Tonelli: `= (∫⁻F)·(∫⁻G) = 1`).
     have hfin : (∫⁻ z, (F ⋆ₗ[volume] G) z ∂volume) ≠ ⊤ := by
       have heq : (∫⁻ z, (F ⋆ₗ[volume] G) z ∂volume)
@@ -154,26 +154,26 @@ theorem indepSum_density_ae {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω}
     have hofReal_mul : ∀ y : ℝ,
         ENNReal.ofReal (pX y) * ENNReal.ofReal (pY (-y + z))
           = ENNReal.ofReal (pX y * pY (-y + z)) :=
-      fun y => (ENNReal.ofReal_mul (hpX_nn y)).symm
+      fun y ↦ (ENNReal.ofReal_mul (hpX_nn y)).symm
     simp only [hF, hG, hofReal_mul] at hz ⊢
-    have hsub : ∀ y : ℝ, (-y + z) = z - y := fun y => by ring
+    have hsub : ∀ y : ℝ, (-y + z) = z - y := fun y ↦ by ring
     simp only [hsub] at hz ⊢
     -- a.e.-`z` integrability of `fun y => pX y · pY(z-y)` from finiteness `hz`.
-    have hmeasf : AEMeasurable (fun y => pX y * pY (z - y)) volume :=
+    have hmeasf : AEMeasurable (fun y ↦ pX y * pY (z - y)) volume :=
       (hpX_meas.mul (hpY_meas.comp (measurable_const.sub measurable_id))).aemeasurable
-    have hint : Integrable (fun y => pX y * pY (z - y)) volume := by
+    have hint : Integrable (fun y ↦ pX y * pY (z - y)) volume := by
       rw [← lintegral_ofReal_ne_top_iff_integrable hmeasf.aestronglyMeasurable
-        (Filter.Eventually.of_forall fun y => mul_nonneg (hpX_nn y) (hpY_nn (z - y)))]
+        (Filter.Eventually.of_forall fun y ↦ mul_nonneg (hpX_nn y) (hpY_nn (z - y)))]
       exact hz.ne
     rw [← ofReal_integral_eq_lintegral_ofReal hint
-      (Filter.Eventually.of_forall fun y => mul_nonneg (hpX_nn y) (hpY_nn (z - y)))]
+      (Filter.Eventually.of_forall fun y ↦ mul_nonneg (hpX_nn y) (hpY_nn (z - y)))]
     rfl
   -- Step 4: combine + strip `ofReal`.
-  have hae3 : (fun x => ENNReal.ofReal (pXY x))
-      =ᵐ[volume] fun z => ENNReal.ofReal (convDensityAdd pX pY z) := hae1.trans hae2
+  have hae3 : (fun x ↦ ENNReal.ofReal (pXY x))
+      =ᵐ[volume] fun z ↦ ENNReal.ofReal (convDensityAdd pX pY z) := hae1.trans hae2
   filter_upwards [hae3] with x hx
   have hpos : (0 : ℝ) ≤ convDensityAdd pX pY x :=
-    integral_nonneg fun y => mul_nonneg (hpX_nn y) (hpY_nn (x - y))
+    integral_nonneg fun y ↦ mul_nonneg (hpX_nn y) (hpY_nn (x - y))
   exact (ENNReal.ofReal_eq_ofReal_iff (hpXY_nn x) hpos).mp hx
 
 theorem convDensityAdd_gaussian_asym_convDensityAdd_pos (pX pY : ℝ → ℝ) {s t : ℝ}
@@ -190,10 +190,10 @@ theorem convDensityAdd_gaussian_asym_convDensityAdd_pos (pX pY : ℝ → ℝ) {s
   have hregX := isRegularDensityV2_convDensityAdd_gaussian pX hs hpX_nn hpX_meas hpX_int hpX_mass
   have hregY := isRegularDensityV2_convDensityAdd_gaussian pY ht hpY_nn hpY_meas hpY_int hpY_mass
   obtain ⟨MfY, hMfY⟩ := convDensityAdd_gaussian_bdd pY hpY_nn hpY_int ht
-  have hint : Integrable (fun x => fX x * fY (z - x)) volume :=
+  have hint : Integrable (fun x ↦ fX x * fY (z - x)) volume :=
     (convDensityAdd_gaussian_integrable pX hpX_meas hpX_int hs).mul_bdd
       ((hregY.diff.continuous.comp (continuous_const.sub continuous_id)).aestronglyMeasurable)
-      (c := MfY) (Filter.Eventually.of_forall fun x => by
+      (c := MfY) (Filter.Eventually.of_forall fun x ↦ by
         simpa [Real.norm_eq_abs] using hMfY (z - x))
   exact convDensityAdd_pos_of_pos_cont fX fY hregX.diff.continuous hregY.diff.continuous
     hregX.pos hregY.pos z hint
@@ -202,23 +202,23 @@ theorem convDensityAdd_gaussian_asym_integrable_deriv_mul (pX pY : ℝ → ℝ) 
     (hs : 0 < s) (ht : 0 < t)
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
     (hpY_meas : Measurable pY) (hpY_int : Integrable pY volume) (z : ℝ) :
-    Integrable (fun x =>
+    Integrable (fun x ↦
         deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩)) x
           * convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩) (z - x)) volume := by
   set fX : ℝ → ℝ := convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) with hfX
   set fY : ℝ → ℝ := convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩) with hfY
   obtain ⟨M, hM⟩ := convDensityAdd_gaussian_deriv_bdd pX hpX_nn hpX_int hs
-  have hg : Integrable (fun x => fY (z - x)) volume :=
+  have hg : Integrable (fun x ↦ fY (z - x)) volume :=
     (convDensityAdd_gaussian_integrable pY hpY_meas hpY_int ht).comp_sub_left z
   refine hg.bdd_mul ?_ (c := M) ?_
   · exact (measurable_deriv fX).aestronglyMeasurable
-  · exact Filter.Eventually.of_forall fun x => by simpa [Real.norm_eq_abs] using hM x
+  · exact Filter.Eventually.of_forall fun x ↦ by simpa [Real.norm_eq_abs] using hM x
 
 theorem convDensityAdd_gaussian_asym_integrable_mul_deriv (pX pY : ℝ → ℝ) {s t : ℝ}
     (hs : 0 < s) (ht : 0 < t)
     (hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)
     (hpY_nn : ∀ x, 0 ≤ pY x) (hpY_int : Integrable pY volume) (z : ℝ) :
-    Integrable (fun x =>
+    Integrable (fun x ↦
         convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) x
           * deriv (convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩)) (z - x)) volume := by
   set fX : ℝ → ℝ := convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) with hfX
@@ -227,7 +227,7 @@ theorem convDensityAdd_gaussian_asym_integrable_mul_deriv (pX pY : ℝ → ℝ) 
   have hg : Integrable fX volume := convDensityAdd_gaussian_integrable pX hpX_meas hpX_int hs
   refine hg.mul_bdd ?_ (c := M) ?_
   · exact ((measurable_deriv fY).comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-  · exact Filter.Eventually.of_forall fun x => by simpa [Real.norm_eq_abs] using hM (z - x)
+  · exact Filter.Eventually.of_forall fun x ↦ by simpa [Real.norm_eq_abs] using hM (z - x)
 
 theorem convDensityAdd_gaussian_asym_condDensityX_integrable (pX pY : ℝ → ℝ) {s t : ℝ}
     (hs : 0 < s) (ht : 0 < t)
@@ -241,13 +241,13 @@ theorem convDensityAdd_gaussian_asym_condDensityX_integrable (pX pY : ℝ → �
   set fY : ℝ → ℝ := convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩) with hfY
   obtain ⟨MfY, hMfY⟩ := convDensityAdd_gaussian_bdd pY hpY_nn hpY_int ht
   have hregY := isRegularDensityV2_convDensityAdd_gaussian pY ht hpY_nn hpY_meas hpY_int hpY_mass
-  have hbase : Integrable (fun x => fX x * fY (z - x)) volume :=
+  have hbase : Integrable (fun x ↦ fX x * fY (z - x)) volume :=
     (convDensityAdd_gaussian_integrable pX hpX_meas hpX_int hs).mul_bdd
       ((hregY.diff.continuous.comp (continuous_const.sub continuous_id)).aestronglyMeasurable)
-      (c := MfY) (Filter.Eventually.of_forall fun x => by
+      (c := MfY) (Filter.Eventually.of_forall fun x ↦ by
         simpa [Real.norm_eq_abs] using hMfY (z - x))
   refine (hbase.div_const (convDensityAdd fX fY z)).congr
-    (Filter.Eventually.of_forall fun x => ?_)
+    (Filter.Eventually.of_forall fun x ↦ ?_)
   simp only [condDensityX]
 
 theorem convDensityAdd_gaussian_asym_integrable_scoreWeight_mul_condDensityX
@@ -256,7 +256,7 @@ theorem convDensityAdd_gaussian_asym_integrable_scoreWeight_mul_condDensityX
     (hpX_mass : 0 < ∫ x, pX x ∂volume)
     (hpY_nn : ∀ x, 0 ≤ pY x) (hpY_meas : Measurable pY) (hpY_int : Integrable pY volume)
     (hpY_mass : 0 < ∫ x, pY x ∂volume) (lam z : ℝ) :
-    Integrable (fun x =>
+    Integrable (fun x ↦
         scoreWeight (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩))
             (convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩)) lam z x
           * condDensityX (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩))
@@ -265,35 +265,35 @@ theorem convDensityAdd_gaussian_asym_integrable_scoreWeight_mul_condDensityX
   set fY : ℝ → ℝ := convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩) with hfY
   have hregX := isRegularDensityV2_convDensityAdd_gaussian pX hs hpX_nn hpX_meas hpX_int hpX_mass
   have hregY := isRegularDensityV2_convDensityAdd_gaussian pY ht hpY_nn hpY_meas hpY_int hpY_mass
-  have hlogX : ∀ w, logDeriv fX w * fX w = deriv fX w := fun w => by
+  have hlogX : ∀ w, logDeriv fX w * fX w = deriv fX w := fun w ↦ by
     rw [logDeriv_apply, div_mul_cancel₀ _ (hregX.pos w).ne']
-  have hlogY : ∀ w, logDeriv fY w * fY w = deriv fY w := fun w => by
+  have hlogY : ∀ w, logDeriv fY w * fY w = deriv fY w := fun w ↦ by
     rw [logDeriv_apply, div_mul_cancel₀ _ (hregY.pos w).ne']
-  have hA : Integrable (fun x =>
+  have hA : Integrable (fun x ↦
       logDeriv fX x * fX x * fY (z - x)) volume := by
-    have hbase : Integrable (fun x => deriv fX x * fY (z - x)) volume := by
-      have hg : Integrable (fun x => fY (z - x)) volume :=
+    have hbase : Integrable (fun x ↦ deriv fX x * fY (z - x)) volume := by
+      have hg : Integrable (fun x ↦ fY (z - x)) volume :=
         (convDensityAdd_gaussian_integrable pY hpY_meas hpY_int ht).comp_sub_left z
       obtain ⟨M, hM⟩ := convDensityAdd_gaussian_deriv_bdd pX hpX_nn hpX_int hs
       refine hg.bdd_mul (measurable_deriv fX).aestronglyMeasurable (c := M)
-        (Filter.Eventually.of_forall fun x => by simpa [Real.norm_eq_abs] using hM x)
-    refine hbase.congr (Filter.Eventually.of_forall fun x => ?_)
+        (Filter.Eventually.of_forall fun x ↦ by simpa [Real.norm_eq_abs] using hM x)
+    refine hbase.congr (Filter.Eventually.of_forall fun x ↦ ?_)
     simp only []
     rw [← hlogX x]
-  have hB : Integrable (fun x =>
+  have hB : Integrable (fun x ↦
       fX x * (logDeriv fY (z - x) * fY (z - x))) volume := by
-    have hbase : Integrable (fun x => fX x * deriv fY (z - x)) volume := by
+    have hbase : Integrable (fun x ↦ fX x * deriv fY (z - x)) volume := by
       have hg : Integrable fX volume := convDensityAdd_gaussian_integrable pX hpX_meas hpX_int hs
       obtain ⟨M, hM⟩ := convDensityAdd_gaussian_deriv_bdd pY hpY_nn hpY_int ht
       refine hg.mul_bdd
         ((measurable_deriv fY).comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-        (c := M) (Filter.Eventually.of_forall fun x => by simpa [Real.norm_eq_abs] using hM (z - x))
-    refine hbase.congr (Filter.Eventually.of_forall fun x => ?_)
+        (c := M) (Filter.Eventually.of_forall fun x ↦ by simpa [Real.norm_eq_abs] using hM (z - x))
+    refine hbase.congr (Filter.Eventually.of_forall fun x ↦ ?_)
     simp only []
     rw [← hlogY (z - x)]
   have hcomb := ((hA.const_mul lam).add (hB.const_mul (1 - lam))).div_const
     (convDensityAdd fX fY z)
-  refine hcomb.congr (Filter.Eventually.of_forall fun x => ?_)
+  refine hcomb.congr (Filter.Eventually.of_forall fun x ↦ ?_)
   simp only [scoreWeight, condDensityX, Pi.add_apply]
   ring
 
@@ -303,7 +303,7 @@ theorem convDensityAdd_gaussian_asym_integrable_scoreWeight_sq_mul_condDensityX
     (hpX_mass : 0 < ∫ x, pX x ∂volume) (hpX_norm : (∫ x, pX x ∂volume) = 1)
     (hpY_nn : ∀ x, 0 ≤ pY x) (hpY_meas : Measurable pY) (hpY_int : Integrable pY volume)
     (hpY_mass : 0 < ∫ x, pY x ∂volume) (hpY_norm : (∫ x, pY x ∂volume) = 1) (lam z : ℝ) :
-    Integrable (fun x =>
+    Integrable (fun x ↦
         (scoreWeight (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩))
             (convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩)) lam z x) ^ 2
           * condDensityX (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩))
@@ -312,47 +312,47 @@ theorem convDensityAdd_gaussian_asym_integrable_scoreWeight_sq_mul_condDensityX
   set fY : ℝ → ℝ := convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩) with hfY
   have hregX := isRegularDensityV2_convDensityAdd_gaussian pX hs hpX_nn hpX_meas hpX_int hpX_mass
   have hregY := isRegularDensityV2_convDensityAdd_gaussian pY ht hpY_nn hpY_meas hpY_int hpY_mass
-  have hlogX : ∀ w, logDeriv fX w * fX w = deriv fX w := fun w => by
+  have hlogX : ∀ w, logDeriv fX w * fX w = deriv fX w := fun w ↦ by
     rw [logDeriv_apply, div_mul_cancel₀ _ (hregX.pos w).ne']
-  have hlogY : ∀ w, logDeriv fY w * fY w = deriv fY w := fun w => by
+  have hlogY : ∀ w, logDeriv fY w * fY w = deriv fY w := fun w ↦ by
     rw [logDeriv_apply, div_mul_cancel₀ _ (hregY.pos w).ne']
   obtain ⟨CfX, hCfX⟩ := convDensityAdd_gaussian_bdd pX hpX_nn hpX_int hs
   obtain ⟨CfY, hCfY⟩ := convDensityAdd_gaussian_bdd pY hpY_nn hpY_int ht
   obtain ⟨CfY', hCfY'⟩ := convDensityAdd_gaussian_deriv_bdd pY hpY_nn hpY_int ht
-  have hT1base : Integrable (fun x => (logDeriv fX x) ^ 2 * fX x) volume :=
+  have hT1base : Integrable (fun x ↦ (logDeriv fX x) ^ 2 * fX x) volume :=
     convDensityAdd_fisher_integrand_integrable pX hpX_nn hpX_meas hpX_int hpX_norm hs
-  have hT1 : Integrable (fun x =>
+  have hT1 : Integrable (fun x ↦
       (logDeriv fX x) ^ 2 * fX x * fY (z - x)) volume :=
     hT1base.mul_bdd
       ((hregY.diff.continuous.comp (continuous_const.sub continuous_id)).aestronglyMeasurable)
-      (c := CfY) (Filter.Eventually.of_forall fun x => by
+      (c := CfY) (Filter.Eventually.of_forall fun x ↦ by
         simpa [Real.norm_eq_abs] using hCfY (z - x))
   have hT2meas : AEStronglyMeasurable
-      (fun x => logDeriv fY (z - x) * fY (z - x)) volume := by
-    have heq : (fun x => logDeriv fY (z - x) * fY (z - x))
-        = (fun x => deriv fY (z - x)) := by funext x; exact hlogY (z - x)
+      (fun x ↦ logDeriv fY (z - x) * fY (z - x)) volume := by
+    have heq : (fun x ↦ logDeriv fY (z - x) * fY (z - x))
+        = (fun x ↦ deriv fY (z - x)) := by funext x; exact hlogY (z - x)
     rw [heq]
     exact ((measurable_deriv fY).comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-  have hT2 : Integrable (fun x =>
+  have hT2 : Integrable (fun x ↦
       logDeriv fX x * fX x * (logDeriv fY (z - x) * fY (z - x))) volume := by
-    have hbase : Integrable (fun x => deriv fX x * (logDeriv fY (z - x) * fY (z - x))) volume :=
+    have hbase : Integrable (fun x ↦ deriv fX x * (logDeriv fY (z - x) * fY (z - x))) volume :=
       (hregX.integrable_deriv).mul_bdd hT2meas (c := CfY')
-        (Filter.Eventually.of_forall fun x => by
+        (Filter.Eventually.of_forall fun x ↦ by
           rw [hlogY (z - x)]; simpa [Real.norm_eq_abs] using hCfY' (z - x))
-    refine hbase.congr (Filter.Eventually.of_forall fun x => ?_)
+    refine hbase.congr (Filter.Eventually.of_forall fun x ↦ ?_)
     simp only []; rw [← hlogX x]
-  have hT3pre : Integrable (fun w => (logDeriv fY w) ^ 2 * fY w) volume :=
+  have hT3pre : Integrable (fun w ↦ (logDeriv fY w) ^ 2 * fY w) volume :=
     convDensityAdd_fisher_integrand_integrable pY hpY_nn hpY_meas hpY_int hpY_norm ht
-  have hT3base : Integrable (fun x => (logDeriv fY (z - x)) ^ 2 * fY (z - x)) volume :=
+  have hT3base : Integrable (fun x ↦ (logDeriv fY (z - x)) ^ 2 * fY (z - x)) volume :=
     hT3pre.comp_sub_left z
-  have hT3 : Integrable (fun x =>
+  have hT3 : Integrable (fun x ↦
       fX x * ((logDeriv fY (z - x)) ^ 2 * fY (z - x))) volume :=
     hT3base.bdd_mul (hregX.diff.continuous.aestronglyMeasurable) (c := CfX)
-      (Filter.Eventually.of_forall fun x => by simpa [Real.norm_eq_abs] using hCfX x)
+      (Filter.Eventually.of_forall fun x ↦ by simpa [Real.norm_eq_abs] using hCfX x)
   have hcomb := ((((hT1.const_mul (lam ^ 2)).add
     (hT2.const_mul (2 * lam * (1 - lam)))).add
     (hT3.const_mul ((1 - lam) ^ 2)))).div_const (convDensityAdd fX fY z)
-  refine hcomb.congr (Filter.Eventually.of_forall fun x => ?_)
+  refine hcomb.congr (Filter.Eventually.of_forall fun x ↦ ?_)
   simp only [scoreWeight, condDensityX, Pi.add_apply]
   ring
 
@@ -362,7 +362,7 @@ theorem convDensityAdd_gaussian_asym_integrable_inner_scoreWeight_sq
     (hpX_mass : 0 < ∫ x, pX x ∂volume) (hpX_norm : (∫ x, pX x ∂volume) = 1)
     (hpY_nn : ∀ x, 0 ≤ pY x) (hpY_meas : Measurable pY) (hpY_int : Integrable pY volume)
     (hpY_mass : 0 < ∫ x, pY x ∂volume) (hpY_norm : (∫ x, pY x ∂volume) = 1) (lam : ℝ) :
-    Integrable (fun z =>
+    Integrable (fun z ↦
         (∫ x, (scoreWeight (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩))
             (convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩)) lam z x) ^ 2
           * condDensityX (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩))
@@ -373,38 +373,38 @@ theorem convDensityAdd_gaussian_asym_integrable_inner_scoreWeight_sq
   set fY : ℝ → ℝ := convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩) with hfY
   have hregX := isRegularDensityV2_convDensityAdd_gaussian pX hs hpX_nn hpX_meas hpX_int hpX_mass
   have hregY := isRegularDensityV2_convDensityAdd_gaussian pY ht hpY_nn hpY_meas hpY_int hpY_mass
-  have hlogX : ∀ w, logDeriv fX w * fX w = deriv fX w := fun w => by
+  have hlogX : ∀ w, logDeriv fX w * fX w = deriv fX w := fun w ↦ by
     rw [logDeriv_apply, div_mul_cancel₀ _ (hregX.pos w).ne']
-  have hlogY : ∀ w, logDeriv fY w * fY w = deriv fY w := fun w => by
+  have hlogY : ∀ w, logDeriv fY w * fY w = deriv fY w := fun w ↦ by
     rw [logDeriv_apply, div_mul_cancel₀ _ (hregY.pos w).ne']
   have hP1 : Integrable
-      (Function.uncurry fun z x =>
+      (Function.uncurry fun z x ↦
         (logDeriv fX x) ^ 2 * fX x * fY (z - x)) (volume.prod volume) := by
-    have hA : Integrable (fun a => (logDeriv fX a) ^ 2 * fX a) volume :=
+    have hA : Integrable (fun a ↦ (logDeriv fX a) ^ 2 * fX a) volume :=
       convDensityAdd_fisher_integrand_integrable pX hpX_nn hpX_meas hpX_int hpX_norm hs
     have hcomp := (measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
       (ν := (volume : Measure ℝ))).integrable_comp_of_integrable
       (hA.mul_prod (convDensityAdd_gaussian_integrable pY hpY_meas hpY_int ht))
-    refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
+    refine hcomp.congr (Filter.Eventually.of_forall fun p ↦ ?_)
     simp only [Function.comp, Function.uncurry, hfX, hfY]
   have hP2 : Integrable
-      (Function.uncurry fun z x =>
+      (Function.uncurry fun z x ↦
         (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x)) (volume.prod volume) := by
-    have hB : Integrable (fun b => (logDeriv fY b) ^ 2 * fY b) volume :=
+    have hB : Integrable (fun b ↦ (logDeriv fY b) ^ 2 * fY b) volume :=
       convDensityAdd_fisher_integrand_integrable pY hpY_nn hpY_meas hpY_int hpY_norm ht
     have hcomp := (measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
       (ν := (volume : Measure ℝ))).integrable_comp_of_integrable
       ((convDensityAdd_gaussian_integrable pX hpX_meas hpX_int hs).mul_prod hB)
-    refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
+    refine hcomp.congr (Filter.Eventually.of_forall fun p ↦ ?_)
     simp only [Function.comp, Function.uncurry, hfX, hfY]; ring
   have hP3 : Integrable
-      (Function.uncurry fun z x =>
+      (Function.uncurry fun z x ↦
         logDeriv fX x * fX x * (logDeriv fY (z - x) * fY (z - x)))
         (volume.prod volume) := by
     have hcomp := (measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
       (ν := (volume : Measure ℝ))).integrable_comp_of_integrable
       ((hregX.integrable_deriv).mul_prod (hregY.integrable_deriv))
-    refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
+    refine hcomp.congr (Filter.Eventually.of_forall fun p ↦ ?_)
     simp only [Function.comp, Function.uncurry, hfX, hfY]
     rw [← hlogX p.2, ← hlogY (p.1 - p.2)]
   have hI1 := hP1.integral_prod_left
@@ -412,13 +412,13 @@ theorem convDensityAdd_gaussian_asym_integrable_inner_scoreWeight_sq
   have hI3 := hP3.integral_prod_left
   have hcomb := (((hI1.const_mul (lam ^ 2)).add
     (hI3.const_mul (2 * lam * (1 - lam)))).add (hI2.const_mul ((1 - lam) ^ 2)))
-  refine hcomb.congr (Filter.Eventually.of_forall fun z => ?_)
+  refine hcomb.congr (Filter.Eventually.of_forall fun z ↦ ?_)
   have hpZ : convDensityAdd fX fY z ≠ 0 := by
-    have hregZint : Integrable (fun x => fX x * fY (z - x)) volume := by
+    have hregZint : Integrable (fun x ↦ fX x * fY (z - x)) volume := by
       obtain ⟨MfY, hMfY⟩ := convDensityAdd_gaussian_bdd pY hpY_nn hpY_int ht
       exact (convDensityAdd_gaussian_integrable pX hpX_meas hpX_int hs).mul_bdd
         ((hregY.diff.continuous.comp (continuous_const.sub continuous_id)).aestronglyMeasurable)
-        (c := MfY) (Filter.Eventually.of_forall fun x => by
+        (c := MfY) (Filter.Eventually.of_forall fun x ↦ by
           simpa [Real.norm_eq_abs] using hMfY (z - x))
     exact (convDensityAdd_pos_of_pos_cont fX fY hregX.diff.continuous hregY.diff.continuous
       hregX.pos hregY.pos z hregZint).ne'
@@ -426,46 +426,46 @@ theorem convDensityAdd_gaussian_asym_integrable_inner_scoreWeight_sq
   obtain ⟨CfX, hCfX⟩ := convDensityAdd_gaussian_bdd pX hpX_nn hpX_int hs
   obtain ⟨CfY, hCfY⟩ := convDensityAdd_gaussian_bdd pY hpY_nn hpY_int ht
   obtain ⟨CfY', hCfY'⟩ := convDensityAdd_gaussian_deriv_bdd pY hpY_nn hpY_int ht
-  have hg1 : Integrable (fun x =>
+  have hg1 : Integrable (fun x ↦
       (logDeriv fX x) ^ 2 * fX x * fY (z - x)) volume := by
-    have hbase : Integrable (fun x => (logDeriv fX x) ^ 2 * fX x) volume :=
+    have hbase : Integrable (fun x ↦ (logDeriv fX x) ^ 2 * fX x) volume :=
       convDensityAdd_fisher_integrand_integrable pX hpX_nn hpX_meas hpX_int hpX_norm hs
     exact hbase.mul_bdd
       ((hregY.diff.continuous.comp (continuous_const.sub continuous_id)).aestronglyMeasurable)
-      (c := CfY) (Filter.Eventually.of_forall fun x => by
+      (c := CfY) (Filter.Eventually.of_forall fun x ↦ by
         simpa [Real.norm_eq_abs] using hCfY (z - x))
-  have hg3 : Integrable (fun x =>
+  have hg3 : Integrable (fun x ↦
       logDeriv fX x * fX x * (logDeriv fY (z - x) * fY (z - x))) volume := by
-    have hmeas : AEStronglyMeasurable (fun x => logDeriv fY (z - x) * fY (z - x)) volume := by
-      have heq : (fun x => logDeriv fY (z - x) * fY (z - x))
-          = (fun x => deriv fY (z - x)) := by funext x; exact hlogY (z - x)
+    have hmeas : AEStronglyMeasurable (fun x ↦ logDeriv fY (z - x) * fY (z - x)) volume := by
+      have heq : (fun x ↦ logDeriv fY (z - x) * fY (z - x))
+          = (fun x ↦ deriv fY (z - x)) := by funext x; exact hlogY (z - x)
       rw [heq]
       exact ((measurable_deriv fY).comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-    have hbase : Integrable (fun x => deriv fX x * (logDeriv fY (z - x) * fY (z - x))) volume :=
+    have hbase : Integrable (fun x ↦ deriv fX x * (logDeriv fY (z - x) * fY (z - x))) volume :=
       (hregX.integrable_deriv).mul_bdd hmeas (c := CfY')
-        (Filter.Eventually.of_forall fun x => by
+        (Filter.Eventually.of_forall fun x ↦ by
           rw [hlogY (z - x)]; simpa [Real.norm_eq_abs] using hCfY' (z - x))
-    refine hbase.congr (Filter.Eventually.of_forall fun x => ?_)
+    refine hbase.congr (Filter.Eventually.of_forall fun x ↦ ?_)
     simp only []; rw [← hlogX x]
-  have hg2 : Integrable (fun x =>
+  have hg2 : Integrable (fun x ↦
       (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x)) volume := by
-    have hpre : Integrable (fun w => (logDeriv fY w) ^ 2 * fY w) volume :=
+    have hpre : Integrable (fun w ↦ (logDeriv fY w) ^ 2 * fY w) volume :=
       convDensityAdd_fisher_integrand_integrable pY hpY_nn hpY_meas hpY_int hpY_norm ht
-    have hbase : Integrable (fun x => (logDeriv fY (z - x)) ^ 2 * fY (z - x)) volume :=
+    have hbase : Integrable (fun x ↦ (logDeriv fY (z - x)) ^ 2 * fY (z - x)) volume :=
       hpre.comp_sub_left z
     refine (hbase.bdd_mul (hregX.diff.continuous.aestronglyMeasurable) (c := CfX)
-      (Filter.Eventually.of_forall fun x => by
+      (Filter.Eventually.of_forall fun x ↦ by
         simpa [Real.norm_eq_abs] using hCfX x)).congr
-      (Filter.Eventually.of_forall fun x => ?_)
+      (Filter.Eventually.of_forall fun x ↦ ?_)
     ring
   have hstep12 : (∫ x, (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x ∂volume) * pZ
       = ∫ x, (scoreWeight fX fY lam z x) ^ 2 * (fX x * fY (z - x)) ∂volume := by
     rw [← integral_mul_const]
-    refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
+    refine integral_congr_ae (Filter.Eventually.of_forall fun x ↦ ?_)
     simp only [condDensityX, ← hpZdef]
     rw [mul_assoc, div_mul_cancel₀ _ hpZ]
-  have hexpand : (fun x => (scoreWeight fX fY lam z x) ^ 2 * (fX x * fY (z - x)))
-      = (fun x => lam ^ 2 * ((logDeriv fX x) ^ 2 * fX x * fY (z - x))
+  have hexpand : (fun x ↦ (scoreWeight fX fY lam z x) ^ 2 * (fX x * fY (z - x)))
+      = (fun x ↦ lam ^ 2 * ((logDeriv fX x) ^ 2 * fX x * fY (z - x))
         + 2 * lam * (1 - lam) * (logDeriv fX x * fX x * (logDeriv fY (z - x) * fY (z - x)))
         + (1 - lam) ^ 2 * ((logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x))) := by
     funext x; simp only [scoreWeight]; ring
@@ -476,13 +476,13 @@ theorem convDensityAdd_gaussian_asym_integrable_inner_scoreWeight_sq
             * (logDeriv fY (z - x) * fY (z - x)) ∂volume)
         + (1 - lam) ^ 2 * (∫ x, (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x) ∂volume) := by
     rw [hexpand]
-    rw [show (fun x => lam ^ 2 * ((logDeriv fX x) ^ 2 * fX x * fY (z - x))
+    rw [show (fun x ↦ lam ^ 2 * ((logDeriv fX x) ^ 2 * fX x * fY (z - x))
         + 2 * lam * (1 - lam) * (logDeriv fX x * fX x * (logDeriv fY (z - x) * fY (z - x)))
         + (1 - lam) ^ 2 * ((logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x)))
-        = ((fun x => lam ^ 2 * ((logDeriv fX x) ^ 2 * fX x * fY (z - x)))
-            + (fun x => 2 * lam * (1 - lam) * (logDeriv fX x * fX x
+        = ((fun x ↦ lam ^ 2 * ((logDeriv fX x) ^ 2 * fX x * fY (z - x)))
+            + (fun x ↦ 2 * lam * (1 - lam) * (logDeriv fX x * fX x
                 * (logDeriv fY (z - x) * fY (z - x)))))
-          + (fun x => (1 - lam) ^ 2 * ((logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x))) from rfl,
+          + (fun x ↦ (1 - lam) ^ 2 * ((logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x))) from rfl,
       integral_add' ((hg1.const_mul (lam ^ 2)).add (hg3.const_mul (2 * lam * (1 - lam))))
           (hg2.const_mul ((1 - lam) ^ 2)),
       integral_add' (hg1.const_mul (lam ^ 2)) (hg3.const_mul (2 * lam * (1 - lam))),
@@ -495,7 +495,7 @@ theorem convDensityAdd_gaussian_asym_fisher_integrand_integrable (pX pY : ℝ �
     (hpX_norm : (∫ x, pX x ∂volume) = 1)
     (hpY_nn : ∀ x, 0 ≤ pY x) (hpY_meas : Measurable pY) (hpY_int : Integrable pY volume)
     (hpY_norm : (∫ x, pY x ∂volume) = 1) :
-    Integrable (fun z =>
+    Integrable (fun z ↦
         (logDeriv (convDensityAdd (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩))
             (convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩))) z) ^ 2
           * convDensityAdd (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩))
@@ -503,7 +503,7 @@ theorem convDensityAdd_gaussian_asym_fisher_integrand_integrable (pX pY : ℝ �
   rw [InformationTheory.Shannon.EPIConvDensity.convDensityAdd_convGaussian_interchange_asym
       pX pY hs ht hpX_nn hpX_meas hpX_int hpY_nn hpY_meas hpY_int]
   have hPXY_nn : ∀ x, 0 ≤ convDensityAdd pX pY x :=
-    fun x => InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_nonneg
+    fun x ↦ InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_nonneg
       pX pY hpX_nn hpY_nn x
   have hPXY_meas : Measurable (convDensityAdd pX pY) :=
     InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_measurable
@@ -522,19 +522,19 @@ theorem convDensityAdd_gaussian_asym_integrable_prod_logDeriv_sq_mul (pX pY : �
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)
     (hpX_norm : (∫ x, pX x ∂volume) = 1)
     (hpY_meas : Measurable pY) (hpY_int : Integrable pY volume) :
-    Integrable (Function.uncurry fun z x =>
+    Integrable (Function.uncurry fun z x ↦
         (logDeriv (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩)) x) ^ 2
             * convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) x
           * convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩) (z - x))
         (volume.prod volume) := by
   set fX : ℝ → ℝ := convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) with hfX
   set fY : ℝ → ℝ := convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩) with hfY
-  have hA : Integrable (fun a => (logDeriv fX a) ^ 2 * fX a) volume :=
+  have hA : Integrable (fun a ↦ (logDeriv fX a) ^ 2 * fX a) volume :=
     convDensityAdd_fisher_integrand_integrable pX hpX_nn hpX_meas hpX_int hpX_norm hs
   have hB : Integrable fY volume := convDensityAdd_gaussian_integrable pY hpY_meas hpY_int ht
   have hcomp := (measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
     (ν := (volume : Measure ℝ))).integrable_comp_of_integrable (hA.mul_prod hB)
-  refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
+  refine hcomp.congr (Filter.Eventually.of_forall fun p ↦ ?_)
   simp only [Function.comp, Function.uncurry]
 
 theorem convDensityAdd_gaussian_asym_integrable_prod_logDeriv_sq_shift_mul (pX pY : ℝ → ℝ)
@@ -542,7 +542,7 @@ theorem convDensityAdd_gaussian_asym_integrable_prod_logDeriv_sq_shift_mul (pX p
     (hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)
     (hpY_nn : ∀ x, 0 ≤ pY x) (hpY_meas : Measurable pY) (hpY_int : Integrable pY volume)
     (hpY_norm : (∫ x, pY x ∂volume) = 1) :
-    Integrable (Function.uncurry fun z x =>
+    Integrable (Function.uncurry fun z x ↦
         (logDeriv (convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩)) (z - x)) ^ 2
             * convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) x
           * convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩) (z - x))
@@ -550,11 +550,11 @@ theorem convDensityAdd_gaussian_asym_integrable_prod_logDeriv_sq_shift_mul (pX p
   set fX : ℝ → ℝ := convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) with hfX
   set fY : ℝ → ℝ := convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩) with hfY
   have hA : Integrable fX volume := convDensityAdd_gaussian_integrable pX hpX_meas hpX_int hs
-  have hB : Integrable (fun b => (logDeriv fY b) ^ 2 * fY b) volume :=
+  have hB : Integrable (fun b ↦ (logDeriv fY b) ^ 2 * fY b) volume :=
     convDensityAdd_fisher_integrand_integrable pY hpY_nn hpY_meas hpY_int hpY_norm ht
   have hcomp := (measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
     (ν := (volume : Measure ℝ))).integrable_comp_of_integrable (hA.mul_prod hB)
-  refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
+  refine hcomp.congr (Filter.Eventually.of_forall fun p ↦ ?_)
   simp only [Function.comp, Function.uncurry]; ring
 
 theorem convDensityAdd_gaussian_asym_integrable_prod_deriv_mul (pX pY : ℝ → ℝ)
@@ -563,7 +563,7 @@ theorem convDensityAdd_gaussian_asym_integrable_prod_deriv_mul (pX pY : ℝ → 
     (hpX_mass : 0 < ∫ x, pX x ∂volume)
     (hpY_nn : ∀ x, 0 ≤ pY x) (hpY_meas : Measurable pY) (hpY_int : Integrable pY volume)
     (hpY_mass : 0 < ∫ x, pY x ∂volume) :
-    Integrable (Function.uncurry fun z x =>
+    Integrable (Function.uncurry fun z x ↦
         logDeriv (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩)) x
             * convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) x
           * (logDeriv (convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩)) (z - x)
@@ -573,15 +573,15 @@ theorem convDensityAdd_gaussian_asym_integrable_prod_deriv_mul (pX pY : ℝ → 
   set fY : ℝ → ℝ := convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩) with hfY
   have hregX := isRegularDensityV2_convDensityAdd_gaussian pX hs hpX_nn hpX_meas hpX_int hpX_mass
   have hregY := isRegularDensityV2_convDensityAdd_gaussian pY ht hpY_nn hpY_meas hpY_int hpY_mass
-  have hlogX : ∀ w, logDeriv fX w * fX w = deriv fX w := fun w => by
+  have hlogX : ∀ w, logDeriv fX w * fX w = deriv fX w := fun w ↦ by
     rw [logDeriv_apply, div_mul_cancel₀ _ (hregX.pos w).ne']
-  have hlogY : ∀ w, logDeriv fY w * fY w = deriv fY w := fun w => by
+  have hlogY : ∀ w, logDeriv fY w * fY w = deriv fY w := fun w ↦ by
     rw [logDeriv_apply, div_mul_cancel₀ _ (hregY.pos w).ne']
   have hA : Integrable (deriv fX) volume := hregX.integrable_deriv
   have hB : Integrable (deriv fY) volume := hregY.integrable_deriv
   have hcomp := (measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
     (ν := (volume : Measure ℝ))).integrable_comp_of_integrable (hA.mul_prod hB)
-  refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
+  refine hcomp.congr (Filter.Eventually.of_forall fun p ↦ ?_)
   simp only [Function.comp, Function.uncurry]
   rw [← hlogX p.2, ← hlogY (p.1 - p.2)]
 
@@ -614,26 +614,26 @@ theorem isBlachmanConvReady_convDensityAdd_gaussian_asym (pX pY : ℝ → ℝ) {
   bdd_fX' := convDensityAdd_gaussian_deriv_bdd pX hpX_nn hpX_int hs
   bdd_fY := convDensityAdd_gaussian_bdd pY hpY_nn hpY_int ht
   bdd_fY' := convDensityAdd_gaussian_deriv_bdd pY hpY_nn hpY_int ht
-  pos_pZ := fun z =>
+  pos_pZ := fun z ↦
     convDensityAdd_gaussian_asym_convDensityAdd_pos pX pY hs ht
       hpX_nn hpX_meas hpX_int hpX_mass hpY_nn hpY_meas hpY_int hpY_mass z
-  int_X := fun z =>
+  int_X := fun z ↦
     convDensityAdd_gaussian_asym_integrable_deriv_mul pX pY hs ht
       hpX_nn hpX_int hpY_meas hpY_int z
-  int_Y := fun z =>
+  int_Y := fun z ↦
     convDensityAdd_gaussian_asym_integrable_mul_deriv pX pY hs ht
       hpX_meas hpX_int hpY_nn hpY_int z
-  cond_int := fun z =>
+  cond_int := fun z ↦
     convDensityAdd_gaussian_asym_condDensityX_integrable pX pY hs ht
       hpX_meas hpX_int hpY_nn hpY_meas hpY_int hpY_mass z
-  int_W := fun lam _ _ z =>
+  int_W := fun lam _ _ z ↦
     convDensityAdd_gaussian_asym_integrable_scoreWeight_mul_condDensityX pX pY hs ht
       hpX_nn hpX_meas hpX_int hpX_mass hpY_nn hpY_meas hpY_int hpY_mass lam z
-  int_Wsq := fun lam _ _ z =>
+  int_Wsq := fun lam _ _ z ↦
     convDensityAdd_gaussian_asym_integrable_scoreWeight_sq_mul_condDensityX pX pY hs ht
       hpX_nn hpX_meas hpX_int hpX_mass hpX_norm
       hpY_nn hpY_meas hpY_int hpY_mass hpY_norm lam z
-  int_inner := fun lam _ _ =>
+  int_inner := fun lam _ _ ↦
     convDensityAdd_gaussian_asym_integrable_inner_scoreWeight_sq pX pY hs ht
       hpX_nn hpX_meas hpX_int hpX_mass hpX_norm
       hpY_nn hpY_meas hpY_int hpY_mass hpY_norm lam
@@ -663,7 +663,7 @@ private lemma reg_density_t_sum_eq_convDensityAdd
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (h_reg_X : StamEPIBridge.IsDeBruijnRegularityHyp X Z_X P)
     (h_reg_Y : StamEPIBridge.IsDeBruijnRegularityHyp Y Z_Y P)
-    (h_reg_sum : StamEPIBridge.IsDeBruijnRegularityHyp (fun ω => X ω + Y ω) Z P)
+    (h_reg_sum : StamEPIBridge.IsDeBruijnRegularityHyp (fun ω ↦ X ω + Y ω) Z P)
     (σ τ : ℝ) (hσ : 0 < σ) (hτ : 0 < τ) :
     ∀ x, (h_reg_sum.reg_at (σ + τ) (add_pos hσ hτ)).density_t x
       = convDensityAdd (h_reg_X.reg_at σ hσ).density_t (h_reg_Y.reg_at τ hτ).density_t x := by
@@ -690,7 +690,7 @@ private lemma reg_density_t_sum_eq_convDensityAdd
   obtain ⟨hpX_int, _⟩ := density_int_mass X pX hX hpX_nn hpX_meas RX.pX_law
   obtain ⟨hpY_int, _⟩ := density_int_mass Y pY hY hpY_nn hpY_meas RY.pX_law
   have lmass : ∀ (W : Ω → ℝ) (p : ℝ → ℝ), Measurable W → (∀ x, 0 ≤ p x) →
-      P.map W = volume.withDensity (fun x => ENNReal.ofReal (p x)) →
+      P.map W = volume.withDensity (fun x ↦ ENNReal.ofReal (p x)) →
       (∫⁻ x, ENNReal.ofReal (p x) ∂volume) = 1 := by
     intro W p hW _ hp_law
     have hprob : IsProbabilityMeasure (P.map W) :=
@@ -701,7 +701,7 @@ private lemma reg_density_t_sum_eq_convDensityAdd
   have hpX_lmass := lmass X pX hX hpX_nn RX.pX_law
   have hpY_lmass := lmass Y pY hY hpY_nn RY.pX_law
   have hpXY_lmass : (∫⁻ x, ENNReal.ofReal (pXY x) ∂volume) ≠ ⊤ := by
-    rw [lmass (fun ω => X ω + Y ω) pXY (hX.add hY) hpXY_nn RS.pX_law]; exact ENNReal.one_ne_top
+    rw [lmass (fun ω ↦ X ω + Y ω) pXY (hX.add hY) hpXY_nn RS.pX_law]; exact ENNReal.one_ne_top
   have hseam : pXY =ᵐ[volume] convDensityAdd pX pY :=
     indepSum_density_ae X Y hX hY hXY pX pY pXY hpX_nn hpX_meas hpY_nn hpY_meas
       RX.pX_law RY.pX_law RS.pX_law hpXY_nn hpXY_meas hpX_int hpY_int
@@ -770,16 +770,16 @@ theorem twoTime_stam_supply {Ω : Type*} [MeasurableSpace Ω]
     (_hXZX : IndepFun X Z_X P) (_hYZY : IndepFun Y Z_Y P) (hXY : IndepFun X Y P)
     -- joint independence of the two source-noise pairs (supplied by the lift's
     -- `iIndepFun ![X, Y, Z_X, Z_Y]` via `indepFun_prodMk_prodMk`); needed for `A ⊥ B`.
-    (hpair_indep : IndepFun (fun ω => (X ω, Z_X ω)) (fun ω => (Y ω, Z_Y ω)) P)
+    (hpair_indep : IndepFun (fun ω ↦ (X ω, Z_X ω)) (fun ω ↦ (Y ω, Z_Y ω)) P)
     (_hZX_law : P.map Z_X = gaussianReal 0 1)
     (_hZY_law : P.map Z_Y = gaussianReal 0 1)
     (_hZ_law : P.map Z = gaussianReal 0 1)
     (_hX_ac : (P.map X) ≪ volume) (_hY_ac : (P.map Y) ≪ volume)
-    (_hmomX : Integrable (fun ω => (X ω) ^ 2) P)
-    (_hmomY : Integrable (fun ω => (Y ω) ^ 2) P)
+    (_hmomX : Integrable (fun ω ↦ (X ω) ^ 2) P)
+    (_hmomY : Integrable (fun ω ↦ (Y ω) ^ 2) P)
     (h_reg_X : StamEPIBridge.IsDeBruijnRegularityHyp X Z_X P)
     (h_reg_Y : StamEPIBridge.IsDeBruijnRegularityHyp Y Z_Y P)
-    (h_reg_sum : StamEPIBridge.IsDeBruijnRegularityHyp (fun ω => X ω + Y ω) Z P) :
+    (h_reg_sum : StamEPIBridge.IsDeBruijnRegularityHyp (fun ω ↦ X ω + Y ω) Z P) :
     ∀ (σ τ : ℝ) (hσ : 0 < σ) (hτ : 0 < τ),
       0 < fisherInfoOfDensityReal ((h_reg_X.reg_at σ hσ).density_t) ∧
       0 < fisherInfoOfDensityReal ((h_reg_Y.reg_at τ hτ).density_t) ∧
@@ -818,7 +818,7 @@ theorem twoTime_stam_supply {Ω : Type*} [MeasurableSpace Ω]
   obtain ⟨hpX_int, hpX_norm⟩ := density_int_mass X pX hX hpX_nn hpX_meas RX.pX_law
   obtain ⟨hpY_int, hpY_norm⟩ := density_int_mass Y pY hY hpY_nn hpY_meas RY.pX_law
   obtain ⟨hpXY_int, hpXY_norm⟩ :=
-    density_int_mass (fun ω => X ω + Y ω) pXY (hX.add hY) hpXY_nn hpXY_meas RS.pX_law
+    density_int_mass (fun ω ↦ X ω + Y ω) pXY (hX.add hY) hpXY_nn hpXY_meas RS.pX_law
   have hpX_mass : (0 : ℝ) < ∫ x, pX x ∂volume := by rw [hpX_norm]; norm_num
   have hpY_mass : (0 : ℝ) < ∫ x, pY x ∂volume := by rw [hpY_norm]; norm_num
   have hpXY_mass : (0 : ℝ) < ∫ x, pXY x ∂volume := by rw [hpXY_norm]; norm_num
@@ -838,14 +838,14 @@ theorem twoTime_stam_supply {Ω : Type*} [MeasurableSpace Ω]
   refine ⟨hposX, hposY, hposS, ?_⟩
   -- ===== (2) the inverse-Stam inequality `1/J_S ≥ 1/J_X + 1/J_Y` =====
   -- the perturbed addends `A := X + √σ·Z_X`, `B := Y + √τ·Z_Y`
-  set A : Ω → ℝ := fun ω => X ω + Real.sqrt σ * Z_X ω with hA_def
-  set B : Ω → ℝ := fun ω => Y ω + Real.sqrt τ * Z_Y ω with hB_def
+  set A : Ω → ℝ := fun ω ↦ X ω + Real.sqrt σ * Z_X ω with hA_def
+  set B : Ω → ℝ := fun ω ↦ Y ω + Real.sqrt τ * Z_Y ω with hB_def
   have hA_meas : Measurable A := by fun_prop
   have hB_meas : Measurable B := by fun_prop
   -- independence `A ⊥ B` (adapt the EPIDensityForm `hStam_indep` block to σ ≠ τ)
   have hAB_indep : IndepFun A B P := by
-    have hcombA : Measurable (fun q : ℝ × ℝ => q.1 + Real.sqrt σ * q.2) := by fun_prop
-    have hcombB : Measurable (fun q : ℝ × ℝ => q.1 + Real.sqrt τ * q.2) := by fun_prop
+    have hcombA : Measurable (fun q : ℝ × ℝ ↦ q.1 + Real.sqrt σ * q.2) := by fun_prop
+    have hcombB : Measurable (fun q : ℝ × ℝ ↦ q.1 + Real.sqrt τ * q.2) := by fun_prop
     have := hpair_indep.comp hcombA hcombB
     simpa [Function.comp, A, B] using this
   -- genuine Stam hyp via step3
@@ -889,7 +889,7 @@ theorem twoTime_stam_supply {Ω : Type*} [MeasurableSpace Ω]
     simp only [fisherInfoOfMeasureV2_def, fisherInfoOfDensityReal]
   have hgateS :
       fisherInfoOfDensityReal RS.density_t
-        = (fisherInfoOfMeasureV2 (P.map (fun ω => A ω + B ω)) RS.density_t).toReal := by
+        = (fisherInfoOfMeasureV2 (P.map (fun ω ↦ A ω + B ω)) RS.density_t).toReal := by
     simp only [fisherInfoOfMeasureV2_def, fisherInfoOfDensityReal]
   exact hStam _ _ _ RX.density_t RY.density_t RS.density_t hJX hJY hJS
     hgateX hgateY hgateS hregX hregY hnormX hnormY hconv hready

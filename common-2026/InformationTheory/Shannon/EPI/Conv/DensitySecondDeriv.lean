@@ -60,21 +60,21 @@ theorem convDensityAdd_deriv1_gaussian_eq
     (bound1 : ℝ → ℝ) (hbound1_int : Integrable bound1 volume)
     (hF1_meas : ∀ ξ : ℝ,
       AEStronglyMeasurable
-        (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
+        (fun y ↦ pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
     (hF1_int : ∀ ξ : ℝ,
-      Integrable (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
+      Integrable (fun y ↦ pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
     (hF1'_meas : ∀ ξ : ℝ, AEStronglyMeasurable
-      (fun y => pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+      (fun y ↦ pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
         * (-((ξ - y) / s)))) volume)
     (hb1 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
       ‖pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
         * (-((ξ - y) / s)))‖ ≤ bound1 y) :
     deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩))
-      = fun ζ : ℝ => ∫ y, pX y * (gaussianPDFReal 0 ⟨s, hs.le⟩ (ζ - y)
+      = fun ζ : ℝ ↦ ∫ y, pX y * (gaussianPDFReal 0 ⟨s, hs.le⟩ (ζ - y)
           * (-((ζ - y) / s))) ∂volume := by
   -- `convDensityAdd pX g_s = fun ζ => ∫ y, pX y · kernel s (ζ-y)` (s>0, all ζ).
   have hconv_eq : (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩))
-      = (fun ζ : ℝ => ∫ y, pX y * heatFlow_density_heat_equation_kernel s (ζ - y) ∂volume) := by
+      = (fun ζ : ℝ ↦ ∫ y, pX y * heatFlow_density_heat_equation_kernel s (ζ - y) ∂volume) := by
     funext ζ
     unfold convDensityAdd
     refine integral_congr_ae ?_
@@ -83,20 +83,20 @@ theorem convDensityAdd_deriv1_gaussian_eq
   funext ζ
   -- per-y spatial 1st-derivative HasDerivAt (kernel `_x_deriv1` chained through `ξ ↦ ξ - y`).
   have hdiff : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
-      HasDerivAt (fun ξ => pX y * heatFlow_density_heat_equation_kernel s (ξ - y))
+      HasDerivAt (fun ξ ↦ pX y * heatFlow_density_heat_equation_kernel s (ξ - y))
         (pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-((ξ - y) / s)))) ξ := by
     filter_upwards with y
     intro ξ _
     have hk := heatFlow_density_heat_equation_kernel_x_deriv1 hs (ξ - y)
-    have hshift : HasDerivAt (fun ξ : ℝ => ξ - y) 1 ξ := by
+    have hshift : HasDerivAt (fun ξ : ℝ ↦ ξ - y) 1 ξ := by
       simpa using (hasDerivAt_id ξ).sub_const y
     have hcomp := hk.comp ξ hshift
     simp only [mul_one] at hcomp
     exact hcomp.const_mul (pX y)
   have hgate :=
     hasDerivAt_integral_of_dominated_loc_of_deriv_le
-      (F := fun ζ y => pX y * heatFlow_density_heat_equation_kernel s (ζ - y))
-      (F' := fun ζ y => pX y * (heatFlow_density_heat_equation_kernel s (ζ - y)
+      (F := fun ζ y ↦ pX y * heatFlow_density_heat_equation_kernel s (ζ - y))
+      (F' := fun ζ y ↦ pX y * (heatFlow_density_heat_equation_kernel s (ζ - y)
         * (-((ζ - y) / s))))
       (bound := bound1) (Filter.univ_mem)
       (Filter.Eventually.of_forall hF1_meas) (hF1_int ζ) (hF1'_meas ζ)
@@ -134,21 +134,21 @@ theorem convDensityAdd_deriv2_eq_gaussian
     (bound1 : ℝ → ℝ) (hbound1_int : Integrable bound1 volume)
     (hF1_meas : ∀ ξ : ℝ,
       AEStronglyMeasurable
-        (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
+        (fun y ↦ pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
     (hF1_int : ∀ ξ : ℝ,
-      Integrable (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
+      Integrable (fun y ↦ pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
     (hF1'_meas : ∀ ξ : ℝ, AEStronglyMeasurable
-      (fun y => pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+      (fun y ↦ pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
         * (-((ξ - y) / s)))) volume)
     (hb1 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
       ‖pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
         * (-((ξ - y) / s)))‖ ≤ bound1 y)
     (bound2 : ℝ → ℝ) (hbound2_int : Integrable bound2 volume)
     (hF2_int : Integrable
-      (fun y => pX y * (heatFlow_density_heat_equation_kernel s (z - y)
+      (fun y ↦ pX y * (heatFlow_density_heat_equation_kernel s (z - y)
         * (-((z - y) / s)))) volume)
     (hF2'_meas : AEStronglyMeasurable
-      (fun y => pX y * (heatFlow_density_heat_equation_kernel s (z - y)
+      (fun y ↦ pX y * (heatFlow_density_heat_equation_kernel s (z - y)
         * ((z - y) ^ 2 / s ^ 2 - 1 / s))) volume)
     (hb2 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
       ‖pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
@@ -161,9 +161,9 @@ theorem convDensityAdd_deriv2_eq_gaussian
     hF1'_meas hb1
   rw [hd1]
   -- The 1st-derivative function, in kernel form (s>0, all ζ).
-  have hd1_kernel : (fun ζ : ℝ => ∫ y, pX y * (gaussianPDFReal 0 ⟨s, hs.le⟩ (ζ - y)
+  have hd1_kernel : (fun ζ : ℝ ↦ ∫ y, pX y * (gaussianPDFReal 0 ⟨s, hs.le⟩ (ζ - y)
         * (-((ζ - y) / s))) ∂volume)
-      = (fun ζ : ℝ => ∫ y, pX y * (heatFlow_density_heat_equation_kernel s (ζ - y)
+      = (fun ζ : ℝ ↦ ∫ y, pX y * (heatFlow_density_heat_equation_kernel s (ζ - y)
           * (-((ζ - y) / s))) ∂volume) := by
     funext ζ
     refine integral_congr_ae ?_
@@ -173,23 +173,23 @@ theorem convDensityAdd_deriv2_eq_gaussian
   -- STEP 2: differentiate the kernel-form 1st-derivative integral at `z` via the gateway.
   -- per-y spatial 2nd-derivative HasDerivAt (kernel `_x_deriv2` chained through `ξ ↦ ξ - y`).
   have hdiff2 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
-      HasDerivAt (fun ξ => pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+      HasDerivAt (fun ξ ↦ pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
           * (-((ξ - y) / s))))
         (pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
           * ((ξ - y) ^ 2 / s ^ 2 - 1 / s))) ξ := by
     filter_upwards with y
     intro ξ _
     have hk := heatFlow_density_heat_equation_kernel_x_deriv2 hs (ξ - y)
-    have hshift : HasDerivAt (fun ξ : ℝ => ξ - y) 1 ξ := by
+    have hshift : HasDerivAt (fun ξ : ℝ ↦ ξ - y) 1 ξ := by
       simpa using (hasDerivAt_id ξ).sub_const y
     have hcomp := hk.comp ξ hshift
     simp only [mul_one] at hcomp
     exact hcomp.const_mul (pX y)
   have hgate2 :=
     hasDerivAt_integral_of_dominated_loc_of_deriv_le
-      (F := fun ξ y => pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+      (F := fun ξ y ↦ pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
         * (-((ξ - y) / s))))
-      (F' := fun ξ y => pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+      (F' := fun ξ y ↦ pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
         * ((ξ - y) ^ 2 / s ^ 2 - 1 / s)))
       (bound := bound2) (Filter.univ_mem)
       (Filter.Eventually.of_forall hF1'_meas) hF2_int hF2'_meas

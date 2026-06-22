@@ -60,17 +60,17 @@ supplied interior derivative `hJ_deriv` (`HasDerivAt → ContinuousAt`); the end
 private theorem matchedTimePath_N_continuousOn
     (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (h_endpt : IsHeatFlowEndpointRegular A B P)
-    (hN_diff_int : ∀ s : ℝ, 0 < s → DifferentiableAt ℝ (fun u => heatFlowEP A B P u) s) :
-    ContinuousOn (fun s => heatFlowEP A B P s) (Set.Ici (0 : ℝ)) := by
+    (hN_diff_int : ∀ s : ℝ, 0 < s → DifferentiableAt ℝ (fun u ↦ heatFlowEP A B P u) s) :
+    ContinuousOn (fun s ↦ heatFlowEP A B P s) (Set.Ici (0 : ℝ)) := by
   -- Endpoint `s = 0⁺`: heat-flow endpoint continuity.
-  have h0 : ContinuousWithinAt (fun s => heatFlowEP A B P s) (Set.Ici (0 : ℝ)) 0 := by
+  have h0 : ContinuousWithinAt (fun s ↦ heatFlowEP A B P s) (Set.Ici (0 : ℝ)) 0 := by
     have hendpt :
         ContinuousWithinAt
-          (fun t : ℝ => entropyPower (P.map (fun ω => A ω + Real.sqrt t * B ω)))
+          (fun t : ℝ ↦ entropyPower (P.map (fun ω ↦ A ω + Real.sqrt t * B ω)))
           (Set.Ioi (0 : ℝ)) 0 :=
       heatFlowEntropyPower_continuousWithinAt_zero A B P h_endpt
     -- `heatFlowEP A B P t = entropyPower (P.map (A + √t·B))` definitionally.
-    have hendpt' : ContinuousWithinAt (fun s => heatFlowEP A B P s) (Set.Ioi (0 : ℝ)) 0 := by
+    have hendpt' : ContinuousWithinAt (fun s ↦ heatFlowEP A B P s) (Set.Ioi (0 : ℝ)) 0 := by
       simpa only [heatFlowEP] using hendpt
     exact (continuousWithinAt_Ioi_iff_Ici).mp hendpt'
   intro x hx
@@ -89,15 +89,15 @@ private theorem matchedTimePath_N_strictMonoOn
     (J_A : ℝ → ℝ)
     (hJ_pos : ∀ s : ℝ, 0 < s → 0 < J_A s)
     (hJ_deriv : ∀ s : ℝ, 0 < s →
-      HasDerivAt (fun u => heatFlowEP A B P u) (heatFlowEP A B P s * J_A s) s)
-    (hN_cont : ContinuousOn (fun s => heatFlowEP A B P s) (Set.Ici (0 : ℝ))) :
-    StrictMonoOn (fun s => heatFlowEP A B P s) (Set.Ici (0 : ℝ)) := by
+      HasDerivAt (fun u ↦ heatFlowEP A B P u) (heatFlowEP A B P s * J_A s) s)
+    (hN_cont : ContinuousOn (fun s ↦ heatFlowEP A B P s) (Set.Ici (0 : ℝ))) :
+    StrictMonoOn (fun s ↦ heatFlowEP A B P s) (Set.Ici (0 : ℝ)) := by
   apply strictMonoOn_of_deriv_pos (convex_Ici 0) hN_cont
   intro x hx
   rw [interior_Ici] at hx
   have hx_pos : 0 < x := hx
   -- `deriv N x = N x * J_A x` from the supplied interior `HasDerivAt`.
-  have hderiv : deriv (fun u => heatFlowEP A B P u) x = heatFlowEP A B P x * J_A x :=
+  have hderiv : deriv (fun u ↦ heatFlowEP A B P u) x = heatFlowEP A B P x * J_A x :=
     (hJ_deriv x hx_pos).deriv
   rw [hderiv]
   exact mul_pos (by simpa [heatFlowEP] using entropyPower_pos _) (hJ_pos x hx_pos)
@@ -108,17 +108,17 @@ the inverse `g` maps `Ici C` into `Ici 0`, is a right inverse of `N_A` on `Ici C
 is continuous, and sends `C` to `0`. -/
 private theorem matchedTimePath_inverse
     (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
-    (hN_cont : ContinuousOn (fun s => heatFlowEP A B P s) (Set.Ici (0 : ℝ)))
-    (hN_mono : StrictMonoOn (fun s => heatFlowEP A B P s) (Set.Ici (0 : ℝ)))
+    (hN_cont : ContinuousOn (fun s ↦ heatFlowEP A B P s) (Set.Ici (0 : ℝ)))
+    (hN_mono : StrictMonoOn (fun s ↦ heatFlowEP A B P s) (Set.Ici (0 : ℝ)))
     (_hC_pos : 0 < heatFlowEP A B P 0)
-    (hN_tendsto : Filter.Tendsto (fun s => heatFlowEP A B P s) Filter.atTop Filter.atTop) :
+    (hN_tendsto : Filter.Tendsto (fun s ↦ heatFlowEP A B P s) Filter.atTop Filter.atTop) :
     ∃ g : ℝ → ℝ,
       (∀ y, heatFlowEP A B P 0 ≤ y → 0 ≤ g y)
       ∧ (∀ y, heatFlowEP A B P 0 ≤ y → heatFlowEP A B P (g y) = y)
       ∧ ContinuousOn g (Set.Ici (heatFlowEP A B P 0))
       ∧ g (heatFlowEP A B P 0) = 0 := by
   classical
-  set N : ℝ → ℝ := fun s => heatFlowEP A B P s with hN
+  set N : ℝ → ℝ := fun s ↦ heatFlowEP A B P s with hN
   set C : ℝ := N 0 with hC
   -- **Surjectivity onto `Ici C`** via IVT.
   have h_surjOn : Set.SurjOn N (Set.Ici (0 : ℝ)) (Set.Ici C) := by
@@ -213,11 +213,11 @@ private theorem matchedTimePath_inverse
 private theorem matchedTimePath_path_continuousOn
     (g : ℝ → ℝ) (C : ℝ) (hC_pos : 0 < C)
     (hg_cont : ContinuousOn g (Set.Ici C)) :
-    ContinuousOn (fun t => g (C * Real.exp t)) (Set.Ici (0 : ℝ)) := by
+    ContinuousOn (fun t ↦ g (C * Real.exp t)) (Set.Ici (0 : ℝ)) := by
   -- `t ↦ C·eᵗ` is continuous and maps `Ici 0` into `Ici C` (since `eᵗ ≥ 1`).
-  have hinner : ContinuousOn (fun t : ℝ => C * Real.exp t) (Set.Ici (0 : ℝ)) :=
+  have hinner : ContinuousOn (fun t : ℝ ↦ C * Real.exp t) (Set.Ici (0 : ℝ)) :=
     (continuous_const.mul Real.continuous_exp).continuousOn
-  have hmaps : Set.MapsTo (fun t : ℝ => C * Real.exp t) (Set.Ici (0 : ℝ)) (Set.Ici C) := by
+  have hmaps : Set.MapsTo (fun t : ℝ ↦ C * Real.exp t) (Set.Ici (0 : ℝ)) (Set.Ici C) := by
     intro t ht
     simp only [Set.mem_Ici] at ht ⊢
     nlinarith [Real.one_le_exp ht, hC_pos]
@@ -235,7 +235,7 @@ private theorem matchedTimePath_path_hasDerivAt
     (hC_eq : N 0 = C)
     (hJ_pos : ∀ s : ℝ, 0 < s → 0 < J_A s)
     (hJ_deriv : ∀ s : ℝ, 0 < s → HasDerivAt N (N s * J_A s) s) :
-    HasDerivAt (fun t => g (C * Real.exp t)) (1 / J_A (g (C * Real.exp t))) t := by
+    HasDerivAt (fun t ↦ g (C * Real.exp t)) (1 / J_A (g (C * Real.exp t))) t := by
   -- `C·eᵗ > C` since `eᵗ > 1` for `t > 0`.
   have hCe_gt : C < C * Real.exp t := by
     nlinarith [Real.add_one_lt_exp (ne_of_gt ht), hC_pos]
@@ -281,9 +281,9 @@ private theorem matchedTimePath_path_hasDerivAt
     have hN_deriv' : HasDerivAt N (N sa * J_A sa) (g (C * Real.exp t)) := by
       rw [← hsa]; exact hN_deriv
     exact hN_deriv'.of_local_left_inverse hg_contAt hf'_ne hrinv
-  have hinner : HasDerivAt (fun u : ℝ => C * Real.exp u) (C * Real.exp t) t := by
+  have hinner : HasDerivAt (fun u : ℝ ↦ C * Real.exp u) (C * Real.exp t) t := by
     have := (Real.hasDerivAt_exp t).const_mul C; simpa using this
-  have hcomp : HasDerivAt (fun u : ℝ => g (C * Real.exp u))
+  have hcomp : HasDerivAt (fun u : ℝ ↦ g (C * Real.exp u))
       ((N sa * J_A sa)⁻¹ * (C * Real.exp t)) t := HasDerivAt.comp t hg_deriv hinner
   have hval : (N sa * J_A sa)⁻¹ * (C * Real.exp t) = 1 / J_A sa := by
     rw [← hmatch]; field_simp
@@ -337,14 +337,14 @@ theorem matchedTimePath_exists
     (_hA : Measurable A) (_hB : Measurable B) (_hAB : IndepFun A B P)
     (hJ_pos : ∀ s : ℝ, 0 < s → 0 < J_A s)
     (hJ_deriv : ∀ s : ℝ, 0 < s →
-      HasDerivAt (fun u => heatFlowEP A B P u) (heatFlowEP A B P s * J_A s) s)
+      HasDerivAt (fun u ↦ heatFlowEP A B P u) (heatFlowEP A B P s * J_A s) s)
     (h_endpt : IsHeatFlowEndpointRegular A B P)
-    (hN_tendsto : Filter.Tendsto (fun s => heatFlowEP A B P s) Filter.atTop Filter.atTop) :
+    (hN_tendsto : Filter.Tendsto (fun s ↦ heatFlowEP A B P s) Filter.atTop Filter.atTop) :
     ∃ s : ℝ → ℝ, IsMatchedTimePath A B P J_A s
       ∧ (∀ t : ℝ, 0 < t → 0 < s t)
       ∧ Filter.Tendsto s Filter.atTop Filter.atTop := by
   classical
-  set N : ℝ → ℝ := fun s => heatFlowEP A B P s with hN
+  set N : ℝ → ℝ := fun s ↦ heatFlowEP A B P s with hN
   set C : ℝ := N 0 with hC
   -- `C = N 0 > 0`.
   have hC_pos : 0 < C := by
@@ -352,7 +352,7 @@ theorem matchedTimePath_exists
   -- (ii) `N` is continuous on `Ici 0`.
   have hN_cont : ContinuousOn N (Set.Ici (0 : ℝ)) :=
     matchedTimePath_N_continuousOn A B P h_endpt
-      (fun s hs => (hJ_deriv s hs).differentiableAt)
+      (fun s hs ↦ (hJ_deriv s hs).differentiableAt)
   -- (i) `N` is strictly monotone on `Ici 0`.
   have hN_mono : StrictMonoOn N (Set.Ici (0 : ℝ)) :=
     matchedTimePath_N_strictMonoOn A B P J_A hJ_pos hJ_deriv hN_cont
@@ -365,7 +365,7 @@ theorem matchedTimePath_exists
   have hg_rinv' : ∀ y, C ≤ y → N (g y) = y := by
     intro y hy; exact hg_rinv y (by simpa [hC, hN] using hy)
   -- Define the matched path `s(t) := g (C · eᵗ)`.
-  refine ⟨fun t => g (C * Real.exp t), ⟨?_, ?_, ?_, ?_⟩, ?_, ?_⟩
+  refine ⟨fun t ↦ g (C * Real.exp t), ⟨?_, ?_, ?_, ?_⟩, ?_, ?_⟩
   · -- start_zero: `s 0 = g (C·e⁰) = g C = 0`.
     simp only [Real.exp_zero, mul_one]
     exact hg_zero
@@ -394,7 +394,7 @@ theorem matchedTimePath_exists
       linarith
     · exact h0
   · -- divergence: `s t = g (C·eᵗ) → ∞` (inner `C·eᵗ → ∞`, `g → ∞` via strict-mono `N`).
-    have hinner : Filter.Tendsto (fun t : ℝ => C * Real.exp t) Filter.atTop Filter.atTop :=
+    have hinner : Filter.Tendsto (fun t : ℝ ↦ C * Real.exp t) Filter.atTop Filter.atTop :=
       Filter.Tendsto.const_mul_atTop hC_pos Real.tendsto_exp_atTop
     have hg_atTop : Filter.Tendsto g Filter.atTop Filter.atTop := by
       rw [Filter.tendsto_atTop_atTop]

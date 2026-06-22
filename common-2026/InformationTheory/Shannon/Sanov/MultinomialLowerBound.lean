@@ -67,8 +67,8 @@ private lemma prod_factorial_pow_swap_le (c k : α → ℕ) :
     (∏ a, Nat.factorial (c a)) * (∏ a, c a ^ k a)
       ≤ (∏ a, Nat.factorial (k a)) * (∏ a, c a ^ c a) := by
   rw [← Finset.prod_mul_distrib, ← Finset.prod_mul_distrib]
-  exact Finset.prod_le_prod (fun _ _ => Nat.zero_le _)
-    (fun a _ => factorial_pow_swap_le (c a) (k a))
+  exact Finset.prod_le_prod (fun _ _ ↦ Nat.zero_le _)
+    (fun a _ ↦ factorial_pow_swap_le (c a) (k a))
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- **Max-likelihood for the multinomial coefficient**: for c, k both summing to n,
@@ -155,48 +155,48 @@ private lemma multinomial_le_typeClass_card {n : ℕ} (c : α → ℕ)
     rw [Fintype.card_fin, Fintype.card_subtype]
     rfl
   let ePos : (x : Fin n → α) → (a : α) → Fin (typeCount x a) ≃ {i : Fin n // x i = a} :=
-    fun x a => Fintype.equivOfCardEq (hcard_typeCount x a)
+    fun x a ↦ Fintype.equivOfCardEq (hcard_typeCount x a)
   -- For x ∈ T_c, derive  Fin (c a) ≃ {i // x i = a}.
   let eFibOf : (x : Fin n → α) → (∀ a, typeCount x a = c a) →
       (a : α) → Fin (c a) ≃ {i : Fin n // x i = a} :=
-    fun x h a => (Equiv.cast (by rw [h a])).trans (ePos x a)
+    fun x h a ↦ (Equiv.cast (by rw [h a])).trans (ePos x a)
   let eFib₀ : (a : α) → Fin (c a) ≃ {i : Fin n // x₀ i = a} := eFibOf x₀ hx₀
   -- Given σ, derive x σ ∈ T_c.
-  let xOf : Equiv.Perm (Fin n) → (Fin n → α) := fun σ i => x₀ (σ.symm i)
+  let xOf : Equiv.Perm (Fin n) → (Fin n → α) := fun σ i ↦ x₀ (σ.symm i)
   have h_xOf_mem : ∀ σ : Equiv.Perm (Fin n), xOf σ ∈ typeClassByCount c := by
     intro σ a
-    show (Finset.univ.filter (fun i => xOf σ i = a)).card = c a
-    have h_eq : Finset.univ.filter (fun i : Fin n => xOf σ i = a)
-        = (Finset.univ.filter (fun j : Fin n => x₀ j = a)).map σ.toEmbedding := by
+    show (Finset.univ.filter (fun i ↦ xOf σ i = a)).card = c a
+    have h_eq : Finset.univ.filter (fun i : Fin n ↦ xOf σ i = a)
+        = (Finset.univ.filter (fun j : Fin n ↦ x₀ j = a)).map σ.toEmbedding := by
       ext i
       simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_map,
         Equiv.coe_toEmbedding]
-      refine ⟨fun h_xi => ⟨σ.symm i, h_xi, Equiv.apply_symm_apply σ i⟩, ?_⟩
+      refine ⟨fun h_xi ↦ ⟨σ.symm i, h_xi, Equiv.apply_symm_apply σ i⟩, ?_⟩
       rintro ⟨j, hj, rfl⟩
       show x₀ (σ.symm (σ j)) = a
       rw [Equiv.symm_apply_apply]; exact hj
     rw [h_eq, Finset.card_map]; exact hx₀ a
   let xMem : Equiv.Perm (Fin n) → (typeClassByCount (α := α) (n := n) c) :=
-    fun σ => ⟨xOf σ, h_xOf_mem σ⟩
+    fun σ ↦ ⟨xOf σ, h_xOf_mem σ⟩
   -- Restriction σ : {j // x₀ j = a} → {i // xOf σ i = a}.
   have h_restrict_mem : ∀ (σ : Equiv.Perm (Fin n)) (a : α) (j : Fin n) (hj : x₀ j = a),
-      xOf σ (σ j) = a := fun σ a j hj => by
+      xOf σ (σ j) = a := fun σ a j hj ↦ by
     show x₀ (σ.symm (σ j)) = a
     rw [Equiv.symm_apply_apply]; exact hj
   -- τOf σ a : Fin (c a) ≃ Fin (c a).
-  let τOf : (σ : Equiv.Perm (Fin n)) → (∀ a, Equiv.Perm (Fin (c a))) := fun σ a =>
+  let τOf : (σ : Equiv.Perm (Fin n)) → (∀ a, Equiv.Perm (Fin (c a))) := fun σ a ↦
     let e1 : Fin (c a) ≃ {j : Fin n // x₀ j = a} := eFib₀ a
     let e2 : {j : Fin n // x₀ j = a} ≃ {i : Fin n // xOf σ i = a} :=
-      { toFun := fun j => ⟨σ j.val, h_restrict_mem σ a j.val j.property⟩,
-        invFun := fun i => ⟨σ.symm i.val, by
+      { toFun := fun j ↦ ⟨σ j.val, h_restrict_mem σ a j.val j.property⟩,
+        invFun := fun i ↦ ⟨σ.symm i.val, by
           show x₀ (σ.symm i.val) = a; exact i.property⟩,
-        left_inv := fun j => Subtype.ext (Equiv.symm_apply_apply σ j.val),
-        right_inv := fun i => Subtype.ext (Equiv.apply_symm_apply σ i.val) }
+        left_inv := fun j ↦ Subtype.ext (Equiv.symm_apply_apply σ j.val),
+        right_inv := fun i ↦ Subtype.ext (Equiv.apply_symm_apply σ i.val) }
     let e3 : {i : Fin n // xOf σ i = a} ≃ Fin (c a) := (eFibOf (xOf σ) (h_xOf_mem σ) a).symm
     (e1.trans e2).trans e3
   let Ψ : Equiv.Perm (Fin n) →
       (typeClassByCount (α := α) (n := n) c) × (∀ a, Equiv.Perm (Fin (c a))) :=
-    fun σ => (xMem σ, τOf σ)
+    fun σ ↦ (xMem σ, τOf σ)
   -- Recovery formula:
   --   σ j = (eFibOf (xOf σ) ... (x₀ j) (τOf σ (x₀ j) ((eFib₀ (x₀ j)).symm ⟨j, rfl⟩))).val
   have h_recovery : ∀ (σ : Equiv.Perm (Fin n)) (j : Fin n),
@@ -222,7 +222,7 @@ private lemma multinomial_le_typeClass_card {n : ℕ} (c : α → ℕ)
     have hxMem_eq : xMem σ = xMem σ' := (Prod.mk.injEq ..).mp hσ |>.1
     have hx_eq : xOf σ = xOf σ' := congrArg Subtype.val hxMem_eq
     have hτ_eq : τOf σ = τOf σ' := (Prod.mk.injEq ..).mp hσ |>.2
-    refine Equiv.ext (fun j => ?_)
+    refine Equiv.ext (fun j ↦ ?_)
     rw [h_recovery σ j, h_recovery σ' j]
     -- Goal: ((eFibOf (xOf σ) (h_xOf_mem σ) (x₀ j)) (τOf σ ...)).val
     --     = ((eFibOf (xOf σ') (h_xOf_mem σ') (x₀ j)) (τOf σ' ...)).val.
@@ -245,7 +245,7 @@ private lemma multinomial_le_typeClass_card {n : ℕ} (c : α → ℕ)
     have h_pair_eq : (⟨xOf σ, h_xOf_mem σ⟩ : (typeClassByCount c)) = ⟨xOf σ', h_xOf_mem σ'⟩ :=
       hxMem_eq
     -- Apply this via `congr` of the auxiliary function.
-    let g : (typeClassByCount (α := α) (n := n) c) → Fin n := fun y =>
+    let g : (typeClassByCount (α := α) (n := n) c) → Fin n := fun y ↦
       ((eFibOf y.val y.property (x₀ j)) (τOf σ' (x₀ j) k)).val
     have hg_eq : g ⟨xOf σ, h_xOf_mem σ⟩ = g ⟨xOf σ', h_xOf_mem σ'⟩ := by
       congr 1
@@ -261,14 +261,14 @@ private lemma multinomial_le_typeClass_card {n : ℕ} (c : α → ℕ)
     rw [Fintype.card_prod, Fintype.card_pi]
     congr 1
     · exact (Set.Finite.card_toFinset _).symm
-    · refine Finset.prod_congr rfl fun a _ => ?_
+    · refine Finset.prod_congr rfl fun a _ ↦ ?_
       rw [Fintype.card_perm, Fintype.card_fin]
   rw [hL, hR] at h_card_le
   -- h_card_le : n! ≤ |T_c| · ∏ Nat.factorial (c a).
   have h_spec : (∏ a, Nat.factorial (c a)) * Nat.multinomial Finset.univ c = Nat.factorial n := by
     rw [Nat.multinomial_spec, hc_sum]
   have h_prod_pos : 0 < ∏ a, Nat.factorial (c a) :=
-    Finset.prod_pos fun _ _ => Nat.factorial_pos _
+    Finset.prod_pos fun _ _ ↦ Nat.factorial_pos _
   -- multinomial · ∏ Nat.factorial (c a) = n! ≤ |T_c| · ∏ Nat.factorial (c a).
   -- So multinomial ≤ |T_c|.
   have h_mul_le : (∏ a, Nat.factorial (c a)) * Nat.multinomial Finset.univ c
@@ -311,11 +311,11 @@ private lemma piAntidiag_card_le (n : ℕ) :
     intros k hk_mem a
     have hk_sum := (Finset.mem_piAntidiag.mp hk_mem).1
     have hka : k a ≤ ∑ a', k a' := Finset.single_le_sum (f := k)
-      (fun _ _ => Nat.zero_le _) (Finset.mem_univ a)
+      (fun _ _ ↦ Nat.zero_le _) (Finset.mem_univ a)
     rw [hk_sum] at hka
     exact hka
   let φ : (α → ℕ) → (α → Fin (n+1)) :=
-    fun k a => ⟨min (k a) n, by
+    fun k a ↦ ⟨min (k a) n, by
       have hmin : min (k a) n ≤ n := Nat.min_le_right _ _
       omega⟩
   have h_inj_on : Set.InjOn φ (Finset.piAntidiag (Finset.univ : Finset α) n) := by
@@ -348,7 +348,7 @@ theorem prod_div_pow_eq_prod_pow_div_npow_of_sum
     ∏ a, ((c a : ℝ) / n) ^ (k a) = (∏ a, (c a : ℝ) ^ (k a)) / (n : ℝ) ^ n := by
   rw [show ∏ a, ((c a : ℝ) / n) ^ (k a)
           = ∏ a, ((c a : ℝ) ^ (k a) / (n : ℝ) ^ (k a)) from
-      Finset.prod_congr rfl (fun a _ => div_pow _ _ _)]
+      Finset.prod_congr rfl (fun a _ ↦ div_pow _ _ _)]
   rw [Finset.prod_div_distrib]
   congr 1
   rw [Finset.prod_pow_eq_pow_sum, hk_sum]
@@ -418,19 +418,19 @@ theorem typeClassByCount_card_ge
   by_cases hn : n = 0
   · -- n = 0: c a = 0 for all a, multinomial univ c = 1.
     subst hn
-    have hc_zero : ∀ a, c a = 0 := fun a => by
+    have hc_zero : ∀ a, c a = 0 := fun a ↦ by
       have : c a ≤ ∑ a', c a' := Finset.single_le_sum (f := c)
-        (fun _ _ => Nat.zero_le _) (Finset.mem_univ _)
+        (fun _ _ ↦ Nat.zero_le _) (Finset.mem_univ _)
       omega
     have h_prod_one : ∏ a : α, ((c a : ℝ) ^ (c a)) = 1 := by
-      refine Finset.prod_eq_one fun a _ => ?_
+      refine Finset.prod_eq_one fun a _ ↦ ?_
       rw [hc_zero a]; simp
     -- multinomial univ c = 1, so the goal `... ≤ multinomial univ c` is `1 ≤ 1`.
     have h_multinomial_one : Nat.multinomial Finset.univ c = 1 := by
       unfold Nat.multinomial
-      have h_facts : ∀ a, Nat.factorial (c a) = 1 := fun a => by
+      have h_facts : ∀ a, Nat.factorial (c a) = 1 := fun a ↦ by
         rw [hc_zero a]; rfl
-      rw [Finset.prod_congr rfl (fun a _ => h_facts a), Finset.prod_const_one]
+      rw [Finset.prod_congr rfl (fun a _ ↦ h_facts a), Finset.prod_const_one]
       rw [hc_sum]
       decide
     rw [h_prod_one]
@@ -451,14 +451,14 @@ theorem typeClassByCount_card_ge
     have h_pow_one : (∑ a, (c a : ℝ) / n) ^ n = 1 := by rw [h_sum_one]; simp
     -- Step 3: Apply multinomial theorem.
     have h_mn := Finset.sum_pow_eq_sum_piAntidiag (R := ℝ)
-      (Finset.univ : Finset α) (fun a => (c a : ℝ) / n) n
+      (Finset.univ : Finset α) (fun a ↦ (c a : ℝ) / n) n
     -- h_mn: (∑ a, (c a)/n)^n = ∑ k ∈ piAntidiag univ n, multinomial univ k · ∏ (c/n)^{k a}
     rw [h_pow_one] at h_mn
     -- h_mn : 1 = ∑ k ∈ piAntidiag univ n, multinomial univ k * ∏ (c/n)^{k a}
     -- Step 4: c ∈ piAntidiag univ n.
     have hc_mem : c ∈ Finset.piAntidiag (Finset.univ : Finset α) n := by
       rw [Finset.mem_piAntidiag]
-      refine ⟨hc_sum, fun a _ => Finset.mem_univ a⟩
+      refine ⟨hc_sum, fun a _ ↦ Finset.mem_univ a⟩
     -- Step 5: each term ≤ multinomial univ c · ∏ (c/n)^{c a} (max-likelihood).
     have h_term_max : ∀ k ∈ Finset.piAntidiag (Finset.univ : Finset α) n,
         (Nat.multinomial Finset.univ k : ℝ) * ∏ a, ((c a : ℝ) / n) ^ (k a)
@@ -470,7 +470,7 @@ theorem typeClassByCount_card_ge
     have h_term_nn : ∀ k ∈ Finset.piAntidiag (Finset.univ : Finset α) n,
         0 ≤ (Nat.multinomial Finset.univ k : ℝ) * ∏ a, ((c a : ℝ) / n) ^ (k a) := by
       intros k _
-      refine mul_nonneg (by positivity) (Finset.prod_nonneg fun a _ => by positivity)
+      refine mul_nonneg (by positivity) (Finset.prod_nonneg fun a _ ↦ by positivity)
     -- Step 7: sum ≤ card · max.
     have h_card_bound :
         (1 : ℝ) ≤ ((Finset.piAntidiag (Finset.univ : Finset α) n).card : ℝ)
@@ -526,7 +526,7 @@ theorem typeClassByCount_card_ge
     -- Actually for c(a) = 0, (c a : ℝ)^(c a) = 0^0 = 1 in ℝ (Real convention).
     -- So ∏ ≥ 1 > 0.
     have h_prod_cc_pos : (0 : ℝ) < ∏ a, (c a : ℝ) ^ (c a) := by
-      refine Finset.prod_pos fun a _ => ?_
+      refine Finset.prod_pos fun a _ ↦ ?_
       rcases Nat.eq_zero_or_pos (c a) with h0 | hp
       · rw [h0]; simp
       · exact pow_pos (by exact_mod_cast hp) _
@@ -545,30 +545,30 @@ theorem typeClassByCount_Qn_ge
     (hQpos : ∀ a : α, 0 < Q.real {a})
     {n : ℕ} (hn : 0 < n) (c : α → ℕ) (hc_sum : (∑ a, c a) = n) :
     (((n : ℝ) + 1) ^ (Fintype.card α : ℕ))⁻¹ * Real.exp (-((n : ℝ) * klDivIndex c n Q))
-      ≤ ((Measure.pi (fun _ : Fin n => Q)) (typeClassByCount (α := α) c)).toReal := by
+      ≤ ((Measure.pi (fun _ : Fin n ↦ Q)) (typeClassByCount (α := α) c)).toReal := by
   classical
   -- Setup.
   set T : Finset (Fin n → α) := (typeClassByCount (α := α) c).toFinite.toFinset with hT_def
   have hT_coe : (T : Set (Fin n → α)) = typeClassByCount c := by simp [hT_def]
-  set qm : α → ℝ := fun a => Q.real {a} with hqm_def
+  set qm : α → ℝ := fun a ↦ Q.real {a} with hqm_def
   set N : ℝ := (((n : ℝ) + 1) ^ (Fintype.card α : ℕ))⁻¹ with hN_def
   -- Step 1: Q^n(T_c) (set form) = sum over T of ∏ Q(x_i).
   have h_pi_singleton_Q : ∀ x : Fin n → α,
-      ((Measure.pi (fun _ : Fin n => Q)).real {x}) = ∏ i : Fin n, qm (x i) := by
+      ((Measure.pi (fun _ : Fin n ↦ Q)).real {x}) = ∏ i : Fin n, qm (x i) := by
     intro x
-    show ((Measure.pi (fun _ : Fin n => Q)) {x}).toReal = ∏ i : Fin n, qm (x i)
+    show ((Measure.pi (fun _ : Fin n ↦ Q)) {x}).toReal = ∏ i : Fin n, qm (x i)
     rw [Measure.pi_singleton, ENNReal.toReal_prod]
     rfl
   have h_pi_eq_sum :
-      ((Measure.pi (fun _ : Fin n => Q)) (typeClassByCount (α := α) c)).toReal
+      ((Measure.pi (fun _ : Fin n ↦ Q)) (typeClassByCount (α := α) c)).toReal
         = ∑ x ∈ T, ∏ i : Fin n, qm (x i) := by
-    have h_step : ((Measure.pi (fun _ : Fin n => Q)) (T : Set (Fin n → α))).toReal
-        = ∑ x ∈ T, ((Measure.pi (fun _ : Fin n => Q)).real {x}) := by
+    have h_step : ((Measure.pi (fun _ : Fin n ↦ Q)) (T : Set (Fin n → α))).toReal
+        = ∑ x ∈ T, ((Measure.pi (fun _ : Fin n ↦ Q)).real {x}) := by
       rw [← MeasureTheory.measureReal_def]
       rw [← MeasureTheory.sum_measureReal_singleton
-        (μ := Measure.pi (fun _ : Fin n => Q)) T]
+        (μ := Measure.pi (fun _ : Fin n ↦ Q)) T]
     rw [← hT_coe, h_step]
-    refine Finset.sum_congr rfl fun x _ => h_pi_singleton_Q x
+    refine Finset.sum_congr rfl fun x _ ↦ h_pi_singleton_Q x
   -- Step 2: For each x ∈ T, ∏ Q(x_i) = ∏ Q(a)^c(a).
   have h_per_point : ∀ x ∈ T,
       (∏ i : Fin n, qm (x i)) = ∏ a : α, qm a ^ (c a) := by
@@ -576,13 +576,13 @@ theorem typeClassByCount_Qn_ge
     have hxT : x ∈ typeClassByCount c := (Set.Finite.mem_toFinset _).mp hx
     -- ∏_i qm (x_i) = ∏ a, qm(a)^c(a) via fiberwise.
     have h_maps : ∀ i ∈ (Finset.univ : Finset (Fin n)), x i ∈ (Finset.univ : Finset α) :=
-      fun i _ => Finset.mem_univ _
+      fun i _ ↦ Finset.mem_univ _
     have h := Finset.prod_fiberwise_of_maps_to' (s := (Finset.univ : Finset (Fin n)))
-      (t := (Finset.univ : Finset α)) h_maps (fun a : α => qm a)
+      (t := (Finset.univ : Finset α)) h_maps (fun a : α ↦ qm a)
     rw [← h]
-    refine Finset.prod_congr rfl fun a _ => ?_
+    refine Finset.prod_congr rfl fun a _ ↦ ?_
     rw [Finset.prod_const]
-    have : (Finset.univ.filter fun j : Fin n => x j = a).card = c a := hxT a
+    have : (Finset.univ.filter fun j : Fin n ↦ x j = a).card = c a := hxT a
     rw [this]
   -- Step 3: ∑_{x ∈ T} ∏ Q(x_i) = |T| · ∏ Q(a)^c(a).
   have h_sum_eq : (∑ x ∈ T, ∏ i : Fin n, qm (x i))
@@ -606,7 +606,7 @@ theorem typeClassByCount_Qn_ge
         = ∑ a : α, (c a : ℝ) * (Real.log ((c a : ℝ) / n) - Real.log (qm a)) := by
       unfold klDivIndex
       rw [Finset.mul_sum]
-      refine Finset.sum_congr rfl fun a _ => ?_
+      refine Finset.sum_congr rfl fun a _ ↦ ?_
       rcases eq_or_ne (c a) 0 with h0 | h_pos
       · simp [h0]
       · have hn_real_pos : (0 : ℝ) < n := by exact_mod_cast hn
@@ -621,7 +621,7 @@ theorem typeClassByCount_Qn_ge
     rw [show -∑ a : α, (c a : ℝ) * (Real.log ((c a : ℝ) / n) - Real.log (qm a))
         = ∑ a : α, (c a : ℝ) * (Real.log (qm a) - Real.log ((c a : ℝ) / n)) by
       rw [← Finset.sum_neg_distrib]
-      refine Finset.sum_congr rfl fun a _ => ?_
+      refine Finset.sum_congr rfl fun a _ ↦ ?_
       ring]
     rw [Real.exp_sum]
     -- ∏ a, exp(c(a) · (log Q(a) - log (c(a)/n))) = ∏ a, (Q(a) / (c(a)/n))^c(a)
@@ -655,7 +655,7 @@ theorem typeClassByCount_Qn_ge
       field_simp
     rw [show (∏ a : α, Real.exp ((c a : ℝ) * (Real.log (qm a) - Real.log ((c a : ℝ) / n))))
           = ∏ a : α, qm a ^ (c a) * ((n : ℝ) ^ (c a) / (c a : ℝ) ^ (c a)) from
-        Finset.prod_congr rfl fun a _ => h_per_letter a]
+        Finset.prod_congr rfl fun a _ ↦ h_per_letter a]
     -- Now: ∏ a, qm a ^ c a · n^c(a) / c(a)^c(a)
     -- = (∏ qm^c) · (∏ n^c / c^c)
     -- = (∏ qm^c) · (∏ n^c) / (∏ c^c)
@@ -672,7 +672,7 @@ theorem typeClassByCount_Qn_ge
   -- Equivalent to: (|T| - N · n^n / ∏ c^c) · ∏ qm^c ≥ 0, which holds if ∏ qm^c ≥ 0
   -- AND |T| ≥ N · n^n / ∏ c^c (the card lower bound).
   have h_qm_prod_nn : 0 ≤ ∏ a : α, qm a ^ (c a) :=
-    Finset.prod_nonneg fun a _ => pow_nonneg (hQpos a).le _
+    Finset.prod_nonneg fun a _ ↦ pow_nonneg (hQpos a).le _
   have h_T_card : (T.card : ℝ) =
       ((typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card : ℝ) := by
     rfl

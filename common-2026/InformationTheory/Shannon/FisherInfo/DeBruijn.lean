@@ -88,7 +88,7 @@ theorem fisherInfoOfMeasureV2Real_gaussianReal
 de Bruijn identity (Cover–Thomas 17.7.2). For `Z ∼ 𝒩(0, 1)` and `X ⊥ Z`, the law
 `P.map (gaussianConvolution X Z t)` is the convolution of `P.map X` with `𝒩(0, t)`. -/
 noncomputable def gaussianConvolution {α : Type*} (X Z : α → ℝ) (t : ℝ) : α → ℝ :=
-  fun ω => X ω + Real.sqrt t * Z ω
+  fun ω ↦ X ω + Real.sqrt t * Z ω
 
 /-- The law of `X + √t · Z` is `𝒩(m, v + t)` when `X ∼ 𝒩(m, v)`, `Z ∼ 𝒩(0, 1)`, and
 `X ⊥ Z`. -/
@@ -106,12 +106,12 @@ theorem gaussianConvolution_law_of_gaussian
   have h_sqrt_nn : 0 ≤ Real.sqrt t := Real.sqrt_nonneg t
   have h_sqrt_sq : (Real.sqrt t) ^ 2 = t := Real.sq_sqrt ht
   -- `P.map (fun ω => √t · Z ω) = gaussianReal (√t · 0) ((√t)² · 1) = gaussianReal 0 t`.
-  have h_sqrtZ_map : Measure.map (fun ω => Real.sqrt t * Z ω) P
+  have h_sqrtZ_map : Measure.map (fun ω ↦ Real.sqrt t * Z ω) P
       = gaussianReal 0 ⟨t, ht⟩ := by
     -- `P.map (c · Z) = (P.map Z).map (c · ·)`.
-    have h_compose : Measure.map (fun ω => Real.sqrt t * Z ω) P
-        = (P.map Z).map (fun y => Real.sqrt t * y) := by
-      have h_meas_mul : Measurable (fun y : ℝ => Real.sqrt t * y) :=
+    have h_compose : Measure.map (fun ω ↦ Real.sqrt t * Z ω) P
+        = (P.map Z).map (fun y ↦ Real.sqrt t * y) := by
+      have h_meas_mul : Measurable (fun y : ℝ ↦ Real.sqrt t * y) :=
         measurable_const.mul measurable_id
       have := Measure.map_map (μ := P) h_meas_mul hZ
       -- `(P.map Z).map (fun y => √t * y) = P.map ((fun y => √t * y) ∘ Z)`.
@@ -128,16 +128,16 @@ theorem gaussianConvolution_law_of_gaussian
   -- Step 2: independence `X ⊥ (√t · Z)`.
   have hX_aem : AEMeasurable X P := hX.aemeasurable
   have hZ_aem : AEMeasurable Z P := hZ.aemeasurable
-  have h_indep_X_sqrtZ : IndepFun X (fun ω => Real.sqrt t * Z ω) P :=
+  have h_indep_X_sqrtZ : IndepFun X (fun ω ↦ Real.sqrt t * Z ω) P :=
     hXZ.comp measurable_id (measurable_const.mul measurable_id)
   -- Step 3: sum of independent Gaussians.
   have h_sum := gaussianReal_add_gaussianReal_of_indepFun (P := P)
-    (X := X) (Y := fun ω => Real.sqrt t * Z ω)
+    (X := X) (Y := fun ω ↦ Real.sqrt t * Z ω)
     (m₁ := m) (m₂ := 0) (v₁ := v) (v₂ := ⟨t, ht⟩)
     h_indep_X_sqrtZ hX_law h_sqrtZ_map
   -- Step 4: `X + (√t · Z) = gaussianConvolution X Z t` pointwise.
   unfold gaussianConvolution
-  have h_funext : (fun ω => X ω + Real.sqrt t * Z ω) = X + (fun ω => Real.sqrt t * Z ω) := by
+  have h_funext : (fun ω ↦ X ω + Real.sqrt t * Z ω) = X + (fun ω ↦ Real.sqrt t * Z ω) := by
     funext ω; rfl
   rw [h_funext, h_sum]
   congr 1
@@ -168,7 +168,7 @@ structure IsRegularDeBruijnHypV2 {Ω : Type*} [MeasurableSpace Ω]
   /-- The density witness `pX` is measurable. -/
   pX_meas : Measurable pX
   /-- `X` has Lebesgue density `pX`. -/
-  pX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x))
+  pX_law : P.map X = volume.withDensity (fun x ↦ ENNReal.ofReal (pX x))
   /-- The density witness `density_t` equals the smooth representative
   `convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)` — the convolution of `pX` with the
   time-`t` Gaussian heat kernel, which is the genuine density of `P.map (X + √t · Z)`.
@@ -179,7 +179,7 @@ structure IsRegularDeBruijnHypV2 {Ω : Type*} [MeasurableSpace Ω]
   density_t_eq : ∀ (ht : 0 < t) (x : ℝ),
     density_t x = convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x
   /-- `X` has a finite second moment: `y ↦ y² · pX y` is volume-integrable. -/
-  pX_mom : Integrable (fun y => y ^ 2 * pX y) volume
+  pX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume
 
 /-- The path-regularity bundle for the integrated de Bruijn identity, packaging the FTC
 ingredients needed to integrate the per-time `debruijnIdentityV2_holds_assembled` derivative
@@ -204,11 +204,11 @@ structure IsDeBruijnPathRegular {Ω : Type*} [MeasurableSpace Ω]
     ∃ h_reg : IsRegularDeBruijnHypV2 X Z P t, h_reg.density_t = fPath t
   /-- Continuity of the heat-flow entropy on `[0, T]`. -/
   cont : ContinuousOn
-    (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
+    (fun s ↦ differentialEntropy (P.map (gaussianConvolution X Z s)))
     (Set.Icc 0 T)
   /-- The path integrand is interval-integrable. -/
   integrable : IntervalIntegrable
-    (fun t => (1/2) * fisherInfoOfDensityReal (fPath t)) volume 0 T
+    (fun t ↦ (1/2) * fisherInfoOfDensityReal (fPath t)) volume 0 T
 
 /-! ## Gaussian discharge -/
 
@@ -217,15 +217,15 @@ structure IsDeBruijnPathRegular {Ω : Type*} [MeasurableSpace Ω]
 theorem hasDerivAt_half_log_gaussian_entropy
     {v : ℝ≥0} (s : ℝ) (hvs : 0 < (v : ℝ) + s) :
     HasDerivAt
-      (fun s' : ℝ => (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s')))
+      (fun s' : ℝ ↦ (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s')))
       (1 / (2 * ((v : ℝ) + s))) s := by
   -- Inner derivative: `s' ↦ 2π e (v + s')` has derivative `2π e` at any point.
-  have h_inner : HasDerivAt (fun s' : ℝ => 2 * Real.pi * Real.exp 1 * ((v : ℝ) + s'))
+  have h_inner : HasDerivAt (fun s' : ℝ ↦ 2 * Real.pi * Real.exp 1 * ((v : ℝ) + s'))
       (2 * Real.pi * Real.exp 1) s := by
-    have h_const : HasDerivAt (fun _ : ℝ => (v : ℝ)) 0 s := hasDerivAt_const s (v : ℝ)
-    have h_id' : HasDerivAt (fun s' : ℝ => s') 1 s := hasDerivAt_id s
-    have h_add : HasDerivAt (fun s' : ℝ => (v : ℝ) + s') (0 + 1) s := h_const.add h_id'
-    have h_add' : HasDerivAt (fun s' : ℝ => (v : ℝ) + s') 1 s := by
+    have h_const : HasDerivAt (fun _ : ℝ ↦ (v : ℝ)) 0 s := hasDerivAt_const s (v : ℝ)
+    have h_id' : HasDerivAt (fun s' : ℝ ↦ s') 1 s := hasDerivAt_id s
+    have h_add : HasDerivAt (fun s' : ℝ ↦ (v : ℝ) + s') (0 + 1) s := h_const.add h_id'
+    have h_add' : HasDerivAt (fun s' : ℝ ↦ (v : ℝ) + s') 1 s := by
       convert h_add using 1; ring
     have h_mul := h_add'.const_mul (2 * Real.pi * Real.exp 1)
     -- `h_mul : HasDerivAt _ (2πe * 1) s`. Rewrite to `2πe`.
@@ -288,7 +288,7 @@ theorem deBruijn_identity_v2_gaussian
     (hZ_law : P.map Z = gaussianReal 0 1)
     {t : ℝ} (ht : 0 < t) :
     HasDerivAt
-      (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
+      (fun s ↦ differentialEntropy (P.map (gaussianConvolution X Z s)))
       ((1/2) * fisherInfoOfMeasureV2Real (P.map (gaussianConvolution X Z t))
           (gaussianPDFReal m (v + ⟨t, ht.le⟩)))
       t := by
@@ -311,15 +311,15 @@ theorem deBruijn_identity_v2_gaussian
     rw [h_law]
     exact differentialEntropy_gaussianReal_heat_path m hv hs
   -- Reformulate as eventually-equality at `nhds t`.
-  have h_eventually : (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
-      =ᶠ[nhds t] (fun s => (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s))) := by
-    refine h_pos_nbhd.mono fun s hs => ?_
+  have h_eventually : (fun s ↦ differentialEntropy (P.map (gaussianConvolution X Z s)))
+      =ᶠ[nhds t] (fun s ↦ (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s))) := by
+    refine h_pos_nbhd.mono fun s hs ↦ ?_
     exact h_entropy_eq s hs.le
   -- Step 2: apply `hasDerivAt_half_log_gaussian_entropy`.
   have h_deriv := hasDerivAt_half_log_gaussian_entropy (v := v) (s := t) hvs_pos
   -- Step 3: transfer via `HasDerivAt.congr_of_eventuallyEq`.
   have h_deriv' : HasDerivAt
-      (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
+      (fun s ↦ differentialEntropy (P.map (gaussianConvolution X Z s)))
       (1 / (2 * ((v : ℝ) + t))) t := by
     refine h_deriv.congr_of_eventuallyEq ?_
     exact h_eventually

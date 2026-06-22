@@ -62,7 +62,7 @@ variable (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ �
 `{coord_i : -k ≤ i ≤ -1}` of length `k`. For `k = 0` this is the trivial
 σ-algebra (the set `{i | 0 ≤ i ∧ i ≤ -1}` is empty). -/
 @[reducible] def pastSigma (k : ℕ) : MeasurableSpace (∀ _ : ℤ, α) :=
-  cylinderEvents (X := fun _ : ℤ => α) {i : ℤ | -(k : ℤ) ≤ i ∧ i ≤ -1}
+  cylinderEvents (X := fun _ : ℤ ↦ α) {i : ℤ | -(k : ℤ) ≤ i ∧ i ≤ -1}
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [IsProbabilityMeasure μ] in
@@ -76,7 +76,7 @@ lemma pastSigma_mono : Monotone (pastSigma (α := α)) := by
     have h_neg : -(k₂ : ℤ) ≤ -(k₁ : ℤ) :=
       neg_le_neg (by exact_mod_cast hk)
     exact le_trans h_neg h_lo
-  exact cylinderEvents_mono (X := fun _ : ℤ => α) hsub
+  exact cylinderEvents_mono (X := fun _ : ℤ ↦ α) hsub
 
 /-- The forward past filtration on `ℕ`: `pastFiltration k` is `pastSigma k`,
 the σ-algebra of events depending on the finite past `{coord_i : -k ≤ i ≤ -1}`. -/
@@ -95,7 +95,7 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
 /-- The σ-algebra of events depending on the **infinite negative past**
 `{coord_i : i ≤ -1}`. This is `⨆ k, pastSigma k`. -/
 @[reducible] def negPastSigma : MeasurableSpace (∀ _ : ℤ, α) :=
-  cylinderEvents (X := fun _ : ℤ => α) {i : ℤ | i ≤ -1}
+  cylinderEvents (X := fun _ : ℤ ↦ α) {i : ℤ | i ≤ -1}
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [IsProbabilityMeasure μ] in
@@ -111,16 +111,16 @@ lemma iSup_pastSigma_eq_negPastSigma :
   -- RHS = ⨆ i ≤ -1, (m_α).comap (· i)
   apply le_antisymm
   · -- LHS ⊆ RHS: each `pastSigma k` has indices ⊆ {i ≤ -1}.
-    refine iSup_le (fun k => ?_)
-    refine cylinderEvents_mono (X := fun _ : ℤ => α) ?_
+    refine iSup_le (fun k ↦ ?_)
+    refine cylinderEvents_mono (X := fun _ : ℤ ↦ α) ?_
     rintro i ⟨_, h_hi⟩
     exact h_hi
   · -- RHS ⊆ LHS: each generator at index `i ≤ -1` sits inside `pastSigma ((-i).toNat)`.
     -- Use the `cylinderEvents = ⨆ i ∈ Δ, ...` unfolding.
-    show cylinderEvents (X := fun _ : ℤ => α) {i : ℤ | i ≤ -1}
-        ≤ ⨆ k : ℕ, cylinderEvents (X := fun _ : ℤ => α)
+    show cylinderEvents (X := fun _ : ℤ ↦ α) {i : ℤ | i ≤ -1}
+        ≤ ⨆ k : ℕ, cylinderEvents (X := fun _ : ℤ ↦ α)
             {i : ℤ | -(k : ℤ) ≤ i ∧ i ≤ -1}
-    refine iSup₂_le (fun i hi => ?_)
+    refine iSup₂_le (fun i hi ↦ ?_)
     -- Goal: `(m_α).comap (· i) ≤ ⨆ k, pastSigma k`.
     set k : ℕ := (-i).toNat with hk_def
     have hi_neg : i ≤ -1 := hi
@@ -131,17 +131,17 @@ lemma iSup_pastSigma_eq_negPastSigma :
     have h_hi : i ≤ -1 := hi
     -- `(m_α).comap (· i) ≤ pastSigma k` because `i ∈ [-k,-1]`.
     have h_in_pastSigma_k :
-        ((inferInstance : MeasurableSpace α).comap (fun x : (∀ _ : ℤ, α) => x i))
+        ((inferInstance : MeasurableSpace α).comap (fun x : (∀ _ : ℤ, α) ↦ x i))
           ≤ pastSigma (α := α) k := by
-      change ((inferInstance : MeasurableSpace α).comap (fun x : (∀ _ : ℤ, α) => x i))
+      change ((inferInstance : MeasurableSpace α).comap (fun x : (∀ _ : ℤ, α) ↦ x i))
           ≤ ⨆ j ∈ ({i : ℤ | -(k : ℤ) ≤ i ∧ i ≤ -1} : Set ℤ),
-              ((inferInstance : MeasurableSpace α).comap (fun x : (∀ _ : ℤ, α) => x j))
-      exact le_iSup₂ (f := fun j _ =>
-        ((inferInstance : MeasurableSpace α).comap (fun x : (∀ _ : ℤ, α) => x j))) i ⟨h_lo, h_hi⟩
-    exact le_trans h_in_pastSigma_k (le_iSup (fun k : ℕ => pastSigma (α := α) k) k)
+              ((inferInstance : MeasurableSpace α).comap (fun x : (∀ _ : ℤ, α) ↦ x j))
+      exact le_iSup₂ (f := fun j _ ↦
+        ((inferInstance : MeasurableSpace α).comap (fun x : (∀ _ : ℤ, α) ↦ x j))) i ⟨h_lo, h_hi⟩
+    exact le_trans h_in_pastSigma_k (le_iSup (fun k : ℕ ↦ pastSigma (α := α) k) k)
 
 /-- The coordinate-0 evaluation. -/
-def coord0 : (∀ _ : ℤ, α) → α := fun x => x 0
+def coord0 : (∀ _ : ℤ, α) → α := fun x ↦ x 0
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [IsProbabilityMeasure μ] in
@@ -153,7 +153,7 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
   [MeasurableSingletonClass α] [IsProbabilityMeasure μ] in
 /-- The indicator of `{coord0 = a}` is bounded by `1`. -/
 lemma indicator_coord0_eq_le_one (a : α) (x : (∀ _ : ℤ, α)) :
-    ((coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ))) x ≤ 1 := by
+    ((coord0 ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ))) x ≤ 1 := by
   by_cases hx : x ∈ (coord0 ⁻¹' {a})
   · simp [Set.indicator_of_mem hx]
   · simp [Set.indicator_of_notMem hx]
@@ -162,7 +162,7 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
   [MeasurableSingletonClass α] [IsProbabilityMeasure μ] in
 /-- The indicator of `{coord0 = a}` is nonneg. -/
 lemma indicator_coord0_eq_nonneg (a : α) (x : (∀ _ : ℤ, α)) :
-    0 ≤ ((coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ))) x := by
+    0 ≤ ((coord0 ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ))) x := by
   by_cases hx : x ∈ (coord0 ⁻¹' {a})
   · simp [Set.indicator_of_mem hx]
   · simp [Set.indicator_of_notMem hx]
@@ -176,7 +176,7 @@ lemma measurableSet_coord0_eq (a : α) :
 omit [DecidableEq α] [Nonempty α] in
 /-- The indicator function `(coord0 ⁻¹' {a}).indicator 1` is integrable under `μZ`. -/
 lemma integrable_indicator_coord0_eq (a : α) :
-    Integrable ((coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ))) (μZ μ p) := by
+    Integrable ((coord0 ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ))) (μZ μ p) := by
   refine (integrable_indicator_iff (measurableSet_coord0_eq (α := α) a)).mpr ?_
   exact integrableOn_const
 
@@ -184,7 +184,7 @@ lemma integrable_indicator_coord0_eq (a : α) :
 the finite past `pastFiltration k`, viewed as a function on `ℤ → α`. -/
 @[entry_point]
 noncomputable def condProbPast (a : α) (k : ℕ) : (∀ _ : ℤ, α) → ℝ :=
-  (μZ μ p)[((coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ)))
+  (μZ μ p)[((coord0 ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ)))
     | (pastFiltration (α := α)) k]
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
@@ -192,8 +192,8 @@ omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 filtration. -/
 @[entry_point]
 lemma martingale_condProbPast (a : α) :
-    Martingale (fun k : ℕ => (μZ μ p)[((coord0 ⁻¹' {a}).indicator
-        (fun _ => (1 : ℝ))) | (pastFiltration (α := α)) k])
+    Martingale (fun k : ℕ ↦ (μZ μ p)[((coord0 ⁻¹' {a}).indicator
+        (fun _ ↦ (1 : ℝ))) | (pastFiltration (α := α)) k])
       (pastFiltration (α := α)) (μZ μ p) :=
   martingale_condExp _ _ _
 
@@ -201,7 +201,7 @@ lemma martingale_condProbPast (a : α) :
 `⨆ k, pastFiltration k`. -/
 @[entry_point]
 noncomputable def condProbInfty (a : α) : (∀ _ : ℤ, α) → ℝ :=
-  (μZ μ p)[((coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ)))
+  (μZ μ p)[((coord0 ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ)))
     | ⨆ k : ℕ, (pastFiltration (α := α)) k]
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
@@ -211,12 +211,12 @@ as `k → ∞`. Direct application of
 @[entry_point]
 lemma condProbPast_tendsto_condProbInfty (a : α) :
     ∀ᵐ x ∂(μZ μ p),
-      Tendsto (fun k : ℕ => condProbPast μ p a k x) atTop
+      Tendsto (fun k : ℕ ↦ condProbPast μ p a k x) atTop
         (𝓝 (condProbInfty μ p a x)) := by
   -- `tendsto_ae_condExp` gives `μ[g | ℱ k] → μ[g | ⨆ k, ℱ k]` a.s. for any `g`.
   exact MeasureTheory.tendsto_ae_condExp (ℱ := pastFiltration (α := α))
     (μ := μZ μ p) (m0 := MeasurableSpace.pi)
-    ((coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ)))
+    ((coord0 ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ)))
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- `condProbPast a k` is integrable. -/
@@ -250,20 +250,20 @@ lemma ae_zero_le_condProbPast (a : α) (k : ℕ) :
 omit [DecidableEq α] [Nonempty α] in
 /-- `condProbPast a k ≤ 1` a.s. -/
 lemma ae_condProbPast_le_one (a : α) (k : ℕ) :
-    condProbPast μ p a k ≤ᵐ[μZ μ p] (fun _ => (1 : ℝ)) := by
+    condProbPast μ p a k ≤ᵐ[μZ μ p] (fun _ ↦ (1 : ℝ)) := by
   have h_mono :
-      (μZ μ p)[(coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ))
+      (μZ μ p)[(coord0 ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ))
           | (pastFiltration (α := α)) k]
-        ≤ᵐ[μZ μ p] (μZ μ p)[(fun _ : (∀ _ : ℤ, α) => (1 : ℝ))
+        ≤ᵐ[μZ μ p] (μZ μ p)[(fun _ : (∀ _ : ℤ, α) ↦ (1 : ℝ))
           | (pastFiltration (α := α)) k] := by
     refine condExp_mono (integrable_indicator_coord0_eq μ p a)
       (integrable_const _) ?_
     filter_upwards with x
     exact indicator_coord0_eq_le_one a x
   have h_const_eq :
-      (μZ μ p)[(fun _ : (∀ _ : ℤ, α) => (1 : ℝ))
+      (μZ μ p)[(fun _ : (∀ _ : ℤ, α) ↦ (1 : ℝ))
           | (pastFiltration (α := α)) k]
-        = fun _ => (1 : ℝ) :=
+        = fun _ ↦ (1 : ℝ) :=
     condExp_const ((pastFiltration (α := α)).le _) 1
   filter_upwards [h_mono] with x hx
   have := hx
@@ -278,17 +278,17 @@ lemma ae_zero_le_condProbInfty (a : α) :
   -- For each x in the AE-set, we have `condProbPast a k x → condProbInfty a x` and each
   -- `condProbPast a k x ≥ 0` a.s. Pick a fixed `k = 0` AE-set and pass to limit.
   have h_nn : ∀ᵐ x ∂(μZ μ p), ∀ k : ℕ, 0 ≤ condProbPast μ p a k x := by
-    rw [ae_all_iff]; exact fun k => ae_zero_le_condProbPast μ p a k
+    rw [ae_all_iff]; exact fun k ↦ ae_zero_le_condProbPast μ p a k
   filter_upwards [h_tendsto, h_nn] with x hx_lim hx_nn
   exact ge_of_tendsto' hx_lim hx_nn
 
 omit [DecidableEq α] [Nonempty α] in
 /-- `condProbInfty a ≤ 1` a.s. -/
 lemma ae_condProbInfty_le_one (a : α) :
-    condProbInfty μ p a ≤ᵐ[μZ μ p] (fun _ => (1 : ℝ)) := by
+    condProbInfty μ p a ≤ᵐ[μZ μ p] (fun _ ↦ (1 : ℝ)) := by
   have h_tendsto := condProbPast_tendsto_condProbInfty μ p a
   have h_le : ∀ᵐ x ∂(μZ μ p), ∀ k : ℕ, condProbPast μ p a k x ≤ 1 := by
-    rw [ae_all_iff]; exact fun k => ae_condProbPast_le_one μ p a k
+    rw [ae_all_iff]; exact fun k ↦ ae_condProbPast_le_one μ p a k
   filter_upwards [h_tendsto, h_le] with x hx_lim hx_le
   exact le_of_tendsto' hx_lim hx_le
 
@@ -297,7 +297,7 @@ omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 `1_{coord0=a}` w.r.t. the σ-algebra `⨆ k, pastFiltration k` of the infinite past. -/
 lemma condProbInfty_eq_condExp_tail (a : α) :
     condProbInfty μ p a =ᵐ[μZ μ p]
-      (μZ μ p)[(coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ))
+      (μZ μ p)[(coord0 ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ))
         | ⨆ n : ℕ, (pastFiltration (α := α)) n] := by
   exact Filter.EventuallyEq.refl _ _
 
@@ -307,14 +307,14 @@ Defined as `-log (∑ a, indicator(coord0 = a) * condProbPast a k)`. On the
 full-measure set where the conditional probability of the actual `coord0` value
 is positive, this is `-log condProbPast (coord0 x) k x`. -/
 @[entry_point]
-noncomputable def pmfLogCondPast (k : ℕ) : (∀ _ : ℤ, α) → ℝ := fun x =>
-  -Real.log (∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) x
+noncomputable def pmfLogCondPast (k : ℕ) : (∀ _ : ℤ, α) → ℝ := fun x ↦
+  -Real.log (∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ ↦ (1 : ℝ)) x
     * condProbPast μ p a k x)
 
 /-- Limit log-likelihood (conditional on the full backward tail). -/
 @[entry_point]
-noncomputable def pmfLogCondInfty : (∀ _ : ℤ, α) → ℝ := fun x =>
-  -Real.log (∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) x
+noncomputable def pmfLogCondInfty : (∀ _ : ℤ, α) → ℝ := fun x ↦
+  -Real.log (∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ ↦ (1 : ℝ)) x
     * condProbInfty μ p a x)
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -322,7 +322,7 @@ omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonCla
 /-- Per-step (and limit) inner sum simplifies to a single conditional probability
 of the realized coord-0 value. -/
 lemma pmfLogCondPast_inner_eq_self (f : α → ℝ) (x : (∀ _ : ℤ, α)) :
-    (∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) x * f a)
+    (∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ ↦ (1 : ℝ)) x * f a)
       = f (coord0 x) := by
   classical
   have hmem : (coord0 x) ∈ (Finset.univ : Finset α) := Finset.mem_univ _
@@ -331,7 +331,7 @@ lemma pmfLogCondPast_inner_eq_self (f : α → ℝ) (x : (∀ _ : ℤ, α)) :
     rw [Set.indicator_of_mem hin]
     ring
   · intro a _ hne
-    have hnotmem : x ∉ coord0 ⁻¹' {a} := fun hx => hne hx.symm
+    have hnotmem : x ∉ coord0 ⁻¹' {a} := fun hx ↦ hne hx.symm
     simp [Set.indicator_of_notMem hnotmem]
   · intro hne; exact absurd hmem hne
 

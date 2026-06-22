@@ -52,12 +52,12 @@ structure IsMemorylessChannelStrong (μ : Measure Ω) [IsFiniteMeasure μ]
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β) : Prop where
   /-- Per-letter Markov: `Y_i` depends on `X^n` only through `X_i`. -/
   per_letter_markov : ∀ i : Fin n,
-    Shannon.IsMarkovChain μ (fun ω j => Xs j ω) (Xs i) (Ys i)
+    Shannon.IsMarkovChain μ (fun ω j ↦ Xs j ω) (Xs i) (Ys i)
   /-- Outputs are conditionally independent across `i` given the full input `X^n`. -/
   outputs_cond_indep : ∀ i : Fin n,
     Shannon.IsMarkovChain μ
-      (fun ω (j : {j : Fin n // j ≠ i}) => Ys j.val ω)
-      (fun ω j => Xs j ω)
+      (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys j.val ω)
+      (fun ω j ↦ Xs j ω)
       (Ys i)
 
 end StrongMemoryless
@@ -77,7 +77,7 @@ to collapse `{j // j = i} → β` to `β`. -/
 noncomputable def measurableEquivExtract (i : Fin n) :
     (Fin n → β) ≃ᵐ β × ({j : Fin n // j ≠ i} → β) :=
   -- (∀ j, β) ≃ᵐ ({j // j = i} → β) × ({j // j ≠ i} → β)
-  (MeasurableEquiv.piEquivPiSubtypeProd (π := fun _ : Fin n => β) (fun j => j = i)).trans
+  (MeasurableEquiv.piEquivPiSubtypeProd (π := fun _ : Fin n ↦ β) (fun j ↦ j = i)).trans
     -- collapse {j // j = i} → β to β
     ((MeasurableEquiv.funUnique {j : Fin n // j = i} β).prodCongr (.refl _))
 
@@ -101,20 +101,20 @@ lemma h_markov_xprefix_of_strong
     (h_strong : IsMemorylessChannelStrong μ Xs Ys) :
     ∀ i : Fin n,
       Shannon.IsMarkovChain μ
-        (fun ω => (
-          (fun (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω),
+        (fun ω ↦ (
+          (fun (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω),
           Xs i ω))
         (Xs i) (Ys i) := by
   intro i
   -- Post-process the full input X^n: extract (Xprefix, X_i).
-  have h_full_meas : Measurable (fun ω j => Xs j ω) := measurable_pi_iff.mpr hXs
+  have h_full_meas : Measurable (fun ω j ↦ Xs j ω) := measurable_pi_iff.mpr hXs
   have hf : Measurable
-      (fun (x : Fin n → α) =>
-        ((fun (j : Fin i.val) => x ⟨j.val, j.isLt.trans i.isLt⟩), x i)) := by
+      (fun (x : Fin n → α) ↦
+        ((fun (j : Fin i.val) ↦ x ⟨j.val, j.isLt.trans i.isLt⟩), x i)) := by
     refine Measurable.prodMk ?_ (measurable_pi_apply _)
-    exact measurable_pi_iff.mpr (fun j => measurable_pi_apply _)
+    exact measurable_pi_iff.mpr (fun j ↦ measurable_pi_apply _)
   exact Shannon.isMarkovChain_map_left
-    μ (fun ω j => Xs j ω) (Xs i) (Ys i)
+    μ (fun ω j ↦ Xs j ω) (Xs i) (Ys i)
     h_full_meas (hXs i) (hYs i) hf (h_strong.per_letter_markov i)
 
 /-- Conditional mutual information reshape (independent of memorylessness):
@@ -130,34 +130,34 @@ lemma h_split_of_strong
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i)) :
     ∀ i : Fin n,
-      Shannon.condMutualInfo μ (Xs i) (fun ω j => Ys j ω)
-          (fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)
+      Shannon.condMutualInfo μ (Xs i) (fun ω j ↦ Ys j ω)
+          (fun ω (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)
         = Shannon.condMutualInfo μ (Xs i) (Ys i)
-            (fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)
+            (fun ω (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)
           + Shannon.condMutualInfo μ (Xs i)
-              (fun ω (j : {j : Fin n // j ≠ i}) => Ys j.val ω)
-              (fun ω => (
-                (fun (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω),
+              (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys j.val ω)
+              (fun ω ↦ (
+                (fun (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω),
                 Ys i ω)) := by
   intro i
   -- Set up the prefix RV.
   set Xprefix : Ω → (Fin i.val → α) :=
-    fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω with hXprefix_def
+    fun ω (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω with hXprefix_def
   have hXprefix : Measurable Xprefix :=
-    measurable_pi_iff.mpr (fun j => hXs ⟨j.val, j.isLt.trans i.isLt⟩)
-  have hYall : Measurable (fun ω (j : Fin n) => Ys j ω) :=
+    measurable_pi_iff.mpr (fun j ↦ hXs ⟨j.val, j.isLt.trans i.isLt⟩)
+  have hYall : Measurable (fun ω (j : Fin n) ↦ Ys j ω) :=
     measurable_pi_iff.mpr hYs
   have hYother : Measurable
-      (fun ω (j : {j : Fin n // j ≠ i}) => Ys j.val ω) :=
-    measurable_pi_iff.mpr (fun j => hYs j.val)
+      (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys j.val ω) :=
+    measurable_pi_iff.mpr (fun j ↦ hYs j.val)
   -- Reshape Y^n via the measurable equiv (Y^n ≃ᵐ Y_i × Y^{≠i}).
   -- Define the equiv's symm so post-composing on (Y_i, Y^{≠i}) gives Y^n.
   let e : (Fin n → β) ≃ᵐ β × ({j : Fin n // j ≠ i} → β) :=
     measurableEquivExtract (β := β) i
   -- LHS of split: rewrite Y^n as e.symm (Y_i, Y^{≠i}).
   have h_pointwise : ∀ ω,
-      e.symm (Ys i ω, fun (j : {j : Fin n // j ≠ i}) => Ys j.val ω)
-        = (fun j => Ys j ω) := by
+      e.symm (Ys i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Ys j.val ω)
+        = (fun j ↦ Ys j ω) := by
     intro ω
     -- e is piEquivPiSubtypeProd ∘ funUnique on first factor.
     -- e.symm collapses (β × ({j // j ≠ i} → β)) back to (Fin n → β):
@@ -176,14 +176,14 @@ lemma h_split_of_strong
         MeasurableEquiv.trans, MeasurableEquiv.prodCongr, hj]
   -- Pair RV: Measurable.
   have hYpair : Measurable
-      (fun ω => (Ys i ω, fun (j : {j : Fin n // j ≠ i}) => Ys j.val ω)) :=
+      (fun ω ↦ (Ys i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Ys j.val ω)) :=
     (hYs i).prodMk hYother
   -- Step A: rewrite Y^n via e.symm.
   have hLHS_eq :
-      Shannon.condMutualInfo μ (Xs i) (fun ω j => Ys j ω) Xprefix
+      Shannon.condMutualInfo μ (Xs i) (fun ω j ↦ Ys j ω) Xprefix
         = Shannon.condMutualInfo μ (Xs i)
-            (fun ω => e.symm
-              (Ys i ω, fun (j : {j : Fin n // j ≠ i}) => Ys j.val ω))
+            (fun ω ↦ e.symm
+              (Ys i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Ys j.val ω))
             Xprefix := by
     congr 1
     funext ω
@@ -193,14 +193,14 @@ lemma h_split_of_strong
   -- Note: signature is condMutualInfo_map_middle_measurableEquiv μ Xs Yo Zc hXs hYo hZc e.
   rw [Shannon.condMutualInfo_map_middle_measurableEquiv μ
       (Xs i)
-      (fun ω => (Ys i ω, fun (j : {j : Fin n // j ≠ i}) => Ys j.val ω))
+      (fun ω ↦ (Ys i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Ys j.val ω))
       Xprefix (hXs i) hYpair hXprefix e.symm]
   -- Step C: 2-var Y-axis chain rule.
   -- Need finiteness side condition: I(Xprefix; X_i) ≠ ∞ (finite alphabet).
   have h_fin : Shannon.mutualInfo μ Xprefix (Xs i) ≠ ∞ :=
     Shannon.mutualInfo_ne_top μ Xprefix (Xs i) hXprefix (hXs i)
   exact condMutualInfo_chain_rule_Y_2var μ (Xs i) (Ys i)
-    (fun ω (j : {j : Fin n // j ≠ i}) => Ys j.val ω) Xprefix
+    (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys j.val ω) Xprefix
     (hXs i) (hYs i) hYother hXprefix h_fin
 
 /- **Architectural note**: an earlier session attempted to derive the D-2'
@@ -246,43 +246,43 @@ theorem channel_coding_converse_general_memoryless_strong
     (hMsg : Measurable Msg) (hYs : ∀ i, Measurable (Ys i))
     (hdecoder : Measurable decoder)
     (hmarkov : Shannon.IsMarkovChain μ Msg
-      (fun ω => encoder (Msg ω)) (fun ω i => Ys i ω))
-    (_h_memo : IsMemorylessChannel μ (fun i ω => encoder (Msg ω) i) Ys)
+      (fun ω ↦ encoder (Msg ω)) (fun ω i ↦ Ys i ω))
+    (_h_memo : IsMemorylessChannel μ (fun i ω ↦ encoder (Msg ω) i) Ys)
     (h_strong : IsMemorylessChannelStrong μ
-      (fun i ω => encoder (Msg ω) i) Ys)
+      (fun i ω ↦ encoder (Msg ω) i) Ys)
     (hMsg_uniform :
       μ.map Msg = (Fintype.card M : ℝ≥0∞)⁻¹ • Measure.count)
     (hcard : 2 ≤ Fintype.card M)
     (hMI_finite : Shannon.mutualInfo μ
-      (fun ω => encoder (Msg ω)) (fun ω i => Ys i ω) ≠ ∞) :
+      (fun ω ↦ encoder (Msg ω)) (fun ω i ↦ Ys i ω) ≠ ∞) :
     Real.log (Fintype.card M) ≤
       (∑ i : Fin n,
         (Shannon.mutualInfo μ
-          (fun ω => encoder (Msg ω) i) (Ys i)).toReal) +
+          (fun ω ↦ encoder (Msg ω) i) (Ys i)).toReal) +
         Real.binEntropy
           (InformationTheory.MeasureFano.errorProb μ Msg
-            (fun ω i => Ys i ω) decoder) +
+            (fun ω i ↦ Ys i ω) decoder) +
         InformationTheory.MeasureFano.errorProb μ Msg
-          (fun ω i => Ys i ω) decoder *
+          (fun ω i ↦ Ys i ω) decoder *
           Real.log ((Fintype.card M : ℝ) - 1) := by
   classical
   -- Set up per-letter and joint X RVs.
-  set Xs : Fin n → Ω → α := fun i ω => encoder (Msg ω) i with hXs_def
+  set Xs : Fin n → Ω → α := fun i ω ↦ encoder (Msg ω) i with hXs_def
   have h_encoder : Measurable encoder := measurable_of_countable _
-  have hXs_meas : ∀ i, Measurable (Xs i) := fun i =>
+  have hXs_meas : ∀ i, Measurable (Xs i) := fun i ↦
     (measurable_pi_apply i).comp (h_encoder.comp hMsg)
-  have hY_pi : Measurable (fun ω (i : Fin n) => Ys i ω) :=
+  have hY_pi : Measurable (fun ω (i : Fin n) ↦ Ys i ω) :=
     measurable_pi_iff.mpr hYs
   -- Step 1: single-shot Markov-encoder converse on (X = Fin n → α, Y = Fin n → β).
   have h_single :=
     Shannon.shannon_converse_single_shot_markov_encoder (X := Fin n → α)
-      μ Msg encoder (fun ω i => Ys i ω) decoder
+      μ Msg encoder (fun ω i ↦ Ys i ω) decoder
       hMsg hY_pi h_encoder hdecoder hmarkov hMsg_uniform hcard hMI_finite
   -- Normalize `(encoder ∘ Msg)` to `fun ω => encoder (Msg ω)`.
-  rw [show (encoder ∘ Msg) = fun ω => encoder (Msg ω) from rfl] at h_single
+  rw [show (encoder ∘ Msg) = fun ω ↦ encoder (Msg ω) from rfl] at h_single
   -- Step 2: Cover-Thomas Thm 7.9 — per-letter MI bound.
   -- `fun ω => encoder (Msg ω) = fun ω j => Xs j ω` (definitional).
-  have h_pi_eq : (fun ω => encoder (Msg ω)) = (fun ω j => Xs j ω) := by
+  have h_pi_eq : (fun ω ↦ encoder (Msg ω)) = (fun ω j ↦ Xs j ω) := by
     funext ω j; rfl
   rw [h_pi_eq] at h_single
   have h_per_letter :=

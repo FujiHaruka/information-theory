@@ -46,7 +46,7 @@ lemma entropy_nonneg (μ : Measure Ω) [IsProbabilityMeasure μ]
   have _ : IsProbabilityMeasure (μ.map Xs) :=
     Measure.isProbabilityMeasure_map hXs.aemeasurable
   unfold entropy
-  exact Finset.sum_nonneg fun x _ =>
+  exact Finset.sum_nonneg fun x _ ↦
     Real.negMulLog_nonneg measureReal_nonneg measureReal_le_one
 
 omit [DecidableEq X] [Nonempty X] in
@@ -54,32 +54,32 @@ private theorem absolutelyContinuous_joint_prod_marginals
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y)
     (hXs : Measurable Xs) (hYo : Measurable Yo) :
-    (μ.map (fun ω => (Xs ω, Yo ω))) ≪ (μ.map Xs).prod (μ.map Yo) := by
-  have hpair : Measurable (fun ω => (Xs ω, Yo ω)) := hXs.prodMk hYo
+    (μ.map (fun ω ↦ (Xs ω, Yo ω))) ≪ (μ.map Xs).prod (μ.map Yo) := by
+  have hpair : Measurable (fun ω ↦ (Xs ω, Yo ω)) := hXs.prodMk hYo
   have _ : IsProbabilityMeasure (μ.map Yo) :=
     Measure.isProbabilityMeasure_map hYo.aemeasurable
   have _ : IsProbabilityMeasure (μ.map Xs) :=
     Measure.isProbabilityMeasure_map hXs.aemeasurable
-  refine Measure.AbsolutelyContinuous.mk fun A hA hA0 => ?_
+  refine Measure.AbsolutelyContinuous.mk fun A hA hA0 ↦ ?_
   -- 1. Expand the product-measure 0 via Tonelli + Fintype sum
   rw [Measure.prod_apply hA, lintegral_fintype] at hA0
   have hzero : ∀ x : X,
       (μ.map Yo) (Prod.mk x ⁻¹' A) * (μ.map Xs) {x} = 0 := by
     intro x
     have hsum := (Finset.sum_eq_zero_iff (s := (Finset.univ : Finset X))
-        (f := fun x => (μ.map Yo) (Prod.mk x ⁻¹' A) * (μ.map Xs) {x})).mp hA0
+        (f := fun x ↦ (μ.map Yo) (Prod.mk x ⁻¹' A) * (μ.map Xs) {x})).mp hA0
     exact hsum x (Finset.mem_univ _)
   -- 2. Rewrite the joint measure as a finite union over Xs slices and show each slice is 0
   rw [Measure.map_apply hpair hA]
-  have hslice : (fun ω => (Xs ω, Yo ω)) ⁻¹' A
+  have hslice : (fun ω ↦ (Xs ω, Yo ω)) ⁻¹' A
       = ⋃ x : X, (Xs ⁻¹' {x}) ∩ (Yo ⁻¹' (Prod.mk x ⁻¹' A)) := by
     ext ω
     simp only [Set.mem_preimage, Set.mem_iUnion, Set.mem_inter_iff, Set.mem_singleton_iff]
-    refine ⟨fun h => ⟨Xs ω, rfl, h⟩, ?_⟩
+    refine ⟨fun h ↦ ⟨Xs ω, rfl, h⟩, ?_⟩
     rintro ⟨x, hx, hY⟩
     rw [hx]; exact hY
   rw [hslice]
-  refine measure_iUnion_null fun x => ?_
+  refine measure_iUnion_null fun x ↦ ?_
   have hAx : MeasurableSet (Prod.mk x ⁻¹' A) := measurable_prodMk_left hA
   rcases mul_eq_zero.mp (hzero x) with hY0 | hX0
   · -- (μ.map Yo)(slice) = 0 ⇒ μ(Yo ⁻¹' slice) = 0
@@ -114,11 +114,11 @@ private lemma rnDeriv_compProd_ae_eq_kernel_rnDeriv
     (κ η : Kernel α β) [IsFiniteKernel κ] [IsFiniteKernel η]
     (h_ac_kernel : ∀ᵐ a ∂μ, κ a ≪ η a) :
     (μ ⊗ₘ κ).rnDeriv (μ ⊗ₘ η) =ᵐ[μ ⊗ₘ η]
-      fun p => Kernel.rnDeriv κ η p.1 p.2 := by
+      fun p ↦ Kernel.rnDeriv κ η p.1 p.2 := by
   have h_ac : μ ⊗ₘ κ ≪ μ ⊗ₘ η :=
     Measure.AbsolutelyContinuous.compProd_right h_ac_kernel
   refine ae_eq_of_forall_setLIntegral_eq_of_sigmaFinite
-    (Measure.measurable_rnDeriv _ _) (Kernel.measurable_rnDeriv κ η) fun s hs _ => ?_
+    (Measure.measurable_rnDeriv _ _) (Kernel.measurable_rnDeriv κ η) fun s hs _ ↦ ?_
   -- Step 1: rectangle case via `setLIntegral_compProd` + `Kernel.setLIntegral_rnDeriv`.
   have h_rect : ∀ t₁ t₂, MeasurableSet t₁ → MeasurableSet t₂ →
       ∫⁻ p in t₁ ×ˢ t₂, (μ ⊗ₘ κ).rnDeriv (μ ⊗ₘ η) p ∂(μ ⊗ₘ η)
@@ -166,10 +166,10 @@ private lemma klDiv_compProd_const_eq_lintegral_of_ac
   rw [klDiv_eq_lintegral_klFun_of_ac h_ac]
   -- Replace joint rnDeriv with `Kernel.rnDeriv κ (const ν) p.1 p.2` (still jointly measurable).
   have h_integrand :
-      (fun p : α × β => ENNReal.ofReal
+      (fun p : α × β ↦ ENNReal.ofReal
           (klFun ((μ ⊗ₘ κ).rnDeriv (μ ⊗ₘ Kernel.const α ν) p).toReal))
         =ᵐ[μ ⊗ₘ Kernel.const α ν]
-        fun p => ENNReal.ofReal
+        fun p ↦ ENNReal.ofReal
           (klFun (Kernel.rnDeriv κ (Kernel.const α ν) p.1 p.2).toReal) := by
     filter_upwards [h_rnD] with p hp
     rw [hp]
@@ -180,10 +180,10 @@ private lemma klDiv_compProd_const_eq_lintegral_of_ac
   refine lintegral_congr_ae ?_
   filter_upwards [h_ac_kernel] with a ha
   have h_inner :
-      (fun b : β => ENNReal.ofReal
+      (fun b : β ↦ ENNReal.ofReal
           (klFun (Kernel.rnDeriv κ (Kernel.const α ν) a b).toReal))
         =ᵐ[(Kernel.const α ν : Kernel α β) a]
-        fun b => ENNReal.ofReal (klFun ((κ a).rnDeriv ν b).toReal) := by
+        fun b ↦ ENNReal.ofReal (klFun ((κ a).rnDeriv ν b).toReal) := by
     have := Kernel.rnDeriv_eq_rnDeriv_measure (κ := κ) (η := Kernel.const α ν) (a := a)
     filter_upwards [this] with b hb
     simp only [Kernel.const_apply] at hb
@@ -207,11 +207,11 @@ private lemma klDiv_discrete_toReal_eq_sum
   have h_int : Integrable (llr Q P) Q := by
     refine ⟨(measurable_llr Q P).aestronglyMeasurable, ?_⟩
     rw [hasFiniteIntegral_iff_enorm, lintegral_fintype]
-    exact ENNReal.sum_lt_top.mpr fun _ _ =>
+    exact ENNReal.sum_lt_top.mpr fun _ _ ↦
       ENNReal.mul_lt_top ENNReal.coe_lt_top (measure_lt_top _ _)
   rw [integral_fintype h_int]
   -- (3) Per-`x` rewrite.
-  refine Finset.sum_congr rfl fun x _ => ?_
+  refine Finset.sum_congr rfl fun x _ ↦ ?_
   -- `Q.real {x} • llr Q P x = Q.real {x} * (log Q.real {x} - log P.real {x})`
   show Q.real {x} * Real.log (Q.rnDeriv P x).toReal
     = Q.real {x} * (Real.log (Q.real {x}) - Real.log (P.real {x}))
@@ -224,7 +224,7 @@ private lemma klDiv_discrete_toReal_eq_sum
     apply hQx
     rw [Measure.real, h]
     rfl
-  have hP_ne : P {x} ≠ 0 := fun h => hQ_ne (hQP h)
+  have hP_ne : P {x} ≠ 0 := fun h ↦ hQ_ne (hQP h)
   have hPx_pos : 0 < P.real {x} := by
     refine lt_of_le_of_ne measureReal_nonneg (Ne.symm ?_)
     intro hPx
@@ -258,8 +258,8 @@ private lemma lintegral_condDistrib_singleton_eq
     ∫⁻ y, (condDistrib Xs Yo μ y) {x} ∂(μ.map Yo)
       = (μ.map Xs) {x} := by
   have h_compProd : (μ.map Yo) ⊗ₘ (condDistrib Xs Yo μ)
-      = μ.map (fun ω => (Yo ω, Xs ω)) := compProd_map_condDistrib hXs.aemeasurable
-  have hpair : Measurable (fun ω => (Yo ω, Xs ω)) := hYo.prodMk hXs
+      = μ.map (fun ω ↦ (Yo ω, Xs ω)) := compProd_map_condDistrib hXs.aemeasurable
+  have hpair : Measurable (fun ω ↦ (Yo ω, Xs ω)) := hYo.prodMk hXs
   have hxs : MeasurableSet ({x} : Set X) := measurableSet_singleton x
   have h₁ : ((μ.map Yo) ⊗ₘ (condDistrib Xs Yo μ)) ((Set.univ : Set Y) ×ˢ ({x} : Set X))
       = ∫⁻ y in Set.univ, (condDistrib Xs Yo μ y) {x} ∂(μ.map Yo) :=
@@ -282,12 +282,12 @@ private lemma integral_condDistrib_real_singleton_eq
     Measure.isProbabilityMeasure_map hYo.aemeasurable
   -- Convert the ∫ (Bochner) into toReal of ∫⁻ via integral_toReal
   have h_ae_lt_top : ∀ᵐ y ∂(μ.map Yo), (condDistrib Xs Yo μ y) {x} < ∞ := by
-    refine ae_of_all _ fun y => ?_
+    refine ae_of_all _ fun y ↦ ?_
     exact (measure_lt_top _ _)
-  have h_meas : AEMeasurable (fun y => (condDistrib Xs Yo μ y) {x}) (μ.map Yo) :=
+  have h_meas : AEMeasurable (fun y ↦ (condDistrib Xs Yo μ y) {x}) (μ.map Yo) :=
     ((Kernel.measurable_coe _ (measurableSet_singleton x))).aemeasurable
-  rw [show (fun y => ((condDistrib Xs Yo μ y).real ({x} : Set X)))
-        = (fun y => ((condDistrib Xs Yo μ y) {x}).toReal) from rfl,
+  rw [show (fun y ↦ ((condDistrib Xs Yo μ y).real ({x} : Set X)))
+        = (fun y ↦ ((condDistrib Xs Yo μ y) {x}).toReal) from rfl,
       integral_toReal h_meas h_ae_lt_top,
       lintegral_condDistrib_singleton_eq μ Xs Yo hXs hYo x]
   rfl
@@ -303,17 +303,17 @@ private lemma condDistrib_ae_absolutelyContinuous_map
   have _ : IsProbabilityMeasure (μ.map Xs) :=
     Measure.isProbabilityMeasure_map hXs.aemeasurable
   have h_compProd : (μ.map Yo) ⊗ₘ (condDistrib Xs Yo μ)
-      = μ.map (fun ω => (Yo ω, Xs ω)) := compProd_map_condDistrib hXs.aemeasurable
+      = μ.map (fun ω ↦ (Yo ω, Xs ω)) := compProd_map_condDistrib hXs.aemeasurable
   -- Step 1: per-`x` ae vanishing of `condDistrib y {x}` when `(μ.map Xs) {x} = 0`.
   have h_each_x : ∀ x : X, (μ.map Xs) {x} = 0 →
       ∀ᵐ y ∂(μ.map Yo), condDistrib Xs Yo μ y {x} = 0 := by
     intro x hx
     have hx_meas : MeasurableSet ({x} : Set X) := measurableSet_singleton x
     have h_joint_zero :
-        (μ.map (fun ω => (Yo ω, Xs ω))) (Set.univ ×ˢ ({x} : Set X)) = 0 := by
+        (μ.map (fun ω ↦ (Yo ω, Xs ω))) (Set.univ ×ˢ ({x} : Set X)) = 0 := by
       rw [Measure.map_apply (hYo.prodMk hXs) (MeasurableSet.univ.prod hx_meas)]
-      have hsubset : (fun ω => (Yo ω, Xs ω)) ⁻¹' (Set.univ ×ˢ ({x} : Set X))
-          ⊆ Xs ⁻¹' {x} := fun ω h => by simpa using h
+      have hsubset : (fun ω ↦ (Yo ω, Xs ω)) ⁻¹' (Set.univ ×ˢ ({x} : Set X))
+          ⊆ Xs ⁻¹' {x} := fun ω h ↦ by simpa using h
       have h0 : μ (Xs ⁻¹' {x}) = 0 := by
         rwa [← Measure.map_apply hXs hx_meas]
       exact measure_mono_null hsubset h0
@@ -327,47 +327,47 @@ private lemma condDistrib_ae_absolutelyContinuous_map
     intro x
     by_cases hx : (μ.map Xs) {x} = 0
     · filter_upwards [h_each_x x hx] with y hy _ using hy
-    · exact ae_of_all _ fun _ hxy => absurd hxy hx
+    · exact ae_of_all _ fun _ hxy ↦ absurd hxy hx
   -- Step 3: conclude AC via Finset decomposition.
   classical
   filter_upwards [h_combined] with y hy
-  refine Measure.AbsolutelyContinuous.mk fun A _ hA0 => ?_
+  refine Measure.AbsolutelyContinuous.mk fun A _ hA0 ↦ ?_
   -- Decompose `A` as finite biUnion of singletons via `Finset.univ.filter (· ∈ A)`.
   set s : Finset X := Finset.univ.filter (· ∈ A)
   have hA_decomp : A = ⋃ x ∈ s, ({x} : Set X) := by
     ext z
     simp [s, Finset.mem_filter]
-  have h_pwd : Set.PairwiseDisjoint (↑s) (fun x : X => ({x} : Set X)) :=
-    fun a _ b _ hne => Set.disjoint_singleton.mpr hne
+  have h_pwd : Set.PairwiseDisjoint (↑s) (fun x : X ↦ ({x} : Set X)) :=
+    fun a _ b _ hne ↦ Set.disjoint_singleton.mpr hne
   have h_meas : ∀ x ∈ s, MeasurableSet ({x} : Set X) :=
-    fun x _ => measurableSet_singleton x
+    fun x _ ↦ measurableSet_singleton x
   have hP_sum : ∑ x ∈ s, (μ.map Xs) {x} = 0 := by
     rw [← measure_biUnion_finset h_pwd h_meas, ← hA_decomp]; exact hA0
-  have hP_each : ∀ x ∈ s, (μ.map Xs) {x} = 0 := fun x hx =>
-    le_antisymm (hP_sum ▸ Finset.single_le_sum (f := fun y => (μ.map Xs) {y})
-      (fun _ _ => bot_le) hx) bot_le
+  have hP_each : ∀ x ∈ s, (μ.map Xs) {x} = 0 := fun x hx ↦
+    le_antisymm (hP_sum ▸ Finset.single_le_sum (f := fun y ↦ (μ.map Xs) {y})
+      (fun _ _ ↦ bot_le) hx) bot_le
   rw [hA_decomp, measure_biUnion_finset h_pwd h_meas]
-  exact Finset.sum_eq_zero fun x hx => hy x (hP_each x hx)
+  exact Finset.sum_eq_zero fun x hx ↦ hy x (hP_each x hx)
 
 omit [DecidableEq X] [Nonempty X] in
 private theorem integrable_sum_fibre_real_mul_log
     (κ : Kernel Y X) [IsMarkovKernel κ]
     (νY : Measure Y) [IsFiniteMeasure νY] (νX : Measure X) :
-    (Integrable (fun y => ∑ x : X, (κ y).real {x}
+    (Integrable (fun y ↦ ∑ x : X, (κ y).real {x}
         * Real.log ((κ y).real {x})) νY)
-      ∧ (Integrable (fun y => ∑ x : X, (κ y).real {x}
+      ∧ (Integrable (fun y ↦ ∑ x : X, (κ y).real {x}
         * Real.log (νX.real {x})) νY) := by
-  have h_meas_real_Q : ∀ x : X, Measurable (fun y => (κ y).real {x}) :=
-    fun x => (Kernel.measurable_coe _ (measurableSet_singleton x)).ennreal_toReal
+  have h_meas_real_Q : ∀ x : X, Measurable (fun y ↦ (κ y).real {x}) :=
+    fun x ↦ (Kernel.measurable_coe _ (measurableSet_singleton x)).ennreal_toReal
   have h_Q_le_one : ∀ y x, (κ y).real {x} ≤ 1 :=
-    fun y x => measureReal_le_one (μ := κ y) (s := {x})
+    fun y x ↦ measureReal_le_one (μ := κ y) (s := {x})
   have h_int_QlogQ : ∀ x : X, Integrable
-      (fun y => (κ y).real {x} * Real.log ((κ y).real {x})) νY := by
+      (fun y ↦ (κ y).real {x} * Real.log ((κ y).real {x})) νY := by
     intro x
-    refine Integrable.mono' (g := fun _ => (1 : ℝ))
+    refine Integrable.mono' (g := fun _ ↦ (1 : ℝ))
       (integrable_const _)
       ((h_meas_real_Q x).mul (h_meas_real_Q x).log).aestronglyMeasurable ?_
-    refine ae_of_all _ fun y => ?_
+    refine ae_of_all _ fun y ↦ ?_
     have hQ_nn : 0 ≤ (κ y).real {x} := measureReal_nonneg
     have hQ_le : (κ y).real {x} ≤ 1 := h_Q_le_one y x
     have h_negMulLog_nn : 0 ≤ Real.negMulLog ((κ y).real {x}) :=
@@ -381,23 +381,23 @@ private theorem integrable_sum_fibre_real_mul_log
     rw [Real.norm_eq_abs, h_eq, abs_neg, abs_of_nonneg h_negMulLog_nn]
     exact h_negMulLog_le_one
   have h_int_QlogP : ∀ x : X, Integrable
-      (fun y => (κ y).real {x} * Real.log (νX.real {x})) νY := by
+      (fun y ↦ (κ y).real {x} * Real.log (νX.real {x})) νY := by
     intro x
     refine Integrable.mul_const ?_ _
-    refine Integrable.mono' (g := fun _ => (1 : ℝ)) (integrable_const _)
+    refine Integrable.mono' (g := fun _ ↦ (1 : ℝ)) (integrable_const _)
       (h_meas_real_Q x).aestronglyMeasurable ?_
-    refine ae_of_all _ fun y => ?_
+    refine ae_of_all _ fun y ↦ ?_
     rw [Real.norm_eq_abs, abs_of_nonneg measureReal_nonneg]
     exact h_Q_le_one y x
-  exact ⟨integrable_finsetSum _ fun x _ => h_int_QlogQ x,
-    integrable_finsetSum _ fun x _ => h_int_QlogP x⟩
+  exact ⟨integrable_finsetSum _ fun x _ ↦ h_int_QlogQ x,
+    integrable_finsetSum _ fun x _ ↦ h_int_QlogP x⟩
 
 omit [DecidableEq X] in
 private theorem klDiv_joint_prod_marginals_toReal
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y)
     (hXs : Measurable Xs) (hYo : Measurable Yo) :
-    (klDiv (μ.map (fun ω => (Xs ω, Yo ω)))
+    (klDiv (μ.map (fun ω ↦ (Xs ω, Yo ω)))
         ((μ.map Xs).prod (μ.map Yo))).toReal
       = entropy μ Xs - InformationTheory.MeasureFano.condEntropy μ Xs Yo := by
   classical
@@ -406,13 +406,13 @@ private theorem klDiv_joint_prod_marginals_toReal
   have hMXs : IsProbabilityMeasure (μ.map Xs) :=
     Measure.isProbabilityMeasure_map hXs.aemeasurable
   -- Step 1: swap to (Yo, Xs) form via `mutualInfo_comm`.
-  have h_swap_kl : klDiv (μ.map (fun ω => (Xs ω, Yo ω))) ((μ.map Xs).prod (μ.map Yo))
-      = klDiv (μ.map (fun ω => (Yo ω, Xs ω))) ((μ.map Yo).prod (μ.map Xs)) := by
+  have h_swap_kl : klDiv (μ.map (fun ω ↦ (Xs ω, Yo ω))) ((μ.map Xs).prod (μ.map Yo))
+      = klDiv (μ.map (fun ω ↦ (Yo ω, Xs ω))) ((μ.map Yo).prod (μ.map Xs)) := by
     have := mutualInfo_comm μ Xs Yo hXs hYo
     simpa [mutualInfo] using this
   rw [h_swap_kl]
   -- Step 2: rewrite both sides as compProd.
-  have h_eq_joint : μ.map (fun ω => (Yo ω, Xs ω))
+  have h_eq_joint : μ.map (fun ω ↦ (Yo ω, Xs ω))
       = (μ.map Yo) ⊗ₘ (condDistrib Xs Yo μ) :=
     (compProd_map_condDistrib hXs.aemeasurable).symm
   have h_eq_prod : (μ.map Yo).prod (μ.map Xs)
@@ -425,10 +425,10 @@ private theorem klDiv_joint_prod_marginals_toReal
   -- (5a) llr Q P is integrable on each fibre (Fintype + finite measure).
   have h_int_llr : ∀ᵐ y ∂(μ.map Yo),
       Integrable (llr (condDistrib Xs Yo μ y) (μ.map Xs)) (condDistrib Xs Yo μ y) := by
-    refine ae_of_all _ fun y => ?_
+    refine ae_of_all _ fun y ↦ ?_
     refine ⟨(measurable_llr _ _).aestronglyMeasurable, ?_⟩
     rw [hasFiniteIntegral_iff_enorm, lintegral_fintype]
-    exact ENNReal.sum_lt_top.mpr fun _ _ =>
+    exact ENNReal.sum_lt_top.mpr fun _ _ ↦
       ENNReal.mul_lt_top ENNReal.coe_lt_top (measure_lt_top _ _)
   -- (5b) klDiv ≠ ∞ on the AC fibre.
   have h_klDiv_ne_top : ∀ᵐ y ∂(μ.map Yo),
@@ -447,18 +447,18 @@ private theorem klDiv_joint_prod_marginals_toReal
   rw [lintegral_congr_ae h_klDiv_eq]
   -- (5d) Convert (∫⁻ ofReal S).toReal back to a Bochner integral via nonneg + AEStronglyMeasurable.
   have h_meas_real_Q : ∀ x : X,
-      Measurable (fun y => (condDistrib Xs Yo μ y).real {x}) :=
-    fun x => (Kernel.measurable_coe _ (measurableSet_singleton x)).ennreal_toReal
+      Measurable (fun y ↦ (condDistrib Xs Yo μ y).real {x}) :=
+    fun x ↦ (Kernel.measurable_coe _ (measurableSet_singleton x)).ennreal_toReal
   have h_S_meas : AEStronglyMeasurable
-      (fun y => ∑ x : X, (condDistrib Xs Yo μ y).real {x}
+      (fun y ↦ ∑ x : X, (condDistrib Xs Yo μ y).real {x}
         * (Real.log ((condDistrib Xs Yo μ y).real {x})
           - Real.log ((μ.map Xs).real {x}))) (μ.map Yo) := by
-    refine Finset.aestronglyMeasurable_fun_sum (M := ℝ) _ fun x _ => ?_
+    refine Finset.aestronglyMeasurable_fun_sum (M := ℝ) _ fun x _ ↦ ?_
     refine AEStronglyMeasurable.mul ?_ ?_
     · exact (h_meas_real_Q x).aestronglyMeasurable
     · exact ((h_meas_real_Q x).log.sub_const _).aestronglyMeasurable
   have h_S_nonneg : 0 ≤ᵐ[μ.map Yo]
-      (fun y => ∑ x : X, (condDistrib Xs Yo μ y).real {x}
+      (fun y ↦ ∑ x : X, (condDistrib Xs Yo μ y).real {x}
         * (Real.log ((condDistrib Xs Yo μ y).real {x})
           - Real.log ((μ.map Xs).real {x}))) := by
     filter_upwards [h_ac_fibre] with y hy
@@ -484,41 +484,41 @@ private theorem klDiv_joint_prod_marginals_toReal
             - (condDistrib Xs Yo μ y).real {x}
               * Real.log ((μ.map Xs).real {x}))
           from (Finset.sum_sub_distrib (s := (Finset.univ : Finset X))
-            (f := fun x => (condDistrib Xs Yo μ y).real {x}
+            (f := fun x ↦ (condDistrib Xs Yo μ y).real {x}
                 * Real.log ((condDistrib Xs Yo μ y).real {x}))
-            (g := fun x => (condDistrib Xs Yo μ y).real {x}
+            (g := fun x ↦ (condDistrib Xs Yo μ y).real {x}
                 * Real.log ((μ.map Xs).real {x}))).symm]
-    refine Finset.sum_congr rfl fun x _ => ?_
+    refine Finset.sum_congr rfl fun x _ ↦ ?_
     ring
   simp_rw [h_split]
   obtain ⟨h_int_sumQlogQ, h_int_sumQlogP⟩ :=
     integrable_sum_fibre_real_mul_log (condDistrib Xs Yo μ) (μ.map Yo) (μ.map Xs)
   -- Term 2: Q.real{x} * log P.real{x} = constant_x * Q.real{x}, bounded → integrable.
   have h_int_QlogP : ∀ x : X, Integrable
-      (fun y => (condDistrib Xs Yo μ y).real {x}
+      (fun y ↦ (condDistrib Xs Yo μ y).real {x}
         * Real.log ((μ.map Xs).real {x})) (μ.map Yo) := by
     intro x
     refine Integrable.mul_const ?_ _
-    refine Integrable.mono' (g := fun _ => (1 : ℝ)) (integrable_const _)
+    refine Integrable.mono' (g := fun _ ↦ (1 : ℝ)) (integrable_const _)
       (h_meas_real_Q x).aestronglyMeasurable ?_
-    refine ae_of_all _ fun y => ?_
+    refine ae_of_all _ fun y ↦ ?_
     rw [Real.norm_eq_abs, abs_of_nonneg measureReal_nonneg]
     exact measureReal_le_one (μ := condDistrib Xs Yo μ y) (s := {x})
   -- (7) Linear split of the integral.
   rw [integral_sub h_int_sumQlogQ h_int_sumQlogP]
   -- (7-a) First term: ∫ ∑ Q*logQ = -condEntropy.
   have h_first :
-      (fun y => ∑ x : X, (condDistrib Xs Yo μ y).real {x}
+      (fun y ↦ ∑ x : X, (condDistrib Xs Yo μ y).real {x}
           * Real.log ((condDistrib Xs Yo μ y).real {x}))
-        = (fun y => -∑ x : X,
+        = (fun y ↦ -∑ x : X,
             Real.negMulLog ((condDistrib Xs Yo μ y).real {x})) := by
     funext y
     rw [← Finset.sum_neg_distrib]
-    refine Finset.sum_congr rfl fun x _ => ?_
+    refine Finset.sum_congr rfl fun x _ ↦ ?_
     rw [Real.negMulLog]; ring
   rw [h_first, integral_neg]
   -- (7-b) Second term: ∫ ∑ Q*logP = -entropy via Helper 3.
-  rw [integral_finsetSum _ fun x _ => h_int_QlogP x]
+  rw [integral_finsetSum _ fun x _ ↦ h_int_QlogP x]
   have h_second_term_each : ∀ x : X,
       ∫ y, (condDistrib Xs Yo μ y).real {x}
         * Real.log ((μ.map Xs).real {x}) ∂(μ.map Yo)
@@ -534,7 +534,7 @@ private theorem klDiv_joint_prod_marginals_toReal
   have h_entropy_term : ∑ x : X, (μ.map Xs).real {x} * Real.log ((μ.map Xs).real {x})
       = -∑ x : X, Real.negMulLog ((μ.map Xs).real {x}) := by
     rw [← Finset.sum_neg_distrib]
-    refine Finset.sum_congr rfl fun x _ => ?_
+    refine Finset.sum_congr rfl fun x _ ↦ ?_
     rw [Real.negMulLog]; ring
   rw [h_entropy_term]
   ring

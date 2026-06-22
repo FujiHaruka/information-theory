@@ -67,8 +67,8 @@ def IsZivCountingAsymptoticBound (p : ℕ → LZ78Parsing α) (B : ℕ → ℝ) 
   ∀ n, ((p n).count : ℝ) ≤ B n
 
 @[simp] theorem IsZivCountingAsymptoticBound.refl (p : ℕ → LZ78Parsing α) :
-    IsZivCountingAsymptoticBound p (fun n => ((p n).count : ℝ)) :=
-  fun _ => le_refl _
+    IsZivCountingAsymptoticBound p (fun n ↦ ((p n).count : ℝ)) :=
+  fun _ ↦ le_refl _
 
 /-- **Monotonicity** in the bound function. -/
 @[entry_point]
@@ -77,7 +77,7 @@ theorem IsZivCountingAsymptoticBound.mono
     (h : IsZivCountingAsymptoticBound p B)
     (hB : ∀ n, B n ≤ B' n) :
     IsZivCountingAsymptoticBound p B' :=
-  fun n => le_trans (h n) (hB n)
+  fun n ↦ le_trans (h n) (hB n)
 
 /-- **Slack addition**: if `B` bounds `count`, so does `B + ε` for any
 non-negative slack `ε`. -/
@@ -86,7 +86,7 @@ theorem IsZivCountingAsymptoticBound.add_nonneg
     {p : ℕ → LZ78Parsing α} {B ε : ℕ → ℝ}
     (h : IsZivCountingAsymptoticBound p B)
     (hε : ∀ n, 0 ≤ ε n) :
-    IsZivCountingAsymptoticBound p (fun n => B n + ε n) := by
+    IsZivCountingAsymptoticBound p (fun n ↦ B n + ε n) := by
   intro n
   have := h n
   linarith [hε n]
@@ -99,7 +99,7 @@ theorem IsZivCountingAsymptoticBound.of_pointwise_count
     {p : ℕ → LZ78Parsing α} {B : ℕ → ℝ}
     (h : ∀ n, ZivCountingBound (p n) (B n)) :
     IsZivCountingAsymptoticBound p B :=
-  fun n => h n
+  fun n ↦ h n
 
 end ZivCountingAsymptoticBound
 
@@ -121,12 +121,12 @@ Cover–Thomas Eq. 13.124 reads
 and this predicate captures exactly the `IsBigO` half: the
 `(1 + o(1))` slack is absorbed into the constant of `IsBigO`. -/
 def IsLZ78PhraseCountAsymptotic (p : ℕ → LZ78Parsing α) (B : ℕ → ℝ) : Prop :=
-  (fun n => ((p n).count : ℝ)) =O[atTop] B
+  (fun n ↦ ((p n).count : ℝ)) =O[atTop] B
 
 /-- **Reflexive constructor**: a sequence is trivially `O[atTop]` of
 itself. -/
 @[simp] theorem IsLZ78PhraseCountAsymptotic.refl (p : ℕ → LZ78Parsing α) :
-    IsLZ78PhraseCountAsymptotic p (fun n => ((p n).count : ℝ)) :=
+    IsLZ78PhraseCountAsymptotic p (fun n ↦ ((p n).count : ℝ)) :=
   isBigO_refl _ _
 
 /-- **Trivial constructor from a global numeric upper bound** (in
@@ -169,9 +169,9 @@ trivial parsing-invariant constraint `(p n).count ≤ n` (which holds for
 theorem IsLZ78PhraseCountAsymptotic.linear_of_count_le_n
     {p : ℕ → LZ78Parsing α}
     (h_le : ∀ n, (p n).count ≤ n) :
-    IsLZ78PhraseCountAsymptotic p (fun n => (n : ℝ)) := by
+    IsLZ78PhraseCountAsymptotic p (fun n ↦ (n : ℝ)) := by
   refine IsLZ78PhraseCountAsymptotic.of_eventual_le ?_ ?_
-  · exact Filter.Eventually.of_forall (fun n => by exact_mod_cast Nat.zero_le n)
+  · exact Filter.Eventually.of_forall (fun n ↦ by exact_mod_cast Nat.zero_le n)
   · refine Filter.Eventually.of_forall ?_
     intro n
     exact_mod_cast h_le n
@@ -222,7 +222,7 @@ theorem IsLZ78PhraseCountAsymptotic.of_n_div_log
     {p : ℕ → LZ78Parsing α}
     (h_bound : ∀ᶠ n : ℕ in atTop,
         ((p n).count : ℝ) ≤ (n : ℝ) / Real.log (n : ℝ)) :
-    IsLZ78PhraseCountAsymptotic p (fun n => (n : ℝ) / Real.log (n : ℝ)) := by
+    IsLZ78PhraseCountAsymptotic p (fun n ↦ (n : ℝ) / Real.log (n : ℝ)) := by
   exact IsLZ78PhraseCountAsymptotic.of_eventual_le
     natCast_div_real_log_eventually_nonneg h_bound
 
@@ -267,7 +267,7 @@ theorem lz78_phrase_count_asymptotic_n_div_log
     (p : ℕ → LZ78Parsing α)
     (h_bound : ∀ᶠ n : ℕ in atTop,
         ((p n).count : ℝ) ≤ (n : ℝ) / Real.log (n : ℝ)) :
-    IsLZ78PhraseCountAsymptotic p (fun n => (n : ℝ) / Real.log (n : ℝ)) :=
+    IsLZ78PhraseCountAsymptotic p (fun n ↦ (n : ℝ) / Real.log (n : ℝ)) :=
   IsLZ78PhraseCountAsymptotic.of_n_div_log h_bound
 
 /-- **Specialized to the linear `n` envelope** (the trivial bound). -/
@@ -275,7 +275,7 @@ theorem lz78_phrase_count_asymptotic_n_div_log
 theorem lz78_phrase_count_asymptotic_linear
     (p : ℕ → LZ78Parsing α)
     (h_le : ∀ n, (p n).count ≤ n) :
-    IsLZ78PhraseCountAsymptotic p (fun n => (n : ℝ)) :=
+    IsLZ78PhraseCountAsymptotic p (fun n ↦ (n : ℝ)) :=
   IsLZ78PhraseCountAsymptotic.linear_of_count_le_n h_le
 
 end MainAsymptoticResult
@@ -294,20 +294,20 @@ Cover–Thomas Eq. 13.124 ⟺ Eq. 13.130 sandwich. -/
 def IsLZ78PhraseCountSandwich
     (p : ℕ → LZ78Parsing α) (B_lower B_upper : ℕ → ℝ) : Prop :=
   IsLZ78PhraseCountAsymptotic p B_upper ∧
-    B_lower =O[atTop] (fun n => ((p n).count : ℝ))
+    B_lower =O[atTop] (fun n ↦ ((p n).count : ℝ))
 
 @[simp] lemma isLZ78PhraseCountSandwich_def
     (p : ℕ → LZ78Parsing α) (B_lower B_upper : ℕ → ℝ) :
     IsLZ78PhraseCountSandwich p B_lower B_upper ↔
       (IsLZ78PhraseCountAsymptotic p B_upper ∧
-        B_lower =O[atTop] (fun n => ((p n).count : ℝ))) := Iff.rfl
+        B_lower =O[atTop] (fun n ↦ ((p n).count : ℝ))) := Iff.rfl
 
 /-- **Reflexive sandwich**: any parsing family sandwiches its own
 count. -/
 @[simp] theorem IsLZ78PhraseCountSandwich.refl (p : ℕ → LZ78Parsing α) :
     IsLZ78PhraseCountSandwich p
-      (fun n => ((p n).count : ℝ))
-      (fun n => ((p n).count : ℝ)) :=
+      (fun n ↦ ((p n).count : ℝ))
+      (fun n ↦ ((p n).count : ℝ)) :=
   ⟨IsLZ78PhraseCountAsymptotic.refl p, isBigO_refl _ _⟩
 
 /-- **Sandwich destructor: upper bound**. -/
@@ -322,14 +322,14 @@ theorem IsLZ78PhraseCountSandwich.upper
 theorem IsLZ78PhraseCountSandwich.lower
     {p : ℕ → LZ78Parsing α} {B_lower B_upper : ℕ → ℝ}
     (h : IsLZ78PhraseCountSandwich p B_lower B_upper) :
-    B_lower =O[atTop] (fun n => ((p n).count : ℝ)) := h.2
+    B_lower =O[atTop] (fun n ↦ ((p n).count : ℝ)) := h.2
 
 /-- **Sandwich constructor from two asymptotic ingredients**. -/
 @[entry_point]
 theorem IsLZ78PhraseCountSandwich.mk
     {p : ℕ → LZ78Parsing α} {B_lower B_upper : ℕ → ℝ}
     (h_upper : IsLZ78PhraseCountAsymptotic p B_upper)
-    (h_lower : B_lower =O[atTop] (fun n => ((p n).count : ℝ))) :
+    (h_lower : B_lower =O[atTop] (fun n ↦ ((p n).count : ℝ))) :
     IsLZ78PhraseCountSandwich p B_lower B_upper :=
   ⟨h_upper, h_lower⟩
 

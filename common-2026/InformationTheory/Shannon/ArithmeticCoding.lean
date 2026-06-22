@@ -65,7 +65,7 @@ lemma sfeLength_kraft_le_one
     kraftSum 2 (sfeLength P) ≤ 1 := by
   unfold kraftSum sfeLength
   -- Each term halves: `2^(-(l+1)) ≤ 2^(-l)`; summing gives `≤ kraftSum 2 (shannonLength 2 P) ≤ 1`.
-  refine le_trans (Finset.sum_le_sum (fun a _ => ?_))
+  refine le_trans (Finset.sum_le_sum (fun a _ ↦ ?_))
     (shannonLength_kraft_le_one (D := 2) (by norm_num) P hP)
   -- RHS is the unfolded form of `kraftSum 2 (shannonLength 2 P)`
   show (2 : ℝ) ^ (-((shannonLength 2 P a + 1 : ℕ) : ℤ))
@@ -125,7 +125,7 @@ theorem arithmeticCode_prefix_free
     exists_prefix_code_of_kraft (D := 2) (by norm_num) (sfeLength P)
       (sfeLength_pos P) hk
   -- Lift to `List Bool` via `finTwoEquiv`.
-  refine ⟨fun a => (c₀ a).map ⇑finTwoEquiv, ?_, ?_, ?_⟩
+  refine ⟨fun a ↦ (c₀ a).map ⇑finTwoEquiv, ?_, ?_, ?_⟩
   · intro a
     rw [List.length_map]
     exact hc₀_len a

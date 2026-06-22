@@ -144,7 +144,7 @@ variable (N : ℕ) (f : ℕᵒᵈ → Ω → ℝ) (ℋ : Filtration ℕᵒᵈ m�
 
 /-- The forward `ℕ`-indexed proxy sequence
 `reverseProxy N f k ω := f (toDual (N - k)) ω`. -/
-def reverseProxy : ℕ → Ω → ℝ := fun k ω => f (OrderDual.toDual (N - k)) ω
+def reverseProxy : ℕ → Ω → ℝ := fun k ω ↦ f (OrderDual.toDual (N - k)) ω
 
 /-- The forward `ℕ`-indexed proxy filtration
 `reverseFiltration N ℋ k := ℋ (toDual (N - k))`.
@@ -239,7 +239,7 @@ variable {Ω' : Type*}
 
 /-- The reverse of `g` over the window `[0, N]`: `revPath g N k ω = g (N - k) ω`. -/
 private def revPath (g : ℕ → Ω' → ℝ) (N : ℕ) : ℕ → Ω' → ℝ :=
-  fun k ω => g (N - k) ω
+  fun k ω ↦ g (N - k) ω
 
 @[simp] private lemma revPath_apply (g : ℕ → Ω' → ℝ) (N k : ℕ) (ω : Ω') :
     revPath g N k ω = g (N - k) ω := rfl
@@ -260,12 +260,12 @@ private lemma upperCrossingTime_le_of_witness {a b : ℝ}
   | zero => simp [upperCrossingTime_zero]
   | succ k ih =>
     -- Specialize ih to bounds for indices `< k`.
-    have hs_lt_t' : ∀ i < k, s i < t i := fun i hi => hs_lt_t i (hi.trans (Nat.lt_succ_self _))
+    have hs_lt_t' : ∀ i < k, s i < t i := fun i hi ↦ hs_lt_t i (hi.trans (Nat.lt_succ_self _))
     have ht_le_s' : ∀ i, i + 1 < k → t i ≤ s (i + 1) :=
-      fun i hi => ht_le_s i (hi.trans (Nat.lt_succ_self _))
-    have ht_lt_N' : ∀ i < k, t i < N := fun i hi => ht_lt_N i (hi.trans (Nat.lt_succ_self _))
-    have hgs' : ∀ i < k, g (s i) ω ≤ a := fun i hi => hgs i (hi.trans (Nat.lt_succ_self _))
-    have hgt' : ∀ i < k, b ≤ g (t i) ω := fun i hi => hgt i (hi.trans (Nat.lt_succ_self _))
+      fun i hi ↦ ht_le_s i (hi.trans (Nat.lt_succ_self _))
+    have ht_lt_N' : ∀ i < k, t i < N := fun i hi ↦ ht_lt_N i (hi.trans (Nat.lt_succ_self _))
+    have hgs' : ∀ i < k, g (s i) ω ≤ a := fun i hi ↦ hgs i (hi.trans (Nat.lt_succ_self _))
+    have hgt' : ∀ i < k, b ≤ g (t i) ω := fun i hi ↦ hgt i (hi.trans (Nat.lt_succ_self _))
     have ih' := ih hs_lt_t' ht_le_s' ht_lt_N' hgs' hgt'
     -- Goal: `upperCrossingTime a b g N (k+1) ω ≤ t k`
     simp only [Nat.succ_sub_one, if_neg (Nat.succ_ne_zero _)]
@@ -398,22 +398,22 @@ private lemma upcrossingsBefore_revPath_ge {a b : ℝ} (hab : a < b)
       (lt_of_le_of_lt hi (Nat.lt_of_succ_le hk))
     exact upperCrossingTime_lt_of_le_upcrossingsBefore hN_pos hab this
   -- Stopped values: g σ_i ≤ a, b ≤ g τ_i.
-  have h_g_sig : ∀ i ≤ k, g (lowerCrossingTime a b g N i ω) ω ≤ a := fun i hi =>
+  have h_g_sig : ∀ i ≤ k, g (lowerCrossingTime a b g N i ω) ω ≤ a := fun i hi ↦
     stoppedValue_lowerCrossingTime (h_sig_lt_N i hi).ne
-  have h_g_tau : ∀ i ≤ k, b ≤ g (upperCrossingTime a b g N (i + 1) ω) ω := fun i hi =>
+  have h_g_tau : ∀ i ≤ k, b ≤ g (upperCrossingTime a b g N (i + 1) ω) ω := fun i hi ↦
     stoppedValue_upperCrossingTime (h_tau_lt_N i hi).ne
   -- Strict separation: σ_i < τ_i for i ≤ k (lowerCrossingTime n < upperCrossingTime (n+1)
   -- when upperCrossingTime (n+1) ≠ N).
   have h_sig_lt_tau : ∀ i ≤ k, lowerCrossingTime a b g N i ω
-                              < upperCrossingTime a b g N (i + 1) ω := fun i hi =>
+                              < upperCrossingTime a b g N (i + 1) ω := fun i hi ↦
     lowerCrossingTime_lt_upperCrossingTime hab (h_tau_lt_N i hi).ne
   -- Weak chain: τ_i ≤ σ_{i+1} (upperCrossingTime (i+1) ≤ lowerCrossingTime (i+1)).
   have h_tau_le_sig : ∀ i, upperCrossingTime a b g N (i + 1) ω
-                          ≤ lowerCrossingTime a b g N (i + 1) ω := fun i =>
+                          ≤ lowerCrossingTime a b g N (i + 1) ω := fun i ↦
     upperCrossingTime_le_lowerCrossingTime
   -- Strict separation: τ_i < σ_{i+1} (when σ_{i+1} ≠ N).
   have h_tau_lt_sig : ∀ i, i + 1 ≤ k →
-      upperCrossingTime a b g N (i + 1) ω < lowerCrossingTime a b g N (i + 1) ω := fun i hi =>
+      upperCrossingTime a b g N (i + 1) ω < lowerCrossingTime a b g N (i + 1) ω := fun i hi ↦
     upperCrossingTime_lt_lowerCrossingTime hab (h_sig_lt_N (i + 1) hi).ne
   -- The strict τ chain: τ_0 < τ_1 < ... < τ_k. Each τ_i < N.
   have h_tau_strictMono : ∀ i, i + 1 ≤ k →
@@ -445,8 +445,8 @@ private lemma upcrossingsBefore_revPath_ge {a b : ℝ} (hab : a < b)
   -- Now define witnesses for revPath g N.
   -- s' i = N - σ_{k - i}, t' i = N - τ_{k - 1 - i}, for i = 0, …, k - 1.
   -- For convenience, define them as functions ℕ → ℕ (extending arbitrarily outside [0, k)).
-  set s' : ℕ → ℕ := fun i => N - lowerCrossingTime a b g N (k - i) ω with hs'_def
-  set t' : ℕ → ℕ := fun i => N - upperCrossingTime a b g N (k - i) ω with ht'_def
+  set s' : ℕ → ℕ := fun i ↦ N - lowerCrossingTime a b g N (k - i) ω with hs'_def
+  set t' : ℕ → ℕ := fun i ↦ N - upperCrossingTime a b g N (k - i) ω with ht'_def
   -- Apply upperCrossingTime_le_of_witness to revPath g N at level k.
   have h_witness :
       upperCrossingTime a b (revPath g N) N k ω ≤ if k = 0 then 0 else t' (k - 1) := by
@@ -574,27 +574,27 @@ theorem BackwardMartingale.upcrossings_ae_lt_top
     (hf_int : Integrable (f (OrderDual.toDual 0)) μ)
     (a b : ℝ) (hab : a < b) :
     ∀ᵐ ω ∂μ,
-      MeasureTheory.upcrossings a b (fun n : ℕ => f (OrderDual.toDual n)) ω < ∞ := by
+      MeasureTheory.upcrossings a b (fun n : ℕ ↦ f (OrderDual.toDual n)) ω < ∞ := by
   -- Notation: `g n ω := f (toDual n) ω`, the backward sequence viewed as a forward path.
-  set g : ℕ → Ω → ℝ := fun n ω => f (OrderDual.toDual n) ω with hg_def
+  set g : ℕ → Ω → ℝ := fun n ω ↦ f (OrderDual.toDual n) ω with hg_def
   -- Each window's proxy is a forward martingale, hence a submartingale.
   have h_proxy_subm : ∀ N : ℕ, Submartingale (reverseProxy N f) (reverseFiltration N ℋ) μ :=
-    fun N => (reverseProxy_isMartingale hf).submartingale
+    fun N ↦ (reverseProxy_isMartingale hf).submartingale
   -- Doob's bound on the proxy: uniform in N.
   -- `(b - a) * 𝔼[upcrossingsBefore a b (proxy N) N] ≤ 𝔼[(proxy N N - a)^+]
   --    = 𝔼[(f(toDual 0) - a)^+]`.
   have h_proxy_top : ∀ N : ℕ, ∀ ω, reverseProxy N f N ω = f (OrderDual.toDual 0) ω := by
     intro N ω; simp [reverseProxy]
   -- Set the constant bound `C := 𝔼[(f(toDual 0) - a)^+]` (finite from integrability).
-  set C : ℝ := μ[fun ω => (f (OrderDual.toDual 0) ω - a)⁺] with hC_def
+  set C : ℝ := μ[fun ω ↦ (f (OrderDual.toDual 0) ω - a)⁺] with hC_def
   have h_doob : ∀ N : ℕ,
-      (b - a) * μ[fun ω => (upcrossingsBefore a b (reverseProxy N f) N ω : ℝ)] ≤ C := by
+      (b - a) * μ[fun ω ↦ (upcrossingsBefore a b (reverseProxy N f) N ω : ℝ)] ≤ C := by
     intro N
     have h1 := (h_proxy_subm N).mul_integral_upcrossingsBefore_le_integral_pos_part a b N
     -- `h1 : (b - a) * μ[upcrossingsBefore a b (reverseProxy N f) N] ≤
     --        μ[fun ω => (reverseProxy N f N ω - a)⁺]`
-    have h_eq : (fun ω => (reverseProxy N f N ω - a)⁺) =
-                (fun ω => (f (OrderDual.toDual 0) ω - a)⁺) := by
+    have h_eq : (fun ω ↦ (reverseProxy N f N ω - a)⁺) =
+                (fun ω ↦ (f (OrderDual.toDual 0) ω - a)⁺) := by
       funext ω; rw [h_proxy_top]
     rw [h_eq] at h1
     exact h1
@@ -622,7 +622,7 @@ theorem BackwardMartingale.upcrossings_ae_lt_top
       ENNReal.ofReal (b - a) * ∫⁻ ω, (upcrossingsBefore a b (reverseProxy N f) N ω : ℝ≥0∞) ∂μ
         ≤ ENNReal.ofReal C := by
     intro N
-    have hint : Integrable (fun ω => (upcrossingsBefore a b (reverseProxy N f) N ω : ℝ)) μ :=
+    have hint : Integrable (fun ω ↦ (upcrossingsBefore a b (reverseProxy N f) N ω : ℝ)) μ :=
       (h_proxy_subm N).stronglyAdapted.integrable_upcrossingsBefore hab
     have hpos : (0 : ℝ) ≤ b - a := (sub_pos.mpr hab).le
     have hupNonneg : ∀ ω, (0 : ℝ) ≤ (upcrossingsBefore a b (reverseProxy N f) N ω : ℝ) := by
@@ -631,7 +631,7 @@ theorem BackwardMartingale.upcrossings_ae_lt_top
     have h1 := h_doob N
     -- `μ[fun ω => (upcrossingsBefore a b (reverseProxy N f) N ω : ℝ)] = ∫ ω, _ ∂μ`
     have h2 : ENNReal.ofReal ((b - a) *
-                μ[fun ω => (upcrossingsBefore a b (reverseProxy N f) N ω : ℝ)])
+                μ[fun ω ↦ (upcrossingsBefore a b (reverseProxy N f) N ω : ℝ)])
               ≤ ENNReal.ofReal C :=
       ENNReal.ofReal_le_ofReal h1
     -- Rewrite: `ENNReal.ofReal (x * y) = ENNReal.ofReal x * ENNReal.ofReal y` for `x ≥ 0`.
@@ -639,8 +639,8 @@ theorem BackwardMartingale.upcrossings_ae_lt_top
     -- And `ENNReal.ofReal (∫ ω, f ω ∂μ) = ∫⁻ ω, ENNReal.ofReal (f ω) ∂μ` for `f ≥ 0`.
     rw [ofReal_integral_eq_lintegral_ofReal hint (Eventually.of_forall hupNonneg)] at h2
     -- And `ENNReal.ofReal (n : ℝ) = (n : ℝ≥0∞)` for `n : ℕ`.
-    have h_cast : (fun ω => ENNReal.ofReal ((upcrossingsBefore a b (reverseProxy N f) N ω : ℝ)))
-                = (fun ω => (upcrossingsBefore a b (reverseProxy N f) N ω : ℝ≥0∞)) := by
+    have h_cast : (fun ω ↦ ENNReal.ofReal ((upcrossingsBefore a b (reverseProxy N f) N ω : ℝ)))
+                = (fun ω ↦ (upcrossingsBefore a b (reverseProxy N f) N ω : ℝ≥0∞)) := by
       funext ω; exact ENNReal.ofReal_natCast _
     rw [h_cast] at h2
     exact h2
@@ -695,7 +695,7 @@ theorem BackwardMartingale.upcrossings_ae_lt_top
     -- And `m₀ = ℱtop n`:
     exact h_sm
   have h_g_meas : ∀ N : ℕ, Measurable (upcrossingsBefore a b g N) :=
-    fun N => h_g_adapt.measurable_upcrossingsBefore hab
+    fun N ↦ h_g_adapt.measurable_upcrossingsBefore hab
   -- Pull the lintegral bound into a uniform-in-N supremum bound on `∫⁻ upcrossings`.
   -- Since `MeasureTheory.upcrossings = ⨆ N upcrossingsBefore` and `upcrossingsBefore`
   -- is monotone in N,
@@ -716,7 +716,7 @@ theorem BackwardMartingale.upcrossings_ae_lt_top
     · intro N
       exact measurable_from_top.comp (h_g_meas N)
     · intro M N hMN
-      refine fun ω => ?_
+      refine fun ω ↦ ?_
       show ((upcrossingsBefore a b g M ω : ℕ) : ℝ≥0∞) ≤ ((upcrossingsBefore a b g N ω : ℕ) : ℝ≥0∞)
       exact_mod_cast upcrossingsBefore_mono (f := g) hab hMN ω
   -- Step 2: each term of the supremum is bounded by `(ofReal C + ofReal (b-a)) / ofReal (b-a)`.
@@ -768,10 +768,10 @@ theorem BackwardMartingale.ae_tendsto
     (hf_int : Integrable (f (OrderDual.toDual 0)) μ) :
     ∃ g : Ω → ℝ,
       StronglyMeasurable[⨅ n : ℕ, ℋ (OrderDual.toDual n)] g ∧
-        ∀ᵐ ω ∂μ, Tendsto (fun n : ℕ => f (OrderDual.toDual n) ω)
+        ∀ᵐ ω ∂μ, Tendsto (fun n : ℕ ↦ f (OrderDual.toDual n) ω)
           atTop (𝓝 (g ω)) := by
   classical
-  set g_back : ℕ → Ω → ℝ := fun n ω => f (OrderDual.toDual n) ω with hg_back_def
+  set g_back : ℕ → Ω → ℝ := fun n ω ↦ f (OrderDual.toDual n) ω with hg_back_def
   -- L¹ bound on `g_back`.
   set R : ℝ≥0 := (eLpNorm (f (OrderDual.toDual 0)) 1 μ).toNNReal with hR_def
   have hR_eq : (R : ℝ≥0∞) = eLpNorm (f (OrderDual.toDual 0)) 1 μ := by
@@ -780,10 +780,10 @@ theorem BackwardMartingale.ae_tendsto
   have hbdd : ∀ n : ℕ, eLpNorm (g_back n) 1 μ ≤ R := by
     intro n; rw [hg_back_def, hR_eq]
     exact BackwardMartingale.eLpNorm_one_le hf (OrderDual.toDual n)
-  have h_meas_g : ∀ n : ℕ, Measurable (g_back n) := fun n =>
+  have h_meas_g : ∀ n : ℕ, Measurable (g_back n) := fun n ↦
     (hf.stronglyMeasurable (OrderDual.toDual n)).measurable.mono (ℋ.le _) le_rfl
   -- Bounded liminf-of-norm a.s. from L¹ bound.
-  have h_liminf : ∀ᵐ ω ∂μ, Filter.liminf (fun n => (‖g_back n ω‖ₑ : ℝ≥0∞)) atTop < ∞ :=
+  have h_liminf : ∀ᵐ ω ∂μ, Filter.liminf (fun n ↦ (‖g_back n ω‖ₑ : ℝ≥0∞)) atTop < ∞ :=
     ae_bdd_liminf_atTop_of_eLpNorm_bdd one_ne_zero h_meas_g hbdd
   -- All rational upcrossings finite a.s.
   have h_upcr : ∀ᵐ ω ∂μ, ∀ a b : ℚ, a < b →
@@ -798,7 +798,7 @@ theorem BackwardMartingale.ae_tendsto
     · filter_upwards with ω hcontra
       exact absurd hcontra hab
   -- Pointwise convergence a.e. from `tendsto_of_uncrossing_lt_top`.
-  have h_ae_tends : ∀ᵐ ω ∂μ, ∃ c, Tendsto (fun n => g_back n ω) atTop (𝓝 c) := by
+  have h_ae_tends : ∀ᵐ ω ∂μ, ∃ c, Tendsto (fun n ↦ g_back n ω) atTop (𝓝 c) := by
     filter_upwards [h_liminf, h_upcr] with ω h₁ h₂
     exact MeasureTheory.tendsto_of_uncrossing_lt_top h₁ h₂
   -- Define `g` as the pointwise `limsup`. When the sequence converges, this equals
@@ -808,7 +808,7 @@ theorem BackwardMartingale.ae_tendsto
   -- functions that are `ℋ (toDual k)`-measurable (since `toDual (n + k) ≤ toDual k`
   -- in ℕᵒᵈ for `0 ≤ n`, hence `ℋ (toDual (n+k)) ≤ ℋ (toDual k)`). Hence `g` is
   -- `ℋ (toDual k)`-measurable for every `k`, and so `m_inf = ⨅ k, ℋ (toDual k)`-measurable.
-  set g : Ω → ℝ := fun ω => Filter.limsup (fun n => g_back n ω) Filter.atTop with hg_def
+  set g : Ω → ℝ := fun ω ↦ Filter.limsup (fun n ↦ g_back n ω) Filter.atTop with hg_def
   -- Each `g_back n` is `ℋ (toDual n)`-measurable.
   have h_meas_back : ∀ n : ℕ, Measurable[ℋ (OrderDual.toDual n)] (g_back n) := by
     intro n
@@ -825,13 +825,13 @@ theorem BackwardMartingale.ae_tendsto
     intro k
     -- `g ω = limsup (fun n => g_back n ω) atTop = limsup (fun n => g_back (n + k) ω) atTop`
     -- (tail invariance), and each `g_back (n + k)` is `ℋ (toDual k)`-measurable.
-    have h_eq : g = fun ω => Filter.limsup (fun n => g_back (n + k) ω) Filter.atTop := by
+    have h_eq : g = fun ω ↦ Filter.limsup (fun n ↦ g_back (n + k) ω) Filter.atTop := by
       funext ω
       rw [hg_def]
-      exact (Filter.limsup_nat_add (fun n => g_back n ω) k).symm
+      exact (Filter.limsup_nat_add (fun n ↦ g_back n ω) k).symm
     rw [h_eq]
     -- Each `n ↦ g_back (n + k)` is `ℋ (toDual k)`-measurable (since `k ≤ n + k`).
-    refine Measurable.limsup (fun n => ?_)
+    refine Measurable.limsup (fun n ↦ ?_)
     exact h_meas_at k (n + k) (Nat.le_add_left k n)
   -- Hence `g` is `(⨅ k, ℋ (toDual k))`-measurable.
   have h_g_meas_inf : Measurable[⨅ k : ℕ, ℋ (OrderDual.toDual k)] g := by
@@ -847,9 +847,9 @@ theorem BackwardMartingale.ae_tendsto
   -- statement holds. AE this follows from `h_ae_tends`.
   filter_upwards [h_ae_tends] with ω hω
   obtain ⟨c, hc⟩ := hω
-  have h_lims : Filter.limsup (fun n => g_back n ω) Filter.atTop = c := hc.limsup_eq
+  have h_lims : Filter.limsup (fun n ↦ g_back n ω) Filter.atTop = c := hc.limsup_eq
   rw [hg_def] at *
-  show Tendsto (fun n => g_back n ω) Filter.atTop (𝓝 (Filter.limsup (fun n => g_back n ω) atTop))
+  show Tendsto (fun n ↦ g_back n ω) Filter.atTop (𝓝 (Filter.limsup (fun n ↦ g_back n ω) atTop))
   rw [h_lims]
   exact hc
 

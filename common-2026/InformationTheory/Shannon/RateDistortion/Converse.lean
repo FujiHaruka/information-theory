@@ -86,7 +86,7 @@ theorem rateDistortionFunction_le_of_feasible
 private lemma map_fst_joint
     (μ : Measure Ω) (X : Ω → α) (Xh : Ω → β)
     (hX : Measurable X) (hXh : Measurable Xh) :
-    (μ.map (fun ω => (X ω, Xh ω))).map Prod.fst = μ.map X := by
+    (μ.map (fun ω ↦ (X ω, Xh ω))).map Prod.fst = μ.map X := by
   rw [Measure.map_map measurable_fst (hX.prodMk hXh)]
   rfl
 
@@ -94,7 +94,7 @@ private lemma map_fst_joint
 private lemma map_snd_joint
     (μ : Measure Ω) (X : Ω → α) (Xh : Ω → β)
     (hX : Measurable X) (hXh : Measurable Xh) :
-    (μ.map (fun ω => (X ω, Xh ω))).map Prod.snd = μ.map Xh := by
+    (μ.map (fun ω ↦ (X ω, Xh ω))).map Prod.snd = μ.map Xh := by
   rw [Measure.map_map measurable_snd (hX.prodMk hXh)]
   rfl
 
@@ -104,9 +104,9 @@ the `Prod.fst`/`Prod.snd` projections through `μ.map`. -/
 private lemma klDiv_joint_eq_mutualInfo
     (μ : Measure Ω) (X : Ω → α) (Xh : Ω → β)
     (hX : Measurable X) (hXh : Measurable Xh) :
-    klDiv (μ.map (fun ω => (X ω, Xh ω)))
-        (((μ.map (fun ω => (X ω, Xh ω))).map Prod.fst).prod
-          ((μ.map (fun ω => (X ω, Xh ω))).map Prod.snd))
+    klDiv (μ.map (fun ω ↦ (X ω, Xh ω)))
+        (((μ.map (fun ω ↦ (X ω, Xh ω))).map Prod.fst).prod
+          ((μ.map (fun ω ↦ (X ω, Xh ω))).map Prod.snd))
       = mutualInfo μ X Xh := by
   rw [map_fst_joint μ X Xh hX hXh, map_snd_joint μ X Xh hX hXh]
   rfl
@@ -116,8 +116,8 @@ integral over `μ`: `∫ p, d p.1 p.2 ∂(μ.map (X, Xh)) = ∫ ω, d (X ω) (Xh
 private lemma expectedDistortion_map
     (μ : Measure Ω) (X : Ω → α) (Xh : Ω → β)
     (hX : Measurable X) (hXh : Measurable Xh)
-    (d : α → β → ℝ) (hd : Measurable (fun p : α × β => d p.1 p.2)) :
-    expectedDistortion d (μ.map (fun ω => (X ω, Xh ω)))
+    (d : α → β → ℝ) (hd : Measurable (fun p : α × β ↦ d p.1 p.2)) :
+    expectedDistortion d (μ.map (fun ω ↦ (X ω, Xh ω)))
       = ∫ ω, d (X ω) (Xh ω) ∂μ := by
   unfold expectedDistortion
   rw [integral_map (hX.prodMk hXh).aemeasurable hd.aestronglyMeasurable]
@@ -143,16 +143,16 @@ theorem rate_distortion_converse_single_shot
     (hX : Measurable X)
     (hencoder : Measurable encoder) (hdecoder : Measurable decoder)
     (d : α → β → ℝ)
-    (hd : Measurable (fun p : α × β => d p.1 p.2))
+    (hd : Measurable (fun p : α × β ↦ d p.1 p.2))
     (hMI_W_finite :
-      mutualInfo μ X (fun ω => encoder (X ω)) ≠ ∞) :
+      mutualInfo μ X (fun ω ↦ encoder (X ω)) ≠ ∞) :
     (rateDistortionFunction d (μ.map X)
         (∫ ω, d (X ω) (decoder (encoder (X ω))) ∂μ)).toReal
       ≤ Real.log (Fintype.card M) := by
   classical
   -- Set up the auxiliary random variables.
-  set W : Ω → M := fun ω => encoder (X ω) with hW_def
-  set Xh : Ω → β := fun ω => decoder (encoder (X ω)) with hXh_def
+  set W : Ω → M := fun ω ↦ encoder (X ω) with hW_def
+  set Xh : Ω → β := fun ω ↦ decoder (encoder (X ω)) with hXh_def
   have hW_meas : Measurable W := hencoder.comp hX
   have hXh_meas : Measurable Xh := hdecoder.comp hW_meas
   -- ## Step 1: entropy μ W ≤ Real.log |M|.
@@ -185,7 +185,7 @@ theorem rate_distortion_converse_single_shot
     ENNReal.toReal_mono hMI_W_finite h_dpi_ennreal
   -- ## Step 4: (rateDistortionFunction (μ.map X) D̃).toReal ≤ (mutualInfo μ X Xh).toReal.
   -- Apply rateDistortionFunction_le_of_feasible to ν := μ.map (X, Xh).
-  set ν : Measure (α × β) := μ.map (fun ω => (X ω, Xh ω)) with hν_def
+  set ν : Measure (α × β) := μ.map (fun ω ↦ (X ω, Xh ω)) with hν_def
   have hν_marg : ν.map Prod.fst = μ.map X := map_fst_joint μ X Xh hX hXh_meas
   have h_expDist :
       expectedDistortion d ν = ∫ ω, d (X ω) (Xh ω) ∂μ :=

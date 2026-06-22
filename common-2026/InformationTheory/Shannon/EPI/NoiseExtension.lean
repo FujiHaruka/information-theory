@@ -43,9 +43,9 @@ noncomputable abbrev liftMeasure3 : Measure (Ω × ℝ × ℝ × ℝ) :=
 
 omit [IsProbabilityMeasure P] in
 theorem entropyPower_map_comp_fst_eq3 (hX : Measurable X) :
-    entropyPower ((liftMeasure3 P).map (fun p => X p.1)) = entropyPower (P.map X) := by
-  have hmap : (liftMeasure3 P).map (fun p : Ω × ℝ × ℝ × ℝ => X p.1) = P.map X := by
-    rw [show (fun p : Ω × ℝ × ℝ × ℝ => X p.1) = X ∘ Prod.fst from rfl,
+    entropyPower ((liftMeasure3 P).map (fun p ↦ X p.1)) = entropyPower (P.map X) := by
+  have hmap : (liftMeasure3 P).map (fun p : Ω × ℝ × ℝ × ℝ ↦ X p.1) = P.map X := by
+    rw [show (fun p : Ω × ℝ × ℝ × ℝ ↦ X p.1) = X ∘ Prod.fst from rfl,
       ← Measure.map_map hX measurable_fst, measurePreserving_fst.map_eq]
   rw [hmap]
 
@@ -53,13 +53,13 @@ omit [IsProbabilityMeasure P] in
 /-- Reduce a lift-space EPI conclusion to the base-space EPI via measure transport along
 `Prod.fst`. -/
 theorem entropy_power_inequality_via_lift3 (hX : Measurable X) (hY : Measurable Y)
-    (h_lift_epi : entropyPower ((liftMeasure3 P).map (fun p => X p.1 + Y p.1))
-      ≥ entropyPower ((liftMeasure3 P).map (fun p => X p.1))
-        + entropyPower ((liftMeasure3 P).map (fun p => Y p.1))) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
+    (h_lift_epi : entropyPower ((liftMeasure3 P).map (fun p ↦ X p.1 + Y p.1))
+      ≥ entropyPower ((liftMeasure3 P).map (fun p ↦ X p.1))
+        + entropyPower ((liftMeasure3 P).map (fun p ↦ Y p.1))) :
+    entropyPower (P.map (fun ω ↦ X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
   rw [entropyPower_map_comp_fst_eq3 P X hX,
       entropyPower_map_comp_fst_eq3 P Y hY] at h_lift_epi
-  rwa [entropyPower_map_comp_fst_eq3 P (fun ω => X ω + Y ω) (hX.add hY)] at h_lift_epi
+  rwa [entropyPower_map_comp_fst_eq3 P (fun ω ↦ X ω + Y ω) (hX.add hY)] at h_lift_epi
 
 end InformationTheory.Shannon.EPINoiseExtension

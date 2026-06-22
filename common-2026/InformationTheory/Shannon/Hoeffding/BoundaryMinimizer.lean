@@ -112,16 +112,16 @@ lemma hoeffdingConstraintSet_eq_singleton_at_alpha_zero
   apply Set.eq_singleton_iff_unique_mem.mpr
   refine ⟨?_, ?_⟩
   · -- P₁ ∈ K (klDivPmf P₁ P₁ = 0 ≤ 0).
-    refine ⟨⟨fun a => (hP₁_pos a).le, hP₁_sum⟩, ?_⟩
+    refine ⟨⟨fun a ↦ (hP₁_pos a).le, hP₁_sum⟩, ?_⟩
     rw [klDivPmf_self_eq_zero P₁ hP₁_pos]
   · -- Any Q ∈ K equals P₁.
     intro Q hQ
     have hQ_simplex : Q ∈ stdSimplex ℝ α := hQ.1
     have hQ_kl_le : klDivPmf Q P₁ ≤ 0 := hQ.2
     have hQ_kl_nn : 0 ≤ klDivPmf Q P₁ :=
-      klDivPmf_nonneg Q P₁ hQ_simplex.1 (fun a => (hP₁_pos a).le)
+      klDivPmf_nonneg Q P₁ hQ_simplex.1 (fun a ↦ (hP₁_pos a).le)
     have hQ_kl_eq : klDivPmf Q P₁ = 0 := le_antisymm hQ_kl_le hQ_kl_nn
-    have hP₁_simplex : P₁ ∈ stdSimplex ℝ α := ⟨fun a => (hP₁_pos a).le, hP₁_sum⟩
+    have hP₁_simplex : P₁ ∈ stdSimplex ℝ α := ⟨fun a ↦ (hP₁_pos a).le, hP₁_sum⟩
     -- klDivPmf Q P₁ = 0 ↔ Q = P₁.
     exact (klDivPmf_eq_zero_iff_pmf hQ_simplex hP₁_simplex hP₁_pos).mp hQ_kl_eq
 
@@ -132,7 +132,7 @@ lemma P₂_mem_hoeffdingConstraintSet
     (hP₂_sum : ∑ a, P₂ a = 1)
     {alpha : ℝ} (h_alpha_ge : klDivPmf P₂ P₁ ≤ alpha) :
     P₂ ∈ hoeffdingConstraintSet P₁ alpha := by
-  refine ⟨⟨fun a => (hP₂_pos a).le, hP₂_sum⟩, h_alpha_ge⟩
+  refine ⟨⟨fun a ↦ (hP₂_pos a).le, hP₂_sum⟩, h_alpha_ge⟩
 
 /-- **E2 collapse**: when `α ≥ klDivPmf P₂ P₁`, the
 `hoeffdingE2` value equals `0`, since `P₂` itself realises the minimum. -/
@@ -151,13 +151,13 @@ lemma hoeffdingE2_eq_zero_at_alpha_ge_kl
   -- hoeffdingE2 = sInf ((klDivPmf · P₂) '' K) ≤ klDivPmf P₂ P₂ = 0.
   have h_le : hoeffdingE2 P₁ P₂ alpha ≤ 0 := by
     unfold hoeffdingE2
-    have h_bdd : BddBelow ((fun Q : α → ℝ => klDivPmf Q P₂) ''
+    have h_bdd : BddBelow ((fun Q : α → ℝ ↦ klDivPmf Q P₂) ''
         {Q : α → ℝ | Q ∈ stdSimplex ℝ α ∧ klDivPmf Q P₁ ≤ alpha}) := by
       refine ⟨0, ?_⟩
       rintro y ⟨Q', hQ', rfl⟩
-      exact klDivPmf_nonneg Q' P₂ hQ'.1.1 (fun a => (hP₂_pos a).le)
+      exact klDivPmf_nonneg Q' P₂ hQ'.1.1 (fun a ↦ (hP₂_pos a).le)
     have h_P₂_in_img :
-        klDivPmf P₂ P₂ ∈ (fun Q : α → ℝ => klDivPmf Q P₂) ''
+        klDivPmf P₂ P₂ ∈ (fun Q : α → ℝ ↦ klDivPmf Q P₂) ''
             {Q : α → ℝ | Q ∈ stdSimplex ℝ α ∧ klDivPmf Q P₁ ≤ alpha} :=
       ⟨P₂, h_P₂_in, rfl⟩
     have := csInf_le h_bdd h_P₂_in_img

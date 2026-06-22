@@ -82,14 +82,14 @@ integrable under each joint. -/
 theorem expectedDistortion_mixtureMeasure
     {lam : ℝ} (hlam₀ : 0 ≤ lam) (hlam₁ : lam ≤ 1)
     (d : α → β → ℝ) (ν₁ ν₂ : Measure (α × β))
-    (h_int₁ : Integrable (fun p => d p.1 p.2) ν₁)
-    (h_int₂ : Integrable (fun p => d p.1 p.2) ν₂) :
+    (h_int₁ : Integrable (fun p ↦ d p.1 p.2) ν₁)
+    (h_int₂ : Integrable (fun p ↦ d p.1 p.2) ν₂) :
     expectedDistortion d (mixtureMeasure lam ν₁ ν₂)
       = lam * expectedDistortion d ν₁ + (1 - lam) * expectedDistortion d ν₂ := by
   unfold expectedDistortion mixtureMeasure
-  have h_int₁' : Integrable (fun p : α × β => d p.1 p.2) (ENNReal.ofReal lam • ν₁) :=
+  have h_int₁' : Integrable (fun p : α × β ↦ d p.1 p.2) (ENNReal.ofReal lam • ν₁) :=
     h_int₁.smul_measure ENNReal.ofReal_ne_top
-  have h_int₂' : Integrable (fun p : α × β => d p.1 p.2) (ENNReal.ofReal (1 - lam) • ν₂) :=
+  have h_int₂' : Integrable (fun p : α × β ↦ d p.1 p.2) (ENNReal.ofReal (1 - lam) • ν₂) :=
     h_int₂.smul_measure ENNReal.ofReal_ne_top
   rw [integral_add_measure h_int₁' h_int₂',
       integral_smul_measure, integral_smul_measure,
@@ -107,8 +107,8 @@ theorem mixtureMeasure_feasible
     (h_marg₁ : ν₁.map Prod.fst = P) (h_marg₂ : ν₂.map Prod.fst = P)
     {D₁ D₂ : ℝ}
     (h_dist₁ : expectedDistortion d ν₁ ≤ D₁) (h_dist₂ : expectedDistortion d ν₂ ≤ D₂)
-    (h_int₁ : Integrable (fun p => d p.1 p.2) ν₁)
-    (h_int₂ : Integrable (fun p => d p.1 p.2) ν₂) :
+    (h_int₁ : Integrable (fun p ↦ d p.1 p.2) ν₁)
+    (h_int₂ : Integrable (fun p ↦ d p.1 p.2) ν₂) :
     (mixtureMeasure lam ν₁ ν₂).map Prod.fst = P
     ∧ expectedDistortion d (mixtureMeasure lam ν₁ ν₂) ≤ lam * D₁ + (1 - lam) * D₂ := by
   refine ⟨mixtureMeasure_map_fst_eq hlam₀ hlam₁ P ν₁ ν₂ h_marg₁ h_marg₂, ?_⟩
@@ -251,7 +251,7 @@ private lemma klDiv_two_slice {Ω : Type*} [MeasurableSpace Ω]
   -- Mutual singularity is preserved under two-sided scaling.
   have smul_both : ∀ {U V : Measure (Bool × Ω)} (r s : ℝ≥0),
       U ⟂ₘ V → ((r : ℝ≥0∞) • U) ⟂ₘ ((s : ℝ≥0∞) • V) :=
-    fun r s h => ((h.smul (r : ℝ≥0∞)).symm.smul (s : ℝ≥0∞)).symm
+    fun r s h ↦ ((h.smul (r : ℝ≥0∞)).symm.smul (s : ℝ≥0∞)).symm
   rw [klDiv_add_of_mutuallySingular ((a : ℝ≥0∞) • St₁) ((b : ℝ≥0∞) • Sf₂)
         ((a : ℝ≥0∞) • Tt₁) ((b : ℝ≥0∞) • Tf₂)
         (smul_both a b hTtf) (smul_both b a hSfTt) (smul_both a b hStTf)]
@@ -382,7 +382,7 @@ theorem rateDistortionFunction_convexOn
     {lam : ℝ} (hlam₀ : 0 ≤ lam) (hlam₁ : lam ≤ 1) (D₁ D₂ : ℝ)
     (h_int_witness :
       ∀ (ν : Measure (α × β)), ν.map Prod.fst = P →
-        Integrable (fun p => d p.1 p.2) ν) :
+        Integrable (fun p ↦ d p.1 p.2) ν) :
     rateDistortionFunction d P (lam * D₁ + (1 - lam) * D₂)
       ≤ ENNReal.ofReal lam * rateDistortionFunction d P D₁
         + ENNReal.ofReal (1 - lam) * rateDistortionFunction d P D₂ := by
@@ -390,7 +390,7 @@ theorem rateDistortionFunction_convexOn
   set w' := ENNReal.ofReal (1 - lam) with hw'
   -- g ν is the quantity under the iInf.
   set g : Measure (α × β) → ℝ≥0∞ :=
-    fun ν => klDiv ν ((ν.map Prod.fst).prod (ν.map Prod.snd)) with hg
+    fun ν ↦ klDiv ν ((ν.map Prod.fst).prod (ν.map Prod.snd)) with hg
   -- Per-pair bound: for any feasible ν₁ (at D₁) and ν₂ (at D₂),
   --   R(target) ≤ w * g ν₁ + w' * g ν₂.
   have h_per_pair : ∀ (ν₁ ν₂ : Measure (α × β)),
@@ -408,8 +408,8 @@ theorem rateDistortionFunction_convexOn
       have : ν₂ Set.univ = P Set.univ := by
         rw [← hm₂, Measure.map_apply measurable_fst MeasurableSet.univ, Set.preimage_univ]
       rw [this]; exact measure_lt_top P _
-    have hint₁ : Integrable (fun p => d p.1 p.2) ν₁ := h_int_witness ν₁ hm₁
-    have hint₂ : Integrable (fun p => d p.1 p.2) ν₂ := h_int_witness ν₂ hm₂
+    have hint₁ : Integrable (fun p ↦ d p.1 p.2) ν₁ := h_int_witness ν₁ hm₁
+    have hint₂ : Integrable (fun p ↦ d p.1 p.2) ν₂ := h_int_witness ν₂ hm₂
     obtain ⟨hfeas_marg, hfeas_dist⟩ :=
       mixtureMeasure_feasible hlam₀ hlam₁ P d ν₁ ν₂ hm₁ hm₂ hd₁ hd₂ hint₁ hint₂
     calc rateDistortionFunction d P (lam * D₁ + (1 - lam) * D₂)
@@ -426,9 +426,9 @@ theorem rateDistortionFunction_convexOn
     intro c D hc0 hctop
     unfold rateDistortionFunction
     rw [ENNReal.mul_iInf_of_ne hc0 hctop]
-    refine iInf_congr fun ν => ?_
+    refine iInf_congr fun ν ↦ ?_
     rw [ENNReal.mul_iInf_of_ne hc0 hctop]
-    refine iInf_congr fun _ => ?_
+    refine iInf_congr fun _ ↦ ?_
     rw [ENNReal.mul_iInf_of_ne hc0 hctop]
   -- Press the iInf; handle the boundary weights lam = 0, 1 separately.
   rcases eq_or_lt_of_le hlam₀ with hlam0 | hlam0
@@ -454,18 +454,18 @@ theorem rateDistortionFunction_convexOn
   rw [h_mul_iInf w D₁ hw0 hwtop, h_mul_iInf w' D₂ hw'0 hw'top]
   -- Peel off the left iInf (ν₁ / marg / dist) in turn.
   rw [ENNReal.iInf_add]
-  refine le_iInf fun ν₁ => ?_
+  refine le_iInf fun ν₁ ↦ ?_
   rw [ENNReal.iInf_add]
-  refine le_iInf fun hm₁ => ?_
+  refine le_iInf fun hm₁ ↦ ?_
   rw [ENNReal.iInf_add]
-  refine le_iInf fun hd₁ => ?_
+  refine le_iInf fun hd₁ ↦ ?_
   -- Peel off the right iInf (ν₂ / marg / dist) in turn.
   rw [ENNReal.add_iInf]
-  refine le_iInf fun ν₂ => ?_
+  refine le_iInf fun ν₂ ↦ ?_
   rw [ENNReal.add_iInf]
-  refine le_iInf fun hm₂ => ?_
+  refine le_iInf fun hm₂ ↦ ?_
   rw [ENNReal.add_iInf]
-  refine le_iInf fun hd₂ => ?_
+  refine le_iInf fun hd₂ ↦ ?_
   exact h_per_pair ν₁ ν₂ hm₁ hd₁ hm₂ hd₂
 
 end InformationTheory.Shannon

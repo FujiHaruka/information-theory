@@ -53,7 +53,7 @@ uniform message. -/
 noncomputable def perLetterXLaw
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (c : AwgnCode M n P) (i : Fin n) : Measure ℝ :=
-  (awgnConverseJoint h_meas c).map (fun ω => c.encoder ω.1 i)
+  (awgnConverseJoint h_meas c).map (fun ω ↦ c.encoder ω.1 i)
 
 private lemma perLetterXLaw_eq_mixture
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
@@ -64,24 +64,24 @@ private lemma perLetterXLaw_eq_mixture
   classical
   unfold perLetterXLaw awgnConverseJoint
   have h_meas_eval :
-      Measurable (fun ω : Fin M × (Fin n → ℝ) => c.encoder ω.1 i) :=
-    (measurable_of_countable (fun a : Fin M => c.encoder a i)).comp measurable_fst
+      Measurable (fun ω : Fin M × (Fin n → ℝ) ↦ c.encoder ω.1 i) :=
+    (measurable_of_countable (fun a : Fin M ↦ c.encoder a i)).comp measurable_fst
   rw [Measure.map_smul]
   rw [Measure.map_finset_sum (s := Finset.univ)
-      (m := fun m => (Measure.dirac m).prod
-        (Measure.pi (fun j : Fin n => awgnChannel N h_meas (c.encoder m j))))
+      (m := fun m ↦ (Measure.dirac m).prod
+        (Measure.pi (fun j : Fin n ↦ awgnChannel N h_meas (c.encoder m j))))
       h_meas_eval.aemeasurable]
   congr 1
   refine Finset.sum_congr rfl ?_
   intro m _
   -- `((dirac m).prod ν).map (fun ω => c.encoder ω.1 i) = dirac (c.encoder m i)`
   -- via `(fun ω => c.encoder ω.1 i) = (fun a => c.encoder a i) ∘ Prod.fst`.
-  have h_decomp : (fun ω : Fin M × (Fin n → ℝ) => c.encoder ω.1 i)
-      = (fun a : Fin M => c.encoder a i) ∘ Prod.fst := rfl
+  have h_decomp : (fun ω : Fin M × (Fin n → ℝ) ↦ c.encoder ω.1 i)
+      = (fun a : Fin M ↦ c.encoder a i) ∘ Prod.fst := rfl
   rw [h_decomp,
-    ← Measure.map_map (measurable_of_countable (fun a : Fin M => c.encoder a i)) measurable_fst,
+    ← Measure.map_map (measurable_of_countable (fun a : Fin M ↦ c.encoder a i)) measurable_fst,
     Measure.map_fst_prod, measure_univ, one_smul,
-    Measure.map_dirac' (measurable_of_countable (fun a : Fin M => c.encoder a i)) m]
+    Measure.map_dirac' (measurable_of_countable (fun a : Fin M ↦ c.encoder a i)) m]
 
 private instance perLetterXLaw_isProbabilityMeasure
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
@@ -89,13 +89,13 @@ private instance perLetterXLaw_isProbabilityMeasure
     IsProbabilityMeasure (perLetterXLaw h_meas c i) := by
   unfold perLetterXLaw
   exact Measure.isProbabilityMeasure_map
-    ((measurable_of_countable (fun a : Fin M => c.encoder a i)).comp measurable_fst).aemeasurable
+    ((measurable_of_countable (fun a : Fin M ↦ c.encoder a i)).comp measurable_fst).aemeasurable
 
 /-- The per-letter pair law factors as `perLetterXLaw ⊗ₘ awgnChannel`. -/
 private lemma awgnConverseJoint_map_pair_eq_compProd
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
-    (awgnConverseJoint h_meas c).map (fun ω => (c.encoder ω.1 i, ω.2 i))
+    (awgnConverseJoint h_meas c).map (fun ω ↦ (c.encoder ω.1 i, ω.2 i))
       = perLetterXLaw h_meas c i ⊗ₘ (awgnChannel N h_meas) := by
   classical
   -- Common target form: `M⁻¹ • ∑ₘ (δ(encoder m i)).prod (gaussianReal (encoder m i) N)`.
@@ -114,48 +114,48 @@ private lemma awgnConverseJoint_map_pair_eq_compProd
             (Measure.dirac (c.encoder m i)).prod (awgnChannel N h_meas (c.encoder m i)) := by
     rw [perLetterXLaw_eq_mixture h_meas c i]
     -- distribute compProd over `smul` and the finset sum
-    rw [← Measure.sum_fintype (fun m : Fin M => Measure.dirac (c.encoder m i)),
+    rw [← Measure.sum_fintype (fun m : Fin M ↦ Measure.dirac (c.encoder m i)),
       Measure.compProd_smul_left, Measure.compProd_sum_left, Measure.sum_fintype]
     congr 1
-    refine Finset.sum_congr rfl (fun m _ => ?_)
+    refine Finset.sum_congr rfl (fun m _ ↦ ?_)
     exact h_dirac_compProd (c.encoder m i)
   -- ===== LHS: (awgnConverseJoint).map (X_i, Y_i) =====
-  have h_lhs : (awgnConverseJoint h_meas c).map (fun ω => (c.encoder ω.1 i, ω.2 i))
+  have h_lhs : (awgnConverseJoint h_meas c).map (fun ω ↦ (c.encoder ω.1 i, ω.2 i))
       = (Fintype.card (Fin M) : ℝ≥0∞)⁻¹ •
           ∑ m : Fin M,
             (Measure.dirac (c.encoder m i)).prod (awgnChannel N h_meas (c.encoder m i)) := by
     unfold awgnConverseJoint
     have hf_meas :
-        Measurable (fun ω : Fin M × (Fin n → ℝ) => (c.encoder ω.1 i, ω.2 i)) :=
-      ((measurable_of_countable (fun a : Fin M => c.encoder a i)).comp measurable_fst).prodMk
+        Measurable (fun ω : Fin M × (Fin n → ℝ) ↦ (c.encoder ω.1 i, ω.2 i)) :=
+      ((measurable_of_countable (fun a : Fin M ↦ c.encoder a i)).comp measurable_fst).prodMk
         ((measurable_pi_apply i).comp measurable_snd)
     rw [Measure.map_smul,
       Measure.map_finset_sum (s := Finset.univ)
-        (m := fun m => (Measure.dirac m).prod
-          (Measure.pi (fun j : Fin n => awgnChannel N h_meas (c.encoder m j))))
+        (m := fun m ↦ (Measure.dirac m).prod
+          (Measure.pi (fun j : Fin n ↦ awgnChannel N h_meas (c.encoder m j))))
         hf_meas.aemeasurable]
     congr 1
-    refine Finset.sum_congr rfl (fun m _ => ?_)
+    refine Finset.sum_congr rfl (fun m _ ↦ ?_)
     -- map of `(δ_m).prod (pi μ_m)` under `ω ↦ (encoder m i, ω.2 i)`
     -- equals `(δ(encoder m i)).prod (gaussianReal (encoder m i) N)`.
     rw [Measure.dirac_prod, Measure.map_map hf_meas measurable_prodMk_left]
     -- `(fun ω => (encoder ω.1 i, ω.2 i)) ∘ (Prod.mk m)` on `pi μ_m`
-    have h_comp : (fun ω : Fin M × (Fin n → ℝ) => (c.encoder ω.1 i, ω.2 i))
+    have h_comp : (fun ω : Fin M × (Fin n → ℝ) ↦ (c.encoder ω.1 i, ω.2 i))
           ∘ (Prod.mk m : (Fin n → ℝ) → Fin M × (Fin n → ℝ))
-        = fun y : Fin n → ℝ => (c.encoder m i, y i) := rfl
+        = fun y : Fin n → ℝ ↦ (c.encoder m i, y i) := rfl
     rw [h_comp]
     -- `(pi μ_m).map (fun y => (encoder m i, y i))`
     -- `= ((pi μ_m).map (Function.eval i)).map (fun z => (encoder m i, z))`.
-    have h_pair : (fun y : Fin n → ℝ => (c.encoder m i, y i))
-        = (fun z : ℝ => (c.encoder m i, z)) ∘ (Function.eval i : (Fin n → ℝ) → ℝ) := rfl
+    have h_pair : (fun y : Fin n → ℝ ↦ (c.encoder m i, y i))
+        = (fun z : ℝ ↦ (c.encoder m i, z)) ∘ (Function.eval i : (Fin n → ℝ) → ℝ) := rfl
     have h_eval_meas : Measurable (Function.eval i : (Fin n → ℝ) → ℝ) :=
       measurable_pi_apply i
-    have h_outer_meas : Measurable (fun z : ℝ => (c.encoder m i, z)) := by fun_prop
+    have h_outer_meas : Measurable (fun z : ℝ ↦ (c.encoder m i, z)) := by fun_prop
     rw [h_pair, ← Measure.map_map h_outer_meas h_eval_meas, Measure.pi_map_eval]
     -- `∏ j ∈ erase i, (awgnChannel ...) univ = 1`
     have h_prod_one : (∏ j ∈ Finset.univ.erase i,
         (awgnChannel N h_meas (c.encoder m j)) Set.univ) = 1 := by
-      refine Finset.prod_eq_one (fun j _ => ?_)
+      refine Finset.prod_eq_one (fun j _ ↦ ?_)
       rw [awgnChannel_apply]; exact measure_univ
     rw [h_prod_one, one_smul]
     -- `(awgnChannel (encoder m i)).map (fun z => (encoder m i, z)) = (δ).prod (awgnChannel ...)`
@@ -172,8 +172,8 @@ private lemma outputDistribution_eq_perLetterYLaw
         = (perLetterXLaw h_meas c i ⊗ₘ (awgnChannel N h_meas)).map Prod.snd from rfl]
   rw [← awgnConverseJoint_map_pair_eq_compProd h_meas c i]
   have hf_meas :
-      Measurable (fun ω : Fin M × (Fin n → ℝ) => (c.encoder ω.1 i, ω.2 i)) :=
-    ((measurable_of_countable (fun a : Fin M => c.encoder a i)).comp measurable_fst).prodMk
+      Measurable (fun ω : Fin M × (Fin n → ℝ) ↦ (c.encoder ω.1 i, ω.2 i)) :=
+    ((measurable_of_countable (fun a : Fin M ↦ c.encoder a i)).comp measurable_fst).prodMk
       ((measurable_pi_apply i).comp measurable_snd)
   rw [Measure.map_map measurable_snd hf_meas]
   rfl
@@ -192,9 +192,9 @@ private lemma perLetterMI_eq_mutualInfoOfChannel
   congr 1
   -- product: `(μ.map X_i).prod (μ.map Y_i) = perLetterXLaw.prod (outputDistribution ...)`.
   -- `μ.map X_i = perLetterXLaw` (def), `μ.map Y_i = perLetterYLaw = outputDistribution`.
-  rw [show (awgnConverseJoint h_meas c).map (fun ω => c.encoder ω.1 i)
+  rw [show (awgnConverseJoint h_meas c).map (fun ω ↦ c.encoder ω.1 i)
         = perLetterXLaw h_meas c i from rfl,
-    show (awgnConverseJoint h_meas c).map (fun ω => ω.2 i)
+    show (awgnConverseJoint h_meas c).map (fun ω ↦ ω.2 i)
         = perLetterYLaw h_meas c i from rfl,
     outputDistribution_eq_perLetterYLaw h_meas c i]
 
@@ -212,7 +212,7 @@ private lemma integral_diffEntropy_awgnChannel_eq_noise
     rw [awgnChannel_apply,
       InformationTheory.Shannon.differentialEntropy_gaussianReal x hN,
       InformationTheory.Shannon.differentialEntropy_gaussianReal 0 hN]
-  rw [integral_congr_ae (Filter.Eventually.of_forall (fun x => h_const x))]
+  rw [integral_congr_ae (Filter.Eventually.of_forall (fun x ↦ h_const x))]
   simp
 
 private lemma perLetterYLaw_eq_mixture_local
@@ -223,22 +223,22 @@ private lemma perLetterYLaw_eq_mixture_local
           ∑ m : Fin M, gaussianReal (c.encoder m i) N := by
   classical
   unfold perLetterYLaw awgnConverseJoint
-  have h_meas_eval : Measurable (fun ω : Fin M × (Fin n → ℝ) => ω.2 i) :=
+  have h_meas_eval : Measurable (fun ω : Fin M × (Fin n → ℝ) ↦ ω.2 i) :=
     (measurable_pi_apply i).comp measurable_snd
   rw [Measure.map_smul,
     Measure.map_finset_sum (s := Finset.univ)
-      (m := fun m => (Measure.dirac m).prod
-        (Measure.pi (fun j : Fin n => awgnChannel N h_meas (c.encoder m j))))
+      (m := fun m ↦ (Measure.dirac m).prod
+        (Measure.pi (fun j : Fin n ↦ awgnChannel N h_meas (c.encoder m j))))
       h_meas_eval.aemeasurable]
   congr 1
-  refine Finset.sum_congr rfl (fun m _ => ?_)
-  have h_comp : (fun ω : Fin M × (Fin n → ℝ) => ω.2 i)
+  refine Finset.sum_congr rfl (fun m _ ↦ ?_)
+  have h_comp : (fun ω : Fin M × (Fin n → ℝ) ↦ ω.2 i)
       = (Function.eval i : (Fin n → ℝ) → ℝ) ∘ (Prod.snd : Fin M × (Fin n → ℝ) → (Fin n → ℝ)) := rfl
   rw [h_comp, ← Measure.map_map (measurable_pi_apply i) measurable_snd,
     Measure.map_snd_prod, measure_univ, one_smul, Measure.pi_map_eval]
   have h_prod_one : (∏ j ∈ Finset.univ.erase i,
       (awgnChannel N h_meas (c.encoder m j)) Set.univ) = 1 := by
-    refine Finset.prod_eq_one (fun j _ => ?_)
+    refine Finset.prod_eq_one (fun j _ ↦ ?_)
     rw [awgnChannel_apply]; exact measure_univ
   rw [h_prod_one, one_smul, awgnChannel_apply]
 
@@ -250,7 +250,7 @@ private lemma perLetterYLaw_ac_volume
   rw [perLetterYLaw_eq_mixture_local h_meas c i]
   refine Measure.AbsolutelyContinuous.smul_left ?_ _
   rw [← Measure.sum_fintype]
-  exact Measure.absolutelyContinuous_sum_left fun m =>
+  exact Measure.absolutelyContinuous_sum_left fun m ↦
     gaussianReal_absolutelyContinuous _ hN
 
 private lemma volume_ac_perLetterYLaw
@@ -297,14 +297,14 @@ private lemma perLetterYLaw_withDensity_real
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
     perLetterYLaw h_meas c i
       = MeasureTheory.volume.withDensity
-          (fun y => ENNReal.ofReal (perLetterRealDensity N c i y)) := by
+          (fun y ↦ ENNReal.ofReal (perLetterRealDensity N c i y)) := by
   classical
   rw [perLetterYLaw_eq_mixture_local h_meas c i]
   -- each component `gaussianReal a N = volume.withDensity (gaussianPDF a N)`
   have h_comp : ∀ m : Fin M,
       gaussianReal (c.encoder m i) N
         = MeasureTheory.volume.withDensity (gaussianPDF (c.encoder m i) N) :=
-    fun m => gaussianReal_of_var_ne_zero (c.encoder m i) hN
+    fun m ↦ gaussianReal_of_var_ne_zero (c.encoder m i) hN
   have h_sum : ∀ s : Finset (Fin M),
       (∑ m ∈ s, gaussianReal (c.encoder m i) N)
         = MeasureTheory.volume.withDensity (∑ m ∈ s, gaussianPDF (c.encoder m i) N) := by
@@ -327,14 +327,14 @@ private lemma perLetterYLaw_withDensity_real
   congr 1
   · rw [one_div, ENNReal.ofReal_inv_of_pos (by exact_mod_cast Nat.pos_of_ne_zero (NeZero.ne M)),
       ENNReal.ofReal_natCast]
-  · rw [ENNReal.ofReal_sum_of_nonneg (fun m _ => (gaussianPDFReal_nonneg _ _ y))]
-    refine Finset.sum_congr rfl (fun m _ => ?_)
+  · rw [ENNReal.ofReal_sum_of_nonneg (fun m _ ↦ (gaussianPDFReal_nonneg _ _ y))]
+    refine Finset.sum_congr rfl (fun m _ ↦ ?_)
     rw [gaussianPDF]
 
 private lemma perLetterYLaw_sq_sub_integrable
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) (a₀ : ℝ) :
-    Integrable (fun y : ℝ => (y - a₀) ^ 2) (perLetterYLaw h_meas c i) := by
+    Integrable (fun y : ℝ ↦ (y - a₀) ^ 2) (perLetterYLaw h_meas c i) := by
   classical
   rw [perLetterYLaw_eq_mixture_local h_meas c i]
   have hM_inv_ne_top : (Fintype.card (Fin M) : ℝ≥0∞)⁻¹ ≠ ∞ := by
@@ -343,11 +343,11 @@ private lemma perLetterYLaw_sq_sub_integrable
   rw [integrable_finsetSum_measure]
   intro m _
   -- `(y − a₀)²` integrable against each `gaussianReal (encoder m i) N`
-  have h_id : Integrable (fun y : ℝ => y) (gaussianReal (c.encoder m i) N) := by
+  have h_id : Integrable (fun y : ℝ ↦ y) (gaussianReal (c.encoder m i) N) := by
     simpa using (memLp_id_gaussianReal (μ := c.encoder m i) (v := N) 1).integrable (by norm_num)
-  have h_sq : Integrable (fun y : ℝ => y ^ 2) (gaussianReal (c.encoder m i) N) :=
+  have h_sq : Integrable (fun y : ℝ ↦ y ^ 2) (gaussianReal (c.encoder m i) N) :=
     (memLp_id_gaussianReal (μ := c.encoder m i) (v := N) 2).integrable_sq
-  have hrw : (fun y : ℝ => (y - a₀) ^ 2) = fun y => y ^ 2 - 2 * a₀ * y + a₀ ^ 2 := by
+  have hrw : (fun y : ℝ ↦ (y - a₀) ^ 2) = fun y ↦ y ^ 2 - 2 * a₀ * y + a₀ ^ 2 := by
     funext y; ring
   rw [hrw]
   exact ((h_sq.sub (h_id.const_mul (2 * a₀))).add (integrable_const (a₀ ^ 2)))
@@ -356,7 +356,7 @@ private lemma integrable_log_rnDeriv_perLetterYLaw
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
     Integrable
-      (fun y => Real.log ((perLetterYLaw h_meas c i).rnDeriv MeasureTheory.volume y).toReal)
+      (fun y ↦ Real.log ((perLetterYLaw h_meas c i).rnDeriv MeasureTheory.volume y).toReal)
       (perLetterYLaw h_meas c i) := by
   classical
   set q := perLetterYLaw h_meas c i with hq_def
@@ -368,20 +368,20 @@ private lemma integrable_log_rnDeriv_perLetterYLaw
   have hM_pos : 0 < M := Nat.pos_of_ne_zero (NeZero.ne M)
   have hM_real_pos : (0 : ℝ) < (M : ℝ) := by exact_mod_cast hM_pos
   -- density form
-  have hq_wd : q = MeasureTheory.volume.withDensity (fun y => ENNReal.ofReal (D y)) := by
+  have hq_wd : q = MeasureTheory.volume.withDensity (fun y ↦ ENNReal.ofReal (D y)) := by
     rw [hq_def, hD_def]; exact perLetterYLaw_withDensity_real hN h_meas c i
-  have hD_meas : Measurable (fun y => ENNReal.ofReal (D y)) := by
+  have hD_meas : Measurable (fun y ↦ ENNReal.ofReal (D y)) := by
     rw [hD_def]; unfold perLetterRealDensity
     refine ENNReal.measurable_ofReal.comp ?_
     exact (measurable_const.mul (Finset.measurable_sum _
-      (fun m _ => (measurable_gaussianPDFReal (c.encoder m i) N))))
+      (fun m _ ↦ (measurable_gaussianPDFReal (c.encoder m i) N))))
   -- `q.rnDeriv vol =ᵐ[vol] ofReal ∘ D`, transport to `=ᵐ[q]` (q ≪ vol)
   have hq_ac : q ≪ MeasureTheory.volume := by
     rw [hq_def]; exact perLetterYLaw_ac_volume hN h_meas c i
   have h_rn_vol : q.rnDeriv MeasureTheory.volume =ᵐ[MeasureTheory.volume]
-      (fun y => ENNReal.ofReal (D y)) := by
+      (fun y ↦ ENNReal.ofReal (D y)) := by
     rw [hq_wd]; exact Measure.rnDeriv_withDensity MeasureTheory.volume hD_meas
-  have h_rn_q : q.rnDeriv MeasureTheory.volume =ᵐ[q] (fun y => ENNReal.ofReal (D y)) :=
+  have h_rn_q : q.rnDeriv MeasureTheory.volume =ᵐ[q] (fun y ↦ ENNReal.ofReal (D y)) :=
     hq_ac.ae_le h_rn_vol
   -- positivity of D: bounded below by a single component (m₀)
   obtain ⟨m₀⟩ : Nonempty (Fin M) := ⟨⟨0, hM_pos⟩⟩
@@ -389,11 +389,11 @@ private lemma integrable_log_rnDeriv_perLetterYLaw
     intro y
     rw [hD_def]; unfold perLetterRealDensity
     refine mul_pos (by positivity) ?_
-    refine Finset.sum_pos (fun m _ => gaussianPDFReal_pos _ _ y hN) ?_
+    refine Finset.sum_pos (fun m _ ↦ gaussianPDFReal_pos _ _ y hN) ?_
     exact ⟨m₀, Finset.mem_univ m₀⟩
   -- the target integrand agrees a.e. with `log (D y)`
-  have h_log_ae : (fun y => Real.log (q.rnDeriv MeasureTheory.volume y).toReal)
-      =ᵐ[q] (fun y => Real.log (D y)) := by
+  have h_log_ae : (fun y ↦ Real.log (q.rnDeriv MeasureTheory.volume y).toReal)
+      =ᵐ[q] (fun y ↦ Real.log (D y)) := by
     filter_upwards [h_rn_q] with y hy
     rw [hy, ENNReal.toReal_ofReal (hD_pos y).le]
   refine (Integrable.congr ?_ h_log_ae.symm)
@@ -420,7 +420,7 @@ private lemma integrable_log_rnDeriv_perLetterYLaw
     calc (1 / (M : ℝ)) * ∑ m : Fin M, gaussianPDFReal (c.encoder m i) N y
         ≤ (1 / (M : ℝ)) * ∑ _m : Fin M, Bpeak := by
           apply mul_le_mul_of_nonneg_left _ (by positivity)
-          exact Finset.sum_le_sum (fun m _ => h_comp_le m)
+          exact Finset.sum_le_sum (fun m _ ↦ h_comp_le m)
       _ = (1 / (M : ℝ)) * ((M : ℝ) * Bpeak) := by
           rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
       _ = Bpeak := by field_simp
@@ -430,8 +430,8 @@ private lemma integrable_log_rnDeriv_perLetterYLaw
     intro y
     rw [hD_def]; unfold perLetterRealDensity
     apply mul_le_mul_of_nonneg_left _ (by positivity)
-    refine Finset.single_le_sum (f := fun m => gaussianPDFReal (c.encoder m i) N y)
-      (fun m _ => gaussianPDFReal_nonneg _ _ y) (Finset.mem_univ m₀)
+    refine Finset.single_le_sum (f := fun m ↦ gaussianPDFReal (c.encoder m i) N y)
+      (fun m _ ↦ gaussianPDFReal_nonneg _ _ y) (Finset.mem_univ m₀)
   -- assemble the quadratic envelope on `|log (D y)|`
   -- upper: log D ≤ log Bpeak; lower: log D ≥ log(M⁻¹) + c₀ + c₁(y-a₀)²
   set c₀ : ℝ := -(1/2) * Real.log (2 * Real.pi * N) with hc₀
@@ -439,7 +439,7 @@ private lemma integrable_log_rnDeriv_perLetterYLaw
   -- dominating function `g y := |log Bpeak| + |log (M⁻¹) + c₀| + |c₁|·(y-a₀)²`
   set A : ℝ := |Real.log Bpeak| + |Real.log (1 / (M : ℝ)) + c₀| with hA
   set Bcoef : ℝ := |c₁| with hBcoef
-  have h_dom : Integrable (fun y : ℝ => A + Bcoef * (y - a₀) ^ 2) q := by
+  have h_dom : Integrable (fun y : ℝ ↦ A + Bcoef * (y - a₀) ^ 2) q := by
     refine (integrable_const A).add ?_
     rw [hq_def]
     exact (perLetterYLaw_sq_sub_integrable hN h_meas c i a₀).const_mul Bcoef
@@ -448,7 +448,7 @@ private lemma integrable_log_rnDeriv_perLetterYLaw
     have hD_meas_real : Measurable D := by
       rw [hD_def]; unfold perLetterRealDensity
       exact measurable_const.mul (Finset.measurable_sum _
-        (fun m _ => measurable_gaussianPDFReal (c.encoder m i) N))
+        (fun m _ ↦ measurable_gaussianPDFReal (c.encoder m i) N))
     exact (Real.measurable_log.comp hD_meas_real).aestronglyMeasurable
   · filter_upwards with y
     -- `|log (D y)| ≤ A + Bcoef·(y-a₀)²`
@@ -505,16 +505,16 @@ theorem awgn_per_letter_mi_bridge_genuine
     (perLetterMI h_meas c i).toReal
       = InformationTheory.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
         - InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N) := by
-  have hN_NN : N ≠ 0 := fun h => hN (by exact_mod_cast h)
+  have hN_NN : N ≠ 0 := fun h ↦ hN (by exact_mod_cast h)
   set p := perLetterXLaw h_meas c i with hp_def
   set W := awgnChannel N h_meas with hW_def
   set q := outputDistribution p W with hq_def
   have hq_eq : q = perLetterYLaw h_meas c i := outputDistribution_eq_perLetterYLaw h_meas c i
   -- measurable PDF proxy `g := gaussianPDF` (Route B)
-  set g : ℝ × ℝ → ℝ≥0∞ := fun z => gaussianPDF z.1 N z.2 with hg_def
+  set g : ℝ × ℝ → ℝ≥0∞ := fun z ↦ gaussianPDF z.1 N z.2 with hg_def
   have hg_meas : Measurable g := by
     rw [hg_def]; simp only [gaussianPDF, gaussianPDFReal]; fun_prop
-  have hg_ae : ∀ x, (fun y => (W x).rnDeriv volume y) =ᵐ[W x] fun y => g (x, y) := by
+  have hg_ae : ∀ x, (fun y ↦ (W x).rnDeriv volume y) =ᵐ[W x] fun y ↦ g (x, y) := by
     intro x
     rw [hW_def, awgnChannel_apply]
     exact (gaussianReal_absolutelyContinuous x hN_NN).ae_le (rnDeriv_gaussianReal x N)
@@ -527,38 +527,38 @@ theorem awgn_per_letter_mi_bridge_genuine
   have h_joint_ac : (p ⊗ₘ W) ≪ p.prod q := by
     rw [show p.prod q = p ⊗ₘ (Kernel.const ℝ q) from (Measure.compProd_const).symm]
     exact Measure.absolutelyContinuous_compProd_right_iff.mpr
-      (Filter.Eventually.of_forall (fun x => by simpa only [Kernel.const_apply] using hWx_q x))
+      (Filter.Eventually.of_forall (fun x ↦ by simpa only [Kernel.const_apply] using hWx_q x))
   -- ★ fibre log-density integrability against the joint (proxy form, mixture input)
   have h_int_fibre :
-      Integrable (fun z : ℝ × ℝ => Real.log (g z).toReal) (p ⊗ₘ W) := by
+      Integrable (fun z : ℝ × ℝ ↦ Real.log (g z).toReal) (p ⊗ₘ W) := by
     -- the joint integrand decomposes everywhere as `c₀ + c₁·(z.2 − z.1)²`
     set c₀ : ℝ := -(1 / 2) * Real.log (2 * Real.pi * N) with hc₀
     set c₁ : ℝ := -(1 / (2 * (N : ℝ))) with hc₁
-    have h_eq : (fun z : ℝ × ℝ => Real.log (g z).toReal)
-        = fun z => c₀ + c₁ * (z.2 - z.1) ^ 2 := by
+    have h_eq : (fun z : ℝ × ℝ ↦ Real.log (g z).toReal)
+        = fun z ↦ c₀ + c₁ * (z.2 - z.1) ^ 2 := by
       funext z
       rw [hg_def, toReal_gaussianPDF,
         InformationTheory.Shannon.log_gaussianPDFReal_eq z.1 hN_NN z.2, hc₀, hc₁]
       ring
     rw [h_eq]
-    have h_sq : Integrable (fun z : ℝ × ℝ => (z.2 - z.1) ^ 2) (p ⊗ₘ W) := by
-      have h_aesm : AEStronglyMeasurable (fun z : ℝ × ℝ => (z.2 - z.1) ^ 2) (p ⊗ₘ W) :=
+    have h_sq : Integrable (fun z : ℝ × ℝ ↦ (z.2 - z.1) ^ 2) (p ⊗ₘ W) := by
+      have h_aesm : AEStronglyMeasurable (fun z : ℝ × ℝ ↦ (z.2 - z.1) ^ 2) (p ⊗ₘ W) :=
         ((measurable_snd.sub measurable_fst).pow_const 2).aestronglyMeasurable
       rw [Measure.integrable_compProd_iff h_aesm]
-      refine ⟨Filter.Eventually.of_forall (fun x => ?_), ?_⟩
+      refine ⟨Filter.Eventually.of_forall (fun x ↦ ?_), ?_⟩
       · -- per-fibre `Integrable (fun y => (y − x)²) (W x = gaussianReal x N)`
-        have h_id : Integrable (fun y : ℝ => y) (gaussianReal x N) := by
+        have h_id : Integrable (fun y : ℝ ↦ y) (gaussianReal x N) := by
           simpa using (memLp_id_gaussianReal (μ := x) (v := N) 1).integrable (by norm_num)
-        have h_sq2 : Integrable (fun y : ℝ => y ^ 2) (gaussianReal x N) :=
+        have h_sq2 : Integrable (fun y : ℝ ↦ y ^ 2) (gaussianReal x N) :=
           (memLp_id_gaussianReal (μ := x) (v := N) 2).integrable_sq
-        have hrw : (fun y : ℝ => (y - x) ^ 2) = fun y => y ^ 2 - 2 * x * y + x ^ 2 := by
+        have hrw : (fun y : ℝ ↦ (y - x) ^ 2) = fun y ↦ y ^ 2 - 2 * x * y + x ^ 2 := by
           funext y; ring
         rw [hW_def, awgnChannel_apply, hrw]
         exact ((h_sq2.sub (h_id.const_mul (2 * x))).add (integrable_const (x ^ 2)))
       · -- per-fibre L¹-norm integral is the constant `N` (nonneg integrand, second moment)
-        have h_norm : (fun x => ∫ y, ‖(y - x) ^ 2‖ ∂(W x)) = fun _ => (N : ℝ) := by
+        have h_norm : (fun x ↦ ∫ y, ‖(y - x) ^ 2‖ ∂(W x)) = fun _ ↦ (N : ℝ) := by
           funext x
-          have hnn : (fun y => ‖(y - x) ^ 2‖) = fun y => (y - x) ^ 2 := by
+          have hnn : (fun y ↦ ‖(y - x) ^ 2‖) = fun y ↦ (y - x) ^ 2 := by
             funext y; rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _)]
           rw [hnn, hW_def, awgnChannel_apply]
           have hvar := variance_fun_id_gaussianReal (μ := x) (v := N)
@@ -568,15 +568,15 @@ theorem awgn_per_letter_mi_bridge_genuine
     exact (integrable_const c₀).add (h_sq.const_mul c₁)
   -- ★ output log-density integrability against the joint (depends only on z.2)
   have h_int_out :
-      Integrable (fun z : ℝ × ℝ => Real.log (q.rnDeriv volume z.2).toReal) (p ⊗ₘ W) := by
+      Integrable (fun z : ℝ × ℝ ↦ Real.log (q.rnDeriv volume z.2).toReal) (p ⊗ₘ W) := by
     have hp_prob : IsProbabilityMeasure p := by rw [hp_def]; infer_instance
     have h_int_marg :
-        Integrable (fun y => Real.log (q.rnDeriv volume y).toReal) q := by
+        Integrable (fun y ↦ Real.log (q.rnDeriv volume y).toReal) q := by
       rw [hq_eq]; exact integrable_log_rnDeriv_perLetterYLaw hN_NN h_meas c i
     -- `q = (p ⊗ₘ W).snd`, so `g ∘ snd` integrable against joint iff `g` against `q`.
     have h_snd : q = (p ⊗ₘ W).map Prod.snd := rfl
-    rw [show (fun z : ℝ × ℝ => Real.log (q.rnDeriv volume z.2).toReal)
-          = (fun y => Real.log (q.rnDeriv volume y).toReal) ∘ Prod.snd from rfl]
+    rw [show (fun z : ℝ × ℝ ↦ Real.log (q.rnDeriv volume z.2).toReal)
+          = (fun y ↦ Real.log (q.rnDeriv volume y).toReal) ∘ Prod.snd from rfl]
     refine (integrable_map_measure ?_ measurable_snd.aemeasurable).mp ?_
     · exact ((Measure.measurable_rnDeriv q volume).ennreal_toReal.log).aestronglyMeasurable
     · rw [← h_snd]; exact h_int_marg
@@ -619,7 +619,7 @@ theorem awgn_converse
           = InformationTheory.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
             - InformationTheory.Shannon.differentialEntropy
                 (ProbabilityTheory.gaussianReal 0 N) :=
-    fun {M n} _ _ c i => awgn_per_letter_mi_bridge_genuine hN h_meas c i
+    fun {M n} _ _ c i ↦ awgn_per_letter_mi_bridge_genuine hN h_meas c i
   exact awgn_converse_F3_discharged P hP N hN h_meas
     h_mi_bridge_per_letter hM hn_pos c Pe hPe
 

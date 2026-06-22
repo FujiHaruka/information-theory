@@ -88,7 +88,7 @@ theorem awgn_capacity_closed_form
             (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas)).toReal
           = (1/2) * Real.log (1 + P / (N : ℝ)))
     (h_bdd :
-        BddAbove ((fun p : Measure ℝ =>
+        BddAbove ((fun p : Measure ℝ ↦
             (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
                 p (awgnChannel N h_meas)).toReal) ''
           awgnPowerConstraintSet P))

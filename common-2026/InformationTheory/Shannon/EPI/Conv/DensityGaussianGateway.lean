@@ -50,32 +50,32 @@ theorem convDensityAdd_hasDerivAt_of_integrable_smoothKernel (fX fY : ℝ → �
   have hs : s ∈ nhds z₀ := Metric.ball_mem_nhds z₀ one_pos
   -- (2) `hF_meas`.
   have hF_meas : ∀ᶠ z in nhds z₀,
-      AEStronglyMeasurable (fun x => fX x * fY (z - x)) volume := by
-    refine Filter.Eventually.of_forall (fun z => ?_)
+      AEStronglyMeasurable (fun x ↦ fX x * fY (z - x)) volume := by
+    refine Filter.Eventually.of_forall (fun z ↦ ?_)
     exact (hX_int.aestronglyMeasurable).mul
       ((hY_cont.comp (continuous_const.sub continuous_id)).aestronglyMeasurable)
   -- (3) `hF_int : Integrable (fun x => fX x * fY (z₀ - x))`.
-  have hF_int : Integrable (fun x => fX x * fY (z₀ - x)) volume := by
-    have hYmeas : AEStronglyMeasurable (fun x => fY (z₀ - x)) volume :=
+  have hF_int : Integrable (fun x ↦ fX x * fY (z₀ - x)) volume := by
+    have hYmeas : AEStronglyMeasurable (fun x ↦ fY (z₀ - x)) volume :=
       (hY_cont.comp (continuous_const.sub continuous_id)).aestronglyMeasurable
     have hbound : ∀ᵐ x ∂volume, ‖fY (z₀ - x)‖ ≤ MY :=
-      Filter.Eventually.of_forall (fun x => by
+      Filter.Eventually.of_forall (fun x ↦ by
         rw [Real.norm_eq_abs]; exact hMY (z₀ - x))
     have := hX_int.bdd_mul hYmeas hbound
     -- `this : Integrable (fun x => fY (z₀ - x) * fX x)`
     simpa only [mul_comm] using this
   -- (4) `hF'_meas`.
   have hF'_meas : AEStronglyMeasurable
-      (fun x => convDensityAddDeriv fX fY z₀ x) volume := by
+      (fun x ↦ convDensityAddDeriv fX fY z₀ x) volume := by
     unfold convDensityAddDeriv
     exact (hX_int.aestronglyMeasurable).mul
       ((hY'_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable)
   -- bound function `bound x := MY' * |fX x|`.
-  set bound : ℝ → ℝ := fun x => MY' * |fX x| with hbound_def
+  set bound : ℝ → ℝ := fun x ↦ MY' * |fX x| with hbound_def
   -- (5) `h_bound`.
   have h_bound : ∀ᵐ x ∂volume, ∀ z ∈ s,
       ‖convDensityAddDeriv fX fY z x‖ ≤ bound x := by
-    refine Filter.Eventually.of_forall (fun x z _ => ?_)
+    refine Filter.Eventually.of_forall (fun x z _ ↦ ?_)
     unfold convDensityAddDeriv
     rw [Real.norm_eq_abs, abs_mul, hbound_def]
     have : |deriv fY (z - x)| ≤ MY' := hMY' (z - x)
@@ -89,18 +89,18 @@ theorem convDensityAdd_hasDerivAt_of_integrable_smoothKernel (fX fY : ℝ → �
     exact (hX_int.abs).const_mul MY'
   -- (7) `h_diff`.
   have h_diff : ∀ᵐ x ∂volume, ∀ z ∈ s,
-      HasDerivAt (fun z => fX x * fY (z - x))
+      HasDerivAt (fun z ↦ fX x * fY (z - x))
         (convDensityAddDeriv fX fY z x) z := by
-    refine Filter.Eventually.of_forall (fun x z _ => ?_)
+    refine Filter.Eventually.of_forall (fun x z _ ↦ ?_)
     unfold convDensityAddDeriv
     -- inner: `z ↦ z - x` has derivative `1`.
-    have hinner : HasDerivAt (fun z : ℝ => z - x) 1 z :=
+    have hinner : HasDerivAt (fun z : ℝ ↦ z - x) 1 z :=
       (hasDerivAt_id z).sub_const x
     -- `fY` differentiable at `z - x`.
     have hY_at : HasDerivAt fY (deriv fY (z - x)) (z - x) :=
       (hregY.diff (z - x)).hasDerivAt
     -- compose: `z ↦ fY (z - x)` has derivative `deriv fY (z-x) * 1`.
-    have hcomp : HasDerivAt (fun z : ℝ => fY (z - x)) (deriv fY (z - x) * 1) z :=
+    have hcomp : HasDerivAt (fun z : ℝ ↦ fY (z - x)) (deriv fY (z - x) * 1) z :=
       hY_at.comp z hinner
     rw [mul_one] at hcomp
     -- const_mul by `fX x`.
@@ -119,7 +119,7 @@ theorem convDensityAdd_differentiable_of_integrable_smoothKernel (fX fY : ℝ �
     (hY_bdd : ∃ M : ℝ, ∀ w, |fY w| ≤ M)
     (hY'_bdd : ∃ M : ℝ, ∀ w, |deriv fY w| ≤ M) :
     Differentiable ℝ (InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY) :=
-  fun z₀ =>
+  fun z₀ ↦
     (convDensityAdd_hasDerivAt_of_integrable_smoothKernel fX fY z₀ hX_int hregY hY_bdd
       hY'_bdd).differentiableAt
 

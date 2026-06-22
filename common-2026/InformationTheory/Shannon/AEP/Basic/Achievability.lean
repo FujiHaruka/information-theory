@@ -90,7 +90,7 @@ noncomputable def aepDecoder
   · -- in range: pull back via equivFin.symm, then take subtype value.
     exact ((typicalSet μ Xs n ε).toFinite.toFinset.equivFin.symm ⟨k.val, hk⟩).val
   · -- out of range: arbitrary block.
-    exact fun _ => Classical.arbitrary α
+    exact fun _ ↦ Classical.arbitrary α
 
 omit [MeasurableSingletonClass α] in
 lemma aepDecoder_aepEncoder_of_mem_typicalSet
@@ -153,25 +153,25 @@ lemma aep_errorProb_tendsto_zero
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
     (hpos : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
-    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     {ε R : ℝ} (hε : 0 < ε) (h_le : entropy μ (Xs 0) + ε ≤ R) :
     Tendsto
-      (fun n => InformationTheory.MeasureFano.errorProb μ
+      (fun n ↦ InformationTheory.MeasureFano.errorProb μ
                   (jointRV Xs n)
-                  (fun ω => aepEncoder μ Xs n ε R
+                  (fun ω ↦ aepEncoder μ Xs n ε R
                               (typicalSet_card_le_codebookSize μ Xs hXs hpos n hε h_le)
                               (jointRV Xs n ω))
                   (aepDecoder μ Xs n ε R))
       atTop (𝓝 0) := by
   -- Sandwich: 0 ≤ errorProb n ≤ μ.real { ω | jointRV Xs n ω ∉ typicalSet ... } → 0.
   set h_card : ∀ n, (typicalSet μ Xs n ε).toFinite.toFinset.card ≤ codebookSize R n :=
-    fun n => typicalSet_card_le_codebookSize μ Xs hXs hpos n hε h_le with h_card_def
+    fun n ↦ typicalSet_card_le_codebookSize μ Xs hXs hpos n hε h_le with h_card_def
   -- Upper-bound: error event ⊆ ∁ typicalSet (orientation matches `errorProb`).
   have h_subset : ∀ n,
       {ω | jointRV Xs n ω
               ≠ aepDecoder μ Xs n ε R
-                  ((fun ω => aepEncoder μ Xs n ε R (h_card n) (jointRV Xs n ω)) ω)}
+                  ((fun ω ↦ aepEncoder μ Xs n ε R (h_card n) (jointRV Xs n ω)) ω)}
         ⊆ {ω | jointRV Xs n ω ∉ typicalSet μ Xs n ε} := by
     intro n
     exact error_subset_compl_typicalSet μ Xs n ε R (h_card n)
@@ -184,7 +184,7 @@ lemma aep_errorProb_tendsto_zero
     intro n; exact (h_meas_T n).compl
   -- μ {ω | not in typicalSet} → 0 (from typicalSet_prob_tendsto_one).
   have h_compl_tendsto :
-      Tendsto (fun n => (μ {ω | jointRV Xs n ω ∉ typicalSet μ Xs n ε}).toReal)
+      Tendsto (fun n ↦ (μ {ω | jointRV Xs n ω ∉ typicalSet μ Xs n ε}).toReal)
         atTop (𝓝 0) := by
     have h_pos := typicalSet_prob_tendsto_one μ Xs hXs hindep hident hε
     -- μ {... ∉ T} = 1 - μ {... ∈ T}, hence its toReal tends to 0.
@@ -198,23 +198,23 @@ lemma aep_errorProb_tendsto_zero
       rw [h_compl_eq, measure_compl (h_meas_T n) (measure_ne_top μ _), measure_univ]
     -- toReal of the difference → 0.
     have h_toReal_tendsto :
-        Tendsto (fun n => (1 - μ {ω | jointRV Xs n ω ∈ typicalSet μ Xs n ε}).toReal)
+        Tendsto (fun n ↦ (1 - μ {ω | jointRV Xs n ω ∈ typicalSet μ Xs n ε}).toReal)
           atTop (𝓝 0) := by
-      have h_cont : Continuous (fun x : ℝ≥0∞ => (1 : ℝ≥0∞) - x) :=
+      have h_cont : Continuous (fun x : ℝ≥0∞ ↦ (1 : ℝ≥0∞) - x) :=
         ENNReal.continuous_sub_left (by simp)
-      have h_step : Tendsto (fun n => (1 : ℝ≥0∞) -
+      have h_step : Tendsto (fun n ↦ (1 : ℝ≥0∞) -
             μ {ω | jointRV Xs n ω ∈ typicalSet μ Xs n ε}) atTop
           (𝓝 ((1 : ℝ≥0∞) - 1)) := h_cont.tendsto _ |>.comp h_pos
       simp only [tsub_self] at h_step
       have h_toReal := (ENNReal.tendsto_toReal (by simp : (0 : ℝ≥0∞) ≠ ∞)).comp h_step
       simpa using h_toReal
-    refine Tendsto.congr (fun n => ?_) h_toReal_tendsto
+    refine Tendsto.congr (fun n ↦ ?_) h_toReal_tendsto
     rw [h_id n]
   -- errorProb n = μ.real {error event} ≤ μ.real {... ∉ T} which → 0.
   have h_error_le : ∀ n,
       InformationTheory.MeasureFano.errorProb μ
           (jointRV Xs n)
-          (fun ω => aepEncoder μ Xs n ε R (h_card n) (jointRV Xs n ω))
+          (fun ω ↦ aepEncoder μ Xs n ε R (h_card n) (jointRV Xs n ω))
           (aepDecoder μ Xs n ε R)
         ≤ (μ {ω | jointRV Xs n ω ∉ typicalSet μ Xs n ε}).toReal := by
     intro n
@@ -223,7 +223,7 @@ lemma aep_errorProb_tendsto_zero
   have h_error_nn : ∀ n,
       0 ≤ InformationTheory.MeasureFano.errorProb μ
             (jointRV Xs n)
-            (fun ω => aepEncoder μ Xs n ε R (h_card n) (jointRV Xs n ω))
+            (fun ω ↦ aepEncoder μ Xs n ε R (h_card n) (jointRV Xs n ω))
             (aepDecoder μ Xs n ε R) := by
     intro n
     unfold InformationTheory.MeasureFano.errorProb
@@ -235,15 +235,15 @@ lemma aep_errorProb_tendsto_zero
 /-- `log M_n / n → R`. -/
 lemma codebookSize_log_div_tendsto
     {R : ℝ} (hR : 0 < R) :
-    Tendsto (fun n : ℕ => Real.log (codebookSize R n : ℝ) / n) atTop (𝓝 R) := by
+    Tendsto (fun n : ℕ ↦ Real.log (codebookSize R n : ℝ) / n) atTop (𝓝 R) := by
   -- Lower bound: R ≤ log M_n / n (for n ≥ 1).
   -- Upper bound: log M_n / n ≤ log (exp(nR) + 1) / n → R.
-  set f : ℕ → ℝ := fun n => Real.log (codebookSize R n : ℝ) / n with hf_def
+  set f : ℕ → ℝ := fun n ↦ Real.log (codebookSize R n : ℝ) / n with hf_def
   -- Show ∀ᶠ n in atTop, R ≤ f n ≤ log (exp(nR) + 1) / n.
   -- Lower: R ≤ log M_n / n.
   have h_lower : ∀ᶠ n in atTop, R ≤ f n := by
     rw [Filter.eventually_atTop]
-    refine ⟨1, fun n hn => ?_⟩
+    refine ⟨1, fun n hn ↦ ?_⟩
     have hn_pos_R : (0 : ℝ) < n := by exact_mod_cast hn
     have hexp_pos : 0 < Real.exp ((n : ℝ) * R) := Real.exp_pos _
     have h_le : Real.exp ((n : ℝ) * R) ≤ (codebookSize R n : ℝ) := by
@@ -258,10 +258,10 @@ lemma codebookSize_log_div_tendsto
     rw [h_simp] at h_div
     exact h_div
   -- Upper: f n ≤ log (exp(nR) + 1) / n.
-  set g : ℕ → ℝ := fun n => Real.log (Real.exp ((n : ℝ) * R) + 1) / n with hg_def
+  set g : ℕ → ℝ := fun n ↦ Real.log (Real.exp ((n : ℝ) * R) + 1) / n with hg_def
   have h_upper : ∀ᶠ n in atTop, f n ≤ g n := by
     rw [Filter.eventually_atTop]
-    refine ⟨1, fun n hn => ?_⟩
+    refine ⟨1, fun n hn ↦ ?_⟩
     have hn_pos_R : (0 : ℝ) < n := by exact_mod_cast hn
     have h_ceil_lt :
         (codebookSize R n : ℝ) < Real.exp ((n : ℝ) * R) + 1 := by
@@ -327,31 +327,31 @@ lemma codebookSize_log_div_tendsto
         Real.log_le_log (by linarith) h_le_two
       exact div_le_div_of_nonneg_right h_log_le_log2 hn_pos_R.le
     -- Use squeeze on log(1 + exp(-nR))/n.
-    have h_log2_div : Tendsto (fun n : ℕ => Real.log 2 / n) atTop (𝓝 0) := by
-      have h_one_div : Tendsto (fun n : ℕ => (1 : ℝ) / n) atTop (𝓝 0) :=
+    have h_log2_div : Tendsto (fun n : ℕ ↦ Real.log 2 / n) atTop (𝓝 0) := by
+      have h_one_div : Tendsto (fun n : ℕ ↦ (1 : ℝ) / n) atTop (𝓝 0) :=
         tendsto_one_div_atTop_nhds_zero_nat
       have h_mul := h_one_div.const_mul (Real.log 2)
       simp only [mul_zero] at h_mul
-      refine Tendsto.congr (fun n => ?_) h_mul
+      refine Tendsto.congr (fun n ↦ ?_) h_mul
       ring
-    have h_zero : Tendsto (fun _ : ℕ => (0 : ℝ)) atTop (𝓝 0) := tendsto_const_nhds
+    have h_zero : Tendsto (fun _ : ℕ ↦ (0 : ℝ)) atTop (𝓝 0) := tendsto_const_nhds
     have h_inner_tendsto :
-        Tendsto (fun n : ℕ => Real.log (1 + Real.exp (-((n : ℝ) * R))) / n) atTop (𝓝 0) := by
+        Tendsto (fun n : ℕ ↦ Real.log (1 + Real.exp (-((n : ℝ) * R))) / n) atTop (𝓝 0) := by
       apply tendsto_of_tendsto_of_tendsto_of_le_of_le' h_zero h_log2_div
-      · exact Filter.eventually_atTop.mpr ⟨1, fun n hn => h_bound_nn n hn⟩
-      · exact Filter.eventually_atTop.mpr ⟨1, fun n hn => h_bound n hn⟩
+      · exact Filter.eventually_atTop.mpr ⟨1, fun n hn ↦ h_bound_nn n hn⟩
+      · exact Filter.eventually_atTop.mpr ⟨1, fun n hn ↦ h_bound n hn⟩
     -- g n = R + (small term), and small → 0, so g → R + 0 = R.
     have h_step :
-        Tendsto (fun n : ℕ => R + Real.log (1 + Real.exp (-((n : ℝ) * R))) / n) atTop
+        Tendsto (fun n : ℕ ↦ R + Real.log (1 + Real.exp (-((n : ℝ) * R))) / n) atTop
           (𝓝 (R + 0)) := tendsto_const_nhds.add h_inner_tendsto
     rw [add_zero] at h_step
     -- Congr g with this representation eventually.
     refine Tendsto.congr' ?_ h_step
     rw [Filter.EventuallyEq, Filter.eventually_atTop]
-    refine ⟨1, fun n hn => ?_⟩
+    refine ⟨1, fun n hn ↦ ?_⟩
     exact (h_eq n hn).symm
   -- Squeeze: R ≤ f n ≤ g n eventually, R → R and g → R, hence f → R.
-  have h_const : Tendsto (fun _ : ℕ => R) atTop (𝓝 R) := tendsto_const_nhds
+  have h_const : Tendsto (fun _ : ℕ ↦ R) atTop (𝓝 R) := tendsto_const_nhds
   exact tendsto_of_tendsto_of_tendsto_of_le_of_le' h_const h_g_tendsto h_lower h_upper
 
 /-- **Source coding theorem, achievability**:
@@ -362,16 +362,16 @@ theorem source_coding_achievability
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
     (hpos : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
-    (hindep_full : iIndepFun (fun i => Xs i) μ)
+    (hindep_full : iIndepFun (fun i ↦ Xs i) μ)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     {R : ℝ} (hR : entropy μ (Xs 0) < R) :
     ∃ M : ℕ → ℕ, ∃ _hM_pos : ∀ n, 0 < M n,
     ∃ c : ∀ n, (Fin n → α) → Fin (M n),
     ∃ d : ∀ n, Fin (M n) → (Fin n → α),
-      Tendsto (fun n => Real.log (M n : ℝ) / n) atTop (𝓝 R) ∧
+      Tendsto (fun n ↦ Real.log (M n : ℝ) / n) atTop (𝓝 R) ∧
       Tendsto
-        (fun n => InformationTheory.MeasureFano.errorProb μ
-                    (jointRV Xs n) (fun ω => c n (jointRV Xs n ω)) (d n))
+        (fun n ↦ InformationTheory.MeasureFano.errorProb μ
+                    (jointRV Xs n) (fun ω ↦ c n (jointRV Xs n ω)) (d n))
         atTop (𝓝 0) := by
   -- Take ε := (R - H) / 2, so H + ε < R (in particular H + ε ≤ R).
   set H : ℝ := entropy μ (Xs 0) with hH_def
@@ -383,13 +383,13 @@ theorem source_coding_achievability
     have hH_nn : 0 ≤ H := InformationTheory.Shannon.entropy_nonneg μ (Xs 0) (hXs 0)
     linarith
   -- Pairwise independence from iIndepFun.
-  have hindep_pair : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j :=
-    fun _ _ hij => hindep_full.indepFun hij
+  have hindep_pair : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j :=
+    fun _ _ hij ↦ hindep_full.indepFun hij
   -- Provide existentials.
-  refine ⟨codebookSize R, fun n => codebookSize_pos R n,
-    fun n => aepEncoder μ Xs n ε R
+  refine ⟨codebookSize R, fun n ↦ codebookSize_pos R n,
+    fun n ↦ aepEncoder μ Xs n ε R
                 (typicalSet_card_le_codebookSize μ Xs hXs hpos n hε h_le),
-    fun n => aepDecoder μ Xs n ε R, ?_, ?_⟩
+    fun n ↦ aepDecoder μ Xs n ε R, ?_, ?_⟩
   · exact codebookSize_log_div_tendsto h_R_pos
   · exact aep_errorProb_tendsto_zero μ Xs hXs hpos hindep_pair hident hε h_le
 
@@ -413,8 +413,8 @@ structure IsAchievableCode
     (d : ∀ n, Fin (M n) → (Fin n → α)) : Prop where
   hM_pos : ∀ n, NeZero (M n)
   hPe_to_zero :
-    Tendsto (fun n => InformationTheory.MeasureFano.errorProb μ
-              (jointRV Xs n) (fun ω => c n (jointRV Xs n ω)) (d n))
+    Tendsto (fun n ↦ InformationTheory.MeasureFano.errorProb μ
+              (jointRV Xs n) (fun ω ↦ c n (jointRV Xs n ω)) (d n))
             atTop (𝓝 0)
   hM_bdd : ∃ R, ∀ n, Real.log (M n : ℝ) / n ≤ R
 
@@ -424,14 +424,14 @@ noncomputable def achievableRates
   { r | ∃ (M : ℕ → ℕ) (c : ∀ n, (Fin n → α) → Fin (M n))
         (d : ∀ n, Fin (M n) → (Fin n → α)),
         IsAchievableCode μ Xs M c d ∧
-        Filter.liminf (fun n : ℕ => Real.log (M n : ℝ) / n) atTop = r }
+        Filter.liminf (fun n : ℕ ↦ Real.log (M n : ℝ) / n) atTop = r }
 
 /-- Every achievable rate is at least the entropy. -/
 @[entry_point]
 theorem entropy_le_of_mem_achievableRates
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep_full : iIndepFun (fun i => Xs i) μ)
+    (hindep_full : iIndepFun (fun i ↦ Xs i) μ)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (hcard : 2 ≤ Fintype.card α)
     {r : ℝ} (hr : r ∈ achievableRates μ Xs) :
@@ -448,16 +448,16 @@ theorem mem_achievableRates_of_gt_entropy
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
     (hpos : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
-    (hindep_full : iIndepFun (fun i => Xs i) μ)
+    (hindep_full : iIndepFun (fun i ↦ Xs i) μ)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     {R : ℝ} (hR : entropy μ (Xs 0) < R) :
     R ∈ achievableRates μ Xs := by
   obtain ⟨M, hM_pos, c, d, hRate, hPe⟩ :=
     source_coding_achievability μ Xs hXs hpos hindep_full hident hR
-  refine ⟨M, c, d, ⟨fun n => ⟨(hM_pos n).ne'⟩, hPe, ?_⟩, hRate.liminf_eq⟩
+  refine ⟨M, c, d, ⟨fun n ↦ ⟨(hM_pos n).ne'⟩, hPe, ?_⟩, hRate.liminf_eq⟩
   -- hM_bdd: Tendsto rate (𝓝 R) ⟹ BddAbove (Set.range rate) ⟹ ∃ R', ∀ n, rate n ≤ R'.
   obtain ⟨R', hR'⟩ := hRate.bddAbove_range
-  exact ⟨R', fun n => hR' (Set.mem_range_self n)⟩
+  exact ⟨R', fun n ↦ hR' (Set.mem_range_self n)⟩
 
 /-- **Source coding theorem**:
 The infimum of asymptotic rates of achievable block source codes equals the
@@ -467,13 +467,13 @@ theorem source_coding_theorem
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
     (hpos : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
-    (hindep_full : iIndepFun (fun i => Xs i) μ)
+    (hindep_full : iIndepFun (fun i ↦ Xs i) μ)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (hcard : 2 ≤ Fintype.card α) :
     sInf (achievableRates μ Xs) = entropy μ (Xs 0) := by
   set H : ℝ := entropy μ (Xs 0) with hH_def
   -- Lower bound H is a lower bound for achievableRates.
-  have h_lb : ∀ r ∈ achievableRates μ Xs, H ≤ r := fun r hr =>
+  have h_lb : ∀ r ∈ achievableRates μ Xs, H ≤ r := fun r hr ↦
     entropy_le_of_mem_achievableRates μ Xs hXs hindep_full hident hcard hr
   have h_bddBelow : BddBelow (achievableRates μ Xs) := ⟨H, h_lb⟩
   -- Achievability gives nonemptyness (use R = H + 1).
@@ -482,7 +482,7 @@ theorem source_coding_theorem
       (by linarith : H < H + 1)⟩
   apply le_antisymm
   · -- sInf ≤ H: for every a > H, a ∈ achievableRates ⟹ sInf ≤ a; dense argument.
-    refine le_of_forall_gt_imp_ge_of_dense fun a ha => ?_
+    refine le_of_forall_gt_imp_ge_of_dense fun a ha ↦ ?_
     exact csInf_le_of_le h_bddBelow
       (mem_achievableRates_of_gt_entropy μ Xs hXs hpos hindep_full hident ha) le_rfl
   · -- H ≤ sInf: H is a lower bound and achievableRates is nonempty.
@@ -505,7 +505,7 @@ via `iIndepFun_iff_map_fun_eq_pi_map` after restricting indices `ℕ → Fin n` 
 theorem typicalSet_prob_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep_full : iIndepFun (fun i => Xs i) μ)
+    (hindep_full : iIndepFun (fun i ↦ Xs i) μ)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (hpos : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
     (n : ℕ) {ε : ℝ}
@@ -514,51 +514,51 @@ theorem typicalSet_prob_le
       ≤ Real.exp (- (n : ℝ) * (entropy μ (Xs 0) - ε)) := by
   classical
   -- Notation.
-  set P : α → ℝ := fun a => (μ.map (Xs 0)).real {a} with hP_def
+  set P : α → ℝ := fun a ↦ (μ.map (Xs 0)).real {a} with hP_def
   set H : ℝ := entropy μ (Xs 0) with hH_def
   -- Reindex `Xs` to `Fin n` via `Fin.val`.
   have hFin_inj : Function.Injective (Fin.val : Fin n → ℕ) := Fin.val_injective
   have hindep_fin :
-      iIndepFun (fun i : Fin n => Xs i.val) μ := hindep_full.precomp hFin_inj
+      iIndepFun (fun i : Fin n ↦ Xs i.val) μ := hindep_full.precomp hFin_inj
   -- Each marginal `Xs i.val` has the same law as `Xs 0`.
-  have hmap_eq : ∀ i : Fin n, μ.map (Xs i.val) = μ.map (Xs 0) := fun i =>
+  have hmap_eq : ∀ i : Fin n, μ.map (Xs i.val) = μ.map (Xs 0) := fun i ↦
     (hident i.val).map_eq
-  have hXfin_meas : ∀ i : Fin n, Measurable (Xs i.val) := fun i => hXs i.val
+  have hXfin_meas : ∀ i : Fin n, Measurable (Xs i.val) := fun i ↦ hXs i.val
   -- Cast `iIndepFun` into the product-measure identity. `Mathlib`'s
   -- `iIndepFun_iff_map_fun_eq_pi_map` requires `[Fintype ι]`. We have that for
   -- `Fin n`.
   have hpi_eq :
-      μ.map (fun ω i => Xs i.val ω)
-        = Measure.pi (fun i : Fin n => μ.map (Xs i.val)) :=
-    (iIndepFun_iff_map_fun_eq_pi_map (fun i => (hXfin_meas i).aemeasurable)).mp
+      μ.map (fun ω i ↦ Xs i.val ω)
+        = Measure.pi (fun i : Fin n ↦ μ.map (Xs i.val)) :=
+    (iIndepFun_iff_map_fun_eq_pi_map (fun i ↦ (hXfin_meas i).aemeasurable)).mp
       hindep_fin
   -- Replace each `μ.map (Xs i.val)` with `μ.map (Xs 0)`.
   have hpi_eq' :
-      μ.map (fun ω i => Xs i.val ω)
-        = Measure.pi (fun _ : Fin n => μ.map (Xs 0)) := by
+      μ.map (fun ω i ↦ Xs i.val ω)
+        = Measure.pi (fun _ : Fin n ↦ μ.map (Xs 0)) := by
     rw [hpi_eq]
     congr 1
     funext i
     exact hmap_eq i
   -- `jointRV Xs n` is definitionally `fun ω i => Xs i.val ω` (Lean coerces `Fin n` to `ℕ`).
   have hjoint_eq : (μ.map (jointRV Xs n) : Measure (Fin n → α))
-      = Measure.pi (fun _ : Fin n => μ.map (Xs 0)) := hpi_eq'
+      = Measure.pi (fun _ : Fin n ↦ μ.map (Xs 0)) := hpi_eq'
   -- Evaluate on the singleton `{x}`.
   -- `IsProbabilityMeasure (μ.map (Xs 0))` ⇒ `SigmaFinite`.
   have hMprob : IsProbabilityMeasure (μ.map (Xs 0)) :=
     Measure.isProbabilityMeasure_map (hXs 0).aemeasurable
   -- Now compute `Measure.pi {x}` via `pi_singleton`.
   have hpi_singleton :
-      Measure.pi (fun _ : Fin n => μ.map (Xs 0)) ({x} : Set (Fin n → α))
+      Measure.pi (fun _ : Fin n ↦ μ.map (Xs 0)) ({x} : Set (Fin n → α))
         = ∏ i, (μ.map (Xs 0)) {x i} :=
-    Measure.pi_singleton (μ := fun _ : Fin n => μ.map (Xs 0)) x
+    Measure.pi_singleton (μ := fun _ : Fin n ↦ μ.map (Xs 0)) x
   have hmeas_singleton :
       (μ.map (jointRV Xs n)) ({x} : Set (Fin n → α))
         = ∏ i, (μ.map (Xs 0)) {x i} := by
     rw [hjoint_eq]; exact hpi_singleton
   -- Convert to `measureReal` (`.toReal`). Each factor is finite (probability ≤ 1).
   have hP_pos : ∀ a, 0 < P a := hpos
-  have hP_lt_top : ∀ a, (μ.map (Xs 0)) {a} ≠ ∞ := fun a => measure_ne_top _ _
+  have hP_lt_top : ∀ a, (μ.map (Xs 0)) {a} ≠ ∞ := fun a ↦ measure_ne_top _ _
   have hreal :
       (μ.map (jointRV Xs n)).real {x} = ∏ i, P (x i) := by
     unfold MeasureTheory.Measure.real
@@ -599,7 +599,7 @@ theorem typicalSet_prob_le
     have hprod_eq : Real.exp (-(∑ i : Fin n, pmfLog μ Xs (x i)))
         = ∏ i : Fin n, P (x i) := by
       rw [← Finset.sum_neg_distrib, Real.exp_sum]
-      exact Finset.prod_congr rfl fun i _ => hexp_pmfLog (x i)
+      exact Finset.prod_congr rfl fun i _ ↦ hexp_pmfLog (x i)
     rw [hprod_eq] at hexp_lt
     -- `∏ i, P (x i) < exp(-n(H-ε))` so `≤ exp(-n(H-ε))`.
     have : ∏ i : Fin n, P (x i) ≤ Real.exp (-((n : ℝ) * (H - ε))) := hexp_lt.le
@@ -631,7 +631,7 @@ bound). -/
 theorem typicalSet_prob_ge
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep_full : iIndepFun (fun i => Xs i) μ)
+    (hindep_full : iIndepFun (fun i ↦ Xs i) μ)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (hpos : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
     (n : ℕ) {ε : ℝ}
@@ -639,35 +639,35 @@ theorem typicalSet_prob_ge
     Real.exp (- (n : ℝ) * (entropy μ (Xs 0) + ε))
       ≤ (μ.map (jointRV Xs n)).real {x} := by
   classical
-  set P : α → ℝ := fun a => (μ.map (Xs 0)).real {a} with hP_def
+  set P : α → ℝ := fun a ↦ (μ.map (Xs 0)).real {a} with hP_def
   set H : ℝ := entropy μ (Xs 0) with hH_def
   -- Reindex `Xs` to `Fin n` via `Fin.val`.
   have hFin_inj : Function.Injective (Fin.val : Fin n → ℕ) := Fin.val_injective
   have hindep_fin :
-      iIndepFun (fun i : Fin n => Xs i.val) μ := hindep_full.precomp hFin_inj
-  have hmap_eq : ∀ i : Fin n, μ.map (Xs i.val) = μ.map (Xs 0) := fun i =>
+      iIndepFun (fun i : Fin n ↦ Xs i.val) μ := hindep_full.precomp hFin_inj
+  have hmap_eq : ∀ i : Fin n, μ.map (Xs i.val) = μ.map (Xs 0) := fun i ↦
     (hident i.val).map_eq
-  have hXfin_meas : ∀ i : Fin n, Measurable (Xs i.val) := fun i => hXs i.val
+  have hXfin_meas : ∀ i : Fin n, Measurable (Xs i.val) := fun i ↦ hXs i.val
   have hpi_eq :
-      μ.map (fun ω i => Xs i.val ω)
-        = Measure.pi (fun i : Fin n => μ.map (Xs i.val)) :=
-    (iIndepFun_iff_map_fun_eq_pi_map (fun i => (hXfin_meas i).aemeasurable)).mp
+      μ.map (fun ω i ↦ Xs i.val ω)
+        = Measure.pi (fun i : Fin n ↦ μ.map (Xs i.val)) :=
+    (iIndepFun_iff_map_fun_eq_pi_map (fun i ↦ (hXfin_meas i).aemeasurable)).mp
       hindep_fin
   have hpi_eq' :
-      μ.map (fun ω i => Xs i.val ω)
-        = Measure.pi (fun _ : Fin n => μ.map (Xs 0)) := by
+      μ.map (fun ω i ↦ Xs i.val ω)
+        = Measure.pi (fun _ : Fin n ↦ μ.map (Xs 0)) := by
     rw [hpi_eq]
     congr 1
     funext i
     exact hmap_eq i
   have hjoint_eq : (μ.map (jointRV Xs n) : Measure (Fin n → α))
-      = Measure.pi (fun _ : Fin n => μ.map (Xs 0)) := hpi_eq'
+      = Measure.pi (fun _ : Fin n ↦ μ.map (Xs 0)) := hpi_eq'
   have hMprob : IsProbabilityMeasure (μ.map (Xs 0)) :=
     Measure.isProbabilityMeasure_map (hXs 0).aemeasurable
   have hpi_singleton :
-      Measure.pi (fun _ : Fin n => μ.map (Xs 0)) ({x} : Set (Fin n → α))
+      Measure.pi (fun _ : Fin n ↦ μ.map (Xs 0)) ({x} : Set (Fin n → α))
         = ∏ i, (μ.map (Xs 0)) {x i} :=
-    Measure.pi_singleton (μ := fun _ : Fin n => μ.map (Xs 0)) x
+    Measure.pi_singleton (μ := fun _ : Fin n ↦ μ.map (Xs 0)) x
   have hmeas_singleton :
       (μ.map (jointRV Xs n)) ({x} : Set (Fin n → α))
         = ∏ i, (μ.map (Xs 0)) {x i} := by
@@ -705,7 +705,7 @@ theorem typicalSet_prob_ge
     have hprod_eq : Real.exp (-(∑ i : Fin n, pmfLog μ Xs (x i)))
         = ∏ i : Fin n, P (x i) := by
       rw [← Finset.sum_neg_distrib, Real.exp_sum]
-      exact Finset.prod_congr rfl fun i _ => hexp_pmfLog (x i)
+      exact Finset.prod_congr rfl fun i _ ↦ hexp_pmfLog (x i)
     rw [hprod_eq] at hexp_lt
     have hle : Real.exp (-((n : ℝ) * (H + ε))) ≤ ∏ i : Fin n, P (x i) := hexp_lt.le
     have hexp_rewrite : Real.exp (-((n : ℝ) * (H + ε)))
@@ -721,7 +721,7 @@ this yields the eventually-large-n form of Cover-Thomas 3.1.2 (b)(4). -/
 theorem typicalSet_card_ge
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep_full : iIndepFun (fun i => Xs i) μ)
+    (hindep_full : iIndepFun (fun i ↦ Xs i) μ)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (hpos : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
     (n : ℕ) {ε η : ℝ}
@@ -731,7 +731,7 @@ theorem typicalSet_card_ge
   classical
   set H : ℝ := entropy μ (Xs 0) with hH_def
   set T : Finset (Fin n → α) := (typicalSet μ Xs n ε).toFinite.toFinset with hT_def
-  set p : (Fin n → α) → ℝ := fun x => (μ.map (jointRV Xs n)).real {x} with hp_def
+  set p : (Fin n → α) → ℝ := fun x ↦ (μ.map (jointRV Xs n)).real {x} with hp_def
   -- Step 1: convert `μ(T)` to `∑ x ∈ T, p x` via finite-sum decomposition.
   have h_coe : (T : Set (Fin n → α)) = typicalSet μ Xs n ε :=
     (typicalSet μ Xs n ε).toFinite.coe_toFinset

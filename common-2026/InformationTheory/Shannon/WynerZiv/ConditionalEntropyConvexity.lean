@@ -83,11 +83,11 @@ lemma negMulLog_marginal_gap_le_joint_gap
       ≤ ∑ y, ∑ x, (Real.negMulLog (a * r₁ (x, y) + b * r₂ (x, y))
             - a * Real.negMulLog (r₁ (x, y))
             - b * Real.negMulLog (r₂ (x, y))) := by
-  refine Finset.sum_le_sum (fun y _ => ?_)
+  refine Finset.sum_le_sum (fun y _ ↦ ?_)
   -- Per `y`, set `m(x) = a r₁(x,y) + b r₂(x,y)`; the inequality is
   -- `a·(R1) + b·(R2)` of the log-sum inequality (denominator `m`), negated.
-  set m : α → ℝ := fun x => a * r₁ (x, y) + b * r₂ (x, y) with hm_def
-  have hm_nn : ∀ x, 0 ≤ m x := fun x =>
+  set m : α → ℝ := fun x ↦ a * r₁ (x, y) + b * r₂ (x, y) with hm_def
+  have hm_nn : ∀ x, 0 ≤ m x := fun x ↦
     add_nonneg (mul_nonneg ha (hr₁ (x, y))) (mul_nonneg hb (hr₂ (x, y)))
   -- The summed `r₁`/`r₂`/`m` over `x`.
   set S₁ : ℝ := ∑ x, r₁ (x, y) with hS₁
@@ -101,8 +101,8 @@ lemma negMulLog_marginal_gap_le_joint_gap
         ≤ Real.negMulLog (∑ x, r x)
             + (∑ x, r x) * Real.log (∑ x, m x) := by
     intro r hr w hw hwle
-    refine log_sum_inequality_negMulLog Finset.univ r (fun x => m x)
-      (fun x _ => hr x) (fun x _ => hm_nn x) (fun x _ hmx => ?_)
+    refine log_sum_inequality_negMulLog Finset.univ r (fun x ↦ m x)
+      (fun x _ ↦ hr x) (fun x _ ↦ hm_nn x) (fun x _ hmx ↦ ?_)
     simp only at hmx
     have hwr0 : w * r x ≤ 0 := by have := hwle x; rwa [hmx] at this
     have hwr_nn : 0 ≤ w * r x := mul_nonneg hw.le (hr x)
@@ -138,31 +138,31 @@ lemma negMulLog_marginal_gap_le_joint_gap
     · -- a = 0, so b = 1, m = r₂.
       have ha0' : a = 0 := ha0.symm
       have hb1 : b = 1 := by linarith
-      have hmr : ∀ x, m x = r₂ (x, y) := fun x => by rw [hm_def]; simp [ha0', hb1]
+      have hmr : ∀ x, m x = r₂ (x, y) := fun x ↦ by rw [hm_def]; simp [ha0', hb1]
       have hSmS₂ : Sm = S₂ := by
-        rw [hSm, hS₂]; exact Finset.sum_congr rfl (fun x _ => hmr x)
+        rw [hSm, hS₂]; exact Finset.sum_congr rfl (fun x _ ↦ hmr x)
       rw [ha0', hb1, hSmS₂]
       apply le_of_eq
-      refine (Finset.sum_eq_zero (fun x _ => ?_)).trans ?_
+      refine (Finset.sum_eq_zero (fun x _ ↦ ?_)).trans ?_
       · rw [hmr x]; ring
       · ring
     · rcases eq_or_lt_of_le hb with hb0 | hbpos
       · -- b = 0, a = 1, m = r₁.
         have hb0' : b = 0 := hb0.symm
         have ha1 : a = 1 := by linarith
-        have hmr : ∀ x, m x = r₁ (x, y) := fun x => by rw [hm_def]; simp [hb0', ha1]
+        have hmr : ∀ x, m x = r₁ (x, y) := fun x ↦ by rw [hm_def]; simp [hb0', ha1]
         have hSmS₁ : Sm = S₁ := by
-          rw [hSm, hS₁]; exact Finset.sum_congr rfl (fun x _ => hmr x)
+          rw [hSm, hS₁]; exact Finset.sum_congr rfl (fun x _ ↦ hmr x)
         rw [ha1, hb0', hSmS₁]
         apply le_of_eq
-        refine (Finset.sum_eq_zero (fun x _ => ?_)).trans ?_
+        refine (Finset.sum_eq_zero (fun x _ ↦ ?_)).trans ?_
         · rw [hmr x]; ring
         · ring
       · -- a, b > 0: combine the two log-sum bounds linearly.
-        have hR1 := key_R (fun x => r₁ (x, y)) (fun x => hr₁ (x, y)) a hapos
-          (fun x => by simp only; rw [hm_def]; nlinarith [mul_nonneg hb (hr₂ (x, y))])
-        have hR2 := key_R (fun x => r₂ (x, y)) (fun x => hr₂ (x, y)) b hbpos
-          (fun x => by simp only; rw [hm_def]; nlinarith [mul_nonneg ha (hr₁ (x, y))])
+        have hR1 := key_R (fun x ↦ r₁ (x, y)) (fun x ↦ hr₁ (x, y)) a hapos
+          (fun x ↦ by simp only; rw [hm_def]; nlinarith [mul_nonneg hb (hr₂ (x, y))])
+        have hR2 := key_R (fun x ↦ r₂ (x, y)) (fun x ↦ hr₂ (x, y)) b hbpos
+          (fun x ↦ by simp only; rw [hm_def]; nlinarith [mul_nonneg ha (hr₁ (x, y))])
         simp only at hR1 hR2
         -- a·hR1 + b·hR2.
         have hsum := add_le_add (mul_le_mul_of_nonneg_left hR1 ha)
@@ -174,7 +174,7 @@ lemma negMulLog_marginal_gap_le_joint_gap
             = ∑ x, (a * Real.negMulLog (r₁ (x, y)) + b * Real.negMulLog (r₂ (x, y))
                     - Real.negMulLog (m x)) := by
           rw [Finset.mul_sum, Finset.mul_sum, ← Finset.sum_add_distrib]
-          refine Finset.sum_congr rfl (fun x _ => ?_)
+          refine Finset.sum_congr rfl (fun x _ ↦ ?_)
           have := hmix_log x
           nlinarith [this]
         -- Rewrite RHS of hsum into a·neg S₁ + b·neg S₂ - neg Sm.
@@ -203,7 +203,7 @@ lemma negMulLog_marginal_gap_le_joint_gap
               - a * Real.negMulLog (r₁ (x, y))
               - b * Real.negMulLog (r₂ (x, y))) := by
     rw [← Finset.sum_neg_distrib]
-    refine Finset.sum_congr rfl (fun x _ => ?_)
+    refine Finset.sum_congr rfl (fun x _ ↦ ?_)
     rw [hm_def]; ring
   rw [hL, hR] at hgoal
   exact hgoal
@@ -228,15 +228,15 @@ lemma wzCondEntDiff_block_convex
   obtain ⟨κ₁, hκ₁nn, _hκ₁sum, hκ₁eq⟩ := hq₁
   obtain ⟨κ₂, hκ₂nn, _hκ₂sum, hκ₂eq⟩ := hq₂
   -- Pointwise nonnegativity of the joint slices.
-  have hq₁nn : ∀ p, 0 ≤ q₁ p := fun ⟨x, y, u'⟩ => by
+  have hq₁nn : ∀ p, 0 ≤ q₁ p := fun ⟨x, y, u'⟩ ↦ by
     rw [hκ₁eq x y u']; exact mul_nonneg (hκ₁nn x u') (h_pmf_nn (x, y))
-  have hq₂nn : ∀ p, 0 ≤ q₂ p := fun ⟨x, y, u'⟩ => by
+  have hq₂nn : ∀ p, 0 ≤ q₂ p := fun ⟨x, y, u'⟩ ↦ by
     rw [hκ₂eq x y u']; exact mul_nonneg (hκ₂nn x u') (h_pmf_nn (x, y))
   -- Slices `r_i (x, y) = q_i (x, y, u)`.
-  set r₁ : α × β → ℝ := fun p => q₁ (p.1, p.2, u) with hr₁_def
-  set r₂ : α × β → ℝ := fun p => q₂ (p.1, p.2, u) with hr₂_def
-  have hr₁nn : ∀ p, 0 ≤ r₁ p := fun p => hq₁nn _
-  have hr₂nn : ∀ p, 0 ≤ r₂ p := fun p => hq₂nn _
+  set r₁ : α × β → ℝ := fun p ↦ q₁ (p.1, p.2, u) with hr₁_def
+  set r₂ : α × β → ℝ := fun p ↦ q₂ (p.1, p.2, u) with hr₂_def
+  have hr₁nn : ∀ p, 0 ≤ r₁ p := fun p ↦ hq₁nn _
+  have hr₂nn : ∀ p, 0 ≤ r₂ p := fun p ↦ hq₂nn _
   -- Marginal identifications.
   have hYU_mix : ∀ y, wzMarginalYU U (a • q₁ + b • q₂) (y, u)
       = ∑ x, (a * r₁ (x, y) + b * r₂ (x, y)) := by
@@ -245,8 +245,8 @@ lemma wzCondEntDiff_block_convex
     simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul, wzMarginalYU,
       hr₁_def, hr₂_def]
     rw [Finset.mul_sum, Finset.mul_sum, ← Finset.sum_add_distrib]
-  have hYU₁ : ∀ y, wzMarginalYU U q₁ (y, u) = ∑ x, r₁ (x, y) := fun y => rfl
-  have hYU₂ : ∀ y, wzMarginalYU U q₂ (y, u) = ∑ x, r₂ (x, y) := fun y => rfl
+  have hYU₁ : ∀ y, wzMarginalYU U q₁ (y, u) = ∑ x, r₁ (x, y) := fun y ↦ rfl
+  have hYU₂ : ∀ y, wzMarginalYU U q₂ (y, u) = ∑ x, r₂ (x, y) := fun y ↦ rfl
   -- The refinement (DPI) inequality: (I)_u ≤ joint-gap.
   have hrefine := negMulLog_marginal_gap_le_joint_gap r₁ r₂ hr₁nn hr₂nn a b ha hb hab
   -- Part 1 (factorisation): joint-gap (per x, summed over y) = XU-block-gap.
@@ -268,9 +268,9 @@ lemma wzCondEntDiff_block_convex
     set γ : ℝ := Real.negMulLog (a * c₁ + b * c₂)
                   - a * Real.negMulLog c₁ - b * Real.negMulLog c₂ with hγ
     -- Slice values factor through `P_XY`.
-    have hr₁fac : ∀ y, r₁ (x, y) = c₁ * P_XY (x, y) := fun y => by
+    have hr₁fac : ∀ y, r₁ (x, y) = c₁ * P_XY (x, y) := fun y ↦ by
       rw [hr₁_def]; exact hκ₁eq x y u
-    have hr₂fac : ∀ y, r₂ (x, y) = c₂ * P_XY (x, y) := fun y => by
+    have hr₂fac : ∀ y, r₂ (x, y) = c₂ * P_XY (x, y) := fun y ↦ by
       rw [hr₂_def]; exact hκ₂eq x y u
     -- Each summand factors as `P_XY(x,y) · γ` via `negMulLog_mul`.
     have hsummand : ∀ y,
@@ -284,21 +284,21 @@ lemma wzCondEntDiff_block_convex
       rw [hmix, Real.negMulLog_mul, Real.negMulLog_mul, Real.negMulLog_mul, hγ]
       ring
     -- LHS: ∑_y P_XY(x,y) · γ = P_X(x) · γ.
-    rw [Finset.sum_congr rfl (fun y _ => hsummand y), ← Finset.sum_mul, ← hPX]
+    rw [Finset.sum_congr rfl (fun y _ ↦ hsummand y), ← Finset.sum_mul, ← hPX]
     -- RHS: each XU marginal factors as kernel · P_X(x); reduce via negMulLog_mul.
     have hmXU : wzMarginalXU U (a • q₁ + b • q₂) (x, u) = (a * c₁ + b * c₂) * PX := by
       simp only [wzMarginalXU, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
       rw [hPX, Finset.mul_sum]
-      refine Finset.sum_congr rfl (fun y _ => ?_)
+      refine Finset.sum_congr rfl (fun y _ ↦ ?_)
       rw [hκ₁eq x y u, hκ₂eq x y u]; ring
     have hq₁XU : wzMarginalXU U q₁ (x, u) = c₁ * PX := by
       simp only [wzMarginalXU]
       rw [hPX, Finset.mul_sum]
-      exact Finset.sum_congr rfl (fun y _ => hκ₁eq x y u)
+      exact Finset.sum_congr rfl (fun y _ ↦ hκ₁eq x y u)
     have hq₂XU : wzMarginalXU U q₂ (x, u) = c₂ * PX := by
       simp only [wzMarginalXU]
       rw [hPX, Finset.mul_sum]
-      exact Finset.sum_congr rfl (fun y _ => hκ₂eq x y u)
+      exact Finset.sum_congr rfl (fun y _ ↦ hκ₂eq x y u)
     rw [hmXU, hq₁XU, hq₂XU, Real.negMulLog_mul, Real.negMulLog_mul,
       Real.negMulLog_mul, hγ]
     ring
@@ -311,7 +311,7 @@ lemma wzCondEntDiff_block_convex
             - a * ∑ x, Real.negMulLog (wzMarginalXU U q₁ (x, u))
             - b * ∑ x, Real.negMulLog (wzMarginalXU U q₂ (x, u)) := by
     rw [Finset.sum_comm]
-    rw [Finset.sum_congr rfl (fun x _ => hpart1 x)]
+    rw [Finset.sum_congr rfl (fun x _ ↦ hpart1 x)]
     rw [Finset.sum_sub_distrib, Finset.sum_sub_distrib, Finset.mul_sum,
       Finset.mul_sum]
   -- The refinement LHS `(I)_u`, expanded into the goal's YU terms.
@@ -325,9 +325,9 @@ lemma wzCondEntDiff_block_convex
     rw [Finset.sum_sub_distrib, Finset.sum_sub_distrib, Finset.mul_sum,
       Finset.mul_sum]
     refine congrArg₂ (· - ·) (congrArg₂ (· - ·) ?_ ?_) ?_
-    · exact Finset.sum_congr rfl (fun y _ => by rw [hYU_mix y])
-    · exact Finset.sum_congr rfl (fun y _ => by rw [hYU₁ y])
-    · exact Finset.sum_congr rfl (fun y _ => by rw [hYU₂ y])
+    · exact Finset.sum_congr rfl (fun y _ ↦ by rw [hYU_mix y])
+    · exact Finset.sum_congr rfl (fun y _ ↦ by rw [hYU₁ y])
+    · exact Finset.sum_congr rfl (fun y _ ↦ by rw [hYU₂ y])
   -- Combine: (I)_u ≤ jointgap = XU-block-combo, then linarith.
   rw [hI_eq, hjointgap_eq] at hrefine
   linarith [hrefine]
@@ -342,12 +342,12 @@ lemma wzCondEntDiff_blockSum_eq_jointEntDiff (q : α × β × U → ℝ) :
       = wzJointEntYU U q - wzJointEntXU U q := by
   rw [Finset.sum_sub_distrib]
   unfold wzJointEntYU wzJointEntXU
-  rw [Fintype.sum_prod_type (f := fun p : β × U => Real.negMulLog (wzMarginalYU U q p)),
-      Fintype.sum_prod_type (f := fun p : α × U => Real.negMulLog (wzMarginalXU U q p))]
+  rw [Fintype.sum_prod_type (f := fun p : β × U ↦ Real.negMulLog (wzMarginalYU U q p)),
+      Fintype.sum_prod_type (f := fun p : α × U ↦ Real.negMulLog (wzMarginalXU U q p))]
   rw [Finset.sum_comm
-        (f := fun u y => Real.negMulLog (wzMarginalYU U q (y, u))),
+        (f := fun u y ↦ Real.negMulLog (wzMarginalYU U q (y, u))),
       Finset.sum_comm
-        (f := fun u x => Real.negMulLog (wzMarginalXU U q (x, u)))]
+        (f := fun u x ↦ Real.negMulLog (wzMarginalXU U q (x, u)))]
 
 /-! ## Main theorem — unconditional discharge of the core -/
 
@@ -365,7 +365,7 @@ theorem wynerZivCondEntDiffConvex_holds
   -- Distribute the `a •`, `b •` and the sum over `u` on the RHS.
   rw [Finset.mul_sum, Finset.mul_sum, ← Finset.sum_add_distrib]
   -- Aggregate the per-`u` block convexity.
-  refine Finset.sum_le_sum (fun u _ => ?_)
+  refine Finset.sum_le_sum (fun u _ ↦ ?_)
   exact wzCondEntDiff_block_convex U P_XY h_pmf_nn hq₁ hq₂ a b ha hb hab u
 
 /-! ## Unconditional rate-level convexity wrapper -/

@@ -111,7 +111,7 @@ def IsStamCauchySchwarz {Ω : Type*} [MeasurableSpace Ω]
     J_X = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
     J_Y = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
     J_sum = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2
-              (P.map (fun ω => X ω + Y ω)) fXY).toReal →
+              (P.map (fun ω ↦ X ω + Y ω)) fXY).toReal →
     InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fX →
     InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fY →
     (∫ x, fX x ∂MeasureTheory.volume = 1) →
@@ -129,7 +129,7 @@ theorem isStamCauchySchwarz_symm {Ω : Type*} [MeasurableSpace Ω]
     IsStamCauchySchwarz Y X P := by
   intro J_Y J_X J_sum fY fX fXY hJY hJX hJsum hJY_def hJX_def hJsum_def
     hregY hregX hnormY hnormX hconv hready
-  have h_comm : (fun ω => Y ω + X ω) = fun ω => X ω + Y ω := by
+  have h_comm : (fun ω ↦ Y ω + X ω) = fun ω ↦ X ω + Y ω := by
     funext ω; ring
   rw [h_comm] at hJsum_def
   -- transport the convolution constraint across `convDensityAdd` commutativity
@@ -222,7 +222,7 @@ def IsStamCauchySchwarzOptimal {Ω : Type*} [MeasurableSpace Ω]
     J_X = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
     J_Y = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
     J_sum = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2
-              (P.map (fun ω => X ω + Y ω)) fXY).toReal →
+              (P.map (fun ω ↦ X ω + Y ω)) fXY).toReal →
     InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fX →
     InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fY →
     (∫ x, fX x ∂MeasureTheory.volume = 1) →
@@ -287,7 +287,7 @@ theorem stam_inequality_via_predicate_optimal
       J_X = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
       J_Y = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
       J_sum = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2
-                (P.map (fun ω => X ω + Y ω)) fXY).toReal →
+                (P.map (fun ω ↦ X ω + Y ω)) fXY).toReal →
       InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fX →
       InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fY →
       (∫ x, fX x ∂MeasureTheory.volume = 1) →
@@ -352,7 +352,7 @@ theorem epi_via_stam_body_gaussian
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
     (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
+    entropyPower (P.map (fun ω ↦ X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
   epi_via_stam_gaussian P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
 
@@ -409,7 +409,7 @@ theorem isStamCauchySchwarzOptimal_of_lambda_optimal
       J_X = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
       J_Y = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
       J_sum = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2
-                (P.map (fun ω => X ω + Y ω)) fXY).toReal →
+                (P.map (fun ω ↦ X ω + Y ω)) fXY).toReal →
       J_sum ≤ (J_Y / (J_X + J_Y)) ^ 2 * J_X
               + (1 - J_Y / (J_X + J_Y)) ^ 2 * J_Y) :
     IsStamCauchySchwarzOptimal X Y P := by

@@ -70,7 +70,7 @@ noncomputable def gibbsZ (f : Fin k → α → ℝ) (lam : Fin k → ℝ) : ℝ 
 
 The denominator `Z(λ)` (`gibbsZ f lam`) is the partition function. -/
 noncomputable def gibbsPmf (f : Fin k → α → ℝ) (lam : Fin k → ℝ) : α → ℝ :=
-  fun x => Real.exp (∑ i, lam i * f i x) / gibbsZ f lam
+  fun x ↦ Real.exp (∑ i, lam i * f i x) / gibbsZ f lam
 
 omit [DecidableEq α] in
 /-- The partition function `Z(λ)` is strictly positive (each summand is `exp _ > 0`
@@ -112,7 +112,7 @@ omit [DecidableEq α] in
 lemma gibbsPmf_mem_stdSimplex [Nonempty α]
     (f : Fin k → α → ℝ) (lam : Fin k → ℝ) :
     gibbsPmf f lam ∈ stdSimplex ℝ α :=
-  ⟨fun x => gibbsPmf_nonneg f lam x, gibbsPmf_sum_eq_one f lam⟩
+  ⟨fun x ↦ gibbsPmf_nonneg f lam x, gibbsPmf_sum_eq_one f lam⟩
 
 omit [DecidableEq α] in
 /-- Closed form for `log (gibbsPmf f λ x)`: the numerator's exponent minus `log Z(λ)`.
@@ -181,7 +181,7 @@ lemma klDivPmf_gibbsPmf_eq [Nonempty α]
               - Q x * Real.log (gibbsPmf f lam x)
               + gibbsPmf f lam x - Q x) := by
     unfold klDivPmf
-    exact Finset.sum_congr rfl (fun x _ => h_per x)
+    exact Finset.sum_congr rfl (fun x _ ↦ h_per x)
   rw [h_sum]
   -- Split the four summands.
   have h_split : ∀ x : α,
@@ -192,7 +192,7 @@ lemma klDivPmf_gibbsPmf_eq [Nonempty α]
           + (-(Q x * Real.log (gibbsPmf f lam x)))
           + (gibbsPmf f lam x - Q x) := by
     intro x; ring
-  rw [Finset.sum_congr rfl (fun x _ => h_split x)]
+  rw [Finset.sum_congr rfl (fun x _ ↦ h_split x)]
   rw [Finset.sum_add_distrib, Finset.sum_add_distrib]
   -- ∑ (-(negMulLog (Q x))) = - ∑ negMulLog (Q x)
   rw [show (∑ x, -(Real.negMulLog (Q x))) = -(∑ x, Real.negMulLog (Q x)) from by
@@ -209,7 +209,7 @@ lemma klDivPmf_gibbsPmf_eq [Nonempty α]
     rw [log_gibbsPmf f lam x]; ring
   rw [show (∑ x, Q x * Real.log (gibbsPmf f lam x))
         = ∑ x, (Q x * (∑ i, lam i * f i x) - Q x * Real.log (gibbsZ f lam))
-      from Finset.sum_congr rfl (fun x _ => h_inner x)]
+      from Finset.sum_congr rfl (fun x _ ↦ h_inner x)]
   rw [Finset.sum_sub_distrib]
   -- ∑ Q x * ⟨λ,f⟩(x) = ⟨λ, 𝔼_Q[f]⟩  (swap sum order)
   have h_lin : (∑ x, Q x * (∑ i, lam i * f i x))
@@ -217,12 +217,12 @@ lemma klDivPmf_gibbsPmf_eq [Nonempty α]
     -- Expand Q x * (∑ i, ...) to ∑ i, lam i * (Q x * f i x), swap sums, factor lam i.
     have step1 : (∑ x, Q x * (∑ i, lam i * f i x))
                   = ∑ x, ∑ i, lam i * (Q x * f i x) := by
-      refine Finset.sum_congr rfl (fun x _ => ?_)
+      refine Finset.sum_congr rfl (fun x _ ↦ ?_)
       rw [Finset.mul_sum]
-      refine Finset.sum_congr rfl (fun i _ => ?_)
+      refine Finset.sum_congr rfl (fun i _ ↦ ?_)
       ring
     rw [step1, Finset.sum_comm]
-    refine Finset.sum_congr rfl (fun i _ => ?_)
+    refine Finset.sum_congr rfl (fun i _ ↦ ?_)
     rw [← Finset.mul_sum]
   rw [h_lin]
   -- ∑ Q x * log Z = (∑ Q x) * log Z = 1 * log Z = log Z
@@ -257,7 +257,7 @@ theorem entropy_le_gibbs_of_constraints [Nonempty α]
   classical
   -- Gibbs inequality: klDivPmf P G ≥ 0.
   have h_KL_P : 0 ≤ klDivPmf P (gibbsPmf f lam) :=
-    klDivPmf_nonneg P (gibbsPmf f lam) hP.1 (fun a => gibbsPmf_nonneg f lam a)
+    klDivPmf_nonneg P (gibbsPmf f lam) hP.1 (fun a ↦ gibbsPmf_nonneg f lam a)
   -- Self-KL: klDivPmf G G = 0.
   have h_KL_G : klDivPmf (gibbsPmf f lam) (gibbsPmf f lam) = 0 :=
     klDivPmf_self_eq_zero (gibbsPmf f lam) (gibbsPmf_pos f lam)
@@ -269,11 +269,11 @@ theorem entropy_le_gibbs_of_constraints [Nonempty α]
   -- Inner product of lam with the constraints is the same for P and G (= ⟨λ, c⟩).
   have h_inner_P : (∑ i, lam i * (∑ x, P x * f i x))
                     = ∑ i, lam i * c i := by
-    refine Finset.sum_congr rfl (fun i _ => ?_)
+    refine Finset.sum_congr rfl (fun i _ ↦ ?_)
     rw [hP_constraints i]
   have h_inner_G : (∑ i, lam i * (∑ x, gibbsPmf f lam x * f i x))
                     = ∑ i, lam i * c i := by
-    refine Finset.sum_congr rfl (fun i _ => ?_)
+    refine Finset.sum_congr rfl (fun i _ ↦ ?_)
     rw [h_gibbs_constraints i]
   rw [h_inner_P] at h_eq_P
   rw [h_inner_G] at h_eq_G
@@ -296,7 +296,7 @@ lemma klDivPmf_eq_zero_iff_pmf
     -- Each summand of the sum is non-negative, so all must be zero.
     have h_per_zero : ∀ a, Q a * InformationTheory.klFun (P a / Q a) = 0 := by
       have h_per_nn : ∀ a ∈ Finset.univ,
-          0 ≤ Q a * InformationTheory.klFun (P a / Q a) := fun a _ =>
+          0 ≤ Q a * InformationTheory.klFun (P a / Q a) := fun a _ ↦
         mul_nonneg (hQ_pos a).le
           (InformationTheory.klFun_nonneg (div_nonneg (hP.1 a) (hQ_pos a).le))
       have h_sum_zero : ∑ a, Q a * InformationTheory.klFun (P a / Q a) = 0 := h
@@ -338,11 +338,11 @@ theorem entropy_eq_gibbs_iff_of_constraints [Nonempty α]
                     (gibbsPmf_mem_stdSimplex f lam)
   have h_inner_P : (∑ i, lam i * (∑ x, P x * f i x))
                     = ∑ i, lam i * c i := by
-    refine Finset.sum_congr rfl (fun i _ => ?_)
+    refine Finset.sum_congr rfl (fun i _ ↦ ?_)
     rw [hP_constraints i]
   have h_inner_G : (∑ i, lam i * (∑ x, gibbsPmf f lam x * f i x))
                     = ∑ i, lam i * c i := by
-    refine Finset.sum_congr rfl (fun i _ => ?_)
+    refine Finset.sum_congr rfl (fun i _ ↦ ?_)
     rw [h_gibbs_constraints i]
   rw [h_inner_P] at h_eq_P
   rw [h_inner_G] at h_eq_G
@@ -379,13 +379,13 @@ lemma gibbsZ_zero [Nonempty α] (lam : Fin k → ℝ) :
     have h_sum_zero : (∑ i, lam i * (0 : Fin k → α → ℝ) i y) = 0 := by
       simp
     rw [h_sum_zero, Real.exp_zero]
-  rw [Finset.sum_congr rfl (fun y _ => h_term y)]
+  rw [Finset.sum_congr rfl (fun y _ ↦ h_term y)]
   rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, mul_one]
 
 omit [DecidableEq α] in
 /-- With the zero feature map, `gibbsPmf` is the uniform pmf `x ↦ 1 / Fintype.card α`. -/
 lemma gibbsPmf_zero_eq_uniform [Nonempty α] (lam : Fin k → ℝ) :
-    gibbsPmf (0 : Fin k → α → ℝ) lam = fun _ => (1 : ℝ) / Fintype.card α := by
+    gibbsPmf (0 : Fin k → α → ℝ) lam = fun _ ↦ (1 : ℝ) / Fintype.card α := by
   funext x
   unfold gibbsPmf
   rw [gibbsZ_zero lam]
@@ -418,8 +418,8 @@ omit [DecidableEq α] in
 theorem entropy_gibbsPmf_zero_eq_log_card [Nonempty α] (lam : Fin k → ℝ) :
     ∑ x : α, Real.negMulLog (gibbsPmf (0 : Fin k → α → ℝ) lam x)
       = Real.log (Fintype.card α) := by
-  rw [show (fun x => Real.negMulLog (gibbsPmf (0 : Fin k → α → ℝ) lam x))
-        = (fun _ : α => Real.negMulLog ((1 : ℝ) / Fintype.card α)) from by
+  rw [show (fun x ↦ Real.negMulLog (gibbsPmf (0 : Fin k → α → ℝ) lam x))
+        = (fun _ : α ↦ Real.negMulLog ((1 : ℝ) / Fintype.card α)) from by
         funext x
         rw [gibbsPmf_zero_eq_uniform lam]]
   exact entropy_uniform_pmf
@@ -428,7 +428,7 @@ theorem entropy_gibbsPmf_zero_eq_log_card [Nonempty α] (lam : Fin k → ℝ) :
 
 /-- The two-point feature map: indicator of `true`. -/
 noncomputable def boolFeature : Fin 1 → Bool → ℝ :=
-  fun _ b => if b then 1 else 0
+  fun _ b ↦ if b then 1 else 0
 
 /-- For any `λ : Fin 1 → ℝ`, `gibbsPmf boolFeature λ true + gibbsPmf boolFeature λ false = 1`
 (restatement of `gibbsPmf_sum_eq_one` on `Bool`). -/
@@ -476,7 +476,7 @@ theorem entropy_gibbsPmf_bool_eq_binEntropy
 
 /-- The discrete "linear" feature map on `Fin (N+1)`: `f 0 x := (x.val : ℝ)`. -/
 noncomputable def linearFeature {N : ℕ} : Fin 1 → Fin (N + 1) → ℝ :=
-  fun _ x => (x : ℝ)
+  fun _ x ↦ (x : ℝ)
 
 /-- **Geometric ratio form** — setting `q := exp (λ 0)`,
 the Gibbs distribution with the linear feature is the geometric ratio
@@ -485,7 +485,7 @@ ansatz; choosing `λ 0 = log q` then yields the geometric distribution with rati
 @[entry_point]
 theorem gibbsPmf_linearFeature_eq_geometric {N : ℕ} (lam : Fin 1 → ℝ) :
     gibbsPmf (linearFeature (N := N)) lam
-      = fun x : Fin (N + 1) =>
+      = fun x : Fin (N + 1) ↦
           (Real.exp (lam 0)) ^ (x : ℕ)
             / ∑ y : Fin (N + 1), (Real.exp (lam 0)) ^ (y : ℕ) := by
   funext x
@@ -501,7 +501,7 @@ theorem gibbsPmf_linearFeature_eq_geometric {N : ℕ} (lam : Fin 1 → ℝ) :
   -- Denominator: ∑ y, exp (lam 0 * (y : ℝ)) = ∑ y, (exp (lam 0)) ^ (y : ℕ).
   have h_den : (∑ y : Fin (N + 1), Real.exp (∑ i, lam i * (y : ℝ)))
                 = ∑ y : Fin (N + 1), (Real.exp (lam 0)) ^ (y : ℕ) := by
-    refine Finset.sum_congr rfl (fun y _ => ?_)
+    refine Finset.sum_congr rfl (fun y _ ↦ ?_)
     have h_sum : (∑ i : Fin 1, lam i * (y : ℝ)) = lam 0 * (y : ℝ) := by
       rw [Fin.sum_univ_one]
     rw [h_sum, show ((y : Fin (N + 1)) : ℝ) = ((y : ℕ) : ℝ) from rfl,

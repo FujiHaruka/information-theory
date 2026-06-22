@@ -34,13 +34,13 @@ private theorem converseMarkov_marginalA
     converseJointInline h_meas c
       = ((converseJointInline h_meas c).map (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)) ⊗ₘ Wg := by
   haveI : IsMarkovKernel Wg := by rw [hWg_def]; infer_instance
-  refine Measure.ext_of_lintegral _ fun f hf => ?_
+  refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
   rw [Measure.lintegral_compProd hf, h_map_Xs, lintegral_smul_measure,
     lintegral_finsetSum_measure]
   have hRHS_summand : ∀ m : Fin M,
       ∫⁻ a : Fin M, ∫⁻ y : Fin n → ℝ, f (a, y) ∂(Wg a) ∂(Measure.dirac m)
         = ∫⁻ y : Fin n → ℝ, f (m, y)
-            ∂(Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))) := by
+            ∂(Measure.pi (fun i : Fin n ↦ awgnChannel N h_meas (c.encoder m i))) := by
     intro m
     rw [lintegral_dirac, hWg_def]
     rfl
@@ -49,9 +49,9 @@ private theorem converseMarkov_marginalA
   have hLHS_summand : ∀ m : Fin M,
       ∫⁻ ω : Fin M × (Fin n → ℝ), f ω
           ∂((Measure.dirac m).prod
-            (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))))
+            (Measure.pi (fun i : Fin n ↦ awgnChannel N h_meas (c.encoder m i))))
         = ∫⁻ y : Fin n → ℝ, f (m, y)
-            ∂(Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))) := by
+            ∂(Measure.pi (fun i : Fin n ↦ awgnChannel N h_meas (c.encoder m i))) := by
     intro m
     rw [lintegral_prod _ hf.aemeasurable, lintegral_dirac]
   simp_rw [hLHS_summand]
@@ -59,7 +59,7 @@ private theorem converseMarkov_marginalA
 private theorem converseMarkov_pairLaw
     {N : ℝ≥0} {h_meas : IsAwgnChannelMeasurable N} {M n : ℕ} [NeZero M] {P : ℝ}
     {c : AwgnCode M n P}
-    (Zc : Fin M × (Fin n → ℝ) → (Fin n → ℝ)) (hZc_def : Zc = fun ω => c.encoder ω.1)
+    (Zc : Fin M × (Fin n → ℝ) → (Fin n → ℝ)) (hZc_def : Zc = fun ω ↦ c.encoder ω.1)
     (hZc_meas : Measurable Zc)
     (Yo : Fin M × (Fin n → ℝ) → (Fin n → ℝ)) (hYo_def : Yo = Prod.snd)
     (hYo_meas : Measurable Yo)
@@ -67,18 +67,18 @@ private theorem converseMarkov_pairLaw
     (hW_def : W = ChannelCoding.Channel.toBlock (awgnChannel N h_meas) n)
     (h_map_Zc : (converseJointInline h_meas c).map Zc
       = ((Fintype.card (Fin M) : ℝ≥0∞)⁻¹) • ∑ m : Fin M, (Measure.dirac (c.encoder m))) :
-    (converseJointInline h_meas c).map (fun ω => (Zc ω, Yo ω))
+    (converseJointInline h_meas c).map (fun ω ↦ (Zc ω, Yo ω))
       = ((converseJointInline h_meas c).map Zc) ⊗ₘ W := by
   haveI : IsMarkovKernel W := by rw [hW_def]; infer_instance
   haveI : IsProbabilityMeasure ((converseJointInline h_meas c).map Zc) :=
     Measure.isProbabilityMeasure_map hZc_meas.aemeasurable
-  refine Measure.ext_of_lintegral _ fun f hf => ?_
+  refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
   rw [Measure.lintegral_compProd hf, h_map_Zc, lintegral_smul_measure,
     lintegral_finsetSum_measure]
   have hRHS_summand : ∀ m : Fin M,
       ∫⁻ z : Fin n → ℝ, ∫⁻ y : Fin n → ℝ, f (z, y) ∂(W z) ∂(Measure.dirac (c.encoder m))
         = ∫⁻ y : Fin n → ℝ, f (c.encoder m, y)
-            ∂(Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))) := by
+            ∂(Measure.pi (fun i : Fin n ↦ awgnChannel N h_meas (c.encoder m i))) := by
     intro m
     rw [lintegral_dirac' _
       (Measurable.lintegral_kernel_prod_right' (κ := W) hf), hW_def]
@@ -89,11 +89,11 @@ private theorem converseMarkov_pairLaw
   have hLHS_summand : ∀ m : Fin M,
       ∫⁻ ω : Fin M × (Fin n → ℝ), f (Zc ω, Yo ω)
           ∂((Measure.dirac m).prod
-            (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))))
+            (Measure.pi (fun i : Fin n ↦ awgnChannel N h_meas (c.encoder m i))))
         = ∫⁻ y : Fin n → ℝ, f (c.encoder m, y)
-            ∂(Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))) := by
+            ∂(Measure.pi (fun i : Fin n ↦ awgnChannel N h_meas (c.encoder m i))) := by
     intro m
-    rw [lintegral_prod (fun ω : Fin M × (Fin n → ℝ) => f (Zc ω, Yo ω))
+    rw [lintegral_prod (fun ω : Fin M × (Fin n → ℝ) ↦ f (Zc ω, Yo ω))
       (hf.comp (hZc_meas.prodMk hYo_meas)).aemeasurable, hZc_def, hYo_def, lintegral_dirac]
   simp_rw [hLHS_summand]
 
@@ -116,12 +116,12 @@ theorem awgnConverseMarkov_holds
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
     IsMarkovChain (converseJointInline h_meas c)
       (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
-      (fun ω : Fin M × (Fin n → ℝ) => c.encoder ω.1)
+      (fun ω : Fin M × (Fin n → ℝ) ↦ c.encoder ω.1)
       (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) := by
   set μ : Measure (Fin M × (Fin n → ℝ)) := converseJointInline h_meas c with hμ_def
   -- The three RVs.
   set Xs : Fin M × (Fin n → ℝ) → Fin M := Prod.fst with hXs_def
-  set Zc : Fin M × (Fin n → ℝ) → (Fin n → ℝ) := fun ω => c.encoder ω.1 with hZc_def
+  set Zc : Fin M × (Fin n → ℝ) → (Fin n → ℝ) := fun ω ↦ c.encoder ω.1 with hZc_def
   set Yo : Fin M × (Fin n → ℝ) → (Fin n → ℝ) := Prod.snd with hYo_def
   -- The noise block kernel `W^{⊗n}` of the AWGN channel.
   set W : Kernel (Fin n → ℝ) (Fin n → ℝ) :=
@@ -146,7 +146,7 @@ theorem awgnConverseMarkov_holds
     rw [Measure.map_smul]
     congr 1
     rw [Measure.map_finset_sum (measurable_fst.aemeasurable)]
-    refine Finset.sum_congr rfl fun m _ => ?_
+    refine Finset.sum_congr rfl fun m _ ↦ ?_
     rw [Measure.map_fst_prod]
     simp
   have h_marginalA : μ = (μ.map Xs) ⊗ₘ Wg := by
@@ -160,10 +160,10 @@ theorem awgnConverseMarkov_holds
       Measure.map_smul]
     congr 1
     rw [Measure.map_finset_sum' Measurable.of_discrete.aemeasurable]
-    refine Finset.sum_congr rfl fun m _ => ?_
+    refine Finset.sum_congr rfl fun m _ ↦ ?_
     rw [Measure.map_dirac' Measurable.of_discrete]
   -- Linchpin marginal: `μ.map (Zc, Yo) = (μ.map Zc) ⊗ₘ W`.
-  have h_pair_eq : μ.map (fun ω => (Zc ω, Yo ω)) = (μ.map Zc) ⊗ₘ W := by
+  have h_pair_eq : μ.map (fun ω ↦ (Zc ω, Yo ω)) = (μ.map Zc) ⊗ₘ W := by
     rw [hμ_def]
     exact converseMarkov_pairLaw Zc hZc_def hZc_meas Yo hYo_def hYo_meas W hW_def
       (by rw [← hμ_def]; exact h_map_Zc)
@@ -182,12 +182,12 @@ theorem awgnConverseMarkov_holds
     rw [Kernel.prod_apply, Kernel.prod_apply, ha]
   rw [h_compProd_eq]
   -- Triple-joint factorization via ext_of_lintegral.
-  have h_LHS_meas : Measurable (fun ω => (Zc ω, Xs ω, Yo ω)) :=
+  have h_LHS_meas : Measurable (fun ω ↦ (Zc ω, Xs ω, Yo ω)) :=
     hZc_meas.prodMk (hXs_meas.prodMk hYo_meas)
   -- `compProd_map_condDistrib`: fold K_X back into `μ.map (Zc, Xs)`.
-  have hKX_fold : (μ.map Zc) ⊗ₘ K_X = μ.map (fun ω => (Zc ω, Xs ω)) :=
+  have hKX_fold : (μ.map Zc) ⊗ₘ K_X = μ.map (fun ω ↦ (Zc ω, Xs ω)) :=
     compProd_map_condDistrib (μ := μ) (X := Zc) (Y := Xs) hXs_meas.aemeasurable
-  refine Measure.ext_of_lintegral _ fun f hf => ?_
+  refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
   -- LHS: ∫⁻ ω, f (Zc ω, Xs ω, Yo ω) ∂μ.
   rw [lintegral_map hf h_LHS_meas]
   -- RHS: unfold the outer compProd over (μ.map Zc), then the inner product kernel.
@@ -199,27 +199,27 @@ theorem awgnConverseMarkov_holds
         = ∫⁻ x : Fin M, ∫⁻ y : Fin n → ℝ, f (z, x, y) ∂(W z) ∂(K_X z) := by
     intro z
     rw [Kernel.prod_apply]
-    rw [lintegral_prod (fun p : Fin M × (Fin n → ℝ) => f (z, p.1, p.2))
+    rw [lintegral_prod (fun p : Fin M × (Fin n → ℝ) ↦ f (z, p.1, p.2))
       (hf.comp (measurable_const.prodMk
         (measurable_fst.prodMk measurable_snd))).aemeasurable]
   simp_rw [h_inner_split]
   -- Define G (z, x) := ∫⁻ y ∂(W z), f (z, x, y),
   -- so RHS = ∫⁻ z ∂(μ.map Zc), ∫⁻ x ∂(K_X z), G (z, x).
   set G : (Fin n → ℝ) × Fin M → ℝ≥0∞ :=
-    fun p => ∫⁻ y : Fin n → ℝ, f (p.1, p.2, y) ∂(W p.1) with hG_def
+    fun p ↦ ∫⁻ y : Fin n → ℝ, f (p.1, p.2, y) ∂(W p.1) with hG_def
   have hG_meas : Measurable G := by
     let K' : Kernel ((Fin n → ℝ) × Fin M) (Fin n → ℝ) :=
       W.comap (Prod.fst : (Fin n → ℝ) × Fin M → (Fin n → ℝ)) measurable_fst
-    have h_eq_K' : G = fun p : (Fin n → ℝ) × Fin M =>
+    have h_eq_K' : G = fun p : (Fin n → ℝ) × Fin M ↦
         ∫⁻ y : Fin n → ℝ, f (p.1, p.2, y) ∂(K' p) := by
       funext p; simp [G, K', Kernel.comap_apply]
     rw [h_eq_K']
     exact Measurable.lintegral_kernel_prod_right' (κ := K')
-      (f := fun pp : ((Fin n → ℝ) × Fin M) × (Fin n → ℝ) => f (pp.1.1, pp.1.2, pp.2))
+      (f := fun pp : ((Fin n → ℝ) × Fin M) × (Fin n → ℝ) ↦ f (pp.1.1, pp.1.2, pp.2))
       (hf.comp (((measurable_fst.comp measurable_fst).prodMk
         ((measurable_snd.comp measurable_fst).prodMk measurable_snd))))
   have h_RHS_is_G : ∀ z : Fin n → ℝ, ∀ x : Fin M,
-      ∫⁻ y : Fin n → ℝ, f (z, x, y) ∂(W z) = G (z, x) := fun _ _ => rfl
+      ∫⁻ y : Fin n → ℝ, f (z, x, y) ∂(W z) = G (z, x) := fun _ _ ↦ rfl
   simp_rw [h_RHS_is_G]
   -- RHS = ∫⁻ z ∂(μ.map Zc), ∫⁻ x ∂(K_X z), G (z, x) = ∫⁻ p ∂((μ.map Zc) ⊗ₘ K_X), G p.
   rw [← Measure.lintegral_compProd hG_meas, hKX_fold]
@@ -234,18 +234,18 @@ theorem awgnConverseMarkov_holds
     intro H hH
     conv_lhs => rw [h_marginalA]
     rw [Measure.lintegral_compProd hH]
-  rw [h_reduce (fun ω => f (Zc ω, Xs ω, Yo ω)) (hf.comp h_LHS_meas),
-    h_reduce (fun ω => G (Zc ω, Xs ω)) (hG_meas.comp (hZc_meas.prodMk hXs_meas))]
+  rw [h_reduce (fun ω ↦ f (Zc ω, Xs ω, Yo ω)) (hf.comp h_LHS_meas),
+    h_reduce (fun ω ↦ G (Zc ω, Xs ω)) (hG_meas.comp (hZc_meas.prodMk hXs_meas))]
   -- Both inner integrals over `Wg a`. For each message `a`:
-  refine lintegral_congr fun a => ?_
+  refine lintegral_congr fun a ↦ ?_
   have hWg_eq : Wg a = W (c.encoder a) := by rw [hWg_def, Kernel.comap_apply]
   haveI : IsProbabilityMeasure (Wg a) := by rw [hWg_eq]; infer_instance
   -- LHS inner: ∫⁻ y ∂(Wg a), f (encoder a, a, y).
   --   `(Zc (a,y), Xs (a,y), Yo (a,y)) = (encoder a, a, y)`.
   -- RHS inner: ∫⁻ y ∂(Wg a), G (encoder a, a), constant in y,
   --   value `∫⁻ y' ∂(W (encoder a)), f (encoder a, a, y')`.
-  have hRHS_eval : (fun y : Fin n → ℝ => G (Zc (a, y), Xs (a, y)))
-      = (fun _ : Fin n → ℝ => ∫⁻ y' : Fin n → ℝ, f (c.encoder a, a, y') ∂(Wg a)) := by
+  have hRHS_eval : (fun y : Fin n → ℝ ↦ G (Zc (a, y), Xs (a, y)))
+      = (fun _ : Fin n → ℝ ↦ ∫⁻ y' : Fin n → ℝ, f (c.encoder a, a, y') ∂(Wg a)) := by
     funext y
     show G (c.encoder a, a) = _
     rw [hG_def, hWg_eq]

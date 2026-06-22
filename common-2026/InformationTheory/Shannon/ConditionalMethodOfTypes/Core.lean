@@ -36,7 +36,7 @@ variable [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass �
 the fixed X-block `x` equals the count vector `c : α × β → ℕ`. -/
 def conditionalTypeClass {n : ℕ} (x : Fin n → α) (c : α × β → ℕ) :
     Set (Fin n → β) :=
-  { y | ∀ a b, (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card = c (a, b) }
+  { y | ∀ a b, (Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)).card = c (a, b) }
 
 lemma conditionalTypeClass_finite {n : ℕ} (x : Fin n → α) (c : α × β → ℕ) :
     (conditionalTypeClass (β := β) x c).Finite :=
@@ -47,25 +47,25 @@ the joint sequence `i ↦ (x i, y i)` lies in `typeClassByCount c` on `α × β`
 lemma mem_conditionalTypeClass_iff_joint {n : ℕ} (x : Fin n → α) (c : α × β → ℕ)
     (y : Fin n → β) :
     y ∈ conditionalTypeClass x c ↔
-      (fun i => (x i, y i)) ∈ typeClassByCount (α := α × β) (n := n) c := by
+      (fun i ↦ (x i, y i)) ∈ typeClassByCount (α := α × β) (n := n) c := by
   classical
   constructor
   · intro h p
     obtain ⟨a, b⟩ := p
-    have h_eq : (Finset.univ.filter (fun i : Fin n => (x i, y i) = (a, b))).card
-        = (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card := by
+    have h_eq : (Finset.univ.filter (fun i : Fin n ↦ (x i, y i) = (a, b))).card
+        = (Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)).card := by
       congr 1
       ext i
       simp [Prod.mk.injEq]
-    show typeCount (fun i => (x i, y i)) (a, b) = c (a, b)
+    show typeCount (fun i ↦ (x i, y i)) (a, b) = c (a, b)
     unfold typeCount
     rw [h_eq]
     exact h a b
   · intro h a b
     have h_p := h (a, b)
-    show (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card = c (a, b)
-    have h_eq : (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card
-        = (Finset.univ.filter (fun i : Fin n => (x i, y i) = (a, b))).card := by
+    show (Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)).card = c (a, b)
+    have h_eq : (Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)).card
+        = (Finset.univ.filter (fun i : Fin n ↦ (x i, y i) = (a, b))).card := by
       congr 1
       ext i
       simp [Prod.mk.injEq]
@@ -83,22 +83,22 @@ lemma conditionalTypeClass_xMarginal {n : ℕ} (x : Fin n → α) (c : α × β 
     (∑ b : β, c (a, b)) = typeCount x a := by
   classical
   have h_each : ∀ b, c (a, b)
-      = (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card :=
-    fun b => (hy a b).symm
+      = (Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)).card :=
+    fun b ↦ (hy a b).symm
   have h_sum :
-      (∑ b : β, (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card)
-        = (Finset.univ.filter (fun i : Fin n => x i = a)).card := by
-    have h_partition : (Finset.univ.filter (fun i : Fin n => x i = a))
-        = (Finset.univ : Finset β).biUnion (fun b =>
-            Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)) := by
+      (∑ b : β, (Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)).card)
+        = (Finset.univ.filter (fun i : Fin n ↦ x i = a)).card := by
+    have h_partition : (Finset.univ.filter (fun i : Fin n ↦ x i = a))
+        = (Finset.univ : Finset β).biUnion (fun b ↦
+            Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)) := by
       ext i
       simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_biUnion]
-      refine ⟨fun h_xi => ⟨y i, h_xi, rfl⟩, ?_⟩
+      refine ⟨fun h_xi ↦ ⟨y i, h_xi, rfl⟩, ?_⟩
       rintro ⟨b, h_xi, _⟩
       exact h_xi
     have h_disjoint :
-        ((Finset.univ : Finset β) : Set β).PairwiseDisjoint (fun b =>
-          Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)) := by
+        ((Finset.univ : Finset β) : Set β).PairwiseDisjoint (fun b ↦
+          Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)) := by
       intro b₁ _ b₂ _ hb
       refine Finset.disjoint_filter.mpr ?_
       intro i _ ⟨_, hb₁⟩ ⟨_, hb₂⟩
@@ -106,8 +106,8 @@ lemma conditionalTypeClass_xMarginal {n : ℕ} (x : Fin n → α) (c : α × β 
       rw [← hb₁, hb₂]
     rw [h_partition, Finset.card_biUnion h_disjoint]
   rw [show (∑ b : β, c (a, b)) =
-        ∑ b : β, (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card from
-        Finset.sum_congr rfl fun b _ => h_each b]
+        ∑ b : β, (Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)).card from
+        Finset.sum_congr rfl fun b _ ↦ h_each b]
   rw [h_sum]
   rfl
 
@@ -118,7 +118,7 @@ empirical type is within `ε` of `qZ := μ.map (jointSequence Xs Ys 0)`. -/
 noncomputable def sliceTypeIndices (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (n : ℕ) (ε : ℝ) : Finset (TypeCountIndex (α × β) n) := by
   classical
-  exact (Finset.univ : Finset (TypeCountIndex (α × β) n)).filter (fun c =>
+  exact (Finset.univ : Finset (TypeCountIndex (α × β) n)).filter (fun c ↦
     ∀ p : α × β, |((c p : ℕ) : ℝ) / n - (μ.map (jointSequence Xs Ys 0)).real {p}| ≤ ε)
 
 /-- Slice = union of conditional type classes over consistent indices. -/
@@ -127,7 +127,7 @@ lemma conditionalStronglyTypicalSlice_eq_biUnion
     (n : ℕ) (ε : ℝ) (x : Fin n → α) :
     conditionalStronglyTypicalSlice μ Xs Ys n ε x
       = ⋃ c ∈ sliceTypeIndices μ Xs Ys n ε,
-          conditionalTypeClass (β := β) x (fun p => (c p : ℕ)) := by
+          conditionalTypeClass (β := β) x (fun p ↦ (c p : ℕ)) := by
   classical
   ext y
   simp only [Set.mem_iUnion, exists_prop]
@@ -136,11 +136,11 @@ lemma conditionalStronglyTypicalSlice_eq_biUnion
     rw [mem_conditionalStronglyTypicalSlice_iff] at hy
     rw [mem_jointStronglyTypicalSet_iff] at hy
     rw [mem_stronglyTypicalSet_iff] at hy
-    set z : Fin n → α × β := fun i => (x i, y i) with hz_def
-    refine ⟨fun p => ⟨typeCount z p, ?_⟩, ?_, ?_⟩
+    set z : Fin n → α × β := fun i ↦ (x i, y i) with hz_def
+    refine ⟨fun p ↦ ⟨typeCount z p, ?_⟩, ?_, ?_⟩
     · -- typeCount z p ≤ n
       unfold typeCount
-      have h1 : (Finset.univ.filter (fun i : Fin n => z i = p)).card ≤
+      have h1 : (Finset.univ.filter (fun i : Fin n ↦ z i = p)).card ≤
           (Finset.univ : Finset (Fin n)).card := Finset.card_filter_le _ _
       rw [Finset.card_univ, Fintype.card_fin] at h1
       omega
@@ -161,8 +161,8 @@ lemma conditionalStronglyTypicalSlice_eq_biUnion
     rw [mem_jointStronglyTypicalSet_iff]
     rw [mem_stronglyTypicalSet_iff]
     intro p
-    have h_eq : typeCount (fun i => (x i, y i)) p = (c p : ℕ) := hy p
-    rw [show ((typeCount (fun i => (x i, y i)) p : ℕ) : ℝ) = ((c p : ℕ) : ℝ) from by
+    have h_eq : typeCount (fun i ↦ (x i, y i)) p = (c p : ℕ) := hy p
+    rw [show ((typeCount (fun i ↦ (x i, y i)) p : ℕ) : ℝ) = ((c p : ℕ) : ℝ) from by
         exact_mod_cast congrArg (Nat.cast (R := ℝ)) h_eq]
     exact hc_close p
 
@@ -229,7 +229,7 @@ private lemma sum_floorMatrix_erase_le
       ≤ typeCount x a := by
   classical
   set qXa : ℝ := ∑ b'' : β, qZ (a, b'') with hqXa_def
-  have hqXa_nn : 0 ≤ qXa := Finset.sum_nonneg fun b'' _ => hqZ_nn (a, b'')
+  have hqXa_nn : 0 ≤ qXa := Finset.sum_nonneg fun b'' _ ↦ hqZ_nn (a, b'')
   -- Each summand is ≤ (typeCount x a : ℝ) · (qZ(a,b')/qXa);
   -- sum ≤ (typeCount x a) · 1 = typeCount x a.
   have h_real_le :
@@ -252,7 +252,7 @@ private lemma sum_floorMatrix_erase_le
             * (qZ (a, b') / qXa))) : ℝ))
         ≤ ∑ b' ∈ Finset.univ.erase (absorberLetterβ β),
               ((typeCount x a : ℝ) * (qZ (a, b') / qXa)) := by
-          refine Finset.sum_le_sum fun b' _ => ?_
+          refine Finset.sum_le_sum fun b' _ ↦ ?_
           refine Nat.floor_le ?_
           exact mul_nonneg (Nat.cast_nonneg _) (div_nonneg (hqZ_nn _) hqXa_nn)
       _ = (typeCount x a : ℝ) *
@@ -306,9 +306,9 @@ lemma floorMatrix_row_sum
     have h_each_le : Nat.floor ((typeCount x a : ℝ)
         * (qZ (a, b') / ∑ b'' : β, qZ (a, b'')))
         ≤ typeCount x a := by
-      have h_one := Finset.single_le_sum (f := fun b'' =>
+      have h_one := Finset.single_le_sum (f := fun b'' ↦
         Nat.floor ((typeCount x a : ℝ) * (qZ (a, b'') / ∑ b''' : β, qZ (a, b'''))))
-        (fun _ _ => Nat.zero_le _) hb'
+        (fun _ _ ↦ Nat.zero_le _) hb'
       exact le_trans h_one hS_le
     exact min_eq_left h_each_le
   rw [Finset.sum_congr rfl h_off]
@@ -330,22 +330,22 @@ lemma floorMatrix_total (qZ : α × β → ℝ) (hqZ_nn : ∀ p, 0 ≤ qZ p)
     rw [← Finset.sum_product']
     rfl
   rw [h_split]
-  rw [Finset.sum_congr rfl (fun a _ => floorMatrix_row_sum qZ hqZ_nn x a)]
+  rw [Finset.sum_congr rfl (fun a _ ↦ floorMatrix_row_sum qZ hqZ_nn x a)]
   -- ∑ a, typeCount x a = n (standard).
   unfold typeCount
   have h_maps : ∀ i ∈ (Finset.univ : Finset (Fin n)),
-      x i ∈ (Finset.univ : Finset α) := fun _ _ => Finset.mem_univ _
+      x i ∈ (Finset.univ : Finset α) := fun _ _ ↦ Finset.mem_univ _
   have h_fiber := Finset.sum_fiberwise_of_maps_to (s := (Finset.univ : Finset (Fin n)))
-    (t := (Finset.univ : Finset α)) h_maps (fun _ : Fin n => (1 : ℕ))
+    (t := (Finset.univ : Finset α)) h_maps (fun _ : Fin n ↦ (1 : ℕ))
   have h_card : ∀ a : α,
-      ((Finset.univ : Finset (Fin n)).filter fun i => x i = a).card
-        = ∑ i ∈ ((Finset.univ : Finset (Fin n)).filter fun i => x i = a), (1 : ℕ) := by
+      ((Finset.univ : Finset (Fin n)).filter fun i ↦ x i = a).card
+        = ∑ i ∈ ((Finset.univ : Finset (Fin n)).filter fun i ↦ x i = a), (1 : ℕ) := by
     intro a
     rw [Finset.sum_const, Nat.smul_one_eq_cast]
     rfl
-  rw [show (∑ a : α, ((Finset.univ : Finset (Fin n)).filter fun i => x i = a).card)
-        = ∑ a : α, ∑ i ∈ ((Finset.univ : Finset (Fin n)).filter fun i => x i = a), (1 : ℕ)
-      from Finset.sum_congr rfl fun a _ => h_card a]
+  rw [show (∑ a : α, ((Finset.univ : Finset (Fin n)).filter fun i ↦ x i = a).card)
+        = ∑ a : α, ∑ i ∈ ((Finset.univ : Finset (Fin n)).filter fun i ↦ x i = a), (1 : ℕ)
+      from Finset.sum_congr rfl fun a _ ↦ h_card a]
   rw [h_fiber]
   simp
 
@@ -370,7 +370,7 @@ lemma sum_real_prod_singleton_of_map_fst_eq
   have h_map : (ν.map Prod.fst).real {a} = ν.real (Prod.fst ⁻¹' {a}) :=
     map_measureReal_apply measurable_fst (MeasurableSet.singleton a)
   have h_disj : (↑(Finset.univ : Finset β) : Set β).PairwiseDisjoint
-      (fun b' => ({(a, b')} : Set (α × β))) := by
+      (fun b' ↦ ({(a, b')} : Set (α × β))) := by
     intro b₁ _ b₂ _ hb s hs1 hs2 p hp
     have hp1 := hs1 hp
     have hp2 := hs2 hp
@@ -378,7 +378,7 @@ lemma sum_real_prod_singleton_of_map_fst_eq
     have heq : (a, b₁) = (a, b₂) := hp1.symm.trans hp2
     exact (hb (Prod.mk.injEq _ _ _ _ |>.mp heq).2).elim
   have h_meas : ∀ b' ∈ (Finset.univ : Finset β),
-      MeasurableSet ({(a, b')} : Set (α × β)) := fun _ _ => measurableSet_singleton _
+      MeasurableSet ({(a, b')} : Set (α × β)) := fun _ _ ↦ measurableSet_singleton _
   have h_sum : ν.real (Prod.fst ⁻¹' {a}) = ∑ b' : β, ν.real {(a, b')} := by
     rw [h_pre]
     rw [measureReal_biUnion_finset h_disj h_meas]
@@ -422,10 +422,10 @@ lemma abs_cast_sub_floor_sum_div_sub_mul_le_of_sum_eq_one
       ≤ ε + (Fintype.card β : ℝ) / n := by
   classical
   have h_floor_le : ∀ b', (Nat.floor ((Ta : ℝ) * r b') : ℝ) ≤ (Ta : ℝ) * r b' :=
-    fun b' => Nat.floor_le (mul_nonneg (Nat.cast_nonneg _) (hr_nn b'))
+    fun b' ↦ Nat.floor_le (mul_nonneg (Nat.cast_nonneg _) (hr_nn b'))
   have h_floor_lt_succ : ∀ b',
       (Ta : ℝ) * r b' < (Nat.floor ((Ta : ℝ) * r b') : ℝ) + 1 :=
-    fun b' => Nat.lt_floor_add_one _
+    fun b' ↦ Nat.lt_floor_add_one _
   have h_decomp :
       ((Ta : ℝ) - ((∑ b' ∈ Finset.univ.erase b₀,
             Nat.floor ((Ta : ℝ) * r b') : ℕ) : ℝ)) / n - q * r b₀
@@ -443,7 +443,7 @@ lemma abs_cast_sub_floor_sum_div_sub_mul_le_of_sum_eq_one
           = (Ta : ℝ) * ∑ b' ∈ Finset.univ.erase b₀, r b' := by
         rw [Finset.mul_sum]
       rw [h_pull, ← mul_add]
-      rw [Finset.add_sum_erase _ (fun b' => r b') (Finset.mem_univ b₀)]
+      rw [Finset.add_sum_erase _ (fun b' ↦ r b') (Finset.mem_univ b₀)]
       rw [hsum_r, mul_one]
     rw [Finset.sum_sub_distrib]
     field_simp
@@ -471,8 +471,8 @@ lemma abs_cast_sub_floor_sum_div_sub_mul_le_of_sum_eq_one
           ((Ta : ℝ) * r b' - (Nat.floor ((Ta : ℝ) * r b') : ℝ)))
         ≤ ((Finset.univ : Finset β).erase b₀).card := by
     have h := Finset.sum_le_sum (s := ((Finset.univ : Finset β).erase b₀))
-      (f := fun b' => (Ta : ℝ) * r b' - (Nat.floor ((Ta : ℝ) * r b') : ℝ))
-      (g := fun _ => (1 : ℝ)) h_each_lt
+      (f := fun b' ↦ (Ta : ℝ) * r b' - (Nat.floor ((Ta : ℝ) * r b') : ℝ))
+      (g := fun _ ↦ (1 : ℝ)) h_each_lt
     simpa [Finset.sum_const, nsmul_eq_mul] using h
   have h_card_le : (((Finset.univ : Finset β).erase b₀).card : ℝ)
       ≤ (Fintype.card β : ℝ) := by
@@ -498,17 +498,17 @@ lemma floorMatrix_dist_le
     (hmarg_X : (μ.map (jointSequence Xs Ys 0)).map Prod.fst = μ.map (Xs 0))
     {n : ℕ} (hn : 0 < n) {ε_X : ℝ} (hε_X : 0 ≤ ε_X)
     (x : Fin n → α) (hx : x ∈ stronglyTypicalSet μ Xs n ε_X) (a : α) (b : β) :
-    |((floorMatrix (fun p => (μ.map (jointSequence Xs Ys 0)).real {p}) x a b : ℕ) : ℝ) / n
+    |((floorMatrix (fun p ↦ (μ.map (jointSequence Xs Ys 0)).real {p}) x a b : ℕ) : ℝ) / n
         - (μ.map (jointSequence Xs Ys 0)).real {(a, b)}|
       ≤ ε_X + (Fintype.card β : ℝ) / n := by
   classical
-  set qZ : α × β → ℝ := fun p => (μ.map (jointSequence Xs Ys 0)).real {p} with hqZ_def
-  set qX : α → ℝ := fun a' => (μ.map (Xs 0)).real {a'} with hqX_def
-  have hqZ_nn : ∀ p, 0 ≤ qZ p := fun p => (hposZ p).le
+  set qZ : α × β → ℝ := fun p ↦ (μ.map (jointSequence Xs Ys 0)).real {p} with hqZ_def
+  set qX : α → ℝ := fun a' ↦ (μ.map (Xs 0)).real {a'} with hqX_def
+  have hqZ_nn : ∀ p, 0 ≤ qZ p := fun p ↦ (hposZ p).le
   set qXa : ℝ := ∑ b' : β, qZ (a, b') with hqXa_def
   have hqXa_pos : 0 < qXa := by
     -- qXa is a sum of strictly-positive terms over a nonempty type.
-    refine Finset.sum_pos (fun b' _ => hposZ (a, b')) ?_
+    refine Finset.sum_pos (fun b' _ ↦ hposZ (a, b')) ?_
     exact Finset.univ_nonempty
   have hqXa_nn : 0 ≤ qXa := hqXa_pos.le
   -- X-marginal identification: qXa = qX a.
@@ -520,15 +520,15 @@ lemma floorMatrix_dist_le
   set Ta : ℕ := typeCount x a with hTa_def
   have hn_pos : (0 : ℝ) < n := by exact_mod_cast hn
   -- Ratio r(b) := qZ(a,b) / qXa; r ≥ 0, ∑ r = 1.
-  set r : β → ℝ := fun b' => qZ (a, b') / qXa with hr_def
-  have hr_nn : ∀ b', 0 ≤ r b' := fun b' => div_nonneg (hqZ_nn _) hqXa_nn
+  set r : β → ℝ := fun b' ↦ qZ (a, b') / qXa with hr_def
+  have hr_nn : ∀ b', 0 ≤ r b' := fun b' ↦ div_nonneg (hqZ_nn _) hqXa_nn
   have hr_le_one : ∀ b', r b' ≤ 1 := by
     intro b'
     rw [hr_def]
     rw [div_le_one hqXa_pos]
     -- qZ(a,b') ≤ ∑ b'', qZ(a,b'') = qXa
-    exact Finset.single_le_sum (f := fun b'' => qZ (a, b''))
-      (fun b'' _ => hqZ_nn _) (Finset.mem_univ b')
+    exact Finset.single_le_sum (f := fun b'' ↦ qZ (a, b''))
+      (fun b'' _ ↦ hqZ_nn _) (Finset.mem_univ b')
   -- Helper bound: |c/n - qZ(a,b)| ≤ ε_X + 1/n when c = floor(T_a · r(b)) and b ≠ b₀.
   have h_off_bound : ∀ b' : β,
       |((Nat.floor ((Ta : ℝ) * r b') : ℕ) : ℝ) / n - qZ (a, b')|
@@ -581,8 +581,8 @@ lemma floorMatrix_dist_le
       have h_mem : b ∈ (Finset.univ : Finset β).erase b₀ :=
         Finset.mem_erase.mpr ⟨hb, Finset.mem_univ b⟩
       have h_one := Finset.single_le_sum
-        (f := fun b'' => Nat.floor ((Ta : ℝ) * r b''))
-        (fun _ _ => Nat.zero_le _) h_mem
+        (f := fun b'' ↦ Nat.floor ((Ta : ℝ) * r b''))
+        (fun _ _ ↦ Nat.zero_le _) h_mem
       have h_each_le : Nat.floor ((Ta : ℝ) * r b) ≤ Ta := h_one.trans hS_le
       rw [show min (Nat.floor ((typeCount x a : ℝ)
             * (qZ (a, b) / ∑ b'' : β, qZ (a, b'')))) (typeCount x a) =
@@ -608,18 +608,18 @@ per-row multinomial Stirling-free bound. -/
 -- Joint-type membership condition is equivalent to per-fibre slice condition.
 lemma conditionalTypeClass_joint_iff_slice
     {n : ℕ} (x : Fin n → α) (c : α × β → ℕ) (y : Fin n → β) :
-    (∀ a b, (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card = c (a, b)) ↔
+    (∀ a b, (Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)).card = c (a, b)) ↔
     (∀ a b, (Finset.univ.filter
-        (fun i : {k : Fin n // x k = a} => y i.val = b)).card = c (a, b)) := by
+        (fun i : {k : Fin n // x k = a} ↦ y i.val = b)).card = c (a, b)) := by
   classical
   constructor
   · intro hP a b
     have h_bij :
-        (Finset.univ.filter (fun i : {k : Fin n // x k = a} => y i.val = b)).card
-          = (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card := by
+        (Finset.univ.filter (fun i : {k : Fin n // x k = a} ↦ y i.val = b)).card
+          = (Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)).card := by
       apply Finset.card_bij
         (fun (i : {k : Fin n // x k = a})
-          (_ : i ∈ Finset.univ.filter (fun i : {k : Fin n // x k = a} => y i.val = b)) =>
+          (_ : i ∈ Finset.univ.filter (fun i : {k : Fin n // x k = a} ↦ y i.val = b)) ↦
           i.val)
       · intro i hi
         rcases Finset.mem_filter.mp hi with ⟨_, h_yb⟩
@@ -631,10 +631,10 @@ lemma conditionalTypeClass_joint_iff_slice
     rw [h_bij, hP a b]
   · intro hQ a b
     have h_bij :
-        (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card
-          = (Finset.univ.filter (fun i : {k : Fin n // x k = a} => y i.val = b)).card := by
+        (Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)).card
+          = (Finset.univ.filter (fun i : {k : Fin n // x k = a} ↦ y i.val = b)).card := by
       apply Finset.card_bij
-        (fun (k : Fin n) (hk : k ∈ Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)) =>
+        (fun (k : Fin n) (hk : k ∈ Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)) ↦
           (⟨k, (Finset.mem_filter.mp hk).2.1⟩ : {k : Fin n // x k = a}))
       · intro k hk
         rcases Finset.mem_filter.mp hk with ⟨_, _, h_yb⟩
@@ -649,9 +649,9 @@ lemma conditionalTypeClass_joint_iff_slice
 lemma filter_card_comp_equiv_symm_eq
     {γ : Type*} [Fintype γ] {m : ℕ} (e : γ ≃ Fin m)
     (f : γ → β) (b : β) :
-    (Finset.univ.filter (fun j : Fin m => f (e.symm j) = b)).card
-      = (Finset.univ.filter (fun i : γ => f i = b)).card := by
-  apply Finset.card_bij (fun (j : Fin m) _ => e.symm j)
+    (Finset.univ.filter (fun j : Fin m ↦ f (e.symm j) = b)).card
+      = (Finset.univ.filter (fun i : γ ↦ f i = b)).card := by
+  apply Finset.card_bij (fun (j : Fin m) _ ↦ e.symm j)
   · intro j hj
     exact Finset.mem_filter.mpr ⟨Finset.mem_univ _, (Finset.mem_filter.mp hj).2⟩
   · intro j₁ _ j₂ _ heq; exact e.symm.injective heq
@@ -664,31 +664,31 @@ noncomputable def sliceSubtype_equiv_typeClassByCount
     {n : ℕ} (x : Fin n → α) (c : α × β → ℕ) (a : α)
     (e : {i : Fin n // x i = a} ≃ Fin (typeCount x a)) :
     {ga : {i : Fin n // x i = a} → β //
-      ∀ b, (Finset.univ.filter (fun i : {i : Fin n // x i = a} => ga i = b)).card = c (a, b)}
-    ≃ typeClassByCount (α := β) (n := typeCount x a) (fun b => c (a, b)) :=
-  { toFun := fun ga =>
-      ⟨fun j => ga.val (e.symm j), fun b => by
-        show typeCount (fun j => ga.val (e.symm j)) b = c (a, b)
+      ∀ b, (Finset.univ.filter (fun i : {i : Fin n // x i = a} ↦ ga i = b)).card = c (a, b)}
+    ≃ typeClassByCount (α := β) (n := typeCount x a) (fun b ↦ c (a, b)) :=
+  { toFun := fun ga ↦
+      ⟨fun j ↦ ga.val (e.symm j), fun b ↦ by
+        show typeCount (fun j ↦ ga.val (e.symm j)) b = c (a, b)
         simp only [typeCount]
-        show (Finset.univ.filter (fun j : Fin (typeCount x a) => ga.val (e.symm j) = b)).card
+        show (Finset.univ.filter (fun j : Fin (typeCount x a) ↦ ga.val (e.symm j) = b)).card
             = c (a, b)
         rw [filter_card_comp_equiv_symm_eq e ga.val b]
         exact ga.property b⟩
-    invFun := fun g =>
-      ⟨fun i => g.val (e i), fun b => by
-        have h : (Finset.univ.filter (fun j : Fin (typeCount x a) => g.val j = b)).card
+    invFun := fun g ↦
+      ⟨fun i ↦ g.val (e i), fun b ↦ by
+        have h : (Finset.univ.filter (fun j : Fin (typeCount x a) ↦ g.val j = b)).card
             = c (a, b) := g.property b
         rw [← h]
-        apply Finset.card_bij (fun (i : {i : Fin n // x i = a}) _ => e i)
+        apply Finset.card_bij (fun (i : {i : Fin n // x i = a}) _ ↦ e i)
         · intro i hi
           exact Finset.mem_filter.mpr ⟨Finset.mem_univ _, (Finset.mem_filter.mp hi).2⟩
         · intro i₁ _ i₂ _ heq; exact e.injective heq
         · intro j hj
           exact ⟨e.symm j, Finset.mem_filter.mpr ⟨Finset.mem_univ _,
             by simp [(Finset.mem_filter.mp hj).2]⟩, by simp⟩⟩
-    left_inv := fun ga => by
+    left_inv := fun ga ↦ by
       ext i; show ga.val (e.symm (e i)) = ga.val i; simp
-    right_inv := fun g => by
+    right_inv := fun g ↦ by
       ext j; show g.val (e (e.symm j)) = g.val j; simp }
 
 /-- **Bijection cardinality**: the conditional type class card equals
@@ -701,27 +701,27 @@ Construction: composition of three Equivs.
 lemma conditionalTypeClass_card_eq_prod_typeClass
     {n : ℕ} (x : Fin n → α) (c : α × β → ℕ) :
     (∏ a : α, (typeClassByCount (α := β) (n := typeCount x a)
-        (fun b => c (a, b))).toFinite.toFinset.card)
+        (fun b ↦ c (a, b))).toFinite.toFinset.card)
       = (conditionalTypeClass (β := β) x c).toFinite.toFinset.card := by
   classical
-  set Ta : α → ℕ := fun a => typeCount x a with hTa_def
-  set Sa : α → Type _ := fun a => {i : Fin n // x i = a} with hSa_def
+  set Ta : α → ℕ := fun a ↦ typeCount x a with hTa_def
+  set Sa : α → Type _ := fun a ↦ {i : Fin n // x i = a} with hSa_def
   -- Per-fibre cardinality: card (Sa a) = Ta a.
   have hcard_S : ∀ a : α, Fintype.card (Sa a) = Ta a := by
     intro a
-    have : Fintype.card (Sa a) = (Finset.univ.filter (fun i : Fin n => x i = a)).card :=
+    have : Fintype.card (Sa a) = (Finset.univ.filter (fun i : Fin n ↦ x i = a)).card :=
       Fintype.card_subtype _
     rw [this]; rfl
   -- Equiv #1: (Fin n → β) ≃ (∀ a, Sa a → β).
   let φ : (Fin n → β) ≃ (∀ a, Sa a → β) :=
-    { toFun := fun y a i => y i.val
-      invFun := fun g i => g (x i) ⟨i, rfl⟩
-      left_inv := fun y => by funext i; rfl
-      right_inv := fun g => by funext a i; rcases i with ⟨k, hk⟩; subst hk; rfl }
+    { toFun := fun y a i ↦ y i.val
+      invFun := fun g i ↦ g (x i) ⟨i, rfl⟩
+      left_inv := fun y ↦ by funext i; rfl
+      right_inv := fun g ↦ by funext a i; rcases i with ⟨k, hk⟩; subst hk; rfl }
   set P : (Fin n → β) → Prop :=
-    fun y => ∀ a b, (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card = c (a, b)
+    fun y ↦ ∀ a b, (Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)).card = c (a, b)
   set Q : (∀ a, Sa a → β) → Prop :=
-    fun g => ∀ a b, (Finset.univ.filter (fun i : Sa a => g a i = b)).card = c (a, b)
+    fun g ↦ ∀ a b, (Finset.univ.filter (fun i : Sa a ↦ g a i = b)).card = c (a, b)
   -- Membership condition is preserved by φ via conditionalTypeClass_joint_iff_slice.
   have hPQ : ∀ y, P y ↔ Q (φ y) := conditionalTypeClass_joint_iff_slice x c
   -- ψ : {y // P y} ≃ {g // Q g}
@@ -729,40 +729,40 @@ lemma conditionalTypeClass_card_eq_prod_typeClass
   -- χ : {g // Q g} ≃ ∀ a, {ga : Sa a → β // per-row count condition}
   let χ : {g : ∀ a, Sa a → β // Q g} ≃
       ∀ a, {ga : Sa a → β // ∀ b,
-        (Finset.univ.filter (fun i : Sa a => ga i = b)).card = c (a, b)} :=
-    { toFun := fun g a => ⟨g.val a, fun b => g.property a b⟩
-      invFun := fun g => ⟨fun a => (g a).val, fun a b => (g a).property b⟩
-      left_inv := fun _ => rfl
-      right_inv := fun _ => rfl }
+        (Finset.univ.filter (fun i : Sa a ↦ ga i = b)).card = c (a, b)} :=
+    { toFun := fun g a ↦ ⟨g.val a, fun b ↦ g.property a b⟩
+      invFun := fun g ↦ ⟨fun a ↦ (g a).val, fun a b ↦ (g a).property b⟩
+      left_inv := fun _ ↦ rfl
+      right_inv := fun _ ↦ rfl }
   -- Per-a Equiv: Sa a ≃ Fin (Ta a) from cardinality equality.
-  let eSa : ∀ a, Sa a ≃ Fin (Ta a) := fun a => Fintype.equivFinOfCardEq (hcard_S a)
+  let eSa : ∀ a, Sa a ≃ Fin (Ta a) := fun a ↦ Fintype.equivFinOfCardEq (hcard_S a)
   -- θ a : per-row subtype ≃ typeClassByCount (n := Ta a, fun b => c (a, b))
   -- via sliceSubtype_equiv_typeClassByCount.
-  let θ := fun a => sliceSubtype_equiv_typeClassByCount x c a (eSa a)
+  let θ := fun a ↦ sliceSubtype_equiv_typeClassByCount x c a (eSa a)
   -- Combine all three equivs into a single bijection.
   let final : {y // P y} ≃
-      ∀ a, typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b)) :=
+      ∀ a, typeClassByCount (α := β) (n := Ta a) (fun b ↦ c (a, b)) :=
     ψ.trans (χ.trans (Equiv.piCongrRight θ))
   haveI hFinRow : ∀ a, Fintype
-      (typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b))) :=
-    fun a => (typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b))).toFinite.fintype
-  haveI : Fintype (∀ a, typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b))) :=
+      (typeClassByCount (α := β) (n := Ta a) (fun b ↦ c (a, b))) :=
+    fun a ↦ (typeClassByCount (α := β) (n := Ta a) (fun b ↦ c (a, b))).toFinite.fintype
+  haveI : Fintype (∀ a, typeClassByCount (α := β) (n := Ta a) (fun b ↦ c (a, b))) :=
     Pi.instFintype
   have h_per_card_eq : ∀ a,
-      (typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b))).toFinite.toFinset.card
-        = Fintype.card (typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b))) := by
-    intro a; rw [(typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b))).toFinite.card_toFinset]
+      (typeClassByCount (α := β) (n := Ta a) (fun b ↦ c (a, b))).toFinite.toFinset.card
+        = Fintype.card (typeClassByCount (α := β) (n := Ta a) (fun b ↦ c (a, b))) := by
+    intro a; rw [(typeClassByCount (α := β) (n := Ta a) (fun b ↦ c (a, b))).toFinite.card_toFinset]
   have h_LHS_eq : (∏ a : α, (typeClassByCount (α := β) (n := Ta a)
-        (fun b => c (a, b))).toFinite.toFinset.card)
-      = Fintype.card (∀ a, typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b))) := by
+        (fun b ↦ c (a, b))).toFinite.toFinset.card)
+      = Fintype.card (∀ a, typeClassByCount (α := β) (n := Ta a) (fun b ↦ c (a, b))) := by
     rw [show (∏ a : α, (typeClassByCount (α := β) (n := Ta a)
-          (fun b => c (a, b))).toFinite.toFinset.card)
-        = ∏ a : α, Fintype.card (typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b)))
-        from Finset.prod_congr rfl (fun a _ => h_per_card_eq a)]
+          (fun b ↦ c (a, b))).toFinite.toFinset.card)
+        = ∏ a : α, Fintype.card (typeClassByCount (α := β) (n := Ta a) (fun b ↦ c (a, b)))
+        from Finset.prod_congr rfl (fun a _ ↦ h_per_card_eq a)]
     convert (Fintype.card_pi (ι := α)
-      (α := fun a => typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b)))).symm using 2
+      (α := fun a ↦ typeClassByCount (α := β) (n := Ta a) (fun b ↦ c (a, b)))).symm using 2
   rw [h_LHS_eq]
-  have h_card_eq : Fintype.card (∀ a, typeClassByCount (α := β) (n := Ta a) (fun b => c (a, b)))
+  have h_card_eq : Fintype.card (∀ a, typeClassByCount (α := β) (n := Ta a) (fun b ↦ c (a, b)))
       = Fintype.card {y // P y} :=
     (Fintype.card_congr final).symm
   rw [h_card_eq]
@@ -781,25 +781,25 @@ lemma conditionalTypeClass_card_ge
             / ∏ b : β, ((c (a, b) : ℝ) ^ (c (a, b))))
       ≤ ((conditionalTypeClass (β := β) x c).toFinite.toFinset.card : ℝ) := by
   classical
-  set Ta : α → ℕ := fun a => typeCount x a with hTa_def
-  set crow : α → β → ℕ := fun a b => c (a, b) with hcrow_def
-  have hcrow_sum : ∀ a, (∑ b : β, crow a b) = Ta a := fun a => h_row a
+  set Ta : α → ℕ := fun a ↦ typeCount x a with hTa_def
+  set crow : α → β → ℕ := fun a b ↦ c (a, b) with hcrow_def
+  have hcrow_sum : ∀ a, (∑ b : β, crow a b) = Ta a := fun a ↦ h_row a
   have h_per_row : ∀ a : α,
       (((Ta a : ℝ) + 1) ^ (Fintype.card β : ℕ))⁻¹ *
           ((Ta a : ℝ) ^ Ta a / ∏ b : β, ((crow a b : ℝ) ^ (crow a b)))
         ≤ ((typeClassByCount (α := β) (n := Ta a) (crow a)).toFinite.toFinset.card : ℝ) :=
-    fun a => typeClassByCount_card_ge (n := Ta a) (crow a) (hcrow_sum a)
+    fun a ↦ typeClassByCount_card_ge (n := Ta a) (crow a) (hcrow_sum a)
   have h_prod_le :
       ∏ a : α, ((((Ta a : ℝ) + 1) ^ (Fintype.card β : ℕ))⁻¹ *
           ((Ta a : ℝ) ^ Ta a / ∏ b : β, ((crow a b : ℝ) ^ (crow a b))))
         ≤ ∏ a : α,
             ((typeClassByCount (α := β) (n := Ta a) (crow a)).toFinite.toFinset.card : ℝ) := by
-    refine Finset.prod_le_prod (fun a _ => ?_) (fun a _ => h_per_row a)
+    refine Finset.prod_le_prod (fun a _ ↦ ?_) (fun a _ ↦ h_per_row a)
     refine mul_nonneg (inv_nonneg.mpr ?_) ?_
     · positivity
     · refine div_nonneg ?_ ?_
       · positivity
-      · refine Finset.prod_nonneg fun b _ => ?_
+      · refine Finset.prod_nonneg fun b _ ↦ ?_
         positivity
   refine le_trans h_prod_le ?_
   -- Bijection gives: ∏_a card (T_{crow a}) = card (conditionalTypeClass x c).
@@ -816,47 +816,47 @@ lemma productMass_eq_columnProd
     (μ : Measure Ω) [IsProbabilityMeasure μ] (Ys : ℕ → Ω → β)
     {n : ℕ} (x : Fin n → α) (c : α × β → ℕ)
     {y : Fin n → β} (hy : y ∈ conditionalTypeClass x c) :
-    (Measure.pi (fun _ : Fin n => μ.map (Ys 0))).real {y}
+    (Measure.pi (fun _ : Fin n ↦ μ.map (Ys 0))).real {y}
       = ∏ b : β, (μ.map (Ys 0)).real {b} ^ (∑ a : α, c (a, b)) := by
   classical
-  set qY : β → ℝ := fun b => (μ.map (Ys 0)).real {b} with hqY_def
+  set qY : β → ℝ := fun b ↦ (μ.map (Ys 0)).real {b} with hqY_def
   -- Step 1: pi-product singleton mass identity.
-  have h_pi : (Measure.pi (fun _ : Fin n => μ.map (Ys 0))).real {y}
+  have h_pi : (Measure.pi (fun _ : Fin n ↦ μ.map (Ys 0))).real {y}
       = ∏ i : Fin n, qY (y i) := by
-    show ((Measure.pi (fun _ : Fin n => μ.map (Ys 0))) {y}).toReal = ∏ i : Fin n, qY (y i)
+    show ((Measure.pi (fun _ : Fin n ↦ μ.map (Ys 0))) {y}).toReal = ∏ i : Fin n, qY (y i)
     rw [Measure.pi_singleton, ENNReal.toReal_prod]
     rfl
   rw [h_pi]
   -- Step 2: aggregate ∏ i, qY (y i) = ∏ b, qY(b) ^ typeCount y b via fiberwise.
   have h_maps : ∀ i ∈ (Finset.univ : Finset (Fin n)),
-      y i ∈ (Finset.univ : Finset β) := fun _ _ => Finset.mem_univ _
+      y i ∈ (Finset.univ : Finset β) := fun _ _ ↦ Finset.mem_univ _
   have h_fib := Finset.prod_fiberwise_of_maps_to' (s := (Finset.univ : Finset (Fin n)))
-    (t := (Finset.univ : Finset β)) h_maps (fun b : β => qY b)
+    (t := (Finset.univ : Finset β)) h_maps (fun b : β ↦ qY b)
   rw [← h_fib]
-  refine Finset.prod_congr rfl fun b _ => ?_
+  refine Finset.prod_congr rfl fun b _ ↦ ?_
   rw [Finset.prod_const]
   -- ((Finset.univ.filter fun i => y i = b).card) = typeCount y b = ∑ a, c (a, b)
-  have h_count_y : (Finset.univ.filter fun i : Fin n => y i = b).card
+  have h_count_y : (Finset.univ.filter fun i : Fin n ↦ y i = b).card
       = ∑ a : α, c (a, b) := by
     -- ∑ a, c (a, b) = typeCount y b by partitioning {i : y i = b} by x i.
-    have h_part : (Finset.univ.filter fun i : Fin n => y i = b)
-        = (Finset.univ : Finset α).biUnion (fun a =>
-            Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)) := by
+    have h_part : (Finset.univ.filter fun i : Fin n ↦ y i = b)
+        = (Finset.univ : Finset α).biUnion (fun a ↦
+            Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)) := by
       ext i
       simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_biUnion]
-      refine ⟨fun h_yi => ⟨x i, rfl, h_yi⟩, ?_⟩
+      refine ⟨fun h_yi ↦ ⟨x i, rfl, h_yi⟩, ?_⟩
       rintro ⟨a, _, h_yi⟩
       exact h_yi
     have h_disjoint :
-        ((Finset.univ : Finset α) : Set α).PairwiseDisjoint (fun a =>
-          Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)) := by
+        ((Finset.univ : Finset α) : Set α).PairwiseDisjoint (fun a ↦
+          Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)) := by
       intro a₁ _ a₂ _ ha
       refine Finset.disjoint_filter.mpr ?_
       intro i _ ⟨ha₁, _⟩ ⟨ha₂, _⟩
       apply ha
       rw [← ha₁, ha₂]
     rw [h_part, Finset.card_biUnion h_disjoint]
-    refine Finset.sum_congr rfl fun a _ => ?_
+    refine Finset.sum_congr rfl fun a _ ↦ ?_
     exact hy a b
   rw [h_count_y]
 

@@ -83,51 +83,51 @@ theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_bdd : ∃ M, ∀ i ω, |X i ω| ≤ M)
     (a : ℝ) (lam : ℝ) (hlam : 0 ≤ lam)
     (h_deriv : deriv (cgf (X 0) μ) lam = a)
-    (hVar : (0 : ℝ) < Var[fun ω : ℕ → Ω => X 0 (ω 0);
-        Measure.infinitePi (fun _ : ℕ => μ.tilted (fun ω => lam * X 0 ω))])
+    (hVar : (0 : ℝ) < Var[fun ω : ℕ → Ω ↦ X 0 (ω 0);
+        Measure.infinitePi (fun _ : ℕ ↦ μ.tilted (fun ω ↦ lam * X 0 ω))])
     (h_coboundedBelow : Filter.IsCoboundedUnder (· ≥ ·) atTop
-      (fun n : ℕ =>
+      (fun n : ℕ ↦
         (1 / (n : ℝ)) * Real.log
           (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}))) :
     -(lam * a - cgf (X 0) μ lam)
-      ≤ liminf (fun n : ℕ =>
+      ≤ liminf (fun n : ℕ ↦
           (1 / (n : ℝ)) * Real.log
             (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop := by
   classical
   -- `h_bdd` specialized to `X 0`.
   have h_bdd0 : ∃ M, ∀ ω, |X 0 ω| ≤ M := by
-    obtain ⟨M, hM⟩ := h_bdd; exact ⟨M, fun ω => hM 0 ω⟩
+    obtain ⟨M, hM⟩ := h_bdd; exact ⟨M, fun ω ↦ hM 0 ω⟩
   -- Marginal `ν := μ.map (X 0)`; both joint laws factor through `infinitePi ν`.
   set ν : Measure ℝ := μ.map (X 0) with hν
   haveI : IsProbabilityMeasure ν := Measure.isProbabilityMeasure_map (h_meas 0).aemeasurable
   -- (a) Root B side: joint map `g ω := fun i => X i ω`.
-  set g : Ω → (ℕ → ℝ) := fun ω i => X i ω with hg
-  have hg_meas : Measurable g := measurable_pi_lambda _ (fun i => h_meas i)
-  have hjointB : μ.map g = Measure.infinitePi (fun _ : ℕ => ν) := by
-    have h1 : μ.map g = Measure.infinitePi (fun i => μ.map (X i)) :=
+  set g : Ω → (ℕ → ℝ) := fun ω i ↦ X i ω with hg
+  have hg_meas : Measurable g := measurable_pi_lambda _ (fun i ↦ h_meas i)
+  have hjointB : μ.map g = Measure.infinitePi (fun _ : ℕ ↦ ν) := by
+    have h1 : μ.map g = Measure.infinitePi (fun i ↦ μ.map (X i)) :=
       (iIndepFun_iff_map_fun_eq_infinitePi_map h_meas).1 h_indep
-    have h2 : (fun i => μ.map (X i)) = (fun _ : ℕ => ν) := by
+    have h2 : (fun i ↦ μ.map (X i)) = (fun _ : ℕ ↦ ν) := by
       funext i; exact (h_ident i).map_eq
     rw [h1, h2]
   -- (b) Canonical side: joint map `g₀ ω := fun i => X 0 (ω i)` on `infinitePi μ`.
-  set P : Measure (ℕ → Ω) := Measure.infinitePi (fun _ : ℕ => μ) with hP
+  set P : Measure (ℕ → Ω) := Measure.infinitePi (fun _ : ℕ ↦ μ) with hP
   haveI : IsProbabilityMeasure P := by rw [hP]; infer_instance
-  set X0 : ℕ → (ℕ → Ω) → ℝ := fun i ω => X 0 (ω i) with hX0
-  have hX0_meas : ∀ i, Measurable (X0 i) := fun i =>
+  set X0 : ℕ → (ℕ → Ω) → ℝ := fun i ω ↦ X 0 (ω i) with hX0
+  have hX0_meas : ∀ i, Measurable (X0 i) := fun i ↦
     (h_meas 0).comp (measurable_pi_apply i)
   have hX0_indep : iIndepFun X0 P :=
     Cramer.TiltedLLN.iIndepFun_eval_under_infinitePi (h_meas 0)
-  set g₀ : (ℕ → Ω) → (ℕ → ℝ) := fun ω i => X 0 (ω i) with hg₀
-  have hg₀_meas : Measurable g₀ := measurable_pi_lambda _ (fun i => hX0_meas i)
-  have hjoint0 : P.map g₀ = Measure.infinitePi (fun _ : ℕ => ν) := by
-    have h1 : P.map g₀ = Measure.infinitePi (fun i => P.map (X0 i)) :=
+  set g₀ : (ℕ → Ω) → (ℕ → ℝ) := fun ω i ↦ X 0 (ω i) with hg₀
+  have hg₀_meas : Measurable g₀ := measurable_pi_lambda _ (fun i ↦ hX0_meas i)
+  have hjoint0 : P.map g₀ = Measure.infinitePi (fun _ : ℕ ↦ ν) := by
+    have h1 : P.map g₀ = Measure.infinitePi (fun i ↦ P.map (X0 i)) :=
       (iIndepFun_iff_map_fun_eq_infinitePi_map hX0_meas).1 hX0_indep
-    have h2 : (fun i => P.map (X0 i)) = (fun _ : ℕ => ν) := by
+    have h2 : (fun i ↦ P.map (X0 i)) = (fun _ : ℕ ↦ ν) := by
       funext i
       -- `P.map (X 0 ∘ eval i) = (P.map (eval i)).map (X 0) = μ.map (X 0) = ν`.
-      show P.map (fun ω : ℕ → Ω => X 0 (ω i)) = ν
+      show P.map (fun ω : ℕ → Ω ↦ X 0 (ω i)) = ν
       rw [hP, hν,
-        show (fun ω : ℕ → Ω => X 0 (ω i)) = X 0 ∘ (fun ω : ℕ → Ω => ω i) from rfl,
+        show (fun ω : ℕ → Ω ↦ X 0 (ω i)) = X 0 ∘ (fun ω : ℕ → Ω ↦ ω i) from rfl,
         ← Measure.map_map (h_meas 0) (measurable_pi_apply i),
         Measure.infinitePi_map_eval]
     rw [h1, h2]
@@ -135,8 +135,8 @@ theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
   have hset : ∀ n : ℕ, MeasurableSet
       {x : ℕ → ℝ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, x i} := by
     intro n
-    have : Measurable (fun x : ℕ → ℝ => ∑ i ∈ Finset.range n, x i) :=
-      Finset.measurable_sum _ (fun i _ => measurable_pi_apply i)
+    have : Measurable (fun x : ℕ → ℝ ↦ ∑ i ∈ Finset.range n, x i) :=
+      Finset.measurable_sum _ (fun i _ ↦ measurable_pi_apply i)
     exact measurableSet_le measurable_const this
   -- Per-`n` event mass transport: both sides equal the coordinate-event mass.
   have hevent : ∀ n : ℕ,
@@ -148,7 +148,7 @@ theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
         = {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω} := by
       ext ω; simp [hg]
     have hmapB : μ {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}
-        = (Measure.infinitePi (fun _ : ℕ => ν))
+        = (Measure.infinitePi (fun _ : ℕ ↦ ν))
             {x : ℕ → ℝ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, x i} := by
       rw [← hjointB, Measure.map_apply hg_meas (hset n), hpreB]
     -- RHS via `g₀` pullback.
@@ -156,15 +156,15 @@ theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
         = {ω : ℕ → Ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X 0 (ω i)} := by
       ext ω; simp [hg₀]
     have hmap0 : P {ω : ℕ → Ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X 0 (ω i)}
-        = (Measure.infinitePi (fun _ : ℕ => ν))
+        = (Measure.infinitePi (fun _ : ℕ ↦ ν))
             {x : ℕ → ℝ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, x i} := by
       rw [← hjoint0, Measure.map_apply hg₀_meas (hset n), hpre0]
     rw [Measure.real, Measure.real, hmapB, ← hmap0]
   -- Rewrite the goal to the headline shape.
-  have hfun : (fun n : ℕ =>
+  have hfun : (fun n : ℕ ↦
       (1 / (n : ℝ)) * Real.log
         (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}))
-      = (fun n : ℕ =>
+      = (fun n : ℕ ↦
           (1 / (n : ℝ)) * Real.log
             (P.real {ω : ℕ → Ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X 0 (ω i)})) := by
     funext n; rw [hevent n]
@@ -172,11 +172,11 @@ theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
   rw [hfun] at h_coboundedBelow
   -- The cgf identification (in-project precedent, no self-build needed).
   have hcgf : cgf (X 0) μ
-      = cgf (fun ω : ℕ → Ω => X 0 (ω 0)) P := by
+      = cgf (fun ω : ℕ → Ω ↦ X 0 (ω 0)) P := by
     funext t
     exact (Cramer.TiltedLLN.cgf_eval_eq_cgf_base (h_meas 0) 0 t).symm
   rw [hcgf]
-  have h_deriv' : deriv (cgf (fun ω : ℕ → Ω => X 0 (ω 0)) P) lam = a := by
+  have h_deriv' : deriv (cgf (fun ω : ℕ → Ω ↦ X 0 (ω 0)) P) lam = a := by
     rw [← hcgf]; exact h_deriv
   -- Apply the headline with `Ω₀ := Ω`, `Y := X 0`, `μ₀ := μ`.
   exact CramerCltBoundary.cramer_lower_boundary_unconditional
@@ -193,14 +193,14 @@ theorem cramer_lower_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (a : ℝ) (lam : ℝ) (hlam : 0 ≤ lam)
     (hlam_opt : lam * a - cgf (X 0) μ lam = cramerRate (X 0) μ a)
     (h_deriv : deriv (cgf (X 0) μ) lam = a)
-    (hVar : (0 : ℝ) < Var[fun ω : ℕ → Ω => X 0 (ω 0);
-        Measure.infinitePi (fun _ : ℕ => μ.tilted (fun ω => lam * X 0 ω))])
+    (hVar : (0 : ℝ) < Var[fun ω : ℕ → Ω ↦ X 0 (ω 0);
+        Measure.infinitePi (fun _ : ℕ ↦ μ.tilted (fun ω ↦ lam * X 0 ω))])
     (h_coboundedBelow : Filter.IsCoboundedUnder (· ≥ ·) atTop
-      (fun n : ℕ =>
+      (fun n : ℕ ↦
         (1 / (n : ℝ)) * Real.log
           (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}))) :
     -cramerRate (X 0) μ a
-      ≤ liminf (fun n : ℕ =>
+      ≤ liminf (fun n : ℕ ↦
           (1 / (n : ℝ)) * Real.log
             (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop := by
   have h := cramer_lower (μ := μ) h_indep h_meas h_ident h_bdd a lam hlam
@@ -222,32 +222,32 @@ theorem cramer_tendsto [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (a : ℝ) (lam : ℝ) (hlam : 0 ≤ lam)
     (hlam_opt : lam * a - cgf (X 0) μ lam = cramerRate (X 0) μ a)
     (h_deriv : deriv (cgf (X 0) μ) lam = a)
-    (hVar : (0 : ℝ) < Var[fun ω : ℕ → Ω => X 0 (ω 0);
-        Measure.infinitePi (fun _ : ℕ => μ.tilted (fun ω => lam * X 0 ω))])
+    (hVar : (0 : ℝ) < Var[fun ω : ℕ → Ω ↦ X 0 (ω 0);
+        Measure.infinitePi (fun _ : ℕ ↦ μ.tilted (fun ω ↦ lam * X 0 ω))])
     (h_pos : ∀ᶠ n : ℕ in atTop,
       0 < μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})
     (h_cobdd : Filter.IsCoboundedUnder (· ≤ ·) atTop
-      (fun n : ℕ =>
+      (fun n : ℕ ↦
         (1 / (n : ℝ)) * Real.log
           (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})))
     (h_coboundedBelow : Filter.IsCoboundedUnder (· ≥ ·) atTop
-      (fun n : ℕ =>
+      (fun n : ℕ ↦
         (1 / (n : ℝ)) * Real.log
           (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})))
     (h_bdd_above : Filter.IsBoundedUnder (· ≤ ·) atTop
-      (fun n : ℕ =>
+      (fun n : ℕ ↦
         (1 / (n : ℝ)) * Real.log
           (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})))
     (h_bdd_below : Filter.IsBoundedUnder (· ≥ ·) atTop
-      (fun n : ℕ =>
+      (fun n : ℕ ↦
         (1 / (n : ℝ)) * Real.log
           (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}))) :
-    Filter.Tendsto (fun n : ℕ =>
+    Filter.Tendsto (fun n : ℕ ↦
         (1 / (n : ℝ)) * Real.log
           (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop
       (𝓝 (-cramerRate (X 0) μ a)) := by
   have h_upper :
-      limsup (fun n : ℕ =>
+      limsup (fun n : ℕ ↦
           (1 / (n : ℝ)) * Real.log
             (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop
         ≤ -cramerRate (X 0) μ a :=
@@ -255,7 +255,7 @@ theorem cramer_tendsto [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
       h_pos h_cobdd
   have h_lower :
       -cramerRate (X 0) μ a
-        ≤ liminf (fun n : ℕ =>
+        ≤ liminf (fun n : ℕ ↦
             (1 / (n : ℝ)) * Real.log
               (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop :=
     cramer_lower_legendre (μ := μ) h_indep h_meas h_ident h_bdd a lam hlam hlam_opt

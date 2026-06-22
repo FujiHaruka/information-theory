@@ -102,7 +102,7 @@ lemma hoeffdingTilt_mem_stdSimplex
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (lam : ℝ) :
     hoeffdingTilt P₁ P₂ lam ∈ stdSimplex ℝ α :=
-  ⟨fun a => (hoeffdingTilt_pos P₁ P₂ hP₁_pos hP₂_pos lam a).le,
+  ⟨fun a ↦ (hoeffdingTilt_pos P₁ P₂ hP₁_pos hP₂_pos lam a).le,
    hoeffdingTilt_sum_eq_one P₁ P₂ hP₁_pos hP₂_pos lam⟩
 
 /-! ## Lagrange gradient identity (constant log-ratio) -/

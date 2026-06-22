@@ -71,7 +71,7 @@ theorem blockDistortion_nonneg
   · by_cases hn : (n : ℝ) = 0
     · simp [hn]
     · exact div_nonneg zero_le_one (le_of_lt (lt_of_le_of_ne (Nat.cast_nonneg n) (Ne.symm hn)))
-  · exact Finset.sum_nonneg (fun i _ => NNReal.coe_nonneg _)
+  · exact Finset.sum_nonneg (fun i _ ↦ NNReal.coe_nonneg _)
 
 /-! ## Block lossy code -/
 
@@ -92,7 +92,7 @@ noncomputable def expectedBlockDistortion
     (c : LossyCode M n α β) (P_X : Measure α) (d : DistortionFn α β) : ℝ :=
   ∫ x : Fin n → α,
       blockDistortion d n x (c.decoder (c.encoder x))
-    ∂(Measure.pi (fun _ : Fin n => P_X))
+    ∂(Measure.pi (fun _ : Fin n ↦ P_X))
 
 /-- Expected block distortion is non-negative. -/
 @[entry_point]
@@ -100,7 +100,7 @@ theorem expectedBlockDistortion_nonneg
     (c : LossyCode M n α β) (P_X : Measure α) (d : DistortionFn α β) :
     0 ≤ c.expectedBlockDistortion P_X d := by
   unfold expectedBlockDistortion
-  exact integral_nonneg (fun x => blockDistortion_nonneg d n x _)
+  exact integral_nonneg (fun x ↦ blockDistortion_nonneg d n x _)
 
 end LossyCode
 
@@ -118,35 +118,35 @@ noncomputable def expectedDistortionPmf
 
 /-- First (source-side) marginal of a joint pmf `q : α × β → ℝ`. -/
 noncomputable def marginalFst (q : α × β → ℝ) : α → ℝ :=
-  fun a => ∑ b, q (a, b)
+  fun a ↦ ∑ b, q (a, b)
 
 /-- Second (reconstruction-side) marginal of a joint pmf `q : α × β → ℝ`. -/
 noncomputable def marginalSnd (q : α × β → ℝ) : β → ℝ :=
-  fun b => ∑ a, q (a, b)
+  fun b ↦ ∑ a, q (a, b)
 
 
 /-- Continuity of `expectedDistortionPmf` in `q` (linear in finite sum). -/
 lemma continuous_expectedDistortionPmf (d : DistortionFn α β) :
-    Continuous (fun q : α × β → ℝ => expectedDistortionPmf d q) := by
+    Continuous (fun q : α × β → ℝ ↦ expectedDistortionPmf d q) := by
   unfold expectedDistortionPmf
-  refine continuous_finsetSum _ fun a _ => ?_
-  refine continuous_finsetSum _ fun b _ => ?_
+  refine continuous_finsetSum _ fun a _ ↦ ?_
+  refine continuous_finsetSum _ fun b _ ↦ ?_
   exact (continuous_apply (a, b)).mul continuous_const
 
 /-- Continuity of `marginalFst` in `q`. -/
 lemma continuous_marginalFst :
-    Continuous (fun q : α × β → ℝ => marginalFst q) := by
+    Continuous (fun q : α × β → ℝ ↦ marginalFst q) := by
   unfold marginalFst
-  refine continuous_pi fun a => ?_
-  refine continuous_finsetSum _ fun b _ => ?_
+  refine continuous_pi fun a ↦ ?_
+  refine continuous_finsetSum _ fun b _ ↦ ?_
   exact continuous_apply (a, b)
 
 /-- Continuity of `marginalSnd` in `q`. -/
 lemma continuous_marginalSnd :
-    Continuous (fun q : α × β → ℝ => marginalSnd q) := by
+    Continuous (fun q : α × β → ℝ ↦ marginalSnd q) := by
   unfold marginalSnd
-  refine continuous_pi fun b => ?_
-  refine continuous_finsetSum _ fun a _ => ?_
+  refine continuous_pi fun b ↦ ?_
+  refine continuous_finsetSum _ fun a _ ↦ ?_
   exact continuous_apply (a, b)
 
 
@@ -160,7 +160,7 @@ def RDConstraint
 /-- `RDConstraint ⊆ stdSimplex ℝ (α × β)`. -/
 lemma RDConstraint_subset_stdSimplex (P_X : α → ℝ) (d : DistortionFn α β) (D : ℝ) :
     RDConstraint P_X d D ⊆ stdSimplex ℝ (α × β) :=
-  fun _ hq => hq.1
+  fun _ hq ↦ hq.1
 
 /-- `RDConstraint` is closed: intersection of closed sets (stdSimplex closed,
 linear constraints closed). -/
@@ -202,18 +202,18 @@ noncomputable def mutualInfoPmf (q : α × β → ℝ) : ℝ :=
 
 /-- `mutualInfoPmf` is continuous on `α × β → ℝ`. -/
 lemma continuous_mutualInfoPmf :
-    Continuous (fun q : α × β → ℝ => mutualInfoPmf q) := by
+    Continuous (fun q : α × β → ℝ ↦ mutualInfoPmf q) := by
   unfold mutualInfoPmf
   refine Continuous.sub (Continuous.add ?_ ?_) ?_
-  · refine continuous_finsetSum _ fun a _ => ?_
-    have h_marg : Continuous (fun q : α × β → ℝ => marginalFst q a) :=
+  · refine continuous_finsetSum _ fun a _ ↦ ?_
+    have h_marg : Continuous (fun q : α × β → ℝ ↦ marginalFst q a) :=
       (continuous_apply a).comp continuous_marginalFst
     exact Real.continuous_negMulLog.comp h_marg
-  · refine continuous_finsetSum _ fun b _ => ?_
-    have h_marg : Continuous (fun q : α × β → ℝ => marginalSnd q b) :=
+  · refine continuous_finsetSum _ fun b _ ↦ ?_
+    have h_marg : Continuous (fun q : α × β → ℝ ↦ marginalSnd q b) :=
       (continuous_apply b).comp continuous_marginalSnd
     exact Real.continuous_negMulLog.comp h_marg
-  · refine continuous_finsetSum _ fun p _ => ?_
+  · refine continuous_finsetSum _ fun p _ ↦ ?_
     exact Real.continuous_negMulLog.comp (continuous_apply p)
 
 /-! ## pmf-form rate-distortion function `R(D)` -/
@@ -240,9 +240,9 @@ theorem rateDistortionFunctionPmf_attained
     (P_X : α → ℝ) (d : DistortionFn α β) (D : ℝ)
     (h_ne : (RDConstraint P_X d D).Nonempty) :
     ∃ qStar ∈ RDConstraint P_X d D,
-      IsMinOn (fun q => mutualInfoPmf q) (RDConstraint P_X d D) qStar := by
+      IsMinOn (fun q ↦ mutualInfoPmf q) (RDConstraint P_X d D) qStar := by
   have h_compact : IsCompact (RDConstraint P_X d D) := RDConstraint_isCompact P_X d D
-  have h_cont : Continuous (fun q : α × β → ℝ => mutualInfoPmf q) := continuous_mutualInfoPmf
+  have h_cont : Continuous (fun q : α × β → ℝ ↦ mutualInfoPmf q) := continuous_mutualInfoPmf
   exact h_compact.exists_isMinOn h_ne h_cont.continuousOn
 
 

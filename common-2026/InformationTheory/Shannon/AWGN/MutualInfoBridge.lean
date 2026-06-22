@@ -105,7 +105,7 @@ theorem awgn_capacity_closed_form_of_maxent_bindconv
     (h_bridge : IsAwgnBindEqConv P N (isAwgnChannelMeasurable N))
     (h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N))
     (h_bdd :
-        BddAbove ((fun p : Measure ℝ =>
+        BddAbove ((fun p : Measure ℝ ↦
             (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
                 p (awgnChannel N (isAwgnChannelMeasurable N))).toReal) ''
           awgnPowerConstraintSet P))

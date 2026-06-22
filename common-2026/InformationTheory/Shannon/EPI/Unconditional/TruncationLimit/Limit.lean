@@ -48,14 +48,14 @@ theorem truncW_map_density_tendsto_ae
     (W : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (_hW_ac : (P.map W) ≪ volume) :
     ∀ᵐ x ∂(volume : Measure ℝ),
-      Tendsto (fun n => (((truncW P W n).map W).rnDeriv volume x).toReal) atTop
+      Tendsto (fun n ↦ (((truncW P W n).map W).rnDeriv volume x).toReal) atTop
         (𝓝 (((P.map W).rnDeriv volume x).toReal)) := by
   classical
   haveI hWmap_prob : IsProbabilityMeasure (P.map W) :=
     Measure.isProbabilityMeasure_map hW.aemeasurable
   -- truncation set in the W-marginal and its mass.
-  set Sn : ℕ → Set ℝ := fun n => {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
-  have hSn_meas : ∀ n, MeasurableSet (Sn n) := fun n =>
+  set Sn : ℕ → Set ℝ := fun n ↦ {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
+  have hSn_meas : ∀ n, MeasurableSet (Sn n) := fun n ↦
     measurableSet_le measurable_norm measurable_const
   have hSn_mono : Monotone Sn := by
     intro n m hnm r hr
@@ -65,7 +65,7 @@ theorem truncW_map_density_tendsto_ae
     rw [Set.eq_univ_iff_forall]; intro r
     obtain ⟨k, hk⟩ := exists_nat_ge |r|
     exact Set.mem_iUnion.2 ⟨k, hk⟩
-  set c : ℕ → ℝ≥0∞ := fun n => (P.map W) (Sn n) with hc_def
+  set c : ℕ → ℝ≥0∞ := fun n ↦ (P.map W) (Sn n) with hc_def
   -- `c n → 1` (union is everything).
   have hc_lim : Tendsto c atTop (𝓝 1) := by
     have h := tendsto_measure_iUnion_atTop (μ := P.map W) hSn_mono
@@ -77,7 +77,7 @@ theorem truncW_map_density_tendsto_ae
     set E : Set Ω := {ω : Ω | |W ω| ≤ (n : ℝ)} with hE_def
     have hE_meas : MeasurableSet E := hW.abs measurableSet_Iic
     have hE_eq : E = W ⁻¹' (Sn n) := by ext ω; simp [hE_def, hSn_def]
-    refine Measure.ext (fun A hA => ?_)
+    refine Measure.ext (fun A hA ↦ ?_)
     have hLHS : ((truncW P W n).map W) A = ((P.map W) (Sn n))⁻¹ * (P.map W) (Sn n ∩ A) := by
       rw [Measure.map_apply hW hA, truncW, ProbabilityTheory.cond_apply hE_meas P, hE_eq,
         Measure.map_apply hW (hSn_meas n), Measure.map_apply hW ((hSn_meas n).inter hA),
@@ -87,7 +87,7 @@ theorem truncW_map_density_tendsto_ae
       rw [ProbabilityTheory.cond_apply (hSn_meas n) (P.map W) A]
     rw [hLHS, hRHS]
   -- real-valued mass and its inverse converge to 1.
-  set cr : ℕ → ℝ := fun n => (c n).toReal with hcr_def
+  set cr : ℕ → ℝ := fun n ↦ (c n).toReal with hcr_def
   have hcr_lim : Tendsto cr atTop (𝓝 1) := by
     have := (ENNReal.tendsto_toReal (by simp : (1 : ℝ≥0∞) ≠ ⊤)).comp hc_lim
     simpa [hcr_def, Function.comp] using this
@@ -96,18 +96,18 @@ theorem truncW_map_density_tendsto_ae
     have h_nhds : {x : ℝ≥0∞ | x ≠ 0} ∈ 𝓝 (1 : ℝ≥0∞) := isOpen_ne.mem_nhds one_ne_zero
     exact hc_lim.eventually_mem h_nhds
   -- the inverse mass (real) converges to 1.
-  have hcbar_lim : Tendsto (fun n => ((c n)⁻¹).toReal) atTop (𝓝 1) := by
-    have heq : (fun n => (cr n)⁻¹) =ᶠ[atTop] fun n => ((c n)⁻¹).toReal := by
+  have hcbar_lim : Tendsto (fun n ↦ ((c n)⁻¹).toReal) atTop (𝓝 1) := by
+    have heq : (fun n ↦ (cr n)⁻¹) =ᶠ[atTop] fun n ↦ ((c n)⁻¹).toReal := by
       filter_upwards [hc_ne] with n hn
       rw [hcr_def]; simp only; rw [ENNReal.toReal_inv]
     refine Tendsto.congr' heq ?_
-    have : Tendsto (fun n => (cr n)⁻¹) atTop (𝓝 (1 : ℝ)⁻¹) :=
+    have : Tendsto (fun n ↦ (cr n)⁻¹) atTop (𝓝 (1 : ℝ)⁻¹) :=
       (continuousAt_inv₀ (by norm_num : (1 : ℝ) ≠ 0)).tendsto.comp hcr_lim
     simpa using this
   -- on the tail (`c n ≠ 0`), the cond density formula:
   -- `fn_n =ᵐ (c n)⁻¹ · 1_{Sn n} · μW.rnDeriv vol`.
   have h_rn : ∀ n, c n ≠ 0 → ((truncW P W n).map W).rnDeriv volume
-      =ᵐ[volume] fun x => (c n)⁻¹ * (Sn n).indicator ((P.map W).rnDeriv volume) x := by
+      =ᵐ[volume] fun x ↦ (c n)⁻¹ * (Sn n).indicator ((P.map W).rnDeriv volume) x := by
     intro n hcn
     have hrn := rnDeriv_cond_eq (P.map W) (hSn_meas n) hcn
     rw [hmap_eq n]; exact hrn
@@ -138,7 +138,7 @@ theorem truncW_map_density_tendsto_ae
     rw [hx n hnN₀, Set.indicator_of_mem hxSn, ENNReal.toReal_mul, ← hfWe_def]
   -- the product `(c n)⁻¹.toReal * fWe.toReal → 1 * fWe.toReal = fWe.toReal`.
   refine Tendsto.congr' (Filter.EventuallyEq.symm hev) ?_
-  have hprod : Tendsto (fun n => ((c n)⁻¹).toReal * fWe.toReal) atTop (𝓝 (1 * fWe.toReal)) :=
+  have hprod : Tendsto (fun n ↦ ((c n)⁻¹).toReal * fWe.toReal) atTop (𝓝 (1 * fWe.toReal)) :=
     hcbar_lim.mul tendsto_const_nhds
   simpa using hprod
 
@@ -210,7 +210,7 @@ theorem truncW_map_negPart_lintegral_le
     Measure.isProbabilityMeasure_map hW.aemeasurable
   set Sn : Set ℝ := {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
   have hSn_meas : MeasurableSet Sn := measurableSet_le measurable_norm measurable_const
-  set fW : ℝ → ℝ := fun x => ((P.map W).rnDeriv volume x).toReal with hfW_def
+  set fW : ℝ → ℝ := fun x ↦ ((P.map W).rnDeriv volume x).toReal with hfW_def
   set c : ℝ≥0∞ := (P.map W) Sn with hc_def
   set cbar : ℝ := (c⁻¹).toReal with hcbar_def
   have hcbar_nn : 0 ≤ cbar := ENNReal.toReal_nonneg
@@ -219,7 +219,7 @@ theorem truncW_map_negPart_lintegral_le
     set E : Set Ω := {ω : Ω | |W ω| ≤ (n : ℝ)} with hE_def
     have hE_meas : MeasurableSet E := hW.abs measurableSet_Iic
     have hE_eq : E = W ⁻¹' Sn := by ext ω; simp [hE_def, hSn_def]
-    refine Measure.ext (fun A hA => ?_)
+    refine Measure.ext (fun A hA ↦ ?_)
     have hLHS : ((truncW P W n).map W) A = ((P.map W) Sn)⁻¹ * (P.map W) (Sn ∩ A) := by
       rw [Measure.map_apply hW hA, truncW, ProbabilityTheory.cond_apply hE_meas P, hE_eq,
         Measure.map_apply hW hSn_meas, Measure.map_apply hW (hSn_meas.inter hA),
@@ -228,27 +228,27 @@ theorem truncW_map_negPart_lintegral_le
         = ((P.map W) Sn)⁻¹ * (P.map W) (Sn ∩ A) := by
       rw [ProbabilityTheory.cond_apply hSn_meas (P.map W) A]
     rw [hLHS, hRHS]
-  set fn : ℝ → ℝ := fun x => (((truncW P W n).map W).rnDeriv volume x).toReal with hfn_def
+  set fn : ℝ → ℝ := fun x ↦ (((truncW P W n).map W).rnDeriv volume x).toReal with hfn_def
   have h_rn : ((truncW P W n).map W).rnDeriv volume
-      =ᵐ[volume] fun x => c⁻¹ * Sn.indicator ((P.map W).rnDeriv volume) x := by
+      =ᵐ[volume] fun x ↦ c⁻¹ * Sn.indicator ((P.map W).rnDeriv volume) x := by
     rw [hmap_eq]; exact rnDeriv_cond_eq (P.map W) hSn_meas hcn
-  have hfW_meas : Measurable (fun x => ENNReal.ofReal (fW x)) :=
+  have hfW_meas : Measurable (fun x ↦ ENNReal.ofReal (fW x)) :=
     (Measure.measurable_rnDeriv _ _).ennreal_toReal.ennreal_ofReal
   have hfW_lint : (∫⁻ x, ENNReal.ofReal (fW x) ∂volume) = 1 := by
-    have hae_eq : (fun x => ENNReal.ofReal (fW x)) =ᵐ[volume] (P.map W).rnDeriv volume := by
+    have hae_eq : (fun x ↦ ENNReal.ofReal (fW x)) =ᵐ[volume] (P.map W).rnDeriv volume := by
       filter_upwards [(P.map W).rnDeriv_ne_top volume] with x hx
       rw [hfW_def]; exact ENNReal.ofReal_toReal hx
     rw [lintegral_congr_ae hae_eq, Measure.lintegral_rnDeriv hW_ac, measure_univ]
   -- pointwise `=ᵐ`: `-(negMulLog fn) = 1_Sn · ((cbar log cbar)·fW + cbar·(-(negMulLog fW)))`.
-  have h_int_eq : (fun x => ENNReal.ofReal (-(Real.negMulLog (fn x))))
-      =ᵐ[volume] fun x => ENNReal.ofReal (Sn.indicator
-        (fun x => cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x)))) x) := by
+  have h_int_eq : (fun x ↦ ENNReal.ofReal (-(Real.negMulLog (fn x))))
+      =ᵐ[volume] fun x ↦ ENNReal.ofReal (Sn.indicator
+        (fun x ↦ cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x)))) x) := by
     filter_upwards [h_rn] with x hx
     rw [hfn_def]; simp only; rw [hx]
     by_cases hxs : x ∈ Sn
     · rw [Set.indicator_of_mem hxs (f := (P.map W).rnDeriv volume),
         Set.indicator_of_mem hxs
-          (f := fun x => cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x)))),
+          (f := fun x ↦ cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x)))),
         ENNReal.toReal_mul]
       congr 1
       show -(Real.negMulLog (cbar * fW x))
@@ -259,18 +259,18 @@ theorem truncW_map_negPart_lintegral_le
       ring
     · rw [Set.indicator_of_notMem hxs (f := (P.map W).rnDeriv volume),
         Set.indicator_of_notMem hxs
-          (f := fun x => cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x))))]
+          (f := fun x ↦ cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x))))]
       simp [Real.negMulLog]
   rw [hfn_def] at *
   rw [show (∫⁻ x,
         ENNReal.ofReal (-(Real.negMulLog ((((truncW P W n).map W).rnDeriv volume x).toReal)))
       ∂volume)
     = ∫⁻ x, ENNReal.ofReal (Sn.indicator
-        (fun x => cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x)))) x) ∂volume from
+        (fun x ↦ cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x)))) x) ∂volume from
     lintegral_congr_ae h_int_eq]
   -- Bound the indicator integrand by two finite-integral pieces (`≤`, then evaluate).
   have hbound : ∀ x, ENNReal.ofReal (Sn.indicator
-        (fun x => cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x)))) x)
+        (fun x ↦ cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x)))) x)
       ≤ ENNReal.ofReal (|cbar * Real.log cbar|) * ENNReal.ofReal (fW x)
         + ENNReal.ofReal cbar * ENNReal.ofReal (-(Real.negMulLog (fW x))) := by
     intro x
@@ -284,14 +284,14 @@ theorem truncW_map_negPart_lintegral_le
         rw [abs_mul, abs_of_nonneg hfW_nn]
       · rw [← ENNReal.ofReal_mul hcbar_nn]
     · rw [Set.indicator_of_notMem hxs]; simp
-  have hnegm_meas : Measurable (fun x => ENNReal.ofReal (-(Real.negMulLog (fW x)))) :=
+  have hnegm_meas : Measurable (fun x ↦ ENNReal.ofReal (-(Real.negMulLog (fW x)))) :=
     ((Real.continuous_negMulLog.measurable.comp
       ((Measure.measurable_rnDeriv _ _).ennreal_toReal)).neg).ennreal_ofReal
   have hg1_meas : Measurable
-      (fun x => ENNReal.ofReal (|cbar * Real.log cbar|) * ENNReal.ofReal (fW x)) :=
+      (fun x ↦ ENNReal.ofReal (|cbar * Real.log cbar|) * ENNReal.ofReal (fW x)) :=
     measurable_const.mul hfW_meas
   calc (∫⁻ x, ENNReal.ofReal (Sn.indicator
-          (fun x => cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x)))) x) ∂volume)
+          (fun x ↦ cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x)))) x) ∂volume)
       ≤ ∫⁻ x, (ENNReal.ofReal (|cbar * Real.log cbar|) * ENNReal.ofReal (fW x)
           + ENNReal.ofReal cbar * ENNReal.ofReal (-(Real.negMulLog (fW x)))) ∂volume :=
         lintegral_mono hbound
@@ -316,17 +316,17 @@ theorem differentialEntropyExt_truncW_tendsto_top
       (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (((P.map W).rnDeriv volume x).toReal)))
         ∂volume) ≠ ⊤)
     (hW_top : differentialEntropyExt (P.map W) = ⊤) :
-    Tendsto (fun n => differentialEntropyExt ((truncW P W n).map W)) atTop
+    Tendsto (fun n ↦ differentialEntropyExt ((truncW P W n).map W)) atTop
       (𝓝 (⊤ : EReal)) := by
   classical
   haveI hWmap_prob : IsProbabilityMeasure (P.map W) :=
     Measure.isProbabilityMeasure_map hW.aemeasurable
   -- Abbreviations for the positive / negative parts of `Q_n.map W := (truncW P W n).map W`.
   set μW : Measure ℝ := P.map W with hμW_def
-  set A : ℕ → ℝ≥0∞ := fun n =>
+  set A : ℕ → ℝ≥0∞ := fun n ↦
     ∫⁻ x, ENNReal.ofReal (Real.negMulLog ((((truncW P W n).map W).rnDeriv volume x).toReal)) ∂volume
     with hA_def
-  set B : ℕ → ℝ≥0∞ := fun n =>
+  set B : ℕ → ℝ≥0∞ := fun n ↦
     ∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((((truncW P W n).map W).rnDeriv volume x).toReal)))
       ∂volume with hB_def
   -- each truncated W-marginal is a.c. (`cond` preserves a.c.).
@@ -340,7 +340,7 @@ theorem differentialEntropyExt_truncW_tendsto_top
     posPart_lintegral_eq_top_of_diffEntExt_top hW_ac hW_top
   -- **Step (2a)+(2c): Fatou ⟹ `liminf A = ⊤`**.
   have hfatou := differentialEntropyExt_posPart_le_liminf_of_ae_tendsto μW
-    (fun n => (truncW P W n).map W)
+    (fun n ↦ (truncW P W n).map W)
     (truncW_map_density_tendsto_ae W P hW hW_ac)
   -- `⊤ = A(μW) ≤ liminf A` ⟹ `liminf A = ⊤`.
   have hliminf_top : Filter.liminf A atTop = ⊤ := by
@@ -363,7 +363,7 @@ theorem differentialEntropyExt_truncW_tendsto_top
     refine ENNReal.add_ne_top.mpr ⟨by simp, ENNReal.mul_ne_top (by simp) hW_negPart_fin⟩
   have hB_bound : ∀ᶠ n in atTop, B n ≤ C := by
     -- mass of the truncation set and its inverse (real) both → 1.
-    set Sn : ℕ → Set ℝ := fun n => {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
+    set Sn : ℕ → Set ℝ := fun n ↦ {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
     have hSn_mono : Monotone Sn := by
       intro p q hpq r hr
       have : (p : ℝ) ≤ (q : ℝ) := by exact_mod_cast hpq
@@ -372,7 +372,7 @@ theorem differentialEntropyExt_truncW_tendsto_top
       rw [Set.eq_univ_iff_forall]; intro r
       obtain ⟨k, hk⟩ := exists_nat_ge |r|
       exact Set.mem_iUnion.2 ⟨k, hk⟩
-    set cc : ℕ → ℝ≥0∞ := fun n => μW (Sn n) with hcc_def
+    set cc : ℕ → ℝ≥0∞ := fun n ↦ μW (Sn n) with hcc_def
     have hcc_lim : Tendsto cc atTop (𝓝 1) := by
       have h := tendsto_measure_iUnion_atTop (μ := μW) hSn_mono
       rw [hSn_union, measure_univ] at h
@@ -381,14 +381,14 @@ theorem differentialEntropyExt_truncW_tendsto_top
       have h_nhds : {x : ℝ≥0∞ | x ≠ 0} ∈ 𝓝 (1 : ℝ≥0∞) := isOpen_ne.mem_nhds one_ne_zero
       exact hcc_lim.eventually_mem h_nhds
     -- inverse-mass (real) `cbar n := (cc n)⁻¹.toReal → 1`.
-    have hcbar_lim : Tendsto (fun n => ((cc n)⁻¹).toReal) atTop (𝓝 1) := by
-      have hcr_lim : Tendsto (fun n => (cc n).toReal) atTop (𝓝 1) := by
+    have hcbar_lim : Tendsto (fun n ↦ ((cc n)⁻¹).toReal) atTop (𝓝 1) := by
+      have hcr_lim : Tendsto (fun n ↦ (cc n).toReal) atTop (𝓝 1) := by
         have := (ENNReal.tendsto_toReal (by simp : (1 : ℝ≥0∞) ≠ ⊤)).comp hcc_lim
         simpa [Function.comp] using this
-      have heq : (fun n => ((cc n).toReal)⁻¹) =ᶠ[atTop] fun n => ((cc n)⁻¹).toReal := by
+      have heq : (fun n ↦ ((cc n).toReal)⁻¹) =ᶠ[atTop] fun n ↦ ((cc n)⁻¹).toReal := by
         filter_upwards [hcc_ne] with n hn; rw [ENNReal.toReal_inv]
       refine Tendsto.congr' heq ?_
-      have : Tendsto (fun n => ((cc n).toReal)⁻¹) atTop (𝓝 (1 : ℝ)⁻¹) :=
+      have : Tendsto (fun n ↦ ((cc n).toReal)⁻¹) atTop (𝓝 (1 : ℝ)⁻¹) :=
         (continuousAt_inv₀ (by norm_num : (1 : ℝ) ≠ 0)).tendsto.comp hcr_lim
       simpa using this
     -- eventually `cbar n ≤ 2` and `|cbar n · log (cbar n)| ≤ 1`.
@@ -397,7 +397,7 @@ theorem differentialEntropyExt_truncW_tendsto_top
     have hlog_le : ∀ᶠ n in atTop,
         |((cc n)⁻¹).toReal * Real.log (((cc n)⁻¹).toReal)| ≤ 1 := by
       -- `t ↦ |t · log t|` is continuous and `→ 0` at `1` (`log 1 = 0`); so eventually `≤ 1`.
-      have hcont : Tendsto (fun n => |((cc n)⁻¹).toReal * Real.log (((cc n)⁻¹).toReal)|)
+      have hcont : Tendsto (fun n ↦ |((cc n)⁻¹).toReal * Real.log (((cc n)⁻¹).toReal)|)
           atTop (𝓝 |(1 : ℝ) * Real.log 1|) := by
         apply Tendsto.abs
         exact (hcbar_lim.mul ((Real.continuousAt_log (by norm_num)).tendsto.comp hcbar_lim))
@@ -420,8 +420,8 @@ theorem differentialEntropyExt_truncW_tendsto_top
   rw [EReal.tendsto_nhds_top_iff_real]
   intro M
   -- coe `A n → ⊤` to EReal.
-  have hAE_tendsto : Tendsto (fun n => ((A n : EReal))) atTop (𝓝 (⊤ : EReal)) := by
-    have : Tendsto (fun n => ((A n : ℝ≥0∞) : EReal)) atTop (𝓝 ((⊤ : ℝ≥0∞) : EReal)) :=
+  have hAE_tendsto : Tendsto (fun n ↦ ((A n : EReal))) atTop (𝓝 (⊤ : EReal)) := by
+    have : Tendsto (fun n ↦ ((A n : ℝ≥0∞) : EReal)) atTop (𝓝 ((⊤ : ℝ≥0∞) : EReal)) :=
       (continuous_coe_ennreal_ereal.tendsto _).comp hA_tendsto
     rwa [EReal.coe_ennreal_top] at this
   -- eventually `(M + C.toReal : EReal) < A n`.
@@ -460,7 +460,7 @@ private theorem negPart_lintegral_map_truncW_add_ne_top
     (hBW : (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (((P.map W).rnDeriv volume x).toReal)))
         ∂volume) ≠ ⊤)
     (n : ℕ) (hn : P {ω | |W ω| ≤ (n : ℝ)} ≠ 0) :
-    (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((((truncW P W n).map (fun ω => W ω + V ω)).rnDeriv
+    (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((((truncW P W n).map (fun ω ↦ W ω + V ω)).rnDeriv
         volume x).toReal))) ∂volume) ≠ ⊤ := by
   classical
   set Q : Measure Ω := truncW P W n with hQ_def
@@ -504,7 +504,7 @@ private theorem negPart_lintegral_map_truncW_add_ne_top
       rw [← mul_assoc, ENNReal.inv_mul_cancel hPE_ne hPE_ne_top, one_mul]
     rw [hcancel]; ring
   -- the sum law equals the convolution of the marginals.
-  have hsum_conv : Q.map (fun ω => W ω + V ω) = (Q.map W) ∗ (Q.map V) := by
+  have hsum_conv : Q.map (fun ω ↦ W ω + V ω) = (Q.map W) ∗ (Q.map V) := by
     have := hindep.map_add_eq_map_conv_map hW hV
     simpa [Pi.add_apply] using this
   -- `B(Q.map W) ≠ ⊤` via the explicit per-n bound (finite under `B(W) < ⊤` and `c_n ≠ 0`).
@@ -535,7 +535,7 @@ private theorem differentialEntropyExt_truncW_add_le_two_mul_Aν
     (hW_ac : (P.map W) ≪ volume)
     (hBW : (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (((P.map W).rnDeriv volume x).toReal)))
         ∂volume) ≠ ⊤)
-    (ν : Measure ℝ) (hν_def : ν = P.map (fun ω => W ω + V ω))
+    (ν : Measure ℝ) (hν_def : ν = P.map (fun ω ↦ W ω + V ω))
     (hν_ac : ν ≪ volume)
     (hBν : (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((ν.rnDeriv volume x).toReal)))
         ∂volume) ≠ ⊤)
@@ -546,10 +546,10 @@ private theorem differentialEntropyExt_truncW_add_le_two_mul_Aν
     (hcn_ev : ∀ᶠ n : ℕ in atTop, P {ω | |W ω| ≤ (n : ℝ)} ≠ 0)
     (hcinv_ev : ∀ᶠ n : ℕ in atTop, ((P {ω | |W ω| ≤ (n : ℝ)})⁻¹).toReal ≤ 2) :
     ∀ᶠ n in atTop,
-        differentialEntropyExt ((truncW P W n).map (fun ω => W ω + V ω))
+        differentialEntropyExt ((truncW P W n).map (fun ω ↦ W ω + V ω))
           ≤ ((2 * Aν : ℝ≥0∞) : EReal) := by
   filter_upwards [hcn_ev, hcinv_ev] with n hn hcinv
-  set νn : Measure ℝ := (truncW P W n).map (fun ω => W ω + V ω) with hνn_def
+  set νn : Measure ℝ := (truncW P W n).map (fun ω ↦ W ω + V ω) with hνn_def
   set cinv : ℝ≥0∞ := (P {ω | |W ω| ≤ (n : ℝ)})⁻¹ with hcinv_def
   -- mass `c_n ∈ (0, 1]` so `cinv ∈ [1, ⊤)`.
   have hcinv_top : cinv ≠ ⊤ := by
@@ -634,10 +634,10 @@ theorem differentialEntropyExt_top_of_indep_add_unconditional
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
     (hW_ac : (P.map W) ≪ volume)
     (hW_top : differentialEntropyExt (P.map W) = ⊤) :
-    differentialEntropyExt (P.map (fun ω => W ω + V ω)) = ⊤ := by
+    differentialEntropyExt (P.map (fun ω ↦ W ω + V ω)) = ⊤ := by
   classical
   -- ν := P.map(W+V),  ν_n := (truncW P W n).map(W+V),  c_n := P{|W| ≤ n}.
-  set ν : Measure ℝ := P.map (fun ω => W ω + V ω) with hν_def
+  set ν : Measure ℝ := P.map (fun ω ↦ W ω + V ω) with hν_def
   haveI hμW_prob : IsProbabilityMeasure (P.map W) :=
     Measure.isProbabilityMeasure_map hW.aemeasurable
   haveI hμV_prob : IsProbabilityMeasure (P.map V) :=
@@ -662,12 +662,12 @@ theorem differentialEntropyExt_top_of_indep_add_unconditional
     exact negPart_negMulLog_conv_single_ne_top (P.map W) (P.map V) hW_ac hBW
   -- **Step 1 — `h(ν_n) → ⊤`** (squeeze: per-n monotone below a tendsto-⊤ sequence).
   -- `h(Q_n.map W) → ⊤`.
-  have hW_tendsto : Tendsto (fun n => differentialEntropyExt ((truncW P W n).map W)) atTop
+  have hW_tendsto : Tendsto (fun n ↦ differentialEntropyExt ((truncW P W n).map W)) atTop
       (𝓝 (⊤ : EReal)) :=
     differentialEntropyExt_truncW_tendsto_top W P hW hW_ac hBW hW_top
   -- eventually positive mass `c_n ≠ 0`.
   have hcn_ev : ∀ᶠ n : ℕ in atTop, P {ω | |W ω| ≤ (n : ℝ)} ≠ 0 := by
-    set E : ℕ → Set Ω := fun n => {ω | |W ω| ≤ (n : ℝ)} with hE_def
+    set E : ℕ → Set Ω := fun n ↦ {ω | |W ω| ≤ (n : ℝ)} with hE_def
     have hE_mono : Monotone E := by
       intro p q hpq ω hω
       have : (p : ℝ) ≤ (q : ℝ) := by exact_mod_cast hpq
@@ -676,7 +676,7 @@ theorem differentialEntropyExt_top_of_indep_add_unconditional
       rw [Set.eq_univ_iff_forall]; intro ω
       obtain ⟨k, hk⟩ := exists_nat_ge |W ω|
       exact Set.mem_iUnion.2 ⟨k, hk⟩
-    have hlim : Tendsto (fun n => P (E n)) atTop (𝓝 1) := by
+    have hlim : Tendsto (fun n ↦ P (E n)) atTop (𝓝 1) := by
       have h := tendsto_measure_iUnion_atTop (μ := P) hE_mono
       rw [hE_union, measure_univ] at h
       exact h
@@ -685,12 +685,12 @@ theorem differentialEntropyExt_top_of_indep_add_unconditional
   -- per-n monotone (eventually): `h(Q_n.map W) ≤ h(ν_n)`.
   have hmono_ev : ∀ᶠ n in atTop,
       differentialEntropyExt ((truncW P W n).map W)
-        ≤ differentialEntropyExt ((truncW P W n).map (fun ω => W ω + V ω)) := by
+        ≤ differentialEntropyExt ((truncW P W n).map (fun ω ↦ W ω + V ω)) := by
     filter_upwards [hcn_ev] with n hn
     exact differentialEntropyExt_mono_add_truncW W V P hW hV hWV hW_ac hBW n hn
   -- squeeze to get `h(ν_n) → ⊤`.
   have hνn_tendsto :
-      Tendsto (fun n => differentialEntropyExt ((truncW P W n).map (fun ω => W ω + V ω)))
+      Tendsto (fun n ↦ differentialEntropyExt ((truncW P W n).map (fun ω ↦ W ω + V ω)))
         atTop (𝓝 (⊤ : EReal)) := by
     rw [EReal.tendsto_nhds_top_iff_real]
     intro M
@@ -704,7 +704,7 @@ theorem differentialEntropyExt_top_of_indep_add_unconditional
     by_contra hAν_ne
     -- eventually `c_n⁻¹ ≤ 2`.
     have hcinv_ev : ∀ᶠ n : ℕ in atTop, ((P {ω | |W ω| ≤ (n : ℝ)})⁻¹).toReal ≤ 2 := by
-      set E : ℕ → Set Ω := fun n => {ω | |W ω| ≤ (n : ℝ)} with hE_def
+      set E : ℕ → Set Ω := fun n ↦ {ω | |W ω| ≤ (n : ℝ)} with hE_def
       have hE_mono : Monotone E := by
         intro p q hpq ω hω
         have : (p : ℝ) ≤ (q : ℝ) := by exact_mod_cast hpq
@@ -713,26 +713,26 @@ theorem differentialEntropyExt_top_of_indep_add_unconditional
         rw [Set.eq_univ_iff_forall]; intro ω
         obtain ⟨k, hk⟩ := exists_nat_ge |W ω|
         exact Set.mem_iUnion.2 ⟨k, hk⟩
-      have hlim : Tendsto (fun n => P (E n)) atTop (𝓝 1) := by
+      have hlim : Tendsto (fun n ↦ P (E n)) atTop (𝓝 1) := by
         have h := tendsto_measure_iUnion_atTop (μ := P) hE_mono
         rw [hE_union, measure_univ] at h
         exact h
       -- `(P (E n))⁻¹.toReal → 1`.
-      have hcinv_lim : Tendsto (fun n => ((P (E n))⁻¹).toReal) atTop (𝓝 1) := by
-        have hr_lim : Tendsto (fun n => (P (E n)).toReal) atTop (𝓝 1) := by
+      have hcinv_lim : Tendsto (fun n ↦ ((P (E n))⁻¹).toReal) atTop (𝓝 1) := by
+        have hr_lim : Tendsto (fun n ↦ (P (E n)).toReal) atTop (𝓝 1) := by
           have := (ENNReal.tendsto_toReal (by simp : (1 : ℝ≥0∞) ≠ ⊤)).comp hlim
           simpa [Function.comp] using this
-        have heq : (fun n => ((P (E n)).toReal)⁻¹) =ᶠ[atTop] fun n => ((P (E n))⁻¹).toReal := by
+        have heq : (fun n ↦ ((P (E n)).toReal)⁻¹) =ᶠ[atTop] fun n ↦ ((P (E n))⁻¹).toReal := by
           filter_upwards [hcn_ev] with n hn; rw [ENNReal.toReal_inv]
         refine Tendsto.congr' heq ?_
-        have : Tendsto (fun n => ((P (E n)).toReal)⁻¹) atTop (𝓝 (1 : ℝ)⁻¹) :=
+        have : Tendsto (fun n ↦ ((P (E n)).toReal)⁻¹) atTop (𝓝 (1 : ℝ)⁻¹) :=
           (continuousAt_inv₀ (by norm_num : (1 : ℝ) ≠ 0)).tendsto.comp hr_lim
         simpa using this
       exact hcinv_lim.eventually_le_const (by norm_num : (1 : ℝ) < 2)
     -- the finite EReal upper bound `(2 * Aν : EReal)`.
     -- eventually `h(ν_n) ≤ (2 * Aν : EReal)`.
     have hub : ∀ᶠ n in atTop,
-        differentialEntropyExt ((truncW P W n).map (fun ω => W ω + V ω))
+        differentialEntropyExt ((truncW P W n).map (fun ω ↦ W ω + V ω))
           ≤ ((2 * Aν : ℝ≥0∞) : EReal) :=
       differentialEntropyExt_truncW_add_le_two_mul_Aν W V P hW hV hWV hW_ac hBW
         ν hν_def hν_ac hBν Aν hAν_def hcn_ev hcinv_ev
@@ -766,7 +766,7 @@ positive- and negative-part `lintegral`s) are then finite, giving `HasFiniteInte
 @audit:ok -/
 theorem differentialEntropyExt_integrable_of_finite {μ : Measure ℝ} (hac : μ ≪ volume)
     (hne_top : differentialEntropyExt μ ≠ ⊤) (hne_bot : differentialEntropyExt μ ≠ ⊥) :
-    Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume := by
+    Integrable (fun x ↦ Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume := by
   -- positive- and negative-part lintegrals of the density's `negMulLog`.
   set A : ℝ≥0∞ := ∫⁻ x, ENNReal.ofReal (Real.negMulLog ((μ.rnDeriv volume x).toReal)) ∂volume
     with hA_def
@@ -805,7 +805,7 @@ theorem differentialEntropyExt_mono_add_unconditional
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
     (hW_ac : (P.map W) ≪ volume) :
-    differentialEntropyExt (P.map W) ≤ differentialEntropyExt (P.map (fun ω => W ω + V ω)) := by
+    differentialEntropyExt (P.map W) ≤ differentialEntropyExt (P.map (fun ω ↦ W ω + V ω)) := by
   -- **⊥ branch**: `h(W) = ⊥ ≤ anything`.
   rcases eq_bot_or_bot_lt (differentialEntropyExt (P.map W)) with hbot | hpos
   · rw [hbot]; exact bot_le
@@ -825,7 +825,7 @@ theorem entropyPowerExt_mono_add_unconditional
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
     (hW_ac : (P.map W) ≪ volume) :
-    entropyPowerExt (P.map (fun ω => W ω + V ω)) ≥ entropyPowerExt (P.map W) := by
+    entropyPowerExt (P.map (fun ω ↦ W ω + V ω)) ≥ entropyPowerExt (P.map W) := by
   unfold entropyPowerExt
   apply EReal.exp_monotone
   exact mul_le_mul_of_nonneg_left

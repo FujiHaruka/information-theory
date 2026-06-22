@@ -30,7 +30,7 @@ section IIDInput
 `Fin n → α × β` whose `i`-th coordinate has law `jointDistribution p W`. -/
 noncomputable def iidJointMeasure
     (p : Measure α) (W : Channel α β) (n : ℕ) : Measure (Fin n → α × β) :=
-  Measure.pi (fun _ : Fin n => jointDistribution p W)
+  Measure.pi (fun _ : Fin n ↦ jointDistribution p W)
 
 instance iidJointMeasure.instIsProbabilityMeasure
     (p : Measure α) [IsProbabilityMeasure p]
@@ -57,7 +57,7 @@ noncomputable def jointTypicalDecoder
     {Ω : Type*} [MeasurableSpace Ω]
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     {M n : ℕ} (hM : 0 < M) (ε : ℝ) (codebook : Codebook M n α) :
-    (Fin n → β) → Fin M := fun y =>
+    (Fin n → β) → Fin M := fun y ↦
   haveI : Decidable (∃! m : Fin M, (codebook m, y) ∈ jointlyTypicalSet μ Xs Ys n ε) :=
     Classical.propDecidable _
   if h : ∃! m : Fin M, (codebook m, y) ∈ jointlyTypicalSet μ Xs Ys n ε
@@ -87,21 +87,21 @@ theorem errorProbAt_le_E1_plus_E2
     {M n : ℕ} (hM : 0 < M) {ε : ℝ}
     (codebook : Codebook M n α) (m : Fin M) :
     ((codebookToCode μ Xs Ys hM ε codebook).errorProbAt W m).toReal
-      ≤ (Measure.pi (fun i => W (codebook m i))).real
+      ≤ (Measure.pi (fun i ↦ W (codebook m i))).real
           {y | (codebook m, y) ∉ jointlyTypicalSet μ Xs Ys n ε}
         + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
-            (Measure.pi (fun i => W (codebook m i))).real
+            (Measure.pi (fun i ↦ W (codebook m i))).real
               {y | (codebook m', y) ∈ jointlyTypicalSet μ Xs Ys n ε} := by
   classical
   -- Abbreviations.
   set c : Code M n α β := codebookToCode μ Xs Ys hM ε codebook with hc_def
-  set ν : Measure (Fin n → β) := Measure.pi (fun i => W (codebook m i)) with hν_def
+  set ν : Measure (Fin n → β) := Measure.pi (fun i ↦ W (codebook m i)) with hν_def
   haveI : IsProbabilityMeasure ν := by
     rw [hν_def]; infer_instance
   -- Define the (E1) and (E2) sets.
   set E1 : Set (Fin n → β) :=
     {y | (codebook m, y) ∉ jointlyTypicalSet μ Xs Ys n ε} with hE1_def
-  set E2_indiv : Fin M → Set (Fin n → β) := fun m' =>
+  set E2_indiv : Fin M → Set (Fin n → β) := fun m' ↦
     {y | (codebook m', y) ∈ jointlyTypicalSet μ Xs Ys n ε} with hE2_def
   -- Step 1: `c.errorEvent m ⊆ E1 ∪ (⋃ m' ∈ univ.erase m, E2_indiv m')`.
   have h_sub :
@@ -165,7 +165,7 @@ theorem errorProbAt_le_E1_plus_E2
   -- Step 2: bound the measure.
   -- First: `c.errorProbAt W m = ν (c.errorEvent m)` (by defeq of `codebookToCode`).
   have h_eq_meas : c.errorProbAt W m = ν (c.errorEvent m) := by
-    show (Measure.pi (fun i => W (c.encoder m i))) (c.errorEvent m) = _
+    show (Measure.pi (fun i ↦ W (c.encoder m i))) (c.errorEvent m) = _
     rfl
   -- The error event is measurable (finite alphabet).
   have h_meas_err : MeasurableSet (c.errorEvent m) :=
@@ -215,7 +215,7 @@ equal any `p`-derived quantity. -/
 /-- Product law `p^{Mn}` on the codebook space. -/
 noncomputable def codebookMeasure
     (p : Measure α) (M n : ℕ) : Measure (Codebook M n α) :=
-  Measure.pi (fun _ : Fin M => Measure.pi (fun _ : Fin n => p))
+  Measure.pi (fun _ : Fin M ↦ Measure.pi (fun _ : Fin n ↦ p))
 
 instance codebookMeasure.instIsProbabilityMeasure
     (p : Measure α) [IsProbabilityMeasure p] (M n : ℕ) :

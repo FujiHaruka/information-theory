@@ -60,7 +60,7 @@ noncomputable def chernoffZSum (P₁ P₂ : α → ℝ) (lam : ℝ) : ℝ :=
 /-- The Chernoff information `C(P₁, P₂) := -min_{λ ∈ [0,1]} log Z(λ)`, stated as `-sInf` of the
 image; `chernoffInfo_attained` shows the minimum is realized. -/
 noncomputable def chernoffInfo (P₁ P₂ : α → ℝ) : ℝ :=
-  -(sInf ((fun lam : ℝ => Real.log (chernoffZSum P₁ P₂ lam)) '' Set.Icc (0:ℝ) 1))
+  -(sInf ((fun lam : ℝ ↦ Real.log (chernoffZSum P₁ P₂ lam)) '' Set.Icc (0:ℝ) 1))
 
 /-! ### Endpoint values `Z(0) = Z(1) = 1` -/
 
@@ -118,14 +118,14 @@ omit [DecidableEq α] in
 /-- `λ ↦ Z(λ)` is continuous on `ℝ`. -/
 lemma chernoffZSum_continuous
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
-    Continuous (fun lam : ℝ => chernoffZSum P₁ P₂ lam) := by
+    Continuous (fun lam : ℝ ↦ chernoffZSum P₁ P₂ lam) := by
   unfold chernoffZSum
-  refine continuous_finsetSum _ fun a _ => ?_
+  refine continuous_finsetSum _ fun a _ ↦ ?_
   -- Each term: (P₁ a) ^ (1 - lam) * (P₂ a) ^ lam.
-  have h1 : Continuous (fun lam : ℝ => (P₁ a) ^ (1 - lam)) := by
-    have h_base : Continuous (fun lam : ℝ => (1 - lam)) := continuous_const.sub continuous_id
+  have h1 : Continuous (fun lam : ℝ ↦ (P₁ a) ^ (1 - lam)) := by
+    have h_base : Continuous (fun lam : ℝ ↦ (1 - lam)) := continuous_const.sub continuous_id
     exact (Real.continuous_const_rpow (hP₁_pos a).ne').comp h_base
-  have h2 : Continuous (fun lam : ℝ => (P₂ a) ^ lam) :=
+  have h2 : Continuous (fun lam : ℝ ↦ (P₂ a) ^ lam) :=
     Real.continuous_const_rpow (hP₂_pos a).ne'
   exact h1.mul h2
 
@@ -134,11 +134,11 @@ omit [DecidableEq α] in
 lemma chernoffLogZ_continuous
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
-    Continuous (fun lam : ℝ => Real.log (chernoffZSum P₁ P₂ lam)) := by
+    Continuous (fun lam : ℝ ↦ Real.log (chernoffZSum P₁ P₂ lam)) := by
   -- Z(λ) > 0 always (full support); use Real.continuousAt_log on each point.
-  have hZ_cont : Continuous (fun lam : ℝ => chernoffZSum P₁ P₂ lam) :=
+  have hZ_cont : Continuous (fun lam : ℝ ↦ chernoffZSum P₁ P₂ lam) :=
     chernoffZSum_continuous P₁ P₂ hP₁_pos hP₂_pos
-  refine continuous_iff_continuousAt.mpr fun lam => ?_
+  refine continuous_iff_continuousAt.mpr fun lam ↦ ?_
   have h_pos : 0 < chernoffZSum P₁ P₂ lam :=
     chernoffZSum_pos P₁ P₂ hP₁_pos hP₂_pos lam
   exact (Real.continuousAt_log h_pos.ne').comp hZ_cont.continuousAt
@@ -155,7 +155,7 @@ theorem chernoffInfo_attained
   -- `IsCompact.exists_sInf_image_eq` on the compact `Icc 0 1` for the continuous `log ∘ Z`.
   have h_compact : IsCompact (Set.Icc (0:ℝ) 1) := isCompact_Icc
   have h_ne : (Set.Icc (0:ℝ) 1).Nonempty := ⟨0, by norm_num⟩
-  have h_cont : Continuous (fun lam : ℝ => Real.log (chernoffZSum P₁ P₂ lam)) :=
+  have h_cont : Continuous (fun lam : ℝ ↦ Real.log (chernoffZSum P₁ P₂ lam)) :=
     chernoffLogZ_continuous P₁ P₂ hP₁_pos hP₂_pos
   obtain ⟨lam, hlam_mem, h_sInf_eq⟩ :=
     h_compact.exists_sInf_image_eq h_ne h_cont.continuousOn
@@ -181,26 +181,26 @@ theorem chernoffInfo_nonneg
   rw [neg_nonneg]
   -- Image is bounded below (compact ⇒ image compact ⇒ bdd below).
   have h_compact : IsCompact (Set.Icc (0:ℝ) 1) := isCompact_Icc
-  have h_cont : Continuous (fun lam : ℝ => Real.log (chernoffZSum P₁ P₂ lam)) :=
+  have h_cont : Continuous (fun lam : ℝ ↦ Real.log (chernoffZSum P₁ P₂ lam)) :=
     chernoffLogZ_continuous P₁ P₂ hP₁_pos hP₂_pos
   have h_img_compact : IsCompact
-      ((fun lam : ℝ => Real.log (chernoffZSum P₁ P₂ lam)) '' Set.Icc (0:ℝ) 1) :=
+      ((fun lam : ℝ ↦ Real.log (chernoffZSum P₁ P₂ lam)) '' Set.Icc (0:ℝ) 1) :=
     h_compact.image_of_continuousOn h_cont.continuousOn
   have h_bdd : BddBelow
-      ((fun lam : ℝ => Real.log (chernoffZSum P₁ P₂ lam)) '' Set.Icc (0:ℝ) 1) :=
+      ((fun lam : ℝ ↦ Real.log (chernoffZSum P₁ P₂ lam)) '' Set.Icc (0:ℝ) 1) :=
     h_img_compact.bddBelow
   -- 0 ∈ Icc, so `log Z(0)` is in the image.
   have h0_mem : (0 : ℝ) ∈ Set.Icc (0:ℝ) 1 := by norm_num
   have h_logZ0_in_img :
       Real.log (chernoffZSum P₁ P₂ 0)
-        ∈ (fun lam : ℝ => Real.log (chernoffZSum P₁ P₂ lam)) '' Set.Icc (0:ℝ) 1 :=
+        ∈ (fun lam : ℝ ↦ Real.log (chernoffZSum P₁ P₂ lam)) '' Set.Icc (0:ℝ) 1 :=
     ⟨0, h0_mem, rfl⟩
   have h_Z0 : chernoffZSum P₁ P₂ 0 = 1 :=
-    chernoffZSum_lam_zero P₁ P₂ hP₁_sum (fun a => (hP₂_pos a).le)
+    chernoffZSum_lam_zero P₁ P₂ hP₁_sum (fun a ↦ (hP₂_pos a).le)
   have h_logZ0 : Real.log (chernoffZSum P₁ P₂ 0) = 0 := by
     rw [h_Z0, Real.log_one]
   -- sInf image ≤ log Z(0) = 0.
-  calc sInf ((fun lam : ℝ => Real.log (chernoffZSum P₁ P₂ lam)) '' Set.Icc (0:ℝ) 1)
+  calc sInf ((fun lam : ℝ ↦ Real.log (chernoffZSum P₁ P₂ lam)) '' Set.Icc (0:ℝ) 1)
       ≤ Real.log (chernoffZSum P₁ P₂ 0) := csInf_le h_bdd h_logZ0_in_img
     _ = 0 := h_logZ0
 
@@ -212,7 +212,7 @@ omit [DecidableEq α] in
 lemma chernoffZSum_swap (P₁ P₂ : α → ℝ) (lam : ℝ) :
     chernoffZSum P₁ P₂ lam = chernoffZSum P₂ P₁ (1 - lam) := by
   unfold chernoffZSum
-  refine Finset.sum_congr rfl fun a _ => ?_
+  refine Finset.sum_congr rfl fun a _ ↦ ?_
   -- (P₁ a)^(1-λ) * (P₂ a)^λ vs (P₂ a)^(1-(1-λ)) * (P₁ a)^(1-λ) = (P₂ a)^λ * (P₁ a)^(1-λ)
   rw [show (1 : ℝ) - (1 - lam) = lam by ring]
   ring
@@ -225,7 +225,7 @@ lemma klDivPmf_self_eq_zero
     (P : α → ℝ) (hP_pos : ∀ a, 0 < P a) :
     klDivPmf P P = 0 := by
   unfold klDivPmf
-  refine Finset.sum_eq_zero (fun a _ => ?_)
+  refine Finset.sum_eq_zero (fun a _ ↦ ?_)
   -- P a * klFun (P a / P a) = P a * klFun 1 = P a * 0 = 0
   have h_div : P a / P a = 1 := div_self (hP_pos a).ne'
   rw [h_div, InformationTheory.klFun_one, mul_zero]
@@ -233,7 +233,7 @@ lemma klDivPmf_self_eq_zero
 /-- **Hoeffding tradeoff exponent** at Type I level `alpha`:
 `E₂(α) := min { klDivPmf Q P₂ | Q ∈ stdSimplex ∧ klDivPmf Q P₁ ≤ α }`. -/
 noncomputable def hoeffdingE2 (P₁ P₂ : α → ℝ) (alpha : ℝ) : ℝ :=
-  sInf ((fun Q : α → ℝ => klDivPmf Q P₂) ''
+  sInf ((fun Q : α → ℝ ↦ klDivPmf Q P₂) ''
     {Q : α → ℝ | Q ∈ stdSimplex ℝ α ∧ klDivPmf Q P₁ ≤ alpha})
 
 /-- The Hoeffding constraint set
@@ -249,7 +249,7 @@ lemma hoeffdingConstraintSet_nonempty
     (alpha : ℝ) (h_alpha_nn : 0 ≤ alpha) :
     (hoeffdingConstraintSet P₁ alpha).Nonempty := by
   refine ⟨P₁, ?_, ?_⟩
-  · refine ⟨fun a => (hP₁_pos a).le, hP₁_sum⟩
+  · refine ⟨fun a ↦ (hP₁_pos a).le, hP₁_sum⟩
   · rw [klDivPmf_self_eq_zero P₁ hP₁_pos]
     exact h_alpha_nn
 
@@ -258,7 +258,7 @@ omit [DecidableEq α] in
 lemma hoeffdingConstraintSet_subset_stdSimplex
     (P₁ : α → ℝ) (alpha : ℝ) :
     hoeffdingConstraintSet P₁ alpha ⊆ stdSimplex ℝ α :=
-  fun _ hQ => hQ.1
+  fun _ hQ ↦ hQ.1
 
 omit [DecidableEq α] in
 /-- The Hoeffding constraint set is **closed** (intersection of the closed simplex with
@@ -269,7 +269,7 @@ lemma hoeffdingConstraintSet_isClosed
   classical
   -- K = stdSimplex ∩ {Q | klDivPmf Q P₁ ≤ alpha}.
   have h_simplex : IsClosed (stdSimplex ℝ α) := isClosed_stdSimplex ℝ α
-  have h_cont : Continuous (fun Q : α → ℝ => klDivPmf Q P₁) :=
+  have h_cont : Continuous (fun Q : α → ℝ ↦ klDivPmf Q P₁) :=
     continuous_klDivPmf_left P₁ hP₁_pos
   have h_sublevel : IsClosed {Q : α → ℝ | klDivPmf Q P₁ ≤ alpha} :=
     isClosed_le h_cont continuous_const
@@ -297,7 +297,7 @@ theorem hoeffdingE2_attained
     isCompact_of_subset_stdSimplex h_closed h_sub
   have h_ne : (hoeffdingConstraintSet P₁ alpha).Nonempty :=
     hoeffdingConstraintSet_nonempty P₁ hP₁_pos hP₁_sum alpha h_alpha_nn
-  have h_cont : Continuous (fun Q : α → ℝ => klDivPmf Q P₂) :=
+  have h_cont : Continuous (fun Q : α → ℝ ↦ klDivPmf Q P₂) :=
     continuous_klDivPmf_left P₂ hP₂_pos
   obtain ⟨Qstar, hQs_mem, h_sInf_eq⟩ :=
     h_compact.exists_sInf_image_eq h_ne h_cont.continuousOn
@@ -322,13 +322,13 @@ theorem hoeffdingE2_nonneg
   have h_ne : (hoeffdingConstraintSet P₁ alpha).Nonempty :=
     hoeffdingConstraintSet_nonempty P₁ hP₁_pos hP₁_sum alpha h_alpha_nn
   have h_img_ne :
-      ((fun Q : α → ℝ => klDivPmf Q P₂) ''
+      ((fun Q : α → ℝ ↦ klDivPmf Q P₂) ''
         {Q : α → ℝ | Q ∈ stdSimplex ℝ α ∧ klDivPmf Q P₁ ≤ alpha}).Nonempty :=
     h_ne.image _
   refine le_csInf h_img_ne ?_
   rintro y ⟨Q, hQ, rfl⟩
   have hQ_nn : ∀ a, 0 ≤ Q a := hQ.1.1
-  have hP₂_nn : ∀ a, 0 ≤ P₂ a := fun a => (hP₂_pos a).le
+  have hP₂_nn : ∀ a, 0 ≤ P₂ a := fun a ↦ (hP₂_pos a).le
   exact klDivPmf_nonneg Q P₂ hQ_nn hP₂_nn
 
 /-! ### Convexity of `log Z(λ)` via Hölder
@@ -355,10 +355,10 @@ lemma chernoffZSum_holder_mul
   --        g_i := (P₁ i)^((1-λ₂)·b) * (P₂ i)^(λ₂·b).
   -- Then  f_i * g_i = (P₁ i)^(1 - (a λ₁ + b λ₂)) * (P₂ i)^(a λ₁ + b λ₂)
   -- with conjugate exponents (1/a, 1/b) (since a + b = 1).
-  set f : α → ℝ := fun i => (P₁ i) ^ ((1 - lam₁) * a) * (P₂ i) ^ (lam₁ * a) with hf_def
-  set g : α → ℝ := fun i => (P₁ i) ^ ((1 - lam₂) * b) * (P₂ i) ^ (lam₂ * b) with hg_def
-  have hP₁_nn : ∀ a, 0 ≤ P₁ a := fun a => (hP₁_pos a).le
-  have hP₂_nn : ∀ a, 0 ≤ P₂ a := fun a => (hP₂_pos a).le
+  set f : α → ℝ := fun i ↦ (P₁ i) ^ ((1 - lam₁) * a) * (P₂ i) ^ (lam₁ * a) with hf_def
+  set g : α → ℝ := fun i ↦ (P₁ i) ^ ((1 - lam₂) * b) * (P₂ i) ^ (lam₂ * b) with hg_def
+  have hP₁_nn : ∀ a, 0 ≤ P₁ a := fun a ↦ (hP₁_pos a).le
+  have hP₂_nn : ∀ a, 0 ≤ P₂ a := fun a ↦ (hP₂_pos a).le
   -- Hölder exponents.
   have ha_lt_one : a < 1 := by linarith
   have hb_eq : b = 1 - a := by linarith
@@ -391,7 +391,7 @@ lemma chernoffZSum_holder_mul
   have h_lhs :
       (∑ i, f i * g i) = chernoffZSum P₁ P₂ (a * lam₁ + b * lam₂) := by
     unfold chernoffZSum
-    refine Finset.sum_congr rfl fun i _ => ?_
+    refine Finset.sum_congr rfl fun i _ ↦ ?_
     show (P₁ i) ^ ((1 - lam₁) * a) * (P₂ i) ^ (lam₁ * a) *
             ((P₁ i) ^ ((1 - lam₂) * b) * (P₂ i) ^ (lam₂ * b))
           = (P₁ i) ^ (1 - (a * lam₁ + b * lam₂)) * (P₂ i) ^ (a * lam₁ + b * lam₂)
@@ -410,7 +410,7 @@ lemma chernoffZSum_holder_mul
   -- Identify ∑ f^(1/a) with chernoffZSum lam₁.
   have h_f_pow_sum : (∑ i, (f i) ^ (1 / a)) = chernoffZSum P₁ P₂ lam₁ := by
     unfold chernoffZSum
-    refine Finset.sum_congr rfl fun i _ => ?_
+    refine Finset.sum_congr rfl fun i _ ↦ ?_
     show ((P₁ i) ^ ((1 - lam₁) * a) * (P₂ i) ^ (lam₁ * a)) ^ (1 / a)
         = (P₁ i) ^ (1 - lam₁) * (P₂ i) ^ lam₁
     have hP₁_nn_i := hP₁_nn i
@@ -427,7 +427,7 @@ lemma chernoffZSum_holder_mul
   -- Identify ∑ g^(1/b) with chernoffZSum lam₂.
   have h_g_pow_sum : (∑ i, (g i) ^ (1 / b)) = chernoffZSum P₁ P₂ lam₂ := by
     unfold chernoffZSum
-    refine Finset.sum_congr rfl fun i _ => ?_
+    refine Finset.sum_congr rfl fun i _ ↦ ?_
     show ((P₁ i) ^ ((1 - lam₂) * b) * (P₂ i) ^ (lam₂ * b)) ^ (1 / b)
         = (P₁ i) ^ (1 - lam₂) * (P₂ i) ^ lam₂
     have hP₁_nn_i := hP₁_nn i
@@ -450,7 +450,7 @@ omit [DecidableEq α] in
 theorem convexOn_chernoffLogZ
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
-    ConvexOn ℝ (Set.Icc (0:ℝ) 1) (fun lam : ℝ => Real.log (chernoffZSum P₁ P₂ lam)) := by
+    ConvexOn ℝ (Set.Icc (0:ℝ) 1) (fun lam : ℝ ↦ Real.log (chernoffZSum P₁ P₂ lam)) := by
   refine ⟨convex_Icc 0 1, ?_⟩
   intro lam₁ _hlam₁ lam₂ _hlam₂ a b ha_nn hb_nn hab
   show Real.log (chernoffZSum P₁ P₂ (a • lam₁ + b • lam₂))
@@ -468,7 +468,7 @@ theorem convexOn_chernoffLogZ
     have ha_eq : a = 1 := by linarith
     rw [hb_eq', ha_eq]; ring_nf; rfl
   -- Both a, b ∈ (0,1): use the Hölder multiplicative form, then take log.
-  have hZ_pos := fun l => chernoffZSum_pos P₁ P₂ hP₁_pos hP₂_pos l
+  have hZ_pos := fun l ↦ chernoffZSum_pos P₁ P₂ hP₁_pos hP₂_pos l
   have h_mul := chernoffZSum_holder_mul (lam₁ := lam₁) (lam₂ := lam₂) P₁ P₂
     hP₁_pos hP₂_pos ha_pos hb_pos hab
   -- Take log on both sides; LHS > 0, RHS > 0.
@@ -495,7 +495,7 @@ theorem convexOn_chernoffLogZ
 
 /-- The Chernoff mediator pmf `T_λ(a) := P₁(a)^(1-λ) · P₂(a)^λ / Z(λ)`. -/
 noncomputable def chernoffMediator (P₁ P₂ : α → ℝ) (lam : ℝ) : α → ℝ :=
-  fun a => (P₁ a) ^ (1 - lam) * (P₂ a) ^ lam / chernoffZSum P₁ P₂ lam
+  fun a ↦ (P₁ a) ^ (1 - lam) * (P₂ a) ^ lam / chernoffZSum P₁ P₂ lam
 
 omit [DecidableEq α] in
 /-- `T_λ(a) > 0` under full-support `P₁, P₂ > 0`. -/
@@ -532,7 +532,7 @@ lemma chernoffMediator_lam_zero
     (hP₁_sum : ∑ a, P₁ a = 1) (a : α) :
     chernoffMediator P₁ P₂ 0 a = P₁ a := by
   unfold chernoffMediator
-  rw [chernoffZSum_lam_zero P₁ P₂ hP₁_sum (fun a => (hP₂_pos a).le)]
+  rw [chernoffZSum_lam_zero P₁ P₂ hP₁_sum (fun a ↦ (hP₂_pos a).le)]
   rw [Real.rpow_zero, mul_one, sub_zero, Real.rpow_one, div_one]
 
 omit [DecidableEq α] in
@@ -542,7 +542,7 @@ lemma chernoffMediator_lam_one
     (hP₂_sum : ∑ a, P₂ a = 1) (a : α) :
     chernoffMediator P₁ P₂ 1 a = P₂ a := by
   unfold chernoffMediator
-  rw [chernoffZSum_lam_one P₁ P₂ (fun a => (hP₁_pos a).le) hP₂_sum]
+  rw [chernoffZSum_lam_one P₁ P₂ (fun a ↦ (hP₁_pos a).le) hP₂_sum]
   rw [sub_self, Real.rpow_zero, one_mul, Real.rpow_one, div_one]
 
 /-! ### Uniqueness of the Hoeffding minimizer -/
@@ -618,14 +618,14 @@ theorem hoeffdingE2_unique
   have h_E2_le : hoeffdingE2 P₁ P₂ alpha
       ≤ klDivPmf ((1 / 2 : ℝ) • Q₁ + (1 / 2 : ℝ) • Q₂) P₂ := by
     unfold hoeffdingE2
-    have h_bdd : BddBelow ((fun Q : α → ℝ => klDivPmf Q P₂) ''
+    have h_bdd : BddBelow ((fun Q : α → ℝ ↦ klDivPmf Q P₂) ''
         {Q : α → ℝ | Q ∈ stdSimplex ℝ α ∧ klDivPmf Q P₁ ≤ alpha}) := by
       refine ⟨0, ?_⟩
       rintro y ⟨Q, hQ, rfl⟩
-      exact klDivPmf_nonneg Q P₂ hQ.1.1 (fun a => (hP₂_pos a).le)
+      exact klDivPmf_nonneg Q P₂ hQ.1.1 (fun a ↦ (hP₂_pos a).le)
     have h_in_img :
         klDivPmf ((1 / 2 : ℝ) • Q₁ + (1 / 2 : ℝ) • Q₂) P₂
-          ∈ (fun Q : α → ℝ => klDivPmf Q P₂) ''
+          ∈ (fun Q : α → ℝ ↦ klDivPmf Q P₂) ''
               {Q : α → ℝ | Q ∈ stdSimplex ℝ α ∧ klDivPmf Q P₁ ≤ alpha} :=
       ⟨_, hQ₃_in_K, rfl⟩
     exact csInf_le h_bdd h_in_img
@@ -697,9 +697,9 @@ lemma prod_rpow_mul_rpow
   rw [Finset.prod_mul_distrib]
   -- ∏ i, (P₁ (x i))^(1-lam) = (∏ i, P₁ (x i))^(1-lam)
   have h1 : (∏ i, (P₁ (x i)) ^ (1 - lam)) = (∏ i, P₁ (x i)) ^ (1 - lam) :=
-    Real.finsetProd_rpow Finset.univ (fun i => P₁ (x i)) (fun i _ => hP₁_nn (x i)) (1 - lam)
+    Real.finsetProd_rpow Finset.univ (fun i ↦ P₁ (x i)) (fun i _ ↦ hP₁_nn (x i)) (1 - lam)
   have h2 : (∏ i, (P₂ (x i)) ^ lam) = (∏ i, P₂ (x i)) ^ lam :=
-    Real.finsetProd_rpow Finset.univ (fun i => P₂ (x i)) (fun i _ => hP₂_nn (x i)) lam
+    Real.finsetProd_rpow Finset.univ (fun i ↦ P₂ (x i)) (fun i _ ↦ hP₂_nn (x i)) lam
   rw [h1, h2]
 
 omit [DecidableEq α] in
@@ -719,7 +719,7 @@ lemma sum_prod_rpow_eq_Z_pow
     rw [prod_rpow_mul_rpow P₁ P₂ hP₁_nn hP₂_nn x lam]
   simp_rw [h_term_eq]
   -- ∑ x : Fin n → α, ∏ i, f (x i) = (∑ a, f a) ^ n via Finset.sum_pow'.
-  set g : α → ℝ := fun a => (P₁ a) ^ (1 - lam) * (P₂ a) ^ lam with hg_def
+  set g : α → ℝ := fun a ↦ (P₁ a) ^ (1 - lam) * (P₂ a) ^ lam with hg_def
   show (∑ x : Fin n → α, ∏ i, g (x i)) = (chernoffZSum P₁ P₂ lam) ^ n
   have h_sum_pow := Finset.sum_pow' (s := (Finset.univ : Finset α)) (f := g) (n := n)
   -- h_sum_pow : (∑ a ∈ univ, g a) ^ n = ∑ p ∈ piFinset (fun _ : Fin n => univ), ∏ i, g (p i)
@@ -746,14 +746,14 @@ theorem bayesErrorMinPmf_le_half_Z_pow
         ≤ (∏ i, P₁ (x i)) ^ (1 - lam) * (∏ i, P₂ (x i)) ^ lam := by
     intro x
     have h_prod_P₁_nn : 0 ≤ ∏ i, P₁ (x i) :=
-      Finset.prod_nonneg (fun i _ => hP₁_nn (x i))
+      Finset.prod_nonneg (fun i _ ↦ hP₁_nn (x i))
     have h_prod_P₂_nn : 0 ≤ ∏ i, P₂ (x i) :=
-      Finset.prod_nonneg (fun i _ => hP₂_nn (x i))
+      Finset.prod_nonneg (fun i _ ↦ hP₂_nn (x i))
     exact min_le_rpow_mul_rpow h_prod_P₁_nn h_prod_P₂_nn hlam_nn hlam_le
   have h_sum_le :
       ∑ x : Fin n → α, min (∏ i, P₁ (x i)) (∏ i, P₂ (x i))
         ≤ ∑ x : Fin n → α, (∏ i, P₁ (x i)) ^ (1 - lam) * (∏ i, P₂ (x i)) ^ lam :=
-    Finset.sum_le_sum (fun x _ => h_pointwise x)
+    Finset.sum_le_sum (fun x _ ↦ h_pointwise x)
   rw [sum_prod_rpow_eq_Z_pow P₁ P₂ hP₁_nn hP₂_nn lam n] at h_sum_le
   exact h_sum_le
 
@@ -772,9 +772,9 @@ lemma bayesErrorMinPmf_pos
   apply Finset.sum_pos
   · intro x _
     have h_prod_P₁_pos : 0 < ∏ i, P₁ (x i) :=
-      Finset.prod_pos (fun i _ => hP₁_pos (x i))
+      Finset.prod_pos (fun i _ ↦ hP₁_pos (x i))
     have h_prod_P₂_pos : 0 < ∏ i, P₂ (x i) :=
-      Finset.prod_pos (fun i _ => hP₂_pos (x i))
+      Finset.prod_pos (fun i _ ↦ hP₂_pos (x i))
     exact lt_min h_prod_P₁_pos h_prod_P₂_pos
   · exact Finset.univ_nonempty
 
@@ -793,8 +793,8 @@ lemma chernoff_rate_ge_neg_log_Z_per_lam
     {n : ℕ} (hn : 0 < n) :
     -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)
       ≥ -Real.log (chernoffZSum P₁ P₂ lam) + Real.log 2 / n := by
-  have hP₁_nn : ∀ a, 0 ≤ P₁ a := fun a => (hP₁_pos a).le
-  have hP₂_nn : ∀ a, 0 ≤ P₂ a := fun a => (hP₂_pos a).le
+  have hP₁_nn : ∀ a, 0 ≤ P₁ a := fun a ↦ (hP₁_pos a).le
+  have hP₂_nn : ∀ a, 0 ≤ P₂ a := fun a ↦ (hP₂_pos a).le
   -- bayesErrorMinPmf ≤ (1/2) · Z(λ)^n
   have h_le := bayesErrorMinPmf_le_half_Z_pow P₁ P₂ hP₁_nn hP₂_nn n hlam_nn hlam_le
   have h_pos := bayesErrorMinPmf_pos P₁ P₂ hP₁_pos hP₂_pos n
@@ -863,7 +863,7 @@ private lemma chernoff_rate_le_aux_upper
   -- p_min := min over a of min(P₁ a, P₂ a) > 0.
   classical
   obtain ⟨a₀, _, ha₀⟩ := Finset.exists_min_image (s := (Finset.univ : Finset α))
-    (f := fun a => min (P₁ a) (P₂ a)) ⟨Classical.choice inferInstance, Finset.mem_univ _⟩
+    (f := fun a ↦ min (P₁ a) (P₂ a)) ⟨Classical.choice inferInstance, Finset.mem_univ _⟩
   set p_min : ℝ := min (P₁ a₀) (P₂ a₀) with hpmin_def
   have hpmin_pos : 0 < p_min := lt_min (hP₁_pos a₀) (hP₂_pos a₀)
   -- Lower bound: bayesErrorMinPmf ≥ (1/2) · p_min^n · (#α)^n... actually simpler:
@@ -885,31 +885,31 @@ private lemma chernoff_rate_le_aux_upper
       calc p_min ^ n = ∏ _i : Fin n, p_min := by
               rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin]
         _ ≤ ∏ i : Fin n, P₁ (x i) := by
-            refine Finset.prod_le_prod (fun i _ => hpmin_pos.le) (fun i _ => ?_)
+            refine Finset.prod_le_prod (fun i _ ↦ hpmin_pos.le) (fun i _ ↦ ?_)
             have := ha₀ (x i) (Finset.mem_univ _)
             exact le_trans this (min_le_left _ _)
     · calc p_min ^ n = ∏ _i : Fin n, p_min := by
               rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin]
         _ ≤ ∏ i : Fin n, P₂ (x i) := by
-            refine Finset.prod_le_prod (fun i _ => hpmin_pos.le) (fun i _ => ?_)
+            refine Finset.prod_le_prod (fun i _ ↦ hpmin_pos.le) (fun i _ ↦ ?_)
             have := ha₀ (x i) (Finset.mem_univ _)
             exact le_trans this (min_le_right _ _)
   -- Sum lower bound: ∑ x, min(...) ≥ #(Fin n → α) · p_min^n ≥ 1 · p_min^n (taking just one term).
   have h_sum_ge :
       ∑ x : Fin n → α, min (∏ i, P₁ (x i)) (∏ i, P₂ (x i)) ≥ p_min ^ n := by
     -- ∑ ≥ const vector term ≥ p_min^n.
-    set x_const : Fin n → α := fun _ => a₀
+    set x_const : Fin n → α := fun _ ↦ a₀
     have h_term_ge : min (∏ i, P₁ (x_const i)) (∏ i, P₂ (x_const i)) ≥ p_min ^ n :=
       h_pmin_pow_le x_const
     have h_term_nn : ∀ x : Fin n → α, 0 ≤ min (∏ i, P₁ (x i)) (∏ i, P₂ (x i)) := by
       intro x
       refine le_min ?_ ?_
-      · exact Finset.prod_nonneg (fun i _ => (hP₁_pos (x i)).le)
-      · exact Finset.prod_nonneg (fun i _ => (hP₂_pos (x i)).le)
+      · exact Finset.prod_nonneg (fun i _ ↦ (hP₁_pos (x i)).le)
+      · exact Finset.prod_nonneg (fun i _ ↦ (hP₂_pos (x i)).le)
     have h_le_sum :=
       Finset.single_le_sum (s := (Finset.univ : Finset (Fin n → α)))
-        (f := fun x => min (∏ i, P₁ (x i)) (∏ i, P₂ (x i)))
-        (fun x _ => h_term_nn x) (Finset.mem_univ x_const)
+        (f := fun x ↦ min (∏ i, P₁ (x i)) (∏ i, P₂ (x i)))
+        (fun x _ ↦ h_term_nn x) (Finset.mem_univ x_const)
     linarith
   -- So bayesErrorMinPmf ≥ (1/2) p_min^n.
   have h_bayes_ge : bayesErrorMinPmf P₁ P₂ n ≥ (1 / 2 : ℝ) * p_min ^ n := by
@@ -969,7 +969,7 @@ theorem chernoff_achievability
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
     chernoffInfo P₁ P₂ ≤ Filter.liminf
-      (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) atTop := by
+      (fun n : ℕ ↦ -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) atTop := by
   -- Strategy: Eventually `chernoffInfo ≤ rate n` (since `chernoffInfo + log 2 / n ≤ rate n`,
   -- and `log 2 / n > 0`). Use `le_liminf_of_le`. The required `IsCoboundedUnder (·≥·)`
   -- follows from a uniform upper bound on `rate n` (via `IsBoundedUnder.isCoboundedUnder_flip`).
@@ -980,7 +980,7 @@ theorem chernoff_achievability
   apply Filter.le_liminf_of_le
   · -- IsCoboundedUnder (·≥·): use the flip of IsBoundedUnder (·≤·).
     have h_bdd_above : Filter.IsBoundedUnder (· ≤ ·) atTop
-        (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) := ⟨M, hM⟩
+        (fun n : ℕ ↦ -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) := ⟨M, hM⟩
     exact h_bdd_above.isCoboundedUnder_ge
   · -- ∀ᶠ n in atTop, chernoffInfo ≤ rate n.
     filter_upwards [h_event, eventually_gt_atTop 0] with n h_event_n hn
@@ -998,7 +998,7 @@ theorem chernoff_lemma_achievability
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
     chernoffInfo P₁ P₂ ≤ Filter.liminf
-      (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) atTop :=
+      (fun n : ℕ ↦ -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) atTop :=
   chernoff_achievability P₁ P₂ hP₁_pos hP₂_pos
 
 end InformationTheory.Shannon.Chernoff

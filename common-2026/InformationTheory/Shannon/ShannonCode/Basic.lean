@@ -139,7 +139,7 @@ theorem shannonLength_kraft_le_one
         = (D : ℝ) ^ (-((shannonLength D P a : ℕ) : ℝ)) := by
     intro a
     exact zpow_neg_natCast_eq_rpow hD0 _
-  rw [Finset.sum_congr rfl (fun a _ => h_rewrite a)]
+  rw [Finset.sum_congr rfl (fun a _ ↦ h_rewrite a)]
   -- each term ≤ P.real {a}; sum ≤ ∑ P.real {a} = 1
   calc (∑ a : α, (D : ℝ) ^ (-((shannonLength D P a : ℕ) : ℝ)))
       ≤ ∑ a : α, P.real {a} := by
@@ -175,8 +175,8 @@ theorem entropyD_le_expectedLength_of_kraft
   --   ≤ (1 − 1) / log D = 0
   unfold entropyD expectedLength
   -- per-term rewrite
-  set f : α → ℝ := fun a => P.real {a} * Real.logb D (P.real {a})
-  set g : α → ℝ := fun a => P.real {a} * (l a : ℝ)
+  set f : α → ℝ := fun a ↦ P.real {a} * Real.logb D (P.real {a})
+  set g : α → ℝ := fun a ↦ P.real {a} * (l a : ℝ)
   -- H_D - E[L] = -Σ f - Σ g = -Σ (f + g) = -Σ a, P(a) · (logb P(a) + l(a))
   --             = Σ a, P(a) · (-logb P(a) - l(a))
   --             = Σ a, P(a) · logb (D^{-l(a)} / P(a))
@@ -225,7 +225,7 @@ theorem entropyD_le_expectedLength_of_kraft
   -- sum the per-term bounds
   have h_sum_term : ∑ a, P.real {a} * (- Real.logb D (P.real {a}) - (l a : ℝ))
       ≤ ∑ a, ((D : ℝ) ^ (-((l a : ℕ) : ℤ)) - P.real {a}) / Real.log D :=
-    Finset.sum_le_sum (fun a _ => h_term a)
+    Finset.sum_le_sum (fun a _ ↦ h_term a)
   -- RHS = (kraftSum D l − 1) / log D
   have h_rhs_eq : (∑ a, ((D : ℝ) ^ (-((l a : ℕ) : ℤ)) - P.real {a}) / Real.log D)
       = (kraftSum D l - (1 : ℝ)) / Real.log D := by
@@ -299,7 +299,7 @@ theorem expectedLength_shannon_lt_entropyD_add_one
       (∑ a : α, P.real {a} *
         ((⌈- Real.logb D (P.real {a})⌉₊ : ℕ) : ℝ))
         < ∑ a : α, P.real {a} * (- Real.logb D (P.real {a}) + 1) := by
-    apply Finset.sum_lt_sum (fun a _ => h_each a)
+    apply Finset.sum_lt_sum (fun a _ ↦ h_each a)
     exact ⟨a₀, Finset.mem_univ _, h_strict⟩
   -- RHS = −∑ P(a)·logb P(a) + ∑ P(a) = entropyD + 1
   have h_rhs : (∑ a : α, P.real {a} * (- Real.logb D (P.real {a}) + 1))
@@ -308,7 +308,7 @@ theorem expectedLength_shannon_lt_entropyD_add_one
         P.real {a} * (- Real.logb D (P.real {a}) + 1)
           = - (P.real {a} * Real.logb D (P.real {a})) + P.real {a} := by
       intro a; ring
-    rw [Finset.sum_congr rfl (fun a _ => h_split a)]
+    rw [Finset.sum_congr rfl (fun a _ ↦ h_split a)]
     rw [Finset.sum_add_distrib, ← Finset.sum_neg_distrib]
     -- Σ P.real {a} = 1
     have h_sum_one : (∑ a : α, P.real {a}) = (1 : ℝ) := by

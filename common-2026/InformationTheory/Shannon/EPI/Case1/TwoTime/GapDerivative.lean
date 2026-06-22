@@ -59,7 +59,7 @@ The third and second terms `log(N_X(0)+N_Y(0))` and `t` are closed forms in `t`
 /-- Sum entropy power of the independently-perturbed pair `X + √s·Z_X` and
 `Y + √r·Z_Y`. -/
 noncomputable def sumHeatFlowEP (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) (s r : ℝ) : ℝ :=
-  entropyPower (P.map (fun ω => X ω + Real.sqrt s * Z_X ω + (Y ω + Real.sqrt r * Z_Y ω)))
+  entropyPower (P.map (fun ω ↦ X ω + Real.sqrt s * Z_X ω + (Y ω + Real.sqrt r * Z_Y ω)))
 
 /-- **TT-def `twoTimeLogRatioGap`** — the two-time EPI log-ratio object
 (formulation (b), `e^t` closed form), parametrized by the matched paths
@@ -89,13 +89,13 @@ theorem twoTimeLogRatioGap_at_zero
     (h_path_X : IsMatchedTimePath X Z_X P J_X s)
     (h_path_Y : IsMatchedTimePath Y Z_Y P J_Y r) :
     twoTimeLogRatioGap X Y Z_X Z_Y P s r 0
-      = Real.log (entropyPower (P.map (fun ω => X ω + Y ω)))
+      = Real.log (entropyPower (P.map (fun ω ↦ X ω + Y ω)))
         - Real.log (entropyPower (P.map X) + entropyPower (P.map Y)) := by
   unfold twoTimeLogRatioGap sumHeatFlowEP
   rw [h_path_X.start_zero, h_path_Y.start_zero]
   have h_sum_funext :
-      (fun ω => X ω + Real.sqrt 0 * Z_X ω + (Y ω + Real.sqrt 0 * Z_Y ω))
-        = fun ω => X ω + Y ω := by
+      (fun ω ↦ X ω + Real.sqrt 0 * Z_X ω + (Y ω + Real.sqrt 0 * Z_Y ω))
+        = fun ω ↦ X ω + Y ω := by
     funext ω
     simp [Real.sqrt_zero]
   rw [h_sum_funext, sub_zero]
@@ -146,35 +146,35 @@ theorem matchedSum_law_eq
     (hZX_law : P.map Z_X = gaussianReal 0 1)
     (hZY_law : P.map Z_Y = gaussianReal 0 1)
     (hZ_law : P.map Z = gaussianReal 0 1)
-    (hXY_ZXZY_pair : IndepFun (fun ω => X ω + Y ω) (fun ω => (Z_X ω, Z_Y ω)) P)
-    (hXY_Z : IndepFun (fun ω => X ω + Y ω) Z P)
+    (hXY_ZXZY_pair : IndepFun (fun ω ↦ X ω + Y ω) (fun ω ↦ (Z_X ω, Z_Y ω)) P)
+    (hXY_Z : IndepFun (fun ω ↦ X ω + Y ω) Z P)
     (hZX_ZY : IndepFun Z_X Z_Y P)
     (s_t r_t : ℝ) (hst : 0 < s_t) (hrt : 0 < r_t) :
-    P.map (fun ω => X ω + Real.sqrt s_t * Z_X ω + (Y ω + Real.sqrt r_t * Z_Y ω))
-      = P.map (fun ω => (X ω + Y ω) + Real.sqrt (s_t + r_t) * Z ω) := by
+    P.map (fun ω ↦ X ω + Real.sqrt s_t * Z_X ω + (Y ω + Real.sqrt r_t * Z_Y ω))
+      = P.map (fun ω ↦ (X ω + Y ω) + Real.sqrt (s_t + r_t) * Z ω) := by
   classical
   -- Abbreviations.
-  set B : Ω → ℝ := fun ω => X ω + Y ω with hB
+  set B : Ω → ℝ := fun ω ↦ X ω + Y ω with hB
   have hB_meas : Measurable B := hX.add hY
   have hst0 : (0:ℝ) ≤ s_t := hst.le
   have hrt0 : (0:ℝ) ≤ r_t := hrt.le
   have hτ0 : (0:ℝ) ≤ s_t + r_t := by positivity
   -- Measurability of the three noise terms.
-  have hmul_st : Measurable (fun y : ℝ => Real.sqrt s_t * y) := measurable_const.mul measurable_id
-  have hmul_rt : Measurable (fun y : ℝ => Real.sqrt r_t * y) := measurable_const.mul measurable_id
-  have hmul_τ : Measurable (fun y : ℝ => Real.sqrt (s_t + r_t) * y) :=
+  have hmul_st : Measurable (fun y : ℝ ↦ Real.sqrt s_t * y) := measurable_const.mul measurable_id
+  have hmul_rt : Measurable (fun y : ℝ ↦ Real.sqrt r_t * y) := measurable_const.mul measurable_id
+  have hmul_τ : Measurable (fun y : ℝ ↦ Real.sqrt (s_t + r_t) * y) :=
     measurable_const.mul measurable_id
-  have hSZX_meas : Measurable (fun ω => Real.sqrt s_t * Z_X ω) := hmul_st.comp hZX
-  have hRZY_meas : Measurable (fun ω => Real.sqrt r_t * Z_Y ω) := hmul_rt.comp hZY
-  have hτZ_meas : Measurable (fun ω => Real.sqrt (s_t + r_t) * Z ω) := hmul_τ.comp hZ
+  have hSZX_meas : Measurable (fun ω ↦ Real.sqrt s_t * Z_X ω) := hmul_st.comp hZX
+  have hRZY_meas : Measurable (fun ω ↦ Real.sqrt r_t * Z_Y ω) := hmul_rt.comp hZY
+  have hτZ_meas : Measurable (fun ω ↦ Real.sqrt (s_t + r_t) * Z ω) := hmul_τ.comp hZ
   -- **Law of a single scaled noise** `√c·W ∼ 𝒩(0, c)` for `c ≥ 0`, `W ∼ 𝒩(0,1)`.
   have scaled_law : ∀ (W : Ω → ℝ) (c : ℝ) (hc : 0 ≤ c), Measurable W →
       P.map W = gaussianReal 0 1 →
-      P.map (fun ω => Real.sqrt c * W ω) = gaussianReal 0 ⟨c, hc⟩ := by
+      P.map (fun ω ↦ Real.sqrt c * W ω) = gaussianReal 0 ⟨c, hc⟩ := by
     intro W c hc hW hW_law
-    have h_compose : Measure.map (fun ω => Real.sqrt c * W ω) P
-        = (P.map W).map (fun y => Real.sqrt c * y) := by
-      have hmm := Measure.map_map (μ := P) (g := fun y : ℝ => Real.sqrt c * y) (f := W)
+    have h_compose : Measure.map (fun ω ↦ Real.sqrt c * W ω) P
+        = (P.map W).map (fun y ↦ Real.sqrt c * y) := by
+      have hmm := Measure.map_map (μ := P) (g := fun y : ℝ ↦ Real.sqrt c * y) (f := W)
         (measurable_const.mul measurable_id) hW
       simpa [Function.comp] using hmm.symm
     rw [h_compose, hW_law, gaussianReal_map_const_mul]
@@ -184,57 +184,57 @@ theorem matchedSum_law_eq
       apply NNReal.eq
       exact Real.sq_sqrt hc
   -- Laws of the three scaled noises.
-  have hSZX_law : P.map (fun ω => Real.sqrt s_t * Z_X ω) = gaussianReal 0 ⟨s_t, hst0⟩ :=
+  have hSZX_law : P.map (fun ω ↦ Real.sqrt s_t * Z_X ω) = gaussianReal 0 ⟨s_t, hst0⟩ :=
     scaled_law Z_X s_t hst0 hZX hZX_law
-  have hRZY_law : P.map (fun ω => Real.sqrt r_t * Z_Y ω) = gaussianReal 0 ⟨r_t, hrt0⟩ :=
+  have hRZY_law : P.map (fun ω ↦ Real.sqrt r_t * Z_Y ω) = gaussianReal 0 ⟨r_t, hrt0⟩ :=
     scaled_law Z_Y r_t hrt0 hZY hZY_law
-  have hτZ_law : P.map (fun ω => Real.sqrt (s_t + r_t) * Z ω) = gaussianReal 0 ⟨s_t + r_t, hτ0⟩ :=
+  have hτZ_law : P.map (fun ω ↦ Real.sqrt (s_t + r_t) * Z ω) = gaussianReal 0 ⟨s_t + r_t, hτ0⟩ :=
     scaled_law Z (s_t + r_t) hτ0 hZ hZ_law
   -- **LHS noise law** = `𝒩(0, s_t + r_t)`.
   -- Independence of the two scaled noises from `IndepFun Z_X Z_Y`.
-  have hSZX_RZY_indep : IndepFun (fun ω => Real.sqrt s_t * Z_X ω)
-      (fun ω => Real.sqrt r_t * Z_Y ω) P :=
+  have hSZX_RZY_indep : IndepFun (fun ω ↦ Real.sqrt s_t * Z_X ω)
+      (fun ω ↦ Real.sqrt r_t * Z_Y ω) P :=
     hZX_ZY.comp hmul_st hmul_rt
-  have hnoiseL_law : P.map (fun ω => Real.sqrt s_t * Z_X ω + Real.sqrt r_t * Z_Y ω)
+  have hnoiseL_law : P.map (fun ω ↦ Real.sqrt s_t * Z_X ω + Real.sqrt r_t * Z_Y ω)
       = gaussianReal 0 ⟨s_t + r_t, hτ0⟩ := by
     have h_sum := gaussianReal_add_gaussianReal_of_indepFun (P := P)
-      (X := fun ω => Real.sqrt s_t * Z_X ω) (Y := fun ω => Real.sqrt r_t * Z_Y ω)
+      (X := fun ω ↦ Real.sqrt s_t * Z_X ω) (Y := fun ω ↦ Real.sqrt r_t * Z_Y ω)
       (m₁ := 0) (m₂ := 0) (v₁ := ⟨s_t, hst0⟩) (v₂ := ⟨r_t, hrt0⟩)
       hSZX_RZY_indep hSZX_law hRZY_law
-    have h_funext : (fun ω => Real.sqrt s_t * Z_X ω + Real.sqrt r_t * Z_Y ω)
-        = (fun ω => Real.sqrt s_t * Z_X ω) + (fun ω => Real.sqrt r_t * Z_Y ω) := by
+    have h_funext : (fun ω ↦ Real.sqrt s_t * Z_X ω + Real.sqrt r_t * Z_Y ω)
+        = (fun ω ↦ Real.sqrt s_t * Z_X ω) + (fun ω ↦ Real.sqrt r_t * Z_Y ω) := by
       funext ω; rfl
     rw [h_funext, h_sum]
     refine congrArg₂ gaussianReal (by norm_num) ?_
     apply NNReal.eq
     rfl
   -- Measurability + independence of `B` from the LHS scaled noise.
-  have hnoiseL_meas : Measurable (fun ω => Real.sqrt s_t * Z_X ω + Real.sqrt r_t * Z_Y ω) :=
+  have hnoiseL_meas : Measurable (fun ω ↦ Real.sqrt s_t * Z_X ω + Real.sqrt r_t * Z_Y ω) :=
     hSZX_meas.add hRZY_meas
   -- `B ⊥ (√s_t·Z_X + √r_t·Z_Y)` from joint independence `B ⊥ (Z_X, Z_Y)`.
   have hB_noiseL_indep : IndepFun B
-      (fun ω => Real.sqrt s_t * Z_X ω + Real.sqrt r_t * Z_Y ω) P := by
-    have hmap : Measurable (fun p : ℝ × ℝ => Real.sqrt s_t * p.1 + Real.sqrt r_t * p.2) := by
+      (fun ω ↦ Real.sqrt s_t * Z_X ω + Real.sqrt r_t * Z_Y ω) P := by
+    have hmap : Measurable (fun p : ℝ × ℝ ↦ Real.sqrt s_t * p.1 + Real.sqrt r_t * p.2) := by
       fun_prop
     have := hXY_ZXZY_pair.comp (measurable_id) hmap
     simpa [Function.comp] using this
   -- `B ⊥ (√τ·Z)` from `B ⊥ Z`.
-  have hB_noiseR_indep : IndepFun B (fun ω => Real.sqrt (s_t + r_t) * Z ω) P :=
+  have hB_noiseR_indep : IndepFun B (fun ω ↦ Real.sqrt (s_t + r_t) * Z ω) P :=
     hXY_Z.comp measurable_id hmul_τ
   -- **Split both sides as `(P.map B) ∗ (noise law)`.**
   -- LHS.
-  have hLHS_eq : P.map (fun ω => X ω + Real.sqrt s_t * Z_X ω + (Y ω + Real.sqrt r_t * Z_Y ω))
+  have hLHS_eq : P.map (fun ω ↦ X ω + Real.sqrt s_t * Z_X ω + (Y ω + Real.sqrt r_t * Z_Y ω))
       = (P.map B) ∗ gaussianReal 0 ⟨s_t + r_t, hτ0⟩ := by
-    have h_funext : (fun ω => X ω + Real.sqrt s_t * Z_X ω + (Y ω + Real.sqrt r_t * Z_Y ω))
-        = B + (fun ω => Real.sqrt s_t * Z_X ω + Real.sqrt r_t * Z_Y ω) := by
+    have h_funext : (fun ω ↦ X ω + Real.sqrt s_t * Z_X ω + (Y ω + Real.sqrt r_t * Z_Y ω))
+        = B + (fun ω ↦ Real.sqrt s_t * Z_X ω + Real.sqrt r_t * Z_Y ω) := by
       funext ω; simp only [hB, Pi.add_apply]; ring
     rw [h_funext,
       hB_noiseL_indep.map_add_eq_map_conv_map hB_meas hnoiseL_meas, hnoiseL_law]
   -- RHS.
-  have hRHS_eq : P.map (fun ω => (X ω + Y ω) + Real.sqrt (s_t + r_t) * Z ω)
+  have hRHS_eq : P.map (fun ω ↦ (X ω + Y ω) + Real.sqrt (s_t + r_t) * Z ω)
       = (P.map B) ∗ gaussianReal 0 ⟨s_t + r_t, hτ0⟩ := by
-    have h_funext : (fun ω => (X ω + Y ω) + Real.sqrt (s_t + r_t) * Z ω)
-        = B + (fun ω => Real.sqrt (s_t + r_t) * Z ω) := by
+    have h_funext : (fun ω ↦ (X ω + Y ω) + Real.sqrt (s_t + r_t) * Z ω)
+        = B + (fun ω ↦ Real.sqrt (s_t + r_t) * Z ω) := by
       funext ω; simp only [hB, Pi.add_apply]
     rw [h_funext,
       hB_noiseR_indep.map_add_eq_map_conv_map hB_meas hτZ_meas, hτZ_law]
@@ -294,15 +294,15 @@ theorem twoTimeLogRatioGap_hasDerivAt
     -- the regularity preconditions for that identification (measurability, the
     -- unit-noise law of `Z`, and independence of `X+Y` from `Z`).
     (hZ : Measurable Z) (hZ_law : P.map Z = gaussianReal 0 1)
-    (hXYZ : IndepFun (fun ω => X ω + Y ω) Z P)
+    (hXYZ : IndepFun (fun ω ↦ X ω + Y ω) Z P)
     -- unit-noise laws + joint independences for the matched-sum law
     -- (`matchedSum_law_eq` regularity preconditions; honest noise-distribution
     -- facts, not bundled derivative content)
     (hZX_law : P.map Z_X = gaussianReal 0 1)
     (hZY_law : P.map Z_Y = gaussianReal 0 1)
-    (hXY_ZXZY_pair : IndepFun (fun ω => X ω + Y ω) (fun ω => (Z_X ω, Z_Y ω)) P)
+    (hXY_ZXZY_pair : IndepFun (fun ω ↦ X ω + Y ω) (fun ω ↦ (Z_X ω, Z_Y ω)) P)
     (hZX_ZY : IndepFun Z_X Z_Y P)
-    (h_reg_sum : IsDeBruijnRegularityHyp (fun ω => X ω + Y ω) Z P)
+    (h_reg_sum : IsDeBruijnRegularityHyp (fun ω ↦ X ω + Y ω) Z P)
     {t : ℝ} (ht : 0 < t)
     -- matched-time positivity (regularity precondition: `t > 0` + strict-mono
     -- matched path put `s t, r t > 0`; threaded here as a precondition)
@@ -319,7 +319,7 @@ theorem twoTimeLogRatioGap_hasDerivAt
         = InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
             ((h_reg_Y.reg_at (r t) hrt).density_t))
     (_hJX_pos : 0 < J_X (s t)) (_hJY_pos : 0 < J_Y (r t)) :
-    HasDerivAt (fun u : ℝ => twoTimeLogRatioGap X Y Z_X Z_Y P s r u)
+    HasDerivAt (fun u : ℝ ↦ twoTimeLogRatioGap X Y Z_X Z_Y P s r u)
       (InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
           ((h_reg_sum.reg_at (s t + r t) hτ).density_t)
         * (1 / J_X (s t) + 1 / J_Y (r t)) - 1) t := by
@@ -329,45 +329,45 @@ theorem twoTimeLogRatioGap_hasDerivAt
   -- Step 2: single-noise de Bruijn for `X+Y` at `τ = s t + r t` gives the
   -- entropy-power log-derivative `d/dσ log (heatFlowEP (X+Y) Z P σ) = J_S` at `s t + r t`.
   have h_log_sum :
-      HasDerivAt (fun σ : ℝ => Real.log (heatFlowEP (fun ω => X ω + Y ω) Z P σ))
+      HasDerivAt (fun σ : ℝ ↦ Real.log (heatFlowEP (fun ω ↦ X ω + Y ω) Z P σ))
         J_S (s t + r t) := by
     -- Single-noise de Bruijn V2 for `X+Y` perturbed by `Z` at time `τ = s t + r t`.
     have h_dB :
         HasDerivAt
-          (fun σ : ℝ => InformationTheory.Shannon.differentialEntropy
+          (fun σ : ℝ ↦ InformationTheory.Shannon.differentialEntropy
             (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution
-                      (fun ω => X ω + Y ω) Z σ)))
+                      (fun ω ↦ X ω + Y ω) Z σ)))
           ((1/2) * J_S) (s t + r t) := by
       have := InformationTheory.Shannon.FisherInfo.deBruijn_identity_v2
-        (fun ω => X ω + Y ω) Z (hX.add hY) hZ hXYZ hτ (h_reg_sum.reg_at (s t + r t) hτ)
+        (fun ω ↦ X ω + Y ω) Z (hX.add hY) hZ hXYZ hτ (h_reg_sum.reg_at (s t + r t) hτ)
       simpa only [hJS_def] using this
     -- Lift to entropy-power form.
     have h_eP := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB
     -- Normalize to `heatFlowEP (X+Y) Z P σ · J_S`.
     have hN :
-        HasDerivAt (fun σ : ℝ => heatFlowEP (fun ω => X ω + Y ω) Z P σ)
-          (heatFlowEP (fun ω => X ω + Y ω) Z P (s t + r t) * J_S) (s t + r t) := by
+        HasDerivAt (fun σ : ℝ ↦ heatFlowEP (fun ω ↦ X ω + Y ω) Z P σ)
+          (heatFlowEP (fun ω ↦ X ω + Y ω) Z P (s t + r t) * J_S) (s t + r t) := by
       have h_val :
-          heatFlowEP (fun ω => X ω + Y ω) Z P (s t + r t) * J_S
+          heatFlowEP (fun ω ↦ X ω + Y ω) Z P (s t + r t) * J_S
             = Real.exp (2 * InformationTheory.Shannon.differentialEntropy
                 (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution
-                          (fun ω => X ω + Y ω) Z (s t + r t))))
+                          (fun ω ↦ X ω + Y ω) Z (s t + r t))))
               * (2 * ((1/2) * J_S)) := by
         unfold heatFlowEP entropyPower InformationTheory.Shannon.FisherInfo.gaussianConvolution
         ring
       rw [h_val]
       exact h_eP
     -- `log` derivative: `(N_S · J_S) / N_S = J_S`.
-    have hNpos : 0 < heatFlowEP (fun ω => X ω + Y ω) Z P (s t + r t) := by
+    have hNpos : 0 < heatFlowEP (fun ω ↦ X ω + Y ω) Z P (s t + r t) := by
       simpa [heatFlowEP] using entropyPower_pos _
     have h := hN.log (ne_of_gt hNpos)
     rwa [mul_comm, mul_div_assoc, div_self (ne_of_gt hNpos), mul_one] at h
   -- Step 3: chain rule with `τ(u) = s u + r u`, `τ'(t) = 1/J_X(s t) + 1/J_Y(r t)`.
   have h_tau_deriv :
-      HasDerivAt (fun u : ℝ => s u + r u) (1 / J_X (s t) + 1 / J_Y (r t)) t :=
+      HasDerivAt (fun u : ℝ ↦ s u + r u) (1 / J_X (s t) + 1 / J_Y (r t)) t :=
     (h_path_X.deriv_at t ht).add (h_path_Y.deriv_at t ht)
   have h_log_comp :
-      HasDerivAt (fun u : ℝ => Real.log (heatFlowEP (fun ω => X ω + Y ω) Z P (s u + r u)))
+      HasDerivAt (fun u : ℝ ↦ Real.log (heatFlowEP (fun ω ↦ X ω + Y ω) Z P (s u + r u)))
         (J_S * (1 / J_X (s t) + 1 / J_Y (r t))) t := by
     -- `comp` of the log-heat-flow (at `s t + r t`) with `τ(u) = s u + r u` (at `t`).
     have hcomp := h_log_sum.comp t h_tau_deriv
@@ -377,7 +377,7 @@ theorem twoTimeLogRatioGap_hasDerivAt
   -- on a neighborhood of `t`, via `matchedSum_law_eq` (eventually `s u, r u > 0`).
   have h_log_sumHeat :
       HasDerivAt
-        (fun u : ℝ => Real.log (sumHeatFlowEP X Y Z_X Z_Y P (s u) (r u)))
+        (fun u : ℝ ↦ Real.log (sumHeatFlowEP X Y Z_X Z_Y P (s u) (r u)))
         (J_S * (1 / J_X (s t) + 1 / J_Y (r t))) t := by
     -- `s`, `r` are continuous at `t` (`HasDerivAt → ContinuousAt`), and `s t, r t > 0`,
     -- so `s u, r u > 0` on a neighborhood of `t`.
@@ -388,8 +388,8 @@ theorem twoTimeLogRatioGap_hasDerivAt
     have hr_ev : ∀ᶠ u in nhds t, 0 < r u :=
       continuousAt_const.eventually_lt hr_cont hrt
     -- On that neighborhood the matched-sum law identifies the two heat flows.
-    have h_eq : (fun u : ℝ => Real.log (sumHeatFlowEP X Y Z_X Z_Y P (s u) (r u)))
-        =ᶠ[nhds t] (fun u : ℝ => Real.log (heatFlowEP (fun ω => X ω + Y ω) Z P (s u + r u))) := by
+    have h_eq : (fun u : ℝ ↦ Real.log (sumHeatFlowEP X Y Z_X Z_Y P (s u) (r u)))
+        =ᶠ[nhds t] (fun u : ℝ ↦ Real.log (heatFlowEP (fun ω ↦ X ω + Y ω) Z P (s u + r u))) := by
       filter_upwards [hs_ev, hr_ev] with u hsu hru
       have hmap := matchedSum_law_eq X Y Z_X Z_Y Z P hX hY hZX hZY hZ
         hZX_law hZY_law hZ_law hXY_ZXZY_pair hXYZ hZX_ZY (s u) (r u) hsu hru
@@ -399,11 +399,11 @@ theorem twoTimeLogRatioGap_hasDerivAt
   -- Step 4: assemble. `twoTimeLogRatioGap ... u = log (sumHeatFlowEP ... (s u)(r u)) − const − u`.
   have h_const :
       HasDerivAt
-        (fun _ : ℝ => Real.log (entropyPower (P.map X) + entropyPower (P.map Y)))
+        (fun _ : ℝ ↦ Real.log (entropyPower (P.map X) + entropyPower (P.map Y)))
         0 t := hasDerivAt_const t _
-  have h_id : HasDerivAt (fun u : ℝ => u) (1 : ℝ) t := hasDerivAt_id t
+  have h_id : HasDerivAt (fun u : ℝ ↦ u) (1 : ℝ) t := hasDerivAt_id t
   have h_assembled :
-      HasDerivAt (fun u : ℝ => twoTimeLogRatioGap X Y Z_X Z_Y P s r u)
+      HasDerivAt (fun u : ℝ ↦ twoTimeLogRatioGap X Y Z_X Z_Y P s r u)
         (J_S * (1 / J_X (s t) + 1 / J_Y (r t)) - 0 - 1) t := by
     have := (h_log_sumHeat.sub h_const).sub h_id
     simpa only [twoTimeLogRatioGap] using this

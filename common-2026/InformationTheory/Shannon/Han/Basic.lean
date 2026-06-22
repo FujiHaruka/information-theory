@@ -33,12 +33,12 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 /-- Joint entropy of a finite family of random variables. -/
 noncomputable def jointEntropy
     (μ : Measure Ω) (Xs : Fin n → Ω → α) : ℝ :=
-  entropy μ (fun ω i => Xs i ω)
+  entropy μ (fun ω i ↦ Xs i ω)
 
 /-- Joint entropy with the `i`-th coordinate removed. -/
 noncomputable def jointEntropyExcept
     (μ : Measure Ω) (Xs : Fin n → Ω → α) (i : Fin n) : ℝ :=
-  entropy μ (fun ω (j : {j // j ≠ i}) => Xs j ω)
+  entropy μ (fun ω (j : {j // j ≠ i}) ↦ Xs j ω)
 
 omit [DecidableEq α] in
 /-- The `n`-variable chain rule for Shannon joint entropy:
@@ -50,7 +50,7 @@ theorem jointEntropy_chain_rule
     jointEntropy μ Xs
       = ∑ i : Fin n,
           InformationTheory.MeasureFano.condEntropy μ (Xs i)
-            (fun ω (j : Fin i.val) =>
+            (fun ω (j : Fin i.val) ↦
               Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) := by
   classical
   induction n with
@@ -58,47 +58,47 @@ theorem jointEntropy_chain_rule
     -- RHS: empty sum over Fin 0
     rw [show (∑ i : Fin 0,
         InformationTheory.MeasureFano.condEntropy μ (Xs i)
-          (fun ω (j : Fin i.val) =>
+          (fun ω (j : Fin i.val) ↦
             Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)) = 0 from Fin.sum_univ_zero _]
     -- LHS: entropy of a `(Fin 0 → α)`-valued RV. The codomain is a singleton,
     -- so the probability measure puts all mass on `default` and `negMulLog 1 = 0`.
     rw [jointEntropy]
     unfold entropy
-    have hmeas : Measurable (fun ω (i : Fin 0) => Xs i ω) :=
-      measurable_pi_iff.mpr (fun i => Fin.elim0 i)
-    haveI : IsProbabilityMeasure (μ.map (fun ω (i : Fin 0) => Xs i ω)) :=
+    have hmeas : Measurable (fun ω (i : Fin 0) ↦ Xs i ω) :=
+      measurable_pi_iff.mpr (fun i ↦ Fin.elim0 i)
+    haveI : IsProbabilityMeasure (μ.map (fun ω (i : Fin 0) ↦ Xs i ω)) :=
       Measure.isProbabilityMeasure_map hmeas.aemeasurable
     haveI : Unique (Fin 0 → α) := Pi.uniqueOfIsEmpty _
     rw [Fintype.sum_unique]
-    have hsingle : ((μ.map (fun ω (i : Fin 0) => Xs i ω)).real {default} : ℝ) = 1 := by
+    have hsingle : ((μ.map (fun ω (i : Fin 0) ↦ Xs i ω)).real {default} : ℝ) = 1 := by
       have huniv : ({default} : Set (Fin 0 → α)) = Set.univ := by
         ext f; simp [Subsingleton.elim f default]
       rw [huniv, measureReal_def, measure_univ, ENNReal.toReal_one]
     rw [hsingle, Real.negMulLog_one]
   | succ n IH =>
     -- Split `Xs : Fin (n+1) → Ω → α` into prefix `f` and last `g`.
-    set f : Ω → (Fin n → α) := fun ω j => Xs j.castSucc ω with hf_def
+    set f : Ω → (Fin n → α) := fun ω j ↦ Xs j.castSucc ω with hf_def
     set g : Ω → α := Xs (Fin.last n) with hg_def
-    have hf : Measurable f := measurable_pi_iff.mpr (fun j => hXs j.castSucc)
+    have hf : Measurable f := measurable_pi_iff.mpr (fun j ↦ hXs j.castSucc)
     have hg : Measurable g := hXs (Fin.last n)
     -- Pair-form joint = pi-form joint via the measurable equivalence
     -- `MeasurableEquiv.piFinSuccAbove (Fin.last n)`. We use its inverse to land on
     -- `Fin (n+1) → α` from the pair `(α (last n)) × (Fin n → α)`, but it's simpler
     -- to express the equality in the forward direction.
     have h_reshape : jointEntropy μ Xs
-        = entropy μ (fun ω => (f ω, g ω)) := by
+        = entropy μ (fun ω ↦ (f ω, g ω)) := by
       -- Apply `entropy_measurableEquiv_comp` with the equiv that turns the pair
       -- `(g ω, f ω)` (note: α first, prefix second matches piFinSuccAbove's image)
       -- into the pi `(fun i => Xs i ω)`.
       let e : (Fin (n + 1) → α) ≃ᵐ α × (Fin n → α) :=
-        (MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) => α) (Fin.last n))
-      have hjoint_meas : Measurable (fun ω (i : Fin (n + 1)) => Xs i ω) :=
-        measurable_pi_iff.mpr (fun i => hXs i)
+        (MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) ↦ α) (Fin.last n))
+      have hjoint_meas : Measurable (fun ω (i : Fin (n + 1)) ↦ Xs i ω) :=
+        measurable_pi_iff.mpr (fun i ↦ hXs i)
       -- For each ω, e maps `fun i => Xs i ω` to
       -- `(Xs (last n) ω, fun j => Xs (succAbove (last n) j) ω)`.
       -- And `succAbove (last n) j = j.castSucc`.
       have h_e_eq : ∀ ω,
-          e (fun i => Xs i ω) = (Xs (Fin.last n) ω, fun (j : Fin n) => Xs j.castSucc ω) := by
+          e (fun i ↦ Xs i ω) = (Xs (Fin.last n) ω, fun (j : Fin n) ↦ Xs j.castSucc ω) := by
         intro ω
         apply Prod.ext
         · simp [e, MeasurableEquiv.piFinSuccAbove_apply]
@@ -106,19 +106,19 @@ theorem jointEntropy_chain_rule
           simp [e, MeasurableEquiv.piFinSuccAbove_apply, Fin.init]
       -- entropy μ (e ∘ Xs_pi) = entropy μ Xs_pi
       have h1 := entropy_measurableEquiv_comp μ
-        (fun ω (i : Fin (n + 1)) => Xs i ω) hjoint_meas e
-      rw [show (fun ω => e (fun i : Fin (n + 1) => Xs i ω))
-            = fun ω => (Xs (Fin.last n) ω, fun (j : Fin n) => Xs j.castSucc ω) from
+        (fun ω (i : Fin (n + 1)) ↦ Xs i ω) hjoint_meas e
+      rw [show (fun ω ↦ e (fun i : Fin (n + 1) ↦ Xs i ω))
+            = fun ω ↦ (Xs (Fin.last n) ω, fun (j : Fin n) ↦ Xs j.castSucc ω) from
           funext h_e_eq] at h1
       -- entropy μ (g, f) = entropy μ ((Xs (last n)), (fun j => Xs j.castSucc))
       -- We want jointEntropy μ Xs = entropy μ (f, g), but h1 gives entropy of (g, f).
       -- Swap with another MeasurableEquiv.
       let e2 : α × (Fin n → α) ≃ᵐ (Fin n → α) × α := MeasurableEquiv.prodComm
       have h_swap_meas : Measurable
-          (fun ω => (Xs (Fin.last n) ω, fun (j : Fin n) => Xs j.castSucc ω)) :=
+          (fun ω ↦ (Xs (Fin.last n) ω, fun (j : Fin n) ↦ Xs j.castSucc ω)) :=
         hg.prodMk hf
       have h2 := entropy_measurableEquiv_comp μ
-        (fun ω => (Xs (Fin.last n) ω, fun (j : Fin n) => Xs j.castSucc ω)) h_swap_meas e2
+        (fun ω ↦ (Xs (Fin.last n) ω, fun (j : Fin n) ↦ Xs j.castSucc ω)) h_swap_meas e2
       simp only [MeasurableEquiv.prodComm, MeasurableEquiv.coe_mk, Equiv.prodComm_apply,
         Prod.swap_prod_mk, e2] at h2
       -- h2: entropy μ (fun ω => (fun (j : Fin n) => Xs j.castSucc ω, Xs (last n) ω))
@@ -127,8 +127,8 @@ theorem jointEntropy_chain_rule
     rw [h_reshape]
     rw [entropy_pair_eq_entropy_add_condEntropy μ f g hf hg]
     -- Apply IH to the Fin n prefix.
-    have IH' := IH (fun i ω => Xs i.castSucc ω) (fun i => hXs i.castSucc)
-    rw [show jointEntropy μ (fun i ω => Xs i.castSucc ω) = entropy μ f from rfl] at IH'
+    have IH' := IH (fun i ω ↦ Xs i.castSucc ω) (fun i ↦ hXs i.castSucc)
+    rw [show jointEntropy μ (fun i ω ↦ Xs i.castSucc ω) = entropy μ f from rfl] at IH'
     rw [IH']
     -- Now: (∑ i : Fin n, condEntropy μ (Xs i.castSucc) ...) + condEntropy μ g f
     -- Goal: ∑ i : Fin (n+1), condEntropy μ (Xs i) ...
@@ -146,18 +146,18 @@ splitting the complement of `i` into the prefix `j < i` and the suffix `i < j`. 
 private def exceptIdxEquiv {n : ℕ} (i : Fin n) :
     Fin i.val ⊕ {j : Fin n // i < j} ≃ {j : Fin n // j ≠ i} where
   toFun := Sum.elim
-    (fun (k : Fin i.val) =>
+    (fun (k : Fin i.val) ↦
       ⟨⟨k.val, k.isLt.trans i.isLt⟩, by
         intro h
         have hval : k.val = i.val := congrArg Fin.val h
         omega⟩)
-    (fun (k : {j : Fin n // i < j}) => ⟨k.val, ne_of_gt k.property⟩)
+    (fun (k : {j : Fin n // i < j}) ↦ ⟨k.val, ne_of_gt k.property⟩)
   invFun j :=
     if h : j.val.val < i.val then
       Sum.inl ⟨j.val.val, h⟩
     else
       Sum.inr ⟨j.val, by
-        have hne : j.val.val ≠ i.val := fun heq =>
+        have hne : j.val.val ≠ i.val := fun heq ↦
           j.property (Fin.ext heq)
         have : i.val ≤ j.val.val := Nat.le_of_not_lt h
         exact Fin.mk_lt_mk.mpr (lt_of_le_of_ne this (Ne.symm hne))⟩
@@ -180,15 +180,15 @@ and the suffix `({j // i < j} → α)`. -/
 private def exceptSplitMEquiv {n : ℕ} (i : Fin n) :
     ({j : Fin n // j ≠ i} → α) ≃ᵐ
       (Fin i.val → α) × ({j : Fin n // i < j} → α) :=
-  ((MeasurableEquiv.piCongrLeft (fun _ : {j : Fin n // j ≠ i} => α)
+  ((MeasurableEquiv.piCongrLeft (fun _ : {j : Fin n // j ≠ i} ↦ α)
       (exceptIdxEquiv i)).symm).trans
-    (MeasurableEquiv.sumPiEquivProdPi (fun _ : Fin i.val ⊕ {j : Fin n // i < j} => α))
+    (MeasurableEquiv.sumPiEquivProdPi (fun _ : Fin i.val ⊕ {j : Fin n // i < j} ↦ α))
 
 /-- The index equivalence `Unit ⊕ {j : Fin n // j ≠ i} ≃ Fin n` sending the `Unit` summand
 to `i` and the complement to the remaining indices. -/
 private def fullIdxEquiv {n : ℕ} (i : Fin n) :
     Unit ⊕ {j : Fin n // j ≠ i} ≃ Fin n where
-  toFun := Sum.elim (fun _ => i) (fun j => j.val)
+  toFun := Sum.elim (fun _ ↦ i) (fun j ↦ j.val)
   invFun j := if h : j = i then Sum.inl () else Sum.inr ⟨j, h⟩
   left_inv := by
     rintro (⟨⟩ | ⟨j, hj⟩)
@@ -205,10 +205,10 @@ private def piExceptMEquiv {n : ℕ} (i : Fin n) :
     (Fin n → α) ≃ᵐ α × ({j : Fin n // j ≠ i} → α) := by
   -- Step 1: piCongrLeft gives `Fin n → α ≃ᵐ (Unit ⊕ {j // j ≠ i}) → α`
   let e1 : (Unit ⊕ {j : Fin n // j ≠ i} → α) ≃ᵐ (Fin n → α) :=
-    MeasurableEquiv.piCongrLeft (fun _ : Fin n => α) (fullIdxEquiv i)
+    MeasurableEquiv.piCongrLeft (fun _ : Fin n ↦ α) (fullIdxEquiv i)
   -- Step 2: sumPi → prod
   let e2 : (Unit ⊕ {j : Fin n // j ≠ i} → α) ≃ᵐ (Unit → α) × ({j // j ≠ i} → α) :=
-    MeasurableEquiv.sumPiEquivProdPi (fun _ : Unit ⊕ {j : Fin n // j ≠ i} => α)
+    MeasurableEquiv.sumPiEquivProdPi (fun _ : Unit ⊕ {j : Fin n // j ≠ i} ↦ α)
   -- Step 3: Unit → α ≃ᵐ α
   let e3 : (Unit → α) ≃ᵐ α := MeasurableEquiv.funUnique Unit α
   exact e1.symm.trans (e2.trans (MeasurableEquiv.prodCongr e3 (.refl _)))
@@ -229,39 +229,39 @@ private lemma han_single_bound
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (i : Fin n) :
     jointEntropy μ Xs - jointEntropyExcept μ Xs i
       ≤ InformationTheory.MeasureFano.condEntropy μ (Xs i)
-          (fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) := by
+          (fun ω (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) := by
   classical
   -- Definitions
   set pref : Ω → (Fin i.val → α) :=
-      fun ω j => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω with hpref_def
+      fun ω j ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω with hpref_def
   set suff : Ω → ({j : Fin n // i < j} → α) :=
-      fun ω j => Xs j.val ω with hsuff_def
+      fun ω j ↦ Xs j.val ω with hsuff_def
   set prefSuff : Ω → ((Fin i.val → α) × ({j : Fin n // i < j} → α)) :=
-      fun ω => (pref ω, suff ω) with hprefSuff_def
+      fun ω ↦ (pref ω, suff ω) with hprefSuff_def
   set «except» : Ω → ({j : Fin n // j ≠ i} → α) :=
-      fun ω j => Xs j.val ω with hexcept_def
+      fun ω j ↦ Xs j.val ω with hexcept_def
   -- Measurability
   have hpref_meas : Measurable pref :=
-    measurable_pi_iff.mpr (fun _ => hXs _)
+    measurable_pi_iff.mpr (fun _ ↦ hXs _)
   have hsuff_meas : Measurable suff :=
-    measurable_pi_iff.mpr (fun _ => hXs _)
+    measurable_pi_iff.mpr (fun _ ↦ hXs _)
   have hprefSuff_meas : Measurable prefSuff := hpref_meas.prodMk hsuff_meas
   have hexcept_meas : Measurable «except» :=
-    measurable_pi_iff.mpr (fun _ => hXs _)
-  have hjoint_meas : Measurable (fun ω (j : Fin n) => Xs j ω) :=
-    measurable_pi_iff.mpr (fun j => hXs j)
+    measurable_pi_iff.mpr (fun _ ↦ hXs _)
+  have hjoint_meas : Measurable (fun ω (j : Fin n) ↦ Xs j ω) :=
+    measurable_pi_iff.mpr (fun j ↦ hXs j)
   -- two-variable chain rule on (prefSuff, Xs i)
   have h_chain :=
     entropy_pair_eq_entropy_add_condEntropy μ prefSuff (Xs i) hprefSuff_meas (hXs i)
   -- Bridge 1: entropy of (prefSuff, Xs i) = jointEntropy μ Xs
-  have h_lhs : entropy μ (fun ω => (prefSuff ω, Xs i ω)) = jointEntropy μ Xs := by
+  have h_lhs : entropy μ (fun ω ↦ (prefSuff ω, Xs i ω)) = jointEntropy μ Xs := by
     let e_full :
         (Fin n → α) ≃ᵐ ((Fin i.val → α) × ({j : Fin n // i < j} → α)) × α :=
       (fullSplitMEquiv i).trans MeasurableEquiv.prodComm
-    have h_e := entropy_measurableEquiv_comp μ (fun ω (j : Fin n) => Xs j ω)
+    have h_e := entropy_measurableEquiv_comp μ (fun ω (j : Fin n) ↦ Xs j ω)
       hjoint_meas e_full
-    have h_pointwise : (fun ω => e_full (fun j : Fin n => Xs j ω))
-        = (fun ω => (prefSuff ω, Xs i ω)) := by
+    have h_pointwise : (fun ω ↦ e_full (fun j : Fin n ↦ Xs j ω))
+        = (fun ω ↦ (prefSuff ω, Xs i ω)) := by
       funext ω
       apply Prod.ext
       · apply Prod.ext
@@ -291,7 +291,7 @@ private lemma han_single_bound
   have h_first : entropy μ prefSuff = jointEntropyExcept μ Xs i := by
     have h_e := entropy_measurableEquiv_comp μ «except» hexcept_meas
       (exceptSplitMEquiv i)
-    have h_pointwise : (fun ω => exceptSplitMEquiv i («except» ω)) = prefSuff := by
+    have h_pointwise : (fun ω ↦ exceptSplitMEquiv i («except» ω)) = prefSuff := by
       funext ω
       apply Prod.ext
       · funext k
@@ -333,8 +333,8 @@ theorem han_inequality
         (jointEntropy μ Xs - jointEntropyExcept μ Xs i)
       ≤ ∑ i : Fin n,
           InformationTheory.MeasureFano.condEntropy μ (Xs i)
-            (fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) :=
-    Finset.sum_le_sum (fun i _ => han_single_bound μ Xs hXs i)
+            (fun ω (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) :=
+    Finset.sum_le_sum (fun i _ ↦ han_single_bound μ Xs hXs i)
   -- chain rule for the RHS
   have h_chain := jointEntropy_chain_rule μ Xs hXs
   rw [← h_chain] at h_sum_bound

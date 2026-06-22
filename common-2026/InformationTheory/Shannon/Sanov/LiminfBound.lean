@@ -34,17 +34,17 @@ theorem neg_card_mul_logSucc_div_sub_klDivIndex_le_inv_mul_log_iUnion
     {n : ℕ} (hn_pos : 0 < n)
     (h_inE : roundedTypeIndex P n ∈ E n) :
     -(Fintype.card α : ℝ) * (Real.log ((n : ℝ) + 1) / (n : ℝ))
-        - klDivIndex (fun a => (roundedTypeIndex P n a : ℕ)) n Q
+        - klDivIndex (fun a ↦ (roundedTypeIndex P n a : ℕ)) n Q
       ≤ (1 / (n : ℝ)) * Real.log
-          (((Measure.pi (fun _ : Fin n => Q))
-            (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal) := by
+          (((Measure.pi (fun _ : Fin n ↦ Q))
+            (⋃ c ∈ E n, typeClassByCount (α := α) (fun a ↦ (c a : ℕ)))).toReal) := by
   classical
-  set c_n : α → ℕ := fun a => (roundedTypeIndex P n a : ℕ) with hc_n_def
+  set c_n : α → ℕ := fun a ↦ (roundedTypeIndex P n a : ℕ) with hc_n_def
   have hn_real_pos : (0 : ℝ) < n := by exact_mod_cast hn_pos
   -- T_{c_n} ⊆ ⋃ c ∈ E n, T_c (because c_n ∈ E n).
   have h_subset :
       (typeClassByCount (α := α) (n := n) c_n)
-      ⊆ ⋃ c ∈ E n, typeClassByCount (α := α) (n := n) (fun a => (c a : ℕ)) := by
+      ⊆ ⋃ c ∈ E n, typeClassByCount (α := α) (n := n) (fun a ↦ (c a : ℕ)) := by
     intro x hx
     simp only [Set.mem_iUnion]
     exact ⟨roundedTypeIndex P n, h_inE, hx⟩
@@ -52,10 +52,10 @@ theorem neg_card_mul_logSucc_div_sub_klDivIndex_le_inv_mul_log_iUnion
   have h_Qn_ge := typeClassByCount_Qn_ge Q hQpos hn_pos c_n
     (roundedTypeIndex_sum P hP_prob hP_nn n hn_pos)
   -- Q^n(⋃) ≥ Q^n(T_{c_n}).
-  have h_union_ge : ((Measure.pi (fun _ : Fin n => Q))
+  have h_union_ge : ((Measure.pi (fun _ : Fin n ↦ Q))
         (typeClassByCount (α := α) c_n)).toReal
-      ≤ ((Measure.pi (fun _ : Fin n => Q))
-        (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal := by
+      ≤ ((Measure.pi (fun _ : Fin n ↦ Q))
+        (⋃ c ∈ E n, typeClassByCount (α := α) (fun a ↦ (c a : ℕ)))).toReal := by
     apply ENNReal.toReal_mono
     · exact measure_ne_top _ _
     · exact measure_mono h_subset
@@ -63,8 +63,8 @@ theorem neg_card_mul_logSucc_div_sub_klDivIndex_le_inv_mul_log_iUnion
   have h_union_lb :
       (((n : ℝ) + 1) ^ (Fintype.card α : ℕ))⁻¹
         * Real.exp (-((n : ℝ) * klDivIndex c_n n Q))
-      ≤ ((Measure.pi (fun _ : Fin n => Q))
-        (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal :=
+      ≤ ((Measure.pi (fun _ : Fin n ↦ Q))
+        (⋃ c ∈ E n, typeClassByCount (α := α) (fun a ↦ (c a : ℕ)))).toReal :=
     h_Qn_ge.trans h_union_ge
   -- Take log: log Q^n(⋃) ≥ -|α| log(n+1) - n klDivIndex.
   have h_lb_pos : (0 : ℝ) <
@@ -76,8 +76,8 @@ theorem neg_card_mul_logSucc_div_sub_klDivIndex_le_inv_mul_log_iUnion
   have h_log_mono : Real.log
       ((((n : ℝ) + 1) ^ (Fintype.card α : ℕ))⁻¹
         * Real.exp (-((n : ℝ) * klDivIndex c_n n Q)))
-      ≤ Real.log (((Measure.pi (fun _ : Fin n => Q))
-        (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal) :=
+      ≤ Real.log (((Measure.pi (fun _ : Fin n ↦ Q))
+        (⋃ c ∈ E n, typeClassByCount (α := α) (fun a ↦ (c a : ℕ)))).toReal) :=
     Real.log_le_log h_lb_pos h_union_lb
   -- Compute log of LHS.
   have h_log_lhs : Real.log
@@ -104,18 +104,18 @@ theorem inv_mul_log_iUnion_typeClassByCount_le_zero
     (E : ∀ n, Finset (TypeCountIndex α n))
     {n : ℕ} (hn_pos : 0 < n) :
     (1 / (n : ℝ)) * Real.log
-        (((Measure.pi (fun _ : Fin n => Q))
-          (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal) ≤ 0 := by
+        (((Measure.pi (fun _ : Fin n ↦ Q))
+          (⋃ c ∈ E n, typeClassByCount (α := α) (fun a ↦ (c a : ℕ)))).toReal) ≤ 0 := by
   classical
-  have h_Qn_le_one : ((Measure.pi (fun _ : Fin n => Q))
-      (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal ≤ 1 := by
-    have := MeasureTheory.measureReal_le_one (μ := Measure.pi (fun _ : Fin n => Q))
-      (s := ⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))
+  have h_Qn_le_one : ((Measure.pi (fun _ : Fin n ↦ Q))
+      (⋃ c ∈ E n, typeClassByCount (α := α) (fun a ↦ (c a : ℕ)))).toReal ≤ 1 := by
+    have := MeasureTheory.measureReal_le_one (μ := Measure.pi (fun _ : Fin n ↦ Q))
+      (s := ⋃ c ∈ E n, typeClassByCount (α := α) (fun a ↦ (c a : ℕ)))
     simpa [MeasureTheory.measureReal_def] using this
   have h_one_div_nn : (0 : ℝ) ≤ 1 / (n : ℝ) := by positivity
   have h_log_le : Real.log
-        (((Measure.pi (fun _ : Fin n => Q))
-          (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal) ≤ 0 := by
+        (((Measure.pi (fun _ : Fin n ↦ Q))
+          (⋃ c ∈ E n, typeClassByCount (α := α) (fun a ↦ (c a : ℕ)))).toReal) ≤ 0 := by
     apply Real.log_nonpos
     · exact ENNReal.toReal_nonneg
     · exact h_Qn_le_one
@@ -131,29 +131,29 @@ theorem sanov_ldp_lower_bound_pointwise
     (hP_full : ∀ a, 0 < P a)
     (E : ∀ n, Finset (TypeCountIndex α n))
     (h_in_E : ∀ᶠ n : ℕ in atTop, roundedTypeIndex P n ∈ E n) :
-    -klDivSumForm_ofVec P (fun a => Q.real {a})
-      ≤ Filter.liminf (fun n : ℕ => (1 / (n : ℝ)) * Real.log
-          (((Measure.pi (fun _ : Fin n => Q))
+    -klDivSumForm_ofVec P (fun a ↦ Q.real {a})
+      ≤ Filter.liminf (fun n : ℕ ↦ (1 / (n : ℝ)) * Real.log
+          (((Measure.pi (fun _ : Fin n ↦ Q))
             (⋃ c ∈ E n, typeClassByCount (α := α)
-              (fun a => (c a : ℕ)))).toReal)) atTop := by
+              (fun a ↦ (c a : ℕ)))).toReal)) atTop := by
   classical
-  set D : ℝ := klDivSumForm_ofVec P (fun a => Q.real {a}) with hD_def
+  set D : ℝ := klDivSumForm_ofVec P (fun a ↦ Q.real {a}) with hD_def
   set K : ℝ := (Fintype.card α : ℝ) with hK_def
-  set f : ℕ → ℝ := fun n => (1 / (n : ℝ)) * Real.log
-    (((Measure.pi (fun _ : Fin n => Q))
-      (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal) with hf_def
-  have hP_nn : ∀ a, 0 ≤ P a := fun a => (hP_full a).le
+  set f : ℕ → ℝ := fun n ↦ (1 / (n : ℝ)) * Real.log
+    (((Measure.pi (fun _ : Fin n ↦ Q))
+      (⋃ c ∈ E n, typeClassByCount (α := α) (fun a ↦ (c a : ℕ)))).toReal) with hf_def
+  have hP_nn : ∀ a, 0 ≤ P a := fun a ↦ (hP_full a).le
   -- Lower bound `f n ≥ -K · log(n+1)/n - klDivIndex (c_n) n Q` eventually.
   -- Define `g n := -K · log(n+1)/n - klDivIndex (c_n) n Q`; show f ≥ g eventually, and g → -D.
-  set c_seq : ∀ n, α → ℕ := fun n a => (roundedTypeIndex P n a : ℕ)
-  set g : ℕ → ℝ := fun n => -K * (Real.log ((n : ℝ) + 1) / (n : ℝ))
+  set c_seq : ∀ n, α → ℕ := fun n a ↦ (roundedTypeIndex P n a : ℕ)
+  set g : ℕ → ℝ := fun n ↦ -K * (Real.log ((n : ℝ) + 1) / (n : ℝ))
     - klDivIndex (c_seq n) n Q with hg_def
   -- g → -D.
   have hg_tendsto : Tendsto g atTop (𝓝 (-D)) := by
-    have h_log_zero : Tendsto (fun n : ℕ => -K * (Real.log ((n : ℝ) + 1) / (n : ℝ)))
+    have h_log_zero : Tendsto (fun n : ℕ ↦ -K * (Real.log ((n : ℝ) + 1) / (n : ℝ)))
         atTop (𝓝 (-K * 0)) := log_succ_div_tendsto_zero.const_mul (-K)
     rw [mul_zero] at h_log_zero
-    have h_kl : Tendsto (fun n : ℕ => klDivIndex (c_seq n) n Q) atTop (𝓝 D) :=
+    have h_kl : Tendsto (fun n : ℕ ↦ klDivIndex (c_seq n) n Q) atTop (𝓝 D) :=
       klDivIndex_rounded_tendsto Q hQpos P hP_prob hP_nn
     have h_sub := h_log_zero.sub h_kl
     rw [zero_sub] at h_sub
@@ -161,7 +161,7 @@ theorem sanov_ldp_lower_bound_pointwise
   -- f n ≥ g n eventually.
   have h_f_ge_g : ∀ᶠ n : ℕ in atTop, g n ≤ f n := by
     have h_n_pos : ∀ᶠ n : ℕ in atTop, 0 < n :=
-      Filter.eventually_atTop.mpr ⟨1, fun n hn => hn⟩
+      Filter.eventually_atTop.mpr ⟨1, fun n hn ↦ hn⟩
     filter_upwards [h_n_pos, h_in_E] with n hn_pos h_inE
     show g n ≤ f n
     rw [hg_def, hf_def, hK_def]
@@ -189,7 +189,7 @@ theorem sanov_ldp_lower_bound_pointwise
     refine ⟨0, ?_⟩
     rw [Filter.eventually_map]
     have h_n_pos : ∀ᶠ n : ℕ in atTop, 0 < n :=
-      Filter.eventually_atTop.mpr ⟨1, fun n hn => hn⟩
+      Filter.eventually_atTop.mpr ⟨1, fun n hn ↦ hn⟩
     filter_upwards [h_n_pos] with n hn_pos
     -- f n = (1/n) log Q^n. Q^n ≤ 1, so log ≤ 0, so (1/n) log ≤ 0.
     show f n ≤ 0

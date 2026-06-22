@@ -117,19 +117,19 @@ theorem phraseSum_le_negLogQk
               -Real.log
                 (condQkState μ p k (windowState p k (N j.castSucc) ω)
                   (N j.succ - N j.castSucc)
-                  (fun m => p.obs (N j.castSucc + m.val) ω)).toReal)
+                  (fun m ↦ p.obs (N j.castSucc + m.val) ω)).toReal)
           + ∑ i ∈ Finset.Ico e n, pmfLogCondMarkov μ p k i ω) :
     (∑ j : Fin c,
         -Real.log
           (condQkState μ p k (windowState p k (N j.castSucc) ω)
             (N j.succ - N j.castSucc)
-            (fun m => p.obs (N j.castSucc + m.val) ω)).toReal)
+            (fun m ↦ p.obs (N j.castSucc + m.val) ω)).toReal)
       ≤ negLogQk μ p k n ω := by
   -- The two boundary sums are nonnegative (each summand is `≥ 0` by `pmfLogCondMarkov_nonneg`).
   have hA : 0 ≤ ∑ i ∈ Finset.range b, pmfLogCondMarkov μ p k i ω :=
-    Finset.sum_nonneg (fun i _ => pmfLogCondMarkov_nonneg μ p k i ω)
+    Finset.sum_nonneg (fun i _ ↦ pmfLogCondMarkov_nonneg μ p k i ω)
   have hB : 0 ≤ ∑ i ∈ Finset.Ico e n, pmfLogCondMarkov μ p k i ω :=
-    Finset.sum_nonneg (fun i _ => pmfLogCondMarkov_nonneg μ p k i ω)
+    Finset.sum_nonneg (fun i _ ↦ pmfLogCondMarkov_nonneg μ p k i ω)
   rw [hthread]
   linarith
 
@@ -155,7 +155,7 @@ theorem parseTiling_totalLength_le
     (hmono : ∀ j : Fin c, N j.castSucc + 1 ≤ N j.succ) :
     (∑ j : Fin c, (N j.succ - N j.castSucc)) ≤ n := by
   -- Extend `N` to a total monotone `M` to telescope (idiom from `negLogQk_phrase_threading`).
-  set M : ℕ → ℕ := fun i => if h : i < c + 1 then N ⟨i, h⟩ else e with hM_def
+  set M : ℕ → ℕ := fun i ↦ if h : i < c + 1 then N ⟨i, h⟩ else e with hM_def
   have hMN : ∀ (i : ℕ) (h : i < c + 1), M i = N ⟨i, h⟩ := by
     intro i h; simp only [hM_def, h, dif_pos]
   have hMcastSucc : ∀ j : Fin c, M j.val = N j.castSucc := by
@@ -185,7 +185,7 @@ theorem parseTiling_totalLength_le
   -- Rewrite the goal sum over `range c` matching `M`.
   have hNtot_range :
       (∑ j : Fin c, (N j.succ - N j.castSucc)) = ∑ j ∈ Finset.range c, (M (j + 1) - M j) := by
-    rw [Finset.sum_range fun j => M (j + 1) - M j]
+    rw [Finset.sum_range fun j ↦ M (j + 1) - M j]
     refine Finset.sum_congr rfl ?_
     intro j _
     rw [hMcastSucc j, hMsucc j]
@@ -199,22 +199,22 @@ theorem parseTiling_phrase_slice_injective
     (hNe : N (Fin.last c) = e) (hen : e ≤ n)
     (hmono : ∀ j : Fin c, N j.castSucc + 1 ≤ N j.succ)
     (hslice : ∀ j : Fin c,
-      (lz78PhraseStrings (List.ofFn (fun i => p.blockRV n ω i)))[bAbsorbed + j.val]?
-        = some (((List.ofFn (fun i => p.blockRV n ω i)).drop (N j.castSucc)).take
+      (lz78PhraseStrings (List.ofFn (fun i ↦ p.blockRV n ω i)))[bAbsorbed + j.val]?
+        = some (((List.ofFn (fun i ↦ p.blockRV n ω i)).drop (N j.castSucc)).take
             (N j.succ - N j.castSucc))) :
     (∀ j : Fin c,
-        (((List.ofFn (fun i => p.blockRV n ω i)).drop (N j.castSucc)).take
+        (((List.ofFn (fun i ↦ p.blockRV n ω i)).drop (N j.castSucc)).take
             (N j.succ - N j.castSucc)).length = N j.succ - N j.castSucc) ∧
       (∀ (j : Fin c) (m : ℕ), m < N j.succ - N j.castSucc →
-        (((List.ofFn (fun i => p.blockRV n ω i)).drop (N j.castSucc)).take
+        (((List.ofFn (fun i ↦ p.blockRV n ω i)).drop (N j.castSucc)).take
             (N j.succ - N j.castSucc))[m]? = some (p.obs (N j.castSucc + m) ω)) ∧
-      Function.Injective (fun j : Fin c =>
-        ((List.ofFn (fun i => p.blockRV n ω i)).drop (N j.castSucc)).take
+      Function.Injective (fun j : Fin c ↦
+        ((List.ofFn (fun i ↦ p.blockRV n ω i)).drop (N j.castSucc)).take
           (N j.succ - N j.castSucc)) := by
   classical
-  set input : List α := List.ofFn (fun i => p.blockRV n ω i) with hinput_def
+  set input : List α := List.ofFn (fun i ↦ p.blockRV n ω i) with hinput_def
   set phrase : Fin c → List α :=
-    fun j => (input.drop (N j.castSucc)).take (N j.succ - N j.castSucc) with hphrase_def
+    fun j ↦ (input.drop (N j.castSucc)).take (N j.succ - N j.castSucc) with hphrase_def
   -- Monotonicity `N j.succ ≤ e` (so each phrase fits inside `[0, n)`).
   have hN_mono_nat : ∀ (i j : ℕ) (hi : i < c + 1) (hj : j < c + 1), i ≤ j →
       N ⟨i, hi⟩ ≤ N ⟨j, hj⟩ := by
@@ -338,7 +338,7 @@ decls). -/
 theorem ziv_achievability_composition
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (k n : ℕ) :
     ∀ᵐ ω ∂μ, ∃ (c bAbsorbed Ntot : ℕ),
-      c + bAbsorbed = (lz78PhraseStrings (List.ofFn (fun i => p.blockRV n ω i))).length ∧
+      c + bAbsorbed = (lz78PhraseStrings (List.ofFn (fun i ↦ p.blockRV n ω i))).length ∧
       bAbsorbed ≤ k + 1 ∧
       Ntot ≤ n ∧
       (c : ℝ) * Real.log (c : ℝ)
@@ -363,15 +363,15 @@ theorem ziv_achievability_composition
             -Real.log
               (condQkState μ p k (windowState p k (N j.castSucc) ω)
                 (N j.succ - N j.castSucc)
-                (fun m => p.obs (N j.castSucc + m.val) ω)).toReal)
+                (fun m ↦ p.obs (N j.castSucc + m.val) ω)).toReal)
           ≤ negLogQk μ p k n ω :=
       phraseSum_le_negLogQk μ p k n ω b c e N hthread_eq
     -- (B) reindex `Fin c → Finset (List α)` of distinct phrase strings, then apply
     -- `condState_grouping_bound_mean`.
-    set input : List α := List.ofFn (fun i => p.blockRV n ω i) with hinput_def
+    set input : List α := List.ofFn (fun i ↦ p.blockRV n ω i) with hinput_def
     -- The `j`-th phrase string is the tiled slice (from `hslice`).
     set phrase : Fin c → List α :=
-      fun j => (input.drop (N j.castSucc)).take (N j.succ - N j.castSucc) with hphrase_def
+      fun j ↦ (input.drop (N j.castSucc)).take (N j.succ - N j.castSucc) with hphrase_def
     -- The slice map's prescribed lengths, obs-coherence, and injectivity (from the tiling).
     obtain ⟨hphrase_len, hphrase_get, hphrase_inj⟩ :=
       parseTiling_phrase_slice_injective μ p n ω c e bAbsorbed N hNe hen hmono hslice
@@ -381,7 +381,7 @@ theorem ziv_achievability_composition
               -Real.log
                 (condQkState μ p k (windowState p k (N j.castSucc) ω)
                   (N j.succ - N j.castSucc)
-                  (fun m => p.obs (N j.castSucc + m.val) ω)).toReal)
+                  (fun m ↦ p.obs (N j.castSucc + m.val) ω)).toReal)
             + ((c : ℝ) * Real.log ((Ntot : ℝ) / (c : ℝ))
                 + (c : ℝ)
                 + (c : ℝ) * Real.log (((Fintype.card α) ^ k : ℕ) : ℝ)) := by
@@ -393,7 +393,7 @@ theorem ziv_achievability_composition
         haveI : Nonempty (Fin c) := ⟨⟨0, hcpos⟩⟩
         -- The state function on phrase strings: invert `phrase`, read the trailing state.
         set st : List α → (Fin k → α) :=
-          fun w => windowState p k (N (Function.invFun phrase w).castSucc) ω with hst_def
+          fun w ↦ windowState p k (N (Function.invFun phrase w).castSucc) ω with hst_def
         -- On `phrase j`, `st` recovers the trailing `k`-state at `N j.castSucc`.
         have hst_phrase : ∀ j : Fin c, st (phrase j) = windowState p k (N j.castSucc) ω := by
           intro j
@@ -415,7 +415,7 @@ theorem ziv_achievability_composition
                 (toFinVec (phrase j).length (phrase j))
               = condQkState μ p k (windowState p k (N j.castSucc) ω)
                   (N j.succ - N j.castSucc)
-                  (fun m => p.obs (N j.castSucc + m.val) ω) := by
+                  (fun m ↦ p.obs (N j.castSucc + m.val) ω) := by
           intro j
           rw [hst_phrase j]
           refine condQkState_congr_length μ p k _ _ _ (hphrase_len j) _ _ ?_
@@ -451,15 +451,15 @@ theorem ziv_achievability_composition
                   -Real.log
                     (condQkState μ p k (windowState p k (N j.castSucc) ω)
                       (N j.succ - N j.castSucc)
-                      (fun m => p.obs (N j.castSucc + m.val) ω)).toReal := by
+                      (fun m ↦ p.obs (N j.castSucc + m.val) ω)).toReal := by
           rw [hphrases_def, Finset.sum_image hInjOn]
-          refine Finset.sum_congr rfl (fun j _ => ?_)
+          refine Finset.sum_congr rfl (fun j _ ↦ ?_)
           rw [hterm j]
         -- Reindex the total length `∑ |w| = ∑ (N j.succ - N j.castSucc) = Ntot`.
         have hNtot_re : (∑ w ∈ phrases, (w.length : ℝ)) = (Ntot : ℝ) := by
           rw [hphrases_def, Finset.sum_image hInjOn, hNtot_def]
           push_cast
-          refine Finset.sum_congr rfl (fun j _ => ?_)
+          refine Finset.sum_congr rfl (fun j _ ↦ ?_)
           rw [hphrase_len j]
         rw [hsum_re, hNtot_re] at hgroup
         exact hgroup

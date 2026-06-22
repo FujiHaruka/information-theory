@@ -47,7 +47,7 @@ theorem rateDistortionFunction_antitone
     {D₁ D₂ : ℝ} (hD : D₁ ≤ D₂) :
     rateDistortionFunction d P D₂ ≤ rateDistortionFunction d P D₁ := by
   unfold rateDistortionFunction
-  refine le_iInf fun ν => le_iInf fun hν_marg => le_iInf fun hν_dist => ?_
+  refine le_iInf fun ν ↦ le_iInf fun hν_marg ↦ le_iInf fun hν_dist ↦ ?_
   -- ν is feasible at D₁; feasibility at D₂ follows from hD.
   have hν_dist₂ : expectedDistortion d ν ≤ D₂ := le_trans hν_dist hD
   exact iInf_le_of_le ν (iInf_le_of_le hν_marg (iInf_le _ hν_dist₂))
@@ -80,9 +80,9 @@ theorem rate_distortion_converse_single_shot_specified
     (hX : Measurable X)
     (hencoder : Measurable encoder) (hdecoder : Measurable decoder)
     (d : α → β → ℝ)
-    (hd : Measurable (fun p : α × β => d p.1 p.2))
+    (hd : Measurable (fun p : α × β ↦ d p.1 p.2))
     (hMI_W_finite :
-      mutualInfo μ X (fun ω => encoder (X ω)) ≠ ∞)
+      mutualInfo μ X (fun ω ↦ encoder (X ω)) ≠ ∞)
     {D : ℝ}
     (hD : ∫ ω, d (X ω) (decoder (encoder (X ω))) ∂μ ≤ D) :
     (rateDistortionFunction d (μ.map X) D).toReal
@@ -105,8 +105,8 @@ theorem rate_distortion_converse_single_shot_specified
   -- The parent R(D̃) is finite (bounded above by mutualInfo μ X Xh which is
   -- finite by hMI_W_finite + DPI). We extract finiteness from h_parent's
   -- premise rather than re-proving it.
-  set W : Ω → M := fun ω => encoder (X ω) with hW_def
-  set Xh : Ω → β := fun ω => decoder (encoder (X ω)) with hXh_def
+  set W : Ω → M := fun ω ↦ encoder (X ω) with hW_def
+  set Xh : Ω → β := fun ω ↦ decoder (encoder (X ω)) with hXh_def
   have hW_meas : Measurable W := hencoder.comp hX
   have hXh_meas : Measurable Xh := hdecoder.comp hW_meas
   -- R(D̃) ≤ mutualInfo μ X Xh (feasible: ν := μ.map (X, Xh)).
@@ -114,7 +114,7 @@ theorem rate_distortion_converse_single_shot_specified
       rateDistortionFunction d (μ.map X)
           (∫ ω, d (X ω) (Xh ω) ∂μ)
         ≤ mutualInfo μ X Xh := by
-    set ν : Measure (α × β) := μ.map (fun ω => (X ω, Xh ω)) with hν_def
+    set ν : Measure (α × β) := μ.map (fun ω ↦ (X ω, Xh ω)) with hν_def
     have hν_marg : ν.map Prod.fst = μ.map X := by
       rw [hν_def, Measure.map_map measurable_fst (hX.prodMk hXh_meas)]
       rfl

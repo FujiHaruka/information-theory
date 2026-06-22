@@ -56,14 +56,14 @@ theorem det_rpow_le_arith_mean_eigenvalues
     rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, ← hN, mul_one_div, div_self hNne]
   -- weighted AM-GM: ∏ λᵢ^(1/N) ≤ ∑ (1/N) λᵢ
   have hAMGM := Real.geom_mean_le_arith_mean_weighted (s := univ)
-    (fun _ => (1 / N)) (fun i => hA.1.eigenvalues i) hw hw' hz
+    (fun _ ↦ (1 / N)) (fun i ↦ hA.1.eigenvalues i) hw hw' hz
   -- rewrite the geometric-mean side: ∏ λᵢ^(1/N) = (∏ λᵢ)^(1/N) = (det A)^(1/N)
   have hdet : A.det = ∏ i, hA.1.eigenvalues i := by
     have h := hA.isHermitian.det_eq_prod_eigenvalues
     simpa using h
   have hprod_eq : ∏ i, (hA.1.eigenvalues i) ^ (1 / N)
       = (A.det) ^ (1 / N) := by
-    rw [hdet, Real.finsetProd_rpow univ _ (fun i _ => (hz i (mem_univ i))) (1 / N)]
+    rw [hdet, Real.finsetProd_rpow univ _ (fun i _ ↦ (hz i (mem_univ i))) (1 / N)]
   -- rewrite the arithmetic-mean side: ∑ (1/N) λᵢ = (1/N) ∑ λᵢ
   have harith_eq : ∑ i, (1 / N) * hA.1.eigenvalues i
       = (1 / N) * ∑ i, hA.1.eigenvalues i := by
@@ -89,27 +89,27 @@ theorem geom_mean_superadditive
   have hNpos : (0 : ℝ) < N := by rw [hN]; exact_mod_cast Fintype.card_pos
   have hNne : N ≠ 0 := ne_of_gt hNpos
   -- the product of the sums is positive
-  have hPpos : (0 : ℝ) < ∏ i, (a i + b i) := Finset.prod_pos (fun i _ => hab i)
+  have hPpos : (0 : ℝ) < ∏ i, (a i + b i) := Finset.prod_pos (fun i _ ↦ hab i)
   -- normalized weights
-  set t : n → ℝ := fun i => a i / (a i + b i) with ht
-  set s : n → ℝ := fun i => b i / (a i + b i) with hs
-  have htnn : ∀ i, 0 ≤ t i := fun i => div_nonneg (ha i) (hab i).le
-  have hsnn : ∀ i, 0 ≤ s i := fun i => div_nonneg (hb i) (hab i).le
+  set t : n → ℝ := fun i ↦ a i / (a i + b i) with ht
+  set s : n → ℝ := fun i ↦ b i / (a i + b i) with hs
+  have htnn : ∀ i, 0 ≤ t i := fun i ↦ div_nonneg (ha i) (hab i).le
+  have hsnn : ∀ i, 0 ≤ s i := fun i ↦ div_nonneg (hb i) (hab i).le
   have htst : ∀ i, t i + s i = 1 := by
     intro i; rw [ht, hs]; rw [← add_div, div_self (ne_of_gt (hab i))]
   -- AM-GM on t and on s
-  have hw : ∀ i ∈ (univ : Finset n), (0 : ℝ) ≤ (1 / N) := fun i _ => by positivity
+  have hw : ∀ i ∈ (univ : Finset n), (0 : ℝ) ≤ (1 / N) := fun i _ ↦ by positivity
   have hw' : ∑ _i : n, (1 / N) = 1 := by
     rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, ← hN, mul_one_div, div_self hNne]
   have hAMt := Real.geom_mean_le_arith_mean_weighted (s := univ)
-    (fun _ => (1 / N)) t hw hw' (fun i _ => htnn i)
+    (fun _ ↦ (1 / N)) t hw hw' (fun i _ ↦ htnn i)
   have hAMs := Real.geom_mean_le_arith_mean_weighted (s := univ)
-    (fun _ => (1 / N)) s hw hw' (fun i _ => hsnn i)
+    (fun _ ↦ (1 / N)) s hw hw' (fun i _ ↦ hsnn i)
   -- rewrite geometric-mean sides as a single product raised to 1/N
   have hprodt : ∏ i, (t i) ^ (1 / N) = (∏ i, t i) ^ (1 / N) :=
-    (Real.finsetProd_rpow univ _ (fun i _ => htnn i) (1 / N))
+    (Real.finsetProd_rpow univ _ (fun i _ ↦ htnn i) (1 / N))
   have hprods : ∏ i, (s i) ^ (1 / N) = (∏ i, s i) ^ (1 / N) :=
-    (Real.finsetProd_rpow univ _ (fun i _ => hsnn i) (1 / N))
+    (Real.finsetProd_rpow univ _ (fun i _ ↦ hsnn i) (1 / N))
   rw [hprodt] at hAMt
   rw [hprods] at hAMs
   -- sum the two AM-GM bounds; the arithmetic means add to (1/N) * N = 1
@@ -130,8 +130,8 @@ theorem geom_mean_superadditive
     rw [ht]; rw [← Finset.prod_div_distrib]
   have hsb : (∏ i, s i) = (∏ i, b i) / (∏ i, (a i + b i)) := by
     rw [hs]; rw [← Finset.prod_div_distrib]
-  have hann : (0 : ℝ) ≤ ∏ i, a i := Finset.prod_nonneg (fun i _ => ha i)
-  have hbnn : (0 : ℝ) ≤ ∏ i, b i := Finset.prod_nonneg (fun i _ => hb i)
+  have hann : (0 : ℝ) ≤ ∏ i, a i := Finset.prod_nonneg (fun i _ ↦ ha i)
+  have hbnn : (0 : ℝ) ≤ ∏ i, b i := Finset.prod_nonneg (fun i _ ↦ hb i)
   rw [hta, hsb, Real.div_rpow hann hPpos.le, Real.div_rpow hbnn hPpos.le] at hsum
   -- multiply through by (∏(a+b))^(1/N)
   have hkey := mul_le_mul_of_nonneg_left hsum hPpow.le
@@ -179,7 +179,7 @@ theorem det_one_add_eq_prod_one_add_eigenvalues
   rw [mul_comm ((U : Matrix n n ℝ).det) ((1 + D).det), mul_assoc]
   rw [← Matrix.det_mul, hUU, Matrix.det_one, mul_one]
   -- `1 + D = diagonal (fun i => 1 + λ i)`, so `det = ∏ (1 + λ i)`
-  have hdiag : (1 : Matrix n n ℝ) + D = Matrix.diagonal (fun i => 1 + hS.eigenvalues i) := by
+  have hdiag : (1 : Matrix n n ℝ) + D = Matrix.diagonal (fun i ↦ 1 + hS.eigenvalues i) := by
     rw [hD, ← Matrix.diagonal_one, ← Matrix.diagonal_add]
     simp
   rw [hdiag, Matrix.det_diagonal]
@@ -234,7 +234,7 @@ theorem minkowskiDeterminantInequality
     rw [hAB, Matrix.det_mul, Matrix.det_mul, ← hRRA, Matrix.det_mul]
     ring
   -- `det(1+S) = ∏ (1 + μ i)`
-  have hμpos : ∀ i, 0 < hSherm.eigenvalues i := fun i => hSpd.eigenvalues_pos i
+  have hμpos : ∀ i, 0 < hSherm.eigenvalues i := fun i ↦ hSpd.eigenvalues_pos i
   have hdetone : (1 + S).det = ∏ i, (1 + hSherm.eigenvalues i) :=
     det_one_add_eq_prod_one_add_eigenvalues hSherm
   -- `∏ μ i = det S`
@@ -245,9 +245,9 @@ theorem minkowskiDeterminantInequality
   have hAdetpos : (0 : ℝ) < A.det := hA.det_pos
   have hSdetpos : (0 : ℝ) < S.det := hSpd.det_pos
   -- scalar Minkowski with `a ≡ 1`, `b i = μ i`
-  have hmink := geom_mean_superadditive (n := n) (fun _ => (1 : ℝ))
-    (fun i => hSherm.eigenvalues i) (fun _ => zero_le_one)
-    (fun i => (hμpos i).le) (fun i => by have := hμpos i; linarith)
+  have hmink := geom_mean_superadditive (n := n) (fun _ ↦ (1 : ℝ))
+    (fun i ↦ hSherm.eigenvalues i) (fun _ ↦ zero_le_one)
+    (fun i ↦ (hμpos i).le) (fun i ↦ by have := hμpos i; linarith)
   -- evaluate the products in the scalar bound
   rw [Finset.prod_const_one, Real.one_rpow] at hmink
   -- `∏ (1 + μ i)` matches `det(1+S)`, `∏ μ i` matches `det S`
@@ -259,7 +259,7 @@ theorem minkowskiDeterminantInequality
   -- `(det A)^p · (det S)^p = (det A · det S)^p = (det B)^p`
   have hRdet2 : R.det * R.det = A.det := by
     rw [← Matrix.det_mul, hRRA]
-  have hRdetne : R.det ≠ 0 := fun h => by
+  have hRdetne : R.det ≠ 0 := fun h ↦ by
     rw [h, mul_zero] at hRdet2; exact (ne_of_gt hAdetpos) hRdet2.symm
   have hdetB : A.det * S.det = B.det := by
     rw [hS, Matrix.det_mul, Matrix.det_mul, Matrix.det_nonsing_inv, Ring.inverse_eq_inv']
@@ -271,7 +271,7 @@ theorem minkowskiDeterminantInequality
   -- `(det A)^p · (det(1+S))^p = (det A · det(1+S))^p = (det(A+B))^p`
   have hdetone_pos : (0 : ℝ) ≤ (1 + S).det := by
     rw [hdetone]
-    exact Finset.prod_nonneg (fun i _ => by have := hμpos i; linarith)
+    exact Finset.prod_nonneg (fun i _ ↦ by have := hμpos i; linarith)
   have hrpow_mul' : A.det ^ p * (1 + S).det ^ p = (A + B).det ^ p := by
     rw [← Real.mul_rpow hAdetpos.le hdetone_pos, ← hdetAB]
   rw [hrpow_mul'] at hstep

@@ -67,7 +67,7 @@ lemma condQkState_le_one
     condQkState μ p k s ℓ Z ≤ 1 := by
   calc condQkState μ p k s ℓ Z
       ≤ ∑ w : Fin ℓ → α, condQkState μ p k s ℓ w :=
-        Finset.single_le_sum (fun w _ => zero_le') (Finset.mem_univ Z)
+        Finset.single_le_sum (fun w _ ↦ zero_le') (Finset.mem_univ Z)
     _ ≤ 1 := condQkState_sum_le_one μ p k s ℓ
 
 /-! ## The `.toReal` sub-distribution bridge (route step iii) -/
@@ -81,7 +81,7 @@ lemma sum_condQkState_toReal_le_one
     (k : ℕ) (s : Fin k → α) (ℓ : ℕ) (S : Finset (Fin ℓ → α)) :
     (∑ Z ∈ S, (condQkState μ p k s ℓ Z).toReal) ≤ 1 := by
   -- Each summand is finite (`≤ 1 < ⊤`), so `.toReal` commutes with the sum.
-  have hfin : ∀ Z ∈ S, condQkState μ p k s ℓ Z ≠ ⊤ := fun Z _ =>
+  have hfin : ∀ Z ∈ S, condQkState μ p k s ℓ Z ≠ ⊤ := fun Z _ ↦
     ne_top_of_le_ne_top ENNReal.one_ne_top (condQkState_le_one μ p k s ℓ Z)
   rw [← ENNReal.toReal_sum hfin]
   -- The `ℝ≥0∞` partial sum is `≤ 1`; `.toReal` is monotone with target `1`.
@@ -101,18 +101,18 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
 theorem condState_grouping_lengthProfile_counts {σ : Type*} [DecidableEq σ]
     (phrases : Finset (List α)) (keyf : List α → σ × ℕ)
     (hkey2 : ∀ w, (keyf w).2 = w.length) (ℓ : ℕ) :
-    (∑ g ∈ (phrases.image keyf).filter (fun g => g.2 = ℓ),
-        (phrases.filter (fun w => keyf w = g)).card)
-      = (phrases.filter (fun w => w.length = ℓ)).card := by
+    (∑ g ∈ (phrases.image keyf).filter (fun g ↦ g.2 = ℓ),
+        (phrases.filter (fun w ↦ keyf w = g)).card)
+      = (phrases.filter (fun w ↦ w.length = ℓ)).card := by
   classical
   set G : Finset (σ × ℕ) := phrases.image keyf with hGdef
   set kk : (σ × ℕ) → ℕ :=
-    fun g => (phrases.filter (fun w => keyf w = g)).card with hkk
-  set Pℓ : Finset (List α) := phrases.filter (fun w => w.length = ℓ) with hPℓ
+    fun g ↦ (phrases.filter (fun w ↦ keyf w = g)).card with hkk
+  set Pℓ : Finset (List α) := phrases.filter (fun w ↦ w.length = ℓ) with hPℓ
   -- `Pℓ.card = ∑_{g ∈ Pℓ.image keyf} (Pℓ.filter (keyf = g)).card`.
   have hcardP := Finset.card_eq_sum_card_image keyf Pℓ
   -- (a) `Pℓ.image keyf = G.filter (·.2 = ℓ)`.
-  have ha : Pℓ.image keyf = G.filter (fun g => g.2 = ℓ) := by
+  have ha : Pℓ.image keyf = G.filter (fun g ↦ g.2 = ℓ) := by
     ext g
     simp only [Finset.mem_image, Finset.mem_filter, hPℓ, hGdef]
     constructor
@@ -124,7 +124,7 @@ theorem condState_grouping_lengthProfile_counts {σ : Type*} [DecidableEq σ]
   -- (b) For `g` with `g.2 = ℓ`, filtering `keyf = g` over `Pℓ` or all of
   --     `phrases` gives the same count (since `keyf w = g ⇒ |w| = ℓ`).
   have hb : ∀ g ∈ Pℓ.image keyf,
-      (Pℓ.filter (fun w => keyf w = g)).card = kk g := by
+      (Pℓ.filter (fun w ↦ keyf w = g)).card = kk g := by
     intro g hg
     rw [hkk]
     congr 1
@@ -147,19 +147,19 @@ theorem condState_grouping_perFiber_logsum
     (phrases : Finset (List α)) (st : List α → (Fin k → α))
     (hpos : ∀ w ∈ phrases,
       0 < (condQkState μ p k (st w) w.length (toFinVec w.length w)).toReal) :
-    (∑ g ∈ phrases.image (fun w => (st w, w.length)),
-        ((phrases.filter (fun w => (st w, w.length) = g)).card : ℝ)
-          * Real.log ((phrases.filter (fun w => (st w, w.length) = g)).card : ℝ))
-      ≤ ∑ g ∈ phrases.image (fun w => (st w, w.length)),
-          ∑ w ∈ phrases.filter (fun w => (st w, w.length) = g),
+    (∑ g ∈ phrases.image (fun w ↦ (st w, w.length)),
+        ((phrases.filter (fun w ↦ (st w, w.length) = g)).card : ℝ)
+          * Real.log ((phrases.filter (fun w ↦ (st w, w.length) = g)).card : ℝ))
+      ≤ ∑ g ∈ phrases.image (fun w ↦ (st w, w.length)),
+          ∑ w ∈ phrases.filter (fun w ↦ (st w, w.length) = g),
             - Real.log (condQkState μ p k (st w) w.length (toFinVec w.length w)).toReal := by
   classical
-  set keyf : List α → (Fin k → α) × ℕ := fun w => (st w, w.length) with hkeyf
+  set keyf : List α → (Fin k → α) × ℕ := fun w ↦ (st w, w.length) with hkeyf
   set Pm : (Fin k → α) → (ℓ : ℕ) → (Fin ℓ → α) → ℝ :=
-    fun s ℓ Z => (condQkState μ p k s ℓ Z).toReal with hPm
-  refine Finset.sum_le_sum (fun g _ => ?_)
+    fun s ℓ Z ↦ (condQkState μ p k s ℓ Z).toReal with hPm
+  refine Finset.sum_le_sum (fun g _ ↦ ?_)
   obtain ⟨s, ℓ⟩ := g
-  set grp : Finset (List α) := phrases.filter (fun w => keyf w = (s, ℓ)) with hgrp
+  set grp : Finset (List α) := phrases.filter (fun w ↦ keyf w = (s, ℓ)) with hgrp
   have hgrp_len : ∀ w ∈ grp, w.length = ℓ := by
     intro w hw
     have := (Finset.mem_filter.mp hw).2
@@ -193,12 +193,12 @@ theorem condState_grouping_perFiber_logsum
   have hrhs_eq : (∑ Z ∈ S, - Real.log (Pm s ℓ Z))
       = ∑ w ∈ grp, - Real.log (Pm (st w) w.length (toFinVec w.length w)) := by
     rw [hSdef, Finset.sum_image hinj]
-    refine Finset.sum_congr rfl (fun w hw => ?_)
+    refine Finset.sum_congr rfl (fun w hw ↦ ?_)
     rw [hgrp_len w hw, hgrp_st w hw]
   rw [hrhs_eq] at hlogsum
-  change ((phrases.filter (fun w => keyf w = (s, ℓ))).card : ℝ)
-        * Real.log ((phrases.filter (fun w => keyf w = (s, ℓ))).card : ℝ)
-      ≤ ∑ w ∈ phrases.filter (fun w => keyf w = (s, ℓ)),
+  change ((phrases.filter (fun w ↦ keyf w = (s, ℓ))).card : ℝ)
+        * Real.log ((phrases.filter (fun w ↦ keyf w = (s, ℓ))).card : ℝ)
+      ≤ ∑ w ∈ phrases.filter (fun w ↦ keyf w = (s, ℓ)),
           - Real.log (Pm (st w) w.length (toFinVec w.length w))
   rw [← hgrp]
   exact hlogsum
@@ -228,14 +228,14 @@ theorem condState_grouping_bound
       ≤ (∑ w ∈ phrases,
             - Real.log (condQkState μ p k (st w) w.length (toFinVec w.length w)).toReal)
         + (phrases.card : ℝ)
-            * Real.log (((phrases.image (fun w => (st w, w.length))).card : ℝ)) := by
+            * Real.log (((phrases.image (fun w ↦ (st w, w.length))).card : ℝ)) := by
   classical
   -- Outer grouping index: distinct `(k-state, length)` pairs.
-  set keyf : List α → (Fin k → α) × ℕ := fun w => (st w, w.length) with hkeyf
+  set keyf : List α → (Fin k → α) × ℕ := fun w ↦ (st w, w.length) with hkeyf
   set G : Finset ((Fin k → α) × ℕ) := phrases.image keyf with hGdef
   -- Per-fiber count.
   set kk : ((Fin k → α) × ℕ) → ℕ :=
-    fun g => (phrases.filter (fun w => keyf w = g)).card with hkk
+    fun g ↦ (phrases.filter (fun w ↦ keyf w = g)).card with hkk
   -- The fibers partition `phrases`: `∑ g ∈ G, kk g = #phrases`.
   have hfiber_card : phrases.card = ∑ g ∈ G, kk g := by
     rw [hGdef, hkk]
@@ -248,22 +248,22 @@ theorem condState_grouping_bound
     rw [hGdef]; exact hpne.image keyf
   -- Per-state conditional masses (real-valued), indexed by the `k`-state.
   set Pm : (Fin k → α) → (ℓ : ℕ) → (Fin ℓ → α) → ℝ :=
-    fun s ℓ Z => (condQkState μ p k s ℓ Z).toReal with hPm
+    fun s ℓ Z ↦ (condQkState μ p k s ℓ Z).toReal with hPm
   -- Per-fiber log-sum bound, summed over `G`:
   -- `∑_g (kk g)·log(kk g) ≤ ∑_g ∑_{w in fiber g} -log P(st w)|w|(toFinVec |w| w)`.
   have hgroup :
       (∑ g ∈ G, (kk g : ℝ) * Real.log (kk g : ℝ))
-      ≤ ∑ g ∈ G, ∑ w ∈ phrases.filter (fun w => keyf w = g),
+      ≤ ∑ g ∈ G, ∑ w ∈ phrases.filter (fun w ↦ keyf w = g),
             - Real.log (Pm (st w) w.length (toFinVec w.length w)) := by
     rw [hGdef, hkeyf, hkk, hPm]
     exact condState_grouping_perFiber_logsum μ p k phrases st hpos
   -- Reassemble the fibers into a single sum over all phrases.
   have hfiber_sum :
-      (∑ g ∈ G, ∑ w ∈ phrases.filter (fun w => keyf w = g),
+      (∑ g ∈ G, ∑ w ∈ phrases.filter (fun w ↦ keyf w = g),
           - Real.log (Pm (st w) w.length (toFinVec w.length w)))
       = ∑ w ∈ phrases, - Real.log (Pm (st w) w.length (toFinVec w.length w)) := by
     rw [hGdef]
-    exact Finset.sum_fiberwise_of_maps_to (fun w hw =>
+    exact Finset.sum_fiberwise_of_maps_to (fun w hw ↦
       Finset.mem_image_of_mem keyf hw) _
   -- Outer grouping inequality.
   have hmain := card_mul_log_le_sum_group_mul_log_add_card_log G kk hGne
@@ -272,7 +272,7 @@ theorem condState_grouping_bound
   calc (phrases.card : ℝ) * Real.log (phrases.card : ℝ)
       ≤ (∑ g ∈ G, (kk g : ℝ) * Real.log (kk g : ℝ))
           + (phrases.card : ℝ) * Real.log (G.card : ℝ) := hmain
-    _ ≤ (∑ g ∈ G, ∑ w ∈ phrases.filter (fun w => keyf w = g),
+    _ ≤ (∑ g ∈ G, ∑ w ∈ phrases.filter (fun w ↦ keyf w = g),
               - Real.log (Pm (st w) w.length (toFinVec w.length w)))
           + (phrases.card : ℝ) * Real.log (G.card : ℝ) := by gcongr
     _ = (∑ w ∈ phrases,
@@ -301,67 +301,67 @@ theorem state_marginalization_bound
     {σ : Type*} [DecidableEq σ]
     (G : Finset (σ × ℕ)) (kk : (σ × ℕ) → ℕ) (nStates : ℕ)
     (hfiber_le : ∀ ℓ ∈ G.image Prod.snd,
-      (G.filter (fun g => g.2 = ℓ)).card ≤ nStates) :
+      (G.filter (fun g ↦ g.2 = ℓ)).card ≤ nStates) :
     (∑ ℓ ∈ G.image Prod.snd,
-        ((∑ g ∈ G.filter (fun g => g.2 = ℓ), kk g : ℕ) : ℝ)
-          * Real.log ((∑ g ∈ G.filter (fun g => g.2 = ℓ), kk g : ℕ) : ℝ))
+        ((∑ g ∈ G.filter (fun g ↦ g.2 = ℓ), kk g : ℕ) : ℝ)
+          * Real.log ((∑ g ∈ G.filter (fun g ↦ g.2 = ℓ), kk g : ℕ) : ℝ))
       ≤ (∑ g ∈ G, (kk g : ℝ) * Real.log (kk g : ℝ))
         + ((∑ g ∈ G, kk g : ℕ) : ℝ) * Real.log (nStates : ℝ) := by
   classical
   set L : Finset ℕ := G.image Prod.snd with hL
-  set cf : ℕ → ℝ := fun ℓ => ((∑ g ∈ G.filter (fun g => g.2 = ℓ), kk g : ℕ) : ℝ)
+  set cf : ℕ → ℝ := fun ℓ ↦ ((∑ g ∈ G.filter (fun g ↦ g.2 = ℓ), kk g : ℕ) : ℝ)
     with hcf
   -- Per-length-fiber grouping bound + state-count correction.
   have hper : ∀ ℓ ∈ L,
       cf ℓ * Real.log (cf ℓ)
-        ≤ (∑ g ∈ G.filter (fun g => g.2 = ℓ), (kk g : ℝ) * Real.log (kk g : ℝ))
+        ≤ (∑ g ∈ G.filter (fun g ↦ g.2 = ℓ), (kk g : ℝ) * Real.log (kk g : ℝ))
           + cf ℓ * Real.log (nStates : ℝ) := by
     intro ℓ hℓ
     -- The fiber is nonempty (since `ℓ` is in the image).
-    have hfne : (G.filter (fun g => g.2 = ℓ)).Nonempty := by
+    have hfne : (G.filter (fun g ↦ g.2 = ℓ)).Nonempty := by
       rw [hL, Finset.mem_image] at hℓ
       obtain ⟨g, hg, hgℓ⟩ := hℓ
       exact ⟨g, Finset.mem_filter.mpr ⟨hg, hgℓ⟩⟩
     -- Abstract grouping inequality inside the fiber: the correction multiplier
     -- is `cf ℓ = ∑ kk`, not the fiber cardinality.
     have hgroup := card_mul_log_le_sum_group_mul_log_add_card_log
-      (G.filter (fun g => g.2 = ℓ)) kk hfne
+      (G.filter (fun g ↦ g.2 = ℓ)) kk hfne
     -- `cf ℓ · log (card fiber) ≤ cf ℓ · log nStates` since `cf ℓ ≥ 0` and
     -- `card fiber ≤ nStates`.
-    have hflpos : (0 : ℝ) < ((G.filter (fun g => g.2 = ℓ)).card : ℝ) := by
+    have hflpos : (0 : ℝ) < ((G.filter (fun g ↦ g.2 = ℓ)).card : ℝ) := by
       exact_mod_cast Finset.card_pos.mpr hfne
-    have hlogle : Real.log ((G.filter (fun g => g.2 = ℓ)).card : ℝ)
+    have hlogle : Real.log ((G.filter (fun g ↦ g.2 = ℓ)).card : ℝ)
         ≤ Real.log (nStates : ℝ) := by
       apply Real.log_le_log hflpos
       exact_mod_cast hfiber_le ℓ hℓ
     have hcfnn : (0 : ℝ) ≤ cf ℓ := by rw [hcf]; positivity
-    have hcorr : cf ℓ * Real.log ((G.filter (fun g => g.2 = ℓ)).card : ℝ)
+    have hcorr : cf ℓ * Real.log ((G.filter (fun g ↦ g.2 = ℓ)).card : ℝ)
         ≤ cf ℓ * Real.log (nStates : ℝ) :=
       mul_le_mul_of_nonneg_left hlogle hcfnn
     -- Combine `hgroup` (with `∑ kk = cf ℓ`) and `hcorr`.
     calc cf ℓ * Real.log (cf ℓ)
-        ≤ (∑ g ∈ G.filter (fun g => g.2 = ℓ), (kk g : ℝ) * Real.log (kk g : ℝ))
-            + cf ℓ * Real.log ((G.filter (fun g => g.2 = ℓ)).card : ℝ) := hgroup
-      _ ≤ (∑ g ∈ G.filter (fun g => g.2 = ℓ), (kk g : ℝ) * Real.log (kk g : ℝ))
+        ≤ (∑ g ∈ G.filter (fun g ↦ g.2 = ℓ), (kk g : ℝ) * Real.log (kk g : ℝ))
+            + cf ℓ * Real.log ((G.filter (fun g ↦ g.2 = ℓ)).card : ℝ) := hgroup
+      _ ≤ (∑ g ∈ G.filter (fun g ↦ g.2 = ℓ), (kk g : ℝ) * Real.log (kk g : ℝ))
             + cf ℓ * Real.log (nStates : ℝ) := by gcongr
   -- Sum the per-fiber bound over all lengths.
   have hsum := Finset.sum_le_sum hper
   -- Identify the two RHS aggregate sums via fiberwise reindexing.
-  have hmaps : ∀ g ∈ G, g.2 ∈ L := fun g hg => by
+  have hmaps : ∀ g ∈ G, g.2 ∈ L := fun g hg ↦ by
     rw [hL]; exact Finset.mem_image_of_mem Prod.snd hg
-  have hfib1 : (∑ ℓ ∈ L, ∑ g ∈ G.filter (fun g => g.2 = ℓ),
+  have hfib1 : (∑ ℓ ∈ L, ∑ g ∈ G.filter (fun g ↦ g.2 = ℓ),
         (kk g : ℝ) * Real.log (kk g : ℝ))
       = ∑ g ∈ G, (kk g : ℝ) * Real.log (kk g : ℝ) :=
     Finset.sum_fiberwise_of_maps_to hmaps _
   have hfib2 : (∑ ℓ ∈ L, cf ℓ) = ((∑ g ∈ G, kk g : ℕ) : ℝ) := by
     rw [hcf]
     push_cast
-    exact Finset.sum_fiberwise_of_maps_to hmaps (fun g => (kk g : ℝ))
+    exact Finset.sum_fiberwise_of_maps_to hmaps (fun g ↦ (kk g : ℝ))
   calc (∑ ℓ ∈ L, cf ℓ * Real.log (cf ℓ))
-      ≤ ∑ ℓ ∈ L, ((∑ g ∈ G.filter (fun g => g.2 = ℓ),
+      ≤ ∑ ℓ ∈ L, ((∑ g ∈ G.filter (fun g ↦ g.2 = ℓ),
             (kk g : ℝ) * Real.log (kk g : ℝ)) + cf ℓ * Real.log (nStates : ℝ)) :=
         hsum
-    _ = (∑ ℓ ∈ L, ∑ g ∈ G.filter (fun g => g.2 = ℓ),
+    _ = (∑ ℓ ∈ L, ∑ g ∈ G.filter (fun g ↦ g.2 = ℓ),
             (kk g : ℝ) * Real.log (kk g : ℝ))
           + (∑ ℓ ∈ L, cf ℓ * Real.log (nStates : ℝ)) := Finset.sum_add_distrib
     _ = (∑ g ∈ G, (kk g : ℝ) * Real.log (kk g : ℝ))
@@ -410,15 +410,15 @@ theorem condState_grouping_bound_mean
   set c : ℝ := (phrases.card : ℝ) with hc
   set N : ℝ := (∑ w ∈ phrases, (w.length : ℝ)) with hN
   set L : Finset ℕ := phrases.image List.length with hL
-  set cℓ : ℕ → ℝ := fun ℓ => ((phrases.filter (fun w => w.length = ℓ)).card : ℝ)
+  set cℓ : ℕ → ℝ := fun ℓ ↦ ((phrases.filter (fun w ↦ w.length = ℓ)).card : ℝ)
     with hcℓ
   -- The grouping vehicle, identical to `condState_grouping_bound`.
-  set keyf : List α → (Fin k → α) × ℕ := fun w => (st w, w.length) with hkeyf
+  set keyf : List α → (Fin k → α) × ℕ := fun w ↦ (st w, w.length) with hkeyf
   set G : Finset ((Fin k → α) × ℕ) := phrases.image keyf with hGdef
   set kk : ((Fin k → α) × ℕ) → ℕ :=
-    fun g => (phrases.filter (fun w => keyf w = g)).card with hkk
+    fun g ↦ (phrases.filter (fun w ↦ keyf w = g)).card with hkk
   set Pm : (Fin k → α) → (ℓ : ℕ) → (Fin ℓ → α) → ℝ :=
-    fun s ℓ Z => (condQkState μ p k s ℓ Z).toReal with hPm
+    fun s ℓ Z ↦ (condQkState μ p k s ℓ Z).toReal with hPm
   -- `c > 0` from nonemptiness.
   have hc_pos : 0 < c := by rw [hc]; exact_mod_cast Finset.card_pos.mpr hne
   -- (Step A) Empirical-entropy/mean bound on the length profile:
@@ -433,12 +433,12 @@ theorem condState_grouping_bound_mean
     rw [hN, hL]
     -- `∑_ℓ ℓ·#(phrases of length ℓ) = ∑_w |w|` by fiberwise reindexing.
     have hmaps : ∀ w ∈ phrases, w.length ∈ phrases.image List.length :=
-      fun w hw => Finset.mem_image_of_mem List.length hw
-    rw [← Finset.sum_fiberwise_of_maps_to hmaps (fun w => (w.length : ℝ))]
-    refine Finset.sum_congr rfl (fun ℓ hℓ => ?_)
+      fun w hw ↦ Finset.mem_image_of_mem List.length hw
+    rw [← Finset.sum_fiberwise_of_maps_to hmaps (fun w ↦ (w.length : ℝ))]
+    refine Finset.sum_congr rfl (fun ℓ hℓ ↦ ?_)
     -- Inside the fiber `{w | |w| = ℓ}`, each summand is `ℓ`, and there are `cℓ ℓ`.
     rw [hcℓ]
-    rw [Finset.sum_congr rfl (fun w hw => by
+    rw [Finset.sum_congr rfl (fun w hw ↦ by
       rw [(Finset.mem_filter.mp hw).2]), Finset.sum_const, nsmul_eq_mul]
     push_cast
     ring
@@ -447,7 +447,7 @@ theorem condState_grouping_bound_mean
     simp only [hcℓ]
     rw [hL, Finset.mem_image] at hℓ
     obtain ⟨w, hw, hwℓ⟩ := hℓ
-    have hnec : (phrases.filter (fun w => w.length = ℓ)).Nonempty :=
+    have hnec : (phrases.filter (fun w ↦ w.length = ℓ)).Nonempty :=
       ⟨w, Finset.mem_filter.mpr ⟨hw, hwℓ⟩⟩
     exact_mod_cast Finset.card_pos.mpr hnec
   have hl1_L : ∀ ℓ ∈ L, 1 ≤ ℓ := by
@@ -465,7 +465,7 @@ theorem condState_grouping_bound_mean
     have hCsum : c * Real.log c = ∑ ℓ ∈ L, cℓ ℓ * Real.log c := by
       rw [← Finset.sum_mul, hsumC]
     rw [hCsum, ← Finset.sum_sub_distrib]
-    refine Finset.sum_congr rfl (fun ℓ hℓ => ?_)
+    refine Finset.sum_congr rfl (fun ℓ hℓ ↦ ?_)
     rw [Real.log_div hc_pos.ne' (hpos_cℓ ℓ hℓ).ne']
     ring
   rw [hLHS] at hemp
@@ -480,11 +480,11 @@ theorem condState_grouping_bound_mean
     rfl
   -- (M2) Per-length: the pair counts marginalize to the length count (as nats).
   have hM2 : ∀ ℓ ∈ L,
-      (∑ g ∈ G.filter (fun g => g.2 = ℓ), kk g)
-        = (phrases.filter (fun w => w.length = ℓ)).card := by
+      (∑ g ∈ G.filter (fun g ↦ g.2 = ℓ), kk g)
+        = (phrases.filter (fun w ↦ w.length = ℓ)).card := by
     intro ℓ _
     rw [hkk, hGdef]
-    exact condState_grouping_lengthProfile_counts phrases keyf (fun _ => rfl) ℓ
+    exact condState_grouping_lengthProfile_counts phrases keyf (fun _ ↦ rfl) ℓ
   -- (M3) The pair counts sum to `c` (cast to ℝ).
   have hM3 : ((∑ g ∈ G, kk g : ℕ) : ℝ) = c := by
     rw [hc]
@@ -493,13 +493,13 @@ theorem condState_grouping_bound_mean
     exact (Finset.card_eq_sum_card_image keyf phrases).symm
   -- (M4) The fiber-cardinality bound: ≤ `(card α)^k = #(Fin k → α)`.
   have hM4 : ∀ ℓ ∈ G.image Prod.snd,
-      (G.filter (fun g => g.2 = ℓ)).card ≤ (Fintype.card α) ^ k := by
+      (G.filter (fun g ↦ g.2 = ℓ)).card ≤ (Fintype.card α) ^ k := by
     intro ℓ _
     have hcard_fun : (Fintype.card α) ^ k = Fintype.card (Fin k → α) := by
       rw [Fintype.card_fun, Fintype.card_fin]
     rw [hcard_fun]
     -- `Prod.fst` is injective on the fiber (the second coordinate is fixed).
-    refine Finset.card_le_card_of_injOn Prod.fst (fun g _ => Finset.mem_univ _) ?_
+    refine Finset.card_le_card_of_injOn Prod.fst (fun g _ ↦ Finset.mem_univ _) ?_
     intro g hg g' hg' heq
     rw [Finset.mem_coe, Finset.mem_filter] at hg hg'
     exact Prod.ext heq (hg.2.trans hg'.2.symm)
@@ -508,10 +508,10 @@ theorem condState_grouping_bound_mean
   rw [hM1] at hsm
   -- Rewrite the LHS sum of `hsm` to `∑_ℓ cℓ·log cℓ` via (M2).
   have hLHSeq : (∑ ℓ ∈ L,
-        ((∑ g ∈ G.filter (fun g => g.2 = ℓ), kk g : ℕ) : ℝ)
-          * Real.log ((∑ g ∈ G.filter (fun g => g.2 = ℓ), kk g : ℕ) : ℝ))
+        ((∑ g ∈ G.filter (fun g ↦ g.2 = ℓ), kk g : ℕ) : ℝ)
+          * Real.log ((∑ g ∈ G.filter (fun g ↦ g.2 = ℓ), kk g : ℕ) : ℝ))
       = ∑ ℓ ∈ L, cℓ ℓ * Real.log (cℓ ℓ) := by
-    refine Finset.sum_congr rfl (fun ℓ hℓ => ?_)
+    refine Finset.sum_congr rfl (fun ℓ hℓ ↦ ?_)
     rw [hM2 ℓ hℓ, hcℓ]
   rw [hLHSeq, hM3] at hsm
   have hstate : (∑ ℓ ∈ L, cℓ ℓ * Real.log (cℓ ℓ))
@@ -521,16 +521,16 @@ theorem condState_grouping_bound_mean
   --   `∑_g kk·log kk ≤ ∑_w -log P_w`.
   have hgroup :
       (∑ g ∈ G, (kk g : ℝ) * Real.log (kk g : ℝ))
-      ≤ ∑ g ∈ G, ∑ w ∈ phrases.filter (fun w => keyf w = g),
+      ≤ ∑ g ∈ G, ∑ w ∈ phrases.filter (fun w ↦ keyf w = g),
             - Real.log (Pm (st w) w.length (toFinVec w.length w)) := by
     rw [hGdef, hkeyf, hkk, hPm]
     exact condState_grouping_perFiber_logsum μ p k phrases st hpos
   have hfiber_sum :
-      (∑ g ∈ G, ∑ w ∈ phrases.filter (fun w => keyf w = g),
+      (∑ g ∈ G, ∑ w ∈ phrases.filter (fun w ↦ keyf w = g),
           - Real.log (Pm (st w) w.length (toFinVec w.length w)))
       = ∑ w ∈ phrases, - Real.log (Pm (st w) w.length (toFinVec w.length w)) := by
     rw [hGdef]
-    exact Finset.sum_fiberwise_of_maps_to (fun w hw =>
+    exact Finset.sum_fiberwise_of_maps_to (fun w hw ↦
       Finset.mem_image_of_mem keyf hw) _
   have hfiber : (∑ g ∈ G, (kk g : ℝ) * Real.log (kk g : ℝ))
       ≤ ∑ w ∈ phrases, - Real.log (Pm (st w) w.length (toFinVec w.length w)) := by

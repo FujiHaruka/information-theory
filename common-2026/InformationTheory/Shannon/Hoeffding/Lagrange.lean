@@ -90,34 +90,34 @@ continuous `rpow` numerator divided by the strictly-positive continuous `Z`). -/
 lemma chernoffMediator_continuous_lam
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (a : α) :
-    Continuous (fun lam : ℝ => chernoffMediator P₁ P₂ lam a) := by
+    Continuous (fun lam : ℝ ↦ chernoffMediator P₁ P₂ lam a) := by
   unfold chernoffMediator
   -- (P₁ a) ^ (1 - lam) * (P₂ a) ^ lam / Z(lam), Z > 0 continuous.
-  have h_num1 : Continuous (fun lam : ℝ => (P₁ a) ^ (1 - lam)) := by
-    have h_base : Continuous (fun lam : ℝ => (1 - lam)) := continuous_const.sub continuous_id
+  have h_num1 : Continuous (fun lam : ℝ ↦ (P₁ a) ^ (1 - lam)) := by
+    have h_base : Continuous (fun lam : ℝ ↦ (1 - lam)) := continuous_const.sub continuous_id
     exact (Real.continuous_const_rpow (hP₁_pos a).ne').comp h_base
-  have h_num2 : Continuous (fun lam : ℝ => (P₂ a) ^ lam) :=
+  have h_num2 : Continuous (fun lam : ℝ ↦ (P₂ a) ^ lam) :=
     Real.continuous_const_rpow (hP₂_pos a).ne'
-  have h_num : Continuous (fun lam : ℝ => (P₁ a) ^ (1 - lam) * (P₂ a) ^ lam) :=
+  have h_num : Continuous (fun lam : ℝ ↦ (P₁ a) ^ (1 - lam) * (P₂ a) ^ lam) :=
     h_num1.mul h_num2
-  have h_Z : Continuous (fun lam : ℝ => chernoffZSum P₁ P₂ lam) :=
+  have h_Z : Continuous (fun lam : ℝ ↦ chernoffZSum P₁ P₂ lam) :=
     chernoffZSum_continuous P₁ P₂ hP₁_pos hP₂_pos
-  exact h_num.div h_Z (fun lam => (chernoffZSum_pos P₁ P₂ hP₁_pos hP₂_pos lam).ne')
+  exact h_num.div h_Z (fun lam ↦ (chernoffZSum_pos P₁ P₂ hP₁_pos hP₂_pos lam).ne')
 
 /-- The constraint functional `g(λ) := klDivPmf (hoeffdingTilt P₁ P₂ λ) P₁` is
 continuous in `λ` on all of `ℝ`. -/
 lemma hoeffdingTilt_continuous_kl_P₁
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
-    Continuous (fun lam : ℝ => klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁) := by
+    Continuous (fun lam : ℝ ↦ klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁) := by
   -- klDivPmf T_λ P₁ = ∑ a, P₁ a * klFun (T_λ a / P₁ a); each term continuous in λ.
   unfold klDivPmf
-  refine continuous_finsetSum _ fun a _ => ?_
+  refine continuous_finsetSum _ fun a _ ↦ ?_
   have hP₁ne : P₁ a ≠ 0 := (hP₁_pos a).ne'
-  have h_med : Continuous (fun lam : ℝ => hoeffdingTilt P₁ P₂ lam a) :=
+  have h_med : Continuous (fun lam : ℝ ↦ hoeffdingTilt P₁ P₂ lam a) :=
     chernoffMediator_continuous_lam P₁ P₂ hP₁_pos hP₂_pos a
-  have h_div : Continuous (fun lam : ℝ => hoeffdingTilt P₁ P₂ lam a / P₁ a) :=
+  have h_div : Continuous (fun lam : ℝ ↦ hoeffdingTilt P₁ P₂ lam a / P₁ a) :=
     h_med.div_const (P₁ a)
-  have h_kl : Continuous (fun lam : ℝ => klFun (hoeffdingTilt P₁ P₂ lam a / P₁ a)) :=
+  have h_kl : Continuous (fun lam : ℝ ↦ klFun (hoeffdingTilt P₁ P₂ lam a / P₁ a)) :=
     continuous_klFun.comp h_div
   exact h_kl.const_mul (P₁ a)
 
@@ -161,7 +161,7 @@ theorem exists_lam_hoeffdingTilt_kl_eq
     (h_alpha_le : alpha ≤ klDivPmf P₂ P₁) :
     ∃ lam ∈ Set.Icc (0 : ℝ) 1,
       klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁ = alpha := by
-  set g : ℝ → ℝ := fun lam => klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁ with hg_def
+  set g : ℝ → ℝ := fun lam ↦ klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁ with hg_def
   have hg_cont : Continuous g := hoeffdingTilt_continuous_kl_P₁ P₁ P₂ hP₁_pos hP₂_pos
   have hg0 : g 0 = 0 := hoeffdingTilt_kl_P₁_lam_zero P₁ P₂ hP₁_pos hP₂_pos hP₁_sum
   have hg1 : g 1 = klDivPmf P₂ P₁ :=
@@ -195,7 +195,7 @@ minimises `klDivPmf · P₂` over the constraint set `K(α)`. This carries genui
 content (an `IsMinOn` over all of `K`), distinct from the `sInf`-form
 `hoeffdingE2 = klDivPmf tilt P₂` of `IsHoeffdingLagrangeHyp.realises`. -/
 def IsHoeffdingTiltMinimal (P₁ P₂ : α → ℝ) (alpha lam : ℝ) : Prop :=
-  IsMinOn (fun Q : α → ℝ => klDivPmf Q P₂)
+  IsMinOn (fun Q : α → ℝ ↦ klDivPmf Q P₂)
     (hoeffdingConstraintSet P₁ alpha) (hoeffdingTilt P₁ P₂ lam)
 
 /-- **Bridge (minimal ⇒ realises)**: when the tilt at `lam` lies in `K(α)` and
@@ -211,11 +211,11 @@ theorem isHoeffdingTiltMinimal_realises
   set S : Set (α → ℝ) := {Q : α → ℝ | Q ∈ stdSimplex ℝ α ∧ klDivPmf Q P₁ ≤ alpha} with hS_def
   -- The constraint set is exactly S (defeq).
   have h_mem_S : hoeffdingTilt P₁ P₂ lam ∈ S := h_mem
-  set img : Set ℝ := (fun Q : α → ℝ => klDivPmf Q P₂) '' S with himg_def
+  set img : Set ℝ := (fun Q : α → ℝ ↦ klDivPmf Q P₂) '' S with himg_def
   have h_bdd : BddBelow img := by
     refine ⟨0, ?_⟩
     rintro y ⟨Q', hQ', rfl⟩
-    exact klDivPmf_nonneg Q' P₂ hQ'.1.1 (fun a => (hP₂_pos a).le)
+    exact klDivPmf_nonneg Q' P₂ hQ'.1.1 (fun a ↦ (hP₂_pos a).le)
   have h_tilt_img : klDivPmf (hoeffdingTilt P₁ P₂ lam) P₂ ∈ img :=
     ⟨hoeffdingTilt P₁ P₂ lam, h_mem_S, rfl⟩
   -- Lower-bound direction: hoeffdingE2 = sInf img ≤ klDivPmf tilt P₂.

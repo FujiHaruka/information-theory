@@ -35,12 +35,12 @@ the entropy power inequality holds.
 @audit:ok -/
 theorem epi_of_csiszarLogRatioGap_tendsto
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω)
-    (h_anti : AntitoneOn (fun t => csiszarLogRatioGap X Y Z_X Z_Y P t) (Set.Ici (0 : ℝ)))
-    (h_lim : Filter.Tendsto (fun t => csiszarLogRatioGap X Y Z_X Z_Y P t)
+    (h_anti : AntitoneOn (fun t ↦ csiszarLogRatioGap X Y Z_X Z_Y P t) (Set.Ici (0 : ℝ)))
+    (h_lim : Filter.Tendsto (fun t ↦ csiszarLogRatioGap X Y Z_X Z_Y P t)
         Filter.atTop (nhds (0 : ℝ))) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
+    entropyPower (P.map (fun ω ↦ X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
-  set R := fun t => csiszarLogRatioGap X Y Z_X Z_Y P t with hR
+  set R := fun t ↦ csiszarLogRatioGap X Y Z_X Z_Y P t with hR
   -- `R 0 ≥ R t` for every `t ≥ 0` by antitonicity (`0 ≤ t`).
   have h_tail : ∀ᶠ t in Filter.atTop, R t ≤ R 0 := by
     filter_upwards [Filter.eventually_ge_atTop (0 : ℝ)] with t ht
@@ -67,28 +67,28 @@ theorem entropyPower_path_scaling
     (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hA : Measurable A) (hB : Measurable B)
     {t : ℝ} (ht : 0 < t)
-    (h_ac : (P.map (fun ω => A ω / Real.sqrt t + B ω)) ≪ volume)
-    (h_ent_int : Integrable (fun x => Real.negMulLog
-        (((P.map (fun ω => A ω / Real.sqrt t + B ω)).rnDeriv volume x).toReal)) volume) :
-    entropyPower (P.map (fun ω => A ω + Real.sqrt t * B ω))
-      = t * entropyPower (P.map (fun ω => A ω / Real.sqrt t + B ω)) := by
+    (h_ac : (P.map (fun ω ↦ A ω / Real.sqrt t + B ω)) ≪ volume)
+    (h_ent_int : Integrable (fun x ↦ Real.negMulLog
+        (((P.map (fun ω ↦ A ω / Real.sqrt t + B ω)).rnDeriv volume x).toReal)) volume) :
+    entropyPower (P.map (fun ω ↦ A ω + Real.sqrt t * B ω))
+      = t * entropyPower (P.map (fun ω ↦ A ω / Real.sqrt t + B ω)) := by
   have h_sqrt_pos : (0 : ℝ) < Real.sqrt t := Real.sqrt_pos.mpr ht
   have h_sqrt_ne : Real.sqrt t ≠ 0 := ne_of_gt h_sqrt_pos
-  set W : Ω → ℝ := fun ω => A ω / Real.sqrt t + B ω with hW
+  set W : Ω → ℝ := fun ω ↦ A ω / Real.sqrt t + B ω with hW
   have hW_meas : Measurable W := (hA.div_const _).add hB
-  have hmul_meas : Measurable (fun x : ℝ => x * Real.sqrt t) :=
+  have hmul_meas : Measurable (fun x : ℝ ↦ x * Real.sqrt t) :=
     measurable_id.mul_const _
   haveI : IsProbabilityMeasure (P.map W) :=
     Measure.isProbabilityMeasure_map hW_meas.aemeasurable
   -- `A + √t·B = (A/√t + B) * √t = (· * √t) ∘ W` pointwise.
-  have h_path_eq : (fun ω => A ω + Real.sqrt t * B ω)
-      = (fun x => x * Real.sqrt t) ∘ W := by
+  have h_path_eq : (fun ω ↦ A ω + Real.sqrt t * B ω)
+      = (fun x ↦ x * Real.sqrt t) ∘ W := by
     funext ω
     simp only [hW, Function.comp_apply]
     field_simp
   -- Push forward through `map_map`: `P.map ((·*√t) ∘ W) = (P.map W).map (·*√t)`.
-  have h_map_eq : P.map (fun ω => A ω + Real.sqrt t * B ω)
-      = (P.map W).map (fun x => x * Real.sqrt t) := by
+  have h_map_eq : P.map (fun ω ↦ A ω + Real.sqrt t * B ω)
+      = (P.map W).map (fun x ↦ x * Real.sqrt t) := by
     rw [h_path_eq, Measure.map_map hmul_meas hW_meas]
   rw [h_map_eq]
   -- `entropyPower ((P.map W).map (·*√t)) = (√t)² · entropyPower (P.map W) = t · …`.
@@ -123,61 +123,61 @@ non-a.c. paths; conclusion nontrivial via the separate `hB_law`/`hv_B`). -/
 def IsRescaledPathRegular (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (varA : ℝ) (v_B : ℝ≥0) : Prop :=
   (∀ t : ℝ, 0 < t →
-      IndepFun B (fun ω => A ω / Real.sqrt t) P
-      ∧ (P.map (fun ω => B ω + A ω / Real.sqrt t)) ≪ volume
-      ∧ ((P.map (fun ω => A ω / Real.sqrt t))
-          ⊗ₘ condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-              (fun ω => A ω / Real.sqrt t) P
-          ≪ (P.map (fun ω => A ω / Real.sqrt t))
-              ⊗ₘ Kernel.const ℝ (P.map (fun ω => B ω + A ω / Real.sqrt t)))
+      IndepFun B (fun ω ↦ A ω / Real.sqrt t) P
+      ∧ (P.map (fun ω ↦ B ω + A ω / Real.sqrt t)) ≪ volume
+      ∧ ((P.map (fun ω ↦ A ω / Real.sqrt t))
+          ⊗ₘ condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+              (fun ω ↦ A ω / Real.sqrt t) P
+          ≪ (P.map (fun ω ↦ A ω / Real.sqrt t))
+              ⊗ₘ Kernel.const ℝ (P.map (fun ω ↦ B ω + A ω / Real.sqrt t)))
       ∧ Integrable
-          (llr ((P.map (fun ω => A ω / Real.sqrt t))
-                  ⊗ₘ condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-                      (fun ω => A ω / Real.sqrt t) P)
-                ((P.map (fun ω => A ω / Real.sqrt t))
-                  ⊗ₘ Kernel.const ℝ (P.map (fun ω => B ω + A ω / Real.sqrt t))))
-          ((P.map (fun ω => A ω / Real.sqrt t))
-            ⊗ₘ condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-                (fun ω => A ω / Real.sqrt t) P)
-      ∧ (∀ᵐ z ∂(P.map (fun ω => A ω / Real.sqrt t)),
-          condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-              (fun ω => A ω / Real.sqrt t) P z ≪ volume)
-      ∧ (∀ᵐ z ∂(P.map (fun ω => A ω / Real.sqrt t)), Integrable
-          (fun x => ((condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-                (fun ω => A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
-            * Real.log (((condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-                (fun ω => A ω / Real.sqrt t) P z).rnDeriv volume x).toReal)) volume)
-      ∧ (∀ᵐ z ∂(P.map (fun ω => A ω / Real.sqrt t)), Integrable
-          (fun x => ((condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-                (fun ω => A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
-            * Real.log (((P.map (fun ω => B ω + A ω / Real.sqrt t)).rnDeriv
+          (llr ((P.map (fun ω ↦ A ω / Real.sqrt t))
+                  ⊗ₘ condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+                      (fun ω ↦ A ω / Real.sqrt t) P)
+                ((P.map (fun ω ↦ A ω / Real.sqrt t))
+                  ⊗ₘ Kernel.const ℝ (P.map (fun ω ↦ B ω + A ω / Real.sqrt t))))
+          ((P.map (fun ω ↦ A ω / Real.sqrt t))
+            ⊗ₘ condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+                (fun ω ↦ A ω / Real.sqrt t) P)
+      ∧ (∀ᵐ z ∂(P.map (fun ω ↦ A ω / Real.sqrt t)),
+          condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+              (fun ω ↦ A ω / Real.sqrt t) P z ≪ volume)
+      ∧ (∀ᵐ z ∂(P.map (fun ω ↦ A ω / Real.sqrt t)), Integrable
+          (fun x ↦ ((condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+                (fun ω ↦ A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
+            * Real.log (((condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+                (fun ω ↦ A ω / Real.sqrt t) P z).rnDeriv volume x).toReal)) volume)
+      ∧ (∀ᵐ z ∂(P.map (fun ω ↦ A ω / Real.sqrt t)), Integrable
+          (fun x ↦ ((condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+                (fun ω ↦ A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
+            * Real.log (((P.map (fun ω ↦ B ω + A ω / Real.sqrt t)).rnDeriv
                 volume x).toReal)) volume)
       ∧ Integrable
-          (fun z => InformationTheory.Shannon.differentialEntropy
-            (condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-                (fun ω => A ω / Real.sqrt t) P z))
-          (P.map (fun ω => A ω / Real.sqrt t))
+          (fun z ↦ InformationTheory.Shannon.differentialEntropy
+            (condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+                (fun ω ↦ A ω / Real.sqrt t) P z))
+          (P.map (fun ω ↦ A ω / Real.sqrt t))
       ∧ Integrable
-          (fun z => ∫ x, ((condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-                (fun ω => A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
-            * Real.log (((P.map (fun ω => B ω + A ω / Real.sqrt t)).rnDeriv
+          (fun z ↦ ∫ x, ((condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+                (fun ω ↦ A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
+            * Real.log (((P.map (fun ω ↦ B ω + A ω / Real.sqrt t)).rnDeriv
                 volume x).toReal) ∂volume)
-          (P.map (fun ω => A ω / Real.sqrt t))
+          (P.map (fun ω ↦ A ω / Real.sqrt t))
       ∧ Integrable
-          (fun x => Real.log (((P.map (fun ω => B ω + A ω / Real.sqrt t)).rnDeriv
+          (fun x ↦ Real.log (((P.map (fun ω ↦ B ω + A ω / Real.sqrt t)).rnDeriv
                 volume x).toReal))
-          (P.map (fun ω => B ω + A ω / Real.sqrt t)))
+          (P.map (fun ω ↦ B ω + A ω / Real.sqrt t)))
   ∧ (∀ t : ℝ, 0 < t →
-      (P.map (fun ω => A ω / Real.sqrt t + B ω)) ≪ volume
-      ∧ (∫ x, (x - (∫ y, y ∂(P.map (fun ω => A ω / Real.sqrt t + B ω))))^2
-            ∂(P.map (fun ω => A ω / Real.sqrt t + B ω)))
+      (P.map (fun ω ↦ A ω / Real.sqrt t + B ω)) ≪ volume
+      ∧ (∫ x, (x - (∫ y, y ∂(P.map (fun ω ↦ A ω / Real.sqrt t + B ω))))^2
+            ∂(P.map (fun ω ↦ A ω / Real.sqrt t + B ω)))
           ≤ varA / t + (v_B : ℝ)
       ∧ Integrable
-          (fun x => (x - (∫ y, y ∂(P.map (fun ω => A ω / Real.sqrt t + B ω))))^2)
-          (P.map (fun ω => A ω / Real.sqrt t + B ω))
+          (fun x ↦ (x - (∫ y, y ∂(P.map (fun ω ↦ A ω / Real.sqrt t + B ω))))^2)
+          (P.map (fun ω ↦ A ω / Real.sqrt t + B ω))
       ∧ Integrable
-          (fun x => Real.negMulLog
-            (((P.map (fun ω => A ω / Real.sqrt t + B ω)).rnDeriv volume x).toReal))
+          (fun x ↦ Real.negMulLog
+            (((P.map (fun ω ↦ A ω / Real.sqrt t + B ω)).rnDeriv volume x).toReal))
           volume)
 
 /-- **Per-path entropy-power limit**: as `t → ∞`, the rescaled W-path entropy power
@@ -213,7 +213,7 @@ theorem entropyPower_rescaled_path_tendsto
     (hB_ac : (P.map B) ≪ volume)
     (h_reg : IsRescaledPathRegular A B P varA v_B) :
     Filter.Tendsto
-      (fun t => entropyPower (P.map (fun ω => A ω / Real.sqrt t + B ω)))
+      (fun t ↦ entropyPower (P.map (fun ω ↦ A ω / Real.sqrt t + B ω)))
       Filter.atTop (nhds (entropyPower (P.map B))) := by
   obtain ⟨h_lb, h_ub⟩ := h_reg
   -- `N(B) = 2πe·v_B` (Gaussian reference value).
@@ -231,30 +231,30 @@ theorem entropyPower_rescaled_path_tendsto
   -- ===== Lower envelope: `N(B) ≤ N(A/√t + B)` for `t > 0`. =====
   have h_lower : ∀ t : ℝ, 0 < t →
       entropyPower (P.map B)
-        ≤ entropyPower (P.map (fun ω => A ω / Real.sqrt t + B ω)) := by
+        ≤ entropyPower (P.map (fun ω ↦ A ω / Real.sqrt t + B ω)) := by
     intro t ht
     obtain ⟨h_indep, hW_ac, h_ac, h_int, hκ_v, hκ_logp, hκ_cross,
       h_fibreEnt, h_cross, h_logq⟩ := h_lb t ht
-    have hAt_meas : Measurable (fun ω => A ω / Real.sqrt t) := hA.div_const _
+    have hAt_meas : Measurable (fun ω ↦ A ω / Real.sqrt t) := hA.div_const _
     -- `h(B) ≤ h(B + A/√t)` from the genuine independent-noise monotonicity lemma.
     have h_de : InformationTheory.Shannon.differentialEntropy (P.map B)
         ≤ InformationTheory.Shannon.differentialEntropy
-            (P.map (fun ω => B ω + A ω / Real.sqrt t)) :=
-      differentialEntropy_add_ge_of_indep B (fun ω => A ω / Real.sqrt t) P hB hAt_meas
+            (P.map (fun ω ↦ B ω + A ω / Real.sqrt t)) :=
+      differentialEntropy_add_ge_of_indep B (fun ω ↦ A ω / Real.sqrt t) P hB hAt_meas
         h_indep hB_ac hW_ac h_ac h_int hκ_v hκ_logp hκ_cross h_fibreEnt h_cross h_logq
     -- `B + A/√t = A/√t + B` pointwise, so the laws agree.
-    have h_path : (fun ω => B ω + A ω / Real.sqrt t)
-        = (fun ω => A ω / Real.sqrt t + B ω) := by funext ω; ring
+    have h_path : (fun ω ↦ B ω + A ω / Real.sqrt t)
+        = (fun ω ↦ A ω / Real.sqrt t + B ω) := by funext ω; ring
     rw [h_path] at h_de
     exact entropyPower_le_of_differentialEntropy_le h_de
   -- ===== Upper envelope: `N(A/√t + B) ≤ 2πe·(varA/t + v_B)` for `t > 0`. =====
   have h_upper : ∀ t : ℝ, 0 < t →
-      entropyPower (P.map (fun ω => A ω / Real.sqrt t + B ω))
+      entropyPower (P.map (fun ω ↦ A ω / Real.sqrt t + B ω))
         ≤ 2 * Real.pi * Real.exp 1 * (varA / t + (v_B : ℝ)) := by
     intro t ht
     obtain ⟨hμ_ac, h_var, h_var_int, h_ent_int⟩ := h_ub t ht
-    set μ : Measure ℝ := P.map (fun ω => A ω / Real.sqrt t + B ω) with hμ_def
-    have hW_meas : Measurable (fun ω => A ω / Real.sqrt t + B ω) :=
+    set μ : Measure ℝ := P.map (fun ω ↦ A ω / Real.sqrt t + B ω) with hμ_def
+    have hW_meas : Measurable (fun ω ↦ A ω / Real.sqrt t + B ω) :=
       (hA.div_const _).add hB
     haveI : IsProbabilityMeasure μ :=
       Measure.isProbabilityMeasure_map hW_meas.aemeasurable
@@ -281,16 +281,16 @@ theorem entropyPower_rescaled_path_tendsto
     exact h_ep
   -- ===== Tendsto of the two envelopes to the common value `N(B) = 2πe·v_B`. =====
   -- Constant lower envelope.
-  have h_lim_low : Filter.Tendsto (fun _ : ℝ => entropyPower (P.map B))
+  have h_lim_low : Filter.Tendsto (fun _ : ℝ ↦ entropyPower (P.map B))
       Filter.atTop (nhds (entropyPower (P.map B))) := tendsto_const_nhds
   -- Decaying upper envelope `2πe·(varA/t + v_B) → 2πe·v_B = N(B)`.
   have h_lim_up : Filter.Tendsto
-      (fun t : ℝ => 2 * Real.pi * Real.exp 1 * (varA / t + (v_B : ℝ)))
+      (fun t : ℝ ↦ 2 * Real.pi * Real.exp 1 * (varA / t + (v_B : ℝ)))
       Filter.atTop (nhds (entropyPower (P.map B))) := by
     rw [hNB]
-    have h_div : Filter.Tendsto (fun t : ℝ => varA / t) Filter.atTop (nhds 0) :=
+    have h_div : Filter.Tendsto (fun t : ℝ ↦ varA / t) Filter.atTop (nhds 0) :=
       Filter.Tendsto.const_div_atTop Filter.tendsto_id varA
-    have h_inner : Filter.Tendsto (fun t : ℝ => varA / t + (v_B : ℝ))
+    have h_inner : Filter.Tendsto (fun t : ℝ ↦ varA / t + (v_B : ℝ))
         Filter.atTop (nhds ((0 : ℝ) + (v_B : ℝ))) := h_div.add tendsto_const_nhds
     simp only [zero_add] at h_inner
     have := h_inner.const_mul (2 * Real.pi * Real.exp 1)
@@ -323,22 +323,22 @@ for `t > 0` (the map `(·/√t)` is a Lebesgue-a.c. linear isomorphism). Genuine
 theorem map_div_sqrt_absolutelyContinuous
     (A : Ω → ℝ) (P : Measure Ω) (hA : Measurable A) (hA_ac : (P.map A) ≪ volume)
     {t : ℝ} (ht : 0 < t) :
-    (P.map (fun ω => A ω / Real.sqrt t)) ≪ volume := by
+    (P.map (fun ω ↦ A ω / Real.sqrt t)) ≪ volume := by
   have h_sqrt_ne : Real.sqrt t ≠ 0 := (Real.sqrt_pos.mpr ht).ne'
   have hc_ne : (Real.sqrt t)⁻¹ ≠ 0 := inv_ne_zero h_sqrt_ne
-  have hf_meas : Measurable (fun x : ℝ => x * (Real.sqrt t)⁻¹) :=
+  have hf_meas : Measurable (fun x : ℝ ↦ x * (Real.sqrt t)⁻¹) :=
     measurable_id.mul_const _
   -- `A/√t = (· * (√t)⁻¹) ∘ A`, so `P.map (A/√t) = (P.map A).map (· * (√t)⁻¹)`.
-  have hmap : (P.map (fun ω => A ω / Real.sqrt t))
-      = (P.map A).map (fun x => x * (Real.sqrt t)⁻¹) := by
+  have hmap : (P.map (fun ω ↦ A ω / Real.sqrt t))
+      = (P.map A).map (fun x ↦ x * (Real.sqrt t)⁻¹) := by
     rw [Measure.map_map hf_meas hA]
     rfl
   rw [hmap]
   -- `(P.map A).map (·*c) ≪ volume.map (·*c) = ofReal|c⁻¹| • volume ≪ volume`.
-  have hac1 : (P.map A).map (fun x => x * (Real.sqrt t)⁻¹)
-      ≪ (volume : Measure ℝ).map (fun x => x * (Real.sqrt t)⁻¹) :=
+  have hac1 : (P.map A).map (fun x ↦ x * (Real.sqrt t)⁻¹)
+      ≪ (volume : Measure ℝ).map (fun x ↦ x * (Real.sqrt t)⁻¹) :=
     hA_ac.map hf_meas
-  have hvol : (volume : Measure ℝ).map (fun x => x * (Real.sqrt t)⁻¹)
+  have hvol : (volume : Measure ℝ).map (fun x ↦ x * (Real.sqrt t)⁻¹)
       = ENNReal.ofReal |((Real.sqrt t)⁻¹)⁻¹| • (volume : Measure ℝ) :=
     Real.map_volume_mul_right hc_ne
   refine hac1.trans ?_
@@ -353,27 +353,27 @@ finite second moment) needed to invoke `convDensityAdd_negMulLog_integrable_pub`
 theorem rescaledInput_density_witness
     (A : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hA : Measurable A) (hA_ac : (P.map A) ≪ volume)
-    (h_mom_A : Integrable (fun ω => (A ω)^2) P) {t : ℝ} (ht : 0 < t) :
+    (h_mom_A : Integrable (fun ω ↦ (A ω)^2) P) {t : ℝ} (ht : 0 < t) :
     ∃ pX : ℝ → ℝ, (∀ x, 0 ≤ pX x) ∧ Measurable pX
-      ∧ (P.map (fun ω => A ω / Real.sqrt t)
-          = volume.withDensity (fun x => ENNReal.ofReal (pX x)))
+      ∧ (P.map (fun ω ↦ A ω / Real.sqrt t)
+          = volume.withDensity (fun x ↦ ENNReal.ofReal (pX x)))
       ∧ Integrable pX volume ∧ (∫ y, pX y ∂volume) = 1
-      ∧ Integrable (fun y => y ^ 2 * pX y) volume := by
-  set Zt : Ω → ℝ := fun ω => A ω / Real.sqrt t with hZt
+      ∧ Integrable (fun y ↦ y ^ 2 * pX y) volume := by
+  set Zt : Ω → ℝ := fun ω ↦ A ω / Real.sqrt t with hZt
   have hZt_meas : Measurable Zt := hA.div_const _
   have hZt_ac : (P.map Zt) ≪ volume :=
     map_div_sqrt_absolutelyContinuous A P hA hA_ac ht
   haveI : IsProbabilityMeasure (P.map Zt) :=
     Measure.isProbabilityMeasure_map hZt_meas.aemeasurable
-  set pX : ℝ → ℝ := fun x => ((P.map Zt).rnDeriv volume x).toReal with hpX
-  have hpX_nn : ∀ x, 0 ≤ pX x := fun x => ENNReal.toReal_nonneg
+  set pX : ℝ → ℝ := fun x ↦ ((P.map Zt).rnDeriv volume x).toReal with hpX
+  have hpX_nn : ∀ x, 0 ≤ pX x := fun x ↦ ENNReal.toReal_nonneg
   have hpX_meas : Measurable pX :=
     ((P.map Zt).measurable_rnDeriv volume).ennreal_toReal
   -- `withDensity` law via `withDensity_rnDeriv_eq` + `ofReal ∘ toReal =ᵐ id` (finite rnDeriv).
-  have hpX_law : P.map Zt = volume.withDensity (fun x => ENNReal.ofReal (pX x)) := by
+  have hpX_law : P.map Zt = volume.withDensity (fun x ↦ ENNReal.ofReal (pX x)) := by
     have hfin : ∀ᵐ x ∂volume, (P.map Zt).rnDeriv volume x < ∞ :=
       Measure.rnDeriv_lt_top (P.map Zt) volume
-    have hcongr : (fun x => ENNReal.ofReal (pX x)) =ᵐ[volume]
+    have hcongr : (fun x ↦ ENNReal.ofReal (pX x)) =ᵐ[volume]
         (P.map Zt).rnDeriv volume := by
       filter_upwards [hfin] with x hx
       simp only [hpX, ENNReal.ofReal_toReal hx.ne]
@@ -397,24 +397,24 @@ theorem rescaledInput_density_witness
       exact this
     rw [h1, measure_univ, ENNReal.toReal_one]
   -- second moment: `∫ y²·pX = ∫ Zt² dP = (1/t)·∫ A² dP < ∞`.
-  have hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume := by
+  have hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume := by
     -- Transport the integrand to `P.map Zt` (withDensity), then to `P`.
-    have hZt_sq : Integrable (fun ω => (Zt ω)^2) P := by
-      have : (fun ω => (Zt ω)^2) = (fun ω => (1 / t) * (A ω)^2) := by
+    have hZt_sq : Integrable (fun ω ↦ (Zt ω)^2) P := by
+      have : (fun ω ↦ (Zt ω)^2) = (fun ω ↦ (1 / t) * (A ω)^2) := by
         funext ω; simp only [hZt, div_pow, Real.sq_sqrt ht.le]; ring
       rw [this]; exact h_mom_A.const_mul _
     -- `Integrable (y²) (P.map Zt)` (transport of `Zt²` to the law).
-    have hsq_law : Integrable (fun y => y ^ 2) (P.map Zt) := by
+    have hsq_law : Integrable (fun y ↦ y ^ 2) (P.map Zt) := by
       rw [integrable_map_measure
-        ((by fun_prop : Measurable (fun y : ℝ => y ^ 2)).aestronglyMeasurable)
+        ((by fun_prop : Measurable (fun y : ℝ ↦ y ^ 2)).aestronglyMeasurable)
         hZt_meas.aemeasurable]
       simpa [Function.comp] using hZt_sq
     -- Move from `P.map Zt = withDensity (ofReal ∘ pX)` to the `y²·pX` integral on volume.
     rw [hpX_law] at hsq_law
     rw [integrable_withDensity_iff_integrable_smul₀'
       hpX_meas.ennreal_ofReal.aemeasurable
-      (Filter.Eventually.of_forall fun x => ENNReal.ofReal_lt_top)] at hsq_law
-    refine hsq_law.congr (Filter.Eventually.of_forall fun x => ?_)
+      (Filter.Eventually.of_forall fun x ↦ ENNReal.ofReal_lt_top)] at hsq_law
+    refine hsq_law.congr (Filter.Eventually.of_forall fun x ↦ ?_)
     simp only [smul_eq_mul, ENNReal.toReal_ofReal (hpX_nn x)]; ring
   exact ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom⟩
 
@@ -424,31 +424,31 @@ theorem rescaledPath_density_rnDeriv_eq
     (v_B : ℝ≥0) (hv_B_pos : (0 : ℝ≥0) < v_B) (hB_law : P.map B = gaussianReal 0 v_B)
     (hAB : IndepFun A B P)
     (hA_ac : (P.map A) ≪ volume)
-    (h_mom_A : Integrable (fun ω => (A ω)^2) P) {t : ℝ} (ht : 0 < t) :
+    (h_mom_A : Integrable (fun ω ↦ (A ω)^2) P) {t : ℝ} (ht : 0 < t) :
     ∃ pX : ℝ → ℝ, (∀ x, 0 ≤ pX x) ∧ Measurable pX
-      ∧ (P.map (fun ω => A ω / Real.sqrt t)
-          = volume.withDensity (fun x => ENNReal.ofReal (pX x)))
+      ∧ (P.map (fun ω ↦ A ω / Real.sqrt t)
+          = volume.withDensity (fun x ↦ ENNReal.ofReal (pX x)))
       ∧ Integrable pX volume ∧ (∫ y, pX y ∂volume) = 1
-      ∧ Integrable (fun y => y ^ 2 * pX y) volume
-      ∧ (P.map (fun ω => B ω + A ω / Real.sqrt t)).rnDeriv volume
-          =ᵐ[volume] fun z => ENNReal.ofReal
+      ∧ Integrable (fun y ↦ y ^ 2 * pX y) volume
+      ∧ (P.map (fun ω ↦ B ω + A ω / Real.sqrt t)).rnDeriv volume
+          =ᵐ[volume] fun z ↦ ENNReal.ofReal
             (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
               (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) z) := by
   obtain ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom⟩ :=
     rescaledInput_density_witness A P hA hA_ac h_mom_A ht
-  set Zt : Ω → ℝ := fun ω => A ω / Real.sqrt t with hZt
+  set Zt : Ω → ℝ := fun ω ↦ A ω / Real.sqrt t with hZt
   have hZt_meas : Measurable Zt := hA.div_const _
   have h_indep_ZtB : IndepFun Zt B P := by
-    have : Zt = (fun a => a / Real.sqrt t) ∘ A := by funext ω; rfl
+    have : Zt = (fun a ↦ a / Real.sqrt t) ∘ A := by funext ω; rfl
     rw [this]
     exact hAB.comp (measurable_id.div_const _) measurable_id
-  have hpath_eq : (fun ω => B ω + Zt ω)
+  have hpath_eq : (fun ω ↦ B ω + Zt ω)
       = InformationTheory.Shannon.FisherInfo.gaussianConvolution Zt B 1 := by
     funext ω
     simp only [InformationTheory.Shannon.FisherInfo.gaussianConvolution,
       Real.sqrt_one, one_mul]; ring
-  have h_path_rnDeriv : (P.map (fun ω => B ω + Zt ω)).rnDeriv volume
-      =ᵐ[volume] fun z => ENNReal.ofReal
+  have h_path_rnDeriv : (P.map (fun ω ↦ B ω + Zt ω)).rnDeriv volume
+      =ᵐ[volume] fun z ↦ ENNReal.ofReal
         (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
           (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) z) := by
     rw [hpath_eq]
@@ -465,42 +465,42 @@ theorem rescaledPath_variance_regular
     (hA_ac : (P.map A) ≪ volume)
     (hB_ac : (P.map B) ≪ volume)
     (varA : ℝ)
-    (h_mom_A : Integrable (fun ω => (A ω)^2) P)
+    (h_mom_A : Integrable (fun ω ↦ (A ω)^2) P)
     (h_var_bound : ∀ t : ℝ, 0 < t →
-      (∫ x, (x - (∫ y, y ∂(P.map (fun ω => A ω / Real.sqrt t + B ω))))^2
-            ∂(P.map (fun ω => A ω / Real.sqrt t + B ω)))
+      (∫ x, (x - (∫ y, y ∂(P.map (fun ω ↦ A ω / Real.sqrt t + B ω))))^2
+            ∂(P.map (fun ω ↦ A ω / Real.sqrt t + B ω)))
           ≤ varA / t + (v_B : ℝ)) :
     ∀ t : ℝ, 0 < t →
-      (P.map (fun ω => A ω / Real.sqrt t + B ω)) ≪ volume
-      ∧ (∫ x, (x - (∫ y, y ∂(P.map (fun ω => A ω / Real.sqrt t + B ω))))^2
-            ∂(P.map (fun ω => A ω / Real.sqrt t + B ω)))
+      (P.map (fun ω ↦ A ω / Real.sqrt t + B ω)) ≪ volume
+      ∧ (∫ x, (x - (∫ y, y ∂(P.map (fun ω ↦ A ω / Real.sqrt t + B ω))))^2
+            ∂(P.map (fun ω ↦ A ω / Real.sqrt t + B ω)))
           ≤ varA / t + (v_B : ℝ)
       ∧ Integrable
-          (fun x => (x - (∫ y, y ∂(P.map (fun ω => A ω / Real.sqrt t + B ω))))^2)
-          (P.map (fun ω => A ω / Real.sqrt t + B ω))
+          (fun x ↦ (x - (∫ y, y ∂(P.map (fun ω ↦ A ω / Real.sqrt t + B ω))))^2)
+          (P.map (fun ω ↦ A ω / Real.sqrt t + B ω))
       ∧ Integrable
-          (fun x => Real.negMulLog
-            (((P.map (fun ω => A ω / Real.sqrt t + B ω)).rnDeriv volume x).toReal))
+          (fun x ↦ Real.negMulLog
+            (((P.map (fun ω ↦ A ω / Real.sqrt t + B ω)).rnDeriv volume x).toReal))
           volume := by
   intro t ht
   have h_sqrt_pos : (0 : ℝ) < Real.sqrt t := Real.sqrt_pos.mpr ht
-  set Zt : Ω → ℝ := fun ω => A ω / Real.sqrt t with hZt
+  set Zt : Ω → ℝ := fun ω ↦ A ω / Real.sqrt t with hZt
   have hZt_meas : Measurable Zt := hA.div_const _
   have h_indep : IndepFun Zt B P := by
-    have : Zt = (fun a => a / Real.sqrt t) ∘ A := by funext ω; rfl
+    have : Zt = (fun a ↦ a / Real.sqrt t) ∘ A := by funext ω; rfl
     rw [this]
     exact hAB.comp (measurable_id.div_const _) measurable_id
   -- a.c. of `A/√t + B` (= `B + A/√t` reordered, both a.c.).
-  have hμ_ac : (P.map (fun ω => Zt ω + B ω)) ≪ volume := by
+  have hμ_ac : (P.map (fun ω ↦ Zt ω + B ω)) ≪ volume := by
     have h_indepBZ : IndepFun B Zt P := h_indep.symm
-    have hWac : (P.map (fun ω => B ω + Zt ω)) ≪ volume :=
+    have hWac : (P.map (fun ω ↦ B ω + Zt ω)) ≪ volume :=
       map_add_absolutelyContinuous B Zt P hB hZt_meas h_indepBZ hB_ac
-    have h_path : (fun ω => Zt ω + B ω) = (fun ω => B ω + Zt ω) := by funext ω; ring
+    have h_path : (fun ω ↦ Zt ω + B ω) = (fun ω ↦ B ω + Zt ω) := by funext ω; ring
     rw [h_path]; exact hWac
-  set W : Ω → ℝ := fun ω => Zt ω + B ω with hW_def
+  set W : Ω → ℝ := fun ω ↦ Zt ω + B ω with hW_def
   have hW_meas : Measurable W := hZt_meas.add hB
   -- `B` has finite second moment (Gaussian, `memLp_id_gaussianReal`).
-  have hB_sq : Integrable (fun ω => (B ω)^2) P := by
+  have hB_sq : Integrable (fun ω ↦ (B ω)^2) P := by
     have hB_memLp : MemLp B 2 P := by
       have : MemLp (id : ℝ → ℝ) 2 (P.map B) := by
         rw [hB_law]; exact memLp_id_gaussianReal' 2 (by simp)
@@ -509,8 +509,8 @@ theorem rescaledPath_variance_regular
       simpa [Function.comp] using this
     simpa using hB_memLp.integrable_sq
   -- `Zt = A/√t` has finite second moment (`h_mom_A`, scaled by `1/t`).
-  have hZt_sq : Integrable (fun ω => (Zt ω)^2) P := by
-    have : (fun ω => (Zt ω)^2) = (fun ω => (1 / t) * (A ω)^2) := by
+  have hZt_sq : Integrable (fun ω ↦ (Zt ω)^2) P := by
+    have : (fun ω ↦ (Zt ω)^2) = (fun ω ↦ (1 / t) * (A ω)^2) := by
       funext ω
       simp only [hZt, div_pow, Real.sq_sqrt ht.le]
       ring
@@ -524,19 +524,19 @@ theorem rescaledPath_variance_regular
     · exact (memLp_two_iff_integrable_sq_norm hB.aestronglyMeasurable).mpr
         (by simpa using hB_sq)
   have hW_int : Integrable W P := hW_memLp.integrable (by norm_num)
-  have hW_sq_int : Integrable (fun ω => (W ω)^2) P := hW_memLp.integrable_sq
+  have hW_sq_int : Integrable (fun ω ↦ (W ω)^2) P := hW_memLp.integrable_sq
   refine ⟨hμ_ac, h_var_bound t ht, ?_, ?_⟩
   · -- squared-deviation `(x-m)²` integrable wrt path law (finite second moment of the
     -- path: `A/√t` finite second moment from `h_mom_A` + Gaussian `B` finite variance,
     -- transported to the pushforward law).
     set m : ℝ := ∫ y, y ∂(P.map W) with hm_def
     -- Transport to `P` via `integrable_map_measure`, then expand `(W-m)²`.
-    have hg_meas : AEStronglyMeasurable (fun x : ℝ => (x - m)^2) (P.map W) :=
+    have hg_meas : AEStronglyMeasurable (fun x : ℝ ↦ (x - m)^2) (P.map W) :=
       ((measurable_id.sub measurable_const).pow_const 2).aestronglyMeasurable
     rw [integrable_map_measure hg_meas hW_meas.aemeasurable]
     -- `(W ω - m)² = W² - 2m·W + m²`, each integrable.
-    have hexp : (fun x => (x - m)^2) ∘ W
-        = (fun ω => (W ω)^2 - 2 * m * W ω + m^2) := by
+    have hexp : (fun x ↦ (x - m)^2) ∘ W
+        = (fun ω ↦ (W ω)^2 - 2 * m * W ω + m^2) := by
       funext ω; simp only [Function.comp]; ring
     rw [hexp]
     exact (hW_sq_int.sub ((hW_int.const_mul (2 * m)))).add
@@ -547,9 +547,9 @@ theorem rescaledPath_variance_regular
     -- Density witness for `Zt = A/√t` + path density identification (`B + Zt = W` reordered).
     obtain ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom, h_path_rnDeriv0⟩ :=
       rescaledPath_density_rnDeriv_eq A B P hA hB v_B hv_B_pos hB_law hAB hA_ac h_mom_A ht
-    have hWeq : W = fun ω => B ω + Zt ω := by funext ω; simp only [hW_def]; ring
+    have hWeq : W = fun ω ↦ B ω + Zt ω := by funext ω; simp only [hW_def]; ring
     have h_path_rnDeriv : (P.map W).rnDeriv volume
-        =ᵐ[volume] fun z => ENNReal.ofReal
+        =ᵐ[volume] fun z ↦ ENNReal.ofReal
           (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
             (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) z) := by
       rw [hWeq]; exact h_path_rnDeriv0
@@ -559,7 +559,7 @@ theorem rescaledPath_variance_regular
       apply NNReal.coe_injective
       show (1 : ℝ) * (v_B : ℝ) = (v_B : ℝ)
       rw [one_mul]
-    have h_asset : Integrable (fun x =>
+    have h_asset : Integrable (fun x ↦
         Real.negMulLog (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
           (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x)) volume := by
       rw [show (⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩ : ℝ≥0) = v_B from hvar_eq]
@@ -571,14 +571,14 @@ theorem rescaledPath_variance_regular
     filter_upwards [h_path_rnDeriv] with x hx
     have hcd_nn : 0 ≤ InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
         (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x :=
-      integral_nonneg fun y =>
+      integral_nonneg fun y ↦
         mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg _ _ _)
     rw [hx, ENNReal.toReal_ofReal hcd_nn]
 
 theorem indepFun_const_div_sqrt
     (A B : Ω → ℝ) (P : Measure Ω) (hAB : IndepFun A B P) {t : ℝ} :
-    IndepFun B (fun ω => A ω / Real.sqrt t) P := by
-  have : (fun ω => A ω / Real.sqrt t) = (fun a => a / Real.sqrt t) ∘ A := by funext ω; rfl
+    IndepFun B (fun ω ↦ A ω / Real.sqrt t) P := by
+  have : (fun ω ↦ A ω / Real.sqrt t) = (fun a ↦ a / Real.sqrt t) ∘ A := by funext ω; rfl
   rw [this]
   exact (hAB.symm).comp measurable_id (measurable_id.div_const _)
 
@@ -586,25 +586,25 @@ theorem condDistrib_indep_gaussian_add_ae_affineShift
     (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hA : Measurable A) (hB : Measurable B)
     (hAB : IndepFun A B P) {t : ℝ} :
-    condDistrib (fun ω => B ω + A ω / Real.sqrt t) (fun ω => A ω / Real.sqrt t) P
-      =ᵐ[P.map (fun ω => A ω / Real.sqrt t)] affineShiftKernel (P.map B) 1 := by
+    condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t) (fun ω ↦ A ω / Real.sqrt t) P
+      =ᵐ[P.map (fun ω ↦ A ω / Real.sqrt t)] affineShiftKernel (P.map B) 1 := by
   haveI : IsProbabilityMeasure (P.map B) :=
     Measure.isProbabilityMeasure_map hB.aemeasurable
-  set Zt : Ω → ℝ := fun ω => A ω / Real.sqrt t with hZt
+  set Zt : Ω → ℝ := fun ω ↦ A ω / Real.sqrt t with hZt
   have hZt_meas : Measurable Zt := hA.div_const _
   have h_indep : IndepFun B Zt P := indepFun_const_div_sqrt A B P hAB
-  set W : Ω → ℝ := fun ω => B ω + Zt ω with hW_def
+  set W : Ω → ℝ := fun ω ↦ B ω + Zt ω with hW_def
   have hW : Measurable W := hB.add hZt_meas
   -- Joint `(Zt, B)` is the product law (independence `B ⊥ Zt`, i.e. `Zt ⊥ B`).
   have hZtB : IndepFun Zt B P := h_indep.symm
-  have hjoint_ZB : P.map (fun ω => (Zt ω, B ω)) = (P.map Zt).prod (P.map B) :=
+  have hjoint_ZB : P.map (fun ω ↦ (Zt ω, B ω)) = (P.map Zt).prod (P.map B) :=
     (indepFun_iff_map_prod_eq_prod_map_map hZt_meas.aemeasurable hB.aemeasurable).mp hZtB
   -- Push the product through `g (z, x) = (z, x + 1·z)`.
-  have hg : Measurable fun p : ℝ × ℝ => (p.1, p.2 + (1 : ℝ) * p.1) := by fun_prop
-  have hjoint_ZW : P.map (fun ω => (Zt ω, W ω))
+  have hg : Measurable fun p : ℝ × ℝ ↦ (p.1, p.2 + (1 : ℝ) * p.1) := by fun_prop
+  have hjoint_ZW : P.map (fun ω ↦ (Zt ω, W ω))
       = (P.map Zt) ⊗ₘ (affineShiftKernel (P.map B) 1) := by
-    have hcomp : (fun ω => (Zt ω, W ω))
-        = (fun p : ℝ × ℝ => (p.1, p.2 + (1 : ℝ) * p.1)) ∘ (fun ω => (Zt ω, B ω)) := by
+    have hcomp : (fun ω ↦ (Zt ω, W ω))
+        = (fun p : ℝ × ℝ ↦ (p.1, p.2 + (1 : ℝ) * p.1)) ∘ (fun ω ↦ (Zt ω, B ω)) := by
       funext ω; simp [hW_def, one_mul, add_comm]
     rw [hcomp, ← Measure.map_map hg (hZt_meas.prodMk hB), hjoint_ZB,
       prod_map_affine_eq_compProd]
@@ -624,8 +624,8 @@ theorem condDistrib_indep_gaussian_add_fibre_absolutelyContinuous
     (hA : Measurable A) (hB : Measurable B)
     (v_B : ℝ≥0) (hv_B : v_B ≠ 0) (hB_law : P.map B = gaussianReal 0 v_B)
     (hAB : IndepFun A B P) {t : ℝ} :
-    ∀ᵐ z ∂(P.map (fun ω => A ω / Real.sqrt t)),
-      condDistrib (fun ω => B ω + A ω / Real.sqrt t) (fun ω => A ω / Real.sqrt t) P z
+    ∀ᵐ z ∂(P.map (fun ω ↦ A ω / Real.sqrt t)),
+      condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t) (fun ω ↦ A ω / Real.sqrt t) P z
         ≪ volume := by
   haveI : SFinite (P.map B) := by rw [hB_law]; infer_instance
   filter_upwards [condDistrib_indep_gaussian_add_ae_affineShift A B P hA hB hAB] with z hz
@@ -638,12 +638,12 @@ theorem volume_absolutelyContinuous_map_indep_gaussian_add
     (v_B : ℝ≥0) (hv_B : v_B ≠ 0) (hB_law : P.map B = gaussianReal 0 v_B)
     (hAB : IndepFun A B P)
     (hA_ac : (P.map A) ≪ volume) (hB_ac : (P.map B) ≪ volume)
-    (h_mom_A : Integrable (fun ω => (A ω)^2) P) {t : ℝ} (ht : 0 < t) :
-    (volume : Measure ℝ) ≪ P.map (fun ω => B ω + A ω / Real.sqrt t) := by
-  set Zt : Ω → ℝ := fun ω => A ω / Real.sqrt t with hZt
+    (h_mom_A : Integrable (fun ω ↦ (A ω)^2) P) {t : ℝ} (ht : 0 < t) :
+    (volume : Measure ℝ) ≪ P.map (fun ω ↦ B ω + A ω / Real.sqrt t) := by
+  set Zt : Ω → ℝ := fun ω ↦ A ω / Real.sqrt t with hZt
   have hZt_meas : Measurable Zt := hA.div_const _
   have h_indep : IndepFun B Zt P := indepFun_const_div_sqrt A B P hAB
-  have hW_ac : (P.map (fun ω => B ω + Zt ω)) ≪ volume :=
+  have hW_ac : (P.map (fun ω ↦ B ω + Zt ω)) ≪ volume :=
     map_add_absolutelyContinuous B Zt P hB hZt_meas h_indep hB_ac
   have hv_B_pos : (0 : ℝ≥0) < v_B := pos_iff_ne_zero.mpr hv_B
   obtain ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom, h_path_rnDeriv⟩ :=
@@ -653,17 +653,17 @@ theorem volume_absolutelyContinuous_map_indep_gaussian_add
     intro x
     exact InformationTheory.Shannon.FisherInfo.convDensityAdd_pos pX hpX_nn hpX_int
       (by rw [hpX_mass]; norm_num) (by positivity) x
-  have hW_density : (P.map (fun ω => B ω + Zt ω))
-      = volume.withDensity (fun x => ENNReal.ofReal
+  have hW_density : (P.map (fun ω ↦ B ω + Zt ω))
+      = volume.withDensity (fun x ↦ ENNReal.ofReal
         (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
           (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x)) := by
     rw [← Measure.withDensity_rnDeriv_eq _ _ hW_ac]
     exact withDensity_congr_ae h_path_rnDeriv
   rw [hW_density]
   refine withDensity_absolutelyContinuous' ?_ ?_
-  · exact ((P.map (fun ω => B ω + Zt ω)).measurable_rnDeriv volume).aemeasurable.congr
+  · exact ((P.map (fun ω ↦ B ω + Zt ω)).measurable_rnDeriv volume).aemeasurable.congr
       h_path_rnDeriv
-  · exact Filter.Eventually.of_forall fun x => by
+  · exact Filter.Eventually.of_forall fun x ↦ by
       simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact hg_pos x
 
 theorem condDistrib_indep_gaussian_add_fibre_rnDeriv_ae
@@ -671,10 +671,10 @@ theorem condDistrib_indep_gaussian_add_fibre_rnDeriv_ae
     (hA : Measurable A) (hB : Measurable B)
     (v_B : ℝ≥0) (hB_law : P.map B = gaussianReal 0 v_B)
     (hAB : IndepFun A B P) {t : ℝ} :
-    ∀ᵐ z ∂(P.map (fun ω => A ω / Real.sqrt t)),
-      (condDistrib (fun ω => B ω + A ω / Real.sqrt t) (fun ω => A ω / Real.sqrt t) P z).rnDeriv
+    ∀ᵐ z ∂(P.map (fun ω ↦ A ω / Real.sqrt t)),
+      (condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t) (fun ω ↦ A ω / Real.sqrt t) P z).rnDeriv
           volume
-        =ᵐ[volume] fun x => ENNReal.ofReal (gaussianPDFReal z v_B x) := by
+        =ᵐ[volume] fun x ↦ ENNReal.ofReal (gaussianPDFReal z v_B x) := by
   haveI : SFinite (P.map B) := by rw [hB_law]; infer_instance
   filter_upwards [condDistrib_indep_gaussian_add_ae_affineShift A B P hA hB hAB] with z hz
   rw [hz, affineShiftKernel_map_gaussian_one_eq B P v_B hB_law z]
@@ -686,10 +686,10 @@ theorem condDistrib_indep_gaussian_add_fibre_rnDeriv_toReal_shift_ae
     (hA : Measurable A) (hB : Measurable B)
     (v_B : ℝ≥0) (hB_law : P.map B = gaussianReal 0 v_B)
     (hAB : IndepFun A B P) {t : ℝ} :
-    ∀ᵐ z ∂(P.map (fun ω => A ω / Real.sqrt t)),
-      (fun x => ((condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-            (fun ω => A ω / Real.sqrt t) P z).rnDeriv volume x).toReal)
-        =ᵐ[volume] fun x => gaussianPDFReal 0 v_B (x - z) := by
+    ∀ᵐ z ∂(P.map (fun ω ↦ A ω / Real.sqrt t)),
+      (fun x ↦ ((condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+            (fun ω ↦ A ω / Real.sqrt t) P z).rnDeriv volume x).toReal)
+        =ᵐ[volume] fun x ↦ gaussianPDFReal 0 v_B (x - z) := by
   filter_upwards [condDistrib_indep_gaussian_add_fibre_rnDeriv_ae A B P hA hB v_B hB_law hAB]
     with z hrn
   filter_upwards [hrn] with x hx
@@ -702,20 +702,20 @@ theorem compProd_condDistrib_indep_gaussian_add_absolutelyContinuous_const
     (v_B : ℝ≥0) (hv_B : v_B ≠ 0) (hB_law : P.map B = gaussianReal 0 v_B)
     (hAB : IndepFun A B P)
     (hA_ac : (P.map A) ≪ volume) (hB_ac : (P.map B) ≪ volume)
-    (h_mom_A : Integrable (fun ω => (A ω)^2) P) {t : ℝ} (ht : 0 < t) :
-    (P.map (fun ω => A ω / Real.sqrt t))
-        ⊗ₘ condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-            (fun ω => A ω / Real.sqrt t) P
-      ≪ (P.map (fun ω => A ω / Real.sqrt t))
-          ⊗ₘ Kernel.const ℝ (P.map (fun ω => B ω + A ω / Real.sqrt t)) := by
+    (h_mom_A : Integrable (fun ω ↦ (A ω)^2) P) {t : ℝ} (ht : 0 < t) :
+    (P.map (fun ω ↦ A ω / Real.sqrt t))
+        ⊗ₘ condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+            (fun ω ↦ A ω / Real.sqrt t) P
+      ≪ (P.map (fun ω ↦ A ω / Real.sqrt t))
+          ⊗ₘ Kernel.const ℝ (P.map (fun ω ↦ B ω + A ω / Real.sqrt t)) := by
   haveI : SFinite (P.map B) := by rw [hB_law]; infer_instance
-  have hvol_ac_W : (volume : Measure ℝ) ≪ P.map (fun ω => B ω + A ω / Real.sqrt t) :=
+  have hvol_ac_W : (volume : Measure ℝ) ≪ P.map (fun ω ↦ B ω + A ω / Real.sqrt t) :=
     volume_absolutelyContinuous_map_indep_gaussian_add A B P hA hB v_B hv_B hB_law hAB
       hA_ac hB_ac h_mom_A ht
   refine Measure.AbsolutelyContinuous.compProd_right ?_
   filter_upwards [condDistrib_indep_gaussian_add_ae_affineShift A B P hA hB hAB] with z hz
   rw [ProbabilityTheory.Kernel.const_apply]
-  refine (?_ : condDistrib (fun ω => B ω + A ω / Real.sqrt t) (fun ω => A ω / Real.sqrt t) P z
+  refine (?_ : condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t) (fun ω ↦ A ω / Real.sqrt t) P z
       ≪ volume).trans hvol_ac_W
   rw [hz, affineShiftKernel_map_gaussian_one_eq B P v_B hB_law z]
   exact gaussianReal_absolutelyContinuous z hv_B
@@ -725,11 +725,11 @@ theorem condDistrib_indep_gaussian_add_fibre_selfEntropy_integrable
     (hA : Measurable A) (hB : Measurable B)
     (v_B : ℝ≥0) (hv_B : v_B ≠ 0) (hB_law : P.map B = gaussianReal 0 v_B)
     (hAB : IndepFun A B P) {t : ℝ} :
-    ∀ᵐ z ∂(P.map (fun ω => A ω / Real.sqrt t)), Integrable
-        (fun x => ((condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-              (fun ω => A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
-          * Real.log (((condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-              (fun ω => A ω / Real.sqrt t) P z).rnDeriv volume x).toReal)) volume := by
+    ∀ᵐ z ∂(P.map (fun ω ↦ A ω / Real.sqrt t)), Integrable
+        (fun x ↦ ((condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+              (fun ω ↦ A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
+          * Real.log (((condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+              (fun ω ↦ A ω / Real.sqrt t) P z).rnDeriv volume x).toReal)) volume := by
   filter_upwards [condDistrib_indep_gaussian_add_fibre_rnDeriv_ae A B P hA hB v_B hB_law hAB]
     with z hrn
   refine (InformationTheory.Shannon.integrable_density_log_density_of_gaussian z hv_B).congr ?_
@@ -742,13 +742,13 @@ theorem condDistrib_indep_gaussian_add_fibre_crossEntropy_integrable
     (v_B : ℝ≥0) (hv_B : v_B ≠ 0) (hB_law : P.map B = gaussianReal 0 v_B)
     (hAB : IndepFun A B P)
     (hA_ac : (P.map A) ≪ volume)
-    (h_mom_A : Integrable (fun ω => (A ω)^2) P) {t : ℝ} (ht : 0 < t) :
-    ∀ᵐ z ∂(P.map (fun ω => A ω / Real.sqrt t)), Integrable
-        (fun x => ((condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-              (fun ω => A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
-          * Real.log (((P.map (fun ω => B ω + A ω / Real.sqrt t)).rnDeriv
+    (h_mom_A : Integrable (fun ω ↦ (A ω)^2) P) {t : ℝ} (ht : 0 < t) :
+    ∀ᵐ z ∂(P.map (fun ω ↦ A ω / Real.sqrt t)), Integrable
+        (fun x ↦ ((condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+              (fun ω ↦ A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
+          * Real.log (((P.map (fun ω ↦ B ω + A ω / Real.sqrt t)).rnDeriv
               volume x).toReal)) volume := by
-  set Zt : Ω → ℝ := fun ω => A ω / Real.sqrt t with hZt
+  set Zt : Ω → ℝ := fun ω ↦ A ω / Real.sqrt t with hZt
   have hv_B_pos : (0 : ℝ≥0) < v_B := pos_iff_ne_zero.mpr hv_B
   obtain ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom, h_path_rnDeriv⟩ :=
     rescaledPath_density_rnDeriv_eq A B P hA hB v_B hv_B_pos hB_law hAB hA_ac h_mom_A ht
@@ -757,9 +757,9 @@ theorem condDistrib_indep_gaussian_add_fibre_crossEntropy_integrable
   set g : ℝ → ℝ :=
     InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX (gaussianPDFReal 0 v_B)
     with hg_def
-  have hg_nn : ∀ x, 0 ≤ g x := fun x =>
-    integral_nonneg fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg _ _ _)
-  have h_g_rnDeriv : (fun x => ((P.map (fun ω => B ω + Zt ω)).rnDeriv volume x).toReal)
+  have hg_nn : ∀ x, 0 ≤ g x := fun x ↦
+    integral_nonneg fun y ↦ mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg _ _ _)
+  have h_g_rnDeriv : (fun x ↦ ((P.map (fun ω ↦ B ω + Zt ω)).rnDeriv volume x).toReal)
       =ᵐ[volume] g := by
     filter_upwards [h_path_rnDeriv] with x hx
     rw [hx, hvar_eq, ENNReal.toReal_ofReal (hg_nn x)]
@@ -780,10 +780,10 @@ theorem integrable_differentialEntropy_condDistrib_indep_gaussian_add
     (v_B : ℝ≥0) (hv_B : v_B ≠ 0) (hB_law : P.map B = gaussianReal 0 v_B)
     (hAB : IndepFun A B P) {t : ℝ} :
     Integrable
-        (fun z => InformationTheory.Shannon.differentialEntropy
-          (condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-              (fun ω => A ω / Real.sqrt t) P z))
-        (P.map (fun ω => A ω / Real.sqrt t)) := by
+        (fun z ↦ InformationTheory.Shannon.differentialEntropy
+          (condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+              (fun ω ↦ A ω / Real.sqrt t) P z))
+        (P.map (fun ω ↦ A ω / Real.sqrt t)) := by
   haveI : SFinite (P.map B) := by rw [hB_law]; infer_instance
   refine (integrable_const ((1/2) * Real.log (2 * Real.pi * Real.exp 1 * v_B))).congr ?_
   filter_upwards [condDistrib_indep_gaussian_add_ae_affineShift A B P hA hB hAB] with z hz
@@ -796,14 +796,14 @@ theorem integrable_condDistrib_indep_gaussian_add_crossEntropy_zAvg
     (v_B : ℝ≥0) (hv_B : v_B ≠ 0) (hB_law : P.map B = gaussianReal 0 v_B)
     (hAB : IndepFun A B P)
     (hA_ac : (P.map A) ≪ volume)
-    (h_mom_A : Integrable (fun ω => (A ω)^2) P) {t : ℝ} (ht : 0 < t) :
+    (h_mom_A : Integrable (fun ω ↦ (A ω)^2) P) {t : ℝ} (ht : 0 < t) :
     Integrable
-        (fun z => ∫ x, ((condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-              (fun ω => A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
-          * Real.log (((P.map (fun ω => B ω + A ω / Real.sqrt t)).rnDeriv
+        (fun z ↦ ∫ x, ((condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+              (fun ω ↦ A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
+          * Real.log (((P.map (fun ω ↦ B ω + A ω / Real.sqrt t)).rnDeriv
               volume x).toReal) ∂volume)
-        (P.map (fun ω => A ω / Real.sqrt t)) := by
-  set Zt : Ω → ℝ := fun ω => A ω / Real.sqrt t with hZt
+        (P.map (fun ω ↦ A ω / Real.sqrt t)) := by
+  set Zt : Ω → ℝ := fun ω ↦ A ω / Real.sqrt t with hZt
   have hZt_meas : Measurable Zt := hA.div_const _
   have hv_B_pos : (0 : ℝ≥0) < v_B := pos_iff_ne_zero.mpr hv_B
   obtain ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom, h_path_rnDeriv⟩ :=
@@ -813,19 +813,19 @@ theorem integrable_condDistrib_indep_gaussian_add_crossEntropy_zAvg
   set g : ℝ → ℝ :=
     InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX (gaussianPDFReal 0 v_B)
     with hg_def
-  have hg_nn : ∀ x, 0 ≤ g x := fun x =>
-    integral_nonneg fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg _ _ _)
-  have h_g_rnDeriv : (fun x => ((P.map (fun ω => B ω + Zt ω)).rnDeriv volume x).toReal)
+  have hg_nn : ∀ x, 0 ≤ g x := fun x ↦
+    integral_nonneg fun y ↦ mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg _ _ _)
+  have h_g_rnDeriv : (fun x ↦ ((P.map (fun ω ↦ B ω + Zt ω)).rnDeriv volume x).toReal)
       =ᵐ[volume] g := by
     filter_upwards [h_path_rnDeriv] with x hx
     rw [hx, hvar_eq, ENNReal.toReal_ofReal (hg_nn x)]
-  have hZt_sq : Integrable (fun ω => (Zt ω)^2) P := by
-    have : (fun ω => (Zt ω)^2) = (fun ω => (1 / t) * (A ω)^2) := by
+  have hZt_sq : Integrable (fun ω ↦ (Zt ω)^2) P := by
+    have : (fun ω ↦ (Zt ω)^2) = (fun ω ↦ (1 / t) * (A ω)^2) := by
       funext ω; simp only [hZt, div_pow, Real.sq_sqrt ht.le]; ring
     rw [this]; exact h_mom_A.const_mul _
-  have hνZ_sq : Integrable (fun z => z ^ 2) (P.map Zt) := by
+  have hνZ_sq : Integrable (fun z ↦ z ^ 2) (P.map Zt) := by
     rw [integrable_map_measure
-      ((by fun_prop : Measurable (fun y : ℝ => y ^ 2)).aestronglyMeasurable)
+      ((by fun_prop : Measurable (fun y : ℝ ↦ y ^ 2)).aestronglyMeasurable)
       hZt_meas.aemeasurable]
     simpa [Function.comp] using hZt_sq
   have hbase := InformationTheory.Shannon.convCrossEntropy_zAvg_integrable
@@ -847,20 +847,20 @@ theorem integrable_llr_compProd_condDistrib_indep_gaussian_add
     (v_B : ℝ≥0) (hv_B : v_B ≠ 0) (hB_law : P.map B = gaussianReal 0 v_B)
     (hAB : IndepFun A B P)
     (hA_ac : (P.map A) ≪ volume) (hB_ac : (P.map B) ≪ volume)
-    (h_mom_A : Integrable (fun ω => (A ω)^2) P) {t : ℝ} (ht : 0 < t) :
+    (h_mom_A : Integrable (fun ω ↦ (A ω)^2) P) {t : ℝ} (ht : 0 < t) :
     Integrable
-        (llr ((P.map (fun ω => A ω / Real.sqrt t))
-                ⊗ₘ condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-                    (fun ω => A ω / Real.sqrt t) P)
-              ((P.map (fun ω => A ω / Real.sqrt t))
-                ⊗ₘ Kernel.const ℝ (P.map (fun ω => B ω + A ω / Real.sqrt t))))
-        ((P.map (fun ω => A ω / Real.sqrt t))
-          ⊗ₘ condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-              (fun ω => A ω / Real.sqrt t) P) := by
-  set Zt : Ω → ℝ := fun ω => A ω / Real.sqrt t with hZt
+        (llr ((P.map (fun ω ↦ A ω / Real.sqrt t))
+                ⊗ₘ condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+                    (fun ω ↦ A ω / Real.sqrt t) P)
+              ((P.map (fun ω ↦ A ω / Real.sqrt t))
+                ⊗ₘ Kernel.const ℝ (P.map (fun ω ↦ B ω + A ω / Real.sqrt t))))
+        ((P.map (fun ω ↦ A ω / Real.sqrt t))
+          ⊗ₘ condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+              (fun ω ↦ A ω / Real.sqrt t) P) := by
+  set Zt : Ω → ℝ := fun ω ↦ A ω / Real.sqrt t with hZt
   have hZt_meas : Measurable Zt := hA.div_const _
   have h_indep : IndepFun B Zt P := indepFun_const_div_sqrt A B P hAB
-  have hW_ac : (P.map (fun ω => B ω + Zt ω)) ≪ volume :=
+  have hW_ac : (P.map (fun ω ↦ B ω + Zt ω)) ≪ volume :=
     map_add_absolutelyContinuous B Zt P hB hZt_meas h_indep hB_ac
   have hv_B_pos : (0 : ℝ≥0) < v_B := pos_iff_ne_zero.mpr hv_B
   obtain ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom, h_path_rnDeriv⟩ :=
@@ -870,33 +870,33 @@ theorem integrable_llr_compProd_condDistrib_indep_gaussian_add
   set g : ℝ → ℝ :=
     InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX (gaussianPDFReal 0 v_B)
     with hg_def
-  have hg_nn : ∀ x, 0 ≤ g x := fun x =>
-    integral_nonneg fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg _ _ _)
+  have hg_nn : ∀ x, 0 ≤ g x := fun x ↦
+    integral_nonneg fun y ↦ mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg _ _ _)
   have hg_meas : Measurable g := by
     rw [hg_def]
     have hg_pdf : Measurable (gaussianPDFReal 0 v_B) := measurable_gaussianPDFReal 0 _
     have huncurry : StronglyMeasurable
-        (Function.uncurry fun w x => pX x * gaussianPDFReal 0 v_B (w - x)) := by
+        (Function.uncurry fun w x ↦ pX x * gaussianPDFReal 0 v_B (w - x)) := by
       apply Measurable.stronglyMeasurable
       exact (hpX_meas.comp measurable_snd).mul
         (hg_pdf.comp (measurable_fst.sub measurable_snd))
     have h := huncurry.integral_prod_right (ν := volume)
     simpa only [InformationTheory.Shannon.EPIConvDensity.convDensityAdd] using h.measurable
-  have h_g_rnDeriv : (P.map (fun ω => B ω + Zt ω)).rnDeriv volume
-      =ᵐ[volume] fun x => ENNReal.ofReal (g x) := by
+  have h_g_rnDeriv : (P.map (fun ω ↦ B ω + Zt ω)).rnDeriv volume
+      =ᵐ[volume] fun x ↦ ENNReal.ofReal (g x) := by
     filter_upwards [h_path_rnDeriv] with x hx
     rw [hx, hvar_eq]
-  have hvol_ac_W : (volume : Measure ℝ) ≪ P.map (fun ω => B ω + Zt ω) :=
+  have hvol_ac_W : (volume : Measure ℝ) ≪ P.map (fun ω ↦ B ω + Zt ω) :=
     volume_absolutelyContinuous_map_indep_gaussian_add A B P hA hB v_B hv_B hB_law hAB
       hA_ac hB_ac h_mom_A ht
-  have h_ac_loc : (P.map Zt) ⊗ₘ condDistrib (fun ω => B ω + Zt ω) Zt P
-      ≪ (P.map Zt) ⊗ₘ Kernel.const ℝ (P.map (fun ω => B ω + Zt ω)) :=
+  have h_ac_loc : (P.map Zt) ⊗ₘ condDistrib (fun ω ↦ B ω + Zt ω) Zt P
+      ≪ (P.map Zt) ⊗ₘ Kernel.const ℝ (P.map (fun ω ↦ B ω + Zt ω)) :=
     compProd_condDistrib_indep_gaussian_add_absolutelyContinuous_const A B P hA hB
       v_B hv_B hB_law hAB hA_ac hB_ac h_mom_A ht
   -- fibre rnDeriv `=ᵐ ofReal (gaussianPDFReal 0 v_B (x − √1·z))`.
   have hfib_eq : ∀ᵐ z ∂(P.map Zt),
-      (condDistrib (fun ω => B ω + Zt ω) Zt P z).rnDeriv volume
-        =ᵐ[volume] fun x => ENNReal.ofReal (gaussianPDFReal 0 v_B (x - Real.sqrt 1 * z)) := by
+      (condDistrib (fun ω ↦ B ω + Zt ω) Zt P z).rnDeriv volume
+        =ᵐ[volume] fun x ↦ ENNReal.ofReal (gaussianPDFReal 0 v_B (x - Real.sqrt 1 * z)) := by
     filter_upwards [condDistrib_indep_gaussian_add_fibre_rnDeriv_ae A B P hA hB v_B hB_law hAB]
       with z hrn
     filter_upwards [hrn] with x hx
@@ -927,20 +927,20 @@ theorem integrable_llr_compProd_condDistrib_indep_gaussian_add
     linarith
   -- Gaussian self-entropy in absolute value (NO input-density entropy needed).
   have hq_abs_ent : Integrable
-      (fun x => gaussianPDFReal 0 v_B x * |Real.log (gaussianPDFReal 0 v_B x)|) volume := by
+      (fun x ↦ gaussianPDFReal 0 v_B x * |Real.log (gaussianPDFReal 0 v_B x)|) volume := by
     have h := (InformationTheory.Shannon.integrable_density_log_density_of_gaussian 0 hv_B).norm
-    refine h.congr (Filter.Eventually.of_forall (fun x => ?_))
+    refine h.congr (Filter.Eventually.of_forall (fun x ↦ ?_))
     simp only [Real.norm_eq_abs, abs_mul, abs_of_nonneg (gaussianPDFReal_nonneg 0 v_B x)]
-  have hZt_sq : Integrable (fun ω => (Zt ω)^2) P := by
-    have : (fun ω => (Zt ω)^2) = (fun ω => (1 / t) * (A ω)^2) := by
+  have hZt_sq : Integrable (fun ω ↦ (Zt ω)^2) P := by
+    have : (fun ω ↦ (Zt ω)^2) = (fun ω ↦ (1 / t) * (A ω)^2) := by
       funext ω; simp only [hZt, div_pow, Real.sq_sqrt ht.le]; ring
     rw [this]; exact h_mom_A.const_mul _
-  have hZ_sq : Integrable (fun z => z ^ 2) (P.map Zt) := by
+  have hZ_sq : Integrable (fun z ↦ z ^ 2) (P.map Zt) := by
     rw [integrable_map_measure
-      ((by fun_prop : Measurable (fun y : ℝ => y ^ 2)).aestronglyMeasurable)
+      ((by fun_prop : Measurable (fun y : ℝ ↦ y ^ 2)).aestronglyMeasurable)
       hZt_meas.aemeasurable]
     simpa [Function.comp] using hZt_sq
-  exact InformationTheory.Shannon.convJointLlr_integrable P Zt (fun ω => B ω + Zt ω)
+  exact InformationTheory.Shannon.convJointLlr_integrable P Zt (fun ω ↦ B ω + Zt ω)
     (gaussianPDFReal 0 v_B) g (gaussianPDFReal_nonneg 0 v_B) hg_nn
     (measurable_gaussianPDFReal 0 v_B) hg_meas Amaj Bmaj one_pos
     hW_ac hvol_ac_W
@@ -960,51 +960,51 @@ theorem integrable_log_map_indep_gaussian_add
     (v_B : ℝ≥0) (hv_B : v_B ≠ 0) (hB_law : P.map B = gaussianReal 0 v_B)
     (hAB : IndepFun A B P)
     (hA_ac : (P.map A) ≪ volume) (hB_ac : (P.map B) ≪ volume)
-    (h_mom_A : Integrable (fun ω => (A ω)^2) P) {t : ℝ} (ht : 0 < t) :
+    (h_mom_A : Integrable (fun ω ↦ (A ω)^2) P) {t : ℝ} (ht : 0 < t) :
     Integrable
-        (fun x => Real.log (((P.map (fun ω => B ω + A ω / Real.sqrt t)).rnDeriv
+        (fun x ↦ Real.log (((P.map (fun ω ↦ B ω + A ω / Real.sqrt t)).rnDeriv
               volume x).toReal))
-        (P.map (fun ω => B ω + A ω / Real.sqrt t)) := by
-  set Zt : Ω → ℝ := fun ω => A ω / Real.sqrt t with hZt
+        (P.map (fun ω ↦ B ω + A ω / Real.sqrt t)) := by
+  set Zt : Ω → ℝ := fun ω ↦ A ω / Real.sqrt t with hZt
   have hZt_meas : Measurable Zt := hA.div_const _
   have h_indep : IndepFun B Zt P := indepFun_const_div_sqrt A B P hAB
-  have hW_ac : (P.map (fun ω => B ω + Zt ω)) ≪ volume :=
+  have hW_ac : (P.map (fun ω ↦ B ω + Zt ω)) ≪ volume :=
     map_add_absolutelyContinuous B Zt P hB hZt_meas h_indep hB_ac
   have hv_B_pos : (0 : ℝ≥0) < v_B := pos_iff_ne_zero.mpr hv_B
   have hv_B_pos' : (0 : ℝ) < v_B := hv_B_pos
   obtain ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom, h_path_rnDeriv⟩ :=
     rescaledPath_density_rnDeriv_eq A B P hA hB v_B hv_B_pos hB_law hAB hA_ac h_mom_A ht
-  set g : ℝ → ℝ := fun x =>
+  set g : ℝ → ℝ := fun x ↦
     InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
       (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x with hg_def
-  have hg_nn : ∀ x, 0 ≤ g x := fun x =>
-    integral_nonneg fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg _ _ _)
+  have hg_nn : ∀ x, 0 ≤ g x := fun x ↦
+    integral_nonneg fun y ↦ mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg _ _ _)
   have hvar_eq : (⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩ : ℝ≥0) = v_B := by
     apply NNReal.coe_injective; show (1 : ℝ) * (v_B : ℝ) = (v_B : ℝ); rw [one_mul]
-  have h_negMulLog : Integrable (fun x => Real.negMulLog (g x)) volume := by
+  have h_negMulLog : Integrable (fun x ↦ Real.negMulLog (g x)) volume := by
     rw [hg_def, show (⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩ : ℝ≥0) = v_B from hvar_eq]
     simpa using InformationTheory.Shannon.convDensityAdd_negMulLog_integrable_pub
       hpX_nn hpX_meas hpX_int hpX_mass hpX_mom (t := (v_B : ℝ)) hv_B_pos'
-  have hW_ac' : (P.map (fun ω => B ω + Zt ω))
-      = volume.withDensity (fun x => ENNReal.ofReal (g x)) := by
+  have hW_ac' : (P.map (fun ω ↦ B ω + Zt ω))
+      = volume.withDensity (fun x ↦ ENNReal.ofReal (g x)) := by
     have hrn := h_path_rnDeriv
     rw [← Measure.withDensity_rnDeriv_eq _ _ hW_ac]
     exact withDensity_congr_ae hrn
-  have hg_ofReal_aem : AEMeasurable (fun x => ENNReal.ofReal (g x)) volume :=
-    ((P.map (fun ω => B ω + Zt ω)).measurable_rnDeriv volume).aemeasurable.congr
+  have hg_ofReal_aem : AEMeasurable (fun x ↦ ENNReal.ofReal (g x)) volume :=
+    ((P.map (fun ω ↦ B ω + Zt ω)).measurable_rnDeriv volume).aemeasurable.congr
       h_path_rnDeriv
-  have h_rn_toReal_ae : (fun x => ((P.map (fun ω => B ω + Zt ω)).rnDeriv volume x).toReal)
-      =ᵐ[P.map (fun ω => B ω + Zt ω)] g := by
-    have h0 : (fun x => ((P.map (fun ω => B ω + Zt ω)).rnDeriv volume x).toReal)
+  have h_rn_toReal_ae : (fun x ↦ ((P.map (fun ω ↦ B ω + Zt ω)).rnDeriv volume x).toReal)
+      =ᵐ[P.map (fun ω ↦ B ω + Zt ω)] g := by
+    have h0 : (fun x ↦ ((P.map (fun ω ↦ B ω + Zt ω)).rnDeriv volume x).toReal)
         =ᵐ[volume] g := by
       filter_upwards [h_path_rnDeriv] with x hx
       rw [hx, ENNReal.toReal_ofReal (hg_nn x)]
     exact hW_ac.ae_eq h0
-  have h_int_logg : Integrable (fun x => Real.log (g x))
-      (P.map (fun ω => B ω + Zt ω)) := by
+  have h_int_logg : Integrable (fun x ↦ Real.log (g x))
+      (P.map (fun ω ↦ B ω + Zt ω)) := by
     rw [hW_ac', integrable_withDensity_iff_integrable_smul₀' hg_ofReal_aem
-      (Filter.Eventually.of_forall fun x => ENNReal.ofReal_lt_top)]
-    refine (h_negMulLog.neg).congr (Filter.Eventually.of_forall fun x => ?_)
+      (Filter.Eventually.of_forall fun x ↦ ENNReal.ofReal_lt_top)]
+    refine (h_negMulLog.neg).congr (Filter.Eventually.of_forall fun x ↦ ?_)
     simp only [Pi.neg_apply, smul_eq_mul, ENNReal.toReal_ofReal (hg_nn x),
       Real.negMulLog, neg_mul, neg_neg]
   refine h_int_logg.congr ?_
@@ -1018,58 +1018,58 @@ theorem rescaledPath_indep_regular
     (hAB : IndepFun A B P)
     (hA_ac : (P.map A) ≪ volume)
     (hB_ac : (P.map B) ≪ volume)
-    (h_mom_A : Integrable (fun ω => (A ω)^2) P) :
+    (h_mom_A : Integrable (fun ω ↦ (A ω)^2) P) :
     ∀ t : ℝ, 0 < t →
-      IndepFun B (fun ω => A ω / Real.sqrt t) P
-      ∧ (P.map (fun ω => B ω + A ω / Real.sqrt t)) ≪ volume
-      ∧ ((P.map (fun ω => A ω / Real.sqrt t))
-          ⊗ₘ condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-              (fun ω => A ω / Real.sqrt t) P
-          ≪ (P.map (fun ω => A ω / Real.sqrt t))
-              ⊗ₘ Kernel.const ℝ (P.map (fun ω => B ω + A ω / Real.sqrt t)))
+      IndepFun B (fun ω ↦ A ω / Real.sqrt t) P
+      ∧ (P.map (fun ω ↦ B ω + A ω / Real.sqrt t)) ≪ volume
+      ∧ ((P.map (fun ω ↦ A ω / Real.sqrt t))
+          ⊗ₘ condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+              (fun ω ↦ A ω / Real.sqrt t) P
+          ≪ (P.map (fun ω ↦ A ω / Real.sqrt t))
+              ⊗ₘ Kernel.const ℝ (P.map (fun ω ↦ B ω + A ω / Real.sqrt t)))
       ∧ Integrable
-          (llr ((P.map (fun ω => A ω / Real.sqrt t))
-                  ⊗ₘ condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-                      (fun ω => A ω / Real.sqrt t) P)
-                ((P.map (fun ω => A ω / Real.sqrt t))
-                  ⊗ₘ Kernel.const ℝ (P.map (fun ω => B ω + A ω / Real.sqrt t))))
-          ((P.map (fun ω => A ω / Real.sqrt t))
-            ⊗ₘ condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-                (fun ω => A ω / Real.sqrt t) P)
-      ∧ (∀ᵐ z ∂(P.map (fun ω => A ω / Real.sqrt t)),
-          condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-              (fun ω => A ω / Real.sqrt t) P z ≪ volume)
-      ∧ (∀ᵐ z ∂(P.map (fun ω => A ω / Real.sqrt t)), Integrable
-          (fun x => ((condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-                (fun ω => A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
-            * Real.log (((condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-                (fun ω => A ω / Real.sqrt t) P z).rnDeriv volume x).toReal)) volume)
-      ∧ (∀ᵐ z ∂(P.map (fun ω => A ω / Real.sqrt t)), Integrable
-          (fun x => ((condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-                (fun ω => A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
-            * Real.log (((P.map (fun ω => B ω + A ω / Real.sqrt t)).rnDeriv
+          (llr ((P.map (fun ω ↦ A ω / Real.sqrt t))
+                  ⊗ₘ condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+                      (fun ω ↦ A ω / Real.sqrt t) P)
+                ((P.map (fun ω ↦ A ω / Real.sqrt t))
+                  ⊗ₘ Kernel.const ℝ (P.map (fun ω ↦ B ω + A ω / Real.sqrt t))))
+          ((P.map (fun ω ↦ A ω / Real.sqrt t))
+            ⊗ₘ condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+                (fun ω ↦ A ω / Real.sqrt t) P)
+      ∧ (∀ᵐ z ∂(P.map (fun ω ↦ A ω / Real.sqrt t)),
+          condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+              (fun ω ↦ A ω / Real.sqrt t) P z ≪ volume)
+      ∧ (∀ᵐ z ∂(P.map (fun ω ↦ A ω / Real.sqrt t)), Integrable
+          (fun x ↦ ((condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+                (fun ω ↦ A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
+            * Real.log (((condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+                (fun ω ↦ A ω / Real.sqrt t) P z).rnDeriv volume x).toReal)) volume)
+      ∧ (∀ᵐ z ∂(P.map (fun ω ↦ A ω / Real.sqrt t)), Integrable
+          (fun x ↦ ((condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+                (fun ω ↦ A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
+            * Real.log (((P.map (fun ω ↦ B ω + A ω / Real.sqrt t)).rnDeriv
                 volume x).toReal)) volume)
       ∧ Integrable
-          (fun z => InformationTheory.Shannon.differentialEntropy
-            (condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-                (fun ω => A ω / Real.sqrt t) P z))
-          (P.map (fun ω => A ω / Real.sqrt t))
+          (fun z ↦ InformationTheory.Shannon.differentialEntropy
+            (condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+                (fun ω ↦ A ω / Real.sqrt t) P z))
+          (P.map (fun ω ↦ A ω / Real.sqrt t))
       ∧ Integrable
-          (fun z => ∫ x, ((condDistrib (fun ω => B ω + A ω / Real.sqrt t)
-                (fun ω => A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
-            * Real.log (((P.map (fun ω => B ω + A ω / Real.sqrt t)).rnDeriv
+          (fun z ↦ ∫ x, ((condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t)
+                (fun ω ↦ A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
+            * Real.log (((P.map (fun ω ↦ B ω + A ω / Real.sqrt t)).rnDeriv
                 volume x).toReal) ∂volume)
-          (P.map (fun ω => A ω / Real.sqrt t))
+          (P.map (fun ω ↦ A ω / Real.sqrt t))
       ∧ Integrable
-          (fun x => Real.log (((P.map (fun ω => B ω + A ω / Real.sqrt t)).rnDeriv
+          (fun x ↦ Real.log (((P.map (fun ω ↦ B ω + A ω / Real.sqrt t)).rnDeriv
                 volume x).toReal))
-          (P.map (fun ω => B ω + A ω / Real.sqrt t)) := by
+          (P.map (fun ω ↦ B ω + A ω / Real.sqrt t)) := by
   intro t ht
-  have hZt_meas : Measurable (fun ω => A ω / Real.sqrt t) := hA.div_const _
-  have h_indep : IndepFun B (fun ω => A ω / Real.sqrt t) P :=
+  have hZt_meas : Measurable (fun ω ↦ A ω / Real.sqrt t) := hA.div_const _
+  have h_indep : IndepFun B (fun ω ↦ A ω / Real.sqrt t) P :=
     indepFun_const_div_sqrt A B P hAB
-  have hW_ac : (P.map (fun ω => B ω + A ω / Real.sqrt t)) ≪ volume :=
-    map_add_absolutelyContinuous B (fun ω => A ω / Real.sqrt t) P hB hZt_meas h_indep hB_ac
+  have hW_ac : (P.map (fun ω ↦ B ω + A ω / Real.sqrt t)) ≪ volume :=
+    map_add_absolutelyContinuous B (fun ω ↦ A ω / Real.sqrt t) P hB hZt_meas h_indep hB_ac
   refine ⟨h_indep, hW_ac, ?_, ?_,
     condDistrib_indep_gaussian_add_fibre_absolutelyContinuous A B P hA hB v_B hv_B hB_law hAB,
     ?_, ?_, ?_, ?_, ?_⟩
@@ -1140,10 +1140,10 @@ theorem isRescaledPathRegular_of_methodX
     (hAB : IndepFun A B P)
     (hA_ac : (P.map A) ≪ volume)
     (varA : ℝ) (_h_varA_nn : 0 ≤ varA)
-    (h_mom_A : Integrable (fun ω => (A ω)^2) P)
+    (h_mom_A : Integrable (fun ω ↦ (A ω)^2) P)
     (h_var_bound : ∀ t : ℝ, 0 < t →
-      (∫ x, (x - (∫ y, y ∂(P.map (fun ω => A ω / Real.sqrt t + B ω))))^2
-            ∂(P.map (fun ω => A ω / Real.sqrt t + B ω)))
+      (∫ x, (x - (∫ y, y ∂(P.map (fun ω ↦ A ω / Real.sqrt t + B ω))))^2
+            ∂(P.map (fun ω ↦ A ω / Real.sqrt t + B ω)))
           ≤ varA / t + (v_B : ℝ)) :
     IsRescaledPathRegular A B P varA v_B := by
   -- Noise is a.c. (Gaussian).

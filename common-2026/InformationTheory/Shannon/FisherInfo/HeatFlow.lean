@@ -71,8 +71,8 @@ theorem heatKernel_variance_ne_zero {t : ℝ} (ht : 0 < t) :
 `InformationTheory.Shannon.deriv_gaussianPDFReal`. -/
 @[entry_point]
 theorem heatKernel_spatial_deriv {t : ℝ} (ht : 0 < t) (x : ℝ) :
-    deriv (fun y => heatKernel t y) x = -(x / t) * heatKernel t x := by
-  have hfun : (fun y => heatKernel t y) = gaussianPDFReal 0 ⟨t, ht.le⟩ := by
+    deriv (fun y ↦ heatKernel t y) x = -(x / t) * heatKernel t x := by
+  have hfun : (fun y ↦ heatKernel t y) = gaussianPDFReal 0 ⟨t, ht.le⟩ := by
     funext y; exact heatKernel_def_gaussianPDFReal ht y
   rw [hfun, InformationTheory.Shannon.deriv_gaussianPDFReal (heatKernel_variance_ne_zero ht) x,
     heatKernel_def_gaussianPDFReal ht x]
@@ -83,8 +83,8 @@ theorem heatKernel_spatial_deriv {t : ℝ} (ht : 0 < t) (x : ℝ) :
 /-- **`HasDerivAt` form** of the first spatial derivative of the heat kernel. -/
 @[entry_point]
 theorem heatKernel_hasDerivAt_spatial {t : ℝ} (ht : 0 < t) (x : ℝ) :
-    HasDerivAt (fun y => heatKernel t y) (-(x / t) * heatKernel t x) x := by
-  have hfun : (fun y => heatKernel t y) = gaussianPDFReal 0 ⟨t, ht.le⟩ := by
+    HasDerivAt (fun y ↦ heatKernel t y) (-(x / t) * heatKernel t x) x := by
+  have hfun : (fun y ↦ heatKernel t y) = gaussianPDFReal 0 ⟨t, ht.le⟩ := by
     funext y; exact heatKernel_def_gaussianPDFReal ht y
   rw [hfun]
   have hval : -(x / t) * heatKernel t x = deriv (gaussianPDFReal 0 ⟨t, ht.le⟩) x := by
@@ -110,20 +110,20 @@ differentiate `heatKernel_spatial_deriv` once more (product rule).
 `∂²_x g_t(x) = (x²/t² - 1/t) · g_t(x)`. -/
 @[entry_point]
 theorem heatKernel_spatial_laplacian {t : ℝ} (ht : 0 < t) (x : ℝ) :
-    deriv (fun y => deriv (fun z => heatKernel t z) y) x
+    deriv (fun y ↦ deriv (fun z ↦ heatKernel t z) y) x
       = spatialLaplacianHeatKernel t x := by
-  have hinner : (fun y => deriv (fun z => heatKernel t z) y)
-      = fun y => -(y / t) * heatKernel t y := by
+  have hinner : (fun y ↦ deriv (fun z ↦ heatKernel t z) y)
+      = fun y ↦ -(y / t) * heatKernel t y := by
     funext y; exact heatKernel_spatial_deriv ht y
   rw [hinner]
   -- product rule on `(fun y => -(y/t)) * (fun y => heatKernel t y)`
-  have hf : HasDerivAt (fun y : ℝ => -(y / t)) (-(1 / t)) x := by
-    have h1 : HasDerivAt (fun y : ℝ => y / t) (1 / t) x :=
+  have hf : HasDerivAt (fun y : ℝ ↦ -(y / t)) (-(1 / t)) x := by
+    have h1 : HasDerivAt (fun y : ℝ ↦ y / t) (1 / t) x :=
       (hasDerivAt_id x).div_const t
     exact h1.neg
-  have hg : HasDerivAt (fun y => heatKernel t y) (-(x / t) * heatKernel t x) x :=
+  have hg : HasDerivAt (fun y ↦ heatKernel t y) (-(x / t) * heatKernel t x) x :=
     heatKernel_hasDerivAt_spatial ht x
-  have hmul : HasDerivAt (fun y => -(y / t) * heatKernel t y)
+  have hmul : HasDerivAt (fun y ↦ -(y / t) * heatKernel t y)
       (-(1 / t) * heatKernel t x + -(x / t) * (-(x / t) * heatKernel t x)) x := hf.mul hg
   rw [hmul.deriv]
   unfold spatialLaplacianHeatKernel
@@ -138,12 +138,12 @@ theorem heatKernel_spatial_laplacian {t : ℝ} (ht : 0 < t) (x : ℝ) :
 `isHeatSpatialDerivHyp_gaussian`. -/
 def IsHeatSpatialDerivHyp (p : ℝ → ℝ → ℝ) (Δp : ℝ → ℝ → ℝ) : Prop :=
   ∀ t : ℝ, 0 < t → ∀ x : ℝ,
-    deriv (fun y => deriv (fun z => p t z) y) x = Δp t x
+    deriv (fun y ↦ deriv (fun z ↦ p t z) y) x = Δp t x
 
 /-- The time-derivative sub-predicate: `p` solves the heat equation `∂_s p = (1/2) Δp` at `t`. -/
 def IsHeatTimeDerivHyp (p : ℝ → ℝ → ℝ) (Δp : ℝ → ℝ → ℝ) : Prop :=
   ∀ t : ℝ, 0 < t → ∀ x : ℝ,
-    HasDerivAt (fun s => p s x) ((1 / 2) * Δp t x) t
+    HasDerivAt (fun s ↦ p s x) ((1 / 2) * Δp t x) t
 
 /-- The convolution-representation sub-predicate. -/
 def IsHeatFlowConvolutionHyp {Ω : Type*} [MeasurableSpace Ω]
@@ -159,8 +159,8 @@ def IsHeatFlowConvolutionHyp {Ω : Type*} [MeasurableSpace Ω]
 `Δp t x := spatialLaplacianHeatKernel t x`. -/
 @[entry_point]
 theorem isHeatSpatialDerivHyp_gaussian :
-    IsHeatSpatialDerivHyp (fun t x => heatKernel t x)
-      (fun t x => spatialLaplacianHeatKernel t x) := by
+    IsHeatSpatialDerivHyp (fun t x ↦ heatKernel t x)
+      (fun t x ↦ spatialLaplacianHeatKernel t x) := by
   intro t ht x
   exact heatKernel_spatial_laplacian ht x
 
@@ -196,14 +196,14 @@ theorem deBruijn_identity_v2_of_heat_subhyp
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z)
     (hXZ : IndepFun X Z P)
     (hX_ac : (P.map X) ≪ volume)
-    (h_mom_X : Integrable (fun ω => (X ω) ^ 2) P)
+    (h_mom_X : Integrable (fun ω ↦ (X ω) ^ 2) P)
     {t : ℝ} (ht : 0 < t)
     {p : ℝ → ℝ → ℝ} {Δp : ℝ → ℝ → ℝ}
     (h_conv : IsHeatFlowConvolutionHyp X Z P p)
     (h_time : IsHeatTimeDerivHyp p Δp)
     (_h_ibp : IsIBPHypothesis X Z P p t) :
     HasDerivAt
-      (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
+      (fun s ↦ differentialEntropy (P.map (gaussianConvolution X Z s)))
       ((1 / 2) * fisherInfoOfDensityReal
         (IsRegularDeBruijnHypV2.ofHeatFlow hX hZ hXZ hX_ac h_mom_X ht
           (IsHeatFlowDensity_of_sub_predicates h_conv h_time)).density_t)
@@ -221,7 +221,7 @@ noncomputable def IsRegularDeBruijnHypV2.ofHeatSubhyp
     {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z)
     (hXZ : IndepFun X Z P)
     (hX_ac : (P.map X) ≪ volume)
-    (h_mom_X : Integrable (fun ω => (X ω) ^ 2) P)
+    (h_mom_X : Integrable (fun ω ↦ (X ω) ^ 2) P)
     {t : ℝ} (ht : 0 < t)
     {p : ℝ → ℝ → ℝ} {Δp : ℝ → ℝ → ℝ}
     (h_conv : IsHeatFlowConvolutionHyp X Z P p)

@@ -185,7 +185,7 @@ def IsStamCondExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     J_X = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
     J_Y = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
     J_sum = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2
-              (P.map (fun ω => X ω + Y ω)) fXY).toReal →
+              (P.map (fun ω ↦ X ω + Y ω)) fXY).toReal →
     InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fX →
     InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fY →
     (∫ x, fX x ∂MeasureTheory.volume = 1) →
@@ -227,7 +227,7 @@ theorem isStamCondExpCSHyp_symm {Ω : Type*} [MeasurableSpace Ω]
     IsStamCondExpCSHyp Y X P := by
   intro J_Y J_X J_sum fY fX fXY hJY hJX hJsum hJY_def hJX_def hJsum_def
     hregY hregX hnormY hnormX hconv hready lam hlo hhi
-  have h_comm : (fun ω => Y ω + X ω) = fun ω => X ω + Y ω := by funext ω; ring
+  have h_comm : (fun ω ↦ Y ω + X ω) = fun ω ↦ X ω + Y ω := by funext ω; ring
   rw [h_comm] at hJsum_def
   -- transport the convolution constraint across `convDensityAdd` commutativity
   have hconv' : ∀ x, fXY x =

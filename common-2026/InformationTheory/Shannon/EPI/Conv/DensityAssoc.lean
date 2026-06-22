@@ -50,7 +50,7 @@ open scoped NNReal Convolution
 (definitional, via `ContinuousLinearMap.mul_apply'`).
 @audit:ok -/
 theorem convDensityAdd_eq_convolution (a b : ℝ → ℝ) :
-    convDensityAdd a b = fun z => (convolution a b (ContinuousLinearMap.mul ℝ ℝ) volume) z := by
+    convDensityAdd a b = fun z ↦ (convolution a b (ContinuousLinearMap.mul ℝ ℝ) volume) z := by
   funext z
   unfold convDensityAdd convolution
   simp only [ContinuousLinearMap.mul_apply']
@@ -61,10 +61,10 @@ theorem convolutionExistsAt_of_integrable_bdd (a b : ℝ → ℝ)
     (hb_bdd : ∃ M, ∀ x, |b x| ≤ M) (z : ℝ) :
     ConvolutionExistsAt a b z (ContinuousLinearMap.mul ℝ ℝ) volume := by
   obtain ⟨M, hM⟩ := hb_bdd
-  have : Integrable (fun x => a x * b (z - x)) volume :=
+  have : Integrable (fun x ↦ a x * b (z - x)) volume :=
     ha_int.mul_bdd
       ((hb_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable)
-      (c := M) (Filter.Eventually.of_forall fun x => by
+      (c := M) (Filter.Eventually.of_forall fun x ↦ by
         simpa [Real.norm_eq_abs] using hM (z - x))
   simpa only [ConvolutionExistsAt, ContinuousLinearMap.mul_apply'] using this
 
@@ -74,7 +74,7 @@ theorem convDensityAdd_pXpY_measurable (pX pY : ℝ → ℝ)
     Measurable (convDensityAdd pX pY) := by
   have huncurry :
       StronglyMeasurable
-        (Function.uncurry fun z x => pX x * pY (z - x)) := by
+        (Function.uncurry fun z x ↦ pX x * pY (z - x)) := by
     apply Measurable.stronglyMeasurable
     apply (hpX_meas.comp measurable_snd).mul
     exact hpY_meas.comp ((measurable_fst).sub measurable_snd)
@@ -89,7 +89,7 @@ theorem convDensityAdd_bdd_of_integrable_bdd (a b : ℝ → ℝ)
     ∃ M, ∀ z, |convDensityAdd a b z| ≤ M := by
   obtain ⟨M, hM⟩ := hb_bdd
   have hM0 : 0 ≤ M := le_trans (abs_nonneg _) (hM 0)
-  refine ⟨(∫ x, a x ∂volume) * M, fun z => ?_⟩
+  refine ⟨(∫ x, a x ∂volume) * M, fun z ↦ ?_⟩
   have hge : ∀ x, |a x * b (z - x)| ≤ a x * M := by
     intro x
     rw [abs_mul, abs_of_nonneg (ha_nn x)]
@@ -98,7 +98,7 @@ theorem convDensityAdd_bdd_of_integrable_bdd (a b : ℝ → ℝ)
     _ ≤ ∫ x, |a x * b (z - x)| ∂volume := abs_integral_le_integral_abs
     _ ≤ ∫ x, a x * M ∂volume := by
         apply integral_mono_of_nonneg
-          (Filter.Eventually.of_forall fun x => abs_nonneg _) (ha_int.mul_const M)
+          (Filter.Eventually.of_forall fun x ↦ abs_nonneg _) (ha_int.mul_const M)
           (Filter.Eventually.of_forall hge)
     _ = (∫ x, a x ∂volume) * M := by rw [integral_mul_const]
 
@@ -117,16 +117,16 @@ theorem convDensityAdd_assoc (a b c : ℝ → ℝ)
   classical
   set L : ℝ →L[ℝ] ℝ →L[ℝ] ℝ := ContinuousLinearMap.mul ℝ ℝ with hL_def
   -- `|b|`, `|c|`, `|a|` agree with `b`, `c`, `a` (nonneg), so norm-convolutions equal plain ones.
-  have hb_abs : (fun x => ‖b x‖) = b := by funext x; rw [Real.norm_eq_abs, abs_of_nonneg (hb_nn x)]
-  have hc_abs : (fun x => ‖c x‖) = c := by funext x; rw [Real.norm_eq_abs, abs_of_nonneg (hc_nn x)]
-  have ha_abs : (fun x => ‖a x‖) = a := by funext x; rw [Real.norm_eq_abs, abs_of_nonneg (ha_nn x)]
+  have hb_abs : (fun x ↦ ‖b x‖) = b := by funext x; rw [Real.norm_eq_abs, abs_of_nonneg (hb_nn x)]
+  have hc_abs : (fun x ↦ ‖c x‖) = c := by funext x; rw [Real.norm_eq_abs, abs_of_nonneg (hc_nn x)]
+  have ha_abs : (fun x ↦ ‖a x‖) = a := by funext x; rw [Real.norm_eq_abs, abs_of_nonneg (ha_nn x)]
   -- Identify both convDensityAdd sides with Mathlib convolution.
   have hbridge : ∀ u v : ℝ → ℝ, convDensityAdd u v = (u ⋆[L, volume] v) :=
-    fun u v => convDensityAdd_eq_convolution u v
+    fun u v ↦ convDensityAdd_eq_convolution u v
   rw [hbridge, hbridge, hbridge, hbridge]
   funext x₀
   refine MeasureTheory.convolution_assoc L L L L
-    (fun x y z => by simp only [hL_def, ContinuousLinearMap.mul_apply']; ring)
+    (fun x y z ↦ by simp only [hL_def, ContinuousLinearMap.mul_apply']; ring)
     ha_meas.aestronglyMeasurable hb_meas.aestronglyMeasurable hc_meas.aestronglyMeasurable
     (MeasureTheory.Integrable.ae_convolution_exists L ha_int hb_int) ?_ ?_
   · -- hgk: ∀ᵐ x, ConvolutionExistsAt ‖b‖ ‖c‖ x (mul) volume
@@ -146,7 +146,7 @@ theorem convDensityAdd_assoc (a b c : ℝ → ℝ)
 theorem convDensityAdd_pXpY_nonneg (pX pY : ℝ → ℝ)
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpY_nn : ∀ x, 0 ≤ pY x) (z : ℝ) :
     0 ≤ convDensityAdd pX pY z :=
-  integral_nonneg fun y => mul_nonneg (hpX_nn y) (hpY_nn _)
+  integral_nonneg fun y ↦ mul_nonneg (hpX_nn y) (hpY_nn _)
 
 /-- Integrability of `convDensityAdd pX pY` when one factor is bounded. -/
 theorem convDensityAdd_pXpY_integrable (pX pY : ℝ → ℝ)
@@ -210,14 +210,14 @@ theorem convDensityAdd_convGaussian_interchange (pX pY : ℝ → ℝ) {t : ℝ} 
           (gaussianPDFReal 0 ⟨2 * t, by positivity⟩) := by
   set g : ℝ → ℝ := gaussianPDFReal 0 ⟨t, ht.le⟩ with hg_def
   -- regularity of the Gaussian heat kernel `g`
-  have hg_nn : ∀ x, 0 ≤ g x := fun x => gaussianPDFReal_nonneg _ _ _
+  have hg_nn : ∀ x, 0 ≤ g x := fun x ↦ gaussianPDFReal_nonneg _ _ _
   have hg_meas : Measurable g := measurable_gaussianPDFReal _ _
   have hg_int : Integrable g volume := integrable_gaussianPDFReal _ _
   have hg_bdd : ∃ M, ∀ x, |g x| ≤ M :=
     InformationTheory.Shannon.EPIGaussianDensityRoute.bdd_gaussianPDFReal _ _
   -- regularity of `pY ∗ g`
   have hpYg_nn : ∀ x, 0 ≤ convDensityAdd pY g x :=
-    fun x => convDensityAdd_pXpY_nonneg pY g hpY_nn hg_nn x
+    fun x ↦ convDensityAdd_pXpY_nonneg pY g hpY_nn hg_nn x
   have hpYg_meas : Measurable (convDensityAdd pY g) :=
     convDensityAdd_pXpY_measurable pY g hpY_meas hg_meas
   have hpYg_int : Integrable (convDensityAdd pY g) volume :=
@@ -226,7 +226,7 @@ theorem convDensityAdd_convGaussian_interchange (pX pY : ℝ → ℝ) {t : ℝ} 
     convDensityAdd_bdd_of_integrable_bdd pY g hpY_nn hpY_int hg_bdd
   -- regularity of `g ∗ g`
   have hgg_nn : ∀ x, 0 ≤ convDensityAdd g g x :=
-    fun x => convDensityAdd_pXpY_nonneg g g hg_nn hg_nn x
+    fun x ↦ convDensityAdd_pXpY_nonneg g g hg_nn hg_nn x
   have hgg_meas : Measurable (convDensityAdd g g) :=
     convDensityAdd_pXpY_measurable g g hg_meas hg_meas
   have hgg_int : Integrable (convDensityAdd g g) volume :=
@@ -269,19 +269,19 @@ theorem convDensityAdd_convGaussian_interchange_asym (pX pY : ℝ → ℝ) {s t 
   set gs : ℝ → ℝ := gaussianPDFReal 0 ⟨s, hs.le⟩ with hgs_def
   set gt : ℝ → ℝ := gaussianPDFReal 0 ⟨t, ht.le⟩ with hgt_def
   -- regularity of the Gaussian heat kernels `gs`, `gt`
-  have hgs_nn : ∀ x, 0 ≤ gs x := fun x => gaussianPDFReal_nonneg _ _ _
+  have hgs_nn : ∀ x, 0 ≤ gs x := fun x ↦ gaussianPDFReal_nonneg _ _ _
   have hgs_meas : Measurable gs := measurable_gaussianPDFReal _ _
   have hgs_int : Integrable gs volume := integrable_gaussianPDFReal _ _
   have hgs_bdd : ∃ M, ∀ x, |gs x| ≤ M :=
     InformationTheory.Shannon.EPIGaussianDensityRoute.bdd_gaussianPDFReal _ _
-  have hgt_nn : ∀ x, 0 ≤ gt x := fun x => gaussianPDFReal_nonneg _ _ _
+  have hgt_nn : ∀ x, 0 ≤ gt x := fun x ↦ gaussianPDFReal_nonneg _ _ _
   have hgt_meas : Measurable gt := measurable_gaussianPDFReal _ _
   have hgt_int : Integrable gt volume := integrable_gaussianPDFReal _ _
   have hgt_bdd : ∃ M, ∀ x, |gt x| ≤ M :=
     InformationTheory.Shannon.EPIGaussianDensityRoute.bdd_gaussianPDFReal _ _
   -- regularity of `pY ∗ gt`
   have hpYg_nn : ∀ x, 0 ≤ convDensityAdd pY gt x :=
-    fun x => convDensityAdd_pXpY_nonneg pY gt hpY_nn hgt_nn x
+    fun x ↦ convDensityAdd_pXpY_nonneg pY gt hpY_nn hgt_nn x
   have hpYg_meas : Measurable (convDensityAdd pY gt) :=
     convDensityAdd_pXpY_measurable pY gt hpY_meas hgt_meas
   have hpYg_int : Integrable (convDensityAdd pY gt) volume :=
@@ -290,7 +290,7 @@ theorem convDensityAdd_convGaussian_interchange_asym (pX pY : ℝ → ℝ) {s t 
     convDensityAdd_bdd_of_integrable_bdd pY gt hpY_nn hpY_int hgt_bdd
   -- regularity of `gs ∗ gt`
   have hgsgt_nn : ∀ x, 0 ≤ convDensityAdd gs gt x :=
-    fun x => convDensityAdd_pXpY_nonneg gs gt hgs_nn hgt_nn x
+    fun x ↦ convDensityAdd_pXpY_nonneg gs gt hgs_nn hgt_nn x
   have hgsgt_meas : Measurable (convDensityAdd gs gt) :=
     convDensityAdd_pXpY_measurable gs gt hgs_meas hgt_meas
   have hgsgt_int : Integrable (convDensityAdd gs gt) volume :=

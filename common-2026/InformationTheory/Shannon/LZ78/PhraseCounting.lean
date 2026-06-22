@@ -79,7 +79,7 @@ variable {α : Type*}
 /-- **Injection of length-`≤L` strings into `Fin (L+1) → Option α`**:
 record each of the first `L+1` `getElem?` slots. -/
 def toOptTuple (L : ℕ) (w : List α) : Fin (L + 1) → Option α :=
-  fun i => w[(i : ℕ)]?
+  fun i ↦ w[(i : ℕ)]?
 
 /-- **Injectivity on length-`≤L` strings**: two strings of length `≤ L`
 with the same `getElem?` on indices `0..L` are equal. -/
@@ -140,9 +140,9 @@ theorem packing_nat (ws : List (List α)) (hnodup : ws.Nodup) (L : ℕ) :
       ≤ (ws.map List.length).sum := by
   classical
   -- Split `ws` into long (`L < length`) and short (`length ≤ L`).
-  set P : List α → Prop := fun w => L < w.length with hP
-  set long := ws.filter (fun w => decide (P w)) with hlong
-  set short := ws.filter (fun w => decide (¬ P w)) with hshort
+  set P : List α → Prop := fun w ↦ L < w.length with hP
+  set long := ws.filter (fun w ↦ decide (P w)) with hlong
+  set short := ws.filter (fun w ↦ decide (¬ P w)) with hshort
   have hsplit :
       (long.map List.length).sum + (short.map List.length).sum
       = (ws.map List.length).sum :=
@@ -172,7 +172,7 @@ theorem packing_nat (ws : List (List α)) (hnodup : ws.Nodup) (L : ℕ) :
           List.card_nsmul_le_sum (long.map List.length) (L + 1) hpt
   -- Long count = total - short count.
   have hcount : ws.length = long.length + short.length := by
-    have := ws.length_eq_countP_add_countP (fun w => decide (P w))
+    have := ws.length_eq_countP_add_countP (fun w ↦ decide (P w))
     simp only [List.countP_eq_length_filter, hlong, hshort] at this ⊢
     convert this using 3
     simp
@@ -342,7 +342,7 @@ omit [DecidableEq α] in
 /-- **`foldr`-length equals `map`-length sum**: bridges the
 total-length shape to the `List.sum` shape used by the packing lemma. -/
 theorem foldr_length_eq_map_sum (ws : List (List α)) :
-    ws.foldr (fun w acc => w.length + acc) 0 = (ws.map List.length).sum := by
+    ws.foldr (fun w acc ↦ w.length + acc) 0 = (ws.map List.length).sum := by
   induction ws with
   | nil => simp
   | cons hd tl ih => simp only [List.foldr_cons, List.map_cons, List.sum_cons, ih]
@@ -409,13 +409,13 @@ no honest hypothesis. -/
 @[entry_point]
 theorem lz78PhraseStrings_count_isBigO
     (input : ℕ → List α) (hlen : ∀ n, (input n).length = n) :
-    (fun n => ((lz78PhraseStrings (input n)).length : ℝ))
-      =O[atTop] (fun n => (n : ℝ) / Real.log (n : ℝ)) := by
+    (fun n ↦ ((lz78PhraseStrings (input n)).length : ℝ))
+      =O[atTop] (fun n ↦ (n : ℝ) / Real.log (n : ℝ)) := by
   refine isBigO_natCast_div_log_of_mul_log_le
     (K := 8 * Real.log (Fintype.card α + 1)) ?_ ?_
-  · exact Filter.Eventually.of_forall (fun n => by positivity)
+  · exact Filter.Eventually.of_forall (fun n ↦ by positivity)
   · exact Filter.Eventually.of_forall
-      (fun n => lz78PhraseStrings_mul_log_le_of_length input hlen n)
+      (fun n ↦ lz78PhraseStrings_mul_log_le_of_length input hlen n)
 
 end AsymptoticBridge
 

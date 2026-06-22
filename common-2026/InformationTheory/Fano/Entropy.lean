@@ -33,7 +33,7 @@ def entropyOfFn {α : Type*} [Fintype α] (μ : α → ℝ) : ℝ :=
 lemma entropyOfFn_nonneg {α : Type*} [Fintype α]
     (μ : α → ℝ) (h0 : ∀ a, 0 ≤ μ a) (h1 : ∀ a, μ a ≤ 1) :
     0 ≤ entropyOfFn μ :=
-  Finset.sum_nonneg (fun a _ => Real.negMulLog_nonneg (h0 a) (h1 a))
+  Finset.sum_nonneg (fun a _ ↦ Real.negMulLog_nonneg (h0 a) (h1 a))
 
 /-- Maximum-entropy bound, restricted to a Finset containing the support: a
 probability mass function whose support is contained in `S` has Shannon
@@ -66,8 +66,8 @@ lemma entropyOfFn_le_log_supportCard {α : Type*} [Fintype α]
       (∑ a ∈ S, (1 / (n : ℝ)) • (μ a).negMulLog)
         ≤ Real.negMulLog (∑ a ∈ S, (1 / (n : ℝ)) • μ a) := by
     refine Real.concaveOn_negMulLog.le_map_sum
-      (t := S) (w := fun _ => 1 / (n : ℝ)) (p := μ)
-      (fun i _ => by positivity) ?_ (fun i _ => hμ i)
+      (t := S) (w := fun _ ↦ 1 / (n : ℝ)) (p := μ)
+      (fun i _ ↦ by positivity) ?_ (fun i _ ↦ hμ i)
     rw [Finset.sum_const, nsmul_eq_mul, ← hn_def, mul_one_div, div_self hn_ne]
   have hlhs :
       (∑ a ∈ S, (1 / (n : ℝ)) • (μ a).negMulLog)
@@ -91,7 +91,7 @@ lemma entropyOfFn_le_log_card {α : Type*} [Fintype α]
     (μ : α → ℝ) (hμ : ∀ a, 0 ≤ μ a) (hsum : ∑ a, μ a = 1) :
     entropyOfFn μ ≤ Real.log (Fintype.card α) := by
   have h := entropyOfFn_le_log_supportCard (S := (Finset.univ : Finset α))
-    μ hμ hsum (fun a ha => (ha (Finset.mem_univ a)).elim)
+    μ hμ hsum (fun a ha ↦ (ha (Finset.mem_univ a)).elim)
   rwa [Finset.card_univ] at h
 
 /-- A Dirac mass at `a₀` has zero Shannon entropy. -/

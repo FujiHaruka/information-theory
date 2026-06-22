@@ -49,7 +49,7 @@ The matched path `s(t)` is the inverse of `N_A` solving `N_A(s(t)) = N_A(0)·e�
 /-- Single-source heat-flow entropy power along the perturbation `A + √s·B`.
 `N_A(0) = entropyPower (P.map A)`. -/
 noncomputable def heatFlowEP (A B : Ω → ℝ) (P : Measure Ω) (s : ℝ) : ℝ :=
-  entropyPower (P.map (fun ω => A ω + Real.sqrt s * B ω))
+  entropyPower (P.map (fun ω ↦ A ω + Real.sqrt s * B ω))
 
 /-- **Matched-time path predicate** (output of the inverse-function construction).
 

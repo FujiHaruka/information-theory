@@ -31,7 +31,7 @@ open MeasureTheory Real ProbabilityTheory Filter
 open scoped ENNReal NNReal Topology
 
 /-- The right-translation map `x ↦ x - y` bundled as a `C(ℝ, ℝ)` element. -/
-noncomputable def subRightCM (y : ℝ) : C(ℝ, ℝ) := ⟨fun x => x - y, by fun_prop⟩
+noncomputable def subRightCM (y : ℝ) : C(ℝ, ℝ) := ⟨fun x ↦ x - y, by fun_prop⟩
 
 theorem continuous_subRightCM : Continuous subRightCM := by
   refine ContinuousMap.continuous_of_continuous_uncurry _ ?_
@@ -48,7 +48,7 @@ as `y → 0`.
 @audit:ok -/
 theorem translation_continuous_L1
     {pX : ℝ → ℝ} (hpX_int : Integrable pX volume) :
-    Tendsto (fun y : ℝ => eLpNorm (fun x => pX (x - y) - pX x) 1 volume) (𝓝 0) (𝓝 0) := by
+    Tendsto (fun y : ℝ ↦ eLpNorm (fun x ↦ pX (x - y) - pX x) 1 volume) (𝓝 0) (𝓝 0) := by
   have hp : (1 : ℝ≥0∞) ≠ ∞ := by simp
   -- lift `pX` to `Lp ℝ 1 volume`.
   have hmem : MemLp pX 1 volume := (memLp_one_iff_integrable).2 hpX_int
@@ -56,11 +56,11 @@ theorem translation_continuous_L1
   -- continuity of the translation family
   -- `Lp.compMeasurePreserving (subRightCM y) (mp y) f₀` in `y`.
   have hcomp :
-      Tendsto (fun y : ℝ =>
+      Tendsto (fun y : ℝ ↦
           Lp.compMeasurePreserving (subRightCM y) (measurePreserving_subRightCM y) f₀)
         (𝓝 0)
         (𝓝 (Lp.compMeasurePreserving (subRightCM 0) (measurePreserving_subRightCM 0) f₀)) := by
-    have hf : Tendsto (fun _ : ℝ => f₀) (𝓝 0) (𝓝 f₀) := tendsto_const_nhds
+    have hf : Tendsto (fun _ : ℝ ↦ f₀) (𝓝 0) (𝓝 f₀) := tendsto_const_nhds
     have hg : Tendsto subRightCM (𝓝 0) (𝓝 (subRightCM 0)) :=
       continuous_subRightCM.tendsto 0
     exact hf.compMeasurePreservingLp hg measurePreserving_subRightCM
@@ -68,7 +68,7 @@ theorem translation_continuous_L1
   -- `compMeasurePreserving (subRightCM 0) ... f₀ = f₀` (since `subRightCM 0 = id`, a.e.).
   -- obtain `edist (g_y) (g_0) → 0` from continuity of `edist`.
   have hedist :
-      Tendsto (fun y : ℝ =>
+      Tendsto (fun y : ℝ ↦
           edist (Lp.compMeasurePreserving (subRightCM y) (measurePreserving_subRightCM y) f₀)
             (Lp.compMeasurePreserving (subRightCM 0) (measurePreserving_subRightCM 0) f₀))
         (𝓝 0) (𝓝 0) := by
@@ -86,7 +86,7 @@ theorem translation_continuous_L1
   have hc := hmem.coeFn_toLp
   -- push `f₀ =ᵐ pX` along the measure-preserving translation `· - y`
   -- to get `f₀ (· - y) =ᵐ pX (· - y)`.
-  have hcy : (fun x => (f₀ : ℝ → ℝ) (x - y)) =ᵐ[volume] (fun x => pX (x - y)) := by
+  have hcy : (fun x ↦ (f₀ : ℝ → ℝ) (x - y)) =ᵐ[volume] (fun x ↦ pX (x - y)) := by
     have := (measurePreserving_subRightCM y).quasiMeasurePreserving.ae_eq_comp hc
     simpa [subRightCM, Function.comp] using this
   filter_upwards [hy, h0, hc, hcy] with x hyx h0x hcx hcyx
@@ -99,19 +99,19 @@ theorem translation_continuous_L1
 @audit:ok -/
 theorem translation_eLpNorm_bound
     {pX : ℝ → ℝ} (hpX_int : Integrable pX volume) (y : ℝ) :
-    eLpNorm (fun x => pX (x - y) - pX x) 1 volume ≤ 2 * eLpNorm pX 1 volume := by
+    eLpNorm (fun x ↦ pX (x - y) - pX x) 1 volume ≤ 2 * eLpNorm pX 1 volume := by
   have hmeas : AEStronglyMeasurable pX volume := hpX_int.aestronglyMeasurable
   -- `τ_y pX = pX ∘ (· - y)`: translation is measure-preserving, so `eLpNorm` is invariant.
-  have hmeasy : AEStronglyMeasurable (fun x => pX (x - y)) volume :=
+  have hmeasy : AEStronglyMeasurable (fun x ↦ pX (x - y)) volume :=
     hmeas.comp_measurePreserving (measurePreserving_subRightCM y)
   have htri := eLpNorm_sub_le (μ := volume) (p := 1) hmeasy hmeas le_rfl
-  have hinv : eLpNorm (fun x => pX (x - y)) 1 volume = eLpNorm pX 1 volume :=
+  have hinv : eLpNorm (fun x ↦ pX (x - y)) 1 volume = eLpNorm pX 1 volume :=
     eLpNorm_comp_measurePreserving (p := 1) hmeas (measurePreserving_subRightCM y)
-  have hsub : (fun x => pX (x - y) - pX x) = (fun x => pX (x - y)) - pX := by
+  have hsub : (fun x ↦ pX (x - y) - pX x) = (fun x ↦ pX (x - y)) - pX := by
     funext x; simp [Pi.sub_apply]
   rw [hinv] at htri
   rw [hsub]
-  calc eLpNorm ((fun x => pX (x - y)) - pX) 1 volume
+  calc eLpNorm ((fun x ↦ pX (x - y)) - pX) 1 volume
       ≤ eLpNorm pX 1 volume + eLpNorm pX 1 volume := htri
     _ = 2 * eLpNorm pX 1 volume := by ring
 
@@ -120,14 +120,14 @@ theorem translation_eLpNorm_bound
 @audit:ok -/
 theorem convDensityAdd_sub_self_eq
     {pX : ℝ → ℝ} (g : ℝ → ℝ) (hg_one : ∫ y, g y = 1) (z : ℝ)
-    (hi1 : Integrable (fun y => pX (z - y) * g y) volume)
-    (hi2 : Integrable (fun y => pX z * g y) volume) :
+    (hi1 : Integrable (fun y ↦ pX (z - y) * g y) volume)
+    (hi2 : Integrable (fun y ↦ pX z * g y) volume) :
     EPIConvDensity.convDensityAdd pX g z - pX z
       = ∫ y, (pX (z - y) - pX z) * g y := by
   unfold EPIConvDensity.convDensityAdd
   have hrefl : ∫ x, pX x * g (z - x) = ∫ y, pX (z - y) * g y := by
     have h := MeasureTheory.integral_sub_left_eq_self
-        (fun y => pX (z - y) * g y) (μ := volume) z
+        (fun y ↦ pX (z - y) * g y) (μ := volume) z
     simpa [sub_sub_cancel] using h
   have hsplit : ∫ y, (pX (z - y) - pX z) * g y
       = (∫ y, pX (z - y) * g y) - ∫ y, pX z * g y := by
@@ -143,20 +143,20 @@ theorem convDensityAdd_sub_self_eq
 theorem eLpNorm_integral_le_lintegral
     (F : ℝ → ℝ → ℝ) (ν : Measure ℝ) [SFinite ν]
     (hF : AEMeasurable (Function.uncurry F) (volume.prod ν)) :
-    eLpNorm (fun z => ∫ y, F z y ∂ν) 1 volume
-      ≤ ∫⁻ y, eLpNorm (fun z => F z y) 1 volume ∂ν := by
+    eLpNorm (fun z ↦ ∫ y, F z y ∂ν) 1 volume
+      ≤ ∫⁻ y, eLpNorm (fun z ↦ F z y) 1 volume ∂ν := by
   rw [eLpNorm_one_eq_lintegral_enorm]
   calc ∫⁻ z, ‖∫ y, F z y ∂ν‖ₑ ∂volume
       ≤ ∫⁻ z, ∫⁻ y, ‖F z y‖ₑ ∂ν ∂volume := by
-        refine lintegral_mono fun z => enorm_integral_le_lintegral_enorm _
+        refine lintegral_mono fun z ↦ enorm_integral_le_lintegral_enorm _
     _ = ∫⁻ y, ∫⁻ z, ‖F z y‖ₑ ∂volume ∂ν := by
         rw [lintegral_lintegral_swap]; exact hF.enorm
-    _ = ∫⁻ y, eLpNorm (fun z => F z y) 1 volume ∂ν := by
+    _ = ∫⁻ y, eLpNorm (fun z ↦ F z y) 1 volume ∂ν := by
         congr 1; funext y; rw [eLpNorm_one_eq_lintegral_enorm]
 
 /-- L¹ norm of the translation difference `φ y := ‖τ_y pX − pX‖₁` as a `ℝ≥0∞`-valued function. -/
 private noncomputable def translL1 (pX : ℝ → ℝ) (y : ℝ) : ℝ≥0∞ :=
-  eLpNorm (fun z => pX (z - y) - pX z) 1 volume
+  eLpNorm (fun z ↦ pX (z - y) - pX z) 1 volume
 
 /-- Pointwise bound `gaussianPDFReal 0 v y ≤ (√(2πv))⁻¹`.
 @audit:ok -/
@@ -190,21 +190,21 @@ private theorem convDensityAdd_eLpNorm_le_psi
   have hg_nn : ∀ y, 0 ≤ g y := gaussianPDFReal_nonneg 0 v
   -- prefactor bound for `g`.
   set Cg : ℝ := (Real.sqrt (2 * Real.pi * v))⁻¹ with hCg_def
-  have hg_bdd : ∀ y, ‖g y‖ ≤ Cg := fun y => by
+  have hg_bdd : ∀ y, ‖g y‖ ≤ Cg := fun y ↦ by
     rw [Real.norm_eq_abs, abs_of_nonneg (hg_nn y)]; exact gaussianPDFReal_le_pref v y
   -- `pX (z - ·)` is integrable (translation+reflection of `pX`).
-  have hpXrefl_int : ∀ z : ℝ, Integrable (fun y => pX (z - y)) volume := fun z =>
+  have hpXrefl_int : ∀ z : ℝ, Integrable (fun y ↦ pX (z - y)) volume := fun z ↦
     (Measure.measurePreserving_sub_left volume z).integrable_comp_of_integrable hpX_int
   -- per-`z` integrability of the two summands.
-  have hi1 : ∀ z : ℝ, Integrable (fun y => pX (z - y) * g y) volume := fun z =>
+  have hi1 : ∀ z : ℝ, Integrable (fun y ↦ pX (z - y) * g y) volume := fun z ↦
     (hpXrefl_int z).mul_bdd hg_meas.aestronglyMeasurable
       (Filter.Eventually.of_forall hg_bdd)
-  have hi2 : ∀ z : ℝ, Integrable (fun y => pX z * g y) volume := fun z =>
+  have hi2 : ∀ z : ℝ, Integrable (fun y ↦ pX z * g y) volume := fun z ↦
     hg_int.const_mul (pX z)
   -- difference representation `(conv - pX)(z) = ∫ y, (pX(z-y)-pX z)·g y`.
-  set F : ℝ → ℝ → ℝ := fun z y => (pX (z - y) - pX z) * g y with hF_def
+  set F : ℝ → ℝ → ℝ := fun z y ↦ (pX (z - y) - pX z) * g y with hF_def
   have hdiff : (EPIConvDensity.convDensityAdd pX g - pX)
-      = fun z => ∫ y, F z y := by
+      = fun z ↦ ∫ y, F z y := by
     funext z
     simp only [Pi.sub_apply, hF_def]
     exact convDensityAdd_sub_self_eq g hg_one z (hi1 z) (hi2 z)
@@ -219,13 +219,13 @@ private theorem convDensityAdd_eLpNorm_le_psi
     exact hm.aemeasurable
   -- apply continuous Minkowski.
   calc eLpNorm (EPIConvDensity.convDensityAdd pX g - pX) 1 volume
-      = eLpNorm (fun z => ∫ y, F z y) 1 volume := by rw [hdiff]
-    _ ≤ ∫⁻ y, eLpNorm (fun z => F z y) 1 volume ∂volume :=
+      = eLpNorm (fun z ↦ ∫ y, F z y) 1 volume := by rw [hdiff]
+    _ ≤ ∫⁻ y, eLpNorm (fun z ↦ F z y) 1 volume ∂volume :=
         eLpNorm_integral_le_lintegral F volume hFmeas
     _ = ∫⁻ y, ENNReal.ofReal (g y) * translL1 pX y ∂volume := by
-        refine lintegral_congr fun y => ?_
+        refine lintegral_congr fun y ↦ ?_
         -- pull constant `g y ≥ 0` out of the inner eLpNorm.
-        have hrw : (fun z => F z y) = (g y) • (fun z => pX (z - y) - pX z) := by
+        have hrw : (fun z ↦ F z y) = (g y) • (fun z ↦ pX (z - y) - pX z) := by
           funext z; simp only [hF_def, Pi.smul_apply, smul_eq_mul, mul_comm]
         rw [hrw, eLpNorm_const_smul, translL1]
         congr 1
@@ -238,33 +238,33 @@ private theorem integral_sq_mul_gaussianPDFReal_local {s : ℝ} (hs : 0 < s) :
     ∫ u, u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u ∂volume = s := by
   have hv_ne : (⟨s, hs.le⟩ : ℝ≥0) ≠ 0 := by
     intro h; exact hs.ne' (congrArg NNReal.toReal h)
-  have hvar : Var[fun x => x; gaussianReal 0 ⟨s, hs.le⟩] = ((⟨s, hs.le⟩ : ℝ≥0) : ℝ) :=
+  have hvar : Var[fun x ↦ x; gaussianReal 0 ⟨s, hs.le⟩] = ((⟨s, hs.le⟩ : ℝ≥0) : ℝ) :=
     variance_fun_id_gaussianReal (μ := 0) (v := ⟨s, hs.le⟩)
   rw [variance_eq_integral measurable_id'.aemeasurable, integral_id_gaussianReal] at hvar
   calc ∫ u, u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u ∂volume
       = ∫ u, gaussianPDFReal 0 ⟨s, hs.le⟩ u • u ^ 2 ∂volume := by
-        refine integral_congr_ae (Filter.Eventually.of_forall fun u => ?_)
+        refine integral_congr_ae (Filter.Eventually.of_forall fun u ↦ ?_)
         simp [smul_eq_mul, mul_comm]
     _ = ∫ u, u ^ 2 ∂(gaussianReal 0 ⟨s, hs.le⟩) :=
-        (integral_gaussianReal_eq_integral_smul (μ := 0) (f := fun u => u ^ 2) hv_ne).symm
+        (integral_gaussianReal_eq_integral_smul (μ := 0) (f := fun u ↦ u ^ 2) hv_ne).symm
     _ = ∫ u, (u - 0) ^ 2 ∂(gaussianReal 0 ⟨s, hs.le⟩) := by simp
     _ = s := by rw [hvar]
 
 /-- Integrability of the Gaussian second-moment integrand `u ↦ u ^ 2 * gaussianPDFReal 0 ⟨s, _⟩ u`.
 @audit:ok -/
 private theorem integrable_sq_mul_gaussianPDFReal_local {s : ℝ} (hs : 0 < s) :
-    Integrable (fun u => u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u) volume := by
+    Integrable (fun u ↦ u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u) volume := by
   have hv_ne : (⟨s, hs.le⟩ : ℝ≥0) ≠ 0 := by
     intro h; exact hs.ne' (congrArg NNReal.toReal h)
   have hmem : MemLp (id : ℝ → ℝ) 2 (gaussianReal 0 ⟨s, hs.le⟩) := memLp_id_gaussianReal 2
-  have hsq_int : Integrable (fun u => u ^ 2) (gaussianReal 0 ⟨s, hs.le⟩) := by
+  have hsq_int : Integrable (fun u ↦ u ^ 2) (gaussianReal 0 ⟨s, hs.le⟩) := by
     have := (memLp_two_iff_integrable_sq (μ := gaussianReal 0 ⟨s, hs.le⟩)
       (f := (id : ℝ → ℝ)) measurable_id.aestronglyMeasurable).mp hmem
     simpa using this
   rw [gaussianReal_of_var_ne_zero _ hv_ne] at hsq_int
   rw [integrable_withDensity_iff (measurable_gaussianPDF _ _)
-    (ae_of_all _ fun _ => gaussianPDF_lt_top)] at hsq_int
-  refine hsq_int.congr (Filter.Eventually.of_forall fun u => ?_)
+    (ae_of_all _ fun _ ↦ gaussianPDF_lt_top)] at hsq_int
+  refine hsq_int.congr (Filter.Eventually.of_forall fun u ↦ ?_)
   simp only [gaussianPDF, ENNReal.toReal_ofReal (gaussianPDFReal_nonneg _ _ _)]
 
 /-- Gaussian tail bound (Chebyshev): `∫⁻ y in {δ ≤ |y|}, ofReal (g_t y) ≤ ofReal (t / δ²)`.
@@ -294,11 +294,11 @@ private theorem gaussianTail_lintegral_le {t δ : ℝ} (ht : 0 < t) (hδ : 0 < �
     _ ≤ ∫⁻ y, ENNReal.ofReal (y ^ 2 / δ ^ 2 * g y) ∂volume :=
         setLIntegral_le_lintegral _ _
     _ = ENNReal.ofReal (t / δ ^ 2) := by
-        have hint : Integrable (fun y => y ^ 2 / δ ^ 2 * g y) volume := by
+        have hint : Integrable (fun y ↦ y ^ 2 / δ ^ 2 * g y) volume := by
           have := integrable_sq_mul_gaussianPDFReal_local (s := t) ht
           simpa [hg_def, div_eq_inv_mul, mul_assoc] using this.const_mul (δ ^ 2)⁻¹
-        have hnn : 0 ≤ᵐ[volume] fun y => y ^ 2 / δ ^ 2 * g y :=
-          Filter.Eventually.of_forall fun y =>
+        have hnn : 0 ≤ᵐ[volume] fun y ↦ y ^ 2 / δ ^ 2 * g y :=
+          Filter.Eventually.of_forall fun y ↦
             mul_nonneg (by positivity) (hg_nn y)
         rw [← ofReal_integral_eq_lintegral_ofReal hint hnn]
         congr 1
@@ -314,14 +314,14 @@ private theorem gaussianTail_lintegral_le {t δ : ℝ} (ht : 0 < t) (hδ : 0 < �
 @audit:ok -/
 private theorem psi_tendsto_zero
     {pX : ℝ → ℝ} (hpX_int : Integrable pX volume) :
-    Tendsto (fun t : ℝ =>
+    Tendsto (fun t : ℝ ↦
         ∫⁻ y, ENNReal.ofReal (gaussianPDFReal 0 t.toNNReal y) * translL1 pX y ∂volume)
       (𝓝[Set.Ioi 0] 0) (𝓝 0) := by
   set φ : ℝ → ℝ≥0∞ := translL1 pX with hφ_def
   -- `C := ‖pX‖₁ < ∞`; `φ` is bounded by `2C` and `φ → 0` at `0`.
   set C : ℝ≥0∞ := eLpNorm pX 1 volume with hC_def
   have hC_ne : C ≠ ∞ := ((memLp_one_iff_integrable).2 hpX_int).eLpNorm_ne_top
-  have hφ_bdd : ∀ y, φ y ≤ 2 * C := fun y => translation_eLpNorm_bound hpX_int y
+  have hφ_bdd : ∀ y, φ y ≤ 2 * C := fun y ↦ translation_eLpNorm_bound hpX_int y
   have hφ_tendsto : Tendsto φ (𝓝 0) (𝓝 0) := translation_continuous_L1 hpX_int
   have h2C_ne : (2 : ℝ≥0∞) * C ≠ ∞ := by
     simp [ENNReal.mul_ne_top, hC_ne]
@@ -333,17 +333,17 @@ private theorem psi_tendsto_zero
     have hball := (ENNReal.tendsto_nhds_zero.1 hφ_tendsto _ hε2)
     rw [Metric.eventually_nhds_iff] at hball
     obtain ⟨δ, hδ, hδ_le⟩ := hball
-    exact ⟨δ, hδ, fun y hy => hδ_le (by rwa [Real.dist_eq, sub_zero])⟩
+    exact ⟨δ, hδ, fun y hy ↦ hδ_le (by rwa [Real.dist_eq, sub_zero])⟩
   obtain ⟨δ, hδ, hδ_le⟩ := hδ_ex
   -- the tail factor `2C · ofReal(t/δ²) → 0`, so eventually `≤ ε/2`.
   have htail_tendsto :
-      Tendsto (fun t : ℝ => (2 * C) * ENNReal.ofReal (t / δ ^ 2)) (𝓝[Set.Ioi 0] 0) (𝓝 0) := by
-    have h0 : Tendsto (fun t : ℝ => ENNReal.ofReal (t / δ ^ 2)) (𝓝[Set.Ioi 0] 0) (𝓝 0) := by
-      have : Tendsto (fun t : ℝ => t / δ ^ 2) (𝓝[Set.Ioi 0] 0) (𝓝 0) := by
+      Tendsto (fun t : ℝ ↦ (2 * C) * ENNReal.ofReal (t / δ ^ 2)) (𝓝[Set.Ioi 0] 0) (𝓝 0) := by
+    have h0 : Tendsto (fun t : ℝ ↦ ENNReal.ofReal (t / δ ^ 2)) (𝓝[Set.Ioi 0] 0) (𝓝 0) := by
+      have : Tendsto (fun t : ℝ ↦ t / δ ^ 2) (𝓝[Set.Ioi 0] 0) (𝓝 0) := by
         have := (continuous_id.div_const (δ ^ 2)).continuousWithinAt (x := (0 : ℝ))
           (s := Set.Ioi 0)
         simpa using this.tendsto
-      have hcont : Continuous fun r : ℝ => ENNReal.ofReal r := ENNReal.continuous_ofReal
+      have hcont : Continuous fun r : ℝ ↦ ENNReal.ofReal r := ENNReal.continuous_ofReal
       simpa using (hcont.tendsto 0).comp this
     have := ENNReal.Tendsto.const_mul (a := 2 * C) h0 (Or.inr h2C_ne)
     simpa using this
@@ -357,7 +357,7 @@ private theorem psi_tendsto_zero
   -- measurable split set `A = {|y| < δ}` (open ⇒ measurable).
   set A : Set ℝ := {y : ℝ | |y| < δ} with hA_def
   have hA_meas : MeasurableSet A := by
-    have : A = (fun y : ℝ => |y|) ⁻¹' Set.Iio δ := by ext y; simp [hA_def]
+    have : A = (fun y : ℝ ↦ |y|) ⁻¹' Set.Iio δ := by ext y; simp [hA_def]
     rw [this]; exact (continuous_abs.measurable measurableSet_Iio)
   have hAc_eq : Aᶜ = {y : ℝ | δ ≤ |y|} := by
     ext y; simp [hA_def, not_lt]
@@ -373,7 +373,7 @@ private theorem psi_tendsto_zero
     calc ∫⁻ y in A, ENNReal.ofReal (g y) * φ y ∂volume
         ≤ ∫⁻ y in A, ENNReal.ofReal (g y) * (ε / 2) ∂volume := by
           refine setLIntegral_mono_ae (by measurability) ?_
-          refine Filter.Eventually.of_forall fun y hy => ?_
+          refine Filter.Eventually.of_forall fun y hy ↦ ?_
           exact mul_le_mul_right (hδ_le y hy) _
       _ = (∫⁻ y in A, ENNReal.ofReal (g y) ∂volume) * (ε / 2) := by
           rw [lintegral_mul_const'' _ (hg_meas.ennreal_ofReal.aemeasurable)]
@@ -389,7 +389,7 @@ private theorem psi_tendsto_zero
     calc ∫⁻ y in Aᶜ, ENNReal.ofReal (g y) * φ y ∂volume
         ≤ ∫⁻ y in Aᶜ, ENNReal.ofReal (g y) * (2 * C) ∂volume := by
           refine setLIntegral_mono_ae (by measurability) ?_
-          refine Filter.Eventually.of_forall fun y _ => ?_
+          refine Filter.Eventually.of_forall fun y _ ↦ ?_
           exact mul_le_mul_right (hφ_bdd y) _
       _ = (∫⁻ y in Aᶜ, ENNReal.ofReal (g y) ∂volume) * (2 * C) := by
           rw [lintegral_mul_const'' _ (hg_meas.ennreal_ofReal.aemeasurable)]
@@ -411,13 +411,13 @@ converges to `pX` in L¹ norm as `t → 0⁺`.
 theorem convDensityAdd_tendsto_L1_zero
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume)
-    (_hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume) :
-    Tendsto (fun t : ℝ =>
+    (_hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume) :
+    Tendsto (fun t : ℝ ↦
       eLpNorm (EPIConvDensity.convDensityAdd pX (gaussianPDFReal 0 t.toNNReal) - pX) 1 volume)
       (𝓝[Set.Ioi 0] 0) (𝓝 0) := by
   -- squeeze: `0 ≤ eLpNorm(...) ≤ ψ t → 0`.
   refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds
-    (psi_tendsto_zero hpX_int) (Filter.Eventually.of_forall fun _ => zero_le') ?_
+    (psi_tendsto_zero hpX_int) (Filter.Eventually.of_forall fun _ ↦ zero_le') ?_
   filter_upwards [self_mem_nhdsWithin] with t ht
   exact convDensityAdd_eLpNorm_le_psi hpX_nn hpX_meas hpX_int ht
 

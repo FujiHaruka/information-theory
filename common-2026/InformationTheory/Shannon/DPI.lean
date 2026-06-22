@@ -126,15 +126,15 @@ theorem mutualInfo_le_of_postprocess
     {f : Y → Z} (hf : Measurable f) :
     mutualInfo μ Xs (f ∘ Yo) ≤ mutualInfo μ Xs Yo := by
   unfold mutualInfo
-  have hpair : Measurable (fun ω => (Xs ω, Yo ω)) := hXs.prodMk hYo
+  have hpair : Measurable (fun ω ↦ (Xs ω, Yo ω)) := hXs.prodMk hYo
   have hg : Measurable (Prod.map id f : X × Y → X × Z) := measurable_id.prodMap hf
   have _ : IsFiniteMeasure (μ.map Xs) := Measure.isFiniteMeasure_map μ Xs
   have _ : IsFiniteMeasure (μ.map Yo) := Measure.isFiniteMeasure_map μ Yo
-  have _ : IsFiniteMeasure (μ.map (fun ω => (Xs ω, Yo ω))) :=
+  have _ : IsFiniteMeasure (μ.map (fun ω ↦ (Xs ω, Yo ω))) :=
     Measure.isFiniteMeasure_map μ _
   -- joint distribution is the pushforward of Prod.map id f
-  have h_joint : μ.map (fun ω => (Xs ω, f (Yo ω)))
-      = (μ.map (fun ω => (Xs ω, Yo ω))).map (Prod.map id f) := by
+  have h_joint : μ.map (fun ω ↦ (Xs ω, f (Yo ω)))
+      = (μ.map (fun ω ↦ (Xs ω, Yo ω))).map (Prod.map id f) := by
     rw [Measure.map_map hg hpair]
     rfl
   -- product distribution is also the pushforward of Prod.map id f
@@ -143,9 +143,9 @@ theorem mutualInfo_le_of_postprocess
     rw [show μ.map (f ∘ Yo) = (μ.map Yo).map f from (Measure.map_map hf hYo).symm,
         ← Measure.map_prod_map (μ.map Xs) (μ.map Yo) measurable_id hf,
         Measure.map_id]
-  show klDiv (μ.map (fun ω => (Xs ω, f (Yo ω))))
+  show klDiv (μ.map (fun ω ↦ (Xs ω, f (Yo ω))))
       ((μ.map Xs).prod (μ.map (f ∘ Yo)))
-    ≤ klDiv (μ.map (fun ω => (Xs ω, Yo ω))) ((μ.map Xs).prod (μ.map Yo))
+    ≤ klDiv (μ.map (fun ω ↦ (Xs ω, Yo ω))) ((μ.map Xs).prod (μ.map Yo))
   rw [h_joint, h_prod]
   exact klDiv_map_le hg _ _
 

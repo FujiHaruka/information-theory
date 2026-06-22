@@ -337,7 +337,7 @@ pass-through** with the canonical bound `n · (log(n+1) + log|α| + 2)`. -/
 @[entry_point]
 theorem IsLZ78EncodingLengthBoundPassthrough.canonical :
     IsLZ78EncodingLengthBoundPassthrough α
-      (fun n => n * (Nat.log 2 (n + 1) + Nat.log 2 (Fintype.card α) + 2)) := by
+      (fun n ↦ n * (Nat.log 2 (n + 1) + Nat.log 2 (Fintype.card α) + 2)) := by
   intro n x
   exact lz78_encoding_length_le_n_log_n_plus_const n x
 

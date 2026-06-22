@@ -154,7 +154,7 @@ lemma IsHoeffdingInteriorMinimizer.isMinOn
     {P₁ P₂ : α → ℝ} {alpha : ℝ} {Qstar : α → ℝ}
     (hP₂_pos : ∀ a, 0 < P₂ a)
     (h : IsHoeffdingInteriorMinimizer P₁ P₂ alpha Qstar) :
-    IsMinOn (fun Q : α → ℝ => klDivPmf Q P₂)
+    IsMinOn (fun Q : α → ℝ ↦ klDivPmf Q P₂)
       (hoeffdingConstraintSet P₁ alpha) Qstar := by
   intro Q hQ
   -- Goal: klDivPmf Qstar P₂ ≤ klDivPmf Q P₂.
@@ -162,13 +162,13 @@ lemma IsHoeffdingInteriorMinimizer.isMinOn
   -- hoeffdingE2 ≤ klDivPmf Q P₂ since Q ∈ K (sInf ≤ any image element).
   have h_E2_le : hoeffdingE2 P₁ P₂ alpha ≤ klDivPmf Q P₂ := by
     unfold hoeffdingE2
-    have h_bdd : BddBelow ((fun Q : α → ℝ => klDivPmf Q P₂) ''
+    have h_bdd : BddBelow ((fun Q : α → ℝ ↦ klDivPmf Q P₂) ''
         {Q : α → ℝ | Q ∈ stdSimplex ℝ α ∧ klDivPmf Q P₁ ≤ alpha}) := by
       refine ⟨0, ?_⟩
       rintro y ⟨Q', hQ', rfl⟩
-      exact klDivPmf_nonneg Q' P₂ hQ'.1.1 (fun a => (hP₂_pos a).le)
+      exact klDivPmf_nonneg Q' P₂ hQ'.1.1 (fun a ↦ (hP₂_pos a).le)
     have h_Q_in_img :
-        klDivPmf Q P₂ ∈ (fun Q : α → ℝ => klDivPmf Q P₂) ''
+        klDivPmf Q P₂ ∈ (fun Q : α → ℝ ↦ klDivPmf Q P₂) ''
             {Q : α → ℝ | Q ∈ stdSimplex ℝ α ∧ klDivPmf Q P₁ ≤ alpha} :=
       ⟨Q, hQ, rfl⟩
     exact csInf_le h_bdd h_Q_in_img

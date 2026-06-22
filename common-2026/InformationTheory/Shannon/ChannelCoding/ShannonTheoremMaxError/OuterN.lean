@@ -389,18 +389,18 @@ private lemma outerN_variance_bounds
   have hXs : ∀ i, Measurable (iidXs (α := α) (β := β) i) := measurable_iidXs
   have hYs : ∀ i, Measurable (iidYs (α := α) (β := β) i) := measurable_iidYs
   have hZ_meas : ∀ i, Measurable (jointSequence (α := α) (β := β) iidXs iidYs i) :=
-    fun i => measurable_jointSequence iidXs iidYs hXs hYs i
+    fun i ↦ measurable_jointSequence iidXs iidYs hXs hYs i
   have hV_X_pointwise : ∀ a : α, |pmfLog μ iidXs a| ≤ V_X_B := by
     intro a
     rw [pmfLog_iidXs_const_in_smooth p_meas W hδ_n_pos hδ_n_le a, hV_X_B]
     exact abs_pmfLog_le_bound (iidAmbientMeasure p_meas W) iidXs a
   have hV_Y_pointwise : ∀ b : β,
       |pmfLog μ iidYs b| ≤ Real.log ((Fintype.card β : ℝ) / δ_n) :=
-    fun b => pmfLog_iidYs_bound_smooth p_meas W hδ_n_pos hδ_n_le b
+    fun b ↦ pmfLog_iidYs_bound_smooth p_meas W hδ_n_pos hδ_n_le b
   have hV_Z_pointwise : ∀ ab : α × β,
       |pmfLog μ (jointSequence iidXs iidYs) ab| ≤
         Real.log (((Fintype.card α : ℝ) * (Fintype.card β : ℝ)) / (p_min * δ_n)) :=
-    fun ab => pmfLog_jointSequence_bound_smooth p_meas hp_min_pos hp_min_le_meas
+    fun ab ↦ pmfLog_jointSequence_bound_smooth p_meas hp_min_pos hp_min_le_meas
       W hδ_n_pos hδ_n_le ab
   refine ⟨pmfLogVariance_le_sq_of_bounded μ iidXs hXs hV_X_pointwise,
     pmfLogVariance_le_sq_of_bounded μ iidYs hYs hV_Y_pointwise,
@@ -442,7 +442,7 @@ theorem exists_N_for_smooth_achievability_uniform
   have hp_min_pos : 0 < p_min := by rw [hp_min_def]; positivity
   -- Lower bound: every `pSmooth p₀ δ_p a ≥ p_min`.
   have hp_min_le : ∀ a : α, p_min ≤ pSmooth p₀ δ_p a :=
-    fun a => pSmooth_ge hp₀_mem hδ_p_pos hδ_p_le a
+    fun a ↦ pSmooth_ge hp₀_mem hδ_p_pos hδ_p_le a
   -- Also for the measure version:
   haveI : IsProbabilityMeasure (pmfToMeasure (pSmooth p₀ δ_p)) :=
     pmfToMeasure_isProbabilityMeasure hp_full_mem
@@ -481,7 +481,7 @@ theorem exists_N_for_smooth_achievability_uniform
   obtain ⟨N_log, hN_log⟩ := exists_N_log_sq_plus_const_le_n (2 * C_coef) D_const
     (by linarith [hC_coef_pos])
   set N₀ : ℕ := max N_log N_rate with hN₀_def
-  refine ⟨N₀, fun n hn => ?_⟩
+  refine ⟨N₀, fun n hn ↦ ?_⟩
   -- Bind δ_n, n inequalities, etc.
   have hn_log : N_log ≤ n := (le_max_left _ _).trans hn
   have hn_rate : N_rate ≤ n := (le_max_right _ _).trans hn

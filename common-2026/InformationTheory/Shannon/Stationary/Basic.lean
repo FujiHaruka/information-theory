@@ -75,12 +75,12 @@ lemma measurable_obs (p : StationaryProcess μ α) (i : ℕ) : Measurable (p.obs
 
 /-- Block joint observation `(X_0, X_1, …, X_{n-1}) : Ω → (Fin n → α)`. -/
 def blockRV (p : StationaryProcess μ α) (n : ℕ) : Ω → (Fin n → α) :=
-  fun ω i => p.obs i ω
+  fun ω i ↦ p.obs i ω
 
 /-- The block random variable is measurable. -/
 lemma measurable_blockRV (p : StationaryProcess μ α) (n : ℕ) :
     Measurable (p.blockRV n) := by
-  refine measurable_pi_iff.mpr (fun i => ?_)
+  refine measurable_pi_iff.mpr (fun i ↦ ?_)
   exact p.measurable_obs i
 
 end StationaryProcess

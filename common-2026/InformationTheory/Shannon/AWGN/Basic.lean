@@ -59,7 +59,7 @@ measurable as a map `ℝ → Measure ℝ`. This is supplied as an explicit hypot
 that the kernel can be built without the (not yet available) Mathlib API for
 mean-measurability of `gaussianReal m v`. -/
 def IsAwgnChannelMeasurable (N : ℝ≥0) : Prop :=
-  Measurable (fun x : ℝ => gaussianReal x N)
+  Measurable (fun x : ℝ ↦ gaussianReal x N)
 
 /-- AWGN channel kernel: on input `x : ℝ`, the output `Y = x + Z` with `Z ∼ 𝒩(0, N)`.
 The kernel returns the law of `Y` directly as `gaussianReal x N` (mean shifted to `x`,
@@ -124,16 +124,16 @@ cannot supply.
 theorem awgnPowerConstraintSet_mem_iff_integrable
     (P : ℝ) (hP : 0 ≤ P) (p : Measure ℝ)
     (hp : p ∈ awgnPowerConstraintSet P) :
-    Integrable (fun x => x ^ 2) p ∧ ∫ x, x ^ 2 ∂p ≤ P := by
+    Integrable (fun x ↦ x ^ 2) p ∧ ∫ x, x ^ 2 ∂p ≤ P := by
   obtain ⟨hp_prob, hp_lint⟩ := hp
-  have h_nonneg : 0 ≤ᵐ[p] fun x => x ^ 2 := Filter.Eventually.of_forall (fun x => sq_nonneg x)
-  have h_meas_sq : AEStronglyMeasurable (fun x : ℝ => x ^ 2) p := by fun_prop
+  have h_nonneg : 0 ≤ᵐ[p] fun x ↦ x ^ 2 := Filter.Eventually.of_forall (fun x ↦ sq_nonneg x)
+  have h_meas_sq : AEStronglyMeasurable (fun x : ℝ ↦ x ^ 2) p := by fun_prop
   -- finite lintegral ⇒ HasFiniteIntegral ⇒ Integrable
   have h_lt_top : (∫⁻ x, ENNReal.ofReal (x ^ 2) ∂p) < ∞ :=
     lt_of_le_of_lt hp_lint ENNReal.ofReal_lt_top
-  have h_hfi : HasFiniteIntegral (fun x => x ^ 2) p :=
+  have h_hfi : HasFiniteIntegral (fun x ↦ x ^ 2) p :=
     (hasFiniteIntegral_iff_ofReal h_nonneg).mpr h_lt_top
-  have h_int : Integrable (fun x => x ^ 2) p := ⟨h_meas_sq, h_hfi⟩
+  have h_int : Integrable (fun x ↦ x ^ 2) p := ⟨h_meas_sq, h_hfi⟩
   refine ⟨h_int, ?_⟩
   -- Bochner bound: ofReal (∫ x²) = ∫⁻ ofReal (x²) ≤ ofReal P, then strip ofReal.
   have h_ofReal : ENNReal.ofReal (∫ x, x ^ 2 ∂p) = ∫⁻ x, ENNReal.ofReal (x ^ 2) ∂p :=
@@ -144,7 +144,7 @@ theorem awgnPowerConstraintSet_mem_iff_integrable
 /-- Power-constrained channel capacity. Supremum of `I(p; W)` over probability
 measures `p` in `awgnPowerConstraintSet P` (second moment ≤ `P`, lintegral form). -/
 noncomputable def awgnCapacity (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) : ℝ :=
-  sSup ((fun p : Measure ℝ =>
+  sSup ((fun p : Measure ℝ ↦
           (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
               p (awgnChannel N h_meas)).toReal) ''
         awgnPowerConstraintSet P)
@@ -156,11 +156,11 @@ theorem gaussianInput_mem_constraintSet (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) :
     (gaussianReal 0 P.toNNReal) ∈ awgnPowerConstraintSet P := by
   refine ⟨inferInstance, ?_⟩
   -- ∫ x² ∂(gaussianReal 0 P.toNNReal) = Var = P, so ∫⁻ ofReal(x²) = ofReal P ≤ ofReal P.
-  have h_var : (Var[fun x : ℝ => x; gaussianReal 0 P.toNNReal] : ℝ) = (P.toNNReal : ℝ) :=
+  have h_var : (Var[fun x : ℝ ↦ x; gaussianReal 0 P.toNNReal] : ℝ) = (P.toNNReal : ℝ) :=
     by rw [variance_fun_id_gaussianReal]
   have h_var_eq :
       (∫ x, (x - (0 : ℝ))^2 ∂(gaussianReal 0 P.toNNReal))
-        = (Var[fun x : ℝ => x; gaussianReal 0 P.toNNReal] : ℝ) := by
+        = (Var[fun x : ℝ ↦ x; gaussianReal 0 P.toNNReal] : ℝ) := by
     rw [variance_eq_integral measurable_id'.aemeasurable]
     congr 1
     rw [integral_id_gaussianReal]
@@ -170,10 +170,10 @@ theorem gaussianInput_mem_constraintSet (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) :
       simp
     rw [h1, h_var_eq, h_var]
   -- x² is integrable against the Gaussian (MemLp 2).
-  have h_int : Integrable (fun x : ℝ => x ^ 2) (gaussianReal 0 P.toNNReal) :=
+  have h_int : Integrable (fun x : ℝ ↦ x ^ 2) (gaussianReal 0 P.toNNReal) :=
     (memLp_id_gaussianReal (μ := 0) (v := P.toNNReal) 2).integrable_sq
-  have h_nonneg : 0 ≤ᵐ[gaussianReal 0 P.toNNReal] fun x => x ^ 2 :=
-    Filter.Eventually.of_forall (fun x => sq_nonneg x)
+  have h_nonneg : 0 ≤ᵐ[gaussianReal 0 P.toNNReal] fun x ↦ x ^ 2 :=
+    Filter.Eventually.of_forall (fun x ↦ sq_nonneg x)
   have h_lint :
       ∫⁻ x, ENNReal.ofReal (x ^ 2) ∂(gaussianReal 0 P.toNNReal)
         = ENNReal.ofReal (P.toNNReal : ℝ) := by
@@ -194,7 +194,7 @@ theorem awgnCapacity_ge_gaussian
             (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas)).toReal
           = (1/2) * Real.log (1 + P / (N : ℝ)))
     (h_bdd :
-        BddAbove ((fun p : Measure ℝ =>
+        BddAbove ((fun p : Measure ℝ ↦
             (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
                 p (awgnChannel N h_meas)).toReal) ''
           awgnPowerConstraintSet P)) :
@@ -244,7 +244,7 @@ theorem awgnCapacity_eq
             (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas)).toReal
           = (1/2) * Real.log (1 + P / (N : ℝ)))
     (h_bdd :
-        BddAbove ((fun p : Measure ℝ =>
+        BddAbove ((fun p : Measure ℝ ↦
             (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
                 p (awgnChannel N h_meas)).toReal) ''
           awgnPowerConstraintSet P))

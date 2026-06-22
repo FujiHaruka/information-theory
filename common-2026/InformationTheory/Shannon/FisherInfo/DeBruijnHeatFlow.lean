@@ -82,7 +82,7 @@ theorem heatKernel_nonneg (t x : ℝ) : 0 ≤ heatKernel t x := by
 
 /-- The heat kernel is measurable. -/
 @[entry_point]
-theorem measurable_heatKernel (t : ℝ) : Measurable (fun x => heatKernel t x) := by
+theorem measurable_heatKernel (t : ℝ) : Measurable (fun x ↦ heatKernel t x) := by
   unfold heatKernel
   split_ifs with h
   · exact measurable_gaussianPDFReal 0 ⟨t, h.le⟩
@@ -105,7 +105,7 @@ structure IsHeatFlowDensity {Ω : Type*} [MeasurableSpace Ω]
   /-- The heat equation in statement form: there is a `Δp : ℝ → ℝ → ℝ` with
   `(d/dt) p t x = (1/2) · Δp t x` for each `t > 0` and `x`. -/
   heat_equation : ∃ Δp : ℝ → ℝ → ℝ, ∀ t : ℝ, 0 < t → ∀ x : ℝ,
-    HasDerivAt (fun s => p s x) ((1/2) * Δp t x) t
+    HasDerivAt (fun s ↦ p s x) ((1/2) * Δp t x) t
 
 /-- Accessor: the spatial laplacian witness from `heat_equation`. -/
 @[entry_point]
@@ -120,7 +120,7 @@ theorem IsHeatFlowDensity.heat_equation_spec {Ω : Type*} [MeasurableSpace Ω]
     {X Z : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P] {p : ℝ → ℝ → ℝ}
     (h : IsHeatFlowDensity X Z P p) :
     ∀ t : ℝ, 0 < t → ∀ x : ℝ,
-      HasDerivAt (fun s => p s x) ((1/2) * h.laplacian t x) t :=
+      HasDerivAt (fun s ↦ p s x) ((1/2) * h.laplacian t x) t :=
   h.heat_equation.choose_spec
 
 /-! ## Integration-by-parts predicate -/
@@ -136,7 +136,7 @@ def IsIBPHypothesis {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (p : ℝ → ℝ → ℝ) (t : ℝ) : Prop :=
   HasDerivAt
-    (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
+    (fun s ↦ differentialEntropy (P.map (gaussianConvolution X Z s)))
     ((1/2) * fisherInfoOfDensityReal (p t))
     t
 
@@ -161,7 +161,7 @@ noncomputable def IsRegularDeBruijnHypV2.ofHeatFlow
     {X Z : Ω → ℝ} (hX : Measurable X) (_hZ : Measurable Z)
     (_hXZ : IndepFun X Z P)
     (hX_ac : (P.map X) ≪ volume)
-    (h_mom_X : Integrable (fun ω => (X ω) ^ 2) P)
+    (h_mom_X : Integrable (fun ω ↦ (X ω) ^ 2) P)
     {t : ℝ} (_ht : 0 < t)
     {p : ℝ → ℝ → ℝ}
     (h_heat : IsHeatFlowDensity X Z P p) :
@@ -170,19 +170,19 @@ noncomputable def IsRegularDeBruijnHypV2.ofHeatFlow
   -- pin `density_t` directly to the smooth convolution
   -- representative so `density_t_eq` is `rfl`. This is the genuine density of
   -- `P.map (X + √t·Z)` (`pPath_eq_convDensityAdd`), written explicitly.
-  density_t := convDensityAdd (fun x => ((P.map X).rnDeriv volume x).toReal)
+  density_t := convDensityAdd (fun x ↦ ((P.map X).rnDeriv volume x).toReal)
     (gaussianPDFReal 0 ⟨t, _ht.le⟩)
-  density_t_eq := fun _ _ => rfl
-  pX := fun x => ((P.map X).rnDeriv volume x).toReal
-  pX_nn := fun x => ENNReal.toReal_nonneg
+  density_t_eq := fun _ _ ↦ rfl
+  pX := fun x ↦ ((P.map X).rnDeriv volume x).toReal
+  pX_nn := fun x ↦ ENNReal.toReal_nonneg
   pX_meas := ((P.map X).measurable_rnDeriv volume).ennreal_toReal
   -- `pX_law` from `hX_ac` via `withDensity_rnDeriv_eq` (mirrors
   -- `rescaledInput_density_witness`'s `hpX_law`, here on `P.map X`).
   pX_law := by
-    set pX : ℝ → ℝ := fun x => ((P.map X).rnDeriv volume x).toReal with hpX
+    set pX : ℝ → ℝ := fun x ↦ ((P.map X).rnDeriv volume x).toReal with hpX
     have hfin : ∀ᵐ x ∂volume, (P.map X).rnDeriv volume x < ∞ :=
       Measure.rnDeriv_lt_top (P.map X) volume
-    have hcongr : (fun x => ENNReal.ofReal (pX x)) =ᵐ[volume]
+    have hcongr : (fun x ↦ ENNReal.ofReal (pX x)) =ᵐ[volume]
         (P.map X).rnDeriv volume := by
       filter_upwards [hfin] with x hx
       simp only [hpX, ENNReal.ofReal_toReal hx.ne]
@@ -190,28 +190,28 @@ noncomputable def IsRegularDeBruijnHypV2.ofHeatFlow
   -- `pX_mom` from `h_mom_X` via `integrable_map_measure` transport + the `pX_law`
   -- withDensity equation (mirrors `rescaledInput_density_witness`'s `hpX_mom`).
   pX_mom := by
-    set pX : ℝ → ℝ := fun x => ((P.map X).rnDeriv volume x).toReal with hpX
-    have hpX_nn : ∀ x, 0 ≤ pX x := fun x => ENNReal.toReal_nonneg
+    set pX : ℝ → ℝ := fun x ↦ ((P.map X).rnDeriv volume x).toReal with hpX
+    have hpX_nn : ∀ x, 0 ≤ pX x := fun x ↦ ENNReal.toReal_nonneg
     have hpX_meas : Measurable pX :=
       ((P.map X).measurable_rnDeriv volume).ennreal_toReal
-    have hpX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x)) := by
+    have hpX_law : P.map X = volume.withDensity (fun x ↦ ENNReal.ofReal (pX x)) := by
       have hfin : ∀ᵐ x ∂volume, (P.map X).rnDeriv volume x < ∞ :=
         Measure.rnDeriv_lt_top (P.map X) volume
-      have hcongr : (fun x => ENNReal.ofReal (pX x)) =ᵐ[volume]
+      have hcongr : (fun x ↦ ENNReal.ofReal (pX x)) =ᵐ[volume]
           (P.map X).rnDeriv volume := by
         filter_upwards [hfin] with x hx
         simp only [hpX, ENNReal.ofReal_toReal hx.ne]
       rw [withDensity_congr_ae hcongr, Measure.withDensity_rnDeriv_eq _ _ hX_ac]
-    have hsq_law : Integrable (fun y => y ^ 2) (P.map X) := by
+    have hsq_law : Integrable (fun y ↦ y ^ 2) (P.map X) := by
       rw [integrable_map_measure
-        ((by fun_prop : Measurable (fun y : ℝ => y ^ 2)).aestronglyMeasurable)
+        ((by fun_prop : Measurable (fun y : ℝ ↦ y ^ 2)).aestronglyMeasurable)
         hX.aemeasurable]
       simpa [Function.comp] using h_mom_X
     rw [hpX_law] at hsq_law
     rw [integrable_withDensity_iff_integrable_smul₀'
       hpX_meas.ennreal_ofReal.aemeasurable
-      (Filter.Eventually.of_forall fun x => ENNReal.ofReal_lt_top)] at hsq_law
-    refine hsq_law.congr (Filter.Eventually.of_forall fun x => ?_)
+      (Filter.Eventually.of_forall fun x ↦ ENNReal.ofReal_lt_top)] at hsq_law
+    refine hsq_law.congr (Filter.Eventually.of_forall fun x ↦ ?_)
     simp only [smul_eq_mul, ENNReal.toReal_ofReal (hpX_nn x)]; ring
 
 /-- The de Bruijn identity from a heat-flow density family `p` (`IsHeatFlowDensity`) and the IBP
@@ -227,13 +227,13 @@ theorem deBruijn_identity_v2_of_heat_flow
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z)
     (hXZ : IndepFun X Z P)
     (hX_ac : (P.map X) ≪ volume)
-    (h_mom_X : Integrable (fun ω => (X ω) ^ 2) P)
+    (h_mom_X : Integrable (fun ω ↦ (X ω) ^ 2) P)
     {t : ℝ} (ht : 0 < t)
     {p : ℝ → ℝ → ℝ}
     (h_heat : IsHeatFlowDensity X Z P p)
     (_h_ibp : IsIBPHypothesis X Z P p t) :
     HasDerivAt
-      (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
+      (fun s ↦ differentialEntropy (P.map (gaussianConvolution X Z s)))
       ((1/2) * fisherInfoOfDensityReal
         (IsRegularDeBruijnHypV2.ofHeatFlow hX hZ hXZ hX_ac h_mom_X ht h_heat).density_t)
       t :=

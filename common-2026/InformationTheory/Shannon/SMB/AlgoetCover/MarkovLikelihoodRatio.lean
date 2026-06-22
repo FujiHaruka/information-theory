@@ -31,7 +31,7 @@ noncomputable def markovFactor
     (condDistrib (p.obs n) (p.blockRV n) μ (Fin.init y)) {y (Fin.last n)}
   else
     (condDistrib (p.obs k) (p.blockRV k) μ
-        (fun j : Fin k => y ⟨n - k + j,
+        (fun j : Fin k ↦ y ⟨n - k + j,
           by have hk : k ≤ n := Nat.le_of_lt (Nat.lt_of_not_le h)
              omega⟩))
       {y (Fin.last n)}
@@ -85,7 +85,7 @@ lemma markovFactor_sum_eq_one
     have h_unfold : ∀ a : α,
         markovFactor μ p k n (Fin.snoc z a)
           = (condDistrib (p.obs k) (p.blockRV k) μ
-              (fun j : Fin k => z ⟨n - k + j.val,
+              (fun j : Fin k ↦ z ⟨n - k + j.val,
                 by have := j.isLt; omega⟩)) {a} := by
       intro a
       unfold markovFactor
@@ -93,9 +93,9 @@ lemma markovFactor_sum_eq_one
       -- Compute snoc at last n (singleton arg) and at castSucc indices (kernel arg).
       -- Lock in non-dependent type for snoc: snoc z a : Fin (n+1) → α.
       set sa : Fin (n + 1) → α := Fin.snoc z a with hsa_def
-      have h_arg : (fun j : Fin k =>
+      have h_arg : (fun j : Fin k ↦
             sa (⟨n - k + j.val, by have := j.isLt; omega⟩ : Fin (n + 1)))
-          = (fun j : Fin k => z ⟨n - k + j.val,
+          = (fun j : Fin k ↦ z ⟨n - k + j.val,
               by have := j.isLt; omega⟩) := by
         funext j
         have h_lt : n - k + j.val < n := by have := j.isLt; omega
@@ -112,7 +112,7 @@ lemma markovFactor_sum_eq_one
     simp_rw [h_unfold]
     haveI : IsMarkovKernel (condDistrib (p.obs k) (p.blockRV k) μ) := inferInstance
     set kern := condDistrib (p.obs k) (p.blockRV k) μ
-        (fun j : Fin k => z ⟨n - k + j.val, by have := j.isLt; omega⟩) with hkern_def
+        (fun j : Fin k ↦ z ⟨n - k + j.val, by have := j.isLt; omega⟩) with hkern_def
     have h_sum : ∑ a : α, kern {a} = kern Set.univ := by
       rw [show (Set.univ : Set α) = (Finset.univ : Finset α) from
         (Finset.coe_univ).symm]
@@ -160,16 +160,16 @@ lemma condQk_sum_le_one
         condQk μ p k start z (ℓ + 1) w
           = condQk μ p k start z ℓ (Fin.init w)
               * markovFactor μ p k (start + ℓ)
-                  (Fin.append z w ∘ Fin.cast (by omega)) := fun w => rfl
+                  (Fin.append z w ∘ Fin.cast (by omega)) := fun w ↦ rfl
     rw [show (∑ w : Fin (ℓ + 1) → α, condQk μ p k start z (ℓ + 1) w)
           = ∑ w : Fin (ℓ + 1) → α,
               condQk μ p k start z ℓ (Fin.init w)
                 * markovFactor μ p k (start + ℓ)
                     (Fin.append z w ∘ Fin.cast (by omega))
-        from Finset.sum_congr rfl (fun w _ => h_eq w)]
+        from Finset.sum_congr rfl (fun w _ ↦ h_eq w)]
     -- Reindex via snocEquiv: w ↔ (a, w') with w' = init w, a = w (last ℓ).
     let e : α × (Fin ℓ → α) ≃ (Fin (ℓ + 1) → α) :=
-      (Fin.snocEquiv (fun _ : Fin (ℓ + 1) => α))
+      (Fin.snocEquiv (fun _ : Fin (ℓ + 1) ↦ α))
     have h_reindex : ∑ w : Fin (ℓ + 1) → α,
           condQk μ p k start z ℓ (Fin.init w)
             * markovFactor μ p k (start + ℓ) (Fin.append z w ∘ Fin.cast (by omega))
@@ -178,10 +178,10 @@ lemma condQk_sum_le_one
               * markovFactor μ p k (start + ℓ)
                   (Fin.append z (e q) ∘ Fin.cast (by omega)) := by
       symm
-      exact Fintype.sum_equiv e _ _ (fun _ => rfl)
+      exact Fintype.sum_equiv e _ _ (fun _ ↦ rfl)
     rw [h_reindex]
     have h_apply : ∀ (a : α) (w' : Fin ℓ → α),
-        e (a, w') = Fin.snoc w' a := fun a w' => by
+        e (a, w') = Fin.snoc w' a := fun a w' ↦ by
       funext i; simp [e, Fin.snocEquiv]
     -- Convert ∑_{(a, w')} to ∑_{w'} ∑_a and rewrite the kernel arg into snoc form
     -- (so markovFactor only sees `a` at the last position, prefix depends on w' only).
@@ -262,8 +262,8 @@ lemma markovFactor_eq_of_window_eq
   unfold markovFactor
   rw [dif_neg hnk₁, dif_neg hnk₂]
   -- The window-functions are equal:
-  have h_arg : (fun j : Fin k => y₁ ⟨n₁ - k + j.val, by have := j.isLt; omega⟩)
-      = (fun j : Fin k => y₂ ⟨n₂ - k + j.val, by have := j.isLt; omega⟩) := by
+  have h_arg : (fun j : Fin k ↦ y₁ ⟨n₁ - k + j.val, by have := j.isLt; omega⟩)
+      = (fun j : Fin k ↦ y₂ ⟨n₂ - k + j.val, by have := j.isLt; omega⟩) := by
     funext j
     exact hwin j
   rw [h_arg, hlast]
@@ -308,21 +308,21 @@ lemma sum_qkSingleton_le_one
     rw [show (∑ y : Fin (n + 1) → α, qkSingleton μ p k (n + 1) y)
           = ∑ y : Fin (n + 1) → α,
               qkSingleton μ p k n (Fin.init y) * markovFactor μ p k n y
-        from Finset.sum_congr rfl (fun y _ => h_eq y)]
+        from Finset.sum_congr rfl (fun y _ ↦ h_eq y)]
     -- Reindex via snocEquiv: y ↔ (z, a) with z = init y, a = y (last n).
     let e : α × (Fin n → α) ≃ (Fin (n + 1) → α) :=
-      (Fin.snocEquiv (fun _ : Fin (n + 1) => α))
+      (Fin.snocEquiv (fun _ : Fin (n + 1) ↦ α))
     have h_reindex : ∑ y : Fin (n + 1) → α,
           qkSingleton μ p k n (Fin.init y) * markovFactor μ p k n y
         = ∑ p' : α × (Fin n → α),
             qkSingleton μ p k n (Fin.init (e p')) * markovFactor μ p k n (e p') := by
       symm
-      exact Fintype.sum_equiv e _ _ (fun _ => rfl)
+      exact Fintype.sum_equiv e _ _ (fun _ ↦ rfl)
     rw [h_reindex]
     -- `e (a, z) = Fin.snoc z a`, so `init (e (a, z)) = z`. The markovFactor part
     -- depends on (a, z) via `snoc z a`.
     have h_apply : ∀ (a : α) (z : Fin n → α),
-        e (a, z) = Fin.snoc z a := fun a z => by
+        e (a, z) = Fin.snoc z a := fun a z ↦ by
       funext i; simp [e, Fin.snocEquiv]
     -- Convert ∑_{(a, z)} f (a, z) to ∑_z ∑_a f (a, z) via Finset.sum_product'.
     have h_split :
@@ -395,7 +395,7 @@ private lemma markovFactor_blockRV_gt
   · simp only [hnk, dif_neg, not_false_iff]
     -- Window prefix: `fun j : Fin k => blockRV (n+1) ω ⟨n-k+j, _⟩
     --              = blockRV k (T^[n-k] ω)`.
-    have h_arg : (fun j : Fin k => p.blockRV (n + 1) ω
+    have h_arg : (fun j : Fin k ↦ p.blockRV (n + 1) ω
           ⟨n - k + j.val, by have := j.isLt; omega⟩)
         = p.blockRV k (p.T^[n - k] ω) := by
       funext j
@@ -461,7 +461,7 @@ lemma qkSingleton_blockRV_eq_ofReal_exp_negLogQk
         = ENNReal.ofReal (Real.exp (-negLogQk μ p k n ω)) := by
   induction n with
   | zero =>
-    refine Filter.Eventually.of_forall (fun ω => ?_)
+    refine Filter.Eventually.of_forall (fun ω ↦ ?_)
     -- LHS: qkSingleton k 0 _ = 1; RHS: ofReal (exp(-0)) = ofReal 1 = 1.
     show qkSingleton μ p k 0 (p.blockRV 0 ω)
         = ENNReal.ofReal (Real.exp (-negLogQk μ p k 0 ω))
@@ -640,7 +640,7 @@ lemma MRatioUp_eq_ofReal_exp_old
 noncomputable def MRatioUp
     (μ : Measure Ω) [IsFiniteMeasure μ] (p : StationaryProcess μ α) (k n : ℕ) :
     Ω → ℝ≥0∞ :=
-  fun ω => ENNReal.ofReal (Real.exp (
+  fun ω ↦ ENNReal.ofReal (Real.exp (
     (n : ℝ) * blockLogAvg μ p n ω - negLogQk μ p k n ω))
 
 omit [DecidableEq α] in
@@ -662,7 +662,7 @@ theorem integral_MRatioUp_le_one
   -- Step 2: push forward via blockRV n; get ∑ y, qk{y}/Pn{y} * Pn{y} ≤ ∑ y, qk{y}.
   -- Step 3: apply sum_qkSingleton_le_one.
   have h_block_meas : Measurable (p.blockRV n) := p.measurable_blockRV n
-  have h_Pn_meas : Measurable (fun y : Fin n → α =>
+  have h_Pn_meas : Measurable (fun y : Fin n → α ↦
       qkSingleton μ p k n y / (μ.map (p.blockRV n)) {y}) := measurable_of_finite _
   have h_eq_ae := MRatioUp_eq_ofReal_exp_old μ p k n
   -- rewrite goal via a.s. equality:
@@ -688,7 +688,7 @@ theorem integral_MRatioUp_le_one
   rw [lintegral_fintype]
   -- ∑ y, (qk{y}/Pn{y}) * Pn{y} ≤ ∑ y, qk{y}, then ≤ 1.
   refine le_trans ?_ (sum_qkSingleton_le_one μ p k n)
-  refine Finset.sum_le_sum (fun y _ => ?_)
+  refine Finset.sum_le_sum (fun y _ ↦ ?_)
   -- (a / b) * b ≤ a: holds unconditionally in ENNReal via div_mul_cancel' edge cases.
   by_cases hb_zero : (μ.map (p.blockRV n)) {y} = 0
   · simp [hb_zero]
@@ -706,7 +706,7 @@ theorem MRatioUp_le_sq_eventually
   -- Markov inequality + integral_MRatioUp_le_one gives μ(s n) ≤ 1/(n^2)
   -- as an ENNReal bound for n ≥ 1. The sum ∑' n, 1/n² is finite (p-series),
   -- so the first Borel-Cantelli (`ae_eventually_notMem`) gives the conclusion.
-  set s : ℕ → Set Ω := fun n => {ω | ENNReal.ofReal ((n : ℝ) ^ 2) < MRatioUp μ p k n ω}
+  set s : ℕ → Set Ω := fun n ↦ {ω | ENNReal.ofReal ((n : ℝ) ^ 2) < MRatioUp μ p k n ω}
     with hs_def
   -- Measurability of MRatioUp.
   have h_MR_meas : ∀ n, Measurable (MRatioUp μ p k n) := by
@@ -718,7 +718,7 @@ theorem MRatioUp_le_sq_eventually
     · exact (measurable_const.mul (measurable_blockLogAvg μ p n))
     · unfold negLogQk
       exact Finset.measurable_sum _
-        (fun i _ => measurable_pmfLogCondMarkov μ p k i)
+        (fun i _ ↦ measurable_pmfLogCondMarkov μ p k i)
   -- Per-n measure bound: for n ≥ 1, μ(s n) ≤ 1 / (n^2 : ℝ≥0∞).
   have h_bound : ∀ n, 1 ≤ n → μ (s n) ≤ (1 : ℝ≥0∞) / ((n : ℝ≥0∞) ^ 2) := by
     intro n hn
@@ -755,14 +755,14 @@ theorem MRatioUp_le_sq_eventually
     refine ENNReal.add_ne_top.mpr ⟨measure_ne_top μ _, ?_⟩
     -- ∑' n, μ (s (n+1)) ≤ ∑' n, 1/((n+1)^2 : ℝ≥0∞) which is finite.
     have h_le : (∑' n : ℕ, μ (s (n + 1))) ≤ ∑' n : ℕ, (1 : ℝ≥0∞) / (((n + 1 : ℕ) : ℝ≥0∞) ^ 2) := by
-      refine ENNReal.tsum_le_tsum (fun n => ?_)
+      refine ENNReal.tsum_le_tsum (fun n ↦ ?_)
       exact h_bound (n + 1) (Nat.succ_le_succ (Nat.zero_le _))
     refine ne_top_of_le_ne_top ?_ h_le
     -- ∑' n, 1/((n+1)^2 : ℝ≥0∞) < ∞: convert via ofReal of a real summable.
-    have h_summable_real : Summable (fun n : ℕ => (1 : ℝ) / ((n + 1 : ℕ) : ℝ) ^ 2) := by
+    have h_summable_real : Summable (fun n : ℕ ↦ (1 : ℝ) / ((n + 1 : ℕ) : ℝ) ^ 2) := by
       have h := (Real.summable_one_div_nat_pow (p := 2)).mpr (by norm_num)
       exact (summable_nat_add_iff 1).mpr h
-    have h_nonneg : ∀ n : ℕ, (0 : ℝ) ≤ (1 : ℝ) / ((n + 1 : ℕ) : ℝ) ^ 2 := fun n => by positivity
+    have h_nonneg : ∀ n : ℕ, (0 : ℝ) ≤ (1 : ℝ) / ((n + 1 : ℕ) : ℝ) ^ 2 := fun n ↦ by positivity
     have h_ennreal_tsum : ∑' n : ℕ,
         ENNReal.ofReal ((1 : ℝ) / ((n + 1 : ℕ) : ℝ) ^ 2) ≠ ∞ := by
       rw [← ENNReal.ofReal_tsum_of_nonneg h_nonneg h_summable_real]

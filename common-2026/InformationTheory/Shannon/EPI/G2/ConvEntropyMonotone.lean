@@ -129,20 +129,20 @@ theorem differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv
     -- (b) per-fibre regularity (a.e. `z`)
     (hκ_v : ∀ᵐ z ∂(μ.map Z), condDistrib X Z μ z ≪ volume)
     (hκ_logp_int : ∀ᵐ z ∂(μ.map Z), Integrable
-      (fun x => ((condDistrib X Z μ z).rnDeriv volume x).toReal
+      (fun x ↦ ((condDistrib X Z μ z).rnDeriv volume x).toReal
         * Real.log (((condDistrib X Z μ z).rnDeriv volume x).toReal)) volume)
     (hκ_cross_int : ∀ᵐ z ∂(μ.map Z), Integrable
-      (fun x => ((condDistrib X Z μ z).rnDeriv volume x).toReal
+      (fun x ↦ ((condDistrib X Z μ z).rnDeriv volume x).toReal
         * Real.log (((μ.map X).rnDeriv volume x).toReal)) volume)
     -- outer `μ_Z`-integrability of the two split pieces
     (h_fibreEnt_int : Integrable
-      (fun z => differentialEntropy (condDistrib X Z μ z)) (μ.map Z))
+      (fun z ↦ differentialEntropy (condDistrib X Z μ z)) (μ.map Z))
     (h_cross_int : Integrable
-      (fun z => ∫ x, ((condDistrib X Z μ z).rnDeriv volume x).toReal
+      (fun z ↦ ∫ x, ((condDistrib X Z μ z).rnDeriv volume x).toReal
         * Real.log (((μ.map X).rnDeriv volume x).toReal) ∂volume) (μ.map Z))
     -- (c) marginal log-density integrability
     (h_logq_int : Integrable
-      (fun x => Real.log (((μ.map X).rnDeriv volume x).toReal)) (μ.map X)) :
+      (fun x ↦ Real.log (((μ.map X).rnDeriv volume x).toReal)) (μ.map X)) :
     differentialEntropy (μ.map X) - condDifferentialEntropy X Z μ
       = (klDiv ((μ.map Z) ⊗ₘ condDistrib X Z μ)
           ((μ.map Z) ⊗ₘ Kernel.const α (μ.map X))).toReal := by
@@ -198,7 +198,7 @@ theorem differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv
             * Real.log ((ν.rnDeriv volume x).toReal) ∂volume := by
     unfold differentialEntropy
     rw [← integral_neg]
-    refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+    refine integral_congr_ae (Filter.Eventually.of_forall (fun x ↦ ?_))
     simp only [Real.negMulLog_def]; ring
   -- Assemble.
   rw [hstepA, hstepBint, hstepC, hent]
@@ -227,18 +227,18 @@ theorem condDifferentialEntropy_le
       ((μ.map Z) ⊗ₘ condDistrib X Z μ))
     (hκ_v : ∀ᵐ z ∂(μ.map Z), condDistrib X Z μ z ≪ volume)
     (hκ_logp_int : ∀ᵐ z ∂(μ.map Z), Integrable
-      (fun x => ((condDistrib X Z μ z).rnDeriv volume x).toReal
+      (fun x ↦ ((condDistrib X Z μ z).rnDeriv volume x).toReal
         * Real.log (((condDistrib X Z μ z).rnDeriv volume x).toReal)) volume)
     (hκ_cross_int : ∀ᵐ z ∂(μ.map Z), Integrable
-      (fun x => ((condDistrib X Z μ z).rnDeriv volume x).toReal
+      (fun x ↦ ((condDistrib X Z μ z).rnDeriv volume x).toReal
         * Real.log (((μ.map X).rnDeriv volume x).toReal)) volume)
     (h_fibreEnt_int : Integrable
-      (fun z => differentialEntropy (condDistrib X Z μ z)) (μ.map Z))
+      (fun z ↦ differentialEntropy (condDistrib X Z μ z)) (μ.map Z))
     (h_cross_int : Integrable
-      (fun z => ∫ x, ((condDistrib X Z μ z).rnDeriv volume x).toReal
+      (fun z ↦ ∫ x, ((condDistrib X Z μ z).rnDeriv volume x).toReal
         * Real.log (((μ.map X).rnDeriv volume x).toReal) ∂volume) (μ.map Z))
     (h_logq_int : Integrable
-      (fun x => Real.log (((μ.map X).rnDeriv volume x).toReal)) (μ.map X)) :
+      (fun x ↦ Real.log (((μ.map X).rnDeriv volume x).toReal)) (μ.map X)) :
     condDifferentialEntropy X Z μ ≤ differentialEntropy (μ.map X) := by
   have hbridge := differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv
     X Z μ hX hZ hX_ac h_ac h_int hκ_v hκ_logp_int hκ_cross_int h_fibreEnt_int
@@ -254,13 +254,13 @@ theorem condDifferentialEntropy_le
 
 @audit:ok -/
 noncomputable def affineShiftKernel (νX : Measure ℝ) [SFinite νX] (c : ℝ) : Kernel ℝ ℝ where
-  toFun z := νX.map (fun x => x + c * z)
+  toFun z := νX.map (fun x ↦ x + c * z)
   measurable' := by
-    have h1 : Measurable fun z : ℝ => νX.map (Prod.mk z) :=
+    have h1 : Measurable fun z : ℝ ↦ νX.map (Prod.mk z) :=
       Measurable.map_prodMk_left (ν := νX)
-    have h2 : Measurable fun p : ℝ × ℝ => p.2 + c * p.1 := by fun_prop
-    have heq : (fun z : ℝ => νX.map (fun x => x + c * z))
-        = fun z : ℝ => (νX.map (Prod.mk z)).map (fun p : ℝ × ℝ => p.2 + c * p.1) := by
+    have h2 : Measurable fun p : ℝ × ℝ ↦ p.2 + c * p.1 := by fun_prop
+    have heq : (fun z : ℝ ↦ νX.map (fun x ↦ x + c * z))
+        = fun z : ℝ ↦ (νX.map (Prod.mk z)).map (fun p : ℝ × ℝ ↦ p.2 + c * p.1) := by
       funext z
       rw [Measure.map_map h2 measurable_prodMk_left]
       rfl
@@ -269,13 +269,13 @@ noncomputable def affineShiftKernel (νX : Measure ℝ) [SFinite νX] (c : ℝ) 
 
 @[simp]
 lemma affineShiftKernel_apply (νX : Measure ℝ) [SFinite νX] (c z : ℝ) :
-    affineShiftKernel νX c z = νX.map (fun x => x + c * z) := rfl
+    affineShiftKernel νX c z = νX.map (fun x ↦ x + c * z) := rfl
 
 instance affineShiftKernel.instIsMarkov (νX : Measure ℝ) [IsProbabilityMeasure νX] (c : ℝ) :
     IsMarkovKernel (affineShiftKernel νX c) := by
-  refine ⟨fun z => ?_⟩
+  refine ⟨fun z ↦ ?_⟩
   rw [affineShiftKernel_apply]
-  have : Measurable fun x : ℝ => x + c * z := by fun_prop
+  have : Measurable fun x : ℝ ↦ x + c * z := by fun_prop
   exact Measure.isProbabilityMeasure_map this.aemeasurable
 
 /-- Plumbing core (buildable, **not** a Mathlib wall): the pushforward of the product
@@ -285,14 +285,14 @@ product of `νZ` with the z-dependent affine-shift kernel `affineShiftKernel νX
 @audit:ok -/
 theorem prod_map_affine_eq_compProd
     (νZ νX : Measure ℝ) [SFinite νZ] [IsProbabilityMeasure νX] (c : ℝ) :
-    (νZ.prod νX).map (fun p : ℝ × ℝ => (p.1, p.2 + c * p.1))
+    (νZ.prod νX).map (fun p : ℝ × ℝ ↦ (p.1, p.2 + c * p.1))
       = νZ ⊗ₘ (affineShiftKernel νX c) := by
-  have hg : Measurable fun p : ℝ × ℝ => (p.1, p.2 + c * p.1) := by fun_prop
+  have hg : Measurable fun p : ℝ × ℝ ↦ (p.1, p.2 + c * p.1) := by fun_prop
   ext s hs
   rw [Measure.map_apply hg hs, Measure.prod_apply (hg hs), Measure.compProd_apply hs]
-  refine lintegral_congr fun z => ?_
+  refine lintegral_congr fun z ↦ ?_
   rw [affineShiftKernel_apply]
-  have hshift : Measurable fun x : ℝ => x + c * z := by fun_prop
+  have hshift : Measurable fun x : ℝ ↦ x + c * z := by fun_prop
   rw [Measure.map_apply hshift (measurable_prodMk_left hs)]
   congr 1
 
@@ -326,9 +326,9 @@ theorem condDifferentialEntropy_indep_add_eq
     [IsProbabilityMeasure μ] (c : ℝ)
     (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z μ)
     (hX_ac : (μ.map X) ≪ volume) :
-    condDifferentialEntropy (fun ω => X ω + c * Z ω) Z μ
+    condDifferentialEntropy (fun ω ↦ X ω + c * Z ω) Z μ
       = differentialEntropy (μ.map X) := by
-  set W : Ω → ℝ := fun ω => X ω + c * Z ω with hW_def
+  set W : Ω → ℝ := fun ω ↦ X ω + c * Z ω with hW_def
   have hW : Measurable W := hX.add ((measurable_const).mul hZ)
   -- Output and conditioning laws are probability measures.
   haveI : IsProbabilityMeasure (μ.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
@@ -336,14 +336,14 @@ theorem condDifferentialEntropy_indep_add_eq
   have hsf : SigmaFinite (μ.map X) := inferInstance
   -- Step 1: joint `(Z, X)` is the product law (independence).
   have hZX : IndepFun Z X μ := hXZ.symm
-  have hjoint_ZX : μ.map (fun ω => (Z ω, X ω)) = (μ.map Z).prod (μ.map X) :=
+  have hjoint_ZX : μ.map (fun ω ↦ (Z ω, X ω)) = (μ.map Z).prod (μ.map X) :=
     (indepFun_iff_map_prod_eq_prod_map_map hZ.aemeasurable hX.aemeasurable).mp hZX
   -- Step 1': push the product through the affine map `g (z, x) = (z, x + c·z)`.
-  have hg : Measurable fun p : ℝ × ℝ => (p.1, p.2 + c * p.1) := by fun_prop
-  have hjoint_ZW : μ.map (fun ω => (Z ω, W ω))
+  have hg : Measurable fun p : ℝ × ℝ ↦ (p.1, p.2 + c * p.1) := by fun_prop
+  have hjoint_ZW : μ.map (fun ω ↦ (Z ω, W ω))
       = (μ.map Z) ⊗ₘ (affineShiftKernel (μ.map X) c) := by
-    have hcomp : (fun ω => (Z ω, W ω))
-        = (fun p : ℝ × ℝ => (p.1, p.2 + c * p.1)) ∘ (fun ω => (Z ω, X ω)) := by
+    have hcomp : (fun ω ↦ (Z ω, W ω))
+        = (fun p : ℝ × ℝ ↦ (p.1, p.2 + c * p.1)) ∘ (fun ω ↦ (Z ω, X ω)) := by
       funext ω; simp [hW_def]
     rw [hcomp, ← Measure.map_map hg (hZ.prodMk hX), hjoint_ZX,
       prod_map_affine_eq_compProd]
@@ -352,7 +352,7 @@ theorem condDifferentialEntropy_indep_add_eq
     condDistrib_ae_eq_of_measure_eq_compProd Z hW.aemeasurable hjoint_ZW
   -- Step 3: rewrite the fibre integral, then apply translation invariance fibrewise.
   unfold condDifferentialEntropy
-  rw [integral_congr_ae (g := fun _ => differentialEntropy (μ.map X)) ?_]
+  rw [integral_congr_ae (g := fun _ ↦ differentialEntropy (μ.map X)) ?_]
   · rw [integral_const, probReal_univ, one_smul]
   · filter_upwards [hae] with z hz
     rw [hz, affineShiftKernel_apply]
@@ -375,38 +375,38 @@ theorem differentialEntropy_indep_gaussian_add_ge
     [IsProbabilityMeasure μ] (s : ℝ) (hs : 0 < s)
     (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z μ)
     (hX_ac : (μ.map X) ≪ volume)
-    (hW_ac : (μ.map (fun ω => X ω + Real.sqrt s * Z ω)) ≪ volume)
-    (h_ac : (μ.map Z) ⊗ₘ condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ
-        ≪ (μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map (fun ω => X ω + Real.sqrt s * Z ω)))
+    (hW_ac : (μ.map (fun ω ↦ X ω + Real.sqrt s * Z ω)) ≪ volume)
+    (h_ac : (μ.map Z) ⊗ₘ condDistrib (fun ω ↦ X ω + Real.sqrt s * Z ω) Z μ
+        ≪ (μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map (fun ω ↦ X ω + Real.sqrt s * Z ω)))
     (h_int : Integrable
-      (llr ((μ.map Z) ⊗ₘ condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ)
-        ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map (fun ω => X ω + Real.sqrt s * Z ω))))
-      ((μ.map Z) ⊗ₘ condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ))
+      (llr ((μ.map Z) ⊗ₘ condDistrib (fun ω ↦ X ω + Real.sqrt s * Z ω) Z μ)
+        ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map (fun ω ↦ X ω + Real.sqrt s * Z ω))))
+      ((μ.map Z) ⊗ₘ condDistrib (fun ω ↦ X ω + Real.sqrt s * Z ω) Z μ))
     (hκ_v : ∀ᵐ z ∂(μ.map Z),
-      condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z ≪ volume)
+      condDistrib (fun ω ↦ X ω + Real.sqrt s * Z ω) Z μ z ≪ volume)
     (hκ_logp_int : ∀ᵐ z ∂(μ.map Z), Integrable
-      (fun x => ((condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z).rnDeriv volume x).toReal
+      (fun x ↦ ((condDistrib (fun ω ↦ X ω + Real.sqrt s * Z ω) Z μ z).rnDeriv volume x).toReal
         * Real.log
-            (((condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z).rnDeriv volume x).toReal))
+            (((condDistrib (fun ω ↦ X ω + Real.sqrt s * Z ω) Z μ z).rnDeriv volume x).toReal))
         volume)
     (hκ_cross_int : ∀ᵐ z ∂(μ.map Z), Integrable
-      (fun x => ((condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z).rnDeriv volume x).toReal
-        * Real.log (((μ.map (fun ω => X ω + Real.sqrt s * Z ω)).rnDeriv volume x).toReal)) volume)
+      (fun x ↦ ((condDistrib (fun ω ↦ X ω + Real.sqrt s * Z ω) Z μ z).rnDeriv volume x).toReal
+        * Real.log (((μ.map (fun ω ↦ X ω + Real.sqrt s * Z ω)).rnDeriv volume x).toReal)) volume)
     (h_fibreEnt_int : Integrable
-      (fun z => differentialEntropy (condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z))
+      (fun z ↦ differentialEntropy (condDistrib (fun ω ↦ X ω + Real.sqrt s * Z ω) Z μ z))
       (μ.map Z))
     (h_cross_int : Integrable
-      (fun z => ∫ x,
-        ((condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z).rnDeriv volume x).toReal
-          * Real.log (((μ.map (fun ω => X ω + Real.sqrt s * Z ω)).rnDeriv volume x).toReal) ∂volume)
+      (fun z ↦ ∫ x,
+        ((condDistrib (fun ω ↦ X ω + Real.sqrt s * Z ω) Z μ z).rnDeriv volume x).toReal
+          * Real.log (((μ.map (fun ω ↦ X ω + Real.sqrt s * Z ω)).rnDeriv volume x).toReal) ∂volume)
       (μ.map Z))
     (h_logq_int : Integrable
-      (fun x => Real.log (((μ.map (fun ω => X ω + Real.sqrt s * Z ω)).rnDeriv volume x).toReal))
-      (μ.map (fun ω => X ω + Real.sqrt s * Z ω))) :
+      (fun x ↦ Real.log (((μ.map (fun ω ↦ X ω + Real.sqrt s * Z ω)).rnDeriv volume x).toReal))
+      (μ.map (fun ω ↦ X ω + Real.sqrt s * Z ω))) :
     differentialEntropy (μ.map X)
-      ≤ differentialEntropy (μ.map (fun ω => X ω + Real.sqrt s * Z ω)) := by
+      ≤ differentialEntropy (μ.map (fun ω ↦ X ω + Real.sqrt s * Z ω)) := by
   -- `W := X + √s·Z`. Conditioning on `Z` reduces entropy, and the fibre is `h(X)`.
-  set W : Ω → ℝ := fun ω => X ω + Real.sqrt s * Z ω with hW
+  set W : Ω → ℝ := fun ω ↦ X ω + Real.sqrt s * Z ω with hW
   have hW_meas : Measurable W := hX.add ((measurable_const).mul hZ)
   have h_fibre : condDifferentialEntropy W Z μ = differentialEntropy (μ.map X) :=
     condDifferentialEntropy_indep_add_eq X Z μ (Real.sqrt s) hX hZ hXZ hX_ac
@@ -433,47 +433,47 @@ theorem negMulLog_convDensity_entropy_ge
     (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z μ)
     (v_Z : ℝ≥0) (hv_Z_pos : 0 < v_Z) (hZ_law : μ.map Z = gaussianReal 0 v_Z)
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_law : μ.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x)))
+    (hpX_law : μ.map X = volume.withDensity (fun x ↦ ENNReal.ofReal (pX x)))
     (u : ℕ → ℝ) (hu_pos : ∀ n, 0 < u n) (n : ℕ)
-    (h_ac : (μ.map Z) ⊗ₘ condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ
-        ≪ (μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω)))
+    (h_ac : (μ.map Z) ⊗ₘ condDistrib (fun ω ↦ X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ
+        ≪ (μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map (fun ω ↦ X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω)))
     (h_int : Integrable
-      (llr ((μ.map Z) ⊗ₘ condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ)
-        ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω))))
-      ((μ.map Z) ⊗ₘ condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ))
+      (llr ((μ.map Z) ⊗ₘ condDistrib (fun ω ↦ X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ)
+        ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map (fun ω ↦ X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω))))
+      ((μ.map Z) ⊗ₘ condDistrib (fun ω ↦ X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ))
     (hκ_v : ∀ᵐ z ∂(μ.map Z),
-      condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z ≪ volume)
+      condDistrib (fun ω ↦ X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z ≪ volume)
     (hκ_logp_int : ∀ᵐ z ∂(μ.map Z), Integrable
-      (fun x =>
-        ((condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv
+      (fun x ↦
+        ((condDistrib (fun ω ↦ X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv
             volume x).toReal
           * Real.log
-              (((condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv
+              (((condDistrib (fun ω ↦ X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv
                 volume x).toReal)) volume)
     (hκ_cross_int : ∀ᵐ z ∂(μ.map Z), Integrable
-      (fun x =>
-        ((condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv
+      (fun x ↦
+        ((condDistrib (fun ω ↦ X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv
             volume x).toReal
           * Real.log
-              (((μ.map (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω)).rnDeriv volume x).toReal))
+              (((μ.map (fun ω ↦ X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω)).rnDeriv volume x).toReal))
         volume)
     (h_fibreEnt_int : Integrable
-      (fun z =>
-        differentialEntropy (condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z))
+      (fun z ↦
+        differentialEntropy (condDistrib (fun ω ↦ X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z))
       (μ.map Z))
     (h_cross_int : Integrable
-      (fun z => ∫ x,
-        ((condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv
+      (fun z ↦ ∫ x,
+        ((condDistrib (fun ω ↦ X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv
             volume x).toReal
           * Real.log
-              (((μ.map (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω)).rnDeriv volume x).toReal)
+              (((μ.map (fun ω ↦ X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω)).rnDeriv volume x).toReal)
           ∂volume)
       (μ.map Z))
     (h_logq_int : Integrable
-      (fun x =>
+      (fun x ↦
         Real.log
-          (((μ.map (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω)).rnDeriv volume x).toReal))
-      (μ.map (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω))) :
+          (((μ.map (fun ω ↦ X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω)).rnDeriv volume x).toReal))
+      (μ.map (fun ω ↦ X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω))) :
     (∫ x, Real.negMulLog (pX x) ∂volume)
       ≤ ∫ x, Real.negMulLog
           (convDensityAdd pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩) x) ∂volume := by
@@ -490,7 +490,7 @@ theorem negMulLog_convDensity_entropy_ge
   have hX_ac : (μ.map X) ≪ volume := by
     rw [hpX_law]; exact withDensity_absolutelyContinuous _ _
   -- Law of the heat-flow path and its absolute continuity.
-  set W : Ω → ℝ := fun ω => X ω + Real.sqrt s * Z ω with hW
+  set W : Ω → ℝ := fun ω ↦ X ω + Real.sqrt s * Z ω with hW
   have hW_law : μ.map W = (μ.map X) ∗ gaussianReal 0 ⟨s * (v_Z : ℝ), by positivity⟩ :=
     InformationTheory.Shannon.FisherInfo.gaussianConvolution_law_conv
       X Z hX hZ hXZ v_Z hZ_law hs.le
@@ -508,7 +508,7 @@ theorem negMulLog_convDensity_entropy_ge
   -- Rewrite LHS `h(μ.map X) = ∫ negMulLog pX`.
   have h_lhs : differentialEntropy (μ.map X) = ∫ x, Real.negMulLog (pX x) ∂volume := by
     rw [hpX_law, differentialEntropy_eq_integral_withDensity hpX_meas.ennreal_ofReal]
-    refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
+    refine integral_congr_ae (Filter.Eventually.of_forall fun x ↦ ?_)
     simp only [ENNReal.toReal_ofReal (hpX_nn x)]
   -- Rewrite RHS `h(μ.map W) = ∫ negMulLog (convDensityAdd pX g_{u n})`.
   have hrn := InformationTheory.Shannon.FisherInfo.pPath_eq_convDensityAdd
@@ -524,7 +524,7 @@ theorem negMulLog_convDensity_entropy_ge
     rw [hx, ENNReal.toReal_ofReal]
     · rw [hwit]
     · unfold convDensityAdd
-      exact integral_nonneg fun y =>
+      exact integral_nonneg fun y ↦
         mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _)
   rw [h_lhs, h_rhs] at h_dev
   exact h_dev

@@ -92,9 +92,9 @@ theorem mutualInfoOfChannel_eq_mutualInfo_prod
           Prod.fst Prod.snd := by
   unfold mutualInfoOfChannel InformationTheory.Shannon.mutualInfo
   -- Three rewrites: joint.map id = joint, joint.fst = p, joint.snd = outputDistribution.
-  have h_id : (jointDistribution p W).map (fun z : α × β => (z.1, z.2))
+  have h_id : (jointDistribution p W).map (fun z : α × β ↦ (z.1, z.2))
       = jointDistribution p W := by
-    have : (fun z : α × β => (z.1, z.2)) = id := by funext z; rfl
+    have : (fun z : α × β ↦ (z.1, z.2)) = id := by funext z; rfl
     rw [this, Measure.map_id]
   have h_fst : (jointDistribution p W).map Prod.fst = p := by
     show ((p ⊗ₘ W).map Prod.fst) = p
@@ -186,7 +186,7 @@ applied symbol-wise to `encoder m`. We model the channel output distribution giv
 of `W` to length `n` blocks. -/
 noncomputable def errorProbAt
     (c : Code M n α β) (W : Channel α β) (m : Fin M) : ℝ≥0∞ :=
-  (Measure.pi (fun i => W (c.encoder m i))) (c.errorEvent m)
+  (Measure.pi (fun i ↦ W (c.encoder m i))) (c.errorEvent m)
 
 /-- Average error probability under a uniform message: `(1/M) ∑ m, errorProbAt c W m`.
 For `M = 0` we set this to `0` (the sum is empty). -/
@@ -211,12 +211,12 @@ theorem averageErrorProb_le_one
     have h_each : ∀ m : Fin M, c.errorProbAt W m ≤ 1 := by
       intro m
       have : IsProbabilityMeasure
-          (Measure.pi (fun i => W (c.encoder m i))) := by infer_instance
+          (Measure.pi (fun i ↦ W (c.encoder m i))) := by infer_instance
       exact prob_le_one
     -- Sum ≤ M
     have h_sum_le : (∑ m : Fin M, c.errorProbAt W m) ≤ (M : ℝ≥0∞) := by
       calc (∑ m : Fin M, c.errorProbAt W m)
-          ≤ ∑ _m : Fin M, (1 : ℝ≥0∞) := Finset.sum_le_sum fun m _ => h_each m
+          ≤ ∑ _m : Fin M, (1 : ℝ≥0∞) := Finset.sum_le_sum fun m _ ↦ h_each m
         _ = (M : ℝ≥0∞) := by rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin,
                                   nsmul_eq_mul, mul_one]
     -- Multiply both sides by (M : ℝ≥0∞)⁻¹
@@ -249,7 +249,7 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 /-- Joint sequence over the product alphabet `α × β`. -/
 noncomputable def jointSequence
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) : ℕ → Ω → α × β :=
-  fun i ω => (Xs i ω, Ys i ω)
+  fun i ω ↦ (Xs i ω, Ys i ω)
 
 omit [MeasurableSpace α] [MeasurableSpace β] [Fintype α] [MeasurableSingletonClass α]
   [Fintype β] [MeasurableSingletonClass β] [MeasurableSpace Ω] in
@@ -279,7 +279,7 @@ noncomputable def jointlyTypicalSet
   { p |
     (p.1 ∈ InformationTheory.Shannon.typicalSet μ Xs n ε)
     ∧ (p.2 ∈ InformationTheory.Shannon.typicalSet μ Ys n ε)
-    ∧ (fun i => (p.1 i, p.2 i)) ∈
+    ∧ (fun i ↦ (p.1 i, p.2 i)) ∈
         InformationTheory.Shannon.typicalSet μ (jointSequence Xs Ys) n ε }
 
 omit [MeasurableSingletonClass α] [MeasurableSingletonClass β] in
@@ -290,7 +290,7 @@ lemma mem_jointlyTypicalSet_iff
     (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε ↔
       x ∈ InformationTheory.Shannon.typicalSet μ Xs n ε
       ∧ y ∈ InformationTheory.Shannon.typicalSet μ Ys n ε
-      ∧ (fun i => (x i, y i)) ∈
+      ∧ (fun i ↦ (x i, y i)) ∈
           InformationTheory.Shannon.typicalSet μ (jointSequence Xs Ys) n ε := Iff.rfl
 
 /-- The jointly typical set is measurable (finite product alphabet). -/
@@ -329,12 +329,12 @@ theorem jointlyTypicalSet_card_le
   -- the reshape (x, y) ↦ (fun i => (x i, y i)) : (Fin n → α) × (Fin n → β) → Fin n → α × β.
   -- Then apply typicalSet_card_le to the joint sequence.
   set Zs : ℕ → Ω → α × β := jointSequence Xs Ys with hZs_def
-  have hZs : ∀ i, Measurable (Zs i) := fun i =>
+  have hZs : ∀ i, Measurable (Zs i) := fun i ↦
     measurable_jointSequence Xs Ys hXs hYs i
   -- The reshape map.
   classical
   let φ : (Fin n → α) × (Fin n → β) → (Fin n → α × β) :=
-    fun p i => (p.1 i, p.2 i)
+    fun p i ↦ (p.1 i, p.2 i)
   have hφ_inj : Function.Injective φ := by
     intro p q hpq
     apply Prod.ext
@@ -376,21 +376,21 @@ private theorem measure_inter3_tendsto_one {Ω' : Type*} [MeasurableSpace Ω']
     (μ' : Measure Ω') [IsProbabilityMeasure μ']
     (A B C : ℕ → Set Ω')
     (hA : ∀ n, MeasurableSet (A n)) (hB : ∀ n, MeasurableSet (B n)) (hC : ∀ n, MeasurableSet (C n))
-    (hA1 : Filter.Tendsto (fun n => μ' (A n)) Filter.atTop (𝓝 1))
-    (hB1 : Filter.Tendsto (fun n => μ' (B n)) Filter.atTop (𝓝 1))
-    (hC1 : Filter.Tendsto (fun n => μ' (C n)) Filter.atTop (𝓝 1)) :
-    Filter.Tendsto (fun n => μ' (A n ∩ B n ∩ C n)) Filter.atTop (𝓝 1) := by
+    (hA1 : Filter.Tendsto (fun n ↦ μ' (A n)) Filter.atTop (𝓝 1))
+    (hB1 : Filter.Tendsto (fun n ↦ μ' (B n)) Filter.atTop (𝓝 1))
+    (hC1 : Filter.Tendsto (fun n ↦ μ' (C n)) Filter.atTop (𝓝 1)) :
+    Filter.Tendsto (fun n ↦ μ' (A n ∩ B n ∩ C n)) Filter.atTop (𝓝 1) := by
   -- Step 1: for any measurable E with μ'(E) → 1, we have μ'(Eᶜ) → 0.
   have h_bad_tendsto : ∀ (E : ℕ → Set Ω') (hE : ∀ n, MeasurableSet (E n))
-      (h : Filter.Tendsto (fun n => μ' (E n)) Filter.atTop (𝓝 1)),
-      Filter.Tendsto (fun n => μ' ((E n)ᶜ)) Filter.atTop (𝓝 0) := by
+      (h : Filter.Tendsto (fun n ↦ μ' (E n)) Filter.atTop (𝓝 1)),
+      Filter.Tendsto (fun n ↦ μ' ((E n)ᶜ)) Filter.atTop (𝓝 0) := by
     intro E hE h
-    have h_id : ∀ n, μ' ((E n)ᶜ) = 1 - μ' (E n) := fun n => by
+    have h_id : ∀ n, μ' ((E n)ᶜ) = 1 - μ' (E n) := fun n ↦ by
       rw [measure_compl (hE n) (measure_ne_top μ' _), measure_univ]
-    refine Filter.Tendsto.congr (fun n => (h_id n).symm) ?_
-    have h_cont : Continuous (fun x : ℝ≥0∞ => (1 : ℝ≥0∞) - x) :=
+    refine Filter.Tendsto.congr (fun n ↦ (h_id n).symm) ?_
+    have h_cont : Continuous (fun x : ℝ≥0∞ ↦ (1 : ℝ≥0∞) - x) :=
       ENNReal.continuous_sub_left (by simp)
-    have h_step : Filter.Tendsto (fun n => (1 : ℝ≥0∞) - μ' (E n)) Filter.atTop
+    have h_step : Filter.Tendsto (fun n ↦ (1 : ℝ≥0∞) - μ' (E n)) Filter.atTop
         (𝓝 ((1 : ℝ≥0∞) - 1)) := h_cont.tendsto _ |>.comp h
     simpa using h_step
   -- Step 2: derive complement → 0 for each axis.
@@ -419,25 +419,25 @@ private theorem measure_inter3_tendsto_one {Ω' : Type*} [MeasurableSpace Ω']
       _ = μ' ((A n)ᶜ) + μ' ((B n)ᶜ) + μ' ((C n)ᶜ) := by ring
   -- Step 5: the sum of complements → 0 + 0 + 0 = 0.
   have h_sum_tendsto : Filter.Tendsto
-      (fun n => μ' ((A n)ᶜ) + μ' ((B n)ᶜ) + μ' ((C n)ᶜ)) Filter.atTop (𝓝 0) := by
+      (fun n ↦ μ' ((A n)ᶜ) + μ' ((B n)ᶜ) + μ' ((C n)ᶜ)) Filter.atTop (𝓝 0) := by
     have h12 := h_badA_to_zero.add h_badB_to_zero
     have h_all := h12.add h_badC_to_zero
     simpa using h_all
   -- Step 6: squeeze to conclude μ'((A∩B∩C)ᶜ) → 0.
-  have h_compl_tendsto : Filter.Tendsto (fun n => μ' ((A n ∩ B n ∩ C n)ᶜ))
+  have h_compl_tendsto : Filter.Tendsto (fun n ↦ μ' ((A n ∩ B n ∩ C n)ᶜ))
       Filter.atTop (𝓝 0) :=
     tendsto_of_tendsto_of_tendsto_of_le_of_le
-      tendsto_const_nhds h_sum_tendsto (fun n => bot_le) h_bound_compl
+      tendsto_const_nhds h_sum_tendsto (fun n ↦ bot_le) h_bound_compl
   -- Step 7: μ'(A∩B∩C) = 1 − μ'((A∩B∩C)ᶜ) → 1 − 0 = 1.
   have h_meas_int : ∀ n, MeasurableSet (A n ∩ B n ∩ C n) :=
-    fun n => ((hA n).inter (hB n)).inter (hC n)
-  have h_id : ∀ n, μ' (A n ∩ B n ∩ C n) = 1 - μ' ((A n ∩ B n ∩ C n)ᶜ) := fun n => by
+    fun n ↦ ((hA n).inter (hB n)).inter (hC n)
+  have h_id : ∀ n, μ' (A n ∩ B n ∩ C n) = 1 - μ' ((A n ∩ B n ∩ C n)ᶜ) := fun n ↦ by
     rw [measure_compl (h_meas_int n) (measure_ne_top μ' _), measure_univ]
     exact (ENNReal.sub_sub_cancel (by simp) prob_le_one).symm
-  refine Filter.Tendsto.congr (fun n => (h_id n).symm) ?_
-  have h_cont : Continuous (fun x : ℝ≥0∞ => (1 : ℝ≥0∞) - x) :=
+  refine Filter.Tendsto.congr (fun n ↦ (h_id n).symm) ?_
+  have h_cont : Continuous (fun x : ℝ≥0∞ ↦ (1 : ℝ≥0∞) - x) :=
     ENNReal.continuous_sub_left (by simp)
-  have h_step : Filter.Tendsto (fun n => (1 : ℝ≥0∞) - μ' ((A n ∩ B n ∩ C n)ᶜ))
+  have h_step : Filter.Tendsto (fun n ↦ (1 : ℝ≥0∞) - μ' ((A n ∩ B n ∩ C n)ᶜ))
       Filter.atTop (𝓝 ((1 : ℝ≥0∞) - 0)) := h_cont.tendsto _ |>.comp h_compl_tendsto
   simpa using h_step
 
@@ -453,17 +453,17 @@ theorem jointlyTypicalSet_prob_tendsto_one
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindepX : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindepX : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
-    (hindepY : Pairwise fun i j => Ys i ⟂ᵢ[μ] Ys j)
+    (hindepY : Pairwise fun i j ↦ Ys i ⟂ᵢ[μ] Ys j)
     (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
-    (hindepZ : Pairwise fun i j =>
+    (hindepZ : Pairwise fun i j ↦
       jointSequence Xs Ys i ⟂ᵢ[μ] jointSequence Xs Ys j)
     (hidentZ : ∀ i,
       IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
     {ε : ℝ} (hε : 0 < ε) :
     Filter.Tendsto
-      (fun n : ℕ =>
+      (fun n : ℕ ↦
         μ {ω | (InformationTheory.Shannon.jointRV Xs n ω,
                 InformationTheory.Shannon.jointRV Ys n ω) ∈
                 jointlyTypicalSet μ Xs Ys n ε})
@@ -475,22 +475,22 @@ theorem jointlyTypicalSet_prob_tendsto_one
   have hY :=
     InformationTheory.Shannon.typicalSet_prob_tendsto_one μ Ys hYs hindepY hidentY hε
   set Zs : ℕ → Ω → α × β := jointSequence Xs Ys with hZs_def
-  have hZs : ∀ i, Measurable (Zs i) := fun i =>
+  have hZs : ∀ i, Measurable (Zs i) := fun i ↦
     measurable_jointSequence Xs Ys hXs hYs i
   have hZ :=
     InformationTheory.Shannon.typicalSet_prob_tendsto_one μ Zs hZs hindepZ hidentZ hε
   -- Naming events.
-  set goodX : ℕ → Set Ω := fun n =>
+  set goodX : ℕ → Set Ω := fun n ↦
     {ω | InformationTheory.Shannon.jointRV Xs n ω ∈
           InformationTheory.Shannon.typicalSet μ Xs n ε}
-  set goodY : ℕ → Set Ω := fun n =>
+  set goodY : ℕ → Set Ω := fun n ↦
     {ω | InformationTheory.Shannon.jointRV Ys n ω ∈
           InformationTheory.Shannon.typicalSet μ Ys n ε}
-  set goodZ : ℕ → Set Ω := fun n =>
+  set goodZ : ℕ → Set Ω := fun n ↦
     {ω | InformationTheory.Shannon.jointRV Zs n ω ∈
           InformationTheory.Shannon.typicalSet μ Zs n ε}
   -- The joint event is the intersection of the three.
-  set jointEvt : ℕ → Set Ω := fun n =>
+  set jointEvt : ℕ → Set Ω := fun n ↦
     {ω | (InformationTheory.Shannon.jointRV Xs n ω,
           InformationTheory.Shannon.jointRV Ys n ω) ∈
           jointlyTypicalSet μ Xs Ys n ε}
@@ -510,20 +510,20 @@ theorem jointlyTypicalSet_prob_tendsto_one
       refine ⟨hX', hY', ?_⟩
       exact hZ'
   -- Each good event is measurable (finite product alphabet).
-  have h_meas_goodX : ∀ n, MeasurableSet (goodX n) := fun n =>
+  have h_meas_goodX : ∀ n, MeasurableSet (goodX n) := fun n ↦
     (InformationTheory.Shannon.measurable_jointRV Xs hXs n)
       (InformationTheory.Shannon.measurableSet_typicalSet μ Xs n ε)
-  have h_meas_goodY : ∀ n, MeasurableSet (goodY n) := fun n =>
+  have h_meas_goodY : ∀ n, MeasurableSet (goodY n) := fun n ↦
     (InformationTheory.Shannon.measurable_jointRV Ys hYs n)
       (InformationTheory.Shannon.measurableSet_typicalSet μ Ys n ε)
-  have h_meas_goodZ : ∀ n, MeasurableSet (goodZ n) := fun n =>
+  have h_meas_goodZ : ∀ n, MeasurableSet (goodZ n) := fun n ↦
     (InformationTheory.Shannon.measurable_jointRV Zs hZs n)
       (InformationTheory.Shannon.measurableSet_typicalSet μ Zs n ε)
   -- Apply the abstract complement-union-bound helper to goodX/goodY/goodZ.
   -- Rewrite goal: μ (jointEvt n) = μ (goodX n ∩ goodY n ∩ goodZ n) via h_joint_decomp.
   have h_eq : ∀ n, μ (jointEvt n) = μ (goodX n ∩ goodY n ∩ goodZ n) :=
-    fun n => congr_arg μ (h_joint_decomp n)
-  rw [show (fun n => μ (jointEvt n)) = fun n => μ (goodX n ∩ goodY n ∩ goodZ n) from
+    fun n ↦ congr_arg μ (h_joint_decomp n)
+  rw [show (fun n ↦ μ (jointEvt n)) = fun n ↦ μ (goodX n ∩ goodY n ∩ goodZ n) from
     funext h_eq]
   exact measure_inter3_tendsto_one μ goodX goodY goodZ
     h_meas_goodX h_meas_goodY h_meas_goodZ hX hY hZ
@@ -548,9 +548,9 @@ theorem jointlyTypicalSet_indep_prob_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindepX_full : iIndepFun (fun i => Xs i) μ)
+    (hindepX_full : iIndepFun (fun i ↦ Xs i) μ)
     (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
-    (hindepY_full : iIndepFun (fun i => Ys i) μ)
+    (hindepY_full : iIndepFun (fun i ↦ Ys i) μ)
     (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
     (hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
     (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})

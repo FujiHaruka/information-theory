@@ -57,14 +57,14 @@ lemma lintegral_conv_kernel_eq (pX g : ℝ → ℝ) (hpX_meas : Measurable pX)
       _ = ENNReal.ofReal (pX x) * ∫⁻ z, ENNReal.ofReal (g (z - x)) ∂volume :=
           lintegral_const_mul _ (hg.comp (measurable_id.sub_const x)).ennreal_ofReal
       _ = ENNReal.ofReal (pX x) * ∫⁻ w, ENNReal.ofReal (g w) ∂volume := by
-          rw [lintegral_sub_right_eq_self (fun w => ENNReal.ofReal (g w)) x]
+          rw [lintegral_sub_right_eq_self (fun w ↦ ENNReal.ofReal (g w)) x]
   simp_rw [hinner]
   rw [lintegral_mul_const _ hpX_meas.ennreal_ofReal]
 
 -- Per-`z` Jensen bound: `max (φ (r z)) 0 ≤ ∫ x, pX x * (max (φ (pY (z-x))) 0) ∂volume`.
 -- Used to bound `∫⁻ G ≤ 1 · C` in `integrable_negPart_negMulLog_map_sum`.
 lemma conv_jensen_bound (pX pY : ℝ → ℝ) (φ : ℝ → ℝ) (r : ℝ → ℝ)
-    (μX : Measure ℝ) (hμX_def : μX = volume.withDensity (fun x => ENNReal.ofReal (pX x)))
+    (μX : Measure ℝ) (hμX_def : μX = volume.withDensity (fun x ↦ ENNReal.ofReal (pX x)))
     [IsProbabilityMeasure μX]
     (hpX_meas : Measurable pX) (hpX_nn : ∀ x, 0 ≤ pX x)
     (hpY_nn : ∀ y, 0 ≤ pY y)
@@ -73,38 +73,38 @@ lemma conv_jensen_bound (pX pY : ℝ → ℝ) (φ : ℝ → ℝ) (r : ℝ → �
     (hφ_cont : ContinuousOn φ (Set.Ici 0))
     (z : ℝ)
     (hz : r z = EPIConvDensity.convDensityAdd pX pY z)
-    (hzpY : Integrable (fun x => pX x * pY (z - x)) volume)
-    (hzCq : Integrable (fun x => pX x * max (φ (pY (z - x))) 0) volume)
-    (hzCm : Integrable (fun x => pX x * max (-(φ (pY (z - x)))) 0) volume) :
+    (hzpY : Integrable (fun x ↦ pX x * pY (z - x)) volume)
+    (hzCq : Integrable (fun x ↦ pX x * max (φ (pY (z - x))) 0) volume)
+    (hzCm : Integrable (fun x ↦ pX x * max (-(φ (pY (z - x)))) 0) volume) :
     max (φ (r z)) 0 ≤ ∫ x, pX x * max (φ (pY (z - x))) 0 ∂volume := by
-  have hpXofReal_meas : Measurable (fun x => ENNReal.ofReal (pX x)) := hpX_meas.ennreal_ofReal
+  have hpXofReal_meas : Measurable (fun x ↦ ENNReal.ofReal (pX x)) := hpX_meas.ennreal_ofReal
   have hpXofReal_lt : ∀ᵐ x ∂volume, ENNReal.ofReal (pX x) < ∞ :=
-    Filter.Eventually.of_forall (fun _ => ENNReal.ofReal_lt_top)
+    Filter.Eventually.of_forall (fun _ ↦ ENNReal.ofReal_lt_top)
   have hμX_smul : ∀ (h : ℝ → ℝ), ∫ x, h x ∂μX = ∫ x, pX x * h x ∂volume := by
     intro h
     rw [hμX_def, integral_withDensity_eq_integral_toReal_smul hpXofReal_meas hpXofReal_lt]
     apply integral_congr_ae; filter_upwards with x
     rw [ENNReal.toReal_ofReal (hpX_nn x), smul_eq_mul]
-  set f : ℝ → ℝ := fun x => pY (z - x)
-  have hf_nn : ∀ x, 0 ≤ f x := fun _ => hpY_nn _
+  set f : ℝ → ℝ := fun x ↦ pY (z - x)
+  have hf_nn : ∀ x, 0 ≤ f x := fun _ ↦ hpY_nn _
   have hf_int : Integrable f μX := by
     rw [hμX_def, integrable_withDensity_iff_integrable_smul' hpXofReal_meas hpXofReal_lt]
     refine hzpY.congr ?_
     filter_upwards with x; rw [ENNReal.toReal_ofReal (hpX_nn x), smul_eq_mul]
-  have hCqf_int : Integrable (fun x => max (φ (f x)) 0) μX := by
+  have hCqf_int : Integrable (fun x ↦ max (φ (f x)) 0) μX := by
     rw [hμX_def, integrable_withDensity_iff_integrable_smul' hpXofReal_meas hpXofReal_lt]
     refine hzCq.congr ?_
     filter_upwards with x; rw [ENNReal.toReal_ofReal (hpX_nn x), smul_eq_mul]
-  have hCmf_int : Integrable (fun x => max (-(φ (f x))) 0) μX := by
+  have hCmf_int : Integrable (fun x ↦ max (-(φ (f x))) 0) μX := by
     rw [hμX_def, integrable_withDensity_iff_integrable_smul' hpXofReal_meas hpXofReal_lt]
     refine hzCm.congr ?_
     filter_upwards with x; rw [ENNReal.toReal_ofReal (hpX_nn x), smul_eq_mul]
-  have hφf_eq : (fun x => φ (f x)) = fun x => max (φ (f x)) 0 - max (-(φ (f x))) 0 := by
+  have hφf_eq : (fun x ↦ φ (f x)) = fun x ↦ max (φ (f x)) 0 - max (-(φ (f x))) 0 := by
     funext x
     rcases le_or_gt 0 (φ (f x)) with h | h
     · rw [max_eq_left h, max_eq_right (by linarith : -(φ (f x)) ≤ 0)]; ring
     · rw [max_eq_right h.le, max_eq_left (by linarith : 0 ≤ -(φ (f x)))]; ring
-  have hφf_int : Integrable (fun x => φ (f x)) μX := by
+  have hφf_int : Integrable (fun x ↦ φ (f x)) μX := by
     rw [hφf_eq]; exact hCqf_int.sub hCmf_int
   have hjz : φ (∫ x, f x ∂μX) ≤ ∫ x, φ (f x) ∂μX :=
     hφ_convex.map_integral_le hφ_cont isClosed_Ici
@@ -114,25 +114,25 @@ lemma conv_jensen_bound (pX pY : ℝ → ℝ) (φ : ℝ → ℝ) (r : ℝ → �
     rw [hμX_smul f]; rfl
   have hstep1 : φ (r z) ≤ ∫ x, φ (f x) ∂μX := by rw [hrz_eq]; exact hjz
   have hstep2 : (∫ x, φ (f x) ∂μX) ≤ ∫ x, max (φ (f x)) 0 ∂μX :=
-    integral_mono hφf_int hCqf_int (fun x => le_max_left _ _)
+    integral_mono hφf_int hCqf_int (fun x ↦ le_max_left _ _)
   have hstep3 : (∫ x, max (φ (f x)) 0 ∂μX) = ∫ x, pX x * max (φ (pY (z - x))) 0 ∂volume :=
-    hμX_smul (fun x => max (φ (f x)) 0)
+    hμX_smul (fun x ↦ max (φ (f x)) 0)
   exact max_le (by rw [← hstep3]; exact le_trans hstep1 hstep2)
-    (integral_nonneg (fun x => mul_nonneg (hpX_nn x) (le_max_right _ _)))
+    (integral_nonneg (fun x ↦ mul_nonneg (hpX_nn x) (le_max_right _ _)))
 
 -- Product-space integrability of `pX x * g (z - x)` from finiteness of `∫⁻ ofReal g`.
 lemma integrable_conv_kernel (pX g : ℝ → ℝ) (hpX_meas : Measurable pX)
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_lint : ∫⁻ x, ENNReal.ofReal (pX x) ∂volume = 1)
     (hg : Measurable g) (hg_nn : ∀ w, 0 ≤ g w)
     (hg_fin : (∫⁻ w, ENNReal.ofReal (g w) ∂volume) ≠ ∞) :
-    Integrable (fun p : ℝ × ℝ => pX p.2 * g (p.1 - p.2)) (volume.prod volume) := by
-  have hjoint_meas : AEStronglyMeasurable (fun p : ℝ × ℝ => pX p.2 * g (p.1 - p.2))
+    Integrable (fun p : ℝ × ℝ ↦ pX p.2 * g (p.1 - p.2)) (volume.prod volume) := by
+  have hjoint_meas : AEStronglyMeasurable (fun p : ℝ × ℝ ↦ pX p.2 * g (p.1 - p.2))
       (volume.prod volume) :=
     ((hpX_meas.comp measurable_snd).mul
       (hg.comp (measurable_fst.sub measurable_snd))).aestronglyMeasurable
   refine ⟨hjoint_meas, ?_⟩
   have hnn : ∀ᵐ p : ℝ × ℝ ∂(volume.prod volume), 0 ≤ pX p.2 * g (p.1 - p.2) :=
-    Filter.Eventually.of_forall (fun p => mul_nonneg (hpX_nn _) (hg_nn _))
+    Filter.Eventually.of_forall (fun p ↦ mul_nonneg (hpX_nn _) (hg_nn _))
   rw [hasFiniteIntegral_iff_ofReal hnn,
     lintegral_prod _ (hjoint_meas).aemeasurable.ennreal_ofReal,
     lintegral_conv_kernel_eq pX g hpX_meas hpX_nn hg hg_nn, hpX_lint, one_mul]
@@ -151,32 +151,32 @@ Tonelli with translation invariance bounds `∫⁻ z (r log r)⁺` by `1 · C < 
 theorem integrable_negPart_negMulLog_map_sum (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) (hXY : IndepFun X Y P)
-    (hY_ent : Integrable (fun x => Real.negMulLog ((P.map Y).rnDeriv volume x).toReal) volume) :
-    Integrable (fun x => max (-(Real.negMulLog
-      ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal)) 0) volume := by
+    (hY_ent : Integrable (fun x ↦ Real.negMulLog ((P.map Y).rnDeriv volume x).toReal) volume) :
+    Integrable (fun x ↦ max (-(Real.negMulLog
+      ((P.map (fun ω ↦ X ω + Y ω)).rnDeriv volume x).toReal)) 0) volume := by
   classical
   -- marginal densities and the sum density `r`.
-  set pX : ℝ → ℝ := fun y => (P.map X).rnDeriv volume y |>.toReal with hpX_def
-  set pY : ℝ → ℝ := fun y => (P.map Y).rnDeriv volume y |>.toReal with hpY_def
-  set ν := P.map (fun ω => X ω + Y ω) with hν_def
-  set r : ℝ → ℝ := fun x => (ν.rnDeriv volume x).toReal with hr_def
+  set pX : ℝ → ℝ := fun y ↦ (P.map X).rnDeriv volume y |>.toReal with hpX_def
+  set pY : ℝ → ℝ := fun y ↦ (P.map Y).rnDeriv volume y |>.toReal with hpY_def
+  set ν := P.map (fun ω ↦ X ω + Y ω) with hν_def
+  set r : ℝ → ℝ := fun x ↦ (ν.rnDeriv volume x).toReal with hr_def
   -- `φ t = t log t = -(negMulLog t)`.
-  set φ : ℝ → ℝ := fun t => t * Real.log t with hφ_def
+  set φ : ℝ → ℝ := fun t ↦ t * Real.log t with hφ_def
   have hφ_eq : ∀ t, -(Real.negMulLog t) = φ t := by
     intro t; show -(-t * Real.log t) = t * Real.log t; ring
   -- basic measurability / nonnegativity.
   have hr_meas : Measurable r := (Measure.measurable_rnDeriv _ _).ennreal_toReal
   have hpX_meas : Measurable pX := (Measure.measurable_rnDeriv _ _).ennreal_toReal
   have hpY_meas : Measurable pY := (Measure.measurable_rnDeriv _ _).ennreal_toReal
-  have hpX_nn : ∀ x, 0 ≤ pX x := fun _ => ENNReal.toReal_nonneg
-  have hpY_nn : ∀ x, 0 ≤ pY x := fun _ => ENNReal.toReal_nonneg
+  have hpX_nn : ∀ x, 0 ≤ pX x := fun _ ↦ ENNReal.toReal_nonneg
+  have hpY_nn : ∀ x, 0 ≤ pY x := fun _ ↦ ENNReal.toReal_nonneg
   have hφ_meas : Measurable φ := measurable_id.mul (Real.measurable_log.comp measurable_id)
   -- target integrand `G z := max (φ (r z)) 0`.
-  set G : ℝ → ℝ := fun z => max (φ (r z)) 0 with hG_def
-  have hG_nn : ∀ z, 0 ≤ G z := fun _ => le_max_right _ _
+  set G : ℝ → ℝ := fun z ↦ max (φ (r z)) 0 with hG_def
+  have hG_nn : ∀ z, 0 ≤ G z := fun _ ↦ le_max_right _ _
   have hG_meas : Measurable G := (hφ_meas.comp hr_meas).max measurable_const
-  have hgoal_eq : (fun x => max (-(Real.negMulLog
-      ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal)) 0) = G := by
+  have hgoal_eq : (fun x ↦ max (-(Real.negMulLog
+      ((P.map (fun ω ↦ X ω + Y ω)).rnDeriv volume x).toReal)) 0) = G := by
     funext z; rw [hG_def]; simp only [hφ_eq, hr_def, hν_def]
   rw [hgoal_eq]
   -- `r =ᵐ convDensityAdd pX pY` (sum density identity, P-version).
@@ -185,47 +185,47 @@ theorem integrable_negPart_negMulLog_map_sum (P : Measure Ω) [IsProbabilityMeas
     filter_upwards [h] with x hx
     show (ν.rnDeriv volume x).toReal = EPIConvDensity.convDensityAdd pX pY x
     rw [hν_def, hx, ENNReal.toReal_ofReal]
-    exact integral_nonneg (fun t => mul_nonneg (hpX_nn t) (hpY_nn _))
+    exact integral_nonneg (fun t ↦ mul_nonneg (hpX_nn t) (hpY_nn _))
   -- `pX · vol = P.map X` is a probability measure (since `∫ pX = 1`).
   haveI hpXP : IsProbabilityMeasure (P.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
   haveI hpYP : IsProbabilityMeasure (P.map Y) := Measure.isProbabilityMeasure_map hY.aemeasurable
-  have hpX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x)) := by
-    have hcongr : (fun x => ENNReal.ofReal (pX x)) =ᵐ[volume] (P.map X).rnDeriv volume := by
+  have hpX_law : P.map X = volume.withDensity (fun x ↦ ENNReal.ofReal (pX x)) := by
+    have hcongr : (fun x ↦ ENNReal.ofReal (pX x)) =ᵐ[volume] (P.map X).rnDeriv volume := by
       filter_upwards [(P.map X).rnDeriv_lt_top volume] with x hx
       rw [hpX_def]; exact ENNReal.ofReal_toReal hx.ne
     rw [withDensity_congr_ae hcongr, Measure.withDensity_rnDeriv_eq _ _ hX_ac]
-  set μX : Measure ℝ := volume.withDensity (fun x => ENNReal.ofReal (pX x)) with hμX_def
+  set μX : Measure ℝ := volume.withDensity (fun x ↦ ENNReal.ofReal (pX x)) with hμX_def
   haveI hμXP : IsProbabilityMeasure μX := hpX_law ▸ hpXP
   -- `pX`'s lintegral is `1`.
   have hpX_lint : ∫⁻ x, ENNReal.ofReal (pX x) ∂volume = 1 := by
     have hu : μX Set.univ = 1 := measure_univ
     rwa [hμX_def, withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ] at hu
   -- `pY`'s lintegral is `1` too (needed for the `qn`-section finiteness).
-  have hpY_law : P.map Y = volume.withDensity (fun x => ENNReal.ofReal (pY x)) := by
-    have hcongr : (fun x => ENNReal.ofReal (pY x)) =ᵐ[volume] (P.map Y).rnDeriv volume := by
+  have hpY_law : P.map Y = volume.withDensity (fun x ↦ ENNReal.ofReal (pY x)) := by
+    have hcongr : (fun x ↦ ENNReal.ofReal (pY x)) =ᵐ[volume] (P.map Y).rnDeriv volume := by
       filter_upwards [(P.map Y).rnDeriv_lt_top volume] with x hx
       rw [hpY_def]; exact ENNReal.ofReal_toReal hx.ne
     rw [withDensity_congr_ae hcongr, Measure.withDensity_rnDeriv_eq _ _ hY_ac]
   have hpY_lint : ∫⁻ x, ENNReal.ofReal (pY x) ∂volume = 1 := by
-    have hv : (volume.withDensity (fun x => ENNReal.ofReal (pY x))) Set.univ = 1 := by
+    have hv : (volume.withDensity (fun x ↦ ENNReal.ofReal (pY x))) Set.univ = 1 := by
       rw [← hpY_law]; exact measure_univ
     rwa [withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ] at hv
   -- `pY`'s entropy integrand is integrable (the genuine use of `hY_ent`).
-  have hpY_ent_int : Integrable (fun x => Real.negMulLog (pY x)) volume := hY_ent
+  have hpY_ent_int : Integrable (fun x ↦ Real.negMulLog (pY x)) volume := hY_ent
   -- the two halves of `φ ∘ pY`:  `Cq = (φ pY)⁺`,  `Cm = (φ pY)⁻`, both integrable.
-  set Cq : ℝ → ℝ := fun w => max (φ (pY w)) 0 with hCq_def
-  set Cm : ℝ → ℝ := fun w => max (-(φ (pY w))) 0 with hCm_def
-  have hCq_nn : ∀ w, 0 ≤ Cq w := fun _ => le_max_right _ _
-  have hCm_nn : ∀ w, 0 ≤ Cm w := fun _ => le_max_right _ _
+  set Cq : ℝ → ℝ := fun w ↦ max (φ (pY w)) 0 with hCq_def
+  set Cm : ℝ → ℝ := fun w ↦ max (-(φ (pY w))) 0 with hCm_def
+  have hCq_nn : ∀ w, 0 ≤ Cq w := fun _ ↦ le_max_right _ _
+  have hCm_nn : ∀ w, 0 ≤ Cm w := fun _ ↦ le_max_right _ _
   have hCq_meas : Measurable Cq := (hφ_meas.comp hpY_meas).max measurable_const
   have hCm_meas : Measurable Cm := ((hφ_meas.comp hpY_meas).neg).max measurable_const
   have hCq_int : Integrable Cq volume := by
-    have heq : Cq = fun w => max ((-(fun x => Real.negMulLog (pY x))) w) 0 := by
+    have heq : Cq = fun w ↦ max ((-(fun x ↦ Real.negMulLog (pY x))) w) 0 := by
       funext w; show max (φ (pY w)) 0 = max (-(Real.negMulLog (pY w))) 0
       rw [hφ_eq]
     rw [heq]; exact hpY_ent_int.neg.pos_part
   have hCm_int : Integrable Cm volume := by
-    have heq : Cm = fun w => max ((fun x => Real.negMulLog (pY x)) w) 0 := by
+    have heq : Cm = fun w ↦ max ((fun x ↦ Real.negMulLog (pY x)) w) 0 := by
       funext w; show max (-(φ (pY w))) 0 = max (Real.negMulLog (pY w)) 0
       rw [← hφ_eq, neg_neg]
     rw [heq]; exact hpY_ent_int.pos_part
@@ -240,13 +240,13 @@ theorem integrable_negPart_negMulLog_map_sum (P : Measure Ω) [IsProbabilityMeas
   -- `K g (z, x) = pX x * g (z - x)`.  Below `g ∈ {pY, Cq, Cm}`.
   -- ============================================================================
   -- a.e.-`z` section integrabilities (via top-level helpers).
-  have hsec_pY : ∀ᵐ z ∂volume, Integrable (fun x => pX x * pY (z - x)) volume :=
+  have hsec_pY : ∀ᵐ z ∂volume, Integrable (fun x ↦ pX x * pY (z - x)) volume :=
     (integrable_conv_kernel pX pY hpX_meas hpX_nn hpX_lint hpY_meas hpY_nn
       (by rw [hpY_lint]; exact ENNReal.one_ne_top)).prod_right_ae
-  have hsec_Cq : ∀ᵐ z ∂volume, Integrable (fun x => pX x * Cq (z - x)) volume :=
+  have hsec_Cq : ∀ᵐ z ∂volume, Integrable (fun x ↦ pX x * Cq (z - x)) volume :=
     (integrable_conv_kernel pX Cq hpX_meas hpX_nn hpX_lint hCq_meas hCq_nn
       (by rw [← hC_def]; exact hC_lt_top.ne)).prod_right_ae
-  have hsec_Cm : ∀ᵐ z ∂volume, Integrable (fun x => pX x * Cm (z - x)) volume := by
+  have hsec_Cm : ∀ᵐ z ∂volume, Integrable (fun x ↦ pX x * Cm (z - x)) volume := by
     have hCm_fin : (∫⁻ w, ENNReal.ofReal (Cm w) ∂volume) ≠ ∞ := by
       have hfin := hCm_int.hasFiniteIntegral
       rw [hasFiniteIntegral_iff_ofReal (Filter.Eventually.of_forall hCm_nn)] at hfin
@@ -279,7 +279,7 @@ theorem integrable_negPart_negMulLog_map_sum (P : Measure Ω) [IsProbabilityMeas
         calc ENNReal.ofReal (∫ x, pX x * Cq (z - x) ∂volume)
             = ∫⁻ x, ENNReal.ofReal (pX x * Cq (z - x)) ∂volume := by
               rw [ofReal_integral_eq_lintegral_ofReal hz
-                (Filter.Eventually.of_forall (fun x => mul_nonneg (hpX_nn x) (hCq_nn _)))]
+                (Filter.Eventually.of_forall (fun x ↦ mul_nonneg (hpX_nn x) (hCq_nn _)))]
           _ ≤ _ := le_refl _
     _ = (∫⁻ x, ENNReal.ofReal (pX x) ∂volume) * (∫⁻ w, ENNReal.ofReal (Cq w) ∂volume) :=
         lintegral_conv_kernel_eq pX Cq hpX_meas hpX_nn hCq_meas hCq_nn
@@ -298,26 +298,26 @@ theorem entropyPowerExt_add_ge_infinite_variance
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
-    (hX_ent : Integrable (fun x => Real.negMulLog ((P.map X).rnDeriv volume x).toReal) volume)
-    (hY_ent : Integrable (fun x => Real.negMulLog ((P.map Y).rnDeriv volume x).toReal) volume)
-    (_h_infvar : ¬ (Integrable (fun ω => (X ω) ^ 2) P ∧ Integrable (fun ω => (Y ω) ^ 2) P)) :
-    entropyPowerExt (P.map (fun ω => X ω + Y ω))
+    (hX_ent : Integrable (fun x ↦ Real.negMulLog ((P.map X).rnDeriv volume x).toReal) volume)
+    (hY_ent : Integrable (fun x ↦ Real.negMulLog ((P.map Y).rnDeriv volume x).toReal) volume)
+    (_h_infvar : ¬ (Integrable (fun ω ↦ (X ω) ^ 2) P ∧ Integrable (fun ω ↦ (Y ω) ^ 2) P)) :
+    entropyPowerExt (P.map (fun ω ↦ X ω + Y ω))
       ≥ entropyPowerExt (P.map X) + entropyPowerExt (P.map Y) := by
   -- the sum law `ν := P.map (X+Y)` and its absolute continuity.
-  set ν : Measure ℝ := P.map (fun ω => X ω + Y ω) with hν_def
+  set ν : Measure ℝ := P.map (fun ω ↦ X ω + Y ω) with hν_def
   have hν_ac : ν ≪ volume := by
     rw [hν_def]
-    have hconv : P.map (fun ω => X ω + Y ω) = (P.map X) ∗ (P.map Y) := by
-      rw [show (fun ω => X ω + Y ω) = X + Y from rfl, hXY.map_add_eq_map_conv_map hX hY]
+    have hconv : P.map (fun ω ↦ X ω + Y ω) = (P.map X) ∗ (P.map Y) := by
+      rw [show (fun ω ↦ X ω + Y ω) = X + Y from rfl, hXY.map_add_eq_map_conv_map hX hY]
     rw [hconv]; exact Measure.conv_absolutelyContinuous hY_ac
   by_cases hent_sum : Integrable
-      (fun x => Real.negMulLog (((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal)) volume
+      (fun x ↦ Real.negMulLog (((P.map (fun ω ↦ X ω + Y ω)).rnDeriv volume x).toReal)) volume
   · -- Case 1: route T headline applies (`h_infvar` unused).
     exact entropyPowerExt_add_ge_infinite_variance_truncation P hX hY hXY hX_ac hY_ac
       hX_ent hY_ent hent_sum
   · -- Case 2: sum entropy non-integrable ⇒ `differentialEntropyExt ν = ⊤` ⇒ `Nₑ ν = ⊤`.
     -- the sum density `r` and its `negMulLog`.
-    set g : ℝ → ℝ := fun x => Real.negMulLog ((ν.rnDeriv volume x).toReal) with hg_def
+    set g : ℝ → ℝ := fun x ↦ Real.negMulLog ((ν.rnDeriv volume x).toReal) with hg_def
     have hg_meas : Measurable g :=
       (Real.continuous_negMulLog.measurable.comp
         (Measure.measurable_rnDeriv _ _).ennreal_toReal)
@@ -325,7 +325,7 @@ theorem entropyPowerExt_add_ge_infinite_variance
     set B : ℝ≥0∞ := ∫⁻ x, ENNReal.ofReal (-(g x)) ∂volume with hB_def
     have hB_lt_top : B < ⊤ := by
       have hint := integrable_negPart_negMulLog_map_sum P hX hY hX_ac hY_ac hXY hY_ent
-      have hnn : ∀ x, (0 : ℝ) ≤ max (-(g x)) 0 := fun _ => le_max_right _ _
+      have hnn : ∀ x, (0 : ℝ) ≤ max (-(g x)) 0 := fun _ ↦ le_max_right _ _
       have hfin := hint.hasFiniteIntegral
       rw [hasFiniteIntegral_iff_ofReal (Filter.Eventually.of_forall hnn)] at hfin
       -- `∫⁻ ofReal (max (-(g x)) 0) = ∫⁻ ofReal (-(g x))`  (negative part = max with 0,
@@ -351,7 +351,7 @@ theorem entropyPowerExt_add_ge_infinite_variance
       -- `∫⁻ ‖g‖ₑ = A + B`.
       have hsplit : (∫⁻ x, ‖g x‖ₑ ∂volume) = A + B := by
         rw [hA_def, hB_def, ← lintegral_add_left
-          (Measurable.ennreal_ofReal hg_meas) (fun x => ENNReal.ofReal (-(g x)))]
+          (Measurable.ennreal_ofReal hg_meas) (fun x ↦ ENNReal.ofReal (-(g x)))]
         apply lintegral_congr; intro x
         rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs]
         rcases le_or_gt 0 (g x) with h | h

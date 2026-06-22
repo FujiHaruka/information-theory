@@ -91,7 +91,7 @@ def backwardFiltration (T : Ω → Ω) (hT : Measurable T) : Filtration ℕᵒ�
 lemma tailSigma_le_comap_iterate (T : Ω → Ω) (hT : Measurable T) (n : ℕ) :
     tailSigma T hT ≤ MeasurableSpace.comap (T^[n]) m₀ := by
   simpa [tailSigma, backwardFiltration_apply] using
-    (iInf_le (fun k : ℕ =>
+    (iInf_le (fun k : ℕ ↦
       MeasurableSpace.comap (T^[OrderDual.ofDual (OrderDual.toDual k)]) m₀) n)
 
 /-- `tailSigma` is contained in `m₀`: it is a sub-σ-algebra of the ambient space. -/
@@ -118,7 +118,7 @@ lemma comap_T_tailSigma_le (T : Ω → Ω) (hT : Measurable T) :
   -- every `k ≥ 1`. Combined with the `k = 0` case (which collapses to `m₀`,
   -- containing `comap T (tailSigma)` since `T` is measurable), we obtain the
   -- bound for every `k`, hence for the iInf.
-  refine le_iInf (fun n => ?_)
+  refine le_iInf (fun n ↦ ?_)
   rcases n with _ | k
   · -- `n = 0`: `backwardFiltration` at `0` is `comap (T^[0]) m₀ = m₀`.
     simp only [toDual_zero, backwardFiltration_apply, ofDual_zero, Function.iterate_zero,

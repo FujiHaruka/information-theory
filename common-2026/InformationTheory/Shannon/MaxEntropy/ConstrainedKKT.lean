@@ -88,7 +88,7 @@ Lagrangian `L(p, λ) = H(p) + ∑ i, λ i (𝔼_p[f i] - c i)`. By
 `expFamilyDist_eq_gibbsPmf` it agrees pointwise with `gibbsPmf f λ`, so all
 positivity / pmf properties transfer. -/
 noncomputable def expFamilyDist (f : Fin k → α → ℝ) (lam : Fin k → ℝ) : α → ℝ :=
-  fun x => Real.exp ((∑ i, lam i * f i x) - logPartitionψ f lam)
+  fun x ↦ Real.exp ((∑ i, lam i * f i x) - logPartitionψ f lam)
 
 omit [DecidableEq α] in
 /-- **Bridge**: the KKT-canonical form `expFamilyDist` agrees pointwise with the
@@ -189,7 +189,7 @@ theorem entropy_expFamilyDist_eq_legendre [Nonempty α]
   have h_match := S.gibbs_moment_match
   have h_inner_G : (∑ i, S.lam i * (∑ x, gibbsPmf f S.lam x * f i x))
                     = ∑ i, S.lam i * c i := by
-    refine Finset.sum_congr rfl (fun i _ => ?_)
+    refine Finset.sum_congr rfl (fun i _ ↦ ?_)
     rw [h_match i]
   rw [h_inner_G] at h_eq_G
   unfold logPartitionψ
@@ -350,18 +350,18 @@ unconstrained-Lagrangian degenerate case `λ = 0`. -/
 @[entry_point]
 lemma expFamilyDist_lam_zero_eq [Nonempty α]
     (f : Fin k → α → ℝ) :
-    expFamilyDist f (fun _ => (0 : ℝ)) = fun _ => (1 : ℝ) / Fintype.card α := by
+    expFamilyDist f (fun _ ↦ (0 : ℝ)) = fun _ ↦ (1 : ℝ) / Fintype.card α := by
   funext x
   unfold expFamilyDist logPartitionψ gibbsZ
-  have h_num_zero : (∑ i, (fun _ : Fin k => (0 : ℝ)) i * f i x) = 0 := by simp
-  have h_den : (∑ y, Real.exp (∑ i, (fun _ : Fin k => (0 : ℝ)) i * f i y))
+  have h_num_zero : (∑ i, (fun _ : Fin k ↦ (0 : ℝ)) i * f i x) = 0 := by simp
+  have h_den : (∑ y, Real.exp (∑ i, (fun _ : Fin k ↦ (0 : ℝ)) i * f i y))
                 = (Fintype.card α : ℝ) := by
     have h_each : ∀ y : α,
-        Real.exp (∑ i, (fun _ : Fin k => (0 : ℝ)) i * f i y) = 1 := by
+        Real.exp (∑ i, (fun _ : Fin k ↦ (0 : ℝ)) i * f i y) = 1 := by
       intro y
-      have h_sum : (∑ i, (fun _ : Fin k => (0 : ℝ)) i * f i y) = 0 := by simp
+      have h_sum : (∑ i, (fun _ : Fin k ↦ (0 : ℝ)) i * f i y) = 0 := by simp
       rw [h_sum, Real.exp_zero]
-    rw [Finset.sum_congr rfl (fun y _ => h_each y)]
+    rw [Finset.sum_congr rfl (fun y _ ↦ h_each y)]
     rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, mul_one]
   rw [h_num_zero, h_den]
   -- Goal: exp (0 - log (Fintype.card α : ℝ)) = 1 / Fintype.card α

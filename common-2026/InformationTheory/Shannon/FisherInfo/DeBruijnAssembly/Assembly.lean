@@ -25,7 +25,7 @@ and the three integrability preconditions from the entropy- and Fisher-integrabi
 private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    (hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume)
     {t : ℝ} (ht : 0 < t) :
     ∫ x, (- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) - 1)
         * deriv (deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))) x ∂volume
@@ -34,12 +34,12 @@ private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step
   -- abbreviate the time-`t` convolution density.
   set p_t : ℝ → ℝ := convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) with hp_t
   -- STEP 2: strict positivity of `p_t` (genuine; `0 < ∫ pX = 1` from `hpX_mass`).
-  have hp_pos : ∀ x, 0 < p_t x := fun x =>
+  have hp_pos : ∀ x, 0 < p_t x := fun x ↦
     convDensityAdd_pos pX hpX_nn hpX_int (by rw [hpX_mass]; norm_num) ht x
   -- IBP quadruple: u, v, u', v'.
-  set u : ℝ → ℝ := fun x => - Real.log (p_t x) - 1 with hu_def
+  set u : ℝ → ℝ := fun x ↦ - Real.log (p_t x) - 1 with hu_def
   set v : ℝ → ℝ := deriv p_t with hv_def
-  set u' : ℝ → ℝ := fun x => - logDeriv p_t x with hu'_def
+  set u' : ℝ → ℝ := fun x ↦ - logDeriv p_t x with hu'_def
   set v' : ℝ → ℝ := deriv (deriv p_t) with hv'_def
   -- STEP 3: `hu : ∀ x ∈ tsupport v, HasDerivAt u (u' x) x` — proved for all `x`.
   have hu : ∀ x ∈ tsupport v, HasDerivAt u (u' x) x := by
@@ -48,7 +48,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step
     have hpt_diff : HasDerivAt p_t (deriv p_t x) x :=
       convDensityAdd_hasDerivAt_self pX hpX_nn hpX_meas hpX_int ht x
     -- `HasDerivAt (log ∘ p_t) (deriv p_t x / p_t x) x` via `Real.hasDerivAt_log`.
-    have hlog : HasDerivAt (fun x => Real.log (p_t x)) (deriv p_t x / p_t x) x := by
+    have hlog : HasDerivAt (fun x ↦ Real.log (p_t x)) (deriv p_t x / p_t x) x := by
       have := (Real.hasDerivAt_log (hp_pos x).ne').comp x hpt_diff
       simpa [one_div, div_eq_mul_inv, mul_comm] using this
     -- `u x = - log (p_t x) - 1`, `u' x = - logDeriv p_t x = - (deriv p_t x / p_t x)`.
@@ -107,7 +107,7 @@ moves the spatial second-derivative factor onto `(- log p - 1)`, yielding
 private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    (hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume)
     {t : ℝ} (ht : 0 < t)
     (entDeriv : ℝ → ℝ)
     (hentDeriv : ∀ᵐ x ∂volume, entDeriv x =
@@ -121,7 +121,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher
   have hp_nn : ∀ x, 0 ≤ p_t x := by
     intro x
     rw [hp_t]
-    exact integral_nonneg fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _)
+    exact integral_nonneg fun y ↦ mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _)
   -- (1) rewrite `∫ entDeriv` to `∫ (1/2)·((- log p_t - 1)·∂²_x p_t)` via the a.e. pin
   --     `hentDeriv` (and `ring` to move the `(1/2)` to the front).
   have hstep1 : ∫ x, entDeriv x ∂volume
@@ -150,11 +150,11 @@ private theorem debruijnIdentityV2_chain_hdiff_pathDeriv
     (pathDeriv2 : ℝ → ℝ → ℝ)
     (hpPath_pos : ∀ (σ : ℝ) (hσ : 0 < σ),
         pPath σ = convDensityAdd pX (gaussianPDFReal 0 ⟨σ, hσ.le⟩))
-    (hpathDeriv1 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pPath σ ξ) (pathDeriv1 σ y) y)
+    (hpathDeriv1 : ∀ σ y : ℝ, HasDerivAt (fun ξ ↦ pPath σ ξ) (pathDeriv1 σ y) y)
     (hpathDeriv2 : ∀ σ y : ℝ,
-        HasDerivAt (fun ξ => pathDeriv1 σ ξ) (pathDeriv2 σ y) y)
+        HasDerivAt (fun ξ ↦ pathDeriv1 σ ξ) (pathDeriv2 σ y) y)
     (x : ℝ) (s : ℝ) (hspos : 0 < s)
-    (hker_meas : Measurable (fun u : ℝ => heatFlow_density_heat_equation_kernel s u))
+    (hker_meas : Measurable (fun u : ℝ ↦ heatFlow_density_heat_equation_kernel s u))
     (hker_le : ∀ v : ℝ,
         |heatFlow_density_heat_equation_kernel s v|
           ≤ (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹)
@@ -162,33 +162,33 @@ private theorem debruijnIdentityV2_chain_hdiff_pathDeriv
         (Real.sqrt (2 * Real.pi * s))⁻¹ * ((1 + 2 * s * Real.exp (-1)) / (2 * s)))
     (Mξ2 : ℝ) (hMξ2 : Mξ2 =
         (Real.sqrt (2 * Real.pi * s))⁻¹ * ((2 * Real.exp (-1) + 1) / s)) :
-    HasDerivAt (fun σ => pPath σ x) ((1/2) * pathDeriv2 s x) s := by
+    HasDerivAt (fun σ ↦ pPath σ x) ((1/2) * pathDeriv2 s x) s := by
   refine heatFlow_density_heat_equation pX pPath pathDeriv1 pathDeriv2
     hpPath_pos hpathDeriv1 hpathDeriv2 hspos x
     ?boundσ ?hboundσ_int ?hFσ_meas ?hFσ_int ?hFσ'_meas ?hbσ
     ?boundξ1 ?hboundξ1_int ?hFξ1_meas ?hFξ1_int ?hFξ1'_meas ?hbξ1
     ?boundξ2 ?hboundξ2_int ?hFξ2_int ?hFξ2'_meas ?hbξ2
-  case boundσ => exact fun y => pX y * gaussHessMaj s (x - y)
+  case boundσ => exact fun y ↦ pX y * gaussHessMaj s (x - y)
   case hboundσ_int =>
     refine hpX_int.mul_bdd
       (c := (Real.sqrt (Real.pi * s))⁻¹ * (16 * Real.exp (-1) / s + 2 / s)) ?_ ?_
     · refine (Measurable.aestronglyMeasurable ?_)
       have hM : Measurable (gaussHessMaj s) := by unfold gaussHessMaj; fun_prop
       exact hM.comp (measurable_const.sub measurable_id)
-    · refine Filter.Eventually.of_forall (fun y => ?_)
+    · refine Filter.Eventually.of_forall (fun y ↦ ?_)
       rw [Real.norm_eq_abs, abs_of_nonneg (gaussHessMaj_nonneg hspos (x - y))]
       exact gaussHessMaj_bdd hspos (x - y)
   case hFσ_meas =>
-    refine Filter.Eventually.of_forall (fun σ => ?_)
+    refine Filter.Eventually.of_forall (fun σ ↦ ?_)
     exact (hpX_meas.aestronglyMeasurable).mul
-      (((show Measurable (fun u : ℝ => heatFlow_density_heat_equation_kernel σ u) by
+      (((show Measurable (fun u : ℝ ↦ heatFlow_density_heat_equation_kernel σ u) by
           unfold heatFlow_density_heat_equation_kernel; fun_prop).comp
         (measurable_const.sub measurable_id)).aestronglyMeasurable)
   case hFσ_int =>
     refine hpX_int.mul_bdd
       (c := (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹) ?_ ?_
     · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-    · exact Filter.Eventually.of_forall (fun y => by
+    · exact Filter.Eventually.of_forall (fun y ↦ by
         rw [Real.norm_eq_abs]; exact hker_le (x - y))
   case hFσ'_meas =>
     refine (hpX_meas.aestronglyMeasurable).mul ?_
@@ -198,7 +198,7 @@ private theorem debruijnIdentityV2_chain_hdiff_pathDeriv
     · exact (((measurable_const.sub measurable_id).pow_const 2).div_const _).sub
         measurable_const |>.aestronglyMeasurable
   case hbσ =>
-    refine Filter.Eventually.of_forall (fun y σ hσ => ?_)
+    refine Filter.Eventually.of_forall (fun y σ hσ ↦ ?_)
     have hσpos : (0:ℝ) < σ := by have := hσ.1; linarith
     rw [norm_mul, Real.norm_eq_abs, abs_of_nonneg (hpX_nn y)]
     apply mul_le_mul_of_nonneg_left _ (hpX_nn y)
@@ -217,7 +217,7 @@ private theorem debruijnIdentityV2_chain_hdiff_pathDeriv
         ≤ 1 / 2 * gaussHessMaj s (x - y) := by
           apply mul_le_mul_of_nonneg_left hmaj (by norm_num)
       _ ≤ gaussHessMaj s (x - y) := by linarith [hgM_nn]
-  case boundξ1 => exact fun y => |pX y| * Mξ1
+  case boundξ1 => exact fun y ↦ |pX y| * Mξ1
   case hboundξ1_int => exact hpX_int.abs.mul_const _
   case hFξ1_meas =>
     intro ξ
@@ -228,7 +228,7 @@ private theorem debruijnIdentityV2_chain_hdiff_pathDeriv
     refine hpX_int.mul_bdd
       (c := (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹) ?_ ?_
     · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-    · exact Filter.Eventually.of_forall (fun y => by
+    · exact Filter.Eventually.of_forall (fun y ↦ by
         rw [Real.norm_eq_abs]; exact hker_le (ξ - y))
   case hFξ1'_meas =>
     intro ξ
@@ -237,16 +237,16 @@ private theorem debruijnIdentityV2_chain_hdiff_pathDeriv
     · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
     · exact ((measurable_const.sub measurable_id).div_const s).neg.aestronglyMeasurable
   case hbξ1 =>
-    refine Filter.Eventually.of_forall (fun y ξ _ => ?_)
+    refine Filter.Eventually.of_forall (fun y ξ _ ↦ ?_)
     rw [norm_mul, Real.norm_eq_abs]
     apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
     have := kernel_x_deriv1_global_bound hspos (ξ - y)
     rwa [hMξ1]
-  case boundξ2 => exact fun y => |pX y| * Mξ2
+  case boundξ2 => exact fun y ↦ |pX y| * Mξ2
   case hboundξ2_int => exact hpX_int.abs.mul_const _
   case hFξ2_int =>
-    have hbound_int : Integrable (fun y => |pX y| * Mξ1) volume := hpX_int.abs.mul_const _
-    refine hbound_int.mono' ?_ (Filter.Eventually.of_forall (fun y => ?_))
+    have hbound_int : Integrable (fun y ↦ |pX y| * Mξ1) volume := hpX_int.abs.mul_const _
+    refine hbound_int.mono' ?_ (Filter.Eventually.of_forall (fun y ↦ ?_))
     · refine (hpX_meas.aestronglyMeasurable).mul ?_
       refine AEStronglyMeasurable.mul ?_ ?_
       · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
@@ -262,7 +262,7 @@ private theorem debruijnIdentityV2_chain_hdiff_pathDeriv
     · exact (((measurable_const.sub measurable_id).pow_const 2).div_const _).sub
         measurable_const |>.aestronglyMeasurable
   case hbξ2 =>
-    refine Filter.Eventually.of_forall (fun y ξ _ => ?_)
+    refine Filter.Eventually.of_forall (fun y ξ _ ↦ ?_)
     rw [norm_mul, Real.norm_eq_abs]
     apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
     have := kernel_x_deriv2_global_bound hspos (ξ - y)
@@ -280,11 +280,11 @@ domination hypotheses come from the Gaussian-Hessian majorant and the global ker
 private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
-    (_hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    (_hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume)
     {t : ℝ} (ht : 0 < t) :
     ∀ᵐ x ∂volume, ∀ s ∈ Set.Ioo (t/2) (2*t),
       HasDerivAt
-        (fun s => Real.negMulLog
+        (fun s ↦ Real.negMulLog
           (convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x))
         ((- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x) - 1)
           * ((1/2) * deriv (deriv (convDensityAdd pX
@@ -294,9 +294,9 @@ private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
   have hpX_pos : 0 < ∫ y, pX y ∂volume := by rw [hpX_mass]; norm_num
   -- the heat-flow path and its two spatial derivatives, in `max σ 0` form.
   set pPath : ℝ → ℝ → ℝ :=
-    fun σ => convDensityAdd pX (gaussianPDFReal 0 ⟨max σ 0, le_max_right σ 0⟩) with hpPath_def
-  set pathDeriv1 : ℝ → ℝ → ℝ := fun σ y => deriv (pPath σ) y with hpathDeriv1_def
-  set pathDeriv2 : ℝ → ℝ → ℝ := fun σ y => deriv (deriv (pPath σ)) y with hpathDeriv2_def
+    fun σ ↦ convDensityAdd pX (gaussianPDFReal 0 ⟨max σ 0, le_max_right σ 0⟩) with hpPath_def
+  set pathDeriv1 : ℝ → ℝ → ℝ := fun σ y ↦ deriv (pPath σ) y with hpathDeriv1_def
+  set pathDeriv2 : ℝ → ℝ → ℝ := fun σ y ↦ deriv (deriv (pPath σ)) y with hpathDeriv2_def
   -- definitional pin: on `σ > 0`, `max σ 0 = σ`, so `pPath σ = convDensityAdd pX g_σ`.
   have hpPath_pos : ∀ (σ : ℝ) (hσ : 0 < σ),
       pPath σ = convDensityAdd pX (gaussianPDFReal 0 ⟨σ, hσ.le⟩) := by
@@ -307,10 +307,10 @@ private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
       apply NNReal.eq; exact max_eq_left hσ.le
     rw [this]
   -- definitional pin (degenerate σ ≤ 0): `pPath σ = 0` (const).
-  have hpPath_nonpos : ∀ (σ : ℝ), σ ≤ 0 → pPath σ = fun _ => (0 : ℝ) := by
+  have hpPath_nonpos : ∀ (σ : ℝ), σ ≤ 0 → pPath σ = fun _ ↦ (0 : ℝ) := by
     intro σ hσ
     show convDensityAdd pX (gaussianPDFReal 0 ⟨max σ 0, le_max_right σ 0⟩)
-      = fun _ => (0 : ℝ)
+      = fun _ ↦ (0 : ℝ)
     have hmax : (⟨max σ 0, le_max_right σ 0⟩ : ℝ≥0) = 0 := by
       apply NNReal.eq
       show max σ 0 = (0 : ℝ)
@@ -318,13 +318,13 @@ private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
     rw [hmax]
     funext z
     show (∫ y, pX y * gaussianPDFReal 0 0 (z - y) ∂volume) = 0
-    have hzero : (fun y => pX y * gaussianPDFReal 0 0 (z - y)) = fun _ => (0 : ℝ) := by
+    have hzero : (fun y ↦ pX y * gaussianPDFReal 0 0 (z - y)) = fun _ ↦ (0 : ℝ) := by
       funext y; rw [gaussianPDFReal_zero_var]; simp
     rw [hzero, integral_zero]
   -- pin `hpathDeriv1`: spatial 1st derivative of `pPath σ`, for ALL σ.
-  have hpathDeriv1 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pPath σ ξ) (pathDeriv1 σ y) y := by
+  have hpathDeriv1 : ∀ σ y : ℝ, HasDerivAt (fun ξ ↦ pPath σ ξ) (pathDeriv1 σ y) y := by
     intro σ y
-    show HasDerivAt (fun ξ => pPath σ ξ) (deriv (pPath σ) y) y
+    show HasDerivAt (fun ξ ↦ pPath σ ξ) (deriv (pPath σ) y) y
     rcases le_or_gt σ 0 with hσ | hσ
     · -- σ ≤ 0: `pPath σ` is the zero function; deriv is 0.
       rw [hpPath_nonpos σ hσ]
@@ -333,17 +333,17 @@ private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
       rw [hpPath_pos σ hσ]
       exact convDensityAdd_hasDerivAt_self pX hpX_nn hpX_meas hpX_int hσ y
   -- pin `hpathDeriv2`: spatial 2nd derivative of `pPath σ`, for ALL σ.
-  have hpathDeriv2 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pathDeriv1 σ ξ) (pathDeriv2 σ y) y := by
+  have hpathDeriv2 : ∀ σ y : ℝ, HasDerivAt (fun ξ ↦ pathDeriv1 σ ξ) (pathDeriv2 σ y) y := by
     intro σ y
-    show HasDerivAt (fun ξ => deriv (pPath σ) ξ) (deriv (deriv (pPath σ)) y) y
+    show HasDerivAt (fun ξ ↦ deriv (pPath σ) ξ) (deriv (deriv (pPath σ)) y) y
     rcases le_or_gt σ 0 with hσ | hσ
     · -- σ ≤ 0: `pPath σ = 0`, so `deriv (pPath σ) = 0` and the 2nd deriv is 0.
-      have hd1 : deriv (pPath σ) = fun _ => (0 : ℝ) := by
+      have hd1 : deriv (pPath σ) = fun _ ↦ (0 : ℝ) := by
         funext ξ; rw [hpPath_nonpos σ hσ]; simp
       rw [hd1]
       simpa using hasDerivAt_const y (0 : ℝ)
     · -- σ > 0: differentiate `deriv (pPath σ) = deriv (convDensityAdd pX g_σ)`.
-      have hfun : (fun ξ => deriv (pPath σ) ξ)
+      have hfun : (fun ξ ↦ deriv (pPath σ) ξ)
           = deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨σ, hσ.le⟩)) := by
         rw [hpPath_pos σ hσ]
       rw [hfun]
@@ -354,12 +354,12 @@ private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
       exact convDensityAdd_deriv_hasDerivAt_self pX hpX_nn hpX_meas hpX_int hσ y
   -- the per-`x`, per-`s` derivative is now obtained by combining the heat-eq atom
   -- (σ-derivative) with the negMulLog chain rule.
-  refine Filter.Eventually.of_forall (fun x s hs => ?_)
+  refine Filter.Eventually.of_forall (fun x s hs ↦ ?_)
   have hspos : (0:ℝ) < s := by have := hs.1; linarith
   -- kernel continuity / measurability (shared by the domination groups).
-  have hker_cont : Continuous (fun u : ℝ => heatFlow_density_heat_equation_kernel s u) := by
+  have hker_cont : Continuous (fun u : ℝ ↦ heatFlow_density_heat_equation_kernel s u) := by
     unfold heatFlow_density_heat_equation_kernel; fun_prop
-  have hker_meas : Measurable (fun u : ℝ => heatFlow_density_heat_equation_kernel s u) :=
+  have hker_meas : Measurable (fun u : ℝ ↦ heatFlow_density_heat_equation_kernel s u) :=
     hker_cont.measurable
   -- the kernel uniform sup bound `|kernel s v| ≤ (√(2πs))⁻¹`.
   have hker_le : ∀ v : ℝ, |heatFlow_density_heat_equation_kernel s v|
@@ -372,7 +372,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
   set Mξ1 : ℝ := (Real.sqrt (2 * Real.pi * s))⁻¹ * ((1 + 2 * s * Real.exp (-1)) / (2 * s)) with hMξ1
   set Mξ2 : ℝ := (Real.sqrt (2 * Real.pi * s))⁻¹ * ((2 * Real.exp (-1) + 1) / s) with hMξ2
   -- (A) σ-derivative pin from `heatFlow_density_heat_equation` (delegated to helper).
-  have hpath_deriv : HasDerivAt (fun σ => pPath σ x) ((1/2) * pathDeriv2 s x) s :=
+  have hpath_deriv : HasDerivAt (fun σ ↦ pPath σ x) ((1/2) * pathDeriv2 s x) s :=
     debruijnIdentityV2_chain_hdiff_pathDeriv
       pX hpX_nn hpX_meas hpX_int
       pPath pathDeriv1 pathDeriv2
@@ -406,23 +406,23 @@ joint domination (`_chain_domination`), the entropy integrability
 private theorem debruijnIdentityV2_holds_assembled_chain_parametric
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    (hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume)
     {t : ℝ} (ht : 0 < t) :
     ∃ entDeriv : ℝ → ℝ,
       HasDerivAt
-        (fun s => ∫ x, Real.negMulLog
+        (fun s ↦ ∫ x, Real.negMulLog
           (convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x) ∂volume)
         (∫ x, entDeriv x ∂volume) t
       ∧ (∫ x, entDeriv x ∂volume
           = (1/2) *
               fisherInfoOfDensityReal (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))) := by
   -- the per-`x` closed form `entDerivFn s x`, as a 2-arg function for the atom.
-  set entDerivFn : ℝ → ℝ → ℝ := fun s x =>
+  set entDerivFn : ℝ → ℝ → ℝ := fun s x ↦
     (- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x) - 1)
       * ((1/2) * deriv (deriv (convDensityAdd pX
           (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩))) x) with hentDerivFn
   -- the witness derivative is `entDerivFn t`.
-  refine ⟨fun x => entDerivFn t x, ?_, ?_⟩
+  refine ⟨fun x ↦ entDerivFn t x, ?_, ?_⟩
   · -- ===== first goal: the HasDerivAt, via the parametric-diff atom. =====
     -- domination: an integrable `bound` dominating `entDerivFn s` on `Ioo (t/2)(2*t)`.
     obtain ⟨bound, hbound_int, hb_dom⟩ :=
@@ -432,11 +432,11 @@ private theorem debruijnIdentityV2_holds_assembled_chain_parametric
     have hmaxt : (⟨max t 0, le_max_right t 0⟩ : ℝ≥0) = ⟨t, ht.le⟩ := by
       apply NNReal.eq; exact max_eq_left ht.le
     -- abbreviate the path.
-    set pPath : ℝ → ℝ → ℝ := fun s x =>
+    set pPath : ℝ → ℝ → ℝ := fun s x ↦
       convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x with hpPath
     -- `hint`: entropy-integrand integrability at `t` (entropy-finiteness wall), moved to
     --   the `pPath t = g_{max t 0}` form via `max t 0 = t`.
-    have hint : Integrable (fun x => Real.negMulLog (pPath t x)) volume := by
+    have hint : Integrable (fun x ↦ Real.negMulLog (pPath t x)) volume := by
       have h := convDensityAdd_negMulLog_integrable
         pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
       refine h.congr ?_
@@ -444,15 +444,15 @@ private theorem debruijnIdentityV2_holds_assembled_chain_parametric
       rw [hpPath]; simp only; rw [hmaxt]
     -- `hmeas`: a.e.-strong-measurability of the entropy integrand, for `s` near `t` (genuine).
     have hmeas : ∀ᶠ s in nhds t,
-        AEStronglyMeasurable (fun x => Real.negMulLog (pPath s x)) volume := by
-      refine Filter.Eventually.of_forall (fun s => ?_)
+        AEStronglyMeasurable (fun x ↦ Real.negMulLog (pPath s x)) volume := by
+      refine Filter.Eventually.of_forall (fun s ↦ ?_)
       -- `convDensityAdd pX g_{max s 0}` is measurable (joint-measurable integrand + Fubini).
       have hg_meas : Measurable (gaussianPDFReal 0 ⟨max s 0, le_max_right s 0⟩) :=
         measurable_gaussianPDFReal 0 _
       have hpath_meas : Measurable
           (convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right s 0⟩)) := by
         have huncurry : StronglyMeasurable
-            (Function.uncurry fun z x =>
+            (Function.uncurry fun z x ↦
               pX x * gaussianPDFReal 0 ⟨max s 0, le_max_right s 0⟩ (z - x)) := by
           apply Measurable.stronglyMeasurable
           apply (hpX_meas.comp measurable_snd).mul
@@ -467,7 +467,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_parametric
       have hpath_meas : Measurable
           (convDensityAdd pX (gaussianPDFReal 0 ⟨max t 0, le_max_right t 0⟩)) := by
         have huncurry : StronglyMeasurable
-            (Function.uncurry fun z x =>
+            (Function.uncurry fun z x ↦
               pX x * gaussianPDFReal 0 ⟨max t 0, le_max_right t 0⟩ (z - x)) := by
           apply Measurable.stronglyMeasurable
           apply (hpX_meas.comp measurable_snd).mul
@@ -475,11 +475,11 @@ private theorem debruijnIdentityV2_holds_assembled_chain_parametric
         have h := huncurry.integral_prod_right (ν := volume)
         simpa only [convDensityAdd] using h.measurable
       have hlog_meas : Measurable
-          (fun x => - Real.log (convDensityAdd pX
+          (fun x ↦ - Real.log (convDensityAdd pX
             (gaussianPDFReal 0 ⟨max t 0, le_max_right t 0⟩) x) - 1) :=
         ((Real.measurable_log.comp hpath_meas).neg).sub_const 1
       have hd2_meas : Measurable
-          (fun x => (1:ℝ)/2 * deriv (deriv (convDensityAdd pX
+          (fun x ↦ (1:ℝ)/2 * deriv (deriv (convDensityAdd pX
             (gaussianPDFReal 0 ⟨max t 0, le_max_right t 0⟩))) x) :=
         (measurable_deriv _).const_mul _
       exact (hlog_meas.mul hd2_meas).aestronglyMeasurable
@@ -509,7 +509,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_parametric
       filter_upwards with x
       rw [hentDerivFn]; simp only; rw [hmaxt]
     exact debruijnIdentityV2_holds_assembled_chain_ibp_fisher
-      pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht (fun x => entDerivFn t x) hentDeriv
+      pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht (fun x ↦ entDerivFn t x) hentDeriv
 
 /-- For the heat-flow density path `pPath s = convDensityAdd pX (gaussianPDFReal 0 ⟨s, _⟩)`
 (the convolution density of the law of `X + √s · Z`), the `s`-derivative of the entropy
@@ -520,10 +520,10 @@ from `_chain_parametric`.
 private theorem debruijnIdentityV2_holds_assembled_chain
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    (hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume)
     {t : ℝ} (ht : 0 < t) :
     HasDerivAt
-      (fun s => ∫ x, Real.negMulLog
+      (fun s ↦ ∫ x, Real.negMulLog
         (convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x) ∂volume)
       ((1/2) * fisherInfoOfDensityReal
         (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)))
@@ -548,10 +548,10 @@ private theorem debruijnIdentityV2_holds_assembled_entropy_eq
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
     (hZ_law : P.map Z = gaussianReal 0 1)
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x)))
+    (hpX_law : P.map X = volume.withDensity (fun x ↦ ENNReal.ofReal (pX x)))
     {t : ℝ} (ht : 0 < t) :
-    (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
-      =ᶠ[nhds t] (fun s => ∫ x, Real.negMulLog
+    (fun s ↦ differentialEntropy (P.map (gaussianConvolution X Z s)))
+      =ᶠ[nhds t] (fun s ↦ ∫ x, Real.negMulLog
         (convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x) ∂volume) := by
   -- on the neighborhood `s > 0` the two functions are equal pointwise.
   filter_upwards [eventually_gt_nhds ht] with s hs
@@ -580,7 +580,7 @@ private theorem debruijnIdentityV2_holds_assembled_entropy_eq
   -- needs `convDensityAdd … x ≥ 0` (so `toReal_ofReal`).
   rw [ENNReal.toReal_ofReal]
   -- nonnegativity of `convDensityAdd pX g_s x = ∫ y, pX y · g_s (x-y)`.
-  refine integral_nonneg (fun y => ?_)
+  refine integral_nonneg (fun y ↦ ?_)
   exact mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _)
 
 /-- The Fisher info of the time-`t` convolution density `convDensityAdd pX g_t` equals the
@@ -591,7 +591,7 @@ private theorem debruijnIdentityV2_holds_assembled_fisher_match
     (X Z : Ω → ℝ) (_hX : Measurable X) (_hZ : Measurable Z) (_hXZ : IndepFun X Z P)
     (_hZ_law : P.map Z = gaussianReal 0 1)
     (pX : ℝ → ℝ) (_hpX_nn : ∀ x, 0 ≤ pX x) (_hpX_meas : Measurable pX)
-    (_hpX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x)))
+    (_hpX_law : P.map X = volume.withDensity (fun x ↦ ENNReal.ofReal (pX x)))
     {t : ℝ}
     (density_t : ℝ → ℝ)
     (hdensity_t_eq : ∀ (ht : 0 < t) (x : ℝ),
@@ -618,7 +618,7 @@ theorem debruijnIdentityV2_holds_assembled
     {t : ℝ} (ht : 0 < t)
     (h_reg : IsRegularDeBruijnHypV2 X Z P t) :
     HasDerivAt
-      (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
+      (fun s ↦ differentialEntropy (P.map (gaussianConvolution X Z s)))
       ((1/2) * fisherInfoOfDensityReal h_reg.density_t)
       t := by
   -- pX integrability from `pX_law` + `P` probability.
@@ -647,7 +647,7 @@ theorem debruijnIdentityV2_holds_assembled
     h_reg.pX h_reg.pX_nn h_reg.pX_meas h_reg.pX_law ht
   -- transfer the derivative to the entropy function via eventual equality.
   have h_ent : HasDerivAt
-      (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
+      (fun s ↦ differentialEntropy (P.map (gaussianConvolution X Z s)))
       ((1/2) * fisherInfoOfDensityReal
         (convDensityAdd h_reg.pX (gaussianPDFReal 0 ⟨t, ht.le⟩)))
       t := h_chain.congr_of_eventuallyEq h_eq

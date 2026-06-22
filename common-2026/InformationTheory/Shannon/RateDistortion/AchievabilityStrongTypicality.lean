@@ -138,9 +138,9 @@ theorem rate_distortion_achievability_strong
   have hqStar_simp : qStar ∈ stdSimplex ℝ (α × β) := hqStar_mem.1
   -- Construct the failure sequence as `codebookAvgFailureStrong` itself.
   set failure_seq : ℕ → ℝ :=
-    fun n => codebookAvgFailureStrong qStar d R n ε_join ε_dist δ_typ
+    fun n ↦ codebookAvgFailureStrong qStar d R n ε_join ε_dist δ_typ
     with hfailure_def
-  have h_failure_nn : ∀ n, 0 ≤ failure_seq n := fun n =>
+  have h_failure_nn : ∀ n, 0 ≤ failure_seq n := fun n ↦
     codebookAvgFailureStrong_nonneg qStar d R n ε_join ε_dist δ_typ
   have h_failure_tendsto_zero :
       Filter.Tendsto failure_seq Filter.atTop (𝓝 0) :=
@@ -154,7 +154,7 @@ theorem rate_distortion_achievability_strong
           (codebookMeasure
               ((rdAmbient qStar).map (iidYs (α := α) (β := β) 0))
                 (Nat.ceil (Real.exp ((n : ℝ) * R))) n).real {c}
-            * (Measure.pi (fun _ : Fin n =>
+            * (Measure.pi (fun _ : Fin n ↦
                   (rdAmbient qStar).map (iidXs (α := α) (β := β) 0))).real
                 { x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
                                 iidXs iidYs

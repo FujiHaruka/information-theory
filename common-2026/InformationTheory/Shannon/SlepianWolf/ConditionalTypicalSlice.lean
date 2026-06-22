@@ -108,12 +108,12 @@ private lemma jointRV_jointSequence_proj_measureReal_eq
     (hYs' : ∀ i, Measurable (Ys' i))
     (hZs' : ∀ i, Measurable (jointSequence Xs' Ys' i))
     (n' : ℕ) (y' : Fin n' → β') :
-    let proj_Y' : (Fin n' → α' × β') → (Fin n' → β') := fun z i => (z i).2
+    let proj_Y' : (Fin n' → α' × β') → (Fin n' → β') := fun z i ↦ (z i).2
     (μ'.map (jointRV (jointSequence Xs' Ys') n')).real
         (proj_Y' ⁻¹' ({y'} : Set (Fin n' → β')))
       = (μ'.map (jointRV Ys' n')).real ({y'} : Set (Fin n' → β')) := by
   intro proj_Y'
-  have hproj_meas : Measurable proj_Y' := measurable_pi_lambda _ fun i =>
+  have hproj_meas : Measurable proj_Y' := measurable_pi_lambda _ fun i ↦
     (measurable_pi_apply i).snd
   have h_meas_y : MeasurableSet ({y'} : Set (Fin n' → β')) := measurableSet_singleton y'
   have h_meas_pre : MeasurableSet (proj_Y' ⁻¹' ({y'} : Set (Fin n' → β'))) :=
@@ -141,9 +141,9 @@ theorem conditionalTypicalSlice_card_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindepY_full : iIndepFun (fun i => Ys i) μ)
+    (hindepY_full : iIndepFun (fun i ↦ Ys i) μ)
     (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
-    (hindepZ_full : iIndepFun (fun i => jointSequence Xs Ys i) μ)
+    (hindepZ_full : iIndepFun (fun i ↦ jointSequence Xs Ys i) μ)
     (hidentZ : ∀ i,
       IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
     (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
@@ -157,7 +157,7 @@ theorem conditionalTypicalSlice_card_le
   classical
   -- Notation.
   set Zs : ℕ → Ω → α × β := jointSequence Xs Ys with hZs_def
-  have hZs : ∀ i, Measurable (Zs i) := fun i =>
+  have hZs : ∀ i, Measurable (Zs i) := fun i ↦
     measurable_jointSequence Xs Ys hXs hYs i
   set HZ : ℝ := entropy μ (Zs 0) with hHZ_def
   set HY : ℝ := entropy μ (Ys 0) with hHY_def
@@ -167,7 +167,7 @@ theorem conditionalTypicalSlice_card_le
   by_cases hyT : y ∈ typicalSet μ Ys n ε
   · -- Y-typical: full argument.
     -- Embedding `embed : (Fin n → α) → (Fin n → α × β)`, `embed x i := (x i, y i)`.
-    let embed : (Fin n → α) → (Fin n → α × β) := fun x i => (x i, y i)
+    let embed : (Fin n → α) → (Fin n → α × β) := fun x i ↦ (x i, y i)
     have hembed_inj : Function.Injective embed := by
       intro x x' hxx
       funext i
@@ -221,7 +221,7 @@ theorem conditionalTypicalSlice_card_le
           = (μ.map (jointRV Zs n)).real (FimgZ : Set (Fin n → α × β)) :=
       sum_measureReal_singleton (μ := μ.map (jointRV Zs n)) FimgZ
     -- Step 4: `FimgZ ⊆ proj_Y ⁻¹' {y}`, so its measure ≤ (μ.map (jointRV Ys n)).real {y}.
-    let proj_Y : (Fin n → α × β) → (Fin n → β) := fun z i => (z i).2
+    let proj_Y : (Fin n → α × β) → (Fin n → β) := fun z i ↦ (z i).2
     have hproj_subset :
         (FimgZ : Set (Fin n → α × β)) ⊆ proj_Y ⁻¹' ({y} : Set (Fin n → β)) := by
       intro z hz

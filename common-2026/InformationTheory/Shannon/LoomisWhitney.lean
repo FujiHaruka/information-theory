@@ -144,10 +144,10 @@ theorem entropy_le_log_image_card
   -- (2) Each y has measure ≤ 1
   have h_le_one : ∀ y : γ,
       ((uniformOn (A : Set β)).map f).real ({y} : Set γ) ≤ 1 :=
-    fun y => measureReal_le_one
+    fun y ↦ measureReal_le_one
   have h_nn : ∀ y : γ,
       0 ≤ ((uniformOn (A : Set β)).map f).real ({y} : Set γ) :=
-    fun y => measureReal_nonneg
+    fun y ↦ measureReal_nonneg
   -- (3) Sum of measures = 1.
   have h_sum_one :
       ∑ y : γ, ((uniformOn (A : Set β)).map f).real ({y} : Set γ) = 1 := by
@@ -161,7 +161,7 @@ theorem entropy_le_log_image_card
   have h_sum_image_one :
       ∑ y ∈ A.image f, ((uniformOn (A : Set β)).map f).real ({y} : Set γ) = 1 := by
     rw [Finset.sum_subset (Finset.subset_univ (A.image f))
-      (fun y _ hy => h_outside y hy)]
+      (fun y _ hy ↦ h_outside y hy)]
     exact h_sum_one
   -- (5) entropy expansion: outside the image, terms vanish.
   unfold entropy
@@ -170,7 +170,7 @@ theorem entropy_le_log_image_card
         = ∑ y ∈ A.image f, Real.negMulLog
             (((uniformOn (A : Set β)).map f).real ({y} : Set γ)) from
       (Finset.sum_subset (Finset.subset_univ (A.image f))
-        (fun y _ hy => by rw [h_outside y hy, Real.negMulLog_zero])).symm]
+        (fun y _ hy ↦ by rw [h_outside y hy, Real.negMulLog_zero])).symm]
   set s : Finset γ := A.image f with hs_def
   have hs_card : s.card = N := rfl
   have hs_card_pos : 0 < s.card := hN_pos
@@ -183,14 +183,14 @@ theorem entropy_le_log_image_card
     field_simp
   have h_each_in : ∀ y ∈ s,
       ((uniformOn (A : Set β)).map f).real ({y} : Set γ) ∈ Set.Ici (0 : ℝ) :=
-    fun y _ => h_nn y
+    fun y _ ↦ h_nn y
   -- Apply ConcaveOn.le_map_sum: ∑ w_i • f(p_i) ≤ f (∑ w_i • p_i)
   have h_jensen_concave :=
     ConcaveOn.le_map_sum (𝕜 := ℝ) (t := s)
-      (w := fun _ => 1 / s.card)
-      (p := fun y => ((uniformOn (A : Set β)).map f).real ({y} : Set γ))
+      (w := fun _ ↦ 1 / s.card)
+      (p := fun y ↦ ((uniformOn (A : Set β)).map f).real ({y} : Set γ))
       Real.concaveOn_negMulLog
-      (fun _ _ => h_one_div_pos) h_weights_sum h_each_in
+      (fun _ _ ↦ h_one_div_pos) h_weights_sum h_each_in
   -- h_jensen_concave : ∑ y ∈ s, (1/N) • negMulLog (p y) ≤ negMulLog (∑ y ∈ s, (1/N) • p y)
   -- Convert smul into mul (real • real = real * real)
   simp only [smul_eq_mul] at h_jensen_concave
@@ -207,7 +207,7 @@ theorem entropy_le_log_image_card
               Real.negMulLog
                 (((uniformOn (A : Set β)).map f).real ({y} : Set γ))) := by
       rw [Finset.mul_sum]
-      refine Finset.sum_congr rfl fun y _ => ?_
+      refine Finset.sum_congr rfl fun y _ ↦ ?_
       field_simp
     rw [h_lhs_eq]
     exact mul_le_mul_of_nonneg_left h_jensen_concave h_card_R_pos.le
@@ -242,65 +242,65 @@ theorem entropy_le_log_image_card
 def projectionExcept {n : ℕ} {α : Type*} [DecidableEq α]
     (i : Fin n) (A : Finset (Fin n → α)) :
     Finset ({j : Fin n // j ≠ i} → α) :=
-  A.image (fun x j => x j.val)
+  A.image (fun x j ↦ x j.val)
 
 theorem jointEntropySubset_le_log_projectionExcept_card
     {n : ℕ} {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
     {A : Finset (Fin n → α)} (hA : A.Nonempty) (i : Fin n) :
     jointEntropySubset (uniformOn (A : Set (Fin n → α)))
-        (fun (i : Fin n) (ω : Fin n → α) => ω i)
-        (Finset.univ.filter (fun j : Fin n => j ≠ i))
+        (fun (i : Fin n) (ω : Fin n → α) ↦ ω i)
+        (Finset.univ.filter (fun j : Fin n ↦ j ≠ i))
       ≤ Real.log (projectionExcept i A).card := by
   classical
   -- IsProbabilityMeasure
   haveI hprob : IsProbabilityMeasure (uniformOn (A : Set (Fin n → α))) :=
     isProbabilityMeasure_uniformOn A.finite_toSet hA
   -- Index equiv: ↥(univ.filter (· ≠ i)) ≃ {j : Fin n // j ≠ i}
-  let idx : ↥(Finset.univ.filter (fun j : Fin n => j ≠ i))
+  let idx : ↥(Finset.univ.filter (fun j : Fin n ↦ j ≠ i))
       ≃ {j : Fin n // j ≠ i} :=
-    { toFun := fun ⟨j, hj⟩ => ⟨j, (Finset.mem_filter.mp hj).2⟩
-      invFun := fun ⟨j, hj⟩ => ⟨j, Finset.mem_filter.mpr ⟨Finset.mem_univ j, hj⟩⟩
+    { toFun := fun ⟨j, hj⟩ ↦ ⟨j, (Finset.mem_filter.mp hj).2⟩
+      invFun := fun ⟨j, hj⟩ ↦ ⟨j, Finset.mem_filter.mpr ⟨Finset.mem_univ j, hj⟩⟩
       left_inv := by rintro ⟨j, hj⟩; rfl
       right_inv := by rintro ⟨j, hj⟩; rfl }
   -- e on Pi values
-  let e : (↥(Finset.univ.filter (fun j : Fin n => j ≠ i)) → α)
+  let e : (↥(Finset.univ.filter (fun j : Fin n ↦ j ≠ i)) → α)
       ≃ᵐ ({j : Fin n // j ≠ i} → α) :=
-    MeasurableEquiv.piCongrLeft (fun _ : {j : Fin n // j ≠ i} => α) idx
+    MeasurableEquiv.piCongrLeft (fun _ : {j : Fin n // j ≠ i} ↦ α) idx
   -- Setup: projection map f : (Fin n → α) → ({j // j ≠ i} → α)
   let fproj : (Fin n → α) → ({j : Fin n // j ≠ i} → α) :=
-    fun x j => x j.val
+    fun x j ↦ x j.val
   have hfproj_meas : Measurable fproj :=
-    measurable_pi_iff.mpr (fun j => measurable_pi_apply j.val)
+    measurable_pi_iff.mpr (fun j ↦ measurable_pi_apply j.val)
   -- jointEntropySubset = entropy μ (fun ω j => ω j.val) over univ.filter
   unfold jointEntropySubset
   -- Reshape: entropy μ (fun ω j => ω j.val : (univ.filter ...) → α)
   --        = entropy μ (fproj) via piCongrLeft idx.
-  set Yo : (Fin n → α) → (↥(Finset.univ.filter (fun j : Fin n => j ≠ i)) → α) :=
-    fun ω j => ω j.val with hYo_def
+  set Yo : (Fin n → α) → (↥(Finset.univ.filter (fun j : Fin n ↦ j ≠ i)) → α) :=
+    fun ω j ↦ ω j.val with hYo_def
   have hYo_meas : Measurable Yo :=
-    measurable_pi_iff.mpr (fun _ => measurable_pi_apply _)
+    measurable_pi_iff.mpr (fun _ ↦ measurable_pi_apply _)
   -- entropy_measurableEquiv_comp e ∘ Yo = Yo
   have h_entropy_eq :
-      entropy (uniformOn (A : Set (Fin n → α))) (fun ω => e (Yo ω))
+      entropy (uniformOn (A : Set (Fin n → α))) (fun ω ↦ e (Yo ω))
         = entropy (uniformOn (A : Set (Fin n → α))) Yo :=
     entropy_measurableEquiv_comp _ Yo hYo_meas e
   -- e (Yo ω) = fproj ω pointwise
-  have h_pointwise : (fun ω => e (Yo ω)) = fproj := by
+  have h_pointwise : (fun ω ↦ e (Yo ω)) = fproj := by
     funext ω
     funext ⟨v, hv⟩
     have hk : (⟨v, hv⟩ : {j : Fin n // j ≠ i})
         = idx (idx.symm ⟨v, hv⟩) :=
       (idx.apply_symm_apply ⟨v, hv⟩).symm
     conv_lhs => rw [hk]
-    show MeasurableEquiv.piCongrLeft (fun _ : {j : Fin n // j ≠ i} => α) idx
+    show MeasurableEquiv.piCongrLeft (fun _ : {j : Fin n // j ≠ i} ↦ α) idx
         (Yo ω) (idx (idx.symm ⟨v, hv⟩)) = ω v
     rw [MeasurableEquiv.piCongrLeft_apply_apply]
     -- After piCongrLeft_apply_apply: Yo ω (idx.symm ⟨v, hv⟩)
     show Yo ω (idx.symm ⟨v, hv⟩) = ω v
     rfl
   rw [show entropy (uniformOn (A : Set (Fin n → α)))
-          (fun ω (j : ↥(Finset.univ.filter (fun j : Fin n => j ≠ i))) =>
+          (fun ω (j : ↥(Finset.univ.filter (fun j : Fin n ↦ j ≠ i))) ↦
             ω j.val)
         = entropy (uniformOn (A : Set (Fin n → α))) Yo from rfl,
     ← h_entropy_eq, h_pointwise]
@@ -328,23 +328,23 @@ theorem loomis_whitney
   haveI hprob : IsProbabilityMeasure (uniformOn (A : Set (Fin n → α))) :=
     isProbabilityMeasure_uniformOn A.finite_toSet hA
   set μ : Measure (Fin n → α) := uniformOn (A : Set (Fin n → α)) with hμ_def
-  set Xs : Fin n → (Fin n → α) → α := fun i ω => ω i with hXs_def
-  have hXs_meas : ∀ i, Measurable (Xs i) := fun i => measurable_pi_apply i
+  set Xs : Fin n → (Fin n → α) → α := fun i ω ↦ ω i with hXs_def
+  have hXs_meas : ∀ i, Measurable (Xs i) := fun i ↦ measurable_pi_apply i
   -- Cover set: S i := univ.filter (· ≠ i)
   set S : Fin n → Finset (Fin n) :=
-    fun i => Finset.univ.filter (fun j : Fin n => j ≠ i) with hS_def
+    fun i ↦ Finset.univ.filter (fun j : Fin n ↦ j ≠ i) with hS_def
   -- Cover condition: each j is in n - 1 of the S i
   have h_cover : ∀ j : Fin n,
-      (n - 1) ≤ (Finset.univ.filter (fun i : Fin n => j ∈ S i)).card := by
+      (n - 1) ≤ (Finset.univ.filter (fun i : Fin n ↦ j ∈ S i)).card := by
     intro j
     -- {i | j ∈ S i} = {i | j ≠ i} = univ.erase j
-    have h_filter_eq : Finset.univ.filter (fun i : Fin n => j ∈ S i)
+    have h_filter_eq : Finset.univ.filter (fun i : Fin n ↦ j ∈ S i)
         = Finset.univ.erase j := by
       ext i
       rw [Finset.mem_filter, Finset.mem_erase]
       simp only [Finset.mem_univ, true_and, and_true, S, Finset.mem_filter]
       -- Goal: (j ≠ i) ↔ (i ≠ j) (after simp out the universe membership)
-      exact ⟨fun h hij => h hij.symm, fun h hji => h hji.symm⟩
+      exact ⟨fun h hij ↦ h hij.symm, fun h hji ↦ h hji.symm⟩
     rw [h_filter_eq, Finset.card_erase_of_mem (Finset.mem_univ j),
       Finset.card_univ, Fintype.card_fin]
   -- Apply Shearer
@@ -354,7 +354,7 @@ theorem loomis_whitney
     -- jointEntropy μ Xs = entropy μ (fun ω i => Xs i ω) = entropy μ id (def-eq).
     unfold jointEntropy
     -- (fun ω i => Xs i ω) = id
-    have h_eq : (fun (ω : Fin n → α) (i : Fin n) => Xs i ω) = id := by
+    have h_eq : (fun (ω : Fin n → α) (i : Fin n) ↦ Xs i ω) = id := by
       funext ω; funext i; rfl
     rw [h_eq]
     exact entropy_uniformOn_eq_log_card hA
@@ -367,7 +367,7 @@ theorem loomis_whitney
     exact jointEntropySubset_le_log_projectionExcept_card hA i
   have h_RHS_le : ∑ i : Fin n, jointEntropySubset μ Xs (S i)
       ≤ ∑ i : Fin n, Real.log (projectionExcept i A).card :=
-    Finset.sum_le_sum (fun i _ => h_marginal i)
+    Finset.sum_le_sum (fun i _ ↦ h_marginal i)
   -- Combine: (n-1) · log #A ≤ ∑ i, log #(projectionExcept i A)
   have h_log :
       ((n - 1 : ℕ) : ℝ) * Real.log A.card
@@ -377,15 +377,15 @@ theorem loomis_whitney
   have h_proj_pos : ∀ i : Fin n, 0 < (projectionExcept i A).card := by
     intro i
     have : (projectionExcept i A).Nonempty :=
-      hA.image (fun (x : Fin n → α) (j : {j : Fin n // j ≠ i}) => x j.val)
+      hA.image (fun (x : Fin n → α) (j : {j : Fin n // j ≠ i}) ↦ x j.val)
     exact this.card_pos
   have h_proj_ne : ∀ i : Fin n,
-      ((projectionExcept i A).card : ℝ) ≠ 0 := fun i => by
+      ((projectionExcept i A).card : ℝ) ≠ 0 := fun i ↦ by
     exact_mod_cast (h_proj_pos i).ne'
   have h_sum_log_eq :
       (∑ i : Fin n, Real.log (projectionExcept i A).card)
         = Real.log (∏ i : Fin n, ((projectionExcept i A).card : ℝ)) := by
-    rw [Real.log_prod (fun i _ => h_proj_ne i)]
+    rw [Real.log_prod (fun i _ ↦ h_proj_ne i)]
   rw [h_sum_log_eq] at h_log
   -- LHS: ((n-1) : ℝ) * log #A = log (#A ^ (n-1))
   have h_lhs_eq :
@@ -398,7 +398,7 @@ theorem loomis_whitney
     exact_mod_cast hA.card_pos
   have h_lhs_pos : (0 : ℝ) < (A.card : ℝ) ^ (n - 1) := pow_pos h_card_pos _
   have h_rhs_pos : (0 : ℝ) < ∏ i : Fin n, ((projectionExcept i A).card : ℝ) :=
-    Finset.prod_pos (fun i _ => by exact_mod_cast h_proj_pos i)
+    Finset.prod_pos (fun i _ ↦ by exact_mod_cast h_proj_pos i)
   have h_pow_le :
       (A.card : ℝ) ^ (n - 1)
         ≤ ∏ i : Fin n, ((projectionExcept i A).card : ℝ) :=

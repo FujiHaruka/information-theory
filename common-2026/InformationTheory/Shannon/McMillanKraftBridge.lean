@@ -85,7 +85,7 @@ the project's `kraftSum`. -/
 lemma kraftSum_eq_sum_one_div_pow (D : ℝ) (l : α → ℕ) :
     kraftSum D l = ∑ a : α, (1 / D) ^ (l a) := by
   unfold kraftSum
-  exact Finset.sum_congr rfl (fun a _ => zpow_neg_natCast_eq_one_div_pow D (l a))
+  exact Finset.sum_congr rfl (fun a _ ↦ zpow_neg_natCast_eq_one_div_pow D (l a))
 
 end Rewrite
 
@@ -111,14 +111,14 @@ recovers the per-symbol sum. -/
 theorem kraftSum_le_one_of_uniquelyDecodable
     (c : α → List β) (hc : Function.Injective c)
     (hUD : UniquelyDecodable ((Finset.univ.image c : Finset (List β)) : Set (List β))) :
-    kraftSum (Fintype.card β : ℝ) (fun a => (c a).length) ≤ 1 := by
+    kraftSum (Fintype.card β : ℝ) (fun a ↦ (c a).length) ≤ 1 := by
   -- McMillan over the (distinct) codeword image.
   have hMcM := kraft_mcmillan_inequality (S := Finset.univ.image c) hUD
   -- Reindex `∑ w ∈ image c, (1/|β|)^|w|` back to `∑ a, (1/|β|)^|c a|`.
   have hReindex :
       (∑ w ∈ Finset.univ.image c, (1 / (Fintype.card β : ℝ)) ^ w.length)
         = ∑ a : α, (1 / (Fintype.card β : ℝ)) ^ (c a).length := by
-    rw [Finset.sum_image (fun a _ b _ h => hc h)]
+    rw [Finset.sum_image (fun a _ b _ h ↦ hc h)]
   rw [hReindex] at hMcM
   rw [kraftSum_eq_sum_one_div_pow]
   exact hMcM
@@ -149,8 +149,8 @@ theorem entropyD_le_expectedLength_of_uniquelyDecodable
     (hP : ∀ a : α, 0 < P.real {a})
     (c : α → List β) (hc : Function.Injective c)
     (hUD : UniquelyDecodable ((Finset.univ.image c : Finset (List β)) : Set (List β))) :
-    entropyD (Fintype.card β : ℝ) P ≤ expectedLength P (fun a => (c a).length) :=
-  entropyD_le_expectedLength_of_kraft hD P hP (fun a => (c a).length)
+    entropyD (Fintype.card β : ℝ) P ≤ expectedLength P (fun a ↦ (c a).length) :=
+  entropyD_le_expectedLength_of_kraft hD P hP (fun a ↦ (c a).length)
     (kraftSum_le_one_of_uniquelyDecodable c hc hUD)
 
 end McMillan

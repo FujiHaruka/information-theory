@@ -129,12 +129,12 @@ private theorem channelCodingSmooth_avg_bound
   haveI : IsProbabilityMeasure μ := by rw [hμ_def]; infer_instance
   exact random_codebook_average_le (M := M) (n := n) Wδ p hp_pos hM_pos hε_pos μ iidXs iidYs
     measurable_iidXs measurable_iidYs (iidAmbient_iIndepFun_iidXs p Wδ)
-    (fun i => iidAmbient_identDistrib_iidXs p Wδ i) (iidAmbient_iIndepFun_iidYs p Wδ)
-    (fun i => iidAmbient_identDistrib_iidYs p Wδ i) (iidAmbient_pairwise_indep_joint p Wδ)
-    (iidAmbient_iIndepFun_joint p Wδ) (fun i => iidAmbient_identDistrib_joint p Wδ i)
-    (fun x => iidAmbient_iidXs_real_singleton_pos p Wδ hp_pos x)
-    (fun y => iidAmbient_iidYs_real_singleton_pos p Wδ hp_pos hW_pos y)
-    (fun q => iidAmbient_joint_real_singleton_pos p Wδ hp_pos hW_pos q)
+    (fun i ↦ iidAmbient_identDistrib_iidXs p Wδ i) (iidAmbient_iIndepFun_iidYs p Wδ)
+    (fun i ↦ iidAmbient_identDistrib_iidYs p Wδ i) (iidAmbient_pairwise_indep_joint p Wδ)
+    (iidAmbient_iIndepFun_joint p Wδ) (fun i ↦ iidAmbient_identDistrib_joint p Wδ i)
+    (fun x ↦ iidAmbient_iidXs_real_singleton_pos p Wδ hp_pos x)
+    (fun y ↦ iidAmbient_iidYs_real_singleton_pos p Wδ hp_pos hW_pos y)
+    (fun q ↦ iidAmbient_joint_real_singleton_pos p Wδ hp_pos hW_pos q)
     (iidAmbient_map_iidXs p Wδ 0) (iidAmbient_map_jointSequence p Wδ 0)
 
 omit [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β] in
@@ -193,7 +193,7 @@ private theorem channelCodingSmooth_assemble
       {ω | (InformationTheory.Shannon.jointRV Xs n ω,
             InformationTheory.Shannon.jointRV Ys n ω) ∈
           jointlyTypicalSet μ Xs Ys n ε} := by
-    have h_meas_pair : Measurable (fun ω =>
+    have h_meas_pair : Measurable (fun ω ↦
         (InformationTheory.Shannon.jointRV (α := α) Xs n ω,
           InformationTheory.Shannon.jointRV (α := β) Ys n ω)) :=
       (InformationTheory.Shannon.measurable_jointRV Xs hXs n).prodMk
@@ -313,26 +313,26 @@ theorem channel_coding_achievability_smooth_at_N_le
     rw [hμ_def]; infer_instance
   have hXs : ∀ i, Measurable (iidXs (α := α) (β := β) i) := measurable_iidXs
   have hYs : ∀ i, Measurable (iidYs (α := α) (β := β) i) := measurable_iidYs
-  have hindepX_pair : Pairwise fun i j =>
+  have hindepX_pair : Pairwise fun i j ↦
       iidXs (α := α) (β := β) i ⟂ᵢ[μ] iidXs j :=
     iidAmbient_pairwise_indep_iidXs p Wδ
-  have hindepY_pair : Pairwise fun i j =>
+  have hindepY_pair : Pairwise fun i j ↦
       iidYs (α := α) (β := β) i ⟂ᵢ[μ] iidYs j :=
     iidAmbient_pairwise_indep_iidYs p Wδ
-  have hindepZ : Pairwise fun i j =>
+  have hindepZ : Pairwise fun i j ↦
       jointSequence (α := α) (β := β) iidXs iidYs i ⟂ᵢ[μ]
         jointSequence iidXs iidYs j :=
     iidAmbient_pairwise_indep_joint p Wδ
   have hidentX : ∀ i,
       IdentDistrib (iidXs (α := α) (β := β) i) (iidXs 0) μ μ :=
-    fun i => iidAmbient_identDistrib_iidXs p Wδ i
+    fun i ↦ iidAmbient_identDistrib_iidXs p Wδ i
   have hidentY : ∀ i,
       IdentDistrib (iidYs (α := α) (β := β) i) (iidYs 0) μ μ :=
-    fun i => iidAmbient_identDistrib_iidYs p Wδ i
+    fun i ↦ iidAmbient_identDistrib_iidYs p Wδ i
   have hidentZ : ∀ i,
       IdentDistrib (jointSequence (α := α) (β := β) iidXs iidYs i)
         (jointSequence iidXs iidYs 0) μ μ :=
-    fun i => iidAmbient_identDistrib_joint p Wδ i
+    fun i ↦ iidAmbient_identDistrib_joint p Wδ i
   -- Step 3: entropy exponent equation (HZ - HX - HY = -I).
   have h_exp_eq : InformationTheory.Shannon.entropy μ
         (jointSequence (α := α) (β := β) iidXs iidYs 0)

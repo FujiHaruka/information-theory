@@ -45,7 +45,7 @@ variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 `Measure.infinitePi (fun _ : ℕ => jointDistribution p W)` on `ℕ → α × β`. -/
 noncomputable def iidAmbientMeasure
     (p : Measure α) (W : Channel α β) : Measure (ℕ → α × β) :=
-  Measure.infinitePi (fun _ : ℕ => jointDistribution p W)
+  Measure.infinitePi (fun _ : ℕ ↦ jointDistribution p W)
 
 instance iidAmbientMeasure.instIsProbabilityMeasure
     (p : Measure α) [IsProbabilityMeasure p]
@@ -55,10 +55,10 @@ instance iidAmbientMeasure.instIsProbabilityMeasure
   infer_instance
 
 /-- The `i`-th input random variable: `ω ↦ (ω i).1`. -/
-def iidXs : ℕ → (ℕ → α × β) → α := fun i ω => (ω i).1
+def iidXs : ℕ → (ℕ → α × β) → α := fun i ω ↦ (ω i).1
 
 /-- The `i`-th output random variable: `ω ↦ (ω i).2`. -/
-def iidYs : ℕ → (ℕ → α × β) → β := fun i ω => (ω i).2
+def iidYs : ℕ → (ℕ → α × β) → β := fun i ω ↦ (ω i).2
 
 omit [MeasurableSpace α] [MeasurableSpace β] in
 @[simp] lemma iidXs_apply (i : ℕ) (ω : ℕ → α × β) : iidXs i ω = (ω i).1 := rfl
@@ -76,7 +76,7 @@ omit [MeasurableSpace α] [MeasurableSpace β] in
 /-- The joint sequence collapses to the raw coordinate projection
 `fun ω ↦ ω i` modulo `Prod.mk` η. -/
 lemma jointSequence_iidXs_iidYs (i : ℕ) :
-    jointSequence (α := α) (β := β) iidXs iidYs i = fun ω => ω i := by
+    jointSequence (α := α) (β := β) iidXs iidYs i = fun ω ↦ ω i := by
   funext ω; rfl
 
 /-! ### Marginal laws
@@ -92,7 +92,7 @@ lemma iidAmbient_map_jointSequence
     (iidAmbientMeasure p W).map (jointSequence iidXs iidYs i)
       = jointDistribution p W := by
   rw [jointSequence_iidXs_iidYs]
-  exact Measure.infinitePi_map_eval (μ := fun _ : ℕ => jointDistribution p W) i
+  exact Measure.infinitePi_map_eval (μ := fun _ : ℕ ↦ jointDistribution p W) i
 
 /-- The input marginal `μ.map (Xs i) = p`. -/
 lemma iidAmbient_map_iidXs
@@ -101,13 +101,13 @@ lemma iidAmbient_map_iidXs
     (iidAmbientMeasure p W).map (iidXs i) = p := by
   -- iidXs i = Prod.fst ∘ (fun ω => ω i)
   have h_comp : iidXs (α := α) (β := β) i
-      = Prod.fst ∘ (fun ω : ℕ → α × β => ω i) := by
+      = Prod.fst ∘ (fun ω : ℕ → α × β ↦ ω i) := by
     funext ω; rfl
   rw [h_comp, ← Measure.map_map measurable_fst (measurable_pi_apply i)]
   -- (iidAmbientMeasure p W).map (fun ω => ω i) = jointDistribution p W
-  have h_eval : (iidAmbientMeasure p W).map (fun ω : ℕ → α × β => ω i)
+  have h_eval : (iidAmbientMeasure p W).map (fun ω : ℕ → α × β ↦ ω i)
       = jointDistribution p W :=
-    Measure.infinitePi_map_eval (μ := fun _ : ℕ => jointDistribution p W) i
+    Measure.infinitePi_map_eval (μ := fun _ : ℕ ↦ jointDistribution p W) i
   rw [h_eval]
   -- (jointDistribution p W).map Prod.fst = (jointDistribution p W).fst = p
   show (jointDistribution p W).fst = p
@@ -120,12 +120,12 @@ lemma iidAmbient_map_iidYs
     (W : Channel α β) [IsMarkovKernel W] (i : ℕ) :
     (iidAmbientMeasure p W).map (iidYs i) = outputDistribution p W := by
   have h_comp : iidYs (α := α) (β := β) i
-      = Prod.snd ∘ (fun ω : ℕ → α × β => ω i) := by
+      = Prod.snd ∘ (fun ω : ℕ → α × β ↦ ω i) := by
     funext ω; rfl
   rw [h_comp, ← Measure.map_map measurable_snd (measurable_pi_apply i)]
-  have h_eval : (iidAmbientMeasure p W).map (fun ω : ℕ → α × β => ω i)
+  have h_eval : (iidAmbientMeasure p W).map (fun ω : ℕ → α × β ↦ ω i)
       = jointDistribution p W :=
-    Measure.infinitePi_map_eval (μ := fun _ : ℕ => jointDistribution p W) i
+    Measure.infinitePi_map_eval (μ := fun _ : ℕ ↦ jointDistribution p W) i
   rw [h_eval]
   rfl
 
@@ -167,40 +167,40 @@ i.i.d. ambient measure. -/
 lemma iidAmbient_iIndepFun_iidXs
     (p : Measure α) [IsProbabilityMeasure p]
     (W : Channel α β) [IsMarkovKernel W] :
-    iIndepFun (fun i : ℕ => iidXs (α := α) (β := β) i) (iidAmbientMeasure p W) := by
+    iIndepFun (fun i : ℕ ↦ iidXs (α := α) (β := β) i) (iidAmbientMeasure p W) := by
   -- iidXs i ω = Prod.fst (ω i), of the shape `fun i ω => f i (ω i)` with `f i := Prod.fst`.
   exact iIndepFun_infinitePi
-    (P := fun _ : ℕ => jointDistribution p W)
-    (X := fun _ : ℕ => Prod.fst (α := α) (β := β))
-    (fun _ => measurable_fst)
+    (P := fun _ : ℕ ↦ jointDistribution p W)
+    (X := fun _ : ℕ ↦ Prod.fst (α := α) (β := β))
+    (fun _ ↦ measurable_fst)
 
 /-- The output coordinates `Ys i ω = (ω i).2` are mutually independent. -/
 lemma iidAmbient_iIndepFun_iidYs
     (p : Measure α) [IsProbabilityMeasure p]
     (W : Channel α β) [IsMarkovKernel W] :
-    iIndepFun (fun i : ℕ => iidYs (α := α) (β := β) i) (iidAmbientMeasure p W) := by
+    iIndepFun (fun i : ℕ ↦ iidYs (α := α) (β := β) i) (iidAmbientMeasure p W) := by
   exact iIndepFun_infinitePi
-    (P := fun _ : ℕ => jointDistribution p W)
-    (X := fun _ : ℕ => Prod.snd (α := α) (β := β))
-    (fun _ => measurable_snd)
+    (P := fun _ : ℕ ↦ jointDistribution p W)
+    (X := fun _ : ℕ ↦ Prod.snd (α := α) (β := β))
+    (fun _ ↦ measurable_snd)
 
 /-- The joint coordinate sequence `jointSequence iidXs iidYs i ω = ω i` is
 mutually independent. -/
 lemma iidAmbient_iIndepFun_joint
     (p : Measure α) [IsProbabilityMeasure p]
     (W : Channel α β) [IsMarkovKernel W] :
-    iIndepFun (fun i : ℕ => jointSequence (α := α) (β := β) iidXs iidYs i)
+    iIndepFun (fun i : ℕ ↦ jointSequence (α := α) (β := β) iidXs iidYs i)
       (iidAmbientMeasure p W) := by
   -- jointSequence iidXs iidYs i ω = ω i = id (ω i)
   have h_eq :
-      (fun i : ℕ => jointSequence (α := α) (β := β) iidXs iidYs i)
-        = (fun (i : ℕ) (ω : ℕ → α × β) => (id : α × β → α × β) (ω i)) := by
+      (fun i : ℕ ↦ jointSequence (α := α) (β := β) iidXs iidYs i)
+        = (fun (i : ℕ) (ω : ℕ → α × β) ↦ (id : α × β → α × β) (ω i)) := by
     funext i ω; rfl
   rw [h_eq]
   exact iIndepFun_infinitePi
-    (P := fun _ : ℕ => jointDistribution p W)
-    (X := fun _ : ℕ => (id : α × β → α × β))
-    (fun _ => measurable_id)
+    (P := fun _ : ℕ ↦ jointDistribution p W)
+    (X := fun _ : ℕ ↦ (id : α × β → α × β))
+    (fun _ ↦ measurable_id)
 
 /-- Pairwise independence for the joint axis: needed by
 `jointlyTypicalSet_prob_tendsto_one` (which takes the `Pairwise … ⟂ᵢ[μ] …` form
@@ -208,7 +208,7 @@ rather than the full `iIndepFun` form). -/
 lemma iidAmbient_pairwise_indep_joint
     (p : Measure α) [IsProbabilityMeasure p]
     (W : Channel α β) [IsMarkovKernel W] :
-    Pairwise fun i j =>
+    Pairwise fun i j ↦
       IndepFun (jointSequence (α := α) (β := β) iidXs iidYs i)
         (jointSequence iidXs iidYs j) (iidAmbientMeasure p W) := by
   intro i j hij
@@ -217,7 +217,7 @@ lemma iidAmbient_pairwise_indep_joint
 lemma iidAmbient_pairwise_indep_iidXs
     (p : Measure α) [IsProbabilityMeasure p]
     (W : Channel α β) [IsMarkovKernel W] :
-    Pairwise fun i j =>
+    Pairwise fun i j ↦
       IndepFun (iidXs (α := α) (β := β) i) (iidXs j) (iidAmbientMeasure p W) := by
   intro i j hij
   exact (iidAmbient_iIndepFun_iidXs p W).indepFun hij
@@ -225,7 +225,7 @@ lemma iidAmbient_pairwise_indep_iidXs
 lemma iidAmbient_pairwise_indep_iidYs
     (p : Measure α) [IsProbabilityMeasure p]
     (W : Channel α β) [IsMarkovKernel W] :
-    Pairwise fun i j =>
+    Pairwise fun i j ↦
       IndepFun (iidYs (α := α) (β := β) i) (iidYs j) (iidAmbientMeasure p W) := by
   intro i j hij
   exact (iidAmbient_iIndepFun_iidYs p W).indepFun hij
@@ -249,7 +249,7 @@ lemma jointDistribution_singleton
   rw [jointDistribution_def, ← Set.singleton_prod_singleton,
     Measure.compProd_apply_prod (measurableSet_singleton _) (measurableSet_singleton _)]
   -- ∫⁻ a in {x}, W a {y} ∂p = (fun a => W a {y}) x * p {x} = W x {y} * p {x}.
-  rw [lintegral_singleton (fun a => W a {y}) x, mul_comm]
+  rw [lintegral_singleton (fun a ↦ W a {y}) x, mul_comm]
 
 omit [DecidableEq α] [Fintype β] [DecidableEq β] in
 /-- Positivity of `(jointDistribution p W).real {(x, y)}` from input + channel
@@ -355,13 +355,13 @@ lemma iidAmbient_iidYs_real_singleton_pos
     exact lt_irrefl 0 this
   obtain ⟨a, ha⟩ := h_some
   -- The a.e. equality h forces W a {y} = 0 for p-almost every a. But p {a} > 0.
-  have h_pt : ∀ᵐ a' ∂p, (fun a' => (W a') {y}) a' = 0 := h
+  have h_pt : ∀ᵐ a' ∂p, (fun a' ↦ (W a') {y}) a' = 0 := h
   -- p {a} > 0 means {a} is not p-null, so the a.e. equality forces W a {y} = 0.
-  have : (fun a' => (W a') {y}) a = 0 := by
+  have : (fun a' ↦ (W a') {y}) a = 0 := by
     -- Since {a} has positive p-mass and the a.e. set has full measure, intersection nonempty.
     -- Actually simpler: use ae_iff and the singleton.
     by_contra hne
-    have h_ae : (fun a' => (W a') {y}) =ᵐ[p] 0 := h_pt
+    have h_ae : (fun a' ↦ (W a') {y}) =ᵐ[p] 0 := h_pt
     -- The set {a' | W a' {y} ≠ 0} has p-measure zero.
     have h_null : p {a' | (W a') {y} ≠ 0} = 0 := by
       have := h_ae

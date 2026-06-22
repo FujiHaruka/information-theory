@@ -39,13 +39,13 @@ open scoped ENNReal NNReal BigOperators Topology
 
 /-- `waterFillingPower ν N i` is continuous in `ν`. -/
 lemma waterFillingPower_continuous_in_ν {n : ℕ} (N : Fin n → ℝ≥0) (i : Fin n) :
-    Continuous (fun ν : ℝ => waterFillingPower ν N i) := by
+    Continuous (fun ν : ℝ ↦ waterFillingPower ν N i) := by
   unfold waterFillingPower
   exact continuous_const.max (continuous_id.sub continuous_const)
 
 /-- The water-filling total sum `∑_i max(0, ν - N_i)` is continuous in `ν`. -/
 lemma waterFillingPower_sum_continuous {n : ℕ} (N : Fin n → ℝ≥0) :
-    Continuous (fun ν : ℝ => ∑ i : Fin n, waterFillingPower ν N i) := by
+    Continuous (fun ν : ℝ ↦ ∑ i : Fin n, waterFillingPower ν N i) := by
   refine continuous_finsetSum _ ?_
   intro i _
   exact waterFillingPower_continuous_in_ν N i
@@ -98,21 +98,21 @@ theorem exists_waterFillingKKT_of_pos {n : ℕ}
   classical
   -- Use the max over the canonical Fin (n+1) Finset.
   set Nmax : ℝ :=
-    (Finset.univ : Finset (Fin (n + 1))).sup' Finset.univ_nonempty (fun i => (N i : ℝ))
+    (Finset.univ : Finset (Fin (n + 1))).sup' Finset.univ_nonempty (fun i ↦ (N i : ℝ))
     with hNmax_def
   have hNmax_ge : ∀ i, (N i : ℝ) ≤ Nmax :=
-    fun i => Finset.le_sup' (fun i => (N i : ℝ)) (Finset.mem_univ i)
+    fun i ↦ Finset.le_sup' (fun i ↦ (N i : ℝ)) (Finset.mem_univ i)
   -- Step 2: Build the two endpoints ν₀ = 0, ν₁ = Nmax + P + 1.
   -- Note: we need (n+1)·(ν₁ - Nmax) ≥ P, i.e., (n+1)·(P+1) ≥ P, true for any n.
-  set ν₀ : ℝ := min 0 (Finset.univ.inf' Finset.univ_nonempty (fun i => (N i : ℝ)))
+  set ν₀ : ℝ := min 0 (Finset.univ.inf' Finset.univ_nonempty (fun i ↦ (N i : ℝ)))
     with hν₀_def
   set ν₁ : ℝ := Nmax + P + 1 with hν₁_def
   -- Step 3: At ν₀, the sum is 0 (every coord is inactive).
   have hν₀_le_N : ∀ i, ν₀ ≤ (N i : ℝ) := by
     intro i
-    have h_inf : Finset.univ.inf' Finset.univ_nonempty (fun i => (N i : ℝ))
+    have h_inf : Finset.univ.inf' Finset.univ_nonempty (fun i ↦ (N i : ℝ))
         ≤ (N i : ℝ) :=
-      Finset.inf'_le (fun i => (N i : ℝ)) (Finset.mem_univ i)
+      Finset.inf'_le (fun i ↦ (N i : ℝ)) (Finset.mem_univ i)
     exact le_trans (min_le_right _ _) h_inf
   have hg_ν₀ : ∑ i : Fin (n + 1), waterFillingPower ν₀ N i = 0 :=
     waterFillingPower_sum_eq_zero_of_le_min N hν₀_le_N
@@ -149,7 +149,7 @@ theorem exists_waterFillingKKT_of_pos {n : ℕ}
       exact le_trans h_nn (hNmax_ge 0)
     show ν₀ ≤ Nmax + P + 1; linarith
   -- Step 6: Apply IVT to g on [ν₀, ν₁].
-  have hg_cont : ContinuousOn (fun ν => ∑ i : Fin (n + 1), waterFillingPower ν N i)
+  have hg_cont : ContinuousOn (fun ν ↦ ∑ i : Fin (n + 1), waterFillingPower ν N i)
       (Set.Icc ν₀ ν₁) :=
     (waterFillingPower_sum_continuous N).continuousOn
   have hP_in_Icc : P ∈ Set.Icc

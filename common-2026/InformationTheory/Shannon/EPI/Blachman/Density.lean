@@ -103,12 +103,12 @@ theorem symm_deriv_integral_eq (fX fY : ℝ → ℝ) (z : ℝ)
   -- huniq : ∫ x, fX x * deriv fY (z - x) = ∫ x, fY x * deriv fX (z - x)
   -- Reflection substitution `x ↦ z - x` on `g x := fY (z - x) * deriv fX x`.
   have hrefl := MeasureTheory.integral_sub_left_eq_self
-      (fun x => fY (z - x) * deriv fX x) (μ := volume) z
+      (fun x ↦ fY (z - x) * deriv fX x) (μ := volume) z
   simp only [sub_sub_cancel] at hrefl
   -- hrefl : ∫ x, fY x * deriv fX (z - x) = ∫ x, fY (z - x) * deriv fX x
   rw [huniq, hrefl]
   -- goal : ∫ x, deriv fX x * fY (z - x) = ∫ x, fY (z - x) * deriv fX x
-  exact integral_congr_ae (Filter.Eventually.of_forall (fun x => mul_comm _ _))
+  exact integral_congr_ae (Filter.Eventually.of_forall (fun x ↦ mul_comm _ _))
 
 /-- **S3 — score representation (Blachman core, condExp-free).**
 
@@ -133,8 +133,8 @@ theorem score_conv_eq_weighted_integral (fX fY : ℝ → ℝ) (lam z : ℝ)
     (hX_bdd : ∃ M : ℝ, ∀ w, |fX w| ≤ M) (hX'_bdd : ∃ M : ℝ, ∀ w, |deriv fX w| ≤ M)
     (hY_bdd : ∃ M : ℝ, ∀ w, |fY w| ≤ M) (hY'_bdd : ∃ M : ℝ, ∀ w, |deriv fY w| ≤ M)
     (hpZ : 0 < convDensityAdd fX fY z)
-    (hint_X : Integrable (fun x => deriv fX x * fY (z - x)) volume)
-    (hint_Y : Integrable (fun x => fX x * deriv fY (z - x)) volume) :
+    (hint_X : Integrable (fun x ↦ deriv fX x * fY (z - x)) volume)
+    (hint_Y : Integrable (fun x ↦ fX x * deriv fY (z - x)) volume) :
     logDeriv (convDensityAdd fX fY) z
       = ∫ x, scoreWeight fX fY lam z x * condDensityX fX fY z x ∂volume := by
   -- abbreviation `P := p_Z'(z) = ∫ x, fX x * deriv fY (z - x)`.
@@ -156,7 +156,7 @@ theorem score_conv_eq_weighted_integral (fX fY : ℝ → ℝ) (lam z : ℝ)
         = (∫ x, scoreWeight fX fY lam z x * (fX x * fY (z - x)) ∂volume)
             / convDensityAdd fX fY z := by
     rw [← integral_div]
-    refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+    refine integral_congr_ae (Filter.Eventually.of_forall (fun x ↦ ?_))
     unfold condDensityX
     field_simp
   rw [hRHS]
@@ -227,16 +227,16 @@ finite Fisher information; neither bundles the Fisher-info value.
 @audit:ok -/
 theorem fisherInfoOfDensity_toReal_eq_integral (f : ℝ → ℝ)
     (hpos : ∀ x, 0 ≤ f x)
-    (hint : Integrable (fun x => (logDeriv f x) ^ 2 * f x) volume) :
+    (hint : Integrable (fun x ↦ (logDeriv f x) ^ 2 * f x) volume) :
     (fisherInfoOfDensity f).toReal = ∫ x, (logDeriv f x) ^ 2 * f x ∂volume := by
   -- Bochner ↔ lintegral on the nonneg integrand `g x := (logDeriv f x)² · f x`.
-  have hg_nonneg : 0 ≤ᵐ[volume] fun x => (logDeriv f x) ^ 2 * f x :=
-    Filter.Eventually.of_forall (fun x => mul_nonneg (sq_nonneg _) (hpos x))
+  have hg_nonneg : 0 ≤ᵐ[volume] fun x ↦ (logDeriv f x) ^ 2 * f x :=
+    Filter.Eventually.of_forall (fun x ↦ mul_nonneg (sq_nonneg _) (hpos x))
   rw [integral_eq_lintegral_of_nonneg_ae hg_nonneg hint.1]
   -- `fisherInfoOfDensity f = ∫⁻ ofReal((logDeriv f x)²) · ofReal(f x)`; combine via `ofReal_mul`.
   congr 1
   unfold fisherInfoOfDensity
-  refine lintegral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+  refine lintegral_congr_ae (Filter.Eventually.of_forall (fun x ↦ ?_))
   simp only [ENNReal.ofReal_mul (sq_nonneg (logDeriv f x))]
 
 /-- **S4 — probability-weighted pointwise Cauchy-Schwarz** of the score.
@@ -273,13 +273,13 @@ theorem score_sq_le_weighted_integral (fX fY : ℝ → ℝ) (lam z : ℝ)
     (hX_bdd : ∃ M : ℝ, ∀ w, |fX w| ≤ M) (hX'_bdd : ∃ M : ℝ, ∀ w, |deriv fX w| ≤ M)
     (hY_bdd : ∃ M : ℝ, ∀ w, |fY w| ≤ M) (hY'_bdd : ∃ M : ℝ, ∀ w, |deriv fY w| ≤ M)
     (hpZ : 0 < convDensityAdd fX fY z)
-    (hint_X : Integrable (fun x => deriv fX x * fY (z - x)) volume)
-    (hint_Y : Integrable (fun x => fX x * deriv fY (z - x)) volume)
+    (hint_X : Integrable (fun x ↦ deriv fX x * fY (z - x)) volume)
+    (hint_Y : Integrable (fun x ↦ fX x * deriv fY (z - x)) volume)
     (hcond_int : Integrable (condDensityX fX fY z) volume)
     (hint_W :
-        Integrable (fun x => scoreWeight fX fY lam z x * condDensityX fX fY z x) volume)
+        Integrable (fun x ↦ scoreWeight fX fY lam z x * condDensityX fX fY z x) volume)
     (hint_Wsq :
-        Integrable (fun x => (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x) volume) :
+        Integrable (fun x ↦ (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x) volume) :
     (logDeriv (convDensityAdd fX fY) z) ^ 2
       ≤ ∫ x, (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x ∂volume := by
   -- Conditional density is nonneg (ratio of nonneg `fX·fY(z-·)` by positive `p_Z`).
@@ -288,11 +288,11 @@ theorem score_sq_le_weighted_integral (fX fY : ℝ → ℝ) (lam z : ℝ)
     unfold condDensityX
     exact div_nonneg (mul_nonneg (hregX.pos x).le (hregY.pos (z - x)).le) hpZ.le
   -- Density `d x := ENNReal.ofReal (condDensityX fX fY z x)`, ae-measurable + finite.
-  set d : ℝ → ℝ≥0∞ := fun x => ENNReal.ofReal (condDensityX fX fY z x) with hd_def
+  set d : ℝ → ℝ≥0∞ := fun x ↦ ENNReal.ofReal (condDensityX fX fY z x) with hd_def
   have hd_meas : AEMeasurable d volume :=
     (hcond_int.aestronglyMeasurable.aemeasurable.ennreal_ofReal)
   have hd_lt_top : ∀ᵐ x ∂volume, d x < ∞ :=
-    Filter.Eventually.of_forall (fun x => ENNReal.ofReal_lt_top)
+    Filter.Eventually.of_forall (fun x ↦ ENNReal.ofReal_lt_top)
   -- Probability measure `μ := volume.withDensity d`; mass = ∫⁻ d = ofReal(∫ condDensityX) = 1.
   set μ : Measure ℝ := volume.withDensity d with hμ_def
   have hμ_mass : μ Set.univ = 1 := by
@@ -306,40 +306,40 @@ theorem score_sq_le_weighted_integral (fX fY : ℝ → ℝ) (lam z : ℝ)
       ∫ x, g x ∂μ = ∫ x, condDensityX fX fY z x * g x ∂volume := by
     intro g
     rw [hμ_def, integral_withDensity_eq_integral_toReal_smul₀ hd_meas hd_lt_top]
-    refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+    refine integral_congr_ae (Filter.Eventually.of_forall (fun x ↦ ?_))
     simp only [hd_def, smul_eq_mul, ENNReal.toReal_ofReal (hcond_nonneg x)]
   -- (1) `∫ scoreWeight ∂μ = logDeriv p_Z z` (S3 + CoV + mul_comm).
   have hmean : ∫ x, scoreWeight fX fY lam z x ∂μ = logDeriv (convDensityAdd fX fY) z := by
     rw [hCoV]
     rw [score_conv_eq_weighted_integral fX fY lam z hregX hregY hX_int hY_int
       hX_bdd hX'_bdd hY_bdd hY'_bdd hpZ hint_X hint_Y]
-    refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+    refine integral_congr_ae (Filter.Eventually.of_forall (fun x ↦ ?_))
     simp only [mul_comm]
   -- (2) Jensen for the convex `(·)²` on `μ`.
-  have hconv : ConvexOn ℝ Set.univ (fun x : ℝ => x ^ 2) :=
+  have hconv : ConvexOn ℝ Set.univ (fun x : ℝ ↦ x ^ 2) :=
     Even.convexOn_pow (by norm_num)
   have hjensen :
       (∫ x, scoreWeight fX fY lam z x ∂μ) ^ 2
         ≤ ∫ x, (scoreWeight fX fY lam z x) ^ 2 ∂μ := by
     have hfi : Integrable (scoreWeight fX fY lam z) μ := by
       rw [hμ_def, integrable_withDensity_iff_integrable_smul₀' hd_meas hd_lt_top]
-      refine (hint_W.congr (Filter.Eventually.of_forall (fun x => ?_)))
+      refine (hint_W.congr (Filter.Eventually.of_forall (fun x ↦ ?_)))
       simp only [hd_def, smul_eq_mul, ENNReal.toReal_ofReal (hcond_nonneg x), mul_comm]
-    have hgi : Integrable ((fun x : ℝ => x ^ 2) ∘ scoreWeight fX fY lam z) μ := by
+    have hgi : Integrable ((fun x : ℝ ↦ x ^ 2) ∘ scoreWeight fX fY lam z) μ := by
       rw [hμ_def, integrable_withDensity_iff_integrable_smul₀' hd_meas hd_lt_top]
-      refine (hint_Wsq.congr (Filter.Eventually.of_forall (fun x => ?_)))
+      refine (hint_Wsq.congr (Filter.Eventually.of_forall (fun x ↦ ?_)))
       simp only [hd_def, Function.comp_apply, smul_eq_mul,
         ENNReal.toReal_ofReal (hcond_nonneg x), mul_comm]
-    have hcont : ContinuousOn (fun x : ℝ => x ^ 2) Set.univ :=
+    have hcont : ContinuousOn (fun x : ℝ ↦ x ^ 2) Set.univ :=
       (continuous_pow 2).continuousOn
     have := hconv.map_integral_le hcont isClosed_univ
-      (Filter.Eventually.of_forall (fun _ => Set.mem_univ _)) hfi hgi
+      (Filter.Eventually.of_forall (fun _ ↦ Set.mem_univ _)) hfi hgi
     simpa only [Function.comp_apply] using this
   -- Assemble: rewrite the mean via S3, then push the RHS through CoV.
   rw [← hmean]
   refine hjensen.trans (le_of_eq ?_)
   rw [hCoV]
-  refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+  refine integral_congr_ae (Filter.Eventually.of_forall (fun x ↦ ?_))
   simp only [mul_comm]
 
 /-! ### Tonelli 3-term evaluation helpers
@@ -359,17 +359,17 @@ private theorem convex_fisher_term1 (fX fY : ℝ → ℝ)
     (hnormY : ∫ x, fY x ∂volume = 1)
     (hint1 :
         Integrable
-          (Function.uncurry fun z x => (logDeriv fX x) ^ 2 * fX x * fY (z - x))
+          (Function.uncurry fun z x ↦ (logDeriv fX x) ^ 2 * fX x * fY (z - x))
           (volume.prod volume)) :
     (∫ z, ∫ x, (logDeriv fX x) ^ 2 * fX x * fY (z - x) ∂volume ∂volume)
       = ∫ x, (logDeriv fX x) ^ 2 * fX x ∂volume := by
   -- Tonelli: put `z` innermost.
   rw [integral_integral_swap hint1]
   -- inner `z` integral of `fY (z - x)` is `∫ fY = 1`; pull constant out.
-  refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+  refine integral_congr_ae (Filter.Eventually.of_forall (fun x ↦ ?_))
   simp only
-  rw [show (fun z => (logDeriv fX x) ^ 2 * fX x * fY (z - x))
-        = (fun z => ((logDeriv fX x) ^ 2 * fX x) * fY (z - x)) from rfl,
+  rw [show (fun z ↦ (logDeriv fX x) ^ 2 * fX x * fY (z - x))
+        = (fun z ↦ ((logDeriv fX x) ^ 2 * fX x) * fY (z - x)) from rfl,
     integral_const_mul]
   have htr := MeasureTheory.integral_sub_right_eq_self fY (μ := volume) x
   rw [htr, hnormY, mul_one]
@@ -381,7 +381,7 @@ private theorem convex_fisher_term2 (fX fY : ℝ → ℝ)
     (hnormX : ∫ x, fX x ∂volume = 1)
     (hint2 :
         Integrable
-          (Function.uncurry fun z x => (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x))
+          (Function.uncurry fun z x ↦ (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x))
           (volume.prod volume)) :
     (∫ z, ∫ x, (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x) ∂volume ∂volume)
       = ∫ y, (logDeriv fY y) ^ 2 * fY y ∂volume := by
@@ -393,12 +393,12 @@ private theorem convex_fisher_term2 (fX fY : ℝ → ℝ)
       (∫ z, (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x) ∂volume)
         = fX x * ∫ y, (logDeriv fY y) ^ 2 * fY y ∂volume := by
     intro x
-    rw [show (fun z => (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x))
-          = (fun z => fX x * ((logDeriv fY (z - x)) ^ 2 * fY (z - x))) from
-        funext (fun z => by ring),
+    rw [show (fun z ↦ (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x))
+          = (fun z ↦ fX x * ((logDeriv fY (z - x)) ^ 2 * fY (z - x))) from
+        funext (fun z ↦ by ring),
       integral_const_mul]
     have htr := MeasureTheory.integral_sub_right_eq_self
-        (fun y => (logDeriv fY y) ^ 2 * fY y) (μ := volume) x
+        (fun y ↦ (logDeriv fY y) ^ 2 * fY y) (μ := volume) x
     rw [htr]
   simp only [hinner]
   rw [integral_mul_const, hnormX, one_mul]
@@ -414,7 +414,7 @@ private theorem convex_fisher_cross (fX fY : ℝ → ℝ)
     (hregY : IsRegularDensityV2 fY)
     (hint3 :
         Integrable
-          (Function.uncurry fun z x =>
+          (Function.uncurry fun z x ↦
             logDeriv fX x * fX x * (logDeriv fY (z - x) * fY (z - x)))
           (volume.prod volume)) :
     (∫ z, ∫ x, logDeriv fX x * fX x * (logDeriv fY (z - x) * fY (z - x))
@@ -428,7 +428,7 @@ private theorem convex_fisher_cross (fX fY : ℝ → ℝ)
     rw [integral_const_mul]
     -- `∫ z, logDeriv fY (z - x) · fY (z - x) = ∫ y, logDeriv fY y · fY y = 0`.
     have htr := MeasureTheory.integral_sub_right_eq_self
-        (fun y => logDeriv fY y * fY y) (μ := volume) x
+        (fun y ↦ logDeriv fY y * fY y) (μ := volume) x
     rw [htr, integral_logDeriv_density_eq_zero hregY, mul_zero]
   simp only [hinner, integral_zero]
 
@@ -474,35 +474,35 @@ theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
     (hY_bdd : ∃ M : ℝ, ∀ w, |fY w| ≤ M) (hY'_bdd : ∃ M : ℝ, ∀ w, |deriv fY w| ≤ M)
     (hnormX : ∫ x, fX x ∂volume = 1) (hnormY : ∫ x, fY x ∂volume = 1)
     (hpZ : ∀ z, 0 < convDensityAdd fX fY z)
-    (hint_X : ∀ z, Integrable (fun x => deriv fX x * fY (z - x)) volume)
-    (hint_Y : ∀ z, Integrable (fun x => fX x * deriv fY (z - x)) volume)
+    (hint_X : ∀ z, Integrable (fun x ↦ deriv fX x * fY (z - x)) volume)
+    (hint_Y : ∀ z, Integrable (fun x ↦ fX x * deriv fY (z - x)) volume)
     (hcond_int : ∀ z, Integrable (condDensityX fX fY z) volume)
     (hint_W : ∀ z,
-        Integrable (fun x => scoreWeight fX fY lam z x * condDensityX fX fY z x) volume)
+        Integrable (fun x ↦ scoreWeight fX fY lam z x * condDensityX fX fY z x) volume)
     (hint_Wsq : ∀ z,
-        Integrable (fun x => (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x) volume)
+        Integrable (fun x ↦ (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x) volume)
     (hint_inner :
-        Integrable (fun z =>
+        Integrable (fun z ↦
           (∫ x, (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x ∂volume)
             * convDensityAdd fX fY z) volume)
-    (hint_fisherX : Integrable (fun x => (logDeriv fX x) ^ 2 * fX x) volume)
-    (hint_fisherY : Integrable (fun x => (logDeriv fY x) ^ 2 * fY x) volume)
+    (hint_fisherX : Integrable (fun x ↦ (logDeriv fX x) ^ 2 * fX x) volume)
+    (hint_fisherY : Integrable (fun x ↦ (logDeriv fY x) ^ 2 * fY x) volume)
     (hint_fisherZ :
-        Integrable (fun z => (logDeriv (convDensityAdd fX fY) z) ^ 2 * convDensityAdd fX fY z)
+        Integrable (fun z ↦ (logDeriv (convDensityAdd fX fY) z) ^ 2 * convDensityAdd fX fY z)
           volume)
     -- Product-measure integrability of the 3 expanded terms (Tonelli preconditions,
     -- Gaussian-satisfied regularity; none bundles the inequality core).
     (hint_prod1 :
         Integrable
-          (Function.uncurry fun z x => (logDeriv fX x) ^ 2 * fX x * fY (z - x))
+          (Function.uncurry fun z x ↦ (logDeriv fX x) ^ 2 * fX x * fY (z - x))
           (volume.prod volume))
     (hint_prod2 :
         Integrable
-          (Function.uncurry fun z x => (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x))
+          (Function.uncurry fun z x ↦ (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x))
           (volume.prod volume))
     (hint_prod3 :
         Integrable
-          (Function.uncurry fun z x =>
+          (Function.uncurry fun z x ↦
             logDeriv fX x * fX x * (logDeriv fY (z - x) * fY (z - x)))
           (volume.prod volume)) :
     (fisherInfoOfDensity (convDensityAdd fX fY)).toReal
@@ -510,9 +510,9 @@ theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
           + (1 - lam) ^ 2 * (fisherInfoOfDensity fY).toReal := by
   -- atom A converts all three Fisher informations to Bochner integrals.
   rw [fisherInfoOfDensity_toReal_eq_integral (convDensityAdd fX fY)
-        (fun z => (hpZ z).le) hint_fisherZ,
-      fisherInfoOfDensity_toReal_eq_integral fX (fun x => (hregX.pos x).le) hint_fisherX,
-      fisherInfoOfDensity_toReal_eq_integral fY (fun x => (hregY.pos x).le) hint_fisherY]
+        (fun z ↦ (hpZ z).le) hint_fisherZ,
+      fisherInfoOfDensity_toReal_eq_integral fX (fun x ↦ (hregX.pos x).le) hint_fisherX,
+      fisherInfoOfDensity_toReal_eq_integral fY (fun x ↦ (hregY.pos x).le) hint_fisherY]
   -- Reduced goal: `∫ z, (logDeriv p_Z z)²·p_Z z ≤ λ²·∫ s_X²·fX + (1-λ)²·∫ s_Y²·fY`.
   -- (a) S4 pointwise → integrate against `p_Z ≥ 0` (monotone).
   have hmono :
@@ -520,7 +520,7 @@ theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
         ≤ ∫ z, (∫ x, (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x ∂volume)
             * convDensityAdd fX fY z ∂volume := by
     refine integral_mono_ae hint_fisherZ hint_inner
-      (Filter.Eventually.of_forall (fun z => ?_))
+      (Filter.Eventually.of_forall (fun z ↦ ?_))
     have hS4 := score_sq_le_weighted_integral fX fY lam z hregX hregY hX_int hY_int
       hX_bdd hX'_bdd hY_bdd hY'_bdd (hpZ z) (hint_X z) (hint_Y z) (hcond_int z)
       (hint_W z) (hint_Wsq z)
@@ -533,7 +533,7 @@ theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
         = ∫ x, (scoreWeight fX fY lam z x) ^ 2 * (fX x * fY (z - x)) ∂volume := by
     intro z
     rw [← integral_mul_const]
-    refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+    refine integral_congr_ae (Filter.Eventually.of_forall (fun x ↦ ?_))
     show (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x * convDensityAdd fX fY z
       = (scoreWeight fX fY lam z x) ^ 2 * (fX x * fY (z - x))
     unfold condDensityX
@@ -542,10 +542,10 @@ theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
   -- (c)-(d) Expand `W²·fX(x)·fY(z-x)` into 3 terms, split the double integral, evaluate
   -- each term with the Tonelli helpers `convex_fisher_term1/2/cross`.
   -- Abbreviations for the three (uncurried) term integrands.
-  set T1 : ℝ → ℝ → ℝ := fun z x => (logDeriv fX x) ^ 2 * fX x * fY (z - x) with hT1_def
-  set T2 : ℝ → ℝ → ℝ := fun z x => (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x) with hT2_def
+  set T1 : ℝ → ℝ → ℝ := fun z x ↦ (logDeriv fX x) ^ 2 * fX x * fY (z - x) with hT1_def
+  set T2 : ℝ → ℝ → ℝ := fun z x ↦ (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x) with hT2_def
   set T3 : ℝ → ℝ → ℝ :=
-    fun z x => logDeriv fX x * fX x * (logDeriv fY (z - x) * fY (z - x)) with hT3_def
+    fun z x ↦ logDeriv fX x * fX x * (logDeriv fY (z - x) * fY (z - x)) with hT3_def
   -- Pointwise expansion `W²·(fX·fY(z-x)) = λ²·T1 + (1-λ)²·T2 + 2λ(1-λ)·T3`.
   have hexpand : ∀ z x,
       (scoreWeight fX fY lam z x) ^ 2 * (fX x * fY (z - x))
@@ -559,12 +559,12 @@ theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
         = ∫ z, ∫ x,
             (lam ^ 2 * T1 z x + (1 - lam) ^ 2 * T2 z x + 2 * lam * (1 - lam) * T3 z x)
             ∂volume ∂volume := by
-    refine integral_congr_ae (Filter.Eventually.of_forall (fun z => ?_))
-    exact integral_congr_ae (Filter.Eventually.of_forall (fun x => hexpand z x))
+    refine integral_congr_ae (Filter.Eventually.of_forall (fun z ↦ ?_))
+    exact integral_congr_ae (Filter.Eventually.of_forall (fun x ↦ hexpand z x))
   rw [hstep1]
   -- Convert the nested double integrals to product-measure integrals.
   rw [integral_integral
-        (f := fun z x =>
+        (f := fun z x ↦
           lam ^ 2 * T1 z x + (1 - lam) ^ 2 * T2 z x + 2 * lam * (1 - lam) * T3 z x)
         (by
           -- prod-integrability of the sum from the 3 scaled prod hyps.
@@ -574,11 +574,11 @@ theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
           simpa only [Function.uncurry, hT1_def, hT2_def, hT3_def] using
             (h1.add h2).add h3)]
   -- Split the product integral into the 3 scaled pieces.
-  have hi1 : Integrable (fun p : ℝ × ℝ => lam ^ 2 * T1 p.1 p.2) (volume.prod volume) :=
+  have hi1 : Integrable (fun p : ℝ × ℝ ↦ lam ^ 2 * T1 p.1 p.2) (volume.prod volume) :=
     hint_prod1.const_mul (lam ^ 2)
-  have hi2 : Integrable (fun p : ℝ × ℝ => (1 - lam) ^ 2 * T2 p.1 p.2) (volume.prod volume) :=
+  have hi2 : Integrable (fun p : ℝ × ℝ ↦ (1 - lam) ^ 2 * T2 p.1 p.2) (volume.prod volume) :=
     hint_prod2.const_mul ((1 - lam) ^ 2)
-  have hi3 : Integrable (fun p : ℝ × ℝ => 2 * lam * (1 - lam) * T3 p.1 p.2) (volume.prod volume) :=
+  have hi3 : Integrable (fun p : ℝ × ℝ ↦ 2 * lam * (1 - lam) * T3 p.1 p.2) (volume.prod volume) :=
     hint_prod3.const_mul (2 * lam * (1 - lam))
   have hsplit :
       (∫ p : ℝ × ℝ, (lam ^ 2 * T1 p.1 p.2 + (1 - lam) ^ 2 * T2 p.1 p.2
@@ -646,39 +646,39 @@ structure IsBlachmanConvReady (fX fY : ℝ → ℝ) : Prop where
   /-- The convolution density `p_Z = convDensityAdd fX fY` is strictly positive. -/
   pos_pZ : ∀ z, 0 < convDensityAdd fX fY z
   /-- Per-`z` integrability of `deriv fX · fY(z - ·)`. -/
-  int_X : ∀ z, Integrable (fun x => deriv fX x * fY (z - x)) volume
+  int_X : ∀ z, Integrable (fun x ↦ deriv fX x * fY (z - x)) volume
   /-- Per-`z` integrability of `fX · deriv fY(z - ·)`. -/
-  int_Y : ∀ z, Integrable (fun x => fX x * deriv fY (z - x)) volume
+  int_Y : ∀ z, Integrable (fun x ↦ fX x * deriv fY (z - x)) volume
   /-- Per-`z` integrability of the conditional density. -/
   cond_int : ∀ z, Integrable (condDensityX fX fY z) volume
   /-- Per-`(lam, z)` integrability of `scoreWeight · condDensityX`. -/
   int_W : ∀ lam, 0 ≤ lam → lam ≤ 1 → ∀ z,
-      Integrable (fun x => scoreWeight fX fY lam z x * condDensityX fX fY z x) volume
+      Integrable (fun x ↦ scoreWeight fX fY lam z x * condDensityX fX fY z x) volume
   /-- Per-`(lam, z)` integrability of `scoreWeight² · condDensityX`. -/
   int_Wsq : ∀ lam, 0 ≤ lam → lam ≤ 1 → ∀ z,
-      Integrable (fun x => (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x) volume
+      Integrable (fun x ↦ (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x) volume
   /-- Per-`lam` integrability of the inner-weighted convolution density. -/
   int_inner : ∀ lam, 0 ≤ lam → lam ≤ 1 →
-      Integrable (fun z =>
+      Integrable (fun z ↦
         (∫ x, (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x ∂volume)
           * convDensityAdd fX fY z) volume
   /-- Integrability of the `fX`-Fisher integrand. -/
-  int_fisherX : Integrable (fun x => (logDeriv fX x) ^ 2 * fX x) volume
+  int_fisherX : Integrable (fun x ↦ (logDeriv fX x) ^ 2 * fX x) volume
   /-- Integrability of the `fY`-Fisher integrand. -/
-  int_fisherY : Integrable (fun x => (logDeriv fY x) ^ 2 * fY x) volume
+  int_fisherY : Integrable (fun x ↦ (logDeriv fY x) ^ 2 * fY x) volume
   /-- Integrability of the `p_Z`-Fisher integrand. -/
   int_fisherZ : Integrable
-      (fun z => (logDeriv (convDensityAdd fX fY) z) ^ 2 * convDensityAdd fX fY z) volume
+      (fun z ↦ (logDeriv (convDensityAdd fX fY) z) ^ 2 * convDensityAdd fX fY z) volume
   /-- Product-measure integrability of the first expanded Tonelli term. -/
   int_prod1 : Integrable
-      (Function.uncurry fun z x => (logDeriv fX x) ^ 2 * fX x * fY (z - x)) (volume.prod volume)
+      (Function.uncurry fun z x ↦ (logDeriv fX x) ^ 2 * fX x * fY (z - x)) (volume.prod volume)
   /-- Product-measure integrability of the second expanded Tonelli term. -/
   int_prod2 : Integrable
-      (Function.uncurry fun z x => (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x))
+      (Function.uncurry fun z x ↦ (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x))
       (volume.prod volume)
   /-- Product-measure integrability of the cross Tonelli term. -/
   int_prod3 : Integrable
-      (Function.uncurry fun z x =>
+      (Function.uncurry fun z x ↦
         logDeriv fX x * fX x * (logDeriv fY (z - x) * fY (z - x))) (volume.prod volume)
 
 /-- **Symmetry of the regularity bundle** under `X ↔ Y` swap.
@@ -735,50 +735,50 @@ theorem isBlachmanConvReady_symm {fX fY : ℝ → ℝ}
     -- reflection of `h.int_Y z : Integrable (fun x => fX x * deriv fY (z - x))`
     have hrefl := (h.int_Y z).comp_sub_left z
     -- hrefl : Integrable (fun x => fX (z - x) * deriv fY (z - (z - x)))
-    refine hrefl.congr (Filter.Eventually.of_forall fun x => ?_)
+    refine hrefl.congr (Filter.Eventually.of_forall fun x ↦ ?_)
     simp only [sub_sub_cancel]
     rw [mul_comm]
   · -- int_Y : Integrable (fun x => fY x * deriv fX (z - x))
     intro z
     -- reflection of `h.int_X z : Integrable (fun x => deriv fX x * fY (z - x))`
     have hrefl := (h.int_X z).comp_sub_left z
-    refine hrefl.congr (Filter.Eventually.of_forall fun x => ?_)
+    refine hrefl.congr (Filter.Eventually.of_forall fun x ↦ ?_)
     simp only [sub_sub_cancel]
     rw [mul_comm]
   · -- cond_int : Integrable (condDensityX fY fX z)
     intro z
     -- reflection of `h.cond_int z : Integrable (condDensityX fX fY z)`
     have hrefl := (h.cond_int z).comp_sub_left z
-    refine hrefl.congr (Filter.Eventually.of_forall fun x => ?_)
+    refine hrefl.congr (Filter.Eventually.of_forall fun x ↦ ?_)
     simp only [condDensityX, sub_sub_cancel, hcomm]
     rw [mul_comm (fY x)]
   · -- int_W : reflection of `h.int_W (1 - lam) z` (the `lam ↔ 1-lam` swap matches the
     -- X↔Y relabelling under `x ↦ z - x`).
     intro lam hlam0 hlam1 z
     have hrefl := (h.int_W (1 - lam) (by linarith) (by linarith) z).comp_sub_left z
-    refine hrefl.congr (Filter.Eventually.of_forall fun x => ?_)
+    refine hrefl.congr (Filter.Eventually.of_forall fun x ↦ ?_)
     simp only [scoreWeight, condDensityX, sub_sub_cancel, hcomm]
     rw [mul_comm (fY x)]; ring
   · -- int_Wsq : same reflection / `lam ↔ 1-lam` swap as `int_W`.
     intro lam hlam0 hlam1 z
     have hrefl := (h.int_Wsq (1 - lam) (by linarith) (by linarith) z).comp_sub_left z
-    refine hrefl.congr (Filter.Eventually.of_forall fun x => ?_)
+    refine hrefl.congr (Filter.Eventually.of_forall fun x ↦ ?_)
     simp only [scoreWeight, condDensityX, sub_sub_cancel, hcomm]
     rw [mul_comm (fY x)]; ring
   · -- int_inner : the `z`-integrand of `h.int_inner (1 - lam)` is *pointwise* (in `z`) equal
     -- to the target's — the inner `x`-integral is reflection-invariant and `pZ` commutes.
     intro lam hlam0 hlam1
     refine (h.int_inner (1 - lam) (by linarith) (by linarith)).congr
-      (Filter.Eventually.of_forall fun z => ?_)
+      (Filter.Eventually.of_forall fun z ↦ ?_)
     -- inner integral: reflection `x ↦ z - x` on
     -- `g x := scoreWeight fX fY (1-lam) z x ^ 2 * condDensityX fX fY z x`.
     have hrefl := MeasureTheory.integral_sub_left_eq_self
-      (fun x => (scoreWeight fX fY (1 - lam) z x) ^ 2 * condDensityX fX fY z x)
+      (fun x ↦ (scoreWeight fX fY (1 - lam) z x) ^ 2 * condDensityX fX fY z x)
       (μ := volume) z
     -- hrefl : ∫ x, g (z - x) = ∫ x, g x
-    have hpt : (fun x => (scoreWeight fX fY (1 - lam) z (z - x)) ^ 2
+    have hpt : (fun x ↦ (scoreWeight fX fY (1 - lam) z (z - x)) ^ 2
         * condDensityX fX fY z (z - x))
-        = (fun x => (scoreWeight fY fX lam z x) ^ 2 * condDensityX fY fX z x) := by
+        = (fun x ↦ (scoreWeight fY fX lam z x) ^ 2 * condDensityX fY fX z x) := by
       funext x
       simp only [scoreWeight, condDensityX, sub_sub_cancel, hcomm]
       rw [mul_comm (fY x)]; ring
@@ -791,35 +791,35 @@ theorem isBlachmanConvReady_symm {fX fY : ℝ → ℝ}
   · -- int_prod1 : Integrable ((z,x) ↦ (logDeriv fY x)²·fY x · fX(z-x))
     -- = separable A_Y ⊗ fX, sheared
     have hsep : Integrable
-        (fun p : ℝ × ℝ =>
+        (fun p : ℝ × ℝ ↦
           ((logDeriv fY p.1) ^ 2 * fY p.1) * fX p.2) (volume.prod volume) :=
       h.int_fisherY.mul_prod h.int_fX
     have hcomp := (MeasureTheory.measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
       (ν := (volume : Measure ℝ))).integrable_comp_of_integrable hsep
-    refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
+    refine hcomp.congr (Filter.Eventually.of_forall fun p ↦ ?_)
     simp only [Function.comp, Function.uncurry]
   · -- int_prod2 : Integrable ((z,x) ↦ (logDeriv fX(z-x))²·fY x · fX(z-x)) = fY ⊗ C_X, sheared
     have hsep : Integrable
-        (fun p : ℝ × ℝ =>
+        (fun p : ℝ × ℝ ↦
           fY p.1 * ((logDeriv fX p.2) ^ 2 * fX p.2)) (volume.prod volume) :=
       h.int_fY.mul_prod h.int_fisherX
     have hcomp := (MeasureTheory.measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
       (ν := (volume : Measure ℝ))).integrable_comp_of_integrable hsep
-    refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
+    refine hcomp.congr (Filter.Eventually.of_forall fun p ↦ ?_)
     simp only [Function.comp, Function.uncurry]
     ring
   · -- int_prod3 : transport from `h.int_prod3` via the skew map `(z,x) ↦ (z, z-x)`
     -- (volume-preserving: id on first coord, `x ↦ z - x` reflection on second).
     have hT : MeasureTheory.MeasurePreserving
-        (fun p : ℝ × ℝ => (p.1, p.1 - p.2)) (volume.prod volume) (volume.prod volume) :=
+        (fun p : ℝ × ℝ ↦ (p.1, p.1 - p.2)) (volume.prod volume) (volume.prod volume) :=
       MeasureTheory.MeasurePreserving.skew_product
         (MeasureTheory.MeasurePreserving.id volume)
-        (g := fun z x => z - x)
+        (g := fun z x ↦ z - x)
         (by fun_prop)
-        (Filter.Eventually.of_forall fun z =>
+        (Filter.Eventually.of_forall fun z ↦
           ((volume : Measure ℝ).measurePreserving_sub_left z).map_eq)
     have hcomp := hT.integrable_comp_of_integrable h.int_prod3
-    refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
+    refine hcomp.congr (Filter.Eventually.of_forall fun p ↦ ?_)
     -- (h.int_prod3 ∘ T)(z,x) = logDeriv fX(z-x)·fX(z-x)·(logDeriv fY x · fY x)
     -- target int_prod3 (fY fX)(z,x) = logDeriv fY x · fY x · (logDeriv fX(z-x) · fX(z-x))
     simp only [Function.comp, Function.uncurry, sub_sub_cancel]

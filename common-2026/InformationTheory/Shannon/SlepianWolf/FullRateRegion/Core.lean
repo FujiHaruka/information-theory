@@ -27,7 +27,7 @@ noncomputable def swJointTypicalDecoder
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     {n M_X M_Y : ℕ} (ε : ℝ)
     (f_X : (Fin n → α) → Fin M_X) (f_Y : (Fin n → β) → Fin M_Y) :
-    Fin M_X × Fin M_Y → (Fin n → α) × (Fin n → β) := fun ij =>
+    Fin M_X × Fin M_Y → (Fin n → α) × (Fin n → β) := fun ij ↦
   haveI : Decidable (∃! p : (Fin n → α) × (Fin n → β),
       f_X p.1 = ij.1 ∧ f_Y p.2 = ij.2 ∧ p ∈ jointlyTypicalSet μ Xs Ys n ε) :=
     Classical.propDecidable _
@@ -237,7 +237,7 @@ lemma measurableSet_swError_EX
   -- Write as preimage of a finite set under the measurable map
   -- `ω ↦ (jointRV Xs n ω, jointRV Ys n ω)`.
   have hmeas : Measurable
-      (fun ω => (jointRV Xs n ω, jointRV Ys n ω)) :=
+      (fun ω ↦ (jointRV Xs n ω, jointRV Ys n ω)) :=
     (measurable_jointRV Xs hXs n).prodMk (measurable_jointRV Ys hYs n)
   -- The target set lives in `(Fin n → α) × (Fin n → β)` (finite ambient).
   let S : Set ((Fin n → α) × (Fin n → β)) :=
@@ -247,7 +247,7 @@ lemma measurableSet_swError_EX
           ∧ (x', p.2) ∈ jointlyTypicalSet μ Xs Ys n ε }
   have hS_meas : MeasurableSet S := (Set.toFinite S).measurableSet
   have h_eq : swError_EX μ Xs Ys n ε f_X
-      = (fun ω => (jointRV Xs n ω, jointRV Ys n ω)) ⁻¹' S := by
+      = (fun ω ↦ (jointRV Xs n ω, jointRV Ys n ω)) ⁻¹' S := by
     ext ω
     rfl
   rw [h_eq]
@@ -261,7 +261,7 @@ lemma measurableSet_swError_EY
     MeasurableSet (swError_EY μ Xs Ys n ε f_Y) := by
   classical
   have hmeas : Measurable
-      (fun ω => (jointRV Xs n ω, jointRV Ys n ω)) :=
+      (fun ω ↦ (jointRV Xs n ω, jointRV Ys n ω)) :=
     (measurable_jointRV Xs hXs n).prodMk (measurable_jointRV Ys hYs n)
   let S : Set ((Fin n → α) × (Fin n → β)) :=
     { p | ∃ y' : Fin n → β,
@@ -270,7 +270,7 @@ lemma measurableSet_swError_EY
           ∧ (p.1, y') ∈ jointlyTypicalSet μ Xs Ys n ε }
   have hS_meas : MeasurableSet S := (Set.toFinite S).measurableSet
   have h_eq : swError_EY μ Xs Ys n ε f_Y
-      = (fun ω => (jointRV Xs n ω, jointRV Ys n ω)) ⁻¹' S := by
+      = (fun ω ↦ (jointRV Xs n ω, jointRV Ys n ω)) ⁻¹' S := by
     ext ω
     rfl
   rw [h_eq]
@@ -288,22 +288,22 @@ theorem swError_E0_prob_tendsto_zero
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindepX : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindepX : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
-    (hindepY : Pairwise fun i j => Ys i ⟂ᵢ[μ] Ys j)
+    (hindepY : Pairwise fun i j ↦ Ys i ⟂ᵢ[μ] Ys j)
     (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
-    (hindepZ : Pairwise fun i j =>
+    (hindepZ : Pairwise fun i j ↦
       jointSequence Xs Ys i ⟂ᵢ[μ] jointSequence Xs Ys j)
     (hidentZ : ∀ i,
       IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
     {ε : ℝ} (hε : 0 < ε) :
     Filter.Tendsto
-      (fun n : ℕ => μ.real (swError_E0 μ Xs Ys n ε))
+      (fun n : ℕ ↦ μ.real (swError_E0 μ Xs Ys n ε))
       Filter.atTop (𝓝 0) := by
   classical
   -- The "good" event: `(X^n ω, Y^n ω) ∈ jointlyTypicalSet`. Tends-to-1 by AEP.
   have h_good : Filter.Tendsto
-      (fun n : ℕ => μ
+      (fun n : ℕ ↦ μ
         {ω | (jointRV Xs n ω, jointRV Ys n ω) ∈ jointlyTypicalSet μ Xs Ys n ε})
       Filter.atTop (𝓝 1) :=
     jointlyTypicalSet_prob_tendsto_one μ Xs Ys hXs hYs
@@ -314,7 +314,7 @@ theorem swError_E0_prob_tendsto_zero
         {ω | (jointRV Xs n ω, jointRV Ys n ω) ∈ jointlyTypicalSet μ Xs Ys n ε} := by
     intro n
     have h_meas_pair : Measurable
-        (fun ω => (jointRV Xs n ω, jointRV Ys n ω)) :=
+        (fun ω ↦ (jointRV Xs n ω, jointRV Ys n ω)) :=
       (measurable_jointRV Xs hXs n).prodMk (measurable_jointRV Ys hYs n)
     exact h_meas_pair (measurableSet_jointlyTypicalSet _ _ _ _ _)
   -- swError_E0 is the complement of the good event.
@@ -330,14 +330,14 @@ theorem swError_E0_prob_tendsto_zero
     rw [h_eq, probReal_compl_eq_one_sub (h_meas_good n)]
   -- Lift `μ` tendsto to `μ.real` tendsto.
   have h_good_real : Filter.Tendsto
-      (fun n : ℕ => μ.real
+      (fun n : ℕ ↦ μ.real
         {ω | (jointRV Xs n ω, jointRV Ys n ω) ∈ jointlyTypicalSet μ Xs Ys n ε})
       Filter.atTop (𝓝 1) := by
     have h_step := (ENNReal.tendsto_toReal (by simp : (1 : ℝ≥0∞) ≠ ∞)).comp h_good
     simpa [Measure.real] using h_step
   -- 1 - μ.real (good) → 1 - 1 = 0.
-  refine Filter.Tendsto.congr (fun n => (h_compl_id n).symm) ?_
-  have h_const : Filter.Tendsto (fun _ : ℕ => (1 : ℝ)) Filter.atTop (𝓝 1) :=
+  refine Filter.Tendsto.congr (fun n ↦ (h_compl_id n).symm) ?_
+  have h_const : Filter.Tendsto (fun _ : ℕ ↦ (1 : ℝ)) Filter.atTop (𝓝 1) :=
     tendsto_const_nhds
   have := h_const.sub h_good_real
   simpa using this

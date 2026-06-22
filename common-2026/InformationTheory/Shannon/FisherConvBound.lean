@@ -44,36 +44,36 @@ theorem integral_sq_mul_gaussianPDFReal {s : ℝ} (hs : 0 < s) :
   have hv_ne : (⟨s, hs.le⟩ : ℝ≥0) ≠ 0 := by
     intro h; exact hs.ne' (congrArg NNReal.toReal h)
   -- Var[id; 𝒩(0,s)] = ∫ (ω - 0)² ∂𝒩(0,s) = ∫ ω² ∂𝒩(0,s) = (s : ℝ).
-  have hvar : Var[fun x => x; gaussianReal 0 ⟨s, hs.le⟩] = ((⟨s, hs.le⟩ : ℝ≥0) : ℝ) :=
+  have hvar : Var[fun x ↦ x; gaussianReal 0 ⟨s, hs.le⟩] = ((⟨s, hs.le⟩ : ℝ≥0) : ℝ) :=
     variance_fun_id_gaussianReal (μ := 0) (v := ⟨s, hs.le⟩)
   rw [variance_eq_integral measurable_id'.aemeasurable, integral_id_gaussianReal] at hvar
   -- chain: `∫ u² g_s u du = ∫ u² ∂𝒩 = ∫ (u-0)² ∂𝒩 = s`.
   calc ∫ u, u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u ∂volume
       = ∫ u, gaussianPDFReal 0 ⟨s, hs.le⟩ u • u ^ 2 ∂volume := by
-        refine integral_congr_ae (Filter.Eventually.of_forall fun u => ?_)
+        refine integral_congr_ae (Filter.Eventually.of_forall fun u ↦ ?_)
         simp [smul_eq_mul, mul_comm]
     _ = ∫ u, u ^ 2 ∂(gaussianReal 0 ⟨s, hs.le⟩) :=
-        (integral_gaussianReal_eq_integral_smul (μ := 0) (f := fun u => u ^ 2) hv_ne).symm
+        (integral_gaussianReal_eq_integral_smul (μ := 0) (f := fun u ↦ u ^ 2) hv_ne).symm
     _ = ∫ u, (u - 0) ^ 2 ∂(gaussianReal 0 ⟨s, hs.le⟩) := by simp
     _ = s := by rw [hvar]
 
 /-- `u ↦ u ^ 2 * gaussianPDFReal 0 ⟨s, _⟩ u` is integrable over `volume`.
 @audit:ok -/
 theorem integrable_sq_mul_gaussianPDFReal {s : ℝ} (hs : 0 < s) :
-    Integrable (fun u => u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u) volume := by
+    Integrable (fun u ↦ u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u) volume := by
   have hv_ne : (⟨s, hs.le⟩ : ℝ≥0) ≠ 0 := by
     intro h; exact hs.ne' (congrArg NNReal.toReal h)
   -- `u² = id² ∈ L²(gaussianReal)`, hence integrable under `gaussianReal`.
   have hmem : MemLp (id : ℝ → ℝ) 2 (gaussianReal 0 ⟨s, hs.le⟩) := memLp_id_gaussianReal 2
-  have hsq_int : Integrable (fun u => u ^ 2) (gaussianReal 0 ⟨s, hs.le⟩) := by
+  have hsq_int : Integrable (fun u ↦ u ^ 2) (gaussianReal 0 ⟨s, hs.le⟩) := by
     have := (memLp_two_iff_integrable_sq (μ := gaussianReal 0 ⟨s, hs.le⟩)
       (f := (id : ℝ → ℝ)) measurable_id.aestronglyMeasurable).mp hmem
     simpa using this
   -- transport to `volume` via `gaussianReal = volume.withDensity gaussianPDF`.
   rw [gaussianReal_of_var_ne_zero _ hv_ne] at hsq_int
   rw [integrable_withDensity_iff (measurable_gaussianPDF _ _)
-    (ae_of_all _ fun _ => gaussianPDF_lt_top)] at hsq_int
-  refine hsq_int.congr (Filter.Eventually.of_forall fun u => ?_)
+    (ae_of_all _ fun _ ↦ gaussianPDF_lt_top)] at hsq_int
+  refine hsq_int.congr (Filter.Eventually.of_forall fun u ↦ ?_)
   simp only [gaussianPDF, ENNReal.toReal_ofReal (gaussianPDFReal_nonneg _ _ _)]
 
 /-- `y ↦ (x - y) ^ 2 * (pX y * g_s(x - y))` is integrable over `volume` for each `x`.
@@ -81,7 +81,7 @@ theorem integrable_sq_mul_gaussianPDFReal {s : ℝ} (hs : 0 < s) :
 theorem convSecondMoment_integrand_integrable
     (pX : ℝ → ℝ) (_hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)
     {s : ℝ} (hs : 0 < s) (x : ℝ) :
-    Integrable (fun y => (x - y) ^ 2 * (pX y * gaussianPDFReal 0 ⟨s, hs.le⟩ (x - y))) volume := by
+    Integrable (fun y ↦ (x - y) ^ 2 * (pX y * gaussianPDFReal 0 ⟨s, hs.le⟩ (x - y))) volume := by
   -- global bound for `u ↦ u² · g_s(u)`:
   --   `u² exp(-u²/(2s)) = 2s·(u²/(2s))·exp(-u²/(2s)) ≤ 2s·exp(-1)`.
   set C : ℝ := (Real.sqrt (2 * Real.pi * (⟨s, hs.le⟩ : ℝ≥0)))⁻¹ * (2 * s * Real.exp (-1)) with hC
@@ -108,18 +108,18 @@ theorem convSecondMoment_integrand_integrable
     rw [heq]
     exact mul_le_mul_of_nonneg_left hexp h2s.le
   -- now: integrand = `pX y · ((x-y)² · g_s(x-y))`, bounded factor measurable + ≤ C.
-  have hgmeas : Measurable (fun y => (x - y) ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ (x - y)) := by
+  have hgmeas : Measurable (fun y ↦ (x - y) ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ (x - y)) := by
     refine (Measurable.pow_const (measurable_const.sub measurable_id) 2).mul ?_
     exact (measurable_gaussianPDFReal 0 ⟨s, hs.le⟩).comp (measurable_const.sub measurable_id)
   have hint : Integrable
-      (fun y => pX y * ((x - y) ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ (x - y))) volume := by
+      (fun y ↦ pX y * ((x - y) ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ (x - y))) volume := by
     refine hpX_int.mul_bdd (c := C) hgmeas.aestronglyMeasurable ?_
-    refine Filter.Eventually.of_forall (fun y => ?_)
+    refine Filter.Eventually.of_forall (fun y ↦ ?_)
     have hnn : (0 : ℝ) ≤ (x - y) ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ (x - y) :=
       mul_nonneg (sq_nonneg _) (gaussianPDFReal_nonneg 0 _ _)
     rw [Real.norm_eq_abs, abs_of_nonneg hnn]
     exact hbnd (x - y)
-  refine (integrable_congr (Filter.Eventually.of_forall fun y => ?_)).mpr hint
+  refine (integrable_congr (Filter.Eventually.of_forall fun y ↦ ?_)).mpr hint
   ring
 
 /-- Pointwise Cauchy-Schwarz: `(∫ pX y (x-y) g_s(x-y))² ≤ p_s(x) · ∫ pX y (x-y)² g_s(x-y)`.
@@ -132,26 +132,26 @@ theorem convScore_sq_le_pointwise
         * (∫ y, (x - y) ^ 2 * (pX y * gaussianPDFReal 0 ⟨s, hs.le⟩ (x - y)) ∂volume) := by
   set g : ℝ → ℝ := gaussianPDFReal 0 ⟨s, hs.le⟩ with hg_def
   -- nonneg integrand `w y := pX y · g(x-y) ≥ 0`.
-  have hw_nn : ∀ y, 0 ≤ pX y * g (x - y) := fun y =>
+  have hw_nn : ∀ y, 0 ≤ pX y * g (x - y) := fun y ↦
     mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _)
   -- Hölder functions `a := |x-·|·√w`, `b := √w` (both nonneg).
-  set a : ℝ → ℝ := fun y => |x - y| * Real.sqrt (pX y * g (x - y)) with ha_def
-  set b : ℝ → ℝ := fun y => Real.sqrt (pX y * g (x - y)) with hb_def
+  set a : ℝ → ℝ := fun y ↦ |x - y| * Real.sqrt (pX y * g (x - y)) with ha_def
+  set b : ℝ → ℝ := fun y ↦ Real.sqrt (pX y * g (x - y)) with hb_def
   have ha_nn : 0 ≤ᵐ[volume] a :=
-    Filter.Eventually.of_forall fun y => mul_nonneg (abs_nonneg _) (Real.sqrt_nonneg _)
+    Filter.Eventually.of_forall fun y ↦ mul_nonneg (abs_nonneg _) (Real.sqrt_nonneg _)
   have hb_nn : 0 ≤ᵐ[volume] b :=
-    Filter.Eventually.of_forall fun y => Real.sqrt_nonneg _
+    Filter.Eventually.of_forall fun y ↦ Real.sqrt_nonneg _
   -- measurability of `w` and its sqrt.
-  have hw_meas : Measurable (fun y => pX y * g (x - y)) :=
+  have hw_meas : Measurable (fun y ↦ pX y * g (x - y)) :=
     hpX_meas.mul ((measurable_gaussianPDFReal 0 ⟨s, hs.le⟩).comp
       (measurable_const.sub measurable_id))
   -- integrability of `w := pX(x-·)·g`
   --   (= the convolution integrand, `pX` integrable × bounded Gaussian).
-  have hw_int : Integrable (fun y => pX y * g (x - y)) volume := by
+  have hw_int : Integrable (fun y ↦ pX y * g (x - y)) volume := by
     refine hpX_int.mul_bdd (c := (Real.sqrt (2 * Real.pi * (⟨s, hs.le⟩ : ℝ≥0)))⁻¹) ?_ ?_
     · exact ((measurable_gaussianPDFReal 0 ⟨s, hs.le⟩).comp
         (measurable_const.sub measurable_id)).aestronglyMeasurable
-    · refine Filter.Eventually.of_forall (fun y => ?_)
+    · refine Filter.Eventually.of_forall (fun y ↦ ?_)
       rw [Real.norm_eq_abs, abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (x - y))]
       -- `g_s(u) = (√(2πs))⁻¹·exp(...) ≤ (√(2πs))⁻¹` since `exp(neg) ≤ 1`.
       rw [gaussianPDFReal]
@@ -170,9 +170,9 @@ theorem convScore_sq_le_pointwise
     intro y
     simp only [hb_def, Real.sq_sqrt (hw_nn y)]
   -- L² memberships.
-  have hb_int : Integrable (fun y => b y ^ 2) volume :=
+  have hb_int : Integrable (fun y ↦ b y ^ 2) volume :=
     (integrable_congr (Filter.Eventually.of_forall hb_sq)).mpr hw_int
-  have ha_int : Integrable (fun y => a y ^ 2) volume := by
+  have ha_int : Integrable (fun y ↦ a y ^ 2) volume := by
     refine (integrable_congr (Filter.Eventually.of_forall ha_sq)).mpr ?_
     simpa [hg_def] using convSecondMoment_integrand_integrable pX hpX_meas hpX_int hs x
   have ha_memLp : MemLp a (ENNReal.ofReal 2) volume := by
@@ -202,7 +202,7 @@ theorem convScore_sq_le_pointwise
   set I0 : ℝ := ∫ y, pX y * g (x - y) ∂volume with hI0
   set I2 : ℝ := ∫ y, (x - y) ^ 2 * (pX y * g (x - y)) ∂volume with hI2
   have hI0_nn : 0 ≤ I0 := integral_nonneg hw_nn
-  have hI2_nn : 0 ≤ I2 := integral_nonneg fun y => mul_nonneg (sq_nonneg _) (hw_nn y)
+  have hI2_nn : 0 ≤ I2 := integral_nonneg fun y ↦ mul_nonneg (sq_nonneg _) (hw_nn y)
   -- `hholder : ∫ |x-y|·w ≤ I2^(1/2)·I0^(1/2)`.
   -- LHS² ≥ (∫ pX(x-y)g)² and RHS² = I2·I0.
   have hconv_eq : convDensityAdd pX g x = I0 := by
@@ -211,7 +211,7 @@ theorem convScore_sq_le_pointwise
   have habs_le : |∫ y, pX y * (x - y) * g (x - y) ∂volume|
       ≤ ∫ y, |x - y| * (pX y * g (x - y)) ∂volume := by
     refine (abs_integral_le_integral_abs).trans (le_of_eq ?_)
-    refine integral_congr_ae (Filter.Eventually.of_forall fun y => ?_)
+    refine integral_congr_ae (Filter.Eventually.of_forall fun y ↦ ?_)
     simp only []
     rw [show pX y * (x - y) * g (x - y) = (x - y) * (pX y * g (x - y)) from by ring,
       abs_mul, abs_of_nonneg (hw_nn y)]
@@ -224,7 +224,7 @@ theorem convScore_sq_le_pointwise
   -- `(∫|x-y|·w)² ≤ (I2^½·I0^½)² = I2·I0`
   have hRHS : (∫ y, |x - y| * (pX y * g (x - y)) ∂volume) ^ 2 ≤ I2 * I0 := by
     have hint_nn : 0 ≤ ∫ y, |x - y| * (pX y * g (x - y)) ∂volume :=
-      integral_nonneg fun y => mul_nonneg (abs_nonneg _) (hw_nn y)
+      integral_nonneg fun y ↦ mul_nonneg (abs_nonneg _) (hw_nn y)
     calc (∫ y, |x - y| * (pX y * g (x - y)) ∂volume) ^ 2
         ≤ (I2 ^ (1/2 : ℝ) * I0 ^ (1/2 : ℝ)) ^ 2 := by
           exact pow_le_pow_left₀ hint_nn hholder 2
@@ -241,11 +241,11 @@ theorem convDensityAdd_deriv_eq
     (pX : ℝ → ℝ) (hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)
     {s : ℝ} (hs : 0 < s) :
     deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩))
-      = fun ζ : ℝ => ∫ y, pX y * (gaussianPDFReal 0 ⟨s, hs.le⟩ (ζ - y)
+      = fun ζ : ℝ ↦ ∫ y, pX y * (gaussianPDFReal 0 ⟨s, hs.le⟩ (ζ - y)
           * (-((ζ - y) / s))) ∂volume := by
   -- kernel measurability + global bound for `kernel·(-(·/s))` (= `g_s(u)·(-u/s)`).
-  have hker_meas : Measurable (fun u : ℝ => heatFlow_density_heat_equation_kernel s u) := by
-    have : Continuous (fun u : ℝ => heatFlow_density_heat_equation_kernel s u) := by
+  have hker_meas : Measurable (fun u : ℝ ↦ heatFlow_density_heat_equation_kernel s u) := by
+    have : Continuous (fun u : ℝ ↦ heatFlow_density_heat_equation_kernel s u) := by
       unfold heatFlow_density_heat_equation_kernel; fun_prop
     exact this.measurable
   -- global bound `M1` for `|g_s(u)·(-u/s)|`: `(√2πs)⁻¹·(|u|exp(-u²/2s))/s`,
@@ -286,7 +286,7 @@ theorem convDensityAdd_deriv_eq
   -- build the 5 deriv1 hyps in kernel form.
   have hF1_meas : ∀ ξ : ℝ,
       AEStronglyMeasurable
-        (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume := fun ξ =>
+        (fun y ↦ pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume := fun ξ ↦
     (hpX_meas.aestronglyMeasurable).mul
       ((hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable)
   have hker_le : ∀ v : ℝ, |heatFlow_density_heat_equation_kernel s v|
@@ -297,13 +297,13 @@ theorem convDensityAdd_deriv_eq
     refine mul_le_of_le_one_right (by positivity) (Real.exp_le_one_iff.mpr ?_)
     rw [neg_div]; exact neg_nonpos.mpr (by positivity)
   have hF1_int : ∀ ξ : ℝ,
-      Integrable (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume := by
+      Integrable (fun y ↦ pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume := by
     intro ξ
     refine hpX_int.mul_bdd (c := (Real.sqrt (2 * Real.pi * s))⁻¹) ?_ ?_
     · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-    · exact Filter.Eventually.of_forall (fun y => by rw [Real.norm_eq_abs]; exact hker_le (ξ - y))
+    · exact Filter.Eventually.of_forall (fun y ↦ by rw [Real.norm_eq_abs]; exact hker_le (ξ - y))
   have hF1'_meas : ∀ ξ : ℝ, AEStronglyMeasurable
-      (fun y => pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+      (fun y ↦ pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
         * (-((ξ - y) / s)))) volume := by
     intro ξ
     refine (hpX_meas.aestronglyMeasurable).mul (AEStronglyMeasurable.mul ?_ ?_)
@@ -311,13 +311,13 @@ theorem convDensityAdd_deriv_eq
     · exact ((measurable_const.sub measurable_id).div_const s).neg.aestronglyMeasurable
   have hb1 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
       ‖pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-((ξ - y) / s)))‖
-        ≤ (fun y => |pX y| * M1) y := by
-    refine Filter.Eventually.of_forall (fun y ξ _ => ?_)
+        ≤ (fun y ↦ |pX y| * M1) y := by
+    refine Filter.Eventually.of_forall (fun y ξ _ ↦ ?_)
     rw [norm_mul, Real.norm_eq_abs]
     exact mul_le_mul_of_nonneg_left (hker_d1_bnd (ξ - y)) (abs_nonneg _)
-  have hb1_int : Integrable (fun y => |pX y| * M1) volume := hpX_int.abs.mul_const _
+  have hb1_int : Integrable (fun y ↦ |pX y| * M1) volume := hpX_int.abs.mul_const _
   exact InformationTheory.Shannon.EPIConvDensitySecondDeriv.convDensityAdd_deriv1_gaussian_eq
-    pX hs (fun y => |pX y| * M1) hb1_int hF1_meas hF1_int hF1'_meas hb1
+    pX hs (fun y ↦ |pX y| * M1) hb1_int hF1_meas hF1_int hF1'_meas hb1
 
 /-- `(logDeriv p_s x) ^ 2 * p_s x ≤ (1/s²) * ∫ (x-y)² * (pX y * g_s(x-y)) ∂volume`.
 @audit:ok -/
@@ -341,7 +341,7 @@ theorem convLogDeriv_sq_mul_le
   have hscore : ∫ y, pX y * (g (x - y) * (-((x - y) / s))) ∂volume
       = -(1 / s) * ∫ y, pX y * (x - y) * g (x - y) ∂volume := by
     rw [← integral_const_mul]
-    refine integral_congr_ae (Filter.Eventually.of_forall fun y => ?_)
+    refine integral_congr_ae (Filter.Eventually.of_forall fun y ↦ ?_)
     field_simp
   -- `(deriv p_s x)² = (1/s²)·(∫ pX (x-y) g)²`.
   have hderiv_sq : (deriv p_s x) ^ 2
@@ -376,19 +376,19 @@ theorem gaussianConv_fisher_le_inv_var
       ≤ ENNReal.ofReal (1 / s) := by
   set g : ℝ → ℝ := gaussianPDFReal 0 ⟨s, hs.le⟩ with hg_def
   set p_s : ℝ → ℝ := convDensityAdd pX g with hp_def
-  have hps_nn : ∀ x, 0 ≤ p_s x := fun x =>
-    integral_nonneg fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _)
+  have hps_nn : ∀ x, 0 ≤ p_s x := fun x ↦
+    integral_nonneg fun y ↦ mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _)
   -- second-moment integrand `K x y := (x-y)²·(pX y · g(x-y)) ≥ 0`.
-  set K : ℝ → ℝ → ℝ := fun x y => (x - y) ^ 2 * (pX y * g (x - y)) with hK_def
-  have hK_nn : ∀ x y, 0 ≤ K x y := fun x y =>
+  set K : ℝ → ℝ → ℝ := fun x y ↦ (x - y) ^ 2 * (pX y * g (x - y)) with hK_def
+  have hK_nn : ∀ x y, 0 ≤ K x y := fun x y ↦
     mul_nonneg (sq_nonneg _) (mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _))
-  have hK_int : ∀ x, Integrable (fun y => K x y) volume := fun x => by
+  have hK_int : ∀ x, Integrable (fun y ↦ K x y) volume := fun x ↦ by
     simpa [hK_def, hg_def] using convSecondMoment_integrand_integrable pX hpX_meas hpX_int hs x
   -- Step 3: merge the Fisher lintegrand to `ofReal((logDeriv)²·p_s)`.
   have hmerge : fisherInfoOfDensity p_s
       = ∫⁻ x, ENNReal.ofReal ((logDeriv p_s x) ^ 2 * p_s x) ∂volume := by
     unfold fisherInfoOfDensity
-    refine lintegral_congr fun x => ?_
+    refine lintegral_congr fun x ↦ ?_
     rw [← ENNReal.ofReal_mul (sq_nonneg _)]
   rw [hmerge]
   -- Step 3 bound: pointwise `≤ ofReal((1/s²)·∫ K x y dy)`.
@@ -406,9 +406,9 @@ theorem gaussianConv_fisher_le_inv_var
     intro x
     rw [ENNReal.ofReal_mul (by positivity),
       ofReal_integral_eq_lintegral_ofReal (hK_int x)
-        (Filter.Eventually.of_forall fun y => hK_nn x y)]
+        (Filter.Eventually.of_forall fun y ↦ hK_nn x y)]
   -- measurability of `(x,y) ↦ ofReal (K x y)` and the inner integral.
-  have hKofReal_meas : Measurable (fun p : ℝ × ℝ => ENNReal.ofReal (K p.1 p.2)) := by
+  have hKofReal_meas : Measurable (fun p : ℝ × ℝ ↦ ENNReal.ofReal (K p.1 p.2)) := by
     refine ENNReal.measurable_ofReal.comp ?_
     refine ((measurable_fst.sub measurable_snd).pow_const 2).mul ?_
     exact (hpX_meas.comp measurable_snd).mul
@@ -421,32 +421,32 @@ theorem gaussianConv_fisher_le_inv_var
     lintegral_lintegral_swap hKofReal_meas.aemeasurable
   rw [hswap]
   -- shifted Gaussian-moment integrability: `x ↦ (x-y)²·g(x-y)` is integrable (for each y).
-  have hmom_int : Integrable (fun u => u ^ 2 * g u) volume := by
+  have hmom_int : Integrable (fun u ↦ u ^ 2 * g u) volume := by
     simpa [hg_def] using integrable_sq_mul_gaussianPDFReal hs
-  have hshift_int : ∀ y, Integrable (fun x => (x - y) ^ 2 * g (x - y)) volume := fun y =>
+  have hshift_int : ∀ y, Integrable (fun x ↦ (x - y) ^ 2 * g (x - y)) volume := fun y ↦
     hmom_int.comp_sub_right y
   -- shifted Gaussian moment value: `∫_x (x-y)²·g(x-y) = ∫ u²·g(u) = s`.
   have hshift_val : ∀ y, (∫ x, (x - y) ^ 2 * g (x - y) ∂volume) = s := by
     intro y
-    rw [integral_sub_right_eq_self (fun u => u ^ 2 * g u) y]
+    rw [integral_sub_right_eq_self (fun u ↦ u ^ 2 * g u) y]
     simpa [hg_def] using integral_sq_mul_gaussianPDFReal hs
   -- inner moment: `∫⁻ x ofReal(K x y) = ofReal(pX y · s)`.
   have hinner : ∀ y, (∫⁻ x, ENNReal.ofReal (K x y) ∂volume) = ENNReal.ofReal (pX y * s) := by
     intro y
     -- `K x y = pX y · ((x-y)²·g(x-y))`, so `∫_x K x y = pX y · ∫_x (x-y)²g(x-y) = pX y · s`.
-    have hxint : Integrable (fun x => K x y) volume := by
-      refine ((hshift_int y).const_mul (pX y)).congr (Filter.Eventually.of_forall fun x => ?_)
+    have hxint : Integrable (fun x ↦ K x y) volume := by
+      refine ((hshift_int y).const_mul (pX y)).congr (Filter.Eventually.of_forall fun x ↦ ?_)
       simp only [hK_def]; ring
     rw [← ofReal_integral_eq_lintegral_ofReal hxint
-        (Filter.Eventually.of_forall fun x => hK_nn x y)]
+        (Filter.Eventually.of_forall fun x ↦ hK_nn x y)]
     congr 1
-    rw [show (fun x => K x y) = (fun x => pX y * ((x - y) ^ 2 * g (x - y))) from by
+    rw [show (fun x ↦ K x y) = (fun x ↦ pX y * ((x - y) ^ 2 * g (x - y))) from by
       funext x; simp only [hK_def]; ring, integral_const_mul, hshift_val y]
   simp_rw [hinner]
   -- `∫⁻ y ofReal(pX y · s) = ofReal(∫ pX·s) = ofReal(s·∫pX) = ofReal s` (hpX_mass).
   have houter : (∫⁻ y, ENNReal.ofReal (pX y * s) ∂volume) = ENNReal.ofReal s := by
     rw [← ofReal_integral_eq_lintegral_ofReal (hpX_int.mul_const s)
-      (Filter.Eventually.of_forall fun y => mul_nonneg (hpX_nn y) hs.le)]
+      (Filter.Eventually.of_forall fun y ↦ mul_nonneg (hpX_nn y) hs.le)]
     congr 1
     rw [integral_mul_const, hpX_mass, one_mul]
   rw [houter]

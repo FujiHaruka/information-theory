@@ -144,12 +144,12 @@ theorem cp_log_cp_le_reconcile_cases (cR cp bR n K : ℝ)
       exact cp_log_cp_le_reconcile cR cp bR n K hcRge hcount hbR_nn hbA hcp_le_n hge
 
 theorem ziv_cp_div_tendsto_zero (cp : ℕ → ℝ) (hcp_nn : ∀ n, 0 ≤ cp n)
-    (hBigO : cp =O[Filter.atTop] (fun n : ℕ => (n : ℝ) / Real.log (n : ℝ))) :
-    Filter.Tendsto (fun n => cp n / (n : ℝ)) Filter.atTop (𝓝 0) := by
+    (hBigO : cp =O[Filter.atTop] (fun n : ℕ ↦ (n : ℝ) / Real.log (n : ℝ))) :
+    Filter.Tendsto (fun n ↦ cp n / (n : ℝ)) Filter.atTop (𝓝 0) := by
   obtain ⟨C, hCb⟩ := hBigO.bound
-  have hub : Filter.Tendsto (fun n : ℕ => C * (Real.log (n : ℝ))⁻¹)
+  have hub : Filter.Tendsto (fun n : ℕ ↦ C * (Real.log (n : ℝ))⁻¹)
       Filter.atTop (𝓝 0) := by
-    have h1 : Filter.Tendsto (fun n : ℕ => Real.log (n : ℝ))
+    have h1 : Filter.Tendsto (fun n : ℕ ↦ Real.log (n : ℝ))
         Filter.atTop Filter.atTop :=
       Real.tendsto_log_atTop.comp tendsto_natCast_atTop_atTop
     simpa using (tendsto_inv_atTop_zero.comp h1).const_mul C
@@ -170,26 +170,26 @@ theorem ziv_cp_div_tendsto_zero (cp : ℕ → ℝ) (hcp_nn : ∀ n, 0 ≤ cp n)
           div_self hnpos.ne', one_div]
 
 theorem ziv_error_seq_tendsto_zero (cp : ℕ → ℝ) (k : ℕ) (La L : ℝ)
-    (hcp_div : Filter.Tendsto (fun n => cp n / (n : ℝ)) Filter.atTop (𝓝 0)) :
+    (hcp_div : Filter.Tendsto (fun n ↦ cp n / (n : ℝ)) Filter.atTop (𝓝 0)) :
     Filter.Tendsto
-      (fun n : ℕ =>
+      (fun n : ℕ ↦
         (2 * (n : ℝ) * Real.sqrt (cp n / (n : ℝ)) + cp n + cp n * ((k : ℝ) * La)
           + ((k : ℝ) + 1) + ((k : ℝ) + 1) * Real.log (n : ℝ)
           + (cp n * Real.log 2 + cp n * (L + 2))) / (Real.log 2 * (n : ℝ)))
       Filter.atTop (𝓝 0) := by
-  have hsqrt : Filter.Tendsto (fun n : ℕ => Real.sqrt (cp n / (n : ℝ)))
+  have hsqrt : Filter.Tendsto (fun n : ℕ ↦ Real.sqrt (cp n / (n : ℝ)))
       Filter.atTop (𝓝 0) := by
     have h := (Real.continuous_sqrt.tendsto 0).comp hcp_div
     simp only [Function.comp_def, Real.sqrt_zero] at h
     exact h
-  have hinv : Filter.Tendsto (fun n : ℕ => (1 : ℝ) / (n : ℝ))
+  have hinv : Filter.Tendsto (fun n : ℕ ↦ (1 : ℝ) / (n : ℝ))
       Filter.atTop (𝓝 0) := tendsto_one_div_atTop_nhds_zero_nat
-  have hlogn : Filter.Tendsto (fun n : ℕ => Real.log (n : ℝ) / (n : ℝ))
+  have hlogn : Filter.Tendsto (fun n : ℕ ↦ Real.log (n : ℝ) / (n : ℝ))
       Filter.atTop (𝓝 0) := by
-    have hR : Filter.Tendsto (fun x : ℝ => Real.log x ^ 1 / (1 * x + 0))
+    have hR : Filter.Tendsto (fun x : ℝ ↦ Real.log x ^ 1 / (1 * x + 0))
         Filter.atTop (𝓝 0) := Real.tendsto_pow_log_div_mul_add_atTop 1 0 1 (by norm_num)
     simpa using hR.comp tendsto_natCast_atTop_atTop
-  set g : ℕ → ℝ := fun n =>
+  set g : ℕ → ℝ := fun n ↦
     (2 / Real.log 2) * Real.sqrt (cp n / (n : ℝ))
     + (1 / Real.log 2) * (cp n / (n : ℝ))
     + ((k : ℝ) * La / Real.log 2) * (cp n / (n : ℝ))
@@ -225,7 +225,7 @@ theorem ziv_aseventual_le_condEntropyTail_bits
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) (k : ℕ) :
     ∀ᵐ ω ∂μ,
       Filter.limsup
-        (fun n => (lz78GreedyEncodingLength n
+        (fun n ↦ (lz78GreedyEncodingLength n
             (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ))
         Filter.atTop
       ≤ conditionalEntropyTail μ p.toStationaryProcess k / Real.log 2 := by
@@ -240,32 +240,32 @@ theorem ziv_aseventual_le_condEntropyTail_bits
     linarith)
   have hL_nn : (0 : ℝ) ≤ L := by rw [hL]; positivity
   filter_upwards [negLogQk_div_tendsto_condEntropyTail μ p k,
-      (MeasureTheory.ae_all_iff.2 (fun n => ziv_achievability_composition μ q k n))]
+      (MeasureTheory.ae_all_iff.2 (fun n ↦ ziv_achievability_composition μ q k n))]
     with ω h_aep h_comp
   -- Abbreviations: the genuine distinct phrase count `cp n`, the LZ78 bit-rate
   -- `T n`, and the deterministic error sequence `E n`.
   set cp : ℕ → ℝ :=
-    fun n => ((lz78PhraseStrings (List.ofFn (q.blockRV n ω))).length : ℝ) with hcp
+    fun n ↦ ((lz78PhraseStrings (List.ofFn (q.blockRV n ω))).length : ℝ) with hcp
   set T : ℕ → ℝ :=
-    fun n => (lz78GreedyEncodingLength n (q.blockRV n ω) : ℝ) / (n : ℝ) with hT
-  set E : ℕ → ℝ := fun n =>
+    fun n ↦ (lz78GreedyEncodingLength n (q.blockRV n ω) : ℝ) / (n : ℝ) with hT
+  set E : ℕ → ℝ := fun n ↦
     (2 * (n : ℝ) * Real.sqrt (cp n / (n : ℝ)) + cp n + cp n * ((k : ℝ) * La)
       + ((k : ℝ) + 1) + ((k : ℝ) + 1) * Real.log (n : ℝ)
       + (cp n * Real.log 2 + cp n * (L + 2))) / (Real.log 2 * (n : ℝ)) with hE
   set U : ℕ → ℝ :=
-    fun n => (negLogQk μ q k n ω / (n : ℝ)) / Real.log 2 + E n with hU
+    fun n ↦ (negLogQk μ q k n ω / (n : ℝ)) / Real.log 2 + E n with hU
   -- `cp n ≥ 0` and `cp n / n → 0`.
-  have hcp_nn : ∀ n, 0 ≤ cp n := fun n => by simp only [hcp]; positivity
-  have hcp_div : Filter.Tendsto (fun n => cp n / (n : ℝ)) Filter.atTop (𝓝 0) :=
+  have hcp_nn : ∀ n, 0 ≤ cp n := fun n ↦ by simp only [hcp]; positivity
+  have hcp_div : Filter.Tendsto (fun n ↦ cp n / (n : ℝ)) Filter.atTop (𝓝 0) :=
     ziv_cp_div_tendsto_zero cp hcp_nn
-      (lz78PhraseStrings_count_isBigO (fun n => List.ofFn (q.blockRV n ω))
-        (fun n => List.length_ofFn))
+      (lz78PhraseStrings_count_isBigO (fun n ↦ List.ofFn (q.blockRV n ω))
+        (fun n ↦ List.length_ofFn))
   -- `E n → 0` (every summand divided by `log 2 · n` vanishes via `cp/n → 0`).
   have hE_tend : Filter.Tendsto E Filter.atTop (𝓝 0) := by
     rw [hE]; exact ziv_error_seq_tendsto_zero cp k La L hcp_div
   -- `U n → H / log 2`.
   have hU_tend : Filter.Tendsto U Filter.atTop (𝓝 (H / Real.log 2)) := by
-    have ha : Filter.Tendsto (fun n => negLogQk μ q k n ω / (n : ℝ) / Real.log 2)
+    have ha : Filter.Tendsto (fun n ↦ negLogQk μ q k n ω / (n : ℝ) / Real.log 2)
         Filter.atTop (𝓝 (H / Real.log 2)) := h_aep.div_const (Real.log 2)
     have := ha.add hE_tend
     simpa [hU] using this
@@ -384,7 +384,7 @@ theorem ziv_aseventual_le_condEntropyTail_bits
   -- Conclude via `limsup_le_limsup`.
   have hcobdd : Filter.IsCoboundedUnder (· ≤ ·) Filter.atTop T :=
     Filter.isCoboundedUnder_le_of_le Filter.atTop
-      (fun n => lz78_encoding_length_per_symbol_nonneg n (q.blockRV n ω))
+      (fun n ↦ lz78_encoding_length_per_symbol_nonneg n (q.blockRV n ω))
   have hbdd : Filter.IsBoundedUnder (· ≤ ·) Filter.atTop U :=
     hU_tend.isBoundedUnder_le
   have hlim_le : Filter.limsup T Filter.atTop ≤ Filter.limsup U Filter.atTop :=
@@ -403,16 +403,16 @@ theorem ziv_aseventual_le_entropyRate₂
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
       Filter.limsup
-        (fun n => (lz78GreedyEncodingLength n
+        (fun n ↦ (lz78GreedyEncodingLength n
             (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ))
         Filter.atTop
       ≤ entropyRate₂ μ p.toStationaryProcess := by
   filter_upwards
     [(MeasureTheory.ae_all_iff.2
-        (fun k => ziv_aseventual_le_condEntropyTail_bits μ p k))] with ω hω
+        (fun k ↦ ziv_aseventual_le_condEntropyTail_bits μ p k))] with ω hω
   -- `hω : ∀ k, limsup (lz/n) ≤ conditionalEntropyTail μ p k / log 2`.
   have h_tend : Filter.Tendsto
-      (fun k => conditionalEntropyTail μ p.toStationaryProcess k / Real.log 2)
+      (fun k ↦ conditionalEntropyTail μ p.toStationaryProcess k / Real.log 2)
       Filter.atTop (𝓝 (entropyRate₂ μ p.toStationaryProcess)) := by
     have h := (entropyRate_eq_lim_condEntropy μ p.toStationaryProcess).div_const
       (Real.log 2)
@@ -445,11 +445,11 @@ theorem ziv_aseventual_le_blockLogAvg₂
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
       Filter.limsup
-        (fun n => (lz78GreedyEncodingLength n
+        (fun n ↦ (lz78GreedyEncodingLength n
             (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ))
         Filter.atTop
       ≤ Filter.limsup
-          (fun n => blockLogAvg₂ μ p.toStationaryProcess n ω) Filter.atTop := by
+          (fun n ↦ blockLogAvg₂ μ p.toStationaryProcess n ω) Filter.atTop := by
   filter_upwards [ziv_aseventual_le_entropyRate₂ μ p, shannon_mcmillan_breiman₂ μ p]
     with ω h_ziv h_smb
   rw [h_smb.limsup_eq]
@@ -528,7 +528,7 @@ theorem lz78Greedy_achievability_ae
     (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
       Filter.limsup
-        (fun n =>
+        (fun n ↦
           (lz78GreedyEncodingLength n
               (p.toStationaryProcess.blockRV n ω) : ℝ)
             / (n : ℝ))
@@ -622,31 +622,31 @@ theorem lz78_asymptotic_optimality_with_greedy
     (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
       Filter.Tendsto
-        (fun n =>
+        (fun n ↦
           (lz78GreedyEncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
             / (n : ℝ))
         Filter.atTop
         (𝓝 (entropyRate₂ μ p.toStationaryProcess)) := by
   have h_bdd_above : ∀ᵐ ω ∂μ,
       Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
-        (fun n =>
+        (fun n ↦
           (lz78GreedyEncodingLength n
               (p.toStationaryProcess.blockRV n ω) : ℝ)
             / (n : ℝ)) := by
-    refine Filter.Eventually.of_forall (fun ω => ?_)
+    refine Filter.Eventually.of_forall (fun ω ↦ ?_)
     exact Filter.isBoundedUnder_of
       ⟨(1 + 8 * Real.log (Fintype.card α + 1) / Real.log 2)
           + ((Nat.log 2 (Fintype.card α) : ℝ) + 2),
-        fun n => lz78_rate_le_const n _⟩
+        fun n ↦ lz78_rate_le_const n _⟩
   have h_bdd_below : ∀ᵐ ω ∂μ,
       Filter.IsBoundedUnder (· ≥ ·) Filter.atTop
-        (fun n =>
+        (fun n ↦
           (lz78GreedyEncodingLength n
               (p.toStationaryProcess.blockRV n ω) : ℝ)
             / (n : ℝ)) := by
-    refine Filter.Eventually.of_forall (fun ω => ?_)
+    refine Filter.Eventually.of_forall (fun ω ↦ ?_)
     exact Filter.isBoundedUnder_of
-      ⟨0, fun n => lz78_encoding_length_per_symbol_nonneg n _⟩
+      ⟨0, fun n ↦ lz78_encoding_length_per_symbol_nonneg n _⟩
   exact lz78_asymptotic_optimality μ p (@lz78GreedyEncodingLength α _ _)
     (entropyRate₂ μ p.toStationaryProcess)
     (lz78Greedy_converse_ae μ p)

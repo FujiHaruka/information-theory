@@ -51,7 +51,7 @@ theorem exists_smooth_capacity_gt_uniform
   have hR_lt_R₁ : R < R₁ := by rw [hR₁_def]; linarith
   have hR₁_lt_I₀ : R₁ < I₀ := by rw [hR₁_def]; linarith
   -- Step 2: continuity of f(δ) := I(p₀; W_smooth δ).toReal on [0,1].
-  set f : ℝ → ℝ := fun δ =>
+  set f : ℝ → ℝ := fun δ ↦
     (mutualInfoOfChannel (pmfToMeasure p₀) (Channel.smooth W δ)).toReal with hf_def
   have hf_cont_on : ContinuousOn f (Set.Icc (0 : ℝ) 1) :=
     continuous_mutualInfoOfChannel_right_smooth hp₀_mem W
@@ -116,12 +116,12 @@ theorem pSmooth_smooth_capacity_gt_uniform
   have hR₂_lt_I₀ : R₂ < I₀ := by rw [hR₂_def]; linarith
   -- Step 2: continuity in p of I(·; W).toReal at p₀.
   -- Compose: g(δ_p) := I(pSmooth p₀ δ_p; W).toReal is continuous on [0,1].
-  set g : ℝ → ℝ := fun δp =>
+  set g : ℝ → ℝ := fun δp ↦
     (mutualInfoOfChannel (pmfToMeasure (pSmooth p₀ δp)) W).toReal with hg_def
-  have h_curve : ContinuousOn (fun δp : ℝ => pSmooth p₀ δp) (Set.Icc (0 : ℝ) 1) :=
+  have h_curve : ContinuousOn (fun δp : ℝ ↦ pSmooth p₀ δp) (Set.Icc (0 : ℝ) 1) :=
     (continuous_pSmooth p₀).continuousOn
-  have h_maps_g : Set.MapsTo (fun δp : ℝ => pSmooth p₀ δp) (Set.Icc 0 1) (stdSimplex ℝ α) :=
-    fun δp hδp => pSmooth_mem_stdSimplex hp₀_mem hδp.1 hδp.2
+  have h_maps_g : Set.MapsTo (fun δp : ℝ ↦ pSmooth p₀ δp) (Set.Icc 0 1) (stdSimplex ℝ α) :=
+    fun δp hδp ↦ pSmooth_mem_stdSimplex hp₀_mem hδp.1 hδp.2
   have hg_cont_on : ContinuousOn g (Set.Icc (0 : ℝ) 1) :=
     (continuous_mutualInfoOfChannel_left W).comp h_curve h_maps_g
   -- g 0 = I₀.
@@ -155,9 +155,9 @@ theorem pSmooth_smooth_capacity_gt_uniform
   have hp_full_mem : p_full ∈ stdSimplex ℝ α :=
     pSmooth_mem_stdSimplex hp₀_mem hδ_p_pos.le hδ_p_le_1
   have hp_full_pos : ∀ a, 0 < p_full a :=
-    fun a => pSmooth_pos hp₀_mem hδ_p_pos hδ_p_le_1 a
+    fun a ↦ pSmooth_pos hp₀_mem hδ_p_pos hδ_p_le_1 a
   -- Step 3: continuity of f(δ) := I(p_full; W_smooth δ).toReal on [0,1].
-  set f : ℝ → ℝ := fun δ =>
+  set f : ℝ → ℝ := fun δ ↦
     (mutualInfoOfChannel (pmfToMeasure p_full) (Channel.smooth W δ)).toReal with hf_def
   have hf_cont_on : ContinuousOn f (Set.Icc (0 : ℝ) 1) :=
     continuous_mutualInfoOfChannel_right_smooth hp_full_mem W

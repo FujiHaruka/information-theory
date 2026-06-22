@@ -51,7 +51,7 @@ lift the V2 de Bruijn identity to entropy-power form.
 @[entry_point]
 theorem entropyPower_hasDerivAt_of_diffEnt_hasDerivAt
     {f : ℝ → ℝ} {d t : ℝ} (h : HasDerivAt f d t) :
-    HasDerivAt (fun s => Real.exp (2 * f s)) (Real.exp (2 * f t) * (2 * d)) t :=
+    HasDerivAt (fun s ↦ Real.exp (2 * f s)) (Real.exp (2 * f t) * (2 * d)) t :=
   (h.const_mul 2).exp
 
 /-! ## §2''' — 1-source Stam reduction `g'(t) ≤ 0` -/
@@ -109,29 +109,29 @@ theorem csiszarLogRatioGap_hasDerivAt
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
     (hY : Measurable Y) (hZY : Measurable Z_Y) (hYZY : IndepFun Y Z_Y P)
-    (hXYZXY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (hXYZXY : IndepFun (fun ω ↦ X ω + Y ω) (fun ω ↦ Z_X ω + Z_Y ω) P)
     (h_reg_sum : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp
-                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+                    (fun ω ↦ X ω + Y ω) (fun ω ↦ Z_X ω + Z_Y ω) P)
     (h_reg_X : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp X Z_X P)
     (h_reg_Y : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp Y Z_Y P)
     {t : ℝ} (ht : 0 < t) :
-    HasDerivAt (fun s : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
+    HasDerivAt (fun s : ℝ ↦ InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
         X Y Z_X Z_Y P s)
       (InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
             ((h_reg_sum.reg_at t ht).density_t)
-        - (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
+        - (entropyPower (P.map (fun ω ↦ X ω + Real.sqrt t * Z_X ω))
               * InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
                   ((h_reg_X.reg_at t ht).density_t)
-            + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω))
+            + entropyPower (P.map (fun ω ↦ Y ω + Real.sqrt t * Z_Y ω))
               * InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
                   ((h_reg_Y.reg_at t ht).density_t))
-          / (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
-            + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)))) t := by
+          / (entropyPower (P.map (fun ω ↦ X ω + Real.sqrt t * Z_X ω))
+            + entropyPower (P.map (fun ω ↦ Y ω + Real.sqrt t * Z_Y ω)))) t := by
   -- Per-term de Bruijn V2 derivatives (same building blocks as the
   -- difference-version path-derivative that was deleted with the dead subgraph).
   have h_dB_X :
       HasDerivAt
-        (fun s : ℝ => InformationTheory.Shannon.differentialEntropy
+        (fun s : ℝ ↦ InformationTheory.Shannon.differentialEntropy
           (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z_X s)))
         ((1/2) * InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
           ((h_reg_X.reg_at t ht).density_t)) t :=
@@ -139,7 +139,7 @@ theorem csiszarLogRatioGap_hasDerivAt
       (h_reg_X.reg_at t ht)
   have h_dB_Y :
       HasDerivAt
-        (fun s : ℝ => InformationTheory.Shannon.differentialEntropy
+        (fun s : ℝ ↦ InformationTheory.Shannon.differentialEntropy
           (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution Y Z_Y s)))
         ((1/2) * InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
           ((h_reg_Y.reg_at t ht).density_t)) t :=
@@ -147,13 +147,13 @@ theorem csiszarLogRatioGap_hasDerivAt
       (h_reg_Y.reg_at t ht)
   have h_dB_sum :
       HasDerivAt
-        (fun s : ℝ => InformationTheory.Shannon.differentialEntropy
+        (fun s : ℝ ↦ InformationTheory.Shannon.differentialEntropy
           (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution
-                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) s)))
+                    (fun ω ↦ X ω + Y ω) (fun ω ↦ Z_X ω + Z_Y ω) s)))
         ((1/2) * InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
           ((h_reg_sum.reg_at t ht).density_t)) t :=
     InformationTheory.Shannon.FisherInfo.deBruijn_identity_v2
-      (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω)
+      (fun ω ↦ X ω + Y ω) (fun ω ↦ Z_X ω + Z_Y ω)
       (hX.add hY) (hZX.add hZY) hXYZXY ht (h_reg_sum.reg_at t ht)
   -- Lift to entropy-power form via the A-2-2 chain rule.
   have h_eP_X := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB_X
@@ -172,10 +172,10 @@ theorem csiszarLogRatioGap_hasDerivAt
   -- bodies already match `entropyPower (P.map (fun ω => ...))`. The derivative
   -- value `exp(2h) * (2 * ((1/2) * J))` simplifies to `entropyPower · J`.
   have hN_X :
-      HasDerivAt (fun s : ℝ => entropyPower (P.map (fun ω => X ω + Real.sqrt s * Z_X ω)))
-        (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)) * J_X) t := by
+      HasDerivAt (fun s : ℝ ↦ entropyPower (P.map (fun ω ↦ X ω + Real.sqrt s * Z_X ω)))
+        (entropyPower (P.map (fun ω ↦ X ω + Real.sqrt t * Z_X ω)) * J_X) t := by
     have h_val :
-        entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)) * J_X
+        entropyPower (P.map (fun ω ↦ X ω + Real.sqrt t * Z_X ω)) * J_X
           = Real.exp (2 * InformationTheory.Shannon.differentialEntropy
               (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z_X t)))
             * (2 * ((1/2) * J_X)) := by
@@ -184,10 +184,10 @@ theorem csiszarLogRatioGap_hasDerivAt
     rw [h_val]
     exact h_eP_X
   have hN_Y :
-      HasDerivAt (fun s : ℝ => entropyPower (P.map (fun ω => Y ω + Real.sqrt s * Z_Y ω)))
-        (entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)) * J_Y) t := by
+      HasDerivAt (fun s : ℝ ↦ entropyPower (P.map (fun ω ↦ Y ω + Real.sqrt s * Z_Y ω)))
+        (entropyPower (P.map (fun ω ↦ Y ω + Real.sqrt t * Z_Y ω)) * J_Y) t := by
     have h_val :
-        entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)) * J_Y
+        entropyPower (P.map (fun ω ↦ Y ω + Real.sqrt t * Z_Y ω)) * J_Y
           = Real.exp (2 * InformationTheory.Shannon.differentialEntropy
               (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution Y Z_Y t)))
             * (2 * ((1/2) * J_Y)) := by
@@ -196,49 +196,49 @@ theorem csiszarLogRatioGap_hasDerivAt
     rw [h_val]
     exact h_eP_Y
   have hN_sum :
-      HasDerivAt (fun s : ℝ => entropyPower
-          (P.map (fun ω => X ω + Y ω + Real.sqrt s * (Z_X ω + Z_Y ω))))
-        (entropyPower (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))) * J_sum) t := by
+      HasDerivAt (fun s : ℝ ↦ entropyPower
+          (P.map (fun ω ↦ X ω + Y ω + Real.sqrt s * (Z_X ω + Z_Y ω))))
+        (entropyPower (P.map (fun ω ↦ X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))) * J_sum) t := by
     have h_val :
-        entropyPower (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))) * J_sum
+        entropyPower (P.map (fun ω ↦ X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))) * J_sum
           = Real.exp (2 * InformationTheory.Shannon.differentialEntropy
               (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution
-                        (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) t)))
+                        (fun ω ↦ X ω + Y ω) (fun ω ↦ Z_X ω + Z_Y ω) t)))
             * (2 * ((1/2) * J_sum)) := by
       unfold entropyPower InformationTheory.Shannon.FisherInfo.gaussianConvolution
       ring
     rw [h_val]
     exact h_eP_sum
   -- Positivity of the entropy powers (for the `log` side conditions).
-  have hNX_pos : 0 < entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)) :=
+  have hNX_pos : 0 < entropyPower (P.map (fun ω ↦ X ω + Real.sqrt t * Z_X ω)) :=
     entropyPower_pos _
-  have hNY_pos : 0 < entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)) :=
+  have hNY_pos : 0 < entropyPower (P.map (fun ω ↦ Y ω + Real.sqrt t * Z_Y ω)) :=
     entropyPower_pos _
   have hNsum_pos : 0 < entropyPower
-      (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))) := entropyPower_pos _
+      (P.map (fun ω ↦ X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))) := entropyPower_pos _
   -- `log N_sum` derivative: `(N_sum · J_sum) / N_sum = J_sum`.
   have h_log_sum :
-      HasDerivAt (fun s : ℝ => Real.log (entropyPower
-          (P.map (fun ω => X ω + Y ω + Real.sqrt s * (Z_X ω + Z_Y ω)))))
+      HasDerivAt (fun s : ℝ ↦ Real.log (entropyPower
+          (P.map (fun ω ↦ X ω + Y ω + Real.sqrt s * (Z_X ω + Z_Y ω)))))
         J_sum t := by
     have h := hN_sum.log (ne_of_gt hNsum_pos)
     rwa [mul_comm, mul_div_assoc, div_self (ne_of_gt hNsum_pos), mul_one] at h
   -- `log (N_X + N_Y)` derivative: `(N_X·J_X + N_Y·J_Y)/(N_X+N_Y)`.
   have h_add :
-      HasDerivAt (fun s : ℝ =>
-          entropyPower (P.map (fun ω => X ω + Real.sqrt s * Z_X ω))
-            + entropyPower (P.map (fun ω => Y ω + Real.sqrt s * Z_Y ω)))
-        (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)) * J_X
-          + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)) * J_Y) t :=
+      HasDerivAt (fun s : ℝ ↦
+          entropyPower (P.map (fun ω ↦ X ω + Real.sqrt s * Z_X ω))
+            + entropyPower (P.map (fun ω ↦ Y ω + Real.sqrt s * Z_Y ω)))
+        (entropyPower (P.map (fun ω ↦ X ω + Real.sqrt t * Z_X ω)) * J_X
+          + entropyPower (P.map (fun ω ↦ Y ω + Real.sqrt t * Z_Y ω)) * J_Y) t :=
     hN_X.add hN_Y
   have h_log_add :
-      HasDerivAt (fun s : ℝ => Real.log
-          (entropyPower (P.map (fun ω => X ω + Real.sqrt s * Z_X ω))
-            + entropyPower (P.map (fun ω => Y ω + Real.sqrt s * Z_Y ω))))
-        ((entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)) * J_X
-            + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)) * J_Y)
-          / (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
-            + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)))) t :=
+      HasDerivAt (fun s : ℝ ↦ Real.log
+          (entropyPower (P.map (fun ω ↦ X ω + Real.sqrt s * Z_X ω))
+            + entropyPower (P.map (fun ω ↦ Y ω + Real.sqrt s * Z_Y ω))))
+        ((entropyPower (P.map (fun ω ↦ X ω + Real.sqrt t * Z_X ω)) * J_X
+            + entropyPower (P.map (fun ω ↦ Y ω + Real.sqrt t * Z_Y ω)) * J_Y)
+          / (entropyPower (P.map (fun ω ↦ X ω + Real.sqrt t * Z_X ω))
+            + entropyPower (P.map (fun ω ↦ Y ω + Real.sqrt t * Z_Y ω)))) t :=
     h_add.log (ne_of_gt (add_pos hNX_pos hNY_pos))
   -- Combine via `.sub` and match the `csiszarLogRatioGap` body.
   have h_combined := h_log_sum.sub h_log_add
@@ -263,7 +263,7 @@ theorem csiszarLogRatioGap_deriv_le_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (h_reg_sum : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp
-                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+                    (fun ω ↦ X ω + Y ω) (fun ω ↦ Z_X ω + Z_Y ω) P)
     (h_reg_X : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp X Z_X P)
     (h_reg_Y : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp Y Z_Y P)
     {t : ℝ} (ht : 0 < t)
@@ -274,8 +274,8 @@ theorem csiszarLogRatioGap_deriv_le_zero
     (hJsum_pos : 0 < InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
                         ((h_reg_sum.reg_at t ht).density_t))
     (h_stam : InformationTheory.Shannon.StamEPIBridge.IsStamInequalityHyp
-                (fun ω => X ω + Real.sqrt t * Z_X ω)
-                (fun ω => Y ω + Real.sqrt t * Z_Y ω) P)
+                (fun ω ↦ X ω + Real.sqrt t * Z_X ω)
+                (fun ω ↦ Y ω + Real.sqrt t * Z_Y ω) P)
     -- caller-supplied regularity preconditions for applying `h_stam`.
     (h_regdens_X : InformationTheory.Shannon.FisherInfo.IsRegularDensityV2
                       ((h_reg_X.reg_at t ht).density_t))
@@ -292,14 +292,14 @@ theorem csiszarLogRatioGap_deriv_le_zero
                     ((h_reg_Y.reg_at t ht).density_t)) :
     InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
           ((h_reg_sum.reg_at t ht).density_t)
-        - (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
+        - (entropyPower (P.map (fun ω ↦ X ω + Real.sqrt t * Z_X ω))
               * InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
                   ((h_reg_X.reg_at t ht).density_t)
-            + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω))
+            + entropyPower (P.map (fun ω ↦ Y ω + Real.sqrt t * Z_Y ω))
               * InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
                   ((h_reg_Y.reg_at t ht).density_t))
-          / (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
-            + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)))
+          / (entropyPower (P.map (fun ω ↦ X ω + Real.sqrt t * Z_X ω))
+            + entropyPower (P.map (fun ω ↦ Y ω + Real.sqrt t * Z_Y ω)))
       ≤ 0 := by
   -- Abbreviations for the three Fisher infos and two entropy powers.
   set J_X := InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
@@ -308,8 +308,8 @@ theorem csiszarLogRatioGap_deriv_le_zero
       ((h_reg_Y.reg_at t ht).density_t) with hJY_def
   set J_sum := InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
       ((h_reg_sum.reg_at t ht).density_t) with hJsum_def
-  set N_X := entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)) with hNX_def
-  set N_Y := entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)) with hNY_def
+  set N_X := entropyPower (P.map (fun ω ↦ X ω + Real.sqrt t * Z_X ω)) with hNX_def
+  set N_Y := entropyPower (P.map (fun ω ↦ Y ω + Real.sqrt t * Z_Y ω)) with hNY_def
   -- Positivity of the entropy powers.
   have hNX_pos : 0 < N_X := entropyPower_pos _
   have hNY_pos : 0 < N_Y := entropyPower_pos _
@@ -348,14 +348,14 @@ theorem epi_of_csiszarLogRatioGap_zero_nonneg
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω)
     (h_nonneg : 0 ≤ InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
         X Y Z_X Z_Y P 0) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
+    entropyPower (P.map (fun ω ↦ X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
   rw [InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap_at_zero] at h_nonneg
   -- `0 ≤ log A − log B` ⟺ `log B ≤ log A`.
   have h_log_le : Real.log (entropyPower (P.map X) + entropyPower (P.map Y))
-      ≤ Real.log (entropyPower (P.map (fun ω => X ω + Y ω))) := by linarith
+      ≤ Real.log (entropyPower (P.map (fun ω ↦ X ω + Y ω))) := by linarith
   -- Positivity of both `log` arguments.
-  have hA_pos : 0 < entropyPower (P.map (fun ω => X ω + Y ω)) := entropyPower_pos _
+  have hA_pos : 0 < entropyPower (P.map (fun ω ↦ X ω + Y ω)) := entropyPower_pos _
   have hB_pos : 0 < entropyPower (P.map X) + entropyPower (P.map Y) :=
     add_pos (entropyPower_pos _) (entropyPower_pos _)
   -- `log B ≤ log A ⟺ B ≤ A` (both positive).
@@ -371,13 +371,13 @@ theorem csiszarLogRatioGap_differentiableOn_interior
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
     (hY : Measurable Y) (hZY : Measurable Z_Y) (hYZY : IndepFun Y Z_Y P)
-    (hXYZXY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (hXYZXY : IndepFun (fun ω ↦ X ω + Y ω) (fun ω ↦ Z_X ω + Z_Y ω) P)
     (h_reg_sum : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp
-                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+                    (fun ω ↦ X ω + Y ω) (fun ω ↦ Z_X ω + Z_Y ω) P)
     (h_reg_X : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp X Z_X P)
     (h_reg_Y : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp Y Z_Y P) :
     DifferentiableOn ℝ
-      (fun t : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
+      (fun t : ℝ ↦ InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
         X Y Z_X Z_Y P t)
       (interior (Set.Ici (0 : ℝ))) := by
   rw [interior_Ici]
@@ -396,15 +396,15 @@ theorem csiszarLogRatioGap_continuousWithinAt_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (h_endpt_sum : InformationTheory.Shannon.IsHeatFlowEndpointRegular
-                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+                    (fun ω ↦ X ω + Y ω) (fun ω ↦ Z_X ω + Z_Y ω) P)
     (h_endpt_X : InformationTheory.Shannon.IsHeatFlowEndpointRegular X Z_X P)
     (h_endpt_Y : InformationTheory.Shannon.IsHeatFlowEndpointRegular Y Z_Y P) :
     ContinuousWithinAt
-      (fun t : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
+      (fun t : ℝ ↦ InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
         X Y Z_X Z_Y P t)
       (Set.Ioi (0 : ℝ)) 0 := by
   have h_sum := heatFlowEntropyPower_continuousWithinAt_zero
-    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P h_endpt_sum
+    (fun ω ↦ X ω + Y ω) (fun ω ↦ Z_X ω + Z_Y ω) P h_endpt_sum
   have h_X := heatFlowEntropyPower_continuousWithinAt_zero X Z_X P h_endpt_X
   have h_Y := heatFlowEntropyPower_continuousWithinAt_zero Y Z_Y P h_endpt_Y
   unfold InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
@@ -421,13 +421,13 @@ theorem csiszarLogRatioGap_antitoneOn_Ici_zero
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
     (hY : Measurable Y) (hZY : Measurable Z_Y) (hYZY : IndepFun Y Z_Y P)
-    (hXYZXY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (hXYZXY : IndepFun (fun ω ↦ X ω + Y ω) (fun ω ↦ Z_X ω + Z_Y ω) P)
     (h_reg_sum : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp
-                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+                    (fun ω ↦ X ω + Y ω) (fun ω ↦ Z_X ω + Z_Y ω) P)
     (h_reg_X : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp X Z_X P)
     (h_reg_Y : InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp Y Z_Y P)
     (h_endpt_sum : InformationTheory.Shannon.IsHeatFlowEndpointRegular
-                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+                    (fun ω ↦ X ω + Y ω) (fun ω ↦ Z_X ω + Z_Y ω) P)
     (h_endpt_X : InformationTheory.Shannon.IsHeatFlowEndpointRegular X Z_X P)
     (h_endpt_Y : InformationTheory.Shannon.IsHeatFlowEndpointRegular Y Z_Y P)
     (h_pos_stam : ∀ (t : ℝ) (ht : 0 < t),
@@ -438,8 +438,8 @@ theorem csiszarLogRatioGap_antitoneOn_Ici_zero
       (0 < InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
               ((h_reg_sum.reg_at t ht).density_t)) ∧
       InformationTheory.Shannon.StamEPIBridge.IsStamInequalityHyp
-        (fun ω => X ω + Real.sqrt t * Z_X ω)
-        (fun ω => Y ω + Real.sqrt t * Z_Y ω) P ∧
+        (fun ω ↦ X ω + Real.sqrt t * Z_X ω)
+        (fun ω ↦ Y ω + Real.sqrt t * Z_Y ω) P ∧
       -- per-`t` caller-supplied regularity preconditions threaded to the derivative-bound lemma.
       InformationTheory.Shannon.FisherInfo.IsRegularDensityV2
         ((h_reg_X.reg_at t ht).density_t) ∧
@@ -455,13 +455,13 @@ theorem csiszarLogRatioGap_antitoneOn_Ici_zero
         ((h_reg_X.reg_at t ht).density_t)
         ((h_reg_Y.reg_at t ht).density_t)) :
     AntitoneOn
-      (fun t : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
+      (fun t : ℝ ↦ InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
         X Y Z_X Z_Y P t)
       (Set.Ici (0 : ℝ)) := by
   -- Derive `AntitoneOn` on the interior `Set.Ioi 0` (continuity there is
   -- `differentiableOn.continuousOn`), then re-attach the endpoint `0` via
   -- `csiszarLogRatioGap_continuousWithinAt_zero` + `AntitoneOn.insert_of_continuousWithinAt`.
-  set f := fun t : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
+  set f := fun t : ℝ ↦ InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
     X Y Z_X Z_Y P t with hf_def
   -- Genuine interior differentiability (= continuity) on `Set.Ioi 0`.
   have h_diff_Ioi : DifferentiableOn ℝ f (Set.Ioi 0) := by

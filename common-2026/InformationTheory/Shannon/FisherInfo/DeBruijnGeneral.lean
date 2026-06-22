@@ -36,7 +36,7 @@ theorem deBruijn_identity_v2
     {t : ℝ} (ht : 0 < t)
     (h_reg : IsRegularDeBruijnHypV2 X Z P t) :
     HasDerivAt
-      (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
+      (fun s ↦ differentialEntropy (P.map (gaussianConvolution X Z s)))
       ((1/2) * fisherInfoOfDensityReal h_reg.density_t)
       t :=
   debruijnIdentityV2_holds_assembled X Z hX hZ hXZ ht h_reg
@@ -64,8 +64,8 @@ theorem debruijnIntegrationIdentity_holds
   -- The integrand `(1/2) * (fisherInfoOfMeasureV2 _ (fPath t)).toReal` is defeq to
   -- `(1/2) * fisherInfoOfDensityReal (fPath t)`.
   set f : ℝ → ℝ :=
-    fun s => differentialEntropy (P.map (gaussianConvolution X Z s)) with hf_def
-  set f' : ℝ → ℝ := fun t => (1/2) * fisherInfoOfDensityReal (h_path.fPath t) with hf'_def
+    fun s ↦ differentialEntropy (P.map (gaussianConvolution X Z s)) with hf_def
+  set f' : ℝ → ℝ := fun t ↦ (1/2) * fisherInfoOfDensityReal (h_path.fPath t) with hf'_def
   -- Step 1: per-time `HasDerivAt f (f' t) t` for `t ∈ Ioo 0 T`, via the genuine assembled identity.
   have h_deriv : ∀ t ∈ Set.Ioo (0 : ℝ) T, HasDerivAt f (f' t) t := by
     intro t ht
@@ -91,7 +91,7 @@ theorem debruijnIntegrationIdentity_holds
     simp only [hf_def, h_path0]
   -- Step 5: identify the goal integrand with `f'` (defeq).
   have h_integrand :
-      (fun t => (1/2)
+      (fun t ↦ (1/2)
         * (fisherInfoOfMeasureV2 (P.map (gaussianConvolution X Z t)) (h_path.fPath t)).toReal)
       = f' := rfl
   -- Assemble.

@@ -37,20 +37,20 @@ theorem mutualInfo_map_left_measurableEquiv
     (μ : Measure Ω) [IsFiniteMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y) (hXs : Measurable Xs) (hYo : Measurable Yo)
     (e : X ≃ᵐ X') :
-    mutualInfo μ (fun ω => e (Xs ω)) Yo = mutualInfo μ Xs Yo := by
+    mutualInfo μ (fun ω ↦ e (Xs ω)) Yo = mutualInfo μ Xs Yo := by
   unfold mutualInfo
   let eProd : X × Y ≃ᵐ X' × Y := MeasurableEquiv.prodCongr e (.refl Y)
   -- joint side
   have h_joint :
-      (μ.map (fun ω => (Xs ω, Yo ω))).map eProd
-        = μ.map (fun ω => (e (Xs ω), Yo ω)) := by
+      (μ.map (fun ω ↦ (Xs ω, Yo ω))).map eProd
+        = μ.map (fun ω ↦ (e (Xs ω), Yo ω)) := by
     rw [Measure.map_map eProd.measurable (hXs.prodMk hYo)]
     rfl
   -- marginal side: ((μ.map Xs).prod (μ.map Yo)).map (e × id) = (μ.map (e∘Xs)).prod (μ.map Yo)
   have h_marg :
       ((μ.map Xs).prod (μ.map Yo)).map eProd
-        = (μ.map (fun ω => e (Xs ω))).prod (μ.map Yo) := by
-    have h_e_Xs : (μ.map Xs).map e = μ.map (fun ω => e (Xs ω)) := by
+        = (μ.map (fun ω ↦ e (Xs ω))).prod (μ.map Yo) := by
+    have h_e_Xs : (μ.map Xs).map e = μ.map (fun ω ↦ e (Xs ω)) := by
       rw [Measure.map_map e.measurable hXs]; rfl
     have h_id : (μ.map Yo).map (id : Y → Y) = μ.map Yo := Measure.map_id
     -- (Measure.map_prod_map): (map f μa).prod (map g μc) = map (Prod.map f g) (μa.prod μc)
@@ -86,19 +86,19 @@ theorem mutualInfo_chain_rule_fin
     [StandardBorelSpace Y] [Nonempty Y]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
     (Yo : Ω → Y) (hYo : Measurable Yo) :
-    mutualInfo μ (fun ω i => Xs i ω) Yo
+    mutualInfo μ (fun ω i ↦ Xs i ω) Yo
       = ∑ i : Fin n,
           condMutualInfo μ (Xs i) Yo
-            (fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) := by
+            (fun ω (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) := by
   induction n with
   | zero =>
     -- RHS: empty sum
     rw [Fin.sum_univ_zero]
     -- LHS: I(pi-X; Y) = 0 because pi-X is a Fin 0 → α constant (one-point space).
-    have hjoint : Measurable (fun ω (i : Fin 0) => Xs i ω) :=
-      measurable_pi_iff.mpr (fun i => Fin.elim0 i)
+    have hjoint : Measurable (fun ω (i : Fin 0) ↦ Xs i ω) :=
+      measurable_pi_iff.mpr (fun i ↦ Fin.elim0 i)
     haveI : Unique (Fin 0 → α) := Pi.uniqueOfIsEmpty _
-    have h_indep : IndepFun (fun ω (i : Fin 0) => Xs i ω) Yo μ := by
+    have h_indep : IndepFun (fun ω (i : Fin 0) ↦ Xs i ω) Yo μ := by
       refine (indepFun_iff_map_prod_eq_prod_map_map hjoint.aemeasurable
         hYo.aemeasurable).mpr ?_
       apply Measure.ext
@@ -119,17 +119,17 @@ theorem mutualInfo_chain_rule_fin
       rw [Measure.prod_prod]
       rw [Measure.map_apply (hjoint.prodMk hYo) (h_singleton.prod h_slice_meas)]
       have h_set_eq :
-          (fun ω => ((fun (i : Fin 0) => Xs i ω), Yo ω)) ⁻¹'
+          (fun ω ↦ ((fun (i : Fin 0) ↦ Xs i ω), Yo ω)) ⁻¹'
               (({default} : Set (Fin 0 → α)) ×ˢ
                 (Prod.mk (default : Fin 0 → α) ⁻¹' s))
             = Yo ⁻¹' (Prod.mk (default : Fin 0 → α) ⁻¹' s) := by
         ext ω
         simp only [Set.mem_preimage, Set.mem_prod, Set.mem_singleton_iff]
-        refine ⟨fun h => h.2, fun h => ⟨Subsingleton.elim _ _, h⟩⟩
+        refine ⟨fun h ↦ h.2, fun h ↦ ⟨Subsingleton.elim _ _, h⟩⟩
       rw [h_set_eq, ← Measure.map_apply hYo h_slice_meas]
-      have hjoint_singleton : (μ.map (fun ω (i : Fin 0) => Xs i ω)) {default} = 1 := by
+      have hjoint_singleton : (μ.map (fun ω (i : Fin 0) ↦ Xs i ω)) {default} = 1 := by
         rw [Measure.map_apply hjoint h_singleton]
-        have h_univ : (fun ω (i : Fin 0) => Xs i ω) ⁻¹' ({default} : Set (Fin 0 → α))
+        have h_univ : (fun ω (i : Fin 0) ↦ Xs i ω) ⁻¹' ({default} : Set (Fin 0 → α))
             = Set.univ := by
           ext ω
           simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_univ, iff_true]
@@ -139,44 +139,44 @@ theorem mutualInfo_chain_rule_fin
     exact (mutualInfo_eq_zero_iff_indep μ _ Yo hjoint hYo).mpr h_indep
   | succ n IH =>
     -- Setup: split Xs : Fin (n+1) → Ω → α into prefix f and last g.
-    set f : Ω → (Fin n → α) := fun ω j => Xs j.castSucc ω with hf_def
+    set f : Ω → (Fin n → α) := fun ω j ↦ Xs j.castSucc ω with hf_def
     set g : Ω → α := Xs (Fin.last n) with hg_def
-    have hf : Measurable f := measurable_pi_iff.mpr (fun j => hXs j.castSucc)
+    have hf : Measurable f := measurable_pi_iff.mpr (fun j ↦ hXs j.castSucc)
     have hg : Measurable g := hXs (Fin.last n)
     -- piFinSuccAbove (Fin.last n) : (Fin (n+1) → α) ≃ᵐ α × (Fin n → α).
     -- For each ω: ePi (pi-X ω) = (Xs (last n) ω, fun j => Xs j.castSucc ω) = (g ω, f ω).
     let ePi : (Fin (n + 1) → α) ≃ᵐ α × (Fin n → α) :=
-      MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) => α) (Fin.last n)
-    have h_ePi_eq : ∀ ω, ePi (fun i : Fin (n + 1) => Xs i ω) = (g ω, f ω) := by
+      MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) ↦ α) (Fin.last n)
+    have h_ePi_eq : ∀ ω, ePi (fun i : Fin (n + 1) ↦ Xs i ω) = (g ω, f ω) := by
       intro ω
       apply Prod.ext
       · rfl
       · funext j
         show Xs ((Fin.last n).succAbove j) ω = Xs j.castSucc ω
         rw [Fin.succAbove_last]
-    have hpi_meas : Measurable (fun ω (i : Fin (n + 1)) => Xs i ω) :=
-      measurable_pi_iff.mpr (fun i => hXs i)
+    have hpi_meas : Measurable (fun ω (i : Fin (n + 1)) ↦ Xs i ω) :=
+      measurable_pi_iff.mpr (fun i ↦ hXs i)
     -- Apply the measurable-equiv reshape and prodComm to land on (f, g) form.
     have h_reshape :
-        mutualInfo μ (fun ω (i : Fin (n + 1)) => Xs i ω) Yo
-          = mutualInfo μ (fun ω => (f ω, g ω)) Yo := by
+        mutualInfo μ (fun ω (i : Fin (n + 1)) ↦ Xs i ω) Yo
+          = mutualInfo μ (fun ω ↦ (f ω, g ω)) Yo := by
       -- Step 1: reshape pi-X to (g, f) via ePi
       have h_step1 :
-          mutualInfo μ (fun ω => ePi (fun i : Fin (n + 1) => Xs i ω)) Yo
-            = mutualInfo μ (fun ω (i : Fin (n + 1)) => Xs i ω) Yo :=
+          mutualInfo μ (fun ω ↦ ePi (fun i : Fin (n + 1) ↦ Xs i ω)) Yo
+            = mutualInfo μ (fun ω (i : Fin (n + 1)) ↦ Xs i ω) Yo :=
         mutualInfo_map_left_measurableEquiv μ
-          (fun ω (i : Fin (n + 1)) => Xs i ω) Yo hpi_meas hYo ePi
-      have h_gf_eq : (fun ω => ePi (fun i : Fin (n + 1) => Xs i ω))
-          = fun ω => (g ω, f ω) := funext h_ePi_eq
+          (fun ω (i : Fin (n + 1)) ↦ Xs i ω) Yo hpi_meas hYo ePi
+      have h_gf_eq : (fun ω ↦ ePi (fun i : Fin (n + 1) ↦ Xs i ω))
+          = fun ω ↦ (g ω, f ω) := funext h_ePi_eq
       rw [h_gf_eq] at h_step1
       -- Step 2: reshape (g, f) to (f, g) via prodComm
       have h_step2 :
-          mutualInfo μ (fun ω => MeasurableEquiv.prodComm (g ω, f ω)) Yo
-            = mutualInfo μ (fun ω => (g ω, f ω)) Yo :=
+          mutualInfo μ (fun ω ↦ MeasurableEquiv.prodComm (g ω, f ω)) Yo
+            = mutualInfo μ (fun ω ↦ (g ω, f ω)) Yo :=
         mutualInfo_map_left_measurableEquiv μ
-          (fun ω => (g ω, f ω)) Yo (hg.prodMk hf) hYo MeasurableEquiv.prodComm
-      have h_prodComm_eq : (fun ω => MeasurableEquiv.prodComm (g ω, f ω))
-          = fun ω => (f ω, g ω) := by
+          (fun ω ↦ (g ω, f ω)) Yo (hg.prodMk hf) hYo MeasurableEquiv.prodComm
+      have h_prodComm_eq : (fun ω ↦ MeasurableEquiv.prodComm (g ω, f ω))
+          = fun ω ↦ (f ω, g ω) := by
         funext ω; rfl
       rw [h_prodComm_eq] at h_step2
       rw [← h_step1, ← h_step2]
@@ -185,11 +185,11 @@ theorem mutualInfo_chain_rule_fin
     -- I((f, g); Y) = I(f; Y) + I(g; Y | f).
     rw [mutualInfo_chain_rule μ g Yo f hg hYo hf]
     -- Apply IH to the prefix f = fun ω j => Xs j.castSucc ω.
-    have IH' := IH (fun i ω => Xs i.castSucc ω) (fun i => hXs i.castSucc)
+    have IH' := IH (fun i ω ↦ Xs i.castSucc ω) (fun i ↦ hXs i.castSucc)
     have h_mi_f : mutualInfo μ f Yo
         = ∑ i : Fin n,
             condMutualInfo μ (Xs i.castSucc) Yo
-              (fun ω (j : Fin i.val) =>
+              (fun ω (j : Fin i.val) ↦
                 Xs ⟨j.val, j.isLt.trans i.castSucc.isLt⟩ ω) := by
       convert IH' using 2
     rw [h_mi_f]
@@ -250,7 +250,7 @@ theorem klDiv_pi_eq_sum
     haveI : IsProbabilityMeasure (Measure.pi μs) := by infer_instance
     haveI : IsProbabilityMeasure (Measure.pi νs) := by infer_instance
     -- Two probability measures on a Subsingleton type are equal.
-    haveI : Subsingleton ((i : Fin 0) → α' i) := ⟨fun a b => funext (fun i => Fin.elim0 i)⟩
+    haveI : Subsingleton ((i : Fin 0) → α' i) := ⟨fun a b ↦ funext (fun i ↦ Fin.elim0 i)⟩
     have h_eq : Measure.pi μs = Measure.pi νs := by
       apply Measure.ext
       intro s _
@@ -268,17 +268,17 @@ theorem klDiv_pi_eq_sum
     let e : (∀ j, α' j) ≃ᵐ α' (Fin.last n) × ∀ j : Fin n, α' ((Fin.last n).succAbove j) :=
       MeasurableEquiv.piFinSuccAbove α' (Fin.last n)
     -- Setup the pi measures over the "rest" indices.
-    have h_succAbove : ∀ j : Fin n, (Fin.last n).succAbove j = j.castSucc := fun j =>
+    have h_succAbove : ∀ j : Fin n, (Fin.last n).succAbove j = j.castSucc := fun j ↦
       Fin.succAbove_last_apply j
     -- Use measurePreserving_piFinSuccAbove to push pi measures through e.
     have hmp_μ := measurePreserving_piFinSuccAbove μs (Fin.last n)
     have hmp_ν := measurePreserving_piFinSuccAbove νs (Fin.last n)
     -- (Measure.pi μs).map e = (μs last).prod (Measure.pi (μs ∘ last.succAbove))
     have h_map_μ : (Measure.pi μs).map e
-        = (μs (Fin.last n)).prod (Measure.pi (fun j : Fin n => μs ((Fin.last n).succAbove j))) :=
+        = (μs (Fin.last n)).prod (Measure.pi (fun j : Fin n ↦ μs ((Fin.last n).succAbove j))) :=
       hmp_μ.map_eq
     have h_map_ν : (Measure.pi νs).map e
-        = (νs (Fin.last n)).prod (Measure.pi (fun j : Fin n => νs ((Fin.last n).succAbove j))) :=
+        = (νs (Fin.last n)).prod (Measure.pi (fun j : Fin n ↦ νs ((Fin.last n).succAbove j))) :=
       hmp_ν.map_eq
     -- klDiv is invariant under e.
     have h_kl :
@@ -288,14 +288,14 @@ theorem klDiv_pi_eq_sum
     rw [h_kl, h_map_μ, h_map_ν, klDiv_prod_eq_add]
     -- klDiv (μs last) (νs last) + klDiv (Measure.pi μs_rest) (Measure.pi νs_rest)
     -- Apply IH to the rest.
-    have IH' := IH (fun j : Fin n => μs ((Fin.last n).succAbove j))
-      (fun j : Fin n => νs ((Fin.last n).succAbove j))
+    have IH' := IH (fun j : Fin n ↦ μs ((Fin.last n).succAbove j))
+      (fun j : Fin n ↦ νs ((Fin.last n).succAbove j))
     rw [IH']
     -- Goal: klDiv (μs last) (νs last) + ∑ j, klDiv (μs (last.succAbove j)) (νs (last.succAbove j))
     --     = ∑ i : Fin (n+1), klDiv (μs i) (νs i)
     rw [Fin.sum_univ_castSucc, add_comm]
     congr 1
-    refine Finset.sum_congr rfl (fun j _ => ?_)
+    refine Finset.sum_congr rfl (fun j _ ↦ ?_)
     rw [h_succAbove j]
 
 /-- MI additivity under product joint distribution: if the joint
@@ -311,13 +311,13 @@ theorem mutualInfo_pi_eq_sum
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (h_iid_joint : μ.map (fun ω (i : Fin n) => (Xs i ω, Ys i ω))
-                      = Measure.pi (fun i => μ.map (fun ω => (Xs i ω, Ys i ω))))
-    (h_iid_X : μ.map (fun ω (i : Fin n) => Xs i ω)
-                  = Measure.pi (fun i => μ.map (Xs i)))
-    (h_iid_Y : μ.map (fun ω (i : Fin n) => Ys i ω)
-                  = Measure.pi (fun i => μ.map (Ys i))) :
-    mutualInfo μ (fun ω i => Xs i ω) (fun ω i => Ys i ω)
+    (h_iid_joint : μ.map (fun ω (i : Fin n) ↦ (Xs i ω, Ys i ω))
+                      = Measure.pi (fun i ↦ μ.map (fun ω ↦ (Xs i ω, Ys i ω))))
+    (h_iid_X : μ.map (fun ω (i : Fin n) ↦ Xs i ω)
+                  = Measure.pi (fun i ↦ μ.map (Xs i)))
+    (h_iid_Y : μ.map (fun ω (i : Fin n) ↦ Ys i ω)
+                  = Measure.pi (fun i ↦ μ.map (Ys i))) :
+    mutualInfo μ (fun ω i ↦ Xs i ω) (fun ω i ↦ Ys i ω)
       = ∑ i : Fin n, mutualInfo μ (Xs i) (Ys i) := by
   unfold mutualInfo
   -- LHS: klDiv (μ.map (joint pair)) ((μ.map X^n).prod (μ.map Y^n))
@@ -328,27 +328,27 @@ theorem mutualInfo_pi_eq_sum
     MeasurableEquiv.arrowProdEquivProdArrow α β (Fin n)
   -- Joint side: μ.map (fun ω => ((fun i => Xs i ω), (fun i => Ys i ω)))
   --   = (μ.map (fun ω i => (Xs i ω, Ys i ω))).map e
-  have h_joint_meas : Measurable (fun ω (i : Fin n) => (Xs i ω, Ys i ω)) :=
-    measurable_pi_iff.mpr fun i => (hXs i).prodMk (hYs i)
-  haveI : ∀ i, IsProbabilityMeasure (μ.map (fun ω => (Xs i ω, Ys i ω))) :=
-    fun i => Measure.isProbabilityMeasure_map ((hXs i).prodMk (hYs i)).aemeasurable
+  have h_joint_meas : Measurable (fun ω (i : Fin n) ↦ (Xs i ω, Ys i ω)) :=
+    measurable_pi_iff.mpr fun i ↦ (hXs i).prodMk (hYs i)
+  haveI : ∀ i, IsProbabilityMeasure (μ.map (fun ω ↦ (Xs i ω, Ys i ω))) :=
+    fun i ↦ Measure.isProbabilityMeasure_map ((hXs i).prodMk (hYs i)).aemeasurable
   haveI : ∀ i, IsProbabilityMeasure (μ.map (Xs i)) :=
-    fun i => Measure.isProbabilityMeasure_map (hXs i).aemeasurable
+    fun i ↦ Measure.isProbabilityMeasure_map (hXs i).aemeasurable
   haveI : ∀ i, IsProbabilityMeasure (μ.map (Ys i)) :=
-    fun i => Measure.isProbabilityMeasure_map (hYs i).aemeasurable
+    fun i ↦ Measure.isProbabilityMeasure_map (hYs i).aemeasurable
   -- Lift joint via e: joint over Fin n → α × β reshapes to joint over (Fin n → α) × (Fin n → β)
   have h_joint_eq :
-      μ.map (fun ω => ((fun i => Xs i ω), (fun i => Ys i ω)))
-        = (μ.map (fun ω (i : Fin n) => (Xs i ω, Ys i ω))).map e := by
+      μ.map (fun ω ↦ ((fun i ↦ Xs i ω), (fun i ↦ Ys i ω)))
+        = (μ.map (fun ω (i : Fin n) ↦ (Xs i ω, Ys i ω))).map e := by
     rw [Measure.map_map e.measurable h_joint_meas]
     congr 1
   -- Marginal product via measurePreserving_arrowProdEquivProdArrow:
   -- (Measure.pi μ_i).prod (Measure.pi ν_i) = (Measure.pi (μ_i.prod ν_i)).map e
   have hmp := measurePreserving_arrowProdEquivProdArrow α β (Fin n)
-    (fun i => μ.map (Xs i)) (fun i => μ.map (Ys i))
+    (fun i ↦ μ.map (Xs i)) (fun i ↦ μ.map (Ys i))
   have h_marg_prod_eq :
-      (μ.map (fun ω (i : Fin n) => Xs i ω)).prod (μ.map (fun ω (i : Fin n) => Ys i ω))
-        = (Measure.pi (fun i => (μ.map (Xs i)).prod (μ.map (Ys i)))).map e := by
+      (μ.map (fun ω (i : Fin n) ↦ Xs i ω)).prod (μ.map (fun ω (i : Fin n) ↦ Ys i ω))
+        = (Measure.pi (fun i ↦ (μ.map (Xs i)).prod (μ.map (Ys i)))).map e := by
     rw [h_iid_X, h_iid_Y, hmp.map_eq]
   -- Apply rewriting.
   rw [h_joint_eq, h_iid_joint, h_marg_prod_eq, klDiv_map_measurableEquiv]
@@ -363,17 +363,17 @@ theorem mutualInfo_iid_eq_nsmul
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (h_iid_joint : μ.map (fun ω (i : Fin n) => (Xs i ω, Ys i ω))
-                      = Measure.pi (fun i => μ.map (fun ω => (Xs i ω, Ys i ω))))
-    (h_iid_X : μ.map (fun ω (i : Fin n) => Xs i ω)
-                  = Measure.pi (fun i => μ.map (Xs i)))
-    (h_iid_Y : μ.map (fun ω (i : Fin n) => Ys i ω)
-                  = Measure.pi (fun i => μ.map (Ys i)))
-    (h_copy : ∀ i, μ.map (fun ω => (Xs i ω, Ys i ω))
-                      = μ.map (fun ω => (Xs ⟨0, hn⟩ ω, Ys ⟨0, hn⟩ ω)))
+    (h_iid_joint : μ.map (fun ω (i : Fin n) ↦ (Xs i ω, Ys i ω))
+                      = Measure.pi (fun i ↦ μ.map (fun ω ↦ (Xs i ω, Ys i ω))))
+    (h_iid_X : μ.map (fun ω (i : Fin n) ↦ Xs i ω)
+                  = Measure.pi (fun i ↦ μ.map (Xs i)))
+    (h_iid_Y : μ.map (fun ω (i : Fin n) ↦ Ys i ω)
+                  = Measure.pi (fun i ↦ μ.map (Ys i)))
+    (h_copy : ∀ i, μ.map (fun ω ↦ (Xs i ω, Ys i ω))
+                      = μ.map (fun ω ↦ (Xs ⟨0, hn⟩ ω, Ys ⟨0, hn⟩ ω)))
     (h_copy_X : ∀ i, μ.map (Xs i) = μ.map (Xs ⟨0, hn⟩))
     (h_copy_Y : ∀ i, μ.map (Ys i) = μ.map (Ys ⟨0, hn⟩)) :
-    mutualInfo μ (fun ω i => Xs i ω) (fun ω i => Ys i ω)
+    mutualInfo μ (fun ω i ↦ Xs i ω) (fun ω i ↦ Ys i ω)
       = n • mutualInfo μ (Xs ⟨0, hn⟩) (Ys ⟨0, hn⟩) := by
   rw [mutualInfo_pi_eq_sum μ Xs Ys hXs hYs h_iid_joint h_iid_X h_iid_Y]
   -- Each summand equals mutualInfo μ (Xs ⟨0, hn⟩) (Ys ⟨0, hn⟩) by the copy hypotheses.
@@ -384,7 +384,7 @@ theorem mutualInfo_iid_eq_nsmul
     unfold mutualInfo
     rw [h_copy i, h_copy_X i, h_copy_Y i]
   -- Sum of constant over Fin n.
-  rw [Finset.sum_congr rfl (fun i _ => h_each i)]
+  rw [Finset.sum_congr rfl (fun i _ ↦ h_each i)]
   rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]
 
 end IID
@@ -431,13 +431,13 @@ theorem mutualInfo_eq_entropy_add_entropy_sub_jointEntropy
   -- Step 3: entropy chain rule — entropy joint id = entropy joint Prod.fst
   --   + condEntropy joint Prod.snd Prod.fst.
   have h_chain :
-      entropy joint (fun z : α × β => (z.1, z.2))
+      entropy joint (fun z : α × β ↦ (z.1, z.2))
         = entropy joint Prod.fst
           + InformationTheory.MeasureFano.condEntropy joint Prod.snd Prod.fst :=
     entropy_pair_eq_entropy_add_condEntropy joint Prod.fst Prod.snd
       measurable_fst measurable_snd
   -- `(fun z => (z.1, z.2)) = id` by η.
-  have h_id : (fun z : α × β => (z.1, z.2)) = (id : α × β → α × β) := by
+  have h_id : (fun z : α × β ↦ (z.1, z.2)) = (id : α × β → α × β) := by
     funext z; rfl
   rw [h_id] at h_chain
   linarith

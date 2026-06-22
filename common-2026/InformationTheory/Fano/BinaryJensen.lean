@@ -35,7 +35,7 @@ lemma binEntropy_jensen_finset {ι : Type*} [Fintype ι]
   have h := hConc.le_map_sum
     (t := (Finset.univ : Finset ι))
     (w := w) (p := p)
-    (fun i _ => hw_nn i) hw_sum (fun i _ => hp_mem i)
+    (fun i _ ↦ hw_nn i) hw_sum (fun i _ ↦ hp_mem i)
   simpa [smul_eq_mul] using h
 
 /-- Algebraic identity used to relate sums of `negMulLog` to `binEntropy`:

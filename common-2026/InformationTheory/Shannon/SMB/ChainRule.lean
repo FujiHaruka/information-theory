@@ -51,7 +51,7 @@ kernel reduces to the marginal `μ.map (p.X)`. -/
 @[entry_point]
 noncomputable def pmfLogCond
     (μ : Measure Ω) [IsFiniteMeasure μ] (p : StationaryProcess μ α) (i : ℕ) : Ω → ℝ :=
-  fun ω => -Real.log
+  fun ω ↦ -Real.log
     ((condDistrib (p.obs i) (p.blockRV i) μ (p.blockRV i ω)).real {p.obs i ω})
 
 omit [DecidableEq α] in
@@ -61,9 +61,9 @@ lemma measurable_pmfLogCond
   unfold pmfLogCond
   -- `(blockRV i ω, obs i ω)` is measurable; postcomposed with the discrete
   -- function `(b, a) ↦ (condDistrib (obs i) (blockRV i) μ b).real {a}`.
-  have h_meas_pair : Measurable (fun ω => (p.blockRV i ω, p.obs i ω)) :=
+  have h_meas_pair : Measurable (fun ω ↦ (p.blockRV i ω, p.obs i ω)) :=
     (p.measurable_blockRV i).prodMk (p.measurable_obs i)
-  have h_disc : Measurable (fun (q : (Fin i → α) × α) =>
+  have h_disc : Measurable (fun (q : (Fin i → α) × α) ↦
       -Real.log ((condDistrib (p.obs i) (p.blockRV i) μ q.1).real {q.2})) :=
     measurable_of_finite _
   exact h_disc.comp h_meas_pair
@@ -87,11 +87,11 @@ theorem block_measure_succ_singleton_eq
   have h_block_meas : Measurable (p.blockRV n) := p.measurable_blockRV n
   have h_obs_meas : Measurable (p.obs n) := p.measurable_obs n
   have h_block_succ_meas : Measurable (p.blockRV (n + 1)) := p.measurable_blockRV (n + 1)
-  have h_pair_meas : Measurable (fun ω => (p.blockRV n ω, p.obs n ω)) :=
+  have h_pair_meas : Measurable (fun ω ↦ (p.blockRV n ω, p.obs n ω)) :=
     h_block_meas.prodMk h_obs_meas
   -- Equiv `e : (Fin (n+1) → α) ≃ᵐ α × (Fin n → α)` from `piFinSuccAbove (Fin.last n)`.
   let e : (Fin (n + 1) → α) ≃ᵐ α × (Fin n → α) :=
-    MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) => α) (Fin.last n)
+    MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) ↦ α) (Fin.last n)
   have h_e_eq : ∀ ω, e (p.blockRV (n + 1) ω) = (p.obs n ω, p.blockRV n ω) := by
     intro ω
     apply Prod.ext
@@ -110,10 +110,10 @@ theorem block_measure_succ_singleton_eq
     simp [e', MeasurableEquiv.prodComm, h_e_eq]
   -- `μ.map (blockRV (n+1)) = (μ.map pair).map e'.symm` via `Measure.map_map`.
   have h_block_succ_eq : ∀ ω, p.blockRV (n + 1) ω
-      = e'.symm (p.blockRV n ω, p.obs n ω) := fun ω =>
+      = e'.symm (p.blockRV n ω, p.obs n ω) := fun ω ↦
     (e'.symm_apply_eq.mpr (h_e'_eq ω).symm).symm
   have h_map_succ : μ.map (p.blockRV (n + 1))
-      = (μ.map (fun ω => (p.blockRV n ω, p.obs n ω))).map e'.symm := by
+      = (μ.map (fun ω ↦ (p.blockRV n ω, p.obs n ω))).map e'.symm := by
     rw [Measure.map_map e'.symm.measurable h_pair_meas]
     congr 1
     funext ω
@@ -132,13 +132,13 @@ theorem block_measure_succ_singleton_eq
       rw [hq]
       exact (h_block_succ_eq ω).symm
   have h_sing : (μ.map (p.blockRV (n + 1))) {p.blockRV (n + 1) ω}
-      = (μ.map (fun ω' => (p.blockRV n ω', p.obs n ω')))
+      = (μ.map (fun ω' ↦ (p.blockRV n ω', p.obs n ω')))
           {(p.blockRV n ω, p.obs n ω)} := by
     rw [h_map_succ, Measure.map_apply e'.symm.measurable
       (measurableSet_singleton _), h_preim]
   rw [h_sing]
   -- Factor the joint via condDistrib.
-  have h_joint : μ.map (fun ω' => (p.blockRV n ω', p.obs n ω'))
+  have h_joint : μ.map (fun ω' ↦ (p.blockRV n ω', p.obs n ω'))
       = (μ.map (p.blockRV n)) ⊗ₘ (condDistrib (p.obs n) (p.blockRV n) μ) :=
     (compProd_map_condDistrib h_obs_meas.aemeasurable).symm
   rw [h_joint]
@@ -267,20 +267,20 @@ theorem integral_pmfLogCond_eq_conditionalEntropyTail
   classical
   have h_block_meas : Measurable (p.blockRV l) := p.measurable_blockRV l
   have h_obs_meas : Measurable (p.obs l) := p.measurable_obs l
-  have h_pair_meas : Measurable (fun ω => (p.blockRV l ω, p.obs l ω)) :=
+  have h_pair_meas : Measurable (fun ω ↦ (p.blockRV l ω, p.obs l ω)) :=
     h_block_meas.prodMk h_obs_meas
   -- Define `F : (Fin l → α) × α → ℝ` as `(y, x) ↦ -log (cd y).real {x}`.
   set F : (Fin l → α) × α → ℝ :=
-    fun q => -Real.log ((condDistrib (p.obs l) (p.blockRV l) μ q.1).real {q.2}) with hF_def
+    fun q ↦ -Real.log ((condDistrib (p.obs l) (p.blockRV l) μ q.1).real {q.2}) with hF_def
   have hF_meas : Measurable F := measurable_of_finite _
   -- Step 1: `∫ ω, pmfLogCond p l ω dμ = ∫ (y, x), F (y, x) d(μ.map pair)`.
   have h_step1 : ∫ ω, pmfLogCond μ p l ω ∂μ
-      = ∫ q, F q ∂(μ.map (fun ω => (p.blockRV l ω, p.obs l ω))) := by
+      = ∫ q, F q ∂(μ.map (fun ω ↦ (p.blockRV l ω, p.obs l ω))) := by
     rw [integral_map h_pair_meas.aemeasurable hF_meas.aestronglyMeasurable]
     rfl
   rw [h_step1]
   -- Step 2: factor joint via compProd_map_condDistrib.
-  have h_joint : μ.map (fun ω => (p.blockRV l ω, p.obs l ω))
+  have h_joint : μ.map (fun ω ↦ (p.blockRV l ω, p.obs l ω))
       = (μ.map (p.blockRV l)) ⊗ₘ (condDistrib (p.obs l) (p.blockRV l) μ) :=
     (compProd_map_condDistrib h_obs_meas.aemeasurable).symm
   rw [h_joint]
@@ -297,7 +297,7 @@ theorem integral_pmfLogCond_eq_conditionalEntropyTail
   -- For each y, the inner integrand is bounded (Fintype), so integrable.
   unfold conditionalEntropyTail InformationTheory.MeasureFano.condEntropy
   refine MeasureTheory.integral_congr_ae ?_
-  refine ae_of_all _ fun y => ?_
+  refine ae_of_all _ fun y ↦ ?_
   -- inner: ∫ x, F (y, x) d(cd y) vs ∑ x, negMulLog ((cd y).real {x})
   show ∫ x, F (y, x) ∂(condDistrib (p.obs l) (p.blockRV l) μ y)
       = ∑ x, Real.negMulLog ((condDistrib (p.obs l) (p.blockRV l) μ y).real {x})
@@ -320,19 +320,19 @@ lemma integrable_pmfLogCond
   classical
   have h_block_meas : Measurable (p.blockRV l) := p.measurable_blockRV l
   have h_obs_meas : Measurable (p.obs l) := p.measurable_obs l
-  have h_pair_meas : Measurable (fun ω => (p.blockRV l ω, p.obs l ω)) :=
+  have h_pair_meas : Measurable (fun ω ↦ (p.blockRV l ω, p.obs l ω)) :=
     h_block_meas.prodMk h_obs_meas
   -- View `pmfLogCond p l` as `F ∘ pair` where `F : (Fin l → α) × α → ℝ` is measurable.
   set F : (Fin l → α) × α → ℝ :=
-    fun q => -Real.log ((condDistrib (p.obs l) (p.blockRV l) μ q.1).real {q.2})
+    fun q ↦ -Real.log ((condDistrib (p.obs l) (p.blockRV l) μ q.1).real {q.2})
   have hF_meas : Measurable F := measurable_of_finite _
-  have h_eq : pmfLogCond μ p l = F ∘ (fun ω => (p.blockRV l ω, p.obs l ω)) := by
+  have h_eq : pmfLogCond μ p l = F ∘ (fun ω ↦ (p.blockRV l ω, p.obs l ω)) := by
     funext ω; rfl
   rw [h_eq]
   -- Integrable iff bounded ∫⁻ ‖F ∘ pair‖. Push to μ.map pair and use Fintype.
-  haveI : IsProbabilityMeasure (μ.map (fun ω => (p.blockRV l ω, p.obs l ω))) :=
+  haveI : IsProbabilityMeasure (μ.map (fun ω ↦ (p.blockRV l ω, p.obs l ω))) :=
     Measure.isProbabilityMeasure_map h_pair_meas.aemeasurable
-  have h_int_pair : Integrable F (μ.map (fun ω => (p.blockRV l ω, p.obs l ω))) :=
+  have h_int_pair : Integrable F (μ.map (fun ω ↦ (p.blockRV l ω, p.obs l ω))) :=
     Integrable.of_finite
   exact (MeasureTheory.integrable_map_measure hF_meas.aestronglyMeasurable
     h_pair_meas.aemeasurable).mp h_int_pair
@@ -362,7 +362,7 @@ theorem birkhoffAverage_pmfLogCond_tendsto
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α) (l : ℕ) :
     ∀ᵐ ω ∂μ, Filter.Tendsto
-      (fun n => birkhoffAverageReal p.T (pmfLogCond μ p.toStationaryProcess l) n ω)
+      (fun n ↦ birkhoffAverageReal p.T (pmfLogCond μ p.toStationaryProcess l) n ω)
       Filter.atTop
       (𝓝 (conditionalEntropyTail μ p.toStationaryProcess l)) := by
   have h_int :

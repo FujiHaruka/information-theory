@@ -36,15 +36,15 @@ variable {α : Type*} {mα : MeasurableSpace α} {μ ν : Measure α}
 theorem integral_exp_sub_llr_le [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (hμν : μ ≪ ν) {g : α → ℝ} (hg_meas : Measurable g) {C : ℝ} (hg_bdd : ∀ x, |g x| ≤ C) :
     ∫ x, Real.exp (g x - llr μ ν x) ∂μ ≤ ∫ x, Real.exp (g x) ∂ν := by
-  set r : α → ℝ := fun x => (μ.rnDeriv ν x).toReal with hr
+  set r : α → ℝ := fun x ↦ (μ.rnDeriv ν x).toReal with hr
   -- `exp g` is bounded by `exp C`, hence `Real.exp (g ·)` is integrable wrt any
   -- probability measure.
-  have hexpg_meas : Measurable (fun x => Real.exp (g x)) := Real.measurable_exp.comp hg_meas
+  have hexpg_meas : Measurable (fun x ↦ Real.exp (g x)) := Real.measurable_exp.comp hg_meas
   have hbound_exp : ∀ x, ‖Real.exp (g x)‖ ≤ Real.exp C := by
     intro x
     rw [Real.norm_eq_abs, abs_of_pos (Real.exp_pos _)]
     exact Real.exp_le_exp.mpr ((abs_le.mp (hg_bdd x)).2)
-  have hint_expg_ν : Integrable (fun x => Real.exp (g x)) ν :=
+  have hint_expg_ν : Integrable (fun x ↦ Real.exp (g x)) ν :=
     Integrable.of_bound hexpg_meas.aestronglyMeasurable (Real.exp C)
       (Filter.Eventually.of_forall hbound_exp)
   -- Step 1: rewrite `exp (g − llr) =ᵐ[μ] exp g · r⁻¹`.
@@ -88,8 +88,8 @@ theorem klDiv_variational_lower_bound [IsProbabilityMeasure μ] [IsProbabilityMe
     (hμν : μ ≪ ν) (h_int : Integrable (llr μ ν) μ)
     {g : α → ℝ} (hg_meas : Measurable g) {C : ℝ} (hg_bdd : ∀ x, |g x| ≤ C) :
     (∫ x, g x ∂μ) - Real.log (∫ x, Real.exp (g x) ∂ν) ≤ (klDiv μ ν).toReal := by
-  set r : α → ℝ := fun x => (μ.rnDeriv ν x).toReal with hr
-  have hexpg_meas : Measurable (fun x => Real.exp (g x)) := Real.measurable_exp.comp hg_meas
+  set r : α → ℝ := fun x ↦ (μ.rnDeriv ν x).toReal with hr
+  have hexpg_meas : Measurable (fun x ↦ Real.exp (g x)) := Real.measurable_exp.comp hg_meas
   have hbound_exp : ∀ x, ‖Real.exp (g x)‖ ≤ Real.exp C := by
     intro x
     rw [Real.norm_eq_abs, abs_of_pos (Real.exp_pos _)]
@@ -97,19 +97,19 @@ theorem klDiv_variational_lower_bound [IsProbabilityMeasure μ] [IsProbabilityMe
   -- `g` and `llr` are integrable wrt the probability measure μ.
   have hint_g_μ : Integrable g μ :=
     Integrable.of_bound hg_meas.aestronglyMeasurable C
-      (Filter.Eventually.of_forall (fun x => by rw [Real.norm_eq_abs]; exact hg_bdd x))
-  have hint_sub : Integrable (fun x => g x - llr μ ν x) μ := hint_g_μ.sub h_int
+      (Filter.Eventually.of_forall (fun x ↦ by rw [Real.norm_eq_abs]; exact hg_bdd x))
+  have hint_sub : Integrable (fun x ↦ g x - llr μ ν x) μ := hint_g_μ.sub h_int
   -- `exp (g − llr)` is integrable wrt μ (via change of measure: bounded after pushing to ν).
   have hr_pos : ∀ᵐ x ∂μ, 0 < μ.rnDeriv ν x := μ.rnDeriv_pos hμν
   have hr_ne_top : ∀ᵐ x ∂μ, μ.rnDeriv ν x ≠ ∞ := hμν.ae_le (μ.rnDeriv_ne_top ν)
-  have hexp_sub_eq : (fun x => Real.exp (g x - llr μ ν x)) =ᵐ[μ]
-      fun x => Real.exp (g x) * (r x)⁻¹ := by
+  have hexp_sub_eq : (fun x ↦ Real.exp (g x - llr μ ν x)) =ᵐ[μ]
+      fun x ↦ Real.exp (g x) * (r x)⁻¹ := by
     filter_upwards [hr_pos, hr_ne_top] with x hx hx_top
     have hrx : 0 < r x := ENNReal.toReal_pos hx.ne' hx_top
     rw [llr, sub_eq_add_neg, Real.exp_add, ← Real.log_inv, Real.exp_log (by positivity)]
-  have hint_expsub_μ : Integrable (fun x => Real.exp (g x - llr μ ν x)) μ := by
+  have hint_expsub_μ : Integrable (fun x ↦ Real.exp (g x - llr μ ν x)) μ := by
     rw [integrable_congr hexp_sub_eq]
-    rw [← integrable_toReal_rnDeriv_mul_iff hμν (f := fun x => Real.exp (g x) * (r x)⁻¹)]
+    rw [← integrable_toReal_rnDeriv_mul_iff hμν (f := fun x ↦ Real.exp (g x) * (r x)⁻¹)]
     apply Integrable.of_bound
       ((((μ.measurable_rnDeriv ν).ennreal_toReal).mul
         (hexpg_meas.mul ((μ.measurable_rnDeriv ν).ennreal_toReal.inv))).aestronglyMeasurable)
@@ -124,9 +124,9 @@ theorem klDiv_variational_lower_bound [IsProbabilityMeasure μ] [IsProbabilityMe
   -- Jensen for the convex `exp`: `exp (∫ (g − llr) ∂μ) ≤ ∫ exp (g − llr) ∂μ`.
   have hjensen : Real.exp (∫ x, (g x - llr μ ν x) ∂μ)
       ≤ ∫ x, Real.exp (g x - llr μ ν x) ∂μ := by
-    have := convexOn_exp.map_integral_le (μ := μ) (f := fun x => g x - llr μ ν x)
+    have := convexOn_exp.map_integral_le (μ := μ) (f := fun x ↦ g x - llr μ ν x)
       (continuousOn_exp.mono (Set.subset_univ _)) isClosed_univ
-      (Filter.Eventually.of_forall (fun _ => Set.mem_univ _)) hint_sub hint_expsub_μ
+      (Filter.Eventually.of_forall (fun _ ↦ Set.mem_univ _)) hint_sub hint_expsub_μ
     simpa using this
   -- Combine with the change-of-measure bound.
   have hcombine : Real.exp (∫ x, (g x - llr μ ν x) ∂μ) ≤ ∫ x, Real.exp (g x) ∂ν :=

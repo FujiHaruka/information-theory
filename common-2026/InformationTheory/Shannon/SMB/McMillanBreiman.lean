@@ -60,7 +60,7 @@ For `n = 0` the value is `0` (multiplication by `1/0 = 0`); only `n > 0`
 behavior is informative. -/
 noncomputable def blockLogAvg
     (μ : Measure Ω) (p : StationaryProcess μ α) (n : ℕ) : Ω → ℝ :=
-  fun ω => -(1 / (n : ℝ)) * Real.log ((μ.map (p.blockRV n)).real {p.blockRV n ω})
+  fun ω ↦ -(1 / (n : ℝ)) * Real.log ((μ.map (p.blockRV n)).real {p.blockRV n ω})
 
 omit [DecidableEq α] [Nonempty α] in
 /-- Measurability of `blockLogAvg μ p n`. -/
@@ -72,7 +72,7 @@ lemma measurable_blockLogAvg
   -- the finite-alphabet function `x ↦ -(1/n) * log (P_n.real {x})` (measurable
   -- because the codomain is discrete).
   have h_block : Measurable (p.blockRV n) := p.measurable_blockRV n
-  have h_disc : Measurable (fun x : Fin n → α =>
+  have h_disc : Measurable (fun x : Fin n → α ↦
       -(1 / (n : ℝ)) * Real.log ((μ.map (p.blockRV n)).real {x})) := by
     exact measurable_of_finite _
   exact h_disc.comp h_block
@@ -94,18 +94,18 @@ theorem shannon_mcmillan_breiman_of_sandwich
     (p : ErgodicProcess μ α)
     (h_liminf : ∀ᵐ ω ∂μ,
       entropyRate μ p.toStationaryProcess
-        ≤ Filter.liminf (fun n => blockLogAvg μ p.toStationaryProcess n ω) Filter.atTop)
+        ≤ Filter.liminf (fun n ↦ blockLogAvg μ p.toStationaryProcess n ω) Filter.atTop)
     (h_limsup : ∀ᵐ ω ∂μ,
-      Filter.limsup (fun n => blockLogAvg μ p.toStationaryProcess n ω) Filter.atTop
+      Filter.limsup (fun n ↦ blockLogAvg μ p.toStationaryProcess n ω) Filter.atTop
         ≤ entropyRate μ p.toStationaryProcess)
     (h_bdd_above : ∀ᵐ ω ∂μ,
       Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
-        (fun n => blockLogAvg μ p.toStationaryProcess n ω))
+        (fun n ↦ blockLogAvg μ p.toStationaryProcess n ω))
     (h_bdd_below : ∀ᵐ ω ∂μ,
       Filter.IsBoundedUnder (· ≥ ·) Filter.atTop
-        (fun n => blockLogAvg μ p.toStationaryProcess n ω)) :
+        (fun n ↦ blockLogAvg μ p.toStationaryProcess n ω)) :
     ∀ᵐ ω ∂μ, Filter.Tendsto
-      (fun n => blockLogAvg μ p.toStationaryProcess n ω)
+      (fun n ↦ blockLogAvg μ p.toStationaryProcess n ω)
       Filter.atTop (𝓝 (entropyRate μ p.toStationaryProcess)) := by
   filter_upwards [h_liminf, h_limsup, h_bdd_above, h_bdd_below]
     with ω hli hls hba hbb
@@ -131,7 +131,7 @@ theorem expected_blockLogAvg_eq
     Measure.isProbabilityMeasure_map hB.aemeasurable
   -- Step 1: push forward via `blockRV n`.
   set f : (Fin n → α) → ℝ :=
-    fun x => -(1 / (n : ℝ)) * Real.log ((μ.map (p.blockRV n)).real {x}) with hf_def
+    fun x ↦ -(1 / (n : ℝ)) * Real.log ((μ.map (p.blockRV n)).real {x}) with hf_def
   have hf_meas : Measurable f := measurable_of_finite _
   have h_push : ∫ ω, blockLogAvg μ p n ω ∂μ
       = ∫ x, f x ∂(μ.map (p.blockRV n)) := by
@@ -152,7 +152,7 @@ theorem expected_blockLogAvg_eq
           ∑ x : Fin n → α,
             Real.negMulLog ((μ.map (p.blockRV n)).real {x}) := by
     rw [Finset.mul_sum]
-    refine Finset.sum_congr rfl fun x _ => ?_
+    refine Finset.sum_congr rfl fun x _ ↦ ?_
     show (μ.map (p.blockRV n)).real {x} • f x
         = (1 / (n : ℝ)) * Real.negMulLog ((μ.map (p.blockRV n)).real {x})
     rw [hf_def, Real.negMulLog, smul_eq_mul]

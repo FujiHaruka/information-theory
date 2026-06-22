@@ -110,8 +110,8 @@ private lemma sum_real_singleton_eq_one (Q : Measure X) [IsProbabilityMeasure Q]
 `mass x x' = Q.real {x} · 𝟙[x' = xh]`. -/
 def diracPMF (Q : Measure X) [IsProbabilityMeasure Q] (xh : X) :
     FiniteJointPMF X X where
-  mass := fun x x' => if x' = xh then Q.real {x} else 0
-  mass_nonneg := fun x x' => by
+  mass := fun x x' ↦ if x' = xh then Q.real {x} else 0
+  mass_nonneg := fun x x' ↦ by
     split_ifs
     · exact measureReal_nonneg
     · exact le_refl 0
@@ -120,10 +120,10 @@ def diracPMF (Q : Measure X) [IsProbabilityMeasure Q] (xh : X) :
     have hInner : ∀ x : X,
         (∑ x' : X, if x' = xh then Q.real {x} else 0) = Q.real {x} := by
       intro x
-      rw [Finset.sum_eq_single xh (fun b _ hb => by simp [hb])
-        (fun h => (h (Finset.mem_univ _)).elim)]
+      rw [Finset.sum_eq_single xh (fun b _ hb ↦ by simp [hb])
+        (fun h ↦ (h (Finset.mem_univ _)).elim)]
       simp
-    rw [Finset.sum_congr rfl (fun x _ => hInner x)]
+    rw [Finset.sum_congr rfl (fun x _ ↦ hInner x)]
     exact sum_real_singleton_eq_one Q
 
 /-! ### Computations for `diracPMF` -/
@@ -137,10 +137,10 @@ omit [Nonempty X] in
 private lemma diracPMF_jointEntropy (Q : Measure X) [IsProbabilityMeasure Q] (xh : X) :
     (diracPMF Q xh).jointEntropy = ∑ x : X, Real.negMulLog (Q.real {x}) := by
   unfold FiniteJointPMF.jointEntropy
-  refine Finset.sum_congr rfl (fun x _ => ?_)
+  refine Finset.sum_congr rfl (fun x _ ↦ ?_)
   rw [Finset.sum_eq_single xh
-    (fun b _ hb => by rw [diracPMF_mass, if_neg hb]; simp)
-    (fun h => (h (Finset.mem_univ _)).elim)]
+    (fun b _ hb ↦ by rw [diracPMF_mass, if_neg hb]; simp)
+    (fun h ↦ (h (Finset.mem_univ _)).elim)]
   rw [diracPMF_mass, if_pos rfl]
 
 omit [Nonempty X] in
@@ -151,7 +151,7 @@ private lemma diracPMF_marginalY (Q : Measure X) [IsProbabilityMeasure Q] (xh x'
   by_cases hx' : x' = xh
   · rw [hx', if_pos rfl]
     have : (∑ x : X, (diracPMF Q xh).mass x xh) = ∑ x : X, Q.real {x} :=
-      Finset.sum_congr rfl (fun x _ => by rw [diracPMF_mass, if_pos rfl])
+      Finset.sum_congr rfl (fun x _ ↦ by rw [diracPMF_mass, if_pos rfl])
     rw [this, sum_real_singleton_eq_one]
   · rw [if_neg hx']
     apply Finset.sum_eq_zero
@@ -188,13 +188,13 @@ private lemma diracPMF_errorProb (Q : Measure X) [IsProbabilityMeasure Q] (xh : 
         = if x = xh then 0 else Q.real {x} := by
     intro x
     rw [Finset.sum_eq_single xh
-      (fun b _ hb => by rw [diracPMF_mass, if_neg hb]; simp)
-      (fun h => (h (Finset.mem_univ _)).elim)]
+      (fun b _ hb ↦ by rw [diracPMF_mass, if_neg hb]; simp)
+      (fun h ↦ (h (Finset.mem_univ _)).elim)]
     rw [diracPMF_mass, if_pos rfl]
-  rw [Finset.sum_congr rfl (fun x _ => hInner x)]
+  rw [Finset.sum_congr rfl (fun x _ ↦ hInner x)]
   -- Split the xh term out (it is 0), leaving ∑ x ∈ univ \ {xh}, Q.real {x}.
   rw [Finset.sum_eq_sum_diff_singleton_add (Finset.mem_univ xh)
-      (fun x => (if x = xh then (0:ℝ) else Q.real {x}))]
+      (fun x ↦ (if x = xh then (0:ℝ) else Q.real {x}))]
   rw [if_pos rfl, add_zero]
   have hDiff : ∀ x ∈ ((Finset.univ : Finset X) \ ({xh} : Finset X)),
       (if x = xh then (0:ℝ) else Q.real {x}) = Q.real {x} := by
@@ -236,13 +236,13 @@ private theorem integral_qaryEntropy_le_qaryEntropy_integral {ι : Type*} [Measu
     (hg_int : Integrable g ν) :
     (∫ y, Real.qaryEntropy K (g y) ∂ν) ≤ Real.qaryEntropy K (∫ y, g y ∂ν) := by
   have hbinEntropy_integrable :
-      Integrable (fun y => Real.binEntropy (g y)) ν := by
+      Integrable (fun y ↦ Real.binEntropy (g y)) ν := by
     apply Integrable.of_mem_Icc 0 (Real.log 2)
       (Real.binEntropy_continuous.measurable.comp hg_meas).aemeasurable
     filter_upwards [hg_mem] with y hy
     exact ⟨Real.binEntropy_nonneg hy.1 hy.2, Real.binEntropy_le_log_two⟩
   have hqDecomp : ∀ p : ℝ,
-      Real.qaryEntropy K p = p * Real.log ((K : ℝ) - 1) + Real.binEntropy p := fun p => by
+      Real.qaryEntropy K p = p * Real.log ((K : ℝ) - 1) + Real.binEntropy p := fun p ↦ by
     rw [InformationTheory.qaryEntropy_eq_binEntropy_add_log]; ring
   have hLHS_eq :
       (∫ y, Real.qaryEntropy K (g y) ∂ν)
@@ -287,17 +287,17 @@ theorem fano_inequality_measure_theoretic
                    = Prod.mk y ⁻¹' {p : Y × X | p.2 ≠ decoder p.1} := by
     intro y; ext x; simp
   have hPeENN : Measurable
-      (fun y => (condDistrib Xs Yo μ y) {x : X | x ≠ decoder y}) := by
+      (fun y ↦ (condDistrib Xs Yo μ y) {x : X | x ≠ decoder y}) := by
     simp only [hPreimage]
     exact Kernel.measurable_kernel_prodMk_left hMS
   have hPeMeas : Measurable (pointwiseErrorProb μ Xs Yo decoder) := by
     change Measurable
-      (fun y => ((condDistrib Xs Yo μ y) {x : X | x ≠ decoder y}).toReal)
+      (fun y ↦ ((condDistrib Xs Yo μ y) {x : X | x ≠ decoder y}).toReal)
     exact ENNReal.measurable_toReal.comp hPeENN
   have hPe_mem :
       ∀ᵐ y ∂(μ.map Yo), pointwiseErrorProb μ Xs Yo decoder y ∈ Set.Icc (0:ℝ) 1 :=
     Filter.Eventually.of_forall
-      (fun _ => ⟨measureReal_nonneg, measureReal_le_one⟩)
+      (fun _ ↦ ⟨measureReal_nonneg, measureReal_le_one⟩)
   have hPe_integrable :
       Integrable (pointwiseErrorProb μ Xs Yo decoder) (μ.map Yo) :=
     Integrable.of_mem_Icc 0 1 hPeMeas.aemeasurable hPe_mem
@@ -310,7 +310,7 @@ theorem fano_inequality_measure_theoretic
   have hPointwise : ∀ y : Y,
       (∑ x : X, Real.negMulLog ((condDistrib Xs Yo μ y).real {x}))
         ≤ Real.qaryEntropy (Fintype.card X)
-            (pointwiseErrorProb μ Xs Yo decoder y) := fun y =>
+            (pointwiseErrorProb μ Xs Yo decoder y) := fun y ↦
     pointwise_fano (condDistrib Xs Yo μ y) (decoder y) hcard
   have step1 :
       condEntropy μ Xs Yo ≤
@@ -321,21 +321,21 @@ theorem fano_inequality_measure_theoretic
     · -- Integrable LHS: `∑ x, negMulLog ((cond y).real {x})` is bounded and measurable on a
       -- probability measure.
       have hMeasOne : ∀ x : X,
-          Measurable (fun y => (condDistrib Xs Yo μ y).real {x}) := fun x =>
+          Measurable (fun y ↦ (condDistrib Xs Yo μ y).real {x}) := fun x ↦
         ENNReal.measurable_toReal.comp
           (Kernel.measurable_coe _ (measurableSet_singleton x))
       have hLHS : Measurable
-          (fun y => ∑ x : X, Real.negMulLog ((condDistrib Xs Yo μ y).real {x})) :=
-        Finset.measurable_sum _ (fun x _ =>
+          (fun y ↦ ∑ x : X, Real.negMulLog ((condDistrib Xs Yo μ y).real {x})) :=
+        Finset.measurable_sum _ (fun x _ ↦
           Real.continuous_negMulLog.measurable.comp (hMeasOne x))
       apply Integrable.of_mem_Icc 0 (Fintype.card X) hLHS.aemeasurable
-      refine Filter.Eventually.of_forall (fun y => ⟨?_, ?_⟩)
-      · exact Finset.sum_nonneg (fun x _ =>
+      refine Filter.Eventually.of_forall (fun y ↦ ⟨?_, ?_⟩)
+      · exact Finset.sum_nonneg (fun x _ ↦
           Real.negMulLog_nonneg measureReal_nonneg measureReal_le_one)
       · -- Each term satisfies `negMulLog t ≤ 1 - t ≤ 1` for `t ≥ 0`.
         calc ∑ x : X, Real.negMulLog ((condDistrib Xs Yo μ y).real {x})
             ≤ ∑ _x : X, (1 : ℝ) := by
-              refine Finset.sum_le_sum (fun x _ => ?_)
+              refine Finset.sum_le_sum (fun x _ ↦ ?_)
               have hUB := Real.negMulLog_le_one_sub_self
                 (measureReal_nonneg (μ := condDistrib Xs Yo μ y)
                   (s := ({x} : Set X)))
@@ -345,12 +345,12 @@ theorem fano_inequality_measure_theoretic
     · -- Integrable RHS: `y ↦ qaryEntropy |X| (Pe(y))`, with `Pe ∈ [0,1]` and `qaryEntropy`
       -- continuous.
       have hRHS : Measurable
-          (fun y => Real.qaryEntropy (Fintype.card X)
+          (fun y ↦ Real.qaryEntropy (Fintype.card X)
                       (pointwiseErrorProb μ Xs Yo decoder y)) :=
         Real.qaryEntropy_continuous.measurable.comp hPeMeas
       apply Integrable.of_mem_Icc 0
         (Real.log ((Fintype.card X : ℝ) - 1) + Real.log 2) hRHS.aemeasurable
-      refine Filter.Eventually.of_forall (fun y => ?_)
+      refine Filter.Eventually.of_forall (fun y ↦ ?_)
       have hPe_nn : 0 ≤ pointwiseErrorProb μ Xs Yo decoder y := measureReal_nonneg
       have hPe_le_one : pointwiseErrorProb μ Xs Yo decoder y ≤ 1 := measureReal_le_one
       refine ⟨Real.qaryEntropy_nonneg hPe_nn hPe_le_one, ?_⟩
@@ -381,7 +381,7 @@ theorem fano_inequality_measure_theoretic
         = errorProb μ Xs Yo decoder := by
     have hPe_lt_top : ∀ᵐ y ∂(μ.map Yo),
         (condDistrib Xs Yo μ y) {x : X | x ≠ decoder y} < ∞ :=
-      Filter.Eventually.of_forall (fun _ => measure_lt_top _ _)
+      Filter.Eventually.of_forall (fun _ ↦ measure_lt_top _ _)
     unfold pointwiseErrorProb errorProb
     show (∫ y, ((condDistrib Xs Yo μ y) {x : X | x ≠ decoder y}).toReal ∂(μ.map Yo))
           = (μ {ω | Xs ω ≠ decoder (Yo ω)}).toReal

@@ -61,31 +61,31 @@ the continuous map `Real.negMulLog` composed pointwise. No own `sorry`.
 theorem negMulLog_convDensity_tendsto_ae_subseq
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    (hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume)
     (u : ℕ → ℝ) (hu_pos : ∀ n, 0 < u n) (hu_lim : Tendsto u atTop (𝓝[Set.Ioi 0] 0)) :
     ∃ ns : ℕ → ℕ, StrictMono ns ∧ ∀ᵐ x ∂volume,
-      Tendsto (fun i =>
+      Tendsto (fun i ↦
         Real.negMulLog (convDensityAdd pX (gaussianPDFReal 0 ⟨u (ns i), (hu_pos (ns i)).le⟩) x))
         atTop (𝓝 (Real.negMulLog (pX x))) := by
   classical
   -- The smoothed densities, indexed by the sequence `u`.
   set f : ℕ → ℝ → ℝ :=
-    fun n => convDensityAdd pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩) with hf_def
+    fun n ↦ convDensityAdd pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩) with hf_def
   -- Layer-1 L¹ convergence, reparameterised from the continuous filter to the
   -- sequence `u` and rewritten from `(u n).toNNReal` to `⟨u n, _⟩`.
-  have hL1 : Tendsto (fun n => eLpNorm (f n - pX) 1 volume) atTop (𝓝 0) := by
+  have hL1 : Tendsto (fun n ↦ eLpNorm (f n - pX) 1 volume) atTop (𝓝 0) := by
     have hcomp :
         Tendsto
-          (fun n => eLpNorm
+          (fun n ↦ eLpNorm
             (EPIConvDensity.convDensityAdd pX (gaussianPDFReal 0 (u n).toNNReal) - pX) 1 volume)
           atTop (𝓝 0) :=
       (convDensityAdd_tendsto_L1_zero hpX_nn hpX_meas hpX_int hpX_mom).comp hu_lim
-    refine hcomp.congr (fun n => ?_)
+    refine hcomp.congr (fun n ↦ ?_)
     have hwit : (u n).toNNReal = (⟨u n, (hu_pos n).le⟩ : ℝ≥0) :=
       NNReal.coe_injective (Real.coe_toNNReal _ (hu_pos n).le)
     rw [hf_def, hwit]
   -- Measurability of every member (and of the limit) — needed for measure convergence.
-  have hf_meas : ∀ n, AEStronglyMeasurable (f n) volume := fun n =>
+  have hf_meas : ∀ n, AEStronglyMeasurable (f n) volume := fun n ↦
     (EPIConvDensity.convDensityAdd_pXpY_measurable pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩)
       hpX_meas (measurable_gaussianPDFReal _ _)).aestronglyMeasurable
   have hpX_aesm : AEStronglyMeasurable pX volume := hpX_meas.aestronglyMeasurable

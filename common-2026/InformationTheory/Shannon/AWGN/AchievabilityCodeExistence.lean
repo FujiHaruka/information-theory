@@ -57,11 +57,11 @@ lemma errorEvent_jointTypicalDecoder_comp_subset_of_strictMono
     (hreindex_strictMono : StrictMono reindex) (j : Fin M_target) :
     (InformationTheory.Shannon.ChannelCoding.Code.mk
           (M := M_target) (n := n) (α := ℝ) (β := ℝ)
-          (fun i => c (reindex i)) (jointTypicalDecoder A (fun i => c (reindex i)))).errorEvent j
+          (fun i ↦ c (reindex i)) (jointTypicalDecoder A (fun i ↦ c (reindex i)))).errorEvent j
       ⊆ (InformationTheory.Shannon.ChannelCoding.Code.mk
           (M := M) (n := n) (α := ℝ) (β := ℝ)
           c (jointTypicalDecoder A c)).errorEvent (reindex j) := by
-  set subcodebook : Fin M_target → Fin n → ℝ := fun i => c (reindex i) with hsubcodebook_def
+  set subcodebook : Fin M_target → Fin n → ℝ := fun i ↦ c (reindex i) with hsubcodebook_def
   intro y hy
   -- `hy : decoder_sub y ≠ j`. Show `decoder_full y ≠ reindex j`.
   simp only [InformationTheory.Shannon.ChannelCoding.Code.mem_errorEvent] at hy ⊢
@@ -75,31 +75,31 @@ lemma errorEvent_jointTypicalDecoder_comp_subset_of_strictMono
   by_cases h_exists_full : ∃ k : Fin M, (c k, y) ∈ A
   · -- Full has typical; extract the smallest-index characterization.
     haveI : Decidable (∃ k : Fin M, (c k, y) ∈ A) := Classical.propDecidable _
-    haveI inst_full : DecidablePred fun k : Fin M => (c k, y) ∈ A :=
-      fun _ => Classical.propDecidable _
+    haveI inst_full : DecidablePred fun k : Fin M ↦ (c k, y) ∈ A :=
+      fun _ ↦ Classical.propDecidable _
     -- Rewrite decoder unfolding once with the SAME instance.
     change
       (haveI : Decidable (∃ m : Fin M, (c m, y) ∈ A) := Classical.propDecidable _;
-       haveI : DecidablePred fun m : Fin M => (c m, y) ∈ A :=
-          fun _ => Classical.propDecidable _;
+       haveI : DecidablePred fun m : Fin M ↦ (c m, y) ∈ A :=
+          fun _ ↦ Classical.propDecidable _;
        if h' : ∃ m : Fin M, (c m, y) ∈ A then Fin.find _ h' else _) = reindex j
         at hfull_def
     rw [dif_pos h_exists_full] at hfull_def
     -- The two `DecidablePred` instances are Subsingleton-equal; bridge them.
-    set inst_dec : DecidablePred fun k : Fin M => (c k, y) ∈ A :=
-      fun x => Classical.propDecidable ((fun m => (c m, y) ∈ A) x) with hinst_dec
+    set inst_dec : DecidablePred fun k : Fin M ↦ (c k, y) ∈ A :=
+      fun x ↦ Classical.propDecidable ((fun m ↦ (c m, y) ∈ A) x) with hinst_dec
     have hfull_def_inst :
-        @Fin.find M (fun k => (c k, y) ∈ A) inst_full h_exists_full = reindex j := by
+        @Fin.find M (fun k ↦ (c k, y) ∈ A) inst_full h_exists_full = reindex j := by
       have h_inst_eq : inst_full = inst_dec := Subsingleton.elim _ _
       rw [h_inst_eq]; exact hfull_def
     have hfull_typ : (c (reindex j), y) ∈ A := by
-      have h_spec := @Fin.find_spec M (fun k => (c k, y) ∈ A) inst_full h_exists_full
+      have h_spec := @Fin.find_spec M (fun k ↦ (c k, y) ∈ A) inst_full h_exists_full
       rw [hfull_def_inst] at h_spec
       exact h_spec
     have hfull_min : ∀ k : Fin M, k < reindex j → (c k, y) ∉ A := by
       intro k hk
-      have h_min := @Fin.find_min M (fun k => (c k, y) ∈ A) inst_full h_exists_full k
-      have hsub : k < @Fin.find M (fun k => (c k, y) ∈ A) inst_full h_exists_full := by
+      have h_min := @Fin.find_min M (fun k ↦ (c k, y) ∈ A) inst_full h_exists_full k
+      have hsub : k < @Fin.find M (fun k ↦ (c k, y) ∈ A) inst_full h_exists_full := by
         rw [hfull_def_inst]; exact hk
       exact h_min hsub
     -- In particular: (subcodebook j, y) = (c (reindex j), y) ∈ A.
@@ -115,12 +115,12 @@ lemma errorEvent_jointTypicalDecoder_comp_subset_of_strictMono
     have : jointTypicalDecoder A subcodebook y = j := by
       unfold jointTypicalDecoder
       rw [dif_pos h_exists_sub]
-      set inst_sub_dec : DecidablePred fun k : Fin M_target => (subcodebook k, y) ∈ A :=
-        fun x => Classical.propDecidable ((fun m => (subcodebook m, y) ∈ A) x)
-      haveI inst_sub : DecidablePred fun k : Fin M_target => (subcodebook k, y) ∈ A :=
+      set inst_sub_dec : DecidablePred fun k : Fin M_target ↦ (subcodebook k, y) ∈ A :=
+        fun x ↦ Classical.propDecidable ((fun m ↦ (subcodebook m, y) ∈ A) x)
+      haveI inst_sub : DecidablePred fun k : Fin M_target ↦ (subcodebook k, y) ∈ A :=
         inferInstance
       have h_inst_eq : inst_sub = inst_sub_dec := Subsingleton.elim _ _
-      show @Fin.find M_target (fun k => (subcodebook k, y) ∈ A) inst_sub_dec
+      show @Fin.find M_target (fun k ↦ (subcodebook k, y) ∈ A) inst_sub_dec
           h_exists_sub = j
       rw [← h_inst_eq]
       exact (Fin.find_eq_iff (i := j) h_exists_sub).mpr ⟨hsub_typ, hsub_min⟩
@@ -160,8 +160,8 @@ lemma errorEvent_jointTypicalDecoder_comp_subset_of_strictMono
 theorem awgn_errorEvent_aemeasurable
     {n M : ℕ} [NeZero M] (P' : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
     (A : Set ((Fin n → ℝ) × (Fin n → ℝ))) (hA_meas : MeasurableSet A) (m : Fin M) :
-    AEMeasurable (fun c : Fin M → Fin n → ℝ =>
-        (Measure.pi (fun i => awgnChannel N h_meas (c m i)))
+    AEMeasurable (fun c : Fin M → Fin n → ℝ ↦
+        (Measure.pi (fun i ↦ awgnChannel N h_meas (c m i)))
           ((InformationTheory.Shannon.ChannelCoding.Code.mk
               (M := M) (n := n) (α := ℝ) (β := ℝ)
               c (jointTypicalDecoder A c)).errorEvent m))
@@ -180,12 +180,12 @@ theorem awgn_errorEvent_aemeasurable
     exact h_joint h_compl
   -- Rewrite via the kernel + prodMk preimage shape required by
   -- `Kernel.measurable_kernel_prodMk_left`.
-  have hPe_eq : (fun c : Fin M → Fin n → ℝ =>
-      (Measure.pi (fun i => awgnChannel N h_meas (c m i)))
+  have hPe_eq : (fun c : Fin M → Fin n → ℝ ↦
+      (Measure.pi (fun i ↦ awgnChannel N h_meas (c m i)))
         ((InformationTheory.Shannon.ChannelCoding.Code.mk
             (M := M) (n := n) (α := ℝ) (β := ℝ)
             c (jointTypicalDecoder A c)).errorEvent m))
-      = (fun c : Fin M → Fin n → ℝ =>
+      = (fun c : Fin M → Fin n → ℝ ↦
           awgnCodebookKernel N h_meas m c (Prod.mk c ⁻¹' T)) := by
     funext c
     rfl
@@ -199,21 +199,21 @@ theorem awgn_subcodebook_errorEvent_le
     (c_full : Fin M → Fin n → ℝ) (reindex : Fin M_target → Fin M)
     (hreindex_strictMono : StrictMono reindex) {b : ℝ≥0∞}
     (hfull : ∀ j : Fin M_target,
-      (Measure.pi (fun i => awgnChannel N h_meas (c_full (reindex j) i)))
+      (Measure.pi (fun i ↦ awgnChannel N h_meas (c_full (reindex j) i)))
         ((InformationTheory.Shannon.ChannelCoding.Code.mk
             (M := M) (n := n) (α := ℝ) (β := ℝ)
             c_full (jointTypicalDecoder A c_full)).errorEvent (reindex j)) ≤ b)
     (j : Fin M_target) :
-    (Measure.pi (fun i => awgnChannel N h_meas (c_full (reindex j) i)))
+    (Measure.pi (fun i ↦ awgnChannel N h_meas (c_full (reindex j) i)))
         ((InformationTheory.Shannon.ChannelCoding.Code.mk
             (M := M_target) (n := n) (α := ℝ) (β := ℝ)
-            (fun i => c_full (reindex i))
-            (jointTypicalDecoder A (fun i => c_full (reindex i)))).errorEvent j) ≤ b := by
+            (fun i ↦ c_full (reindex i))
+            (jointTypicalDecoder A (fun i ↦ c_full (reindex i)))).errorEvent j) ≤ b := by
   classical
-  set subcodebook : Fin M_target → Fin n → ℝ := fun i => c_full (reindex i)
+  set subcodebook : Fin M_target → Fin n → ℝ := fun i ↦ c_full (reindex i)
     with hsubcodebook_def
   set μ_y : Measure (Fin n → ℝ) :=
-    Measure.pi (fun i => awgnChannel N h_meas (subcodebook j i)) with hμ_y_def
+    Measure.pi (fun i ↦ awgnChannel N h_meas (subcodebook j i)) with hμ_y_def
   -- Step 1: Set-level inclusion `errorEvent_sub j ⊆ errorEvent_full (reindex j)`.
   have h_incl : (InformationTheory.Shannon.ChannelCoding.Code.mk
             (M := M_target) (n := n) (α := ℝ) (β := ℝ)
@@ -231,7 +231,7 @@ theorem awgn_subcodebook_errorEvent_le
       μ_y ((InformationTheory.Shannon.ChannelCoding.Code.mk
               (M := M) (n := n) (α := ℝ) (β := ℝ)
               c_full (jointTypicalDecoder A c_full)).errorEvent (reindex j))
-        = (Measure.pi (fun i => awgnChannel N h_meas (c_full (reindex j) i)))
+        = (Measure.pi (fun i ↦ awgnChannel N h_meas (c_full (reindex j) i)))
             ((InformationTheory.Shannon.ChannelCoding.Code.mk
                 (M := M) (n := n) (α := ℝ) (β := ℝ)
                 c_full (jointTypicalDecoder A c_full)).errorEvent (reindex j)) := rfl
@@ -247,7 +247,7 @@ theorem awgn_exists_codebook_combined_penalty
     (h_slack_eq : 2 * ε_rand + ε_pow = 2 * ε_d2) (h4_lt_one : 4 * ε_d2 < 1)
     (h_per_m : ∀ m : Fin M,
       ∫⁻ c : Fin M → Fin n → ℝ,
-        (Measure.pi (fun i => awgnChannel N h_meas (c m i)))
+        (Measure.pi (fun i ↦ awgnChannel N h_meas (c m i)))
           ((InformationTheory.Shannon.ChannelCoding.Code.mk
               (M := M) (n := n) (α := ℝ) (β := ℝ)
               c (jointTypicalDecoder A c)).errorEvent m)
@@ -258,15 +258,15 @@ theorem awgn_exists_codebook_combined_penalty
         ≤ ENNReal.ofReal ε_pow) :
     ∃ (c_full : Fin M → Fin n → ℝ) (S : Finset (Fin M)), M / 2 ≤ S.card ∧
       (∀ s ∈ S,
-        (Measure.pi (fun i => awgnChannel N h_meas (c_full s i)))
+        (Measure.pi (fun i ↦ awgnChannel N h_meas (c_full s i)))
             ((InformationTheory.Shannon.ChannelCoding.Code.mk
                 (M := M) (n := n) (α := ℝ) (β := ℝ)
                 c_full (jointTypicalDecoder A c_full)).errorEvent s)
           ≤ ENNReal.ofReal (4 * ε_d2)) ∧
       (∀ s ∈ S, ∑ i, (c_full s i) ^ 2 ≤ (n : ℝ) * P) := by
   classical
-  set Pe : (Fin M → Fin n → ℝ) → Fin M → ℝ≥0∞ := fun c m =>
-    (Measure.pi (fun i => awgnChannel N h_meas (c m i)))
+  set Pe : (Fin M → Fin n → ℝ) → Fin M → ℝ≥0∞ := fun c m ↦
+    (Measure.pi (fun i ↦ awgnChannel N h_meas (c m i)))
       ((InformationTheory.Shannon.ChannelCoding.Code.mk
           (M := M) (n := n) (α := ℝ) (β := ℝ)
           c (jointTypicalDecoder A c)).errorEvent m) with hPe_def
@@ -274,41 +274,41 @@ theorem awgn_exists_codebook_combined_penalty
     intro c m
     haveI : IsMarkovKernel (awgnChannel N h_meas) := awgnChannel.instIsMarkovKernel N h_meas
     haveI : IsProbabilityMeasure
-        (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c m i))) := by infer_instance
+        (Measure.pi (fun i : Fin n ↦ awgnChannel N h_meas (c m i))) := by infer_instance
     exact prob_le_one
-  set ViolSet : Fin M → Set (Fin M → Fin n → ℝ) := fun m =>
+  set ViolSet : Fin M → Set (Fin M → Fin n → ℝ) := fun m ↦
     {c : Fin M → Fin n → ℝ | (n : ℝ) * P < ∑ i, (c m i) ^ 2} with hViolSet_def
   have hViolSet_meas : ∀ m, MeasurableSet (ViolSet m) := by
     intro m
     rw [hViolSet_def]
     apply measurableSet_lt measurable_const
-    refine Finset.measurable_sum _ (fun i _ => ?_)
-    have h_proj : Measurable (fun c : Fin M → Fin n → ℝ => c m i) :=
+    refine Finset.measurable_sum _ (fun i _ ↦ ?_)
+    have h_proj : Measurable (fun c : Fin M → Fin n → ℝ ↦ c m i) :=
       (measurable_pi_apply i).comp (measurable_pi_apply m)
     exact h_proj.pow_const 2
-  set Viol : (Fin M → Fin n → ℝ) → Fin M → ℝ≥0∞ := fun c m =>
-    (ViolSet m).indicator (fun _ => (1 : ℝ≥0∞)) c with hViol_def
+  set Viol : (Fin M → Fin n → ℝ) → Fin M → ℝ≥0∞ := fun c m ↦
+    (ViolSet m).indicator (fun _ ↦ (1 : ℝ≥0∞)) c with hViol_def
   have hViol_le_one : ∀ c m, Viol c m ≤ 1 := by
     intro c m
     rw [hViol_def]
-    exact Set.indicator_le_self' (fun _ _ => zero_le_one) c
-  have hViol_meas : ∀ m, Measurable (fun c => Viol c m) := by
+    exact Set.indicator_le_self' (fun _ _ ↦ zero_le_one) c
+  have hViol_meas : ∀ m, Measurable (fun c ↦ Viol c m) := by
     intro m
     rw [hViol_def]
     exact measurable_const.indicator (hViolSet_meas m)
-  have hPe_meas : ∀ m, AEMeasurable (fun c => Pe c m)
-      (gaussianCodebook M n P'.toNNReal) := fun m =>
+  have hPe_meas : ∀ m, AEMeasurable (fun c ↦ Pe c m)
+      (gaussianCodebook M n P'.toNNReal) := fun m ↦
     awgn_errorEvent_aemeasurable P' N h_meas A hA_meas m
-  have hPV_meas : ∀ m, AEMeasurable (fun c => Pe c m + Viol c m)
-      (gaussianCodebook M n P'.toNNReal) := fun m =>
+  have hPV_meas : ∀ m, AEMeasurable (fun c ↦ Pe c m + Viol c m)
+      (gaussianCodebook M n P'.toNNReal) := fun m ↦
     (hPe_meas m).add (hViol_meas m).aemeasurable
-  have hG_aemeas : AEMeasurable (fun c => ∑ m, (Pe c m + Viol c m))
+  have hG_aemeas : AEMeasurable (fun c ↦ ∑ m, (Pe c m + Viol c m))
       (gaussianCodebook M n P'.toNNReal) := by
     have h := Finset.aemeasurable_sum (s := (Finset.univ : Finset (Fin M)))
       (μ := gaussianCodebook M n P'.toNNReal)
-      (f := fun m c => Pe c m + Viol c m) (fun m _ => hPV_meas m)
-    rw [show (fun c => ∑ m, (Pe c m + Viol c m)) =
-          (∑ m ∈ (Finset.univ : Finset (Fin M)), fun c => Pe c m + Viol c m) from
+      (f := fun m c ↦ Pe c m + Viol c m) (fun m _ ↦ hPV_meas m)
+    rw [show (fun c ↦ ∑ m, (Pe c m + Viol c m)) =
+          (∑ m ∈ (Finset.univ : Finset (Fin M)), fun c ↦ Pe c m + Viol c m) from
         (Finset.sum_fn _ _).symm]
     exact h
   have h_per_int : ∀ m,
@@ -326,27 +326,27 @@ theorem awgn_exists_codebook_combined_penalty
   have hsum_total :
       ∫⁻ c, (∑ m, (Pe c m + Viol c m)) ∂(gaussianCodebook M n P'.toNNReal)
         ≤ (M : ℝ≥0∞) * ENNReal.ofReal (2 * ε_d2) := by
-    rw [lintegral_finsetSum' Finset.univ (fun m _ => hPV_meas m)]
-    refine le_trans (Finset.sum_le_sum (fun m _ => h_per_int m)) ?_
+    rw [lintegral_finsetSum' Finset.univ (fun m _ ↦ hPV_meas m)]
+    refine le_trans (Finset.sum_le_sum (fun m _ ↦ h_per_int m)) ?_
     rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
     gcongr
     rw [← ENNReal.ofReal_add (by positivity) (le_of_lt hε_pow_pos), h_slack_eq]
   obtain ⟨c_full, hc_full_bound⟩ :=
     awgn_exists_codebook_le_avg (M := M) (n := n) (σsq := P'.toNNReal)
-      (Pe := fun c => ∑ m, (Pe c m + Viol c m))
+      (Pe := fun c ↦ ∑ m, (Pe c m + Viol c m))
       hG_aemeas (B := (M : ℝ≥0∞) * ENNReal.ofReal (2 * ε_d2)) hsum_total
-  have hPe_ne_top : ∀ m, Pe c_full m ≠ ⊤ := fun m =>
+  have hPe_ne_top : ∀ m, Pe c_full m ≠ ⊤ := fun m ↦
     (hPe_le_one c_full m).trans_lt (by norm_num : (1 : ℝ≥0∞) < ⊤) |>.ne
-  have hViol_ne_top : ∀ m, Viol c_full m ≠ ⊤ := fun m =>
+  have hViol_ne_top : ∀ m, Viol c_full m ≠ ⊤ := fun m ↦
     (hViol_le_one c_full m).trans_lt (by norm_num : (1 : ℝ≥0∞) < ⊤) |>.ne
-  set Comb : Fin M → ℝ := fun m => (Pe c_full m).toReal + (Viol c_full m).toReal
+  set Comb : Fin M → ℝ := fun m ↦ (Pe c_full m).toReal + (Viol c_full m).toReal
     with hComb_def
-  have hComb_nn : ∀ m, 0 ≤ Comb m := fun m => by rw [hComb_def]; positivity
+  have hComb_nn : ∀ m, 0 ≤ Comb m := fun m ↦ by rw [hComb_def]; positivity
   have h_real_sum : (∑ m, Comb m) ≤ (M : ℝ) * (2 * ε_d2) := by
     have h_toReal_sum : (∑ m, Comb m)
         = (∑ m, (Pe c_full m + Viol c_full m)).toReal := by
-      rw [ENNReal.toReal_sum (fun m _ => ENNReal.add_ne_top.mpr ⟨hPe_ne_top m, hViol_ne_top m⟩)]
-      refine Finset.sum_congr rfl (fun m _ => ?_)
+      rw [ENNReal.toReal_sum (fun m _ ↦ ENNReal.add_ne_top.mpr ⟨hPe_ne_top m, hViol_ne_top m⟩)]
+      refine Finset.sum_congr rfl (fun m _ ↦ ?_)
       rw [hComb_def, ENNReal.toReal_add (hPe_ne_top m) (hViol_ne_top m)]
     rw [h_toReal_sum]
     have h_M_finite_ne : (M : ℝ≥0∞) * ENNReal.ofReal (2 * ε_d2) ≠ ⊤ :=
@@ -376,7 +376,7 @@ theorem awgn_exists_codebook_combined_penalty
       have : (Viol c_full s).toReal ≤ Comb s := by rw [hComb_def]; linarith
       linarith
     have hViol_unfold : Viol c_full s
-        = (ViolSet s).indicator (fun _ => (1 : ℝ≥0∞)) c_full := rfl
+        = (ViolSet s).indicator (fun _ ↦ (1 : ℝ≥0∞)) c_full := rfl
     have h_notmem : c_full ∉ ViolSet s := by
       intro h_mem
       rw [hViol_unfold, Set.indicator_of_mem h_mem] at h_viol_lt_one
@@ -466,7 +466,7 @@ theorem isAwgnTypicalityHypothesis
   -- from `R'' < C = (1/2) * log(1 + P'/N)` via monotonicity in P'≤P.
   have hN_pos : (0 : ℝ) < (N : ℝ) := by
     have hN_nonneg : (0 : ℝ) ≤ (N : ℝ) := N.coe_nonneg
-    exact lt_of_le_of_ne hN_nonneg (fun h => hN h.symm)
+    exact lt_of_le_of_ne hN_nonneg (fun h ↦ hN h.symm)
   have hR''_lt_PC : R'' < (1 / 2) * Real.log (1 + P / (N : ℝ)) :=
     awgn_capacity_inflatedRate_lt hP'_pos hP'_lt_P hN_pos hR''_lt_C
   -- Extract three N₀ from the sub-bounds.
@@ -514,7 +514,7 @@ theorem isAwgnTypicalityHypothesis
   have hM_le_ceil_R'' : M ≤ Nat.ceil (Real.exp ((n : ℝ) * R'')) := le_rfl
   have h_per_m : ∀ m : Fin M,
       ∫⁻ codebook : Fin M → Fin n → ℝ,
-        ((Measure.pi (fun i => awgnChannel N h_meas (codebook m i)))
+        ((Measure.pi (fun i ↦ awgnChannel N h_meas (codebook m i)))
           ((InformationTheory.Shannon.ChannelCoding.Code.mk
               (M := M) (n := n) (α := ℝ) (β := ℝ)
               codebook (jointTypicalDecoder A codebook)).errorEvent m))
@@ -551,7 +551,7 @@ theorem isAwgnTypicalityHypothesis
   set reindex_emb : Fin M_target ↪o Fin M :=
     (Fin.castLEOrderEmb hM_target_le_S).trans (S.orderEmbOfFin rfl)
       with hreindex_emb_def
-  set reindex : Fin M_target → Fin M := fun i => reindex_emb i with hreindex_def
+  set reindex : Fin M_target → Fin M := fun i ↦ reindex_emb i with hreindex_def
   have hreindex_strictMono : StrictMono reindex :=
     reindex_emb.strictMono
   -- Each `reindex i ∈ S` (image of `orderEmbOfFin S` is `S`).
@@ -559,27 +559,27 @@ theorem isAwgnTypicalityHypothesis
     intro i
     show (S.orderEmbOfFin rfl) ((Fin.castLEOrderEmb hM_target_le_S) i) ∈ S
     exact Finset.orderEmbOfFin_mem S rfl _
-  set subcodebook : Fin M_target → Fin n → ℝ := fun i => c_full (reindex i)
+  set subcodebook : Fin M_target → Fin n → ℝ := fun i ↦ c_full (reindex i)
     with hsubcodebook_def
   -- (10) Power constraint + (11) full-side error bound on the subcodebook, both
   -- read off the combined-penalty output set `S` at `reindex j ∈ S`.
   have h_sub_power : ∀ j : Fin M_target,
-      (∑ i, (subcodebook j i)^2) ≤ (n : ℝ) * P := fun j =>
+      (∑ i, (subcodebook j i)^2) ≤ (n : ℝ) * P := fun j ↦
     hS_power (reindex j) (h_reindex_mem j)
   have h_full_pe : ∀ j : Fin M_target,
-      (Measure.pi (fun i => awgnChannel N h_meas (c_full (reindex j) i)))
+      (Measure.pi (fun i ↦ awgnChannel N h_meas (c_full (reindex j) i)))
         ((InformationTheory.Shannon.ChannelCoding.Code.mk
             (M := M) (n := n) (α := ℝ) (β := ℝ)
             c_full (jointTypicalDecoder A c_full)).errorEvent (reindex j))
-        ≤ ENNReal.ofReal (4 * ε_d2) := fun j =>
+        ≤ ENNReal.ofReal (4 * ε_d2) := fun j ↦
     hS_pe_err (reindex j) (h_reindex_mem j)
   -- Transfer the full-side bound to the sub-decoder via the error-event inclusion.
   have h_sub_pe : ∀ j : Fin M_target,
-      ((Measure.pi (fun i => awgnChannel N h_meas (subcodebook j i)))
+      ((Measure.pi (fun i ↦ awgnChannel N h_meas (subcodebook j i)))
         ((InformationTheory.Shannon.ChannelCoding.Code.mk
             (M := M_target) (n := n) (α := ℝ) (β := ℝ)
             subcodebook (jointTypicalDecoder A subcodebook)).errorEvent j))
-        ≤ ENNReal.ofReal (4 * ε_d2) := fun j =>
+        ≤ ENNReal.ofReal (4 * ε_d2) := fun j ↦
     awgn_subcodebook_errorEvent_le N h_meas A c_full reindex hreindex_strictMono
       h_full_pe j
   -- (13) D-3: bridge to AwgnCode with the 5ε_d2 = ε₁ ≤ ε bound.

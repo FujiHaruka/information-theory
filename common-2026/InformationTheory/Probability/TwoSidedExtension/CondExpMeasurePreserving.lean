@@ -42,7 +42,7 @@ lemma condExp_comp_measurePreserving
     {T : Ω₁ → Ω₂} (h_mp : MeasurePreserving T μ₁ μ₂)
     {f : Ω₂ → ℝ} (hf : Integrable f μ₂)
     (n : MeasurableSpace Ω₂) (hn : n ≤ m₂) :
-    (fun x => (μ₂[f | n]) (T x)) =ᵐ[μ₁] μ₁[f ∘ T | n.comap T] := by
+    (fun x ↦ (μ₂[f | n]) (T x)) =ᵐ[μ₁] μ₁[f ∘ T | n.comap T] := by
   -- KEY TYPECLASS WORKAROUND: hide `n` behind `letI` so it stops competing for synthesis.
   -- After this point, any "synthesize MeasurableSpace Ω₂" picks `m₂` (the only `[..]` instance).
   letI : MeasurableSpace Ω₂ := m₂
@@ -50,7 +50,7 @@ lemma condExp_comp_measurePreserving
   have hT_meas : Measurable T := h_mp.measurable
   have h_mp_eq : Measure.map T μ₁ = μ₂ := h_mp.map_eq
   -- `n.comap T ≤ m₁`.
-  have hcomap_le : n.comap T ≤ m₁ := fun s ⟨t, ht_n, hts⟩ => hts ▸ hT_meas (hn _ ht_n)
+  have hcomap_le : n.comap T ≤ m₁ := fun s ⟨t, ht_n, hts⟩ ↦ hts ▸ hT_meas (hn _ ht_n)
   -- `SigmaFinite (μ₁.trim hcomap_le)` from finiteness.
   haveI : IsFiniteMeasure (μ₁.trim hcomap_le) := isFiniteMeasure_trim _
   -- Integrability of pulled-back functions.
@@ -61,7 +61,7 @@ lemma condExp_comp_measurePreserving
     h_mp.integrable_comp_of_integrable hf
   -- Goal: `(μ₂[f|n]) ∘ T =ᵐ μ₁[f∘T | n.comap T]`.
   -- Direct from `ae_eq_condExp_of_forall_setIntegral_eq`.
-  have h_rev : (fun x => (μ₂[f | n]) (T x)) =ᵐ[μ₁] μ₁[f ∘ T | n.comap T] := by
+  have h_rev : (fun x ↦ (μ₂[f | n]) (T x)) =ᵐ[μ₁] μ₁[f ∘ T | n.comap T] := by
     refine ae_eq_condExp_of_forall_setIntegral_eq hcomap_le hf_comp ?_ ?_ ?_
     · intro s _ _; exact h_cE_comp_int.integrableOn
     · intro s hs _
@@ -89,7 +89,7 @@ lemma condExp_comp_measurePreserving
     · refine StronglyMeasurable.aestronglyMeasurable ?_
       have h_sm_m₂ : StronglyMeasurable[n] (μ₂[f | n]) := stronglyMeasurable_condExp
       -- `T : (Ω₁, n.comap T) → (Ω₂, n)` is measurable by definition of comap.
-      have hT_comap : @Measurable Ω₁ Ω₂ (n.comap T) n T := fun s hs => ⟨s, hs, rfl⟩
+      have hT_comap : @Measurable Ω₁ Ω₂ (n.comap T) n T := fun s hs ↦ ⟨s, hs, rfl⟩
       exact h_sm_m₂.comp_measurable hT_comap
   exact h_rev
 

@@ -59,7 +59,7 @@ def IsParallelAwgnChannelMeasurable {n : ℕ} (N : Fin n → ℝ≥0) : Prop :=
 /-- Measurability of the parallel kernel map `x : Fin n → ℝ ↦ Measure.pi (fun i =>
 gaussianReal (x i) (N i))`, supplied as a hypothesis. -/
 def IsParallelGaussianKernelMeasurable {n : ℕ} (N : Fin n → ℝ≥0) : Prop :=
-  Measurable (fun x : Fin n → ℝ => Measure.pi (fun i => gaussianReal (x i) (N i)))
+  Measurable (fun x : Fin n → ℝ ↦ Measure.pi (fun i ↦ gaussianReal (x i) (N i)))
 
 /-- The **parallel Gaussian channel kernel**: on input `x : Fin n → ℝ` the output
 `y : Fin n → ℝ` has `y i = x i + z i` with `z i ∼ 𝒩(0, N i)` independent across
@@ -69,7 +69,7 @@ noncomputable def parallelGaussianChannel {n : ℕ}
     (N : Fin n → ℝ≥0) (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N) :
     InformationTheory.Shannon.ChannelCoding.Channel (Fin n → ℝ) (Fin n → ℝ) where
-  toFun x := Measure.pi (fun i => gaussianReal (x i) (N i))
+  toFun x := Measure.pi (fun i ↦ gaussianReal (x i) (N i))
   measurable' := h_parallel_meas
 
 @[simp] lemma parallelGaussianChannel_apply {n : ℕ}
@@ -77,7 +77,7 @@ noncomputable def parallelGaussianChannel {n : ℕ}
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N)
     (x : Fin n → ℝ) :
     (parallelGaussianChannel N h_meas h_parallel_meas) x
-      = Measure.pi (fun i => gaussianReal (x i) (N i)) := rfl
+      = Measure.pi (fun i ↦ gaussianReal (x i) (N i)) := rfl
 
 /-- `parallelGaussianChannel N` is a Markov kernel (each fibre is a product of
 probability measures, hence itself a probability measure). -/
@@ -86,7 +86,7 @@ instance parallelGaussianChannel.instIsMarkovKernel {n : ℕ}
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N) :
     IsMarkovKernel (parallelGaussianChannel N h_meas h_parallel_meas) where
   isProbabilityMeasure x := by
-    show IsProbabilityMeasure (Measure.pi (fun i => gaussianReal (x i) (N i)))
+    show IsProbabilityMeasure (Measure.pi (fun i ↦ gaussianReal (x i) (N i)))
     infer_instance
 
 /-! ## Water-filling power allocation -/
@@ -96,7 +96,7 @@ instance parallelGaussianChannel.instIsMarkovKernel {n : ℕ}
 Theorem 9.4.1). -/
 noncomputable def waterFillingPower {n : ℕ} (ν : ℝ) (N : Fin n → ℝ≥0) :
     Fin n → ℝ :=
-  fun i => max 0 (ν - (N i : ℝ))
+  fun i ↦ max 0 (ν - (N i : ℝ))
 
 @[simp] lemma waterFillingPower_apply {n : ℕ} (ν : ℝ) (N : Fin n → ℝ≥0) (i : Fin n) :
     waterFillingPower ν N i = max 0 (ν - (N i : ℝ)) := rfl
@@ -136,26 +136,26 @@ regularity (`Integrable (fun x => (x i)²) p`) the Bochner form alone cannot sup
 theorem parallelGaussianPowerConstraintSet_mem_iff_integrable {n : ℕ}
     (P : ℝ) (hP : 0 ≤ P) (p : Measure (Fin n → ℝ))
     (hp : p ∈ parallelGaussianPowerConstraintSet P) :
-    (∀ i, Integrable (fun x : Fin n → ℝ => (x i) ^ 2) p) ∧
+    (∀ i, Integrable (fun x : Fin n → ℝ ↦ (x i) ^ 2) p) ∧
       ∑ i : Fin n, ∫ x : Fin n → ℝ, (x i) ^ 2 ∂p ≤ P := by
   obtain ⟨hp_prob, hp_lint⟩ := hp
   -- each coordinate's lintegral is ≤ the sum ≤ ofReal P < ∞, hence integrable
-  have h_each_nonneg : ∀ i : Fin n, 0 ≤ᵐ[p] fun x : Fin n → ℝ => (x i) ^ 2 :=
-    fun i => Filter.Eventually.of_forall (fun x => sq_nonneg (x i))
+  have h_each_nonneg : ∀ i : Fin n, 0 ≤ᵐ[p] fun x : Fin n → ℝ ↦ (x i) ^ 2 :=
+    fun i ↦ Filter.Eventually.of_forall (fun x ↦ sq_nonneg (x i))
   have h_each_lt_top : ∀ i : Fin n,
       (∫⁻ x : Fin n → ℝ, ENNReal.ofReal ((x i) ^ 2) ∂p) < ∞ := by
     intro i
     have h_single_le :
         (∫⁻ x : Fin n → ℝ, ENNReal.ofReal ((x i) ^ 2) ∂p)
           ≤ ∑ j : Fin n, ∫⁻ x : Fin n → ℝ, ENNReal.ofReal ((x j) ^ 2) ∂p :=
-      Finset.single_le_sum (f := fun j => ∫⁻ x : Fin n → ℝ, ENNReal.ofReal ((x j) ^ 2) ∂p)
-        (fun j _ => bot_le) (Finset.mem_univ i)
+      Finset.single_le_sum (f := fun j ↦ ∫⁻ x : Fin n → ℝ, ENNReal.ofReal ((x j) ^ 2) ∂p)
+        (fun j _ ↦ bot_le) (Finset.mem_univ i)
     exact lt_of_le_of_lt (h_single_le.trans hp_lint) ENNReal.ofReal_lt_top
-  have h_int : ∀ i, Integrable (fun x : Fin n → ℝ => (x i) ^ 2) p := by
+  have h_int : ∀ i, Integrable (fun x : Fin n → ℝ ↦ (x i) ^ 2) p := by
     intro i
-    have h_meas : AEStronglyMeasurable (fun x : Fin n → ℝ => (x i) ^ 2) p :=
+    have h_meas : AEStronglyMeasurable (fun x : Fin n → ℝ ↦ (x i) ^ 2) p :=
       ((measurable_pi_apply i).pow_const 2).aestronglyMeasurable
-    have h_hfi : HasFiniteIntegral (fun x : Fin n → ℝ => (x i) ^ 2) p :=
+    have h_hfi : HasFiniteIntegral (fun x : Fin n → ℝ ↦ (x i) ^ 2) p :=
       (hasFiniteIntegral_iff_ofReal (h_each_nonneg i)).mpr (h_each_lt_top i)
     exact ⟨h_meas, h_hfi⟩
   refine ⟨h_int, ?_⟩
@@ -163,14 +163,14 @@ theorem parallelGaussianPowerConstraintSet_mem_iff_integrable {n : ℕ}
   have h_ofReal_each : ∀ i : Fin n,
       ENNReal.ofReal (∫ x : Fin n → ℝ, (x i) ^ 2 ∂p)
         = ∫⁻ x : Fin n → ℝ, ENNReal.ofReal ((x i) ^ 2) ∂p :=
-    fun i => ofReal_integral_eq_lintegral_ofReal (h_int i) (h_each_nonneg i)
+    fun i ↦ ofReal_integral_eq_lintegral_ofReal (h_int i) (h_each_nonneg i)
   have h_int_nonneg : ∀ i : Fin n, 0 ≤ ∫ x : Fin n → ℝ, (x i) ^ 2 ∂p :=
-    fun i => integral_nonneg (fun x => sq_nonneg (x i))
+    fun i ↦ integral_nonneg (fun x ↦ sq_nonneg (x i))
   have h_sum_ofReal :
       ENNReal.ofReal (∑ i : Fin n, ∫ x : Fin n → ℝ, (x i) ^ 2 ∂p)
         = ∑ i : Fin n, ∫⁻ x : Fin n → ℝ, ENNReal.ofReal ((x i) ^ 2) ∂p := by
-    rw [ENNReal.ofReal_sum_of_nonneg (fun i _ => h_int_nonneg i)]
-    exact Finset.sum_congr rfl (fun i _ => h_ofReal_each i)
+    rw [ENNReal.ofReal_sum_of_nonneg (fun i _ ↦ h_int_nonneg i)]
+    exact Finset.sum_congr rfl (fun i _ ↦ h_ofReal_each i)
   have h_le : ENNReal.ofReal (∑ i : Fin n, ∫ x : Fin n → ℝ, (x i) ^ 2 ∂p) ≤ ENNReal.ofReal P :=
     h_sum_ofReal ▸ hp_lint
   exact (ENNReal.ofReal_le_ofReal_iff hP).mp h_le
@@ -181,7 +181,7 @@ information `I(p; parallelGaussianChannel N)` over inputs `p` in
 noncomputable def parallelGaussianCapacity {n : ℕ} (P : ℝ)
     (N : Fin n → ℝ≥0) (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N) : ℝ :=
-  sSup ((fun p : Measure (Fin n → ℝ) =>
+  sSup ((fun p : Measure (Fin n → ℝ) ↦
           (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
               p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal) ''
         parallelGaussianPowerConstraintSet P)
@@ -222,7 +222,7 @@ def IsParallelGaussianPerCoordReduction {n : ℕ} (P : ℝ)
 water-filling power. -/
 noncomputable def waterFillingActiveSet {n : ℕ} (ν : ℝ) (N : Fin n → ℝ≥0) :
     Finset (Fin n) :=
-  Finset.univ.filter (fun i => (N i : ℝ) < ν)
+  Finset.univ.filter (fun i ↦ (N i : ℝ) < ν)
 
 @[simp] lemma mem_waterFillingActiveSet {n : ℕ} (ν : ℝ) (N : Fin n → ℝ≥0)
     (i : Fin n) :

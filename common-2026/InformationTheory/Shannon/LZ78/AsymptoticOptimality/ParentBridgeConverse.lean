@@ -45,7 +45,7 @@ gives the bit-unit version converging to `entropyRate₂`, the unit that matches
 the base-2 LZ78 bit-rate `lz78GreedyEncodingLength/n`. -/
 noncomputable def blockLogAvg₂
     (μ : Measure Ω) (p : StationaryProcess μ α) (n : ℕ) : Ω → ℝ :=
-  fun ω => blockLogAvg μ p n ω / Real.log 2
+  fun ω ↦ blockLogAvg μ p n ω / Real.log 2
 
 /-- **Shannon–McMillan–Breiman in bits**: `blockLogAvg₂` converges a.s. to
 `entropyRate₂`.
@@ -61,7 +61,7 @@ so no degenerate rewrite.
 theorem shannon_mcmillan_breiman₂
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ, Filter.Tendsto
-      (fun n => blockLogAvg₂ μ p.toStationaryProcess n ω)
+      (fun n ↦ blockLogAvg₂ μ p.toStationaryProcess n ω)
       Filter.atTop (𝓝 (entropyRate₂ μ p.toStationaryProcess)) := by
   filter_upwards [shannon_mcmillan_breiman μ p] with ω hω
   have := hω.div_const (Real.log 2)
@@ -149,7 +149,7 @@ theorem fintype_card_parentIdx (c : ℕ) :
     Fintype.card ((j : Fin c) → Fin (j.val + 1)) = c.factorial := by
   rw [Fintype.card_pi]
   simp only [Fintype.card_fin]
-  rw [Fin.prod_univ_eq_prod_range (fun i => i + 1) c]
+  rw [Fin.prod_univ_eq_prod_range (fun i ↦ i + 1) c]
   exact Finset.prod_range_add_one_eq_factorial c
 
 theorem lz78PhraseStrings_getElem_eq_of_parentData_eq {n c : ℕ} (x y : Fin n → α)
@@ -167,7 +167,7 @@ theorem lz78PhraseStrings_getElem_eq_of_parentData_eq {n c : ℕ} (x y : Fin n �
           (lz78PhraseStrings_forall_ne_nil (List.ofFn y) _ (List.getElem_mem _))) :
     lz78PhraseStrings (List.ofFn x) = lz78PhraseStrings (List.ofFn y) := by
   classical
-  let P : (Fin n → α) → List (List α) := fun z => lz78PhraseStrings (List.ofFn z)
+  let P : (Fin n → α) → List (List α) := fun z ↦ lz78PhraseStrings (List.ofFn z)
   have hPx_len : (P x).length = c := hPx_len
   have hPy_len : (P y).length = c := hPy_len
   have hparent : ∀ j (hj : j < c),
@@ -341,36 +341,36 @@ position, and `lz78PhraseStrings_flatten_prefix` + `List.ofFn_injective` to
 recover `x` from the phrase list and tail. -/
 theorem lz78_phrase_count_fiber_card_le_nat (n c : ℕ) :
     (Finset.univ.filter
-          (fun x : Fin n → α => (lz78PhraseStrings (List.ofFn x)).length = c)).card
+          (fun x : Fin n → α ↦ (lz78PhraseStrings (List.ofFn x)).length = c)).card
       ≤ c.factorial * (Fintype.card α) ^ c * (c + 1) := by
   classical
   -- Encoding target: parent indices, phrase symbols, tail index.
   let D := ((j : Fin c) → Fin (j.val + 1)) × (Fin c → α) × Fin (c + 1)
   -- For a tuple `x`, its phrase list.
-  let P : (Fin n → α) → List (List α) := fun x => lz78PhraseStrings (List.ofFn x)
+  let P : (Fin n → α) → List (List α) := fun x ↦ lz78PhraseStrings (List.ofFn x)
   -- Parent index of phrase `j` of `x`: the first index of `(P x)[j].dropLast`
   -- in `P x`, capped to `Fin (j+1)` (value `j` marks the empty parent).
-  let parent : (Fin n → α) → (j : Fin c) → Fin (j.val + 1) := fun x j =>
+  let parent : (Fin n → α) → (j : Fin c) → Fin (j.val + 1) := fun x j ↦
     ⟨min ((P x).idxOf ((((P x)[j.val]?).getD []).dropLast)) j.val, by
       have : min ((P x).idxOf ((((P x)[j.val]?).getD []).dropLast)) j.val ≤ j.val :=
         min_le_right _ _
       omega⟩
   -- Last symbol of phrase `j` of `x`.
-  let sym : (Fin n → α) → Fin c → α := fun x j =>
+  let sym : (Fin n → α) → Fin c → α := fun x j ↦
     ((P x)[j.val]?.getD []).getLastD (Classical.arbitrary α)
   -- Tail index of `x`: index of the unfinished tail in `P x` (or `c` for empty).
-  let tailIdx : (Fin n → α) → Fin (c + 1) := fun x =>
+  let tailIdx : (Fin n → α) → Fin (c + 1) := fun x ↦
     ⟨min ((P x).idxOf (Classical.choose (lz78PhraseStrings_flatten_tail_mem (List.ofFn x)))) c, by
       have : min ((P x).idxOf (Classical.choose (lz78PhraseStrings_flatten_tail_mem
         (List.ofFn x)))) c ≤ c := min_le_right _ _
       omega⟩
-  let Φ : (Fin n → α) → D := fun x => (parent x, sym x, tailIdx x)
+  let Φ : (Fin n → α) → D := fun x ↦ (parent x, sym x, tailIdx x)
   -- The fiber injects into `D` via `Φ`.
   have hcard : (Finset.univ.filter
-        (fun x : Fin n → α => (lz78PhraseStrings (List.ofFn x)).length = c)).card
+        (fun x : Fin n → α ↦ (lz78PhraseStrings (List.ofFn x)).length = c)).card
       ≤ Fintype.card D := by
     rw [← Finset.card_univ (α := D)]
-    refine Finset.card_le_card_of_injOn Φ (fun x _ => Finset.mem_univ _) ?_
+    refine Finset.card_le_card_of_injOn Φ (fun x _ ↦ Finset.mem_univ _) ?_
     -- injectivity on the fiber
     intro x hx y hy hΦ
     simp only [Finset.coe_filter, Set.mem_setOf_eq, Finset.mem_univ, true_and] at hx hy
@@ -379,8 +379,8 @@ theorem lz78_phrase_count_fiber_card_le_nat (n c : ℕ) :
     have hPy_len : (P y).length = c := hy
     -- componentwise equality of the encoding
     have hpar : parent x = parent y := congrArg Prod.fst hΦ
-    have hsym : sym x = sym y := congrArg (fun t => t.2.1) hΦ
-    have htail : tailIdx x = tailIdx y := congrArg (fun t => t.2.2) hΦ
+    have hsym : sym x = sym y := congrArg (fun t ↦ t.2.1) hΦ
+    have htail : tailIdx x = tailIdx y := congrArg (fun t ↦ t.2.2) hΦ
     -- all phrases non-empty
     have hne_x : ∀ w ∈ P x, w ≠ [] := lz78PhraseStrings_forall_ne_nil (List.ofFn x)
     have hne_y : ∀ w ∈ P y, w ≠ [] := lz78PhraseStrings_forall_ne_nil (List.ofFn y)
@@ -422,7 +422,7 @@ theorem lz78_phrase_count_fiber_card_le_nat (n c : ℕ) :
           = min ((lz78PhraseStrings (List.ofFn y)).idxOf
               (((lz78PhraseStrings (List.ofFn y))[j]'(by omega)).dropLast)) j := by
       intro j hj
-      have := congrArg (fun f => (f ⟨j, hj⟩ : ℕ)) hpar
+      have := congrArg (fun f ↦ (f ⟨j, hj⟩ : ℕ)) hpar
       simp only at this
       rw [hpar_x j hj, hpar_y j hj] at this
       exact this
@@ -500,12 +500,12 @@ no smuggling. Non-circular, non-degenerate; the `(c+1) ≤ (n+1)` cast upgrade
 [propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-confirmed). -/
 theorem lz78_phrase_count_fiber_card_le (n c : ℕ) :
     ((Finset.univ.filter
-          (fun x : Fin n → α => (lz78PhraseStrings (List.ofFn x)).length = c)).card : ℝ)
+          (fun x : Fin n → α ↦ (lz78PhraseStrings (List.ofFn x)).length = c)).card : ℝ)
       ≤ ((n : ℝ) + 1) * (c.factorial : ℝ) * (Fintype.card α : ℝ) ^ c := by
   -- The fiber is empty once `c > n` (the parse emits `≤ n` phrases), so `c ≤ n`
   -- whenever the fiber is non-empty; combine with the nat-form count bound.
   set S := Finset.univ.filter
-    (fun x : Fin n → α => (lz78PhraseStrings (List.ofFn x)).length = c) with hS
+    (fun x : Fin n → α ↦ (lz78PhraseStrings (List.ofFn x)).length = c) with hS
   rcases Nat.lt_or_ge n c with hcn | hcn
   · -- c > n: the fiber is empty (the parse emits at most `n` phrases).
     have hempty : S = ∅ := by
@@ -542,11 +542,11 @@ bit-length decay `2^{c·bitLength(c,|α|)} ≥ ((c+1)·|α|)^c` (from
 elementary inequality `c!·2^c ≤ (c+1)^c`. -/
 theorem lz78_block_kraft_term_le (n c : ℕ) :
     (((Finset.univ.filter
-          (fun x : Fin n → α => (lz78PhraseStrings (List.ofFn x)).length = c)).card : ℝ)
+          (fun x : Fin n → α ↦ (lz78PhraseStrings (List.ofFn x)).length = c)).card : ℝ)
         * (1 / 2 : ℝ) ^ (c * LZ78Phrase.bitLength c (Fintype.card α)))
       ≤ ((n : ℝ) + 1) * (1 / 2 : ℝ) ^ c := by
   set F : ℝ := ((Finset.univ.filter
-          (fun x : Fin n → α => (lz78PhraseStrings (List.ofFn x)).length = c)).card : ℝ) with hF
+          (fun x : Fin n → α ↦ (lz78PhraseStrings (List.ofFn x)).length = c)).card : ℝ) with hF
   set a : ℕ := Fintype.card α with ha
   set B : ℕ := LZ78Phrase.bitLength c a with hB
   have hF_nn : 0 ≤ F := by rw [hF]; positivity
@@ -655,7 +655,7 @@ theorem lz78_block_kraft_poly (n : ℕ) :
       ≤ ((n : ℝ) + 1) ^ 2 := by
   classical
   -- Part A: group the Kraft sum by the distinct-phrase count `c = φ x`.
-  set φ : (Fin n → α) → ℕ := fun x => (lz78PhraseStrings (List.ofFn x)).length with hφ
+  set φ : (Fin n → α) → ℕ := fun x ↦ (lz78PhraseStrings (List.ofFn x)).length with hφ
   -- The encoding length depends on `x` only through `c = φ x`.
   have hLfac : ∀ x : Fin n → α,
       lz78GreedyEncodingLength n x = φ x * LZ78Phrase.bitLength (φ x) (Fintype.card α) := by
@@ -670,20 +670,20 @@ theorem lz78_block_kraft_poly (n : ℕ) :
   have hfiber :
       ∑ x : Fin n → α, (1 / 2 : ℝ) ^ (lz78GreedyEncodingLength n x)
         = ∑ c ∈ Finset.range (n + 1),
-            ∑ x ∈ Finset.univ.filter (fun x => φ x = c),
+            ∑ x ∈ Finset.univ.filter (fun x ↦ φ x = c),
               (1 / 2 : ℝ) ^ (c * LZ78Phrase.bitLength c (Fintype.card α)) := by
     -- `(1/2)^(L_n x) = f (φ x)` with `f c = (1/2)^(c·bitLength c |α|)`.
     have hrw : ∀ x : Fin n → α, (1 / 2 : ℝ) ^ (lz78GreedyEncodingLength n x)
-        = (fun c => (1 / 2 : ℝ) ^ (c * LZ78Phrase.bitLength c (Fintype.card α))) (φ x) := by
+        = (fun c ↦ (1 / 2 : ℝ) ^ (c * LZ78Phrase.bitLength c (Fintype.card α))) (φ x) := by
       intro x; rw [hLfac x]
     -- On each fiber `φ x = c`, the summand `f (φ x)` collapses to `f c`.
-    rw [Finset.sum_congr rfl (fun x _ => hrw x),
+    rw [Finset.sum_congr rfl (fun x _ ↦ hrw x),
       ← Finset.sum_fiberwise_of_maps_to' hmaps
-        (fun c => (1 / 2 : ℝ) ^ (c * LZ78Phrase.bitLength c (Fintype.card α)))]
+        (fun c ↦ (1 / 2 : ℝ) ^ (c * LZ78Phrase.bitLength c (Fintype.card α)))]
   rw [hfiber]
   -- Part B + C: each per-`c` term is ≤ (n+1)·(1/2)^c, then sum the geometric series.
   have hterm : ∀ c ∈ Finset.range (n + 1),
-      (∑ x ∈ Finset.univ.filter (fun x => φ x = c),
+      (∑ x ∈ Finset.univ.filter (fun x ↦ φ x = c),
           (1 / 2 : ℝ) ^ (c * LZ78Phrase.bitLength c (Fintype.card α)))
         ≤ ((n : ℝ) + 1) * (1 / 2 : ℝ) ^ c := by
     intro c _
@@ -692,7 +692,7 @@ theorem lz78_block_kraft_poly (n : ℕ) :
     exact lz78_block_kraft_term_le n c
   calc
     ∑ c ∈ Finset.range (n + 1),
-        ∑ x ∈ Finset.univ.filter (fun x => φ x = c),
+        ∑ x ∈ Finset.univ.filter (fun x ↦ φ x = c),
           (1 / 2 : ℝ) ^ (c * LZ78Phrase.bitLength c (Fintype.card α))
       ≤ ∑ c ∈ Finset.range (n + 1), ((n : ℝ) + 1) * (1 / 2 : ℝ) ^ c :=
         Finset.sum_le_sum hterm
@@ -750,12 +750,12 @@ theorem lz78_converse_bad_set_measure_le
     Measure.isProbabilityMeasure_map hB_meas.aemeasurable
   -- The bad set on the discrete block alphabet.
   set rateX : (Fin n → α) → ℝ :=
-    fun x => (lz78GreedyEncodingLength n x : ℝ) / (n : ℝ) with hrateX
+    fun x ↦ (lz78GreedyEncodingLength n x : ℝ) / (n : ℝ) with hrateX
   set bla₂X : (Fin n → α) → ℝ :=
-    fun x => (-(1 / (n : ℝ)) * Real.log (Pn.real {x})) / Real.log 2 with hbla₂X
+    fun x ↦ (-(1 / (n : ℝ)) * Real.log (Pn.real {x})) / Real.log 2 with hbla₂X
   set errR : ℝ := (2 * Real.log n + 2 * Real.log (n + 1)) / ((n : ℝ) * Real.log 2) with herrR
   set S : Finset (Fin n → α) :=
-    Finset.univ.filter (fun x => rateX x < bla₂X x - errR) with hS
+    Finset.univ.filter (fun x ↦ rateX x < bla₂X x - errR) with hS
   -- `blockLogAvg₂ μ q n ω = bla₂X (block_n ω)` (depends on `ω` only via `block_n`).
   have h_bla_factor : ∀ ω, blockLogAvg₂ μ q n ω = bla₂X (q.blockRV n ω) := by
     intro ω; rw [hbla₂X]; simp only [blockLogAvg₂, blockLogAvg, hPn]
@@ -909,14 +909,14 @@ theorem blockLogAvg₂_minus_error_le_rate_ae
   -- The bad set at scale `n`: the realizations where the greedy bit-rate
   -- undershoots `blockLogAvg₂ − err` by more than the error margin.
   set err : ℕ → ℝ :=
-    fun n => (2 * Real.log n + 2 * Real.log (n + 1)) / ((n : ℝ) * Real.log 2) with herr
+    fun n ↦ (2 * Real.log n + 2 * Real.log (n + 1)) / ((n : ℝ) * Real.log 2) with herr
   set B : ℕ → Set Ω :=
-    fun n => {ω | (lz78GreedyEncodingLength n (q.blockRV n ω) : ℝ) / (n : ℝ)
+    fun n ↦ {ω | (lz78GreedyEncodingLength n (q.blockRV n ω) : ℝ) / (n : ℝ)
         < blockLogAvg₂ μ q n ω - err n} with hB
   -- Per-`n` bad-set measure bound `μ(B n) ≤ 1/n²` (Markov on the discrete
   -- block law + G2 polynomial Kraft); summable, so first Borel–Cantelli.
   have h_bound : ∀ n, 1 ≤ n → μ (B n) ≤ (1 : ℝ≥0∞) / ((n : ℝ≥0∞) ^ 2) :=
-    fun n hn => lz78_converse_bad_set_measure_le μ p n hn
+    fun n hn ↦ lz78_converse_bad_set_measure_le μ p n hn
   -- ∑' n, μ (B n) < ∞ (p-series), via the same machinery as
   -- `MRatioLowerZ_le_sq_eventually`.
   have h_tsum : ∑' n, μ (B n) ≠ ∞ := by
@@ -924,11 +924,11 @@ theorem blockLogAvg₂_minus_error_le_rate_ae
     refine ENNReal.add_ne_top.mpr ⟨measure_ne_top _ _, ?_⟩
     have h_le : (∑' n : ℕ, μ (B (n + 1)))
         ≤ ∑' n : ℕ, (1 : ℝ≥0∞) / (((n + 1 : ℕ) : ℝ≥0∞) ^ 2) :=
-      ENNReal.tsum_le_tsum (fun n => h_bound (n + 1) (Nat.succ_le_succ (Nat.zero_le _)))
+      ENNReal.tsum_le_tsum (fun n ↦ h_bound (n + 1) (Nat.succ_le_succ (Nat.zero_le _)))
     refine ne_top_of_le_ne_top ?_ h_le
-    have h_summable_real : Summable (fun n : ℕ => (1 : ℝ) / ((n + 1 : ℕ) : ℝ) ^ 2) :=
+    have h_summable_real : Summable (fun n : ℕ ↦ (1 : ℝ) / ((n + 1 : ℕ) : ℝ) ^ 2) :=
       (summable_nat_add_iff 1).mpr ((Real.summable_one_div_nat_pow (p := 2)).mpr (by norm_num))
-    have h_nonneg : ∀ n : ℕ, (0 : ℝ) ≤ (1 : ℝ) / ((n + 1 : ℕ) : ℝ) ^ 2 := fun _ => by positivity
+    have h_nonneg : ∀ n : ℕ, (0 : ℝ) ≤ (1 : ℝ) / ((n + 1 : ℕ) : ℝ) ^ 2 := fun _ ↦ by positivity
     have h_ennreal_tsum : ∑' n : ℕ,
         ENNReal.ofReal ((1 : ℝ) / ((n + 1 : ℕ) : ℝ) ^ 2) ≠ ∞ := by
       rw [← ENNReal.ofReal_tsum_of_nonneg h_nonneg h_summable_real]
@@ -1016,7 +1016,7 @@ theorem lz78Greedy_converse_ae
     ∀ᵐ ω ∂μ,
       entropyRate₂ μ p.toStationaryProcess
       ≤ Filter.liminf
-          (fun n =>
+          (fun n ↦
             (lz78GreedyEncodingLength n
                 (p.toStationaryProcess.blockRV n ω) : ℝ)
               / (n : ℝ))
@@ -1024,20 +1024,20 @@ theorem lz78Greedy_converse_ae
   set q := p.toStationaryProcess with hq
   -- The greedy bit-rate sequence and its eventual lower envelope.
   set rate : Ω → ℕ → ℝ :=
-    fun ω n => (lz78GreedyEncodingLength n (q.blockRV n ω) : ℝ) / (n : ℝ) with hrate
+    fun ω n ↦ (lz78GreedyEncodingLength n (q.blockRV n ω) : ℝ) / (n : ℝ) with hrate
   set err : ℕ → ℝ :=
-    fun n => (2 * Real.log n + 2 * Real.log (n + 1)) / ((n : ℝ) * Real.log 2) with herr
+    fun n ↦ (2 * Real.log n + 2 * Real.log (n + 1)) / ((n : ℝ) * Real.log 2) with herr
   -- `err n → 0` (each `log n / n → 0`).
   have h_err_tend : Filter.Tendsto err Filter.atTop (𝓝 0) := by
     have hℓ2 : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
-    have hlogn : Filter.Tendsto (fun n : ℕ => Real.log (n : ℝ) / (n : ℝ))
+    have hlogn : Filter.Tendsto (fun n : ℕ ↦ Real.log (n : ℝ) / (n : ℝ))
         Filter.atTop (𝓝 0) := by
-      have hR : Filter.Tendsto (fun x : ℝ => Real.log x ^ 1 / (1 * x + 0))
+      have hR : Filter.Tendsto (fun x : ℝ ↦ Real.log x ^ 1 / (1 * x + 0))
           Filter.atTop (𝓝 0) := Real.tendsto_pow_log_div_mul_add_atTop 1 0 1 (by norm_num)
       simpa using hR.comp tendsto_natCast_atTop_atTop
-    have hlogn1 : Filter.Tendsto (fun n : ℕ => Real.log ((n : ℝ) + 1) / (n : ℝ))
+    have hlogn1 : Filter.Tendsto (fun n : ℕ ↦ Real.log ((n : ℝ) + 1) / (n : ℝ))
         Filter.atTop (𝓝 0) := by
-      have hR : Filter.Tendsto (fun x : ℝ => Real.log x ^ 1 / (1 * x + (-1)))
+      have hR : Filter.Tendsto (fun x : ℝ ↦ Real.log x ^ 1 / (1 * x + (-1)))
           Filter.atTop (𝓝 0) := Real.tendsto_pow_log_div_mul_add_atTop 1 (-1) 1 (by norm_num)
       have hcomp := hR.comp (Filter.tendsto_atTop_add_const_right Filter.atTop (1 : ℝ)
         tendsto_natCast_atTop_atTop)
@@ -1045,7 +1045,7 @@ theorem lz78Greedy_converse_ae
       filter_upwards [Filter.eventually_gt_atTop 0] with n hn
       simp only [Function.comp_apply, pow_one]
       rw [show (1 : ℝ) * ((n : ℝ) + 1) + (-1) = (n : ℝ) by ring]
-    set g : ℕ → ℝ := fun n =>
+    set g : ℕ → ℝ := fun n ↦
       (2 / Real.log 2) * (Real.log (n : ℝ) / (n : ℝ))
       + (2 / Real.log 2) * (Real.log ((n : ℝ) + 1) / (n : ℝ)) with hg
     have hg_tend : Filter.Tendsto g Filter.atTop (𝓝 0) := by
@@ -1060,7 +1060,7 @@ theorem lz78Greedy_converse_ae
   filter_upwards [shannon_mcmillan_breiman₂ μ p,
       blockLogAvg₂_minus_error_le_rate_ae μ p] with ω h_smb h_lift
   -- The lower sequence `Low n = blockLogAvg₂ n ω − err n` tends to `entropyRate₂`.
-  set Low : ℕ → ℝ := fun n => blockLogAvg₂ μ q n ω - err n with hLow
+  set Low : ℕ → ℝ := fun n ↦ blockLogAvg₂ μ q n ω - err n with hLow
   have h_Low_tend : Filter.Tendsto Low Filter.atTop
       (𝓝 (entropyRate₂ μ q)) := by
     have := h_smb.sub h_err_tend
@@ -1070,7 +1070,7 @@ theorem lz78Greedy_converse_ae
     Filter.isBoundedUnder_of
       ⟨(1 + 8 * Real.log (Fintype.card α + 1) / Real.log 2)
           + ((Nat.log 2 (Fintype.card α) : ℝ) + 2),
-        fun n => lz78_rate_le_const n _⟩
+        fun n ↦ lz78_rate_le_const n _⟩
   -- `Low n ≤ rate ω n` eventually, from G3.
   have h_le : ∀ᶠ n in Filter.atTop, Low n ≤ rate ω n := by
     filter_upwards [h_lift] with n hn

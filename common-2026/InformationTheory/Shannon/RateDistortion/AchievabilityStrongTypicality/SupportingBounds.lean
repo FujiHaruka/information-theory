@@ -41,7 +41,7 @@ theorem per_source_typical_match_prob_strong_ge
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindep_Z_pair : Pairwise fun i j =>
+    (hindep_Z_pair : Pairwise fun i j ↦
       jointSequence Xs Ys i ⟂ᵢ[μ] jointSequence Xs Ys j)
     (hident_Z : ∀ i, IdentDistrib (jointSequence Xs Ys i)
                                   (jointSequence Xs Ys 0) μ μ)
@@ -66,7 +66,7 @@ theorem per_source_typical_match_prob_strong_ge
                + ε_X * logSumAbs μ Xs
                + ε_X * logSumAbs μ (jointSequence Xs Ys)
                + δ)))
-        ≤ (Measure.pi (fun _ : Fin n => μ.map (Ys 0))).real
+        ≤ (Measure.pi (fun _ : Fin n ↦ μ.map (Ys 0))).real
               {y | (x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε} := by
   -- This is exactly `conditionalStronglyTypicalSlice_mass_ge`; the conditional slice
   -- unfolds to `{y | (x, y) ∈ jointStronglyTypicalSet ...}`.
@@ -84,7 +84,7 @@ theorem encoder_strong_failure_prob_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindep_Z_pair : Pairwise fun i j =>
+    (hindep_Z_pair : Pairwise fun i j ↦
       jointSequence Xs Ys i ⟂ᵢ[μ] jointSequence Xs Ys j)
     (hident_Z : ∀ i, IdentDistrib (jointSequence Xs Ys i)
                                   (jointSequence Xs Ys 0) μ μ)
@@ -102,7 +102,7 @@ theorem encoder_strong_failure_prob_le
           ≤ δ * qZ_min) :
     ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (M : ℕ) (x : Fin n → α),
       x ∈ stronglyTypicalSet μ Xs n ε_X →
-    (Measure.pi (fun _ : Fin M => Measure.pi (fun _ : Fin n => μ.map (Ys 0)))).real
+    (Measure.pi (fun _ : Fin M ↦ Measure.pi (fun _ : Fin n ↦ μ.map (Ys 0)))).real
       { c : Fin M → (Fin n → β) |
           ∀ m, (x, c m) ∉ jointStronglyTypicalSet μ Xs Ys n ε }
       ≤ Real.exp (-(M : ℝ) *
@@ -117,10 +117,10 @@ theorem encoder_strong_failure_prob_le
   obtain ⟨N, hN⟩ := per_source_typical_match_prob_strong_ge μ Xs Ys hXs hYs
     hindep_Z_pair hident_Z hposZ hposX hposY hmarg_X hmarg_Y
     hε hε_X hε_X_lt_ε hδ qZ_min hqZ_min_pos hqZ_min_le hδ_dominates_kl
-  refine ⟨N, fun n hn M x hx => ?_⟩
+  refine ⟨N, fun n hn M x hx ↦ ?_⟩
   have h_lower := hN n hn x hx
   -- Abbreviate.
-  set p : Measure (Fin n → β) := Measure.pi (fun _ : Fin n => μ.map (Ys 0)) with hp_def
+  set p : Measure (Fin n → β) := Measure.pi (fun _ : Fin n ↦ μ.map (Ys 0)) with hp_def
   haveI : IsProbabilityMeasure (μ.map (Ys 0)) :=
     MeasureTheory.Measure.isProbabilityMeasure_map (hYs 0).aemeasurable
   haveI : IsProbabilityMeasure p := by rw [hp_def]; infer_instance
@@ -133,7 +133,7 @@ theorem encoder_strong_failure_prob_le
   have hq_le : q ≤ 1 := measureReal_le_one
   -- Equation: (Measure.pi (fun _ => p)).real Smiss = (1 - q)^M.
   have h_set_eq : Smiss = Set.univ.pi
-      (fun _ : Fin M => {y : Fin n → β | (x, y) ∉ jointStronglyTypicalSet μ Xs Ys n ε}) := by
+      (fun _ : Fin M ↦ {y : Fin n → β | (x, y) ∉ jointStronglyTypicalSet μ Xs Ys n ε}) := by
     ext c
     simp [hSmiss_def, Set.mem_pi]
   have h_per_missing :
@@ -150,15 +150,15 @@ theorem encoder_strong_failure_prob_le
       MeasurableSet {y : Fin n → β | (x, y) ∉ jointStronglyTypicalSet μ Xs Ys n ε} :=
     (Set.toFinite _).measurableSet
   have h_pi :
-      (Measure.pi (fun _ : Fin M => p))
+      (Measure.pi (fun _ : Fin M ↦ p))
           (Set.univ.pi
-            (fun _ : Fin M => {y : Fin n → β | (x, y) ∉ jointStronglyTypicalSet μ Xs Ys n ε}))
+            (fun _ : Fin M ↦ {y : Fin n → β | (x, y) ∉ jointStronglyTypicalSet μ Xs Ys n ε}))
         = ∏ _m : Fin M,
             p {y : Fin n → β | (x, y) ∉ jointStronglyTypicalSet μ Xs Ys n ε} :=
     Measure.pi_pi _ _
   have h_real :
-      (Measure.pi (fun _ : Fin M => p)).real Smiss = (1 - q) ^ M := by
-    show ((Measure.pi (fun _ : Fin M => p)) Smiss).toReal = _
+      (Measure.pi (fun _ : Fin M ↦ p)).real Smiss = (1 - q) ^ M := by
+    show ((Measure.pi (fun _ : Fin M ↦ p)) Smiss).toReal = _
     rw [h_set_eq, h_pi, ENNReal.toReal_prod]
     have h_pt :
         (p {y : Fin n → β | (x, y) ∉ jointStronglyTypicalSet μ Xs Ys n ε}).toReal = 1 - q := by
@@ -219,78 +219,78 @@ theorem source_avg_distortion_le_simpler_generic
   have h_B_meas : MeasurableSet B := (Set.toFinite _).measurableSet
   have h_pointwise : ∀ x : Fin n → α,
       blockDistortion d n x (c (enc x))
-        ≤ Edδ + dMax * (B.indicator (fun _ => (1 : ℝ)) x) := by
+        ≤ Edδ + dMax * (B.indicator (fun _ ↦ (1 : ℝ)) x) := by
     intro x
     by_cases hxB : x ∈ B
     · have h_bd :
           blockDistortion d n x (c (enc x)) ≤ dMax :=
         blockDistortion_le_distortionMax d n x _
-      have h_ind : B.indicator (fun _ : Fin n → α => (1 : ℝ)) x = 1 :=
+      have h_ind : B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x = 1 :=
         Set.indicator_of_mem hxB _
       calc blockDistortion d n x (c (enc x))
           ≤ dMax := h_bd
         _ = 0 + dMax * 1 := by ring
         _ ≤ Edδ + dMax * 1 := by linarith
-        _ = Edδ + dMax * (B.indicator (fun _ => (1 : ℝ)) x) := by rw [h_ind]
+        _ = Edδ + dMax * (B.indicator (fun _ ↦ (1 : ℝ)) x) := by rw [h_ind]
     · have hxB' : (x, c (enc x)) ∈ distortionTypicalSet μ Xs Ys d n ε δ := by
         rw [hB_def, Set.mem_setOf_eq, not_not] at hxB
         exact hxB
       have h_bd :
           blockDistortion d n x (c (enc x)) ≤ Edδ :=
         blockDistortion_le_of_mem_distortionTypicalSet μ Xs Ys d n ε δ hxB'
-      have h_ind : B.indicator (fun _ : Fin n → α => (1 : ℝ)) x = 0 :=
+      have h_ind : B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x = 0 :=
         Set.indicator_of_notMem hxB _
       calc blockDistortion d n x (c (enc x))
           ≤ Edδ := h_bd
         _ = Edδ + dMax * 0 := by ring
-        _ = Edδ + dMax * (B.indicator (fun _ => (1 : ℝ)) x) := by rw [h_ind]
-  have h_meas_f : Measurable (fun x : Fin n → α =>
+        _ = Edδ + dMax * (B.indicator (fun _ ↦ (1 : ℝ)) x) := by rw [h_ind]
+  have h_meas_f : Measurable (fun x : Fin n → α ↦
         blockDistortion d n x (c (enc x))) := measurable_of_finite _
-  have h_meas_g : Measurable (fun x : Fin n → α =>
-        Edδ + dMax * (B.indicator (fun _ => (1 : ℝ)) x)) := measurable_of_finite _
+  have h_meas_g : Measurable (fun x : Fin n → α ↦
+        Edδ + dMax * (B.indicator (fun _ ↦ (1 : ℝ)) x)) := measurable_of_finite _
   have h_f_le : ∀ x, ‖blockDistortion d n x (c (enc x))‖ ≤ dMax := by
     intro x
     rw [Real.norm_eq_abs, abs_of_nonneg (blockDistortion_nonneg d n x _)]
     exact blockDistortion_le_distortionMax d n x _
-  have h_int_f : Integrable (fun x : Fin n → α =>
+  have h_int_f : Integrable (fun x : Fin n → α ↦
         blockDistortion d n x (c (enc x))) P_X := by
-    refine Integrable.mono' (g := fun _ => dMax) (integrable_const dMax)
+    refine Integrable.mono' (g := fun _ ↦ dMax) (integrable_const dMax)
       h_meas_f.aestronglyMeasurable ?_
     exact Filter.Eventually.of_forall h_f_le
-  have h_int_g : Integrable (fun x : Fin n → α =>
-        Edδ + dMax * (B.indicator (fun _ => (1 : ℝ)) x)) P_X := by
-    refine Integrable.mono' (g := fun _ => Edδ + dMax) (integrable_const (Edδ + dMax))
+  have h_int_g : Integrable (fun x : Fin n → α ↦
+        Edδ + dMax * (B.indicator (fun _ ↦ (1 : ℝ)) x)) P_X := by
+    refine Integrable.mono' (g := fun _ ↦ Edδ + dMax) (integrable_const (Edδ + dMax))
       h_meas_g.aestronglyMeasurable ?_
-    refine Filter.Eventually.of_forall (fun x => ?_)
-    have h_ind_le : (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) ≤ 1 := by
+    refine Filter.Eventually.of_forall (fun x ↦ ?_)
+    have h_ind_le : (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x) ≤ 1 := by
       by_cases hxB : x ∈ B
       · rw [Set.indicator_of_mem hxB]
       · rw [Set.indicator_of_notMem hxB]; linarith
-    have h_ind_nn : 0 ≤ (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) :=
-      Set.indicator_nonneg (fun _ _ => zero_le_one) x
-    have h_val_le : Edδ + dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x)
+    have h_ind_nn : 0 ≤ (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x) :=
+      Set.indicator_nonneg (fun _ _ ↦ zero_le_one) x
+    have h_val_le : Edδ + dMax * (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x)
         ≤ Edδ + dMax := by
-      have h_inner : dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) ≤ dMax := by
-        calc dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x)
+      have h_inner : dMax * (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x) ≤ dMax := by
+        calc dMax * (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x)
             ≤ dMax * 1 := mul_le_mul_of_nonneg_left h_ind_le h_dMax_nn
           _ = dMax := by ring
       linarith
-    have h_val_nn : 0 ≤ Edδ + dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) :=
+    have h_val_nn : 0 ≤ Edδ + dMax * (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x) :=
       add_nonneg h_Edδ_nn (mul_nonneg h_dMax_nn h_ind_nn)
     rw [Real.norm_eq_abs, abs_of_nonneg h_val_nn]
     exact h_val_le
   have h_int_mono :
       ∫ x, blockDistortion d n x (c (enc x)) ∂P_X
-        ≤ ∫ x, Edδ + dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) ∂P_X :=
+        ≤ ∫ x, Edδ + dMax * (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x) ∂P_X :=
     integral_mono h_int_f h_int_g h_pointwise
   have h_int_const : ∫ _x : Fin n → α, Edδ ∂P_X = Edδ := by
     rw [integral_const]; simp
   have h_int_indicator_const :
-      ∫ x : Fin n → α, dMax * (B.indicator (fun _ => (1 : ℝ)) x) ∂P_X
+      ∫ x : Fin n → α, dMax * (B.indicator (fun _ ↦ (1 : ℝ)) x) ∂P_X
         = dMax * P_X.real B := by
     have h_ind_eq :
-        (fun x : Fin n → α => dMax * (B.indicator (fun _ => (1 : ℝ)) x))
-          = B.indicator (fun _ : Fin n → α => dMax) := by
+        (fun x : Fin n → α ↦ dMax * (B.indicator (fun _ ↦ (1 : ℝ)) x))
+          = B.indicator (fun _ : Fin n → α ↦ dMax) := by
       funext x
       by_cases hxB : x ∈ B
       · rw [Set.indicator_of_mem hxB, Set.indicator_of_mem hxB]; ring
@@ -298,27 +298,27 @@ theorem source_avg_distortion_le_simpler_generic
     rw [h_ind_eq, integral_indicator_const dMax h_B_meas]
     rw [smul_eq_mul]; ring
   have h_int_split :
-      ∫ x, Edδ + dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) ∂P_X
+      ∫ x, Edδ + dMax * (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x) ∂P_X
         = Edδ + dMax * P_X.real B := by
-    have h_const_int : Integrable (fun _ : Fin n → α => Edδ) P_X := integrable_const Edδ
+    have h_const_int : Integrable (fun _ : Fin n → α ↦ Edδ) P_X := integrable_const Edδ
     have h_ind_int : Integrable
-        (fun x : Fin n → α => dMax * (B.indicator (fun _ => (1 : ℝ)) x)) P_X := by
+        (fun x : Fin n → α ↦ dMax * (B.indicator (fun _ ↦ (1 : ℝ)) x)) P_X := by
       have h_meas' : Measurable
-          (fun x : Fin n → α => dMax * (B.indicator (fun _ => (1 : ℝ)) x)) :=
+          (fun x : Fin n → α ↦ dMax * (B.indicator (fun _ ↦ (1 : ℝ)) x)) :=
         measurable_of_finite _
-      refine Integrable.mono' (g := fun _ => dMax) (integrable_const dMax)
+      refine Integrable.mono' (g := fun _ ↦ dMax) (integrable_const dMax)
         h_meas'.aestronglyMeasurable ?_
-      refine Filter.Eventually.of_forall (fun x => ?_)
-      have h_ind_le : (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) ≤ 1 := by
+      refine Filter.Eventually.of_forall (fun x ↦ ?_)
+      have h_ind_le : (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x) ≤ 1 := by
         by_cases hxB : x ∈ B
         · rw [Set.indicator_of_mem hxB]
         · rw [Set.indicator_of_notMem hxB]; linarith
-      have h_ind_nn : 0 ≤ (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) :=
-        Set.indicator_nonneg (fun _ _ => zero_le_one) x
-      have h_val_nn : 0 ≤ dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) :=
+      have h_ind_nn : 0 ≤ (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x) :=
+        Set.indicator_nonneg (fun _ _ ↦ zero_le_one) x
+      have h_val_nn : 0 ≤ dMax * (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x) :=
         mul_nonneg h_dMax_nn h_ind_nn
-      have h_val_le : dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) ≤ dMax := by
-        calc dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x)
+      have h_val_le : dMax * (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x) ≤ dMax := by
+        calc dMax * (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x)
             ≤ dMax * 1 := mul_le_mul_of_nonneg_left h_ind_le h_dMax_nn
           _ = dMax := by ring
       rw [Real.norm_eq_abs, abs_of_nonneg h_val_nn]
@@ -345,13 +345,13 @@ lemma weighted_avg_bound {ι : Type*} [Fintype ι] (W f g : ι → ℝ) (a m B :
     (h_per : ∀ i, f i ≤ a + m * g i) (h_g : ∑ i, W i * g i ≤ B) :
     ∑ i, W i * f i ≤ a + m * B := by
   have h_step1 : ∑ i, W i * f i ≤ ∑ i, W i * (a + m * g i) :=
-    Finset.sum_le_sum (fun i _ => mul_le_mul_of_nonneg_left (h_per i) (hW_nn i))
+    Finset.sum_le_sum (fun i _ ↦ mul_le_mul_of_nonneg_left (h_per i) (hW_nn i))
   have h_step2 : ∑ i, W i * (a + m * g i) = a + m * ∑ i, W i * g i := by
     have h_distribute :
         ∑ i, W i * (a + m * g i)
           = (∑ i, W i * a) + ∑ i, W i * (m * g i) := by
       rw [← Finset.sum_add_distrib]
-      refine Finset.sum_congr rfl (fun i _ => ?_)
+      refine Finset.sum_congr rfl (fun i _ ↦ ?_)
       ring
     rw [h_distribute]
     have h_sum_a : ∑ i, W i * a = a := by
@@ -359,7 +359,7 @@ lemma weighted_avg_bound {ι : Type*} [Fintype ι] (W f g : ι → ℝ) (a m B :
       rw [hW_sum]; ring
     have h_sum_m : ∑ i, W i * (m * g i) = m * ∑ i, W i * g i := by
       rw [Finset.mul_sum]
-      refine Finset.sum_congr rfl (fun i _ => ?_)
+      refine Finset.sum_congr rfl (fun i _ ↦ ?_)
       ring
     rw [h_sum_a, h_sum_m]
   linarith [h_step2 ▸ h_step1, mul_le_mul_of_nonneg_left h_g hm_nn]
@@ -390,7 +390,7 @@ theorem rate_distortion_achievability_witness_form_strong
         ∑ c : Codebook (Nat.ceil (Real.exp ((n : ℝ) * R))) n β,
             (codebookMeasure (μ.map (Ys 0))
                 (Nat.ceil (Real.exp ((n : ℝ) * R))) n).real {c}
-              * (Measure.pi (fun _ : Fin n => μ.map (Xs 0))).real
+              * (Measure.pi (fun _ : Fin n ↦ μ.map (Xs 0))).real
                   { x | (x, c (jointStronglyTypicalLossyEncoder μ Xs Ys
                                   (Nat.ceil_pos.mpr (Real.exp_pos _)) ε_join c x))
                           ∉ distortionTypicalSet μ Xs Ys d n ε_dist δ_typ }
@@ -409,14 +409,14 @@ theorem rate_distortion_achievability_witness_form_strong
   have h_failure_eventually : ∀ᶠ n in Filter.atTop, failure_seq n < η := by
     have := (Metric.tendsto_atTop.mp h_failure_tendsto_zero) η hη_pos
     obtain ⟨N, hN⟩ := this
-    refine Filter.eventually_atTop.mpr ⟨N, fun n hn => ?_⟩
+    refine Filter.eventually_atTop.mpr ⟨N, fun n hn ↦ ?_⟩
     have := hN n hn
     rw [Real.dist_eq, sub_zero] at this
     have h_nn := h_failure_nn n
     rw [abs_of_nonneg h_nn] at this
     exact this
   obtain ⟨N, hN⟩ := Filter.eventually_atTop.mp h_failure_eventually
-  refine ⟨max N 1, fun n hn => ?_⟩
+  refine ⟨max N 1, fun n hn ↦ ?_⟩
   have hN_le : N ≤ n := le_of_max_le_left hn
   have h_n_pos : 0 < n := lt_of_lt_of_le Nat.zero_lt_one (le_of_max_le_right hn)
   have h_failure_n_lt : failure_seq n < η := hN n hN_le
@@ -424,20 +424,20 @@ theorem rate_distortion_achievability_witness_form_strong
   have hMn_pos : 0 < Mn := by
     rw [hMn_def]
     exact Nat.ceil_pos.mpr (Real.exp_pos _)
-  set f : Codebook Mn n β → ℝ := fun c =>
+  set f : Codebook Mn n β → ℝ := fun c ↦
     (lossyCodeOfCodebookStrong μ Xs Ys hMn_pos ε_join c).expectedBlockDistortion
       (μ.map (Xs 0)) d with hf_def
   have h_per_codebook : ∀ c : Codebook Mn n β,
       f c ≤ (expectedJointDistortion μ (Xs 0) (Ys 0) d + δ_typ)
               + dMax *
-                (Measure.pi (fun _ : Fin n => μ.map (Xs 0))).real
+                (Measure.pi (fun _ : Fin n ↦ μ.map (Xs 0))).real
                   { x | (x, c (jointStronglyTypicalLossyEncoder μ Xs Ys hMn_pos ε_join c x))
                           ∉ distortionTypicalSet μ Xs Ys d n ε_dist δ_typ } := by
     intro c
     have h := source_avg_distortion_le_simpler_generic (μ := μ) (Xs := Xs) (Ys := Ys)
       (d := d) (ε := ε_dist) (δ := δ_typ) hδ_typ c
       (enc := jointStronglyTypicalLossyEncoder μ Xs Ys hMn_pos ε_join c)
-      (P_X := Measure.pi (fun _ : Fin n => μ.map (Xs 0)))
+      (P_X := Measure.pi (fun _ : Fin n ↦ μ.map (Xs 0)))
     show (lossyCodeOfCodebookStrong μ Xs Ys hMn_pos ε_join c).expectedBlockDistortion
         (μ.map (Xs 0)) d ≤ _
     unfold LossyCode.expectedBlockDistortion lossyCodeOfCodebookStrong
@@ -462,21 +462,21 @@ theorem rate_distortion_achievability_witness_form_strong
         ≤ (expectedJointDistortion μ (Xs 0) (Ys 0) d + δ_typ) + dMax * failure_seq n := by
     have h_step3 : ∑ c : Codebook Mn n β,
         (codebookMeasure (μ.map (Ys 0)) Mn n).real {c} *
-          (Measure.pi (fun _ : Fin n => μ.map (Xs 0))).real
+          (Measure.pi (fun _ : Fin n ↦ μ.map (Xs 0))).real
             { x | (x, c (jointStronglyTypicalLossyEncoder μ Xs Ys hMn_pos ε_join c x))
                     ∉ distortionTypicalSet μ Xs Ys d n ε_dist δ_typ }
         ≤ failure_seq n := by
       have h_app := h_codebook_avg_failure h_n_pos
       convert h_app using 0
     exact weighted_avg_bound
-      (fun c => (codebookMeasure (μ.map (Ys 0)) Mn n).real {c})
+      (fun c ↦ (codebookMeasure (μ.map (Ys 0)) Mn n).real {c})
       f
-      (fun c => (Measure.pi (fun _ : Fin n => μ.map (Xs 0))).real
+      (fun c ↦ (Measure.pi (fun _ : Fin n ↦ μ.map (Xs 0))).real
         { x | (x, c (jointStronglyTypicalLossyEncoder μ Xs Ys hMn_pos ε_join c x))
                 ∉ distortionTypicalSet μ Xs Ys d n ε_dist δ_typ })
       (expectedJointDistortion μ (Xs 0) (Ys 0) d + δ_typ)
       dMax (failure_seq n)
-      (fun _ => measureReal_nonneg) h_sum_one h_dMax_nn
+      (fun _ ↦ measureReal_nonneg) h_sum_one h_dMax_nn
       h_per_codebook h_step3
   obtain ⟨c₀, hc₀_le⟩ :=
     exists_codebook_low_avg (M := Mn) (n := n) (μ.map (Ys 0)) f h_avg_bound
@@ -529,7 +529,7 @@ theorem rate_distortion_achievability_partial_discharge_strong
             (codebookMeasure
                 ((rdAmbient qStar).map (iidYs (α := α) (β := β) 0))
                   (Nat.ceil (Real.exp ((n : ℝ) * R))) n).real {c}
-              * (Measure.pi (fun _ : Fin n =>
+              * (Measure.pi (fun _ : Fin n ↦
                     (rdAmbient qStar).map (iidXs (α := α) (β := β) 0))).real
                   { x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
                                   iidXs iidYs
@@ -584,7 +584,7 @@ noncomputable def codebookAvgFailureStrong
   ∑ c : Codebook (Nat.ceil (Real.exp ((n : ℝ) * R))) n β,
     (codebookMeasure ((rdAmbient qStar).map (iidYs (α := α) (β := β) 0))
         (Nat.ceil (Real.exp ((n : ℝ) * R))) n).real {c}
-      * (Measure.pi (fun _ : Fin n =>
+      * (Measure.pi (fun _ : Fin n ↦
             (rdAmbient qStar).map (iidXs (α := α) (β := β) 0))).real
           { x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar) iidXs iidYs
                           (Nat.ceil_pos.mpr (Real.exp_pos _)) ε_join c x))
@@ -596,7 +596,7 @@ lemma codebookAvgFailureStrong_nonneg
     (R : ℝ) (n : ℕ) (ε_join ε_dist δ_typ : ℝ) :
     0 ≤ codebookAvgFailureStrong qStar d R n ε_join ε_dist δ_typ := by
   unfold codebookAvgFailureStrong
-  refine Finset.sum_nonneg fun c _ => ?_
+  refine Finset.sum_nonneg fun c _ ↦ ?_
   exact mul_nonneg measureReal_nonneg measureReal_nonneg
 
 /-! ### Entropy ↔ mutualInfoPmf bridge in the `rdAmbient` setting -/
@@ -620,14 +620,14 @@ lemma rdAmbient_entropy_diff_eq_mutualInfoPmf
         = ∑ a : α, Real.negMulLog (marginalFst qStar a) := by
     unfold entropy
     rw [rdAmbient_map_iidXs qStar hqStar_simp]
-    refine Finset.sum_congr rfl fun a _ => ?_
+    refine Finset.sum_congr rfl fun a _ ↦ ?_
     rw [pmfToMeasure_map_fst_real_singleton hqStar_simp]
   have h_HY :
       entropy (rdAmbient qStar) (iidYs (α := α) (β := β) 0)
         = ∑ b : β, Real.negMulLog (marginalSnd qStar b) := by
     unfold entropy
     rw [rdAmbient_map_iidYs qStar hqStar_simp]
-    refine Finset.sum_congr rfl fun b _ => ?_
+    refine Finset.sum_congr rfl fun b _ ↦ ?_
     rw [pmfToMeasure_map_snd_real_singleton hqStar_simp]
   have h_HZ :
       entropy (rdAmbient qStar)
@@ -635,7 +635,7 @@ lemma rdAmbient_entropy_diff_eq_mutualInfoPmf
         = ∑ p : α × β, Real.negMulLog (qStar p) := by
     unfold entropy
     rw [rdAmbient_map_jointSequence qStar hqStar_simp]
-    refine Finset.sum_congr rfl fun p _ => ?_
+    refine Finset.sum_congr rfl fun p _ ↦ ?_
     congr 1
     exact pmfToMeasure_real_singleton hqStar_simp p
   rw [h_HX, h_HY, h_HZ]
@@ -652,7 +652,7 @@ lemma rdAmbient_block_law_iidXs
     (qStar : α × β → ℝ) (hqStar_simp : qStar ∈ stdSimplex ℝ (α × β)) (n : ℕ) :
     (rdAmbient qStar).map
         (InformationTheory.Shannon.jointRV (iidXs (α := α) (β := β)) n)
-      = Measure.pi (fun _ : Fin n =>
+      = Measure.pi (fun _ : Fin n ↦
           (rdAmbient qStar).map (iidXs (α := α) (β := β) 0)) := by
   classical
   haveI : IsProbabilityMeasure (pmfToMeasure (α := α × β) qStar) :=
@@ -660,21 +660,21 @@ lemma rdAmbient_block_law_iidXs
   haveI : IsProbabilityMeasure (rdAmbient qStar) :=
     rdAmbient_isProbabilityMeasure qStar hqStar_simp
   -- Restrict the i.i.d. X-sequence to `Fin n`.
-  set Xs' : Fin n → (ℕ → α × β) → α := fun i => iidXs (α := α) (β := β) i
+  set Xs' : Fin n → (ℕ → α × β) → α := fun i ↦ iidXs (α := α) (β := β) i
     with hXs'_def
-  have hXs'_meas : ∀ i : Fin n, AEMeasurable (Xs' i) (rdAmbient qStar) := fun i =>
+  have hXs'_meas : ∀ i : Fin n, AEMeasurable (Xs' i) (rdAmbient qStar) := fun i ↦
     (measurable_iidXs i).aemeasurable
   have hindepX_full :
-      iIndepFun (fun i : ℕ => iidXs (α := α) (β := β) i) (rdAmbient qStar) :=
+      iIndepFun (fun i : ℕ ↦ iidXs (α := α) (β := β) i) (rdAmbient qStar) :=
     iidAmbientJoint_iIndepFun_iidXs (pmfToMeasure (α := α × β) qStar)
   have hindepX' : iIndepFun Xs' (rdAmbient qStar) :=
-    hindepX_full.precomp (g := fun i : Fin n => (i : ℕ)) Fin.val_injective
+    hindepX_full.precomp (g := fun i : Fin n ↦ (i : ℕ)) Fin.val_injective
   have h_pi_form :
-      (rdAmbient qStar).map (fun ω i => Xs' i ω)
-        = Measure.pi (fun i => (rdAmbient qStar).map (Xs' i)) :=
+      (rdAmbient qStar).map (fun ω i ↦ Xs' i ω)
+        = Measure.pi (fun i ↦ (rdAmbient qStar).map (Xs' i)) :=
     (iIndepFun_iff_map_fun_eq_pi_map hXs'_meas).mp hindepX'
   have h_jointRV_eq : InformationTheory.Shannon.jointRV
-        (iidXs (α := α) (β := β)) n = fun ω (i : Fin n) => Xs' i ω := rfl
+        (iidXs (α := α) (β := β)) n = fun ω (i : Fin n) ↦ Xs' i ω := rfl
   rw [h_jointRV_eq, h_pi_form]
   congr 1
   funext i

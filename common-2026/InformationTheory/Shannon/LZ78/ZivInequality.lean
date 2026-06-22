@@ -152,7 +152,7 @@ noncomputable def LZ78Parsing.phraseSet (p : LZ78Parsing α) :
     Finset (LZ78Phrase α) :=
   letI : DecidableEq (LZ78Phrase α) := Classical.decEq _
   (Finset.univ : Finset (Fin p.phrases.length)).image
-    (fun i => p.phrases.get i)
+    (fun i ↦ p.phrases.get i)
 
 /-- **Every phrase in the parsing has bounded parent.** Direct consequence
 of the `inRange` invariant: phrase at index `i < count` has parent
@@ -168,7 +168,7 @@ theorem LZ78Parsing.parent_bounded (p : LZ78Parsing α)
 forget the bound to recover the phrase itself. -/
 noncomputable def LZ78Parsing.indexToBounded (p : LZ78Parsing α) :
     Fin p.phrases.length → LZ78Phrase.parentBounded p.phrases.length α :=
-  fun i => (p.phrases.get i).toParentBounded (p.parent_bounded i.1 i.2)
+  fun i ↦ (p.phrases.get i).toParentBounded (p.parent_bounded i.1 i.2)
 
 theorem LZ78Parsing.ofParentBounded_indexToBounded (p : LZ78Parsing α)
     (i : Fin p.phrases.length) :

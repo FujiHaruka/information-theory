@@ -107,7 +107,7 @@ lemma klDivPmf_eq_entropyCross_sum
     klDivPmf Q R
       = ∑ a, (Q a * Real.log (Q a) - Q a * Real.log (R a) + (R a - Q a)) := by
   unfold klDivPmf
-  refine Finset.sum_congr rfl fun a _ => ?_
+  refine Finset.sum_congr rfl fun a _ ↦ ?_
   exact klFun_ref_mul (hR_pos a) (hQ_nn a)
 
 /-! ## Master exponential-family identity -/
@@ -132,9 +132,9 @@ lemma hoeffdingTilt_kl_master
   have hT_pos : ∀ a, 0 < T a := hoeffdingTilt_pos P₁ P₂ hP₁_pos hP₂_pos lam
   have hQ_nn : ∀ a, 0 ≤ Q a := hQ.1
   -- Cross-entropy sum forms for the three references.
-  rw [klDivPmf_eq_entropyCross_sum (fun a => hP₂_pos a) hQ_nn,
-      klDivPmf_eq_entropyCross_sum (fun a => hP₁_pos a) hQ_nn,
-      klDivPmf_eq_entropyCross_sum (fun a => hT_pos a) hQ_nn]
+  rw [klDivPmf_eq_entropyCross_sum (fun a ↦ hP₂_pos a) hQ_nn,
+      klDivPmf_eq_entropyCross_sum (fun a ↦ hP₁_pos a) hQ_nn,
+      klDivPmf_eq_entropyCross_sum (fun a ↦ hT_pos a) hQ_nn]
   -- Pull scalars into the sums, then collapse per coordinate.
   rw [Finset.mul_sum, Finset.mul_sum, ← Finset.sum_add_distrib, ← Finset.sum_sub_distrib]
   -- Per-coordinate: combine to Q a * (-log Z) + (lam P₂ a + (1-lam) P₁ a - T a).
@@ -158,7 +158,7 @@ lemma hoeffdingTilt_kl_master
       linarith [this]
     rw [h_logT]
     ring
-  rw [Finset.sum_congr rfl fun a _ => h_per a]
+  rw [Finset.sum_congr rfl fun a _ ↦ h_per a]
   -- Split: ∑ Q a · (-log Z) + ∑ (lam P₂ + (1-lam) P₁ - T) = -log Z · 1 + 0.
   rw [Finset.sum_add_distrib, ← Finset.sum_mul]
   have hQ_sum : ∑ a, Q a = 1 := hQ.2
@@ -226,8 +226,8 @@ theorem isHoeffdingTiltMinimal_of_constraint_eq
     lam hQ_simplex
   -- klDivPmf Q T ≥ 0.
   have h_QT_nn : 0 ≤ klDivPmf Q T :=
-    klDivPmf_nonneg Q T (fun a => hQ_simplex.1 a)
-      (fun a => (hoeffdingTilt_pos P₁ P₂ hP₁_pos hP₂_pos lam a).le)
+    klDivPmf_nonneg Q T (fun a ↦ hQ_simplex.1 a)
+      (fun a ↦ (hoeffdingTilt_pos P₁ P₂ hP₁_pos hP₂_pos lam a).le)
   -- Constraint: klDivPmf Q P₁ - klDivPmf T P₁ ≤ 0  (since klDivPmf T P₁ = alpha).
   have h_constraint : klDivPmf Q P₁ - klDivPmf T P₁ ≤ 0 := by
     rw [show klDivPmf T P₁ = alpha from h_kl]

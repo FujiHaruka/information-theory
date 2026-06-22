@@ -52,7 +52,7 @@ lemma natKraft_cast_eq
     congr 1
     push_cast [hle]
     omega
-  rw [Finset.sum_congr rfl (fun c _ => hterm c), ← Finset.mul_sum]
+  rw [Finset.sum_congr rfl (fun c _ ↦ hterm c), ← Finset.mul_sum]
 
 omit [DecidableEq β] in
 /-- Equivalence: real Kraft sum `≤ 1` iff natural-number Kraft sum `≤ 2^M` (when `M` bounds `l`). -/
@@ -115,9 +115,9 @@ private theorem shorten_to_kraft_one_aux
     obtain ⟨m, _, hm_max⟩ :=
       Finset.exists_max_image (Finset.univ : Finset β) ll Finset.univ_nonempty
     set L := ll m with hL_def
-    have hL_max : ∀ c, ll c ≤ L := fun c => hm_max c (Finset.mem_univ c)
+    have hL_max : ∀ c, ll c ≤ L := fun c ↦ hm_max c (Finset.mem_univ c)
     by_cases h_eq : ∑ x : β, ((2 : ℝ)) ^ (-(ll x : ℤ)) = 1
-    · exact ⟨ll, hll_pos, fun _ => le_refl _, h_eq⟩
+    · exact ⟨ll, hll_pos, fun _ ↦ le_refl _, h_eq⟩
     · -- Kraft < 1
       have h_lt : ∑ x : β, ((2 : ℝ)) ^ (-(ll x : ℤ)) < 1 := lt_of_le_of_ne hll_kraft h_eq
       -- nat form: N(ll, L) < 2^L
@@ -133,7 +133,7 @@ private theorem shorten_to_kraft_one_aux
         by_contra hL_lt
         push Not at hL_lt
         have hL_eq_1 : L = 1 := le_antisymm (by omega) (hll_pos m)
-        have hall_one : ∀ c, ll c = 1 := fun c => le_antisymm (hL_eq_1 ▸ hL_max c) (hll_pos c)
+        have hall_one : ∀ c, ll c = 1 := fun c ↦ le_antisymm (hL_eq_1 ▸ hL_max c) (hll_pos c)
         have hsum_eq : (∑ x : β, ((2 : ℝ)) ^ (-(ll x : ℤ)))
             = ∑ x : β, ((2 : ℝ)) ^ (-(1 : ℤ)) := by
           apply Finset.sum_congr rfl
@@ -162,7 +162,7 @@ private theorem shorten_to_kraft_one_aux
         · rw [hx, hll'_m]; omega
         · rw [hll'_off x hx]
       -- ll' c ≤ L still (so L is a valid bound for ll')
-      have hll'_max : ∀ c, ll' c ≤ L := fun c => le_trans (hll'_le c) (hL_max c)
+      have hll'_max : ∀ c, ll' c ≤ L := fun c ↦ le_trans (hll'_le c) (hL_max c)
       -- total length strictly decreases
       have htotal_lt : (∑ x : β, ll' x) < n := by
         rw [← hn]
@@ -178,8 +178,8 @@ private theorem shorten_to_kraft_one_aux
         omega
       -- nat Kraft for ll': N(ll', L) = N(ll, L) + 1 ≤ 2^L
       have h_nat'_eq : (∑ c : β, 2 ^ (L - ll' c)) = (∑ c : β, 2 ^ (L - ll c)) + 1 := by
-        rw [← Finset.add_sum_erase _ (fun c => 2 ^ (L - ll c)) (Finset.mem_univ m),
-            ← Finset.add_sum_erase _ (fun c => 2 ^ (L - ll' c)) (Finset.mem_univ m)]
+        rw [← Finset.add_sum_erase _ (fun c ↦ 2 ^ (L - ll c)) (Finset.mem_univ m),
+            ← Finset.add_sum_erase _ (fun c ↦ 2 ^ (L - ll' c)) (Finset.mem_univ m)]
         have h_erase_eq : (∑ x ∈ (Finset.univ : Finset β).erase m, 2 ^ (L - ll' x))
             = ∑ x ∈ (Finset.univ : Finset β).erase m, 2 ^ (L - ll x) := by
           apply Finset.sum_congr rfl
@@ -200,7 +200,7 @@ private theorem shorten_to_kraft_one_aux
       -- apply IH
       obtain ⟨l1, hl1_pos, hl1_le, hl1_kraft⟩ :=
         IH (∑ x : β, ll' x) htotal_lt ll' hll'_pos hll'_kraft rfl
-      exact ⟨l1, hl1_pos, fun x => le_trans (hl1_le x) (hll'_le x), hl1_kraft⟩
+      exact ⟨l1, hl1_pos, fun x ↦ le_trans (hl1_le x) (hll'_le x), hl1_kraft⟩
 
 omit [DecidableEq β] in
 /-- A positive Kraft-feasible code can be shortened pointwise to a complete code (Kraft = 1). -/

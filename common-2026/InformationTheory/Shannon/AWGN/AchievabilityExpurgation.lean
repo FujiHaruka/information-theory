@@ -58,17 +58,17 @@ theorem awgn_expurgate_worst_half
     (h_avg : (∑ m, Pe m) ≤ (M : ℝ) * (2 * ε)) :
     ∃ S : Finset (Fin M), M / 2 ≤ S.card ∧ ∀ m ∈ S, Pe m ≤ 4 * ε := by
   classical
-  refine ⟨Finset.univ.filter (fun m => Pe m ≤ 4 * ε), ?_, ?_⟩
+  refine ⟨Finset.univ.filter (fun m ↦ Pe m ≤ 4 * ε), ?_, ?_⟩
   · -- card ≥ M/2 via contrapositive on the "bad" filter
     by_contra hlt
     push Not at hlt
     set S_good : Finset (Fin M) :=
-      Finset.univ.filter (fun m : Fin M => Pe m ≤ 4 * ε) with hS_good
+      Finset.univ.filter (fun m : Fin M ↦ Pe m ≤ 4 * ε) with hS_good
     set S_bad : Finset (Fin M) :=
-      Finset.univ.filter (fun m : Fin M => ¬ Pe m ≤ 4 * ε) with hS_bad
+      Finset.univ.filter (fun m : Fin M ↦ ¬ Pe m ≤ 4 * ε) with hS_bad
     have h_card_sum : S_good.card + S_bad.card = M := by
       have h := Finset.card_filter_add_card_filter_not
-        (s := (Finset.univ : Finset (Fin M))) (fun m : Fin M => Pe m ≤ 4 * ε)
+        (s := (Finset.univ : Finset (Fin M))) (fun m : Fin M ↦ Pe m ≤ 4 * ε)
       have hu : (Finset.univ : Finset (Fin M)).card = M := by
         simp [Finset.card_univ, Fintype.card_fin]
       simp [hu] at h
@@ -104,7 +104,7 @@ theorem awgn_expurgate_worst_half
       linarith
     have h_sub_le : ∑ m ∈ S_bad, Pe m ≤ ∑ m, Pe m :=
       Finset.sum_le_sum_of_subset_of_nonneg (Finset.subset_univ _)
-        (fun m _ _ => hPe_nn m)
+        (fun m _ _ ↦ hPe_nn m)
     -- Combine: M * 2ε < 2 * S_bad.card * 2ε = S_bad.card * 4ε < ∑ Pe ≤ M * 2ε. Contradiction.
     nlinarith [h_two_card_lb, h_sum_bad_lb, h_sub_le, h_avg, hε]
   · intro m hm
@@ -138,7 +138,7 @@ theorem awgnPowerWitness_exists (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : 
     {R : ℝ} (hR_pos : 0 < R) (hR : R < (1/2) * Real.log (1 + P / (N : ℝ))) :
     ∃ P', 0 < P' ∧ P' < P ∧ R < (1/2) * Real.log (1 + P' / (N : ℝ)) := by
   have hN_pos : (0 : ℝ) < (N : ℝ) :=
-    lt_of_le_of_ne N.coe_nonneg (fun h => hN h.symm)
+    lt_of_le_of_ne N.coe_nonneg (fun h ↦ hN h.symm)
   -- `R < (1/2) log(1 + P/N)` ⟺ `2R < log(1 + P/N)` ⟺ `exp(2R) < 1 + P/N`.
   have hlogP : 2 * R < Real.log (1 + P / (N : ℝ)) := by linarith
   have harg_P_pos : (0 : ℝ) < 1 + P / (N : ℝ) := by positivity
@@ -190,7 +190,7 @@ theorem awgn_extract_AwgnCode
     {A : Set ((Fin n → ℝ) × (Fin n → ℝ))} (hA_meas : MeasurableSet A)
     (codebook : Fin M → Fin n → ℝ)
     (h_max_Pe : ∀ m,
-        (Measure.pi (fun i => awgnChannel N h_meas (codebook m i)))
+        (Measure.pi (fun i ↦ awgnChannel N h_meas (codebook m i)))
           ((InformationTheory.Shannon.ChannelCoding.Code.mk
               (M := M) (n := n) (α := ℝ) (β := ℝ)
               codebook (jointTypicalDecoder A codebook)).errorEvent m)
@@ -215,7 +215,7 @@ theorem awgn_extract_AwgnCode
           decoder_meas := jointTypicalDecoder_measurable A hA_meas codebook
           power_constraint := h_power : AwgnCode M n P }).toCode.errorProbAt
             (awgnChannel N h_meas) m)
-      = (Measure.pi (fun i => awgnChannel N h_meas (codebook m i)))
+      = (Measure.pi (fun i ↦ awgnChannel N h_meas (codebook m i)))
           ((InformationTheory.Shannon.ChannelCoding.Code.mk
               (M := M) (n := n) (α := ℝ) (β := ℝ)
               codebook (jointTypicalDecoder A codebook)).errorEvent m) := rfl
@@ -225,7 +225,7 @@ theorem awgn_extract_AwgnCode
     rw [ENNReal.toReal_ofReal (by positivity)]
     linarith
   have h_ne_top : (ENNReal.ofReal (4 * ε)) ≠ ⊤ := ENNReal.ofReal_ne_top
-  calc ((Measure.pi (fun i => awgnChannel N h_meas (codebook m i)))
+  calc ((Measure.pi (fun i ↦ awgnChannel N h_meas (codebook m i)))
           ((InformationTheory.Shannon.ChannelCoding.Code.mk
               (M := M) (n := n) (α := ℝ) (β := ℝ)
               codebook (jointTypicalDecoder A codebook)).errorEvent m)).toReal
@@ -245,7 +245,7 @@ lemma exists_two_mul_ceil_exp_le_ceil_exp_of_lt {R R'' : ℝ} (hR_nonneg : 0 ≤
   have hδd_pos : 0 < δd := by linarith
   -- Need `n * δd ≥ log 4`, i.e., `n ≥ log 4 / δd`.
   set N₀ : ℕ := Nat.ceil (Real.log 4 / δd) with hN₀_def
-  refine ⟨N₀, fun n hn => ?_⟩
+  refine ⟨N₀, fun n hn ↦ ?_⟩
   -- Cast `(N₀ : ℝ) ≤ (n : ℝ)`.
   have h_ndelta : Real.log 4 / δd ≤ (n : ℝ) := by
     have h_cast : ((N₀ : ℕ) : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn

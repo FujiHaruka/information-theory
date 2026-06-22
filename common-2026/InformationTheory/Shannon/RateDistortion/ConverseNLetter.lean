@@ -79,42 +79,42 @@ theorem rate_distortion_converse_n_letter_block
     {D : ℝ}
     (hD : c.expectedBlockDistortion P_X d ≤ D)
     (hMI_W_finite :
-      mutualInfo (Measure.pi (fun _ : Fin n => P_X)) id
-        (fun x => c.encoder x) ≠ ∞) :
-    (rateDistortionFunction (fun x y => blockDistortion d n x y)
-        (Measure.pi (fun _ : Fin n => P_X)) D).toReal
+      mutualInfo (Measure.pi (fun _ : Fin n ↦ P_X)) id
+        (fun x ↦ c.encoder x) ≠ ∞) :
+    (rateDistortionFunction (fun x y ↦ blockDistortion d n x y)
+        (Measure.pi (fun _ : Fin n ↦ P_X)) D).toReal
       ≤ Real.log (Fintype.card (Fin M)) := by
   classical
   -- Substitution: α' := Fin n → α, β' := Fin n → β, M' := Fin M,
   -- Ω' := Fin n → α, μ' := Measure.pi (fun _ => P_X), X' := id,
   -- d' := fun x y => blockDistortion d n x y.
-  set Pi_X : Measure (Fin n → α) := Measure.pi (fun _ : Fin n => P_X) with hPi_def
+  set Pi_X : Measure (Fin n → α) := Measure.pi (fun _ : Fin n ↦ P_X) with hPi_def
   haveI : IsProbabilityMeasure Pi_X := by
     rw [hPi_def]; infer_instance
   -- d as ℝ-valued bivariate function.
   set d_block : (Fin n → α) → (Fin n → β) → ℝ :=
-    fun x y => blockDistortion d n x y with hd_block_def
+    fun x y ↦ blockDistortion d n x y with hd_block_def
   -- Measurability of (x, y) ↦ d_block x y on the product space.
   -- d_block is real-valued, but α × β is Fintype + MeasurableSingletonClass, so all
   -- functions out of it are measurable. We prove measurability of the projection
   -- bundle and use the fact that any function from a discrete measurable space is
   -- measurable.
   have hd_block_meas : Measurable
-      (fun p : (Fin n → α) × (Fin n → β) => d_block p.1 p.2) := by
-    show Measurable (fun p : (Fin n → α) × (Fin n → β) =>
+      (fun p : (Fin n → α) × (Fin n → β) ↦ d_block p.1 p.2) := by
+    show Measurable (fun p : (Fin n → α) × (Fin n → β) ↦
       (1 / (n : ℝ)) * ∑ i, ((d (p.1 i) (p.2 i) : NNReal) : ℝ))
     refine Measurable.const_mul ?_ _
-    refine Finset.measurable_sum _ fun i _ => ?_
+    refine Finset.measurable_sum _ fun i _ ↦ ?_
     refine measurable_coe_nnreal_real.comp ?_
     -- d (p.1 i) (p.2 i) : NNReal. α × β is Fintype + MeasurableSingletonClass,
     -- so any function out is measurable; pre-composing with the measurable pair
     -- (p.1 i, p.2 i) preserves measurability.
     have h_pair :
-        Measurable (fun p : (Fin n → α) × (Fin n → β) => (p.1 i, p.2 i)) :=
+        Measurable (fun p : (Fin n → α) × (Fin n → β) ↦ (p.1 i, p.2 i)) :=
       ((measurable_pi_apply i).comp measurable_fst).prodMk
         ((measurable_pi_apply i).comp measurable_snd)
-    have h_d : Measurable (fun ab : α × β => d ab.1 ab.2) :=
-      measurable_from_prod_countable_left (fun _ => measurable_of_countable _)
+    have h_d : Measurable (fun ab : α × β ↦ d ab.1 ab.2) :=
+      measurable_from_prod_countable_left (fun _ ↦ measurable_of_countable _)
     exact h_d.comp h_pair
   -- expectedBlockDistortion identity: P_X^n integral of d_block id (decoder ∘ encoder).
   have h_expBlock_eq :
@@ -129,7 +129,7 @@ theorem rate_distortion_converse_n_letter_block
     exact hD
   -- mutualInfo with X = id reduces to mutualInfo at the source RVs.
   have hMI' :
-      mutualInfo Pi_X id (fun x => c.encoder (id x)) ≠ ∞ := by
+      mutualInfo Pi_X id (fun x ↦ c.encoder (id x)) ≠ ∞ := by
     simpa [id_eq] using hMI_W_finite
   -- Apply parent theorem. `Measure.map id Pi_X = Pi_X` since `id` is a measurable
   -- equiv (identity); use `Measure.map_id` to align signatures.
@@ -162,13 +162,13 @@ lemma mutualInfo_block_le_log_card
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs_block : Ω → (Fin n → α)) (hXs_block : Measurable Xs_block)
     (hMI_W_finite :
-      mutualInfo μ Xs_block (fun ω => c.encoder (Xs_block ω)) ≠ ∞) :
+      mutualInfo μ Xs_block (fun ω ↦ c.encoder (Xs_block ω)) ≠ ∞) :
     (mutualInfo μ Xs_block
-        (fun ω => c.decoder (c.encoder (Xs_block ω)))).toReal
+        (fun ω ↦ c.decoder (c.encoder (Xs_block ω)))).toReal
       ≤ Real.log (Fintype.card (Fin M)) := by
   -- Same as `rate_distortion_converse_single_shot` steps 1-3.
-  set W : Ω → Fin M := fun ω => c.encoder (Xs_block ω) with hW_def
-  set Xh : Ω → (Fin n → β) := fun ω => c.decoder (c.encoder (Xs_block ω)) with hXh_def
+  set W : Ω → Fin M := fun ω ↦ c.encoder (Xs_block ω) with hW_def
+  set Xh : Ω → (Fin n → β) := fun ω ↦ c.decoder (c.encoder (Xs_block ω)) with hXh_def
   have hW_meas : Measurable W := hencoder.comp hXs_block
   have hXh_meas : Measurable Xh := hdecoder.comp hW_meas
   -- Step 1: entropy μ W ≤ log M.
@@ -211,11 +211,11 @@ lemma rateDistortionFunction_le_mutualInfo_perLetter
     (μ : Measure Ω) (X : Ω → α') (Xh : Ω → β')
     (hX : Measurable X) (hXh : Measurable Xh)
     (d : α' → β' → ℝ)
-    (hd : Measurable (fun p : α' × β' => d p.1 p.2)) :
+    (hd : Measurable (fun p : α' × β' ↦ d p.1 p.2)) :
     rateDistortionFunction d (μ.map X) (∫ ω, d (X ω) (Xh ω) ∂μ)
       ≤ mutualInfo μ X Xh := by
   -- Joint ν := μ.map (X, Xh) is feasible at D̃ := ∫ d(X, Xh) ∂μ.
-  set ν : Measure (α' × β') := μ.map (fun ω => (X ω, Xh ω)) with hν_def
+  set ν : Measure (α' × β') := μ.map (fun ω ↦ (X ω, Xh ω)) with hν_def
   -- Marginal: ν.map fst = μ.map X.
   have hν_marg : ν.map Prod.fst = μ.map X := by
     rw [hν_def, Measure.map_map measurable_fst (hX.prodMk hXh)]
@@ -248,7 +248,7 @@ private lemma integrable_d_of_finite
       [MeasurableSpace α] [MeasurableSingletonClass α]
       [MeasurableSpace β] [MeasurableSingletonClass β]
     (d : α → β → ℝ) (ν : Measure (α × β)) [IsFiniteMeasure ν] :
-    Integrable (fun p : α × β => d p.1 p.2) ν :=
+    Integrable (fun p : α × β ↦ d p.1 p.2) ν :=
   Integrable.of_finite
 
 /-- **ENNReal n-way Jensen for `R(D)` (uniform weights)**: for finite alphabets,
@@ -270,7 +270,7 @@ private lemma rateDistortionFunction_jensen_uniform
   classical
   -- Integrability witness, fixed for all of `P`'s feasible joints (finite alphabet).
   have h_int_witness : ∀ (ν : Measure (α × β)), ν.map Prod.fst = P →
-      Integrable (fun p => d p.1 p.2) ν := by
+      Integrable (fun p ↦ d p.1 p.2) ν := by
     intro ν hν
     have : IsFiniteMeasure ν := by
       refine ⟨?_⟩
@@ -293,7 +293,7 @@ private lemma rateDistortionFunction_jensen_uniform
     set N : ℝ := ((m : ℝ) + 1) + 1 with hN_def
     have hN_pos : 0 < N := by positivity
     -- Prefix points (Fin (m+1)) and last point.
-    set Dpre : Fin (m + 1) → ℝ := fun i => Dvals i.castSucc with hDpre_def
+    set Dpre : Fin (m + 1) → ℝ := fun i ↦ Dvals i.castSucc with hDpre_def
     set Dlast : ℝ := Dvals (Fin.last (m + 1)) with hDlast_def
     -- λ = (m+1)/N, 1 - λ = 1/N.
     set lam : ℝ := ((m : ℝ) + 1) / N with hlam_def
@@ -336,12 +336,12 @@ private lemma rateDistortionFunction_jensen_uniform
       _ = ∑ i, ENNReal.ofReal (1 / N) * rateDistortionFunction d P (Dvals i) := by
             -- Split the RHS sum over Fin (m+2) into prefix + last.
             rw [Fin.sum_univ_castSucc
-                  (f := fun i => ENNReal.ofReal (1 / N) * rateDistortionFunction d P (Dvals i)),
+                  (f := fun i ↦ ENNReal.ofReal (1 / N) * rateDistortionFunction d P (Dvals i)),
                 Finset.mul_sum]
             congr 1
             · -- prefix: ofReal lam * (ofReal (1/(m+1)) * R(Dpre i))
               --        = ofReal (1/N) * R(Dvals i.castSucc).
-              refine Finset.sum_congr rfl (fun i _ => ?_)
+              refine Finset.sum_congr rfl (fun i _ ↦ ?_)
               rw [← mul_assoc, ← ENNReal.ofReal_mul hlam0, hlam_def, hDpre_def]
               congr 2
               have hm1 : ((m : ℝ) + 1) ≠ 0 := by positivity
@@ -360,27 +360,27 @@ private lemma indepFun_prefix_of_iIndepFun_fin
     {α : Type*} [MeasurableSpace α]
     (μ : Measure Ω)
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep : iIndepFun (fun i => Xs i) μ) (i : Fin n) :
-    IndepFun (Xs i) (fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) μ := by
+    (hindep : iIndepFun (fun i ↦ Xs i) μ) (i : Fin n) :
+    IndepFun (Xs i) (fun ω (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) μ := by
   classical
   set S : Finset (Fin n) := {i} with hS_def
-  set T : Finset (Fin n) := Finset.univ.filter (fun j => j.val < i.val) with hT_def
+  set T : Finset (Fin n) := Finset.univ.filter (fun j ↦ j.val < i.val) with hT_def
   have hST_disj : Disjoint S T := by
     rw [Finset.disjoint_singleton_left, hT_def, Finset.mem_filter]
     rintro ⟨-, hlt⟩
     exact lt_irrefl _ hlt
   have h_pair_indep := hindep.indepFun_finset S T hST_disj hXs
   -- LHS projection: (S → α) → α, evaluate at i.
-  let projS : (S → α) → α := fun f => f ⟨i, Finset.mem_singleton.mpr rfl⟩
+  let projS : (S → α) → α := fun f ↦ f ⟨i, Finset.mem_singleton.mpr rfl⟩
   have hprojS_meas : Measurable projS := measurable_pi_apply _
   -- RHS projection: (T → α) → (Fin i.val → α) by reindexing j ↦ ⟨j.val, _⟩.
   let projT : (T → α) → (Fin i.val → α) :=
-    fun f (j : Fin i.val) =>
+    fun f (j : Fin i.val) ↦
       f ⟨⟨j.val, j.isLt.trans i.isLt⟩, by
         rw [hT_def, Finset.mem_filter]
         exact ⟨Finset.mem_univ _, j.isLt⟩⟩
   have hprojT_meas : Measurable projT :=
-    measurable_pi_iff.mpr (fun j => measurable_pi_apply _)
+    measurable_pi_iff.mpr (fun j ↦ measurable_pi_apply _)
   have h_lifted := h_pair_indep.comp hprojS_meas hprojT_meas
   exact h_lifted
 
@@ -397,18 +397,18 @@ private lemma entropy_pi_eq_sum_of_indep
       [MeasurableSpace α] [MeasurableSingletonClass α]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep : iIndepFun (fun i => Xs i) μ) :
-    entropy μ (fun ω j => Xs j ω) = ∑ i : Fin n, entropy μ (Xs i) := by
+    (hindep : iIndepFun (fun i ↦ Xs i) μ) :
+    entropy μ (fun ω j ↦ Xs j ω) = ∑ i : Fin n, entropy μ (Xs i) := by
   classical
   -- jointEntropy μ Xs = entropy μ (fun ω j => Xs j ω) by defeq.
-  have h_je : jointEntropy μ Xs = entropy μ (fun ω j => Xs j ω) := rfl
+  have h_je : jointEntropy μ Xs = entropy μ (fun ω j ↦ Xs j ω) := rfl
   rw [← h_je, jointEntropy_chain_rule μ Xs hXs]
   apply Finset.sum_congr rfl
   intro i _
   set prefix_i : Ω → (Fin i.val → α) :=
-    fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω with hprefix_def
+    fun ω (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω with hprefix_def
   have hprefix_meas : Measurable prefix_i :=
-    measurable_pi_iff.mpr (fun j => hXs ⟨j.val, j.isLt.trans i.isLt⟩)
+    measurable_pi_iff.mpr (fun j ↦ hXs ⟨j.val, j.isLt.trans i.isLt⟩)
   have h_indep : IndepFun (Xs i) prefix_i μ :=
     indepFun_prefix_of_iIndepFun_fin μ Xs hXs hindep i
   exact condEntropy_eq_entropy_of_indepFun μ (Xs i) prefix_i (hXs i) hprefix_meas h_indep
@@ -436,28 +436,28 @@ lemma condEntropy_pi_le_sum_condEntropy_per_letter
     (Xs : Fin n → Ω → α) (Xhs : Fin n → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hXhs : ∀ i, Measurable (Xhs i)) :
     InformationTheory.MeasureFano.condEntropy μ
-        (fun ω j => Xs j ω) (fun ω j => Xhs j ω)
+        (fun ω j ↦ Xs j ω) (fun ω j ↦ Xhs j ω)
       ≤ ∑ i : Fin n,
           InformationTheory.MeasureFano.condEntropy μ (Xs i) (Xhs i) := by
   classical
-  have hXhs_pi : Measurable (fun ω j => Xhs j ω) := measurable_pi_iff.mpr hXhs
+  have hXhs_pi : Measurable (fun ω j ↦ Xhs j ω) := measurable_pi_iff.mpr hXhs
   -- Step 1: conditional chain rule on the block.
   -- H(X^n | X̂^n) = ∑ i, H(X_i | (X̂^n, X^{<i})).
-  rw [condEntropy_pi_chain_rule μ (fun ω j => Xhs j ω) Xs hXhs_pi hXs]
+  rw [condEntropy_pi_chain_rule μ (fun ω j ↦ Xhs j ω) Xs hXhs_pi hXs]
   -- Step 2: per-summand drop.
   apply Finset.sum_le_sum
   intro i _
   -- Goal: H(X_i | (X̂^n, X^{<i})) ≤ H(X_i | X̂_i).
   -- Conditioner W := (fun ω => (X̂^n ω, X^{<i} ω)).
   set Xprefix : Ω → (Fin i.val → α) :=
-    fun ω j => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω with hXprefix_def
+    fun ω j ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω with hXprefix_def
   have hXprefix_meas : Measurable Xprefix :=
-    measurable_pi_iff.mpr (fun j => hXs ⟨j.val, j.isLt.trans i.isLt⟩)
+    measurable_pi_iff.mpr (fun j ↦ hXs ⟨j.val, j.isLt.trans i.isLt⟩)
   -- Reshape the X̂^n part of the conditioner to extract the i-th coordinate X̂_i,
   -- using `MeasurableEquiv.piEquivPiSubtypeProd` (specialized to `j = i`).
   -- e₀ : (Fin n → β) ≃ᵐ ({j // j = i} → β) × ({j // j ≠ i} → β).
   let e₀ : (Fin n → β) ≃ᵐ ({j : Fin n // j = i} → β) × ({j : Fin n // j ≠ i} → β) :=
-    MeasurableEquiv.piEquivPiSubtypeProd (π := fun _ : Fin n => β) (fun j => j = i)
+    MeasurableEquiv.piEquivPiSubtypeProd (π := fun _ : Fin n ↦ β) (fun j ↦ j = i)
   -- e₁ : ({j // j = i} → β) ≃ᵐ β (the singleton index set).
   let e₁ : ({j : Fin n // j = i} → β) ≃ᵐ β :=
     MeasurableEquiv.funUnique {j : Fin n // j = i} β
@@ -466,10 +466,10 @@ lemma condEntropy_pi_le_sum_condEntropy_per_letter
     e₀.trans (e₁.prodCongr (.refl _))
   -- e (X̂^n ω) = (X̂_i ω, X̂^{≠i} ω).
   set XhnoI : Ω → ({j : Fin n // j ≠ i} → β) :=
-    fun ω (j : {j : Fin n // j ≠ i}) => Xhs j.val ω with hXhnoI_def
+    fun ω (j : {j : Fin n // j ≠ i}) ↦ Xhs j.val ω with hXhnoI_def
   have hXhnoI_meas : Measurable XhnoI :=
-    measurable_pi_iff.mpr (fun j => hXhs j.val)
-  have h_e_eq : ∀ ω, e (fun j => Xhs j ω) = (Xhs i ω, XhnoI ω) := by
+    measurable_pi_iff.mpr (fun j ↦ hXhs j.val)
+  have h_e_eq : ∀ ω, e (fun j ↦ Xhs j ω) = (Xhs i ω, XhnoI ω) := by
     intro ω
     apply Prod.ext
     · have hdef : ((default : {j : Fin n // j = i}) : Fin n) = i := by
@@ -495,34 +495,34 @@ lemma condEntropy_pi_le_sum_condEntropy_per_letter
     E.trans E'
   -- Etot (X̂^n ω, X^{<i} ω) = (X̂_i ω, (X̂^{≠i} ω, X^{<i} ω)).
   have hEtot_eq : ∀ ω,
-      Etot (fun j => Xhs j ω, Xprefix ω)
+      Etot (fun j ↦ Xhs j ω, Xprefix ω)
         = (Xhs i ω, (XhnoI ω, Xprefix ω)) := by
     intro ω
-    show E' (E (fun j => Xhs j ω, Xprefix ω))
+    show E' (E (fun j ↦ Xhs j ω, Xprefix ω))
       = (Xhs i ω, (XhnoI ω, Xprefix ω))
-    have hE : E (fun j => Xhs j ω, Xprefix ω)
+    have hE : E (fun j ↦ Xhs j ω, Xprefix ω)
         = ((Xhs i ω, XhnoI ω), Xprefix ω) := by
-      show (e (fun j => Xhs j ω), Xprefix ω) = ((Xhs i ω, XhnoI ω), Xprefix ω)
+      show (e (fun j ↦ Xhs j ω), Xprefix ω) = ((Xhs i ω, XhnoI ω), Xprefix ω)
       rw [h_e_eq ω]
     rw [hE]
     rfl
   -- condEntropy is invariant under the equiv reshape of the conditioner.
-  have hcond_meas : Measurable (fun ω => (fun j => Xhs j ω, Xprefix ω)) :=
+  have hcond_meas : Measurable (fun ω ↦ (fun j ↦ Xhs j ω, Xprefix ω)) :=
     hXhs_pi.prodMk hXprefix_meas
   have h_reshape :
       InformationTheory.MeasureFano.condEntropy μ (Xs i)
-          (fun ω => (fun j => Xhs j ω, Xprefix ω))
+          (fun ω ↦ (fun j ↦ Xhs j ω, Xprefix ω))
         = InformationTheory.MeasureFano.condEntropy μ (Xs i)
-            (fun ω => (Xhs i ω, (XhnoI ω, Xprefix ω))) := by
+            (fun ω ↦ (Xhs i ω, (XhnoI ω, Xprefix ω))) := by
     have h := condEntropy_measurableEquiv_comp μ (Xs i) (hXs i)
-      (fun ω => (fun j => Xhs j ω, Xprefix ω)) hcond_meas Etot
-    rw [show (fun ω => Etot (fun j => Xhs j ω, Xprefix ω))
-            = (fun ω => (Xhs i ω, (XhnoI ω, Xprefix ω))) from funext hEtot_eq] at h
+      (fun ω ↦ (fun j ↦ Xhs j ω, Xprefix ω)) hcond_meas Etot
+    rw [show (fun ω ↦ Etot (fun j ↦ Xhs j ω, Xprefix ω))
+            = (fun ω ↦ (Xhs i ω, (XhnoI ω, Xprefix ω))) from funext hEtot_eq] at h
     exact h.symm
   rw [h_reshape]
   -- Drop the (X̂^{≠i}, X^{<i}) part via condEntropy_le_condEntropy_of_pair.
   exact condEntropy_le_condEntropy_of_pair μ (Xs i) (Xhs i)
-    (fun ω => (XhnoI ω, Xprefix ω)) (hXs i) (hXhs i)
+    (fun ω ↦ (XhnoI ω, Xprefix ω)) (hXs i) (hXhs i)
     (hXhnoI_meas.prodMk hXprefix_meas)
 
 /-- **Stage 2 core: mutual-information superadditivity for an independent source**.
@@ -552,29 +552,29 @@ lemma mutualInfo_superadditive_of_indep
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (Xhs : Fin n → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hXhs : ∀ i, Measurable (Xhs i))
-    (hindep : iIndepFun (fun i => Xs i) μ) :
+    (hindep : iIndepFun (fun i ↦ Xs i) μ) :
     (∑ i : Fin n, (mutualInfo μ (Xs i) (Xhs i)).toReal)
-      ≤ (mutualInfo μ (fun ω j => Xs j ω) (fun ω j => Xhs j ω)).toReal := by
+      ≤ (mutualInfo μ (fun ω j ↦ Xs j ω) (fun ω j ↦ Xhs j ω)).toReal := by
   classical
-  have hX_pi : Measurable (fun ω j => Xs j ω) := measurable_pi_iff.mpr hXs
-  have hXh_pi : Measurable (fun ω j => Xhs j ω) := measurable_pi_iff.mpr hXhs
+  have hX_pi : Measurable (fun ω j ↦ Xs j ω) := measurable_pi_iff.mpr hXs
+  have hXh_pi : Measurable (fun ω j ↦ Xhs j ω) := measurable_pi_iff.mpr hXhs
   -- Bridge: I(X^n; X̂^n).toReal = H(X^n) - H(X^n | X̂^n).
   have h_bridge_joint :
-      (mutualInfo μ (fun ω j => Xs j ω) (fun ω j => Xhs j ω)).toReal
-        = entropy μ (fun ω j => Xs j ω)
+      (mutualInfo μ (fun ω j ↦ Xs j ω) (fun ω j ↦ Xhs j ω)).toReal
+        = entropy μ (fun ω j ↦ Xs j ω)
           - InformationTheory.MeasureFano.condEntropy μ
-              (fun ω j => Xs j ω) (fun ω j => Xhs j ω) :=
+              (fun ω j ↦ Xs j ω) (fun ω j ↦ Xhs j ω) :=
     mutualInfo_eq_entropy_sub_condEntropy μ
-      (fun ω j => Xs j ω) (fun ω j => Xhs j ω) hX_pi hXh_pi
+      (fun ω j ↦ Xs j ω) (fun ω j ↦ Xhs j ω) hX_pi hXh_pi
   rw [h_bridge_joint]
   -- Independence: H(X^n) = ∑ H(X_i). (equality)
-  have h_add : entropy μ (fun ω j => Xs j ω) = ∑ i : Fin n, entropy μ (Xs i) :=
+  have h_add : entropy μ (fun ω j ↦ Xs j ω) = ∑ i : Fin n, entropy μ (Xs i) :=
     entropy_pi_eq_sum_of_indep μ Xs hXs hindep
   rw [h_add]
   -- Gateway (b): H(X^n | X̂^n) ≤ ∑ H(X_i | X̂_i).
   have h_cond_le :
       InformationTheory.MeasureFano.condEntropy μ
-          (fun ω j => Xs j ω) (fun ω j => Xhs j ω)
+          (fun ω j ↦ Xs j ω) (fun ω j ↦ Xhs j ω)
         ≤ ∑ i : Fin n,
             InformationTheory.MeasureFano.condEntropy μ (Xs i) (Xhs i) :=
     condEntropy_pi_le_sum_condEntropy_per_letter μ Xs Xhs hXs hXhs
@@ -592,7 +592,7 @@ lemma mutualInfo_superadditive_of_indep
           - (∑ i : Fin n,
               InformationTheory.MeasureFano.condEntropy μ (Xs i) (Xhs i)) := by
     rw [← Finset.sum_sub_distrib]
-    exact Finset.sum_congr rfl (fun i _ => h_each_bridge i)
+    exact Finset.sum_congr rfl (fun i _ ↦ h_each_bridge i)
   rw [h_lhs_eq]
   linarith
 
@@ -603,19 +603,19 @@ private theorem blockDistortion_eq_avg_perLetter
     (d : DistortionFn α β)
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep : iIndepFun (fun i => Xs i) μ)
+    (hindep : iIndepFun (fun i ↦ Xs i) μ)
     (P_X : Measure α) [IsProbabilityMeasure P_X]
     (hXs_law : ∀ i, μ.map (Xs i) = P_X) :
     (1 / (n : ℝ)) * ∑ i, ∫ ω, ((d (Xs i ω)
-        (c.decoder (c.encoder (fun j => Xs j ω)) i) : NNReal) : ℝ) ∂μ
+        (c.decoder (c.encoder (fun j ↦ Xs j ω)) i) : NNReal) : ℝ) ∂μ
       = c.expectedBlockDistortion P_X d := by
-  set d' : α → β → ℝ := fun a b => ((d a b : NNReal) : ℝ)
-  set Xn : Ω → (Fin n → α) := fun ω j => Xs j ω
+  set d' : α → β → ℝ := fun a b ↦ ((d a b : NNReal) : ℝ)
+  set Xn : Ω → (Fin n → α) := fun ω j ↦ Xs j ω
   have hXn_meas : Measurable Xn := measurable_pi_iff.mpr hXs
   -- Product law: μ.map Xn = Measure.pi (fun _ => P_X).
-  have h_pi_law : μ.map Xn = Measure.pi (fun _ : Fin n => P_X) := by
-    have h := (iIndepFun_iff_map_fun_eq_pi_map (μ := μ) (f := fun i => Xs i)
-      (fun i => (hXs i).aemeasurable)).mp hindep
+  have h_pi_law : μ.map Xn = Measure.pi (fun _ : Fin n ↦ P_X) := by
+    have h := (iIndepFun_iff_map_fun_eq_pi_map (μ := μ) (f := fun i ↦ Xs i)
+      (fun i ↦ (hXs i).aemeasurable)).mp hindep
     simp only [Xn]
     rw [h]
     congr 1
@@ -623,31 +623,31 @@ private theorem blockDistortion_eq_avg_perLetter
     exact hXs_law i
   -- Each summand equals the integral under pi P_X via change of variables.
   have h_each : ∀ i, ∫ ω, ((d (Xs i ω)
-        (c.decoder (c.encoder (fun j => Xs j ω)) i) : NNReal) : ℝ) ∂μ
+        (c.decoder (c.encoder (fun j ↦ Xs j ω)) i) : NNReal) : ℝ) ∂μ
       = ∫ x : Fin n → α, d' (x i) (c.decoder (c.encoder x) i)
-          ∂(Measure.pi (fun _ : Fin n => P_X)) := by
+          ∂(Measure.pi (fun _ : Fin n ↦ P_X)) := by
     intro i
     have hg_meas : Measurable
-        (fun x : Fin n → α => d' (x i) (c.decoder (c.encoder x) i)) := by
+        (fun x : Fin n → α ↦ d' (x i) (c.decoder (c.encoder x) i)) := by
       apply measurable_of_countable
-    have hgoal : (fun ω => ((d (Xs i ω) (c.decoder (c.encoder (fun j => Xs j ω)) i) : NNReal) : ℝ))
-        = fun ω => (fun x : Fin n → α => d' (x i) (c.decoder (c.encoder x) i)) (Xn ω) := rfl
+    have hgoal : (fun ω ↦ ((d (Xs i ω) (c.decoder (c.encoder (fun j ↦ Xs j ω)) i) : NNReal) : ℝ))
+        = fun ω ↦ (fun x : Fin n → α ↦ d' (x i) (c.decoder (c.encoder x) i)) (Xn ω) := rfl
     rw [hgoal, ← integral_map hXn_meas.aemeasurable hg_meas.aestronglyMeasurable, h_pi_law]
   -- Sum and pull through the integral.
   calc (1 / (n : ℝ)) * ∑ i, ∫ ω, ((d (Xs i ω)
-          (c.decoder (c.encoder (fun j => Xs j ω)) i) : NNReal) : ℝ) ∂μ
+          (c.decoder (c.encoder (fun j ↦ Xs j ω)) i) : NNReal) : ℝ) ∂μ
       = (1 / (n : ℝ)) * ∑ i, ∫ x : Fin n → α,
           d' (x i) (c.decoder (c.encoder x) i)
-            ∂(Measure.pi (fun _ : Fin n => P_X)) := by
-          rw [Finset.sum_congr rfl (fun i _ => h_each i)]
+            ∂(Measure.pi (fun _ : Fin n ↦ P_X)) := by
+          rw [Finset.sum_congr rfl (fun i _ ↦ h_each i)]
     _ = (1 / (n : ℝ)) * ∫ x : Fin n → α,
           ∑ i, d' (x i) (c.decoder (c.encoder x) i)
-            ∂(Measure.pi (fun _ : Fin n => P_X)) := by
+            ∂(Measure.pi (fun _ : Fin n ↦ P_X)) := by
           rw [integral_finsetSum]
-          exact fun i _ => Integrable.of_finite
+          exact fun i _ ↦ Integrable.of_finite
     _ = ∫ x : Fin n → α,
           (1 / (n : ℝ)) * ∑ i, d' (x i) (c.decoder (c.encoder x) i)
-            ∂(Measure.pi (fun _ : Fin n => P_X)) := by
+            ∂(Measure.pi (fun _ : Fin n ↦ P_X)) := by
           rw [integral_const_mul]
     _ = c.expectedBlockDistortion P_X d := by
           rw [LossyCode.expectedBlockDistortion]
@@ -694,39 +694,39 @@ theorem rate_distortion_converse_n_letter_singleLetter
     (d : DistortionFn α β)
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep : iIndepFun (fun i => Xs i) μ)
+    (hindep : iIndepFun (fun i ↦ Xs i) μ)
     (P_X : Measure α) [IsProbabilityMeasure P_X]
     (hXs_law : ∀ i, μ.map (Xs i) = P_X)
     -- ω ↦ X^n(ω) := (Xs 0 ω, …, Xs (n-1) ω); Xh i ω := (decoder (encoder X^n(ω))) i.
     (h_MI_block_finite :
-      mutualInfo μ (fun ω i => Xs i ω)
-        (fun ω => c.encoder (fun j => Xs j ω)) ≠ ∞)
+      mutualInfo μ (fun ω i ↦ Xs i ω)
+        (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) ≠ ∞)
     (h_MI_perletter_finite :
       ∀ i, mutualInfo μ (Xs i)
-        (fun ω => c.decoder (c.encoder (fun j => Xs j ω)) i) ≠ ∞)
+        (fun ω ↦ c.decoder (c.encoder (fun j ↦ Xs j ω)) i) ≠ ∞)
     {D : ℝ}
     (hD : c.expectedBlockDistortion P_X d ≤ D) :
-    (rateDistortionFunction (fun a b => ((d a b : NNReal) : ℝ)) P_X D).toReal
+    (rateDistortionFunction (fun a b ↦ ((d a b : NNReal) : ℝ)) P_X D).toReal
       ≤ (1 / (n : ℝ)) * Real.log (Fintype.card (Fin M)) := by
   classical
   -- Real-valued distortion and reconstruction RVs.
-  set d' : α → β → ℝ := fun a b => ((d a b : NNReal) : ℝ) with hd'_def
-  set Xn : Ω → (Fin n → α) := fun ω j => Xs j ω with hXn_def
+  set d' : α → β → ℝ := fun a b ↦ ((d a b : NNReal) : ℝ) with hd'_def
+  set Xn : Ω → (Fin n → α) := fun ω j ↦ Xs j ω with hXn_def
   set Xhn : Ω → (Fin n → β) :=
-    fun ω => c.decoder (c.encoder (fun j => Xs j ω)) with hXhn_def
+    fun ω ↦ c.decoder (c.encoder (fun j ↦ Xs j ω)) with hXhn_def
   set Xh : Fin n → Ω → β :=
-    fun i ω => c.decoder (c.encoder (fun j => Xs j ω)) i with hXh_def
+    fun i ω ↦ c.decoder (c.encoder (fun j ↦ Xs j ω)) i with hXh_def
   have hXn_meas : Measurable Xn := measurable_pi_iff.mpr hXs
   have hXhn_meas : Measurable Xhn := hdecoder.comp (hencoder.comp hXn_meas)
-  have hXh_meas : ∀ i, Measurable (Xh i) := fun i => (measurable_pi_apply i).comp hXhn_meas
-  have hd'_meas : Measurable (fun p : α × β => d' p.1 p.2) :=
-    measurable_from_prod_countable_left (fun _ => measurable_of_countable _)
+  have hXh_meas : ∀ i, Measurable (Xh i) := fun i ↦ (measurable_pi_apply i).comp hXhn_meas
+  have hd'_meas : Measurable (fun p : α × β ↦ d' p.1 p.2) :=
+    measurable_from_prod_countable_left (fun _ ↦ measurable_of_countable _)
   -- Per-letter distortion thresholds.
-  set Dvals : Fin n → ℝ := fun i => ∫ ω, d' (Xs i ω) (Xh i ω) ∂μ with hDvals_def
+  set Dvals : Fin n → ℝ := fun i ↦ ∫ ω, d' (Xs i ω) (Xh i ω) ∂μ with hDvals_def
   -- Product law: μ.map Xn = Measure.pi (fun _ => P_X).
-  have h_pi_law : μ.map Xn = Measure.pi (fun _ : Fin n => P_X) := by
-    have h := (iIndepFun_iff_map_fun_eq_pi_map (μ := μ) (f := fun i => Xs i)
-      (fun i => (hXs i).aemeasurable)).mp hindep
+  have h_pi_law : μ.map Xn = Measure.pi (fun _ : Fin n ↦ P_X) := by
+    have h := (iIndepFun_iff_map_fun_eq_pi_map (μ := μ) (f := fun i ↦ Xs i)
+      (fun i ↦ (hXs i).aemeasurable)).mp hindep
     rw [hXn_def, h]
     congr 1
     funext i
@@ -744,11 +744,11 @@ theorem rate_distortion_converse_n_letter_singleLetter
       mutualInfo μ Xn Xhn ≠ ∞ := by
     -- I(X^n; X̂^n) ≤ I(X^n; encoder) (DPI) which is finite by h_MI_block_finite.
     have hpost : mutualInfo μ Xn Xhn
-        ≤ mutualInfo μ Xn (fun ω => c.encoder (fun j => Xs j ω)) := by
-      have : Xhn = c.decoder ∘ (fun ω => c.encoder (fun j => Xs j ω)) := rfl
+        ≤ mutualInfo μ Xn (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) := by
+      have : Xhn = c.decoder ∘ (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) := rfl
       rw [this]
       exact mutualInfo_le_of_postprocess μ Xn
-        (fun ω => c.encoder (fun j => Xs j ω)) hXn_meas
+        (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) hXn_meas
         (hencoder.comp hXn_meas) hdecoder
     exact ne_top_of_le_ne_top h_MI_block_finite hpost
   -- Per-letter R(Dvals i) ≤ I(Xᵢ; X̂ᵢ), so R(Dvals i) is finite.
@@ -759,7 +759,7 @@ theorem rate_distortion_converse_n_letter_singleLetter
       (hXs i) (hXh_meas i) d' hd'_meas
     rw [hXs_law i] at h
     exact h
-  have hR_per_finite : ∀ i, rateDistortionFunction d' P_X (Dvals i) ≠ ∞ := fun i =>
+  have hR_per_finite : ∀ i, rateDistortionFunction d' P_X (Dvals i) ≠ ∞ := fun i ↦
     ne_top_of_le_ne_top (hMI_per_finite i) (h_per_feasible i)
   -- ===== Main chain =====
   -- Step A: antitonicity. R(D) ≤ R((1/n)∑Dvals) since (1/n)∑Dvals ≤ D.
@@ -784,9 +784,9 @@ theorem rate_distortion_converse_n_letter_singleLetter
   have h_jensen_toReal_rhs :
       (∑ i, ENNReal.ofReal (1 / (n : ℝ)) * rateDistortionFunction d' P_X (Dvals i)).toReal
         = (1 / (n : ℝ)) * ∑ i, (rateDistortionFunction d' P_X (Dvals i)).toReal := by
-    rw [ENNReal.toReal_sum (fun i _ => ENNReal.mul_ne_top ENNReal.ofReal_ne_top (hR_per_finite i))]
+    rw [ENNReal.toReal_sum (fun i _ ↦ ENNReal.mul_ne_top ENNReal.ofReal_ne_top (hR_per_finite i))]
     rw [Finset.mul_sum]
-    refine Finset.sum_congr rfl (fun i _ => ?_)
+    refine Finset.sum_congr rfl (fun i _ ↦ ?_)
     rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal (by positivity)]
   -- Chain Steps A + B in toReal.
   have h_AB :
@@ -801,7 +801,7 @@ theorem rate_distortion_converse_n_letter_singleLetter
   -- Step C: per-letter feasibility, R(Dvals i).toReal ≤ I(Xᵢ; X̂ᵢ).toReal.
   have h_per_toReal : ∀ i,
       (rateDistortionFunction d' P_X (Dvals i)).toReal
-        ≤ (mutualInfo μ (Xs i) (Xh i)).toReal := fun i =>
+        ≤ (mutualInfo μ (Xs i) (Xh i)).toReal := fun i ↦
     ENNReal.toReal_mono (hMI_per_finite i) (h_per_feasible i)
   -- Step D: MI superadditivity, ∑ I(Xᵢ; X̂ᵢ).toReal ≤ I(X^n; X̂^n).toReal.
   have h_super :
@@ -811,7 +811,7 @@ theorem rate_distortion_converse_n_letter_singleLetter
   -- Step E: block bound, I(X^n; X̂^n).toReal ≤ log M.
   have h_block_bound :
       (mutualInfo μ Xn Xhn).toReal ≤ Real.log (Fintype.card (Fin M)) := by
-    have hfin' : mutualInfo μ Xn (fun ω => c.encoder (Xn ω)) ≠ ∞ := h_MI_block_finite
+    have hfin' : mutualInfo μ Xn (fun ω ↦ c.encoder (Xn ω)) ≠ ∞ := h_MI_block_finite
     have h := mutualInfo_block_le_log_card c hencoder hdecoder μ Xn hXn_meas hfin'
     exact h
   -- Assemble: combine Steps A-E.
@@ -820,7 +820,7 @@ theorem rate_distortion_converse_n_letter_singleLetter
   have h_sum_per_le :
       (∑ i, (rateDistortionFunction d' P_X (Dvals i)).toReal)
         ≤ ∑ i, (mutualInfo μ (Xs i) (Xh i)).toReal :=
-    Finset.sum_le_sum (fun i _ => h_per_toReal i)
+    Finset.sum_le_sum (fun i _ ↦ h_per_toReal i)
   have hn_inv_nonneg : (0 : ℝ) ≤ 1 / (n : ℝ) := by positivity
   calc (rateDistortionFunction d' P_X D).toReal
       ≤ (1 / (n : ℝ)) * ∑ i, (rateDistortionFunction d' P_X (Dvals i)).toReal := h_AB

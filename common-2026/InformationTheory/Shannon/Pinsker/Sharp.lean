@@ -46,23 +46,23 @@ private lemma hasDerivAt_H {t : ℝ} (ht : 0 < t) :
   unfold H Hderiv
   have ht_ne : t ≠ 0 := ht.ne'
   -- derivative of `2 * (t + 2)` is `2`
-  have h1 : HasDerivAt (fun t : ℝ => 2 * (t + 2)) 2 t := by
-    have hid : HasDerivAt (fun t : ℝ => t + 2) 1 t :=
+  have h1 : HasDerivAt (fun t : ℝ ↦ 2 * (t + 2)) 2 t := by
+    have hid : HasDerivAt (fun t : ℝ ↦ t + 2) 1 t :=
       (hasDerivAt_id t).add_const 2
     have := hid.const_mul 2
     simpa using this
   have h2 : HasDerivAt klFun (Real.log t) t := hasDerivAt_klFun ht_ne
-  have h3 : HasDerivAt (fun t => 2 * (t + 2) * klFun t)
+  have h3 : HasDerivAt (fun t ↦ 2 * (t + 2) * klFun t)
       (2 * klFun t + 2 * (t + 2) * Real.log t) t := by
     have hmul := h1.mul h2
     convert hmul using 1
   -- derivative of `3 * (t - 1) ^ 2` is `6 * (t - 1)`
-  have hid' : HasDerivAt (fun t : ℝ => t - 1) 1 t :=
+  have hid' : HasDerivAt (fun t : ℝ ↦ t - 1) 1 t :=
     (hasDerivAt_id t).sub_const 1
-  have h4 : HasDerivAt (fun t : ℝ => (t - 1) ^ 2) (2 * (t - 1) * 1) t := by
+  have h4 : HasDerivAt (fun t : ℝ ↦ (t - 1) ^ 2) (2 * (t - 1) * 1) t := by
     have := hid'.pow 2
     simpa using this
-  have h5 : HasDerivAt (fun t => 3 * (t - 1) ^ 2) (3 * (2 * (t - 1) * 1)) t :=
+  have h5 : HasDerivAt (fun t ↦ 3 * (t - 1) ^ 2) (3 * (2 * (t - 1) * 1)) t :=
     h4.const_mul 3
   have h_sub := h3.sub h5
   convert h_sub using 1
@@ -76,15 +76,15 @@ private lemma hasDerivAt_Hderiv {t : ℝ} (ht : 0 < t) :
   -- derivative of `(t + 1) * log t`: `1 * log t + (t + 1) * (1/t)`
   have h_log : HasDerivAt Real.log (1 / t) t := by
     rw [one_div]; exact Real.hasDerivAt_log ht_ne
-  have h_t1 : HasDerivAt (fun t : ℝ => t + 1) 1 t :=
+  have h_t1 : HasDerivAt (fun t : ℝ ↦ t + 1) 1 t :=
     (hasDerivAt_id t).add_const 1
-  have h_t1_log : HasDerivAt (fun t : ℝ => (t + 1) * Real.log t)
+  have h_t1_log : HasDerivAt (fun t : ℝ ↦ (t + 1) * Real.log t)
       (1 * Real.log t + (t + 1) * (1 / t)) t :=
     h_t1.mul h_log
   -- derivative of `2 * (t - 1)`: `2`
-  have h_tm1 : HasDerivAt (fun t : ℝ => t - 1) 1 t :=
+  have h_tm1 : HasDerivAt (fun t : ℝ ↦ t - 1) 1 t :=
     (hasDerivAt_id t).sub_const 1
-  have h_2tm1 : HasDerivAt (fun t : ℝ => 2 * (t - 1)) 2 t := by
+  have h_2tm1 : HasDerivAt (fun t : ℝ ↦ 2 * (t - 1)) 2 t := by
     have := h_tm1.const_mul 2
     simpa using this
   -- derivative of `(t+1)*log t - 2*(t-1)`: `log t + (t+1)/t - 2`
@@ -295,21 +295,21 @@ theorem tvNorm_le_sqrt_klDiv_div_two
   have h_KL_eq : (klDiv P Q).toReal
       = ∑ x : α, Q.real {x} * klFun (P.rnDeriv Q x).toReal := by
     rw [toReal_klDiv_eq_integral_klFun hPQ]
-    have h_int : Integrable (fun x => klFun (P.rnDeriv Q x).toReal) Q := by
+    have h_int : Integrable (fun x ↦ klFun (P.rnDeriv Q x).toReal) Q := by
       refine ⟨(stronglyMeasurable_klFun.comp_measurable
         ((Measure.measurable_rnDeriv P Q).ennreal_toReal)).aestronglyMeasurable, ?_⟩
       rw [hasFiniteIntegral_iff_enorm, lintegral_fintype]
-      exact ENNReal.sum_lt_top.mpr fun _ _ =>
+      exact ENNReal.sum_lt_top.mpr fun _ _ ↦
         ENNReal.mul_lt_top ENNReal.coe_lt_top (measure_lt_top _ _)
     rw [integral_fintype h_int]
-    refine Finset.sum_congr rfl fun x _ => ?_
+    refine Finset.sum_congr rfl fun x _ ↦ ?_
     rw [smul_eq_mul]
   -- Step 2: Σ x, 3·(p_x - q_x)² / (2·(p_x + 2·q_x)) ≤ KL.toReal
   have h_KL_ge : ∑ x : α, 3 * (P.real {x} - Q.real {x}) ^ 2
         / (2 * (P.real {x} + 2 * Q.real {x}))
       ≤ (klDiv P Q).toReal := by
     rw [h_KL_eq]
-    exact Finset.sum_le_sum fun x _ => per_element_sharp P Q hPQ x
+    exact Finset.sum_le_sum fun x _ ↦ per_element_sharp P Q hPQ x
   -- Step 3: Cauchy-Schwarz with
   -- r_x := |p_x - q_x|, f_x := (p-q)²/(p+2q) (or 0 if p+2q = 0), g_x := p+2q
   -- f_x · g_x = (p-q)² = r_x²
@@ -387,7 +387,7 @@ theorem tvNorm_le_sqrt_klDiv_div_two
           = (3 / 2) * ∑ x : α, (P.real {x} - Q.real {x}) ^ 2
             / (P.real {x} + 2 * Q.real {x}) := by
         rw [Finset.mul_sum]
-        exact Finset.sum_congr rfl fun x _ => hf_id x
+        exact Finset.sum_congr rfl fun x _ ↦ hf_id x
       linarith [h_sum_id ▸ h_KL_ge]
     linarith
   -- Step 6: combine

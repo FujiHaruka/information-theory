@@ -55,13 +55,13 @@ theorem bind_eq_conv_of_translation_kernel
     (κ : Kernel ℝ ℝ) (p ν : Measure ℝ) [SFinite p] [SFinite ν]
     (hκ : ∀ x, κ x = ν.map (x + ·)) :
     κ ∘ₘ p = p ∗ ν := by
-  refine Measure.ext_of_lintegral _ fun f hf => ?_
+  refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
   -- LHS: Giry-monad bind expands fibrewise.
   rw [Measure.lintegral_bind κ.aemeasurable hf.aemeasurable]
   -- RHS: convolution expands as a double lintegral over `p ∗ ν`.
   rw [Measure.lintegral_conv hf]
   -- Match fibrewise: `∫⁻ y, f y ∂(κ x) = ∫⁻ y, f (x + y) ∂ν`.
-  refine lintegral_congr fun x => ?_
+  refine lintegral_congr fun x ↦ ?_
   rw [hκ x, lintegral_map hf (measurable_const_add x)]
 
 /-! ## AWGN specialization -/
@@ -92,7 +92,7 @@ theorem awgn_capacity_closed_form_of_maxent_bindconv_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N))
     (h_bdd :
-        BddAbove ((fun p : Measure ℝ =>
+        BddAbove ((fun p : Measure ℝ ↦
             (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
                 p (awgnChannel N (isAwgnChannelMeasurable N))).toReal) ''
           awgnPowerConstraintSet P))

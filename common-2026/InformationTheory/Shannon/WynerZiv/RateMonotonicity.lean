@@ -68,10 +68,10 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 threshold is contained in the objective-image at the larger threshold. -/
 lemma wynerZivObjective_image_mono_in_D
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {D D' : ℝ} (hD : D ≤ D') :
-    ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+    ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
               wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
         '' WynerZivConstraint U P_XY d D)
-      ⊆ ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+      ⊆ ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
               wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
         '' WynerZivConstraint U P_XY d D') := by
   intro v hv
@@ -91,11 +91,11 @@ projection. -/
 @[entry_point]
 theorem wynerZivRatePmf_antitone
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {D D' : ℝ} (hD : D ≤ D')
-    (h_ne : ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+    (h_ne : ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
                 wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
               '' WynerZivConstraint U P_XY d D).Nonempty)
     (h_bdd : BddBelow
-      ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+      ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
                 wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
         '' WynerZivConstraint U P_XY d D')) :
     wynerZivRatePmf U P_XY d D' ≤ wynerZivRatePmf U P_XY d D := by
@@ -103,7 +103,7 @@ theorem wynerZivRatePmf_antitone
   refine le_csInf h_ne ?_
   rintro v hv
   have h_mem :
-      v ∈ ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+      v ∈ ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
               wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
             '' WynerZivConstraint U P_XY d D') :=
     wynerZivObjective_image_mono_in_D U P_XY d hD hv
@@ -181,7 +181,7 @@ containment for the joint pmf component. -/
 @[entry_point]
 lemma wynerZivConstraint_fst_subset_stdSimplex
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) :
-    (fun qf : (α × β × U → ℝ) × (U × β → γ) => qf.1)
+    (fun qf : (α × β × U → ℝ) × (U × β → γ) ↦ qf.1)
         '' WynerZivConstraint U P_XY d D ⊆ stdSimplex ℝ (α × β × U) := by
   intro q hq
   rcases hq with ⟨qf, hqf, hq_eq⟩
@@ -195,17 +195,17 @@ constraint set inclusion gives the result. -/
 lemma wynerZivObjective_image_bddBelow
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) :
     BddBelow
-      ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+      ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
                 wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
         '' WynerZivConstraint U P_XY d D) := by
   -- We bound the image by `objective '' stdSimplex` which is compact (image of
   -- compact under continuous map).
   set img : Set ℝ :=
-    (fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+    (fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
               wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
         '' WynerZivConstraint U P_XY d D
   set img_simplex : Set ℝ :=
-    (fun q : α × β × U → ℝ =>
+    (fun q : α × β × U → ℝ ↦
               wzMutualInfoXU U q - wzMutualInfoYU U q)
         '' stdSimplex ℝ (α × β × U)
   have h_subset : img ⊆ img_simplex := by
@@ -215,7 +215,7 @@ lemma wynerZivObjective_image_bddBelow
     exact hv_eq
   have h_simplex_compact : IsCompact (stdSimplex ℝ (α × β × U)) :=
     isCompact_stdSimplex ℝ _
-  have h_cont : Continuous (fun q : α × β × U → ℝ =>
+  have h_cont : Continuous (fun q : α × β × U → ℝ ↦
               wzMutualInfoXU U q - wzMutualInfoYU U q) :=
     continuous_wzObjective U
   have h_img_simplex_compact : IsCompact img_simplex :=
@@ -229,7 +229,7 @@ remains: the user must supply at least one feasible `(q, f)` at the smaller
 threshold `D`. -/
 theorem wynerZivRatePmf_antitone_of_nonempty
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {D D' : ℝ} (hD : D ≤ D')
-    (h_ne : ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+    (h_ne : ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
                 wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
               '' WynerZivConstraint U P_XY d D).Nonempty) :
     wynerZivRatePmf U P_XY d D' ≤ wynerZivRatePmf U P_XY d D :=
@@ -252,7 +252,7 @@ lemma wynerZivObjective_image_nonempty_of_feasible
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ)
     {qf : (α × β × U → ℝ) × (U × β → γ)}
     (hqf : qf ∈ WynerZivConstraint U P_XY d D) :
-    ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+    ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
               wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
         '' WynerZivConstraint U P_XY d D).Nonempty :=
   ⟨wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1, qf, hqf, rfl⟩

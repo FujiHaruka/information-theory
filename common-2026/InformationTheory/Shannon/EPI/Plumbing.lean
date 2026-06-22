@@ -122,7 +122,7 @@ theorem entropyPower_map_add_const_eq_self
 @[entry_point]
 theorem entropyPower_map_mul_const
     {μ : Measure ℝ} (hμ : μ ≪ volume) [IsProbabilityMeasure μ] {c : ℝ} (hc : c ≠ 0)
-    (h_ent_int : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
+    (h_ent_int : Integrable (fun x ↦ Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
     entropyPower (μ.map (· * c)) = c^2 * entropyPower μ := by
   unfold entropyPower
   rw [InformationTheory.Shannon.differentialEntropy_map_mul_const hμ hc h_ent_int]
@@ -146,8 +146,8 @@ leaving only the scaling factor `a²`. -/
 @[entry_point]
 theorem entropyPower_map_affine
     {μ : Measure ℝ} (hμ : μ ≪ volume) [IsProbabilityMeasure μ] {a : ℝ} (ha : a ≠ 0) (b : ℝ)
-    (h_ent_int : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
-    entropyPower (μ.map (fun x => a * x + b)) = a^2 * entropyPower μ := by
+    (h_ent_int : Integrable (fun x ↦ Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
+    entropyPower (μ.map (fun x ↦ a * x + b)) = a^2 * entropyPower μ := by
   unfold entropyPower
   rw [InformationTheory.Shannon.differentialEntropy_map_affine hμ ha b h_ent_int]
   rw [show (2 : ℝ) * (InformationTheory.Shannon.differentialEntropy μ + Real.log |a|)
@@ -179,18 +179,18 @@ theorem entropy_power_inequality_four_arg {Ω : Type*} {mΩ : MeasurableSpace Ω
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y Z W : Ω → ℝ)
     (h_xyz_w_epi :
-      IsEntropyPowerInequalityHypothesis (fun ω => X ω + Y ω + Z ω) W P)
-    (h_xy_z_epi : IsEntropyPowerInequalityHypothesis (fun ω => X ω + Y ω) Z P)
+      IsEntropyPowerInequalityHypothesis (fun ω ↦ X ω + Y ω + Z ω) W P)
+    (h_xy_z_epi : IsEntropyPowerInequalityHypothesis (fun ω ↦ X ω + Y ω) Z P)
     (h_x_y_epi : IsEntropyPowerInequalityHypothesis X Y P) :
-    entropyPower (P.map (fun ω => X ω + Y ω + Z ω + W ω))
+    entropyPower (P.map (fun ω ↦ X ω + Y ω + Z ω + W ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) + entropyPower (P.map Z)
           + entropyPower (P.map W) := by
   -- Step 1: from `h_xyz_w_epi`:
   -- entropyPower ((X+Y+Z) + W) ≥ entropyPower (X+Y+Z) + entropyPower W
-  have h1 : entropyPower (P.map (fun ω => X ω + Y ω + Z ω + W ω))
-      ≥ entropyPower (P.map (fun ω => X ω + Y ω + Z ω)) + entropyPower (P.map W) := by
-    have h_assoc : (fun ω : Ω => (X ω + Y ω + Z ω) + W ω)
-        = (fun ω : Ω => X ω + Y ω + Z ω + W ω) := by
+  have h1 : entropyPower (P.map (fun ω ↦ X ω + Y ω + Z ω + W ω))
+      ≥ entropyPower (P.map (fun ω ↦ X ω + Y ω + Z ω)) + entropyPower (P.map W) := by
+    have h_assoc : (fun ω : Ω ↦ (X ω + Y ω + Z ω) + W ω)
+        = (fun ω : Ω ↦ X ω + Y ω + Z ω + W ω) := by
       funext ω; ring
     have h := h_xyz_w_epi
     unfold IsEntropyPowerInequalityHypothesis at h
@@ -198,7 +198,7 @@ theorem entropy_power_inequality_four_arg {Ω : Type*} {mΩ : MeasurableSpace Ω
     exact h
   -- Step 2: from `entropy_power_inequality_three_arg`:
   -- entropyPower (X+Y+Z) ≥ entropyPower X + entropyPower Y + entropyPower Z
-  have h2 : entropyPower (P.map (fun ω => X ω + Y ω + Z ω))
+  have h2 : entropyPower (P.map (fun ω ↦ X ω + Y ω + Z ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) + entropyPower (P.map Z) :=
     entropy_power_inequality_three_arg P X Y Z h_xy_z_epi h_x_y_epi
   -- Combine via transitivity.
@@ -214,7 +214,7 @@ theorem isEntropyPowerInequalityHypothesis_symm
     (h : IsEntropyPowerInequalityHypothesis X Y P) :
     IsEntropyPowerInequalityHypothesis Y X P := by
   unfold IsEntropyPowerInequalityHypothesis at *
-  have h_comm : (fun ω => Y ω + X ω) = fun ω => X ω + Y ω := by
+  have h_comm : (fun ω ↦ Y ω + X ω) = fun ω ↦ X ω + Y ω := by
     funext ω; ring
   rw [h_comm, add_comm (entropyPower (P.map Y))]
   exact h

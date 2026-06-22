@@ -55,7 +55,7 @@ theorem llr_eq_log_density_sub_log_density
     (P Q : Measure ℝ) [SigmaFinite P] [SigmaFinite Q]
     (hPv : P ≪ volume) (hQv : Q ≪ volume) (hPQ : P ≪ Q) :
     llr P Q
-      =ᵐ[P] fun x => Real.log ((P.rnDeriv volume x).toReal)
+      =ᵐ[P] fun x ↦ Real.log ((P.rnDeriv volume x).toReal)
         - Real.log ((Q.rnDeriv volume x).toReal) := by
   -- `P.rnDeriv Q * Q.rnDeriv volume =ᵐ[volume] P.rnDeriv volume`, transferred to `P`-a.e.
   have hchain : P.rnDeriv Q * Q.rnDeriv volume =ᵐ[P] P.rnDeriv volume :=
@@ -95,14 +95,14 @@ theorem klDiv_toReal_eq_neg_differentialEntropy_sub_cross
     (hPv : P ≪ volume) (hQv : Q ≪ volume) (hPQ : P ≪ Q)
     (hmass : P Set.univ = Q Set.univ)
     (h_logp_int : Integrable
-      (fun x => (P.rnDeriv volume x).toReal * Real.log ((P.rnDeriv volume x).toReal)) volume)
+      (fun x ↦ (P.rnDeriv volume x).toReal * Real.log ((P.rnDeriv volume x).toReal)) volume)
     (h_cross_int : Integrable
-      (fun x => (P.rnDeriv volume x).toReal * Real.log ((Q.rnDeriv volume x).toReal)) volume) :
+      (fun x ↦ (P.rnDeriv volume x).toReal * Real.log ((Q.rnDeriv volume x).toReal)) volume) :
     (klDiv P Q).toReal
       = - differentialEntropy P
         - ∫ x, (P.rnDeriv volume x).toReal * Real.log ((Q.rnDeriv volume x).toReal) ∂volume := by
-  set p := fun x => (P.rnDeriv volume x).toReal with hp
-  set q := fun x => (Q.rnDeriv volume x).toReal with hq
+  set p := fun x ↦ (P.rnDeriv volume x).toReal with hp
+  set q := fun x ↦ (Q.rnDeriv volume x).toReal with hq
   -- Step 1: `(klDiv P Q).toReal = ∫ llr P Q ∂P` (equal mass, no integrability side-condition).
   rw [toReal_klDiv_of_measure_eq hPQ hmass]
   -- Step 2: rewrite `llr P Q` as `log p − log q`, `P`-a.e.
@@ -110,15 +110,15 @@ theorem klDiv_toReal_eq_neg_differentialEntropy_sub_cross
   -- Step 3: push `∫ · ∂P` to `∫ p · · ∂volume`.
   rw [← integral_toReal_rnDeriv_mul (μ := P) (ν := volume) hPv]
   -- Step 4: distribute the product over the difference, then split the integral.
-  have hdist : (fun x => p x * (Real.log (p x) - Real.log (q x)))
-      = (fun x => p x * Real.log (p x) - p x * Real.log (q x)) := by
+  have hdist : (fun x ↦ p x * (Real.log (p x) - Real.log (q x)))
+      = (fun x ↦ p x * Real.log (p x) - p x * Real.log (q x)) := by
     funext x; ring
   rw [hdist, integral_sub h_logp_int h_cross_int]
   -- Step 5: `∫ p log p = − differentialEntropy P`.
   have hent : differentialEntropy P = -∫ x, p x * Real.log (p x) ∂volume := by
     unfold differentialEntropy
     rw [← integral_neg]
-    refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+    refine integral_congr_ae (Filter.Eventually.of_forall (fun x ↦ ?_))
     simp only [Real.negMulLog_def, hp]
     ring
   rw [hent]
@@ -133,9 +133,9 @@ theorem klDiv_negMulLog_cross_balance_ennreal
     (P ν : Measure ℝ) [IsProbabilityMeasure P] [IsProbabilityMeasure ν]
     (hPv : P ≪ volume) (hνv : ν ≪ volume) (hPν : P ≪ ν)
     (h_logp_int : Integrable
-      (fun x => (P.rnDeriv volume x).toReal * Real.log ((P.rnDeriv volume x).toReal)) volume)
+      (fun x ↦ (P.rnDeriv volume x).toReal * Real.log ((P.rnDeriv volume x).toReal)) volume)
     (h_cross_int : Integrable
-      (fun x => (P.rnDeriv volume x).toReal * Real.log ((ν.rnDeriv volume x).toReal)) volume)
+      (fun x ↦ (P.rnDeriv volume x).toReal * Real.log ((ν.rnDeriv volume x).toReal)) volume)
     (hKL : klDiv P ν ≠ ∞) :
     (∫⁻ x, ENNReal.ofReal (Real.negMulLog ((P.rnDeriv volume x).toReal)) ∂volume)
       + klDiv P ν
@@ -144,8 +144,8 @@ theorem klDiv_negMulLog_cross_balance_ennreal
     = (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((P.rnDeriv volume x).toReal))) ∂volume)
       + (∫⁻ x, ENNReal.ofReal (-((P.rnDeriv volume x).toReal
             * Real.log ((ν.rnDeriv volume x).toReal))) ∂volume) := by
-  set p := fun x => (P.rnDeriv volume x).toReal with hp
-  set q := fun x => (ν.rnDeriv volume x).toReal with hq
+  set p := fun x ↦ (P.rnDeriv volume x).toReal with hp
+  set q := fun x ↦ (ν.rnDeriv volume x).toReal with hq
   -- A := ∫⁻ ofReal(negMulLog p), B := ∫⁻ ofReal(-(negMulLog p)),
   -- Cpos := ∫⁻ ofReal(p·log q), Cneg := ∫⁻ ofReal(-(p·log q)).
   set A := ∫⁻ x, ENNReal.ofReal (Real.negMulLog (p x)) ∂volume with hA
@@ -157,12 +157,12 @@ theorem klDiv_negMulLog_cross_balance_ennreal
   have hbound : ∀ (f : ℝ → ℝ), Integrable f volume →
       (∫⁻ x, ENNReal.ofReal (f x) ∂volume) ≠ ⊤ := by
     intro f hf
-    refine ne_top_of_le_ne_top hf.hasFiniteIntegral.ne (lintegral_mono fun x => ?_)
+    refine ne_top_of_le_ne_top hf.hasFiniteIntegral.ne (lintegral_mono fun x ↦ ?_)
     rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs]
     exact ENNReal.ofReal_le_ofReal (le_abs_self _)
   -- `negMulLog p = -(p·log p)`, so `negMulLog ∘ p` is integrable (from `h_logp_int.neg`).
-  have h_negMulLog_int : Integrable (fun x => Real.negMulLog (p x)) volume := by
-    refine (h_logp_int.neg).congr (Filter.Eventually.of_forall (fun x => ?_))
+  have h_negMulLog_int : Integrable (fun x ↦ Real.negMulLog (p x)) volume := by
+    refine (h_logp_int.neg).congr (Filter.Eventually.of_forall (fun x ↦ ?_))
     simp only [Real.negMulLog_eq_neg, Pi.neg_apply, hp]
   have hAfin : A ≠ ⊤ := hbound _ h_negMulLog_int
   have hBfin : B ≠ ⊤ := hbound _ h_negMulLog_int.neg
@@ -216,21 +216,21 @@ theorem integral_condDistrib_marginal_eq
     (hg_int : Integrable g (μ.map X)) :
     ∫ z, (∫ x, g x ∂(condDistrib X Z μ z)) ∂(μ.map Z) = ∫ x, g x ∂(μ.map X) := by
   -- The joint law `(μ.map Z) ⊗ₘ condDistrib X Z μ = μ.map (Z, X)`.
-  have hjoint : (μ.map Z) ⊗ₘ condDistrib X Z μ = μ.map (fun ω => (Z ω, X ω)) :=
+  have hjoint : (μ.map Z) ⊗ₘ condDistrib X Z μ = μ.map (fun ω ↦ (Z ω, X ω)) :=
     compProd_map_condDistrib hX.aemeasurable
   -- The second marginal of the joint is `μ.map X`.
-  have hsnd : (μ.map (fun ω => (Z ω, X ω))).map Prod.snd = μ.map X := by
+  have hsnd : (μ.map (fun ω ↦ (Z ω, X ω))).map Prod.snd = μ.map X := by
     rw [Measure.map_map measurable_snd (hZ.prodMk hX)]; rfl
   -- `snd` is quasi-measure-preserving from the joint to `μ.map X`.
   have hqmp : Measure.QuasiMeasurePreserving Prod.snd
-      (μ.map (fun ω => (Z ω, X ω))) (μ.map X) :=
+      (μ.map (fun ω ↦ (Z ω, X ω))) (μ.map X) :=
     ⟨measurable_snd, hsnd.le.absolutelyContinuous⟩
   -- `g ∘ snd` is a.e.-strongly measurable against the joint.
-  have hgsnd_meas : AEStronglyMeasurable (fun p : α × ℝ => g p.2)
-      (μ.map (fun ω => (Z ω, X ω))) :=
+  have hgsnd_meas : AEStronglyMeasurable (fun p : α × ℝ ↦ g p.2)
+      (μ.map (fun ω ↦ (Z ω, X ω))) :=
     hg_int.aestronglyMeasurable.comp_quasiMeasurePreserving hqmp
   -- `g ∘ snd` is integrable against the joint.
-  have hgsnd_int : Integrable (fun p : α × ℝ => g p.2) ((μ.map Z) ⊗ₘ condDistrib X Z μ) := by
+  have hgsnd_int : Integrable (fun p : α × ℝ ↦ g p.2) ((μ.map Z) ⊗ₘ condDistrib X Z μ) := by
     rw [hjoint, integrable_map_measure hgsnd_meas (hZ.prodMk hX).aemeasurable]
     exact hg_int.comp_measurable hX
   -- Fubini: open the joint integral into the iterated fibre integral.
@@ -260,12 +260,12 @@ theorem integral_condDistrib_density_marginal_eq
     (hX_ac : (μ.map X) ≪ volume)
     (hκ_ac : ∀ᵐ z ∂(μ.map Z), condDistrib X Z μ z ≪ volume)
     (h_logq_int : Integrable
-      (fun x => Real.log (((μ.map X).rnDeriv volume x).toReal)) (μ.map X)) :
+      (fun x ↦ Real.log (((μ.map X).rnDeriv volume x).toReal)) (μ.map X)) :
     ∫ z, (∫ x, ((condDistrib X Z μ z).rnDeriv volume x).toReal
             * Real.log (((μ.map X).rnDeriv volume x).toReal) ∂volume) ∂(μ.map Z)
       = ∫ x, ((μ.map X).rnDeriv volume x).toReal
             * Real.log (((μ.map X).rnDeriv volume x).toReal) ∂volume := by
-  set g := fun x => Real.log (((μ.map X).rnDeriv volume x).toReal) with hg
+  set g := fun x ↦ Real.log (((μ.map X).rnDeriv volume x).toReal) with hg
   -- Per-fibre density rewrite: for a.e. `z`, the inner volume-integral against the
   -- fibre density equals the fibre integral of `g`.
   have hinner : ∫ z, (∫ x, ((condDistrib X Z μ z).rnDeriv volume x).toReal * g x ∂volume) ∂(μ.map Z)
@@ -303,17 +303,17 @@ theorem lintegral_condDistrib_marginal_eq
     (hX : Measurable X) (hZ : Measurable Z) {g : ℝ → ℝ≥0∞} (hg : Measurable g) :
     ∫⁻ z, (∫⁻ x, g x ∂(condDistrib X Z μ z)) ∂(μ.map Z) = ∫⁻ x, g x ∂(μ.map X) := by
   -- The joint law `(μ.map Z) ⊗ₘ condDistrib X Z μ = μ.map (Z, X)`.
-  have hjoint : (μ.map Z) ⊗ₘ condDistrib X Z μ = μ.map (fun ω => (Z ω, X ω)) :=
+  have hjoint : (μ.map Z) ⊗ₘ condDistrib X Z μ = μ.map (fun ω ↦ (Z ω, X ω)) :=
     compProd_map_condDistrib hX.aemeasurable
   -- The second marginal of the joint is `μ.map X`.
-  have hsnd : (μ.map (fun ω => (Z ω, X ω))).map Prod.snd = μ.map X := by
+  have hsnd : (μ.map (fun ω ↦ (Z ω, X ω))).map Prod.snd = μ.map X := by
     rw [Measure.map_map measurable_snd (hZ.prodMk hX)]; rfl
-  have hgsnd : Measurable (fun p : α × ℝ => g p.2) := hg.comp measurable_snd
+  have hgsnd : Measurable (fun p : α × ℝ ↦ g p.2) := hg.comp measurable_snd
   calc ∫⁻ z, (∫⁻ x, g x ∂(condDistrib X Z μ z)) ∂(μ.map Z)
       = ∫⁻ p, g p.2 ∂((μ.map Z) ⊗ₘ condDistrib X Z μ) :=
         (Measure.lintegral_compProd hgsnd).symm
-    _ = ∫⁻ p, g p.2 ∂(μ.map (fun ω => (Z ω, X ω))) := by rw [hjoint]
-    _ = ∫⁻ y, g y ∂((μ.map (fun ω => (Z ω, X ω))).map Prod.snd) :=
+    _ = ∫⁻ p, g p.2 ∂(μ.map (fun ω ↦ (Z ω, X ω))) := by rw [hjoint]
+    _ = ∫⁻ y, g y ∂((μ.map (fun ω ↦ (Z ω, X ω))).map Prod.snd) :=
         (lintegral_map hg measurable_snd).symm
     _ = ∫⁻ x, g x ∂(μ.map X) := by rw [hsnd]
 
@@ -350,7 +350,7 @@ theorem lintegral_condDistrib_cross_eq
   haveI : IsProbabilityMeasure (μ.map Z) := Measure.isProbabilityMeasure_map hZ.aemeasurable
   -- The `z`-free `ℝ≥0∞` factor `g x := ofReal (sign (log qX_x))`.
   set g : ℝ → ℝ≥0∞ :=
-    fun x => ENNReal.ofReal (sign (Real.log (((μ.map X).rnDeriv volume x).toReal))) with hg
+    fun x ↦ ENNReal.ofReal (sign (Real.log (((μ.map X).rnDeriv volume x).toReal))) with hg
   have hg_meas : Measurable g := by
     refine ENNReal.measurable_ofReal.comp (hsign_meas.comp (Real.measurable_log.comp ?_))
     exact (Measure.measurable_rnDeriv (μ.map X) volume).ennreal_toReal

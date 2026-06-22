@@ -55,10 +55,10 @@ set directly. -/
 noncomputable def jointTypicalDecoder
     {n M : ℕ} [NeZero M]
     (A : Set ((Fin n → ℝ) × (Fin n → ℝ)))
-    (codebook : Fin M → Fin n → ℝ) : (Fin n → ℝ) → Fin M := fun y =>
+    (codebook : Fin M → Fin n → ℝ) : (Fin n → ℝ) → Fin M := fun y ↦
   haveI : Decidable (∃ m : Fin M, (codebook m, y) ∈ A) := Classical.propDecidable _
-  haveI : DecidablePred (fun m : Fin M => (codebook m, y) ∈ A) :=
-    fun _ => Classical.propDecidable _
+  haveI : DecidablePred (fun m : Fin M ↦ (codebook m, y) ∈ A) :=
+    fun _ ↦ Classical.propDecidable _
   if h : ∃ m : Fin M, (codebook m, y) ∈ A then Fin.find _ h
   else ⟨0, Nat.pos_of_ne_zero (NeZero.ne M)⟩
 
@@ -72,7 +72,7 @@ theorem jointTypicalDecoder_measurable
     Measurable (jointTypicalDecoder A codebook) := by
   classical
   -- `Fin M` is countable: reduce to per-fibre measurability.
-  refine measurable_to_countable' (fun m => ?_)
+  refine measurable_to_countable' (fun m ↦ ?_)
   -- Pointwise characterization of the decoder.
   let m₀ : Fin M := ⟨0, Nat.pos_of_ne_zero (NeZero.ne M)⟩
   have hChar : ∀ y : Fin n → ℝ,
@@ -83,14 +83,14 @@ theorem jointTypicalDecoder_measurable
     unfold jointTypicalDecoder
     by_cases h : ∃ k : Fin M, (codebook k, y) ∈ A
     · -- typical hit: decoder = Fin.find _ h
-      haveI : DecidablePred fun k : Fin M => (codebook k, y) ∈ A :=
-        fun _ => Classical.propDecidable _
+      haveI : DecidablePred fun k : Fin M ↦ (codebook k, y) ∈ A :=
+        fun _ ↦ Classical.propDecidable _
       -- value of decoder = Fin.find _ h (instance-irrelevant via Subsingleton)
       have hsimp :
           (haveI : Decidable (∃ k : Fin M, (codebook k, y) ∈ A) :=
               Classical.propDecidable _;
-           haveI : DecidablePred fun m : Fin M => (codebook m, y) ∈ A :=
-              fun _ => Classical.propDecidable _;
+           haveI : DecidablePred fun m : Fin M ↦ (codebook m, y) ∈ A :=
+              fun _ ↦ Classical.propDecidable _;
            if h' : ∃ m : Fin M, (codebook m, y) ∈ A then Fin.find _ h' else m₀)
             = Fin.find _ h := by
         rw [dif_pos h]
@@ -109,8 +109,8 @@ theorem jointTypicalDecoder_measurable
       have hsimp :
           (haveI : Decidable (∃ k : Fin M, (codebook k, y) ∈ A) :=
               Classical.propDecidable _;
-           haveI : DecidablePred fun m : Fin M => (codebook m, y) ∈ A :=
-              fun _ => Classical.propDecidable _;
+           haveI : DecidablePred fun m : Fin M ↦ (codebook m, y) ∈ A :=
+              fun _ ↦ Classical.propDecidable _;
            if h' : ∃ m : Fin M, (codebook m, y) ∈ A then Fin.find _ h' else m₀)
             = m₀ := by
         rw [dif_neg h]
@@ -128,7 +128,7 @@ theorem jointTypicalDecoder_measurable
   have hSec : ∀ k : Fin M,
       MeasurableSet {y : Fin n → ℝ | (codebook k, y) ∈ A} := by
     intro k
-    have hmeas : Measurable (fun y : Fin n → ℝ => (codebook k, y)) :=
+    have hmeas : Measurable (fun y : Fin n → ℝ ↦ (codebook k, y)) :=
       measurable_const.prodMk measurable_id
     exact hmeas hA
   -- "No codeword smaller than `m` is typical for y".
@@ -138,15 +138,15 @@ theorem jointTypicalDecoder_measurable
         = ⋂ j : Fin M, ⋂ _ : j < m, {y | (codebook j, y) ∉ A} := by
       ext y; simp
     rw [hset]
-    exact MeasurableSet.iInter fun j =>
-      MeasurableSet.iInter fun _ => (hSec j).compl
+    exact MeasurableSet.iInter fun j ↦
+      MeasurableSet.iInter fun _ ↦ (hSec j).compl
   -- "No codeword at all is typical for y".
   have hNoneAll : MeasurableSet {y : Fin n → ℝ | ∀ k : Fin M, (codebook k, y) ∉ A} := by
     have hset : {y : Fin n → ℝ | ∀ k : Fin M, (codebook k, y) ∉ A}
         = ⋂ k : Fin M, {y | (codebook k, y) ∉ A} := by
       ext y; simp
     rw [hset]
-    exact MeasurableSet.iInter (fun k => (hSec k).compl)
+    exact MeasurableSet.iInter (fun k ↦ (hSec k).compl)
   -- Rewrite the fibre using the characterization, then take MeasurableSet union.
   have hFiber :
       jointTypicalDecoder A codebook ⁻¹' {m}
@@ -184,10 +184,10 @@ codebook kernel, and the kernel-section measurability. -/
 theorem jointTypicalDecoder_joint_measurable
     {n M : ℕ} [NeZero M]
     (A : Set ((Fin n → ℝ) × (Fin n → ℝ))) (hA : MeasurableSet A) :
-    Measurable (fun p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) =>
+    Measurable (fun p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) ↦
                   jointTypicalDecoder A p.1 p.2) := by
   classical
-  refine measurable_to_countable' (fun m => ?_)
+  refine measurable_to_countable' (fun m ↦ ?_)
   let m₀ : Fin M := ⟨0, Nat.pos_of_ne_zero (NeZero.ne M)⟩
   -- Pointwise characterization (identical Boolean shape to y-only version).
   have hChar : ∀ p : (Fin M → Fin n → ℝ) × (Fin n → ℝ),
@@ -197,13 +197,13 @@ theorem jointTypicalDecoder_joint_measurable
     intro p
     unfold jointTypicalDecoder
     by_cases h : ∃ k : Fin M, (p.1 k, p.2) ∈ A
-    · haveI : DecidablePred fun k : Fin M => (p.1 k, p.2) ∈ A :=
-        fun _ => Classical.propDecidable _
+    · haveI : DecidablePred fun k : Fin M ↦ (p.1 k, p.2) ∈ A :=
+        fun _ ↦ Classical.propDecidable _
       have hsimp :
           (haveI : Decidable (∃ k : Fin M, (p.1 k, p.2) ∈ A) :=
               Classical.propDecidable _;
-           haveI : DecidablePred fun m : Fin M => (p.1 m, p.2) ∈ A :=
-              fun _ => Classical.propDecidable _;
+           haveI : DecidablePred fun m : Fin M ↦ (p.1 m, p.2) ∈ A :=
+              fun _ ↦ Classical.propDecidable _;
            if h' : ∃ m : Fin M, (p.1 m, p.2) ∈ A then Fin.find _ h' else m₀)
             = Fin.find _ h := by
         rw [dif_pos h]; congr 1
@@ -217,15 +217,15 @@ theorem jointTypicalDecoder_joint_measurable
     · have hsimp :
           (haveI : Decidable (∃ k : Fin M, (p.1 k, p.2) ∈ A) :=
               Classical.propDecidable _;
-           haveI : DecidablePred fun m : Fin M => (p.1 m, p.2) ∈ A :=
-              fun _ => Classical.propDecidable _;
+           haveI : DecidablePred fun m : Fin M ↦ (p.1 m, p.2) ∈ A :=
+              fun _ ↦ Classical.propDecidable _;
            if h' : ∃ m : Fin M, (p.1 m, p.2) ∈ A then Fin.find _ h' else m₀)
             = m₀ := by
         rw [dif_neg h]
       rw [hsimp]
       constructor
       · intro hm
-        exact Or.inr ⟨hm.symm, fun k hk => h ⟨k, hk⟩⟩
+        exact Or.inr ⟨hm.symm, fun k hk ↦ h ⟨k, hk⟩⟩
       · rintro (⟨hmA, _⟩ | ⟨hm_eq, _⟩)
         · exfalso; exact h ⟨m, hmA⟩
         · exact hm_eq.symm
@@ -236,10 +236,10 @@ theorem jointTypicalDecoder_joint_measurable
     intro k
     -- (c, y) ↦ (c k, y) is measurable: each component is a projection.
     have h_proj : Measurable
-        (fun p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) => p.1 k) :=
+        (fun p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) ↦ p.1 k) :=
       (measurable_pi_apply k).comp measurable_fst
     have h_pair :
-        Measurable (fun p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) =>
+        Measurable (fun p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) ↦
                       ((p.1 k, p.2) : (Fin n → ℝ) × (Fin n → ℝ))) :=
       h_proj.prodMk measurable_snd
     exact h_pair hA
@@ -252,8 +252,8 @@ theorem jointTypicalDecoder_joint_measurable
           = ⋂ j : Fin M, ⋂ _ : j < m, {p | (p.1 j, p.2) ∉ A} := by
       ext p; simp
     rw [hset]
-    exact MeasurableSet.iInter fun j =>
-      MeasurableSet.iInter fun _ => (hSec j).compl
+    exact MeasurableSet.iInter fun j ↦
+      MeasurableSet.iInter fun _ ↦ (hSec j).compl
   have hNoneAll : MeasurableSet
       {p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) | ∀ k : Fin M, (p.1 k, p.2) ∉ A} := by
     have hset :
@@ -261,10 +261,10 @@ theorem jointTypicalDecoder_joint_measurable
           = ⋂ k : Fin M, {p | (p.1 k, p.2) ∉ A} := by
       ext p; simp
     rw [hset]
-    exact MeasurableSet.iInter (fun k => (hSec k).compl)
+    exact MeasurableSet.iInter (fun k ↦ (hSec k).compl)
   -- Rewrite fibre and conclude.
   have hFiber :
-      (fun p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) =>
+      (fun p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) ↦
           jointTypicalDecoder A p.1 p.2) ⁻¹' {m}
         = {p | (p.1 m, p.2) ∈ A ∧ ∀ j : Fin M, j < m → (p.1 j, p.2) ∉ A}
           ∪ (if m = m₀ then {p | ∀ k : Fin M, (p.1 k, p.2) ∉ A} else ∅) := by
@@ -290,30 +290,30 @@ theorem jointTypicalDecoder_joint_measurable
 
 private theorem awgnCodebook_pi_measurable
     {n M : ℕ} (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) (m : Fin M) :
-    Measurable (fun c : Fin M → Fin n → ℝ =>
-      (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c m i)) :
+    Measurable (fun c : Fin M → Fin n → ℝ ↦
+      (Measure.pi (fun i : Fin n ↦ awgnChannel N h_meas (c m i)) :
         Measure (Fin n → ℝ))) := by
   -- Each fibre is a probability measure (Markov kernel + pi instance).
   haveI : IsMarkovKernel (awgnChannel N h_meas) := awgnChannel.instIsMarkovKernel N h_meas
   haveI : ∀ c : Fin M → Fin n → ℝ,
       IsProbabilityMeasure
-        (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c m i))) := by
+        (Measure.pi (fun i : Fin n ↦ awgnChannel N h_meas (c m i))) := by
     intro c; infer_instance
   refine Measurable.measure_of_isPiSystem_of_isProbabilityMeasure
     (S := Set.pi Set.univ '' Set.pi Set.univ
-            (fun _ : Fin n => {s : Set ℝ | MeasurableSet s}))
+            (fun _ : Fin n ↦ {s : Set ℝ | MeasurableSet s}))
     (hgen := generateFrom_pi.symm) (hpi := isPiSystem_pi) ?_
   rintro s ⟨t, ht, rfl⟩
   -- Box: μ_c (Set.pi univ t) = ∏ i, awgnChannel N h_meas (c m i) (t i).
   simp_rw [Measure.pi_pi]
   -- Each factor is measurable in `c`.
-  refine Finset.measurable_prod _ (fun i _ => ?_)
+  refine Finset.measurable_prod _ (fun i _ ↦ ?_)
   -- `c ↦ c m i` is the composition of two pi-projections.
-  have h_proj : Measurable (fun c : Fin M → Fin n → ℝ => c m i) :=
+  have h_proj : Measurable (fun c : Fin M → Fin n → ℝ ↦ c m i) :=
     (measurable_pi_apply i).comp (measurable_pi_apply m)
   -- `awgnChannel N h_meas` is a kernel; combine via `Kernel.measurable_coe`.
   have h_kernel_coe :
-      Measurable (fun x : ℝ => (awgnChannel N h_meas) x (t i)) :=
+      Measurable (fun x : ℝ ↦ (awgnChannel N h_meas) x (t i)) :=
     Kernel.measurable_coe _ (ht i (Set.mem_univ _))
   exact h_kernel_coe.comp h_proj
 
@@ -324,7 +324,7 @@ hence s-finite), which lets us feed it to
 noncomputable def awgnCodebookKernel
     {n M : ℕ} (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) (m : Fin M) :
     Kernel (Fin M → Fin n → ℝ) (Fin n → ℝ) where
-  toFun c := Measure.pi (fun i : Fin n => awgnChannel N h_meas (c m i))
+  toFun c := Measure.pi (fun i : Fin n ↦ awgnChannel N h_meas (c m i))
   measurable' := awgnCodebook_pi_measurable N h_meas m
 
 instance awgnCodebookKernel.instIsMarkovKernel
@@ -332,45 +332,45 @@ instance awgnCodebookKernel.instIsMarkovKernel
     IsMarkovKernel (awgnCodebookKernel (n := n) (M := M) N h_meas m) where
   isProbabilityMeasure c := by
     show IsProbabilityMeasure
-      (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c m i)))
+      (Measure.pi (fun i : Fin n ↦ awgnChannel N h_meas (c m i)))
     haveI : IsMarkovKernel (awgnChannel N h_meas) := awgnChannel.instIsMarkovKernel N h_meas
     infer_instance
 
 lemma measurable_measurePi_awgnChannel
     {n : ℕ} (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) :
-    Measurable (fun x : Fin n → ℝ =>
-      (Measure.pi (fun i => awgnChannel N h_meas (x i)) : Measure (Fin n → ℝ))) := by
+    Measurable (fun x : Fin n → ℝ ↦
+      (Measure.pi (fun i ↦ awgnChannel N h_meas (x i)) : Measure (Fin n → ℝ))) := by
   haveI : IsMarkovKernel (awgnChannel N h_meas) :=
     awgnChannel.instIsMarkovKernel N h_meas
   haveI : ∀ x : Fin n → ℝ,
       IsProbabilityMeasure
-        (Measure.pi (fun i => awgnChannel N h_meas (x i))) := fun x => by
+        (Measure.pi (fun i ↦ awgnChannel N h_meas (x i))) := fun x ↦ by
     infer_instance
   refine Measurable.measure_of_isPiSystem_of_isProbabilityMeasure
     (S := Set.pi Set.univ '' Set.pi Set.univ
-            (fun _ : Fin n => {s : Set ℝ | MeasurableSet s}))
+            (fun _ : Fin n ↦ {s : Set ℝ | MeasurableSet s}))
     (hgen := generateFrom_pi.symm) (hpi := isPiSystem_pi) ?_
   rintro s ⟨t, ht, rfl⟩
   simp_rw [Measure.pi_pi]
-  refine Finset.measurable_prod _ (fun i _ => ?_)
+  refine Finset.measurable_prod _ (fun i _ ↦ ?_)
   have hti : MeasurableSet (t i) := ht i (Set.mem_univ i)
   have h_kernel_coe : Measurable
-      (fun x : ℝ => (awgnChannel N h_meas) x (t i)) :=
+      (fun x : ℝ ↦ (awgnChannel N h_meas) x (t i)) :=
     Kernel.measurable_coe _ hti
   exact h_kernel_coe.comp (measurable_pi_apply i)
 
 lemma map_add_prod_pi_gaussianReal_eq_pi_gaussianReal
     {n : ℕ} (v₁ v₂ : ℝ≥0) :
-    ((Measure.pi (fun _ : Fin n => gaussianReal 0 v₁)).prod
-        (Measure.pi (fun _ : Fin n => gaussianReal 0 v₂))).map
-      (fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i)
-      = Measure.pi (fun _ : Fin n => gaussianReal 0 (v₁ + v₂)) := by
+    ((Measure.pi (fun _ : Fin n ↦ gaussianReal 0 v₁)).prod
+        (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 v₂))).map
+      (fun p : (Fin n → ℝ) × (Fin n → ℝ) ↦ fun i ↦ p.1 i + p.2 i)
+      = Measure.pi (fun _ : Fin n ↦ gaussianReal 0 (v₁ + v₂)) := by
   set e : (Fin n → ℝ × ℝ) ≃ᵐ (Fin n → ℝ) × (Fin n → ℝ) :=
     MeasurableEquiv.arrowProdEquivProdArrow ℝ ℝ (Fin n) with he_def
   -- per-letter sum measure: `(gauss 0 v₁).prod (gauss 0 v₂)` pushed by `+`.
   have hperletter : ∀ _ : Fin n,
       ((gaussianReal 0 v₁).prod (gaussianReal 0 v₂)).map
-          (fun p : ℝ × ℝ => p.1 + p.2)
+          (fun p : ℝ × ℝ ↦ p.1 + p.2)
         = gaussianReal 0 (v₁ + v₂) := by
     intro _
     have := gaussianReal_conv_gaussianReal (m₁ := 0) (m₂ := 0)
@@ -379,43 +379,43 @@ lemma map_add_prod_pi_gaussianReal_eq_pi_gaussianReal
     exact this
   -- reshape `(pi gauss).prod (pi gauss) = (pi (gauss×gauss)).map e`.
   have hmp := measurePreserving_arrowProdEquivProdArrow ℝ ℝ (Fin n)
-    (fun _ : Fin n => gaussianReal 0 v₁) (fun _ : Fin n => gaussianReal 0 v₂)
+    (fun _ : Fin n ↦ gaussianReal 0 v₁) (fun _ : Fin n ↦ gaussianReal 0 v₂)
   have hreshape :
-      (Measure.pi (fun _ : Fin n => gaussianReal 0 v₁)).prod
-          (Measure.pi (fun _ : Fin n => gaussianReal 0 v₂))
-        = (Measure.pi (fun _ : Fin n =>
+      (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 v₁)).prod
+          (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 v₂))
+        = (Measure.pi (fun _ : Fin n ↦
             (gaussianReal 0 v₁).prod (gaussianReal 0 v₂))).map e := by
     rw [he_def, ← hmp.map_eq]
   have hsum_meas : Measurable
-      (fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i) :=
-    measurable_pi_lambda _ (fun i =>
+      (fun p : (Fin n → ℝ) × (Fin n → ℝ) ↦ fun i ↦ p.1 i + p.2 i) :=
+    measurable_pi_lambda _ (fun i ↦
       ((measurable_pi_apply i).comp measurable_fst).add
         ((measurable_pi_apply i).comp measurable_snd))
-  have hcoord_meas : Measurable (fun p : ℝ × ℝ => p.1 + p.2) :=
+  have hcoord_meas : Measurable (fun p : ℝ × ℝ ↦ p.1 + p.2) :=
     measurable_fst.add measurable_snd
   rw [hreshape, Measure.map_map hsum_meas e.measurable]
   -- `Σ ∘ e = fun w i => (w i).1 + (w i).2`, which `pi_map_pi` factorizes.
   have hcomp :
-      ((fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i) ∘ e)
-        = (fun (w : Fin n → ℝ × ℝ) (i : Fin n) => (w i).1 + (w i).2) := by
+      ((fun p : (Fin n → ℝ) × (Fin n → ℝ) ↦ fun i ↦ p.1 i + p.2 i) ∘ e)
+        = (fun (w : Fin n → ℝ × ℝ) (i : Fin n) ↦ (w i).1 + (w i).2) := by
     funext w; rfl
   rw [hcomp]
   haveI : ∀ _ : Fin n, SigmaFinite
       (((gaussianReal 0 v₁).prod (gaussianReal 0 v₂)).map
-        (fun p : ℝ × ℝ => p.1 + p.2)) := by
+        (fun p : ℝ × ℝ ↦ p.1 + p.2)) := by
     intro i; rw [hperletter i]; infer_instance
-  rw [Measure.pi_map_pi (μ := fun _ : Fin n =>
+  rw [Measure.pi_map_pi (μ := fun _ : Fin n ↦
       (gaussianReal 0 v₁).prod (gaussianReal 0 v₂))
-      (f := fun _ : Fin n => (fun p : ℝ × ℝ => p.1 + p.2))
-      (fun _ => hcoord_meas.aemeasurable)]
+      (f := fun _ : Fin n ↦ (fun p : ℝ × ℝ ↦ p.1 + p.2))
+      (fun _ ↦ hcoord_meas.aemeasurable)]
   congr 1
   funext i
   exact hperletter i
 
 lemma measurePi_awgnChannel_eq_pi_gaussianReal_map_add
     {n : ℕ} (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) (x : Fin n → ℝ) :
-    Measure.pi (fun i => awgnChannel N h_meas (x i))
-      = (Measure.pi (fun _ : Fin n => gaussianReal 0 N)).map (fun z i => x i + z i) := by
+    Measure.pi (fun i ↦ awgnChannel N h_meas (x i))
+      = (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 N)).map (fun z i ↦ x i + z i) := by
   -- Each fibre: `awgnChannel · (x i) = gaussianReal (x i) N = (gaussianReal 0 N).map (x i + ·)`.
   have hfib : ∀ i : Fin n,
       (awgnChannel N h_meas (x i) : Measure ℝ)
@@ -424,14 +424,14 @@ lemma measurePi_awgnChannel_eq_pi_gaussianReal_map_add
     rw [awgnChannel_apply, gaussianReal_map_const_add, zero_add]
   -- AEMeasurable of each shift map.
   have haem : ∀ i : Fin n, AEMeasurable (x i + · : ℝ → ℝ) (gaussianReal 0 N) :=
-    fun i => (measurable_const.add measurable_id).aemeasurable
+    fun i ↦ (measurable_const.add measurable_id).aemeasurable
   -- SigmaFinite of each pushforward (it equals `gaussianReal (x i) N`, a prob measure).
   haveI hσ : ∀ i : Fin n, SigmaFinite ((gaussianReal 0 N).map (x i + ·)) := by
     intro i
     rw [gaussianReal_map_const_add, zero_add]
     infer_instance
-  rw [Measure.pi_map_pi (μ := fun _ : Fin n => gaussianReal 0 N)
-    (f := fun i => (x i + ·)) haem]
+  rw [Measure.pi_map_pi (μ := fun _ : Fin n ↦ gaussianReal 0 N)
+    (f := fun i ↦ (x i + ·)) haem]
   congr 1
   funext i
   rw [hfib i]
@@ -439,31 +439,31 @@ lemma measurePi_awgnChannel_eq_pi_gaussianReal_map_add
 lemma lintegral_measurePi_awgnChannel_eq_pi_gaussianReal
     {n : ℕ} (N v : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
     (B : Set (Fin n → ℝ)) (hB : MeasurableSet B) :
-    (∫⁻ x, (Measure.pi (fun i => awgnChannel N h_meas (x i))) B
-        ∂(Measure.pi (fun _ : Fin n => gaussianReal 0 v)))
-      = Measure.pi (fun _ : Fin n => gaussianReal 0 (v + N)) B := by
+    (∫⁻ x, (Measure.pi (fun i ↦ awgnChannel N h_meas (x i))) B
+        ∂(Measure.pi (fun _ : Fin n ↦ gaussianReal 0 v)))
+      = Measure.pi (fun _ : Fin n ↦ gaussianReal 0 (v + N)) B := by
   -- per-vector channel collapse `chan x = (pi gauss).map (x + ·)`.
-  have hshift : ∀ x : Fin n → ℝ, Measurable (fun z : Fin n → ℝ => fun i => x i + z i) := by
-    intro x; exact measurable_pi_lambda _ (fun i => measurable_const.add (measurable_pi_apply i))
+  have hshift : ∀ x : Fin n → ℝ, Measurable (fun z : Fin n → ℝ ↦ fun i ↦ x i + z i) := by
+    intro x; exact measurable_pi_lambda _ (fun i ↦ measurable_const.add (measurable_pi_apply i))
   have hchanB : ∀ x : Fin n → ℝ,
-      (Measure.pi (fun i => awgnChannel N h_meas (x i))) B
-        = (Measure.pi (fun _ : Fin n => gaussianReal 0 N))
-            ((fun z : Fin n → ℝ => fun i => x i + z i) ⁻¹' B) := by
+      (Measure.pi (fun i ↦ awgnChannel N h_meas (x i))) B
+        = (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 N))
+            ((fun z : Fin n → ℝ ↦ fun i ↦ x i + z i) ⁻¹' B) := by
     intro x
     rw [measurePi_awgnChannel_eq_pi_gaussianReal_map_add N h_meas x,
       Measure.map_apply (hshift x) hB]
   -- integrate over `x`, fold into the prod, then push by `Σ`.
   rw [lintegral_congr hchanB]
   have hsum_meas : Measurable
-      (fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i) :=
-    measurable_pi_lambda _ (fun i =>
+      (fun p : (Fin n → ℝ) × (Fin n → ℝ) ↦ fun i ↦ p.1 i + p.2 i) :=
+    measurable_pi_lambda _ (fun i ↦
       ((measurable_pi_apply i).comp measurable_fst).add
         ((measurable_pi_apply i).comp measurable_snd))
   have hsec_eq : ∀ x : Fin n → ℝ,
-      (fun z : Fin n → ℝ => fun i => x i + z i) ⁻¹' B
-        = Prod.mk x ⁻¹' ((fun p : (Fin n → ℝ) × (Fin n → ℝ) => fun i => p.1 i + p.2 i) ⁻¹' B) := by
+      (fun z : Fin n → ℝ ↦ fun i ↦ x i + z i) ⁻¹' B
+        = Prod.mk x ⁻¹' ((fun p : (Fin n → ℝ) × (Fin n → ℝ) ↦ fun i ↦ p.1 i + p.2 i) ⁻¹' B) := by
     intro x; rfl
-  rw [lintegral_congr (fun x => by rw [hsec_eq x]),
+  rw [lintegral_congr (fun x ↦ by rw [hsec_eq x]),
     ← Measure.prod_apply (hsum_meas hB),
     ← Measure.map_apply hsum_meas hB,
     map_add_prod_pi_gaussianReal_eq_pi_gaussianReal v N]
@@ -473,29 +473,29 @@ theorem awgn_unionBound_trueCodeword_term_le
     (m : Fin M) {ε : ℝ} (hε : 0 < ε)
     (A : Set ((Fin n → ℝ) × (Fin n → ℝ))) (hA_meas : MeasurableSet A)
     (hA_mass :
-      (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-            (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
-          (fun p : (Fin n → ℝ) × (Fin n → ℝ) =>
-              (p.1, fun i => p.1 i + p.2 i))) A
+      (((Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P.toNNReal)).prod
+            (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 N))).map
+          (fun p : (Fin n → ℝ) × (Fin n → ℝ) ↦
+              (p.1, fun i ↦ p.1 i + p.2 i))) A
         ≥ ENNReal.ofReal (1 - ε)) :
     ∫⁻ codebook : Fin M → Fin n → ℝ,
-        (Measure.pi (fun i => awgnChannel N h_meas (codebook m i)))
+        (Measure.pi (fun i ↦ awgnChannel N h_meas (codebook m i)))
           {y | (codebook m, y) ∉ A}
       ∂(gaussianCodebook M n P.toNNReal)
         ≤ ENNReal.ofReal ε := by
   classical
   set J : Measure ((Fin n → ℝ) × (Fin n → ℝ)) :=
-    ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-        (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
-      (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i)) with hJ_def
+    ((Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P.toNNReal)).prod
+        (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 N))).map
+      (fun p : (Fin n → ℝ) × (Fin n → ℝ) ↦ (p.1, fun i ↦ p.1 i + p.2 i)) with hJ_def
   -- Single-codeword integrand.
-  set f1 : (Fin n → ℝ) → ℝ≥0∞ := fun x =>
-    (Measure.pi (fun i => awgnChannel N h_meas (x i))) {y | (x, y) ∉ A} with hf1_def
+  set f1 : (Fin n → ℝ) → ℝ≥0∞ := fun x ↦
+    (Measure.pi (fun i ↦ awgnChannel N h_meas (x i))) {y | (x, y) ∉ A} with hf1_def
   -- The codebook integrand equals `f1` precomposed with the `m`-th projection.
-  have hpt : (fun codebook : Fin M → Fin n → ℝ =>
-      (Measure.pi (fun i => awgnChannel N h_meas (codebook m i)))
+  have hpt : (fun codebook : Fin M → Fin n → ℝ ↦
+      (Measure.pi (fun i ↦ awgnChannel N h_meas (codebook m i)))
         {y | (codebook m, y) ∉ A})
-      = (fun codebook : Fin M → Fin n → ℝ => f1 (codebook m)) := rfl
+      = (fun codebook : Fin M → Fin n → ℝ ↦ f1 (codebook m)) := rfl
   -- `f1` is measurable: same kernel section as `hAE_E1`.
   have hf1_meas : Measurable f1 := by
     set T1 : Set ((Fin n → ℝ) × (Fin n → ℝ)) := {p | (p.1, p.2) ∉ A} with hT1_def
@@ -504,25 +504,25 @@ theorem awgn_unionBound_trueCodeword_term_le
         ext p; simp
       rw [hT1_def, this]; exact hA_meas.compl
     -- Package `x ↦ Measure.pi (awgnChannel · (x i))` as a kernel (m := default).
-    have hker : Measurable (fun x : Fin n → ℝ =>
-        (Measure.pi (fun i => awgnChannel N h_meas (x i))) {y | (x, y) ∉ A}) := by
-      have hk : Measurable (fun x : Fin n → ℝ =>
-          (Measure.pi (fun i => awgnChannel N h_meas (x i)) :
+    have hker : Measurable (fun x : Fin n → ℝ ↦
+        (Measure.pi (fun i ↦ awgnChannel N h_meas (x i))) {y | (x, y) ∉ A}) := by
+      have hk : Measurable (fun x : Fin n → ℝ ↦
+          (Measure.pi (fun i ↦ awgnChannel N h_meas (x i)) :
             Measure (Fin n → ℝ))) :=
         measurable_measurePi_awgnChannel N h_meas
       -- Bundle as a Markov kernel and pull back the joint set via prodMk.
       let K : Kernel (Fin n → ℝ) (Fin n → ℝ) :=
-        { toFun := fun x => Measure.pi (fun i => awgnChannel N h_meas (x i))
+        { toFun := fun x ↦ Measure.pi (fun i ↦ awgnChannel N h_meas (x i))
           measurable' := hk }
       haveI : IsMarkovKernel K := by
-        refine ⟨fun x => ?_⟩
-        show IsProbabilityMeasure (Measure.pi (fun i => awgnChannel N h_meas (x i)))
+        refine ⟨fun x ↦ ?_⟩
+        show IsProbabilityMeasure (Measure.pi (fun i ↦ awgnChannel N h_meas (x i)))
         haveI : IsMarkovKernel (awgnChannel N h_meas) :=
           awgnChannel.instIsMarkovKernel N h_meas
         infer_instance
-      have hEqK : (fun x : Fin n → ℝ =>
-            (Measure.pi (fun i => awgnChannel N h_meas (x i))) {y | (x, y) ∉ A})
-          = (fun x : Fin n → ℝ => K x (Prod.mk x ⁻¹' T1)) := by
+      have hEqK : (fun x : Fin n → ℝ ↦
+            (Measure.pi (fun i ↦ awgnChannel N h_meas (x i))) {y | (x, y) ∉ A})
+          = (fun x : Fin n → ℝ ↦ K x (Prod.mk x ⁻¹' T1)) := by
         funext x; rfl
       rw [hEqK]
       exact Kernel.measurable_kernel_prodMk_left hT1_meas
@@ -532,17 +532,17 @@ theorem awgn_unionBound_trueCodeword_term_le
     gaussianCodebook_codeword_law M n P.toNNReal m]
   -- Remaining: the joint marginal identity `∫ f1 dμX = J Aᶜ ≤ ε`.
   -- ── Abbreviations for the marginals and the joint map `Φ`. ──
-  set μX : Measure (Fin n → ℝ) := Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)
+  set μX : Measure (Fin n → ℝ) := Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P.toNNReal)
     with hμX_def
-  set μZ : Measure (Fin n → ℝ) := Measure.pi (fun _ : Fin n => gaussianReal 0 N)
+  set μZ : Measure (Fin n → ℝ) := Measure.pi (fun _ : Fin n ↦ gaussianReal 0 N)
     with hμZ_def
   set Φ : (Fin n → ℝ) × (Fin n → ℝ) → (Fin n → ℝ) × (Fin n → ℝ) :=
-    fun p => (p.1, fun i => p.1 i + p.2 i) with hΦ_def
+    fun p ↦ (p.1, fun i ↦ p.1 i + p.2 i) with hΦ_def
   -- `Φ` is measurable.
   have hΦ_meas : Measurable Φ := by
     rw [hΦ_def]
     refine Measurable.prodMk measurable_fst ?_
-    refine measurable_pi_lambda _ (fun i => ?_)
+    refine measurable_pi_lambda _ (fun i ↦ ?_)
     exact ((measurable_pi_apply i).comp measurable_fst).add
       ((measurable_pi_apply i).comp measurable_snd)
   -- The section set `{y | (x, y) ∉ A} = Prod.mk x ⁻¹' Aᶜ`.
@@ -552,8 +552,8 @@ theorem awgn_unionBound_trueCodeword_term_le
     simp [Set.mem_preimage, Set.mem_compl_iff]
   -- Per-vector channel collapse: `Measure.pi (awgnChannel · (x i)) = μZ.map (x + ·)`.
   have hchan : ∀ x : Fin n → ℝ,
-      Measure.pi (fun i => awgnChannel N h_meas (x i))
-        = μZ.map (fun z i => x i + z i) := by
+      Measure.pi (fun i ↦ awgnChannel N h_meas (x i))
+        = μZ.map (fun z i ↦ x i + z i) := by
     intro x
     rw [hμZ_def]
     exact measurePi_awgnChannel_eq_pi_gaussianReal_map_add N h_meas x
@@ -561,11 +561,11 @@ theorem awgn_unionBound_trueCodeword_term_le
   have hf1_eq : ∀ x : Fin n → ℝ,
       f1 x = μZ (Prod.mk x ⁻¹' (Φ ⁻¹' Aᶜ)) := by
     intro x
-    show (Measure.pi (fun i => awgnChannel N h_meas (x i))) {y | (x, y) ∉ A}
+    show (Measure.pi (fun i ↦ awgnChannel N h_meas (x i))) {y | (x, y) ∉ A}
       = μZ (Prod.mk x ⁻¹' (Φ ⁻¹' Aᶜ))
     rw [hsec x, hchan x]
-    have hshift : Measurable (fun z : Fin n → ℝ => fun i => x i + z i) := by
-      refine measurable_pi_lambda _ (fun i => ?_)
+    have hshift : Measurable (fun z : Fin n → ℝ ↦ fun i ↦ x i + z i) := by
+      refine measurable_pi_lambda _ (fun i ↦ ?_)
       exact (measurable_const).add ((measurable_pi_apply i))
     rw [Measure.map_apply hshift (hA_meas.compl.preimage measurable_prodMk_left)]
     -- Section sets coincide.
@@ -596,52 +596,52 @@ theorem awgn_unionBound_aliasCodeword_sum_eq
     (m : Fin M) (A : Set ((Fin n → ℝ) × (Fin n → ℝ))) (hA_meas : MeasurableSet A) :
     ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
         ∫⁻ codebook : Fin M → Fin n → ℝ,
-          (Measure.pi (fun i => awgnChannel N h_meas (codebook m i)))
+          (Measure.pi (fun i ↦ awgnChannel N h_meas (codebook m i)))
             {y | (codebook m', y) ∈ A}
         ∂(gaussianCodebook M n P.toNNReal)
       = (M - 1) •
-        ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-            (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N)))) A := by
+        ((Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P.toNNReal)).prod
+            (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 (P.toNNReal + N)))) A := by
   classical
   set Q : Measure ((Fin n → ℝ) × (Fin n → ℝ)) :=
-    (Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-        (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))) with hQ_def
+    (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P.toNNReal)).prod
+        (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 (P.toNNReal + N))) with hQ_def
   -- per-letter marginals
   set μXn : Measure (Fin n → ℝ) :=
-    Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal) with hμXn_def
+    Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P.toNNReal) with hμXn_def
   set μYn : Measure (Fin n → ℝ) :=
-    Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N)) with hμYn_def
+    Measure.pi (fun _ : Fin n ↦ gaussianReal 0 (P.toNNReal + N)) with hμYn_def
   haveI : IsProbabilityMeasure μXn := by rw [hμXn_def]; infer_instance
   haveI : IsProbabilityMeasure μYn := by rw [hμYn_def]; infer_instance
   -- ── Step O (output-marginal identity): for any measurable `B`,
   -- `∫⁻ x, (channel x) B ∂μXn = μYn B` (the n-fold law of `X + Z`). ──
   have houtput : ∀ B : Set (Fin n → ℝ), MeasurableSet B →
-      (∫⁻ x, (Measure.pi (fun i => awgnChannel N h_meas (x i))) B ∂μXn) = μYn B := by
+      (∫⁻ x, (Measure.pi (fun i ↦ awgnChannel N h_meas (x i))) B ∂μXn) = μYn B := by
     intro B hB
     rw [hμXn_def, hμYn_def]
     exact lintegral_measurePi_awgnChannel_eq_pi_gaussianReal N P.toNNReal h_meas B hB
   -- ── Step A (2-coordinate collapse): each summand `= Q A`. ──
   have hsummand : ∀ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
-      (∫⁻ codebook, (Measure.pi (fun i => awgnChannel N h_meas (codebook m i)))
+      (∫⁻ codebook, (Measure.pi (fun i ↦ awgnChannel N h_meas (codebook m i)))
           {y | (codebook m', y) ∈ A}
           ∂(gaussianCodebook M n P.toNNReal)) = Q A := by
     intro m' hm'
     have hm'_ne : m' ≠ m := (Finset.mem_erase.mp hm').1
     -- The channel kernel `K x = Measure.pi (awgnChannel·(x i))`.
-    have hk : Measurable (fun x : Fin n → ℝ =>
-        (Measure.pi (fun i => awgnChannel N h_meas (x i)) : Measure (Fin n → ℝ))) :=
+    have hk : Measurable (fun x : Fin n → ℝ ↦
+        (Measure.pi (fun i ↦ awgnChannel N h_meas (x i)) : Measure (Fin n → ℝ))) :=
       measurable_measurePi_awgnChannel N h_meas
     let K : Kernel (Fin n → ℝ) (Fin n → ℝ) :=
-      { toFun := fun x => Measure.pi (fun i => awgnChannel N h_meas (x i))
+      { toFun := fun x ↦ Measure.pi (fun i ↦ awgnChannel N h_meas (x i))
         measurable' := hk }
     haveI hKmarkov : IsMarkovKernel K := by
-      refine ⟨fun x => ?_⟩
-      show IsProbabilityMeasure (Measure.pi (fun i => awgnChannel N h_meas (x i)))
+      refine ⟨fun x ↦ ?_⟩
+      show IsProbabilityMeasure (Measure.pi (fun i ↦ awgnChannel N h_meas (x i)))
       haveI : IsMarkovKernel (awgnChannel N h_meas) := awgnChannel.instIsMarkovKernel N h_meas
       infer_instance
     -- 2-coordinate integrand `g2 p = (chan p.1) {y | (p.2, y) ∈ A}`.
-    set g2 : (Fin n → ℝ) × (Fin n → ℝ) → ℝ≥0∞ := fun p =>
-      (Measure.pi (fun i => awgnChannel N h_meas (p.1 i))) {y | (p.2, y) ∈ A} with hg2_def
+    set g2 : (Fin n → ℝ) × (Fin n → ℝ) → ℝ≥0∞ := fun p ↦
+      (Measure.pi (fun i ↦ awgnChannel N h_meas (p.1 i))) {y | (p.2, y) ∈ A} with hg2_def
     -- the joint section `T = {q | (q.1.2, q.2) ∈ A}` on `((x,x'), y)`.
     let K' : Kernel ((Fin n → ℝ) × (Fin n → ℝ)) (Fin n → ℝ) :=
       K.comap Prod.fst measurable_fst
@@ -650,28 +650,28 @@ theorem awgn_unionBound_aliasCodeword_sum_eq
         {q | (q.1.2, q.2) ∈ A} with hT_def
       have hT_meas : MeasurableSet T := by
         have hpair : Measurable
-            (fun q : ((Fin n → ℝ) × (Fin n → ℝ)) × (Fin n → ℝ) => (q.1.2, q.2)) :=
+            (fun q : ((Fin n → ℝ) × (Fin n → ℝ)) × (Fin n → ℝ) ↦ (q.1.2, q.2)) :=
           (measurable_snd.comp measurable_fst).prodMk measurable_snd
         exact hpair hA_meas
       -- `g2 p = K' p (Prod.mk p ⁻¹' T)`.
-      have hEq : g2 = (fun p : (Fin n → ℝ) × (Fin n → ℝ) =>
+      have hEq : g2 = (fun p : (Fin n → ℝ) × (Fin n → ℝ) ↦
           K' p (Prod.mk p ⁻¹' T)) := by
         funext p; rfl
       rw [hEq]
       exact Kernel.measurable_kernel_prodMk_left hT_meas
     -- Step 3: push `gaussianCodebook` forward by `c ↦ (c m, c m')` = `μXn.prod μXn`.
     have hmap2 : (gaussianCodebook M n P.toNNReal).map
-        (fun c : Fin M → Fin n → ℝ => (c m, c m')) = μXn.prod μXn := by
+        (fun c : Fin M → Fin n → ℝ ↦ (c m, c m')) = μXn.prod μXn := by
       have hindep := gaussianCodebook_indepFun_codewords M n P.toNNReal hm'_ne.symm
-      have haem_m : AEMeasurable (fun c : Fin M → Fin n → ℝ => c m)
+      have haem_m : AEMeasurable (fun c : Fin M → Fin n → ℝ ↦ c m)
           (gaussianCodebook M n P.toNNReal) := (measurable_pi_apply m).aemeasurable
-      have haem_m' : AEMeasurable (fun c : Fin M → Fin n → ℝ => c m')
+      have haem_m' : AEMeasurable (fun c : Fin M → Fin n → ℝ ↦ c m')
           (gaussianCodebook M n P.toNNReal) := (measurable_pi_apply m').aemeasurable
       rw [(indepFun_iff_map_prod_eq_prod_map_map haem_m haem_m').mp hindep,
         gaussianCodebook_codeword_law M n P.toNNReal m,
         gaussianCodebook_codeword_law M n P.toNNReal m', hμXn_def]
     -- Step 4: collapse the codebook integral to the 2-coordinate marginal.
-    have hcollapse : (∫⁻ codebook, (Measure.pi (fun i => awgnChannel N h_meas (codebook m i)))
+    have hcollapse : (∫⁻ codebook, (Measure.pi (fun i ↦ awgnChannel N h_meas (codebook m i)))
           {y | (codebook m', y) ∈ A}
           ∂(gaussianCodebook M n P.toNNReal))
         = ∫⁻ p, g2 p ∂(μXn.prod μXn) := by
@@ -705,44 +705,44 @@ theorem awgn_unionBound_aliasMass_decay
     (hn : Nat.ceil (Real.log (2 / ε) /
             ((1/2) * Real.log (1 + P / (N : ℝ)) - R - 3 * δ)) ≤ n)
     (hA_indep :
-      ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-          (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N)))) A
+      ((Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P.toNNReal)).prod
+          (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 (P.toNNReal + N)))) A
         ≤ ENNReal.ofReal (Real.exp (-(
             (klDiv
-                (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-                    (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
-                  (fun p : (Fin n → ℝ) × (Fin n → ℝ) =>
-                      (p.1, fun i => p.1 i + p.2 i)))
-                ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-                  (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))))).toReal
+                (((Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P.toNNReal)).prod
+                    (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 N))).map
+                  (fun p : (Fin n → ℝ) × (Fin n → ℝ) ↦
+                      (p.1, fun i ↦ p.1 i + p.2 i)))
+                ((Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P.toNNReal)).prod
+                  (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 (P.toNNReal + N))))).toReal
               - (n : ℝ) * (3 * δ))))) :
     (M - 1) •
-        ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-            (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N)))) A
+        ((Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P.toNNReal)).prod
+            (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 (P.toNNReal + N)))) A
       ≤ ENNReal.ofReal ε := by
   classical
   set g : ℝ := (1/2) * Real.log (1 + P / (N : ℝ)) - R - 3 * δ with hg_def
   set J : Measure ((Fin n → ℝ) × (Fin n → ℝ)) :=
-    ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-        (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
-      (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i)) with hJ_def
+    ((Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P.toNNReal)).prod
+        (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 N))).map
+      (fun p : (Fin n → ℝ) × (Fin n → ℝ) ↦ (p.1, fun i ↦ p.1 i + p.2 i)) with hJ_def
   set Q : Measure ((Fin n → ℝ) × (Fin n → ℝ)) :=
-    (Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-        (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))) with hQ_def
+    (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P.toNNReal)).prod
+        (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 (P.toNNReal + N))) with hQ_def
   -- ── Step C (decay): `(M − 1) • Q A ≤ ofReal ε`. ──
   -- First, the nondegeneracy `(N : ℝ) ≠ 0` (else `1 + P/N = 1`, `log 1 = 0 < R + 3δ`).
   have hN_ne : (N : ℝ) ≠ 0 := by
     intro hN0
     rw [hN0, div_zero, add_zero, Real.log_one, mul_zero] at hslack
     linarith
-  have hN_pos : (0 : ℝ) < N := lt_of_le_of_ne N.coe_nonneg (fun h => hN_ne h.symm)
+  have hN_pos : (0 : ℝ) < N := lt_of_le_of_ne N.coe_nonneg (fun h ↦ hN_ne h.symm)
   -- The per-letter capacity `I = (1/2)log(1+P/N)`, which `hslack` lower-bounds.
   by_cases hPN_nonneg : 0 ≤ 1 + P / (N : ℝ)
   · have hP_pos : 0 < P := hP
     -- bridges: `klDiv_n.toReal = n · klDiv(J₁,Q₁).toReal = n · I`.
     have hI : (klDiv
           (((gaussianReal 0 P.toNNReal).prod (gaussianReal 0 N)).map
-              (fun p : ℝ × ℝ => (p.1, p.1 + p.2)))
+              (fun p : ℝ × ℝ ↦ (p.1, p.1 + p.2)))
           ((gaussianReal 0 P.toNNReal).prod
             (gaussianReal 0 (P.toNNReal + N)))).toReal
         = (1/2) * Real.log (1 + P / (N : ℝ)) :=
@@ -841,26 +841,26 @@ theorem awgn_random_coding_union_bound
     ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n → ∀ ⦃M : ℕ⦄ (hM_pos : 0 < M),
       M ≤ Nat.ceil (Real.exp ((n : ℝ) * R)) →
       ∀ (A : Set ((Fin n → ℝ) × (Fin n → ℝ))), MeasurableSet A →
-        (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-              (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
-            (fun p : (Fin n → ℝ) × (Fin n → ℝ) =>
-                (p.1, fun i => p.1 i + p.2 i))) A
+        (((Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P.toNNReal)).prod
+              (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 N))).map
+            (fun p : (Fin n → ℝ) × (Fin n → ℝ) ↦
+                (p.1, fun i ↦ p.1 i + p.2 i))) A
           ≥ ENNReal.ofReal (1 - ε) →
-        ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-            (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N)))) A
+        ((Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P.toNNReal)).prod
+            (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 (P.toNNReal + N)))) A
           ≤ ENNReal.ofReal (Real.exp (-(
               (klDiv
-                  (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-                      (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
-                    (fun p : (Fin n → ℝ) × (Fin n → ℝ) =>
-                        (p.1, fun i => p.1 i + p.2 i)))
-                  ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-                    (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))))).toReal
+                  (((Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P.toNNReal)).prod
+                      (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 N))).map
+                    (fun p : (Fin n → ℝ) × (Fin n → ℝ) ↦
+                        (p.1, fun i ↦ p.1 i + p.2 i)))
+                  ((Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P.toNNReal)).prod
+                    (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 (P.toNNReal + N))))).toReal
                 - (n : ℝ) * (3 * δ)))) →
         haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
         ∀ m : Fin M,
           ∫⁻ codebook : Fin M → Fin n → ℝ,
-            ((Measure.pi (fun i => awgnChannel N h_meas (codebook m i)))
+            ((Measure.pi (fun i ↦ awgnChannel N h_meas (codebook m i)))
               ((InformationTheory.Shannon.ChannelCoding.Code.mk
                   (M := M) (n := n) (α := ℝ) (β := ℝ)
                   codebook (jointTypicalDecoder A codebook)).errorEvent m))
@@ -879,22 +879,22 @@ theorem awgn_random_coding_union_bound
   intro m
   -- Abbreviations for the joint law `J` and the product law `Q` (verbatim Walls).
   set J : Measure ((Fin n → ℝ) × (Fin n → ℝ)) :=
-    ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-        (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
-      (fun p : (Fin n → ℝ) × (Fin n → ℝ) => (p.1, fun i => p.1 i + p.2 i)) with hJ_def
+    ((Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P.toNNReal)).prod
+        (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 N))).map
+      (fun p : (Fin n → ℝ) × (Fin n → ℝ) ↦ (p.1, fun i ↦ p.1 i + p.2 i)) with hJ_def
   set Q : Measure ((Fin n → ℝ) × (Fin n → ℝ)) :=
-    (Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-        (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))) with hQ_def
+    (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P.toNNReal)).prod
+        (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 (P.toNNReal + N))) with hQ_def
   -- The channel-output measure for codeword `codebook m`.
-  set Wch : (Fin M → Fin n → ℝ) → Measure (Fin n → ℝ) := fun codebook =>
-    Measure.pi (fun i => awgnChannel N h_meas (codebook m i)) with hWch_def
+  set Wch : (Fin M → Fin n → ℝ) → Measure (Fin n → ℝ) := fun codebook ↦
+    Measure.pi (fun i ↦ awgnChannel N h_meas (codebook m i)) with hWch_def
   haveI hWch_prob : ∀ codebook, IsProbabilityMeasure (Wch codebook) := by
     intro codebook; rw [hWch_def]; infer_instance
   -- The (E1) "true codeword not typical" set and the (E2) "alias codeword
   -- typical" sets, as functions of the codebook.
-  set E1 : (Fin M → Fin n → ℝ) → Set (Fin n → ℝ) := fun codebook =>
+  set E1 : (Fin M → Fin n → ℝ) → Set (Fin n → ℝ) := fun codebook ↦
     {y | (codebook m, y) ∉ A} with hE1_def
-  set E2 : (Fin M → Fin n → ℝ) → Fin M → Set (Fin n → ℝ) := fun codebook m' =>
+  set E2 : (Fin M → Fin n → ℝ) → Fin M → Set (Fin n → ℝ) := fun codebook m' ↦
     {y | (codebook m', y) ∈ A} with hE2_def
   -- ── Atom 1: error-event set inclusion (from the decoder definition). ──
   -- `errorEvent m ⊆ E1 ∪ ⋃_{m' ≠ m} E2 m'`.
@@ -921,7 +921,7 @@ theorem awgn_random_coding_union_bound
         unfold jointTypicalDecoder
         rw [dif_pos hex]
       -- The found index is typical and (being ≠ m) gives the `E2` witness.
-      set m' := Fin.find (fun k : Fin M => (codebook k, y) ∈ A) hex with hm'_def
+      set m' := Fin.find (fun k : Fin M ↦ (codebook k, y) ∈ A) hex with hm'_def
       have hm'_mem : (codebook m', y) ∈ A := by
         have := (Fin.find_eq_iff (i := m') hex).mp rfl
         exact this.1
@@ -961,25 +961,25 @@ theorem awgn_random_coding_union_bound
   -- section `(c, y) ↦ (c k, y)` pulled back through `Kernel.measurable_kernel_prodMk_left`
   -- (the same machinery already used in `isAwgnTypicalityHypothesis`, lines 998-1028).
   have hAE_E1 : AEMeasurable
-      (fun codebook : Fin M → Fin n → ℝ => (Wch codebook) (E1 codebook))
+      (fun codebook : Fin M → Fin n → ℝ ↦ (Wch codebook) (E1 codebook))
       (gaussianCodebook M n P.toNNReal) := by
     refine Measurable.aemeasurable ?_
     set T1 : Set ((Fin M → Fin n → ℝ) × (Fin n → ℝ)) :=
       {p | (p.1 m, p.2) ∉ A} with hT1_def
     have hT1_meas : MeasurableSet T1 := by
       have h_pair : Measurable
-          (fun p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) => (p.1 m, p.2)) :=
+          (fun p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) ↦ (p.1 m, p.2)) :=
         ((measurable_pi_apply m).comp measurable_fst).prodMk measurable_snd
       exact (h_pair hA_meas).compl
-    have hEq : (fun codebook : Fin M → Fin n → ℝ => (Wch codebook) (E1 codebook))
-        = (fun codebook : Fin M → Fin n → ℝ =>
+    have hEq : (fun codebook : Fin M → Fin n → ℝ ↦ (Wch codebook) (E1 codebook))
+        = (fun codebook : Fin M → Fin n → ℝ ↦
             awgnCodebookKernel N h_meas m codebook (Prod.mk codebook ⁻¹' T1)) := by
       funext codebook
       rfl
     rw [hEq]
     exact Kernel.measurable_kernel_prodMk_left hT1_meas
   have hAE_E2 : ∀ m', AEMeasurable
-      (fun codebook : Fin M → Fin n → ℝ => (Wch codebook) (E2 codebook m'))
+      (fun codebook : Fin M → Fin n → ℝ ↦ (Wch codebook) (E2 codebook m'))
       (gaussianCodebook M n P.toNNReal) := by
     intro m'
     refine Measurable.aemeasurable ?_
@@ -987,11 +987,11 @@ theorem awgn_random_coding_union_bound
       {p | (p.1 m', p.2) ∈ A} with hT2_def
     have hT2_meas : MeasurableSet T2 := by
       have h_pair : Measurable
-          (fun p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) => (p.1 m', p.2)) :=
+          (fun p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) ↦ (p.1 m', p.2)) :=
         ((measurable_pi_apply m').comp measurable_fst).prodMk measurable_snd
       exact h_pair hA_meas
-    have hEq : (fun codebook : Fin M → Fin n → ℝ => (Wch codebook) (E2 codebook m'))
-        = (fun codebook : Fin M → Fin n → ℝ =>
+    have hEq : (fun codebook : Fin M → Fin n → ℝ ↦ (Wch codebook) (E2 codebook m'))
+        = (fun codebook : Fin M → Fin n → ℝ ↦
             awgnCodebookKernel N h_meas m codebook (Prod.mk codebook ⁻¹' T2)) := by
       funext codebook
       rfl
@@ -1014,7 +1014,7 @@ theorem awgn_random_coding_union_bound
             + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
                 (Wch codebook) (E2 codebook m'))
           ∂(gaussianCodebook M n P.toNNReal) :=
-          lintegral_mono (fun codebook => h_ptwise codebook)
+          lintegral_mono (fun codebook ↦ h_ptwise codebook)
       _ = (∫⁻ codebook, (Wch codebook) (E1 codebook)
             ∂(gaussianCodebook M n P.toNNReal))
           + ∫⁻ codebook, (∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
@@ -1027,7 +1027,7 @@ theorem awgn_random_coding_union_bound
               ∫⁻ codebook, (Wch codebook) (E2 codebook m')
                 ∂(gaussianCodebook M n P.toNNReal) := by
           congr 1
-          rw [lintegral_finsetSum' _ (fun m' _ => hAE_E2 m')]
+          rw [lintegral_finsetSum' _ (fun m' _ ↦ hAE_E2 m')]
   -- ── Atom 2: first term = `J Aᶜ ≤ ε` (joint marginal identity + hA_mass). ──
   -- Reduction (genuine): the integrand depends only on the `m`-th codeword, so the
   -- codebook integral collapses to a single-codeword integral against the codeword
@@ -1090,7 +1090,7 @@ theorem awgn_avg_error_union_bound
         haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
         ∀ m : Fin M,
           ∫⁻ codebook : Fin M → Fin n → ℝ,
-            ((Measure.pi (fun i => awgnChannel N h_meas (codebook m i)))
+            ((Measure.pi (fun i ↦ awgnChannel N h_meas (codebook m i)))
               ((InformationTheory.Shannon.ChannelCoding.Code.mk
                   (M := M) (n := n) (α := ℝ) (β := ℝ)
                   codebook (jointTypicalDecoder A codebook)).errorEvent m))

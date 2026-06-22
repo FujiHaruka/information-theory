@@ -66,16 +66,16 @@ private lemma map_absolutelyContinuous_uniformOn_univ
     (μ : Measure Ω) (X : Ω → α) :
     (μ.map X) ≪ uniformOn (Set.univ : Set α) := by
   classical
-  refine Measure.AbsolutelyContinuous.mk fun A hA hA0 => ?_
+  refine Measure.AbsolutelyContinuous.mk fun A hA hA0 ↦ ?_
   -- decompose A = ⋃ x ∈ univ.filter (· ∈ A), {x}
-  set s : Finset α := Finset.univ.filter (fun x => x ∈ A)
+  set s : Finset α := Finset.univ.filter (fun x ↦ x ∈ A)
   have hA_decomp : A = ⋃ x ∈ s, ({x} : Set α) := by
     ext z
     simp [s]
   have h_meas : ∀ x ∈ s, MeasurableSet ({x} : Set α) :=
-    fun x _ => measurableSet_singleton x
-  have h_pwd : Set.PairwiseDisjoint (↑s) (fun x : α => ({x} : Set α)) :=
-    fun a _ b _ hne => Set.disjoint_singleton.mpr hne
+    fun x _ ↦ measurableSet_singleton x
+  have h_pwd : Set.PairwiseDisjoint (↑s) (fun x : α ↦ ({x} : Set α)) :=
+    fun a _ b _ hne ↦ Set.disjoint_singleton.mpr hne
   -- U A = 0 ⟹ s = ∅ (each singleton has positive mass)
   have hU_each_pos : ∀ x : α,
       (uniformOn (Set.univ : Set α)) ({x} : Set α) ≠ 0 := by
@@ -113,7 +113,7 @@ private lemma klDiv_map_uniformOn_univ_ne_top
   have h_int : Integrable (llr (μ.map X) (uniformOn (Set.univ : Set α))) (μ.map X) := by
     refine ⟨(measurable_llr _ _).aestronglyMeasurable, ?_⟩
     rw [hasFiniteIntegral_iff_enorm, lintegral_fintype]
-    exact ENNReal.sum_lt_top.mpr fun _ _ =>
+    exact ENNReal.sum_lt_top.mpr fun _ _ ↦
       ENNReal.mul_lt_top ENNReal.coe_lt_top (measure_lt_top _ _)
   exact klDiv_ne_top hac h_int
 
@@ -155,7 +155,7 @@ theorem klDiv_uniformOn_univ_toReal_eq
   have h_int : Integrable (llr P U) P := by
     refine ⟨(measurable_llr _ _).aestronglyMeasurable, ?_⟩
     rw [hasFiniteIntegral_iff_enorm, lintegral_fintype]
-    exact ENNReal.sum_lt_top.mpr fun _ _ =>
+    exact ENNReal.sum_lt_top.mpr fun _ _ ↦
       ENNReal.mul_lt_top ENNReal.coe_lt_top (measure_lt_top _ _)
   rw [integral_fintype h_int]
   -- ∑ x, P.real {x} • llr P U x
@@ -248,14 +248,14 @@ theorem entropy_le_log_card
     rw [show ((Finset.univ : Finset α) : Set α) = Set.univ from Finset.coe_univ]
     simp [measureReal_def, measure_univ]
   -- finite-sum Jensen: uniform weights 1/N, each point P.real {x} ∈ Ici 0
-  have hw0 : ∀ i ∈ (Finset.univ : Finset α), (0 : ℝ) ≤ 1 / N := fun _ _ => by positivity
+  have hw0 : ∀ i ∈ (Finset.univ : Finset α), (0 : ℝ) ≤ 1 / N := fun _ _ ↦ by positivity
   have hw1 : ∑ _i ∈ (Finset.univ : Finset α), (1 : ℝ) / N = 1 := by
     rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, mul_one_div, div_self hN_ne_R]
   have hmem : ∀ i ∈ (Finset.univ : Finset α), P.real {i} ∈ Set.Ici (0 : ℝ) :=
-    fun _ _ => Set.mem_Ici.mpr measureReal_nonneg
+    fun _ _ ↦ Set.mem_Ici.mpr measureReal_nonneg
   have hJ := Real.concaveOn_negMulLog.le_map_sum
-      (t := (Finset.univ : Finset α)) (w := fun _ => (1 : ℝ) / N)
-      (p := fun i => P.real {i}) hw0 hw1 hmem
+      (t := (Finset.univ : Finset α)) (w := fun _ ↦ (1 : ℝ) / N)
+      (p := fun i ↦ P.real {i}) hw0 hw1 hmem
   simp only [smul_eq_mul] at hJ
   rw [← Finset.mul_sum, ← Finset.mul_sum, h_sum_one, mul_one, ← hent] at hJ
   -- hJ : (1 / N) * entropy μ X ≤ negMulLog (1 / N)
@@ -288,15 +288,15 @@ theorem entropy_eq_log_card_iff
         sum_measureReal_singleton]
     rw [show ((Finset.univ : Finset α) : Set α) = Set.univ from Finset.coe_univ]
     simp [measureReal_def, measure_univ]
-  have hw0 : ∀ i ∈ (Finset.univ : Finset α), (0 : ℝ) < 1 / N := fun _ _ => by positivity
+  have hw0 : ∀ i ∈ (Finset.univ : Finset α), (0 : ℝ) < 1 / N := fun _ _ ↦ by positivity
   have hw1 : ∑ _i ∈ (Finset.univ : Finset α), (1 : ℝ) / N = 1 := by
     rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, mul_one_div, div_self hN_ne_R]
   have hmem : ∀ i ∈ (Finset.univ : Finset α), P.real {i} ∈ Set.Ici (0 : ℝ) :=
-    fun _ _ => Set.mem_Ici.mpr measureReal_nonneg
+    fun _ _ ↦ Set.mem_Ici.mpr measureReal_nonneg
   -- strict-concave Jensen equality case (positive weights 1/N)
   have hJiff := Real.strictConcaveOn_negMulLog.map_sum_eq_iff
-      (t := (Finset.univ : Finset α)) (w := fun _ => (1 : ℝ) / N)
-      (p := fun i => P.real {i}) hw0 hw1 hmem
+      (t := (Finset.univ : Finset α)) (w := fun _ ↦ (1 : ℝ) / N)
+      (p := fun i ↦ P.real {i}) hw0 hw1 hmem
   simp only [smul_eq_mul] at hJiff
   rw [← Finset.mul_sum, ← Finset.mul_sum, h_sum_one, mul_one, ← hent] at hJiff
   have hneg : Real.negMulLog (1 / (N : ℝ)) = (1 / N) * Real.log N := by

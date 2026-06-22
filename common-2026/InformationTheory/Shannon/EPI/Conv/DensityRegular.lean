@@ -64,7 +64,7 @@ theorem deriv_gaussianPDFReal_abs_le {v : ℝ≥0} (hv : v ≠ 0) :
   set P : ℝ := (Real.sqrt (2 * Real.pi * v))⁻¹ with hP
   have hP_nn : (0:ℝ) ≤ P := by rw [hP]; positivity
   -- global bound: `|deriv g w| = (|w|/v)·P·exp(-w²/(2v)) ≤ P·(1+2v·exp(-1))/(2v²)`
-  refine ⟨P * ((1 + 2 * (v:ℝ) * Real.exp (-1)) / (2 * (v:ℝ))), fun w => ?_⟩
+  refine ⟨P * ((1 + 2 * (v:ℝ) * Real.exp (-1)) / (2 * (v:ℝ))), fun w ↦ ?_⟩
   rw [deriv_gaussianPDFReal hv w, gaussianPDFReal_def]
   -- |(-(w-0)/v)·(P·exp(-(w-0)²/(2v)))| = (|w|/v)·P·exp(-w²/(2v))
   set E : ℝ := Real.exp (-(w - 0) ^ 2 / (2 * v)) with hE
@@ -136,45 +136,45 @@ convergence with bound `pX · M`.
 theorem tendsto_convDensityAdd_gaussian_zero {pX : ℝ → ℝ} {v : ℝ≥0}
     (hv : v ≠ 0) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
     {l : Filter ℝ} [l.IsCountablyGenerated]
-    (hl : Filter.Tendsto (fun z : ℝ => z) l Filter.atTop ∨
-          Filter.Tendsto (fun z : ℝ => z) l Filter.atBot) :
+    (hl : Filter.Tendsto (fun z : ℝ ↦ z) l Filter.atTop ∨
+          Filter.Tendsto (fun z : ℝ ↦ z) l Filter.atBot) :
     Filter.Tendsto (convDensityAdd pX (gaussianPDFReal 0 v)) l (nhds 0) := by
   set g : ℝ → ℝ := gaussianPDFReal 0 v with hg
   set M : ℝ := (Real.sqrt (2 * Real.pi * v))⁻¹ with hM
   -- pointwise limit: for each `x`, `g (z - x) → 0` along `l`.
-  have hshift : ∀ x : ℝ, Filter.Tendsto (fun z : ℝ => g (z - x)) l (nhds 0) := by
+  have hshift : ∀ x : ℝ, Filter.Tendsto (fun z : ℝ ↦ g (z - x)) l (nhds 0) := by
     intro x
     rcases hl with htop | hbot
-    · have hsub : Filter.Tendsto (fun z : ℝ => z - x) l Filter.atTop :=
-        Filter.tendsto_atTop_add_const_right l (-x) htop |>.congr (fun z => by ring)
+    · have hsub : Filter.Tendsto (fun z : ℝ ↦ z - x) l Filter.atTop :=
+        Filter.tendsto_atTop_add_const_right l (-x) htop |>.congr (fun z ↦ by ring)
       exact (tendsto_gaussianPDFReal_atTop 0 hv).comp hsub
-    · have hsub : Filter.Tendsto (fun z : ℝ => z - x) l Filter.atBot :=
-        Filter.tendsto_atBot_add_const_right l (-x) hbot |>.congr (fun z => by ring)
+    · have hsub : Filter.Tendsto (fun z : ℝ ↦ z - x) l Filter.atBot :=
+        Filter.tendsto_atBot_add_const_right l (-x) hbot |>.congr (fun z ↦ by ring)
       exact (tendsto_gaussianPDFReal_atBot 0 hv).comp hsub
   -- `convDensityAdd pX g z = ∫ x, pX x * g (z - x)`; the limit is `∫ x, 0 = 0`.
-  have hconv_eq : convDensityAdd pX g = fun z => ∫ x, pX x * g (z - x) ∂volume := rfl
+  have hconv_eq : convDensityAdd pX g = fun z ↦ ∫ x, pX x * g (z - x) ∂volume := rfl
   rw [hconv_eq]
-  have hbound_int : Integrable (fun x => pX x * M) volume := hpX_int.mul_const M
-  have hF_meas : ∀ᶠ z in l, AEStronglyMeasurable (fun x => pX x * g (z - x)) volume := by
-    refine Filter.Eventually.of_forall (fun z => ?_)
+  have hbound_int : Integrable (fun x ↦ pX x * M) volume := hpX_int.mul_const M
+  have hF_meas : ∀ᶠ z in l, AEStronglyMeasurable (fun x ↦ pX x * g (z - x)) volume := by
+    refine Filter.Eventually.of_forall (fun z ↦ ?_)
     have hg_cont : Continuous g := by
       rw [hg]; exact (InformationTheory.Shannon.differentiable_gaussianPDFReal 0 v).continuous
     exact hpX_int.aestronglyMeasurable.mul
       ((hg_cont.comp (continuous_const.sub continuous_id)).aestronglyMeasurable)
   have hbound : ∀ᶠ z in l, ∀ᵐ x ∂volume, ‖pX x * g (z - x)‖ ≤ pX x * M := by
-    refine Filter.Eventually.of_forall (fun z => Filter.Eventually.of_forall (fun x => ?_))
+    refine Filter.Eventually.of_forall (fun z ↦ Filter.Eventually.of_forall (fun x ↦ ?_))
     rw [Real.norm_eq_abs, abs_mul]
     have h1 : |pX x| = pX x := abs_of_nonneg (hpX_nn x)
     have h2 : |g (z - x)| ≤ M := by rw [hg, hM]; exact gaussianPDFReal_abs_le v (z - x)
     rw [h1]
     exact mul_le_mul_of_nonneg_left h2 (hpX_nn x)
-  have hlim : ∀ᵐ x ∂volume, Filter.Tendsto (fun z => pX x * g (z - x)) l (nhds 0) := by
-    refine Filter.Eventually.of_forall (fun x => ?_)
+  have hlim : ∀ᵐ x ∂volume, Filter.Tendsto (fun z ↦ pX x * g (z - x)) l (nhds 0) := by
+    refine Filter.Eventually.of_forall (fun x ↦ ?_)
     have := (hshift x).const_mul (pX x)
     simpa using this
   have := tendsto_integral_filter_of_dominated_convergence
-    (μ := volume) (l := l) (F := fun z x => pX x * g (z - x)) (f := fun _ => (0 : ℝ))
-    (fun x => pX x * M) hF_meas hbound hbound_int hlim
+    (μ := volume) (l := l) (F := fun z x ↦ pX x * g (z - x)) (f := fun _ ↦ (0 : ℝ))
+    (fun x ↦ pX x * M) hF_meas hbound hbound_int hlim
   simpa using this
 
 /-- **A-5 precondition (1) producer.** `convDensityAdd pX g_t` is a regular V2
@@ -231,27 +231,27 @@ theorem isRegularDensityV2_convDensityAdd_gaussian (pX : ℝ → ℝ) {t : ℝ} 
     -- `∫ z, convDensityAdd pX (deriv g) z = ∫ z, ∫ x, pX x * deriv g (z - x) dx dz`
     show (∫ z, ∫ x, pX x * deriv g (z - x) ∂volume ∂volume) = 0
     -- product integrability of `(z,x) ↦ pX x * deriv g (z - x)`
-    set f : ℝ → ℝ → ℝ := fun z x => pX x * deriv g (z - x) with hf
+    set f : ℝ → ℝ → ℝ := fun z x ↦ pX x * deriv g (z - x) with hf
     have hf_meas : AEStronglyMeasurable (Function.uncurry f) (volume.prod volume) := by
-      have h1 : AEStronglyMeasurable (fun p : ℝ × ℝ => pX p.2) (volume.prod volume) :=
+      have h1 : AEStronglyMeasurable (fun p : ℝ × ℝ ↦ pX p.2) (volume.prod volume) :=
         (hpX_meas.comp measurable_snd).aestronglyMeasurable
-      have h2 : AEStronglyMeasurable (fun p : ℝ × ℝ => deriv g (p.1 - p.2))
+      have h2 : AEStronglyMeasurable (fun p : ℝ × ℝ ↦ deriv g (p.1 - p.2))
           (volume.prod volume) := by
-        have hsub : Measurable (fun p : ℝ × ℝ => p.1 - p.2) := measurable_fst.sub measurable_snd
+        have hsub : Measurable (fun p : ℝ × ℝ ↦ p.1 - p.2) := measurable_fst.sub measurable_snd
         exact (hg'_meas.comp hsub).aestronglyMeasurable
       exact h1.mul h2
     have hf_int : Integrable (Function.uncurry f) (volume.prod volume) := by
       rw [integrable_prod_iff' hf_meas]
       refine ⟨?_, ?_⟩
-      · refine Filter.Eventually.of_forall (fun z => ?_)
+      · refine Filter.Eventually.of_forall (fun z ↦ ?_)
         exact (hg'_int.comp_sub_right z).const_mul (pX z)
-      · have heq : (fun x => ∫ z, ‖Function.uncurry f (z, x)‖ ∂volume)
-            = (fun x => ‖pX x‖ * ∫ z, ‖deriv g z‖ ∂volume) := by
+      · have heq : (fun x ↦ ∫ z, ‖Function.uncurry f (z, x)‖ ∂volume)
+            = (fun x ↦ ‖pX x‖ * ∫ z, ‖deriv g z‖ ∂volume) := by
           funext x
           simp only [hf, Function.uncurry, norm_mul]
           rw [integral_const_mul]
           congr 1
-          rw [← integral_sub_right_eq_self (fun z => ‖deriv g z‖) x]
+          rw [← integral_sub_right_eq_self (fun z ↦ ‖deriv g z‖) x]
         rw [heq]
         exact hpX_int.norm.mul_const _
     -- swap order of integration
@@ -260,7 +260,7 @@ theorem isRegularDensityV2_convDensityAdd_gaussian (pX : ℝ → ℝ) {t : ℝ} 
     have hinner : ∀ x, (∫ z, f z x ∂volume) = 0 := by
       intro x
       simp only [hf]
-      rw [integral_const_mul, integral_sub_right_eq_self (fun z => deriv g z) x,
+      rw [integral_const_mul, integral_sub_right_eq_self (fun z ↦ deriv g z) x,
         InformationTheory.Shannon.integral_deriv_gaussianPDFReal_eq_zero 0 hv_ne, mul_zero]
     simp_rw [hinner]
     exact integral_zero _ _
@@ -296,7 +296,7 @@ theorem fisherInfoOfDensityReal_convDensityAdd_pos (pX : ℝ → ℝ) {t : ℝ} 
   have hreg : InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 f :=
     isRegularDensityV2_convDensityAdd_gaussian pX ht hpX_nn hpX_meas hpX_int hpX_mass
   -- pointwise positivity of `f`
-  have hf_pos : ∀ x, 0 < f x := fun x =>
+  have hf_pos : ∀ x, 0 < f x := fun x ↦
     InformationTheory.Shannon.FisherInfo.convDensityAdd_pos pX hpX_nn hpX_int hpX_mass ht x
   -- finiteness of `J(f)`
   have hfin : InformationTheory.Shannon.FisherInfo.fisherInfoOfDensity f
@@ -316,7 +316,7 @@ theorem fisherInfoOfDensityReal_convDensityAdd_pos (pX : ℝ → ℝ) {t : ℝ} 
       simp only [ContinuousLinearMap.mul_apply']
     rw [hconv]
     obtain ⟨M, hM⟩ := deriv_gaussianPDFReal_abs_le hv_ne
-    have hbdd : BddAbove (Set.range fun x => ‖deriv g x‖) := by
+    have hbdd : BddAbove (Set.range fun x ↦ ‖deriv g x‖) := by
       refine ⟨M, ?_⟩
       rintro _ ⟨x, rfl⟩
       simp only
@@ -335,12 +335,12 @@ theorem fisherInfoOfDensityReal_convDensityAdd_pos (pX : ℝ → ℝ) {t : ℝ} 
       exact (measurable_deriv f).div (hreg.diff.continuous.measurable)
     have hf_meas : Measurable f := hreg.diff.continuous.measurable
     have hintegrand_meas : AEMeasurable
-        (fun x => ENNReal.ofReal ((logDeriv f x) ^ 2) * ENNReal.ofReal (f x)) volume :=
+        (fun x ↦ ENNReal.ofReal ((logDeriv f x) ^ 2) * ENNReal.ofReal (f x)) volume :=
       (((hlogderiv_meas.pow_const 2).ennreal_ofReal).mul
         (hf_meas.ennreal_ofReal)).aemeasurable
     have hJ0' : (∫⁻ x, ENNReal.ofReal ((logDeriv f x) ^ 2) * ENNReal.ofReal (f x) ∂volume) = 0 := by
       rw [← InformationTheory.Shannon.FisherInfo.fisherInfoOfDensity]; exact hJ0
-    have hae0 : (fun x => ENNReal.ofReal ((logDeriv f x) ^ 2) * ENNReal.ofReal (f x))
+    have hae0 : (fun x ↦ ENNReal.ofReal ((logDeriv f x) ^ 2) * ENNReal.ofReal (f x))
         =ᵐ[volume] 0 :=
       (MeasureTheory.lintegral_eq_zero_iff' hintegrand_meas).mp hJ0'
     -- ⟹ `deriv f = 0` a.e.
@@ -366,12 +366,12 @@ theorem fisherInfoOfDensityReal_convDensityAdd_pos (pX : ℝ → ℝ) {t : ℝ} 
     have hderiv0 : deriv f = 0 :=
       (hderiv_cont.ae_eq_iff_eq (μ := volume) continuous_const).mp hderiv_ae0
     -- `f` constant
-    have hconst : ∀ x, f x = f 0 := fun x =>
-      is_const_of_deriv_eq_zero hreg.diff (fun y => by rw [hderiv0]; rfl) x 0
+    have hconst : ∀ x, f x = f 0 := fun x ↦
+      is_const_of_deriv_eq_zero hreg.diff (fun y ↦ by rw [hderiv0]; rfl) x 0
     -- contradict `tail_bot`: constant `f` tends to `f 0`, but tail_bot says `→ 0`
     have htail : Filter.Tendsto f Filter.atBot (nhds 0) := hreg.tail_bot
     have hconst_tail : Filter.Tendsto f Filter.atBot (nhds (f 0)) := by
-      have : f = fun _ => f 0 := funext hconst
+      have : f = fun _ ↦ f 0 := funext hconst
       rw [this]; exact tendsto_const_nhds
     have hf0_eq : f 0 = 0 := tendsto_nhds_unique hconst_tail htail
     exact (hf_pos 0).ne' hf0_eq

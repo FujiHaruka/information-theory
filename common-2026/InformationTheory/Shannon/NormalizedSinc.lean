@@ -133,14 +133,14 @@ theorem whittaker_shannon_sample_collapse
 @[entry_point, fun_prop]
 theorem Measurable.sincN {α : Type*} [MeasurableSpace α]
     {f : α → ℝ} (hf : Measurable f) :
-    Measurable (fun x => sincN (f x)) :=
+    Measurable (fun x ↦ sincN (f x)) :=
   measurable_sincN.comp hf
 
 /-- Composition: `sincN ∘ f` is continuous if `f` is. -/
 @[entry_point, fun_prop]
 theorem Continuous.sincN {α : Type*} [TopologicalSpace α]
     {f : α → ℝ} (hf : Continuous f) :
-    Continuous (fun x => sincN (f x)) :=
+    Continuous (fun x ↦ sincN (f x)) :=
   continuous_sincN.comp hf
 
 /-! ## §I — Sample-rate scaling identities. -/
@@ -149,7 +149,7 @@ theorem Continuous.sincN {α : Type*} [TopologicalSpace α]
 for any fixed integer `n` and positive `W`. -/
 @[entry_point, fun_prop]
 theorem continuous_sincN_sample_term (W : ℝ) (n : ℤ) :
-    Continuous (fun t : ℝ => sincN ((2 * W) * t - (n : ℝ))) := by
+    Continuous (fun t : ℝ ↦ sincN ((2 * W) * t - (n : ℝ))) := by
   fun_prop
 
 end InformationTheory.Shannon.NormalizedSinc

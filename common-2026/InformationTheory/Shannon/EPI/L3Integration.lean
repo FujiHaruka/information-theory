@@ -139,7 +139,7 @@ theorem entropy_power_inequality_gaussian_full
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
     (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
+    entropyPower (P.map (fun ω ↦ X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
   have h_eq := entropyPower_gaussian_additivity
     P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
@@ -214,7 +214,7 @@ structure IsDeBruijnTailHyp {Ω : Type*} [MeasurableSpace Ω]
   `omit [TopologicalSpace α]`) discoverable. -/
   tail_limit :
     Tendsto
-      (fun T : ℝ => Real.toEReal
+      (fun T : ℝ ↦ Real.toEReal
         (InformationTheory.Shannon.differentialEntropy
           (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z T))))
       atTop (𝓝 h_inf)
@@ -293,7 +293,7 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
       -- `pX`-witness fields (Gaussian case): `X ∼ 𝒩(m, v)` has Lebesgue
       -- density `gaussianPDFReal m v`.
       pX := gaussianPDFReal m v
-      pX_nn := fun x => gaussianPDFReal_nonneg m v x
+      pX_nn := fun x ↦ gaussianPDFReal_nonneg m v x
       pX_meas := measurable_gaussianPDFReal m v
       pX_law := by
         -- `P.map X = gaussianReal m v = withDensity (gaussianPDF m v)`,
@@ -306,13 +306,13 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
       -- `integrable_withDensity_iff` (giving `x² · (gaussianPDF m v x).toReal`, which is
       -- `x² · gaussianPDFReal m v x`).
       pX_mom := by
-        have hsq : Integrable (fun x => x ^ 2) (gaussianReal m v) := by
+        have hsq : Integrable (fun x ↦ x ^ 2) (gaussianReal m v) := by
           have hL2 : MemLp id 2 (gaussianReal m v) := memLp_id_gaussianReal 2
           simpa using hL2.integrable_sq
         rw [gaussianReal_of_var_ne_zero m hv] at hsq
-        have hvol : Integrable (fun x => x ^ 2 * (gaussianPDF m v x).toReal) volume :=
+        have hvol : Integrable (fun x ↦ x ^ 2 * (gaussianPDF m v x).toReal) volume :=
           (integrable_withDensity_iff (measurable_gaussianPDF m v)
-            (Filter.Eventually.of_forall (fun _ => ENNReal.ofReal_lt_top))).mp hsq
+            (Filter.Eventually.of_forall (fun _ ↦ ENNReal.ofReal_lt_top))).mp hsq
         refine hvol.congr ?_
         filter_upwards with x
         rw [gaussianPDF, ENNReal.toReal_ofReal (gaussianPDFReal_nonneg m v x)] }
@@ -379,24 +379,24 @@ noncomputable def isDeBruijnTailHyp_of_gaussian
     have h2pie_pos : (0 : ℝ) < 2 * Real.pi * Real.exp 1 := mul_pos h2pi_pos hexp_pos
     have hhalf_pos : (0 : ℝ) < (1 / 2 : ℝ) := by norm_num
     -- `Tendsto (fun T : ℝ => (v : ℝ) + T) atTop atTop`.
-    have h_shift : Tendsto (fun T : ℝ => (v : ℝ) + T) atTop atTop :=
+    have h_shift : Tendsto (fun T : ℝ ↦ (v : ℝ) + T) atTop atTop :=
       tendsto_atTop_add_const_left atTop (v : ℝ) tendsto_id
     -- Scale by `2πe > 0`.
     have h_scale_inner : Tendsto
-        (fun T : ℝ => 2 * Real.pi * Real.exp 1 * ((v : ℝ) + T)) atTop atTop :=
+        (fun T : ℝ ↦ 2 * Real.pi * Real.exp 1 * ((v : ℝ) + T)) atTop atTop :=
       Tendsto.const_mul_atTop h2pie_pos h_shift
     -- Apply log.
     have h_log : Tendsto
-        (fun T : ℝ => Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + T))) atTop atTop :=
+        (fun T : ℝ ↦ Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + T))) atTop atTop :=
       Real.tendsto_log_atTop.comp h_scale_inner
     -- Scale by `(1/2) > 0`.
     have h_closed : Tendsto
-        (fun T : ℝ => (1 / 2 : ℝ) *
+        (fun T : ℝ ↦ (1 / 2 : ℝ) *
           Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + T))) atTop atTop :=
       Tendsto.const_mul_atTop hhalf_pos h_log
     -- Congr with entropy form on `T ≥ 0`.
     have h_entropy : Tendsto
-        (fun T : ℝ => InformationTheory.Shannon.differentialEntropy
+        (fun T : ℝ ↦ InformationTheory.Shannon.differentialEntropy
             (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z T)))
         atTop atTop := by
       refine h_closed.congr' ?_
@@ -430,7 +430,7 @@ theorem hasDerivAt_differentialEntropy_heat_flow_gaussian
     (hZ_law : P.map Z = gaussianReal 0 1)
     {s : ℝ} (hs : 0 < s) :
     HasDerivAt
-      (fun s' => InformationTheory.Shannon.differentialEntropy
+      (fun s' ↦ InformationTheory.Shannon.differentialEntropy
                   (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z s')))
       (1 / (2 * ((v : ℝ) + s))) s := by
   -- Step 1: re-derive the LHS identification (same approach as
@@ -443,11 +443,11 @@ theorem hasDerivAt_differentialEntropy_heat_flow_gaussian
       exact lt_of_le_of_ne v.coe_nonneg (Ne.symm this)
     linarith
   have h_pos_nbhd : ∀ᶠ s' in nhds s, (0 : ℝ) < s' := eventually_gt_nhds hs
-  have h_eventually : (fun s' => InformationTheory.Shannon.differentialEntropy
+  have h_eventually : (fun s' ↦ InformationTheory.Shannon.differentialEntropy
         (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z s')))
-        =ᶠ[nhds s] (fun s' => (1/2 : ℝ) * Real.log
+        =ᶠ[nhds s] (fun s' ↦ (1/2 : ℝ) * Real.log
             (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s'))) := by
-    refine h_pos_nbhd.mono fun s' hs' => ?_
+    refine h_pos_nbhd.mono fun s' hs' ↦ ?_
     exact differentialEntropy_gaussianConvolution_of_gaussian
       hX hZ hXZ hv hX_law hZ_law hs'.le
   -- Step 2: derivative of the log form.
@@ -461,7 +461,7 @@ theorem hasDerivAt_differentialEntropy_heat_flow_gaussian
 /-- **Continuity of `1/(2(v+t))` on `[0, T]`** for `v > 0`, `T ≥ 0`. -/
 theorem continuousOn_one_div_two_times_v_plus
     {v : ℝ≥0} (hv : v ≠ 0) (T : ℝ) :
-    ContinuousOn (fun t : ℝ => 1 / (2 * ((v : ℝ) + t))) (Set.Icc 0 T) := by
+    ContinuousOn (fun t : ℝ ↦ 1 / (2 * ((v : ℝ) + t))) (Set.Icc 0 T) := by
   have hv_pos : (0 : ℝ) < v := by
     have : (v : ℝ) ≠ 0 := by exact_mod_cast hv
     exact lt_of_le_of_ne v.coe_nonneg (Ne.symm this)
@@ -487,15 +487,15 @@ theorem continuousOn_differentialEntropy_heat_flow_gaussian
     (hZ_law : P.map Z = gaussianReal 0 1)
     {T : ℝ} (hT : 0 ≤ T) :
     ContinuousOn
-      (fun s' => InformationTheory.Shannon.differentialEntropy
+      (fun s' ↦ InformationTheory.Shannon.differentialEntropy
                   (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z s')))
       (Set.Icc 0 T) := by
   -- For `s' ∈ [0, T]` (so `s' ≥ 0`), the entropy equals the closed form
   -- `(1/2) log (2π e (v + s'))`, which is continuous.
   have h_eq_on : Set.EqOn
-      (fun s' => InformationTheory.Shannon.differentialEntropy
+      (fun s' ↦ InformationTheory.Shannon.differentialEntropy
         (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z s')))
-      (fun s' => (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s')))
+      (fun s' ↦ (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s')))
       (Set.Icc 0 T) := by
     intro s' hs'
     exact differentialEntropy_gaussianConvolution_of_gaussian
@@ -514,10 +514,10 @@ theorem continuousOn_differentialEntropy_heat_flow_gaussian
     exact mul_pos h2πe_pos this
   -- `Real.log` is continuous on positives.
   have h_inner_cont : ContinuousOn
-      (fun s' : ℝ => 2 * Real.pi * Real.exp 1 * ((v : ℝ) + s')) (Set.Icc 0 T) :=
+      (fun s' : ℝ ↦ 2 * Real.pi * Real.exp 1 * ((v : ℝ) + s')) (Set.Icc 0 T) :=
     (continuous_const.mul (continuous_const.add continuous_id)).continuousOn
   have h_log_cont : ContinuousOn
-      (fun s' : ℝ => Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s')))
+      (fun s' : ℝ ↦ Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s')))
       (Set.Icc 0 T) := by
     refine ContinuousOn.log h_inner_cont ?_
     intro s' hs'
@@ -549,9 +549,9 @@ theorem bounded_T_ftc_gaussian
         (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z T))
       - InformationTheory.Shannon.differentialEntropy (P.map X)
       = ∫ t in Set.Ioo 0 T, 1 / (2 * ((v : ℝ) + t)) ∂volume := by
-  set f : ℝ → ℝ := fun s => InformationTheory.Shannon.differentialEntropy
+  set f : ℝ → ℝ := fun s ↦ InformationTheory.Shannon.differentialEntropy
     (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z s)) with hf_def
-  set f' : ℝ → ℝ := fun s => 1 / (2 * ((v : ℝ) + s)) with hf'_def
+  set f' : ℝ → ℝ := fun s ↦ 1 / (2 * ((v : ℝ) + s)) with hf'_def
   -- Step 1: continuity of `f` on `[0, T]`.
   have h_cont : ContinuousOn f (Set.Icc 0 T) :=
     continuousOn_differentialEntropy_heat_flow_gaussian hX hZ hXZ hv hX_law hZ_law hT
@@ -606,10 +606,10 @@ closable from plain harmonic Stam. Both `log` arguments are strictly positive
 @[entry_point]
 noncomputable def csiszarLogRatioGap {Ω : Type*} [MeasurableSpace Ω]
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) (t : ℝ) : ℝ :=
-  Real.log (entropyPower (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))))
+  Real.log (entropyPower (P.map (fun ω ↦ X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))))
     - Real.log
-        (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
-          + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)))
+        (entropyPower (P.map (fun ω ↦ X ω + Real.sqrt t * Z_X ω))
+          + entropyPower (P.map (fun ω ↦ Y ω + Real.sqrt t * Z_Y ω)))
 
 /-- **Endpoint `t = 0` of the log-ratio gap**: reduces to
 `log (eP(X+Y)) − log (eP X + eP Y)`, the form bridging to EPI
@@ -618,20 +618,20 @@ noncomputable def csiszarLogRatioGap {Ω : Type*} [MeasurableSpace Ω]
 theorem csiszarLogRatioGap_at_zero {Ω : Type*} [MeasurableSpace Ω]
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) :
     csiszarLogRatioGap X Y Z_X Z_Y P 0
-      = Real.log (entropyPower (P.map (fun ω => X ω + Y ω)))
+      = Real.log (entropyPower (P.map (fun ω ↦ X ω + Y ω)))
         - Real.log (entropyPower (P.map X) + entropyPower (P.map Y)) := by
   unfold csiszarLogRatioGap
   have h_sum_funext :
-      (fun ω => X ω + Y ω + Real.sqrt 0 * (Z_X ω + Z_Y ω))
-        = fun ω => X ω + Y ω := by
+      (fun ω ↦ X ω + Y ω + Real.sqrt 0 * (Z_X ω + Z_Y ω))
+        = fun ω ↦ X ω + Y ω := by
     funext ω
     simp [Real.sqrt_zero]
   have h_X_funext :
-      (fun ω => X ω + Real.sqrt 0 * Z_X ω) = X := by
+      (fun ω ↦ X ω + Real.sqrt 0 * Z_X ω) = X := by
     funext ω
     simp [Real.sqrt_zero]
   have h_Y_funext :
-      (fun ω => Y ω + Real.sqrt 0 * Z_Y ω) = Y := by
+      (fun ω ↦ Y ω + Real.sqrt 0 * Z_Y ω) = Y := by
     funext ω
     simp [Real.sqrt_zero]
   rw [h_sum_funext, h_X_funext, h_Y_funext]
@@ -652,30 +652,30 @@ convolved endpoints), not load-bearing bundling. -/
 @[entry_point]
 theorem csiszarLogRatioGap_at_one_eq_zero {Ω : Type*} {mΩ : MeasurableSpace Ω}
     {X Y Z_X Z_Y : Ω → ℝ} (P : Measure Ω) [IsProbabilityMeasure P]
-    (hXZX : Measurable (fun ω => X ω + Z_X ω))
-    (hYZY : Measurable (fun ω => Y ω + Z_Y ω))
-    (hIndep : IndepFun (fun ω => X ω + Z_X ω) (fun ω => Y ω + Z_Y ω) P)
+    (hXZX : Measurable (fun ω ↦ X ω + Z_X ω))
+    (hYZY : Measurable (fun ω ↦ Y ω + Z_Y ω))
+    (hIndep : IndepFun (fun ω ↦ X ω + Z_X ω) (fun ω ↦ Y ω + Z_Y ω) P)
     (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
-    (hLawX : P.map (fun ω => X ω + Z_X ω) = gaussianReal m₁ v₁)
-    (hLawY : P.map (fun ω => Y ω + Z_Y ω) = gaussianReal m₂ v₂) :
+    (hLawX : P.map (fun ω ↦ X ω + Z_X ω) = gaussianReal m₁ v₁)
+    (hLawY : P.map (fun ω ↦ Y ω + Z_Y ω) = gaussianReal m₂ v₂) :
     csiszarLogRatioGap X Y Z_X Z_Y P 1 = 0 := by
   unfold csiszarLogRatioGap
   -- At `t = 1`, `√1 = 1`; reduce the three paths to `X+Z_X`, `Y+Z_Y`,
   -- and their sum `(X+Z_X)+(Y+Z_Y)`.
   have h_sum_funext :
-      (fun ω => X ω + Y ω + Real.sqrt 1 * (Z_X ω + Z_Y ω))
-        = fun ω => (X ω + Z_X ω) + (Y ω + Z_Y ω) := by
+      (fun ω ↦ X ω + Y ω + Real.sqrt 1 * (Z_X ω + Z_Y ω))
+        = fun ω ↦ (X ω + Z_X ω) + (Y ω + Z_Y ω) := by
     funext ω; rw [Real.sqrt_one]; ring
   have h_X_funext :
-      (fun ω => X ω + Real.sqrt 1 * Z_X ω) = fun ω => X ω + Z_X ω := by
+      (fun ω ↦ X ω + Real.sqrt 1 * Z_X ω) = fun ω ↦ X ω + Z_X ω := by
     funext ω; rw [Real.sqrt_one]; ring
   have h_Y_funext :
-      (fun ω => Y ω + Real.sqrt 1 * Z_Y ω) = fun ω => Y ω + Z_Y ω := by
+      (fun ω ↦ Y ω + Real.sqrt 1 * Z_Y ω) = fun ω ↦ Y ω + Z_Y ω := by
     funext ω; rw [Real.sqrt_one]; ring
   rw [h_sum_funext, h_X_funext, h_Y_funext]
   -- Gaussian saturation: `eP((X+Z_X)+(Y+Z_Y)) = eP(X+Z_X) + eP(Y+Z_Y)`.
   have h_sat := entropyPower_gaussian_additivity P
-    (fun ω => X ω + Z_X ω) (fun ω => Y ω + Z_Y ω)
+    (fun ω ↦ X ω + Z_X ω) (fun ω ↦ Y ω + Z_Y ω)
     hXZX hYZY hIndep m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
   rw [h_sat]
   -- `log A − log A = 0`.

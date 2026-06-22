@@ -59,7 +59,7 @@ lemma pow_div_prod_pow_eq_exp_n_entropyByCount
   classical
   -- ∏ a, (c a : ℝ)^(c a) > 0 (every factor 0^0 = 1 or pos^pos > 0).
   have h_prod_pos : (0 : ℝ) < ∏ a, (c a : ℝ) ^ (c a) := by
-    refine Finset.prod_pos fun a _ => ?_
+    refine Finset.prod_pos fun a _ ↦ ?_
     rcases Nat.eq_zero_or_pos (c a) with h | h
     · rw [h, pow_zero]; norm_num
     · exact pow_pos (by exact_mod_cast h) _
@@ -67,17 +67,17 @@ lemma pow_div_prod_pow_eq_exp_n_entropyByCount
   by_cases hn : n = 0
   · -- n = 0 case: c is zero everywhere, both sides = 1.
     subst hn
-    have hc_zero : ∀ a, c a = 0 := fun a => by
+    have hc_zero : ∀ a, c a = 0 := fun a ↦ by
       have h_le : c a ≤ ∑ a', c a' := Finset.single_le_sum (f := c)
-        (fun _ _ => Nat.zero_le _) (Finset.mem_univ a)
+        (fun _ _ ↦ Nat.zero_le _) (Finset.mem_univ a)
       omega
     have h_prod_one : ∏ a, (c a : ℝ) ^ (c a) = 1 := by
-      refine Finset.prod_eq_one fun a _ => ?_
+      refine Finset.prod_eq_one fun a _ ↦ ?_
       rw [hc_zero a, pow_zero]
     have h_entropy_zero : entropyByCount c 0 = 0 := by
       unfold entropyByCount
       refine neg_eq_zero.mpr ?_
-      refine Finset.sum_eq_zero fun a _ => ?_
+      refine Finset.sum_eq_zero fun a _ ↦ ?_
       rw [hc_zero a]
       simp
     rw [h_prod_one, h_entropy_zero]
@@ -95,33 +95,33 @@ lemma pow_div_prod_pow_eq_exp_n_entropyByCount
     rw [Real.log_div (pow_pos hn_real_pos _).ne' h_prod_ne, Real.log_pow]
     -- LHS = n · log n - log(∏ c^c)
     -- log(∏ c^c) = ∑ log(c^c) = ∑ c · log c.
-    have h_each_ne : ∀ a ∈ (Finset.univ : Finset α), (c a : ℝ) ^ (c a) ≠ 0 := fun a _ => by
+    have h_each_ne : ∀ a ∈ (Finset.univ : Finset α), (c a : ℝ) ^ (c a) ≠ 0 := fun a _ ↦ by
       rcases Nat.eq_zero_or_pos (c a) with h | h
       · rw [h, pow_zero]; exact one_ne_zero
       · exact (pow_pos (by exact_mod_cast h) _).ne'
     rw [Real.log_prod h_each_ne]
     have h_each_log : ∀ a, Real.log ((c a : ℝ) ^ (c a)) = (c a : ℝ) * Real.log (c a : ℝ) :=
-      fun a => Real.log_pow _ _
-    rw [Finset.sum_congr rfl (fun a _ => h_each_log a)]
+      fun a ↦ Real.log_pow _ _
+    rw [Finset.sum_congr rfl (fun a _ ↦ h_each_log a)]
     -- Goal: (n : ℝ) · log n - ∑ a, (c a) · log (c a) = n · entropyByCount c n
     unfold entropyByCount
     -- n · (-∑ (c/n)·log(c/n)) = -∑ c·log(c/n) = -∑ (c·log c - c·log n)
     --                       = -∑ c·log c + (∑ c)·log n = -∑ c·log c + n·log n
     have h_inner : ∀ a, (c a : ℝ) * Real.log ((c a : ℝ) / n)
         = (c a : ℝ) * Real.log (c a : ℝ) - (c a : ℝ) * Real.log n :=
-      fun a => cnt_mul_log_div (c a) hn_real_ne
+      fun a ↦ cnt_mul_log_div (c a) hn_real_ne
     -- Rearrange RHS: (n : ℝ) · (-∑ (c/n)·log(c/n)) = -∑ c·log(c/n)
     have h_factor : (n : ℝ) * (-∑ a, ((c a : ℝ) / n) * Real.log ((c a : ℝ) / n))
         = -∑ a, (c a : ℝ) * Real.log ((c a : ℝ) / n) := by
       rw [mul_neg, Finset.mul_sum]
       congr 1
-      refine Finset.sum_congr rfl fun a _ => ?_
+      refine Finset.sum_congr rfl fun a _ ↦ ?_
       field_simp
     rw [h_factor]
     -- Now: -∑ c·log(c/n) = -∑ (c·log c - c·log n) = -∑ c·log c + (∑ c)·log n
     have h_sum_eq : (∑ a, (c a : ℝ) * Real.log ((c a : ℝ) / n))
         = (∑ a, ((c a : ℝ) * Real.log (c a : ℝ) - (c a : ℝ) * Real.log n)) :=
-      Finset.sum_congr rfl (fun a _ => h_inner a)
+      Finset.sum_congr rfl (fun a _ ↦ h_inner a)
     rw [h_sum_eq, Finset.sum_sub_distrib]
     -- ∑ c · log n = (∑ c) · log n = n · log n
     have h_swap : (∑ a, (c a : ℝ) * Real.log n) = (∑ a, (c a : ℝ)) * Real.log n := by

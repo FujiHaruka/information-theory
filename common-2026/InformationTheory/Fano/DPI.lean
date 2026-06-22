@@ -52,10 +52,10 @@ lemma log_sum_inequality_negMulLog {ι : Type*} (s : Finset ι) (a b : ι → �
   set A := ∑ i ∈ s, a i with hA_def
   by_cases hB : B = 0
   · -- All b i = 0, hence all a i = 0; both sides are 0.
-    have hb_all : ∀ i ∈ s, b i = 0 := fun i hi =>
-      (Finset.sum_eq_zero_iff_of_nonneg (fun j hj => hb j hj)).mp hB i hi
-    have ha_all : ∀ i ∈ s, a i = 0 := fun i hi => h_ac i hi (hb_all i hi)
-    have hA0 : A = 0 := Finset.sum_eq_zero (fun i hi => ha_all i hi)
+    have hb_all : ∀ i ∈ s, b i = 0 := fun i hi ↦
+      (Finset.sum_eq_zero_iff_of_nonneg (fun j hj ↦ hb j hj)).mp hB i hi
+    have ha_all : ∀ i ∈ s, a i = 0 := fun i hi ↦ h_ac i hi (hb_all i hi)
+    have hA0 : A = 0 := Finset.sum_eq_zero (fun i hi ↦ ha_all i hi)
     have hLHS_zero :
         ∑ i ∈ s, (Real.negMulLog (a i) + a i * Real.log (b i)) = 0 := by
       apply Finset.sum_eq_zero
@@ -65,45 +65,45 @@ lemma log_sum_inequality_negMulLog {ι : Type*} (s : Finset ι) (a b : ι → �
     rw [hLHS_zero, hA0, hB, Real.negMulLog_zero, Real.log_zero, zero_mul,
       add_zero]
   · -- B > 0 case.
-    have hB_nn : 0 ≤ B := Finset.sum_nonneg (fun i hi => hb i hi)
+    have hB_nn : 0 ≤ B := Finset.sum_nonneg (fun i hi ↦ hb i hi)
     have hB_pos : 0 < B := lt_of_le_of_ne hB_nn (Ne.symm hB)
-    set s' := s.filter (fun i => b i ≠ 0) with hs'_def
+    set s' := s.filter (fun i ↦ b i ≠ 0) with hs'_def
     have hs'_subset : s' ⊆ s := Finset.filter_subset _ _
-    have hb_pos_on_s' : ∀ i ∈ s', 0 < b i := fun i hi => by
+    have hb_pos_on_s' : ∀ i ∈ s', 0 < b i := fun i hi ↦ by
       have hin : i ∈ s := hs'_subset hi
       have hne : b i ≠ 0 := (Finset.mem_filter.mp hi).2
       exact lt_of_le_of_ne (hb i hin) (Ne.symm hne)
-    have hbi_zero_outside : ∀ i ∈ s, i ∉ s' → b i = 0 := fun i hi hni => by
+    have hbi_zero_outside : ∀ i ∈ s, i ∉ s' → b i = 0 := fun i hi hni ↦ by
       by_contra hbi_ne
       exact hni (Finset.mem_filter.mpr ⟨hi, hbi_ne⟩)
-    have ha_zero_outside : ∀ i ∈ s, i ∉ s' → a i = 0 := fun i hi hni =>
+    have ha_zero_outside : ∀ i ∈ s, i ∉ s' → a i = 0 := fun i hi hni ↦
       h_ac i hi (hbi_zero_outside i hi hni)
     -- ∑ over s collapses to ∑ over s' for both a and b.
     have hsum_a_s' : (∑ i ∈ s', a i) = A := by
       rw [hA_def]
-      exact (Finset.sum_subset hs'_subset (fun i hi hni =>
+      exact (Finset.sum_subset hs'_subset (fun i hi hni ↦
         ha_zero_outside i hi hni))
     have hsum_b_s' : (∑ i ∈ s', b i) = B := by
       rw [hB_def]
-      exact (Finset.sum_subset hs'_subset (fun i hi hni =>
+      exact (Finset.sum_subset hs'_subset (fun i hi hni ↦
         hbi_zero_outside i hi hni))
     -- Jensen with weights w i = b i / B, points p i = a i / b i (on s').
     have hw_nn : ∀ i ∈ s', 0 ≤ b i / B :=
-      fun i hi => div_nonneg (hb_pos_on_s' i hi).le hB_pos.le
+      fun i hi ↦ div_nonneg (hb_pos_on_s' i hi).le hB_pos.le
     have hw_sum : ∑ i ∈ s', b i / B = 1 := by
       rw [← Finset.sum_div, hsum_b_s', div_self hB]
     have hp_nn : ∀ i ∈ s', 0 ≤ a i / b i :=
-      fun i hi => div_nonneg (ha i (hs'_subset hi)) (hb_pos_on_s' i hi).le
+      fun i hi ↦ div_nonneg (ha i (hs'_subset hi)) (hb_pos_on_s' i hi).le
     have hjensen :
         ∑ i ∈ s', (b i / B) • Real.negMulLog (a i / b i)
           ≤ Real.negMulLog (∑ i ∈ s', (b i / B) • (a i / b i)) :=
-      Real.concaveOn_negMulLog.le_map_sum hw_nn hw_sum (fun i hi => hp_nn i hi)
+      Real.concaveOn_negMulLog.le_map_sum hw_nn hw_sum (fun i hi ↦ hp_nn i hi)
     -- Simplify Jensen's two sides.
     have hjensen_lhs :
         ∑ i ∈ s', (b i / B) • Real.negMulLog (a i / b i)
           = (1 / B) * ∑ i ∈ s', b i * Real.negMulLog (a i / b i) := by
       rw [Finset.mul_sum]
-      refine Finset.sum_congr rfl (fun i _ => ?_)
+      refine Finset.sum_congr rfl (fun i _ ↦ ?_)
       rw [smul_eq_mul]
       ring
     have h_inner_sum : (∑ i ∈ s', (b i / B) • (a i / b i)) = A / B := by
@@ -129,7 +129,7 @@ lemma log_sum_inequality_negMulLog {ι : Type*} (s : Finset ι) (a b : ι → �
     have h_translated_LHS :
         ∑ i ∈ s', b i * Real.negMulLog (a i / b i)
           = ∑ i ∈ s', (Real.negMulLog (a i) + a i * Real.log (b i)) := by
-      refine Finset.sum_congr rfl (fun i hi => ?_)
+      refine Finset.sum_congr rfl (fun i hi ↦ ?_)
       have hbi_ne : b i ≠ 0 := (Finset.mem_filter.mp hi).2
       rw [mul_negMulLog_div (b i) (a i) hbi_ne]
     have h_translated_RHS :
@@ -159,22 +159,22 @@ namespace FiniteJointPMF
 /-- Pushforward of a finite joint PMF under a deterministic function `f : Y → Xh`.
 The new joint PMF on `(X, Xh)` has mass given by summing over the fiber `f⁻¹{xh}`. -/
 def pushforward (P : FiniteJointPMF X Y) (f : Y → X) : FiniteJointPMF X X where
-  mass x xh := ∑ y ∈ Finset.univ.filter (fun y => f y = xh), P.mass x y
-  mass_nonneg x xh := Finset.sum_nonneg (fun y _ => P.mass_nonneg x y)
+  mass x xh := ∑ y ∈ Finset.univ.filter (fun y ↦ f y = xh), P.mass x y
+  mass_nonneg x xh := Finset.sum_nonneg (fun y _ ↦ P.mass_nonneg x y)
   sum_mass := by
     -- ∑ x, ∑ xh, ∑ y in fiber, P.mass x y = ∑ x, ∑ y, P.mass x y = 1
-    have hkey : ∀ x, (∑ xh, ∑ y ∈ Finset.univ.filter (fun y => f y = xh),
+    have hkey : ∀ x, (∑ xh, ∑ y ∈ Finset.univ.filter (fun y ↦ f y = xh),
                         P.mass x y) = ∑ y, P.mass x y := by
       intro x
       exact Finset.sum_fiberwise Finset.univ f (P.mass x)
-    rw [Finset.sum_congr rfl (fun x _ => hkey x)]
+    rw [Finset.sum_congr rfl (fun x _ ↦ hkey x)]
     exact P.sum_mass
 
 /-- Marginal of the pushforward:
 `(P.pushforward f).marginalY xh = ∑_{y : f y = xh} P.marginalY y`. -/
 lemma pushforward_marginalY (P : FiniteJointPMF X Y) (f : Y → X) (xh : X) :
     (P.pushforward f).marginalY xh
-      = ∑ y ∈ Finset.univ.filter (fun y => f y = xh), P.marginalY y := by
+      = ∑ y ∈ Finset.univ.filter (fun y ↦ f y = xh), P.marginalY y := by
   unfold marginalY pushforward
   rw [Finset.sum_comm]
 
@@ -189,51 +189,51 @@ theorem condEntropy_le_pushforward_condEntropy
     P.condEntropy ≤ (P.pushforward f).condEntropy := by
   set Q := P.pushforward f with hQ_def
   -- Marginal of P (summing the source X) is nonneg.
-  have h_marg_nn : ∀ y, 0 ≤ P.marginalY y := fun y =>
-    Finset.sum_nonneg (fun x _ => P.mass_nonneg x y)
+  have h_marg_nn : ∀ y, 0 ≤ P.marginalY y := fun y ↦
+    Finset.sum_nonneg (fun x _ ↦ P.mass_nonneg x y)
   -- Absolute continuity: P.marginalY y = 0 ⟹ P.mass x y = 0.
-  have h_ac_pt : ∀ x y, P.marginalY y = 0 → P.mass x y = 0 := fun x y hb =>
+  have h_ac_pt : ∀ x y, P.marginalY y = 0 → P.mass x y = 0 := fun x y hb ↦
     (Finset.sum_eq_zero_iff_of_nonneg
-      (fun x'' _ => P.mass_nonneg x'' y)).mp hb x (Finset.mem_univ _)
+      (fun x'' _ ↦ P.mass_nonneg x'' y)).mp hb x (Finset.mem_univ _)
   -- Convenience: identification of pushforward.mass with the fiber sum.
   have hQmass : ∀ x xh : X,
-      Q.mass x xh = ∑ y ∈ Finset.univ.filter (fun y => f y = xh), P.mass x y :=
-    fun _ _ => rfl
+      Q.mass x xh = ∑ y ∈ Finset.univ.filter (fun y ↦ f y = xh), P.mass x y :=
+    fun _ _ ↦ rfl
   have hQmarg : ∀ xh : X,
-      Q.marginalY xh = ∑ y ∈ Finset.univ.filter (fun y => f y = xh), P.marginalY y :=
-    fun xh => P.pushforward_marginalY f xh
+      Q.marginalY xh = ∑ y ∈ Finset.univ.filter (fun y ↦ f y = xh), P.marginalY y :=
+    fun xh ↦ P.pushforward_marginalY f xh
   -- Per-xh inequality: aggregate of log-sum across fibers.
   have h_per_xh : ∀ xh : X,
-      ((∑ x : X, ∑ y ∈ Finset.univ.filter (fun y => f y = xh),
+      ((∑ x : X, ∑ y ∈ Finset.univ.filter (fun y ↦ f y = xh),
             Real.negMulLog (P.mass x y))
-        - ∑ y ∈ Finset.univ.filter (fun y => f y = xh),
+        - ∑ y ∈ Finset.univ.filter (fun y ↦ f y = xh),
             Real.negMulLog (P.marginalY y))
       ≤ ((∑ x : X, Real.negMulLog (Q.mass x xh))
         - Real.negMulLog (Q.marginalY xh)) := by
     intro xh
-    set F := Finset.univ.filter (fun y : Y => f y = xh) with hF_def
+    set F := Finset.univ.filter (fun y : Y ↦ f y = xh) with hF_def
     -- Per-x log-sum on fiber.
     have h_per_x : ∀ x : X,
         ∑ y ∈ F, (Real.negMulLog (P.mass x y) + P.mass x y * Real.log (P.marginalY y))
         ≤ Real.negMulLog (∑ y ∈ F, P.mass x y)
-          + (∑ y ∈ F, P.mass x y) * Real.log (∑ y ∈ F, P.marginalY y) := fun x =>
-      log_sum_inequality_negMulLog F (fun y => P.mass x y) (fun y => P.marginalY y)
-        (fun y _ => P.mass_nonneg x y)
-        (fun y _ => h_marg_nn y)
-        (fun y _ hb => h_ac_pt x y hb)
+          + (∑ y ∈ F, P.mass x y) * Real.log (∑ y ∈ F, P.marginalY y) := fun x ↦
+      log_sum_inequality_negMulLog F (fun y ↦ P.mass x y) (fun y ↦ P.marginalY y)
+        (fun y _ ↦ P.mass_nonneg x y)
+        (fun y _ ↦ h_marg_nn y)
+        (fun y _ hb ↦ h_ac_pt x y hb)
     -- Sum over x.
     have h_sum_x :
         (∑ x : X, ∑ y ∈ F,
             (Real.negMulLog (P.mass x y) + P.mass x y * Real.log (P.marginalY y)))
           ≤ ∑ x : X, (Real.negMulLog (∑ y ∈ F, P.mass x y)
               + (∑ y ∈ F, P.mass x y) * Real.log (∑ y ∈ F, P.marginalY y)) :=
-      Finset.sum_le_sum (fun x _ => h_per_x x)
+      Finset.sum_le_sum (fun x _ ↦ h_per_x x)
     -- Identification: P.marginalY y * log(P.marginalY y) = -negMulLog(P.marginalY y).
     have hneg_marg : ∀ y, P.marginalY y * Real.log (P.marginalY y)
-                          = -Real.negMulLog (P.marginalY y) := fun y => by
+                          = -Real.negMulLog (P.marginalY y) := fun y ↦ by
       unfold Real.negMulLog; ring
     -- Cross-sum: ∑ x, P.mass x y = P.marginalY y.
-    have hcross : ∀ y, (∑ x : X, P.mass x y) = P.marginalY y := fun y => rfl
+    have hcross : ∀ y, (∑ x : X, P.mass x y) = P.marginalY y := fun y ↦ rfl
     -- Simplify LHS.
     have hLHS :
         (∑ x : X, ∑ y ∈ F,
@@ -244,15 +244,15 @@ theorem condEntropy_le_pushforward_condEntropy
           (∑ y ∈ F, (Real.negMulLog (P.mass x y) + P.mass x y * Real.log (P.marginalY y)))
             = (∑ y ∈ F, Real.negMulLog (P.mass x y))
               + ∑ y ∈ F, P.mass x y * Real.log (P.marginalY y) :=
-        fun _ => Finset.sum_add_distrib
-      rw [Finset.sum_congr rfl (fun x _ => hsplit_inner x), Finset.sum_add_distrib]
+        fun _ ↦ Finset.sum_add_distrib
+      rw [Finset.sum_congr rfl (fun x _ ↦ hsplit_inner x), Finset.sum_add_distrib]
       have hswap :
           (∑ x : X, ∑ y ∈ F, P.mass x y * Real.log (P.marginalY y))
             = ∑ y ∈ F, P.marginalY y * Real.log (P.marginalY y) := by
         rw [Finset.sum_comm]
-        refine Finset.sum_congr rfl (fun y _ => ?_)
+        refine Finset.sum_congr rfl (fun y _ ↦ ?_)
         rw [← Finset.sum_mul, hcross y]
-      rw [hswap, Finset.sum_congr rfl (fun y _ => hneg_marg y),
+      rw [hswap, Finset.sum_congr rfl (fun y _ ↦ hneg_marg y),
         Finset.sum_neg_distrib]
       ring
     -- Simplify RHS.
@@ -264,40 +264,40 @@ theorem condEntropy_le_pushforward_condEntropy
       have h_neg_to_negMul : Q.marginalY xh * Real.log (Q.marginalY xh)
                               = -Real.negMulLog (Q.marginalY xh) := by
         unfold Real.negMulLog; ring
-      have hQmass' : ∀ x : X, (∑ y ∈ F, P.mass x y) = Q.mass x xh := fun x =>
+      have hQmass' : ∀ x : X, (∑ y ∈ F, P.mass x y) = Q.mass x xh := fun x ↦
         (hQmass x xh).symm
       have hQmarg' : (∑ y ∈ F, P.marginalY y) = Q.marginalY xh :=
         (hQmarg xh).symm
       have hQmarg_via_x : (∑ x : X, Q.mass x xh) = Q.marginalY xh := rfl
       rw [Finset.sum_add_distrib, ← Finset.sum_mul,
-        Finset.sum_congr rfl (fun x _ => congrArg Real.negMulLog (hQmass' x)),
-        Finset.sum_congr rfl (fun x _ => hQmass' x), hQmarg_via_x, hQmarg',
+        Finset.sum_congr rfl (fun x _ ↦ congrArg Real.negMulLog (hQmass' x)),
+        Finset.sum_congr rfl (fun x _ ↦ hQmass' x), hQmarg_via_x, hQmarg',
         h_neg_to_negMul]
       ring
     rw [hLHS, hRHS] at h_sum_x
     exact h_sum_x
   -- Sum h_per_xh over xh and reduce to condEntropy comparison.
   have h_sum_xh : (∑ xh : X,
-        ((∑ x : X, ∑ y ∈ Finset.univ.filter (fun y => f y = xh),
+        ((∑ x : X, ∑ y ∈ Finset.univ.filter (fun y ↦ f y = xh),
               Real.negMulLog (P.mass x y))
-          - ∑ y ∈ Finset.univ.filter (fun y => f y = xh),
+          - ∑ y ∈ Finset.univ.filter (fun y ↦ f y = xh),
               Real.negMulLog (P.marginalY y)))
       ≤ ∑ xh : X,
         ((∑ x : X, Real.negMulLog (Q.mass x xh)) - Real.negMulLog (Q.marginalY xh)) :=
     Finset.sum_le_sum (s := (Finset.univ : Finset X))
-      (fun xh _ => h_per_xh xh)
+      (fun xh _ ↦ h_per_xh xh)
   rw [Finset.sum_sub_distrib, Finset.sum_sub_distrib] at h_sum_xh
   -- LHS: ∑ xh, ∑ x, ∑ y in F xh = ∑ x, ∑ y, ... (sum_comm + sum_fiberwise).
-  rw [show (∑ xh : X, ∑ x : X, ∑ y ∈ Finset.univ.filter (fun y => f y = xh),
+  rw [show (∑ xh : X, ∑ x : X, ∑ y ∈ Finset.univ.filter (fun y ↦ f y = xh),
               Real.negMulLog (P.mass x y))
         = ∑ x : X, ∑ y, Real.negMulLog (P.mass x y) by
     rw [Finset.sum_comm]
-    refine Finset.sum_congr rfl (fun x _ => ?_)
-    exact Finset.sum_fiberwise Finset.univ f (fun y => Real.negMulLog (P.mass x y))] at h_sum_xh
-  rw [show (∑ xh : X, ∑ y ∈ Finset.univ.filter (fun y => f y = xh),
+    refine Finset.sum_congr rfl (fun x _ ↦ ?_)
+    exact Finset.sum_fiberwise Finset.univ f (fun y ↦ Real.negMulLog (P.mass x y))] at h_sum_xh
+  rw [show (∑ xh : X, ∑ y ∈ Finset.univ.filter (fun y ↦ f y = xh),
               Real.negMulLog (P.marginalY y))
         = ∑ y, Real.negMulLog (P.marginalY y) from
-    Finset.sum_fiberwise Finset.univ f (fun y => Real.negMulLog (P.marginalY y))]
+    Finset.sum_fiberwise Finset.univ f (fun y ↦ Real.negMulLog (P.marginalY y))]
     at h_sum_xh
   -- RHS: ∑ xh, ∑ x, negMulLog(Q.mass x xh) = ∑ x, ∑ xh, ... = Q.jointEntropy.
   rw [show (∑ xh : X, ∑ x : X, Real.negMulLog (Q.mass x xh))
@@ -319,14 +319,14 @@ lemma pushforward_errorProb (P : FiniteJointPMF X Y) (f : Y → X) :
   simp only
   -- LHS = ∑ x, ∑ xh, if x = xh then 0 else ∑ y in fiber, P.mass x y
   -- RHS = ∑ x, ∑ y, if x = f y then 0 else P.mass x y
-  refine Finset.sum_congr rfl (fun x _ => ?_)
+  refine Finset.sum_congr rfl (fun x _ ↦ ?_)
   -- For each x: ∑ xh, (if x = xh then 0 else ∑ y in fiber, P.mass x y)
   --           = ∑ xh, ∑ y in fiber, (if x = xh then 0 else P.mass x y)
   --           = ∑ xh, ∑ y in fiber, (if x = f y then 0 else P.mass x y)  [in fiber, xh = f y]
   --           = ∑ y, (if x = f y then 0 else P.mass x y)                 [sum_fiberwise]
   have hstep1 : ∀ xh, (if x = xh then (0 : ℝ)
-                        else ∑ y ∈ Finset.univ.filter (fun y => f y = xh), P.mass x y)
-      = ∑ y ∈ Finset.univ.filter (fun y => f y = xh),
+                        else ∑ y ∈ Finset.univ.filter (fun y ↦ f y = xh), P.mass x y)
+      = ∑ y ∈ Finset.univ.filter (fun y ↦ f y = xh),
           (if x = f y then (0 : ℝ) else P.mass x y) := by
     intro xh
     by_cases hx : x = xh
@@ -338,12 +338,12 @@ lemma pushforward_errorProb (P : FiniteJointPMF X Y) (f : Y → X) :
       have hy' : f y = x := (Finset.mem_filter.mp hy).2
       simp [hy']
     · rw [if_neg hx]
-      refine Finset.sum_congr rfl (fun y hy => ?_)
+      refine Finset.sum_congr rfl (fun y hy ↦ ?_)
       have hy' : f y = xh := (Finset.mem_filter.mp hy).2
       have hne : ¬ x = f y := by rw [hy']; exact hx
       rw [if_neg hne]
-  rw [Finset.sum_congr rfl (fun xh _ => hstep1 xh)]
-  exact Finset.sum_fiberwise Finset.univ f (fun y => if x = f y then 0 else P.mass x y)
+  rw [Finset.sum_congr rfl (fun xh _ ↦ hstep1 xh)]
+  exact Finset.sum_fiberwise Finset.univ f (fun y ↦ if x = f y then 0 else P.mass x y)
 
 /-! ## Decoder form recovered from Markov Fano + DPI -/
 

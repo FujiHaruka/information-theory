@@ -126,7 +126,7 @@ lemma sum_sqrt_add_sq_le_four
     nlinarith [h_sq_p, h_sq_q, h_AM_GM]
   have h_sum_le : ∑ i : α, (Real.sqrt (p i) + Real.sqrt (q i))^2
       ≤ ∑ i : α, 2 * (p i + q i) :=
-    Finset.sum_le_sum fun i _ => h_per_i i
+    Finset.sum_le_sum fun i _ ↦ h_per_i i
   have h_sum_PQ : ∑ i : α, 2 * (p i + q i) = 4 := by
     rw [← Finset.mul_sum, Finset.sum_add_distrib, hpsum, hqsum]; ring
   linarith
@@ -165,14 +165,14 @@ theorem tvNorm_le_sqrt_klDiv
       = ∑ x : α, Q.real {x} * klFun (P.rnDeriv Q x).toReal := by
     rw [toReal_klDiv_eq_integral_klFun hPQ]
     -- ∫ x, klFun (P.rnDeriv Q x).toReal ∂Q = ∑ x : α, Q.real {x} * klFun (...)
-    have h_int : Integrable (fun x => klFun (P.rnDeriv Q x).toReal) Q := by
+    have h_int : Integrable (fun x ↦ klFun (P.rnDeriv Q x).toReal) Q := by
       refine ⟨(stronglyMeasurable_klFun.comp_measurable
         ((Measure.measurable_rnDeriv P Q).ennreal_toReal)).aestronglyMeasurable, ?_⟩
       rw [hasFiniteIntegral_iff_enorm, lintegral_fintype]
-      exact ENNReal.sum_lt_top.mpr fun _ _ =>
+      exact ENNReal.sum_lt_top.mpr fun _ _ ↦
         ENNReal.mul_lt_top ENNReal.coe_lt_top (measure_lt_top _ _)
     rw [integral_fintype h_int]
-    refine Finset.sum_congr rfl fun x _ => ?_
+    refine Finset.sum_congr rfl fun x _ ↦ ?_
     rw [smul_eq_mul]
   -- Step 3: per-element Bretagnolle-Huber: Q.real{x} * klFun(rnDeriv x)
   --         ≥ (√P.real{x} - √Q.real{x})^2.
@@ -237,12 +237,12 @@ theorem tvNorm_le_sqrt_klDiv
   have h_KL_ge_H2 : ∑ x : α, (Real.sqrt (P.real {x}) - Real.sqrt (Q.real {x}))^2
       ≤ (klDiv P Q).toReal := by
     rw [h_KL_eq]
-    exact Finset.sum_le_sum fun x _ => h_per_x x
+    exact Finset.sum_le_sum fun x _ ↦ h_per_x x
   -- Step 5: Cauchy-Schwarz (via finset_cs_sqrt_sq)
   have h_CS : (∑ x : α, |P.real {x} - Q.real {x}|)^2
       ≤ (∑ x : α, (Real.sqrt (P.real {x}) - Real.sqrt (Q.real {x}))^2)
         * (∑ x : α, (Real.sqrt (P.real {x}) + Real.sqrt (Q.real {x}))^2) :=
-    finset_cs_sqrt_sq _ _ (fun _ => measureReal_nonneg) (fun _ => measureReal_nonneg)
+    finset_cs_sqrt_sq _ _ (fun _ ↦ measureReal_nonneg) (fun _ ↦ measureReal_nonneg)
   -- Step 6: Σ (√p + √q)^2 ≤ 4 (via sum_sqrt_add_sq_le_four)
   have h_P : ∑ x : α, P.real {x} = 1 := by
     rw [show (∑ x : α, P.real {x}) = ∑ x ∈ (Finset.univ : Finset α), P.real {x} from rfl,
@@ -255,7 +255,7 @@ theorem tvNorm_le_sqrt_klDiv
     rw [show ((Finset.univ : Finset α) : Set α) = Set.univ from Finset.coe_univ]
     simp [measureReal_def, measure_univ]
   have h_sum_sq_sum_le_4 : ∑ x : α, (Real.sqrt (P.real {x}) + Real.sqrt (Q.real {x}))^2 ≤ 4 :=
-    sum_sqrt_add_sq_le_four _ _ (fun _ => measureReal_nonneg) (fun _ => measureReal_nonneg)
+    sum_sqrt_add_sq_le_four _ _ (fun _ ↦ measureReal_nonneg) (fun _ ↦ measureReal_nonneg)
       h_P h_Q
   -- Step 7: combine. (2 * tvNorm)^2 = (Σ |p-q|)^2 ≤ H² * 4 ≤ 4 * KL.toReal.
   -- So tvNorm^2 ≤ KL.toReal, hence tvNorm ≤ √KL.toReal.
@@ -263,10 +263,10 @@ theorem tvNorm_le_sqrt_klDiv
     unfold tvNorm; ring
   have h_KL_nn : 0 ≤ (klDiv P Q).toReal := ENNReal.toReal_nonneg
   have h_H2_nn : 0 ≤ ∑ x : α, (Real.sqrt (P.real {x}) - Real.sqrt (Q.real {x}))^2 :=
-    Finset.sum_nonneg fun _ _ => sq_nonneg _
+    Finset.sum_nonneg fun _ _ ↦ sq_nonneg _
   have h_sum_sum_sq_nn :
       0 ≤ ∑ x : α, (Real.sqrt (P.real {x}) + Real.sqrt (Q.real {x}))^2 :=
-    Finset.sum_nonneg fun _ _ => sq_nonneg _
+    Finset.sum_nonneg fun _ _ ↦ sq_nonneg _
   -- (2 * tvNorm)^2 ≤ Σ (√p-√q)^2 * Σ (√p+√q)^2 ≤ Σ (√p-√q)^2 * 4 ≤ KL.toReal * 4
   have h_main_sq : (2 * tvNorm P Q)^2 ≤ 4 * (klDiv P Q).toReal := by
     have h1 : (2 * tvNorm P Q)^2 ≤

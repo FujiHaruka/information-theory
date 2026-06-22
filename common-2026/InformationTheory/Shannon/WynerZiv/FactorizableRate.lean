@@ -181,12 +181,12 @@ lemma IsWynerZivFactorizable_sum
   refine Finset.sum_congr rfl ?_
   intro x _
   -- ∑ p : β × U, q (x, p) = ∑ y, P_XY (x, y).
-  rw [Fintype.sum_prod_type (f := fun p : β × U => q (x, p.1, p.2))]
+  rw [Fintype.sum_prod_type (f := fun p : β × U ↦ q (x, p.1, p.2))]
   -- ∑ y, ∑ u, q (x, y, u) = ∑ y, P_XY (x, y).
   refine Finset.sum_congr rfl ?_
   intro y _
   -- ∑ u, q (x, y, u) = P_XY (x, y).
-  have h_rewrite : ∀ u, q (x, y, u) = κ x u * P_XY (x, y) := fun u => hκeq x y u
+  have h_rewrite : ∀ u, q (x, y, u) = κ x u * P_XY (x, y) := fun u ↦ hκeq x y u
   calc (∑ u, q (x, y, u))
       = ∑ u, κ x u * P_XY (x, y) := by
         refine Finset.sum_congr rfl ?_; intro u _; exact h_rewrite u
@@ -239,7 +239,7 @@ lemma IsWynerZivFactorizable_convex_combination
     IsWynerZivFactorizable U P_XY (a • q₁ + b • q₂) := by
   rcases h1 with ⟨κ₁, hκ₁nn, hκ₁sum, hκ₁eq⟩
   rcases h2 with ⟨κ₂, hκ₂nn, hκ₂sum, hκ₂eq⟩
-  refine ⟨fun x u => a * κ₁ x u + b * κ₂ x u, ?_, ?_, ?_⟩
+  refine ⟨fun x u ↦ a * κ₁ x u + b * κ₂ x u, ?_, ?_, ?_⟩
   · intro x u
     exact add_nonneg (mul_nonneg ha (hκ₁nn x u)) (mul_nonneg hb (hκ₂nn x u))
   · intro x
@@ -381,7 +381,7 @@ This is the form Cover–Thomas §15.9 directly addresses: the minimisation
 over auxiliary kernels `κ(u|x)` with side-information decoders `f(u,y)`. -/
 noncomputable def wynerZivRateFactorizable
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) : ℝ :=
-  sInf ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+  sInf ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
               wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
         '' WynerZivFactorizableConstraint U P_XY d D)
 
@@ -390,11 +390,11 @@ noncomputable def wynerZivRateFactorizable
 @[entry_point]
 theorem wynerZivRateFactorizable_antitone
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {D D' : ℝ} (hD : D ≤ D')
-    (h_ne : ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+    (h_ne : ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
                 wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
               '' WynerZivFactorizableConstraint U P_XY d D).Nonempty)
     (h_bdd : BddBelow
-      ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+      ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
                 wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
         '' WynerZivFactorizableConstraint U P_XY d D')) :
     wynerZivRateFactorizable U P_XY d D' ≤ wynerZivRateFactorizable U P_XY d D := by
@@ -428,7 +428,7 @@ theorem wynerZivRateFactorizable_convex
     (h_feasible₂ : (q₂, f) ∈ WynerZivFactorizableConstraint U P_XY d D₂)
     {a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) (hab : a + b = 1)
     (h_bdd_mixed : BddBelow
-      ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+      ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
                 wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
         '' WynerZivFactorizableConstraint U P_XY d (a * D₁ + b * D₂))) :
     wynerZivRateFactorizable U P_XY d (a * D₁ + b * D₂)
@@ -451,7 +451,7 @@ theorem wynerZivRateFactorizable_convex
   have h_mixed_in_image :
       wzMutualInfoXU U (a • q₁ + b • q₂)
         - wzMutualInfoYU U (a • q₁ + b • q₂)
-        ∈ ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+        ∈ ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
                   wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
             '' WynerZivFactorizableConstraint U P_XY d (a * D₁ + b * D₂)) :=
     ⟨(a • q₁ + b • q₂, f), h_mixed_feasible, rfl⟩
@@ -483,15 +483,15 @@ lemma wynerZivFactorizableObjective_image_bddBelow
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
     (d : α → γ → ℝ) (D : ℝ) :
     BddBelow
-      ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+      ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
                 wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
         '' WynerZivFactorizableConstraint U P_XY d D) := by
   -- Image of factorisable constraint is contained in image of raw constraint.
   have h_subset :
-      ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+      ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
                 wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
           '' WynerZivFactorizableConstraint U P_XY d D)
-        ⊆ ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+        ⊆ ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
                 wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
           '' WynerZivConstraint U P_XY d D) := by
     rintro v ⟨qf, hqf, rfl⟩

@@ -74,9 +74,9 @@ noncomputable def expectedBlockDistortion
     (c : WynerZivCode M n α β γ) (P_XY : Measure (α × β))
     (d : DistortionFn α γ) : ℝ :=
   ∫ p : Fin n → α × β,
-      blockDistortion d n (fun i => (p i).1)
-        (c.decoder (c.encoder (fun i => (p i).1), fun i => (p i).2))
-    ∂(Measure.pi (fun _ : Fin n => P_XY))
+      blockDistortion d n (fun i ↦ (p i).1)
+        (c.decoder (c.encoder (fun i ↦ (p i).1), fun i ↦ (p i).2))
+    ∂(Measure.pi (fun _ : Fin n ↦ P_XY))
 
 /-- Expected block distortion is non-negative (the integrand is a non-negative
 real-valued function). -/
@@ -86,7 +86,7 @@ theorem expectedBlockDistortion_nonneg
     (d : DistortionFn α γ) :
     0 ≤ c.expectedBlockDistortion P_XY d := by
   unfold expectedBlockDistortion
-  exact integral_nonneg fun _ => blockDistortion_nonneg d n _ _
+  exact integral_nonneg fun _ ↦ blockDistortion_nonneg d n _ _
 
 end WynerZivCode
 
@@ -100,15 +100,15 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
 /-- `(α, β)`-marginal of a joint pmf `q : α × β × U → ℝ`. -/
 noncomputable def wzMarginalXY (q : α × β × U → ℝ) : α × β → ℝ :=
-  fun p => ∑ u, q (p.1, p.2, u)
+  fun p ↦ ∑ u, q (p.1, p.2, u)
 
 /-- `(α, U)`-marginal of a joint pmf `q : α × β × U → ℝ`. -/
 noncomputable def wzMarginalXU (q : α × β × U → ℝ) : α × U → ℝ :=
-  fun p => ∑ y, q (p.1, y, p.2)
+  fun p ↦ ∑ y, q (p.1, y, p.2)
 
 /-- `(β, U)`-marginal of a joint pmf `q : α × β × U → ℝ`. -/
 noncomputable def wzMarginalYU (q : α × β × U → ℝ) : β × U → ℝ :=
-  fun p => ∑ x, q (x, p.1, p.2)
+  fun p ↦ ∑ x, q (x, p.1, p.2)
 
 /-- 3-variable mutual information `I(X ; U)` for a joint pmf `q : α × β × U → ℝ`,
 defined as `mutualInfoPmf (wzMarginalXU q)`. -/
@@ -122,42 +122,42 @@ noncomputable def wzMutualInfoYU (q : α × β × U → ℝ) : ℝ :=
 
 /-- `wzMarginalXY` is continuous in `q` (finite sum of evaluations). -/
 lemma continuous_wzMarginalXY :
-    Continuous (fun q : α × β × U → ℝ => wzMarginalXY U q) := by
+    Continuous (fun q : α × β × U → ℝ ↦ wzMarginalXY U q) := by
   unfold wzMarginalXY
-  refine continuous_pi fun p => ?_
-  refine continuous_finsetSum _ fun u _ => ?_
+  refine continuous_pi fun p ↦ ?_
+  refine continuous_finsetSum _ fun u _ ↦ ?_
   exact continuous_apply (p.1, p.2, u)
 
 /-- `wzMarginalXU` is continuous in `q`. -/
 lemma continuous_wzMarginalXU :
-    Continuous (fun q : α × β × U → ℝ => wzMarginalXU U q) := by
+    Continuous (fun q : α × β × U → ℝ ↦ wzMarginalXU U q) := by
   unfold wzMarginalXU
-  refine continuous_pi fun p => ?_
-  refine continuous_finsetSum _ fun y _ => ?_
+  refine continuous_pi fun p ↦ ?_
+  refine continuous_finsetSum _ fun y _ ↦ ?_
   exact continuous_apply (p.1, y, p.2)
 
 /-- `wzMarginalYU` is continuous in `q`. -/
 lemma continuous_wzMarginalYU :
-    Continuous (fun q : α × β × U → ℝ => wzMarginalYU U q) := by
+    Continuous (fun q : α × β × U → ℝ ↦ wzMarginalYU U q) := by
   unfold wzMarginalYU
-  refine continuous_pi fun p => ?_
-  refine continuous_finsetSum _ fun x _ => ?_
+  refine continuous_pi fun p ↦ ?_
+  refine continuous_finsetSum _ fun x _ ↦ ?_
   exact continuous_apply (x, p.1, p.2)
 
 /-- `wzMutualInfoXU` is continuous in `q`. -/
 lemma continuous_wzMutualInfoXU :
-    Continuous (fun q : α × β × U → ℝ => wzMutualInfoXU U q) :=
+    Continuous (fun q : α × β × U → ℝ ↦ wzMutualInfoXU U q) :=
   continuous_mutualInfoPmf.comp (continuous_wzMarginalXU U)
 
 /-- `wzMutualInfoYU` is continuous in `q`. -/
 lemma continuous_wzMutualInfoYU :
-    Continuous (fun q : α × β × U → ℝ => wzMutualInfoYU U q) :=
+    Continuous (fun q : α × β × U → ℝ ↦ wzMutualInfoYU U q) :=
   continuous_mutualInfoPmf.comp (continuous_wzMarginalYU U)
 
 /-- The Wyner–Ziv objective `I(X ; U) − I(Y ; U)` is continuous in the joint pmf. -/
 @[entry_point]
 lemma continuous_wzObjective :
-    Continuous (fun q : α × β × U → ℝ => wzMutualInfoXU U q - wzMutualInfoYU U q) :=
+    Continuous (fun q : α × β × U → ℝ ↦ wzMutualInfoXU U q - wzMutualInfoYU U q) :=
   (continuous_wzMutualInfoXU U).sub (continuous_wzMutualInfoYU U)
 
 end PmfForm
@@ -232,7 +232,7 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 with the auxiliary alphabet `U` taken as an argument. -/
 noncomputable def wynerZivRatePmf
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) : ℝ :=
-  sInf ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+  sInf ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
             wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
     '' WynerZivConstraint U P_XY d D)
 
@@ -244,7 +244,7 @@ theorem wynerZivRatePmf_le_of_feasible
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ)
     (qf : (α × β × U → ℝ) × (U × β → γ))
     (hqf : qf ∈ WynerZivConstraint U P_XY d D)
-    (h_bdd : BddBelow ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+    (h_bdd : BddBelow ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
                 wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
             '' WynerZivConstraint U P_XY d D)) :
     wynerZivRatePmf U P_XY d D ≤
@@ -264,13 +264,13 @@ theorem wynerZivRatePmf_attained_slice
     (f₀ : U × β → γ)
     (h_ne : ({q : α × β × U → ℝ | (q, f₀) ∈ WynerZivConstraint U P_XY d D}).Nonempty) :
     ∃ qStar ∈ ({q : α × β × U → ℝ | (q, f₀) ∈ WynerZivConstraint U P_XY d D}),
-      IsMinOn (fun q => wzMutualInfoXU U q - wzMutualInfoYU U q)
+      IsMinOn (fun q ↦ wzMutualInfoXU U q - wzMutualInfoYU U q)
         ({q : α × β × U → ℝ | (q, f₀) ∈ WynerZivConstraint U P_XY d D}) qStar := by
   classical
   set K : Set (α × β × U → ℝ) :=
     {q | (q, f₀) ∈ WynerZivConstraint U P_XY d D}
   have hK_subset : K ⊆ stdSimplex ℝ (α × β × U) :=
-    fun q hq => hq.1
+    fun q hq ↦ hq.1
   -- The Markov cross-product equation set is closed (intersection over
   -- (x, y, u, u') of equality sets between products of continuous evaluations).
   have hMarkov_closed :
@@ -284,24 +284,24 @@ theorem wynerZivRatePmf_attained_slice
       ext q
       simp only [Set.mem_setOf_eq, Set.mem_iInter, wzMarkovCrossEq]
     rw [h_eq]
-    refine isClosed_iInter fun x => ?_
-    refine isClosed_iInter fun y => ?_
-    refine isClosed_iInter fun u => ?_
-    refine isClosed_iInter fun u' => ?_
+    refine isClosed_iInter fun x ↦ ?_
+    refine isClosed_iInter fun y ↦ ?_
+    refine isClosed_iInter fun u ↦ ?_
+    refine isClosed_iInter fun u' ↦ ?_
     refine isClosed_eq ?_ ?_
     · refine Continuous.mul (continuous_apply (x, y, u)) ?_
-      refine continuous_finsetSum _ fun y' _ => ?_
+      refine continuous_finsetSum _ fun y' _ ↦ ?_
       exact continuous_apply (x, y', u')
     · refine Continuous.mul (continuous_apply (x, y, u')) ?_
-      refine continuous_finsetSum _ fun y' _ => ?_
+      refine continuous_finsetSum _ fun y' _ ↦ ?_
       exact continuous_apply (x, y', u)
   have hMarg_closed :
       IsClosed {q : α × β × U → ℝ | wzMarginalXY U q = P_XY} :=
     isClosed_eq (continuous_wzMarginalXY U) continuous_const
   have hDist_cont :
-      Continuous (fun q : α × β × U → ℝ => wzExpectedDistortion U d q f₀) := by
+      Continuous (fun q : α × β × U → ℝ ↦ wzExpectedDistortion U d q f₀) := by
     unfold wzExpectedDistortion
-    refine continuous_finsetSum _ fun p _ => ?_
+    refine continuous_finsetSum _ fun p _ ↦ ?_
     exact (continuous_apply p).mul continuous_const
   have hDist_closed :
       IsClosed {q : α × β × U → ℝ | wzExpectedDistortion U d q f₀ ≤ D} :=
@@ -322,7 +322,7 @@ theorem wynerZivRatePmf_attained_slice
   have hK_compact : IsCompact K :=
     IsCompact.of_isClosed_subset (isCompact_stdSimplex ℝ (α × β × U)) hK_closed hK_subset
   have hCont_obj :
-      Continuous (fun q : α × β × U → ℝ => wzMutualInfoXU U q - wzMutualInfoYU U q) :=
+      Continuous (fun q : α × β × U → ℝ ↦ wzMutualInfoXU U q - wzMutualInfoYU U q) :=
     continuous_wzObjective U
   exact hK_compact.exists_isMinOn h_ne hCont_obj.continuousOn
 
@@ -336,7 +336,7 @@ theorem wynerZivRatePmf_image_bddBelow_of_objective
     (B : ℝ)
     (h_lb : ∀ qf ∈ WynerZivConstraint U P_XY d D,
               B ≤ wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1) :
-    BddBelow ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
+    BddBelow ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
                 wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
             '' WynerZivConstraint U P_XY d D) := by
   refine ⟨B, ?_⟩

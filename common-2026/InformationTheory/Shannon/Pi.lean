@@ -40,21 +40,21 @@ lemma entropy_measurableEquiv_comp
     [Fintype γ] [Nonempty γ]
     [MeasurableSpace γ] [MeasurableSingletonClass γ]
     (μ : Measure Ω) (Xs : Ω → β) (hXs : Measurable Xs) (e : β ≃ᵐ γ) :
-    entropy μ (fun ω => e (Xs ω)) = entropy μ Xs := by
+    entropy μ (fun ω ↦ e (Xs ω)) = entropy μ Xs := by
   unfold entropy
   refine (Fintype.sum_equiv e.toEquiv
-    (fun x => Real.negMulLog ((μ.map Xs).real {x}))
-    (fun y => Real.negMulLog ((μ.map (fun ω => e (Xs ω))).real {y}))
+    (fun x ↦ Real.negMulLog ((μ.map Xs).real {x}))
+    (fun y ↦ Real.negMulLog ((μ.map (fun ω ↦ e (Xs ω))).real {y}))
     ?_).symm
   intro x
   have hpre : (e : β → γ) ⁻¹' {e x} = {x} := by
     ext y
     simp [Set.mem_preimage, Set.mem_singleton_iff, e.injective.eq_iff, eq_comm]
   show Real.negMulLog ((μ.map Xs).real {x})
-      = Real.negMulLog ((μ.map (fun ω => e (Xs ω))).real {(e.toEquiv x : γ)})
+      = Real.negMulLog ((μ.map (fun ω ↦ e (Xs ω))).real {(e.toEquiv x : γ)})
   congr 1
   rw [show (e.toEquiv x : γ) = e x from rfl,
-      show (fun ω => e (Xs ω)) = (e : β → γ) ∘ Xs from rfl,
+      show (fun ω ↦ e (Xs ω)) = (e : β → γ) ∘ Xs from rfl,
       ← Measure.map_map e.measurable hXs,
       measureReal_def, measureReal_def,
       Measure.map_apply e.measurable (measurableSet_singleton _),
@@ -70,22 +70,22 @@ lemma condEntropy_measurableEquiv_comp
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xc : Ω → α) (hXc : Measurable Xc)
     (Yo : Ω → β) (hYo : Measurable Yo) (e : β ≃ᵐ γ) :
-    InformationTheory.MeasureFano.condEntropy μ Xc (fun ω => e (Yo ω))
+    InformationTheory.MeasureFano.condEntropy μ Xc (fun ω ↦ e (Yo ω))
       = InformationTheory.MeasureFano.condEntropy μ Xc Yo := by
   classical
   -- H(Yo, Xc) = H(Yo) + H(Xc | Yo)
   have h₁ := entropy_pair_eq_entropy_add_condEntropy μ Yo Xc hYo hXc
   -- H(e∘Yo, Xc) = H(e∘Yo) + H(Xc | e∘Yo)
   have h₂ := entropy_pair_eq_entropy_add_condEntropy μ
-    (fun ω => e (Yo ω)) Xc (e.measurable.comp hYo) hXc
+    (fun ω ↦ e (Yo ω)) Xc (e.measurable.comp hYo) hXc
   -- H(e∘Yo) = H(Yo)
   have hY := entropy_measurableEquiv_comp μ Yo hYo e
   -- H(e∘Yo, Xc) = H(Yo, Xc) via the prod equiv (e × refl α)
   have hYX :
-      entropy μ (fun ω => (e (Yo ω), Xc ω))
-        = entropy μ (fun ω => (Yo ω, Xc ω)) := by
+      entropy μ (fun ω ↦ (e (Yo ω), Xc ω))
+        = entropy μ (fun ω ↦ (Yo ω, Xc ω)) := by
     have := entropy_measurableEquiv_comp μ
-      (fun ω => (Yo ω, Xc ω)) (hYo.prodMk hXc)
+      (fun ω ↦ (Yo ω, Xc ω)) (hYo.prodMk hXc)
       (MeasurableEquiv.prodCongr e (.refl α))
     simpa using this
   linarith
@@ -100,8 +100,8 @@ theorem condEntropy_nonneg
     (Ws : Ω → W) (Yo : Ω → Y) :
     0 ≤ InformationTheory.MeasureFano.condEntropy μ Ws Yo := by
   unfold InformationTheory.MeasureFano.condEntropy
-  refine integral_nonneg fun y => ?_
-  refine Finset.sum_nonneg fun x _ => ?_
+  refine integral_nonneg fun y ↦ ?_
+  refine Finset.sum_nonneg fun x _ ↦ ?_
   exact Real.negMulLog_nonneg measureReal_nonneg measureReal_le_one
 
 /-! ## Subset reshape index equivalences -/
@@ -142,21 +142,21 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] i
 lemma subsetSplitMEquivAux_apply
     {n : ℕ} {T₁ R U : Finset (Fin n)}
     (hd : Disjoint T₁ R) (hU : T₁ ∪ R = U) (Xs : Fin n → α) :
-    subsetSplitMEquivAux (β := fun _ : Fin n => α) hd hU
-      (fun j : ↥T₁ => Xs j.val, fun j : ↥R => Xs j.val)
-      = fun j : ↥U => Xs j.val := by
+    subsetSplitMEquivAux (β := fun _ : Fin n ↦ α) hd hU
+      (fun j : ↥T₁ ↦ Xs j.val, fun j : ↥R ↦ Xs j.val)
+      = fun j : ↥U ↦ Xs j.val := by
   subst hU
   funext k
   obtain ⟨j, hj⟩ := k
-  show ((MeasurableEquiv.piFinsetUnion (π := fun _ : Fin n => α) hd).trans
+  show ((MeasurableEquiv.piFinsetUnion (π := fun _ : Fin n ↦ α) hd).trans
       (MeasurableEquiv.cast rfl HEq.rfl)
-      (fun j : ↥T₁ => Xs j.val, fun j : ↥R => Xs j.val)) ⟨j, hj⟩ = Xs j
+      (fun j : ↥T₁ ↦ Xs j.val, fun j : ↥R ↦ Xs j.val)) ⟨j, hj⟩ = Xs j
   -- The cast over `rfl` is the identity on values.
   by_cases hjT₁ : j ∈ T₁
   · exact MeasurableEquiv.piFinsetUnion_apply_left
-      (β := fun _ : Fin n => α) hd hjT₁ hj
+      (β := fun _ : Fin n ↦ α) hd hjT₁ hj
   · have hjR : j ∈ R := (Finset.mem_union.mp hj).resolve_left hjT₁
     exact MeasurableEquiv.piFinsetUnion_apply_right
-      (β := fun _ : Fin n => α) hd hjR hj
+      (β := fun _ : Fin n ↦ α) hd hjR hj
 
 end InformationTheory.Shannon

@@ -63,22 +63,22 @@ lemma klDivPmf_nonneg (P Q : α → ℝ)
     (hP : ∀ a, 0 ≤ P a) (hQ : ∀ a, 0 ≤ Q a) :
     0 ≤ klDivPmf P Q := by
   unfold klDivPmf
-  refine Finset.sum_nonneg fun a _ => ?_
+  refine Finset.sum_nonneg fun a _ ↦ ?_
   have h_ratio_nn : 0 ≤ P a / Q a := div_nonneg (hP a) (hQ a)
   exact mul_nonneg (hQ a) (klFun_nonneg h_ratio_nn)
 
 /-- `klFun` is continuous on `[0, ∞)` (Mathlib `continuous_klFun`). The composition
 `fun P => klFun (P a / Q a)` is continuous in P when `Q a > 0`. -/
 lemma continuous_klDivPmf_left (Q : α → ℝ) (hQ_pos : ∀ a, 0 < Q a) :
-    Continuous (fun P : α → ℝ => klDivPmf P Q) := by
+    Continuous (fun P : α → ℝ ↦ klDivPmf P Q) := by
   unfold klDivPmf
-  refine continuous_finsetSum _ fun a _ => ?_
+  refine continuous_finsetSum _ fun a _ ↦ ?_
   -- (Q a) * klFun ((P a) / (Q a)) : continuous in P.
   have hQne : Q a ≠ 0 := (hQ_pos a).ne'
-  have h_apply : Continuous (fun P : α → ℝ => P a) := continuous_apply a
-  have h_div : Continuous (fun P : α → ℝ => P a / Q a) :=
+  have h_apply : Continuous (fun P : α → ℝ ↦ P a) := continuous_apply a
+  have h_div : Continuous (fun P : α → ℝ ↦ P a / Q a) :=
     h_apply.div_const (Q a)
-  have h_kl : Continuous (fun P : α → ℝ => klFun (P a / Q a)) :=
+  have h_kl : Continuous (fun P : α → ℝ ↦ klFun (P a / Q a)) :=
     continuous_klFun.comp h_div
   exact h_kl.const_mul (Q a)
 
@@ -92,7 +92,7 @@ gives strict convexity of the sum.
 (But care: if `P = P'` they agree in every coordinate; if `P ≠ P'` then there is at least
 one coordinate `a` where `P a ≠ P' a`, and at that coordinate `klFun` strict convexity fires.) -/
 lemma klDivPmf_strictConvexOn_left (Q : α → ℝ) (hQ_pos : ∀ a, 0 < Q a) :
-    StrictConvexOn ℝ (stdSimplex ℝ α) (fun P : α → ℝ => klDivPmf P Q) := by
+    StrictConvexOn ℝ (stdSimplex ℝ α) (fun P : α → ℝ ↦ klDivPmf P Q) := by
   refine ⟨convex_stdSimplex ℝ α, ?_⟩
   intro P hP P' hP' hne s t hs ht hst
   -- We need: klDivPmf (s • P + t • P') Q < s * klDivPmf P Q + t * klDivPmf P' Q
@@ -101,10 +101,10 @@ lemma klDivPmf_strictConvexOn_left (Q : α → ℝ) (hQ_pos : ∀ a, 0 < Q a) :
     by_contra h_all_eq
     apply hne
     funext a
-    exact not_not.mp (fun hne_a => h_all_eq ⟨a, hne_a⟩)
+    exact not_not.mp (fun hne_a ↦ h_all_eq ⟨a, hne_a⟩)
   -- Per-coordinate ratios: P a / Q a ∈ Ici 0 (since hP.1, hQ_pos).
-  have h_ratio_nn : ∀ a, 0 ≤ P a / Q a := fun a => div_nonneg (hP.1 a) (hQ_pos a).le
-  have h_ratio_nn' : ∀ a, 0 ≤ P' a / Q a := fun a => div_nonneg (hP'.1 a) (hQ_pos a).le
+  have h_ratio_nn : ∀ a, 0 ≤ P a / Q a := fun a ↦ div_nonneg (hP.1 a) (hQ_pos a).le
+  have h_ratio_nn' : ∀ a, 0 ≤ P' a / Q a := fun a ↦ div_nonneg (hP'.1 a) (hQ_pos a).le
   -- per-coordinate convexity of klFun on [0,∞)
   have h_ratio_combo : ∀ a : α,
       (s • P + t • P') a / Q a = s * (P a / Q a) + t * (P' a / Q a) := by
@@ -146,14 +146,14 @@ lemma klDivPmf_strictConvexOn_left (Q : α → ℝ) (hQ_pos : ∀ a, 0 < Q a) :
   have h_total :
       ∑ a, Q a * klFun ((s • P + t • P') a / Q a)
         < ∑ a, Q a * (s * klFun (P a / Q a) + t * klFun (P' a / Q a)) := by
-    refine Finset.sum_lt_sum (fun a _ => ?_) ⟨a₀, Finset.mem_univ _, ?_⟩
+    refine Finset.sum_lt_sum (fun a _ ↦ ?_) ⟨a₀, Finset.mem_univ _, ?_⟩
     · exact mul_le_mul_of_nonneg_left (h_per a) (hQ_pos a).le
     · exact mul_lt_mul_of_pos_left h_strict_a₀ (hQ_pos a₀)
   have h_split : ∑ a, Q a * (s * klFun (P a / Q a) + t * klFun (P' a / Q a))
       = s * ∑ a, Q a * klFun (P a / Q a) + t * ∑ a, Q a * klFun (P' a / Q a) := by
     have : ∑ a, Q a * (s * klFun (P a / Q a) + t * klFun (P' a / Q a))
         = ∑ a, (s * (Q a * klFun (P a / Q a)) + t * (Q a * klFun (P' a / Q a))) := by
-      refine Finset.sum_congr rfl fun a _ => ?_
+      refine Finset.sum_congr rfl fun a _ ↦ ?_
       ring
     rw [this, Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum]
   rw [smul_eq_mul, smul_eq_mul]
@@ -174,9 +174,9 @@ theorem csiszar_projection_exists {K : Set (α → ℝ)} {Q : α → ℝ}
     (hK_sub : K ⊆ stdSimplex ℝ α)
     (hK_ne : K.Nonempty)
     (hQ_pos : ∀ a, 0 < Q a) :
-    ∃ Qstar ∈ K, IsMinOn (fun P => klDivPmf P Q) K Qstar := by
+    ∃ Qstar ∈ K, IsMinOn (fun P ↦ klDivPmf P Q) K Qstar := by
   have hK_compact : IsCompact K := isCompact_of_subset_stdSimplex hK_closed hK_sub
-  have h_cont : Continuous (fun P : α → ℝ => klDivPmf P Q) :=
+  have h_cont : Continuous (fun P : α → ℝ ↦ klDivPmf P Q) :=
     continuous_klDivPmf_left Q hQ_pos
   exact hK_compact.exists_isMinOn hK_ne h_cont.continuousOn
 
@@ -191,8 +191,8 @@ theorem csiszar_projection_unique {K : Set (α → ℝ)} {Q : α → ℝ}
     (hQ_pos : ∀ a, 0 < Q a)
     {Qstar Qstar' : α → ℝ}
     (hQs : Qstar ∈ K) (hQs' : Qstar' ∈ K)
-    (hmin : IsMinOn (fun P => klDivPmf P Q) K Qstar)
-    (hmin' : IsMinOn (fun P => klDivPmf P Q) K Qstar') :
+    (hmin : IsMinOn (fun P ↦ klDivPmf P Q) K Qstar)
+    (hmin' : IsMinOn (fun P ↦ klDivPmf P Q) K Qstar') :
     Qstar = Qstar' := by
   by_contra hne
   -- The two minimizers have the same value (each is ≤ the other).
@@ -273,7 +273,7 @@ lemma klDivPmf_decomp_via_intermediate
   rw [klDivPmf_eq_log_diff_sum hP_sum hQ_sum hP_pos hQ_pos,
       klDivPmf_eq_log_diff_sum hP_sum hQs_sum hP_pos hQs_pos]
   rw [← Finset.sum_add_distrib]
-  refine Finset.sum_congr rfl fun a _ => ?_
+  refine Finset.sum_congr rfl fun a _ ↦ ?_
   ring
 
 /-- Expansion of `klDivPmf Q* Q` in log-ratio form:
@@ -292,19 +292,19 @@ lemma klDivPmf_self_expand
 equal to `∑ a, (P a - Qstar a) * (log (Qstar a) - log (Q a))`. -/
 lemma csiszar_segment_hasDerivAt
     {Q Qstar P : α → ℝ} (hQ_pos : ∀ a, 0 < Q a) (hQs_pos : ∀ a, 0 < Qstar a) :
-    HasDerivAt (fun t : ℝ => klDivPmf ((1 - t) • Qstar + t • P) Q)
+    HasDerivAt (fun t : ℝ ↦ klDivPmf ((1 - t) • Qstar + t • P) Q)
       (∑ a : α, (P a - Qstar a) * (Real.log (Qstar a) - Real.log (Q a))) 0 := by
   classical
-  set Pt : ℝ → α → ℝ := fun t => (1 - t) • Qstar + t • P with hPt_def
+  set Pt : ℝ → α → ℝ := fun t ↦ (1 - t) • Qstar + t • P with hPt_def
   -- per-coordinate derivative
   have h_per : ∀ a : α,
-      HasDerivAt (fun t : ℝ => Q a * klFun (Pt t a / Q a))
+      HasDerivAt (fun t : ℝ ↦ Q a * klFun (Pt t a / Q a))
         ((P a - Qstar a) * (Real.log (Qstar a) - Real.log (Q a))) 0 := by
     intro a
     have hQne : Q a ≠ 0 := (hQ_pos a).ne'
     -- g_a t := Pt t a / Q a = Qstar a / Q a + t * ((P a - Qstar a) / Q a).
-    have h_g_eq : (fun t : ℝ => Pt t a / Q a)
-        = fun t => Qstar a / Q a + t * ((P a - Qstar a) / Q a) := by
+    have h_g_eq : (fun t : ℝ ↦ Pt t a / Q a)
+        = fun t ↦ Qstar a / Q a + t * ((P a - Qstar a) / Q a) := by
       funext t
       have h_apply : Pt t a = (1 - t) * Qstar a + t * P a := by
         simp [hPt_def, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
@@ -312,13 +312,13 @@ lemma csiszar_segment_hasDerivAt
       field_simp
       ring
     -- HasDerivAt g_a ((P a - Qstar a) / Q a) 0
-    have h_g_deriv : HasDerivAt (fun t : ℝ => Pt t a / Q a) ((P a - Qstar a) / Q a) 0 := by
+    have h_g_deriv : HasDerivAt (fun t : ℝ ↦ Pt t a / Q a) ((P a - Qstar a) / Q a) 0 := by
       rw [h_g_eq]
-      have h1 : HasDerivAt (fun t : ℝ => t * ((P a - Qstar a) / Q a))
+      have h1 : HasDerivAt (fun t : ℝ ↦ t * ((P a - Qstar a) / Q a))
           ((P a - Qstar a) / Q a) 0 := by
         have := (hasDerivAt_id (0 : ℝ)).mul_const ((P a - Qstar a) / Q a)
         simpa using this
-      have h2 : HasDerivAt (fun t : ℝ => Qstar a / Q a + t * ((P a - Qstar a) / Q a))
+      have h2 : HasDerivAt (fun t : ℝ ↦ Qstar a / Q a + t * ((P a - Qstar a) / Q a))
           ((P a - Qstar a) / Q a) 0 := by
         have := h1.const_add (Qstar a / Q a)
         simpa using this
@@ -334,17 +334,17 @@ lemma csiszar_segment_hasDerivAt
       hasDerivAt_klFun h_g0_pos.ne'
     -- Need klFun at (Pt 0 a / Q a) which equals Qstar a / Q a.
     have h_klfun_deriv' : HasDerivAt klFun (Real.log (Qstar a / Q a))
-        ((fun t : ℝ => Pt t a / Q a) 0) := by
+        ((fun t : ℝ ↦ Pt t a / Q a) 0) := by
       show HasDerivAt klFun (Real.log (Qstar a / Q a)) (Pt 0 a / Q a)
       rw [h_g0]
       exact h_klfun_deriv
     -- Chain rule (klFun ∘ g_a) has derivative log(g 0) * g'(0).
-    have h_kl_deriv : HasDerivAt (fun t : ℝ => klFun (Pt t a / Q a))
+    have h_kl_deriv : HasDerivAt (fun t : ℝ ↦ klFun (Pt t a / Q a))
         (Real.log (Qstar a / Q a) * ((P a - Qstar a) / Q a)) 0 := by
       have := h_klfun_deriv'.comp (0 : ℝ) h_g_deriv
       simpa [Function.comp_def] using this
     -- × Q a (const_mul)
-    have h_scaled : HasDerivAt (fun t : ℝ => Q a * klFun (Pt t a / Q a))
+    have h_scaled : HasDerivAt (fun t : ℝ ↦ Q a * klFun (Pt t a / Q a))
         (Q a * (Real.log (Qstar a / Q a) * ((P a - Qstar a) / Q a))) 0 :=
       h_kl_deriv.const_mul (Q a)
     -- Massage the RHS:
@@ -356,19 +356,19 @@ lemma csiszar_segment_hasDerivAt
     rw [h_rhs_eq] at h_scaled
     exact h_scaled
   -- Sum: HasDerivAt of φ = ∑ … = D
-  have h_sum : HasDerivAt (fun t : ℝ => ∑ a : α, Q a * klFun (Pt t a / Q a))
+  have h_sum : HasDerivAt (fun t : ℝ ↦ ∑ a : α, Q a * klFun (Pt t a / Q a))
       (∑ a : α, (P a - Qstar a) * (Real.log (Qstar a) - Real.log (Q a))) 0 := by
     have h_sum_fn := HasDerivAt.sum (u := Finset.univ) (𝕜 := ℝ)
-      (fun a _ => h_per a)
+      (fun a _ ↦ h_per a)
     have h_fun_eq :
-        (fun t : ℝ => ∑ a : α, Q a * klFun (Pt t a / Q a))
-          = ∑ a ∈ (Finset.univ : Finset α), fun t : ℝ => Q a * klFun (Pt t a / Q a) := by
+        (fun t : ℝ ↦ ∑ a : α, Q a * klFun (Pt t a / Q a))
+          = ∑ a ∈ (Finset.univ : Finset α), fun t : ℝ ↦ Q a * klFun (Pt t a / Q a) := by
       funext t
       simp [Finset.sum_apply]
     rw [h_fun_eq]
     exact h_sum_fn
   -- klDivPmf (Pt t) Q matches the sum (defeq).
-  show HasDerivAt (fun t : ℝ => klDivPmf (Pt t) Q)
+  show HasDerivAt (fun t : ℝ ↦ klDivPmf (Pt t) Q)
     (∑ a : α, (P a - Qstar a) * (Real.log (Qstar a) - Real.log (Q a))) 0
   have h_eq : ∀ t : ℝ, klDivPmf (Pt t) Q = ∑ a : α, Q a * klFun (Pt t a / Q a) := by
     intro t; rfl
@@ -385,14 +385,14 @@ lemma csiszar_first_order_condition
     (hK_conv : Convex ℝ K)
     (hQ_pos : ∀ a, 0 < Q a)
     {Qstar : α → ℝ} (hQs : Qstar ∈ K) (hQs_pos : ∀ a, 0 < Qstar a)
-    (hmin : IsMinOn (fun P => klDivPmf P Q) K Qstar)
+    (hmin : IsMinOn (fun P ↦ klDivPmf P Q) K Qstar)
     {P : α → ℝ} (hP : P ∈ K) :
     0 ≤ ∑ a : α, (P a - Qstar a) * (Real.log (Qstar a) - Real.log (Q a)) := by
   classical
   -- Segment: Pt t := (1 - t) • Qstar + t • P, with Pt 0 = Qstar.
-  set Pt : ℝ → α → ℝ := fun t => (1 - t) • Qstar + t • P with hPt_def
+  set Pt : ℝ → α → ℝ := fun t ↦ (1 - t) • Qstar + t • P with hPt_def
   -- φ t := klDivPmf (Pt t) Q
-  set φ : ℝ → ℝ := fun t => klDivPmf (Pt t) Q with hφ_def
+  set φ : ℝ → ℝ := fun t ↦ klDivPmf (Pt t) Q with hφ_def
   set D : ℝ := ∑ a : α, (P a - Qstar a) * (Real.log (Qstar a) - Real.log (Q a)) with hD_def
   -- Step 1: HasDerivAt φ D 0.
   -- For each a, per-coordinate inner function: g_a (t) := Pt t a / Q a
@@ -461,7 +461,7 @@ theorem csiszar_pythagoras_inequality
     (hQ_sum : ∑ a, Q a = 1)
     (hQ_pos : ∀ a, 0 < Q a)
     {Qstar : α → ℝ} (hQs : Qstar ∈ K) (hQs_pos : ∀ a, 0 < Qstar a)
-    (hmin : IsMinOn (fun P => klDivPmf P Q) K Qstar)
+    (hmin : IsMinOn (fun P ↦ klDivPmf P Q) K Qstar)
     {P : α → ℝ} (hP : P ∈ K) (hP_pos : ∀ a, 0 < P a) :
     klDivPmf P Q ≥ klDivPmf P Qstar + klDivPmf Qstar Q := by
   -- Extract simplex membership for P, Qstar.
@@ -483,7 +483,7 @@ theorem csiszar_pythagoras_inequality
       = (∑ a : α, P a * (Real.log (Qstar a) - Real.log (Q a)))
         - (∑ a : α, Qstar a * (Real.log (Qstar a) - Real.log (Q a))) := by
     rw [← Finset.sum_sub_distrib]
-    refine Finset.sum_congr rfl fun a _ => ?_
+    refine Finset.sum_congr rfl fun a _ ↦ ?_
     ring
   rw [h_split] at h_first
   -- Combine: klDivPmf P Q = klDivPmf P Qstar + (∑ Qstar (log Qstar - log Q) + nonneg)

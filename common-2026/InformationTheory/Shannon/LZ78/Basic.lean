@@ -233,30 +233,30 @@ theorem lz78_asymptotic_optimality
     (h_lower : ∀ᵐ ω ∂μ,
         L
         ≤ Filter.liminf
-            (fun n =>
+            (fun n ↦
               (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
                 / (n : ℝ))
             Filter.atTop)
     (h_upper : ∀ᵐ ω ∂μ,
         Filter.limsup
-          (fun n =>
+          (fun n ↦
             (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
               / (n : ℝ))
           Filter.atTop
         ≤ L)
     (h_bdd_above : ∀ᵐ ω ∂μ,
         Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
-          (fun n =>
+          (fun n ↦
             (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
               / (n : ℝ)))
     (h_bdd_below : ∀ᵐ ω ∂μ,
         Filter.IsBoundedUnder (· ≥ ·) Filter.atTop
-          (fun n =>
+          (fun n ↦
             (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
               / (n : ℝ))) :
     ∀ᵐ ω ∂μ,
       Filter.Tendsto
-        (fun n =>
+        (fun n ↦
           (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
             / (n : ℝ))
         Filter.atTop
@@ -281,30 +281,30 @@ theorem lz78_asymptotic_optimality_two_sided
     (h_lower : ∀ᵐ ω ∂μ,
         entropyRate μ p.toStationaryProcess
         ≤ Filter.liminf
-            (fun n =>
+            (fun n ↦
               (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
                 / (n : ℝ))
             Filter.atTop)
     (h_upper : ∀ᵐ ω ∂μ,
         Filter.limsup
-          (fun n =>
+          (fun n ↦
             (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
               / (n : ℝ))
           Filter.atTop
         ≤ entropyRate μ p.toStationaryProcess)
     (h_bdd_above : ∀ᵐ ω ∂μ,
         Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
-          (fun n =>
+          (fun n ↦
             (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
               / (n : ℝ)))
     (h_bdd_below : ∀ᵐ ω ∂μ,
         Filter.IsBoundedUnder (· ≥ ·) Filter.atTop
-          (fun n =>
+          (fun n ↦
             (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
               / (n : ℝ))) :
     ∀ᵐ ω ∂μ,
       Filter.Tendsto
-        (fun n =>
+        (fun n ↦
           (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
             / (n : ℝ))
         Filter.atTop
@@ -329,27 +329,27 @@ theorem lz78_asymptotic_optimality_of_bounds
     (h_combined : ∀ᵐ ω ∂μ,
         (entropyRate μ p.toStationaryProcess
           ≤ Filter.liminf
-              (fun n =>
+              (fun n ↦
                 (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
                   / (n : ℝ))
               Filter.atTop)
         ∧ (Filter.limsup
-              (fun n =>
+              (fun n ↦
                 (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
                   / (n : ℝ))
               Filter.atTop
             ≤ entropyRate μ p.toStationaryProcess)
         ∧ Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
-            (fun n =>
+            (fun n ↦
               (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
                 / (n : ℝ))
         ∧ Filter.IsBoundedUnder (· ≥ ·) Filter.atTop
-            (fun n =>
+            (fun n ↦
               (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
                 / (n : ℝ))) :
     ∀ᵐ ω ∂μ,
       Filter.Tendsto
-        (fun n =>
+        (fun n ↦
           (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
             / (n : ℝ))
         Filter.atTop

@@ -73,7 +73,7 @@ def IsStamInequalityHyp {Ω : Type*} [MeasurableSpace Ω]
     J_X = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
     J_Y = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
     J_sum = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2
-              (P.map (fun ω => X ω + Y ω)) fXY).toReal →
+              (P.map (fun ω ↦ X ω + Y ω)) fXY).toReal →
     InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fX →
     InformationTheory.Shannon.FisherInfo.IsRegularDensityV2 fY →
     (∫ x, fX x ∂MeasureTheory.volume = 1) →
@@ -91,7 +91,7 @@ theorem isStamInequalityHyp_symm
     IsStamInequalityHyp Y X P := by
   intro J_Y J_X J_sum fY fX fXY hJY hJX hJsum hJY_def hJX_def hJsum_def
     hregY hregX hnormY hnormX hconv hready
-  have h_comm : (fun ω => Y ω + X ω) = fun ω => X ω + Y ω := by
+  have h_comm : (fun ω ↦ Y ω + X ω) = fun ω ↦ X ω + Y ω := by
     funext ω; ring
   rw [h_comm] at hJsum_def
   -- transport the pointwise convolution constraint across `convDensityAdd` commutativity
@@ -145,9 +145,9 @@ structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
   integrable_deriv :
     ∀ T : ℝ, 0 < T →
       IntervalIntegrable
-        (fun t : ℝ => (1/2)
+        (fun t : ℝ ↦ (1/2)
           * (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2
-              (P.map (fun ω => X ω + Real.sqrt t * Z ω)) (density_path t)).toReal)
+              (P.map (fun ω ↦ X ω + Real.sqrt t * Z ω)) (density_path t)).toReal)
         volume 0 T
 
 /-! ## §4 — de Bruijn integration predicate -/
@@ -168,11 +168,11 @@ def IsDeBruijnIntegrationHyp {Ω : Type*} [MeasurableSpace Ω]
     ∀ (h_X h_target : ℝ),
       h_X = InformationTheory.Shannon.differentialEntropy (P.map X) →
       h_target = InformationTheory.Shannon.differentialEntropy
-                  (P.map (fun ω => X ω + Real.sqrt T * Z ω)) →
+                  (P.map (fun ω ↦ X ω + Real.sqrt T * Z ω)) →
       h_target - h_X
         = ∫ t in Set.Ioo 0 T, (1/2)
           * (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2
-              (P.map (fun ω => X ω + Real.sqrt t * Z ω)) (fPath t)).toReal ∂volume
+              (P.map (fun ω ↦ X ω + Real.sqrt t * Z ω)) (fPath t)).toReal ∂volume
 
 /-- Trivial degenerate case: when `T ≤ 0` the integration interval `(0, T)` is
 empty, so the identity is `h_target - h_X = 0`. This holds whenever
@@ -183,9 +183,9 @@ theorem isDeBruijnIntegrationHyp_at_zero
     (h_boundary :
       InformationTheory.Shannon.differentialEntropy (P.map X) =
         InformationTheory.Shannon.differentialEntropy
-          (P.map (fun ω => X ω + Real.sqrt 0 * Z ω))) :
+          (P.map (fun ω ↦ X ω + Real.sqrt 0 * Z ω))) :
     IsDeBruijnIntegrationHyp X Z P 0 := by
-  refine ⟨fun _ _ => 0, ?_⟩
+  refine ⟨fun _ _ ↦ 0, ?_⟩
   intro h_X h_target hX_def htarget_def
   -- Integral over the empty set `Ioo 0 0` is 0.
   have h_empty : Set.Ioo (0 : ℝ) 0 = ∅ := by
@@ -240,7 +240,7 @@ theorem isStamToEPIBridgeHyp_of_epi
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_epi : IsEntropyPowerInequalityHypothesis X Y P) :
     IsStamToEPIBridgeHyp X Y P :=
-  fun _ => h_epi
+  fun _ ↦ h_epi
 
 /-- Assembles the Stam inequality and the Stam-to-EPI bridge into the entropy power inequality
 hypothesis `IsEntropyPowerInequalityHypothesis`.
@@ -285,7 +285,7 @@ theorem epi_via_stam_gaussian
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
     (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
+    entropyPower (P.map (fun ω ↦ X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
   -- Equality form from Gaussian saturation.
   have h_eq := entropyPower_gaussian_additivity
@@ -330,12 +330,12 @@ theorem epi_via_stam_three_arg
     (X Y Z G : Ω → ℝ)
     (h_xy_stam : IsStamInequalityHyp X Y P)
     (h_xy_bridge : IsStamToEPIBridgeHyp X Y P)
-    (h_xyz_stam : IsStamInequalityHyp (fun ω => X ω + Y ω) Z P)
-    (h_xyz_bridge : IsStamToEPIBridgeHyp (fun ω => X ω + Y ω) Z P) :
-    entropyPower (P.map (fun ω => X ω + Y ω + Z ω))
+    (h_xyz_stam : IsStamInequalityHyp (fun ω ↦ X ω + Y ω) Z P)
+    (h_xyz_bridge : IsStamToEPIBridgeHyp (fun ω ↦ X ω + Y ω) Z P) :
+    entropyPower (P.map (fun ω ↦ X ω + Y ω + Z ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) + entropyPower (P.map Z) := by
   have h_xy_epi := epi_via_stam X Y G h_xy_stam h_xy_bridge
-  have h_xyz_epi := epi_via_stam (fun ω => X ω + Y ω) Z G h_xyz_stam h_xyz_bridge
+  have h_xyz_epi := epi_via_stam (fun ω ↦ X ω + Y ω) Z G h_xyz_stam h_xyz_bridge
   exact entropy_power_inequality_three_arg P X Y Z h_xyz_epi h_xy_epi
 
 /-! ## §10 — Stam predicate manipulation -/
@@ -364,9 +364,9 @@ theorem isStamInequalityHyp_of_fisherInfo_eq
     (hJY : ∀ f : ℝ → ℝ, InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map Y) f
           = InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map Y') f)
     (hJsum : ∀ f : ℝ → ℝ,
-        InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map (fun ω => X ω + Y ω)) f
+        InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2 (P.map (fun ω ↦ X ω + Y ω)) f
           = InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2
-              (P.map (fun ω => X' ω + Y' ω)) f)
+              (P.map (fun ω ↦ X' ω + Y' ω)) f)
     (h : IsStamInequalityHyp X Y P) :
     IsStamInequalityHyp X' Y' P := by
   intro J_X J_Y J_sum fX fY fXY hJX_pos hJY_pos hJsum_pos hJX_def hJY_def hJsum_def
@@ -378,7 +378,7 @@ theorem isStamInequalityHyp_of_fisherInfo_eq
     rw [hJY_def, hJY]
   have hJsum_def' :
       J_sum = (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2
-              (P.map (fun ω => X ω + Y ω)) fXY).toReal := by
+              (P.map (fun ω ↦ X ω + Y ω)) fXY).toReal := by
     rw [hJsum_def, hJsum]
   exact h J_X J_Y J_sum fX fY fXY hJX_pos hJY_pos hJsum_pos hJX_def' hJY_def' hJsum_def'
 
@@ -389,7 +389,7 @@ case where `X + √0 · Z = X` pointwise. -/
 theorem isDeBruijnIntegrationHyp_at_zero_pointwise
     {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω)
-    (h_pt : (fun ω => X ω + Real.sqrt 0 * Z ω) = X) :
+    (h_pt : (fun ω ↦ X ω + Real.sqrt 0 * Z ω) = X) :
     IsDeBruijnIntegrationHyp X Z P 0 := by
   apply isDeBruijnIntegrationHyp_at_zero
   rw [h_pt]
@@ -397,7 +397,7 @@ theorem isDeBruijnIntegrationHyp_at_zero_pointwise
 /-- **`√0 = 0`** specialization: at `T = 0`, the heat-flow path returns
 `X + 0 · Z = X`. Used to discharge `isDeBruijnIntegrationHyp_at_zero`. -/
 theorem heat_flow_path_at_zero {Ω : Type*} (X Z : Ω → ℝ) :
-    (fun ω => X ω + Real.sqrt 0 * Z ω) = X := by
+    (fun ω ↦ X ω + Real.sqrt 0 * Z ω) = X := by
   funext ω
   rw [Real.sqrt_zero, zero_mul, add_zero]
 
@@ -441,7 +441,7 @@ theorem entropyPower_gaussian_sum_eq
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
     (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
+    entropyPower (P.map (fun ω ↦ X ω + Y ω))
       = entropyPower (P.map X) + entropyPower (P.map Y) :=
   entropyPower_gaussian_additivity P X Y hX hY hXY m₁ m₂ v₁ v₂
     hv₁ hv₂ hLawX hLawY
@@ -458,16 +458,16 @@ theorem epi_via_stam_four_arg
     (X Y Z W G : Ω → ℝ)
     (h_xy_stam : IsStamInequalityHyp X Y P)
     (h_xy_bridge : IsStamToEPIBridgeHyp X Y P)
-    (h_xyz_stam : IsStamInequalityHyp (fun ω => X ω + Y ω) Z P)
-    (h_xyz_bridge : IsStamToEPIBridgeHyp (fun ω => X ω + Y ω) Z P)
-    (h_xyzw_stam : IsStamInequalityHyp (fun ω => X ω + Y ω + Z ω) W P)
-    (h_xyzw_bridge : IsStamToEPIBridgeHyp (fun ω => X ω + Y ω + Z ω) W P) :
-    entropyPower (P.map (fun ω => X ω + Y ω + Z ω + W ω))
+    (h_xyz_stam : IsStamInequalityHyp (fun ω ↦ X ω + Y ω) Z P)
+    (h_xyz_bridge : IsStamToEPIBridgeHyp (fun ω ↦ X ω + Y ω) Z P)
+    (h_xyzw_stam : IsStamInequalityHyp (fun ω ↦ X ω + Y ω + Z ω) W P)
+    (h_xyzw_bridge : IsStamToEPIBridgeHyp (fun ω ↦ X ω + Y ω + Z ω) W P) :
+    entropyPower (P.map (fun ω ↦ X ω + Y ω + Z ω + W ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y)
         + entropyPower (P.map Z) + entropyPower (P.map W) := by
   have h_xy_epi := epi_via_stam X Y G h_xy_stam h_xy_bridge
-  have h_xyz_epi := epi_via_stam (fun ω => X ω + Y ω) Z G h_xyz_stam h_xyz_bridge
-  have h_xyzw_epi := epi_via_stam (fun ω => X ω + Y ω + Z ω) W G h_xyzw_stam h_xyzw_bridge
+  have h_xyz_epi := epi_via_stam (fun ω ↦ X ω + Y ω) Z G h_xyz_stam h_xyz_bridge
+  have h_xyzw_epi := epi_via_stam (fun ω ↦ X ω + Y ω + Z ω) W G h_xyzw_stam h_xyzw_bridge
   exact entropy_power_inequality_four_arg P X Y Z W h_xyzw_epi h_xyz_epi h_xy_epi
 
 /-! ## §16 — Stam pipeline composability witnesses -/
@@ -508,9 +508,9 @@ theorem epi_via_stam_three_arg_normalized
     (X Y Z G : Ω → ℝ)
     (h_xy_stam : IsStamInequalityHyp X Y P)
     (h_xy_bridge : IsStamToEPIBridgeHyp X Y P)
-    (h_xyz_stam : IsStamInequalityHyp (fun ω => X ω + Y ω) Z P)
-    (h_xyz_bridge : IsStamToEPIBridgeHyp (fun ω => X ω + Y ω) Z P) :
-    entropyPower (P.map (fun ω => X ω + Y ω + Z ω)) / gaussianEntropyPowerConst
+    (h_xyz_stam : IsStamInequalityHyp (fun ω ↦ X ω + Y ω) Z P)
+    (h_xyz_bridge : IsStamToEPIBridgeHyp (fun ω ↦ X ω + Y ω) Z P) :
+    entropyPower (P.map (fun ω ↦ X ω + Y ω + Z ω)) / gaussianEntropyPowerConst
       ≥ entropyPower (P.map X) / gaussianEntropyPowerConst
         + entropyPower (P.map Y) / gaussianEntropyPowerConst
         + entropyPower (P.map Z) / gaussianEntropyPowerConst := by

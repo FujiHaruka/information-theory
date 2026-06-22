@@ -83,7 +83,7 @@ lemma pmfToMeasure_isProbabilityMeasure
   -- ∑ a, ENNReal.ofReal (p a) = 1
   have hsum := hp.2
   have hnn : ∀ a, 0 ≤ p a := hp.1
-  rw [← ENNReal.ofReal_sum_of_nonneg (fun a _ => hnn a), hsum, ENNReal.ofReal_one]
+  rw [← ENNReal.ofReal_sum_of_nonneg (fun a _ ↦ hnn a), hsum, ENNReal.ofReal_one]
 
 omit [DecidableEq α] [Nonempty α] in
 /-- `(pmfToMeasure p).real {a} = p a` when `p ∈ stdSimplex`. -/
@@ -97,14 +97,14 @@ lemma pmfToMeasure_real_singleton
 /-- **Channel capacity** (Cover-Thomas 7.5):
 `capacity W := sup { I(p; W).toReal | p ∈ stdSimplex }`. -/
 noncomputable def capacity (W : Channel α β) : ℝ :=
-  sSup ((fun p : α → ℝ => (mutualInfoOfChannel (pmfToMeasure p) W).toReal) ''
+  sSup ((fun p : α → ℝ ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal) ''
         stdSimplex ℝ α)
 
 omit [DecidableEq α] [MeasurableSingletonClass α] [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSingletonClass β] in
 /-- The capacity image set is nonempty (witnessed by a `Pi.single` Dirac input). -/
 lemma capacity_image_nonempty (W : Channel α β) :
-    ((fun p : α → ℝ => (mutualInfoOfChannel (pmfToMeasure p) W).toReal) ''
+    ((fun p : α → ℝ ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal) ''
       stdSimplex ℝ α).Nonempty := by
   classical
   exact ⟨_, Pi.single (Classical.arbitrary α) 1, single_mem_stdSimplex ℝ _, rfl⟩
@@ -112,7 +112,7 @@ lemma capacity_image_nonempty (W : Channel α β) :
 omit [DecidableEq α] [DecidableEq β] in
 /-- `capacity` value set is bounded above by `H(X) + H(Y)`-style entropy bound. -/
 theorem capacity_bddAbove (W : Channel α β) [IsMarkovKernel W] :
-    BddAbove ((fun p : α → ℝ => (mutualInfoOfChannel (pmfToMeasure p) W).toReal) ''
+    BddAbove ((fun p : α → ℝ ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal) ''
               stdSimplex ℝ α) := by
   classical
   -- I(p; W).toReal = H(X) + H(Y) - H(X,Y) ≤ H(X) + H(Y) ≤ log |α| + log |β|.
@@ -169,7 +169,7 @@ private lemma outputDistribution_real_singleton_of_stdSimplex
   have h2 : ((pmfToMeasure p) ⊗ₘ W) (Set.univ ×ˢ ({b} : Set β))
       = ∫⁻ a, W a {b} ∂(pmfToMeasure p) := by
     rw [Measure.compProd_apply (MeasurableSet.univ.prod (measurableSet_singleton _))]
-    refine lintegral_congr_ae (Filter.Eventually.of_forall fun a => ?_)
+    refine lintegral_congr_ae (Filter.Eventually.of_forall fun a ↦ ?_)
     show (W a) (Prod.mk a ⁻¹' (Set.univ ×ˢ ({b} : Set β))) = (W a) {b}
     congr 1; ext y; simp
   rw [h2]
@@ -180,7 +180,7 @@ private lemma outputDistribution_real_singleton_of_stdSimplex
   rw [ENNReal.toReal_sum (by
     intro a _
     exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top (measure_ne_top _ _))]
-  refine Finset.sum_congr rfl (fun a _ => ?_)
+  refine Finset.sum_congr rfl (fun a _ ↦ ?_)
   rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal (hp.1 a)]
   rfl
 
@@ -209,7 +209,7 @@ private lemma jointDistribution_real_singleton_of_stdSimplex
   -- ∑ a', ENNReal.ofReal (p a') * (({a}.indicator (fun x => W x {b})) a').
   -- For a' = a: indicator value is W a {b}. For a' ≠ a: 0.
   have h_each : ∀ a' ∈ (Finset.univ : Finset α),
-      ENNReal.ofReal (p a') * Set.indicator ({a} : Set α) (fun x => W x {b}) a'
+      ENNReal.ofReal (p a') * Set.indicator ({a} : Set α) (fun x ↦ W x {b}) a'
         = if a' = a then ENNReal.ofReal (p a) * W a {b} else 0 := by
     intro a' _
     by_cases hcase : a' = a
@@ -275,21 +275,21 @@ private lemma mutualInfoOfChannel_toReal_eq_of_stdSimplex
   congr 1
   · -- H(X) + H(Y) match.
     congr 1
-    · refine Finset.sum_congr rfl (fun a _ => ?_)
+    · refine Finset.sum_congr rfl (fun a _ ↦ ?_)
       rw [jointMap_fst_real_singleton_of_stdSimplex hp W a]
-    · refine Finset.sum_congr rfl (fun b _ => ?_)
+    · refine Finset.sum_congr rfl (fun b _ ↦ ?_)
       rw [jointMap_snd_real_singleton_of_stdSimplex hp W b]
   · -- H(X,Y) over α × β.
-    refine Finset.sum_congr rfl (fun ab _ => ?_)
+    refine Finset.sum_congr rfl (fun ab _ ↦ ?_)
     rw [jointMap_id_real_singleton_of_stdSimplex hp W ab.1 ab.2]
 
 omit [DecidableEq α] [DecidableEq β] in
 /-- `p ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal` is continuous on `stdSimplex ℝ α`. -/
 theorem continuous_mutualInfoOfChannel_left (W : Channel α β) [IsMarkovKernel W] :
-    ContinuousOn (fun p : α → ℝ => (mutualInfoOfChannel (pmfToMeasure p) W).toReal)
+    ContinuousOn (fun p : α → ℝ ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal)
       (stdSimplex ℝ α) := by
   -- Define the 3-entropy expression in p (continuous on Set.univ).
-  set g : (α → ℝ) → ℝ := fun p =>
+  set g : (α → ℝ) → ℝ := fun p ↦
     (∑ a : α, Real.negMulLog (p a))
       + (∑ b : β, Real.negMulLog (∑ a : α, p a * (W a).real {b}))
       - (∑ ab : α × β, Real.negMulLog (p ab.1 * (W ab.1).real {ab.2})) with hg_def
@@ -304,15 +304,15 @@ theorem continuous_mutualInfoOfChannel_left (W : Channel α β) [IsMarkovKernel 
   refine Continuous.sub ?_ ?_
   · refine Continuous.add ?_ ?_
     · -- ∑ a, negMulLog (p a).
-      refine continuous_finsetSum _ (fun a _ => ?_)
+      refine continuous_finsetSum _ (fun a _ ↦ ?_)
       exact Real.continuous_negMulLog.comp (continuous_apply a)
     · -- ∑ b, negMulLog (∑ a, p a * c_a)
-      refine continuous_finsetSum _ (fun b _ => ?_)
+      refine continuous_finsetSum _ (fun b _ ↦ ?_)
       refine Real.continuous_negMulLog.comp ?_
-      refine continuous_finsetSum _ (fun a _ => ?_)
+      refine continuous_finsetSum _ (fun a _ ↦ ?_)
       exact (continuous_apply a).mul continuous_const
   · -- ∑ ab, negMulLog (p ab.1 * c_{ab.1, ab.2}).
-    refine continuous_finsetSum _ (fun ab _ => ?_)
+    refine continuous_finsetSum _ (fun ab _ ↦ ?_)
     refine Real.continuous_negMulLog.comp ?_
     exact (continuous_apply ab.1).mul continuous_const
 
@@ -321,7 +321,7 @@ omit [DecidableEq α] [DecidableEq β] in
 @[entry_point]
 theorem exists_capacity_achiever (W : Channel α β) [IsMarkovKernel W] :
     ∃ p ∈ stdSimplex ℝ α, IsMaxOn
-      (fun p : α → ℝ => (mutualInfoOfChannel (pmfToMeasure p) W).toReal)
+      (fun p : α → ℝ ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal)
       (stdSimplex ℝ α) p := by
   classical
   refine IsCompact.exists_isMaxOn (isCompact_stdSimplex ℝ α) ?_
@@ -356,27 +356,27 @@ theorem errorProbAt_filter_card_bound
     {M n : ℕ} (c : Code M n α β) (W : Channel α β) [IsMarkovKernel W]
     {K : ℝ} (hK : 1 < K) :
     ((Finset.univ : Finset (Fin M)).filter
-        (fun m => K * (c.averageErrorProb W).toReal < (c.errorProbAt W m).toReal)).card
+        (fun m ↦ K * (c.averageErrorProb W).toReal < (c.errorProbAt W m).toReal)).card
       * K ≤ (M : ℝ) := by
   classical
-  set f : Fin M → ℝ := fun m => (c.errorProbAt W m).toReal with hf_def
+  set f : Fin M → ℝ := fun m ↦ (c.errorProbAt W m).toReal with hf_def
   set avg : ℝ := (c.averageErrorProb W).toReal with havg_def
   set F : Finset (Fin M) := (Finset.univ : Finset (Fin M)).filter
-      (fun m => K * avg < f m) with hF_def
+      (fun m ↦ K * avg < f m) with hF_def
   -- Each summand is finite and bounded.
   have hK_pos : 0 < K := lt_trans zero_lt_one hK
   have h_each_le_one : ∀ m : Fin M, c.errorProbAt W m ≤ 1 := by
     intro m
-    haveI : IsProbabilityMeasure (Measure.pi (fun i => W (c.encoder m i))) := by infer_instance
+    haveI : IsProbabilityMeasure (Measure.pi (fun i ↦ W (c.encoder m i))) := by infer_instance
     exact prob_le_one
-  have h_each_ne_top : ∀ m : Fin M, c.errorProbAt W m ≠ ∞ := fun m =>
+  have h_each_ne_top : ∀ m : Fin M, c.errorProbAt W m ≠ ∞ := fun m ↦
     ((h_each_le_one m).trans_lt ENNReal.one_lt_top).ne
-  have hf_nn : ∀ m, 0 ≤ f m := fun m => ENNReal.toReal_nonneg
+  have hf_nn : ∀ m, 0 ≤ f m := fun m ↦ ENNReal.toReal_nonneg
   -- Case split on M = 0.
   by_cases hM : M = 0
   · subst hM
     -- F is empty.
-    have hF_empty : F = ∅ := Finset.eq_empty_of_forall_notMem (fun m => Fin.elim0 m)
+    have hF_empty : F = ∅ := Finset.eq_empty_of_forall_notMem (fun m ↦ Fin.elim0 m)
     simp [hF_empty]
   · have hM_pos : 0 < M := Nat.pos_of_ne_zero hM
     have hM_R_pos : (0 : ℝ) < (M : ℝ) := by exact_mod_cast hM_pos
@@ -384,7 +384,7 @@ theorem errorProbAt_filter_card_bound
     have h_avg_eq : avg = (M : ℝ)⁻¹ * ∑ m : Fin M, f m := by
       simp only [havg_def, hf_def, Code.averageErrorProb, hM, if_false]
       rw [ENNReal.toReal_mul, ENNReal.toReal_inv, ENNReal.toReal_natCast,
-          ENNReal.toReal_sum (fun m _ => h_each_ne_top m)]
+          ENNReal.toReal_sum (fun m _ ↦ h_each_ne_top m)]
     -- Sum of f over all = M * avg.
     have h_sum_eq : ∑ m : Fin M, f m = (M : ℝ) * avg := by
       rw [h_avg_eq, ← mul_assoc, mul_inv_cancel₀ hM_R_pos.ne', one_mul]
@@ -396,7 +396,7 @@ theorem errorProbAt_filter_card_bound
       have h_sum_zero : ∑ m : Fin M, f m = 0 := by rw [h_sum_eq, h_avg_zero, mul_zero]
       have h_each_zero : ∀ m ∈ (Finset.univ : Finset (Fin M)), f m = 0 := by
         intro m hm
-        exact (Finset.sum_eq_zero_iff_of_nonneg (fun i _ => hf_nn i)).mp h_sum_zero m hm
+        exact (Finset.sum_eq_zero_iff_of_nonneg (fun i _ ↦ hf_nn i)).mp h_sum_zero m hm
       have hF_empty : F = ∅ := by
         rw [hF_def]
         refine Finset.filter_false_of_mem ?_
@@ -413,7 +413,7 @@ theorem errorProbAt_filter_card_bound
         exact hm.2.le
       -- card F * (K * avg) ≤ ∑_{m ∈ F} f m  (via Finset.card_nsmul_le_sum).
       have h_card_le_sum_F : (F.card : ℝ) * (K * avg) ≤ ∑ m ∈ F, f m := by
-        have := F.card_nsmul_le_sum (fun m => f m) (K * avg) h_F_lb
+        have := F.card_nsmul_le_sum (fun m ↦ f m) (K * avg) h_F_lb
         simpa [nsmul_eq_mul] using this
       -- ∑_{m ∈ F} f m ≤ ∑ all f m = M * avg.
       have h_sum_F_le : ∑ m ∈ F, f m ≤ ∑ m : Fin M, f m := by
@@ -432,8 +432,8 @@ outside `S` to a fixed fallback message. -/
 noncomputable def Code.subcode
     {M n : ℕ} (c : Code M n α β) (S : Finset (Fin M)) (hS : 0 < S.card) :
     Code S.card n α β :=
-  { encoder := fun m' => c.encoder (S.equivFin.symm ⟨m', by simp⟩).val
-    decoder := fun y =>
+  { encoder := fun m' ↦ c.encoder (S.equivFin.symm ⟨m', by simp⟩).val
+    decoder := fun y ↦
       let m := c.decoder y
       if h : m ∈ S then
         ⟨(S.equivFin ⟨m, h⟩).val, by simp⟩
@@ -459,8 +459,8 @@ theorem Code.subcode_errorProbAt_le
     rfl
   -- The two `Measure.pi` factors coincide.
   have h_meas_eq :
-      Measure.pi (fun i => W ((c.subcode S hS).encoder m' i))
-        = Measure.pi (fun i => W (c.encoder m₀ i)) := by
+      Measure.pi (fun i ↦ W ((c.subcode S hS).encoder m' i))
+        = Measure.pi (fun i ↦ W (c.encoder m₀ i)) := by
     rfl
   -- Set inclusion: (subcode).errorEvent m' ⊆ c.errorEvent m₀.
   have h_subset : (c.subcode S hS).errorEvent m' ⊆ c.errorEvent m₀ := by
@@ -487,15 +487,15 @@ theorem Code.subcode_errorProbAt_le
     apply Fin.ext
     rw [h_efy_eq]
   -- Conclude with measure monotonicity.
-  show Measure.pi (fun i => W ((c.subcode S hS).encoder m' i))
+  show Measure.pi (fun i ↦ W ((c.subcode S hS).encoder m' i))
         ((c.subcode S hS).errorEvent m') ≤
-      Measure.pi (fun i => W (c.encoder m₀ i)) (c.errorEvent m₀)
+      Measure.pi (fun i ↦ W (c.encoder m₀ i)) (c.errorEvent m₀)
   rw [h_meas_eq]
   exact measure_mono h_subset
 
 /-- Helper: linearization `(fun n : ℕ => (n : ℝ) * c) → ∞` for `c > 0`. -/
 lemma tendsto_nat_mul_atTop {c : ℝ} (hc : 0 < c) :
-    Filter.Tendsto (fun n : ℕ => (n : ℝ) * c) Filter.atTop Filter.atTop := by
+    Filter.Tendsto (fun n : ℕ ↦ (n : ℝ) * c) Filter.atTop Filter.atTop := by
   refine Filter.tendsto_atTop_atTop.mpr ?_
   intro b
   refine ⟨Nat.ceil (b / c) + 1, ?_⟩
@@ -521,11 +521,11 @@ lemma exists_N_two_ceil_exp_le
   have h_delta_pos : 0 < R' - R := by linarith
   -- `exp(n R) → ∞` (since R > 0).
   have h_exp_R_tendsto :
-      Filter.Tendsto (fun n : ℕ => Real.exp ((n : ℝ) * R)) Filter.atTop Filter.atTop :=
+      Filter.Tendsto (fun n : ℕ ↦ Real.exp ((n : ℝ) * R)) Filter.atTop Filter.atTop :=
     Real.tendsto_exp_atTop.comp (tendsto_nat_mul_atTop hR_pos)
   -- `exp(n (R' - R)) → ∞`.
   have h_exp_delta_tendsto :
-      Filter.Tendsto (fun n : ℕ => Real.exp ((n : ℝ) * (R' - R))) Filter.atTop Filter.atTop :=
+      Filter.Tendsto (fun n : ℕ ↦ Real.exp ((n : ℝ) * (R' - R))) Filter.atTop Filter.atTop :=
     Real.tendsto_exp_atTop.comp (tendsto_nat_mul_atTop h_delta_pos)
   -- `exp(n R) * (exp(n (R'-R)) - 2) - 2 → ∞`.
   -- We bound `exp(n (R'-R)) - 2 ≥ 1` eventually, and `exp(n R) → ∞`, so the product → ∞;
@@ -592,10 +592,10 @@ lemma exists_subcode_maxError_lt_two_mul
   have hK : (1 : ℝ) < 2 := by norm_num
   have h_filter_bound := errorProbAt_filter_card_bound (M := M') (n := n) c W' hK
   set T : Finset (Fin M') := (Finset.univ : Finset (Fin M')).filter
-      (fun m => 2 * (c.averageErrorProb W').toReal <
+      (fun m ↦ 2 * (c.averageErrorProb W').toReal <
         (c.errorProbAt W' m).toReal) with hT_def
   set S : Finset (Fin M') := (Finset.univ : Finset (Fin M')).filter
-      (fun m => (c.errorProbAt W' m).toReal ≤
+      (fun m ↦ (c.errorProbAt W' m).toReal ≤
         2 * (c.averageErrorProb W').toReal) with hS_def
   have hST_partition : S.card + T.card = M' := by
     have h_union : S ∪ T = Finset.univ := by
@@ -643,9 +643,9 @@ lemma exists_subcode_maxError_lt_two_mul
     exact hm₀_mem.2
   have h_sub_le_top : c.errorProbAt W' m₀ ≠ ∞ := by
     haveI : IsProbabilityMeasure
-        (Measure.pi (fun i => W' (c.encoder m₀ i))) := by infer_instance
+        (Measure.pi (fun i ↦ W' (c.encoder m₀ i))) := by infer_instance
     exact ((prob_le_one
-      (μ := Measure.pi (fun i => W' (c.encoder m₀ i)))
+      (μ := Measure.pi (fun i ↦ W' (c.encoder m₀ i)))
       (s := c.errorEvent m₀)).trans_lt ENNReal.one_lt_top).ne
   have h_sub_le_toReal :
       ((c.subcode S hS_pos).errorProbAt W' m').toReal
@@ -696,7 +696,7 @@ theorem channel_coding_achievability_max_error
   -- and avg error `< ε'`, pick the good half to get max-error `< 2 ε' = ε/2 < ε`.
   obtain ⟨M₂, hM₂_lb, cs, h_max_lt⟩ :=
     exists_subcode_maxError_lt_two_mul c W hR_pos hM_lb (hN_rate n hn1) h_avg_lt
-  refine ⟨M₂, hM₂_lb, cs, fun m' => ?_⟩
+  refine ⟨M₂, hM₂_lb, cs, fun m' ↦ ?_⟩
   calc (cs.errorProbAt W m').toReal
       < 2 * ε' := h_max_lt m'
     _ = ε / 2 := by rw [hε'_def]; ring
@@ -738,7 +738,7 @@ private lemma klDiv_map_measurableEmbedding
   · have hac' : μ.map f ≪ ν.map f := hf.absolutelyContinuous_map hac
     rw [klDiv_eq_lintegral_klFun_of_ac hac, klDiv_eq_lintegral_klFun_of_ac hac']
     -- Rewrite the LHS via lintegral_map for measurable embedding.
-    rw [hf.lintegral_map (fun y => ENNReal.ofReal
+    rw [hf.lintegral_map (fun y ↦ ENNReal.ofReal
       (InformationTheory.klFun ((μ.map f).rnDeriv (ν.map f) y).toReal))]
     -- Now compare ∫⁻ x, klFun ((μ.map f).rnDeriv (ν.map f) (f x)).toReal ∂ν
     -- vs ∫⁻ x, klFun ((μ.rnDeriv ν) x).toReal ∂ν.
@@ -746,7 +746,7 @@ private lemma klDiv_map_measurableEmbedding
     filter_upwards [hf.rnDeriv_map μ ν] with x hx
     rw [hx]
   · have hac_map_iff := absolutelyContinuous_map_iff_of_measurableEmbedding hf μ ν
-    have hac' : ¬ (μ.map f ≪ ν.map f) := fun h => hac (hac_map_iff.mp h)
+    have hac' : ¬ (μ.map f ≪ ν.map f) := fun h ↦ hac (hac_map_iff.mp h)
     rw [klDiv_of_not_ac hac, klDiv_of_not_ac hac']
 
 omit [DecidableEq α] [Nonempty α] in
@@ -775,13 +775,13 @@ private lemma measure_compl_support_eq_zero (p : Measure α) [IsFiniteMeasure p]
     p ({a : α | 0 < p.real {a}}ᶜ) = 0 := by
   -- The complement is finite (subset of `Fintype α`); rewrite as a finite union of singletons.
   have hcompl_eq : ({a : α | 0 < p.real {a}}ᶜ : Set α) = ⋃ a ∈ (Finset.univ.filter
-      (fun a => ¬ 0 < p.real {a})), ({a} : Set α) := by
+      (fun a ↦ ¬ 0 < p.real {a})), ({a} : Set α) := by
     ext x
     simp [Set.mem_compl_iff, Set.mem_setOf_eq]
-  rw [hcompl_eq, measure_biUnion_finset (fun a _ b _ hab => by
+  rw [hcompl_eq, measure_biUnion_finset (fun a _ b _ hab ↦ by
         simpa [Function.onFun, Set.disjoint_singleton] using hab)
-      (fun a _ => MeasurableSet.singleton a)]
-  refine Finset.sum_eq_zero (fun a ha => ?_)
+      (fun a _ ↦ MeasurableSet.singleton a)]
+  refine Finset.sum_eq_zero (fun a ha ↦ ?_)
   -- `a` is in the filter, so `¬ 0 < p.real {a}`.
   have hnot : ¬ 0 < p.real {a} := (Finset.mem_filter.mp ha).2
   -- Hence `p.real {a} = 0`.
@@ -805,7 +805,7 @@ private lemma map_comap_subtype_support_eq_self
   refine Measure.restrict_eq_self_of_ae_mem ?_
   -- `∀ᵐ a ∂p, a ∈ S` iff `p Sᶜ = 0`.
   rw [Filter.eventually_iff_exists_mem]
-  refine ⟨{a : α | 0 < p.real {a}}, ?_, fun a ha => ha⟩
+  refine ⟨{a : α | 0 < p.real {a}}, ?_, fun a ha ↦ ha⟩
   rw [mem_ae_iff]
   -- `{a | a ∈ S}ᶜ = Sᶜ`.
   exact measure_compl_support_eq_zero p
@@ -841,7 +841,7 @@ theorem mutualInfoOfChannel_restrict_to_support
   -- ===== Step 1: Joint pushforward = original joint. =====
   -- `(p_supp ⊗ₘ W_supp).map (Prod.map j id) = p ⊗ₘ W`
   have h_joint_map : (p_supp ⊗ₘ W_supp).map (Prod.map j (id : β → β)) = p ⊗ₘ W := by
-    refine Measure.ext fun T hT => ?_
+    refine Measure.ext fun T hT ↦ ?_
     have h_emb_map : MeasurableEmbedding (Prod.map j (id : β → β)) :=
       hj_emb.prodMap MeasurableEmbedding.id
     rw [h_emb_map.map_apply, Measure.compProd_apply hT,
@@ -900,21 +900,21 @@ with `Subtype.val`. -/
 noncomputable def Code_lift_from_subtype
     {M n : ℕ} (p : Measure α)
     (c : Code M n {a : α // 0 < p.real {a}} β) : Code M n α β :=
-  { encoder := fun m i => (c.encoder m i).val
+  { encoder := fun m i ↦ (c.encoder m i).val
     decoder := c.decoder }
 
 /-! ## Main theorem -/
 
 /-- Uniform input distribution `unif a := 1/|α|`, used as a smoothing target. -/
 noncomputable def uniformInput (α : Type*) [Fintype α] : α → ℝ :=
-  fun _ => (Fintype.card α : ℝ)⁻¹
+  fun _ ↦ (Fintype.card α : ℝ)⁻¹
 omit [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
   [MeasurableSingletonClass β] in
 /-- `uniformInput α ∈ stdSimplex ℝ α`. -/
 lemma uniformInput_mem_stdSimplex : uniformInput α ∈ stdSimplex ℝ α := by
   unfold uniformInput
-  refine ⟨fun _ => ?_, ?_⟩
+  refine ⟨fun _ ↦ ?_, ?_⟩
   · exact inv_nonneg.mpr (Nat.cast_nonneg _)
   · rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
     have hpos : (0 : ℝ) < Fintype.card α := by
@@ -932,7 +932,7 @@ lemma uniformInput_pos (a : α) : 0 < uniformInput α a := by
 
 /-- Smoothed input `pSmooth p₀ δ := (1-δ) • p₀ + δ • uniformInput`. -/
 noncomputable def pSmooth (p₀ : α → ℝ) (δ : ℝ) : α → ℝ :=
-  fun a => (1 - δ) * p₀ a + δ * uniformInput α a
+  fun a ↦ (1 - δ) * p₀ a + δ * uniformInput α a
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
@@ -971,8 +971,8 @@ lemma pSmooth_pos {p₀ : α → ℝ} (hp₀ : p₀ ∈ stdSimplex ℝ α)
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- `δ ↦ pSmooth p₀ δ` is continuous (as a curve into `α → ℝ` with product topology). -/
-lemma continuous_pSmooth (p₀ : α → ℝ) : Continuous (fun δ : ℝ => pSmooth p₀ δ) := by
-  refine continuous_pi (fun a => ?_)
+lemma continuous_pSmooth (p₀ : α → ℝ) : Continuous (fun δ : ℝ ↦ pSmooth p₀ δ) := by
+  refine continuous_pi (fun a ↦ ?_)
   unfold pSmooth
   exact (continuous_const.sub continuous_id).mul continuous_const
     |>.add (continuous_id.mul continuous_const)
@@ -1007,17 +1007,17 @@ theorem shannon_noisy_channel_coding_theorem
   have hI_cont_on := continuous_mutualInfoOfChannel_left W
   -- Restrict to the path `δ ↦ pSmooth p₀ δ`.
   have h_path : ∀ δ ∈ Set.Icc (0 : ℝ) 1, pSmooth p₀ δ ∈ stdSimplex ℝ α :=
-    fun δ hδ => pSmooth_mem_stdSimplex hp₀_mem hδ.1 hδ.2
+    fun δ hδ ↦ pSmooth_mem_stdSimplex hp₀_mem hδ.1 hδ.2
   have h_pSmooth_zero_eq : pSmooth p₀ 0 = p₀ := pSmooth_zero p₀
   have h_at_zero_in : pSmooth p₀ 0 ∈ stdSimplex ℝ α := by
     rw [h_pSmooth_zero_eq]; exact hp₀_mem
   -- Compose: `δ ↦ pSmooth p₀ δ` continuous + ContinuousOn of `I(·; W).toReal`.
-  have h_curve_cont : Continuous (fun δ : ℝ => pSmooth p₀ δ) := continuous_pSmooth p₀
+  have h_curve_cont : Continuous (fun δ : ℝ ↦ pSmooth p₀ δ) := continuous_pSmooth p₀
   -- `f δ := I(pmfToMeasure (pSmooth p₀ δ); W).toReal` is continuous on `[0,1]`.
-  set f : ℝ → ℝ := fun δ => (mutualInfoOfChannel (pmfToMeasure (pSmooth p₀ δ)) W).toReal with hf_def
+  set f : ℝ → ℝ := fun δ ↦ (mutualInfoOfChannel (pmfToMeasure (pSmooth p₀ δ)) W).toReal with hf_def
   have hf_cont_on : ContinuousOn f (Set.Icc 0 1) := by
-    have h_maps : Set.MapsTo (fun δ : ℝ => pSmooth p₀ δ) (Set.Icc 0 1) (stdSimplex ℝ α) :=
-      fun δ hδ => h_path δ hδ
+    have h_maps : Set.MapsTo (fun δ : ℝ ↦ pSmooth p₀ δ) (Set.Icc 0 1) (stdSimplex ℝ α) :=
+      fun δ hδ ↦ h_path δ hδ
     exact hI_cont_on.comp h_curve_cont.continuousOn h_maps
   -- f 0 = I₀, so f 0 > R₀.
   have hf_zero : f 0 = I₀ := by
@@ -1052,7 +1052,7 @@ theorem shannon_noisy_channel_coding_theorem
   have h_pδ₀_mem : pSmooth p₀ δ₀ ∈ stdSimplex ℝ α :=
     pSmooth_mem_stdSimplex hp₀_mem hδ₀_pos.le hδ₀_le_1
   have h_pδ₀_pos : ∀ a, 0 < pSmooth p₀ δ₀ a :=
-    fun a => pSmooth_pos hp₀_mem hδ₀_pos hδ₀_le_1 a
+    fun a ↦ pSmooth_pos hp₀_mem hδ₀_pos hδ₀_le_1 a
   -- Convert to (pmfToMeasure (pSmooth p₀ δ₀)).real {a} > 0.
   haveI hpmf_pm : IsProbabilityMeasure (pmfToMeasure (pSmooth p₀ δ₀)) :=
     pmfToMeasure_isProbabilityMeasure h_pδ₀_mem

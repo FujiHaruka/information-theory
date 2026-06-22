@@ -49,7 +49,7 @@ By `huffmanLengthAux_const_on_group`, depth is constant on each group, so this e
 `∑_p p.2 * depth(p)`.
 @audit:ok -/
 noncomputable def huffmanCost (s : Multiset (Finset α × ℝ)) : ℝ :=
-  (s.map (fun p =>
+  (s.map (fun p ↦
     p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s a : ℝ)) / (p.1.card : ℝ)))).sum
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
@@ -91,12 +91,12 @@ lemma huffmanCost_step
       huffmanCost s =
       x1.2 * ((∑ a ∈ x1.1, (huffmanLengthAux s a : ℝ)) / (x1.1.card : ℝ))
       + (x2.2 * ((∑ a ∈ x2.1, (huffmanLengthAux s a : ℝ)) / (x2.1.card : ℝ))
-      + (ee.map (fun p =>
+      + (ee.map (fun p ↦
           p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s a : ℝ)) / (p.1.card : ℝ)))).sum) := by
     unfold huffmanCost
-    have : (s.map (fun p =>
+    have : (s.map (fun p ↦
         p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s a : ℝ)) / (p.1.card : ℝ)))).sum
-        = ((x1 ::ₘ x2 ::ₘ ee).map (fun p =>
+        = ((x1 ::ₘ x2 ::ₘ ee).map (fun p ↦
         p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s a : ℝ)) / (p.1.card : ℝ)))).sum := by
       exact congr_arg _ (congr_arg _ hs_decomp)
     rw [this]
@@ -104,12 +104,12 @@ lemma huffmanCost_step
   have rhs_eq :
       huffmanCost s'' =
       merged.2 * ((∑ a ∈ merged.1, (huffmanLengthAux s'' a : ℝ)) / (merged.1.card : ℝ))
-      + (ee.map (fun p =>
+      + (ee.map (fun p ↦
           p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s'' a : ℝ)) / (p.1.card : ℝ)))).sum := by
     unfold huffmanCost
-    have : (s''.map (fun p =>
+    have : (s''.map (fun p ↦
         p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s'' a : ℝ)) / (p.1.card : ℝ)))).sum
-        = ((merged ::ₘ ee).map (fun p =>
+        = ((merged ::ₘ ee).map (fun p ↦
         p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s'' a : ℝ)) / (p.1.card : ℝ)))).sum := by
       exact congr_arg _ (congr_arg _ hshape')
     rw [this]
@@ -117,9 +117,9 @@ lemma huffmanCost_step
   rw [lhs_eq, rhs_eq]
   -- contribution equation for ee
   have h_ee_sum :
-      (ee.map (fun p =>
+      (ee.map (fun p ↦
         p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s a : ℝ)) / (p.1.card : ℝ)))).sum
-      = (ee.map (fun p =>
+      = (ee.map (fun p ↦
           p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s'' a : ℝ)) / (p.1.card : ℝ)))).sum := by
     apply congr_arg Multiset.sum
     apply Multiset.map_congr rfl
@@ -203,9 +203,9 @@ lemma huffmanCost_eq_zero_of_base
     huffmanCost s = 0 := by
   unfold huffmanCost
   rw [huffmanLengthAux_eq_zero s h hg]
-  rw [show s.map (fun p =>
-      p.2 * ((∑ a ∈ p.1, ((fun _ : α => (0 : ℕ)) a : ℝ)) / (p.1.card : ℝ)))
-      = s.map (fun _ => (0 : ℝ)) from ?_]
+  rw [show s.map (fun p ↦
+      p.2 * ((∑ a ∈ p.1, ((fun _ : α ↦ (0 : ℕ)) a : ℝ)) / (p.1.card : ℝ)))
+      = s.map (fun _ ↦ (0 : ℝ)) from ?_]
   · simp
   · apply Multiset.map_congr rfl
     intro p _
@@ -338,7 +338,7 @@ lemma expectedLength_eq_huffmanCost (P : Measure α) :
   unfold huffmanLength
   rw [show ∑ a : α, P.real {a} * (huffmanLengthAux (initMultiset P) a : ℝ)
       = ((Finset.univ : Finset α).val.map
-          (fun a => P.real {a} * (huffmanLengthAux (initMultiset P) a : ℝ))).sum from rfl]
+          (fun a ↦ P.real {a} * (huffmanLengthAux (initMultiset P) a : ℝ))).sum from rfl]
   conv_rhs => rw [initMultiset, Multiset.map_map]
   congr 1
   apply Multiset.map_congr rfl

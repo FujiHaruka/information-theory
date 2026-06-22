@@ -69,7 +69,7 @@ Concretely (unfolding `stronglyTypicalSet`):
 noncomputable def jointStronglyTypicalSet
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) (n : ℕ) (ε : ℝ) :
     Set ((Fin n → α) × (Fin n → β)) :=
-  { p | (fun i => (p.1 i, p.2 i)) ∈
+  { p | (fun i ↦ (p.1 i, p.2 i)) ∈
         stronglyTypicalSet μ (jointSequence Xs Ys) n ε }
 
 omit [MeasurableSingletonClass α] [MeasurableSingletonClass β] in
@@ -77,7 +77,7 @@ lemma mem_jointStronglyTypicalSet_iff
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (n : ℕ) (ε : ℝ) (x : Fin n → α) (y : Fin n → β) :
     (x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε ↔
-      (fun i => (x i, y i)) ∈
+      (fun i ↦ (x i, y i)) ∈
         stronglyTypicalSet μ (jointSequence Xs Ys) n ε := Iff.rfl
 
 
@@ -99,14 +99,14 @@ omit [Fintype α] [MeasurableSingletonClass α] [MeasurableSingletonClass β] in
 @[entry_point]
 lemma typeCount_joint_sum_snd
     {n : ℕ} (x : Fin n → α) (y : Fin n → β) (a : α) :
-    ∑ b : β, typeCount (fun i => (x i, y i)) (a, b) = typeCount x a := by
+    ∑ b : β, typeCount (fun i ↦ (x i, y i)) (a, b) = typeCount x a := by
   classical
   -- typeCount (z) (a,b) = card of fibre, partition Fin n by y i to recover typeCount x a.
   unfold typeCount
   -- Σ_b card (filter (z i = (a,b))) = card (filter (x i = a))
   have h_eq : ∀ b : β,
-      (Finset.univ.filter (fun i : Fin n => (x i, y i) = (a, b))).card
-        = (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card := by
+      (Finset.univ.filter (fun i : Fin n ↦ (x i, y i) = (a, b))).card
+        = (Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)).card := by
     intro b
     congr 1
     ext i
@@ -115,7 +115,7 @@ lemma typeCount_joint_sum_snd
   -- ∑ b, card (filter (x i = a ∧ y i = b)) = card (filter (x i = a))
   -- via fiberwise: filter (x i = a) = ⋃_b filter (x i = a ∧ y i = b)
   rw [← Finset.card_biUnion (s := Finset.univ)
-    (t := fun b : β => Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)) (by
+    (t := fun b : β ↦ Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)) (by
     intros b₁ _ b₂ _ hb12
     show Disjoint _ _
     rw [Finset.disjoint_left]
@@ -125,26 +125,26 @@ lemma typeCount_joint_sum_snd
   congr 1
   ext i
   simp only [Finset.mem_biUnion, Finset.mem_filter, Finset.mem_univ, true_and]
-  refine ⟨fun ⟨_, hxa, _⟩ => hxa, fun hxa => ⟨y i, hxa, rfl⟩⟩
+  refine ⟨fun ⟨_, hxa, _⟩ ↦ hxa, fun hxa ↦ ⟨y i, hxa, rfl⟩⟩
 
 omit [Fintype β] [MeasurableSingletonClass α] [MeasurableSingletonClass β] in
 /-- **Marginalising the joint type-count over `α` recovers the Y type-count**. -/
 @[entry_point]
 lemma typeCount_joint_sum_fst
     {n : ℕ} (x : Fin n → α) (y : Fin n → β) (b : β) :
-    ∑ a : α, typeCount (fun i => (x i, y i)) (a, b) = typeCount y b := by
+    ∑ a : α, typeCount (fun i ↦ (x i, y i)) (a, b) = typeCount y b := by
   classical
   unfold typeCount
   have h_eq : ∀ a : α,
-      (Finset.univ.filter (fun i : Fin n => (x i, y i) = (a, b))).card
-        = (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card := by
+      (Finset.univ.filter (fun i : Fin n ↦ (x i, y i) = (a, b))).card
+        = (Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)).card := by
     intro a
     congr 1
     ext i
     simp [Prod.mk.injEq]
   simp_rw [h_eq]
   rw [← Finset.card_biUnion (s := Finset.univ)
-    (t := fun a : α => Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)) (by
+    (t := fun a : α ↦ Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)) (by
     intros a₁ _ a₂ _ ha12
     show Disjoint _ _
     rw [Finset.disjoint_left]
@@ -154,7 +154,7 @@ lemma typeCount_joint_sum_fst
   congr 1
   ext i
   simp only [Finset.mem_biUnion, Finset.mem_filter, Finset.mem_univ, true_and]
-  refine ⟨fun ⟨_, _, hyb⟩ => hyb, fun hyb => ⟨x i, ⟨rfl, hyb⟩⟩⟩
+  refine ⟨fun ⟨_, _, hyb⟩ ↦ hyb, fun hyb ↦ ⟨x i, ⟨rfl, hyb⟩⟩⟩
 
 /-! ### Strong joint ⟹ strong X- and Y-typicality (with widened slack) -/
 
@@ -177,10 +177,10 @@ lemma jointStronglyTypicalSet_implies_X_stronglyTypical
   intro a
   -- typeCount x a / n = ∑_b typeCount (x,y) (a,b) / n
   have h_marg : (typeCount x a : ℝ) = ∑ b : β,
-      (typeCount (fun i => (x i, y i)) (a, b) : ℝ) := by
+      (typeCount (fun i ↦ (x i, y i)) (a, b) : ℝ) := by
     rw [← typeCount_joint_sum_snd x y a, Nat.cast_sum]
   -- P_X(a) = ∑_b q(a,b) where q := (μ.map jointSequence) and the marginal map equals P_X.
-  set q : α × β → ℝ := fun p => (μ.map (jointSequence Xs Ys 0)).real {p} with hq_def
+  set q : α × β → ℝ := fun p ↦ (μ.map (jointSequence Xs Ys 0)).real {p} with hq_def
   have h_PX : (μ.map (Xs 0)).real {a} = ∑ b : β, q (a, b) := by
     -- (μ.map (Xs 0)).real {a} = ((μ.map (Z 0)).map fst).real {a} = ∑_b (μ.map (Z 0)).real {(a,b)}.
     rw [← hmarg_X]
@@ -213,7 +213,7 @@ lemma jointStronglyTypicalSet_implies_X_stronglyTypical
     rw [h_map_apply, h_preimage_eq]
     -- Apply measureReal_biUnion_finset.
     rw [measureReal_biUnion_finset (s := (Finset.univ : Finset β))
-      (f := fun b : β => ({(a, b)} : Set (α × β)))
+      (f := fun b : β ↦ ({(a, b)} : Set (α × β)))
       (hd := by
         intros b₁ _ b₂ _ hb12
         show Disjoint _ _
@@ -226,21 +226,21 @@ lemma jointStronglyTypicalSet_implies_X_stronglyTypical
           have : b₁ = b₂ := (Prod.mk.injEq _ _ _ _).mp h2 |>.2
           exact (hb12 this).elim
         · intro h; exact h.elim)
-      (hm := fun b _ => measurableSet_singleton _)]
+      (hm := fun b _ ↦ measurableSet_singleton _)]
   -- Now bound |typeCount x a / n - P_X(a)| via triangle inequality through the joint sum.
   have h_diff_eq :
       (typeCount x a : ℝ) / n - (μ.map (Xs 0)).real {a}
         = ∑ b : β,
-            ((typeCount (fun i => (x i, y i)) (a, b) : ℝ) / n - q (a, b)) := by
+            ((typeCount (fun i ↦ (x i, y i)) (a, b) : ℝ) / n - q (a, b)) := by
     rw [h_marg, h_PX, Finset.sum_div, ← Finset.sum_sub_distrib]
   rw [h_diff_eq]
   calc |∑ b : β,
-            ((typeCount (fun i => (x i, y i)) (a, b) : ℝ) / n - q (a, b))|
+            ((typeCount (fun i ↦ (x i, y i)) (a, b) : ℝ) / n - q (a, b))|
       ≤ ∑ b : β,
-            |((typeCount (fun i => (x i, y i)) (a, b) : ℝ) / n - q (a, b))| :=
+            |((typeCount (fun i ↦ (x i, y i)) (a, b) : ℝ) / n - q (a, b))| :=
         Finset.abs_sum_le_sum_abs _ _
     _ ≤ ∑ _b : β, ε := by
-        refine Finset.sum_le_sum fun b _ => ?_
+        refine Finset.sum_le_sum fun b _ ↦ ?_
         exact hxy (a, b)
     _ = (Fintype.card β : ℝ) * ε := by
         rw [Finset.sum_const, nsmul_eq_mul, Finset.card_univ]
@@ -260,9 +260,9 @@ lemma jointStronglyTypicalSet_implies_Y_stronglyTypical
   rw [mem_jointStronglyTypicalSet_iff, mem_stronglyTypicalSet_iff] at hxy
   intro b
   have h_marg : (typeCount y b : ℝ) = ∑ a : α,
-      (typeCount (fun i => (x i, y i)) (a, b) : ℝ) := by
+      (typeCount (fun i ↦ (x i, y i)) (a, b) : ℝ) := by
     rw [← typeCount_joint_sum_fst x y b, Nat.cast_sum]
-  set q : α × β → ℝ := fun p => (μ.map (jointSequence Xs Ys 0)).real {p} with hq_def
+  set q : α × β → ℝ := fun p ↦ (μ.map (jointSequence Xs Ys 0)).real {p} with hq_def
   have h_PY : (μ.map (Ys 0)).real {b} = ∑ a : α, q (a, b) := by
     rw [← hmarg_Y]
     have h_meas_snd : Measurable (Prod.snd : α × β → β) := measurable_snd
@@ -293,7 +293,7 @@ lemma jointStronglyTypicalSet_implies_Y_stronglyTypical
       exact Measure.map_apply h_meas_snd (measurableSet_singleton b)
     rw [h_map_apply, h_preimage_eq]
     rw [measureReal_biUnion_finset (s := (Finset.univ : Finset α))
-      (f := fun a : α => ({(a, b)} : Set (α × β)))
+      (f := fun a : α ↦ ({(a, b)} : Set (α × β)))
       (hd := by
         intros a₁ _ a₂ _ ha12
         show Disjoint _ _
@@ -306,20 +306,20 @@ lemma jointStronglyTypicalSet_implies_Y_stronglyTypical
           have : a₁ = a₂ := (Prod.mk.injEq _ _ _ _).mp h2 |>.1
           exact (ha12 this).elim
         · intro h; exact h.elim)
-      (hm := fun a _ => measurableSet_singleton _)]
+      (hm := fun a _ ↦ measurableSet_singleton _)]
   have h_diff_eq :
       (typeCount y b : ℝ) / n - (μ.map (Ys 0)).real {b}
         = ∑ a : α,
-            ((typeCount (fun i => (x i, y i)) (a, b) : ℝ) / n - q (a, b)) := by
+            ((typeCount (fun i ↦ (x i, y i)) (a, b) : ℝ) / n - q (a, b)) := by
     rw [h_marg, h_PY, Finset.sum_div, ← Finset.sum_sub_distrib]
   rw [h_diff_eq]
   calc |∑ a : α,
-            ((typeCount (fun i => (x i, y i)) (a, b) : ℝ) / n - q (a, b))|
+            ((typeCount (fun i ↦ (x i, y i)) (a, b) : ℝ) / n - q (a, b))|
       ≤ ∑ a : α,
-            |((typeCount (fun i => (x i, y i)) (a, b) : ℝ) / n - q (a, b))| :=
+            |((typeCount (fun i ↦ (x i, y i)) (a, b) : ℝ) / n - q (a, b))| :=
         Finset.abs_sum_le_sum_abs _ _
     _ ≤ ∑ _a : α, ε := by
-        refine Finset.sum_le_sum fun a _ => ?_
+        refine Finset.sum_le_sum fun a _ ↦ ?_
         exact hxy (a, b)
     _ = (Fintype.card α : ℝ) * ε := by
         rw [Finset.sum_const, nsmul_eq_mul, Finset.card_univ]
@@ -331,7 +331,7 @@ private lemma jointStronglyTypicalSet_card_eq_typicalSet_card
     (jointStronglyTypicalSet_finite μ Xs Ys n ε).toFinset.card
       = (stronglyTypicalSet μ (jointSequence Xs Ys) n ε).toFinite.toFinset.card := by
   let φ : (Fin n → α) × (Fin n → β) → (Fin n → α × β) :=
-    fun p i => (p.1 i, p.2 i)
+    fun p i ↦ (p.1 i, p.2 i)
   have hφ_inj : Function.Injective φ := by
     intro p q hpq
     apply Prod.ext
@@ -341,7 +341,7 @@ private lemma jointStronglyTypicalSet_card_eq_typicalSet_card
       exact ((Prod.mk.injEq _ _ _ _).mp (congr_fun hpq i)).2
   have hφ_surj : Function.Surjective φ := by
     intro z
-    refine ⟨(fun i => (z i).1, fun i => (z i).2), ?_⟩
+    refine ⟨(fun i ↦ (z i).1, fun i ↦ (z i).2), ?_⟩
     funext i; rfl
   set Afin : Finset ((Fin n → α) × (Fin n → β)) :=
     (jointStronglyTypicalSet_finite μ Xs Ys n ε).toFinset
@@ -389,9 +389,9 @@ private lemma jointStronglyTypicalSet_indep_perPair_prob_ge
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindepX_full : iIndepFun (fun i => Xs i) μ)
+    (hindepX_full : iIndepFun (fun i ↦ Xs i) μ)
     (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
-    (hindepY_full : iIndepFun (fun i => Ys i) μ)
+    (hindepY_full : iIndepFun (fun i ↦ Ys i) μ)
     (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
     (hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
     (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
@@ -475,12 +475,12 @@ theorem jointStronglyTypicalSet_indep_prob_ge
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindepX_full : iIndepFun (fun i => Xs i) μ)
+    (hindepX_full : iIndepFun (fun i ↦ Xs i) μ)
     (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
-    (hindepY_full : iIndepFun (fun i => Ys i) μ)
+    (hindepY_full : iIndepFun (fun i ↦ Ys i) μ)
     (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
-    (hindepZ_full : iIndepFun (fun i => jointSequence Xs Ys i) μ)
-    (hindepZ_pair : Pairwise fun i j =>
+    (hindepZ_full : iIndepFun (fun i ↦ jointSequence Xs Ys i) μ)
+    (hindepZ_pair : Pairwise fun i j ↦
       jointSequence Xs Ys i ⟂ᵢ[μ] jointSequence Xs Ys j)
     (hidentZ : ∀ i, IdentDistrib (jointSequence Xs Ys i)
                       (jointSequence Xs Ys 0) μ μ)
@@ -512,11 +512,11 @@ theorem jointStronglyTypicalSet_indep_prob_ge
   have hLX_nn : 0 ≤ LX := logSumAbs_nonneg μ Xs
   have hLY_nn : 0 ≤ LY := logSumAbs_nonneg μ Ys
   -- Strong-typical card lower bound (eventually).
-  have hZmeas : ∀ i, Measurable (Zs i) := fun i =>
+  have hZmeas : ∀ i, Measurable (Zs i) := fun i ↦
     measurable_jointSequence Xs Ys hXs hYs i
   obtain ⟨N₀, hN₀⟩ := stronglyTypicalSet_card_ge_eventually μ Zs hZmeas
     hindepZ_full hindepZ_pair hidentZ hposZ hε hδ hη
-  refine ⟨max N₀ 1, fun n hn_ge => ?_⟩
+  refine ⟨max N₀ 1, fun n hn_ge ↦ ?_⟩
   have hn_pos : 0 < n := by have := le_of_max_le_right hn_ge; omega
   -- Card lower bound on stronglyTypicalSet of Zs.
   have h_card_ge :
@@ -624,7 +624,7 @@ theorem jointStronglyTypicalSet_indep_prob_ge
 noncomputable def jointStronglyTypicalLossyEncoder
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     {M n : ℕ} (hM : 0 < M) (ε : ℝ) (c : Codebook M n β) :
-    (Fin n → α) → Fin M := fun x =>
+    (Fin n → α) → Fin M := fun x ↦
   haveI : Decidable (∃ m : Fin M, (x, c m) ∈ jointStronglyTypicalSet μ Xs Ys n ε) :=
     Classical.propDecidable _
   if h : ∃ m : Fin M, (x, c m) ∈ jointStronglyTypicalSet μ Xs Ys n ε

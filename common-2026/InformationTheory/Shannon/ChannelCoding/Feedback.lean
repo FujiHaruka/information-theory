@@ -66,7 +66,7 @@ input. Equivalently: a standard `Code` (no feedback). The achievability statemen
 this degenerate construction. -/
 def ofCode [MeasurableSpace α] [MeasurableSpace β]
     (c : InformationTheory.Shannon.ChannelCoding.Code M n α β) : FeedbackCode M n α β where
-  encoder := fun i m _ => c.encoder m i
+  encoder := fun i m _ ↦ c.encoder m i
   decoder := c.decoder
 
 @[simp] lemma ofCode_decoder [MeasurableSpace α] [MeasurableSpace β]
@@ -110,12 +110,12 @@ theorem mutualInfo_chain_rule_Y_axis_fin
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Msg : Ω → M) (Ys : Fin n → Ω → β)
     (hMsg : Measurable Msg) (hYs : ∀ i, Measurable (Ys i)) :
-    Shannon.mutualInfo μ Msg (fun ω i => Ys i ω)
+    Shannon.mutualInfo μ Msg (fun ω i ↦ Ys i ω)
       = ∑ i : Fin n,
           Shannon.condMutualInfo μ Msg (Ys i)
-            (fun ω (j : Fin i.val) => Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω) := by
+            (fun ω (j : Fin i.val) ↦ Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω) := by
   -- Step 1: commute MI to put Y on the left.
-  have hYpi : Measurable (fun ω (i : Fin n) => Ys i ω) :=
+  have hYpi : Measurable (fun ω (i : Fin n) ↦ Ys i ω) :=
     measurable_pi_iff.mpr hYs
   rw [Shannon.mutualInfo_comm μ Msg _ hMsg hYpi]
   -- Step 2: apply X-axis chain rule with X_i := Ys i.
@@ -127,10 +127,10 @@ theorem mutualInfo_chain_rule_Y_axis_fin
   -- Apply condMutualInfo_comm.
   -- Prefix's measurability:
   have hPrefix : Measurable
-      (fun ω (j : Fin i.val) => Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω) :=
-    measurable_pi_iff.mpr (fun j => hYs ⟨j.val, j.isLt.trans i.isLt⟩)
+      (fun ω (j : Fin i.val) ↦ Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω) :=
+    measurable_pi_iff.mpr (fun j ↦ hYs ⟨j.val, j.isLt.trans i.isLt⟩)
   exact Shannon.condMutualInfo_comm μ (Ys i) Msg
-    (fun ω (j : Fin i.val) => Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω)
+    (fun ω (j : Fin i.val) ↦ Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω)
     (hYs i) hMsg hPrefix
 
 end ChainRuleY
@@ -157,12 +157,12 @@ theorem channel_coding_feedback_converse_chain
     (hYs : ∀ i, Measurable (Ys i))
     (h_per_letter : ∀ i : Fin n,
         Shannon.condMutualInfo μ Msg (Ys i)
-            (fun ω (j : Fin i.val) => Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω)
+            (fun ω (j : Fin i.val) ↦ Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω)
           ≤ Shannon.mutualInfo μ (Xs i) (Ys i)) :
-    Shannon.mutualInfo μ Msg (fun ω i => Ys i ω)
+    Shannon.mutualInfo μ Msg (fun ω i ↦ Ys i ω)
       ≤ ∑ i : Fin n, Shannon.mutualInfo μ (Xs i) (Ys i) := by
   rw [mutualInfo_chain_rule_Y_axis_fin μ Msg Ys hMsg hYs]
-  exact Finset.sum_le_sum (fun i _ => h_per_letter i)
+  exact Finset.sum_le_sum (fun i _ ↦ h_per_letter i)
 
 /-- **Capacity upper bound (Cover-Thomas 7.12, hypothesis form)**:
 per-letter bound + `I(X_i; Y_i) ≤ C` for all `i` implies `I(Msg; Y^n) ≤ n • C`
@@ -177,15 +177,15 @@ theorem channel_coding_feedback_converse_capacity
     (hYs : ∀ i, Measurable (Ys i))
     (h_per_letter : ∀ i : Fin n,
         Shannon.condMutualInfo μ Msg (Ys i)
-            (fun ω (j : Fin i.val) => Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω)
+            (fun ω (j : Fin i.val) ↦ Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω)
           ≤ Shannon.mutualInfo μ (Xs i) (Ys i))
     (h_capacity : ∀ i : Fin n, Shannon.mutualInfo μ (Xs i) (Ys i) ≤ C) :
-    Shannon.mutualInfo μ Msg (fun ω i => Ys i ω) ≤ n • C := by
+    Shannon.mutualInfo μ Msg (fun ω i ↦ Ys i ω) ≤ n • C := by
   have h_chain := channel_coding_feedback_converse_chain μ Msg Xs Ys
     hMsg hYs h_per_letter
   -- ∑ i, I(X_i; Y_i) ≤ ∑ i, C = n • C
   have h_sum_le : (∑ i : Fin n, Shannon.mutualInfo μ (Xs i) (Ys i)) ≤
-      ∑ _i : Fin n, C := Finset.sum_le_sum (fun i _ => h_capacity i)
+      ∑ _i : Fin n, C := Finset.sum_le_sum (fun i _ ↦ h_capacity i)
   have h_sum_const : (∑ _i : Fin n, C) = n • C := by
     rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]
   exact h_chain.trans (h_sum_le.trans h_sum_const.le)
@@ -227,7 +227,7 @@ theorem channel_coding_feedback_converse
     (hYs : ∀ i, Measurable (Ys i)) (hdecoder : Measurable decoder)
     (h_per_letter : ∀ i : Fin n,
         Shannon.condMutualInfo μ Msg (Ys i)
-            (fun ω (j : Fin i.val) => Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω)
+            (fun ω (j : Fin i.val) ↦ Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω)
           ≤ Shannon.mutualInfo μ (Xs i) (Ys i))
     (h_capacity : ∀ i : Fin n, Shannon.mutualInfo μ (Xs i) (Ys i) ≤ C)
     (hMsg_uniform :
@@ -237,13 +237,13 @@ theorem channel_coding_feedback_converse
       (n : ℝ) * C.toReal +
         Real.binEntropy
           (InformationTheory.MeasureFano.errorProb μ Msg
-            (fun ω i => Ys i ω) decoder) +
+            (fun ω i ↦ Ys i ω) decoder) +
         InformationTheory.MeasureFano.errorProb μ Msg
-          (fun ω i => Ys i ω) decoder *
+          (fun ω i ↦ Ys i ω) decoder *
           Real.log ((Fintype.card M : ℝ) - 1) := by
   classical
   -- The Y^n channel output.
-  set Yo : Ω → (Fin n → β) := fun ω i => Ys i ω with hYo_def
+  set Yo : Ω → (Fin n → β) := fun ω i ↦ Ys i ω with hYo_def
   have hYo : Measurable Yo := measurable_pi_iff.mpr hYs
   -- The capacity bound on I(Msg; Y^n).
   have h_capacity_bound :

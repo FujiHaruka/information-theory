@@ -48,7 +48,7 @@ lemma condE_Y_eq_sum_marginalY_mul_binEntropy
           Real.binEntropy (marginalEY μ true y / marginalY μ y) := by
   unfold condE_Y eyEntropy yEntropy
   rw [Finset.sum_comm, ← Finset.sum_sub_distrib]
-  refine Finset.sum_congr rfl (fun y _ => ?_)
+  refine Finset.sum_congr rfl (fun y _ ↦ ?_)
   rw [Fintype.sum_bool, marginalY_eq_marginalEY_true_add_false]
   exact negMulLog_pair_sub_negMulLog_sum_eq_binEntropy _ _
     (marginalEY_nonneg μ h_nn true y)
@@ -66,7 +66,7 @@ lemma condX_EY_eq_sum_per_ey
   unfold condX_EY jointEntropy eyEntropy
   rw [Finset.sum_comm]
   rw [← Finset.sum_sub_distrib]
-  refine Finset.sum_congr rfl (fun e _ => ?_)
+  refine Finset.sum_congr rfl (fun e _ ↦ ?_)
   rw [Finset.sum_comm]
   rw [← Finset.sum_sub_distrib]
 
@@ -89,23 +89,23 @@ lemma sum_negMulLog_sub_le_sum_mul_log_card
     (∑ a, (μ a).negMulLog) - (∑ a, μ a).negMulLog
       ≤ (∑ a, μ a) * Real.log S.card := by
   by_cases hm : (∑ a, μ a) = 0
-  · have h_all_zero : ∀ a, μ a = 0 := fun a =>
+  · have h_all_zero : ∀ a, μ a = 0 := fun a ↦
       (Finset.sum_eq_zero_iff_of_nonneg
-        (fun a _ => h_nn a)).mp hm a (Finset.mem_univ a)
+        (fun a _ ↦ h_nn a)).mp hm a (Finset.mem_univ a)
     have h_sum_neg : (∑ a, (μ a).negMulLog) = 0 :=
-      Finset.sum_eq_zero (fun a _ => by rw [h_all_zero a, Real.negMulLog_zero])
+      Finset.sum_eq_zero (fun a _ ↦ by rw [h_all_zero a, Real.negMulLog_zero])
     rw [h_sum_neg, hm]
     simp
-  · have hm_nn : 0 ≤ (∑ a, μ a) := Finset.sum_nonneg (fun a _ => h_nn a)
+  · have hm_nn : 0 ≤ (∑ a, μ a) := Finset.sum_nonneg (fun a _ ↦ h_nn a)
     have hm_pos : 0 < (∑ a, μ a) := hm_nn.lt_of_ne (Ne.symm hm)
     set m := ∑ a, μ a with hm_def
-    set q : α → ℝ := fun a => μ a / m with hq_def
-    have hq_nn : ∀ a, 0 ≤ q a := fun a => div_nonneg (h_nn a) hm_pos.le
+    set q : α → ℝ := fun a ↦ μ a / m with hq_def
+    have hq_nn : ∀ a, 0 ≤ q a := fun a ↦ div_nonneg (h_nn a) hm_pos.le
     have hq_sum : ∑ a, q a = 1 := by
       simp only [hq_def]
       rw [← Finset.sum_div, ← hm_def]
       exact div_self hm
-    have hq_supp : ∀ a ∉ S, q a = 0 := fun a ha => by
+    have hq_supp : ∀ a ∉ S, q a = 0 := fun a ha ↦ by
       simp [hq_def, h_supp a ha]
     have hq_bound := entropyOfFn_le_log_supportCard q hq_nn hq_sum hq_supp
     have h_translate :
@@ -117,7 +117,7 @@ lemma sum_negMulLog_sub_le_sum_mul_log_card
         intro a
         simp only [hq_def]
         exact mul_negMulLog_div m (μ a) hm
-      rw [Finset.sum_congr rfl (fun a _ => hkey a)]
+      rw [Finset.sum_congr rfl (fun a _ ↦ hkey a)]
       rw [Finset.sum_add_distrib, ← Finset.sum_mul, ← hm_def]
       unfold Real.negMulLog
       ring
@@ -135,7 +135,7 @@ variable {X : Type*} [Fintype X] [DecidableEq X]
 /-- Decoding-error indicator (Markov form): `errIndicator x xh = true`
 iff the estimator `xh` differs from the source `x`. -/
 def errIndicator : X → X → Bool :=
-  fun x xh => decide (x ≠ xh)
+  fun x xh ↦ decide (x ≠ xh)
 
 /-- The 3-variable mass extending `P` with the decoding-error coordinate.
 
@@ -143,7 +143,7 @@ The point `(x, e, xh)` carries mass `P.mass x xh` exactly when `e` agrees
 with `errIndicator x xh`, and `0` otherwise. -/
 def withErr (P : FiniteJointPMF X X) :
     X → Bool → X → ℝ :=
-  fun x e xh => if e = errIndicator x xh then P.mass x xh else 0
+  fun x e xh ↦ if e = errIndicator x xh then P.mass x xh else 0
 
 variable (P : FiniteJointPMF X X)
 
@@ -164,20 +164,20 @@ lemma withErr_marginalXY (x xh : X) :
 lemma withErr_marginalY (xh : X) :
     Joint3.marginalY P.withErr xh = P.marginalY xh := by
   unfold Joint3.marginalY marginalY
-  refine Finset.sum_congr rfl (fun x _ => ?_)
+  refine Finset.sum_congr rfl (fun x _ ↦ ?_)
   exact P.withErr_marginalXY x xh
 
 lemma withErr_xyEntropy :
     Joint3.xyEntropy P.withErr = P.jointEntropy := by
   unfold Joint3.xyEntropy jointEntropy
-  refine Finset.sum_congr rfl (fun x _ => ?_)
-  refine Finset.sum_congr rfl (fun xh _ => ?_)
+  refine Finset.sum_congr rfl (fun x _ ↦ ?_)
+  refine Finset.sum_congr rfl (fun xh _ ↦ ?_)
   rw [P.withErr_marginalXY]
 
 lemma withErr_yEntropy :
     Joint3.yEntropy P.withErr = P.yEntropy := by
   unfold Joint3.yEntropy yEntropy
-  refine Finset.sum_congr rfl (fun xh _ => ?_)
+  refine Finset.sum_congr rfl (fun xh _ ↦ ?_)
   rw [P.withErr_marginalY]
 
 /-- `H(X | Xh)` for the original PMF agrees with `Joint3.condX_Y` of the
@@ -202,8 +202,8 @@ theorem withErr_condE_XY_zero :
     Joint3.condE_XY P.withErr = 0 :=
   Joint3.condE_XY_zero_of_deterministic
     (μ := P.withErr)
-    (f := fun x xh => errIndicator x xh)
-    (fun x e xh => P.withErr_isDeterministic x e xh)
+    (f := fun x xh ↦ errIndicator x xh)
+    (fun x e xh ↦ P.withErr_isDeterministic x e xh)
 
 /-! ### Marginal of `E = true` equals the error probability -/
 
@@ -211,8 +211,8 @@ lemma withErr_marginalEY_true_sum :
     (∑ xh, Joint3.marginalEY P.withErr true xh) = P.errorProb := by
   unfold Joint3.marginalEY errorProb
   rw [Finset.sum_comm]
-  refine Finset.sum_congr rfl (fun x _ => ?_)
-  refine Finset.sum_congr rfl (fun xh _ => ?_)
+  refine Finset.sum_congr rfl (fun x _ ↦ ?_)
+  refine Finset.sum_congr rfl (fun xh _ ↦ ?_)
   unfold withErr errIndicator
   by_cases hx : x = xh
   · simp [hx]
@@ -260,8 +260,8 @@ theorem withErr_condE_Y_le_binEntropy_errorProb :
         linarith [Joint3.marginalEY_nonneg _ h_nn false xh]
       · exact h_w_nn _
   have hjensen := binEntropy_jensen_finset
-    (fun xh => Joint3.marginalY P.withErr xh)
-    (fun xh => Joint3.marginalEY P.withErr true xh /
+    (fun xh ↦ Joint3.marginalY P.withErr xh)
+    (fun xh ↦ Joint3.marginalEY P.withErr true xh /
               Joint3.marginalY P.withErr xh)
     h_w_nn h_w_sum h_p_mem
   -- Show ∑ xh, m_xh * (t_xh / m_xh) = ∑ xh, t_xh = errorProb.
@@ -287,7 +287,7 @@ theorem withErr_condE_Y_le_binEntropy_errorProb :
              Joint3.marginalY P.withErr xh))
         = P.errorProb := by
     calc (∑ xh, _) = ∑ xh, Joint3.marginalEY P.withErr true xh :=
-          Finset.sum_congr rfl (fun xh _ => h_per_y xh)
+          Finset.sum_congr rfl (fun xh _ ↦ h_per_y xh)
       _ = P.errorProb := P.withErr_marginalEY_true_sum
   rw [h_inner_sum] at hjensen
   exact hjensen
@@ -310,10 +310,10 @@ theorem withErr_condX_EY_le
         - (Joint3.marginalEY P.withErr false xh).negMulLog ≤ 0 := by
     intro xh
     have h := sum_negMulLog_sub_le_sum_mul_log_card
-      (μ := fun x => P.withErr x false xh)
-      (h_nn := fun x => h_nn x false xh)
+      (μ := fun x ↦ P.withErr x false xh)
+      (h_nn := fun x ↦ h_nn x false xh)
       (S := ({xh} : Finset X))
-      (h_supp := fun x hx => by
+      (h_supp := fun x hx ↦ by
         simp only [Finset.mem_singleton] at hx
         unfold withErr errIndicator
         have hd : decide (x ≠ xh) = true := decide_eq_true hx
@@ -330,17 +330,17 @@ theorem withErr_condX_EY_le
             Real.log ((Fintype.card X : ℝ) - 1) := by
     intro xh
     have h := sum_negMulLog_sub_le_sum_mul_log_card
-      (μ := fun x => P.withErr x true xh)
-      (h_nn := fun x => h_nn x true xh)
+      (μ := fun x ↦ P.withErr x true xh)
+      (h_nn := fun x ↦ h_nn x true xh)
       (S := (Finset.univ \ ({xh} : Finset X)))
-      (h_supp := fun x hx => by
+      (h_supp := fun x hx ↦ by
         have hxd : x = xh := by
           simp only [Finset.mem_sdiff, Finset.mem_univ, Finset.mem_singleton,
             true_and, not_not] at hx
           exact hx
         unfold withErr errIndicator
         have hd : decide (x ≠ xh) = false :=
-          decide_eq_false (fun hne => hne hxd)
+          decide_eq_false (fun hne ↦ hne hxd)
         simp [hd])
     rw [Finset.card_sdiff_of_subset (Finset.subset_univ _),
         Finset.card_univ, Finset.card_singleton,
@@ -358,7 +358,7 @@ theorem withErr_condX_EY_le
     calc (∑ xh, _)
         ≤ ∑ xh, Joint3.marginalEY P.withErr true xh *
                   Real.log ((Fintype.card X : ℝ) - 1) :=
-          Finset.sum_le_sum (fun xh _ => h_true_per_y xh)
+          Finset.sum_le_sum (fun xh _ ↦ h_true_per_y xh)
       _ = (∑ xh, Joint3.marginalEY P.withErr true xh) *
               Real.log ((Fintype.card X : ℝ) - 1) := by
             rw [← Finset.sum_mul]
@@ -369,7 +369,7 @@ theorem withErr_condX_EY_le
               - (Joint3.marginalEY P.withErr false xh).negMulLog))
         ≤ 0 := by
     calc (∑ xh, _) ≤ ∑ xh, (0 : ℝ) :=
-            Finset.sum_le_sum (fun xh _ => h_false_per_y xh)
+            Finset.sum_le_sum (fun xh _ ↦ h_false_per_y xh)
       _ = 0 := by simp
   linarith
 

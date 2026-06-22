@@ -110,14 +110,14 @@ theorem group_card_mul_log_le_sum_neg_log
   -- `∑ P > 0` from positivity on a nonempty index set.
   have hsumP_pos : 0 < ∑ Z ∈ S, P Z := Finset.sum_pos hPpos hS
   -- log-sum inequality with `a ≡ 1`, `b = P`.
-  have hlog := log_sum_inequality S (fun _ => (1 : ℝ)) P
-    (fun _ _ => zero_le_one) hPpos
+  have hlog := log_sum_inequality S (fun _ ↦ (1 : ℝ)) P
+    (fun _ _ ↦ zero_le_one) hPpos
   -- LHS sum of `a`: `∑ 1 = card S`.
   rw [Finset.sum_const, nsmul_eq_mul, mul_one] at hlog
   -- RHS terms: `1 · log(1/P Z) = -log (P Z)`.
   have hrhs : (∑ Z ∈ S, (1 : ℝ) * Real.log (1 / P Z))
       = ∑ Z ∈ S, - Real.log (P Z) := by
-    refine Finset.sum_congr rfl (fun Z hZ => ?_)
+    refine Finset.sum_congr rfl (fun Z hZ ↦ ?_)
     rw [one_mul, Real.log_div one_ne_zero (hPpos Z hZ).ne', Real.log_one, zero_sub]
   rw [hrhs] at hlog
   -- `hlog : card S · log (card S / ∑ P) ≤ ∑ -log P`.
@@ -140,7 +140,7 @@ theorem group_card_mul_log_le_sum_neg_log
 `Fin ℓ → α` function, defaulting past the end. Injective on length-`ℓ`
 lists. -/
 noncomputable def toFinVec (ℓ : ℕ) (w : List α) : Fin ℓ → α :=
-  fun i => (w[(i : ℕ)]?).getD (Classical.arbitrary α)
+  fun i ↦ (w[(i : ℕ)]?).getD (Classical.arbitrary α)
 
 omit [Fintype α] [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [MeasurableSpace Ω] in
@@ -198,17 +198,17 @@ theorem lz78PhraseStrings_mul_log_le_sum_neg_log_marginal_add_overhead
   set G : Finset ℕ := phrases.image List.length with hGdef
   -- Per-length count and abbreviated marginal.
   set Pm : ∀ ℓ, (Fin ℓ → α) → ℝ :=
-    fun ℓ Z => (μ.map (p.blockRV ℓ)).real {Z} with hPm
+    fun ℓ Z ↦ (μ.map (p.blockRV ℓ)).real {Z} with hPm
   -- Step 2 applied per length group ℓ, summed over G:
   -- `∑_ℓ c_ℓ·log c_ℓ ≤ ∑_ℓ ∑_{w in group ℓ} -log P_{|w|}(w)`.
   have hgroup :
-      (∑ ℓ ∈ G, ((phrases.filter (fun w => w.length = ℓ)).card : ℝ)
-          * Real.log ((phrases.filter (fun w => w.length = ℓ)).card : ℝ))
-      ≤ ∑ ℓ ∈ G, ∑ w ∈ phrases.filter (fun w => w.length = ℓ),
+      (∑ ℓ ∈ G, ((phrases.filter (fun w ↦ w.length = ℓ)).card : ℝ)
+          * Real.log ((phrases.filter (fun w ↦ w.length = ℓ)).card : ℝ))
+      ≤ ∑ ℓ ∈ G, ∑ w ∈ phrases.filter (fun w ↦ w.length = ℓ),
             - Real.log (Pm w.length (toFinVec w.length w)) := by
-    refine Finset.sum_le_sum (fun ℓ _ => ?_)
+    refine Finset.sum_le_sum (fun ℓ _ ↦ ?_)
     -- The length-`ℓ` fiber, all of length exactly `ℓ`.
-    set grp : Finset (List α) := phrases.filter (fun w => w.length = ℓ) with hgrp
+    set grp : Finset (List α) := phrases.filter (fun w ↦ w.length = ℓ) with hgrp
     have hgrp_len : ∀ w ∈ grp, w.length = ℓ := by
       intro w hw; exact (Finset.mem_filter.mp hw).2
     -- `toFinVec ℓ` is injective on `grp` (all elements have length `ℓ`).
@@ -239,28 +239,28 @@ theorem lz78PhraseStrings_mul_log_le_sum_neg_log_marginal_add_overhead
     have hrhs_eq : (∑ Z ∈ S, - Real.log (Pm ℓ Z))
         = ∑ w ∈ grp, - Real.log (Pm w.length (toFinVec w.length w)) := by
       rw [hSdef, Finset.sum_image hinj]
-      refine Finset.sum_congr rfl (fun w hw => ?_)
+      refine Finset.sum_congr rfl (fun w hw ↦ ?_)
       rw [hgrp_len w hw]
     rw [hrhs_eq] at hlogsum
     exact hlogsum
   -- Reassemble the length fibers into a single sum over all phrases.
   have hfiber :
-      (∑ ℓ ∈ G, ∑ w ∈ phrases.filter (fun w => w.length = ℓ),
+      (∑ ℓ ∈ G, ∑ w ∈ phrases.filter (fun w ↦ w.length = ℓ),
           - Real.log (Pm w.length (toFinVec w.length w)))
       = ∑ w ∈ phrases, - Real.log (Pm w.length (toFinVec w.length w)) := by
     rw [hGdef]
-    exact Finset.sum_fiberwise_of_maps_to (fun w hw =>
+    exact Finset.sum_fiberwise_of_maps_to (fun w hw ↦
       Finset.mem_image_of_mem List.length hw) _
   -- Combine the grouping inequality with the per-group log-sum bound.
   have hleg4 := lz78PhraseStrings_card_mul_log_le_sum_length_group (α := α) input
   simp only at hleg4
   calc ((lz78PhraseStrings input).length : ℝ)
           * Real.log ((lz78PhraseStrings input).length : ℝ)
-      ≤ (∑ ℓ ∈ G, ((phrases.filter (fun w => w.length = ℓ)).card : ℝ)
-            * Real.log ((phrases.filter (fun w => w.length = ℓ)).card : ℝ))
+      ≤ (∑ ℓ ∈ G, ((phrases.filter (fun w ↦ w.length = ℓ)).card : ℝ)
+            * Real.log ((phrases.filter (fun w ↦ w.length = ℓ)).card : ℝ))
           + ((lz78PhraseStrings input).length : ℝ)
               * Real.log (G.card : ℝ) := hleg4
-    _ ≤ (∑ ℓ ∈ G, ∑ w ∈ phrases.filter (fun w => w.length = ℓ),
+    _ ≤ (∑ ℓ ∈ G, ∑ w ∈ phrases.filter (fun w ↦ w.length = ℓ),
               - Real.log (Pm w.length (toFinVec w.length w)))
           + ((lz78PhraseStrings input).length : ℝ)
               * Real.log (G.card : ℝ) := by

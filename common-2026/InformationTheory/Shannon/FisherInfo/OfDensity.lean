@@ -55,7 +55,7 @@ theorem fisherInfoOfDensity_nonneg (f : ℝ → ℝ) : 0 ≤ fisherInfoOfDensity
 
 /-- The Fisher information of the constant-zero density is `0`. -/
 @[entry_point]
-theorem fisherInfoOfDensity_zero : fisherInfoOfDensity (fun _ : ℝ => (0 : ℝ)) = 0 := by
+theorem fisherInfoOfDensity_zero : fisherInfoOfDensity (fun _ : ℝ ↦ (0 : ℝ)) = 0 := by
   unfold fisherInfoOfDensity
   simp
 
@@ -107,7 +107,7 @@ theorem integral_logDeriv_density_eq_zero {f : ℝ → ℝ} (h_reg : IsRegularDe
 
 /-- `((x - m) / v)² · gaussianPDFReal m v x` is Lebesgue-integrable for `v ≠ 0`. -/
 lemma integrable_logDeriv_sq_mul_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
-    Integrable (fun x => ((x - m) / (v : ℝ)) ^ 2 * gaussianPDFReal m v x) volume := by
+    Integrable (fun x ↦ ((x - m) / (v : ℝ)) ^ 2 * gaussianPDFReal m v x) volume := by
   have hv_pos : (0 : ℝ) < v := by
     have : (v : ℝ) ≠ 0 := by exact_mod_cast hv
     exact lt_of_le_of_ne v.coe_nonneg (Ne.symm this)
@@ -117,25 +117,25 @@ lemma integrable_logDeriv_sq_mul_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v
   -- `integrable_rpow_mul_exp_neg_mul_sq` at `s = 2`. Convert rpow `^(2:ℝ)`
   -- to nat-pow `^2` using `Real.rpow_two`.
   have h_pow_two : Integrable
-      (fun y : ℝ => y ^ 2 * Real.exp (-(2 * (v : ℝ))⁻¹ * y ^ 2)) volume := by
+      (fun y : ℝ ↦ y ^ 2 * Real.exp (-(2 * (v : ℝ))⁻¹ * y ^ 2)) volume := by
     have h_rpow : Integrable
-        (fun y : ℝ => y ^ (2 : ℝ) * Real.exp (-(2 * (v : ℝ))⁻¹ * y ^ 2)) volume :=
+        (fun y : ℝ ↦ y ^ (2 : ℝ) * Real.exp (-(2 * (v : ℝ))⁻¹ * y ^ 2)) volume :=
       integrable_rpow_mul_exp_neg_mul_sq hb (by norm_num : (-1 : ℝ) < 2)
-    refine h_rpow.congr (Filter.Eventually.of_forall fun y => ?_)
+    refine h_rpow.congr (Filter.Eventually.of_forall fun y ↦ ?_)
     show y ^ (2 : ℝ) * Real.exp (-(2 * (v : ℝ))⁻¹ * y ^ 2)
         = y ^ 2 * Real.exp (-(2 * (v : ℝ))⁻¹ * y ^ 2)
     rw [Real.rpow_two]
   -- Shift: `y ↦ y - m`.
   have h_shift : Integrable
-      (fun x : ℝ => (x - m) ^ 2 * Real.exp (-(2 * (v : ℝ))⁻¹ * (x - m) ^ 2)) volume :=
+      (fun x : ℝ ↦ (x - m) ^ 2 * Real.exp (-(2 * (v : ℝ))⁻¹ * (x - m) ^ 2)) volume :=
     h_pow_two.comp_sub_right m
   -- Multiply by `(1 / v²) · (√(2πv))⁻¹` to obtain the target shape.
   have h_scaled : Integrable
-      (fun x : ℝ => ((1 / (v : ℝ) ^ 2) * (Real.sqrt (2 * Real.pi * v))⁻¹)
+      (fun x : ℝ ↦ ((1 / (v : ℝ) ^ 2) * (Real.sqrt (2 * Real.pi * v))⁻¹)
           * ((x - m) ^ 2 * Real.exp (-(2 * (v : ℝ))⁻¹ * (x - m) ^ 2))) volume :=
     h_shift.const_mul _
   -- Match the target shape `((x - m) / v)² · gaussianPDFReal m v x`.
-  refine h_scaled.congr (Filter.Eventually.of_forall fun x => ?_)
+  refine h_scaled.congr (Filter.Eventually.of_forall fun x ↦ ?_)
   -- Expand the Gaussian PDF and reconcile the exponent form.
   have hexp_eq :
       Real.exp (-(x - m) ^ 2 / (2 * (v : ℝ)))
@@ -153,8 +153,8 @@ private lemma integral_logDeriv_sq_mul_gaussianPDFReal_eq (m : ℝ) {v : ℝ≥0
   have hv_ne : (v : ℝ) ≠ 0 := hv_pos.ne'
   have hv_sq_ne : (v : ℝ) ^ 2 ≠ 0 := pow_ne_zero _ hv_ne
   -- Step 1: pull out `(1/v²)`.
-  have h_eq : (fun x : ℝ => ((x - m) / (v : ℝ)) ^ 2 * gaussianPDFReal m v x)
-      = fun x : ℝ => (1 / (v : ℝ) ^ 2) * ((x - m) ^ 2 * gaussianPDFReal m v x) := by
+  have h_eq : (fun x : ℝ ↦ ((x - m) / (v : ℝ)) ^ 2 * gaussianPDFReal m v x)
+      = fun x : ℝ ↦ (1 / (v : ℝ) ^ 2) * ((x - m) ^ 2 * gaussianPDFReal m v x) := by
     funext x; field_simp
   rw [h_eq, integral_const_mul]
   -- Step 2: `∫ (x - m)² · gaussianPDFReal m v x = v` via variance.
@@ -163,11 +163,11 @@ private lemma integral_logDeriv_sq_mul_gaussianPDFReal_eq (m : ℝ) {v : ℝ≥0
     --   ∫ f x ∂(gaussianReal m v) = ∫ gaussianPDFReal m v x • f x ∂volume.
     -- With `f x := (x - m) ^ 2`, the LHS equals the variance of the Gaussian, namely `v`.
     have h_smul := integral_gaussianReal_eq_integral_smul
-      (μ := m) (v := v) (f := fun x => (x - m) ^ 2) hv
+      (μ := m) (v := v) (f := fun x ↦ (x - m) ^ 2) hv
     -- LHS = ∫ (x - m)² ∂(gaussianReal m v) = Var[fun x => x; gaussianReal m v] = v.
     have h_var_eq : ∫ x, (x - m) ^ 2 ∂(gaussianReal m v) = (v : ℝ) := by
       have h_int_id : ∫ x, x ∂(gaussianReal m v) = m := integral_id_gaussianReal
-      have h_id_mb : AEMeasurable (fun x : ℝ => x) (gaussianReal m v) := aemeasurable_id'
+      have h_id_mb : AEMeasurable (fun x : ℝ ↦ x) (gaussianReal m v) := aemeasurable_id'
       have h_var := variance_fun_id_gaussianReal (μ := m) (v := v)
       rw [variance_eq_integral h_id_mb] at h_var
       -- h_var : ∫ ω, (ω - ∫ x, x ∂(gaussianReal m v)) ^ 2 ∂(gaussianReal m v) = v
@@ -178,7 +178,7 @@ private lemma integral_logDeriv_sq_mul_gaussianPDFReal_eq (m : ℝ) {v : ℝ≥0
     -- Beta-reduce + smul_eq_mul + commute the factors.
     have h_smul' : (v : ℝ) = ∫ x, (x - m) ^ 2 * gaussianPDFReal m v x ∂volume := by
       rw [h_smul]
-      refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
+      refine integral_congr_ae (Filter.Eventually.of_forall fun x ↦ ?_)
       simp [smul_eq_mul, mul_comm]
     exact h_smul'.symm
   rw [h_var]
@@ -211,9 +211,9 @@ theorem fisherInfoOfDensity_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 
     ring
   rw [lintegral_congr h_pointwise]
   -- Step 2: convert `∫⁻ ofReal g = ofReal (∫ g)` using non-negativity + integrability.
-  have h_nn : 0 ≤ᵐ[volume] fun x : ℝ =>
+  have h_nn : 0 ≤ᵐ[volume] fun x : ℝ ↦
       ((x - m) / (v : ℝ)) ^ 2 * gaussianPDFReal m v x := by
-    refine Filter.Eventually.of_forall fun x => ?_
+    refine Filter.Eventually.of_forall fun x ↦ ?_
     have h_pdf_nn : 0 ≤ gaussianPDFReal m v x := (gaussianPDFReal_pos m v x hv).le
     have h_sq_nn : 0 ≤ ((x - m) / (v : ℝ)) ^ 2 := sq_nonneg _
     exact mul_nonneg h_sq_nn h_pdf_nn

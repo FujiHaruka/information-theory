@@ -86,19 +86,19 @@ lemma AWGNJointlyTypicalSet_measurable (n : ℕ) (P N ε : ℝ) :
   have h1 : MeasurableSet { p : (Fin n → ℝ) × (Fin n → ℝ) |
       (∑ i : Fin n, (p.1 i)^2) ≤ (n : ℝ) * (P + ε) } := by
     refine measurableSet_le ?_ measurable_const
-    refine Finset.measurable_sum _ (fun i _ => ?_)
+    refine Finset.measurable_sum _ (fun i _ ↦ ?_)
     exact ((measurable_pi_apply i).comp measurable_fst).pow_const 2
   have h2 : MeasurableSet { p : (Fin n → ℝ) × (Fin n → ℝ) |
       (∑ i : Fin n, (p.1 i - p.2 i)^2) ≤ (n : ℝ) * (N + ε) } := by
     refine measurableSet_le ?_ measurable_const
-    refine Finset.measurable_sum _ (fun i _ => ?_)
+    refine Finset.measurable_sum _ (fun i _ ↦ ?_)
     refine Measurable.pow_const ?_ 2
     exact ((measurable_pi_apply i).comp measurable_fst).sub
         ((measurable_pi_apply i).comp measurable_snd)
   have h3 : MeasurableSet { p : (Fin n → ℝ) × (Fin n → ℝ) |
       (∑ i : Fin n, (p.2 i)^2) ≤ (n : ℝ) * (P + N + ε) } := by
     refine measurableSet_le ?_ measurable_const
-    refine Finset.measurable_sum _ (fun i _ => ?_)
+    refine Finset.measurable_sum _ (fun i _ ↦ ?_)
     exact ((measurable_pi_apply i).comp measurable_snd).pow_const 2
   -- `AWGNJointlyTypicalSet` is the intersection of the three sub-level sets.
   have h_eq : AWGNJointlyTypicalSet n P N ε
@@ -128,7 +128,7 @@ theorem awgn_capacity_closed_form_of_maxent_hypotheses
             (awgnChannel N (isAwgnChannelMeasurable N))).toReal
           = (1/2) * Real.log (1 + P / (N : ℝ)))
     (h_bdd :
-        BddAbove ((fun p : Measure ℝ =>
+        BddAbove ((fun p : Measure ℝ ↦
             (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
                 p (awgnChannel N (isAwgnChannelMeasurable N))).toReal) ''
           awgnPowerConstraintSet P))

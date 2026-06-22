@@ -55,9 +55,9 @@ theorem shannon_noisy_channel_coding_theorem_general_full
         ∀ m, (c.errorProbAt W m).toReal < ε := by
   classical
   obtain ⟨N, hN⟩ := exists_N_for_smooth_achievability_uniform W hR_pos hR hε
-  refine ⟨N, fun n hn => ?_⟩
+  refine ⟨N, fun n hn ↦ ?_⟩
   obtain ⟨δ, hδ_pos, hδ_le, h_tv_bd, M, hM_lb, c, hc_err⟩ := hN n hn
-  refine ⟨M, hM_lb, c, fun m => ?_⟩
+  refine ⟨M, hM_lb, c, fun m ↦ ?_⟩
   -- TV bound: |errorProbAt(W_smooth δ) - errorProbAt(W)| ≤ 2 n δ.
   have h_tv := errorProbAt_smooth_TV c W hδ_pos.le hδ_le m
   have h_W_le :

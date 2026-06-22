@@ -64,20 +64,20 @@ applications of `W`. Requires `[IsMarkovKernel W]` so each fibre measure is a
 probability measure (used in the measurability proof via the π-system route). -/
 noncomputable def Channel.toBlock (W : Channel α β) [IsMarkovKernel W] (n : ℕ) :
     Kernel (Fin n → α) (Fin n → β) where
-  toFun x := Measure.pi (fun i : Fin n => W (x i))
+  toFun x := Measure.pi (fun i : Fin n ↦ W (x i))
   measurable' := by
     -- `Measure.pi (fun i => W (x i))` is a probability measure for each `x`, so use
     -- `Measurable.measure_of_isPiSystem_of_isProbabilityMeasure` on the cylinder
     -- π-system `pi univ '' pi univ {MeasurableSet}` generating `MeasurableSpace.pi`.
     refine Measurable.measure_of_isPiSystem_of_isProbabilityMeasure
       (S := Set.pi Set.univ '' Set.pi Set.univ
-        (fun i : Fin n => { s : Set β | MeasurableSet s }))
+        (fun i : Fin n ↦ { s : Set β | MeasurableSet s }))
       generateFrom_pi.symm isPiSystem_pi ?_
     rintro _ ⟨t, ht, rfl⟩
     simp only [Set.mem_pi, Set.mem_univ, true_imp_iff] at ht
     -- On `Set.univ.pi t`, `Measure.pi (...) = ∏ i, W (x i) (t i)` by `pi_pi`.
     have h_eval : ∀ x : Fin n → α,
-        Measure.pi (fun i : Fin n => W (x i)) (Set.univ.pi t)
+        Measure.pi (fun i : Fin n ↦ W (x i)) (Set.univ.pi t)
           = ∏ i : Fin n, (W (x i)) (t i) := by
       intro x; rw [Measure.pi_pi]
     simp_rw [h_eval]
@@ -89,19 +89,19 @@ noncomputable def Channel.toBlock (W : Channel α β) [IsMarkovKernel W] (n : �
 instance Channel.toBlock.instIsMarkovKernel (W : Channel α β) [IsMarkovKernel W] (n : ℕ) :
     IsMarkovKernel (Channel.toBlock W n) where
   isProbabilityMeasure x := by
-    show IsProbabilityMeasure (Measure.pi (fun i : Fin n => W (x i)))
+    show IsProbabilityMeasure (Measure.pi (fun i : Fin n ↦ W (x i)))
     infer_instance
 
 @[simp] lemma Channel.toBlock_apply (W : Channel α β) [IsMarkovKernel W] (n : ℕ)
     (x : Fin n → α) :
-    (Channel.toBlock W n) x = Measure.pi (fun i : Fin n => W (x i)) := rfl
+    (Channel.toBlock W n) x = Measure.pi (fun i : Fin n ↦ W (x i)) := rfl
 
 /-! ## `BlockwiseChannel.ofMemoryless` -/
 
 /-- Memoryless block extension: `ofMemoryless W n := W.toBlock n`. -/
 noncomputable def BlockwiseChannel.ofMemoryless
     (W : Channel α β) [IsMarkovKernel W] : BlockwiseChannel α β :=
-  fun n => W.toBlock n
+  fun n ↦ W.toBlock n
 
 instance BlockwiseChannel.ofMemoryless.instIsMarkovKernel
     (W : Channel α β) [IsMarkovKernel W] (n : ℕ) :
@@ -115,7 +115,7 @@ Type is `ℝ≥0∞` to match `mutualInfoOfChannel`. -/
 @[entry_point]
 noncomputable def BlockwiseChannel.capacityN
     (W : BlockwiseChannel α β) (n : ℕ) : ℝ≥0∞ :=
-  sSup ((fun p : Measure (Fin n → α) => mutualInfoOfChannel p (W n)) ''
+  sSup ((fun p : Measure (Fin n → α) ↦ mutualInfoOfChannel p (W n)) ''
         { p : Measure (Fin n → α) | IsProbabilityMeasure p })
 
 @[entry_point]
@@ -126,6 +126,6 @@ theorem BlockwiseChannel.capacityN_nonneg (W : BlockwiseChannel α β) (n : ℕ)
 `capacity_lim W := lim_{n → ∞} (capacityN W n).toReal / n`. -/
 @[entry_point]
 noncomputable def BlockwiseChannel.capacity_lim (W : BlockwiseChannel α β) : ℝ :=
-  Filter.atTop.limUnder (fun n : ℕ => (W.capacityN n).toReal / n)
+  Filter.atTop.limUnder (fun n : ℕ ↦ (W.capacityN n).toReal / n)
 
 end InformationTheory.Shannon.ChannelCoding

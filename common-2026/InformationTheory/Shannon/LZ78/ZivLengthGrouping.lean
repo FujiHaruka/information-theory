@@ -84,8 +84,8 @@ theorem card_mul_log_le_sum_group_mul_log_add_card_log
     have hc_ne : c ≠ 0 := ne_of_gt hc_pos
     -- Jensen with uniform weights `1/D` at points `k i`.
     have hjensen :
-        (fun x => x * Real.log x) (∑ i ∈ G, (1 / D) • (k i : ℝ))
-          ≤ ∑ i ∈ G, (1 / D) • ((fun x => x * Real.log x) (k i : ℝ)) := by
+        (fun x ↦ x * Real.log x) (∑ i ∈ G, (1 / D) • (k i : ℝ))
+          ≤ ∑ i ∈ G, (1 / D) • ((fun x ↦ x * Real.log x) (k i : ℝ)) := by
       refine Real.convexOn_mul_log.map_sum_le ?_ ?_ ?_
       · intro i _; positivity
       · -- `∑ i ∈ G, 1/D = G.card • (1/D) = D * (1/D) = 1`.
@@ -146,8 +146,8 @@ theorem lz78PhraseStrings_card_mul_log_le_sum_length_group
     ((lz78PhraseStrings input).length : ℝ)
         * Real.log ((lz78PhraseStrings input).length : ℝ)
       ≤ (∑ ℓ ∈ phrases.image List.length,
-            ((phrases.filter (fun w => w.length = ℓ)).card : ℝ)
-              * Real.log ((phrases.filter (fun w => w.length = ℓ)).card : ℝ))
+            ((phrases.filter (fun w ↦ w.length = ℓ)).card : ℝ)
+              * Real.log ((phrases.filter (fun w ↦ w.length = ℓ)).card : ℝ))
         + ((lz78PhraseStrings input).length : ℝ)
             * Real.log ((phrases.image List.length).card : ℝ) := by
   intro phrases
@@ -157,7 +157,7 @@ theorem lz78PhraseStrings_card_mul_log_le_sum_length_group
     List.toFinset_card_of_nodup hnodup
   -- Index set `G` = distinct lengths, weights `k ℓ` = count of phrases of length `ℓ`.
   set G : Finset ℕ := phrases.image List.length with hG
-  set k : ℕ → ℕ := fun ℓ => (phrases.filter (fun w => w.length = ℓ)).card with hk
+  set k : ℕ → ℕ := fun ℓ ↦ (phrases.filter (fun w ↦ w.length = ℓ)).card with hk
   -- The length fibers partition `phrases`: `∑ ℓ ∈ G, k ℓ = #phrases`.
   have hfiber : (∑ ℓ ∈ G, k ℓ) = phrases.card := by
     rw [hG, hk]

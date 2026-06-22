@@ -60,14 +60,14 @@ theorem awgnPowerConstraintPerCodeword_holds
       ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n → ∀ ⦃M : ℕ⦄ (_hM_pos : 0 < M),
         ∀ m : Fin M,
           (Measure.pi
-              (fun _ : Fin M => Measure.pi (fun _ : Fin n => gaussianReal 0 P_cb.toNNReal)))
+              (fun _ : Fin M ↦ Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P_cb.toNNReal)))
             {c : Fin M → Fin n → ℝ | (n : ℝ) * P_target < ∑ i, (c m i) ^ 2}
           ≤ ENNReal.ofReal ε := by
   classical
   -- Abbreviations: codeword law `μ`, statistic `φ = x²`, mean `μ[φ] = variance = P_cb`.
   set v : ℝ≥0 := P_cb.toNNReal with hv_def
   set μ : Measure ℝ := gaussianReal 0 v with hμ_def
-  set φ : ℝ → ℝ := fun x => x ^ 2 with hφ_def
+  set φ : ℝ → ℝ := fun x ↦ x ^ 2 with hφ_def
   -- `φ ∈ MemLp 2` via finite 4th moment of the Gaussian.
   have hφ_mem : MemLp φ 2 μ := by
     have hmeas : AEStronglyMeasurable φ μ := by
@@ -76,7 +76,7 @@ theorem awgnPowerConstraintPerCodeword_holds
     -- `Integrable (fun x => (x²)²) = Integrable (fun x => x⁴)`, from `MemLp id 4`.
     have hmem4 : MemLp (id : ℝ → ℝ) 4 μ := by
       rw [hμ_def]; exact memLp_id_gaussianReal' 4 (by simp)
-    have hint4 : Integrable (fun x : ℝ => ‖(id : ℝ → ℝ) x‖ ^ 4) μ :=
+    have hint4 : Integrable (fun x : ℝ ↦ ‖(id : ℝ → ℝ) x‖ ^ 4) μ :=
       hmem4.integrable_norm_pow (by norm_num)
     refine hint4.congr ?_
     filter_upwards with x
@@ -106,24 +106,24 @@ theorem awgnPowerConstraintPerCodeword_holds
   -- Choose `N₀` so that `variance φ μ / (N₀ · δ²) ≤ ε`, mirroring the engine's own
   -- existence construction.
   obtain ⟨N₀, hN₀⟩ := exists_nat_gt (variance φ μ / (ε * δ ^ 2))
-  refine ⟨N₀ + 1, fun n hn M _hM_pos m => ?_⟩
+  refine ⟨N₀ + 1, fun n hn M _hM_pos m ↦ ?_⟩
   have hn0 : 0 < n := lt_of_lt_of_le (Nat.succ_pos N₀) hn
   have hnR : (0 : ℝ) < n := by exact_mod_cast hn0
   -- The `m`-th coordinate marginal of the codebook law is `νₙ = Measure.pi μ`.
   have hmarg :
-      (Measure.pi (fun _ : Fin M => Measure.pi (fun _ : Fin n => μ)))
+      (Measure.pi (fun _ : Fin M ↦ Measure.pi (fun _ : Fin n ↦ μ)))
           {c : Fin M → Fin n → ℝ | (n : ℝ) * P_target < ∑ i, (c m i) ^ 2}
-        = (Measure.pi (fun _ : Fin n => μ))
+        = (Measure.pi (fun _ : Fin n ↦ μ))
             {x : Fin n → ℝ | (n : ℝ) * P_target < ∑ i, (x i) ^ 2} := by
     have hmp :
         MeasurePreserving (Function.eval m)
-          (Measure.pi (fun _ : Fin M => Measure.pi (fun _ : Fin n => μ)))
-          (Measure.pi (fun _ : Fin n => μ)) :=
-      measurePreserving_eval (fun _ : Fin M => Measure.pi (fun _ : Fin n => μ)) m
+          (Measure.pi (fun _ : Fin M ↦ Measure.pi (fun _ : Fin n ↦ μ)))
+          (Measure.pi (fun _ : Fin n ↦ μ)) :=
+      measurePreserving_eval (fun _ : Fin M ↦ Measure.pi (fun _ : Fin n ↦ μ)) m
     have hmeasSet :
         MeasurableSet {x : Fin n → ℝ | (n : ℝ) * P_target < ∑ i, (x i) ^ 2} := by
       apply measurableSet_lt measurable_const
-      exact Finset.measurable_sum _ (fun i _ => (measurable_pi_apply i).pow_const 2)
+      exact Finset.measurable_sum _ (fun i _ ↦ (measurable_pi_apply i).pow_const 2)
     have hpre :
         {c : Fin M → Fin n → ℝ | (n : ℝ) * P_target < ∑ i, (c m i) ^ 2}
           = (Function.eval m) ⁻¹' {x : Fin n → ℝ | (n : ℝ) * P_target < ∑ i, (x i) ^ 2} := by
@@ -148,7 +148,7 @@ theorem awgnPowerConstraintPerCodeword_holds
     exact le_of_lt (lt_of_lt_of_le hkey (le_abs_self _))
   -- Mass of the violating set ≤ mass of the deviation set ≤ variance/(n·δ²) ≤ ε.
   have hdev := pi_empirical_mean_concentration μ hφ_mem hδ_pos hn0
-  have hviol_le := measure_mono (μ := Measure.pi (fun _ : Fin n => μ)) hsubset
+  have hviol_le := measure_mono (μ := Measure.pi (fun _ : Fin n ↦ μ)) hsubset
   refine le_trans (le_trans hviol_le hdev) ?_
   -- `variance φ μ / (n · δ²) ≤ ε`.
   apply ENNReal.ofReal_le_ofReal

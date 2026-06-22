@@ -33,7 +33,7 @@ variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 `Measure.infinitePi (fun _ : ℕ => joint)` on `ℕ → α × β`. -/
 noncomputable def iidAmbientJointMeasure
     (joint : Measure (α × β)) : Measure (ℕ → α × β) :=
-  Measure.infinitePi (fun _ : ℕ => joint)
+  Measure.infinitePi (fun _ : ℕ ↦ joint)
 
 instance iidAmbientJointMeasure.instIsProbabilityMeasure
     (joint : Measure (α × β)) [IsProbabilityMeasure joint] :
@@ -48,7 +48,7 @@ lemma iidAmbientJoint_map_jointSequence
     (joint : Measure (α × β)) [IsProbabilityMeasure joint] (i : ℕ) :
     (iidAmbientJointMeasure joint).map (jointSequence iidXs iidYs i) = joint := by
   rw [jointSequence_iidXs_iidYs]
-  exact Measure.infinitePi_map_eval (μ := fun _ : ℕ => joint) i
+  exact Measure.infinitePi_map_eval (μ := fun _ : ℕ ↦ joint) i
 
 /-- The `Xs` marginal at index `i` is `joint.map Prod.fst`. -/
 lemma iidAmbientJoint_map_iidXs
@@ -56,12 +56,12 @@ lemma iidAmbientJoint_map_iidXs
     (iidAmbientJointMeasure joint).map (iidXs (α := α) (β := β) i)
       = joint.map Prod.fst := by
   have h_comp : iidXs (α := α) (β := β) i
-      = Prod.fst ∘ (fun ω : ℕ → α × β => ω i) := by
+      = Prod.fst ∘ (fun ω : ℕ → α × β ↦ ω i) := by
     funext ω; rfl
   rw [h_comp, ← Measure.map_map measurable_fst (measurable_pi_apply i)]
-  have h_eval : (iidAmbientJointMeasure joint).map (fun ω : ℕ → α × β => ω i)
+  have h_eval : (iidAmbientJointMeasure joint).map (fun ω : ℕ → α × β ↦ ω i)
       = joint :=
-    Measure.infinitePi_map_eval (μ := fun _ : ℕ => joint) i
+    Measure.infinitePi_map_eval (μ := fun _ : ℕ ↦ joint) i
   rw [h_eval]
 
 /-- The `Ys` marginal at index `i` is `joint.map Prod.snd`. -/
@@ -70,12 +70,12 @@ lemma iidAmbientJoint_map_iidYs
     (iidAmbientJointMeasure joint).map (iidYs (α := α) (β := β) i)
       = joint.map Prod.snd := by
   have h_comp : iidYs (α := α) (β := β) i
-      = Prod.snd ∘ (fun ω : ℕ → α × β => ω i) := by
+      = Prod.snd ∘ (fun ω : ℕ → α × β ↦ ω i) := by
     funext ω; rfl
   rw [h_comp, ← Measure.map_map measurable_snd (measurable_pi_apply i)]
-  have h_eval : (iidAmbientJointMeasure joint).map (fun ω : ℕ → α × β => ω i)
+  have h_eval : (iidAmbientJointMeasure joint).map (fun ω : ℕ → α × β ↦ ω i)
       = joint :=
-    Measure.infinitePi_map_eval (μ := fun _ : ℕ => joint) i
+    Measure.infinitePi_map_eval (μ := fun _ : ℕ ↦ joint) i
   rw [h_eval]
 
 /-! ### `IdentDistrib` along each axis -/
@@ -103,25 +103,25 @@ lemma iidAmbientJoint_identDistrib_joint
 
 lemma iidAmbientJoint_iIndepFun_iidXs
     (joint : Measure (α × β)) [IsProbabilityMeasure joint] :
-    iIndepFun (fun i : ℕ => iidXs (α := α) (β := β) i) (iidAmbientJointMeasure joint) := by
+    iIndepFun (fun i : ℕ ↦ iidXs (α := α) (β := β) i) (iidAmbientJointMeasure joint) := by
   exact iIndepFun_infinitePi
-    (P := fun _ : ℕ => joint)
-    (X := fun _ : ℕ => Prod.fst (α := α) (β := β))
-    (fun _ => measurable_fst)
+    (P := fun _ : ℕ ↦ joint)
+    (X := fun _ : ℕ ↦ Prod.fst (α := α) (β := β))
+    (fun _ ↦ measurable_fst)
 
 lemma iidAmbientJoint_iIndepFun_joint
     (joint : Measure (α × β)) [IsProbabilityMeasure joint] :
-    iIndepFun (fun i : ℕ => jointSequence (α := α) (β := β) iidXs iidYs i)
+    iIndepFun (fun i : ℕ ↦ jointSequence (α := α) (β := β) iidXs iidYs i)
       (iidAmbientJointMeasure joint) := by
   have h_eq :
-      (fun i : ℕ => jointSequence (α := α) (β := β) iidXs iidYs i)
-        = (fun (i : ℕ) (ω : ℕ → α × β) => (id : α × β → α × β) (ω i)) := by
+      (fun i : ℕ ↦ jointSequence (α := α) (β := β) iidXs iidYs i)
+        = (fun (i : ℕ) (ω : ℕ → α × β) ↦ (id : α × β → α × β) (ω i)) := by
     funext i ω; rfl
   rw [h_eq]
   exact iIndepFun_infinitePi
-    (P := fun _ : ℕ => joint)
-    (X := fun _ : ℕ => (id : α × β → α × β))
-    (fun _ => measurable_id)
+    (P := fun _ : ℕ ↦ joint)
+    (X := fun _ : ℕ ↦ (id : α × β → α × β))
+    (fun _ ↦ measurable_id)
 
 /-! ### Positivity of singleton marginals -/
 

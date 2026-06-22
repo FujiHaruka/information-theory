@@ -78,7 +78,7 @@ lemma pmfToMeasure_map_fst_real_singleton
     map_measureReal_apply measurable_fst (MeasurableSet.singleton a)
   rw [h_map, h_pre]
   have h_disj : (↑(Finset.univ : Finset β) : Set β).PairwiseDisjoint
-      (fun b => ({(a, b)} : Set (α × β))) := by
+      (fun b ↦ ({(a, b)} : Set (α × β))) := by
     intro b₁ _ b₂ _ hb s hs1 hs2 p hp
     have hp1 := hs1 hp
     have hp2 := hs2 hp
@@ -86,7 +86,7 @@ lemma pmfToMeasure_map_fst_real_singleton
     have heq : (a, b₁) = (a, b₂) := hp1.symm.trans hp2
     exact (hb (Prod.mk.injEq _ _ _ _ |>.mp heq).2).elim
   have h_meas : ∀ b ∈ (Finset.univ : Finset β),
-      MeasurableSet ({(a, b)} : Set (α × β)) := fun b _ => measurableSet_singleton _
+      MeasurableSet ({(a, b)} : Set (α × β)) := fun b _ ↦ measurableSet_singleton _
   rw [measureReal_biUnion_finset h_disj h_meas]
   simp only [marginalFst]
   refine Finset.sum_congr rfl ?_
@@ -117,7 +117,7 @@ lemma pmfToMeasure_map_snd_real_singleton
     map_measureReal_apply measurable_snd (MeasurableSet.singleton b)
   rw [h_map, h_pre]
   have h_disj : (↑(Finset.univ : Finset α) : Set α).PairwiseDisjoint
-      (fun a => ({(a, b)} : Set (α × β))) := by
+      (fun a ↦ ({(a, b)} : Set (α × β))) := by
     intro a₁ _ a₂ _ ha s hs1 hs2 p hp
     have hp1 := hs1 hp
     have hp2 := hs2 hp
@@ -125,7 +125,7 @@ lemma pmfToMeasure_map_snd_real_singleton
     have heq : (a₁, b) = (a₂, b) := hp1.symm.trans hp2
     exact (ha (Prod.mk.injEq _ _ _ _ |>.mp heq).1).elim
   have h_meas : ∀ a ∈ (Finset.univ : Finset α),
-      MeasurableSet ({(a, b)} : Set (α × β)) := fun a _ => measurableSet_singleton _
+      MeasurableSet ({(a, b)} : Set (α × β)) := fun a _ ↦ measurableSet_singleton _
   rw [measureReal_biUnion_finset h_disj h_meas]
   simp only [marginalSnd]
   refine Finset.sum_congr rfl ?_
@@ -226,7 +226,7 @@ lemma expectedJointDistortion_rdAmbient
   unfold expectedJointDistortion
   -- ∫ ω, d(X ω, Y ω) ∂μ = ∫ p, d p.1 p.2 ∂(μ.map (jointSequence ... 0))
   -- where `jointSequence iidXs iidYs 0 ω = (iidXs 0 ω, iidYs 0 ω) = ω 0`.
-  have h_meas_d : Measurable (fun p : α × β => ((d p.1 p.2 : NNReal) : ℝ)) := by
+  have h_meas_d : Measurable (fun p : α × β ↦ ((d p.1 p.2 : NNReal) : ℝ)) := by
     -- α × β is discrete; everything is measurable.
     refine Measurable.coe_nnreal_real ?_
     exact measurable_of_countable _
@@ -250,7 +250,7 @@ lemma expectedJointDistortion_rdAmbient
   -- Each `(ofReal (q p) • δ_p)` is a finite (in fact prob-mass times Dirac) measure;
   -- the integrand is integrable against it.
   have h_integrable : ∀ a ∈ (Finset.univ : Finset (α × β)),
-      MeasureTheory.Integrable (fun p : α × β => ((d p.1 p.2 : NNReal) : ℝ))
+      MeasureTheory.Integrable (fun p : α × β ↦ ((d p.1 p.2 : NNReal) : ℝ))
         (ENNReal.ofReal (qStar a) • Measure.dirac a) := by
     intro a _
     haveI : IsFiniteMeasure

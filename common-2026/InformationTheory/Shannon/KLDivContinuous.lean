@@ -39,11 +39,11 @@ omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonCla
 @[entry_point]
 theorem klDivSumForm_ofVec_continuous
     (q : α → ℝ) (_hq_pos : ∀ a, 0 < q a) :
-    Continuous (fun p : α → ℝ => klDivSumForm_ofVec p q) := by
+    Continuous (fun p : α → ℝ ↦ klDivSumForm_ofVec p q) := by
   -- Rewrite each summand `p a * (log (p a) - log (q a))` as
   --   `-(Real.negMulLog (p a)) - Real.log (q a) * p a`
   -- and use `Real.continuous_negMulLog` (extends `x * log x` continuously through 0).
-  show Continuous fun p : α → ℝ => ∑ a : α, p a * (Real.log (p a) - Real.log (q a))
+  show Continuous fun p : α → ℝ ↦ ∑ a : α, p a * (Real.log (p a) - Real.log (q a))
   have hrewrite : ∀ (p : α → ℝ) (a : α),
       p a * (Real.log (p a) - Real.log (q a))
         = -(Real.negMulLog (p a)) - Real.log (q a) * p a := by
@@ -51,15 +51,15 @@ theorem klDivSumForm_ofVec_continuous
     rw [Real.negMulLog_eq_neg]
     ring
   simp_rw [hrewrite]
-  refine continuous_finsetSum (Finset.univ : Finset α) (fun a _ => ?_)
-  have h_eval : Continuous (fun p : α → ℝ => p a) := continuous_apply a
-  have h_negMulLog : Continuous (fun p : α → ℝ => Real.negMulLog (p a)) :=
+  refine continuous_finsetSum (Finset.univ : Finset α) (fun a _ ↦ ?_)
+  have h_eval : Continuous (fun p : α → ℝ ↦ p a) := continuous_apply a
+  have h_negMulLog : Continuous (fun p : α → ℝ ↦ Real.negMulLog (p a)) :=
     Real.continuous_negMulLog.comp h_eval
   exact h_negMulLog.neg.sub (h_eval.const_mul (Real.log (q a)))
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 lemma klDivIndex_eq_ofVec (c : α → ℕ) (n : ℕ) (Q : Measure α) :
     klDivIndex c n Q
-      = klDivSumForm_ofVec (fun a => (c a : ℝ) / n) (fun a => Q.real {a}) := rfl
+      = klDivSumForm_ofVec (fun a ↦ (c a : ℝ) / n) (fun a ↦ Q.real {a}) := rfl
 
 end InformationTheory.Shannon

@@ -36,14 +36,14 @@ theorem shearer_inequality
     (S : ι → Finset (Fin n))
     {k : ℕ}
     (hk : ∀ i : Fin n,
-      k ≤ (Finset.univ.filter (fun j : ι => i ∈ S j)).card) :
+      k ≤ (Finset.univ.filter (fun j : ι ↦ i ∈ S j)).card) :
     (k : ℝ) * jointEntropy μ Xs
       ≤ ∑ j : ι, jointEntropySubset μ Xs (S j) := by
   classical
   -- f i = H(X_i | X_{<i}) (conditioning over Finset.univ.filter (· < i))
-  set f : Fin n → ℝ := fun i =>
+  set f : Fin n → ℝ := fun i ↦
     InformationTheory.MeasureFano.condEntropy μ (Xs i)
-      (fun ω (j : ↥(Finset.univ.filter (· < i))) => Xs j.val ω) with hf_def
+      (fun ω (j : ↥(Finset.univ.filter (· < i))) ↦ Xs j.val ω) with hf_def
   -- Step A: ∀ T : Finset (Fin n), ∑ i ∈ T, f i ≤ jointEntropySubset μ Xs T
   have h_subset_lower : ∀ T : Finset (Fin n),
       ∑ i ∈ T, f i ≤ jointEntropySubset μ Xs T := by
@@ -61,7 +61,7 @@ theorem shearer_inequality
   have hf_nonneg : ∀ i, 0 ≤ f i := by
     intro i
     show 0 ≤ InformationTheory.MeasureFano.condEntropy μ (Xs i)
-        (fun ω (j : ↥(Finset.univ.filter (· < i))) => Xs j.val ω)
+        (fun ω (j : ↥(Finset.univ.filter (· < i))) ↦ Xs j.val ω)
     unfold InformationTheory.MeasureFano.condEntropy
     apply integral_nonneg
     intro y
@@ -71,12 +71,12 @@ theorem shearer_inequality
   -- Step D: swap the double sum
   -- ∑ j : ι, ∑ i ∈ S j, f i = ∑ i, (cover i) * f i
   have h_double : ∑ j : ι, ∑ i ∈ S j, f i
-      = ∑ i, ((Finset.univ.filter (fun j : ι => i ∈ S j)).card : ℝ) * f i := by
+      = ∑ i, ((Finset.univ.filter (fun j : ι ↦ i ∈ S j)).card : ℝ) * f i := by
     have h1 : ∀ j, ∑ i ∈ S j, f i
         = ∑ i : Fin n, if i ∈ S j then f i else 0 := by
       intro j
       conv_lhs =>
-        rw [show S j = Finset.univ.filter (fun i => i ∈ S j) from by ext; simp]
+        rw [show S j = Finset.univ.filter (fun i ↦ i ∈ S j) from by ext; simp]
       rw [Finset.sum_filter]
     simp_rw [h1]
     rw [Finset.sum_comm]
@@ -86,7 +86,7 @@ theorem shearer_inequality
   -- Step E: cover i ≥ k and f i ≥ 0 give (k : ℝ) * f i ≤ (cover i) * f i
   have h_cover_ge : ∀ i,
       (k : ℝ) * f i
-        ≤ ((Finset.univ.filter (fun j : ι => i ∈ S j)).card : ℝ) * f i := by
+        ≤ ((Finset.univ.filter (fun j : ι ↦ i ∈ S j)).card : ℝ) * f i := by
     intro i
     apply mul_le_mul_of_nonneg_right _ (hf_nonneg i)
     exact_mod_cast hk i
@@ -94,10 +94,10 @@ theorem shearer_inequality
   calc (k : ℝ) * jointEntropy μ Xs
       = (k : ℝ) * ∑ i, f i := by rw [h_joint_eq]
     _ = ∑ i, (k : ℝ) * f i := by rw [Finset.mul_sum]
-    _ ≤ ∑ i, ((Finset.univ.filter (fun j : ι => i ∈ S j)).card : ℝ) * f i :=
-        Finset.sum_le_sum (fun i _ => h_cover_ge i)
+    _ ≤ ∑ i, ((Finset.univ.filter (fun j : ι ↦ i ∈ S j)).card : ℝ) * f i :=
+        Finset.sum_le_sum (fun i _ ↦ h_cover_ge i)
     _ = ∑ j : ι, ∑ i ∈ S j, f i := h_double.symm
     _ ≤ ∑ j : ι, jointEntropySubset μ Xs (S j) :=
-        Finset.sum_le_sum (fun j _ => h_subset_lower (S j))
+        Finset.sum_le_sum (fun j _ ↦ h_subset_lower (S j))
 
 end InformationTheory.Shannon

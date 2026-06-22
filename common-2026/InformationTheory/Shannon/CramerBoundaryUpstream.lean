@@ -67,7 +67,7 @@ def IsMeasureInfinitePiTiltedEq (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam
   ∀ a ε : ℝ, 0 < ε →
     ∃ C > 0, ∀ᶠ n : ℕ in atTop,
       C * Real.exp (-(n : ℝ) * (lam * a - cgf Y μ₀ lam + lam * ε))
-        ≤ (Measure.infinitePi (fun _ : ℕ => μ₀)).real
+        ≤ (Measure.infinitePi (fun _ : ℕ ↦ μ₀)).real
             {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)}
 
 /-! ## Cylinder lift (hoisted) -/
@@ -79,9 +79,9 @@ factor `ν` (apply with `ν = μ₀` and `ν = μ₀.tilted ...`). -/
 theorem infinitePi_partialSum_event_eq_pi {ν : Measure Ω₀} [IsProbabilityMeasure ν]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (n : ℕ) (P : ℝ → Prop)
     (hP : MeasurableSet {r : ℝ | P r}) :
-    (Measure.infinitePi (fun _ : ℕ => ν))
+    (Measure.infinitePi (fun _ : ℕ ↦ ν))
         {ω : ℕ → Ω₀ | P (∑ i ∈ Finset.range n, Y (ω i))}
-      = (Measure.pi (fun _ : Fin n => ν))
+      = (Measure.pi (fun _ : Fin n ↦ ν))
           {x : Fin n → Ω₀ | P (∑ i, Y (x i))} := by
   classical
   -- The cylinder set on the subtype `↥(Finset.range n)`.
@@ -89,32 +89,32 @@ theorem infinitePi_partialSum_event_eq_pi {ν : Measure Ω₀} [IsProbabilityMea
     {f | P (∑ j, Y (f j))} with hS
   -- Measurability of `S`.
   have hSmeas : MeasurableSet S := by
-    have hfun : Measurable (fun f : ∀ i : ↥(Finset.range n), Ω₀ => ∑ j, Y (f j)) :=
-      Finset.measurable_sum _ (fun j _ => hY.comp (measurable_pi_apply j))
+    have hfun : Measurable (fun f : ∀ i : ↥(Finset.range n), Ω₀ ↦ ∑ j, Y (f j)) :=
+      Finset.measurable_sum _ (fun j _ ↦ hY.comp (measurable_pi_apply j))
     exact hfun hP
   -- The infinite event is the preimage of `S` under the `range n` restriction.
   have hpre : {ω : ℕ → Ω₀ | P (∑ i ∈ Finset.range n, Y (ω i))}
       = (Finset.range n).restrict ⁻¹' S := by
     ext ω
     simp only [Set.mem_setOf_eq, Set.mem_preimage, hS]
-    rw [← Finset.sum_coe_sort (Finset.range n) (fun i => Y (ω i))]
+    rw [← Finset.sum_coe_sort (Finset.range n) (fun i ↦ Y (ω i))]
     rfl
   rw [hpre, ← Measure.map_apply (Finset.measurable_restrict _) hSmeas,
     Measure.infinitePi_map_restrict]
   -- Reindex the subtype product `↥(range n)` to `Fin n` via `piCongrLeft`.
   set e : Fin n ≃ ↥(Finset.range n) :=
     (Finset.equivFinOfCardEq (Finset.card_range n)).symm with he
-  have hmp := measurePreserving_piCongrLeft (α := fun _ : ↥(Finset.range n) => Ω₀)
-      (fun _ : ↥(Finset.range n) => ν) e
+  have hmp := measurePreserving_piCongrLeft (α := fun _ : ↥(Finset.range n) ↦ Ω₀)
+      (fun _ : ↥(Finset.range n) ↦ ν) e
   rw [← hmp.measure_preimage_emb (MeasurableEquiv.measurableEmbedding _) S]
   -- The preimage event agrees with the `Fin n` event after reindexing.
   congr 1
   ext x
   simp only [Set.mem_preimage, Set.mem_setOf_eq, hS,
     MeasurableEquiv.coe_piCongrLeft]
-  rw [← e.sum_comp (fun j : ↥(Finset.range n) => Y ((Equiv.piCongrLeft
-    (fun _ : ↥(Finset.range n) => Ω₀) e) x j))]
-  refine iff_of_eq (congrArg P (Finset.sum_congr rfl (fun j _ => ?_)))
+  rw [← e.sum_comp (fun j : ↥(Finset.range n) ↦ Y ((Equiv.piCongrLeft
+    (fun _ : ↥(Finset.range n) ↦ Ω₀) e) x j))]
+  refine iff_of_eq (congrArg P (Finset.sum_congr rfl (fun j _ ↦ ?_)))
   rw [Equiv.piCongrLeft_apply_apply]
 
 /-! ## Finite change-of-measure lower bound (hoisted) -/
@@ -132,14 +132,14 @@ theorem change_of_measure_lower_bound_pi {n : ℕ} {μ₀ : Measure Ω₀} [IsPr
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
     (a ε lam : ℝ) (hlam : 0 ≤ lam) :
     ENNReal.ofReal (Real.exp (-(n : ℝ) * (lam * a - cgf Y μ₀ lam + lam * ε)))
-        * (Measure.pi (fun _ : Fin n => μ₀.tilted (fun ω => lam * Y ω)))
+        * (Measure.pi (fun _ : Fin n ↦ μ₀.tilted (fun ω ↦ lam * Y ω)))
             {x : Fin n → Ω₀ | a * n ≤ ∑ i, Y (x i) ∧ ∑ i, Y (x i) < (a + ε) * n}
-      ≤ (Measure.pi (fun _ : Fin n => μ₀))
+      ≤ (Measure.pi (fun _ : Fin n ↦ μ₀))
             {x : Fin n → Ω₀ | a * n ≤ ∑ i, Y (x i)} := by
   classical
   -- Notation: single-coordinate partition function `Z₁ = ∫ exp(lam·Y) dμ₀`.
   set Z₁ : ℝ := ∫ ω, Real.exp (lam * Y ω) ∂μ₀ with hZ₁
-  have hint : Integrable (fun ω => Real.exp (lam * Y ω)) μ₀ :=
+  have hint : Integrable (fun ω ↦ Real.exp (lam * Y ω)) μ₀ :=
     Cramer.integrable_exp_mul_of_bounded hY h_bdd lam
   have hZ₁_pos : 0 < Z₁ := mgf_pos hint
   have hcgf : cgf Y μ₀ lam = Real.log Z₁ := rfl
@@ -148,16 +148,16 @@ theorem change_of_measure_lower_bound_pi {n : ℕ} {μ₀ : Measure Ω₀} [IsPr
     {x : Fin n → Ω₀ | a * n ≤ ∑ i, Y (x i) ∧ ∑ i, Y (x i) < (a + ε) * n} with hW
   set E : Set (Fin n → Ω₀) := {x : Fin n → Ω₀ | a * n ≤ ∑ i, Y (x i)} with hE
   have hWmeas : MeasurableSet W := by
-    have hsum : Measurable (fun x : Fin n → Ω₀ => ∑ i, Y (x i)) :=
-      Finset.measurable_sum _ (fun i _ => hY.comp (measurable_pi_apply i))
+    have hsum : Measurable (fun x : Fin n → Ω₀ ↦ ∑ i, Y (x i)) :=
+      Finset.measurable_sum _ (fun i _ ↦ hY.comp (measurable_pi_apply i))
     exact (measurableSet_le measurable_const hsum).inter
       (measurableSet_lt hsum measurable_const)
-  have hWsubE : W ⊆ E := fun x hx => hx.1
+  have hWsubE : W ⊆ E := fun x hx ↦ hx.1
   -- Step 1: rewrite the tilted product as the tilt of the un-tilted product.
   rw [← pi_tilted_sum_eq_pi_tilted (n := n) (μ₀ := μ₀) hY lam,
     tilted_apply' _ _ hWmeas]
   -- Normalization constant `Z_n = Z₁ ^ n`.
-  have hZn : (∫ x, Real.exp (∑ i, lam * Y (x i)) ∂(Measure.pi (fun _ : Fin n => μ₀)))
+  have hZn : (∫ x, Real.exp (∑ i, lam * Y (x i)) ∂(Measure.pi (fun _ : Fin n ↦ μ₀)))
       = Z₁ ^ n := by rw [hZ₁]; exact integral_exp_sum_pi_eq_pow lam
   rw [hZn]
   -- Step 2: pointwise upper bound of the density on `W` by the constant
@@ -184,28 +184,28 @@ theorem change_of_measure_lower_bound_pi {n : ℕ} {μ₀ : Measure Ω₀} [IsPr
   -- Step 3: bound the set-lintegral by the constant times the measure of `W`.
   have hstep2 :
       ∫⁻ x in W, ENNReal.ofReal (Real.exp (∑ i, lam * Y (x i)) / Z₁ ^ n)
-          ∂(Measure.pi (fun _ : Fin n => μ₀))
-        ≤ ENNReal.ofReal c * (Measure.pi (fun _ : Fin n => μ₀)) W := by
+          ∂(Measure.pi (fun _ : Fin n ↦ μ₀))
+        ≤ ENNReal.ofReal c * (Measure.pi (fun _ : Fin n ↦ μ₀)) W := by
     calc ∫⁻ x in W, ENNReal.ofReal (Real.exp (∑ i, lam * Y (x i)) / Z₁ ^ n)
-            ∂(Measure.pi (fun _ : Fin n => μ₀))
-        ≤ ∫⁻ _ in W, ENNReal.ofReal c ∂(Measure.pi (fun _ : Fin n => μ₀)) :=
+            ∂(Measure.pi (fun _ : Fin n ↦ μ₀))
+        ≤ ∫⁻ _ in W, ENNReal.ofReal c ∂(Measure.pi (fun _ : Fin n ↦ μ₀)) :=
           setLIntegral_mono' hWmeas hdens_le
-      _ = ENNReal.ofReal c * (Measure.pi (fun _ : Fin n => μ₀)) W := by
+      _ = ENNReal.ofReal c * (Measure.pi (fun _ : Fin n ↦ μ₀)) W := by
           rw [setLIntegral_const]
   -- Step 4: combine. The LHS coefficient times `(pi μ_tilt) W` rewritten via
   -- `tilted_apply'` is exactly the set-lintegral; we bound it and use `W ⊆ E`.
-  refine le_trans ?_ (measure_mono (μ := Measure.pi (fun _ : Fin n => μ₀)) hWsubE)
+  refine le_trans ?_ (measure_mono (μ := Measure.pi (fun _ : Fin n ↦ μ₀)) hWsubE)
   -- Goal: ofReal(exp(-n(λa-Λ+λε))) * ∫⁻_W density ≤ (pi μ₀) W.
   calc ENNReal.ofReal (Real.exp (-(n : ℝ) * (lam * a - cgf Y μ₀ lam + lam * ε)))
           * ∫⁻ x in W, ENNReal.ofReal (Real.exp (∑ i, lam * Y (x i)) / Z₁ ^ n)
-              ∂(Measure.pi (fun _ : Fin n => μ₀))
+              ∂(Measure.pi (fun _ : Fin n ↦ μ₀))
       ≤ ENNReal.ofReal (Real.exp (-(n : ℝ) * (lam * a - cgf Y μ₀ lam + lam * ε)))
-          * (ENNReal.ofReal c * (Measure.pi (fun _ : Fin n => μ₀)) W) := by
+          * (ENNReal.ofReal c * (Measure.pi (fun _ : Fin n ↦ μ₀)) W) := by
         gcongr
     _ = ENNReal.ofReal (Real.exp (-(n : ℝ) * (lam * a - cgf Y μ₀ lam + lam * ε)) * c)
-          * (Measure.pi (fun _ : Fin n => μ₀)) W := by
+          * (Measure.pi (fun _ : Fin n ↦ μ₀)) W := by
         rw [← mul_assoc, ← ENNReal.ofReal_mul (by positivity)]
-    _ = (Measure.pi (fun _ : Fin n => μ₀)) W := by
+    _ = (Measure.pi (fun _ : Fin n ↦ μ₀)) W := by
         have hprod : Real.exp (-(n : ℝ) * (lam * a - cgf Y μ₀ lam + lam * ε)) * c = 1 := by
           rw [hc, hcgf, ← Real.exp_add]
           rw [show -(n : ℝ) * (lam * a - Real.log Z₁ + lam * ε)
@@ -224,7 +224,7 @@ tilted-side LLN `tilted_lln_in_probability_real` under that condition. -/
 def IsTiltedWindowEventuallyLarge (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam : ℝ) : Prop :=
   ∀ a ε : ℝ, 0 < ε →
     ∀ᶠ n : ℕ in atTop,
-      (1 : ℝ) / 2 ≤ (Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))).real
+      (1 : ℝ) / 2 ≤ (Measure.infinitePi (fun _ : ℕ ↦ μ₀.tilted (fun ω ↦ lam * Y ω))).real
           {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)
             ∧ ∑ i ∈ Finset.range n, Y (ω i) < (a + ε) * n}
 
@@ -241,7 +241,7 @@ theorem isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) (hlam : 0 ≤ lam)
     (h_res : IsTiltedWindowEventuallyLarge μ₀ Y lam) :
     IsMeasureInfinitePiTiltedEq μ₀ Y lam := by
-  haveI hp : IsProbabilityMeasure (μ₀.tilted (fun ω => lam * Y ω)) :=
+  haveI hp : IsProbabilityMeasure (μ₀.tilted (fun ω ↦ lam * Y ω)) :=
     isProbabilityMeasure_tilted_of_bounded hY h_bdd lam
   intro a ε hε
   refine ⟨1 / 2, by norm_num, ?_⟩
@@ -251,42 +251,42 @@ theorem isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge
   have hPE : MeasurableSet {r : ℝ | a * (n : ℝ) ≤ r} :=
     measurableSet_le measurable_const measurable_id
   have hlift_E := infinitePi_partialSum_event_eq_pi (ν := μ₀) hY n
-      (fun r => a * (n : ℝ) ≤ r) hPE
+      (fun r ↦ a * (n : ℝ) ≤ r) hPE
   -- Cylinder lift, tilted side: window event.
   have hPW : MeasurableSet {r : ℝ | a * (n : ℝ) ≤ r ∧ r < (a + ε) * n} :=
     (measurableSet_le measurable_const measurable_id).inter
       (measurableSet_lt measurable_id measurable_const)
   have hlift_W := infinitePi_partialSum_event_eq_pi
-      (ν := μ₀.tilted (fun ω => lam * Y ω)) hY n
-      (fun r => a * (n : ℝ) ≤ r ∧ r < (a + ε) * n) hPW
+      (ν := μ₀.tilted (fun ω ↦ lam * Y ω)) hY n
+      (fun r ↦ a * (n : ℝ) ≤ r ∧ r < (a + ε) * n) hPW
   -- Change-of-measure at the finite level.
   have hcm := change_of_measure_lower_bound_pi (n := n) (μ₀ := μ₀) hY h_bdd a ε lam hlam
   -- Convert change-of-measure to `.real` form.
-  have hfin_t : (Measure.pi (fun _ : Fin n => μ₀.tilted (fun ω => lam * Y ω)))
+  have hfin_t : (Measure.pi (fun _ : Fin n ↦ μ₀.tilted (fun ω ↦ lam * Y ω)))
       {x : Fin n → Ω₀ | a * n ≤ ∑ i, Y (x i) ∧ ∑ i, Y (x i) < (a + ε) * n} ≠ ⊤ :=
     (measure_ne_top _ _)
-  have hfin_E : (Measure.pi (fun _ : Fin n => μ₀))
+  have hfin_E : (Measure.pi (fun _ : Fin n ↦ μ₀))
       {x : Fin n → Ω₀ | a * n ≤ ∑ i, Y (x i)} ≠ ⊤ := (measure_ne_top _ _)
   have hcm_real :
       Real.exp (-(n : ℝ) * (lam * a - cgf Y μ₀ lam + lam * ε))
-          * (Measure.pi (fun _ : Fin n => μ₀.tilted (fun ω => lam * Y ω))).real
+          * (Measure.pi (fun _ : Fin n ↦ μ₀.tilted (fun ω ↦ lam * Y ω))).real
               {x : Fin n → Ω₀ | a * n ≤ ∑ i, Y (x i) ∧ ∑ i, Y (x i) < (a + ε) * n}
-        ≤ (Measure.pi (fun _ : Fin n => μ₀)).real
+        ≤ (Measure.pi (fun _ : Fin n ↦ μ₀)).real
               {x : Fin n → Ω₀ | a * n ≤ ∑ i, Y (x i)} := by
     have h := ENNReal.toReal_mono hfin_E hcm
     rwa [ENNReal.toReal_mul, ENNReal.toReal_ofReal (le_of_lt (Real.exp_pos _))] at h
   -- Assemble: 1/2 · exp(...) ≤ exp(...) · (tilted window).real ≤ (un-tilted half-line).real.
   -- Cylinder lift identifies the un-tilted half-line `.real`.
-  have hE_real : (Measure.infinitePi (fun _ : ℕ => μ₀)).real
+  have hE_real : (Measure.infinitePi (fun _ : ℕ ↦ μ₀)).real
         {ω : ℕ → Ω₀ | a * (n : ℝ) ≤ ∑ i ∈ Finset.range n, Y (ω i)}
-      = (Measure.pi (fun _ : Fin n => μ₀)).real
+      = (Measure.pi (fun _ : Fin n ↦ μ₀)).real
           {x : Fin n → Ω₀ | a * (n : ℝ) ≤ ∑ i, Y (x i)} := by
     rw [measureReal_def, measureReal_def, hlift_E]
   -- Cylinder lift identifies the tilted window `.real`.
-  have hW_real : (Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))).real
+  have hW_real : (Measure.infinitePi (fun _ : ℕ ↦ μ₀.tilted (fun ω ↦ lam * Y ω))).real
         {ω : ℕ → Ω₀ | a * (n : ℝ) ≤ ∑ i ∈ Finset.range n, Y (ω i)
           ∧ ∑ i ∈ Finset.range n, Y (ω i) < (a + ε) * n}
-      = (Measure.pi (fun _ : Fin n => μ₀.tilted (fun ω => lam * Y ω))).real
+      = (Measure.pi (fun _ : Fin n ↦ μ₀.tilted (fun ω ↦ lam * Y ω))).real
           {x : Fin n → Ω₀ | a * (n : ℝ) ≤ ∑ i, Y (x i) ∧ ∑ i, Y (x i) < (a + ε) * n} := by
     rw [measureReal_def, measureReal_def, hlift_W]
   rw [hE_real]
@@ -315,41 +315,41 @@ theorem tiltedWindow_eventually_tendsto_one
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ)
     {a ε : ℝ}
-    (h_lo : a < ∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)))
-    (h_hi : ∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)) < a + ε) :
-    Tendsto (fun n : ℕ =>
-        (Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))).real
+    (h_lo : a < ∫ ω, Y ω ∂(μ₀.tilted (fun ω ↦ lam * Y ω)))
+    (h_hi : ∫ ω, Y ω ∂(μ₀.tilted (fun ω ↦ lam * Y ω)) < a + ε) :
+    Tendsto (fun n : ℕ ↦
+        (Measure.infinitePi (fun _ : ℕ ↦ μ₀.tilted (fun ω ↦ lam * Y ω))).real
           {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)
             ∧ ∑ i ∈ Finset.range n, Y (ω i) < (a + ε) * n}) atTop (𝓝 1) := by
   haveI : IsProbabilityMeasure
-      (Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))) :=
+      (Measure.infinitePi (fun _ : ℕ ↦ μ₀.tilted (fun ω ↦ lam * Y ω))) :=
     isProbabilityMeasure_infinitePi_tilted_of_bounded hY h_bdd lam
   set μ : Measure (ℕ → Ω₀) :=
-    Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω)) with hμ
-  set m : ℝ := ∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)) with hm
+    Measure.infinitePi (fun _ : ℕ ↦ μ₀.tilted (fun ω ↦ lam * Y ω)) with hμ
+  set m : ℝ := ∫ ω, Y ω ∂(μ₀.tilted (fun ω ↦ lam * Y ω)) with hm
   -- The half-window radius `δ`.
   set δ : ℝ := min (m - a) (a + ε - m) with hδdef
   have hδ : 0 < δ := lt_min (by linarith) (by linarith)
   -- The bad set and the window event, per `n`.
-  set bad : ℕ → Set (ℕ → Ω₀) := fun n =>
+  set bad : ℕ → Set (ℕ → Ω₀) := fun n ↦
     {ω | δ ≤ |(∑ i ∈ Finset.range n, Y (ω i)) / n - m|} with hbad
-  set window : ℕ → Set (ℕ → Ω₀) := fun n =>
+  set window : ℕ → Set (ℕ → Ω₀) := fun n ↦
     {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)
       ∧ ∑ i ∈ Finset.range n, Y (ω i) < (a + ε) * n} with hwindow
   -- Measurability of the bad set.
-  have hbad_meas : ∀ n, MeasurableSet (bad n) := fun n =>
+  have hbad_meas : ∀ n, MeasurableSet (bad n) := fun n ↦
     measurableSet_le measurable_const
-      ((((Finset.measurable_sum _ (fun i _ => hY.comp (measurable_pi_apply i))).div_const
+      ((((Finset.measurable_sum _ (fun i _ ↦ hY.comp (measurable_pi_apply i))).div_const
         (n : ℝ)).sub measurable_const).norm)
   -- LLN: bad-set mass → 0.
-  have h_bad : Tendsto (fun n : ℕ => μ.real (bad n)) atTop (𝓝 0) :=
+  have h_bad : Tendsto (fun n : ℕ ↦ μ.real (bad n)) atTop (𝓝 0) :=
     tilted_lln_in_probability_real hY h_bdd lam hδ
   -- Complement mass → 1.
-  have h_compl : Tendsto (fun n : ℕ => μ.real (bad n)ᶜ) atTop (𝓝 1) := by
-    have h1 : Tendsto (fun n : ℕ => (1 : ℝ) - μ.real (bad n)) atTop (𝓝 (1 - 0)) :=
+  have h_compl : Tendsto (fun n : ℕ ↦ μ.real (bad n)ᶜ) atTop (𝓝 1) := by
+    have h1 : Tendsto (fun n : ℕ ↦ (1 : ℝ) - μ.real (bad n)) atTop (𝓝 (1 - 0)) :=
       h_bad.const_sub 1
     rw [sub_zero] at h1
-    refine h1.congr (fun n => ?_)
+    refine h1.congr (fun n ↦ ?_)
     rw [probReal_compl_eq_one_sub (hbad_meas n)]
   -- Inclusion: complement of bad ⊆ window, for `n ≥ 1`.
   have h_sub : ∀ n : ℕ, 1 ≤ n → (bad n)ᶜ ⊆ window n := by
@@ -371,7 +371,7 @@ theorem tiltedWindow_eventually_tendsto_one
     filter_upwards [eventually_ge_atTop 1] with n hn
     exact measureReal_mono (h_sub n hn) (measure_ne_top _ _)
   · -- always `μ.real (window n) ≤ 1`
-    exact Eventually.of_forall (fun n => measureReal_le_one)
+    exact Eventually.of_forall (fun n ↦ measureReal_le_one)
 
 /-- **Per-instance tilted window mass ≥ 1/2** (interior case, `≥ 1/2` corollary).
 
@@ -382,10 +382,10 @@ theorem tiltedWindow_eventually_large_of_interior
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ)
     {a ε : ℝ}
-    (h_lo : a < ∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)))
-    (h_hi : ∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)) < a + ε) :
+    (h_lo : a < ∫ ω, Y ω ∂(μ₀.tilted (fun ω ↦ lam * Y ω)))
+    (h_hi : ∫ ω, Y ω ∂(μ₀.tilted (fun ω ↦ lam * Y ω)) < a + ε) :
     ∀ᶠ n : ℕ in atTop,
-      (1 : ℝ) / 2 ≤ (Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))).real
+      (1 : ℝ) / 2 ≤ (Measure.infinitePi (fun _ : ℕ ↦ μ₀.tilted (fun ω ↦ lam * Y ω))).real
           {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)
             ∧ ∑ i ∈ Finset.range n, Y (ω i) < (a + ε) * n} :=
   (tiltedWindow_eventually_tendsto_one hY h_bdd lam h_lo h_hi).eventually_const_le
@@ -409,9 +409,9 @@ and its interior is again `Set.univ`.
 theorem tiltedMean_eq_deriv_cgf
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) :
-    ∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)) = deriv (cgf Y μ₀) lam := by
+    ∫ ω, Y ω ∂(μ₀.tilted (fun ω ↦ lam * Y ω)) = deriv (cgf Y μ₀) lam := by
   have h_univ : integrableExpSet Y μ₀ = Set.univ := by
-    refine Set.eq_univ_of_forall (fun t => ?_)
+    refine Set.eq_univ_of_forall (fun t ↦ ?_)
     exact Cramer.integrable_exp_mul_of_bounded hY h_bdd t
   have hmem : lam ∈ interior (integrableExpSet Y μ₀) := by
     rw [h_univ, interior_univ]

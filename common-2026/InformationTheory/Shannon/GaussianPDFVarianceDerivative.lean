@@ -68,7 +68,7 @@ theorem gaussianPDFRealVar_eq_gaussianPDFReal (m : ℝ) {v : ℝ} (hv : 0 < v) (
 of `(√(2πv))⁻¹` is rational. -/
 @[entry_point]
 theorem hasDerivAt_gaussianNorm_variance {v : ℝ} (hv : 0 < v) :
-    HasDerivAt (fun v => (Real.sqrt (2 * Real.pi * v))⁻¹)
+    HasDerivAt (fun v ↦ (Real.sqrt (2 * Real.pi * v))⁻¹)
       (-(1 / (2 * v)) * (Real.sqrt (2 * Real.pi * v))⁻¹) v := by
   have hpi : (0 : ℝ) < Real.pi := Real.pi_pos
   have h2piv_pos : (0 : ℝ) < 2 * Real.pi * v := by positivity
@@ -76,11 +76,11 @@ theorem hasDerivAt_gaussianNorm_variance {v : ℝ} (hv : 0 < v) :
   have hsqrt_pos : (0 : ℝ) < Real.sqrt (2 * Real.pi * v) := Real.sqrt_pos.mpr h2piv_pos
   have hsqrt_ne : Real.sqrt (2 * Real.pi * v) ≠ 0 := ne_of_gt hsqrt_pos
   -- inner: `2πv`, derivative `2π`
-  have h_inner : HasDerivAt (fun v : ℝ => 2 * Real.pi * v) (2 * Real.pi) v := by
+  have h_inner : HasDerivAt (fun v : ℝ ↦ 2 * Real.pi * v) (2 * Real.pi) v := by
     have := (hasDerivAt_id v).const_mul (2 * Real.pi)
     simpa using this
   -- sqrt: derivative `(2π) / (2 · √(2πv))`
-  have h_sqrt : HasDerivAt (fun v : ℝ => Real.sqrt (2 * Real.pi * v))
+  have h_sqrt : HasDerivAt (fun v : ℝ ↦ Real.sqrt (2 * Real.pi * v))
       ((2 * Real.pi) / (2 * Real.sqrt (2 * Real.pi * v))) v := h_inner.sqrt h2piv_ne
   -- inverse: derivative `-((2π)/(2·√(2πv))) / (√(2πv))²`
   have h_inv := h_sqrt.inv hsqrt_ne
@@ -95,17 +95,17 @@ theorem hasDerivAt_gaussianNorm_variance {v : ℝ} (hv : 0 < v) :
 `∂_v exp(−(x−m)²/(2v)) = ((x−m)²/(2v²)) · exp(−(x−m)²/(2v))`. -/
 @[entry_point]
 theorem hasDerivAt_gaussianExp_variance (m x : ℝ) {v : ℝ} (hv : 0 < v) :
-    HasDerivAt (fun v => Real.exp (-(x - m) ^ 2 / (2 * v)))
+    HasDerivAt (fun v ↦ Real.exp (-(x - m) ^ 2 / (2 * v)))
       (((x - m) ^ 2 / (2 * v ^ 2)) * Real.exp (-(x - m) ^ 2 / (2 * v))) v := by
   have h2v_ne : (2 * v : ℝ) ≠ 0 := by positivity
   -- inner argument `-(x-m)²/(2v)`, derivative `(x-m)²/(2v²)`
-  have h_num : HasDerivAt (fun _ : ℝ => -(x - m) ^ 2) 0 v := hasDerivAt_const v _
-  have h_den : HasDerivAt (fun v : ℝ => 2 * v) 2 v := by
+  have h_num : HasDerivAt (fun _ : ℝ ↦ -(x - m) ^ 2) 0 v := hasDerivAt_const v _
+  have h_den : HasDerivAt (fun v : ℝ ↦ 2 * v) 2 v := by
     have := (hasDerivAt_id v).const_mul (2 : ℝ)
     simpa using this
-  have h_div : HasDerivAt (fun v : ℝ => -(x - m) ^ 2 / (2 * v))
+  have h_div : HasDerivAt (fun v : ℝ ↦ -(x - m) ^ 2 / (2 * v))
       ((0 * (2 * v) - -(x - m) ^ 2 * 2) / (2 * v) ^ 2) v := h_num.div h_den h2v_ne
-  have h_div' : HasDerivAt (fun v : ℝ => -(x - m) ^ 2 / (2 * v))
+  have h_div' : HasDerivAt (fun v : ℝ ↦ -(x - m) ^ 2 / (2 * v))
       ((x - m) ^ 2 / (2 * v ^ 2)) v := by
     convert h_div using 1
     field_simp
@@ -123,7 +123,7 @@ theorem hasDerivAt_gaussianExp_variance (m x : ℝ) {v : ℝ} (hv : 0 < v) :
 for `v > 0`. Proven from scratch via the `Real.exp` / `Real.sqrt` chain rule. -/
 @[entry_point]
 theorem hasDerivAt_gaussianPDFRealVar_variance (m x : ℝ) {v : ℝ} (hv : 0 < v) :
-    HasDerivAt (fun v => gaussianPDFRealVar m v x)
+    HasDerivAt (fun v ↦ gaussianPDFRealVar m v x)
       (((x - m) ^ 2 / (2 * v ^ 2) - 1 / (2 * v)) * gaussianPDFRealVar m v x) v := by
   have hA := hasDerivAt_gaussianNorm_variance hv
   have hB := hasDerivAt_gaussianExp_variance m x hv
@@ -131,7 +131,7 @@ theorem hasDerivAt_gaussianPDFRealVar_variance (m x : ℝ) {v : ℝ} (hv : 0 < v
   have hAB := hA.mul hB
   -- `gaussianPDFRealVar m v x = A v * B v` definitionally; rewrite the goal's
   -- derivative value to match the product-rule output.
-  have hprod : HasDerivAt (fun v => gaussianPDFRealVar m v x)
+  have hprod : HasDerivAt (fun v ↦ gaussianPDFRealVar m v x)
       (-(1 / (2 * v)) * (Real.sqrt (2 * Real.pi * v))⁻¹
           * Real.exp (-(x - m) ^ 2 / (2 * v))
         + (Real.sqrt (2 * Real.pi * v))⁻¹
@@ -150,7 +150,7 @@ heat equation `∂_t p = (1/2) Δ_x p`. This is the `m = 0` specialization of
 `spatialLaplacianHeatKernel`. -/
 @[entry_point]
 theorem hasDerivAt_heatKernel_time {t : ℝ} (ht : 0 < t) (x : ℝ) :
-    HasDerivAt (fun s => InformationTheory.Shannon.FisherInfo.heatKernel s x)
+    HasDerivAt (fun s ↦ InformationTheory.Shannon.FisherInfo.heatKernel s x)
       ((1 / 2) * InformationTheory.Shannon.FisherInfo.spatialLaplacianHeatKernel t x) t := by
   -- variance-derivative of `gaussianPDFRealVar 0 · x` at `t` (m = 0)
   have hvar := hasDerivAt_gaussianPDFRealVar_variance 0 x ht
@@ -178,8 +178,8 @@ theorem hasDerivAt_heatKernel_time {t : ℝ} (ht : 0 < t) (x : ℝ) :
 @[entry_point]
 theorem isHeatTimeDerivHyp_gaussian :
     InformationTheory.Shannon.FisherInfo.IsHeatTimeDerivHyp
-      (fun t x => InformationTheory.Shannon.FisherInfo.heatKernel t x)
-      (fun t x => InformationTheory.Shannon.FisherInfo.spatialLaplacianHeatKernel t x) := by
+      (fun t x ↦ InformationTheory.Shannon.FisherInfo.heatKernel t x)
+      (fun t x ↦ InformationTheory.Shannon.FisherInfo.spatialLaplacianHeatKernel t x) := by
   intro t ht x
   exact hasDerivAt_heatKernel_time ht x
 

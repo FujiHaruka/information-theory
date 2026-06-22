@@ -71,7 +71,7 @@ theorem unifIntegrable_of_superlinear_lintegral
   have hC'_pos : C' ≠ 0 := by
     have : (1 : ℝ≥0∞) ≤ C' := le_max_right _ _
     exact (lt_of_lt_of_le one_pos this).ne'
-  have hbound' : ∀ i, ∫⁻ x, G (‖f i x‖ₑ) ∂μ ≤ C' := fun i => (hbound i).trans (le_max_left _ _)
+  have hbound' : ∀ i, ∫⁻ x, G (‖f i x‖ₑ) ∂μ ≤ C' := fun i ↦ (hbound i).trans (le_max_left _ _)
   -- Reduce to the indicator-tail estimate via `unifIntegrable_of` (no `[IsFiniteMeasure]`).
   refine unifIntegrable_of (le_refl 1) (by norm_num) hf ?_
   intro ε hε
@@ -85,14 +85,14 @@ theorem unifIntegrable_of_superlinear_lintegral
   have hK_top : K ≠ ∞ := by rw [hKdef]; exact ENNReal.div_ne_top hC'_top hεE_pos
   -- Extract the de la Vallée-Poussin threshold for slope `K`.
   obtain ⟨M, hM⟩ := hG_superlinear K
-  refine ⟨M, fun i => ?_⟩
+  refine ⟨M, fun i ↦ ?_⟩
   -- Pointwise: on the tail `{M ≤ ‖f i x‖ₑ}`, `‖f i x‖ₑ ≤ θ * G ‖f i x‖ₑ`.
   -- Bound the indicator `eLpNorm` by `∫⁻ (θ * G ‖f i‖ₑ)` and conclude `≤ εE`.
   rw [eLpNorm_one_eq_lintegral_enorm]
   calc
     ∫⁻ x, ‖({ x | M ≤ ‖f i x‖₊ }.indicator (f i)) x‖ₑ ∂μ
         ≤ ∫⁻ x, θ * G (‖f i x‖ₑ) ∂μ := by
-          refine lintegral_mono fun x => ?_
+          refine lintegral_mono fun x ↦ ?_
           rw [enorm_indicator_eq_indicator_enorm]
           by_cases hx : x ∈ { x | M ≤ ‖f i x‖₊ }
           · rw [Set.indicator_of_mem hx]

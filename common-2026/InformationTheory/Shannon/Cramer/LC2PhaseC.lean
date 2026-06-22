@@ -65,21 +65,21 @@ theorem cramer_lower_phaseC_partial_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
     (a lam : ℝ) (hlam : 0 ≤ lam)
-    (h_deriv : deriv (cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
-        (Measure.infinitePi (fun _ : ℕ => μ₀))) lam = a)
-    (hVar : (0 : ℝ) < Var[fun ω : ℕ → Ω₀ => Y (ω 0);
-        Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))])
+    (h_deriv : deriv (cgf (fun ω : ℕ → Ω₀ ↦ Y (ω 0))
+        (Measure.infinitePi (fun _ : ℕ ↦ μ₀))) lam = a)
+    (hVar : (0 : ℝ) < Var[fun ω : ℕ → Ω₀ ↦ Y (ω 0);
+        Measure.infinitePi (fun _ : ℕ ↦ μ₀.tilted (fun ω ↦ lam * Y ω))])
     (h_coboundedBelow : Filter.IsCoboundedUnder (· ≥ ·) atTop
-      (fun n : ℕ =>
+      (fun n : ℕ ↦
         (1 / (n : ℝ)) * Real.log
-          ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
+          ((Measure.infinitePi (fun _ : ℕ ↦ μ₀)).real
             {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)}))) :
     -(lam * a
-        - cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
-            (Measure.infinitePi (fun _ : ℕ => μ₀)) lam)
-      ≤ liminf (fun n : ℕ =>
+        - cgf (fun ω : ℕ → Ω₀ ↦ Y (ω 0))
+            (Measure.infinitePi (fun _ : ℕ ↦ μ₀)) lam)
+      ≤ liminf (fun n : ℕ ↦
           (1 / (n : ℝ)) * Real.log
-            ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
+            ((Measure.infinitePi (fun _ : ℕ ↦ μ₀)).real
               {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop :=
   CramerCltBoundary.cramer_lower_boundary_unconditional
     hY_meas h_bdd a lam hlam h_deriv hVar h_coboundedBelow
@@ -99,24 +99,24 @@ theorem cramer_lower_legendre_phaseC_partial_discharge
     (a lam : ℝ) (hlam : 0 ≤ lam)
     (hlam_opt :
       lam * a
-          - cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
-              (Measure.infinitePi (fun _ : ℕ => μ₀)) lam
-        = cramerRate (fun ω : ℕ → Ω₀ => Y (ω 0))
-            (Measure.infinitePi (fun _ : ℕ => μ₀)) a)
-    (h_deriv : deriv (cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
-        (Measure.infinitePi (fun _ : ℕ => μ₀))) lam = a)
-    (hVar : (0 : ℝ) < Var[fun ω : ℕ → Ω₀ => Y (ω 0);
-        Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))])
+          - cgf (fun ω : ℕ → Ω₀ ↦ Y (ω 0))
+              (Measure.infinitePi (fun _ : ℕ ↦ μ₀)) lam
+        = cramerRate (fun ω : ℕ → Ω₀ ↦ Y (ω 0))
+            (Measure.infinitePi (fun _ : ℕ ↦ μ₀)) a)
+    (h_deriv : deriv (cgf (fun ω : ℕ → Ω₀ ↦ Y (ω 0))
+        (Measure.infinitePi (fun _ : ℕ ↦ μ₀))) lam = a)
+    (hVar : (0 : ℝ) < Var[fun ω : ℕ → Ω₀ ↦ Y (ω 0);
+        Measure.infinitePi (fun _ : ℕ ↦ μ₀.tilted (fun ω ↦ lam * Y ω))])
     (h_coboundedBelow : Filter.IsCoboundedUnder (· ≥ ·) atTop
-      (fun n : ℕ =>
+      (fun n : ℕ ↦
         (1 / (n : ℝ)) * Real.log
-          ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
+          ((Measure.infinitePi (fun _ : ℕ ↦ μ₀)).real
             {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)}))) :
-    -cramerRate (fun ω : ℕ → Ω₀ => Y (ω 0))
-        (Measure.infinitePi (fun _ : ℕ => μ₀)) a
-      ≤ liminf (fun n : ℕ =>
+    -cramerRate (fun ω : ℕ → Ω₀ ↦ Y (ω 0))
+        (Measure.infinitePi (fun _ : ℕ ↦ μ₀)) a
+      ≤ liminf (fun n : ℕ ↦
           (1 / (n : ℝ)) * Real.log
-            ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
+            ((Measure.infinitePi (fun _ : ℕ ↦ μ₀)).real
               {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop := by
   have h := cramer_lower_phaseC_partial_discharge
     (μ₀ := μ₀) hY_meas h_bdd a lam hlam h_deriv hVar h_coboundedBelow
@@ -138,74 +138,74 @@ theorem cramer_tendsto_phaseC_partial_discharge
     (a lam : ℝ) (hlam : 0 ≤ lam)
     (hlam_opt :
       lam * a
-          - cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
-              (Measure.infinitePi (fun _ : ℕ => μ₀)) lam
-        = cramerRate (fun ω : ℕ → Ω₀ => Y (ω 0))
-            (Measure.infinitePi (fun _ : ℕ => μ₀)) a)
-    (h_deriv : deriv (cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
-        (Measure.infinitePi (fun _ : ℕ => μ₀))) lam = a)
-    (hVar : (0 : ℝ) < Var[fun ω : ℕ → Ω₀ => Y (ω 0);
-        Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))])
+          - cgf (fun ω : ℕ → Ω₀ ↦ Y (ω 0))
+              (Measure.infinitePi (fun _ : ℕ ↦ μ₀)) lam
+        = cramerRate (fun ω : ℕ → Ω₀ ↦ Y (ω 0))
+            (Measure.infinitePi (fun _ : ℕ ↦ μ₀)) a)
+    (h_deriv : deriv (cgf (fun ω : ℕ → Ω₀ ↦ Y (ω 0))
+        (Measure.infinitePi (fun _ : ℕ ↦ μ₀))) lam = a)
+    (hVar : (0 : ℝ) < Var[fun ω : ℕ → Ω₀ ↦ Y (ω 0);
+        Measure.infinitePi (fun _ : ℕ ↦ μ₀.tilted (fun ω ↦ lam * Y ω))])
     (h_pos : ∀ᶠ n : ℕ in atTop,
-      0 < (Measure.infinitePi (fun _ : ℕ => μ₀)).real
+      0 < (Measure.infinitePi (fun _ : ℕ ↦ μ₀)).real
             {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})
     (h_cobdd : Filter.IsCoboundedUnder (· ≤ ·) atTop
-      (fun n : ℕ =>
+      (fun n : ℕ ↦
         (1 / (n : ℝ)) * Real.log
-          ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
+          ((Measure.infinitePi (fun _ : ℕ ↦ μ₀)).real
             {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})))
     (h_coboundedBelow : Filter.IsCoboundedUnder (· ≥ ·) atTop
-      (fun n : ℕ =>
+      (fun n : ℕ ↦
         (1 / (n : ℝ)) * Real.log
-          ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
+          ((Measure.infinitePi (fun _ : ℕ ↦ μ₀)).real
             {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})))
     (h_bdd_above : Filter.IsBoundedUnder (· ≤ ·) atTop
-      (fun n : ℕ =>
+      (fun n : ℕ ↦
         (1 / (n : ℝ)) * Real.log
-          ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
+          ((Measure.infinitePi (fun _ : ℕ ↦ μ₀)).real
             {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})))
     (h_bdd_below : Filter.IsBoundedUnder (· ≥ ·) atTop
-      (fun n : ℕ =>
+      (fun n : ℕ ↦
         (1 / (n : ℝ)) * Real.log
-          ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
+          ((Measure.infinitePi (fun _ : ℕ ↦ μ₀)).real
             {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)}))) :
-    Filter.Tendsto (fun n : ℕ =>
+    Filter.Tendsto (fun n : ℕ ↦
         (1 / (n : ℝ)) * Real.log
-          ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
+          ((Measure.infinitePi (fun _ : ℕ ↦ μ₀)).real
             {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop
-      (𝓝 (-cramerRate (fun ω : ℕ → Ω₀ => Y (ω 0))
-            (Measure.infinitePi (fun _ : ℕ => μ₀)) a)) := by
+      (𝓝 (-cramerRate (fun ω : ℕ → Ω₀ ↦ Y (ω 0))
+            (Measure.infinitePi (fun _ : ℕ ↦ μ₀)) a)) := by
   -- Infinite-product i.i.d. structure plumbing.
-  have h_indep : iIndepFun (fun i : ℕ => fun ω : ℕ → Ω₀ => Y (ω i))
-      (Measure.infinitePi (fun _ : ℕ => μ₀)) :=
+  have h_indep : iIndepFun (fun i : ℕ ↦ fun ω : ℕ → Ω₀ ↦ Y (ω i))
+      (Measure.infinitePi (fun _ : ℕ ↦ μ₀)) :=
     iIndepFun_eval_under_infinitePi (μ₀ := μ₀) hY_meas
-  have h_meas : ∀ i, Measurable (fun ω : ℕ → Ω₀ => Y (ω i)) :=
-    fun i => hY_meas.comp (measurable_pi_apply i)
+  have h_meas : ∀ i, Measurable (fun ω : ℕ → Ω₀ ↦ Y (ω i)) :=
+    fun i ↦ hY_meas.comp (measurable_pi_apply i)
   have h_ident : ∀ i, IdentDistrib
-      (fun ω : ℕ → Ω₀ => Y (ω i)) (fun ω : ℕ → Ω₀ => Y (ω 0))
-      (Measure.infinitePi (fun _ : ℕ => μ₀))
-      (Measure.infinitePi (fun _ : ℕ => μ₀)) :=
-    fun i => identDistrib_eval_under_infinitePi hY_meas i
-  have h_bdd_eval : ∃ M, ∀ i ω, |(fun (ω : ℕ → Ω₀) => Y (ω i)) ω| ≤ M := by
+      (fun ω : ℕ → Ω₀ ↦ Y (ω i)) (fun ω : ℕ → Ω₀ ↦ Y (ω 0))
+      (Measure.infinitePi (fun _ : ℕ ↦ μ₀))
+      (Measure.infinitePi (fun _ : ℕ ↦ μ₀)) :=
+    fun i ↦ identDistrib_eval_under_infinitePi hY_meas i
+  have h_bdd_eval : ∃ M, ∀ i ω, |(fun (ω : ℕ → Ω₀) ↦ Y (ω i)) ω| ≤ M := by
     obtain ⟨M, hM⟩ := bounded_eval_family h_bdd
     exact ⟨M, hM⟩
   -- Upper bound (constructive, through Cramer.cramer_upper_legendre).
   have h_upper :
-      limsup (fun n : ℕ =>
+      limsup (fun n : ℕ ↦
           (1 / (n : ℝ)) * Real.log
-            ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
+            ((Measure.infinitePi (fun _ : ℕ ↦ μ₀)).real
               {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop
-        ≤ -cramerRate (fun ω : ℕ → Ω₀ => Y (ω 0))
-            (Measure.infinitePi (fun _ : ℕ => μ₀)) a :=
-    cramer_upper_legendre (μ := Measure.infinitePi (fun _ : ℕ => μ₀))
+        ≤ -cramerRate (fun ω : ℕ → Ω₀ ↦ Y (ω 0))
+            (Measure.infinitePi (fun _ : ℕ ↦ μ₀)) a :=
+    cramer_upper_legendre (μ := Measure.infinitePi (fun _ : ℕ ↦ μ₀))
       h_indep h_meas h_ident h_bdd_eval a lam hlam hlam_opt h_pos h_cobdd
   -- Lower bound via cramer_lower_phaseC_partial_discharge.
   have h_lower :
-      -cramerRate (fun ω : ℕ → Ω₀ => Y (ω 0))
-          (Measure.infinitePi (fun _ : ℕ => μ₀)) a
-        ≤ liminf (fun n : ℕ =>
+      -cramerRate (fun ω : ℕ → Ω₀ ↦ Y (ω 0))
+          (Measure.infinitePi (fun _ : ℕ ↦ μ₀)) a
+        ≤ liminf (fun n : ℕ ↦
             (1 / (n : ℝ)) * Real.log
-              ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
+              ((Measure.infinitePi (fun _ : ℕ ↦ μ₀)).real
                 {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop :=
     cramer_lower_legendre_phaseC_partial_discharge
       (μ₀ := μ₀) hY_meas h_bdd a lam hlam hlam_opt h_deriv hVar h_coboundedBelow
@@ -221,7 +221,7 @@ lemma isMeasureInfinitePiTiltedEq_iff (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ
       ∀ a ε : ℝ, 0 < ε →
         ∃ C > 0, ∀ᶠ n : ℕ in atTop,
           C * Real.exp (-(n : ℝ) * (lam * a - cgf Y μ₀ lam + lam * ε))
-            ≤ (Measure.infinitePi (fun _ : ℕ => μ₀)).real
+            ≤ (Measure.infinitePi (fun _ : ℕ ↦ μ₀)).real
                 {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)} :=
   Iff.rfl
 

@@ -78,14 +78,14 @@ theorem differentialEntropyExt_of_ac {μ : Measure ℝ} (h : μ ≪ volume) :
 `differentialEntropyExt` equals the workhorse `differentialEntropy`.
 @audit:ok -/
 theorem differentialEntropyExt_of_ac_integrable {μ : Measure ℝ} (hac : μ ≪ volume)
-    (hint : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
+    (hint : Integrable (fun x ↦ Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
     differentialEntropyExt μ = (differentialEntropy μ : EReal) := by
   rw [differentialEntropyExt_of_ac hac]
-  set g : ℝ → ℝ := fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal) with hg
+  set g : ℝ → ℝ := fun x ↦ Real.negMulLog ((μ.rnDeriv volume x).toReal) with hg
   have hbound : ∀ (f : ℝ → ℝ), Integrable f volume →
       (∫⁻ x, ENNReal.ofReal (f x) ∂volume) ≠ ⊤ := by
     intro f hf
-    refine ne_top_of_le_ne_top hf.hasFiniteIntegral.ne (lintegral_mono fun x => ?_)
+    refine ne_top_of_le_ne_top hf.hasFiniteIntegral.ne (lintegral_mono fun x ↦ ?_)
     rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs]
     exact ENNReal.ofReal_le_ofReal (le_abs_self _)
   have hAfin : (∫⁻ x, ENNReal.ofReal (g x) ∂volume) ≠ ⊤ := hbound g hint
@@ -107,7 +107,7 @@ theorem differentialEntropyExt_singular {μ : Measure ℝ} (h : ¬ μ ≪ volume
 /-- The finite a.c.-branch value of `entropyPowerExt` is `ENNReal.ofReal (exp (2h))`.
 @audit:ok -/
 theorem entropyPowerExt_of_ac_integrable {μ : Measure ℝ} (hac : μ ≪ volume)
-    (hint : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
+    (hint : Integrable (fun x ↦ Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
     entropyPowerExt μ = ENNReal.ofReal (Real.exp (2 * differentialEntropy μ)) := by
   unfold entropyPowerExt
   rw [differentialEntropyExt_of_ac_integrable hac hint,
@@ -145,10 +145,10 @@ a.e. identity `negMulLog(gaussianPDF) = gaussianPDF · c₁ + gaussianPDF · (x-
 density integrable and the second moment finite.
 @audit:ok -/
 theorem integrable_negMulLog_gaussianReal_density (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
-    Integrable (fun x => Real.negMulLog ((gaussianReal m v).rnDeriv volume x).toReal) volume := by
+    Integrable (fun x ↦ Real.negMulLog ((gaussianReal m v).rnDeriv volume x).toReal) volume := by
   -- pointwise: negMulLog(pdf) = pdf · (c₁ + (x-m)²/(2v))  (a.e. via density identification)
-  have h_ae : (fun x => Real.negMulLog ((gaussianReal m v).rnDeriv volume x).toReal)
-      =ᵐ[volume] (fun x => gaussianPDFReal m v x * ((1/2) * Real.log (2 * Real.pi * v))
+  have h_ae : (fun x ↦ Real.negMulLog ((gaussianReal m v).rnDeriv volume x).toReal)
+      =ᵐ[volume] (fun x ↦ gaussianPDFReal m v x * ((1/2) * Real.log (2 * Real.pi * v))
         + gaussianPDFReal m v x * ((x - m)^2 / (2 * v))) := by
     filter_upwards [rnDeriv_gaussianReal m v] with x hx
     rw [hx, toReal_gaussianPDF]
@@ -159,27 +159,27 @@ theorem integrable_negMulLog_gaussianReal_density (m : ℝ) {v : ℝ≥0} (hv : 
   -- term 1: pdf · const
   have h_pdf : Integrable (gaussianPDFReal m v) volume := integrable_gaussianPDFReal m v
   have h_t1 : Integrable
-      (fun x => gaussianPDFReal m v x * ((1/2) * Real.log (2 * Real.pi * v))) volume :=
+      (fun x ↦ gaussianPDFReal m v x * ((1/2) * Real.log (2 * Real.pi * v))) volume :=
     h_pdf.mul_const _
   -- term 2: pdf · (x-m)²/(2v).  `pdf · (x-m)²` integrable against volume = `(x-m)²` integrable
   -- against `gaussianReal = volume.withDensity (ofReal ∘ pdf)`.
-  have h2mom : Integrable (fun x => (x - m)^2) (gaussianReal m v) := by
-    have h_sq : Integrable (fun y : ℝ => y ^ 2) (gaussianReal m v) :=
+  have h2mom : Integrable (fun x ↦ (x - m)^2) (gaussianReal m v) := by
+    have h_sq : Integrable (fun y : ℝ ↦ y ^ 2) (gaussianReal m v) :=
       (memLp_id_gaussianReal (μ := m) (v := v) 2).integrable_sq
-    have h_id : Integrable (fun y : ℝ => y) (gaussianReal m v) := by
+    have h_id : Integrable (fun y : ℝ ↦ y) (gaussianReal m v) := by
       simpa using (memLp_id_gaussianReal (μ := m) (v := v) 1).integrable (by norm_num)
-    have h_eq : (fun y : ℝ => (y - m) ^ 2) = fun y => y ^ 2 - 2 * m * y + m ^ 2 := by
+    have h_eq : (fun y : ℝ ↦ (y - m) ^ 2) = fun y ↦ y ^ 2 - 2 * m * y + m ^ 2 := by
       funext y; ring
     rw [h_eq]
     exact ((h_sq.sub (h_id.const_mul (2 * m))).add (integrable_const (m ^ 2)))
   have hgvol : gaussianReal m v
-      = volume.withDensity (fun x => ENNReal.ofReal (gaussianPDFReal m v x)) :=
+      = volume.withDensity (fun x ↦ ENNReal.ofReal (gaussianPDFReal m v x)) :=
     gaussianReal_of_var_ne_zero m hv
   rw [hgvol, integrable_withDensity_iff (by measurability)
-    (ae_of_all _ fun x => ENNReal.ofReal_lt_top)] at h2mom
-  have h_t2 : Integrable (fun x => gaussianPDFReal m v x * ((x - m)^2 / (2 * v))) volume := by
+    (ae_of_all _ fun x ↦ ENNReal.ofReal_lt_top)] at h2mom
+  have h_t2 : Integrable (fun x ↦ gaussianPDFReal m v x * ((x - m)^2 / (2 * v))) volume := by
     have hc := (h2mom.const_mul (1 / (2 * (v : ℝ))))
-    refine hc.congr (Filter.Eventually.of_forall fun x => ?_)
+    refine hc.congr (Filter.Eventually.of_forall fun x ↦ ?_)
     show 1 / (2 * (v : ℝ)) * ((x - m) ^ 2 * (ENNReal.ofReal (gaussianPDFReal m v x)).toReal)
         = gaussianPDFReal m v x * ((x - m) ^ 2 / (2 * v))
     rw [ENNReal.toReal_ofReal (gaussianPDFReal_nonneg m v x)]

@@ -45,12 +45,12 @@ theorem steinTypicalSubset_Q_prob_ge
     {n : ℕ} {δ : ℝ}
     (A : Set (Fin n → α)) (hAsub : A ⊆ steinTypicalSet P Q n δ) :
     Real.exp (-((n : ℝ) * ((klDiv P Q).toReal + δ)))
-        * ((Measure.pi (fun _ : Fin n => P)) A).toReal
-      ≤ ((Measure.pi (fun _ : Fin n => Q)) A).toReal := by
+        * ((Measure.pi (fun _ : Fin n ↦ P)) A).toReal
+      ≤ ((Measure.pi (fun _ : Fin n ↦ Q)) A).toReal := by
   classical
   set K : ℝ := (klDiv P Q).toReal
-  set p : α → ℝ := fun x => P.real {x}
-  set q : α → ℝ := fun x => Q.real {x}
+  set p : α → ℝ := fun x ↦ P.real {x}
+  set q : α → ℝ := fun x ↦ Q.real {x}
   have hp_pos : ∀ x, 0 < p x := hPpos
   have hq_pos : ∀ x, 0 < q x := hQpos
   -- Finset abbreviations.
@@ -58,40 +58,40 @@ theorem steinTypicalSubset_Q_prob_ge
   have hTA_coe : (TA : Set (Fin n → α)) = A := by simp [hTA_def]
   -- Singleton measures.
   have h_pi_singleton_P : ∀ x : Fin n → α,
-      ((Measure.pi (fun _ : Fin n => P)).real {x}) = ∏ i : Fin n, p (x i) := by
+      ((Measure.pi (fun _ : Fin n ↦ P)).real {x}) = ∏ i : Fin n, p (x i) := by
     intro x
-    show ((Measure.pi (fun _ : Fin n => P)) {x}).toReal = ∏ i : Fin n, p (x i)
+    show ((Measure.pi (fun _ : Fin n ↦ P)) {x}).toReal = ∏ i : Fin n, p (x i)
     rw [Measure.pi_singleton, ENNReal.toReal_prod]
     rfl
   have h_pi_singleton_Q : ∀ x : Fin n → α,
-      ((Measure.pi (fun _ : Fin n => Q)).real {x}) = ∏ i : Fin n, q (x i) := by
+      ((Measure.pi (fun _ : Fin n ↦ Q)).real {x}) = ∏ i : Fin n, q (x i) := by
     intro x
-    show ((Measure.pi (fun _ : Fin n => Q)) {x}).toReal = ∏ i : Fin n, q (x i)
+    show ((Measure.pi (fun _ : Fin n ↦ Q)) {x}).toReal = ∏ i : Fin n, q (x i)
     rw [Measure.pi_singleton, ENNReal.toReal_prod]
     rfl
   -- Rewrite both measures as Finset sums over TA.
   have h_pi_P_eq_sum :
-      ((Measure.pi (fun _ : Fin n => P)) A).toReal
+      ((Measure.pi (fun _ : Fin n ↦ P)) A).toReal
         = ∑ x ∈ TA, ∏ i : Fin n, p (x i) := by
-    have h_step : ((Measure.pi (fun _ : Fin n => P)) (TA : Set (Fin n → α))).toReal
-        = ∑ x ∈ TA, ((Measure.pi (fun _ : Fin n => P)).real {x}) := by
+    have h_step : ((Measure.pi (fun _ : Fin n ↦ P)) (TA : Set (Fin n → α))).toReal
+        = ∑ x ∈ TA, ((Measure.pi (fun _ : Fin n ↦ P)).real {x}) := by
       rw [← MeasureTheory.measureReal_def]
       rw [← MeasureTheory.sum_measureReal_singleton
-        (μ := Measure.pi (fun _ : Fin n => P)) TA]
+        (μ := Measure.pi (fun _ : Fin n ↦ P)) TA]
     rw [← hTA_coe]
     rw [h_step]
-    refine Finset.sum_congr rfl fun x _ => h_pi_singleton_P x
+    refine Finset.sum_congr rfl fun x _ ↦ h_pi_singleton_P x
   have h_pi_Q_eq_sum :
-      ((Measure.pi (fun _ : Fin n => Q)) A).toReal
+      ((Measure.pi (fun _ : Fin n ↦ Q)) A).toReal
         = ∑ x ∈ TA, ∏ i : Fin n, q (x i) := by
-    have h_step : ((Measure.pi (fun _ : Fin n => Q)) (TA : Set (Fin n → α))).toReal
-        = ∑ x ∈ TA, ((Measure.pi (fun _ : Fin n => Q)).real {x}) := by
+    have h_step : ((Measure.pi (fun _ : Fin n ↦ Q)) (TA : Set (Fin n → α))).toReal
+        = ∑ x ∈ TA, ((Measure.pi (fun _ : Fin n ↦ Q)).real {x}) := by
       rw [← MeasureTheory.measureReal_def]
       rw [← MeasureTheory.sum_measureReal_singleton
-        (μ := Measure.pi (fun _ : Fin n => Q)) TA]
+        (μ := Measure.pi (fun _ : Fin n ↦ Q)) TA]
     rw [← hTA_coe]
     rw [h_step]
-    refine Finset.sum_congr rfl fun x _ => h_pi_singleton_Q x
+    refine Finset.sum_congr rfl fun x _ ↦ h_pi_singleton_Q x
   rw [h_pi_Q_eq_sum, h_pi_P_eq_sum]
   -- Per-point bound on x ∈ TA (since TA ⊆ steinTypicalSet via hAsub).
   have h_per_point : ∀ x ∈ TA,
@@ -130,16 +130,16 @@ theorem steinTypicalSubset_Q_prob_ge
         Real.exp (-(∑ i : Fin n, llrPmf P Q (x i)))
           = ∏ i : Fin n, q (x i) / p (x i) := by
       rw [← Finset.sum_neg_distrib, Real.exp_sum]
-      exact Finset.prod_congr rfl fun i _ => h_exp_neg_llr i
+      exact Finset.prod_congr rfl fun i _ ↦ h_exp_neg_llr i
     rw [h_prod_ratio] at hexp_lt
     have hexp_le : Real.exp (-((n : ℝ) * (K + δ)))
         ≤ ∏ i : Fin n, q (x i) / p (x i) := hexp_lt.le
     have hprod_p_pos : 0 < ∏ i : Fin n, p (x i) :=
-      Finset.prod_pos (fun i _ => hp_pos (x i))
+      Finset.prod_pos (fun i _ ↦ hp_pos (x i))
     have h_eq_split : ∏ i : Fin n, q (x i)
         = (∏ i : Fin n, q (x i) / p (x i)) * ∏ i : Fin n, p (x i) := by
       rw [← Finset.prod_mul_distrib]
-      refine Finset.prod_congr rfl fun i _ => ?_
+      refine Finset.prod_congr rfl fun i _ ↦ ?_
       rw [div_mul_cancel₀ _ (hp_pos (x i)).ne']
     rw [h_eq_split]
     have hp_nn : (0 : ℝ) ≤ ∏ i : Fin n, p (x i) := hprod_p_pos.le
@@ -152,7 +152,7 @@ theorem steinTypicalSubset_Q_prob_ge
       = ∑ x ∈ TA, Real.exp (-((n : ℝ) * (K + δ))) * ∏ i : Fin n, p (x i) := by
         rw [Finset.mul_sum]
     _ = ∑ x ∈ TA, (∏ i : Fin n, p (x i)) * Real.exp (-((n : ℝ) * (K + δ))) := by
-        refine Finset.sum_congr rfl fun x _ => ?_
+        refine Finset.sum_congr rfl fun x _ ↦ ?_
         ring
     _ ≤ ∑ x ∈ TA, ∏ i : Fin n, q (x i) :=
         Finset.sum_le_sum h_per_point
@@ -166,13 +166,13 @@ theorem steinAlphaTest_Q_prob_ge
     (hQpos : ∀ x : α, 0 < Q.real {x})
     {ε δ : ℝ}
     {n : ℕ} (s : Set (Fin n → α)) (hs : MeasurableSet s)
-    (hα : ((Measure.pi (fun _ : Fin n => P)) sᶜ).toReal ≤ ε) :
+    (hα : ((Measure.pi (fun _ : Fin n ↦ P)) sᶜ).toReal ≤ ε) :
     Real.exp (-((n : ℝ) * ((klDiv P Q).toReal + δ)))
-        * (((Measure.pi (fun _ : Fin n => P)) (steinTypicalSet P Q n δ)).toReal - ε)
-      ≤ ((Measure.pi (fun _ : Fin n => Q)) s).toReal := by
+        * (((Measure.pi (fun _ : Fin n ↦ P)) (steinTypicalSet P Q n δ)).toReal - ε)
+      ≤ ((Measure.pi (fun _ : Fin n ↦ Q)) s).toReal := by
   classical
-  set Pn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n => P)
-  set Qn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n => Q)
+  set Pn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n ↦ P)
+  set Qn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n ↦ Q)
   set Tset : Set (Fin n → α) := steinTypicalSet P Q n δ
   have hT_meas : MeasurableSet Tset := measurableSet_steinTypicalSet P Q n δ
   set K : ℝ := (klDiv P Q).toReal
@@ -230,7 +230,7 @@ theorem exp_le_steinOptimalBeta_strong
     (hQpos : ∀ x : α, 0 < Q.real {x})
     {ε δ : ℝ} (hε : 0 ≤ ε) (n : ℕ) :
     Real.exp (-((n : ℝ) * ((klDiv P Q).toReal + δ)))
-        * (((Measure.pi (fun _ : Fin n => P)) (steinTypicalSet P Q n δ)).toReal - ε)
+        * (((Measure.pi (fun _ : Fin n ↦ P)) (steinTypicalSet P Q n δ)).toReal - ε)
       ≤ steinOptimalBeta P Q n ε := by
   apply le_csInf (steinBetaSet_nonempty P Q n ε hε)
   rintro β ⟨s, hs_meas, hs_alpha, rfl⟩
@@ -243,10 +243,10 @@ theorem steinOptimalBeta_log_le_of_strong_converse
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (hMap : μ.map (Xs 0) = P)
-    (hMapJoint : ∀ n, μ.map (jointRV Xs n) = Measure.pi (fun _ : Fin n => P))
+    (hMapJoint : ∀ n, μ.map (jointRV Xs n) = Measure.pi (fun _ : Fin n ↦ P))
     (hPpos : ∀ x : α, 0 < P.real {x})
     (hPQ : P ≪ Q) (hQpos : ∀ x : α, 0 < Q.real {x})
     {ε δ : ℝ} (hε : 0 < ε) (hε1 : ε < 1) (hδ : 0 < δ) :
@@ -254,11 +254,11 @@ theorem steinOptimalBeta_log_le_of_strong_converse
       -((1 : ℝ) / n) * Real.log (steinOptimalBeta P Q n ε)
         ≤ (klDiv P Q).toReal + δ
             - ((1 : ℝ) / n) * Real.log
-                (((Measure.pi (fun _ : Fin n => P))
+                (((Measure.pi (fun _ : Fin n ↦ P))
                   (steinTypicalSet P Q n δ)).toReal - ε) := by
   -- Translate via hMapJoint so we know P^n(T_n^δ) → 1.
   have h_translate : ∀ (n : ℕ) (T : Set (Fin n → α)), MeasurableSet T →
-      μ {ω | jointRV Xs n ω ∈ T} = (Measure.pi (fun _ : Fin n => P)) T := by
+      μ {ω | jointRV Xs n ω ∈ T} = (Measure.pi (fun _ : Fin n ↦ P)) T := by
     intro n T hT
     have hjoint_meas : Measurable (jointRV Xs n) := measurable_jointRV Xs hXs n
     have h_preimg : {ω | jointRV Xs n ω ∈ T} = jointRV Xs n ⁻¹' T := rfl
@@ -266,12 +266,12 @@ theorem steinOptimalBeta_log_le_of_strong_converse
   have h_P_mu_to_one := steinTypicalSet_P_prob_tendsto_one μ P Q Xs hXs hindep hident hMap
     hPQ hQpos (ε := δ) hδ
   have h_P_pi_to_one : Tendsto
-      (fun n : ℕ => (Measure.pi (fun _ : Fin n => P)) (steinTypicalSet P Q n δ))
+      (fun n : ℕ ↦ (Measure.pi (fun _ : Fin n ↦ P)) (steinTypicalSet P Q n δ))
       atTop (𝓝 1) := by
-    refine Tendsto.congr (fun n => ?_) h_P_mu_to_one
+    refine Tendsto.congr (fun n ↦ ?_) h_P_mu_to_one
     exact h_translate n _ (measurableSet_steinTypicalSet P Q n δ)
   have h_P_pi_to_one_R : Tendsto
-      (fun n : ℕ => ((Measure.pi (fun _ : Fin n => P))
+      (fun n : ℕ ↦ ((Measure.pi (fun _ : Fin n ↦ P))
         (steinTypicalSet P Q n δ)).toReal)
       atTop (𝓝 1) := by
     have h_cont : ContinuousAt ENNReal.toReal 1 :=
@@ -282,7 +282,7 @@ theorem steinOptimalBeta_log_le_of_strong_converse
   have h_mid_pos : 0 < (1 - ε) / 2 := by linarith
   have h_target_pos : 0 < (1 - ε) / 2 + ε := by linarith
   have h_eventually_PT_ge : ∀ᶠ n : ℕ in atTop,
-      (1 - ε) / 2 + ε ≤ ((Measure.pi (fun _ : Fin n => P))
+      (1 - ε) / 2 + ε ≤ ((Measure.pi (fun _ : Fin n ↦ P))
         (steinTypicalSet P Q n δ)).toReal := by
     have h_lt_one : (1 - ε) / 2 + ε < 1 := by linarith
     have : ∀ᶠ x : ℝ in 𝓝 1, (1 - ε) / 2 + ε ≤ x :=
@@ -291,7 +291,7 @@ theorem steinOptimalBeta_log_le_of_strong_converse
   -- Combine with exp_le_steinOptimalBeta_strong.
   filter_upwards [h_eventually_PT_ge, eventually_gt_atTop 0] with n h_PT hn_pos
   set K : ℝ := (klDiv P Q).toReal with hK_def
-  set Pn_T_minus_ε : ℝ := ((Measure.pi (fun _ : Fin n => P))
+  set Pn_T_minus_ε : ℝ := ((Measure.pi (fun _ : Fin n ↦ P))
     (steinTypicalSet P Q n δ)).toReal - ε with hPn_def
   have h_diff_pos : 0 < Pn_T_minus_ε := by
     have : (1 - ε) / 2 + ε - ε ≤ Pn_T_minus_ε := by linarith

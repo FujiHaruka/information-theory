@@ -55,7 +55,7 @@ structure IsRegularDensity {Ω : Type*} [MeasurableSpace Ω]
   to this representative, see `pdf_ae_eq`). -/
   density : ℝ → ℝ
   /-- `(pdf X P volume).toReal` equals the smooth representative `density` a.e. -/
-  pdf_ae_eq : (fun x => (pdf X P volume x).toReal) =ᵐ[volume] density
+  pdf_ae_eq : (fun x ↦ (pdf X P volume x).toReal) =ᵐ[volume] density
   /-- The representative is differentiable on all of `ℝ`. -/
   diff : Differentiable ℝ density
   /-- The representative is strictly positive everywhere (so `logDeriv` is well-defined). -/

@@ -28,7 +28,7 @@ theorem MRatioLowerZ_le_sq_eventually
       MRatioLowerZ μ p n x ≤ ENNReal.ofReal ((n : ℝ) ^ 2) := by
   -- Direct Markov + first Borel-Cantelli on `s n := {MRatioLowerZ n > n²}`.
   set s : ℕ → Set (∀ _ : ℤ, α) :=
-    fun n => {x | ENNReal.ofReal ((n : ℝ) ^ 2) < MRatioLowerZ μ p n x} with hs_def
+    fun n ↦ {x | ENNReal.ofReal ((n : ℝ) ^ 2) < MRatioLowerZ μ p n x} with hs_def
   have h_MR_meas : ∀ n, Measurable (MRatioLowerZ μ p n) := measurable_MRatioLowerZ μ p
   -- Per-n measure bound: for n ≥ 1, μZ(s n) ≤ 1 / (n^2 : ℝ≥0∞).
   have h_bound : ∀ n, 1 ≤ n → (μZ μ p) (s n) ≤ (1 : ℝ≥0∞) / ((n : ℝ≥0∞) ^ 2) := by
@@ -62,13 +62,13 @@ theorem MRatioLowerZ_le_sq_eventually
     refine ENNReal.add_ne_top.mpr ⟨measure_ne_top _ _, ?_⟩
     have h_le : (∑' n : ℕ, (μZ μ p) (s (n + 1)))
         ≤ ∑' n : ℕ, (1 : ℝ≥0∞) / (((n + 1 : ℕ) : ℝ≥0∞) ^ 2) := by
-      refine ENNReal.tsum_le_tsum (fun n => ?_)
+      refine ENNReal.tsum_le_tsum (fun n ↦ ?_)
       exact h_bound (n + 1) (Nat.succ_le_succ (Nat.zero_le _))
     refine ne_top_of_le_ne_top ?_ h_le
-    have h_summable_real : Summable (fun n : ℕ => (1 : ℝ) / ((n + 1 : ℕ) : ℝ) ^ 2) := by
+    have h_summable_real : Summable (fun n : ℕ ↦ (1 : ℝ) / ((n + 1 : ℕ) : ℝ) ^ 2) := by
       have h := (Real.summable_one_div_nat_pow (p := 2)).mpr (by norm_num)
       exact (summable_nat_add_iff 1).mpr h
-    have h_nonneg : ∀ n : ℕ, (0 : ℝ) ≤ (1 : ℝ) / ((n + 1 : ℕ) : ℝ) ^ 2 := fun _ => by positivity
+    have h_nonneg : ∀ n : ℕ, (0 : ℝ) ≤ (1 : ℝ) / ((n + 1 : ℕ) : ℝ) ^ 2 := fun _ ↦ by positivity
     have h_ennreal_tsum : ∑' n : ℕ,
         ENNReal.ofReal ((1 : ℝ) / ((n + 1 : ℕ) : ℝ) ^ 2) ≠ ∞ := by
       rw [← ENNReal.ofReal_tsum_of_nonneg h_nonneg h_summable_real]
@@ -135,7 +135,7 @@ theorem birkhoffAverage_pmfLogCondInfty_tendsto
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ x ∂(μZ μ p.toStationaryProcess),
       Filter.Tendsto
-        (fun n : ℕ => negLogQInftyZ μ p.toStationaryProcess n x / (n : ℝ))
+        (fun n : ℕ ↦ negLogQInftyZ μ p.toStationaryProcess n x / (n : ℝ))
         Filter.atTop
         (𝓝 (entropyRate μ p.toStationaryProcess)) := by
   classical
@@ -178,15 +178,15 @@ omit [DecidableEq α] [Nonempty α] in
 `eN y i := y i.toNat`. -/
 private lemma measurable_blockLogAvgZ_via_eN
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) :
-    Measurable (fun y : ∀ _ : ℕ, α =>
-      blockLogAvgZ μ p n (fun i : ℤ => y i.toNat)) := by
+    Measurable (fun y : ∀ _ : ℕ, α ↦
+      blockLogAvgZ μ p n (fun i : ℤ ↦ y i.toNat)) := by
   unfold blockLogAvgZ
   refine measurable_const.mul ?_
   refine Real.measurable_log.comp ?_
-  have h_disc : Measurable (fun s : Fin n → α =>
+  have h_disc : Measurable (fun s : Fin n → α ↦
       (((μZ μ p).map (firstBlockZ (α := α) n)).real {s})) := measurable_of_finite _
   refine h_disc.comp ?_
-  refine measurable_pi_iff.mpr (fun i => ?_)
+  refine measurable_pi_iff.mpr (fun i ↦ ?_)
   exact measurable_pi_apply _
 
 omit [DecidableEq α] in
@@ -201,11 +201,11 @@ to μZ-a.s. on `(ℤ → α)` via `natProj`. -/
 theorem blockLogAvgZ_bddAbove_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ x ∂(μZ μ p.toStationaryProcess), Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
-      (fun n => blockLogAvgZ μ p.toStationaryProcess n x) := by
+      (fun n ↦ blockLogAvgZ μ p.toStationaryProcess n x) := by
   classical
   -- Define `eN : (ℕ → α) → (ℤ → α)`, `eN y i := y i.toNat`. Then for any `x`,
   -- `blockLogAvgZ n x = blockLogAvgZ n (eN (natProj x))` (depends only on natProj).
-  set eN : (∀ _ : ℕ, α) → (∀ _ : ℤ, α) := fun y i => y i.toNat with heN_def
+  set eN : (∀ _ : ℕ, α) → (∀ _ : ℤ, α) := fun y i ↦ y i.toNat with heN_def
   have h_blockLogAvgZ_factor : ∀ x : ∀ _ : ℤ, α, ∀ n,
       blockLogAvgZ μ p.toStationaryProcess n x
         = blockLogAvgZ μ p.toStationaryProcess n
@@ -224,15 +224,15 @@ theorem blockLogAvgZ_bddAbove_ae
   -- For each `ω`, `blockLogAvgZ n (eN (forwardEmbed ω)) = blockLogAvg n ω` (by
   -- `blockLogAvgZ_natExt_eq`).
   have h_Ω' : ∀ᵐ ω ∂μ, Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
-      (fun n => blockLogAvgZ μ p.toStationaryProcess n
+      (fun n ↦ blockLogAvgZ μ p.toStationaryProcess n
         (eN (forwardEmbed (μ := μ) p.toStationaryProcess ω))) := by
     filter_upwards [h_Ω] with ω hω
-    have h_eq : (fun n => blockLogAvgZ μ p.toStationaryProcess n
+    have h_eq : (fun n ↦ blockLogAvgZ μ p.toStationaryProcess n
           (eN (forwardEmbed (μ := μ) p.toStationaryProcess ω)))
-        = fun n => blockLogAvg μ p.toStationaryProcess n ω := by
+        = fun n ↦ blockLogAvg μ p.toStationaryProcess n ω := by
       funext n
       rw [show eN (forwardEmbed (μ := μ) p.toStationaryProcess ω)
-          = fun i : ℤ => p.obs i.toNat ω from rfl]
+          = fun i : ℤ ↦ p.obs i.toNat ω from rfl]
       exact blockLogAvgZ_natExt_eq μ p.toStationaryProcess n ω
     rw [h_eq]; exact hω
   -- Push h_Ω' through measurePreserving_forwardEmbed to (μ.map forwardEmbed)-a.s.
@@ -243,7 +243,7 @@ theorem blockLogAvgZ_bddAbove_ae
   -- Convert μ-a.s. statement to (μ.map forwardEmbed)-a.s. via `ae_map_iff`.
   have h_N_ae : ∀ᵐ y ∂(μ.map (forwardEmbed (μ := μ) p.toStationaryProcess)),
       Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
-        (fun n => blockLogAvgZ μ p.toStationaryProcess n (eN y)) := by
+        (fun n ↦ blockLogAvgZ μ p.toStationaryProcess n (eN y)) := by
     -- This is the (μ.map forwardEmbed)-form, but we have h_Ω' (μ-form of ∘ forwardEmbed).
     -- We need ae_map_iff with measurability.
     rw [ae_map_iff (measurable_forwardEmbed (μ := μ) p.toStationaryProcess).aemeasurable
@@ -260,18 +260,18 @@ theorem blockLogAvgZ_bddAbove_ae
         -- For ℝ, the existence of bound `∃ a, ∀ᶠ n, f n ≤ a` is equivalent to
         --   `⋃ M : ℕ, {y | ∀ᶠ n, f n ≤ M}`.
         have h_set_eq : {y : ∀ _ : ℕ, α | Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
-              (fun n => blockLogAvgZ μ p.toStationaryProcess n (eN y))}
+              (fun n ↦ blockLogAvgZ μ p.toStationaryProcess n (eN y))}
             = ⋃ M : ℕ, {y | ∀ᶠ n in Filter.atTop,
                 blockLogAvgZ μ p.toStationaryProcess n (eN y) ≤ (M : ℝ)} := by
           ext y
           constructor
           · rintro ⟨a, ha⟩
             obtain ⟨M, hM⟩ := exists_nat_ge a
-            exact Set.mem_iUnion.mpr ⟨M, ha.mono (fun n hn => hn.trans hM)⟩
+            exact Set.mem_iUnion.mpr ⟨M, ha.mono (fun n hn ↦ hn.trans hM)⟩
           · rintro ⟨S, ⟨M, rfl⟩, hS⟩
             exact ⟨(M : ℝ), hS⟩
         rw [h_set_eq]
-        refine MeasurableSet.iUnion (fun M => ?_)
+        refine MeasurableSet.iUnion (fun M ↦ ?_)
         -- `{y | ∀ᶠ n, blockLogAvgZ ... ≤ M}` = `⋃ N : ℕ, ⋂ n ≥ N, {y | ...}`.
         have h_eventually : {y : ∀ _ : ℕ, α | ∀ᶠ n in Filter.atTop,
               blockLogAvgZ μ p.toStationaryProcess n (eN y) ≤ (M : ℝ)}
@@ -281,8 +281,8 @@ theorem blockLogAvgZ_bddAbove_ae
           simp only [Set.mem_setOf_eq, Set.mem_iUnion, Set.mem_iInter, Set.mem_Ici,
             Filter.eventually_atTop]
         rw [h_eventually]
-        refine MeasurableSet.iUnion (fun N => ?_)
-        refine MeasurableSet.biInter (Set.to_countable _) (fun n _ => ?_)
+        refine MeasurableSet.iUnion (fun N ↦ ?_)
+        refine MeasurableSet.biInter (Set.to_countable _) (fun n _ ↦ ?_)
         exact measurableSet_le (measurable_blockLogAvgZ_via_eN μ p.toStationaryProcess n)
           measurable_const
       )]
@@ -295,18 +295,18 @@ theorem blockLogAvgZ_bddAbove_ae
       -- Measurability of the predicate set on (ℕ → α), same proof as above.
       change MeasurableSet {y : ∀ _ : ℕ, α | _}
       have h_set_eq : {y : ∀ _ : ℕ, α | Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
-            (fun n => blockLogAvgZ μ p.toStationaryProcess n (eN y))}
+            (fun n ↦ blockLogAvgZ μ p.toStationaryProcess n (eN y))}
           = ⋃ M : ℕ, {y | ∀ᶠ n in Filter.atTop,
               blockLogAvgZ μ p.toStationaryProcess n (eN y) ≤ (M : ℝ)} := by
         ext y
         constructor
         · rintro ⟨a, ha⟩
           obtain ⟨M, hM⟩ := exists_nat_ge a
-          exact Set.mem_iUnion.mpr ⟨M, ha.mono (fun n hn => hn.trans hM)⟩
+          exact Set.mem_iUnion.mpr ⟨M, ha.mono (fun n hn ↦ hn.trans hM)⟩
         · rintro ⟨S, ⟨M, rfl⟩, hS⟩
           exact ⟨(M : ℝ), hS⟩
       rw [h_set_eq]
-      refine MeasurableSet.iUnion (fun M => ?_)
+      refine MeasurableSet.iUnion (fun M ↦ ?_)
       have h_eventually : {y : ∀ _ : ℕ, α | ∀ᶠ n in Filter.atTop,
             blockLogAvgZ μ p.toStationaryProcess n (eN y) ≤ (M : ℝ)}
           = ⋃ N : ℕ, ⋂ n ∈ Set.Ici N,
@@ -315,18 +315,18 @@ theorem blockLogAvgZ_bddAbove_ae
         simp only [Set.mem_setOf_eq, Set.mem_iUnion, Set.mem_iInter, Set.mem_Ici,
           Filter.eventually_atTop]
       rw [h_eventually]
-      refine MeasurableSet.iUnion (fun N => ?_)
-      refine MeasurableSet.biInter (Set.to_countable _) (fun n _ => ?_)
+      refine MeasurableSet.iUnion (fun N ↦ ?_)
+      refine MeasurableSet.biInter (Set.to_countable _) (fun n _ ↦ ?_)
       exact measurableSet_le (measurable_blockLogAvgZ_via_eN μ p.toStationaryProcess n)
         measurable_const
     )] at h_N_ae
   -- Now h_N_ae : ∀ᵐ x ∂μZ, IsBoundedUnder (≤) atTop (fun n => blockLogAvgZ n (eN (natProj x))).
   -- Convert to the target via h_blockLogAvgZ_factor.
   filter_upwards [h_N_ae] with x hx
-  have h_eq : (fun n => blockLogAvgZ μ p.toStationaryProcess n x)
-      = fun n => blockLogAvgZ μ p.toStationaryProcess n
+  have h_eq : (fun n ↦ blockLogAvgZ μ p.toStationaryProcess n x)
+      = fun n ↦ blockLogAvgZ μ p.toStationaryProcess n
           (eN (InformationTheory.Shannon.TwoSided.natProj x)) :=
-    funext (fun n => h_blockLogAvgZ_factor x n)
+    funext (fun n ↦ h_blockLogAvgZ_factor x n)
   rw [h_eq]; exact hx
 
 omit [DecidableEq α] in
@@ -337,26 +337,26 @@ theorem liminf_blockLogAvgZ_ge_entropyRate
     ∀ᵐ x ∂(μZ μ p.toStationaryProcess),
       entropyRate μ p.toStationaryProcess
         ≤ Filter.liminf
-            (fun n => blockLogAvgZ μ p.toStationaryProcess n x) Filter.atTop := by
+            (fun n ↦ blockLogAvgZ μ p.toStationaryProcess n x) Filter.atTop := by
   filter_upwards [blockLogAvgZ_ge_negLogQInftyZ_minus_error μ p.toStationaryProcess,
                   birkhoffAverage_pmfLogCondInfty_tendsto μ p,
                   blockLogAvgZ_bddAbove_ae μ p] with x h_bound h_birk h_bdd_above
   -- LHS tendsto: negLogQ/n - 2 log n / n → entropyRate - 0 = entropyRate.
-  have h_log_div : Filter.Tendsto (fun n : ℕ => 2 * Real.log (n : ℝ) / (n : ℝ))
+  have h_log_div : Filter.Tendsto (fun n : ℕ ↦ 2 * Real.log (n : ℝ) / (n : ℝ))
       Filter.atTop (𝓝 0) := by
-    have h_log : Filter.Tendsto (fun n : ℕ => Real.log (n : ℝ) / (n : ℝ))
+    have h_log : Filter.Tendsto (fun n : ℕ ↦ Real.log (n : ℝ) / (n : ℝ))
         Filter.atTop (𝓝 0) := by
-      have h_real : Filter.Tendsto (fun x : ℝ => Real.log x ^ 1 / (1 * x + 0))
+      have h_real : Filter.Tendsto (fun x : ℝ ↦ Real.log x ^ 1 / (1 * x + 0))
           Filter.atTop (𝓝 0) := Real.tendsto_pow_log_div_mul_add_atTop 1 0 1 one_ne_zero
       have h_comp := h_real.comp tendsto_natCast_atTop_atTop
-      refine h_comp.congr (fun n => ?_)
+      refine h_comp.congr (fun n ↦ ?_)
       simp
     have h_mul := h_log.const_mul (2 : ℝ)
     simp only [mul_zero] at h_mul
-    refine h_mul.congr (fun n => ?_)
+    refine h_mul.congr (fun n ↦ ?_)
     rw [mul_div_assoc]
   have h_lhs : Filter.Tendsto
-      (fun n : ℕ => negLogQInftyZ μ p.toStationaryProcess n x / (n : ℝ)
+      (fun n : ℕ ↦ negLogQInftyZ μ p.toStationaryProcess n x / (n : ℝ)
         - 2 * Real.log (n : ℝ) / (n : ℝ))
       Filter.atTop (𝓝 (entropyRate μ p.toStationaryProcess)) := by
     have := h_birk.sub h_log_div
@@ -365,9 +365,9 @@ theorem liminf_blockLogAvgZ_ge_entropyRate
   -- - hu: u is bounded below (tendsto ⇒ isBoundedUnder ≥).
   -- - hv: v is cobounded (· ≥ ·), from the a.s. upper bound `blockLogAvgZ_bddAbove_ae`.
   have h_liminf_le : Filter.liminf
-      (fun n : ℕ => negLogQInftyZ μ p.toStationaryProcess n x / (n : ℝ)
+      (fun n : ℕ ↦ negLogQInftyZ μ p.toStationaryProcess n x / (n : ℝ)
         - 2 * Real.log (n : ℝ) / (n : ℝ)) Filter.atTop
-      ≤ Filter.liminf (fun n => blockLogAvgZ μ p.toStationaryProcess n x) Filter.atTop :=
+      ≤ Filter.liminf (fun n ↦ blockLogAvgZ μ p.toStationaryProcess n x) Filter.atTop :=
     Filter.liminf_le_liminf h_bound (hu := h_lhs.isBoundedUnder_ge)
       (hv := h_bdd_above.isCoboundedUnder_ge)
   rw [h_lhs.liminf_eq] at h_liminf_le
@@ -386,7 +386,7 @@ theorem algoet_cover_liminf_bound
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
       entropyRate μ p.toStationaryProcess
-        ≤ Filter.liminf (fun n => blockLogAvg μ p.toStationaryProcess n ω) Filter.atTop := by
+        ≤ Filter.liminf (fun n ↦ blockLogAvg μ p.toStationaryProcess n ω) Filter.atTop := by
   classical
   -- Step 1: Z-side liminf bound.
   have h_Z := liminf_blockLogAvgZ_ge_entropyRate μ p
@@ -394,7 +394,7 @@ theorem algoet_cover_liminf_bound
   -- extension" `eN : (ℕ → α) → (ℤ → α)`, `eN y i := y i.toNat`, with
   -- `natProj (eN y) = y` and
   --   `blockLogAvgZ n x = blockLogAvgZ n (eN (InformationTheory.Shannon.TwoSided.natProj x))`.
-  set eN : (∀ _ : ℕ, α) → (∀ _ : ℤ, α) := fun y i => y i.toNat with heN_def
+  set eN : (∀ _ : ℕ, α) → (∀ _ : ℤ, α) := fun y i ↦ y i.toNat with heN_def
   have h_blockLogAvgZ_factor : ∀ x : ∀ _ : ℤ, α, ∀ n,
       blockLogAvgZ μ p.toStationaryProcess n x
         = blockLogAvgZ μ p.toStationaryProcess n
@@ -417,14 +417,14 @@ theorem algoet_cover_liminf_bound
   have h_Z' : ∀ᵐ x ∂(μZ μ p.toStationaryProcess),
       entropyRate μ p.toStationaryProcess
         ≤ Filter.liminf
-            (fun n => blockLogAvgZ μ p.toStationaryProcess n
+            (fun n ↦ blockLogAvgZ μ p.toStationaryProcess n
               (eN (InformationTheory.Shannon.TwoSided.natProj x)))
             Filter.atTop := by
     filter_upwards [h_Z] with x hx
-    have h_eq : (fun n => blockLogAvgZ μ p.toStationaryProcess n x)
-        = fun n => blockLogAvgZ μ p.toStationaryProcess n
+    have h_eq : (fun n ↦ blockLogAvgZ μ p.toStationaryProcess n x)
+        = fun n ↦ blockLogAvgZ μ p.toStationaryProcess n
             (eN (InformationTheory.Shannon.TwoSided.natProj x)) :=
-      funext (fun n => h_blockLogAvgZ_factor x n)
+      funext (fun n ↦ h_blockLogAvgZ_factor x n)
     rw [← h_eq]; exact hx
   -- Step 4: push h_Z' through `natProj` to get a (μZ.map natProj)-a.s. statement.
   -- Since `μZ.map natProj = μ.map forwardEmbed`, this becomes (μ.map forwardEmbed)-a.s.
@@ -437,7 +437,7 @@ theorem algoet_cover_liminf_bound
   have h_N_ae : ∀ᵐ y ∂(μ.map (forwardEmbed (μ := μ) p.toStationaryProcess)),
       entropyRate μ p.toStationaryProcess
         ≤ Filter.liminf
-            (fun n => blockLogAvgZ μ p.toStationaryProcess n (eN y)) Filter.atTop := by
+            (fun n ↦ blockLogAvgZ μ p.toStationaryProcess n (eN y)) Filter.atTop := by
     -- Use the fact that `(μZ.map natProj) = (μ.map forwardEmbed)` (from h_mp_natProj.map_eq).
     rw [← h_mp_natProj.map_eq]
     -- And `ae_map_iff` to convert μZ-a.s. of `Q ∘ natProj` to (μZ.map natProj)-a.s. of Q.
@@ -445,7 +445,7 @@ theorem algoet_cover_liminf_bound
       (by
         -- Measurability of the predicate set on (ℕ → α).
         apply measurableSet_le measurable_const
-        refine Measurable.liminf (fun n => ?_)
+        refine Measurable.liminf (fun n ↦ ?_)
         -- `λ y, blockLogAvgZ n (eN y)` is measurable.
         exact measurable_blockLogAvgZ_via_eN μ p.toStationaryProcess n
       )]
@@ -458,7 +458,7 @@ theorem algoet_cover_liminf_bound
   have h_Ω_ae : ∀ᵐ ω ∂μ,
       entropyRate μ p.toStationaryProcess
         ≤ Filter.liminf
-            (fun n => blockLogAvgZ μ p.toStationaryProcess n
+            (fun n ↦ blockLogAvgZ μ p.toStationaryProcess n
               (eN (forwardEmbed (μ := μ) p.toStationaryProcess ω))) Filter.atTop :=
     h_mp_forwardEmbed.quasiMeasurePreserving.ae h_N_ae
   -- Step 6: `eN (forwardEmbed ω) = fun i : ℤ => p.obs i.toNat ω`, so
@@ -467,7 +467,7 @@ theorem algoet_cover_liminf_bound
   convert hω using 2
   funext n
   rw [show eN (forwardEmbed (μ := μ) p.toStationaryProcess ω)
-      = fun i : ℤ => p.obs i.toNat ω from rfl]
+      = fun i : ℤ ↦ p.obs i.toNat ω from rfl]
   exact (blockLogAvgZ_natExt_eq μ p.toStationaryProcess n ω).symm
 
 /-! ## D.7 — Main theorem (hypothesis-free assembly) -/
@@ -491,7 +491,7 @@ convergence. -/
 theorem shannon_mcmillan_breiman
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ, Filter.Tendsto
-      (fun n => blockLogAvg μ p.toStationaryProcess n ω)
+      (fun n ↦ blockLogAvg μ p.toStationaryProcess n ω)
       Filter.atTop (𝓝 (entropyRate μ p.toStationaryProcess)) := by
   classical
   exact shannon_mcmillan_breiman_of_sandwich μ p

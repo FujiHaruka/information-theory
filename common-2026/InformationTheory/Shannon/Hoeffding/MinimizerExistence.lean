@@ -64,7 +64,7 @@ lemma exists_hoeffding_minimizer_full_support
     subst h_alpha0
     refine ⟨P₁, ?_, ?_, hP₁_pos⟩
     · -- P₁ ∈ K (klDivPmf P₁ P₁ = 0 ≤ 0).
-      refine ⟨⟨fun a => (hP₁_pos a).le, hP₁_sum⟩, ?_⟩
+      refine ⟨⟨fun a ↦ (hP₁_pos a).le, hP₁_sum⟩, ?_⟩
       rw [klDivPmf_self_eq_zero P₁ hP₁_pos]
     · -- hoeffdingE2 P₁ P₂ 0 = klDivPmf P₁ P₂: K = {P₁} forces the infimum.
       have h_singleton : hoeffdingConstraintSet P₁ (0 : ℝ) = {P₁} :=
@@ -109,7 +109,7 @@ theorem hoeffding_tradeoff_achievability_at_boundary
     {alpha : ℝ} (h_alpha_nn : 0 ≤ alpha) (h_alpha_lt : alpha < 1)
     (h_alpha_ge : klDivPmf P₂ P₁ ≤ alpha) :
     hoeffdingE2 P₁ P₂ alpha ≤
-      Filter.liminf (fun n : ℕ =>
+      Filter.liminf (fun n : ℕ ↦
         -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha)) atTop := by
   classical
   -- E2 = 0 on the boundary.
@@ -123,10 +123,10 @@ theorem hoeffding_tradeoff_achievability_at_boundary
   · -- rate n ≥ 0 eventually.
     filter_upwards [eventually_gt_atTop 0] with n hn
     have h_le_one : steinTypeII_at_level_pmf P₁ P₂ n alpha ≤ 1 :=
-      steinTypeII_at_level_pmf_le_one P₁ P₂ hP₁_sum hP₂_sum (fun a => (hP₂_pos a).le) n alpha
+      steinTypeII_at_level_pmf_le_one P₁ P₂ hP₁_sum hP₂_sum (fun a ↦ (hP₂_pos a).le) n alpha
         h_alpha_nn
     have h_nn : 0 ≤ steinTypeII_at_level_pmf P₁ P₂ n alpha :=
-      steinTypeII_at_level_pmf_nonneg P₁ P₂ hP₁_sum hP₂_sum (fun a => (hP₂_pos a).le) n alpha
+      steinTypeII_at_level_pmf_nonneg P₁ P₂ hP₁_sum hP₂_sum (fun a ↦ (hP₂_pos a).le) n alpha
         h_alpha_nn
     have h_log_le : Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha) ≤ 0 := by
       rcases eq_or_lt_of_le h_nn with h_zero | h_pos

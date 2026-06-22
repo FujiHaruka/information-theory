@@ -43,8 +43,8 @@ theorem integral_convDensityAdd_gaussian_eq_one (pX : ℝ → ℝ) {t : ℝ} (ht
       exact ht.ne' (congrArg NNReal.toReal h)
     exact ProbabilityTheory.integral_gaussianPDFReal_eq_one 0 hv
   -- `convDensityAdd pX g = pX ⋆[mul ℝ ℝ, volume] g` (definitional, via `mul_apply'`).
-  have hconv : (fun z => convDensityAdd pX g z)
-      = fun z => (convolution pX g (ContinuousLinearMap.mul ℝ ℝ) volume) z := by
+  have hconv : (fun z ↦ convDensityAdd pX g z)
+      = fun z ↦ (convolution pX g (ContinuousLinearMap.mul ℝ ℝ) volume) z := by
     funext z
     unfold convDensityAdd convolution
     simp only [ContinuousLinearMap.mul_apply']

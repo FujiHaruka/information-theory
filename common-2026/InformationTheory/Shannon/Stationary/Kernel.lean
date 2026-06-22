@@ -54,7 +54,7 @@ theorem prefixBlockProb_zero
   unfold prefixBlockProb
   have _ : IsProbabilityMeasure (μ.map (p.blockRV 0)) :=
     Measure.isProbabilityMeasure_map (p.measurable_blockRV 0).aemeasurable
-  have h_default : ∀ x : (Fin 0 → α), x = default := fun x => by
+  have h_default : ∀ x : (Fin 0 → α), x = default := fun x ↦ by
     funext i; exact i.elim0
   have h_singleton_eq_univ :
       ({(p.blockRV 0 ω : Fin 0 → α)} : Set (Fin 0 → α)) = Set.univ := by
@@ -83,7 +83,7 @@ theorem prod_condPhraseProb_telescope
       simp [parsingBoundary_zero, prefixBlockProb_zero]
   | succ k ih =>
       have hk : ∀ j ≤ k, prefixBlockProb μ p ω (parsingBoundary μ p n ω j) ≠ 0 :=
-        fun j hj => hpos j (Nat.le_succ_of_le hj)
+        fun j hj ↦ hpos j (Nat.le_succ_of_le hj)
       rw [Finset.prod_range_succ, ih hk]
       -- `prefix(b k) * (prefix(b (k+1)) / prefix(b k)) = prefix(b (k+1))`.
       unfold condPhraseProb

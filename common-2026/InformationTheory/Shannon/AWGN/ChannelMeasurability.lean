@@ -46,8 +46,8 @@ theorem isAwgnChannelMeasurable (N : ℝ≥0) : IsAwgnChannelMeasurable N := by
   unfold IsAwgnChannelMeasurable
   -- Function equality `fun x => gaussianReal x N = fun x => (gaussianReal 0 N).map (x + ·)`.
   have h_fun_eq :
-      (fun x : ℝ => gaussianReal x N)
-        = (fun x : ℝ => (gaussianReal 0 N).map (x + ·)) := by
+      (fun x : ℝ ↦ gaussianReal x N)
+        = (fun x : ℝ ↦ (gaussianReal 0 N).map (x + ·)) := by
     funext x
     exact gaussianReal_eq_zero_map x N
   rw [h_fun_eq]
@@ -60,8 +60,8 @@ theorem isAwgnChannelMeasurable (N : ℝ≥0) : IsAwgnChannelMeasurable N := by
   -- Function equality: ∀ x, (gaussianReal 0 N).map (x + ·) s
   --              = (gaussianReal 0 N) (Prod.mk x ⁻¹' {p | p.1 + p.2 ∈ s}).
   have h_apply_eq :
-      (fun x : ℝ => ((gaussianReal 0 N).map (x + ·)) s)
-        = (fun x : ℝ => (gaussianReal 0 N)
+      (fun x : ℝ ↦ ((gaussianReal 0 N).map (x + ·)) s)
+        = (fun x : ℝ ↦ (gaussianReal 0 N)
             (Prod.mk x ⁻¹' {p : ℝ × ℝ | p.1 + p.2 ∈ s})) := by
     funext x
     have h_meas_x : Measurable (x + · : ℝ → ℝ) :=
@@ -112,7 +112,7 @@ theorem awgn_capacity_closed_form_F1_discharged
             (awgnChannel N (isAwgnChannelMeasurable N))).toReal
           = (1/2) * Real.log (1 + P / (N : ℝ)))
     (h_bdd :
-        BddAbove ((fun p : Measure ℝ =>
+        BddAbove ((fun p : Measure ℝ ↦
             (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
                 p (awgnChannel N (isAwgnChannelMeasurable N))).toReal) ''
           awgnPowerConstraintSet P))

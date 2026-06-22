@@ -35,7 +35,7 @@ variable {Y : Type*} [MeasurableSpace Y]
 `I(X; Y) := KL(P_{X,Y} ‖ P_X ⊗ P_Y)`. -/
 noncomputable def mutualInfo
     (μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y) : ℝ≥0∞ :=
-  klDiv (μ.map (fun ω => (Xs ω, Yo ω)))
+  klDiv (μ.map (fun ω ↦ (Xs ω, Yo ω)))
         ((μ.map Xs).prod (μ.map Yo))
 
 /-- Mutual information is nonneg (immediate from `klDiv : ℝ≥0∞`). -/
@@ -85,7 +85,7 @@ theorem mutualInfo_comm
     mutualInfo μ Xs Yo = mutualInfo μ Yo Xs := by
   unfold mutualInfo
   let e : Y × X ≃ᵐ X × Y := MeasurableEquiv.prodComm
-  have h₁ : (μ.map (fun ω => (Yo ω, Xs ω))).map e = μ.map (fun ω => (Xs ω, Yo ω)) := by
+  have h₁ : (μ.map (fun ω ↦ (Yo ω, Xs ω))).map e = μ.map (fun ω ↦ (Xs ω, Yo ω)) := by
     rw [Measure.map_map e.measurable (hYo.prodMk hXs)]
     rfl
   have h₂ : ((μ.map Yo).prod (μ.map Xs)).map e = (μ.map Xs).prod (μ.map Yo) :=
@@ -99,8 +99,8 @@ theorem mutualInfo_eq_zero_iff_indep
     (Xs : Ω → X) (Yo : Ω → Y)
     (hXs : Measurable Xs) (hYo : Measurable Yo) :
     mutualInfo μ Xs Yo = 0 ↔ IndepFun Xs Yo μ := by
-  have hpair : Measurable (fun ω => (Xs ω, Yo ω)) := hXs.prodMk hYo
-  have : IsProbabilityMeasure (μ.map (fun ω => (Xs ω, Yo ω))) :=
+  have hpair : Measurable (fun ω ↦ (Xs ω, Yo ω)) := hXs.prodMk hYo
+  have : IsProbabilityMeasure (μ.map (fun ω ↦ (Xs ω, Yo ω))) :=
     Measure.isProbabilityMeasure_map hpair.aemeasurable
   have : IsProbabilityMeasure (μ.map Xs) := Measure.isProbabilityMeasure_map hXs.aemeasurable
   have : IsProbabilityMeasure (μ.map Yo) := Measure.isProbabilityMeasure_map hYo.aemeasurable
@@ -113,41 +113,41 @@ private lemma map_pair_absolutelyContinuous_prod_marginals
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y)
     (hXs : Measurable Xs) (hYo : Measurable Yo) :
-    μ.map (fun ω => (Xs ω, Yo ω)) ≪ (μ.map Xs).prod (μ.map Yo) := by
+    μ.map (fun ω ↦ (Xs ω, Yo ω)) ≪ (μ.map Xs).prod (μ.map Yo) := by
   classical
-  refine Measure.AbsolutelyContinuous.mk fun s _ hs_zero => ?_
+  refine Measure.AbsolutelyContinuous.mk fun s _ hs_zero ↦ ?_
   set sf : Finset (X × Y) := Finset.univ.filter (· ∈ s)
   have hs_decomp : s = ⋃ p ∈ sf, ({p} : Set (X × Y)) := by
     ext p; simp [sf]
-  have h_pwd : Set.PairwiseDisjoint (↑sf) (fun p : X × Y => ({p} : Set (X × Y))) :=
-    fun a _ b _ hne => Set.disjoint_singleton.mpr hne
+  have h_pwd : Set.PairwiseDisjoint (↑sf) (fun p : X × Y ↦ ({p} : Set (X × Y))) :=
+    fun a _ b _ hne ↦ Set.disjoint_singleton.mpr hne
   have h_meas : ∀ p ∈ sf, MeasurableSet ({p} : Set (X × Y)) :=
-    fun p _ => measurableSet_singleton p
+    fun p _ ↦ measurableSet_singleton p
   have h_prod_sum : ∑ p ∈ sf, ((μ.map Xs).prod (μ.map Yo)) {p} = 0 := by
     rw [← measure_biUnion_finset h_pwd h_meas, ← hs_decomp]; exact hs_zero
-  have h_prod_each : ∀ p ∈ sf, ((μ.map Xs).prod (μ.map Yo)) {p} = 0 := fun p hp =>
+  have h_prod_each : ∀ p ∈ sf, ((μ.map Xs).prod (μ.map Yo)) {p} = 0 := fun p hp ↦
     le_antisymm (h_prod_sum ▸ Finset.single_le_sum
-      (f := fun q => ((μ.map Xs).prod (μ.map Yo)) {q})
-      (fun _ _ => bot_le) hp) bot_le
+      (f := fun q ↦ ((μ.map Xs).prod (μ.map Yo)) {q})
+      (fun _ _ ↦ bot_le) hp) bot_le
   rw [hs_decomp, measure_biUnion_finset h_pwd h_meas]
-  refine Finset.sum_eq_zero fun ⟨x, y⟩ hp => ?_
+  refine Finset.sum_eq_zero fun ⟨x, y⟩ hp ↦ ?_
   have h_pt := h_prod_each (x, y) hp
   rw [show ({(x, y)} : Set (X × Y)) = {x} ×ˢ {y} from
     Set.singleton_prod_singleton.symm, Measure.prod_prod] at h_pt
   rw [Measure.map_apply (hXs.prodMk hYo) (measurableSet_singleton _)]
   rcases mul_eq_zero.mp h_pt with hX | hY
   · refine le_antisymm ?_ bot_le
-    calc μ ((fun ω => (Xs ω, Yo ω)) ⁻¹' {(x, y)})
+    calc μ ((fun ω ↦ (Xs ω, Yo ω)) ⁻¹' {(x, y)})
         ≤ μ (Xs ⁻¹' {x}) := by
-          refine measure_mono fun ω hω => ?_
+          refine measure_mono fun ω hω ↦ ?_
           simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.mk.injEq] at hω
           exact hω.1
       _ = (μ.map Xs) {x} := (Measure.map_apply hXs (measurableSet_singleton _)).symm
       _ = 0 := hX
   · refine le_antisymm ?_ bot_le
-    calc μ ((fun ω => (Xs ω, Yo ω)) ⁻¹' {(x, y)})
+    calc μ ((fun ω ↦ (Xs ω, Yo ω)) ⁻¹' {(x, y)})
         ≤ μ (Yo ⁻¹' {y}) := by
-          refine measure_mono fun ω hω => ?_
+          refine measure_mono fun ω hω ↦ ?_
           simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.mk.injEq] at hω
           exact hω.2
       _ = (μ.map Yo) {y} := (Measure.map_apply hYo (measurableSet_singleton _)).symm
@@ -160,13 +160,13 @@ private lemma integrable_llr_map_pair_prod_marginals
     (Xs : Ω → X) (Yo : Ω → Y)
     (_hXs : Measurable Xs) (_hYo : Measurable Yo) :
     Integrable
-      (llr (μ.map (fun ω => (Xs ω, Yo ω))) ((μ.map Xs).prod (μ.map Yo)))
-      (μ.map (fun ω => (Xs ω, Yo ω))) := by
-  haveI : IsProbabilityMeasure (μ.map (fun ω => (Xs ω, Yo ω))) :=
+      (llr (μ.map (fun ω ↦ (Xs ω, Yo ω))) ((μ.map Xs).prod (μ.map Yo)))
+      (μ.map (fun ω ↦ (Xs ω, Yo ω))) := by
+  haveI : IsProbabilityMeasure (μ.map (fun ω ↦ (Xs ω, Yo ω))) :=
     Measure.isProbabilityMeasure_map (_hXs.prodMk _hYo).aemeasurable
   refine ⟨(measurable_llr _ _).aestronglyMeasurable, ?_⟩
   rw [hasFiniteIntegral_iff_enorm, lintegral_fintype]
-  exact ENNReal.sum_lt_top.mpr fun _ _ =>
+  exact ENNReal.sum_lt_top.mpr fun _ _ ↦
     ENNReal.mul_lt_top ENNReal.coe_lt_top (measure_lt_top _ _)
 
 /-- Mutual information is finite for finite alphabets. -/

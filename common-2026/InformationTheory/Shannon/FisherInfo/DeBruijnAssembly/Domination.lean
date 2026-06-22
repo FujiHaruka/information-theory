@@ -27,10 +27,10 @@ private theorem convDensityAdd_deriv2_le_gaussHessMaj_conv
       ≤ ∫ y, pX y * gaussHessMaj t (x - y) ∂volume := by
   have hspos : (0:ℝ) < s := by have := hs.1; linarith
   -- kernel continuity (for measurability of the bridge integrands).
-  have hker_cont : Continuous (fun u : ℝ => heatFlow_density_heat_equation_kernel s u) := by
+  have hker_cont : Continuous (fun u : ℝ ↦ heatFlow_density_heat_equation_kernel s u) := by
     unfold heatFlow_density_heat_equation_kernel
     fun_prop
-  have hker_meas : Measurable (fun u : ℝ => heatFlow_density_heat_equation_kernel s u) :=
+  have hker_meas : Measurable (fun u : ℝ ↦ heatFlow_density_heat_equation_kernel s u) :=
     hker_cont.measurable
   -- global sup constants of the kernel spatial derivatives.
   set M1 : ℝ := (Real.sqrt (2 * Real.pi * s))⁻¹ * ((1 + 2 * s * Real.exp (-1)) / (2 * s)) with hM1
@@ -39,7 +39,7 @@ private theorem convDensityAdd_deriv2_le_gaussHessMaj_conv
   have hM2_nn : (0:ℝ) ≤ M2 := by rw [hM2]; positivity
   have hF1_meas : ∀ ξ : ℝ,
       AEStronglyMeasurable
-        (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume := by
+        (fun y ↦ pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume := by
     intro ξ
     exact (hpX_meas.aestronglyMeasurable).mul
       ((hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable)
@@ -50,15 +50,15 @@ private theorem convDensityAdd_deriv2_le_gaussHessMaj_conv
       abs_of_nonneg (gaussianPDFReal_nonneg 0 _ v)]
     exact gaussianPDFReal_le_prefactor' ⟨s, hspos.le⟩ v
   have hF1_int : ∀ ξ : ℝ,
-      Integrable (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume := by
+      Integrable (fun y ↦ pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume := by
     intro ξ
     refine hpX_int.mul_bdd
       (c := (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹) ?_ ?_
     · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-    · exact Filter.Eventually.of_forall (fun y => by
+    · exact Filter.Eventually.of_forall (fun y ↦ by
         rw [Real.norm_eq_abs]; exact hker_le (ξ - y))
   have hF1'_meas : ∀ ξ : ℝ, AEStronglyMeasurable
-      (fun y => pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+      (fun y ↦ pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
         * (-((ξ - y) / s)))) volume := by
     intro ξ
     refine (hpX_meas.aestronglyMeasurable).mul ?_
@@ -67,15 +67,15 @@ private theorem convDensityAdd_deriv2_le_gaussHessMaj_conv
     · exact ((measurable_const.sub measurable_id).div_const s).neg.aestronglyMeasurable
   have hb1 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
       ‖pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
-        * (-((ξ - y) / s)))‖ ≤ (fun y => |pX y| * M1) y := by
-    refine Filter.Eventually.of_forall (fun y ξ _ => ?_)
+        * (-((ξ - y) / s)))‖ ≤ (fun y ↦ |pX y| * M1) y := by
+    refine Filter.Eventually.of_forall (fun y ξ _ ↦ ?_)
     rw [norm_mul, Real.norm_eq_abs]
     apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
     have := kernel_x_deriv1_global_bound hspos (ξ - y)
     rwa [hM1]
-  have hb1_int : Integrable (fun y => |pX y| * M1) volume := hpX_int.abs.mul_const _
+  have hb1_int : Integrable (fun y ↦ |pX y| * M1) volume := hpX_int.abs.mul_const _
   have hF2'_meas : AEStronglyMeasurable
-      (fun y => pX y * (heatFlow_density_heat_equation_kernel s (x - y)
+      (fun y ↦ pX y * (heatFlow_density_heat_equation_kernel s (x - y)
         * ((x - y) ^ 2 / s ^ 2 - 1 / s))) volume := by
     refine (hpX_meas.aestronglyMeasurable).mul ?_
     refine AEStronglyMeasurable.mul ?_ ?_
@@ -84,17 +84,17 @@ private theorem convDensityAdd_deriv2_le_gaussHessMaj_conv
         measurable_const |>.aestronglyMeasurable
   have hb2 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
       ‖pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
-        * ((ξ - y) ^ 2 / s ^ 2 - 1 / s))‖ ≤ (fun y => |pX y| * M2) y := by
-    refine Filter.Eventually.of_forall (fun y ξ _ => ?_)
+        * ((ξ - y) ^ 2 / s ^ 2 - 1 / s))‖ ≤ (fun y ↦ |pX y| * M2) y := by
+    refine Filter.Eventually.of_forall (fun y ξ _ ↦ ?_)
     rw [norm_mul, Real.norm_eq_abs]
     apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
     have := kernel_x_deriv2_global_bound hspos (ξ - y)
     rwa [hM2]
-  have hb2_int : Integrable (fun y => |pX y| * M2) volume := hpX_int.abs.mul_const _
+  have hb2_int : Integrable (fun y ↦ |pX y| * M2) volume := hpX_int.abs.mul_const _
   have hF2_int : Integrable
-      (fun y => pX y * (heatFlow_density_heat_equation_kernel s (x - y)
+      (fun y ↦ pX y * (heatFlow_density_heat_equation_kernel s (x - y)
         * (-((x - y) / s)))) volume := by
-    refine Integrable.mono' hb1_int (hF1'_meas x) (Filter.Eventually.of_forall (fun y => ?_))
+    refine Integrable.mono' hb1_int (hF1'_meas x) (Filter.Eventually.of_forall (fun y ↦ ?_))
     have := kernel_x_deriv1_global_bound hspos (x - y)
     rw [norm_mul, Real.norm_eq_abs]
     apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
@@ -102,18 +102,18 @@ private theorem convDensityAdd_deriv2_le_gaussHessMaj_conv
   have hbridge :=
     InformationTheory.Shannon.EPIConvDensitySecondDeriv.convDensityAdd_deriv2_eq_gaussian
     pX hpX_nn hpX_int hspos x
-    (fun y => |pX y| * M1) hb1_int hF1_meas hF1_int hF1'_meas hb1
-    (fun y => |pX y| * M2) hb2_int hF2_int hF2'_meas hb2
+    (fun y ↦ |pX y| * M1) hb1_int hF1_meas hF1_int hF1'_meas hb1
+    (fun y ↦ |pX y| * M2) hb2_int hF2_int hF2'_meas hb2
   rw [show (gaussianPDFReal 0 ⟨s, le_of_lt (by have := hs.1; linarith : (0:ℝ) < s)⟩)
       = gaussianPDFReal 0 ⟨s, hspos.le⟩ from rfl, hbridge]
   refine le_trans (norm_integral_le_integral_norm _) ?_
-  refine integral_mono_of_nonneg (Filter.Eventually.of_forall (fun y => norm_nonneg _)) ?_
-    (Filter.Eventually.of_forall (fun y => ?_))
+  refine integral_mono_of_nonneg (Filter.Eventually.of_forall (fun y ↦ norm_nonneg _)) ?_
+    (Filter.Eventually.of_forall (fun y ↦ ?_))
   · have hMmeas : Measurable (gaussHessMaj t) := by unfold gaussHessMaj; fun_prop
     refine hpX_int.mul_bdd
       (c := (Real.sqrt (Real.pi * t))⁻¹ * (16 * Real.exp (-1) / t + 2 / t)) ?_ ?_
     · exact (hMmeas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-    · refine Filter.Eventually.of_forall (fun y => ?_)
+    · refine Filter.Eventually.of_forall (fun y ↦ ?_)
       rw [Real.norm_eq_abs, abs_of_nonneg (gaussHessMaj_nonneg ht (x - y))]
       exact gaussHessMaj_bdd ht (x - y)
   · simp only []
@@ -136,7 +136,7 @@ densities).
 private theorem convDensityAdd_deriv2_poly_moment_majorant
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (_hpX_mass : (∫ y, pX y ∂volume) = 1)
-    (_hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    (_hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume)
     {t : ℝ} (ht : 0 < t) :
     ∃ bound : ℝ → ℝ, Integrable bound volume ∧
       ∀ᵐ x ∂volume, ∀ s : ℝ, (hs : s ∈ Set.Ioo (t/2) (2*t)) →
@@ -148,21 +148,21 @@ private theorem convDensityAdd_deriv2_poly_moment_majorant
   -- Integrability via Tonelli (`convKernel_envelope_integrable`), pointwise domination via the
   -- extracted concrete lemma `convDensityAdd_deriv2_le_gaussHessMaj_conv`
   -- (reused by `_chain_domination`).
-  refine ⟨fun x => ∫ y, pX y * gaussHessMaj t (x - y) ∂volume, ?_, ?_⟩
+  refine ⟨fun x ↦ ∫ y, pX y * gaussHessMaj t (x - y) ∂volume, ?_, ?_⟩
   · have hMmeas : Measurable (gaussHessMaj t) := by unfold gaussHessMaj; fun_prop
     exact convKernel_envelope_integrable pX (gaussHessMaj t) hpX_int hpX_meas
       (gaussHessMaj_integrable ht) hMmeas
-  · refine Filter.Eventually.of_forall (fun x s hs => ?_)
+  · refine Filter.Eventually.of_forall (fun x s hs ↦ ?_)
     exact convDensityAdd_deriv2_le_gaussHessMaj_conv pX hpX_nn hpX_meas hpX_int ht x hs
 
 private theorem convDensityAdd_jointMajorant_integrable
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    (hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume)
     {t : ℝ} (ht : 0 < t) (A B : ℝ) :
-    Integrable (fun x => (A + B * x ^ 2)
+    Integrable (fun x ↦ (A + B * x ^ 2)
         * ((1/2) * (∫ y, pX y * gaussHessMaj t (x - y) ∂volume))) volume := by
-  set E : ℝ → ℝ := fun x => ∫ y, pX y * gaussHessMaj t (x - y) ∂volume with hE_def
+  set E : ℝ → ℝ := fun x ↦ ∫ y, pX y * gaussHessMaj t (x - y) ∂volume with hE_def
   have hg_meas : Measurable (gaussHessMaj t) := by unfold gaussHessMaj; fun_prop
   have hg_nn : ∀ u, (0:ℝ) ≤ gaussHessMaj t u := gaussHessMaj_nonneg ht
   -- **route II = Tonelli + g_s moment** (the only honest route).
@@ -174,23 +174,23 @@ private theorem convDensityAdd_jointMajorant_integrable
   -- integrability of `y²·pX`, the heavy-tail-controlling density).
   -- `integrable_natPow_mul_exp_neg_mul_sq`
   -- (route I = deleted case-A defect, false for polynomial-tail pX) is NOT used.
-  set G : ℝ → ℝ := fun u => (|A| + 2 * |B| * u ^ 2) * gaussHessMaj t u with hG_def
+  set G : ℝ → ℝ := fun u ↦ (|A| + 2 * |B| * u ^ 2) * gaussHessMaj t u with hG_def
   have hG_int : Integrable G volume := gaussHessMaj_polyWeight_integrable ht |A| (2 * |B|)
   have hG_meas : Measurable G := by rw [hG_def]; fun_prop
-  have hG_nn : ∀ u, (0:ℝ) ≤ G u := fun u => by
+  have hG_nn : ∀ u, (0:ℝ) ≤ G u := fun u ↦ by
     rw [hG_def]; exact mul_nonneg (by positivity) (hg_nn u)
   -- `y²·pX` integrable (= `hpX_mom`) and measurable.
-  have hmomPX_int : Integrable (fun y => y ^ 2 * pX y) volume := hpX_mom
-  have hmomPX_meas : Measurable (fun y => y ^ 2 * pX y) := by fun_prop
+  have hmomPX_int : Integrable (fun y ↦ y ^ 2 * pX y) volume := hpX_mom
+  have hmomPX_meas : Measurable (fun y ↦ y ^ 2 * pX y) := by fun_prop
   -- the two convolution envelopes.
-  have hEnv1_int : Integrable (fun x => ∫ y, pX y * G (x - y) ∂volume) volume :=
+  have hEnv1_int : Integrable (fun x ↦ ∫ y, pX y * G (x - y) ∂volume) volume :=
     convKernel_envelope_integrable pX G hpX_int hpX_meas hG_int hG_meas
-  have hEnv2_int : Integrable (fun x => ∫ y, (y ^ 2 * pX y) * gaussHessMaj t (x - y) ∂volume)
+  have hEnv2_int : Integrable (fun x ↦ ∫ y, (y ^ 2 * pX y) * gaussHessMaj t (x - y) ∂volume)
       volume :=
-    convKernel_envelope_integrable (fun y => y ^ 2 * pX y) (gaussHessMaj t)
+    convKernel_envelope_integrable (fun y ↦ y ^ 2 * pX y) (gaussHessMaj t)
       hmomPX_int hmomPX_meas (gaussHessMaj_integrable ht) hg_meas
   -- dominating function `H x` integrable.
-  have hH_int : Integrable (fun x => (∫ y, pX y * G (x - y) ∂volume)
+  have hH_int : Integrable (fun x ↦ (∫ y, pX y * G (x - y) ∂volume)
       + 2 * |B| * (∫ y, (y ^ 2 * pX y) * gaussHessMaj t (x - y) ∂volume)) volume :=
     hEnv1_int.add (hEnv2_int.const_mul _)
   -- measurability of the target (poly × convolution envelope).
@@ -199,24 +199,24 @@ private theorem convDensityAdd_jointMajorant_integrable
     exact (convKernel_envelope_integrable pX (gaussHessMaj t) hpX_int hpX_meas
       (gaussHessMaj_integrable ht) hg_meas).aestronglyMeasurable
   have htarget_meas : AEStronglyMeasurable
-      (fun x => (A + B * x ^ 2) * ((1/2) * E x)) volume := by
+      (fun x ↦ (A + B * x ^ 2) * ((1/2) * E x)) volume := by
     refine AEStronglyMeasurable.mul ?_ ?_
     · fun_prop
     · exact hE_meas.const_mul _
   -- pointwise domination `‖(A+Bx²)·(1/2)·E x‖ ≤ H x`.
-  refine Integrable.mono' hH_int htarget_meas (Filter.Eventually.of_forall (fun x => ?_))
+  refine Integrable.mono' hH_int htarget_meas (Filter.Eventually.of_forall (fun x ↦ ?_))
   -- nonneg of `E x` (= `∫ pX y·g(x−y)`, integrand `≥ 0`).
-  have hEnv_pos_int : Integrable (fun y => pX y * gaussHessMaj t (x - y)) volume := by
+  have hEnv_pos_int : Integrable (fun y ↦ pX y * gaussHessMaj t (x - y)) volume := by
     have hMmeas := hg_meas
     refine hpX_int.mul_bdd
       (c := (Real.sqrt (Real.pi * t))⁻¹ * (16 * Real.exp (-1) / t + 2 / t)) ?_ ?_
     · exact (hMmeas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-    · refine Filter.Eventually.of_forall (fun y => ?_)
+    · refine Filter.Eventually.of_forall (fun y ↦ ?_)
       rw [Real.norm_eq_abs, abs_of_nonneg (hg_nn (x - y))]
       exact gaussHessMaj_bdd ht (x - y)
   have hE_nn : (0:ℝ) ≤ E x := by
     rw [hE_def]
-    exact integral_nonneg (fun y => mul_nonneg (hpX_nn y) (hg_nn (x - y)))
+    exact integral_nonneg (fun y ↦ mul_nonneg (hpX_nn y) (hg_nn (x - y)))
   -- `‖(A+Bx²)·(1/2)·E x‖ = |A+Bx²|·(1/2)·E x ≤ (|A|+|B|x²)·E x`.
   rw [Real.norm_eq_abs, abs_mul, abs_mul]
   have h12 : |(1/2 : ℝ)| = 1/2 := by rw [abs_of_pos]; norm_num
@@ -243,30 +243,30 @@ private theorem convDensityAdd_jointMajorant_integrable
   -- per-`y` fibre integrability of the two dominating pieces.
   -- (1) `fun y => pX y · G(x−y)`: `G` globally bounded
   -- (`gaussHessMaj_polyWeight_bdd`) × `pX` integ.
-  have hfib1_int : Integrable (fun y => pX y * G (x - y)) volume := by
+  have hfib1_int : Integrable (fun y ↦ pX y * G (x - y)) volume := by
     refine hpX_int.mul_bdd
       (c := |A| * ((Real.sqrt (Real.pi * t))⁻¹ * (16 * Real.exp (-1) / t + 2 / t))
         + 2 * |B| * ((Real.sqrt (Real.pi * t))⁻¹
             * (256 * Real.exp (-1) ^ 2 + 8 * Real.exp (-1)))) ?_ ?_
     · exact (hG_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-    · refine Filter.Eventually.of_forall (fun y => ?_)
+    · refine Filter.Eventually.of_forall (fun y ↦ ?_)
       rw [Real.norm_eq_abs, hG_def, abs_of_nonneg (hG_nn (x - y))]
       exact gaussHessMaj_polyWeight_bdd ht (abs_nonneg A) (by positivity) (x - y)
   -- (2) `fun y => (y²·pX y)·g(x−y)`: `g` globally bounded (`gaussHessMaj_bdd`) × `y²·pX` integ.
-  have hfib2_int : Integrable (fun y => (y ^ 2 * pX y) * gaussHessMaj t (x - y)) volume := by
+  have hfib2_int : Integrable (fun y ↦ (y ^ 2 * pX y) * gaussHessMaj t (x - y)) volume := by
     refine hmomPX_int.mul_bdd
       (c := (Real.sqrt (Real.pi * t))⁻¹ * (16 * Real.exp (-1) / t + 2 / t)) ?_ ?_
     · exact (hg_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
-    · refine Filter.Eventually.of_forall (fun y => ?_)
+    · refine Filter.Eventually.of_forall (fun y ↦ ?_)
       rw [Real.norm_eq_abs, abs_of_nonneg (hg_nn (x - y))]
       exact gaussHessMaj_bdd ht (x - y)
   -- target integrand integrability (for the LHS of `integral_mono`).
   have hlhs_int : Integrable
-      (fun y => (|A| + |B| * x ^ 2) * (pX y * gaussHessMaj t (x - y))) volume :=
+      (fun y ↦ (|A| + |B| * x ^ 2) * (pX y * gaussHessMaj t (x - y))) volume :=
     hEnv_pos_int.const_mul _
   -- the dominating integrand: `pX y·G(x−y) + 2|B|·((y²pX)·g(x−y))`.
   have hdom_int : Integrable
-      (fun y => pX y * G (x - y) + 2 * |B| * ((y ^ 2 * pX y) * gaussHessMaj t (x - y)))
+      (fun y ↦ pX y * G (x - y) + 2 * |B| * ((y ^ 2 * pX y) * gaussHessMaj t (x - y)))
       volume :=
     hfib1_int.add (hfib2_int.const_mul _)
   -- `H x = ∫ pX y·G(x−y) + 2|B|·∫(y²pX)·g(x−y) = ∫ [pX y·G(x−y) + 2|B|·(y²pX)·g(x−y)]`.
@@ -277,7 +277,7 @@ private theorem convDensityAdd_jointMajorant_integrable
     rw [integral_add hfib1_int (hfib2_int.const_mul _), integral_const_mul]
   rw [hH_eq]
   -- pointwise: `(|A|+|B|x²)·pX y·g(x−y) ≤ pX y·G(x−y) + 2|B|·(y²pX)·g(x−y)`.
-  refine integral_mono hlhs_int hdom_int (fun y => ?_)
+  refine integral_mono hlhs_int hdom_int (fun y ↦ ?_)
   -- `(|A|+|B|x²) ≤ |A| + 2|B|(x−y)² + 2|B|y²` via `x² ≤ 2(x−y)²+2y²`,
   -- then multiply by `pX y·g ≥ 0`.
   have hpXg_nn : (0:ℝ) ≤ pX y * gaussHessMaj t (x - y) :=
@@ -310,7 +310,7 @@ integral to the mass, first, and second moments of `pX` — all finite under `hp
 theorem debruijnIdentityV2_holds_assembled_chain_domination
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    (hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume)
     {t : ℝ} (ht : 0 < t) :
     ∃ bound : ℝ → ℝ, Integrable bound volume ∧
       (∀ᵐ x ∂volume, ∀ s : ℝ, (hs : s ∈ Set.Ioo (t/2) (2*t)) →
@@ -330,9 +330,9 @@ theorem debruijnIdentityV2_holds_assembled_chain_domination
   -- The **concrete** envelope `E x = ∫ y, pX y · gaussHessMaj t (x − y)`
   -- (= GAP②'s in-body envelope),
   -- used directly here so that route II Tonelli sees the convolution shape (not an abstract `∃`).
-  set E : ℝ → ℝ := fun x => ∫ y, pX y * gaussHessMaj t (x - y) ∂volume with hE_def
+  set E : ℝ → ℝ := fun x ↦ ∫ y, pX y * gaussHessMaj t (x - y) ∂volume with hE_def
   -- the joint majorant: (A + B·x²) · ((1/2)·E x).
-  refine ⟨fun x => (A + B * x ^ 2) * ((1/2) * E x), ?_, ?_⟩
+  refine ⟨fun x ↦ (A + B * x ^ 2) * ((1/2) * E x), ?_, ?_⟩
   · -- the joint majorant integrability, extracted to `convDensityAdd_jointMajorant_integrable`.
     -- `E` is a `set` variable defeq to its expansion `∫ y, pX y · gaussHessMaj t (x − y)`.
     exact convDensityAdd_jointMajorant_integrable pX hpX_nn hpX_meas hpX_int hpX_mom ht A B

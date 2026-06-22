@@ -56,7 +56,7 @@ theorem kraft_one_nat_sum
       omega
     calc (∑ c : β, (2 : ℝ) ^ (M - l c))
         = ∑ c : β, (2 : ℝ) ^ M * ((2 : ℝ)) ^ (-(l c : ℤ)) := by
-          exact Finset.sum_congr rfl (fun c _ => hterm c)
+          exact Finset.sum_congr rfl (fun c _ ↦ hterm c)
       _ = (2 : ℝ) ^ M * ∑ c : β, ((2 : ℝ)) ^ (-(l c : ℤ)) := by
           rw [Finset.mul_sum]
       _ = (2 : ℝ) ^ M := by rw [hkraft, mul_one]
@@ -82,7 +82,7 @@ theorem strict_kraft_one_implies_pairing
   -- Natural-number Kraft identity: ∑ c, 2^(M - l c) = 2^M
   have hnat : ∑ c : β, 2 ^ (M - l c) = 2 ^ M := kraft_one_nat_sum l M hb_max hkraft
   -- Split off the b term.
-  rw [← Finset.sum_erase_add (Finset.univ : Finset β) (fun c => 2 ^ (M - l c))
+  rw [← Finset.sum_erase_add (Finset.univ : Finset β) (fun c ↦ 2 ^ (M - l c))
       (Finset.mem_univ b)] at hnat
   -- b term: 2^(M - l b) = 2^0 = 1
   have hb_term : 2 ^ (M - l b) = 1 := by rw [hM_def]; simp
@@ -121,10 +121,10 @@ theorem exists_two_equal_longest
   -- Pick a global argmax c₁.
   obtain ⟨c₁, _, hc₁⟩ :=
     Finset.exists_max_image (Finset.univ : Finset β) l Finset.univ_nonempty
-  have hc₁_max : ∀ d, l d ≤ l c₁ := fun d => hc₁ d (Finset.mem_univ d)
+  have hc₁_max : ∀ d, l d ≤ l c₁ := fun d ↦ hc₁ d (Finset.mem_univ d)
   -- The keystone gives a distinct c₂ with l c₁ ≤ l c₂; maximality forces equality.
   obtain ⟨c₂, hc₂_ne, hc₂_ge⟩ := strict_kraft_one_implies_pairing l hl_pos hkraft c₁ hc₁_max
-  refine ⟨c₁, c₂, fun h => hc₂_ne h.symm, hc₁_max, ?_⟩
+  refine ⟨c₁, c₂, fun h ↦ hc₂_ne h.symm, hc₁_max, ?_⟩
   exact le_antisymm hc₂_ge (hc₁_max c₂)
 
 end InformationTheory.Shannon.Huffman

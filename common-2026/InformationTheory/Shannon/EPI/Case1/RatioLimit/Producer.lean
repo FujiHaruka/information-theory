@@ -36,7 +36,7 @@ non-degeneracy precondition (excludes the `√0 = 0` division), NOT load-bearing
 theorem gaussianConvolution_rescale_eq {α : Type*}
     (X Z : α → ℝ) (v : ℝ) (hv : 0 < v) (t : ℝ) (ht : 0 ≤ t) :
     InformationTheory.Shannon.FisherInfo.gaussianConvolution X
-        (fun ω => Z ω / Real.sqrt v) (t * v)
+        (fun ω ↦ Z ω / Real.sqrt v) (t * v)
       = InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z t := by
   funext ω
   unfold InformationTheory.Shannon.FisherInfo.gaussianConvolution
@@ -49,7 +49,7 @@ and the original path coincide (consequence of the pointwise identity). -/
 theorem map_gaussianConvolution_rescale_eq {α : Type*} [MeasurableSpace α]
     (P : Measure α) (X Z : α → ℝ) (v : ℝ) (hv : 0 < v) (t : ℝ) (ht : 0 ≤ t) :
     P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X
-        (fun ω => Z ω / Real.sqrt v) (t * v))
+        (fun ω ↦ Z ω / Real.sqrt v) (t * v))
       = P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z t) := by
   rw [gaussianConvolution_rescale_eq X Z v hv t ht]
 
@@ -205,55 +205,55 @@ noncomputable def isDeBruijnRegularityHyp_of_methodX_unitnoise
     (X Z_X : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (_hZX : Measurable Z_X) (_hXZX : IndepFun X Z_X P)
     (hZX_law : P.map Z_X = gaussianReal 0 1)
-    (hX_ac : (P.map X) ≪ volume) (h_mom_X : Integrable (fun ω => (X ω) ^ 2) P)
+    (hX_ac : (P.map X) ≪ volume) (h_mom_X : Integrable (fun ω ↦ (X ω) ^ 2) P)
     (_h_fisher_X : InformationTheory.Shannon.FisherInfo.fisherInfoOfDensity
-        (fun x => ((P.map X).rnDeriv volume x).toReal) ≠ ∞)
+        (fun x ↦ ((P.map X).rnDeriv volume x).toReal) ≠ ∞)
     -- Design (b) input-regularity preconditions (regularity, NOT load-bearing):
     -- they assert only that the input density `pX` is a *regular* L¹ density (differentiable,
     -- strictly positive, tails → 0, integrable derivative), is normalized, and satisfies the
     -- `Integrable`/boundedness/positivity bundle `IsBlachmanConvReady` against any centered
     -- Gaussian. None of them encode the de Bruijn / Fisher-monotonicity inequality core.
     (hreg_pX : InformationTheory.Shannon.FisherInfo.IsRegularDensityV2
-        (fun x => ((P.map X).rnDeriv volume x).toReal))
+        (fun x ↦ ((P.map X).rnDeriv volume x).toReal))
     (hnorm_pX : ∫ x, ((P.map X).rnDeriv volume x).toReal ∂volume = 1)
     (hready_pX : ∀ v : ℝ≥0, v ≠ 0 →
         InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady
-          (fun x => ((P.map X).rnDeriv volume x).toReal) (gaussianPDFReal 0 v)) :
+          (fun x ↦ ((P.map X).rnDeriv volume x).toReal) (gaussianPDFReal 0 v)) :
     InformationTheory.Shannon.StamEPIBridge.IsDeBruijnRegularityHyp X Z_X P := by
   classical
   -- Real density witness for `X` from a.c.
-  set pX : ℝ → ℝ := fun x => ((P.map X).rnDeriv volume x).toReal with hpX_def
-  have hpX_nn : ∀ x, 0 ≤ pX x := fun x => ENNReal.toReal_nonneg
+  set pX : ℝ → ℝ := fun x ↦ ((P.map X).rnDeriv volume x).toReal with hpX_def
+  have hpX_nn : ∀ x, 0 ≤ pX x := fun x ↦ ENNReal.toReal_nonneg
   have hpX_meas : Measurable pX :=
     ((P.map X).measurable_rnDeriv volume).ennreal_toReal
-  have hpX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x)) := by
+  have hpX_law : P.map X = volume.withDensity (fun x ↦ ENNReal.ofReal (pX x)) := by
     have hfin : ∀ᵐ x ∂volume, (P.map X).rnDeriv volume x < ∞ :=
       Measure.rnDeriv_lt_top (P.map X) volume
-    have hcongr : (fun x => ENNReal.ofReal (pX x)) =ᵐ[volume]
+    have hcongr : (fun x ↦ ENNReal.ofReal (pX x)) =ᵐ[volume]
         (P.map X).rnDeriv volume := by
       filter_upwards [hfin] with x hx
       simp only [hpX_def, ENNReal.ofReal_toReal hx.ne]
     rw [withDensity_congr_ae hcongr, Measure.withDensity_rnDeriv_eq _ _ hX_ac]
-  have hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume := by
-    have hsq_law : Integrable (fun y => y ^ 2) (P.map X) := by
+  have hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume := by
+    have hsq_law : Integrable (fun y ↦ y ^ 2) (P.map X) := by
       rw [integrable_map_measure
-        ((by fun_prop : Measurable (fun y : ℝ => y ^ 2)).aestronglyMeasurable)
+        ((by fun_prop : Measurable (fun y : ℝ ↦ y ^ 2)).aestronglyMeasurable)
         hX.aemeasurable]
       simpa [Function.comp] using h_mom_X
     rw [hpX_law] at hsq_law
     rw [integrable_withDensity_iff_integrable_smul₀'
       hpX_meas.ennreal_ofReal.aemeasurable
-      (Filter.Eventually.of_forall fun x => ENNReal.ofReal_lt_top)] at hsq_law
-    refine hsq_law.congr (Filter.Eventually.of_forall fun x => ?_)
+      (Filter.Eventually.of_forall fun x ↦ ENNReal.ofReal_lt_top)] at hsq_law
+    refine hsq_law.congr (Filter.Eventually.of_forall fun x ↦ ?_)
     simp only [smul_eq_mul, ENNReal.toReal_ofReal (hpX_nn x)]; ring
   refine
-    { density_path := fun t => InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+    { density_path := fun t ↦ InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
         (gaussianPDFReal 0 t.toNNReal),
-      reg_at := fun t ht =>
+      reg_at := fun t ht ↦
         { Z_law := hZX_law
           density_t := InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
             (gaussianPDFReal 0 ⟨t, ht.le⟩)
-          density_t_eq := fun _ _ => rfl
+          density_t_eq := fun _ _ ↦ rfl
           pX := pX
           pX_nn := hpX_nn
           pX_meas := hpX_meas

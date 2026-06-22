@@ -59,7 +59,7 @@ theorem isParallelGaussianPerCoordRegularity_of_pieces {n : ℕ}
   · -- `bddAbove` field
     exact parallel_bddAbove_miImage P hP N hN h_meas h_parallel_meas
   · -- `achiever_mi` field
-    exact parallelGaussianCapacity_achiever_mi Q N (fun i => NNReal.coe_ne_zero.mp (hN i))
+    exact parallelGaussianCapacity_achiever_mi Q N (fun i ↦ NNReal.coe_ne_zero.mp (hN i))
       h_meas h_parallel_meas
   · -- `max_ent` field
     intro p hp
@@ -83,7 +83,7 @@ theorem parallel_gaussian_capacity_formula_minimal {n : ℕ}
       = ∑ i : Fin (n + 1), (1/2) *
           Real.log (1 + waterFillingPower ν N i / (N i : ℝ)) := by
   -- assemble the regularity bundle, then invoke `parallel_gaussian_capacity_formula`
-  set Q : Fin (n + 1) → ℝ≥0 := fun i => (waterFillingPower ν N i).toNNReal with hQ_def
+  set Q : Fin (n + 1) → ℝ≥0 := fun i ↦ (waterFillingPower ν N i).toNNReal with hQ_def
   have h_reg : IsParallelGaussianPerCoordRegularity P N h_meas h_parallel_meas Q :=
     isParallelGaussianPerCoordRegularity_of_pieces P hP.le N hN h_meas h_parallel_meas Q
   exact parallel_gaussian_capacity_formula P hP N hN h_meas h_parallel_meas

@@ -116,7 +116,7 @@ theorem capacityRate_ofMemoryless_eventually_const
     (W : ChannelCoding.Channel α β) [IsMarkovKernel W] :
     ∀ᶠ n : ℕ in Filter.atTop,
       capacityRate (BlockwiseChannel.ofMemoryless W) n = capacity W := by
-  refine Filter.eventually_atTop.mpr ⟨1, fun n hn => ?_⟩
+  refine Filter.eventually_atTop.mpr ⟨1, fun n hn ↦ ?_⟩
   have hn_pos : 0 < n := hn
   have hN := capacityN_ofMemoryless_eq W n hn_pos
   have hC_nn : 0 ≤ capacity W := capacity_nonneg W
@@ -136,7 +136,7 @@ theorem capacity_lim_tendsto_of_memoryless
     Filter.Tendsto (capacityRate (BlockwiseChannel.ofMemoryless W))
       Filter.atTop (nhds (capacity W)) := by
   refine (tendsto_const_nhds (x := capacity W)).congr' ?_
-  exact (capacityRate_ofMemoryless_eventually_const W).mono (fun n hn => hn.symm)
+  exact (capacityRate_ofMemoryless_eventually_const W).mono (fun n hn ↦ hn.symm)
 
 omit [DecidableEq α] [DecidableEq β] in
 /-- **Main bridge**: for memoryless `W`, the general DMC
@@ -173,10 +173,10 @@ theorem capacity_lim_pass_through_of_eventually_const
     capacity_lim W = c := by
   have h_tendsto : Filter.Tendsto (capacityRate W) Filter.atTop (nhds c) := by
     refine (tendsto_const_nhds (x := c)).congr' ?_
-    exact h_const.mono (fun n hn => hn.symm)
+    exact h_const.mono (fun n hn ↦ hn.symm)
   unfold capacity_lim
-  show Filter.atTop.limUnder (fun n => (W.capacityN n).toReal / n) = c
-  exact (show Filter.Tendsto (fun n => (W.capacityN n).toReal / n) Filter.atTop (nhds c) from
+  show Filter.atTop.limUnder (fun n ↦ (W.capacityN n).toReal / n) = c
+  exact (show Filter.Tendsto (fun n ↦ (W.capacityN n).toReal / n) Filter.atTop (nhds c) from
     h_tendsto).limUnder_eq
 
 end General

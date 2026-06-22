@@ -76,7 +76,7 @@ private lemma sum_roundedFloor_le (P : α → ℝ) (hP : (∑ a, P a) = 1)
   have h_real : (∑ a, (roundedFloor P n a : ℝ)) ≤ (n : ℝ) := by
     calc (∑ a, (roundedFloor P n a : ℝ))
         ≤ ∑ a, (n : ℝ) * P a := by
-          refine Finset.sum_le_sum fun a _ => ?_
+          refine Finset.sum_le_sum fun a _ ↦ ?_
           exact roundedFloor_le_real P n a (hP_nn a)
       _ = (n : ℝ) * ∑ a, P a := by rw [Finset.mul_sum]
       _ = (n : ℝ) := by rw [hP, mul_one]
@@ -105,7 +105,7 @@ private lemma roundedTypeIndexNat_le (P : α → ℝ) (n : ℕ) (a : α) :
 where `a₀ := absorberLetter α`. The single "absorber" letter takes all the
 deficit, simplifying the `Fin (n+1)` range proof. -/
 noncomputable def roundedTypeIndex (P : α → ℝ) (n : ℕ) :
-    TypeCountIndex α n := fun a =>
+    TypeCountIndex α n := fun a ↦
   ⟨roundedTypeIndexNat P n a, Nat.lt_succ_of_le (roundedTypeIndexNat_le P n a)⟩
 
 
@@ -127,7 +127,7 @@ lemma roundedTypeIndex_sum
     rw [if_neg ha]
     exact min_eq_left (roundedFloor_le P n a (hP_nn a) (by
       have : P a ≤ ∑ b, P b := by
-        refine Finset.single_le_sum (f := P) (fun b _ => hP_nn b) (Finset.mem_univ _)
+        refine Finset.single_le_sum (f := P) (fun b _ ↦ hP_nn b) (Finset.mem_univ _)
       rw [hP] at this; exact this))
   have h_abs : (roundedTypeIndex P n a₀ : ℕ) = n - ∑ b ∈ Finset.univ.erase a₀, f b := by
     show roundedTypeIndexNat P n a₀ = n - ∑ b ∈ Finset.univ.erase a₀, f b
@@ -137,7 +137,7 @@ lemma roundedTypeIndex_sum
   -- Sum splits as a₀ + sum over erase a₀.
   rw [← Finset.sum_erase_add _ _ (Finset.mem_univ a₀)]
   rw [h_abs]
-  rw [Finset.sum_congr rfl (fun a ha => h_non_abs a (Finset.ne_of_mem_erase ha))]
+  rw [Finset.sum_congr rfl (fun a ha ↦ h_non_abs a (Finset.ne_of_mem_erase ha))]
   -- ∑_{a ≠ a₀} f a + (n - ∑_{a ≠ a₀} f a) = n
   have h_sum_le : (∑ a ∈ Finset.univ.erase a₀, f a) ≤ n := by
     have h_total : (∑ a, f a) ≤ n := sum_roundedFloor_le P hP hP_nn n
@@ -163,7 +163,7 @@ lemma roundedTypeIndex_dist_le
   have hP_le_one : ∀ b, P b ≤ 1 := by
     intro b
     have : P b ≤ ∑ c, P c :=
-      Finset.single_le_sum (f := P) (fun c _ => hP_nn c) (Finset.mem_univ _)
+      Finset.single_le_sum (f := P) (fun c _ ↦ hP_nn c) (Finset.mem_univ _)
     rw [hP] at this; exact this
   -- Reformulate: |c a / n - P a| ≤ |α|/n  ↔  |c a - n · P a| ≤ |α|.
   show |((roundedTypeIndexNat P n a : ℝ)) / n - P a| ≤ (Fintype.card α : ℝ) / n
@@ -219,12 +219,12 @@ lemma roundedTypeIndex_dist_le
     have h_card : (Finset.univ.erase a₀).card = Fintype.card α - 1 := by
       rw [Finset.card_erase_of_mem (Finset.mem_univ _)]; rfl
     have h_sum_nn : 0 ≤ ∑ b ∈ Finset.univ.erase a₀, ((n : ℝ) * P b - f b) :=
-      Finset.sum_nonneg fun b hb => (h_each b hb).1
+      Finset.sum_nonneg fun b hb ↦ (h_each b hb).1
     have h_sum_lt : (∑ b ∈ Finset.univ.erase a₀, ((n : ℝ) * P b - f b))
         ≤ (Finset.univ.erase a₀).card := by
       have h := Finset.sum_le_sum (s := (Finset.univ.erase a₀ : Finset α))
-        (f := fun b => (n : ℝ) * P b - f b) (g := fun _ => (1 : ℝ))
-        (fun b hb => (h_each b hb).2.le)
+        (f := fun b ↦ (n : ℝ) * P b - f b) (g := fun _ ↦ (1 : ℝ))
+        (fun b hb ↦ (h_each b hb).2.le)
       simpa [Finset.sum_const, nsmul_eq_mul] using h
     rw [abs_of_nonneg h_sum_nn]
     refine h_sum_lt.trans ?_
@@ -253,9 +253,9 @@ omit [MeasurableSpace α] [MeasurableSingletonClass α] in
 lemma roundedTypeIndex_tendsto
     (P : α → ℝ) (hP : (∑ a, P a) = 1) (hP_nn : ∀ a, 0 ≤ P a)
     (a : α) :
-    Tendsto (fun n : ℕ => ((roundedTypeIndex P n a : ℕ) : ℝ) / n) atTop (𝓝 (P a)) := by
+    Tendsto (fun n : ℕ ↦ ((roundedTypeIndex P n a : ℕ) : ℝ) / n) atTop (𝓝 (P a)) := by
   -- Sandwich: |c_n / n - P a| ≤ |α| / n → 0.
-  refine Metric.tendsto_atTop.mpr fun ε hε => ?_
+  refine Metric.tendsto_atTop.mpr fun ε hε ↦ ?_
   -- Pick N so |α|/N < ε.
   have h_card_pos : (0 : ℝ) < Fintype.card α := by
     have : (0 : ℕ) < Fintype.card α := Fintype.card_pos
@@ -270,7 +270,7 @@ lemma roundedTypeIndex_tendsto
     rw [h_N_real]
     rw [div_lt_iff₀ hε] at hN
     linarith
-  refine ⟨N, fun n hn => ?_⟩
+  refine ⟨N, fun n hn ↦ ?_⟩
   have hn_pos : 0 < n := lt_of_lt_of_le hN.2 hn
   have h_dist := roundedTypeIndex_dist_le P hP hP_nn n hn_pos a
   -- d(x,y) = |x - y|, so the goal is `|... - P a| < ε`.
@@ -289,7 +289,7 @@ omit [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- **Vector Tendsto** (`α → ℝ` Pi-topology). -/
 lemma roundedTypeIndex_tendsto_vec
     (P : α → ℝ) (hP : (∑ a, P a) = 1) (hP_nn : ∀ a, 0 ≤ P a) :
-    Tendsto (fun n : ℕ => (fun a => ((roundedTypeIndex P n a : ℕ) : ℝ) / n))
+    Tendsto (fun n : ℕ ↦ (fun a ↦ ((roundedTypeIndex P n a : ℕ) : ℝ) / n))
       atTop (𝓝 P) := by
   rw [tendsto_pi_nhds]
   intro a
@@ -313,17 +313,17 @@ lemma typeClassByCount_nonempty_of_sum
   -- noncomputable equivalence
   let e : (Σ a : α, Fin (c a)) ≃ Fin n := Fintype.equivOfCardEq h_card_eq
   -- g j := first component of e⁻¹ j.
-  let g : Fin n → α := fun j => (e.symm j).fst
+  let g : Fin n → α := fun j ↦ (e.symm j).fst
   refine ⟨g, ?_⟩
   intro a
-  show (Finset.univ.filter (fun i : Fin n => g i = a)).card = c a
+  show (Finset.univ.filter (fun i : Fin n ↦ g i = a)).card = c a
   -- count via image of an embedding from Fin (c a):  k ↦ e ⟨a, k⟩.
   let φ : Fin (c a) ↪ Fin n :=
-    ⟨fun k => e ⟨a, k⟩, fun k₁ k₂ h => by
+    ⟨fun k ↦ e ⟨a, k⟩, fun k₁ k₂ h ↦ by
       have := e.injective h
       simpa using this⟩
   have h_filter_eq :
-      Finset.univ.filter (fun i : Fin n => g i = a)
+      Finset.univ.filter (fun i : Fin n ↦ g i = a)
         = (Finset.univ : Finset (Fin (c a))).map φ := by
     ext j
     simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_map]
@@ -353,23 +353,23 @@ omit [MeasurableSingletonClass α] in
 theorem klDivIndex_rounded_tendsto
     (Q : Measure α) (hQpos : ∀ a, 0 < Q.real {a})
     (P : α → ℝ) (hP : (∑ a, P a) = 1) (hP_nn : ∀ a, 0 ≤ P a) :
-    Tendsto (fun n : ℕ =>
-        klDivIndex (fun a => (roundedTypeIndex P n a : ℕ)) n Q)
-      atTop (𝓝 (klDivSumForm_ofVec P (fun a => Q.real {a}))) := by
+    Tendsto (fun n : ℕ ↦
+        klDivIndex (fun a ↦ (roundedTypeIndex P n a : ℕ)) n Q)
+      atTop (𝓝 (klDivSumForm_ofVec P (fun a ↦ Q.real {a}))) := by
   -- rewrite klDivIndex via the `klDivSumForm_ofVec` connection
   have h_rewrite : ∀ n,
-      klDivIndex (fun a => (roundedTypeIndex P n a : ℕ)) n Q
+      klDivIndex (fun a ↦ (roundedTypeIndex P n a : ℕ)) n Q
         = klDivSumForm_ofVec
-            (fun a => ((roundedTypeIndex P n a : ℕ) : ℝ) / n)
-            (fun a => Q.real {a}) := fun n =>
-    klDivIndex_eq_ofVec (fun a => (roundedTypeIndex P n a : ℕ)) n Q
+            (fun a ↦ ((roundedTypeIndex P n a : ℕ) : ℝ) / n)
+            (fun a ↦ Q.real {a}) := fun n ↦
+    klDivIndex_eq_ofVec (fun a ↦ (roundedTypeIndex P n a : ℕ)) n Q
   simp_rw [h_rewrite]
   -- Now: continuity of klDivSumForm_ofVec composed with tendsto of c_n/n.
   have h_cont : Continuous
-      (fun p : α → ℝ => klDivSumForm_ofVec p (fun a => Q.real {a})) :=
-    klDivSumForm_ofVec_continuous (fun a => Q.real {a}) hQpos
+      (fun p : α → ℝ ↦ klDivSumForm_ofVec p (fun a ↦ Q.real {a})) :=
+    klDivSumForm_ofVec_continuous (fun a ↦ Q.real {a}) hQpos
   have h_tendsto_vec :
-      Tendsto (fun n : ℕ => (fun a => ((roundedTypeIndex P n a : ℕ) : ℝ) / n))
+      Tendsto (fun n : ℕ ↦ (fun a ↦ ((roundedTypeIndex P n a : ℕ) : ℝ) / n))
         atTop (𝓝 P) :=
     roundedTypeIndex_tendsto_vec P hP hP_nn
   exact h_cont.tendsto P |>.comp h_tendsto_vec

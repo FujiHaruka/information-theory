@@ -46,7 +46,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
 /-- Number of occurrences of letter `a` in sequence `x : Fin n → α`. -/
 noncomputable def typeCount {n : ℕ} (x : Fin n → α) (a : α) : ℕ :=
-  (Finset.univ.filter (fun i : Fin n => x i = a)).card
+  (Finset.univ.filter (fun i : Fin n ↦ x i = a)).card
 
 /-- **Type class** `T(P)`: sequences `x : Fin n → α` whose empirical distribution equals `P`,
 i.e., `∀ a, (typeCount x a : ℝ) = n · P.real {a}`. -/
@@ -69,34 +69,34 @@ lemma sum_llrPmf_eq_of_mem_typeClass
     (∑ i : Fin n, (Real.log (P.real {x i}) - Real.log (Q.real {x i})))
       = (n : ℝ) * klDivSumForm P Q := by
   classical
-  set f : α → ℝ := fun a => Real.log (P.real {a}) - Real.log (Q.real {a}) with hf_def
+  set f : α → ℝ := fun a ↦ Real.log (P.real {a}) - Real.log (Q.real {a}) with hf_def
   -- Step 1: aggregate `∑ i, f (x i) = ∑ a, (typeCount x a) • f a`.
   have h_agg : (∑ i : Fin n, f (x i))
       = ∑ a : α, ((typeCount x a : ℝ) * f a) := by
     -- `prod_fiberwise_of_maps_to'` (additive ⇒ sum_fiberwise_of_maps_to') —
     -- `∑ a, ∑ i ∈ univ with x i = a, f a = ∑ i, f (x i)`.
     have h_maps : ∀ i ∈ (Finset.univ : Finset (Fin n)), x i ∈ (Finset.univ : Finset α) :=
-      fun i _ => Finset.mem_univ _
+      fun i _ ↦ Finset.mem_univ _
     have h := Finset.sum_fiberwise_of_maps_to' (s := (Finset.univ : Finset (Fin n)))
       (t := (Finset.univ : Finset α)) h_maps f
     -- h : ∑ a ∈ univ, ∑ i ∈ univ with x i = a, f a = ∑ i ∈ univ, f (x i)
     rw [← h]
     -- ∑ i ∈ univ with x i = a, f a = (typeCount x a) * f a since f a is constant on the fiber.
-    refine Finset.sum_congr rfl fun a _ => ?_
+    refine Finset.sum_congr rfl fun a _ ↦ ?_
     rw [Finset.sum_const, nsmul_eq_mul]
     rfl
   rw [h_agg]
   -- Step 2: substitute `typeCount x a = n · P.real {a}` from `hx`.
   have h_sub : (∑ a : α, (typeCount x a : ℝ) * f a)
       = ∑ a : α, ((n : ℝ) * P.real {a}) * f a := by
-    refine Finset.sum_congr rfl fun a _ => ?_
+    refine Finset.sum_congr rfl fun a _ ↦ ?_
     rw [hx a]
   rw [h_sub]
   -- Step 3: re-associate `(n * P) * f = n * (P * f)`, pull out `n`, recognise `klDivSumForm`.
   rw [show (∑ a : α, ((n : ℝ) * P.real {a}) * f a)
         = (n : ℝ) * ∑ a : α, P.real {a} * f a from by
         rw [Finset.mul_sum]
-        refine Finset.sum_congr rfl fun a _ => ?_
+        refine Finset.sum_congr rfl fun a _ ↦ ?_
         ring]
   rfl
 
@@ -127,13 +127,13 @@ lemma typeClass_prod_ratio
     have h_rhs : Real.exp (-(∑ i : Fin n, (Real.log (P.real {x i}) - Real.log (Q.real {x i}))))
         = ∏ i : Fin n, Q.real {x i} / P.real {x i} := by
       rw [← Finset.sum_neg_distrib, Real.exp_sum]
-      exact Finset.prod_congr rfl fun i _ => h_exp_neg_diff i
+      exact Finset.prod_congr rfl fun i _ ↦ h_exp_neg_diff i
     rw [← h_rhs, sum_llrPmf_eq_of_mem_typeClass P Q hx]
   -- Step 3: ∏ Q = (∏ Q/P) · (∏ P) — algebraic split.
   have h_split : (∏ i : Fin n, Q.real {x i})
       = (∏ i : Fin n, Q.real {x i} / P.real {x i}) * ∏ i : Fin n, P.real {x i} := by
     rw [← Finset.prod_mul_distrib]
-    refine Finset.prod_congr rfl fun i _ => ?_
+    refine Finset.prod_congr rfl fun i _ ↦ ?_
     rw [div_mul_cancel₀ _ (hPpos (x i)).ne']
   rw [h_split, h_prod_ratio]
   ring
@@ -149,14 +149,14 @@ theorem typeClass_Qn_le
     (hPpos : ∀ a : α, 0 < P.real {a})
     (hQpos : ∀ a : α, 0 < Q.real {a})
     (n : ℕ) :
-    ((Measure.pi (fun _ : Fin n => Q)) (typeClass P n)).toReal
+    ((Measure.pi (fun _ : Fin n ↦ Q)) (typeClass P n)).toReal
       ≤ Real.exp (-((n : ℝ) * klDivSumForm P Q)) := by
   classical
   -- Setup: T as Finset, marginal abbreviations.
   set T : Finset (Fin n → α) := (typeClass P n).toFinite.toFinset with hT_def
   have hT_coe : (T : Set (Fin n → α)) = typeClass P n := by simp [hT_def]
-  set p : α → ℝ := fun a => P.real {a} with hp_def
-  set q : α → ℝ := fun a => Q.real {a} with hq_def
+  set p : α → ℝ := fun a ↦ P.real {a} with hp_def
+  set q : α → ℝ := fun a ↦ Q.real {a} with hq_def
   set D : ℝ := klDivSumForm P Q with hD_def
   have hp_pos : ∀ a, 0 < p a := hPpos
   -- ∑ a, p a = 1.
@@ -169,22 +169,22 @@ theorem typeClass_Qn_le
     exact probReal_univ
   -- Step 1: Q^n(T) (set form) → sum over T (Finset form).
   have h_pi_singleton_Q : ∀ x : Fin n → α,
-      ((Measure.pi (fun _ : Fin n => Q)).real {x}) = ∏ i : Fin n, q (x i) := by
+      ((Measure.pi (fun _ : Fin n ↦ Q)).real {x}) = ∏ i : Fin n, q (x i) := by
     intro x
-    show ((Measure.pi (fun _ : Fin n => Q)) {x}).toReal = ∏ i : Fin n, q (x i)
+    show ((Measure.pi (fun _ : Fin n ↦ Q)) {x}).toReal = ∏ i : Fin n, q (x i)
     rw [Measure.pi_singleton, ENNReal.toReal_prod]
     rfl
   have h_pi_real_eq_sum :
-      ((Measure.pi (fun _ : Fin n => Q)) (typeClass P n)).toReal
+      ((Measure.pi (fun _ : Fin n ↦ Q)) (typeClass P n)).toReal
         = ∑ x ∈ T, ∏ i : Fin n, q (x i) := by
-    have h_step : ((Measure.pi (fun _ : Fin n => Q)) (T : Set (Fin n → α))).toReal
-        = ∑ x ∈ T, ((Measure.pi (fun _ : Fin n => Q)).real {x}) := by
+    have h_step : ((Measure.pi (fun _ : Fin n ↦ Q)) (T : Set (Fin n → α))).toReal
+        = ∑ x ∈ T, ((Measure.pi (fun _ : Fin n ↦ Q)).real {x}) := by
       rw [← MeasureTheory.measureReal_def]
       rw [← MeasureTheory.sum_measureReal_singleton
-        (μ := Measure.pi (fun _ : Fin n => Q)) T]
+        (μ := Measure.pi (fun _ : Fin n ↦ Q)) T]
     rw [← hT_coe]
     rw [h_step]
-    refine Finset.sum_congr rfl fun x _ => h_pi_singleton_Q x
+    refine Finset.sum_congr rfl fun x _ ↦ h_pi_singleton_Q x
   rw [h_pi_real_eq_sum]
   -- Step 2: per-`x ∈ T`, `∏ q (x i) = (∏ p (x i)) · exp(-n·D)`.
   have h_per_point : ∀ x ∈ T,
@@ -207,7 +207,7 @@ theorem typeClass_Qn_le
             simp [hsum_p]
           have h_nonneg : ∀ x : Fin n → α, 0 ≤ ∏ i : Fin n, p (x i) := by
             intro x
-            exact Finset.prod_nonneg (fun i _ => (hp_pos (x i)).le)
+            exact Finset.prod_nonneg (fun i _ ↦ (hp_pos (x i)).le)
           calc (∑ x ∈ T, ∏ i : Fin n, p (x i))
               ≤ ∑ x : Fin n → α, ∏ i : Fin n, p (x i) := by
                 apply Finset.sum_le_sum_of_subset_of_nonneg
@@ -234,12 +234,12 @@ theorem klDivSumForm_eq_toReal_klDiv
   have h_int : Integrable (llr P Q) P := by
     refine ⟨(measurable_llr _ _).aestronglyMeasurable, ?_⟩
     rw [hasFiniteIntegral_iff_enorm, lintegral_fintype]
-    exact ENNReal.sum_lt_top.mpr fun _ _ =>
+    exact ENNReal.sum_lt_top.mpr fun _ _ ↦
       ENNReal.mul_lt_top ENNReal.coe_lt_top (measure_lt_top _ _)
   rw [integral_fintype h_int]
   -- ∑ a, P.real {a} • llr P Q a = ∑ a, P.real {a} * (log P.real{a} - log Q.real{a}).
   unfold klDivSumForm
-  refine Finset.sum_congr rfl fun a _ => ?_
+  refine Finset.sum_congr rfl fun a _ ↦ ?_
   -- term-wise equality.
   by_cases hPa : P.real {a} = 0
   · rw [hPa]; simp
@@ -281,7 +281,7 @@ theorem typeClass_Qn_le_klDiv
     (hQpos : ∀ a : α, 0 < Q.real {a})
     (hPQ : P ≪ Q)
     (n : ℕ) :
-    ((Measure.pi (fun _ : Fin n => Q)) (typeClass P n)).toReal
+    ((Measure.pi (fun _ : Fin n ↦ Q)) (typeClass P n)).toReal
       ≤ Real.exp (-((n : ℝ) * (klDiv P Q).toReal)) := by
   have h_eq : klDivSumForm P Q = (klDiv P Q).toReal :=
     klDivSumForm_eq_toReal_klDiv P Q hPQ hQpos

@@ -68,14 +68,14 @@ theorem encoder_failure_prob_le_exp_neg_M_avg
     ∫ x, (1 - p.real {y | (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε}) ^ M ∂P_X
       ≤ ∫ x, Real.exp (-(M : ℝ) *
           p.real {y | (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε}) ∂P_X := by
-  have h_int_pow : Integrable (fun x =>
+  have h_int_pow : Integrable (fun x ↦
       (1 - p.real {y | (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε}) ^ M) P_X := by
-    have h_meas : Measurable (fun x : Fin n → α =>
+    have h_meas : Measurable (fun x : Fin n → α ↦
         (1 - p.real {y | (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε}) ^ M) :=
       measurable_of_finite _
-    refine Integrable.mono' (g := fun _ => (1 : ℝ)) (integrable_const 1)
+    refine Integrable.mono' (g := fun _ ↦ (1 : ℝ)) (integrable_const 1)
       h_meas.aestronglyMeasurable ?_
-    refine Filter.Eventually.of_forall (fun x => ?_)
+    refine Filter.Eventually.of_forall (fun x ↦ ?_)
     have h_pos : 0 ≤ p.real {y | (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε} :=
       measureReal_nonneg
     have h_le : p.real {y | (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε} ≤ 1 :=
@@ -87,14 +87,14 @@ theorem encoder_failure_prob_le_exp_neg_M_avg
       exact pow_le_one₀ (by linarith) this
     rw [Real.norm_eq_abs, abs_of_nonneg hpow_nn]
     exact hpow_le
-  have h_int_exp : Integrable (fun x =>
+  have h_int_exp : Integrable (fun x ↦
       Real.exp (-(M : ℝ) * p.real {y | (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε})) P_X := by
-    have h_meas : Measurable (fun x : Fin n → α =>
+    have h_meas : Measurable (fun x : Fin n → α ↦
         Real.exp (-(M : ℝ) * p.real {y | (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε})) :=
       measurable_of_finite _
-    refine Integrable.mono' (g := fun _ => (1 : ℝ)) (integrable_const 1)
+    refine Integrable.mono' (g := fun _ ↦ (1 : ℝ)) (integrable_const 1)
       h_meas.aestronglyMeasurable ?_
-    refine Filter.Eventually.of_forall (fun x => ?_)
+    refine Filter.Eventually.of_forall (fun x ↦ ?_)
     have h_pos : 0 ≤ p.real {y | (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε} :=
       measureReal_nonneg
     have h_arg_le : -(M : ℝ) * p.real {y | (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε} ≤ 0 := by
@@ -160,25 +160,25 @@ theorem exists_codebook_low_avg
         (Finset.univ : Finset (Codebook M n β))
     rw [h_sum_eq, h_real_univ]
   have h_w_nn : ∀ c : Codebook M n β,
-      0 ≤ (codebookMeasure p M n).real {c} := fun _ => measureReal_nonneg
+      0 ≤ (codebookMeasure p M n).real {c} := fun _ ↦ measureReal_nonneg
   -- Strict-sum contradiction.
   have h_contra : B < ∑ c : Codebook M n β,
       (codebookMeasure p M n).real {c} * f c := by
     calc B = B * 1 := by ring
       _ = B * ∑ c : Codebook M n β, (codebookMeasure p M n).real {c} := by rw [h_sum_one]
       _ = ∑ c : Codebook M n β, (codebookMeasure p M n).real {c} * B := by
-          rw [Finset.mul_sum]; refine Finset.sum_congr rfl (fun _ _ => by ring)
+          rw [Finset.mul_sum]; refine Finset.sum_congr rfl (fun _ _ ↦ by ring)
       _ < ∑ c : Codebook M n β, (codebookMeasure p M n).real {c} * f c := by
           have h_each : ∀ c : Codebook M n β,
               (codebookMeasure p M n).real {c} * B
-                ≤ (codebookMeasure p M n).real {c} * f c := fun c =>
+                ≤ (codebookMeasure p M n).real {c} * f c := fun c ↦
             mul_le_mul_of_nonneg_left (h_none c).le (h_w_nn c)
           have h_exists_pos : ∃ c : Codebook M n β,
               0 < (codebookMeasure p M n).real {c} := by
             by_contra h_none_pos
             simp only [not_exists, not_lt] at h_none_pos
             have h_all_zero : ∀ c : Codebook M n β,
-                (codebookMeasure p M n).real {c} = 0 := fun c =>
+                (codebookMeasure p M n).real {c} = 0 := fun c ↦
               le_antisymm (h_none_pos c) (h_w_nn c)
             have : ∑ c : Codebook M n β,
                 (codebookMeasure p M n).real {c} = 0 := by
@@ -191,7 +191,7 @@ theorem exists_codebook_low_avg
               (codebookMeasure p M n).real {c₀} * B
                 < (codebookMeasure p M n).real {c₀} * f c₀ :=
             mul_lt_mul_of_pos_left (h_none c₀) hc₀_pos
-          exact Finset.sum_lt_sum (fun i _ => h_each i) ⟨c₀, Finset.mem_univ _, h_strict⟩
+          exact Finset.sum_lt_sum (fun i _ ↦ h_each i) ⟨c₀, Finset.mem_univ _, h_strict⟩
   exact (lt_irrefl _) (lt_of_le_of_lt h_avg h_contra)
 
 end InformationTheory.Shannon

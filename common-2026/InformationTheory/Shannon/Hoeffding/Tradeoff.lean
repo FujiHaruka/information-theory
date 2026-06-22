@@ -57,10 +57,10 @@ variable {α : Type*} [Fintype α] [Nonempty α]
 /-- Lift a pmf vector `P : α → ℝ` to `Measure α` via `PMF.ofFintype`. -/
 noncomputable def pmfToMeasure (P : α → ℝ)
     (hP_nn : ∀ a, 0 ≤ P a) (hP_sum : ∑ a, P a = 1) : Measure α :=
-  (PMF.ofFintype (fun a => ENNReal.ofReal (P a)) (by
+  (PMF.ofFintype (fun a ↦ ENNReal.ofReal (P a)) (by
     rw [show (1 : ℝ≥0∞) = ENNReal.ofReal 1 from (ENNReal.ofReal_one).symm]
     rw [← hP_sum]
-    rw [ENNReal.ofReal_sum_of_nonneg (fun a _ => hP_nn a)])).toMeasure
+    rw [ENNReal.ofReal_sum_of_nonneg (fun a _ ↦ hP_nn a)])).toMeasure
 
 instance pmfToMeasure_isProbabilityMeasure
     (P : α → ℝ) (hP_nn : ∀ a, 0 ≤ P a) (hP_sum : ∑ a, P a = 1) :
@@ -108,7 +108,7 @@ lemma sum_prod_pi_eq_pow_sum (P : α → ℝ) (n : ℕ) :
   have h := Finset.sum_pow' (s := (Finset.univ : Finset α)) (f := P) n
   rw [h]
   -- piFinset (fun _ => Finset.univ) = Finset.univ : Finset (Fin n → α)
-  rw [show (Fintype.piFinset (fun _ : Fin n => (Finset.univ : Finset α)))
+  rw [show (Fintype.piFinset (fun _ : Fin n ↦ (Finset.univ : Finset α)))
         = (Finset.univ : Finset (Fin n → α)) from Fintype.piFinset_univ]
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
@@ -143,7 +143,7 @@ lemma steinTypeII_at_level_pmf_nonneg
   · rintro β ⟨s, _, rfl⟩
     refine Finset.sum_nonneg ?_
     intro x _
-    exact Finset.prod_nonneg (fun i _ => hP₂_nn (x i))
+    exact Finset.prod_nonneg (fun i _ ↦ hP₂_nn (x i))
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- `steinTypeII_at_level_pmf P₁ P₂ n alpha ≤ 1`. -/
@@ -153,9 +153,9 @@ lemma steinTypeII_at_level_pmf_le_one
     steinTypeII_at_level_pmf P₁ P₂ n alpha ≤ 1 := by
   unfold steinTypeII_at_level_pmf
   refine csInf_le ?_ ?_
-  · exact ⟨0, fun β ⟨s, _, hβ⟩ => by
+  · exact ⟨0, fun β ⟨s, _, hβ⟩ ↦ by
       rw [hβ]
-      exact Finset.sum_nonneg (fun x _ => Finset.prod_nonneg (fun i _ => hP₂_nn (x i)))⟩
+      exact Finset.sum_nonneg (fun x _ ↦ Finset.prod_nonneg (fun i _ ↦ hP₂_nn (x i)))⟩
   · exact one_mem_steinBetaSet_pmf P₁ P₂ hP₁_sum hP₂_sum n alpha h_alpha_nn
 
 /-! ## Hoeffding constraint set convexity + Qstar full support -/
@@ -214,7 +214,7 @@ lemma hoeffding_minimizer_ge
     (hP_pos : ∀ a, 0 < P a) :
     klDivPmf Qstar P₂ ≤ klDivPmf P P₂ := by
   -- IsMinOn from hQs_min + hQs_mem.
-  have hQs_isMinOn : IsMinOn (fun Q : α → ℝ => klDivPmf Q P₂)
+  have hQs_isMinOn : IsMinOn (fun Q : α → ℝ ↦ klDivPmf Q P₂)
       (hoeffdingConstraintSet P₁ alpha) Qstar := by
     intro Q hQ
     -- Goal: klDivPmf Qstar P₂ ≤ klDivPmf Q P₂.
@@ -223,13 +223,13 @@ lemma hoeffding_minimizer_ge
     -- hoeffdingE2 ≤ klDivPmf Q P₂ since Q ∈ K.
     have h_E2_le : hoeffdingE2 P₁ P₂ alpha ≤ klDivPmf Q P₂ := by
       unfold hoeffdingE2
-      have h_bdd : BddBelow ((fun Q : α → ℝ => klDivPmf Q P₂) ''
+      have h_bdd : BddBelow ((fun Q : α → ℝ ↦ klDivPmf Q P₂) ''
           {Q : α → ℝ | Q ∈ stdSimplex ℝ α ∧ klDivPmf Q P₁ ≤ alpha}) := by
         refine ⟨0, ?_⟩
         rintro y ⟨Q', hQ', rfl⟩
-        exact klDivPmf_nonneg Q' P₂ hQ'.1.1 (fun a => (hP₂_pos a).le)
+        exact klDivPmf_nonneg Q' P₂ hQ'.1.1 (fun a ↦ (hP₂_pos a).le)
       have h_in_img :
-          klDivPmf Q P₂ ∈ (fun Q : α → ℝ => klDivPmf Q P₂) ''
+          klDivPmf Q P₂ ∈ (fun Q : α → ℝ ↦ klDivPmf Q P₂) ''
               {Q : α → ℝ | Q ∈ stdSimplex ℝ α ∧ klDivPmf Q P₁ ≤ alpha} :=
         ⟨Q, hQ_K, rfl⟩
       exact csInf_le h_bdd h_in_img
@@ -247,7 +247,7 @@ lemma hoeffding_minimizer_ge
     hP_mem hP_pos
   -- klDivPmf P P₂ ≥ klDivPmf P Qstar + klDivPmf Qstar P₂.
   have h_pq_nn : 0 ≤ klDivPmf P Qstar :=
-    klDivPmf_nonneg P Qstar (fun a => (hP_pos a).le) (fun a => (hQs_pos a).le)
+    klDivPmf_nonneg P Qstar (fun a ↦ (hP_pos a).le) (fun a ↦ (hQs_pos a).le)
   linarith
 
 end InformationTheory.Shannon.HoeffdingTradeoff

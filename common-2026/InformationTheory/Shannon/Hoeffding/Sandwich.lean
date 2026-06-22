@@ -63,7 +63,7 @@ lemma hoeffding_rate_isBoundedUnder_ge
     (P₁ P₂ : α → ℝ) (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
     (hP₂_nn : ∀ a, 0 ≤ P₂ a) {alpha : ℝ} (h_alpha_nn : 0 ≤ alpha) :
     Filter.IsBoundedUnder (· ≥ ·) atTop
-      (fun n : ℕ =>
+      (fun n : ℕ ↦
         -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha)) := by
   classical
   -- ∀ᶠ n ≥ 1, rate n ≥ 0.
@@ -132,13 +132,13 @@ lemma steinTypeII_at_level_pmf_ge_pow_pmin
       · intro i _
         -- P₁(x_i) ≤ ∑ a, P₁ a = 1.
         have h_single : P₁ (x i) ≤ ∑ a, P₁ a :=
-          Finset.single_le_sum (f := P₁) (fun a _ => (hP₁_pos a).le) (Finset.mem_univ _)
+          Finset.single_le_sum (f := P₁) (fun a _ ↦ (hP₁_pos a).le) (Finset.mem_univ _)
         rw [hP₁_sum] at h_single
         exact h_single
     -- So ∑_{x∈s} ∏ P₁ ≤ |s| · 1 = |s|.
     have h_s_card_ge : (1 : ℝ) - alpha ≤ s.card := by
       have h_sum_le : ∑ x ∈ s, ∏ i, P₁ (x i) ≤ ∑ _x ∈ s, (1 : ℝ) :=
-        Finset.sum_le_sum (fun x _ => h_p1_le_one x)
+        Finset.sum_le_sum (fun x _ ↦ h_p1_le_one x)
       rw [Finset.sum_const, Nat.smul_one_eq_cast] at h_sum_le
       linarith
     -- Now: ∑_{x∈s} ∏ P₂(x_i) ≥ ∑_{x∈s} (P₂ a₀)^n = |s| · (P₂ a₀)^n ≥ (1-alpha) · (P₂ a₀)^n.
@@ -148,10 +148,10 @@ lemma steinTypeII_at_level_pmf_ge_pow_pmin
           = ∏ _i : Fin n, P₂ a₀ := by
             rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin]
         _ ≤ ∏ i : Fin n, P₂ (x i) := by
-            refine Finset.prod_le_prod (fun i _ => (hP₂_pos a₀).le) (fun i _ => ?_)
+            refine Finset.prod_le_prod (fun i _ ↦ (hP₂_pos a₀).le) (fun i _ ↦ ?_)
             exact ha₀ (x i)
     have h_sum_p2_ge : ∑ x ∈ s, (P₂ a₀) ^ n ≤ ∑ x ∈ s, ∏ i, P₂ (x i) :=
-      Finset.sum_le_sum (fun x _ => h_p2_pow_le x)
+      Finset.sum_le_sum (fun x _ ↦ h_p2_pow_le x)
     -- ∑_{x∈s} (P₂ a₀)^n = |s| · (P₂ a₀)^n.
     rw [Finset.sum_const] at h_sum_p2_ge
     -- s.card • (P₂ a₀)^n = (s.card : ℝ) · (P₂ a₀)^n. Use nsmul_eq_mul.
@@ -172,7 +172,7 @@ lemma hoeffding_rate_isBoundedUnder_le
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
     {alpha : ℝ} (h_alpha_nn : 0 ≤ alpha) (h_alpha_lt : alpha < 1) :
     Filter.IsBoundedUnder (· ≤ ·) atTop
-      (fun n : ℕ =>
+      (fun n : ℕ ↦
         -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha)) := by
   classical
   -- Extract p_min := min over a of P₂ a > 0.
@@ -193,7 +193,7 @@ lemma hoeffding_rate_isBoundedUnder_le
   have h_lower :
       (1 - alpha) * p_min ^ n ≤ steinTypeII_at_level_pmf P₁ P₂ n alpha :=
     steinTypeII_at_level_pmf_ge_pow_pmin P₁ P₂ hP₁_pos hP₂_pos hP₁_sum hP₂_sum
-      h_alpha_nn h_alpha_lt n (a₀ := a₀) (fun a => ha₀ a (Finset.mem_univ _))
+      h_alpha_nn h_alpha_lt n (a₀ := a₀) (fun a ↦ ha₀ a (Finset.mem_univ _))
   have h_lb_pos : 0 < (1 - alpha) * p_min ^ n :=
     mul_pos h_one_minus_alpha_pos (pow_pos hpmin_pos n)
   have h_stein_pos : 0 < steinTypeII_at_level_pmf P₁ P₂ n alpha :=

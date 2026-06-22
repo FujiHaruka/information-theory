@@ -28,9 +28,9 @@ theorem debruijnIdentityV2_holds_assembled_chain_entDeriv_formula
     (pX : ℝ → ℝ) {t : ℝ} (ht : 0 < t) (x : ℝ) (D : ℝ)
     (hpos : convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x ≠ 0)
     (hpath_deriv : HasDerivAt
-      (fun s : ℝ => convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x) D t) :
+      (fun s : ℝ ↦ convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x) D t) :
     HasDerivAt
-      (fun s : ℝ => Real.negMulLog
+      (fun s : ℝ ↦ Real.negMulLog
         (convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x))
       ((- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) - 1) * D)
       t := by
@@ -50,14 +50,14 @@ theorem debruijnIdentityV2_holds_assembled_chain_entDeriv_formula
 
 @audit:ok -/
 private theorem integrable_natPow_mul_exp_neg_mul_sq {b : ℝ} (hb : 0 < b) (k : ℕ) :
-    Integrable (fun x : ℝ => x ^ k * Real.exp (-b * x ^ 2)) volume := by
+    Integrable (fun x : ℝ ↦ x ^ k * Real.exp (-b * x ^ 2)) volume := by
   have hk : (-1 : ℝ) < (k : ℝ) := by
     have : (0:ℝ) ≤ (k : ℝ) := Nat.cast_nonneg k
     linarith
   have hrpow := integrable_rpow_mul_exp_neg_mul_sq hb hk
   -- bridge `x ^ (k:ℝ)` (rpow) to `x ^ k` (pow): equal everywhere by `Real.rpow_natCast`.
-  have hcongr : (fun x : ℝ => x ^ (k : ℝ) * Real.exp (-b * x ^ 2))
-      = fun x : ℝ => x ^ k * Real.exp (-b * x ^ 2) := by
+  have hcongr : (fun x : ℝ ↦ x ^ (k : ℝ) * Real.exp (-b * x ^ 2))
+      = fun x : ℝ ↦ x ^ k * Real.exp (-b * x ^ 2) := by
     funext x; rw [Real.rpow_natCast]
   rwa [hcongr] at hrpow
 
@@ -89,18 +89,18 @@ private theorem convDensityAdd_le_prefactor
   set pref : ℝ := (Real.sqrt (2 * Real.pi * (⟨s, hs.le⟩ : ℝ≥0)))⁻¹ with hpref
   have hpref_nn : 0 ≤ pref := by rw [hpref]; positivity
   -- integrand `F y := pX y * g_s(x-y)` integrable; majorant `pX y * pref` integrable.
-  have hF_int : Integrable (fun y => pX y * gaussianPDFReal 0 ⟨s, hs.le⟩ (x - y)) volume := by
+  have hF_int : Integrable (fun y ↦ pX y * gaussianPDFReal 0 ⟨s, hs.le⟩ (x - y)) volume := by
     refine hpX_int.mul_bdd (c := pref) ?_ ?_
     · exact ((measurable_gaussianPDFReal 0 ⟨s, hs.le⟩).comp
         (measurable_const.sub measurable_id)).aestronglyMeasurable
-    · refine Filter.Eventually.of_forall (fun y => ?_)
+    · refine Filter.Eventually.of_forall (fun y ↦ ?_)
       rw [Real.norm_eq_abs, abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (x - y))]
       exact gaussianPDFReal_le_prefactor' ⟨s, hs.le⟩ (x - y)
-  have hmaj_int : Integrable (fun y => pX y * pref) volume := hpX_int.mul_const _
+  have hmaj_int : Integrable (fun y ↦ pX y * pref) volume := hpX_int.mul_const _
   -- `∫ F ≤ ∫ (pX · pref) = pref · ∫ pX = pref`.
   have hle : (∫ y, pX y * gaussianPDFReal 0 ⟨s, hs.le⟩ (x - y) ∂volume)
       ≤ ∫ y, pX y * pref ∂volume := by
-    refine integral_mono hF_int hmaj_int (fun y => ?_)
+    refine integral_mono hF_int hmaj_int (fun y ↦ ?_)
     exact mul_le_mul_of_nonneg_left (gaussianPDFReal_le_prefactor' ⟨s, hs.le⟩ (x - y)) (hpX_nn y)
   rwa [integral_mul_const, hpX_mass, one_mul] at hle
 
@@ -136,8 +136,8 @@ private theorem convDensityAdd_lower_bound_gaussian_uniformR
   -- STEP 1 (tightness, `s`-independent): `∃ R > 0, ∫_{[-R,R]} pX ≥ 1/2`.
   obtain ⟨R, hR_pos, hR_mass⟩ :
       ∃ R : ℝ, 0 < R ∧ (1:ℝ)/2 ≤ ∫ y in Set.Icc (-R) R, pX y ∂volume := by
-    set sN : ℕ → Set ℝ := fun n => Set.Icc (-(n:ℝ)) (n:ℝ) with hsN_def
-    have hsN_meas : ∀ n, MeasurableSet (sN n) := fun n => measurableSet_Icc
+    set sN : ℕ → Set ℝ := fun n ↦ Set.Icc (-(n:ℝ)) (n:ℝ) with hsN_def
+    have hsN_meas : ∀ n, MeasurableSet (sN n) := fun n ↦ measurableSet_Icc
     have hsN_mono : Monotone sN := by
       intro m n hmn
       apply Set.Icc_subset_Icc
@@ -159,16 +159,16 @@ private theorem convDensityAdd_lower_bound_gaussian_uniformR
     obtain ⟨N, hN⟩ := (hev.and (Filter.eventually_gt_atTop 0)).exists
     refine ⟨(N:ℝ), by exact_mod_cast hN.2, ?_⟩
     rw [hsN_def] at hN; exact hN.1.le
-  refine ⟨R, hR_pos, fun s hs x => ?_⟩
+  refine ⟨R, hR_pos, fun s hs x ↦ ?_⟩
   set g : ℝ → ℝ := gaussianPDFReal 0 ⟨s, hs.le⟩ with hg_def
   -- integrand `F y := pX y * g (x - y)` nonnegative + integrable.
-  set F : ℝ → ℝ := fun y => pX y * g (x - y) with hF_def
-  have hF_nn : ∀ y, 0 ≤ F y := fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ (x - y))
+  set F : ℝ → ℝ := fun y ↦ pX y * g (x - y) with hF_def
+  have hF_nn : ∀ y, 0 ≤ F y := fun y ↦ mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ (x - y))
   have hF_int : Integrable F volume := by
     refine hpX_int.mul_bdd (c := (Real.sqrt (2 * Real.pi * (⟨s, hs.le⟩ : ℝ≥0)))⁻¹) ?_ ?_
     · exact ((measurable_gaussianPDFReal 0 ⟨s, hs.le⟩).comp
         (measurable_const.sub measurable_id)).aestronglyMeasurable
-    · refine Filter.Eventually.of_forall (fun y => ?_)
+    · refine Filter.Eventually.of_forall (fun y ↦ ?_)
       rw [Real.norm_eq_abs, abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (x - y))]
       exact gaussianPDFReal_le_prefactor' ⟨s, hs.le⟩ (x - y)
   -- STEP 2: drop the integral to the box `Icc (-R) R`.
@@ -188,7 +188,7 @@ private theorem convDensityAdd_lower_bound_gaussian_uniformR
         refine gaussianPDFReal_antitone_abs' ⟨s, hs.le⟩ ?_
         rwa [abs_of_nonneg hxR_nn]
       exact mul_le_mul_of_nonneg_left hmono (hpX_nn y)
-    have hlb_int : IntegrableOn (fun y => pX y * g (|x| + R)) (Set.Icc (-R) R) volume :=
+    have hlb_int : IntegrableOn (fun y ↦ pX y * g (|x| + R)) (Set.Icc (-R) R) volume :=
       hpX_int.integrableOn.mul_const _
     have hstep : (∫ y in Set.Icc (-R) R, pX y * g (|x| + R) ∂volume)
         ≤ ∫ y in Set.Icc (-R) R, F y ∂volume :=
@@ -234,7 +234,7 @@ theorem convDensityAdd_logFactor_poly_majorant
   set A_lo : ℝ := 1 - (1/2) * Real.log (Real.pi * t) with hA_lo
   refine ⟨max A_up A_lo, 2 / t, by positivity, ?_⟩
   -- the bound is pointwise in `x`, holds for every `x` (so trivially a.e.).
-  refine Filter.Eventually.of_forall (fun x s hs => ?_)
+  refine Filter.Eventually.of_forall (fun x s hs ↦ ?_)
   have hspos : (0:ℝ) < s := by have := hs.1; linarith
   set g : ℝ → ℝ := gaussianPDFReal 0 ⟨s, hspos.le⟩ with hg_def
   set p : ℝ := convDensityAdd pX g x with hp_def
@@ -410,20 +410,20 @@ theorem gaussHessMaj_integrable {t : ℝ} (ht : 0 < t) :
     Integrable (gaussHessMaj t) volume := by
   have hb : (0:ℝ) < 1 / (4 * t) := by positivity
   -- the two Gaussian building blocks: `exp(-b u²)` and `|u|² · exp(-b u²)`.
-  have hexp : Integrable (fun u : ℝ => Real.exp (-(1 / (4 * t)) * u ^ 2)) volume :=
+  have hexp : Integrable (fun u : ℝ ↦ Real.exp (-(1 / (4 * t)) * u ^ 2)) volume :=
     integrable_exp_neg_mul_sq hb
-  have hsq : Integrable (fun u : ℝ => u ^ 2 * Real.exp (-(1 / (4 * t)) * u ^ 2)) volume := by
+  have hsq : Integrable (fun u : ℝ ↦ u ^ 2 * Real.exp (-(1 / (4 * t)) * u ^ 2)) volume := by
     have := integrable_rpow_mul_exp_neg_mul_sq hb (by norm_num : (-1:ℝ) < 2)
-    refine this.congr (Filter.Eventually.of_forall (fun u => ?_))
+    refine this.congr (Filter.Eventually.of_forall (fun u ↦ ?_))
     simp only [Real.rpow_two]
   -- assemble `gaussHessMaj` as a linear combination of the two.
   have hcomb : Integrable
-      (fun u : ℝ => (Real.sqrt (Real.pi * t))⁻¹ * (4 / t ^ 2)
+      (fun u : ℝ ↦ (Real.sqrt (Real.pi * t))⁻¹ * (4 / t ^ 2)
             * (u ^ 2 * Real.exp (-(1 / (4 * t)) * u ^ 2))
           + (Real.sqrt (Real.pi * t))⁻¹ * (2 / t)
             * Real.exp (-(1 / (4 * t)) * u ^ 2)) volume :=
     (hsq.const_mul _).add (hexp.const_mul _)
-  refine hcomb.congr (Filter.Eventually.of_forall (fun u => ?_))
+  refine hcomb.congr (Filter.Eventually.of_forall (fun u ↦ ?_))
   -- pointwise: `gaussHessMaj t u = ` the combination.
   unfold gaussHessMaj
   have hexp_eq : Real.exp (-u ^ 2 / (4 * t)) = Real.exp (-(1 / (4 * t)) * u ^ 2) := by
@@ -435,18 +435,18 @@ is Lebesgue-integrable (a Gaussian times a quartic).
 
 @audit:ok -/
 theorem gaussHessMaj_polyWeight_integrable {t : ℝ} (ht : 0 < t) (a b : ℝ) :
-    Integrable (fun u : ℝ => (a + b * u ^ 2) * gaussHessMaj t u) volume := by
+    Integrable (fun u : ℝ ↦ (a + b * u ^ 2) * gaussHessMaj t u) volume := by
   have hbpos : (0:ℝ) < 1 / (4 * t) := by positivity
   -- the three Gaussian moment building blocks: `exp`, `u²·exp`, `u⁴·exp`.
-  have hexp : Integrable (fun u : ℝ => Real.exp (-(1 / (4 * t)) * u ^ 2)) volume :=
+  have hexp : Integrable (fun u : ℝ ↦ Real.exp (-(1 / (4 * t)) * u ^ 2)) volume :=
     integrable_exp_neg_mul_sq hbpos
-  have hsq : Integrable (fun u : ℝ => u ^ 2 * Real.exp (-(1 / (4 * t)) * u ^ 2)) volume := by
+  have hsq : Integrable (fun u : ℝ ↦ u ^ 2 * Real.exp (-(1 / (4 * t)) * u ^ 2)) volume := by
     have := integrable_rpow_mul_exp_neg_mul_sq hbpos (by norm_num : (-1:ℝ) < 2)
-    refine this.congr (Filter.Eventually.of_forall (fun u => ?_))
+    refine this.congr (Filter.Eventually.of_forall (fun u ↦ ?_))
     simp only [Real.rpow_two]
-  have hquart : Integrable (fun u : ℝ => u ^ 4 * Real.exp (-(1 / (4 * t)) * u ^ 2)) volume := by
+  have hquart : Integrable (fun u : ℝ ↦ u ^ 4 * Real.exp (-(1 / (4 * t)) * u ^ 2)) volume := by
     have := integrable_rpow_mul_exp_neg_mul_sq hbpos (by norm_num : (-1:ℝ) < 4)
-    refine this.congr (Filter.Eventually.of_forall (fun u => ?_))
+    refine this.congr (Filter.Eventually.of_forall (fun u ↦ ?_))
     simp only []
     rw [show ((4:ℝ)) = ((4:ℕ):ℝ) by norm_num, Real.rpow_natCast]
   -- `(a+b·u²)·gaussHessMaj t u = c·exp·[(a + b·u²)·(4u²/t² + 2/t)]`
@@ -454,13 +454,13 @@ theorem gaussHessMaj_polyWeight_integrable {t : ℝ} (ht : 0 < t) (a b : ℝ) :
   --   — a linear combo of exp, u²·exp, u⁴·exp.
   set c : ℝ := (Real.sqrt (Real.pi * t))⁻¹ with hc
   have hcomb : Integrable
-      (fun u : ℝ =>
+      (fun u : ℝ ↦
           c * (4 * b / t ^ 2) * (u ^ 4 * Real.exp (-(1 / (4 * t)) * u ^ 2))
         + (c * (4 * a / t ^ 2) + c * (2 * b / t))
             * (u ^ 2 * Real.exp (-(1 / (4 * t)) * u ^ 2))
         + c * (2 * a / t) * Real.exp (-(1 / (4 * t)) * u ^ 2)) volume :=
     ((hquart.const_mul _).add (hsq.const_mul _)).add (hexp.const_mul _)
-  refine hcomb.congr (Filter.Eventually.of_forall (fun u => ?_))
+  refine hcomb.congr (Filter.Eventually.of_forall (fun u ↦ ?_))
   simp only []
   unfold gaussHessMaj
   have hexp_eq : Real.exp (-u ^ 2 / (4 * t)) = Real.exp (-(1 / (4 * t)) * u ^ 2) := by
@@ -611,15 +611,15 @@ theorem gaussianHess_le_gaussHessMaj {t : ℝ} (ht : 0 < t) {s : ℝ}
 theorem convKernel_envelope_integrable
     (pX K : ℝ → ℝ) (hpX_int : Integrable pX volume) (hpX_meas : Measurable pX)
     (hK_int : Integrable K volume) (hK_meas : Measurable K) :
-    Integrable (fun x => ∫ y, pX y * K (x - y) ∂volume) volume := by
+    Integrable (fun x ↦ ∫ y, pX y * K (x - y) ∂volume) volume := by
   -- the 2D integrand `f (x,y) = pX y · K (x − y)`.
-  set f : ℝ × ℝ → ℝ := fun p => pX p.2 * K (p.1 - p.2) with hf_def
+  set f : ℝ × ℝ → ℝ := fun p ↦ pX p.2 * K (p.1 - p.2) with hf_def
   -- a.e.-strong measurability of `f` on the product measure.
   have hf_meas : AEStronglyMeasurable f (volume.prod volume) := by
-    have h1 : AEStronglyMeasurable (fun p : ℝ × ℝ => pX p.2) (volume.prod volume) :=
+    have h1 : AEStronglyMeasurable (fun p : ℝ × ℝ ↦ pX p.2) (volume.prod volume) :=
       (hpX_meas.comp measurable_snd).aestronglyMeasurable
-    have h2 : AEStronglyMeasurable (fun p : ℝ × ℝ => K (p.1 - p.2)) (volume.prod volume) := by
-      have hsub : Measurable (fun p : ℝ × ℝ => p.1 - p.2) := measurable_fst.sub measurable_snd
+    have h2 : AEStronglyMeasurable (fun p : ℝ × ℝ ↦ K (p.1 - p.2)) (volume.prod volume) := by
+      have hsub : Measurable (fun p : ℝ × ℝ ↦ p.1 - p.2) := measurable_fst.sub measurable_snd
       exact (hK_meas.comp hsub).aestronglyMeasurable
     exact h1.mul h2
   -- `f` is integrable on the product via `integrable_prod_iff'`.
@@ -627,17 +627,17 @@ theorem convKernel_envelope_integrable
     rw [integrable_prod_iff' hf_meas]
     refine ⟨?_, ?_⟩
     · -- for each `y`, `x ↦ pX y · K (x − y)` is integrable.
-      refine Filter.Eventually.of_forall (fun y => ?_)
+      refine Filter.Eventually.of_forall (fun y ↦ ?_)
       exact (hK_int.comp_sub_right y).const_mul (pX y)
     · -- `y ↦ ∫ x ‖pX y · K(x−y)‖ dx = (∫‖K‖) · ‖pX y‖` is integrable.
-      have hKnorm : Integrable (fun x => ‖K x‖) volume := hK_int.norm
-      have heq : (fun y => ∫ x, ‖f (x, y)‖ ∂volume)
-          = (fun y => ‖pX y‖ * ∫ x, ‖K x‖ ∂volume) := by
+      have hKnorm : Integrable (fun x ↦ ‖K x‖) volume := hK_int.norm
+      have heq : (fun y ↦ ∫ x, ‖f (x, y)‖ ∂volume)
+          = (fun y ↦ ‖pX y‖ * ∫ x, ‖K x‖ ∂volume) := by
         funext y
         simp only [hf_def, norm_mul]
         rw [integral_const_mul]
         congr 1
-        rw [← integral_sub_right_eq_self (fun x => ‖K x‖) y]
+        rw [← integral_sub_right_eq_self (fun x ↦ ‖K x‖) y]
       rw [heq]
       exact (hpX_int.norm.mul_const _)
   -- conclude via `Integrable.integral_prod_left`.

@@ -52,7 +52,7 @@ def IsSufficientStatistic
     (μ : Measure Ω) [IsFiniteMeasure μ]
     [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Θ] [Nonempty Θ]
     (θ : Ω → Θ) (Xs : Ω → X) (f : X → T') : Prop :=
-  IsMarkovChain μ Xs (fun ω => f (Xs ω)) θ
+  IsMarkovChain μ Xs (fun ω ↦ f (Xs ω)) θ
 
 /-- Cover-Thomas 2.9: if `T` is sufficient for `θ`, then `I(θ; X) = I(θ; T(X))`.
 
@@ -66,16 +66,16 @@ theorem mutualInfo_eq_of_sufficient
     (θ : Ω → Θ) (Xs : Ω → X) {f : X → T'}
     (hθ : Measurable θ) (hXs : Measurable Xs) (hf : Measurable f)
     (hsuff : IsSufficientStatistic μ θ Xs f) :
-    mutualInfo μ θ Xs = mutualInfo μ θ (fun ω => f (Xs ω)) := by
-  have hfXs : Measurable (fun ω => f (Xs ω)) := hf.comp hXs
+    mutualInfo μ θ Xs = mutualInfo μ θ (fun ω ↦ f (Xs ω)) := by
+  have hfXs : Measurable (fun ω ↦ f (Xs ω)) := hf.comp hXs
   -- (≥) T(X) = f∘Xs is a deterministic post-processing of Xs.
-  have h_ge : mutualInfo μ θ (fun ω => f (Xs ω)) ≤ mutualInfo μ θ Xs :=
+  have h_ge : mutualInfo μ θ (fun ω ↦ f (Xs ω)) ≤ mutualInfo μ θ Xs :=
     mutualInfo_le_of_postprocess μ θ Xs hθ hXs hf
   -- (≤) DPI from the Markov chain `Xs → f∘Xs → θ`, then flip both sides via `mutualInfo_comm`.
-  have h_markov : mutualInfo μ Xs θ ≤ mutualInfo μ (fun ω => f (Xs ω)) θ :=
-    mutualInfo_le_of_markov μ Xs (fun ω => f (Xs ω)) θ hXs hfXs hθ hsuff
-  have h_le : mutualInfo μ θ Xs ≤ mutualInfo μ θ (fun ω => f (Xs ω)) := by
-    rw [mutualInfo_comm μ θ Xs hθ hXs, mutualInfo_comm μ θ (fun ω => f (Xs ω)) hθ hfXs]
+  have h_markov : mutualInfo μ Xs θ ≤ mutualInfo μ (fun ω ↦ f (Xs ω)) θ :=
+    mutualInfo_le_of_markov μ Xs (fun ω ↦ f (Xs ω)) θ hXs hfXs hθ hsuff
+  have h_le : mutualInfo μ θ Xs ≤ mutualInfo μ θ (fun ω ↦ f (Xs ω)) := by
+    rw [mutualInfo_comm μ θ Xs hθ hXs, mutualInfo_comm μ θ (fun ω ↦ f (Xs ω)) hθ hfXs]
     exact h_markov
   exact le_antisymm h_le h_ge
 
@@ -91,9 +91,9 @@ def IsSufficientStatisticFactorized
     (μ : Measure Ω) [IsFiniteMeasure μ]
     [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Θ] [Nonempty Θ]
     (θ : Ω → Θ) (Xs : Ω → X) (f : X → T') : Prop :=
-  condDistrib Xs (fun ω => (f (Xs ω), θ ω)) μ
-    =ᵐ[μ.map (fun ω => (f (Xs ω), θ ω))]
-      (condDistrib Xs (fun ω => f (Xs ω)) μ).prodMkRight Θ
+  condDistrib Xs (fun ω ↦ (f (Xs ω), θ ω)) μ
+    =ᵐ[μ.map (fun ω ↦ (f (Xs ω), θ ω))]
+      (condDistrib Xs (fun ω ↦ f (Xs ω)) μ).prodMkRight Θ
 
 /-- The markov-form and the Neyman-Fisher factorization form of sufficiency are equivalent:
 both express `X ⊥ θ ∣ T(X)`.
@@ -112,19 +112,19 @@ theorem isSufficient_iff_factorized
     (θ : Ω → Θ) (Xs : Ω → X) {f : X → T'}
     (hθ : Measurable θ) (hXs : Measurable Xs) (hf : Measurable f) :
     IsSufficientStatistic μ θ Xs f ↔ IsSufficientStatisticFactorized μ θ Xs f := by
-  have hfXs : Measurable (fun ω => f (Xs ω)) := hf.comp hXs
+  have hfXs : Measurable (fun ω ↦ f (Xs ω)) := hf.comp hXs
   -- (A) markov γ-form ↔ condIndepFun `Xs ⟂ᵢ[f∘Xs] θ`
   have hA : IsSufficientStatistic μ θ Xs f
-      ↔ Xs ⟂ᵢ[fun ω => f (Xs ω), hfXs; μ] θ := by
+      ↔ Xs ⟂ᵢ[fun ω ↦ f (Xs ω), hfXs; μ] θ := by
     unfold IsSufficientStatistic IsMarkovChain
     rw [condIndepFun_iff_map_prod_eq_prod_condDistrib_prod_condDistrib hXs hθ hfXs,
         Measure.compProd_eq_comp_prod]
   -- (B) symmetry of condIndepFun
-  have hB : (Xs ⟂ᵢ[fun ω => f (Xs ω), hfXs; μ] θ)
-      ↔ (θ ⟂ᵢ[fun ω => f (Xs ω), hfXs; μ] Xs) :=
+  have hB : (Xs ⟂ᵢ[fun ω ↦ f (Xs ω), hfXs; μ] θ)
+      ↔ (θ ⟂ᵢ[fun ω ↦ f (Xs ω), hfXs; μ] Xs) :=
     ⟨CondIndepFun.symm, CondIndepFun.symm⟩
   -- (C) `θ ⟂ᵢ[f∘Xs] Xs` ↔ factorization form
-  have hC : (θ ⟂ᵢ[fun ω => f (Xs ω), hfXs; μ] Xs)
+  have hC : (θ ⟂ᵢ[fun ω ↦ f (Xs ω), hfXs; μ] Xs)
       ↔ IsSufficientStatisticFactorized μ θ Xs f := by
     unfold IsSufficientStatisticFactorized
     rw [condIndepFun_iff_condDistrib_prod_ae_eq_prodMkRight hXs hθ hfXs]

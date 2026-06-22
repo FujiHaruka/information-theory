@@ -41,8 +41,8 @@ above. Letting `ε → 0⁺` collapses the upper bound back to `(klDiv P Q).toRe
 noncomputable def steinBetaSet
     (P Q : Measure α) (n : ℕ) (ε : ℝ) : Set ℝ :=
   { β : ℝ | ∃ (s : Set (Fin n → α)), MeasurableSet s ∧
-        ((Measure.pi (fun _ : Fin n => P)) sᶜ).toReal ≤ ε ∧
-        β = ((Measure.pi (fun _ : Fin n => Q)) s).toReal }
+        ((Measure.pi (fun _ : Fin n ↦ P)) sᶜ).toReal ≤ ε ∧
+        β = ((Measure.pi (fun _ : Fin n ↦ Q)) s).toReal }
 
 /-- The optimal type-II error subject to type-I ≤ ε. -/
 @[entry_point]
@@ -60,9 +60,9 @@ lemma one_mem_steinBetaSet
   · rw [Set.compl_univ]
     simp only [measure_empty, ENNReal.toReal_zero]
     exact hε
-  · show 1 = ((Measure.pi (fun _ : Fin n => Q)) Set.univ).toReal
-    rw [show ((Measure.pi (fun _ : Fin n => Q)) Set.univ).toReal
-      = (Measure.pi (fun _ : Fin n => Q)).real Set.univ from rfl, probReal_univ]
+  · show 1 = ((Measure.pi (fun _ : Fin n ↦ Q)) Set.univ).toReal
+    rw [show ((Measure.pi (fun _ : Fin n ↦ Q)) Set.univ).toReal
+      = (Measure.pi (fun _ : Fin n ↦ Q)).real Set.univ from rfl, probReal_univ]
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 lemma steinBetaSet_nonempty
@@ -85,7 +85,7 @@ lemma steinOptimalBeta_nonneg
     (P Q : Measure α) (n : ℕ) (ε : ℝ) :
     0 ≤ steinOptimalBeta P Q n ε := by
   by_cases h : (steinBetaSet P Q n ε).Nonempty
-  · exact le_csInf h fun _ ⟨_, _, _, hβ⟩ => hβ ▸ ENNReal.toReal_nonneg
+  · exact le_csInf h fun _ ⟨_, _, _, hβ⟩ ↦ hβ ▸ ENNReal.toReal_nonneg
   · simp [steinOptimalBeta, Set.not_nonempty_iff_eq_empty.mp h, Real.sInf_empty]
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
@@ -106,13 +106,13 @@ lemma exp_le_Qn_of_alpha_level
     {ε : ℝ} (hε : 0 < ε) (hε1 : ε < 1)
     {n : ℕ} (hn : 0 < n)
     (s : Set (Fin n → α)) (hs : MeasurableSet s)
-    (hα : ((Measure.pi (fun _ : Fin n => P)) sᶜ).toReal ≤ ε) :
+    (hα : ((Measure.pi (fun _ : Fin n ↦ P)) sᶜ).toReal ≤ ε) :
     Real.exp (-((n : ℝ) * ((klDiv P Q).toReal / (1 - ε)
         + Real.log 2 / ((n : ℝ) * (1 - ε)))))
-      ≤ ((Measure.pi (fun _ : Fin n => Q)) s).toReal := by
+      ≤ ((Measure.pi (fun _ : Fin n ↦ Q)) s).toReal := by
   -- Q^n s > 0: reproduce the argument from stein_converse_finite_n.
-  set Qn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n => Q)
-  set Pn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n => P)
+  set Qn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n ↦ Q)
+  set Pn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n ↦ P)
   have hn_R_pos : (0 : ℝ) < n := by exact_mod_cast hn
   have h_one_sub_eps_pos : (0 : ℝ) < 1 - ε := by linarith
   -- P^n s ≥ 1 - ε > 0, hence s nonempty, hence Q^n s ≥ Q^n {x_witness} > 0.
@@ -126,21 +126,21 @@ lemma exp_le_Qn_of_alpha_level
     rw [h_empty] at h_Pn_s_pos; simp at h_Pn_s_pos
   obtain ⟨x_w, hx_in_s⟩ := h_s_nonempty
   have h_Qn_x_pos : 0 < Qn.real {x_w} := by
-    show 0 < ((Measure.pi (fun _ : Fin n => Q)) {x_w}).toReal
+    show 0 < ((Measure.pi (fun _ : Fin n ↦ Q)) {x_w}).toReal
     rw [Measure.pi_singleton, ENNReal.toReal_prod]
-    exact Finset.prod_pos (fun i _ => hQpos (x_w i))
+    exact Finset.prod_pos (fun i _ ↦ hQpos (x_w i))
   have h_Qn_s_pos : 0 < Qn.real s := by
     have h_subset : ({x_w} : Set (Fin n → α)) ⊆ s := by
       intro y hy; simp only [Set.mem_singleton_iff] at hy; rw [hy]; exact hx_in_s
     have := MeasureTheory.measureReal_mono (μ := Qn) h_subset
     linarith
-  have h_Qn_s_real_pos : 0 < ((Measure.pi (fun _ : Fin n => Q)) s).toReal := h_Qn_s_pos
+  have h_Qn_s_real_pos : 0 < ((Measure.pi (fun _ : Fin n ↦ Q)) s).toReal := h_Qn_s_pos
   -- Apply stein_converse_finite_n.
   have h_conv := stein_converse_finite_n P Q hPpos hPQ hQpos hε hε1 hn s hs hα
   -- h_conv : -(1/n) * log Q^n s ≤ K/(1-ε) + log 2/(n(1-ε))
   -- Multiply both sides by -n: log Q^n s ≥ -n * (K/(1-ε) + log 2/(n(1-ε)))
   set B : ℝ := (klDiv P Q).toReal / (1 - ε) + Real.log 2 / ((n : ℝ) * (1 - ε))
-  have h_log_ge : Real.log ((Measure.pi (fun _ : Fin n => Q)) s).toReal ≥ -((n : ℝ) * B) := by
+  have h_log_ge : Real.log ((Measure.pi (fun _ : Fin n ↦ Q)) s).toReal ≥ -((n : ℝ) * B) := by
     have h_neg_inv_lt : -((1 : ℝ) / n) < 0 := by
       have : (0 : ℝ) < 1 / n := one_div_pos.mpr hn_R_pos
       linarith
@@ -150,20 +150,20 @@ lemma exp_le_Qn_of_alpha_level
     -- Multiply h_conv by -n (negative) flips: log Q^n s ≥ -n * B.
     -- Concretely: log Q^n s = (-n) * (-(1/n) * log Q^n s) and -(1/n) log Q^n s ≤ B.
     have h_step : (-(n : ℝ)) *
-          (-((1 : ℝ) / n) * Real.log ((Measure.pi (fun _ : Fin n => Q)) s).toReal)
+          (-((1 : ℝ) / n) * Real.log ((Measure.pi (fun _ : Fin n ↦ Q)) s).toReal)
         ≥ (-(n : ℝ)) * B := by
       apply mul_le_mul_of_nonpos_left h_conv
       linarith
     have h_simp : (-(n : ℝ)) *
-          (-((1 : ℝ) / n) * Real.log ((Measure.pi (fun _ : Fin n => Q)) s).toReal)
-        = Real.log ((Measure.pi (fun _ : Fin n => Q)) s).toReal := by
+          (-((1 : ℝ) / n) * Real.log ((Measure.pi (fun _ : Fin n ↦ Q)) s).toReal)
+        = Real.log ((Measure.pi (fun _ : Fin n ↦ Q)) s).toReal := by
       field_simp
     rw [h_simp] at h_step
     linarith
   -- exp_le_exp + Real.exp_log h_Qn_s_real_pos:
   have h_exp_chain :
       Real.exp (-((n : ℝ) * B))
-        ≤ Real.exp (Real.log ((Measure.pi (fun _ : Fin n => Q)) s).toReal) :=
+        ≤ Real.exp (Real.log ((Measure.pi (fun _ : Fin n ↦ Q)) s).toReal) :=
     Real.exp_le_exp.mpr h_log_ge
   rw [Real.exp_log h_Qn_s_real_pos] at h_exp_chain
   exact h_exp_chain
@@ -233,10 +233,10 @@ theorem steinOptimalBeta_log_ge_of_achievability
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (hMap : μ.map (Xs 0) = P)
-    (hMapJoint : ∀ n, μ.map (jointRV Xs n) = Measure.pi (fun _ : Fin n => P))
+    (hMapJoint : ∀ n, μ.map (jointRV Xs n) = Measure.pi (fun _ : Fin n ↦ P))
     (hPpos : ∀ x : α, 0 < P.real {x})
     (hPQ : P ≪ Q) (hQpos : ∀ x : α, 0 < Q.real {x})
     {ε δ : ℝ} (hε : 0 < ε) (hε1 : ε < 1) (hδ : 0 < δ) :
@@ -249,7 +249,7 @@ theorem steinOptimalBeta_log_ge_of_achievability
   obtain ⟨s, hs_meas, hs_alpha, hs_log⟩ := h_ex
   -- hs_log : K - δ ≤ -(1/n) log Q^n s
   -- (Q^n s).toReal ∈ steinBetaSet, so steinOptimalBeta ≤ Q^n s.
-  set Qn_s : ℝ := ((Measure.pi (fun _ : Fin n => Q)) s).toReal with hQns_def
+  set Qn_s : ℝ := ((Measure.pi (fun _ : Fin n ↦ Q)) s).toReal with hQns_def
   have h_in_set : Qn_s ∈ steinBetaSet P Q n ε := ⟨s, hs_meas, hs_alpha, rfl⟩
   have h_optBeta_le : steinOptimalBeta P Q n ε ≤ Qn_s :=
     csInf_le (steinBetaSet_bddBelow P Q n ε) h_in_set
@@ -257,8 +257,8 @@ theorem steinOptimalBeta_log_ge_of_achievability
   have h_opt_pos := steinOptimalBeta_pos P Q hPpos hPQ hQpos hε hε1 hn_pos
   -- Qn_s > 0: reproduce from the achievability proof's argument (Q^n s ≥ Q^n {x} > 0).
   have hn_R_pos : (0 : ℝ) < n := by exact_mod_cast hn_pos
-  set Pn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n => P)
-  set Qn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n => Q)
+  set Pn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n ↦ P)
+  set Qn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n ↦ Q)
   have h_Pn_total : Pn.real s + Pn.real sᶜ = 1 := by
     rw [measureReal_add_measureReal_compl hs_meas]; exact probReal_univ
   have h_Pn_sc_eq : Pn.real sᶜ = (Pn sᶜ).toReal := rfl
@@ -271,9 +271,9 @@ theorem steinOptimalBeta_log_ge_of_achievability
     rw [h_empty] at h_Pn_s_pos; simp at h_Pn_s_pos
   obtain ⟨x_w, hx_in_s⟩ := h_s_nonempty
   have h_Qn_x_pos : 0 < Qn.real {x_w} := by
-    show 0 < ((Measure.pi (fun _ : Fin n => Q)) {x_w}).toReal
+    show 0 < ((Measure.pi (fun _ : Fin n ↦ Q)) {x_w}).toReal
     rw [Measure.pi_singleton, ENNReal.toReal_prod]
-    exact Finset.prod_pos (fun i _ => hQpos (x_w i))
+    exact Finset.prod_pos (fun i _ ↦ hQpos (x_w i))
   have h_Qns_pos : 0 < Qn_s := by
     have h_subset : ({x_w} : Set (Fin n → α)) ⊆ s := by
       intro y hy; simp only [Set.mem_singleton_iff] at hy; rw [hy]; exact hx_in_s

@@ -59,7 +59,7 @@ def IsMemorylessFeedback {n : ℕ} (μ : Measure Ω) [IsFiniteMeasure μ]
     (Msg : Ω → M) (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β) : Prop :=
   ∀ i : Fin n,
     Shannon.IsMarkovChain μ
-      (fun ω => (fun (j : Fin i.val) => Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω, Msg ω))
+      (fun ω ↦ (fun (j : Fin i.val) ↦ Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω, Msg ω))
       (Xs i) (Ys i)
 
 omit [Nonempty α] [StandardBorelSpace α] [Fintype β] [MeasurableSingletonClass β] in
@@ -68,7 +68,7 @@ lemma IsMemorylessFeedback.markovChain {n : ℕ} (μ : Measure Ω) [IsFiniteMeas
     {Msg : Ω → M} {Xs : Fin n → Ω → α} {Ys : Fin n → Ω → β}
     (h : IsMemorylessFeedback μ Msg Xs Ys) (i : Fin n) :
     Shannon.IsMarkovChain μ
-      (fun ω => (fun (j : Fin i.val) => Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω, Msg ω))
+      (fun ω ↦ (fun (j : Fin i.val) ↦ Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω, Msg ω))
       (Xs i) (Ys i) :=
   h i
 
@@ -92,16 +92,16 @@ theorem feedback_per_letter_bound
     (h_memo : IsMemorylessFeedback μ Msg Xs Ys) :
     ∀ i : Fin n,
       Shannon.condMutualInfo μ Msg (Ys i)
-          (fun ω (j : Fin i.val) => Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω)
+          (fun ω (j : Fin i.val) ↦ Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω)
         ≤ Shannon.mutualInfo μ (Xs i) (Ys i) := by
   intro i
   -- Prefix of outputs Y^{<i}.
   set Yprev : Ω → (Fin i.val → β) :=
-    fun ω (j : Fin i.val) => Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω with hYprev_def
+    fun ω (j : Fin i.val) ↦ Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω with hYprev_def
   have hYprev : Measurable Yprev :=
-    measurable_pi_iff.mpr (fun j => hYs ⟨j.val, j.isLt.trans i.isLt⟩)
+    measurable_pi_iff.mpr (fun j ↦ hYs ⟨j.val, j.isLt.trans i.isLt⟩)
   -- Joint of prefix and message.
-  set L : Ω → (Fin i.val → β) × M := fun ω => (Yprev ω, Msg ω) with hL_def
+  set L : Ω → (Fin i.val → β) × M := fun ω ↦ (Yprev ω, Msg ω) with hL_def
   have hL : Measurable L := hYprev.prodMk hMsg
   -- Step 1: Markov chain L → X_i → Y_i ⇒ I(L; Y_i) ≤ I(X_i; Y_i).
   have h_markov : Shannon.IsMarkovChain μ L (Xs i) (Ys i) := h_memo.markovChain μ i
@@ -158,9 +158,9 @@ theorem channel_coding_feedback_converse_memoryless
       (n : ℝ) * C.toReal +
         Real.binEntropy
           (InformationTheory.MeasureFano.errorProb μ Msg
-            (fun ω i => Ys i ω) decoder) +
+            (fun ω i ↦ Ys i ω) decoder) +
         InformationTheory.MeasureFano.errorProb μ Msg
-          (fun ω i => Ys i ω) decoder *
+          (fun ω i ↦ Ys i ω) decoder *
           Real.log ((Fintype.card M : ℝ) - 1) := by
   classical
   have h_per_letter := feedback_per_letter_bound μ Msg Xs Ys hMsg hXs hYs h_memo

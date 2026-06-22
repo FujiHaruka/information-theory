@@ -78,7 +78,7 @@ theorem exists_codebook_le_avg
     rw [h_sum_eq, h_real_univ]
   -- Each weight is nonneg.
   have h_w_nn : ∀ codebook : Codebook M n α,
-      0 ≤ (codebookMeasure p M n).real {codebook} := fun _ => measureReal_nonneg
+      0 ≤ (codebookMeasure p M n).real {codebook} := fun _ ↦ measureReal_nonneg
   -- The contradictory strict inequality.
   have h_contra : B < ∑ codebook : Codebook M n α,
       (codebookMeasure p M n).real {codebook} *
@@ -88,7 +88,7 @@ theorem exists_codebook_le_avg
             (codebookMeasure p M n).real {codebook} := by rw [h_sum_one]
       _ = ∑ codebook : Codebook M n α,
             (codebookMeasure p M n).real {codebook} * B := by
-          rw [Finset.mul_sum]; refine Finset.sum_congr rfl (fun _ _ => by ring)
+          rw [Finset.mul_sum]; refine Finset.sum_congr rfl (fun _ _ ↦ by ring)
       _ < ∑ codebook : Codebook M n α,
             (codebookMeasure p M n).real {codebook} *
             ((codebookToCode μ Xs Ys hM ε codebook).averageErrorProb W).toReal := by
@@ -111,7 +111,7 @@ theorem exists_codebook_le_avg
             by_contra h_none_pos
             simp only [not_exists, not_lt] at h_none_pos
             have h_all_zero : ∀ codebook : Codebook M n α,
-                (codebookMeasure p M n).real {codebook} = 0 := fun c =>
+                (codebookMeasure p M n).real {codebook} = 0 := fun c ↦
               le_antisymm (h_none_pos c) (h_w_nn c)
             have : ∑ codebook : Codebook M n α,
                 (codebookMeasure p M n).real {codebook} = 0 := by
@@ -125,7 +125,7 @@ theorem exists_codebook_le_avg
                 < (codebookMeasure p M n).real {c₀} *
                   ((codebookToCode μ Xs Ys hM ε c₀).averageErrorProb W).toReal :=
             mul_lt_mul_of_pos_left (h_none c₀) hc₀_pos
-          exact Finset.sum_lt_sum (fun i _ => h_each i) ⟨c₀, Finset.mem_univ _, h_strict⟩
+          exact Finset.sum_lt_sum (fun i _ ↦ h_each i) ⟨c₀, Finset.mem_univ _, h_strict⟩
   exact (lt_irrefl _) (lt_of_le_of_lt h_avg h_contra)
 
 /-! ### Existence of a low-error codebook for large `n`
@@ -250,37 +250,37 @@ theorem channel_coding_achievability
   -- All abstract hypotheses on `(μ, iidXs, iidYs)` come from `IIDProductInput`.
   have hXs : ∀ i, Measurable (iidXs (α := α) (β := β) i) := measurable_iidXs
   have hYs : ∀ i, Measurable (iidYs (α := α) (β := β) i) := measurable_iidYs
-  have hindepX_full : iIndepFun (fun i => iidXs (α := α) (β := β) i) μ :=
+  have hindepX_full : iIndepFun (fun i ↦ iidXs (α := α) (β := β) i) μ :=
     iidAmbient_iIndepFun_iidXs p W
-  have hindepY_full : iIndepFun (fun i => iidYs (α := α) (β := β) i) μ :=
+  have hindepY_full : iIndepFun (fun i ↦ iidYs (α := α) (β := β) i) μ :=
     iidAmbient_iIndepFun_iidYs p W
-  have hindepX_pair : Pairwise fun i j =>
+  have hindepX_pair : Pairwise fun i j ↦
       iidXs (α := α) (β := β) i ⟂ᵢ[μ] iidXs j :=
     iidAmbient_pairwise_indep_iidXs p W
-  have hindepY_pair : Pairwise fun i j =>
+  have hindepY_pair : Pairwise fun i j ↦
       iidYs (α := α) (β := β) i ⟂ᵢ[μ] iidYs j :=
     iidAmbient_pairwise_indep_iidYs p W
-  have hindepZ : Pairwise fun i j =>
+  have hindepZ : Pairwise fun i j ↦
       jointSequence (α := α) (β := β) iidXs iidYs i ⟂ᵢ[μ]
         jointSequence iidXs iidYs j :=
     iidAmbient_pairwise_indep_joint p W
   have hidentX : ∀ i,
       IdentDistrib (iidXs (α := α) (β := β) i) (iidXs 0) μ μ :=
-    fun i => iidAmbient_identDistrib_iidXs p W i
+    fun i ↦ iidAmbient_identDistrib_iidXs p W i
   have hidentY : ∀ i,
       IdentDistrib (iidYs (α := α) (β := β) i) (iidYs 0) μ μ :=
-    fun i => iidAmbient_identDistrib_iidYs p W i
+    fun i ↦ iidAmbient_identDistrib_iidYs p W i
   have hidentZ : ∀ i,
       IdentDistrib (jointSequence (α := α) (β := β) iidXs iidYs i)
         (jointSequence iidXs iidYs 0) μ μ :=
-    fun i => iidAmbient_identDistrib_joint p W i
+    fun i ↦ iidAmbient_identDistrib_joint p W i
   have hposX : ∀ x : α, 0 < (μ.map (iidXs (α := α) (β := β) 0)).real {x} :=
-    fun x => iidAmbient_iidXs_real_singleton_pos p W hp_pos x
+    fun x ↦ iidAmbient_iidXs_real_singleton_pos p W hp_pos x
   have hposY : ∀ y : β, 0 < (μ.map (iidYs (α := α) (β := β) 0)).real {y} :=
-    fun y => iidAmbient_iidYs_real_singleton_pos p W hp_pos hW_pos y
+    fun y ↦ iidAmbient_iidYs_real_singleton_pos p W hp_pos hW_pos y
   have hposZ : ∀ q : α × β,
       0 < (μ.map (jointSequence (α := α) (β := β) iidXs iidYs 0)).real {q} :=
-    fun q => iidAmbient_joint_real_singleton_pos p W hp_pos hW_pos q
+    fun q ↦ iidAmbient_joint_real_singleton_pos p W hp_pos hW_pos q
   have h_match_X : μ.map (iidXs (α := α) (β := β) 0) = p :=
     iidAmbient_map_iidXs p W 0
   have h_match_Z : μ.map (jointSequence (α := α) (β := β) iidXs iidYs 0)
@@ -303,7 +303,7 @@ theorem channel_coding_achievability
     channelCoding_E2_lt_of_rate (I := I) (R := R) (ε := ε) (ε' := ε' / 2)
       h_gap_pos hε'_half
   -- Step 8: assemble. N := max N₁ N₂ (and ensure n ≥ 1 for `0 < M`).
-  refine ⟨max (max N₁ N₂) 1, fun n hn => ?_⟩
+  refine ⟨max (max N₁ N₂) 1, fun n hn ↦ ?_⟩
   have hn_N₁ : N₁ ≤ n := le_trans (le_max_left _ _) (le_trans (le_max_left _ _) hn)
   have hn_N₂ : N₂ ≤ n := le_trans (le_max_right _ _) (le_trans (le_max_left _ _) hn)
   have hn_one : 1 ≤ n := le_trans (le_max_right _ _) hn
@@ -312,7 +312,7 @@ theorem channel_coding_achievability
   refine ⟨M, le_refl _, ?_⟩
   -- Apply `random_codebook_average_le` + `exists_codebook_le_avg`.
   have hindepZ_full : iIndepFun
-      (fun i : ℕ => jointSequence (α := α) (β := β) iidXs iidYs i) μ :=
+      (fun i : ℕ ↦ jointSequence (α := α) (β := β) iidXs iidYs i) μ :=
     iidAmbient_iIndepFun_joint p W
   have h_avg_bound :=
     random_codebook_average_le (M := M) (n := n) W p hp_pos hM_pos hε_pos μ iidXs iidYs
@@ -339,7 +339,7 @@ theorem channel_coding_achievability
       {ω | (InformationTheory.Shannon.jointRV iidXs n ω,
             InformationTheory.Shannon.jointRV iidYs n ω) ∈
           jointlyTypicalSet μ iidXs iidYs n ε} := by
-    have h_meas_pair : Measurable (fun ω =>
+    have h_meas_pair : Measurable (fun ω ↦
         (InformationTheory.Shannon.jointRV (α := α) iidXs n ω,
           InformationTheory.Shannon.jointRV (α := β) iidYs n ω)) :=
       (InformationTheory.Shannon.measurable_jointRV iidXs hXs n).prodMk

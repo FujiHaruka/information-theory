@@ -70,7 +70,7 @@ theorem measurableSet_stronglyTypicalSet
 /-! ### Probability convergence -/
 
 noncomputable def letterIndicator (Xs : ℕ → Ω → α) (a : α) (i : ℕ) : Ω → ℝ :=
-  fun ω => if Xs i ω = a then (1 : ℝ) else 0
+  fun ω ↦ if Xs i ω = a then (1 : ℝ) else 0
 
 lemma measurable_letterIndicator
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (a : α) (i : ℕ) :
@@ -81,12 +81,12 @@ lemma measurable_letterIndicator
 lemma indepFun_letterIndicator
     (μ : Measure Ω) (Xs : ℕ → Ω → α)
     (_hXs : ∀ i, Measurable (Xs i))
-    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j) (a : α) :
-    Pairwise fun i j =>
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j) (a : α) :
+    Pairwise fun i j ↦
       letterIndicator Xs a i ⟂ᵢ[μ] letterIndicator Xs a j := by
   intro i j hij
   -- letterIndicator Xs a i = (fun x => if x = a then 1 else 0) ∘ (Xs i)
-  set f : α → ℝ := fun x => if x = a then (1 : ℝ) else 0 with hf_def
+  set f : α → ℝ := fun x ↦ if x = a then (1 : ℝ) else 0 with hf_def
   have hf_meas : Measurable f := measurable_of_finite _
   have h := (hindep hij).comp hf_meas hf_meas
   exact h
@@ -95,7 +95,7 @@ lemma identDistrib_letterIndicator
     (μ : Measure Ω) (Xs : ℕ → Ω → α)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ) (a : α) (i : ℕ) :
     IdentDistrib (letterIndicator Xs a i) (letterIndicator Xs a 0) μ μ := by
-  set f : α → ℝ := fun x => if x = a then (1 : ℝ) else 0 with hf_def
+  set f : α → ℝ := fun x ↦ if x = a then (1 : ℝ) else 0 with hf_def
   have hf_meas : Measurable f := measurable_of_finite _
   -- letterIndicator Xs a i = f ∘ Xs i
   exact (hident i).comp hf_meas
@@ -105,7 +105,7 @@ lemma integral_letterIndicator
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (a : α) :
     ∫ ω, letterIndicator Xs a 0 ω ∂μ = (μ.map (Xs 0)).real {a} := by
   -- Push forward via Xs 0.
-  set f : α → ℝ := fun x => if x = a then (1 : ℝ) else 0 with hf_def
+  set f : α → ℝ := fun x ↦ if x = a then (1 : ℝ) else 0 with hf_def
   have hf_meas : Measurable f := measurable_of_finite _
   have h_push : ∫ ω, letterIndicator Xs a 0 ω ∂μ
       = ∫ x, f x ∂(μ.map (Xs 0)) := by
@@ -134,7 +134,7 @@ lemma integrable_letterIndicator
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (a : α) :
     Integrable (letterIndicator Xs a 0) μ := by
   -- The indicator is bounded (∈ {0, 1}), hence integrable on a probability measure.
-  refine Integrable.mono' (g := fun _ => (1 : ℝ)) (integrable_const 1) ?_ ?_
+  refine Integrable.mono' (g := fun _ ↦ (1 : ℝ)) (integrable_const 1) ?_ ?_
   · exact (measurable_letterIndicator Xs hXs a 0).aestronglyMeasurable
   · filter_upwards with ω
     unfold letterIndicator
@@ -146,56 +146,56 @@ lemma typeCount_eq_sum_indicator
   unfold typeCount
   classical
   rw [show (∑ i : Fin n, if x i = a then (1 : ℝ) else 0)
-        = ∑ i ∈ (Finset.univ.filter fun i : Fin n => x i = a), (1 : ℝ) from by
+        = ∑ i ∈ (Finset.univ.filter fun i : Fin n ↦ x i = a), (1 : ℝ) from by
         rw [← Finset.sum_filter]]
   rw [Finset.sum_const, nsmul_eq_mul, mul_one]
 
 lemma letterIndicator_inProbability
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (a : α) {ε : ℝ} (hε : 0 < ε) :
     Tendsto
-      (fun n : ℕ => μ {ω | ε ≤ |(∑ i ∈ Finset.range n, letterIndicator Xs a i ω) / n
+      (fun n : ℕ ↦ μ {ω | ε ≤ |(∑ i ∈ Finset.range n, letterIndicator Xs a i ω) / n
                               - (μ.map (Xs 0)).real {a}|})
       atTop (𝓝 0) := by
   -- Apply strong_law_ae_real then tendstoInMeasure_of_tendsto_ae.
   have hint : Integrable (letterIndicator Xs a 0) μ :=
     integrable_letterIndicator μ Xs hXs a
-  have hindLI : Pairwise fun i j =>
+  have hindLI : Pairwise fun i j ↦
       letterIndicator Xs a i ⟂ᵢ[μ] letterIndicator Xs a j :=
     indepFun_letterIndicator μ Xs hXs hindep a
   have hidLI : ∀ i, IdentDistrib (letterIndicator Xs a i)
       (letterIndicator Xs a 0) μ μ :=
-    fun i => identDistrib_letterIndicator μ Xs hident a i
+    fun i ↦ identDistrib_letterIndicator μ Xs hident a i
   have h_lln := strong_law_ae_real (letterIndicator Xs a) hint hindLI hidLI
   have h_int_eq := integral_letterIndicator μ Xs hXs a
   -- a.s. convergence with constant limit P(a).
   have h_ae : ∀ᵐ ω ∂μ,
       Tendsto
-        (fun n : ℕ => (∑ i ∈ Finset.range n, letterIndicator Xs a i ω) / n)
+        (fun n : ℕ ↦ (∑ i ∈ Finset.range n, letterIndicator Xs a i ω) / n)
         atTop (𝓝 ((μ.map (Xs 0)).real {a})) := by
     filter_upwards [h_lln] with ω hω
     simpa [h_int_eq] using hω
   -- Convergence in measure via tendstoInMeasure_of_tendsto_ae.
   set f : ℕ → Ω → ℝ :=
-    fun n ω => (∑ i ∈ Finset.range n, letterIndicator Xs a i ω) / n with hf_def
-  set g : Ω → ℝ := fun _ => (μ.map (Xs 0)).real {a} with hg_def
+    fun n ω ↦ (∑ i ∈ Finset.range n, letterIndicator Xs a i ω) / n with hf_def
+  set g : Ω → ℝ := fun _ ↦ (μ.map (Xs 0)).real {a} with hg_def
   have h_meas_f : ∀ n, AEStronglyMeasurable (f n) μ := by
     intro n
     have h_sum_meas : Measurable
-        (fun ω => ∑ i ∈ Finset.range n, letterIndicator Xs a i ω) :=
-      Finset.measurable_sum _ fun i _ => measurable_letterIndicator Xs hXs a i
+        (fun ω ↦ ∑ i ∈ Finset.range n, letterIndicator Xs a i ω) :=
+      Finset.measurable_sum _ fun i _ ↦ measurable_letterIndicator Xs hXs a i
     have h_meas : Measurable (f n) := by
-      change Measurable (fun ω => (∑ i ∈ Finset.range n, letterIndicator Xs a i ω) / n)
+      change Measurable (fun ω ↦ (∑ i ∈ Finset.range n, letterIndicator Xs a i ω) / n)
       exact h_sum_meas.div_const _
     exact h_meas.aestronglyMeasurable
   have h_inm : TendstoInMeasure μ f atTop g :=
     tendstoInMeasure_of_tendsto_ae h_meas_f h_ae
   rw [tendstoInMeasure_iff_dist] at h_inm
   have h_target := h_inm ε hε
-  refine Tendsto.congr (fun n => ?_) h_target
+  refine Tendsto.congr (fun n ↦ ?_) h_target
   apply congrArg μ
   ext ω
   show ε ≤ dist (f n ω) (g ω) ↔ ε ≤ |f n ω - g ω|
@@ -207,11 +207,11 @@ lemma letterIndicator_inProbability
 theorem stronglyTypicalSet_prob_tendsto_one
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     {ε : ℝ} (hε : 0 < ε) :
     Tendsto
-      (fun n : ℕ => μ {ω | jointRV Xs n ω ∈ stronglyTypicalSet μ Xs n ε})
+      (fun n : ℕ ↦ μ {ω | jointRV Xs n ω ∈ stronglyTypicalSet μ Xs n ε})
       atTop (𝓝 1) := by
   classical
   -- Strategy:
@@ -219,51 +219,51 @@ theorem stronglyTypicalSet_prob_tendsto_one
   --   bad n := ⋃ a, bad_a n → 0 (finite union over α)
   --   good n := (bad n)ᶜ = {ω | ∀ a, |.../n - P(a)| < ε}  ⊆ stronglyTypicalSet (with ≤)
   -- Then μ (good n) = 1 - μ (bad n) → 1.
-  set P : α → ℝ := fun a => (μ.map (Xs 0)).real {a} with hP_def
+  set P : α → ℝ := fun a ↦ (μ.map (Xs 0)).real {a} with hP_def
   -- Per-letter "bad" event.
   set bad_a : α → ℕ → Set Ω :=
-    fun a n => {ω | ε ≤ |(∑ i ∈ Finset.range n, letterIndicator Xs a i ω) / n - P a|}
+    fun a n ↦ {ω | ε ≤ |(∑ i ∈ Finset.range n, letterIndicator Xs a i ω) / n - P a|}
       with hbad_a_def
   -- Each bad_a a n → 0.
-  have h_bad_a : ∀ a, Tendsto (fun n : ℕ => μ (bad_a a n)) atTop (𝓝 0) :=
-    fun a => letterIndicator_inProbability μ Xs hXs hindep hident a hε
+  have h_bad_a : ∀ a, Tendsto (fun n : ℕ ↦ μ (bad_a a n)) atTop (𝓝 0) :=
+    fun a ↦ letterIndicator_inProbability μ Xs hXs hindep hident a hε
   -- Each bad_a a n is measurable (for the union-bound sum).
   have h_meas_bad_a : ∀ a n, MeasurableSet (bad_a a n) := by
     intro a n
     have h_sum_meas : Measurable
-        (fun ω => ∑ i ∈ Finset.range n, letterIndicator Xs a i ω) :=
-      Finset.measurable_sum _ fun i _ => measurable_letterIndicator Xs hXs a i
+        (fun ω ↦ ∑ i ∈ Finset.range n, letterIndicator Xs a i ω) :=
+      Finset.measurable_sum _ fun i _ ↦ measurable_letterIndicator Xs hXs a i
     have h_diff : Measurable
-        (fun ω => (∑ i ∈ Finset.range n, letterIndicator Xs a i ω) / n - P a) :=
+        (fun ω ↦ (∑ i ∈ Finset.range n, letterIndicator Xs a i ω) / n - P a) :=
       (h_sum_meas.div_const _).sub_const _
     have h_abs : Measurable
-        (fun ω => |(∑ i ∈ Finset.range n, letterIndicator Xs a i ω) / n - P a|) :=
-      (Measurable.abs (f := fun ω => (∑ i ∈ Finset.range n, letterIndicator Xs a i ω) / n - P a)
+        (fun ω ↦ |(∑ i ∈ Finset.range n, letterIndicator Xs a i ω) / n - P a|) :=
+      (Measurable.abs (f := fun ω ↦ (∑ i ∈ Finset.range n, letterIndicator Xs a i ω) / n - P a)
         h_diff)
     exact h_abs measurableSet_Ici
   -- Union bound: μ (⋃ a, bad_a a n) ≤ ∑ a, μ (bad_a a n) → 0.
-  set bad : ℕ → Set Ω := fun n => ⋃ a : α, bad_a a n with hbad_def
+  set bad : ℕ → Set Ω := fun n ↦ ⋃ a : α, bad_a a n with hbad_def
   have h_meas_bad : ∀ n, MeasurableSet (bad n) := by
     intro n
-    exact MeasurableSet.iUnion fun a => h_meas_bad_a a n
+    exact MeasurableSet.iUnion fun a ↦ h_meas_bad_a a n
   have h_bad_le : ∀ n, μ (bad n) ≤ ∑ a : α, μ (bad_a a n) := by
     intro n
     -- measure_iUnion_fintype_le or measure_biUnion_finset_le
-    exact (MeasureTheory.measure_iUnion_fintype_le μ (fun a => bad_a a n))
+    exact (MeasureTheory.measure_iUnion_fintype_le μ (fun a ↦ bad_a a n))
   -- ∑ a, μ (bad_a a n) → 0 (finite sum of sequences each → 0).
-  have h_sum_tendsto : Tendsto (fun n : ℕ => ∑ a : α, μ (bad_a a n)) atTop (𝓝 0) := by
-    have h_tend_sum : Tendsto (fun n : ℕ => ∑ a : α, μ (bad_a a n)) atTop
+  have h_sum_tendsto : Tendsto (fun n : ℕ ↦ ∑ a : α, μ (bad_a a n)) atTop (𝓝 0) := by
+    have h_tend_sum : Tendsto (fun n : ℕ ↦ ∑ a : α, μ (bad_a a n)) atTop
         (𝓝 (∑ a : α, (0 : ℝ≥0∞))) :=
-      tendsto_finsetSum (Finset.univ : Finset α) fun a _ => h_bad_a a
+      tendsto_finsetSum (Finset.univ : Finset α) fun a _ ↦ h_bad_a a
     simpa using h_tend_sum
-  have h_bad_tendsto : Tendsto (fun n : ℕ => μ (bad n)) atTop (𝓝 0) := by
+  have h_bad_tendsto : Tendsto (fun n : ℕ ↦ μ (bad n)) atTop (𝓝 0) := by
     -- Sandwich: 0 ≤ μ (bad n) ≤ ∑ a, μ (bad_a a n) → 0.
     refine tendsto_of_tendsto_of_tendsto_of_le_of_le'
       (tendsto_const_nhds (x := (0 : ℝ≥0∞))) h_sum_tendsto ?_ ?_
-    · refine Filter.Eventually.of_forall (fun n : ℕ => ?_)
+    · refine Filter.Eventually.of_forall (fun n : ℕ ↦ ?_)
       show (0 : ℝ≥0∞) ≤ μ (bad n)
       exact bot_le
-    · exact Filter.Eventually.of_forall (fun n => h_bad_le n)
+    · exact Filter.Eventually.of_forall (fun n ↦ h_bad_le n)
   -- Subset: good n ⊆ {ω | jointRV ∈ stronglyTypicalSet}.
   have h_subset : ∀ n, (bad n)ᶜ ⊆ {ω | jointRV Xs n ω ∈ stronglyTypicalSet μ Xs n ε} := by
     intro n ω hω
@@ -287,8 +287,8 @@ theorem stronglyTypicalSet_prob_tendsto_one
         rfl
       rw [show (∑ i : Fin n, if jointRV Xs n ω i = a then (1 : ℝ) else 0)
           = ∑ i : Fin n, letterIndicator Xs a i.val ω from
-            Finset.sum_congr rfl fun i _ => h_jr i]
-      exact Fin.sum_univ_eq_sum_range (fun i => letterIndicator Xs a i ω) n
+            Finset.sum_congr rfl fun i _ ↦ h_jr i]
+      exact Fin.sum_univ_eq_sum_range (fun i ↦ letterIndicator Xs a i ω) n
     rw [h_eq]
     exact (hω a).le
   -- Measure-monotone: μ (good n) ≥ μ ((bad n)ᶜ).
@@ -310,13 +310,13 @@ theorem stronglyTypicalSet_prob_tendsto_one
     exact measure_mono (h_subset n)
   -- μ (jointRV ∈ stronglyTypicalSet) ≤ 1.
   have h_le : ∀ n, μ {ω | jointRV Xs n ω ∈ stronglyTypicalSet μ Xs n ε} ≤ 1 :=
-    fun n => prob_le_one
+    fun n ↦ prob_le_one
   -- Sandwich.
   -- ENNReal subtraction is not continuous in general, but `(1 : ℝ≥0∞) - · ` is continuous
   -- at `0` because `μ (bad n) → 0` lives in `[0, 1]` where subtraction is continuous.
   -- Use `ENNReal.Tendsto.const_sub`.
-  have h_bad_ne_top : ∀ n, μ (bad n) ≠ ∞ := fun n => measure_ne_top _ _
-  have h_sub_tendsto : Tendsto (fun n : ℕ => (1 : ℝ≥0∞) - μ (bad n)) atTop (𝓝 (1 - 0)) :=
+  have h_bad_ne_top : ∀ n, μ (bad n) ≠ ∞ := fun n ↦ measure_ne_top _ _
+  have h_sub_tendsto : Tendsto (fun n : ℕ ↦ (1 : ℝ≥0∞) - μ (bad n)) atTop (𝓝 (1 - 0)) :=
     ENNReal.Tendsto.sub tendsto_const_nhds h_bad_tendsto (Or.inr (by simp))
   rw [tsub_zero] at h_sub_tendsto
   refine tendsto_of_tendsto_of_tendsto_of_le_of_le' h_sub_tendsto
@@ -333,7 +333,7 @@ noncomputable def logSumAbs (μ : Measure Ω) (Xs : ℕ → Ω → α) : ℝ :=
 omit [DecidableEq α] [Nonempty α] in
 lemma logSumAbs_nonneg (μ : Measure Ω) (Xs : ℕ → Ω → α) :
     0 ≤ logSumAbs μ Xs :=
-  Finset.sum_nonneg fun _ _ => abs_nonneg _
+  Finset.sum_nonneg fun _ _ ↦ abs_nonneg _
 
 lemma weak_displacement_eq_strong_sum
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -344,25 +344,25 @@ lemma weak_displacement_eq_strong_sum
           ((μ.map (Xs 0)).real {a} - (typeCount x a : ℝ) / n)
             * Real.log ((μ.map (Xs 0)).real {a}) := by
   classical
-  set P : α → ℝ := fun a => (μ.map (Xs 0)).real {a} with hP_def
+  set P : α → ℝ := fun a ↦ (μ.map (Xs 0)).real {a} with hP_def
   -- Step 1: aggregate ∑ i, pmfLog (x i) = -∑ a, (typeCount x a) · log P(a).
   have h_pmfLog_eq : ∀ a : α, pmfLog μ Xs a = -Real.log (P a) := by
     intro a
     show (-Real.log ((μ.map (Xs 0)).real {a})) = -Real.log (P a)
     rfl
   -- Use sum_fiberwise: ∑ i, f (x i) = ∑ a, (typeCount x a) · f a, with f a := -log P a.
-  set f : α → ℝ := fun a => -Real.log (P a) with hf_def
+  set f : α → ℝ := fun a ↦ -Real.log (P a) with hf_def
   have h_agg : (∑ i : Fin n, pmfLog μ Xs (x i)) = ∑ a : α, (typeCount x a : ℝ) * f a := by
-    have h_pmf_eq_f : ∀ i, pmfLog μ Xs (x i) = f (x i) := fun i => h_pmfLog_eq (x i)
+    have h_pmf_eq_f : ∀ i, pmfLog μ Xs (x i) = f (x i) := fun i ↦ h_pmfLog_eq (x i)
     rw [show (∑ i : Fin n, pmfLog μ Xs (x i)) = ∑ i : Fin n, f (x i) from
-          Finset.sum_congr rfl fun i _ => h_pmf_eq_f i]
+          Finset.sum_congr rfl fun i _ ↦ h_pmf_eq_f i]
     -- Now: ∑ i, f (x i) = ∑ a, (typeCount x a) · f a via fiberwise.
     have h_maps : ∀ i ∈ (Finset.univ : Finset (Fin n)), x i ∈ (Finset.univ : Finset α) :=
-      fun i _ => Finset.mem_univ _
+      fun i _ ↦ Finset.mem_univ _
     have h := Finset.sum_fiberwise_of_maps_to' (s := (Finset.univ : Finset (Fin n)))
       (t := (Finset.univ : Finset α)) h_maps f
     rw [← h]
-    refine Finset.sum_congr rfl fun a _ => ?_
+    refine Finset.sum_congr rfl fun a _ ↦ ?_
     rw [Finset.sum_const, nsmul_eq_mul]
     -- (typeCount x a : ℝ) * f a, with typeCount x a from filter.card
     unfold typeCount
@@ -370,7 +370,7 @@ lemma weak_displacement_eq_strong_sum
   -- Step 2: entropy μ (Xs 0) = ∑ a, negMulLog (P a) = -∑ a, P a · log P a.
   have h_entropy_eq : entropy μ (Xs 0) = ∑ a : α, P a * (-Real.log (P a)) := by
     unfold entropy
-    refine Finset.sum_congr rfl fun a _ => ?_
+    refine Finset.sum_congr rfl fun a _ ↦ ?_
     rw [Real.negMulLog, hP_def]
     ring
   -- Step 3: put together.
@@ -383,7 +383,7 @@ lemma weak_displacement_eq_strong_sum
   -- = ∑ a, (P a - (typeCount x a)/n) · log P a.
   rw [Finset.sum_div]
   rw [← Finset.sum_sub_distrib]
-  refine Finset.sum_congr rfl fun a _ => ?_
+  refine Finset.sum_congr rfl fun a _ ↦ ?_
   show ((typeCount x a : ℝ) * f a) / n - P a * (-Real.log (P a))
       = (P a - (typeCount x a : ℝ) / n) * Real.log (P a)
   rw [hf_def]
@@ -398,7 +398,7 @@ lemma stronglyTypical_implies_weakly_typical_bound
     |(∑ i : Fin n, pmfLog μ Xs (x i)) / n - entropy μ (Xs 0)|
       ≤ ε * logSumAbs μ Xs := by
   classical
-  set P : α → ℝ := fun a => (μ.map (Xs 0)).real {a} with hP_def
+  set P : α → ℝ := fun a ↦ (μ.map (Xs 0)).real {a} with hP_def
   rw [weak_displacement_eq_strong_sum μ Xs hXs hn x]
   rw [mem_stronglyTypicalSet_iff] at hx
   -- |∑ a, (P a - typeCount x a / n) · log P a| ≤ ∑ a, |P a - typeCount x a / n| · |log P a|
@@ -407,10 +407,10 @@ lemma stronglyTypical_implies_weakly_typical_bound
       ≤ ∑ a : α, |(P a - (typeCount x a : ℝ) / n) * Real.log (P a)| :=
           Finset.abs_sum_le_sum_abs _ _
     _ = ∑ a : α, |P a - (typeCount x a : ℝ) / n| * |Real.log (P a)| := by
-          refine Finset.sum_congr rfl fun a _ => ?_
+          refine Finset.sum_congr rfl fun a _ ↦ ?_
           rw [abs_mul]
     _ ≤ ∑ a : α, ε * |Real.log (P a)| := by
-          refine Finset.sum_le_sum fun a _ => ?_
+          refine Finset.sum_le_sum fun a _ ↦ ?_
           have h_abs_le : |P a - (typeCount x a : ℝ) / n| ≤ ε := by
             rw [show P a - (typeCount x a : ℝ) / n = -((typeCount x a : ℝ) / n - P a) from by ring,
               abs_neg]
@@ -441,8 +441,8 @@ eventually `|A^*_ε^n| ≥ (1-η) · exp(n · (H - ε·L - δ))`. -/
 theorem stronglyTypicalSet_card_ge_eventually
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep_full : iIndepFun (fun i => Xs i) μ)
-    (hindep_pair : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindep_full : iIndepFun (fun i ↦ Xs i) μ)
+    (hindep_pair : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (hpos : ∀ a : α, 0 < (μ.map (Xs 0)).real {a})
     {ε δ η : ℝ} (hε : 0 < ε) (hδ : 0 < δ) (hη : 0 < η) :
@@ -470,12 +470,12 @@ theorem stronglyTypicalSet_card_ge_eventually
       (measurableSet_stronglyTypicalSet μ Xs n ε)
   -- Apply .toReal to the ℝ≥0∞-tendsto.
   have h_tend_R :
-      Tendsto (fun n : ℕ =>
+      Tendsto (fun n : ℕ ↦
           (μ.map (jointRV Xs n)).real (stronglyTypicalSet μ Xs n ε))
         atTop (𝓝 1) := by
-    refine Tendsto.congr (fun n => (h_eq n).symm) ?_
+    refine Tendsto.congr (fun n ↦ (h_eq n).symm) ?_
     have h_comp :
-        Tendsto (fun n : ℕ =>
+        Tendsto (fun n : ℕ ↦
             (μ {ω | jointRV Xs n ω ∈ stronglyTypicalSet μ Xs n ε}).toReal)
           atTop (𝓝 (1 : ℝ≥0∞).toReal) :=
       (ENNReal.continuousAt_toReal ENNReal.one_ne_top).tendsto.comp h_tend
@@ -489,7 +489,7 @@ theorem stronglyTypicalSet_card_ge_eventually
     exact hn.le
   rcases Filter.eventually_atTop.mp h_event with ⟨N, hN⟩
   -- Take max(N, 1) to also have n ≥ 1.
-  refine ⟨max N 1, fun n hn => ?_⟩
+  refine ⟨max N 1, fun n hn ↦ ?_⟩
   have hN_n : N ≤ n := le_of_max_le_left hn
   have hn_pos : 1 ≤ n := le_of_max_le_right hn
   have hμ : (1 - η) ≤ (μ.map (jointRV Xs n)).real (stronglyTypicalSet μ Xs n ε) := hN n hN_n
@@ -500,7 +500,7 @@ theorem stronglyTypicalSet_card_ge_eventually
     show ε * L < ε * L + δ
     linarith
   -- Step 3: for x ∈ A^*_ε, p(x) ≤ exp(-n(H - ε')).
-  set p : (Fin n → α) → ℝ := fun x => (μ.map (jointRV Xs n)).real {x} with hp_def
+  set p : (Fin n → α) → ℝ := fun x ↦ (μ.map (jointRV Xs n)).real {x} with hp_def
   set T : Finset (Fin n → α) := (stronglyTypicalSet μ Xs n ε).toFinite.toFinset
     with hT_def
   have h_coe : (T : Set (Fin n → α)) = stronglyTypicalSet μ Xs n ε :=

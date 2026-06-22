@@ -39,23 +39,23 @@ set_option linter.unusedVariables false
 /-- `M_n · exp(-nθ) → ∞` when `M_n ≥ ⌈exp(nR)⌉` and `R > θ`. -/
 lemma ceil_exp_mul_exp_neg_tendsto_atTop
     {R θ : ℝ} (hRθ : θ < R) :
-    Filter.Tendsto (fun n : ℕ =>
+    Filter.Tendsto (fun n : ℕ ↦
         (Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) * Real.exp (-(n : ℝ) * θ))
       Filter.atTop Filter.atTop := by
   -- Lower bound: `(⌈exp(nR)⌉ : ℝ) · exp(-nθ) ≥ exp(nR) · exp(-nθ) = exp(n(R-θ))`.
   have h_diff_pos : 0 < R - θ := sub_pos.mpr hRθ
   -- `(n : ℝ) → ∞` as `n : ℕ → ∞`.
-  have h_nat_atTop : Filter.Tendsto (fun n : ℕ => (n : ℝ)) Filter.atTop Filter.atTop :=
+  have h_nat_atTop : Filter.Tendsto (fun n : ℕ ↦ (n : ℝ)) Filter.atTop Filter.atTop :=
     tendsto_natCast_atTop_atTop
   -- `(n : ℝ) * (R - θ) → ∞`.
-  have h_lin : Filter.Tendsto (fun n : ℕ => (n : ℝ) * (R - θ)) Filter.atTop Filter.atTop :=
+  have h_lin : Filter.Tendsto (fun n : ℕ ↦ (n : ℝ) * (R - θ)) Filter.atTop Filter.atTop :=
     h_nat_atTop.atTop_mul_const h_diff_pos
   -- `exp((n : ℝ) * (R - θ)) → ∞`.
-  have h_exp_lin : Filter.Tendsto (fun n : ℕ => Real.exp ((n : ℝ) * (R - θ)))
+  have h_exp_lin : Filter.Tendsto (fun n : ℕ ↦ Real.exp ((n : ℝ) * (R - θ)))
       Filter.atTop Filter.atTop :=
     Real.tendsto_exp_atTop.comp h_lin
   -- Squeeze: show `exp((n : ℝ) * (R - θ)) ≤ (⌈exp(nR)⌉ : ℝ) * exp(-nθ)` for all `n`.
-  refine Filter.tendsto_atTop_mono (fun n => ?_) h_exp_lin
+  refine Filter.tendsto_atTop_mono (fun n ↦ ?_) h_exp_lin
   have h_exp_pos : 0 < Real.exp ((n : ℝ) * R) := Real.exp_pos _
   have h_exp_neg_pos : 0 < Real.exp (-(n : ℝ) * θ) := Real.exp_pos _
   -- Step 1: `exp(nR) ≤ (⌈exp(nR)⌉ : ℝ)`.
@@ -77,8 +77,8 @@ lemma ceil_exp_mul_exp_neg_tendsto_atTop
 /-- `exp(-f n) → 0` when `f n → ∞`. -/
 lemma exp_neg_tendsto_zero_of_tendsto_atTop
     {f : ℕ → ℝ} (hf : Filter.Tendsto f Filter.atTop Filter.atTop) :
-    Filter.Tendsto (fun n => Real.exp (-(f n))) Filter.atTop (𝓝 0) := by
-  have h_neg : Filter.Tendsto (fun n => -(f n)) Filter.atTop Filter.atBot :=
+    Filter.Tendsto (fun n ↦ Real.exp (-(f n))) Filter.atTop (𝓝 0) := by
+  have h_neg : Filter.Tendsto (fun n ↦ -(f n)) Filter.atTop Filter.atBot :=
     Filter.tendsto_neg_atTop_atBot.comp hf
   exact Real.tendsto_exp_atBot.comp h_neg
 
@@ -96,7 +96,7 @@ variable [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass �
 `blockDistortion` on the encoder-fail event. -/
 noncomputable def distortionMax (d : DistortionFn α β) : ℝ :=
   (Finset.univ : Finset (α × β)).sup' Finset.univ_nonempty
-    (fun ab : α × β => ((d ab.1 ab.2 : NNReal) : ℝ))
+    (fun ab : α × β ↦ ((d ab.1 ab.2 : NNReal) : ℝ))
 
 omit [DecidableEq α] [DecidableEq β] in
 /-- `distortionMax` is non-negative. -/
@@ -107,8 +107,8 @@ lemma distortionMax_nonneg (d : DistortionFn α β) : 0 ≤ distortionMax d := b
   have h_mem : (a, b) ∈ (Finset.univ : Finset (α × β)) := Finset.mem_univ _
   have h_le : ((d a b : NNReal) : ℝ)
       ≤ (Finset.univ : Finset (α × β)).sup' Finset.univ_nonempty
-          (fun ab : α × β => ((d ab.1 ab.2 : NNReal) : ℝ)) :=
-    Finset.le_sup' (f := fun ab : α × β => ((d ab.1 ab.2 : NNReal) : ℝ)) h_mem
+          (fun ab : α × β ↦ ((d ab.1 ab.2 : NNReal) : ℝ)) :=
+    Finset.le_sup' (f := fun ab : α × β ↦ ((d ab.1 ab.2 : NNReal) : ℝ)) h_mem
   exact le_trans (NNReal.coe_nonneg _) h_le
 
 omit [DecidableEq α] [DecidableEq β] in
@@ -116,7 +116,7 @@ omit [DecidableEq α] [DecidableEq β] in
 lemma distortion_le_distortionMax (d : DistortionFn α β) (a : α) (b : β) :
     ((d a b : NNReal) : ℝ) ≤ distortionMax d := by
   unfold distortionMax
-  exact Finset.le_sup' (f := fun ab : α × β => ((d ab.1 ab.2 : NNReal) : ℝ))
+  exact Finset.le_sup' (f := fun ab : α × β ↦ ((d ab.1 ab.2 : NNReal) : ℝ))
     (Finset.mem_univ (a, b))
 
 omit [DecidableEq α] [DecidableEq β] in
@@ -135,7 +135,7 @@ lemma blockDistortion_le_distortionMax
           ≤ (n : ℝ) * distortionMax d := by
       have h_each : ∀ i ∈ (Finset.univ : Finset (Fin n)),
           ((d (x i) (y i) : NNReal) : ℝ) ≤ distortionMax d :=
-        fun i _ => distortion_le_distortionMax d (x i) (y i)
+        fun i _ ↦ distortion_le_distortionMax d (x i) (y i)
       have h_sum := Finset.sum_le_sum h_each
       rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin] at h_sum
       have h_nsmul : (n : ℕ) • distortionMax d = (n : ℝ) * distortionMax d := by
@@ -158,7 +158,7 @@ lemma expectedJointDistortion_nonneg
     (μ : Measure Ω) (X : Ω → α) (Y : Ω → β) (d : DistortionFn α β) :
     0 ≤ expectedJointDistortion μ X Y d := by
   unfold expectedJointDistortion
-  exact integral_nonneg (fun _ => NNReal.coe_nonneg _)
+  exact integral_nonneg (fun _ ↦ NNReal.coe_nonneg _)
 
 
 omit [DecidableEq α] [DecidableEq β] in
@@ -167,16 +167,16 @@ lemma integral_const_add_indicator_one
     {S : Type*} [MeasurableSpace S]
     (P : Measure S) [IsProbabilityMeasure P]
     (B : Set S) (hB : MeasurableSet B) (a m : ℝ) :
-    ∫ x, a + m * (B.indicator (fun _ => (1 : ℝ)) x) ∂P = a + m * P.real B := by
+    ∫ x, a + m * (B.indicator (fun _ ↦ (1 : ℝ)) x) ∂P = a + m * P.real B := by
   have h_ind_eq :
-      (fun x : S => m * (B.indicator (fun _ => (1 : ℝ)) x))
-        = B.indicator (fun _ : S => m) := by
+      (fun x : S ↦ m * (B.indicator (fun _ ↦ (1 : ℝ)) x))
+        = B.indicator (fun _ : S ↦ m) := by
     funext x
     by_cases hxB : x ∈ B
     · rw [Set.indicator_of_mem hxB, Set.indicator_of_mem hxB]; ring
     · rw [Set.indicator_of_notMem hxB, Set.indicator_of_notMem hxB]; ring
-  have h_int_const : Integrable (fun _ : S => a) P := integrable_const a
-  have h_int_ind : Integrable (fun x : S => m * (B.indicator (fun _ => (1 : ℝ)) x)) P := by
+  have h_int_const : Integrable (fun _ : S ↦ a) P := integrable_const a
+  have h_int_ind : Integrable (fun x : S ↦ m * (B.indicator (fun _ ↦ (1 : ℝ)) x)) P := by
     rw [h_ind_eq]
     exact (integrable_indicator_iff hB).mpr (integrable_const m)
   rw [integral_add h_int_const h_int_ind, integral_const, smul_eq_mul,
@@ -229,7 +229,7 @@ theorem source_avg_distortion_le_simpler
   --   blockDistortion ≤ Edδ + dMax * (B.indicator (fun _ => 1) x).
   have h_pointwise : ∀ x : Fin n → α,
       blockDistortion d n x (c (jointTypicalLossyEncoder μ Xs Ys hM ε c x))
-        ≤ Edδ + dMax * (B.indicator (fun _ => (1 : ℝ)) x) := by
+        ≤ Edδ + dMax * (B.indicator (fun _ ↦ (1 : ℝ)) x) := by
     intro x
     by_cases hxB : x ∈ B
     · -- Encoder's choice not in distortionTypicalSet ⇒ blockDistortion ≤ dMax.
@@ -237,13 +237,13 @@ theorem source_avg_distortion_le_simpler
           blockDistortion d n x (c (jointTypicalLossyEncoder μ Xs Ys hM ε c x))
             ≤ dMax :=
         blockDistortion_le_distortionMax d n x _
-      have h_ind : B.indicator (fun _ : Fin n → α => (1 : ℝ)) x = 1 :=
+      have h_ind : B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x = 1 :=
         Set.indicator_of_mem hxB _
       calc blockDistortion d n x (c (jointTypicalLossyEncoder μ Xs Ys hM ε c x))
           ≤ dMax := h_bd
         _ = 0 + dMax * 1 := by ring
         _ ≤ Edδ + dMax * 1 := by linarith
-        _ = Edδ + dMax * (B.indicator (fun _ => (1 : ℝ)) x) := by rw [h_ind]
+        _ = Edδ + dMax * (B.indicator (fun _ ↦ (1 : ℝ)) x) := by rw [h_ind]
     · -- Encoder's choice IS in distortionTypicalSet ⇒ blockDistortion ≤ Edδ.
       have hxB' : (x, c (jointTypicalLossyEncoder μ Xs Ys hM ε c x))
           ∈ distortionTypicalSet μ Xs Ys d n ε δ := by
@@ -253,20 +253,20 @@ theorem source_avg_distortion_le_simpler
           blockDistortion d n x (c (jointTypicalLossyEncoder μ Xs Ys hM ε c x))
             ≤ Edδ :=
         blockDistortion_le_of_mem_distortionTypicalSet μ Xs Ys d n ε δ hxB'
-      have h_ind : B.indicator (fun _ : Fin n → α => (1 : ℝ)) x = 0 :=
+      have h_ind : B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x = 0 :=
         Set.indicator_of_notMem hxB _
       calc blockDistortion d n x (c (jointTypicalLossyEncoder μ Xs Ys hM ε c x))
           ≤ Edδ := h_bd
         _ = Edδ + dMax * 0 := by ring
-        _ = Edδ + dMax * (B.indicator (fun _ => (1 : ℝ)) x) := by rw [h_ind]
+        _ = Edδ + dMax * (B.indicator (fun _ ↦ (1 : ℝ)) x) := by rw [h_ind]
   -- Step 2: integrate the pointwise bound over `P_X`.
   -- LHS / RHS measurability for `integral_mono`.
   have h_meas_f : Measurable
-      (fun x : Fin n → α =>
+      (fun x : Fin n → α ↦
         blockDistortion d n x (c (jointTypicalLossyEncoder μ Xs Ys hM ε c x)) ) :=
     measurable_of_finite _
   have h_meas_g : Measurable
-      (fun x : Fin n → α => Edδ + dMax * (B.indicator (fun _ => (1 : ℝ)) x)) :=
+      (fun x : Fin n → α ↦ Edδ + dMax * (B.indicator (fun _ ↦ (1 : ℝ)) x)) :=
     measurable_of_finite _
   -- Integrability: both functions are bounded (LHS by dMax, RHS by Edδ + dMax)
   -- on a probability measure ⇒ integrable.
@@ -276,42 +276,42 @@ theorem source_avg_distortion_le_simpler
     rw [Real.norm_eq_abs, abs_of_nonneg (blockDistortion_nonneg d n x _)]
     exact blockDistortion_le_distortionMax d n x _
   have h_int_f : Integrable
-      (fun x : Fin n → α =>
+      (fun x : Fin n → α ↦
         blockDistortion d n x (c (jointTypicalLossyEncoder μ Xs Ys hM ε c x))) P_X := by
-    refine Integrable.mono' (g := fun _ => dMax) (integrable_const dMax)
+    refine Integrable.mono' (g := fun _ ↦ dMax) (integrable_const dMax)
       h_meas_f.aestronglyMeasurable ?_
     exact Filter.Eventually.of_forall h_f_le
   have h_int_g : Integrable
-      (fun x : Fin n → α => Edδ + dMax * (B.indicator (fun _ => (1 : ℝ)) x)) P_X := by
-    refine Integrable.mono' (g := fun _ => Edδ + dMax) (integrable_const (Edδ + dMax))
+      (fun x : Fin n → α ↦ Edδ + dMax * (B.indicator (fun _ ↦ (1 : ℝ)) x)) P_X := by
+    refine Integrable.mono' (g := fun _ ↦ Edδ + dMax) (integrable_const (Edδ + dMax))
       h_meas_g.aestronglyMeasurable ?_
-    refine Filter.Eventually.of_forall (fun x => ?_)
-    have h_ind_le : (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) ≤ 1 := by
+    refine Filter.Eventually.of_forall (fun x ↦ ?_)
+    have h_ind_le : (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x) ≤ 1 := by
       by_cases hxB : x ∈ B
       · rw [Set.indicator_of_mem hxB]
       · rw [Set.indicator_of_notMem hxB]; linarith
-    have h_ind_nn : 0 ≤ (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) :=
-      Set.indicator_nonneg (fun _ _ => zero_le_one) x
-    have h_val_le : Edδ + dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x)
+    have h_ind_nn : 0 ≤ (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x) :=
+      Set.indicator_nonneg (fun _ _ ↦ zero_le_one) x
+    have h_val_le : Edδ + dMax * (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x)
         ≤ Edδ + dMax := by
       have h_inner :
-          dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) ≤ dMax := by
-        calc dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x)
+          dMax * (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x) ≤ dMax := by
+        calc dMax * (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x)
             ≤ dMax * 1 := mul_le_mul_of_nonneg_left h_ind_le h_dMax_nn
           _ = dMax := by ring
       linarith
-    have h_val_nn : 0 ≤ Edδ + dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) :=
+    have h_val_nn : 0 ≤ Edδ + dMax * (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x) :=
       add_nonneg h_Edδ_nn (mul_nonneg h_dMax_nn h_ind_nn)
     rw [Real.norm_eq_abs, abs_of_nonneg h_val_nn]
     exact h_val_le
   -- Monotone integral.
   have h_int_mono :
       ∫ x, blockDistortion d n x (c (jointTypicalLossyEncoder μ Xs Ys hM ε c x)) ∂P_X
-        ≤ ∫ x, Edδ + dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) ∂P_X :=
+        ≤ ∫ x, Edδ + dMax * (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x) ∂P_X :=
     integral_mono h_int_f h_int_g h_pointwise
   -- Evaluate the RHS integral using `integral_const_add_indicator_one`.
   have h_int_split :
-      ∫ x, Edδ + dMax * (B.indicator (fun _ : Fin n → α => (1 : ℝ)) x) ∂P_X
+      ∫ x, Edδ + dMax * (B.indicator (fun _ : Fin n → α ↦ (1 : ℝ)) x) ∂P_X
         = Edδ + dMax * P_X.real B :=
     integral_const_add_indicator_one P_X B h_B_meas Edδ dMax
   -- Combine.

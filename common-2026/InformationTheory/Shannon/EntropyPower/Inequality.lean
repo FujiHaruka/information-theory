@@ -106,7 +106,7 @@ This is the conclusion itself and is not used as a hypothesis (that would be cir
 output of the Gaussian saturation case and downstream intermediate results. -/
 def IsEntropyPowerInequalityHypothesis {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
-  entropyPower (P.map (fun ω => X ω + Y ω))
+  entropyPower (P.map (fun ω ↦ X ω + Y ω))
     ≥ entropyPower (P.map X) + entropyPower (P.map Y)
 
 /-! ### Gaussian saturation case -/
@@ -124,14 +124,14 @@ theorem entropyPower_gaussian_additivity
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
     (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
+    entropyPower (P.map (fun ω ↦ X ω + Y ω))
       = entropyPower (P.map X) + entropyPower (P.map Y) := by
   -- Step 1: `(X+Y).law = gaussianReal (m₁+m₂) (v₁+v₂)` from Mathlib.
-  have h_sum_law : P.map (fun ω => X ω + Y ω) = gaussianReal (m₁ + m₂) (v₁ + v₂) := by
+  have h_sum_law : P.map (fun ω ↦ X ω + Y ω) = gaussianReal (m₁ + m₂) (v₁ + v₂) := by
     have h := gaussianReal_add_gaussianReal_of_indepFun hXY hLawX hLawY
     -- `X + Y` in Mathlib lemma is `Pi.instAdd`-form which is defeq to `fun ω => X ω + Y ω`.
     -- Convert via `Pi.add_apply` / `funext`.
-    have h_eq : (X + Y) = fun ω => X ω + Y ω := by
+    have h_eq : (X + Y) = fun ω ↦ X ω + Y ω := by
       funext ω; rfl
     rw [h_eq] at h
     exact h
@@ -203,17 +203,17 @@ same reason, and this declaration was migrated from a stale
 theorem entropy_power_inequality_three_arg {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y Z : Ω → ℝ)
-    (h_xy_z_epi : IsEntropyPowerInequalityHypothesis (fun ω => X ω + Y ω) Z P)
+    (h_xy_z_epi : IsEntropyPowerInequalityHypothesis (fun ω ↦ X ω + Y ω) Z P)
     (h_x_y_epi : IsEntropyPowerInequalityHypothesis X Y P) :
-    entropyPower (P.map (fun ω => X ω + Y ω + Z ω))
+    entropyPower (P.map (fun ω ↦ X ω + Y ω + Z ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) + entropyPower (P.map Z) := by
   -- Step 1: from `h_xy_z_epi`, we get
   --   `entropyPower ((X+Y)+Z) ≥ entropyPower (X+Y) + entropyPower Z`.
-  have h1 : entropyPower (P.map (fun ω => X ω + Y ω + Z ω))
-      ≥ entropyPower (P.map (fun ω => X ω + Y ω)) + entropyPower (P.map Z) := by
+  have h1 : entropyPower (P.map (fun ω ↦ X ω + Y ω + Z ω))
+      ≥ entropyPower (P.map (fun ω ↦ X ω + Y ω)) + entropyPower (P.map Z) := by
     -- `fun ω => (X ω + Y ω) + Z ω` is `fun ω => X ω + Y ω + Z ω` (assoc).
-    have h_assoc : (fun ω : Ω => (X ω + Y ω) + Z ω)
-        = (fun ω : Ω => X ω + Y ω + Z ω) := by
+    have h_assoc : (fun ω : Ω ↦ (X ω + Y ω) + Z ω)
+        = (fun ω : Ω ↦ X ω + Y ω + Z ω) := by
       funext ω; ring
     have h := h_xy_z_epi
     unfold IsEntropyPowerInequalityHypothesis at h
@@ -221,7 +221,7 @@ theorem entropy_power_inequality_three_arg {Ω : Type*} {mΩ : MeasurableSpace �
     exact h
   -- Step 2: from `h_x_y_epi`, we get
   --   `entropyPower (X+Y) ≥ entropyPower X + entropyPower Y`.
-  have h2 : entropyPower (P.map (fun ω => X ω + Y ω))
+  have h2 : entropyPower (P.map (fun ω ↦ X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) := h_x_y_epi
   -- Combine via transitivity (add `entropyPower Z` to both sides of h2).
   linarith

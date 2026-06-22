@@ -24,7 +24,7 @@ for `i ≤ k`, use the genuine `pmfLogCond μ p i`; for `i > k`, use the
 noncomputable def pmfLogCondMarkov
     (μ : Measure Ω) [IsFiniteMeasure μ] (p : StationaryProcess μ α) (k i : ℕ) :
     Ω → ℝ :=
-  fun ω => if i ≤ k then pmfLogCond μ p i ω
+  fun ω ↦ if i ≤ k then pmfLogCond μ p i ω
            else pmfLogCond μ p k (p.T^[i - k] ω)
 
 omit [DecidableEq α] in
@@ -119,7 +119,7 @@ omit [DecidableEq α] in
 theorem birkhoffAverage_pmfLogCondMarkov_tendsto
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) (k : ℕ) :
     ∀ᵐ ω ∂μ, Filter.Tendsto
-      (fun n : ℕ =>
+      (fun n : ℕ ↦
         (∑ i ∈ Finset.range (n + 1),
             pmfLogCondMarkov μ p.toStationaryProcess k i ω) / (n + 1 : ℝ))
       Filter.atTop (𝓝 (conditionalEntropyTail μ p.toStationaryProcess k)) := by
@@ -132,7 +132,7 @@ theorem birkhoffAverage_pmfLogCondMarkov_tendsto
   -- and Birkhoff gives the inner average → ∫f = H_k.
   set f : Ω → ℝ := pmfLogCond μ p.toStationaryProcess k with hf_def
   have h_birk : ∀ᵐ ω ∂μ, Filter.Tendsto
-      (fun n => birkhoffAverageReal p.T f n ω) Filter.atTop
+      (fun n ↦ birkhoffAverageReal p.T f n ω) Filter.atTop
       (𝓝 (conditionalEntropyTail μ p.toStationaryProcess k)) :=
     birkhoffAverage_pmfLogCond_tendsto μ p k
   filter_upwards [h_birk] with ω h_birk_ω
@@ -152,21 +152,21 @@ theorem birkhoffAverage_pmfLogCondMarkov_tendsto
   -- Now establish three convergence facts.
   -- (a) (C - f ω) / (n+1) → 0.
   have h_inv : Filter.Tendsto
-      (fun n : ℕ => (1 : ℝ) / (n + 1 : ℝ)) Filter.atTop (𝓝 0) := by
-    have h_nat : Filter.Tendsto (fun n : ℕ => ((n : ℝ)) + 1) Filter.atTop Filter.atTop :=
+      (fun n : ℕ ↦ (1 : ℝ) / (n + 1 : ℝ)) Filter.atTop (𝓝 0) := by
+    have h_nat : Filter.Tendsto (fun n : ℕ ↦ ((n : ℝ)) + 1) Filter.atTop Filter.atTop :=
       Filter.tendsto_atTop_add_const_right _ 1 (tendsto_natCast_atTop_atTop (R := ℝ))
     have h2 := h_nat.inv_tendsto_atTop
-    refine h2.congr (fun n => ?_)
+    refine h2.congr (fun n ↦ ?_)
     simp [one_div]
   have h_a : Filter.Tendsto
-      (fun n : ℕ => (C - f ω) / (n + 1 : ℝ)) Filter.atTop (𝓝 0) := by
+      (fun n : ℕ ↦ (C - f ω) / (n + 1 : ℝ)) Filter.atTop (𝓝 0) := by
     have := h_inv.const_mul (C - f ω)
     simp only [mul_zero] at this
-    refine this.congr (fun n => ?_)
+    refine this.congr (fun n ↦ ?_)
     rw [mul_one_div]
   -- (b) (n-k+1)/(n+1) → 1.
   have h_b : Filter.Tendsto
-      (fun n : ℕ => ((n - k + 1 : ℕ) : ℝ) / (n + 1 : ℝ)) Filter.atTop (𝓝 1) := by
+      (fun n : ℕ ↦ ((n - k + 1 : ℕ) : ℝ) / (n + 1 : ℝ)) Filter.atTop (𝓝 1) := by
     -- Eventually equals (n+1-k)/(n+1) = 1 - k/(n+1) → 1.
     have h_eq : ∀ᶠ n in Filter.atTop,
         ((n - k + 1 : ℕ) : ℝ) / ((n : ℝ) + 1) = 1 - (k : ℝ) / ((n : ℝ) + 1) := by
@@ -179,21 +179,21 @@ theorem birkhoffAverage_pmfLogCondMarkov_tendsto
       rw [h_cast]
       have h_pos : ((n : ℝ) + 1) ≠ 0 := by positivity
       field_simp
-    refine Filter.Tendsto.congr' (h_eq.mono (fun n hn => hn.symm)) ?_
+    refine Filter.Tendsto.congr' (h_eq.mono (fun n hn ↦ hn.symm)) ?_
     have h_kdiv : Filter.Tendsto
-        (fun n : ℕ => (k : ℝ) / ((n : ℝ) + 1)) Filter.atTop (𝓝 0) := by
+        (fun n : ℕ ↦ (k : ℝ) / ((n : ℝ) + 1)) Filter.atTop (𝓝 0) := by
       have h := h_inv.const_mul (k : ℝ)
       simp only [mul_zero] at h
-      refine h.congr (fun n => ?_)
+      refine h.congr (fun n ↦ ?_)
       rw [mul_one_div]
-    have h_one : Filter.Tendsto (fun _ : ℕ => (1 : ℝ)) Filter.atTop (𝓝 1) :=
+    have h_one : Filter.Tendsto (fun _ : ℕ ↦ (1 : ℝ)) Filter.atTop (𝓝 1) :=
       tendsto_const_nhds
     have h_sub := h_one.sub h_kdiv
     simp only [sub_zero] at h_sub
     exact h_sub
   -- (c) birkhoffAverageReal T f (n-k) ω → H_k via composing Birkhoff with `n ↦ n-k`.
   have h_c : Filter.Tendsto
-      (fun n : ℕ => birkhoffAverageReal p.T f (n - k) ω) Filter.atTop
+      (fun n : ℕ ↦ birkhoffAverageReal p.T f (n - k) ω) Filter.atTop
       (𝓝 (conditionalEntropyTail μ p.toStationaryProcess k)) :=
     h_birk_ω.comp (Filter.tendsto_sub_atTop_nat k)
   -- Combine (b) * (c) + (a):
@@ -211,7 +211,7 @@ length `n`. -/
 noncomputable def negLogQk
     (μ : Measure Ω) [IsFiniteMeasure μ] (p : StationaryProcess μ α) (k n : ℕ) :
     Ω → ℝ :=
-  fun ω => ∑ i ∈ Finset.range n, pmfLogCondMarkov μ p k i ω
+  fun ω ↦ ∑ i ∈ Finset.range n, pmfLogCondMarkov μ p k i ω
 
 omit [DecidableEq α] in
 /-- `negLogQk μ p k n / n → conditionalEntropyTail μ p k` a.s. as `n → ∞`. -/
@@ -219,7 +219,7 @@ omit [DecidableEq α] in
 theorem negLogQk_div_tendsto_condEntropyTail
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) (k : ℕ) :
     ∀ᵐ ω ∂μ, Filter.Tendsto
-      (fun n : ℕ => negLogQk μ p.toStationaryProcess k n ω / n)
+      (fun n : ℕ ↦ negLogQk μ p.toStationaryProcess k n ω / n)
       Filter.atTop (𝓝 (conditionalEntropyTail μ p.toStationaryProcess k)) := by
   -- From `birkhoffAverage_pmfLogCondMarkov_tendsto`: for almost every ω,
   --   (∑_{i=0}^m markov k i ω)/(m+1) → H_k

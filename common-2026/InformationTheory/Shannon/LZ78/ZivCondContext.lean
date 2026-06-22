@@ -109,18 +109,18 @@ theorem sum_extend_marginal_real_eq
   classical
   -- Each pushforward singleton mass is the μ-measure of its preimage cylinder.
   have hpush : ∀ a : α, (μ.map (p.blockRV (m + 1))).real {Fin.snoc v a}
-      = μ.real (p.blockRV (m + 1) ⁻¹' {Fin.snoc v a}) := fun a =>
+      = μ.real (p.blockRV (m + 1) ⁻¹' {Fin.snoc v a}) := fun a ↦
     map_measureReal_apply (p.measurable_blockRV (m + 1)) (measurableSet_singleton _)
   simp only [hpush]
   -- The preimage cylinders are pairwise disjoint (injectivity of `snoc v`).
   have hdisj : Set.PairwiseDisjoint (↑(Finset.univ : Finset α))
-      (fun a : α => p.blockRV (m + 1) ⁻¹' {Fin.snoc v a}) := by
+      (fun a : α ↦ p.blockRV (m + 1) ⁻¹' {Fin.snoc v a}) := by
     intro a _ b _ hab
     have hsing : Disjoint ({Fin.snoc v a} : Set (Fin (m + 1) → α)) {Fin.snoc v b} :=
-      Set.disjoint_singleton.mpr (fun h => hab (Fin.snoc_inj.mp h).2)
+      Set.disjoint_singleton.mpr (fun h ↦ hab (Fin.snoc_inj.mp h).2)
     exact hsing.preimage _
   have hmeas : ∀ a ∈ (Finset.univ : Finset α),
-      MeasurableSet (p.blockRV (m + 1) ⁻¹' {Fin.snoc v a}) := fun a _ =>
+      MeasurableSet (p.blockRV (m + 1) ⁻¹' {Fin.snoc v a}) := fun a _ ↦
     (p.measurable_blockRV (m + 1)) (measurableSet_singleton _)
   -- Finite additivity collapses the sum into the measure of the disjoint union.
   rw [← measureReal_biUnion_finset hdisj hmeas]
@@ -202,13 +202,13 @@ theorem condContext_card_mul_log_le_sum_neg_log
   -- `∑ q > 0` from positivity on a nonempty index set.
   have hsumP_pos : 0 < ∑ a ∈ S, condContextProb μ p v a := Finset.sum_pos hPpos hS
   -- log-sum inequality with `a ≡ 1`, `b = condContextProb`.
-  have hlog := log_sum_inequality S (fun _ => (1 : ℝ)) (condContextProb μ p v)
-    (fun _ _ => zero_le_one) hPpos
+  have hlog := log_sum_inequality S (fun _ ↦ (1 : ℝ)) (condContextProb μ p v)
+    (fun _ _ ↦ zero_le_one) hPpos
   rw [Finset.sum_const, nsmul_eq_mul, mul_one] at hlog
   -- RHS terms: `1 · log (1 / q a) = -log (q a)`.
   have hrhs : (∑ a ∈ S, (1 : ℝ) * Real.log (1 / condContextProb μ p v a))
       = ∑ a ∈ S, - Real.log (condContextProb μ p v a) := by
-    refine Finset.sum_congr rfl (fun a ha => ?_)
+    refine Finset.sum_congr rfl (fun a ha ↦ ?_)
     rw [one_mul, Real.log_div one_ne_zero (hPpos a ha).ne', Real.log_one, zero_sub]
   rw [hrhs] at hlog
   refine le_trans ?_ hlog
@@ -260,7 +260,7 @@ theorem prod_condContextProb_path_telescope
   | zero => simp [prefixBlockProb_zero]
   | succ k ih =>
       have hk : ∀ m ≤ k, prefixBlockProb μ p ω m ≠ 0 :=
-        fun m hm => hpos m (Nat.le_succ_of_le hm)
+        fun m hm ↦ hpos m (Nat.le_succ_of_le hm)
       rw [Finset.prod_range_succ, ih hk, condContextProb_path_eq_ratio μ p k ω,
         mul_div_cancel₀ _ (hpos k (Nat.le_succ k))]
 

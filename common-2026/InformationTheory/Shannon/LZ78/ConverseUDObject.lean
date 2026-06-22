@@ -105,8 +105,8 @@ theorem uniquelyDecodable_of_constantLength {S : Set (List β)} {K : ℕ}
       obtain ⟨hab, hflat'⟩ := List.append_inj hflat (by rw [ha, hb])
       subst hab
       have hrec : L₁' = L₂' :=
-        ih L₂' (fun w hw => h₁ w (List.mem_cons_of_mem _ hw))
-          (fun w hw => h₂ w (List.mem_cons_of_mem _ hw)) hflat'
+        ih L₂' (fun w hw ↦ h₁ w (List.mem_cons_of_mem _ hw))
+          (fun w hw ↦ h₂ w (List.mem_cons_of_mem _ hw)) hflat'
       rw [hrec]
 
 end ConstantLength
@@ -129,7 +129,7 @@ theorem boolEncode_injOn {K m m' : ℕ} (hm : m < 2 ^ K) (hm' : m' < 2 ^ K)
   apply Nat.eq_of_testBit_eq
   intro i
   by_cases hi : i < K
-  · have h2 := congrArg (fun l => l[i]?) h
+  · have h2 := congrArg (fun l ↦ l[i]?) h
     simp only [boolEncode, List.getElem?_map, List.getElem?_range, hi,
       Option.map_some] at h2
     exact Option.some.inj h2
@@ -258,7 +258,7 @@ theorem lz78TokenCode_entropyD_le_expectedLength (c : ℕ)
     (hP : ∀ t : Fin (c + 1) × α, 0 < P.real {t}) :
     ShannonCode.entropyD (Fintype.card Bool : ℝ) P
       ≤ ShannonCode.expectedLength P
-          (fun t => (lz78TokenCode c t).length) :=
+          (fun t ↦ (lz78TokenCode c t).length) :=
   ShannonCode.entropyD_le_expectedLength_of_uniquelyDecodable
     (by rw [Fintype.card_bool]; norm_num) P hP (lz78TokenCode c)
     (injective_lz78TokenCode c) (uniquelyDecodable_lz78TokenCode c)

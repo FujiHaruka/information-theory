@@ -67,9 +67,9 @@ def IsMemorylessChannel (μ : Measure Ω) [IsFiniteMeasure μ]
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β) : Prop :=
   ∀ i : Fin n,
     Shannon.IsMarkovChain μ
-      (fun ω =>
-        ((fun (j : {j : Fin n // j ≠ i}) => Xs j.val ω),
-         (fun (j : {j : Fin n // j ≠ i}) => Ys j.val ω)))
+      (fun ω ↦
+        ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
+         (fun (j : {j : Fin n // j ≠ i}) ↦ Ys j.val ω)))
       (Xs i) (Ys i)
 
 /-- Accessor: extract the `i`-th Markov chain from `IsMemorylessChannel`. -/
@@ -78,9 +78,9 @@ lemma IsMemorylessChannel.markovChain (μ : Measure Ω) [IsFiniteMeasure μ]
     {Xs : Fin n → Ω → α} {Ys : Fin n → Ω → β}
     (h : IsMemorylessChannel μ Xs Ys) (i : Fin n) :
     Shannon.IsMarkovChain μ
-      (fun ω =>
-        ((fun (j : {j : Fin n // j ≠ i}) => Xs j.val ω),
-         (fun (j : {j : Fin n // j ≠ i}) => Ys j.val ω)))
+      (fun ω ↦
+        ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
+         (fun (j : {j : Fin n // j ≠ i}) ↦ Ys j.val ω)))
       (Xs i) (Ys i) :=
   h i
 
@@ -117,27 +117,27 @@ theorem condMutualInfo_le_of_markov_joint
     (hYo : Measurable Yo) (hWc : Measurable Wc)
     (hmarkov :
       Shannon.IsMarkovChain μ
-        (fun ω => (Wc ω, Xs ω)) (fun ω => (Wc ω, Zc ω)) Yo)
+        (fun ω ↦ (Wc ω, Xs ω)) (fun ω ↦ (Wc ω, Zc ω)) Yo)
     (hWcYo_fin : Shannon.mutualInfo μ Wc Yo ≠ ∞) :
     Shannon.condMutualInfo μ Xs Yo Wc ≤ Shannon.condMutualInfo μ Zc Yo Wc := by
-  have hWX : Measurable (fun ω => (Wc ω, Xs ω)) := hWc.prodMk hXs
-  have hWZ : Measurable (fun ω => (Wc ω, Zc ω)) := hWc.prodMk hZc
+  have hWX : Measurable (fun ω ↦ (Wc ω, Xs ω)) := hWc.prodMk hXs
+  have hWZ : Measurable (fun ω ↦ (Wc ω, Zc ω)) := hWc.prodMk hZc
   -- Chain rule for Xs: I((Wc, Xs); Yo) = I(Wc; Yo) + I(Xs; Yo | Wc).
   have h_chain_X :
-      Shannon.mutualInfo μ (fun ω => (Wc ω, Xs ω)) Yo
+      Shannon.mutualInfo μ (fun ω ↦ (Wc ω, Xs ω)) Yo
         = Shannon.mutualInfo μ Wc Yo + Shannon.condMutualInfo μ Xs Yo Wc :=
     Shannon.mutualInfo_chain_rule μ Xs Yo Wc hXs hYo hWc
   -- Chain rule for Zc: I((Wc, Zc); Yo) = I(Wc; Yo) + I(Zc; Yo | Wc).
   have h_chain_Z :
-      Shannon.mutualInfo μ (fun ω => (Wc ω, Zc ω)) Yo
+      Shannon.mutualInfo μ (fun ω ↦ (Wc ω, Zc ω)) Yo
         = Shannon.mutualInfo μ Wc Yo + Shannon.condMutualInfo μ Zc Yo Wc :=
     Shannon.mutualInfo_chain_rule μ Zc Yo Wc hZc hYo hWc
   -- Augmented Markov ⇒ I((Wc, Xs); Yo) ≤ I((Wc, Zc); Yo).
   have h_aug :
-      Shannon.mutualInfo μ (fun ω => (Wc ω, Xs ω)) Yo
-        ≤ Shannon.mutualInfo μ (fun ω => (Wc ω, Zc ω)) Yo :=
+      Shannon.mutualInfo μ (fun ω ↦ (Wc ω, Xs ω)) Yo
+        ≤ Shannon.mutualInfo μ (fun ω ↦ (Wc ω, Zc ω)) Yo :=
     Shannon.mutualInfo_le_of_markov μ
-      (fun ω => (Wc ω, Xs ω)) (fun ω => (Wc ω, Zc ω)) Yo
+      (fun ω ↦ (Wc ω, Xs ω)) (fun ω ↦ (Wc ω, Zc ω)) Yo
       hWX hWZ hYo hmarkov
   -- Rewrite and cancel I(Wc; Yo).
   rw [h_chain_X, h_chain_Z] at h_aug
@@ -169,51 +169,51 @@ theorem condMutualInfo_chain_rule_X_2var
     (hX : Measurable X_RV) (hX' : Measurable X'_RV)
     (hYo : Measurable Yo) (hWc : Measurable Wc)
     (hWcY_fin : Shannon.mutualInfo μ Wc Yo ≠ ∞) :
-    Shannon.condMutualInfo μ (fun ω => (X_RV ω, X'_RV ω)) Yo Wc
+    Shannon.condMutualInfo μ (fun ω ↦ (X_RV ω, X'_RV ω)) Yo Wc
       = Shannon.condMutualInfo μ X_RV Yo Wc
-        + Shannon.condMutualInfo μ X'_RV Yo (fun ω => (Wc ω, X_RV ω)) := by
-  have hXX' : Measurable (fun ω => (X_RV ω, X'_RV ω)) := hX.prodMk hX'
-  have hWX : Measurable (fun ω => (Wc ω, X_RV ω)) := hWc.prodMk hX
+        + Shannon.condMutualInfo μ X'_RV Yo (fun ω ↦ (Wc ω, X_RV ω)) := by
+  have hXX' : Measurable (fun ω ↦ (X_RV ω, X'_RV ω)) := hX.prodMk hX'
+  have hWX : Measurable (fun ω ↦ (Wc ω, X_RV ω)) := hWc.prodMk hX
   -- Step (A): I((Wc, (X, X')); Y) = I(Wc; Y) + condMI (X, X') Y Wc.
   have hA :
-      Shannon.mutualInfo μ (fun ω => (Wc ω, X_RV ω, X'_RV ω)) Yo
+      Shannon.mutualInfo μ (fun ω ↦ (Wc ω, X_RV ω, X'_RV ω)) Yo
         = Shannon.mutualInfo μ Wc Yo
-          + Shannon.condMutualInfo μ (fun ω => (X_RV ω, X'_RV ω)) Yo Wc :=
-    Shannon.mutualInfo_chain_rule μ (fun ω => (X_RV ω, X'_RV ω)) Yo Wc hXX' hYo hWc
+          + Shannon.condMutualInfo μ (fun ω ↦ (X_RV ω, X'_RV ω)) Yo Wc :=
+    Shannon.mutualInfo_chain_rule μ (fun ω ↦ (X_RV ω, X'_RV ω)) Yo Wc hXX' hYo hWc
   -- Step (B): Reshape (Wc, (X, X')) ↔ ((Wc, X), X') via prodAssoc.
   -- prodAssoc : (Wc × X) × X' ≃ᵐ Wc × (X × X')
   -- so prodAssoc.symm : Wc × (X × X') → (Wc × X) × X'.
   let eAssoc : W × (X × X') ≃ᵐ (W × X) × X' :=
     (MeasurableEquiv.prodAssoc (α := W) (β := X) (γ := X')).symm
   have h_eAssoc_apply : ∀ ω,
-      eAssoc (Wc ω, X_RV ω, X'_RV ω) = ((Wc ω, X_RV ω), X'_RV ω) := fun _ => rfl
+      eAssoc (Wc ω, X_RV ω, X'_RV ω) = ((Wc ω, X_RV ω), X'_RV ω) := fun _ ↦ rfl
   have h_reshape :
       Shannon.mutualInfo μ
-          (fun ω => ((Wc ω, X_RV ω), X'_RV ω)) Yo
-        = Shannon.mutualInfo μ (fun ω => (Wc ω, X_RV ω, X'_RV ω)) Yo := by
-    have h_RV_meas : Measurable (fun ω => (Wc ω, X_RV ω, X'_RV ω)) :=
+          (fun ω ↦ ((Wc ω, X_RV ω), X'_RV ω)) Yo
+        = Shannon.mutualInfo μ (fun ω ↦ (Wc ω, X_RV ω, X'_RV ω)) Yo := by
+    have h_RV_meas : Measurable (fun ω ↦ (Wc ω, X_RV ω, X'_RV ω)) :=
       hWc.prodMk hXX'
     have hMap :
         Shannon.mutualInfo μ
-            (fun ω => eAssoc (Wc ω, X_RV ω, X'_RV ω)) Yo
-          = Shannon.mutualInfo μ (fun ω => (Wc ω, X_RV ω, X'_RV ω)) Yo :=
+            (fun ω ↦ eAssoc (Wc ω, X_RV ω, X'_RV ω)) Yo
+          = Shannon.mutualInfo μ (fun ω ↦ (Wc ω, X_RV ω, X'_RV ω)) Yo :=
       Shannon.mutualInfo_map_left_measurableEquiv μ
-        (fun ω => (Wc ω, X_RV ω, X'_RV ω)) Yo h_RV_meas hYo eAssoc
+        (fun ω ↦ (Wc ω, X_RV ω, X'_RV ω)) Yo h_RV_meas hYo eAssoc
     -- The two sides are pointwise-equal as functions of ω.
-    have : (fun ω => eAssoc (Wc ω, X_RV ω, X'_RV ω))
-        = (fun ω => ((Wc ω, X_RV ω), X'_RV ω)) := funext h_eAssoc_apply
+    have : (fun ω ↦ eAssoc (Wc ω, X_RV ω, X'_RV ω))
+        = (fun ω ↦ ((Wc ω, X_RV ω), X'_RV ω)) := funext h_eAssoc_apply
     rw [this] at hMap
     exact hMap
   -- Step (C): I(((Wc, X), X'); Y) = I((Wc, X); Y) + condMI X' Y (Wc, X).
   have hC :
-      Shannon.mutualInfo μ (fun ω => ((Wc ω, X_RV ω), X'_RV ω)) Yo
-        = Shannon.mutualInfo μ (fun ω => (Wc ω, X_RV ω)) Yo
-          + Shannon.condMutualInfo μ X'_RV Yo (fun ω => (Wc ω, X_RV ω)) :=
-    Shannon.mutualInfo_chain_rule μ X'_RV Yo (fun ω => (Wc ω, X_RV ω))
+      Shannon.mutualInfo μ (fun ω ↦ ((Wc ω, X_RV ω), X'_RV ω)) Yo
+        = Shannon.mutualInfo μ (fun ω ↦ (Wc ω, X_RV ω)) Yo
+          + Shannon.condMutualInfo μ X'_RV Yo (fun ω ↦ (Wc ω, X_RV ω)) :=
+    Shannon.mutualInfo_chain_rule μ X'_RV Yo (fun ω ↦ (Wc ω, X_RV ω))
       hX' hYo hWX
   -- Step (D): I((Wc, X); Y) = I(Wc; Y) + condMI X Y Wc.
   have hD :
-      Shannon.mutualInfo μ (fun ω => (Wc ω, X_RV ω)) Yo
+      Shannon.mutualInfo μ (fun ω ↦ (Wc ω, X_RV ω)) Yo
         = Shannon.mutualInfo μ Wc Yo + Shannon.condMutualInfo μ X_RV Yo Wc :=
     Shannon.mutualInfo_chain_rule μ X_RV Yo Wc hX hYo hWc
   -- Combine: chain reshape + C + D gives the same LHS as A.
@@ -227,10 +227,10 @@ theorem condMutualInfo_chain_rule_X_2var
   -- Cancel I(Wc; Y) from both sides.
   have hC' :
       Shannon.mutualInfo μ Wc Yo
-          + Shannon.condMutualInfo μ (fun ω => (X_RV ω, X'_RV ω)) Yo Wc
+          + Shannon.condMutualInfo μ (fun ω ↦ (X_RV ω, X'_RV ω)) Yo Wc
         = Shannon.mutualInfo μ Wc Yo
           + (Shannon.condMutualInfo μ X_RV Yo Wc
-            + Shannon.condMutualInfo μ X'_RV Yo (fun ω => (Wc ω, X_RV ω))) := by
+            + Shannon.condMutualInfo μ X'_RV Yo (fun ω ↦ (Wc ω, X_RV ω))) := by
     rw [← add_assoc]; exact hC
   exact WithTop.add_left_cancel hWcY_fin hC'
 
@@ -252,17 +252,17 @@ theorem condMutualInfo_chain_rule_Y_2var
     (hX : Measurable X_RV) (hA : Measurable A)
     (hB : Measurable B) (hWc : Measurable Wc)
     (hWcX_fin : Shannon.mutualInfo μ Wc X_RV ≠ ∞) :
-    Shannon.condMutualInfo μ X_RV (fun ω => (A ω, B ω)) Wc
+    Shannon.condMutualInfo μ X_RV (fun ω ↦ (A ω, B ω)) Wc
       = Shannon.condMutualInfo μ X_RV A Wc
-        + Shannon.condMutualInfo μ X_RV B (fun ω => (Wc ω, A ω)) := by
-  have hAB : Measurable (fun ω => (A ω, B ω)) := hA.prodMk hB
-  have hWA : Measurable (fun ω => (Wc ω, A ω)) := hWc.prodMk hA
+        + Shannon.condMutualInfo μ X_RV B (fun ω ↦ (Wc ω, A ω)) := by
+  have hAB : Measurable (fun ω ↦ (A ω, B ω)) := hA.prodMk hB
+  have hWA : Measurable (fun ω ↦ (Wc ω, A ω)) := hWc.prodMk hA
   -- LHS: condMI X (A,B) Wc = condMI (A,B) X Wc (by comm).
-  rw [Shannon.condMutualInfo_comm μ X_RV (fun ω => (A ω, B ω)) Wc hX hAB hWc]
+  rw [Shannon.condMutualInfo_comm μ X_RV (fun ω ↦ (A ω, B ω)) Wc hX hAB hWc]
   -- Term 1: condMI X A Wc = condMI A X Wc.
   rw [Shannon.condMutualInfo_comm μ X_RV A Wc hX hA hWc]
   -- Term 2: condMI X B (Wc, A) = condMI B X (Wc, A).
-  rw [Shannon.condMutualInfo_comm μ X_RV B (fun ω => (Wc ω, A ω)) hX hB hWA]
+  rw [Shannon.condMutualInfo_comm μ X_RV B (fun ω ↦ (Wc ω, A ω)) hX hB hWA]
   -- Now reduce to X-axis 2-var.
   exact condMutualInfo_chain_rule_X_2var μ A B X_RV Wc hA hB hX hWc hWcX_fin
 

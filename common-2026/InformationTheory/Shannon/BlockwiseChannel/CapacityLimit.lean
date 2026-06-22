@@ -40,7 +40,7 @@ theorem capacity_lim_eq_capacity_of_memoryless
   have h_eq_eventually :
       ∀ᶠ n : ℕ in Filter.atTop,
         ((BlockwiseChannel.ofMemoryless W).capacityN n).toReal / (n : ℝ) = capacity W := by
-    refine Filter.eventually_atTop.mpr ⟨1, fun n hn => ?_⟩
+    refine Filter.eventually_atTop.mpr ⟨1, fun n hn ↦ ?_⟩
     have hn_pos : 0 < n := hn
     have hn_real_pos : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn_pos
     have hN := capacityN_ofMemoryless_eq W n hn_pos
@@ -50,10 +50,10 @@ theorem capacity_lim_eq_capacity_of_memoryless
     field_simp
   have h_tendsto :
       Filter.Tendsto
-        (fun n : ℕ => ((BlockwiseChannel.ofMemoryless W).capacityN n).toReal / (n : ℝ))
+        (fun n : ℕ ↦ ((BlockwiseChannel.ofMemoryless W).capacityN n).toReal / (n : ℝ))
         Filter.atTop (nhds (capacity W)) := by
     refine (tendsto_const_nhds (x := capacity W)).congr' ?_
-    exact h_eq_eventually.mono (fun n hn => hn.symm)
+    exact h_eq_eventually.mono (fun n hn ↦ hn.symm)
   unfold BlockwiseChannel.capacity_lim
   exact h_tendsto.limUnder_eq
 

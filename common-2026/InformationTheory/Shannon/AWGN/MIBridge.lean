@@ -150,9 +150,9 @@ theorem awgn_cond_entropy_eq_noise_entropy_of_const
   have h_const : ∀ x,
       InformationTheory.Shannon.differentialEntropy ((awgnChannel N h_meas) x)
         = InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N) :=
-    fun x => differentialEntropy_awgnChannel_apply_eq_noise N hN h_meas x
+    fun x ↦ differentialEntropy_awgnChannel_apply_eq_noise N hN h_meas x
   -- ∫ const ∂(gaussianReal 0 P) = const · (gaussianReal 0 P).real univ = const · 1.
-  rw [integral_congr_ae (Filter.Eventually.of_forall (fun x => h_const x))]
+  rw [integral_congr_ae (Filter.Eventually.of_forall (fun x ↦ h_const x))]
   -- ∫ c ∂μ = c (probability measure).
   simp
 
@@ -199,7 +199,7 @@ theorem awgn_mi_gaussian_closed_form_of_primitives
         (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas)).toReal
       = (1/2) * Real.log (1 + P / (N : ℝ)) := by
   have hN_NN : N ≠ 0 :=
-    fun h => hN (by exact_mod_cast (congrArg (fun x : ℝ≥0 => (x : ℝ)) h))
+    fun h ↦ hN (by exact_mod_cast (congrArg (fun x : ℝ≥0 ↦ (x : ℝ)) h))
   have h_cond : IsAwgnCondEntropyEqNoise P N h_meas :=
     awgn_cond_entropy_eq_noise_entropy_of_const P N hN_NN h_meas
   have h_mi_bridge :=
@@ -216,7 +216,7 @@ theorem awgn_mi_gaussian_closed_form_of_primitives
       have hPnn : (0 : ℝ) ≤ (P.toNNReal : ℝ≥0) := (P.toNNReal).coe_nonneg
       have hNnn : (0 : ℝ) ≤ N := N.coe_nonneg
       have hsum : ((P.toNNReal : ℝ≥0) : ℝ) + N = 0 := by
-        exact_mod_cast (congrArg (fun x : ℝ≥0 => (x : ℝ)) h)
+        exact_mod_cast (congrArg (fun x : ℝ≥0 ↦ (x : ℝ)) h)
       linarith
     rw [hP_toNN] at hP0
     exact hP_pos.ne' hP0
@@ -259,7 +259,7 @@ theorem awgn_capacity_closed_form_F2_discharged
     (h_out : IsAwgnOutputGaussian P N (isAwgnChannelMeasurable N))
     (h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N))
     (h_bdd :
-        BddAbove ((fun p : Measure ℝ =>
+        BddAbove ((fun p : Measure ℝ ↦
             (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
                 p (awgnChannel N (isAwgnChannelMeasurable N))).toReal) ''
           awgnPowerConstraintSet P))

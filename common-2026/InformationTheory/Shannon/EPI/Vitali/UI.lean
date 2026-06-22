@@ -70,7 +70,7 @@ theorem convDensityAdd_gaussian_nonneg {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤
     {t : ℝ} (ht : 0 < t) (x : ℝ) :
     0 ≤ convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x :=
   convDensityAdd_pXpY_nonneg pX (gaussianPDFReal 0 ⟨t, ht.le⟩) hpX_nn
-    (fun y => gaussianPDFReal_nonneg 0 ⟨t, ht.le⟩ y) x
+    (fun y ↦ gaussianPDFReal_nonneg 0 ⟨t, ht.le⟩ y) x
 
 /-- The smoothed-density measure `μ_t := volume.withDensity (ofReal ∘ f_t)` is a
 probability measure (Step 2).
@@ -80,13 +80,13 @@ theorem convDensityAdd_gaussian_isProbabilityMeasure {pX : ℝ → ℝ}
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
     {t : ℝ} (ht : 0 < t) :
     IsProbabilityMeasure
-      (volume.withDensity (fun x =>
+      (volume.withDensity (fun x ↦
         ENNReal.ofReal (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x))) := by
   set f : ℝ → ℝ := convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) with hf_def
   have hf_int : Integrable f volume :=
     convDensityAdd_pXpY_integrable pX (gaussianPDFReal 0 ⟨t, ht.le⟩) hpX_int hpX_meas
       (integrable_gaussianPDFReal 0 ⟨t, ht.le⟩) (measurable_gaussianPDFReal 0 ⟨t, ht.le⟩)
-  have hf_nn : ∀ x, 0 ≤ f x := fun x => convDensityAdd_gaussian_nonneg hpX_nn ht x
+  have hf_nn : ∀ x, 0 ≤ f x := fun x ↦ convDensityAdd_gaussian_nonneg hpX_nn ht x
   have hf_mass : ∫ x, f x ∂volume = 1 :=
     integral_convDensityAdd_gaussian_eq_one pX ht hpX_int hpX_mass
   have hf_meas : Measurable f := convDensityAdd_gaussian_measurable hpX_meas ht
@@ -103,16 +103,16 @@ theorem differentialEntropy_convDensityAdd_gaussian_eq {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     {t : ℝ} (ht : 0 < t) :
     differentialEntropy
-        (volume.withDensity (fun x =>
+        (volume.withDensity (fun x ↦
           ENNReal.ofReal (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x)))
       = ∫ x, Real.negMulLog (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) ∂volume := by
   set f : ℝ → ℝ := convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) with hf_def
   have hf_meas : Measurable f := convDensityAdd_gaussian_measurable hpX_meas ht
-  have hf_nn : ∀ x, 0 ≤ f x := fun x => convDensityAdd_gaussian_nonneg hpX_nn ht x
-  have hofReal_meas : Measurable (fun x => ENNReal.ofReal (f x)) :=
+  have hf_nn : ∀ x, 0 ≤ f x := fun x ↦ convDensityAdd_gaussian_nonneg hpX_nn ht x
+  have hofReal_meas : Measurable (fun x ↦ ENNReal.ofReal (f x)) :=
     ENNReal.measurable_ofReal.comp hf_meas
-  have hrn : (volume.withDensity (fun x => ENNReal.ofReal (f x))).rnDeriv volume
-      =ᵐ[volume] fun x => ENNReal.ofReal (f x) :=
+  have hrn : (volume.withDensity (fun x ↦ ENNReal.ofReal (f x))).rnDeriv volume
+      =ᵐ[volume] fun x ↦ ENNReal.ofReal (f x) :=
     Measure.rnDeriv_withDensity volume hofReal_meas
   rw [differentialEntropy]
   refine integral_congr_ae ?_
@@ -125,34 +125,34 @@ theorem differentialEntropy_convDensityAdd_gaussian_eq {pX : ℝ → ℝ}
 theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    (hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume)
     {t : ℝ} (ht : 0 < t) :
-    Integrable (fun x => x ^ 2 * convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) volume := by
+    Integrable (fun x ↦ x ^ 2 * convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) volume := by
   set g : ℝ → ℝ := gaussianPDFReal 0 ⟨t, ht.le⟩ with hg_def
   set p_t : ℝ → ℝ := convDensityAdd pX g with hp_def
   -- The nonneg double-integrand `K x y := x² · (pX y · g (x - y)) ≥ 0`.
-  set K : ℝ → ℝ → ℝ := fun x y => x ^ 2 * (pX y * g (x - y)) with hK_def
-  have hK_nn : ∀ x y, 0 ≤ K x y := fun x y =>
+  set K : ℝ → ℝ → ℝ := fun x y ↦ x ^ 2 * (pX y * g (x - y)) with hK_def
+  have hK_nn : ∀ x y, 0 ≤ K x y := fun x y ↦
     mul_nonneg (sq_nonneg _) (mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _))
-  have hKofReal_meas : Measurable (fun p : ℝ × ℝ => ENNReal.ofReal (K p.1 p.2)) := by
+  have hKofReal_meas : Measurable (fun p : ℝ × ℝ ↦ ENNReal.ofReal (K p.1 p.2)) := by
     refine ENNReal.measurable_ofReal.comp ?_
     refine (measurable_fst.pow_const 2).mul ?_
     exact (hpX_meas.comp measurable_snd).mul
       ((measurable_gaussianPDFReal 0 ⟨t, ht.le⟩).comp (measurable_fst.sub measurable_snd))
-  have hp_nn : ∀ x, 0 ≤ p_t x := fun x =>
-    integral_nonneg fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _)
+  have hp_nn : ∀ x, 0 ≤ p_t x := fun x ↦
+    integral_nonneg fun y ↦ mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _)
   -- inner integrand `y ↦ pX y · g (x - y)` is integrable (convolution integrand).
-  have hconv_int : ∀ x, Integrable (fun y => pX y * g (x - y)) volume := fun x => by
+  have hconv_int : ∀ x, Integrable (fun y ↦ pX y * g (x - y)) volume := fun x ↦ by
     refine hpX_int.mul_bdd (c := (Real.sqrt (2 * Real.pi * (⟨t, ht.le⟩ : ℝ≥0)))⁻¹) ?_ ?_
     · exact ((measurable_gaussianPDFReal 0 ⟨t, ht.le⟩).comp
         (measurable_const.sub measurable_id)).aestronglyMeasurable
-    · refine Filter.Eventually.of_forall (fun y => ?_)
+    · refine Filter.Eventually.of_forall (fun y ↦ ?_)
       rw [Real.norm_eq_abs, abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (x - y))]
       show gaussianPDFReal 0 ⟨t, ht.le⟩ (x - y) ≤ _
       rw [gaussianPDFReal]
       refine mul_le_of_le_one_right (by positivity) (Real.exp_le_one_iff.mpr ?_)
       rw [neg_div]; exact neg_nonpos.mpr (by positivity)
-  have hsq_mom_int : Integrable (fun u => u ^ 2 * g u) volume := by
+  have hsq_mom_int : Integrable (fun u ↦ u ^ 2 * g u) volume := by
     simpa [hg_def] using
       InformationTheory.Shannon.FisherInfo.integrable_sq_mul_gaussianPDFReal ht
   -- ── Step A: lift LHS to a double lintegral over `(x,y)`. ──
@@ -162,10 +162,10 @@ theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
     rw [← integral_const_mul]
   have hLHS_lint : (∫⁻ x, ENNReal.ofReal (x ^ 2 * p_t x) ∂volume)
       = ∫⁻ x, ∫⁻ y, ENNReal.ofReal (K x y) ∂volume ∂volume := by
-    refine lintegral_congr fun x => ?_
+    refine lintegral_congr fun x ↦ ?_
     rw [hLHS_inner x]
-    refine ofReal_integral_eq_lintegral_ofReal ?_ (Filter.Eventually.of_forall fun y => hK_nn x y)
-    refine ((hconv_int x).const_mul (x ^ 2)).congr (Filter.Eventually.of_forall fun y => ?_)
+    refine ofReal_integral_eq_lintegral_ofReal ?_ (Filter.Eventually.of_forall fun y ↦ hK_nn x y)
+    refine ((hconv_int x).const_mul (x ^ 2)).congr (Filter.Eventually.of_forall fun y ↦ ?_)
     simp only [hK_def]
   -- ── Step B: Tonelli swap + inner Gaussian moment `∫_x x²·g(x-y) = y²+t`. ──
   have hswap : (∫⁻ x, ∫⁻ y, ENNReal.ofReal (K x y) ∂volume ∂volume)
@@ -173,32 +173,32 @@ theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
     lintegral_lintegral_swap hKofReal_meas.aemeasurable
   have hg_int : Integrable g volume := by
     rw [hg_def]; exact integrable_gaussianPDFReal 0 ⟨t, ht.le⟩
-  have hid_g_int : Integrable (fun u => u * g u) volume := by
+  have hid_g_int : Integrable (fun u ↦ u * g u) volume := by
     have hmem : MemLp (id : ℝ → ℝ) 1 (gaussianReal 0 ⟨t, ht.le⟩) := memLp_id_gaussianReal 1
     have hv_ne : (⟨t, ht.le⟩ : ℝ≥0) ≠ 0 := by
       intro h; exact ht.ne' (congrArg NNReal.toReal h)
-    have hid_g : Integrable (fun u => u) (gaussianReal 0 ⟨t, ht.le⟩) := by
+    have hid_g : Integrable (fun u ↦ u) (gaussianReal 0 ⟨t, ht.le⟩) := by
       have := (memLp_one_iff_integrable (μ := gaussianReal 0 ⟨t, ht.le⟩)
         (f := (id : ℝ → ℝ))).mp hmem
       simpa using this
     rw [gaussianReal_of_var_ne_zero _ hv_ne] at hid_g
     rw [integrable_withDensity_iff (measurable_gaussianPDF _ _)
-      (ae_of_all _ fun _ => gaussianPDF_lt_top)] at hid_g
-    refine hid_g.congr (Filter.Eventually.of_forall fun u => ?_)
+      (ae_of_all _ fun _ ↦ gaussianPDF_lt_top)] at hid_g
+    refine hid_g.congr (Filter.Eventually.of_forall fun u ↦ ?_)
     simp only [hg_def, gaussianPDF, ENNReal.toReal_ofReal (gaussianPDFReal_nonneg _ _ _)]
-  have hsq_shift_int : ∀ y, Integrable (fun x => x ^ 2 * g (x - y)) volume := by
+  have hsq_shift_int : ∀ y, Integrable (fun x ↦ x ^ 2 * g (x - y)) volume := by
     intro y
-    have hexp : Integrable (fun u => (u + y) ^ 2 * g u) volume := by
+    have hexp : Integrable (fun u ↦ (u + y) ^ 2 * g u) volume := by
       have : Integrable
-          (fun u => u ^ 2 * g u + 2 * y * (u * g u) + y ^ 2 * g u) volume :=
+          (fun u ↦ u ^ 2 * g u + 2 * y * (u * g u) + y ^ 2 * g u) volume :=
         (hsq_mom_int.add (hid_g_int.const_mul (2 * y))).add (hg_int.const_mul (y ^ 2))
-      refine this.congr (Filter.Eventually.of_forall fun u => ?_); ring
+      refine this.congr (Filter.Eventually.of_forall fun u ↦ ?_); ring
     have := hexp.comp_sub_right y
-    refine this.congr (Filter.Eventually.of_forall fun x => ?_)
+    refine this.congr (Filter.Eventually.of_forall fun x ↦ ?_)
     simp only [sub_add_cancel]
-  have hxint : ∀ y, Integrable (fun x => K x y) volume := fun y => by
+  have hxint : ∀ y, Integrable (fun x ↦ K x y) volume := fun y ↦ by
     refine ((hsq_shift_int y).const_mul (pX y)).congr
-      (Filter.Eventually.of_forall fun x => ?_)
+      (Filter.Eventually.of_forall fun x ↦ ?_)
     simp only [hK_def]; ring
   -- inner Gaussian shift moment `∫ x, x²·g(x-y) = y²+t` (reconstructed inline, public API).
   have hv_ne : (⟨t, ht.le⟩ : ℝ≥0) ≠ 0 := by
@@ -206,11 +206,11 @@ theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
   have hid_mom0 : ∫ x, x * g x ∂volume = 0 := by
     calc ∫ x, x * g x ∂volume
         = ∫ x, g x • x ∂volume := by
-          refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
+          refine integral_congr_ae (Filter.Eventually.of_forall fun x ↦ ?_)
           simp [hg_def, smul_eq_mul, mul_comm]
       _ = ∫ x, x ∂(gaussianReal 0 ⟨t, ht.le⟩) := by
           rw [hg_def]
-          exact (integral_gaussianReal_eq_integral_smul (μ := 0) (f := fun x => x) hv_ne).symm
+          exact (integral_gaussianReal_eq_integral_smul (μ := 0) (f := fun x ↦ x) hv_ne).symm
       _ = 0 := ProbabilityTheory.integral_id_gaussianReal
   have hsq_mom0 : ∫ x, x ^ 2 * g x ∂volume = t := by
     simpa [hg_def] using
@@ -222,7 +222,7 @@ theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
     have hsub : ∫ x, x ^ 2 * g (x - y) ∂volume
         = ∫ x, (x + y) ^ 2 * g x ∂volume := by
       have := MeasureTheory.integral_add_right_eq_self
-        (μ := volume) (fun x => x ^ 2 * g (x - y)) y
+        (μ := volume) (fun x ↦ x ^ 2 * g (x - y)) y
       simp only [add_sub_cancel_right] at this
       rw [← this]
     rw [hsub]
@@ -241,31 +241,31 @@ theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
       = ENNReal.ofReal (pX y * (y ^ 2 + t)) := by
     intro y
     rw [← ofReal_integral_eq_lintegral_ofReal (hxint y)
-      (Filter.Eventually.of_forall fun x => hK_nn x y)]
+      (Filter.Eventually.of_forall fun x ↦ hK_nn x y)]
     congr 1
-    rw [show (fun x => K x y) = (fun x => pX y * (x ^ 2 * g (x - y))) from by
+    rw [show (fun x ↦ K x y) = (fun x ↦ pX y * (x ^ 2 * g (x - y))) from by
       funext x; simp only [hK_def]; ring, integral_const_mul]
     rw [hshift y]
   -- ── Step C: outer integral over `y`. ──
-  have hpX_polymom_int : Integrable (fun y => pX y * (y ^ 2 + t)) volume := by
-    have : Integrable (fun y => y ^ 2 * pX y + pX y * t) volume :=
+  have hpX_polymom_int : Integrable (fun y ↦ pX y * (y ^ 2 + t)) volume := by
+    have : Integrable (fun y ↦ y ^ 2 * pX y + pX y * t) volume :=
       hpX_mom.add (hpX_int.mul_const t)
-    refine this.congr (Filter.Eventually.of_forall fun y => ?_); ring
+    refine this.congr (Filter.Eventually.of_forall fun y ↦ ?_); ring
   have houter : (∫⁻ y, ENNReal.ofReal (pX y * (y ^ 2 + t)) ∂volume)
       = ENNReal.ofReal (∫ y, pX y * (y ^ 2 + t) ∂volume) :=
     (ofReal_integral_eq_lintegral_ofReal hpX_polymom_int
-      (Filter.Eventually.of_forall fun y =>
+      (Filter.Eventually.of_forall fun y ↦
         mul_nonneg (hpX_nn y) (by positivity))).symm
   -- ── Assemble: `Integrable` via AEStronglyMeasurable + finite lintegral of norm. ──
-  have hmeas : AEStronglyMeasurable (fun x => x ^ 2 * p_t x) volume := by
+  have hmeas : AEStronglyMeasurable (fun x ↦ x ^ 2 * p_t x) volume := by
     refine (measurable_id.pow_const 2).aestronglyMeasurable.mul ?_
     rw [hp_def]
     exact (convDensityAdd_pXpY_measurable pX g hpX_meas
       (measurable_gaussianPDFReal 0 ⟨t, ht.le⟩)).aestronglyMeasurable
   refine ⟨hmeas, ?_⟩
   rw [hasFiniteIntegral_iff_enorm]
-  have hnorm : (fun x => (‖x ^ 2 * p_t x‖ₑ : ℝ≥0∞))
-      = (fun x => ENNReal.ofReal (x ^ 2 * p_t x)) := by
+  have hnorm : (fun x ↦ (‖x ^ 2 * p_t x‖ₑ : ℝ≥0∞))
+      = (fun x ↦ ENNReal.ofReal (x ^ 2 * p_t x)) := by
     funext x
     rw [Real.enorm_eq_ofReal (mul_nonneg (sq_nonneg _) (hp_nn x))]
   rw [hnorm, hLHS_lint, hswap]
@@ -279,23 +279,23 @@ theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
 theorem convDensityAdd_gaussian_id_integrable {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    (hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume)
     {t : ℝ} (ht : 0 < t) :
-    Integrable (fun x => x * convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) volume := by
+    Integrable (fun x ↦ x * convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) volume := by
   set g : ℝ → ℝ := gaussianPDFReal 0 ⟨t, ht.le⟩ with hg_def
   set p_t : ℝ → ℝ := convDensityAdd pX g with hp_def
-  have hp_nn : ∀ x, 0 ≤ p_t x := fun x => convDensityAdd_gaussian_nonneg hpX_nn ht x
+  have hp_nn : ∀ x, 0 ≤ p_t x := fun x ↦ convDensityAdd_gaussian_nonneg hpX_nn ht x
   have hf_int : Integrable p_t volume := by
     rw [hp_def]
     exact convDensityAdd_pXpY_integrable pX g hpX_int hpX_meas
       (integrable_gaussianPDFReal 0 ⟨t, ht.le⟩) (measurable_gaussianPDFReal 0 ⟨t, ht.le⟩)
-  have hsq_int : Integrable (fun x => x ^ 2 * p_t x) volume := by
+  have hsq_int : Integrable (fun x ↦ x ^ 2 * p_t x) volume := by
     rw [hp_def]
     exact convDensityAdd_gaussian_sq_integrable hpX_nn hpX_meas hpX_int hpX_mom ht
   -- Majorant `|x|·p_t x ≤ (p_t x + x²·p_t x)/2` (from `|x| ≤ (1+x²)/2`, `p_t ≥ 0`).
-  have hmaj_int : Integrable (fun x => (p_t x + x ^ 2 * p_t x) / 2) volume :=
+  have hmaj_int : Integrable (fun x ↦ (p_t x + x ^ 2 * p_t x) / 2) volume :=
     (hf_int.add hsq_int).div_const 2
-  refine Integrable.mono' hmaj_int ?_ (Filter.Eventually.of_forall fun x => ?_)
+  refine Integrable.mono' hmaj_int ?_ (Filter.Eventually.of_forall fun x ↦ ?_)
   · exact (measurable_id.mul (convDensityAdd_gaussian_measurable hpX_meas ht)).aestronglyMeasurable
   · rw [Real.norm_eq_abs, abs_mul]
     rw [abs_of_nonneg (hp_nn x)]
@@ -312,7 +312,7 @@ theorem convDensityAdd_gaussian_id_integrable {pX : ℝ → ℝ}
 theorem negMulLog_convDensityAdd_gaussian_entropy_upper {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    (hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume)
     {t : ℝ} (ht : 0 < t)
     {V : ℝ≥0} (hV : (∫ x, x ^ 2 * pX x ∂volume) + t ≤ (V : ℝ)) (hV0 : V ≠ 0) :
     (∫ x, Real.negMulLog (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) ∂volume)
@@ -324,7 +324,7 @@ theorem negMulLog_convDensityAdd_gaussian_entropy_upper {pX : ℝ → ℝ}
   -- convolution density (which blows up `isDefEq`). The defining equations
   -- `hf_def`/`hμ_def` remain available as ordinary hypotheses.
   have hf_nn : ∀ x, 0 ≤ convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x :=
-    fun x => convDensityAdd_gaussian_nonneg hpX_nn ht x
+    fun x ↦ convDensityAdd_gaussian_nonneg hpX_nn ht x
   have hf_meas : Measurable (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)) :=
     convDensityAdd_gaussian_measurable hpX_meas ht
   have hf_int : Integrable (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)) volume :=
@@ -333,13 +333,13 @@ theorem negMulLog_convDensityAdd_gaussian_entropy_upper {pX : ℝ → ℝ}
   have hf_mass : ∫ x, convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x ∂volume = 1 :=
     integral_convDensityAdd_gaussian_eq_one pX ht hpX_int hpX_mass
   set f : ℝ → ℝ := convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) with hf_def
-  set μ : Measure ℝ := volume.withDensity (fun x => ENNReal.ofReal (f x)) with hμ_def
+  set μ : Measure ℝ := volume.withDensity (fun x ↦ ENNReal.ofReal (f x)) with hμ_def
   haveI hμ_prob : IsProbabilityMeasure μ := by
     rw [hμ_def, hf_def]
     exact convDensityAdd_gaussian_isProbabilityMeasure hpX_nn hpX_meas hpX_int hpX_mass ht
   have hμ_ac : μ ≪ volume := withDensity_absolutelyContinuous volume _
   have hofReal_lt : ∀ᵐ x ∂volume, ENNReal.ofReal (f x) < ∞ :=
-    Eventually.of_forall fun x => ENNReal.ofReal_lt_top
+    Eventually.of_forall fun x ↦ ENNReal.ofReal_lt_top
   clear_value μ f
   -- `∫ g ∂μ = ∫ f · g ∂volume` for any `g`.
   have htransfer : ∀ g : ℝ → ℝ, ∫ x, g x ∂μ = ∫ x, f x * g x ∂volume := by
@@ -350,13 +350,13 @@ theorem negMulLog_convDensityAdd_gaussian_entropy_upper {pX : ℝ → ℝ}
       exact integral_withDensity_eq_integral_toReal_smul
         (ENNReal.measurable_ofReal.comp hf_meas) hofReal_lt g
     rw [hstep]
-    refine integral_congr_ae (Eventually.of_forall fun x => ?_)
+    refine integral_congr_ae (Eventually.of_forall fun x ↦ ?_)
     simp only [ENNReal.toReal_ofReal (hf_nn x), smul_eq_mul]
   -- Moments transferred to `volume`.
   set m : ℝ := ∫ x, x ∂μ with hm_def
-  have hsq_int : Integrable (fun x => x ^ 2 * f x) volume := by
+  have hsq_int : Integrable (fun x ↦ x ^ 2 * f x) volume := by
     rw [hf_def]; exact convDensityAdd_gaussian_sq_integrable hpX_nn hpX_meas hpX_int hpX_mom ht
-  have hid_int : Integrable (fun x => x * f x) volume := by
+  have hid_int : Integrable (fun x ↦ x * f x) volume := by
     rw [hf_def]; exact convDensityAdd_gaussian_id_integrable hpX_nn hpX_meas hpX_int hpX_mom ht
   have hsq_val : ∫ x, x ^ 2 * f x ∂volume = (∫ x, x ^ 2 * pX x ∂volume) + t := by
     have h := convDensityAdd_second_moment hpX_nn hpX_meas hpX_int hpX_mom ht
@@ -365,50 +365,50 @@ theorem negMulLog_convDensityAdd_gaussian_entropy_upper {pX : ℝ → ℝ}
   have h_mean : ∫ x, x ∂μ = m := rfl
   -- `∫ x² ∂μ = ∫ x² f`.
   have hsqμ : ∫ x, x ^ 2 ∂μ = (∫ x, x ^ 2 * pX x ∂volume) + t := by
-    rw [htransfer (fun x => x ^ 2)]
+    rw [htransfer (fun x ↦ x ^ 2)]
     simp only [mul_comm (f _)]
     rw [hsq_val]
   -- `∫ x ∂μ = ∫ x f`, integrable transfer for variance expansion.
   have hidμ_eq : ∫ x, x ∂μ = ∫ x, x * f x ∂volume := by
-    rw [htransfer (fun x => x)]
-    refine integral_congr_ae (Eventually.of_forall fun x => ?_); ring
+    rw [htransfer (fun x ↦ x)]
+    refine integral_congr_ae (Eventually.of_forall fun x ↦ ?_); ring
   -- Variance ≤ second moment: `∫ (x-m)² ∂μ = ∫ x² ∂μ - m² ≤ ∫ x² ∂μ`.
   -- Integrability of `x ↦ (x - m)²` wrt `μ`.
-  have hvar_int_vol : Integrable (fun x => f x * (x - m) ^ 2) volume := by
+  have hvar_int_vol : Integrable (fun x ↦ f x * (x - m) ^ 2) volume := by
     have hexp : ∀ x, f x * (x - m) ^ 2
         = (x ^ 2 * f x) - (2 * m) * (x * f x) + (m ^ 2) * f x := by
       intro x; ring
     rw [integrable_congr (Eventually.of_forall hexp)]
     exact (hsq_int.sub (hid_int.const_mul (2 * m))).add (hf_int.const_mul (m ^ 2))
-  have hvar_int : Integrable (fun x => (x - m) ^ 2) μ := by
+  have hvar_int : Integrable (fun x ↦ (x - m) ^ 2) μ := by
     have hiff := integrable_withDensity_iff_integrable_smul₀'
-      (μ := volume) (f := fun x => ENNReal.ofReal (f x))
-      (ENNReal.measurable_ofReal.comp hf_meas).aemeasurable hofReal_lt (g := fun x => (x - m) ^ 2)
+      (μ := volume) (f := fun x ↦ ENNReal.ofReal (f x))
+      (ENNReal.measurable_ofReal.comp hf_meas).aemeasurable hofReal_lt (g := fun x ↦ (x - m) ^ 2)
     rw [hμ_def]
-    refine hiff.mpr (hvar_int_vol.congr (Eventually.of_forall fun x => ?_))
+    refine hiff.mpr (hvar_int_vol.congr (Eventually.of_forall fun x ↦ ?_))
     simp only [ENNReal.toReal_ofReal (hf_nn x), smul_eq_mul]
   -- Variance bound.
   have h_var : ∫ x, (x - m) ^ 2 ∂μ ≤ (V : ℝ) := by
     have hvar_eq : ∫ x, (x - m) ^ 2 ∂μ = (∫ x, x ^ 2 ∂μ) - m ^ 2 := by
-      have hxsq_int : Integrable (fun x => x ^ 2) μ := by
+      have hxsq_int : Integrable (fun x ↦ x ^ 2) μ := by
         have hiff := integrable_withDensity_iff_integrable_smul₀'
-          (μ := volume) (f := fun x => ENNReal.ofReal (f x))
-          (ENNReal.measurable_ofReal.comp hf_meas).aemeasurable hofReal_lt (g := fun x => x ^ 2)
+          (μ := volume) (f := fun x ↦ ENNReal.ofReal (f x))
+          (ENNReal.measurable_ofReal.comp hf_meas).aemeasurable hofReal_lt (g := fun x ↦ x ^ 2)
         rw [hμ_def]
-        refine hiff.mpr ((hsq_int).congr (Eventually.of_forall fun x => ?_))
+        refine hiff.mpr ((hsq_int).congr (Eventually.of_forall fun x ↦ ?_))
         simp only [ENNReal.toReal_ofReal (hf_nn x), smul_eq_mul, mul_comm]
-      have hx_int : Integrable (fun x => x) μ := by
+      have hx_int : Integrable (fun x ↦ x) μ := by
         have hiff := integrable_withDensity_iff_integrable_smul₀'
-          (μ := volume) (f := fun x => ENNReal.ofReal (f x))
-          (ENNReal.measurable_ofReal.comp hf_meas).aemeasurable hofReal_lt (g := fun x => x)
+          (μ := volume) (f := fun x ↦ ENNReal.ofReal (f x))
+          (ENNReal.measurable_ofReal.comp hf_meas).aemeasurable hofReal_lt (g := fun x ↦ x)
         rw [hμ_def]
-        refine hiff.mpr ((hid_int).congr (Eventually.of_forall fun x => ?_))
+        refine hiff.mpr ((hid_int).congr (Eventually.of_forall fun x ↦ ?_))
         simp only [ENNReal.toReal_ofReal (hf_nn x), smul_eq_mul, mul_comm]
       have hexpand : ∀ x : ℝ, (x - m) ^ 2 = (x ^ 2 - (2 * m) * x) + m ^ 2 := by
         intro x; ring
       calc ∫ x, (x - m) ^ 2 ∂μ
-          = ∫ x, (fun x => x ^ 2 - (2 * m) * x) x + (fun _ => m ^ 2) x ∂μ := by
-            refine integral_congr_ae (Eventually.of_forall fun x => ?_); simpa using hexpand x
+          = ∫ x, (fun x ↦ x ^ 2 - (2 * m) * x) x + (fun _ ↦ m ^ 2) x ∂μ := by
+            refine integral_congr_ae (Eventually.of_forall fun x ↦ ?_); simpa using hexpand x
         _ = (∫ x, (x ^ 2 - (2 * m) * x) ∂μ) + ∫ _, m ^ 2 ∂μ :=
             integral_add ((hxsq_int).sub (hx_int.const_mul (2 * m))) (integrable_const _)
         _ = ((∫ x, x ^ 2 ∂μ) - ∫ x, (2 * m) * x ∂μ) + ∫ _, m ^ 2 ∂μ := by
@@ -423,10 +423,10 @@ theorem negMulLog_convDensityAdd_gaussian_entropy_upper {pX : ℝ → ℝ}
     linarith [hV]
   -- `h_ent_int`: integrability of the entropy integrand.
   have h_ent_int : Integrable
-      (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume := by
-    have hrn : (μ.rnDeriv volume) =ᵐ[volume] fun x => ENNReal.ofReal (f x) := by
+      (fun x ↦ Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume := by
+    have hrn : (μ.rnDeriv volume) =ᵐ[volume] fun x ↦ ENNReal.ofReal (f x) := by
       rw [hμ_def]; exact Measure.rnDeriv_withDensity volume (ENNReal.measurable_ofReal.comp hf_meas)
-    have hbase : Integrable (fun x => Real.negMulLog (f x)) volume := by
+    have hbase : Integrable (fun x ↦ Real.negMulLog (f x)) volume := by
       rw [hf_def]
       exact InformationTheory.Shannon.FisherInfo.convDensityAdd_negMulLog_integrable
         pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht

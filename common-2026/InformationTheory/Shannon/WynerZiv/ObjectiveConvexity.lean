@@ -308,7 +308,7 @@ theorem wynerZivRateFactorizable_convex_in_D_of_condEntDiff
         + b * wynerZivRateFactorizable U P_XY d D₂ := by
   classical
   exact wynerZivRateFactorizable_convex_in_D U h_pmf d f
-    (fun q₁' q₂' hq₁' hq₂' a' b' ha' hb' hab' =>
+    (fun q₁' q₂' hq₁' hq₂' a' b' ha' hb' hab' ↦
       wzObjective_convex_of_condEntDiff U P_XY h_core q₁' q₂' hq₁' hq₂' a' b' ha' hb' hab')
     h_feasible₁ h_feasible₂ h_attain₁ h_attain₂ ha hb hab
 

@@ -81,14 +81,14 @@ lemma pmfLog_iidYs_bound_smooth
     have h2 : (p ⊗ₘ (Channel.smooth W δ)) (Set.univ ×ˢ ({b} : Set β))
         = ∫⁻ a, (Channel.smooth W δ a) {b} ∂p := by
       rw [Measure.compProd_apply (MeasurableSet.univ.prod (measurableSet_singleton _))]
-      refine lintegral_congr_ae (Filter.Eventually.of_forall fun a => ?_)
+      refine lintegral_congr_ae (Filter.Eventually.of_forall fun a ↦ ?_)
       show (Channel.smooth W δ a) (Prod.mk a ⁻¹' (Set.univ ×ˢ ({b} : Set β)))
           = (Channel.smooth W δ a) {b}
       congr 1; ext y; simp
     rw [h2, lintegral_fintype,
-        ENNReal.toReal_sum (fun a _ => ENNReal.mul_ne_top
+        ENNReal.toReal_sum (fun a _ ↦ ENNReal.mul_ne_top
           (measure_ne_top _ _) (measure_ne_top _ _))]
-    refine Finset.sum_congr rfl (fun a _ => ?_)
+    refine Finset.sum_congr rfl (fun a _ ↦ ?_)
     rw [ENNReal.toReal_mul]
     show (Channel.smooth W δ a).real {b} * p.real {a}
         = p.real {a} * (Channel.smooth W δ a).real {b}
@@ -107,14 +107,14 @@ lemma pmfLog_iidYs_bound_smooth
       rw [measureReal_def]
       have h_sum_ennreal : (∑ a : α, p {a}) = p (Set.univ : Set α) := by
         rw [← measure_biUnion_finset (s := (Finset.univ : Finset α))
-          (f := fun a => ({a} : Set α))
-          (fun i _ j _ hij => by
+          (f := fun a ↦ ({a} : Set α))
+          (fun i _ j _ hij ↦ by
             simpa [Set.disjoint_singleton] using hij)
-          (fun i _ => measurableSet_singleton _)]
+          (fun i _ ↦ measurableSet_singleton _)]
         congr 1
         ext a
         simp
-      rw [← h_sum_ennreal, ENNReal.toReal_sum (fun a _ => measure_ne_top _ _)]
+      rw [← h_sum_ennreal, ENNReal.toReal_sum (fun a _ ↦ measure_ne_top _ _)]
       rfl
     rw [h_univ]
     exact MeasureTheory.probReal_univ
@@ -127,7 +127,7 @@ lemma pmfLog_iidYs_bound_smooth
       _ = ∑ a : α, p.real {a} * (δ * (Fintype.card β : ℝ)⁻¹) := by
           rw [Finset.sum_mul]
       _ ≤ ∑ a : α, p.real {a} * (Channel.smooth W δ a).real {b} := by
-          refine Finset.sum_le_sum (fun a _ => ?_)
+          refine Finset.sum_le_sum (fun a _ ↦ ?_)
           have hpa_nn : 0 ≤ p.real {a} := ENNReal.toReal_nonneg
           exact mul_le_mul_of_nonneg_left (h_term_lb a) hpa_nn
   -- Upper bound: ≤ 1 (probability measure).
@@ -269,7 +269,7 @@ lemma exists_N_log_sq_le_n (C : ℝ) (hC : 0 < C) :
     ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
       C * (Real.log ((n : ℝ) + 1))^2 + 1 ≤ (n : ℝ) := by
   -- Step 1: (log x)^2 / x → 0 as x → ∞.
-  have h_lim : Filter.Tendsto (fun x : ℝ => (Real.log x)^2 / x) Filter.atTop (𝓝 0) := by
+  have h_lim : Filter.Tendsto (fun x : ℝ ↦ (Real.log x)^2 / x) Filter.atTop (𝓝 0) := by
     have h := Real.tendsto_pow_log_div_mul_add_atTop 1 0 2 one_ne_zero
     -- `(fun x => log x ^ 2 / (1 * x + 0))` simplifies to `(fun x => (log x)^2 / x)`.
     simpa using h
@@ -282,7 +282,7 @@ lemma exists_N_log_sq_le_n (C : ℝ) (hC : 0 < C) :
   rw [Filter.eventually_atTop] at h_ev
   obtain ⟨x₀, hx₀⟩ := h_ev
   set N : ℕ := max (Nat.ceil x₀) 4 with hN_def
-  refine ⟨N, fun n hn => ?_⟩
+  refine ⟨N, fun n hn ↦ ?_⟩
   have hn4 : 4 ≤ n := by
     have : (4 : ℕ) ≤ N := le_max_right _ _
     exact this.trans hn
@@ -328,7 +328,7 @@ lemma exists_N_log_sq_plus_const_le_n (C D : ℝ) (hC : 0 < C) :
   -- Use exists_N_log_sq_le_n with `2C`, then absorb D via N ≥ 2|D|.
   obtain ⟨N₁, hN₁⟩ := exists_N_log_sq_le_n (2 * C) (by linarith)
   set N : ℕ := max N₁ (Nat.ceil (2 * D + 2))
-  refine ⟨N, fun n hn => ?_⟩
+  refine ⟨N, fun n hn ↦ ?_⟩
   have hN₁_le : N₁ ≤ n := (le_max_left _ _).trans hn
   have h2D_le : (Nat.ceil (2 * D + 2) : ℕ) ≤ n := (le_max_right _ _).trans hn
   have h2D_real : 2 * D + 2 ≤ (n : ℝ) := by

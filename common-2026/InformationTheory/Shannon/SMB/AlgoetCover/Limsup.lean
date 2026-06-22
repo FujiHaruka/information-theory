@@ -66,27 +66,27 @@ Birkhoff for the `k`-Markov approximation gives the per-`k` limsup bound. -/
 theorem limsup_blockLogAvg_le_condEntropyTail
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) (k : ℕ) :
     ∀ᵐ ω ∂μ,
-      Filter.limsup (fun n => blockLogAvg μ p.toStationaryProcess n ω) Filter.atTop
+      Filter.limsup (fun n ↦ blockLogAvg μ p.toStationaryProcess n ω) Filter.atTop
         ≤ conditionalEntropyTail μ p.toStationaryProcess k := by
   filter_upwards [blockLogAvg_le_negLogQk_plus_error μ p.toStationaryProcess k,
                   negLogQk_div_tendsto_condEntropyTail μ p k] with ω h_bound h_neg
   -- RHS tendsto: negLogQk / n + 2 log n / n → H_k + 0 = H_k.
-  have h_log_div : Filter.Tendsto (fun n : ℕ => 2 * Real.log (n : ℝ) / (n : ℝ))
+  have h_log_div : Filter.Tendsto (fun n : ℕ ↦ 2 * Real.log (n : ℝ) / (n : ℝ))
       Filter.atTop (𝓝 0) := by
     -- log n / n → 0 then multiply by 2.
-    have h_log : Filter.Tendsto (fun n : ℕ => Real.log (n : ℝ) / (n : ℝ))
+    have h_log : Filter.Tendsto (fun n : ℕ ↦ Real.log (n : ℝ) / (n : ℝ))
         Filter.atTop (𝓝 0) := by
-      have h_real : Filter.Tendsto (fun x : ℝ => Real.log x ^ 1 / (1 * x + 0))
+      have h_real : Filter.Tendsto (fun x : ℝ ↦ Real.log x ^ 1 / (1 * x + 0))
           Filter.atTop (𝓝 0) := Real.tendsto_pow_log_div_mul_add_atTop 1 0 1 one_ne_zero
       have h_comp := h_real.comp tendsto_natCast_atTop_atTop
-      refine h_comp.congr (fun n => ?_)
+      refine h_comp.congr (fun n ↦ ?_)
       simp
     have h_mul := h_log.const_mul (2 : ℝ)
     simp only [mul_zero] at h_mul
-    refine h_mul.congr (fun n => ?_)
+    refine h_mul.congr (fun n ↦ ?_)
     rw [mul_div_assoc]
   have h_rhs : Filter.Tendsto
-      (fun n : ℕ => negLogQk μ p.toStationaryProcess k n ω / (n : ℝ)
+      (fun n : ℕ ↦ negLogQk μ p.toStationaryProcess k n ω / (n : ℝ)
         + 2 * Real.log (n : ℝ) / (n : ℝ))
       Filter.atTop
       (𝓝 (conditionalEntropyTail μ p.toStationaryProcess k)) := by
@@ -96,13 +96,13 @@ theorem limsup_blockLogAvg_le_condEntropyTail
   -- We need IsCoboundedUnder for blockLogAvg.
   -- Strategy: limsup ≤ limsup of bound = lim of bound = H_k.
   have h_limsup_bound : Filter.limsup
-      (fun n => blockLogAvg μ p.toStationaryProcess n ω) Filter.atTop
-      ≤ Filter.limsup (fun n : ℕ => negLogQk μ p.toStationaryProcess k n ω / (n : ℝ)
+      (fun n ↦ blockLogAvg μ p.toStationaryProcess n ω) Filter.atTop
+      ≤ Filter.limsup (fun n : ℕ ↦ negLogQk μ p.toStationaryProcess k n ω / (n : ℝ)
         + 2 * Real.log (n : ℝ) / (n : ℝ)) Filter.atTop := by
     refine Filter.limsup_le_limsup h_bound ?_ ?_
     · -- IsCoboundedUnder (· ≤ ·) of blockLogAvg: from boundedness below by 0.
       refine (Filter.isBoundedUnder_of_eventually_ge (a := 0)
-        (Filter.Eventually.of_forall (fun n => ?_))).isCoboundedUnder_le
+        (Filter.Eventually.of_forall (fun n ↦ ?_))).isCoboundedUnder_le
       -- Reuse the same nonneg proof from blockLogAvg_bddBelow_ae body.
       have hPn : IsProbabilityMeasure (μ.map (p.toStationaryProcess.blockRV n)) :=
         Measure.isProbabilityMeasure_map (p.measurable_blockRV n).aemeasurable
@@ -127,12 +127,12 @@ omit [DecidableEq α] in
 theorem algoet_cover_limsup_bound
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
-      Filter.limsup (fun n => blockLogAvg μ p.toStationaryProcess n ω) Filter.atTop
+      Filter.limsup (fun n ↦ blockLogAvg μ p.toStationaryProcess n ω) Filter.atTop
         ≤ entropyRate μ p.toStationaryProcess := by
   classical
   -- Per-k bound (a.s.): limsup ≤ H_k.
   have h_all : ∀ᵐ ω ∂μ, ∀ k : ℕ,
-      Filter.limsup (fun n => blockLogAvg μ p.toStationaryProcess n ω) Filter.atTop
+      Filter.limsup (fun n ↦ blockLogAvg μ p.toStationaryProcess n ω) Filter.atTop
         ≤ conditionalEntropyTail μ p.toStationaryProcess k := by
     rw [ae_all_iff]
     intro k

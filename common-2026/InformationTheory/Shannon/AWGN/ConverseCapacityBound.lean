@@ -128,12 +128,12 @@ private lemma perLetterYLaw_eq_mixture
   unfold perLetterYLaw awgnConverseJoint
   -- map distributes over smul and finset sum.
   have h_meas_eval :
-      Measurable (fun ω : Fin M × (Fin n → ℝ) => ω.2 i) :=
+      Measurable (fun ω : Fin M × (Fin n → ℝ) ↦ ω.2 i) :=
     (measurable_pi_apply i).comp measurable_snd
   rw [Measure.map_smul]
   rw [Measure.map_finset_sum (s := Finset.univ)
-      (m := fun m => (Measure.dirac m).prod
-        (Measure.pi (fun j : Fin n => awgnChannel N h_meas (c.encoder m j))))
+      (m := fun m ↦ (Measure.dirac m).prod
+        (Measure.pi (fun j : Fin n ↦ awgnChannel N h_meas (c.encoder m j))))
       h_meas_eval.aemeasurable]
   congr 1
   refine Finset.sum_congr rfl ?_
@@ -145,7 +145,7 @@ private lemma perLetterYLaw_eq_mixture
       Measurable (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) := measurable_snd
   have h_meas_eval_i :
       Measurable (Function.eval i : (Fin n → ℝ) → ℝ) := measurable_pi_apply i
-  have h_decomp : (fun ω : Fin M × (Fin n → ℝ) => ω.2 i)
+  have h_decomp : (fun ω : Fin M × (Fin n → ℝ) ↦ ω.2 i)
       = (Function.eval i) ∘ Prod.snd := rfl
   rw [h_decomp]
   rw [← Measure.map_map h_meas_eval_i h_meas_snd]
@@ -173,7 +173,7 @@ private lemma perLetterYLaw_isProbabilityMeasure
     IsProbabilityMeasure (perLetterYLaw h_meas c i) := by
   unfold perLetterYLaw
   have h_meas_eval :
-      Measurable (fun ω : Fin M × (Fin n → ℝ) => ω.2 i) :=
+      Measurable (fun ω : Fin M × (Fin n → ℝ) ↦ ω.2 i) :=
     (measurable_pi_apply i).comp measurable_snd
   exact Measure.isProbabilityMeasure_map h_meas_eval.aemeasurable
 
@@ -192,7 +192,7 @@ private lemma perLetterYLaw_absolutelyContinuous
   refine Measure.AbsolutelyContinuous.smul_left ?_ _
   -- Convert finset sum to `Measure.sum` to apply `absolutelyContinuous_sum_left`.
   rw [← Measure.sum_fintype]
-  exact Measure.absolutelyContinuous_sum_left fun m =>
+  exact Measure.absolutelyContinuous_sum_left fun m ↦
     gaussianReal_absolutelyContinuous _ hN_ne
 
 /-- Integral against `perLetterYLaw`: linearity over the mixture. -/
@@ -206,7 +206,7 @@ private lemma perLetterYLaw_integral
   rw [perLetterYLaw_eq_mixture h_meas c i]
   rw [integral_smul_measure]
   -- Now goal: (M⁻¹ : ℝ≥0∞).toReal • ∫ f ∂(∑ m, gaussianReal ...) = (1/M) * ∑ m, ∫ ...
-  rw [integral_finsetSum_measure (fun m _ => hf m)]
+  rw [integral_finsetSum_measure (fun m _ ↦ hf m)]
   rw [Fintype.card_fin]
   -- `(M⁻¹ : ℝ≥0∞).toReal = 1/M` and scalar smul on ℝ is just mul.
   have h_inv : ((M : ℝ≥0∞)⁻¹).toReal = 1 / (M : ℝ) := by
@@ -223,7 +223,7 @@ private lemma perLetterYLaw_mean
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
     ∫ x, x ∂(perLetterYLaw h_meas c i)
       = (1 / (M : ℝ)) * ∑ m : Fin M, c.encoder m i := by
-  have h_int : ∀ m : Fin M, Integrable (fun x : ℝ => x) (gaussianReal (c.encoder m i) N) := by
+  have h_int : ∀ m : Fin M, Integrable (fun x : ℝ ↦ x) (gaussianReal (c.encoder m i) N) := by
     intro m
     have : MemLp (id : ℝ → ℝ) 1 (gaussianReal (c.encoder m i) N) :=
       memLp_id_gaussianReal' 1 ENNReal.one_ne_top
@@ -233,11 +233,11 @@ private lemma perLetterYLaw_mean
 
 /-- Per-letter integrability of `(x - m)²` against each mixture component. -/
 private lemma gaussianReal_integrable_sub_sq (a : ℝ) {N : ℝ≥0} (m : ℝ) :
-    Integrable (fun x : ℝ => (x - m) ^ 2) (gaussianReal a N) := by
+    Integrable (fun x : ℝ ↦ (x - m) ^ 2) (gaussianReal a N) := by
   -- `id - const m` is `MemLp 2` via `memLp_id_gaussianReal 2` minus a constant.
   have h_id : MemLp (id : ℝ → ℝ) 2 (gaussianReal a N) :=
     memLp_id_gaussianReal' 2 ENNReal.ofNat_ne_top
-  have h_sub : MemLp (fun x : ℝ => x - m) 2 (gaussianReal a N) := by
+  have h_sub : MemLp (fun x : ℝ ↦ x - m) 2 (gaussianReal a N) := by
     have := h_id.sub (memLp_const m)
     simpa using this
   exact h_sub.integrable_sq
@@ -247,7 +247,7 @@ private lemma perLetterYLaw_var_integrable
     {P : ℝ} {N : ℝ≥0} (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) (m : ℝ) :
-    Integrable (fun x : ℝ => (x - m) ^ 2) (perLetterYLaw h_meas c i) := by
+    Integrable (fun x : ℝ ↦ (x - m) ^ 2) (perLetterYLaw h_meas c i) := by
   classical
   rw [perLetterYLaw_eq_mixture h_meas c i]
   -- Goal: Integrable f (M⁻¹ • ∑ k, gaussianReal (c.encoder k i) N)
@@ -270,25 +270,25 @@ private lemma gaussianReal_integral_sub_sq
       = (a - m_avg) ^ 2 + (N : ℝ) := by
   -- Define f x := (x - m_avg)² and rewrite the integral via the decomposition
   -- (x - m_avg)² = (x - a)² + 2(x - a)(a - m_avg) + (a - m_avg)².
-  have h_int_id : Integrable (fun x : ℝ => x) (gaussianReal a N) := by
+  have h_int_id : Integrable (fun x : ℝ ↦ x) (gaussianReal a N) := by
     have : MemLp (id : ℝ → ℝ) 1 (gaussianReal a N) :=
       memLp_id_gaussianReal' 1 ENNReal.one_ne_top
     exact (memLp_one_iff_integrable.mp this)
-  have h_int1 : Integrable (fun x : ℝ => (x - a) ^ 2) (gaussianReal a N) :=
+  have h_int1 : Integrable (fun x : ℝ ↦ (x - a) ^ 2) (gaussianReal a N) :=
     gaussianReal_integrable_sub_sq a a
-  have h_int_xa : Integrable (fun x : ℝ => x - a) (gaussianReal a N) :=
+  have h_int_xa : Integrable (fun x : ℝ ↦ x - a) (gaussianReal a N) :=
     h_int_id.sub (integrable_const a)
   -- Rewrite integrand pointwise via `integral_congr`.
   have h_eq_fun :
-      (fun x : ℝ => (x - m_avg) ^ 2)
-        = (fun x : ℝ => (x - a) ^ 2 + 2 * (x - a) * (a - m_avg) + (a - m_avg) ^ 2) := by
+      (fun x : ℝ ↦ (x - m_avg) ^ 2)
+        = (fun x : ℝ ↦ (x - a) ^ 2 + 2 * (x - a) * (a - m_avg) + (a - m_avg) ^ 2) := by
     funext x; ring
   rw [h_eq_fun]
-  have h_int2 : Integrable (fun x : ℝ => 2 * (x - a) * (a - m_avg)) (gaussianReal a N) := by
-    have h_lin : Integrable (fun x : ℝ => 2 * (x - a)) (gaussianReal a N) := by
+  have h_int2 : Integrable (fun x : ℝ ↦ 2 * (x - a) * (a - m_avg)) (gaussianReal a N) := by
+    have h_lin : Integrable (fun x : ℝ ↦ 2 * (x - a)) (gaussianReal a N) := by
       simpa [mul_comm] using h_int_xa.const_mul 2
     simpa [mul_assoc] using h_lin.mul_const (a - m_avg)
-  have h_int3 : Integrable (fun _ : ℝ => (a - m_avg) ^ 2) (gaussianReal a N) :=
+  have h_int3 : Integrable (fun _ : ℝ ↦ (a - m_avg) ^ 2) (gaussianReal a N) :=
     integrable_const _
   -- Split integral by linearity.
   have h_sum_step1 :
@@ -310,8 +310,8 @@ private lemma gaussianReal_integral_sub_sq
     exact h_var
   -- 2) ∫ 2(x - a)(a - m_avg) ∂(gaussianReal a N) = 0 since mean = a.
   have h_lin_zero : ∫ x, 2 * (x - a) * (a - m_avg) ∂(gaussianReal a N) = 0 := by
-    have h_factor : (fun x : ℝ => 2 * (x - a) * (a - m_avg))
-        = (fun x : ℝ => (2 * (a - m_avg)) * (x - a)) := by
+    have h_factor : (fun x : ℝ ↦ 2 * (x - a) * (a - m_avg))
+        = (fun x : ℝ ↦ (2 * (a - m_avg)) * (x - a)) := by
       funext x; ring
     rw [h_factor, integral_const_mul]
     have h_mean_zero : ∫ x, (x - a) ∂(gaussianReal a N) = 0 := by
@@ -340,13 +340,13 @@ private lemma perLetterYLaw_variance_le
       ∫ x, (x - m_avg) ^ 2 ∂(perLetterYLaw h_meas c i)
         = (1 / (M : ℝ)) * ∑ k : Fin M,
             ∫ x, (x - m_avg) ^ 2 ∂(gaussianReal (c.encoder k i) N) :=
-    perLetterYLaw_integral h_meas c i (fun k =>
+    perLetterYLaw_integral h_meas c i (fun k ↦
       gaussianReal_integrable_sub_sq (c.encoder k i) m_avg)
   rw [h_int_mix]
   -- Step 2: each summand simplifies to `(c.encoder k i - m_avg)² + N`.
   have h_each : ∀ k : Fin M,
       ∫ x, (x - m_avg) ^ 2 ∂(gaussianReal (c.encoder k i) N)
-        = (c.encoder k i - m_avg) ^ 2 + (N : ℝ) := fun k =>
+        = (c.encoder k i - m_avg) ^ 2 + (N : ℝ) := fun k ↦
     gaussianReal_integral_sub_sq (c.encoder k i) m_avg
   simp_rw [h_each]
   -- Step 3: split sum = ∑ (...)² + ∑ N = (∑ (...)²) + M·N.
@@ -445,7 +445,7 @@ theorem awgn_per_letter_mi_le_log_var
     rw [hS2_def]; unfold perLetterInputSecondMoment
     apply mul_nonneg
     · positivity
-    · exact Finset.sum_nonneg (fun _ _ => sq_nonneg _)
+    · exact Finset.sum_nonneg (fun _ _ ↦ sq_nonneg _)
   -- `v_Y := (S² + N).toNNReal`. Positivity from N > 0.
   set v : ℝ≥0 := (S2 + (N : ℝ)).toNNReal with hv_def
   have h_v_eq : (v : ℝ) = S2 + (N : ℝ) := by
@@ -470,12 +470,12 @@ theorem awgn_per_letter_mi_le_log_var
     rw [h_v_eq]
     exact perLetterYLaw_variance_le hN h_meas c i
   have h_var_int :
-      Integrable (fun x : ℝ => (x - m) ^ 2) (perLetterYLaw h_meas c i) :=
+      Integrable (fun x : ℝ ↦ (x - m) ^ 2) (perLetterYLaw h_meas c i) :=
     perLetterYLaw_var_integrable hN h_meas c i m
   -- Per-letter log-density integrability via `awgnPerLetterIntegrability_holds`
   -- (`AwgnWalls.lean`); `perLetterYLaw h_meas c i` matches by definitional equality.
   have h_ent_int :
-      Integrable (fun y : ℝ =>
+      Integrable (fun y : ℝ ↦
           Real.negMulLog
             ((perLetterYLaw h_meas c i).rnDeriv MeasureTheory.volume y).toReal)
         MeasureTheory.volume := awgnPerLetterIntegrability_holds h_meas c i
@@ -536,13 +536,13 @@ theorem sum_log_one_add_le_n_log_one_add_avg
     ∑ i : Fin n, (1 / 2) * Real.log (1 + xs i / N)
       ≤ (n : ℝ) * ((1 / 2) * Real.log (1 + ((1 / (n : ℝ)) * ∑ i : Fin n, xs i) / N)) := by
   -- `f x := log(1 + x/N)` is concave on `Ici 0`.
-  set f : ℝ → ℝ := fun x => Real.log (1 + x / N) with hf_def
+  set f : ℝ → ℝ := fun x ↦ Real.log (1 + x / N) with hf_def
   have hf_concave : ConcaveOn ℝ (Set.Ici (0 : ℝ)) f :=
     InformationTheory.Shannon.concaveOn_log_one_add_div hN_pos
   have hn_real_pos : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn_pos
   have hn_ne : (n : ℝ) ≠ 0 := ne_of_gt hn_real_pos
   -- Uniform weights `wᵢ := 1/n`.
-  set w : Fin n → ℝ := fun _ => (1 : ℝ) / (n : ℝ) with hw_def
+  set w : Fin n → ℝ := fun _ ↦ (1 : ℝ) / (n : ℝ) with hw_def
   have hw_nn : ∀ i ∈ (Finset.univ : Finset (Fin n)), 0 ≤ w i := by
     intro i _; simp only [hw_def]; positivity
   have hw_sum : ∑ i ∈ (Finset.univ : Finset (Fin n)), w i = 1 := by
@@ -569,7 +569,7 @@ theorem sum_log_one_add_le_n_log_one_add_avg
             ∑ i : Fin n, Real.log (1 + xs i / N))) := by
     rw [show (∑ i : Fin n, (1 / 2 : ℝ) * Real.log (1 + xs i / N))
       = (1 / 2 : ℝ) * ∑ i : Fin n, Real.log (1 + xs i / N) from
-      (Finset.mul_sum Finset.univ (fun i => Real.log (1 + xs i / N)) (1 / 2 : ℝ)).symm]
+      (Finset.mul_sum Finset.univ (fun i ↦ Real.log (1 + xs i / N)) (1 / 2 : ℝ)).symm]
     field_simp
   rw [h_lhs_rewrite]
   -- Now goal: (n) * ((1/2) * ((1/n) * ∑ log(1+xᵢ/N))) ≤ (n) * ((1/2) * log(1+avg/N)).
@@ -582,7 +582,7 @@ theorem sum_log_one_add_le_n_log_one_add_avg
   have h_sum_factor :
       ∑ i : Fin n, (1 / (n : ℝ)) * Real.log (1 + xs i / N)
         = (1 / (n : ℝ)) * ∑ i : Fin n, Real.log (1 + xs i / N) :=
-    (Finset.mul_sum Finset.univ (fun i => Real.log (1 + xs i / N)) (1 / (n : ℝ))).symm
+    (Finset.mul_sum Finset.univ (fun i ↦ Real.log (1 + xs i / N)) (1 / (n : ℝ))).symm
   rw [← h_sum_factor]
   -- `f (xs i) = log(1 + xs i / N)` and `f (∑ ...) = log(1 + (...)/N)`.
   exact h_jensen
@@ -613,7 +613,7 @@ theorem awgn_sum_per_letter_mi_le_n_capacity
   have h_sum_le_sum :
       (∑ i : Fin n, (perLetterMI h_meas c i).toReal)
         ≤ ∑ i : Fin n, (1 / 2) * Real.log (1 + perLetterInputSecondMoment c i / (N : ℝ)) :=
-    Finset.sum_le_sum (fun i _ => h_per_letter_bound i)
+    Finset.sum_le_sum (fun i _ ↦ h_per_letter_bound i)
   -- Step 3: non-negativity of `perLetterInputSecondMoment c i` (squares are ≥ 0).
   have h_nn : ∀ i : Fin n, 0 ≤ perLetterInputSecondMoment c i := by
     intro i
@@ -629,7 +629,7 @@ theorem awgn_sum_per_letter_mi_le_n_capacity
     refine lt_of_le_of_ne N.coe_nonneg ?_
     exact (Ne.symm hN)
   have h_jensen := sum_log_one_add_le_n_log_one_add_avg (n := n) hn_pos
-    (N : ℝ) hN_pos (fun i => perLetterInputSecondMoment c i) h_nn
+    (N : ℝ) hN_pos (fun i ↦ perLetterInputSecondMoment c i) h_nn
   -- Step 5: monotonicity of `log` to push down `avg ≤ P` (C-1a) into the RHS.
   -- `avg := (1/n) ∑ᵢ perLetterInputSecondMoment c i ≤ P` (awgn_per_letter_input_power_avg).
   have h_avg_le : (1 / (n : ℝ)) * ∑ i : Fin n, perLetterInputSecondMoment c i ≤ P :=
@@ -649,7 +649,7 @@ theorem awgn_sum_per_letter_mi_le_n_capacity
         (0 : ℝ) ≤ (1 / (n : ℝ)) * ∑ i : Fin n, perLetterInputSecondMoment c i := by
       apply mul_nonneg
       · positivity
-      · exact Finset.sum_nonneg (fun i _ => h_nn i)
+      · exact Finset.sum_nonneg (fun i _ ↦ h_nn i)
     have : (0 : ℝ) ≤ ((1 / (n : ℝ)) * ∑ i : Fin n, perLetterInputSecondMoment c i) / (N : ℝ) := by
       exact div_nonneg h_avg_nn hN_pos.le
     linarith

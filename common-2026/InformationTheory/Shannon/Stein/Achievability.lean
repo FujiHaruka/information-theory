@@ -54,7 +54,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 /-- The alphabet-side log-likelihood ratio `log P{x} − log Q{x}`. On the support of `P` and
 assuming `Q{x} > 0` for all `x`, this equals `Real.log ((P.rnDeriv Q x).toReal)`. -/
 noncomputable def llrPmf (P Q : Measure α) : α → ℝ :=
-  fun x => Real.log (P.real {x}) - Real.log (Q.real {x})
+  fun x ↦ Real.log (P.real {x}) - Real.log (Q.real {x})
 
 omit [DecidableEq α] [Nonempty α] in
 lemma measurable_llrPmf (P Q : Measure α) : Measurable (llrPmf P Q) :=
@@ -63,7 +63,7 @@ lemma measurable_llrPmf (P Q : Measure α) : Measurable (llrPmf P Q) :=
 /-- Per-symbol log-likelihood ratio: `llrPmf P Q (Xs i ω)`. -/
 noncomputable def logLikelihoodRatio
     (P Q : Measure α) (Xs : ℕ → Ω → α) (i : ℕ) : Ω → ℝ :=
-  fun ω => llrPmf P Q (Xs i ω)
+  fun ω ↦ llrPmf P Q (Xs i ω)
 
 omit [MeasurableSpace Ω] [Fintype α] [DecidableEq α] [Nonempty α]
     [MeasurableSingletonClass α] in
@@ -115,7 +115,7 @@ theorem integral_logLikelihoodRatio_under_P
   have h_int_llr : Integrable (llr P Q) P := by
     refine ⟨(measurable_llr P Q).aestronglyMeasurable, ?_⟩
     rw [hasFiniteIntegral_iff_enorm, lintegral_fintype]
-    exact ENNReal.sum_lt_top.mpr fun _ _ =>
+    exact ENNReal.sum_lt_top.mpr fun _ _ ↦
       ENNReal.mul_lt_top ENNReal.coe_lt_top (measure_lt_top _ _)
   rw [toReal_klDiv hPQ h_int_llr]
   -- Both sides are now in `Real`. The KL side has shape
@@ -130,7 +130,7 @@ theorem integral_logLikelihoodRatio_under_P
   -- Now express RHS as `∫ x, llr P Q x ∂P` via `integral_fintype`.
   rw [integral_fintype (μ := P) h_int_llr]
   -- Per-`x` rewrite: `P.real {x} • llrPmf P Q x = P.real {x} • llr P Q x`.
-  refine Finset.sum_congr rfl fun x _ => ?_
+  refine Finset.sum_congr rfl fun x _ ↦ ?_
   -- Case split on whether `P.real {x} = 0`.
   by_cases hPx0 : P.real {x} = 0
   · simp [hPx0]
@@ -166,8 +166,8 @@ lemma identDistrib_logLikelihoodRatio
 omit [DecidableEq α] [Nonempty α] in
 lemma indepFun_logLikelihoodRatio
     (μ : Measure Ω) (P Q : Measure α) (Xs : ℕ → Ω → α)
-    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j) :
-    Pairwise fun i j =>
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j) :
+    Pairwise fun i j ↦
       logLikelihoodRatio P Q Xs i ⟂ᵢ[μ] logLikelihoodRatio P Q Xs j := by
   intro i j hij
   have h := hindep hij
@@ -182,17 +182,17 @@ theorem stein_strong_law
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (hMap : μ.map (Xs 0) = P)
     (hPQ : P ≪ Q) (hQpos : ∀ x : α, 0 < Q.real {x}) :
     ∀ᵐ ω ∂μ, Tendsto
-      (fun n : ℕ => (∑ i ∈ Finset.range n, logLikelihoodRatio P Q Xs i ω) / n)
+      (fun n : ℕ ↦ (∑ i ∈ Finset.range n, logLikelihoodRatio P Q Xs i ω) / n)
       atTop
       (𝓝 (klDiv P Q).toReal) := by
   have hint : Integrable (logLikelihoodRatio P Q Xs 0) μ :=
     integrable_logLikelihoodRatio μ P Q Xs hXs 0
-  have hindLR : Pairwise fun i j =>
+  have hindLR : Pairwise fun i j ↦
       logLikelihoodRatio P Q Xs i ⟂ᵢ[μ] logLikelihoodRatio P Q Xs j :=
     indepFun_logLikelihoodRatio μ P Q Xs hindep
   have hidLR : ∀ i, IdentDistrib (logLikelihoodRatio P Q Xs i)
@@ -211,37 +211,37 @@ theorem stein_inProbability
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (hMap : μ.map (Xs 0) = P)
     (hPQ : P ≪ Q) (hQpos : ∀ x : α, 0 < Q.real {x})
     {ε : ℝ} (hε : 0 < ε) :
     Tendsto
-      (fun n : ℕ => μ {ω | ε ≤ |((∑ i ∈ Finset.range n,
+      (fun n : ℕ ↦ μ {ω | ε ≤ |((∑ i ∈ Finset.range n,
                                   logLikelihoodRatio P Q Xs i ω) / n)
                                 - (klDiv P Q).toReal|})
       atTop
       (𝓝 0) := by
   set f : ℕ → Ω → ℝ :=
-    fun n ω => (∑ i ∈ Finset.range n, logLikelihoodRatio P Q Xs i ω) / n with hf_def
-  set g : Ω → ℝ := fun _ => (klDiv P Q).toReal with hg_def
+    fun n ω ↦ (∑ i ∈ Finset.range n, logLikelihoodRatio P Q Xs i ω) / n with hf_def
+  set g : Ω → ℝ := fun _ ↦ (klDiv P Q).toReal with hg_def
   have h_meas_f : ∀ n, AEStronglyMeasurable (f n) μ := by
     intro n
     have h_sum_meas : Measurable
-        (fun ω => ∑ i ∈ Finset.range n, logLikelihoodRatio P Q Xs i ω) :=
-      Finset.measurable_sum _ fun i _ => measurable_logLikelihoodRatio P Q Xs hXs i
+        (fun ω ↦ ∑ i ∈ Finset.range n, logLikelihoodRatio P Q Xs i ω) :=
+      Finset.measurable_sum _ fun i _ ↦ measurable_logLikelihoodRatio P Q Xs hXs i
     have h_meas : Measurable (f n) := by
-      change Measurable (fun ω => (∑ i ∈ Finset.range n,
+      change Measurable (fun ω ↦ (∑ i ∈ Finset.range n,
         logLikelihoodRatio P Q Xs i ω) / n)
       exact h_sum_meas.div_const _
     exact h_meas.aestronglyMeasurable
   have h_ae := stein_strong_law μ P Q Xs hXs hindep hident hMap hPQ hQpos
-  have h_ae' : ∀ᵐ ω ∂μ, Tendsto (fun n => f n ω) atTop (𝓝 (g ω)) := h_ae
+  have h_ae' : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ f n ω) atTop (𝓝 (g ω)) := h_ae
   have h_inm : TendstoInMeasure μ f atTop g :=
     tendstoInMeasure_of_tendsto_ae h_meas_f h_ae'
   rw [tendstoInMeasure_iff_dist] at h_inm
   have h_target := h_inm ε hε
-  refine Tendsto.congr (fun n => ?_) h_target
+  refine Tendsto.congr (fun n ↦ ?_) h_target
   apply congrArg μ
   ext ω
   show ε ≤ dist (f n ω) (g ω) ↔ ε ≤ |f n ω - g ω|
@@ -274,17 +274,17 @@ theorem steinTypicalSet_P_prob_tendsto_one
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (hMap : μ.map (Xs 0) = P)
     (hPQ : P ≪ Q) (hQpos : ∀ x : α, 0 < Q.real {x})
     {ε : ℝ} (hε : 0 < ε) :
     Tendsto
-      (fun n : ℕ => μ {ω | jointRV Xs n ω ∈ steinTypicalSet P Q n ε})
+      (fun n : ℕ ↦ μ {ω | jointRV Xs n ω ∈ steinTypicalSet P Q n ε})
       atTop (𝓝 1) := by
   -- The "bad" event (from `stein_inProbability`).
   set bad : ℕ → Set Ω :=
-    fun n => {ω | ε ≤ |((∑ i ∈ Finset.range n, logLikelihoodRatio P Q Xs i ω) / n)
+    fun n ↦ {ω | ε ≤ |((∑ i ∈ Finset.range n, logLikelihoodRatio P Q Xs i ω) / n)
                        - (klDiv P Q).toReal|} with hbad_def
   -- Typical event = complement of `bad n`.
   have h_event_eq : ∀ n, {ω | jointRV Xs n ω ∈ steinTypicalSet P Q n ε} = (bad n)ᶜ := by
@@ -295,38 +295,38 @@ theorem steinTypicalSet_P_prob_tendsto_one
     -- Convert the Fin-sum to a range-sum.
     have h_sum : (∑ i : Fin n, llrPmf P Q (Xs i ω))
         = ∑ i ∈ Finset.range n, logLikelihoodRatio P Q Xs i ω :=
-      Fin.sum_univ_eq_sum_range (fun i => llrPmf P Q (Xs i ω)) n
+      Fin.sum_univ_eq_sum_range (fun i ↦ llrPmf P Q (Xs i ω)) n
     rw [h_sum]
-  have h_bad : Tendsto (fun n => μ (bad n)) atTop (𝓝 0) :=
+  have h_bad : Tendsto (fun n ↦ μ (bad n)) atTop (𝓝 0) :=
     stein_inProbability μ P Q Xs hXs hindep hident hMap hPQ hQpos hε
   have h_meas_bad : ∀ n, MeasurableSet (bad n) := by
     intro n
     have h_sum_meas : Measurable
-        (fun ω => ∑ i ∈ Finset.range n, logLikelihoodRatio P Q Xs i ω) :=
-      Finset.measurable_sum _ fun i _ => measurable_logLikelihoodRatio P Q Xs hXs i
+        (fun ω ↦ ∑ i ∈ Finset.range n, logLikelihoodRatio P Q Xs i ω) :=
+      Finset.measurable_sum _ fun i _ ↦ measurable_logLikelihoodRatio P Q Xs hXs i
     have h_div : Measurable
-        (fun ω => (∑ i ∈ Finset.range n, logLikelihoodRatio P Q Xs i ω) / n) :=
+        (fun ω ↦ (∑ i ∈ Finset.range n, logLikelihoodRatio P Q Xs i ω) / n) :=
       h_sum_meas.div_const _
     have h_diff : Measurable
-        (fun ω => (∑ i ∈ Finset.range n, logLikelihoodRatio P Q Xs i ω) / n
+        (fun ω ↦ (∑ i ∈ Finset.range n, logLikelihoodRatio P Q Xs i ω) / n
                     - (klDiv P Q).toReal) :=
       h_div.sub_const _
     have h_abs : Measurable
-        (fun ω => |((∑ i ∈ Finset.range n, logLikelihoodRatio P Q Xs i ω) / n
+        (fun ω ↦ |((∑ i ∈ Finset.range n, logLikelihoodRatio P Q Xs i ω) / n
                     - (klDiv P Q).toReal)|) :=
       _root_.continuous_abs.measurable.comp h_diff
     exact measurableSet_le measurable_const h_abs
-  have h_compl : Tendsto (fun n => μ (bad n)ᶜ) atTop (𝓝 1) := by
+  have h_compl : Tendsto (fun n ↦ μ (bad n)ᶜ) atTop (𝓝 1) := by
     have h_id : ∀ n, μ ((bad n)ᶜ) = 1 - μ (bad n) := by
       intro n
       rw [measure_compl (h_meas_bad n) (measure_ne_top μ _), measure_univ]
-    refine Tendsto.congr (fun n => (h_id n).symm) ?_
-    have h_cont : Continuous (fun x : ℝ≥0∞ => (1 : ℝ≥0∞) - x) :=
+    refine Tendsto.congr (fun n ↦ (h_id n).symm) ?_
+    have h_cont : Continuous (fun x : ℝ≥0∞ ↦ (1 : ℝ≥0∞) - x) :=
       ENNReal.continuous_sub_left (by simp)
-    have h_step : Tendsto (fun n => (1 : ℝ≥0∞) - μ (bad n)) atTop
+    have h_step : Tendsto (fun n ↦ (1 : ℝ≥0∞) - μ (bad n)) atTop
         (𝓝 ((1 : ℝ≥0∞) - 0)) := h_cont.tendsto _ |>.comp h_bad
     simpa using h_step
-  refine Tendsto.congr (fun n => ?_) h_compl
+  refine Tendsto.congr (fun n ↦ ?_) h_compl
   rw [h_event_eq n]
 
 omit [DecidableEq α] [Nonempty α] in
@@ -336,7 +336,7 @@ theorem steinTypicalSet_Q_prob_le
     (hPpos : ∀ x : α, 0 < P.real {x})
     (hQpos : ∀ x : α, 0 < Q.real {x})
     (n : ℕ) (ε : ℝ) :
-    ((Measure.pi (fun _ : Fin n => Q)) (steinTypicalSet P Q n ε)).toReal
+    ((Measure.pi (fun _ : Fin n ↦ Q)) (steinTypicalSet P Q n ε)).toReal
       ≤ Real.exp (-((n : ℝ) * ((klDiv P Q).toReal - ε))) := by
   classical
   -- Notation: `K = (klDiv P Q).toReal`, `T = T_ε^n` as a Finset.
@@ -345,8 +345,8 @@ theorem steinTypicalSet_Q_prob_le
   have hT_coe : (T : Set (Fin n → α)) = steinTypicalSet P Q n ε := by
     simp [hT_def]
   -- Pointwise marginal masses.
-  set p : α → ℝ := fun x => P.real {x} with hp_def
-  set q : α → ℝ := fun x => Q.real {x} with hq_def
+  set p : α → ℝ := fun x ↦ P.real {x} with hp_def
+  set q : α → ℝ := fun x ↦ Q.real {x} with hq_def
   have hp_pos : ∀ x, 0 < p x := hPpos
   have hq_pos : ∀ x, 0 < q x := hQpos
   -- Sum-of-marginals = 1.
@@ -359,29 +359,29 @@ theorem steinTypicalSet_Q_prob_le
     exact probReal_univ
   -- (Measure.pi Q).real {x} = ∏ i, Q.real {x i}.
   have h_pi_singleton_Q : ∀ x : Fin n → α,
-      ((Measure.pi (fun _ : Fin n => Q)).real {x}) = ∏ i : Fin n, q (x i) := by
+      ((Measure.pi (fun _ : Fin n ↦ Q)).real {x}) = ∏ i : Fin n, q (x i) := by
     intro x
-    show ((Measure.pi (fun _ : Fin n => Q)) {x}).toReal = ∏ i : Fin n, q (x i)
+    show ((Measure.pi (fun _ : Fin n ↦ Q)) {x}).toReal = ∏ i : Fin n, q (x i)
     rw [Measure.pi_singleton, ENNReal.toReal_prod]
     rfl
   have h_pi_singleton_P : ∀ x : Fin n → α,
-      ((Measure.pi (fun _ : Fin n => P)).real {x}) = ∏ i : Fin n, p (x i) := by
+      ((Measure.pi (fun _ : Fin n ↦ P)).real {x}) = ∏ i : Fin n, p (x i) := by
     intro x
-    show ((Measure.pi (fun _ : Fin n => P)) {x}).toReal = ∏ i : Fin n, p (x i)
+    show ((Measure.pi (fun _ : Fin n ↦ P)) {x}).toReal = ∏ i : Fin n, p (x i)
     rw [Measure.pi_singleton, ENNReal.toReal_prod]
     rfl
   -- Step 1: rewrite the Pi-measure of `T` (set form) as the sum over `T` (Finset form).
   have h_pi_real_eq_sum :
-      ((Measure.pi (fun _ : Fin n => Q)) (steinTypicalSet P Q n ε)).toReal
+      ((Measure.pi (fun _ : Fin n ↦ Q)) (steinTypicalSet P Q n ε)).toReal
         = ∑ x ∈ T, ∏ i : Fin n, q (x i) := by
-    have h_step : ((Measure.pi (fun _ : Fin n => Q)) (T : Set (Fin n → α))).toReal
-        = ∑ x ∈ T, ((Measure.pi (fun _ : Fin n => Q)).real {x}) := by
+    have h_step : ((Measure.pi (fun _ : Fin n ↦ Q)) (T : Set (Fin n → α))).toReal
+        = ∑ x ∈ T, ((Measure.pi (fun _ : Fin n ↦ Q)).real {x}) := by
       rw [← MeasureTheory.measureReal_def]
       rw [← MeasureTheory.sum_measureReal_singleton
-        (μ := Measure.pi (fun _ : Fin n => Q)) T]
+        (μ := Measure.pi (fun _ : Fin n ↦ Q)) T]
     rw [← hT_coe]
     rw [h_step]
-    refine Finset.sum_congr rfl fun x _ => h_pi_singleton_Q x
+    refine Finset.sum_congr rfl fun x _ ↦ h_pi_singleton_Q x
   rw [h_pi_real_eq_sum]
   -- Step 2: per-`x ∈ T`, `∏ i, q (x i) ≤ (∏ i, p (x i)) · exp(-(n · (K - ε)))`.
   have h_per_point : ∀ x ∈ T,
@@ -424,17 +424,17 @@ theorem steinTypicalSet_Q_prob_le
         Real.exp (-(∑ i : Fin n, llrPmf P Q (x i)))
           = ∏ i : Fin n, q (x i) / p (x i) := by
       rw [← Finset.sum_neg_distrib, Real.exp_sum]
-      exact Finset.prod_congr rfl fun i _ => h_exp_neg_llr i
+      exact Finset.prod_congr rfl fun i _ ↦ h_exp_neg_llr i
     rw [h_prod_ratio] at hexp_lt
     have hexp_lt_le : ∏ i : Fin n, q (x i) / p (x i)
         ≤ Real.exp (-((n : ℝ) * (K - ε))) := hexp_lt.le
     -- Now multiply both sides by `∏ i, p (x i)` (positive).
     have hprod_p_pos : 0 < ∏ i : Fin n, p (x i) :=
-      Finset.prod_pos (fun i _ => hp_pos (x i))
+      Finset.prod_pos (fun i _ ↦ hp_pos (x i))
     have h_eq_split : ∏ i : Fin n, q (x i)
         = (∏ i : Fin n, q (x i) / p (x i)) * ∏ i : Fin n, p (x i) := by
       rw [← Finset.prod_mul_distrib]
-      refine Finset.prod_congr rfl fun i _ => ?_
+      refine Finset.prod_congr rfl fun i _ ↦ ?_
       rw [div_mul_cancel₀ _ (hp_pos (x i)).ne']
     rw [h_eq_split]
     have hp_nn : (0 : ℝ) ≤ ∏ i : Fin n, p (x i) := hprod_p_pos.le
@@ -462,7 +462,7 @@ theorem steinTypicalSet_Q_prob_le
               simp [hsum_p]
             have h_nonneg : ∀ x : Fin n → α, 0 ≤ ∏ i : Fin n, p (x i) := by
               intro x
-              exact Finset.prod_nonneg (fun i _ => (hp_pos (x i)).le)
+              exact Finset.prod_nonneg (fun i _ ↦ (hp_pos (x i)).le)
             calc (∑ x ∈ T, ∏ i : Fin n, p (x i))
                 ≤ ∑ x : Fin n → α, ∏ i : Fin n, p (x i) := by
                   apply Finset.sum_le_sum_of_subset_of_nonneg
@@ -482,17 +482,17 @@ theorem stein_achievability
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (hMap : μ.map (Xs 0) = P)
-    (hMapJoint : ∀ n, μ.map (jointRV Xs n) = Measure.pi (fun _ : Fin n => P))
+    (hMapJoint : ∀ n, μ.map (jointRV Xs n) = Measure.pi (fun _ : Fin n ↦ P))
     (hPpos : ∀ x : α, 0 < P.real {x})
     (hPQ : P ≪ Q) (hQpos : ∀ x : α, 0 < Q.real {x})
     {ε δ : ℝ} (hε : 0 < ε) (_hε1 : ε < 1) (hδ : 0 < δ) :
     ∀ᶠ n : ℕ in atTop,
       ∃ s : Set (Fin n → α), MeasurableSet s ∧
-        ((Measure.pi (fun _ : Fin n => P)) sᶜ).toReal ≤ ε ∧
-        -((1 : ℝ) / n) * Real.log ((Measure.pi (fun _ : Fin n => Q)) s).toReal
+        ((Measure.pi (fun _ : Fin n ↦ P)) sᶜ).toReal ≤ ε ∧
+        -((1 : ℝ) / n) * Real.log ((Measure.pi (fun _ : Fin n ↦ Q)) s).toReal
           ≥ (klDiv P Q).toReal - δ := by
   classical
   -- Use the Stein-typical set with slack `δ` as the rejection region.
@@ -502,7 +502,7 @@ theorem stein_achievability
   set K : ℝ := (klDiv P Q).toReal with hK_def
   -- Translate via `hMapJoint`: `μ{ω | jointRV ∈ T} = P^n(T)` for measurable T.
   have h_translate : ∀ (n : ℕ) (T : Set (Fin n → α)), MeasurableSet T →
-      μ {ω | jointRV Xs n ω ∈ T} = (Measure.pi (fun _ : Fin n => P)) T := by
+      μ {ω | jointRV Xs n ω ∈ T} = (Measure.pi (fun _ : Fin n ↦ P)) T := by
     intro n T hT
     have hjoint_meas : Measurable (jointRV Xs n) := measurable_jointRV Xs hXs n
     have h_preimg : {ω | jointRV Xs n ω ∈ T} = jointRV Xs n ⁻¹' T := rfl
@@ -512,21 +512,21 @@ theorem stein_achievability
     hPQ hQpos (ε := δ) hδ
   -- Translate to pi form (still ENNReal).
   have h_P_pi_to_one : Tendsto
-      (fun n : ℕ => (Measure.pi (fun _ : Fin n => P)) (steinTypicalSet P Q n δ))
+      (fun n : ℕ ↦ (Measure.pi (fun _ : Fin n ↦ P)) (steinTypicalSet P Q n δ))
       atTop (𝓝 1) := by
-    refine Tendsto.congr (fun n => ?_) h_P_mu_to_one
+    refine Tendsto.congr (fun n ↦ ?_) h_P_mu_to_one
     exact h_translate n _ (measurableSet_steinTypicalSet P Q n δ)
   -- Eventually `P^n(steinTypicalSet) > 0` (since it tends to 1).
   -- This will give us `steinTypicalSet ≠ ∅` and hence `Q^n(steinTypicalSet) > 0`.
   have h_P_eventually_pos : ∀ᶠ n : ℕ in atTop,
-      0 < (Measure.pi (fun _ : Fin n => P)) (steinTypicalSet P Q n δ) := by
+      0 < (Measure.pi (fun _ : Fin n ↦ P)) (steinTypicalSet P Q n δ) := by
     have : ∀ᶠ x : ℝ≥0∞ in 𝓝 (1 : ℝ≥0∞), (0 : ℝ≥0∞) < x := by
       apply eventually_gt_nhds
       simp
     exact h_P_pi_to_one this
   -- Pass `P^n(T) → 1` (in ENNReal) to `(P^n(T)).toReal → 1` (in ℝ).
   have h_P_pi_to_one_R : Tendsto
-      (fun n : ℕ => ((Measure.pi (fun _ : Fin n => P))
+      (fun n : ℕ ↦ ((Measure.pi (fun _ : Fin n ↦ P))
         (steinTypicalSet P Q n δ)).toReal)
       atTop (𝓝 1) := by
     have h_cont : ContinuousAt ENNReal.toReal 1 :=
@@ -535,26 +535,26 @@ theorem stein_achievability
     simpa using this
   -- Hence `P^n(steinTypicalSetᶜ).toReal = 1 - P^n(steinTypicalSet).toReal → 0`.
   have h_P_compl_R_to_zero : Tendsto
-      (fun n : ℕ => ((Measure.pi (fun _ : Fin n => P))
+      (fun n : ℕ ↦ ((Measure.pi (fun _ : Fin n ↦ P))
         (steinTypicalSet P Q n δ)ᶜ).toReal) atTop (𝓝 0) := by
     have h_id : ∀ n : ℕ,
-        ((Measure.pi (fun _ : Fin n => P)) (steinTypicalSet P Q n δ)ᶜ).toReal
-          = 1 - ((Measure.pi (fun _ : Fin n => P))
+        ((Measure.pi (fun _ : Fin n ↦ P)) (steinTypicalSet P Q n δ)ᶜ).toReal
+          = 1 - ((Measure.pi (fun _ : Fin n ↦ P))
               (steinTypicalSet P Q n δ)).toReal := by
       intro n
       have h_meas := measurableSet_steinTypicalSet P Q n δ
-      show (Measure.pi (fun _ : Fin n => P)).real (steinTypicalSet P Q n δ)ᶜ
-        = 1 - (Measure.pi (fun _ : Fin n => P)).real (steinTypicalSet P Q n δ)
+      show (Measure.pi (fun _ : Fin n ↦ P)).real (steinTypicalSet P Q n δ)ᶜ
+        = 1 - (Measure.pi (fun _ : Fin n ↦ P)).real (steinTypicalSet P Q n δ)
       rw [measureReal_compl h_meas, probReal_univ]
-    refine Tendsto.congr (fun n => (h_id n).symm) ?_
-    have h_sub : Tendsto (fun n : ℕ =>
-        (1 : ℝ) - ((Measure.pi (fun _ : Fin n => P))
+    refine Tendsto.congr (fun n ↦ (h_id n).symm) ?_
+    have h_sub : Tendsto (fun n : ℕ ↦
+        (1 : ℝ) - ((Measure.pi (fun _ : Fin n ↦ P))
             (steinTypicalSet P Q n δ)).toReal) atTop (𝓝 (1 - 1)) := by
       exact (tendsto_const_nhds).sub h_P_pi_to_one_R
     simpa using h_sub
   -- Step 2: `P^n(steinTypicalSetᶜ).toReal ≤ ε` eventually.
   have h_alpha_le : ∀ᶠ n : ℕ in atTop,
-      ((Measure.pi (fun _ : Fin n => P))
+      ((Measure.pi (fun _ : Fin n ↦ P))
         (steinTypicalSet P Q n δ)ᶜ).toReal ≤ ε := by
     have : ∀ᶠ x : ℝ in 𝓝 0, x ≤ ε := by
       apply eventually_le_nhds
@@ -571,7 +571,7 @@ theorem stein_achievability
   have h_Q_le := steinTypicalSet_Q_prob_le P Q hPpos hQpos n δ
   -- `Q^n(steinTypicalSet) > 0`: since `P^n(s) > 0` and `s` non-empty (singletons in `s`),
   -- and every singleton has positive Q^n mass (because hQpos).
-  have h_Q_pos : 0 < ((Measure.pi (fun _ : Fin n => Q))
+  have h_Q_pos : 0 < ((Measure.pi (fun _ : Fin n ↦ Q))
       (steinTypicalSet P Q n δ)).toReal := by
     -- Pick a witness `x ∈ steinTypicalSet`. From `h_pos`, `P^n(s) > 0`, so `s ≠ ∅`.
     have h_s_nonempty : (steinTypicalSet P Q n δ).Nonempty := by
@@ -581,27 +581,27 @@ theorem stein_achievability
       simp at h_pos
     obtain ⟨x, hx⟩ := h_s_nonempty
     -- `Q^n({x}) > 0` because all singletons of α have positive Q-mass (hQpos).
-    have h_Q_x_pos : 0 < ((Measure.pi (fun _ : Fin n => Q)) {x}).toReal := by
-      rw [show ((Measure.pi (fun _ : Fin n => Q)) {x}).toReal
+    have h_Q_x_pos : 0 < ((Measure.pi (fun _ : Fin n ↦ Q)) {x}).toReal := by
+      rw [show ((Measure.pi (fun _ : Fin n ↦ Q)) {x}).toReal
         = ∏ i : Fin n, Q.real {x i} from by
           rw [Measure.pi_singleton, ENNReal.toReal_prod]; rfl]
-      exact Finset.prod_pos (fun i _ => hQpos (x i))
+      exact Finset.prod_pos (fun i _ ↦ hQpos (x i))
     -- And `Q^n({x}) ≤ Q^n(steinTypicalSet)` by monotonicity.
     have h_subset : ({x} : Set (Fin n → α)) ⊆ steinTypicalSet P Q n δ := by
       intro y hy
       simp only [Set.mem_singleton_iff] at hy
       rw [hy]; exact hx
-    have h_meas_sub : ((Measure.pi (fun _ : Fin n => Q)) {x}).toReal
-        ≤ ((Measure.pi (fun _ : Fin n => Q)) (steinTypicalSet P Q n δ)).toReal :=
+    have h_meas_sub : ((Measure.pi (fun _ : Fin n ↦ Q)) {x}).toReal
+        ≤ ((Measure.pi (fun _ : Fin n ↦ Q)) (steinTypicalSet P Q n δ)).toReal :=
       MeasureTheory.measureReal_mono h_subset
     linarith
   -- Now apply log monotonicity.
   -- From `Q^n(s).toReal ≤ exp(-(n(K-δ)))`, by `Real.log` monotonicity (and Q^n s > 0),
   -- `log Q^n(s).toReal ≤ -(n(K-δ))`.
   have hn_R_pos : (0 : ℝ) < n := by exact_mod_cast hn_pos
-  have h_log_le : Real.log ((Measure.pi (fun _ : Fin n => Q))
+  have h_log_le : Real.log ((Measure.pi (fun _ : Fin n ↦ Q))
       (steinTypicalSet P Q n δ)).toReal ≤ -((n : ℝ) * (K - δ)) := by
-    calc Real.log ((Measure.pi (fun _ : Fin n => Q))
+    calc Real.log ((Measure.pi (fun _ : Fin n ↦ Q))
             (steinTypicalSet P Q n δ)).toReal
         ≤ Real.log (Real.exp (-((n : ℝ) * (K - δ)))) :=
           Real.log_le_log h_Q_pos h_Q_le
@@ -611,7 +611,7 @@ theorem stein_achievability
   have h_neg_inv_neg : -(1 / n : ℝ) < 0 := by linarith
   -- `-(1/n) * log Q^n s ≥ -(1/n) * (-(n(K-δ))) = (K - δ)`.
   have h_step : -(1 / n : ℝ) * Real.log
-      ((Measure.pi (fun _ : Fin n => Q)) (steinTypicalSet P Q n δ)).toReal
+      ((Measure.pi (fun _ : Fin n ↦ Q)) (steinTypicalSet P Q n δ)).toReal
       ≥ -(1 / n : ℝ) * (-((n : ℝ) * (K - δ))) := by
     apply mul_le_mul_of_nonpos_left h_log_le
     linarith
@@ -633,9 +633,9 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] i
 divergence is `0`. -/
 theorem klDiv_pi_zero
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q] :
-    klDiv (Measure.pi (fun _ : Fin 0 => P)) (Measure.pi (fun _ : Fin 0 => Q)) = 0 := by
+    klDiv (Measure.pi (fun _ : Fin 0 ↦ P)) (Measure.pi (fun _ : Fin 0 ↦ Q)) = 0 := by
   -- Both Pi measures equal `Measure.dirac isEmptyElim` via `pi_of_empty`.
-  rw [Measure.pi_of_empty (fun _ : Fin 0 => P), Measure.pi_of_empty (fun _ : Fin 0 => Q)]
+  rw [Measure.pi_of_empty (fun _ : Fin 0 ↦ P), Measure.pi_of_empty (fun _ : Fin 0 ↦ Q)]
   exact klDiv_self _
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
@@ -643,64 +643,64 @@ omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 `klDiv (Π_{n+1} P) (Π_{n+1} Q) = klDiv P Q + klDiv (Π_n P) (Π_n Q)`. -/
 theorem klDiv_pi_succ
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q] (n : ℕ) :
-    klDiv (Measure.pi (fun _ : Fin (n + 1) => P)) (Measure.pi (fun _ : Fin (n + 1) => Q))
-      = klDiv P Q + klDiv (Measure.pi (fun _ : Fin n => P))
-                          (Measure.pi (fun _ : Fin n => Q)) := by
+    klDiv (Measure.pi (fun _ : Fin (n + 1) ↦ P)) (Measure.pi (fun _ : Fin (n + 1) ↦ Q))
+      = klDiv P Q + klDiv (Measure.pi (fun _ : Fin n ↦ P))
+                          (Measure.pi (fun _ : Fin n ↦ Q)) := by
   -- (1) reshape via piFinSuccAbove with i = 0:
   --     Measure.pi (Fin (n+1) → P) = (P).prod (Measure.pi (Fin n → P)) (after map)
-  set e : ((i : Fin (n + 1)) → (fun _ => α) i) ≃ᵐ
-            α × ((j : Fin n) → (fun _ => α) ((0 : Fin (n + 1)).succAbove j)) :=
-    MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) => α) 0 with he_def
+  set e : ((i : Fin (n + 1)) → (fun _ ↦ α) i) ≃ᵐ
+            α × ((j : Fin n) → (fun _ ↦ α) ((0 : Fin (n + 1)).succAbove j)) :=
+    MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) ↦ α) 0 with he_def
   have hP_pres : MeasurePreserving e
-      (Measure.pi (fun _ : Fin (n + 1) => P))
-      (P.prod (Measure.pi (fun j : Fin n => P))) := by
-    have := measurePreserving_piFinSuccAbove (fun _ : Fin (n + 1) => P) (0 : Fin (n + 1))
+      (Measure.pi (fun _ : Fin (n + 1) ↦ P))
+      (P.prod (Measure.pi (fun j : Fin n ↦ P))) := by
+    have := measurePreserving_piFinSuccAbove (fun _ : Fin (n + 1) ↦ P) (0 : Fin (n + 1))
     -- `(0 : Fin (n+1)).succAbove j` for `j : Fin n` is `j.succ`, so the resulting
     -- Pi measure is over the constant `P` family: this is defeq.
     exact this
   have hQ_pres : MeasurePreserving e
-      (Measure.pi (fun _ : Fin (n + 1) => Q))
-      (Q.prod (Measure.pi (fun j : Fin n => Q))) := by
-    have := measurePreserving_piFinSuccAbove (fun _ : Fin (n + 1) => Q) (0 : Fin (n + 1))
+      (Measure.pi (fun _ : Fin (n + 1) ↦ Q))
+      (Q.prod (Measure.pi (fun j : Fin n ↦ Q))) := by
+    have := measurePreserving_piFinSuccAbove (fun _ : Fin (n + 1) ↦ Q) (0 : Fin (n + 1))
     exact this
-  have hP_map : (Measure.pi (fun _ : Fin (n + 1) => P)).map e
-      = P.prod (Measure.pi (fun j : Fin n => P)) := hP_pres.map_eq
-  have hQ_map : (Measure.pi (fun _ : Fin (n + 1) => Q)).map e
-      = Q.prod (Measure.pi (fun j : Fin n => Q)) := hQ_pres.map_eq
+  have hP_map : (Measure.pi (fun _ : Fin (n + 1) ↦ P)).map e
+      = P.prod (Measure.pi (fun j : Fin n ↦ P)) := hP_pres.map_eq
+  have hQ_map : (Measure.pi (fun _ : Fin (n + 1) ↦ Q)).map e
+      = Q.prod (Measure.pi (fun j : Fin n ↦ Q)) := hQ_pres.map_eq
   -- (2) `klDiv (Pi (n+1) P) (Pi (n+1) Q) = klDiv (P.prod Pi^n P) (Q.prod Pi^n Q)`.
   have h_reshape :
-      klDiv (Measure.pi (fun _ : Fin (n + 1) => P))
-            (Measure.pi (fun _ : Fin (n + 1) => Q))
-        = klDiv (P.prod (Measure.pi (fun j : Fin n => P)))
-                (Q.prod (Measure.pi (fun j : Fin n => Q))) := by
+      klDiv (Measure.pi (fun _ : Fin (n + 1) ↦ P))
+            (Measure.pi (fun _ : Fin (n + 1) ↦ Q))
+        = klDiv (P.prod (Measure.pi (fun j : Fin n ↦ P)))
+                (Q.prod (Measure.pi (fun j : Fin n ↦ Q))) := by
     rw [← hP_map, ← hQ_map, klDiv_map_measurableEquiv e]
   rw [h_reshape]
   -- (3) Convert `prod` to `compProd const`.
-  have hP_compProd : P.prod (Measure.pi (fun j : Fin n => P))
-      = P ⊗ₘ Kernel.const α (Measure.pi (fun j : Fin n => P)) :=
+  have hP_compProd : P.prod (Measure.pi (fun j : Fin n ↦ P))
+      = P ⊗ₘ Kernel.const α (Measure.pi (fun j : Fin n ↦ P)) :=
     (Measure.compProd_const).symm
-  have hQ_compProd : Q.prod (Measure.pi (fun j : Fin n => Q))
-      = Q ⊗ₘ Kernel.const α (Measure.pi (fun j : Fin n => Q)) :=
+  have hQ_compProd : Q.prod (Measure.pi (fun j : Fin n ↦ Q))
+      = Q ⊗ₘ Kernel.const α (Measure.pi (fun j : Fin n ↦ Q)) :=
     (Measure.compProd_const).symm
   rw [hP_compProd, hQ_compProd]
   -- (4) Apply `klDiv_compProd_eq_add`:
   --     klDiv (P ⊗ const Pi^n P) (Q ⊗ const Pi^n Q)
   --       = klDiv P Q + klDiv (P ⊗ const Pi^n P) (P ⊗ const Pi^n Q)
-  rw [klDiv_compProd_eq_add P Q (Kernel.const α (Measure.pi (fun j : Fin n => P)))
-        (Kernel.const α (Measure.pi (fun j : Fin n => Q)))]
+  rw [klDiv_compProd_eq_add P Q (Kernel.const α (Measure.pi (fun j : Fin n ↦ P)))
+        (Kernel.const α (Measure.pi (fun j : Fin n ↦ Q)))]
   -- (5) The right summand is `klDiv (P ⊗ const Pi^n P) (P ⊗ const Pi^n Q)`.
   -- Convert both sides back to `prod` form using `compProd_const`, then apply
   -- `klDiv_prod_const_left` to cancel the common left factor `P`.
   congr 1
   rw [Measure.compProd_const, Measure.compProd_const]
-  exact klDiv_prod_const_left P (Measure.pi (fun j : Fin n => P))
-    (Measure.pi (fun j : Fin n => Q))
+  exact klDiv_prod_const_left P (Measure.pi (fun j : Fin n ↦ P))
+    (Measure.pi (fun j : Fin n ↦ Q))
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- KL tensorization: `klDiv (Π_{Fin n} P) (Π_{Fin n} Q) = n · klDiv P Q`. -/
 theorem klDiv_pi_eq_n_smul
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q] (n : ℕ) :
-    klDiv (Measure.pi (fun _ : Fin n => P)) (Measure.pi (fun _ : Fin n => Q))
+    klDiv (Measure.pi (fun _ : Fin n ↦ P)) (Measure.pi (fun _ : Fin n ↦ Q))
       = (n : ℝ≥0∞) * klDiv P Q := by
   induction n with
   | zero => rw [klDiv_pi_zero P Q]; simp

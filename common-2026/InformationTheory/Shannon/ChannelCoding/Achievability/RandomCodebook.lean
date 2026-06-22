@@ -64,7 +64,7 @@ lemma jointDistribution_real_singleton
     · ext z; simp [ha']
   have h_lint_congr : (∫⁻ a' : α, (W a') (Prod.mk a' ⁻¹' (({a} : Set α) ×ˢ ({b} : Set β))) ∂p)
         = ∫⁻ a' : α, (W a') (if a' = a then ({b} : Set β) else (∅ : Set β)) ∂p := by
-    refine lintegral_congr_ae (Filter.Eventually.of_forall fun a' => ?_)
+    refine lintegral_congr_ae (Filter.Eventually.of_forall fun a' ↦ ?_)
     show (W a') (Prod.mk a' ⁻¹' (({a} : Set α) ×ˢ ({b} : Set β)))
         = (W a') (if a' = a then ({b} : Set β) else (∅ : Set β))
     rw [h_pre a']
@@ -76,8 +76,8 @@ lemma jointDistribution_real_singleton
     by_cases ha' : a' = a
     · subst ha'; simp
     · simp [ha']
-  rw [Finset.sum_congr rfl (fun a' _ => hsum a')]
-  rw [Finset.sum_ite_eq' Finset.univ a (fun _ => (W a) {b} * p {a})]
+  rw [Finset.sum_congr rfl (fun a' _ ↦ hsum a')]
+  rw [Finset.sum_ite_eq' Finset.univ a (fun _ ↦ (W a) {b} * p {a})]
   rw [if_pos (Finset.mem_univ _), ENNReal.toReal_mul]
   show (W a).real {b} * p.real {a} = p.real {a} * (W a).real {b}
   ring
@@ -98,14 +98,14 @@ lemma outputDistribution_real_singleton_eq_sum
   rw [measureReal_def, h1, jointDistribution_def]
   have h2 : (p ⊗ₘ W) (Set.univ ×ˢ ({b} : Set β)) = ∫⁻ a, W a {b} ∂p := by
     rw [Measure.compProd_apply (MeasurableSet.univ.prod (measurableSet_singleton _))]
-    refine lintegral_congr_ae (Filter.Eventually.of_forall fun a => ?_)
+    refine lintegral_congr_ae (Filter.Eventually.of_forall fun a ↦ ?_)
     show (W a) (Prod.mk a ⁻¹' (Set.univ ×ˢ ({b} : Set β))) = (W a) {b}
     congr 1
     ext y; simp
   rw [h2, lintegral_fintype,
-      ENNReal.toReal_sum (fun a _ => ENNReal.mul_ne_top
+      ENNReal.toReal_sum (fun a _ ↦ ENNReal.mul_ne_top
         (measure_ne_top _ _) (measure_ne_top _ _))]
-  refine Finset.sum_congr rfl (fun a _ => ?_)
+  refine Finset.sum_congr rfl (fun a _ ↦ ?_)
   rw [ENNReal.toReal_mul]
   show (W a).real {b} * p.real {a} = p.real {a} * (W a).real {b}
   ring
@@ -126,26 +126,26 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
 private lemma block_law_X_eq_pi_p
     {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindepX : iIndepFun (fun i => Xs i) μ)
+    (hindepX : iIndepFun (fun i ↦ Xs i) μ)
     (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (p : Measure α) [IsProbabilityMeasure p]
     (h_match_X : μ.map (Xs 0) = p) (n : ℕ) :
     μ.map (InformationTheory.Shannon.jointRV Xs n)
-      = Measure.pi (fun _ : Fin n => p) := by
+      = Measure.pi (fun _ : Fin n ↦ p) := by
   classical
   -- Restrict `Xs` to `Fin n`: `Xs' : Fin n → Ω → α := fun i => Xs i`.
-  set Xs' : Fin n → Ω → α := fun i => Xs i with hXs'_def
-  have hXs'_meas : ∀ i : Fin n, AEMeasurable (Xs' i) μ := fun i => (hXs i).aemeasurable
+  set Xs' : Fin n → Ω → α := fun i ↦ Xs i with hXs'_def
+  have hXs'_meas : ∀ i : Fin n, AEMeasurable (Xs' i) μ := fun i ↦ (hXs i).aemeasurable
   -- `iIndepFun Xs' μ` from `iIndepFun (Xs ·) μ` by restriction.
   have hindepX' : iIndepFun Xs' μ :=
-    hindepX.precomp (g := fun i : Fin n => (i : ℕ)) Fin.val_injective
+    hindepX.precomp (g := fun i : Fin n ↦ (i : ℕ)) Fin.val_injective
   -- Use `iIndepFun_iff_map_fun_eq_pi_map`.
-  have h_pi_form : μ.map (fun ω i => Xs' i ω)
-        = Measure.pi (fun i => μ.map (Xs' i)) :=
+  have h_pi_form : μ.map (fun ω i ↦ Xs' i ω)
+        = Measure.pi (fun i ↦ μ.map (Xs' i)) :=
     (iIndepFun_iff_map_fun_eq_pi_map hXs'_meas).mp hindepX'
   -- `μ.map (jointRV Xs n) = μ.map (fun ω i => Xs' i ω)` (defeq).
   have h_jointRV_eq : InformationTheory.Shannon.jointRV Xs n
-        = fun ω (i : Fin n) => Xs' i ω := rfl
+        = fun ω (i : Fin n) ↦ Xs' i ω := rfl
   rw [h_jointRV_eq, h_pi_form]
   -- Each `μ.map (Xs' i) = p` via `IdentDistrib` to `Xs 0` and `h_match_X`.
   congr 1
@@ -161,20 +161,20 @@ omit [DecidableEq α] [Nonempty α] [Fintype β] [DecidableEq β] [Nonempty β]
 private lemma block_law_Y_eq_pi
     {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Ys : ℕ → Ω → β) (hYs : ∀ i, Measurable (Ys i))
-    (hindepY : iIndepFun (fun i => Ys i) μ)
+    (hindepY : iIndepFun (fun i ↦ Ys i) μ)
     (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ) (n : ℕ) :
     μ.map (InformationTheory.Shannon.jointRV Ys n)
-      = Measure.pi (fun _ : Fin n => μ.map (Ys 0)) := by
+      = Measure.pi (fun _ : Fin n ↦ μ.map (Ys 0)) := by
   classical
-  set Ys' : Fin n → Ω → β := fun i => Ys i with hYs'_def
-  have hYs'_meas : ∀ i : Fin n, AEMeasurable (Ys' i) μ := fun i => (hYs i).aemeasurable
+  set Ys' : Fin n → Ω → β := fun i ↦ Ys i with hYs'_def
+  have hYs'_meas : ∀ i : Fin n, AEMeasurable (Ys' i) μ := fun i ↦ (hYs i).aemeasurable
   have hindepY' : iIndepFun Ys' μ :=
-    hindepY.precomp (g := fun i : Fin n => (i : ℕ)) Fin.val_injective
-  have h_pi_form : μ.map (fun ω i => Ys' i ω)
-        = Measure.pi (fun i => μ.map (Ys' i)) :=
+    hindepY.precomp (g := fun i : Fin n ↦ (i : ℕ)) Fin.val_injective
+  have h_pi_form : μ.map (fun ω i ↦ Ys' i ω)
+        = Measure.pi (fun i ↦ μ.map (Ys' i)) :=
     (iIndepFun_iff_map_fun_eq_pi_map hYs'_meas).mp hindepY'
   have h_jointRV_eq : InformationTheory.Shannon.jointRV Ys n
-        = fun ω (i : Fin n) => Ys' i ω := rfl
+        = fun ω (i : Fin n) ↦ Ys' i ω := rfl
   rw [h_jointRV_eq, h_pi_form]
   congr 1
   funext i
@@ -193,25 +193,25 @@ private lemma block_joint_law_eq_pi
     {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindepZ_full : iIndepFun (fun i => jointSequence Xs Ys i) μ)
+    (hindepZ_full : iIndepFun (fun i ↦ jointSequence Xs Ys i) μ)
     (hidentZ : ∀ i,
       IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
     (p : Measure α) [IsProbabilityMeasure p]
     (W : Channel α β) [IsMarkovKernel W]
     (h_match_Z : μ.map (jointSequence Xs Ys 0) = jointDistribution p W) (n : ℕ) :
-    μ.map (fun ω (i : Fin n) => (Xs i ω, Ys i ω))
-      = Measure.pi (fun _ : Fin n => jointDistribution p W) := by
+    μ.map (fun ω (i : Fin n) ↦ (Xs i ω, Ys i ω))
+      = Measure.pi (fun _ : Fin n ↦ jointDistribution p W) := by
   classical
-  set Zs' : Fin n → Ω → α × β := fun i => jointSequence Xs Ys i with hZs'_def
-  have hZs'_meas : ∀ i : Fin n, AEMeasurable (Zs' i) μ := fun i =>
+  set Zs' : Fin n → Ω → α × β := fun i ↦ jointSequence Xs Ys i with hZs'_def
+  have hZs'_meas : ∀ i : Fin n, AEMeasurable (Zs' i) μ := fun i ↦
     (measurable_jointSequence Xs Ys hXs hYs i).aemeasurable
   have hindepZ' : iIndepFun Zs' μ :=
-    hindepZ_full.precomp (g := fun i : Fin n => (i : ℕ)) Fin.val_injective
-  have h_pi_form : μ.map (fun ω i => Zs' i ω)
-        = Measure.pi (fun i => μ.map (Zs' i)) :=
+    hindepZ_full.precomp (g := fun i : Fin n ↦ (i : ℕ)) Fin.val_injective
+  have h_pi_form : μ.map (fun ω i ↦ Zs' i ω)
+        = Measure.pi (fun i ↦ μ.map (Zs' i)) :=
     (iIndepFun_iff_map_fun_eq_pi_map hZs'_meas).mp hindepZ'
-  have h_fn_eq : (fun ω (i : Fin n) => (Xs i ω, Ys i ω))
-        = (fun ω i => Zs' i ω) := by
+  have h_fn_eq : (fun ω (i : Fin n) ↦ (Xs i ω, Ys i ω))
+        = (fun ω i ↦ Zs' i ω) := by
     funext ω i; rfl
   rw [h_fn_eq, h_pi_form]
   congr 1
@@ -237,7 +237,7 @@ lemma prod_erase_eq_prod_subtype_ne
           g' ⟨m''.1, (Finset.mem_erase.mp m''.2).1⟩ := by
     symm
     apply Finset.prod_bij (fun (m'' : {m'' // m'' ∈ (Finset.univ : Finset (Fin M)).erase m})
-      _ => (⟨m''.1, (Finset.mem_erase.mp m''.2).1⟩ : {m' : Fin M // m' ≠ m}))
+      _ ↦ (⟨m''.1, (Finset.mem_erase.mp m''.2).1⟩ : {m' : Fin M // m' ≠ m}))
     · intro a _; exact Finset.mem_univ _
     · intro a _ b _ hab
       have h1 : (⟨a.1, _⟩ : {m' : Fin M // m' ≠ m}).1 = (⟨b.1, _⟩ : {m' : Fin M // m' ≠ m}).1 :=
@@ -260,20 +260,20 @@ lemma sum_prod_measureReal_singleton_eq_one
   have h_sum_one : (∑ x : γ, P.real {x}) = 1 :=
     sum_measureReal_singleton_univ_eq_one P
   have h_pi := (Finset.prod_univ_sum
-    (κ := fun _ : J => γ)
-    (t := fun _ => (Finset.univ : Finset γ))
+    (κ := fun _ : J ↦ γ)
+    (t := fun _ ↦ (Finset.univ : Finset γ))
     (R := ℝ)
-    (f := fun (_ : J) x => P.real {x})).symm
+    (f := fun (_ : J) x ↦ P.real {x})).symm
   have h_lhs_eq : (∑ c : J → γ, ∏ j : J, P.real {c j})
-      = ∑ c ∈ Fintype.piFinset (fun _ : J => (Finset.univ : Finset γ)),
+      = ∑ c ∈ Fintype.piFinset (fun _ : J ↦ (Finset.univ : Finset γ)),
         ∏ j : J, P.real {c j} := by
-    apply Finset.sum_bij (fun (c : J → γ) _ => c)
-    · intro a _; exact Fintype.mem_piFinset.mpr (fun _ => Finset.mem_univ _)
+    apply Finset.sum_bij (fun (c : J → γ) _ ↦ c)
+    · intro a _; exact Fintype.mem_piFinset.mpr (fun _ ↦ Finset.mem_univ _)
     · intro a _ b _ h; exact h
     · intro b _; exact ⟨b, Finset.mem_univ _, rfl⟩
     · intro _ _; rfl
   rw [h_lhs_eq, h_pi]
-  exact Finset.prod_eq_one (fun i _ => h_sum_one)
+  exact Finset.prod_eq_one (fun i _ ↦ h_sum_one)
 
 omit [DecidableEq α] [Nonempty α] [Fintype β]
   [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
@@ -282,15 +282,15 @@ private lemma codebook_marginal_one
     (p : Measure α) [IsProbabilityMeasure p] (M n : ℕ)
     (m : Fin M) (f : (Fin n → α) → ℝ) (_hf_nn : ∀ x, 0 ≤ f x) :
     ∑ c : Codebook M n α, (codebookMeasure p M n).real {c} * f (c m)
-      = ∑ x : Fin n → α, (Measure.pi (fun _ : Fin n => p)).real {x} * f x := by
+      = ∑ x : Fin n → α, (Measure.pi (fun _ : Fin n ↦ p)).real {x} * f x := by
   classical
   haveI : MeasurableSingletonClass (Fin n → α) := Pi.instMeasurableSingletonClass
   haveI : MeasurableSingletonClass (Codebook M n α) := Pi.instMeasurableSingletonClass
-  haveI : IsProbabilityMeasure (Measure.pi (fun _ : Fin n => p)) := by infer_instance
+  haveI : IsProbabilityMeasure (Measure.pi (fun _ : Fin n ↦ p)) := by infer_instance
   -- Step 1: codebookMeasure.real {c} = ∏ m', (Pi p).real {c m'}.
   have h_cm : ∀ c : Codebook M n α,
       (codebookMeasure p M n).real {c}
-        = ∏ m' : Fin M, (Measure.pi (fun _ : Fin n => p)).real {c m'} := by
+        = ∏ m' : Fin M, (Measure.pi (fun _ : Fin n ↦ p)).real {c m'} := by
     intro c
     unfold codebookMeasure
     rw [measureReal_def, Measure.pi_singleton, ENNReal.toReal_prod]
@@ -302,19 +302,19 @@ private lemma codebook_marginal_one
   -- We use `Finset.sum_univ_pi`-style.
   have h_swap_step :
       ∑ c : Codebook M n α,
-        (∏ m' : Fin M, (Measure.pi (fun _ : Fin n => p)).real {c m'}) * f (c m)
-      = ∑ x : Fin n → α, (Measure.pi (fun _ : Fin n => p)).real {x} * f x := by
+        (∏ m' : Fin M, (Measure.pi (fun _ : Fin n ↦ p)).real {c m'}) * f (c m)
+      = ∑ x : Fin n → α, (Measure.pi (fun _ : Fin n ↦ p)).real {x} * f x := by
     -- Strategy: reindex `c : Fin M → (Fin n → α)` via swapping `m`-th coord with `0`-th.
     -- Pull out the `m`-th factor in the product to get `f(c m) * P{c m} * ∏_{m'≠m} P{c m'}`.
     -- Then sum over `c m'` for `m' ≠ m` separately (each gives 1 since P is a probability).
-    set P : Measure (Fin n → α) := Measure.pi (fun _ : Fin n => p) with hP_def
+    set P : Measure (Fin n → α) := Measure.pi (fun _ : Fin n ↦ p) with hP_def
     haveI : IsProbabilityMeasure P := by rw [hP_def]; infer_instance
     -- Pull out the m-th factor.
     have h_prod_split : ∀ c : Codebook M n α,
         (∏ m' : Fin M, P.real {c m'})
           = P.real {c m} * ∏ m' ∈ (Finset.univ : Finset (Fin M)).erase m, P.real {c m'} := by
       intro c
-      exact (Finset.mul_prod_erase Finset.univ (fun m' => P.real {c m'})
+      exact (Finset.mul_prod_erase Finset.univ (fun m' ↦ P.real {c m'})
         (Finset.mem_univ m)).symm
     -- Reindex: `c ↦ (c m, c restricted to (univ.erase m))`.
     -- Use Fintype.sum_equiv? simpler: use Finset.sum_prod_pi.
@@ -333,7 +333,7 @@ private lemma codebook_marginal_one
     --   ∑_c F(c m) * ∏_{m'} P{c m'}
     --   = ∑_{c m ∈ FinN→α} F(c m) * P{c m} * ∑_{c m'≠m ∈ ...} ∏ P{c m'}
     -- And `∑_{c''} ∏ P{c'' m'} = ∏ ∑_{x} P{x} = 1^... = 1` over `(Fin M).erase m`.
-    rw [Finset.sum_congr rfl (fun c _ => by rw [h_prod_split c])]
+    rw [Finset.sum_congr rfl (fun c _ ↦ by rw [h_prod_split c])]
     -- Now group: ∑ c, (P{c m} * ∏_{m'≠m} P{c m'}) * f(c m)
     --   = ∑ c, P{c m} * f(c m) * ∏_{m'≠m} P{c m'}.
     have h_reassoc : ∀ c : Codebook M n α,
@@ -342,7 +342,7 @@ private lemma codebook_marginal_one
           = (P.real {c m} * f (c m)) *
             (∏ m' ∈ (Finset.univ : Finset (Fin M)).erase m, P.real {c m'}) := by
       intro c; ring
-    rw [Finset.sum_congr rfl (fun c _ => h_reassoc c)]
+    rw [Finset.sum_congr rfl (fun c _ ↦ h_reassoc c)]
     -- Use a bijection `Codebook M n α ≃ (Fin n → α) × ((Fin M).erase m → (Fin n → α))`
     -- via `c ↦ (c m, fun m' => c m'.1)`. We avoid building this Equiv explicitly and
     -- use the Fintype.sum_prod identity in product form.
@@ -351,9 +351,9 @@ private lemma codebook_marginal_one
     -- `∑_{x} ∑_{c'} g (Function.update c' m x)` if we let c' vary over m' ≠ m.
     -- We use `Fintype.sum_equiv` with the obvious equivalence.
     let toFun : Codebook M n α → (Fin n → α) × ({m' : Fin M // m' ≠ m} → (Fin n → α)) :=
-      fun c => (c m, fun m' => c m'.1)
+      fun c ↦ (c m, fun m' ↦ c m'.1)
     let invFun : (Fin n → α) × ({m' : Fin M // m' ≠ m} → (Fin n → α)) → Codebook M n α :=
-      fun p m' => if h : m' = m then p.1 else p.2 ⟨m', h⟩
+      fun p m' ↦ if h : m' = m then p.1 else p.2 ⟨m', h⟩
     have left_inv : ∀ c, invFun (toFun c) = c := by
       intro c
       funext m'
@@ -370,7 +370,7 @@ private lemma codebook_marginal_one
       { toFun := toFun, invFun := invFun, left_inv := left_inv, right_inv := right_inv }
     -- Reindex via `e.symm`: ∑ y, F (e.symm y) = ∑ c, F c.
     rw [← Equiv.sum_comp e.symm
-      (fun c => P.real {c m} * f (c m) *
+      (fun c ↦ P.real {c m} * f (c m) *
         ∏ m' ∈ (Finset.univ : Finset (Fin M)).erase m, P.real {c m'})]
     -- Now the sum is over `(x, c') : (Fin n → α) × ({m' // m' ≠ m} → (Fin n → α))`.
     rw [Fintype.sum_prod_type]
@@ -388,8 +388,8 @@ private lemma codebook_marginal_one
           = ∏ m'' : {m' : Fin M // m' ≠ m}, P.real {c' m''} := by
       intro x c'
       refine prod_erase_eq_prod_subtype_ne m
-        (fun m'' => P.real {(invFun (x, c')) m''})
-        (fun m'' => P.real {c' m''}) (fun m'' h => ?_)
+        (fun m'' ↦ P.real {(invFun (x, c')) m''})
+        (fun m'' ↦ P.real {c' m''}) (fun m'' h ↦ ?_)
       have h_bij : (invFun (x, c')) m'' = c' ⟨m'', h⟩ := by
         show (if h' : m'' = m then x else c' ⟨m'', h'⟩) = c' ⟨m'', h⟩
         simp [h]
@@ -409,7 +409,7 @@ private lemma codebook_marginal_one
         = ∑ x : Fin n → α, ∑ c' : {m' : Fin M // m' ≠ m} → (Fin n → α),
             (P.real {x} * f x) *
               ∏ m'' : {m' : Fin M // m' ≠ m}, P.real {c' m''} := by
-          refine Finset.sum_congr rfl (fun x _ => Finset.sum_congr rfl (fun c' _ => ?_))
+          refine Finset.sum_congr rfl (fun x _ ↦ Finset.sum_congr rfl (fun c' _ ↦ ?_))
           have h1 : (invFun (x, c')) m = x := by
             show (if h : m = m then x else c' ⟨m, h⟩) = x
             simp
@@ -417,13 +417,13 @@ private lemma codebook_marginal_one
       _ = ∑ x : Fin n → α, (P.real {x} * f x) *
             ∑ c' : {m' : Fin M // m' ≠ m} → (Fin n → α),
               ∏ m'' : {m' : Fin M // m' ≠ m}, P.real {c' m''} := by
-          refine Finset.sum_congr rfl (fun x _ => ?_)
+          refine Finset.sum_congr rfl (fun x _ ↦ ?_)
           rw [← Finset.mul_sum]
       _ = ∑ x : Fin n → α, P.real {x} * f x := by
-          refine Finset.sum_congr rfl (fun x _ => ?_)
+          refine Finset.sum_congr rfl (fun x _ ↦ ?_)
           rw [h_sum_other, mul_one]
   -- Combine h_cm with h_swap_step.
-  rw [Finset.sum_congr rfl (fun c _ => by rw [h_cm c])]
+  rw [Finset.sum_congr rfl (fun c _ ↦ by rw [h_cm c])]
   exact h_swap_step
 
 omit [DecidableEq α] [Nonempty α] [Fintype β]
@@ -436,12 +436,12 @@ private lemma codebook_marginal_two
     (f : (Fin n → α) → (Fin n → α) → ℝ) (_hf_nn : ∀ x x', 0 ≤ f x x') :
     ∑ c : Codebook M n α, (codebookMeasure p M n).real {c} * f (c m) (c m')
       = ∑ x : Fin n → α, ∑ x' : Fin n → α,
-          (Measure.pi (fun _ : Fin n => p)).real {x} *
-          (Measure.pi (fun _ : Fin n => p)).real {x'} * f x x' := by
+          (Measure.pi (fun _ : Fin n ↦ p)).real {x} *
+          (Measure.pi (fun _ : Fin n ↦ p)).real {x'} * f x x' := by
   classical
   haveI : MeasurableSingletonClass (Fin n → α) := Pi.instMeasurableSingletonClass
   haveI : MeasurableSingletonClass (Codebook M n α) := Pi.instMeasurableSingletonClass
-  set P : Measure (Fin n → α) := Measure.pi (fun _ : Fin n => p) with hP_def
+  set P : Measure (Fin n → α) := Measure.pi (fun _ : Fin n ↦ p) with hP_def
   haveI : IsProbabilityMeasure P := by rw [hP_def]; infer_instance
   -- Step 1: codebookMeasure.real {c} = ∏ m'', P.real {c m''}.
   have h_cm : ∀ c : Codebook M n α,
@@ -453,16 +453,16 @@ private lemma codebook_marginal_two
     rfl
   -- Step 2: split off m and m' from the product, then sum out the rest.
   -- Define `Other := {m'' : Fin M | m'' ≠ m ∧ m'' ≠ m'}`.
-  rw [Finset.sum_congr rfl (fun c _ => by rw [h_cm c])]
+  rw [Finset.sum_congr rfl (fun c _ ↦ by rw [h_cm c])]
   -- Build the equiv
   -- `Codebook M n α ≃ (Fin n → α) × (Fin n → α) × ({m'' // m'' ≠ m ∧ m'' ≠ m'} → (Fin n → α))`.
   let toFun : Codebook M n α →
       (Fin n → α) × (Fin n → α) × ({m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'} → (Fin n → α)) :=
-    fun c => (c m, c m', fun m'' => c m''.1)
+    fun c ↦ (c m, c m', fun m'' ↦ c m''.1)
   let invFun :
       (Fin n → α) × (Fin n → α) × ({m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'} → (Fin n → α)) →
         Codebook M n α :=
-    fun ⟨x, x', c''⟩ idx =>
+    fun ⟨x, x', c''⟩ idx ↦
       if h : idx = m then x
       else if h' : idx = m' then x'
       else c'' ⟨idx, h, h'⟩
@@ -485,14 +485,14 @@ private lemma codebook_marginal_two
       (Fin n → α) × (Fin n → α) × ({m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'} → (Fin n → α)) :=
     { toFun := toFun, invFun := invFun, left_inv := left_inv, right_inv := right_inv }
   rw [← Equiv.sum_comp e.symm
-    (fun c => (∏ m'' : Fin M, P.real {c m''}) * f (c m) (c m'))]
+    (fun c ↦ (∏ m'' : Fin M, P.real {c m''}) * f (c m) (c m'))]
   -- Decompose the sum on the right of e.symm.
   show ∑ y : (Fin n → α) × (Fin n → α) × _,
         (∏ m'' : Fin M, P.real {(invFun y) m''}) * f ((invFun y) m) ((invFun y) m') = _
   rw [Fintype.sum_prod_type]
-  refine Finset.sum_congr rfl (fun x _ => ?_)
+  refine Finset.sum_congr rfl (fun x _ ↦ ?_)
   rw [Fintype.sum_prod_type]
-  refine Finset.sum_congr rfl (fun x' _ => ?_)
+  refine Finset.sum_congr rfl (fun x' _ ↦ ?_)
   -- Inner sum over c''.
   -- For invFun (x, x', c''), at idx = m gives x, at idx = m' gives x', else c'' ⟨idx,_,_⟩.
   have h_at_m : ∀ (c'' : {m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'} → (Fin n → α)),
@@ -511,14 +511,14 @@ private lemma codebook_marginal_two
             P.real {(invFun (x, x', c'')) m''} := by
     intro c''
     -- Pull out m, m'.
-    rw [← Finset.mul_prod_erase Finset.univ (fun m'' => P.real {(invFun (x, x', c'')) m''})
+    rw [← Finset.mul_prod_erase Finset.univ (fun m'' ↦ P.real {(invFun (x, x', c'')) m''})
           (Finset.mem_univ m)]
     rw [← Finset.mul_prod_erase ((Finset.univ : Finset (Fin M)).erase m)
-          (fun m'' => P.real {(invFun (x, x', c'')) m''})
+          (fun m'' ↦ P.real {(invFun (x, x', c'')) m''})
           (Finset.mem_erase.mpr ⟨hne.symm, Finset.mem_univ _⟩)]
     rw [h_at_m c'', h_at_m' c'']
     ring
-  rw [Finset.sum_congr rfl (fun c'' _ => by rw [h_split c'',
+  rw [Finset.sum_congr rfl (fun c'' _ ↦ by rw [h_split c'',
         h_at_m c'', h_at_m' c''])]
   -- Inner sum: ∑_{c''} (P{x} * P{x'} * ∏_{m''} P{c'' ⟨m'',_⟩}) * f x x'
   -- = (P{x} * P{x'} * f x x') * (∑_{c''} ∏_{m''} P{c'' ⟨m'',_⟩})
@@ -543,7 +543,7 @@ private lemma codebook_marginal_two
         simp [h_ne_m, h_ne_m']
       -- Bijection: idx ∈ ((univ.erase m).erase m') ↔ idx ≠ m ∧ idx ≠ m'.
       symm
-      apply Finset.prod_bij (fun (idx : {m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'}) _ => idx.1)
+      apply Finset.prod_bij (fun (idx : {m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'}) _ ↦ idx.1)
       · intro a _
         exact Finset.mem_erase.mpr ⟨a.2.2, Finset.mem_erase.mpr ⟨a.2.1, Finset.mem_univ _⟩⟩
       · intro a _ b _ h; exact Subtype.ext h
@@ -554,7 +554,7 @@ private lemma codebook_marginal_two
       · intro a _
         rw [h_val a.1 a.2.1 a.2.2]
     rw [h_other_prod]; ring
-  rw [Finset.sum_congr rfl (fun c'' _ => h_inner_eq c'')]
+  rw [Finset.sum_congr rfl (fun c'' _ ↦ h_inner_eq c'')]
   rw [← Finset.mul_sum]
   -- Use prod_univ_sum to compute ∑_{c''} ∏_{m''} P{c'' m''} = ∏_{m''} ∑_x P{x} = 1.
   have h_sum_other : ∑ c'' : {m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'} → (Fin n → α),
@@ -572,26 +572,26 @@ private lemma E1_lhs_sum_eq_Q_sum
     (JTS : Set ((Fin n → α) × (Fin n → β)))
     (Sfin : Finset (Fin n → α × β))
     (hSfin : (Sfin : Set (Fin n → α × β))
-      = (fun z => ((fun i => (z i).1 : Fin n → α), (fun i => (z i).2 : Fin n → β)))
+      = (fun z ↦ ((fun i ↦ (z i).1 : Fin n → α), (fun i ↦ (z i).2 : Fin n → β)))
           ⁻¹' (JTSᶜ : Set ((Fin n → α) × (Fin n → β))))
     (hQ_singleton : ∀ (x : Fin n → α) (y : Fin n → β),
-      Q.real {(fun i => (x i, y i) : Fin n → α × β)} = P.real {x} * (Wpi x).real {y}) :
+      Q.real {(fun i ↦ (x i, y i) : Fin n → α × β)} = P.real {x} * (Wpi x).real {y}) :
     ∑ x : Fin n → α, P.real {x} * (Wpi x).real {y | (x, y) ∉ JTS}
       = ∑ z ∈ Sfin, Q.real {z} := by
   classical
   let ψ : (Fin n → α × β) → (Fin n → α) × (Fin n → β) :=
-    fun z => (fun i => (z i).1, fun i => (z i).2)
+    fun z ↦ (fun i ↦ (z i).1, fun i ↦ (z i).2)
   have hSfin_mem : ∀ z : Fin n → α × β, z ∈ Sfin ↔ ψ z ∉ JTS := by
     intro z
     rw [← Finset.mem_coe, hSfin]; rfl
   -- For each x, (Wpi x).real {y | ...} = ∑_{y ∈ slicefinset(x)} (Wpi x).real {y}.
   have h_slice_fin : ∀ x : Fin n → α,
       ({y | (x, y) ∉ JTS} : Set (Fin n → β)).Finite :=
-    fun _ => Set.toFinite _
+    fun _ ↦ Set.toFinite _
   have h_per_x : ∀ x : Fin n → α,
       P.real {x} * (Wpi x).real {y | (x, y) ∉ JTS}
         = ∑ y ∈ (h_slice_fin x).toFinset,
-            Q.real {(fun i => (x i, y i) : Fin n → α × β)} := by
+            Q.real {(fun i ↦ (x i, y i) : Fin n → α × β)} := by
     intro x
     haveI := hWpi x
     set Ts : Finset (Fin n → β) := (h_slice_fin x).toFinset with hTs_def
@@ -601,26 +601,26 @@ private lemma E1_lhs_sum_eq_Q_sum
           = ∑ y ∈ Ts, (Wpi x).real {y} := by
       rw [← h_Ts_coe, ← sum_measureReal_singleton (μ := Wpi x) Ts]
     rw [h_eq, Finset.mul_sum]
-    refine Finset.sum_congr rfl (fun y _ => ?_)
+    refine Finset.sum_congr rfl (fun y _ ↦ ?_)
     rw [hQ_singleton x y]
-  rw [Finset.sum_congr rfl (fun x _ => h_per_x x)]
+  rw [Finset.sum_congr rfl (fun x _ ↦ h_per_x x)]
   -- Build a finset = pairs (x,y) with (x,y) ∉ JTS, in bijection with Sfin.
   set Tfin : Finset ((Fin n → α) × (Fin n → β)) :=
     ((Finset.univ : Finset (Fin n → α)) ×ˢ
-      (Finset.univ : Finset (Fin n → β))).filter (fun p => p ∉ JTS) with hTfin_def
+      (Finset.univ : Finset (Fin n → β))).filter (fun p ↦ p ∉ JTS) with hTfin_def
   have h_lhs_to_T :
       (∑ x : Fin n → α, ∑ y ∈ (h_slice_fin x).toFinset,
-            Q.real {(fun i => (x i, y i) : Fin n → α × β)})
-        = ∑ p ∈ Tfin, Q.real {(fun i => (p.1 i, p.2 i) : Fin n → α × β)} := by
+            Q.real {(fun i ↦ (x i, y i) : Fin n → α × β)})
+        = ∑ p ∈ Tfin, Q.real {(fun i ↦ (p.1 i, p.2 i) : Fin n → α × β)} := by
     have h_full : (∑ x : Fin n → α, ∑ y : Fin n → β,
             if (x, y) ∉ JTS then
-              Q.real {(fun i => (x i, y i) : Fin n → α × β)}
+              Q.real {(fun i ↦ (x i, y i) : Fin n → α × β)}
             else 0)
           = ∑ x : Fin n → α, ∑ y ∈ (h_slice_fin x).toFinset,
-              Q.real {(fun i => (x i, y i) : Fin n → α × β)} := by
-      refine Finset.sum_congr rfl (fun x _ => ?_)
+              Q.real {(fun i ↦ (x i, y i) : Fin n → α × β)} := by
+      refine Finset.sum_congr rfl (fun x _ ↦ ?_)
       rw [← Finset.sum_filter]
-      apply Finset.sum_congr ?_ (fun _ _ => rfl)
+      apply Finset.sum_congr ?_ (fun _ _ ↦ rfl)
       ext y
       rw [Finset.mem_filter, Set.Finite.mem_toFinset]
       show (y ∈ (Finset.univ : Finset (Fin n → β)) ∧ (x, y) ∉ JTS) ↔
@@ -635,8 +635,8 @@ private lemma E1_lhs_sum_eq_Q_sum
   rw [h_lhs_to_T]
   -- bijection Tfin ≃ Sfin via (x, y) ↦ fun i => (x i, y i).
   apply Finset.sum_bij
-    (i := fun (p : (Fin n → α) × (Fin n → β)) _ =>
-      (fun i => (p.1 i, p.2 i) : Fin n → α × β))
+    (i := fun (p : (Fin n → α) × (Fin n → β)) _ ↦
+      (fun i ↦ (p.1 i, p.2 i) : Fin n → α × β))
   · intro p hp
     rw [hSfin_mem]
     rw [hTfin_def, Finset.mem_filter] at hp
@@ -644,13 +644,13 @@ private lemma E1_lhs_sum_eq_Q_sum
   · intro a _ b _ hab
     have h1 : a.1 = b.1 := by
       funext i
-      have hh : (fun i => (a.1 i, a.2 i) : Fin n → α × β) i
-          = (fun i => (b.1 i, b.2 i) : Fin n → α × β) i := by rw [hab]
+      have hh : (fun i ↦ (a.1 i, a.2 i) : Fin n → α × β) i
+          = (fun i ↦ (b.1 i, b.2 i) : Fin n → α × β) i := by rw [hab]
       exact (Prod.mk.injEq _ _ _ _).mp hh |>.1
     have h2 : a.2 = b.2 := by
       funext i
-      have hh : (fun i => (a.1 i, a.2 i) : Fin n → α × β) i
-          = (fun i => (b.1 i, b.2 i) : Fin n → α × β) i := by rw [hab]
+      have hh : (fun i ↦ (a.1 i, a.2 i) : Fin n → α × β) i
+          = (fun i ↦ (b.1 i, b.2 i) : Fin n → α × β) i := by rw [hab]
       exact (Prod.mk.injEq _ _ _ _).mp hh |>.2
     exact Prod.ext h1 h2
   · intro z hz
@@ -673,13 +673,13 @@ private lemma random_codebook_E1_swap
     {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (_hindepX : iIndepFun (fun i => Xs i) μ)
+    (_hindepX : iIndepFun (fun i ↦ Xs i) μ)
     (_hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
-    (_hindepY : iIndepFun (fun i => Ys i) μ)
+    (_hindepY : iIndepFun (fun i ↦ Ys i) μ)
     (_hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
-    (_hindepZ : Pairwise fun i j =>
+    (_hindepZ : Pairwise fun i j ↦
       jointSequence Xs Ys i ⟂ᵢ[μ] jointSequence Xs Ys j)
-    (hindepZ_full : iIndepFun (fun i : ℕ => jointSequence Xs Ys i) μ)
+    (hindepZ_full : iIndepFun (fun i : ℕ ↦ jointSequence Xs Ys i) μ)
     (hidentZ : ∀ i,
       IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
     (_hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
@@ -689,7 +689,7 @@ private lemma random_codebook_E1_swap
     (_h_match_X : μ.map (Xs 0) = p)
     (h_match_Z : μ.map (jointSequence Xs Ys 0) = jointDistribution p W) (m : Fin M) :
     ∑ c : Codebook M n α, (codebookMeasure p M n).real {c} *
-        (Measure.pi (fun i => W (c m i))).real
+        (Measure.pi (fun i ↦ W (c m i))).real
           {y | (c m, y) ∉ jointlyTypicalSet μ Xs Ys n ε}
       ≤ μ.real
           {ω | (InformationTheory.Shannon.jointRV Xs n ω,
@@ -699,19 +699,19 @@ private lemma random_codebook_E1_swap
   haveI : MeasurableSingletonClass (Fin n → α) := Pi.instMeasurableSingletonClass
   haveI : MeasurableSingletonClass (Fin n → β) := Pi.instMeasurableSingletonClass
   haveI : MeasurableSingletonClass (Fin n → α × β) := Pi.instMeasurableSingletonClass
-  set P : Measure (Fin n → α) := Measure.pi (fun _ : Fin n => p) with hP_def
+  set P : Measure (Fin n → α) := Measure.pi (fun _ : Fin n ↦ p) with hP_def
   haveI : IsProbabilityMeasure P := by rw [hP_def]; infer_instance
   set JTS : Set ((Fin n → α) × (Fin n → β)) := jointlyTypicalSet μ Xs Ys n ε with hJTS_def
   -- Step 1: codebook_marginal_one reduces LHS to ∑_x P{x} * (Pi (W∘x)).real {y | (x,y) ∉ JTS}.
   have h_swap_step1 :
       ∑ c : Codebook M n α, (codebookMeasure p M n).real {c} *
-        (Measure.pi (fun i => W (c m i))).real
+        (Measure.pi (fun i ↦ W (c m i))).real
           {y | (c m, y) ∉ jointlyTypicalSet μ Xs Ys n ε}
       = ∑ x : Fin n → α, P.real {x} *
-          (Measure.pi (fun i => W (x i))).real
+          (Measure.pi (fun i ↦ W (x i))).real
             {y | (x, y) ∉ jointlyTypicalSet μ Xs Ys n ε} := by
     refine codebook_marginal_one p M n m
-      (fun x => (Measure.pi (fun i => W (x i))).real
+      (fun x ↦ (Measure.pi (fun i ↦ W (x i))).real
         {y | (x, y) ∉ jointlyTypicalSet μ Xs Ys n ε}) ?_
     intro x; exact measureReal_nonneg
   rw [h_swap_step1]
@@ -719,16 +719,16 @@ private lemma random_codebook_E1_swap
   have h_P_singleton : ∀ (x : Fin n → α), P.real {x} = ∏ i, p.real {x i} := by
     intro x; rw [hP_def]; exact measureReal_pi_singleton_eq_prod _ x
   have h_pi_W_singleton : ∀ (x : Fin n → α) (y : Fin n → β),
-      (Measure.pi (fun i => W (x i))).real {y} = ∏ i, (W (x i)).real {y i} :=
-    fun x y => measureReal_pi_singleton_eq_prod _ y
-  set Q : Measure (Fin n → α × β) := Measure.pi (fun _ : Fin n => jointDistribution p W) with hQ_def
+      (Measure.pi (fun i ↦ W (x i))).real {y} = ∏ i, (W (x i)).real {y i} :=
+    fun x y ↦ measureReal_pi_singleton_eq_prod _ y
+  set Q : Measure (Fin n → α × β) := Measure.pi (fun _ : Fin n ↦ jointDistribution p W) with hQ_def
   haveI : IsProbabilityMeasure Q := by rw [hQ_def]; infer_instance
   have h_jointSingleton : ∀ (a : α) (b : β),
       (jointDistribution p W).real ({(a, b)} : Set (α × β)) = p.real {a} * (W a).real {b} :=
-    fun a b => jointDistribution_real_singleton p W a b
+    fun a b ↦ jointDistribution_real_singleton p W a b
   have h_Q_singleton : ∀ (x : Fin n → α) (y : Fin n → β),
-      Q.real {(fun i => (x i, y i) : Fin n → α × β)}
-        = P.real {x} * (Measure.pi (fun i => W (x i))).real {y} := by
+      Q.real {(fun i ↦ (x i, y i) : Fin n → α × β)}
+        = P.real {x} * (Measure.pi (fun i ↦ W (x i))).real {y} := by
     intro x y
     rw [hQ_def, measureReal_def, Measure.pi_singleton, ENNReal.toReal_prod]
     have hprod : ∀ i : Fin n,
@@ -738,28 +738,28 @@ private lemma random_codebook_E1_swap
       have := h_jointSingleton (x i) (y i)
       rw [measureReal_def] at this
       exact this
-    rw [Finset.prod_congr rfl (fun i _ => hprod i)]
+    rw [Finset.prod_congr rfl (fun i _ ↦ hprod i)]
     rw [Finset.prod_mul_distrib, h_P_singleton x, h_pi_W_singleton x y]
   -- Step 3: μ.map (fun ω i => (Xs i ω, Ys i ω)) = Q via block_joint_law_eq_pi.
-  set ζ : Ω → (Fin n → α × β) := fun ω i => (Xs i ω, Ys i ω) with hζ_def
+  set ζ : Ω → (Fin n → α × β) := fun ω i ↦ (Xs i ω, Ys i ω) with hζ_def
   have h_ζ_meas : Measurable ζ := by
-    refine measurable_pi_lambda _ (fun i => ?_)
+    refine measurable_pi_lambda _ (fun i ↦ ?_)
     exact (hXs i).prodMk (hYs i)
   have h_block_law : μ.map ζ = Q := by
     rw [hζ_def, hQ_def]
     exact block_joint_law_eq_pi μ Xs Ys hXs hYs hindepZ_full hidentZ p W h_match_Z n
   -- Step 4: reshape function ψ : (Fin n → α × β) → (Fin n → α) × (Fin n → β).
   let ψ : (Fin n → α × β) → (Fin n → α) × (Fin n → β) :=
-    fun z => (fun i => (z i).1, fun i => (z i).2)
+    fun z ↦ (fun i ↦ (z i).1, fun i ↦ (z i).2)
   have h_ψ_meas : Measurable ψ := by
     refine Measurable.prodMk ?_ ?_
-    · refine measurable_pi_lambda _ (fun i => ?_)
+    · refine measurable_pi_lambda _ (fun i ↦ ?_)
       exact (measurable_pi_apply i).fst
-    · refine measurable_pi_lambda _ (fun i => ?_)
+    · refine measurable_pi_lambda _ (fun i ↦ ?_)
       exact (measurable_pi_apply i).snd
   -- (jointRV Xs n, jointRV Ys n) ω = ψ (ζ ω).
   have h_jointRV_eq :
-      (fun ω => (InformationTheory.Shannon.jointRV (α := α) Xs n ω,
+      (fun ω ↦ (InformationTheory.Shannon.jointRV (α := α) Xs n ω,
                   InformationTheory.Shannon.jointRV (α := β) Ys n ω))
         = ψ ∘ ζ := by
     funext ω; rfl
@@ -800,11 +800,11 @@ private lemma random_codebook_E1_swap
   --     = ∑_{z ∈ ψ ⁻¹' JTSᶜ} Q.real {z}.
   have h_LHS_eq :
       ∑ x : Fin n → α, P.real {x} *
-        (Measure.pi (fun i => W (x i))).real
+        (Measure.pi (fun i ↦ W (x i))).real
           {y | (x, y) ∉ jointlyTypicalSet μ Xs Ys n ε}
       = ∑ z ∈ Sfin, Q.real {z} :=
-    E1_lhs_sum_eq_Q_sum P Q (fun x => Measure.pi (fun i => W (x i)))
-      (fun _ => inferInstance) JTS Sfin (h_Sfin_coe.trans hS_def) h_Q_singleton
+    E1_lhs_sum_eq_Q_sum P Q (fun x ↦ Measure.pi (fun i ↦ W (x i)))
+      (fun _ ↦ inferInstance) JTS Sfin (h_Sfin_coe.trans hS_def) h_Q_singleton
   rw [h_LHS_eq]
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
@@ -829,17 +829,17 @@ private lemma sum_chan_set_eq_μY
     haveI := hWpi x
     have h1 : (Wpi x).real S = ∑ y ∈ Sfin, (Wpi x).real {y} := by
       rw [← h_S_coe, ← sum_measureReal_singleton (μ := Wpi x) Sfin]
-    rw [h1]; exact Finset.sum_congr rfl (fun y _ => h_pi_W x y)
+    rw [h1]; exact Finset.sum_congr rfl (fun y _ ↦ h_pi_W x y)
   have h_μY_set : μY.real S = ∑ y ∈ Sfin, μY.real {y} := by
     rw [← h_S_coe, ← sum_measureReal_singleton (μ := μY) Sfin]
   calc (∑ x : Fin n → α, P.real {x} * (Wpi x).real S)
       = ∑ x : Fin n → α, P.real {x} * ∑ y ∈ Sfin, f x y := by
-        refine Finset.sum_congr rfl (fun x _ => ?_); rw [h_Wpi_real x]
+        refine Finset.sum_congr rfl (fun x _ ↦ ?_); rw [h_Wpi_real x]
     _ = ∑ x : Fin n → α, ∑ y ∈ Sfin, P.real {x} * f x y := by
-        refine Finset.sum_congr rfl (fun x _ => ?_); rw [Finset.mul_sum]
+        refine Finset.sum_congr rfl (fun x _ ↦ ?_); rw [Finset.mul_sum]
     _ = ∑ y ∈ Sfin, ∑ x : Fin n → α, P.real {x} * f x y := Finset.sum_comm
     _ = ∑ y ∈ Sfin, μY.real {y} := by
-        refine Finset.sum_congr rfl (fun y _ => h_chan y)
+        refine Finset.sum_congr rfl (fun y _ ↦ h_chan y)
     _ = μY.real S := h_μY_set.symm
 
 omit [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β] in
@@ -861,7 +861,7 @@ private lemma prod_real_eq_slice_sum
     have h_real_eq : (P.prod μY).real JTS = ∑ p ∈ JTSfin, (P.prod μY).real {p} := by
       rw [← h_JTS_coe, ← sum_measureReal_singleton (μ := P.prod μY) JTSfin]
     rw [h_real_eq]
-    refine Finset.sum_congr rfl (fun pq _ => ?_)
+    refine Finset.sum_congr rfl (fun pq _ ↦ ?_)
     have h_sgl : ({pq} : Set ((Fin n → α) × (Fin n → β)))
         = ({pq.1} : Set (Fin n → α)) ×ˢ ({pq.2} : Set (Fin n → β)) := by
       ext ⟨a, b⟩; simp [Prod.ext_iff]
@@ -882,7 +882,7 @@ private lemma prod_real_eq_slice_sum
       · intro h; exact h.2
   rw [h_ind]
   -- Inner: ∑_y if (x',y) ∈ JTS then P{x'}*μY{y} else 0 = P{x'} * μY.real {y | (x',y) ∈ JTS}.
-  refine Finset.sum_congr rfl (fun x' _ => ?_)
+  refine Finset.sum_congr rfl (fun x' _ ↦ ?_)
   set S : Set (Fin n → β) := {y | (x', y) ∈ JTS}
   have h_S_fin : S.Finite := Set.toFinite _
   have h_μY_slice : μY.real {y | (x', y) ∈ JTS}
@@ -893,9 +893,9 @@ private lemma prod_real_eq_slice_sum
   rw [h_μY_slice, Finset.mul_sum]
   rw [show (∑ y : Fin n → β,
               (if (x', y) ∈ JTS then P.real {x'} * μY.real {y} else 0))
-          = ∑ y ∈ (Finset.univ : Finset (Fin n → β)).filter (fun y => (x', y) ∈ JTS),
+          = ∑ y ∈ (Finset.univ : Finset (Fin n → β)).filter (fun y ↦ (x', y) ∈ JTS),
               P.real {x'} * μY.real {y} from by rw [Finset.sum_filter]]
-  apply Finset.sum_congr ?_ (fun _ _ => rfl)
+  apply Finset.sum_congr ?_ (fun _ _ ↦ rfl)
   ext y; simp
 
 omit [DecidableEq α] [DecidableEq β] in
@@ -911,9 +911,9 @@ private lemma random_codebook_E2_swap
     {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindepX : iIndepFun (fun i => Xs i) μ)
+    (hindepX : iIndepFun (fun i ↦ Xs i) μ)
     (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
-    (hindepY : iIndepFun (fun i => Ys i) μ)
+    (hindepY : iIndepFun (fun i ↦ Ys i) μ)
     (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
     (hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
     (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
@@ -923,7 +923,7 @@ private lemma random_codebook_E2_swap
     (h_match_Z : μ.map (jointSequence Xs Ys 0) = jointDistribution p W)
     (m m' : Fin M) (hne : m ≠ m') :
     ∑ c : Codebook M n α, (codebookMeasure p M n).real {c} *
-        (Measure.pi (fun i => W (c m i))).real
+        (Measure.pi (fun i ↦ W (c m i))).real
           {y | (c m', y) ∈ jointlyTypicalSet μ Xs Ys n ε}
       ≤ Real.exp ((n : ℝ) *
             ((InformationTheory.Shannon.entropy μ (jointSequence Xs Ys 0)
@@ -932,7 +932,7 @@ private lemma random_codebook_E2_swap
   classical
   haveI : MeasurableSingletonClass (Fin n → α) := Pi.instMeasurableSingletonClass
   haveI : MeasurableSingletonClass (Fin n → β) := Pi.instMeasurableSingletonClass
-  set P : Measure (Fin n → α) := Measure.pi (fun _ : Fin n => p) with hP_def
+  set P : Measure (Fin n → α) := Measure.pi (fun _ : Fin n ↦ p) with hP_def
   haveI : IsProbabilityMeasure P := by rw [hP_def]; infer_instance
   -- μY = μ.map (jointRV Ys n), the y-block law. By block_law_Y_eq_pi, μY = Pi (μ.map (Ys 0)).
   set μY : Measure (Fin n → β) := μ.map (InformationTheory.Shannon.jointRV Ys n) with hμY_def
@@ -949,20 +949,20 @@ private lemma random_codebook_E2_swap
   have hμX_eq : μX = P := by
     rw [hμX_def, hP_def]
     exact block_law_X_eq_pi_p μ Xs hXs hindepX hidentX p h_match_X n
-  have hμY_eq : μY = Measure.pi (fun _ : Fin n => μ.map (Ys 0)) := by
+  have hμY_eq : μY = Measure.pi (fun _ : Fin n ↦ μ.map (Ys 0)) := by
     rw [hμY_def]
     exact block_law_Y_eq_pi μ Ys hYs hindepY hidentY n
   -- Step 1: apply codebook_marginal_two.
   have h_swap_step1 :
       ∑ c : Codebook M n α, (codebookMeasure p M n).real {c} *
-        (Measure.pi (fun i => W (c m i))).real
+        (Measure.pi (fun i ↦ W (c m i))).real
           {y | (c m', y) ∈ jointlyTypicalSet μ Xs Ys n ε}
       = ∑ x : Fin n → α, ∑ x' : Fin n → α,
           P.real {x} * P.real {x'} *
-          (Measure.pi (fun i => W (x i))).real
+          (Measure.pi (fun i ↦ W (x i))).real
             {y | (x', y) ∈ jointlyTypicalSet μ Xs Ys n ε} := by
     refine codebook_marginal_two p M n m m' hne
-      (fun x x' => (Measure.pi (fun i => W (x i))).real
+      (fun x x' ↦ (Measure.pi (fun i ↦ W (x i))).real
         {y | (x', y) ∈ jointlyTypicalSet μ Xs Ys n ε}) ?_
     intro x x'; exact measureReal_nonneg
   rw [h_swap_step1]
@@ -979,16 +979,16 @@ private lemma random_codebook_E2_swap
   have h_P_singleton : ∀ (x : Fin n → α), P.real {x} = ∏ i, p.real {x i} := by
     intro x; rw [hP_def]; exact measureReal_pi_singleton_eq_prod _ x
   have h_pi_W_singleton : ∀ (x : Fin n → α) (y : Fin n → β),
-      (Measure.pi (fun i => W (x i))).real {y} = ∏ i, (W (x i)).real {y i} :=
-    fun x y => measureReal_pi_singleton_eq_prod _ y
+      (Measure.pi (fun i ↦ W (x i))).real {y} = ∏ i, (W (x i)).real {y i} :=
+    fun x y ↦ measureReal_pi_singleton_eq_prod _ y
   have h_output_singleton : ∀ b : β,
       (outputDistribution p W).real {b} = ∑ a : α, p.real {a} * (W a).real {b} :=
-    fun b => outputDistribution_real_singleton_eq_sum p W b
+    fun b ↦ outputDistribution_real_singleton_eq_sum p W b
   have h_μY_singleton : ∀ (y : Fin n → β),
       μY.real {y} = ∏ i, ∑ a : α, p.real {a} * (W a).real {y i} := by
     intro y
     rw [hμY_eq, measureReal_def, Measure.pi_singleton, ENNReal.toReal_prod]
-    refine Finset.prod_congr rfl (fun i _ => ?_)
+    refine Finset.prod_congr rfl (fun i _ ↦ ?_)
     show (μ.map (Ys 0)).real {y i} = _
     rw [h_match_Y, h_output_singleton]
   -- 2c: ∑_x P{x} * ∏_i (W(x i)){y_i} = μY{y} for each y.
@@ -998,15 +998,15 @@ private lemma random_codebook_E2_swap
     rw [h_μY_singleton y]
     have h_lhs_eq : (∑ x : Fin n → α, P.real {x} * ∏ i, (W (x i)).real {y i})
         = ∑ x : Fin n → α, ∏ i, p.real {x i} * (W (x i)).real {y i} := by
-      refine Finset.sum_congr rfl (fun x _ => ?_)
+      refine Finset.sum_congr rfl (fun x _ ↦ ?_)
       rw [h_P_singleton x, ← Finset.prod_mul_distrib]
     rw [h_lhs_eq]
     have h_pi_sum := (Finset.prod_univ_sum
-      (κ := fun _ : Fin n => α)
-      (t := fun _ : Fin n => (Finset.univ : Finset α))
+      (κ := fun _ : Fin n ↦ α)
+      (t := fun _ : Fin n ↦ (Finset.univ : Finset α))
       (R := ℝ)
-      (f := fun (i : Fin n) (a : α) => p.real {a} * (W a).real {y i})).symm
-    have h_pi : Fintype.piFinset (fun _ : Fin n => (Finset.univ : Finset α))
+      (f := fun (i : Fin n) (a : α) ↦ p.real {a} * (W a).real {y i})).symm
+    have h_pi : Fintype.piFinset (fun _ : Fin n ↦ (Finset.univ : Finset α))
         = (Finset.univ : Finset (Fin n → α)) := by
       ext c; simp
     rw [h_pi] at h_pi_sum
@@ -1014,27 +1014,27 @@ private lemma random_codebook_E2_swap
   -- 2d: extend to ∑_x P{x} * Pi(W∘x).real(S) = μY.real(S) for finite S.
   have h_sum_chan_set : ∀ x' : Fin n → α,
       (∑ x : Fin n → α, P.real {x} *
-        (Measure.pi (fun i => W (x i))).real {y | (x', y) ∈ JTS})
-      = μY.real {y | (x', y) ∈ JTS} := fun x' =>
-    sum_chan_set_eq_μY P μY (fun x => Measure.pi (fun i => W (x i)))
-      (fun _ => inferInstance) (fun x y => ∏ i, (W (x i)).real {y i})
+        (Measure.pi (fun i ↦ W (x i))).real {y | (x', y) ∈ JTS})
+      = μY.real {y | (x', y) ∈ JTS} := fun x' ↦
+    sum_chan_set_eq_μY P μY (fun x ↦ Measure.pi (fun i ↦ W (x i)))
+      (fun _ ↦ inferInstance) (fun x y ↦ ∏ i, (W (x i)).real {y i})
       h_pi_W_singleton h_chan_y_singleton {y | (x', y) ∈ JTS} (Set.toFinite _)
   -- 2e: pull together ∑_x ∑_x' P{x}*P{x'}*Pi(W∘x){slice} = (μX.prod μY).real JTS.
   have h_rewrite :
       (∑ x : Fin n → α, ∑ x' : Fin n → α,
           P.real {x} * P.real {x'} *
-          (Measure.pi (fun i => W (x i))).real {y | (x', y) ∈ JTS})
+          (Measure.pi (fun i ↦ W (x i))).real {y | (x', y) ∈ JTS})
       = ∑ x' : Fin n → α, P.real {x'} * μY.real {y | (x', y) ∈ JTS} := by
     rw [Finset.sum_comm]
-    refine Finset.sum_congr rfl (fun x' _ => ?_)
+    refine Finset.sum_congr rfl (fun x' _ ↦ ?_)
     have h_inner : (∑ x : Fin n → α,
             P.real {x} * P.real {x'} *
-            (Measure.pi (fun i => W (x i))).real {y | (x', y) ∈ JTS})
+            (Measure.pi (fun i ↦ W (x i))).real {y | (x', y) ∈ JTS})
         = P.real {x'} *
           (∑ x : Fin n → α, P.real {x} *
-            (Measure.pi (fun i => W (x i))).real {y | (x', y) ∈ JTS}) := by
+            (Measure.pi (fun i ↦ W (x i))).real {y | (x', y) ∈ JTS}) := by
       rw [Finset.mul_sum]
-      refine Finset.sum_congr rfl (fun x _ => by ring)
+      refine Finset.sum_congr rfl (fun x _ ↦ by ring)
     rw [h_inner, h_sum_chan_set x']
   rw [h_rewrite]
   -- 2f: ∑_x' P{x'} * μY{slice} = (μX.prod μY).real(JTS).
@@ -1067,10 +1067,10 @@ lemma sum_weighted_diag_offdiag_decomp
             (a c m + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, b c m m')) := by
     intro c
     rw [← mul_assoc, mul_comm (w c) Minv, mul_assoc, Finset.mul_sum]
-  rw [Finset.sum_congr rfl (fun c _ => step1 c), ← Finset.mul_sum]
+  rw [Finset.sum_congr rfl (fun c _ ↦ step1 c), ← Finset.mul_sum]
   congr 1
   rw [Finset.sum_comm]
-  refine Finset.sum_congr rfl (fun m _ => ?_)
+  refine Finset.sum_congr rfl (fun m _ ↦ ?_)
   have step2 : ∀ c : ι,
       w c *
           (a c m + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, b c m m')
@@ -1078,7 +1078,7 @@ lemma sum_weighted_diag_offdiag_decomp
             ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, w c * b c m m' := by
     intro c
     rw [mul_add, Finset.mul_sum]
-  rw [Finset.sum_congr rfl (fun c _ => step2 c), Finset.sum_add_distrib,
+  rw [Finset.sum_congr rfl (fun c _ ↦ step2 c), Finset.sum_add_distrib,
       Finset.sum_comm]
 
 lemma diag_add_offdiag_sum_le
@@ -1110,7 +1110,7 @@ lemma sum_average_le_of_forall_le
     rw [Finset.card_univ, Fintype.card_fin]
   calc Minv * ∑ m : Fin M, g m
       ≤ Minv * ∑ _m : Fin M, B :=
-        mul_le_mul_of_nonneg_left (Finset.sum_le_sum (fun m _ => hg m)) hMinv
+        mul_le_mul_of_nonneg_left (Finset.sum_le_sum (fun m _ ↦ hg m)) hMinv
     _ = Minv * ((M : ℝ) * B) := by
         rw [Finset.sum_const, nsmul_eq_mul, h_M_card]
     _ = B := by rw [← mul_assoc, hMinvM, one_mul]
@@ -1125,7 +1125,7 @@ private lemma averageErrorProb_toReal_eq
   unfold Code.averageErrorProb
   rw [if_neg hM.ne']
   rw [ENNReal.toReal_mul, ENNReal.toReal_inv, ENNReal.toReal_natCast,
-      ENNReal.toReal_sum (fun m _ => h_ne_top m)]
+      ENNReal.toReal_sum (fun m _ ↦ h_ne_top m)]
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
@@ -1136,10 +1136,10 @@ private lemma errorProbAt_codebookToCode_ne_top
     {M n : ℕ} (hM : 0 < M) (ε : ℝ) (c : Codebook M n α) (m : Fin M) :
     (codebookToCode μ Xs Ys hM ε c).errorProbAt W m ≠ ∞ := by
   have h_le_one : (codebookToCode μ Xs Ys hM ε c).errorProbAt W m ≤ 1 := by
-    show (Measure.pi (fun i => W ((codebookToCode μ Xs Ys hM ε c).encoder m i)))
+    show (Measure.pi (fun i ↦ W ((codebookToCode μ Xs Ys hM ε c).encoder m i)))
         ((codebookToCode μ Xs Ys hM ε c).errorEvent m) ≤ 1
     haveI : IsProbabilityMeasure
-        (Measure.pi (fun i => W ((codebookToCode μ Xs Ys hM ε c).encoder m i))) :=
+        (Measure.pi (fun i ↦ W ((codebookToCode μ Xs Ys hM ε c).encoder m i))) :=
       inferInstance
     exact prob_le_one
   exact h_le_one.trans_lt ENNReal.one_lt_top |>.ne
@@ -1162,13 +1162,13 @@ theorem random_codebook_average_le
     {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindepX : iIndepFun (fun i => Xs i) μ)
+    (hindepX : iIndepFun (fun i ↦ Xs i) μ)
     (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
-    (hindepY : iIndepFun (fun i => Ys i) μ)
+    (hindepY : iIndepFun (fun i ↦ Ys i) μ)
     (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
-    (hindepZ : Pairwise fun i j =>
+    (hindepZ : Pairwise fun i j ↦
       jointSequence Xs Ys i ⟂ᵢ[μ] jointSequence Xs Ys j)
-    (hindepZ_full : iIndepFun (fun i : ℕ => jointSequence Xs Ys i) μ)
+    (hindepZ_full : iIndepFun (fun i : ℕ ↦ jointSequence Xs Ys i) μ)
     (hidentZ : ∀ i,
       IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
     (hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
@@ -1204,7 +1204,7 @@ theorem random_codebook_average_le
   haveI : MeasurableSingletonClass (Codebook M n α) := Pi.instMeasurableSingletonClass
   -- `errorProbAt c W m` is finite (`≤ 1` for a Markov kernel).
   have h_errProbAt_ne_top : ∀ (c : Codebook M n α) (m : Fin M),
-      (codebookToCode μ Xs Ys hM ε c).errorProbAt W m ≠ ∞ := fun c m =>
+      (codebookToCode μ Xs Ys hM ε c).errorProbAt W m ≠ ∞ := fun c m ↦
     errorProbAt_codebookToCode_ne_top μ Xs Ys W hM ε c m
   -- Step 1: rewrite `(averageErrorProb).toReal = (1/M) * ∑_m (errorProbAt).toReal`.
   have h_avg_real : ∀ c : Codebook M n α,
@@ -1219,11 +1219,11 @@ theorem random_codebook_average_le
   have h_M_pos_R : 0 < (M : ℝ) := by exact_mod_cast hM
   have h_M_inv_nn : 0 ≤ ((M : ℝ))⁻¹ := inv_nonneg.mpr h_M_pos_R.le
   -- Per-codebook bound from `errorProbAt_le_E1_plus_E2`.
-  set E1_indiv : Codebook M n α → Fin M → ℝ := fun c m =>
-    (Measure.pi (fun i => W (c m i))).real
+  set E1_indiv : Codebook M n α → Fin M → ℝ := fun c m ↦
+    (Measure.pi (fun i ↦ W (c m i))).real
       {y | (c m, y) ∉ jointlyTypicalSet μ Xs Ys n ε} with hE1ind_def
-  set E2_indiv : Codebook M n α → Fin M → Fin M → ℝ := fun c m m' =>
-    (Measure.pi (fun i => W (c m i))).real
+  set E2_indiv : Codebook M n α → Fin M → Fin M → ℝ := fun c m m' ↦
+    (Measure.pi (fun i ↦ W (c m i))).real
       {y | (c m', y) ∈ jointlyTypicalSet μ Xs Ys n ε} with hE2ind_def
   have h_per_cb : ∀ (c : Codebook M n α) (m : Fin M),
       ((codebookToCode μ Xs Ys hM ε c).errorProbAt W m).toReal
@@ -1240,9 +1240,9 @@ theorem random_codebook_average_le
     intro c
     rw [h_avg_real c]
     refine mul_le_mul_of_nonneg_left ?_ h_M_inv_nn
-    exact Finset.sum_le_sum (fun m _ => h_per_cb c m)
+    exact Finset.sum_le_sum (fun m _ ↦ h_per_cb c m)
   -- Weighted sum over c bound.
-  have h_w_nn : ∀ c : Codebook M n α, 0 ≤ wM.real {c} := fun _ => measureReal_nonneg
+  have h_w_nn : ∀ c : Codebook M n α, 0 ≤ wM.real {c} := fun _ ↦ measureReal_nonneg
   have h_weighted_bound :
       ∑ c : Codebook M n α, wM.real {c} *
           ((codebookToCode μ Xs Ys hM ε c).averageErrorProb W).toReal
@@ -1250,7 +1250,7 @@ theorem random_codebook_average_le
           (((M : ℝ))⁻¹ * ∑ m : Fin M,
             (E1_indiv c m +
               ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, E2_indiv c m m')) := by
-    refine Finset.sum_le_sum (fun c _ => ?_)
+    refine Finset.sum_le_sum (fun c _ ↦ ?_)
     exact mul_le_mul_of_nonneg_left (h_sum_per_cb c) (h_w_nn c)
   -- Step 3: distribute & swap sum orderings.
   -- RHS of `h_weighted_bound` = (1/M) * ∑_m (∑_c w(c) * E1_indiv c m
@@ -1264,7 +1264,7 @@ theorem random_codebook_average_le
             ((∑ c : Codebook M n α, wM.real {c} * E1_indiv c m)
             + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
                 ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m') :=
-    sum_weighted_diag_offdiag_decomp (fun c => wM.real {c}) E1_indiv E2_indiv
+    sum_weighted_diag_offdiag_decomp (fun c ↦ wM.real {c}) E1_indiv E2_indiv
       ((M : ℝ))⁻¹
   -- Step 4: bound each inner Fubini sum.
   -- (E1) `∑_c w(c) * E1_indiv c m ≤ E1` for every `m`.
@@ -1286,8 +1286,8 @@ theorem random_codebook_average_le
         ≤ E1 + ((M : ℝ) - 1) * Eexp := by
     intro m
     refine diag_add_offdiag_sum_le hM _
-      (fun m' => ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m') E1 Eexp
-      (h_E1_swap m) (fun m' hm' => ?_)
+      (fun m' ↦ ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m') E1 Eexp
+      (h_E1_swap m) (fun m' hm' ↦ ?_)
     have hne : m ≠ m' := (Finset.mem_erase.mp hm').1.symm
     exact h_E2_swap m m' hne
   -- Aggregate over `m`.

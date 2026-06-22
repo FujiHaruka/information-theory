@@ -30,13 +30,13 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
 /-- The supremum of `|pmfLog μ Xs|` over the alphabet. -/
 noncomputable def pmfLogBound (μ : Measure Ω) (Xs : ℕ → Ω → α) : ℝ :=
-  Finset.univ.sup' Finset.univ_nonempty (fun a : α => |pmfLog μ Xs a|)
+  Finset.univ.sup' Finset.univ_nonempty (fun a : α ↦ |pmfLog μ Xs a|)
 
 omit [DecidableEq α] [MeasurableSingletonClass α] in
 lemma abs_pmfLog_le_bound (μ : Measure Ω) (Xs : ℕ → Ω → α) (a : α) :
     |pmfLog μ Xs a| ≤ pmfLogBound μ Xs := by
   unfold pmfLogBound
-  exact Finset.le_sup' (f := fun a : α => |pmfLog μ Xs a|) (Finset.mem_univ a)
+  exact Finset.le_sup' (f := fun a : α ↦ |pmfLog μ Xs a|) (Finset.mem_univ a)
 
 omit [DecidableEq α] [MeasurableSingletonClass α] in
 lemma abs_logLikelihood_le_bound
@@ -52,7 +52,7 @@ lemma memLp_logLikelihood
     MemLp (logLikelihood μ Xs i) 2 μ := by
   refine MemLp.of_bound (measurable_logLikelihood μ Xs hXs i).aestronglyMeasurable
     (pmfLogBound μ Xs) ?_
-  exact Filter.Eventually.of_forall (fun ω => by
+  exact Filter.Eventually.of_forall (fun ω ↦ by
     have := abs_logLikelihood_le_bound μ Xs i ω
     simpa [Real.norm_eq_abs] using this)
 
@@ -77,7 +77,7 @@ lemma pmfLogVariance_le_sq_of_bounded
     pmfLogVariance μ Xs ≤ B ^ 2 := by
   unfold pmfLogVariance
   have h_ae_Icc : ∀ᵐ ω ∂μ, logLikelihood μ Xs 0 ω ∈ Set.Icc (-B) B := by
-    refine Filter.Eventually.of_forall (fun ω => ?_)
+    refine Filter.Eventually.of_forall (fun ω ↦ ?_)
     have h := hB (Xs 0 ω)
     have h_eq : logLikelihood μ Xs 0 ω = pmfLog μ Xs (Xs 0 ω) := rfl
     rw [h_eq]
@@ -108,7 +108,7 @@ omit [DecidableEq α] in
 lemma aep_chebyshev_bound
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     {ε : ℝ} (hε : 0 < ε) {n : ℕ} (hn : 0 < n) :
     μ {ω | ε ≤ |((∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n)
@@ -118,10 +118,10 @@ lemma aep_chebyshev_bound
   -- Denote the n-step sum (no `set` to avoid `eta` beta-reduction issues).
   -- MemLp for each summand.
   have h_memLp_each : ∀ i, MemLp (logLikelihood μ Xs i) 2 μ :=
-    fun i => memLp_logLikelihood μ Xs hXs i
+    fun i ↦ memLp_logLikelihood μ Xs hXs i
   -- MemLp for the sum.
   have h_memLp_S :
-      MemLp (fun ω => ∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) 2 μ := by
+      MemLp (fun ω ↦ ∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) 2 μ := by
     refine memLp_finsetSum (Finset.range n) ?_
     intro i _
     exact h_memLp_each i
@@ -134,8 +134,8 @@ lemma aep_chebyshev_bound
   have h_int_S :
       ∫ ω, (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) ∂μ
         = (n : ℝ) * entropy μ (Xs 0) := by
-    rw [integral_finsetSum _ (fun i _ => (h_memLp_each i).integrable (by norm_num))]
-    rw [Finset.sum_congr rfl (fun i _ => h_int_each i)]
+    rw [integral_finsetSum _ (fun i _ ↦ (h_memLp_each i).integrable (by norm_num))]
+    rw [Finset.sum_congr rfl (fun i _ ↦ h_int_each i)]
     rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
   -- Variance of the sum: pairwise indep + ident ⇒ Var[∑] = n · V.
   have h_var_S :
@@ -143,18 +143,18 @@ lemma aep_chebyshev_bound
         = n * pmfLogVariance μ Xs := by
     have h_pairwise :
         Set.Pairwise (Finset.range n : Set ℕ)
-          (fun i j => logLikelihood μ Xs i ⟂ᵢ[μ] logLikelihood μ Xs j) := by
+          (fun i j ↦ logLikelihood μ Xs i ⟂ᵢ[μ] logLikelihood μ Xs j) := by
       intro i _ j _ hij
       exact indepFun_logLikelihood μ Xs hindep hij
-    rw [IndepFun.variance_sum (fun i _ => h_memLp_each i) h_pairwise]
+    rw [IndepFun.variance_sum (fun i _ ↦ h_memLp_each i) h_pairwise]
     rw [Finset.sum_congr rfl
-      (fun i _ => variance_logLikelihood_eq μ Xs hident i)]
+      (fun i _ ↦ variance_logLikelihood_eq μ Xs hident i)]
     rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
   have h_var_S_fun :
-      variance (fun ω => ∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) μ
+      variance (fun ω ↦ ∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) μ
         = n * pmfLogVariance μ Xs := by
     have h_ext :
-        (fun ω => ∑ i ∈ Finset.range n, logLikelihood μ Xs i ω)
+        (fun ω ↦ ∑ i ∈ Finset.range n, logLikelihood μ Xs i ω)
         = (∑ i ∈ Finset.range n, logLikelihood μ Xs i) := by
       ext ω; rw [Finset.sum_apply]
     rw [h_ext]
@@ -208,7 +208,7 @@ private lemma typicalSet_compl_eq
     not_le, jointRV_apply]
   have h_sum : (∑ i : Fin n, pmfLog μ Xs (Xs i ω))
       = ∑ i ∈ Finset.range n, logLikelihood μ Xs i ω :=
-    Fin.sum_univ_eq_sum_range (fun i => pmfLog μ Xs (Xs i ω)) n
+    Fin.sum_univ_eq_sum_range (fun i ↦ pmfLog μ Xs (Xs i ω)) n
   rw [h_sum]
 
 omit [DecidableEq α] in
@@ -219,7 +219,7 @@ omit [DecidableEq α] in
 theorem typicalSet_prob_ge_of_rate
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     {ε : ℝ} (hε : 0 < ε) {η : ℝ} (hη : 0 < η) :
     ∃ N : ℕ, ∀ n ≥ N,
@@ -271,17 +271,17 @@ theorem typicalSet_prob_ge_of_rate
   -- bad is measurable (subset of ℝ via measurable function).
   have h_meas_bad : MeasurableSet bad := by
     have h_sum_meas : Measurable
-        (fun ω => ∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) :=
-      Finset.measurable_sum _ fun i _ => measurable_logLikelihood μ Xs hXs i
+        (fun ω ↦ ∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) :=
+      Finset.measurable_sum _ fun i _ ↦ measurable_logLikelihood μ Xs hXs i
     have h_div : Measurable
-        (fun ω => (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n) :=
+        (fun ω ↦ (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n) :=
       h_sum_meas.div_const _
     have h_diff : Measurable
-        (fun ω => (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n
+        (fun ω ↦ (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n
                     - entropy μ (Xs 0)) :=
       h_div.sub_const _
     have h_abs : Measurable
-        (fun ω => |((∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n
+        (fun ω ↦ |((∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n
                     - entropy μ (Xs 0))|) :=
       _root_.continuous_abs.measurable.comp h_diff
     exact measurableSet_le measurable_const h_abs
@@ -394,11 +394,11 @@ theorem jointlyTypicalSet_prob_ge_of_rate
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindepX : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindepX : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
-    (hindepY : Pairwise fun i j => Ys i ⟂ᵢ[μ] Ys j)
+    (hindepY : Pairwise fun i j ↦ Ys i ⟂ᵢ[μ] Ys j)
     (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
-    (hindepZ : Pairwise fun i j =>
+    (hindepZ : Pairwise fun i j ↦
       ChannelCoding.jointSequence Xs Ys i ⟂ᵢ[μ]
         ChannelCoding.jointSequence Xs Ys j)
     (hidentZ : ∀ i,
@@ -417,7 +417,7 @@ theorem jointlyTypicalSet_prob_ge_of_rate
   obtain ⟨N_Y, hN_Y⟩ :=
     typicalSet_prob_ge_of_rate μ Ys hYs hindepY hidentY hε hη3
   set Zs : ℕ → Ω → α × β := ChannelCoding.jointSequence Xs Ys with hZs_def
-  have hZs : ∀ i, Measurable (Zs i) := fun i =>
+  have hZs : ∀ i, Measurable (Zs i) := fun i ↦
     ChannelCoding.measurable_jointSequence Xs Ys hXs hYs i
   obtain ⟨N_Z, hN_Z⟩ :=
     typicalSet_prob_ge_of_rate μ Zs hZs hindepZ hidentZ hε hη3
@@ -552,7 +552,7 @@ omit [DecidableEq α] in
 theorem typicalSet_prob_ge_at_N
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     {ε η : ℝ} (hε : 0 < ε) (hη : 0 < η) :
     ∀ n, typicalSetMinN (pmfLogVariance μ Xs) η ε ≤ n →
@@ -599,17 +599,17 @@ theorem typicalSet_prob_ge_at_N
     exact ENNReal.ofReal_le_ofReal h_rate
   have h_meas_bad : MeasurableSet bad := by
     have h_sum_meas : Measurable
-        (fun ω => ∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) :=
-      Finset.measurable_sum _ fun i _ => measurable_logLikelihood μ Xs hXs i
+        (fun ω ↦ ∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) :=
+      Finset.measurable_sum _ fun i _ ↦ measurable_logLikelihood μ Xs hXs i
     have h_div : Measurable
-        (fun ω => (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n) :=
+        (fun ω ↦ (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n) :=
       h_sum_meas.div_const _
     have h_diff : Measurable
-        (fun ω => (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n
+        (fun ω ↦ (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n
                     - entropy μ (Xs 0)) :=
       h_div.sub_const _
     have h_abs : Measurable
-        (fun ω => |((∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n
+        (fun ω ↦ |((∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n
                     - entropy μ (Xs 0))|) :=
       _root_.continuous_abs.measurable.comp h_diff
     exact measurableSet_le measurable_const h_abs
@@ -637,7 +637,7 @@ is `typicalSetMinN V_upper η ε` (independent of the true variance). -/
 theorem typicalSet_prob_ge_at_N_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (V_upper : ℝ) (hV_upper : pmfLogVariance μ Xs ≤ V_upper)
     {ε η : ℝ} (hε : 0 < ε) (hη : 0 < η) :
@@ -735,11 +735,11 @@ theorem jointlyTypicalSet_prob_ge_at_N_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindepX : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hindepX : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
-    (hindepY : Pairwise fun i j => Ys i ⟂ᵢ[μ] Ys j)
+    (hindepY : Pairwise fun i j ↦ Ys i ⟂ᵢ[μ] Ys j)
     (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
-    (hindepZ : Pairwise fun i j =>
+    (hindepZ : Pairwise fun i j ↦
       ChannelCoding.jointSequence Xs Ys i ⟂ᵢ[μ]
         ChannelCoding.jointSequence Xs Ys j)
     (hidentZ : ∀ i,
@@ -767,7 +767,7 @@ theorem jointlyTypicalSet_prob_ge_at_N_le
   have hN_X := typicalSet_prob_ge_at_N_le μ Xs hXs hindepX hidentX V_X hV_X hε hη3 n hn_N_X
   have hN_Y := typicalSet_prob_ge_at_N_le μ Ys hYs hindepY hidentY V_Y hV_Y hε hη3 n hn_N_Y
   set Zs : ℕ → Ω → α × β := ChannelCoding.jointSequence Xs Ys with hZs_def
-  have hZs : ∀ i, Measurable (Zs i) := fun i =>
+  have hZs : ∀ i, Measurable (Zs i) := fun i ↦
     ChannelCoding.measurable_jointSequence Xs Ys hXs hYs i
   have hN_Z := typicalSet_prob_ge_at_N_le μ Zs hZs hindepZ hidentZ V_Z hV_Z hε hη3 n hn_N_Z
   -- The body below mirrors `jointlyTypicalSet_prob_ge_of_rate`'s union-bound step.

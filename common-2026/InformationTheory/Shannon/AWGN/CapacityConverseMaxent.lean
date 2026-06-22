@@ -118,22 +118,22 @@ theorem capacity_log_diff (hP : 0 < P) (hN : (N : ℝ) ≠ 0) :
 /-- Second moment of a shifted real Gaussian: `∫ z, (z − c)² ∂𝒩(0,N) = N + c²`. -/
 theorem integral_sub_sq_gaussianReal (N : ℝ≥0) (hN : N ≠ 0) (c : ℝ) :
     ∫ z, (z - c) ^ 2 ∂(gaussianReal 0 N) = (N : ℝ) + c ^ 2 := by
-  have h_id : Integrable (fun z : ℝ => z) (gaussianReal 0 N) := by
+  have h_id : Integrable (fun z : ℝ ↦ z) (gaussianReal 0 N) := by
     have := (memLp_id_gaussianReal (μ := 0) (v := N) 1).integrable (by norm_num)
     simpa using this
-  have h_sq : Integrable (fun z : ℝ => z ^ 2) (gaussianReal 0 N) :=
+  have h_sq : Integrable (fun z : ℝ ↦ z ^ 2) (gaussianReal 0 N) :=
     (memLp_id_gaussianReal (μ := 0) (v := N) 2).integrable_sq
   -- `∫ z² ∂𝒩(0,N) = Var[id] + (∫ z)² = N + 0`
   have h_var : ∫ z, z ^ 2 ∂(gaussianReal 0 N) = (N : ℝ) := by
-    have hv : Var[fun z : ℝ => z; gaussianReal 0 N] = (N : ℝ) := variance_fun_id_gaussianReal
+    have hv : Var[fun z : ℝ ↦ z; gaussianReal 0 N] = (N : ℝ) := variance_fun_id_gaussianReal
     rw [variance_eq_integral measurable_id'.aemeasurable, integral_id_gaussianReal] at hv
     simpa using hv
   -- expand `(z - c)² = z² - 2cz + c²` and integrate termwise
-  have h_int1 : Integrable (fun z : ℝ => -(2 * c) * z) (gaussianReal 0 N) :=
+  have h_int1 : Integrable (fun z : ℝ ↦ -(2 * c) * z) (gaussianReal 0 N) :=
     h_id.const_mul _
   calc ∫ z, (z - c) ^ 2 ∂(gaussianReal 0 N)
       = ∫ z, (z ^ 2 + (-(2 * c) * z + c ^ 2)) ∂(gaussianReal 0 N) := by
-        refine integral_congr_ae (ae_of_all _ (fun z => ?_)); ring
+        refine integral_congr_ae (ae_of_all _ (fun z ↦ ?_)); ring
     _ = (∫ z, z ^ 2 ∂(gaussianReal 0 N))
           + ∫ z, (-(2 * c) * z + c ^ 2) ∂(gaussianReal 0 N) :=
         integral_add h_sq (h_int1.add (integrable_const _))
@@ -153,37 +153,37 @@ degenerate `∫ x² ∂p = 0 ≤ P`). -/
 theorem output_sq_sub_integrable
     (h_meas : IsAwgnChannelMeasurable N) (hN : N ≠ 0)
     (p : Measure ℝ) [IsProbabilityMeasure p]
-    (hp_2mom_int : Integrable (fun x => x ^ 2) p) (m : ℝ) :
-    Integrable (fun y => (y - m) ^ 2)
+    (hp_2mom_int : Integrable (fun x ↦ x ^ 2) p) (m : ℝ) :
+    Integrable (fun y ↦ (y - m) ^ 2)
       (ChannelCoding.outputDistribution p (awgnChannel N h_meas)) := by
   rw [outputDistribution_awgn_eq_conv h_meas p]
   -- Use `integrable_conv_iff`: fibre integrability + outer integrability of fibre norm.
   refine (integrable_conv_iff (by fun_prop)).mpr ⟨?_, ?_⟩
   · -- fibre: `(x + z - m)²` integrable against `𝒩(0,N)`.
-    refine ae_of_all _ (fun x => ?_)
-    have : (fun z => (x + z - m) ^ 2) = (fun z => (z - (m - x)) ^ 2) := by
+    refine ae_of_all _ (fun x ↦ ?_)
+    have : (fun z ↦ (x + z - m) ^ 2) = (fun z ↦ (z - (m - x)) ^ 2) := by
       funext z; ring_nf
     rw [this]
     exact integrable_sq_sub_gaussianReal (m - x) 0 N
   · -- outer: `∫ z, ‖(x + z - m)²‖ ∂𝒩` is integrable against `p`.
     -- `‖(x+z-m)²‖ = (x+z-m)²` and `∫ z, (x+z-m)² ∂𝒩 = (x-m)² + N` (Gaussian variance N).
-    have h_eq : (fun x => ∫ z, ‖(x + z - m) ^ 2‖ ∂(gaussianReal 0 N))
-        = fun x => (N : ℝ) + (m - x) ^ 2 := by
+    have h_eq : (fun x ↦ ∫ z, ‖(x + z - m) ^ 2‖ ∂(gaussianReal 0 N))
+        = fun x ↦ (N : ℝ) + (m - x) ^ 2 := by
       funext x
-      have hnorm : (fun z => ‖(x + z - m) ^ 2‖) = fun z => (z - (m - x)) ^ 2 := by
+      have hnorm : (fun z ↦ ‖(x + z - m) ^ 2‖) = fun z ↦ (z - (m - x)) ^ 2 := by
         funext z
         rw [Real.norm_eq_abs, abs_of_nonneg (by positivity)]
         ring
       rw [hnorm, integral_sub_sq_gaussianReal N hN (m - x)]
     rw [h_eq]
     -- `(N : ℝ) + (m - x)² = (N + m²) - 2mx + x²` integrable against `p`.
-    have h_poly : (fun x => (N : ℝ) + (m - x) ^ 2)
-        = fun x => x ^ 2 - (2 * m) * x + ((N : ℝ) + m ^ 2) := by funext x; ring
+    have h_poly : (fun x ↦ (N : ℝ) + (m - x) ^ 2)
+        = fun x ↦ x ^ 2 - (2 * m) * x + ((N : ℝ) + m ^ 2) := by funext x; ring
     rw [h_poly]
     -- `id` is integrable against the finite `p`: `‖x‖ ≤ 1 + x²`.
-    have h_id : Integrable (fun x : ℝ => x) p := by
+    have h_id : Integrable (fun x : ℝ ↦ x) p := by
       refine ((integrable_const (1 : ℝ)).add hp_2mom_int).mono' (by fun_prop)
-        (ae_of_all _ (fun x => ?_))
+        (ae_of_all _ (fun x ↦ ?_))
       simp only [Real.norm_eq_abs, Pi.add_apply]
       rcases le_or_gt |x| 1 with h | h
       · nlinarith [sq_nonneg x]
@@ -197,20 +197,20 @@ Via `integral_conv` (the output is `(p.prod 𝒩).map (·+·)`) and the fibre id
 theorem output_secondMoment_eq
     (h_meas : IsAwgnChannelMeasurable N) (hN : N ≠ 0)
     (p : Measure ℝ) [IsProbabilityMeasure p]
-    (hp_2mom_int : Integrable (fun x => x ^ 2) p) :
+    (hp_2mom_int : Integrable (fun x ↦ x ^ 2) p) :
     ∫ y, y ^ 2 ∂(ChannelCoding.outputDistribution p (awgnChannel N h_meas))
       = (∫ x, x ^ 2 ∂p) + (N : ℝ) := by
-  have h_int : Integrable (fun y => y ^ 2)
+  have h_int : Integrable (fun y ↦ y ^ 2)
       (ChannelCoding.outputDistribution p (awgnChannel N h_meas)) := by
     have := output_sq_sub_integrable h_meas hN p hp_2mom_int 0
     simpa using this
   rw [outputDistribution_awgn_eq_conv h_meas p] at h_int ⊢
   rw [integral_conv h_int]
   -- fibre: `∫ z, (x + z)² ∂𝒩(0,N) = x² + N`
-  have h_fibre : (fun x => ∫ z, (x + z) ^ 2 ∂(gaussianReal 0 N))
-      = fun x => x ^ 2 + (N : ℝ) := by
+  have h_fibre : (fun x ↦ ∫ z, (x + z) ^ 2 ∂(gaussianReal 0 N))
+      = fun x ↦ x ^ 2 + (N : ℝ) := by
     funext x
-    have : (fun z => (x + z) ^ 2) = fun z => (z - (-x)) ^ 2 := by funext z; ring
+    have : (fun z ↦ (x + z) ^ 2) = fun z ↦ (z - (-x)) ^ 2 := by funext z; ring
     rw [this, integral_sub_sq_gaussianReal N hN (-x)]
     ring
   rw [h_fibre, integral_add hp_2mom_int (integrable_const _), integral_const]
@@ -225,15 +225,15 @@ theorem output_secondMoment_eq
 theorem output_variance_le
     (h_meas : IsAwgnChannelMeasurable N) (hN : N ≠ 0)
     (p : Measure ℝ) [IsProbabilityMeasure p]
-    (hp_2mom_int : Integrable (fun x => x ^ 2) p) (hp_2mom : ∫ x, x ^ 2 ∂p ≤ P) :
+    (hp_2mom_int : Integrable (fun x ↦ x ^ 2) p) (hp_2mom : ∫ x, x ^ 2 ∂p ≤ P) :
     ∫ y, (y - (∫ z, z ∂(ChannelCoding.outputDistribution p (awgnChannel N h_meas)))) ^ 2
         ∂(ChannelCoding.outputDistribution p (awgnChannel N h_meas))
       ≤ P + (N : ℝ) := by
   set q := ChannelCoding.outputDistribution p (awgnChannel N h_meas) with hq_def
   -- `∫ (y - E[Y])² ∂q = Var[id; q] ≤ q[id²] = ∫ y² ∂q`.
-  have h_var_eq : ∫ y, (y - (∫ z, z ∂q)) ^ 2 ∂q = Var[fun y : ℝ => y; q] :=
+  have h_var_eq : ∫ y, (y - (∫ z, z ∂q)) ^ 2 ∂q = Var[fun y : ℝ ↦ y; q] :=
     (variance_eq_integral measurable_id'.aemeasurable).symm
-  have h_var_le : Var[fun y : ℝ => y; q] ≤ q[fun y : ℝ => y ^ 2] :=
+  have h_var_le : Var[fun y : ℝ ↦ y; q] ≤ q[fun y : ℝ ↦ y ^ 2] :=
     variance_le_expectation_sq measurable_id'.aestronglyMeasurable
   rw [h_var_eq]
   refine h_var_le.trans ?_
@@ -268,17 +268,17 @@ theorem fibre_absolutelyContinuous_output_general
   -- Pick any such `a` (p is a probability measure, so the ae set is nonempty).
   obtain ⟨a, ha⟩ := h_inner_zero.exists
   -- The inner vanishing means `𝒩(0,N)((a + ·) ⁻¹' s) = 0`, hence `volume(...) = 0`.
-  have h_indic : (fun y => s.indicator (1 : ℝ → ℝ≥0∞) (a + y))
-      = ((fun y => a + y) ⁻¹' s).indicator 1 := by
+  have h_indic : (fun y ↦ s.indicator (1 : ℝ → ℝ≥0∞) (a + y))
+      = ((fun y ↦ a + y) ⁻¹' s).indicator 1 := by
     ext y
     by_cases hy : a + y ∈ s
     · rw [Set.indicator_of_mem hy, Set.indicator_of_mem (Set.mem_preimage.mpr hy),
         Pi.one_apply, Pi.one_apply]
     · rw [Set.indicator_of_notMem hy, Set.indicator_of_notMem (by simpa using hy)]
   rw [h_indic, lintegral_indicator_one (by apply MeasurableSet.preimage hs (by fun_prop))] at ha
-  have h_gauss_pre : (gaussianReal 0 N) ((fun y => a + y) ⁻¹' s) = 0 := ha
+  have h_gauss_pre : (gaussianReal 0 N) ((fun y ↦ a + y) ⁻¹' s) = 0 := ha
   -- `volume ≪ 𝒩(0,N)`, so the preimage has volume 0; volume is translation invariant.
-  have h_vol_pre : volume ((fun y => a + y) ⁻¹' s) = 0 :=
+  have h_vol_pre : volume ((fun y ↦ a + y) ⁻¹' s) = 0 :=
     (gaussianReal_absolutelyContinuous' 0 hN) h_gauss_pre
   rwa [← (measurePreserving_add_left volume a).measure_preimage hs.nullMeasurableSet]
 
@@ -295,26 +295,26 @@ theorem integrable_log_proxy_fibre_compProd_general
     (h_meas : IsAwgnChannelMeasurable N) (hN : N ≠ 0)
     (p : Measure ℝ) [IsProbabilityMeasure p] :
     Integrable
-      (fun z : ℝ × ℝ => Real.log (gaussianPDF z.1 N z.2).toReal)
+      (fun z : ℝ × ℝ ↦ Real.log (gaussianPDF z.1 N z.2).toReal)
       (p ⊗ₘ (awgnChannel N h_meas)) := by
   set W := awgnChannel N h_meas with hW_def
   set c₀ : ℝ := -(1 / 2) * Real.log (2 * Real.pi * N) with hc₀
   set c₁ : ℝ := -(1 / (2 * (N : ℝ))) with hc₁
-  have h_eq : (fun z : ℝ × ℝ => Real.log (gaussianPDF z.1 N z.2).toReal)
-      = fun z => c₀ + c₁ * (z.2 - z.1) ^ 2 := by
+  have h_eq : (fun z : ℝ × ℝ ↦ Real.log (gaussianPDF z.1 N z.2).toReal)
+      = fun z ↦ c₀ + c₁ * (z.2 - z.1) ^ 2 := by
     funext z
     rw [toReal_gaussianPDF, InformationTheory.Shannon.log_gaussianPDFReal_eq z.1 hN z.2, hc₀, hc₁]
     ring
   rw [h_eq]
-  have h_sq : Integrable (fun z : ℝ × ℝ => (z.2 - z.1) ^ 2) (p ⊗ₘ W) := by
-    have h_aesm : AEStronglyMeasurable (fun z : ℝ × ℝ => (z.2 - z.1) ^ 2) (p ⊗ₘ W) :=
+  have h_sq : Integrable (fun z : ℝ × ℝ ↦ (z.2 - z.1) ^ 2) (p ⊗ₘ W) := by
+    have h_aesm : AEStronglyMeasurable (fun z : ℝ × ℝ ↦ (z.2 - z.1) ^ 2) (p ⊗ₘ W) :=
       ((measurable_snd.sub measurable_fst).pow_const 2).aestronglyMeasurable
     rw [Measure.integrable_compProd_iff h_aesm]
-    refine ⟨Filter.Eventually.of_forall (fun x => ?_), ?_⟩
+    refine ⟨Filter.Eventually.of_forall (fun x ↦ ?_), ?_⟩
     · simpa only [hW_def, awgnChannel_apply] using integrable_sq_sub_gaussianReal x x N
-    · have h_norm : (fun x => ∫ y, ‖(y - x) ^ 2‖ ∂(W x)) = fun _ => (N : ℝ) := by
+    · have h_norm : (fun x ↦ ∫ y, ‖(y - x) ^ 2‖ ∂(W x)) = fun _ ↦ (N : ℝ) := by
         funext x
-        have : (fun y => ‖(y - x) ^ 2‖) = fun y => (y - x) ^ 2 := by
+        have : (fun y ↦ ‖(y - x) ^ 2‖) = fun y ↦ (y - x) ^ 2 := by
           funext y; rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _)]
         rw [this, hW_def, awgnChannel_apply]
         exact integral_sq_sub_self_gaussianReal x N
@@ -334,7 +334,7 @@ noncomputable def outputMixtureDensity (N : ℝ≥0) (p : Measure ℝ) (y : ℝ)
 theorem measurable_outputMixtureDensity (N : ℝ≥0) (p : Measure ℝ) [SFinite p] :
     Measurable (outputMixtureDensity N p) := by
   unfold outputMixtureDensity
-  exact Measurable.lintegral_prod_left' (f := fun z : ℝ × ℝ => gaussianPDF z.1 N z.2)
+  exact Measurable.lintegral_prod_left' (f := fun z : ℝ × ℝ ↦ gaussianPDF z.1 N z.2)
     (measurable_gaussianPDF_uncurry N)
 
 /-- Measurability of the Gaussian pdf in the **mean** parameter (fixed argument `y`):
@@ -343,9 +343,9 @@ theorem measurable_outputMixtureDensity (N : ℝ≥0) (p : Measure ℝ) [SFinite
 unfold `gaussianPDF`/`gaussianPDFReal` and hit a heartbeat timeout; the `have h := …; exact h`
 shape elaborates `comp` freely and matches cheaply. Consumers call this lemma (term reuse). -/
 theorem measurable_gaussianPDF_fst (N : ℝ≥0) (y : ℝ) :
-    Measurable (fun x : ℝ => gaussianPDF x N y) := by
+    Measurable (fun x : ℝ ↦ gaussianPDF x N y) := by
   have h := (measurable_gaussianPDF_uncurry N).comp
-    (measurable_id.prodMk (measurable_const : Measurable fun _ : ℝ => y))
+    (measurable_id.prodMk (measurable_const : Measurable fun _ : ℝ ↦ y))
   exact h
 
 /-- The mixture output `q = p ∗ 𝒩(0,N)` is
@@ -362,11 +362,11 @@ theorem output_eq_withDensity_mixture
     p ∗ gaussianReal 0 N = volume.withDensity (outputMixtureDensity N p) := by
   have h_mix_meas : Measurable (outputMixtureDensity N p) :=
     measurable_outputMixtureDensity N p
-  refine Measure.ext_of_lintegral _ (fun f hf => ?_)
+  refine Measure.ext_of_lintegral _ (fun f hf ↦ ?_)
   -- LHS: `∫ f ∂(p ∗ 𝒩) = ∫_x ∫_y f(x+y) ∂𝒩(0,N) ∂p`
   rw [Measure.lintegral_conv hf]
   -- keep the Gaussian density opaque to stop whnf from unfolding it during Fubini
-  set g : ℝ × ℝ → ℝ≥0∞ := fun z => gaussianPDF z.1 N z.2 with hg_def
+  set g : ℝ × ℝ → ℝ≥0∞ := fun z ↦ gaussianPDF z.1 N z.2 with hg_def
   have hg_meas : Measurable g := measurable_gaussianPDF_uncurry N
   -- inner: `∫_y f(x+y) ∂𝒩(0,N) = ∫_w f(w) ∂𝒩(x,N) = ∫_w f(w)·g(x,w) ∂vol`
   have h_inner : ∀ x : ℝ,
@@ -377,24 +377,24 @@ theorem output_eq_withDensity_mixture
       simpa using this
     rw [← lintegral_map hf (by fun_prop), h_map, gaussianReal_of_var_ne_zero x hN,
       lintegral_withDensity_eq_lintegral_mul _ (measurable_gaussianPDF x N) hf]
-    refine lintegral_congr (fun w => ?_)
+    refine lintegral_congr (fun w ↦ ?_)
     rw [Pi.mul_apply, hg_def, mul_comm]
   -- swap order via Fubini
   have h_swap_meas : AEMeasurable
-      (Function.uncurry fun x w : ℝ => f w * g (x, w)) (p.prod volume) := by
+      (Function.uncurry fun x w : ℝ ↦ f w * g (x, w)) (p.prod volume) := by
     apply Measurable.aemeasurable
     exact (hf.comp measurable_snd).mul (hg_meas.comp (measurable_fst.prodMk measurable_snd))
   calc ∫⁻ x, ∫⁻ y, f (x + y) ∂(gaussianReal 0 N) ∂p
-      = ∫⁻ x, ∫⁻ w, f w * g (x, w) ∂volume ∂p := lintegral_congr (fun x => h_inner x)
+      = ∫⁻ x, ∫⁻ w, f w * g (x, w) ∂volume ∂p := lintegral_congr (fun x ↦ h_inner x)
     _ = ∫⁻ w, ∫⁻ x, f w * g (x, w) ∂p ∂volume := lintegral_lintegral_swap h_swap_meas
     _ = ∫⁻ w, f w * outputMixtureDensity N p w ∂volume := by
-        refine lintegral_congr (fun w => ?_)
-        have h_pdf_mean : Measurable fun x : ℝ => g (x, w) :=
+        refine lintegral_congr (fun w ↦ ?_)
+        have h_pdf_mean : Measurable fun x : ℝ ↦ g (x, w) :=
           hg_meas.comp (measurable_id.prodMk measurable_const)
         rw [outputMixtureDensity, ← lintegral_const_mul (f w) h_pdf_mean]
     _ = ∫⁻ z, f z ∂(volume.withDensity (outputMixtureDensity N p)) := by
         rw [lintegral_withDensity_eq_lintegral_mul _ h_mix_meas hf]
-        refine lintegral_congr (fun w => ?_)
+        refine lintegral_congr (fun w ↦ ?_)
         rw [Pi.mul_apply, mul_comm]
 
 /-- The output rnDeriv is a.e. the mixture density. -/
@@ -415,7 +415,7 @@ theorem outputMixtureDensity_le_sup
   unfold outputMixtureDensity
   calc ∫⁻ x, gaussianPDF x N y ∂p
       ≤ ∫⁻ _x, ENNReal.ofReal (Real.sqrt (2 * Real.pi * N))⁻¹ ∂p := by
-        refine lintegral_mono (fun x => ?_)
+        refine lintegral_mono (fun x ↦ ?_)
         rw [gaussianPDF]
         exact ENNReal.ofReal_le_ofReal (gaussianPDFReal_le_sup x N y)
     _ = ENNReal.ofReal (Real.sqrt (2 * Real.pi * N))⁻¹ := by
@@ -434,7 +434,7 @@ theorem output_logDensity_lower_bound
     ∃ a b : ℝ, 0 ≤ a ∧ ∀ y : ℝ,
       -Real.log ((outputMixtureDensity N p y).toReal) ≤ a * y ^ 2 + b := by
   classical
-  have hN_pos : (0 : ℝ) < N := lt_of_le_of_ne N.coe_nonneg (fun h => hN (by exact_mod_cast h.symm))
+  have hN_pos : (0 : ℝ) < N := lt_of_le_of_ne N.coe_nonneg (fun h ↦ hN (by exact_mod_cast h.symm))
   obtain ⟨hp_2mom_int, hp_2mom⟩ := awgnPowerConstraintSet_mem_iff_integrable P hP p hp
   -- lintegral form of the second-moment bound
   have hp_lint : ∫⁻ x, ENNReal.ofReal (x ^ 2) ∂p ≤ ENNReal.ofReal P := hp.2
@@ -484,12 +484,12 @@ theorem output_logDensity_lower_bound
     rw [add_comm (p Sᶜ)] at h1
     exact ENNReal.le_of_add_le_add_right (ne_of_lt (lt_of_le_of_lt hSc_le (by norm_num))) h1
   -- the per-`y` Gaussian tail lower constant `K y := (√2πN)⁻¹ · exp(−(y²+R²)/N)`
-  refine ⟨1 / N, R ^ 2 / N + Real.log (2 * Real.sqrt (2 * Real.pi * N)), by positivity, fun y => ?_⟩
+  refine ⟨1 / N, R ^ 2 / N + Real.log (2 * Real.sqrt (2 * Real.pi * N)), by positivity, fun y ↦ ?_⟩
   set Kr : ℝ := (Real.sqrt (2 * Real.pi * N))⁻¹ * Real.exp (-(2 * y ^ 2 + 2 * R ^ 2) / (2 * N))
     with hKr_def
   have hKr_pos : 0 < Kr := by rw [hKr_def]; positivity
   -- keep the Gaussian density opaque to stop whnf from unfolding it
-  set gy : ℝ → ℝ≥0∞ := fun x => gaussianPDF x N y with hgy_def
+  set gy : ℝ → ℝ≥0∞ := fun x ↦ gaussianPDF x N y with hgy_def
   have hgy_meas : Measurable gy := measurable_gaussianPDF_fst N y
   -- pointwise: `gaussianPDF x N y ≥ ofReal Kr` for `x ∈ S`
   have h_pdf_ge : ∀ x ∈ S, ENNReal.ofReal Kr ≤ gy x := by
@@ -514,7 +514,7 @@ theorem output_logDensity_lower_bound
       _ = ∫⁻ _x in S, ENNReal.ofReal Kr ∂p := by
           rw [setLIntegral_const, mul_comm]
       _ ≤ ∫⁻ x in S, gy x ∂p :=
-          setLIntegral_mono hgy_meas (fun x hx => h_pdf_ge x hx)
+          setLIntegral_mono hgy_meas (fun x hx ↦ h_pdf_ge x hx)
       _ ≤ ∫⁻ x, gy x ∂p := setLIntegral_le_lintegral S _
   -- convert to `-log`: `-log f_q ≤ -log (Kr/2) = (2y²+2R²)/(2N) + log(2√2πN)`
   have h_lb_real : Kr * (1 / 2) ≤ (outputMixtureDensity N p y).toReal := by
@@ -570,7 +570,7 @@ theorem outputMixtureDensity_log_abs_le
     · exact le_trans (Real.log_le_log h0 h_le) (le_max_left _ _)
   -- lower bound on log f_q(y): `-log f_q(y) ≤ a·y² + b`.
   obtain ⟨a, b, ha, h_low⟩ := output_logDensity_lower_bound hP hN p hp
-  refine ⟨max (Real.log M) 0 + max b 0, a, ha, fun y => ?_⟩
+  refine ⟨max (Real.log M) 0 + max b 0, a, ha, fun y ↦ ?_⟩
   rw [abs_le]
   constructor
   · -- `-(c₀ + c₁ y²) ≤ log f_q(y)`: from `-log f_q ≤ a y² + b`
@@ -597,7 +597,7 @@ theorem outputDistribution_logDensity_integrable
     (hP : 0 ≤ P) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     (p : Measure ℝ) [IsProbabilityMeasure p]
     (hp : p ∈ awgnPowerConstraintSet P) :
-    Integrable (fun y : ℝ =>
+    Integrable (fun y : ℝ ↦
         Real.negMulLog
           ((ChannelCoding.outputDistribution p (awgnChannel N h_meas)).rnDeriv
             volume y).toReal)
@@ -610,9 +610,9 @@ theorem outputDistribution_logDensity_integrable
   have hfq_meas : Measurable fq := measurable_outputMixtureDensity N p
   have hfq_lt_top : ∀ᵐ y ∂(volume : Measure ℝ), fq y < ∞ := by
     have h_le : ∀ y, fq y ≤ ENNReal.ofReal (Real.sqrt (2 * Real.pi * N))⁻¹ :=
-      fun y => outputMixtureDensity_le_sup N p y
+      fun y ↦ outputMixtureDensity_le_sup N p y
     exact Filter.Eventually.of_forall
-      (fun y => lt_of_le_of_lt (h_le y) ENNReal.ofReal_lt_top)
+      (fun y ↦ lt_of_le_of_lt (h_le y) ENNReal.ofReal_lt_top)
   -- `q = vol.withDensity fq`
   have hq_wd : q = volume.withDensity fq := by
     rw [hq_def, outputDistribution_awgn_eq_conv h_meas p, hfq_def,
@@ -622,19 +622,19 @@ theorem outputDistribution_logDensity_integrable
   -- `q` has finite second moment, so `c₀ + c₁·y²` is integrable against `q`
   have hq_prob : IsProbabilityMeasure q := by
     rw [hq_def, outputDistribution_awgn_eq_conv h_meas p]; infer_instance
-  have h_q_sq_int : Integrable (fun y : ℝ => y ^ 2) q := by
+  have h_q_sq_int : Integrable (fun y : ℝ ↦ y ^ 2) q := by
     have := output_sq_sub_integrable h_meas hN_NN p hp_2mom_int 0
     simpa [hq_def] using this
-  have h_dom_q : Integrable (fun y : ℝ => c₀ + c₁ * y ^ 2) q :=
+  have h_dom_q : Integrable (fun y : ℝ ↦ c₀ + c₁ * y ^ 2) q :=
     (integrable_const c₀).add (h_q_sq_int.const_mul c₁)
   -- transport to volume via the withDensity ↔ smul iff
-  have h_dom_vol : Integrable (fun y : ℝ => (fq y).toReal • (c₀ + c₁ * y ^ 2)) volume :=
+  have h_dom_vol : Integrable (fun y : ℝ ↦ (fq y).toReal • (c₀ + c₁ * y ^ 2)) volume :=
     (integrable_withDensity_iff_integrable_smul' hfq_meas hfq_lt_top).mp
       (by rw [← hq_wd]; exact h_dom_q)
   -- dominate `negMulLog (rnDeriv)` by `(fq y).toReal · (c₀ + c₁ y²)`
   refine Integrable.mono' h_dom_vol ?_ ?_
   · -- measurability of the integrand
-    have h_rn_meas : Measurable (fun y => (q.rnDeriv volume y).toReal) :=
+    have h_rn_meas : Measurable (fun y ↦ (q.rnDeriv volume y).toReal) :=
       (Measure.measurable_rnDeriv q volume).ennreal_toReal
     exact (Real.continuous_negMulLog.measurable.comp h_rn_meas).aestronglyMeasurable
   · -- `‖negMulLog ((q.rnDeriv vol y).toReal)‖ ≤ (fq y).toReal • (c₀ + c₁ y²)` a.e.
@@ -658,7 +658,7 @@ theorem outputDistribution_logDensity_integrable_joint
     (hP : 0 ≤ P) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     (p : Measure ℝ) [IsProbabilityMeasure p]
     (hp : p ∈ awgnPowerConstraintSet P) :
-    Integrable (fun z : ℝ × ℝ =>
+    Integrable (fun z : ℝ × ℝ ↦
         Real.log
           ((ChannelCoding.outputDistribution p (awgnChannel N h_meas)).rnDeriv
             volume z.2).toReal)
@@ -668,7 +668,7 @@ theorem outputDistribution_logDensity_integrable_joint
   set W := awgnChannel N h_meas with hW_def
   set q := ChannelCoding.outputDistribution p W with hq_def
   set fq := outputMixtureDensity N p with hfq_def
-  set g : ℝ → ℝ := fun y => Real.log ((q.rnDeriv volume y).toReal) with hg_def
+  set g : ℝ → ℝ := fun y ↦ Real.log ((q.rnDeriv volume y).toReal) with hg_def
   -- `q` is a probability measure and `q ≪ volume`
   have hq_prob : IsProbabilityMeasure q := by
     rw [hq_def, hW_def, outputDistribution_awgn_eq_conv h_meas p]; infer_instance
@@ -678,10 +678,10 @@ theorem outputDistribution_logDensity_integrable_joint
   -- quadratic abs bound on `log fq`
   obtain ⟨c₀, c₁, hc₁, h_abs⟩ := outputMixtureDensity_log_abs_le hP hN p hp
   -- `q` has finite second moment ⇒ `c₀ + c₁·y²` integrable against `q`
-  have h_q_sq_int : Integrable (fun y : ℝ => y ^ 2) q := by
+  have h_q_sq_int : Integrable (fun y : ℝ ↦ y ^ 2) q := by
     have := output_sq_sub_integrable h_meas hN p hp_2mom_int 0
     simpa [hq_def, hW_def] using this
-  have h_dom_q : Integrable (fun y : ℝ => c₀ + c₁ * y ^ 2) q :=
+  have h_dom_q : Integrable (fun y : ℝ ↦ c₀ + c₁ * y ^ 2) q :=
     (integrable_const c₀).add (h_q_sq_int.const_mul c₁)
   -- `q.rnDeriv vol =ᵐ[q] fq` (volume-a.e. equality transports along `q ≪ volume`)
   have h_rn_ae_q : q.rnDeriv volume =ᵐ[q] fq := by
@@ -690,7 +690,7 @@ theorem outputDistribution_logDensity_integrable_joint
   -- `g` is integrable against `q` by domination
   have h_g_q : Integrable g q := by
     refine Integrable.mono' h_dom_q ?_ ?_
-    · have h_rn_meas : Measurable (fun y => (q.rnDeriv volume y).toReal) :=
+    · have h_rn_meas : Measurable (fun y ↦ (q.rnDeriv volume y).toReal) :=
         (Measure.measurable_rnDeriv q volume).ennreal_toReal
       exact (Real.measurable_log.comp h_rn_meas).aestronglyMeasurable
     · filter_upwards [h_rn_ae_q] with y hy
@@ -702,7 +702,7 @@ theorem outputDistribution_logDensity_integrable_joint
     rw [hq_def]; rfl
   have h_aesm : AEStronglyMeasurable g (Measure.map Prod.snd (p ⊗ₘ W)) := by
     rw [← h_map]; exact h_g_q.aestronglyMeasurable
-  rw [show (fun z : ℝ × ℝ => Real.log ((q.rnDeriv volume z.2).toReal)) = g ∘ Prod.snd from rfl]
+  rw [show (fun z : ℝ × ℝ ↦ Real.log ((q.rnDeriv volume z.2).toReal)) = g ∘ Prod.snd from rfl]
   rw [← integrable_map_measure h_aesm measurable_snd.aemeasurable, ← h_map]
   exact h_g_q
 
@@ -732,7 +732,7 @@ theorem awgn_per_input_mi_le_log
       ≤ (1/2) * Real.log (1 + P / (N : ℝ)) := by
   classical
   have hN_pos : (0 : ℝ) < N := lt_of_le_of_ne N.coe_nonneg (Ne.symm hN)
-  have hN_NN : N ≠ 0 := fun h => hN (by exact_mod_cast (congrArg (fun x : ℝ≥0 => (x : ℝ)) h))
+  have hN_NN : N ≠ 0 := fun h ↦ hN (by exact_mod_cast (congrArg (fun x : ℝ≥0 ↦ (x : ℝ)) h))
   -- regularity from membership: genuine `x²` integrability + Bochner second-moment bound
   obtain ⟨hp_2mom_int, hp_2mom⟩ := awgnPowerConstraintSet_mem_iff_integrable P hP.le p hp
   set W := awgnChannel N h_meas with hW_def
@@ -748,16 +748,16 @@ theorem awgn_per_input_mi_le_log
     rw [hq_conv]
     exact Measure.conv_absolutelyContinuous (gaussianReal_absolutelyContinuous 0 hN_NN)
   -- proxy `g := gaussianPDF` for the fibre volume-density
-  set g : ℝ × ℝ → ℝ≥0∞ := fun z => gaussianPDF z.1 N z.2 with hg_def
+  set g : ℝ × ℝ → ℝ≥0∞ := fun z ↦ gaussianPDF z.1 N z.2 with hg_def
   have hg_meas : Measurable g := measurable_gaussianPDF_uncurry N
   -- per-fibre rnDeriv↔proxy bridge `(W x).rnDeriv vol =ᵐ[W x] g(x,·)`
-  have hg_ae : ∀ x, (fun y => (W x).rnDeriv volume y) =ᵐ[W x] fun y => g (x, y) := by
+  have hg_ae : ∀ x, (fun y ↦ (W x).rnDeriv volume y) =ᵐ[W x] fun y ↦ g (x, y) := by
     intro x
     rw [hW_def, awgnChannel_apply]
     exact (gaussianReal_absolutelyContinuous x hN_NN).ae_le (rnDeriv_gaussianReal x N)
   -- fibre-vs-output absolute continuity `hWx_q`
   have hWx_q : ∀ x, W x ≪ q :=
-    fun x => fibre_absolutelyContinuous_output_general h_meas hN_NN p x
+    fun x ↦ fibre_absolutelyContinuous_output_general h_meas hN_NN p x
   -- fibre ≪ volume (each fibre is a full-support Gaussian)
   have hW_ac : ∀ x, W x ≪ volume := by
     intro x; rw [hW_def, awgnChannel_apply]; exact gaussianReal_absolutelyContinuous x hN_NN
@@ -765,14 +765,14 @@ theorem awgn_per_input_mi_le_log
   have h_joint_ac : (p ⊗ₘ W) ≪ p.prod q := by
     rw [show p.prod q = p ⊗ₘ (Kernel.const ℝ q) from (Measure.compProd_const).symm]
     exact Measure.absolutelyContinuous_compProd_right_iff.mpr
-      (Filter.Eventually.of_forall (fun x => by simpa only [Kernel.const_apply] using hWx_q x))
+      (Filter.Eventually.of_forall (fun x ↦ by simpa only [Kernel.const_apply] using hWx_q x))
   -- fibre log-density joint integrability `h_int_fibre` (proxy form, in-tree)
   have h_int_fibre :
-      Integrable (fun z : ℝ × ℝ => Real.log (g z).toReal) (p ⊗ₘ W) :=
+      Integrable (fun z : ℝ × ℝ ↦ Real.log (g z).toReal) (p ⊗ₘ W) :=
     integrable_log_proxy_fibre_compProd_general h_meas hN_NN p
   -- output log-density joint integrability `h_int_out` (joint form)
   have h_int_out :
-      Integrable (fun z : ℝ × ℝ =>
+      Integrable (fun z : ℝ × ℝ ↦
           Real.log (q.rnDeriv volume z.2).toReal) (p ⊗ₘ W) :=
     outputDistribution_logDensity_integrable_joint hP.le hN_NN h_meas p hp
   -- STEP 1: chain rule `MI.toReal = h(q) − ∫ h(W x) ∂p`
@@ -786,8 +786,8 @@ theorem awgn_per_input_mi_le_log
   have h_fibre_ent :
       ∫ x, InformationTheory.Shannon.differentialEntropy (W x) ∂p
         = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ)) := by
-    have h_const : (fun x => InformationTheory.Shannon.differentialEntropy (W x))
-        = fun _ => (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ)) := by
+    have h_const : (fun x ↦ InformationTheory.Shannon.differentialEntropy (W x))
+        = fun _ ↦ (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ)) := by
       funext x
       rw [hW_def, awgnChannel_apply,
         InformationTheory.Shannon.differentialEntropy_gaussianReal x hN_NN]
@@ -800,14 +800,14 @@ theorem awgn_per_input_mi_le_log
   have hv_ne : v ≠ 0 := by
     rw [hv_def]; exact (Real.toNNReal_pos.mpr hPN_pos).ne'
   have hv_coe : (v : ℝ) = P + (N : ℝ) := by rw [hv_def, Real.coe_toNNReal _ hPN_pos.le]
-  have h_var_int : Integrable (fun y => (y - m) ^ 2) q := by
+  have h_var_int : Integrable (fun y ↦ (y - m) ^ 2) q := by
     rw [hq_def]; exact output_sq_sub_integrable h_meas hN_NN p hp_2mom_int m
   have h_var : ∫ y, (y - m) ^ 2 ∂q ≤ (v : ℝ) := by
     rw [hv_coe, hm_def, hq_def]
     exact output_variance_le h_meas hN_NN p hp_2mom_int hp_2mom
   -- output log-density volume-integrability `h_ent_int` (volume form)
   have h_ent_int :
-      Integrable (fun y => Real.negMulLog ((q.rnDeriv volume y).toReal)) volume := by
+      Integrable (fun y ↦ Real.negMulLog ((q.rnDeriv volume y).toReal)) volume := by
     rw [hq_def]; exact outputDistribution_logDensity_integrable hP.le hN_NN h_meas p hp
   have h_maxent :
       InformationTheory.Shannon.differentialEntropy q
@@ -846,7 +846,7 @@ theorem awgn_capacity_closed_form_genuine
     awgnCapacity P N (isAwgnChannelMeasurable N)
       = (1/2) * Real.log (1 + P / (N : ℝ)) := by
   have hN_NN : N ≠ 0 :=
-    fun h => hN (by exact_mod_cast (congrArg (fun x : ℝ≥0 => (x : ℝ)) h))
+    fun h ↦ hN (by exact_mod_cast (congrArg (fun x : ℝ≥0 ↦ (x : ℝ)) h))
   have hP_toNN_pos : (0 : ℝ≥0) < P.toNNReal := Real.toNNReal_pos.mpr hP
   have hPN : P.toNNReal + N ≠ 0 :=
     (add_pos_of_pos_of_nonneg hP_toNN_pos (zero_le' (a := N))).ne'
@@ -867,7 +867,7 @@ theorem awgn_capacity_closed_form_genuine
     exact awgn_per_input_mi_le_log hP hN (isAwgnChannelMeasurable N) p hp
   -- Bounded-above follows from the converse bound.
   have h_bdd :
-      BddAbove ((fun p : Measure ℝ =>
+      BddAbove ((fun p : Measure ℝ ↦
           (mutualInfoOfChannel p (awgnChannel N (isAwgnChannelMeasurable N))).toReal) ''
         awgnPowerConstraintSet P) :=
     ⟨(1/2) * Real.log (1 + P / (N : ℝ)), by

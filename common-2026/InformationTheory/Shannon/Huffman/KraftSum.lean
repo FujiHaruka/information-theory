@@ -113,7 +113,7 @@ lemma huffmanLengthAux_const_on_group
 /-- Per-group Kraft sum: `∑_p (∑_{a ∈ p.1} 2^(-huffmanLengthAux s a)) / p.1.card`.
 By `huffmanLengthAux_const_on_group` this equals `∑_p 2^(-depth(p))`. -/
 noncomputable def kraftPerGroup (s : Multiset (Finset α × ℝ)) : ℝ :=
-  (s.map (fun p =>
+  (s.map (fun p ↦
     (∑ a ∈ p.1, (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ))) / (p.1.card : ℝ))).sum
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
@@ -132,9 +132,9 @@ lemma kraftPerGroup_eq_card_of_base
     rw [show -((0 : ℕ) : ℤ) = 0 from rfl, zpow_zero]
     rw [Finset.sum_const, nsmul_eq_mul, mul_one]
     field_simp
-  rw [show s.map (fun p =>
-      (∑ a ∈ p.1, (2 : ℝ) ^ (-((fun _ : α => (0 : ℕ)) a : ℤ))) / (p.1.card : ℝ))
-      = s.map (fun _ => 1) from ?_]
+  rw [show s.map (fun p ↦
+      (∑ a ∈ p.1, (2 : ℝ) ^ (-((fun _ : α ↦ (0 : ℕ)) a : ℤ))) / (p.1.card : ℝ))
+      = s.map (fun _ ↦ 1) from ?_]
   · rw [Multiset.map_const', Multiset.sum_replicate, nsmul_eq_mul, mul_one]
   · apply Multiset.map_congr rfl
     intro p hp
@@ -249,13 +249,13 @@ lemma kraftPerGroup_step
       kraftPerGroup s =
       (∑ a ∈ x1.1, (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ))) / (x1.1.card : ℝ)
       + ((∑ a ∈ x2.1, (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ))) / (x2.1.card : ℝ)
-      + (ee.map (fun p =>
+      + (ee.map (fun p ↦
           (∑ a ∈ p.1, (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ))) / (p.1.card : ℝ))).sum) := by
     unfold kraftPerGroup
     -- (s.map f).sum = ((x1 ::ₘ x2 ::ₘ ee).map f).sum (using hs_decomp at the multiset arg only)
-    have : (s.map (fun p =>
+    have : (s.map (fun p ↦
         (∑ a ∈ p.1, (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ))) / (p.1.card : ℝ))).sum
-        = ((x1 ::ₘ x2 ::ₘ ee).map (fun p =>
+        = ((x1 ::ₘ x2 ::ₘ ee).map (fun p ↦
         (∑ a ∈ p.1, (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ))) / (p.1.card : ℝ))).sum := by
       exact congr_arg _ (congr_arg _ hs_decomp)
     rw [this]
@@ -263,12 +263,12 @@ lemma kraftPerGroup_step
   have rhs_eq :
       kraftPerGroup s'' =
       (∑ a ∈ merged.1, (2 : ℝ) ^ (-(huffmanLengthAux s'' a : ℤ))) / (merged.1.card : ℝ)
-      + (ee.map (fun p =>
+      + (ee.map (fun p ↦
           (∑ a ∈ p.1, (2 : ℝ) ^ (-(huffmanLengthAux s'' a : ℤ))) / (p.1.card : ℝ))).sum := by
     unfold kraftPerGroup
-    have : (s''.map (fun p =>
+    have : (s''.map (fun p ↦
         (∑ a ∈ p.1, (2 : ℝ) ^ (-(huffmanLengthAux s'' a : ℤ))) / (p.1.card : ℝ))).sum
-        = ((merged ::ₘ ee).map (fun p =>
+        = ((merged ::ₘ ee).map (fun p ↦
         (∑ a ∈ p.1, (2 : ℝ) ^ (-(huffmanLengthAux s'' a : ℤ))) / (p.1.card : ℝ))).sum := by
       exact congr_arg _ (congr_arg _ hshape')
     rw [this]
@@ -277,9 +277,9 @@ lemma kraftPerGroup_step
   -- LHS: f_s x1 + (f_s x2 + (ee.map f_s).sum)
   -- RHS: f_s'' merged + (ee.map f_s'').sum
   have h_ee_sum :
-      (ee.map (fun p =>
+      (ee.map (fun p ↦
         (∑ a ∈ p.1, (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ))) / (p.1.card : ℝ))).sum
-      = (ee.map (fun p =>
+      = (ee.map (fun p ↦
           (∑ a ∈ p.1, (2 : ℝ) ^ (-(huffmanLengthAux s'' a : ℤ))) / (p.1.card : ℝ))).sum := by
     apply congr_arg Multiset.sum
     apply Multiset.map_congr rfl
@@ -317,20 +317,20 @@ lemma kraftPerGroup_step
   have h_x1_term :
       (∑ a ∈ x1.1, (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ))) / (x1.1.card : ℝ)
       = (2 : ℝ) ^ (-((d_m + 1 : ℕ) : ℤ)) :=
-    kraftTerm_of_const_depth (hg.nonempty hx1_mem) (fun a => (huffmanLengthAux s a : ℤ))
-      ((d_m + 1 : ℕ) : ℤ) (fun a ha => by
+    kraftTerm_of_const_depth (hg.nonempty hx1_mem) (fun a ↦ (huffmanLengthAux s a : ℤ))
+      ((d_m + 1 : ℕ) : ℤ) (fun a ha ↦ by
         show (huffmanLengthAux s a : ℤ) = ((d_m + 1 : ℕ) : ℤ); exact_mod_cast h_x1_aux a ha)
   have h_x2_term :
       (∑ a ∈ x2.1, (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ))) / (x2.1.card : ℝ)
       = (2 : ℝ) ^ (-((d_m + 1 : ℕ) : ℤ)) :=
-    kraftTerm_of_const_depth (hg.nonempty hx2_s) (fun a => (huffmanLengthAux s a : ℤ))
-      ((d_m + 1 : ℕ) : ℤ) (fun a ha => by
+    kraftTerm_of_const_depth (hg.nonempty hx2_s) (fun a ↦ (huffmanLengthAux s a : ℤ))
+      ((d_m + 1 : ℕ) : ℤ) (fun a ha ↦ by
         show (huffmanLengthAux s a : ℤ) = ((d_m + 1 : ℕ) : ℤ); exact_mod_cast h_x2_aux a ha)
   have h_merged_term :
       (∑ a ∈ merged.1, (2 : ℝ) ^ (-(huffmanLengthAux s'' a : ℤ))) / (merged.1.card : ℝ)
       = (2 : ℝ) ^ (-(d_m : ℤ)) :=
-    kraftTerm_of_const_depth hmerged_ne (fun a => (huffmanLengthAux s'' a : ℤ))
-      (d_m : ℤ) (fun a ha => by
+    kraftTerm_of_const_depth hmerged_ne (fun a ↦ (huffmanLengthAux s'' a : ℤ))
+      (d_m : ℤ) (fun a ha ↦ by
         show (huffmanLengthAux s'' a : ℤ) = (d_m : ℤ); exact_mod_cast h_merged_const a ha)
   rw [h_x1_term, h_x2_term, h_merged_term, h_ee_sum]
   -- Goal: 2^(-(d_m+1)) + (2^(-(d_m+1)) + rest) = 2^(-d_m) + rest
@@ -384,7 +384,7 @@ lemma kraftPerGroup_initMultiset_eq_kraft (P : Measure α) :
   unfold huffmanLength
   rw [show ∑ a : α, (2 : ℝ) ^ (-(huffmanLengthAux (initMultiset P) a : ℤ))
       = ((Finset.univ : Finset α).val.map
-          (fun a => (2 : ℝ) ^ (-(huffmanLengthAux (initMultiset P) a : ℤ)))).sum from rfl]
+          (fun a ↦ (2 : ℝ) ^ (-(huffmanLengthAux (initMultiset P) a : ℤ)))).sum from rfl]
   congr 1
   apply Multiset.map_congr rfl
   intro a _

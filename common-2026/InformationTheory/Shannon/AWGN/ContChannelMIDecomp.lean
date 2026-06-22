@@ -88,7 +88,7 @@ is **not** (it is only a.e.-determined). This brick supplies the everywhere
 joint measurability that the eq-set construction in `llr_compProd_prod_split`
 requires. -/
 theorem measurable_gaussianPDF_uncurry (N : ℝ≥0) :
-    Measurable (fun z : ℝ × ℝ => gaussianPDF z.1 N z.2) := by
+    Measurable (fun z : ℝ × ℝ ↦ gaussianPDF z.1 N z.2) := by
   simp only [gaussianPDF, gaussianPDFReal]
   fun_prop
 
@@ -96,7 +96,7 @@ theorem measurable_gaussianPDF_uncurry (N : ℝ≥0) :
 `measurable_gaussianPDF_uncurry`; used to supply the joint `AEStronglyMeasurable`
 prerequisite when lifting the proxy log-density integrability to the compProd. -/
 theorem measurable_gaussianPDFReal_uncurry (N : ℝ≥0) :
-    Measurable (fun z : ℝ × ℝ => gaussianPDFReal z.1 N z.2) := by
+    Measurable (fun z : ℝ × ℝ ↦ gaussianPDFReal z.1 N z.2) := by
   simp only [gaussianPDFReal]
   fun_prop
 
@@ -105,15 +105,15 @@ against `gaussianReal m' v'` (any mean / variance), since `id ∈ L²(gaussianRe
 (`memLp_id_gaussianReal`). Needed to discharge the Gaussian log-density
 integrabilities (the log pdf is a constant plus a `(y − m)²` term). -/
 theorem integrable_sq_sub_gaussianReal (m m' : ℝ) (v' : ℝ≥0) :
-    Integrable (fun y => (y - m) ^ 2) (gaussianReal m' v') := by
+    Integrable (fun y ↦ (y - m) ^ 2) (gaussianReal m' v') := by
   -- `id ∈ L²` and `id ∈ L¹`, so `y², y, 1` are all integrable; expand `(y-m)²`.
-  have h_sq : Integrable (fun y : ℝ => y ^ 2) (gaussianReal m' v') :=
+  have h_sq : Integrable (fun y : ℝ ↦ y ^ 2) (gaussianReal m' v') :=
     (memLp_id_gaussianReal (μ := m') (v := v') 2).integrable_sq
-  have h_id : Integrable (fun y : ℝ => y) (gaussianReal m' v') := by
+  have h_id : Integrable (fun y : ℝ ↦ y) (gaussianReal m' v') := by
     have := (memLp_id_gaussianReal (μ := m') (v := v') 1).integrable (by norm_num)
     simpa using this
-  have h_eq : (fun y : ℝ => (y - m) ^ 2)
-      = fun y => y ^ 2 - 2 * m * y + m ^ 2 := by
+  have h_eq : (fun y : ℝ ↦ (y - m) ^ 2)
+      = fun y ↦ y ^ 2 - 2 * m * y + m ^ 2 := by
     funext y; ring
   rw [h_eq]
   exact ((h_sq.sub (h_id.const_mul (2 * m))).add (integrable_const (m ^ 2)))
@@ -123,10 +123,10 @@ theorem integrable_sq_sub_gaussianReal (m m' : ℝ) (v' : ℝ≥0) :
 The log pdf splits as `c₀ + c₁·(y − m)²`, a constant plus a finite-second-moment term. -/
 theorem integrable_log_gaussianPDFReal_gaussianReal
     (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) (m' : ℝ) (v' : ℝ≥0) :
-    Integrable (fun y => Real.log (gaussianPDFReal m v y)) (gaussianReal m' v') := by
+    Integrable (fun y ↦ Real.log (gaussianPDFReal m v y)) (gaussianReal m' v') := by
   -- `log (gaussianPDFReal m v y) = c₀ + c₁·(y − m)²`.
-  have h_eq : (fun y => Real.log (gaussianPDFReal m v y))
-      = fun y => (-(1/2) * Real.log (2 * Real.pi * v))
+  have h_eq : (fun y ↦ Real.log (gaussianPDFReal m v y))
+      = fun y ↦ (-(1/2) * Real.log (2 * Real.pi * v))
           + (-(1 / (2 * (v : ℝ)))) * (y - m) ^ 2 := by
     funext y
     rw [InformationTheory.Shannon.log_gaussianPDFReal_eq m hv y]
@@ -142,16 +142,16 @@ appearing in the honest hypotheses to `gaussianPDFReal` via the a.e. identity
 `rnDeriv_gaussianReal`, then `integrable_log_gaussianPDFReal_gaussianReal`. -/
 theorem integrable_log_rnDeriv_gaussianReal
     (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
-    Integrable (fun y => Real.log ((gaussianReal m v).rnDeriv volume y).toReal)
+    Integrable (fun y ↦ Real.log ((gaussianReal m v).rnDeriv volume y).toReal)
       (gaussianReal m v) := by
   -- `rnDeriv =ᵐ[gaussianReal] gaussianPDF`, transported from vol via absolute continuity.
   have h_rn : (gaussianReal m v).rnDeriv volume =ᵐ[gaussianReal m v] gaussianPDF m v :=
     (gaussianReal_absolutelyContinuous m hv).ae_le (rnDeriv_gaussianReal m v)
   -- the log-density observables agree a.e. on `gaussianReal m v`
   have h_log :
-      (fun y => Real.log (gaussianPDFReal m v y))
+      (fun y ↦ Real.log (gaussianPDFReal m v y))
         =ᵐ[gaussianReal m v]
-      (fun y => Real.log ((gaussianReal m v).rnDeriv volume y).toReal) := by
+      (fun y ↦ Real.log ((gaussianReal m v).rnDeriv volume y).toReal) := by
     filter_upwards [h_rn] with y hy
     rw [hy, toReal_gaussianPDF]
   exact (integrable_log_gaussianPDFReal_gaussianReal m hv m v).congr h_log
@@ -180,31 +180,31 @@ constant in `x`). -/
 theorem integrable_log_proxy_fibre_compProd
     (P : ℝ) (N : ℝ≥0) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N) :
     Integrable
-      (fun z : ℝ × ℝ => Real.log (gaussianPDF z.1 N z.2).toReal)
+      (fun z : ℝ × ℝ ↦ Real.log (gaussianPDF z.1 N z.2).toReal)
       ((gaussianReal 0 P.toNNReal) ⊗ₘ (awgnChannel N h_meas)) := by
   set p := gaussianReal 0 P.toNNReal with hp_def
   set W := awgnChannel N h_meas with hW_def
   -- the joint integrand decomposes everywhere as `c₀ + c₁·(z.2 − z.1)²`
   set c₀ : ℝ := -(1 / 2) * Real.log (2 * Real.pi * N) with hc₀
   set c₁ : ℝ := -(1 / (2 * (N : ℝ))) with hc₁
-  have h_eq : (fun z : ℝ × ℝ => Real.log (gaussianPDF z.1 N z.2).toReal)
-      = fun z => c₀ + c₁ * (z.2 - z.1) ^ 2 := by
+  have h_eq : (fun z : ℝ × ℝ ↦ Real.log (gaussianPDF z.1 N z.2).toReal)
+      = fun z ↦ c₀ + c₁ * (z.2 - z.1) ^ 2 := by
     funext z
     rw [toReal_gaussianPDF, InformationTheory.Shannon.log_gaussianPDFReal_eq z.1 hN z.2, hc₀, hc₁]
     ring
   rw [h_eq]
   -- the `(z.2 − z.1)²` term is integrable against the joint via compProd-iff
-  have h_sq : Integrable (fun z : ℝ × ℝ => (z.2 - z.1) ^ 2) (p ⊗ₘ W) := by
-    have h_aesm : AEStronglyMeasurable (fun z : ℝ × ℝ => (z.2 - z.1) ^ 2) (p ⊗ₘ W) :=
+  have h_sq : Integrable (fun z : ℝ × ℝ ↦ (z.2 - z.1) ^ 2) (p ⊗ₘ W) := by
+    have h_aesm : AEStronglyMeasurable (fun z : ℝ × ℝ ↦ (z.2 - z.1) ^ 2) (p ⊗ₘ W) :=
       ((measurable_snd.sub measurable_fst).pow_const 2).aestronglyMeasurable
     rw [Measure.integrable_compProd_iff h_aesm]
-    refine ⟨Filter.Eventually.of_forall (fun x => ?_), ?_⟩
+    refine ⟨Filter.Eventually.of_forall (fun x ↦ ?_), ?_⟩
     · -- per-fibre `Integrable (fun y => (y − x)²) (W x = gaussianReal x N)`
       simpa only [hW_def, awgnChannel_apply] using integrable_sq_sub_gaussianReal x x N
     · -- per-fibre L¹-norm integral is the constant `N` (nonneg integrand, second moment)
-      have h_norm : (fun x => ∫ y, ‖(y - x) ^ 2‖ ∂(W x)) = fun _ => (N : ℝ) := by
+      have h_norm : (fun x ↦ ∫ y, ‖(y - x) ^ 2‖ ∂(W x)) = fun _ ↦ (N : ℝ) := by
         funext x
-        have : (fun y => ‖(y - x) ^ 2‖) = fun y => (y - x) ^ 2 := by
+        have : (fun y ↦ ‖(y - x) ^ 2‖) = fun y ↦ (y - x) ^ 2 := by
           funext y; rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _)]
         rw [this, hW_def, awgnChannel_apply]
         exact integral_sq_sub_self_gaussianReal x N
@@ -254,10 +254,10 @@ theorem isContChannelMIDecompHyp_awgn
   set W := awgnChannel N h_meas with hW_def
   set q := outputDistribution p W with hq_def
   -- measurable PDF proxy `g := gaussianPDF` for the fibre volume-density
-  set g : ℝ × ℝ → ℝ≥0∞ := fun z => gaussianPDF z.1 N z.2 with hg_def
+  set g : ℝ × ℝ → ℝ≥0∞ := fun z ↦ gaussianPDF z.1 N z.2 with hg_def
   have hg_meas : Measurable g := measurable_gaussianPDF_uncurry N
   -- per-fibre rnDeriv↔proxy bridge: `(W x).rnDeriv vol =ᵐ[W x] g(x, ·)`
-  have hg_ae : ∀ x, (fun y => (W x).rnDeriv volume y) =ᵐ[W x] fun y => g (x, y) := by
+  have hg_ae : ∀ x, (fun y ↦ (W x).rnDeriv volume y) =ᵐ[W x] fun y ↦ g (x, y) := by
     intro x
     rw [hW_def, awgnChannel_apply]
     exact (gaussianReal_absolutelyContinuous x hN).ae_le (rnDeriv_gaussianReal x N)
@@ -274,29 +274,29 @@ theorem isContChannelMIDecompHyp_awgn
   have h_joint_ac : (p ⊗ₘ W) ≪ p.prod q := by
     rw [show p.prod q = p ⊗ₘ (Kernel.const ℝ q) from (Measure.compProd_const).symm]
     exact Measure.absolutelyContinuous_compProd_right_iff.mpr
-      (Filter.Eventually.of_forall (fun x => by simpa only [Kernel.const_apply] using hWx_q x))
+      (Filter.Eventually.of_forall (fun x ↦ by simpa only [Kernel.const_apply] using hWx_q x))
   -- Bayes density split via the general linchpin-backed lemma (proxy form)
   have h_llr_split := llr_compProd_prod_split (p := p) (W := W) q hWx_q hq_vol
     h_joint_ac g hg_meas hg_ae
   -- fibre log-density integrability against the joint, in proxy form
   have h_int_fibre_joint :
-      Integrable (fun z => Real.log (g z).toReal) (p ⊗ₘ W) :=
+      Integrable (fun z ↦ Real.log (g z).toReal) (p ⊗ₘ W) :=
     integrable_log_proxy_fibre_compProd P N hN h_meas
   -- output marginal log-density integrability (Gaussian fact, q = 𝒩(0, P+N))
   have h_int_out_marg :
-      Integrable (fun y => Real.log (q.rnDeriv volume y).toReal) q := by
+      Integrable (fun y ↦ Real.log (q.rnDeriv volume y).toReal) q := by
     rw [hq_def, h_out]
     exact integrable_log_rnDeriv_gaussianReal 0 hPN
   -- joint output log-density integrability: integrand = (log-density ∘ snd),
   --    and `(p ⊗ₘ W).snd = outputDistribution p W = q`, so reduce to `h_int_out_marg`.
   have h_int_out_joint :
-      Integrable (fun z => Real.log (q.rnDeriv volume z.2).toReal) (p ⊗ₘ W) := by
+      Integrable (fun z ↦ Real.log (q.rnDeriv volume z.2).toReal) (p ⊗ₘ W) := by
     have h_eq : q = (p ⊗ₘ W).map Prod.snd := rfl
     have hg_aesm :
-        AEStronglyMeasurable (fun y => Real.log (q.rnDeriv volume y).toReal) q :=
+        AEStronglyMeasurable (fun y ↦ Real.log (q.rnDeriv volume y).toReal) q :=
       h_int_out_marg.aestronglyMeasurable
-    rw [show (fun z : ℝ × ℝ => Real.log (q.rnDeriv volume z.2).toReal)
-          = (fun y => Real.log (q.rnDeriv volume y).toReal) ∘ Prod.snd from rfl]
+    rw [show (fun z : ℝ × ℝ ↦ Real.log (q.rnDeriv volume z.2).toReal)
+          = (fun y ↦ Real.log (q.rnDeriv volume y).toReal) ∘ Prod.snd from rfl]
     refine (integrable_map_measure ?_ measurable_snd.aemeasurable).mp ?_
     · rw [← h_eq]; exact hg_aesm
     · rw [← h_eq]; exact h_int_out_marg
@@ -345,7 +345,7 @@ theorem awgn_mi_gaussian_closed_form_of_out
         (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas)).toReal
       = (1/2) * Real.log (1 + P / (N : ℝ)) := by
   have hN_NN : N ≠ 0 :=
-    fun h => hN (by exact_mod_cast (congrArg (fun x : ℝ≥0 => (x : ℝ)) h))
+    fun h ↦ hN (by exact_mod_cast (congrArg (fun x : ℝ≥0 ↦ (x : ℝ)) h))
   have hP_toNN_pos : (0 : ℝ≥0) < P.toNNReal := Real.toNNReal_pos.mpr hP_pos
   have hPN : P.toNNReal + N ≠ 0 :=
     (add_pos_of_pos_of_nonneg hP_toNN_pos (zero_le' (a := N))).ne'

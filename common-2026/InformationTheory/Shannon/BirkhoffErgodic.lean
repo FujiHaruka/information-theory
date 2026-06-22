@@ -78,12 +78,12 @@ variable {Ω : Type*} {m₀ : MeasurableSpace Ω}
 The `n + 1` denominator side-steps the `n = 0` division issue; this is
 the sequence we want to converge to `∫ f dμ` under Birkhoff's theorem. -/
 noncomputable def birkhoffAverageReal (T : Ω → Ω) (f : Ω → ℝ) (n : ℕ) : Ω → ℝ :=
-  fun ω => (∑ i ∈ Finset.range (n + 1), f (T^[i] ω)) / (n + 1 : ℝ)
+  fun ω ↦ (∑ i ∈ Finset.range (n + 1), f (T^[i] ω)) / (n + 1 : ℝ)
 
 /-- Partial Birkhoff sum with `k` terms.
 `birkhoffPartialSum T f k ω := ∑_{i=0}^{k-1} f (T^[i] ω)`. -/
 noncomputable def birkhoffPartialSum (T : Ω → Ω) (f : Ω → ℝ) (k : ℕ) : Ω → ℝ :=
-  fun ω => ∑ i ∈ Finset.range k, f (T^[i] ω)
+  fun ω ↦ ∑ i ∈ Finset.range k, f (T^[i] ω)
 
 /-- Average and partial sum are related: `A_n = S_{n+1} / (n + 1)`. -/
 lemma birkhoffAverageReal_eq_partialSum_div (T : Ω → Ω) (f : Ω → ℝ) (n : ℕ) (ω : Ω) :
@@ -98,7 +98,7 @@ lemma birkhoffPartialSum_measurable {T : Ω → Ω} (hT : Measurable T)
     {f : Ω → ℝ} (hf : Measurable f) (k : ℕ) :
     Measurable (birkhoffPartialSum T f k) := by
   unfold birkhoffPartialSum
-  refine Finset.measurable_sum _ (fun i _ => ?_)
+  refine Finset.measurable_sum _ (fun i _ ↦ ?_)
   exact hf.comp (hT.iterate i)
 
 /-- Running maximum of Birkhoff partial sums:
@@ -127,10 +127,10 @@ lemma maxPartialSum_measurable {T : Ω → Ω} (hT : Measurable T)
     Measurable (maxPartialSum T f n) := by
   induction n with
   | zero =>
-    show Measurable (fun _ : Ω => (0 : ℝ))
+    show Measurable (fun _ : Ω ↦ (0 : ℝ))
     exact measurable_const
   | succ n ih =>
-    show Measurable (fun ω => max (maxPartialSum T f n ω) (birkhoffPartialSum T f (n + 1) ω))
+    show Measurable (fun ω ↦ max (maxPartialSum T f n ω) (birkhoffPartialSum T f (n + 1) ω))
     exact ih.max (birkhoffPartialSum_measurable hT hf (n + 1))
 
 lemma birkhoffPartialSum_le_maxPartialSum (T : Ω → Ω) (f : Ω → ℝ)
@@ -184,7 +184,7 @@ lemma integral_birkhoffAverageReal_eq (μ : Measure Ω) [IsFiniteMeasure μ]
     rw [integral_mul_const]
   rw [h1]
   have h_int_each : ∀ i ∈ Finset.range (n + 1),
-      Integrable (fun ω => f (T^[i] ω)) μ := by
+      Integrable (fun ω ↦ f (T^[i] ω)) μ := by
     intro i _
     exact (hT.iterate i).integrable_comp_of_integrable hf
   rw [integral_finsetSum _ h_int_each]
@@ -204,9 +204,9 @@ lemma birkhoffPartialSum_succ_eq (T : Ω → Ω) (f : Ω → ℝ) (k : ℕ) (ω 
     birkhoffPartialSum T f (k + 1) ω = f ω + birkhoffPartialSum T f k (T ω) := by
   classical
   unfold birkhoffPartialSum
-  rw [Finset.sum_range_succ' (fun i => f (T^[i] ω)) k, add_comm]
+  rw [Finset.sum_range_succ' (fun i ↦ f (T^[i] ω)) k, add_comm]
   refine congr_arg₂ (· + ·) rfl ?_
-  refine Finset.sum_congr rfl (fun i _ => ?_)
+  refine Finset.sum_congr rfl (fun i _ ↦ ?_)
   exact congr_arg f (Function.iterate_succ_apply T i ω)
 
 /-- Algebraic recursion for time averages:
@@ -216,18 +216,18 @@ lemma birkhoffAverageReal_comp_T (T : Ω → Ω) (f : Ω → ℝ) (n : ℕ) (ω 
       = ((n + 2 : ℝ) * birkhoffAverageReal T f (n + 1) ω - f ω) / (n + 1) := by
   classical
   unfold birkhoffAverageReal
-  have h_iter : ∀ i, T^[i] (T ω) = T^[i + 1] ω := fun i => by
+  have h_iter : ∀ i, T^[i] (T ω) = T^[i + 1] ω := fun i ↦ by
     rw [show T^[i] (T ω) = (T^[i] ∘ T) ω from rfl]
     rw [show (T^[i] ∘ T) = T^[i + 1] from (Function.iterate_succ T i).symm]
   have h_lhs_sum :
       (∑ i ∈ Finset.range (n + 1), f (T^[i] (T ω)))
         = (∑ i ∈ Finset.range (n + 1), f (T^[i + 1] ω)) := by
-    refine Finset.sum_congr rfl (fun i _ => ?_)
+    refine Finset.sum_congr rfl (fun i _ ↦ ?_)
     rw [h_iter i]
   have h_reindex :
       (∑ i ∈ Finset.range (n + 1), f (T^[i + 1] ω))
         = (∑ j ∈ Finset.range (n + 2), f (T^[j] ω)) - f (T^[0] ω) := by
-    rw [Finset.sum_range_succ' (fun j => f (T^[j] ω)) (n + 1)]
+    rw [Finset.sum_range_succ' (fun j ↦ f (T^[j] ω)) (n + 1)]
     ring
   have h_T0 : T^[0] ω = ω := rfl
   rw [h_lhs_sum, h_reindex, h_T0]
@@ -252,7 +252,7 @@ lemma maxPartialSum_le_sum_abs (T : Ω → Ω) (f : Ω → ℝ) (n : ℕ) (ω : 
       rw [Finset.sum_range_succ]
       exact le_add_of_nonneg_right (abs_nonneg _)
     · unfold birkhoffPartialSum
-      exact Finset.sum_le_sum (fun i _ => le_abs_self _)
+      exact Finset.sum_le_sum (fun i _ ↦ le_abs_self _)
 
 /-- `M_n` is integrable when `f` is, in finite measure. -/
 lemma maxPartialSum_integrable {μ : Measure Ω}
@@ -261,11 +261,11 @@ lemma maxPartialSum_integrable {μ : Measure Ω}
     Integrable (maxPartialSum T f n) μ := by
   have h_M_meas : Measurable (maxPartialSum T f n) :=
     maxPartialSum_measurable hT.measurable hf n
-  have h_RHS_int : Integrable (fun ω => ∑ i ∈ Finset.range n, |f (T^[i] ω)|) μ := by
-    refine integrable_finsetSum _ (fun i _ => ?_)
+  have h_RHS_int : Integrable (fun ω ↦ ∑ i ∈ Finset.range n, |f (T^[i] ω)|) μ := by
+    refine integrable_finsetSum _ (fun i _ ↦ ?_)
     exact ((hT.iterate i).integrable_comp_of_integrable hf_int).abs
   refine h_RHS_int.mono h_M_meas.aestronglyMeasurable
-    (Filter.Eventually.of_forall fun ω => ?_)
+    (Filter.Eventually.of_forall fun ω ↦ ?_)
   rw [Real.norm_eq_abs, Real.norm_eq_abs,
       abs_of_nonneg (maxPartialSum_nonneg T f n ω)]
   refine (maxPartialSum_le_sum_abs T f n ω).trans ?_
@@ -347,10 +347,10 @@ theorem maximal_ergodic_inequality {μ : Measure Ω} [IsFiniteMeasure μ]
   have hM_meas : Measurable M := maxPartialSum_measurable hT.measurable hf n
   have hA_meas : MeasurableSet A := hM_meas measurableSet_Ioi
   have hM_int : Integrable M μ := maxPartialSum_integrable hT hf hf_int n
-  have hM_compT_int : Integrable (fun ω => M (T ω)) μ :=
+  have hM_compT_int : Integrable (fun ω ↦ M (T ω)) μ :=
     hT.integrable_comp hM_int.aestronglyMeasurable |>.mpr hM_int
   -- Garsia pointwise inequality.
-  have h_ptwise : ∀ ω, M ω - M (T ω) ≤ A.indicator f ω := fun ω =>
+  have h_ptwise : ∀ ω, M ω - M (T ω) ≤ A.indicator f ω := fun ω ↦
     maxPartialSum_sub_comp_T_le_indicator T f n ω
   -- Indicator integral equals set integral.
   have h_indicator_int : Integrable (A.indicator f) μ :=
@@ -414,9 +414,9 @@ lemma birkhoff_neg_mean_sup_null (hT : MeasurePreserving T μ μ) (_hT_erg : Erg
     False := by
   classical
   -- B_n := {ω | maxPartialSum T g n ω > 0}, monotone in n, ⋃ = B_∞.
-  set B : ℕ → Set Ω := fun n => {ω | 0 < maxPartialSum T g n ω} with hB_def
+  set B : ℕ → Set Ω := fun n ↦ {ω | 0 < maxPartialSum T g n ω} with hB_def
   set B_inf : Set Ω := ⋃ n, B n with hB_inf_def
-  have hB_meas : ∀ n, MeasurableSet (B n) := fun n =>
+  have hB_meas : ∀ n, MeasurableSet (B n) := fun n ↦
     (maxPartialSum_measurable hT.measurable hg n) measurableSet_Ioi
   have hB_inf_meas : MeasurableSet B_inf := MeasurableSet.iUnion hB_meas
   -- B_n monotone non-decreasing.
@@ -451,9 +451,9 @@ lemma birkhoff_neg_mean_sup_null (hT : MeasurePreserving T μ μ) (_hT_erg : Erg
       _ ≤ μ B_inf := measure_mono hA_sub
   -- DCT: ∫_{B n} g → ∫_{B_inf} g.
   -- Set h_n := g · 1_{B n}, h_∞ := g · 1_{B_inf}.
-  set h : ℕ → Ω → ℝ := fun n => (B n).indicator g with hh_def
+  set h : ℕ → Ω → ℝ := fun n ↦ (B n).indicator g with hh_def
   set h_inf : Ω → ℝ := B_inf.indicator g with hh_inf_def
-  have h_ptwise_lim : ∀ ω, Tendsto (fun n => h n ω) atTop (𝓝 (h_inf ω)) := by
+  have h_ptwise_lim : ∀ ω, Tendsto (fun n ↦ h n ω) atTop (𝓝 (h_inf ω)) := by
     intro ω
     by_cases h_in : ω ∈ B_inf
     · obtain ⟨k, hk⟩ : ∃ k, ω ∈ B k := Set.mem_iUnion.mp h_in
@@ -462,11 +462,11 @@ lemma birkhoff_neg_mean_sup_null (hT : MeasurePreserving T μ μ) (_hT_erg : Erg
       show h_inf ω = h n ω
       change B_inf.indicator g ω = (B n).indicator g ω
       rw [Set.indicator_of_mem h_in, Set.indicator_of_mem (hB_mono hn hk)]
-    · have h_const : ∀ n, h n ω = h_inf ω := fun n =>
+    · have h_const : ∀ n, h n ω = h_inf ω := fun n ↦
         show (B n).indicator g ω = B_inf.indicator g ω by
-          rw [Set.indicator_of_notMem (fun hin => h_in (Set.mem_iUnion.mpr ⟨n, hin⟩)),
+          rw [Set.indicator_of_notMem (fun hin ↦ h_in (Set.mem_iUnion.mpr ⟨n, hin⟩)),
               Set.indicator_of_notMem h_in]
-      have h_funext : (fun n => h n ω) = (fun _ : ℕ => h_inf ω) := funext h_const
+      have h_funext : (fun n ↦ h n ω) = (fun _ : ℕ ↦ h_inf ω) := funext h_const
       rw [h_funext]
       exact tendsto_const_nhds
   have h_dom : ∀ n ω, ‖h n ω‖ ≤ ‖g ω‖ := by
@@ -475,13 +475,13 @@ lemma birkhoff_neg_mean_sup_null (hT : MeasurePreserving T μ μ) (_hT_erg : Erg
     split_ifs <;> simp [Real.norm_eq_abs, abs_nonneg]
   have hg_smeas : AEStronglyMeasurable g μ := hg.aestronglyMeasurable
   have h_meas : ∀ n, AEStronglyMeasurable (h n) μ :=
-    fun n => (hg.indicator (hB_meas n)).aestronglyMeasurable
+    fun n ↦ (hg.indicator (hB_meas n)).aestronglyMeasurable
   have h_int_tendsto :
-      Tendsto (fun n => ∫ ω, h n ω ∂μ) atTop (𝓝 (∫ ω, h_inf ω ∂μ)) :=
-    tendsto_integral_of_dominated_convergence (G := ℝ) (fun ω => ‖g ω‖)
+      Tendsto (fun n ↦ ∫ ω, h n ω ∂μ) atTop (𝓝 (∫ ω, h_inf ω ∂μ)) :=
+    tendsto_integral_of_dominated_convergence (G := ℝ) (fun ω ↦ ‖g ω‖)
       h_meas hg_int.norm
-      (fun n => Filter.Eventually.of_forall (fun ω => h_dom n ω))
-      (Filter.Eventually.of_forall fun ω => h_ptwise_lim ω)
+      (fun n ↦ Filter.Eventually.of_forall (fun ω ↦ h_dom n ω))
+      (Filter.Eventually.of_forall fun ω ↦ h_ptwise_lim ω)
   -- ∫_{B n} g ≥ 0 (maximal ergodic).
   have h_each_nn : ∀ n, 0 ≤ ∫ ω, h n ω ∂μ := by
     intro n
@@ -508,9 +508,9 @@ For `m = 0` the bound is trivial. -/
 lemma maxPartialSum_meas_le
     (hT : MeasurePreserving T μ μ)
     {g : Ω → ℝ} (hg : Measurable g) (hg_int : Integrable g μ) (m n : ℕ) :
-    (m : ℝ≥0∞) * μ {ω | 0 < maxPartialSum T (fun ω => g ω - (m : ℝ)) n ω}
+    (m : ℝ≥0∞) * μ {ω | 0 < maxPartialSum T (fun ω ↦ g ω - (m : ℝ)) n ω}
       ≤ ENNReal.ofReal (∫ ω, |g ω| ∂μ) := by
-  set g_m : Ω → ℝ := fun ω => g ω - (m : ℝ)
+  set g_m : Ω → ℝ := fun ω ↦ g ω - (m : ℝ)
   have hg_m_meas : Measurable g_m := hg.sub_const _
   have hg_m_int : Integrable g_m μ := hg_int.sub (integrable_const _)
   set E : Set Ω := {ω | 0 < maxPartialSum T g_m n ω}
@@ -519,7 +519,7 @@ lemma maxPartialSum_meas_le
   have h_max := maximal_ergodic_inequality hT hg_m_meas hg_m_int n
   -- ∫_E g_m = ∫_E g - m · μ(E).toReal
   have h_decomp : ∫ ω in E, g_m ω ∂μ = ∫ ω in E, g ω ∂μ - (m : ℝ) * (μ E).toReal := by
-    rw [show g_m = fun ω => g ω - (m : ℝ) from rfl,
+    rw [show g_m = fun ω ↦ g ω - (m : ℝ) from rfl,
         integral_sub hg_int.integrableOn (integrable_const _).integrableOn,
         setIntegral_const]
     rw [show μ.real E = (μ E).toReal from rfl]
@@ -527,15 +527,15 @@ lemma maxPartialSum_meas_le
   rw [h_decomp] at h_max
   -- m · μ(E).toReal ≤ ∫_E g ≤ ∫|g|.
   have h_mu_lt : μ E < ⊤ := measure_lt_top _ _
-  have h_abs_int : Integrable (fun ω => |g ω|) μ := hg_int.abs
+  have h_abs_int : Integrable (fun ω ↦ |g ω|) μ := hg_int.abs
   have h_g_le_abs : ∫ ω in E, g ω ∂μ ≤ ∫ ω, |g ω| ∂μ := by
     calc ∫ ω in E, g ω ∂μ
         ≤ ∫ ω in E, |g ω| ∂μ :=
           setIntegral_mono_ae hg_int.integrableOn h_abs_int.integrableOn
-            (Filter.Eventually.of_forall fun ω => le_abs_self _)
+            (Filter.Eventually.of_forall fun ω ↦ le_abs_self _)
       _ ≤ ∫ ω, |g ω| ∂μ :=
           setIntegral_le_integral h_abs_int
-            (Filter.Eventually.of_forall fun ω => abs_nonneg _)
+            (Filter.Eventually.of_forall fun ω ↦ abs_nonneg _)
   have h_real : (m : ℝ) * (μ E).toReal ≤ ∫ ω, |g ω| ∂μ := by linarith
   -- Lift to ENNReal.
   have h_m_nn : (0 : ℝ) ≤ m := Nat.cast_nonneg m
@@ -552,22 +552,22 @@ lemma maxPartialSum_meas_iUnion_le
     (hT : MeasurePreserving T μ μ)
     {g : Ω → ℝ} (hg : Measurable g) (hg_int : Integrable g μ) (m : ℕ) :
     (m : ℝ≥0∞) *
-      μ (⋃ n, {ω | 0 < maxPartialSum T (fun ω => g ω - (m : ℝ)) n ω})
+      μ (⋃ n, {ω | 0 < maxPartialSum T (fun ω ↦ g ω - (m : ℝ)) n ω})
       ≤ ENNReal.ofReal (∫ ω, |g ω| ∂μ) := by
   -- Monotonicity of {0 < maxPartialSum (g - m) n} in n.
-  have h_mono : Monotone (fun n =>
-      {ω | 0 < maxPartialSum T (fun ω => g ω - (m : ℝ)) n ω}) := by
+  have h_mono : Monotone (fun n ↦
+      {ω | 0 < maxPartialSum T (fun ω ↦ g ω - (m : ℝ)) n ω}) := by
     intro a b hab ω hω
-    show 0 < maxPartialSum T (fun ω => g ω - (m : ℝ)) b ω
+    show 0 < maxPartialSum T (fun ω ↦ g ω - (m : ℝ)) b ω
     obtain ⟨k, _, hka, hk_eq⟩ :=
-      exists_pos_index_attaining_max T (fun ω => g ω - (m : ℝ)) a ω hω
+      exists_pos_index_attaining_max T (fun ω ↦ g ω - (m : ℝ)) a ω hω
     calc (0 : ℝ)
-        < maxPartialSum T (fun ω => g ω - (m : ℝ)) a ω := hω
-      _ = birkhoffPartialSum T (fun ω => g ω - (m : ℝ)) k ω := hk_eq.symm
-      _ ≤ maxPartialSum T (fun ω => g ω - (m : ℝ)) b ω :=
+        < maxPartialSum T (fun ω ↦ g ω - (m : ℝ)) a ω := hω
+      _ = birkhoffPartialSum T (fun ω ↦ g ω - (m : ℝ)) k ω := hk_eq.symm
+      _ ≤ maxPartialSum T (fun ω ↦ g ω - (m : ℝ)) b ω :=
           birkhoffPartialSum_le_maxPartialSum T _ b (hka.trans hab) ω
   rw [h_mono.measure_iUnion, ENNReal.mul_iSup]
-  exact iSup_le fun n => maxPartialSum_meas_le hT hg hg_int m n
+  exact iSup_le fun n ↦ maxPartialSum_meas_le hT hg hg_int m n
 
 /-- **A.e. boundedness of Birkhoff averages** (Hardy-Littlewood-style).
 For `T` measure-preserving and `g` integrable, the sequence
@@ -580,24 +580,24 @@ choice of `m` large to push `‖g‖₁/m < ε`). -/
 lemma birkhoffAverageReal_ae_bddAbove
     (hT : MeasurePreserving T μ μ)
     {g : Ω → ℝ} (hg : Measurable g) (hg_int : Integrable g μ) :
-    ∀ᵐ ω ∂μ, BddAbove (Set.range (fun n => birkhoffAverageReal T g n ω)) := by
+    ∀ᵐ ω ∂μ, BddAbove (Set.range (fun n ↦ birkhoffAverageReal T g n ω)) := by
   classical
   rw [ae_iff]
-  set U : ℕ → Set Ω := fun m =>
-    ⋃ n, {ω | 0 < maxPartialSum T (fun ω => g ω - (m : ℝ)) n ω}
+  set U : ℕ → Set Ω := fun m ↦
+    ⋃ n, {ω | 0 < maxPartialSum T (fun ω ↦ g ω - (m : ℝ)) n ω}
   -- Step 1: {¬BddAbove} ⊆ ⋂_m U m.
   have h_subset :
-      {ω | ¬ BddAbove (Set.range (fun n => birkhoffAverageReal T g n ω))}
+      {ω | ¬ BddAbove (Set.range (fun n ↦ birkhoffAverageReal T g n ω))}
         ⊆ ⋂ m, U m := by
     intro ω hω
     rw [Set.mem_setOf_eq, not_bddAbove_iff] at hω
-    refine Set.mem_iInter.mpr fun m => ?_
+    refine Set.mem_iInter.mpr fun m ↦ ?_
     obtain ⟨_, ⟨k, rfl⟩, hk⟩ := hω (m : ℝ)
     refine Set.mem_iUnion.mpr ⟨k + 1, ?_⟩
-    show 0 < maxPartialSum T (fun ω => g ω - (m : ℝ)) (k + 1) ω
+    show 0 < maxPartialSum T (fun ω ↦ g ω - (m : ℝ)) (k + 1) ω
     -- A_k(g, ω) > m ⟹ S_{k+1}(g - m, ω) > 0.
     have hk1_pos : (0 : ℝ) < (k : ℝ) + 1 := by positivity
-    have hS_eq : birkhoffPartialSum T (fun ω => g ω - (m : ℝ)) (k + 1) ω
+    have hS_eq : birkhoffPartialSum T (fun ω ↦ g ω - (m : ℝ)) (k + 1) ω
         = (k + 1 : ℝ) * birkhoffAverageReal T g k ω - (k + 1 : ℝ) * m := by
       unfold birkhoffPartialSum birkhoffAverageReal
       rw [Finset.sum_sub_distrib, Finset.sum_const, Finset.card_range, nsmul_eq_mul]
@@ -605,7 +605,7 @@ lemma birkhoffAverageReal_ae_bddAbove
       field_simp
       push_cast
       ring
-    have hS_pos : 0 < birkhoffPartialSum T (fun ω => g ω - (m : ℝ)) (k + 1) ω := by
+    have hS_pos : 0 < birkhoffPartialSum T (fun ω ↦ g ω - (m : ℝ)) (k + 1) ω := by
       rw [hS_eq]; nlinarith
     exact hS_pos.trans_le
       (birkhoffPartialSum_le_maxPartialSum T _ (k + 1) le_rfl ω)
@@ -613,15 +613,15 @@ lemma birkhoffAverageReal_ae_bddAbove
   refine measure_mono_null h_subset ?_
   -- Bound: for every m, (m : ℝ≥0∞) * μ(U m) ≤ ‖g‖₁.
   have h_U_bound : ∀ m : ℕ, (m : ℝ≥0∞) * μ (U m) ≤ ENNReal.ofReal (∫ ω, |g ω| ∂μ) :=
-    fun m => maxPartialSum_meas_iUnion_le hT hg hg_int m
+    fun m ↦ maxPartialSum_meas_iUnion_le hT hg hg_int m
   -- Use Archimedean to get μ(⋂_m U m) ≤ ε for arbitrary ε > 0.
   rw [← nonpos_iff_eq_zero]
-  refine ENNReal.le_of_forall_pos_le_add fun ε hε h_top => ?_
+  refine ENNReal.le_of_forall_pos_le_add fun ε hε h_top ↦ ?_
   -- Pick m > ‖g‖₁ / ε (real division).
   obtain ⟨m, hm⟩ := exists_nat_gt ((∫ ω, |g ω| ∂μ) / (ε : ℝ))
   -- m ≥ 1 because m > ‖g‖₁/ε ≥ 0 and m : ℕ (so m ≥ 1 if m > 0; we'll separately handle m = 0).
   have hε_pos : (0 : ℝ) < ε := by exact_mod_cast hε
-  have h_int_nn : 0 ≤ ∫ ω, |g ω| ∂μ := integral_nonneg fun _ => abs_nonneg _
+  have h_int_nn : 0 ≤ ∫ ω, |g ω| ∂μ := integral_nonneg fun _ ↦ abs_nonneg _
   have hm_pos : 0 < m := by
     rcases Nat.eq_zero_or_pos m with h | h
     · subst h
@@ -669,17 +669,17 @@ Combining with `Filter.limsup_nat_add` shifts back to
 `limsup A_n(f, Tω) = limsup A_n(f, ω)`. -/
 lemma birkhoffAverageReal_limsup_comp_T_ae
     (hT : MeasurePreserving T μ μ) (f : Ω → ℝ) (hf : Measurable f) (hf_int : Integrable f μ) :
-    (fun ω => Filter.limsup (fun n => birkhoffAverageReal T f n ω) Filter.atTop) ∘ T
-      =ᵐ[μ] fun ω => Filter.limsup (fun n => birkhoffAverageReal T f n ω) Filter.atTop := by
+    (fun ω ↦ Filter.limsup (fun n ↦ birkhoffAverageReal T f n ω) Filter.atTop) ∘ T
+      =ᵐ[μ] fun ω ↦ Filter.limsup (fun n ↦ birkhoffAverageReal T f n ω) Filter.atTop := by
   classical
   have h_above := birkhoffAverageReal_ae_bddAbove hT hf hf_int
-  have h_below : ∀ᵐ ω ∂μ, BddBelow (Set.range (fun n => birkhoffAverageReal T f n ω)) := by
+  have h_below : ∀ᵐ ω ∂μ, BddBelow (Set.range (fun n ↦ birkhoffAverageReal T f n ω)) := by
     have h := birkhoffAverageReal_ae_bddAbove hT hf.neg hf_int.neg
     filter_upwards [h] with ω hω
     obtain ⟨b, hb⟩ := hω
     refine ⟨-b, ?_⟩
     rintro y ⟨n, rfl⟩
-    have h_neg : birkhoffAverageReal T (fun ω => -f ω) n ω = -birkhoffAverageReal T f n ω := by
+    have h_neg : birkhoffAverageReal T (fun ω ↦ -f ω) n ω = -birkhoffAverageReal T f n ω := by
       unfold birkhoffAverageReal
       have h_sum : (∑ i ∈ Finset.range (n + 1), -f (T^[i] ω))
           = -∑ i ∈ Finset.range (n + 1), f (T^[i] ω) := by
@@ -688,8 +688,8 @@ lemma birkhoffAverageReal_limsup_comp_T_ae
     have := hb ⟨n, h_neg⟩
     linarith
   filter_upwards [h_above, h_below] with ω h_ab h_bel
-  show Filter.limsup (fun n => birkhoffAverageReal T f n (T ω)) Filter.atTop
-    = Filter.limsup (fun n => birkhoffAverageReal T f n ω) Filter.atTop
+  show Filter.limsup (fun n ↦ birkhoffAverageReal T f n (T ω)) Filter.atTop
+    = Filter.limsup (fun n ↦ birkhoffAverageReal T f n ω) Filter.atTop
   obtain ⟨B_up, hB_up⟩ := h_ab
   obtain ⟨B_lo, hB_lo⟩ := h_bel
   -- M := bound on |A_{n+1}(f, ω) - f(ω)|.
@@ -718,34 +718,34 @@ lemma birkhoffAverageReal_limsup_comp_T_ae
     field_simp
     ring
   -- u_n := A_n(f, T ω), v_n := A_{n+1}(f, ω). u_n - v_n → 0.
-  have h_diff_tendsto : Tendsto (fun n : ℕ =>
+  have h_diff_tendsto : Tendsto (fun n : ℕ ↦
       birkhoffAverageReal T f n (T ω) - birkhoffAverageReal T f (n + 1) ω) atTop (𝓝 0) := by
     rw [funext h_diff_eq]
-    have hM_div_tendsto : Tendsto (fun n : ℕ => M / ((n : ℝ) + 1)) atTop (𝓝 0) := by
-      have h1 : Tendsto (fun n : ℕ => 1 / ((n : ℝ) + 1)) atTop (𝓝 0) :=
+    have hM_div_tendsto : Tendsto (fun n : ℕ ↦ M / ((n : ℝ) + 1)) atTop (𝓝 0) := by
+      have h1 : Tendsto (fun n : ℕ ↦ 1 / ((n : ℝ) + 1)) atTop (𝓝 0) :=
         tendsto_one_div_add_atTop_nhds_zero_nat
-      have h2 : Tendsto (fun n : ℕ => M * (1 / ((n : ℝ) + 1))) atTop (𝓝 (M * 0)) :=
+      have h2 : Tendsto (fun n : ℕ ↦ M * (1 / ((n : ℝ) + 1))) atTop (𝓝 (M * 0)) :=
         h1.const_mul M
       simp only [mul_zero] at h2
       convert h2 using 1
       funext n; rw [mul_one_div]
-    refine squeeze_zero_norm (fun n => ?_) hM_div_tendsto
+    refine squeeze_zero_norm (fun n ↦ ?_) hM_div_tendsto
     rw [Real.norm_eq_abs, abs_div]
     have hn1_pos : (0 : ℝ) < (n : ℝ) + 1 := by positivity
     rw [abs_of_pos hn1_pos]
     exact div_le_div_of_nonneg_right (h_bd_diff n) hn1_pos.le
   -- Bounded under hypotheses for v_n = A_{n+1}(f, ω).
   have h_v_bdd_above : Filter.atTop.IsBoundedUnder (· ≤ ·)
-      (fun n : ℕ => birkhoffAverageReal T f (n + 1) ω) :=
+      (fun n : ℕ ↦ birkhoffAverageReal T f (n + 1) ω) :=
     Filter.isBoundedUnder_of_eventually_le (a := B_up) <|
-      Filter.Eventually.of_forall fun n => hB_up ⟨n + 1, rfl⟩
+      Filter.Eventually.of_forall fun n ↦ hB_up ⟨n + 1, rfl⟩
   have h_v_bdd_below : Filter.atTop.IsBoundedUnder (· ≥ ·)
-      (fun n : ℕ => birkhoffAverageReal T f (n + 1) ω) :=
+      (fun n : ℕ ↦ birkhoffAverageReal T f (n + 1) ω) :=
     Filter.isBoundedUnder_of_eventually_ge (a := B_lo) <|
-      Filter.Eventually.of_forall fun n => hB_lo ⟨n + 1, rfl⟩
+      Filter.Eventually.of_forall fun n ↦ hB_lo ⟨n + 1, rfl⟩
   -- u_n bounded above: from v_n + diff (diff bounded by 1 eventually).
   have h_u_bdd_above : Filter.atTop.IsBoundedUnder (· ≤ ·)
-      (fun n : ℕ => birkhoffAverageReal T f n (T ω)) := by
+      (fun n : ℕ ↦ birkhoffAverageReal T f n (T ω)) := by
     refine Filter.isBoundedUnder_of_eventually_le (a := B_up + 1) ?_
     filter_upwards [h_diff_tendsto.eventually (Metric.ball_mem_nhds 0 one_pos)] with n hn
     rw [Real.dist_eq, abs_sub_lt_iff, sub_zero] at hn
@@ -753,7 +753,7 @@ lemma birkhoffAverageReal_limsup_comp_T_ae
     have hv : birkhoffAverageReal T f (n + 1) ω ≤ B_up := hB_up ⟨n + 1, rfl⟩
     linarith
   have h_u_bdd_below : Filter.atTop.IsBoundedUnder (· ≥ ·)
-      (fun n : ℕ => birkhoffAverageReal T f n (T ω)) := by
+      (fun n : ℕ ↦ birkhoffAverageReal T f n (T ω)) := by
     refine Filter.isBoundedUnder_of_eventually_ge (a := B_lo - 1) ?_
     filter_upwards [h_diff_tendsto.eventually (Metric.ball_mem_nhds 0 one_pos)] with n hn
     rw [Real.dist_eq, abs_sub_lt_iff, sub_zero] at hn
@@ -761,8 +761,8 @@ lemma birkhoffAverageReal_limsup_comp_T_ae
     have hv : B_lo ≤ birkhoffAverageReal T f (n + 1) ω := hB_lo ⟨n + 1, rfl⟩
     linarith
   -- limsup u_n ≤ limsup v_n (and vice versa) via "u_n ≤ v_n + ε eventually".
-  have h_le : Filter.limsup (fun n => birkhoffAverageReal T f n (T ω)) Filter.atTop
-      ≤ Filter.limsup (fun n => birkhoffAverageReal T f (n + 1) ω) Filter.atTop := by
+  have h_le : Filter.limsup (fun n ↦ birkhoffAverageReal T f n (T ω)) Filter.atTop
+      ≤ Filter.limsup (fun n ↦ birkhoffAverageReal T f (n + 1) ω) Filter.atTop := by
     rw [le_iff_forall_pos_lt_add]
     intro ε hε
     have h_event : ∀ᶠ n in Filter.atTop,
@@ -771,22 +771,22 @@ lemma birkhoffAverageReal_limsup_comp_T_ae
       rw [Real.dist_eq, abs_sub_lt_iff, sub_zero] at hn
       linarith [hn.1]
     have h_v_const_bdd : Filter.atTop.IsBoundedUnder (· ≤ ·)
-        (fun n : ℕ => birkhoffAverageReal T f (n + 1) ω + ε / 2) := by
+        (fun n : ℕ ↦ birkhoffAverageReal T f (n + 1) ω + ε / 2) := by
       refine Filter.isBoundedUnder_of_eventually_le (a := B_up + ε / 2) ?_
-      refine Filter.Eventually.of_forall fun n => ?_
+      refine Filter.Eventually.of_forall fun n ↦ ?_
       have : birkhoffAverageReal T f (n + 1) ω ≤ B_up := hB_up ⟨n + 1, rfl⟩
       linarith
-    have h_step : Filter.limsup (fun n => birkhoffAverageReal T f n (T ω)) Filter.atTop
-        ≤ Filter.limsup (fun n => birkhoffAverageReal T f (n + 1) ω + ε / 2) Filter.atTop :=
+    have h_step : Filter.limsup (fun n ↦ birkhoffAverageReal T f n (T ω)) Filter.atTop
+        ≤ Filter.limsup (fun n ↦ birkhoffAverageReal T f (n + 1) ω + ε / 2) Filter.atTop :=
       Filter.limsup_le_limsup h_event h_u_bdd_below.isCoboundedUnder_le h_v_const_bdd
     have h_const_eq :
-        Filter.limsup (fun n : ℕ => birkhoffAverageReal T f (n + 1) ω + ε / 2) Filter.atTop
-          = Filter.limsup (fun n => birkhoffAverageReal T f (n + 1) ω) Filter.atTop + ε / 2 :=
+        Filter.limsup (fun n : ℕ ↦ birkhoffAverageReal T f (n + 1) ω + ε / 2) Filter.atTop
+          = Filter.limsup (fun n ↦ birkhoffAverageReal T f (n + 1) ω) Filter.atTop + ε / 2 :=
       limsup_add_const Filter.atTop _ (ε / 2) h_v_bdd_above
         h_v_bdd_below.isCoboundedUnder_le
     linarith [h_step.trans_eq h_const_eq]
-  have h_ge : Filter.limsup (fun n => birkhoffAverageReal T f (n + 1) ω) Filter.atTop
-      ≤ Filter.limsup (fun n => birkhoffAverageReal T f n (T ω)) Filter.atTop := by
+  have h_ge : Filter.limsup (fun n ↦ birkhoffAverageReal T f (n + 1) ω) Filter.atTop
+      ≤ Filter.limsup (fun n ↦ birkhoffAverageReal T f n (T ω)) Filter.atTop := by
     rw [le_iff_forall_pos_lt_add]
     intro ε hε
     have h_event : ∀ᶠ n in Filter.atTop,
@@ -795,24 +795,24 @@ lemma birkhoffAverageReal_limsup_comp_T_ae
       rw [Real.dist_eq, abs_sub_lt_iff, sub_zero] at hn
       linarith [hn.2]
     have h_u_const_bdd : Filter.atTop.IsBoundedUnder (· ≤ ·)
-        (fun n : ℕ => birkhoffAverageReal T f n (T ω) + ε / 2) := by
+        (fun n : ℕ ↦ birkhoffAverageReal T f n (T ω) + ε / 2) := by
       refine Filter.isBoundedUnder_of_eventually_le (a := B_up + 1 + ε / 2) ?_
       filter_upwards [h_diff_tendsto.eventually (Metric.ball_mem_nhds 0 one_pos)] with n hn
       rw [Real.dist_eq, abs_sub_lt_iff, sub_zero] at hn
       have hv : birkhoffAverageReal T f (n + 1) ω ≤ B_up := hB_up ⟨n + 1, rfl⟩
       linarith [hn.1]
-    have h_step : Filter.limsup (fun n => birkhoffAverageReal T f (n + 1) ω) Filter.atTop
-        ≤ Filter.limsup (fun n => birkhoffAverageReal T f n (T ω) + ε / 2) Filter.atTop :=
+    have h_step : Filter.limsup (fun n ↦ birkhoffAverageReal T f (n + 1) ω) Filter.atTop
+        ≤ Filter.limsup (fun n ↦ birkhoffAverageReal T f n (T ω) + ε / 2) Filter.atTop :=
       Filter.limsup_le_limsup h_event h_v_bdd_below.isCoboundedUnder_le h_u_const_bdd
     have h_const_eq :
-        Filter.limsup (fun n : ℕ => birkhoffAverageReal T f n (T ω) + ε / 2) Filter.atTop
-          = Filter.limsup (fun n => birkhoffAverageReal T f n (T ω)) Filter.atTop + ε / 2 :=
+        Filter.limsup (fun n : ℕ ↦ birkhoffAverageReal T f n (T ω) + ε / 2) Filter.atTop
+          = Filter.limsup (fun n ↦ birkhoffAverageReal T f n (T ω)) Filter.atTop + ε / 2 :=
       limsup_add_const Filter.atTop _ (ε / 2) h_u_bdd_above
         h_u_bdd_below.isCoboundedUnder_le
     linarith [h_step.trans_eq h_const_eq]
-  have h_shift : Filter.limsup (fun n => birkhoffAverageReal T f (n + 1) ω) Filter.atTop
-      = Filter.limsup (fun n => birkhoffAverageReal T f n ω) Filter.atTop :=
-    Filter.limsup_nat_add (fun n => birkhoffAverageReal T f n ω) 1
+  have h_shift : Filter.limsup (fun n ↦ birkhoffAverageReal T f (n + 1) ω) Filter.atTop
+      = Filter.limsup (fun n ↦ birkhoffAverageReal T f n ω) Filter.atTop :=
+    Filter.limsup_nat_add (fun n ↦ birkhoffAverageReal T f n ω) 1
   rw [← h_shift]
   exact le_antisymm h_le h_ge
 
@@ -823,11 +823,11 @@ but the function remains measurable). -/
 lemma birkhoffAverageReal_limsup_aestronglyMeasurable
     {T : Ω → Ω} (hT_meas : Measurable T) {f : Ω → ℝ} (hf : Measurable f) :
     AEStronglyMeasurable
-      (fun ω => Filter.limsup (fun n => birkhoffAverageReal T f n ω) Filter.atTop) μ := by
+      (fun ω ↦ Filter.limsup (fun n ↦ birkhoffAverageReal T f n ω) Filter.atTop) μ := by
   refine (Measurable.limsup ?_).aestronglyMeasurable
   intro n
   unfold birkhoffAverageReal
-  exact ((Finset.measurable_sum _ (fun i _ => hf.comp (hT_meas.iterate i))).div_const _)
+  exact ((Finset.measurable_sum _ (fun i _ ↦ hf.comp (hT_meas.iterate i))).div_const _)
 
 /-- **Ergodic limsup discharge**: for ergodic `T` and integrable `g` with
 `∫g dμ < 0`, the limsup of Birkhoff averages of `g` is `≤ 0` a.e.
@@ -842,9 +842,9 @@ lemma birkhoffAverageReal_limsup_le_zero_of_int_neg
     (hT : MeasurePreserving T μ μ) (hT_erg : Ergodic T μ)
     {g : Ω → ℝ} (hg : Measurable g) (hg_int : Integrable g μ)
     (hg_neg : ∫ ω, g ω ∂μ < 0) :
-    ∀ᵐ ω ∂μ, Filter.limsup (fun n => birkhoffAverageReal T g n ω) Filter.atTop ≤ 0 := by
+    ∀ᵐ ω ∂μ, Filter.limsup (fun n ↦ birkhoffAverageReal T g n ω) Filter.atTop ≤ 0 := by
   set lsa : Ω → ℝ :=
-    fun ω => Filter.limsup (fun n => birkhoffAverageReal T g n ω) Filter.atTop with hlsa_def
+    fun ω ↦ Filter.limsup (fun n ↦ birkhoffAverageReal T g n ω) Filter.atTop with hlsa_def
   have h_meas : AEStronglyMeasurable lsa μ :=
     birkhoffAverageReal_limsup_aestronglyMeasurable hT.measurable hg
   have h_inv : lsa ∘ T =ᵐ[μ] lsa :=
@@ -861,14 +861,14 @@ lemma birkhoffAverageReal_limsup_le_zero_of_int_neg
   -- For a.e. ω: ∀ k, ∃ N ≥ k, S_N(g, ω) > 0.
   have h_inf_often : ∀ᵐ ω ∂μ, ∀ k : ℕ, ∃ N ≥ k, 0 < birkhoffPartialSum T g N ω := by
     filter_upwards [hc, h_below] with ω hω hω_bdd
-    have hω' : Filter.limsup (fun n => birkhoffAverageReal T g n ω) Filter.atTop = c := hω
+    have hω' : Filter.limsup (fun n ↦ birkhoffAverageReal T g n ω) Filter.atTop = c := hω
     -- BddBelow A_·(g, ω) via BddAbove A_·(-g, ω).
     obtain ⟨b, hb⟩ := hω_bdd
     have h_bdd_below : Filter.atTop.IsBoundedUnder (· ≥ ·)
-        (fun n => birkhoffAverageReal T g n ω) := by
+        (fun n ↦ birkhoffAverageReal T g n ω) := by
       refine Filter.isBoundedUnder_of_eventually_ge (a := -b) ?_
-      refine Filter.Eventually.of_forall fun n => ?_
-      have h_neg : birkhoffAverageReal T (fun ω => -g ω) n ω
+      refine Filter.Eventually.of_forall fun n ↦ ?_
+      have h_neg : birkhoffAverageReal T (fun ω ↦ -g ω) n ω
           = -birkhoffAverageReal T g n ω := by
         unfold birkhoffAverageReal
         have h_sum : (∑ i ∈ Finset.range (n + 1), -g (T^[i] ω))
@@ -900,8 +900,8 @@ lemma birkhoffAverageReal_limsup_le_zero_of_int_neg
       ext ω
       simp only [Set.mem_setOf_eq, Set.mem_iInter, Set.mem_iUnion, ge_iff_le, exists_prop]
     rw [h_eq]
-    refine MeasurableSet.iInter fun k => MeasurableSet.iUnion fun N =>
-      MeasurableSet.iUnion fun _ => ?_
+    refine MeasurableSet.iInter fun k ↦ MeasurableSet.iUnion fun N ↦
+      MeasurableSet.iUnion fun _ ↦ ?_
     exact (birkhoffPartialSum_measurable hT.measurable hg N) measurableSet_Ioi
   rw [measure_univ]
   rw [ae_iff] at h_inf_often
@@ -920,28 +920,28 @@ lemma birkhoff_eventually_lt_integral_add
   set α : ℝ := ∫ x, f x ∂μ with hα
   set ε' : ℝ := ε / 2 with hε'
   have hε'_pos : 0 < ε' := half_pos hε
-  set g : Ω → ℝ := fun ω => f ω - α - ε' with hg
+  set g : Ω → ℝ := fun ω ↦ f ω - α - ε' with hg
   have hg_meas : Measurable g := (hf.sub measurable_const).sub measurable_const
   have hg_int : Integrable g μ :=
     (hf_int.sub (integrable_const α)).sub (integrable_const ε')
   have hg_int_eq : ∫ ω, g ω ∂μ = -ε' := by
-    have h_g_eq : ∀ ω, g ω = f ω - (α + ε') := fun ω => by simp [hg]; ring
+    have h_g_eq : ∀ ω, g ω = f ω - (α + ε') := fun ω ↦ by simp [hg]; ring
     rw [integral_congr_ae (Filter.Eventually.of_forall h_g_eq),
         integral_sub hf_int (integrable_const _),
         integral_const]
     simp [← hα]
   have hg_neg : ∫ ω, g ω ∂μ < 0 := by rw [hg_int_eq]; linarith
   have h_limsup : ∀ᵐ ω ∂μ,
-      Filter.limsup (fun n => birkhoffAverageReal T g n ω) Filter.atTop ≤ 0 :=
+      Filter.limsup (fun n ↦ birkhoffAverageReal T g n ω) Filter.atTop ≤ 0 :=
     birkhoffAverageReal_limsup_le_zero_of_int_neg hT hT_erg hg_meas hg_int hg_neg
   have h_ae_bdd : ∀ᵐ ω ∂μ,
-      BddAbove (Set.range (fun n => birkhoffAverageReal T g n ω)) :=
+      BddAbove (Set.range (fun n ↦ birkhoffAverageReal T g n ω)) :=
     birkhoffAverageReal_ae_bddAbove hT hg_meas hg_int
   -- Convert: limsup ≤ 0 ⟹ eventually A_n(g) < ε' ⟹ A_n(f) < α + ε' + ε' = α + ε.
   filter_upwards [h_limsup, h_ae_bdd] with ω hω hω_bdd
   -- ∀ε'' > 0, ∀ᶠ n, A_n(g) < ε''. Apply with ε'' := ε'.
   have h_freq_lt : ∀ᶠ n in Filter.atTop, birkhoffAverageReal T g n ω < ε' := by
-    have h_lt : Filter.limsup (fun n => birkhoffAverageReal T g n ω) Filter.atTop < ε' :=
+    have h_lt : Filter.limsup (fun n ↦ birkhoffAverageReal T g n ω) Filter.atTop < ε' :=
       lt_of_le_of_lt hω hε'_pos
     exact Filter.eventually_lt_of_limsup_lt h_lt hω_bdd.isBoundedUnder_of_range
   filter_upwards [h_freq_lt] with n hn
@@ -949,9 +949,9 @@ lemma birkhoff_eventually_lt_integral_add
   have h_decomp : birkhoffAverageReal T g n ω = birkhoffAverageReal T f n ω - α - ε' := by
     unfold birkhoffAverageReal
     have hn1_pos : (0 : ℝ) < (n : ℝ) + 1 := by positivity
-    rw [show g = fun ω' => f ω' - α - ε' from rfl]
-    rw [show (fun ω' : Ω => f ω' - α - ε')
-      = (fun ω' : Ω => f ω' - (α + ε')) from by funext ω'; ring]
+    rw [show g = fun ω' ↦ f ω' - α - ε' from rfl]
+    rw [show (fun ω' : Ω ↦ f ω' - α - ε')
+      = (fun ω' : Ω ↦ f ω' - (α + ε')) from by funext ω'; ring]
     -- ∑ (f(T^i ω) - (α + ε')) = (∑ f(T^i ω)) - (n+1)(α + ε')
     have h_sum_eq : (∑ i ∈ Finset.range (n + 1), (f (T^[i] ω) - (α + ε')))
         = (∑ i ∈ Finset.range (n + 1), f (T^[i] ω)) - ((n : ℝ) + 1) * (α + ε') := by
@@ -977,9 +977,9 @@ lemma birkhoff_eventually_gt_integral_sub
   filter_upwards [h_upper] with ω hω
   filter_upwards [hω] with n hn
   -- A_n(-f, ω) = -A_n(f, ω); ∫(-f) = -∫f.
-  have h_neg_avg : birkhoffAverageReal T (fun ω => -f ω) n ω = -birkhoffAverageReal T f n ω := by
+  have h_neg_avg : birkhoffAverageReal T (fun ω ↦ -f ω) n ω = -birkhoffAverageReal T f n ω := by
     unfold birkhoffAverageReal
-    rw [show (fun ω' : Ω => -f ω') = (fun ω' : Ω => -(f ω')) from rfl]
+    rw [show (fun ω' : Ω ↦ -f ω') = (fun ω' : Ω ↦ -(f ω')) from rfl]
     have h_sum_neg : (∑ i ∈ Finset.range (n + 1), -f (T^[i] ω))
         = -(∑ i ∈ Finset.range (n + 1), f (T^[i] ω)) := by
       rw [← Finset.sum_neg_distrib]
@@ -1004,7 +1004,7 @@ converge almost everywhere to the spatial mean `∫ f dμ`. -/
 theorem birkhoff_ergodic_ae {μ : Measure Ω} [IsProbabilityMeasure μ]
     {T : Ω → Ω} (hT : MeasurePreserving T μ μ) (hT_erg : Ergodic T μ)
     {f : Ω → ℝ} (hf : Integrable f μ) :
-    ∀ᵐ ω ∂μ, Tendsto (fun n => birkhoffAverageReal T f n ω)
+    ∀ᵐ ω ∂μ, Tendsto (fun n ↦ birkhoffAverageReal T f n ω)
       atTop (𝓝 (∫ x, f x ∂μ)) := by
   classical
   -- Replace `f` with a measurable model `f'` (AE-equal).
@@ -1017,44 +1017,44 @@ theorem birkhoff_ergodic_ae {μ : Measure Ω} [IsProbabilityMeasure μ]
   -- A_n(f, ω) =ᵐ A_n(f', ω).
   have h_A_ae : ∀ n : ℕ, birkhoffAverageReal T f n =ᵐ[μ] birkhoffAverageReal T f' n := by
     intro n
-    have h_each : ∀ i, (fun ω => f (T^[i] ω)) =ᵐ[μ] fun ω => f' (T^[i] ω) := fun i =>
+    have h_each : ∀ i, (fun ω ↦ f (T^[i] ω)) =ᵐ[μ] fun ω ↦ f' (T^[i] ω) := fun i ↦
       (hT.iterate i).quasiMeasurePreserving.ae_eq hf'_ae
     have h_all : ∀ᵐ ω ∂μ, ∀ i : ℕ, f (T^[i] ω) = f' (T^[i] ω) := by
       rw [ae_all_iff]; exact h_each
     filter_upwards [h_all] with ω hω
     unfold birkhoffAverageReal
     congr 1
-    exact Finset.sum_congr rfl (fun i _ => hω i)
+    exact Finset.sum_congr rfl (fun i _ ↦ hω i)
   have h_all_A_ae : ∀ᵐ ω ∂μ, ∀ n : ℕ,
       birkhoffAverageReal T f n ω = birkhoffAverageReal T f' n ω := by
     rw [ae_all_iff]; exact h_A_ae
   -- Apply upper/lower sandwich for each positive rational, then take countable
   -- intersection to get Tendsto via `Metric.tendsto_atTop`.
   have h_upper_rat : ∀ q : ℚ, 0 < q → ∀ᵐ ω ∂μ, ∀ᶠ n in Filter.atTop,
-      birkhoffAverageReal T f' n ω < ∫ x, f' x ∂μ + (q : ℝ) := fun q hq =>
+      birkhoffAverageReal T f' n ω < ∫ x, f' x ∂μ + (q : ℝ) := fun q hq ↦
     birkhoff_eventually_lt_integral_add hT hT_erg hf'_meas hf'_int (by exact_mod_cast hq)
   have h_lower_rat : ∀ q : ℚ, 0 < q → ∀ᵐ ω ∂μ, ∀ᶠ n in Filter.atTop,
-      ∫ x, f' x ∂μ - (q : ℝ) < birkhoffAverageReal T f' n ω := fun q hq =>
+      ∫ x, f' x ∂μ - (q : ℝ) < birkhoffAverageReal T f' n ω := fun q hq ↦
     birkhoff_eventually_gt_integral_sub hT hT_erg hf'_meas hf'_int (by exact_mod_cast hq)
   have h_upper_all : ∀ᵐ ω ∂μ, ∀ q : ℚ, 0 < q → ∀ᶠ n in Filter.atTop,
       birkhoffAverageReal T f' n ω < ∫ x, f' x ∂μ + (q : ℝ) := by
     rw [ae_all_iff]
     intro q
     by_cases hq : 0 < q
-    · exact (h_upper_rat q hq).mono fun _ hω _ => hω
-    · exact Filter.Eventually.of_forall fun _ h => absurd h hq
+    · exact (h_upper_rat q hq).mono fun _ hω _ ↦ hω
+    · exact Filter.Eventually.of_forall fun _ h ↦ absurd h hq
   have h_lower_all : ∀ᵐ ω ∂μ, ∀ q : ℚ, 0 < q → ∀ᶠ n in Filter.atTop,
       ∫ x, f' x ∂μ - (q : ℝ) < birkhoffAverageReal T f' n ω := by
     rw [ae_all_iff]
     intro q
     by_cases hq : 0 < q
-    · exact (h_lower_rat q hq).mono fun _ hω _ => hω
-    · exact Filter.Eventually.of_forall fun _ h => absurd h hq
+    · exact (h_lower_rat q hq).mono fun _ hω _ ↦ hω
+    · exact Filter.Eventually.of_forall fun _ h ↦ absurd h hq
   -- Combine: ∀ᵐ ω, convergence A_n(f) → ∫f.
   filter_upwards [h_upper_all, h_lower_all, h_all_A_ae] with ω h_up h_lo h_ae_eq
   -- The sequences A_n(f, ω) and A_n(f', ω) agree pointwise.
-  have h_seq_eq : (fun n => birkhoffAverageReal T f n ω)
-      = fun n => birkhoffAverageReal T f' n ω := funext h_ae_eq
+  have h_seq_eq : (fun n ↦ birkhoffAverageReal T f n ω)
+      = fun n ↦ birkhoffAverageReal T f' n ω := funext h_ae_eq
   rw [h_seq_eq, h_int_eq]
   -- Now show A_n(f', ω) → ∫f' via metric/ε.
   rw [Metric.tendsto_atTop]
@@ -1070,7 +1070,7 @@ theorem birkhoff_ergodic_ae {μ : Measure Ω} [IsProbabilityMeasure μ]
   have h_lo' : ∀ᶠ n in Filter.atTop,
       ∫ x, f' x ∂μ - (q : ℝ) < birkhoffAverageReal T f' n ω := h_lo q hq_pos'
   obtain ⟨N, hN⟩ := Filter.eventually_atTop.mp (h_up'.and h_lo')
-  refine ⟨N, fun n hn => ?_⟩
+  refine ⟨N, fun n hn ↦ ?_⟩
   obtain ⟨h_u, h_l⟩ := hN n hn
   rw [Real.dist_eq, abs_sub_lt_iff]
   refine ⟨?_, ?_⟩

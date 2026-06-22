@@ -62,7 +62,7 @@ theorem entropy_le_log_card
   -- Jensen on `Real.concaveOn_negMulLog` with weights `1 / N` on the full Finset.univ.
   have h_each_in : ∀ x ∈ (Finset.univ : Finset α),
       (μ.map Xs).real ({x} : Set α) ∈ Set.Ici (0 : ℝ) :=
-    fun x _ => measureReal_nonneg
+    fun x _ ↦ measureReal_nonneg
   have h_one_div_pos : (0 : ℝ) ≤ 1 / N := by
     rw [one_div]; exact inv_nonneg.mpr hN_pos_R.le
   have h_weights_sum :
@@ -73,10 +73,10 @@ theorem entropy_le_log_card
     field_simp
   have h_jensen :=
     ConcaveOn.le_map_sum (𝕜 := ℝ) (t := (Finset.univ : Finset α))
-      (w := fun _ => 1 / (N : ℝ))
-      (p := fun x => (μ.map Xs).real ({x} : Set α))
+      (w := fun _ ↦ 1 / (N : ℝ))
+      (p := fun x ↦ (μ.map Xs).real ({x} : Set α))
       Real.concaveOn_negMulLog
-      (fun _ _ => h_one_div_pos) h_weights_sum h_each_in
+      (fun _ _ ↦ h_one_div_pos) h_weights_sum h_each_in
   simp only [smul_eq_mul] at h_jensen
   -- LHS of Jensen: ∑ (1/N) • negMulLog (p x) ≥ ... — multiply by N to recover ∑ negMulLog.
   have h_card_eq : ((Finset.univ : Finset α).card : ℝ) = (N : ℝ) := by
@@ -87,7 +87,7 @@ theorem entropy_le_log_card
         = ∑ x ∈ (Finset.univ : Finset α),
               Real.negMulLog ((μ.map Xs).real ({x} : Set α)) := by
     rw [Finset.mul_sum]
-    refine Finset.sum_congr rfl fun x _ => ?_
+    refine Finset.sum_congr rfl fun x _ ↦ ?_
     field_simp
   -- mean = 1/N: ∑ (1/N) * p x = (1/N) * ∑ p x = 1/N.
   have h_mean :
@@ -138,16 +138,16 @@ theorem fano_inequality_with_side_info
     (hXs : Measurable Xs) (hYo : Measurable Yo) (hSi : Measurable Si)
     (hdec : Measurable decoder)
     (hcard : 2 ≤ Fintype.card X) :
-    InformationTheory.MeasureFano.condEntropy μ Xs (fun ω => (Yo ω, Si ω)) ≤
+    InformationTheory.MeasureFano.condEntropy μ Xs (fun ω ↦ (Yo ω, Si ω)) ≤
       Real.binEntropy
         (InformationTheory.MeasureFano.errorProb μ Xs
-          (fun ω => (Yo ω, Si ω)) decoder)
+          (fun ω ↦ (Yo ω, Si ω)) decoder)
         + InformationTheory.MeasureFano.errorProb μ Xs
-            (fun ω => (Yo ω, Si ω)) decoder
+            (fun ω ↦ (Yo ω, Si ω)) decoder
           * Real.log ((Fintype.card X : ℝ) - 1) := by
-  have hpair : Measurable (fun ω => (Yo ω, Si ω)) := hYo.prodMk hSi
+  have hpair : Measurable (fun ω ↦ (Yo ω, Si ω)) := hYo.prodMk hSi
   exact InformationTheory.MeasureFano.fano_inequality_measure_theoretic
-    μ Xs (fun ω => (Yo ω, Si ω)) decoder hXs hpair hdec hcard
+    μ Xs (fun ω ↦ (Yo ω, Si ω)) decoder hXs hpair hdec hcard
 
 /-! ## Conditioning never increases entropy -/
 
@@ -202,17 +202,17 @@ theorem slepian_wolf_converse_X
       InformationTheory.MeasureFano.condEntropy μ Xs Ys
         - Real.binEntropy
             (InformationTheory.MeasureFano.errorProb μ Xs
-              (fun ω => (Ys ω, eX (Xs ω)))
-              (fun p : β × Fin Mx => (dec (p.2, eY p.1)).1))
+              (fun ω ↦ (Ys ω, eX (Xs ω)))
+              (fun p : β × Fin Mx ↦ (dec (p.2, eY p.1)).1))
         - InformationTheory.MeasureFano.errorProb μ Xs
-            (fun ω => (Ys ω, eX (Xs ω)))
-            (fun p : β × Fin Mx => (dec (p.2, eY p.1)).1)
+            (fun ω ↦ (Ys ω, eX (Xs ω)))
+            (fun p : β × Fin Mx ↦ (dec (p.2, eY p.1)).1)
           * Real.log ((Fintype.card α : ℝ) - 1) := by
   -- Abbreviations.
-  set EX : Ω → Fin Mx := fun ω => eX (Xs ω) with hEX_def
-  set decX : β × Fin Mx → α := fun p => (dec (p.2, eY p.1)).1 with hdecX_def
+  set EX : Ω → Fin Mx := fun ω ↦ eX (Xs ω) with hEX_def
+  set decX : β × Fin Mx → α := fun p ↦ (dec (p.2, eY p.1)).1 with hdecX_def
   set Pe_X := InformationTheory.MeasureFano.errorProb μ Xs
-    (fun ω => (Ys ω, EX ω)) decX with hPe_def
+    (fun ω ↦ (Ys ω, EX ω)) decX with hPe_def
   -- Measurability (all Fintype targets ⇒ auto-measurable).
   have hEX_aux : Measurable eX := measurable_of_countable _
   have hdec : Measurable decX := measurable_of_countable _
@@ -233,31 +233,31 @@ theorem slepian_wolf_converse_X
   have h_bridge_X :
       (condMutualInfo μ Xs EX Ys).toReal
         = InformationTheory.MeasureFano.condEntropy μ Xs Ys
-          - InformationTheory.MeasureFano.condEntropy μ Xs (fun ω => (Ys ω, EX ω)) :=
+          - InformationTheory.MeasureFano.condEntropy μ Xs (fun ω ↦ (Ys ω, EX ω)) :=
     condMutualInfo_eq_condEntropy_sub_condEntropy μ Xs Ys EX hXs hYs hEX
   have h_bridge_EX :
       (condMutualInfo μ EX Xs Ys).toReal
         = InformationTheory.MeasureFano.condEntropy μ EX Ys
-          - InformationTheory.MeasureFano.condEntropy μ EX (fun ω => (Ys ω, Xs ω)) :=
+          - InformationTheory.MeasureFano.condEntropy μ EX (fun ω ↦ (Ys ω, Xs ω)) :=
     condMutualInfo_eq_condEntropy_sub_condEntropy μ EX Ys Xs hEX hYs hXs
   have h_comm : condMutualInfo μ Xs EX Ys = condMutualInfo μ EX Xs Ys :=
     condMutualInfo_comm μ Xs EX Ys hXs hEX hYs
   have h_step_C :
       InformationTheory.MeasureFano.condEntropy μ Xs Ys
-        - InformationTheory.MeasureFano.condEntropy μ Xs (fun ω => (Ys ω, EX ω))
+        - InformationTheory.MeasureFano.condEntropy μ Xs (fun ω ↦ (Ys ω, EX ω))
           ≤ InformationTheory.MeasureFano.condEntropy μ EX Ys := by
     have h_eq :
         InformationTheory.MeasureFano.condEntropy μ Xs Ys
-          - InformationTheory.MeasureFano.condEntropy μ Xs (fun ω => (Ys ω, EX ω))
+          - InformationTheory.MeasureFano.condEntropy μ Xs (fun ω ↦ (Ys ω, EX ω))
             = InformationTheory.MeasureFano.condEntropy μ EX Ys
-              - InformationTheory.MeasureFano.condEntropy μ EX (fun ω => (Ys ω, Xs ω)) := by
+              - InformationTheory.MeasureFano.condEntropy μ EX (fun ω ↦ (Ys ω, Xs ω)) := by
       rw [← h_bridge_X, h_comm, h_bridge_EX]
     rw [h_eq]
-    have h_nn := condEntropy_nonneg μ EX (fun ω => (Ys ω, Xs ω))
+    have h_nn := condEntropy_nonneg μ EX (fun ω ↦ (Ys ω, Xs ω))
     linarith
   -- Step D: side info Fano with Yo := Ys, Si := EX. Conditioner = (Ys, EX), decoder = decX.
   have h_step_D :
-      InformationTheory.MeasureFano.condEntropy μ Xs (fun ω => (Ys ω, EX ω))
+      InformationTheory.MeasureFano.condEntropy μ Xs (fun ω ↦ (Ys ω, EX ω))
         ≤ Real.binEntropy Pe_X + Pe_X * Real.log ((Fintype.card α : ℝ) - 1) :=
     fano_inequality_with_side_info μ Xs Ys EX decX hXs hYs hEX hdec hcard
   -- Final: chain Steps A-D.
@@ -279,17 +279,17 @@ theorem slepian_wolf_converse_Y
       InformationTheory.MeasureFano.condEntropy μ Ys Xs
         - Real.binEntropy
             (InformationTheory.MeasureFano.errorProb μ Ys
-              (fun ω => (Xs ω, eY (Ys ω)))
-              (fun p : α × Fin My => (dec (eX p.1, p.2)).2))
+              (fun ω ↦ (Xs ω, eY (Ys ω)))
+              (fun p : α × Fin My ↦ (dec (eX p.1, p.2)).2))
         - InformationTheory.MeasureFano.errorProb μ Ys
-            (fun ω => (Xs ω, eY (Ys ω)))
-            (fun p : α × Fin My => (dec (eX p.1, p.2)).2)
+            (fun ω ↦ (Xs ω, eY (Ys ω)))
+            (fun p : α × Fin My ↦ (dec (eX p.1, p.2)).2)
           * Real.log ((Fintype.card β : ℝ) - 1) := by
   -- Symmetric to X bound with X ↔ Y, Mx ↔ My.
-  set EY : Ω → Fin My := fun ω => eY (Ys ω) with hEY_def
-  set decY : α × Fin My → β := fun p => (dec (eX p.1, p.2)).2 with hdecY_def
+  set EY : Ω → Fin My := fun ω ↦ eY (Ys ω) with hEY_def
+  set decY : α × Fin My → β := fun p ↦ (dec (eX p.1, p.2)).2 with hdecY_def
   set Pe_Y := InformationTheory.MeasureFano.errorProb μ Ys
-    (fun ω => (Xs ω, EY ω)) decY with hPe_def
+    (fun ω ↦ (Xs ω, EY ω)) decY with hPe_def
   have hEY_aux : Measurable eY := measurable_of_countable _
   have hdec : Measurable decY := measurable_of_countable _
   have hEY : Measurable EY := hEY_aux.comp hYs
@@ -304,30 +304,30 @@ theorem slepian_wolf_converse_Y
   have h_bridge_Y :
       (condMutualInfo μ Ys EY Xs).toReal
         = InformationTheory.MeasureFano.condEntropy μ Ys Xs
-          - InformationTheory.MeasureFano.condEntropy μ Ys (fun ω => (Xs ω, EY ω)) :=
+          - InformationTheory.MeasureFano.condEntropy μ Ys (fun ω ↦ (Xs ω, EY ω)) :=
     condMutualInfo_eq_condEntropy_sub_condEntropy μ Ys Xs EY hYs hXs hEY
   have h_bridge_EY :
       (condMutualInfo μ EY Ys Xs).toReal
         = InformationTheory.MeasureFano.condEntropy μ EY Xs
-          - InformationTheory.MeasureFano.condEntropy μ EY (fun ω => (Xs ω, Ys ω)) :=
+          - InformationTheory.MeasureFano.condEntropy μ EY (fun ω ↦ (Xs ω, Ys ω)) :=
     condMutualInfo_eq_condEntropy_sub_condEntropy μ EY Xs Ys hEY hXs hYs
   have h_comm : condMutualInfo μ Ys EY Xs = condMutualInfo μ EY Ys Xs :=
     condMutualInfo_comm μ Ys EY Xs hYs hEY hXs
   have h_step_C :
       InformationTheory.MeasureFano.condEntropy μ Ys Xs
-        - InformationTheory.MeasureFano.condEntropy μ Ys (fun ω => (Xs ω, EY ω))
+        - InformationTheory.MeasureFano.condEntropy μ Ys (fun ω ↦ (Xs ω, EY ω))
           ≤ InformationTheory.MeasureFano.condEntropy μ EY Xs := by
     have h_eq :
         InformationTheory.MeasureFano.condEntropy μ Ys Xs
-          - InformationTheory.MeasureFano.condEntropy μ Ys (fun ω => (Xs ω, EY ω))
+          - InformationTheory.MeasureFano.condEntropy μ Ys (fun ω ↦ (Xs ω, EY ω))
             = InformationTheory.MeasureFano.condEntropy μ EY Xs
-              - InformationTheory.MeasureFano.condEntropy μ EY (fun ω => (Xs ω, Ys ω)) := by
+              - InformationTheory.MeasureFano.condEntropy μ EY (fun ω ↦ (Xs ω, Ys ω)) := by
       rw [← h_bridge_Y, h_comm, h_bridge_EY]
     rw [h_eq]
-    have h_nn := condEntropy_nonneg μ EY (fun ω => (Xs ω, Ys ω))
+    have h_nn := condEntropy_nonneg μ EY (fun ω ↦ (Xs ω, Ys ω))
     linarith
   have h_step_D :
-      InformationTheory.MeasureFano.condEntropy μ Ys (fun ω => (Xs ω, EY ω))
+      InformationTheory.MeasureFano.condEntropy μ Ys (fun ω ↦ (Xs ω, EY ω))
         ≤ Real.binEntropy Pe_Y + Pe_Y * Real.log ((Fintype.card β : ℝ) - 1) :=
     fano_inequality_with_side_info μ Ys Xs EY decY hYs hXs hEY hdec hcard
   linarith
@@ -345,22 +345,22 @@ theorem slepian_wolf_converse_sum
     (hXs : Measurable Xs) (hYs : Measurable Ys)
     (hcard : 2 ≤ Fintype.card (α × β)) :
     Real.log (Mx : ℝ) + Real.log (My : ℝ) ≥
-      entropy μ (fun ω => (Xs ω, Ys ω))
+      entropy μ (fun ω ↦ (Xs ω, Ys ω))
         - Real.binEntropy
             (InformationTheory.MeasureFano.errorProb μ
-              (fun ω => (Xs ω, Ys ω))
-              (fun ω => (eX (Xs ω), eY (Ys ω))) dec)
+              (fun ω ↦ (Xs ω, Ys ω))
+              (fun ω ↦ (eX (Xs ω), eY (Ys ω))) dec)
         - InformationTheory.MeasureFano.errorProb μ
-            (fun ω => (Xs ω, Ys ω))
-            (fun ω => (eX (Xs ω), eY (Ys ω))) dec
+            (fun ω ↦ (Xs ω, Ys ω))
+            (fun ω ↦ (eX (Xs ω), eY (Ys ω))) dec
           * Real.log ((Fintype.card (α × β) : ℝ) - 1) := by
   -- Joint source Z := (Xs, Ys) on α × β, joint encoder E := (EX, EY) : Ω → Fin Mx × Fin My.
-  set Z : Ω → α × β := fun ω => (Xs ω, Ys ω) with hZ_def
-  set E : Ω → Fin Mx × Fin My := fun ω => (eX (Xs ω), eY (Ys ω)) with hE_def
+  set Z : Ω → α × β := fun ω ↦ (Xs ω, Ys ω) with hZ_def
+  set E : Ω → Fin Mx × Fin My := fun ω ↦ (eX (Xs ω), eY (Ys ω)) with hE_def
   set Pe := InformationTheory.MeasureFano.errorProb μ Z E dec with hPe_def
   -- Measurabilities.
   have hZ : Measurable Z := hXs.prodMk hYs
-  have hE_aux : Measurable (fun p : α × β => (eX p.1, eY p.2)) :=
+  have hE_aux : Measurable (fun p : α × β ↦ (eX p.1, eY p.2)) :=
     measurable_of_countable _
   have hE : Measurable E := hE_aux.comp hZ
   have hdec : Measurable dec := measurable_of_countable _

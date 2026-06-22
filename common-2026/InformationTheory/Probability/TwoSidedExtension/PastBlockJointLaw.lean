@@ -48,14 +48,14 @@ formulation of `condProbPast` with the `μ`-side `condDistrib` formulation of
 Maps `x : ℤ → α` to its restriction at indices `{-k, -k+1, …, -1}`, viewed
 as a function `Fin k → α`. -/
 def pastBlock (k : ℕ) : (∀ _ : ℤ, α) → (Fin k → α) :=
-  fun x i => x ((i.val : ℤ) - k)
+  fun x i ↦ x ((i.val : ℤ) - k)
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [IsProbabilityMeasure μ] in
 /-- The past block projection is measurable. -/
 lemma measurable_pastBlock (k : ℕ) :
     Measurable (pastBlock k : (∀ _ : ℤ, α) → (Fin k → α)) := by
-  refine measurable_pi_iff.mpr (fun i => ?_)
+  refine measurable_pi_iff.mpr (fun i ↦ ?_)
   exact measurable_pi_apply _
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
@@ -79,9 +79,9 @@ lemma comap_pastBlock_eq_pastSigma (k : ℕ) :
     -- pull comap through iSup, identify each `Fin k → α` coord with a ℤ index.
     change MeasurableSpace.comap (pastBlock k) MeasurableSpace.pi ≤ _
     rw [show (MeasurableSpace.pi : MeasurableSpace (Fin k → α))
-        = ⨆ i : Fin k, MeasurableSpace.comap (fun x : Fin k → α => x i) inferInstance from rfl,
+        = ⨆ i : Fin k, MeasurableSpace.comap (fun x : Fin k → α ↦ x i) inferInstance from rfl,
       MeasurableSpace.comap_iSup]
-    refine iSup_le (fun i => ?_)
+    refine iSup_le (fun i ↦ ?_)
     rw [MeasurableSpace.comap_comp]
     -- Goal: `m_α.comap (fun x => x ((i.val : ℤ) - k)) ≤ pastSigma k`.
     have hi_mem : ((i.val : ℤ) - k) ∈ ({j : ℤ | -(k : ℤ) ≤ j ∧ j ≤ -1} : Set ℤ) := by
@@ -94,20 +94,20 @@ lemma comap_pastBlock_eq_pastSigma (k : ℕ) :
           linarith
         linarith
     -- `pastSigma k` reduces to the cylinderEvents iSup.
-    change MeasurableSpace.comap (fun x : (∀ _ : ℤ, α) => x ((i.val : ℤ) - k))
-        inferInstance ≤ cylinderEvents (X := fun _ : ℤ => α) _
+    change MeasurableSpace.comap (fun x : (∀ _ : ℤ, α) ↦ x ((i.val : ℤ) - k))
+        inferInstance ≤ cylinderEvents (X := fun _ : ℤ ↦ α) _
     show _ ≤ ⨆ j ∈ ({j : ℤ | -(k : ℤ) ≤ j ∧ j ≤ -1} : Set ℤ),
-            MeasurableSpace.comap (fun x : (∀ _ : ℤ, α) => x j) inferInstance
-    exact le_iSup₂ (f := fun j _ =>
-      MeasurableSpace.comap (fun x : (∀ _ : ℤ, α) => x j) inferInstance)
+            MeasurableSpace.comap (fun x : (∀ _ : ℤ, α) ↦ x j) inferInstance
+    exact le_iSup₂ (f := fun j _ ↦
+      MeasurableSpace.comap (fun x : (∀ _ : ℤ, α) ↦ x j) inferInstance)
       ((i.val : ℤ) - k) hi_mem
   · -- RHS ≤ LHS.
-    change cylinderEvents (X := fun _ : ℤ => α) _
+    change cylinderEvents (X := fun _ : ℤ ↦ α) _
           ≤ MeasurableSpace.comap (pastBlock k) MeasurableSpace.pi
     show ⨆ j ∈ ({j : ℤ | -(k : ℤ) ≤ j ∧ j ≤ -1} : Set ℤ),
-            MeasurableSpace.comap (fun x : (∀ _ : ℤ, α) => x j) inferInstance
+            MeasurableSpace.comap (fun x : (∀ _ : ℤ, α) ↦ x j) inferInstance
           ≤ MeasurableSpace.comap (pastBlock k) MeasurableSpace.pi
-    refine iSup₂_le (fun j hj => ?_)
+    refine iSup₂_le (fun j hj ↦ ?_)
     obtain ⟨h_lo, h_hi⟩ := hj
     -- j ∈ [-k, -1], so j + k ∈ [0, k-1], cast to Fin k.
     have hj_plus_k_nn : (0 : ℤ) ≤ j + k := by linarith
@@ -123,7 +123,7 @@ lemma comap_pastBlock_eq_pastSigma (k : ℕ) :
     rw [hj_eq]
     -- Goal: `m_α.comap (fun x => x ((i'.val : ℤ) - k)) ≤ (m_pi).comap (pastBlock k)`.
     rw [show (MeasurableSpace.pi : MeasurableSpace (Fin k → α))
-        = ⨆ ii : Fin k, MeasurableSpace.comap (fun x : Fin k → α => x ii) inferInstance from rfl,
+        = ⨆ ii : Fin k, MeasurableSpace.comap (fun x : Fin k → α ↦ x ii) inferInstance from rfl,
       MeasurableSpace.comap_iSup]
     refine le_trans ?_ (le_iSup _ i')
     rw [MeasurableSpace.comap_comp]
@@ -137,17 +137,17 @@ lemma comap_pastBlock_eq_pastSigma (k : ℕ) :
 
 omit [DecidableEq α] [Nonempty α] in
 lemma mapZ_coord0_pastBlock_apply_singleton (k : ℕ) (a : α) (s : Fin k → α) :
-    (μZ μ p).map (fun x : (∀ _ : ℤ, α) => (coord0 x, pastBlock k x)) {(a, s)}
+    (μZ μ p).map (fun x : (∀ _ : ℤ, α) ↦ (coord0 x, pastBlock k x)) {(a, s)}
       = (μ.map (p.blockRV (k + 1))) {Fin.snoc s a} := by
   classical
-  have hpair_meas_Z : Measurable (fun x : (∀ _ : ℤ, α) => (coord0 x, pastBlock k x)) :=
+  have hpair_meas_Z : Measurable (fun x : (∀ _ : ℤ, α) ↦ (coord0 x, pastBlock k x)) :=
     (measurable_coord0).prodMk (measurable_pastBlock k)
   set s_full : Fin (k + 1) → α := Fin.snoc s a with hs_full_def
   -- Step LHS-1: rewrite the LHS as μZ of a set, then split into shifted-marginal.
   rw [Measure.map_apply hpair_meas_Z (measurableSet_singleton _)]
   -- Preimage rewrite: { x | (x 0 = a) ∧ pastBlock k x = s }
   --   = { x | ∀ i : Fin (k+1), x ((i.val:ℤ) - k) = s_full i }
-  have hpre : (fun x : (∀ _ : ℤ, α) => (coord0 x, pastBlock k x)) ⁻¹' {(a, s)}
+  have hpre : (fun x : (∀ _ : ℤ, α) ↦ (coord0 x, pastBlock k x)) ⁻¹' {(a, s)}
       = { x : (∀ _ : ℤ, α) | ∀ i : Fin (k + 1), x ((i.val : ℤ) - k) = s_full i } := by
     ext x
     simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.mk.injEq, Set.mem_setOf_eq]
@@ -186,7 +186,7 @@ lemma mapZ_coord0_pastBlock_apply_singleton (k : ℕ) (a : α) (s : Fin k → α
   rw [hpre]
   -- A cylinder on the index set `J := { (i.val:ℤ) - k | i : Fin (k+1) }`.
   set J : Finset ℤ :=
-    (Finset.univ.image (fun i : Fin (k + 1) => (i.val : ℤ) - k))
+    (Finset.univ.image (fun i : Fin (k + 1) ↦ (i.val : ℤ) - k))
     with hJ_def
   have hi_mem : ∀ i : Fin (k + 1), ((i.val : ℤ) - k) ∈ J := by
     intro i
@@ -199,9 +199,9 @@ lemma mapZ_coord0_pastBlock_apply_singleton (k : ℕ) (a : α) (s : Fin k → α
         { f : ∀ _ : J, α | f ⟨((i.val : ℤ) - k), hi_mem i⟩ = s_full i } := by
       ext f; simp [hS_J]
     rw [h_inter]
-    refine MeasurableSet.iInter (fun i => ?_)
+    refine MeasurableSet.iInter (fun i ↦ ?_)
     have hpre' : { f : ∀ _ : J, α | f ⟨((i.val : ℤ) - k), hi_mem i⟩ = s_full i }
-        = (fun f : ∀ _ : J, α => f ⟨((i.val : ℤ) - k), hi_mem i⟩) ⁻¹' {s_full i} := rfl
+        = (fun f : ∀ _ : J, α ↦ f ⟨((i.val : ℤ) - k), hi_mem i⟩) ⁻¹' {s_full i} := rfl
     rw [hpre']
     exact (measurable_pi_apply _) (measurableSet_singleton _)
   have h_set_eq :
@@ -243,10 +243,10 @@ lemma mapZ_coord0_pastBlock_apply_singleton (k : ℕ) (a : α) (s : Fin k → α
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [IsProbabilityMeasure μ] in
 lemma map_obs_blockRV_apply_singleton (k : ℕ) (a : α) (s : Fin k → α) :
-    μ.map (fun ω : Ω => (p.obs k ω, p.blockRV k ω)) {(a, s)}
+    μ.map (fun ω : Ω ↦ (p.obs k ω, p.blockRV k ω)) {(a, s)}
       = (μ.map (p.blockRV (k + 1))) {Fin.snoc s a} := by
   classical
-  have hpair_meas_Ω : Measurable (fun ω : Ω => (p.obs k ω, p.blockRV k ω)) :=
+  have hpair_meas_Ω : Measurable (fun ω : Ω ↦ (p.obs k ω, p.blockRV k ω)) :=
     (p.measurable_obs k).prodMk (p.measurable_blockRV k)
   set s_full : Fin (k + 1) → α := Fin.snoc s a with hs_full_def
   rw [Measure.map_apply hpair_meas_Ω (measurableSet_singleton _),
@@ -304,20 +304,20 @@ The RHS rectangle is exactly the singleton mass of `μ.map (p.blockRV (k+1))`
 at the corresponding `Fin (k+1) → α`. -/
 @[entry_point]
 theorem joint_pastBlock_coord0_eq (k : ℕ) :
-    (μZ μ p).map (fun x : (∀ _ : ℤ, α) => (coord0 x, pastBlock k x))
-      = μ.map (fun ω : Ω => (p.obs k ω, p.blockRV k ω)) := by
+    (μZ μ p).map (fun x : (∀ _ : ℤ, α) ↦ (coord0 x, pastBlock k x))
+      = μ.map (fun ω : Ω ↦ (p.obs k ω, p.blockRV k ω)) := by
   classical
   -- Both are probability measures on `α × (Fin k → α)` (finite × finite).
-  have hpair_meas_Z : Measurable (fun x : (∀ _ : ℤ, α) => (coord0 x, pastBlock k x)) :=
+  have hpair_meas_Z : Measurable (fun x : (∀ _ : ℤ, α) ↦ (coord0 x, pastBlock k x)) :=
     (measurable_coord0).prodMk (measurable_pastBlock k)
-  have hpair_meas_Ω : Measurable (fun ω : Ω => (p.obs k ω, p.blockRV k ω)) :=
+  have hpair_meas_Ω : Measurable (fun ω : Ω ↦ (p.obs k ω, p.blockRV k ω)) :=
     (p.measurable_obs k).prodMk (p.measurable_blockRV k)
   -- Both are probability measures (in particular, finite).
   haveI : IsProbabilityMeasure
-      ((μZ μ p).map (fun x : (∀ _ : ℤ, α) => (coord0 x, pastBlock k x))) :=
+      ((μZ μ p).map (fun x : (∀ _ : ℤ, α) ↦ (coord0 x, pastBlock k x))) :=
     Measure.isProbabilityMeasure_map hpair_meas_Z.aemeasurable
   haveI : IsProbabilityMeasure
-      (μ.map (fun ω : Ω => (p.obs k ω, p.blockRV k ω))) :=
+      (μ.map (fun ω : Ω ↦ (p.obs k ω, p.blockRV k ω))) :=
     Measure.isProbabilityMeasure_map hpair_meas_Ω.aemeasurable
   -- It suffices to show equality on singletons (finite types).
   refine Measure.ext_of_singleton ?_
@@ -332,7 +332,7 @@ with the `condDistrib`-form regular conditional probability built from
 `(coord0, pastBlock k)`. -/
 lemma condProbPast_ae_eq_condDistrib (a : α) (k : ℕ) :
     condProbPast μ p a k =ᵐ[μZ μ p]
-      fun x => (ProbabilityTheory.condDistrib coord0 (pastBlock k) (μZ μ p)
+      fun x ↦ (ProbabilityTheory.condDistrib coord0 (pastBlock k) (μZ μ p)
         (pastBlock k x)).real {a} := by
   -- Apply `condDistrib_ae_eq_condExp` with Y := coord0, X := pastBlock k, s := {a}.
   -- This gives:
@@ -358,7 +358,7 @@ lemma condProbPast_ae_eq_condDistrib (a : α) (k : ℕ) :
   -- Goal: μZ⟦coord0 ⁻¹' {a} | _.comap (pastBlock k)⟧ =ᵐ condProbPast a k.
   unfold condProbPast
   show (μZ μ p)⟦coord0 ⁻¹' {a} | (inferInstance : MeasurableSpace (Fin k → α)).comap (pastBlock k)⟧
-      =ᵐ[μZ μ p] (μZ μ p)[(coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ))
+      =ᵐ[μZ μ p] (μZ μ p)[(coord0 ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ))
           | (pastFiltration (α := α)) k]
   rw [h_sigma_eq]
 

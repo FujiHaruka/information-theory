@@ -49,7 +49,7 @@ private lemma klDiv_bool_toReal_eq_sum
   have h_int : Integrable (llr μ ν) μ := by
     refine ⟨(measurable_llr μ ν).aestronglyMeasurable, ?_⟩
     rw [hasFiniteIntegral_iff_enorm, lintegral_fintype]
-    exact ENNReal.sum_lt_top.mpr fun _ _ =>
+    exact ENNReal.sum_lt_top.mpr fun _ _ ↦
       ENNReal.mul_lt_top ENNReal.coe_lt_top (measure_lt_top _ _)
   rw [integral_fintype h_int]
   -- Now expand the Fintype sum over `Bool = {true, false}` and per-point rewrite.
@@ -70,7 +70,7 @@ private lemma klDiv_bool_toReal_eq_sum
       intro h
       apply hμb
       rw [Measure.real, h]; rfl
-    have hν_ne : ν {b} ≠ 0 := fun h => hμ_ne (hμν h)
+    have hν_ne : ν {b} ≠ 0 := fun h ↦ hμ_ne (hμν h)
     have hνb_pos : 0 < ν.real {b} := by
       refine lt_of_le_of_ne measureReal_nonneg (Ne.symm ?_)
       intro hνb
@@ -99,7 +99,7 @@ omit [DecidableEq α] [Nonempty α] in
 /-- The `Bool`-valued indicator of a test `s : Set (Fin n → α)`. -/
 private noncomputable def steinTestFn (n : ℕ) (s : Set (Fin n → α)) :
     (Fin n → α) → Bool :=
-  fun x => @decide (x ∈ s) (Classical.dec _)
+  fun x ↦ @decide (x ∈ s) (Classical.dec _)
 
 omit [DecidableEq α] [Nonempty α] in
 private lemma measurable_steinTestFn (n : ℕ) (s : Set (Fin n → α)) :
@@ -136,40 +136,40 @@ omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 private theorem absolutelyContinuous_pi
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (hPQ : P ≪ Q) (n : ℕ) :
-    Measure.pi (fun _ : Fin n => P) ≪ Measure.pi (fun _ : Fin n => Q) := by
+    Measure.pi (fun _ : Fin n ↦ P) ≪ Measure.pi (fun _ : Fin n ↦ Q) := by
   induction n with
   | zero =>
-    rw [Measure.pi_of_empty (fun _ : Fin 0 => P), Measure.pi_of_empty (fun _ : Fin 0 => Q)]
+    rw [Measure.pi_of_empty (fun _ : Fin 0 ↦ P), Measure.pi_of_empty (fun _ : Fin 0 ↦ Q)]
   | succ k ih =>
     -- Use `piFinSuccAbove 0` to go via `α × (Fin k → α)`.
-    set e : ((i : Fin (k + 1)) → (fun _ => α) i) ≃ᵐ
-              α × ((j : Fin k) → (fun _ => α) ((0 : Fin (k + 1)).succAbove j)) :=
-      MeasurableEquiv.piFinSuccAbove (fun _ : Fin (k + 1) => α) 0 with he_def
+    set e : ((i : Fin (k + 1)) → (fun _ ↦ α) i) ≃ᵐ
+              α × ((j : Fin k) → (fun _ ↦ α) ((0 : Fin (k + 1)).succAbove j)) :=
+      MeasurableEquiv.piFinSuccAbove (fun _ : Fin (k + 1) ↦ α) 0 with he_def
     have hP_pres : MeasurePreserving e
-        (Measure.pi (fun _ : Fin (k + 1) => P))
-        (P.prod (Measure.pi (fun _ : Fin k => P))) :=
-      measurePreserving_piFinSuccAbove (fun _ : Fin (k + 1) => P) (0 : Fin (k + 1))
+        (Measure.pi (fun _ : Fin (k + 1) ↦ P))
+        (P.prod (Measure.pi (fun _ : Fin k ↦ P))) :=
+      measurePreserving_piFinSuccAbove (fun _ : Fin (k + 1) ↦ P) (0 : Fin (k + 1))
     have hQ_pres : MeasurePreserving e
-        (Measure.pi (fun _ : Fin (k + 1) => Q))
-        (Q.prod (Measure.pi (fun _ : Fin k => Q))) :=
-      measurePreserving_piFinSuccAbove (fun _ : Fin (k + 1) => Q) (0 : Fin (k + 1))
-    have hP_map : (Measure.pi (fun _ : Fin (k + 1) => P)).map e
-        = P.prod (Measure.pi (fun _ : Fin k => P)) := hP_pres.map_eq
-    have hQ_map : (Measure.pi (fun _ : Fin (k + 1) => Q)).map e
-        = Q.prod (Measure.pi (fun _ : Fin k => Q)) := hQ_pres.map_eq
+        (Measure.pi (fun _ : Fin (k + 1) ↦ Q))
+        (Q.prod (Measure.pi (fun _ : Fin k ↦ Q))) :=
+      measurePreserving_piFinSuccAbove (fun _ : Fin (k + 1) ↦ Q) (0 : Fin (k + 1))
+    have hP_map : (Measure.pi (fun _ : Fin (k + 1) ↦ P)).map e
+        = P.prod (Measure.pi (fun _ : Fin k ↦ P)) := hP_pres.map_eq
+    have hQ_map : (Measure.pi (fun _ : Fin (k + 1) ↦ Q)).map e
+        = Q.prod (Measure.pi (fun _ : Fin k ↦ Q)) := hQ_pres.map_eq
     -- Step 1: AC for product measures from coordinate-wise AC.
-    have h_prod_ac : (P.prod (Measure.pi (fun _ : Fin k => P)))
-        ≪ (Q.prod (Measure.pi (fun _ : Fin k => Q))) :=
+    have h_prod_ac : (P.prod (Measure.pi (fun _ : Fin k ↦ P)))
+        ≪ (Q.prod (Measure.pi (fun _ : Fin k ↦ Q))) :=
       Measure.AbsolutelyContinuous.prod hPQ ih
     -- Step 2: Lift back via `e.symm` (also measure-preserving).
     have h_e_sym_meas : Measurable e.symm := e.symm.measurable
     have h_e_meas : Measurable e := e.measurable
     -- Use `e` is a MeasurableEquiv, so `(map e μ ≪ map e ν) ↔ (μ ≪ ν)`.
-    have hPe : Measure.pi (fun _ : Fin (k + 1) => P)
-        = (P.prod (Measure.pi (fun _ : Fin k => P))).map e.symm := by
+    have hPe : Measure.pi (fun _ : Fin (k + 1) ↦ P)
+        = (P.prod (Measure.pi (fun _ : Fin k ↦ P))).map e.symm := by
       rw [← hP_map, Measure.map_map h_e_sym_meas h_e_meas, e.symm_comp_self, Measure.map_id]
-    have hQe : Measure.pi (fun _ : Fin (k + 1) => Q)
-        = (Q.prod (Measure.pi (fun _ : Fin k => Q))).map e.symm := by
+    have hQe : Measure.pi (fun _ : Fin (k + 1) ↦ Q)
+        = (Q.prod (Measure.pi (fun _ : Fin k ↦ Q))).map e.symm := by
       rw [← hQ_map, Measure.map_map h_e_sym_meas h_e_meas, e.symm_comp_self, Measure.map_id]
     rw [hPe, hQe]
     exact h_prod_ac.map h_e_sym_meas
@@ -180,8 +180,8 @@ indicator is at most `n · klDiv P Q`. -/
 theorem stein_converse_bool_kl_le
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (n : ℕ) (s : Set (Fin n → α)) :
-    klDiv ((Measure.pi (fun _ : Fin n => P)).map (steinTestFn n s))
-          ((Measure.pi (fun _ : Fin n => Q)).map (steinTestFn n s))
+    klDiv ((Measure.pi (fun _ : Fin n ↦ P)).map (steinTestFn n s))
+          ((Measure.pi (fun _ : Fin n ↦ Q)).map (steinTestFn n s))
       ≤ (n : ℝ≥0∞) * klDiv P Q := by
   rw [← klDiv_pi_eq_n_smul P Q n]
   exact klDiv_map_le (measurable_steinTestFn n s) _ _
@@ -192,8 +192,8 @@ omit [DecidableEq α] [Nonempty α] in
 theorem stein_converse_sum_form
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (hPQ : P ≪ Q) (n : ℕ) (s : Set (Fin n → α)) :
-    let Pn := Measure.pi (fun _ : Fin n => P)
-    let Qn := Measure.pi (fun _ : Fin n => Q)
+    let Pn := Measure.pi (fun _ : Fin n ↦ P)
+    let Qn := Measure.pi (fun _ : Fin n ↦ Q)
     (Pn.real s) * (Real.log (Pn.real s) - Real.log (Qn.real s))
     + (Pn.real sᶜ) * (Real.log (Pn.real sᶜ) - Real.log (Qn.real sᶜ))
     ≤ (n : ℝ) * (klDiv P Q).toReal := by
@@ -232,7 +232,7 @@ theorem stein_converse_sum_form
   have h_int_llr : Integrable (llr P Q) P := by
     refine ⟨(measurable_llr P Q).aestronglyMeasurable, ?_⟩
     rw [hasFiniteIntegral_iff_enorm, lintegral_fintype]
-    exact ENNReal.sum_lt_top.mpr fun _ _ =>
+    exact ENNReal.sum_lt_top.mpr fun _ _ ↦
       ENNReal.mul_lt_top ENNReal.coe_lt_top (measure_lt_top _ _)
   have h_kl_ne_top : klDiv P Q ≠ ∞ := klDiv_ne_top hPQ h_int_llr
   have h_n_kl_ne_top : (n : ℝ≥0∞) * klDiv P Q ≠ ∞ :=
@@ -260,12 +260,12 @@ theorem stein_converse_finite_n
     (hPQ : P ≪ Q) (hQpos : ∀ x : α, 0 < Q.real {x})
     {ε : ℝ} (_hε : 0 < ε) (hε1 : ε < 1)
     {n : ℕ} (hn_pos : 0 < n) (s : Set (Fin n → α)) (hs : MeasurableSet s)
-    (hPn_sc_le : ((Measure.pi (fun _ : Fin n => P)) sᶜ).toReal ≤ ε) :
-    -((1 : ℝ) / n) * Real.log ((Measure.pi (fun _ : Fin n => Q)) s).toReal
+    (hPn_sc_le : ((Measure.pi (fun _ : Fin n ↦ P)) sᶜ).toReal ≤ ε) :
+    -((1 : ℝ) / n) * Real.log ((Measure.pi (fun _ : Fin n ↦ Q)) s).toReal
       ≤ (klDiv P Q).toReal / (1 - ε) + Real.log 2 / ((n : ℝ) * (1 - ε)) := by
   classical
-  set Pn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n => P) with hPn_def
-  set Qn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n => Q) with hQn_def
+  set Pn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n ↦ P) with hPn_def
+  set Qn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n ↦ Q) with hQn_def
   set K : ℝ := (klDiv P Q).toReal with hK_def
   have h_one_sub_eps_pos : (0 : ℝ) < 1 - ε := by linarith
   have h_n_R_pos : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn_pos
@@ -298,9 +298,9 @@ theorem stein_converse_finite_n
   -- Qn {x_witness} > 0 from hQpos.
   have h_Qn_x_pos : 0 < (Qn.real {x_witness}) := by
     rw [hQn_def]
-    show ((Measure.pi (fun _ : Fin n => Q)) {x_witness}).toReal > 0
+    show ((Measure.pi (fun _ : Fin n ↦ Q)) {x_witness}).toReal > 0
     rw [Measure.pi_singleton, ENNReal.toReal_prod]
-    exact Finset.prod_pos (fun i _ => hQpos (x_witness i))
+    exact Finset.prod_pos (fun i _ ↦ hQpos (x_witness i))
   have h_Qn_s_pos : 0 < Qn.real s := by
     have h_subset : ({x_witness} : Set (Fin n → α)) ⊆ s := by
       intro y hy; simp only [Set.mem_singleton_iff] at hy; rw [hy]; exact hx_in_s
@@ -398,7 +398,7 @@ theorem stein_converse_finite_n
     rw [← h_simp_R]
     exact h_div_n
   -- Unfold Qn.real and conclude.
-  show -((1 : ℝ) / n) * Real.log ((Measure.pi (fun _ : Fin n => Q)) s).toReal
+  show -((1 : ℝ) / n) * Real.log ((Measure.pi (fun _ : Fin n ↦ Q)) s).toReal
       ≤ (klDiv P Q).toReal / (1 - ε) + Real.log 2 / ((n : ℝ) * (1 - ε))
   exact h_target
 

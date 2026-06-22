@@ -65,16 +65,16 @@ theorem logSumInequality
   have hB_pos : 0 < B := Finset.sum_pos hb hs
   have hB_ne : B ≠ 0 := hB_pos.ne'
   set A : ℝ := ∑ i ∈ s, a i with hA_def
-  have h₀ : ∀ i ∈ s, 0 ≤ b i / B := fun i hi =>
+  have h₀ : ∀ i ∈ s, 0 ≤ b i / B := fun i hi ↦
     div_nonneg (hb i hi).le hB_pos.le
   have h₁ : ∑ i ∈ s, b i / B = 1 := by
     rw [← Finset.sum_div, ← hB_def, div_self hB_ne]
-  have hmem : ∀ i ∈ s, a i / b i ∈ Set.Ici (0 : ℝ) := fun i hi => by
+  have hmem : ∀ i ∈ s, a i / b i ∈ Set.Ici (0 : ℝ) := fun i hi ↦ by
     simp only [Set.mem_Ici]; exact div_nonneg (ha i hi) (hb i hi).le
   have hJensen :=
     Real.convexOn_mul_log.map_sum_le (t := s)
-      (w := fun i => b i / B) (p := fun i => a i / b i) h₀ h₁ hmem
-  have hpt : ∀ i ∈ s, (b i / B) • (a i / b i) = a i / B := fun i hi => by
+      (w := fun i ↦ b i / B) (p := fun i ↦ a i / b i) h₀ h₁ hmem
+  have hpt : ∀ i ∈ s, (b i / B) • (a i / b i) = a i / B := fun i hi ↦ by
     have hbi : b i ≠ 0 := (hb i hi).ne'
     simp only [smul_eq_mul]
     field_simp
@@ -82,7 +82,7 @@ theorem logSumInequality
     rw [Finset.sum_congr rfl hpt, ← Finset.sum_div, ← hA_def]
   have hrhs : (∑ i ∈ s, (b i / B) • ((a i / b i) * Real.log (a i / b i)))
       = ∑ i ∈ s, (a i / B) * Real.log (a i / b i) := by
-    refine Finset.sum_congr rfl (fun i hi => ?_)
+    refine Finset.sum_congr rfl (fun i hi ↦ ?_)
     have hbi : b i ≠ 0 := (hb i hi).ne'
     simp only [smul_eq_mul]
     field_simp
@@ -93,7 +93,7 @@ theorem logSumInequality
     _ ≤ (∑ i ∈ s, (a i / B) * Real.log (a i / b i)) * B := hkey
     _ = ∑ i ∈ s, a i * Real.log (a i / b i) := by
         rw [Finset.sum_mul]
-        refine Finset.sum_congr rfl (fun i hi => ?_)
+        refine Finset.sum_congr rfl (fun i hi ↦ ?_)
         field_simp
 
 /-- The finite geometric reference sum is bounded by the full geometric tail:
@@ -105,21 +105,21 @@ theorem sum_geom_shift_le_inv
     (∑ l ∈ L, θ ^ (l - 1)) ≤ (1 - θ)⁻¹ := by
   classical
   -- Reindex `l ↦ l - 1`, injective on `L` since all lengths are `≥ 1`.
-  have hInj : Set.InjOn (fun l => l - 1) (L : Set ℕ) := by
+  have hInj : Set.InjOn (fun l ↦ l - 1) (L : Set ℕ) := by
     intro x hx y hy hxy
     simp only at hxy
     have hx1 := hl1 x hx
     have hy1 := hl1 y hy
     omega
   have hreindex : (∑ l ∈ L, θ ^ (l - 1))
-      = ∑ m ∈ L.image (fun l => l - 1), θ ^ m := by
+      = ∑ m ∈ L.image (fun l ↦ l - 1), θ ^ m := by
     rw [Finset.sum_image hInj]
   rw [hreindex]
   -- Bound the finite sum by the full geometric series.
-  have hsummable : Summable (fun n : ℕ => θ ^ n) :=
+  have hsummable : Summable (fun n : ℕ ↦ θ ^ n) :=
     summable_geometric_of_lt_one hθ0.le hθ1
-  have hle := hsummable.sum_le_tsum (L.image (fun l => l - 1))
-    (fun n _ => by positivity)
+  have hle := hsummable.sum_le_tsum (L.image (fun l ↦ l - 1))
+    (fun n _ ↦ by positivity)
   rw [tsum_geometric_of_lt_one hθ0.le hθ1] at hle
   exact hle
 
@@ -151,9 +151,9 @@ theorem empirical_entropy_le_log_mean_of_lt
   have hθ_ne : θ ≠ 0 := hθ0.ne'
   have h1subθ : 1 - θ = C / N := by rw [hθ_def]; ring
   -- Apply the log-sum inequality with `a = cf`, `b l = θ^(l-1)`.
-  have hb_pos : ∀ l ∈ L, 0 < θ ^ (l - 1) := fun l _ => by positivity
-  have hlogsum := logSumInequality L cf (fun l => θ ^ (l - 1))
-    (fun l hl => (hpos l hl).le) hb_pos
+  have hb_pos : ∀ l ∈ L, 0 < θ ^ (l - 1) := fun l _ ↦ by positivity
+  have hlogsum := logSumInequality L cf (fun l ↦ θ ^ (l - 1))
+    (fun l hl ↦ (hpos l hl).le) hb_pos
   -- `∑ a = C`.
   rw [← hC_def] at hlogsum
   -- Rewrite the RHS of `hlogsum`:
@@ -176,7 +176,7 @@ theorem empirical_entropy_le_log_mean_of_lt
     rw [← Finset.sum_mul]
     congr 1
     rw [hN_def, hC_def, ← Finset.sum_sub_distrib]
-    refine Finset.sum_congr rfl (fun l hl => ?_)
+    refine Finset.sum_congr rfl (fun l hl ↦ ?_)
     ring
   rw [hrhs] at hlogsum
   -- LHS of `hlogsum`: `C · log (C / ∑θ^(l-1))`.
@@ -261,7 +261,7 @@ theorem empirical_entropy_le_log_mean
   -- `C ≤ N` since each length `l ≥ 1`.
   have hCN : C ≤ N := by
     rw [hC_def, hN_def]
-    refine Finset.sum_le_sum (fun l hl => ?_)
+    refine Finset.sum_le_sum (fun l hl ↦ ?_)
     have hl1' : (1 : ℝ) ≤ (l : ℝ) := by exact_mod_cast hl1 l hl
     nlinarith [hpos l hl]
   -- Rewrite the LHS as `C · log C − ∑ cf l · log (cf l)`.
@@ -270,7 +270,7 @@ theorem empirical_entropy_le_log_mean
     have hCsum : C * Real.log C = ∑ l ∈ L, cf l * Real.log C := by
       rw [← Finset.sum_mul, ← hC_def]
     rw [hCsum, ← Finset.sum_sub_distrib]
-    refine Finset.sum_congr rfl (fun l hl => ?_)
+    refine Finset.sum_congr rfl (fun l hl ↦ ?_)
     have hcfl : cf l ≠ 0 := (hpos l hl).ne'
     rw [Real.log_div hC_ne hcfl]
     ring
@@ -284,7 +284,7 @@ theorem empirical_entropy_le_log_mean
       -- The `l` term contributes a strictly positive excess to `N − C`.
       have hexcess : C < N := by
         rw [hC_def, hN_def]
-        refine Finset.sum_lt_sum (fun i hi => ?_) ⟨l, hl, ?_⟩
+        refine Finset.sum_lt_sum (fun i hi ↦ ?_) ⟨l, hl, ?_⟩
         · have : (1 : ℝ) ≤ (i : ℝ) := by exact_mod_cast hl1 i hi
           nlinarith [hpos i hi]
         · have : (2 : ℝ) ≤ (l : ℝ) := by exact_mod_cast hl2

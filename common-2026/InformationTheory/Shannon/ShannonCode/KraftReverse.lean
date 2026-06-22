@@ -40,7 +40,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α]
 
 For `n < D^L`, this is the canonical length-`L` digit list (most-significant first). -/
 def toBaseDLen (D : ℕ) [NeZero D] (L n : ℕ) : List (Fin D) :=
-  List.ofFn (n := L) fun i =>
+  List.ofFn (n := L) fun i ↦
     ⟨(n / D ^ (L - 1 - (i : ℕ))) % D,
       Nat.mod_lt _ (Nat.pos_of_neZero D)⟩
 
@@ -131,7 +131,7 @@ lemma toBaseDLen_injOn_lt (D : ℕ) [NeZero D] (L : ℕ) {n₁ n₂ : ℕ}
 
 /-- Elements of `α` sorted by `l` in ascending order. -/
 noncomputable def sortedByLen (l : α → ℕ) : List α :=
-  List.mergeSort (Finset.univ : Finset α).toList (fun a b => decide (l a ≤ l b))
+  List.mergeSort (Finset.univ : Finset α).toList (fun a b ↦ decide (l a ≤ l b))
 
 omit [DecidableEq α] in
 lemma sortedByLen_length (l : α → ℕ) :
@@ -149,14 +149,14 @@ lemma mem_sortedByLen (l : α → ℕ) (a : α) : a ∈ sortedByLen l := by
 
 omit [DecidableEq α] in
 lemma sortedByLen_pairwise_le (l : α → ℕ) :
-    (sortedByLen l).Pairwise (fun a b => l a ≤ l b) := by
+    (sortedByLen l).Pairwise (fun a b ↦ l a ≤ l b) := by
   unfold sortedByLen
-  have h := List.pairwise_mergeSort (le := fun a b => decide (l a ≤ l b))
+  have h := List.pairwise_mergeSort (le := fun a b ↦ decide (l a ≤ l b))
     (l := (Finset.univ : Finset α).toList)
-    (fun a b c hab hbc => by
+    (fun a b c hab hbc ↦ by
       simp only [decide_eq_true_eq] at hab hbc ⊢
       exact le_trans hab hbc)
-    (fun a b => by
+    (fun a b ↦ by
       simp only [Bool.or_eq_true, decide_eq_true_eq]
       exact le_total _ _)
   refine h.imp ?_
@@ -166,7 +166,7 @@ lemma sortedByLen_pairwise_le (l : α → ℕ) :
 /-- Cumulative slot offset: `slotStart D l L k = ∑_{j < k} D^(L − l (sortedByLen l)[j])`.
 Saturates to the full sum for `k ≥ |α|`. -/
 noncomputable def slotStart (D : ℕ) (l : α → ℕ) (L : ℕ) (k : ℕ) : ℕ :=
-  ((sortedByLen l).take k).map (fun a => D ^ (L - l a)) |>.sum
+  ((sortedByLen l).take k).map (fun a ↦ D ^ (L - l a)) |>.sum
 
 
 omit [DecidableEq α] in
@@ -213,8 +213,8 @@ lemma slotStart_card_eq_sum (D : ℕ) (l : α → ℕ) (L : ℕ) :
   have hperm : (sortedByLen l).Perm (Finset.univ : Finset α).toList := by
     unfold sortedByLen
     exact List.mergeSort_perm _ _
-  rw [show (List.map (fun a => D ^ (L - l a)) (sortedByLen l)).sum
-        = (List.map (fun a => D ^ (L - l a)) ((Finset.univ : Finset α).toList)).sum
+  rw [show (List.map (fun a ↦ D ^ (L - l a)) (sortedByLen l)).sum
+        = (List.map (fun a ↦ D ^ (L - l a)) ((Finset.univ : Finset α).toList)).sum
         from (hperm.map _).sum_eq]
   -- ((univ.toList).map f).sum = univ.sum f
   rw [← Finset.sum_map_val]
@@ -420,7 +420,7 @@ lemma shannonFanoCode_prefixFree
   have h_len_le : l a ≤ l b := by
     have := hpref.length_le
     rwa [shannonFanoCode_length, shannonFanoCode_length] at this
-  have hidx_ne : sortedIndex l a ≠ sortedIndex l b := fun h =>
+  have hidx_ne : sortedIndex l a ≠ sortedIndex l b := fun h ↦
     hab (sortedIndex_injective l h)
   rcases lt_or_gt_of_ne hidx_ne with h_idx_lt | h_idx_gt
   · -- Case: idx a < idx b, prefix flows correct direction

@@ -58,12 +58,12 @@ lemma entropy_eq_of_identDistrib
     (h : IdentDistrib X Y μ ν) :
     entropy μ X = entropy ν Y := by
   unfold entropy
-  refine Finset.sum_congr rfl fun x _ => ?_
+  refine Finset.sum_congr rfl fun x _ ↦ ?_
   rw [show (μ.map X).real {x} = (ν.map Y).real {x} from by rw [h.map_eq]]
 
 /-- The block `jointRV` as a `Fin n`-indexed family. -/
 private noncomputable def jointFamily (Xs : ℕ → Ω → α) (n : ℕ) : Fin n → Ω → α :=
-  fun i ω => Xs i.val ω
+  fun i ω ↦ Xs i.val ω
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 private lemma measurable_jointFamily (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -73,8 +73,8 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] i
 private lemma indepFun_Xs_prefix_of_iIndepFun
     (μ : Measure Ω)
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep_full : iIndepFun (fun i => Xs i) μ) (i : ℕ) :
-    IndepFun (Xs i) (fun ω (j : Fin i) => Xs j.val ω) μ := by
+    (hindep_full : iIndepFun (fun i ↦ Xs i) μ) (i : ℕ) :
+    IndepFun (Xs i) (fun ω (j : Fin i) ↦ Xs j.val ω) μ := by
   -- Apply `iIndepFun.indepFun_finset` with `S = {i}`, `T = Finset.range i`.
   set S : Finset ℕ := {i} with hS_def
   set T : Finset ℕ := Finset.range i with hT_def
@@ -85,17 +85,17 @@ private lemma indepFun_Xs_prefix_of_iIndepFun
   -- h_pair_indep : IndepFun (fun a (k : S) => Xs k.val a) (fun a (k : T) => Xs k.val a) μ.
   -- Project: S → Unit → α, T → Fin i → α via measurable functions.
   -- LHS projection: (S → α) → α, "evaluate at i".
-  let projS : (S → α) → α := fun f => f ⟨i, Finset.mem_singleton.mpr rfl⟩
+  let projS : (S → α) → α := fun f ↦ f ⟨i, Finset.mem_singleton.mpr rfl⟩
   have hprojS_meas : Measurable projS := by
-    show Measurable (fun (f : S → α) => f ⟨i, _⟩)
+    show Measurable (fun (f : S → α) ↦ f ⟨i, _⟩)
     exact measurable_pi_apply _
   -- RHS projection: (T → α) → (Fin i → α) by reindexing.
   let projT : (T → α) → (Fin i → α) :=
-    fun f j => f ⟨j.val, Finset.mem_range.mpr j.isLt⟩
+    fun f j ↦ f ⟨j.val, Finset.mem_range.mpr j.isLt⟩
   have hprojT_meas : Measurable projT := by
     refine measurable_pi_iff.mpr ?_
     intro j
-    show Measurable (fun (f : T → α) => f ⟨j.val, _⟩)
+    show Measurable (fun (f : T → α) ↦ f ⟨j.val, _⟩)
     exact measurable_pi_apply _
   have h_lifted := h_pair_indep.comp hprojS_meas hprojT_meas
   -- h_lifted : IndepFun (projS ∘ ...) (projT ∘ ...) = IndepFun (Xs i) (fun ω j => Xs j.val ω).
@@ -107,7 +107,7 @@ omit [DecidableEq α] in
 theorem entropy_jointRV_eq_n_smul
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep_full : iIndepFun (fun i => Xs i) μ)
+    (hindep_full : iIndepFun (fun i ↦ Xs i) μ)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (n : ℕ) :
     entropy μ (jointRV Xs n) = (n : ℝ) * entropy μ (Xs 0) := by
@@ -122,16 +122,16 @@ theorem entropy_jointRV_eq_n_smul
   -- Each summand: condEntropy μ (F i) prefix_i = entropy μ (F i) (independence).
   have h_each : ∀ i : Fin n,
       InformationTheory.MeasureFano.condEntropy μ (F i)
-          (fun ω (j : Fin i.val) => F ⟨j.val, j.isLt.trans i.isLt⟩ ω)
+          (fun ω (j : Fin i.val) ↦ F ⟨j.val, j.isLt.trans i.isLt⟩ ω)
         = entropy μ (Xs 0) := by
     intro i
     -- prefix is the tuple of `F j` for `j : Fin i.val` (which is `Xs j.val`).
     set prefix_i : Ω → (Fin i.val → α) :=
-      fun ω j => F ⟨j.val, j.isLt.trans i.isLt⟩ ω with hprefix_def
+      fun ω j ↦ F ⟨j.val, j.isLt.trans i.isLt⟩ ω with hprefix_def
     have hprefix_meas : Measurable prefix_i :=
-      measurable_pi_iff.mpr fun j => hF_meas _
+      measurable_pi_iff.mpr fun j ↦ hF_meas _
     -- prefix_i = fun ω j => Xs j.val ω (defeq via F = jointFamily).
-    have hprefix_eq : prefix_i = fun ω (j : Fin i.val) => Xs j.val ω := rfl
+    have hprefix_eq : prefix_i = fun ω (j : Fin i.val) ↦ Xs j.val ω := rfl
     -- F i = Xs i.val (defeq).
     have hFi_eq : F i = Xs i.val := rfl
     -- Independence of F i and prefix_i.
@@ -147,7 +147,7 @@ theorem entropy_jointRV_eq_n_smul
     exact entropy_eq_of_identDistrib μ μ (Xs i.val) (Xs 0) (hident i.val)
   -- Combine: jointEntropy = ∑ i, H(Xs 0) = n · H(Xs 0).
   rw [← h_je_eq, h_chain]
-  rw [Finset.sum_congr rfl (fun i _ => h_each i)]
+  rw [Finset.sum_congr rfl (fun i _ ↦ h_each i)]
   rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
 
 /-! ### Per-block converse bound -/
@@ -159,7 +159,7 @@ omit [DecidableEq α] in
 theorem source_coding_per_n_bound
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep_full : iIndepFun (fun i => Xs i) μ)
+    (hindep_full : iIndepFun (fun i ↦ Xs i) μ)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (hcard : 2 ≤ Fintype.card α)
     (n : ℕ) (hn : 1 ≤ n)
@@ -170,14 +170,14 @@ theorem source_coding_per_n_bound
       ≤ Real.log (M : ℝ)
         + Real.binEntropy
             (InformationTheory.MeasureFano.errorProb μ
-              (jointRV Xs n) (fun ω => c (jointRV Xs n ω)) d)
+              (jointRV Xs n) (fun ω ↦ c (jointRV Xs n ω)) d)
         + InformationTheory.MeasureFano.errorProb μ
-            (jointRV Xs n) (fun ω => c (jointRV Xs n ω)) d
+            (jointRV Xs n) (fun ω ↦ c (jointRV Xs n ω)) d
           * (n : ℝ) * Real.log (Fintype.card α) := by
   classical
   -- ## B.0 Setup
   set Xn : Ω → (Fin n → α) := jointRV Xs n with hXn_def
-  set Yn : Ω → Fin M := fun ω => c (Xn ω) with hYn_def
+  set Yn : Ω → Fin M := fun ω ↦ c (Xn ω) with hYn_def
   set Pe : ℝ := InformationTheory.MeasureFano.errorProb μ Xn Yn d with hPe_def
   have hXn_meas : Measurable Xn := measurable_jointRV Xs hXs n
   have hc_meas : Measurable c := measurable_of_countable _
@@ -286,41 +286,41 @@ with `R'` any constant `> R`. -/
 theorem source_coding_converse
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hindep_full : iIndepFun (fun i => Xs i) μ)
+    (hindep_full : iIndepFun (fun i ↦ Xs i) μ)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (hcard : 2 ≤ Fintype.card α)
     (M : ℕ → ℕ) [hM_pos : ∀ n, NeZero (M n)]
     (c : ∀ n, (Fin n → α) → Fin (M n))
     (d : ∀ n, Fin (M n) → (Fin n → α))
     (hPe_to_zero :
-      Tendsto (fun n => InformationTheory.MeasureFano.errorProb μ
-                          (jointRV Xs n) (fun ω => c n (jointRV Xs n ω)) (d n))
+      Tendsto (fun n ↦ InformationTheory.MeasureFano.errorProb μ
+                          (jointRV Xs n) (fun ω ↦ c n (jointRV Xs n ω)) (d n))
               atTop (𝓝 0))
     (hM_bdd : ∃ R, ∀ n, Real.log (M n : ℝ) / n ≤ R) :
     entropy μ (Xs 0)
-      ≤ Filter.liminf (fun n : ℕ => Real.log (M n : ℝ) / n) atTop := by
+      ≤ Filter.liminf (fun n : ℕ ↦ Real.log (M n : ℝ) / n) atTop := by
   classical
   set H : ℝ := entropy μ (Xs 0) with hH_def
-  set Pe : ℕ → ℝ := fun n => InformationTheory.MeasureFano.errorProb μ
-    (jointRV Xs n) (fun ω => c n (jointRV Xs n ω)) (d n) with hPe_def
+  set Pe : ℕ → ℝ := fun n ↦ InformationTheory.MeasureFano.errorProb μ
+    (jointRV Xs n) (fun ω ↦ c n (jointRV Xs n ω)) (d n) with hPe_def
   -- δ_n := h(Pe_n) / n + Pe_n · log |α|.
-  set δ : ℕ → ℝ := fun n => Real.binEntropy (Pe n) / n + Pe n * Real.log (Fintype.card α)
+  set δ : ℕ → ℝ := fun n ↦ Real.binEntropy (Pe n) / n + Pe n * Real.log (Fintype.card α)
     with hδ_def
   -- (C.1) Tendsto δ atTop (𝓝 0).
-  have h_binEntropy_tendsto : Tendsto (fun n => Real.binEntropy (Pe n)) atTop (𝓝 0) := by
+  have h_binEntropy_tendsto : Tendsto (fun n ↦ Real.binEntropy (Pe n)) atTop (𝓝 0) := by
     have := Real.binEntropy_continuous.tendsto 0
     rw [Real.binEntropy_zero] at this
     exact this.comp hPe_to_zero
-  have h_one_div_n : Tendsto (fun n : ℕ => (1 : ℝ) / n) atTop (𝓝 0) :=
+  have h_one_div_n : Tendsto (fun n : ℕ ↦ (1 : ℝ) / n) atTop (𝓝 0) :=
     tendsto_one_div_atTop_nhds_zero_nat
-  have h_binEntropy_div : Tendsto (fun n => Real.binEntropy (Pe n) / n) atTop (𝓝 0) := by
+  have h_binEntropy_div : Tendsto (fun n ↦ Real.binEntropy (Pe n) / n) atTop (𝓝 0) := by
     have hprod := h_binEntropy_tendsto.mul h_one_div_n
     simp only [mul_zero] at hprod
     have h_eq : ∀ n : ℕ, Real.binEntropy (Pe n) * (1 / (n : ℝ))
-        = Real.binEntropy (Pe n) / n := fun n => by ring
+        = Real.binEntropy (Pe n) / n := fun n ↦ by ring
     exact (Tendsto.congr h_eq hprod)
-  have h_Pe_log : Tendsto (fun n => Pe n * Real.log (Fintype.card α)) atTop (𝓝 0) := by
-    have h_const : Tendsto (fun _ : ℕ => Real.log (Fintype.card α)) atTop
+  have h_Pe_log : Tendsto (fun n ↦ Pe n * Real.log (Fintype.card α)) atTop (𝓝 0) := by
+    have h_const : Tendsto (fun _ : ℕ ↦ Real.log (Fintype.card α)) atTop
         (𝓝 (Real.log (Fintype.card α))) := tendsto_const_nhds
     have hprod := hPe_to_zero.mul h_const
     simpa using hprod
@@ -330,7 +330,7 @@ theorem source_coding_converse
   -- (C.2) per-n bound /n: H ≤ log M_n / n + δ_n eventually.
   have h_per_n : ∀ᶠ n in atTop, H ≤ Real.log (M n : ℝ) / n + δ n := by
     rw [Filter.eventually_atTop]
-    refine ⟨1, fun n hn => ?_⟩
+    refine ⟨1, fun n hn ↦ ?_⟩
     have hn_pos_R : (0 : ℝ) < n := by exact_mod_cast hn
     have h_bound := source_coding_per_n_bound μ Xs hXs hindep_full hident hcard n hn (c n) (d n)
     -- h_bound : n · H ≤ log M + h(Pe) + Pe · n · log |α|.
@@ -358,24 +358,24 @@ theorem source_coding_converse
   have h_per_n' : ∀ᶠ n in atTop, H - δ n ≤ Real.log (M n : ℝ) / n := by
     filter_upwards [h_per_n] with n hn
     linarith
-  have h_LHS_tendsto : Tendsto (fun n => H - δ n) atTop (𝓝 H) := by
+  have h_LHS_tendsto : Tendsto (fun n ↦ H - δ n) atTop (𝓝 H) := by
     have := (tendsto_const_nhds (x := H) (f := atTop)).sub h_δ
     simpa using this
-  have h_LHS_liminf : Filter.liminf (fun n => H - δ n) atTop = H :=
+  have h_LHS_liminf : Filter.liminf (fun n ↦ H - δ n) atTop = H :=
     h_LHS_tendsto.liminf_eq
   -- IsCoboundedUnder for log M_n / n: from `hM_bdd` (eventual upper bound R) we get
   -- frequent (in fact universal) `log M_n / n ≤ R`, hence `IsCoboundedUnder (· ≥ ·)`.
   obtain ⟨R, hR⟩ := hM_bdd
   have h_cobdd : Filter.IsCoboundedUnder (· ≥ ·) atTop
-      (fun n : ℕ => Real.log (M n : ℝ) / n) :=
+      (fun n : ℕ ↦ Real.log (M n : ℝ) / n) :=
     Filter.IsCoboundedUnder.of_frequently_le (a := R)
       (Filter.Eventually.frequently (Filter.Eventually.of_forall hR))
   -- liminf monotone via `liminf_le_liminf`.
-  have h_LHS_bdd : Filter.IsBoundedUnder (· ≥ ·) atTop (fun n => H - δ n) :=
+  have h_LHS_bdd : Filter.IsBoundedUnder (· ≥ ·) atTop (fun n ↦ H - δ n) :=
     h_LHS_tendsto.isBoundedUnder_ge
   have h_liminf_mono :
-      Filter.liminf (fun n => H - δ n) atTop ≤
-        Filter.liminf (fun n : ℕ => Real.log (M n : ℝ) / n) atTop :=
+      Filter.liminf (fun n ↦ H - δ n) atTop ≤
+        Filter.liminf (fun n : ℕ ↦ Real.log (M n : ℝ) / n) atTop :=
     Filter.liminf_le_liminf h_per_n' h_LHS_bdd h_cobdd
   rw [h_LHS_liminf] at h_liminf_mono
   exact h_liminf_mono

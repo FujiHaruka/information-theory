@@ -110,12 +110,12 @@ theorem isBigO_natCast_div_log_of_mul_log_le
     {f : ℕ → ℝ} {K : ℝ}
     (h_nonneg : ∀ᶠ n in atTop, 0 ≤ f n)
     (h_mul_log : ∀ᶠ n in atTop, f n * Real.log (f n) ≤ K * (n : ℝ)) :
-    f =O[atTop] (fun n => (n : ℝ) / Real.log (n : ℝ)) := by
+    f =O[atTop] (fun n ↦ (n : ℝ) / Real.log (n : ℝ)) := by
   -- Choose the constant `C = max (2K) 2`, valid in both branches.
   refine IsBigO.of_bound (max (2 * K) 2) ?_
   -- `1 < n` eventually gives `log n > 0` and `n > 0`.
   have h_one_lt : ∀ᶠ n : ℕ in atTop, (1 : ℝ) < (n : ℝ) := by
-    have : ∀ᶠ n : ℕ in atTop, 2 ≤ n := Filter.eventually_atTop.2 ⟨2, fun _ hn => hn⟩
+    have : ∀ᶠ n : ℕ in atTop, 2 ≤ n := Filter.eventually_atTop.2 ⟨2, fun _ hn ↦ hn⟩
     filter_upwards [this] with n hn
     exact_mod_cast lt_of_lt_of_le one_lt_two (by exact_mod_cast hn)
   filter_upwards [h_nonneg, h_mul_log, h_one_lt] with n hf hfl hn1
@@ -200,11 +200,11 @@ asymptotic envelope predicate holds with genuine `IsBigO` content. -/
 theorem IsLZ78PhraseCountAsymptotic.of_mul_log_bound
     {p : ℕ → LZ78Parsing α} {K : ℝ} (_hK : 0 ≤ K)
     (h : IsZivCountingMulLogBound p K) :
-    IsLZ78PhraseCountAsymptotic p (fun n => (n : ℝ) / Real.log (n : ℝ)) := by
+    IsLZ78PhraseCountAsymptotic p (fun n ↦ (n : ℝ) / Real.log (n : ℝ)) := by
   unfold IsLZ78PhraseCountAsymptotic
   refine isBigO_natCast_div_log_of_mul_log_le (K := K) ?_ h
   -- `((p n).count : ℝ) ≥ 0` always.
-  exact Filter.Eventually.of_forall (fun n => by exact_mod_cast Nat.zero_le _)
+  exact Filter.Eventually.of_forall (fun n ↦ by exact_mod_cast Nat.zero_le _)
 
 end MulLogPredicate
 
@@ -222,7 +222,7 @@ shape of `lz78_phrase_count_asymptotic_n_div_log` but with the genuine
 theorem lz78_phrase_count_asymptotic_of_mul_log
     (p : ℕ → LZ78Parsing α) {K : ℝ} (hK : 0 ≤ K)
     (h : IsZivCountingMulLogBound p K) :
-    IsLZ78PhraseCountAsymptotic p (fun n => (n : ℝ) / Real.log (n : ℝ)) :=
+    IsLZ78PhraseCountAsymptotic p (fun n ↦ (n : ℝ) / Real.log (n : ℝ)) :=
   IsLZ78PhraseCountAsymptotic.of_mul_log_bound hK h
 
 /-- **Sandwich upgrade**: combine the genuine upper envelope with the
@@ -232,8 +232,8 @@ theorem IsLZ78PhraseCountSandwich.of_mul_log_bound
     (p : ℕ → LZ78Parsing α) {K : ℝ} (hK : 0 ≤ K)
     (h : IsZivCountingMulLogBound p K) :
     IsLZ78PhraseCountSandwich p
-      (fun n => ((p n).count : ℝ))
-      (fun n => (n : ℝ) / Real.log (n : ℝ)) :=
+      (fun n ↦ ((p n).count : ℝ))
+      (fun n ↦ (n : ℝ) / Real.log (n : ℝ)) :=
   IsLZ78PhraseCountSandwich.mk
     (IsLZ78PhraseCountAsymptotic.of_mul_log_bound hK h)
     (isBigO_refl _ _)

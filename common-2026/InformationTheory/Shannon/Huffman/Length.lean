@@ -66,8 +66,8 @@ omit [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
 lemma groupKey_injective : Function.Injective (groupKey (α := α)) := by
   intro p q h
   unfold groupKey at h
-  have h1 : p.2 = q.2 := congrArg (fun z => (ofLex z).1) h
-  have h2 : toColex p.1 = toColex q.1 := congrArg (fun z => (ofLex z).2) h
+  have h1 : p.2 = q.2 := congrArg (fun z ↦ (ofLex z).1) h
+  have h2 : toColex p.1 = toColex q.1 := congrArg (fun z ↦ (ofLex z).2) h
   rw [toColex_inj] at h2
   exact Prod.ext h2 h1
 
@@ -195,7 +195,7 @@ noncomputable def huffmanStep
     Classical.choose_spec (Multiset.exists_min_image (α := Finset α × ℝ)
       (R := ℝ ×ₗ Colex (Finset α)) groupKey hs_ne)
   have hx1 : x1 ∈ s ∧ ∀ z ∈ s, x1.2 ≤ z.2 :=
-    ⟨hx1k.1, fun z hz => groupKey_le_imp_snd_le (hx1k.2 z hz)⟩
+    ⟨hx1k.1, fun z hz ↦ groupKey_le_imp_snd_le (hx1k.2 z hz)⟩
   let s' := s.erase x1
   have hs'_ne : s' ≠ 0 := by
     have hcard_s' : s'.card = s.card - 1 :=
@@ -209,7 +209,7 @@ noncomputable def huffmanStep
     Classical.choose_spec (Multiset.exists_min_image (α := Finset α × ℝ)
       (R := ℝ ×ₗ Colex (Finset α)) groupKey hs'_ne)
   have hx2 : x2 ∈ s' ∧ ∀ z ∈ s', x2.2 ≤ z.2 :=
-    ⟨hx2k.1, fun z hz => groupKey_le_imp_snd_le (hx2k.2 z hz)⟩
+    ⟨hx2k.1, fun z hz ↦ groupKey_le_imp_snd_le (hx2k.2 z hz)⟩
   -- Assemble witnesses for HuffmanGrouping preservation.
   have hx1_mem : x1 ∈ s := hx1.1
   have hx2_mem_s' : x2 ∈ s' := hx2.1
@@ -426,17 +426,17 @@ noncomputable def huffmanLengthAux
         let s'' := step.2.2
         have : s''.card < s.card := huffmanStep_card_lt s h hg
         let g := huffmanLengthAux s''
-        fun a => if a ∈ A ∨ a ∈ B then g a + 1 else g a
+        fun a ↦ if a ∈ A ∨ a ∈ B then g a + 1 else g a
       else
-        fun _ => 0
+        fun _ ↦ 0
     else
-      fun _ => 0
+      fun _ ↦ 0
 termination_by s.card
 
 /-- Initial working multiset: each element `a : α` maps to the singleton group
 `({a}, P.real {a})`. -/
 noncomputable def initMultiset (P : Measure α) : Multiset (Finset α × ℝ) :=
-  (Finset.univ : Finset α).val.map (fun a => ({a}, P.real {a}))
+  (Finset.univ : Finset α).val.map (fun a ↦ ({a}, P.real {a}))
 
 /-! ### Unfolding lemmas and structural invariants for `huffmanLengthAux` -/
 
@@ -449,14 +449,14 @@ lemma huffmanLengthAux_eq_step (s : Multiset (Finset α × ℝ)) (h : 2 ≤ s.ca
       let B := step.2.1.1
       let s'' := step.2.2
       let g := huffmanLengthAux s''
-      fun a => if a ∈ A ∨ a ∈ B then g a + 1 else g a := by
+      fun a ↦ if a ∈ A ∨ a ∈ B then g a + 1 else g a := by
   rw [huffmanLengthAux]
   simp only [dif_pos hg, dif_pos h]
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 lemma huffmanLengthAux_eq_zero (s : Multiset (Finset α × ℝ)) (h : s.card ≤ 1)
     (hg : HuffmanGrouping s) :
-    huffmanLengthAux s = fun _ => 0 := by
+    huffmanLengthAux s = fun _ ↦ 0 := by
   have h' : ¬ 2 ≤ s.card := by omega
   rw [huffmanLengthAux]
   simp only [dif_pos hg, dif_neg h']
@@ -533,7 +533,7 @@ lemma initMultiset_huffmanGrouping (P : Measure α) :
   · -- Nodup: the map a ↦ ({a}, P.real {a}) is injective via the first coordinate.
     unfold initMultiset
     have hinj : Function.Injective
-        (fun a : α => (({a} : Finset α), P.real {a})) := by
+        (fun a : α ↦ (({a} : Finset α), P.real {a})) := by
       intro a b hab
       simp only [Prod.mk.injEq, Finset.singleton_inj] at hab
       exact hab.1

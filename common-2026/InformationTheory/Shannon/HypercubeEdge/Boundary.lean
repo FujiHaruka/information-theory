@@ -70,14 +70,14 @@ lemma flipCoord_apply_other {n : ℕ} (i : Fin n) (x : Fin n → Bool)
 cube edges having exactly one endpoint in `A`. -/
 def edgeBoundaryCount {n : ℕ} (A : Finset (Fin n → Bool)) : ℕ :=
   (Finset.univ.filter
-    (fun p : (Fin n → Bool) × Fin n => p.1 ∈ A ∧ flipCoord p.2 p.1 ∉ A)).card
+    (fun p : (Fin n → Bool) × Fin n ↦ p.1 ∈ A ∧ flipCoord p.2 p.1 ∉ A)).card
 
 /-- The number of pairs `(x, i)` with `x ∈ A` and `flipCoord i x ∈ A`, counting each internal
 edge twice. -/
 @[entry_point]
 def internalEdgePairCount {n : ℕ} (A : Finset (Fin n → Bool)) : ℕ :=
   (Finset.univ.filter
-    (fun p : (Fin n → Bool) × Fin n => p.1 ∈ A ∧ flipCoord p.2 p.1 ∈ A)).card
+    (fun p : (Fin n → Bool) × Fin n ↦ p.1 ∈ A ∧ flipCoord p.2 p.1 ∈ A)).card
 
 /-! ## Counting identities -/
 
@@ -89,7 +89,7 @@ theorem edge_total_count {n : ℕ} (A : Finset (Fin n → Bool)) :
   classical
   -- The two sets are disjoint (predicate negation) and union = {p : p.1 ∈ A}.
   set S : Finset ((Fin n → Bool) × Fin n) :=
-    Finset.univ.filter (fun p => p.1 ∈ A) with hS_def
+    Finset.univ.filter (fun p ↦ p.1 ∈ A) with hS_def
   -- edgeBoundaryCount A + internalEdgePairCount A = S.card
   have hsplit : edgeBoundaryCount A + internalEdgePairCount A = S.card := by
     unfold edgeBoundaryCount internalEdgePairCount
@@ -132,12 +132,12 @@ lemma flipCoord_mem_iff {n : ℕ} (A : Finset (Fin n → Bool)) (x : Fin n → B
 
 /-- The projection `(Fin n → Bool) → ({j // j ≠ i} → Bool)` dropping coordinate `i`. -/
 def projMap {n : ℕ} (i : Fin n) (x : Fin n → Bool) :
-    {j : Fin n // j ≠ i} → Bool := fun j => x j.val
+    {j : Fin n // j ≠ i} → Bool := fun j ↦ x j.val
 
 /-- Extend a projection by the bit `b` at coordinate `i`. -/
 def extension {n : ℕ} (i : Fin n) (b : Bool)
     (y : {j : Fin n // j ≠ i} → Bool) : Fin n → Bool :=
-  fun j => if h : j = i then b else y ⟨j, h⟩
+  fun j ↦ if h : j = i then b else y ⟨j, h⟩
 
 @[simp] lemma extension_apply_eq {n : ℕ} (i : Fin n) (b : Bool)
     (y : {j : Fin n // j ≠ i} → Bool) :
@@ -186,11 +186,11 @@ lemma projMap_eq_iff {n : ℕ} (i : Fin n) (x : Fin n → Bool)
 /-- The boundary contribution in direction `i`: elements `x ∈ A` with `flipCoord i x ∉ A`. -/
 def boundaryDirSet {n : ℕ} (A : Finset (Fin n → Bool)) (i : Fin n) :
     Finset (Fin n → Bool) :=
-  A.filter (fun x => flipCoord i x ∉ A)
+  A.filter (fun x ↦ flipCoord i x ∉ A)
 
 lemma fiber_projMap_eq_union {n : ℕ} (A : Finset (Fin n → Bool)) (i : Fin n)
     (y : {j : Fin n // j ≠ i} → Bool) :
-    A.filter (fun x => projMap i x = y) =
+    A.filter (fun x ↦ projMap i x = y) =
       ((({extension i false y} : Finset _).filter (· ∈ A)) ∪
        (({extension i true y} : Finset _).filter (· ∈ A))) := by
   classical
@@ -211,11 +211,11 @@ lemma fiber_projMap_eq_union {n : ℕ} (A : Finset (Fin n → Bool)) (i : Fin n)
 
 lemma boundaryDirSet_fiber_projMap_eq_union {n : ℕ} (A : Finset (Fin n → Bool))
     (i : Fin n) (y : {j : Fin n // j ≠ i} → Bool) :
-    (boundaryDirSet A i).filter (fun x => projMap i x = y) =
+    (boundaryDirSet A i).filter (fun x ↦ projMap i x = y) =
       ((({extension i false y} : Finset _).filter
-          (fun x => x ∈ A ∧ extension i true y ∉ A)) ∪
+          (fun x ↦ x ∈ A ∧ extension i true y ∉ A)) ∪
        (({extension i true y} : Finset _).filter
-          (fun x => x ∈ A ∧ extension i false y ∉ A))) := by
+          (fun x ↦ x ∈ A ∧ extension i false y ∉ A))) := by
   classical
   ext x
   simp only [boundaryDirSet, Finset.mem_filter,
@@ -287,8 +287,8 @@ lemma extension_mem_of_mem_projectionExcept {n : ℕ} (A : Finset (Fin n → Boo
 lemma two_eq_fiber_card_add_boundaryDirSet_fiber_card {n : ℕ}
     (A : Finset (Fin n → Bool)) (i : Fin n) (y : {j : Fin n // j ≠ i} → Bool)
     (hy : y ∈ projectionExcept i A) :
-    2 = (A.filter (fun x => projMap i x = y)).card +
-        ((boundaryDirSet A i).filter (fun x => projMap i x = y)).card := by
+    2 = (A.filter (fun x ↦ projMap i x = y)).card +
+        ((boundaryDirSet A i).filter (fun x ↦ projMap i x = y)).card := by
   classical
   have h_ext_ne : extension i false y ≠ extension i true y :=
     extension_false_ne_extension_true i y
@@ -309,12 +309,12 @@ lemma two_eq_fiber_card_add_boundaryDirSet_fiber_card {n : ℕ}
               apply Finset.filter_eq_self.mpr
               intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1,
           show ({extension i false y} : Finset (Fin n → Bool)).filter
-              (fun x => x ∈ A ∧ extension i true y ∉ A) = ∅ from by
+              (fun x ↦ x ∈ A ∧ extension i true y ∉ A) = ∅ from by
               apply Finset.filter_eq_empty_iff.mpr
               intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
               rintro ⟨_, h⟩; exact h h1,
           show ({extension i true y} : Finset (Fin n → Bool)).filter
-              (fun x => x ∈ A ∧ extension i false y ∉ A) = ∅ from by
+              (fun x ↦ x ∈ A ∧ extension i false y ∉ A) = ∅ from by
               apply Finset.filter_eq_empty_iff.mpr
               intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
               rintro ⟨_, h⟩; exact h h0]
@@ -335,12 +335,12 @@ lemma two_eq_fiber_card_add_boundaryDirSet_fiber_card {n : ℕ}
               apply Finset.filter_eq_empty_iff.mpr
               intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1,
           show ({extension i false y} : Finset (Fin n → Bool)).filter
-              (fun x => x ∈ A ∧ extension i true y ∉ A) = {extension i false y} from by
+              (fun x ↦ x ∈ A ∧ extension i true y ∉ A) = {extension i false y} from by
               apply Finset.filter_eq_self.mpr
               intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
               exact ⟨h0, h1⟩,
           show ({extension i true y} : Finset (Fin n → Bool)).filter
-              (fun x => x ∈ A ∧ extension i false y ∉ A) = ∅ from by
+              (fun x ↦ x ∈ A ∧ extension i false y ∉ A) = ∅ from by
               apply Finset.filter_eq_empty_iff.mpr
               intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
               rintro ⟨h, _⟩; exact h1 h]
@@ -364,12 +364,12 @@ lemma two_eq_fiber_card_add_boundaryDirSet_fiber_card {n : ℕ}
               apply Finset.filter_eq_self.mpr
               intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1,
           show ({extension i false y} : Finset (Fin n → Bool)).filter
-              (fun x => x ∈ A ∧ extension i true y ∉ A) = ∅ from by
+              (fun x ↦ x ∈ A ∧ extension i true y ∉ A) = ∅ from by
               apply Finset.filter_eq_empty_iff.mpr
               intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
               rintro ⟨_, h⟩; exact h h1,
           show ({extension i true y} : Finset (Fin n → Bool)).filter
-              (fun x => x ∈ A ∧ extension i false y ∉ A) = ∅ from by
+              (fun x ↦ x ∈ A ∧ extension i false y ∉ A) = ∅ from by
               apply Finset.filter_eq_empty_iff.mpr
               intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
               rintro ⟨_, h⟩; exact h h0]
@@ -390,12 +390,12 @@ lemma two_eq_fiber_card_add_boundaryDirSet_fiber_card {n : ℕ}
               apply Finset.filter_eq_self.mpr
               intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1,
           show ({extension i false y} : Finset (Fin n → Bool)).filter
-              (fun x => x ∈ A ∧ extension i true y ∉ A) = ∅ from by
+              (fun x ↦ x ∈ A ∧ extension i true y ∉ A) = ∅ from by
               apply Finset.filter_eq_empty_iff.mpr
               intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
               rintro ⟨h, _⟩; exact h0 h,
           show ({extension i true y} : Finset (Fin n → Bool)).filter
-              (fun x => x ∈ A ∧ extension i false y ∉ A) = {extension i true y} from by
+              (fun x ↦ x ∈ A ∧ extension i false y ∉ A) = {extension i true y} from by
               apply Finset.filter_eq_self.mpr
               intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
               exact ⟨h1, h0⟩]
@@ -410,12 +410,12 @@ lemma two_eq_fiber_card_add_boundaryDirSet_fiber_card {n : ℕ}
 lemma boundaryPairCount_eq_boundaryDirSet_card {n : ℕ} (A : Finset (Fin n → Bool))
     (i : Fin n) :
     (Finset.univ.filter
-        (fun p : (Fin n → Bool) × Fin n =>
+        (fun p : (Fin n → Bool) × Fin n ↦
           p.1 ∈ A ∧ flipCoord p.2 p.1 ∉ A ∧ p.2 = i)).card
       = (boundaryDirSet A i).card := by
   classical
-  refine Finset.card_nbij' (fun (p : (Fin n → Bool) × Fin n) => p.1)
-    (fun x => (x, i)) ?_ ?_ ?_ ?_
+  refine Finset.card_nbij' (fun (p : (Fin n → Bool) × Fin n) ↦ p.1)
+    (fun x ↦ (x, i)) ?_ ?_ ?_ ?_
   · -- MapsTo: pair set → bdir
     intro p hp
     rw [Finset.mem_coe, Finset.mem_filter] at hp
@@ -441,7 +441,7 @@ lemma two_mul_projectionExcept_card_eq {n : ℕ} (A : Finset (Fin n → Bool))
     2 * (projectionExcept i A).card
       = A.card +
         (Finset.univ.filter
-          (fun p : (Fin n → Bool) × Fin n =>
+          (fun p : (Fin n → Bool) × Fin n ↦
             p.1 ∈ A ∧ flipCoord p.2 p.1 ∉ A ∧ p.2 = i)).card := by
   classical
   rw [boundaryPairCount_eq_boundaryDirSet_card]
@@ -452,7 +452,7 @@ lemma two_mul_projectionExcept_card_eq {n : ℕ} (A : Finset (Fin n → Bool))
     rw [projectionExcept_eq_image]
     exact Finset.mem_image_of_mem _ hxA
   have h_A_sum : A.card
-      = ∑ y ∈ projectionExcept i A, (A.filter (fun x => projMap i x = y)).card :=
+      = ∑ y ∈ projectionExcept i A, (A.filter (fun x ↦ projMap i x = y)).card :=
     Finset.card_eq_sum_card_fiberwise hMapsTo
   have hMapsTo_bdir : (boundaryDirSet A i : Set (Fin n → Bool)).MapsTo (projMap i)
       (projectionExcept i A : Set _) := by
@@ -461,13 +461,13 @@ lemma two_mul_projectionExcept_card_eq {n : ℕ} (A : Finset (Fin n → Bool))
     exact hMapsTo hxbdir.1
   have h_bdir_sum : (boundaryDirSet A i).card
       = ∑ y ∈ projectionExcept i A,
-          ((boundaryDirSet A i).filter (fun x => projMap i x = y)).card :=
+          ((boundaryDirSet A i).filter (fun x ↦ projMap i x = y)).card :=
     Finset.card_eq_sum_card_fiberwise hMapsTo_bdir
   have h_sum_2 :
       ∑ _y ∈ projectionExcept i A, (2 : ℕ)
         = ∑ y ∈ projectionExcept i A,
-            ((A.filter (fun x => projMap i x = y)).card +
-             ((boundaryDirSet A i).filter (fun x => projMap i x = y)).card) := by
+            ((A.filter (fun x ↦ projMap i x = y)).card +
+             ((boundaryDirSet A i).filter (fun x ↦ projMap i x = y)).card) := by
     apply Finset.sum_congr rfl
     intro y hy
     exact two_eq_fiber_card_add_boundaryDirSet_fiber_card A i y hy
@@ -486,14 +486,14 @@ theorem two_sum_projection_eq {n : ℕ} (A : Finset (Fin n → Bool)) :
       2 * (projectionExcept i A).card
         = A.card +
           (Finset.univ.filter
-            (fun p : (Fin n → Bool) × Fin n =>
+            (fun p : (Fin n → Bool) × Fin n ↦
               p.1 ∈ A ∧ flipCoord p.2 p.1 ∉ A ∧ p.2 = i)).card :=
-    fun i => two_mul_projectionExcept_card_eq A i
+    fun i ↦ two_mul_projectionExcept_card_eq A i
   -- Sum h_per_i over i:
   have h_sum :
       ∑ i : Fin n, 2 * (projectionExcept i A).card
         = ∑ i : Fin n, (A.card + (Finset.univ.filter
-            (fun p : (Fin n → Bool) × Fin n =>
+            (fun p : (Fin n → Bool) × Fin n ↦
               p.1 ∈ A ∧ flipCoord p.2 p.1 ∉ A ∧ p.2 = i)).card) := by
     apply Finset.sum_congr rfl
     intro i _; exact h_per_i i
@@ -507,11 +507,11 @@ theorem two_sum_projection_eq {n : ℕ} (A : Finset (Fin n → Bool)) :
   -- Use Finset.card_eq_sum_card_fiberwise (or rewrite manually).
   symm
   rw [show (Finset.univ.filter
-        (fun p : (Fin n → Bool) × Fin n =>
+        (fun p : (Fin n → Bool) × Fin n ↦
           p.1 ∈ A ∧ flipCoord p.2 p.1 ∉ A)).card
       = ∑ i : Fin n, ((Finset.univ.filter
-          (fun p : (Fin n → Bool) × Fin n =>
-            p.1 ∈ A ∧ flipCoord p.2 p.1 ∉ A)).filter (fun p => p.2 = i)).card from ?_]
+          (fun p : (Fin n → Bool) × Fin n ↦
+            p.1 ∈ A ∧ flipCoord p.2 p.1 ∉ A)).filter (fun p ↦ p.2 = i)).card from ?_]
   · apply Finset.sum_congr rfl
     intro i _
     congr 1
@@ -519,7 +519,7 @@ theorem two_sum_projection_eq {n : ℕ} (A : Finset (Fin n → Bool)) :
     simp only [Finset.mem_filter, Finset.mem_univ, true_and]
     tauto
   · -- card = Σ_i #(filter p.2 = i)
-    rw [← Finset.card_eq_sum_card_fiberwise (f := fun p : (Fin n → Bool) × Fin n => p.2)
+    rw [← Finset.card_eq_sum_card_fiberwise (f := fun p : (Fin n → Bool) × Fin n ↦ p.2)
         (t := Finset.univ)]
     intro p _
     exact Finset.mem_univ _
@@ -567,7 +567,7 @@ theorem sum_projection_card_ge_amgm {n : ℕ} {α : Type*}
     have h2 := (Nat.cast_le (α := ℝ)).mpr h
     push_cast at h2
     exact h2
-  have h_proj_nn : ∀ i : Fin n, 0 ≤ ((projectionExcept i A).card : ℝ) := fun i => by
+  have h_proj_nn : ∀ i : Fin n, 0 ≤ ((projectionExcept i A).card : ℝ) := fun i ↦ by
     exact_mod_cast Nat.zero_le _
   have h_A_nn : (0 : ℝ) ≤ A.card := by exact_mod_cast Nat.zero_le _
   have h_A_pow_nn : (0 : ℝ) ≤ (A.card : ℝ) ^ (n - 1) := pow_nonneg h_A_nn _
@@ -578,14 +578,14 @@ theorem sum_projection_card_ge_amgm {n : ℕ} {α : Type*}
     field_simp
   have h_GM_AM :=
     Real.geom_mean_le_arith_mean_weighted (s := (Finset.univ : Finset (Fin n)))
-      (w := fun _ => (1 : ℝ) / n)
-      (z := fun i => ((projectionExcept i A).card : ℝ))
-      (fun _ _ => h_one_div_nn) h_w_sum (fun i _ => h_proj_nn i)
+      (w := fun _ ↦ (1 : ℝ) / n)
+      (z := fun i ↦ ((projectionExcept i A).card : ℝ))
+      (fun _ _ ↦ h_one_div_nn) h_w_sum (fun i _ ↦ h_proj_nn i)
   -- ∏ z_i ^ (1/n) = (∏ z_i) ^ (1/n)
   have h_prod_rpow :
       ∏ i : Fin n, ((projectionExcept i A).card : ℝ) ^ ((1 : ℝ) / n)
         = (∏ i : Fin n, ((projectionExcept i A).card : ℝ)) ^ ((1 : ℝ) / n) :=
-    Real.finsetProd_rpow Finset.univ _ (fun i _ => h_proj_nn i) _
+    Real.finsetProd_rpow Finset.univ _ (fun i _ ↦ h_proj_nn i) _
   rw [h_prod_rpow] at h_GM_AM
   -- ∑ (1/n) * z_i = (1/n) * ∑ z_i
   rw [← Finset.mul_sum] at h_GM_AM

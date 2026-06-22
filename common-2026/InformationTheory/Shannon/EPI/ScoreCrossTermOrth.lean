@@ -49,11 +49,11 @@ theorem score_cross_term_eq_zero
     {sX sY : ℝ → ℝ}
     (hXY : IndepFun X Y P)
     (hsXmeas : Measurable sX) (hsYmeas : Measurable sY)
-    (hsX : AEStronglyMeasurable (fun ω => sX (X ω)) P)
-    (hsY : AEStronglyMeasurable (fun ω => sY (Y ω)) P)
+    (hsX : AEStronglyMeasurable (fun ω ↦ sX (X ω)) P)
+    (hsY : AEStronglyMeasurable (fun ω ↦ sY (Y ω)) P)
     (hmeanX : ∫ ω, sX (X ω) ∂P = 0) :
     ∫ ω, sX (X ω) * sY (Y ω) ∂P = 0 := by
-  have hindep : IndepFun (fun ω => sX (X ω)) (fun ω => sY (Y ω)) P :=
+  have hindep : IndepFun (fun ω ↦ sX (X ω)) (fun ω ↦ sY (Y ω)) P :=
     hXY.comp hsXmeas hsYmeas
   have hsplit :
       ∫ ω, sX (X ω) * sY (Y ω) ∂P

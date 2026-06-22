@@ -48,46 +48,46 @@ omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 The inner sum collapses to a single nonzero term at `a = coord0 x`. -/
 private lemma pmfLogCondPast_eq_sum_indicator_neg_log (k : ℕ) (x : (∀ _ : ℤ, α)) :
     pmfLogCondPast μ p k x
-      = ∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) x
+      = ∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ ↦ (1 : ℝ)) x
         * (-Real.log (condProbPast μ p a k x)) := by
   classical
   unfold pmfLogCondPast
   have h_inner :
-      (∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) x
+      (∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ ↦ (1 : ℝ)) x
         * condProbPast μ p a k x) = condProbPast μ p (coord0 x) k x :=
-    pmfLogCondPast_inner_eq_self (fun a => condProbPast μ p a k x) x
+    pmfLogCondPast_inner_eq_self (fun a ↦ condProbPast μ p a k x) x
   have h_sum :
-      (∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) x
+      (∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ ↦ (1 : ℝ)) x
         * (-Real.log (condProbPast μ p a k x)))
         = -Real.log (condProbPast μ p (coord0 x) k x) :=
-    pmfLogCondPast_inner_eq_self (fun a => -Real.log (condProbPast μ p a k x)) x
+    pmfLogCondPast_inner_eq_self (fun a ↦ -Real.log (condProbPast μ p a k x)) x
   rw [h_inner, h_sum]
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- Analogous decomposition for `pmfLogCondInfty`. -/
 private lemma pmfLogCondInfty_eq_sum_indicator_neg_log (x : (∀ _ : ℤ, α)) :
     pmfLogCondInfty μ p x
-      = ∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) x
+      = ∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ ↦ (1 : ℝ)) x
         * (-Real.log (condProbInfty μ p a x)) := by
   classical
   unfold pmfLogCondInfty
   have h_inner :
-      (∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) x
+      (∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ ↦ (1 : ℝ)) x
         * condProbInfty μ p a x) = condProbInfty μ p (coord0 x) x :=
-    pmfLogCondPast_inner_eq_self (fun a => condProbInfty μ p a x) x
+    pmfLogCondPast_inner_eq_self (fun a ↦ condProbInfty μ p a x) x
   have h_sum :
-      (∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) x
+      (∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ ↦ (1 : ℝ)) x
         * (-Real.log (condProbInfty μ p a x)))
         = -Real.log (condProbInfty μ p (coord0 x) x) :=
-    pmfLogCondPast_inner_eq_self (fun a => -Real.log (condProbInfty μ p a x)) x
+    pmfLogCondPast_inner_eq_self (fun a ↦ -Real.log (condProbInfty μ p a x)) x
   rw [h_inner, h_sum]
 
 lemma tendsto_min_posPart_natCast (t : ℝ) :
-    Tendsto (fun M : ℕ => min (t⁺) (M : ℝ)) atTop (𝓝 (t⁺)) := by
+    Tendsto (fun M : ℕ ↦ min (t⁺) (M : ℝ)) atTop (𝓝 (t⁺)) := by
   obtain ⟨N, hN⟩ := exists_nat_ge (t⁺)
   rw [Metric.tendsto_atTop]
   intro ε hε
-  refine ⟨N, fun M hM => ?_⟩
+  refine ⟨N, fun M hM ↦ ?_⟩
   have hMbig : (N : ℝ) ≤ (M : ℝ) := by exact_mod_cast hM
   have h_pos_part_le_M : t⁺ ≤ (M : ℝ) := hN.trans hMbig
   have hFM : min (t⁺) (M : ℝ) = t⁺ := min_eq_left h_pos_part_le_M
@@ -124,8 +124,8 @@ lemma enorm_mul_neg_log_eq_ofReal {c y : ℝ} (hc : 0 ≤ c) (hy_nn : 0 ≤ y)
 lemma integrable_negMulLog_of_mem_Icc {β : Type*} {mβ : MeasurableSpace β}
     {ν : Measure β} [IsFiniteMeasure ν] {g : β → ℝ}
     (hg_meas : AEStronglyMeasurable g ν) (hg_nn : 0 ≤ᵐ[ν] g)
-    (hg_le : g ≤ᵐ[ν] fun _ => (1 : ℝ)) :
-    Integrable (fun x => Real.negMulLog (g x)) ν := by
+    (hg_le : g ≤ᵐ[ν] fun _ ↦ (1 : ℝ)) :
+    Integrable (fun x ↦ Real.negMulLog (g x)) ν := by
   refine Integrable.mono (integrable_const (1 : ℝ))
     (Real.continuous_negMulLog.comp_aestronglyMeasurable hg_meas) ?_
   filter_upwards [hg_nn, hg_le] with x hx_nn hx_le
@@ -138,9 +138,9 @@ lemma integrable_negMulLog_of_mem_Icc {β : Type*} {mβ : MeasurableSpace β}
 lemma integral_negMulLog_le_one {β : Type*} {mβ : MeasurableSpace β}
     {ν : Measure β} [IsProbabilityMeasure ν] {g : β → ℝ}
     (hg_meas : AEStronglyMeasurable g ν) (hg_nn : 0 ≤ᵐ[ν] g)
-    (hg_le : g ≤ᵐ[ν] fun _ => (1 : ℝ)) :
+    (hg_le : g ≤ᵐ[ν] fun _ ↦ (1 : ℝ)) :
     ∫ x, Real.negMulLog (g x) ∂ν ≤ 1 := by
-  have h_bd : (fun x => Real.negMulLog (g x)) ≤ᵐ[ν] fun _ => (1 : ℝ) := by
+  have h_bd : (fun x ↦ Real.negMulLog (g x)) ≤ᵐ[ν] fun _ ↦ (1 : ℝ) := by
     filter_upwards [hg_nn, hg_le] with x hx_nn hx_le
     have hx_nn' : (0 : ℝ) ≤ g x := hx_nn
     have : Real.negMulLog (g x) ≤ 1 - g x := Real.negMulLog_le_one_sub_self hx_nn'
@@ -159,15 +159,15 @@ lemma lintegral_ofReal_le_one_of_integral_le_one {β : Type*} {mβ : MeasurableS
 
 lemma lintegral_lt_top_of_monotone_tendsto_le {β : Type*} {mβ : MeasurableSpace β}
     {ν : Measure β} {f : ℕ → β → ENNReal} {ψ : β → ENNReal} {C : ENNReal}
-    (hf_meas : ∀ M, Measurable (f M)) (hf_mono : ∀ x, Monotone fun M => f M x)
-    (hf_tendsto : ∀ x, Tendsto (fun M => f M x) atTop (𝓝 (ψ x)))
+    (hf_meas : ∀ M, Measurable (f M)) (hf_mono : ∀ x, Monotone fun M ↦ f M x)
+    (hf_tendsto : ∀ x, Tendsto (fun M ↦ f M x) atTop (𝓝 (ψ x)))
     (hf_bound : ∀ M, ∫⁻ x, f M x ∂ν ≤ C) (hC : C < ⊤) :
     ∫⁻ x, ψ x ∂ν < ⊤ := by
   have h_supr_eq : ∫⁻ x, ψ x ∂ν = ⨆ M, ∫⁻ x, f M x ∂ν := by
-    rw [show ψ = fun x => ⨆ M, f M x by
+    rw [show ψ = fun x ↦ ⨆ M, f M x by
       funext x
       exact (iSup_eq_of_tendsto (hf_mono x) (hf_tendsto x)).symm]
-    exact lintegral_iSup hf_meas (fun M N hMN x => hf_mono x hMN)
+    exact lintegral_iSup hf_meas (fun M N hMN x ↦ hf_mono x hMN)
   rw [h_supr_eq]
   exact lt_of_le_of_lt (iSup_le hf_bound) hC
 
@@ -186,18 +186,18 @@ private lemma integrable_indicator_mul_negLog_of_condExp
     (a : α) (g : (∀ _ : ℤ, α) → ℝ)
     (hg_meas_m : StronglyMeasurable[m] g)
     (hg_eq_ce : g =ᵐ[μZ μ p]
-      (μZ μ p)[(coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ)) | m])
+      (μZ μ p)[(coord0 ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ)) | m])
     (hg_nn : 0 ≤ᵐ[μZ μ p] g)
-    (hg_le : g ≤ᵐ[μZ μ p] (fun _ => (1 : ℝ))) :
-    Integrable (fun x => (coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ)) x
+    (hg_le : g ≤ᵐ[μZ μ p] (fun _ ↦ (1 : ℝ))) :
+    Integrable (fun x ↦ (coord0 ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ)) x
       * (-Real.log (g x))) (μZ μ p) := by
   classical
   set ind : (∀ _ : ℤ, α) → ℝ :=
-    (coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ)) with hind_def
+    (coord0 ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ)) with hind_def
   have h_g_m : Measurable[m] g := hg_meas_m.measurable
   have h_meas_g : @Measurable _ _ MeasurableSpace.pi _ g :=
     @Measurable.mono _ _ m MeasurableSpace.pi _ _ g h_g_m hm le_rfl
-  have h_meas_log_g : @Measurable _ _ MeasurableSpace.pi _ (fun x => Real.log (g x)) :=
+  have h_meas_log_g : @Measurable _ _ MeasurableSpace.pi _ (fun x ↦ Real.log (g x)) :=
     Real.measurable_log.comp h_meas_g
   have h_meas_ind : @Measurable _ _ MeasurableSpace.pi _ ind := by
     refine Measurable.indicator measurable_const ?_
@@ -206,21 +206,21 @@ private lemma integrable_indicator_mul_negLog_of_condExp
   have h_ind_nn : ∀ x, 0 ≤ ind x := indicator_coord0_eq_nonneg a
   have h_ind_le : ∀ x, ind x ≤ 1 := indicator_coord0_eq_le_one a
   -- Truncated factor `F_M(x) := min ((-log g x)⁺) M`. m-measurable and bounded by M.
-  set F : ℕ → (∀ _ : ℤ, α) → ℝ := fun M x => min ((-Real.log (g x))⁺) M with hF_def
-  have h_neg_log_m : Measurable[m] (fun x => -Real.log (g x)) :=
+  set F : ℕ → (∀ _ : ℤ, α) → ℝ := fun M x ↦ min ((-Real.log (g x))⁺) M with hF_def
+  have h_neg_log_m : Measurable[m] (fun x ↦ -Real.log (g x)) :=
     (Real.measurable_log.comp h_g_m).neg
-  have h_pos_part_m : Measurable[m] (fun x => (-Real.log (g x))⁺) :=
+  have h_pos_part_m : Measurable[m] (fun x ↦ (-Real.log (g x))⁺) :=
     h_neg_log_m.max measurable_const
   have hF_meas_m : ∀ M, StronglyMeasurable[m] (F M) := by
     intro M
     exact (h_pos_part_m.min measurable_const).stronglyMeasurable
-  have hF_nn : ∀ M x, 0 ≤ F M x := fun M x =>
+  have hF_nn : ∀ M x, 0 ≤ F M x := fun M x ↦
     le_min (le_max_right _ _) M.cast_nonneg
-  have hF_bound : ∀ M x, F M x ≤ M := fun M x => min_le_right _ _
-  have hF_mono : ∀ x, Monotone (fun M : ℕ => F M x) := by
+  have hF_bound : ∀ M x, F M x ≤ M := fun M x ↦ min_le_right _ _
+  have hF_mono : ∀ x, Monotone (fun M : ℕ ↦ F M x) := by
     intro x M N hMN
     exact min_le_min le_rfl (by exact_mod_cast hMN)
-  have hF_tendsto : ∀ x, Tendsto (fun M : ℕ => F M x) atTop (𝓝 ((-Real.log (g x))⁺)) := by
+  have hF_tendsto : ∀ x, Tendsto (fun M : ℕ ↦ F M x) atTop (𝓝 ((-Real.log (g x))⁺)) := by
     intro x
     simp only [hF_def]
     exact tendsto_min_posPart_natCast (-Real.log (g x))
@@ -231,28 +231,28 @@ private lemma integrable_indicator_mul_negLog_of_condExp
     simp only [hF_def]
     exact norm_min_posPart_natCast_le (-Real.log (g x)) M
   have hF_meas : ∀ M, @Measurable _ _ MeasurableSpace.pi _ (F M) :=
-    fun M => ((hF_meas_m M).mono hm).measurable
+    fun M ↦ ((hF_meas_m M).mono hm).measurable
   -- Pull-out for each M: μZ[ind * F M | m] =ᵐ F M * g. We compute via
   -- `condExp_stronglyMeasurable_mul_of_bound` applied to (F M * ind) (F M is the bounded
   -- m-measurable factor); then commute *.
   have h_pullout_step1 : ∀ M,
-      (μZ μ p)[fun x => F M x * ind x | m] =ᵐ[μZ μ p]
-        fun x => F M x * (μZ μ p)[ind | m] x := by
+      (μZ μ p)[fun x ↦ F M x * ind x | m] =ᵐ[μZ μ p]
+        fun x ↦ F M x * (μZ μ p)[ind | m] x := by
     intro M
     refine condExp_stronglyMeasurable_mul_of_bound hm (hF_meas_m M) h_int_ind (M : ℝ) ?_
     filter_upwards with x using hF_norm_bound M x
   have h_pullout : ∀ M,
-      (μZ μ p)[fun x => F M x * ind x | m] =ᵐ[μZ μ p] fun x => F M x * g x := by
+      (μZ μ p)[fun x ↦ F M x * ind x | m] =ᵐ[μZ μ p] fun x ↦ F M x * g x := by
     intro M
     refine (h_pullout_step1 M).trans ?_
     filter_upwards [hg_eq_ce] with x hxg
     rw [hxg]
   -- Integrability of ind * F M (and F M * ind).
-  have h_int_FM_ind : ∀ M, Integrable (fun x => ind x * F M x) (μZ μ p) := by
+  have h_int_FM_ind : ∀ M, Integrable (fun x ↦ ind x * F M x) (μZ μ p) := by
     intro M
     refine Integrable.mul_bdd (c := (M : ℝ)) h_int_ind (hF_meas M).aestronglyMeasurable ?_
     filter_upwards with x using hF_norm_bound M x
-  have h_int_FM_ind' : ∀ M, Integrable (fun x => F M x * ind x) (μZ μ p) := by
+  have h_int_FM_ind' : ∀ M, Integrable (fun x ↦ F M x * ind x) (μZ μ p) := by
     intro M
     refine (h_int_FM_ind M).congr ?_
     filter_upwards with x using by ring
@@ -263,9 +263,9 @@ private lemma integrable_indicator_mul_negLog_of_condExp
     simp only [hF_def]
     exact min_posPart_neg_log_mul_le_negMulLog hx_nn hx_le M
   -- Integrability of negMulLog g (bounded by 1 - g ≤ 1).
-  have h_int_negMulLog : Integrable (fun x => Real.negMulLog (g x)) (μZ μ p) :=
+  have h_int_negMulLog : Integrable (fun x ↦ Real.negMulLog (g x)) (μZ μ p) :=
     integrable_negMulLog_of_mem_Icc h_meas_g.aestronglyMeasurable hg_nn hg_le
-  have h_int_FM_g : ∀ M, Integrable (fun x => F M x * g x) (μZ μ p) := by
+  have h_int_FM_g : ∀ M, Integrable (fun x ↦ F M x * g x) (μZ μ p) := by
     intro M
     refine Integrable.mono h_int_negMulLog
       (((hF_meas M).mul h_meas_g).aestronglyMeasurable) ?_
@@ -280,7 +280,7 @@ private lemma integrable_indicator_mul_negLog_of_condExp
       ∫ x, F M x * ind x ∂(μZ μ p) = ∫ x, F M x * g x ∂(μZ μ p) := by
     intro M
     have h1 : ∫ x, F M x * ind x ∂(μZ μ p)
-        = ∫ x, ((μZ μ p)[fun x => F M x * ind x | m]) x ∂(μZ μ p) :=
+        = ∫ x, ((μZ μ p)[fun x ↦ F M x * ind x | m]) x ∂(μZ μ p) :=
       (integral_condExp hm).symm
     rw [h1]
     exact integral_congr_ae (h_pullout M)
@@ -298,34 +298,34 @@ private lemma integrable_indicator_mul_negLog_of_condExp
     exact integral_mono_ae (h_int_FM_g M) h_int_negMulLog (h_bound M)
   -- Now build Integrable via lintegral bound + MCT.
   -- ‖ind(x) * (-log g(x))‖ₑ = ENNReal.ofReal (ind(x) * (-log g)⁺) a.s.
-  have h_eq_pos_part : (fun x => (‖ind x * (-Real.log (g x))‖ₑ : ENNReal))
-      =ᵐ[μZ μ p] fun x => ENNReal.ofReal (ind x * (-Real.log (g x))⁺) := by
+  have h_eq_pos_part : (fun x ↦ (‖ind x * (-Real.log (g x))‖ₑ : ENNReal))
+      =ᵐ[μZ μ p] fun x ↦ ENNReal.ofReal (ind x * (-Real.log (g x))⁺) := by
     filter_upwards [hg_nn, hg_le] with x hx_nn hx_le
     exact enorm_mul_neg_log_eq_ofReal (h_ind_nn x) hx_nn hx_le
   -- The product ind * (-log g) is AEStronglyMeasurable.
   have h_meas_prod_pi : @Measurable _ _ MeasurableSpace.pi _
-      (fun x => ind x * (-Real.log (g x))) :=
+      (fun x ↦ ind x * (-Real.log (g x))) :=
     h_meas_ind.mul h_meas_log_g.neg
   have h_meas_prod : AEStronglyMeasurable[MeasurableSpace.pi]
-      (fun x => ind x * (-Real.log (g x))) (μZ μ p) :=
+      (fun x ↦ ind x * (-Real.log (g x))) (μZ μ p) :=
     h_meas_prod_pi.aestronglyMeasurable
   refine ⟨h_meas_prod, ?_⟩
   rw [hasFiniteIntegral_iff_enorm, lintegral_congr_ae h_eq_pos_part]
   -- ENNReal-of-real-integral bound per M.
   have h_lintegral_bound : ∀ M,
-      ∫⁻ x, ENNReal.ofReal (ind x * F M x) ∂(μZ μ p) ≤ 1 := fun M =>
+      ∫⁻ x, ENNReal.ofReal (ind x * F M x) ∂(μZ μ p) ≤ 1 := fun M ↦
     lintegral_ofReal_le_one_of_integral_le_one (h_int_FM_ind M)
-      (Filter.Eventually.of_forall fun x => mul_nonneg (h_ind_nn x) (hF_nn M x))
+      (Filter.Eventually.of_forall fun x ↦ mul_nonneg (h_ind_nn x) (hF_nn M x))
       (h_uniform_bound M)
   -- MCT (monotone increasing supremum).
-  have h_mono : ∀ x, Monotone (fun M => ENNReal.ofReal (ind x * F M x)) := by
+  have h_mono : ∀ x, Monotone (fun M ↦ ENNReal.ofReal (ind x * F M x)) := by
     intro x M N hMN
     apply ENNReal.ofReal_le_ofReal
     exact mul_le_mul_of_nonneg_left (hF_mono x hMN) (h_ind_nn x)
   refine lintegral_lt_top_of_monotone_tendsto_le
     (C := 1)
-    (fun M => ENNReal.continuous_ofReal.measurable.comp (h_meas_ind.mul (hF_meas M)))
-    h_mono (fun x => ?_) h_lintegral_bound ENNReal.one_lt_top
+    (fun M ↦ ENNReal.continuous_ofReal.measurable.comp (h_meas_ind.mul (hF_meas M)))
+    h_mono (fun x ↦ ?_) h_lintegral_bound ENNReal.one_lt_top
   refine (ENNReal.continuous_ofReal.tendsto _).comp ?_
   exact (hF_tendsto x).const_mul (ind x)
 
@@ -341,13 +341,13 @@ and the `[0,1]` bound. The sum of finitely many integrable functions is integrab
 theorem integrable_pmfLogCondPast (k : ℕ) :
     Integrable (pmfLogCondPast μ p k) (μZ μ p) := by
   classical
-  have h_eq : pmfLogCondPast μ p k = fun x =>
-      ∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) x
+  have h_eq : pmfLogCondPast μ p k = fun x ↦
+      ∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ ↦ (1 : ℝ)) x
         * (-Real.log (condProbPast μ p a k x)) := by
     funext x
     exact pmfLogCondPast_eq_sum_indicator_neg_log μ p k x
   rw [h_eq]
-  refine integrable_finsetSum _ (fun a _ => ?_)
+  refine integrable_finsetSum _ (fun a _ ↦ ?_)
   refine integrable_indicator_mul_negLog_of_condExp μ p
     ((pastFiltration (α := α)) k)
     ((pastFiltration (α := α)).le _)
@@ -366,17 +366,17 @@ w.r.t. the σ-algebra `⨆ k, pastFiltration k` of the infinite past. -/
 theorem integrable_pmfLogCondInfty :
     Integrable (pmfLogCondInfty μ p) (μZ μ p) := by
   classical
-  have h_eq : pmfLogCondInfty μ p = fun x =>
-      ∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) x
+  have h_eq : pmfLogCondInfty μ p = fun x ↦
+      ∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ ↦ (1 : ℝ)) x
         * (-Real.log (condProbInfty μ p a x)) := by
     funext x
     exact pmfLogCondInfty_eq_sum_indicator_neg_log μ p x
   rw [h_eq]
-  refine integrable_finsetSum _ (fun a _ => ?_)
+  refine integrable_finsetSum _ (fun a _ ↦ ?_)
   -- `condProbInfty a := μZ[ind | ⨆ k, pastFiltration k]` by definition.
   refine integrable_indicator_mul_negLog_of_condExp μ p
     (⨆ n : ℕ, (pastFiltration (α := α)) n)
-    (iSup_le (fun n => (pastFiltration (α := α)).le n))
+    (iSup_le (fun n ↦ (pastFiltration (α := α)).le n))
     a (condProbInfty μ p a)
     (stronglyMeasurable_condProbInfty μ p a) ?_
     (ae_zero_le_condProbInfty μ p a) (ae_condProbInfty_le_one μ p a)
@@ -401,14 +401,14 @@ lemma ae_condProbInfty_coord0_pos :
   set m_inf : MeasurableSpace (∀ _ : ℤ, α) :=
     ⨆ n : ℕ, (pastFiltration (α := α)) n with hm_inf_def
   have hm_inf_le : m_inf ≤ MeasurableSpace.pi :=
-    iSup_le (fun n => (pastFiltration (α := α)).le n)
+    iSup_le (fun n ↦ (pastFiltration (α := α)).le n)
   -- For each `a`, the "bad" set `E_a := {coord0 = a} ∩ {condProbInfty a ≤ 0}` has μZ-measure 0.
   have h_bad_zero : ∀ a : α,
       (μZ μ p) ((coord0 ⁻¹' {a}) ∩ {x | condProbInfty μ p a x ≤ 0}) = 0 := by
     intro a
     set E : Set (∀ _ : ℤ, α) := {x | condProbInfty μ p a x ≤ 0} with hE_def
     set indf : (∀ _ : ℤ, α) → ℝ :=
-      (coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ)) with hindf_def
+      (coord0 ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ)) with hindf_def
     have h_sm : StronglyMeasurable[m_inf] (condProbInfty μ p a) :=
       stronglyMeasurable_condProbInfty μ p a
     have hE_m : MeasurableSet[m_inf] E :=
@@ -437,7 +437,7 @@ lemma ae_condProbInfty_coord0_pos :
       simp only [Measure.restrict_apply MeasurableSet.univ, Set.univ_inter]
     -- Step 3: RHS ≤ 0 since condProbInfty a ≤ 0 on E.
     have h_rhs_le_zero : ∫ x in E, condProbInfty μ p a x ∂(μZ μ p) ≤ 0 := by
-      refine MeasureTheory.setIntegral_nonpos hE_pi (fun x hx => hx)
+      refine MeasureTheory.setIntegral_nonpos hE_pi (fun x hx ↦ hx)
     -- Step 4: RHS ≥ 0 since condProbInfty a ≥ 0 a.s.
     have h_rhs_nonneg : 0 ≤ ∫ x in E, condProbInfty μ p a x ∂(μZ μ p) := by
       refine MeasureTheory.integral_nonneg_of_ae ?_
@@ -460,12 +460,12 @@ lemma ae_condProbInfty_coord0_pos :
     ext x
     simp only [Set.mem_setOf_eq, not_lt, Set.mem_iUnion, Set.mem_inter_iff,
       Set.mem_preimage, Set.mem_singleton_iff]
-    refine ⟨fun hx => ⟨coord0 x, rfl, hx⟩, ?_⟩
+    refine ⟨fun hx ↦ ⟨coord0 x, rfl, hx⟩, ?_⟩
     rintro ⟨a, ⟨ha, hle⟩⟩
     rw [show coord0 x = a from ha]
     exact hle
   rw [h_set_eq]
-  refine measure_iUnion_null_iff.mpr fun a => ?_
+  refine measure_iUnion_null_iff.mpr fun a ↦ ?_
   exact h_bad_zero a
 
 omit [DecidableEq α] [Nonempty α] in
@@ -483,15 +483,15 @@ value is `0`, `Real.log` is discontinuous, and we report
 @[entry_point]
 theorem pmfLogCondPast_tendsto_pmfLogCondInfty :
     ∀ᵐ x ∂(μZ μ p),
-      Tendsto (fun k => pmfLogCondPast μ p k x) atTop
+      Tendsto (fun k ↦ pmfLogCondPast μ p k x) atTop
         (𝓝 (pmfLogCondInfty μ p x)) := by
   classical
   -- Combine the `α`-many a.s. convergences `condProbPast a k x → condProbInfty a x`.
   have h_all : ∀ᵐ x ∂(μZ μ p), ∀ a : α,
-      Tendsto (fun k : ℕ => condProbPast μ p a k x) atTop
+      Tendsto (fun k : ℕ ↦ condProbPast μ p a k x) atTop
         (𝓝 (condProbInfty μ p a x)) := by
     rw [ae_all_iff]
-    exact fun a => condProbPast_tendsto_condProbInfty μ p a
+    exact fun a ↦ condProbPast_tendsto_condProbInfty μ p a
   -- AE positivity of the realized conditional probability `condProbInfty (coord0 x) x`.
   have h_pos := ae_condProbInfty_coord0_pos μ p
   filter_upwards [h_all, h_pos] with x hx hxpos
@@ -501,15 +501,15 @@ theorem pmfLogCondPast_tendsto_pmfLogCondInfty :
   have h_simp_past : ∀ k, pmfLogCondPast μ p k x = -Real.log (condProbPast μ p a₀ k x) := by
     intro k
     unfold pmfLogCondPast
-    rw [pmfLogCondPast_inner_eq_self (fun a => condProbPast μ p a k x) x]
+    rw [pmfLogCondPast_inner_eq_self (fun a ↦ condProbPast μ p a k x) x]
   have h_simp_infty :
       pmfLogCondInfty μ p x = -Real.log (condProbInfty μ p a₀ x) := by
     unfold pmfLogCondInfty
-    rw [pmfLogCondPast_inner_eq_self (fun a => condProbInfty μ p a x) x]
+    rw [pmfLogCondPast_inner_eq_self (fun a ↦ condProbInfty μ p a x) x]
   rw [h_simp_infty]
   simp_rw [h_simp_past]
   -- Goal: `(fun k => -log (condProbPast a₀ k x)) → -log (condProbInfty a₀ x)`.
-  have hlimit : Tendsto (fun k : ℕ => condProbPast μ p a₀ k x) atTop
+  have hlimit : Tendsto (fun k : ℕ ↦ condProbPast μ p a₀ k x) atTop
       (𝓝 (condProbInfty μ p a₀ x)) := hx a₀
   -- `Real.log` is continuous at any positive point.
   have hcont : ContinuousAt Real.log (condProbInfty μ p a₀ x) :=
@@ -527,17 +527,17 @@ Proof: `(-log condProbPast a k)` is `pastSigma k`-measurable; the indicator
 (`condExp_mul_of_aestronglyMeasurable_left`), pulling the `m`-measurable
 factor out of the conditional expectation gives the result. -/
 private lemma integral_indicator_mul_negLog_condProbPast (k : ℕ) (a : α) :
-    ∫ x, (coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ)) x
+    ∫ x, (coord0 ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ)) x
         * (-Real.log (condProbPast μ p a k x)) ∂(μZ μ p)
       = ∫ x, Real.negMulLog (condProbPast μ p a k x) ∂(μZ μ p) := by
   classical
   set ind : (∀ _ : ℤ, α) → ℝ :=
-    (coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ)) with hind_def
+    (coord0 ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ)) with hind_def
   set g : (∀ _ : ℤ, α) → ℝ := condProbPast μ p a k with hg_def
   set m : MeasurableSpace (∀ _ : ℤ, α) := (pastFiltration (α := α)) k with hm_def
   have hm_le : m ≤ MeasurableSpace.pi := (pastFiltration (α := α)).le k
   have h_int_ind : Integrable ind (μZ μ p) := integrable_indicator_coord0_eq μ p a
-  have h_int_prod : Integrable (fun x => ind x * (-Real.log (g x))) (μZ μ p) := by
+  have h_int_prod : Integrable (fun x ↦ ind x * (-Real.log (g x))) (μZ μ p) := by
     refine integrable_indicator_mul_negLog_of_condExp μ p m hm_le a g ?_ ?_ ?_ ?_
     · exact stronglyMeasurable_condProbPast μ p a k
     · exact Filter.EventuallyEq.refl _ _
@@ -545,20 +545,20 @@ private lemma integral_indicator_mul_negLog_condProbPast (k : ℕ) (a : α) :
     · exact ae_condProbPast_le_one μ p a k
   -- `(-log g)` is `m`-measurable.
   have h_g_meas_m : Measurable[m] g := (stronglyMeasurable_condProbPast μ p a k).measurable
-  have h_neglog_g_meas_m : Measurable[m] (fun x => -Real.log (g x)) :=
+  have h_neglog_g_meas_m : Measurable[m] (fun x ↦ -Real.log (g x)) :=
     (Real.measurable_log.comp h_g_meas_m).neg
-  have h_neglog_g_asm : AEStronglyMeasurable[m] (fun x => -Real.log (g x)) (μZ μ p) :=
+  have h_neglog_g_asm : AEStronglyMeasurable[m] (fun x ↦ -Real.log (g x)) (μZ μ p) :=
     h_neglog_g_meas_m.stronglyMeasurable.aestronglyMeasurable
   -- Pull-out: μZ[(-log g) * ind | m] =ᵐ (-log g) * μZ[ind | m] = (-log g) * g.
   have h_pullout :
-      (μZ μ p)[fun x => (-Real.log (g x)) * ind x | m]
-        =ᵐ[μZ μ p] fun x => (-Real.log (g x)) * g x := by
-    have h_prod' : Integrable (fun x => (-Real.log (g x)) * ind x) (μZ μ p) := by
+      (μZ μ p)[fun x ↦ (-Real.log (g x)) * ind x | m]
+        =ᵐ[μZ μ p] fun x ↦ (-Real.log (g x)) * g x := by
+    have h_prod' : Integrable (fun x ↦ (-Real.log (g x)) * ind x) (μZ μ p) := by
       refine h_int_prod.congr ?_
       filter_upwards with x using by ring
     have h_pull :
-        (μZ μ p)[fun x => (-Real.log (g x)) * ind x | m]
-          =ᵐ[μZ μ p] fun x => (-Real.log (g x)) * (μZ μ p)[ind | m] x :=
+        (μZ μ p)[fun x ↦ (-Real.log (g x)) * ind x | m]
+          =ᵐ[μZ μ p] fun x ↦ (-Real.log (g x)) * (μZ μ p)[ind | m] x :=
       condExp_mul_of_aestronglyMeasurable_left h_neglog_g_asm h_prod' h_int_ind
     refine h_pull.trans ?_
     -- (μZ μ p)[ind | m] = g (by definition of g = condProbPast a k = μZ[ind | m]).
@@ -570,9 +570,9 @@ private lemma integral_indicator_mul_negLog_condProbPast (k : ℕ) (a : α) :
     refine integral_congr_ae ?_
     filter_upwards with x using by ring
   have h2 : ∫ x, (-Real.log (g x)) * ind x ∂(μZ μ p)
-      = ∫ x, ((μZ μ p)[fun x => (-Real.log (g x)) * ind x | m]) x ∂(μZ μ p) :=
+      = ∫ x, ((μZ μ p)[fun x ↦ (-Real.log (g x)) * ind x | m]) x ∂(μZ μ p) :=
     (integral_condExp hm_le).symm
-  have h3 : ∫ x, ((μZ μ p)[fun x => (-Real.log (g x)) * ind x | m]) x ∂(μZ μ p)
+  have h3 : ∫ x, ((μZ μ p)[fun x ↦ (-Real.log (g x)) * ind x | m]) x ∂(μZ μ p)
       = ∫ x, (-Real.log (g x)) * g x ∂(μZ μ p) :=
     integral_congr_ae h_pullout
   have h4 : ∫ x, (-Real.log (g x)) * g x ∂(μZ μ p)
@@ -590,15 +590,15 @@ private lemma integral_pmfLogCondPast_eq_sum (k : ℕ) :
       = ∑ a, ∫ x, Real.negMulLog (condProbPast μ p a k x) ∂(μZ μ p) := by
   classical
   -- Expand pmfLogCondPast pointwise as a finite sum.
-  have h_eq : pmfLogCondPast μ p k = fun x =>
-      ∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) x
+  have h_eq : pmfLogCondPast μ p k = fun x ↦
+      ∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ ↦ (1 : ℝ)) x
         * (-Real.log (condProbPast μ p a k x)) := by
     funext x
     exact pmfLogCondPast_eq_sum_indicator_neg_log μ p k x
   rw [h_eq]
   -- Each summand is integrable.
   have h_int_a : ∀ a : α, Integrable
-      (fun x => Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) x
+      (fun x ↦ Set.indicator (coord0 ⁻¹' {a}) (fun _ ↦ (1 : ℝ)) x
         * (-Real.log (condProbPast μ p a k x))) (μZ μ p) := by
     intro a
     refine integrable_indicator_mul_negLog_of_condExp μ p
@@ -606,7 +606,7 @@ private lemma integral_pmfLogCondPast_eq_sum (k : ℕ) :
       (condProbPast μ p a k) (stronglyMeasurable_condProbPast μ p a k)
       ?_ (ae_zero_le_condProbPast μ p a k) (ae_condProbPast_le_one μ p a k)
     exact Filter.EventuallyEq.refl _ _
-  rw [integral_finsetSum _ (fun a _ => h_int_a a)]
+  rw [integral_finsetSum _ (fun a _ ↦ h_int_a a)]
   refine Finset.sum_congr rfl ?_
   intro a _
   exact integral_indicator_mul_negLog_condProbPast μ p k a
@@ -644,10 +644,10 @@ private lemma sum_integral_negMulLog_condDistrib_eq_condEntropy (k : ℕ) :
   have hpast_meas : Measurable (pastBlock k : (∀ _ : ℤ, α) → (Fin k → α)) :=
     measurable_pastBlock k
   -- Define f_a : (Fin k → α) → ℝ.
-  set f : α → (Fin k → α) → ℝ := fun a y =>
+  set f : α → (Fin k → α) → ℝ := fun a y ↦
     Real.negMulLog ((ProbabilityTheory.condDistrib coord0 (pastBlock k) (μZ μ p) y).real {a})
     with hf_def
-  have hf_meas : ∀ a, Measurable (f a) := fun a => measurable_of_finite _
+  have hf_meas : ∀ a, Measurable (f a) := fun a ↦ measurable_of_finite _
   -- Step 1: each summand = ∫ y, f a y ∂(μZ.map pastBlock).
   have h_per_a : ∀ a, ∫ x, Real.negMulLog
       ((ProbabilityTheory.condDistrib coord0 (pastBlock k) (μZ μ p)
@@ -659,7 +659,7 @@ private lemma sum_integral_negMulLog_condDistrib_eq_condEntropy (k : ℕ) :
   -- Step 2: sum-of-integrals = integral-of-sum (for finite sums and integrable terms;
   -- finite alphabet + bounded integrand makes this trivial via integral_finsetSum).
   rw [← integral_finsetSum (s := (Finset.univ : Finset α)) (f := f)
-        (fun a _ => Integrable.of_finite)]
+        (fun a _ ↦ Integrable.of_finite)]
   -- Now the goal is exactly the definition of MeasureFano.condEntropy.
   unfold InformationTheory.MeasureFano.condEntropy
   rfl
@@ -704,7 +704,7 @@ theorem integral_pmfLogCondPast_eq_conditionalEntropyTail (k : ℕ) :
         = ∑ a, ∫ x, Real.negMulLog
             ((ProbabilityTheory.condDistrib coord0 (pastBlock k) (μZ μ p)
               (pastBlock k x)).real {a}) ∂(μZ μ p) from
-      Finset.sum_congr rfl (fun a _ => integral_negMulLog_condProbPast_eq μ p a k)]
+      Finset.sum_congr rfl (fun a _ ↦ integral_negMulLog_condProbPast_eq μ p a k)]
   -- Step 3: collapse sum + integrals into condEntropy μZ.
   rw [sum_integral_negMulLog_condDistrib_eq_condEntropy μ p k]
   -- Step 4: transport via joint-law equality.
@@ -717,18 +717,18 @@ omit [DecidableEq α] [Nonempty α] in
 integrating `1_{coord_0=a} * (-log condProbInfty a)` equals integrating
 `negMulLog(condProbInfty a)`. -/
 private lemma integral_indicator_mul_negLog_condProbInfty (a : α) :
-    ∫ x, (coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ)) x
+    ∫ x, (coord0 ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ)) x
         * (-Real.log (condProbInfty μ p a x)) ∂(μZ μ p)
       = ∫ x, Real.negMulLog (condProbInfty μ p a x) ∂(μZ μ p) := by
   classical
   set ind : (∀ _ : ℤ, α) → ℝ :=
-    (coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ)) with hind_def
+    (coord0 ⁻¹' {a}).indicator (fun _ ↦ (1 : ℝ)) with hind_def
   set g : (∀ _ : ℤ, α) → ℝ := condProbInfty μ p a with hg_def
   set m : MeasurableSpace (∀ _ : ℤ, α) := ⨆ n : ℕ, (pastFiltration (α := α)) n with hm_def
   have hm_le : m ≤ MeasurableSpace.pi :=
-    iSup_le (fun n => (pastFiltration (α := α)).le n)
+    iSup_le (fun n ↦ (pastFiltration (α := α)).le n)
   have h_int_ind : Integrable ind (μZ μ p) := integrable_indicator_coord0_eq μ p a
-  have h_int_prod : Integrable (fun x => ind x * (-Real.log (g x))) (μZ μ p) := by
+  have h_int_prod : Integrable (fun x ↦ ind x * (-Real.log (g x))) (μZ μ p) := by
     refine integrable_indicator_mul_negLog_of_condExp μ p m hm_le a g ?_ ?_ ?_ ?_
     · exact stronglyMeasurable_condProbInfty μ p a
     · exact condProbInfty_eq_condExp_tail μ p a
@@ -736,20 +736,20 @@ private lemma integral_indicator_mul_negLog_condProbInfty (a : α) :
     · exact ae_condProbInfty_le_one μ p a
   -- `(-log g)` is `m`-measurable.
   have h_g_meas_m : Measurable[m] g := (stronglyMeasurable_condProbInfty μ p a).measurable
-  have h_neglog_g_meas_m : Measurable[m] (fun x => -Real.log (g x)) :=
+  have h_neglog_g_meas_m : Measurable[m] (fun x ↦ -Real.log (g x)) :=
     (Real.measurable_log.comp h_g_meas_m).neg
-  have h_neglog_g_asm : AEStronglyMeasurable[m] (fun x => -Real.log (g x)) (μZ μ p) :=
+  have h_neglog_g_asm : AEStronglyMeasurable[m] (fun x ↦ -Real.log (g x)) (μZ μ p) :=
     h_neglog_g_meas_m.stronglyMeasurable.aestronglyMeasurable
   -- Pull-out: μZ[(-log g) * ind | m] =ᵐ (-log g) * μZ[ind | m] =ᵐ (-log g) * g.
   have h_pullout :
-      (μZ μ p)[fun x => (-Real.log (g x)) * ind x | m]
-        =ᵐ[μZ μ p] fun x => (-Real.log (g x)) * g x := by
-    have h_prod' : Integrable (fun x => (-Real.log (g x)) * ind x) (μZ μ p) := by
+      (μZ μ p)[fun x ↦ (-Real.log (g x)) * ind x | m]
+        =ᵐ[μZ μ p] fun x ↦ (-Real.log (g x)) * g x := by
+    have h_prod' : Integrable (fun x ↦ (-Real.log (g x)) * ind x) (μZ μ p) := by
       refine h_int_prod.congr ?_
       filter_upwards with x using by ring
     have h_pull :
-        (μZ μ p)[fun x => (-Real.log (g x)) * ind x | m]
-          =ᵐ[μZ μ p] fun x => (-Real.log (g x)) * (μZ μ p)[ind | m] x :=
+        (μZ μ p)[fun x ↦ (-Real.log (g x)) * ind x | m]
+          =ᵐ[μZ μ p] fun x ↦ (-Real.log (g x)) * (μZ μ p)[ind | m] x :=
       condExp_mul_of_aestronglyMeasurable_left h_neglog_g_asm h_prod' h_int_ind
     refine h_pull.trans ?_
     filter_upwards [condProbInfty_eq_condExp_tail μ p a] with x hx
@@ -761,9 +761,9 @@ private lemma integral_indicator_mul_negLog_condProbInfty (a : α) :
     refine integral_congr_ae ?_
     filter_upwards with x using by ring
   have h2 : ∫ x, (-Real.log (g x)) * ind x ∂(μZ μ p)
-      = ∫ x, ((μZ μ p)[fun x => (-Real.log (g x)) * ind x | m]) x ∂(μZ μ p) :=
+      = ∫ x, ((μZ μ p)[fun x ↦ (-Real.log (g x)) * ind x | m]) x ∂(μZ μ p) :=
     (integral_condExp hm_le).symm
-  have h3 : ∫ x, ((μZ μ p)[fun x => (-Real.log (g x)) * ind x | m]) x ∂(μZ μ p)
+  have h3 : ∫ x, ((μZ μ p)[fun x ↦ (-Real.log (g x)) * ind x | m]) x ∂(μZ μ p)
       = ∫ x, (-Real.log (g x)) * g x ∂(μZ μ p) :=
     integral_congr_ae h_pullout
   have h4 : ∫ x, (-Real.log (g x)) * g x ∂(μZ μ p)
@@ -780,23 +780,23 @@ private lemma integral_pmfLogCondInfty_eq_sum :
     ∫ x, pmfLogCondInfty μ p x ∂(μZ μ p)
       = ∑ a, ∫ x, Real.negMulLog (condProbInfty μ p a x) ∂(μZ μ p) := by
   classical
-  have h_eq : pmfLogCondInfty μ p = fun x =>
-      ∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) x
+  have h_eq : pmfLogCondInfty μ p = fun x ↦
+      ∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ ↦ (1 : ℝ)) x
         * (-Real.log (condProbInfty μ p a x)) := by
     funext x
     exact pmfLogCondInfty_eq_sum_indicator_neg_log μ p x
   rw [h_eq]
   have h_int_a : ∀ a : α, Integrable
-      (fun x => Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) x
+      (fun x ↦ Set.indicator (coord0 ⁻¹' {a}) (fun _ ↦ (1 : ℝ)) x
         * (-Real.log (condProbInfty μ p a x))) (μZ μ p) := by
     intro a
     refine integrable_indicator_mul_negLog_of_condExp μ p
       (⨆ n : ℕ, (pastFiltration (α := α)) n)
-      (iSup_le (fun n => (pastFiltration (α := α)).le n)) a
+      (iSup_le (fun n ↦ (pastFiltration (α := α)).le n)) a
       (condProbInfty μ p a) (stronglyMeasurable_condProbInfty μ p a) ?_
       (ae_zero_le_condProbInfty μ p a) (ae_condProbInfty_le_one μ p a)
     exact condProbInfty_eq_condExp_tail μ p a
-  rw [integral_finsetSum _ (fun a _ => h_int_a a)]
+  rw [integral_finsetSum _ (fun a _ ↦ h_int_a a)]
   refine Finset.sum_congr rfl ?_
   intro a _
   exact integral_indicator_mul_negLog_condProbInfty μ p a
@@ -807,13 +807,13 @@ omit [DecidableEq α] [Nonempty α] in
 on `[0, 1]`, the integral `∫ negMulLog(condProbPast a k)` converges to
 `∫ negMulLog(condProbInfty a)`. -/
 private lemma tendsto_integral_negMulLog_condProbPast (a : α) :
-    Tendsto (fun k : ℕ => ∫ x, Real.negMulLog (condProbPast μ p a k x) ∂(μZ μ p))
+    Tendsto (fun k : ℕ ↦ ∫ x, Real.negMulLog (condProbPast μ p a k x) ∂(μZ μ p))
       atTop (𝓝 (∫ x, Real.negMulLog (condProbInfty μ p a x) ∂(μZ μ p))) := by
   classical
   -- Use DCT with constant bound `Real.exp (-1)` (= max of negMulLog on [0,1] at 1/e).
   -- AE: condProbPast a k x → condProbInfty a x.
   have h_ae : ∀ᵐ x ∂(μZ μ p),
-      Tendsto (fun k : ℕ => Real.negMulLog (condProbPast μ p a k x)) atTop
+      Tendsto (fun k : ℕ ↦ Real.negMulLog (condProbPast μ p a k x)) atTop
         (𝓝 (Real.negMulLog (condProbInfty μ p a x))) := by
     filter_upwards [condProbPast_tendsto_condProbInfty μ p a] with x hx
     exact (Real.continuous_negMulLog.tendsto _).comp hx
@@ -833,20 +833,20 @@ private lemma tendsto_integral_negMulLog_condProbPast (a : α) :
     rw [Real.norm_eq_abs, abs_of_nonneg h_nn]
     exact h_le_one
   -- Bound function is constant (integrable on finite measure).
-  have h_bound_int : Integrable (fun _ : (∀ _ : ℤ, α) => (1 : ℝ)) (μZ μ p) :=
+  have h_bound_int : Integrable (fun _ : (∀ _ : ℤ, α) ↦ (1 : ℝ)) (μZ μ p) :=
     integrable_const _
   -- Each F_k is AEStronglyMeasurable: negMulLog ∘ condProbPast a k.
   have h_meas : ∀ k : ℕ, AEStronglyMeasurable
-      (fun x : (∀ _ : ℤ, α) => Real.negMulLog (condProbPast μ p a k x)) (μZ μ p) := by
+      (fun x : (∀ _ : ℤ, α) ↦ Real.negMulLog (condProbPast μ p a k x)) (μZ μ p) := by
     intro k
     refine Real.continuous_negMulLog.measurable.comp_aemeasurable ?_
       |>.aestronglyMeasurable
     refine ((stronglyMeasurable_condProbPast μ p a k).mono
       ((pastFiltration (α := α)).le k)).measurable.aemeasurable
-  exact tendsto_integral_of_dominated_convergence (F := fun k => fun x =>
+  exact tendsto_integral_of_dominated_convergence (F := fun k ↦ fun x ↦
     Real.negMulLog (condProbPast μ p a k x))
-    (f := fun x => Real.negMulLog (condProbInfty μ p a x))
-    (bound := fun _ => (1 : ℝ))
+    (f := fun x ↦ Real.negMulLog (condProbInfty μ p a x))
+    (bound := fun _ ↦ (1 : ℝ))
     h_meas h_bound_int h_bound h_ae
 
 omit [DecidableEq α] in
@@ -866,7 +866,7 @@ theorem integral_pmfLogCondInfty_eq_entropyRate :
   -- (by the per-step identity + `entropyRate_eq_lim_condEntropy`). Apply
   -- `tendsto_nhds_unique`.
   -- Step 1: `∫ pmfLogCondPast k → ∫ pmfLogCondInfty`.
-  have h_lim1 : Tendsto (fun k : ℕ => ∫ x, pmfLogCondPast μ p k x ∂(μZ μ p))
+  have h_lim1 : Tendsto (fun k : ℕ ↦ ∫ x, pmfLogCondPast μ p k x ∂(μZ μ p))
       atTop (𝓝 (∫ x, pmfLogCondInfty μ p x ∂(μZ μ p))) := by
     -- Rewrite both sides as finite sums.
     have h_LHS : ∀ k : ℕ, ∫ x, pmfLogCondPast μ p k x ∂(μZ μ p)
@@ -876,16 +876,16 @@ theorem integral_pmfLogCondInfty_eq_entropyRate :
         = ∑ a, ∫ x, Real.negMulLog (condProbInfty μ p a x) ∂(μZ μ p) :=
       integral_pmfLogCondInfty_eq_sum μ p
     rw [h_RHS]
-    refine Tendsto.congr (fun k => (h_LHS k).symm) ?_
+    refine Tendsto.congr (fun k ↦ (h_LHS k).symm) ?_
     -- Finite sum of convergent sequences converges to the sum.
-    exact tendsto_finsetSum _ (fun a _ => tendsto_integral_negMulLog_condProbPast μ p a)
+    exact tendsto_finsetSum _ (fun a _ ↦ tendsto_integral_negMulLog_condProbPast μ p a)
   -- Step 2: `∫ pmfLogCondPast k = conditionalEntropyTail k → entropyRate μ p`.
   have h_step : ∀ k : ℕ,
       ∫ x, pmfLogCondPast μ p k x ∂(μZ μ p) = conditionalEntropyTail μ p k :=
-    fun k => integral_pmfLogCondPast_eq_conditionalEntropyTail μ p k
-  have h_lim2 : Tendsto (fun k : ℕ => ∫ x, pmfLogCondPast μ p k x ∂(μZ μ p))
+    fun k ↦ integral_pmfLogCondPast_eq_conditionalEntropyTail μ p k
+  have h_lim2 : Tendsto (fun k : ℕ ↦ ∫ x, pmfLogCondPast μ p k x ∂(μZ μ p))
       atTop (𝓝 (entropyRate μ p)) := by
-    refine Tendsto.congr (fun k => (h_step k).symm) ?_
+    refine Tendsto.congr (fun k ↦ (h_step k).symm) ?_
     exact entropyRate_eq_lim_condEntropy μ p
   -- Step 3: uniqueness of limit.
   exact tendsto_nhds_unique h_lim1 h_lim2

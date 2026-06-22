@@ -82,17 +82,17 @@ theorem log_sum_inequality
   have hB_ne : B ≠ 0 := hB_pos.ne'
   set A : ℝ := ∑ i ∈ s, a i with hA_def
   -- Jensen for `x ↦ x * log x` on `Set.Ici 0`.
-  have h₀ : ∀ i ∈ s, 0 ≤ b i / B := fun i hi =>
+  have h₀ : ∀ i ∈ s, 0 ≤ b i / B := fun i hi ↦
     div_nonneg (hb i hi).le hB_pos.le
   have h₁ : ∑ i ∈ s, b i / B = 1 := by
     rw [← Finset.sum_div, ← hB_def, div_self hB_ne]
-  have hmem : ∀ i ∈ s, a i / b i ∈ Set.Ici (0 : ℝ) := fun i hi => by
+  have hmem : ∀ i ∈ s, a i / b i ∈ Set.Ici (0 : ℝ) := fun i hi ↦ by
     simp only [Set.mem_Ici]; exact div_nonneg (ha i hi) (hb i hi).le
   have hJensen :=
     Real.convexOn_mul_log.map_sum_le (t := s)
-      (w := fun i => b i / B) (p := fun i => a i / b i) h₀ h₁ hmem
+      (w := fun i ↦ b i / B) (p := fun i ↦ a i / b i) h₀ h₁ hmem
   -- Simplify the two `smul`-sums on `ℝ`.
-  have hpt : ∀ i ∈ s, (b i / B) • (a i / b i) = a i / B := fun i hi => by
+  have hpt : ∀ i ∈ s, (b i / B) • (a i / b i) = a i / B := fun i hi ↦ by
     have hbi : b i ≠ 0 := (hb i hi).ne'
     simp only [smul_eq_mul]
     field_simp
@@ -100,7 +100,7 @@ theorem log_sum_inequality
     rw [Finset.sum_congr rfl hpt, ← Finset.sum_div, ← hA_def]
   have hrhs : (∑ i ∈ s, (b i / B) • ((a i / b i) * Real.log (a i / b i)))
       = ∑ i ∈ s, (a i / B) * Real.log (a i / b i) := by
-    refine Finset.sum_congr rfl (fun i hi => ?_)
+    refine Finset.sum_congr rfl (fun i hi ↦ ?_)
     have hbi : b i ≠ 0 := (hb i hi).ne'
     simp only [smul_eq_mul]
     field_simp
@@ -113,7 +113,7 @@ theorem log_sum_inequality
     _ ≤ (∑ i ∈ s, (a i / B) * Real.log (a i / b i)) * B := hkey
     _ = ∑ i ∈ s, a i * Real.log (a i / b i) := by
         rw [Finset.sum_mul]
-        refine Finset.sum_congr rfl (fun i hi => ?_)
+        refine Finset.sum_congr rfl (fun i hi ↦ ?_)
         field_simp
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
@@ -236,7 +236,7 @@ theorem blockProb_neg_log_ge_sum
       ≤ - Real.log ((μ.map (p.blockRV n)).real {p.blockRV n ω}) := by
   have hne : ∀ j ∈ Finset.range
       (lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length,
-      condPhraseProb μ p n ω j ≠ 0 := fun j hj => (h.pos n ω j hj).ne'
+      condPhraseProb μ p n ω j ≠ 0 := fun j hj ↦ (h.pos n ω j hj).ne'
   -- `∑ -log qⱼ = -log (∏ qⱼ) ≤ -log Pₙ` since `Pₙ ≤ ∏ qⱼ` (factor) and
   -- `Real.log` is monotone on positives (`0 < Pₙ`).
   rw [Finset.sum_neg_distrib, ← Real.log_prod hne]

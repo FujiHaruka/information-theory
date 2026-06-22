@@ -82,12 +82,12 @@ lemma uniformMeasureβ_real_singleton (b : β) :
           simp only [Set.mem_singleton_iff]; exact hbb), if_neg hbb]
   rw [Finset.sum_congr rfl h_each]
   -- ∑ b', (if b' = b then 1 else 0) = 1
-  rw [Finset.sum_ite_eq' Finset.univ b (fun _ => (1 : ℝ≥0∞)), if_pos (Finset.mem_univ b)]
+  rw [Finset.sum_ite_eq' Finset.univ b (fun _ ↦ (1 : ℝ≥0∞)), if_pos (Finset.mem_univ b)]
   rw [smul_eq_mul, mul_one, ENNReal.toReal_inv, ENNReal.toReal_natCast]
 
 /-- **Smoothed channel** `W_smooth δ a := (1-δ) W a + δ · uniformMeasureβ`. -/
 noncomputable def Channel.smooth (W : Channel α β) (δ : ℝ) : Channel α β :=
-  { toFun := fun a => ENNReal.ofReal (1 - δ) • W a + ENNReal.ofReal δ • uniformMeasureβ β
+  { toFun := fun a ↦ ENNReal.ofReal (1 - δ) • W a + ENNReal.ofReal δ • uniformMeasureβ β
     measurable' := Measurable.of_discrete }
 
 omit [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
@@ -99,7 +99,7 @@ omit [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β] [MeasurableSi
 /-- `Channel.smooth W 0 = W`. -/
 lemma Channel.smooth_zero (W : Channel α β) [IsMarkovKernel W] :
     Channel.smooth W 0 = W := by
-  refine Kernel.ext (fun a => ?_)
+  refine Kernel.ext (fun a ↦ ?_)
   show ENNReal.ofReal (1 - 0) • W a + ENNReal.ofReal 0 • uniformMeasureβ β = W a
   simp
 
@@ -108,7 +108,7 @@ omit [DecidableEq α] [Nonempty α] [DecidableEq β] [MeasurableSingletonClass �
 lemma Channel.smooth_isMarkovKernel
     (W : Channel α β) [IsMarkovKernel W] {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ ≤ 1) :
     IsMarkovKernel (Channel.smooth W δ) := by
-  refine ⟨fun a => ⟨?_⟩⟩
+  refine ⟨fun a ↦ ⟨?_⟩⟩
   show (ENNReal.ofReal (1 - δ) • W a + ENNReal.ofReal δ • uniformMeasureβ β)
         (Set.univ : Set β) = 1
   rw [Measure.add_apply, Measure.smul_apply, Measure.smul_apply,
@@ -189,7 +189,7 @@ lemma mutualInfoOfChannel_toReal_three_entropy
     have h2 : ((pmfToMeasure p) ⊗ₘ K) (Set.univ ×ˢ ({b} : Set β))
         = ∫⁻ a, K a {b} ∂(pmfToMeasure p) := by
       rw [Measure.compProd_apply (MeasurableSet.univ.prod (measurableSet_singleton _))]
-      refine lintegral_congr_ae (Filter.Eventually.of_forall fun a => ?_)
+      refine lintegral_congr_ae (Filter.Eventually.of_forall fun a ↦ ?_)
       show (K a) (Prod.mk a ⁻¹' (Set.univ ×ˢ ({b} : Set β))) = (K a) {b}
       congr 1; ext y; simp
     rw [h2]
@@ -199,7 +199,7 @@ lemma mutualInfoOfChannel_toReal_three_entropy
     rw [ENNReal.toReal_sum (by
       intro a _
       exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top (measure_ne_top _ _))]
-    refine Finset.sum_congr rfl (fun a _ => ?_)
+    refine Finset.sum_congr rfl (fun a _ ↦ ?_)
     rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal (hp.1 a)]
     rfl
   have h_id : ∀ ab : α × β,
@@ -217,7 +217,7 @@ lemma mutualInfoOfChannel_toReal_three_entropy
     rw [MeasureTheory.lintegral_finsetSum_measure]
     simp_rw [MeasureTheory.lintegral_smul_measure, MeasureTheory.lintegral_dirac, smul_eq_mul]
     have h_each : ∀ a' ∈ (Finset.univ : Finset α),
-        ENNReal.ofReal (p a') * Set.indicator ({a} : Set α) (fun x => K x {b}) a'
+        ENNReal.ofReal (p a') * Set.indicator ({a} : Set α) (fun x ↦ K x {b}) a'
           = if a' = a then ENNReal.ofReal (p a) * K a {b} else 0 := by
       intro a' _
       by_cases hcase : a' = a
@@ -230,9 +230,9 @@ lemma mutualInfoOfChannel_toReal_three_entropy
     rfl
   congr 1
   · congr 1
-    · refine Finset.sum_congr rfl (fun a _ => ?_); rw [h_fst a]
-    · refine Finset.sum_congr rfl (fun b _ => ?_); rw [h_snd b]
-  · refine Finset.sum_congr rfl (fun ab _ => ?_); rw [h_id ab]
+    · refine Finset.sum_congr rfl (fun a _ ↦ ?_); rw [h_fst a]
+    · refine Finset.sum_congr rfl (fun b _ ↦ ?_); rw [h_snd b]
+  · refine Finset.sum_congr rfl (fun ab _ ↦ ?_); rw [h_id ab]
 
 omit [DecidableEq α] [DecidableEq β] in
 /-- For `δ ∈ [0,1]`, `(mutualInfoOfChannel (pmfToMeasure p) (Channel.smooth W δ)).toReal` expands
@@ -250,11 +250,11 @@ lemma mutualInfoOfChannel_toReal_smooth_eq
   rw [mutualInfoOfChannel_toReal_three_entropy hp (Channel.smooth W δ)]
   congr 1
   · congr 1
-    refine Finset.sum_congr rfl (fun b _ => ?_)
+    refine Finset.sum_congr rfl (fun b _ ↦ ?_)
     congr 1
-    refine Finset.sum_congr rfl (fun a _ => ?_)
+    refine Finset.sum_congr rfl (fun a _ ↦ ?_)
     rw [Channel.smooth_real_singleton W hδ0 hδ1]
-  · refine Finset.sum_congr rfl (fun ab _ => ?_)
+  · refine Finset.sum_congr rfl (fun ab _ ↦ ?_)
     rw [Channel.smooth_real_singleton W hδ0 hδ1]
 
 omit [DecidableEq α] [DecidableEq β] in
@@ -263,11 +263,11 @@ omit [DecidableEq α] [DecidableEq β] in
 lemma continuous_mutualInfoOfChannel_right_smooth
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
     (W : Channel α β) [IsMarkovKernel W] :
-    ContinuousOn (fun δ : ℝ =>
+    ContinuousOn (fun δ : ℝ ↦
         (mutualInfoOfChannel (pmfToMeasure p) (Channel.smooth W δ)).toReal)
       (Set.Icc (0 : ℝ) 1) := by
   -- Use the 3-entropy form via mutualInfoOfChannel_toReal_smooth_eq.
-  set g : ℝ → ℝ := fun δ =>
+  set g : ℝ → ℝ := fun δ ↦
     (∑ a : α, Real.negMulLog (p a))
       + (∑ b : β, Real.negMulLog
           (∑ a : α, p a * ((1 - δ) * (W a).real {b} + δ * (Fintype.card β : ℝ)⁻¹)))
@@ -282,15 +282,15 @@ lemma continuous_mutualInfoOfChannel_right_smooth
   -- Continuity of g.
   refine Continuous.sub ?_ ?_
   · refine Continuous.add continuous_const ?_
-    refine continuous_finsetSum _ (fun b _ => ?_)
+    refine continuous_finsetSum _ (fun b _ ↦ ?_)
     refine Real.continuous_negMulLog.comp ?_
-    refine continuous_finsetSum _ (fun a _ => ?_)
+    refine continuous_finsetSum _ (fun a _ ↦ ?_)
     -- p a * ((1-δ) * (W a).real {b} + δ * (Fintype.card β : ℝ)⁻¹)
     refine continuous_const.mul ?_
     refine Continuous.add ?_ ?_
     · exact (continuous_const.sub continuous_id).mul continuous_const
     · exact continuous_id.mul continuous_const
-  · refine continuous_finsetSum _ (fun ab _ => ?_)
+  · refine continuous_finsetSum _ (fun ab _ ↦ ?_)
     refine Real.continuous_negMulLog.comp ?_
     refine continuous_const.mul ?_
     refine Continuous.add ?_ ?_
@@ -313,7 +313,7 @@ private lemma exists_smooth_capacity_gt
   have hR_lt_R₁ : R < R₁ := by rw [hR₁_def]; linarith
   have hR₁_lt_I₀ : R₁ < I₀ := by rw [hR₁_def]; linarith
   -- Step 2: continuity of f(δ) := I(p₀; W_smooth δ).toReal on [0,1].
-  set f : ℝ → ℝ := fun δ =>
+  set f : ℝ → ℝ := fun δ ↦
     (mutualInfoOfChannel (pmfToMeasure p₀) (Channel.smooth W δ)).toReal with hf_def
   have hf_cont_on : ContinuousOn f (Set.Icc (0 : ℝ) 1) :=
     continuous_mutualInfoOfChannel_right_smooth hp₀_mem W
@@ -379,19 +379,19 @@ private lemma Channel.smooth_TV_bound
         _ = (W a).real {b} + (Fintype.card β : ℝ)⁻¹ := by rw [abs_of_nonneg h1, abs_of_nonneg h2]
     have h_sum_le : ∑ b : β, |(W a).real {b} - (Fintype.card β : ℝ)⁻¹|
         ≤ ∑ b : β, ((W a).real {b} + (Fintype.card β : ℝ)⁻¹) :=
-      Finset.sum_le_sum (fun b _ => h_le b)
+      Finset.sum_le_sum (fun b _ ↦ h_le b)
     -- ∑ b, (W a).real {b} = 1 (Markov).
     have h_card_pos_nat : 0 < Fintype.card β := Fintype.card_pos_iff.mpr inferInstance
     have h_card_pos : (0 : ℝ) < Fintype.card β := by exact_mod_cast h_card_pos_nat
     have h_sum_W : ∑ b : β, (W a).real {b} = 1 := by
       haveI : IsProbabilityMeasure (W a) := IsMarkovKernel.isProbabilityMeasure a
       -- ∑ b, (W a).real {b} = (W a).real (⋃ b, {b}) = (W a).real univ = 1.
-      have h_pairwise : Pairwise (Function.onFun Disjoint (fun b : β => ({b} : Set β))) := by
+      have h_pairwise : Pairwise (Function.onFun Disjoint (fun b : β ↦ ({b} : Set β))) := by
         intro b₁ b₂ hb
         show Disjoint (({b₁} : Set β)) (({b₂} : Set β))
         rw [Set.disjoint_singleton]
         exact hb
-      have h_meas : ∀ b : β, MeasurableSet ({b} : Set β) := fun b => measurableSet_singleton b
+      have h_meas : ∀ b : β, MeasurableSet ({b} : Set β) := fun b ↦ measurableSet_singleton b
       have h_iUnion : (⋃ b : β, ({b} : Set β)) = Set.univ := by
         ext x; simp
       have h := measureReal_iUnion_fintype (μ := W a) h_pairwise h_meas
@@ -416,12 +416,12 @@ private lemma measure_pi_eq_sum_singletons
   have h_E_eq : (S : Set (Fin n → β)) = ⋃ y ∈ S, ({y} : Set (Fin n → β)) := by
     ext x; simp
   rw [h_E_eq, measure_biUnion_finset]
-  · refine Finset.sum_congr rfl (fun y _ => ?_)
+  · refine Finset.sum_congr rfl (fun y _ ↦ ?_)
     have h_singleton_eq :
-        ({y} : Set (Fin n → β)) = Set.pi Set.univ (fun i => ({y i} : Set β)) := by
+        ({y} : Set (Fin n → β)) = Set.pi Set.univ (fun i ↦ ({y i} : Set β)) := by
       ext x
       simp only [Set.mem_singleton_iff, Set.mem_pi, Set.mem_univ, true_implies]
-      exact ⟨fun h i => by rw [h], fun h => funext h⟩
+      exact ⟨fun h i ↦ by rw [h], fun h ↦ funext h⟩
     rw [h_singleton_eq, Measure.pi_pi]
   · intro y₁ _ y₂ _ hy
     show Disjoint ({y₁} : Set (Fin n → β)) ({y₂} : Set (Fin n → β))
@@ -464,8 +464,8 @@ private lemma sum_prod_diff_abs_le_aux : ∀ {n : ℕ} (a b : Fin n → β → �
       rw [Fin.prod_univ_succ, Fin.prod_univ_succ]
       set A : ℝ := ∏ i : Fin k, a i.succ (y i.succ)
       set B : ℝ := ∏ i : Fin k, b i.succ (y i.succ)
-      have hA_nn : 0 ≤ A := Finset.prod_nonneg (fun i _ => ha_nn _ _)
-      have hB_nn : 0 ≤ B := Finset.prod_nonneg (fun i _ => hb_nn _ _)
+      have hA_nn : 0 ≤ A := Finset.prod_nonneg (fun i _ ↦ ha_nn _ _)
+      have hB_nn : 0 ≤ B := Finset.prod_nonneg (fun i _ ↦ hb_nn _ _)
       have ha₀_nn : 0 ≤ a 0 (y 0) := ha_nn _ _
       have h_eq : a 0 (y 0) * A - b 0 (y 0) * B
           = (a 0 (y 0) - b 0 (y 0)) * B + a 0 (y 0) * (A - B) := by ring
@@ -476,7 +476,7 @@ private lemma sum_prod_diff_abs_le_aux : ∀ {n : ℕ} (a b : Fin n → β → �
             rw [abs_mul, abs_mul]
         _ = |a 0 (y 0) - b 0 (y 0)| * B + a 0 (y 0) * |A - B| := by
             rw [abs_of_nonneg hB_nn, abs_of_nonneg ha₀_nn]
-    refine (Finset.sum_le_sum (fun y _ => h_split y)).trans ?_
+    refine (Finset.sum_le_sum (fun y _ ↦ h_split y)).trans ?_
     rw [Finset.sum_add_distrib]
     -- The first sum: ∑_y |a 0 (y 0) - b 0 (y 0)| · ∏ b' = (∑_y ∏ over Fin (k+1) of f) where
     -- f 0 = |..|, f i+1 = b _.
@@ -492,8 +492,8 @@ private lemma sum_prod_diff_abs_le_aux : ∀ {n : ℕ} (a b : Fin n → β → �
               |a 0 (y 0) - b 0 (y 0)| * (∏ i : Fin k, b i.succ (y i.succ))
             = ∑ p : β × (Fin k → β),
               |a 0 p.1 - b 0 p.1| * (∏ i : Fin k, b i.succ (p.2 i)) := by
-        rw [← Equiv.sum_comp (Fin.consEquiv (fun _ : Fin (k+1) => β))]
-        refine Finset.sum_congr rfl (fun p _ => ?_)
+        rw [← Equiv.sum_comp (Fin.consEquiv (fun _ : Fin (k+1) ↦ β))]
+        refine Finset.sum_congr rfl (fun p _ ↦ ?_)
         simp only [Fin.consEquiv_apply, Fin.cons_zero, Fin.cons_succ]
       rw [h_step1]
       rw [show (Finset.univ : Finset (β × (Fin k → β)))
@@ -517,8 +517,8 @@ private lemma sum_prod_diff_abs_le_aux : ∀ {n : ℕ} (a b : Fin n → β → �
             = ∑ p : β × (Fin k → β),
               a 0 p.1
                 * |∏ i : Fin k, a i.succ (p.2 i) - ∏ i : Fin k, b i.succ (p.2 i)| := by
-        rw [← Equiv.sum_comp (Fin.consEquiv (fun _ : Fin (k+1) => β))]
-        refine Finset.sum_congr rfl (fun p _ => ?_)
+        rw [← Equiv.sum_comp (Fin.consEquiv (fun _ : Fin (k+1) ↦ β))]
+        refine Finset.sum_congr rfl (fun p _ ↦ ?_)
         simp only [Fin.consEquiv_apply, Fin.cons_zero, Fin.cons_succ]
       rw [h_step1]
       rw [show (Finset.univ : Finset (β × (Fin k → β)))
@@ -538,8 +538,8 @@ private lemma sum_prod_diff_abs_le_aux : ∀ {n : ℕ} (a b : Fin n → β → �
     rw [h_prod_b_sum, h_prod_b_one, mul_one]
     rw [ha_sum, one_mul]
     -- IH on (a ∘ Fin.succ, b ∘ Fin.succ).
-    have h_ih := ih (fun i => a i.succ) (fun i => b i.succ)
-      (fun i z => ha_nn _ z) (fun i z => hb_nn _ z) (fun i => ha_sum _) (fun i => hb_sum _)
+    have h_ih := ih (fun i ↦ a i.succ) (fun i ↦ b i.succ)
+      (fun i z ↦ ha_nn _ z) (fun i z ↦ hb_nn _ z) (fun i ↦ ha_sum _) (fun i ↦ hb_sum _)
     -- |a₀ - b₀| sum + IH ≤ ∑ i : Fin (k+1), ∑ z, |...|.
     rw [Fin.sum_univ_succ]
     linarith
@@ -554,25 +554,25 @@ private lemma Measure_pi_real_event_diff_le
     (E : Set (Fin n → β)) :
     |(Measure.pi μ).real E - (Measure.pi μ').real E|
       ≤ ∑ i : Fin n, ∑ b : β, |(μ i).real {b} - (μ' i).real {b}| := by
-  set a : Fin n → β → ℝ := fun i b => (μ i).real ({b} : Set β) with _ha_def
-  set b' : Fin n → β → ℝ := fun i b => (μ' i).real ({b} : Set β) with _hb_def
+  set a : Fin n → β → ℝ := fun i b ↦ (μ i).real ({b} : Set β) with _ha_def
+  set b' : Fin n → β → ℝ := fun i b ↦ (μ' i).real ({b} : Set β) with _hb_def
   -- Each coord-sum is 1.
   have h_sum_per_coord : ∀ (ν : Measure β) [IsProbabilityMeasure ν],
       ∑ z : β, ν.real ({z} : Set β) = 1 := by
     intro ν _
-    have h_pairwise : Pairwise (Function.onFun Disjoint (fun z : β => ({z} : Set β))) := by
+    have h_pairwise : Pairwise (Function.onFun Disjoint (fun z : β ↦ ({z} : Set β))) := by
       intro z₁ z₂ hz
       show Disjoint (({z₁} : Set β)) (({z₂} : Set β))
       rw [Set.disjoint_singleton]; exact hz
-    have h_meas : ∀ z : β, MeasurableSet ({z} : Set β) := fun z => measurableSet_singleton z
+    have h_meas : ∀ z : β, MeasurableSet ({z} : Set β) := fun z ↦ measurableSet_singleton z
     have h_iUnion : (⋃ z : β, ({z} : Set β)) = Set.univ := by ext x; simp
     have h := measureReal_iUnion_fintype (μ := ν) h_pairwise h_meas
     rw [h_iUnion] at h
     rw [← h, probReal_univ]
-  have h_sum_a : ∀ i, ∑ z : β, a i z = 1 := fun i => h_sum_per_coord (μ i)
-  have h_sum_b : ∀ i, ∑ z : β, b' i z = 1 := fun i => h_sum_per_coord (μ' i)
-  have h_a_nn : ∀ i z, 0 ≤ a i z := fun _ _ => ENNReal.toReal_nonneg
-  have h_b_nn : ∀ i z, 0 ≤ b' i z := fun _ _ => ENNReal.toReal_nonneg
+  have h_sum_a : ∀ i, ∑ z : β, a i z = 1 := fun i ↦ h_sum_per_coord (μ i)
+  have h_sum_b : ∀ i, ∑ z : β, b' i z = 1 := fun i ↦ h_sum_per_coord (μ' i)
+  have h_a_nn : ∀ i z, 0 ≤ a i z := fun _ _ ↦ ENNReal.toReal_nonneg
+  have h_b_nn : ∀ i z, 0 ≤ b' i z := fun _ _ ↦ ENNReal.toReal_nonneg
   classical
   -- Convert E to a finite set of (Fin n → β) via filter on universe.
   set S : Finset (Fin n → β) := (Finset.univ : Finset (Fin n → β)).filter (· ∈ E) with hS_def
@@ -586,22 +586,22 @@ private lemma Measure_pi_real_event_diff_le
     rw [Measure.real]
     rw [show ((Measure.pi ν) E) = (Measure.pi ν) (S : Set (Fin n → β)) from by rw [h_S_eq_E]]
     rw [measure_pi_eq_sum_singletons]
-    rw [ENNReal.toReal_sum (fun y _ => by
-      refine ENNReal.prod_ne_top (fun i _ => ?_); exact measure_ne_top _ _)]
+    rw [ENNReal.toReal_sum (fun y _ ↦ by
+      refine ENNReal.prod_ne_top (fun i _ ↦ ?_); exact measure_ne_top _ _)]
   have h_μ_eq : (Measure.pi μ).real E
       = ∑ y ∈ S, ∏ i : Fin n, a i (y i) := by
     rw [h_pi_eq μ]
-    refine Finset.sum_congr rfl (fun y _ => ?_)
+    refine Finset.sum_congr rfl (fun y _ ↦ ?_)
     rw [ENNReal.toReal_prod]; rfl
   have h_μ'_eq : (Measure.pi μ').real E
       = ∑ y ∈ S, ∏ i : Fin n, b' i (y i) := by
     rw [h_pi_eq μ']
-    refine Finset.sum_congr rfl (fun y _ => ?_)
+    refine Finset.sum_congr rfl (fun y _ ↦ ?_)
     rw [ENNReal.toReal_prod]; rfl
   rw [h_μ_eq, h_μ'_eq, ← Finset.sum_sub_distrib]
   refine (Finset.abs_sum_le_sum_abs _ _).trans ?_
   refine (Finset.sum_le_sum_of_subset_of_nonneg (Finset.subset_univ _)
-    (fun y _ _ => abs_nonneg _)).trans ?_
+    (fun y _ _ ↦ abs_nonneg _)).trans ?_
   exact sum_prod_diff_abs_le_aux a b' h_a_nn h_b_nn h_sum_a h_sum_b
 
 
@@ -618,12 +618,12 @@ lemma errorProbAt_smooth_TV
   -- Apply Measure_pi_real_event_diff_le with μ_i := Channel.smooth W δ (c.encoder m i),
   -- μ'_i := W (c.encoder m i).
   have h_TV := Measure_pi_real_event_diff_le
-    (fun i => Channel.smooth W δ (c.encoder m i))
-    (fun i => W (c.encoder m i))
+    (fun i ↦ Channel.smooth W δ (c.encoder m i))
+    (fun i ↦ W (c.encoder m i))
     (c.errorEvent m)
   -- errorProbAt = Measure.pi (· (encoder m i)) (errorEvent m), and `.toReal` of measure = `.real`.
-  show |((Measure.pi (fun i => (Channel.smooth W δ) (c.encoder m i))) (c.errorEvent m)).toReal
-        - ((Measure.pi (fun i => W (c.encoder m i))) (c.errorEvent m)).toReal| ≤ 2 * (n : ℝ) * δ
+  show |((Measure.pi (fun i ↦ (Channel.smooth W δ) (c.encoder m i))) (c.errorEvent m)).toReal
+        - ((Measure.pi (fun i ↦ W (c.encoder m i))) (c.errorEvent m)).toReal| ≤ 2 * (n : ℝ) * δ
   refine h_TV.trans ?_
   -- Each per-coord sum ≤ 2δ by C.2.1.
   have h_each : ∀ i : Fin n,
@@ -643,7 +643,7 @@ lemma errorProbAt_smooth_TV
       ∑ b : β, |((Channel.smooth W δ) (c.encoder m i)).real ({b} : Set β)
                   - (W (c.encoder m i)).real ({b} : Set β)|
         ≤ ∑ _i : Fin n, (2 * δ) :=
-    Finset.sum_le_sum (fun i _ => h_each i)
+    Finset.sum_le_sum (fun i _ ↦ h_each i)
   refine h_sum.trans ?_
   rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
   ring_nf

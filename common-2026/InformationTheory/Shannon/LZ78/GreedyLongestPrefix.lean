@@ -140,25 +140,25 @@ omit [DecidableEq α] in
 `fun w acc => w.length + acc` is additive, so `foldr_append` would leave a
 non-zero seed; this dedicated lemma keeps the seed at `0`.) -/
 theorem foldr_length_append_singleton (l : List (List α)) (w : List α) :
-    ((l ++ [w]).foldr (fun w acc => w.length + acc) 0)
-      = (l.foldr (fun w acc => w.length + acc) 0) + w.length := by
+    ((l ++ [w]).foldr (fun w acc ↦ w.length + acc) 0)
+      = (l.foldr (fun w acc ↦ w.length + acc) 0) + w.length := by
   induction l with
   | nil => simp
   | cons hd tl ih => simp only [List.cons_append, List.foldr_cons, ih]; omega
 
 omit [DecidableEq α] in
 theorem foldrLength_take_succ (L : List (List α)) (j : ℕ) (h : j < L.length) :
-    ((L.take (j + 1)).foldr (fun w acc => w.length + acc) 0)
-      = ((L.take j).foldr (fun w acc => w.length + acc) 0) + (L[j]'h).length := by
+    ((L.take (j + 1)).foldr (fun w acc ↦ w.length + acc) 0)
+      = ((L.take j).foldr (fun w acc ↦ w.length + acc) 0) + (L[j]'h).length := by
   rw [List.take_succ_eq_append_getElem h, foldr_length_append_singleton]
 
 omit [DecidableEq α] in
 theorem foldrLength_take_mono (L : List (List α)) {i j : ℕ} (hij : i ≤ j) :
-    ((L.take i).foldr (fun w acc => w.length + acc) 0)
-      ≤ ((L.take j).foldr (fun w acc => w.length + acc) 0) := by
+    ((L.take i).foldr (fun w acc ↦ w.length + acc) 0)
+      ≤ ((L.take j).foldr (fun w acc ↦ w.length + acc) 0) := by
   have hstep : ∀ i : ℕ,
-      ((L.take i).foldr (fun w acc => w.length + acc) 0)
-        ≤ ((L.take (i + 1)).foldr (fun w acc => w.length + acc) 0) := by
+      ((L.take i).foldr (fun w acc ↦ w.length + acc) 0)
+        ≤ ((L.take (i + 1)).foldr (fun w acc ↦ w.length + acc) 0) := by
     intro i
     by_cases h : i < L.length
     · rw [foldrLength_take_succ L i h]; omega
@@ -177,7 +177,7 @@ theorem foldrLength_take_mono (L : List (List α)) {i j : ℕ} (hij : i ≤ j) :
 omit [DecidableEq α] in
 theorem foldrLength_take_ge_of_forall_ne_nil (L : List (List α))
     (hne : ∀ w ∈ L, w ≠ []) {j : ℕ} (hj : j ≤ L.length) :
-    j ≤ (L.take j).foldr (fun w acc => w.length + acc) 0 := by
+    j ≤ (L.take j).foldr (fun w acc ↦ w.length + acc) 0 := by
   induction j with
   | zero => simp
   | succ j ihj =>
@@ -196,8 +196,8 @@ theorem lz78PhraseStringsAux_total_length :
     ∀ (fuel : ℕ) (dict : List (List α)) (cur input : List α),
       input.length < fuel →
       ((lz78PhraseStringsAux fuel dict cur input).foldr
-          (fun w acc => w.length + acc) 0)
-        ≤ (dict.foldr (fun w acc => w.length + acc) 0) + cur.length + input.length
+          (fun w acc ↦ w.length + acc) 0)
+        ≤ (dict.foldr (fun w acc ↦ w.length + acc) 0) + cur.length + input.length
   | 0, _, _, _, hfuel => by omega
   | fuel + 1, dict, cur, [], _ => by
       unfold lz78PhraseStringsAux
@@ -219,8 +219,8 @@ theorem lz78PhraseStringsAux_total_length :
           (by simp only [List.length_cons] at hfuel; omega)
         -- compute the foldr over the grown dictionary without touching the
         -- worker argument (which is identical on both sides)
-        have hdict : (dict.concat (cur ++ [s])).foldr (fun w acc => w.length + acc) 0
-            = dict.foldr (fun w acc => w.length + acc) 0 + (cur.length + 1) := by
+        have hdict : (dict.concat (cur ++ [s])).foldr (fun w acc ↦ w.length + acc) 0
+            = dict.foldr (fun w acc ↦ w.length + acc) 0 + (cur.length + 1) := by
           rw [List.concat_eq_append, foldr_length_append_singleton]
           simp only [List.length_append, List.length_singleton]
         rw [hdict] at ih
@@ -233,7 +233,7 @@ phrase consumes input symbols; the unfinished tail accounts for the slack,
 so this is `≤`, not `=`.) -/
 @[entry_point]
 theorem lz78PhraseStrings_total_length_le (input : List α) :
-    (lz78PhraseStrings input).foldr (fun w acc => w.length + acc) 0
+    (lz78PhraseStrings input).foldr (fun w acc ↦ w.length + acc) 0
       ≤ input.length := by
   have h := lz78PhraseStringsAux_total_length (input.length + 1) [] [] input
     (by omega)
@@ -341,7 +341,7 @@ omit [DecidableEq α] in
 reconstruction-invariant `List.flatten` length to the cumulative-length `foldr`
 accumulator used by the tiling. -/
 theorem length_flatten_eq_foldr_length (L : List (List α)) :
-    L.flatten.length = L.foldr (fun w acc => w.length + acc) 0 := by
+    L.flatten.length = L.foldr (fun w acc ↦ w.length + acc) 0 := by
   rw [List.length_flatten]
   induction L with
   | nil => simp
@@ -360,7 +360,7 @@ This is the content half of the absolute-position tiling: the tiling carries
 phrase lengths/positions, and this lemma certifies that the slice at those
 positions reproduces the `j`-th phrase string. -/
 theorem flatten_drop_take_getElem (L : List (List α)) (j : ℕ) (hj : j < L.length) :
-    (L.flatten.drop ((L.take j).foldr (fun w acc => w.length + acc) 0)).take
+    (L.flatten.drop ((L.take j).foldr (fun w acc ↦ w.length + acc) 0)).take
         (L[j].length) = L[j] := by
   induction L generalizing j with
   | nil => exact absurd hj (by simp)
@@ -380,20 +380,20 @@ theorem flatten_drop_take_getElem (L : List (List α)) (j : ℕ) (hj : j < L.len
       -- consumes `hd`, leaving `tl.flatten.drop (tl cumLen i)`.
       rw [List.drop_append]
       have hdrop_hd : hd.drop (hd.length
-          + (List.take i tl).foldr (fun w acc => w.length + acc) 0) = [] :=
+          + (List.take i tl).foldr (fun w acc ↦ w.length + acc) 0) = [] :=
         List.drop_eq_nil_of_le (by omega)
       rw [hdrop_hd, List.nil_append,
-        show hd.length + (List.take i tl).foldr (fun w acc => w.length + acc) 0 - hd.length
-          = (List.take i tl).foldr (fun w acc => w.length + acc) 0 from by omega]
+        show hd.length + (List.take i tl).foldr (fun w acc ↦ w.length + acc) 0 - hd.length
+          = (List.take i tl).foldr (fun w acc ↦ w.length + acc) 0 from by omega]
       exact ih i hi
 
 omit [DecidableEq α] in
 theorem getElem?_eq_some_drop_take_of_flatten_prefix (L : List (List α))
     {input : List α} {tail : List α} (htail : L.flatten ++ tail = input)
     (idx : ℕ) (hidx : idx < L.length) :
-    L[idx]? = some ((input.drop ((L.take idx).foldr (fun w acc => w.length + acc) 0)).take
-      (((L.take (idx + 1)).foldr (fun w acc => w.length + acc) 0)
-        - ((L.take idx).foldr (fun w acc => w.length + acc) 0))) := by
+    L[idx]? = some ((input.drop ((L.take idx).foldr (fun w acc ↦ w.length + acc) 0)).take
+      (((L.take (idx + 1)).foldr (fun w acc ↦ w.length + acc) 0)
+        - ((L.take idx).foldr (fun w acc ↦ w.length + acc) 0))) := by
   -- One-step cumulative length recurrence: the step length is `L[idx].length`, so the
   -- take amount simplifies to `L[idx].length`.
   have hstep := foldrLength_take_succ L idx hidx
@@ -402,19 +402,19 @@ theorem getElem?_eq_some_drop_take_of_flatten_prefix (L : List (List α))
   rw [List.getElem?_eq_getElem hidx]
   -- `cum (idx + 1) ≤ L.flatten.length`, hence both `cum idx ≤ L.flatten.length` and
   -- `cum idx + L[idx].length ≤ L.flatten.length`.
-  have hbound : (L.take (idx + 1)).foldr (fun w acc => w.length + acc) 0 ≤ L.flatten.length := by
+  have hbound : (L.take (idx + 1)).foldr (fun w acc ↦ w.length + acc) 0 ≤ L.flatten.length := by
     rw [length_flatten_eq_foldr_length L]
-    calc (L.take (idx + 1)).foldr (fun w acc => w.length + acc) 0
-        ≤ (L.take L.length).foldr (fun w acc => w.length + acc) 0 :=
+    calc (L.take (idx + 1)).foldr (fun w acc ↦ w.length + acc) 0
+        ≤ (L.take L.length).foldr (fun w acc ↦ w.length + acc) 0 :=
           foldrLength_take_mono L (by omega)
-      _ = L.foldr (fun w acc => w.length + acc) 0 := by rw [List.take_length]
-  have hcumidx_le : (L.take idx).foldr (fun w acc => w.length + acc) 0 ≤ L.flatten.length := by
+      _ = L.foldr (fun w acc ↦ w.length + acc) 0 := by rw [List.take_length]
+  have hcumidx_le : (L.take idx).foldr (fun w acc ↦ w.length + acc) 0 ≤ L.flatten.length := by
     omega
   -- On `input = L.flatten ++ tail`, dropping `cum idx` then taking `L[idx].length`
   -- only sees the flatten part.
-  have hslice : (input.drop ((L.take idx).foldr (fun w acc => w.length + acc) 0)).take
+  have hslice : (input.drop ((L.take idx).foldr (fun w acc ↦ w.length + acc) 0)).take
         ((L[idx]'hidx).length)
-      = (L.flatten.drop ((L.take idx).foldr (fun w acc => w.length + acc) 0)).take
+      = (L.flatten.drop ((L.take idx).foldr (fun w acc ↦ w.length + acc) 0)).take
         ((L[idx]'hidx).length) := by
     conv_lhs => rw [show input = L.flatten ++ tail from htail.symm]
     rw [List.drop_append_of_le_length hcumidx_le,
@@ -554,7 +554,7 @@ the number of phrases is at most the sum of their lengths, since each
 length is `≥ 1`. -/
 theorem length_le_foldr_length_of_ne_nil (l : List (List α))
     (h : ∀ w ∈ l, w ≠ []) :
-    l.length ≤ l.foldr (fun w acc => w.length + acc) 0 := by
+    l.length ≤ l.foldr (fun w acc ↦ w.length + acc) 0 := by
   induction l with
   | nil => simp
   | cons hd tl ih =>
@@ -564,7 +564,7 @@ theorem length_le_foldr_length_of_ne_nil (l : List (List α))
         rcases hd with _ | ⟨a, as⟩
         · exact absurd rfl hhd
         · simp
-      have htl : ∀ w ∈ tl, w ≠ [] := fun w hw => h w (List.mem_cons_of_mem _ hw)
+      have htl : ∀ w ∈ tl, w ≠ [] := fun w hw ↦ h w (List.mem_cons_of_mem _ hw)
       have := ih htl
       omega
 
@@ -573,7 +573,7 @@ omit [DecidableEq α] in
 length at most the longest entry length (the `Lmax` accumulator used to bound the
 leading-boundary and trailing-tail symbol lengths in the tiling). -/
 theorem length_le_foldr_max_of_mem (l : List (List α)) (w : List α) (h : w ∈ l) :
-    w.length ≤ l.foldr (fun w acc => max w.length acc) 0 := by
+    w.length ≤ l.foldr (fun w acc ↦ max w.length acc) 0 := by
   induction l with
   | nil => simp at h
   | cons hd tl ih =>
@@ -648,7 +648,7 @@ theorem lz78_parse_tiling_positions (input : List α) (k : ℕ) :
   set L := lz78PhraseStrings input with hL_def
   set m := L.length with hm_def
   -- Cumulative length of the first `j` phrases.
-  set cumLen : ℕ → ℕ := fun j => (L.take j).foldr (fun w acc => w.length + acc) 0
+  set cumLen : ℕ → ℕ := fun j ↦ (L.take j).foldr (fun w acc ↦ w.length + acc) 0
     with hcum_def
   -- cumLen 0 = 0.
   have hcum0 : cumLen 0 = 0 := by simp [hcum_def]
@@ -675,14 +675,14 @@ theorem lz78_parse_tiling_positions (input : List α) (k : ℕ) :
     exact foldrLength_take_ge_of_forall_ne_nil L
       (lz78PhraseStrings_forall_ne_nil input) (by rw [← hm_def]; exact hj)
   -- cumLen m = total ≤ input.length.
-  have hcumm_eq : cumLen m = L.foldr (fun w acc => w.length + acc) 0 := by
+  have hcumm_eq : cumLen m = L.foldr (fun w acc ↦ w.length + acc) 0 := by
     simp only [hcum_def, hm_def, List.take_length]
   have hcumm_le : cumLen m ≤ input.length := by
     rw [hcumm_eq, hL_def]
     exact lz78PhraseStrings_total_length_le input
   -- The absorption predicate: least index whose cumulative length exceeds `k`,
   -- or `m` (the parse end) if none.
-  set P : ℕ → Prop := fun j => k < cumLen j ∨ j = m with hP_def
+  set P : ℕ → Prop := fun j ↦ k < cumLen j ∨ j = m with hP_def
   have hP_exists : ∃ j, P j := ⟨m, Or.inr rfl⟩
   set bAbsorbed := Nat.find hP_exists with hbA_def
   have hbA_le_m : bAbsorbed ≤ m := Nat.find_min' hP_exists (Or.inr rfl)
@@ -707,9 +707,9 @@ theorem lz78_parse_tiling_positions (input : List α) (k : ℕ) :
   -- Either k < cumLen bAbsorbed, or bAbsorbed = m.
   have hbA_spec : k < cumLen bAbsorbed ∨ bAbsorbed = m := Nat.find_spec hP_exists
   set c := m - bAbsorbed with hc_def
-  set N : Fin (c + 1) → ℕ := fun j => cumLen (bAbsorbed + j.val) with hN_def
+  set N : Fin (c + 1) → ℕ := fun j ↦ cumLen (bAbsorbed + j.val) with hN_def
   -- Longest phrase length: the boundary symbol-length cap.
-  set Lmax : ℕ := L.foldr (fun w acc => max w.length acc) 0 with hLmax_def
+  set Lmax : ℕ := L.foldr (fun w acc ↦ max w.length acc) 0 with hLmax_def
   have hLmax_bound : ∀ j (h : j < m), (L[j]'h).length ≤ Lmax := by
     intro j h
     exact length_le_foldr_max_of_mem L (L[j]'h) (List.getElem_mem h)

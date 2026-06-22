@@ -49,15 +49,15 @@ Under positivity `0 < a n ∧ 0 < b n` this is equivalent to
 the use site rather than in the predicate. -/
 @[entry_point]
 def DotEq (a b : ℕ → ℝ) : Prop :=
-  (fun n : ℕ => Real.log (a n) - Real.log (b n)) =o[atTop] (fun n : ℕ => (n : ℝ))
+  (fun n : ℕ ↦ Real.log (a n) - Real.log (b n)) =o[atTop] (fun n : ℕ ↦ (n : ℝ))
 
 @[inherit_doc] scoped notation:50 a:51 " ≐ " b:51 => DotEq a b
 
 /-- `DotEq` is reflexive: `Real.log (a n) - Real.log (a n) = 0 = o(n)`. -/
 @[entry_point]
 lemma DotEq.refl (a : ℕ → ℝ) : a ≐ a := by
-  show (fun n : ℕ => Real.log (a n) - Real.log (a n)) =o[atTop] (fun n : ℕ => (n : ℝ))
-  have h0 : (fun n : ℕ => Real.log (a n) - Real.log (a n)) = (fun _ : ℕ => (0 : ℝ)) := by
+  show (fun n : ℕ ↦ Real.log (a n) - Real.log (a n)) =o[atTop] (fun n : ℕ ↦ (n : ℝ))
+  have h0 : (fun n : ℕ ↦ Real.log (a n) - Real.log (a n)) = (fun _ : ℕ ↦ (0 : ℝ)) := by
     funext n; ring
   rw [h0]
   exact Asymptotics.isLittleO_zero _ _
@@ -65,9 +65,9 @@ lemma DotEq.refl (a : ℕ → ℝ) : a ≐ a := by
 /-- `DotEq` is symmetric: swap `a` / `b` and negate the inside. -/
 @[entry_point]
 lemma DotEq.symm {a b : ℕ → ℝ} (h : a ≐ b) : b ≐ a := by
-  show (fun n : ℕ => Real.log (b n) - Real.log (a n)) =o[atTop] (fun n : ℕ => (n : ℝ))
-  have h_eq : (fun n : ℕ => Real.log (b n) - Real.log (a n))
-      = fun n : ℕ => -(Real.log (a n) - Real.log (b n)) := by
+  show (fun n : ℕ ↦ Real.log (b n) - Real.log (a n)) =o[atTop] (fun n : ℕ ↦ (n : ℝ))
+  have h_eq : (fun n : ℕ ↦ Real.log (b n) - Real.log (a n))
+      = fun n : ℕ ↦ -(Real.log (a n) - Real.log (b n)) := by
     funext n; ring
   rw [h_eq]
   exact h.neg_left
@@ -75,9 +75,9 @@ lemma DotEq.symm {a b : ℕ → ℝ} (h : a ≐ b) : b ≐ a := by
 /-- `DotEq` is transitive: `(log a - log b) + (log b - log c) = (log a - log c)`. -/
 @[entry_point]
 lemma DotEq.trans {a b c : ℕ → ℝ} (hab : a ≐ b) (hbc : b ≐ c) : a ≐ c := by
-  show (fun n : ℕ => Real.log (a n) - Real.log (c n)) =o[atTop] (fun n : ℕ => (n : ℝ))
-  have h_eq : (fun n : ℕ => Real.log (a n) - Real.log (c n))
-      = fun n : ℕ => (Real.log (a n) - Real.log (b n))
+  show (fun n : ℕ ↦ Real.log (a n) - Real.log (c n)) =o[atTop] (fun n : ℕ ↦ (n : ℝ))
+  have h_eq : (fun n : ℕ ↦ Real.log (a n) - Real.log (c n))
+      = fun n : ℕ ↦ (Real.log (a n) - Real.log (b n))
                       + (Real.log (b n) - Real.log (c n)) := by
     funext n; ring
   rw [h_eq]
@@ -90,11 +90,11 @@ Proof: `log(a₁·a₂) - log(b₁·b₂) = (log a₁ - log b₁) + (log a₂ - 
 lemma DotEq.mul {a₁ a₂ b₁ b₂ : ℕ → ℝ}
     (hPos₁ : ∀ n, 0 < a₁ n ∧ 0 < b₁ n) (hPos₂ : ∀ n, 0 < a₂ n ∧ 0 < b₂ n)
     (h₁ : a₁ ≐ b₁) (h₂ : a₂ ≐ b₂) :
-    (fun n => a₁ n * a₂ n) ≐ (fun n => b₁ n * b₂ n) := by
-  show (fun n : ℕ => Real.log (a₁ n * a₂ n) - Real.log (b₁ n * b₂ n))
-        =o[atTop] (fun n : ℕ => (n : ℝ))
-  have h_eq : (fun n : ℕ => Real.log (a₁ n * a₂ n) - Real.log (b₁ n * b₂ n))
-      = fun n : ℕ => (Real.log (a₁ n) - Real.log (b₁ n))
+    (fun n ↦ a₁ n * a₂ n) ≐ (fun n ↦ b₁ n * b₂ n) := by
+  show (fun n : ℕ ↦ Real.log (a₁ n * a₂ n) - Real.log (b₁ n * b₂ n))
+        =o[atTop] (fun n : ℕ ↦ (n : ℝ))
+  have h_eq : (fun n : ℕ ↦ Real.log (a₁ n * a₂ n) - Real.log (b₁ n * b₂ n))
+      = fun n : ℕ ↦ (Real.log (a₁ n) - Real.log (b₁ n))
                       + (Real.log (a₂ n) - Real.log (b₂ n)) := by
     funext n
     have ha₁ : a₁ n ≠ 0 := ne_of_gt (hPos₁ n).1
@@ -111,11 +111,11 @@ lemma DotEq.mul {a₁ a₂ b₁ b₂ : ℕ → ℝ}
 Proof: `log a⁻¹ - log b⁻¹ = -(log a - log b)` via `Real.log_inv` (unconditional in Mathlib). -/
 @[entry_point]
 lemma DotEq.inv {a b : ℕ → ℝ} (h : a ≐ b) :
-    (fun n => (a n)⁻¹) ≐ (fun n => (b n)⁻¹) := by
-  show (fun n : ℕ => Real.log ((a n)⁻¹) - Real.log ((b n)⁻¹))
-        =o[atTop] (fun n : ℕ => (n : ℝ))
-  have h_eq : (fun n : ℕ => Real.log ((a n)⁻¹) - Real.log ((b n)⁻¹))
-      = fun n : ℕ => -(Real.log (a n) - Real.log (b n)) := by
+    (fun n ↦ (a n)⁻¹) ≐ (fun n ↦ (b n)⁻¹) := by
+  show (fun n : ℕ ↦ Real.log ((a n)⁻¹) - Real.log ((b n)⁻¹))
+        =o[atTop] (fun n : ℕ ↦ (n : ℝ))
+  have h_eq : (fun n : ℕ ↦ Real.log ((a n)⁻¹) - Real.log ((b n)⁻¹))
+      = fun n : ℕ ↦ -(Real.log (a n) - Real.log (b n)) := by
     funext n
     rw [Real.log_inv, Real.log_inv]; ring
   rw [h_eq]
@@ -126,7 +126,7 @@ lemma DotEq.inv {a b : ℕ → ℝ} (h : a ≐ b) :
 @[entry_point]
 lemma dotEq_iff_tendsto_log_div (a b : ℕ → ℝ) (hPos : ∀ n, 0 < a n ∧ 0 < b n) :
     a ≐ b ↔
-    Tendsto (fun n : ℕ => (1 / (n : ℝ)) * Real.log (a n / b n)) atTop (𝓝 0) := by
+    Tendsto (fun n : ℕ ↦ (1 / (n : ℝ)) * Real.log (a n / b n)) atTop (𝓝 0) := by
   -- `DotEq` ⟺ `(log a - log b) =o[atTop] (·:ℝ)`
   -- ⟺ (by `isLittleO_iff_tendsto'`) `Tendsto ((log a - log b) / n) atTop (𝓝 0)`
   -- ⟺ (under positivity, `log_div`) `Tendsto ((1/n) * log (a/b)) atTop (𝓝 0)`
@@ -135,20 +135,20 @@ lemma dotEq_iff_tendsto_log_div (a b : ℕ → ℝ) (hPos : ∀ n, 0 < a n ∧ 0
     filter_upwards [eventually_gt_atTop 0] with n hn h_eq
     exact absurd h_eq (by exact_mod_cast (Nat.pos_iff_ne_zero.mp hn))
   have h_iff := Asymptotics.isLittleO_iff_tendsto' (l := atTop)
-      (f := fun n : ℕ => Real.log (a n) - Real.log (b n))
-      (g := fun n : ℕ => (n : ℝ)) h_eventually
+      (f := fun n : ℕ ↦ Real.log (a n) - Real.log (b n))
+      (g := fun n : ℕ ↦ (n : ℝ)) h_eventually
   -- Rewrite the ratio form to the `(1/n) * log (a/b)` form.
-  have h_ratio_eq : (fun n : ℕ =>
+  have h_ratio_eq : (fun n : ℕ ↦
         (Real.log (a n) - Real.log (b n)) / (n : ℝ))
-      = fun n : ℕ => (1 / (n : ℝ)) * Real.log (a n / b n) := by
+      = fun n : ℕ ↦ (1 / (n : ℝ)) * Real.log (a n / b n) := by
     funext n
     have ha : a n ≠ 0 := ne_of_gt (hPos n).1
     have hb : b n ≠ 0 := ne_of_gt (hPos n).2
     rw [Real.log_div ha hb]
     ring
   rw [show (a ≐ b)
-        = ((fun n : ℕ => Real.log (a n) - Real.log (b n))
-            =o[atTop] (fun n : ℕ => (n : ℝ))) from rfl, h_iff, h_ratio_eq]
+        = ((fun n : ℕ ↦ Real.log (a n) - Real.log (b n))
+            =o[atTop] (fun n : ℕ ↦ (n : ℝ))) from rfl, h_iff, h_ratio_eq]
 
 /-- Closed-form block length for `exp(-n·g) < ε'` (rate-extraction wrapper).
 For `g, ε' > 0`, the witness `N := ⌈max 0 (-Real.log ε' / g)⌉ + 1` works. -/
@@ -188,7 +188,7 @@ theorem exp_decay_N_of_pos {g ε' : ℝ} (hg : 0 < g) (hε' : 0 < ε') :
 
 -- `≐` notation via `dotEq_iff_tendsto_log_div`.
 example (a b : ℕ → ℝ) (hPos : ∀ n, 0 < a n ∧ 0 < b n)
-    (h : Tendsto (fun n : ℕ => (1 / (n : ℝ)) * Real.log (a n / b n)) atTop (𝓝 0)) :
+    (h : Tendsto (fun n : ℕ ↦ (1 / (n : ℝ)) * Real.log (a n / b n)) atTop (𝓝 0)) :
     a ≐ b :=
   (dotEq_iff_tendsto_log_div a b hPos).mpr h
 

@@ -91,7 +91,7 @@ theorem integral_log_rnDeriv_eq_neg_diffEntropy
     _ = -InformationTheory.Shannon.differentialEntropy μ := by
         unfold InformationTheory.Shannon.differentialEntropy
         rw [← integral_neg]
-        refine integral_congr_ae (Filter.Eventually.of_forall (fun y => ?_))
+        refine integral_congr_ae (Filter.Eventually.of_forall (fun y ↦ ?_))
         rw [Real.negMulLog_def]
         ring
 
@@ -113,7 +113,7 @@ fed by the per-fibre a.e. agreement `hg_ae`, so no joint measurability is ever
 needed. This is the step that lets the body keep its fibre term in proxy form. -/
 theorem integral_log_proxy_fibre
     (x : ℝ) (hWx : W x ≪ volume) {g : ℝ × ℝ → ℝ≥0∞}
-    (hg_ae : (fun y => (W x).rnDeriv volume y) =ᵐ[W x] fun y => g (x, y)) :
+    (hg_ae : (fun y ↦ (W x).rnDeriv volume y) =ᵐ[W x] fun y ↦ g (x, y)) :
     ∫ y, Real.log (g (x, y)).toReal ∂(W x)
       = -InformationTheory.Shannon.differentialEntropy (W x) := by
   rw [← integral_log_density_fibre x hWx]
@@ -137,7 +137,7 @@ theorem rnDeriv_compProd_fibre
     [IsFiniteMeasure μ] [IsFiniteKernel κ] [IsFiniteKernel η]
     (h_ac : μ ⊗ₘ κ ≪ μ ⊗ₘ η) :
     (μ ⊗ₘ κ).rnDeriv (μ ⊗ₘ η)
-      =ᵐ[μ ⊗ₘ η] fun p => Kernel.rnDeriv κ η p.1 p.2 := by
+      =ᵐ[μ ⊗ₘ η] fun p ↦ Kernel.rnDeriv κ η p.1 p.2 := by
   -- fibrewise absolute continuity from the joint one
   have h_ac_fibre : ∀ᵐ a ∂μ, κ a ≪ η a := h_ac.kernel_of_compProd
   -- the measurable density `g p := Kernel.rnDeriv κ η p.1 p.2`
@@ -147,7 +147,7 @@ theorem rnDeriv_compProd_fibre
   have hκ_eq : κ =ᵐ[μ] η.withDensity (Kernel.rnDeriv κ η) := by
     filter_upwards [h_ac_fibre] with a ha using (Kernel.withDensity_rnDeriv_eq ha).symm
   -- transport to compProd, then to a withDensity of the joint measure
-  have h_cp : μ ⊗ₘ κ = (μ ⊗ₘ η).withDensity (fun p => Kernel.rnDeriv κ η p.1 p.2) := by
+  have h_cp : μ ⊗ₘ κ = (μ ⊗ₘ η).withDensity (fun p ↦ Kernel.rnDeriv κ η p.1 p.2) := by
     rw [Measure.compProd_congr hκ_eq, Measure.compProd_withDensity hg_meas]
   -- finish: rnDeriv of a withDensity is the density
   rw [h_cp]
@@ -162,12 +162,12 @@ on `ν` since `ν ≪ q`). -/
 theorem log_rnDeriv_split
     {ν q : Measure ℝ} [SigmaFinite ν] [SigmaFinite q]
     (hνq : ν ≪ q) (hq_vol : q ≪ volume) :
-    (fun y => Real.log ((ν.rnDeriv q y).toReal))
+    (fun y ↦ Real.log ((ν.rnDeriv q y).toReal))
       =ᵐ[ν]
-    (fun y => Real.log ((ν.rnDeriv volume y).toReal)
+    (fun y ↦ Real.log ((ν.rnDeriv volume y).toReal)
                 - Real.log ((q.rnDeriv volume y).toReal)) := by
   -- chain rule  dν/dq · dq/dvol =ᵐ[q] dν/dvol, transported to ν
-  have h_chain : (fun y => ν.rnDeriv q y * q.rnDeriv volume y)
+  have h_chain : (fun y ↦ ν.rnDeriv q y * q.rnDeriv volume y)
       =ᵐ[ν] ν.rnDeriv volume :=
     hνq.ae_le (Measure.rnDeriv_mul_rnDeriv' (μ := ν) (ν := q) (κ := volume) hq_vol)
   -- positivity / finiteness of both factors, ν-a.e.
@@ -202,10 +202,10 @@ theorem llr_compProd_prod_split
     -- `g := fun z => gaussianPDF z.1 N z.2`, everywhere jointly measurable). The
     -- per-fibre a.e. agreement `hg_ae` carries the rnDeriv↔proxy bridge.
     (g : ℝ × ℝ → ℝ≥0∞) (hg_meas : Measurable g)
-    (hg_ae : ∀ x, (fun y => (W x).rnDeriv volume y) =ᵐ[W x] fun y => g (x, y)) :
-    (fun z => llr (p ⊗ₘ W) (p.prod q) z)
+    (hg_ae : ∀ x, (fun y ↦ (W x).rnDeriv volume y) =ᵐ[W x] fun y ↦ g (x, y)) :
+    (fun z ↦ llr (p ⊗ₘ W) (p.prod q) z)
       =ᵐ[p ⊗ₘ W]
-    (fun z => Real.log (g z).toReal
+    (fun z ↦ Real.log (g z).toReal
                 - Real.log (q.rnDeriv volume z.2).toReal) := by
   -- present `p.prod q` as a compProd with the constant kernel `Kernel.const ℝ q`
   have h_prod : p.prod q = p ⊗ₘ (Kernel.const ℝ q) := (Measure.compProd_const).symm
@@ -214,14 +214,14 @@ theorem llr_compProd_prod_split
   -- (1) linchpin: joint rnDeriv =ᵐ[p⊗ₘ const q] fibrewise kernel rnDeriv;
   --     transport to a.e. on the joint via `h_ac'`
   have h1 : (p ⊗ₘ W).rnDeriv (p.prod q)
-      =ᵐ[p ⊗ₘ W] fun z => Kernel.rnDeriv W (Kernel.const ℝ q) z.1 z.2 := by
+      =ᵐ[p ⊗ₘ W] fun z ↦ Kernel.rnDeriv W (Kernel.const ℝ q) z.1 z.2 := by
     rw [h_prod]
     exact h_ac'.ae_le (rnDeriv_compProd_fibre h_ac')
   -- (2+3) per-fibre: log of the fibrewise kernel rnDeriv splits into the proxy fibre
   -- term `log (g z).toReal` minus the output term, lifted to the joint. The eq-set is
   -- built directly with the everywhere-measurable proxy `g`, never the rnDeriv form.
-  have h_split : (fun z => Real.log ((Kernel.rnDeriv W (Kernel.const ℝ q) z.1 z.2)).toReal)
-      =ᵐ[p ⊗ₘ W] fun z => Real.log (g z).toReal
+  have h_split : (fun z ↦ Real.log ((Kernel.rnDeriv W (Kernel.const ℝ q) z.1 z.2)).toReal)
+      =ᵐ[p ⊗ₘ W] fun z ↦ Real.log (g z).toReal
                   - Real.log (q.rnDeriv volume z.2).toReal := by
     refine Measure.ae_compProd_of_ae_ae ?_ ?_
     · refine measurableSet_eq_fun ?_ ?_
@@ -231,8 +231,8 @@ theorem llr_compProd_prod_split
     · -- a.e. `a ∂p`, a.e. `b ∂(W a)`
       filter_upwards with a
       -- fibre kernel rnDeriv = fibre measure rnDeriv `(W a).rnDeriv q`, a.e. on `W a`
-      have hker : (fun b => Kernel.rnDeriv W (Kernel.const ℝ q) a b)
-          =ᵐ[W a] fun b => (W a).rnDeriv q b := by
+      have hker : (fun b ↦ Kernel.rnDeriv W (Kernel.const ℝ q) a b)
+          =ᵐ[W a] fun b ↦ (W a).rnDeriv q b := by
         have := (hWx_q a).ae_le
           (Kernel.rnDeriv_eq_rnDeriv_measure (κ := W) (η := Kernel.const ℝ q) (a := a))
         simpa only [Kernel.const_apply] using this
@@ -241,9 +241,9 @@ theorem llr_compProd_prod_split
         with b hb hb_split hg_b
       rw [hb, hb_split, hg_b]
   -- assemble:  llr = log(joint rnDeriv).toReal = log(fibre kernel rnDeriv).toReal = split
-  have h_llr_eq : (fun z => llr (p ⊗ₘ W) (p.prod q) z)
+  have h_llr_eq : (fun z ↦ llr (p ⊗ₘ W) (p.prod q) z)
       =ᵐ[p ⊗ₘ W]
-      fun z => Real.log ((Kernel.rnDeriv W (Kernel.const ℝ q) z.1 z.2)).toReal := by
+      fun z ↦ Real.log ((Kernel.rnDeriv W (Kernel.const ℝ q) z.1 z.2)).toReal := by
     simp only [llr_def]
     filter_upwards [h1] with z hz1
     rw [hz1]
@@ -270,10 +270,10 @@ theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub
     (hq_ac : outputDistribution p W ≪ volume)
     (h_joint_ac : (p ⊗ₘ W) ≪ p.prod (outputDistribution p W))
     (g : ℝ × ℝ → ℝ≥0∞) (hg_meas : Measurable g)
-    (hg_ae : ∀ x, (fun y => (W x).rnDeriv volume y) =ᵐ[W x] fun y => g (x, y))
-    (h_int_fibre : Integrable (fun z : ℝ × ℝ => Real.log (g z).toReal) (p ⊗ₘ W))
+    (hg_ae : ∀ x, (fun y ↦ (W x).rnDeriv volume y) =ᵐ[W x] fun y ↦ g (x, y))
+    (h_int_fibre : Integrable (fun z : ℝ × ℝ ↦ Real.log (g z).toReal) (p ⊗ₘ W))
     (h_int_out : Integrable
-        (fun z : ℝ × ℝ => Real.log
+        (fun z : ℝ × ℝ ↦ Real.log
             ((outputDistribution p W).rnDeriv volume z.2).toReal) (p ⊗ₘ W)) :
     (mutualInfoOfChannel p W).toReal
       = InformationTheory.Shannon.differentialEntropy (outputDistribution p W)
@@ -300,7 +300,7 @@ theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub
         = -(∫ x, InformationTheory.Shannon.differentialEntropy (W x) ∂p) := by
     rw [Measure.integral_compProd h_int_fibre]
     rw [← integral_neg]
-    refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+    refine integral_congr_ae (Filter.Eventually.of_forall (fun x ↦ ?_))
     exact integral_log_proxy_fibre x (hW_ac x) (hg_ae x)
   -- Step 4: output term `∫ z, log f_q(z.2) ∂(p⊗ₘW) = -h(q)`.
   have h_out :
@@ -310,17 +310,17 @@ theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub
     have h_eq : q = (p ⊗ₘ W).map Prod.snd := rfl
     have h_int_joint :
         Integrable
-          ((fun y => Real.log (q.rnDeriv volume y).toReal) ∘ Prod.snd) (p ⊗ₘ W) := h_int_out
+          ((fun y ↦ Real.log (q.rnDeriv volume y).toReal) ∘ Prod.snd) (p ⊗ₘ W) := h_int_out
     have h_marg_meas :
-        AEStronglyMeasurable (fun y => Real.log (q.rnDeriv volume y).toReal) q :=
+        AEStronglyMeasurable (fun y ↦ Real.log (q.rnDeriv volume y).toReal) q :=
       ((Measure.measurable_rnDeriv q volume).ennreal_toReal.log).aestronglyMeasurable
     have h_int_out_marg :
-        Integrable (fun y => Real.log (q.rnDeriv volume y).toReal) q := by
+        Integrable (fun y ↦ Real.log (q.rnDeriv volume y).toReal) q := by
       rw [h_eq]
       refine (integrable_map_measure ?_ measurable_snd.aemeasurable).mpr h_int_joint
       rw [← h_eq]; exact h_marg_meas
     rw [integral_snd_outputDistribution
-          (fun y => Real.log (q.rnDeriv volume y).toReal) (by rw [← hq_def]; exact h_int_out_marg)]
+          (fun y ↦ Real.log (q.rnDeriv volume y).toReal) (by rw [← hq_def]; exact h_int_out_marg)]
     rw [← hq_def]
     exact integral_log_rnDeriv_eq_neg_diffEntropy q hq_vol
   -- Step 5: combine.
@@ -363,11 +363,11 @@ theorem log_rnDeriv_split_gen
     [ν.HaveLebesgueDecomposition q] [q.HaveLebesgueDecomposition ref]
     [ν.HaveLebesgueDecomposition ref]
     (hνq : ν ≪ q) (hq_ref : q ≪ ref) :
-    (fun y => Real.log ((ν.rnDeriv q y).toReal))
+    (fun y ↦ Real.log ((ν.rnDeriv q y).toReal))
       =ᵐ[ν]
-    (fun y => Real.log ((ν.rnDeriv ref y).toReal)
+    (fun y ↦ Real.log ((ν.rnDeriv ref y).toReal)
                 - Real.log ((q.rnDeriv ref y).toReal)) := by
-  have h_chain : (fun y => ν.rnDeriv q y * q.rnDeriv ref y)
+  have h_chain : (fun y ↦ ν.rnDeriv q y * q.rnDeriv ref y)
       =ᵐ[ν] ν.rnDeriv ref :=
     hνq.ae_le (Measure.rnDeriv_mul_rnDeriv' (μ := ν) (ν := q) (κ := ref) hq_ref)
   have h_pos_νq : ∀ᵐ y ∂ν, 0 < ν.rnDeriv q y := Measure.rnDeriv_pos hνq
@@ -397,19 +397,19 @@ theorem llr_compProd_prod_split_gen
     (hWx_q : ∀ x, W x ≪ q) (hq_ref : q ≪ ref)
     (h_joint_ac : (p ⊗ₘ W) ≪ p.prod q)
     (g : α × β → ℝ≥0∞) (hg_meas : Measurable g)
-    (hg_ae : ∀ x, (fun y => (W x).rnDeriv ref y) =ᵐ[W x] fun y => g (x, y)) :
-    (fun z => llr (p ⊗ₘ W) (p.prod q) z)
+    (hg_ae : ∀ x, (fun y ↦ (W x).rnDeriv ref y) =ᵐ[W x] fun y ↦ g (x, y)) :
+    (fun z ↦ llr (p ⊗ₘ W) (p.prod q) z)
       =ᵐ[p ⊗ₘ W]
-    (fun z => Real.log (g z).toReal
+    (fun z ↦ Real.log (g z).toReal
                 - Real.log (q.rnDeriv ref z.2).toReal) := by
   have h_prod : p.prod q = p ⊗ₘ (Kernel.const α q) := (Measure.compProd_const).symm
   have h_ac' : (p ⊗ₘ W) ≪ p ⊗ₘ (Kernel.const α q) := by rwa [h_prod] at h_joint_ac
   have h1 : (p ⊗ₘ W).rnDeriv (p.prod q)
-      =ᵐ[p ⊗ₘ W] fun z => Kernel.rnDeriv W (Kernel.const α q) z.1 z.2 := by
+      =ᵐ[p ⊗ₘ W] fun z ↦ Kernel.rnDeriv W (Kernel.const α q) z.1 z.2 := by
     rw [h_prod]
     exact h_ac'.ae_le (rnDeriv_compProd_fibre h_ac')
-  have h_split : (fun z => Real.log ((Kernel.rnDeriv W (Kernel.const α q) z.1 z.2)).toReal)
-      =ᵐ[p ⊗ₘ W] fun z => Real.log (g z).toReal
+  have h_split : (fun z ↦ Real.log ((Kernel.rnDeriv W (Kernel.const α q) z.1 z.2)).toReal)
+      =ᵐ[p ⊗ₘ W] fun z ↦ Real.log (g z).toReal
                   - Real.log (q.rnDeriv ref z.2).toReal := by
     refine Measure.ae_compProd_of_ae_ae ?_ ?_
     · refine measurableSet_eq_fun ?_ ?_
@@ -417,17 +417,17 @@ theorem llr_compProd_prod_split_gen
       · exact (hg_meas.ennreal_toReal.log).sub
           (((Measure.measurable_rnDeriv q ref).comp measurable_snd).ennreal_toReal.log)
     · filter_upwards with a
-      have hker : (fun b => Kernel.rnDeriv W (Kernel.const α q) a b)
-          =ᵐ[W a] fun b => (W a).rnDeriv q b := by
+      have hker : (fun b ↦ Kernel.rnDeriv W (Kernel.const α q) a b)
+          =ᵐ[W a] fun b ↦ (W a).rnDeriv q b := by
         have := (hWx_q a).ae_le
           (Kernel.rnDeriv_eq_rnDeriv_measure (κ := W) (η := Kernel.const α q) (a := a))
         simpa only [Kernel.const_apply] using this
       filter_upwards [hker, log_rnDeriv_split_gen (hWx_q a) hq_ref, hg_ae a]
         with b hb hb_split hg_b
       rw [hb, hb_split, hg_b]
-  have h_llr_eq : (fun z => llr (p ⊗ₘ W) (p.prod q) z)
+  have h_llr_eq : (fun z ↦ llr (p ⊗ₘ W) (p.prod q) z)
       =ᵐ[p ⊗ₘ W]
-      fun z => Real.log ((Kernel.rnDeriv W (Kernel.const α q) z.1 z.2)).toReal := by
+      fun z ↦ Real.log ((Kernel.rnDeriv W (Kernel.const α q) z.1 z.2)).toReal := by
     simp only [llr_def]
     filter_upwards [h1] with z hz1
     rw [hz1]
@@ -456,15 +456,15 @@ theorem mutualInfoOfChannel_toReal_eq_log_density_sub
     (hq_ref : outputDistribution p W ≪ ref)
     (h_joint_ac : (p ⊗ₘ W) ≪ p.prod (outputDistribution p W))
     (g : α × β → ℝ≥0∞) (hg_meas : Measurable g)
-    (hg_ae : ∀ x, (fun y => (W x).rnDeriv ref y) =ᵐ[W x] fun y => g (x, y))
-    (h_int_fibre : Integrable (fun z : α × β => Real.log (g z).toReal) (p ⊗ₘ W))
+    (hg_ae : ∀ x, (fun y ↦ (W x).rnDeriv ref y) =ᵐ[W x] fun y ↦ g (x, y))
+    (h_int_fibre : Integrable (fun z : α × β ↦ Real.log (g z).toReal) (p ⊗ₘ W))
     (h_int_out : Integrable
-        (fun z : α × β => Real.log
+        (fun z : α × β ↦ Real.log
             ((outputDistribution p W).rnDeriv ref z.2).toReal) (p ⊗ₘ W))
     (h_fibre_self : ∀ x, ∫ y, Real.log (g (x, y)).toReal ∂(W x)
         = ∫ y, Real.log ((W x).rnDeriv ref y).toReal ∂(W x))
     (h_out_self : Integrable
-        (fun y => Real.log ((outputDistribution p W).rnDeriv ref y).toReal)
+        (fun y ↦ Real.log ((outputDistribution p W).rnDeriv ref y).toReal)
         (outputDistribution p W)) :
     (mutualInfoOfChannel p W).toReal
       = (∫ x, (∫ y, Real.log ((W x).rnDeriv ref y).toReal ∂(W x)) ∂p)
@@ -487,14 +487,14 @@ theorem mutualInfoOfChannel_toReal_eq_log_density_sub
       (∫ z, Real.log (g z).toReal ∂(p ⊗ₘ W))
         = ∫ x, (∫ y, Real.log ((W x).rnDeriv ref y).toReal ∂(W x)) ∂p := by
     rw [Measure.integral_compProd h_int_fibre]
-    refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+    refine integral_congr_ae (Filter.Eventually.of_forall (fun x ↦ ?_))
     exact h_fibre_self x
   -- output term
   have h_out :
       (∫ z, Real.log (q.rnDeriv ref z.2).toReal ∂(p ⊗ₘ W))
         = ∫ y, Real.log (q.rnDeriv ref y).toReal ∂q := by
     rw [integral_snd_outputDistribution_gen
-          (fun y => Real.log (q.rnDeriv ref y).toReal) (by rw [← hq_def]; exact h_out_self)]
+          (fun y ↦ Real.log (q.rnDeriv ref y).toReal) (by rw [← hq_def]; exact h_out_self)]
   rw [h_fibre, h_out]
 
 end Generic

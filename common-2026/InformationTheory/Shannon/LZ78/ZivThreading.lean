@@ -65,7 +65,7 @@ position `N`. Defined via `obs` so it is position-coherent with `blockRV`
 (`blockRV m ω j = obs j ω` for any `m`). -/
 noncomputable def windowState
     (p : StationaryProcess μ α) (k N : ℕ) (ω : Ω) : Fin k → α :=
-  fun j => p.obs (N - k + j.val) ω
+  fun j ↦ p.obs (N - k + j.val) ω
 
 /-! ## Gateway atom — single-factor absolute↔relative correspondence -/
 
@@ -197,7 +197,7 @@ lemma pmfLogCondMarkov_eq_neg_log_markovFactor
   unfold markovFactor
   rw [dif_neg (Nat.not_le.mpr hki)]
   -- Window prefix: `fun j => blockRV (i+1) ω ⟨i-k+j⟩ = blockRV k (T^[i-k] ω)`.
-  have h_arg : (fun j : Fin k => p.blockRV (i + 1) ω
+  have h_arg : (fun j : Fin k ↦ p.blockRV (i + 1) ω
         ⟨i - k + j.val, by have := j.isLt; omega⟩)
       = p.blockRV k (p.T^[i - k] ω) := by
     funext j
@@ -291,7 +291,7 @@ lemma negLogQk_segment_eq_condQkState
       = - Real.log (condQkState μ p k s ℓ Z).toReal := by
   classical
   -- Abbreviate the per-position absolute-block factor.
-  set f : ℕ → ℝ := fun m => (markovFactor μ p k (N + m) (p.blockRV (N + m + 1) ω)).toReal
+  set f : ℕ → ℝ := fun m ↦ (markovFactor μ p k (N + m) (p.blockRV (N + m + 1) ω)).toReal
     with hf_def
   -- Each `negLogQk` term is `-log` of the corresponding factor (bridge).
   have hterm : ∀ m ∈ Finset.range ℓ,
@@ -306,7 +306,7 @@ lemma negLogQk_segment_eq_condQkState
   congr 1
   have hlogprod : ∑ m ∈ Finset.range ℓ, Real.log (f m)
       = Real.log (∏ m ∈ Finset.range ℓ, f m) := by
-    rw [Real.log_prod (s := Finset.range ℓ) (f := f) (fun m hm => by
+    rw [Real.log_prod (s := Finset.range ℓ) (f := f) (fun m hm ↦ by
       have hpm := hposfac m (Finset.mem_range.mp hm)
       exact ne_of_gt hpm)]
   rw [hlogprod]
@@ -333,7 +333,7 @@ lemma condQkState_pos_of_markovFactor_pos
     0 < (condQkState μ p k s ℓ Z).toReal := by
   unfold condQkState
   rw [condQk_eq_prod_markovFactor μ p k N hkN ω s hs ℓ Z hZ, ENNReal.toReal_prod]
-  refine Finset.prod_pos (fun m hm => ?_)
+  refine Finset.prod_pos (fun m hm ↦ ?_)
   exact hposfac m (Finset.mem_range.mp hm)
 
 /-! ## Threading decomposition (genuine blocker: List↔Fin tiling) -/
@@ -419,13 +419,13 @@ lemma negLogQk_phrase_threading
             - Real.log
               (condQkState μ p k (windowState p k (N j.castSucc) ω)
                 (N j.succ - N j.castSucc)
-                (fun m => p.obs (N j.castSucc + m.val) ω)).toReal)
+                (fun m ↦ p.obs (N j.castSucc + m.val) ω)).toReal)
         + ∑ i ∈ Finset.Ico e n, pmfLogCondMarkov μ p k i ω := by
   classical
-  set f : ℕ → ℝ := fun i => pmfLogCondMarkov μ p k i ω with hf_def
+  set f : ℕ → ℝ := fun i ↦ pmfLogCondMarkov μ p k i ω with hf_def
   -- Extend `N` to a total monotone `M : ℕ → ℕ` so the telescoping helper applies.
   -- Off-grid values are pinned to `e = N (last c)` so `M c = e`.
-  set M : ℕ → ℕ := fun i => if h : i < c + 1 then N ⟨i, h⟩ else e with hM_def
+  set M : ℕ → ℕ := fun i ↦ if h : i < c + 1 then N ⟨i, h⟩ else e with hM_def
   -- `M` agrees with `N` on `Fin (c+1)`.
   have hMN : ∀ (i : ℕ) (h : i < c + 1), M i = N ⟨i, h⟩ := by
     intro i h; simp only [hM_def, h, dif_pos]
@@ -482,7 +482,7 @@ lemma negLogQk_phrase_threading
   rw [show b = M 0 from hM0.symm, show e = M c from hMc.symm,
     sum_Ico_telescope_of_monotone M hMmono f c]
   -- Step 4: convert `∑ j ∈ range c` to `∑ j : Fin c` and discharge each piece.
-  rw [Finset.sum_range fun j => ∑ i ∈ Finset.Ico (M j) (M (j + 1)), f i]
+  rw [Finset.sum_range fun j ↦ ∑ i ∈ Finset.Ico (M j) (M (j + 1)), f i]
   refine Finset.sum_congr rfl ?_
   intro j _
   -- Identify the partition endpoints with the phrase start/end.
@@ -494,8 +494,8 @@ lemma negLogQk_phrase_threading
   -- Apply the per-phrase segment identity. `f (N j.castSucc + i) = pmfLogCondMarkov ...`.
   have hseg := negLogQk_segment_eq_condQkState μ p k (N j.castSucc) ℓ
     (hstart j) ω (windowState p k (N j.castSucc) ω)
-    (fun m => p.obs (N j.castSucc + m.val) ω) rfl (fun _ => rfl)
-    (fun m hm => hposfac j m hm)
+    (fun m ↦ p.obs (N j.castSucc + m.val) ω) rfl (fun _ ↦ rfl)
+    (fun m hm ↦ hposfac j m hm)
   rw [← hseg]
 
 /-! ## Tiling materialization from the greedy parse (genuine blocker) -/
@@ -578,7 +578,7 @@ lemma lz78_block_tiling
       -- non-vacuity: the tiling is the *parse* tiling (phrase count anchored to the
       -- genuine distinct-phrase count, minus `bAbsorbed ≤ k + 1` leading phrases).
       c + bAbsorbed
-        = (lz78PhraseStrings (List.ofFn (fun i => p.blockRV n ω i))).length ∧
+        = (lz78PhraseStrings (List.ofFn (fun i ↦ p.blockRV n ω i))).length ∧
       bAbsorbed ≤ k + 1 ∧
       -- boundary-length bounds for the downstream limsup discharge (`Lmax` = longest phrase).
       n - e ≤ Lmax ∧
@@ -587,13 +587,13 @@ lemma lz78_block_tiling
       -- `(bAbsorbed + j)`-th greedy phrase string (content half, carried for the
       -- `(k-state, length)` grouping reindex).
       (∀ j : Fin c,
-        (lz78PhraseStrings (List.ofFn (fun i => p.blockRV n ω i)))[bAbsorbed + j.val]?
-          = some (((List.ofFn (fun i => p.blockRV n ω i)).drop (N j.castSucc)).take
+        (lz78PhraseStrings (List.ofFn (fun i ↦ p.blockRV n ω i)))[bAbsorbed + j.val]?
+          = some (((List.ofFn (fun i ↦ p.blockRV n ω i)).drop (N j.castSucc)).take
               (N j.succ - N j.castSucc))) := by
   filter_upwards [markovFactor_blockRV_pos_ae μ p k] with ω hpos
   obtain ⟨b, c, e, bAbsorbed, Lmax, N, hN0, hNlast, he_le, hmono, hstart, hcount, hbA,
-    htail, hbb, hslice⟩ := lz78_parse_tiling_positions (List.ofFn (fun i => p.blockRV n ω i)) k
-  have hlen : (List.ofFn (fun i => p.blockRV n ω i)).length = n := List.length_ofFn
+    htail, hbb, hslice⟩ := lz78_parse_tiling_positions (List.ofFn (fun i ↦ p.blockRV n ω i)) k
+  have hlen : (List.ofFn (fun i ↦ p.blockRV n ω i)).length = n := List.length_ofFn
   refine ⟨b, c, e, bAbsorbed, Lmax, N, hN0, hNlast, ?_, hmono, hstart, ?_, hcount, hbA,
     ?_, hbb, hslice⟩
   · -- `e ≤ (List.ofFn …).length = n`.
@@ -633,24 +633,24 @@ lemma negLogQk_parse_threading
       N 0 = b ∧ N (Fin.last c) = e ∧ e ≤ n ∧
       (∀ j : Fin c, N j.castSucc + 1 ≤ N j.succ) ∧
       (∀ j : Fin c, k < N j.castSucc) ∧
-      c + bAbsorbed = (lz78PhraseStrings (List.ofFn (fun i => p.blockRV n ω i))).length ∧
+      c + bAbsorbed = (lz78PhraseStrings (List.ofFn (fun i ↦ p.blockRV n ω i))).length ∧
       bAbsorbed ≤ k + 1 ∧ n - e ≤ Lmax ∧ b ≤ k + Lmax ∧
       (∀ j : Fin c,
-        (lz78PhraseStrings (List.ofFn (fun i => p.blockRV n ω i)))[bAbsorbed + j.val]?
-          = some (((List.ofFn (fun i => p.blockRV n ω i)).drop (N j.castSucc)).take
+        (lz78PhraseStrings (List.ofFn (fun i ↦ p.blockRV n ω i)))[bAbsorbed + j.val]?
+          = some (((List.ofFn (fun i ↦ p.blockRV n ω i)).drop (N j.castSucc)).take
               (N j.succ - N j.castSucc))) ∧
       -- per-phrase positivity (`condState_grouping_bound_mean`'s `hpos` input).
       (∀ j : Fin c,
         0 < (condQkState μ p k (windowState p k (N j.castSucc) ω)
               (N j.succ - N j.castSucc)
-              (fun m => p.obs (N j.castSucc + m.val) ω)).toReal) ∧
+              (fun m ↦ p.obs (N j.castSucc + m.val) ω)).toReal) ∧
       negLogQk μ p k n ω
         = (∑ i ∈ Finset.range b, pmfLogCondMarkov μ p k i ω)
           + (∑ j : Fin c,
               - Real.log
                 (condQkState μ p k (windowState p k (N j.castSucc) ω)
                   (N j.succ - N j.castSucc)
-                  (fun m => p.obs (N j.castSucc + m.val) ω)).toReal)
+                  (fun m ↦ p.obs (N j.castSucc + m.val) ω)).toReal)
           + ∑ i ∈ Finset.Ico e n, pmfLogCondMarkov μ p k i ω := by
   filter_upwards [lz78_block_tiling μ p k n] with ω htiling
   obtain ⟨b, c, e, bAbsorbed, Lmax, N, hNb, hNe, hen, hmono, hstart, hposfac, hcount, hbA,
@@ -660,7 +660,7 @@ lemma negLogQk_parse_threading
   · -- per-phrase positivity from the per-position positivity `hposfac`.
     intro j
     refine condQkState_pos_of_markovFactor_pos μ p k (N j.castSucc) (N j.succ - N j.castSucc)
-      (hstart j) ω _ _ rfl (fun m => rfl) ?_
+      (hstart j) ω _ _ rfl (fun m ↦ rfl) ?_
     intro m hm
     exact hposfac j m hm
   · exact negLogQk_phrase_threading μ p k n b c e ω N hNb hNe hen hmono hstart hposfac

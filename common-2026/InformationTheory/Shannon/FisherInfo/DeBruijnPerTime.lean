@@ -56,11 +56,11 @@ theorem gaussianConvolution_law_conv
       = (P.map X) ∗ gaussianReal 0 ⟨s * v_Z, by positivity⟩ := by
   -- Step 1: law of `√s · Z` is `𝒩(0, s·v_Z)` (mirrors `gaussianConvolution_law_of_gaussian`).
   have h_sqrt_sq : (Real.sqrt s) ^ 2 = s := Real.sq_sqrt hs
-  have h_sqrtZ_map : Measure.map (fun ω => Real.sqrt s * Z ω) P
+  have h_sqrtZ_map : Measure.map (fun ω ↦ Real.sqrt s * Z ω) P
       = gaussianReal 0 ⟨s * v_Z, by positivity⟩ := by
-    have h_compose : Measure.map (fun ω => Real.sqrt s * Z ω) P
-        = (P.map Z).map (fun y => Real.sqrt s * y) := by
-      have h_meas_mul : Measurable (fun y : ℝ => Real.sqrt s * y) :=
+    have h_compose : Measure.map (fun ω ↦ Real.sqrt s * Z ω) P
+        = (P.map Z).map (fun y ↦ Real.sqrt s * y) := by
+      have h_meas_mul : Measurable (fun y : ℝ ↦ Real.sqrt s * y) :=
         measurable_const.mul measurable_id
       have := Measure.map_map (μ := P) h_meas_mul hZ
       simpa [Function.comp] using this.symm
@@ -73,12 +73,12 @@ theorem gaussianConvolution_law_conv
       rw [h_sqrt_sq]
       rfl
   -- Step 2: independence `X ⊥ (√s · Z)`.
-  have h_indep_X_sqrtZ : IndepFun X (fun ω => Real.sqrt s * Z ω) P :=
+  have h_indep_X_sqrtZ : IndepFun X (fun ω ↦ Real.sqrt s * Z ω) P :=
     hXZ.comp measurable_id (measurable_const.mul measurable_id)
   -- Step 3: `gaussianConvolution X Z s = X + (√s · Z)` pointwise, then conv factorization.
-  have h_meas_sqrtZ : Measurable (fun ω => Real.sqrt s * Z ω) :=
+  have h_meas_sqrtZ : Measurable (fun ω ↦ Real.sqrt s * Z ω) :=
     measurable_const.mul hZ
-  have h_funext : gaussianConvolution X Z s = X + (fun ω => Real.sqrt s * Z ω) := by
+  have h_funext : gaussianConvolution X Z s = X + (fun ω ↦ Real.sqrt s * Z ω) := by
     funext ω; rfl
   rw [h_funext,
     IndepFun.map_add_eq_map_conv_map hX h_meas_sqrtZ h_indep_X_sqrtZ, h_sqrtZ_map]
@@ -111,10 +111,10 @@ private theorem pPath_eq_convDensityAdd_lconvolution_bridge
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
     (s : ℝ) (hs : 0 ≤ s)
     (_hv_ne : (⟨s, hs⟩ : ℝ≥0) ≠ 0) :
-    ((fun x => ENNReal.ofReal (pX x)) ⋆ₗ gaussianPDF 0 (⟨s, hs⟩ : ℝ≥0))
-      =ᵐ[volume] fun z => ENNReal.ofReal
+    ((fun x ↦ ENNReal.ofReal (pX x)) ⋆ₗ gaussianPDF 0 (⟨s, hs⟩ : ℝ≥0))
+      =ᵐ[volume] fun z ↦ ENNReal.ofReal
         (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs⟩) z) := by
-  refine Filter.Eventually.of_forall (fun z => ?_)
+  refine Filter.Eventually.of_forall (fun z ↦ ?_)
   -- unfold lconvolution: `∫⁻ y, ofReal (pX y) * gaussianPDF 0 v (-y + z)`
   rw [MeasureTheory.lconvolution_def]
   simp only [gaussianPDF]
@@ -122,22 +122,22 @@ private theorem pPath_eq_convDensityAdd_lconvolution_bridge
   have hofReal_mul : ∀ y : ℝ,
       ENNReal.ofReal (pX y) * ENNReal.ofReal (gaussianPDFReal 0 ⟨s, hs⟩ (-y + z))
         = ENNReal.ofReal (pX y * gaussianPDFReal 0 ⟨s, hs⟩ (-y + z)) :=
-    fun y => (ENNReal.ofReal_mul (hpX_nn y)).symm
+    fun y ↦ (ENNReal.ofReal_mul (hpX_nn y)).symm
   simp only [hofReal_mul]
   -- rewrite `-y + z` to the `convDensityAdd` shape `z - y`
-  have hsub : ∀ y : ℝ, (-y + z) = z - y := fun y => by ring
+  have hsub : ∀ y : ℝ, (-y + z) = z - y := fun y ↦ by ring
   simp only [hsub]
   -- `∫⁻ ofReal f = ofReal (∫ f)` needs integrability of `fun y => pX y * gpdfReal 0 v (z-y)`.
-  have hint : Integrable (fun y => pX y * gaussianPDFReal 0 ⟨s, hs⟩ (z - y)) volume := by
+  have hint : Integrable (fun y ↦ pX y * gaussianPDFReal 0 ⟨s, hs⟩ (z - y)) volume := by
     -- `pX` integrable × Gaussian factor bounded by its prefactor ⇒ `Integrable.mul_bdd`.
     refine hpX_int.mul_bdd (c := (Real.sqrt (2 * Real.pi * (⟨s, hs⟩ : ℝ≥0)))⁻¹) ?_ ?_
     · exact ((measurable_gaussianPDFReal 0 ⟨s, hs⟩).comp
         (measurable_const.sub measurable_id)).aestronglyMeasurable
-    · refine Filter.Eventually.of_forall (fun y => ?_)
+    · refine Filter.Eventually.of_forall (fun y ↦ ?_)
       rw [Real.norm_eq_abs, abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (z - y))]
       exact gaussianPDFReal_le_prefactor 0 ⟨s, hs⟩ (z - y)
-  have hnn : 0 ≤ᵐ[volume] fun y => pX y * gaussianPDFReal 0 ⟨s, hs⟩ (z - y) :=
-    Filter.Eventually.of_forall fun y =>
+  have hnn : 0 ≤ᵐ[volume] fun y ↦ pX y * gaussianPDFReal 0 ⟨s, hs⟩ (z - y) :=
+    Filter.Eventually.of_forall fun y ↦
       mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ (z - y))
   rw [← ofReal_integral_eq_lintegral_ofReal hint hnn]
   rfl
@@ -155,10 +155,10 @@ theorem pPath_eq_convDensityAdd
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
     (v_Z : ℝ≥0) (hv_Z_pos : 0 < v_Z) (hZ_law : P.map Z = gaussianReal 0 v_Z)
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x)))
+    (hpX_law : P.map X = volume.withDensity (fun x ↦ ENNReal.ofReal (pX x)))
     {s : ℝ} (hs : 0 < s) :
     (P.map (gaussianConvolution X Z s)).rnDeriv volume
-      =ᵐ[volume] fun z => ENNReal.ofReal
+      =ᵐ[volume] fun z ↦ ENNReal.ofReal
         (convDensityAdd pX (gaussianPDFReal 0 ⟨s * v_Z, by positivity⟩) z) := by
   -- variance witness `⟨s·v_Z, _⟩ : ℝ≥0` is nonzero (so the Gaussian is volume-AC).
   have hsv_pos : 0 < s * v_Z := mul_pos hs hv_Z_pos
@@ -181,7 +181,7 @@ theorem pPath_eq_convDensityAdd
   --   `𝒩(0, s·v_Z) = volume.withDensity (gaussianPDF 0 ⟨s·v_Z,_⟩)`  (gaussianReal_of_var_ne_zero)
   rw [hpX_law, gaussianReal_of_var_ne_zero 0 hv_ne]
   -- Step 3: conv of two `withDensity` = `withDensity` of the lconvolution `∫⁻`.
-  have hf_meas : Measurable (fun x => ENNReal.ofReal (pX x)) := hpX_meas.ennreal_ofReal
+  have hf_meas : Measurable (fun x ↦ ENNReal.ofReal (pX x)) := hpX_meas.ennreal_ofReal
   have hg_meas : Measurable (gaussianPDF 0 (⟨s * v_Z, by positivity⟩ : ℝ≥0)) :=
     measurable_gaussianPDF 0 _
   rw [MeasureTheory.conv_withDensity_eq_lconvolution hf_meas hg_meas]
@@ -222,11 +222,11 @@ theorem heatFlow_density_heat_equation_kernel_eq
 @audit:ok -/
 theorem heatFlow_density_heat_equation_kernel_x_deriv1
     {σ : ℝ} (hσ : 0 < σ) (u : ℝ) :
-    HasDerivAt (fun ξ : ℝ => heatFlow_density_heat_equation_kernel σ ξ)
+    HasDerivAt (fun ξ : ℝ ↦ heatFlow_density_heat_equation_kernel σ ξ)
       (heatFlow_density_heat_equation_kernel σ u * (-(u / σ))) u := by
   unfold heatFlow_density_heat_equation_kernel
-  have he : HasDerivAt (fun ξ : ℝ => -ξ ^ 2 / (2 * σ)) (-(u / σ)) u := by
-    have h1 : HasDerivAt (fun ξ : ℝ => -ξ ^ 2) (-(2 * u)) u := by
+  have he : HasDerivAt (fun ξ : ℝ ↦ -ξ ^ 2 / (2 * σ)) (-(u / σ)) u := by
+    have h1 : HasDerivAt (fun ξ : ℝ ↦ -ξ ^ 2) (-(2 * u)) u := by
       simpa using ((hasDerivAt_pow 2 u).const_mul (-1 : ℝ))
     have := h1.div_const (2 * σ)
     convert this using 1
@@ -243,10 +243,10 @@ theorem heatFlow_density_heat_equation_kernel_x_deriv1
 theorem heatFlow_density_heat_equation_kernel_x_deriv2
     {σ : ℝ} (hσ : 0 < σ) (u : ℝ) :
     HasDerivAt
-      (fun ξ : ℝ => heatFlow_density_heat_equation_kernel σ ξ * (-(ξ / σ)))
+      (fun ξ : ℝ ↦ heatFlow_density_heat_equation_kernel σ ξ * (-(ξ / σ)))
       (heatFlow_density_heat_equation_kernel σ u * (u ^ 2 / σ ^ 2 - 1 / σ)) u := by
   have hg := heatFlow_density_heat_equation_kernel_x_deriv1 hσ u
-  have hlin : HasDerivAt (fun ξ : ℝ => -(ξ / σ)) (-(1 / σ)) u := by
+  have hlin : HasDerivAt (fun ξ : ℝ ↦ -(ξ / σ)) (-(1 / σ)) u := by
     have := (hasDerivAt_id u).div_const σ
     simpa using this.neg
   have hprod := hg.mul hlin
@@ -260,25 +260,25 @@ theorem heatFlow_density_heat_equation_kernel_x_deriv2
 @audit:ok -/
 theorem heatFlow_density_heat_equation_kernel_sigma_deriv
     {σ : ℝ} (hσ : 0 < σ) (u : ℝ) :
-    HasDerivAt (fun τ : ℝ => heatFlow_density_heat_equation_kernel τ u)
+    HasDerivAt (fun τ : ℝ ↦ heatFlow_density_heat_equation_kernel τ u)
       ((1/2) * (heatFlow_density_heat_equation_kernel σ u * (u ^ 2 / σ ^ 2 - 1 / σ))) σ := by
   unfold heatFlow_density_heat_equation_kernel
   have hpos2pi : (2 * Real.pi * σ) ≠ 0 := by positivity
   have hpos2pi' : (0:ℝ) ≤ 2 * Real.pi * σ := by positivity
   have hsqrt_ne : Real.sqrt (2 * Real.pi * σ) ≠ 0 := by rw [Real.sqrt_ne_zero']; positivity
   -- ∂_τ √(2πτ)
-  have hsqrtcomp : HasDerivAt (fun τ : ℝ => Real.sqrt (2 * Real.pi * τ))
+  have hsqrtcomp : HasDerivAt (fun τ : ℝ ↦ Real.sqrt (2 * Real.pi * τ))
       (1 / (2 * Real.sqrt (2 * Real.pi * σ)) * (2 * Real.pi)) σ := by
-    have hinner : HasDerivAt (fun τ : ℝ => 2 * Real.pi * τ) (2 * Real.pi) σ := by
+    have hinner : HasDerivAt (fun τ : ℝ ↦ 2 * Real.pi * τ) (2 * Real.pi) σ := by
       simpa using (hasDerivAt_id σ).const_mul (2 * Real.pi)
     exact (hasDerivAt_sqrt hpos2pi).comp σ hinner
   have hinv := hsqrtcomp.inv hsqrt_ne
   -- ∂_τ exp(-u²/(2τ))
-  have hexp_inner : HasDerivAt (fun τ : ℝ => -u ^ 2 / (2 * τ)) (u ^ 2 / (2 * σ ^ 2)) σ := by
-    have hinv2 : HasDerivAt (fun τ : ℝ => τ⁻¹) (-1 / σ ^ 2) σ := by
+  have hexp_inner : HasDerivAt (fun τ : ℝ ↦ -u ^ 2 / (2 * τ)) (u ^ 2 / (2 * σ ^ 2)) σ := by
+    have hinv2 : HasDerivAt (fun τ : ℝ ↦ τ⁻¹) (-1 / σ ^ 2) σ := by
       simpa using (hasDerivAt_id σ).inv hσ.ne'
     have hcm := hinv2.const_mul (-u ^ 2 / 2)
-    have heq : (fun τ : ℝ => (-u ^ 2 / 2) * τ⁻¹) = (fun τ : ℝ => -u ^ 2 / (2 * τ)) := by
+    have heq : (fun τ : ℝ ↦ (-u ^ 2 / 2) * τ⁻¹) = (fun τ : ℝ ↦ -u ^ 2 / (2 * τ)) := by
       funext τ
       rcases eq_or_ne τ 0 with h | h
       · simp [h]
@@ -302,10 +302,10 @@ sides equal `(1/2) · g_σ(u) · (u²/σ² - 1/σ)`.
 @[entry_point]
 theorem heatFlow_density_heat_equation_kernel_heat_eq
     {σ : ℝ} (hσ : 0 < σ) (u : ℝ) :
-    HasDerivAt (fun τ : ℝ => heatFlow_density_heat_equation_kernel τ u)
+    HasDerivAt (fun τ : ℝ ↦ heatFlow_density_heat_equation_kernel τ u)
       ((1/2) * (heatFlow_density_heat_equation_kernel σ u * (u ^ 2 / σ ^ 2 - 1 / σ))) σ
     ∧ HasDerivAt
-        (fun ξ : ℝ => heatFlow_density_heat_equation_kernel σ ξ * (-(ξ / σ)))
+        (fun ξ : ℝ ↦ heatFlow_density_heat_equation_kernel σ ξ * (-(ξ / σ)))
         (heatFlow_density_heat_equation_kernel σ u * (u ^ 2 / σ ^ 2 - 1 / σ)) u :=
   ⟨heatFlow_density_heat_equation_kernel_sigma_deriv hσ u,
    heatFlow_density_heat_equation_kernel_x_deriv2 hσ u⟩
@@ -319,25 +319,25 @@ private theorem heatFlow_pathDeriv2_eq_integral
     (pPath pathDeriv1 pathDeriv2 : ℝ → ℝ → ℝ)
     (hpPath : ∀ (σ : ℝ) (hσ : 0 < σ),
       pPath σ = convDensityAdd pX (gaussianPDFReal 0 ⟨σ, hσ.le⟩))
-    (hpathDeriv1 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pPath σ ξ) (pathDeriv1 σ y) y)
-    (hpathDeriv2 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pathDeriv1 σ ξ) (pathDeriv2 σ y) y)
+    (hpathDeriv1 : ∀ σ y : ℝ, HasDerivAt (fun ξ ↦ pPath σ ξ) (pathDeriv1 σ y) y)
+    (hpathDeriv2 : ∀ σ y : ℝ, HasDerivAt (fun ξ ↦ pathDeriv1 σ ξ) (pathDeriv2 σ y) y)
     {s : ℝ} (hs : 0 < s) (x : ℝ)
     (boundξ1 : ℝ → ℝ) (hboundξ1_int : Integrable boundξ1 volume)
     (hFξ1_meas : ∀ ξ : ℝ,
       AEStronglyMeasurable
-        (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
+        (fun y ↦ pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
     (hFξ1_int : ∀ ξ : ℝ,
-      Integrable (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
+      Integrable (fun y ↦ pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
     (hFξ1'_meas : ∀ ξ : ℝ, AEStronglyMeasurable
-      (fun y =>
+      (fun y ↦
         pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-(((ξ - y)) / s)))) volume)
     (hbξ1 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
       ‖pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-((ξ - y) / s)))‖ ≤ boundξ1 y)
     (boundξ2 : ℝ → ℝ) (hboundξ2_int : Integrable boundξ2 volume)
     (hFξ2_int : Integrable
-      (fun y => pX y * (heatFlow_density_heat_equation_kernel s (x - y) * (-((x - y) / s)))) volume)
+      (fun y ↦ pX y * (heatFlow_density_heat_equation_kernel s (x - y) * (-((x - y) / s)))) volume)
     (hFξ2'_meas : AEStronglyMeasurable
-      (fun y => pX y * (heatFlow_density_heat_equation_kernel s (x - y)
+      (fun y ↦ pX y * (heatFlow_density_heat_equation_kernel s (x - y)
         * ((x - y) ^ 2 / s ^ 2 - 1 / s))) volume)
     (hbξ2 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
       ‖pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
@@ -347,8 +347,8 @@ private theorem heatFlow_pathDeriv2_eq_integral
           * ((x - y) ^ 2 / s ^ 2 - 1 / s)) ∂volume := by
   classical
   -- Global agreement `pPath s = fun ξ => ∫ y, pX y · kernel s (ξ-y)` (s > 0, all ξ).
-  have hpPaths : (fun ξ : ℝ => pPath s ξ)
-      = (fun ξ : ℝ => ∫ y, pX y * heatFlow_density_heat_equation_kernel s (ξ - y) ∂volume) := by
+  have hpPaths : (fun ξ : ℝ ↦ pPath s ξ)
+      = (fun ξ : ℝ ↦ ∫ y, pX y * heatFlow_density_heat_equation_kernel s (ξ - y) ∂volume) := by
     funext ξ
     rw [hpPath s hs]
     unfold convDensityAdd
@@ -357,30 +357,30 @@ private theorem heatFlow_pathDeriv2_eq_integral
     rw [heatFlow_density_heat_equation_kernel_eq hs (ξ - y)]
   -- per-y spatial 1st-derivative HasDerivAt (kernel `_x_deriv1` chained through `ξ ↦ ξ - y`).
   have hD1diff : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
-      HasDerivAt (fun ξ => pX y * heatFlow_density_heat_equation_kernel s (ξ - y))
+      HasDerivAt (fun ξ ↦ pX y * heatFlow_density_heat_equation_kernel s (ξ - y))
         (pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-((ξ - y) / s)))) ξ := by
     filter_upwards with y
     intro ξ _
     have hk := heatFlow_density_heat_equation_kernel_x_deriv1 hs (ξ - y)
-    have hshift : HasDerivAt (fun ξ : ℝ => ξ - y) 1 ξ := by
+    have hshift : HasDerivAt (fun ξ : ℝ ↦ ξ - y) 1 ξ := by
       simpa using (hasDerivAt_id ξ).sub_const y
     have hcomp := hk.comp ξ hshift
     simp only [mul_one] at hcomp
     exact hcomp.const_mul (pX y)
   -- D1: identify `pathDeriv1 s` (spatial 1st deriv) with the integral, at every ξ.
-  have hpathDeriv1_eq : (fun ξ : ℝ => pathDeriv1 s ξ)
-      = (fun ξ : ℝ => ∫ y, pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+  have hpathDeriv1_eq : (fun ξ : ℝ ↦ pathDeriv1 s ξ)
+      = (fun ξ : ℝ ↦ ∫ y, pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
           * (-((ξ - y) / s))) ∂volume) := by
     funext ξ
     have hgξ :=
       hasDerivAt_integral_of_dominated_loc_of_deriv_le
-        (F := fun ζ y => pX y * heatFlow_density_heat_equation_kernel s (ζ - y))
-        (F' := fun ζ y => pX y * (heatFlow_density_heat_equation_kernel s (ζ - y)
+        (F := fun ζ y ↦ pX y * heatFlow_density_heat_equation_kernel s (ζ - y))
+        (F' := fun ζ y ↦ pX y * (heatFlow_density_heat_equation_kernel s (ζ - y)
           * (-((ζ - y) / s))))
         (bound := boundξ1) (Filter.univ_mem)
         (Filter.Eventually.of_forall hFξ1_meas) (hFξ1_int ξ) (hFξ1'_meas ξ)
         hbξ1 hboundξ1_int hD1diff
-    have hpath : HasDerivAt (fun ξ : ℝ => pPath s ξ)
+    have hpath : HasDerivAt (fun ξ : ℝ ↦ pPath s ξ)
         (∫ y, pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-((ξ - y) / s))) ∂volume)
         ξ := by
       rw [hpPaths]; exact hgξ.2
@@ -388,30 +388,30 @@ private theorem heatFlow_pathDeriv2_eq_integral
   -- D2: identify `pathDeriv2 s x` (spatial 2nd deriv) with `∫ y, pX y · ∂²_x kernel`.
   -- per-y spatial 2nd-derivative HasDerivAt (kernel `_x_deriv2` chained through `ξ ↦ ξ - y`).
   have hD2diff : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
-      HasDerivAt (fun ξ => pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+      HasDerivAt (fun ξ ↦ pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
           * (-((ξ - y) / s))))
         (pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
           * ((ξ - y) ^ 2 / s ^ 2 - 1 / s))) ξ := by
     filter_upwards with y
     intro ξ _
     have hk := heatFlow_density_heat_equation_kernel_x_deriv2 hs (ξ - y)
-    have hshift : HasDerivAt (fun ξ : ℝ => ξ - y) 1 ξ := by
+    have hshift : HasDerivAt (fun ξ : ℝ ↦ ξ - y) 1 ξ := by
       simpa using (hasDerivAt_id ξ).sub_const y
     have hcomp := hk.comp ξ hshift
     simp only [mul_one] at hcomp
     exact hcomp.const_mul (pX y)
   have hD2gate :=
     hasDerivAt_integral_of_dominated_loc_of_deriv_le
-      (F := fun ξ y => pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+      (F := fun ξ y ↦ pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
         * (-((ξ - y) / s))))
-      (F' := fun ξ y => pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+      (F' := fun ξ y ↦ pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
         * ((ξ - y) ^ 2 / s ^ 2 - 1 / s)))
       (bound := boundξ2) (Filter.univ_mem)
-      (Filter.Eventually.of_forall (fun ξ => hFξ1'_meas ξ)) hFξ2_int hFξ2'_meas
+      (Filter.Eventually.of_forall (fun ξ ↦ hFξ1'_meas ξ)) hFξ2_int hFξ2'_meas
       hbξ2 hboundξ2_int hD2diff
   -- `pathDeriv1 s` IS the integral function (hpathDeriv1_eq), so differentiating it at x gives
   -- `∫ y, pX y · ∂²_x kernel`; uniqueness with the pin `hpathDeriv2 s x` identifies the value.
-  have hpath2 : HasDerivAt (fun ξ : ℝ => pathDeriv1 s ξ)
+  have hpath2 : HasDerivAt (fun ξ : ℝ ↦ pathDeriv1 s ξ)
       (∫ y, pX y * (heatFlow_density_heat_equation_kernel s (x - y)
         * ((x - y) ^ 2 / s ^ 2 - 1 / s)) ∂volume) x := by
     rw [hpathDeriv1_eq]; exact hD2gate.2
@@ -434,9 +434,9 @@ theorem heatFlow_density_heat_equation
     (hpPath : ∀ (σ : ℝ) (hσ : 0 < σ),
       pPath σ = convDensityAdd pX (gaussianPDFReal 0 ⟨σ, hσ.le⟩))
     -- definitional pin: `pathDeriv1` IS the spatial first derivative of `pPath`
-    (hpathDeriv1 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pPath σ ξ) (pathDeriv1 σ y) y)
+    (hpathDeriv1 : ∀ σ y : ℝ, HasDerivAt (fun ξ ↦ pPath σ ξ) (pathDeriv1 σ y) y)
     -- definitional pin: `pathDeriv2` IS the spatial second derivative of `pPath`
-    (hpathDeriv2 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pathDeriv1 σ ξ) (pathDeriv2 σ y) y)
+    (hpathDeriv2 : ∀ σ y : ℝ, HasDerivAt (fun ξ ↦ pathDeriv1 σ ξ) (pathDeriv2 σ y) y)
     {s : ℝ} (hs : 0 < s) (x : ℝ)
     -- σ-direction domination: per-`y` integrand `pX y · g_σ(x-y)` and its σ-derivative
     -- `pX y · ∂_σ g_σ(x-y)` are bounded/integrable on the compact σ-neighborhood
@@ -444,11 +444,11 @@ theorem heatFlow_density_heat_equation
     (boundσ : ℝ → ℝ) (hboundσ_int : Integrable boundσ volume)
     (hFσ_meas : ∀ᶠ σ in nhds s,
       AEStronglyMeasurable
-        (fun y => pX y * heatFlow_density_heat_equation_kernel σ (x - y)) volume)
+        (fun y ↦ pX y * heatFlow_density_heat_equation_kernel σ (x - y)) volume)
     (hFσ_int : Integrable
-      (fun y => pX y * heatFlow_density_heat_equation_kernel s (x - y)) volume)
+      (fun y ↦ pX y * heatFlow_density_heat_equation_kernel s (x - y)) volume)
     (hFσ'_meas : AEStronglyMeasurable
-      (fun y => pX y * ((1/2) * (heatFlow_density_heat_equation_kernel s (x - y)
+      (fun y ↦ pX y * ((1/2) * (heatFlow_density_heat_equation_kernel s (x - y)
         * ((x - y) ^ 2 / s ^ 2 - 1 / s)))) volume)
     (hbσ : ∀ᵐ y ∂volume, ∀ σ ∈ Set.Ioo (s/2) (2*s),
       ‖pX y * ((1/2) * (heatFlow_density_heat_equation_kernel σ (x - y)
@@ -458,25 +458,25 @@ theorem heatFlow_density_heat_equation
     (boundξ1 : ℝ → ℝ) (hboundξ1_int : Integrable boundξ1 volume)
     (hFξ1_meas : ∀ ξ : ℝ,
       AEStronglyMeasurable
-        (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
+        (fun y ↦ pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
     (hFξ1_int : ∀ ξ : ℝ,
-      Integrable (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
+      Integrable (fun y ↦ pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
     (hFξ1'_meas : ∀ ξ : ℝ, AEStronglyMeasurable
-      (fun y =>
+      (fun y ↦
         pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-(((ξ - y)) / s)))) volume)
     (hbξ1 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
       ‖pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-((ξ - y) / s)))‖ ≤ boundξ1 y)
     (boundξ2 : ℝ → ℝ) (hboundξ2_int : Integrable boundξ2 volume)
     (hFξ2_int : Integrable
-      (fun y => pX y * (heatFlow_density_heat_equation_kernel s (x - y) * (-((x - y) / s)))) volume)
+      (fun y ↦ pX y * (heatFlow_density_heat_equation_kernel s (x - y) * (-((x - y) / s)))) volume)
     (hFξ2'_meas : AEStronglyMeasurable
-      (fun y => pX y * (heatFlow_density_heat_equation_kernel s (x - y)
+      (fun y ↦ pX y * (heatFlow_density_heat_equation_kernel s (x - y)
         * ((x - y) ^ 2 / s ^ 2 - 1 / s))) volume)
     (hbξ2 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
       ‖pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
         * ((ξ - y) ^ 2 / s ^ 2 - 1 / s))‖ ≤ boundξ2 y) :
     HasDerivAt
-      (fun σ : ℝ => pPath σ x)
+      (fun σ : ℝ ↦ pPath σ x)
       ((1/2) * pathDeriv2 s x) s := by
   classical
   -- σ-neighborhood (compact, keeps σ > 0; avoids the σ→0 blow-up of `(u²/σ²-1/σ)`).
@@ -497,7 +497,7 @@ theorem heatFlow_density_heat_equation
   -- =========================================================================
   -- per-y σ-derivative HasDerivAt (from kernel σ-deriv scaled by `pX y`).
   have hAdiff : ∀ᵐ y ∂volume, ∀ σ ∈ sset,
-      HasDerivAt (fun σ => pX y * heatFlow_density_heat_equation_kernel σ (x - y))
+      HasDerivAt (fun σ ↦ pX y * heatFlow_density_heat_equation_kernel σ (x - y))
         (pX y * ((1/2) * (heatFlow_density_heat_equation_kernel σ (x - y)
           * ((x - y) ^ 2 / σ ^ 2 - 1 / σ)))) σ := by
     filter_upwards with y
@@ -505,21 +505,21 @@ theorem heatFlow_density_heat_equation
     exact (heatFlow_density_heat_equation_kernel_sigma_deriv (hσ_pos σ hσ) (x - y)).const_mul (pX y)
   have hAgate :=
     hasDerivAt_integral_of_dominated_loc_of_deriv_le
-      (F := fun σ y => pX y * heatFlow_density_heat_equation_kernel σ (x - y))
-      (F' := fun σ y => pX y * ((1/2) * (heatFlow_density_heat_equation_kernel σ (x - y)
+      (F := fun σ y ↦ pX y * heatFlow_density_heat_equation_kernel σ (x - y))
+      (F' := fun σ y ↦ pX y * ((1/2) * (heatFlow_density_heat_equation_kernel σ (x - y)
         * ((x - y) ^ 2 / σ ^ 2 - 1 / σ))))
       (bound := boundσ) hs_nhds hFσ_meas hFσ_int hFσ'_meas hbσ hboundσ_int hAdiff
   -- hAgate.2 : HasDerivAt (fun σ => ∫ y, pX y · kernel σ (x-y))
   --              (∫ y, pX y · (1/2)(kernel s (x-y)(…))) s
   have hA : HasDerivAt
-      (fun σ : ℝ => ∫ y, pX y * heatFlow_density_heat_equation_kernel σ (x - y) ∂volume)
+      (fun σ : ℝ ↦ ∫ y, pX y * heatFlow_density_heat_equation_kernel σ (x - y) ∂volume)
       (∫ y, pX y * ((1/2) * (heatFlow_density_heat_equation_kernel s (x - y)
         * ((x - y) ^ 2 / s ^ 2 - 1 / s))) ∂volume) s := hAgate.2
   -- =========================================================================
   -- STEP B: transfer `hA` to `fun σ => pPath σ x` (they agree on `sset ∈ 𝓝 s`).
   -- =========================================================================
-  have hEq : (fun σ : ℝ => pPath σ x)
-      =ᶠ[nhds s] (fun σ : ℝ =>
+  have hEq : (fun σ : ℝ ↦ pPath σ x)
+      =ᶠ[nhds s] (fun σ : ℝ ↦
         ∫ y, pX y * heatFlow_density_heat_equation_kernel σ (x - y) ∂volume) := by
     filter_upwards [hs_nhds] with σ hσ
     have hσpos : 0 < σ := hσ_pos σ hσ
@@ -528,7 +528,7 @@ theorem heatFlow_density_heat_equation
     refine integral_congr_ae ?_
     filter_upwards with y
     rw [heatFlow_density_heat_equation_kernel_eq hσpos (x - y)]
-  have hB : HasDerivAt (fun σ : ℝ => pPath σ x)
+  have hB : HasDerivAt (fun σ : ℝ ↦ pPath σ x)
       (∫ y, pX y * ((1/2) * (heatFlow_density_heat_equation_kernel s (x - y)
         * ((x - y) ^ 2 / s ^ 2 - 1 / s))) ∂volume) s :=
     hA.congr_of_eventuallyEq hEq
@@ -576,20 +576,20 @@ universal form would be un-instantiable since the integrand diverges as `s → 0
 theorem entropy_hasDerivAt_via_parametric
     (pPath : ℝ → ℝ → ℝ) (entDeriv : ℝ → ℝ → ℝ) (bound : ℝ → ℝ) {t : ℝ} (ht : 0 < t)
     (hbound_int : Integrable bound volume)
-    (hmeas : ∀ᶠ s in nhds t, AEStronglyMeasurable (fun x => negMulLog (pPath s x)) volume)
-    (hint : Integrable (fun x => negMulLog (pPath t x)) volume)
+    (hmeas : ∀ᶠ s in nhds t, AEStronglyMeasurable (fun x ↦ negMulLog (pPath s x)) volume)
+    (hint : Integrable (fun x ↦ negMulLog (pPath t x)) volume)
     (hderiv_meas : AEStronglyMeasurable (entDeriv t) volume)
     (hb : ∀ᵐ x ∂volume, ∀ s ∈ Set.Ioo (t/2) (2*t), ‖entDeriv s x‖ ≤ bound x)
     (hdiff : ∀ᵐ x ∂volume, ∀ s ∈ Set.Ioo (t/2) (2*t),
-      HasDerivAt (fun s => negMulLog (pPath s x)) (entDeriv s x) s) :
-    HasDerivAt (fun s => ∫ x, negMulLog (pPath s x) ∂volume)
+      HasDerivAt (fun s ↦ negMulLog (pPath s x)) (entDeriv s x) s) :
+    HasDerivAt (fun s ↦ ∫ x, negMulLog (pPath s x) ∂volume)
       (∫ x, entDeriv t x ∂volume) t := by
   have hnhds : Set.Ioo (t/2) (2*t) ∈ nhds t :=
     Ioo_mem_nhds (by linarith) (by linarith)
   have hgate :=
     hasDerivAt_integral_of_dominated_loc_of_deriv_le
-      (F := fun s x => negMulLog (pPath s x))
-      (F' := fun s x => entDeriv s x)
+      (F := fun s x ↦ negMulLog (pPath s x))
+      (F' := fun s x ↦ entDeriv s x)
       (bound := bound) hnhds hmeas hint hderiv_meas hb hbound_int hdiff
   simpa only using hgate.2
 
@@ -617,20 +617,20 @@ integrability so the `ℝ≥0∞ ↔ ℝ` round-trip holds.
 @audit:ok -/
 theorem fisher_from_logDeriv
     (p : ℝ → ℝ) (hp_nn : ∀ x, 0 ≤ p x)
-    (hint : Integrable (fun x => (logDeriv p x)^2 * p x) volume) :
+    (hint : Integrable (fun x ↦ (logDeriv p x)^2 * p x) volume) :
     ∫ x, (logDeriv p x)^2 * p x ∂volume = fisherInfoOfDensityReal p := by
   -- non-negativity of the integrand `g x = (logDeriv p x)^2 * p x`
-  have hg_nn : 0 ≤ᵐ[volume] fun x => (logDeriv p x)^2 * p x :=
-    Filter.Eventually.of_forall fun x => mul_nonneg (sq_nonneg _) (hp_nn x)
+  have hg_nn : 0 ≤ᵐ[volume] fun x ↦ (logDeriv p x)^2 * p x :=
+    Filter.Eventually.of_forall fun x ↦ mul_nonneg (sq_nonneg _) (hp_nn x)
   -- RHS unfolds to the `.toReal` of a lintegral; match the lintegrands
   unfold fisherInfoOfDensityReal fisherInfoOfDensity
   have hlint :
       (∫⁻ x, ENNReal.ofReal ((logDeriv p x) ^ 2) * ENNReal.ofReal (p x) ∂volume)
         = ∫⁻ x, ENNReal.ofReal ((logDeriv p x)^2 * p x) ∂volume := by
-    refine lintegral_congr fun x => ?_
+    refine lintegral_congr fun x ↦ ?_
     rw [← ENNReal.ofReal_mul (sq_nonneg _)]
   rw [hlint, ← ofReal_integral_eq_lintegral_ofReal hint hg_nn,
-    ENNReal.toReal_ofReal (integral_nonneg fun x => mul_nonneg (sq_nonneg _) (hp_nn x))]
+    ENNReal.toReal_ofReal (integral_nonneg fun x ↦ mul_nonneg (sq_nonneg _) (hp_nn x))]
 
 /-! ## Convolution-density positivity and Gaussian lower bound
 
@@ -642,11 +642,11 @@ bounded below by a shifted Gaussian, so its support is all of `ℝ`. -/
 @audit:ok -/
 private theorem convDensityAdd_integrand_integrable
     (pX : ℝ → ℝ) (hpX_int : Integrable pX volume) (v : ℝ≥0) (x : ℝ) :
-    Integrable (fun y => pX y * gaussianPDFReal 0 v (x - y)) volume := by
+    Integrable (fun y ↦ pX y * gaussianPDFReal 0 v (x - y)) volume := by
   refine hpX_int.mul_bdd (c := (Real.sqrt (2 * Real.pi * v))⁻¹) ?_ ?_
   · exact ((measurable_gaussianPDFReal 0 v).comp
       (measurable_const.sub measurable_id)).aestronglyMeasurable
-  · refine Filter.Eventually.of_forall (fun y => ?_)
+  · refine Filter.Eventually.of_forall (fun y ↦ ?_)
     rw [Real.norm_eq_abs, abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (x - y))]
     exact gaussianPDFReal_le_prefactor 0 v (x - y)
 
@@ -666,8 +666,8 @@ theorem convDensityAdd_pos
   -- variance witness for `gaussianPDFReal_pos`
   set g : ℝ → ℝ := gaussianPDFReal 0 ⟨s, hs.le⟩ with hg_def
   -- integrand `F y := pX y * g (x - y)`, nonnegative + integrable
-  set F : ℝ → ℝ := fun y => pX y * g (x - y) with hF_def
-  have hF_nn : 0 ≤ F := fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ (x - y))
+  set F : ℝ → ℝ := fun y ↦ pX y * g (x - y) with hF_def
+  have hF_nn : 0 ≤ F := fun y ↦ mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ (x - y))
   have hF_int : Integrable F volume :=
     convDensityAdd_integrand_integrable pX hpX_int ⟨s, hs.le⟩ x
   -- support of F equals support of pX (the Gaussian factor never vanishes)
@@ -675,8 +675,8 @@ theorem convDensityAdd_pos
     ext y
     simp only [Function.mem_support, hF_def, ne_eq, mul_eq_zero, not_or]
     constructor
-    · exact fun h => h.1
-    · exact fun h => ⟨h, (gaussianPDFReal_pos 0 _ (x - y) hv_ne).ne'⟩
+    · exact fun h ↦ h.1
+    · exact fun h ↦ ⟨h, (gaussianPDFReal_pos 0 _ (x - y) hv_ne).ne'⟩
   -- positive mass ⇒ positive-measure support of pX
   have hpX_supp : 0 < volume (Function.support pX) :=
     (integral_pos_iff_support_of_nonneg hpX_nn hpX_int).mp hpX_mass
@@ -723,8 +723,8 @@ theorem convDensityAdd_lower_bound_gaussian
   obtain ⟨R, hR_pos, hR_mass⟩ :
       ∃ R : ℝ, 0 < R ∧ (1:ℝ)/2 ≤ ∫ y in Set.Icc (-R) R, pX y ∂volume := by
     -- exhausting boxes `sN n := Icc (-n) n`, monotone, `⋃ = univ`.
-    set sN : ℕ → Set ℝ := fun n => Set.Icc (-(n:ℝ)) (n:ℝ) with hsN_def
-    have hsN_meas : ∀ n, MeasurableSet (sN n) := fun n => measurableSet_Icc
+    set sN : ℕ → Set ℝ := fun n ↦ Set.Icc (-(n:ℝ)) (n:ℝ) with hsN_def
+    have hsN_meas : ∀ n, MeasurableSet (sN n) := fun n ↦ measurableSet_Icc
     have hsN_mono : Monotone sN := by
       intro m n hmn
       apply Set.Icc_subset_Icc
@@ -753,10 +753,10 @@ theorem convDensityAdd_lower_bound_gaussian
     refine ⟨(N:ℝ), by exact_mod_cast hN.2, ?_⟩
     rw [hsN_def] at hN
     exact hN.1.le
-  refine ⟨R, hR_pos, fun x => ?_⟩
+  refine ⟨R, hR_pos, fun x ↦ ?_⟩
   -- Integrand `F y := pX y * g (x - y)` is nonnegative + integrable.
-  set F : ℝ → ℝ := fun y => pX y * g (x - y) with hF_def
-  have hF_nn : ∀ y, 0 ≤ F y := fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ (x - y))
+  set F : ℝ → ℝ := fun y ↦ pX y * g (x - y) with hF_def
+  have hF_nn : ∀ y, 0 ≤ F y := fun y ↦ mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ (x - y))
   have hF_int : Integrable F volume :=
     convDensityAdd_integrand_integrable pX hpX_int ⟨s, hs.le⟩ x
   -- STEP 2: drop the integral down to the box `Icc (-R) R`.
@@ -782,7 +782,7 @@ theorem convDensityAdd_lower_bound_gaussian
       exact mul_le_mul_of_nonneg_left hmono (hpX_nn y)
     -- integrate the pointwise bound over the box.
     have hpX_int_box : IntegrableOn pX (Set.Icc (-R) R) volume := hpX_int.integrableOn
-    have hlb_int : IntegrableOn (fun y => pX y * g (|x| + R)) (Set.Icc (-R) R) volume :=
+    have hlb_int : IntegrableOn (fun y ↦ pX y * g (|x| + R)) (Set.Icc (-R) R) volume :=
       hpX_int_box.mul_const _
     have hF_int_box : IntegrableOn F (Set.Icc (-R) R) volume := hF_int.integrableOn
     have hstep : (∫ y in Set.Icc (-R) R, pX y * g (|x| + R) ∂volume)

@@ -43,22 +43,22 @@ private lemma uniformOn_A_isProb
 
 /-- Measurability of the coordinate projection `ω ↦ ω i`. -/
 private lemma xsCoord_measurable {n : ℕ} (i : Fin n) :
-    Measurable (fun ω : Fin n → Bool => ω i) :=
+    Measurable (fun ω : Fin n → Bool ↦ ω i) :=
   measurable_pi_apply i
 
 /-- Measurability of the projection `ω ↦ fun j => ω j.val` onto `{j // j ≠ i}`. -/
 private lemma xExceptCoord_measurable {n : ℕ} (i : Fin n) :
-    Measurable (fun ω : Fin n → Bool => fun (j : {j : Fin n // j ≠ i}) => ω j.val) :=
-  measurable_pi_iff.mpr (fun j => measurable_pi_apply j.val)
+    Measurable (fun ω : Fin n → Bool ↦ fun (j : {j : Fin n // j ≠ i}) ↦ ω j.val) :=
+  measurable_pi_iff.mpr (fun j ↦ measurable_pi_apply j.val)
 
 /-- The joint entropy of the coordinate family `Xs i ω := ω i` under `μ_A` equals `log |A|`. -/
 private lemma jointEntropy_xs_eq_log_card
     {n : ℕ} {A : Finset (Fin n → Bool)} (hA : A.Nonempty) :
     jointEntropy (uniformOn (A : Set (Fin n → Bool)))
-        (fun (i : Fin n) (ω : Fin n → Bool) => ω i)
+        (fun (i : Fin n) (ω : Fin n → Bool) ↦ ω i)
       = Real.log A.card := by
   unfold jointEntropy
-  have h_eq : (fun (ω : Fin n → Bool) (i : Fin n) => ω i) = id := by
+  have h_eq : (fun (ω : Fin n → Bool) (i : Fin n) ↦ ω i) = id := by
     funext ω; funext i; rfl
   rw [h_eq]
   exact entropy_uniformOn_eq_log_card hA
@@ -74,15 +74,15 @@ private lemma map_projMap_real
     {n : ℕ} (i : Fin n) {A : Finset (Fin n → Bool)} (_hA : A.Nonempty)
     (y : {j : Fin n // j ≠ i} → Bool) :
     ((uniformOn (A : Set (Fin n → Bool))).map
-        (fun ω : Fin n → Bool => fun (j : {j : Fin n // j ≠ i}) => ω j.val)).real {y}
-      = ((A.filter (fun x => projMap i x = y)).card : ℝ) / A.card := by
+        (fun ω : Fin n → Bool ↦ fun (j : {j : Fin n // j ≠ i}) ↦ ω j.val)).real {y}
+      = ((A.filter (fun x ↦ projMap i x = y)).card : ℝ) / A.card := by
   classical
   set f : (Fin n → Bool) → ({j : Fin n // j ≠ i} → Bool) :=
-    fun ω j => ω j.val with hf_def
+    fun ω j ↦ ω j.val with hf_def
   have hf_meas : Measurable f := xExceptCoord_measurable i
   -- Preimage as a Finset
   set t : Finset (Fin n → Bool) :=
-    (Finset.univ : Finset (Fin n → Bool)).filter (fun x => f x = y) with ht_def
+    (Finset.univ : Finset (Fin n → Bool)).filter (fun x ↦ f x = y) with ht_def
   have ht_set : (t : Set (Fin n → Bool)) = f ⁻¹' ({y} : Set _) := by
     ext x
     simp [ht_def]
@@ -90,7 +90,7 @@ private lemma map_projMap_real
   rw [Measure.real, Measure.map_apply hf_meas (measurableSet_singleton y), ← ht_set,
     uniformOn_apply_finset (s := A) (t := t)]
   -- A ∩ t = A.filter (projMap i x = y)
-  have h_inter : A ∩ t = A.filter (fun x => projMap i x = y) := by
+  have h_inter : A ∩ t = A.filter (fun x ↦ projMap i x = y) := by
     ext x
     simp [ht_def, Finset.mem_inter, hf_def]
     tauto
@@ -100,8 +100,8 @@ private lemma map_projMap_real
 private lemma fibre_oneortwo_of_mem_projectionExcept
     {n : ℕ} (i : Fin n) {A : Finset (Fin n → Bool)}
     (y : {j : Fin n // j ≠ i} → Bool) (hy : y ∈ projectionExcept i A) :
-    (A.filter (fun x => projMap i x = y)).card = 1 ∨
-    (A.filter (fun x => projMap i x = y)).card = 2 := by
+    (A.filter (fun x ↦ projMap i x = y)).card = 1 ∨
+    (A.filter (fun x ↦ projMap i x = y)).card = 2 := by
   classical
   have hext_ne : extension i false y ≠ extension i true y := by
     intro h
@@ -115,7 +115,7 @@ private lemma fibre_oneortwo_of_mem_projectionExcept
     cases hb : x i with
     | false => left; rw [hxext, hb] at hxA; exact hxA
     | true => right; rw [hxext, hb] at hxA; exact hxA
-  have h_filter_eq : A.filter (fun x => projMap i x = y) =
+  have h_filter_eq : A.filter (fun x ↦ projMap i x = y) =
       (({extension i false y} : Finset _).filter (· ∈ A)) ∪
       (({extension i true y} : Finset _).filter (· ∈ A)) := by
     ext x
@@ -185,7 +185,7 @@ private lemma fibre_oneortwo_of_mem_projectionExcept
 private lemma entropy_projMap_eq
     {n : ℕ} (i : Fin n) {A : Finset (Fin n → Bool)} (hA : A.Nonempty) :
     entropy (uniformOn (A : Set (Fin n → Bool)))
-        (fun ω : Fin n → Bool => fun (j : {j : Fin n // j ≠ i}) => ω j.val)
+        (fun ω : Fin n → Bool ↦ fun (j : {j : Fin n // j ≠ i}) ↦ ω j.val)
       = Real.log A.card
         - 2 * ((A.card : ℝ) - ((projectionExcept i A).card : ℝ))
             * Real.log 2 / A.card := by
@@ -193,17 +193,17 @@ private lemma entropy_projMap_eq
   haveI : IsProbabilityMeasure (uniformOn (A : Set (Fin n → Bool))) :=
     uniformOn_A_isProb hA
   set f : (Fin n → Bool) → ({j : Fin n // j ≠ i} → Bool) :=
-    fun ω j => ω j.val
+    fun ω j ↦ ω j.val
   set proj : Finset ({j : Fin n // j ≠ i} → Bool) := projectionExcept i A
   set fibre : ({j : Fin n // j ≠ i} → Bool) → ℕ :=
-    fun y => (A.filter (fun x => projMap i x = y)).card
+    fun y ↦ (A.filter (fun x ↦ projMap i x = y)).card
   -- positivity
   have h_card_pos : 0 < (A.card : ℝ) := by exact_mod_cast hA.card_pos
   have h_card_ne : (A.card : ℝ) ≠ 0 := h_card_pos.ne'
   -- Mass values: per y, mass = fibre y / |A|.
   have h_mass : ∀ y : {j : Fin n // j ≠ i} → Bool,
       ((uniformOn (A : Set (Fin n → Bool))).map f).real {y}
-        = ((fibre y : ℕ) : ℝ) / A.card := fun y =>
+        = ((fibre y : ℕ) : ℝ) / A.card := fun y ↦
     map_projMap_real i hA y
   unfold entropy
   -- Rewrite each term of the sum with the mass formula.
@@ -211,12 +211,12 @@ private lemma entropy_projMap_eq
         Real.negMulLog (((uniformOn (A : Set (Fin n → Bool))).map f).real {y}))
         = ∑ y : ({j : Fin n // j ≠ i} → Bool),
             Real.negMulLog ((fibre y : ℝ) / A.card) from
-        Finset.sum_congr rfl (fun y _ => by rw [h_mass])]
+        Finset.sum_congr rfl (fun y _ ↦ by rw [h_mass])]
   -- For y ∉ proj, fibre y = 0 so the term is 0; restrict sum to proj.
   have h_fibre_zero : ∀ y : {j : Fin n // j ≠ i} → Bool,
       y ∉ proj → fibre y = 0 := by
     intro y hy
-    show (A.filter (fun x => projMap i x = y)).card = 0
+    show (A.filter (fun x ↦ projMap i x = y)).card = 0
     rw [Finset.card_eq_zero]
     rw [Finset.filter_eq_empty_iff]
     intro x hxA hpx
@@ -234,12 +234,12 @@ private lemma entropy_projMap_eq
   -- Now sum over proj. Each y ∈ proj has fibre y ∈ {1, 2}.
   -- Split proj by fibre size.
   set S2 : Finset ({j : Fin n // j ≠ i} → Bool) :=
-    proj.filter (fun y => fibre y = 2) with hS2_def
+    proj.filter (fun y ↦ fibre y = 2) with hS2_def
   set S1 : Finset ({j : Fin n // j ≠ i} → Bool) :=
-    proj.filter (fun y => fibre y = 1) with hS1_def
+    proj.filter (fun y ↦ fibre y = 1) with hS1_def
   -- Each y ∈ proj has fibre size 1 or 2.
   have h_fibre_oneortwo : ∀ y ∈ proj, fibre y = 1 ∨ fibre y = 2 :=
-    fun y hy => fibre_oneortwo_of_mem_projectionExcept i y hy
+    fun y hy ↦ fibre_oneortwo_of_mem_projectionExcept i y hy
   -- proj = S1 ∪ S2, disjoint
   have hS_disjoint : Disjoint S1 S2 := by
     apply Finset.disjoint_filter.mpr
@@ -289,13 +289,13 @@ private lemma entropy_projMap_eq
     -- A.card = ∑ y ∈ proj, fibre y = S1.card + 2 * S2.card
     rw [h_A_sum]
     rw [show proj = S1 ∪ S2 from hS_union.symm, Finset.sum_union hS_disjoint]
-    have h1 : (∑ y ∈ S1, (A.filter (fun x => projMap i x = y)).card) = S1.card := by
-      have h1a : ∀ y ∈ S1, (A.filter (fun x => projMap i x = y)).card = 1 := by
+    have h1 : (∑ y ∈ S1, (A.filter (fun x ↦ projMap i x = y)).card) = S1.card := by
+      have h1a : ∀ y ∈ S1, (A.filter (fun x ↦ projMap i x = y)).card = 1 := by
         intro y hy
         exact (Finset.mem_filter.mp hy).2
       rw [Finset.sum_congr rfl h1a, Finset.sum_const, smul_eq_mul, mul_one]
-    have h2 : (∑ y ∈ S2, (A.filter (fun x => projMap i x = y)).card) = 2 * S2.card := by
-      have h2a : ∀ y ∈ S2, (A.filter (fun x => projMap i x = y)).card = 2 := by
+    have h2 : (∑ y ∈ S2, (A.filter (fun x ↦ projMap i x = y)).card) = 2 * S2.card := by
+      have h2a : ∀ y ∈ S2, (A.filter (fun x ↦ projMap i x = y)).card = 2 := by
         intro y hy
         exact (Finset.mem_filter.mp hy).2
       rw [Finset.sum_congr rfl h2a, Finset.sum_const, smul_eq_mul, Nat.mul_comm]
@@ -329,16 +329,16 @@ private lemma entropy_projMap_eq
 private lemma entropy_pair_proj_coord_eq_log_card
     {n : ℕ} (i : Fin n) {A : Finset (Fin n → Bool)} (hA : A.Nonempty) :
     entropy (uniformOn (A : Set (Fin n → Bool)))
-        (fun ω : Fin n → Bool =>
-          ((fun (j : {j : Fin n // j ≠ i}) => ω j.val), ω i))
+        (fun ω : Fin n → Bool ↦
+          ((fun (j : {j : Fin n // j ≠ i}) ↦ ω j.val), ω i))
       = Real.log A.card := by
   classical
   haveI : IsProbabilityMeasure (uniformOn (A : Set (Fin n → Bool))) :=
     uniformOn_A_isProb hA
   -- Build equiv: (Fin n → Bool) ≃ᵐ ({j // j ≠ i} → Bool) × Bool.
   let e : (Fin n → Bool) ≃ᵐ ({j : Fin n // j ≠ i} → Bool) × Bool :=
-    { toFun := fun ω => ((fun j : {j : Fin n // j ≠ i} => ω j.val), ω i)
-      invFun := fun p j => if h : j = i then p.2 else p.1 ⟨j, h⟩
+    { toFun := fun ω ↦ ((fun j : {j : Fin n // j ≠ i} ↦ ω j.val), ω i)
+      invFun := fun p j ↦ if h : j = i then p.2 else p.1 ⟨j, h⟩
       left_inv := by
         intro ω
         funext j
@@ -356,20 +356,20 @@ private lemma entropy_pair_proj_coord_eq_log_card
       measurable_toFun :=
         (xExceptCoord_measurable i).prodMk (xsCoord_measurable i)
       measurable_invFun := by
-        change Measurable (fun p : ({j : Fin n // j ≠ i} → Bool) × Bool =>
-          fun j : Fin n => if h : j = i then p.2 else p.1 ⟨j, h⟩)
-        refine measurable_pi_iff.mpr (fun j => ?_)
+        change Measurable (fun p : ({j : Fin n // j ≠ i} → Bool) × Bool ↦
+          fun j : Fin n ↦ if h : j = i then p.2 else p.1 ⟨j, h⟩)
+        refine measurable_pi_iff.mpr (fun j ↦ ?_)
         by_cases h : j = i
-        · have : (fun p : ({j : Fin n // j ≠ i} → Bool) × Bool =>
-              (fun j' : Fin n => if h : j' = i then p.2 else p.1 ⟨j', h⟩) j) =
-              fun p => p.2 := by
+        · have : (fun p : ({j : Fin n // j ≠ i} → Bool) × Bool ↦
+              (fun j' : Fin n ↦ if h : j' = i then p.2 else p.1 ⟨j', h⟩) j) =
+              fun p ↦ p.2 := by
             funext p; show (if hh : j = i then p.2 else p.1 ⟨j, hh⟩) = p.2
             rw [dif_pos h]
           rw [this]
           exact measurable_snd
-        · have : (fun p : ({j : Fin n // j ≠ i} → Bool) × Bool =>
-              (fun j' : Fin n => if h : j' = i then p.2 else p.1 ⟨j', h⟩) j) =
-              fun p => p.1 ⟨j, h⟩ := by
+        · have : (fun p : ({j : Fin n // j ≠ i} → Bool) × Bool ↦
+              (fun j' : Fin n ↦ if h : j' = i then p.2 else p.1 ⟨j', h⟩) j) =
+              fun p ↦ p.1 ⟨j, h⟩ := by
             funext p; show (if hh : j = i then p.2 else p.1 ⟨j, hh⟩) = p.1 ⟨j, h⟩
             rw [dif_neg h]
           rw [this]
@@ -378,20 +378,20 @@ private lemma entropy_pair_proj_coord_eq_log_card
   unfold jointEntropy at h_full
   -- h_full: entropy μ_A (fun ω i => ω i) = log |A|
   -- Note: (fun ω i => ω i) = id, so this is entropy μ_A id = log|A|.
-  have h_id : (fun (ω : Fin n → Bool) (i : Fin n) => ω i) = id := by
+  have h_id : (fun (ω : Fin n → Bool) (i : Fin n) ↦ ω i) = id := by
     funext ω i; rfl
   rw [h_id] at h_full
   -- Apply entropy_measurableEquiv_comp with e: (fun ω => e ω) = our target.
-  have h_eq : (fun ω : Fin n → Bool => e ω)
-      = fun ω : Fin n → Bool =>
-          ((fun (j : {j : Fin n // j ≠ i}) => ω j.val), ω i) := rfl
+  have h_eq : (fun ω : Fin n → Bool ↦ e ω)
+      = fun ω : Fin n → Bool ↦
+          ((fun (j : {j : Fin n // j ≠ i}) ↦ ω j.val), ω i) := rfl
   have h := entropy_measurableEquiv_comp
     (uniformOn (A : Set (Fin n → Bool))) (id : (Fin n → Bool) → Fin n → Bool)
     measurable_id e
   -- h: entropy μ_A (fun ω => e (id ω)) = entropy μ_A id
   -- LHS pointwise = e ω = ((..), ω i)
-  rw [show (fun ω => e (id ω)) = (fun ω : Fin n → Bool =>
-      ((fun (j : {j : Fin n // j ≠ i}) => ω j.val), ω i)) from rfl] at h
+  rw [show (fun ω ↦ e (id ω)) = (fun ω : Fin n → Bool ↦
+      ((fun (j : {j : Fin n // j ≠ i}) ↦ ω j.val), ω i)) from rfl] at h
   rw [h, h_full]
 
 /-- The direction-`i` conditional entropy under `μ_A`:
@@ -400,8 +400,8 @@ theorem condEntropy_coord_eq
     {n : ℕ} {A : Finset (Fin n → Bool)} (hA : A.Nonempty) (i : Fin n) :
     InformationTheory.MeasureFano.condEntropy
         (uniformOn (A : Set (Fin n → Bool)))
-        (fun ω : Fin n → Bool => ω i)
-        (fun ω (j : {j : Fin n // j ≠ i}) => ω j.val)
+        (fun ω : Fin n → Bool ↦ ω i)
+        (fun ω (j : {j : Fin n // j ≠ i}) ↦ ω j.val)
       = (2 * ((A.card : ℝ) - ((projectionExcept i A).card : ℝ)) / A.card)
           * Real.log 2 := by
   classical
@@ -410,8 +410,8 @@ theorem condEntropy_coord_eq
   -- chain rule
   have h_chain := entropy_pair_eq_entropy_add_condEntropy
     (uniformOn (A : Set (Fin n → Bool)))
-    (fun ω : Fin n → Bool => fun (j : {j : Fin n // j ≠ i}) => ω j.val)
-    (fun ω : Fin n → Bool => ω i)
+    (fun ω : Fin n → Bool ↦ fun (j : {j : Fin n // j ≠ i}) ↦ ω j.val)
+    (fun ω : Fin n → Bool ↦ ω i)
     (xExceptCoord_measurable i) (xsCoord_measurable i)
   -- pair joint
   have h_pair := entropy_pair_proj_coord_eq_log_card i hA
@@ -439,43 +439,43 @@ private lemma condEntropy_chain_to_subset
     (μ : MeasureTheory.Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (i : Fin n) :
     InformationTheory.MeasureFano.condEntropy μ (Xs i)
-        (fun ω (j : Fin i.val) =>
+        (fun ω (j : Fin i.val) ↦
           Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)
       = InformationTheory.MeasureFano.condEntropy μ (Xs i)
-          (fun ω (j : ↥((Finset.univ : Finset (Fin n)).filter (· < i))) =>
+          (fun ω (j : ↥((Finset.univ : Finset (Fin n)).filter (· < i))) ↦
             Xs j.val ω) := by
   classical
   -- Index equiv Fin i.val ≃ ↥(univ.filter (· < i))
   let idx : Fin i.val ≃ ↥((Finset.univ : Finset (Fin n)).filter (· < i)) :=
-    { toFun := fun j => ⟨⟨j.val, j.isLt.trans i.isLt⟩, by
+    { toFun := fun j ↦ ⟨⟨j.val, j.isLt.trans i.isLt⟩, by
         rw [Finset.mem_filter]
         exact ⟨Finset.mem_univ _, j.isLt⟩⟩
-      invFun := fun vh => ⟨vh.val.val, (Finset.mem_filter.mp vh.property).2⟩
+      invFun := fun vh ↦ ⟨vh.val.val, (Finset.mem_filter.mp vh.property).2⟩
       left_inv := by rintro ⟨j, hj⟩; rfl
       right_inv := by rintro ⟨⟨v, hv⟩, hv2⟩; rfl }
   let e_cond : (Fin i.val → α)
       ≃ᵐ (↥((Finset.univ : Finset (Fin n)).filter (· < i)) → α) :=
     MeasurableEquiv.piCongrLeft
-      (fun _ : ↥((Finset.univ : Finset (Fin n)).filter (· < i)) => α) idx
+      (fun _ : ↥((Finset.univ : Finset (Fin n)).filter (· < i)) ↦ α) idx
   have hcond_meas : Measurable
-      (fun ω (j : Fin i.val) =>
+      (fun ω (j : Fin i.val) ↦
         Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) :=
-    measurable_pi_iff.mpr (fun _ => hXs _)
+    measurable_pi_iff.mpr (fun _ ↦ hXs _)
   have h_eq :
-      (fun ω => e_cond (fun (j : Fin i.val) =>
+      (fun ω ↦ e_cond (fun (j : Fin i.val) ↦
           Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω))
-        = fun ω (j : ↥((Finset.univ : Finset (Fin n)).filter (· < i))) =>
+        = fun ω (j : ↥((Finset.univ : Finset (Fin n)).filter (· < i))) ↦
             Xs j.val ω := by
     funext ω jh
     have h_apply :=
       MeasurableEquiv.piCongrLeft_apply_apply
-        (β := fun _ : ↥((Finset.univ : Finset (Fin n)).filter (· < i)) => α)
+        (β := fun _ : ↥((Finset.univ : Finset (Fin n)).filter (· < i)) ↦ α)
         idx
-        (fun (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)
+        (fun (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)
         (idx.symm jh)
     have h_idx : idx (idx.symm jh) = jh := idx.apply_symm_apply jh
     rw [h_idx] at h_apply
-    show e_cond (fun (j : Fin i.val) =>
+    show e_cond (fun (j : Fin i.val) ↦
         Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) jh = Xs jh.val ω
     rw [h_apply]
     -- idx maps j to ⟨⟨j.val, ...⟩, ...⟩; so its .val.val = j.val. After idx.symm idx = id.
@@ -483,7 +483,7 @@ private lemma condEntropy_chain_to_subset
     -- (idx.symm jh).val = jh.val.val (by def of idx)
     rfl
   exact (condEntropy_measurableEquiv_comp μ (Xs i) (hXs _)
-    (fun ω (j : Fin i.val) =>
+    (fun ω (j : Fin i.val) ↦
       Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) hcond_meas e_cond).symm.trans
     (by rw [h_eq])
 
@@ -497,43 +497,43 @@ private lemma condEntropy_subtype_erase_bridge
     (μ : MeasureTheory.Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (i : Fin n) :
     InformationTheory.MeasureFano.condEntropy μ (Xs i)
-        (fun ω (j : {j : Fin n // j ≠ i}) => Xs j.val ω)
+        (fun ω (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω)
       = InformationTheory.MeasureFano.condEntropy μ (Xs i)
-          (fun ω (j : ↥((Finset.univ : Finset (Fin n)).erase i)) =>
+          (fun ω (j : ↥((Finset.univ : Finset (Fin n)).erase i)) ↦
             Xs j.val ω) := by
   classical
   let idx : {j : Fin n // j ≠ i}
       ≃ ↥((Finset.univ : Finset (Fin n)).erase i) :=
-    { toFun := fun jh => ⟨jh.val, by
+    { toFun := fun jh ↦ ⟨jh.val, by
         rw [Finset.mem_erase]; exact ⟨jh.property, Finset.mem_univ _⟩⟩
-      invFun := fun vh => ⟨vh.val, (Finset.mem_erase.mp vh.property).1⟩
+      invFun := fun vh ↦ ⟨vh.val, (Finset.mem_erase.mp vh.property).1⟩
       left_inv := by rintro ⟨j, hj⟩; rfl
       right_inv := by rintro ⟨v, hv⟩; rfl }
   let e_cond : ({j : Fin n // j ≠ i} → α)
       ≃ᵐ (↥((Finset.univ : Finset (Fin n)).erase i) → α) :=
     MeasurableEquiv.piCongrLeft
-      (fun _ : ↥((Finset.univ : Finset (Fin n)).erase i) => α) idx
+      (fun _ : ↥((Finset.univ : Finset (Fin n)).erase i) ↦ α) idx
   have hcond_meas : Measurable
-      (fun ω (j : {j : Fin n // j ≠ i}) => Xs j.val ω) :=
-    measurable_pi_iff.mpr (fun _ => hXs _)
+      (fun ω (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω) :=
+    measurable_pi_iff.mpr (fun _ ↦ hXs _)
   have h_eq :
-      (fun ω => e_cond (fun (j : {j : Fin n // j ≠ i}) => Xs j.val ω))
-        = fun ω (j : ↥((Finset.univ : Finset (Fin n)).erase i)) =>
+      (fun ω ↦ e_cond (fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω))
+        = fun ω (j : ↥((Finset.univ : Finset (Fin n)).erase i)) ↦
             Xs j.val ω := by
     funext ω jh
     have h_apply :=
       MeasurableEquiv.piCongrLeft_apply_apply
-        (β := fun _ : ↥((Finset.univ : Finset (Fin n)).erase i) => α)
+        (β := fun _ : ↥((Finset.univ : Finset (Fin n)).erase i) ↦ α)
         idx
-        (fun (j : {j : Fin n // j ≠ i}) => Xs j.val ω)
+        (fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω)
         (idx.symm jh)
     have h_idx : idx (idx.symm jh) = jh := idx.apply_symm_apply jh
     rw [h_idx] at h_apply
-    show e_cond (fun (j : {j : Fin n // j ≠ i}) => Xs j.val ω) jh = Xs jh.val ω
+    show e_cond (fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω) jh = Xs jh.val ω
     rw [h_apply]
     rfl
   exact (condEntropy_measurableEquiv_comp μ (Xs i) (hXs _)
-    (fun ω (j : {j : Fin n // j ≠ i}) => Xs j.val ω) hcond_meas e_cond).symm.trans
+    (fun ω (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω) hcond_meas e_cond).symm.trans
     (by rw [h_eq])
 
 /-- The sum of the direction-wise conditional entropies is bounded by `log |A|`:
@@ -543,14 +543,14 @@ theorem sum_condEntropy_le_log_card
     ∑ i : Fin n,
         InformationTheory.MeasureFano.condEntropy
           (uniformOn (A : Set (Fin n → Bool)))
-          (fun ω : Fin n → Bool => ω i)
-          (fun ω (j : {j : Fin n // j ≠ i}) => ω j.val)
+          (fun ω : Fin n → Bool ↦ ω i)
+          (fun ω (j : {j : Fin n // j ≠ i}) ↦ ω j.val)
       ≤ Real.log A.card := by
   classical
   haveI : IsProbabilityMeasure (uniformOn (A : Set (Fin n → Bool))) :=
     uniformOn_A_isProb hA
-  set Xs : Fin n → (Fin n → Bool) → Bool := fun i ω => ω i with hXs_def
-  have hXs_meas : ∀ i, Measurable (Xs i) := fun i => xsCoord_measurable i
+  set Xs : Fin n → (Fin n → Bool) → Bool := fun i ω ↦ ω i with hXs_def
+  have hXs_meas : ∀ i, Measurable (Xs i) := fun i ↦ xsCoord_measurable i
   -- chain rule
   have h_chain :=
     jointEntropy_chain_rule (uniformOn (A : Set (Fin n → Bool))) Xs hXs_meas
@@ -561,10 +561,10 @@ theorem sum_condEntropy_le_log_card
   have h_per_i : ∀ i : Fin n,
       InformationTheory.MeasureFano.condEntropy
           (uniformOn (A : Set (Fin n → Bool))) (Xs i)
-          (fun ω (j : {j : Fin n // j ≠ i}) => Xs j.val ω)
+          (fun ω (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω)
         ≤ InformationTheory.MeasureFano.condEntropy
             (uniformOn (A : Set (Fin n → Bool))) (Xs i)
-            (fun ω (j : Fin i.val) =>
+            (fun ω (j : Fin i.val) ↦
               Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) := by
     intro i
     -- Step 1: Convert chain summand to subset form via condEntropy_chain_to_subset.
@@ -588,13 +588,13 @@ theorem sum_condEntropy_le_log_card
       ∑ i : Fin n,
         InformationTheory.MeasureFano.condEntropy
           (uniformOn (A : Set (Fin n → Bool))) (Xs i)
-          (fun ω (j : {j : Fin n // j ≠ i}) => Xs j.val ω)
+          (fun ω (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω)
       ≤ ∑ i : Fin n,
           InformationTheory.MeasureFano.condEntropy
             (uniformOn (A : Set (Fin n → Bool))) (Xs i)
-            (fun ω (j : Fin i.val) =>
+            (fun ω (j : Fin i.val) ↦
               Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) :=
-    Finset.sum_le_sum (fun i _ => h_per_i i)
+    Finset.sum_le_sum (fun i _ ↦ h_per_i i)
   rw [← h_chain] at h_sum_per_i
   exact h_sum_per_i
 
@@ -638,12 +638,12 @@ theorem edgeBoundary_entropy_sharp {n : ℕ} {A : Finset (Fin n → Bool)}
       ∑ i : Fin n,
         InformationTheory.MeasureFano.condEntropy
           (uniformOn (A : Set (Fin n → Bool)))
-          (fun ω : Fin n → Bool => ω i)
-          (fun ω (j : {j : Fin n // j ≠ i}) => ω j.val)
+          (fun ω : Fin n → Bool ↦ ω i)
+          (fun ω (j : {j : Fin n // j ≠ i}) ↦ ω j.val)
         = ∑ i : Fin n,
             (2 * ((A.card : ℝ) - ((projectionExcept i A).card : ℝ)) / A.card)
               * Real.log 2 := by
-    refine Finset.sum_congr rfl (fun i _ => ?_)
+    refine Finset.sum_congr rfl (fun i _ ↦ ?_)
     exact condEntropy_coord_eq hA i
   -- Pull out constant log 2 and bring sum inside
   have h_pull :
@@ -658,7 +658,7 @@ theorem edgeBoundary_entropy_sharp {n : ℕ} {A : Finset (Fin n → Bool)}
           2 * ((A.card : ℝ) - ((projectionExcept i A).card : ℝ)) / A.card)
           = (2 / A.card) * ∑ i : Fin n,
               ((A.card : ℝ) - ((projectionExcept i A).card : ℝ)) from by
-      rw [Finset.mul_sum]; refine Finset.sum_congr rfl (fun i _ => ?_); ring]
+      rw [Finset.mul_sum]; refine Finset.sum_congr rfl (fun i _ ↦ ?_); ring]
     rw [Finset.sum_sub_distrib, Finset.sum_const, Finset.card_univ, Fintype.card_fin,
       nsmul_eq_mul]
     ring
