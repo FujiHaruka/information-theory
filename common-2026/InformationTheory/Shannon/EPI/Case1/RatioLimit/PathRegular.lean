@@ -25,7 +25,7 @@ variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
 `epi_of_csiszarLogRatioGap_tendsto`: antitone `R` on `Ici 0` together with
 `R t → 0` forces `R 0 ≥ 0`, hence EPI. Pure order-limit argument; no analysis. -/
 
-/-- **Order-limit bridge → EPI**. If the log-ratio gap `R = csiszarLogRatioGap …`
+/-- The order-limit bridge to EPI. If the log-ratio gap `R = csiszarLogRatioGap …`
 is antitone on `Set.Ici 0` and `R t → 0` as `t → ∞`, then `R 0 ≥ 0`, and therefore
 the entropy power inequality holds.
 
@@ -100,14 +100,14 @@ theorem entropyPower_path_scaling
 `N(W_X t) → N(law Z_X)` via the independent-noise lower bound and the Gaussian
 max-entropy upper bound. -/
 
-/-- **Per-`t` regularity bundle for the rescaled path `A/√t + B`**, holding the
+/-- A per-`t` regularity bundle for the rescaled path `A/√t + B`, holding the
 preconditions of the two genuine envelope lemmas
 (`differentialEntropy_add_ge_of_indep` for the lower bound, applied with
 `X := B, Y := A/√t`; `differentialEntropy_le_gaussian_of_variance_le` for the
 upper bound on `μ := P.map (A/√t + B)` with variance bound `varA/t + v_B`).
 
-This is a **regularity** bundle (IndepFun / a.c. / fibre integrabilities / mean +
-variance-bound + integrabilities), **NOT** load-bearing: it never contains the
+This is a regularity bundle (IndepFun / a.c. / fibre integrabilities / mean +
+variance-bound + integrabilities), NOT load-bearing: it never contains the
 conclusion `Tendsto … N(B)` nor either envelope inequality — those are derived in
 `entropyPower_rescaled_path_tendsto` by calling the genuine lemmas with these
 preconditions.
@@ -194,12 +194,12 @@ max-entropy, `differentialEntropy_le_gaussian_of_variance_le`), both sandwiching
 The squeeze structure (constant lower envelope from independent-noise monotonicity
 + decaying upper envelope from Gaussian max-entropy → common limit `N(B)`) is the
 genuine analytic content of this lemma. All the per-`t` data feeding the two
-genuine envelope lemmas are threaded as **honest regularity preconditions**
+genuine envelope lemmas are threaded as honest regularity preconditions
 (NOT load-bearing): `IndepFun B (A/√t)` (`h_indep`), a.c. of the path laws
 (`h_path_ac`, `hB_ac`), the 8 fibre integrabilities of the lower-bound lemma
 (`h_lb`), the max-entropy data of the upper-bound lemma (mean / variance bound by
 `varA/t + v_B` / integrabilities, packaged in `h_ub`). The conclusion
-`N(W t) → N(B)` is **not** encoded in any hypothesis — both envelopes are produced
+`N(W t) → N(B)` is not encoded in any hypothesis — both envelopes are produced
 by genuine Mathlib / in-tree lemmas, and their common limit is computed here.
 
 `varA` (`= Var A`, threaded as a real regularity datum with `h_varA_nn : 0 ≤ varA`)
@@ -1088,7 +1088,7 @@ theorem rescaledPath_indep_regular
   · exact integrable_log_map_indep_gaussian_add A B P hA hB v_B hv_B hB_law hAB hA_ac hB_ac
       h_mom_A ht
 
-/-- **Discharge `IsRescaledPathRegular` from method-X regularity.**
+/-- Discharge `IsRescaledPathRegular` from method-X regularity.
 
 Given a Gaussian noise `B` (`P.map B = gaussianReal 0 v_B`, `v_B ≠ 0`) independent of
 the input `A` (`hAB : IndepFun A B P`), with `A` measurable + finite-second-moment
@@ -1097,27 +1097,27 @@ data threaded as `varA`-regularity, construct the per-`t` regularity bundle
 
 The key insight (demonstrated genuinely here): the fibre of
 `condDistrib (B + A/√t) (A/√t) P` is the translated Gaussian `gaussianReal z v_B` (the
-law of `B + z` by `affineShiftKernel`/Gaussian translation). This **avoids the
-density-witness obstruction** for the general fibre: the fibre identification
+law of `B + z` by `affineShiftKernel`/Gaussian translation). This avoids the
+density-witness obstruction for the general fibre: the fibre identification
 `condDistrib (B + A/√t) (A/√t) P =ᵐ affineShiftKernel (P.map B) 1` (`h_fibre_ae`) and
 the per-fibre a.c. `condDistrib z ≪ volume` (`hκ_v`, via `gaussianReal z v_B`) are both
-**closed genuinely** — exactly the conjuncts that are intractable in the general case.
+closed genuinely — exactly the conjuncts that are intractable in the general case.
 
 Honest preconditions only (NOT load-bearing): measurability, `IndepFun A B P`, the
 Gaussian noise law, finite-second-moment `h_mom_A` + `varA`-regularity (`h_var_bound`).
 The bundle being constructed is itself regularity (audited non-load-bearing at its def
 site §3).
 
-**All 9 integrability conjuncts are supplied.** The 3 conditional-KL integrabilities are
+All 9 integrability conjuncts are supplied. The 3 conditional-KL integrabilities are
 supplied via the extracted standalone lemmas in `EPIG2ConvEntropyDensity.lean`
 (`convCrossEntropy_perFibre_integrable` / `convCrossEntropy_zAvg_integrable` /
 `convJointLlr_integrable`), instantiated here with the
-**Gaussian fibre** `q := gaussianPDFReal 0 v_B` (translated by `z`) and the target
+Gaussian fibre `q := gaussianPDFReal 0 v_B` (translated by `z`) and the target
 convolution density `g := convDensityAdd pX g_{v_B}`. No signature change was needed:
 because the fibre is Gaussian (not the input density), the joint-llr branch (b)
 abs-entropy `∫ q·|log q|` is the Gaussian self-entropy (finite via
 `integrable_density_log_density_of_gaussian`), so the inventory's suspected `hpX_ent`
-input-density-entropy precondition is **not required** (the `X`/`Z` roles are swapped vs.
+input-density-entropy precondition is not required (the `X`/`Z` roles are swapped vs.
 the density template, where the fibre is the input). All honest preconditions:
 `hA_ac : P.map A ≪ volume` (case-1 a.c. input, NOT load-bearing — consumed only for the
 density witness and `P.map (A/√t) ≪ volume`), `h_mom_A` (finite second moment, feeds the

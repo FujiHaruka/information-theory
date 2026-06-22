@@ -472,19 +472,19 @@ optimality, i.e. the a.s.-eventual Ziv inequality
 `limsup (c·log₂ c / n) ≤ H₂` combined with the SMB upper bound.
 
 Units: the encoding length is a base-2 code length (`bitLength` uses
-`Nat.log 2`), so the per-symbol rate `lz/n` is in **bits** and the correct
-RHS is the **bit** entropy rate `entropyRate₂ = entropyRate / Real.log 2`,
+`Nat.log 2`), so the per-symbol rate `lz/n` is in bits and the correct
+RHS is the bit entropy rate `entropyRate₂ = entropyRate / Real.log 2`,
 the unit-correction documented in `ZivEntropyBridge.lean` ("Base-2 (bit)
 layer") and `McMillanKraftBridge.lean`.
 
 `lz78GreedyEncodingLength` charges `c · bitLength c |α|` against the
 genuine distinct phrase count `c = (lz78PhraseStrings (List.ofFn x)).length`,
-so this is a **genuine proposition** carrying real Ziv content.
+so this is a genuine proposition carrying real Ziv content.
 
-**Composition lemma.** The body of this theorem is `sorry`-free: it is
+The composition lemma. The body of this theorem is `sorry`-free: it is
 assembled from the two genuine halves of the achievability sandwich,
 
-* `shannon_mcmillan_breiman₂` (SMB in bits, **sorryAx-free**) — gives
+* `shannon_mcmillan_breiman₂` (SMB in bits, sorryAx-free) — gives
   `Tendsto blockLogAvg₂ → entropyRate₂` a.s., hence
   `limsup blockLogAvg₂ = entropyRate₂` (`Filter.Tendsto.limsup_eq`);
 * `ziv_aseventual_le_blockLogAvg₂` (the a.s.-eventual Ziv comparison) —
@@ -544,7 +544,7 @@ implementation (Cover–Thomas Theorem 13.5.3)**.
 For a stationary ergodic source `p : ErgodicProcess μ α` on a finite
 alphabet `α`, the per-symbol output length of the genuine
 longest-prefix-match greedy LZ78 parse converges almost surely to the
-**bit** entropy rate:
+bit entropy rate:
 
 ```
 lim_{n → ∞} (1/n) · lz78GreedyEncodingLength(X^n) = entropyRate₂ μ p   a.s.
@@ -552,8 +552,8 @@ lim_{n → ∞} (1/n) · lz78GreedyEncodingLength(X^n) = entropyRate₂ μ p   a
 
 Units: the encoding length is a base-2 code length
 (`lz78GreedyEncodingLength = c · bitLength c |α|`, `bitLength` uses
-`Nat.log 2`), so the per-symbol rate is in **bits** and the convergence
-target is the **bit** entropy rate `entropyRate₂ = entropyRate / Real.log 2`
+`Nat.log 2`), so the per-symbol rate is in bits and the convergence
+target is the bit entropy rate `entropyRate₂ = entropyRate / Real.log 2`
 (not the nat-unit `entropyRate`). This is the unit-correction documented in
 `ZivEntropyBridge.lean` ("Base-2 (bit) layer — unit correction for the LZ78
 headline"). On a uniform i.i.d. source on A symbols the bit-rate limit is
@@ -571,7 +571,7 @@ combinator `lz78_asymptotic_optimality` instantiated at `L = entropyRate₂`
 `lz78GreedyEncodingLength` charges `c · bitLength c |α|` against the
 genuine distinct phrase count of the longest-prefix-match parse, so the
 per-symbol rate is data-dependent and
-**deterministically bounded above by an `n`- and `ω`-uniform constant**
+deterministically bounded above by an `n`- and `ω`-uniform constant
 `(1 + 8·log(|α|+1)/log 2) + (log₂|α| + 2)` (via `lz78_rate_le_const`,
 combining the Ziv product bound `c·log c ≤ 8·log(|α|+1)·n` with `c ≤ n` and the
 `ℕ`–`Real` `log` bridge). The upper-boundedness hypothesis is therefore **no
@@ -593,7 +593,7 @@ reads `rate → 0`, again genuine. Both halves
 against `entropyRate₂`, and the base combinator `lz78_asymptotic_optimality`
 is instantiated at `L = entropyRate₂`.
 
-**Proof done (Standard B): fully `sorryAx`-free** (`#print axioms` =
+Proof done (Standard B): fully `sorryAx`-free (`#print axioms` =
 `[propext, Classical.choice, Quot.sound]`). The headline takes only the source
 data (`μ`, `p`) — no `h_bdd_above` precondition. Both `IsBoundedUnder`
 witnesses (`(·≤·)` above and `(·≥·)` below) are constructed deterministically

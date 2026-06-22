@@ -77,7 +77,7 @@ Mathlib gap), or a strengthened input regularity precondition on `X`. The lemma 
 landing of the monotonicity content for the regular case; the producer in turn threads the
 strengthened input regularity (design (b)) so that `integrable_deriv` is supplied. -/
 
-/-- **Fisher monotonicity under Gaussian convolution** (Stam `lam = 1` corollary).
+/-- Fisher monotonicity under Gaussian convolution (Stam `lam = 1` corollary).
 
 For densities `fX`, `fY` satisfying the genuine Stam regularity preconditions
 (`IsRegularDensityV2`, normalization to `1`, and the `IsBlachmanConvReady` integrability /
@@ -113,7 +113,7 @@ later wave). The `pX`-witness fields are the same plumbing as `IsRegularDeBruijn
 of `P.map (X + √t·Z)`. -/
 
 /-- From method-X input regularity (`X`
-measurable, a.c., finite second moment) and **standard-normal** noise `Z_X` independent of
+measurable, a.c., finite second moment) and standard-normal noise `Z_X` independent of
 `X`, supply the `IsDeBruijnRegularityHyp X Z_X P` group threaded by the case-1 wrapper.
 
 The V2 `reg_at` instance is built directly (mirroring `IsRegularDeBruijnHypV2.ofHeatFlow`'s
@@ -124,21 +124,21 @@ fields use the genuine convolution density. The `pX` series is a regularity prec
 (`X` has a Lebesgue density + finite variance), discharged genuinely from `hX_ac`/`h_mom_X`.
 
 The `integrable_deriv` field — interval-integrability of `t ↦ (1/2)·J(density_t)` on `[0,T]`
-— is supplied via **design (b)** (strengthened input regularity).
+— is supplied via design (b) (strengthened input regularity).
 
-**Design (b).** Three input-regularity preconditions are threaded
+Design (b). Three input-regularity preconditions are threaded
 (`hreg_pX`, `hnorm_pX`, `hready_pX` — see signature below), together with the earlier
 `h_fisher_X`. They state that `pX = (P.map X).rnDeriv volume` is a *regular* L¹ density
 (`IsRegularDensityV2 pX`: differentiable + strictly positive + tails → 0 + integrable
 derivative), is normalized (`∫ pX = 1`), and satisfies the `Integrable`/boundedness/positivity
 bundle `IsBlachmanConvReady pX (gaussianPDFReal 0 v)` against every centered Gaussian
-(`h_fisher_X` adds finiteness of the input's Fisher info). **None of these encode the
-Fisher-monotonicity / de Bruijn inequality core** — they are regularity preconditions, NOT
+(`h_fisher_X` adds finiteness of the input's Fisher info). None of these encode the
+Fisher-monotonicity / de Bruijn inequality core — they are regularity preconditions, NOT
 load-bearing.
 
 With them the bound is supplied in two steps:
 
-1. **Fisher monotonicity (Stam).** For every `t ∈ Ioc 0 T`, `t.toNNReal ≠ 0`, so
+1. Fisher monotonicity (Stam). For every `t ∈ Ioc 0 T`, `t.toNNReal ≠ 0`, so
    `g_t := gaussianPDFReal 0 t.toNNReal` is a regular normalized density
    (`isRegularDensityV2_gaussianPDFReal`, `integral_gaussianPDFReal_eq_one`). PB-2b
    (`fisherInfoOfDensity_convDensityAdd_le`, = `convex_fisher_bound_of_ready` at
@@ -146,7 +146,7 @@ With them the bound is supplied in two steps:
    `(1/2)·J(density_t).toReal ≤ (1/2)·J(pX).toReal =: C` on `Ioc 0 T`, finite and `t`-independent.
    (The bridge `fisherInfoOfMeasureV2 _ f = fisherInfoOfDensity f` is `rfl`, so the measure
    argument is dropped; the integrand reduces to `(1/2)·J(convDensityAdd pX g_t).toReal`.)
-2. **`t`-measurability** of `t ↦ J(density_t).toReal` (AEStronglyMeasurable on `Ι 0 T`), required
+2. The `t`-measurability of `t ↦ J(density_t).toReal` (AEStronglyMeasurable on `Ι 0 T`), required
    by `Measure.integrableOn_of_bounded`. The `(t,x)`-jointly measurable
    `logDeriv (convDensityAdd pX g_t)` feeding the `fisherInfoOfDensity` lintegral has no direct
    Mathlib parameter-measurability lemma; it is supplied by
@@ -196,7 +196,7 @@ through `hready_pX` — it is produced by `convex_fisher_bound_of_ready` (`@audi
 (conclusion ≢ any hyp), non-degenerate (`density_t_eq:=fun _ _=>rfl` genuine, no `:True` slot).
 (4) the `f_mble` `t`-measurability is
 discharged by `EPICase1ProducerMeasurability.aestronglyMeasurable_fisherInfo_t`
-via the **C-b closed-form score route** (`measurable_deriv_with_param` fully avoided): the joint
+via the C-b closed-form score route (`measurable_deriv_with_param` fully avoided): the joint
 `(t,x)`-measurability of `logDeriv (convDensityAdd pX g_t)` follows from `deriv (conv_t) =
 ∫ x, pX x · deriv g_t (z-x)` (differentiation-under-integral for `t>0`, both sides `0` for
 `t≤0`) divided by `conv_t`, then `Measurable.lintegral_prod_right`. `Integrable pX` is supplied

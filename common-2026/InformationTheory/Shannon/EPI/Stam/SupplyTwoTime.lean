@@ -593,7 +593,7 @@ public per-arm conv-Gaussian lemmas (`convDensityAdd_gaussian_integrable` / `_bd
 `_deriv_bdd` / `convDensityAdd_fisher_integrand_integrable` / `convDensityAdd_pos_of_pos_cont`
 / `isRegularDensityV2_convDensityAdd_gaussian`), each at its own arm's time, so the same-`t`
 restriction was incidental. The only structural change is `int_fisherZ`: the conv-of-conv
-`conv(pX∗g_σ)(pY∗g_τ)` is identified with `conv(pX∗pY) g_{σ+τ}` via the **asymmetric**
+`conv(pX∗g_σ)(pY∗g_τ)` is identified with `conv(pX∗pY) g_{σ+τ}` via the asymmetric
 interchange bridge `convDensityAdd_convGaussian_interchange_asym` (variance `σ+τ`, not `2t`).
 
 All hypotheses are regularity preconditions; the conclusion (19-field integrability /
@@ -725,7 +725,7 @@ private lemma reg_density_t_sum_eq_convDensityAdd
   intro x
   rw [hpinS, hpinX, hpinY, hinterchange, hgconv x]
 
-/-- **Two-time harmonic-Stam supply producer**.
+/-- The two-time harmonic-Stam supply producer.
 
 For `X Y Z_X Z_Y Z : Ω → ℝ` (all unit noises, sum perturbed by separate `Z`), independent
 appropriately, with Lebesgue densities and finite second moments, and de Bruijn regularity

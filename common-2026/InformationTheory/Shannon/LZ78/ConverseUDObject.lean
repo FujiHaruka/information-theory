@@ -7,17 +7,17 @@ import Mathlib.Data.Nat.Log
 /-!
 # LZ78 converse UD-object
 
-This file builds the **uniquely-decodable LZ78 code object** that
+This file builds the uniquely-decodable LZ78 code object that
 `McMillanKraftBridge.lean` §3 Residual 1 flagged as "out of scope / not
 attempted", and applies Mathlib's McMillan inequality to it to obtain a
-**genuine, sorry-free** Kraft bound and source-coding converse for the *real*
+genuine, sorry-free Kraft bound and source-coding converse for the *real*
 LZ78 per-phrase `(parent, symbol)` token code.
 
 ## What this delivers (genuine, unconditional)
 
-* **§1 — `uniquelyDecodable_of_constantLength`** (general, reusable; Mathlib
-  has no such constructor): any set of lists all of the same **positive
-  constant length** `K` is `UniquelyDecodable`. This is the classic
+* §1 — `uniquelyDecodable_of_constantLength` (general, reusable; Mathlib
+  has no such constructor): any set of lists all of the same positive
+  constant length `K` is `UniquelyDecodable`. This is the classic
   block-code fact and the genuine mathematical core here — it is exactly the
   UD certificate the LZ78 token stream needs (`lz78PhraseStrings` itself is
   prefix-complete and *not* UD; the encoded fixed-width token set is).
@@ -39,14 +39,14 @@ LZ78 per-phrase `(parent, symbol)` token code.
 ## Honesty status (read before reusing)
 
 * The §1 lemma is genuine new content (type ≠ conclusion, no `True`/`:= h`).
-* The §3 converse is the genuine **expectation-level** source-coding lower
+* The §3 converse is the genuine expectation-level source-coding lower
   bound for the LZ78 token code, now resting on a *real, explicitly
   constructed* UD code rather than the abstract `UniquelyDecodable`
   hypothesis carried by `McMillanKraftBridge.entropyD_le_expectedLength_of_uniquelyDecodable`.
-* **What this does NOT close.** The LZ78 *block-rate* converse
+* What this does NOT close: the LZ78 *block-rate* converse
   `IsLZ78ConverseCodingLowerBound` (`LZ78ConverseKraft.lean`, Cover–Thomas
   Eq. 13.130) is an a.s.-eventual *per-realization* `liminf` bound. Getting
-  there from the token-level Kraft requires the **averaged ⟶ a.s. lift**
+  there from the token-level Kraft requires the averaged ⟶ a.s. lift
   (Barron / competitive optimality), genuinely separate and
   not attempted here. This file does not touch `IsLZ78ConverseCodingLowerBound`.
 -/
@@ -63,7 +63,7 @@ section ConstantLength
 
 variable {β : Type*}
 
-/-- **A constant-length code is uniquely decodable** (the block-code fact;
+/-- A constant-length code is uniquely decodable (the block-code fact;
 Mathlib has no such constructor). If every codeword in `S` has the same
 positive length `K`, then distinct concatenations of codewords from `S`
 yield distinct strings.
@@ -115,7 +115,7 @@ end ConstantLength
 
 section BoolEncode
 
-/-- **`K`-bit binary encoding** of `m`: the booleans `testBit m 0, …,
+/-- The `K`-bit binary encoding of `m`: the booleans `testBit m 0, …,
 testBit m (K-1)`. Constant length `K`. -/
 def boolEncode (K m : ℕ) : List Bool := (List.range K).map (Nat.testBit m)
 
@@ -149,7 +149,7 @@ noncomputable def finBoolCode (α' : Type*) [Fintype α'] (K : ℕ) (a : α') : 
     (finBoolCode α' K a).length = K := by
   simp [finBoolCode]
 
-/-- **`finBoolCode` is injective** when `|α'| ≤ 2^K` (so every index fits in
+/-- `finBoolCode` is injective when `|α'| ≤ 2^K` (so every index fits in
 `K` bits). -/
 theorem injective_finBoolCode {K : ℕ} (hcard : Fintype.card α' ≤ 2 ^ K) :
     Function.Injective (finBoolCode α' K) := by
@@ -159,7 +159,7 @@ theorem injective_finBoolCode {K : ℕ} (hcard : Fintype.card α' ≤ 2 ^ K) :
   exact boolEncode_injOn (lt_of_lt_of_le (Fintype.equivFin α' a).isLt hcard)
     (lt_of_lt_of_le (Fintype.equivFin α' b).isLt hcard) hab
 
-/-- **The image of `finBoolCode` is uniquely decodable** (constant length
+/-- The image of `finBoolCode` is uniquely decodable (constant length
 `K > 0`). -/
 theorem uniquelyDecodable_finBoolCode {K : ℕ} (hK : 0 < K) :
     UniquelyDecodable
@@ -211,7 +211,7 @@ noncomputable def lz78TokenCode (c : ℕ) : (Fin (c + 1) × α) → List Bool :=
   finBoolCode (Fin (c + 1) × α) (LZ78Phrase.bitLength c (Fintype.card α))
 
 omit [DecidableEq α] in
-/-- **Every LZ78 token codeword has length `K = bitLength c |α|`.** -/
+/-- Every LZ78 token codeword has length `K = bitLength c |α|`. -/
 @[simp] lemma lz78TokenCode_length (c : ℕ) (t : Fin (c + 1) × α) :
     (lz78TokenCode c t).length = LZ78Phrase.bitLength c (Fintype.card α) :=
   finBoolCode_length _ t
@@ -224,12 +224,12 @@ theorem lz78Token_card_le (c : ℕ) :
   exact lz78_token_card_le_pow c (Fintype.card α)
 
 omit [DecidableEq α] in
-/-- **The LZ78 token code is injective.** -/
+/-- The LZ78 token code is injective. -/
 theorem injective_lz78TokenCode (c : ℕ) : Function.Injective (lz78TokenCode (α := α) c) :=
   injective_finBoolCode (lz78Token_card_le c)
 
 omit [DecidableEq α] in
-/-- **The LZ78 token codeword set is uniquely decodable** (constant length
+/-- The LZ78 token codeword set is uniquely decodable (constant length
 `K > 0`) — the genuine UD-object McMillanKraftBridge §3 Residual 1 lacked. -/
 @[entry_point]
 theorem uniquelyDecodable_lz78TokenCode (c : ℕ) :
@@ -239,7 +239,7 @@ theorem uniquelyDecodable_lz78TokenCode (c : ℕ) :
   uniquelyDecodable_finBoolCode (LZ78Phrase.bitLength_pos c (Fintype.card α))
 
 omit [DecidableEq α] in
-/-- **Expectation-level source-coding converse for the real LZ78 token code**
+/-- The expectation-level source-coding converse for the real LZ78 token code
 (genuine, sorry-free). For any probability measure `P` (full support) on the
 LZ78 token alphabet, the binary entropy is bounded by the (constant) token
 code length:
@@ -251,7 +251,7 @@ entropyD 2 P ≤ E[L] = bitLength c |α|.
 This is the genuine Cover–Thomas 5.4 converse, instantiated at the *real*
 LZ78 `(parent, symbol)` token code via the McMillan bridge. The block-rate
 form (Cover–Thomas Eq. 13.130, `IsLZ78ConverseCodingLowerBound`) needs the
-averaged⟶a.s. lift and is **not** addressed here. -/
+averaged⟶a.s. lift and is not addressed here. -/
 @[entry_point]
 theorem lz78TokenCode_entropyD_le_expectedLength (c : ℕ)
     (P : Measure (Fin (c + 1) × α)) [IsProbabilityMeasure P]

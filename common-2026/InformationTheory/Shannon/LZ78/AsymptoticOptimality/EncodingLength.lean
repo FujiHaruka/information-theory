@@ -82,7 +82,7 @@ theorem lz78_encoding_length_le_n_log_n_plus_const (n : ℕ) (x : Fin n → α) 
     _ = n * (Nat.log 2 (n + 1) + Nat.log 2 (Fintype.card α) + 2) := by
         rw [LZ78Phrase.bitLength_eq]
 
-/-- **Per-symbol asymptotic bit-rate bound on `ℝ`** for the genuine
+/-- The per-symbol asymptotic bit-rate bound on `ℝ` for the genuine
 greedy parse: dividing by `n` gives `≤ log(n+1) + log|α| + 2`. -/
 @[entry_point]
 theorem lz78_encoding_length_per_symbol_le (n : ℕ) (hn : 0 < n)
@@ -322,7 +322,7 @@ section EncodingLengthBoundPassthrough
 
 variable (α : Type*) [Fintype α] [DecidableEq α]
 
-/-- **`IsLZ78EncodingLengthBoundPassthrough B`** — hypothesis
+/-- `IsLZ78EncodingLengthBoundPassthrough B` — hypothesis
 pass-through for an upper bound `B : ℕ → ℕ` on the genuine greedy
 encoding length `lz78GreedyEncodingLength`. -/
 def IsLZ78EncodingLengthBoundPassthrough (B : ℕ → ℕ) : Prop :=
@@ -341,7 +341,7 @@ theorem IsLZ78EncodingLengthBoundPassthrough.canonical :
   intro n x
   exact lz78_encoding_length_le_n_log_n_plus_const n x
 
-/-- **Monotonicity** of the bound pass-through. -/
+/-- Monotonicity of the bound pass-through. -/
 @[entry_point]
 theorem IsLZ78EncodingLengthBoundPassthrough.mono {B₁ B₂ : ℕ → ℕ}
     (h : IsLZ78EncodingLengthBoundPassthrough α B₁) (hB : ∀ n, B₁ n ≤ B₂ n) :

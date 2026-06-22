@@ -12,7 +12,7 @@ slug `lz78-aseventual-ziv`):
 
 * `negLogQk_parse_threading` (`ZivThreading.lean`): the a.s. threading identity
   `negLogQk μ p k n ω = (leading boundary) + (per-phrase sum) + (trailing tail)`,
-  where the per-phrase sum is **position-indexed** (`∑ j : Fin c`).
+  where the per-phrase sum is position-indexed (`∑ j : Fin c`).
 * `condState_grouping_bound_mean` (`ZivCondGrouping.lean`): the
   `(k-state, length)` grouped entropy bound with `o(n)` mean-length overhead, on a
   `Finset (List α)` of distinct phrase strings.
@@ -23,13 +23,13 @@ in the manifestly-`o(n)` mean-length form, the input to the downstream
 
 ## Two sub-steps
 
-* **(A) boundary-nonneg.** The threading identity carries two boundary sums of
+* (A) boundary-nonneg. The threading identity carries two boundary sums of
   `pmfLogCondMarkov μ p k i ω`. Since `pmfLogCondMarkov` is `-log` of a conditional
   kernel singleton mass `≤ 1` (the kernel is a Markov kernel, so its value at every
   point is a probability measure), each term is `≥ 0`, hence the per-phrase sum is
-  `≤ negLogQk`. This holds **unconditionally** (no a.s. caveat needed for the
+  `≤ negLogQk`. This holds unconditionally (no a.s. caveat needed for the
   positivity).
-* **(B) reindex `Fin c → Finset` + apply `condState_grouping_bound_mean`.** The
+* (B) reindex `Fin c → Finset` + apply `condState_grouping_bound_mean`. The
   threading phrase sum is position-indexed; `condState_grouping_bound_mean` consumes
   a `Finset (List α)` of distinct phrase strings. Bridging the two requires the `c`
   tiled phrases to be distinct as strings (so `card = c`) and the content/state
@@ -296,7 +296,7 @@ theorem parseTiling_phrase_slice_injective
 
 /-! ## Sub-step (B): the achievability composition lemma -/
 
-/-- **LZ78 achievability composition** (a.s. form): for a.e. `ω`, the tiled phrase
+/-- The LZ78 achievability composition (a.s. form): for a.e. `ω`, the tiled phrase
 count `c` and total parsed length `Ntot ≤ n` satisfy the `o(n)`-overhead Ziv lower
 bound
 `c · log c ≤ negLogQk μ p k n ω + (c · log (Ntot / c) + c + c · log (#states))`,
@@ -307,7 +307,7 @@ This is the input to the downstream "divide by `n`, limsup, diagonalize `k → �
 step: divide by `n`, the overhead is `o(n)` (mean length `~ log n`, `c = O(n/log n)`),
 and the boundary terms vanish.
 
-**Now genuinely closed (sorryAx-free).** The former residual was the (B) reindexing
+Now genuinely closed (sorryAx-free). The former residual was the (B) reindexing
 bridge from the position-indexed threading sum (`∑ j : Fin c`) onto the distinct-phrase
 `Finset` consumed by `condState_grouping_bound_mean`. It is discharged by:
 

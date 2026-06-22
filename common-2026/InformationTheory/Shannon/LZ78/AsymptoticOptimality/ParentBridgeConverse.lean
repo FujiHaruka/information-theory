@@ -67,7 +67,7 @@ theorem shannon_mcmillan_breiman₂
   have := hω.div_const (Real.log 2)
   simpa only [blockLogAvg₂, entropyRate₂] using this
 
-/-- **Factorial-power decay** `c! · 2^c ≤ (c+1)^c` (real form). The per-`c`
+/-- Factorial-power decay `c! · 2^c ≤ (c+1)^c` (real form). The per-`c`
 structure-Kraft term `c!/(c+1)^c` is geometrically small. Proved by induction;
 the step uses Bernoulli `2·(c+1)^(c+1) ≤ (c+2)^(c+1)`. -/
 theorem factorial_two_pow_le_succ_pow (c : ℕ) :
@@ -114,7 +114,7 @@ theorem factorial_two_pow_le_succ_pow (c : ℕ) :
         _ ≤ ((c : ℝ) + 2) ^ (c + 1) := hbern
         _ = ((↑(c + 1) : ℝ) + 1) ^ (c + 1) := by push_cast; ring
 
-/-- **Bit-length decay (nat form)** `2^{bitLength c a} ≥ (c+1)·a`. The per-phrase
+/-- Bit-length decay (nat form) `2^{bitLength c a} ≥ (c+1)·a`. The per-phrase
 bit cost is large enough that `2^{-bitLength}` collapses the dictionary-size and
 alphabet-size factors. From `Nat.lt_pow_succ_log_self`: `m + 1 ≤ 2·2^{log₂ m}`. -/
 theorem two_pow_bitLength_ge (c a : ℕ) :
@@ -330,7 +330,7 @@ theorem fintype_card_parentData_eq (c : ℕ) :
   simp only [Fintype.card_fin, Finset.prod_const, Finset.card_univ]
   ring
 
-/-- **Fiber-cardinality count is bounded by the parent-data target** (nat form):
+/-- The fiber-cardinality count is bounded by the parent-data target (nat form):
 the map sending `x` (in the `c`-phrase fiber) to its parent indices, phrase
 symbols, and tail index is injective, so the fiber injects into
 `((j : Fin c) → Fin (j+1)) × (Fin c → α) × Fin (c+1)`, whose cardinality is
@@ -532,7 +532,7 @@ theorem lz78_phrase_count_fiber_card_le (n c : ℕ) :
           apply mul_le_mul_of_nonneg_left hc1; positivity
       _ = ((n : ℝ) + 1) * (c.factorial : ℝ) * (Fintype.card α : ℝ) ^ c := by ring
 
-/-- **Per-`c` Kraft term bound (Part C, geometric collapse)**.
+/-- The per-`c` Kraft term bound (Part C, geometric collapse).
 
 The fiber sum over `n`-tuples with `c` distinct phrases is geometrically small:
 `#fiber(c) · (1/2)^{c·bitLength(c,|α|)} ≤ (n+1)·(1/2)^c`. Combines the counting
@@ -613,14 +613,14 @@ by a polynomial in `n`:
 ∑_{x : Fin n → α} (1/2)^{lz78GreedyEncodingLength n x} ≤ (n + 1)^2.
 ```
 
-**Why a polynomial and not the exact Kraft `≤ 1`.** The greedy
+Why a polynomial and not the exact Kraft `≤ 1`: the greedy
 longest-prefix-match parse is *not complete* — `lz78PhraseStrings_flatten` is a
 genuine *prefix* of the input, and the unfinished tail (`flatten ++ tail =
 input`, with `tail ≠ []` possible and `tail` a prefix of an existing phrase)
 is *not* charged a fresh `(parent, symbol)` token. Hence
 `lz78GreedyEncodingLength n x = c · bitLength c |α|` is the cost of only
-the `c` completed phrases and is **not a lossless code length** for `x`, so the
-exact Kraft inequality `∑ 2^{-L_n} ≤ 1` is **FALSE**. The polynomial bound is
+the `c` completed phrases and is not a lossless code length for `x`, so the
+exact Kraft inequality `∑ 2^{-L_n} ≤ 1` is FALSE. The polynomial bound is
 the honest statement: the number of distinct parse *structures* with `c`
 phrases is `≤ c! · |α|^c`, and `2^{-c·bitLength(c,|α|)} ≈ (c+1)^{-c}|α|^{-c}4^{-c}`,
 so the structure-Kraft sum `∑_c (#structures)·2^{-c·bitLength} = O(1)`; the
@@ -633,14 +633,14 @@ Borel–Cantelli lift (`blockLogAvg₂_minus_error_le_rate_ae`).
 This is the genuine combinatorial new-math brick of the LZ78 converse
 (Cover–Thomas Thm 13.5.3 lower bound, distinct-phrase counting).
 
-**Proof structure (Parts A + B + C, all proven, sorryAx-free).** Assembled from
-* **Part A** — fiberwise regrouping of the Kraft sum by the distinct-phrase
+The proof structure (Parts A + B + C, all proven, sorryAx-free) is assembled from
+* Part A — fiberwise regrouping of the Kraft sum by the distinct-phrase
   count `c = φ x` (`Finset.sum_fiberwise_of_maps_to'`, `φ x ≤ n`);
-* **Part B** — the finite counting fact `lz78_phrase_count_fiber_card_le`
+* Part B — the finite counting fact `lz78_phrase_count_fiber_card_le`
   (`#fiber(c) ≤ (n+1)·c!·|α|^c`), proved via the LZ78 dictionary
   parent-extension invariant (`lz78PhraseStrings_dropLast_earlier`) and a
   `Fintype.card` injection into `((j:Fin c)→Fin (j+1)) × (Fin c → α) × Fin (c+1)`;
-* **Part C** — the per-`c` geometric collapse `lz78_block_kraft_term_le`
+* Part C — the per-`c` geometric collapse `lz78_block_kraft_term_le`
   (`#fiber(c)·2^{-c·bitLength} ≤ (n+1)·(1/2)^c`, built from the bit-length decay
   `two_pow_bitLength_ge` and the factorial-power decay
   `factorial_two_pow_le_succ_pow`), then `sum_geometric_two_le` and
@@ -716,7 +716,7 @@ theorem lz78_block_kraft_poly (n : ℕ) :
                 exact mul_le_mul_of_nonneg_left h2le hnpos
             _ = ((n : ℝ) + 1) ^ 2 := by ring
 
-/-- **Per-`n` bad-set measure bound (Markov on the discrete block law + G2)**.
+/-- The per-`n` bad-set measure bound (Markov on the discrete block law + G2).
 
 For `n ≥ 1`, the LZ78 converse bad set
 `B_n = {ω : lz/n < blockLogAvg₂ n ω − err_n}`
@@ -969,16 +969,16 @@ inequality + finite-alphabet bookkeeping).
 
 Units: the encoding length is a base-2 code length
 (`lz78GreedyEncodingLength = c · bitLength c |α|`, `bitLength` uses
-`Nat.log 2`), so the per-symbol rate `lz/n` is in **bits**, and the correct
-RHS is the **bit** entropy rate `entropyRate₂ = entropyRate / Real.log 2`
+`Nat.log 2`), so the per-symbol rate `lz/n` is in bits, and the correct
+RHS is the bit entropy rate `entropyRate₂ = entropyRate / Real.log 2`
 (not the nat-unit `entropyRate`), exactly the unit-correction documented in
 `ZivEntropyBridge.lean` ("Base-2 (bit) layer") and
 `McMillanKraftBridge.lean` (converse target `blockLogAvg₂`).
 
-**Dependency shape (Barron reduction).** The body is genuinely wired from two
+The dependency shape (Barron reduction): the body is genuinely wired from two
 bricks plus the bit SMB convergence,
 
-* `shannon_mcmillan_breiman₂` (SMB in bits, **sorryAx-free**) — gives
+* `shannon_mcmillan_breiman₂` (SMB in bits, sorryAx-free) — gives
   `Tendsto blockLogAvg₂ → entropyRate₂` a.s.;
 * `blockLogAvg₂_minus_error_le_rate_ae` (G3, Barron a.s.-eventual lift) —
   gives `∀ᶠ n, blockLogAvg₂ n ω − err_n ≤ lz/n` a.s., with `err_n → 0`;

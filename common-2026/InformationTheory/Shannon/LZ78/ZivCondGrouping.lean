@@ -8,7 +8,7 @@ import Mathlib.Data.ENNReal.BigOperators
 /-!
 # LZ78 conditional (k-state, length) grouping bridge
 
-This file supplies the **conditional** analogue of the length-grouping measure
+This file supplies the conditional analogue of the length-grouping measure
 bridge for the LZ78 achievability wall `ziv_aseventual_le_blockLogAvg₂`
 (`InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`,
 slug `lz78-aseventual-ziv`), via the `markovFactor` route.
@@ -19,9 +19,9 @@ The dead marginal route (`ZivMeasureBridge.lean`,
 `lz78PhraseStrings_mul_log_le_sum_neg_log_marginal_add_overhead`) fibers phrases
 by `List.length` and lower-bounds the entropy by `∑ -log P_ℓ` for the *marginal*
 `P_ℓ`. That direction is dead (the marginal sum bound runs the wrong way for
-the Ziv connection). This file instead uses the **conditional** per-`k`-state
+the Ziv connection). This file instead uses the conditional per-`k`-state
 product sub-distribution `condQkState μ p k s` (from `markovFactor`) as
-the grouping vehicle, fibering phrases by the **pair** `(k-state, length)`:
+the grouping vehicle, fibering phrases by the pair `(k-state, length)`:
 
 1. Group over `ι = (Fin k → α) × ℕ`: apply
    `card_mul_log_le_sum_group_mul_log_add_card_log` to the image
@@ -34,7 +34,7 @@ the grouping vehicle, fibering phrases by the **pair** `(k-state, length)`:
    `P Z = (condQkState μ p k s ℓ Z).toReal`, `group_card_mul_log_le_sum_neg_log`
    gives `card · log card ≤ ∑ -log P`.
 
-   - The **`.toReal` sub-distribution bound** `∑_{Z} P Z ≤ 1` is derived from the
+   - The `.toReal` sub-distribution bound `∑_{Z} P Z ≤ 1` is derived from the
      `ℝ≥0∞` fact `condQkState_sum_le_one` via `ENNReal.toReal_sum` (each term is
      `≤ 1 < ⊤`, so finite) and `ENNReal.toReal_mono`. This is the route's `.toReal`
      bridge `(iii)`.
@@ -281,7 +281,7 @@ theorem condState_grouping_bound
 
 /-! ## State-marginalization (a finer partition has higher entropy) -/
 
-/-- **State-marginalization grouping inequality** (abstract `Finset`/`Real`).
+/-- The state-marginalization grouping inequality (abstract `Finset`/`Real`).
 
 Fibering a pair-indexed count function `kk : (σ × ℕ) → ℕ` by the length
 coordinate, the length-marginal `∑·log` sum is bounded by the full pair `∑·log`
