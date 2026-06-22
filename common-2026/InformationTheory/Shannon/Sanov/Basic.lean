@@ -32,6 +32,11 @@ where `T(P) := { x : Fin n → α | ∀ a, #{i | x i = a} = n · P(a) }`.
   it goes directly via `Q^n(T) = exp(-n D) · P^n(T) ≤ exp(-n D)`.
 * `klDivSumForm` is used in the main bound; the equality to `(klDiv P Q).toReal`
   is separated into `klDivSumForm_eq_toReal_klDiv`.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
+  Wiley, 2006. Theorem 11.1.4.
 -/
 
 namespace InformationTheory.Shannon
@@ -141,8 +146,7 @@ lemma typeClass_prod_ratio
 /-! ### Sanov A main theorem -/
 
 set_option linter.unusedSectionVars false in
-/-- Sanov A form (Cover-Thomas Theorem 11.1.4):
-`Q^n(T(P)) ≤ exp(-n · klDivSumForm P Q)`. -/
+/-- **Sanov's theorem** (A form): `Q^n(T(P)) ≤ exp(-n · klDivSumForm P Q)`. -/
 @[entry_point]
 theorem typeClass_Qn_le
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
@@ -272,8 +276,10 @@ theorem klDivSumForm_eq_toReal_klDiv
   rw [h_llr, smul_eq_mul]
 
 set_option linter.unusedSectionVars false in
-/-- Sanov A form, `klDiv` exponent (corollary of `typeClass_Qn_le`):
-`Q^n(T(P)) ≤ exp(-n · (klDiv P Q).toReal)`. -/
+/-- **Sanov's theorem** (A form), `klDiv` exponent:
+`Q^n(T(P)) ≤ exp(-n · (klDiv P Q).toReal)`.
+
+See also `typeClass_Qn_le`. -/
 @[entry_point]
 theorem typeClass_Qn_le_klDiv
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]

@@ -19,6 +19,11 @@ letter to satisfy the sum constraint exactly.
   index converges to `P` pointwise (and in the `α → ℝ` Pi-topology).
 * `klDivIndex_rounded_tendsto` lifts this to KL-divergence convergence via
   `klDivSumForm_ofVec` continuity.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
+  Wiley, 2006. Theorem 11.4.1.
 -/
 
 namespace InformationTheory.Shannon
@@ -297,9 +302,7 @@ lemma roundedTypeIndex_tendsto_vec
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- General witness lemma: for any count `c : α → ℕ` with `∑ a, c a = n`,
-the type class `typeClassByCount c` is nonempty.
-Construction: define `g : Fin n → α` by packing `Σ a, Fin (c a)` into `Fin n`
-via cardinality equivalence, then projecting via `Sigma.fst`. -/
+the type class `typeClassByCount c` is nonempty. -/
 lemma typeClassByCount_nonempty_of_sum
     {n : ℕ} (c : α → ℕ) (hc_sum : (∑ a, c a) = n) :
     (typeClassByCount (α := α) (n := n) c).Nonempty := by
@@ -348,7 +351,7 @@ lemma typeClassByCount_nonempty_of_sum
 
 
 omit [MeasurableSingletonClass α] in
-/-- KL convergence via `klDivSumForm_ofVec` continuity:
+/-- KL convergence:
 `klDivIndex (roundedTypeIndex P n) n Q → klDivSumForm_ofVec P (Q.real ∘ singleton)`. -/
 theorem klDivIndex_rounded_tendsto
     (Q : Measure α) (hQpos : ∀ a, 0 < Q.real {a})

@@ -19,6 +19,11 @@ The Stirling-free multinomial lower bound for the type class cardinality
 
 * The multinomial lower bound is proved without Stirling's approximation, using only
   the per-letter inequality `c! · c^k ≤ k! · c^c`.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
+  Wiley, 2006. Theorem 11.1.3.
 -/
 
 namespace InformationTheory.Shannon
@@ -127,18 +132,7 @@ private lemma multinomial_pow_le {n : ℕ} (c k : α → ℕ)
   exact Nat.le_of_mul_le_mul_left step2 h_pos
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- `multinomial univ c ≤ |T_c|` (the bridge to the multinomial coefficient).
-
-We use a surjection `Φ : Fin n → α → T_c` defined via `x₀ ∈ T_c`:
-`Φ σ := x₀ ∘ σ`. By surjectivity of `Φ` (any `x ∈ T_c` is hit because both x, x₀ have
-type c so we can find a permutation taking one to the other), `n! = |Perm Fin n|`
-counts each `x ∈ T_c` with multiplicity = fiber size ≤ `∏ a, Nat.factorial (c a)` (the permutations
-preserving fiber structure on x₀). So `n! ≤ |T_c| · ∏ c(a)!`, giving the goal via
-`Nat.multinomial_spec`.
-
-Strategy: use `Fintype.card_le_of_surjective` with a chosen
-`Ψ : (T_c × Π a, Perm (Fin (c a))) → Perm (Fin n)`
-that is injective. Then `n! = card (Perm Fin n) ≥ |T_c| · ∏ c(a)!`. -/
+/-- `multinomial univ c ≤ |T_c|` (the bridge to the multinomial coefficient). -/
 private lemma multinomial_le_typeClass_card {n : ℕ} (c : α → ℕ)
     (hc_sum : (∑ a, c a) = n) :
     Nat.multinomial Finset.univ c
@@ -389,12 +383,8 @@ theorem multinomial_mul_prod_ratio_pow_le
   exact multinomial_pow_le_real c k hc_sum hk_sum
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- Multinomial lower bound (Cover-Thomas 11.1.3):
-`(n+1)^{-|α|} · n^n / ∏ c(a)^{c(a)} ≤ |T_c|`.
-
-Strategy: show `multinomial univ c · ∏ (c/n)^{c(a)} ≥ (n+1)^{-|α|}` via the multinomial
-theorem and the per-letter max-likelihood inequality; then combine with
-`multinomial univ c ≤ |T_c|`. -/
+/-- Multinomial lower bound:
+`(n+1)^{-|α|} · n^n / ∏ c(a)^{c(a)} ≤ |T_c|`. -/
 theorem typeClassByCount_card_ge
     {n : ℕ} (c : α → ℕ) (hc_sum : (∑ a, c a) = n) :
     (((n : ℝ) + 1) ^ (Fintype.card α : ℕ))⁻¹ *
@@ -536,10 +526,7 @@ theorem typeClassByCount_card_ge
       (pow_pos hn_real_succ_pos _) h_prod_cc_pos (pow_pos hn_real_pos _) h_chain
 
 omit [Nonempty α] in
-/-- Lower bound on `Q^n(T_c)`: `Q^n(T_c) ≥ (n+1)^{-|α|} · exp(-n · klDivIndex c n Q)`.
-
-Follows from `typeClassByCount_card_ge` and the identity
-`∏ Q(a)^{c(a)} · n^n / ∏ c(a)^{c(a)} = exp(-n · klDivIndex c n Q)`. -/
+/-- Lower bound on `Q^n(T_c)`: `Q^n(T_c) ≥ (n+1)^{-|α|} · exp(-n · klDivIndex c n Q)`. -/
 theorem typeClassByCount_Qn_ge
     (Q : Measure α) [IsProbabilityMeasure Q]
     (hQpos : ∀ a : α, 0 < Q.real {a})

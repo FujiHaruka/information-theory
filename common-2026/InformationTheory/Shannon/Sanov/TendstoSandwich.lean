@@ -19,6 +19,11 @@ where `D = klDivSumForm_ofVec P (Q.real ∘ singleton)`, given `E n` eventually 
 ## Implementation notes
 
 * The equality closes via `tendsto_of_le_liminf_of_limsup_le`.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
+  Wiley, 2006. Theorem 11.4.1.
 -/
 
 namespace InformationTheory.Shannon
@@ -112,18 +117,13 @@ theorem log_le_inv_mul_log_iUnion_of_forall_le
   rw [show (1 / (n : ℝ)) * ((n : ℝ) * Real.log m) = Real.log m by field_simp] at h
   exact h
 
-/-- Sanov LDP equality form (Cover-Thomas Theorem 11.4.1):
+/-- **Sanov's theorem** (LDP, equality form):
 
 ```
 (1/n) log Q^n(⋃ c ∈ E n, T_c)  →  -klDivSumForm_ofVec P (Q.real ∘ singleton)
 ```
 
-Inputs: `P` is the user-specified minimizer; `E n` eventually contains `roundedTypeIndex P n`;
-`∀ c ∈ E n, klDivSumForm_ofVec P Q ≤ klDivIndex c n Q` (minimizer hypothesis).
-
-Proof: `sanov_ldp_upper_bound` gives `limsup ≤ -D + ε` for all `ε > 0`, hence `limsup ≤ -D`;
-`sanov_ldp_lower_bound_pointwise` gives `liminf ≥ -D`; close via
-`tendsto_of_le_liminf_of_limsup_le`. -/
+for the minimizer `P` whose rounded type sequence eventually lies in `E n`. -/
 @[entry_point]
 theorem sanov_ldp_equality
     (Q : Measure α) [IsProbabilityMeasure Q]

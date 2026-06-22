@@ -37,6 +37,11 @@ where `D* = inf_{c ∈ E n} klDivIndex c n Q`.
   have zero components when `c a = 0`, violating the full-support hypothesis.
 * The polynomial slack `(|α| log(n+1))/n → 0` is extracted from
   `Real.isLittleO_log_id_atTop`.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
+  Wiley, 2006. Theorem 11.4.1.
 -/
 
 namespace InformationTheory.Shannon
@@ -430,11 +435,9 @@ lemma log_succ_div_tendsto_zero :
   have hn1_pos : (0 : ℝ) < (n : ℝ) + 1 := by linarith
   field_simp
 
-/-- Sanov LDP upper bound (Cover-Thomas Theorem 11.4.1):
+/-- **Sanov's theorem** (LDP upper bound):
 `(1/n) log Q^n({x | typeCount x ∈ E n}) ≤ -D + ε` for all large `n`,
-provided every `c ∈ E n` satisfies `D ≤ klDivIndex c n Q`.
-
-The bound follows from `polynomial type count · exp(-n D)` via `(|α| log(n+1))/n → 0`. -/
+provided every `c ∈ E n` satisfies `D ≤ klDivIndex c n Q`. -/
 @[entry_point]
 theorem sanov_ldp_upper_bound
     (Q : Measure α) [IsProbabilityMeasure Q]
