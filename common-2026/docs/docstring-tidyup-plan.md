@@ -1,6 +1,6 @@
 # docstring tidy-up plan — Mathlib スタイルへの寄せ込み（英語化含む）
 
-**Status**: Phase 0–3 + 2.5 DONE (2026-06-14、CJK 0 / プロセス語彙 0 / full build green)。**Phase 4 進行中** (2026-06-22、bold-label→prose + 末尾ピリオド) / **Parent**: なし (standalone) /
+**Status**: Phase 0–4 + 2.5 DONE (2026-06-22、CJK 0 / プロセス語彙 0 / 太字 named-theorem 4 件のみ / full build green)。**Parent**: なし (standalone) /
 **関連**: 規約 SoT [`rules/docstrings.md`](rules/docstrings.md) ・実測 [`mathlib-conventions-gap.md`](mathlib-conventions-gap.md) ・honesty タグ SoT [`audit/audit-tags.md`](audit/audit-tags.md)
 
 分割リファクタ (footprint の裾を named lemma に割る) に着手する**前に**、既存 docstring を Mathlib スタイルへ整える。
@@ -233,23 +233,17 @@ retreat-line・task-code・roadmap-stage slug。保持: 全 `@residual`/`@audit`
 残る `scope-out` 3 は `@audit:closed-by-successor` タグの正当な根拠散文) / CJK 0 / **full `lake build` 3471 jobs green**。
 honesty audit 不要 (新規 sorry/@residual を導入しないため。タグ数保存で代替検証)。
 
-### Phase 4 — bold-label 剥がし + 末尾ピリオド (2026-06-22 着手)
+### Phase 4 — bold-label 剥がし + 末尾ピリオド ✅ DONE (2026-06-22)
 
-[`rules/docstrings.md`](rules/docstrings.md) 乖離表の残り 2 軸（太字 topic ラベル始まり / 末尾ピリオド無し）を、
-「無害ゆえ随時」から **能動一括移行** へ切替 (ユーザー決定 2026-06-22)。
+[`rules/docstrings.md`](rules/docstrings.md) 乖離表の残り 2 軸（太字 topic ラベル始まり / 末尾ピリオド無し）を
+能動一括移行で解消。topic ラベル / 太字センテンスは完全文の地の文へ、識別子の太字は backtick 化、
+inline named-theorem 言及の太字のみ残す。同時に末尾ピリオド付与・太字巻き込み honesty タグの unwrap も処理。
 
-- **対象 (拡張、ユーザー決定 2026-06-22)**: docstring/コメント中の **全太字** 1157 箇所 / 189 ファイル。
-  当初の colon ラベル `**Label**:` (386/119) に加え、非 colon の太字センテンス・語強調・識別子の太字も含む
-  (規約「太字は named theorem のみ」は colon 有無を問わないため)。
-- **スタイル (ユーザー決定)**: topic ラベル / 太字センテンスは **完全文の地の文** へ書き換え
-  (pilot Stein.lean / MaxEntropy.Basic 既定と一致、最も Mathlib 忠実)。
-  語強調 (`**not**` 等) は太字除去のみ、識別子の太字 (`**Foo**`) は backtick 化、
-  inline named-theorem 言及の太字のみ残す。
-- **同時処理**: 末尾ピリオド無し (完全文のみ付与、formula 末尾は不要) / 太字に巻き込まれた honesty タグの unwrap
-  (`**@audit:...**` → タグは bold 外、Assembly.lean 2 件) / 残存プロセス語彙 (`deferred to next pass` 等) の除去。
-- **invariant**: Phase 2 と同じ (@residual/@audit タグ数不変・proof 不変・compile 不変・rename しない・新規 docstring 追加しない)。
-- **進め方**: pilot (MaxEntropy/Basic.lean) で style 確定 → ファミリ単位 subagent dispatch (text-only, file 所有分離)
-  → 検証 (bold-label count→0 / full build green / tag 数照合)。
+- **残存太字は named-theorem 固有名の inline prose 参照 4 件のみ**（規約上 KEEP で正）:
+  `Shannon/LZ78/ZivEntropyBridge.lean:16` / `Shannon/LZ78/EmpiricalEntropyMean.lean:28` の `**log-sum inequality**`、
+  `Shannon/BirkhoffErgodic.lean:14` の `**Birkhoff individual ergodic theorem**`、
+  `Shannon/Hoeffding/Lagrange.lean:19` の `**Intermediate Value Theorem**`。
+- **検証**: `lake build InformationTheory` green (exit 0, 3503 jobs) / `@residual`/`@audit:` タグ行数不変 (base 557 = HEAD 557, verbatim) / invariant (proof 不変・compile 不変・rename なし・新規 docstring 追加なし) 充足。
 
 ## DoD
 
