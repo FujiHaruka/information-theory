@@ -16,8 +16,7 @@ development in `FactorizableRate.lean`.
   conditions discharged for the feasibility-witness form.
 * `wzMarginalXY_add`, `wzMarginalXY_smul`, `wzMarginalXY_convex_combination` —
   affinity of the `(X,Y)`-marginal in the joint pmf.
-* `wynerZivObjective_image_bddBelow` — the objective image is bounded below, via
-  compactness of the simplex.
+* `wynerZivObjective_image_bddBelow` — the objective image is bounded below.
 
 ## Notation
 
@@ -188,10 +187,7 @@ lemma wynerZivConstraint_fst_subset_stdSimplex
   rw [← hq_eq]
   exact hqf.1
 
-/-- Wyner–Ziv objective image is `BddBelow` — discharged via the
-simplex containment + continuity of the objective. The standard simplex
-is compact, so the continuous-image is bounded; passing through the
-constraint set inclusion gives the result. -/
+/-- The Wyner–Ziv objective image is bounded below. -/
 lemma wynerZivObjective_image_bddBelow
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) :
     BddBelow
@@ -222,11 +218,9 @@ lemma wynerZivObjective_image_bddBelow
     h_simplex_compact.image h_cont
   exact h_img_simplex_compact.bddBelow.mono h_subset
 
-/-- D-antitone, with `BddBelow` discharged in the body. Combines
-`wynerZivRatePmf_antitone` with `wynerZivObjective_image_bddBelow` to
-eliminate the `BddBelow` side condition. The non-emptiness side condition
-remains: the user must supply at least one feasible `(q, f)` at the smaller
-threshold `D`. -/
+/-- D-antitone, with `BddBelow` discharged in the body. The non-emptiness side
+condition remains: the user must supply at least one feasible `(q, f)` at the
+smaller threshold `D`. -/
 theorem wynerZivRatePmf_antitone_of_nonempty
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {D D' : ℝ} (hD : D ≤ D')
     (h_ne : ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
@@ -257,16 +251,11 @@ lemma wynerZivObjective_image_nonempty_of_feasible
         '' WynerZivConstraint U P_XY d D).Nonempty :=
   ⟨wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1, qf, hqf, rfl⟩
 
-/-- D-antitone, final form — feasibility witness drives everything.
-
-Given a feasible `(q, f) ∈ WynerZivConstraint U P_XY d D` at the *smaller*
-threshold `D`, the Wyner–Ziv rate is antitone: `R_WZ(D') ≤ R_WZ(D)` for any
-`D' ≥ D`.
-
-This is the user-facing form for downstream applications: callers supply
-only a feasibility witness, and both the non-emptiness and the `BddBelow`
-side conditions are discharged internally (via the simplex-projection
-route). -/
+/-- D-antitone, feasibility-witness form. Given a feasible
+`(q, f) ∈ WynerZivConstraint U P_XY d D` at the *smaller* threshold `D`, the
+Wyner–Ziv rate is antitone: `R_WZ(D') ≤ R_WZ(D)` for any `D' ≥ D`. Both the
+non-emptiness and the `BddBelow` side conditions are discharged internally, so
+only a feasibility witness is required. -/
 @[entry_point]
 theorem wynerZivRatePmf_antitone_of_feasible
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {D D' : ℝ} (hD : D ≤ D')

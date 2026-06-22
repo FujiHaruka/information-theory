@@ -354,7 +354,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- The Wyner–Ziv rate-equality form: from achievability
+/-- **Wyner–Ziv theorem** (rate-equality form): from achievability
 `R ≥ wynerZivRatePmf(D)` and converse `R ≤ wynerZivRatePmf(D)`,
 `R = wynerZivRatePmf(D)`. The two-sided hypotheses are discharged in
 `WynerZivAchievability.lean` and `WynerZivConverse.lean`. -/
