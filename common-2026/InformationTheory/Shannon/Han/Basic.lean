@@ -317,7 +317,7 @@ private lemma han_single_bound
 
 omit [DecidableEq α] in
 set_option linter.unusedSectionVars false in
-/-- Han's inequality: for a finite family `Xs : Fin n → Ω → α` of random variables,
+/-- **Han's inequality**: for a finite family `Xs : Fin n → Ω → α` of random variables,
 `(n − 1) · H(Xs) ≤ ∑ i, H(Xs except i)`. The degenerate cases `n = 0, 1` (both sides `0`)
 are included. -/
 @[entry_point]

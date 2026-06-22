@@ -367,7 +367,7 @@ private lemma jointEntropyExcept_orderEmb_eq
   exact h_comp.symm
 
 omit [DecidableEq α] in
-/-- The subset form of Han's inequality:
+/-- **Han's inequality** (subset form):
 `(|S| − 1) · H(X_S) ≤ ∑ i ∈ S, H(X_{S \ {i}})`. -/
 @[entry_point]
 theorem han_inequality_subset

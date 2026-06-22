@@ -26,7 +26,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 variable {Ω : Type*} [MeasurableSpace Ω]
 
 omit [DecidableEq α] in
-/-- Shearer's inequality (integer covering form): if `S : ι → Finset (Fin n)` covers each
+/-- **Shearer's inequality** (integer covering form): if `S : ι → Finset (Fin n)` covers each
 `i : Fin n` at least `k` times, then `k · H(X_{[n]}) ≤ ∑_j H(X_{S_j})`. -/
 @[entry_point]
 theorem shearer_inequality
