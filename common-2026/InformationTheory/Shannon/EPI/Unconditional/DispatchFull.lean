@@ -130,7 +130,7 @@ theorem entropyPowerExt_add_ge_case1_uncond
     have hW_ent := differentialEntropyExt_integrable_of_finite hW_ac hWtop hWbot
     exact entropyPowerExt_add_ge_finite_ac X Y P hX hY hXY hX_ac hY_ac hX_ent hY_ent hW_ent
 
-/-- The fully unconditional extended-real entropy power inequality `N(X+Y) ≥ N(X) + N(Y)`, taking
+/-- The fully unconditional extended-real **entropy power inequality** `N(X+Y) ≥ N(X) + N(Y)`, taking
 only `hX hY hXY`. The four-case split on absolute continuity of `P.map X` and `P.map Y` delegates to
 `entropyPowerExt_add_ge_case1_uncond` (both a.c.), `entropyPowerExt_mixed_add_ge_uncond` /
 `_symm_uncond` (mixed), and `entropyPowerExt_singular_add_ge` (both singular).
