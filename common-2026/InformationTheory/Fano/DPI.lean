@@ -39,9 +39,7 @@ with the absolute-continuity condition `b i = 0 → a i = 0`,
   `∑ (negMulLog (a i) + a i * log (b i))
       ≤ negMulLog (∑ a i) + (∑ a i) * log (∑ b i)`.
 
-This is Jensen's inequality on the concave function `negMulLog`, applied
-with weights `b i / ∑ b j` and points `a i / b i`, then translated via
-`mul_negMulLog_div`. -/
+This is Jensen's inequality on the concave function `negMulLog`. -/
 lemma log_sum_inequality_negMulLog {ι : Type*} (s : Finset ι) (a b : ι → ℝ)
     (ha : ∀ i ∈ s, 0 ≤ a i) (hb : ∀ i ∈ s, 0 ≤ b i)
     (h_ac : ∀ i ∈ s, b i = 0 → a i = 0) :
@@ -180,7 +178,7 @@ lemma pushforward_marginalY (P : FiniteJointPMF X Y) (f : Y → X) (xh : X) :
 
 /-! ## DPI: H(X | Y) ≤ H(X | f(Y)) -/
 
-/-- Data processing inequality (deterministic post-processing form):
+/-- **Data processing inequality** (deterministic post-processing):
 the conditional entropy of `X` given `Y` does not exceed the conditional
 entropy of `X` given `f(Y)`. -/
 @[entry_point]
@@ -347,13 +345,14 @@ lemma pushforward_errorProb (P : FiniteJointPMF X Y) (f : Y → X) :
 
 /-! ## Decoder form recovered from Markov Fano + DPI -/
 
-/-- Decoder form of Fano's inequality: for a deterministic decoder `decode : Y → X`,
+/-- **Fano's inequality** (decoder form): for a deterministic decoder
+`decode : Y → X`,
 
   `H(X | Y) ≤ binEntropy Pe + Pe * log (|X| - 1)`
 
-with `Pe = ∑ {(x, y) : x ≠ decode y}, P.mass x y`. Derived from the
-Markov-form Fano (`fano_inequality` on the pushforward) and the data
-processing inequality (`condEntropy_le_pushforward_condEntropy`). -/
+with `Pe = ∑ {(x, y) : x ≠ decode y}, P.mass x y`.
+
+See also `fano_inequality`, `condEntropy_le_pushforward_condEntropy`. -/
 @[entry_point]
 theorem fano_inequality_decode
     (P : FiniteJointPMF X Y) (decode : Y → X)
@@ -375,7 +374,7 @@ theorem fano_inequality_decode'
   exact P.fano_inequality_decode decode hcard
 
 /-- Decoder form of the strict inverse Fano bound (`error_lower_bound`)
-recovered for a deterministic decoder via DPI. -/
+for a deterministic decoder. -/
 @[entry_point]
 theorem error_lower_bound_decode
     (P : FiniteJointPMF X Y) (decode : Y → X)

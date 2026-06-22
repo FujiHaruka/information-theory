@@ -54,7 +54,7 @@ theorem qaryEntropy_eq_binEntropy_add_log (q : ℕ) (Pe : ℝ) :
   push_cast
   ring
 
-/-- Fano's inequality, in its reusable `q`-ary form.
+/-- **Fano's inequality** (`q`-ary form).
 
 The hypothesis is the information-theoretic estimate
 `Hxy ≤ qaryEntropy q Pe`; the conclusion is the usual textbook display
@@ -70,7 +70,7 @@ theorem fano_inequality_of_le_qaryEntropy
 def fanoBoundRHSOfAlphabet (X : Type*) [Fintype X] (Pe : ℝ) : ℝ :=
   fanoBoundRHS (Fintype.card X) Pe
 
-/-- Fano's inequality for a finite alphabet, packaged with `Fintype.card`. -/
+/-- **Fano's inequality** (finite alphabet). -/
 @[entry_point]
 theorem fano_inequality_of_alphabet
     {X : Type*} [Fintype X] {Pe Hxy : ℝ}

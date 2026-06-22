@@ -77,9 +77,7 @@ end Joint3
 /-! ## Non-normalized maximum-entropy bound
 
 `(∑ a, negMulLog μ a) - negMulLog (∑ a, μ a) ≤ (∑ a, μ a) * log |S|` whenever
-the support of `μ` is contained in a Finset `S`. This is M1's
-`entropyOfFn_le_log_supportCard` re-expressed for an un-normalized mass,
-obtained by scaling the normalized form by the total mass `m`. -/
+the support of `μ` is contained in a Finset `S`. -/
 
 noncomputable section
 
@@ -375,7 +373,7 @@ theorem withErr_condX_EY_le
 
 /-! ### M6: assembled Fano core inequality -/
 
-/-- Fano's core inequality (Markov form):
+/-- **Fano's inequality** (core, Markov form):
 `H(X | Xh) ≤ qaryEntropy |X| P.errorProb`. -/
 @[entry_point]
 theorem fano_core (hcard : 2 ≤ Fintype.card X) :
@@ -421,8 +419,9 @@ lemma errorProb_nonneg : 0 ≤ P.errorProb := by
   · exact le_refl 0
   · exact P.mass_nonneg x xh
 
-/-- Fano's inequality (Markov form) in the textbook `fanoBoundRHS` form,
-with no external `hcore` hypothesis. -/
+/-- **Fano's inequality** (Markov form, textbook RHS):
+`H(X | Xh) ≤ binEntropy Pe + Pe · log(|X| - 1)`, with no external `hcore`
+hypothesis. -/
 @[entry_point]
 theorem fano_inequality (hcard : 2 ≤ Fintype.card X) :
     P.condEntropy ≤ fanoBoundRHSOfAlphabet X P.errorProb :=

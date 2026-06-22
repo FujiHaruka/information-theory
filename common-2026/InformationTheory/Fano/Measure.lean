@@ -52,6 +52,11 @@ requirement of `condDistrib` is imposed on the output type, which here is `X`; f
 `Fintype + MeasurableSingletonClass + Countable` the instance
 `DiscreteMeasurableSpace → StandardBorelSpace` is derived automatically, so `Y` carries no
 extra constraint.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
+* Y. Polyanskiy and Y. Wu, *Information Theory: From Coding to Learning*, Cambridge, 2024.
 -/
 
 namespace InformationTheory.MeasureFano
@@ -211,9 +216,7 @@ private lemma diracPMF_errorProb (Q : Measure X) [IsProbabilityMeasure Q] (xh : 
 
 omit [DecidableEq X] [Nonempty X] in
 /-- Pointwise Fano: for a probability measure `Q : Measure X` and guess `xh : X`,
-`∑ x, negMulLog (Q.real {x}) ≤ qaryEntropy |X| (Q.real {x | x ≠ xh})`. The conclusion comes
-directly from `fano_core` applied to `diracPMF Q xh` (Dirac at `xh` in the second
-coordinate). -/
+`∑ x, negMulLog (Q.real {x}) ≤ qaryEntropy |X| (Q.real {x | x ≠ xh})`. -/
 lemma pointwise_fano (Q : Measure X) [IsProbabilityMeasure Q] (xh : X)
     (hcard : 2 ≤ Fintype.card X) :
     (∑ x : X, Real.negMulLog (Q.real {x}))
@@ -261,7 +264,7 @@ private theorem integral_qaryEntropy_le_qaryEntropy_integral {ι : Type*} [Measu
   linarith
 
 omit [DecidableEq X] in
-/-- Fano's inequality, measure-theoretic form (deterministic decoder). -/
+/-- **Fano's inequality** (measure-theoretic form, deterministic decoder). -/
 @[entry_point]
 theorem fano_inequality_measure_theoretic
     (μ : Measure Ω) [IsProbabilityMeasure μ]
