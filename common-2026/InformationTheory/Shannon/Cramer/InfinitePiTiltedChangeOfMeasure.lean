@@ -163,7 +163,7 @@ theorem cramer_lower_phaseC_residual_discharge
   cramer_lower_phaseC_partial_discharge hY_meas h_bdd a lam hlam h_deriv hVar h_coboundedBelow
 
 
-/-- **Per-instance tilted window mass ≥ 1/2** (cgf-derivative interior case).
+/-- Per-instance tilted window mass ≥ 1/2 (cgf-derivative interior case).
 
 cgf-calculus restatement of `tiltedWindow_eventually_large_of_interior`: the
 interior condition `a < tilted mean < a + ε` is rewritten via the
@@ -172,7 +172,7 @@ cgf-derivative bridge `tiltedMean_eq_deriv_cgf` as `a < deriv (cgf Y μ₀) lam`
 strictly inside the window, the tilted infinite-product window mass is
 eventually `≥ 1/2` (indeed `→ 1`).
 
-The only residual gap left after this lemma is the **CLT boundary** case
+The only residual gap left after this lemma is the CLT boundary case
 `a = deriv (cgf Y μ₀) lam` (= tilted mean): squeezing the window mass to `1/2`
 there requires a central-limit-theorem refinement, not the law of large numbers.
 The interior `a < deriv (cgf Y μ₀) lam < a + ε` is fully discharged here, with

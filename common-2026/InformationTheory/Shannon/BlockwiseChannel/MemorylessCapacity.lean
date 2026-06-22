@@ -43,7 +43,7 @@ nearly definitional: `(Measure.pi p) ⊗ₘ (toBlock W n)` lives on `(Fin n → 
 and pushing it through the canonical equiv to `Fin n → α × β` recovers
 `Measure.pi (fun i => p i ⊗ₘ W)` via `measurePreserving_arrowProdEquivProdArrow.symm`. -/
 
-/-- **Structural bridge**. For any product input `p_i : Fin n → Measure α` (each
+/-- Structural bridge. For any product input `p_i : Fin n → Measure α` (each
 `IsProbabilityMeasure`) and Markov `W`, the joint distribution
 `(Measure.pi p_i) ⊗ₘ (W.toBlock n)` on `(Fin n → α) × (Fin n → β)`, pushed through
 the canonical equiv `(Fin n → α) × (Fin n → β) ≃ᵐ Fin n → (α × β)`, factors as
@@ -213,7 +213,7 @@ and applying `klDiv_pi_eq_sum`.
 channel mutual information with the block kernel `Channel.toBlock W n` equals
 `n • mutualInfoOfChannel p₀ W`.
 
-**Proof sketch**: Use the canonical `(Fin n → α × β) ≃ᵐ (Fin n → α) × (Fin n → β)`
+Proof sketch: use the canonical `(Fin n → α × β) ≃ᵐ (Fin n → α) × (Fin n → β)`
 to reshape both joint (via `toBlock_compProd_pi_factor`) and marginal product (via
 `measurePreserving_arrowProdEquivProdArrow`) into `Measure.pi` form, then apply
 `klDiv_pi_eq_sum`. -/
@@ -477,7 +477,7 @@ private lemma mutualInfo_per_letter_eq_marginal
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
-/-- **Auxiliary lemma**: under `μ := q ⊗ₘ (toBlock W n)`, the joint of `(X^n, Y_i)`
+/-- Auxiliary lemma: under `μ := q ⊗ₘ (toBlock W n)`, the joint of `(X^n, Y_i)`
 factors as `q ⊗ₘ (W.comap (eval i))` — i.e., `Y_i ~ W (X^n_i)`.
 
 This is the per-coordinate marginalization of `Measure.pi`: integrating out all
@@ -537,7 +537,7 @@ private lemma measurable_lintegral_channel_snd_arg
 omit [DecidableEq α] [DecidableEq β] in
 /-- IsMarkovChain `(X^n) → X_i → Y_i` under `μ := q ⊗ₘ (toBlock W n)`.
 
-**Strategy**: identify `condDistrib (z.2 i) (z.1 i) μ =ᵐ W` via
+Strategy: identify `condDistrib (z.2 i) (z.1 i) μ =ᵐ W` via
 `per_letter_marginal_eq_compProd`, then verify the triple-joint factorization
 by `Measure.ext_of_lintegral`. -/
 private lemma isMarkovChain_per_letter_input
@@ -686,7 +686,7 @@ private lemma isMarkovChain_per_letter_input
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
-/-- **Auxiliary**: under `μ := q ⊗ₘ (toBlock W n)`, the joint of `(X^n, Y^{≠i})`
+/-- Auxiliary: under `μ := q ⊗ₘ (toBlock W n)`, the joint of `(X^n, Y^{≠i})`
 factors as `q ⊗ₘ K_noI` where `K_noI x = Measure.pi (fun j : {j // j ≠ i} => W (x j.val))`. -/
 private lemma map_xn_yNoI_eq_compProd_pi
     (W : Channel α β) [IsMarkovKernel W] (n : ℕ)
@@ -828,7 +828,7 @@ private lemma toBlock_split_kernel_eq
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] [DecidableEq β] in
 /-- IsMarkovChain `Y^{≠i} → X^n → Y_i` under `μ := q ⊗ₘ (toBlock W n)`.
 
-**Strategy**: identify both condDistribs simultaneously by writing the joint
+Strategy: identify both condDistribs simultaneously by writing the joint
 factorization `μ.map (z.1, z.2 ∘ ↑, z.2 i) = (μ.map z.1) ⊗ₘ (K_YnoI ×ₖ K_Yi)`
 where the two kernels are `W`-derived per-coordinate kernels, then use
 `condDistrib_ae_eq_of_measure_eq_compProd` to close the gap. -/

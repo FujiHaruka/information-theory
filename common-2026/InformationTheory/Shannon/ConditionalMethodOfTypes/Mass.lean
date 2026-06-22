@@ -33,14 +33,14 @@ variable [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass �
 /-! ### Main assembly
 
 The main theorem combines the four pieces:
-1. **`floorMatrix` construction**: pick a single c_floor with
+1. `floorMatrix` construction: pick a single c_floor with
    row sums = typeCount x, total = n, and entries close to `n · qZ`.
-2. **`floorMatrix_dist_le`**: the rounding stays within
+2. `floorMatrix_dist_le`: the rounding stays within
    `ε_X + |β|/n` of `qZ`. For n large or ε > ε_X, c_floor ∈ `sliceTypeIndices`.
-3. **`conditionalTypeClass_card_ge`**: the slice
+3. `conditionalTypeClass_card_ge`: the slice
    contains `conditionalTypeClass x c_floor` which has cardinality
    `≥ poly(n)⁻¹ · ∏_a (T_a^{T_a} / ∏_b c(a,b)^{c(a,b)})` (per-row multinomial).
-4. **`productMass_eq_columnProd`**: for each `y` in this
+4. `productMass_eq_columnProd`: for each `y` in this
    class, Y-product mass equals `∏_b qY(b)^{col_b}`.
 
 Final algebra (the assembly): combining the cardinality bound, the per-y mass,
@@ -50,7 +50,7 @@ exponential bound. Additionally requires marginal-compatibility hypotheses
 (e.g. `rdAmbient qStar` provides both marginals from a single joint pmf). -/
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Marginal-Y identification** (helper): the Y-marginal of `qZ` equals `qY`,
+/-- Marginal-Y identification (helper): the Y-marginal of `qZ` equals `qY`,
 i.e., `qY(b) = ∑_a qZ(a, b)`. -/
 private lemma qY_eq_sum_qZ
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -94,7 +94,7 @@ private lemma qY_eq_sum_qZ
     rw [measureReal_biUnion_finset h_disj h_meas]
   rw [← h_qY_eq, h_map, h_sum]
 
-/-- **Per-y Y-product mass lower bound** for `y ∈ conditionalTypeClass x c_floor`.
+/-- Per-y Y-product mass lower bound for `y ∈ conditionalTypeClass x c_floor`.
 Combines `productMass_eq_columnProd` (exact mass identity) with the empirical
 column-sum bound `|col_b/n - qY(b)| ≤ |α|·(ε_X + |β|/n)`. -/
 private lemma productMass_columnProd_ge
@@ -227,7 +227,7 @@ Combines the per-row multinomial cardinality lower bound
 (`conditionalTypeClass_card_ge`) with the per-y Y-product mass shape to yield the
 joint exponential lower bound.
 
-**Proof strategy**:
+Proof strategy:
 1. From `conditionalTypeClass_card_ge`, take logs:
    `log card ≥ -|β|·∑_a log(T_a+1) + ∑_a (T_a · log T_a - ∑_b c(a,b) · log c(a,b))`.
 2. Combine with `n·log n` to express as
@@ -249,7 +249,7 @@ We factor out three local helpers used in the main proof:
 * `sum_diff_log_abs_le_typicality` — for `|p - q| ≤ δ`,
   `|∑ (p - q)·log q| ≤ δ · ∑ |log q|`. -/
 
-/-- **KL upper bound via χ²** (Gibbs/Pinsker): on a finite alphabet with
+/-- KL upper bound via χ² (Gibbs/Pinsker): on a finite alphabet with
 `∑ p = ∑ q`, `KL(p‖q) := ∑ p · log(p/q) ≤ ∑ (p-q)² / q`. -/
 lemma KL_le_chi_square_finset
     {γ : Type*} (s : Finset γ)
@@ -1015,7 +1015,7 @@ lemma conditionalKL_log_card_lb
   rw [h_split, h_chain]; linarith
 
 set_option maxHeartbeats 4000000 in
-/-- **Conditional KL concentration helper** — combines `conditionalTypeClass_card_ge`
+/-- Conditional KL concentration helper — combines `conditionalTypeClass_card_ge`
 with `weak_displacement_eq_strong_sum` (joint) and a χ²-style KL bound to produce
 the joint exponential lower bound used by `conditionalStronglyTypicalSlice_mass_ge`.
 

@@ -63,7 +63,7 @@ that `Real.log Z(λ)` can be reused throughout the core identity. -/
 noncomputable def gibbsZ (f : Fin k → α → ℝ) (lam : Fin k → ℝ) : ℝ :=
   ∑ y, Real.exp (∑ i, lam i * f i y)
 
-/-- **Boltzmann–Gibbs exponential family pmf**, parametrized by Lagrange parameter
+/-- Boltzmann–Gibbs exponential family pmf, parametrized by Lagrange parameter
 `lam : Fin k → ℝ` and feature maps `f : Fin k → α → ℝ`:
 
   gibbsPmf f λ x := exp (∑ i, λ i · f i x) / Z(λ).
@@ -128,7 +128,7 @@ lemma log_gibbsPmf [Nonempty α]
 /-! ## Core identity and main upper bound -/
 
 omit [DecidableEq α] in
-/-- **Core algebraic identity** — for any `Q ∈ stdSimplex` on `α`,
+/-- Core algebraic identity — for any `Q ∈ stdSimplex` on `α`,
 the KL divergence from `Q` to `gibbsPmf f λ` decomposes into negative entropy,
 the constraint inner product `⟨λ, 𝔼_Q[f]⟩`, and `log Z(λ)`:
 
@@ -235,7 +235,7 @@ lemma klDivPmf_gibbsPmf_eq [Nonempty α]
   ring
 
 omit [DecidableEq α] in
-/-- **Cover–Thomas Theorem 12.1.1 (upper bound)** — pmf form:
+/-- Cover–Thomas Theorem 12.1.1 (upper bound) — pmf form:
 under moment constraints `∑ x, P x · f i x = c i` for all `i`, and assuming the same
 constraints hold for the Boltzmann–Gibbs ansatz `gibbsPmf f λ` for some fixed Lagrange
 parameter `lam : Fin k → ℝ`, the entropy of `P` is bounded by the entropy of the gibbs
@@ -243,7 +243,7 @@ distribution:
 
   H(P) ≤ H(gibbsPmf f λ).
 
-The Lagrange parameter `lam` is **passed in as a hypothesis** (with the matching
+The Lagrange parameter `lam` is passed in as a hypothesis (with the matching
 constraint witness `h_gibbs_constraints`), so the proof does not need ψ(λ) convexity
 or any Lagrange-multiplier existence theory. -/
 @[entry_point]
@@ -322,7 +322,7 @@ lemma klDivPmf_eq_zero_iff_pmf
     exact klDivPmf_self_eq_zero Q hQ_pos
 
 omit [DecidableEq α] in
-/-- **Uniqueness** — `H(P) = H(gibbsPmf f λ)` if and only if `P = gibbsPmf f λ` pointwise. -/
+/-- Uniqueness — `H(P) = H(gibbsPmf f λ)` if and only if `P = gibbsPmf f λ` pointwise. -/
 @[entry_point]
 theorem entropy_eq_gibbs_iff_of_constraints [Nonempty α]
     (f : Fin k → α → ℝ) (c : Fin k → ℝ)
@@ -478,7 +478,7 @@ theorem entropy_gibbsPmf_bool_eq_binEntropy
 noncomputable def linearFeature {N : ℕ} : Fin 1 → Fin (N + 1) → ℝ :=
   fun _ x ↦ (x : ℝ)
 
-/-- **Geometric ratio form** — setting `q := exp (λ 0)`,
+/-- Geometric ratio form — setting `q := exp (λ 0)`,
 the Gibbs distribution with the linear feature is the geometric ratio
 `x ↦ q^x.val / ∑ y, q^y.val` on `Fin (N+1)`. Lagrange parameter `λ` is left as an
 ansatz; choosing `λ 0 = log q` then yields the geometric distribution with ratio `q`. -/

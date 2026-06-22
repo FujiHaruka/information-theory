@@ -5,17 +5,17 @@ import Mathlib.Analysis.Subadditive
 /-!
 # General DMC capacity (limit form) — publish layer
 
-This file is a thin **publish** layer on top of `BlockwiseChannel.lean`. It
+This file is a thin publish layer on top of `BlockwiseChannel.lean`. It
 re-exports the limit-form capacity definition and four publish-surface
 theorems under a dedicated `GeneralDMC` namespace so that downstream modules
 (`AWGN`, `MAC`, `BC`, `RelayCutset`, …) can refer to
 `GeneralDMC.capacity_lim` directly without depending on `BlockwiseChannel`
 plumbing names.
 
-For the **memoryless** case, every publish theorem
+For the memoryless case, every publish theorem
 is fully discharged via `BlockwiseChannel.capacity_lim_eq_capacity_of_memoryless`.
-For the **fully general** case (Han–Verdú spectral form / informationally
-stable channels) the publish theorems are exposed in **hypothesis-form**: the
+For the fully general case (Han–Verdú spectral form / informationally
+stable channels) the publish theorems are exposed in hypothesis-form: the
 limit-existence / monotonicity hypothesis is taken as an explicit argument and
 consumed pass-through. The Han–Verdú spectral form itself is out of scope.
 
@@ -44,14 +44,14 @@ consumed pass-through. The Han–Verdú spectral form itself is out of scope.
 
 ## Design
 
-This file is intentionally signature-stable: it does **not** redefine
+This file is intentionally signature-stable: it does not redefine
 `BlockwiseChannel`, `capacityN`, or `capacity_lim`, and adds no new
 mathematical content beyond statement-level pass-through. The four
 publish surfaces (`capacity_lim_exists`,
 `capacity_lim_nonneg`, `capacity_lim_monotone_in_n`,
-`capacity_lim_eq_capacity_of_memoryless`) are split into a **concrete
-memoryless flavour** (discharged 0-sorry from `BlockwiseChannel`) and a
-**general hypothesis-form flavour** (limit-existence / monotonicity taken
+`capacity_lim_eq_capacity_of_memoryless`) are split into a concrete
+memoryless flavour (discharged 0-sorry from `BlockwiseChannel`) and a
+general hypothesis-form flavour (limit-existence / monotonicity taken
 as an explicit argument).
 
 ## References
@@ -80,7 +80,7 @@ abbrev Channel (α β : Type*) [MeasurableSpace α] [MeasurableSpace β] : Type 
 
 variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 
-/-- General DMC capacity, **limit form**:
+/-- General DMC capacity, limit form:
 `lim_{n → ∞} (1/n) · sup_{p} I(p; W_n)`. Re-export of
 `BlockwiseChannel.capacity_lim`. -/
 @[entry_point]
@@ -139,7 +139,7 @@ theorem capacity_lim_tendsto_of_memoryless
   exact (capacityRate_ofMemoryless_eventually_const W).mono (fun n hn ↦ hn.symm)
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Main bridge**: for memoryless `W`, the general DMC
+/-- Main bridge: for memoryless `W`, the general DMC
 limit-form capacity coincides with the single-letter capacity. Alias of
 `BlockwiseChannel.capacity_lim_eq_capacity_of_memoryless`. -/
 @[entry_point]

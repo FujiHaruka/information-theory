@@ -32,7 +32,7 @@ variable [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass �
 variable [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β]
 /-! ## Conditional type-class basics + joint type bridge -/
 
-/-- **Conditional type class.** Sequences `y : Fin n → β` whose joint type with
+/-- Conditional type class. Sequences `y : Fin n → β` whose joint type with
 the fixed X-block `x` equals the count vector `c : α × β → ℕ`. -/
 def conditionalTypeClass {n : ℕ} (x : Fin n → α) (c : α × β → ℕ) :
     Set (Fin n → β) :=
@@ -42,7 +42,7 @@ lemma conditionalTypeClass_finite {n : ℕ} (x : Fin n → α) (c : α × β →
     (conditionalTypeClass (β := β) x c).Finite :=
   Set.toFinite _
 
-/-- **Membership bridge to joint type-class.** `y ∈ conditionalTypeClass x c` iff
+/-- Membership bridge to joint type-class. `y ∈ conditionalTypeClass x c` iff
 the joint sequence `i ↦ (x i, y i)` lies in `typeClassByCount c` on `α × β`. -/
 lemma mem_conditionalTypeClass_iff_joint {n : ℕ} (x : Fin n → α) (c : α × β → ℕ)
     (y : Fin n → β) :
@@ -75,7 +75,7 @@ lemma mem_conditionalTypeClass_iff_joint {n : ℕ} (x : Fin n → α) (c : α ×
 
 /-! ## Marginal sums of joint type -/
 
-/-- **X-marginal recovery.** If `y ∈ conditionalTypeClass x c`, then for each `a`,
+/-- X-marginal recovery. If `y ∈ conditionalTypeClass x c`, then for each `a`,
 `∑ b, c (a, b) = typeCount x a`. -/
 @[entry_point]
 lemma conditionalTypeClass_xMarginal {n : ℕ} (x : Fin n → α) (c : α × β → ℕ)
@@ -113,7 +113,7 @@ lemma conditionalTypeClass_xMarginal {n : ℕ} (x : Fin n → α) (c : α × β 
 
 /-! ## Slice partition by joint type -/
 
-/-- **Slice partition indices.** Count vectors `c : α × β → Fin (n+1)` whose
+/-- Slice partition indices. Count vectors `c : α × β → Fin (n+1)` whose
 empirical type is within `ε` of `qZ := μ.map (jointSequence Xs Ys 0)`. -/
 noncomputable def sliceTypeIndices (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (n : ℕ) (ε : ℝ) : Finset (TypeCountIndex (α × β) n) := by
@@ -184,7 +184,7 @@ for downstream consumers.
 
 The bound is sometimes paraphrased as
 `exp(-n · (H(Z) - H(X) + slack)) = exp(-n · (H(Y|X) + slack))`.
-That paraphrase is **incorrect**: when `X = Y` deterministically (a degenerate
+That paraphrase is incorrect: when `X = Y` deterministically (a degenerate
 but legal case), `H(Y|X) = 0` so the paraphrased bound demands `mass ≥ exp(-n·slack)
 ≈ 1`, but the actual mass is `≈ exp(-n · H(X))`. The correct form (used here)
 is `exp(-n · I(X;Y))`, which yields `mass ≥ exp(-n·H(X)) · poly(n)⁻¹` in that
@@ -206,7 +206,7 @@ letter rounding scheme. -/
 private noncomputable def absorberLetterβ (β : Type*) [Nonempty β] : β :=
   Classical.choice (inferInstance : Nonempty β)
 
-/-- **Per-row floor** for splitting `typeCount x a` over `β` proportionally
+/-- Per-row floor for splitting `typeCount x a` over `β` proportionally
 to `qZ(a, ·) / qX_from_Z(a)`. -/
 noncomputable def floorMatrix
     (qZ : α × β → ℝ) {n : ℕ} (x : Fin n → α) (a : α) (b : β) : ℕ :=
@@ -219,7 +219,7 @@ noncomputable def floorMatrix
   else
     min (Nat.floor ((typeCount x a : ℝ) * (qZ (a, b) / qXa))) (typeCount x a)
 
-/-- **Sum of off-absorber floor entries ≤ typeCount x a** when qZ row is a sub-probability. -/
+/-- Sum of off-absorber floor entries ≤ typeCount x a when qZ row is a sub-probability. -/
 private lemma sum_floorMatrix_erase_le
     (qZ : α × β → ℝ) (hqZ_nn : ∀ p, 0 ≤ qZ p)
     {n : ℕ} (x : Fin n → α) (a : α) :
@@ -274,7 +274,7 @@ private lemma sum_floorMatrix_erase_le
       _ = (typeCount x a : ℝ) := by ring
   exact_mod_cast h_real_le
 
-/-- **Row-sum preservation**: `∑ b, floorMatrix qZ x a b = typeCount x a` when qZ ≥ 0. -/
+/-- Row-sum preservation: `∑ b, floorMatrix qZ x a b = typeCount x a` when qZ ≥ 0. -/
 lemma floorMatrix_row_sum
     (qZ : α × β → ℝ) (hqZ_nn : ∀ p, 0 ≤ qZ p)
     {n : ℕ} (x : Fin n → α) (a : α) :
@@ -320,7 +320,7 @@ lemma floorMatrix_row_sum
   rw [Nat.add_comm]
   exact Nat.sub_add_cancel hS_le
 
-/-- **Total**: `∑ p, floorMatrix qZ x p.1 p.2 = n` when qZ ≥ 0. -/
+/-- Total: `∑ p, floorMatrix qZ x p.1 p.2 = n` when qZ ≥ 0. -/
 lemma floorMatrix_total (qZ : α × β → ℝ) (hqZ_nn : ∀ p, 0 ≤ qZ p)
     {n : ℕ} (x : Fin n → α) :
     (∑ p : α × β, floorMatrix qZ x p.1 p.2) = n := by
@@ -487,7 +487,7 @@ lemma abs_cast_sub_floor_sum_div_sub_mul_le_of_sum_eq_one
     exact h_sum_le_card.trans h_card_le
   linarith
 
-/-- **Joint type close to qZ**: For `x` X-strongly-typical at slack `ε_X` with
+/-- Joint type close to qZ: for `x` X-strongly-typical at slack `ε_X` with
 matching X-marginals, each entry of `floorMatrix qZ x` satisfies
 `|floorMatrix x a b / n - qZ(a, b)| ≤ ε_X + |β| / n`. -/
 lemma floorMatrix_dist_le
@@ -691,7 +691,7 @@ noncomputable def sliceSubtype_equiv_typeClassByCount
     right_inv := fun g ↦ by
       ext j; show g.val (e (e.symm j)) = g.val j; simp }
 
-/-- **Bijection cardinality**: the conditional type class card equals
+/-- Bijection cardinality: the conditional type class card equals
 the product over `a` of per-row type class cards on `Fin (typeCount x a) → β`.
 
 Construction: composition of three Equivs.
@@ -769,7 +769,7 @@ lemma conditionalTypeClass_card_eq_prod_typeClass
   rw [(conditionalTypeClass (β := β) x c).toFinite.card_toFinset]
   exact Fintype.card_congr (Equiv.refl _)
 
-/-- **Cardinality lower bound for conditional type class** (product of per-row
+/-- Cardinality lower bound for conditional type class (product of per-row
 multinomial bounds):
 `|conditionalTypeClass x c| ≥ ∏_a (typeCount x a)! / ∏_{a,b} (c (a,b))!`
 up to the standard `(n+1)^{-|α×β|}` factor. -/

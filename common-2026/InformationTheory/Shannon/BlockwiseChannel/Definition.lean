@@ -28,7 +28,7 @@ asymptotic capacity quantities `capacityN` / `capacity_lim`.
 
 Design notes:
 
-* `BlockwiseChannel` is the **function form** `(n : ℕ) → Kernel _ _`. No marginal
+* `BlockwiseChannel` is the function form `(n : ℕ) → Kernel _ _`. No marginal
   consistency axiom; sufficient for the memoryless extension.
 * `Channel.toBlock` is defined directly via `Measure.pi`: this makes
   the `compProd ↔ pi` bridge (`toBlock_compProd_pi_factor`, in
@@ -47,7 +47,7 @@ open scoped ENNReal NNReal BigOperators Topology
 
 variable {α β : Type*}
 
-/-- A **blockwise channel** is a sequence of kernels, one per block length `n`. -/
+/-- A blockwise channel is a sequence of kernels, one per block length `n`. -/
 def BlockwiseChannel (α β : Type*) [MeasurableSpace α] [MeasurableSpace β] : Type _ :=
   (n : ℕ) → Kernel (Fin n → α) (Fin n → β)
 

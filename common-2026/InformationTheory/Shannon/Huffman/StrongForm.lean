@@ -126,7 +126,7 @@ theorem swap_normalization_proof : SwapNormalizationHypothesis.{u} := by
   intro β _ _ _ _ _ _ Q _ ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
   exact swap_normalization_strong Q ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
 
-/-- **Cover–Thomas Theorem 5.8.1**: `huffmanLength P` minimizes expected codeword length
+/-- Cover–Thomas Theorem 5.8.1: `huffmanLength P` minimizes expected codeword length
 among all positive Kraft-feasible length functions.
 @audit:ok -/
 @[entry_point]

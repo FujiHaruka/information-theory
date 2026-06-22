@@ -47,22 +47,22 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
 /-! ### Definitions -/
 
-/-- **D-ary Shannon entropy** (finite-alphabet, Real-valued):
+/-- D-ary Shannon entropy (finite-alphabet, Real-valued):
 `H_D(P) := -Σ a, P.real {a} · logb D P(a)`. -/
 noncomputable def entropyD (D : ℝ) (P : Measure α) : ℝ :=
   -∑ a : α, P.real {a} * Real.logb D (P.real {a})
 
-/-- **Shannon codeword length** `l(a) := ⌈−logb D P(a)⌉₊ : ℕ`.
+/-- Shannon codeword length `l(a) := ⌈−logb D P(a)⌉₊ : ℕ`.
 
 When `P.real {a} = 0`, Mathlib sets `logb D 0 = 0` so `l(a) = 0`. -/
 noncomputable def shannonLength (D : ℝ) (P : Measure α) (a : α) : ℕ :=
   ⌈- Real.logb D (P.real {a})⌉₊
 
-/-- **Expected length** `E[L] := ∑ a, P.real {a} · l(a)`. -/
+/-- Expected length `E[L] := ∑ a, P.real {a} · l(a)`. -/
 noncomputable def expectedLength (P : Measure α) (l : α → ℕ) : ℝ :=
   ∑ a : α, P.real {a} * (l a : ℝ)
 
-/-- **Kraft sum** `K_D(l) := ∑ a, D^{−l(a)}` (Real-valued). -/
+/-- Kraft sum `K_D(l) := ∑ a, D^{−l(a)}` (Real-valued). -/
 noncomputable def kraftSum (D : ℝ) (l : α → ℕ) : ℝ :=
   ∑ a : α, (D : ℝ) ^ (-(l a : ℤ))
 
@@ -123,7 +123,7 @@ lemma rpow_neg_shannonLength_le_real
   exact h_ge
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Shannon code Kraft inequality**: `D > 1`, `P` a probability measure with full support
+/-- Shannon code Kraft inequality: `D > 1`, `P` a probability measure with full support
 implies `∑ a, D ^ (−shannonLength D P a) ≤ 1`. -/
 @[entry_point]
 theorem shannonLength_kraft_le_one
@@ -156,7 +156,7 @@ theorem shannonLength_kraft_le_one
 /-! ### Gibbs lower bound -/
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Gibbs lower bound**: for `D > 1`, probability measure `P` with full support, and
+/-- Gibbs lower bound: for `D > 1`, probability measure `P` with full support, and
 any Kraft-feasible lengths `l`, we have `H_D(P) ≤ E[L]`. -/
 @[entry_point]
 theorem entropyD_le_expectedLength_of_kraft
@@ -252,7 +252,7 @@ theorem entropyD_le_expectedLength_of_kraft
 /-! ### Shannon upper bound -/
 
 omit [DecidableEq α] in
-/-- **Shannon code upper bound**: `D > 1`, probability measure `P` with full support ⟹
+/-- Shannon code upper bound: `D > 1`, probability measure `P` with full support ⟹
 `E[L_Shannon] < H_D(P) + 1`. -/
 @[entry_point]
 theorem expectedLength_shannon_lt_entropyD_add_one
@@ -325,7 +325,7 @@ theorem expectedLength_shannon_lt_entropyD_add_one
 /-! ### Sandwich theorem -/
 
 omit [DecidableEq α] in
-/-- **Shannon code sandwich** (Cover–Thomas 5.4 + 5.8.1): for a probability measure `P`
+/-- Shannon code sandwich (Cover–Thomas 5.4 + 5.8.1): for a probability measure `P`
 with full support on a finite alphabet, the Shannon codeword lengths satisfy
 `H_D(P) ≤ E[L_Shannon] < H_D(P) + 1`. -/
 @[entry_point]

@@ -4,11 +4,11 @@ import InformationTheory.Shannon.MaxEntropy.Constrained
 /-!
 # Constrained Maximum Entropy — Lagrange / KKT perspective
 
-The companion file `MaxEntropyConstrained.lean` publishes the **Boltzmann–Gibbs**
+The companion file `MaxEntropyConstrained.lean` publishes the Boltzmann–Gibbs
 main theorems (`entropy_le_gibbs_of_constraints`, `entropy_eq_gibbs_iff_of_constraints`)
 in the `gibbsPmf f λ` notation, derived by the algebraic-identity route
 (`klDivPmf_gibbsPmf_eq`). The present file re-packages those results in the
-**KKT / exponential-family language**:
+KKT / exponential-family language:
 
   expFamilyDist λ f x := exp (⟨λ, f x⟩ - ψ(λ))
   logPartitionψ λ f   := log (∑ y, exp ⟨λ, f y⟩)
@@ -16,7 +16,7 @@ in the `gibbsPmf f λ` notation, derived by the algebraic-identity route
 with `ψ(λ) = logPartitionψ` the log-partition function. The two presentations
 are equal pointwise (`expFamilyDist_eq_gibbsPmf`), so every property of `gibbsPmf`
 transports to `expFamilyDist`. The KKT first-order condition (∇ψ(λ) = 𝔼[f] in
-the unconstrained Lagrangian) appears as the **moment-matching hypothesis**
+the unconstrained Lagrangian) appears as the moment-matching hypothesis
 which we pass through (Mathlib lacks the convex-duality theorems needed to
 *solve* for `λ`; it does have everything we need to *use* a given solution).
 
@@ -31,10 +31,10 @@ which we pass through (Mathlib lacks the convex-duality theorems needed to
 * `KKTSolution`                           — packaged Lagrange multiplier + moment witness
 * `entropy_expFamilyDist_eq_legendre`     — Legendre identity
                                             `H(p*) = ψ(λ) - ⟨λ, c⟩`
-* `expFamily_maximizes_entropy`           — **main theorem (Tier 1)** —
+* `expFamily_maximizes_entropy`           — main theorem (Tier 1) —
                                             constraint-respecting `P` satisfies
                                             `H(P) ≤ H(expFamilyDist λ f)`
-* `expFamily_unique`                      — **main theorem (Tier 2)** —
+* `expFamily_unique`                      — main theorem (Tier 2) —
                                             equality ⟺ `P = expFamilyDist λ f`
 * `expFamily_maximizes_entropy_of_KKT`    — Cover–Thomas Theorem 12.1.1 in the
                                             `KKTSolution` packaging
@@ -71,7 +71,7 @@ variable {k : ℕ}
 
 /-! ## Section 1 — Log-partition function and exponential-family pmf -/
 
-/-- **Log-partition function** `ψ(λ) := log (∑ y, exp ⟨λ, f y⟩)`.
+/-- Log-partition function `ψ(λ) := log (∑ y, exp ⟨λ, f y⟩)`.
 
 In the Lagrangian for constrained maximum entropy, `ψ(λ)` is the Legendre dual
 of `H` and its gradient `∇ψ(λ) = 𝔼_{p_λ^*}[f]` encodes the KKT first-order
@@ -79,7 +79,7 @@ condition (moment matching). -/
 noncomputable def logPartitionψ (f : Fin k → α → ℝ) (lam : Fin k → ℝ) : ℝ :=
   Real.log (gibbsZ f lam)
 
-/-- **Exponential family pmf**, Lagrangian / KKT-canonical form:
+/-- Exponential family pmf, Lagrangian / KKT-canonical form:
 
 expFamilyDist λ f x := exp (⟨λ, f x⟩ - ψ(λ))
 
@@ -91,7 +91,7 @@ noncomputable def expFamilyDist (f : Fin k → α → ℝ) (lam : Fin k → ℝ)
   fun x ↦ Real.exp ((∑ i, lam i * f i x) - logPartitionψ f lam)
 
 omit [DecidableEq α] in
-/-- **Bridge**: the KKT-canonical form `expFamilyDist` agrees pointwise with the
+/-- Bridge: the KKT-canonical form `expFamilyDist` agrees pointwise with the
 Boltzmann–Gibbs form `gibbsPmf`:
 
 exp (⟨λ, f x⟩ - ψ(λ)) = exp ⟨λ, f x⟩ / Z(λ).
@@ -129,7 +129,7 @@ lemma expFamilyDist_mem_stdSimplex [Nonempty α]
 
 /-! ## Section 3 — KKT solution packaging -/
 
-/-- **KKT solution** for the constrained maximum-entropy problem with feature
+/-- KKT solution for the constrained maximum-entropy problem with feature
 maps `f : Fin k → α → ℝ` and moment targets `c : Fin k → ℝ`.
 
 A `KKTSolution f c` packages a Lagrange multiplier vector `lam : Fin k → ℝ`
@@ -142,7 +142,7 @@ the exponential family, and feasibility in `λ` is the moment match. -/
 structure KKTSolution (f : Fin k → α → ℝ) (c : Fin k → ℝ) where
   /-- Lagrange multiplier (one per feature / constraint). -/
   lam : Fin k → ℝ
-  /-- **KKT moment-matching condition** — `∇ψ(λ) = c`, equivalently
+  /-- KKT moment-matching condition — `∇ψ(λ) = c`, equivalently
       `𝔼_{p*}[f i] = c i` for all `i`. -/
   moment_match : ∀ i, ∑ x, expFamilyDist f lam x * f i x = c i
 
@@ -161,7 +161,7 @@ lemma KKTSolution.gibbs_moment_match [Nonempty α]
 /-! ## Section 4 — Legendre identity: self-entropy of the exponential family -/
 
 omit [DecidableEq α] in
-/-- **Legendre / saddle-point identity** for the exponential family. With KKT
+/-- Legendre / saddle-point identity for the exponential family. With KKT
 solution `(λ, moment_match)` for constraints `c`, the entropy of the
 exponential-family optimum has the closed form
 
@@ -198,7 +198,7 @@ theorem entropy_expFamilyDist_eq_legendre [Nonempty α]
 /-! ## Section 5 — Main theorem: exponential family maximizes constrained entropy -/
 
 omit [DecidableEq α] in
-/-- **Cover–Thomas Theorem 12.1.1 (Tier 1) — KKT / exponential-family form**.
+/-- Cover–Thomas Theorem 12.1.1 (Tier 1) — KKT / exponential-family form.
 
 Under moment constraints `𝔼_P[f i] = c i` for all `i`, the entropy of `P` is
 bounded above by the entropy of the exponential-family solution
@@ -229,7 +229,7 @@ theorem expFamily_maximizes_entropy [Nonempty α]
   exact h
 
 omit [DecidableEq α] in
-/-- **KKT-packaged Cover–Thomas Theorem 12.1.1**: a constraint-feasible `P` cannot
+/-- KKT-packaged Cover–Thomas Theorem 12.1.1: a constraint-feasible `P` cannot
 exceed the entropy of the exponential-family solution attached to a KKT witness. -/
 @[entry_point]
 theorem expFamily_maximizes_entropy_of_KKT [Nonempty α]
@@ -243,7 +243,7 @@ theorem expFamily_maximizes_entropy_of_KKT [Nonempty α]
 /-! ## Section 6 — Uniqueness of the exponential-family maximizer -/
 
 omit [DecidableEq α] in
-/-- **Cover–Thomas Theorem 12.1.1 uniqueness (Tier 2) — KKT / exponential-family form**.
+/-- Cover–Thomas Theorem 12.1.1 uniqueness (Tier 2) — KKT / exponential-family form.
 
 For constraint-feasible `P` and a KKT-witnessed exponential-family solution,
 entropy equality `H(P) = H(expFamilyDist f λ)` holds *if and only if*
@@ -285,7 +285,7 @@ theorem expFamily_unique_of_KKT [Nonempty α]
 /-! ## Section 7 — Variational form (free-energy / Legendre dual upper bound) -/
 
 omit [DecidableEq α] in
-/-- **Variational upper bound (Legendre / free-energy form)** — any constraint-feasible
+/-- Variational upper bound (Legendre / free-energy form) — any constraint-feasible
 `P` satisfies the dual bound
 
 H(P) ≤ ψ(λ) - ⟨λ, c⟩
@@ -326,7 +326,7 @@ theorem entropy_le_logPartition_sub_inner_of_KKT [Nonempty α]
 /-! ## Section 8 — KKT first-order moment-matching reformulation -/
 
 omit [DecidableEq α] in
-/-- **KKT first-order condition equivalence** — the moment-matching hypothesis
+/-- KKT first-order condition equivalence — the moment-matching hypothesis
 `𝔼_{p*}[f] = c` (the gradient-of-ψ condition `∇ψ(λ) = c`) is *equivalent* to
 the gibbs ansatz satisfying the same constraint as `P`. This is the formal
 content of "KKT stationarity in `λ`". -/
@@ -344,7 +344,7 @@ lemma KKT_moment_match_iff_gibbs_moment_match [Nonempty α]
 /-! ## Section 10 — Tier 3 stretch: zero-multiplier reduction = uniform -/
 
 omit [DecidableEq α] in
-/-- **KKT zero-multiplier reduction**: `expFamilyDist f 0 = expFamilyDist g 0`
+/-- KKT zero-multiplier reduction: `expFamilyDist f 0 = expFamilyDist g 0`
 for any features `f`, `g` (both equal to the uniform pmf). This is the
 unconstrained-Lagrangian degenerate case `λ = 0`. -/
 @[entry_point]

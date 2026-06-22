@@ -36,7 +36,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α]
 
 /-! ### Definitions -/
 
-/-- **MSB-first base-`D` digit expansion of length `L` of `n`**.
+/-- MSB-first base-`D` digit expansion of length `L` of `n`.
 
 For `n < D^L`, this is the canonical length-`L` digit list (most-significant first). -/
 def toBaseDLen (D : ℕ) [NeZero D] (L n : ℕ) : List (Fin D) :=
@@ -470,7 +470,7 @@ lemma le_commonDepth (l : α → ℕ) (a : α) : l a ≤ commonDepth l :=
   Finset.le_sup (Finset.mem_univ a)
 
 omit [DecidableEq α] in
-/-- **Kraft converse**: Kraft-feasible positive lengths yield a prefix-free code. -/
+/-- Kraft converse: Kraft-feasible positive lengths yield a prefix-free code. -/
 @[entry_point]
 theorem exists_prefix_code_of_kraft
     {D : ℕ} (hD : 2 ≤ D)

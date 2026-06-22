@@ -5,7 +5,7 @@ import Mathlib.Probability.Independence.InfinitePi
 /-!
 # i.i.d. ambient `(μ, Xs, Ys)` for channel coding achievability
 
-This file provides the **i.i.d. ambient probability space** consumed by the
+This file provides the i.i.d. ambient probability space consumed by the
 abstract `random_codebook_average_le` and the main theorem
 `channel_coding_achievability` of
 `InformationTheory/Shannon/ChannelCoding/Achievability.lean`.

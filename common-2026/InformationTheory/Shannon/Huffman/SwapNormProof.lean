@@ -14,11 +14,11 @@ import InformationTheory.Meta.EntryPoint
 # `strict_kraft_one_implies_pairing` keystone (genuine combinatorial heart)
 
 A self-contained, fully-proved lemma that is the genuine combinatorial heart of the
-Cover–Thomas swap-normalization argument and is **not present in Mathlib**.
+Cover–Thomas swap-normalization argument and is not present in Mathlib.
 
-**Statement**: if `l : β → ℕ` is positive and satisfies the binary Kraft equality
+Statement: if `l : β → ℕ` is positive and satisfies the binary Kraft equality
 `∑ c, (2:ℝ)^(-(l c)) = 1`, then the maximum codeword length is attained by at least
-**two distinct** symbols. Equivalently: there is no unique longest leaf.
+two distinct symbols. Equivalently: there is no unique longest leaf.
 
 This is the parity argument: scaling the Kraft equality by `2^M` (where `M` is the max
 length) turns it into the natural-number identity `∑ c, 2^(M - l c) = 2^M`. If the max
@@ -29,7 +29,7 @@ namespace InformationTheory.Shannon.Huffman
 
 open scoped BigOperators
 
-/-- **Natural-number form of the Kraft equality.** If `l` is positive, `M` bounds every
+/-- Natural-number form of the Kraft equality. If `l` is positive, `M` bounds every
 `l c` (`∀ c, l c ≤ M`), and the real binary Kraft sum equals `1`, then the rescaled
 natural-number sum `∑ c, 2^(M - l c)` equals `2^M`. -/
 @[entry_point]
@@ -62,7 +62,7 @@ theorem kraft_one_nat_sum
       _ = (2 : ℝ) ^ M := by rw [hkraft, mul_one]
   exact_mod_cast hcast
 
-/-- **Keystone: Kraft = 1 forbids a unique longest leaf.** If `l` is positive on a
+/-- Keystone: Kraft = 1 forbids a unique longest leaf. If `l` is positive on a
 `Fintype` and the binary Kraft sum is exactly `1`, then for every `b` there exists a
 distinct `c ≠ b` with `l b ≤ l c`. In particular the maximum length is attained by at
 least two symbols. -/
@@ -107,9 +107,9 @@ theorem strict_kraft_one_implies_pairing
     exact ⟨2 ^ k, by ring⟩
   exact (Nat.not_odd_iff_even.mpr hMeven) hodd
 
-/-- **Corollary: a complete (Kraft = 1) binary code has two equal-longest leaves.**
+/-- Corollary: a complete (Kraft = 1) binary code has two equal-longest leaves.
 For a positive length function whose binary Kraft sum is exactly `1`, the maximum codeword
-length is attained by **two distinct** symbols. This is the structural fact Cover–Thomas
+length is attained by two distinct symbols. This is the structural fact Cover–Thomas
 uses to argue that the two longest leaves of an optimal binary code are siblings. -/
 @[entry_point]
 theorem exists_two_equal_longest

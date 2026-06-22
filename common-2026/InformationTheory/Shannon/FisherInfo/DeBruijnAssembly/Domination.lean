@@ -165,7 +165,7 @@ private theorem convDensityAdd_jointMajorant_integrable
   set E : ℝ → ℝ := fun x ↦ ∫ y, pX y * gaussHessMaj t (x - y) ∂volume with hE_def
   have hg_meas : Measurable (gaussHessMaj t) := by unfold gaussHessMaj; fun_prop
   have hg_nn : ∀ u, (0:ℝ) ≤ gaussHessMaj t u := gaussHessMaj_nonneg ht
-  -- **route II = Tonelli + g_s moment** (the only honest route).
+  -- route II = Tonelli + g_s moment (the only honest route).
   -- The dominating function: `H x = ∫ pX y·G(x−y) + 2|B|·∫ (y²·pX y)·g(x−y)`, where
   -- `G(u) = (|A| + 2|B|·u²)·gaussHessMaj t u` (Gaussian × quartic) and `g = gaussHessMaj t`.
   -- Both summands are `convKernel_envelope_integrable` envelopes (`pX` / `y²·pX` integrable,
@@ -327,7 +327,7 @@ theorem debruijnIdentityV2_holds_assembled_chain_domination
   -- for the Hessian.
   obtain ⟨A, B, _hB_nn, hLog⟩ :=
     convDensityAdd_logFactor_poly_majorant pX hpX_nn hpX_meas hpX_int hpX_mass ht
-  -- The **concrete** envelope `E x = ∫ y, pX y · gaussHessMaj t (x − y)`
+  -- The concrete envelope `E x = ∫ y, pX y · gaussHessMaj t (x − y)`
   -- (= GAP②'s in-body envelope),
   -- used directly here so that route II Tonelli sees the convolution shape (not an abstract `∃`).
   set E : ℝ → ℝ := fun x ↦ ∫ y, pX y * gaussHessMaj t (x - y) ∂volume with hE_def

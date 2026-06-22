@@ -65,7 +65,7 @@ theorem heatKernel_variance_ne_zero {t : ℝ} (ht : 0 < t) :
   have : (t : ℝ) = 0 := h'
   linarith
 
-/-- **First spatial derivative of the heat kernel** (`m = 0` case).
+/-- First spatial derivative of the heat kernel (`m = 0` case).
 
 `∂_x g_t(x) = -(x / t) · g_t(x)`, the `m = 0` specialization of
 `InformationTheory.Shannon.deriv_gaussianPDFReal`. -/
@@ -80,7 +80,7 @@ theorem heatKernel_spatial_deriv {t : ℝ} (ht : 0 < t) (x : ℝ) :
      = -(x / t) * gaussianPDFReal 0 ⟨t, ht.le⟩ x
   ring
 
-/-- **`HasDerivAt` form** of the first spatial derivative of the heat kernel. -/
+/-- `HasDerivAt` form of the first spatial derivative of the heat kernel. -/
 @[entry_point]
 theorem heatKernel_hasDerivAt_spatial {t : ℝ} (ht : 0 < t) (x : ℝ) :
     HasDerivAt (fun y ↦ heatKernel t y) (-(x / t) * heatKernel t x) x := by
@@ -97,13 +97,13 @@ theorem heatKernel_hasDerivAt_spatial {t : ℝ} (ht : 0 < t) (x : ℝ) :
   exact (InformationTheory.Shannon.differentiable_gaussianPDFReal 0
     ⟨t, ht.le⟩).differentiableAt.hasDerivAt
 
-/-- **Spatial Laplacian of the heat kernel** (closed form).
+/-- Spatial Laplacian of the heat kernel (closed form).
 
 `Δ_x g_t(x) = ∂²_x g_t(x) = (x²/t² - 1/t) · g_t(x)`. -/
 noncomputable def spatialLaplacianHeatKernel (t : ℝ) (x : ℝ) : ℝ :=
   (x ^ 2 / t ^ 2 - 1 / t) * heatKernel t x
 
-/-- **Second spatial derivative of the heat kernel** equals
+/-- Second spatial derivative of the heat kernel equals
 `spatialLaplacianHeatKernel`. The core internal discharge:
 differentiate `heatKernel_spatial_deriv` once more (product rule).
 
@@ -166,7 +166,7 @@ theorem isHeatSpatialDerivHyp_gaussian :
 
 /-! ## Re-assembly into `IsHeatFlowDensity` -/
 
-/-- **Re-assembly**: the sub-predicates re-build an `IsHeatFlowDensity`. -/
+/-- Re-assembly: the sub-predicates re-build an `IsHeatFlowDensity`. -/
 @[entry_point]
 def IsHeatFlowDensity_of_sub_predicates {Ω : Type*} [MeasurableSpace Ω]
     {X Z : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]

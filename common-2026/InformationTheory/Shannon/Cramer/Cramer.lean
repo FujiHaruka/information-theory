@@ -12,8 +12,8 @@ import InformationTheory.Meta.EntryPoint
 /-!
 # Cramér's theorem
 
-The **Legendre transform** of a real-valued function and the **Cramér rate
-function** (`I(a) = Λ^*(a)` for `Λ = cgf X μ`), together with the upper bound of
+The Legendre transform of a real-valued function and the Cramér rate
+function (`I(a) = Λ^*(a)` for `Λ = cgf X μ`), together with the upper bound of
 Cramér's large deviation theorem (Cover–Thomas, Theorem 11.4.1, upper half) in
 per-`n` Chernoff, log, and limsup forms. The lower bound is developed downstream
 in `CramerGeneralLower.lean`.
@@ -42,7 +42,7 @@ variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
 
 /-! ## `legendre` and `cramerRate`: definitions and basic properties -/
 
-/-- The **Legendre transform** of `Λ : ℝ → ℝ` at `a`: `Λ^*(a) := sup_λ (λ·a − Λ(λ))`.
+/-- The Legendre transform of `Λ : ℝ → ℝ` at `a`: `Λ^*(a) := sup_λ (λ·a − Λ(λ))`.
 
 Mathlib has no general Legendre-transform / convex-conjugate API, so this is the
 textbook `sSup` form. When the image set is not `BddAbove`, Mathlib returns
@@ -50,7 +50,7 @@ textbook `sSup` form. When the image set is not `BddAbove`, Mathlib returns
 noncomputable def legendre (Λ : ℝ → ℝ) (a : ℝ) : ℝ :=
   sSup ((fun lam : ℝ ↦ lam * a - Λ lam) '' Set.univ)
 
-/-- **Cramér rate function** `I(a) := Λ^*(a)` for `Λ := cgf X μ`. -/
+/-- Cramér rate function `I(a) := Λ^*(a)` for `Λ := cgf X μ`. -/
 noncomputable def cramerRate (X : Ω → ℝ) (μ : Measure Ω) (a : ℝ) : ℝ :=
   legendre (cgf X μ) a
 
@@ -112,7 +112,7 @@ lemma integrable_exp_mul_of_bounded
   refine Integrable.mono' (integrable_const (Real.exp (|t| * M))) h_meas ?_
   exact Filter.Eventually.of_forall hC
 
-/-- **i.i.d. CGF sum formula**: for an i.i.d. family `X : ℕ → Ω → ℝ` (with `X i`
+/-- i.i.d. CGF sum formula: for an i.i.d. family `X : ℕ → Ω → ℝ` (with `X i`
 identically distributed to `X 0` and the exponential moments integrable for
 every `i`), `cgf (∑ i ∈ range n, X i) μ t = n · cgf (X 0) μ t`. -/
 lemma cgf_sum_eq_nsmul {X : ℕ → Ω → ℝ}
@@ -139,7 +139,7 @@ lemma cgf_sum_eq_nsmul {X : ℕ → Ω → ℝ}
 
 /-! ## Cramér upper bound: per-`n` Chernoff bound (i.i.d. strengthening) -/
 
-/-- **Per-n Chernoff bound** for the upper tail of an i.i.d. sum of bounded real
+/-- Per-n Chernoff bound for the upper tail of an i.i.d. sum of bounded real
 random variables (Cover-Thomas 11.4.1 upper half, point-wise in `n`).
 
 We specialise Mathlib's single-variable Chernoff bound `measure_ge_le_exp_cgf`
@@ -212,7 +212,7 @@ lemma chernoff_bound_n_iid [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
   apply Real.exp_le_exp.mpr
   linarith
 
-/-- **Per-n Cramér upper bound, log form**: for each `n ≥ 1` with positive tail
+/-- Per-n Cramér upper bound, log form: for each `n ≥ 1` with positive tail
 probability, `(1/n) · log P[a·n ≤ Sₙ] ≤ -(lam · a − Λ(lam))` for every
 `lam ≥ 0`.
 
@@ -250,7 +250,7 @@ lemma cramer_log_bound_n_iid [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
 
 /-! ## Cramér upper bound: limsup form -/
 
-/-- **Cramér upper bound, limsup form** (Cover-Thomas 11.4.1 upper half).
+/-- Cramér upper bound, limsup form (Cover-Thomas 11.4.1 upper half).
 
 For each `lam ≥ 0`, the upper-tail probability of the i.i.d. sample sum decays
 at exponential rate at least `lam * a − Λ(lam)`:
@@ -293,7 +293,7 @@ theorem cramer_upper [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
       lam hlam
   exact Filter.limsup_le_of_le h_cobdd h_eventually
 
-/-- **Cramér upper bound, Legendre form** (Cover-Thomas 11.4.1 upper half,
+/-- Cramér upper bound, Legendre form (Cover-Thomas 11.4.1 upper half,
 asymptotic statement).
 
 If the Legendre transform of `Λ = cgf (X 0) μ` at `a` is attained by some
@@ -325,7 +325,7 @@ theorem cramer_upper_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
 
 /-! ## Cramér lower bound: tilted change-of-measure identities
 
-The lower bound uses an exponential change-of-measure to the **tilted measure**
+The lower bound uses an exponential change-of-measure to the tilted measure
 `μ_lam := μ.tilted (lam * X ·)`, where `lam` is chosen so that `Λ'(lam) = a`.
 Under the tilted measure the mean of `X` equals `a`, a tilted-side law of large
 numbers concentrates the sample mean near `a`, and converting back to `μ` via the
@@ -336,7 +336,7 @@ This file publishes the change-of-measure building blocks — `klDiv_tilted_eq`
 (the KL-of-tilted identity) and `integral_tilted_eq_deriv_cgf` — that the
 downstream lower bound consumes. -/
 
-/-- **Universal integrability for bounded RVs**: a bounded random variable has
+/-- Universal integrability for bounded RVs: a bounded random variable has
 every `t ∈ ℝ` in its `integrableExpSet`, hence the whole real line lies in the
 interior. This kills the `interior (integrableExpSet X μ)` hypothesis of
 `integral_tilted_mul_self` / `variance_tilted_mul` in the bounded-RV setting. -/

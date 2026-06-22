@@ -4,7 +4,7 @@ import InformationTheory.Shannon.GeneralDMC.Basic
 # General DMC capacity — extension layer
 
 This file extends `InformationTheory/Shannon/GeneralDMC/Basic.lean` with three families of
-**hypothesis-form** publish theorems aimed at downstream modules that need
+hypothesis-form publish theorems aimed at downstream modules that need
 capacity-limit reasoning beyond the memoryless DMC case.
 
 The mathematical objects this layer would *concretely* discharge (Verdú–Han
@@ -48,7 +48,7 @@ pass-through.
 
 ## Design
 
-This file is intentionally a **predicate + pass-through** layer: it
+This file is intentionally a predicate + pass-through layer: it
 introduces no new definitions that would shift the `BlockwiseChannel` /
 `capacity_lim` API surface. Concrete proofs that a *given* channel is
 informationally stable, or that its spectral and limit characterizations
@@ -80,7 +80,7 @@ variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 
 /-! ## Limsup / liminf publish surface (statement-level)
 
-Where the per-letter sequence does **not** converge (so neither
+Where the per-letter sequence does not converge (so neither
 `IsInformationallyStable` nor `IsSpectralCapacityForm` applies), the
 Verdú–Han / Pinsker literature uses `limsup` and `liminf` (the
 "information-spectrum" upper/lower rates). We expose these in

@@ -55,7 +55,7 @@ open scoped ENNReal NNReal Real
 
 /-! ## Heat kernel (Gaussian density with variance `t`) -/
 
-/-- **Gaussian heat kernel** `g_t(x) := (1/√(2π t)) exp(-x²/(2t))`.
+/-- Gaussian heat kernel `g_t(x) := (1/√(2π t)) exp(-x²/(2t))`.
 
 Defined as the standard centred Gaussian density with variance `t > 0`. This is
 the *kernel* of the Gaussian heat semigroup: for `Z ∼ 𝒩(0, 1)` and `X`
