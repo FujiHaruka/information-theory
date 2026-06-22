@@ -137,7 +137,7 @@ noncomputable def condQk
             (Fin.append z w ∘ Fin.cast (by omega))
 
 omit [DecidableEq α] in
-/-- **Conditional product sub-distribution from a fixed prefix**: for any prefix
+/-- Conditional product sub-distribution from a fixed prefix: for any prefix
 `z : Fin start → α`, the `k`-Markov conditional masses of all length-`ℓ`
 continuations sum to at most `1`. The non-empty-start generalization of
 `sum_qkSingleton_le_one` (which is the `start = 0` case): same induction on `ℓ`,
@@ -237,7 +237,7 @@ lemma markovFactor_sum_subset_le_one
     _ = 1 := markovFactor_sum_eq_one μ p k n z
 
 omit [DecidableEq α] in
-/-- **Position invariance of `markovFactor` (the `n > k` branch).** For `n₁, n₂ > k`,
+/-- Position invariance of `markovFactor` (the `n > k` branch). For `n₁, n₂ > k`,
 `markovFactor μ p k n` depends only on the last `k + 1` symbols of its argument (the
 `k`-symbol window plus the last symbol), not on the absolute position `n`. This is the
 foundation of the conditional Ziv `(k-state, length)` grouping: the conditional mass of
@@ -416,7 +416,7 @@ private lemma markovFactor_blockRV_gt
     rw [h_arg, h_last]
 
 omit [DecidableEq α] in
-/-- **A.s. positivity of every per-position `markovFactor`** evaluated at the block
+/-- A.s. positivity of every per-position `markovFactor` evaluated at the block
 random variable: for a probability-preserving stationary process, a.s. (in `ω`) the
 real-valued Markov factor `markovFactor μ p k i (blockRV (i+1) ω)` is strictly
 positive at *every* position `i`. This is the a.s. positivity input that the LZ78
@@ -452,7 +452,7 @@ lemma markovFactor_blockRV_pos_ae
     rwa [← measureReal_def]
 
 omit [DecidableEq α] in
-/-- **M1 (bridge for L1)**: a.s., `qkSingleton μ p k n (blockRV n ω)` equals
+/-- M1 (bridge for L1): a.s., `qkSingleton μ p k n (blockRV n ω)` equals
 `ofReal (exp (-negLogQk μ p k n ω))`. -/
 lemma qkSingleton_blockRV_eq_ofReal_exp_negLogQk
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (k n : ℕ) :
@@ -646,7 +646,7 @@ noncomputable def MRatioUp
 omit [DecidableEq α] in
 /-- Markov inequality input: the upward ratio integrates to at most `1`.
 
-**Proof**:
+Proof:
 1. Bridge `MRatioUp` to the ratio form `qkSingleton k n (blockRV n ω) / P_n {blockRV n ω}`
    a.s. via `MRatioUp_eq_ofReal_exp_old`.
 2. Push forward through `blockRV n` using `lintegral_map`, then

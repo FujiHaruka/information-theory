@@ -35,7 +35,7 @@ instance parallelOutput_marginal_isProbabilityMeasure (i : Fin n) :
     inferInstance
   exact Measure.isProbabilityMeasure_map (measurable_pi_apply i).aemeasurable
 
-/-- **Parallel-output marginal as 1-D AWGN convolution.** The `i`-th coordinate marginal of
+/-- Parallel-output marginal as 1-D AWGN convolution. The `i`-th coordinate marginal of
 the correlated output law is the input marginal smoothed by the noise:
 `μY.map (· i) = (p.map (· i)) ∗ gaussianReal 0 (N i)`.
 
@@ -113,7 +113,7 @@ theorem parallelOutput_marginal_eq_conv (i : Fin n) :
     rw [hLHS, hRHS]
   rw [h_id, InformationTheory.Shannon.AWGN.outputDistribution_awgn_eq_conv]
 
-/-- **Parallel-output marginal as 1-D AWGN output law.** The `i`-marginal of the correlated
+/-- Parallel-output marginal as 1-D AWGN output law. The `i`-marginal of the correlated
 output equals the 1-D AWGN output law `outputDistribution (p.map (· i)) (awgnChannel (N i))`,
 letting the single-coordinate AWGN lemmas apply verbatim.
 
@@ -126,7 +126,7 @@ theorem parallelOutput_marginal_eq_awgn_output (i : Fin n) :
   rw [parallelOutput_marginal_eq_conv N h_meas h_parallel_meas p i,
     InformationTheory.Shannon.AWGN.outputDistribution_awgn_eq_conv]
 
-/-- **`i`-marginal inherits the 1-D AWGN power constraint.** From the total constraint
+/-- `i`-marginal inherits the 1-D AWGN power constraint. From the total constraint
 `∑ⱼ ∫⁻ (xⱼ)² ∂p ≤ P`, the input marginal satisfies `p.map (· i) ∈ awgnPowerConstraintSet P`.
 
 @audit:ok -/
@@ -208,7 +208,7 @@ theorem parallelOutput_marginal_absolutelyContinuous_volume (hN : ∀ i, (N i : 
   rw [hpre, ← Measure.map_apply hmeas_i hs]
   exact h_fibre_marg_ac x hvol
 
-/-- **Reverse full-support AC of each output coordinate marginal:** `volume ≪ μY.map (· i)`.
+/-- Reverse full-support AC of each output coordinate marginal: `volume ≪ μY.map (· i)`.
 
 @audit:ok -/
 theorem volume_absolutelyContinuous_parallelOutput_marginal (hN : ∀ i, (N i : ℝ) ≠ 0)
@@ -248,7 +248,7 @@ theorem volume_absolutelyContinuous_parallelOutput_marginal (hN : ∀ i, (N i : 
   obtain ⟨x, hx⟩ := h_ae.exists
   exact h_fibre_marg_rev x hx
 
-/-- **Reverse full-support AC of the correlated output law:** `volume ≪ μY`. From `μY s = 0`
+/-- Reverse full-support AC of the correlated output law: `volume ≪ μY`. From `μY s = 0`
 the nonnegative `x ↦ (W x) s` vanishes `p`-a.e., so `volume s = 0` by the reverse
 Gaussian-product AC `volume ≪ W x`.
 
@@ -292,7 +292,7 @@ theorem parallelOutput_absolutelyContinuous_pi_marginals (hN : ∀ i, (N i : ℝ
     (fun i ↦ parallelOutput_marginal_absolutelyContinuous_volume N h_meas h_parallel_meas p hN i)
     (fun i ↦ volume_absolutelyContinuous_parallelOutput_marginal N h_meas h_parallel_meas p hN i)
 
-/-- **1-D AWGN output log-density integrability over the output law itself.** The integrand
+/-- 1-D AWGN output log-density integrability over the output law itself. The integrand
 `log ((q.rnDeriv volume y).toReal)` is integrable against `q = outputDistribution p₁ (awgn N₁)`.
 
 @audit:ok -/

@@ -23,7 +23,7 @@ example {n : ℕ} :
 
 /-! ## Product-measure absolute continuity -/
 
-/-- **`Measure.pi` preserves absolute continuity w.r.t. `volume`.** If every factor
+/-- `Measure.pi` preserves absolute continuity w.r.t. `volume`. If every factor
 `μ i ≪ volume` (each a probability measure), then `Measure.pi μ ≪ volume`.
 
 @audit:ok -/
@@ -49,7 +49,7 @@ theorem pi_absolutelyContinuous {n : ℕ} (μ : Fin n → Measure ℝ)
   rw [h_pi_eq, volume_pi]
   exact withDensity_absolutelyContinuous _ _
 
-/-- **Reverse `Measure.pi` absolute continuity from componentwise mutual AC.** If every factor
+/-- Reverse `Measure.pi` absolute continuity from componentwise mutual AC. If every factor
 is mutually absolutely continuous with `volume` (`ν i ≪ volume` and `volume ≪ ν i`), then
 `volume ≪ Measure.pi ν`.
 
@@ -89,7 +89,7 @@ theorem pi_absolutelyContinuous_reverse {n : ℕ} (ν : Fin n → Measure ℝ)
     filter_upwards [eventually_countable_forall.mpr h_pos_pi] with z hz
     exact Finset.prod_ne_zero_iff.mpr (fun i _ ↦ hz i)
 
-/-- **Reverse full-support AC for a Gaussian product fibre.**
+/-- Reverse full-support AC for a Gaussian product fibre.
 `volume ≪ Measure.pi (gaussianReal (x i) (N i))` whenever every `N i ≠ 0`, since the product
 of everywhere-positive Gaussian densities gives the reverse AC.
 
@@ -125,7 +125,7 @@ theorem volume_absolutelyContinuous_pi_gaussian {n : ℕ}
     simp only [hf_def, gaussianPDF_def, ne_eq, ENNReal.ofReal_eq_zero, not_le]
     exact gaussianPDFReal_pos (x i) (N i) (z i) (hN' i)
 
-/-- **Product → sum differential entropy identity.** For a product of probability measures
+/-- Product → sum differential entropy identity. For a product of probability measures
 `μ i ≪ volume` on `ℝ`, the joint differential entropy of `Measure.pi μ` is the coordinate sum
 of the 1-D entropies, `jointDifferentialEntropyPi (Measure.pi μ) = ∑ i, differentialEntropy
 (μ i)`. The per-component log-density integrability `h_int` is a regularity precondition
@@ -210,7 +210,7 @@ theorem jointDifferentialEntropyPi_pi_eq_sum {n : ℕ} (μ : Fin n → Measure �
     Finset.sum_congr rfl (fun i _ ↦ h_marg i)]
   rw [Finset.sum_neg_distrib, neg_neg]
 
-/-- **Per-Gaussian log-density integrability.** For `v ≠ 0`,
+/-- Per-Gaussian log-density integrability. For `v ≠ 0`,
 `log ((gaussianReal m v).rnDeriv volume y).toReal` is integrable against `gaussianReal m v`;
 it is the affine-in-`(y-m)²` function `-(1/2)log(2πv) - (y-m)²/(2v)`.
 
@@ -253,7 +253,7 @@ variable {p : Measure α} [IsProbabilityMeasure p]
 variable {W : Channel α β} [IsMarkovKernel W]
 variable {vol : Measure β} [SigmaFinite vol]
 
-/-- **Generic per-measure log-density split** (Bayes step). Mirror of
+/-- Generic per-measure log-density split (Bayes step). Mirror of
 `ContChannelMIDecomp.log_rnDeriv_split` over an arbitrary measurable space with a
 `SigmaFinite` reference measure `vol`. -/
 private theorem log_rnDeriv_split_gen
@@ -280,7 +280,7 @@ private theorem log_rnDeriv_split_gen
   rw [← hy, ENNReal.toReal_mul, Real.log_mul hne1 hne2]
   ring
 
-/-- **Generic Bayes density split of the joint llr.** Mirror of
+/-- Generic Bayes density split of the joint llr. Mirror of
 `ContChannelMIDecomp.llr_compProd_prod_split` over `α β` with `vol`. -/
 private theorem llr_compProd_prod_split_gen
     [MeasurableSpace.CountableOrCountablyGenerated α β]
@@ -324,7 +324,7 @@ private theorem llr_compProd_prod_split_gen
     rw [hz1]
   exact h_llr_eq.trans h_split
 
-/-- **Generic continuous-channel MI chain rule** (entropy in raw integral form).
+/-- Generic continuous-channel MI chain rule (entropy in raw integral form).
 `(mutualInfoOfChannel p W).toReal = (−∫_y log(dq/dvol) ∂q) − ∫_x (−∫_y log(d(Wx)/dvol) ∂(Wx)) dp`.
 Specialized below to `jointDifferentialEntropyPi` via `integral_log_rnDeriv_self_eq_neg`.
 @audit:ok -/
@@ -388,7 +388,7 @@ private theorem mutualInfoOfChannel_toReal_eq_neg_integral_log_sub
 
 end GenericDecomp
 
-/-- **Channel↔RV MI decomposition, `Fin n → ℝ` lift.** Specializes the generic chain rule to
+/-- Channel↔RV MI decomposition, `Fin n → ℝ` lift. Specializes the generic chain rule to
 `β = Fin n → ℝ`, `vol = volume`, producing the entropy in `jointDifferentialEntropyPi` form.
 The absolute-continuity / log-density-integrability hypotheses are regularity preconditions.
 
@@ -452,7 +452,7 @@ joint-vs-product absolute continuity, and the log-density integrabilities. These
 Gaussian smoothing (each fibre is a full-support product, so the output is
 volume-equivalent), supplied here for an arbitrary correlated input as named lemmas. -/
 
-/-- **Each fibre is absolutely continuous w.r.t. volume.** Each component
+/-- Each fibre is absolutely continuous w.r.t. volume. Each component
 `gaussianReal (x i) (N i) ≪ volume`, so the product fibre is `≪ volume`.
 
 @audit:ok -/

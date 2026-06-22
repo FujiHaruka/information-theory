@@ -172,7 +172,7 @@ structure IsParallelGaussianPerCoordRegularity {n : ℕ} (P : ℝ)
 
 /-! ## Sup-sandwich -/
 
-/-- **Lower bound (achiever).** The independent Gaussian product input is feasible and
+/-- Lower bound (achiever). The independent Gaussian product input is feasible and
 achieves the per-coordinate sum, so the capacity is at least that sum (modulo the
 `bddAbove` and `achiever_mi` fields of the regularity bundle). -/
 theorem parallelGaussianCapacity_ge_sum {n : ℕ} (P : ℝ)
@@ -190,7 +190,7 @@ theorem parallelGaussianCapacity_ge_sum {n : ℕ} (P : ℝ)
   refine le_csSup h_reg.bddAbove ?_
   exact ⟨gaussianProductInput Q, h_mem, rfl⟩
 
-/-- **Upper bound (max-entropy and water-filling).** Every constrained input has MI bounded
+/-- Upper bound (max-entropy and water-filling). Every constrained input has MI bounded
 by the water-filling sum, via the per-coordinate max-entropy bound (`max_ent` field)
 followed by water-filling optimality (`h_opt`). -/
 theorem parallelGaussianCapacity_le_sum {n : ℕ} (P : ℝ)
@@ -222,7 +222,7 @@ theorem parallelGaussianCapacity_le_sum {n : ℕ} (P : ℝ)
 /-! ## `max_ent` via output-entropy subadditivity -/
 
 open InformationTheory.Shannon in
-/-- **`max_ent` from subadditivity.** With the channel MI written as `h(Yⁿ) - condTerm`
+/-- `max_ent` from subadditivity. With the channel MI written as `h(Yⁿ) - condTerm`
 (`h_decomp`), output-entropy subadditivity `h(Yⁿ) ≤ ∑ h(Yᵢ)`
 (`jointDifferentialEntropyPi_le_sum`) and the per-coordinate water-filling allocation
 bound `h_perCoord` give `I ≤ ∑ᵢ (1/2) log(1 + P'ᵢ/Nᵢ)`. -/
@@ -294,7 +294,7 @@ theorem isParallelGaussianPerCoordReduction_discharged {n : ℕ}
 
 /-! ## Headline capacity formula -/
 
-/-- **Parallel Gaussian capacity formula** (Cover–Thomas, Theorem 9.4.1). For parallel AWGN
+/-- Parallel Gaussian capacity formula (Cover–Thomas, Theorem 9.4.1). For parallel AWGN
 channels `Y_i = X_i + Z_i`, `Z_i ∼ 𝒩(0, N_i)` (`i : Fin (n+1)`) under the total power
 constraint `∑_i E[X_i²] ≤ P`, the information capacity equals the water-filling sum
 
@@ -360,7 +360,7 @@ theorem lintegral_fin_nat_prod_eq_prod {n : ℕ} {E : Fin n → Type*}
         _ = ∏ i, ∫⁻ x, f i x ∂(μ i) := by rw [Fin.prod_univ_succ]
 
 open InformationTheory.Shannon InformationTheory.Shannon.AWGN in
-/-- **compProd-of-`Measure.pi` factorization.** The channel joint
+/-- compProd-of-`Measure.pi` factorization. The channel joint
 `gaussianProductInput Q ⊗ₘ parallelGaussianChannel N` factors as the `Measure.pi` of the
 per-coordinate joints `gaussianReal 0 (Qᵢ) ⊗ₘ awgnChannel Nᵢ`, reshaped by
 `arrowProdEquivProdArrow`.
@@ -441,7 +441,7 @@ theorem gaussianProductInput_compProd_parallelGaussianChannel_eq_pi {n : ℕ}
   simp
 
 open InformationTheory.Shannon InformationTheory.Shannon.AWGN in
-/-- **Per-channel MI decomposition of the product achiever.** The channel mutual
+/-- Per-channel MI decomposition of the product achiever. The channel mutual
 information of the independent-Gaussian product input through the parallel Gaussian channel
 equals the sum of the per-coordinate single-channel mutual informations.
 
@@ -546,7 +546,7 @@ theorem parallelGaussian_achiever_mi_eq_sum_perChannel_enn {n : ℕ}
     rw [this, Measure.map_id]
 
 open InformationTheory.Shannon InformationTheory.Shannon.AWGN in
-/-- **AWGN single-channel mutual information is finite.** The channel MI of the Gaussian
+/-- AWGN single-channel mutual information is finite. The channel MI of the Gaussian
 input through a single AWGN channel is a finite `ENNReal` (`≠ ⊤`), via `klDiv_ne_top`
 applied to the joint `gaussianReal 0 P ⊗ₘ awgnChannel N` against the product of its
 marginals (joint absolute continuity plus llr integrability via the Bayes split).
@@ -637,7 +637,7 @@ theorem parallelGaussian_achiever_mi_eq_sum_perChannel {n : ℕ}
   rw [ENNReal.toReal_sum (fun i _ ↦ awgn_mutualInfoOfChannel_ne_top (N i) (hN i) (h_meas i) (Q i))]
 
 open InformationTheory.Shannon InformationTheory.Shannon.AWGN in
-/-- **Per-coordinate AWGN MI closed form** (all variances). For a single AWGN sub-channel,
+/-- Per-coordinate AWGN MI closed form (all variances). For a single AWGN sub-channel,
 the Gaussian-input mutual information equals `(1/2)·log(1 + Q/N)`, with no positivity
 hypothesis on the input variance `Q`. The `Q = 0` branch (deterministic input
 `gaussianReal 0 0 = dirac 0`) gives MI `= 0 = (1/2)·log 1` via `klDiv_self`. -/

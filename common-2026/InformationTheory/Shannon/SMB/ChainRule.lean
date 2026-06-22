@@ -9,7 +9,7 @@ import Mathlib.MeasureTheory.Integral.Lebesgue.Countable
 # SMB chain rule decomposition
 
 For a stationary process `p : StationaryProcess μ α` over a finite alphabet,
-this file establishes the Cover–Thomas 16.8 **chain rule for log-likelihood**:
+this file establishes the Cover–Thomas 16.8 chain rule for log-likelihood:
 
   `-log P_n({block_n ω}) = ∑_{i<n} -log P(obs i | block_i)(block_i ω){obs i ω}`
 
@@ -71,7 +71,7 @@ lemma measurable_pmfLogCond
 /-! ## Multiplicative chain rule at singletons (ENNReal level) -/
 
 omit [DecidableEq α] in
-/-- **Chain rule for the block measure** (ENNReal singleton form).
+/-- Chain rule for the block measure (ENNReal singleton form).
 
 Pushforward of `μ` by `blockRV (n+1)` factors at any singleton via the
 conditional kernel `condDistrib (obs n) (blockRV n) μ`:
@@ -345,7 +345,7 @@ the orbit converges a.s. to `conditionalEntropyTail μ p l`. This is the
 with `H_l → entropyRate` to obtain the full result. -/
 
 omit [DecidableEq α] in
-/-- **Birkhoff applied to per-step conditional log-likelihood**.
+/-- Birkhoff applied to per-step conditional log-likelihood.
 
 For an ergodic process and fixed level `l`, the Birkhoff time average of
 `pmfLogCond p l` converges a.s. to `conditionalEntropyTail μ p l`:

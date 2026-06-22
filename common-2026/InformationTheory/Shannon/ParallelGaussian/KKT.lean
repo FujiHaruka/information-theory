@@ -85,7 +85,7 @@ lemma waterFillingPower_sum_ge_of_all_active {n : ℕ} (N : Fin n → ℝ≥0)
 
 /-! ## Existence of the KKT water level -/
 
-/-- **Existence of a KKT water level.** For positive total power `P > 0` and at least one
+/-- Existence of a KKT water level. For positive total power `P > 0` and at least one
 coordinate, there is a water level `ν` whose water-filling allocation exactly uses up the
 power, `∑_i max(0, ν - N_i) = P`. Proved by the intermediate value theorem applied to the
 continuous, monotone `ν ↦ ∑_i waterFillingPower ν N i`. -/
@@ -264,7 +264,7 @@ lemma waterFillingCost_tangent_le {n : ℕ} (N : Fin n → ℝ≥0) (hN : ∀ i,
     _ ≤ (1/2) * (Real.log (a + Pstar) - Real.log a)
         + (1 / (2 * ν)) * (P'i - Pstar) := by linarith [h_slope]
 
-/-- **Water-filling optimality from the KKT level.** Given a KKT water level `ν`
+/-- Water-filling optimality from the KKT level. Given a KKT water level `ν`
 (`h_kkt : ∑ max(0, ν - N_i) = P`), the water-filling allocation `P_i^* = max(0, ν - N_i)`
 maximizes the per-coordinate sum `∑ (1/2) log(1 + P_i / N_i)` over the feasible set
 `{P' | ∀ i, 0 ≤ P'_i ∧ ∑_i P'_i ≤ P}`, i.e. `IsWaterFillingOptimal P N ν`.

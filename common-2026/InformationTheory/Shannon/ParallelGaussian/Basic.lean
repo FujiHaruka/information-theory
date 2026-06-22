@@ -61,7 +61,7 @@ gaussianReal (x i) (N i))`, supplied as a hypothesis. -/
 def IsParallelGaussianKernelMeasurable {n : ℕ} (N : Fin n → ℝ≥0) : Prop :=
   Measurable (fun x : Fin n → ℝ ↦ Measure.pi (fun i ↦ gaussianReal (x i) (N i)))
 
-/-- The **parallel Gaussian channel kernel**: on input `x : Fin n → ℝ` the output
+/-- The parallel Gaussian channel kernel: on input `x : Fin n → ℝ` the output
 `y : Fin n → ℝ` has `y i = x i + z i` with `z i ∼ 𝒩(0, N i)` independent across
 coordinates. The output law is the product measure `Measure.pi (fun i =>
 gaussianReal (x i) (N i))`. -/
@@ -91,7 +91,7 @@ instance parallelGaussianChannel.instIsMarkovKernel {n : ℕ}
 
 /-! ## Water-filling power allocation -/
 
-/-- The **water-filling power allocation**: for water level `ν : ℝ` and noise vector
+/-- The water-filling power allocation: for water level `ν : ℝ` and noise vector
 `N : Fin n → ℝ≥0`, coordinate `i` is allocated `max(0, ν - N_i)` (Cover–Thomas,
 Theorem 9.4.1). -/
 noncomputable def waterFillingPower {n : ℕ} (ν : ℝ) (N : Fin n → ℝ≥0) :
@@ -115,7 +115,7 @@ lemma waterFillingPower_eq_zero_of_inactive {n : ℕ} (ν : ℝ) (N : Fin n → 
 
 /-! ## Parallel Gaussian capacity -/
 
-/-- The **parallel power constraint set**: probability measures with total
+/-- The parallel power constraint set: probability measures with total
 per-coordinate second moment `≤ P`, in lower-integral form `∑_i ∫⁻ ofReal ((x i)²) ∂p
 ≤ ofReal P`. Multivariate analogue of `AWGN.awgnPowerConstraintSet`. The lower-integral
 form forces each `∫⁻ ofReal ((x i)²) < ∞`, hence genuine integrability of every
@@ -175,7 +175,7 @@ theorem parallelGaussianPowerConstraintSet_mem_iff_integrable {n : ℕ}
     h_sum_ofReal ▸ hp_lint
   exact (ENNReal.ofReal_le_ofReal_iff hP).mp h_le
 
-/-- The **power-constrained parallel Gaussian capacity**: the supremum of the mutual
+/-- The power-constrained parallel Gaussian capacity: the supremum of the mutual
 information `I(p; parallelGaussianChannel N)` over inputs `p` in
 `parallelGaussianPowerConstraintSet P`. -/
 noncomputable def parallelGaussianCapacity {n : ℕ} (P : ℝ)
@@ -188,14 +188,14 @@ noncomputable def parallelGaussianCapacity {n : ℕ} (P : ℝ)
 
 /-! ## Water-filling KKT, optimality, and per-coordinate reduction predicates -/
 
-/-- The **water-filling KKT condition**: the water level `ν` uses up the total budget,
+/-- The water-filling KKT condition: the water level `ν` uses up the total budget,
 `∑_i max(0, ν - N_i) = P`. For the unconstrained water-filling problem this characterizes
 the KKT-optimal Lagrange multiplier (a unique such `ν` exists by the intermediate value
 theorem). -/
 def IsWaterFillingKKT {n : ℕ} (P : ℝ) (N : Fin n → ℝ≥0) (ν : ℝ) : Prop :=
   ∑ i : Fin n, waterFillingPower ν N i = P
 
-/-- **Water-filling optimality**: the water-filling allocation `P_i^* = max(0, ν - N_i)`
+/-- Water-filling optimality: the water-filling allocation `P_i^* = max(0, ν - N_i)`
 maximizes the per-coordinate sum `∑ (1/2) log(1 + P_i/N_i)` subject to `P_i ≥ 0`,
 `∑ P_i ≤ P`. -/
 def IsWaterFillingOptimal {n : ℕ} (P : ℝ) (N : Fin n → ℝ≥0) (ν : ℝ) : Prop :=
@@ -203,7 +203,7 @@ def IsWaterFillingOptimal {n : ℕ} (P : ℝ) (N : Fin n → ℝ≥0) (ν : ℝ)
     ∑ i : Fin n, (1/2) * Real.log (1 + P' i / (N i : ℝ))
       ≤ ∑ i : Fin n, (1/2) * Real.log (1 + waterFillingPower ν N i / (N i : ℝ))
 
-/-- The **per-coordinate water-filling reduction**: the parallel Gaussian capacity equals
+/-- The per-coordinate water-filling reduction: the parallel Gaussian capacity equals
 the per-coordinate water-filling sum `∑_i (1/2) log(1 + max(0, ν - N_i) / N_i)`.
 
 This predicate is the capacity equality itself, so it is intended to be *derived* (not
@@ -218,7 +218,7 @@ def IsParallelGaussianPerCoordReduction {n : ℕ} (P : ℝ)
 
 /-! ## Active set -/
 
-/-- The **active set** of coordinates (those with `N_i < ν`), allocated positive
+/-- The active set of coordinates (those with `N_i < ν`), allocated positive
 water-filling power. -/
 noncomputable def waterFillingActiveSet {n : ℕ} (ν : ℝ) (N : Fin n → ℝ≥0) :
     Finset (Fin n) :=

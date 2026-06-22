@@ -72,7 +72,7 @@ theorem entropyPower_pos (μ : Measure ℝ) : 0 < entropyPower μ :=
 theorem entropyPower_nonneg (μ : Measure ℝ) : 0 ≤ entropyPower μ :=
   (entropyPower_pos μ).le
 
-/-- **Closed form for Gaussian entropy power**: `entropyPower (gaussianReal m v) =
+/-- Closed form for Gaussian entropy power: `entropyPower (gaussianReal m v) =
 2πe v`. This is the Gaussian saturation reference value that drives the
 saturating case of EPI.
 

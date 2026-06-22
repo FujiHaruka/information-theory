@@ -68,7 +68,7 @@ theorem isParallelGaussianPerCoordRegularity_of_pieces {n : ℕ}
 
 /-! ## Hypothesis-minimal headline -/
 
-/-- **Hypothesis-minimal capacity formula.** The parallel Gaussian capacity equals the
+/-- Hypothesis-minimal capacity formula. The parallel Gaussian capacity equals the
 water-filling sum at the KKT water level `ν`. The regularity bundle is assembled internally
 via `isParallelGaussianPerCoordRegularity_of_pieces` and water-filling optimality is derived
 from `h_kkt`, so the only inputs are the KKT condition `h_kkt` and the preconditions

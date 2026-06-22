@@ -21,7 +21,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 open InformationTheory.Shannon.TwoSided
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Borel–Cantelli consequence (Z-side)**: μZ-a.s., `MRatioLowerZ n x ≤ n²` eventually. -/
+/-- Borel–Cantelli consequence (Z-side): μZ-a.s., `MRatioLowerZ n x ≤ n²` eventually. -/
 theorem MRatioLowerZ_le_sq_eventually
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) :
     ∀ᵐ x ∂(μZ μ p), ∀ᶠ n in Filter.atTop,
@@ -93,7 +93,7 @@ theorem MRatioLowerZ_le_sq_eventually
   exact not_lt.mp hn
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Logarithmic form (Z-side)**: μZ-a.s., eventually,
+/-- Logarithmic form (Z-side): μZ-a.s., eventually,
 `blockLogAvgZ n x ≥ (1/n) · negLogQInftyZ n x - 2 log n / n`. -/
 theorem blockLogAvgZ_ge_negLogQInftyZ_minus_error
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) :
@@ -127,7 +127,7 @@ theorem blockLogAvgZ_ge_negLogQInftyZ_minus_error
   linarith
 
 omit [DecidableEq α] in
-/-- **Birkhoff for `pmfLogCondInfty` on the 2-sided side**: applying Birkhoff to
+/-- Birkhoff for `pmfLogCondInfty` on the 2-sided side: applying Birkhoff to
 `(μZ, shiftZ, pmfLogCondInfty)`, using `ergodic_shiftZ`, `measurePreserving_shiftZ`,
 `integrable_pmfLogCondInfty`, and `integral_pmfLogCondInfty_eq_entropyRate`. -/
 @[entry_point]
@@ -190,7 +190,7 @@ private lemma measurable_blockLogAvgZ_via_eN
   exact measurable_pi_apply _
 
 omit [DecidableEq α] in
-/-- **Z-side a.s. upper boundedness** of `blockLogAvgZ` (transferred from the Ω-side
+/-- Z-side a.s. upper boundedness of `blockLogAvgZ` (transferred from the Ω-side
 `blockLogAvg_bddAbove_ae`, via the bridge `blockLogAvgZ n (natExt ω) = blockLogAvg n ω`
 and `measurePreserving_forwardEmbed` + `μZ_nat_proj_eq`).
 
@@ -330,7 +330,7 @@ theorem blockLogAvgZ_bddAbove_ae
   rw [h_eq]; exact hx
 
 omit [DecidableEq α] in
-/-- **Z-side liminf bound**: μZ-a.s., `liminf blockLogAvgZ n x ≥ entropyRate`. -/
+/-- Z-side liminf bound: μZ-a.s., `liminf blockLogAvgZ n x ≥ entropyRate`. -/
 @[entry_point]
 theorem liminf_blockLogAvgZ_ge_entropyRate
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
@@ -374,7 +374,7 @@ theorem liminf_blockLogAvgZ_ge_entropyRate
   exact h_liminf_le
 
 omit [DecidableEq α] in
-/-- **Final transfer to Ω-side**: μ-a.s., `entropyRate ≤ liminf blockLogAvg n ω`.
+/-- Final transfer to Ω-side: μ-a.s., `entropyRate ≤ liminf blockLogAvg n ω`.
 
 Bridge: `blockLogAvgZ n x` depends only on `natProj x : ℕ → α`. We transfer the
 Z-side a.s. liminf bound through `natProj`-`forwardEmbed` measure preservation
@@ -473,7 +473,7 @@ theorem algoet_cover_liminf_bound
 /-! ## D.7 — Main theorem (hypothesis-free assembly) -/
 
 omit [DecidableEq α] in
-/-- **Shannon–McMillan–Breiman theorem** (Cover–Thomas 16.8.1).
+/-- Shannon–McMillan–Breiman theorem (Cover–Thomas 16.8.1).
 
 For a stationary ergodic process with finite alphabet `α`, the per-symbol
 negative log-likelihood `blockLogAvg μ p n` converges almost surely to the

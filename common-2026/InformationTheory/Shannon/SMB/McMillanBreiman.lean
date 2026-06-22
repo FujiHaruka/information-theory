@@ -13,7 +13,7 @@ alphabet `α`, the per-symbol negative log-likelihood
   `-(1/n) log P(X_0, …, X_{n-1})`
 
 converges almost surely to the entropy rate `H`. This file packages the
-**sandwich form** of the conclusion: assuming `liminf ≥ H` and `limsup ≤ H`
+sandwich form of the conclusion: assuming `liminf ≥ H` and `limsup ≤ H`
 almost surely (the two halves of the Cover–Thomas 16.8 bound which Birkhoff
 supplies), we deduce a.s. convergence via `tendsto_of_le_liminf_of_limsup_le`.
 
@@ -25,7 +25,7 @@ Birkhoff ergodic theorem (`BirkhoffErgodic`), the two-sided projective-limit
 construction (`Probability.TwoSidedExtension`), and backward-martingale
 convergence.
 
-We also publish the **expected-value level** statement, which does **not**
+We also publish the expected-value level statement, which does not
 need Birkhoff.
 
 ## Main definitions
@@ -80,7 +80,7 @@ lemma measurable_blockLogAvg
 /-! ## Sandwich form (Cover–Thomas 16.8.1) -/
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Shannon–McMillan–Breiman, sandwich form**.
+/-- Shannon–McMillan–Breiman, sandwich form.
 
 If the per-symbol log-likelihood average `blockLogAvg μ p n` satisfies the
 two Cover–Thomas 16.8 bounds (liminf ≥ entropy rate, limsup ≤ entropy rate)

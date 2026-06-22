@@ -35,7 +35,7 @@ so `liminf blockLogAvgZ ≥ entropyRate` μZ-a.s. We transfer to the Ω-side via
 
 open InformationTheory.Shannon.TwoSided
 
-/-- **First-`n` block projection on the 2-sided side**: pulls out `x_0, …, x_{n-1}`. -/
+/-- First-`n` block projection on the 2-sided side: pulls out `x_0, …, x_{n-1}`. -/
 noncomputable def firstBlockZ (n : ℕ) : (∀ _ : ℤ, α) → (Fin n → α) :=
   fun x i ↦ x (i.val : ℤ)
 
@@ -85,7 +85,7 @@ lemma map_firstBlockZ_eq_map_blockRV
   rw [Measure.map_apply (p.measurable_blockRV n) (measurableSet_singleton _)]
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Z-side blockLogAvg**: the per-symbol negative log-likelihood on the 2-sided side. -/
+/-- Z-side blockLogAvg: the per-symbol negative log-likelihood on the 2-sided side. -/
 noncomputable def blockLogAvgZ
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) :
     (∀ _ : ℤ, α) → ℝ :=
@@ -115,13 +115,13 @@ lemma blockLogAvgZ_natExt_eq
   rw [map_firstBlockZ_eq_map_blockRV μ p n]
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Z-side negLogQ∞**: Birkhoff sum of `pmfLogCondInfty` along the orbit. -/
+/-- Z-side negLogQ∞: Birkhoff sum of `pmfLogCondInfty` along the orbit. -/
 noncomputable def negLogQInftyZ
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) :
     (∀ _ : ℤ, α) → ℝ :=
   fun x ↦ ∑ i ∈ Finset.range n, pmfLogCondInfty μ p (shiftZ^[i] x)
 
-/-- **The Z-side lower-bound likelihood ratio**: `exp(negLogQ∞ - n · blockLogAvgZ)`,
+/-- The Z-side lower-bound likelihood ratio: `exp(negLogQ∞ - n · blockLogAvgZ)`,
 which represents `P_n/q_∞` lifted to `ℝ≥0∞`. -/
 noncomputable def MRatioLowerZ
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) :
@@ -131,7 +131,7 @@ noncomputable def MRatioLowerZ
 /-! ### Inductive-step infrastructure for `integral_MRatioLowerZ_le_one` -/
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Probability ratio at the `(n+1)`-block over the `n`-block**: when `P_n(s) > 0`,
+/-- Probability ratio at the `(n+1)`-block over the `n`-block: when `P_n(s) > 0`,
 this is `P_{n+1}(snoc(s, a)) / P_n(s)`; defaulted to `0` when `P_n(s) = 0`. -/
 noncomputable def blockCondRatio
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
@@ -239,7 +239,7 @@ private lemma sum_blockCondRatio
   rw [h_sum, div_self hP_n_ne]
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **A.s. positivity of `P_n^Z`**: the singleton mass at the realized
+/-- A.s. positivity of `P_n^Z`: the singleton mass at the realized
 `firstBlockZ n x` is a.s. positive under `μZ`.
 
 Transferred from the Ω-side `block_singleton_pos_ae_at` via `map_firstBlockZ_eq_map_blockRV`. -/
@@ -278,7 +278,7 @@ lemma firstBlockZ_singleton_pos_ae
   exact le_antisymm hx measureReal_nonneg
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Pointwise factorization of `MRatioLowerZ (n+1)` on the a.s. positive set**.
+/-- Pointwise factorization of `MRatioLowerZ (n+1)` on the a.s. positive set.
 
 On the set where both `P_n(firstBlockZ n x) > 0` and `P_{n+1}(firstBlockZ (n+1) x) > 0`,
 we have the decomposition
@@ -411,7 +411,7 @@ lemma MRatioLowerZ_succ_eq_mul
   rw [← ENNReal.ofReal_mul h_pn_pos.le, mul_one_div, div_self h_pn_pos.ne']
   simp
 
-/-- **ENNReal pull-out for indicator factor** (special case of the pull-out property
+/-- ENNReal pull-out for indicator factor (special case of the pull-out property
 for the conditional Lebesgue expectation). If `m ≤ m₀`, `μ.trim` σ-finite, `B ∈ m`,
 and `f : Ω → ℝ≥0∞`, then `∫⁻ x, B.indicator(1) · f dμ = ∫⁻ x, B.indicator(1) · μ⁻[f|m] dμ`.
 
@@ -436,7 +436,7 @@ private lemma lintegral_indicator_mul_eq
       · simp [Set.indicator_of_notMem hx]
   rw [h_rw, h_rw, MeasureTheory.setLIntegral_condLExp hm μ f hB]
 
-/-- **ENNReal pull-out (general)**: for `g : Ω → ℝ≥0∞` `m`-measurable and `f : Ω → ℝ≥0∞`
+/-- ENNReal pull-out (general): for `g : Ω → ℝ≥0∞` `m`-measurable and `f : Ω → ℝ≥0∞`
 measurable, `∫⁻ x, g · f dμ = ∫⁻ x, g · μ⁻[f|m] dμ`. -/
 lemma lintegral_mul_eq_lintegral_mul_condLExp
     {Ω : Type*} {m₀ m : MeasurableSpace Ω} (hm : m ≤ m₀) (μ : @Measure Ω m₀)
@@ -528,7 +528,7 @@ lemma lintegral_mul_eq_lintegral_mul_condLExp
   exact iSup_congr h_step
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **σ-algebra of the shifted past**: events depending only on `{x_i : i ≤ n - 1}`. -/
+/-- σ-algebra of the shifted past: events depending only on `{x_i : i ≤ n - 1}`. -/
 @[reducible] def shiftedPastSigma (n : ℕ) : MeasurableSpace (∀ _ : ℤ, α) :=
   (negPastSigma (α := α)).comap (shiftZ^[n])
 
@@ -558,7 +558,7 @@ lemma measurable_condProbInfty_comp_shift_shiftedPastSigma
   rfl
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Generic comap-through-shift lemma**: if `f : (∀_:ℤ,α) → β` satisfies
+/-- Generic comap-through-shift lemma: if `f : (∀_:ℤ,α) → β` satisfies
 `f = g ∘ shiftZ^[n]` for some `negPastSigma`-measurable `g`, then `f` is
 `shiftedPastSigma n`-measurable. -/
 lemma measurable_shiftedPastSigma_of_eq_comp
@@ -759,7 +759,7 @@ lemma measurable_MRatioLowerZ_shiftedPastSigma
     exact measurable_coord_negPastSigma h_idx_le
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Substep A — Tower identification**: the conditional Lebesgue expectation of
+/-- Substep A — Tower identification: the conditional Lebesgue expectation of
 the ENNReal indicator `1_{x_n = a}` w.r.t. `shiftedPastSigma n` equals
 `ofReal(condProbInfty(a)(shift^n x))` a.s.
 
@@ -945,7 +945,7 @@ lemma condLExp_indicator_coord_n_eq_ofReal_condProbInfty_shift
   · simp [indR, indENN₀, Set.indicator_of_notMem hy]
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Indicator-support collapse**: on the set `{x_n = a}`, the factor
+/-- Indicator-support collapse: on the set `{x_n = a}`, the factor
 `exp(pmfLogCondInfty(shift^n x))` equals `1/condProbInfty(a)(shift^n x)`
 (in ℝ; with `1/0 = 0`). Formulated as an indicator-times-factor pointwise identity. -/
 lemma indicator_mul_ofReal_exp_pmf_eq
@@ -970,7 +970,7 @@ lemma indicator_mul_ofReal_exp_pmf_eq
     simp
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Reciprocal product bound**: `ofReal(exp(-log c)) · ofReal(c) ≤ 1` for any real `c`.
+/-- Reciprocal product bound: `ofReal(exp(-log c)) · ofReal(c) ≤ 1` for any real `c`.
 - When `c > 0`: `exp(-log c) · c = 1`, so product = 1.
 - When `c ≤ 0`: `ofReal(c) = 0`, so product = 0.
 -/
@@ -1152,7 +1152,7 @@ lemma mRatioLowerZ_mul_blockCondRatio_mul_exp_neg_log_mul_condProbInfty_le
           * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a) := by rw [mul_one]
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **CORE LEMMA (tower property)**: `∫ MRatioLowerZ n dμZ ≤ 1`. -/
+/-- CORE LEMMA (tower property): `∫ MRatioLowerZ n dμZ ≤ 1`. -/
 theorem integral_MRatioLowerZ_le_one
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) :
     ∫⁻ x, MRatioLowerZ μ p n x ∂(μZ μ p) ≤ 1 := by
@@ -1172,7 +1172,7 @@ theorem integral_MRatioLowerZ_le_one
         _ = 1 := measure_univ
     rw [h_int_eq]
   | succ n ih =>
-    -- **Inductive step** (Algoet–Cover tower argument).
+    -- Inductive step (Algoet–Cover tower argument).
     --
     -- All infrastructure helpers are in this file:
     --   * `MRatioLowerZ_succ_eq_mul`: pointwise factorization
@@ -1184,7 +1184,7 @@ theorem integral_MRatioLowerZ_le_one
     --       `∫⁻ g · f dμ = ∫⁻ g · μ⁻[f|m] dμ` for `m`-measurable `g`.
     --   * `shiftedPastSigma n := negPastSigma.comap shift^n`: the relevant sub-σ-algebra.
     --
-    -- **Remaining glue work (~150 LOC, deferred to next pass)**:
+    -- Remaining glue work (~150 LOC, deferred to next pass):
     --
     --   (a) Tower identification: combine `condExp_comp_measurePreserving` (from
     --       `TwoSidedExtension.lean`) with `condProbInfty_eq_condExp_tail` to get
