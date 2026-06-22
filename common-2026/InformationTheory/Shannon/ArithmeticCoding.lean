@@ -33,6 +33,11 @@ Shannon-code machinery (`entropyD_le_expectedLength_of_kraft` /
 and the prefix-free code is obtained from `exists_prefix_code_of_kraft` (integer-slot
 Kraft-reverse) lifted to `List Bool` via `finTwoEquiv`. The textbook midpoint-expansion
 equivalence is out of scope — it gives the same code and is not needed for the bounds.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
+  Theorem 13.3.3 (Shannon-Fano-Elias coding); Theorem 5.2.2 (unique decodability).
 -/
 
 namespace InformationTheory.Shannon.ArithmeticCoding
@@ -74,7 +79,8 @@ lemma sfeLength_kraft_le_one
   push_cast
   omega
 
-/-- The expected-length sandwich: `H₂(P) ≤ E[L] ≤ H₂(P) + 2`. -/
+/-- **Shannon-Fano-Elias coding**: the expected-length sandwich
+`H₂(P) ≤ E[L] ≤ H₂(P) + 2`. -/
 @[entry_point]
 theorem arithmeticCode_expected_length_bounds
     (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a : α, 0 < P.real {a}) :
@@ -155,9 +161,8 @@ private lemma uncons_eq_of_flatten_eq
   subst hab
   exact ⟨rfl, List.append_cancel_left h⟩
 
-/-- Unique decodability (Cover-Thomas 5.2.2): for a prefix-free code with
-nonempty codewords, the map `s ↦ (s.map c).flatten` is injective. Proved by
-induction, peeling one block at a time via `uncons_eq_of_flatten_eq`. -/
+/-- Unique decodability: for a prefix-free code with nonempty codewords,
+the map `s ↦ (s.map c).flatten` is injective. -/
 @[entry_point]
 theorem arithmeticCode_unique_decodable
     (c : α → List Bool)

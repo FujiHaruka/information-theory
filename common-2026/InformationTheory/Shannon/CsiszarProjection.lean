@@ -34,6 +34,11 @@ Proof strategy for the Pythagorean inequality: the first-order condition
 Combined with the algebraic identity
 `klDivPmf P Q = klDivPmf P Q* + ∑ P·(log Q* - log Q)` and the expansion of
 `klDivPmf Q* Q`, this gives the inequality.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
+  Theorem 11.6.1.
 -/
 
 namespace InformationTheory.Shannon.CsiszarProjection
@@ -166,7 +171,7 @@ lemma isCompact_of_subset_stdSimplex {K : Set (α → ℝ)}
     IsCompact K :=
   IsCompact.of_isClosed_subset (isCompact_stdSimplex ℝ α) hK_closed hK_sub
 
-/-- Existence of the I-projection (Cover-Thomas 11.6.1 a): for a nonempty closed set
+/-- Existence of the **Csiszár I-projection**: for a nonempty closed set
 `K ⊆ stdSimplex ℝ α` and full-support `Q`, there exists `Q* ∈ K` minimizing `klDivPmf · Q`
 over `K`. -/
 @[entry_point]
@@ -183,7 +188,7 @@ theorem csiszar_projection_exists {K : Set (α → ℝ)} {Q : α → ℝ}
 
 /-! ## Uniqueness via strict convexity -/
 
-/-- Uniqueness of the I-projection (Cover-Thomas 11.6.1 b): the minimizer of `klDivPmf · Q` on a
+/-- Uniqueness of the **Csiszár I-projection**: the minimizer of `klDivPmf · Q` on a
 convex `K ⊆ stdSimplex ℝ α` is unique. -/
 @[entry_point]
 theorem csiszar_projection_unique {K : Set (α → ℝ)} {Q : α → ℝ}
@@ -448,12 +453,8 @@ lemma csiszar_first_order_condition
     exact h_slope_nn
   exact this
 
-/-- The Pythagorean inequality (Cover-Thomas 11.6.1 c): for the minimizer `Q*` and any `P ∈ K`,
-`klDivPmf P Q ≥ klDivPmf P Q* + klDivPmf Q* Q`.
-
-Proof: combine the algebraic identity `klDivPmf P Q = klDivPmf P Q* + ∑ P·(log Q* - log Q)`,
-the expansion `klDivPmf Q* Q = ∑ Q*·(log Q* - log Q)`, and the first-order condition
-`∑ (P - Q*)·(log Q* - log Q) ≥ 0`. -/
+/-- **Csiszár's Pythagorean inequality**: for the I-projection `Q*` and any `P ∈ K`,
+`klDivPmf P Q ≥ klDivPmf P Q* + klDivPmf Q* Q`. -/
 @[entry_point]
 theorem csiszar_pythagoras_inequality
     {K : Set (α → ℝ)} {Q : α → ℝ}

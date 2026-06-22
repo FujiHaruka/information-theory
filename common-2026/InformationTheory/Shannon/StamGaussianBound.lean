@@ -53,7 +53,7 @@ theorem stam_fisher_arith (a b lam : ℝ) (ha : 0 < a) (hb : 0 < b)
 
 /-! ## §2 — Gaussian convex Fisher bound (V2-keyed, non-vacuous) -/
 
-/-- The Gaussian Stam convex Fisher bound. For Gaussian laws `𝒩(m₁,v₁)`, `𝒩(m₂,v₂)`
+/-- The Gaussian **Stam convex Fisher bound**. For Gaussian laws `𝒩(m₁,v₁)`, `𝒩(m₂,v₂)`
 with `v₁, v₂ ≠ 0`, the V2 Fisher information of the sum law `𝒩(m₁+m₂, v₁+v₂)`
 satisfies `J(X+Y) ≤ λ² J(X) + (1-λ)² J(Y)` for every `λ ∈ [0,1]`.
 Each Fisher info evaluates to the closed form `1/v` via `fisherInfoOfMeasureV2_gaussianReal`. -/
