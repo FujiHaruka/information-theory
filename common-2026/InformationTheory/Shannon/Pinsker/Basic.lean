@@ -27,6 +27,11 @@ This is the weak form with constant `1`; the sharp Cover–Thomas (11.6) form
 
 The proof combines the pointwise Bretagnolle–Huber bound `klFun t ≥ (√t - 1)^2` with the
 Cauchy–Schwarz factorization `|p - q| = |√p - √q| · (√p + √q)`, bounding `∑ (√p + √q)^2 ≤ 4`.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
+  Wiley, 2006. Section 11.6.
 -/
 
 namespace InformationTheory.Shannon.Pinsker
@@ -143,7 +148,7 @@ noncomputable def tvNorm (P Q : Measure α) : ℝ :=
 
 
 omit [DecidableEq α] in
-/-- Pinsker's inequality (weak form, constant `1`): for probability measures `P ≪ Q` on a
+/-- **Pinsker's inequality** (weak form, constant `1`): for probability measures `P ≪ Q` on a
 finite alphabet, `tvNorm P Q ≤ √((klDiv P Q).toReal)`. -/
 @[entry_point]
 theorem tvNorm_le_sqrt_klDiv

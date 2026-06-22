@@ -23,6 +23,11 @@ The pointwise bound is obtained from the auxiliary `H t := 2 (t + 2) · klFun t 
 whose second derivative `4 (log t + 1/t - 1)` is nonnegative on `(0, ∞)` and which has a minimum
 of `0` at `t = 1`. The global bound follows by a per-element application together with the
 Cauchy–Schwarz step and `∑ (p + 2q) = 3`.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
+  Wiley, 2006. Section 11.6.
 -/
 
 namespace InformationTheory.Shannon.PinskerSharp
@@ -283,8 +288,8 @@ private lemma per_element_sharp
   rw [div_le_iff₀ (by linarith : (0 : ℝ) < 2 * (p + 2 * q))]
   linarith
 
-/-- The sharp Pinsker inequality: for probability measures `P ≪ Q` on a finite alphabet,
-`tvNorm P Q ≤ √((klDiv P Q).toReal / 2)`. -/
+/-- **Pinsker's inequality** (sharp form, constant `1/√2`): for probability measures `P ≪ Q` on a
+finite alphabet, `tvNorm P Q ≤ √((klDiv P Q).toReal / 2)`. -/
 @[entry_point]
 theorem tvNorm_le_sqrt_klDiv_div_two
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
