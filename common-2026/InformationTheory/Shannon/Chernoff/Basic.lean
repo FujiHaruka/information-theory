@@ -39,6 +39,11 @@ Everything is stated in finite-alphabet pmf form (`α → ℝ`) so that `Csiszar
 can be reused directly. `chernoffInfo` and `hoeffdingE2` are stated as `sInf` over an image of a
 compact set, so attainment follows from `IsCompact.exists_sInf_image_eq`. The convexity of
 `log Z` is obtained from the multiplicative Hölder bound `Z(αλ₁ + βλ₂) ≤ Z(λ₁)^α · Z(λ₂)^β`.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
+  Wiley, 2006. Theorem 11.9.1.
 -/
 
 namespace InformationTheory.Shannon.Chernoff
@@ -53,7 +58,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α]
 
 /-! ### Chernoff exponent: definition and basic properties -/
 
-/-- The Chernoff partition function `Z(λ) := ∑_a P₁(a)^(1-λ) · P₂(a)^λ` (Cover–Thomas 11.9.1). -/
+/-- The Chernoff partition function `Z(λ) := ∑_a P₁(a)^(1-λ) · P₂(a)^λ`. -/
 noncomputable def chernoffZSum (P₁ P₂ : α → ℝ) (lam : ℝ) : ℝ :=
   ∑ a : α, (P₁ a) ^ (1 - lam) * (P₂ a) ^ lam
 
@@ -164,11 +169,7 @@ theorem chernoffInfo_attained
   rw [h_sInf_eq]
 
 omit [DecidableEq α] in
-/-- `chernoffInfo P₁ P₂ ≥ 0`.
-
-`chernoffInfo := -sInf (log Z '' Icc 0 1)`. At `λ = 0`, `log Z(0) = log 1 = 0`, so
-`sInf (log Z '' Icc 0 1) ≤ 0` (compact + continuous gives `sInf` attained, and `0` is in
-the image). Hence `chernoffInfo ≥ 0`. -/
+/-- `chernoffInfo P₁ P₂ ≥ 0`. -/
 @[entry_point]
 theorem chernoffInfo_nonneg
     (P₁ P₂ : α → ℝ) [Nonempty α]
@@ -306,10 +307,7 @@ theorem hoeffdingE2_attained
   exact h_sInf_eq
 
 omit [DecidableEq α] in
-/-- `hoeffdingE2 P₁ P₂ alpha ≥ 0`.
-
-`hoeffdingE2 := sInf (klDivPmf · P₂ '' K)`. Since `K` is nonempty and every element in
-the image is `≥ 0` (`klDivPmf_nonneg`), the infimum is `≥ 0` by `le_csInf`. -/
+/-- `hoeffdingE2 P₁ P₂ alpha ≥ 0`. -/
 @[entry_point]
 theorem hoeffdingE2_nonneg
     (P₁ P₂ : α → ℝ)
@@ -342,8 +340,7 @@ omit [DecidableEq α] in
 /-- Hölder multiplicative form for the Chernoff partition function:
 `Z(αλ₁ + βλ₂) ≤ Z(λ₁)^α · Z(λ₂)^β` for `α, β ∈ (0, 1)`, `α + β = 1`.
 
-This is the engine of `convexOn_chernoffLogZ`. Stated under full-support `P₁, P₂ > 0`
-to avoid `0^x` corner cases; this is the only setting we use it. -/
+Stated under full-support `P₁, P₂ > 0` to avoid `0^x` corner cases. -/
 lemma chernoffZSum_holder_mul
     (P₁ P₂ : α → ℝ)
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -445,7 +442,7 @@ lemma chernoffZSum_holder_mul
   exact hHolder
 
 omit [DecidableEq α] in
-/-- `λ ↦ log Z(λ)` is convex on `Icc 0 1` (Cover–Thomas 11.9.1). -/
+/-- `λ ↦ log Z(λ)` is convex on `Icc 0 1`. -/
 @[entry_point]
 theorem convexOn_chernoffLogZ
     (P₁ P₂ : α → ℝ) [Nonempty α]
@@ -853,8 +850,8 @@ lemma chernoff_rate_ge_chernoffInfo_eventually
   linarith
 
 omit [DecidableEq α] in
-/-- Auxiliary upper bound: `rate n ≤ -log p_min - (log 2)/n` (loose, just to get
-boundedness for `liminf` plumbing). Here `p_min := min over a of (min (P₁ a) (P₂ a))`. -/
+/-- Auxiliary upper bound: `rate n ≤ -log p_min - (log 2)/n`.
+Here `p_min := min over a of (min (P₁ a) (P₂ a))`. -/
 private lemma chernoff_rate_le_aux_upper
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
@@ -991,8 +988,10 @@ theorem chernoff_achievability
 /-! ### Achievability main statement -/
 
 omit [DecidableEq α] in
-/-- The achievability half of the Chernoff bound (Cover–Thomas Theorem 11.9.1): the exponential
-convergence rate of `bayesErrorMinPmf` is at least `chernoffInfo P₁ P₂`. -/
+/-- **Chernoff bound** (achievability half): the exponential convergence rate of
+`bayesErrorMinPmf` is at least `chernoffInfo P₁ P₂`.
+
+See also `chernoff_achievability`. -/
 @[entry_point]
 theorem chernoff_lemma_achievability
     (P₁ P₂ : α → ℝ) [Nonempty α]
