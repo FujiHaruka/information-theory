@@ -43,7 +43,8 @@ theorem measurePreserving_subRightCM (y : ℝ) :
     MeasurePreserving (subRightCM y) volume volume :=
   measurePreserving_sub_right volume y
 
-/-- L¹ translation continuity: `y ↦ eLpNorm (fun x => pX (x - y) - pX x) 1 volume` tends to `0` as `y → 0`.
+/-- L¹ translation continuity: `y ↦ eLpNorm (fun x => pX (x - y) - pX x) 1 volume` tends to `0`
+as `y → 0`.
 @audit:ok -/
 theorem translation_continuous_L1
     {pX : ℝ → ℝ} (hpX_int : Integrable pX volume) :
@@ -52,7 +53,8 @@ theorem translation_continuous_L1
   -- lift `pX` to `Lp ℝ 1 volume`.
   have hmem : MemLp pX 1 volume := (memLp_one_iff_integrable).2 hpX_int
   set f₀ : Lp ℝ 1 volume := hmem.toLp pX with hf₀
-  -- continuity of the translation family `Lp.compMeasurePreserving (subRightCM y) (mp y) f₀` in `y`.
+  -- continuity of the translation family
+  -- `Lp.compMeasurePreserving (subRightCM y) (mp y) f₀` in `y`.
   have hcomp :
       Tendsto (fun y : ℝ =>
           Lp.compMeasurePreserving (subRightCM y) (measurePreserving_subRightCM y) f₀)
@@ -82,7 +84,8 @@ theorem translation_continuous_L1
   have hy := Lp.coeFn_compMeasurePreserving f₀ (measurePreserving_subRightCM y)
   have h0 := Lp.coeFn_compMeasurePreserving f₀ (measurePreserving_subRightCM 0)
   have hc := hmem.coeFn_toLp
-  -- push `f₀ =ᵐ pX` along the measure-preserving translation `· - y` to get `f₀ (· - y) =ᵐ pX (· - y)`.
+  -- push `f₀ =ᵐ pX` along the measure-preserving translation `· - y`
+  -- to get `f₀ (· - y) =ᵐ pX (· - y)`.
   have hcy : (fun x => (f₀ : ℝ → ℝ) (x - y)) =ᵐ[volume] (fun x => pX (x - y)) := by
     have := (measurePreserving_subRightCM y).quasiMeasurePreserving.ae_eq_comp hc
     simpa [subRightCM, Function.comp] using this

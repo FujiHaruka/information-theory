@@ -458,7 +458,9 @@ private lemma jointStronglyTypicalSet_indep_perPair_prob_ge
 For an i.i.d. joint sequence with marginals matching `μ.map (Xs 0)` and `μ.map (Ys 0)`,
 and any `η > 0`, eventually for all `n` large enough,
 
-  `(1 - η) · exp(n · ((H(Z) - H(X) - H(Y)) - ((Fintype.card β · L_X + Fintype.card α · L_Y + L_Z) · ε + 3 δ)))
+  `(1 - η) ·
+    exp(n · ((H(Z) - H(X) - H(Y))
+      - ((Fintype.card β · L_X + Fintype.card α · L_Y + L_Z) · ε + 3 δ)))
     ≤ (μ_X^n × μ_Y^n).real (jointStronglyTypicalSet ε)`,
 
 where `L_X := logSumAbs μ Xs`, `L_Y := logSumAbs μ Ys`, `L_Z := logSumAbs μ (jointSequence Xs Ys)`,
@@ -600,7 +602,8 @@ theorem jointStronglyTypicalSet_indep_prob_ge
         + (-(n : ℝ) * (HX + (εX * LX + δ)) + -(n : ℝ) * (HY + (εY * LY + δ)))
       = (n : ℝ) * ((HZ - HX - HY) - ((εX * LX + εY * LY + ε * LZ) + 3 * δ))
     ring
-  -- Lower bound: (1-η) · exp(n · (HZ - ε·LZ - δ)) · C ≤ Afin.card · C ≤ sum ≤ (μXn.prod μYn).real A.
+  -- Lower bound: (1-η) · exp(n · (HZ - ε·LZ - δ)) · C ≤ Afin.card · C ≤ sum
+  --   ≤ (μXn.prod μYn).real A.
   have h_mul_C : (1 - η) * Real.exp ((n : ℝ) * (HZ - ε * LZ - δ)) * C
       ≤ (Afin.card : ℝ) * C := mul_le_mul_of_nonneg_right h_Afin_ge hC_nn
   calc (1 - η) * Real.exp ((n : ℝ) *

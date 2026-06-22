@@ -106,7 +106,8 @@ lemma pi_withDensity {n : ℕ} {E : Fin n → Type*}
   have hprod_meas : Measurable (fun x : (i : Fin n) → E i => ∏ i, f i (x i)) :=
     Finset.measurable_prod _ (fun i _ => (hf i).comp (measurable_pi_apply i))
   refine Measure.pi_eq (μ := fun i => (μ i).withDensity (f i)) (fun s hs => ?_)
-  -- box agreement: `((pi μ).withDensity (∏ f i)) (univ.pi s) = ∏ i, ((μ i).withDensity (f i)) (s i)`
+  -- box agreement:
+  -- `((pi μ).withDensity (∏ f i)) (univ.pi s) = ∏ i, ((μ i).withDensity (f i)) (s i)`
   rw [withDensity_apply _ (MeasurableSet.univ_pi hs)]
   -- rewrite the box-restricted integrand as the product of indicator-weighted densities
   have hint_eq : ∫⁻ x in Set.univ.pi s, ∏ i, f i (x i) ∂(Measure.pi μ)
@@ -189,13 +190,17 @@ private lemma gaussianReal_llr_integrable
     rw [h_real_combine, Real.log_mul hν₁ν₂_real_pos.ne' hg₂_pos.ne']
     ring
   -- each `log gᵢ(x) = cᵢ - (x-mᵢ)²/(2vᵢ)` is integrable against ν₁ (quadratic moment).
-  have hv₁_pos : (0 : ℝ) < v₁ := lt_of_le_of_ne v₁.coe_nonneg (fun h => hv₁ (by exact_mod_cast h.symm))
-  have hv₂_pos : (0 : ℝ) < v₂ := lt_of_le_of_ne v₂.coe_nonneg (fun h => hv₂ (by exact_mod_cast h.symm))
+  have hv₁_pos : (0 : ℝ) < v₁ :=
+    lt_of_le_of_ne v₁.coe_nonneg (fun h => hv₁ (by exact_mod_cast h.symm))
+  have hv₂_pos : (0 : ℝ) < v₂ :=
+    lt_of_le_of_ne v₂.coe_nonneg (fun h => hv₂ (by exact_mod_cast h.symm))
   have h_int_x2 : Integrable (fun x : ℝ => x ^ 2) ν₁ := by
-    have h_memLp : MemLp (fun x : ℝ => x) 2 ν₁ := by rw [hν₁_def]; exact memLp_id_gaussianReal' 2 (by simp)
+    have h_memLp : MemLp (fun x : ℝ => x) 2 ν₁ := by
+      rw [hν₁_def]; exact memLp_id_gaussianReal' 2 (by simp)
     have := h_memLp.integrable_sq; simpa [sq] using this
   have h_int_x1 : Integrable (fun x : ℝ => x) ν₁ := by
-    have h_memLp : MemLp (fun x : ℝ => x) 1 ν₁ := by rw [hν₁_def]; exact memLp_id_gaussianReal' 1 (by simp)
+    have h_memLp : MemLp (fun x : ℝ => x) 1 ν₁ := by
+      rw [hν₁_def]; exact memLp_id_gaussianReal' 1 (by simp)
     exact h_memLp.integrable (by norm_num)
   have h_int_logg : ∀ (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) (hvp : (0:ℝ) < v),
       Integrable (fun x : ℝ => Real.log (gaussianPDFReal m v x)) ν₁ := by
@@ -330,7 +335,8 @@ lemma awgn_perLetter_changeOfMeasure_facts
       Real.log_div
         (ne_of_gt (ENNReal.toReal_pos (hjden_pos p).ne' (hjden_lt_top p).ne))
         (ne_of_gt (ENNReal.toReal_pos (hqden_pos p).ne' (hqden_lt_top p).ne)),
-      neg_sub, Real.exp_sub, Real.exp_log (ENNReal.toReal_pos (hqden_pos p).ne' (hqden_lt_top p).ne),
+      neg_sub, Real.exp_sub,
+      Real.exp_log (ENNReal.toReal_pos (hqden_pos p).ne' (hqden_lt_top p).ne),
       Real.exp_log (ENNReal.toReal_pos (hjden_pos p).ne' (hjden_lt_top p).ne)]
   have hexp_J : ∀ᵐ p ∂J₁, (Q₁.rnDeriv J₁ p).toReal
       = Real.exp (-(Real.log ((J₁.rnDeriv Q₁ p).toReal))) := hJ_ac_vol.ae_le hexp_vol

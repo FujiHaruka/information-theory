@@ -502,7 +502,8 @@ lemma qkSingleton_blockRV_eq_ofReal_exp_negLogQk
       rw [← ENNReal.ofReal_mul (Real.exp_nonneg _)]
       congr 1
       -- exp(-negLogQk n ω) * m.toReal = exp(-negLogQk (n+1) ω).
-      -- m.toReal = exp(log m.toReal) = exp(-pmfLogCond μ p n ω) since pmfLogCond n ω = -log m.toReal.
+      -- m.toReal = exp(log m.toReal) = exp(-pmfLogCond μ p n ω)
+      -- since pmfLogCond n ω = -log m.toReal.
       have h_pmf : pmfLogCond μ p n ω = -Real.log m.toReal := by
         show -Real.log m.toReal = -Real.log m.toReal
         rfl
@@ -631,7 +632,8 @@ lemma MRatioUp_eq_ofReal_exp_old
         rw [Real.exp_neg, Real.exp_log h_P_real_pos]]
       rw [div_eq_mul_inv]
     rw [h_split]
-    -- ofReal (exp(-negLogQk) / P.toReal) = ofReal(exp(-negLogQk)) / ofReal(P.toReal) = ofReal(exp(-negLogQk)) / P.
+    -- ofReal (exp(-negLogQk) / P.toReal) = ofReal(exp(-negLogQk)) / ofReal(P.toReal)
+    --   = ofReal(exp(-negLogQk)) / P.
     rw [ENNReal.ofReal_div_of_pos h_P_real_pos, ← h_P_eq]
 
 /-- Upward likelihood ratio: `exp(n · blockLogAvg - negLogQk)` lifted to ENNReal. -/

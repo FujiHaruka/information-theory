@@ -316,7 +316,8 @@ private lemma codebook_marginal_one
       intro c
       exact (Finset.mul_prod_erase Finset.univ (fun m' => P.real {c m'})
         (Finset.mem_univ m)).symm
-    -- Reindex: `c ↦ (c m, c restricted to (univ.erase m))`. Use Fintype.sum_equiv? simpler: use Finset.sum_prod_pi.
+    -- Reindex: `c ↦ (c m, c restricted to (univ.erase m))`.
+    -- Use Fintype.sum_equiv? simpler: use Finset.sum_prod_pi.
     -- A cleaner approach: view `Codebook M n α = Fin M → (Fin n → α)` as a product over Fin M.
     -- The big sum is `∑_{c : Fin M → (Fin n → α)} F(c)` = `∑_{x : Fin n → α} ∑_{c' : ...}  F(...)`.
     -- We use `Fintype.sum_equiv` with `Equiv.piFinSucc` style, but simpler: just split via
@@ -325,14 +326,16 @@ private lemma codebook_marginal_one
     -- Use `Fintype.sum_pi`:
     -- ∑ c, ∏ m', g (c m') = ∏ m', ∑ x, g x.
     -- Combined with f(c m) breaking the product, we use Fintype.sum_apply_prod.
-    -- The cleanest: do an Equiv-based reindex `Fin M → (Fin n → α) ≃ (Fin n → α) × (Fin M.erase m → Fin n → α)`.
+    -- The cleanest: do an Equiv-based reindex
+    -- `Fin M → (Fin n → α) ≃ (Fin n → α) × (Fin M.erase m → Fin n → α)`.
     -- Use Fintype.prod_univ_sum-style.
     -- Concretely:
     --   ∑_c F(c m) * ∏_{m'} P{c m'}
     --   = ∑_{c m ∈ FinN→α} F(c m) * P{c m} * ∑_{c m'≠m ∈ ...} ∏ P{c m'}
     -- And `∑_{c''} ∏ P{c'' m'} = ∏ ∑_{x} P{x} = 1^... = 1` over `(Fin M).erase m`.
     rw [Finset.sum_congr rfl (fun c _ => by rw [h_prod_split c])]
-    -- Now group: ∑ c, (P{c m} * ∏_{m'≠m} P{c m'}) * f(c m) = ∑ c, P{c m} * f(c m) * ∏_{m'≠m} P{c m'}.
+    -- Now group: ∑ c, (P{c m} * ∏_{m'≠m} P{c m'}) * f(c m)
+    --   = ∑ c, P{c m} * f(c m) * ∏_{m'≠m} P{c m'}.
     have h_reassoc : ∀ c : Codebook M n α,
         (P.real {c m} * ∏ m' ∈ (Finset.univ : Finset (Fin M)).erase m, P.real {c m'}) *
             f (c m)
@@ -451,7 +454,8 @@ private lemma codebook_marginal_two
   -- Step 2: split off m and m' from the product, then sum out the rest.
   -- Define `Other := {m'' : Fin M | m'' ≠ m ∧ m'' ≠ m'}`.
   rw [Finset.sum_congr rfl (fun c _ => by rw [h_cm c])]
-  -- Build the equiv `Codebook M n α ≃ (Fin n → α) × (Fin n → α) × ({m'' // m'' ≠ m ∧ m'' ≠ m'} → (Fin n → α))`.
+  -- Build the equiv
+  -- `Codebook M n α ≃ (Fin n → α) × (Fin n → α) × ({m'' // m'' ≠ m ∧ m'' ≠ m'} → (Fin n → α))`.
   let toFun : Codebook M n α →
       (Fin n → α) × (Fin n → α) × ({m'' : Fin M // m'' ≠ m ∧ m'' ≠ m'} → (Fin n → α)) :=
     fun c => (c m, c m', fun m'' => c m''.1)

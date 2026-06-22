@@ -174,8 +174,10 @@ theorem lz78PhraseStrings_getElem_eq_of_parentData_eq {n c : ℕ} (x y : Fin n �
       min ((P x).idxOf (((P x)[j]'(by omega)).dropLast)) j
         = min ((P y).idxOf (((P y)[j]'(by omega)).dropLast)) j := hparent
   have hsym : ∀ j (hj : j < c),
-      ((P x)[j]'(by omega)).getLast (lz78PhraseStrings_forall_ne_nil (List.ofFn x) _ (List.getElem_mem _))
-        = ((P y)[j]'(by omega)).getLast (lz78PhraseStrings_forall_ne_nil (List.ofFn y) _ (List.getElem_mem _)) :=
+      ((P x)[j]'(by omega)).getLast
+          (lz78PhraseStrings_forall_ne_nil (List.ofFn x) _ (List.getElem_mem _))
+        = ((P y)[j]'(by omega)).getLast
+          (lz78PhraseStrings_forall_ne_nil (List.ofFn y) _ (List.getElem_mem _)) :=
     hsym
   have hne_x : ∀ w ∈ P x, w ≠ [] := lz78PhraseStrings_forall_ne_nil (List.ofFn x)
   have hne_y : ∀ w ∈ P y, w ≠ [] := lz78PhraseStrings_forall_ne_nil (List.ofFn y)
@@ -298,9 +300,11 @@ theorem lz78PhraseStrings_tail_eq_of_tailIdx_eq {n c : ℕ} (x y : Fin n → α)
       omega
     rw [min_eq_left (by omega)] at htailval
     -- idxOf tx = idxOf ty in P x; recover both via getElem_idxOf
-    have hgx : (lz78PhraseStrings (List.ofFn x))[(lz78PhraseStrings (List.ofFn x)).idxOf tx]'(by omega)
+    have hgx :
+        (lz78PhraseStrings (List.ofFn x))[(lz78PhraseStrings (List.ofFn x)).idxOf tx]'(by omega)
         = tx := List.getElem_idxOf (by omega)
-    have hgy : (lz78PhraseStrings (List.ofFn x))[(lz78PhraseStrings (List.ofFn x)).idxOf ty]'(by omega)
+    have hgy :
+        (lz78PhraseStrings (List.ofFn x))[(lz78PhraseStrings (List.ofFn x)).idxOf ty]'(by omega)
         = ty := List.getElem_idxOf (by omega)
     rw [← hgx, ← hgy, getElem_congr rfl htailval (by omega)]
   · -- tx = []: idxOf tx = c, min = c, forcing idxOf ty ≥ c, so ty ∉ P x ⇒ ty = []

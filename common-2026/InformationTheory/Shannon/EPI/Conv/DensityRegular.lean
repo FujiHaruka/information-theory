@@ -120,10 +120,11 @@ theorem deriv_convDensityAdd_eq {pX : ℝ → ℝ} {t : ℝ} (ht : 0 < t)
   funext z
   -- gateway: `HasDerivAt (convDensityAdd pX g) (∫ x, convDensityAddDeriv pX g z x) z`
   have hderiv :=
-    InformationTheory.Shannon.EPIConvDensityGaussianGateway.convDensityAdd_hasDerivAt_of_integrable_smoothKernel
+    EPIConvDensityGaussianGateway.convDensityAdd_hasDerivAt_of_integrable_smoothKernel
       pX g z hpX_int hregY hY_bdd hY'_bdd
   rw [hderiv.deriv]
-  -- `∫ x, convDensityAddDeriv pX g z x = ∫ x, pX x * deriv g (z - x) = convDensityAdd pX (deriv g) z`
+  -- `∫ x, convDensityAddDeriv pX g z x = ∫ x, pX x * deriv g (z - x)`
+  -- `  = convDensityAdd pX (deriv g) z`
   rfl
 
 /-- **Convolution-with-Gaussian tail vanishing** (filter-generic).
@@ -211,7 +212,7 @@ theorem isRegularDensityV2_convDensityAdd_gaussian (pX : ℝ → ℝ) {t : ℝ} 
       integral_deriv_eq_zero := ?_ }
   · -- diff
     exact
-      InformationTheory.Shannon.EPIConvDensityGaussianGateway.convDensityAdd_differentiable_of_integrable_smoothKernel
+      EPIConvDensityGaussianGateway.convDensityAdd_differentiable_of_integrable_smoothKernel
         pX g hpX_int hregY hY_bdd hY'_bdd
   · -- pos
     intro x

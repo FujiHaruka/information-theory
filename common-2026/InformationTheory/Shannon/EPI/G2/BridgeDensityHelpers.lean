@@ -80,12 +80,14 @@ theorem llr_eq_log_density_sub_log_density
 Kullback-Leibler divergence expands into minus the differential entropy of `P`
 and a cross-entropy term:
 
-`(klDiv P Q).toReal = − differentialEntropy P − ∫ x, (P.rnDeriv volume x).toReal · log ((Q.rnDeriv volume x).toReal) ∂volume`.
+`(klDiv P Q).toReal = − differentialEntropy P`
+` − ∫ x, (P.rnDeriv volume x).toReal · log ((Q.rnDeriv volume x).toReal) ∂volume`.
 
 `differentialEntropy P = − ∫ p log p` and the cross-term is `∫ p log q`, so this is
 `∫ p log p − ∫ p log q = ∫ p log (p/q) = ∫ llr P Q ∂P`.
 
-The cross-term integrability `Integrable (fun x => (P.rnDeriv volume x).toReal · log ((Q.rnDeriv volume x).toReal)) volume`
+The cross-term integrability
+`Integrable (fun x => (P.rnDeriv volume x).toReal · log ((Q.rnDeriv volume x).toReal)) volume`
 is a regularity precondition (the term may otherwise be non-integrable).
 @audit:ok -/
 theorem klDiv_toReal_eq_neg_differentialEntropy_sub_cross
@@ -123,7 +125,8 @@ theorem klDiv_toReal_eq_neg_differentialEntropy_sub_cross
   ring
 
 /-- Per-fibre balance in `ℝ≥0∞`: the sum of the differential entropy positive part `A`,
-KL divergence, and cross-entropy positive part `Cpos` equals the sum of the negative parts `B` and `Cneg`.
+KL divergence, and cross-entropy positive part `Cpos` equals the sum of the negative parts
+`B` and `Cneg`.
 A subtraction-free identity used by the assembler via `lintegral_add`.
 @audit:ok -/
 theorem klDiv_negMulLog_cross_balance_ennreal
@@ -149,7 +152,8 @@ theorem klDiv_negMulLog_cross_balance_ennreal
   set B := ∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (p x))) ∂volume with hB
   set Cpos := ∫⁻ x, ENNReal.ofReal (p x * Real.log (q x)) ∂volume with hCpos
   set Cneg := ∫⁻ x, ENNReal.ofReal (-(p x * Real.log (q x))) ∂volume with hCneg
-  -- Step 1: finiteness of the four lintegrals (template from `differentialEntropyExt_of_ac_integrable`).
+  -- Step 1: finiteness of the four lintegrals
+  -- (template from `differentialEntropyExt_of_ac_integrable`).
   have hbound : ∀ (f : ℝ → ℝ), Integrable f volume →
       (∫⁻ x, ENNReal.ofReal (f x) ∂volume) ≠ ⊤ := by
     intro f hf

@@ -30,7 +30,9 @@ record of the abandoned Vitali approach.
 `f_n := convDensityAdd pX g_{u n} = pX ∗ g_{u n}`.
 
 * **Step 1** (Mathlib in): `unifIntegrable_of` reduces UI to a *uniform* indicator-tail
-  estimate `∀ ε>0, ∃ C, ∀ n, eLpNorm ({C ≤ |negMulLog (f_n)|}.indicator (negMulLog∘f_n)) 1 volume ≤ ofReal ε`.
+  estimate
+  `∀ ε>0, ∃ C, ∀ n, eLpNorm ({C ≤ |negMulLog (f_n)|}.indicator (negMulLog∘f_n)) 1 volume`
+  ` ≤ ofReal ε`.
 * **Step 2** (probability-measure framing, genuine, option b = `withDensity` direct):
   `μ_n := volume.withDensity (ofReal∘f_n)` is a probability measure (`∫ f_n = 1` via
   `integral_convDensityAdd_gaussian_eq_one`), `≪ volume`, and `rnDeriv = ofReal∘f_n`.
@@ -229,7 +231,8 @@ theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
           = x ^ 2 * g x + 2 * y * (x * g x) + y ^ 2 * g x := by
       intro x; ring
     rw [integral_congr_ae (Filter.Eventually.of_forall hexpand)]
-    rw [integral_add (by exact hsq_mom_int.add ((hid_g_int.const_mul (2 * y)))) (hg_int.const_mul (y ^ 2)),
+    rw [integral_add (by exact hsq_mom_int.add ((hid_g_int.const_mul (2 * y))))
+        (hg_int.const_mul (y ^ 2)),
       integral_add hsq_mom_int (hid_g_int.const_mul (2 * y)),
       integral_const_mul, integral_const_mul]
     rw [hsq_mom0, hid_mom0, hg_mom0]
@@ -296,7 +299,8 @@ theorem convDensityAdd_gaussian_id_integrable {pX : ℝ → ℝ}
   · exact (measurable_id.mul (convDensityAdd_gaussian_measurable hpX_meas ht)).aestronglyMeasurable
   · rw [Real.norm_eq_abs, abs_mul]
     rw [abs_of_nonneg (hp_nn x)]
-    have habs_le : |x| ≤ (1 + x ^ 2) / 2 := by nlinarith [sq_nonneg (|x| - 1), abs_nonneg x, sq_abs x]
+    have habs_le : |x| ≤ (1 + x ^ 2) / 2 := by
+      nlinarith [sq_nonneg (|x| - 1), abs_nonneg x, sq_abs x]
     calc |x| * p_t x ≤ ((1 + x ^ 2) / 2) * p_t x :=
           mul_le_mul_of_nonneg_right habs_le (hp_nn x)
       _ = (p_t x + x ^ 2 * p_t x) / 2 := by ring

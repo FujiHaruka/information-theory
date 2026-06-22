@@ -203,7 +203,8 @@ theorem awgnConverseMarkov_holds
       (hf.comp (measurable_const.prodMk
         (measurable_fst.prodMk measurable_snd))).aemeasurable]
   simp_rw [h_inner_split]
-  -- Define G (z, x) := ∫⁻ y ∂(W z), f (z, x, y), so RHS = ∫⁻ z ∂(μ.map Zc), ∫⁻ x ∂(K_X z), G (z, x).
+  -- Define G (z, x) := ∫⁻ y ∂(W z), f (z, x, y),
+  -- so RHS = ∫⁻ z ∂(μ.map Zc), ∫⁻ x ∂(K_X z), G (z, x).
   set G : (Fin n → ℝ) × Fin M → ℝ≥0∞ :=
     fun p => ∫⁻ y : Fin n → ℝ, f (p.1, p.2, y) ∂(W p.1) with hG_def
   have hG_meas : Measurable G := by
@@ -239,8 +240,10 @@ theorem awgnConverseMarkov_holds
   refine lintegral_congr fun a => ?_
   have hWg_eq : Wg a = W (c.encoder a) := by rw [hWg_def, Kernel.comap_apply]
   haveI : IsProbabilityMeasure (Wg a) := by rw [hWg_eq]; infer_instance
-  -- LHS inner: ∫⁻ y ∂(Wg a), f (encoder a, a, y).  `(Zc (a,y), Xs (a,y), Yo (a,y)) = (encoder a, a, y)`.
-  -- RHS inner: ∫⁻ y ∂(Wg a), G (encoder a, a), constant in y, value `∫⁻ y' ∂(W (encoder a)), f (encoder a, a, y')`.
+  -- LHS inner: ∫⁻ y ∂(Wg a), f (encoder a, a, y).
+  --   `(Zc (a,y), Xs (a,y), Yo (a,y)) = (encoder a, a, y)`.
+  -- RHS inner: ∫⁻ y ∂(Wg a), G (encoder a, a), constant in y,
+  --   value `∫⁻ y' ∂(W (encoder a)), f (encoder a, a, y')`.
   have hRHS_eval : (fun y : Fin n → ℝ => G (Zc (a, y), Xs (a, y)))
       = (fun _ : Fin n → ℝ => ∫⁻ y' : Fin n → ℝ, f (c.encoder a, a, y') ∂(Wg a)) := by
     funext y

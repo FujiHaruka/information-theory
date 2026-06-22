@@ -190,7 +190,8 @@ private lemma productMass_columnProd_ge
         = -(n : ℝ) * HY + (-(n : ℝ) * ε_amp * LY) from by ring]
   rw [h_HY_eq]
   -- Now: need -(n · ε_amp · LY) ≤ ∑_b (col_b - n·qY(b)) · log qY(b).
-  suffices h : -((n : ℝ) * ε_amp * LY) ≤ ∑ b : β, ((col b : ℝ) - (n : ℝ) * qY b) * Real.log (qY b) by
+  suffices h : -((n : ℝ) * ε_amp * LY) ≤
+      ∑ b : β, ((col b : ℝ) - (n : ℝ) * qY b) * Real.log (qY b) by
     have hgoal : -(n : ℝ) * ε_amp * LY = -((n : ℝ) * ε_amp * LY) := by ring
     rw [hgoal]
     linarith
@@ -1385,7 +1386,8 @@ theorem conditionalStronglyTypicalSlice_mass_ge
   have h_subset : Cset ⊆ conditionalStronglyTypicalSlice μ Xs Ys n ε x := by
     rw [conditionalStronglyTypicalSlice_eq_biUnion]
     intro y hy
-    -- y ∈ Cset = conditionalTypeClass x c_floor; want ∈ ⋃ c ∈ slice, conditionalTypeClass x (c : ℕ).
+    -- y ∈ Cset = conditionalTypeClass x c_floor;
+    -- want ∈ ⋃ c ∈ slice, conditionalTypeClass x (c : ℕ).
     -- Note: c_idx : TypeCountIndex (α × β) n; (fun p => (c_idx p : ℕ)) = c_floor by defeq.
     have h_idx_unfold : (fun p => ((c_idx p : Fin (n + 1)) : ℕ)) = c_floor := by
       funext p; rfl
@@ -1462,7 +1464,8 @@ theorem conditionalStronglyTypicalSlice_mass_ge
         = (Cfin.card : ℝ) := by
     rfl
   rw [h_card_eq_KL] at h_KL
-  -- Now combine: target ≤ card · exp(-n(HY + ε_amp · LY)) ≤ ∑ y ∈ Cfin, ... = mass(Cset) ≤ mass(slice).
+  -- Now combine: target ≤ card · exp(-n(HY + ε_amp · LY)) ≤ ∑ y ∈ Cfin, ...
+  --   = mass(Cset) ≤ mass(slice).
   calc Real.exp (-(n : ℝ) *
         (entropy μ (Xs 0) + entropy μ (Ys 0)
           - entropy μ (jointSequence Xs Ys 0)
