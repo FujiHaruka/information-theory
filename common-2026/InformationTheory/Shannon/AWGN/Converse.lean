@@ -590,7 +590,7 @@ theorem awgn_per_letter_mi_bridge_genuine
 
 /-! ## The converse rate bound -/
 
-/-- **AWGN converse theorem** (Cover–Thomas, Theorem 9.1.2). For every code with
+/-- AWGN converse theorem (Cover–Thomas, Theorem 9.1.2). For every code with
 `M ≥ 2` messages, block length `n`, output-power constraint `P` and average error
 probability `Pe`, the rate satisfies
 

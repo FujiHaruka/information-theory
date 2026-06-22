@@ -16,7 +16,7 @@ mis-flagged this as `Found 0` — the bare-identifier loogle query
 `condExp_indep` simply failed; `MeasureTheory.condExp_indep_eq` is real and
 `IndepFun.integral_fun_mul_eq_mul_integral` is real.
 
-**NOT the Blachman identity itself** (`wall:stam-blachman`) — that remains a
+NOT the Blachman identity itself (`wall:stam-blachman`) — that remains a
 self-build wall (score-of-convolution `s_Z = E[s_X | σ(X+Y)]`, PR-grade). This
 file only supplies the cross-term lemma the Blachman expansion consumes.
 -/
@@ -28,7 +28,7 @@ open scoped ENNReal NNReal
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-- **Score cross-term orthogonality (full-expectation version).**
+/-- Score cross-term orthogonality (full-expectation version).
 For independent `X, Y` whose score functions `sX, sY` have zero mean (here only
 `sX` needs mean zero), the cross-term `∫ sX(X ω) · sY(Y ω) dP = 0`. Built from
 `IndepFun.comp` + `IndepFun.integral_fun_mul_eq_mul_integral` + the mean-zero

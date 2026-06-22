@@ -43,7 +43,7 @@ variable {n : ℕ}
 variable {α : Type*} [MeasurableSpace α] [Nonempty α] [StandardBorelSpace α]
 variable {β : Type*} [MeasurableSpace β] [Nonempty β] [StandardBorelSpace β]
 
-/-- **Strong memoryless DMC predicate** (two Markov axioms):
+/-- Strong memoryless DMC predicate (two Markov axioms):
 
 * `per_letter_markov`: for each `i`, `X^n → X_i → Y_i` (per-letter channel).
 * `outputs_cond_indep`: for each `i`, `Y^{≠i} → X^n → Y_i` (outputs conditionally
@@ -203,10 +203,10 @@ lemma h_split_of_strong
     (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys j.val ω) Xprefix
     (hXs i) (hYs i) hYother hXprefix h_fin
 
-/- **Architectural note**: an earlier session attempted to derive the D-2'
+/- Architectural note: an earlier session attempted to derive the D-2'
 hypothesis `h_yother_zero : condMI X_i Y^{≠i} (Xprefix, Y_i) = 0` from
 `IsMemorylessChannelStrong`. A counterexample (n = 2, i = 0, X_1 := X_0
-degenerate encoder + iid Bernoulli(1/4) noise) showed the claim is **false**
+degenerate encoder + iid Bernoulli(1/4) noise) showed the claim is false
 under arbitrary encoders — the joint distribution of `(X_i, X^{≠i})` is
 unconstrained, so `Y^{≠i} ⊥/ X_i | Y_i` in general.
 
@@ -230,7 +230,7 @@ variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
 omit [DecidableEq M] [DecidableEq α] [DecidableEq β] in
-/-- **Channel coding converse, strong memoryless DMC (Cover-Thomas Thm 7.9)**:
+/-- Channel coding converse, strong memoryless DMC (Cover-Thomas Thm 7.9):
 under `IsMemorylessChannelStrong`,
 `log |M| ≤ ∑ I(X_i; Y_i).toReal + h(Pe) + Pe · log(|M| - 1)`.
 

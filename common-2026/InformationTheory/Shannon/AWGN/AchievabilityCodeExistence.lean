@@ -455,7 +455,7 @@ theorem isAwgnTypicalityHypothesis
     linarith
   have hR''_lt_C : R'' < C := by linarith
   have hR_lt_R'' : R < R'' := by linarith
-  -- **Typicality slack `δ`** (δ-separation): pick `δ := (C − R)/12 > 0` so that
+  -- Typicality slack `δ` (δ-separation): pick `δ := (C − R)/12 > 0` so that
   -- `R'' + 3δ < C` (the margin condition the δ-separated union bound consumes).
   -- `3δ = (C − R)/4` and `R'' = C − (C − R)/2`, so `R'' + 3δ = C − (C − R)/4 < C`.
   set δ : ℝ := (C - R) / 12 with hδ_def
@@ -505,7 +505,7 @@ theorem isAwgnTypicalityHypothesis
   haveI : NeZero M := ⟨hM_pos.ne'⟩
   haveI : NeZero M_target := ⟨hM_target_pos.ne'⟩
   -- (1) typical set + measurability from AEP at parameters `(P', N, δ, ε_rand, n)`,
-  --     **keeping** the two AEP bounds (mass `≥ 1−ε_rand`, indep-pair `≤ exp(...)`)
+  --     keeping the two AEP bounds (mass `≥ 1−ε_rand`, indep-pair `≤ exp(...)`)
   --     to thread into the δ-separated union bound.
   obtain ⟨A, hA_meas, hA_mass, hA_indep⟩ := hN_aep hn_aep
   -- (2) per-m average error bound from the δ-separated union bound at rate R''

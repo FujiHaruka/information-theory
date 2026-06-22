@@ -38,7 +38,7 @@ variable {α β : Type*}
 
 /-! ### Per-codeword information-density lower bound -/
 
-/-- **High-LLR set for codeword `m`**: those `y` where the channel output law at
+/-- High-LLR set for codeword `m`: those `y` where the channel output law at
 codeword `m` exceeds the reference `Q` by more than `exp(threshold)`. -/
 noncomputable def highLLRSet
     {M n : ℕ} (W : Channel α β) (c : Code M n α β)
@@ -55,7 +55,7 @@ lemma measurableSet_highLLRSet
   (Set.toFinite _).measurableSet
 
 omit [Fintype α] [DecidableEq α] [MeasurableSingletonClass α] [Nonempty β] in
-/-- **Per-codeword Markov-style bound**: For each codeword `m`, the channel
+/-- Per-codeword Markov-style bound: For each codeword `m`, the channel
 output mass on `s \ highLLR_m` is bounded by `exp(threshold) · Q(s)`. -/
 theorem channelCoding_per_codeword_markov_bound
     {M n : ℕ} (W : Channel α β) [IsMarkovKernel W] (c : Code M n α β)
@@ -107,7 +107,7 @@ theorem channelCoding_per_codeword_markov_bound
         mul_le_mul_of_nonneg_left h_Q_mono h_exp_nn
 
 omit [Fintype α] [DecidableEq α] [MeasurableSingletonClass α] [Nonempty β] in
-/-- **Verdú-Han single-shot strong-converse decomposition** (per-codeword):
+/-- Verdú-Han single-shot strong-converse decomposition (per-codeword):
 For any codeword `m`, any measurable `s`,
 
 ```
@@ -233,7 +233,7 @@ lemma channelCoding_one_sub_avgErr_eq
   rfl
 
 omit [Fintype α] [DecidableEq α] [MeasurableSingletonClass α] [Nonempty β] in
-/-- **Average-codeword Verdú-Han bound**:
+/-- Average-codeword Verdú-Han bound:
 Average the per-codeword decomposition over the uniform message distribution
 to get the strong-converse-style lower bound on success probability `1 - avgPe`:
 

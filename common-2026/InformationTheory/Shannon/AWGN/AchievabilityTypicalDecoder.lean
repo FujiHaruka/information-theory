@@ -1032,7 +1032,7 @@ theorem awgn_random_coding_union_bound
   -- Reduction (genuine): the integrand depends only on the `m`-th codeword, so the
   -- codebook integral collapses to a single-codeword integral against the codeword
   -- marginal `Measure.pi (gaussianReal 0 P')` (`gaussianCodebook_codeword_law` +
-  -- `lintegral_map`). What remains is the **joint marginal identity** `J Aᶜ ≤ ε`
+  -- `lintegral_map`). What remains is the joint marginal identity `J Aᶜ ≤ ε`
   -- (the `μX ⊗ channel = J` change-of-variables; genuine Mathlib-absent wiring).
   have h_term1 :
       ∫⁻ codebook, (Wch codebook) (E1 codebook)
@@ -1040,9 +1040,9 @@ theorem awgn_random_coding_union_bound
         ≤ ENNReal.ofReal ε :=
     awgn_unionBound_trueCodeword_term_le P N h_meas m hε A hA_meas hA_mass
   -- ── Atom 3: second (alias) term `∑_{m'≠m} ∫ Wch(E2 m') = (M−1)·Q A ≤ ε`. ──
-  -- Two sub-steps: (a) **Q-marginal collapse** `∑_{m'≠m} ∫ Wch(E2 m') = (M−1)·Q A`
+  -- Two sub-steps: (a) Q-marginal collapse `∑_{m'≠m} ∫ Wch(E2 m') = (M−1)·Q A`
   -- (m'≠m ⟹ codebook m' ⊥ codebook m, the product law `Q`; same plumbing as term1's
-  -- J-marginal). (b) **N₀-decay** `(M−1)·Q A ≤ (M−1)·exp(−(klDiv_n − n·3δ)) ≤
+  -- J-marginal). (b) N₀-decay `(M−1)·Q A ≤ (M−1)·exp(−(klDiv_n − n·3δ)) ≤
   -- ⌈exp(nR)⌉·exp(−n(I−3δ)) ≤ ε` from `hA_indep`, `hM_le`, and `hslack` (margin
   -- `g = I − R − 3δ > 0`, needing `klDiv_n = n·I` via `klDiv_perLetter_eq_capacity`
   -- and `klDiv_nFold_eq_nsmul`). `N₀ = ⌈log(2/ε)/g⌉` is the pinned decay threshold.

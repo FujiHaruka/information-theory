@@ -228,7 +228,7 @@ theorem awgnCapacity_le_gaussian
   · rintro y ⟨p, hp_mem, rfl⟩
     exact h_max_ent p hp_mem
 
-/-- **AWGN capacity closed form** (Cover–Thomas, Theorem 9.1): the supremum over
+/-- AWGN capacity closed form (Cover–Thomas, Theorem 9.1): the supremum over
 power-constrained inputs equals `(1/2) log(1 + P/N)`, obtained as the sandwich of
 the Gaussian-achievable lower bound and the max-entropy upper bound. The hypotheses
 `h_bridge_gauss`, `h_max_ent`, `h_bdd` carry the closed-form mutual information and

@@ -407,7 +407,7 @@ theorem entropy_power_inequality_of_density_explicit
     varX varY varS h_varX_nn h_varY_nn h_varS_nn
     h_rescale_X h_rescale_Y h_rescale_S h_stam_supply
 
-/-- **Blachman bridge** — `IsBlachmanConvReady (convDensityAdd p_base g_τ) (gaussianPDFReal 0 v)`.
+/-- Blachman bridge — `IsBlachmanConvReady (convDensityAdd p_base g_τ) (gaussianPDFReal 0 v)`.
 
 The explicit `entropy_power_inequality_of_density_explicit` requires, for each density
 witness `q`, a `hready : ∀ v ≠ 0, IsBlachmanConvReady q (gaussianPDFReal 0 v)`. When `q` is
@@ -599,7 +599,7 @@ lemma smoothing_density_regularity
   · exact InformationTheory.Shannon.convDensityAdd_gaussian_sq_integrable
       hp_nn hp_meas hp_int hp_mom hτ
 
-/-- **Per-`t` smoothing EPI**.
+/-- Per-`t` smoothing EPI.
 
 For smoothed variables `X_t = X + √t·Z_X`, `Y_t = Y + √t·Z_Y` (independent standard-normal
 noises), the entropy-power inequality holds at every fixed `t > 0`. Proved by instantiating the
@@ -871,7 +871,7 @@ lemma iIndepFun_liftMeasure4_of_indep
   rw [hAprod]
   ring
 
-/-- **Finite-variance classical EPI (Real, no noise)**.
+/-- Finite-variance classical EPI (Real, no noise).
 
 The base-level entropy-power inequality `N(X+Y) ≥ N(X) + N(Y)` for absolutely
 continuous, finite-variance, independent `X, Y` — with NO smoothing noise. Obtained
@@ -1068,7 +1068,7 @@ theorem entropy_power_add_ge_of_finite_variance
     exact htend_sum
   exact hfinal
 
-/-- **Finite-variance classical EPI (ext, ℝ≥0∞)**.
+/-- Finite-variance classical EPI (ext, ℝ≥0∞).
 
 The `entropyPowerExt` (ℝ≥0∞-valued) version of `entropy_power_add_ge_of_finite_variance`.
 Under the same hypotheses, `Nₑ(X+Y) ≥ Nₑ(X) + Nₑ(Y)` in `ℝ≥0∞`. Obtained by lifting the

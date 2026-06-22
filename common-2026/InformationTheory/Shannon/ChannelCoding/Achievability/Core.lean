@@ -50,7 +50,7 @@ variable [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass �
 abbrev Codebook (M n : ℕ) (α : Type*) [MeasurableSpace α] :=
   Fin M → (Fin n → α)
 
-/-- **Joint-typical decoder.** Given a received word `y`, returns the unique
+/-- Joint-typical decoder. Given a received word `y`, returns the unique
 message `m` such that `(codebook m, y) ∈ jointlyTypicalSet μ Xs Ys n ε`, falling
 back to `⟨0, hM⟩` if either no such `m` exists or it is not unique. -/
 noncomputable def jointTypicalDecoder
@@ -77,7 +77,7 @@ noncomputable def codebookToCode
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] [DecidableEq β]
   [Nonempty β] in
-/-- **Per-codeword error bound.** The point-wise error probability of message `m`
+/-- Per-codeword error bound. The point-wise error probability of message `m`
 under the joint-typical decoder is bounded by the (E1) "true codeword not typical"
 event plus the (E2) "some alias codeword is typical" union bound. -/
 theorem errorProbAt_le_E1_plus_E2
@@ -207,7 +207,7 @@ Because `α` is finite, this `Measure.pi` is determined by its values on singlet
 `{codebook}`, namely the product `∏ m i, p.real {codebook m i}`; the codebook
 average is then a finite weighted sum.
 
-The alternative of averaging over a **uniform** distribution on `Codebook M n α`
+The alternative of averaging over a uniform distribution on `Codebook M n α`
 is inconsistent with the joint-typicality bounds, which speak about a `p`-i.i.d.
 law: when `p` is not uniform on `α`, the uniform-on-codebook expectation does not
 equal any `p`-derived quantity. -/

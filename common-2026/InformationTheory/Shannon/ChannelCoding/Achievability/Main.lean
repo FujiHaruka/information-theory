@@ -37,7 +37,7 @@ average is a convex combination. -/
 
 omit [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β]
   [MeasurableSingletonClass β] in
-/-- **Pigeonhole (probabilistic-method form).** If the codebook expectation is
+/-- Pigeonhole (probabilistic-method form). If the codebook expectation is
 `≤ B`, then there exists a single codebook with `averageErrorProb ≤ B`. -/
 theorem exists_codebook_le_avg
     {Ω : Type*} [MeasurableSpace Ω]
@@ -206,7 +206,7 @@ theorem complementProbReal_le_of_one_sub_le
 /-! ### Main theorem -/
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Channel coding achievability (Cover-Thomas 7.7.1, achievability half).**
+/-- Channel coding achievability (Cover-Thomas 7.7.1, achievability half).
 For any rate `R < I(p; W)` and target error probability `ε' > 0`, there exists
 `N` such that for all `n ≥ N` there is a block code of length `n` with at least
 `exp (n · R)` messages whose average error probability is `< ε'`.

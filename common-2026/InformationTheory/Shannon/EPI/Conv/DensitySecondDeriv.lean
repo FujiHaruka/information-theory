@@ -20,13 +20,13 @@ once the second derivative is identified as this integral, GAP② majorizes it b
 
 ## Mathlib-shape-driven
 
-The conclusion is an **equality** (not a `HasDerivAt`) so that the triangle bound
+The conclusion is an equality (not a `HasDerivAt`) so that the triangle bound
 in GAP② can `rw` it directly. We reach it by applying the parametric-integral
 gateway `hasDerivAt_integral_of_dominated_loc_of_deriv_le` twice (1st then 2nd
 spatial derivative), mirroring the genuine STEP D code in
 `FisherInfoDeBruijnPerTime.heatFlow_density_heat_equation`. The Gaussian-tail
-domination of the polynomial×Gaussian integrand is supplied as **honest
-regularity preconditions** in the exact shape the gateway consumes — NOT a
+domination of the polynomial×Gaussian integrand is supplied as honest
+regularity preconditions in the exact shape the gateway consumes — NOT a
 load-bearing bundling of the second-derivative conclusion, which is *derived*.
 
 The per-`y` kernel derivative closed forms are the `@audit:ok` atoms
@@ -41,7 +41,7 @@ open MeasureTheory Real ProbabilityTheory
 open InformationTheory.Shannon.EPIConvDensity
 open InformationTheory.Shannon.FisherInfo
 
-/-- **Spatial first-derivative identification (as a function).** Under
+/-- Spatial first-derivative identification (as a function). Under
 Gaussian-tail domination preconditions, the spatial first derivative of the
 convolution density is the integral of `pX y · ∂_z g_s(z-y) = pX y · g_s(z-y)·(-(z-y)/s)`:
 
@@ -112,7 +112,7 @@ theorem convDensityAdd_deriv1_gaussian_eq
   filter_upwards with y
   rw [heatFlow_density_heat_equation_kernel_eq hs (ζ - y)]
 
-/-- **Spatial second-derivative closed form (STEP D bridge).** Under Gaussian-tail
+/-- Spatial second-derivative closed form (STEP D bridge). Under Gaussian-tail
 domination preconditions, the spatial second derivative of the heat-flow
 convolution density is the integral of `pX y · ∂²_z g_s(z-y)`:
 

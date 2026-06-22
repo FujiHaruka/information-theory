@@ -5,7 +5,7 @@ import Mathlib.MeasureTheory.Constructions.Pi
 # AWGN achievability — continuous AEP engine (Chebyshev concentration)
 
 False-wall overturn for the `awgn-continuous-aep-gaussian` wall slug.  The
-continuous AEP mass-concentration sub-bound (i) does **not** require a.s.
+continuous AEP mass-concentration sub-bound (i) does not require a.s.
 convergence (the infinite product measure SLLN that the inventory assumed); a
 finite-`n` Chebyshev weak law on the *finite* product measure
 `Measure.pi (fun _ : Fin n => μ)` is enough.  Both lemmas below are genuine

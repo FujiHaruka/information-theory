@@ -37,7 +37,7 @@ For a codebook drawn from the 2-stage Gaussian product law at codeword variance
 *individual* codeword `m` violates the power budget `∑ᵢ (c m i)² > n · P_target`
 on a codebook set of mass `≤ ε` (for all `n` past a threshold `N₀`).
 
-This is the **per-codeword marginal** form: unlike the false `∀ m`-form (mass of
+This is the per-codeword marginal form: unlike the false `∀ m`-form (mass of
 the all-codewords-OK set `≥ 1 − ε`, which decays like `q^M ≈ exp(−exp(n(R−ψ)))`),
 the per-codeword marginal mass is `M`-independent (the `m`-th coordinate marginal
 of `Measure.pi (fun _ : Fin M => νₙ)` is `νₙ`), so no exponential rate / capacity

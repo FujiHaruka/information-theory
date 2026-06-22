@@ -50,7 +50,7 @@ variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
 
 /-! ## §4 — Endpoints, antitonicity, EPI bridge -/
 
-/-- **TT-`_continuousWithinAt_zero`** — the two-time gap is continuous at the
+/-- TT-`_continuousWithinAt_zero` — the two-time gap is continuous at the
 left endpoint `t = 0` (within `Ioi 0`).
 
 The `log N(s(t),r(t))` term is continuous via the matched-path continuity
@@ -172,7 +172,7 @@ theorem twoTimeLogRatioGap_continuousWithinAt_zero
       simp [hs0, hr0, Real.sqrt_zero]
     rw [hfun]
 
-/-- **TT-`_antitoneOn_Ici_zero`** — the two-time gap is `AntitoneOn (Set.Ici 0)`.
+/-- TT-`_antitoneOn_Ici_zero` — the two-time gap is `AntitoneOn (Set.Ici 0)`.
 
 `antitoneOn_of_deriv_nonpos` (convex `Set.Ici 0`) with continuity
 (`twoTimeLogRatioGap_continuousWithinAt_zero`), differentiability + per-`t`
@@ -189,7 +189,7 @@ Fisher info) and the per-`t` harmonic Stam supply. The endpoint `0` is then
 re-attached via `AntitoneOn.insert_of_continuousWithinAt` + the endpoint
 continuity (Task 1).
 
-The added preconditions are all genuine regularity / Stam-supply, **not** a
+The added preconditions are all genuine regularity / Stam-supply, not a
 bundling of the EPI conclusion (the `h_per_t` conjunction supplies positivity,
 the density-pin equalities, and the harmonic Stam `1/J_S ≥ 1/J_X + 1/J_Y` — the
 same shape as the model's `h_pos_stam`; the harmonic Stam is the genuine
@@ -507,11 +507,11 @@ theorem sumHeatFlowEP_div_heatFlowEP_sum_tendsto_one
   filter_upwards [Filter.eventually_ge_atTop (0 : ℝ)] with t ht
   exact h_den t ht
 
-/-- **TT-`_tendsto_zero_atTop`** — the two-time gap tends to `0` as `t → ∞`
+/-- TT-`_tendsto_zero_atTop` — the two-time gap tends to `0` as `t → ∞`
 (Gaussian-saturation limit along the matched paths). Mirrors
 `csiszarLogRatioGap_tendsto_zero_atTop` (`EPICase1RatioLimit.lean:1178`).
 
-**§1 (genuine reduction, sorry-free in this body).** Using
+§1 (genuine reduction, sorry-free in this body). Using
 `IsMatchedTimePath.matched_growth` (for `t ≥ 0`, `heatFlowEP A B P (s t) =
 heatFlowEP A B P 0 · eᵗ`) and `heatFlowEP A B P 0 = entropyPower (P.map A)` (the
 `√0 = 0` collapse), the matched-path denominator
@@ -522,7 +522,7 @@ saturation ratio `A t / B t` (`A t = sumHeatFlowEP …(s t)(r t)` is the numerat
 The `−t` correction is absorbed by the `eᵗ` growth — established genuinely in the
 body via `Real.log_mul`/`Real.log_exp`, no `sorry`.
 
-**§2 (saturation core, genuinely closed 2026-06-06).** The EPI saturation
+§2 (saturation core, genuinely closed 2026-06-06). The EPI saturation
 `A t / B t → 1` as `t → ∞`, isolated into `have h_ratio_tendsto`; from it
 `log (A t / B t) → log 1 = 0` (continuity of `log` at `1`) and
 `log (A/B) = log A − log B` (both positive) recover `R t → 0`. The saturation is

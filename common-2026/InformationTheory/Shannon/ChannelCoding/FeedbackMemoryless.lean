@@ -50,7 +50,7 @@ Markov chain property: for each `i : Fin n`, the random variables form a Markov 
 ```
 
 That is, given `X_i`, the output `Y_i` is independent of `(Y^{<i}, Msg)` — which captures
-both **memorylessness** (`Y_i` doesn't depend on `Y^{<i}`) and **causality** (`Y_i`
+both memorylessness (`Y_i` doesn't depend on `Y^{<i}`) and causality (`Y_i`
 doesn't depend on `Msg` once `X_i` is given).
 
 The left RV is `(Y^{<i}, Msg)` (prefix first, message second), aligning with the chain
@@ -82,7 +82,7 @@ variable {M : Type*} [MeasurableSpace M] [Nonempty M] [StandardBorelSpace M]
 variable {α : Type*} [MeasurableSpace α]
 variable {β : Type*} [MeasurableSpace β] [Nonempty β] [StandardBorelSpace β]
 
-/-- **Per-letter bound**: under `IsMemorylessFeedback`,
+/-- Per-letter bound: under `IsMemorylessFeedback`,
 `I(Msg; Y_i | Y^{<i}) ≤ I(X_i; Y_i)` for every `i : Fin n`. -/
 theorem feedback_per_letter_bound
     {n : ℕ} (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -135,7 +135,7 @@ variable {β : Type*} [Fintype β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
 omit [DecidableEq M] in
-/-- **Feedback channel coding converse, memoryless form (Cover-Thomas Thm. 7.12)**.
+/-- Feedback channel coding converse, memoryless form (Cover-Thomas Thm. 7.12).
 
 Variant of `channel_coding_feedback_converse` with `h_per_letter` replaced by
 `IsMemorylessFeedback`. The per-letter inequality is discharged internally via

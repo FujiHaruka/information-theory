@@ -243,7 +243,7 @@ private theorem channelCodingSmooth_assemble
   exact ⟨codebook, lt_of_le_of_lt hcb h_sum_lt⟩
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Smooth achievability with closed-form N**: `channel_coding_achievability` with the
+/-- Smooth achievability with closed-form N: `channel_coding_achievability` with the
 existential `N` replaced by `channelCodingSmoothMinN V_X V_Y V_Z I_lb R ε'`.
 
 The caller supplies axis-wise variance upper bounds `V_X, V_Y, V_Z` and a

@@ -31,7 +31,7 @@ open scoped ENNReal NNReal BigOperators Topology
 
 /-! ## Continuous Gaussian AEP -/
 
-/-- **Shear pushforward of a density** (linchpin for the `J₁` density identity, absent
+/-- Shear pushforward of a density (linchpin for the `J₁` density identity, absent
 from Mathlib): pushing a `volume.prod volume`-density `ρ` through the measure-preserving
 shear `h₁(x,z) = (x, x+z)` gives the density `(x,y) ↦ ρ(x, y−x)` (the inverse shear).
 Proof: `h₁` is a measurable equiv preserving `volume.prod volume`
@@ -60,7 +60,7 @@ private lemma map_shear_withDensity (ρ : ℝ × ℝ → ℝ≥0∞) (hρ : Meas
   -- `ρ'(g p) = ρ(p.1, (p.1 + p.2) − p.1) = ρ p`
   simp only [hρ'_def, hg_def, add_sub_cancel_left]
 
-/-- **Lintegral product factorization over `Measure.pi`** (the lintegral analogue of
+/-- Lintegral product factorization over `Measure.pi` (the lintegral analogue of
 `MeasureTheory.integral_fin_nat_prod_eq_prod`, absent from Mathlib): the lintegral of a
 coordinatewise product `∏ i, f i (x i)` against the finite product measure factors into the
 product of per-coordinate lintegrals. Proved by the same `n`-variable Fubini induction
@@ -92,7 +92,7 @@ private lemma lintegral_pi_prod_eq_prod {n : ℕ} {E : Fin n → Type*}
             (measurable_pi_apply i))).aemeasurable
         _ = ∏ i, ∫⁻ y, f i y ∂(μ i) := by rw [Fin.prod_univ_succ]
 
-/-- **Tensorization of `withDensity` through `Measure.pi`** (G-2, absent from Mathlib): the
+/-- Tensorization of `withDensity` through `Measure.pi` (G-2, absent from Mathlib): the
 finite product of per-coordinate weighted measures `(μ i).withDensity (f i)` equals the product
 measure `Measure.pi μ` weighted by the coordinatewise product density `x ↦ ∏ i, f i (x i)`.
 Proved via `Measure.pi_eq` (agreement on measurable boxes) + the box factorization
@@ -146,7 +146,7 @@ below and `awgn_random_coding_union_bound` in `AchievabilityTypicalDecoder.lean`
   `arrowProdEquivProdArrow` reshape (`klDiv_map_measurableEquiv`) + `klDiv_pi_eq_sum`
   + i.i.d. `Finset.sum_const` collapse. -/
 
-/-- **Integrability of the 1-D Gaussian log-likelihood ratio**: for nondegenerate variances
+/-- Integrability of the 1-D Gaussian log-likelihood ratio: for nondegenerate variances
 `v₁, v₂ ≠ 0`, `llr (gaussianReal m₁ v₁) (gaussianReal m₂ v₂)` is integrable against
 `gaussianReal m₁ v₁`. The llr is a.e. a quadratic in `x` (the difference of two Gaussian
 log-densities), and quadratics are integrable against a Gaussian. -/
@@ -222,7 +222,7 @@ private lemma gaussianReal_llr_integrable
   refine (Integrable.sub (h_int_logg m₁ hv₁ hv₁_pos) (h_int_logg m₂ hv₂ hv₂_pos)).congr ?_
   filter_upwards [h_llr_decomp] with x hx using hx.symm
 
-/-- **Per-letter change-of-measure facts** for the AWGN joint `J₁ = law(X, X+Z)` /
+/-- Per-letter change-of-measure facts for the AWGN joint `J₁ = law(X, X+Z)` /
 product `Q₁ = μX ⊗ μY` (nondegenerate `P', N ≠ 0`): the mutual absolute continuity
 `J₁ ≪ Q₁`, `Q₁ ≪ J₁`, and the pointwise density relation
 `(Q₁.rnDeriv J₁ p).toReal = exp(−φ p)` a.e. `[J₁]` (where `φ = log dJ₁/dQ₁`). The `f_X`
@@ -342,7 +342,7 @@ lemma awgn_perLetter_changeOfMeasure_facts
       = Real.exp (-(Real.log ((J₁.rnDeriv Q₁ p).toReal))) := hJ_ac_vol.ae_le hexp_vol
   exact ⟨hJQ_ac, hQJ_ac, hexp_J⟩
 
-/-- **Degenerate per-letter KL vanishes** (`P' = 0 ∨ N = 0`): in either degenerate case
+/-- Degenerate per-letter KL vanishes (`P' = 0 ∨ N = 0`): in either degenerate case
 the per-letter KL `(klDiv J₁ Q₁).toReal = 0`. When `P' = 0` the input collapses to `Dirac 0`,
 the shear is the identity on `{0} × ℝ`, so `J₁ = Q₁` (`klDiv_self`). When `N = 0`
 (with `P' ≠ 0`) the joint `J₁` concentrates on the diagonal `{(x, x)}`, which is `Q₁`-null
@@ -477,12 +477,12 @@ private lemma integral_perFibre_klDiv_quadratic_eq_capacity
     rw [add_sub_assoc, add_assoc, this, hsum]; ring
   rw [hfin]
 
-/-- **bridge ① per-letter closed form** (genuine, sorryAx-free): per-letter joint
+/-- bridge ① per-letter closed form (genuine, sorryAx-free): per-letter joint
 `J₁ = law(X, X+Z)` and product of marginals `Q₁ = μX ⊗ μY` have KL equal to the AWGN
 per-letter capacity `(1/2) log(1 + P/N)` (nondegenerate `P > 0`, `N ≠ 0`). Routed through the
 conditional-KL integral (`klDiv_compProd_const_toReal_integral`) + the 1-D Gaussian KL closed
 form (`klDiv_gaussianReal_gaussianReal_eq`), integrating the per-fibre quadratic against the
-mean-0 variance-`P'` input — deliberately **avoiding `mutualInfoOfChannel` / `MIClosedForm`**
+mean-0 variance-`P'` input — deliberately avoiding `mutualInfoOfChannel` / `MIClosedForm`
 (import cycle `KLCapacityAndAEP → MIClosedForm → ContChannelMIDecomp → KLCapacityAndAEP`).
 
 The signature carries the genuine preconditions
@@ -514,7 +514,7 @@ theorem klDiv_perLetter_eq_capacity
   haveI : IsProbabilityMeasure μX := by rw [hμX_def]; infer_instance
   haveI : IsProbabilityMeasure μZ := by rw [hμZ_def]; infer_instance
   haveI : IsProbabilityMeasure μY := by rw [hμY_def]; infer_instance
-  -- **AWGN channel kernel** `κ x = gaussianReal x N` (measurable, Markov).
+  -- AWGN channel kernel `κ x = gaussianReal x N` (measurable, Markov).
   have hκ_meas : Measurable (fun x : ℝ ↦ gaussianReal x N) := by
     have h_fun_eq : (fun x : ℝ ↦ gaussianReal x N)
         = (fun x : ℝ ↦ (gaussianReal 0 N).map (fun z ↦ x + z)) := by
@@ -550,7 +550,7 @@ theorem klDiv_perLetter_eq_capacity
   -- `Q₁ = μX ⊗ₘ (Kernel.const _ μY)`.
   have hQ_compProd : Q₁ = μX ⊗ₘ (Kernel.const ℝ μY) := by
     rw [hQ₁_def, Measure.compProd_const]
-  -- **Fibrewise AC + AC of the joint**: `κ x = gaussianReal x N ≪ μY = gaussianReal 0 (P'+N)`.
+  -- Fibrewise AC + AC of the joint: `κ x = gaussianReal x N ≪ μY = gaussianReal 0 (P'+N)`.
   have hfib_ac : ∀ x, κ x ≪ Kernel.const ℝ μY x := by
     intro x
     rw [hκ_apply, Kernel.const_apply, hμY_def]
@@ -560,13 +560,13 @@ theorem klDiv_perLetter_eq_capacity
     rw [hJ_compProd, hQ_compProd]
     exact Measure.absolutelyContinuous_compProd_right_iff.mpr
       (Filter.Eventually.of_forall hfib_ac)
-  -- **Per-fibre KL finiteness + closed form** (`gaussianReal x N ≪ gaussianReal 0 (P'+N)`,
+  -- Per-fibre KL finiteness + closed form (`gaussianReal x N ≪ gaussianReal 0 (P'+N)`,
   -- both with integrable llr): `klDiv (κ x) μY ≠ ⊤`.
   have hfib_int : ∀ x : ℝ, Integrable (llr (κ x) μY) (κ x) := fun x ↦ by
     rw [hκ_apply, hμY_def]; exact gaussianReal_llr_integrable x 0 hN_nn hPN_ne
   have hfib_ne_top : ∀ x : ℝ, klDiv (κ x) μY ≠ ⊤ := fun x ↦
     klDiv_ne_top (hfib_ac x |>.trans (by rw [Kernel.const_apply])) (hfib_int x)
-  -- **Joint KL finiteness via the lintegral form** (`klDiv_compProd_lintegral`): the integral
+  -- Joint KL finiteness via the lintegral form (`klDiv_compProd_lintegral`): the integral
   -- of the per-fibre KL (a quadratic in `x`) against the Gaussian `μX` is finite.
   have hjoint_lint : klDiv (μX ⊗ₘ κ) (μX ⊗ₘ (Kernel.const ℝ μY))
       = ∫⁻ x, klDiv (κ x) (Kernel.const ℝ μY x) ∂μX :=
@@ -626,7 +626,7 @@ theorem klDiv_perLetter_eq_capacity
   -- integrate the per-fibre closed form over `μX` (mean 0, variance `P'`).
   exact integral_perFibre_klDiv_quadratic_eq_capacity P P' N hP'_coe hN_nn hPN_ne
 
-/-- **bridge ① n-fold identity** (genuine, sorryAx-free):
+/-- bridge ① n-fold identity (genuine, sorryAx-free):
 `klDiv(J_n, Q_n).toReal = n · klDiv(J₁, Q₁).toReal`, where `J_n`/`Q_n` are the verbatim
 n-letter joint/product measures from the `continuousAepGaussian_holds` signature. Via
 `arrowProdEquivProdArrow` reshape (`klDiv_map_measurableEquiv`) + `klDiv_pi_eq_sum`
@@ -1214,7 +1214,7 @@ theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
                   - (n : ℝ) * (3 * δ)))) := by
   intro δ ε hδ hε
   classical
-  -- **Degenerate-boundary split** (the theorem signature carries no positivity on
+  -- Degenerate-boundary split (the theorem signature carries no positivity on
   -- `P`/`N`). In the degenerate cases `P.toNNReal = 0` (`μX = Dirac 0`) or `N = 0`
   -- (`μZ = Dirac 0`, joint concentrated on the diagonal `{(x,x)}`), the engine route is
   -- unavailable: when `N = 0` the joint law `Jₙ` is mutually singular w.r.t. `Qₙ` so
@@ -1277,7 +1277,7 @@ theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
     have hT : MeasurableSet {r : ℝ | |r| < δ} :=
       measurableSet_lt (measurable_norm.comp measurable_id) measurable_const
     exact hsum hT
-  -- **Joint measure-identity** (`awgn_joint_law_reshape_eq`): the signature's joint law
+  -- Joint measure-identity (`awgn_joint_law_reshape_eq`): the signature's joint law
   -- equals `(Measure.pi J₁).map e`, via `arrowProdEquivProdArrow` + `pi_map_pi`.
   have hJ_eq :
       ((Measure.pi (fun _ : Fin n ↦ μX)).prod (Measure.pi (fun _ : Fin n ↦ μZ))).map

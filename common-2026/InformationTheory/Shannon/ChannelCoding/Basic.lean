@@ -35,7 +35,7 @@ open scoped ENNReal NNReal BigOperators Topology
 
 variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 
-/-- A **discrete memoryless channel** (DMC) is just a (Markov) kernel `α → Measure β`.
+/-- A discrete memoryless channel (DMC) is just a (Markov) kernel `α → Measure β`.
 Markov-ness is requested as a separate type-class hypothesis on the user side, so the
 definition itself stays the bare `Kernel`. -/
 abbrev Channel (α β : Type*) [MeasurableSpace α] [MeasurableSpace β] :=
@@ -80,7 +80,7 @@ noncomputable def mutualInfoOfChannel (p : Measure α) (W : Channel α β) : ℝ
     mutualInfoOfChannel p W
       = klDiv (jointDistribution p W) (p.prod (outputDistribution p W)) := rfl
 
-/-- **`mutualInfoOfChannel` equals MI of the joint coordinates.** Unfolds the
+/-- `mutualInfoOfChannel` equals MI of the joint coordinates. Unfolds the
 `klDiv`-defined `mutualInfoOfChannel p W` into the canonical
 `mutualInfo (jointDistribution p W) Prod.fst Prod.snd`. Used as the bridge from
 the channel-side formulation to the joint-distribution-side three-term identity. -/
@@ -103,7 +103,7 @@ theorem mutualInfoOfChannel_eq_mutualInfo_prod
   have h_snd : (jointDistribution p W).map Prod.snd = outputDistribution p W := rfl
   rw [h_id, h_fst, h_snd]
 
-/-- **Entropy ↔ mutual-information bridge for the channel.**
+/-- Entropy ↔ mutual-information bridge for the channel.
 The channel mutual information equals the three-term form
 `H(X) + H(Y) − H(X, Y)` on the joint distribution `p ⊗ₘ W`, where `H` is the
 discrete Shannon entropy and `H(X, Y) := entropy (p ⊗ₘ W) id` is the joint entropy
@@ -130,7 +130,7 @@ theorem mutualInfoOfChannel_eq_HX_add_HY_sub_HZ
 
 /-! ## Block code -/
 
-/-- A **block code** of length `n` with `M` messages over input alphabet `α` and
+/-- A block code of length `n` with `M` messages over input alphabet `α` and
 output alphabet `β`: a deterministic encoder `Fin M → (Fin n → α)` and decoder
 `(Fin n → β) → Fin M`.
 
@@ -264,7 +264,7 @@ lemma measurable_jointSequence
     Measurable (jointSequence Xs Ys i) :=
   (hXs i).prodMk (hYs i)
 
-/-- The **jointly typical set** `A_ε^n ⊆ (Fin n → α) × (Fin n → β)`: pairs `(x, y)`
+/-- The jointly typical set `A_ε^n ⊆ (Fin n → α) × (Fin n → β)`: pairs `(x, y)`
 whose empirical entropies of `X`, `Y`, and `(X, Y)` are all within `ε` of the true
 entropies.
 
@@ -305,7 +305,7 @@ lemma jointlyTypicalSet_finite
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) (n : ℕ) (ε : ℝ) :
     (jointlyTypicalSet μ Xs Ys n ε).Finite := Set.toFinite _
 
-/-- **Bound (b): size of the jointly typical set**. The size is bounded by the size of
+/-- Bound (b): size of the jointly typical set. The size is bounded by the size of
 the joint single-axis typical set, which (by `typicalSet_card_le` applied to the joint
 sequence over `α × β`) is at most `exp(n · (H(X, Y) + ε))`.
 
@@ -441,7 +441,7 @@ private theorem measure_inter3_tendsto_one {Ω' : Type*} [MeasurableSpace Ω']
       Filter.atTop (𝓝 ((1 : ℝ≥0∞) - 0)) := h_cont.tendsto _ |>.comp h_compl_tendsto
   simpa using h_step
 
-/-- **Bound (a): joint AEP probability**. The probability that the block-joint pair
+/-- Bound (a): joint AEP probability. The probability that the block-joint pair
 `(X^n, Y^n)` lies in the jointly typical set tends to `1`.
 
 Strategy: the event "(X^n, Y^n) jointly typical" is the intersection of three single-axis
@@ -528,7 +528,7 @@ theorem jointlyTypicalSet_prob_tendsto_one
   exact measure_inter3_tendsto_one μ goodX goodY goodZ
     h_meas_goodX h_meas_goodY h_meas_goodZ hX hY hZ
 
-/-- **Bound (c): independent-pair probability**. The probability under the **product**
+/-- Bound (c): independent-pair probability. The probability under the product
 measure `μX^n × μY^n` (where `μX^n := μ.map (jointRV Xs n)` and similarly for `Y`) that
 `(X̃, Y)` lies in the jointly typical set is bounded by `exp(-n(I - 3ε))` (in the
 log form: `exp(n · (H(X,Y) - H(X) - H(Y) + 3ε))`).
@@ -538,9 +538,9 @@ This is Cover-Thomas Theorem 7.6.1 (7.71). The key inputs are
 each typical block) applied to the `X` and `Y` axes, and `jointlyTypicalSet_card_le`
 for the cardinality of the joint typical set.
 
-Mutual independence (`iIndepFun`) along **each** of the `X` and `Y` axes is required
+Mutual independence (`iIndepFun`) along each of the `X` and `Y` axes is required
 to factorise the block laws `μ.map (jointRV Xs n) = Measure.pi (μ.map (Xs ·))`. The
-joint axis identification (`hidentZ`) is **not** required for this bound (it is
+joint axis identification (`hidentZ`) is not required for this bound (it is
 required only by the random-codebook average downstream of this lemma). -/
 @[entry_point]
 theorem jointlyTypicalSet_indep_prob_le

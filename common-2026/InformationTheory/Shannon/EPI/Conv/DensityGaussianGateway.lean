@@ -25,7 +25,7 @@ namespace InformationTheory.Shannon.EPIConvDensityGaussianGateway
 open MeasureTheory Real
 open InformationTheory.Shannon.EPIConvDensity
 
-/-- **`pX` integrable-only variant of `convDensityAdd_hasDerivAt_of_regular`.**
+/-- `pX` integrable-only variant of `convDensityAdd_hasDerivAt_of_regular`.
 `fX` smoothness is dropped; the derivative is carried by the Gaussian kernel `fY`.
 `fX` enters only through `Integrable fX volume` (ae-measurability + bound
 integrability). All hyps are regularity preconditions; the differentiability is
@@ -110,7 +110,7 @@ theorem convDensityAdd_hasDerivAt_of_integrable_smoothKernel (fX fY : ℝ → �
   exact convDensityAdd_hasDerivAt fX fY z₀ hs hF_meas hF_int hF'_meas h_bound
     bound_integrable h_diff
 
-/-- **Differentiable corollary** of `convDensityAdd_hasDerivAt_of_integrable_smoothKernel`,
+/-- Differentiable corollary of `convDensityAdd_hasDerivAt_of_integrable_smoothKernel`,
 for the `diff` field of downstream regular-density witnesses.
 @audit:ok -/
 theorem convDensityAdd_differentiable_of_integrable_smoothKernel (fX fY : ℝ → ℝ)

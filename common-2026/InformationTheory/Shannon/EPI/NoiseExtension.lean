@@ -32,7 +32,7 @@ variable (X Y : Ω → ℝ)
 
 The two-time assembler `entropyPower_add_ge_case1_of_regular_twotime` perturbs the
 sum with a SEPARATE single unit noise `Z`, independent of `(Z_X, Z_Y)`. That requires a
-**3-noise** lift `Ω × ℝ × ℝ × ℝ` (three independent standard normals), since reusing one
+3-noise lift `Ω × ℝ × ℝ × ℝ` (three independent standard normals), since reusing one
 of the 2-noise factors for `Z` would break `Z ⊥ (Z_X, Z_Y)`. In the transport lemma below
 only the first factor (`Prod.fst`) carries `X`/`Y`, so all three `entropyPower` terms
 transport via `measurePreserving_fst`. -/

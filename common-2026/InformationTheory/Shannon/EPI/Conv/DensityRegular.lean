@@ -127,7 +127,7 @@ theorem deriv_convDensityAdd_eq {pX : ℝ → ℝ} {t : ℝ} (ht : 0 < t)
   -- `  = convDensityAdd pX (deriv g) z`
   rfl
 
-/-- **Convolution-with-Gaussian tail vanishing** (filter-generic).
+/-- Convolution-with-Gaussian tail vanishing (filter-generic).
 For an integrable nonnegative `pX` and the Gaussian kernel `g = gaussianPDFReal 0 v`
 that is globally bounded by `M` and vanishes (after the `z - x` shift) along the
 filter `l`, the convolution `convDensityAdd pX g` vanishes along `l`. Dominated
@@ -177,7 +177,7 @@ theorem tendsto_convDensityAdd_gaussian_zero {pX : ℝ → ℝ} {v : ℝ≥0}
     (fun x ↦ pX x * M) hF_meas hbound hbound_int hlim
   simpa using this
 
-/-- **A-5 precondition (1) producer.** `convDensityAdd pX g_t` is a regular V2
+/-- A-5 precondition (1) producer. `convDensityAdd pX g_t` is a regular V2
 density for `t > 0` and any probability density `pX`.
 @audit:ok -/
 theorem isRegularDensityV2_convDensityAdd_gaussian (pX : ℝ → ℝ) {t : ℝ} (ht : 0 < t)
@@ -265,7 +265,7 @@ theorem isRegularDensityV2_convDensityAdd_gaussian (pX : ℝ → ℝ) {t : ℝ} 
     simp_rw [hinner]
     exact integral_zero _ _
 
-/-- **Fisher non-degeneracy for a conv-with-Gaussian density** (Gap 1 closure).
+/-- Fisher non-degeneracy for a conv-with-Gaussian density (Gap 1 closure).
 `0 < J(convDensityAdd pX g_t)` for `t > 0` and any normalized probability density
 `pX` (nonneg / measurable / integrable / `∫ pX = 1`).
 

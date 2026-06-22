@@ -135,7 +135,7 @@ theorem awgnConverseMarkov_holds
   have hg_meas : Measurable c.encoder := Measurable.of_discrete
   -- `W.comap encoder`: the channel kernel reindexed from message to codeword.
   set Wg : Kernel (Fin M) (Fin n → ℝ) := W.comap c.encoder hg_meas with hWg_def
-  -- **Fundamental message-space marginal (A)**: `μ = (μ.map Xs) ⊗ₘ (W.comap encoder)`.
+  -- Fundamental message-space marginal (A): `μ = (μ.map Xs) ⊗ₘ (W.comap encoder)`.
   -- Since `(Xs ω, Yo ω) = ω`, this says the converse joint factors as
   -- `uniform(W) ⊗ₘ (∏ᵢ awgnChannel (encoder · i))`. Proved by `ext_of_lintegral` on the
   -- mixture-of-diracs.

@@ -671,7 +671,7 @@ private lemma count_eq_finset_sum_dirac_inline (α : Type*) [Fintype α]
     exact h
   rw [← h_sum, Measure.sum_fintype]
 
-/-- **Elementary discrete-input factorization** (mixture-of-diracs):
+/-- Elementary discrete-input factorization (mixture-of-diracs):
 `converseJointInline = msgLawInline ⊗ₘ blockKernelInline`. -/
 private lemma converseJointInline_eq_compProd
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
@@ -698,7 +698,7 @@ private lemma converseJointInline_eq_compProd
   funext i
   rw [awgnChannel_apply]
 
-/-- **Output law identification**: `outputDistribution msgLawInline blockKernelInline
+/-- Output law identification: `outputDistribution msgLawInline blockKernelInline
 = blockYLawInline`. -/
 private lemma outputDistribution_msgLawInline_eq
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
@@ -721,7 +721,7 @@ private lemma mutualInfo_fst_snd_eq_channel
   congr 1
   rw [ChannelCoding.jointDistribution_def, ← converseJointInline_eq_compProd h_meas c]
 
-/-- **Deterministic DPI**: `I(X^n;Y^n) ≤ I(W;Y^n)` (`X^n = encoder ∘ fst` is a
+/-- Deterministic DPI: `I(X^n;Y^n) ≤ I(W;Y^n)` (`X^n = encoder ∘ fst` is a
 post-processing of `W = fst`). -/
 lemma mutualInfo_encoder_le_fst
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
@@ -868,7 +868,7 @@ lemma mutualInfo_fst_snd_ne_top
       exact integrable_log_component_rnDeriv_blockYLawInline hN h_meas c m
     · exact Integrable.of_finite
 
-/-- **Block MI decomposition**: `I(W;Y^n).toReal = h(Y^n) − n·h(noise)`. -/
+/-- Block MI decomposition: `I(W;Y^n).toReal = h(Y^n) − n·h(noise)`. -/
 lemma blockMI_decomp
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :

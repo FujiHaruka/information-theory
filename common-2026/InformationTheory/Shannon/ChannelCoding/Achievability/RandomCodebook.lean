@@ -119,7 +119,7 @@ They are the only ingredients that use the marginal-matching hypotheses
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [DecidableEq β] [Nonempty β] in
-/-- **Block X-law identification.** Under `iIndepFun (Xs ·) μ` and
+/-- Block X-law identification. Under `iIndepFun (Xs ·) μ` and
 `h_match_X : μ.map (Xs 0) = p`, the block law `μ.map (jointRV Xs n)` equals
 `Measure.pi (fun _ : Fin n => p)`. This is the bridge to the
 `codebookMeasure p M n` structure. -/
@@ -155,8 +155,8 @@ private lemma block_law_X_eq_pi_p
 
 omit [DecidableEq α] [Nonempty α] [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSingletonClass β] in
-/-- **Block Y-law identification.** Symmetric to `block_law_X_eq_pi_p`. We do
-**not** assume `μ.map (Ys 0) = outputDistribution p W`; instead, we just identify
+/-- Block Y-law identification. Symmetric to `block_law_X_eq_pi_p`. We do
+not assume `μ.map (Ys 0) = outputDistribution p W`; instead, we just identify
 `μ.map (jointRV Ys n) = Measure.pi (fun _ => μ.map (Ys 0))`. -/
 private lemma block_law_Y_eq_pi
     {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -183,7 +183,7 @@ private lemma block_law_Y_eq_pi
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
-/-- **Block joint-law identification.** Under `Pairwise … ⟂ᵢ[μ] …` for the
+/-- Block joint-law identification. Under `Pairwise … ⟂ᵢ[μ] …` for the
 joint sequence and `h_match_Z : μ.map (jointSequence Xs Ys 0) = jointDistribution p W`,
 the block-joint law `μ.map ⟨jointRV Xs n, jointRV Ys n⟩` corresponds to the product
 `Measure.pi (fun _ => jointDistribution p W)` via reshape. Stated in the
@@ -277,7 +277,7 @@ lemma sum_prod_measureReal_singleton_eq_one
 
 omit [DecidableEq α] [Nonempty α] [Fintype β]
   [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
-/-- **Single-row marginalization.** Sum out all rows other than `m`. -/
+/-- Single-row marginalization. Sum out all rows other than `m`. -/
 private lemma codebook_marginal_one
     (p : Measure α) [IsProbabilityMeasure p] (M n : ℕ)
     (m : Fin M) (f : (Fin n → α) → ℝ) (_hf_nn : ∀ x, 0 ≤ f x) :
@@ -428,7 +428,7 @@ private lemma codebook_marginal_one
 
 omit [DecidableEq α] [Nonempty α] [Fintype β]
   [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
-/-- **Two-row marginalization.** Sum out all rows other than `m` and `m'` (with
+/-- Two-row marginalization. Sum out all rows other than `m` and `m'` (with
 `m ≠ m'`). -/
 private lemma codebook_marginal_two
     (p : Measure α) [IsProbabilityMeasure p] (M n : ℕ)
@@ -663,7 +663,7 @@ private lemma E1_lhs_sum_eq_Q_sum
   · intro _ _; rfl
 
 omit [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β] in
-/-- **(E1) Fubini swap.** For any message index `m`, the codebook expectation of
+/-- (E1) Fubini swap. For any message index `m`, the codebook expectation of
 the "true codeword not jointly typical" event equals the abstract i.i.d.
 expectation. -/
 private lemma random_codebook_E1_swap
@@ -899,7 +899,7 @@ private lemma prod_real_eq_slice_sum
   ext y; simp
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **(E2) Fubini swap.** For any two distinct message indices `m ≠ m'`, the
+/-- (E2) Fubini swap. For any two distinct message indices `m ≠ m'`, the
 codebook expectation of the "alias codeword jointly typical" event is bounded
 by `exp(n((HZ-HX-HY)+3ε))` via the independent-pair bound
 `jointlyTypicalSet_indep_prob_le`. -/
@@ -1145,7 +1145,7 @@ private lemma errorProbAt_codebookToCode_ne_top
   exact h_le_one.trans_lt ENNReal.one_lt_top |>.ne
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Random codebook average (probabilistic-method form).** With each codeword
+/-- Random codebook average (probabilistic-method form). With each codeword
 drawn i.i.d. from `p^n` (so the codebook law is `codebookMeasure p M n`), the
 codebook-average of the (uniform-over-message) error probability decomposes via
 Fubini into the "joint typical event probability" (E1) plus `(M - 1) ·` the

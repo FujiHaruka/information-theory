@@ -45,7 +45,7 @@ variable {α β : Type*}
 
 /-! ## Input distribution maximization -/
 
-/-- **Lift a pmf vector to a measure**:
+/-- Lift a pmf vector to a measure:
 `pmfToMeasure p = ∑ a, ENNReal.ofReal (p a) • Measure.dirac a`. -/
 noncomputable def pmfToMeasure (p : α → ℝ) : Measure α :=
   ∑ a : α, ENNReal.ofReal (p a) • Measure.dirac a
@@ -94,7 +94,7 @@ lemma pmfToMeasure_real_singleton
   rw [pmfToMeasure_apply_singleton]
   exact ENNReal.toReal_ofReal (hp.1 a)
 
-/-- **Channel capacity** (Cover-Thomas 7.5):
+/-- Channel capacity (Cover-Thomas 7.5):
 `capacity W := sup { I(p; W).toReal | p ∈ stdSimplex }`. -/
 noncomputable def capacity (W : Channel α β) : ℝ :=
   sSup ((fun p : α → ℝ ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal) ''
@@ -427,7 +427,7 @@ theorem errorProbAt_filter_card_bound
       rw [h_rewrite] at h_card_le_M_avg
       exact (mul_le_mul_iff_of_pos_right h_avg_pos).mp h_card_le_M_avg
 
-/-- **Sub-code** restricted to a message subset `S`: encoder restricts to `S`, decoder maps
+/-- Sub-code restricted to a message subset `S`: encoder restricts to `S`, decoder maps
 outside `S` to a fixed fallback message. -/
 noncomputable def Code.subcode
     {M n : ℕ} (c : Code M n α β) (S : Finset (Fin M)) (hS : 0 < S.card) :
@@ -658,7 +658,7 @@ lemma exists_subcode_maxError_lt_two_mul
     _ < 2 * ε' := by linarith
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Expurgation**: average error achievability implies max error achievability. -/
+/-- Expurgation: average error achievability implies max error achievability. -/
 @[entry_point]
 theorem channel_coding_achievability_max_error
     (W : Channel α β) [IsMarkovKernel W]
@@ -725,7 +725,7 @@ private lemma absolutelyContinuous_map_iff_of_measurableEmbedding
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
-/-- **`klDiv` is invariant under `MeasurableEmbedding`-pushforward** of both arguments
+/-- `klDiv` is invariant under `MeasurableEmbedding`-pushforward of both arguments
 (finite-measure side). Proof: split on `μ ≪ ν`; in the AC case use the lintegral form
 `klDiv_eq_lintegral_klFun_of_ac` + `MeasurableEmbedding.rnDeriv_map` +
 `MeasurableEmbedding.lintegral_map`; in the not-AC case both sides are `∞`. -/
@@ -894,7 +894,7 @@ theorem mutualInfoOfChannel_restrict_to_support
   rw [← h_joint_map, ← h_prod_map]
   exact klDiv_map_measurableEmbedding (hj_emb.prodMap MeasurableEmbedding.id) _ _
 
-/-- **Lift a code** from the support subtype to the full alphabet by composing the encoder
+/-- Lift a code from the support subtype to the full alphabet by composing the encoder
 with `Subtype.val`. -/
 @[entry_point]
 noncomputable def Code_lift_from_subtype
@@ -978,7 +978,7 @@ lemma continuous_pSmooth (p₀ : α → ℝ) : Continuous (fun δ : ℝ ↦ pSmo
     |>.add (continuous_id.mul continuous_const)
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Shannon noisy channel coding theorem** (Cover-Thomas 7.7.1): for any `R < capacity W`
+/-- Shannon noisy channel coding theorem (Cover-Thomas 7.7.1): for any `R < capacity W`
 and `ε > 0`, there exists `N` such that for all `n ≥ N` there is a code of size `≥ exp(n R)`
 achieving max error probability `< ε`.
 

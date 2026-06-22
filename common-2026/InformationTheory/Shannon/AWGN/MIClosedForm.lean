@@ -7,13 +7,13 @@ import InformationTheory.Shannon.AWGN.ContChannelMIDecomp
 This file hosts the hypothesis-free Gaussian-input MI closed form. The old
 `h_bridge`-form wrapper `AWGN.mutualInfoOfChannel_gaussianInput_closed_form`
 (took the textbook identity `I = h(P+N) − h(N)` as an opaque load-bearing
-hypothesis `h_bridge`) has been **retired**; its log-algebra was inlined into
+hypothesis `h_bridge`) has been retired; its log-algebra was inlined into
 `AWGNMIBridge.awgn_mi_gaussian_closed_form_of_primitives`, where the bridge is
 genuinely discharged. The genuine machinery that discharges the bridge lives strictly
-**downstream** of `AWGN.lean` (the MI-decomposition wall in `AwgnWalls.lean`, the
+downstream of `AWGN.lean` (the MI-decomposition wall in `AwgnWalls.lean`, the
 output-Gaussian bind/conv bridge in `AWGNBindConvolution.lean`, and the assembled
 `awgn_mi_gaussian_closed_form_of_out` in `ContChannelMIDecomp.lean`), so the
-closed form must be **relocated** to the lowest file that can see both genuine
+closed form must be relocated to the lowest file that can see both genuine
 producers.
 
 `AWGNBindConvolution` and `ContChannelMIDecomp` are non-importing siblings (both sit

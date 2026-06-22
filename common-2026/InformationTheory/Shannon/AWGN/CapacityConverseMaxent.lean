@@ -337,7 +337,7 @@ theorem measurable_outputMixtureDensity (N : ℝ≥0) (p : Measure ℝ) [SFinite
   exact Measurable.lintegral_prod_left' (f := fun z : ℝ × ℝ ↦ gaussianPDF z.1 N z.2)
     (measurable_gaussianPDF_uncurry N)
 
-/-- Measurability of the Gaussian pdf in the **mean** parameter (fixed argument `y`):
+/-- Measurability of the Gaussian pdf in the mean parameter (fixed argument `y`):
 `Measurable (fun x => gaussianPDF x N y)`. Isolated as its own declaration because the
 `(uncurry).comp` term, if elaborated with an expected type pushed in, makes `isDefEq`
 unfold `gaussianPDF`/`gaussianPDFReal` and hit a heartbeat timeout; the `have h := …; exact h`
@@ -831,7 +831,7 @@ theorem awgn_per_input_mi_le_log
 /-! ## Capacity closed form -/
 
 open InformationTheory.Shannon.ChannelCoding in
-/-- **AWGN capacity closed form (Cover-Thomas 9.1), genuine assembly.**
+/-- AWGN capacity closed form (Cover-Thomas 9.1), genuine assembly.
 
 `awgnCapacity P N = (1/2) log(1 + P/N)`. This supersedes
 `ContChannelMIDecomp.awgn_capacity_closed_form_of_out`: there the converse

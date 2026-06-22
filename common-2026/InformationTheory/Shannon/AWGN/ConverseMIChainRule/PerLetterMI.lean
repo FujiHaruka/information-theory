@@ -69,7 +69,7 @@ private lemma perLetterInputLaw_eq_mixture
     Measure.map_fst_prod, measure_univ, one_smul,
     MeasureTheory.Measure.map_dirac' (measurable_of_countable _)]
 
-/-- **Per-letter X-input factorization** (mixture-of-diracs, holds with collisions):
+/-- Per-letter X-input factorization (mixture-of-diracs, holds with collisions):
 `μ.map (fun ω => (encoder ω.1 i, ω.2 i)) = perLetterInputLaw_i ⊗ₘ awgnChannel`. -/
 private lemma perLetter_map_eq_compProd
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
@@ -163,7 +163,7 @@ private lemma volume_ac_perLetterLaw
   intro h0
   rw [h0] at this; simp at this
 
-/-- **Marginal identification**: `blockYLawInline.map (· i) = (converseJointInline).map (·.2 i)`
+/-- Marginal identification: `blockYLawInline.map (· i) = (converseJointInline).map (·.2 i)`
 = the per-letter law `Y_i`. -/
 private lemma blockYLawInline_map_eval
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
@@ -260,7 +260,7 @@ private lemma integrable_log_perLetterLaw_on_fibre
     rw [Real.norm_eq_abs]
     exact h_abs y
 
-/-- **Per-letter MI decomposition**: `I(X_i;Y_i).toReal = h(Y_i) − h(noise)`. -/
+/-- Per-letter MI decomposition: `I(X_i;Y_i).toReal = h(Y_i) − h(noise)`. -/
 private lemma perLetterMI_decomp
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
@@ -454,7 +454,7 @@ private lemma integrable_log_marg_on_blockYLawInline
   exact integrable_comp_eval (μ := fun j : Fin n ↦ gaussianReal (c.encoder m j) N) (i := i)
     (integrable_log_perLetterLaw_on_fibre hN h_meas c i (c.encoder m i))
 
-/-- **n-D subadditivity for the block output law**: `h(Y^n) ≤ ∑ᵢ h(Y_i)`. -/
+/-- n-D subadditivity for the block output law: `h(Y^n) ≤ ∑ᵢ h(Y_i)`. -/
 private lemma jointDifferentialEntropyPi_blockYLawInline_le_sum
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :

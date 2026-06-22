@@ -16,18 +16,18 @@ import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
 /-!
 # Continuous-channel mutual-information chain rule
 
-This file applies the **continuous-channel MI chain rule**
+This file applies the continuous-channel MI chain rule
 `I(X;Y) = h(Y) − h(Y|X)` (`IsContChannelMIDecompHyp`) at the AWGN
 channel, with `h(Y|X)` realized as the integral of fibrewise differential entropies.
 
 The AWGN-independent generic core (the `InformationTheory.Shannon.ChannelCoding.*`
 section: `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` and its helpers) lives
-**upstream** in `InformationTheory/Shannon/ChannelCoding/MIDecomp.lean` (imported above),
+upstream in `InformationTheory/Shannon/ChannelCoding/MIDecomp.lean` (imported above),
 so the AWGN converse chain (`AWGN.Converse`) can reuse it without an import cycle.
 
 ## Approach
 
-The MI chain identity is **not AWGN-specific**: it holds for any Markov channel
+The MI chain identity is not AWGN-specific: it holds for any Markov channel
 `W : Channel ℝ ℝ` and input law `p`. Concretely it is a density-level identity
 opened from the `klDiv` definition of `mutualInfoOfChannel`:
 
@@ -44,11 +44,11 @@ marginal identification (`outputDistribution = (p⊗ₘW).snd`) and the
 differential-entropy density form (`differentialEntropy_eq_integral_density`) are
 all proved here.
 
-The single step **(★)** — the Bayes density split of the joint log-likelihood
+The single step (★) — the Bayes density split of the joint log-likelihood
 ratio into fibre/output log densities — is the conditional-rnDeriv-to-fibre
 identification `(p⊗ₘW).rnDeriv (p.prod q) (x,y) =ᵐ (W x).rnDeriv vol y / q.rnDeriv vol y`.
 Mathlib's `rnDeriv_compProd` machinery stops at the *conditional* rnDeriv
-`(μ⊗ₘκ).rnDeriv (μ⊗ₘη)` and provides **no** fibre identification
+`(μ⊗ₘκ).rnDeriv (μ⊗ₘη)` and provides no fibre identification
 `= (κ a).rnDeriv (η a)`. This is supplied here by the linchpin
 `rnDeriv_compProd_fibre` (withDensity route), assembled into the per-fibre split by
 `llr_compProd_prod_split`. The body `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`
@@ -66,7 +66,7 @@ set_option linter.unusedSectionVars false
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal BigOperators Topology
 
-/-- **Each AWGN fibre is absolutely continuous w.r.t. the (Gaussian) output law.**
+/-- Each AWGN fibre is absolutely continuous w.r.t. the (Gaussian) output law.
 `gaussianReal x N ≪ volume ≪ gaussianReal 0 (P.toNNReal+N) = q`, both full-support
 Gaussians. Used to discharge the joint absolute continuity `p⊗ₘW ≪ p.prod q` and the
 Bayes density split. -/
@@ -81,10 +81,10 @@ theorem awgnChannel_apply_absolutelyContinuous_output
   exact (gaussianReal_absolutelyContinuous x hN).trans
     (gaussianReal_absolutelyContinuous' 0 hPN)
 
-/-- **2-variable (joint) measurability of the ℝ≥0∞ Gaussian pdf.**
+/-- 2-variable (joint) measurability of the ℝ≥0∞ Gaussian pdf.
 The closed-form Gaussian pdf is everywhere jointly measurable in `(mean, point)`,
 whereas the measure-form rnDeriv `fun z => (gaussianReal z.1 N).rnDeriv volume z.2`
-is **not** (it is only a.e.-determined). This brick supplies the everywhere
+is not (it is only a.e.-determined). This brick supplies the everywhere
 joint measurability that the eq-set construction in `llr_compProd_prod_split`
 requires. -/
 theorem measurable_gaussianPDF_uncurry (N : ℝ≥0) :
@@ -92,7 +92,7 @@ theorem measurable_gaussianPDF_uncurry (N : ℝ≥0) :
   simp only [gaussianPDF, gaussianPDFReal]
   fun_prop
 
-/-- **2-variable (joint) measurability of the ℝ-valued Gaussian pdf.** Companion of
+/-- 2-variable (joint) measurability of the ℝ-valued Gaussian pdf. Companion of
 `measurable_gaussianPDF_uncurry`; used to supply the joint `AEStronglyMeasurable`
 prerequisite when lifting the proxy log-density integrability to the compProd. -/
 theorem measurable_gaussianPDFReal_uncurry (N : ℝ≥0) :
@@ -100,7 +100,7 @@ theorem measurable_gaussianPDFReal_uncurry (N : ℝ≥0) :
   simp only [gaussianPDFReal]
   fun_prop
 
-/-- **Second moment of a real Gaussian is integrable.** `(y − m)²` is integrable
+/-- Second moment of a real Gaussian is integrable. `(y − m)²` is integrable
 against `gaussianReal m' v'` (any mean / variance), since `id ∈ L²(gaussianReal)`
 (`memLp_id_gaussianReal`). Needed to discharge the Gaussian log-density
 integrabilities (the log pdf is a constant plus a `(y − m)²` term). -/
@@ -118,7 +118,7 @@ theorem integrable_sq_sub_gaussianReal (m m' : ℝ) (v' : ℝ≥0) :
   rw [h_eq]
   exact ((h_sq.sub (h_id.const_mul (2 * m))).add (integrable_const (m ^ 2)))
 
-/-- **Log Gaussian density is integrable against a Gaussian law.** For `v ≠ 0`,
+/-- Log Gaussian density is integrable against a Gaussian law. For `v ≠ 0`,
 `fun y => Real.log (gaussianPDFReal m v y)` is integrable against `gaussianReal m' v'`.
 The log pdf splits as `c₀ + c₁·(y − m)²`, a constant plus a finite-second-moment term. -/
 theorem integrable_log_gaussianPDFReal_gaussianReal
@@ -135,7 +135,7 @@ theorem integrable_log_gaussianPDFReal_gaussianReal
   exact (integrable_const _).add
     ((integrable_sq_sub_gaussianReal m m' v').const_mul (-(1 / (2 * (v : ℝ)))))
 
-/-- **Log of the Gaussian rnDeriv (toReal) is integrable against the Gaussian law.**
+/-- Log of the Gaussian rnDeriv (toReal) is integrable against the Gaussian law.
 For `v ≠ 0`, `fun y => Real.log ((gaussianReal m v).rnDeriv volume y).toReal` is
 integrable against `gaussianReal m v`. Bridges the literal `Measure.rnDeriv` form
 appearing in the honest hypotheses to `gaussianPDFReal` via the a.e. identity
@@ -156,7 +156,7 @@ theorem integrable_log_rnDeriv_gaussianReal
     rw [hy, toReal_gaussianPDF]
   exact (integrable_log_gaussianPDFReal_gaussianReal m hv m v).congr h_log
 
-/-- **Second moment about the mean of a real Gaussian** (variance form). The mean of
+/-- Second moment about the mean of a real Gaussian (variance form). The mean of
 `gaussianReal m N` is `m`, so `∫ y, (y − m)² ∂(gaussianReal m N) = N` by
 `variance_fun_id_gaussianReal`. Used to make the per-fibre L¹-norm integral of the
 joint log-density a *constant* in the input `x`, which discharges the third condition
@@ -168,7 +168,7 @@ theorem integral_sq_sub_self_gaussianReal (m : ℝ) (N : ℝ≥0) :
   simpa only [id_eq, integral_id_gaussianReal] using hvar
 
 open InformationTheory.Shannon.ChannelCoding in
-/-- **Proxy-form joint integrability of the AWGN fibre log-density.**
+/-- Proxy-form joint integrability of the AWGN fibre log-density.
 The fibre log-density, in measurable-proxy form
 `fun z => Real.log (gaussianPDF z.1 N z.2).toReal`, is integrable against the joint
 `p ⊗ₘ awgnChannel N`. Built via `Measure.integrable_compProd_iff`: joint
@@ -213,32 +213,32 @@ theorem integrable_log_proxy_fibre_compProd
   exact (integrable_const c₀).add (h_sq.const_mul c₁)
 
 open InformationTheory.Shannon.ChannelCoding in
-/-- **AWGN instance of `IsContChannelMIDecompHyp`.**
+/-- AWGN instance of `IsContChannelMIDecompHyp`.
 
 Applies the general body `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` at the AWGN
 instance `p := gaussianReal 0 P.toNNReal`, `W := awgnChannel N h_meas`. From the inputs
 `P, N, hN, hPN, h_meas, h_out` alone, all of the following are supplied:
 
 * the fibre / output absolute continuities `hW_ac`, `hq_ac` (Gaussian facts);
-* the **joint absolute continuity** `p⊗ₘW ≪ p.prod q`
+* the joint absolute continuity `p⊗ₘW ≪ p.prod q`
   (`absolutelyContinuous_compProd_right_iff` + fibre-vs-output ac);
-* the **Bayes density split** `h_llr_split` — from the general
-  `llr_compProd_prod_split`, which rests on the **linchpin**
+* the Bayes density split `h_llr_split` — from the general
+  `llr_compProd_prod_split`, which rests on the linchpin
   `rnDeriv_compProd_fibre` (the fibre form of the compProd rnDeriv);
-* the **fibre log-density integrability** and the **fibre joint measurability** — via the
-  **measurable PDF proxy** `g := fun z => gaussianPDF z.1 N z.2`.
+* the fibre log-density integrability and the fibre joint measurability — via the
+  measurable PDF proxy `g := fun z => gaussianPDF z.1 N z.2`.
 
-**Why the measurable PDF proxy.** The *measure-form* parameterized rnDeriv
-`fun z => (gaussianReal z.1 N).rnDeriv volume z.2` has **no** everywhere joint
+Why the measurable PDF proxy. The *measure-form* parameterized rnDeriv
+`fun z => (gaussianReal z.1 N).rnDeriv volume z.2` has no everywhere joint
 measurability (rnDeriv is a.e.-determined; `rnDeriv_gaussianReal` is `=ᵐ[volume]`, not
 everywhere). Instead, the fibre density term is carried by the closed-form proxy `g`,
-which **is** everywhere jointly measurable (`measurable_gaussianPDF_uncurry`). The
+which is everywhere jointly measurable (`measurable_gaussianPDF_uncurry`). The
 proxy↔rnDeriv bridge is the per-fibre a.e. agreement
 `hg_ae x : (W x).rnDeriv vol =ᵐ[W x] g(x,·)` (from `rnDeriv_gaussianReal` lifted via
 `gaussianReal_absolutelyContinuous`), consumed only *inside integrals* by
 `llr_compProd_prod_split` and `integral_log_proxy_fibre` — never via a joint a.e.
 `MeasurableSet`, which would be circular. The proxy-form joint integrability is
-`integrable_log_proxy_fibre_compProd`. The two **output**-side log-density
+`integrable_log_proxy_fibre_compProd`. The two output-side log-density
 integrabilities follow from the Gaussian density facts: `h_int_out_joint` (the integrand
 depends only on `z.2`, so it is `g ∘ snd` with `(p ⊗ₘ W).snd = outputDistribution = q`)
 reduces to `h_int_out_marg`, which is `integrable_log_rnDeriv_gaussianReal` at
@@ -313,13 +313,13 @@ theorem isContChannelMIDecompHyp_awgn
     hWx_q hq_vol h_joint_ac g hg_meas hg_ae h_int_fibre_joint h_int_out_joint
 
 open InformationTheory.Shannon.ChannelCoding in
-/-- **`IsAwgnMIDecomp` wrapper.**
+/-- `IsAwgnMIDecomp` wrapper.
 
 Composes `isContChannelMIDecompHyp_awgn` with the combinator
 `awgn_midecomp_of_cont_chain`. The MI-decomp predicate `IsAwgnMIDecomp` follows from the
-inputs `P, N, hN, hPN, h_meas, h_out` alone — via the **linchpin**
-`rnDeriv_compProd_fibre`, the general `llr_compProd_prod_split`, and the **measurable PDF
-proxy** `g := gaussianPDF` (see `isContChannelMIDecompHyp_awgn`). The Bayes density
+inputs `P, N, hN, hPN, h_meas, h_out` alone — via the linchpin
+`rnDeriv_compProd_fibre`, the general `llr_compProd_prod_split`, and the measurable PDF
+proxy `g := gaussianPDF` (see `isContChannelMIDecompHyp_awgn`). The Bayes density
 split, the joint absolute continuity, both fibre/output absolute continuities, the fibre
 log-density integrability and the two output-side log-density integrabilities are all
 supplied. Everything else in the MI chain rule (KL→integral, Fubini split, both
@@ -332,7 +332,7 @@ theorem isAwgnMIDecomp_of_densitySplit
   awgn_midecomp_of_cont_chain P N h_meas
     (isContChannelMIDecompHyp_awgn P N hN hPN h_meas h_out)
 
-/-- **Closed-form Gaussian MI from `h_out`.**
+/-- Closed-form Gaussian MI from `h_out`.
 
 Same as `awgn_mi_gaussian_closed_form_of_primitives` but with the `h_decomp`
 argument supplied internally: `IsAwgnMIDecomp` comes from
@@ -353,7 +353,7 @@ theorem awgn_mi_gaussian_closed_form_of_out
     isAwgnMIDecomp_of_densitySplit P N hN_NN hPN h_meas h_out
   exact awgn_mi_gaussian_closed_form_of_primitives P hP_pos N hN h_meas h_out h_decomp
 
-/-! **AWGN capacity closed form** — hosted downstream.
+/-! AWGN capacity closed form — hosted downstream.
 
 This file cannot host the closed form `awgnCapacity P N = (1/2) log(1 + P/N)`, since the
 converse depends on `AwgnCapacityConverseMaxent`, which imports this file; wiring it here

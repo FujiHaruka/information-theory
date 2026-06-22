@@ -14,8 +14,8 @@ import InformationTheory.Shannon.EPI.Case1.RatioLimit.Producer
 /-!
 # EPI case-1 via ratio + scaling squeeze (entropic-CLT-free)
 
-This file lands the **monotone + limit** architecture for the classical (case-1,
-a.c. inputs) entropy power inequality, **bypassing the entropic CLT wall**.
+This file lands the monotone + limit architecture for the classical (case-1,
+a.c. inputs) entropy power inequality, bypassing the entropic CLT wall.
 
 ## Architecture
 
@@ -29,7 +29,7 @@ the genuine log-ratio gap (`EPIL3Integration.csiszarLogRatioGap`).
   gives `0 ≤ R 0 ⟹ EPI`.
 
 So if `R t → 0` as `t → ∞`, then by antitonicity `R 0 ≥ lim_{t→∞} R t = 0`, hence
-EPI. **No entropic CLT** is needed: `R t → 0` follows from a *scaling squeeze*.
+EPI. No entropic CLT is needed: `R t → 0` follows from a *scaling squeeze*.
 
 ### Scaling cancellation
 
@@ -54,7 +54,7 @@ standard normals), the two `log`s converge to the same value, so `R t → 0`.
 
 All per-`t` regularity (a.c., finite-entropy integrability of the W-path laws, the
 8 fibre-integrability preconditions of `differentialEntropy_add_ge_of_indep`, finite
-variance) is threaded as **honest preconditions** in the signatures. The
+variance) is threaded as honest preconditions in the signatures. The
 Stam core / EPI core is never bundled as a `*Hypothesis`. The genuine analytic glue
 (scaling cancellation, log-continuity composition, Gaussian additivity, order limit)
 is the deliverable; preconditions not discharged here remain honest hypotheses.

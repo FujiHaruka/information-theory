@@ -37,13 +37,13 @@ variable {X Y Z : Type*}
   [MeasurableSpace Y] [StandardBorelSpace Y] [Nonempty Y]
   [MeasurableSpace Z] [StandardBorelSpace Z] [Nonempty Z]
 
-/-- **Bundle the conditioner into the left endpoint** (graphoid trivial-inclusion).
+/-- Bundle the conditioner into the left endpoint (graphoid trivial-inclusion).
 
 If `Markov μ As Zc Yo`, then `Markov μ (As, Zc) Zc Yo`: bundling the conditioner `Zc` as a
 copy on the left endpoint preserves the Markov chain (since `Zc` is determined by the
 conditioning, the extra copy carries no new conditional information).
 
-**Strategy**: identify `condDistrib (As, Zc) Zc μ =ᵐ[μ.map Zc] (condDistrib As Zc μ) ×ₖ Kernel.id`
+Strategy: identify `condDistrib (As, Zc) Zc μ =ᵐ[μ.map Zc] (condDistrib As Zc μ) ×ₖ Kernel.id`
 via `condDistrib_ae_eq_of_measure_eq_compProd`, then push the original γ-form through
 `g : Z × (X × Y) → Z × ((X × Z) × Y)`. -/
 private lemma isMarkovChain_bundle_left_with_conditioner
@@ -200,14 +200,14 @@ private lemma condDistrib_prodMk_right_ae_eq_comap
   refine lintegral_congr fun a ↦ ?_
   rw [Kernel.comap_apply _ measurable_fst]
 
-/-- **Graphoid weak union (γ-form direct)**: From `Markov μ (As, Bs) Zc Yo`
+/-- Graphoid weak union (γ-form direct): From `Markov μ (As, Bs) Zc Yo`
 (i.e., `Yo ⫫ (As, Bs) | Zc`), derive `Markov μ Bs (Zc, As) Yo` (i.e.,
 `Yo ⫫ Bs | (Zc, As)`).
 
 This is the graphoid weak union axiom: bundle a piece of the joint left endpoint into
 the conditioner.
 
-**Proof structure (`Measure.ext_of_lintegral`)**:
+Proof structure (`Measure.ext_of_lintegral`):
 1. Unfold the goal `IsMarkovChain` to a `compProd` equality at the level of `μ.map`.
 2. Expand `μ.map (Z, A)` via `compProd_map_condDistrib` to `(μ.map Z) ⊗ₘ K_A`.
 3. Identify `condDistrib Yo (Zc, As) μ =ᵐ[μ.map (Zc, As)] (K_Y).comap Prod.fst _`
@@ -404,7 +404,7 @@ private lemma cond_reshape_kernel_lemma {X' Z Z' : Type*}
   rw [Kernel.comap_apply _ e.symm.measurable]
   simp [Prod.map]
 
-/-- **Markov chain conditioner reshape via measurable equiv**: if `Markov μ Xs (e ∘ Z') Yo`
+/-- Markov chain conditioner reshape via measurable equiv: if `Markov μ Xs (e ∘ Z') Yo`
 and `e : Z' ≃ᵐ Z`, then `Markov μ Xs Z' Yo`. -/
 private lemma isMarkovChain_map_conditioner_measurableEquiv
     {X Z Z' : Type*}
@@ -509,7 +509,7 @@ variable {n : ℕ}
 variable {α : Type*} [MeasurableSpace α] [Nonempty α] [StandardBorelSpace α]
 variable {β : Type*} [MeasurableSpace β] [Nonempty β] [StandardBorelSpace β]
 
-/-- **Per-letter Markov chain from memoryless**: derive `Markov μ (Xs full) (Xs i) (Ys i)`
+/-- Per-letter Markov chain from memoryless: derive `Markov μ (Xs full) (Xs i) (Ys i)`
 from `IsMemorylessChannel`.
 
 Steps:
@@ -568,7 +568,7 @@ theorem per_letter_markov_of_memoryless
   rw [← h_eq]
   exact h3
 
-/-- **Outputs conditional independence from memoryless**: derive
+/-- Outputs conditional independence from memoryless: derive
 `Markov μ Y^{≠i} (X^n) Y_i` from `IsMemorylessChannel`.
 
 Steps:
@@ -646,7 +646,7 @@ variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
 omit [DecidableEq M] [DecidableEq α] [DecidableEq β] in
-/-- **Channel coding converse, pure memoryless DMC form**.
+/-- Channel coding converse, pure memoryless DMC form.
 
 Under `h_memo : IsMemorylessChannel μ Xs Ys`, auto-derives the per-letter Markov chain
 `X^n → X_i → Y_i` and outputs conditional independence `Y^{≠i} → X^n → Y_i`, then

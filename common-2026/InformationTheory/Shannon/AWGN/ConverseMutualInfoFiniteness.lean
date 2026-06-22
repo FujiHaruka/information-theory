@@ -482,7 +482,7 @@ private lemma blockRealDensity_le_sup
         · have : (M : ℝ) ≠ 0 := by exact_mod_cast hMpos.ne'
           field_simp
 
-/-- **Per-component output log-density integrability (n-dim).** For each codeword index
+/-- Per-component output log-density integrability (n-dim). For each codeword index
 `m`, `log (blockYLaw.rnDeriv volume y)` is integrable against the m-th block component
 `pi (gaussianReal (encoder m i) N)`. The mixture density is bounded above by the Gaussian
 peak (so `log ≤ const`) and below by component `m` (so `-log ≤ ∑ᵢ (yᵢ − encoder m i)²/(2N)
@@ -800,7 +800,7 @@ private lemma integrable_log_component_rnDeriv_blockYLaw
     ring
   exact (h_int_νm_vol.sub h_int_q_vol).congr h_split.symm
 
-/-- **I(W; Y^n) finiteness (genuine).** -/
+/-- I(W; Y^n) finiteness (genuine). -/
 private lemma awgnConverseJoint_mi_W_ne_top
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :

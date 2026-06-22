@@ -33,7 +33,7 @@ open scoped ENNReal NNReal BigOperators Topology
 
 /-! ## Main theorem — `awgn_channel_coding_theorem` -/
 
-/-- **AWGN channel coding theorem (Cover-Thomas 9.1.1 + 9.1.2)**.
+/-- AWGN channel coding theorem (Cover-Thomas 9.1.1 + 9.1.2).
 
 For the additive white Gaussian noise channel `Y = X + Z`, `Z ∼ 𝒩(0, N)`, with
 output power constraint `E[X²] ≤ P`:
@@ -70,7 +70,7 @@ theorem awgn_channel_coding_theorem
 
 /-! ## Closed-form capacity corollary -/
 
-/-- **AWGN capacity closed form** (Cover-Thomas 9.1, restated as a public corollary).
+/-- AWGN capacity closed form (Cover-Thomas 9.1, restated as a public corollary).
 
 `awgnCapacity P N h_meas = (1/2) log(1 + P/N)`.
 

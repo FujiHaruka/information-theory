@@ -76,7 +76,7 @@ theorem epi_of_twoTimeLogRatioGap_zero_nonneg
   rw [Real.log_le_log_iff hB_pos hA_pos] at h_log_le
   exact h_log_le
 
-/-- **TT EPI via tendsto** — antitonicity + `R(t) → 0` give `R(0) ≥ 0`, hence EPI.
+/-- TT EPI via tendsto — antitonicity + `R(t) → 0` give `R(0) ≥ 0`, hence EPI.
 
 Order-limit bridge (`le_of_tendsto`) over `twoTimeLogRatioGap_antitoneOn_Ici_zero`
 + `twoTimeLogRatioGap_tendsto_zero_atTop`, then `epi_of_twoTimeLogRatioGap_zero_nonneg`.
@@ -155,7 +155,7 @@ theorem heatFlowEP_tendsto_atTop
     Filter.Tendsto.atTop_mul_pos hν_pos Filter.tendsto_id hNr_lim
   exact h_prod.congr' (h_eq.mono (fun s hs ↦ hs.symm))
 
-/-- **TT case-1 EPI terminal** (two-time analog of the single-`t`
+/-- TT case-1 EPI terminal (two-time analog of the single-`t`
 `entropyPower_add_ge_case1_of_regular`, `EPICase1RatioLimit.lean:1343`).
 
 `N(X+Y) ≥ N(X) + N(Y)`, assembled from the three GENUINE two-time pillars
@@ -166,7 +166,7 @@ does NOT close from harmonic Stam), the two-time object perturbs `X`/`Y` at
 *independent* matched times `s(t)`/`r(t)` and closes from the genuine harmonic Stam
 producer.
 
-**`J_X`/`J_Y` Fisher pin (honesty-load-bearing).** The Fisher infos are NOT free
+`J_X`/`J_Y` Fisher pin (honesty-load-bearing). The Fisher infos are NOT free
 variables: `J_X`/`J_Y` are defined as the total-domain functions
 `fun σ => if 0 < σ then fisherInfoOfDensityReal ((h_reg_*.reg_at σ _).density_t) else 0`.
 The same quantity supplies both (a) `matchedTimePath_exists`'s entropy-power
@@ -176,7 +176,7 @@ pointwise-pinned by `IsRegularDeBruijnHypV2.density_t_eq` (`∀ x`, NOT a.e.), s
 representative escape is structurally impossible — the same honest mechanism as
 `twoTimeLogRatioGap_hasDerivAt`.
 
-**Preconditions** are the union of `matchedTimePath_exists` (×2) + Pillar B + Pillar C
+Preconditions are the union of `matchedTimePath_exists` (×2) + Pillar B + Pillar C
 regularity, deduplicated. None encode the EPI conclusion (mirrors the single-`t`
 terminal's `@audit:ok` union, `EPICase1RatioLimit.lean:1336-1342`):
 * `h_endpt_X`/`h_endpt_Y` (path-producer endpoint continuity), `h_endpt_sum` (Pillar B);

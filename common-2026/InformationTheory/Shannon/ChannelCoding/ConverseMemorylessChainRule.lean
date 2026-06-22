@@ -52,7 +52,7 @@ variable {n : ℕ}
 variable {α : Type*} [MeasurableSpace α] [Nonempty α] [StandardBorelSpace α]
 variable {β : Type*} [MeasurableSpace β] [Nonempty β] [StandardBorelSpace β]
 
-/-- A **memoryless DMC** (without feedback) is formalized by the per-time-step Markov
+/-- A memoryless DMC (without feedback) is formalized by the per-time-step Markov
 chain property: for each `i : Fin n`, the random variables form a Markov chain
 
 ```
@@ -96,9 +96,9 @@ variable {X Y Z W : Type*}
   [MeasurableSpace Z] [StandardBorelSpace Z] [Nonempty Z]
   [MeasurableSpace W] [StandardBorelSpace W] [Nonempty W]
 
-/-- **Conditional version of `mutualInfo_le_of_markov` (augmented form)**.
+/-- Conditional version of `mutualInfo_le_of_markov` (augmented form).
 
-Under the **joint Markov chain** `(Wc, Xs) → (Wc, Zc) → Yo` (i.e., `Markov` holds with
+Under the joint Markov chain `(Wc, Xs) → (Wc, Zc) → Yo` (i.e., `Markov` holds with
 `Wc` carried on both sides), and assuming `I(Wc; Yo) ≠ ∞`, we have
 
 ```
@@ -235,7 +235,7 @@ theorem condMutualInfo_chain_rule_X_2var
   exact WithTop.add_left_cancel hWcY_fin hC'
 
 omit [StandardBorelSpace W] [Nonempty W] in
-/-- **2-variable Y-axis conditional chain rule for `condMutualInfo`**.
+/-- 2-variable Y-axis conditional chain rule for `condMutualInfo`.
 
 ```
 I(X; (A, B) | Wc) = I(X; A | Wc) + I(X; B | (Wc, A))

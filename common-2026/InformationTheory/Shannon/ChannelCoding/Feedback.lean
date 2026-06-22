@@ -38,8 +38,8 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 
 /-! ## `FeedbackCode` structure -/
 
-/-- A **feedback code** of length `n` with `M` messages. The encoder at time `i` takes
-the message and the **prior outputs** `Y_0, …, Y_{i-1}` to produce the input symbol
+/-- A feedback code of length `n` with `M` messages. The encoder at time `i` takes
+the message and the prior outputs `Y_0, …, Y_{i-1}` to produce the input symbol
 `X_i ∈ α`. The decoder maps the full output block `Y^n` to a message guess.
 
 `X_i = encoder i m (y_0, …, y_{i-1})` — the causal structure is built into the type
@@ -60,7 +60,7 @@ def decodingRegion (c : FeedbackCode M n α β) (m : Fin M) : Set (Fin n → β)
 def errorEvent (c : FeedbackCode M n α β) (m : Fin M) : Set (Fin n → β) :=
   (c.decodingRegion m)ᶜ
 
-/-- A **degenerate feedback encoder** is one whose `encoder i` ignores its `(Fin i.val → β)`
+/-- A degenerate feedback encoder is one whose `encoder i` ignores its `(Fin i.val → β)`
 input. Equivalently: a standard `Code` (no feedback). The achievability statement
 `C_FB ≥ C` is trivially captured by the embedding of `Code` into `FeedbackCode` via
 this degenerate construction. -/
@@ -99,7 +99,7 @@ variable {M : Type*} [MeasurableSpace M]
 variable {β : Type*} [Fintype β] [MeasurableSpace β] [MeasurableSingletonClass β]
   [Nonempty β] [StandardBorelSpace β]
 
-/-- **Y-axis n-variable chain rule for mutual information**:
+/-- Y-axis n-variable chain rule for mutual information:
 `I(Msg; Y_0, …, Y_{n-1}) = ∑ i, I(Msg; Y_i | (Y_0, …, Y_{i-1}))`.
 
 Derived from `mutualInfo_chain_rule_fin` by swapping left/right roles via
@@ -144,7 +144,7 @@ variable {α : Type*} [MeasurableSpace α]
 variable {β : Type*} [Fintype β] [MeasurableSpace β] [MeasurableSingletonClass β]
   [Nonempty β] [StandardBorelSpace β]
 
-/-- **Chain-rule converse (Cover-Thomas 7.12, chain step, hypothesis form)**:
+/-- Chain-rule converse (Cover-Thomas 7.12, chain step, hypothesis form):
 under the per-letter bound `I(Msg; Y_i | Y^{<i}) ≤ I(X_i; Y_i)`,
 `I(Msg; Y^n) ≤ ∑ i, I(X_i; Y_i)`.
 
@@ -164,7 +164,7 @@ theorem channel_coding_feedback_converse_chain
   rw [mutualInfo_chain_rule_Y_axis_fin μ Msg Ys hMsg hYs]
   exact Finset.sum_le_sum (fun i _ ↦ h_per_letter i)
 
-/-- **Capacity upper bound (Cover-Thomas 7.12, hypothesis form)**:
+/-- Capacity upper bound (Cover-Thomas 7.12, hypothesis form):
 per-letter bound + `I(X_i; Y_i) ≤ C` for all `i` implies `I(Msg; Y^n) ≤ n • C`
 (where `n • C` is `nsmul` in `ℝ≥0∞`).
 
@@ -203,7 +203,7 @@ variable {β : Type*} [Fintype β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
 omit [DecidableEq M] in
-/-- **Feedback channel coding converse (Cover-Thomas Theorem 7.12)** — hypothesis form.
+/-- Feedback channel coding converse (Cover-Thomas Theorem 7.12) — hypothesis form.
 
 Under the per-letter bound `I(Msg; Y_i | Y^{<i}) ≤ I(X_i; Y_i)` and `I(X_i; Y_i) ≤ C`
 for all `i`, combined with the Fano inequality:
