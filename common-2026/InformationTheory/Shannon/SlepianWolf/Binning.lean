@@ -27,6 +27,11 @@ collapse `𝔼_f[1_{f x = f x'}] = 1/M` for `x ≠ x'` (and `= 1` for `x = x'`).
   (`Measure.pi (fun _ : Fin M => Measure.pi (fun _ : Fin n => p))`): the index of
   the outer `Measure.pi` is swapped from `Fin M` (codeword count) to `(Fin n → α)`
   (input-sequence space).
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
+  Wiley, 2006. Theorem 15.4.1.
 -/
 
 namespace InformationTheory.Shannon
@@ -96,7 +101,7 @@ lemma binningMeasure_singleton_real
 /-! ## Collision probability collapse `𝔼[1_{f x = f x'}] = 1/M` -/
 
 /-- For random binning at rate `1/M` per input sequence, two distinct sequences
-`x ≠ x'` collide with probability exactly `1/M` (Cover–Thomas Theorem 15.4.1). -/
+`x ≠ x'` collide with probability exactly `1/M`. -/
 @[entry_point]
 theorem binning_collision_prob
     {n M : ℕ} [NeZero M]

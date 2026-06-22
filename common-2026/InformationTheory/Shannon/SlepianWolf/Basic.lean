@@ -35,7 +35,7 @@ open scoped ENNReal NNReal
 
 /-! ## Entropy is bounded by the log of the alphabet size -/
 
-/-- `H(W) ≤ log |α|` for any `μ`, by Jensen for `negMulLog` over `Fintype.univ`. -/
+/-- `H(W) ≤ log |α|` for any `μ`. -/
 @[entry_point]
 theorem entropy_le_log_card
     {Ω : Type*} [MeasurableSpace Ω]
@@ -125,7 +125,9 @@ theorem entropy_le_log_card
 /-! ## Fano with side information -/
 
 /-- Fano with side information: `condEntropy μ Xs (Yo, Si) ≤ binEntropy(Pe) + Pe · log(|X|-1)`,
-obtained from `fano_inequality_measure_theoretic` with the paired conditioner `(Yo, Si)`. -/
+with the paired conditioner `(Yo, Si)`.
+
+See also `fano_inequality_measure_theoretic`. -/
 @[entry_point]
 theorem fano_inequality_with_side_info
     {Ω : Type*} [MeasurableSpace Ω]

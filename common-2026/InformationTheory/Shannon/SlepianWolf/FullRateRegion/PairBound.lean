@@ -844,8 +844,7 @@ private theorem swErrorProb_total_expectation_le
 
 omit [DecidableEq α] [DecidableEq β] in
 /-- Pigeonhole: from a double-integral bound `≤ δ`, extract a deterministic encoder
-pair `(f_X, f_Y)` with `g f_X f_Y ≤ δ`, by applying the first moment method
-(`MeasureTheory.exists_le_integral`) to the outer and inner integrals in turn. -/
+pair `(f_X, f_Y)` with `g f_X f_Y ≤ δ`. -/
 private lemma exists_pair_le_of_binning_integral_le
     {n M_X M_Y : ℕ} [NeZero M_X] [NeZero M_Y]
     (g : ((Fin n → α) → Fin M_X) → ((Fin n → β) → Fin M_Y) → ℝ)
@@ -1023,10 +1022,16 @@ expectation, the pigeonhole extraction, and the exponential squeeze into the
 achievability of the full Slepian–Wolf rate region: for any rates strictly above the
 conditional entropies `H(X|Y)`, `H(Y|X)` and the joint entropy `H(X,Y)`, there is a
 sequence of binning encoders and joint typicality decoders whose error probability
-tends to `0`. -/
+tends to `0`.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
+  Wiley, 2006. Theorem 15.4.1.
+-/
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- Slepian–Wolf full rate region achievability (Cover–Thomas 15.4.1). For an
+/-- **Slepian–Wolf theorem** (full rate region achievability): for an
 i.i.d. source `(Xⁿ, Yⁿ)` with full support, any rate pair `(R_X, R_Y)` with
 `R_X > H(X|Y)`, `R_Y > H(Y|X)`, `R_X + R_Y > H(X,Y)` is achievable: there are
 codebook sizes `M_X, M_Y` with the required asymptotic rates and encoders/decoders
