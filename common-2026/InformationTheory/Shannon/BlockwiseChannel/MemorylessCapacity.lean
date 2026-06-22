@@ -277,7 +277,8 @@ private theorem mutualInfoOfChannel_pi_iid_eq_nsmul
     --   = Measure.pi (fun _ => outputDistribution p₀ W).
     rw [Measure.pi_map_pi (fun _ => measurable_snd.aemeasurable)]
     rfl
-  -- Step C: Marginal product pushed via e.symm equals `Measure.pi (fun _ => p₀.prod (output p₀ W))`.
+  -- Step C: Marginal product pushed via e.symm equals
+  -- `Measure.pi (fun _ => p₀.prod (output p₀ W))`.
   have h_marg_map :
       (q.prod (outputDistribution q (Channel.toBlock W n))).map (e.symm : _ ≃ᵐ _)
         = Measure.pi (fun _ : Fin n => p₀.prod (outputDistribution p₀ W)) := by

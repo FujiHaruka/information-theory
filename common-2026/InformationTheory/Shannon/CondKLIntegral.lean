@@ -34,11 +34,13 @@ The slice identity is the linchpin. We use `Measure.compProd_withDensity`
 (`μ ⊗ₘ (η.withDensity f) = (μ ⊗ₘ η).withDensity (fun p ↦ f p.1 p.2)`) together with the
 kernel Radon-Nikodym facts `Kernel.withDensity_rnDeriv_eq` (`η.withDensity (κ.rnDeriv η) a = κ a`
 when `κ a ≪ η a`) and `Measure.absolutelyContinuous_compProd_right_iff` (`μ ⊗ₘ κ ≪ μ ⊗ₘ η ↔
-∀ᵐ a ∂μ, κ a ≪ η a`) to rewrite `μ ⊗ₘ κ` as `(μ ⊗ₘ η).withDensity (fun p ↦ Kernel.rnDeriv κ η p.1 p.2)`,
+∀ᵐ a ∂μ, κ a ≪ η a`) to rewrite `μ ⊗ₘ κ` as
+`(μ ⊗ₘ η).withDensity (fun p ↦ Kernel.rnDeriv κ η p.1 p.2)`,
 whence `Measure.rnDeriv_withDensity` reads off the joint Radon-Nikodym derivative.
 
 For the integral, `toReal_klDiv_eq_integral_klFun` expresses both sides through `klFun` integrated
-against the dominating measure (`μ ⊗ₘ η` on the left, `η z` per fibre), and `Measure.integral_compProd`
+against the dominating measure (`μ ⊗ₘ η` on the left, `η z` per fibre), and
+`Measure.integral_compProd`
 opens the joint `klFun` integral into the outer `μ`-integral.
 -/
 

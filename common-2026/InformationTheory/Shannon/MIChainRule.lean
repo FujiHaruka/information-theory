@@ -201,7 +201,8 @@ theorem mutualInfo_chain_rule_fin
     -- The last summand of the RHS at i = Fin.last n is condMI of Xs(last) given a Fin n-prefix.
     -- After IH rewrite + Fin.sum_univ_castSucc, the LHS sum already matches the RHS's
     -- castSucc-indexed part exactly (modulo `Fin (Fin.last n).val = Fin n`-prefix defeq).
-    -- The remaining `condMutualInfo μ g Yo f` matches `condMutualInfo μ (Xs (last n)) Yo (last-prefix)`
+    -- The remaining `condMutualInfo μ g Yo f` matches
+    -- `condMutualInfo μ (Xs (last n)) Yo (last-prefix)`
     -- by `hg_def` + the prefix definitional equality.
     congr 1
 
@@ -320,7 +321,8 @@ theorem mutualInfo_pi_eq_sum
       = ∑ i : Fin n, mutualInfo μ (Xs i) (Ys i) := by
   unfold mutualInfo
   -- LHS: klDiv (μ.map (joint pair)) ((μ.map X^n).prod (μ.map Y^n))
-  --   where joint pair = fun ω => (fun i => Xs i ω, fun i => Ys i ω) : Ω → (Fin n → α) × (Fin n → β)
+  --   where joint pair = fun ω => (fun i => Xs i ω, fun i => Ys i ω)
+  --     : Ω → (Fin n → α) × (Fin n → β)
   -- Reshape via arrowProdEquivProdArrow.
   let e : (Fin n → α × β) ≃ᵐ (Fin n → α) × (Fin n → β) :=
     MeasurableEquiv.arrowProdEquivProdArrow α β (Fin n)

@@ -203,7 +203,8 @@ lemma mutualInfoOfChannel_toReal_three_entropy
     rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal (hp.1 a)]
     rfl
   have h_id : ∀ ab : α × β,
-      ((jointDistribution (pmfToMeasure p) K).map id).real {ab} = p ab.1 * (K ab.1).real {ab.2} := by
+      ((jointDistribution (pmfToMeasure p) K).map id).real {ab}
+        = p ab.1 * (K ab.1).real {ab.2} := by
     intro ⟨a, b⟩
     rw [Measure.map_id]
     -- {(a, b)} = {a} ×ˢ {b}.
@@ -257,7 +258,8 @@ lemma mutualInfoOfChannel_toReal_smooth_eq
     rw [Channel.smooth_real_singleton W hδ0 hδ1]
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- `δ ↦ (mutualInfoOfChannel (pmfToMeasure p) (Channel.smooth W δ)).toReal` is continuous on `[0,1]`. -/
+/-- `δ ↦ (mutualInfoOfChannel (pmfToMeasure p) (Channel.smooth W δ)).toReal` is continuous on
+`[0,1]`. -/
 lemma continuous_mutualInfoOfChannel_right_smooth
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
     (W : Channel α β) [IsMarkovKernel W] :
@@ -456,7 +458,8 @@ private lemma sum_prod_diff_abs_le_aux : ∀ {n : ℕ} (a b : Fin n → β → �
     have h_split : ∀ y : Fin (k+1) → β,
         |∏ i : Fin (k+1), a i (y i) - ∏ i : Fin (k+1), b i (y i)|
           ≤ |a 0 (y 0) - b 0 (y 0)| * (∏ i : Fin k, b i.succ (y i.succ))
-            + a 0 (y 0) * |∏ i : Fin k, a i.succ (y i.succ) - ∏ i : Fin k, b i.succ (y i.succ)| := by
+            + a 0 (y 0)
+              * |∏ i : Fin k, a i.succ (y i.succ) - ∏ i : Fin k, b i.succ (y i.succ)| := by
       intro y
       rw [Fin.prod_univ_succ, Fin.prod_univ_succ]
       set A : ℝ := ∏ i : Fin k, a i.succ (y i.succ)
@@ -475,7 +478,8 @@ private lemma sum_prod_diff_abs_le_aux : ∀ {n : ℕ} (a b : Fin n → β → �
             rw [abs_of_nonneg hB_nn, abs_of_nonneg ha₀_nn]
     refine (Finset.sum_le_sum (fun y _ => h_split y)).trans ?_
     rw [Finset.sum_add_distrib]
-    -- The first sum: ∑_y |a 0 (y 0) - b 0 (y 0)| · ∏ b' = (∑_y ∏ over Fin (k+1) of f) where f 0 = |..|, f i+1 = b _.
+    -- The first sum: ∑_y |a 0 (y 0) - b 0 (y 0)| · ∏ b' = (∑_y ∏ over Fin (k+1) of f) where
+    -- f 0 = |..|, f i+1 = b _.
     -- We use the bijection (Fin (k+1) → β) ≃ β × (Fin k → β) via y ↦ (y 0, y ∘ Fin.succ).
     have h_first_eq :
         ∑ y : Fin (k+1) → β,
@@ -611,7 +615,8 @@ lemma errorProbAt_smooth_TV
     |(c.errorProbAt (Channel.smooth W δ) m).toReal - (c.errorProbAt W m).toReal|
       ≤ 2 * n * δ := by
   haveI : IsMarkovKernel (Channel.smooth W δ) := Channel.smooth_isMarkovKernel W hδ0 hδ1
-  -- Apply Measure_pi_real_event_diff_le with μ_i := Channel.smooth W δ (c.encoder m i), μ'_i := W (c.encoder m i).
+  -- Apply Measure_pi_real_event_diff_le with μ_i := Channel.smooth W δ (c.encoder m i),
+  -- μ'_i := W (c.encoder m i).
   have h_TV := Measure_pi_real_event_diff_le
     (fun i => Channel.smooth W δ (c.encoder m i))
     (fun i => W (c.encoder m i))

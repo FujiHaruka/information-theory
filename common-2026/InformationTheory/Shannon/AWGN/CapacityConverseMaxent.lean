@@ -789,7 +789,8 @@ theorem awgn_per_input_mi_le_log
     have h_const : (fun x => InformationTheory.Shannon.differentialEntropy (W x))
         = fun _ => (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ)) := by
       funext x
-      rw [hW_def, awgnChannel_apply, InformationTheory.Shannon.differentialEntropy_gaussianReal x hN_NN]
+      rw [hW_def, awgnChannel_apply,
+        InformationTheory.Shannon.differentialEntropy_gaussianReal x hN_NN]
     rw [h_const, integral_const, probReal_univ]
     simp
   -- STEP 3: max-entropy bound on `h(q)` with `m := ∫ y ∂q`, `v := (P+N).toNNReal`

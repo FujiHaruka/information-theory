@@ -175,7 +175,8 @@ theorem convDensityAdd_gaussian_variance_double {t : ℝ} (ht : 0 < t) :
     ext
     show t + t = 2 * t
     ring
-  rw [InformationTheory.Shannon.EPIGaussianDensityRoute.convDensityAdd_gaussian_closed_form hv_ne hv_ne,
+  rw [InformationTheory.Shannon.EPIGaussianDensityRoute.convDensityAdd_gaussian_closed_form
+      hv_ne hv_ne,
     add_zero]
   congr 1
 
@@ -190,7 +191,8 @@ theorem convDensityAdd_gaussian_variance_add {s t : ℝ} (hs : 0 < s) (ht : 0 < 
     intro h; exact hs.ne' (congrArg NNReal.toReal h)
   have ht_ne : (⟨t, ht.le⟩ : ℝ≥0) ≠ 0 := by
     intro h; exact ht.ne' (congrArg NNReal.toReal h)
-  rw [InformationTheory.Shannon.EPIGaussianDensityRoute.convDensityAdd_gaussian_closed_form hs_ne ht_ne,
+  rw [InformationTheory.Shannon.EPIGaussianDensityRoute.convDensityAdd_gaussian_closed_form
+      hs_ne ht_ne,
     add_zero]
   congr 1
 

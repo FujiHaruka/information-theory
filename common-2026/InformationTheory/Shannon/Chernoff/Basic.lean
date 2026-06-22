@@ -882,12 +882,14 @@ private lemma chernoff_rate_le_aux_upper
     intro x
     refine le_min ?_ ?_
     · -- p_min^n ≤ ∏ i, P₁ (x i). Use ∀ i, p_min ≤ P₁ (x i).
-      calc p_min ^ n = ∏ _i : Fin n, p_min := by rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin]
+      calc p_min ^ n = ∏ _i : Fin n, p_min := by
+              rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin]
         _ ≤ ∏ i : Fin n, P₁ (x i) := by
             refine Finset.prod_le_prod (fun i _ => hpmin_pos.le) (fun i _ => ?_)
             have := ha₀ (x i) (Finset.mem_univ _)
             exact le_trans this (min_le_left _ _)
-    · calc p_min ^ n = ∏ _i : Fin n, p_min := by rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin]
+    · calc p_min ^ n = ∏ _i : Fin n, p_min := by
+              rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin]
         _ ≤ ∏ i : Fin n, P₂ (x i) := by
             refine Finset.prod_le_prod (fun i _ => hpmin_pos.le) (fun i _ => ?_)
             have := ha₀ (x i) (Finset.mem_univ _)
@@ -932,7 +934,8 @@ private lemma chernoff_rate_le_aux_upper
     rw [Real.log_inv]
   rw [h_log_expand] at h_log_ge
   -- Multiply by -(1/n) (negative), flips:
-  --   -(1/n) * log bayes ≤ -(1/n) * (-log 2 + n · log p_min) = log 2 / n - log p_min ≤ -log p_min + log 2.
+  --   -(1/n) * log bayes ≤ -(1/n) * (-log 2 + n · log p_min)
+  --   = log 2 / n - log p_min ≤ -log p_min + log 2.
   have h_neg_inv : -((1 : ℝ) / n) ≤ 0 := by
     have : (0 : ℝ) ≤ 1 / n := by positivity
     linarith

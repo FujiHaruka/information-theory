@@ -26,7 +26,8 @@ MI chain rule, and the deterministic-encoder Markov factorization.
 The old predicate bodies referenced `awgnConverseJoint` / `perLetterYLaw` / `perLetterMI`
 / `jointMIXnYn`, all defined in `ConverseMutualInfoFiniteness.lean`. Referencing those named defs
 from this file directly would create the import cycle
-`ConverseMIChainRule → ConverseMutualInfoFiniteness → ConverseMIChainRule`, so the body of `awgnConverseJoint` is inlined here as
+`ConverseMIChainRule → ConverseMutualInfoFiniteness → ConverseMIChainRule`, so the body of
+`awgnConverseJoint` is inlined here as
 the private mirror def `converseJointInline`. The two defs share the same RHS, so they are
 definitionally equal: on the consumer side `unfold awgnConverseJoint perLetterYLaw …`
 reduces the goal to the inline form here, where the shared lemmas apply. -/
@@ -333,7 +334,8 @@ theorem awgnPerLetterIntegrability_holds
     -- `ν` is a probability measure (pushforward of the probability mixture)
     haveI hν_prob : IsProbabilityMeasure ν := by
       rw [hν_def]
-      exact Measure.isProbabilityMeasure_map ((measurable_pi_apply i).comp measurable_snd).aemeasurable
+      exact Measure.isProbabilityMeasure_map
+        ((measurable_pi_apply i).comp measurable_snd).aemeasurable
     -- main case: `ν = volume.withDensity f`, `f := perLetterMixtureDensity N c i`.
     set f : ℝ → ℝ≥0∞ := perLetterMixtureDensity N c i with hf_def
     have hf_meas : Measurable f := perLetterMixtureDensity_measurable N c i

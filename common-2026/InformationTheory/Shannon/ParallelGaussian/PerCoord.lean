@@ -381,7 +381,8 @@ theorem gaussianProductInput_compProd_parallelGaussianChannel_eq_pi {n : ℕ}
   have hkey : ((gaussianProductInput Q) ⊗ₘ W).map e.symm = Measure.pi joints := by
     -- Characterize `Measure.pi joints` by its values on product boxes via `pi_eq`.
     refine (Measure.pi_eq (fun s hs => ?_)).symm
-    -- LHS box value: `((compProd).map e.symm) (Set.pi univ s) = (compProd) (e.symm ⁻¹' (Set.pi univ s))`.
+    -- LHS box value:
+    -- `((compProd).map e.symm) (Set.pi univ s) = (compProd) (e.symm ⁻¹' (Set.pi univ s))`.
     have hbox_meas : MeasurableSet (Set.pi (Set.univ : Set (Fin n)) s) :=
       MeasurableSet.univ_pi hs
     rw [Measure.map_apply e.symm.measurable hbox_meas]
@@ -401,7 +402,8 @@ theorem gaussianProductInput_compProd_parallelGaussianChannel_eq_pi {n : ℕ}
     rw [hpre]
     -- Apply general `compProd_apply`.
     rw [Measure.compProd_apply hpre_meas]
-    -- The kernel fibre value: `W x (Prod.mk x ⁻¹' preimage) = ∏ i, gaussianReal (x i) (N i) (slice i)`.
+    -- The kernel fibre value:
+    -- `W x (Prod.mk x ⁻¹' preimage) = ∏ i, gaussianReal (x i) (N i) (slice i)`.
     have hslice : ∀ x : Fin n → ℝ,
         (W x) (Prod.mk x ⁻¹' {ω : (Fin n → ℝ) × (Fin n → ℝ) | ∀ i, (ω.1 i, ω.2 i) ∈ s i})
           = ∏ i, (gaussianReal (x i) (N i)) (Prod.mk (x i) ⁻¹' s i) := by

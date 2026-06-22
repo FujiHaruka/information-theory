@@ -152,7 +152,8 @@ theorem binning_collision_prob
   -- and `f x'` is forced to equal `f x`. Equivalently, they correspond to
   -- functions `(Fin n → α) → Fin M` modulo the constraint, which has
   -- `M^{|α|^n - 1}` elements.
-  -- Cleaner: count via bijection `{f | f x = f x'} ≃ {g : (Fin n → α) → Fin M | true (no constraint, but reindexed)}`.
+  -- Cleaner: count via bijection
+  -- `{f | f x = f x'} ≃ {g : (Fin n → α) → Fin M | true (no constraint, but reindexed)}`.
   -- Concretely: removing the constraint at one coordinate, the constraint
   -- `f x' = f x` makes `f x'` determined by `f x`. So
   -- `#{f | f x = f x'} = M^{|α|^n - 1}` (free choices at all coords except `x'`).
@@ -176,7 +177,8 @@ theorem binning_collision_prob
     fun ⟨f, _⟩ y => f y.1
   let invFun : ({y : Fin n → α // y ≠ x'} → Fin M) → {f : HashFn // f x = f x'} :=
     fun g => ⟨fun y => if hy : y = x' then g ⟨x, h⟩ else g ⟨y, hy⟩, by
-      -- Need: (if hyp : x = x' then g ⟨x, h⟩ else g ⟨x, hyp⟩) = (if h_x_eq_x' : x' = x' then g ⟨x, h⟩ else g ⟨x', h_x_eq_x'⟩).
+      -- Need: (if hyp : x = x' then g ⟨x, h⟩ else g ⟨x, hyp⟩)
+      --   = (if h_x_eq_x' : x' = x' then g ⟨x, h⟩ else g ⟨x', h_x_eq_x'⟩).
       -- LHS: x = x' iff false (h : x ≠ x'), so LHS = g ⟨x, h⟩.
       -- RHS: x' = x' iff true, so RHS = g ⟨x, h⟩.
       simp [h]⟩

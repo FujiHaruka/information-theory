@@ -29,9 +29,10 @@ with the Gaussian saturation case where the inequality holds with equality.
 * `entropyPower_pos`, `entropyPower_nonneg`, `entropyPower_gaussianReal` — basic properties and the
   Gaussian closed form `2πe v`.
 * `entropyPower_gaussian_additivity` — EPI holds with equality for independent Gaussians.
-* `isEntropyPowerInequalityHypothesis_of_gaussian` — the EPI predicate holds for independent Gaussians.
-* `entropyPower_map_add_const`, `entropy_power_inequality_three_arg` — translation invariance and the
-  three-variable form.
+* `isEntropyPowerInequalityHypothesis_of_gaussian` — the EPI predicate holds for independent
+  Gaussians.
+* `entropyPower_map_add_const`, `entropy_power_inequality_three_arg` — translation invariance and
+  the three-variable form.
 
 ## Implementation notes
 
@@ -150,8 +151,8 @@ theorem entropyPower_gaussian_additivity
   push_cast
   ring
 
-/-- The entropy-power-inequality hypothesis is satisfied (with equality) whenever both `X` and `Y` are
-independent Gaussians.
+/-- The entropy-power-inequality hypothesis is satisfied (with equality) whenever both `X` and `Y`
+are independent Gaussians.
 
 @audit:ok -/
 @[entry_point]

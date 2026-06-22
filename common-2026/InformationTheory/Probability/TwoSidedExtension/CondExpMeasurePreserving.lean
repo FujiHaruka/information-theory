@@ -59,7 +59,8 @@ lemma condExp_comp_measurePreserving
     h_mp.integrable_comp_of_integrable h_cE_int
   have hf_comp : Integrable (f ∘ T) μ₁ :=
     h_mp.integrable_comp_of_integrable hf
-  -- Goal: `(μ₂[f|n]) ∘ T =ᵐ μ₁[f∘T | n.comap T]`. Direct from `ae_eq_condExp_of_forall_setIntegral_eq`.
+  -- Goal: `(μ₂[f|n]) ∘ T =ᵐ μ₁[f∘T | n.comap T]`.
+  -- Direct from `ae_eq_condExp_of_forall_setIntegral_eq`.
   have h_rev : (fun x => (μ₂[f | n]) (T x)) =ᵐ[μ₁] μ₁[f ∘ T | n.comap T] := by
     refine ae_eq_condExp_of_forall_setIntegral_eq hcomap_le hf_comp ?_ ?_ ?_
     · intro s _ _; exact h_cE_comp_int.integrableOn

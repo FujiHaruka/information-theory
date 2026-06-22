@@ -123,7 +123,8 @@ private theorem channelCodingSmooth_avg_bound
             ((InformationTheory.Shannon.entropy (iidAmbientMeasure p Wδ)
                 (jointSequence iidXs iidYs 0)
               - InformationTheory.Shannon.entropy (iidAmbientMeasure p Wδ) (iidXs 0)
-              - InformationTheory.Shannon.entropy (iidAmbientMeasure p Wδ) (iidYs 0)) + 3 * ε)) := by
+              - InformationTheory.Shannon.entropy (iidAmbientMeasure p Wδ) (iidYs 0))
+                + 3 * ε)) := by
   set μ : Measure (ℕ → α × β) := iidAmbientMeasure p Wδ with hμ_def
   haveI : IsProbabilityMeasure μ := by rw [hμ_def]; infer_instance
   exact random_codebook_average_le (M := M) (n := n) Wδ p hp_pos hM_pos hε_pos μ iidXs iidYs

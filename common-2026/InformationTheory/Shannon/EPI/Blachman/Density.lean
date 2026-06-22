@@ -119,7 +119,8 @@ Proof skeleton (explicit Bochner integrals + cancellation, NO disintegration):
 
 * `logDeriv p_Z z = p_Z'(z) / p_Z(z)` (gateway `HasDerivAt` + `logDeriv_apply`).
 * `∫ W_λ · p_{X|Z} = (1/p_Z) ∫ W_λ · fX(x) fY(z-x)`.
-* `W_λ · fX(x) fY(z-x) = λ (logDeriv fX x · fX x) fY(z-x) + (1-λ) fX x (logDeriv fY(z-x) · fY(z-x))`,
+* `W_λ · fX(x) fY(z-x) = λ (logDeriv fX x · fX x) fY(z-x)
+    + (1-λ) fX x (logDeriv fY(z-x) · fY(z-x))`,
 and `logDeriv f · f = deriv f` pointwise (positivity).
 * `∫ deriv fX(x) fY(z-x) = p_Z'(z)` (S2) and `∫ fX(x) deriv fY(z-x) = p_Z'(z)`
 (gateway derivative).  Numerator `= λ p_Z' + (1-λ) p_Z' = p_Z'`.  Divide by `p_Z`.
@@ -386,7 +387,8 @@ private theorem convex_fisher_term2 (fX fY : ℝ → ℝ)
       = ∫ y, (logDeriv fY y) ^ 2 * fY y ∂volume := by
   -- Tonelli: put `z` innermost.
   rw [integral_integral_swap hint2]
-  -- inner `z` integral of `(logDeriv fY (z-x))²·fY (z-x)` is `J_Y` (translation), `fX x` is constant.
+  -- inner `z` integral of `(logDeriv fY (z-x))²·fY (z-x)` is `J_Y` (translation),
+  -- `fX x` is constant.
   have hinner : ∀ x : ℝ,
       (∫ z, (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x) ∂volume)
         = fX x * ∫ y, (logDeriv fY y) ^ 2 * fY y ∂volume := by
@@ -786,7 +788,8 @@ theorem isBlachmanConvReady_symm {fX fY : ℝ → ℝ}
     rw [hrefl, hcomm]
   · -- int_fisherZ
     rw [hcomm]; exact h.int_fisherZ
-  · -- int_prod1 : Integrable ((z,x) ↦ (logDeriv fY x)²·fY x · fX(z-x)) = separable A_Y ⊗ fX, sheared
+  · -- int_prod1 : Integrable ((z,x) ↦ (logDeriv fY x)²·fY x · fX(z-x))
+    -- = separable A_Y ⊗ fX, sheared
     have hsep : Integrable
         (fun p : ℝ × ℝ =>
           ((logDeriv fY p.1) ^ 2 * fY p.1) * fX p.2) (volume.prod volume) :=

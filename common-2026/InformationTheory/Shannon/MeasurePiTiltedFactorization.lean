@@ -121,7 +121,8 @@ theorem integral_exp_sum_pi_eq_pow {n : ℕ} {μ₀ : Measure Ω₀} [IsProbabil
 /-- The tilt of the finite product measure by the sum exponent factors as the
 product of the per-coordinate tilts.
 
-`(Measure.pi (fun _ => μ₀)).tilted (∑ i, lam · Y (· i)) = Measure.pi (fun _ => μ₀.tilted (lam · Y))`. -/
+`(Measure.pi (fun _ => μ₀)).tilted (∑ i, lam · Y (· i))
+= Measure.pi (fun _ => μ₀.tilted (lam · Y))`. -/
 @[entry_point]
 theorem pi_tilted_sum_eq_pi_tilted {n : ℕ} {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (lam : ℝ) :

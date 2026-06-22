@@ -873,7 +873,8 @@ theorem twoTime_stam_supply {Ω : Type*} [MeasurableSpace Ω]
       hpY_nn hpY_meas hpY_int hpY_mass hpY_norm
   -- the conv-pin gate `∀ x, RS.density_t x = convDensityAdd RX.density_t RY.density_t x`
   have hconv : ∀ x, RS.density_t x = convDensityAdd RX.density_t RY.density_t x :=
-    reg_density_t_sum_eq_convDensityAdd P X Y Z_X Z_Y Z hX hY hXY h_reg_X h_reg_Y h_reg_sum σ τ hσ hτ
+    reg_density_t_sum_eq_convDensityAdd P X Y Z_X Z_Y Z hX hY hXY h_reg_X h_reg_Y h_reg_sum
+      σ τ hσ hτ
   -- instantiate the Stam hyp at the three `density_t`s; the J-gates close definitionally.
   have hJX : 0 < fisherInfoOfDensityReal RX.density_t := hposX
   have hJY : 0 < fisherInfoOfDensityReal RY.density_t := hposY

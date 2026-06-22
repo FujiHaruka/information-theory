@@ -71,7 +71,8 @@ Nyquist-Fourier machinery not in Mathlib; this predicate carries only positivity
 def IsBandlimitedSamplingHypothesis (W N₀ P : ℝ) : Prop :=
   0 < W ∧ 0 < N₀ ∧ 0 ≤ P
 
-/-- Bandlimited-kernel hypothesis: positivity stand-in `0 < W` for continuous-time AWGN noise kernel measurability.
+/-- Bandlimited-kernel hypothesis: positivity stand-in `0 < W` for continuous-time AWGN noise
+kernel measurability.
 
 `@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
 def IsBandlimitedKernel (W : ℝ) : Prop := 0 < W
@@ -81,7 +82,8 @@ def IsBandlimitedKernel (W : ℝ) : Prop := 0 < W
 Requires Whittaker-Shannon sampling theorem + continuous AEP (not in Mathlib);
 taken as the caller's hypothesis.
 
-`@audit:retract-candidate(load-bearing-predicate) @audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate)`
+`@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
 def IsTwoWDegreesOfFreedom (W N₀ P C : ℝ) : Prop :=
   C = 2 * W * perSampleAwgnCapacity W N₀ P
 
@@ -108,7 +110,9 @@ only performs the residual algebra `2W · perSample = W · log(1 + P/(N₀·W))`
 Closing the `2W` degrees-of-freedom identity requires the Whittaker-Shannon
 sampling theorem + continuous AEP (not in Mathlib).
 
-`@audit:retract-candidate(load-bearing-predicate) @audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan) @residual(plan:whittaker-shannon-partial-moonshot-plan)`
+`@audit:retract-candidate(load-bearing-predicate)`
+`@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)`
+`@residual(plan:whittaker-shannon-partial-moonshot-plan)`
 -/
 @[entry_point]
 theorem shannon_hartley_formula

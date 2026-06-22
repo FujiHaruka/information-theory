@@ -417,7 +417,8 @@ theorem measurePreserving_shiftZ :
       linarith
     rw [shiftedMarginal_eq_of_shift μ p I_shift (shiftAmount I) hN_shift,
         shiftedMarginal_eq_of_shift μ p I (shiftAmount I + 1) hN_I_succ]
-    -- Now: `(μ.map (obsZ μ p (shiftAmount I) I_shift)).map e = μ.map (obsZ μ p (shiftAmount I + 1) I)`.
+    -- Now:
+    -- `(μ.map (obsZ μ p (shiftAmount I) I_shift)).map e = μ.map (obsZ μ p (shiftAmount I + 1) I)`.
     rw [Measure.map_map hmeas_e (measurable_obsZ μ p _ I_shift)]
     congr 1
     funext ω
@@ -859,7 +860,8 @@ lemma exists_preimage_natProj_of_posSigma
       --                     = ⨆ i, (m_α).comap (· (i:ℤ))
       -- And (m_α).comap (· (i:ℤ)) ≤ posSigma because (i:ℤ) ≥ 0.
       rw [show (MeasurableSpace.pi : MeasurableSpace (∀ _ : ℕ, α))
-            = ⨆ i : ℕ, (inferInstance : MeasurableSpace α).comap (fun x : (∀ _ : ℕ, α) => x i) from rfl]
+            = ⨆ i : ℕ, (inferInstance : MeasurableSpace α).comap
+              (fun x : (∀ _ : ℕ, α) => x i) from rfl]
       rw [MeasurableSpace.comap_iSup]
       refine iSup_le (fun i => ?_)
       rw [MeasurableSpace.comap_comp]

@@ -149,11 +149,13 @@ lemma exp_le_Qn_of_alpha_level
     have h_eq : -((n : ℝ) * B) = -n * B := by ring
     -- Multiply h_conv by -n (negative) flips: log Q^n s ≥ -n * B.
     -- Concretely: log Q^n s = (-n) * (-(1/n) * log Q^n s) and -(1/n) log Q^n s ≤ B.
-    have h_step : (-(n : ℝ)) * (-((1 : ℝ) / n) * Real.log ((Measure.pi (fun _ : Fin n => Q)) s).toReal)
+    have h_step : (-(n : ℝ)) *
+          (-((1 : ℝ) / n) * Real.log ((Measure.pi (fun _ : Fin n => Q)) s).toReal)
         ≥ (-(n : ℝ)) * B := by
       apply mul_le_mul_of_nonpos_left h_conv
       linarith
-    have h_simp : (-(n : ℝ)) * (-((1 : ℝ) / n) * Real.log ((Measure.pi (fun _ : Fin n => Q)) s).toReal)
+    have h_simp : (-(n : ℝ)) *
+          (-((1 : ℝ) / n) * Real.log ((Measure.pi (fun _ : Fin n => Q)) s).toReal)
         = Real.log ((Measure.pi (fun _ : Fin n => Q)) s).toReal := by
       field_simp
     rw [h_simp] at h_step

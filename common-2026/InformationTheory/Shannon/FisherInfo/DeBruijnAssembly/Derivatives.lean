@@ -692,7 +692,8 @@ theorem convDensityAdd_logFactor_deriv2_integrable
       pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
   -- `t ∈ Ioo (t/2)(2*t)`.
   have htmem : t ∈ Set.Ioo (t/2) (2*t) := ⟨by linarith, by linarith⟩
-  -- the half-Hessian integrand at `s = t`, with `⟨t, _⟩` variance witness (= `_chain_domination`'s).
+  -- the half-Hessian integrand at `s = t`, with `⟨t, _⟩` variance witness
+  -- (= `_chain_domination`'s).
   set f : ℝ → ℝ := fun x =>
     (- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) - 1)
       * ((1/2) * deriv (deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))) x) with hf_def
@@ -776,7 +777,8 @@ theorem convDensityAdd_logFactor_deriv_integrable
   obtain ⟨Cg, hCg⟩ : ∃ C : ℝ, ∀ u : ℝ, gaussGradMaj t u ≤ C :=
     ⟨(Real.sqrt (Real.pi * t))⁻¹ * ((1 + 4 * t * Real.exp (-1)) / t), gaussGradMaj_bdd ht⟩
   obtain ⟨CG, hCG⟩ : ∃ C : ℝ, ∀ u : ℝ, G u ≤ C := by
-    obtain ⟨C, hC⟩ := gaussGradMaj_polyWeight_bdd ht (abs_nonneg A) (by positivity : (0:ℝ) ≤ 2 * |B|)
+    obtain ⟨C, hC⟩ :=
+      gaussGradMaj_polyWeight_bdd ht (abs_nonneg A) (by positivity : (0:ℝ) ≤ 2 * |B|)
     exact ⟨C, fun u => by rw [hG_def]; exact hC u⟩
   -- `E x` nonneg + measurable.
   have hE_meas : AEStronglyMeasurable E volume := by
@@ -807,14 +809,15 @@ theorem convDensityAdd_logFactor_deriv_integrable
   have hlog_x : ‖- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) - 1‖
       ≤ A + B * x ^ 2 := hLogx t htmem
   have hderiv_x : ‖deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)) x‖ ≤ E x := by
-    rw [hE_def]; exact convDensityAdd_deriv1_le_gaussGradMaj_conv pX hpX_nn hpX_meas hpX_int ht x htmem
+    rw [hE_def]
+    exact convDensityAdd_deriv1_le_gaussGradMaj_conv pX hpX_nn hpX_meas hpX_int ht x htmem
   have hABnn : (0:ℝ) ≤ A + B * x ^ 2 := le_trans (norm_nonneg _) hlog_x
   have hE_nn : (0:ℝ) ≤ E x := by
     rw [hE_def]; exact integral_nonneg (fun y => mul_nonneg (hpX_nn y) (hg_nn (x - y)))
   -- `‖(- log p_t - 1)·∂p_t‖ ≤ (A + B·x²)·E x`.
   rw [Real.norm_eq_abs, abs_mul]
-  have h1 : |- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) - 1| ≤ A + B * x ^ 2 := by
-    rwa [← Real.norm_eq_abs]
+  have h1 : |- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) - 1| ≤ A + B * x ^ 2 :=
+    by rwa [← Real.norm_eq_abs]
   have h2 : |deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)) x| ≤ E x := by
     rwa [← Real.norm_eq_abs]
   have hstep1 : |- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) - 1|
@@ -858,7 +861,8 @@ theorem convDensityAdd_logFactor_deriv_integrable
   refine integral_mono hlhs_int hdom_int (fun y => ?_)
   have hpXg_nn : (0:ℝ) ≤ pX y * gaussGradMaj t (x - y) :=
     mul_nonneg (hpX_nn y) (hg_nn (x - y))
-  have hx2 : x ^ 2 ≤ 2 * (x - y) ^ 2 + 2 * y ^ 2 := by nlinarith [sq_nonneg (x - 2 * y), sq_nonneg x]
+  have hx2 : x ^ 2 ≤ 2 * (x - y) ^ 2 + 2 * y ^ 2 := by
+    nlinarith [sq_nonneg (x - 2 * y), sq_nonneg x]
   -- `A + B·x² ≤ |A| + 2|B|(x−y)² + 2|B|y²` (using `A ≤ |A|`, `B·x² ≤ |B|x² ≤ |B|(2(x-y)²+2y²)`).
   have hcoef : A + B * x ^ 2 ≤ (|A| + 2 * |B| * (x - y) ^ 2) + 2 * |B| * y ^ 2 := by
     have hBabs : (0:ℝ) ≤ |B| := abs_nonneg B
@@ -1019,7 +1023,8 @@ theorem convDensityAdd_negMulLog_integrable
   -- `Integrable (fun x => x²·p_t x)` via `x² ≤ 2(x−y)²+2y²` split into two conv envelopes.
   have hmomPX_int : Integrable (fun y => y ^ 2 * pX y) volume := hpX_mom
   have hmomPX_meas : Measurable (fun y => y ^ 2 * pX y) := by fun_prop
-  have hEnv1_int : Integrable (fun x => ∫ y, pX y * (fun u => u ^ 2 * g u) (x - y) ∂volume) volume :=
+  have hEnv1_int :
+      Integrable (fun x => ∫ y, pX y * (fun u => u ^ 2 * g u) (x - y) ∂volume) volume :=
     convKernel_envelope_integrable pX (fun u => u ^ 2 * g u) hpX_int hpX_meas hg2_int hg2_meas
   have hEnv2_int : Integrable (fun x => ∫ y, (y ^ 2 * pX y) * g (x - y) ∂volume) volume :=
     convKernel_envelope_integrable (fun y => y ^ 2 * pX y) g hmomPX_int hmomPX_meas hg_int hg_meas

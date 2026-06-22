@@ -18,8 +18,9 @@ real-valued `entropyPower` (under which a singular measure satisfies `entropyPow
   positive and negative parts. It evaluates to `⊤` for an infinite-entropy a.c. density
   (`h = +∞`), to `⊥` for a tall peaked density (`h = −∞`), and to the workhorse
   `differentialEntropy` value when finite.
-* `entropyPowerExt : Measure ℝ → ℝ≥0∞` is the non-branching `EReal.exp (2 * differentialEntropyExt μ)`,
-  with `EReal.exp` absorbing `exp ⊥ = 0`, `exp ⊤ = ∞`, and `exp ↑x = ofReal (exp x)` in one function.
+* `entropyPowerExt : Measure ℝ → ℝ≥0∞` is the non-branching
+  `EReal.exp (2 * differentialEntropyExt μ)`, with `EReal.exp` absorbing `exp ⊥ = 0`, `exp ⊤ = ∞`,
+  and `exp ↑x = ofReal (exp x)` in one function.
 
 ## Main definitions
 

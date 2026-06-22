@@ -226,7 +226,8 @@ integration + scaling squeeze, neither encoded in any hypothesis. Sufficiency: t
 threads pillar args in matching order and composes via the §1 bridge.
 **@audit:superseded-by(entropyPowerExt_add_ge_unconditional)**: superseded by the
 unconditional EPI; the sole consumer `entropyPower_add_ge_case1_of_methodX` is a dead leaf.
-Retained as proof-done. The two-time variant `entropyPower_add_ge_case1_of_regular_twotime` is separate and live. -/
+Retained as proof-done. The two-time variant `entropyPower_add_ge_case1_of_regular_twotime` is
+separate and live. -/
 theorem entropyPower_add_ge_case1_of_regular
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     -- independence (pairwise + joint), shared by both pillars
@@ -473,7 +474,8 @@ is **not supplied from method-X** (it depends on the moonshot
 
 **@audit:superseded-by(entropyPowerExt_add_ge_unconditional)**: 0 consumers, carries an
 unresolved de Bruijn per-time wall (`@residual` below). Superseded by the unconditional EPI.
-The de Bruijn closure plan `epi-debruijn-pertime-closure` remains a valid standalone goal independently of this supersession.
+The de Bruijn closure plan `epi-debruijn-pertime-closure` remains a valid standalone goal
+independently of this supersession.
 @residual(plan:epi-debruijn-pertime-closure) -/
 theorem entropyPower_add_ge_case1_of_methodX
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]

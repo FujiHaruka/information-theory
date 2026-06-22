@@ -313,7 +313,8 @@ private lemma entropy_projMap_eq
     exact_mod_cast h_A_card
   -- Now show the assembled sum equals the target.
   -- LHS of `entropy = ...`: S1.card • (log|A|/|A|) + S2.card • (2/|A|*(log|A| - log 2))
-  -- Note that after nsmul_eq_mul we get S1.card * (log|A|/|A|) + S2.card * (2/|A| * (log|A| - log 2)).
+  -- Note that after nsmul_eq_mul we get
+  -- S1.card * (log|A|/|A|) + S2.card * (2/|A| * (log|A| - log 2)).
   -- Goal: ... = log|A| - 2 * (|A| - proj) * log 2 / |A|
   -- Substitute S1.card = |A| - 2*S2.card and S2.card = |A| - proj.
   rw [show (S1 ∪ S2).card = proj.card from by rw [hS_union]]

@@ -288,7 +288,8 @@ theorem differentialEntropy_condTrunc_sum_bddUnder (P : Measure Ω) [IsProbabili
     have hX_toReal_tendsto :
         Tendsto (fun n => (entropyPowerExt ((condTrunc P X Y n).map X)).toReal) atTop (𝓝 cX) := by
       rw [hcX_def]
-      exact (ENNReal.continuousAt_toReal (by rw [hX_law_pow]; exact ENNReal.ofReal_ne_top)).tendsto.comp
+      exact (ENNReal.continuousAt_toReal
+        (by rw [hX_law_pow]; exact ENNReal.ofReal_ne_top)).tendsto.comp
         hX_tendsto
     -- eventually `Nₑ(X_n).toReal ≥ cX / 2`.
     have hX_ev : ∀ᶠ n in atTop, cX / 2 ≤ (entropyPowerExt ((condTrunc P X Y n).map X)).toReal := by
@@ -306,7 +307,8 @@ theorem differentialEntropy_condTrunc_sum_bddUnder (P : Measure Ω) [IsProbabili
       have hconv : P.map (fun ω => X ω + Y ω) = (P.map X) ∗ (P.map Y) := by
         rw [show (fun ω => X ω + Y ω) = X + Y from rfl, hXY.map_add_eq_map_conv_map hX hY]
       have h_cond : condTrunc P X Y n ≪ P := ProbabilityTheory.cond_absolutelyContinuous
-      exact (h_cond.map hsum_meas).trans (by rw [hconv]; exact Measure.conv_absolutelyContinuous hY_ac)
+      exact (h_cond.map hsum_meas).trans
+        (by rw [hconv]; exact Measure.conv_absolutelyContinuous hY_ac)
     have hent_n : Integrable
         (fun x => Real.negMulLog
           (((condTrunc P X Y n).map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume :=
@@ -426,7 +428,8 @@ theorem entropyPowerExt_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabilityM
       have hconv : P.map (fun ω => X ω + Y ω) = (P.map X) ∗ (P.map Y) := by
         rw [show (fun ω => X ω + Y ω) = X + Y from rfl, hXY.map_add_eq_map_conv_map hX hY]
       have h_cond : condTrunc P X Y n ≪ P := ProbabilityTheory.cond_absolutelyContinuous
-      exact (h_cond.map hsum_meas).trans (by rw [hconv]; exact Measure.conv_absolutelyContinuous hY_ac)
+      exact (h_cond.map hsum_meas).trans
+        (by rw [hconv]; exact Measure.conv_absolutelyContinuous hY_ac)
     have hent_n : Integrable
         (fun x => Real.negMulLog
           (((condTrunc P X Y n).map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume :=

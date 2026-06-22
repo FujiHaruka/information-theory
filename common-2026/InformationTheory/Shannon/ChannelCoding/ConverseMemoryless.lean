@@ -129,7 +129,8 @@ private lemma isMarkovChain_bundle_left_with_conditioner
     hf.comp (measurable_const.prodMk measurable_id)
   rw [MeasureTheory.lintegral_prod _ h_lhs_meas.aemeasurable,
       MeasureTheory.lintegral_prod _ h_rhs_meas.aemeasurable]
-  have h_inner_meas : Measurable (fun p : X × Z => ∫⁻ y, f (z, p, y) ∂((condDistrib Yo Zc μ) z)) := by
+  have h_inner_meas :
+      Measurable (fun p : X × Z => ∫⁻ y, f (z, p, y) ∂((condDistrib Yo Zc μ) z)) := by
     refine Measurable.lintegral_prod_right' (f := fun q : (X × Z) × Y => f (z, q.1, q.2)) ?_
     exact hf.comp (measurable_const.prodMk
       ((measurable_fst.prodMk measurable_snd).comp measurable_fst |>.prodMk
@@ -346,7 +347,8 @@ private lemma isMarkovChain_weakUnion_left_to_conditioner
   -- LHS = ∫⁻ ab ∂((K_A ⊗ₖ K_B') z), ∫⁻ y ∂(K_Y z), f ((z, ab.1), ab.2, y).
   have h_inner_meas : Measurable
       (fun ab : A × B => ∫⁻ y, f ((z, ab.1), ab.2, y) ∂(K_Y z)) := by
-    refine Measurable.lintegral_prod_right' (f := fun p : (A × B) × Y => f ((z, p.1.1), p.1.2, p.2)) ?_
+    refine Measurable.lintegral_prod_right'
+      (f := fun p : (A × B) × Y => f ((z, p.1.1), p.1.2, p.2)) ?_
     exact h_meas_q
   rw [Kernel.lintegral_compProd K_A K_B' z h_inner_meas]
   -- LHS = ∫⁻ a ∂(K_A z), ∫⁻ b ∂(K_B' (z, a)), ∫⁻ y ∂(K_Y z), f ((z, a), b, y).
@@ -359,7 +361,8 @@ private lemma isMarkovChain_weakUnion_left_to_conditioner
   refine lintegral_congr fun b => ?_
   rw [Kernel.comap_apply _ measurable_fst]
 
-/-- Auxiliary: `condDistrib Xs (e ∘ Zc') μ =ᵐ[μ.map (e ∘ Zc')] (condDistrib Xs Zc' μ).comap e.symm`. -/
+/-- Auxiliary:
+`condDistrib Xs (e ∘ Zc') μ =ᵐ[μ.map (e ∘ Zc')] (condDistrib Xs Zc' μ).comap e.symm`. -/
 private lemma cond_reshape_kernel_lemma {X' Z Z' : Type*}
     [MeasurableSpace X'] [StandardBorelSpace X'] [Nonempty X']
     [MeasurableSpace Z] [StandardBorelSpace Z] [Nonempty Z]
@@ -612,7 +615,8 @@ theorem outputs_cond_indep_of_memoryless
   have h_pointwise : ∀ ω, (Xs i ω, XnoI ω) = e (fun j => Xs j ω) := by
     intro ω
     -- e (Xs full) = (Xs i, X^{≠i})
-    -- The collapse {j // j = i} → α ≃ α uses default = ⟨i, rfl⟩; need to rewrite `Xs (↑default)` = `Xs i`.
+    -- The collapse {j // j = i} → α ≃ α uses default = ⟨i, rfl⟩;
+    -- need to rewrite `Xs (↑default)` = `Xs i`.
     have h_default : (default : {j : Fin n // j = i}).val = i :=
       rfl
     simp [e, measurableEquivExtract,

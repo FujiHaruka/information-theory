@@ -95,7 +95,8 @@ lemma sum_const_aggr_of_mem_typeClassByCount
   -- typeCount x a = c a (from hx a) ⇒ ((typeCount x a) : ℝ) = (c a : ℝ)
   have h_count : typeCount x a = c a := hx a
   unfold typeCount at h_count
-  rw [show ((Finset.univ.filter fun j : Fin n => x j = a).card : ℝ) = (c a : ℝ) by exact_mod_cast h_count]
+  rw [show ((Finset.univ.filter fun j : Fin n => x j = a).card : ℝ) = (c a : ℝ) by
+    exact_mod_cast h_count]
 
 omit [Nonempty α] [MeasurableSingletonClass α] in
 /-- **Per-point identity** (index form): `x ∈ typeClassByCount c` implies

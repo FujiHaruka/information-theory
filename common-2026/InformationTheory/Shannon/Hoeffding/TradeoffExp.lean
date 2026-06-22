@@ -268,8 +268,10 @@ lemma hoeffding_exp_minimizer
     (hQs_pos : ∀ a, 0 < Qstar a)
     (hQs_min : hoeffdingE2 P₁ P₂ r = klDivPmf Qstar P₂) :
     ∀ n, ∀ c ∈ E_r P₁ (fun a => (hP₁_pos a).le) hP₁_sum n r,
-      klDivSumForm_ofVec Qstar (fun a => (pmfToMeasure P₂ (fun a => (hP₂_pos a).le) hP₂_sum).real {a})
-        ≤ klDivIndex (fun a => (c a : ℕ)) n (pmfToMeasure P₂ (fun a => (hP₂_pos a).le) hP₂_sum) := by
+      klDivSumForm_ofVec Qstar
+          (fun a => (pmfToMeasure P₂ (fun a => (hP₂_pos a).le) hP₂_sum).real {a})
+        ≤ klDivIndex (fun a => (c a : ℕ)) n
+            (pmfToMeasure P₂ (fun a => (hP₂_pos a).le) hP₂_sum) := by
   set μ₁ := pmfToMeasure P₁ (fun a => (hP₁_pos a).le) hP₁_sum with hμ₁
   set μ₂ := pmfToMeasure P₂ (fun a => (hP₂_pos a).le) hP₂_sum with hμ₂
   have hμ₁_real : ∀ a, μ₁.real {a} = P₁ a := fun a => by rw [hμ₁, pmfToMeasure_real_singleton]

@@ -206,7 +206,8 @@ theorem csiszar_projection_unique {K : Set (α → ℝ)} {Q : α → ℝ}
     have h_half_nn : (0 : ℝ) ≤ 1/2 := by norm_num
     have h_sum : (1/2 : ℝ) + 1/2 = 1 := by norm_num
     exact hK_conv hQs hQs' h_half_nn h_half_nn h_sum
-  -- By strict convexity of klDivPmf, klDivPmf Pm Q < (1/2)*klDivPmf Qstar Q + (1/2)*klDivPmf Qstar' Q
+  -- By strict convexity of klDivPmf,
+  -- klDivPmf Pm Q < (1/2)*klDivPmf Qstar Q + (1/2)*klDivPmf Qstar' Q
   -- = klDivPmf Qstar Q.
   have hsc := klDivPmf_strictConvexOn_left Q hQ_pos
   have h_half_pos : (0 : ℝ) < 1/2 := by norm_num

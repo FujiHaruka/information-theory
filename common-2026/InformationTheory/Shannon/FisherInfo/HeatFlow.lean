@@ -94,7 +94,8 @@ theorem heatKernel_hasDerivAt_spatial {t : ℝ} (ht : 0 < t) (x : ℝ) :
        = -((x : ℝ) - 0) / t * gaussianPDFReal 0 ⟨t, ht.le⟩ x
     ring
   rw [hval]
-  exact (InformationTheory.Shannon.differentiable_gaussianPDFReal 0 ⟨t, ht.le⟩).differentiableAt.hasDerivAt
+  exact (InformationTheory.Shannon.differentiable_gaussianPDFReal 0
+    ⟨t, ht.le⟩).differentiableAt.hasDerivAt
 
 /-- **Spatial Laplacian of the heat kernel** (closed form).
 

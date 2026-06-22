@@ -50,7 +50,8 @@ theorem entropyPower_map_comp_fst_eq3 (hX : Measurable X) :
   rw [hmap]
 
 omit [IsProbabilityMeasure P] in
-/-- Reduce a lift-space EPI conclusion to the base-space EPI via measure transport along `Prod.fst`. -/
+/-- Reduce a lift-space EPI conclusion to the base-space EPI via measure transport along
+`Prod.fst`. -/
 theorem entropy_power_inequality_via_lift3 (hX : Measurable X) (hY : Measurable Y)
     (h_lift_epi : entropyPower ((liftMeasure3 P).map (fun p => X p.1 + Y p.1))
       ≥ entropyPower ((liftMeasure3 P).map (fun p => X p.1))

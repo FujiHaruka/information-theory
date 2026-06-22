@@ -37,7 +37,8 @@ theorem convDensityAdd_hasDerivAt_of_integrable_smoothKernel (fX fY : ℝ → �
     (hY_bdd : ∃ M : ℝ, ∀ w, |fY w| ≤ M)
     (hY'_bdd : ∃ M : ℝ, ∀ w, |deriv fY w| ≤ M) :
     HasDerivAt (InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY)
-      (∫ x, InformationTheory.Shannon.EPIConvDensity.convDensityAddDeriv fX fY z₀ x ∂volume) z₀ := by
+      (∫ x, InformationTheory.Shannon.EPIConvDensity.convDensityAddDeriv fX fY z₀ x ∂volume)
+      z₀ := by
   obtain ⟨MY, hMY⟩ := hY_bdd
   obtain ⟨MY', hMY'⟩ := hY'_bdd
   -- Continuity / measurability facts (only `fY`-side; `fX` uses integrability).

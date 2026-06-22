@@ -450,7 +450,8 @@ theorem gaussHessMaj_polyWeight_integrable {t : ℝ} (ht : 0 < t) (a b : ℝ) :
     simp only []
     rw [show ((4:ℝ)) = ((4:ℕ):ℝ) by norm_num, Real.rpow_natCast]
   -- `(a+b·u²)·gaussHessMaj t u = c·exp·[(a + b·u²)·(4u²/t² + 2/t)]`
-  --   = c·[ (4a/t² + 4b/t²·u² )·u² + (2a/t + 2b/t·u²) ]·exp  — a linear combo of exp, u²·exp, u⁴·exp.
+  --   = c·[ (4a/t² + 4b/t²·u² )·u² + (2a/t + 2b/t·u²) ]·exp
+  --   — a linear combo of exp, u²·exp, u⁴·exp.
   set c : ℝ := (Real.sqrt (Real.pi * t))⁻¹ with hc
   have hcomb : Integrable
       (fun u : ℝ =>
@@ -519,7 +520,8 @@ theorem gaussHessMaj_polyWeight_bdd {t : ℝ} (ht : 0 < t) {a b : ℝ}
           = u ^ 4 * Real.exp (-u ^ 2 / (4 * t)) := by
         rw [show u ^ 4 = u ^ 2 * u ^ 2 by ring, ← hsplit]; ring
       rw [heq] at hsq
-      calc u ^ 4 * Real.exp (-u ^ 2 / (4 * t)) ≤ (8 * t * Real.exp (-1)) * (8 * t * Real.exp (-1)) :=
+      calc u ^ 4 * Real.exp (-u ^ 2 / (4 * t))
+            ≤ (8 * t * Real.exp (-1)) * (8 * t * Real.exp (-1)) :=
             hsq
         _ = (8 * t * Real.exp (-1)) ^ 2 := by ring
     -- assemble: `P·exp·(4u⁴/t²+2u²/t) = P·(4/t²·(u⁴·exp) + 2/t·(u²·exp))`
@@ -597,7 +599,8 @@ theorem gaussianHess_le_gaussHessMaj {t : ℝ} (ht : 0 < t) {s : ℝ}
   have hexpT_nn : (0:ℝ) ≤ Real.exp (-u ^ 2 / (4 * t)) := (Real.exp_pos _).le
   unfold gaussHessMaj
   calc (Real.sqrt (2 * Real.pi * s))⁻¹ * Real.exp (-u ^ 2 / (2 * s)) * |u ^ 2 / s ^ 2 - 1 / s|
-      ≤ (Real.sqrt (Real.pi * t))⁻¹ * Real.exp (-u ^ 2 / (4 * t)) * (4 * u ^ 2 / t ^ 2 + 2 / t) := by
+      ≤ (Real.sqrt (Real.pi * t))⁻¹ * Real.exp (-u ^ 2 / (4 * t))
+        * (4 * u ^ 2 / t ^ 2 + 2 / t) := by
         apply mul_le_mul (mul_le_mul hpref hexp hexp_nn hprefT_nn) hpoly habs_nn
         exact mul_nonneg hprefT_nn hexpT_nn
 

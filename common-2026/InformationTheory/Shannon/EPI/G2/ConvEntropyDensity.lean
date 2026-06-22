@@ -416,7 +416,8 @@ theorem convJointLlr_integrable
           * (Real.log (((κ z).rnDeriv volume x).toReal)
             - Real.log (((μ.map W).rnDeriv volume x).toReal)))
         = (fun x => ((κ z).rnDeriv volume x).toReal * Real.log (((κ z).rnDeriv volume x).toReal)
-            - ((κ z).rnDeriv volume x).toReal * Real.log (((μ.map W).rnDeriv volume x).toReal)) := by
+            - ((κ z).rnDeriv volume x).toReal
+              * Real.log (((μ.map W).rnDeriv volume x).toReal)) := by
       funext x; ring
     rw [hdist]
     exact hz_logp.sub hz_cross

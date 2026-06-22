@@ -262,7 +262,8 @@ theorem jointEntropySubset_submodular
   -- Combine: from h_S_eq, h_T_eq, h_ST_eq, h_BS_le_BI, do linarith.
   -- jointEntropySubset μ Xs (S ∩ T) = entropy μ XI is by definition.
   -- The condEntropy slot in h_T_eq/h_S_eq matches XB/XA (with conditioner XI).
-  -- Note: The condEntropy slot in h_T_eq is condEntropy μ (fun ω j : ↥(T\S) => ...) (fun ω j : ↥(S∩T) => ...)
+  -- Note: The condEntropy slot in h_T_eq is
+  -- condEntropy μ (fun ω j : ↥(T\S) => ...) (fun ω j : ↥(S∩T) => ...)
   -- which equals condEntropy μ XB XI by `set` definitions.
   -- Same for h_S_eq.
   linarith [h_S_eq, h_T_eq, h_ST_eq, h_BS_le_BI]

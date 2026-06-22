@@ -452,7 +452,8 @@ theorem exists_N_for_smooth_achievability_uniform
     rw [pmfToMeasure_real_singleton hp_full_mem]
     exact hp_min_le a
   -- Step 4: closed-form constant `V_X` (δ-independent).
-  -- We use the absolute-value bound `pmfLogBound (iidAmbientMeasure (pmfToMeasure p_full) W) iidXs`,
+  -- We use the absolute-value bound
+  -- `pmfLogBound (iidAmbientMeasure (pmfToMeasure p_full) W) iidXs`,
   -- and `pmfLog_iidXs_const_in_smooth` to lift to the smooth channel.
   set V_X_B : ℝ :=
     pmfLogBound (iidAmbientMeasure (pmfToMeasure (pSmooth p₀ δ_p)) W) iidXs with hV_X_B_def

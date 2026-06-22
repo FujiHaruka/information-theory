@@ -159,7 +159,8 @@ theorem parallelOutput_absolutelyContinuous_volume (hN : ∀ i, (N i : ℝ) ≠ 
   show (outputDistribution p W) s = 0
   rw [outputDistribution, jointDistribution_def, Measure.snd,
     Measure.map_apply measurable_snd hs, Measure.compProd_apply (measurable_snd hs)]
-  rw [lintegral_eq_zero_iff (ProbabilityTheory.Kernel.measurable_kernel_prodMk_left (κ := W) (measurable_snd hs))]
+  rw [lintegral_eq_zero_iff
+    (ProbabilityTheory.Kernel.measurable_kernel_prodMk_left (κ := W) (measurable_snd hs))]
   filter_upwards with x
   -- each fibre contributes 0
   show (W x) (Prod.mk x ⁻¹' (Prod.snd ⁻¹' s)) = 0

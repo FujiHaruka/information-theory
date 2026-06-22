@@ -366,7 +366,8 @@ theorem entropy_power_inequality_of_density_explicit
         Integrable (fun x => Real.negMulLog
           (((lift.map (fun p => A p / Real.sqrt t + B p)).rnDeriv volume x).toReal)) volume :=
     fun A B hA hB hAB hA_ac h_mom_A v_B hv_B hB_law t ht =>
-      InformationTheory.Shannon.EPIDensityForm.rescaled_path_absolutelyContinuous_and_negMulLog_integrable
+      InformationTheory.Shannon.EPIDensityForm.
+          rescaled_path_absolutelyContinuous_and_negMulLog_integrable
         lift A B hA hB hAB hA_ac h_mom_A v_B hv_B hB_law ht
   set varX : ℝ := ProbabilityTheory.variance X' lift with hvarX_def
   set varY : ℝ := ProbabilityTheory.variance Y' lift with hvarY_def

@@ -251,7 +251,8 @@ theorem integrable_negPart_negMulLog_map_sum (P : Measure Ω) [IsProbabilityMeas
       have hfin := hCm_int.hasFiniteIntegral
       rw [hasFiniteIntegral_iff_ofReal (Filter.Eventually.of_forall hCm_nn)] at hfin
       exact hfin.ne
-    exact (integrable_conv_kernel pX Cm hpX_meas hpX_nn hpX_lint hCm_meas hCm_nn hCm_fin).prod_right_ae
+    exact (integrable_conv_kernel pX Cm hpX_meas hpX_nn hpX_lint hCm_meas hCm_nn
+      hCm_fin).prod_right_ae
   -- ============================================================================
   -- per-`z` Jensen bound:  `G z ≤ ∫ x, pX x * Cq (z - x) ∂volume`  (a.e. `z`).
   -- ============================================================================
@@ -334,7 +335,8 @@ theorem entropyPowerExt_add_ge_infinite_variance
         apply lintegral_congr; intro x
         rcases le_or_gt 0 (-(g x)) with h | h
         · rw [max_eq_left h]
-        · rw [max_eq_right h.le, ENNReal.ofReal_of_nonpos h.le, ENNReal.ofReal_of_nonpos (by linarith)]
+        · rw [max_eq_right h.le, ENNReal.ofReal_of_nonpos h.le,
+            ENNReal.ofReal_of_nonpos (by linarith)]
       rw [heq] at hfin; rw [hB_def]; exact hfin
     -- A := ∫⁻ ofReal(g x).  From `¬ hent_sum` and `B < ⊤` we get `A = ⊤`.
     set A : ℝ≥0∞ := ∫⁻ x, ENNReal.ofReal (g x) ∂volume with hA_def

@@ -150,7 +150,8 @@ theorem sanov_ldp_equality
   have h_liminf : -D ≤ liminf f atTop :=
     sanov_ldp_lower_bound_pointwise Q hQpos P hP_prob hP_full E h_in_E
   -- Upper bound: limsup f ≤ -D.
-  -- Strategy: provide eventually upper bound `f ≤ -D + ε` for any ε > 0, conclude `f` bounded above.
+  -- Strategy: provide eventually upper bound `f ≤ -D + ε` for any ε > 0,
+  -- conclude `f` bounded above.
   -- Then use ε → 0 to get limsup ≤ -D.
   have h_upper_event : ∀ ε > (0 : ℝ), ∀ᶠ n : ℕ in atTop, f n ≤ -D + ε := by
     intro ε hε

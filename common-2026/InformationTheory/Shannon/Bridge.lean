@@ -540,7 +540,8 @@ private theorem klDiv_joint_prod_marginals_toReal
   ring
 
 omit [DecidableEq X] in
-/-- For a finite-alphabet source `X`, `(mutualInfo μ Xs Yo).toReal = entropy μ Xs - condEntropy μ Xs Yo`. -/
+/-- For a finite-alphabet source `X`,
+`(mutualInfo μ Xs Yo).toReal = entropy μ Xs - condEntropy μ Xs Yo`. -/
 theorem mutualInfo_eq_entropy_sub_condEntropy
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y)

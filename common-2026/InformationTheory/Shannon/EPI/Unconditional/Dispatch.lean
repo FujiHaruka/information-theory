@@ -67,7 +67,8 @@ theorem entropyPowerExt_add_ge_finite_ac
 /-- Four-case dispatch for the extended-real entropy power inequality, splitting on absolute
 continuity of `P.map X` and `P.map Y`: both a.c. delegates to `entropyPowerExt_add_ge_finite_ac`,
 the mixed cases to `entropyPowerExt_mixed_add_ge` / `_symm`, and the doubly-singular case to
-`entropyPowerExt_singular_add_ge`. The integrability and finite-entropy hypotheses are path-dependent
+`entropyPowerExt_singular_add_ge`. The integrability and finite-entropy hypotheses are
+path-dependent
 regularity preconditions threaded into the mixed-case lemmas.
 
 @audit:superseded-by(entropyPowerExt_add_ge_unconditional) The fully unconditional version

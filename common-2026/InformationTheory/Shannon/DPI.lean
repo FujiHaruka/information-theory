@@ -73,7 +73,8 @@ theorem klDiv_map_le {α β : Type*}
         = ∫⁻ x, ENNReal.ofReal
               (klFun ((μ.map f).rnDeriv (ν.map f) (f x)).toReal) ∂ν from
       lintegral_map (by fun_prop) hf]
-  -- toReal_rnDeriv_map: ((μ.map f).rnDeriv (ν.map f) (f ·)).toReal =ᵐ[ν] condExp of (μ.rnDeriv ν ·).toReal
+  -- toReal_rnDeriv_map:
+  -- ((μ.map f).rnDeriv (ν.map f) (f ·)).toReal =ᵐ[ν] condExp of (μ.rnDeriv ν ·).toReal
   have h_rnDeriv_map :
       (fun x ↦ ((μ.map f).rnDeriv (ν.map f) (f x)).toReal) =ᵐ[ν]
         ν[(fun x ↦ (μ.rnDeriv ν x).toReal) | MeasurableSpace.comap f ‹MeasurableSpace β›] :=

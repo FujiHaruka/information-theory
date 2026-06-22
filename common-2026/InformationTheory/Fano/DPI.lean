@@ -170,7 +170,8 @@ def pushforward (P : FiniteJointPMF X Y) (f : Y → X) : FiniteJointPMF X X wher
     rw [Finset.sum_congr rfl (fun x _ => hkey x)]
     exact P.sum_mass
 
-/-- Marginal of the pushforward: `(P.pushforward f).marginalY xh = ∑_{y : f y = xh} P.marginalY y`. -/
+/-- Marginal of the pushforward:
+`(P.pushforward f).marginalY xh = ∑_{y : f y = xh} P.marginalY y`. -/
 lemma pushforward_marginalY (P : FiniteJointPMF X Y) (f : Y → X) (xh : X) :
     (P.pushforward f).marginalY xh
       = ∑ y ∈ Finset.univ.filter (fun y => f y = xh), P.marginalY y := by
