@@ -38,6 +38,11 @@ tensorization of the KL divergence.
   lemmas be reused rather than reproved.
 * Over a finite alphabet `α` with `0 < Q.real {x}` for every `x`, all quantities are expanded
   point-wise, avoiding the general Radon–Nikodym derivative machinery for product measures.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
+  Wiley, 2006. Theorem 11.8.3.
 -/
 
 namespace InformationTheory.Shannon
@@ -473,7 +478,7 @@ theorem steinTypicalSet_Q_prob_le
   exact h_sum_le
 
 omit [DecidableEq α] in
-/-- Achievability of Stein's lower bound: eventually there exist `ε`-level tests whose type-II
+/-- **Stein's lemma** (achievability): eventually there exist `ε`-level tests whose type-II
 error decays as `exp(-n · ((klDiv P Q).toReal − δ))`. The statement is in product-measure form;
 the translation from the random-variable form is supplied by the hypothesis
 `hMapJoint : μ.map (jointRV Xs n) = Measure.pi (fun _ : Fin n => P)`. -/
@@ -624,9 +629,7 @@ theorem stein_achievability
 /-! ### Tensorization of the KL divergence
 
 The KL divergence between i.i.d. product measures factorizes as `n` times the single-sample KL
-divergence: `klDiv (Π_{Fin n} P) (Π_{Fin n} Q) = n · klDiv P Q`. It is built by induction on `n`,
-reshaping `Fin (n+1) → α` into `α × (Fin n → α)` via `MeasurableEquiv.piFinSuccAbove` and applying
-the compProd chain rule `klDiv_compProd_eq_add`. -/
+divergence: `klDiv (Π_{Fin n} P) (Π_{Fin n} Q) = n · klDiv P Q`. -/
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- Base case of the KL tensorization: the product measures over `Fin 0 → α` agree, so their KL

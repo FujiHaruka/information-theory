@@ -21,6 +21,11 @@ lower bound `Q^n(s) ≥ exp(-n(K+δ)) · (P^n(T_n^δ) - ε)` for any α-level te
 derived by restricting to the Stein-typical set. Together with the existing achievability
 upper bound, this sandwiches the limit. The existing `Stein/` API is reused without
 modification.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
+  Wiley, 2006. Theorem 11.8.3.
 -/
 
 namespace InformationTheory.Shannon.StrongStein
@@ -237,7 +242,8 @@ theorem exp_le_steinOptimalBeta_strong
   exact steinAlphaTest_Q_prob_ge P Q hPpos hQpos s hs_meas hs_alpha
 
 omit [DecidableEq α] in
-/-- For any `δ > 0`, eventually `-(1/n) log β*(n, ε) ≤ (klDiv P Q).toReal + δ + o(1)`. -/
+/-- **Strong Stein's lemma**: for any `δ > 0`, eventually
+`-(1/n) log β*(n, ε) ≤ (klDiv P Q).toReal + δ + o(1)`. -/
 @[entry_point]
 theorem steinOptimalBeta_log_le_of_strong_converse
     (μ : Measure Ω) [IsProbabilityMeasure μ]

@@ -13,6 +13,11 @@ concrete rate bound.
 
 * `stein_converse_finite_n` — every `ε`-level test obeys the matching converse rate bound
   `-(1/n) log Qⁿ s ≤ (klDiv P Q).toReal / (1−ε) + log 2 / (n(1−ε))`.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
+  Wiley, 2006. Theorem 11.8.3.
 -/
 
 namespace InformationTheory.Shannon
@@ -26,10 +31,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
 /-! ### Stein converse
 
-Every `ε`-level test obeys the converse rate bound. The argument reduces the test to a Bernoulli
-random variable, applies the data-processing inequality together with the KL tensorization, and
-expands the resulting two-point KL divergence into its sum form before correcting for the level
-constraint. -/
+Every `ε`-level test obeys the converse rate bound. -/
 
 omit [DecidableEq α] [Nonempty α] in
 /-- The `toReal` KL divergence between two probability measures on `Bool` (with `μ ≪ ν`) expands
@@ -246,13 +248,12 @@ theorem stein_converse_sum_form
 
 /-! ### The converse inequality
 
-The two-point sum-form bound is sharpened, using the level constraint together with
-`binEntropy ≤ log 2` and the sign of `log Qⁿ sᶜ`, into the concrete rate bound
+The concrete rate bound
 `-(1/n) log Qⁿ s ≤ (klDiv P Q).toReal / (1−ε) + log 2 / (n(1−ε))`. -/
 
 omit [DecidableEq α] [Nonempty α] in
-/-- The finite-`n` Stein converse: any measurable `ε`-level test `s` (with `Pⁿ sᶜ ≤ ε`) and
-`0 < n` satisfies `-(1/n) log Qⁿ s ≤ (klDiv P Q).toReal / (1−ε) + log 2 / (n(1−ε))`. -/
+/-- **Stein's lemma** (converse, finite `n`): any measurable `ε`-level test `s` (with `Pⁿ sᶜ ≤ ε`)
+and `0 < n` satisfies `-(1/n) log Qⁿ s ≤ (klDiv P Q).toReal / (1−ε) + log 2 / (n(1−ε))`. -/
 @[entry_point]
 theorem stein_converse_finite_n
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
