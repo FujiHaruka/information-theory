@@ -33,6 +33,11 @@ The WLLN is applied per letter via `strong_law_ae_real` on the indicators
 gives simultaneous concentration. Full support `hpos : ∀ a, 0 < P(a)` is
 required for the size bounds (via `typicalSet_prob_le`) but not for the
 probability convergence.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
+  Theorem 11.2.
 -/
 
 namespace InformationTheory.Shannon
@@ -48,7 +53,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
 /-! ### Definitions -/
 
-/-- The strongly typical set (Cover-Thomas 11.2):
+/-- The strongly typical set
 `A^*_ε^n := { x : Fin n → α | ∀ a, |(typeCount x a : ℝ)/n - P(a)| ≤ ε }`. -/
 noncomputable def stronglyTypicalSet
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (n : ℕ) (ε : ℝ) :
@@ -201,8 +206,8 @@ lemma letterIndicator_inProbability
   show ε ≤ dist (f n ω) (g ω) ↔ ε ≤ |f n ω - g ω|
   rw [Real.dist_eq]
 
-/-- The strong typicality probability tends to one: for `Xs` i.i.d. with finite alphabet,
-`μ {ω | jointRV Xs n ω ∈ A^*_ε^n} → 1`. -/
+/-- **Strong typicality**: for `Xs` i.i.d. with finite alphabet, the probability of the
+strongly typical set tends to one, `μ {ω | jointRV Xs n ω ∈ A^*_ε^n} → 1`. -/
 @[entry_point]
 theorem stronglyTypicalSet_prob_tendsto_one
     (μ : Measure Ω) [IsProbabilityMeasure μ]

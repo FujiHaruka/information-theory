@@ -99,7 +99,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 variable {β : Type*} [Fintype β] [Nonempty β] [DecidableEq β]
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- The per-symbol Kraft bound from McMillan: if the codeword assignment
+/-- **McMillan's inequality**, per-symbol form: if the codeword assignment
 `c : α → List β` is injective with uniquely-decodable image, then the
 per-symbol Kraft sum `kraftSum |β| (|c ·|) ≤ 1`.
 

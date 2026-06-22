@@ -457,7 +457,7 @@ theorem differentialEntropy_gaussianReal_std :
 
 /-! ## Gaussian maximum-entropy theorem -/
 
-/-- The Gaussian maximum-entropy theorem: for `μ ≪ volume` with mean `m` and variance ≤ `v`,
+/-- **Gaussian maximum-entropy theorem**: for `μ ≪ volume` with mean `m` and variance ≤ `v`,
 `differentialEntropy μ ≤ (1/2) log (2πe v)`.
 
 The side hypotheses `h_ent_int` (integrability of `negMulLog (dμ/dλ)`) and `h_var_int`
