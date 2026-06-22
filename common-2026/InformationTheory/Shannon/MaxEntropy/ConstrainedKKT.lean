@@ -4,11 +4,9 @@ import InformationTheory.Shannon.MaxEntropy.Constrained
 /-!
 # Constrained Maximum Entropy — Lagrange / KKT perspective
 
-The companion file `MaxEntropyConstrained.lean` publishes the Boltzmann–Gibbs
-main theorems (`entropy_le_gibbs_of_constraints`, `entropy_eq_gibbs_iff_of_constraints`)
-in the `gibbsPmf f λ` notation, derived by the algebraic-identity route
-(`klDivPmf_gibbsPmf_eq`). The present file re-packages those results in the
-KKT / exponential-family language:
+The Boltzmann–Gibbs main theorems (`entropy_le_gibbs_of_constraints`,
+`entropy_eq_gibbs_iff_of_constraints`), stated in the `gibbsPmf f λ` notation, are
+recast here in the KKT / exponential-family language:
 
   expFamilyDist λ f x := exp (⟨λ, f x⟩ - ψ(λ))
   logPartitionψ λ f   := log (∑ y, exp ⟨λ, f y⟩)
@@ -31,13 +29,11 @@ which we pass through (Mathlib lacks the convex-duality theorems needed to
 * `KKTSolution`                           — packaged Lagrange multiplier + moment witness
 * `entropy_expFamilyDist_eq_legendre`     — Legendre identity
                                             `H(p*) = ψ(λ) - ⟨λ, c⟩`
-* `expFamily_maximizes_entropy`           — main theorem (Tier 1) —
-                                            constraint-respecting `P` satisfies
+* `expFamily_maximizes_entropy`           — constraint-respecting `P` satisfies
                                             `H(P) ≤ H(expFamilyDist λ f)`
-* `expFamily_unique`                      — main theorem (Tier 2) —
-                                            equality ⟺ `P = expFamilyDist λ f`
-* `expFamily_maximizes_entropy_of_KKT`    — Cover–Thomas Theorem 12.1.1 in the
-                                            `KKTSolution` packaging
+* `expFamily_unique`                      — equality ⟺ `P = expFamilyDist λ f`
+* `expFamily_maximizes_entropy_of_KKT`    — upper bound in the `KKTSolution`
+                                            packaging
 * `entropy_le_logPartition_sub_inner`     — variational form
                                             `H(P) ≤ ψ(λ) - ⟨λ, c⟩`
 
@@ -51,6 +47,10 @@ constraint-witness hypothesis `∀ i, ∑ x, expFamilyDist λ f x · f i x = c i
 (equivalent to `∇ψ(λ) = 𝔼_{p*}[f]` at the saddle point, but stated in the
 ansatz-pass-through form to avoid the convex-duality theorems Mathlib does
 not provide).
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 12.1.1.
 -/
 
 namespace InformationTheory.Shannon.MaxEntropyConstrainedKKT
@@ -198,14 +198,10 @@ theorem entropy_expFamilyDist_eq_legendre [Nonempty α]
 /-! ## Section 5 — Main theorem: exponential family maximizes constrained entropy -/
 
 omit [DecidableEq α] in
-/-- Cover–Thomas Theorem 12.1.1 (Tier 1) — KKT / exponential-family form.
-
-Under moment constraints `𝔼_P[f i] = c i` for all `i`, the entropy of `P` is
-bounded above by the entropy of the exponential-family solution
-`expFamilyDist f λ`, provided the latter also satisfies the same moments
-(KKT first-order condition).
-
-This is `entropy_le_gibbs_of_constraints` repackaged in the KKT language. -/
+/-- **Maximum entropy theorem** (upper bound, KKT form): under moment constraints
+`𝔼_P[f i] = c i` for all `i`, the entropy of `P` is bounded above by the entropy of the
+exponential-family solution `expFamilyDist f λ`, provided the latter also satisfies the
+same moments (KKT first-order condition). -/
 @[entry_point]
 theorem expFamily_maximizes_entropy [Nonempty α]
     (f : Fin k → α → ℝ) (c : Fin k → ℝ)
@@ -229,8 +225,11 @@ theorem expFamily_maximizes_entropy [Nonempty α]
   exact h
 
 omit [DecidableEq α] in
-/-- KKT-packaged Cover–Thomas Theorem 12.1.1: a constraint-feasible `P` cannot
-exceed the entropy of the exponential-family solution attached to a KKT witness. -/
+/-- **Maximum entropy theorem** (upper bound, `KKTSolution` form): a constraint-feasible
+`P` cannot exceed the entropy of the exponential-family solution attached to a KKT
+witness.
+
+See also `expFamily_maximizes_entropy`. -/
 @[entry_point]
 theorem expFamily_maximizes_entropy_of_KKT [Nonempty α]
     (f : Fin k → α → ℝ) (c : Fin k → ℝ)
@@ -243,13 +242,9 @@ theorem expFamily_maximizes_entropy_of_KKT [Nonempty α]
 /-! ## Section 6 — Uniqueness of the exponential-family maximizer -/
 
 omit [DecidableEq α] in
-/-- Cover–Thomas Theorem 12.1.1 uniqueness (Tier 2) — KKT / exponential-family form.
-
-For constraint-feasible `P` and a KKT-witnessed exponential-family solution,
-entropy equality `H(P) = H(expFamilyDist f λ)` holds *if and only if*
-`P = expFamilyDist f λ` pointwise.
-
-This is `entropy_eq_gibbs_iff_of_constraints` repackaged. -/
+/-- **Maximum entropy theorem** (uniqueness, KKT form): for constraint-feasible `P` and a
+KKT-witnessed exponential-family solution, entropy equality
+`H(P) = H(expFamilyDist f λ)` holds if and only if `P = expFamilyDist f λ` pointwise. -/
 @[entry_point]
 theorem expFamily_unique [Nonempty α]
     (f : Fin k → α → ℝ) (c : Fin k → ℝ)
@@ -271,7 +266,10 @@ theorem expFamily_unique [Nonempty α]
   exact entropy_eq_gibbs_iff_of_constraints f c P hP hP_constraints lam h_gibbs_KKT
 
 omit [DecidableEq α] in
-/-- KKT-packaged uniqueness companion of `expFamily_maximizes_entropy_of_KKT`. -/
+/-- **Maximum entropy theorem** (uniqueness, `KKTSolution` form): entropy equality holds
+if and only if `P = expFamilyDist f λ` pointwise.
+
+See also `expFamily_unique`. -/
 @[entry_point]
 theorem expFamily_unique_of_KKT [Nonempty α]
     (f : Fin k → α → ℝ) (c : Fin k → ℝ)

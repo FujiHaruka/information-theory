@@ -14,7 +14,7 @@ is the Boltzmann–Gibbs exponential family
   `gibbsPmf f λ x := exp (∑ i, λ i · f i x) / Z(λ)`
 
 where `Z(λ) = ∑ y, exp (∑ i, λ i · f i y)` is the partition function.
-The Lagrange parameter `λ` is passed in as an hypothesis (ansatz pass-through design).
+The Lagrange parameter `λ` is passed in as a hypothesis rather than solved for.
 
 ## Main definitions
 
@@ -42,6 +42,10 @@ This avoids any need for ψ(λ) convexity or Lagrange-multiplier existence theor
 We use `CsiszarProjection.klDivPmf` rather than `Mathlib.MeasureTheory.Measure.Tilted`
 because the Csiszár API (`klDivPmf_nonneg`, `klDivPmf_self_eq_zero`) is closed in the pmf
 world, and `Real.exp / log` arithmetic suffices without `rnDeriv` or `=ᵐ` arguments.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 12.1.1.
 -/
 
 namespace InformationTheory.Shannon.MaxEntropyConstrained
@@ -115,8 +119,7 @@ lemma gibbsPmf_mem_stdSimplex [Nonempty α]
   ⟨fun x ↦ gibbsPmf_nonneg f lam x, gibbsPmf_sum_eq_one f lam⟩
 
 omit [DecidableEq α] in
-/-- Closed form for `log (gibbsPmf f λ x)`: the numerator's exponent minus `log Z(λ)`.
-Entry point for the core algebraic identity in the main theorem proof. -/
+/-- Closed form for `log (gibbsPmf f λ x)`: the numerator's exponent minus `log Z(λ)`. -/
 lemma log_gibbsPmf [Nonempty α]
     (f : Fin k → α → ℝ) (lam : Fin k → ℝ) (x : α) :
     Real.log (gibbsPmf f lam x)
@@ -128,15 +131,12 @@ lemma log_gibbsPmf [Nonempty α]
 /-! ## Core identity and main upper bound -/
 
 omit [DecidableEq α] in
-/-- Core algebraic identity — for any `Q ∈ stdSimplex` on `α`,
-the KL divergence from `Q` to `gibbsPmf f λ` decomposes into negative entropy,
-the constraint inner product `⟨λ, 𝔼_Q[f]⟩`, and `log Z(λ)`:
+/-- For any `Q ∈ stdSimplex` on `α`, the KL divergence from `Q` to `gibbsPmf f λ`
+decomposes into negative entropy, the constraint inner product `⟨λ, 𝔼_Q[f]⟩`, and
+`log Z(λ)`:
 
   klDivPmf Q (gibbsPmf f λ)
-    = -H(Q) - ⟨λ, 𝔼_Q[f]⟩ + log Z(λ).
-
-Both the upper bound and the uniqueness statement reduce to one application
-of this identity at `Q := P` plus another at `Q := gibbsPmf f λ`. -/
+    = -H(Q) - ⟨λ, 𝔼_Q[f]⟩ + log Z(λ). -/
 lemma klDivPmf_gibbsPmf_eq [Nonempty α]
     (f : Fin k → α → ℝ) (lam : Fin k → ℝ)
     (Q : α → ℝ) (hQ : Q ∈ stdSimplex ℝ α) :
@@ -235,16 +235,16 @@ lemma klDivPmf_gibbsPmf_eq [Nonempty α]
   ring
 
 omit [DecidableEq α] in
-/-- Cover–Thomas Theorem 12.1.1 (upper bound) — pmf form:
-under moment constraints `∑ x, P x · f i x = c i` for all `i`, and assuming the same
-constraints hold for the Boltzmann–Gibbs ansatz `gibbsPmf f λ` for some fixed Lagrange
-parameter `lam : Fin k → ℝ`, the entropy of `P` is bounded by the entropy of the gibbs
+/-- **Maximum entropy theorem** (upper bound, pmf form): under moment constraints
+`∑ x, P x · f i x = c i` for all `i`, and assuming the same constraints hold for the
+Boltzmann–Gibbs ansatz `gibbsPmf f λ` for some fixed Lagrange parameter
+`lam : Fin k → ℝ`, the entropy of `P` is bounded by the entropy of the gibbs
 distribution:
 
   H(P) ≤ H(gibbsPmf f λ).
 
 The Lagrange parameter `lam` is passed in as a hypothesis (with the matching
-constraint witness `h_gibbs_constraints`), so the proof does not need ψ(λ) convexity
+constraint witness `h_gibbs_constraints`), so the result does not need ψ(λ) convexity
 or any Lagrange-multiplier existence theory. -/
 @[entry_point]
 theorem entropy_le_gibbs_of_constraints [Nonempty α]
@@ -283,9 +283,7 @@ theorem entropy_le_gibbs_of_constraints [Nonempty α]
 /-! ## Uniqueness -/
 
 omit [DecidableEq α] in
-/-- Auxiliary: for a full-support reference pmf `Q`, `klDivPmf P Q = 0 ↔ P = Q`.
-Used in `entropy_eq_gibbs_iff_of_constraints` to translate "KL = 0" into the pointwise
-equality `P = gibbsPmf f λ`. -/
+/-- For a full-support reference pmf `Q`, `klDivPmf P Q = 0 ↔ P = Q`. -/
 lemma klDivPmf_eq_zero_iff_pmf
     {P Q : α → ℝ} (hP : P ∈ stdSimplex ℝ α) (_hQ : Q ∈ stdSimplex ℝ α)
     (hQ_pos : ∀ a, 0 < Q a) :
@@ -322,7 +320,8 @@ lemma klDivPmf_eq_zero_iff_pmf
     exact klDivPmf_self_eq_zero Q hQ_pos
 
 omit [DecidableEq α] in
-/-- Uniqueness — `H(P) = H(gibbsPmf f λ)` if and only if `P = gibbsPmf f λ` pointwise. -/
+/-- **Maximum entropy theorem** (uniqueness, pmf form): `H(P) = H(gibbsPmf f λ)` if and
+only if `P = gibbsPmf f λ` pointwise. -/
 @[entry_point]
 theorem entropy_eq_gibbs_iff_of_constraints [Nonempty α]
     (f : Fin k → α → ℝ) (c : Fin k → ℝ)
@@ -430,8 +429,8 @@ theorem entropy_gibbsPmf_zero_eq_log_card [Nonempty α] (lam : Fin k → ℝ) :
 noncomputable def boolFeature : Fin 1 → Bool → ℝ :=
   fun _ b ↦ if b then 1 else 0
 
-/-- For any `λ : Fin 1 → ℝ`, `gibbsPmf boolFeature λ true + gibbsPmf boolFeature λ false = 1`
-(restatement of `gibbsPmf_sum_eq_one` on `Bool`). -/
+/-- For any `λ : Fin 1 → ℝ`,
+`gibbsPmf boolFeature λ true + gibbsPmf boolFeature λ false = 1`. -/
 lemma gibbsPmf_bool_sum_eq_one (lam : Fin 1 → ℝ) :
     gibbsPmf boolFeature lam true + gibbsPmf boolFeature lam false = 1 := by
   have h := gibbsPmf_sum_eq_one (α := Bool) boolFeature lam
@@ -450,7 +449,7 @@ lemma gibbsPmf_bool_true_eq_of_mean
   simp only [boolFeature, ↓reduceIte, mul_one, Bool.false_eq_true, mul_zero, add_zero] at h_mean
   exact h_mean
 
-/-- Companion to the above: `gibbsPmf boolFeature λ false = 1 - μ`. -/
+/-- Under the same mean constraint, `gibbsPmf boolFeature λ false = 1 - μ`. -/
 lemma gibbsPmf_bool_false_eq_of_mean
     (lam : Fin 1 → ℝ) (μ : ℝ)
     (h_mean : ∑ b : Bool, gibbsPmf boolFeature lam b * boolFeature 0 b = μ) :
