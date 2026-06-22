@@ -172,7 +172,8 @@ theorem rnDeriv_conv_toReal_aeeq_integral_translate
     (hfWe_meas.comp (measurable_fst.sub measurable_snd)).lintegral_prod_right'
   have h_rn : (μW ∗ μV).rnDeriv volume =ᵐ[volume] fun z => ∫⁻ v, fWe (z - v) ∂μV := by
     rw [hconv]; exact Measure.rnDeriv_withDensity volume hrho_meas
-  have h_lt : ∀ᵐ z ∂volume, (μW ∗ μV).rnDeriv volume z < ∞ := Measure.rnDeriv_lt_top (μW ∗ μV) volume
+  have h_lt : ∀ᵐ z ∂volume, (μW ∗ μV).rnDeriv volume z < ∞ :=
+    Measure.rnDeriv_lt_top (μW ∗ μV) volume
   filter_upwards [h_rn, h_lt] with x hx hx_lt
   show ((μW ∗ μV).rnDeriv volume x).toReal = ∫ z, (μW.rnDeriv volume (x - z)).toReal ∂μV
   have hfWe_x_meas : Measurable (fun z => fWe (x - z)) := by fun_prop
@@ -195,7 +196,8 @@ theorem lintegral_ofReal_translate_density_aeeq
     rw [hconv]
     exact Measure.rnDeriv_withDensity volume
       ((hfWe_meas.comp (measurable_fst.sub measurable_snd)).lintegral_prod_right')
-  have h_lt : ∀ᵐ z ∂volume, (μW ∗ μV).rnDeriv volume z < ∞ := Measure.rnDeriv_lt_top (μW ∗ μV) volume
+  have h_lt : ∀ᵐ z ∂volume, (μW ∗ μV).rnDeriv volume z < ∞ :=
+    Measure.rnDeriv_lt_top (μW ∗ μV) volume
   filter_upwards [hsumdens, h_lt] with x hx hx_lt
   have hae_fin : ∀ᵐ z ∂μV, fWe (x - z) < ∞ :=
     ae_lt_top' (by fun_prop : Measurable fun z => fWe (x - z)).aemeasurable (hx ▸ hx_lt).ne
@@ -331,7 +333,8 @@ private theorem differentialEntropy_le_of_conv_finite
   haveI hVmap_prob : IsProbabilityMeasure (Q.map V) :=
     Measure.isProbabilityMeasure_map hV.aemeasurable
   -- **per-fibre translate Gibbs**.  Set `μWz z := (Q.map W).map (·+z)` (the per-fibre conditional
-  -- law of `W+V` given `V=z`, by independence).  Each `μWz z ≪ ν` (a.e. z), so per-fibre Gibbs gives
+  -- law of `W+V` given `V=z`, by independence).  Each `μWz z ≪ ν` (a.e. z), so per-fibre Gibbs
+  -- gives
   -- `h(μWz z) ≤ -∫ x, log(r x) ∂(μWz z)`, and translation invariance gives `h(μWz z) = h(Q.map W)`.
   set μV : Measure ℝ := Q.map V with hμV_def
   set fW : ℝ → ℝ := fun x => ((Q.map W).rnDeriv volume x).toReal with hfWb_def
@@ -356,7 +359,8 @@ private theorem differentialEntropy_le_of_conv_finite
   haveI hμWz_prob : ∀ z, IsProbabilityMeasure (μWz z) := by
     intro z
     show IsProbabilityMeasure ((Q.map W).map (fun x => x + z))
-    exact Measure.isProbabilityMeasure_map (by fun_prop : Measurable fun x : ℝ => x + z).aemeasurable
+    exact Measure.isProbabilityMeasure_map
+      (by fun_prop : Measurable fun x : ℝ => x + z).aemeasurable
   -- (c) per-fibre finite entropy.
   have hμWz_ent : ∀ z, Integrable
       (fun x => Real.negMulLog ((μWz z).rnDeriv volume x).toReal) volume := by
@@ -373,7 +377,8 @@ private theorem differentialEntropy_le_of_conv_finite
   have hlog_meas : Measurable (fun x => Real.log (rfun x)) := by
     rw [hrfun_def]
     exact Real.measurable_log.comp ((Measure.measurable_rnDeriv _ _).ennreal_toReal)
-  -- `μWz z = vol.withDensity (fun x => fWe (x - z))`  (translate of an a.c. measure as withDensity).
+  -- `μWz z = vol.withDensity (fun x => fWe (x - z))`
+  -- (translate of an a.c. measure as withDensity).
   have hμWz_wd : ∀ z, μWz z = (volume : Measure ℝ).withDensity (fun x => fWe (x - z)) := by
     intro z
     show (Q.map W).map (fun x => x + z) = _
@@ -560,7 +565,8 @@ theorem truncW_indepFun_of_indepFun
 
 -- Negative-part lintegral of `negMulLog` of the truncated density `fn` is finite,
 -- given that the same quantity is finite for the base density `ρ`.
--- Uses the decomposition `-(negMulLog fn) = 1_Sn·(cbar·log cbar·ρ.toReal + cbar·-(negMulLog ρ.toReal))`.
+-- Uses the decomposition
+-- `-(negMulLog fn) = 1_Sn·(cbar·log cbar·ρ.toReal + cbar·-(negMulLog ρ.toReal))`.
 theorem truncW_map_negMulLog_negPart_lintegral_ne_top
     {Sn : Set ℝ} (_hSn_meas : MeasurableSet Sn)
     {ρ : ℝ → ℝ≥0∞} (hρ_meas : Measurable ρ)
@@ -573,17 +579,20 @@ theorem truncW_map_negMulLog_negPart_lintegral_ne_top
     (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (fn x))) ∂volume) ≠ ⊤ := by
   set cbar : ℝ := (c⁻¹).toReal
   have hcbar_nn : 0 ≤ cbar := ENNReal.toReal_nonneg
-  have hfW_meas : Measurable (fun x => ENNReal.ofReal ((ρ x).toReal)) := hρ_meas.ennreal_toReal.ennreal_ofReal
+  have hfW_meas : Measurable (fun x => ENNReal.ofReal ((ρ x).toReal)) :=
+    hρ_meas.ennreal_toReal.ennreal_ofReal
   -- Rewrite `-(negMulLog fn)` a.e. using the pointwise formula.
   have h_int_eq : (fun x => ENNReal.ofReal (-(Real.negMulLog (fn x))))
       =ᵐ[volume] fun x => ENNReal.ofReal (Sn.indicator
-        (fun x => cbar * Real.log cbar * (ρ x).toReal + cbar * (-(Real.negMulLog (ρ x).toReal))) x) := by
+        (fun x => cbar * Real.log cbar * (ρ x).toReal +
+          cbar * (-(Real.negMulLog (ρ x).toReal))) x) := by
     filter_upwards [h_fn_ae] with x hx
     rw [hx]
     by_cases hxs : x ∈ Sn
     · rw [Set.indicator_of_mem hxs (f := ρ),
         Set.indicator_of_mem hxs
-          (f := fun x => cbar * Real.log cbar * (ρ x).toReal + cbar * (-(Real.negMulLog (ρ x).toReal))),
+          (f := fun x => cbar * Real.log cbar * (ρ x).toReal +
+            cbar * (-(Real.negMulLog (ρ x).toReal))),
         ENNReal.toReal_mul]
       congr 1
       show -(Real.negMulLog (cbar * (ρ x).toReal)) =
@@ -594,7 +603,8 @@ theorem truncW_map_negMulLog_negPart_lintegral_ne_top
       ring
     · rw [Set.indicator_of_notMem hxs (f := ρ),
         Set.indicator_of_notMem hxs
-          (f := fun x => cbar * Real.log cbar * (ρ x).toReal + cbar * (-(Real.negMulLog (ρ x).toReal)))]
+          (f := fun x => cbar * Real.log cbar * (ρ x).toReal +
+            cbar * (-(Real.negMulLog (ρ x).toReal)))]
       simp [Real.negMulLog]
   rw [lintegral_congr_ae h_int_eq]
   have hbound : ∀ x, ENNReal.ofReal (Sn.indicator
@@ -677,7 +687,8 @@ theorem differentialEntropyExt_mono_add_truncW
         Set.preimage_inter, hE_eq]
     rw [hLHS, hRHS]
   -- positive mass of `Sn` under `P.map W`.
-  have hWmap_prob' : IsProbabilityMeasure (P.map W) := Measure.isProbabilityMeasure_map hW.aemeasurable
+  have hWmap_prob' : IsProbabilityMeasure (P.map W) :=
+    Measure.isProbabilityMeasure_map hW.aemeasurable
   have hSn_pos : (P.map W) Sn ≠ 0 := by
     rw [Measure.map_apply hW hSn_meas]
     have : W ⁻¹' Sn = E := by ext ω; simp [hE_def, hSn_def]
@@ -718,7 +729,8 @@ theorem differentialEntropyExt_mono_add_truncW
       by_cases hxs : x ∈ Sn
       · rw [Set.indicator_of_mem hxs]
         refine le_trans (ENNReal.ofReal_le_ofReal ?_) ENNReal.ofReal_one.le
-        calc Real.negMulLog (fn x) ≤ 1 - fn x := Real.negMulLog_le_one_sub_self ENNReal.toReal_nonneg
+        calc Real.negMulLog (fn x) ≤ 1 - fn x :=
+              Real.negMulLog_le_one_sub_self ENNReal.toReal_nonneg
           _ ≤ 1 := by have : (0 : ℝ) ≤ fn x := ENNReal.toReal_nonneg; linarith
       · rw [Set.indicator_of_notMem hxs]
         -- off `Sn`, `fn x = 0`, so `negMulLog 0 = 0`, `ofReal 0 = 0`.

@@ -45,7 +45,8 @@ variable {α β : Type*}
 
 /-! ## Input distribution maximization -/
 
-/-- **Lift a pmf vector to a measure**: `pmfToMeasure p = ∑ a, ENNReal.ofReal (p a) • Measure.dirac a`. -/
+/-- **Lift a pmf vector to a measure**:
+`pmfToMeasure p = ∑ a, ENNReal.ofReal (p a) • Measure.dirac a`. -/
 noncomputable def pmfToMeasure (p : α → ℝ) : Measure α :=
   ∑ a : α, ENNReal.ofReal (p a) • Measure.dirac a
 
@@ -60,7 +61,8 @@ lemma pmfToMeasure_apply_singleton (p : α → ℝ) (a : α) :
   · simp [Measure.smul_apply, Measure.dirac_apply' _ (MeasurableSet.singleton a)]
   · intro b _ hb
     simp [Measure.smul_apply, Measure.dirac_apply' _ (MeasurableSet.singleton a),
-      Set.indicator_of_notMem (show b ∉ ({a} : Set α) by simp only [Set.mem_singleton_iff]; exact hb)]
+      Set.indicator_of_notMem
+        (show b ∉ ({a} : Set α) by simp only [Set.mem_singleton_iff]; exact hb)]
   · intro h
     exact (h (Finset.mem_univ a)).elim
 
@@ -198,7 +200,8 @@ private lemma jointDistribution_real_singleton_of_stdSimplex
   rw [Measure.real, jointDistribution_def, h_eq,
       Measure.compProd_apply_prod (measurableSet_singleton _) (measurableSet_singleton _)]
   -- ∫⁻ x in {a}, W x {b} ∂(pmfToMeasure p) = ENNReal.ofReal (p a) * W a {b}.
-  -- Use setLIntegral on dirac decomposition: rewrite as ∫⁻ x, ({a}.indicator (fun x => W x {b})) x ∂...
+  -- Use setLIntegral on dirac decomposition: rewrite as
+  -- ∫⁻ x, ({a}.indicator (fun x => W x {b})) x ∂...
   rw [← MeasureTheory.lintegral_indicator (measurableSet_singleton _)]
   unfold pmfToMeasure
   rw [MeasureTheory.lintegral_finsetSum_measure]
@@ -219,7 +222,8 @@ private lemma jointDistribution_real_singleton_of_stdSimplex
   rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal (hp.1 a)]
   rfl
 
-omit [Nonempty α] [DecidableEq α] [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
+omit [Nonempty α] [DecidableEq α] [Fintype β] [DecidableEq β] [Nonempty β]
+  [MeasurableSingletonClass β] in
 /-- For `p ∈ stdSimplex`, `(pmfToMeasure p).real {a}` rewritten using `J.map Prod.fst = p`. -/
 private lemma jointMap_fst_real_singleton_of_stdSimplex
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
@@ -325,7 +329,8 @@ theorem exists_capacity_achiever (W : Channel α β) [IsMarkovKernel W] :
   exact ⟨_, single_mem_stdSimplex ℝ (Classical.arbitrary α)⟩
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- `R < capacity W` implies there exists `p ∈ stdSimplex` with `R < I(pmfToMeasure p; W).toReal`. -/
+/-- `R < capacity W` implies there exists `p ∈ stdSimplex` with
+`R < I(pmfToMeasure p; W).toReal`. -/
 theorem capacity_lt_implies_exists_pmf
     (W : Channel α β) [IsMarkovKernel W]
     {R : ℝ} (hR : R < capacity W) :
@@ -344,7 +349,8 @@ theorem capacity_lt_implies_exists_pmf
 
 /-! ## Expurgation (average → max error) -/
 
-omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
 /-- Markov inequality: the number of `m` with `errorProbAt > K · avg` is at most `M / K`. -/
 theorem errorProbAt_filter_card_bound
     {M n : ℕ} (c : Code M n α β) (W : Channel α β) [IsMarkovKernel W]
@@ -433,7 +439,8 @@ noncomputable def Code.subcode
         ⟨(S.equivFin ⟨m, h⟩).val, by simp⟩
       else ⟨0, hS⟩ }
 
-omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
 /-- Sub-code error probability is bounded above by the original code's `errorProbAt`. -/
 theorem Code.subcode_errorProbAt_le
     {M n : ℕ} (c : Code M n α β) (W : Channel α β) [IsMarkovKernel W]
@@ -547,7 +554,8 @@ lemma exists_N_two_ceil_exp_le
   have h_exp_R_ge : (2 : ℝ) ≤ Real.exp ((n : ℝ) * R) := hN₂ n hn2
   -- `exp(n R) * 3 ≤ exp(n R) * exp(n (R'-R)) = exp(n R')`.
   have h_exp_R_nn : 0 ≤ Real.exp ((n : ℝ) * R) := (Real.exp_pos _).le
-  have h_expR'_eq : Real.exp ((n : ℝ) * R') = Real.exp ((n : ℝ) * R) * Real.exp ((n : ℝ) * (R' - R)) := by
+  have h_expR'_eq : Real.exp ((n : ℝ) * R')
+      = Real.exp ((n : ℝ) * R) * Real.exp ((n : ℝ) * (R' - R)) := by
     rw [← Real.exp_add]; congr 1; ring
   have h_3R_le_R' : 3 * Real.exp ((n : ℝ) * R) ≤ Real.exp ((n : ℝ) * R') := by
     rw [h_expR'_eq, mul_comm (Real.exp ((n : ℝ) * R))]
@@ -732,7 +740,8 @@ private lemma klDiv_map_measurableEmbedding
     -- Rewrite the LHS via lintegral_map for measurable embedding.
     rw [hf.lintegral_map (fun y => ENNReal.ofReal
       (InformationTheory.klFun ((μ.map f).rnDeriv (ν.map f) y).toReal))]
-    -- Now compare ∫⁻ x, klFun ((μ.map f).rnDeriv (ν.map f) (f x)).toReal ∂ν vs ∫⁻ x, klFun ((μ.rnDeriv ν) x).toReal ∂ν.
+    -- Now compare ∫⁻ x, klFun ((μ.map f).rnDeriv (ν.map f) (f x)).toReal ∂ν
+    -- vs ∫⁻ x, klFun ((μ.rnDeriv ν) x).toReal ∂ν.
     refine lintegral_congr_ae ?_
     filter_upwards [hf.rnDeriv_map μ ν] with x hx
     rw [hx]
@@ -1018,7 +1027,8 @@ theorem shannon_noisy_channel_coding_theorem
   -- Continuity ⟹ ∃ open nbhd of 0 in [0,1] with f > R₀ on it.
   have h_at_zero : ContinuousWithinAt f (Set.Icc 0 1) 0 := by
     refine hf_cont_on 0 ⟨le_refl _, by norm_num⟩
-  -- Use `eventually_lt` form: there exists ε_δ > 0 such that for all δ ∈ [0, ε_δ) ∩ [0,1], f δ > R₀.
+  -- Use `eventually_lt` form: there exists ε_δ > 0 such that for all δ ∈ [0, ε_δ) ∩ [0,1],
+  -- f δ > R₀.
   have h_ev_gt : ∀ᶠ δ in (nhdsWithin (0 : ℝ) (Set.Icc 0 1)), R₀ < f δ := by
     have := h_at_zero.tendsto
     exact this.eventually_const_lt hf_zero_gt

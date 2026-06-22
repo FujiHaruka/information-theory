@@ -163,9 +163,11 @@ private lemma blockYLawInline_withDensity_real
     | empty => simp
     | insert m s hms ih =>
         have h_density_eq :
-            (fun y : Fin n → ℝ => ∑ m' ∈ insert m s, ∏ i : Fin n, gaussianPDF (c.encoder m' i) N (y i))
+            (fun y : Fin n → ℝ => ∑ m' ∈ insert m s,
+              ∏ i : Fin n, gaussianPDF (c.encoder m' i) N (y i))
               = (fun y : Fin n → ℝ => ∏ i : Fin n, gaussianPDF (c.encoder m i) N (y i))
-                + (fun y : Fin n → ℝ => ∑ m' ∈ s, ∏ i : Fin n, gaussianPDF (c.encoder m' i) N (y i)) := by
+                + (fun y : Fin n → ℝ => ∑ m' ∈ s,
+                  ∏ i : Fin n, gaussianPDF (c.encoder m' i) N (y i)) := by
           funext y; simp only [Pi.add_apply]; rw [Finset.sum_insert hms]
         rw [Finset.sum_insert hms, ih, h_comp m, h_density_eq]
         rw [withDensity_add_left
@@ -354,7 +356,8 @@ lemma integrable_log_blockYLawInline_on_component
       have hMinv_pos : (0 : ℝ) < 1 / (M : ℝ) := by positivity
       have hprod_pos : (0 : ℝ) < ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i) :=
         Finset.prod_pos (fun i _ => gaussianPDFReal_pos _ _ _ hN)
-      have h_log_prod : Real.log ((1 / (M : ℝ)) * ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i))
+      have h_log_prod : Real.log ((1 / (M : ℝ)) *
+            ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i))
           = Real.log (1 / (M : ℝ)) + (n : ℝ) * c₀ + c₁ * S := by
         rw [Real.log_mul hMinv_pos.ne' hprod_pos.ne', Real.log_prod (fun i _ =>
           (gaussianPDFReal_pos (c.encoder m i) N (y i) hN).ne')]
@@ -493,7 +496,8 @@ private lemma integrable_log_fibre_rnDeriv
     have h_pi_wd : νp = (volume : Measure (Fin n → ℝ)).withDensity (fun z => ∏ i, a i (z i)) := by
       rw [hνp, ← (funext h_eq : (fun i => (volume : Measure ℝ).withDensity (a i))
           = fun i => gaussianReal (c.encoder m i) N)]
-      rw [InformationTheory.Shannon.pi_withDensity_fin (fun _ : Fin n => (volume : Measure ℝ)) ha_meas,
+      rw [InformationTheory.Shannon.pi_withDensity_fin
+          (fun _ : Fin n => (volume : Measure ℝ)) ha_meas,
         volume_pi]
     have h_prod_meas : Measurable (fun z : Fin n → ℝ => ∏ i, a i (z i)) :=
       Finset.measurable_prod _ (fun i _ => (ha_meas i).comp (measurable_pi_apply i))
@@ -504,12 +508,14 @@ private lemma integrable_log_fibre_rnDeriv
   have h_pos : ∀ i, ∀ᵐ z ∂νp, 0 < a i (z i) := by
     intro i
     have h1d : ∀ᵐ y ∂(gaussianReal (c.encoder m i) N), 0 < a i y := Measure.rnDeriv_pos (hac i)
-    exact (Measure.quasiMeasurePreserving_eval (μ := fun i => gaussianReal (c.encoder m i) N) i).ae h1d
+    exact (Measure.quasiMeasurePreserving_eval
+      (μ := fun i => gaussianReal (c.encoder m i) N) i).ae h1d
   have h_lt : ∀ i, ∀ᵐ z ∂νp, a i (z i) < ∞ := by
     intro i
     have h1d : ∀ᵐ y ∂(gaussianReal (c.encoder m i) N), a i y < ∞ :=
       (hac i).ae_le (Measure.rnDeriv_lt_top _ volume)
-    exact (Measure.quasiMeasurePreserving_eval (μ := fun i => gaussianReal (c.encoder m i) N) i).ae h1d
+    exact (Measure.quasiMeasurePreserving_eval
+      (μ := fun i => gaussianReal (c.encoder m i) N) i).ae h1d
   have h_log_split : (fun z => Real.log ((νp.rnDeriv volume z).toReal))
       =ᵐ[νp] fun z => ∑ i, Real.log ((a i (z i)).toReal) := by
     filter_upwards [h_rn_pi, eventually_countable_forall.mpr h_pos,
@@ -546,7 +552,8 @@ private lemma jointDifferentialEntropyPi_pi_eq_sum_inline {n : ℕ} (μ : Fin n 
         = (Measure.pi (fun _ : Fin n => (volume : Measure ℝ))).withDensity
             (fun z => ∏ i, a i (z i)) := by
       rw [← (funext h_eq : (fun i => (volume : Measure ℝ).withDensity (a i)) = μ)]
-      exact InformationTheory.Shannon.pi_withDensity_fin (fun _ : Fin n => (volume : Measure ℝ)) ha_meas
+      exact InformationTheory.Shannon.pi_withDensity_fin
+        (fun _ : Fin n => (volume : Measure ℝ)) ha_meas
     rw [hP, h_pi_eq, volume_pi]
     exact withDensity_absolutelyContinuous _ _
   have h_step1 : InformationTheory.Shannon.jointDifferentialEntropyPi Pm
@@ -559,7 +566,8 @@ private lemma jointDifferentialEntropyPi_pi_eq_sum_inline {n : ℕ} (μ : Fin n 
       intro i; rw [h_eq i]; infer_instance
     have h_pi_wd : Pm = (volume : Measure (Fin n → ℝ)).withDensity (fun z => ∏ i, a i (z i)) := by
       rw [hP, ← (funext h_eq : (fun i => (volume : Measure ℝ).withDensity (a i)) = μ)]
-      rw [InformationTheory.Shannon.pi_withDensity_fin (fun _ : Fin n => (volume : Measure ℝ)) ha_meas,
+      rw [InformationTheory.Shannon.pi_withDensity_fin
+          (fun _ : Fin n => (volume : Measure ℝ)) ha_meas,
         volume_pi]
     have h_prod_meas : Measurable (fun z : Fin n → ℝ => ∏ i, a i (z i)) :=
       Finset.measurable_prod _ (fun i _ => (ha_meas i).comp (measurable_pi_apply i))
@@ -779,7 +787,8 @@ private lemma integrable_log_component_rnDeriv_blockYLawInline
   haveI hνm_prob : IsProbabilityMeasure νm := by rw [hνm]; infer_instance
   haveI hq_prob : IsProbabilityMeasure q := by rw [hq]; infer_instance
   have hνm_q : νm ≪ q := by rw [hνm, hq]; exact blockComponentInline_ac_blockYLaw hN h_meas c m
-  have hq_vol : q ≪ (volume : Measure (Fin n → ℝ)) := by rw [hq]; exact blockYLawInline_ac_volume hN h_meas c
+  have hq_vol : q ≪ (volume : Measure (Fin n → ℝ)) := by
+    rw [hq]; exact blockYLawInline_ac_volume hN h_meas c
   have hνm_vol : νm ≪ (volume : Measure (Fin n → ℝ)) := by
     rw [hνm, blockComponentInline_withDensity hN c m]
     exact MeasureTheory.withDensity_absolutelyContinuous _ _
@@ -843,7 +852,8 @@ lemma mutualInfo_fst_snd_ne_top
           =ᵐ[K m] (fun y => Real.log (((K m).rnDeriv (blockYLawInline h_meas c) y)).toReal) := by
         have hKm_blockY : K m ≪ blockYLawInline h_meas c := by
           rw [hK]
-          show Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N) ≪ blockYLawInline h_meas c
+          show Measure.pi (fun i : Fin n => gaussianReal (c.encoder m i) N) ≪
+            blockYLawInline h_meas c
           exact blockComponentInline_ac_blockYLaw hN h_meas c m
         have h_meas_eq : K m ≪ ηc m := by rw [hηc, Kernel.const_apply]; exact hKm_blockY
         filter_upwards [h_meas_eq.ae_le
@@ -895,7 +905,8 @@ lemma blockMI_decomp
     refine (integrable_log_fibre_rnDeriv hN c m).congr ?_
     filter_upwards [hg_ae m] with y hy
     rw [hy]
-  have h_int_fibre : Integrable (fun z : (Fin M) × (Fin n → ℝ) => Real.log (g z).toReal) (p ⊗ₘ W) := by
+  have h_int_fibre :
+      Integrable (fun z : (Fin M) × (Fin n → ℝ) => Real.log (g z).toReal) (p ⊗ₘ W) := by
     rw [Measure.integrable_compProd_iff ((hg_meas.ennreal_toReal.log).aestronglyMeasurable)]
     refine ⟨Filter.Eventually.of_forall (fun m => h_int_fibre_self m), ?_⟩
     -- `p = msgLaw` is a finite measure on the finite type `Fin M` → integrable for free
@@ -937,7 +948,8 @@ lemma blockMI_decomp
       filter_upwards with y; rw [hψ, hq_eq]
     · exact Integrable.of_finite
   have h_fibre_self : ∀ m, ∫ y, Real.log (g (m, y)).toReal ∂(W m)
-      = ∫ y, Real.log ((W m).rnDeriv volume y).toReal ∂(W m) := fun m => fibre_log_proxy_integral hN c m
+      = ∫ y, Real.log ((W m).rnDeriv volume y).toReal ∂(W m) :=
+        fun m => fibre_log_proxy_integral hN c m
   -- apply the generic decomposition
   rw [mutualInfo_fst_snd_eq_channel h_meas c]
   rw [ChannelCoding.mutualInfoOfChannel_toReal_eq_log_density_sub

@@ -130,7 +130,8 @@ noncomputable def jointMIXnYn
 
 The three analytic sub-bounds (per-letter log-density integrability, the continuous
 mutual-information chain rule, and the Markov-chain factorization) live as lemmas in
-`InformationTheory/Shannon/AWGN/ConverseMIChainRule.lean` and are invoked here as ordinary lemma calls. -/
+`InformationTheory/Shannon/AWGN/ConverseMIChainRule.lean` and are invoked here as ordinary
+lemma calls. -/
 
 /-! ## Fano dispatch
 
@@ -358,9 +359,11 @@ private lemma blockYLaw_withDensity_real
     | empty => simp
     | insert m s hms ih =>
         have h_density_eq :
-            (fun y : Fin n → ℝ => ∑ m' ∈ insert m s, ∏ i : Fin n, gaussianPDF (c.encoder m' i) N (y i))
+            (fun y : Fin n → ℝ => ∑ m' ∈ insert m s,
+              ∏ i : Fin n, gaussianPDF (c.encoder m' i) N (y i))
               = (fun y : Fin n → ℝ => ∏ i : Fin n, gaussianPDF (c.encoder m i) N (y i))
-                + (fun y : Fin n → ℝ => ∑ m' ∈ s, ∏ i : Fin n, gaussianPDF (c.encoder m' i) N (y i)) := by
+                + (fun y : Fin n → ℝ => ∑ m' ∈ s,
+                  ∏ i : Fin n, gaussianPDF (c.encoder m' i) N (y i)) := by
           funext y; simp only [Pi.add_apply]; rw [Finset.sum_insert hms]
         rw [Finset.sum_insert hms, ih, h_comp m, h_density_eq]
         rw [withDensity_add_left
@@ -427,7 +430,8 @@ private lemma blockRealDensity_measurable
   exact Finset.measurable_prod _ (fun i _ =>
     (measurable_gaussianPDFReal (c.encoder m i) N).comp (measurable_pi_apply i))
 
-/-- Per-component lower bound: `blockRealDensity y ≥ M⁻¹ · ∏ᵢ gaussianPDFReal (encoder m i) N (yᵢ)`. -/
+/-- Per-component lower bound:
+`blockRealDensity y ≥ M⁻¹ · ∏ᵢ gaussianPDFReal (encoder m i) N (yᵢ)`. -/
 private lemma blockRealDensity_ge_component
     {P : ℝ} {N : ℝ≥0} {M n : ℕ} (c : AwgnCode M n P) (m : Fin M) (y : Fin n → ℝ) :
     (1 / (M : ℝ)) * ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i)
@@ -541,7 +545,8 @@ private lemma integrable_log_blockYLaw_on_component
     -- `∑ᵢ (yᵢ - encoder m i)²` integrable against the product Gaussian νm
     rw [hνm_def]
     refine integrable_finsetSum _ (fun i _ => ?_)
-    -- coordinate `i` integrable: lift the 1-D second-moment integrability via `integrable_comp_eval`
+    -- coordinate `i` integrable: lift the 1-D second-moment integrability via
+    -- `integrable_comp_eval`
     have h_1d : Integrable (fun y : ℝ => (y - c.encoder m i) ^ 2)
         (gaussianReal (c.encoder m i) N) := by
       have h_id : Integrable (fun y : ℝ => y) (gaussianReal (c.encoder m i) N) := by
@@ -572,7 +577,8 @@ private lemma integrable_log_blockYLaw_on_component
       have hMinv_pos : (0 : ℝ) < 1 / (M : ℝ) := by positivity
       have hprod_pos : (0 : ℝ) < ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i) :=
         Finset.prod_pos (fun i _ => gaussianPDFReal_pos _ _ _ hN)
-      have h_log_prod : Real.log ((1 / (M : ℝ)) * ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i))
+      have h_log_prod : Real.log ((1 / (M : ℝ)) *
+            ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i))
           = Real.log (1 / (M : ℝ)) + (n : ℝ) * c₀ + c₁ * S := by
         rw [Real.log_mul hMinv_pos.ne' hprod_pos.ne', Real.log_prod (fun i _ =>
           (gaussianPDFReal_pos (c.encoder m i) N (y i) hN).ne')]
@@ -657,7 +663,8 @@ private lemma awgnConverseJoint_eq_compProd
     Measure.compProd_sum_left, Measure.sum_fintype]
   symm
   refine Finset.sum_congr rfl (fun m _ => ?_)
-  -- `(δ_m) ⊗ₘ K = (δ_m).prod (K m) = (δ_m).prod νₘ` (`K m = νₘ`, `awgnChannel = gaussianReal` defeq)
+  -- `(δ_m) ⊗ₘ K = (δ_m).prod (K m) = (δ_m).prod νₘ`
+  -- (`K m = νₘ`, `awgnChannel = gaussianReal` defeq)
   rw [show (Measure.dirac m) ⊗ₘ blockKernel N c
         = (Measure.dirac m).prod (blockKernel N c m) by
       ext s hs
@@ -731,7 +738,8 @@ private lemma integrable_log_component_rnDeriv_blockYLaw
     have h_wd : νm = (MeasureTheory.volume : Measure (Fin n → ℝ)).withDensity
         (fun y => ∏ i : Fin n, gaussianPDF (c.encoder m i) N (y i)) := by
       rw [hνm]; exact blockComponent_withDensity hN c m
-    have h_meas_dens : Measurable (fun y : Fin n → ℝ => ∏ i : Fin n, gaussianPDF (c.encoder m i) N (y i)) :=
+    have h_meas_dens :
+        Measurable (fun y : Fin n → ℝ => ∏ i : Fin n, gaussianPDF (c.encoder m i) N (y i)) :=
       Finset.measurable_prod _ (fun i _ =>
         (measurable_gaussianPDF (c.encoder m i) N).comp (measurable_pi_apply i))
     exact hνm_vol.ae_le (by rw [h_wd]; exact Measure.rnDeriv_withDensity _ h_meas_dens)

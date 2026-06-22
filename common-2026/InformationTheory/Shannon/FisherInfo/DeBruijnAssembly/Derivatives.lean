@@ -161,7 +161,8 @@ theorem convDensityAdd_hasDerivAt_self
       hb1 hb1_int hdiff
   -- `hgate.2 : HasDerivAt p_t (∫ y, pX y · kernel·(-(x-y)/t)) x`.
   have hderiv : HasDerivAt (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))
-      (∫ y, pX y * (heatFlow_density_heat_equation_kernel t (x - y) * (-((x - y) / t))) ∂volume) x := by
+      (∫ y, pX y * (heatFlow_density_heat_equation_kernel t (x - y) * (-((x - y) / t))) ∂volume)
+      x := by
     rw [hconv_eq]; exact hgate.2
   -- conclude `HasDerivAt p_t (deriv p_t x) x` by rewriting the derivative value.
   rw [hderiv.deriv]

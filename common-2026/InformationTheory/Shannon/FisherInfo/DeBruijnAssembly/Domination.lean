@@ -146,7 +146,8 @@ private theorem convDensityAdd_deriv2_poly_moment_majorant
   -- The concrete envelope: `bound x = ∫ y, pX y · gaussHessMaj t (x − y)` — the convolution of
   -- the integrable density `pX` against the `s`-uniform Gaussian-Hessian kernel majorant.
   -- Integrability via Tonelli (`convKernel_envelope_integrable`), pointwise domination via the
-  -- extracted concrete lemma `convDensityAdd_deriv2_le_gaussHessMaj_conv` (reused by `_chain_domination`).
+  -- extracted concrete lemma `convDensityAdd_deriv2_le_gaussHessMaj_conv`
+  -- (reused by `_chain_domination`).
   refine ⟨fun x => ∫ y, pX y * gaussHessMaj t (x - y) ∂volume, ?_, ?_⟩
   · have hMmeas : Measurable (gaussHessMaj t) := by unfold gaussHessMaj; fun_prop
     exact convKernel_envelope_integrable pX (gaussHessMaj t) hpX_int hpX_meas
@@ -170,7 +171,8 @@ private theorem convDensityAdd_jointMajorant_integrable
   -- Both summands are `convKernel_envelope_integrable` envelopes (`pX` / `y²·pX` integrable,
   -- `G` / `g` integrable). Pointwise `‖(A+Bx²)·(1/2)E x‖ ≤ H x` via `x² ≤ 2(x−y)²+2y²` (NO odd
   -- cross-term, so only even Gaussian moments needed). `hpX_mom` is genuinely used (it supplies
-  -- integrability of `y²·pX`, the heavy-tail-controlling density). `integrable_natPow_mul_exp_neg_mul_sq`
+  -- integrability of `y²·pX`, the heavy-tail-controlling density).
+  -- `integrable_natPow_mul_exp_neg_mul_sq`
   -- (route I = deleted case-A defect, false for polynomial-tail pX) is NOT used.
   set G : ℝ → ℝ := fun u => (|A| + 2 * |B| * u ^ 2) * gaussHessMaj t u with hG_def
   have hG_int : Integrable G volume := gaussHessMaj_polyWeight_integrable ht |A| (2 * |B|)
@@ -230,7 +232,8 @@ private theorem convDensityAdd_jointMajorant_integrable
       _ ≤ (|A| + |B| * x ^ 2) * E x := by
           apply mul_le_mul_of_nonneg_left _ (by positivity)
           nlinarith [hE_nn]
-  -- step 2: `(|A|+|B|x²)·E x = ∫ (|A|+|B|x²)·pX y·g(x−y) ≤ ∫ pX y·G(x−y) + 2|B|∫(y²pX)·g(x−y) = H x`.
+  -- step 2: `(|A|+|B|x²)·E x = ∫ (|A|+|B|x²)·pX y·g(x−y) ≤
+  --    ∫ pX y·G(x−y) + 2|B|∫(y²pX)·g(x−y) = H x`.
   refine le_trans hstep1 ?_
   -- pull the constant `(|A|+|B|x²)` into the integral.
   have hpull : (|A| + |B| * x ^ 2) * E x
@@ -238,7 +241,8 @@ private theorem convDensityAdd_jointMajorant_integrable
     rw [hE_def, ← integral_const_mul]
   rw [hpull]
   -- per-`y` fibre integrability of the two dominating pieces.
-  -- (1) `fun y => pX y · G(x−y)`: `G` globally bounded (`gaussHessMaj_polyWeight_bdd`) × `pX` integ.
+  -- (1) `fun y => pX y · G(x−y)`: `G` globally bounded
+  -- (`gaussHessMaj_polyWeight_bdd`) × `pX` integ.
   have hfib1_int : Integrable (fun y => pX y * G (x - y)) volume := by
     refine hpX_int.mul_bdd
       (c := |A| * ((Real.sqrt (Real.pi * t))⁻¹ * (16 * Real.exp (-1) / t + 2 / t))
@@ -274,10 +278,12 @@ private theorem convDensityAdd_jointMajorant_integrable
   rw [hH_eq]
   -- pointwise: `(|A|+|B|x²)·pX y·g(x−y) ≤ pX y·G(x−y) + 2|B|·(y²pX)·g(x−y)`.
   refine integral_mono hlhs_int hdom_int (fun y => ?_)
-  -- `(|A|+|B|x²) ≤ |A| + 2|B|(x−y)² + 2|B|y²` via `x² ≤ 2(x−y)²+2y²`, then multiply by `pX y·g ≥ 0`.
+  -- `(|A|+|B|x²) ≤ |A| + 2|B|(x−y)² + 2|B|y²` via `x² ≤ 2(x−y)²+2y²`,
+  -- then multiply by `pX y·g ≥ 0`.
   have hpXg_nn : (0:ℝ) ≤ pX y * gaussHessMaj t (x - y) :=
     mul_nonneg (hpX_nn y) (hg_nn (x - y))
-  have hx2 : x ^ 2 ≤ 2 * (x - y) ^ 2 + 2 * y ^ 2 := by nlinarith [sq_nonneg (x - 2 * y), sq_nonneg x]
+  have hx2 : x ^ 2 ≤ 2 * (x - y) ^ 2 + 2 * y ^ 2 := by
+    nlinarith [sq_nonneg (x - 2 * y), sq_nonneg x]
   have hcoef : (|A| + |B| * x ^ 2)
       ≤ (|A| + 2 * |B| * (x - y) ^ 2) + 2 * |B| * y ^ 2 := by
     have hBabs : (0:ℝ) ≤ |B| := abs_nonneg B
@@ -317,10 +323,12 @@ theorem debruijnIdentityV2_holds_assembled_chain_domination
   --   LogFactor(s,x) = - log (p_s x) - 1     (poly-in-x growth, `A + B·x²`)
   --   (1/2)·Hess(s,x) = (1/2)·∂²_x p_s x     (integrable envelope `(1/2)·hessBound x`).
   -- GAP① gives an `s`-uniform polynomial majorant for the log factor;
-  -- GAP② (poly-moment restate) gives an `s`-uniform integrable envelope `hessBound` for the Hessian.
+  -- GAP② (poly-moment restate) gives an `s`-uniform integrable envelope `hessBound`
+  -- for the Hessian.
   obtain ⟨A, B, _hB_nn, hLog⟩ :=
     convDensityAdd_logFactor_poly_majorant pX hpX_nn hpX_meas hpX_int hpX_mass ht
-  -- The **concrete** envelope `E x = ∫ y, pX y · gaussHessMaj t (x − y)` (= GAP②'s in-body envelope),
+  -- The **concrete** envelope `E x = ∫ y, pX y · gaussHessMaj t (x − y)`
+  -- (= GAP②'s in-body envelope),
   -- used directly here so that route II Tonelli sees the convolution shape (not an abstract `∃`).
   set E : ℝ → ℝ := fun x => ∫ y, pX y * gaussHessMaj t (x - y) ∂volume with hE_def
   -- the joint majorant: (A + B·x²) · ((1/2)·E x).

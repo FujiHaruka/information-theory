@@ -66,7 +66,8 @@ private lemma perLetterInputLaw_eq_mixture
   rw [show (fun ω : Fin M × (Fin n → ℝ) => c.encoder ω.1 i)
         = (fun a : Fin M => c.encoder a i) ∘ Prod.fst from rfl,
     ← Measure.map_map (measurable_of_countable _) measurable_fst,
-    Measure.map_fst_prod, measure_univ, one_smul, MeasureTheory.Measure.map_dirac' (measurable_of_countable _)]
+    Measure.map_fst_prod, measure_univ, one_smul,
+    MeasureTheory.Measure.map_dirac' (measurable_of_countable _)]
 
 /-- **Per-letter X-input factorization** (mixture-of-diracs, holds with collisions):
 `μ.map (fun ω => (encoder ω.1 i, ω.2 i)) = perLetterInputLaw_i ⊗ₘ awgnChannel`. -/
@@ -180,7 +181,8 @@ private lemma perLetterMI_eq_channel
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
     mutualInfo (converseJointInline h_meas c)
         (fun ω => c.encoder ω.1 i) (fun ω => ω.2 i)
-      = ChannelCoding.mutualInfoOfChannel (perLetterInputLaw h_meas c i) (awgnChannel N h_meas) := by
+      = ChannelCoding.mutualInfoOfChannel (perLetterInputLaw h_meas c i)
+          (awgnChannel N h_meas) := by
   classical
   set μ := converseJointInline h_meas c with hμ
   set p := perLetterInputLaw h_meas c i with hp
@@ -347,7 +349,8 @@ private lemma perLetterMI_decomp
     refine (Integrable.congr ?_ h_log_ae.symm)
     obtain ⟨c₀, c₁, hc₁, h_abs⟩ := perLetterMixtureDensity_log_abs_le N c i hM_pos hN
     have h_dom : Integrable (fun y : ℝ => c₀ + c₁ * y ^ 2) ν :=
-      (integrable_const c₀).add (((by rw [hν]; exact perLetterLaw_sq_integrable h_meas c i hM_pos hN)
+      (integrable_const c₀).add (((by
+            rw [hν]; exact perLetterLaw_sq_integrable h_meas c i hM_pos hN)
         : Integrable (fun y : ℝ => y ^ 2) ν).const_mul c₁)
     refine Integrable.mono' h_dom ?_ ?_
     · exact (Real.measurable_log.comp
@@ -462,16 +465,20 @@ private lemma jointDifferentialEntropyPi_blockYLawInline_le_sum
   set q := blockYLawInline h_meas c with hq
   haveI : IsProbabilityMeasure q := by rw [hq]; infer_instance
   -- marginal identification: `q.map (·i) = perLetterYLaw_i`
-  have h_marg_eq : ∀ i, q.map (fun y => y i) = (converseJointInline h_meas c).map (fun ω => ω.2 i) :=
+  have h_marg_eq : ∀ i,
+      q.map (fun y => y i) = (converseJointInline h_meas c).map (fun ω => ω.2 i) :=
     fun i => blockYLawInline_map_eval h_meas c i
   haveI : ∀ i, IsProbabilityMeasure (q.map (fun z => z i)) := by
     intro i; rw [h_marg_eq i]
-    exact Measure.isProbabilityMeasure_map (((measurable_pi_apply i).comp measurable_snd).aemeasurable)
+    exact Measure.isProbabilityMeasure_map
+      (((measurable_pi_apply i).comp measurable_snd).aemeasurable)
   have h_marg_ac : ∀ i, (q.map (fun z => z i)) ≪ (volume : Measure ℝ) := by
     intro i; rw [h_marg_eq i]; exact perLetterLaw_ac_volume hN h_meas c i
-  have hμ_ac : q ≪ (volume : Measure (Fin n → ℝ)) := by rw [hq]; exact blockYLawInline_ac_volume hN h_meas c
+  have hμ_ac : q ≪ (volume : Measure (Fin n → ℝ)) := by
+    rw [hq]; exact blockYLawInline_ac_volume hN h_meas c
   -- `q ≪ pi(marginals)` via `q ≪ vol` and `vol ≪ pi(marginals)`
-  have hvol_ac_pi : (volume : Measure (Fin n → ℝ)) ≪ Measure.pi (fun i => q.map (fun z => z i)) := by
+  have hvol_ac_pi : (volume : Measure (Fin n → ℝ)) ≪
+      Measure.pi (fun i => q.map (fun z => z i)) := by
     have h_rev : ∀ i, (volume : Measure ℝ) ≪ q.map (fun z => z i) := by
       intro i; rw [h_marg_eq i]; exact volume_ac_perLetterLaw hN h_meas c i
     -- mirror of `pi_absolutelyContinuous_reverse`
@@ -486,10 +493,12 @@ private lemma jointDifferentialEntropyPi_blockYLawInline_le_sum
             (fun z => ∏ i, f i (z i)) := by
       rw [← (funext h_eq : (fun i => (volume : Measure ℝ).withDensity (f i))
           = fun i => q.map (fun z => z i))]
-      exact InformationTheory.Shannon.pi_withDensity_fin (fun _ : Fin n => (volume : Measure ℝ)) hf_meas
+      exact InformationTheory.Shannon.pi_withDensity_fin
+        (fun _ : Fin n => (volume : Measure ℝ)) hf_meas
     rw [h_pi_eq, ← volume_pi]
     refine withDensity_absolutelyContinuous' ?_ ?_
-    · exact (Finset.measurable_prod _ (fun i _ => (hf_meas i).comp (measurable_pi_apply i))).aemeasurable
+    · exact (Finset.measurable_prod _
+        (fun i _ => (hf_meas i).comp (measurable_pi_apply i))).aemeasurable
     · -- each `f i (z i)` a.e.-positive on `volume` (from `volume ≪ q.map(·i)`)
       have h_pos : ∀ i, ∀ᵐ y ∂(volume : Measure ℝ), f i y ≠ 0 := by
         intro i
@@ -508,9 +517,11 @@ private lemma jointDifferentialEntropyPi_blockYLawInline_le_sum
   have h_int_marg : ∀ i, Integrable
       (fun z => Real.log (((q.map (fun z => z i)).rnDeriv volume (z i)).toReal)) q := by
     intro i
-    have h_eq : (fun z : Fin n → ℝ => Real.log (((q.map (fun z => z i)).rnDeriv volume (z i)).toReal))
+    have h_eq : (fun z : Fin n → ℝ =>
+          Real.log (((q.map (fun z => z i)).rnDeriv volume (z i)).toReal))
         = (fun z => Real.log
-            ((((converseJointInline h_meas c).map (fun ω => ω.2 i)).rnDeriv volume (z i)).toReal)) := by
+            ((((converseJointInline h_meas c).map (fun ω => ω.2 i)).rnDeriv volume
+              (z i)).toReal)) := by
       funext z; rw [h_marg_eq i]
     rw [h_eq, hq]
     exact integrable_log_marg_on_blockYLawInline hN h_meas c i

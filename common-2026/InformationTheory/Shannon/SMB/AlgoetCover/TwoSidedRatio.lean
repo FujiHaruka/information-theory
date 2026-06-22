@@ -212,7 +212,8 @@ private lemma sum_blockCondRatio
       · rintro ⟨a, h_t_eq⟩
         rw [h_t_eq, Fin.init_snoc]
     rw [hP_n_def, h_eq, h_preim]
-    -- Now `(μZ.map firstBlockZ (n+1)) (⋃_a {snoc s a}) = ∑_a (μZ.map firstBlockZ (n+1)) {snoc s a}`.
+    -- Now `(μZ.map firstBlockZ (n+1)) (⋃_a {snoc s a})
+    --   = ∑_a (μZ.map firstBlockZ (n+1)) {snoc s a}`.
     -- `Fin.snoc s` is injective in `a` (since `(snoc s a) (Fin.last n) = a`).
     have h_inj : Function.Injective (fun a : α => (Fin.snoc s a : Fin (n + 1) → α)) := by
       intro a₁ a₂ h_eq_snoc
@@ -281,7 +282,8 @@ omit [DecidableEq α] [Nonempty α] in
 
 On the set where both `P_n(firstBlockZ n x) > 0` and `P_{n+1}(firstBlockZ (n+1) x) > 0`,
 we have the decomposition
-`MRatioLowerZ (n+1) x = MRatioLowerZ n x · ofReal(blockCondRatio · exp(pmfLogCondInfty(shift^n x)))`,
+`MRatioLowerZ (n+1) x
+  = MRatioLowerZ n x · ofReal(blockCondRatio · exp(pmfLogCondInfty(shift^n x)))`,
 where `blockCondRatio` is the chain-rule ratio. -/
 lemma MRatioLowerZ_succ_eq_mul
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ)
@@ -374,7 +376,8 @@ lemma MRatioLowerZ_succ_eq_mul
             ((μZ μ p).map (firstBlockZ (α := α) n)).real {firstBlockZ n x})
         = Psucc / Pn
     rw [if_neg (by rw [← hPn_def]; exact hPn_pos.ne'),
-        show Fin.snoc (firstBlockZ (α := α) n x) (x (n : ℤ)) = firstBlockZ (n + 1) x from h_snoc.symm,
+        show Fin.snoc (firstBlockZ (α := α) n x) (x (n : ℤ)) = firstBlockZ (n + 1) x
+          from h_snoc.symm,
         ← hPn_def, ← hPsucc_def]
   rw [h_ratio]
   -- Combine via `ENNReal.ofReal_mul`.
@@ -399,7 +402,8 @@ lemma MRatioLowerZ_succ_eq_mul
   rw [ENNReal.ofReal_mul h_exp_nn]
   rw [show Psucc / Pn = Psucc * (1 / Pn) by ring]
   rw [ENNReal.ofReal_mul h_psucc_pos.le]
-  -- Goal: ofReal(exp Qn) * ofReal Psucc = ofReal(exp Qn) * ofReal Pn * (ofReal Psucc * ofReal (1/Pn))
+  -- Goal: ofReal(exp Qn) * ofReal Psucc
+  --   = ofReal(exp Qn) * ofReal Pn * (ofReal Psucc * ofReal (1/Pn))
   rw [show ENNReal.ofReal (Real.exp (negLogQInftyZ μ p n x)) * ENNReal.ofReal Pn
         * (ENNReal.ofReal Psucc * ENNReal.ofReal (1 / Pn))
       = ENNReal.ofReal (Real.exp (negLogQInftyZ μ p n x)) * ENNReal.ofReal Psucc
@@ -517,7 +521,8 @@ lemma lintegral_mul_eq_lintegral_mul_condLExp
         lintegral_indicator_mul_eq hm μ (h_preim_meas c) f]
   -- Step B: pass to MCT via lintegral_iSup.
   rw [h_g_mul_iSup f, h_g_mul_iSup (μ⁻[f|m])]
-  rw [MeasureTheory.lintegral_iSup (fun n => h_meas_mul f hf n) (fun i j hij x => h_mono_mul f x hij)]
+  rw [MeasureTheory.lintegral_iSup (fun n => h_meas_mul f hf n)
+        (fun i j hij x => h_mono_mul f x hij)]
   rw [MeasureTheory.lintegral_iSup (fun n => h_meas_mul (μ⁻[f|m]) h_cL_meas_m₀ n)
     (fun i j hij x => h_mono_mul _ x hij)]
   exact iSup_congr h_step
@@ -1187,21 +1192,30 @@ theorem integral_MRatioLowerZ_le_one
     --          =ᵐ ENNReal.ofReal (condProbInfty(a)(shift^n x))`. Goes through
     --       `toReal_condLExp` bridge between real `condExp` and ENNReal `condLExp`.
     --
-    --   (b) On positive set: `ofReal(exp(pmfLogCondInfty y)) · ofReal(condProbInfty (coord0 y) y) = 1`,
+    --   (b) On positive set:
+    --       `ofReal(exp(pmfLogCondInfty y)) · ofReal(condProbInfty (coord0 y) y) = 1`,
     --       i.e., `pmf inverse = condProb`. Direct from the definition of `pmfLogCondInfty`
     --       (using `pmfLogCondPast_inner_eq_self`).
     --
     --   (c) Combine via:
     --       ```
     --       ∫⁻ MRatioLowerZ (n+1) dμZ
-    --         = ∫⁻ ∑_a [coord_n=a] · MRatioLowerZ n · ofReal(ratio_a/condProbInfty) dμZ  -- by (a),(b),decomp
-    --         = ∑_a ∫⁻ [coord_n=a] · (factor_a) dμZ                                       -- finset sum/integral commute
-    --         = ∑_a ∫⁻ μZ⁻[[coord_n=a]|F_n] · (factor_a) dμZ                              -- pull-out
-    --         = ∑_a ∫⁻ ofReal(condProbInfty(a)(shift^n)) · (factor_a) dμZ                 -- tower id (a)
-    --         = ∑_a ∫⁻ MRatioLowerZ n · ofReal(ratio_a) dμZ                               -- cancellation
-    --         = ∫⁻ MRatioLowerZ n · ofReal(∑_a ratio_a) dμZ                               -- finset sum
-    --         ≤ ∫⁻ MRatioLowerZ n dμZ                                                     -- ∑ ratio_a = 1
-    --         ≤ 1                                                                          -- by ih
+    --         -- by (a),(b),decomp
+    --         = ∫⁻ ∑_a [coord_n=a] · MRatioLowerZ n · ofReal(ratio_a/condProbInfty) dμZ
+    --         -- finset sum/integral commute
+    --         = ∑_a ∫⁻ [coord_n=a] · (factor_a) dμZ
+    --         -- pull-out
+    --         = ∑_a ∫⁻ μZ⁻[[coord_n=a]|F_n] · (factor_a) dμZ
+    --         -- tower id (a)
+    --         = ∑_a ∫⁻ ofReal(condProbInfty(a)(shift^n)) · (factor_a) dμZ
+    --         -- cancellation
+    --         = ∑_a ∫⁻ MRatioLowerZ n · ofReal(ratio_a) dμZ
+    --         -- finset sum
+    --         = ∫⁻ MRatioLowerZ n · ofReal(∑_a ratio_a) dμZ
+    --         -- ∑ ratio_a = 1
+    --         ≤ ∫⁻ MRatioLowerZ n dμZ
+    --         -- by ih
+    --         ≤ 1
     --       ```
     --
     -- Reference: Algoet–Cover (1988), Sandwich Theorem proof.
@@ -1255,7 +1269,8 @@ theorem integral_MRatioLowerZ_le_one
         rw [h]
         ring
       rw [lintegral_congr_ae (Filter.Eventually.of_forall h_F_rewrite)]
-      -- Now express integrand as g(x) · 1[x n = a](x), with g := MRatio(n) · ratio_a · exp(-log c_a shift^n).
+      -- Now express integrand as g(x) · 1[x n = a](x), with
+      --   g := MRatio(n) · ratio_a · exp(-log c_a shift^n).
       set g : (∀ _ : ℤ, α) → ℝ≥0∞ := fun x =>
         MRatioLowerZ μ p n x
           * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a)
@@ -1281,7 +1296,8 @@ theorem integral_MRatioLowerZ_le_one
           infer_instance
         exact lintegral_mul_eq_lintegral_mul_condLExp (shiftedPastSigma_le n)
           (μZ μ p) h_g_meas_m h_indicator_meas
-      -- The integrand: g x · indicator x. Compare to F a x: F a x = indicator x · MRatio · ratio · exp(...)
+      -- The integrand: g x · indicator x. Compare to F a x:
+      --   F a x = indicator x · MRatio · ratio · exp(...)
       -- After rewrite, it's indicator · g.
       rw [show (fun x => (((shiftZ^[n]) ⁻¹' (coord0 ⁻¹' {a})).indicator (fun _ => (1 : ℝ≥0∞))) x
             * MRatioLowerZ μ p n x

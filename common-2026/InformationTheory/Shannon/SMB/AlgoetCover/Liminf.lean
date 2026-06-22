@@ -208,7 +208,8 @@ theorem blockLogAvgZ_bddAbove_ae
   set eN : (∀ _ : ℕ, α) → (∀ _ : ℤ, α) := fun y i => y i.toNat with heN_def
   have h_blockLogAvgZ_factor : ∀ x : ∀ _ : ℤ, α, ∀ n,
       blockLogAvgZ μ p.toStationaryProcess n x
-        = blockLogAvgZ μ p.toStationaryProcess n (eN (InformationTheory.Shannon.TwoSided.natProj x)) := by
+        = blockLogAvgZ μ p.toStationaryProcess n
+            (eN (InformationTheory.Shannon.TwoSided.natProj x)) := by
     intro x n
     have h_arg : (firstBlockZ (α := α) n) x
         = (firstBlockZ (α := α) n) (eN (InformationTheory.Shannon.TwoSided.natProj x)) := by
@@ -391,11 +392,13 @@ theorem algoet_cover_liminf_bound
   have h_Z := liminf_blockLogAvgZ_ge_entropyRate μ p
   -- Step 2: `blockLogAvgZ n x` depends only on `natProj x`. Define a "trivial
   -- extension" `eN : (ℕ → α) → (ℤ → α)`, `eN y i := y i.toNat`, with
-  -- `natProj (eN y) = y` and `blockLogAvgZ n x = blockLogAvgZ n (eN (InformationTheory.Shannon.TwoSided.natProj x))`.
+  -- `natProj (eN y) = y` and
+  --   `blockLogAvgZ n x = blockLogAvgZ n (eN (InformationTheory.Shannon.TwoSided.natProj x))`.
   set eN : (∀ _ : ℕ, α) → (∀ _ : ℤ, α) := fun y i => y i.toNat with heN_def
   have h_blockLogAvgZ_factor : ∀ x : ∀ _ : ℤ, α, ∀ n,
       blockLogAvgZ μ p.toStationaryProcess n x
-        = blockLogAvgZ μ p.toStationaryProcess n (eN (InformationTheory.Shannon.TwoSided.natProj x)) := by
+        = blockLogAvgZ μ p.toStationaryProcess n
+            (eN (InformationTheory.Shannon.TwoSided.natProj x)) := by
     intro x n
     -- Show: blockLogAvgZ n x = blockLogAvgZ n (eN (natProj x)).
     -- It suffices to show firstBlockZ n x = firstBlockZ n (eN (natProj x)).
@@ -408,15 +411,19 @@ theorem algoet_cover_liminf_bound
     unfold blockLogAvgZ
     rw [h_arg]
   -- Step 3: rewrite `h_Z` via `h_blockLogAvgZ_factor` so the predicate factors through
-  -- natProj: P(x) = (entropyRate ≤ liminf (blockLogAvgZ n (eN (InformationTheory.Shannon.TwoSided.natProj x)))).
+  -- natProj:
+  --   P(x) = (entropyRate ≤ liminf
+  --     (blockLogAvgZ n (eN (InformationTheory.Shannon.TwoSided.natProj x)))).
   have h_Z' : ∀ᵐ x ∂(μZ μ p.toStationaryProcess),
       entropyRate μ p.toStationaryProcess
         ≤ Filter.liminf
-            (fun n => blockLogAvgZ μ p.toStationaryProcess n (eN (InformationTheory.Shannon.TwoSided.natProj x)))
+            (fun n => blockLogAvgZ μ p.toStationaryProcess n
+              (eN (InformationTheory.Shannon.TwoSided.natProj x)))
             Filter.atTop := by
     filter_upwards [h_Z] with x hx
     have h_eq : (fun n => blockLogAvgZ μ p.toStationaryProcess n x)
-        = fun n => blockLogAvgZ μ p.toStationaryProcess n (eN (InformationTheory.Shannon.TwoSided.natProj x)) :=
+        = fun n => blockLogAvgZ μ p.toStationaryProcess n
+            (eN (InformationTheory.Shannon.TwoSided.natProj x)) :=
       funext (fun n => h_blockLogAvgZ_factor x n)
     rw [← h_eq]; exact hx
   -- Step 4: push h_Z' through `natProj` to get a (μZ.map natProj)-a.s. statement.

@@ -311,7 +311,8 @@ theorem heatFlow_density_heat_equation_kernel_heat_eq
    heatFlow_density_heat_equation_kernel_x_deriv2 hσ u⟩
 
 -- STEP D of `heatFlow_density_heat_equation`: identify the pinned `pathDeriv2 s x` with the
--- spatial-second-derivative integral `∫ y, pX y · ∂²_x kernel`, using the `pathDeriv1` / `pathDeriv2`
+-- spatial-second-derivative integral `∫ y, pX y · ∂²_x kernel`, using the
+-- `pathDeriv1` / `pathDeriv2`
 -- pins and the spatial-direction domination hypotheses.
 private theorem heatFlow_pathDeriv2_eq_integral
     (pX : ℝ → ℝ)
@@ -328,7 +329,8 @@ private theorem heatFlow_pathDeriv2_eq_integral
     (hFξ1_int : ∀ ξ : ℝ,
       Integrable (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
     (hFξ1'_meas : ∀ ξ : ℝ, AEStronglyMeasurable
-      (fun y => pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-(((ξ - y)) / s)))) volume)
+      (fun y =>
+        pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-(((ξ - y)) / s)))) volume)
     (hbξ1 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
       ‖pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-((ξ - y) / s)))‖ ≤ boundξ1 y)
     (boundξ2 : ℝ → ℝ) (hboundξ2_int : Integrable boundξ2 volume)
@@ -379,7 +381,8 @@ private theorem heatFlow_pathDeriv2_eq_integral
         (Filter.Eventually.of_forall hFξ1_meas) (hFξ1_int ξ) (hFξ1'_meas ξ)
         hbξ1 hboundξ1_int hD1diff
     have hpath : HasDerivAt (fun ξ : ℝ => pPath s ξ)
-        (∫ y, pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-((ξ - y) / s))) ∂volume) ξ := by
+        (∫ y, pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-((ξ - y) / s))) ∂volume)
+        ξ := by
       rw [hpPaths]; exact hgξ.2
     exact (hpathDeriv1 s ξ).unique hpath
   -- D2: identify `pathDeriv2 s x` (spatial 2nd deriv) with `∫ y, pX y · ∂²_x kernel`.
@@ -459,7 +462,8 @@ theorem heatFlow_density_heat_equation
     (hFξ1_int : ∀ ξ : ℝ,
       Integrable (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
     (hFξ1'_meas : ∀ ξ : ℝ, AEStronglyMeasurable
-      (fun y => pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-(((ξ - y)) / s)))) volume)
+      (fun y =>
+        pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-(((ξ - y)) / s)))) volume)
     (hbξ1 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
       ‖pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-((ξ - y) / s)))‖ ≤ boundξ1 y)
     (boundξ2 : ℝ → ℝ) (hboundξ2_int : Integrable boundξ2 volume)
@@ -507,14 +511,16 @@ theorem heatFlow_density_heat_equation
       (bound := boundσ) hs_nhds hFσ_meas hFσ_int hFσ'_meas hbσ hboundσ_int hAdiff
   -- hAgate.2 : HasDerivAt (fun σ => ∫ y, pX y · kernel σ (x-y))
   --              (∫ y, pX y · (1/2)(kernel s (x-y)(…))) s
-  have hA : HasDerivAt (fun σ : ℝ => ∫ y, pX y * heatFlow_density_heat_equation_kernel σ (x - y) ∂volume)
+  have hA : HasDerivAt
+      (fun σ : ℝ => ∫ y, pX y * heatFlow_density_heat_equation_kernel σ (x - y) ∂volume)
       (∫ y, pX y * ((1/2) * (heatFlow_density_heat_equation_kernel s (x - y)
         * ((x - y) ^ 2 / s ^ 2 - 1 / s))) ∂volume) s := hAgate.2
   -- =========================================================================
   -- STEP B: transfer `hA` to `fun σ => pPath σ x` (they agree on `sset ∈ 𝓝 s`).
   -- =========================================================================
   have hEq : (fun σ : ℝ => pPath σ x)
-      =ᶠ[nhds s] (fun σ : ℝ => ∫ y, pX y * heatFlow_density_heat_equation_kernel σ (x - y) ∂volume) := by
+      =ᶠ[nhds s] (fun σ : ℝ =>
+        ∫ y, pX y * heatFlow_density_heat_equation_kernel σ (x - y) ∂volume) := by
     filter_upwards [hs_nhds] with σ hσ
     have hσpos : 0 < σ := hσ_pos σ hσ
     rw [hpPath σ hσpos]

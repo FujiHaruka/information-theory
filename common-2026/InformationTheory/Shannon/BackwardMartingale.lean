@@ -274,7 +274,8 @@ private lemma upperCrossingTime_le_of_witness {a b : ℝ}
     --              = hittingBtwn g (Iic a) (upperCrossingTime k ω) N ω`.
     rw [upperCrossingTime_succ]
     unfold lowerCrossingTimeAux
-    -- We need: `hittingBtwn g (Ici b) (hittingBtwn g (Iic a) (upperCrossingTime k ω) N ω) N ω ≤ t k`
+    -- We need:
+    -- `hittingBtwn g (Ici b) (hittingBtwn g (Iic a) (upperCrossingTime k ω) N ω) N ω ≤ t k`
     -- Use `hittingBtwn_le_of_mem` (the outer hit ≤ t k since g (t k) ∈ Ici b and t k is reachable).
     -- First, bound the inner `lowerAux` ≤ s k.
     have h_inner_le_sk : hittingBtwn g (Set.Iic a) (upperCrossingTime a b g N k ω) N ω ≤ s k := by
@@ -320,7 +321,8 @@ private lemma upperCrossingTime_one_pos {a b : ℝ} (hab : a < b)
   by_contra h
   push Not at h
   have h_eq : upperCrossingTime a b g N 1 ω = 0 := Nat.le_zero.mp h
-  -- The recursive form: `upperCrossingTime 1 ω = hittingBtwn g (Ici b) (lowerCrossingTimeAux a g 0 N) N ω`.
+  -- The recursive form:
+  -- `upperCrossingTime 1 ω = hittingBtwn g (Ici b) (lowerCrossingTimeAux a g 0 N) N ω`.
   -- And `lowerCrossingTime a b g N 0 ω = hittingBtwn g (Iic a) 0 N ω`.
   -- Note `lowerCrossingTimeAux a g 0 N ω = lowerCrossingTime a b g N 0 ω`.
   have h_low_eq : lowerCrossingTimeAux a g (upperCrossingTime a b g N 0 ω) N ω
@@ -336,9 +338,11 @@ private lemma upperCrossingTime_one_pos {a b : ℝ} (hab : a < b)
       intro hN0
       simp [hN0, upcrossingsBefore_zero] at h_pos)) hab h_pos
   have h_low0_ne_N : lowerCrossingTime a b g N 0 ω ≠ N := h_low0_lt_N.ne
-  have h_g_low0 : g (lowerCrossingTime a b g N 0 ω) ω ≤ a := stoppedValue_lowerCrossingTime h_low0_ne_N
+  have h_g_low0 : g (lowerCrossingTime a b g N 0 ω) ω ≤ a :=
+    stoppedValue_lowerCrossingTime h_low0_ne_N
   -- From `hittingBtwn g (Ici b) (lowerCrossingTime 0) N ω = 0` and `lowerCrossingTime 0 ≤ 0`
-  -- (since the hittingBtwn always has the start as a lower bound), we get `lowerCrossingTime 0 = 0`.
+  -- (since the hittingBtwn always has the start as a lower bound), we get
+  -- `lowerCrossingTime 0 = 0`.
   have h_low0_zero : lowerCrossingTime a b g N 0 ω = 0 := by
     have h_le_start : lowerCrossingTime a b g N 0 ω ≤
         hittingBtwn g (Set.Ici b) (lowerCrossingTime a b g N 0 ω) N ω := by
@@ -467,9 +471,11 @@ private lemma upcrossingsBefore_revPath_ge {a b : ℝ} (hab : a < b)
     · intro i hi
       simp only [hs'_def, ht'_def]
       -- N - τ_{k-i} ≤ N - σ_{k-i-1} iff σ_{k-i-1} ≤ τ_{k-i}.
-      -- Use h_tau_le_sig: τ_{k-i-1} = upperCrossingTime ((k-i-1)+1) ≤ lowerCrossingTime ((k-i-1)+1) = σ_{k-i}.
+      -- Use h_tau_le_sig: τ_{k-i-1} = upperCrossingTime ((k-i-1)+1) ≤
+      -- lowerCrossingTime ((k-i-1)+1) = σ_{k-i}.
       -- Wait we want σ_{k-i-1} ≤ τ_{k-i} = upperCrossingTime (k-i-1+1) = upperCrossingTime (k-i).
-      -- σ_{k-i-1} = lowerCrossingTime (k-i-1) ≤ upperCrossingTime (k-i) by lowerCrossingTime_le_upperCrossingTime_succ.
+      -- σ_{k-i-1} = lowerCrossingTime (k-i-1) ≤ upperCrossingTime (k-i) by
+      -- lowerCrossingTime_le_upperCrossingTime_succ.
       have h_le : lowerCrossingTime a b g N (k - (i + 1)) ω
                 ≤ upperCrossingTime a b g N (k - i) ω := by
         have h_eq : k - i = (k - (i + 1)) + 1 := by omega
@@ -575,15 +581,18 @@ theorem BackwardMartingale.upcrossings_ae_lt_top
   have h_proxy_subm : ∀ N : ℕ, Submartingale (reverseProxy N f) (reverseFiltration N ℋ) μ :=
     fun N => (reverseProxy_isMartingale hf).submartingale
   -- Doob's bound on the proxy: uniform in N.
-  -- `(b - a) * 𝔼[upcrossingsBefore a b (proxy N) N] ≤ 𝔼[(proxy N N - a)^+] = 𝔼[(f(toDual 0) - a)^+]`.
+  -- `(b - a) * 𝔼[upcrossingsBefore a b (proxy N) N] ≤ 𝔼[(proxy N N - a)^+]
+  --    = 𝔼[(f(toDual 0) - a)^+]`.
   have h_proxy_top : ∀ N : ℕ, ∀ ω, reverseProxy N f N ω = f (OrderDual.toDual 0) ω := by
     intro N ω; simp [reverseProxy]
   -- Set the constant bound `C := 𝔼[(f(toDual 0) - a)^+]` (finite from integrability).
   set C : ℝ := μ[fun ω => (f (OrderDual.toDual 0) ω - a)⁺] with hC_def
-  have h_doob : ∀ N : ℕ, (b - a) * μ[fun ω => (upcrossingsBefore a b (reverseProxy N f) N ω : ℝ)] ≤ C := by
+  have h_doob : ∀ N : ℕ,
+      (b - a) * μ[fun ω => (upcrossingsBefore a b (reverseProxy N f) N ω : ℝ)] ≤ C := by
     intro N
     have h1 := (h_proxy_subm N).mul_integral_upcrossingsBefore_le_integral_pos_part a b N
-    -- `h1 : (b - a) * μ[upcrossingsBefore a b (reverseProxy N f) N] ≤ μ[fun ω => (reverseProxy N f N ω - a)⁺]`
+    -- `h1 : (b - a) * μ[upcrossingsBefore a b (reverseProxy N f) N] ≤
+    --        μ[fun ω => (reverseProxy N f N ω - a)⁺]`
     have h_eq : (fun ω => (reverseProxy N f N ω - a)⁺) =
                 (fun ω => (f (OrderDual.toDual 0) ω - a)⁺) := by
       funext ω; rw [h_proxy_top]
@@ -621,7 +630,8 @@ theorem BackwardMartingale.upcrossings_ae_lt_top
     -- Convert the real integral bound from h_doob into a lintegral bound.
     have h1 := h_doob N
     -- `μ[fun ω => (upcrossingsBefore a b (reverseProxy N f) N ω : ℝ)] = ∫ ω, _ ∂μ`
-    have h2 : ENNReal.ofReal ((b - a) * μ[fun ω => (upcrossingsBefore a b (reverseProxy N f) N ω : ℝ)])
+    have h2 : ENNReal.ofReal ((b - a) *
+                μ[fun ω => (upcrossingsBefore a b (reverseProxy N f) N ω : ℝ)])
               ≤ ENNReal.ofReal C :=
       ENNReal.ofReal_le_ofReal h1
     -- Rewrite: `ENNReal.ofReal (x * y) = ENNReal.ofReal x * ENNReal.ofReal y` for `x ≥ 0`.
@@ -634,7 +644,8 @@ theorem BackwardMartingale.upcrossings_ae_lt_top
       funext ω; exact ENNReal.ofReal_natCast _
     rw [h_cast] at h2
     exact h2
-  -- Combining path-reversal with proxy bound: `(b-a) * ∫⁻ upcrossingsBefore g N ∂μ ≤ ofReal C + (b-a) * μ Set.univ`.
+  -- Combining path-reversal with proxy bound:
+  -- `(b-a) * ∫⁻ upcrossingsBefore g N ∂μ ≤ ofReal C + (b-a) * μ Set.univ`.
   -- Since `μ` is a probability measure, `μ Set.univ = 1`, so the bound is `ofReal C + (b - a)`.
   have h_g_lint : ∀ N : ℕ,
       ENNReal.ofReal (b - a) * ∫⁻ ω, (upcrossingsBefore a b g N ω : ℝ≥0∞) ∂μ
@@ -646,7 +657,8 @@ theorem BackwardMartingale.upcrossings_ae_lt_top
     rw [lintegral_add_right _ measurable_const] at h1
     have h2 : ENNReal.ofReal (b - a) *
               ∫⁻ ω, (upcrossingsBefore a b g N ω : ℝ≥0∞) ∂μ ≤
-              ENNReal.ofReal (b - a) * (∫⁻ ω, (upcrossingsBefore a b (reverseProxy N f) N ω : ℝ≥0∞) ∂μ
+              ENNReal.ofReal (b - a) *
+                (∫⁻ ω, (upcrossingsBefore a b (reverseProxy N f) N ω : ℝ≥0∞) ∂μ
                                           + ∫⁻ _, (1 : ℝ≥0∞) ∂μ) := by
       gcongr
     rw [mul_add] at h2
@@ -660,10 +672,13 @@ theorem BackwardMartingale.upcrossings_ae_lt_top
     calc ENNReal.ofReal (b - a) * ∫⁻ ω, (upcrossingsBefore a b g N ω : ℝ≥0∞) ∂μ
         ≤ _ := h2
       _ ≤ ENNReal.ofReal C + ENNReal.ofReal (b - a) := add_le_add h4 h3
-  -- The path `g` is also strongly adapted (per fixed `n`, `g n` is `ℋ(toDual n)`-strongly measurable,
+  -- The path `g` is also strongly adapted (per fixed `n`, `g n` is
+  -- `ℋ(toDual n)`-strongly measurable,
   -- which is `m₀`-strongly measurable). For our use of monotone convergence on `upcrossingsBefore`,
-  -- we need measurability of `upcrossingsBefore g N`. Use the constant filtration `(⊤ : Filtration ℕ m₀)`.
-  -- Actually `upcrossingsBefore` is measurable iff the underlying path is strongly adapted to SOMETHING,
+  -- we need measurability of `upcrossingsBefore g N`. Use the constant filtration
+  -- `(⊤ : Filtration ℕ m₀)`.
+  -- Actually `upcrossingsBefore` is measurable iff the underlying path is strongly
+  -- adapted to SOMETHING,
   -- and the simplest "something" is the trivial `Filtration ℕ m₀` where every level is `m₀` itself.
   -- We construct that filtration here.
   let ℱtop : Filtration ℕ m₀ := ⊤
@@ -682,7 +697,8 @@ theorem BackwardMartingale.upcrossings_ae_lt_top
   have h_g_meas : ∀ N : ℕ, Measurable (upcrossingsBefore a b g N) :=
     fun N => h_g_adapt.measurable_upcrossingsBefore hab
   -- Pull the lintegral bound into a uniform-in-N supremum bound on `∫⁻ upcrossings`.
-  -- Since `MeasureTheory.upcrossings = ⨆ N upcrossingsBefore` and `upcrossingsBefore` is monotone in N,
+  -- Since `MeasureTheory.upcrossings = ⨆ N upcrossingsBefore` and `upcrossingsBefore`
+  -- is monotone in N,
   -- by `lintegral_iSup`, `∫⁻ upcrossings ≤ liminf ∫⁻ upcrossingsBefore`.
   -- Combined with `∫⁻ upcrossingsBefore ≤ (ofReal C + ofReal (b-a)) / ofReal (b-a)`,
   -- we get a uniform finite bound on `∫⁻ upcrossings`.

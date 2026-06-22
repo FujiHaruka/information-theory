@@ -25,7 +25,8 @@ error of an `n`-sample binary hypothesis test.
 
 ## Main statements
 
-* `chernoffInfo_attained`, `chernoffInfo_nonneg` — the Chernoff information is attained and nonnegative.
+* `chernoffInfo_attained`, `chernoffInfo_nonneg` — the Chernoff information is attained and
+  nonnegative.
 * `convexOn_chernoffLogZ` — `λ ↦ log Z(λ)` is convex on `Icc 0 1`.
 * `hoeffdingE2_attained`, `hoeffdingE2_nonneg`, `hoeffdingE2_unique` — existence, nonnegativity,
   and uniqueness of the Hoeffding minimizer.
@@ -571,7 +572,8 @@ theorem hoeffdingE2_unique
   have h_simplex_convex : Convex ℝ (stdSimplex ℝ α) := convex_stdSimplex ℝ α
   have hQ₁_simplex : Q₁ ∈ stdSimplex ℝ α := hQ₁_mem.1
   have hQ₂_simplex : Q₂ ∈ stdSimplex ℝ α := hQ₂_mem.1
-  -- Strict convexity gives: klDivPmf ((1/2)•Q₁ + (1/2)•Q₂) P₂ < (1/2) klDivPmf Q₁ P₂ + (1/2) klDivPmf Q₂ P₂.
+  -- Strict convexity gives: klDivPmf ((1/2)•Q₁ + (1/2)•Q₂) P₂ <
+  --   (1/2) klDivPmf Q₁ P₂ + (1/2) klDivPmf Q₂ P₂.
   have h_strict := klDivPmf_strictConvexOn_left P₂ hP₂_pos
   have h_half : (0 : ℝ) < (1 / 2 : ℝ) := by norm_num
   have h_half_sum : (1 / 2 : ℝ) + 1 / 2 = 1 := by norm_num
@@ -662,7 +664,8 @@ lemma min_le_rpow_mul_rpow
   -- min a b ^ lam ≤ b ^ lam
   have h2 : (min a b) ^ lam ≤ b ^ lam :=
     Real.rpow_le_rpow h_min_nn (min_le_right _ _) hlam_nn
-  -- Combine: min a b = min a b ^ ((1-lam) + lam) = min a b ^ (1-lam) * min a b ^ lam ≤ a^(1-lam) * b^lam
+  -- Combine: min a b = min a b ^ ((1-lam) + lam) = min a b ^ (1-lam) * min a b ^ lam
+  --   ≤ a^(1-lam) * b^lam
   have h_mul :
       (min a b) ^ (1 - lam) * (min a b) ^ lam ≤ a ^ (1 - lam) * b ^ lam := by
     have h_pow1_nn : 0 ≤ (min a b) ^ (1 - lam) := Real.rpow_nonneg h_min_nn _

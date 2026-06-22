@@ -179,7 +179,8 @@ theorem parallel_concentration_box (P : ℝ) (hP : 0 ≤ P)
     have hn_pos' : (0 : ℝ) < 2 * n := by
       have : 0 < n := i.pos
       positivity
-    have h_subset : T i ⊆ {x : Fin n → ℝ | ENNReal.ofReal (R i ^ 2) ≤ ENNReal.ofReal ((x i) ^ 2)} := by
+    have h_subset : T i ⊆
+        {x : Fin n → ℝ | ENNReal.ofReal (R i ^ 2) ≤ ENNReal.ofReal ((x i) ^ 2)} := by
       intro x hx
       simp only [hT_def, Set.mem_setOf_eq] at hx
       refine ENNReal.ofReal_le_ofReal ?_
@@ -269,7 +270,8 @@ theorem parallelOutput_logDensity_lower_bound (P : ℝ) (hP : 0 ≤ P)
     refine ENNReal.ofReal_le_ofReal ?_
     rw [gaussianPDFReal, hKr_def]
     have hxi : |x i| ≤ R i := hx i
-    have hxi_sq : (x i) ^ 2 ≤ R i ^ 2 := by nlinarith [abs_nonneg (x i), sq_abs (x i), (hR_pos i).le]
+    have hxi_sq : (x i) ^ 2 ≤ R i ^ 2 := by
+      nlinarith [abs_nonneg (x i), sq_abs (x i), (hR_pos i).le]
     have hNi := hN_pos i
     refine mul_le_mul_of_nonneg_left (Real.exp_le_exp.mpr ?_) (by positivity)
     rw [neg_div, neg_div, neg_le_neg_iff,
@@ -287,7 +289,8 @@ theorem parallelOutput_logDensity_lower_bound (P : ℝ) (hP : 0 ≤ P)
         measurableSet_le ((measurable_pi_apply i).abs) measurable_const)
     have h_prod_meas : Measurable
         (fun x : Fin n → ℝ => ∏ i, gaussianPDF (x i) (N i) (z i)) := by
-      have := (piGaussProxy_measurable N).comp (measurable_id.prodMk (measurable_const : Measurable fun _ : Fin n → ℝ => z))
+      have := (piGaussProxy_measurable N).comp
+        (measurable_id.prodMk (measurable_const : Measurable fun _ : Fin n → ℝ => z))
       simpa [piGaussProxy] using this
     calc ENNReal.ofReal (∏ i, Kr i (z i)) * (1 / 2)
         ≤ ENNReal.ofReal (∏ i, Kr i (z i)) * p S := by gcongr
@@ -519,7 +522,8 @@ theorem parallelOutput_centered_secondMoment_eq (P : ℝ) (hP : 0 ≤ P) (i : Fi
     rw [hpi, integral_map hmeas_i.aemeasurable
       (by fun_prop : AEStronglyMeasurable (fun y : ℝ => (y - c) ^ 2) (p.map (fun z => z i)))]
   rw [h_marg_eq]
-  -- the 1-D output second moment: `∫ (y − c)² ∂(outputDistribution pi (awgn (N i))) = ∫ (x − c)² ∂pi + N i`
+  -- the 1-D output second moment:
+  -- `∫ (y − c)² ∂(outputDistribution pi (awgn (N i))) = ∫ (x − c)² ∂pi + N i`
   rw [InformationTheory.Shannon.AWGN.outputDistribution_awgn_eq_conv,
     MeasureTheory.integral_conv (by
       rw [← InformationTheory.Shannon.AWGN.outputDistribution_awgn_eq_conv
@@ -595,7 +599,8 @@ theorem parallelOutputMean_eq (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
   have h_fibre : (fun x : ℝ => ∫ z, (x + z) ∂(gaussianReal 0 (N i))) = fun x => x := by
     funext x
     have h_id_g : Integrable (fun z : ℝ => z) (gaussianReal 0 (N i)) := by
-      have := (memLp_id_gaussianReal (μ := 0) (v := N i) 1).integrable (by norm_num); simpa using this
+      have := (memLp_id_gaussianReal (μ := 0) (v := N i) 1).integrable (by norm_num)
+      simpa using this
     rw [integral_add (integrable_const _) h_id_g, integral_const,
       ProbabilityTheory.integral_id_gaussianReal]
     simp
@@ -744,7 +749,8 @@ theorem parallelFibre_rnDeriv_ae_proxy (hN : ∀ i, (N i : ℝ) ≠ 0) (x : Fin 
         = fun i => gaussianReal (x i) (N i))]
     rw [pi_withDensity_fin (fun _ : Fin n => (volume : Measure ℝ)) hf_meas, volume_pi]
   have h_ac : Measure.pi (fun i => gaussianReal (x i) (N i)) ≪ (volume : Measure (Fin n → ℝ)) :=
-    pi_absolutelyContinuous _ (fun i => gaussianReal_absolutelyContinuous (x i) (by exact_mod_cast hN i))
+    pi_absolutelyContinuous _
+      (fun i => gaussianReal_absolutelyContinuous (x i) (by exact_mod_cast hN i))
   refine h_ac.ae_le ?_
   have h_rn : (Measure.pi (fun i => gaussianReal (x i) (N i))).rnDeriv volume
       =ᵐ[volume] fun y => ∏ i, f i (y i) := by
@@ -875,7 +881,8 @@ theorem parallel_mi_decomp_value (P : ℝ) (hP : 0 ≤ P) (hN : ∀ i, (N i : �
     have hF_meas' : AEStronglyMeasurable
         (fun y => Real.log (q.rnDeriv volume y).toReal) ((p ⊗ₘ W).map Prod.snd) := by
       rw [← h_eq]; exact hF_meas
-    have := (integrable_map_measure hF_meas' measurable_snd.aemeasurable).mp (by rw [← h_eq]; exact h5)
+    have := (integrable_map_measure hF_meas' measurable_snd.aemeasurable).mp
+      (by rw [← h_eq]; exact h5)
     simpa [Function.comp] using this
   have h_lift := parallel_mutualInfoOfChannel_toReal_eq_diffEntropyPi_sub N h_meas h_parallel_meas p
     hW_ac hWx_q hq_ac h_joint_ac g hg_meas hg_ae h_int_fibre h_int_out
@@ -943,7 +950,8 @@ theorem parallel_per_input_mi_le_sum {n : ℕ}
       rw [hμY_def, hcond_def, hW_def]
       exact parallel_mi_decomp_value N h_meas h_parallel_meas p P hP hN hp
     -- condTerm is the constant noise-entropy sum
-    have h_cond_eq : condTerm = ∑ i : Fin n, (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (N i : ℝ)) := by
+    have h_cond_eq : condTerm =
+        ∑ i : Fin n, (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (N i : ℝ)) := by
       rw [hcond_def]
       exact parallel_condTerm_eq_sum_noise_entropy N h_meas h_parallel_meas p hN
     -- per-coord max-entropy bound: h(Yᵢ) ≤ (1/2)log(2πe·Var(Yᵢ)) and Var(Yᵢ) = P'ᵢ + Nᵢ
@@ -964,9 +972,12 @@ theorem parallel_per_input_mi_le_sum {n : ℕ}
       have h_maxent :
           differentialEntropy (μY.map (fun z => z i))
             ≤ (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (v : ℝ)) := by
-        have hμac := parallelOutput_marginal_absolutelyContinuous_volume N h_meas h_parallel_meas p hN i
-        have hvar_int := parallelOutput_variance_integrable N h_meas h_parallel_meas p P hP i (hN i) hp
-        have hent_int := parallelOutput_marginal_entropy_integrable N h_meas h_parallel_meas p P hP i (hN i) hp
+        have hμac :=
+          parallelOutput_marginal_absolutelyContinuous_volume N h_meas h_parallel_meas p hN i
+        have hvar_int :=
+          parallelOutput_variance_integrable N h_meas h_parallel_meas p P hP i (hN i) hp
+        have hent_int :=
+          parallelOutput_marginal_entropy_integrable N h_meas h_parallel_meas p P hP i (hN i) hp
         rw [← hW_def, ← hμY_def] at hμac hvar_int hent_int
         refine differentialEntropy_le_gaussian_of_variance_le hμac (m i) hv_ne rfl ?_ ?_ ?_
         · rw [hv_coe]
@@ -999,15 +1010,19 @@ theorem parallel_per_input_mi_le_sum {n : ℕ}
             sub_le_sub_right h_maxent _
         _ = (1/2) * Real.log (1 + (varY i - (N i : ℝ)) / (N i : ℝ)) := h_log_alg
     -- assemble via the genuine subadditivity wrapper
-    have h_marg_ac := fun i => parallelOutput_marginal_absolutelyContinuous_volume N h_meas h_parallel_meas p hN i
+    have h_marg_ac := fun i =>
+      parallelOutput_marginal_absolutelyContinuous_volume N h_meas h_parallel_meas p hN i
     have hμ_ac := parallelOutput_absolutelyContinuous_volume N h_meas h_parallel_meas p hN
-    have h_joint_ac := parallelOutput_absolutelyContinuous_pi_marginals N h_meas h_parallel_meas p hN
+    have h_joint_ac :=
+      parallelOutput_absolutelyContinuous_pi_marginals N h_meas h_parallel_meas p hN
     have h_int_marg : ∀ i, Integrable (fun z => Real.log
         (((μY.map (fun z => z i)).rnDeriv volume (z i)).toReal)) μY := by
       intro i
-      have := parallelOutput_marginal_logDensity_integrable N h_meas h_parallel_meas p P hP i (hN i) hp
+      have :=
+        parallelOutput_marginal_logDensity_integrable N h_meas h_parallel_meas p P hP i (hN i) hp
       rwa [← hW_def, ← hμY_def] at this
-    have h_int_joint := parallelOutput_joint_logDensity_integrable N h_meas h_parallel_meas p P hP hN hp
+    have h_int_joint :=
+      parallelOutput_joint_logDensity_integrable N h_meas h_parallel_meas p P hP hN hp
     rw [← hW_def, ← hμY_def] at h_marg_ac hμ_ac h_joint_ac h_int_joint
     exact parallelGaussian_max_ent_le_of_subadditivity μY
       (mutualInfoOfChannel p W).toReal condTerm (fun i => varY i - (N i : ℝ)) N

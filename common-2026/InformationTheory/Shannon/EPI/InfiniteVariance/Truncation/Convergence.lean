@@ -118,7 +118,8 @@ theorem differentialEntropy_map_condTrunc_tendsto (P : Measure Ω) [IsProbabilit
   have hZmeas : Measurable Z := by rcases hZ with rfl | rfl; exacts [hX, hY]
   haveI : IsProbabilityMeasure (P.map Z) :=
     MeasureTheory.Measure.isProbabilityMeasure_map hZmeas.aemeasurable
-  -- abbreviations: `Sn n = {|r| ≤ n}`, `m_n = (P.map Z) (Sn n)`, `p x = ((P.map Z).rnDeriv vol x).toReal`.
+  -- abbreviations: `Sn n = {|r| ≤ n}`, `m_n = (P.map Z) (Sn n)`,
+  --   `p x = ((P.map Z).rnDeriv vol x).toReal`.
   set Sn : ℕ → Set ℝ := fun n => {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
   have hSn_meas : ∀ n, MeasurableSet (Sn n) := fun n =>
     measurableSet_le measurable_norm measurable_const

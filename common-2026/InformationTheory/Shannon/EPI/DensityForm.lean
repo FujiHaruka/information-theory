@@ -463,9 +463,12 @@ theorem entropy_power_inequality_of_density
   obtain ⟨hXZX, hYZY, hX'Y'_indep, hZX_ZY, hpair_indep, hXYZ, hXY_ZXZY_pair⟩ :=
     liftMeasure3_pairwise_indep hX'_meas hY'_meas hZX_meas hZY_meas hZ_meas h_iIndep
   -- noise a.c. (Gaussian)
-  have hZX_ac : (lift.map ZX) ≪ volume := by rw [hZX_law]; exact gaussianReal_absolutelyContinuous 0 one_ne_zero
-  have hZY_ac : (lift.map ZY) ≪ volume := by rw [hZY_law]; exact gaussianReal_absolutelyContinuous 0 one_ne_zero
-  have hZ_ac : (lift.map Z) ≪ volume := by rw [hZ_law]; exact gaussianReal_absolutelyContinuous 0 one_ne_zero
+  have hZX_ac : (lift.map ZX) ≪ volume := by
+    rw [hZX_law]; exact gaussianReal_absolutelyContinuous 0 one_ne_zero
+  have hZY_ac : (lift.map ZY) ≪ volume := by
+    rw [hZY_law]; exact gaussianReal_absolutelyContinuous 0 one_ne_zero
+  have hZ_ac : (lift.map Z) ≪ volume := by
+    rw [hZ_law]; exact gaussianReal_absolutelyContinuous 0 one_ne_zero
   -- density-precondition transport
   have hrn_X : (fun x => ((lift.map X').rnDeriv volume x).toReal)
       = (fun x => ((P.map X).rnDeriv volume x).toReal) := by rw [hmap_X']
@@ -525,8 +528,10 @@ theorem entropy_power_inequality_of_density
   have h_varX_nn : 0 ≤ varX := ProbabilityTheory.variance_nonneg _ _
   have h_varY_nn : 0 ≤ varY := ProbabilityTheory.variance_nonneg _ _
   have h_varS_nn : 0 ≤ varS := ProbabilityTheory.variance_nonneg _ _
-  have h_scale_X := h_scale_general X' ZX hX'_meas hZX_meas hXZX hX'_ac h_mom_X' 1 one_ne_zero hZX_law
-  have h_scale_Y := h_scale_general Y' ZY hY'_meas hZY_meas hYZY hY'_ac h_mom_Y' 1 one_ne_zero hZY_law
+  have h_scale_X :=
+    h_scale_general X' ZX hX'_meas hZX_meas hXZX hX'_ac h_mom_X' 1 one_ne_zero hZX_law
+  have h_scale_Y :=
+    h_scale_general Y' ZY hY'_meas hZY_meas hYZY hY'_ac h_mom_Y' 1 one_ne_zero hZY_law
   have h_scale_sum := h_scale_general (fun p => X' p + Y' p) Z (hX'_meas.add hY'_meas) hZ_meas
     hXYZ hXY'_ac h_mom_XY' 1 one_ne_zero hZ_law
   have h_rescale_X : IsRescaledPathRegular X' ZX lift varX 1 :=

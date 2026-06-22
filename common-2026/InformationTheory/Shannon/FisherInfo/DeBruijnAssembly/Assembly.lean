@@ -132,7 +132,8 @@ private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher
   -- (2) pull out the `(1/2)` constant.
   rw [hstep1, integral_const_mul]
   -- (3) IBP step wall: `∫ (- log p_t - 1)·∂²_x p_t = ∫ (logDeriv p_t)²·p_t`.
-  rw [debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht]
+  rw [debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step pX hpX_nn hpX_meas hpX_int
+        hpX_mass hpX_mom ht]
   -- (4) Fisher value: `∫ (logDeriv p_t)²·p_t = fisherInfoOfDensityReal p_t`,
   --     integrability supplied by the Fisher-finiteness wall.
   rw [fisher_from_logDeriv p_t hp_nn
@@ -413,7 +414,8 @@ private theorem debruijnIdentityV2_holds_assembled_chain_parametric
           (convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x) ∂volume)
         (∫ x, entDeriv x ∂volume) t
       ∧ (∫ x, entDeriv x ∂volume
-          = (1/2) * fisherInfoOfDensityReal (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))) := by
+          = (1/2) *
+              fisherInfoOfDensityReal (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))) := by
   -- the per-`x` closed form `entDerivFn s x`, as a 2-arg function for the atom.
   set entDerivFn : ℝ → ℝ → ℝ := fun s x =>
     (- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x) - 1)
@@ -530,7 +532,8 @@ private theorem debruijnIdentityV2_holds_assembled_chain
   -- value `= (1/2)·fisher`. The `max s 0` neighborhood correction is baked into the
   -- `_parametric` signature (integrand matches the `_chain` conclusion verbatim).
   obtain ⟨entDeriv, hderiv, hval⟩ :=
-    debruijnIdentityV2_holds_assembled_chain_parametric pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
+    debruijnIdentityV2_holds_assembled_chain_parametric pX hpX_nn hpX_meas hpX_int hpX_mass
+      hpX_mom ht
   rw [hval] at hderiv
   exact hderiv
 
@@ -554,7 +557,8 @@ private theorem debruijnIdentityV2_holds_assembled_entropy_eq
   filter_upwards [eventually_gt_nhds ht] with s hs
   -- at `s > 0`: `max s 0 = s`.
   have hmax : max s 0 = s := max_eq_left hs.le
-  -- density identification (general noise variance): instantiate at `v_Z := 1` (recovers `s·1 = s`).
+  -- density identification (general noise variance): instantiate at `v_Z := 1`
+  --   (recovers `s·1 = s`).
   have h1b := pPath_eq_convDensityAdd X Z hX hZ hXZ (1 : ℝ≥0) one_pos hZ_law
     pX hpX_nn hpX_meas hpX_law hs
   -- unfold differentialEntropy = ∫ negMulLog ((rnDeriv).toReal).
@@ -567,7 +571,8 @@ private theorem debruijnIdentityV2_holds_assembled_entropy_eq
     apply NNReal.eq; simp
   rw [hwit1] at h1b
   rw [hwit]
-  -- congr the two integrands a.e. via the density identification + `toReal_ofReal` (convDensityAdd ≥ 0).
+  -- congr the two integrands a.e. via the density identification + `toReal_ofReal`
+  --   (convDensityAdd ≥ 0).
   refine integral_congr_ae ?_
   filter_upwards [h1b] with x hx
   rw [hx]

@@ -111,7 +111,8 @@ noncomputable def isDeBruijnRegularityHyp_of_explicitDensity
         simp only [ne_eq]
         exact (measure_Ioc_lt_top).ne)
       ?_meas (M := C) ?_bdd
-    · exact InformationTheory.Shannon.EPICase1ProducerMeasurability.aestronglyMeasurable_fisherInfo_t
+    · exact
+        InformationTheory.Shannon.EPICase1ProducerMeasurability.aestronglyMeasurable_fisherInfo_t
         hpX_meas hpX_int
     · refine (ae_restrict_iff' measurableSet_Ioc).mpr (Filter.Eventually.of_forall ?_)
       intro t ht
@@ -302,9 +303,12 @@ theorem entropy_power_inequality_of_density_explicit
     InformationTheory.Shannon.EPIDensityForm.liftMeasure3_pairwise_indep
       hX'_meas hY'_meas hZX_meas hZY_meas hZ_meas h_iIndep
   -- noise a.c.
-  have hZX_ac : (lift.map ZX) ≪ volume := by rw [hZX_law]; exact gaussianReal_absolutelyContinuous 0 one_ne_zero
-  have hZY_ac : (lift.map ZY) ≪ volume := by rw [hZY_law]; exact gaussianReal_absolutelyContinuous 0 one_ne_zero
-  have hZ_ac : (lift.map Z) ≪ volume := by rw [hZ_law]; exact gaussianReal_absolutelyContinuous 0 one_ne_zero
+  have hZX_ac : (lift.map ZX) ≪ volume := by
+    rw [hZX_law]; exact gaussianReal_absolutelyContinuous 0 one_ne_zero
+  have hZY_ac : (lift.map ZY) ≪ volume := by
+    rw [hZY_law]; exact gaussianReal_absolutelyContinuous 0 one_ne_zero
+  have hZ_ac : (lift.map Z) ≪ volume := by
+    rw [hZ_law]; exact gaussianReal_absolutelyContinuous 0 one_ne_zero
   -- explicit-density link transport to the lift (lift.map X' = P.map X = withDensity(ofReal∘pX))
   have hpX_law' : lift.map X' = volume.withDensity (fun x => ENNReal.ofReal (pX x)) := by
     rw [hmap_X']; exact hpX_law
@@ -370,8 +374,10 @@ theorem entropy_power_inequality_of_density_explicit
   have h_varX_nn : 0 ≤ varX := ProbabilityTheory.variance_nonneg _ _
   have h_varY_nn : 0 ≤ varY := ProbabilityTheory.variance_nonneg _ _
   have h_varS_nn : 0 ≤ varS := ProbabilityTheory.variance_nonneg _ _
-  have h_scale_X := h_scale_general X' ZX hX'_meas hZX_meas hXZX hX'_ac h_mom_X' 1 one_ne_zero hZX_law
-  have h_scale_Y := h_scale_general Y' ZY hY'_meas hZY_meas hYZY hY'_ac h_mom_Y' 1 one_ne_zero hZY_law
+  have h_scale_X :=
+    h_scale_general X' ZX hX'_meas hZX_meas hXZX hX'_ac h_mom_X' 1 one_ne_zero hZX_law
+  have h_scale_Y :=
+    h_scale_general Y' ZY hY'_meas hZY_meas hYZY hY'_ac h_mom_Y' 1 one_ne_zero hZY_law
   have h_scale_sum := h_scale_general (fun p => X' p + Y' p) Z (hX'_meas.add hY'_meas) hZ_meas
     hXYZ hXY'_ac h_mom_XY' 1 one_ne_zero hZ_law
   have h_rescale_X : IsRescaledPathRegular X' ZX lift varX 1 :=
@@ -431,13 +437,15 @@ theorem isBlachmanConvReady_convGaussian_gaussian (p_base : ℝ → ℝ) {τ : �
   -- `IsBlachmanConvReady (conv p_base g_τ) (conv g_h g_h)`.
   have hg_nn : ∀ x, 0 ≤ gaussianPDFReal 0 ⟨h, hh_pos.le⟩ x := gaussianPDFReal_nonneg _ _
   have hg_meas : Measurable (gaussianPDFReal 0 ⟨h, hh_pos.le⟩) := measurable_gaussianPDFReal _ _
-  have hg_int : Integrable (gaussianPDFReal 0 ⟨h, hh_pos.le⟩) volume := integrable_gaussianPDFReal _ _
+  have hg_int : Integrable (gaussianPDFReal 0 ⟨h, hh_pos.le⟩) volume :=
+    integrable_gaussianPDFReal _ _
   have hg_ne : (⟨h, hh_pos.le⟩ : ℝ≥0) ≠ 0 := by
     intro hc; exact hh_pos.ne' (congrArg NNReal.toReal hc)
   have hg_norm : (∫ x, gaussianPDFReal 0 ⟨h, hh_pos.le⟩ x ∂volume) = 1 :=
     ProbabilityTheory.integral_gaussianPDFReal_eq_one 0 hg_ne
   have hg_mass : 0 < ∫ x, gaussianPDFReal 0 ⟨h, hh_pos.le⟩ x ∂volume := by rw [hg_norm]; norm_num
-  have hbundle := InformationTheory.Shannon.EPIStamSupplyTwoTime.isBlachmanConvReady_convDensityAdd_gaussian_asym
+  have hbundle :=
+    InformationTheory.Shannon.EPIStamSupplyTwoTime.isBlachmanConvReady_convDensityAdd_gaussian_asym
     p_base (gaussianPDFReal 0 ⟨h, hh_pos.le⟩) hτ hh_pos
     hp_nn hp_meas hp_int hp_mass hp_norm
     hg_nn hg_meas hg_int hg_mass hg_norm
@@ -702,13 +710,18 @@ theorem entropyPower_smoothed_epi_perT
     have hsum : MemLp Yt 2 P := by rw [hYt_def]; exact hY_memLp.add hsZ_memLp
     simpa using hsum.integrable_sq
   -- ===== base canonical densities =====
-  haveI hPX_prob : IsProbabilityMeasure (P.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
-  haveI hPY_prob : IsProbabilityMeasure (P.map Y) := Measure.isProbabilityMeasure_map hY.aemeasurable
-  haveI hPS_prob : IsProbabilityMeasure (P.map S) := Measure.isProbabilityMeasure_map hS_meas.aemeasurable
+  haveI hPX_prob : IsProbabilityMeasure (P.map X) :=
+    Measure.isProbabilityMeasure_map hX.aemeasurable
+  haveI hPY_prob : IsProbabilityMeasure (P.map Y) :=
+    Measure.isProbabilityMeasure_map hY.aemeasurable
+  haveI hPS_prob : IsProbabilityMeasure (P.map S) :=
+    Measure.isProbabilityMeasure_map hS_meas.aemeasurable
   -- S ≪ volume
   have hS_ac : (P.map S) ≪ volume := by
     have := map_add_absolutelyContinuous X Y P hX hY
-      (by have := h_iIndep.indepFun (i := (0 : Fin 4)) (j := (1 : Fin 4)) (by decide); simpa using this)
+      (by
+        have := h_iIndep.indepFun (i := (0 : Fin 4)) (j := (1 : Fin 4)) (by decide)
+        simpa using this)
       hX_ac
     simpa [hS_def] using this
   set pX_base : ℝ → ℝ := fun x => ((P.map X).rnDeriv volume x).toReal with hpXb_def

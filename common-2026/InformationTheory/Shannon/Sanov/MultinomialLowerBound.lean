@@ -136,7 +136,8 @@ counts each `x ∈ T_c` with multiplicity = fiber size ≤ `∏ a, Nat.factorial
 preserving fiber structure on x₀). So `n! ≤ |T_c| · ∏ c(a)!`, giving the goal via
 `Nat.multinomial_spec`.
 
-Strategy: use `Fintype.card_le_of_surjective` with a chosen `Ψ : (T_c × Π a, Perm (Fin (c a))) → Perm (Fin n)`
+Strategy: use `Fintype.card_le_of_surjective` with a chosen
+`Ψ : (T_c × Π a, Perm (Fin (c a))) → Perm (Fin n)`
 that is injective. Then `n! = card (Perm Fin n) ≥ |T_c| · ∏ c(a)!`. -/
 private lemma multinomial_le_typeClass_card {n : ℕ} (c : α → ℕ)
     (hc_sum : (∑ a, c a) = n) :
@@ -196,7 +197,8 @@ private lemma multinomial_le_typeClass_card {n : ℕ} (c : α → ℕ)
   let Ψ : Equiv.Perm (Fin n) →
       (typeClassByCount (α := α) (n := n) c) × (∀ a, Equiv.Perm (Fin (c a))) :=
     fun σ => (xMem σ, τOf σ)
-  -- Recovery formula: σ j = (eFibOf (xOf σ) ... (x₀ j) (τOf σ (x₀ j) ((eFib₀ (x₀ j)).symm ⟨j, rfl⟩))).val
+  -- Recovery formula:
+  --   σ j = (eFibOf (xOf σ) ... (x₀ j) (τOf σ (x₀ j) ((eFib₀ (x₀ j)).symm ⟨j, rfl⟩))).val
   have h_recovery : ∀ (σ : Equiv.Perm (Fin n)) (j : Fin n),
       σ j = ((eFibOf (xOf σ) (h_xOf_mem σ) (x₀ j))
               (τOf σ (x₀ j) ((eFib₀ (x₀ j)).symm ⟨j, rfl⟩))).val := by
@@ -227,14 +229,17 @@ private lemma multinomial_le_typeClass_card {n : ℕ} (c : α → ℕ)
     -- Use hxMem_eq and hτ_eq to align both sides as members of the same Subtype.
     -- The most robust way: show the result via `Subtype.ext` after using the membership-coercion.
     -- The Subtype-valued LHS RHS, after taking .val, only require equality at the value level.
-    -- We use the fact that `eFibOf x hx a m` as a Subtype's `.val` is independent of `hx` (only x matters), and depends on x via Fintype.equivOfCardEq.
-    -- The cleanest path: substitute xOf σ with xOf σ' (then membership proofs become equal by Subsingleton).
+    -- We use the fact that `eFibOf x hx a m` as a Subtype's `.val` is independent of `hx`
+    --   (only x matters), and depends on x via Fintype.equivOfCardEq.
+    -- The cleanest path: substitute xOf σ with xOf σ'
+    --   (then membership proofs become equal by Subsingleton).
     set j₀ := (⟨j, (rfl : x₀ j = x₀ j)⟩ : {i : Fin n // x₀ i = x₀ j})
     set k := (eFib₀ (x₀ j)).symm j₀
     -- After unfolding the τ-applications, replace τOf σ with τOf σ' via hτ_eq.
     have h_tau_at : τOf σ (x₀ j) k = τOf σ' (x₀ j) k := by rw [hτ_eq]
     rw [h_tau_at]
-    -- Now both sides: (eFibOf (xOf σ) (h_xOf_mem σ) a (τOf σ' a k)).val vs (eFibOf (xOf σ') ...).val.
+    -- Now both sides:
+    --   (eFibOf (xOf σ) (h_xOf_mem σ) a (τOf σ' a k)).val vs (eFibOf (xOf σ') ...).val.
     -- The pair `(xOf σ, h_xOf_mem σ)` equals `(xOf σ', h_xOf_mem σ')` via `hxMem_eq`.
     -- Use Sigma to consolidate the dependency.
     have h_pair_eq : (⟨xOf σ, h_xOf_mem σ⟩ : (typeClassByCount c)) = ⟨xOf σ', h_xOf_mem σ'⟩ :=
@@ -272,9 +277,12 @@ private lemma multinomial_le_typeClass_card {n : ℕ} (c : α → ℕ)
     rw [h_spec]
     -- |T_c| · ∏ Nat.factorial (c a) ≥ n! = ∏ Nat.factorial (c a) · multinomial.
     -- h_card_le : n! ≤ |T_c| · ∏ Nat.factorial (c a).
-    calc Nat.factorial n ≤ (typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card * ∏ a, Nat.factorial (c a) :=
+    calc Nat.factorial n ≤
+          (typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card *
+            ∏ a, Nat.factorial (c a) :=
           h_card_le
-      _ = (∏ a, Nat.factorial (c a)) * (typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card := by ring
+      _ = (∏ a, Nat.factorial (c a))
+            * (typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card := by ring
   exact Nat.le_of_mul_le_mul_left h_mul_le h_prod_pos
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
@@ -665,7 +673,8 @@ theorem typeClassByCount_Qn_ge
   -- AND |T| ≥ N · n^n / ∏ c^c (the card lower bound).
   have h_qm_prod_nn : 0 ≤ ∏ a : α, qm a ^ (c a) :=
     Finset.prod_nonneg fun a _ => pow_nonneg (hQpos a).le _
-  have h_T_card : (T.card : ℝ) = ((typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card : ℝ) := by
+  have h_T_card : (T.card : ℝ) =
+      ((typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card : ℝ) := by
     rfl
   rw [h_T_card] at *
   -- Goal: N · ((n^n / ∏ c^c) · ∏ qm^c) ≤ |T| · ∏ qm^c.

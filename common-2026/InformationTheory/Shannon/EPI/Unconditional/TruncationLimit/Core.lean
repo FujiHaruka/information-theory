@@ -58,7 +58,8 @@ noncomputable def truncW (P : Measure Ω) (W : Ω → ℝ) (n : ℕ) : Measure �
   ProbabilityTheory.cond P {ω | |W ω| ≤ (n : ℝ)}
 
 /-- Radon–Nikodym derivative of a conditioned measure: for a probability measure `μ` and a
-measurable set `s` of positive mass, `(cond μ s).rnDeriv volume =ᵐ (μ s)⁻¹ · 1_s · μ.rnDeriv volume`.
+measurable set `s` of positive mass,
+`(cond μ s).rnDeriv volume =ᵐ (μ s)⁻¹ · 1_s · μ.rnDeriv volume`.
 
 @audit:ok -/
 theorem rnDeriv_cond_eq (μ : Measure ℝ) [IsProbabilityMeasure μ] {s : Set ℝ}
@@ -135,12 +136,14 @@ Then `crossEnt(μ, ν) = -∫ log fν ∂μ = crossPos - crossNeg`, handled in r
 to avoid the `⊤ - ⊤` indeterminacy. The `⊤`-case Gibbs lands via the universal bound
 `∫⁻ ofReal(-log r) ∂μ ≤ 1` (the content of `klFun ≥ 0`, from `-r log r ≤ 1`). -/
 
-/-- Positive part of the cross-entropy (`ℝ≥0∞`): `∫⁻ x, ofReal (-log ((ν.rnDeriv volume x).toReal)) ∂μ`,
+/-- Positive part of the cross-entropy (`ℝ≥0∞`):
+`∫⁻ x, ofReal (-log ((ν.rnDeriv volume x).toReal)) ∂μ`,
 integrating the negative values of the log-density of `ν` against `μ`. -/
 noncomputable def crossPos (μ ν : Measure ℝ) : ℝ≥0∞ :=
   ∫⁻ x, ENNReal.ofReal (-Real.log ((ν.rnDeriv volume x).toReal)) ∂μ
 
-/-- Negative part of the cross-entropy (`ℝ≥0∞`): `∫⁻ x, ofReal (log ((ν.rnDeriv volume x).toReal)) ∂μ`,
+/-- Negative part of the cross-entropy (`ℝ≥0∞`):
+`∫⁻ x, ofReal (log ((ν.rnDeriv volume x).toReal)) ∂μ`,
 integrating the positive values of the log-density of `ν` against `μ`. -/
 noncomputable def crossNeg (μ ν : Measure ℝ) : ℝ≥0∞ :=
   ∫⁻ x, ENNReal.ofReal (Real.log ((ν.rnDeriv volume x).toReal)) ∂μ
@@ -230,7 +233,8 @@ private theorem ennreal_gibbs_rearranged_of_finite_ent {μ ν : Measure ℝ}
       ≤ crossPos μ ν
         + ∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((μ.rnDeriv volume x).toReal))) ∂volume := by
   -- abbreviations for the four lintegrals (all finite under the regularity preconditions).
-  set A : ℝ≥0∞ := ∫⁻ x, ENNReal.ofReal (Real.negMulLog ((μ.rnDeriv volume x).toReal)) ∂volume with hA
+  set A : ℝ≥0∞ :=
+    ∫⁻ x, ENNReal.ofReal (Real.negMulLog ((μ.rnDeriv volume x).toReal)) ∂volume with hA
   set B : ℝ≥0∞ := ∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((μ.rnDeriv volume x).toReal))) ∂volume
     with hB
   -- finiteness of all four from the integrability preconditions
@@ -289,7 +293,8 @@ theorem ennreal_gibbs_rearranged {μ ν : Measure ℝ}
         + crossNeg μ ν
       ≤ crossPos μ ν
         + ∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((μ.rnDeriv volume x).toReal))) ∂volume := by
-  set A : ℝ≥0∞ := ∫⁻ x, ENNReal.ofReal (Real.negMulLog ((μ.rnDeriv volume x).toReal)) ∂volume with hA
+  set A : ℝ≥0∞ :=
+    ∫⁻ x, ENNReal.ofReal (Real.negMulLog ((μ.rnDeriv volume x).toReal)) ∂volume with hA
   set B : ℝ≥0∞ := ∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((μ.rnDeriv volume x).toReal))) ∂volume
     with hB
   by_cases hA_top : A = ⊤
@@ -354,7 +359,8 @@ theorem ennreal_gibbs_rearranged {μ ν : Measure ℝ}
             ≤ ∫⁻ _, (1 : ℝ≥0∞) ∂ν := by
               refine lintegral_mono_ae ?_
               filter_upwards [μ.rnDeriv_lt_top ν] with x hx
-              -- `μ.rnDeriv ν x = ofReal (r x)`, then `ofReal(r)·ofReal(-log r) = ofReal(-r log r) ≤ 1`.
+              -- `μ.rnDeriv ν x = ofReal (r x)`, then
+              -- `ofReal(r)·ofReal(-log r) = ofReal(-r log r) ≤ 1`.
               rw [hr_def, show μ.rnDeriv ν x = ENNReal.ofReal (μ.rnDeriv ν x).toReal from
                 (ENNReal.ofReal_toReal hx.ne).symm,
                 ← ENNReal.ofReal_mul ENNReal.toReal_nonneg]
@@ -437,9 +443,11 @@ theorem integrable_negMulLog_rnDeriv_map_add_const
   exact (hmp.integrable_comp_emb hf).mp hcomp_int
 
 /-- **convolution density as translate-average** (only the LEFT factor a.c.): for `μW ≪ volume`
-the sum law `μW ∗ μV` is `volume.withDensity (z ↦ ∫⁻ v, f_W (z - v) ∂μV)` where `f_W = μW.rnDeriv vol`.
+the sum law `μW ∗ μV` is `volume.withDensity (z ↦ ∫⁻ v, f_W (z - v) ∂μV)`
+where `f_W = μW.rnDeriv vol`.
 Unlike the route-T `convDensityAdd` machinery (`EPIConvDensity`, which requires **both** components
-a.c.), this only needs `μW` a.c.; `μV` is a general (probability) measure. `lintegral_conv` (Tonelli)
+a.c.), this only needs `μW` a.c.; `μV` is a general (probability) measure.
+`lintegral_conv` (Tonelli)
 + `withDensity_rnDeriv_eq` (recover `μW = vol.withDensity f_W`) + translation invariance.
 @audit:ok -/
 theorem conv_eq_withDensity_translate_average
@@ -508,7 +516,8 @@ theorem map_add_const_withDensity (f : ℝ → ℝ≥0∞) (z : ℝ) :
 
 /-- **per-fibre a.c. (continuous disintegration, sum structure)**: for `W ⊥ V` under `Q` with
 `Q.map W ≪ volume`, the affine-shift fibre `(Q.map W).map (·+z)` (= the per-fibre conditional law
-of `W+V` given `V=z`, via `affineShiftKernel`) is a.c. w.r.t. the sum marginal `(Q.map W) ∗ (Q.map V)`
+of `W+V` given `V=z`, via `affineShiftKernel`) is a.c. w.r.t. the sum marginal
+`(Q.map W) ∗ (Q.map V)`
 for a.e. `z ∂(Q.map V)`. This is the **continuous** version of the general disintegration fact
 `condDistrib z ≪ μ.map X` (Mathlib's general/non-discrete version is absent; the in-tree
 `Bridge.condDistrib_ae_absolutelyContinuous_map` is `[Countable X]`-only, unusable for `X = ℝ`).
@@ -550,7 +559,8 @@ theorem condDistrib_ae_absolutelyContinuous_indep_add
       rw [this]; simp
   have hkey : ∫⁻ z, (volume : Measure ℝ) (Prod.mk z ⁻¹' S) ∂μV = 0 := by
     rw [← Measure.prod_apply hSmeas, Measure.prod_apply_symm hSmeas]
-    simp_rw [show ∀ x : ℝ, (fun v => (v, x)) ⁻¹' S = {v | r x = 0 ∧ 0 < f (x - v)} from fun _ => rfl,
+    simp_rw [show ∀ x : ℝ, (fun v => (v, x)) ⁻¹' S = {v | r x = 0 ∧ 0 < f (x - v)} from
+        fun _ => rfl,
       hslice_x, lintegral_zero]
   have hae_slice : ∀ᵐ z ∂μV, (volume : Measure ℝ) (Prod.mk z ⁻¹' S) = 0 :=
     (lintegral_eq_zero_iff (measurable_measure_prodMk_left hSmeas)).mp hkey
@@ -562,7 +572,8 @@ theorem condDistrib_ae_absolutelyContinuous_indep_add
   rw [setLIntegral_eq_zero_iff hA hr_meas] at hA0
   rw [setLIntegral_eq_zero_iff hA hfz_meas]
   have hnull2 : ∀ᵐ x ∂volume, ¬ (r x = 0 ∧ 0 < f (x - z)) := by
-    rw [ae_iff]; convert (hz : (volume : Measure ℝ) (Prod.mk z ⁻¹' S) = 0) using 2; ext x; simp [hS_def]
+    rw [ae_iff]
+    convert (hz : (volume : Measure ℝ) (Prod.mk z ⁻¹' S) = 0) using 2; ext x; simp [hS_def]
   filter_upwards [hA0, hnull2] with x hx0 hxsub hxA
   by_contra hne
   exact hxsub ⟨hx0 hxA, pos_iff_ne_zero.mpr hne⟩
@@ -695,7 +706,8 @@ theorem negPart_negMulLog_conv_single_ne_top
     conv_eq_withDensity_translate_average μW μV hμW
   have hrho_meas : Measurable (fun z => ∫⁻ v, fWe (z - v) ∂μV) :=
     (hfWe_meas.comp (measurable_fst.sub measurable_snd)).lintegral_prod_right'
-  -- `r =ᵐ[vol] fun z => ∫ v, fW (z-v) ∂μV`  (toReal of the convolution density, μV is a prob measure).
+  -- `r =ᵐ[vol] fun z => ∫ v, fW (z-v) ∂μV`
+  -- (toReal of the convolution density, μV is a prob measure).
   have hr_conv : r =ᵐ[volume] fun z => ∫ v, fW (z - v) ∂μV := by
     have h_rn : (μW ∗ μV).rnDeriv volume =ᵐ[volume] fun z => ∫⁻ v, fWe (z - v) ∂μV := by
       rw [hconv]; exact Measure.rnDeriv_withDensity volume hrho_meas

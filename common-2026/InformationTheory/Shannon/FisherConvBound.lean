@@ -1,12 +1,15 @@
 import InformationTheory.Shannon.EPI.Conv.Density
-import InformationTheory.Shannon.EPI.Conv.DensitySecondDeriv          -- convDensityAdd_deriv1_gaussian_eq
+-- convDensityAdd_deriv1_gaussian_eq
+import InformationTheory.Shannon.EPI.Conv.DensitySecondDeriv
 import InformationTheory.Shannon.FisherInfo.OfDensity
 import InformationTheory.Shannon.FisherInfo.DeBruijn   -- V2 Gaussian closed form J(𝒩(0,s))=1/s
-import InformationTheory.Shannon.FisherInfo.DeBruijnPerTime        -- convDensityAdd_pos / fisher_from_logDeriv
+-- convDensityAdd_pos / fisher_from_logDeriv
+import InformationTheory.Shannon.FisherInfo.DeBruijnPerTime
 import InformationTheory.Shannon.StamGaussianBound       -- stam_fisher_arith
 import Mathlib.MeasureTheory.Integral.Bochner.Basic          -- integral_mul_le_Lp_mul_Lq_of_nonneg
 import Mathlib.MeasureTheory.Measure.Prod                    -- lintegral_lintegral_swap
-import Mathlib.Probability.Distributions.Gaussian.Real       -- variance_fun_id_gaussianReal / integral_gaussianReal_eq_integral_smul
+-- variance_fun_id_gaussianReal / integral_gaussianReal_eq_integral_smul
+import Mathlib.Probability.Distributions.Gaussian.Real
 
 /-!
 # Stam convolution Fisher information bound `J(pX ∗ g_s) ≤ 1/s`
@@ -79,7 +82,8 @@ theorem convSecondMoment_integrand_integrable
     (pX : ℝ → ℝ) (_hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)
     {s : ℝ} (hs : 0 < s) (x : ℝ) :
     Integrable (fun y => (x - y) ^ 2 * (pX y * gaussianPDFReal 0 ⟨s, hs.le⟩ (x - y))) volume := by
-  -- global bound for `u ↦ u² · g_s(u)`: `u² exp(-u²/(2s)) = 2s·(u²/(2s))·exp(-u²/(2s)) ≤ 2s·exp(-1)`.
+  -- global bound for `u ↦ u² · g_s(u)`:
+  --   `u² exp(-u²/(2s)) = 2s·(u²/(2s))·exp(-u²/(2s)) ≤ 2s·exp(-1)`.
   set C : ℝ := (Real.sqrt (2 * Real.pi * (⟨s, hs.le⟩ : ℝ≥0)))⁻¹ * (2 * s * Real.exp (-1)) with hC
   have hcoe : ((⟨s, hs.le⟩ : ℝ≥0) : ℝ) = s := rfl
   have hbnd : ∀ u : ℝ, u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u ≤ C := by
@@ -88,7 +92,8 @@ theorem convSecondMoment_integrand_integrable
     -- `(u²/(2s)) · exp(-(u²/(2s))) ≤ exp(-1)`
     have hexp := Real.mul_exp_neg_le_exp_neg_one (u ^ 2 / (2 * s))
     have hpref_nn : (0 : ℝ) ≤ (Real.sqrt (2 * Real.pi * (⟨s, hs.le⟩ : ℝ≥0)))⁻¹ := by positivity
-    -- unfold gaussianPDFReal (centered): `(√(2πs))⁻¹ · exp(-u²/(2s))`; coercion `↑⟨s,_⟩ = s` is defeq.
+    -- unfold gaussianPDFReal (centered): `(√(2πs))⁻¹ · exp(-u²/(2s))`;
+    --   coercion `↑⟨s,_⟩ = s` is defeq.
     rw [hC]
     show u ^ 2 * ((Real.sqrt (2 * Real.pi * s))⁻¹ * Real.exp (-(u - 0) ^ 2 / (2 * s)))
       ≤ (Real.sqrt (2 * Real.pi * s))⁻¹ * (2 * s * Real.exp (-1))
@@ -138,8 +143,10 @@ theorem convScore_sq_le_pointwise
     Filter.Eventually.of_forall fun y => Real.sqrt_nonneg _
   -- measurability of `w` and its sqrt.
   have hw_meas : Measurable (fun y => pX y * g (x - y)) :=
-    hpX_meas.mul ((measurable_gaussianPDFReal 0 ⟨s, hs.le⟩).comp (measurable_const.sub measurable_id))
-  -- integrability of `w := pX(x-·)·g` (= the convolution integrand, `pX` integrable × bounded Gaussian).
+    hpX_meas.mul ((measurable_gaussianPDFReal 0 ⟨s, hs.le⟩).comp
+      (measurable_const.sub measurable_id))
+  -- integrability of `w := pX(x-·)·g`
+  --   (= the convolution integrand, `pX` integrable × bounded Gaussian).
   have hw_int : Integrable (fun y => pX y * g (x - y)) volume := by
     refine hpX_int.mul_bdd (c := (Real.sqrt (2 * Real.pi * (⟨s, hs.le⟩ : ℝ≥0)))⁻¹) ?_ ?_
     · exact ((measurable_gaussianPDFReal 0 ⟨s, hs.le⟩).comp
@@ -241,7 +248,8 @@ theorem convDensityAdd_deriv_eq
     have : Continuous (fun u : ℝ => heatFlow_density_heat_equation_kernel s u) := by
       unfold heatFlow_density_heat_equation_kernel; fun_prop
     exact this.measurable
-  -- global bound `M1` for `|g_s(u)·(-u/s)|`: `(√2πs)⁻¹·(|u|exp(-u²/2s))/s`, `|u|exp(-u²/2s) ≤ √(s·exp(-1))`.
+  -- global bound `M1` for `|g_s(u)·(-u/s)|`: `(√2πs)⁻¹·(|u|exp(-u²/2s))/s`,
+  --   `|u|exp(-u²/2s) ≤ √(s·exp(-1))`.
   -- key: `|u|·exp(-u²/(2s)) ≤ √(s·exp(-1))` (square both sides; `(u²/s)exp(-u²/s) ≤ exp(-1)`).
   have hum_bnd : ∀ u : ℝ, |u| * Real.exp (-u ^ 2 / (2 * s)) ≤ Real.sqrt (s * Real.exp (-1)) := by
     intro u
@@ -270,7 +278,8 @@ theorem convDensityAdd_deriv_eq
       abs_neg, abs_div, abs_of_pos hs]
     -- `(√2πs)⁻¹·(exp·(|u|/s)) ≤ (√2πs)⁻¹·(√(s exp(-1))/s)`
     rw [show (Real.sqrt (2 * Real.pi * s))⁻¹ * Real.exp (-u ^ 2 / (2 * s)) * (|u| / s)
-          = (Real.sqrt (2 * Real.pi * s))⁻¹ * ((|u| * Real.exp (-u ^ 2 / (2 * s))) / s) from by ring]
+          = (Real.sqrt (2 * Real.pi * s))⁻¹ * ((|u| * Real.exp (-u ^ 2 / (2 * s))) / s)
+            from by ring]
     refine mul_le_mul_of_nonneg_left ?_ hpref_nn
     gcongr
     exact hum_bnd u
@@ -428,7 +437,8 @@ theorem gaussianConv_fisher_le_inv_var
     have hxint : Integrable (fun x => K x y) volume := by
       refine ((hshift_int y).const_mul (pX y)).congr (Filter.Eventually.of_forall fun x => ?_)
       simp only [hK_def]; ring
-    rw [← ofReal_integral_eq_lintegral_ofReal hxint (Filter.Eventually.of_forall fun x => hK_nn x y)]
+    rw [← ofReal_integral_eq_lintegral_ofReal hxint
+        (Filter.Eventually.of_forall fun x => hK_nn x y)]
     congr 1
     rw [show (fun x => K x y) = (fun x => pX y * ((x - y) ^ 2 * g (x - y))) from by
       funext x; simp only [hK_def]; ring, integral_const_mul, hshift_val y]

@@ -386,15 +386,20 @@ theorem differentialEntropy_indep_gaussian_add_ge
       condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z ≪ volume)
     (hκ_logp_int : ∀ᵐ z ∂(μ.map Z), Integrable
       (fun x => ((condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z).rnDeriv volume x).toReal
-        * Real.log (((condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z).rnDeriv volume x).toReal)) volume)
+        * Real.log
+            (((condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z).rnDeriv volume x).toReal))
+        volume)
     (hκ_cross_int : ∀ᵐ z ∂(μ.map Z), Integrable
       (fun x => ((condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z).rnDeriv volume x).toReal
         * Real.log (((μ.map (fun ω => X ω + Real.sqrt s * Z ω)).rnDeriv volume x).toReal)) volume)
     (h_fibreEnt_int : Integrable
-      (fun z => differentialEntropy (condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z)) (μ.map Z))
+      (fun z => differentialEntropy (condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z))
+      (μ.map Z))
     (h_cross_int : Integrable
-      (fun z => ∫ x, ((condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z).rnDeriv volume x).toReal
-        * Real.log (((μ.map (fun ω => X ω + Real.sqrt s * Z ω)).rnDeriv volume x).toReal) ∂volume) (μ.map Z))
+      (fun z => ∫ x,
+        ((condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z).rnDeriv volume x).toReal
+          * Real.log (((μ.map (fun ω => X ω + Real.sqrt s * Z ω)).rnDeriv volume x).toReal) ∂volume)
+      (μ.map Z))
     (h_logq_int : Integrable
       (fun x => Real.log (((μ.map (fun ω => X ω + Real.sqrt s * Z ω)).rnDeriv volume x).toReal))
       (μ.map (fun ω => X ω + Real.sqrt s * Z ω))) :
@@ -439,18 +444,35 @@ theorem negMulLog_convDensity_entropy_ge
     (hκ_v : ∀ᵐ z ∂(μ.map Z),
       condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z ≪ volume)
     (hκ_logp_int : ∀ᵐ z ∂(μ.map Z), Integrable
-      (fun x => ((condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv volume x).toReal
-        * Real.log (((condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv volume x).toReal)) volume)
+      (fun x =>
+        ((condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv
+            volume x).toReal
+          * Real.log
+              (((condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv
+                volume x).toReal)) volume)
     (hκ_cross_int : ∀ᵐ z ∂(μ.map Z), Integrable
-      (fun x => ((condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv volume x).toReal
-        * Real.log (((μ.map (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω)).rnDeriv volume x).toReal)) volume)
+      (fun x =>
+        ((condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv
+            volume x).toReal
+          * Real.log
+              (((μ.map (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω)).rnDeriv volume x).toReal))
+        volume)
     (h_fibreEnt_int : Integrable
-      (fun z => differentialEntropy (condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z)) (μ.map Z))
+      (fun z =>
+        differentialEntropy (condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z))
+      (μ.map Z))
     (h_cross_int : Integrable
-      (fun z => ∫ x, ((condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv volume x).toReal
-        * Real.log (((μ.map (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω)).rnDeriv volume x).toReal) ∂volume) (μ.map Z))
+      (fun z => ∫ x,
+        ((condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv
+            volume x).toReal
+          * Real.log
+              (((μ.map (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω)).rnDeriv volume x).toReal)
+          ∂volume)
+      (μ.map Z))
     (h_logq_int : Integrable
-      (fun x => Real.log (((μ.map (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω)).rnDeriv volume x).toReal))
+      (fun x =>
+        Real.log
+          (((μ.map (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω)).rnDeriv volume x).toReal))
       (μ.map (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω))) :
     (∫ x, Real.negMulLog (pX x) ∂volume)
       ≤ ∫ x, Real.negMulLog
