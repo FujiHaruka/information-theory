@@ -142,6 +142,10 @@ import InformationTheory.Shannon.AWGN.ConverseMutualInfoFiniteness
 import InformationTheory.Shannon.AWGN.ConverseCapacityBound
 import InformationTheory.Shannon.AWGN.KLCapacityAndAEP
 import InformationTheory.Shannon.AWGN.PerCodewordPowerConstraint
+import InformationTheory.Shannon.AWGN.ConverseMIChainRule.PerLetterIntegrability
+import InformationTheory.Shannon.AWGN.ConverseMIChainRule.BlockMI
+import InformationTheory.Shannon.AWGN.ConverseMIChainRule.PerLetterMI
+import InformationTheory.Shannon.AWGN.ConverseMIChainRule.Markov
 import InformationTheory.Shannon.AWGN.ConverseMIChainRule
 import InformationTheory.Shannon.AWGN.AchievabilityAEP
 import InformationTheory.Shannon.ParallelGaussian.Basic
