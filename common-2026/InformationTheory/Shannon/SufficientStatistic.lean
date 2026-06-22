@@ -20,7 +20,7 @@ If `T` is sufficient for `θ` (i.e., the chain `X → T(X) → θ` is Markov), t
 
 ## Main statements
 
-* `mutualInfo_eq_of_sufficient` — Cover-Thomas 2.9: sufficiency implies `I(θ; X) = I(θ; T(X))`.
+* `mutualInfo_eq_of_sufficient` — sufficiency implies `I(θ; X) = I(θ; T(X))`.
 * `isSufficient_iff_factorized` — equivalence of the two forms of sufficiency.
 
 ## Implementation notes
@@ -31,6 +31,10 @@ the main theorem close directly via `mutualInfo_le_of_postprocess` (the ≥ dire
 `mutualInfo_le_of_markov` + `mutualInfo_comm` (the ≤ direction) by `le_antisymm`.
 
 Equivalence with the Neyman-Fisher form is proved via Mathlib's conditional independence API.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Section 2.9.
 -/
 
 namespace InformationTheory.Shannon
@@ -54,7 +58,7 @@ def IsSufficientStatistic
     (θ : Ω → Θ) (Xs : Ω → X) (f : X → T') : Prop :=
   IsMarkovChain μ Xs (fun ω ↦ f (Xs ω)) θ
 
-/-- Cover-Thomas 2.9: if `T` is sufficient for `θ`, then `I(θ; X) = I(θ; T(X))`.
+/-- If `T` is sufficient for `θ`, then `I(θ; X) = I(θ; T(X))`.
 
 `IsSufficientStatistic` is a structural precondition (the Markov chain property), not the
 conclusion itself. The proof is `le_antisymm` with the two directions from DPI.
@@ -95,8 +99,8 @@ def IsSufficientStatisticFactorized
     =ᵐ[μ.map (fun ω ↦ (f (Xs ω), θ ω))]
       (condDistrib Xs (fun ω ↦ f (Xs ω)) μ).prodMkRight Θ
 
-/-- The markov-form and the Neyman-Fisher factorization form of sufficiency are equivalent:
-both express `X ⊥ θ ∣ T(X)`.
+/-- **Neyman-Fisher factorization theorem**: the markov-chain form and the factorization form
+of sufficiency are equivalent (both express `X ⊥ θ ∣ T(X)`).
 
 Proof via Mathlib's conditional independence API:
 - (A) `IsSufficientStatistic` (γ-form joint factorization) ↔ `Xs ⟂ᵢ[f∘Xs] θ`

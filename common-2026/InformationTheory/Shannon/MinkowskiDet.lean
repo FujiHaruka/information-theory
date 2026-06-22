@@ -19,6 +19,9 @@ eigenvalue-shift determinant identity `det (1 + S) = ∏ (1 + eigenvalues S i)`
 (`det_one_add_eq_prod_one_add_eigenvalues`), and the scalar geometric-mean
 superadditivity bound (`geom_mean_superadditive`).
 
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 17.9.1.
 -/
 
 namespace InformationTheory.Shannon
@@ -184,7 +187,7 @@ theorem det_one_add_eq_prod_one_add_eigenvalues
     simp
   rw [hdiag, Matrix.det_diagonal]
 
-/-- Cover-Thomas Theorem 17.9.1: Minkowski determinant inequality.
+/-- **Minkowski determinant inequality**.
 
 For PosDef `A B`, `det(A+B)^(1/n) ≥ det(A)^(1/n) + det(B)^(1/n)`.
 
