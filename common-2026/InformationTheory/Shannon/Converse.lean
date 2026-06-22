@@ -61,7 +61,7 @@ private lemma entropy_of_uniform_msg
   field_simp
 
 omit [DecidableEq M] in
-/-- Single-shot Shannon converse: for a uniformly distributed message `Msg`
+/-- **Single-shot Shannon converse**: for a uniformly distributed message `Msg`
 transmitted via channel output `Yo` and decoded by `decoder`,
 `log |M| ≤ I(Msg; Yo) + h(Pe) + Pe · log(|M| - 1)`,
 where `Pe = errorProb μ Msg Yo decoder = μ {Msg ≠ decoder ∘ Yo}`.

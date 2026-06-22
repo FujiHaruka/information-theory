@@ -746,7 +746,7 @@ section MainTheorem
 
 variable {f : ℕᵒᵈ → Ω → ℝ} {ℋ : Filtration ℕᵒᵈ m₀}
 
-/-- The backward martingale convergence theorem. If `f : ℕᵒᵈ → Ω → ℝ`
+/-- The **backward martingale convergence theorem**. If `f : ℕᵒᵈ → Ω → ℝ`
 is a martingale with respect to an antitone filtration `ℋ : Filtration ℕᵒᵈ m₀`
 and `f (toDual 0)` is integrable, then `n ↦ f (toDual n) ω` converges almost
 everywhere as `n → ∞` to a `⨅ n, ℋ (toDual n)`-measurable limit `g`.
