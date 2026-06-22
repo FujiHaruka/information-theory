@@ -11,16 +11,15 @@ import Mathlib.Tactic.Ring
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# `strict_kraft_one_implies_pairing` keystone (genuine combinatorial heart)
+# The pairing keystone of swap normalization
 
-A self-contained, fully-proved lemma that is the genuine combinatorial heart of the
-Cover–Thomas swap-normalization argument and is not present in Mathlib.
-
-Statement: if `l : β → ℕ` is positive and satisfies the binary Kraft equality
+If `l : β → ℕ` is positive and satisfies the binary Kraft equality
 `∑ c, (2:ℝ)^(-(l c)) = 1`, then the maximum codeword length is attained by at least
-two distinct symbols. Equivalently: there is no unique longest leaf.
+two distinct symbols; equivalently, there is no unique longest leaf.
 
-This is the parity argument: scaling the Kraft equality by `2^M` (where `M` is the max
+## Implementation notes
+
+The argument is a parity one: scaling the Kraft equality by `2^M` (where `M` is the max
 length) turns it into the natural-number identity `∑ c, 2^(M - l c) = 2^M`. If the max
 were unique at `b`, the sum would be `1 + (even)`, i.e. odd, contradicting `2^M` even.
 -/

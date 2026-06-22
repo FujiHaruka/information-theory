@@ -16,7 +16,7 @@ Provides the constructive proof that `SwapNormalizationHypothesis` holds
   elements `(a, b)` (a = global-min, b = second-min), there exists `l_norm` with
   `l_norm a = l_norm b`, Kraft ≤ 1, and expected length ≤ that of `ll`.
 * `swap_normalization_proof` — discharges `SwapNormalizationHypothesis` unconditionally.
-* `huffmanLength_optimal` — Cover–Thomas Theorem 5.8.1: `huffmanLength P` is optimal among
+* `huffmanLength_optimal` — Huffman's theorem: `huffmanLength P` is optimal among
   all Kraft-feasible length functions.
 
 ## Implementation notes
@@ -25,6 +25,10 @@ The swap normalization proof proceeds in three steps:
 1. Shorten `ll` to a complete code `l1` (Kraft = 1) via `shorten_to_kraft_one`.
 2. Find two equal-longest leaves `c₁ ≠ c₂` of `l1` via `exists_two_equal_longest`.
 3. Swap `a ↔ c₁` then `b ↔ c₂` using `swap_step_le`, so that `l_norm a = l_norm b = L`.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 5.8.1.
 -/
 
 namespace InformationTheory.Shannon.Huffman
@@ -126,7 +130,7 @@ theorem swap_normalization_proof : SwapNormalizationHypothesis.{u} := by
   intro β _ _ _ _ _ _ Q _ ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
   exact swap_normalization_strong Q ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
 
-/-- Cover–Thomas Theorem 5.8.1: `huffmanLength P` minimizes expected codeword length
+/-- **Huffman's theorem** (optimality): `huffmanLength P` minimizes expected codeword length
 among all positive Kraft-feasible length functions.
 @audit:ok -/
 @[entry_point]

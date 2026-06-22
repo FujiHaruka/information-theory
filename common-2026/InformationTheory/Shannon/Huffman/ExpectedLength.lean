@@ -44,9 +44,8 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty �
 
 /-! ### Cost-level recurrence for the optimality proof -/
 
-/-- Multiset-level expected length: `∑_p p.2 * (∑_{a ∈ p.1} huffmanLengthAux s a) / p.1.card`.
-By `huffmanLengthAux_const_on_group`, depth is constant on each group, so this equals
-`∑_p p.2 * depth(p)`.
+/-- Multiset-level expected length `∑_p p.2 * (∑_{a ∈ p.1} huffmanLengthAux s a) / p.1.card`.
+Since depth is constant on each group, this equals `∑_p p.2 * depth(p)`.
 @audit:ok -/
 noncomputable def huffmanCost (s : Multiset (Finset α × ℝ)) : ℝ :=
   (s.map (fun p ↦

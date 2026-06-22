@@ -19,8 +19,8 @@ length functions, via the sibling property and `n → n-1` strong induction.
 ## Main statements
 
 * `exists_deepest_leaf` — a deepest leaf of `huffmanLength P` always exists.
-* `exists_sibling_min_pair` — the two minimum-probability elements have equal Huffman length
-  (Cover–Thomas Lemma 5.8.1, sibling property).
+* `exists_sibling_min_pair` — the sibling property: the two minimum-probability elements have
+  equal Huffman length.
 * `huffmanLength_optimal_aux` — induction motor: `huffmanLength P` is optimal among
   Kraft-feasible length functions, given swap normalization as a hypothesis.
 
@@ -31,7 +31,11 @@ and `mergedMeasure` assigns probability `P{a} + P{b}` to the merged element and 
 `mergedMeasure` is constructed as `Measure.sum (fun x => f x • Measure.dirac x)` so that
 `Measure.sum_smul_dirac_singleton` applies directly.
 The induction step avoids a per-symbol depth identity (which would be false for a general
-Huffman tree) by routing through `expectedLength_merged_cost_bridge`, a cost-level equality.
+Huffman tree) and instead uses the cost-level equality `expectedLength_merged_cost_bridge`.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Lemma 5.8.1.
 -/
 
 namespace InformationTheory.Shannon.Huffman
@@ -158,10 +162,10 @@ theorem huffmanLength_eq_of_min_prob_pair
       (∀ c, c ≠ a → P.real {b} ≤ P.real {c}) :=
   huffmanStep_initMultiset_sibling P h_card
 
-/-! ### Sibling property (Cover-Thomas Lemma 5.8.1) -/
+/-! ### Sibling property -/
 
 omit [Nonempty α] [MeasurableSingletonClass α] in
-/-- Cover–Thomas Lemma 5.8.1: the two minimum-probability elements have equal `huffmanLength`.
+/-- **Sibling property**: the two minimum-probability elements have equal `huffmanLength`.
 Returns `a` = global-min probability and `b` = second-min probability. -/
 @[entry_point]
 theorem exists_sibling_min_pair
