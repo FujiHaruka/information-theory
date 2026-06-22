@@ -362,7 +362,7 @@ theorem klDiv_mixture_le
 
 /-! ### Convexity of the rate-distortion function (infimum press) -/
 
-/-- **R(D) is convex**: the rate-distortion function is convex in the distortion
+/-- `R(D)` is convex: the rate-distortion function is convex in the distortion
 threshold (Cover–Thomas 10.4),
 `R(λ D₁ + (1-λ) D₂) ≤ λ R(D₁) + (1-λ) R(D₂)`.
 

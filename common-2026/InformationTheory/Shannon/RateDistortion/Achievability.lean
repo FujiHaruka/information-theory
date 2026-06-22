@@ -75,7 +75,7 @@ theorem blockDistortion_nonneg
 
 /-! ## Block lossy code -/
 
-/-- A **block lossy code** of length `n` with `M` codewords over source alphabet `α`
+/-- A block lossy code of length `n` with `M` codewords over source alphabet `α`
 and reconstruction alphabet `β`: a deterministic encoder `(Fin n → α) → Fin M` and
 decoder `Fin M → (Fin n → β)`. -/
 structure LossyCode (M n : ℕ) (α β : Type*)
@@ -193,7 +193,7 @@ lemma RDConstraint_isCompact (P_X : α → ℝ) (d : DistortionFn α β) (D : �
 
 /-- `mutualInfoPmf q := H(fst) + H(snd) − H(joint)` written via `negMulLog`:
 `I(X;Y) = ∑_a negMulLog(q.fst a) + ∑_b negMulLog(q.snd b) − ∑_{a,b} negMulLog(q(a,b))`.
-This formulation is **continuous on all of `α × β → ℝ`** because `Real.negMulLog`
+This formulation is continuous on all of `α × β → ℝ` because `Real.negMulLog`
 is continuous everywhere (with `negMulLog 0 = 0`). -/
 noncomputable def mutualInfoPmf (q : α × β → ℝ) : ℝ :=
   (∑ a, Real.negMulLog (marginalFst q a))

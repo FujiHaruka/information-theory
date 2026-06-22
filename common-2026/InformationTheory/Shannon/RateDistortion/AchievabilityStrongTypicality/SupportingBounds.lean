@@ -33,7 +33,7 @@ variable [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass �
 
 /-! ## Step A — Per-source-typical match probability lower bound -/
 
-/-- **Step A**: repackage `conditionalStronglyTypicalSlice_mass_ge` for the
+/-- Step A: repackage `conditionalStronglyTypicalSlice_mass_ge` for the
 random-coding chain. For `x` X-strongly-typical (eventually in `n`), the
 probability under the Y-product measure that a random `y` lands in the joint
 strong slice at `x` is bounded below by `exp(-n · (H(X) + H(Y) - H(Z) + slack))`. -/
@@ -76,7 +76,7 @@ theorem per_source_typical_match_prob_strong_ge
 
 /-! ## Step B — Encoder failure probability bound (strong version) -/
 
-/-- **Step B**: For `x ∈ stronglyTypicalSet μ Xs n ε_X` (eventually in `n`),
+/-- Step B: For `x ∈ stronglyTypicalSet μ Xs n ε_X` (eventually in `n`),
 the codebook-averaged probability that *no* codeword is jointly-strongly-typical
 with `x` is bounded by `exp(-M · exp(-n(H(X)+H(Y)-H(Z)+slack)))`. Strong analogue
 of `encoder_failure_prob_le_exp_neg_M_avg`. -/
@@ -512,7 +512,7 @@ theorem rate_distortion_achievability_witness_form_strong
 
 /-! ## Partial-discharge wrapper (strong-encoder variant) -/
 
-/-- **Rate-distortion achievability — partial discharge form (strong-encoder variant).**
+/-- Rate-distortion achievability — partial discharge form (strong-encoder variant).
 The strong-encoder analogue of `rate_distortion_achievability_partial_discharge`,
 with `jointStronglyTypicalLossyEncoder` as the encoder. -/
 theorem rate_distortion_achievability_partial_discharge_strong
@@ -572,7 +572,7 @@ theorem rate_distortion_achievability_partial_discharge_strong
 
 /-! ## Codebook-averaged source-failure sequence (strong-encoder variant) -/
 
-/-- The codebook-averaged source-failure probability for the **strong** lossy
+/-- The codebook-averaged source-failure probability for the strong lossy
 encoder, at the canonical codebook size `M_n := ⌈exp(n·R)⌉`.
 
 The encoder uses the inner slack `ε_join` for `jointStronglyTypicalSet`; the

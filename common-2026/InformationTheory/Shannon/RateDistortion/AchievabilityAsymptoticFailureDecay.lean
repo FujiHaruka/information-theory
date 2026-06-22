@@ -184,7 +184,7 @@ lemma integral_const_add_indicator_one
   simp [Measure.real, IsProbabilityMeasure.measure_univ, mul_comm]
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Codebook-fixed average distortion decomposition.**
+/-- Codebook-fixed average distortion decomposition.
 
 For a fixed deterministic codebook `c : Codebook M n β` and the joint-typical
 lossy encoder, the source-averaged block distortion satisfies

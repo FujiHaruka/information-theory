@@ -56,7 +56,7 @@ variable [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass �
 
 /-! ## Joint strongly typical set -/
 
-/-- **Joint strongly typical set** over the product alphabet `α × β`. A pair
+/-- Joint strongly typical set over the product alphabet `α × β`. A pair
 `(x, y) : (Fin n → α) × (Fin n → β)` is in the set iff the "reshape"
 `fun i => (x i, y i) : Fin n → α × β` lies in the single-axis strongly typical
 set for the joint sequence `jointSequence Xs Ys`.
@@ -94,7 +94,7 @@ lemma jointStronglyTypicalSet_finite
 /-! ### Marginalisation of `typeCount` over a coordinate -/
 
 omit [Fintype α] [MeasurableSingletonClass α] [MeasurableSingletonClass β] in
-/-- **Marginalising the joint type-count over `β` recovers the X type-count**:
+/-- Marginalising the joint type-count over `β` recovers the X type-count:
 `∑_b typeCount (fun i => (x i, y i)) (a, b) = typeCount x a`. -/
 @[entry_point]
 lemma typeCount_joint_sum_snd
@@ -128,7 +128,7 @@ lemma typeCount_joint_sum_snd
   refine ⟨fun ⟨_, hxa, _⟩ ↦ hxa, fun hxa ↦ ⟨y i, hxa, rfl⟩⟩
 
 omit [Fintype β] [MeasurableSingletonClass α] [MeasurableSingletonClass β] in
-/-- **Marginalising the joint type-count over `α` recovers the Y type-count**. -/
+/-- Marginalising the joint type-count over `α` recovers the Y type-count. -/
 @[entry_point]
 lemma typeCount_joint_sum_fst
     {n : ℕ} (x : Fin n → α) (y : Fin n → β) (b : β) :
@@ -158,7 +158,7 @@ lemma typeCount_joint_sum_fst
 
 /-! ### Strong joint ⟹ strong X- and Y-typicality (with widened slack) -/
 
-/-- **Strong joint typicality ⟹ Strong X-typicality (slack widened by `|β|`)**.
+/-- Strong joint typicality ⟹ Strong X-typicality (slack widened by `|β|`).
 Given `(fun i => (x i, y i)) ∈ stronglyTypicalSet μ (jointSequence Xs Ys) n ε` and
 `(μ.map (jointSequence Xs Ys 0)).map Prod.fst = μ.map (Xs 0)`, we have
 `x ∈ stronglyTypicalSet μ Xs n (Fintype.card β · ε)`. -/
@@ -245,7 +245,7 @@ lemma jointStronglyTypicalSet_implies_X_stronglyTypical
     _ = (Fintype.card β : ℝ) * ε := by
         rw [Finset.sum_const, nsmul_eq_mul, Finset.card_univ]
 
-/-- **Strong joint typicality ⟹ Strong Y-typicality (slack widened by `|α|`)**. -/
+/-- Strong joint typicality ⟹ Strong Y-typicality (slack widened by `|α|`). -/
 @[entry_point]
 lemma jointStronglyTypicalSet_implies_Y_stronglyTypical
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -452,7 +452,7 @@ private lemma jointStronglyTypicalSet_indep_perPair_prob_ge
     _ ≤ μXn.real {x} * μYn.real {y} :=
         mul_le_mul_of_nonneg_left hbdY hX_nn
 
-/-- **Strong-typical independent probability lower bound** (mirror of
+/-- Strong-typical independent probability lower bound (mirror of
 `jointlyTypicalSet_indep_prob_ge` for the strong-typicality version).
 
 For an i.i.d. joint sequence with marginals matching `μ.map (Xs 0)` and `μ.map (Ys 0)`,
@@ -618,7 +618,7 @@ theorem jointStronglyTypicalSet_indep_prob_ge
 
 /-! ## Strong-JTS lossy encoder -/
 
-/-- **Strong-JTS lossy encoder**. Parallel to `jointTypicalLossyEncoder` but targets
+/-- Strong-JTS lossy encoder. Parallel to `jointTypicalLossyEncoder` but targets
 `jointStronglyTypicalSet`. Given a codebook `c`, returns some index `m` with
 `(x, c m) ∈ jointStronglyTypicalSet`; falls back to `⟨0, hM⟩` otherwise. -/
 noncomputable def jointStronglyTypicalLossyEncoder
@@ -656,7 +656,7 @@ masses upper-bounded via `typicalSet_prob_le` on `Y`, yielding the
 per-source-typical match-probability lower bound `exp(-n(I(X;Y) + δ(ε)))` of
 Cover–Thomas 10.6.1. -/
 
-/-- **Conditional strong-typical slice.** For a fixed X-block `x : Fin n → α`,
+/-- Conditional strong-typical slice. For a fixed X-block `x : Fin n → α`,
 the Y-fiber of the joint strongly-typical set at `x`. -/
 noncomputable def conditionalStronglyTypicalSlice
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)

@@ -51,7 +51,7 @@ variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 
 /-! ## Block-level n-letter converse -/
 
-/-- **Stage 1 — block-level n-letter rate-distortion converse**.
+/-- Stage 1 — block-level n-letter rate-distortion converse.
 
 For any block lossy code `c : LossyCode M n α β` (with `encoder : (Fin n → α) → Fin M`,
 `decoder : Fin M → (Fin n → β)`) and i.i.d. source `P_X` on `α`, if
@@ -142,7 +142,7 @@ theorem rate_distortion_converse_n_letter_block
 
 /-! ## Block-level MI ≤ log M -/
 
-/-- **Block-level MI ≤ log M**. For any block lossy code `c : LossyCode M n α β`
+/-- Block-level MI ≤ log M. For any block lossy code `c : LossyCode M n α β`
 and i.i.d. source `μ` on `Ω` with X^n-projection `Xs_block : Ω → (Fin n → α)`,
 the mutual information between `X^n` and the reconstruction
 `X̂^n := decoder ∘ encoder ∘ X^n` satisfies
@@ -201,7 +201,7 @@ lemma mutualInfo_block_le_log_card
 
 /-! ## Single-letterized form -/
 
-/-- **Per-letter feasible feed**: for fixed `i`, the joint `νᵢ := μ.map (Xs i, X̂s i)`
+/-- Per-letter feasible feed: for fixed `i`, the joint `νᵢ := μ.map (Xs i, X̂s i)`
 is feasible for the per-letter `R(Dᵢ)` at threshold
 `Dᵢ := ∫ d(Xs i ω) (X̂s i ω) ∂μ`, so
 `R(Dᵢ) ≤ klDiv νᵢ ((νᵢ.map fst).prod (νᵢ.map snd)) = mutualInfo μ (Xs i) (X̂s i)`. -/
@@ -240,7 +240,7 @@ lemma rateDistortionFunction_le_mutualInfo_perLetter
 
 /-! ## n-way Jensen for `R(D)` from binary convexity -/
 
-/-- **Finite-alphabet integrability witness**: on finite alphabets any
+/-- Finite-alphabet integrability witness: on finite alphabets any
 `d : α → β → ℝ` is integrable against any finite measure on `α × β`. Discharges the
 regularity precondition of `rateDistortionFunction_convexOn`. -/
 private lemma integrable_d_of_finite
@@ -251,7 +251,7 @@ private lemma integrable_d_of_finite
     Integrable (fun p : α × β ↦ d p.1 p.2) ν :=
   Integrable.of_finite
 
-/-- **ENNReal n-way Jensen for `R(D)` (uniform weights)**: for finite alphabets,
+/-- ENNReal n-way Jensen for `R(D)` (uniform weights): for finite alphabets,
 ```
 R(d, P, (1/n) ∑ i, Dvals i) ≤ ∑ i, ENNReal.ofReal (1/n) * R(d, P, Dvals i).
 ```
@@ -351,7 +351,7 @@ private lemma rateDistortionFunction_jensen_uniform
 
 /-! ## MI superadditivity for an independent source -/
 
-/-- **Prefix independence on `Fin n` from `iIndepFun`**: for a mutually independent
+/-- Prefix independence on `Fin n` from `iIndepFun`: for a mutually independent
 family `Xs : Fin n → Ω → α`, each `Xs i` is independent of its prefix
 `(Xs 0, …, Xs (i-1))`. `Fin n`-indexed analogue of
 `indepFun_Xs_prefix_of_iIndepFun` (which is `ℕ`-indexed and private). -/
@@ -384,7 +384,7 @@ private lemma indepFun_prefix_of_iIndepFun_fin
   have h_lifted := h_pair_indep.comp hprojS_meas hprojT_meas
   exact h_lifted
 
-/-- **Independent-source block entropy additivity**: for a mutually independent
+/-- Independent-source block entropy additivity: for a mutually independent
 family `Xs : Fin n → Ω → α`, `H(X^n) = ∑ i, H(X_i)`.
 
 Chain rule (`jointEntropy_chain_rule`) collapses each `H(X_i | X^{<i})` to `H(X_i)`
@@ -413,7 +413,7 @@ private lemma entropy_pi_eq_sum_of_indep
     indepFun_prefix_of_iIndepFun_fin μ Xs hXs hindep i
   exact condEntropy_eq_entropy_of_indepFun μ (Xs i) prefix_i (hXs i) hprefix_meas h_indep
 
-/-- **Gateway piece (b): conditional-entropy subadditivity on the block**.
+/-- Gateway piece (b): conditional-entropy subadditivity on the block.
 For any `Xs : Fin n → Ω → α` and any reconstruction family `Xhs : Fin n → Ω → β`,
 ```
 H(X^n | X̂^n) ≤ ∑ i, H(X_i | X̂_i).
@@ -525,7 +525,7 @@ lemma condEntropy_pi_le_sum_condEntropy_per_letter
     (fun ω ↦ (XhnoI ω, Xprefix ω)) (hXs i) (hXhs i)
     (hXhnoI_meas.prodMk hXprefix_meas)
 
-/-- **Stage 2 core: mutual-information superadditivity for an independent source**.
+/-- Stage 2 core: mutual-information superadditivity for an independent source.
 For `Xs : Fin n → Ω → α` *mutually independent* and any reconstruction family
 `Xhs : Fin n → Ω → β`,
 ```
@@ -653,7 +653,7 @@ private theorem blockDistortion_eq_avg_perLetter
           rw [LossyCode.expectedBlockDistortion]
           rfl
 
-/-- **Single-letterized n-letter rate-distortion converse**.
+/-- Single-letterized n-letter rate-distortion converse.
 
 Given a block lossy code, an i.i.d. source `P_X`, and a probability space
 `(Ω, μ)` where `Xs i : Ω → α` are i.i.d. copies of `P_X` (mutual independence
@@ -664,19 +664,19 @@ the single-letter rate-distortion function satisfies
 ```
 
 The proof composes:
-1. **Block-distortion identity**: `(1/n) ∑ᵢ Dᵢ = c.expectedBlockDistortion P_X d`
+1. Block-distortion identity: `(1/n) ∑ᵢ Dᵢ = c.expectedBlockDistortion P_X d`
    via the product law `μ.map X^n = Measure.pi (fun _ => P_X)`
    (`iIndepFun_iff_map_fun_eq_pi_map` + `hXs_law`), `integral_map`, and Fubini
    linearity over the finite sum.
-2. **Antitonicity**: `R(P_X, D) ≤ R(P_X, (1/n)∑Dᵢ)` since `(1/n)∑Dᵢ ≤ D` (`hD`).
-3. **n-way Jensen**: `R(P_X, (1/n)∑Dᵢ) ≤ ∑ ofReal(1/n) · R(P_X, Dᵢ)` built by
+2. Antitonicity: `R(P_X, D) ≤ R(P_X, (1/n)∑Dᵢ)` since `(1/n)∑Dᵢ ≤ D` (`hD`).
+3. n-way Jensen: `R(P_X, (1/n)∑Dᵢ) ≤ ∑ ofReal(1/n) · R(P_X, Dᵢ)` built by
    induction on `n` from the binary convexity `rateDistortionFunction_convexOn`
    (`rateDistortionFunction_jensen_uniform`).
-4. **Per-letter feasibility**: `R(P_X, Dᵢ) ≤ I(Xᵢ; X̂ᵢ)` via
+4. Per-letter feasibility: `R(P_X, Dᵢ) ≤ I(Xᵢ; X̂ᵢ)` via
    `rateDistortionFunction_le_mutualInfo_perLetter` (`μ.map (Xs i) = P_X`).
-5. **MI superadditivity** (independent source): `∑ I(Xᵢ; X̂ᵢ) ≤ I(X^n; X̂^n)` via
+5. MI superadditivity (independent source): `∑ I(Xᵢ; X̂ᵢ) ≤ I(X^n; X̂^n)` via
    `mutualInfo_superadditive_of_indep`.
-6. **Block MI bound**: `I(X^n; X̂^n).toReal ≤ log M` (`mutualInfo_block_le_log_card`).
+6. Block MI bound: `I(X^n; X̂^n).toReal ≤ log M` (`mutualInfo_block_le_log_card`).
 
 The independence and i.i.d. preconditions (`hindep` + `hXs_law`) are genuine: the
 conclusion is false without them (`n = 2, X₁ = X₂` gives `R = log 2 > (1/2)log 2`).

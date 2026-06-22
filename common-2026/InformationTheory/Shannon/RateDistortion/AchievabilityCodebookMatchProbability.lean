@@ -40,7 +40,7 @@ probability. The non-trivial step is the Fubini-style bridge rewriting
 `∫ x, p.real {y | (x, y) ∈ JTS} ∂P_X` as `(P_X.prod p).real (JTS)`.
 -/
 
-/-- **Utility**: `(1 - t)^M ≤ exp (-M·t)` for `0 ≤ t ≤ 1`. Used to convert the per-codeword
+/-- Utility: `(1 - t)^M ≤ exp (-M·t)` for `0 ≤ t ≤ 1`. Used to convert the per-codeword
 no-match probability into an exponential bound. -/
 lemma one_sub_pow_le_exp_neg_mul (M : ℕ) {t : ℝ} (_h0 : 0 ≤ t) (h1 : t ≤ 1) :
     (1 - t) ^ M ≤ Real.exp (-(M : ℝ) * t) := by
@@ -57,7 +57,7 @@ lemma one_sub_pow_le_exp_neg_mul (M : ℕ) {t : ℝ} (_h0 : 0 ≤ t) (h1 : t ≤
 
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Exponentialization** of the source-averaged failure-pow bound.
+/-- Exponentialization of the source-averaged failure-pow bound.
 Pointwise `(1 - p_typ x)^M ≤ exp(-M · p_typ x)`, then integrate. -/
 @[entry_point]
 theorem encoder_failure_prob_le_exp_neg_M_avg
@@ -127,7 +127,7 @@ lossy-distortion-style consumers.
 open InformationTheory.Shannon.ChannelCoding (Codebook codebookMeasure)
 
 omit [DecidableEq β] in
-/-- **Pigeonhole (probabilistic-method form, lossy version).** If a real-valued
+/-- Pigeonhole (probabilistic-method form, lossy version). If a real-valued
 codebook functional has `codebookMeasure`-weighted average `≤ B`, then some
 deterministic codebook achieves `f c ≤ B`.
 

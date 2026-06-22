@@ -452,7 +452,7 @@ lemma exp_neg_ceilExp_mul_tendsto_zero_of_lt
 
 /-! ## Main probabilistic content: `codebookAvgFailureStrong → 0` -/
 
-/-- **Main `tendsto_zero` for the strong-encoder failure sequence.**
+/-- Main `tendsto_zero` for the strong-encoder failure sequence.
 
 Hypotheses:
 

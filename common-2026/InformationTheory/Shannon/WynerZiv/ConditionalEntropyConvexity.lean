@@ -18,13 +18,13 @@ The core asserts convexity of `H(m_YU) − H(m_XU) = I(X;U|Y)` along convex
 combinations of factorisable joints.  The proof routes the whole content
 through the per-atom `log_sum_inequality_negMulLog` (`Fano/DPI.lean:44`):
 
-* **Step A** affine translation: the marginals of `a•q₁ + b•q₂` are the
+* Step A — affine translation: the marginals of `a•q₁ + b•q₂` are the
   convex combinations of the marginals (`wzMarginalXU_smul_add`,
   `wzMarginalYU_smul_add`).
-* **Step B** per-`u` block convexity (`wzCondEntDiff_block_convex`): for a
+* Step B — per-`u` block convexity (`wzCondEntDiff_block_convex`): for a
   fixed `u`, the block difference is convex.  The two mixture components
   play the role of the log-sum "fiber".
-* **Step C/D** `∑_u` aggregation and identification with `wzJointEntYU/XU`
+* Step C/D — `∑_u` aggregation and identification with `wzJointEntYU/XU`
   (`wzCondEntDiff_blockSum_eq_jointEntDiff`), then assembly into the main
   theorem `wynerZivCondEntDiffConvex_holds`, finally re-publishing the
   unconditional rate wrapper.
@@ -63,7 +63,7 @@ lemma wzMarginalYU_smul_add (a b : ℝ) (q₁ q₂ : α × β × U → ℝ) :
 
 /-! ## Step B — per-`u` block convexity (the core) -/
 
-/-- **Refinement / coarsening inequality (the DPI core).**  For two
+/-- Refinement / coarsening inequality (the DPI core).  For two
 non-negative joint slices `r₁, r₂ : α × β → ℝ` and weights `a, b ≥ 0` with
 `a + b = 1`, writing the mixture `m = a • r₁ + b • r₂`, the convexity of the
 `Y`-marginal-vs-joint entropy gap holds:
@@ -209,7 +209,7 @@ lemma negMulLog_marginal_gap_le_joint_gap
   exact hgoal
 
 
-/-- **Per-`u` block convexity.**  For factorisable `q₁, q₂` and weights
+/-- Per-`u` block convexity.  For factorisable `q₁, q₂` and weights
 `a, b ≥ 0` with `a + b = 1`, the conditional-entropy-difference block at a
 fixed `u`,
 `(∑_y negMulLog m_YU(y,u)) − (∑_x negMulLog m_XU(x,u))`, is convex. -/
@@ -351,7 +351,7 @@ lemma wzCondEntDiff_blockSum_eq_jointEntDiff (q : α × β × U → ℝ) :
 
 /-! ## Main theorem — unconditional discharge of the core -/
 
-/-- **Lemma-15.9 core, discharged.**  `WynerZivCondEntDiffConvex` holds for
+/-- Lemma-15.9 core, discharged.  `WynerZivCondEntDiffConvex` holds for
 every non-negative `P_XY`. -/
 @[entry_point]
 theorem wynerZivCondEntDiffConvex_holds

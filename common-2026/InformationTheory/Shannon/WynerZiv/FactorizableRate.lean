@@ -61,7 +61,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **Affine factorisation predicate.** The joint pmf `q : α × β × U → ℝ` is
+/-- Affine factorisation predicate. The joint pmf `q : α × β × U → ℝ` is
 *Wyner–Ziv factorisable* over the source `P_XY : α × β → ℝ` if there exists
 a transition kernel `κ : α → U → ℝ` (per-row non-negative and per-row sum
 `1`) such that
@@ -101,7 +101,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **Markov chain holds automatically on factorisable joints.** The
+/-- Markov chain holds automatically on factorisable joints. The
 quadratic cross-product equation collapses to a kernel-level identity that
 is trivially symmetric in `u, u'`. -/
 lemma IsWynerZivFactorizable_markov
@@ -130,7 +130,7 @@ lemma IsWynerZivFactorizable_markov
     rw [this]; ring
   rw [h_lhs, h_rhs]; ring
 
-/-- **`(X, Y)`-marginal of a factorisable joint recovers `P_XY`** (when the
+/-- `(X, Y)`-marginal of a factorisable joint recovers `P_XY` (when the
 kernel `κ` is row-stochastic). -/
 lemma IsWynerZivFactorizable_marginalXY
     (P_XY : α × β → ℝ) {q : α × β × U → ℝ}
@@ -152,7 +152,7 @@ lemma IsWynerZivFactorizable_marginalXY
     _ = 1 * P_XY p := by rw [hκsum p.1]
     _ = P_XY p := by rw [one_mul]
 
-/-- **Factorisable joints are non-negative pointwise** (when `P_XY` is). -/
+/-- Factorisable joints are non-negative pointwise (when `P_XY` is). -/
 lemma IsWynerZivFactorizable_nonneg
     (P_XY : α × β → ℝ) (h_pmf_nn : ∀ p, 0 ≤ P_XY p)
     {q : α × β × U → ℝ}
@@ -165,7 +165,7 @@ lemma IsWynerZivFactorizable_nonneg
   rw [hκeq x y u]
   exact mul_nonneg (hκnn x u) (h_pmf_nn (x, y))
 
-/-- **Total mass of a factorisable joint equals total mass of `P_XY`.** When
+/-- Total mass of a factorisable joint equals total mass of `P_XY`. When
 `P_XY` is a pmf (total mass `1`), the joint is also total-mass `1`. -/
 lemma IsWynerZivFactorizable_sum
     (P_XY : α × β → ℝ) {q : α × β × U → ℝ}
@@ -194,7 +194,7 @@ lemma IsWynerZivFactorizable_sum
     _ = 1 * P_XY (x, y) := by rw [hκsum x]
     _ = P_XY (x, y) := by rw [one_mul]
 
-/-- **`stdSimplex` membership for factorisable joints over a pmf source.**
+/-- `stdSimplex` membership for factorisable joints over a pmf source.
 If `P_XY ∈ stdSimplex` (a pmf), then every factorisable joint is also in
 `stdSimplex ℝ (α × β × U)`. -/
 lemma IsWynerZivFactorizable_mem_stdSimplex
@@ -218,7 +218,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **Convex combinations of factorisable joints are factorisable.** This is
+/-- Convex combinations of factorisable joints are factorisable. This is
 the key affine property that re-parameterisation buys us: although the
 Markov cross-product constraint is non-affine on the *raw* joint pmf
 coordinate, on the *factorised* manifold the predicate is affine in `κ`,
@@ -266,7 +266,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **Factorisable Wyner–Ziv constraint set.** A `(q, f)` pair belongs iff:
+/-- Factorisable Wyner–Ziv constraint set. A `(q, f)` pair belongs iff:
 1. `q` is `IsWynerZivFactorizable U P_XY` — factorises as `κ(u|x)·P_XY(x,y)`,
 2. `wzExpectedDistortion d q f ≤ D` — distortion budget.
 
@@ -288,7 +288,7 @@ lemma mem_WynerZivFactorizableConstraint_iff
       IsWynerZivFactorizable U P_XY qf.1
         ∧ wzExpectedDistortion U d qf.1 qf.2 ≤ D := Iff.rfl
 
-/-- **Factorisable constraint ⊆ raw constraint.** Every factorisable
+/-- Factorisable constraint ⊆ raw constraint. Every factorisable
 feasible point is also feasible in the original (un-re-parameterised)
 constraint set, provided `P_XY` is itself a pmf in the simplex. -/
 lemma factorisable_subset_constraint
@@ -313,7 +313,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **Factorisable constraint set is monotone in `D`.** Mirror of
+/-- Factorisable constraint set is monotone in `D`. Mirror of
 `WynerZivConstraint_mono_in_D`. -/
 @[entry_point]
 theorem WynerZivFactorizableConstraint_mono_in_D
@@ -374,7 +374,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **Wyner–Ziv rate function restricted to factorisable joints.**
+/-- Wyner–Ziv rate function restricted to factorisable joints.
 `R_WZ_fact(D) := sInf { I(X;U) − I(Y;U) | (q, f) ∈ WynerZivFactorizableConstraint U P_XY d D }`.
 
 This is the form Cover–Thomas §15.9 directly addresses: the minimisation
@@ -385,7 +385,7 @@ noncomputable def wynerZivRateFactorizable
               wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
         '' WynerZivFactorizableConstraint U P_XY d D)
 
-/-- **Factorisable rate is antitone in `D`** (mirror of the raw
+/-- Factorisable rate is antitone in `D` (mirror of the raw
 `wynerZivRatePmf_antitone`). -/
 @[entry_point]
 theorem wynerZivRateFactorizable_antitone
@@ -474,7 +474,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **The factorisable image is `BddBelow`.** Same simplex-projection route
+/-- The factorisable image is `BddBelow`. Same simplex-projection route
 as in `WynerZiv/RateMonotonicity.lean`: the factorisable image is contained in the
 raw image (modulo the side conditions in `factorisable_subset_constraint`),
 which is contained in `objective '' stdSimplex`, which is compact and

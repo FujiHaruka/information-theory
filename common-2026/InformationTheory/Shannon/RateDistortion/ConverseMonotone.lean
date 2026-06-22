@@ -34,7 +34,7 @@ variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 
 /-! ## Monotonicity of `rateDistortionFunction` -/
 
-/-- **Antitone monotonicity of `R(D)`**. The rate-distortion function is antitone
+/-- Antitone monotonicity of `R(D)`. The rate-distortion function is antitone
 in the distortion threshold: enlarging the feasibility budget can only lower the
 infimum.
 
@@ -54,7 +54,7 @@ theorem rateDistortionFunction_antitone
 
 /-! ## Specified-distortion single-shot converse -/
 
-/-- **Single-shot rate-distortion converse, specified-distortion form**.
+/-- Single-shot rate-distortion converse, specified-distortion form.
 
 For any single-shot lossy code `(encoder, decoder)` with image alphabet `M` and
 source random variable `X : Ω → α`, if the actual expected distortion

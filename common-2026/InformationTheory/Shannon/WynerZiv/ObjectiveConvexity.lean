@@ -17,12 +17,12 @@ the entropy form `mutualInfoPmf m = H(fst m) + H(snd m) − H(m)`.  Two exact
 algebraic cancellations make the deep content explicit and isolate it from
 the trivial parts:
 
-* **`H(U)` cancellation (any `q`).** The `U`-marginal of `wzMarginalXU U q`
+* `H(U)` cancellation (any `q`): the `U`-marginal of `wzMarginalXU U q`
   and of `wzMarginalYU U q` coincide — both equal `P_U(u) = ∑_{x,y} q(x,y,u)`
   — by Fubini.  Hence the `∑_u negMulLog(P_U u)` terms (the `H(U)` blocks)
-  cancel between `I(X;U)` and `I(Y;U)`.  This needs **no** factorisation.
+  cancel between `I(X;U)` and `I(Y;U)`.  This needs no factorisation.
 
-* **`H(X) − H(Y)` constancy (factorisable `q`).** The `X`-marginal of
+* `H(X) − H(Y)` constancy (factorisable `q`): the `X`-marginal of
   `wzMarginalXU U q` equals `∑_y q(x,y,·)` summed over `u`, i.e. the
   `(X)`-marginal of `wzMarginalXY U q`.  For factorisable `q` the latter is
   `P_XY`, so this block is the constant `H(P_X)` — independent of the kernel
@@ -147,7 +147,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **Objective decomposition (any `q`).**  After cancelling the shared
+/-- Objective decomposition (any `q`).  After cancelling the shared
 `H(U)` block,
 `I(X;U) − I(Y;U)
   = [H(marginalFst m_XU) − H(marginalFst m_YU)] + [H(m_YU) − H(m_XU)]`,
@@ -203,7 +203,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **The irreducible Lemma-15.9 core.**  Convexity of the conditional
+/-- The irreducible Lemma-15.9 core.  Convexity of the conditional
 entropy difference `H(m_YU) − H(m_XU) = I(X;U|Y)` along convex combinations
 of factorisable joints.  This is the genuine analytic content of
 Cover–Thomas Lemma 15.9 (a joint-convexity-of-KL argument); it is *strictly
@@ -229,7 +229,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **Objective convexity from the conditional-entropy-difference core.**
+/-- Objective convexity from the conditional-entropy-difference core.
 Given `WynerZivCondEntDiffConvex` (the Lemma-15.9 core), the Wyner–Ziv
 objective `I(X;U) − I(Y;U)` is convex along factorisable convex
 combinations — i.e. exactly the `h_obj_convex` hypothesis consumed by

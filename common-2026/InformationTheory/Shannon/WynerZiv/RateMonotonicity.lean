@@ -43,7 +43,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **Constraint set is monotone in `D`.** Increasing the distortion budget
+/-- Constraint set is monotone in `D`. Increasing the distortion budget
 can only enlarge the set of feasible `(q, f)`-pairs: every point feasible at
 the lower threshold `D` is *also* feasible at the higher threshold `D'`. -/
 @[entry_point]
@@ -63,7 +63,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **Image-of-constraint monotonicity.** A direct consequence of
+/-- Image-of-constraint monotonicity. A direct consequence of
 `WynerZivConstraint_mono_in_D`: the objective-image at the smaller
 threshold is contained in the objective-image at the larger threshold. -/
 lemma wynerZivObjective_image_mono_in_D
@@ -134,7 +134,7 @@ lemma wzMarginalXY_smul (c : ℝ) (q : α × β × U → ℝ) :
   unfold wzMarginalXY
   simp [Finset.mul_sum, Pi.smul_apply, smul_eq_mul]
 
-/-- `wzExpectedDistortion` (for fixed decoder `f`) is **additive** in `q`. -/
+/-- `wzExpectedDistortion` (for fixed decoder `f`) is additive in `q`. -/
 lemma wzExpectedDistortion_add (d : α → γ → ℝ) (q₁ q₂ : α × β × U → ℝ)
     (f : U × β → γ) :
     wzExpectedDistortion U d (q₁ + q₂) f
@@ -143,7 +143,7 @@ lemma wzExpectedDistortion_add (d : α → γ → ℝ) (q₁ q₂ : α × β × 
   simp only [Pi.add_apply, add_mul]
   exact Finset.sum_add_distrib
 
-/-- `wzExpectedDistortion` (for fixed decoder `f`) is **homogeneous** in `q`. -/
+/-- `wzExpectedDistortion` (for fixed decoder `f`) is homogeneous in `q`. -/
 lemma wzExpectedDistortion_smul (d : α → γ → ℝ) (c : ℝ)
     (q : α × β × U → ℝ) (f : U × β → γ) :
     wzExpectedDistortion U d (c • q) f = c * wzExpectedDistortion U d q f := by
@@ -188,7 +188,7 @@ lemma wynerZivConstraint_fst_subset_stdSimplex
   rw [← hq_eq]
   exact hqf.1
 
-/-- **Wyner–Ziv objective image is `BddBelow`** — discharged via the
+/-- Wyner–Ziv objective image is `BddBelow` — discharged via the
 simplex containment + continuity of the objective. The standard simplex
 is compact, so the continuous-image is bounded; passing through the
 constraint set inclusion gives the result. -/
@@ -222,7 +222,7 @@ lemma wynerZivObjective_image_bddBelow
     h_simplex_compact.image h_cont
   exact h_img_simplex_compact.bddBelow.mono h_subset
 
-/-- **D-antitone, with `BddBelow` discharged in the body.** Combines
+/-- D-antitone, with `BddBelow` discharged in the body. Combines
 `wynerZivRatePmf_antitone` with `wynerZivObjective_image_bddBelow` to
 eliminate the `BddBelow` side condition. The non-emptiness side condition
 remains: the user must supply at least one feasible `(q, f)` at the smaller
@@ -245,7 +245,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **Image non-emptiness from feasibility witness.** If a feasible
+/-- Image non-emptiness from feasibility witness. If a feasible
 `(q, f) ∈ WynerZivConstraint U P_XY d D` exists, the Wyner–Ziv objective
 image at `D` is non-empty. Trivial unwrapping. -/
 lemma wynerZivObjective_image_nonempty_of_feasible
@@ -257,7 +257,7 @@ lemma wynerZivObjective_image_nonempty_of_feasible
         '' WynerZivConstraint U P_XY d D).Nonempty :=
   ⟨wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1, qf, hqf, rfl⟩
 
-/-- **D-antitone, final form — feasibility witness drives everything.**
+/-- D-antitone, final form — feasibility witness drives everything.
 
 Given a feasible `(q, f) ∈ WynerZivConstraint U P_XY d D` at the *smaller*
 threshold `D`, the Wyner–Ziv rate is antitone: `R_WZ(D') ≤ R_WZ(D)` for any

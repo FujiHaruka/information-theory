@@ -53,7 +53,7 @@ set_option linter.unusedSectionVars false
 
 /-! ## Wyner–Ziv block code -/
 
-/-- A **Wyner–Ziv block code** of length `n` with `M` codewords. Encoder is
+/-- A Wyner–Ziv block code of length `n` with `M` codewords. Encoder is
 X-side only; decoder takes `(codeword, side info Y^n)` and reproduces an
 estimate of `X^n` over the reconstruction alphabet `γ`. -/
 structure WynerZivCode (M n : ℕ) (α β γ : Type*)
@@ -192,7 +192,7 @@ def wzMarkovCrossEq (q : α × β × U → ℝ) : Prop :=
     q (x, y, u) * (∑ y', q (x, y', u'))
       = q (x, y, u') * (∑ y', q (x, y', u))
 
-/-- **Wyner–Ziv constraint set** — feasible `(q, f)` pairs satisfying:
+/-- Wyner–Ziv constraint set — feasible `(q, f)` pairs satisfying:
 1. `q ∈ stdSimplex ℝ (α × β × U)` — non-negative pmf with total mass 1.
 2. `wzMarginalXY q = P_XY` — `(X, Y)` marginal matches the source.
 3. `wzMarkovCrossEq q` — Markov chain `U − X − Y`.
@@ -227,7 +227,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- The **Wyner–Ziv rate function** (pmf form),
+/-- The Wyner–Ziv rate function (pmf form),
 `R_WZ(D) := sInf { I(X;U) − I(Y;U) | (q, f) ∈ WynerZivConstraint U P_XY d D }`,
 with the auxiliary alphabet `U` taken as an argument. -/
 noncomputable def wynerZivRatePmf
@@ -252,7 +252,7 @@ theorem wynerZivRatePmf_le_of_feasible
   unfold wynerZivRatePmf
   exact csInf_le h_bdd ⟨qf, hqf, rfl⟩
 
-/-- **Attainment (slice form)** — fix a decoder `f₀ : U × β → γ` and assume
+/-- Attainment (slice form) — fix a decoder `f₀ : U × β → γ` and assume
 the slice `K f₀ := {q | (q, f₀) ∈ WynerZivConstraint U P_XY d D}` is
 non-empty. Then there exists a `qStar ∈ K f₀` minimizing the Wyner–Ziv
 objective `I(X;U) − I(Y;U)` over `K f₀`. This is the structural ingredient

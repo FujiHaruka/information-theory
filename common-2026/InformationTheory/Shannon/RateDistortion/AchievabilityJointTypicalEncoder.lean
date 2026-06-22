@@ -23,7 +23,7 @@ side of the lossy compression chain:
   characterisations of the two branches.
 
 Note: unlike the channel-coding decoder side (`jointTypicalDecoder`), the lossy encoder
-does **not** require uniqueness of the typical match — any one is fine because the
+does not require uniqueness of the typical match — any one is fine because the
 encoder's job is only to commit to a single index. Hence we use `Classical.choose`
 of `∃ m, _` rather than `Classical.choose` of `∃! m, _`.
 
@@ -52,7 +52,7 @@ variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 variable [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
 variable [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β]
 
-/-- **Joint-typical lossy encoder.** Given a codebook `c : Codebook M n β`,
+/-- Joint-typical lossy encoder. Given a codebook `c : Codebook M n β`,
 returns the first (any) message index `m` whose codeword is jointly typical with the
 source word `x`. Falls back to `⟨0, hM⟩` if no such `m` exists. -/
 @[entry_point]
@@ -86,7 +86,7 @@ noncomputable def expectedJointDistortion
     (μ : Measure Ω) (X : Ω → α) (Y : Ω → β) (d : DistortionFn α β) : ℝ :=
   ∫ ω, ((d (X ω) (Y ω) : NNReal) : ℝ) ∂μ
 
-/-- **Distortion typical set.** Pairs `(x, y) ∈ (Fin n → α) × (Fin n → β)` that are
+/-- Distortion typical set. Pairs `(x, y) ∈ (Fin n → α) × (Fin n → β)` that are
 both (a) jointly typical in the entropy sense (`jointlyTypicalSet μ Xs Ys n ε`) and
 (b) whose empirical block distortion is within `δ` of the joint expectation
 `𝔼[d(X_0, Y_0)]`. The set used by Cover-Thomas 10.5 to bound the distortion on
@@ -122,7 +122,7 @@ as supplied by `jointlyTypicalSet_prob_tendsto_one`.
 -/
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Size lower bound on the jointly typical set** (mirror of
+/-- Size lower bound on the jointly typical set (mirror of
 `jointlyTypicalSet_card_le`). If under joint law the event
 "`(jointRV Xs n ω, jointRV Ys n ω) ∈ JTS`" has measure ≥ `1 - η`, then
 `|JTS| ≥ (1 - η) · exp(n · (H(Z) - ε))`. -/
@@ -244,9 +244,9 @@ private theorem jointlyTypicalSet_card_ge
   exact h_mul
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Anti-direction (lower-bound) joint-AEP indep probability**.
+/-- Anti-direction (lower-bound) joint-AEP indep probability.
 The probability under the product measure `μX^n × μY^n` that `(X̃, Ỹ)` lies in
-the jointly typical set is bounded **below** by `(1 - η) · exp(-n · (I + 3ε))`,
+the jointly typical set is bounded below by `(1 - η) · exp(-n · (I + 3ε))`,
 which is Cover-Thomas (10.85). Mirror of `jointlyTypicalSet_indep_prob_le`. -/
 @[entry_point]
 theorem jointlyTypicalSet_indep_prob_ge

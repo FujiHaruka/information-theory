@@ -122,7 +122,7 @@ private lemma expectedDistortion_map
   unfold expectedDistortion
   rw [integral_map (hX.prodMk hXh).aemeasurable hd.aestronglyMeasurable]
 
-/-- **Single-shot rate-distortion converse**.
+/-- Single-shot rate-distortion converse.
 
 For any single-shot lossy code `(encoder, decoder)` with image alphabet `M` and
 source random variable `X : Ω → α`, the rate-distortion function evaluated at
