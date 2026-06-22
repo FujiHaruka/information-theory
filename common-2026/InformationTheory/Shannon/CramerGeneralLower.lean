@@ -4,7 +4,7 @@ import InformationTheory.Shannon.Cramer.Cramer
 /-!
 # Cramér lower bound — general i.i.d. wiring (root B)
 
-This module relocates the **root B** Cramér lower-bound chain
+This module relocates the root B Cramér lower-bound chain
 (`cramer_lower` / `cramer_lower_legendre` / `cramer_tendsto`) downstream of the
 CLT-boundary headline `cramer_lower_boundary_unconditional`
 (`CramerCltBoundaryClosure.lean`).
@@ -24,15 +24,15 @@ Root B is the general i.i.d. statement on an arbitrary bounded `μ : Measure Ω`
 `X : ℕ → Ω → ℝ`.  The headline is the canonical infinitePi specialization.  We
 transport via:
 
-* **joint law = infinitePi** — `iIndepFun_iff_map_fun_eq_infinitePi_map`
+* The joint law equals an infinite product — `iIndepFun_iff_map_fun_eq_infinitePi_map`
   (Mathlib, only `[IsProbabilityMeasure μ]`): the joint law of `X` equals
   `infinitePi (fun i => μ.map (X i))`.
-* **identical marginals** — `IdentDistrib.map_eq` unifies the marginals to
+* Identical marginals — `IdentDistrib.map_eq` unifies the marginals to
   `ν := μ.map (X 0)`.
-* **event transport** — the partial-sum event pulls back through the joint map
+* Event transport — the partial-sum event pulls back through the joint map
   `g := fun ω i => X i ω`, so `μ.real {ω | a·n ≤ ∑ X i ω}` equals the
   coordinate-event mass on `infinitePi (fun _ => ν)`.
-* **cgf transport** — `cgf (fun ω => ω 0) (infinitePi (fun _ => ν)) = cgf (X 0) μ`,
+* The cgf transports — `cgf (fun ω => ω 0) (infinitePi (fun _ => ν)) = cgf (X 0) μ`,
   a ~10-line self-build (the in-project precedent `cgf_eval_eq_cgf_base` does the
   same kind of move).
 
@@ -50,7 +50,7 @@ open scoped Topology BigOperators
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
 
-/-- **Cramér lower bound** (general i.i.d.), root B form, transported to the
+/-- The Cramér lower bound (general i.i.d.), root B form, transported to the
 CLT-boundary headline `cramer_lower_boundary_unconditional`.
 
 The optimal-tilt hypothesis `h_deriv : deriv (cgf (X 0) μ) lam = a` makes the
@@ -182,7 +182,7 @@ theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
   exact CramerCltBoundary.cramer_lower_boundary_unconditional
     (μ₀ := μ) (Y := X 0) (h_meas 0) h_bdd0 a lam hlam h_deriv' hVar h_coboundedBelow
 
-/-- **Cramér lower bound, Legendre form**. Threads `hVar` to `cramer_lower`.
+/-- The Cramér lower bound, Legendre form. Threads `hVar` to `cramer_lower`.
 
 @audit:ok (rewrites conclusion via the `hlam_opt` Legendre-attainment precondition,
 all hypotheses are regularity preconditions threaded to `cramer_lower`.) -/
@@ -207,7 +207,7 @@ theorem cramer_lower_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     h_deriv hVar h_coboundedBelow
   rw [← hlam_opt]; exact h
 
-/-- **Cramér's theorem (`Tendsto` form)** (Cover-Thomas 11.4.1). Sandwich of
+/-- Cramér's theorem (`Tendsto` form, Cover-Thomas 11.4.1). Sandwich of
 the upper bound `cramer_upper_legendre` and the lower bound `cramer_lower_legendre`.
 Threads `hVar` to the lower-bound side.
 

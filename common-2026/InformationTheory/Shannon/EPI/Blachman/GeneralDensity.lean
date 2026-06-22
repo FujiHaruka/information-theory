@@ -15,12 +15,12 @@ heat kernel (`t > 0`). The existing producer
 conv-with-Gaussian (general density) version.
 
 Set `fX := convDensityAdd pX g_t`, `fY := convDensityAdd pY g_t`. Both are
-conv-with-Gaussian densities. **All 19 `IsBlachmanConvReady` fields are closed genuinely**
+conv-with-Gaussian densities. All 19 `IsBlachmanConvReady` fields are closed genuinely
 (19/19, no retreat).
 
-* **GENUINE (18 conv-with-Gaussian fields)**: `int_fX/fY`, `bdd_*`, `pos_pZ`,
+* The 18 conv-with-Gaussian fields `int_fX/fY`, `bdd_*`, `pos_pZ`,
   `int_X/int_Y`, `cond_int`, `int_W`, `int_Wsq`, `int_inner`, `int_fisherX/int_fisherY`,
-  `int_prod1/2/3` — closed from the conv-with-Gaussian regularity assets
+  `int_prod1/2/3` are closed genuinely from the conv-with-Gaussian regularity assets
   (`isRegularDensityV2_convDensityAdd_gaussian`,
   `convDensityAdd_gaussian_bdd`/`_deriv_bdd`/`_integrable`, `convDensityAdd_pos_of_pos_cont`,
   the Fisher-finiteness bound `gaussianConv_fisher_le_inv_var` via
@@ -29,8 +29,8 @@ conv-with-Gaussian densities. **All 19 `IsBlachmanConvReady` fields are closed g
   reduction is `logDeriv fX · fX = deriv fX` (strict positivity of `fX`), turning the
   linear-score fields into integrable·bounded products and the Fisher fields into
   shifted/sheared copies of `int_fisherX/int_fisherY`.
-* **GENUINE (`int_fisherZ`)**: Fisher integrability of the conv-of-conv
-  `convDensityAdd fX fY`. The 4-fold interchange bridge
+* The `int_fisherZ` field is closed genuinely from Fisher integrability of the
+  conv-of-conv `convDensityAdd fX fY`. The 4-fold interchange bridge
   `convDensityAdd_convGaussian_interchange` (`EPIConvDensityAssoc.lean`) identifies it with
   `convDensityAdd (convDensityAdd pX pY) g_{2t}` (convolution associativity via Mathlib
   `convolution_assoc` + `convDensityAdd_comm` + variance-doubling `g_t ∗ g_t = g_{2t}`),
@@ -53,7 +53,7 @@ open InformationTheory.Shannon.EPIBlachmanDensity
 open InformationTheory.Shannon.EPIConvDensityRegular
 open InformationTheory.Shannon.FisherInfo
 
-/-- **Fisher integrand integrability for a conv-with-Gaussian density** (public form).
+/-- Fisher integrand integrability for a conv-with-Gaussian density (public form).
 
 `Integrable ((logDeriv (convDensityAdd pX g_t))² · convDensityAdd pX g_t)` — the
 `int_fisherX` shape. Reconstructed from the public Fisher-finiteness bound
@@ -177,7 +177,7 @@ theorem convDensityAdd_gaussian_deriv_bdd
         · exact Filter.Eventually.of_forall hge
     _ = (∫ x, pX x ∂volume) * Mg := by rw [integral_mul_const]
 
-/-- **General convolution positivity.** If `fX`, `fY` are continuous, strictly
+/-- General convolution positivity: if `fX`, `fY` are continuous, strictly
 positive everywhere, and the integrand `x ↦ fX x · fY (z - x)` is integrable, then the
 convolution density `convDensityAdd fX fY z` is strictly positive.
 @audit:ok -/
@@ -598,7 +598,7 @@ theorem convDensityAdd_gaussian_integrable_prod_deriv_mul (pX pY : ℝ → ℝ)
   simp only [Function.comp, Function.uncurry]
   rw [← hlogX p.2, ← hlogY (p.1 - p.2)]
 
-/-- **Non-Gaussian `IsBlachmanConvReady` producer** for EPI A-5 precondition (4).
+/-- A non-Gaussian `IsBlachmanConvReady` producer for EPI A-5 precondition (4).
 
 `fX := convDensityAdd pX g_t`, `fY := convDensityAdd pY g_t`.
 @audit:ok -/

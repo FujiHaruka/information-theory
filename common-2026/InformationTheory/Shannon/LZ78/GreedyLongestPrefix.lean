@@ -14,9 +14,9 @@ A one-symbol-per-step parse (always feeding the dictionary the singleton
 the distinct-phrase invariant *false* (the same singleton recurs), so the
 sharp counting bound `c(n) · log c(n) ≤ K·n` cannot hold.
 
-This file establishes the **genuine longest-prefix-match greedy parse**
+This file establishes the genuine longest-prefix-match greedy parse
 together with the central invariant: the list of emitted phrase
-**strings** (the LZ78 dictionary entries) is `Nodup`.
+strings (the LZ78 dictionary entries) is `Nodup`.
 
 ## Design (Mathlib-shape-driven)
 
@@ -25,7 +25,7 @@ The dominant lemma for the distinct invariant is
 (`Mathlib/Data/List/Nodup.lean:308`). To make its hypothesis `a ∉ l`
 *available by construction* rather than recovered from a "longest match"
 argument, the worker grows the current prefix symbol-by-symbol from the
-input and **emits the prefix the moment it leaves the dictionary**:
+input and emits the prefix the moment it leaves the dictionary:
 
 * maintain `dict : List (List α)` of already-emitted phrase strings;
 * walk the input building a candidate prefix `acc`; while `acc` is still
@@ -37,18 +37,18 @@ applies directly with no longest-match reconstruction. This is exactly
 LZ78's behaviour (match the longest dictionary prefix, append one new
 symbol), recorded in the cheapest shape for the invariant proof.
 
-We track only the **phrase strings** here — that is the object the
+We track only the phrase strings here — that is the object the
 counting bound reasons about. The back-pointer
 `LZ78Parsing`/`inRange` structure of `LZ78AsymptoticOptimality.lean` is left
 untouched.
 
 ## File layout
 
-* **§1. Longest-prefix worker** — `lz78PhraseStringsAux` / `lz78PhraseStrings`:
+* §1. Longest-prefix worker — `lz78PhraseStringsAux` / `lz78PhraseStrings`:
   the genuine greedy parse, returning the list of emitted phrase strings.
-* **§2. Distinct-phrase invariant** — `lz78PhraseStrings_nodup`: the list
+* §2. Distinct-phrase invariant — `lz78PhraseStrings_nodup`: the list
   of emitted phrase strings is `Nodup`.
-* **§3. Length conservation** — `lz78PhraseStrings_total_length`: the
+* §3. Length conservation — `lz78PhraseStrings_total_length`: the
   total number of symbols across emitted phrases (plus the unfinished
   tail) equals the input length, supplying the counting denominator `n`.
 -/
@@ -63,7 +63,7 @@ section Worker
 
 variable {α : Type*} [DecidableEq α]
 
-/-- **Longest-prefix greedy worker** returning the list of emitted phrase
+/-- The longest-prefix greedy worker returning the list of emitted phrase
 strings (the LZ78 dictionary entries) in order.
 
 * `fuel : ℕ` bounds recursion depth (instantiated to `input.length + 1`).
@@ -87,7 +87,7 @@ def lz78PhraseStringsAux :
       else
         lz78PhraseStringsAux fuel (dict.concat w) [] rest
 
-/-- **`lz78PhraseStrings input`** — the genuine longest-prefix greedy
+/-- `lz78PhraseStrings input` — the genuine longest-prefix greedy
 parse of `input`, returning the ordered list of emitted phrase strings. -/
 def lz78PhraseStrings (input : List α) : List (List α) :=
   lz78PhraseStringsAux (input.length + 1) [] [] input
@@ -100,7 +100,7 @@ section Nodup
 
 variable {α : Type*} [DecidableEq α]
 
-/-- **Worker preserves `Nodup`**: if the running dictionary is already
+/-- The worker preserves `Nodup`: if the running dictionary is already
 `Nodup`, the dictionary returned by the worker is `Nodup`. The emitted
 string is `∉ dict` by the `if`-guard, so `List.Nodup.concat` applies. -/
 theorem lz78PhraseStringsAux_nodup :
@@ -119,7 +119,7 @@ theorem lz78PhraseStringsAux_nodup :
         exact lz78PhraseStringsAux_nodup fuel (dict.concat (cur ++ [s])) [] rest
           (List.Nodup.concat hmem hd)
 
-/-- **Distinct phrase invariant**: the list of emitted phrase strings of
+/-- The list of emitted phrase strings of
 the genuine longest-prefix greedy parse is `Nodup`. -/
 @[entry_point]
 theorem lz78PhraseStrings_nodup (input : List α) :
@@ -135,7 +135,7 @@ section Length
 variable {α : Type*} [DecidableEq α]
 
 omit [DecidableEq α] in
-/-- **Additive `foldr`-length over an append**: the total phrase length of
+/-- The additive `foldr`-length over an append: the total phrase length of
 `l ++ [w]` is the total over `l` plus `w.length`. (The accumulator
 `fun w acc => w.length + acc` is additive, so `foldr_append` would leave a
 non-zero seed; this dedicated lemma keeps the seed at `0`.) -/
@@ -227,7 +227,7 @@ theorem lz78PhraseStringsAux_total_length :
         simp only [List.length_nil, List.length_cons, Nat.add_zero] at ih ⊢
         omega
 
-/-- **Top-level total-length bound**: the total number of symbols across
+/-- The total number of symbols across
 all emitted phrase strings is at most the input length. (Each emitted
 phrase consumes input symbols; the unfinished tail accounts for the slack,
 so this is `≤`, not `=`.) -/
@@ -239,7 +239,7 @@ theorem lz78PhraseStrings_total_length_le (input : List α) :
     (by omega)
   simpa using h
 
-/-- **Worker conserves the flattened string**: the concatenation
+/-- The worker conserves the flattened string: the concatenation
 (`List.flatten`) of all emitted phrase strings, followed by an unfinished
 tail, reproduces the symbols seen so far `dict.flatten ++ cur ++ input`. This
 is the genuine *reconstruction* invariant: the phrases tile a prefix of the
@@ -273,7 +273,7 @@ theorem lz78PhraseStringsAux_flatten_conserve :
           (by simp only [List.length_cons] at h; omega)
         exact ⟨tail, by rw [htail]; simp [List.concat_eq_append, List.flatten_append]⟩
 
-/-- **Top-level reconstruction**: the concatenation of all emitted phrase
+/-- The concatenation of all emitted phrase
 strings, followed by an unfinished tail, equals the input. The cumulative
 phrase lengths therefore furnish an absolute-position tiling of a prefix of
 the input, with the tail accounting for the `≤`-slack.
@@ -288,7 +288,7 @@ theorem lz78PhraseStrings_flatten_prefix (input : List α) :
     lz78PhraseStringsAux_flatten_conserve (input.length + 1) [] [] input (by omega)
   exact ⟨tail, by simpa using htail⟩
 
-/-- **Worker conserves the flattened string AND bounds the tail**: the unfinished
+/-- The worker conserves the flattened string and bounds the tail: the unfinished
 tail at termination is the final candidate prefix `cur`, which the greedy invariant
 keeps as a dictionary entry (or empty). So the tail is a member of the returned
 phrase list (or `[]`), bounding its length by the longest phrase. Proved by induction
@@ -326,7 +326,7 @@ theorem lz78PhraseStringsAux_tail_mem :
         exact ⟨tail, by rw [htail]; simp [List.concat_eq_append, List.flatten_append],
           hmem_tail⟩
 
-/-- **Top-level tail membership**: the unfinished tail of the parse is a phrase string
+/-- The unfinished tail of the parse is a phrase string
 (a member of `lz78PhraseStrings input`) or empty. Hence its length is at most the
 longest phrase length, which bounds the un-emitted trailing tail `input.length - e`. -/
 theorem lz78PhraseStrings_flatten_tail_mem (input : List α) :
@@ -337,7 +337,7 @@ theorem lz78PhraseStrings_flatten_tail_mem (input : List α) :
   exact ⟨tail, by simpa using htail, hmem⟩
 
 omit [DecidableEq α] in
-/-- **`flatten` length equals the additive `foldr` total**: bridges the
+/-- The `flatten` length equals the additive `foldr` total, bridging the
 reconstruction-invariant `List.flatten` length to the cumulative-length `foldr`
 accumulator used by the tiling. -/
 theorem length_flatten_eq_foldr_length (L : List (List α)) :
@@ -350,7 +350,7 @@ theorem length_flatten_eq_foldr_length (L : List (List α)) :
 /-! ### Slice / content correspondence -/
 
 omit [DecidableEq α] in
-/-- **Flatten slice content correspondence** (pure list fact). For a list of
+/-- Flatten slice content correspondence (pure list fact). For a list of
 lists `L`, dropping the cumulative length of the first `j` sublists from the
 flatten and taking the `j`-th sublist length recovers `L[j]` exactly:
 `(L.flatten.drop (cumLen j)).take (L[j].length) = L[j]`, where
@@ -429,7 +429,7 @@ section ParentExtension
 
 variable {α : Type*} [DecidableEq α]
 
-/-- **Worker maintains the parent-extension invariant**: every emitted phrase
+/-- The worker maintains the parent-extension invariant: every emitted phrase
 string is `(an earlier dictionary entry) ++ [symbol]` or `[symbol]`. Stated
 positionally: for the worker output `D`, each `D[j].dropLast` either equals
 `[]` or appears strictly earlier in `D` (i.e. in `D.take j`).
@@ -489,7 +489,7 @@ theorem lz78PhraseStringsAux_dropLast_earlier :
               rw [hget, htake, List.dropLast_concat]
               exact hcur
 
-/-- **Top-level parent-extension invariant**: for the genuine longest-prefix
+/-- For the genuine longest-prefix
 greedy parse, each emitted phrase's `dropLast` is either `[]` or an earlier
 emitted phrase.
 
@@ -519,7 +519,7 @@ section CountBound
 
 variable {α : Type*} [DecidableEq α]
 
-/-- **Worker emits only non-empty phrases**: if every dictionary entry is
+/-- The worker emits only non-empty phrases: if every dictionary entry is
 non-empty, every entry of the worker output is non-empty. The emitted
 string is `cur ++ [s]`, which is always non-empty. -/
 theorem lz78PhraseStringsAux_forall_ne_nil :
@@ -543,13 +543,13 @@ theorem lz78PhraseStringsAux_forall_ne_nil :
           subst hw
           simp
 
-/-- **All emitted phrase strings are non-empty**. -/
+/-- All emitted phrase strings are non-empty. -/
 theorem lz78PhraseStrings_forall_ne_nil (input : List α) :
     ∀ w ∈ lz78PhraseStrings input, w ≠ [] :=
   lz78PhraseStringsAux_forall_ne_nil _ [] [] input (by simp)
 
 omit [DecidableEq α] in
-/-- **Count is bounded by total length when every phrase is non-empty**:
+/-- When every phrase is non-empty, the count is bounded by the total length:
 the number of phrases is at most the sum of their lengths, since each
 length is `≥ 1`. -/
 theorem length_le_foldr_length_of_ne_nil (l : List (List α))
@@ -569,7 +569,7 @@ theorem length_le_foldr_length_of_ne_nil (l : List (List α))
       omega
 
 omit [DecidableEq α] in
-/-- **Member length bounded by the `foldr max`**: every entry of a list of strings has
+/-- Every entry of a list of strings has
 length at most the longest entry length (the `Lmax` accumulator used to bound the
 leading-boundary and trailing-tail symbol lengths in the tiling). -/
 theorem length_le_foldr_max_of_mem (l : List (List α)) (w : List α) (h : w ∈ l) :
@@ -582,7 +582,7 @@ theorem length_le_foldr_max_of_mem (l : List (List α)) (w : List α) (h : w ∈
       · subst h; exact Nat.le_max_left _ _
       · exact Nat.le_trans (ih h) (Nat.le_max_right _ _)
 
-/-- **Distinct phrase count bound**: the number of distinct
+/-- The number of distinct
 phrases emitted by the genuine longest-prefix greedy parse is at most the
 input length. Combined with `lz78PhraseStrings_nodup` (the strings are
 distinct), this is the count `c(n) ≤ n` feeding the Cover–Thomas
@@ -601,7 +601,7 @@ section Tiling
 
 variable {α : Type*} [DecidableEq α]
 
-/-- **Deterministic absolute-position tiling from the greedy parse.** For an
+/-- Deterministic absolute-position tiling from the greedy parse. For an
 input list and a Markov order `k`, the greedy longest-prefix parse furnishes an
 absolute-position partition of the input prefix it covers: a leading boundary
 length `b`, a phrase count `c`, a covered length `e ≤ input.length`, the count
@@ -614,7 +614,7 @@ absorbed), the count is anchored to the genuine parse via
 `c + bAbsorbed = (parse).length`, and `bAbsorbed ≤ k + 1` (the cumulative length
 increases by `≥ 1` each step, so at most `k + 1` phrases fit below position `k`).
 
-**Boundary-length bounds** (for the downstream W2 limsup discharge): with `Lmax` the
+The boundary-length bounds (for the downstream W2 limsup discharge): with `Lmax` the
 longest phrase length, the leading boundary `b ≤ k + Lmax` (the last absorbed phrase
 extends one phrase past the `≤ k` cumulative prefix) and the trailing tail
 `input.length - e ≤ Lmax` (the un-emitted tail is one dictionary phrase or empty,

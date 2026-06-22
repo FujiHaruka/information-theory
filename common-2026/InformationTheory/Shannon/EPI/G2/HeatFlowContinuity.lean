@@ -55,13 +55,13 @@ open scoped ENNReal NNReal Topology
 
 `Integrable (negMulLog pX)` (= `h(X) < ∞`, differential entropy of the limit
 density `pX` finite) is required as the limit-side `Integrable` input by the
-entropy-integral machinery. It does **not** follow from the L¹ +
+entropy-integral machinery. It does not follow from the L¹ +
 finite-second-moment regularity of `pX` (a concentrated density can have
 `∫ negMulLog pX = −∞`). It is therefore carried as an explicit `hpX_ent`
 precondition: the input `X` has finite differential entropy. This is a regularity
 precondition on the input distribution, not a load-bearing conclusion. -/
 
-/-- **Per-time entropy-integrand integrability.**
+/-- Per-time entropy-integrand integrability.
 For each `t > 0`, `negMulLog (convDensityAdd pX g_t)` is `volume`-integrable.
 
 Delegates verbatim to the in-tree asset
@@ -82,11 +82,11 @@ theorem convDensityAdd_negMulLog_integrable_pub
 The lift from per-time entropy integrals to the endpoint entropy integral is a
 two-sided sandwich:
 
-* **(α) limsup upper bound** — `InformationTheory.EPIG2KLFatou.negMulLog_convDensity_limsup_le`
+* the (α) limsup upper bound — `InformationTheory.EPIG2KLFatou.negMulLog_convDensity_limsup_le`
   (Fatou / KL lower-semicontinuity): `limsup (∫ negMulLog f_n) ≤ ∫ negMulLog pX`.
-* **(β) per-`n` lower bound** — `negMulLog_convDensity_entropy_ge_density`
+* the (β) per-`n` lower bound — `negMulLog_convDensity_entropy_ge_density`
   (conditioning reduces entropy): `∫ negMulLog pX ≤ ∫ negMulLog f_n`.
-* **uniform upper bound** — `negMulLog_convDensityAdd_gaussian_entropy_upper`
+* the uniform upper bound — `negMulLog_convDensityAdd_gaussian_entropy_upper`
   (Gaussian maximum-entropy): a per-`n` bound with a uniform variance majorant
   (the `v n` are bounded since `v n → 0`), supplying the `IsBoundedUnder (· ≤ ·)`
   witness for the squeeze.
@@ -95,7 +95,7 @@ The squeeze `tendsto_of_le_liminf_of_limsup_le` then gives `∫ negMulLog f_n �
 negMulLog pX` along sequences, lifted to `𝓝[Ioi 0] 0` via
 `Filter.tendsto_iff_seq_tendsto`. -/
 
-/-- **Entropy-integral convergence.** Given the regularity of `pX` and the
+/-- Entropy-integral convergence. Given the regularity of `pX` and the
 entropy-finiteness precondition `hpX_ent` (= `h(X) < ∞`, a regularity precondition
 on the input), the differential-entropy integrals of the heat-smoothed densities
 converge to the entropy integral of `pX` as `t → 0⁺`:
@@ -153,14 +153,14 @@ theorem differentialEntropy_convDensity_integral_tendsto
     (hv_lim.mono_right nhdsWithin_le_nhds).bddAbove_range
   -- Abbreviation for the target value `a := ∫ g = ∫ negMulLog pX`.
   set a : ℝ := ∫ x, g x ∂volume with ha_def
-  -- **(β) lower bound** (`negMulLog_convDensity_entropy_ge_density`):
+  -- The (β) lower bound (`negMulLog_convDensity_entropy_ge_density`):
   -- for every `n`, `∫ negMulLog pX ≤ ∫ F n`, i.e. `a ≤ ∫ F n`.
   have hβ : ∀ n, a ≤ ∫ x, F n x ∂volume := by
     intro n
     rw [ha_def, hg_def, hF_def]
     exact negMulLog_convDensity_entropy_ge_density hpX_nn hpX_meas hpX_int hpX_mass hpX_mom
       hpX_ent (v_Z := 1) one_pos v hv_pos n
-  -- **(α) limsup upper bound** (`negMulLog_convDensity_limsup_le`):
+  -- The (α) limsup upper bound (`negMulLog_convDensity_limsup_le`):
   -- `limsup (∫ F ·) ≤ ∫ negMulLog pX = a`.
   have hα : Filter.limsup (fun n ↦ ∫ x, F n x ∂volume) atTop ≤ a := by
     rw [ha_def, hg_def]
@@ -169,7 +169,7 @@ theorem differentialEntropy_convDensity_integral_tendsto
     -- The lever's summand `∫ negMulLog (convDensityAdd pX (gaussianPDFReal 0 ⟨v n,_⟩))`
     -- is `F n` by definition.
     simpa only [hF_def] using hlim
-  -- **Uniform upper bound on `∫ F n`**: the Gaussian
+  -- A uniform upper bound on `∫ F n`: the Gaussian
   -- maximum-entropy bound `negMulLog_convDensityAdd_gaussian_entropy_upper` gives a per-`n`
   -- bound with a uniform variance majorant `V` (since the `v n` are bounded above).
   obtain ⟨C, hC⟩ : ∃ C : ℝ, ∀ n, (∫ x, F n x ∂volume) ≤ C := by
@@ -223,7 +223,7 @@ theorem differentialEntropy_convDensity_integral_tendsto
     exact hn.symm
   simp only [hF_def, Function.comp_apply, hwit]
 
-/-- **Heat-flow differential-entropy endpoint continuity.** With explicit regularity
+/-- Heat-flow differential-entropy endpoint continuity. With explicit regularity
 preconditions on `X, Z` (measurability, independence, Gaussian noise law
 `P.map Z = 𝒩(0, v_Z)`) and a Real density witness `pX` for `P.map X`, the inner
 differential entropy of the heat-flow path is `ContinuousWithinAt (Set.Ioi 0) 0`:
@@ -313,7 +313,7 @@ theorem heatFlowDifferentialEntropy_continuousWithinAt_zero
   filter_upwards [self_mem_nhdsWithin] with t ht
   exact (h_perT t ht).symm
 
-/-- **AntitoneOn endpoint-insert** — the OrderDual mirror of
+/-- `AntitoneOn` endpoint-insert, the OrderDual mirror of
 `MonotoneOn.insert_of_continuousWithinAt`. If `f` is `AntitoneOn s` and
 left-continuous-within-`s` at a cluster point `x`, then `f` is `AntitoneOn` the
 augmented set `insert x s`. Used to re-attach the endpoint `t = 0` to the genuine
@@ -336,7 +336,7 @@ theorem _root_.AntitoneOn.insert_of_continuousWithinAt
     continuous_toDual.continuousWithinAt.comp h'x (Set.mapsTo_univ _ _)
   exact (hmono.insert_of_continuousWithinAt hx hcont).dual_right
 
-/-- **Heat-flow endpoint regularity bundle** (precondition for the G2 wall lemma).
+/-- The heat-flow endpoint regularity bundle (precondition for the G2 wall lemma).
 
 Carries exactly the regularity / input-distribution data the density-identification
 bridge (`pPath_eq_convDensityAdd`) and the entropy-integral machinery
@@ -376,7 +376,7 @@ structure IsHeatFlowEndpointRegular {Ω : Type*} [MeasurableSpace Ω]
   hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume
   hpX_ent : Integrable (fun x ↦ Real.negMulLog (pX x)) volume
 
-/-- **Heat-flow entropy-power endpoint continuity.**
+/-- Heat-flow entropy-power endpoint continuity.
 
 `t ↦ entropyPower (P.map (fun ω => X ω + √t · Z ω))` is `ContinuousWithinAt
 (Set.Ioi 0) 0` (the limit `t → 0⁺`). The consumer

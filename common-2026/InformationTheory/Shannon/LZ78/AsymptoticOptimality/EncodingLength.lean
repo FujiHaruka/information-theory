@@ -26,7 +26,7 @@ section EncodingLength
 
 variable {α : Type*} [Fintype α] [DecidableEq α]
 
-/-- **Greedy encoding length of a finite tuple**: parse `List.ofFn x` with
+/-- The greedy encoding length of a finite tuple: parse `List.ofFn x` with
 the genuine longest-prefix-match greedy parse `lz78PhraseStrings`, count its
 `c` distinct emitted phrases, and charge `c · bitLength c |α|` bits (each of
 the `c` phrases costs at most `bitLength c |α|` bits, the uniform Cover–Thomas
@@ -99,7 +99,7 @@ theorem lz78_encoding_length_per_symbol_le (n : ℕ) (hn : 0 < n)
   push_cast
   ring
 
-/-- **Per-symbol bit-rate is nonnegative**: the greedy encoding length
+/-- The per-symbol bit-rate is nonnegative: the greedy encoding length
 divided by `n` is `≥ 0` for every `n` (including `n = 0`, where the
 division is `0/0 = 0`). The numerator is a `ℕ` cast and the denominator a
 `ℕ` cast, so the quotient is a nonnegative real. -/

@@ -19,7 +19,7 @@ and its de la Vallée-Poussin core have been DELETED.** The layer-2 endpoint
 continuity (`differentialEntropy_convDensity_integral_tendsto`) no longer uses the
 Vitali route — it was reassembled from the genuine `(α)` upper bound + `(β)` lower
 bound sandwich, and `wall:approx-identity-L1` is CLOSED (no active residual). What
-this file still provides is the **genuine maxent upper bound**
+this file still provides is the genuine maxent upper bound
 `negMulLog_convDensityAdd_gaussian_entropy_upper` (`@audit:ok`), which the sandwich
 layer-2 now consumes to discharge the `IsBoundedUnder` premise of
 `tendsto_of_le_liminf_of_limsup_le`. The Strategy note below is retained only as a
@@ -29,23 +29,23 @@ record of the abandoned Vitali approach.
 
 `f_n := convDensityAdd pX g_{u n} = pX ∗ g_{u n}`.
 
-* **Step 1** (Mathlib in): `unifIntegrable_of` reduces UI to a *uniform* indicator-tail
+* Step 1 (Mathlib in): `unifIntegrable_of` reduces UI to a *uniform* indicator-tail
   estimate
   `∀ ε>0, ∃ C, ∀ n, eLpNorm ({C ≤ |negMulLog (f_n)|}.indicator (negMulLog∘f_n)) 1 volume`
   ` ≤ ofReal ε`.
-* **Step 2** (probability-measure framing, genuine, option b = `withDensity` direct):
+* Step 2 (probability-measure framing, genuine, option b = `withDensity` direct):
   `μ_n := volume.withDensity (ofReal∘f_n)` is a probability measure (`∫ f_n = 1` via
   `integral_convDensityAdd_gaussian_eq_one`), `≪ volume`, and `rnDeriv = ofReal∘f_n`.
   Hence `differentialEntropy μ_n = ∫ negMulLog f_n`.
-* **Step 3** (maxent upper bound, in-tree `@entry_point`):
+* Step 3 (maxent upper bound, in-tree `@entry_point`):
   `differentialEntropy_le_gaussian_of_variance_le` applied to `μ_n` gives
   `∫ negMulLog f_n ≤ (1/2) log(2πe V_n)` with `V_n = (∫ x² pX) + u n` `n`-uniform.
   Combined with `negMulLog_le_one_sub_self` (positive part) this gives a uniform
   bound `M` on `∫ |negMulLog f_n|`.
-* **Step 4** (★ de la Vallée-Poussin bridge core, Mathlib-absent): "`∫|negMulLog f_n|`
+* Step 4 (★ de la Vallée-Poussin bridge core, Mathlib-absent): "`∫|negMulLog f_n|`
   uniformly bounded → `∫⁻_{C≤|negMulLog f_n|}|negMulLog f_n| ≤ ε` uniformly (C large)".
   This was the genuine de la Vallée-Poussin content (superlinear moment) with no
-  Mathlib lemma. It was the `wall:approx-identity-L1` content — now **OBSOLETE**: the
+  Mathlib lemma. It was the `wall:approx-identity-L1` content, now obsolete: the
   sandwich route bypassed it entirely (the (α) upper bound uses klFun-Fatou KL
   lower-semicontinuity, no uniform-integrability / de la Vallée-Poussin needed).
 -/
@@ -119,7 +119,7 @@ theorem differentialEntropy_convDensityAdd_gaussian_eq {pX : ℝ → ℝ}
   filter_upwards [hrn] with x hx
   rw [hx, ENNReal.toReal_ofReal (hf_nn x)]
 
-/-- **Second-moment integrability of `f_t` (helper, GENUINELY CLOSED).**
+/-- Second-moment integrability of `f_t` (a genuinely closed helper).
 `x ↦ x² · f_t(x)` is `volume`-integrable.
 @audit:ok -/
 theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
@@ -273,7 +273,7 @@ theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
   rw [houter]
   exact ENNReal.ofReal_lt_top
 
-/-- **First-moment integrability of `f_t` (helper, GENUINELY CLOSED).**
+/-- First-moment integrability of `f_t` (a genuinely closed helper).
 `x ↦ x · f_t(x)` is `volume`-integrable.
 @audit:ok -/
 theorem convDensityAdd_gaussian_id_integrable {pX : ℝ → ℝ}
@@ -305,7 +305,7 @@ theorem convDensityAdd_gaussian_id_integrable {pX : ℝ → ℝ}
           mul_le_mul_of_nonneg_right habs_le (hp_nn x)
       _ = (p_t x + x ^ 2 * p_t x) / 2 := by ring
 
-/-- **Maxent upper bound (Step 3, GENUINELY CLOSED).** The entropy integral
+/-- The maxent upper bound (Step 3, genuinely closed). The entropy integral
 `∫ negMulLog f_t` is bounded above by the Gaussian max-entropy `(1/2) log(2πe·V)` with
 `V = (∫ x² pX) + t`.
 @audit:ok -/

@@ -22,7 +22,7 @@ variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
 
 /-! ## PB-2 — path-identification reduction (B-0) -/
 
-/-- **Path-identification (B-0)**: the standardized noise `Z' = Z/√v` (`v > 0`) on the
+/-- The standardized noise `Z' = Z/√v` (`v > 0`) on the
 time-reparametrized path `X + √(t·v)·Z'` agrees *pointwise* (everywhere, not just a.e.)
 with the original path `X + √t·Z`. Used to bridge the sum-instance's `𝒩(0,2)` noise to a
 unit `W`. The hypothesis `0 < v` is required (`√v ≠ 0`); the `v = 0` degeneracy (division
@@ -44,7 +44,7 @@ theorem gaussianConvolution_rescale_eq {α : Type*}
   have hsv : Real.sqrt v ≠ 0 := (Real.sqrt_ne_zero' (x := v)).mpr hv
   field_simp
 
-/-- **Path-identification, `P.map` form**: the laws of the standardized time-reparam path
+/-- In `P.map` form, the laws of the standardized time-reparam path
 and the original path coincide (consequence of the pointwise identity). -/
 theorem map_gaussianConvolution_rescale_eq {α : Type*} [MeasurableSpace α]
     (P : Measure α) (X Z : α → ℝ) (v : ℝ) (hv : 0 < v) (t : ℝ) (ht : 0 ≤ t) :
@@ -66,7 +66,7 @@ It is conditioned on the *regularity* preconditions that the genuine Stam machin
 actually requires (`IsRegularDensityV2 fX/fY`, normalization, `IsBlachmanConvReady fX fY`),
 NOT on any inequality core — the bound is genuinely supplied by `convex_fisher_bound_of_ready`.
 
-**Why this does NOT directly close `integrable_deriv` for the case-1 producer**: the
+This does not directly close `integrable_deriv` for the case-1 producer: the
 producer's input density `pX = (P.map X).rnDeriv volume` is a *general* L¹ a.c. density with
 finite second moment. It need NOT satisfy `IsRegularDensityV2` (differentiable + strictly
 positive everywhere + both tails → 0) nor the boundedness fields of `IsBlachmanConvReady`
@@ -112,7 +112,7 @@ later wave). The `pX`-witness fields are the same plumbing as `IsRegularDeBruijn
 (`FisherInfoDeBruijnHeatFlow.lean`); the conv-pin `density_path` reuses the genuine density
 of `P.map (X + √t·Z)`. -/
 
-/-- **PB-3 producer (X / Y, unit-noise direct)**: from method-X input regularity (`X`
+/-- From method-X input regularity (`X`
 measurable, a.c., finite second moment) and **standard-normal** noise `Z_X` independent of
 `X`, supply the `IsDeBruijnRegularityHyp X Z_X P` group threaded by the case-1 wrapper.
 

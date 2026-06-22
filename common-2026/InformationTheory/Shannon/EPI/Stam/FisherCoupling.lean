@@ -53,8 +53,8 @@ open InformationTheory.Shannon.StamInequality
 
 /-! ## §1 — Optimal λ membership (arithmetic) -/
 
-/-- **Optimal λ membership** (used throughout): the optimal λ `J_Y / (J_X + J_Y)`
-selected in Step 4 lies in the unit interval `[0, 1]` whenever `J_X, J_Y > 0`. -/
+/-- The optimal λ `J_Y / (J_X + J_Y)` selected in Step 4 lies in the unit interval
+`[0, 1]` whenever `J_X, J_Y > 0` (used throughout). -/
 @[entry_point]
 theorem stam_optimal_lambda_mem_unit {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
     0 ≤ b / (a + b) ∧ b / (a + b) ≤ 1 := by
@@ -98,9 +98,8 @@ theorem stam_coupling_saturates {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
 
 /-! ## §6 — EPI pipeline integration via Step 3 -/
 
-/-- **EPI via Stam Step 3 (Gaussian case)**: full deliverable end-to-end. For
-Gaussian `X, Y` with non-zero variance, EPI follows through the Step-3 body
-discharge + Gaussian saturation bridge. -/
+/-- For Gaussian `X, Y` with non-zero variance, EPI follows end-to-end through the
+Step-3 body discharge and the Gaussian saturation bridge. -/
 @[entry_point]
 theorem epi_via_stam_step3_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}

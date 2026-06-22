@@ -42,9 +42,8 @@ set_option linter.unusedSectionVars false
 
 /-! ## sub-gap (b) — per-fibre density expansion -/
 
-/-- **Density split of `llr`**: when `P ≪ volume` and `Q ≪ volume`, the
-log-likelihood ratio `llr P Q` splits, `P`-a.e., into the difference of the
-two volume-densities' logarithms:
+/-- When `P ≪ volume` and `Q ≪ volume`, the log-likelihood ratio `llr P Q`
+splits, `P`-a.e., into the difference of the two volume-densities' logarithms:
 `llr P Q x = log (P-density x) − log (Q-density x)` for `P`-a.e. `x`,
 where `P-density x := (P.rnDeriv volume x).toReal`.
 
@@ -75,7 +74,7 @@ theorem llr_eq_log_density_sub_log_density
   rw [hxR, Real.log_mul (ne_of_gt (ENNReal.toReal_pos hPQx.ne' hPQtopx))
     (ne_of_gt (ENNReal.toReal_pos hQx.ne' hQtopx)), add_sub_cancel_right]
 
-/-- **Per-fibre density expansion** (sub-gap (b)). For `P Q : Measure ℝ` with
+/-- Per-fibre density expansion (sub-gap (b)). For `P Q : Measure ℝ` with
 `P ≪ volume`, `Q ≪ volume`, equal total mass `P univ = Q univ`, the real-valued
 Kullback-Leibler divergence expands into minus the differential entropy of `P`
 and a cross-entropy term:
@@ -196,7 +195,7 @@ theorem klDiv_negMulLog_cross_balance_ennreal
 
 /-! ## sub-gap (c) — Fubini + marginal identification -/
 
-/-- **Fubini + `condDistrib` marginal identification** (sub-gap (c), measure-level core).
+/-- Fubini + `condDistrib` marginal identification (sub-gap (c), measure-level core).
 For `X : Ω → ℝ`, `Z : Ω → α` measurable and `g : ℝ → ℝ` integrable against `μ.map X`,
 averaging the `X`-fibre integral of `g` over the law `μ.map Z` of `Z` returns the
 `μ.map X` integral:
@@ -239,7 +238,7 @@ theorem integral_condDistrib_marginal_eq
   rw [hjoint, integral_map (hZ.prodMk hX).aemeasurable hgsnd_meas]
   rw [← integral_map hX.aemeasurable hg_int.aestronglyMeasurable]
 
-/-- **Density-form wrapper of sub-gap (c)**, packaging the cross-entropy shape the
+/-- The density-form wrapper of sub-gap (c), packaging the cross-entropy shape the
 assembly consumes. With `g := fun x => Real.log ((μ.map X).rnDeriv volume x).toReal`
 and the per-fibre density rewrite `∫ x, g x ∂(κ z) = ∫ x, (κ z -density x) · g x ∂volume`
 (needs `κ z ≪ volume` a.e. `z`), the `μ.map Z`-average of the fibre cross-integral
@@ -281,7 +280,7 @@ theorem integral_condDistrib_density_marginal_eq
 
 /-! ## sub-gap (c) — ℝ≥0∞ (finiteness-free) marginal collapse for crux ② -/
 
-/-- **ℝ≥0∞ Fubini + `condDistrib` marginal identification** (crux ② core).
+/-- ℝ≥0∞ Fubini + `condDistrib` marginal identification (crux ② core).
 ℝ≥0∞ mirror of `integral_condDistrib_marginal_eq`: for `X : Ω → ℝ`, `Z : Ω → α`
 measurable and `g : ℝ → ℝ≥0∞` measurable, averaging the `X`-fibre lintegral of `g`
 over `μ.map Z` returns the `μ.map X` lintegral:
@@ -317,7 +316,7 @@ theorem lintegral_condDistrib_marginal_eq
         (lintegral_map hg measurable_snd).symm
     _ = ∫⁻ x, g x ∂(μ.map X) := by rw [hsnd]
 
-/-- **ℝ≥0∞ cross-term marginal collapse** (crux ② core, sign-parametrized).
+/-- ℝ≥0∞ cross-term marginal collapse (crux ② core, sign-parametrized).
 ℝ≥0∞ mirror of `integral_condDistrib_density_marginal_eq`: the `μ.map Z`-average of the
 fibre cross-lintegral `∫⁻ x, ofReal (sign (pz_x · log qX_x)) ∂volume` (where
 `pz_x := (condDistrib X Z μ z -density x)`, `qX_x := (μ.map X -density x)`,

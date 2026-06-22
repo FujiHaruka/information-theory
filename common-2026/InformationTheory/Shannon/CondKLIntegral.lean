@@ -57,7 +57,7 @@ section SliceRnDeriv
 variable [IsFiniteMeasure μ] [IsFiniteKernel κ] [IsFiniteKernel η]
   [MeasurableSpace.CountableOrCountablyGenerated 𝓧 𝓨]
 
-/-- **Slice identity for the Radon-Nikodym derivative of a composition product.**
+/-- The slice identity for the Radon-Nikodym derivative of a composition product.
 When the two joint measures share the first marginal `μ`, the joint Radon-Nikodym derivative
 agrees almost everywhere with the pointwise kernel Radon-Nikodym derivative. This is the
 statement the `RadonNikodym.lean` `TODO` left open.
@@ -91,7 +91,7 @@ section Integral
 variable [IsFiniteMeasure μ] [IsMarkovKernel κ] [IsMarkovKernel η]
   [MeasurableSpace.CountableOrCountablyGenerated 𝓧 𝓨]
 
-/-- **Conditional Kullback-Leibler divergence, integral form** (Mathlib `ChainRule.lean` `TODO`).
+/-- The conditional Kullback-Leibler divergence, integral form (Mathlib `ChainRule.lean` `TODO`).
 When the two joint measures `μ ⊗ₘ κ` and `μ ⊗ₘ η` share the first marginal `μ`, the `toReal`
 Kullback-Leibler divergence decomposes as the `μ`-average of the fibrewise divergences.
 @audit:ok -/
@@ -127,10 +127,10 @@ theorem klDiv_compProd_toReal_integral
         filter_upwards [Kernel.rnDeriv_eq_rnDeriv_measure (κ := κ) (η := η) (a := z)] with y hy
         rw [hy]
 
-/-- **Conditional KL divergence, lintegral form** (Mathlib `ChainRule.lean` `TODO`, ℝ≥0∞ form).
+/-- The conditional KL divergence, lintegral form (Mathlib `ChainRule.lean` `TODO`, ℝ≥0∞ form).
 ℝ≥0∞ mirror of `klDiv_compProd_toReal_integral`: when the two joint measures share the first
 marginal `μ`, the (ℝ≥0∞-valued) KL divergence equals the `μ`-average of the fibrewise divergences,
-**with no integrability hypothesis** (ℝ≥0∞ Tonelli `lintegral_compProd` is unconditional). -/
+with no integrability hypothesis (ℝ≥0∞ Tonelli `lintegral_compProd` is unconditional). -/
 theorem klDiv_compProd_lintegral (h_ac : μ ⊗ₘ κ ≪ μ ⊗ₘ η) :
     klDiv (μ ⊗ₘ κ) (μ ⊗ₘ η) = ∫⁻ z, klDiv (κ z) (η z) ∂μ := by
   -- a.e. fibrewise absolute continuity
@@ -164,7 +164,7 @@ theorem klDiv_compProd_lintegral (h_ac : μ ⊗ₘ κ ≪ μ ⊗ₘ η) :
         filter_upwards [Kernel.rnDeriv_eq_rnDeriv_measure (κ := κ) (η := η) (a := z)] with y hy
         rw [hy]
 
-/-- **Conditional KL divergence, integral form against a constant kernel.**
+/-- The conditional KL divergence, integral form against a constant kernel.
 Specialization of `klDiv_compProd_toReal_integral` to `η := Kernel.const 𝓧 ν`, the form used by
 the EPI G2 conditional differential-entropy bridge.
 @audit:ok -/

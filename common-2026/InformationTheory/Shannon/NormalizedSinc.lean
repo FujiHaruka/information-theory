@@ -42,7 +42,7 @@ open scoped Topology
 
 /-- Normalized sinc, `sin(π · x) / (π · x)` (with value `1` at `0`).
 
-This is the **information-theoretic convention** whose zeros land at the
+This is the information-theoretic convention whose zeros land at the
 non-zero integers (vs Mathlib's `Real.sinc` whose zeros are at non-zero
 multiples of `π`). The Whittaker-Shannon series formula
 `f(t) = Σ_n f(n/(2W)) · sincN(2W·t - n)` uses this convention. -/
@@ -79,7 +79,7 @@ theorem sincN_of_ne_zero (x : ℝ) (hx : x ≠ 0) :
 
 /-- The normalized sinc vanishes at all non-zero integers.
 
-This is the **algebraic reason** the Whittaker-Shannon series collapses
+This is the algebraic reason the Whittaker-Shannon series collapses
 to a single term at a sample point: `sincN(n - n₀) = δ_{n,n₀}`. -/
 @[entry_point]
 theorem sincN_int_eq_zero (n : ℤ) (hn : n ≠ 0) : sincN (n : ℝ) = 0 := by
@@ -100,7 +100,7 @@ theorem sincN_int_eq_kronecker (n : ℤ) :
 
 /-! ## §D — Sample-point collapse identity. -/
 
-/-- **Sample-point collapse**: at `t = n₀ / (2W)`, the Whittaker-Shannon
+/-- The sample-point collapse identity: at `t = n₀ / (2W)`, the Whittaker-Shannon
 series term `sincN(2W·t - n)` evaluates to `δ_{n,n₀}` (`1` if `n = n₀`,
 `0` otherwise).
 
@@ -145,7 +145,7 @@ theorem Continuous.sincN {α : Type*} [TopologicalSpace α]
 
 /-! ## §I — Sample-rate scaling identities. -/
 
-/-- The sample-rate-scaled sinc `sincN (2W·t - n)` is **continuous in `t`**
+/-- The sample-rate-scaled sinc `sincN (2W·t - n)` is continuous in `t`
 for any fixed integer `n` and positive `W`. -/
 @[entry_point, fun_prop]
 theorem continuous_sincN_sample_term (W : ℝ) (n : ℤ) :

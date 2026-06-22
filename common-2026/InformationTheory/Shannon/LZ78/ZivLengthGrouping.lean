@@ -8,7 +8,7 @@ import Mathlib.Data.Finset.Card
 /-!
 # LZ78 length-grouping Jensen inequality
 
-This file supplies the **abstract grouping inequality** at the heart of the
+This file supplies the abstract grouping inequality at the heart of the
 length-grouping route for the LZ78 achievability wall
 `ziv_aseventual_le_blockLogAvg₂`
 (`InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`,
@@ -36,7 +36,7 @@ namespace InformationTheory.Shannon
 
 open scoped BigOperators
 
-/-- **Abstract length-grouping Jensen inequality** (gateway atom for the LZ78
+/-- The abstract length-grouping Jensen inequality (gateway atom for the LZ78
 length-grouping route). For a nonempty finite index set `G` and weights
 `k : ι → ℕ`, writing `c = ∑ i ∈ G, k i` and `D = G.card`,
 
@@ -128,7 +128,7 @@ section LengthGrouping
 
 variable {α : Type*} [DecidableEq α]
 
-/-- **Length-grouped entropy bound for the LZ78 phrase set**: instantiating
+/-- The length-grouped entropy bound for the LZ78 phrase set, obtained by instantiating
 the abstract Jensen grouping inequality at the distinct LZ78 phrases, fibered
 by `List.length`. With `c = #phrases`, `c_ℓ = #{phrase | length = ℓ}` and
 `D = #{distinct lengths}`,

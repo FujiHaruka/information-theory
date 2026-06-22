@@ -47,13 +47,13 @@ Construct `s(t) = N_A⁻¹(N_A(0)·eᵗ)`
 via strict monotonicity (`J_A > 0`), continuity on `Ici 0`, surjectivity
 (`N_A → ∞`), continuous inverse (`StrictMonoOn.orderIso`), and inverse-function
 derivative (`HasDerivAt.of_local_left_inverse` + `comp`). The hypotheses are
-**only** regularity preconditions; the conclusion (existence of a matched path)
+only regularity preconditions; the conclusion (existence of a matched path)
 is the genuine output, not bundled.
 
 The five pieces (i)-(v) are isolated as private sub-lemmas below.
 -/
 
-/-- **(ii) Continuity of `N_A` on `Ici 0`.** Interior `s > 0` continuity from the
+/-- (ii) Continuity of `N_A` on `Ici 0`. Interior `s > 0` continuity from the
 supplied interior derivative `hJ_deriv` (`HasDerivAt → ContinuousAt`); the endpoint
 `s = 0` from the heat-flow endpoint continuity
 (`heatFlowEntropyPower_continuousWithinAt_zero`). -/
@@ -81,7 +81,7 @@ private theorem matchedTimePath_N_continuousOn
   · -- `x > 0`: interior, `DifferentiableAt → ContinuousAt → ContinuousWithinAt`.
     exact ((hN_diff_int x hx0).continuousAt).continuousWithinAt
 
-/-- **(i) Strict monotonicity of `N_A` on `Ici 0`.** From `strictMonoOn_of_deriv_pos`
+/-- (i) Strict monotonicity of `N_A` on `Ici 0`. From `strictMonoOn_of_deriv_pos`
 on the convex `Ici 0`: continuity (ii) + interior derivative
 `N_A(s)·J_A(s) > 0` (`entropyPower_pos` × `hJ_pos`). -/
 private theorem matchedTimePath_N_strictMonoOn
@@ -102,7 +102,7 @@ private theorem matchedTimePath_N_strictMonoOn
   rw [hderiv]
   exact mul_pos (by simpa [heatFlowEP] using entropyPower_pos _) (hJ_pos x hx_pos)
 
-/-- **(iii)+(iv) Continuous inverse `g = N_A⁻¹`.** From strict monotonicity (i),
+/-- (iii)+(iv) Continuous inverse `g = N_A⁻¹`. From strict monotonicity (i),
 continuity (ii), and surjectivity (`N_A → ∞`, IVT `intermediate_value_Ici`):
 the inverse `g` maps `Ici C` into `Ici 0`, is a right inverse of `N_A` on `Ici C`,
 is continuous, and sends `C` to `0`. -/
@@ -120,7 +120,7 @@ private theorem matchedTimePath_inverse
   classical
   set N : ℝ → ℝ := fun s ↦ heatFlowEP A B P s with hN
   set C : ℝ := N 0 with hC
-  -- **Surjectivity onto `Ici C`** via IVT.
+  -- Surjectivity onto `Ici C` via IVT.
   have h_surjOn : Set.SurjOn N (Set.Ici (0 : ℝ)) (Set.Ici C) := by
     have hsub : Set.Ici (N (0 : ℝ)) ⊆ N '' Set.Ici (0 : ℝ) :=
       isPreconnected_Ici.intermediate_value_Ici
@@ -141,7 +141,7 @@ private theorem matchedTimePath_inverse
   · -- `N (g y) = y`.
     intro y hy
     exact h_rinv (by simpa [hC] using hy)
-  · -- **Continuity of `g` on `Ici C`** (the inverse-continuity piece).
+  · -- Continuity of `g` on `Ici C` (the inverse-continuity piece).
     -- `g` is strictly monotone on `Ici C` (inverse of the strict-mono `N`).
     have h_leftInv : Set.LeftInvOn g N (Set.Ici (0 : ℝ)) := h_injOn.leftInvOn_invFunOn
     -- `N` maps `Ici 0` into `Ici C` (monotone, `N 0 = C`).
@@ -208,7 +208,7 @@ private theorem matchedTimePath_inverse
       have := h_rinv (Set.self_mem_Ici (a := C)); rw [this]
     exact h_injOn hgC_mem (Set.self_mem_Ici) hN_gC
 
-/-- **Continuity of the matched path** `t ↦ g (C·eᵗ)` on `Ici 0`, from
+/-- Continuity of the matched path `t ↦ g (C·eᵗ)` on `Ici 0`, from
 `ContinuousAt g (C·eᵗ)` (interior, `t > 0`) and the endpoint. -/
 private theorem matchedTimePath_path_continuousOn
     (g : ℝ → ℝ) (C : ℝ) (hC_pos : 0 < C)
@@ -223,7 +223,7 @@ private theorem matchedTimePath_path_continuousOn
     nlinarith [Real.one_le_exp ht, hC_pos]
   exact hg_cont.comp hinner hmaps
 
-/-- **(v) Inverse-function chain rule glue**: the matched path `s(t) = g (C·eᵗ)` has
+/-- The matched path `s(t) = g (C·eᵗ)` has
 derivative `1/J_A(s(t))` at `t > 0`, via `HasDerivAt.of_local_left_inverse` (giving
 `g' (C·eᵗ) = (N·J)⁻¹`) composed with `d/dt (C·eᵗ) = C·eᵗ`, cancelling to `1/J`. -/
 private theorem matchedTimePath_path_hasDerivAt
@@ -290,7 +290,7 @@ private theorem matchedTimePath_path_hasDerivAt
   rw [hsa] at hcomp ⊢
   rwa [hval] at hcomp
 
-/-- **TT-path existence** — the matched-time path `s : ℝ → ℝ` exists.
+/-- The matched-time path `s : ℝ → ℝ` exists.
 
 Hypotheses are regularity preconditions only: positivity of the Fisher info
 `J_A` along the path (`hJ_pos`, a genuine `0 < fisherInfo` precondition that has
@@ -317,16 +317,16 @@ supplied derivative `DifferentiableAt → ContinuousAt`; endpoint `s = 0⁺` fro
 (`HasDerivAt.of_local_left_inverse` giving `g'(C·eᵗ) = (N·J)⁻¹`, composed via
 `HasDerivAt.comp` with `d/dt (C·eᵗ) = C·eᵗ`, cancelling to `1/J_A`).
 
-**Surjectivity precondition** (`hN_tendsto`): the single-source heat-flow entropy
+The surjectivity precondition (`hN_tendsto`): the single-source heat-flow entropy
 power `N_A(s) = entropyPower (P.map (A + √s·B))` diverges to `∞` as `s → ∞`. This
 is a genuine regularity datum (no in-tree theorem gives it for an arbitrary `A`),
 assembled from `entropyPower_path_scaling` (`N_A(s) = s · entropyPower(P.map(A/√s + B))`)
 times `entropyPower_rescaled_path_tendsto` (the rescaled path entropy power tends to
-the positive `entropyPower (P.map B)`). It is **not** load-bearing on the EPI
+the positive `entropyPower (P.map B)`). It is not load-bearing on the EPI
 conclusion: it is the order-completeness datum used to invert `N_A` (surjectivity onto
 `[N_A 0, ∞)`).
 
-**Endpoint precondition** (`h_endpt : IsHeatFlowEndpointRegular A B P`): a regularity
+The endpoint precondition (`h_endpt : IsHeatFlowEndpointRegular A B P`): a regularity
 bundle (measurability / independence / Real density witness of `P.map A` / input
 entropy finiteness) consumed by the heat-flow endpoint continuity lemma; all fields
 are preconditions, none bundles the EPI conclusion.

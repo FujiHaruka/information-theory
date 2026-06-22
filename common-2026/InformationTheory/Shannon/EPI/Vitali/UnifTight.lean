@@ -90,7 +90,7 @@ private theorem integral_sq_mul_gaussianPDFReal_shift {t : ℝ} (ht : 0 < t) (y 
     integral_id_mul_gaussianPDFReal ht, integral_gaussianPDFReal_eq_one 0 hv_ne]
   ring
 
-/-- **Convolution-density second moment**.
+/-- The second moment of a convolution density.
 For `f_t = pX ∗ g_t` (Gaussian kernel of variance `t`):
 `∫ x², (convDensityAdd pX g_t) ∂volume = (∫ x², pX) + (∫ pX) · t`.
 @audit:ok -/
@@ -243,7 +243,7 @@ theorem convDensityAdd_second_moment
     funext y; ring]
   rw [integral_add hpX_mom (hpX_int.mul_const t), integral_mul_const]
 
-/-- **Uniform second-moment bound (GENUINE sub-structure of the UT witness).**
+/-- A uniform second-moment bound (a genuine sub-structure of the UT witness).
 For a bounded positive variance sequence `u`, the second moments
 `∫ x², f_n = ∫ x² pX + (∫ pX)·u n` are uniformly bounded by
 `V := (∫ x² pX) + (∫ pX)·B` where `B` is any upper bound of `u`. This is the

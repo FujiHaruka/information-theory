@@ -39,7 +39,7 @@ open scoped ENNReal NNReal Real
 
 /-! ## Differential entropy: definition and basic integrability -/
 
-/-- **Differential entropy**. For a measure `μ` on `ℝ`, define
+/-- Differential entropy. For a measure `μ` on `ℝ`, define
 `differentialEntropy μ := ∫ x, Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume`,
 i.e. `-∫ f log f dx` where `f := dμ/dvolume` is the Radon-Nikodym derivative w.r.t.
 the Lebesgue measure. `Real.negMulLog 0 = 0` covers the support boundary automatically.
@@ -163,7 +163,7 @@ theorem differentialEntropy_dirac (m : ℝ) :
 /-! ## Translation invariance and scaling -/
 
 set_option linter.unusedVariables false in
-/-- **Translation invariance**: `h(X + y) = h(X)`. -/
+/-- Differential entropy is translation invariant: `h(X + y) = h(X)`. -/
 theorem differentialEntropy_map_add_const
     {μ : Measure ℝ} (hμ : μ ≪ volume) [SigmaFinite μ] (y : ℝ) :
     differentialEntropy (μ.map (· + y)) = differentialEntropy μ := by
@@ -190,7 +190,7 @@ theorem differentialEntropy_map_add_const
   filter_upwards [h_rn] with x hx
   rw [hx]
 
-/-- **Scaling**: `h(cX) = h(X) + log |c|`.
+/-- Differential entropy under scaling: `h(cX) = h(X) + log |c|`.
 
 Requires `h_ent_int`: integrability of `negMulLog (μ.rnDeriv volume)` (not automatic from
 `μ ≪ volume`; heavy-tail densities can have non-integrable `negMulLog`). -/
@@ -315,7 +315,7 @@ theorem differentialEntropy_map_mul_const
     rw [h_eq]
     exact h_ent_int.const_mul _
 
-/-- **Affine** corollary: `h(aX + b) = h(X) + log |a|`. -/
+/-- The affine corollary: `h(aX + b) = h(X) + log |a|`. -/
 @[entry_point]
 theorem differentialEntropy_map_affine
     {μ : Measure ℝ} (hμ : μ ≪ volume) [IsProbabilityMeasure μ] {a : ℝ} (ha : a ≠ 0) (b : ℝ)
@@ -370,7 +370,7 @@ theorem log_gaussianPDFReal_eq
   rw [Real.log_inv, Real.log_sqrt h2πv_pos.le, Real.log_exp]
   ring
 
-/-- **Main theorem**: `h(𝒩(m, v)) = (1/2) log (2πe v)`. -/
+/-- The differential entropy of a Gaussian: `h(𝒩(m, v)) = (1/2) log (2πe v)`. -/
 @[entry_point]
 theorem differentialEntropy_gaussianReal
     (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
@@ -457,7 +457,7 @@ theorem differentialEntropy_gaussianReal_std :
 
 /-! ## Gaussian maximum-entropy theorem -/
 
-/-- **Gaussian maximum-entropy theorem**: for `μ ≪ volume` with mean `m` and variance ≤ `v`,
+/-- The Gaussian maximum-entropy theorem: for `μ ≪ volume` with mean `m` and variance ≤ `v`,
 `differentialEntropy μ ≤ (1/2) log (2πe v)`.
 
 The side hypotheses `h_ent_int` (integrability of `negMulLog (dμ/dλ)`) and `h_var_int`

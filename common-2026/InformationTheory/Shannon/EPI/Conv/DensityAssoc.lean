@@ -15,13 +15,13 @@ then closes Fisher integrability via `convDensityAdd_fisher_integrand_integrable
 
 ## Route
 
-1. **`convDensityAdd_assoc`** — `conv(conv(a,b),c) = conv(a,conv(b,c))`, via the bridge
+1. `convDensityAdd_assoc` — `conv(conv(a,b),c) = conv(a,conv(b,c))`, via the bridge
    `convDensityAdd = ⋆[mul ℝ ℝ, volume]` (definitional, from the normalization file) and
    Mathlib `MeasureTheory.convolution_assoc` (all four bilinear maps `= mul ℝ ℝ`,
    compatibility `(x*y)*z = x*(y*z)` is `mul_assoc`). The `ConvolutionExistsAt` side
    conditions reduce to integrand integrability, supplied for nonneg integrable functions
    with a bounded (Gaussian-kernel) factor.
-2. **`convDensityAdd_convGaussian_interchange`** — assoc + `convDensityAdd_comm` rearrange
+2. `convDensityAdd_convGaussian_interchange` — assoc + `convDensityAdd_comm` rearrange
    `(pX∗g)∗(pY∗g) = (pX∗pY)∗(g∗g)`, then variance-doubling `g_t ∗ g_t = g_{2t}` via
    `convDensityAdd_gaussian_closed_form` (`mX=mY=0`, `vX=vY=⟨t,_⟩`, sum `⟨2t,_⟩`).
 
@@ -46,7 +46,7 @@ namespace InformationTheory.Shannon.EPIConvDensity
 open MeasureTheory Real ProbabilityTheory
 open scoped NNReal Convolution
 
-/-- **Convolution-density bridge**: `convDensityAdd a b = a ⋆[mul ℝ ℝ, volume] b`
+/-- The convolution density `convDensityAdd a b` equals `a ⋆[mul ℝ ℝ, volume] b`
 (definitional, via `ContinuousLinearMap.mul_apply'`).
 @audit:ok -/
 theorem convDensityAdd_eq_convolution (a b : ℝ → ℝ) :
@@ -102,9 +102,9 @@ theorem convDensityAdd_bdd_of_integrable_bdd (a b : ℝ → ℝ)
           (Filter.Eventually.of_forall hge)
     _ = (∫ x, a x ∂volume) * M := by rw [integral_mul_const]
 
-/-- **Associativity of the convolution density**: `conv(conv(a,b),c) = conv(a,conv(b,c))`.
+/-- The convolution density is associative: `conv(conv(a,b),c) = conv(a,conv(b,c))`.
 Via the bridge `convDensityAdd = ⋆[mul ℝ ℝ, volume]` and Mathlib `convolution_assoc`.
-Requires nonneg + integrable data; only the **third** factor `c` need be bounded (so that
+Requires nonneg + integrable data; only the third factor `c` need be bounded (so that
 the `‖b‖ ⋆ ‖c‖`-at-`x₀` existence holds everywhere). The `a ⋆ b` and `‖b‖ ⋆ ‖c‖` existence
 are a.e. from `Integrable.ae_convolution_exists` (`a`, `b` may both be unbounded `L¹`).
 @audit:ok -/
@@ -164,7 +164,7 @@ theorem convDensityAdd_pXpY_integral_eq (pX pY : ℝ → ℝ)
   exact MeasureTheory.integral_convolution
     (L := ContinuousLinearMap.mul ℝ ℝ) hpX_int hpY_int
 
-/-- **Variance-doubling**: `g_t ∗ g_t = g_{2t}` (`g_s = gaussianPDFReal 0 ⟨s, _⟩`).
+/-- Variance doubling: `g_t ∗ g_t = g_{2t}` (`g_s = gaussianPDFReal 0 ⟨s, _⟩`).
 @audit:ok -/
 theorem convDensityAdd_gaussian_variance_double {t : ℝ} (ht : 0 < t) :
     convDensityAdd (gaussianPDFReal 0 ⟨t, ht.le⟩) (gaussianPDFReal 0 ⟨t, ht.le⟩)
@@ -180,7 +180,7 @@ theorem convDensityAdd_gaussian_variance_double {t : ℝ} (ht : 0 < t) :
     add_zero]
   congr 1
 
-/-- **Variance-adding** (asymmetric variances): `g_s ∗ g_t = g_{s+t}`
+/-- Variance adding with asymmetric variances: `g_s ∗ g_t = g_{s+t}`
 (`g_s = gaussianPDFReal 0 ⟨s, _⟩`). Independent-time generalization of
 `convDensityAdd_gaussian_variance_double` (`s = t`); feeds the two-time route's
 harmonic-Stam supply producer (`density_sum_{σ+τ} = conv(density_X_σ, density_Y_τ)`). -/
@@ -196,7 +196,7 @@ theorem convDensityAdd_gaussian_variance_add {s t : ℝ} (hs : 0 < s) (ht : 0 < 
     add_zero]
   congr 1
 
-/-- **4-fold interchange bridge** (consumed by `int_fisherZ`):
+/-- The 4-fold interchange bridge (consumed by `int_fisherZ`):
 `conv(conv(pX,g_t), conv(pY,g_t)) = conv(conv(pX,pY), g_{2t})`.
 @audit:ok -/
 theorem convDensityAdd_convGaussian_interchange (pX pY : ℝ → ℝ) {t : ℝ} (ht : 0 < t)
@@ -252,7 +252,7 @@ theorem convDensityAdd_convGaussian_interchange (pX pY : ℝ → ℝ) {t : ℝ} 
   rw [show convDensityAdd g g = gaussianPDFReal 0 ⟨2 * t, by positivity⟩ from
     convDensityAdd_gaussian_variance_double ht]
 
-/-- **Asymmetric 4-fold interchange bridge** (independent times `s, t`):
+/-- The asymmetric 4-fold interchange bridge with independent times `s, t`:
 `conv(conv(pX,g_s), conv(pY,g_t)) = conv(conv(pX,pY), g_{s+t})`. Independent-time
 generalization of `convDensityAdd_convGaussian_interchange` (`σ = τ`); feeds the two-time
 route's harmonic-Stam supply producer for `density_sum_{σ+τ} = conv(density_X_σ, density_Y_τ)`. -/

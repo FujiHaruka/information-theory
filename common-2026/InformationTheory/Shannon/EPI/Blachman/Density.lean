@@ -19,11 +19,11 @@ and builds, without any `condExp`/`condDistrib`/disintegration:
   — the conditional density `p_{X|Z}(x|z)` written as an explicit ratio of
   Bochner integrands.
 * `condDensityX_integral_eq_one` — normalization `∫ x, p_{X|Z}(x|z) dx = 1`.
-* `symm_deriv_integral_eq` (**S2**) — symmetric derivative identity
+* `symm_deriv_integral_eq` (S2) — symmetric derivative identity
   `∫ x, deriv fX x · fY (z - x) = ∫ x, fX x · deriv fY (z - x)` (both `= p_Z'(z)`),
   obtained from the genuine gateway applied in both factor orders +
   `convDensityAdd_comm` + the reflection substitution.
-* `score_conv_eq_weighted_integral` (**S3**, the Blachman core) — for any `λ`,
+* `score_conv_eq_weighted_integral` (S3, the Blachman core) — for any `λ`,
   with `W_λ(x,z) := λ · logDeriv fX x + (1-λ) · logDeriv fY (z-x)`,
   `logDeriv (convDensityAdd fX fY) z = ∫ x, W_λ x z · p_{X|Z}(x|z) dx`.
   This is the score-of-convolution representation written as an explicit
@@ -42,16 +42,16 @@ open scoped ENNReal NNReal
 open InformationTheory.Shannon.FisherInfo
 open InformationTheory.Shannon.EPIConvDensity
 
-/-- **Conditional density** `p_{X|Z}(x|z) := fX(x) · fY(z - x) / p_Z(z)`, where
+/-- The conditional density `p_{X|Z}(x|z) := fX(x) · fY(z - x) / p_Z(z)`, where
 `p_Z = convDensityAdd fX fY`. Explicit ratio form (no `condDistrib`). -/
 noncomputable def condDensityX (fX fY : ℝ → ℝ) (z x : ℝ) : ℝ :=
   fX x * fY (z - x) / convDensityAdd fX fY z
 
-/-- **Score weight** `W_λ(x,z) := λ · logDeriv fX x + (1-λ) · logDeriv fY (z - x)`. -/
+/-- The score weight `W_λ(x,z) := λ · logDeriv fX x + (1-λ) · logDeriv fY (z - x)`. -/
 noncomputable def scoreWeight (fX fY : ℝ → ℝ) (lam z x : ℝ) : ℝ :=
   lam * logDeriv fX x + (1 - lam) * logDeriv fY (z - x)
 
-/-- **Normalization** of the conditional density: `∫ x, p_{X|Z}(x|z) dx = 1`.
+/-- Normalization of the conditional density: `∫ x, p_{X|Z}(x|z) dx = 1`.
 
 Numerator `∫ x, fX x · fY (z - x) = convDensityAdd fX fY z = p_Z(z)` (by
 definition), divided by `p_Z(z) > 0`.
@@ -70,7 +70,7 @@ theorem condDensityX_integral_eq_one (fX fY : ℝ → ℝ) (z : ℝ)
   rw [hnum]
   exact div_self hpZ.ne'
 
-/-- **S2 — symmetric derivative identity** of the convolution density:
+/-- S2, the symmetric derivative identity of the convolution density:
 `∫ x, deriv fX x · fY (z - x) = ∫ x, fX x · deriv fY (z - x)` (both `= p_Z'(z)`).
 @audit:ok -/
 theorem symm_deriv_integral_eq (fX fY : ℝ → ℝ) (z : ℝ)
@@ -110,7 +110,7 @@ theorem symm_deriv_integral_eq (fX fY : ℝ → ℝ) (z : ℝ)
   -- goal : ∫ x, deriv fX x * fY (z - x) = ∫ x, fY (z - x) * deriv fX x
   exact integral_congr_ae (Filter.Eventually.of_forall (fun x ↦ mul_comm _ _))
 
-/-- **S3 — score representation (Blachman core, condExp-free).**
+/-- S3, the score representation (the Blachman core, condExp-free).
 
 For any `λ`, with `W_λ(x,z) := λ · logDeriv fX x + (1-λ) · logDeriv fY (z - x)`,
 `logDeriv (convDensityAdd fX fY) z = ∫ x, W_λ x z · p_{X|Z}(x|z) dx`.
@@ -196,22 +196,22 @@ theorem score_conv_eq_weighted_integral (fX fY : ℝ → ℝ) (lam z : ℝ)
 
 /-! ## Convex Fisher bound (density route)
 
-This section consumes S2/S3 (above) and assembles the **convex Fisher bound**
+This section consumes S2/S3 (above) and assembles the convex Fisher bound
 
 `(fisherInfoOfDensity (convDensityAdd fX fY)).toReal ≤
    lam² · (fisherInfoOfDensity fX).toReal + (1-lam)² · (fisherInfoOfDensity fY).toReal`
 
 for `0 ≤ lam ≤ 1`, via:
 
-* **atom A** (`fisherInfoOfDensity_toReal_eq_integral`) — the lintegral↔Bochner
+* atom A (`fisherInfoOfDensity_toReal_eq_integral`) — the lintegral↔Bochner
   bridge `(fisherInfoOfDensity f).toReal = ∫ x, (logDeriv f x)² · f x ∂volume`
   (genuine, `integral_eq_lintegral_of_nonneg_ae` + `ENNReal.ofReal_mul`).
-* **S4 pointwise Cauchy-Schwarz** (`score_sq_le_weighted_integral`) — probability
+* S4 pointwise Cauchy-Schwarz (`score_sq_le_weighted_integral`) — probability
   weighted CS: `(logDeriv p_Z z)² ≤ ∫ x, (W_λ x z)² · p_{X|Z}(x|z) dx`.
 * the Tonelli swap + 3-term evaluation (`λ²·J_X + (1-λ)²·J_Y`, cross-term `= 0`).
 -/
 
-/-- **atom A — lintegral↔Bochner bridge** for the Fisher information of a density.
+/-- Atom A, the lintegral↔Bochner bridge for the Fisher information of a density.
 
 `(fisherInfoOfDensity f).toReal = ∫ x, (logDeriv f x)² · f x ∂volume`.
 
@@ -239,7 +239,7 @@ theorem fisherInfoOfDensity_toReal_eq_integral (f : ℝ → ℝ)
   refine lintegral_congr_ae (Filter.Eventually.of_forall (fun x ↦ ?_))
   simp only [ENNReal.ofReal_mul (sq_nonneg (logDeriv f x))]
 
-/-- **S4 — probability-weighted pointwise Cauchy-Schwarz** of the score.
+/-- S4, the probability-weighted pointwise Cauchy-Schwarz of the score.
 
 With `W_λ(x,z) := scoreWeight fX fY lam z x` and `p_{X|Z}(x|z) := condDensityX fX fY z x`
 (a probability weight: `≥ 0`, `∫ = 1`), and the S3 representation
@@ -352,7 +352,7 @@ Bochner) to put `z` innermost, then translation invariance `integral_sub_right_e
 integral. The product-measure integrability hypotheses (`Integrable (uncurry …)`) are
 honest regularity preconditions (Gaussian-satisfied, load-bearing-free). -/
 
-/-- **Term 1** (the `λ²` term): translation invariance pulls the inner `z` integral of
+/-- Term 1 (the `λ²` term): translation invariance pulls the inner `z` integral of
 `fY (z - x)` to `1`, leaving `J_X`.
 @audit:ok -/
 private theorem convex_fisher_term1 (fX fY : ℝ → ℝ)
@@ -374,7 +374,7 @@ private theorem convex_fisher_term1 (fX fY : ℝ → ℝ)
   have htr := MeasureTheory.integral_sub_right_eq_self fY (μ := volume) x
   rw [htr, hnormY, mul_one]
 
-/-- **Term 2** (the `(1-λ)²` term): substitute `y = z - x` (translation), the inner `z`
+/-- Term 2 (the `(1-λ)²` term): substitute `y = z - x` (translation), the inner `z`
 integral becomes `J_Y`, and `∫_x fX = 1`.
 @audit:ok -/
 private theorem convex_fisher_term2 (fX fY : ℝ → ℝ)
@@ -403,7 +403,7 @@ private theorem convex_fisher_term2 (fX fY : ℝ → ℝ)
   simp only [hinner]
   rw [integral_mul_const, hnormX, one_mul]
 
-/-- **Term 3** (the cross term): the inner `z` integral of `logDeriv fY (z-x)·fY (z-x)`
+/-- Term 3 (the cross term): the inner `z` integral of `logDeriv fY (z-x)·fY (z-x)`
 is `∫ logDeriv fY · fY = 0`, so the whole term vanishes.
 
 The conclusion `= 0` is reconstructed via `integral_integral_swap` (Tonelli) +
@@ -432,7 +432,7 @@ private theorem convex_fisher_cross (fX fY : ℝ → ℝ)
     rw [htr, integral_logDeriv_density_eq_zero hregY, mul_zero]
   simp only [hinner, integral_zero]
 
-/-- **Convex Fisher bound (density route).**
+/-- The convex Fisher bound (density route).
 
 For `0 ≤ lam ≤ 1`,
 `(fisherInfoOfDensity (convDensityAdd fX fY)).toReal
@@ -681,7 +681,7 @@ structure IsBlachmanConvReady (fX fY : ℝ → ℝ) : Prop where
       (Function.uncurry fun z x ↦
         logDeriv fX x * fX x * (logDeriv fY (z - x) * fY (z - x))) (volume.prod volume)
 
-/-- **Symmetry of the regularity bundle** under `X ↔ Y` swap.
+/-- Symmetry of the regularity bundle under the `X ↔ Y` swap.
 
 `IsBlachmanConvReady` is genuinely symmetric: `convDensityAdd` is commutative
 (`convDensityAdd_comm`) and each integrability / boundedness field transports across
@@ -825,7 +825,7 @@ theorem isBlachmanConvReady_symm {fX fY : ℝ → ℝ}
     simp only [Function.comp, Function.uncurry, sub_sub_cancel]
     ring
 
-/-- **Convex Fisher bound from the regularity bundle**. Applies `convex_fisher_bound`
+/-- The convex Fisher bound from the regularity bundle. Applies `convex_fisher_bound`
 by projecting the integrability / boundedness / positivity preconditions out of the
 `IsBlachmanConvReady` bundle. Pure plumbing — no analytic content beyond
 `convex_fisher_bound`.

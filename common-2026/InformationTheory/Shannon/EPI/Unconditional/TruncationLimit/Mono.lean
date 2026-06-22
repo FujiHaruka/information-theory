@@ -332,7 +332,7 @@ private theorem differentialEntropy_le_of_conv_finite
     Measure.isProbabilityMeasure_map hW.aemeasurable
   haveI hVmap_prob : IsProbabilityMeasure (Q.map V) :=
     Measure.isProbabilityMeasure_map hV.aemeasurable
-  -- **per-fibre translate Gibbs**.  Set `μWz z := (Q.map W).map (·+z)` (the per-fibre conditional
+  -- Per-fibre translate Gibbs.  Set `μWz z := (Q.map W).map (·+z)` (the per-fibre conditional
   -- law of `W+V` given `V=z`, by independence).  Each `μWz z ≪ ν` (a.e. z), so per-fibre Gibbs
   -- gives
   -- `h(μWz z) ≤ -∫ x, log(r x) ∂(μWz z)`, and translation invariance gives `h(μWz z) = h(Q.map W)`.
@@ -368,7 +368,7 @@ private theorem differentialEntropy_le_of_conv_finite
     show Integrable (fun x ↦ Real.negMulLog
       (((Q.map W).map (fun x ↦ x + z)).rnDeriv volume x).toReal) volume
     exact integrable_negMulLog_rnDeriv_map_add_const (ν := Q.map W) z hW_ent_Q
-  -- **Foundational identities for the Tonelli collapse.**
+  -- Foundational identities for the Tonelli collapse.
   set fWe : ℝ → ℝ≥0∞ := (Q.map W).rnDeriv volume with hfWeb_def
   have hfWe_meas : Measurable fWe := Measure.measurable_rnDeriv _ _
   have hfW_meas : Measurable fW := (Measure.measurable_rnDeriv _ _).ennreal_toReal
@@ -392,7 +392,7 @@ private theorem differentialEntropy_le_of_conv_finite
     have hmp : MeasurePreserving (fun x : ℝ ↦ x - z) volume volume :=
       ⟨by fun_prop, MeasureTheory.map_sub_right_eq_self (μ := (volume : Measure ℝ)) z⟩
     exact hmp.quasiMeasurePreserving.ae h0
-  -- **inner integral identity**: `∫ x, g x ∂(μWz z) = ∫ x, fW (x - z) * g x ∂volume`.
+  -- The inner integral identity `∫ x, g x ∂(μWz z) = ∫ x, fW (x - z) * g x ∂volume`.
   have hinner : ∀ (z : ℝ) (g : ℝ → ℝ),
       ∫ x, g x ∂(μWz z) = ∫ x, fW (x - z) * g x ∂volume :=
     fun z g ↦ integral_map_add_const_eq_integral_translate_mul (Q.map W) hW_ac_Q z g
@@ -469,7 +469,7 @@ theorem differentialEntropyExt_mono_add_of_integrable
       (fun x ↦ Real.negMulLog ((Q.map W).rnDeriv volume x).toReal) volume) :
     differentialEntropyExt (Q.map W)
       ≤ differentialEntropyExt (Q.map (fun ω ↦ W ω + V ω)) := by
-  -- **Local aliases matching the transplanted core's names.**
+  -- Local aliases matching the transplanted core's names.
   have hW_ac_Q : (Q.map W) ≪ volume := hW_ac
   have hindep : IndepFun W V Q := hWV
   -- Probability-measure instances on the relevant marginals.
@@ -487,17 +487,17 @@ theorem differentialEntropyExt_mono_add_of_integrable
   -- Full differential-entropy integrability of `Q.map W` is exactly the hypothesis `hW_ent`.
   have hW_ent_Q : Integrable
       (fun x ↦ Real.negMulLog ((Q.map W).rnDeriv volume x).toReal) volume := hW_ent
-  -- **negative-part lintegral `B(W) < ⊤`** from the integrability `hW_ent`
+  -- Negative-part lintegral `B(W) < ⊤` from the integrability `hW_ent`
   -- (`∫⁻ ofReal(-(negMulLog f)) ≤ ∫⁻ ‖negMulLog f‖ₑ < ⊤`).
   have hBn_fin :
       (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (((Q.map W).rnDeriv volume x).toReal)))
         ∂volume) ≠ ⊤ :=
     lintegral_ofReal_neg_ne_top_of_integrable hW_ent
-  -- ↓↓↓ **core, transplanted verbatim from `differentialEntropyExt_mono_add_truncW`** ↓↓↓
+  -- ↓↓↓ core, transplanted verbatim from `differentialEntropyExt_mono_add_truncW` ↓↓↓
   -- abbreviations for the sum law `ν := Q.map (W+V) = (Q.map W) ∗ (Q.map V)` and its density.
   set ν : Measure ℝ := Q.map (fun ω ↦ W ω + V ω) with hν_def
   set rfun : ℝ → ℝ := fun x ↦ (ν.rnDeriv volume x).toReal with hrfun_def
-  -- **`B(ν) < ⊤`** (sum-marginal negative-part), via the single-component helper
+  -- `B(ν) < ⊤` (sum-marginal negative-part), via the single-component helper
   -- `negPart_negMulLog_conv_single_ne_top` averaging over the probability measure `Q.map V`
   -- (no a.c. on `V` needed).  `B(Q.map W) < ⊤` is `hBn_fin`.
   have hBn_fin' :
@@ -508,9 +508,9 @@ theorem differentialEntropyExt_mono_add_of_integrable
       (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (rfun x))) ∂volume) ≠ ⊤ := by
     have hconv_fin := negPart_negMulLog_conv_single_ne_top (Q.map W) (Q.map V) hW_ac_Q hBn_fin'
     rw [hrfun_def, hν_conv]; exact hconv_fin
-  -- **Case split on whether the sum entropy integrand is integrable.**
+  -- Case split on whether the sum entropy integrand is integrable.
   by_cases hent_sum : Integrable (fun x ↦ Real.negMulLog (rfun x)) volume
-  · -- **Case B (finite branch)**: descend to the workhorse `differentialEntropy` and prove the
+  · -- Case B, the finite branch: descend to the workhorse `differentialEntropy` and prove the
     -- real inequality `h(Q.map W) ≤ h(ν)` via per-fibre translate Gibbs.
     have hν_ac : ν ≪ volume := hWV_ac_Q
     have hent_sum' : Integrable
@@ -523,7 +523,7 @@ theorem differentialEntropyExt_mono_add_of_integrable
       rw [hν_def]; exact Measure.isProbabilityMeasure_map (hW.add hV).aemeasurable
     exact differentialEntropy_le_of_conv_finite W V Q hW hV hW_ac_Q hW_ent_Q ν hν_ac hν_conv
       rfun hrfun_def hent_sum'
-  · -- **Case A (infinite branch)**: `¬ hent_sum` and `B(ν) < ⊤` ⟹ `A(ν) = ⊤` ⟹
+  · -- Case A, the infinite branch: `¬ hent_sum` and `B(ν) < ⊤` ⟹ `A(ν) = ⊤` ⟹
     -- `differentialEntropyExt ν = ⊤`, then `h(Q.map W) ≤ ⊤` by `le_top`.
     rw [differentialEntropyExt_eq_top_of_not_integrable hWV_ac_Q hent_sum hBnu_fin]
     exact le_top
@@ -666,7 +666,7 @@ theorem differentialEntropyExt_mono_add_truncW
   set E : Set Ω := {ω : Ω | |W ω| ≤ (n : ℝ)} with hE_def
   have hindep : IndepFun W V Q :=
     truncW_indepFun_of_indepFun W V P hW hV hWV n (hE_def ▸ hn)
-  -- **Set-up shared by the `≠ ⊥` / entropy blocks**: `Q.map W = cond (P.map W) Sn` (single-variable
+  -- Set-up shared by the `≠ ⊥` / entropy blocks: `Q.map W = cond (P.map W) Sn` (single-variable
   -- truncation), so its density is `c⁻¹ · 1_Sn · f_W` with `c = (P.map W) Sn = P E`.
   set Sn : Set ℝ := {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
   have hSn_meas : MeasurableSet Sn := measurableSet_le measurable_norm measurable_const
@@ -693,7 +693,7 @@ theorem differentialEntropyExt_mono_add_truncW
     rw [Measure.map_apply hW hSn_meas]
     have : W ⁻¹' Sn = E := by ext ω; simp [hE_def, hSn_def]
     rw [this, hE_def]; exact hn
-  -- **density formula for `Q.map W`** (cond density, reusable across the `≠⊥` / entropy blocks).
+  -- Density formula for `Q.map W` (cond density, reusable across the `≠⊥` / entropy blocks).
   set fW : ℝ → ℝ := fun x ↦ ((P.map W).rnDeriv volume x).toReal with hfW_def
   set c : ℝ≥0∞ := (P.map W) Sn with hc_def
   have hc_top : c ≠ ∞ := measure_ne_top _ _
@@ -709,7 +709,7 @@ theorem differentialEntropyExt_mono_add_truncW
       filter_upwards [(P.map W).rnDeriv_ne_top volume] with x hx
       rw [hfW_def]; exact ENNReal.ofReal_toReal hx
     rw [lintegral_congr_ae hae_eq, Measure.lintegral_rnDeriv hW_ac, measure_univ]
-  -- **negative-part lintegral `B(W_n) < ⊤`** (from `hW_negPart_fin = B(W) < ⊤`).
+  -- Negative-part lintegral `B(W_n) < ⊤` (from `hW_negPart_fin = B(W) < ⊤`).
   -- Bridge: `fn x = (c⁻¹ * Sn.indicator (P.map W).rnDeriv x).toReal` a.e.
   have h_fn_ae : ∀ᵐ x ∂volume,
       fn x = (c⁻¹ * Sn.indicator ((P.map W).rnDeriv volume) x).toReal := by
@@ -718,7 +718,7 @@ theorem differentialEntropyExt_mono_add_truncW
       (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (fn x))) ∂volume) ≠ ⊤ :=
     truncW_map_negMulLog_negPart_lintegral_ne_top hSn_meas
       (Measure.measurable_rnDeriv _ _) hfW_lint hc_top h_fn_ae hW_negPart_fin
-  -- **positive-part lintegral `A(W_n) < ⊤`** (compact support: `negMulLog fn ≤ 1` on `Sn`,
+  -- Positive-part lintegral `A(W_n) < ⊤` (compact support: `negMulLog fn ≤ 1` on `Sn`,
   -- `fn = 0` off `Sn`, and `volume Sn < ⊤`).
   have hAn_fin :
       (∫⁻ x, ENNReal.ofReal (Real.negMulLog (fn x)) ∂volume) ≠ ⊤ := by
@@ -743,7 +743,7 @@ theorem differentialEntropyExt_mono_add_truncW
     have hSn_sub : Sn ⊆ Set.Icc (-(n : ℝ)) (n : ℝ) := by
       intro r hr; rw [hSn_def, Set.mem_setOf_eq, abs_le] at hr; exact ⟨hr.1, hr.2⟩
     exact ne_top_of_le_ne_top (measure_Icc_lt_top.ne) (measure_mono hSn_sub)
-  -- **full differential-entropy integrability of `Q.map W`** (both parts finite ⟹ integrable).
+  -- Full differential-entropy integrability of `Q.map W` (both parts finite ⟹ integrable).
   have hW_ent_Q : Integrable (fun x ↦ Real.negMulLog (fn x)) volume := by
     refine ⟨(Real.continuous_negMulLog.measurable.comp hfn_meas).aestronglyMeasurable, ?_⟩
     rw [hasFiniteIntegral_iff_norm]
@@ -761,7 +761,7 @@ theorem differentialEntropyExt_mono_add_truncW
       (Real.continuous_negMulLog.measurable.comp hfn_meas).ennreal_ofReal
     rw [h_abs_eq, lintegral_add_left hposm]
     exact lt_top_iff_ne_top.mpr (ENNReal.add_ne_top.mpr ⟨hAn_fin, hBn_fin⟩)
-  -- **core delegation**: the preamble established `hindep` (W ⊥ V under conditioning) / `hW_ac_Q`
+  -- Core delegation: the preamble established `hindep` (W ⊥ V under conditioning) / `hW_ac_Q`
   -- (truncated W-marginal a.c.) / `hW_ent_Q` (its finite differential entropy).  The per-fibre
   -- translate Gibbs core is now the truncation-free lemma
   -- `differentialEntropyExt_mono_add_of_integrable` applied to `Q := truncW P W n`.

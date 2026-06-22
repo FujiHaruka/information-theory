@@ -37,7 +37,7 @@ This file proves that factor-level correspondence, assembles the per-phrase
 per-position positivity supplied as regularity hypotheses). The tiling itself —
 turning the `List (List α)` greedy parse into an absolute-position `Fin`-tiling of
 the block (materializing `N`, `c`, and the tiling hypotheses) — is supplied a.s. by
-the `lz78_block_tiling` atom, now **sorryAx-free**: the deterministic position
+the `lz78_block_tiling` atom, now sorryAx-free: the deterministic position
 tiling `lz78_parse_tiling_positions` (`GreedyLongestPrefix.lean`) supplies the
 length-only conjuncts and `markovFactor_blockRV_pos_ae` (`Core.lean`) supplies the
 a.s. per-position positivity. The remaining LZ78 achievability content

@@ -32,12 +32,12 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 open MeasureTheory ProbabilityTheory
 open scoped ENNReal
 
-/-- **Type-check witness**: the genuine greedy encoding length has the
+/-- The genuine greedy encoding length has the
 right type to plug into the parent `lz78_asymptotic_optimality`
 `lz78EncodingLength : ∀ n, (Fin n → α) → ℕ` parameter slot. -/
 example : (∀ n, (Fin n → α) → ℕ) := @lz78GreedyEncodingLength α _ _
 
-/-- **Per-symbol negative log-likelihood in bits**: `blockLogAvg / Real.log 2`.
+/-- The per-symbol negative log-likelihood in bits, `blockLogAvg / Real.log 2`.
 
 The base-2 (bit) version of `blockLogAvg`. SMB (`shannon_mcmillan_breiman`)
 converges `blockLogAvg → entropyRate` in nats; dividing through by `Real.log 2`
@@ -47,7 +47,7 @@ noncomputable def blockLogAvg₂
     (μ : Measure Ω) (p : StationaryProcess μ α) (n : ℕ) : Ω → ℝ :=
   fun ω ↦ blockLogAvg μ p n ω / Real.log 2
 
-/-- **Shannon–McMillan–Breiman in bits**: `blockLogAvg₂` converges a.s. to
+/-- The Shannon–McMillan–Breiman theorem in bits: `blockLogAvg₂` converges a.s. to
 `entropyRate₂`.
 
 Obtained from `shannon_mcmillan_breiman` (nat units) by dividing the
@@ -142,7 +142,7 @@ theorem two_pow_bitLength_ge (c a : ℕ) :
         Nat.mul_le_mul hc1 ha
     _ = 4 * 2 ^ Nat.log 2 (c + 1) * 2 ^ Nat.log 2 a := by ring
 
-/-- **Parent-index type cardinality**: the dependent function type assigning
+/-- The dependent function type assigning
 each phrase position `j : Fin c` a parent index in `Fin (j+1)` (one of the `j`
 earlier phrases or the empty prefix) has exactly `c!` elements. -/
 theorem fintype_card_parentIdx (c : ℕ) :
@@ -867,7 +867,7 @@ theorem lz78_converse_bad_set_measure_le
       ENNReal.ofReal_natCast]; push_cast; ring]
   exact ENNReal.ofReal_le_ofReal h_toReal
 
-/-- **G3 — Barron a.s.-eventual lift**: the per-realization, a.s.-eventual
+/-- The Barron a.s.-eventual lift: the per-realization, a.s.-eventual
 converse lower bound on the greedy bit-rate by `blockLogAvg₂` minus an `o(1)`
 error term.
 
@@ -891,7 +891,7 @@ summable, so first Borel–Cantelli gives `∀ᵐ ω, ∀ᶠ n, ω ∉ B_n`.
 
 Modeled on the Z-side `blockLogAvgZ_ge_negLogQInftyZ_minus_error`
 (`SMB/AlgoetCover/Liminf.lean`) — the same Markov + p-series + Borel–Cantelli
-template. The body is **`sorry`-free**: the Markov + Borel–Cantelli lift is
+template. The body is `sorry`-free: the Markov + Borel–Cantelli lift is
 genuinely proven; it consumes the genuine combinatorial brick G2
 (`lz78_block_kraft_poly`) through the per-`n` bad-set measure bound
 `lz78_converse_bad_set_measure_le`. G2 (and hence its Part B counting lemma

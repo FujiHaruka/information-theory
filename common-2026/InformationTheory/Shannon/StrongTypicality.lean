@@ -48,7 +48,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
 /-! ### Definitions -/
 
-/-- **Strongly typical set** (Cover-Thomas 11.2):
+/-- The strongly typical set (Cover-Thomas 11.2):
 `A^*_ε^n := { x : Fin n → α | ∀ a, |(typeCount x a : ℝ)/n - P(a)| ≤ ε }`. -/
 noncomputable def stronglyTypicalSet
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (n : ℕ) (ε : ℝ) :
@@ -201,7 +201,7 @@ lemma letterIndicator_inProbability
   show ε ≤ dist (f n ω) (g ω) ↔ ε ≤ |f n ω - g ω|
   rw [Real.dist_eq]
 
-/-- **Strong typicality probability tendsto one**: for `Xs` i.i.d. with finite alphabet,
+/-- The strong typicality probability tends to one: for `Xs` i.i.d. with finite alphabet,
 `μ {ω | jointRV Xs n ω ∈ A^*_ε^n} → 1`. -/
 @[entry_point]
 theorem stronglyTypicalSet_prob_tendsto_one
@@ -435,7 +435,7 @@ lemma stronglyTypicalSet_subset_typicalSet
 
 /-! ### Size bounds -/
 
-/-- **Size lower bound (eventually-N form)**: for any `η > 0`,
+/-- A lower bound on the typical-set size (eventually-`N` form): for any `η > 0`,
 eventually `|A^*_ε^n| ≥ (1-η) · exp(n · (H - ε·L - δ))`. -/
 @[entry_point]
 theorem stronglyTypicalSet_card_ge_eventually

@@ -22,12 +22,12 @@ LZ78 per-phrase `(parent, symbol)` token code.
   UD certificate the LZ78 token stream needs (`lz78PhraseStrings` itself is
   prefix-complete and *not* UD; the encoded fixed-width token set is).
 
-* **§2 — `boolEncode` / `finBoolCode`**: a concrete `K`-bit binary code
+* §2 introduces `boolEncode` / `finBoolCode`, a concrete `K`-bit binary code
   `m ↦ (range K).map (testBit m)`. Constant length `K`; injective on
   `m < 2^K` (`Nat.eq_of_testBit_eq`). `finBoolCode` encodes any `Fintype`
   whose card is `≤ 2^K` as fixed-width binary, injectively.
 
-* **§3 — LZ78 token code**: for a dictionary of size `c` over alphabet `α`,
+* §3 builds the LZ78 token code: for a dictionary of size `c` over alphabet `α`,
   the `(c+1)·|α|` possible `(parent ∈ Fin (c+1), symbol ∈ α)` tokens encode
   injectively into `K = LZ78Phrase.bitLength c |α|` bits
   (`(c+1)·|α| ≤ 2^K` via `Nat.lt_pow_succ_log_self`). Its image is UD (§1),
@@ -122,7 +122,7 @@ def boolEncode (K m : ℕ) : List Bool := (List.range K).map (Nat.testBit m)
 @[simp] lemma boolEncode_length (K m : ℕ) : (boolEncode K m).length = K := by
   simp [boolEncode]
 
-/-- **`boolEncode` is injective on `m < 2^K`**: agreeing on the low `K` bits
+/-- `boolEncode` is injective on `m < 2^K`: agreeing on the low `K` bits
 plus both having no bits `≥ K` (since `m < 2^K`) forces `m = m'`. -/
 theorem boolEncode_injOn {K m m' : ℕ} (hm : m < 2 ^ K) (hm' : m' < 2 ^ K)
     (h : boolEncode K m = boolEncode K m') : m = m' := by
@@ -140,7 +140,7 @@ theorem boolEncode_injOn {K m m' : ℕ} (hm : m < 2 ^ K) (hm' : m' < 2 ^ K)
 
 variable {α' : Type*} [Fintype α']
 
-/-- **Fixed-width binary code for a `Fintype`**: index each element via
+/-- A fixed-width binary code for a `Fintype`: index each element via
 `Fintype.equivFin`, then `K`-bit encode. Constant length `K`. -/
 noncomputable def finBoolCode (α' : Type*) [Fintype α'] (K : ℕ) (a : α') : List Bool :=
   boolEncode K (Fintype.equivFin α' a).val
@@ -185,7 +185,7 @@ open scoped ENNReal NNReal BigOperators
 
 set_option linter.unusedSectionVars false
 
-/-- **Token-count fits the per-phrase bit budget**: a dictionary of size `c`
+/-- The token count fits the per-phrase bit budget: a dictionary of size `c`
 has `c+1` parent slots (incl. the empty-prefix root) times `a` symbols, and
 `(c+1)·a ≤ 2^(bitLength c a)` since `bitLength c a = (log₂(c+1)+1)+(log₂ a+1)`
 and `n ≤ 2^(log₂ n + 1)` (`Nat.lt_pow_succ_log_self`). -/
@@ -203,7 +203,7 @@ theorem lz78_token_card_le_pow (c a : ℕ) :
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-- **The real LZ78 token code**: a `(parent, symbol)` token for a dictionary
+/-- The real LZ78 token code: a `(parent, symbol)` token for a dictionary
 of size `c` is encoded as a fixed-width `K = bitLength c |α|`-bit binary word.
 The parent ranges over `Fin (c+1)` (the `c` existing entries plus the
 empty-prefix root), the symbol over `α`. -/
@@ -217,7 +217,7 @@ omit [DecidableEq α] in
   finBoolCode_length _ t
 
 omit [DecidableEq α] in
-/-- **Card bound for the LZ78 token alphabet**: `|Fin (c+1) × α| ≤ 2^K`. -/
+/-- The cardinality bound for the LZ78 token alphabet, `|Fin (c+1) × α| ≤ 2^K`. -/
 theorem lz78Token_card_le (c : ℕ) :
     Fintype.card (Fin (c + 1) × α) ≤ 2 ^ (LZ78Phrase.bitLength c (Fintype.card α)) := by
   rw [Fintype.card_prod, Fintype.card_fin]

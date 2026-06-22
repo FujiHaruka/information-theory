@@ -9,7 +9,7 @@ import Mathlib.Algebra.BigOperators.Field
 /-!
 # LZ78 overhead control — empirical-entropy / mean bound
 
-This file supplies the **analytic crux** behind the `o(n)` overhead estimate
+This file supplies the analytic crux behind the `o(n)` overhead estimate
 required by the LZ78 achievability bound `ziv_aseventual_le_blockLogAvg₂`
 (`InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`).
 
@@ -20,9 +20,9 @@ The generic length-grouping inequality
 `c · log c ≤ ∑ … + c · log D` with a worst-case overhead `c · log D`,
 where `D` is the number of distinct lengths. For the LZ78 parse `D ~ √n`, so
 `c · log D ~ Θ(n)` does *not* vanish. The correct, sharper overhead is the
-**empirical entropy** of the length profile,
+empirical entropy of the length profile,
 `∑_g c_g · log (c / c_g)`, and the key analytic fact is that this empirical
-entropy is controlled by the (log of the) **mean length** under the
+entropy is controlled by the (log of the) mean length under the
 average-length constraint `∑_l l · c_l = N`.
 
 The proof is a one-shot application of the **log-sum inequality** (a pure
@@ -48,7 +48,7 @@ namespace InformationTheory.Shannon
 
 open scoped BigOperators
 
-/-- **Log-sum inequality** (finite form, local copy).
+/-- The log-sum inequality (finite form, local copy).
 
 For nonnegative `a` and strictly positive `b` over a finite index set `s`,
 `(∑ a)·log((∑ a)/(∑ b)) ≤ ∑ aᵢ·log(aᵢ/bᵢ)`. Convexity of `x ↦ x·log x`
@@ -231,7 +231,7 @@ theorem empirical_entropy_le_log_mean_of_lt
       ≤ C * Real.log S - (N - C) * Real.log θ := hchain
     _ ≤ C * Real.log (N / C) + C := by nlinarith [hSlog, hθbound]
 
-/-- **Empirical-entropy / mean bound** (LZ78 overhead crux).
+/-- The empirical-entropy / mean bound (LZ78 overhead crux).
 
 For a length profile `cf : ℕ → ℝ` supported on a finite set `L` of positive
 lengths (`l ≥ 1`) with positive counts, writing `C = ∑ cf` (total count) and

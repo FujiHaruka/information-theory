@@ -15,14 +15,14 @@ import InformationTheory.Meta.EntryPoint
 
 This file packages the genuine Ω-level (β) lower bound
 `negMulLog_convDensity_entropy_ge` (`EPIG2ConvEntropyMonotone.lean`) into a
-**density-only** wrapper: given just a probability density `pX` (plus minimal
+density-only wrapper: given just a probability density `pX` (plus minimal
 regularity), no abstract independent pair is required.
 
   `∫ negMulLog pX ≤ ∫ negMulLog (pX ∗ g_{u n})`.
 
 The Ω-level theorem requires an independent pair `X ⊥ Z` (with `Z ∼ 𝒩(0, v_Z)`) on
 some probability space together with 8 per-`n` regularity/integrability preconditions.
-We **instantiate the canonical product space** `Ω := ℝ × ℝ`,
+We instantiate the canonical product space `Ω := ℝ × ℝ`,
 `μ := (volume.withDensity (ofReal ∘ pX)).prod (gaussianReal 0 v_Z)`,
 `X := Prod.fst`, `Z := Prod.snd`. Then `X ⊥ Z` (product independence),
 `μ.map X = withDensity pX`, `μ.map Z = gaussianReal 0 v_Z`, and the 8 preconditions are
@@ -37,7 +37,7 @@ from the canonical construction:
   (translation invariance: each fibre is a translate `pX(· − √s·z)` of `μ.map X`);
 * joint absolute continuity (per-fibre `≪ volume ≪ μ.map W`, the marginal having a
   strictly positive density);
-* the **two cross terms** (per-fibre (5) + outer (7)): closed via the `s`-uniform
+* the two cross terms (per-fibre (5) + outer (7)): closed via the `s`-uniform
   polynomial majorant `|log p_t| ≤ A + B·x²`
   (`convDensityAdd_logFactor_poly_majorant`, made public in
   `FisherInfoDeBruijnAssembly`) integrated against `pX`'s translate moments
@@ -45,7 +45,7 @@ from the canonical construction:
   fed the a.e. identifications `hLog` / `hfib_eq` in the proof body);
 * marginal log-density integrability (`∫ negMulLog p_t < ∞`, the genuine
   `convDensityAdd_negMulLog_integrable`);
-* **joint llr integrability** `h_int` (= KL finiteness `D(joint ‖ product) < ∞`): closed
+* joint llr integrability `h_int` (= KL finiteness `D(joint ‖ product) < ∞`): closed
   via `MeasureTheory.Measure.integrable_compProd_iff`.  The slice identity
   `rnDeriv_compProd_eq_kernel_rnDeriv` + `Kernel.rnDeriv_eq_rnDeriv_measure` identify the
   joint `llr` a.e. with the per-fibre `llr (κ_z) (μ.map W)`, which the density split
@@ -108,8 +108,8 @@ theorem fibre_rnDeriv_integrable_iff
 
 The 3 `have` blocks `hκ_cross_int` / `h_cross_int` / `h_int` inside
 `negMulLog_convDensity_entropy_ge_density` are extracted into standalone lemmas
-parametrized over an arbitrary **fibre density** `q` (with mass `1`, finite second
-moment, finite absolute entropy) and a **target convolution log-density**
+parametrized over an arbitrary fibre density `q` (with mass `1`, finite second
+moment, finite absolute entropy) and a target convolution log-density
 `g := convDensityAdd pX (gaussianPDFReal 0 v)`.  Unlike the template (where fibre and
 target share the same `pX`), these admit *two distinct* densities, so they cover the
 EPI case-1 framing where the fibre is the Gaussian `q = gaussianPDFReal 0 v_B` (translated
@@ -686,7 +686,7 @@ theorem abs_log_convDensityAdd_le_of_majorant {pX : ℝ → ℝ} {A B : ℝ}
       _ = |(- Real.log q - 1)| + 1 := by norm_num
   linarith
 
-/-- **(β) density form, pX-only.** Convolution with a Gaussian does not decrease the
+/-- The (β) density form, pX-only: convolution with a Gaussian does not decrease the
 `negMulLog` entropy integral: `∫ negMulLog pX ≤ ∫ negMulLog (pX ∗ g_{u n})`.
 
 `pX` is a probability density (non-negative, measurable, integrable, mass `1`) with a

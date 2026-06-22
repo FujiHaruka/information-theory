@@ -61,7 +61,7 @@ The third and second terms `log(N_X(0)+N_Y(0))` and `t` are closed forms in `t`
 noncomputable def sumHeatFlowEP (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) (s r : ℝ) : ℝ :=
   entropyPower (P.map (fun ω ↦ X ω + Real.sqrt s * Z_X ω + (Y ω + Real.sqrt r * Z_Y ω)))
 
-/-- **TT-def `twoTimeLogRatioGap`** — the two-time EPI log-ratio object
+/-- The two-time EPI log-ratio object `twoTimeLogRatioGap`
 (formulation (b), `e^t` closed form), parametrized by the matched paths
 `s r : ℝ → ℝ`.
 
@@ -77,7 +77,7 @@ noncomputable def twoTimeLogRatioGap (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω)
     - Real.log (entropyPower (P.map X) + entropyPower (P.map Y))
     - t
 
-/-- **TT-`_at_zero`** — at `t = 0` the two-time gap reduces to the EPI bridge
+/-- At `t = 0` the two-time gap reduces to the EPI bridge
 form `log (eP(X+Y)) − log (eP X + eP Y)`.
 
 Uses `s 0 = r 0 = 0` (`IsMatchedTimePath.start_zero`) so the perturbations
@@ -106,7 +106,7 @@ theorem twoTimeLogRatioGap_at_zero
 `J_S = J(X_s + Y_r)`, via per-component de Bruijn (`deBruijn_identity_v2`) +
 chain rule (`HasDerivAt.comp` with `s' = 1/J_X`, `r' = 1/J_Y`). -/
 
-/-- **Matched-sum law = single-noise heat flow of `X+Y` at `τ = s_t + r_t`.**
+/-- The matched-sum law equals the single-noise heat flow of `X+Y` at `τ = s_t + r_t`.
 
 At a single time the matched-sum perturbation
 `X + √(s_t)·Z_X + (Y + √(r_t)·Z_Y)` rearranges to
@@ -126,10 +126,10 @@ is bundled. Body: Gaussian convolution additivity (`gaussianReal` add of the
 independent noise variances) + reassociation of the `map`.
 
 Honesty (2026-06-06 independence strengthening). The original `hXY_ZXZY :
-IndepFun (X+Y) (Z_X+Z_Y) P` was **insufficient**: it gives independence of `X+Y`
+IndepFun (X+Y) (Z_X+Z_Y) P` was insufficient: it gives independence of `X+Y`
 from the *unscaled* sum `Z_X+Z_Y`, but the matched-sum noise is the *scaled*
 combination `√s_t·Z_X + √r_t·Z_Y` (a different linear functional when
-`s_t ≠ r_t`), whose independence from `X+Y` does **not** follow. The honest
+`s_t ≠ r_t`), whose independence from `X+Y` does not follow. The honest
 precondition is joint independence of `X+Y` from the pair `(Z_X, Z_Y)`
 (`hXY_ZXZY_pair`), from which the scaled-noise independence is recovered by
 `IndepFun.comp` with the measurable map `(z₁, z₂) ↦ √s_t·z₁ + √r_t·z₂`. This is
@@ -167,7 +167,7 @@ theorem matchedSum_law_eq
   have hSZX_meas : Measurable (fun ω ↦ Real.sqrt s_t * Z_X ω) := hmul_st.comp hZX
   have hRZY_meas : Measurable (fun ω ↦ Real.sqrt r_t * Z_Y ω) := hmul_rt.comp hZY
   have hτZ_meas : Measurable (fun ω ↦ Real.sqrt (s_t + r_t) * Z ω) := hmul_τ.comp hZ
-  -- **Law of a single scaled noise** `√c·W ∼ 𝒩(0, c)` for `c ≥ 0`, `W ∼ 𝒩(0,1)`.
+  -- Law of a single scaled noise `√c·W ∼ 𝒩(0, c)` for `c ≥ 0`, `W ∼ 𝒩(0,1)`.
   have scaled_law : ∀ (W : Ω → ℝ) (c : ℝ) (hc : 0 ≤ c), Measurable W →
       P.map W = gaussianReal 0 1 →
       P.map (fun ω ↦ Real.sqrt c * W ω) = gaussianReal 0 ⟨c, hc⟩ := by
@@ -190,7 +190,7 @@ theorem matchedSum_law_eq
     scaled_law Z_Y r_t hrt0 hZY hZY_law
   have hτZ_law : P.map (fun ω ↦ Real.sqrt (s_t + r_t) * Z ω) = gaussianReal 0 ⟨s_t + r_t, hτ0⟩ :=
     scaled_law Z (s_t + r_t) hτ0 hZ hZ_law
-  -- **LHS noise law** = `𝒩(0, s_t + r_t)`.
+  -- LHS noise law = `𝒩(0, s_t + r_t)`.
   -- Independence of the two scaled noises from `IndepFun Z_X Z_Y`.
   have hSZX_RZY_indep : IndepFun (fun ω ↦ Real.sqrt s_t * Z_X ω)
       (fun ω ↦ Real.sqrt r_t * Z_Y ω) P :=
@@ -221,7 +221,7 @@ theorem matchedSum_law_eq
   -- `B ⊥ (√τ·Z)` from `B ⊥ Z`.
   have hB_noiseR_indep : IndepFun B (fun ω ↦ Real.sqrt (s_t + r_t) * Z ω) P :=
     hXY_Z.comp measurable_id hmul_τ
-  -- **Split both sides as `(P.map B) ∗ (noise law)`.**
+  -- Split both sides as `(P.map B) ∗ (noise law)`.
   -- LHS.
   have hLHS_eq : P.map (fun ω ↦ X ω + Real.sqrt s_t * Z_X ω + (Y ω + Real.sqrt r_t * Z_Y ω))
       = (P.map B) ∗ gaussianReal 0 ⟨s_t + r_t, hτ0⟩ := by
@@ -240,7 +240,7 @@ theorem matchedSum_law_eq
       hB_noiseR_indep.map_add_eq_map_conv_map hB_meas hτZ_meas, hτZ_law]
   rw [hLHS_eq, hRHS_eq]
 
-/-- **TT-`_hasDerivAt`** — the two-time gap has derivative
+/-- The two-time gap has derivative
 `J_S·(1/J_X + 1/J_Y) − 1` at `t > 0` along the matched path.
 
 Reuses the per-component de Bruijn building blocks of
@@ -261,11 +261,11 @@ cannot choose their values:
 
 * `J_X (s t)` / `J_Y (r t)`: density-pinned. `hJX_eq`/`hJY_eq` fix them to
 `fisherInfoOfDensityReal ((h_reg_*.reg_at (s t) hst).density_t)`, and that
-`density_t` is **pointwise** pinned to the smooth representative via
+`density_t` is pointwise pinned to the smooth representative via
 `IsRegularDeBruijnHypV2.density_t_eq`, with the real `X`/`Y`-density fixed by
 `pX_law` (same mechanism as the honest single-time
 `csiszarLogRatioGap_hasDerivAt`).
-* `J_S`: **directly embedded, no free variable.** At the single time `t`, the
+* `J_S`: directly embedded, no free variable. At the single time `t`, the
 matched sum `X_{s t} + Y_{r t} = (X+Y) + (√(s t)·Z_X + √(r t)·Z_Y)`, and the
 noise has law `𝒩(0, s t + r t)` independent of `X+Y`, so the matched-sum law
 equals that of `(X+Y) + √τ·Z` (`τ = s t + r t`, `Z` unit Gaussian) — a
@@ -414,14 +414,14 @@ theorem twoTimeLogRatioGap_hasDerivAt
   rw [hJS_def] at h_assembled
   exact h_assembled
 
-/-- **TT-`_deriv_le_zero`** (= analytic core, arith gate PASS) — the two-time
-gap derivative is `≤ 0` at `t > 0` along the matched path.
+/-- The two-time gap derivative is `≤ 0` at `t > 0` along the matched path
+(the analytic core).
 
 From harmonic Stam `1/J_S ≥ 1/J_X + 1/J_Y` (J_S > 0), the value
 `J_S·(1/J_X + 1/J_Y) − 1 ≤ 0` (proof-log §Two-time object `twotime_reduced` /
 `twotime_full`, mechanically verified). The harmonic Stam supply is the
 existing genuine producer `isStamInequalityHyp_via_step3` /
-`isStamInequalityHyp_via_body` (sorryAx-free). **No new wall.**
+`isStamInequalityHyp_via_body` (sorryAx-free).
 
 Audit 2026-06-06 (skeleton): signature-honest. Free `J_S`/`J_X`/`J_Y` are here
 genuinely OK because `h_stam : 1/J_S ≥ 1/J_X(s t)+1/J_Y(r t)` + `hJS_pos` CONSTRAIN

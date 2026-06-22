@@ -11,9 +11,9 @@ import Mathlib.Topology.Order.Compact
 For a finite alphabet `α`, a full-support reference pmf `Q : α → ℝ`, and a closed convex
 set `K ⊆ stdSimplex ℝ α`:
 
-- **Existence**: there is `Q* ∈ K` minimizing `klDivPmf · Q` over `K`.
-- **Uniqueness**: the minimizer is unique.
-- **Pythagorean inequality** (Cover-Thomas 11.6.1): for all `P ∈ K`,
+- Existence: there is `Q* ∈ K` minimizing `klDivPmf · Q` over `K`.
+- Uniqueness: the minimizer is unique.
+- The Pythagorean inequality (Cover-Thomas 11.6.1): for all `P ∈ K`,
   `klDivPmf P Q ≥ klDivPmf P Q* + klDivPmf Q* Q`.
 
 ## Main definitions
@@ -47,7 +47,7 @@ variable {α : Type*} [Fintype α]
 
 /-! ## `klDivPmf`: definition, non-negativity, continuity, and strict convexity -/
 
-/-- **Real-valued finite-alphabet KL divergence** as a pmf functional:
+/-- The real-valued finite-alphabet KL divergence as a pmf functional:
 `klDivPmf P Q := ∑ a, Q a * klFun (P a / Q a)` where
 `klFun x = x * log x + 1 - x` (Mathlib `InformationTheory.klFun`).
 
@@ -166,8 +166,9 @@ lemma isCompact_of_subset_stdSimplex {K : Set (α → ℝ)}
     IsCompact K :=
   IsCompact.of_isClosed_subset (isCompact_stdSimplex ℝ α) hK_closed hK_sub
 
-/-- **Existence** (Cover-Thomas 11.6.1 a): for a nonempty closed set `K ⊆ stdSimplex ℝ α` and
-full-support `Q`, there exists `Q* ∈ K` minimizing `klDivPmf · Q` over `K`. -/
+/-- Existence of the I-projection (Cover-Thomas 11.6.1 a): for a nonempty closed set
+`K ⊆ stdSimplex ℝ α` and full-support `Q`, there exists `Q* ∈ K` minimizing `klDivPmf · Q`
+over `K`. -/
 @[entry_point]
 theorem csiszar_projection_exists {K : Set (α → ℝ)} {Q : α → ℝ}
     (hK_closed : IsClosed K)
@@ -182,8 +183,8 @@ theorem csiszar_projection_exists {K : Set (α → ℝ)} {Q : α → ℝ}
 
 /-! ## Uniqueness via strict convexity -/
 
-/-- **Uniqueness** (Cover-Thomas 11.6.1 b): the minimizer of `klDivPmf · Q` on a convex
-`K ⊆ stdSimplex ℝ α` is unique. -/
+/-- Uniqueness of the I-projection (Cover-Thomas 11.6.1 b): the minimizer of `klDivPmf · Q` on a
+convex `K ⊆ stdSimplex ℝ α` is unique. -/
 @[entry_point]
 theorem csiszar_projection_unique {K : Set (α → ℝ)} {Q : α → ℝ}
     (hK_conv : Convex ℝ K)
@@ -227,7 +228,7 @@ theorem csiszar_projection_unique {K : Set (α → ℝ)} {Q : α → ℝ}
 
 /-! ## Pythagorean inequality -/
 
-/-- **Standard sum form** for `klDivPmf` under probability measure hypotheses:
+/-- The standard sum form of `klDivPmf` under probability measure hypotheses:
 `klDivPmf P Q = ∑ a, P a * (log (P a) - log (Q a))` when `∑ P = ∑ Q = 1` and both
 positive. (`klFun(t) = t log t + 1 - t` ⟹ `Q * klFun(P/Q) = P log(P/Q) + Q - P`,
 sum collapses 1 - 1 = 0.) -/
@@ -375,8 +376,8 @@ lemma csiszar_segment_hasDerivAt
   simp_rw [h_eq]
   exact h_sum
 
-/-- **First-order condition**: if `Q*` minimizes `klDivPmf · Q` over `K`, then for all `P ∈ K`,
-`∑ a, (P a - Q* a) * (log (Q* a) - log (Q a)) ≥ 0`.
+/-- The first-order optimality condition: if `Q*` minimizes `klDivPmf · Q` over `K`, then for all
+`P ∈ K`, `∑ a, (P a - Q* a) * (log (Q* a) - log (Q a)) ≥ 0`.
 
 Proof: the right derivative of `t ↦ klDivPmf ((1-t)Q* + tP) Q` at `t = 0` equals the sum,
 and non-negativity follows from minimality (`φ(0) ≤ φ(t)` for small `t > 0`). -/
@@ -447,7 +448,7 @@ lemma csiszar_first_order_condition
     exact h_slope_nn
   exact this
 
-/-- **Pythagorean inequality** (Cover-Thomas 11.6.1 c): for the minimizer `Q*` and any `P ∈ K`,
+/-- The Pythagorean inequality (Cover-Thomas 11.6.1 c): for the minimizer `Q*` and any `P ∈ K`,
 `klDivPmf P Q ≥ klDivPmf P Q* + klDivPmf Q* Q`.
 
 Proof: combine the algebraic identity `klDivPmf P Q = klDivPmf P Q* + ∑ P·(log Q* - log Q)`,

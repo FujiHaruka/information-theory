@@ -24,11 +24,11 @@ already-genuine SMB layer (`blockLogAvg`, `ShannonMcMillanBreiman.lean`).
 ## Per-path parsing factorization
 
 The Ziv chain (Cover–Thomas §13.5) needs the pushforward block probability
-`Pₙ{block ω}` bounded **above** by a product of per-phrase conditional
-probabilities along the LZ78 parse: `Pₙ ≤ ∏ⱼ qⱼ`. This **inequality** is
+`Pₙ{block ω}` bounded above by a product of per-phrase conditional
+probabilities along the LZ78 parse: `Pₙ ≤ ∏ⱼ qⱼ`. This inequality is
 unconditionally true by prefix monotonicity (proved genuinely in
 `StationaryKernel.lean`, `blockProb_le_prod_condPhraseProb`); the *equality*
-`Pₙ = ∏ⱼ qⱼ` is **false** for the longest-prefix parse (it leaves an
+`Pₙ = ∏ⱼ qⱼ` is false for the longest-prefix parse (it leaves an
 unfinished tail, so `boundary c ≤ n` and the product equals
 `prefixBlockProb ω (boundary c) ≥ Pₙ`).
 
@@ -37,8 +37,8 @@ unfinished tail, so `boundary c ≤ n` and the product equals
   parsing-prefix block probabilities (telescoping to
   `prefixBlockProb ω (boundary c)`).
 * `IsLZ78PerPathParsingFactorization` — the named `Prop` carrying the Ziv
-  **inequality** `Pₙ{block ω} ≤ ∏ⱼ condPhraseProb …` plus a positivity
-  field; **genuinely constructible** from positivity alone
+  inequality `Pₙ{block ω} ≤ ∏ⱼ condPhraseProb …` plus a positivity
+  field; genuinely constructible from positivity alone
   (`isLZ78PerPathParsingFactorization_of_pos`, `StationaryKernel.lean`),
   no longer a vacuous-premise hazard.
 * `blockProb_neg_log_ge_sum` — a *genuine* proof, from that factorization,
@@ -60,7 +60,7 @@ variable [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 variable [MeasurableSpace Ω]
 
-/-- **Log-sum inequality** (finite form).
+/-- The log-sum inequality (finite form).
 
 For nonnegative `aᵢ` and strictly positive `bᵢ` over a finite index set `s`,
 `(∑ aᵢ)·log((∑ aᵢ)/(∑ bᵢ)) ≤ ∑ aᵢ·log(aᵢ/bᵢ)`.
@@ -117,7 +117,7 @@ theorem log_sum_inequality
         field_simp
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Restatement of `blockLogAvg` as a negative log block-probability.**
+/-- Restatement of `blockLogAvg` as a negative log block-probability.
 
 For `0 < n`, `n · blockLogAvg μ p n ω = -log Pₙ{block ω}` where
 `Pₙ = μ.map (blockRV n)`. Trivial unfolding of the `blockLogAvg` definition;
@@ -133,7 +133,7 @@ theorem blockLogAvg_eq_neg_log_blockProb
 
 /-! ## Per-path parsing factorization -/
 
-/-- **Cumulative parsing boundary length.**
+/-- The cumulative parsing boundary length.
 
 The number of input symbols consumed by the first `j` emitted LZ78 phrases
 of the observed block `blockRV n ω`, i.e. the sum of the lengths of the
@@ -143,7 +143,7 @@ def parsingBoundary
     (μ : Measure Ω) (p : StationaryProcess μ α) (n : ℕ) (ω : Ω) (j : ℕ) : ℕ :=
   (((lz78PhraseStrings (List.ofFn (p.blockRV n ω))).take j).map List.length).sum
 
-/-- **Prefix block probability.**
+/-- The prefix block probability.
 
 The pushforward block probability of the length-`m` parsing prefix of the
 observed path, `Pₘ{blockRV m ω} = (μ.map (blockRV m)).real {blockRV m ω}`. -/
@@ -151,7 +151,7 @@ noncomputable def prefixBlockProb
     (μ : Measure Ω) (p : StationaryProcess μ α) (ω : Ω) (m : ℕ) : ℝ :=
   (μ.map (p.blockRV m)).real {p.blockRV m ω}
 
-/-- **Per-phrase conditional probability** (Cover–Thomas §13.5, chain-rule
+/-- The per-phrase conditional probability (Cover–Thomas §13.5, chain-rule
 per-path form), indexed by phrase position `j`.
 
 Concretely the ratio of the block probabilities of the parsing prefix after
@@ -169,23 +169,23 @@ noncomputable def condPhraseProb
   prefixBlockProb μ p ω (parsingBoundary μ p n ω (j + 1))
     / prefixBlockProb μ p ω (parsingBoundary μ p n ω j)
 
-/-- **Genuine Ziv-direction parsing factorization**: the per-path
-block probability of a stationary process is bounded **above** by the
+/-- The per-path
+block probability of a stationary process is bounded above by the
 product of the LZ78 parse's per-phrase conditional probabilities,
 `Pₙ{block ω} ≤ ∏ⱼ condPhraseProb …` (Cover–Thomas §13.5, the per-path /
 per-realization form of the entropy chain rule, in the inequality direction
 the Ziv chain consumes).
 
-**Defect fix (read this).** This field was previously stated as the
-**equality** `Pₙ = ∏ⱼ qⱼ`, which is *genuinely false* in general: the
+This field was previously stated as the
+equality `Pₙ = ∏ⱼ qⱼ`, which is *genuinely false* in general: the
 longest-prefix greedy parse leaves an unfinished tail, so the phrase
 boundaries cover only `boundary c ≤ n` symbols and the telescoping product
 equals `prefixBlockProb ω (boundary c) ≥ Pₙ`. The equality therefore made
 `IsLZ78PerPathParsingFactorization` *unsatisfiable* for non-completing
 parses (a vacuous-premise hazard). The Ziv chain only needs the
-**inequality** `Pₙ ≤ ∏ⱼ qⱼ`, which **is** unconditionally true by prefix
+inequality `Pₙ ≤ ∏ⱼ qⱼ`, which is unconditionally true by prefix
 monotonicity of the cylinder block probability — and this is now a
-**genuine theorem** (`blockProb_le_prod_condPhraseProb` /
+genuine theorem (`blockProb_le_prod_condPhraseProb` /
 `isLZ78PerPathParsingFactorization_of_pos`, `StationaryKernel.lean`),
 constructed from positivity alone (a.s. regularity), not assumed.
 
@@ -210,7 +210,7 @@ structure IsLZ78PerPathParsingFactorization
       0 < condPhraseProb μ p n ω j
 
 omit [Fintype α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Genuine backbone: factorization to additive log form.**
+/-- The genuine backbone: factorization to additive log form.
 
 From the genuine Ziv-direction factorization, the sum, over the phrase
 positions of the parse, of the negative logs of the per-phrase conditional
@@ -244,9 +244,9 @@ theorem blockProb_neg_log_ge_sum
 
 /-! ## Base-2 (bit) layer — unit correction for the LZ78 headline
 
-The LZ78 encoding length `lz78DistinctEncodingLength` is measured in **bits**
+The LZ78 encoding length `lz78DistinctEncodingLength` is measured in bits
 (`LZ78Phrase.bitLength` uses `Nat.log 2`, the binary code-length), whereas
-`blockLogAvg` / `entropyRate` are **natural-log** quantities (nats). The
+`blockLogAvg` / `entropyRate` are natural-log quantities (nats). The
 genuine Cover–Thomas Theorem 13.5.3 statement is bit-based:
 
 ```

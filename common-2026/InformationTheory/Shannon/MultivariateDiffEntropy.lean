@@ -51,13 +51,13 @@ open scoped ENNReal NNReal Real
 
 /-! ## Definitions (Mathlib-shape-driven, mirror the 1-D `differentialEntropy`) -/
 
-/-- **2-variable joint differential entropy.** Defined `-∫ negMulLog (dμ/dvol)` on
+/-- The 2-variable joint differential entropy. Defined `-∫ negMulLog (dμ/dvol)` on
 `Measure (ℝ × ℝ)`, identical in shape to the 1-D `differentialEntropy`, so the
 existing 1-D density lemmas apply through `volume_eq_prod` (which holds by `rfl`). -/
 noncomputable def jointDifferentialEntropy (μ : Measure (ℝ × ℝ)) : ℝ :=
   ∫ z, Real.negMulLog ((μ.rnDeriv volume z).toReal) ∂volume
 
-/-- **`n`-variable joint differential entropy** on `Measure (Fin n → ℝ)` (the
+/-- The `n`-variable joint differential entropy on `Measure (Fin n → ℝ)` (the
 parallel-Gaussian consumer form). `Fin n → ℝ` is chosen over `EuclideanSpace`
 so that the product-Lebesgue API (`volume_pi`, `Measure.pi`) applies directly. -/
 noncomputable def jointDifferentialEntropyPi {n : ℕ} (μ : Measure (Fin n → ℝ)) : ℝ :=
@@ -85,7 +85,7 @@ theorem integral_log_rnDeriv_self_eq_neg
 
 /-! ## Generic `withDensity` change-of-variables under a measurable equivalence -/
 
-/-- **Generic `withDensity_map` (Mathlib absent, rnDeriv-version de-specialized).**
+/-- A generic `withDensity_map` (Mathlib absent, rnDeriv-version de-specialized).
 Pushforward of a `withDensity` measure along a measurable equivalence `e`:
 `(μ.withDensity g).map e = (μ.map e).withDensity (g ∘ e.symm)`. Mathlib only ships
 the rnDeriv-specialized `MeasurableEmbedding.map_withDensity_rnDeriv`; the generic
@@ -192,7 +192,7 @@ theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint
   rw [h_kl, h_split, h_add, h_fst, h_snd, h_jt]
   ring
 
-/-- **★ 2-variable differential-entropy subadditivity** `h(X,Y) ≤ h(X) + h(Y)`.
+/-- 2-variable differential-entropy subadditivity `h(X,Y) ≤ h(X) + h(Y)`.
 
 Requires an explicit `h_llr_split` hypothesis for the Bayes density split.
 Superseded by `jointDifferentialEntropy_le_sum_v2`, which internalizes the split.
@@ -232,7 +232,7 @@ theorem jointDifferentialEntropy_le_sum
 
 /-! ## `n`-variable bridge + subadditivity -/
 
-/-- **`pi_withDensity` (Mathlib absent, built by `piFinSuccAbove` induction).**
+/-- `pi_withDensity` (Mathlib absent, built by `piFinSuccAbove` induction).
 The product measure of `withDensity` factors is the `withDensity` of the product
 measure with the product density `z ↦ ∏ᵢ fᵢ (z i)`. Specialized to `Fin n → ℝ`
 (all factors on `ℝ`), the form the `n`-variable density split requires.
@@ -503,7 +503,7 @@ theorem klDiv_pi_marginals_toReal_eq_sum_sub_joint
   rw [Finset.sum_neg_distrib]
   ring
 
-/-- **★ `n`-variable differential-entropy subadditivity** `h(Yⁿ) ≤ ∑ᵢ h(Yᵢ)`
+/-- `n`-variable differential-entropy subadditivity `h(Yⁿ) ≤ ∑ᵢ h(Yᵢ)`
 (the parallel-Gaussian consumer form). `KL ≥ 0` + the bridge, by `linarith`.
 @audit:ok -/
 @[entry_point]
@@ -730,7 +730,7 @@ theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2
     (llr_split_from_density_factorize h_fst_ac h_snd_ac h_joint_ac)
     h_int_fst h_int_snd h_int_joint h_int_fst_marg h_int_snd_marg
 
-/-- **★ 2-variable differential-entropy subadditivity** `h(X,Y) ≤ h(X) + h(Y)`.
+/-- 2-variable differential-entropy subadditivity `h(X,Y) ≤ h(X) + h(Y)`.
 
 The Bayes density split is internalized via `llr_split_from_density_factorize`;
 no explicit `h_llr_split` argument required. -/

@@ -7,7 +7,7 @@ import Mathlib.MeasureTheory.Function.ConditionalExpectation.Real
 /-!
 # Backward martingale convergence theorem
 
-This file develops the **backward (reverse) martingale convergence theorem**:
+This file develops the backward (reverse) martingale convergence theorem:
 if `f : ℕᵒᵈ → Ω → ℝ` is a martingale with respect to an antitone filtration
 `ℋ : Filtration ℕᵒᵈ m₀` (i.e. `ℋ` decreases as the ℕ-index grows), and
 `f (toDual 0)` is integrable, then `f (toDual n)` converges almost everywhere
@@ -554,7 +554,7 @@ section Upcrossings
 variable {f : ℕᵒᵈ → Ω → ℝ} {ℋ : Filtration ℕᵒᵈ m₀}
 
 set_option linter.unusedVariables false in
-/-- **Backward upcrossing finiteness.** For a backward martingale indexed
+/-- Backward upcrossings are almost surely finite. For a backward martingale indexed
 by `ℕᵒᵈ` with integrable head, the number of upcrossings of any interval
 `(a, b)` along the sequence `n ↦ f (toDual n)` is almost surely finite.
 
@@ -746,7 +746,7 @@ section MainTheorem
 
 variable {f : ℕᵒᵈ → Ω → ℝ} {ℋ : Filtration ℕᵒᵈ m₀}
 
-/-- **Backward martingale convergence theorem.** If `f : ℕᵒᵈ → Ω → ℝ`
+/-- The backward martingale convergence theorem. If `f : ℕᵒᵈ → Ω → ℝ`
 is a martingale with respect to an antitone filtration `ℋ : Filtration ℕᵒᵈ m₀`
 and `f (toDual 0)` is integrable, then `n ↦ f (toDual n) ω` converges almost
 everywhere as `n → ∞` to a `⨅ n, ℋ (toDual n)`-measurable limit `g`.

@@ -15,8 +15,8 @@ import InformationTheory.Meta.EntryPoint
 /-!
 # EPI G2 (α) upper bound — KL lower-semicontinuity via klFun-Fatou
 
-This file supplies the **(α) upper bound** of the EPI G2 general-sandwich result
-along a constructive route that **avoids the Donsker–Varadhan dual hard direction**.
+This file supplies the (α) upper bound of the EPI G2 general-sandwich result
+along a constructive route that avoids the Donsker–Varadhan dual hard direction.
 
 The route:
 - `klDiv μ γ = ∫⁻ klFun(rnDeriv μ γ) dγ` (`klDiv_eq_lintegral_klFun_of_ac`, the ℝ≥0∞
@@ -68,7 +68,7 @@ theorem tendsto_of_le_liminf_of_le_tendsto {a b : ℕ → ℝ} {v C : ℝ}
   have hbdd_ge : Filter.IsBoundedUnder (· ≥ ·) atTop a := Filter.isBoundedUnder_of ⟨0, hnn⟩
   exact tendsto_of_le_liminf_of_limsup_le hliminf_ge hlimsup_le hbdd_le hbdd_ge
 
-/-- **W2 — withDensity rnDeriv quotient identification** (the largest gap, an assembly
+/-- W2, the withDensity rnDeriv quotient identification (the largest gap, an assembly
 of existing parts). For `f ≥ 0`, `g > 0`, both measurable and integrable, the
 Radon–Nikodym derivative of `volume.withDensity (ofReal∘f)` w.r.t.
 `volume.withDensity (ofReal∘g)` is, `γ`-a.e. (with `γ` the `g`-weighted measure),
@@ -121,7 +121,7 @@ theorem rnDeriv_withDensity_quotient_ae
   have hγ_ac : γ ≪ volume := withDensity_absolutelyContinuous volume Gd
   exact hγ_ac.ae_eq hcomb
 
-/-- **W1 — KL lower-semicontinuity via klFun-Fatou** (the heart of the route).
+/-- W1, KL lower-semicontinuity via klFun-Fatou (the heart of the route).
 If `μ_n.rnDeriv γ → μ.rnDeriv γ` `γ`-a.e. (as reals), then `klDiv μ γ ≤ liminf klDiv (μ_n) γ`.
 
 Route: rewrite both sides with the ℝ≥0∞ integral form
@@ -176,10 +176,10 @@ theorem klDiv_le_liminf_of_ae_tendsto
 open InformationTheory.Shannon
 open InformationTheory.Shannon.EPIConvDensity
 
-/-- **W4 — density-level a.e. subsequence convergence** (genuine, the negMulLog-free
+/-- W4, density-level a.e. subsequence convergence (genuine, the negMulLog-free
 companion of `EPIVitaliAE.negMulLog_convDensity_tendsto_ae_subseq`). Along any sequence
 `u → 0⁺`, the smoothed densities `convDensityAdd pX g_{u n}` converge to `pX`
-**a.e. along a subsequence** `n ↦ u (ns n)` (`StrictMono ns`), *before* composing with
+a.e. along a subsequence `n ↦ u (ns n)` (`StrictMono ns`), *before* composing with
 any continuous map.
 
 Genuine route, identical to `EPIVitaliAE` but cut before the `negMulLog` composition:
@@ -222,7 +222,7 @@ theorem convDensity_tendsto_ae_subseq
   obtain ⟨ns, hns_mono, hns_ae⟩ := hmeas.exists_seq_tendsto_ae
   exact ⟨ns, hns_mono, hns_ae⟩
 
-/-- **log of the Gaussian density** as a quadratic (verbatim from the `gaussianPDFReal`
+/-- The log of the Gaussian density as a quadratic (verbatim from the `gaussianPDFReal`
 definition `(√(2πv))⁻¹ · exp(-(x-μ)²/(2v))`). For `v ≠ 0` and `μ = 0`:
 `log (gaussianPDFReal 0 v x) = - log (√(2πv)) - x² / (2v)`.
 @audit:ok -/
@@ -239,7 +239,7 @@ theorem log_gaussianPDFReal_zero {v : ℝ≥0} (hv : v ≠ 0) (x : ℝ) :
   rw [Real.log_inv, Real.log_exp]
   ring
 
-/-- **Cross-term closed form** for a smoothed density against a Gaussian log-density.
+/-- The cross-term closed form for a smoothed density against a Gaussian log-density.
 With `g := gaussianPDFReal 0 σ²` (`σ² ≠ 0`) and `f_t := convDensityAdd pX g_t` (`t > 0`),
 the cross integral `∫ f_t · log g` is an *affine* function of `t`:
 `∫ x, f_t x · log (g x) = c₀ · 1 − (1/(2σ²)) · (M2(pX) + (∫pX)·t)`,
@@ -280,7 +280,7 @@ theorem cross_term_closed_form {pX : ℝ → ℝ}
   rw [convDensityAdd_second_moment hpX_nn hpX_meas hpX_int hpX_mom ht]
   ring
 
-/-- **Limit of the marginal cross-term** `∫ pX · log g` in the same expanded form.
+/-- The limit of the marginal cross-term `∫ pX · log g` in the same expanded form.
 With `g := gaussianPDFReal 0 σ²`, `∫ x, pX x · log (g x) = c₀·(∫pX) − (1/(2σ²))·M2(pX)`.
 @audit:ok -/
 theorem pX_cross_term_expand {pX : ℝ → ℝ}
@@ -297,7 +297,7 @@ theorem pX_cross_term_expand {pX : ℝ → ℝ}
   rw [hpt, integral_sub (hpX_int.const_mul _) (hpX_mom.const_mul _),
     integral_const_mul, integral_const_mul]
 
-/-- **W3 — cross-term convergence** `∫ f_n · log g → ∫ pX · log g` as `u_n → 0⁺`.
+/-- W3, cross-term convergence `∫ f_n · log g → ∫ pX · log g` as `u_n → 0⁺`.
 Combines the affine closed form `cross_term_closed_form` (in `t`) with the marginal
 expansion `pX_cross_term_expand`; the difference is `−(1/(2σ²))·(∫pX)·u_n → 0`.
 @audit:ok -/
@@ -620,7 +620,7 @@ private theorem negMulLog_klFatou_bridge_identities {pX g : ℝ → ℝ} {f : �
     rw [hent_μ, hcross_eq_μ] at this
     linarith [this]
 
-/-- **(α) upper bound assembly** — differential-entropy upper semicontinuity of the
+/-- The (α) upper bound assembly: differential-entropy upper semicontinuity of the
 smoothed densities at the `t → 0⁺` endpoint, via the klFun-Fatou KL lower-semicontinuity
 route (`klDiv_le_liminf_of_ae_tendsto`) and the genuine bridge
 `klDiv_toReal_eq_neg_differentialEntropy_sub_cross`.
@@ -642,7 +642,7 @@ ROUTE (the pieces all live in this file):
   promotes the subsequence bound to the full sequence.
 
 BOUNDEDNESS (the `hKL_limsup` step): the boundedness that the
-ℝ≥0∞ → `toReal` transfer of W1 requires is supplied by the **pX-only (β) lower bound**
+ℝ≥0∞ → `toReal` transfer of W1 requires is supplied by the pX-only (β) lower bound
 `negMulLog_convDensity_entropy_ge_density` (`EPIG2ConvEntropyDensity.lean`, `@audit:ok`,
 via the `cond-diff-entropy` route): each `h(μ_n) ≥ h(pX)`, so
 `KLr n = −h(μ_n) − cross_n ≤ −cross_n − h(pX)`, which converges (W3) and hence bounds

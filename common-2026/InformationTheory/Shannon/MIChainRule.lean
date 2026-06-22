@@ -406,7 +406,7 @@ variable {α β : Type*}
   [MeasurableSpace β] [MeasurableSingletonClass β]
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Mutual-information ↔ entropy three-term identity (joint-distribution level).**
+/-- The mutual-information ↔ entropy three-term identity (joint-distribution level).
 For any probability measure `joint` on a finite-alphabet product `α × β`, the
 `klDiv`-based mutual information of its coordinates equals the standard three-term
 form `H(X) + H(Y) − H(X, Y)`, where `H(X, Y) := entropy joint id` is the joint

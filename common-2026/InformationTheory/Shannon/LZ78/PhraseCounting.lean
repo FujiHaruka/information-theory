@@ -14,10 +14,10 @@ import Mathlib.Analysis.SpecialFunctions.Log.Basic
 
 `InformationTheory/Shannon/LZ78/GreedyLongestPrefix.lean` establishes
 the genuine longest-prefix greedy parse `lz78PhraseStrings` together with
-its **distinct invariant** `lz78PhraseStrings_nodup` and the
+its distinct invariant `lz78PhraseStrings_nodup` and the
 total-length conservation `lz78PhraseStrings_total_length_le`.
 
-This file supplies the **Cover–Thomas Lemma 13.5.2 counting bound** as a
+This file supplies the Cover–Thomas Lemma 13.5.2 counting bound as a
 genuine combinatorial inequality on any `Nodup` list of non-empty strings
 over a finite alphabet:
 
@@ -32,11 +32,11 @@ inversion `isBigO_natCast_div_log_of_mul_log_le`
 
 ## Approach
 
-The substantive content is the **shortest-first packing lower bound** on
+The substantive content is the shortest-first packing lower bound on
 the total length `T` of `c` distinct non-empty strings. Two genuine
 ingredients:
 
-1. **Geometric stratification (`card_short_le`)** — the number of
+1. Geometric stratification (`card_short_le`) — the number of
    *distinct* strings of length `≤ L` is at most `(b+1)^(L+1)`, where
    `b = |α|`. Proof: `w ↦ (fun i : Fin (L+1) => w[i]?)` is injective on
    strings of length `≤ L` (two such strings agreeing on indices `0..L`
@@ -44,7 +44,7 @@ ingredients:
    `none`), so `List.Nodup.length_le_card` into `Fin (L+1) → Option α`
    (card `(b+1)^(L+1)`) bounds the count.
 
-2. **Packing (`total_length_ge`)** — among `c` distinct strings, at most
+2. Packing (`total_length_ge`) — among `c` distinct strings, at most
    `(b+1)^(L+1)` are short (length `≤ L`), so at least `c - (b+1)^(L+1)`
    are long (length `≥ L+1`), each contributing `≥ L+1` to `T`. Choosing
    the threshold `L+1 = Nat.log (b+1) c - 1` makes the short count
@@ -56,11 +56,11 @@ yielding `c·log c ≤ 4·log(b+1)·T`.
 
 ## File layout
 
-* **§1. Strings as `Option`-tuples** — the injection `toOptTuple` and its
+* §1. Strings as `Option`-tuples — the injection `toOptTuple` and its
   injectivity on length-`≤L` strings.
-* **§2. Geometric stratification** — `card_short_le`.
-* **§3. Shortest-first packing** — `total_length_ge_count_mul_log`.
-* **§4. Ziv product bound** — `lz78PhraseStrings_mul_log_le`, the genuine
+* §2. Geometric stratification — `card_short_le`.
+* §3. Shortest-first packing — `total_length_ge_count_mul_log`.
+* §4. Ziv product bound — `lz78PhraseStrings_mul_log_le`, the genuine
   `c·log c ≤ K·T` on `lz78PhraseStrings`.
 -/
 
@@ -76,12 +76,12 @@ section OptTuple
 
 variable {α : Type*}
 
-/-- **Injection of length-`≤L` strings into `Fin (L+1) → Option α`**:
-record each of the first `L+1` `getElem?` slots. -/
+/-- Inject length-`≤L` strings into `Fin (L+1) → Option α` by
+recording each of the first `L+1` `getElem?` slots. -/
 def toOptTuple (L : ℕ) (w : List α) : Fin (L + 1) → Option α :=
   fun i ↦ w[(i : ℕ)]?
 
-/-- **Injectivity on length-`≤L` strings**: two strings of length `≤ L`
+/-- Two strings of length `≤ L`
 with the same `getElem?` on indices `0..L` are equal. -/
 theorem toOptTuple_injOn (L : ℕ) :
     Set.InjOn (toOptTuple L) {w : List α | w.length ≤ L} := by
@@ -106,7 +106,7 @@ section Stratification
 
 variable {α : Type*} [Fintype α]
 
-/-- **Distinct short-string count bound**: a `Nodup` list of strings, all
+/-- A `Nodup` list of strings, all
 of length `≤ L`, has length at most `(|α|+1)^(L+1)`. -/
 theorem card_short_le (ws : List (List α)) (hnodup : ws.Nodup)
     (hlen : ∀ w ∈ ws, w.length ≤ L) :
@@ -130,7 +130,7 @@ section Packing
 
 variable {α : Type*} [Fintype α] [Nonempty α]
 
-/-- **Nat-level packing bound**: for any threshold `L`, the total length
+/-- For any threshold `L`, the total length
 `T` of a `Nodup` string list dominates `(L+1)` times the number of long
 strings (length `> L`), and the long-string count is `c` minus the short
 count, which is bounded by `(b+1)^(L+1)`. Concretely
@@ -184,7 +184,7 @@ theorem packing_nat (ws : List (List α)) (hnodup : ws.Nodup) (L : ℕ) :
     _ ≤ (long.map List.length).sum := hlong_sum
     _ ≤ (ws.map List.length).sum := by omega
 
-/-- **Total-length lower bound (Cover–Thomas packing core)**: a `Nodup`
+/-- The total-length lower bound at the core of the Cover–Thomas packing argument: a `Nodup`
 list of non-empty strings with `c = ws.length` and total length
 `T = Σ lengths` satisfies `c · log c ≤ K · T` with `K = 4·log(|α|+1)`. -/
 theorem total_length_ge_count_mul_log
@@ -218,7 +218,7 @@ theorem total_length_ge_count_mul_log
     rwa [List.length_map] at this
   have hTcR : (c : ℝ) ≤ (T : ℝ) := by exact_mod_cast hTc
   have hcR_nonneg : (0 : ℝ) ≤ (c : ℝ) := by positivity
-  -- **Case split** at the threshold `c ≤ b1^4`.
+  -- Case split at the threshold `c ≤ b1^4`.
   rcases le_or_gt c (b1 ^ 4) with hsmall | hlarge
   · -- Small `c`: `log c ≤ log (b1^4) = 4 log b1`, so `c log c ≤ 4 log b1 · c ≤ … T`.
     have hlogc_le : Real.log (c : ℝ) ≤ 4 * Real.log (b1 : ℝ) := by
@@ -339,7 +339,7 @@ section ZivBound
 variable {α : Type*} [Fintype α] [DecidableEq α]
 
 omit [DecidableEq α] in
-/-- **`foldr`-length equals `map`-length sum**: bridges the
+/-- The `foldr`-length equals the `map`-length sum, bridging the
 total-length shape to the `List.sum` shape used by the packing lemma. -/
 theorem foldr_length_eq_map_sum (ws : List (List α)) :
     ws.foldr (fun w acc ↦ w.length + acc) 0 = (ws.map List.length).sum := by
@@ -347,7 +347,7 @@ theorem foldr_length_eq_map_sum (ws : List (List α)) :
   | nil => simp
   | cons hd tl ih => simp only [List.foldr_cons, List.map_cons, List.sum_cons, ih]
 
-/-- **Ziv product bound `c·log c ≤ K·n` on the genuine greedy parse**: the
+/-- The Ziv product bound `c·log c ≤ K·n` on the genuine greedy parse: the
 distinct phrase count `c = (lz78PhraseStrings input).length` satisfies
 `c · log c ≤ 8·log(|α|+1) · input.length`. This is the genuine
 Cover–Thomas `(★)` for the longest-prefix greedy parse, combining the
@@ -386,7 +386,7 @@ open Filter Asymptotics
 
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
-/-- **Genuine `c·log c ≤ K·n` for a length-`n` input family**: for any
+/-- The genuine `c·log c ≤ K·n` bound for a length-`n` input family: for any
 family `input : ℕ → List α` with `(input n).length = n`, the distinct
 phrase count `c(n) = (lz78PhraseStrings (input n)).length` satisfies the
 Cover–Thomas product bound `(★)` with `K = 8·log(|α|+1)`. -/

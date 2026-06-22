@@ -7,7 +7,7 @@ import Mathlib.MeasureTheory.Measure.Typeclasses.Probability
 /-!
 # LZ78 conditional-context sub-distribution (node-context route)
 
-This file supplies the first measure-theoretic atom of the **conditional-context**
+This file supplies the first measure-theoretic atom of the conditional-context
 route for the LZ78 achievability wall `ziv_aseventual_le_blockLogAvg₂`
 (`InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`,
 slug `lz78-aseventual-ziv`).
@@ -17,7 +17,7 @@ slug `lz78-aseventual-ziv`).
 The two simple grouping routes are ruled out: node-position grouping (the
 overhead trap) and marginal-length grouping (`ZivMeasureBridge.lean`, the
 direction is wrong since `∑ -log P_marginal ≥ -log Pₙ` for sources with memory).
-The genuine surviving structure is the **conditional** sub-distribution
+The genuine surviving structure is the conditional sub-distribution
 `q(symbol | context)`, which reaches `-log Pₙ` via the chain rule. The first
 building block of that route is the per-context (fixed-tuple) conditional
 sub-distribution `∑_a q(v · a | v) ≤ 1`.
@@ -31,7 +31,7 @@ sub-distribution `∑_a q(v · a | v) ≤ 1`.
 
 ## Main results
 
-* `sum_extend_marginal_real_eq` — **Kolmogorov consistency**:
+* `sum_extend_marginal_real_eq` — Kolmogorov consistency,
   `∑_a P(blockRV (m+1) = Fin.snoc v a) = P(blockRV m = v)`. The first `m`
   coordinates of `blockRV (m+1)` are `blockRV m`, so the events
   `{blockRV (m+1) = snoc v a}` partition `{blockRV m = v}` disjointly over `a`.
@@ -57,7 +57,7 @@ variable [MeasurableSpace Ω]
 /-! ## Step 1 — Kolmogorov consistency of the extended marginal -/
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Block-extension fibre identity** (genuine, unconditional): for a fixed
+/-- The block-extension fibre identity (genuine, unconditional): for a fixed
 tuple `v : Fin m → α` and symbol `a`, the preimage of the extended cylinder
 `{blockRV (m+1) = Fin.snoc v a}` is exactly the set of `ω` whose `m`-block is
 `v` and whose time-`m` observation is `a`. -/
@@ -78,7 +78,7 @@ theorem blockRV_succ_preimage_snoc
   rw [hinit, hlast]
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Disjoint cover**: over the symbol `a`, the extended-cylinder preimages
+/-- Over the symbol `a`, the extended-cylinder preimages
 `{blockRV (m+1) = Fin.snoc v a}` partition the `m`-block cylinder
 `{blockRV m = v}`. -/
 theorem blockRV_succ_preimage_iUnion_eq
@@ -94,7 +94,7 @@ theorem blockRV_succ_preimage_iUnion_eq
   · intro hv; exact ⟨p.obs m ω, hv, rfl⟩
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Kolmogorov consistency** (genuine, unconditional): the extended length-`m+1`
+/-- Kolmogorov consistency (genuine, unconditional): the extended length-`m+1`
 marginals over the last symbol sum to the length-`m` marginal,
 `∑_a P(blockRV (m+1) = Fin.snoc v a) = P(blockRV m = v)`. The first `m`
 coordinates of `blockRV (m+1)` agree with `blockRV m`, so the extended cylinders
@@ -130,7 +130,7 @@ theorem sum_extend_marginal_real_eq
   rw [← map_measureReal_apply (p.measurable_blockRV m) (measurableSet_singleton _)]
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Extended-marginal sub-distribution bound**: a `≤` form of consistency, the
+/-- A `≤` form of consistency for the extended marginal, the
 input the per-context log-sum step needs. -/
 theorem sum_extend_marginal_real_le
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
@@ -141,7 +141,7 @@ theorem sum_extend_marginal_real_le
 
 /-! ## Step 2 — conditional sub-distribution -/
 
-/-- **Fixed-tuple conditional probability** `q(v, a)` (node-context, ω-independent):
+/-- The fixed-tuple conditional probability `q(v, a)` (node-context, ω-independent):
 the conditional mass of the extended block `Fin.snoc v a` given the context block
 `v`, `q(v, a) = P(blockRV (m+1) = Fin.snoc v a) / P(blockRV m = v)`.
 
@@ -155,7 +155,7 @@ noncomputable def condContextProb
     / (μ.map (p.blockRV m)).real {v}
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Per-context normalization**: when the context mass `P(blockRV m = v)` is
+/-- When the context mass `P(blockRV m = v)` is
 strictly positive, the conditional masses sum to `1`. Immediate from Kolmogorov
 consistency `sum_extend_marginal_real_eq`. -/
 theorem condContext_sum_eq_one
@@ -167,7 +167,7 @@ theorem condContext_sum_eq_one
   rw [← Finset.sum_div, sum_extend_marginal_real_eq μ p m v, div_self hpos.ne']
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Per-context sub-distribution bound** `∑_a q(v · a | v) ≤ 1`: the genuine
+/-- The per-context sub-distribution bound `∑_a q(v · a | v) ≤ 1`: the genuine
 node-context conditional sub-distribution. This is the missing measure-theoretic
 piece the conditional log-sum step consumes (the third quantity, neither
 marginal nor path-prefix). -/
@@ -181,7 +181,7 @@ theorem condContext_sum_le_one
 /-! ## Step 3 — per-context log-sum step -/
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Per-context log-sum step**: for a finite set `S` of symbols with strictly
+/-- The per-context log-sum step: for a finite set `S` of symbols with strictly
 positive conditional masses `q(v, a) > 0` whose masses sum to at most `1`,
 
 ```
@@ -247,7 +247,7 @@ theorem condContextProb_path_eq_ratio
   rw [← blockRV_succ_eq_snoc p m ω]
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Symbol-by-symbol chain-rule telescoping** (genuine, equality): the per-path
+/-- Symbol-by-symbol chain-rule telescoping (genuine, equality): the per-path
 block probability factorizes as the product of node-context conditionals along
 the path, given positivity of the intermediate prefix masses. -/
 theorem prod_condContextProb_path_telescope
@@ -265,7 +265,7 @@ theorem prod_condContextProb_path_telescope
         mul_div_cancel₀ _ (hpos k (Nat.le_succ k))]
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Conditional chain rule reaches `-log Pₙ`** (genuine, equality): unlike the
+/-- The conditional chain rule reaches `-log Pₙ` (genuine, equality): unlike the
 marginal route (direction-mismatched), the node-context conditional sum
 reaches the block neg-log-probability exactly,
 `∑_{m<n} -log q_cond = -log Pₙ{block ω}`. -/
@@ -286,7 +286,7 @@ theorem sum_neg_log_condContextProb_path_eq
     prod_condContextProb_path_telescope μ p n ω hpos, prefixBlockProb]
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Conditional chain rule = `n · blockLogAvg`** (genuine, equality): the
+/-- The conditional chain rule equals `n · blockLogAvg` (genuine, equality): the
 SMB-controlled quantity. Combined with SMB (`blockLogAvg → entropyRate`), this
 connects the conditional-context route to the source entropy limit. -/
 theorem sum_neg_log_condContextProb_path_eq_blockLogAvg

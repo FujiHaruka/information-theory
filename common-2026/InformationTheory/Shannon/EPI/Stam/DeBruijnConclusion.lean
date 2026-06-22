@@ -18,7 +18,7 @@ import Mathlib.Probability.Independence.Basic
 
 The EPI proof pieces:
 
-* **Stam inequality** (Cover-Thomas Lemma 17.7.2). Step 4 (λ-optimization closed
+* The Stam inequality (Cover-Thomas Lemma 17.7.2). Step 4 (λ-optimization closed
   form `J_sum ≤ J_X J_Y / (J_X + J_Y)`) is *fully arithmetic*, in
   `StamInequality.lean` (`stam_lambda_min`, `stam_lambda_lower_bound`,
   `stam_inverse_form_of_harmonic_mean`). The Step 2-3 analytic core (the
@@ -27,12 +27,12 @@ The EPI proof pieces:
   `convex_fisher_bound_of_ready` (regularity preconditions only).
   The chain `isStamInequalityHyp_via_step3` discharges `IsStamInequalityHyp` from
   regularity alone via that lemma.
-* **de Bruijn identity** (V2). `deBruijn_identity_v2` gives, from
+* The de Bruijn identity (V2). `deBruijn_identity_v2` gives, from
   `IsRegularDeBruijnHypV2`, the heat-flow derivative
   `(d/dt) h(X + √t · Z) = (1/2) · J(g_t)`, with the Gaussian case
   `deBruijn_identity_v2_gaussian` fully discharged hypothesis-free.
 
-This file is the **conclusion-assembly** layer: it wires those discharged Stam +
+This file is the conclusion-assembly layer: it wires those discharged Stam +
 de Bruijn pieces into a tighter EPI pipeline, reducing the EPI main theorem's
 remaining hypothesis to the genuinely-irreducible primitives.
 
@@ -42,12 +42,12 @@ This file wires the Stam + de Bruijn pieces directly into the EPI
 conclusion, with no intermediate scaling-decomposition structure. The wiring
 proceeds two ways:
 
-1. **Stam from regularity via the wall lemma** (§2). The
+1. Stam from regularity via the wall lemma (§2). The
    Step 2-3 analytic core is localized to `stam_step2_density_wall`;
    `isStamInequalityHyp_of_primitives`
    derives `IsStamInequalityHyp` from regularity preconditions alone (no
    load-bearing analytic hypothesis).
-2. **de Bruijn gap-monotonicity engine** (§1, §6). The de Bruijn derivative
+2. The de Bruijn gap-monotonicity engine (§1, §6). The de Bruijn derivative
    `g'(t) = (1/2) · J(g_t)` is `≥ 0` because Fisher information is non-negative
    (`fisherInfoOfDensityReal_nonneg`). This is the *genuine* monotonicity content
    that makes the EPI gap monotone along the heat-flow scaling path — we discharge
@@ -101,15 +101,15 @@ open InformationTheory.Shannon.FisherInfo
 
 /-! ## §1 — de Bruijn gap-monotonicity engine -/
 
-/-- **EPI gap-monotonicity hypothesis along the heat-flow scaling path**.
+/-- The EPI gap-monotonicity hypothesis along the heat-flow scaling path.
 
 The Stam inequality + de Bruijn identity together imply that the EPI gap is
 monotone non-decreasing along the heat-flow path `X(t) = X + √t · Z`. The de
 Bruijn derivative `g'(t) = (d/dt) h(X + √t · Z) = (1/2) · J(g_t)` is the engine:
 it is non-negative because Fisher information is non-negative.
 
-This `Prop`-level predicate records the **non-negativity of the de Bruijn
-derivative for the density witness `f`** — the genuine analytic content that makes
+This `Prop`-level predicate records the non-negativity of the de Bruijn
+derivative for the density witness `f` — the genuine analytic content that makes
 the gap monotone. It complements `EPIStamToBridge.csiszarLogRatioGap_antitoneOn_Ici_zero`
 (which carries the global `AntitoneOn` witness for the Csiszár log-ratio gap along
 the heat-flow path); the present predicate isolates the *derivative-sign* step of
@@ -117,7 +117,7 @@ the Csiszár scaling argument and discharges it outright (§1, below). -/
 def IsEPIGapMonotoneHyp (f : ℝ → ℝ) : Prop :=
   0 ≤ (1 / 2 : ℝ) * fisherInfoOfDensityReal f
 
-/-- **de Bruijn derivative is non-negative**: `(1/2) · J(f) ≥ 0` for any density
+/-- The de Bruijn derivative is non-negative: `(1/2) · J(f) ≥ 0` for any density
 `f`, because the V2 Fisher information is non-negative. This is the
 monotonicity engine of the heat-flow EPI gap. -/
 @[entry_point]
@@ -125,13 +125,13 @@ theorem deBruijn_deriv_nonneg (f : ℝ → ℝ) :
     0 ≤ (1 / 2 : ℝ) * fisherInfoOfDensityReal f :=
   mul_nonneg (by norm_num) (fisherInfoOfDensityReal_nonneg f)
 
-/-- The gap-monotonicity hypothesis is **discharged outright** for any density
+/-- The gap-monotonicity hypothesis is discharged outright for any density
 `f`. -/
 @[entry_point]
 theorem isEPIGapMonotoneHyp_discharge (f : ℝ → ℝ) : IsEPIGapMonotoneHyp f :=
   deBruijn_deriv_nonneg f
 
-/-- **Gap-monotonicity from a de Bruijn V2 regularity witness**. Given the
+/-- Gap-monotonicity from a de Bruijn V2 regularity witness. Given the
 de Bruijn V2 witness, its derivative value `(1/2) · J(density_t)` is the EPI
 gap derivative along the heat-flow path, and it is non-negative. -/
 @[entry_point]
@@ -144,12 +144,12 @@ theorem isEPIGapMonotoneHyp_of_deBruijnV2
 
 /-! ## §2 — Stam inequality from regularity (via shared wall) -/
 
-/-- **Stam inequality from regularity preconditions** (via the shared wall).
+/-- The Stam inequality from regularity preconditions (via the shared wall).
 
 Produces `IsStamInequalityHyp` from measurability / independence /
 probability measure alone, delegating the Step 2-3 analytic core to the
 lemma `stam_step2_density_wall` via
-`isStamInequalityHyp_via_step3`. The signature carries **no**
+`isStamInequalityHyp_via_step3`. The signature carries no
 load-bearing analytic hypothesis.
 
 The published `IsStamInequalityHyp` carries the pointwise convolution constraint +
@@ -175,7 +175,7 @@ The Gaussian EPI is `entropy_power_inequality_gaussian_full'` below (direct from
 comes entirely from Gaussian saturation.
 -/
 
-/-- **Gaussian EPI fully hypothesis-free**
+/-- Gaussian EPI fully hypothesis-free
 (`EPIL3Integration.entropy_power_inequality_gaussian_full`). The saturation case
 gives equality, hence `≥`; *no* pipeline hypothesis at all is required. -/
 @[entry_point]
@@ -192,7 +192,7 @@ theorem entropy_power_inequality_gaussian_full'
 
 /-! ## §6 — Composed de Bruijn gap-monotonicity into the EPI gap -/
 
-/-- **Composed Gaussian gap-derivative non-negativity**. For Gaussian `X`,
+/-- Composed Gaussian gap-derivative non-negativity. For Gaussian `X`,
 standard-normal `Z`, `X ⊥ Z`, the de Bruijn derivative along the heat-flow path
 at `t > 0` is `(1/2) · J(𝒩(m, v + t)) = 1/(2(v + t)) ≥ 0`. This composes the
 Gaussian de Bruijn identity with the derivative-sign engine: the EPI gap is
@@ -211,7 +211,7 @@ theorem deBruijn_gap_deriv_nonneg_gaussian
   rw [fisherInfoOfMeasureV2Real_def]
   exact deBruijn_deriv_nonneg _
 
-/-- **The de Bruijn derivative drives a monotone EPI gap**: the heat-flow path
+/-- The de Bruijn derivative drives a monotone EPI gap: the heat-flow path
 derivative `g'(t) = (1/2) · J(g_t)` is non-negative, so the gap function
 `g(t)` is monotone non-decreasing — packaged as the `IsEPIGapMonotoneHyp`
 predicate for the density witness. -/

@@ -93,7 +93,7 @@ theorem isStamScoreConvolution_intro {Ω : Type*} [MeasurableSpace Ω]
 
 /-! ## §2 — Cauchy-Schwarz + total expectation predicate (Step 2-3) -/
 
-/-- **Cauchy-Schwarz + total expectation hypothesis** (Stam body).
+/-- The Cauchy-Schwarz plus total expectation hypothesis (Stam body).
 
 The genuine Stam-proof body step: given the score-convolution identity, apply
 Cauchy-Schwarz pointwise to `s_Z(z)² = E[λ s_X + (1 - λ) s_Y | sum = z]²`,
@@ -103,7 +103,7 @@ then take total expectation against `p_Z` to obtain
 
 Phrased here as: there exists `λ ∈ [0, 1]` with the inequality between
 real-valued Fisher info projections. The predicate enforces only the
-**existence of the bounding λ-witness**; the optimum is selected separately in
+existence of the bounding λ-witness; the optimum is selected separately in
 §3. -/
 def IsStamCauchySchwarz {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
@@ -151,7 +151,7 @@ theorem isStamCauchySchwarz_symm {Ω : Type*} [MeasurableSpace Ω]
 
 /-! ## §3 — λ-optimization closed form (Step 4): pure arithmetic, no predicate -/
 
-/-- **λ-optimization closed form** (Stam Step 4).
+/-- The λ-optimization closed form (Stam Step 4).
 
 For positive `a, b > 0`, the function `λ ↦ λ² a + (1 - λ)² b` is minimized at
 `λ* = b / (a + b)` with minimum value `a b / (a + b)`. Combined with Step 3,
@@ -167,8 +167,8 @@ theorem stam_lambda_min {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
   field_simp
   ring
 
-/-- **λ optimum upper bound**: for any `λ ∈ ℝ`, `λ² a + (1-λ)² b ≥ ab / (a+b)`.
-Cauchy-Schwarz / AM-GM direct consequence. -/
+/-- For any `λ ∈ ℝ`, `λ² a + (1-λ)² b ≥ ab / (a+b)`, the lower bound at the λ
+optimum. A direct consequence of Cauchy-Schwarz / AM-GM. -/
 @[entry_point]
 theorem stam_lambda_lower_bound {a b : ℝ} (ha : 0 < a) (hb : 0 < b) (lam : ℝ) :
     a * b / (a + b) ≤ lam ^ 2 * a + (1 - lam) ^ 2 * b := by
@@ -186,7 +186,7 @@ theorem stam_lambda_lower_bound {a b : ℝ} (ha : 0 < a) (hb : 0 < b) (lam : ℝ
     mul_nonneg h_sq_nn hab.le
   linarith [h_expand, h_prod_nn]
 
-/-- **Inverse-form Stam algebraic identity**: for `a, b, c > 0` with
+/-- The inverse-form Stam algebraic identity: for `a, b, c > 0` with
 `c ≤ ab/(a+b)`, the inverse relation `1/c ≥ 1/a + 1/b` holds. -/
 @[entry_point]
 theorem stam_inverse_form_of_harmonic_mean
@@ -329,7 +329,7 @@ The genuine Gaussian entropy power inequality runs via `entropyPower_gaussian_ad
 
 /-! ## §6 — EPI pipeline integration with body discharge -/
 
-/-- **Stam-to-EPI bridge via body discharge** (Gaussian case): combine
+/-- The Stam-to-EPI bridge via body discharge (Gaussian case): combine
 the body-derived Stam inequality with the Stam-to-EPI bridge from
 `StamEPIBridge.isStamToEPIBridgeHyp_of_gaussian`. -/
 @[entry_point]
@@ -342,9 +342,9 @@ theorem isStamToEPIBridgeHyp_via_body_gaussian
     IsStamToEPIBridgeHyp X Y P :=
   isStamToEPIBridgeHyp_of_gaussian P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
 
-/-- **EPI via Stam body discharge (Gaussian case)**: full deliverable end-to-end.
-For Gaussian `X, Y` with non-zero variance, EPI follows through the body
-discharge + Gaussian saturation bridge — no upstream hypothesis required. -/
+/-- For Gaussian `X, Y` with non-zero variance, EPI follows end-to-end through the
+body discharge and the Gaussian saturation bridge — no upstream hypothesis
+required. -/
 @[entry_point]
 theorem epi_via_stam_body_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -398,8 +398,8 @@ theorem isStamScoreConvolution_symm
 
 /-! ## §9 — Direct optimal-CS construction from λ-witness -/
 
-/-- **Optimal CS from a λ-witness at the optimum**: given a Cauchy-Schwarz
-witness with `λ = J_Y / (J_X + J_Y)`, the optimal-form predicate is recovered.
+/-- Given a Cauchy-Schwarz witness with `λ = J_Y / (J_X + J_Y)`, the optimal-form
+predicate is recovered from the λ-witness at the optimum.
 
 `@audit:ok` -/
 theorem isStamCauchySchwarzOptimal_of_lambda_optimal
@@ -435,7 +435,7 @@ theorem isStamInequalityHyp_via_body_to_pipeline
 
 /-! ## §11 — Sanity check / regression theorems -/
 
-/-- **Sanity check**: `stam_inverse_form_of_harmonic_mean` recovers the standard
+/-- A sanity check that `stam_inverse_form_of_harmonic_mean` recovers the standard
 form `1/c ≥ 1/a + 1/b` when `c = ab/(a+b)` exactly. -/
 theorem stam_inverse_form_at_equality {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
     1 / (a * b / (a + b)) = 1 / a + 1 / b := by
@@ -446,11 +446,11 @@ theorem stam_inverse_form_at_equality {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
   field_simp
   ring
 
-/-- **Sanity check**: at `λ = 0`, the upper bound is `J_Y`. -/
+/-- A sanity check that at `λ = 0`, the upper bound is `J_Y`. -/
 theorem stam_lambda_at_zero (a b : ℝ) :
     (0 : ℝ) ^ 2 * a + (1 - 0) ^ 2 * b = b := by ring
 
-/-- **Sanity check**: at `λ = 1`, the upper bound is `J_X`. -/
+/-- A sanity check that at `λ = 1`, the upper bound is `J_X`. -/
 theorem stam_lambda_at_one (a b : ℝ) :
     (1 : ℝ) ^ 2 * a + (1 - 1) ^ 2 * b = a := by ring
 

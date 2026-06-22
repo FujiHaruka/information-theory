@@ -258,9 +258,9 @@ theorem epi_via_stam
 
 /-! ## §7 — Gaussian full discharge (`epi_via_stam_gaussian`) -/
 
-/-- **Gaussian full discharge**: for independent Gaussian `X, Y` with non-zero
-variance, `IsStamToEPIBridgeHyp X Y P` is **discharged with no upstream
-hypothesis** (the EPI hypothesis is provable directly via
+/-- For independent Gaussian `X, Y` with non-zero variance,
+`IsStamToEPIBridgeHyp X Y P` is discharged with no upstream hypothesis (the EPI
+hypothesis is provable directly via
 `isEntropyPowerInequalityHypothesis_of_gaussian`). -/
 theorem isStamToEPIBridgeHyp_of_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -274,10 +274,9 @@ theorem isStamToEPIBridgeHyp_of_gaussian
       hv₁ hv₂ hLawX hLawY
   exact isStamToEPIBridgeHyp_of_epi h_epi
 
-/-- **`epi_via_stam_gaussian`**: for independent Gaussians `X, Y`, EPI holds
-with equality via the Gaussian saturation discharge — no upstream hypothesis
-required. Routes through the §6 wrapper to demonstrate the Stam-bridge
-pipeline structure. -/
+/-- For independent Gaussians `X, Y`, EPI holds with equality via the Gaussian
+saturation discharge — no upstream hypothesis required. Routes through the §6
+wrapper to demonstrate the Stam-bridge pipeline structure. -/
 @[entry_point]
 theorem epi_via_stam_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -319,8 +318,8 @@ theorem isStamToEPIBridgeHyp_of_forall
 
 /-! ## §9 — 3-arg EPI via Stam (chain application) -/
 
-/-- **3-arg EPI via Stam pipeline**: chains `epi_via_stam` twice to obtain
-the 3-argument EPI.
+/-- Chains `epi_via_stam` twice to obtain the 3-argument EPI via the Stam
+pipeline.
 
 `@audit:ok` -/
 @[entry_point]
@@ -340,7 +339,7 @@ theorem epi_via_stam_three_arg
 
 /-! ## §10 — Stam predicate manipulation -/
 
-/-- **Stam predicate is preserved under arithmetic equivalent rephrasings**: if
+/-- The Stam predicate is preserved under arithmetic equivalent rephrasings: if
 two functions `X, Y` are pointwise equal to `X', Y'` then their Stam predicates
 coincide (the predicate depends only on `P.map X`, `P.map Y`, `P.map (X + Y)`). -/
 theorem isStamInequalityHyp_congr
@@ -384,7 +383,7 @@ theorem isStamInequalityHyp_of_fisherInfo_eq
 
 /-! ## §11 — de Bruijn regularity manipulation -/
 
-/-- de Bruijn integration `T = 0` always holds in the **structurally trivial**
+/-- de Bruijn integration `T = 0` always holds in the structurally trivial
 case where `X + √0 · Z = X` pointwise. -/
 theorem isDeBruijnIntegrationHyp_at_zero_pointwise
     {Ω : Type*} [MeasurableSpace Ω]
@@ -394,7 +393,7 @@ theorem isDeBruijnIntegrationHyp_at_zero_pointwise
   apply isDeBruijnIntegrationHyp_at_zero
   rw [h_pt]
 
-/-- **`√0 = 0`** specialization: at `T = 0`, the heat-flow path returns
+/-- The `√0 = 0` specialization: at `T = 0`, the heat-flow path returns
 `X + 0 · Z = X`. Used to discharge `isDeBruijnIntegrationHyp_at_zero`. -/
 theorem heat_flow_path_at_zero {Ω : Type*} (X Z : Ω → ℝ) :
     (fun ω ↦ X ω + Real.sqrt 0 * Z ω) = X := by
@@ -431,7 +430,7 @@ theorem isStamToEPIBridgeHyp_const
 
 /-! ## §13 — Gaussian saturation corollaries -/
 
-/-- **Variance-additive form of Gaussian saturation**: the entropy power of
+/-- Variance-additive form of Gaussian saturation: the entropy power of
 the Gaussian sum equals `2πe (v₁ + v₂) = 2πe v₁ + 2πe v₂`, matching the
 EPI inequality with equality. -/
 @[entry_point]
@@ -448,7 +447,8 @@ theorem entropyPower_gaussian_sum_eq
 
 /-! ## §15 — 4-arg EPI chain via Stam pipeline -/
 
-/-- **4-arg EPI via Stam pipeline**: chains `epi_via_stam` three times.
+/-- Chains `epi_via_stam` three times to obtain the 4-argument EPI via the Stam
+pipeline.
 
 `@audit:ok` -/
 @[entry_point]
@@ -472,8 +472,8 @@ theorem epi_via_stam_four_arg
 
 /-! ## §16 — Stam pipeline composability witnesses -/
 
-/-- **Composability witness**: any conjunction `(Stam X Y P) ∧ (StamToEPIBridge X Y P)`
-yields the EPI hypothesis.
+/-- Any conjunction `(Stam X Y P) ∧ (StamToEPIBridge X Y P)` yields the EPI
+hypothesis.
 
 `@audit:ok` -/
 theorem isEntropyPowerInequalityHypothesis_of_stam_pair
@@ -484,8 +484,8 @@ theorem isEntropyPowerInequalityHypothesis_of_stam_pair
     IsEntropyPowerInequalityHypothesis X Y P :=
   h_bridge h_stam
 
-/-- **Pipeline composability**: given the entropy-power-inequality form already, the Stam pipeline
-trivially returns the same hypothesis.
+/-- Given the entropy-power-inequality form already, the Stam pipeline trivially
+returns the same hypothesis.
 
 `@audit:ok` -/
 theorem epi_pipeline_idempotent
@@ -530,8 +530,8 @@ theorem epi_via_stam_three_arg_normalized
 
 /-! ## §17 — Sanity check / regression theorems -/
 
-/-- **Round trip**: if we have the Stam-derived EPI, the EntropyPowerInequality
-predicate is exactly the result of the bridge applied to Stam.
+/-- If we have the Stam-derived EPI, the `EntropyPowerInequality` predicate is
+exactly the result of the bridge applied to Stam.
 
 `@audit:ok` -/
 theorem epi_via_stam_recovers_predicate

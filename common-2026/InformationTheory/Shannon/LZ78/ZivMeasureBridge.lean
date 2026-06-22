@@ -7,7 +7,7 @@ import Mathlib.MeasureTheory.Measure.Typeclasses.Probability
 /-!
 # LZ78 length-grouping measure bridge — per-length sub-distribution + log-sum
 
-This file supplies the **measure-theoretic + log-sum** layer of the
+This file supplies the measure-theoretic + log-sum layer of the
 length-grouping route for the LZ78 achievability wall
 `ziv_aseventual_le_blockLogAvg₂`
 (`InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`,
@@ -26,18 +26,18 @@ LZ78 phrases by `List.length` (`c` = #phrases, `c_ℓ` = #{phrases of length
 `ℓ`}, `D` = #distinct lengths). This file converts the inner `c_ℓ · log c_ℓ`
 terms into negative-log marginal probabilities and aggregates:
 
-1. **Per-length sub-distribution** (`sum_marginal_real_le_one`): for the
+1. Per-length sub-distribution (`sum_marginal_real_le_one`): for the
    length-`ℓ` marginal `P_ℓ(Z) = (μ.map (blockRV ℓ)).real {Z}` and a finite
    set `S` of distinct strings `Z : Fin ℓ → α`, `∑_{Z ∈ S} P_ℓ(Z) ≤ 1`. This
    is a pure probability fact: distinct singletons are disjoint, so the sum
    is the measure of the finset, bounded by the measure of the whole space.
 
-2. **Per-length log-sum step** (`group_card_mul_log_le_sum_neg_log`): applying
+2. Per-length log-sum step (`group_card_mul_log_le_sum_neg_log`): applying
    `log_sum_inequality` (`ZivEntropyBridge.lean`) with `aᵢ ≡ 1`, `bᵢ = P_ℓ(Zᵢ)`
    over a group `S` of `card S` distinct strings with `∑ P ≤ 1` and `P > 0`
    gives `card S · log (card S) ≤ ∑_{Z ∈ S} -log P_ℓ(Z)`.
 
-3. **Aggregation** (`lz78PhraseStrings_mul_log_le_sum_neg_log_marginal_add_overhead`):
+3. Aggregation (`lz78PhraseStrings_mul_log_le_sum_neg_log_marginal_add_overhead`):
    combine the grouping inequality with step 2 applied per length group,
    instantiating `P_ℓ` at the actual phrase marginals via the injection
    `w ↦ (w[·]) : List α → (Fin ℓ → α)` (injective on length-`ℓ` lists), giving
@@ -65,7 +65,7 @@ variable [MeasurableSpace Ω]
 /-! ## Step 1 — per-length sub-distribution -/
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] in
-/-- **Per-length sub-distribution bound**: for the length-`ℓ` marginal
+/-- For the length-`ℓ` marginal
 `P_ℓ(Z) = (μ.map (blockRV ℓ)).real {Z}` and any finite set `S` of distinct
 strings `Z : Fin ℓ → α`, the marginal masses sum to at most `1`.
 
@@ -89,7 +89,7 @@ theorem sum_marginal_real_le_one
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
   [MeasurableSingletonClass α] [MeasurableSpace Ω] in
-/-- **Per-length log-sum step**: for a finite group `S` of distinct strings
+/-- The per-length log-sum step: for a finite group `S` of distinct strings
 `Z : Fin ℓ → α` with strictly positive marginals `P_ℓ(Z) > 0` whose masses
 sum to at most `1`,
 
@@ -136,7 +136,7 @@ theorem group_card_mul_log_le_sum_neg_log
 
 /-! ## Step 3 — aggregation over phrases -/
 
-/-- **List-to-vector conversion**: read the first `ℓ` entries of a list into a
+/-- Read the first `ℓ` entries of a list into a
 `Fin ℓ → α` function, defaulting past the end. Injective on length-`ℓ`
 lists. -/
 noncomputable def toFinVec (ℓ : ℕ) (w : List α) : Fin ℓ → α :=
@@ -164,7 +164,7 @@ theorem toFinVec_injOn (ℓ : ℕ) :
     rw [List.getElem?_eq_none (by omega), List.getElem?_eq_none (by omega)]
 
 omit [Fintype α] in
-/-- **Length-grouped marginal entropy bound for the LZ78 phrase set**.
+/-- The length-grouped marginal entropy bound for the LZ78 phrase set.
 
 Instantiating the abstract grouping inequality at the actual
 length-`ℓ` marginals, with `c = #phrases`, `D = #distinct lengths`:

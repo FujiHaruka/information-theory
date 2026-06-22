@@ -11,7 +11,7 @@ import Mathlib.Order.Filter.AtTopBot.CompleteLattice
 # Entropy rate of a stationary process
 
 For a stationary process `p : StationaryProcess μ α` on a finite alphabet `α`,
-the **block entropy** is `H_n := H(X_0, …, X_{n-1})` and the **entropy rate**
+the block entropy is `H_n := H(X_0, …, X_{n-1})` and the entropy rate
 is `H := lim_{n → ∞} H_n / n` (Cover–Thomas 4.2.1). Existence of the limit is
 the principal content of this file.
 
@@ -67,7 +67,7 @@ proven by `entropyRate_exists_of_stationary`. -/
 noncomputable def entropyRate (μ : Measure Ω) (p : StationaryProcess μ α) : ℝ :=
   Filter.atTop.limUnder (fun n : ℕ ↦ blockEntropy μ p n / n)
 
-/-- **Base-2 (bit) entropy rate**: the natural-log `entropyRate` divided by
+/-- The base-2 (bit) entropy rate: the natural-log `entropyRate` divided by
 `Real.log 2`, i.e. the entropy rate measured in bits/symbol. This is the
 target the LZ78 bit-rate `lz78GreedyEncodingLength/n` converges to (the
 LZ78 encoding length uses `LZ78Phrase.bitLength = Nat.log 2 …`, a base-2 code
@@ -137,10 +137,10 @@ theorem blockEntropy_succ_chain_rule
 /-! ## Antitonicity of `conditionalEntropyTail`
 
 `H(X_{n+1} | X_0, …, X_n) ≤ H(X_n | X_0, …, X_{n-1})`. Proof:
-1. **Stationarity** (apply shift `T`): the joint pushforward
+1. By stationarity (apply shift `T`), the joint pushforward
    `μ.map (X_n, (X_0, …, X_{n-1}))` equals `μ.map (X_{n+1}, (X_1, …, X_n))`,
    so the corresponding conditional entropies coincide (via `condDistrib_map`).
-2. **Conditioning monotonicity** (`condEntropy_le_condEntropy_of_pair`):
+2. By conditioning monotonicity (`condEntropy_le_condEntropy_of_pair`),
    `H(X_{n+1} | (X_0, (X_1, …, X_n))) ≤ H(X_{n+1} | (X_1, …, X_n))`. The
    conditioner `(X_0, (X_1, …, X_n))` reshapes to `blockRV (n+1)` via
    `MeasurableEquiv.piFinSuccAbove ... 0` + `prodComm`.

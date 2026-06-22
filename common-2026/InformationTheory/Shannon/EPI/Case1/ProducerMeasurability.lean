@@ -35,7 +35,7 @@ namespace InformationTheory.Shannon.EPICase1ProducerMeasurability
 open MeasureTheory Real ProbabilityTheory
 open scoped ENNReal NNReal
 
-/-- **Layer A brick**: the Gaussian pdf is jointly measurable in `(variance, point)`.
+/-- The Gaussian pdf is jointly measurable in `(variance, point)`.
 The in-tree port `measurable_gaussianPDFReal_uncurry` is on the *mean* axis; this is
 the *variance* axis (`v = p.1.toNNReal`).
 @audit:ok -/
@@ -53,7 +53,7 @@ theorem measurable_gaussianPDFReal_var_uncurry :
     · exact ((measurable_snd.sub measurable_const).pow_const 2).neg
     · exact measurable_const.mul hv
 
-/-- **Layer A brick**: the convolution density is jointly measurable in `(t, z)`.
+/-- The convolution density is jointly measurable in `(t, z)`.
 @audit:ok -/
 theorem measurable_convDensityAdd_gaussian_uncurry
     {pX : ℝ → ℝ} (hpX : Measurable pX) :
@@ -83,7 +83,7 @@ theorem measurable_convDensityAdd_gaussian_uncurry
   exact (MeasureTheory.StronglyMeasurable.integral_prod_right hsm).measurable
 
 /-- The Gaussian spatial-derivative closed form `deriv (gaussianPDFReal 0 v) w =
--(w)/v · gaussianPDFReal 0 v w`, valid for **all** `v` (including `v = 0`, where both
+-(w)/v · gaussianPDFReal 0 v w`, valid for all `v` (including `v = 0`, where both
 sides vanish: `gaussianPDFReal 0 0 = 0` and `-(w)/0 = 0`).
 @audit:ok -/
 theorem deriv_gaussianPDFReal_zero_mean_all (v : ℝ≥0) (w : ℝ) :
@@ -94,7 +94,7 @@ theorem deriv_gaussianPDFReal_zero_mean_all (v : ℝ≥0) (w : ℝ) :
   · have := InformationTheory.Shannon.deriv_gaussianPDFReal (m := 0) (v := v) hv w
     simpa using this
 
-/-- **Layer A brick**: the score-form numerator `(t, z) ↦ ∫ x, pX x · deriv g_t (z - x)`
+/-- The score-form numerator `(t, z) ↦ ∫ x, pX x · deriv g_t (z - x)`
 is jointly measurable. Uses the closed form `deriv (gaussianPDFReal 0 v) w =
 -(w)/v · gaussianPDFReal 0 v w` so the integrand is jointly measurable.
 @audit:ok -/
@@ -133,8 +133,8 @@ theorem measurable_scoreNum_gaussian_uncurry
     simpa [Function.uncurry] using hmeas_F.stronglyMeasurable
   exact (MeasureTheory.StronglyMeasurable.integral_prod_right hsm).measurable
 
-/-- **C-b key identity**: `deriv (convDensityAdd pX g_t) z = ∫ x, pX x · deriv g_t (z - x)`
-for **all** `t, z` (the differentiation-under-the-integral score form). For `t > 0`
+/-- The key identity `deriv (convDensityAdd pX g_t) z = ∫ x, pX x · deriv g_t (z - x)`
+for all `t, z` (the differentiation-under-the-integral score form). For `t > 0`
 this is `convDensityAdd_hasDerivAt_of_integrable_smoothKernel.deriv`; for `t ≤ 0` both
 sides vanish (`g_0 = 0` ⇒ `conv = 0` ⇒ `deriv = 0`, and `deriv g_0 = 0` ⇒ integrand `0`).
 
@@ -169,7 +169,7 @@ theorem deriv_convDensityAdd_gaussian_eq_scoreNum
     rw [hconv0]
     simp [gaussianPDFReal_zero_var]
 
-/-- **Layer C brick (C-b core)**: `logDeriv (convDensityAdd pX g_t)` is jointly
+/-- `logDeriv (convDensityAdd pX g_t)` is jointly
 measurable in `(t, z)`. By `logDeriv = deriv / conv` and the C-b key identity
 `deriv (conv_t) = scoreNum t`, this is `scoreNum / conv`, both jointly measurable.
 
@@ -190,7 +190,7 @@ theorem measurable_logDeriv_convDensityAdd_gaussian_uncurry
   exact (measurable_scoreNum_gaussian_uncurry hpX).div
     (measurable_convDensityAdd_gaussian_uncurry hpX)
 
-/-- **Final brick**: the `t`-side measurability the producer's `integrable_deriv`
+/-- The `t`-side measurability the producer's `integrable_deriv`
 field needs, in the exact `Measure.integrableOn_of_bounded` shape (over `volume`).
 
 `hpX_int` is a pure regularity precondition (integrable probability density).

@@ -9,7 +9,7 @@ import Mathlib.Data.Fintype.Prod
 /-!
 # LZ78 Ziv's inequality — combinatorial counting layer
 
-This file publishes the **combinatorial counting plumbing** layer of
+This file publishes the combinatorial counting plumbing layer of
 Ziv's inequality (Cover–Thomas Lemma 13.5.5; the upper-bound half of the
 LZ78 asymptotic optimality theorem). It establishes the *combinatorial*
 layer (Nat-level phrase-space cardinality bound) as concrete `theorem`s,
@@ -21,12 +21,12 @@ of LZ78 optimality is scoped out as `lz78Greedy_achievability_ae` in
 
 ## File layout
 
-* **§1. `LZ78Phrase` cardinality plumbing** —
+* §1. `LZ78Phrase` cardinality plumbing —
   `LZ78Phrase.equivOptionNatProd`-style cardinality / image-card bounds.
-* **§2. `LZ78Parsing.count` combinatorial bounds** — Nat-level
+* §2. `LZ78Parsing.count` combinatorial bounds — Nat-level
   inequalities on `p.count = p.phrases.length` purely from the parsing
   invariant.
-* **§3. `ZivCountingBound` predicate** — a real-valued
+* §3. `ZivCountingBound` predicate — a real-valued
   predicate that exposes the combinatorial-layer Ziv counting bound at
   the `Prop` level, with a `.refl` constructor and a constructor
   taking a real bound directly. The entropy-side layer plugs
@@ -132,19 +132,19 @@ section CountBounds
 
 variable {α : Type*}
 
-/-- **`LZ78Parsing.count` is the list length.** Restatement of
+/-- `LZ78Parsing.count` is the list length. Restatement of
 `LZ78Parsing.count_eq_length` for direct citation in counting proofs. -/
 @[entry_point]
 theorem LZ78Parsing.count_eq_length' (p : LZ78Parsing α) :
     p.count = p.phrases.length :=
   rfl
 
-/-- **Empty-parsing count is zero.** -/
+/-- The empty parsing has count zero. -/
 @[simp] theorem LZ78Parsing.count_empty' :
     (LZ78Parsing.empty α).count = 0 :=
   rfl
 
-/-- **The set of phrases of a parsing, as a finset.** Built by mapping
+/-- The set of phrases of a parsing, as a finset. Built by mapping
 the `Fin p.count` index space through the `get` accessor and packaging
 as a `Finset` via `Finset.image`. Uses `Classical.decEq` so that no
 `DecidableEq` instance on `LZ78Phrase α` is required at the call site. -/
@@ -154,7 +154,7 @@ noncomputable def LZ78Parsing.phraseSet (p : LZ78Parsing α) :
   (Finset.univ : Finset (Fin p.phrases.length)).image
     (fun i ↦ p.phrases.get i)
 
-/-- **Every phrase in the parsing has bounded parent.** Direct consequence
+/-- Every phrase in the parsing has bounded parent. Direct consequence
 of the `inRange` invariant: phrase at index `i < count` has parent
 in `Option (Fin count)`. -/
 theorem LZ78Parsing.parent_bounded (p : LZ78Parsing α)
@@ -163,7 +163,7 @@ theorem LZ78Parsing.parent_bounded (p : LZ78Parsing α)
   intro k hk
   exact lt_trans (p.inRange i hi k hk) hi
 
-/-- **The phrase-index map factors through `parentBounded`.** Map each
+/-- The phrase-index map factors through `parentBounded`. Map each
 `Fin p.count` index to its corresponding bounded-parent phrase, then
 forget the bound to recover the phrase itself. -/
 noncomputable def LZ78Parsing.indexToBounded (p : LZ78Parsing α) :
@@ -176,7 +176,7 @@ theorem LZ78Parsing.ofParentBounded_indexToBounded (p : LZ78Parsing α)
   unfold LZ78Parsing.indexToBounded
   exact LZ78Phrase.ofParentBounded_toParentBounded _ _
 
-/-- **`count` upper-bound via the bounded-parent ambient.**
+/-- The `count` upper bound via the bounded-parent ambient.
 For any LZ78 parsing on a finite alphabet, the number of *distinct*
 phrases is at most `(count + 1) · |α|`: every phrase is a pair
 `(parent ∈ Option (Fin count), symbol ∈ α)`. -/
@@ -211,14 +211,14 @@ theorem LZ78Parsing.card_phraseSet_le_pow [Fintype α]
   rw [LZ78Phrase.card_parentBounded] at hcard
   simpa [LZ78Parsing.count_eq_length'] using hcard
 
-/-- **Trivial monotonicity: count ≥ 0.** A useful base hypothesis for
+/-- Trivial monotonicity: `count ≥ 0`. A useful base hypothesis for
 Ziv-style real-valued bounds (avoids `pos`/`nonneg` re-derivation
 downstream). -/
 @[simp] theorem LZ78Parsing.count_nonneg (p : LZ78Parsing α) :
     0 ≤ p.count :=
   Nat.zero_le _
 
-/-- **Empty parsing has empty phrase set.** -/
+/-- The empty parsing has an empty phrase set. -/
 @[simp] theorem LZ78Parsing.phraseSet_empty :
     (LZ78Parsing.empty α).phraseSet = ∅ := by
   classical
@@ -238,7 +238,7 @@ section ZivCountingBoundPredicate
 
 variable {α : Type*}
 
-/-- **Real-valued Ziv counting-layer predicate**.
+/-- The real-valued Ziv counting-layer predicate.
 
 For a parsing `p` and a real-valued upper bound `B : ℝ`, this predicate
 asserts that the *combinatorial* layer of the Ziv inequality holds:
@@ -252,18 +252,18 @@ The combinatorial layer of `B` is established by `card_phraseSet_le_pow`
 def ZivCountingBound (p : LZ78Parsing α) (B : ℝ) : Prop :=
   (p.count : ℝ) ≤ B
 
-/-- **Reflexive bound**: trivially `count ≤ count`. -/
+/-- Trivially `count ≤ count`. -/
 @[simp] theorem ZivCountingBound.refl (p : LZ78Parsing α) :
     ZivCountingBound p (p.count : ℝ) := le_refl _
 
-/-- **Monotonicity** in the real bound. -/
+/-- Monotonicity in the real bound. -/
 @[entry_point]
 theorem ZivCountingBound.mono {p : LZ78Parsing α} {B B' : ℝ}
     (h : ZivCountingBound p B) (hB : B ≤ B') :
     ZivCountingBound p B' :=
   le_trans h hB
 
-/-- **Adding a positive slack preserves the bound** (`B` ≤ `B + ε`). -/
+/-- Adding a positive slack preserves the bound (`B` ≤ `B + ε`). -/
 @[entry_point]
 theorem ZivCountingBound.add_nonneg {p : LZ78Parsing α} {B ε : ℝ}
     (h : ZivCountingBound p B) (hε : 0 ≤ ε) :

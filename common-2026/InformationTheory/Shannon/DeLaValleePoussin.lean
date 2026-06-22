@@ -16,7 +16,7 @@ exponent `1`.
 This is the classical "forward" direction of the de la Vallée-Poussin theorem.
 Mathlib does not have this lemma (loogle `UnifIntegrable, ConvexOn = Found 0`), but
 the proof is short and reduces to `MeasureTheory.unifIntegrable_of` — crucially that
-gateway does **not** require `[IsFiniteMeasure μ]`, so the criterion applies to
+gateway does not require `[IsFiniteMeasure μ]`, so the criterion applies to
 infinite measures such as `volume`.
 
 The intended downstream consumer is the EPI G2 Vitali witness chain
@@ -37,7 +37,7 @@ namespace InformationTheory.Shannon
 
 variable {α : Type*} {m : MeasurableSpace α} {μ : Measure α} {ι : Type*}
 
-/-- **Superlinear growth control**, the genuine de la Vallée-Poussin hypothesis on
+/-- Superlinear growth control, the genuine de la Vallée-Poussin hypothesis on
 `G : ℝ≥0∞ → ℝ≥0∞`: for every slope `K` there is a finite threshold `M` beyond which
 `K * t ≤ G t`. This is the non-degenerate `ℝ≥0∞` reading of "`G t / t → ∞`" — note
 that `Filter.atTop` on `ℝ≥0∞` collapses to the singleton `{∞}` (since `∞` is the top),
@@ -46,7 +46,7 @@ the usable statement. -/
 def Superlinear (G : ℝ≥0∞ → ℝ≥0∞) : Prop :=
   ∀ K : ℝ≥0∞, ∃ M : ℝ≥0, ∀ t : ℝ≥0∞, (M : ℝ≥0∞) ≤ t → K * t ≤ G t
 
-/-- **de la Vallée-Poussin criterion (forward direction).**
+/-- The de la Vallée-Poussin criterion (forward direction).
 
 If `G : ℝ≥0∞ → ℝ≥0∞` is superlinear (`Superlinear G`, i.e. `K * t ≤ G t` eventually for
 every slope `K`) and the family `f` satisfies a uniform bound

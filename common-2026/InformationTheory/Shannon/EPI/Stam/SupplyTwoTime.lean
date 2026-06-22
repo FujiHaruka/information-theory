@@ -4,7 +4,7 @@
 Produces the `h_stam_supply` clause demanded by
 `EPICase1TwoTime.entropyPower_add_ge_case1_of_regular_twotime`
 (`InformationTheory/Shannon/EPI/Case1/TwoTime/EntropyPowerInequality.lean`): for noises `Z_X Z_Y Z`
-(all unit, the sum perturbed by a **separate** unit noise `Z`) and de Bruijn
+(all unit, the sum perturbed by a separate unit noise `Z`) and de Bruijn
 regularity hyps `h_reg_X`, `h_reg_Y`, `h_reg_sum`, at every pair of matched times
 `σ, τ > 0` the three smoothed Fisher informations are positive and the inverse-Stam
 inequality `1/J_S ≥ 1/J_X + 1/J_Y` holds, where `J_S` is the single-noise sum heat
@@ -13,8 +13,8 @@ flow at `σ + τ`.
 ## Approach
 
 Mirror the same-time producer `EPIDensityForm.lean:300-414` (which parks the sum
-conjuncts because the same-noise sum has variance `𝒩(0,2)`), but with **separate
-times** `σ ≠ τ` and a **separate unit noise** `Z` for the sum. The asymmetric
+conjuncts because the same-noise sum has variance `𝒩(0,2)`), but with separate
+times `σ ≠ τ` and a separate unit noise `Z` for the sum. The asymmetric
 variance-add bridge `EPIConvDensityAssoc.convDensityAdd_convGaussian_interchange_asym`
 then closes the conv-pin seam at the genuine sum-time `σ + τ` (no `𝒩(0,2)` reparam).
 
@@ -25,7 +25,7 @@ positivities and all `IsStamInequalityHyp` regularity gates are discharged by re
 
 The single genuinely-new piece is the conv-pin gate
 `density_sum_{σ+τ} = convDensityAdd density_X_σ density_Y_τ`, reduced via the asym
-interchange to the **input-level a.e. identity** `pXY =ᵐ convDensityAdd pX pY`
+interchange to the input-level a.e. identity `pXY =ᵐ convDensityAdd pX pY`
 (independent-sum density = convolution-of-densities), proved from `pX_law`/`pY_law`/
 `pXY_law` + `IndepFun.map_add_eq_map_conv_map` + `conv_withDensity_eq_lconvolution`
 + withDensity a.e.-uniqueness. The a.e.→pointwise wash through `convDensityAdd · g`
@@ -51,7 +51,7 @@ open InformationTheory.Shannon.EPIBlachmanDensity
 open InformationTheory.Shannon.EPIBlachmanGeneralDensity
 open scoped ENNReal NNReal Convolution
 
-/-- **Density facts from a `withDensity` law** (probability-density normalization):
+/-- Density facts from a `withDensity` law (probability-density normalization):
 if `P.map W = volume.withDensity (ofReal ∘ p)` with `P` a probability measure and `p ≥ 0`
 measurable, then `p` is `volume`-integrable with mass `1`. Copy of the `density_facts`
 local lemma in `EPIDensityForm.lean:321-340`, lifted to a top-level helper.
@@ -76,14 +76,14 @@ theorem density_int_mass {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω}
       hp_meas.aestronglyMeasurable, hlint, ENNReal.toReal_one]
   exact ⟨hp_int, hp_mass⟩
 
-/-- **The independent-sum input identity (the seam)**: for `X ⊥ Y` with Lebesgue
+/-- The independent-sum input identity, the seam of the argument: for `X ⊥ Y` with Lebesgue
 densities `pX`, `pY` and `X+Y` with Lebesgue density `pXY` (all from probability-measure
 `withDensity` laws), the sum density equals the convolution of the addend densities a.e.:
 `pXY =ᵐ[volume] convDensityAdd pX pY`.
 
 Both `pXY` and `convDensityAdd pX pY` are densities of
 `P.map (X+Y) = (P.map X) ∗ (P.map Y)` (independence), and `withDensity` densities are
-a.e.-unique. This is an a.e. identity at the **un-smoothed input** level; the consumed
+a.e.-unique. This is an a.e. identity at the un-smoothed input level; the consumed
 `density_t` is pinned pointwise to the *smooth* convolution, so this a.e. seam is honest.
 @audit:ok -/
 theorem indepSum_density_ae {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω}
@@ -585,11 +585,11 @@ theorem convDensityAdd_gaussian_asym_integrable_prod_deriv_mul (pX pY : ℝ → 
   simp only [Function.comp, Function.uncurry]
   rw [← hlogX p.2, ← hlogY (p.1 - p.2)]
 
-/-- **Asymmetric `IsBlachmanConvReady` producer** (independent times `σ ≠ τ`):
+/-- The asymmetric `IsBlachmanConvReady` producer (independent times `σ ≠ τ`):
 `IsBlachmanConvReady (convDensityAdd pX g_σ) (convDensityAdd pY g_τ)`. Faithful
 generalization of `EPIBlachmanGeneralDensity.isBlachmanConvReady_convDensityAdd_gaussian`
 (which hardcodes the same `t` for both arms) — every field's construction uses only the
-public **per-arm** conv-Gaussian lemmas (`convDensityAdd_gaussian_integrable` / `_bdd` /
+public per-arm conv-Gaussian lemmas (`convDensityAdd_gaussian_integrable` / `_bdd` /
 `_deriv_bdd` / `convDensityAdd_fisher_integrand_integrable` / `convDensityAdd_pos_of_pos_cont`
 / `isRegularDensityV2_convDensityAdd_gaussian`), each at its own arm's time, so the same-`t`
 restriction was incidental. The only structural change is `int_fisherZ`: the conv-of-conv
@@ -741,14 +741,14 @@ Genuine (no residual): the conv-pin seam `indepSum_density_ae`
 (Tonelli finiteness + a.e.-`z` `ofReal_integral_eq_lintegral_ofReal`).
 
 @audit:ok — independent honesty audit (2026-06-06), all 5 priority checks PASS:
-(1) **Core genuinely produced, not assumed**: the inverse-Stam `1/J_S ≥ 1/J_X+1/J_Y` is
+(1) Core genuinely produced, not assumed: the inverse-Stam `1/J_S ≥ 1/J_X+1/J_Y` is
 CONSTRUCTED by `isStamInequalityHyp_via_step3 P A B` (regularity-only → genuine
 `stam_step2_density_wall`, `wall:stam-step2-density` CLOSED, `@audit:ok`) then APPLIED at
 `density_t`. The three `IsDeBruijnRegularityHyp` inputs are consumed only as regularity
 (`.pX`/`.pX_law`/`.pX_nn`/`.pX_meas` density witnesses + `.density_t_eq` pointwise pins),
 never as a bundled inequality core. No `:= h` circularity, no `:True`, no degenerate
 exploitation, no `*Hypothesis`-core bundling, no name laundering.
-(2) **a.e.→pointwise wash honest**: the object `IsStamInequalityHyp` consumes is the
+(2) a.e.→pointwise wash honest: the object `IsStamInequalityHyp` consumes is the
 POINTWISE-pinned smooth `density_t` (`density_t_eq` pins to the explicit smooth
 `convDensityAdd pX g_t`, not an a.e. rnDeriv class); the a.e. seam sits only at the
 un-smoothed input (`pXY =ᵐ convDensityAdd pX pY`) and is washed through `convDensityAdd · g`

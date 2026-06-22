@@ -16,11 +16,11 @@ import InformationTheory.Shannon.EPI.G2.BridgeDensityHelpers
 /-!
 # EPI G2 — (β) Convolution does not decrease differential entropy
 
-This file supplies the **lower bound** `h(pX) ≤ h(pX ∗ g_t)` of the EPI G2 general
+This file supplies the lower bound `h(pX) ≤ h(pX ∗ g_t)` of the EPI G2 general
 sandwich: the differential entropy of a Gaussian-smoothed density `convDensityAdd pX g_t`
 (with `g_t = gaussianPDFReal 0 ⟨t,_⟩`) is at least the differential entropy of `pX`.
 
-The mathematical route is the continuous **conditioning-reduces-entropy**
+The mathematical route is the continuous conditioning-reduces-entropy
 inequality, applied to `W := X + √t·Z` with `Z ⊥ X` a Gaussian:
 
   `h(X + √t·Z) ≥ h(X + √t·Z | Z) = h(X)`.
@@ -39,7 +39,7 @@ conditional differential entropy is defined Mathlib-shape:
 
   `condDifferentialEntropy X Z μ := ∫ z, differentialEntropy ((condDistrib X Z μ) z) ∂(μ.map Z)`.
 
-This is a **reusable, EPI-line-wide asset**: continuous conditional differential
+This is a reusable, EPI-line-wide asset. Continuous conditional differential
 entropy + conditioning-reduces-entropy are absent from Mathlib (genuine gap, not a
 wall), but the `condDistrib` machinery exists, so a genuine construction is possible.
 
@@ -76,7 +76,7 @@ open MeasureTheory Real ProbabilityTheory InformationTheory
 open InformationTheory.Shannon.EPIConvDensity
 open scoped ENNReal NNReal Real
 
-/-- **Continuous conditional differential entropy** `h(X | Z)`. Defined directly on
+/-- The continuous conditional differential entropy `h(X | Z)`. Defined directly on
 the Mathlib regular conditional distribution `condDistrib X Z μ` (the conditional law
 of `X` given `Z`, a `Kernel α ℝ`): the fibre differential entropy
 `differentialEntropy ((condDistrib X Z μ) z)` averaged over the law `μ.map Z` of `Z`.
@@ -89,7 +89,7 @@ noncomputable def condDifferentialEntropy
     (X : Ω → ℝ) (Z : Ω → α) (μ : Measure Ω) [IsFiniteMeasure μ] : ℝ :=
   ∫ z, differentialEntropy ((condDistrib X Z μ) z) ∂(μ.map Z)
 
-/-- **Differential mutual information as a Kullback-Leibler divergence**:
+/-- Differential mutual information expressed as a Kullback-Leibler divergence:
 
   `h(X) − h(X | Z) = KL(joint ‖ product).toReal`,
 
@@ -204,7 +204,7 @@ theorem differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv
   rw [hstepA, hstepBint, hstepC, hent]
   ring
 
-/-- **Conditioning reduces (differential) entropy**: `h(X | Z) ≤ h(X)`.
+/-- Conditioning reduces the differential entropy: `h(X | Z) ≤ h(X)`.
 
 The differential analogue of `I(X;Z) = h(X) − h(X|Z) = KL(joint ‖ product) ≥ 0`.
 The bridge
@@ -278,7 +278,7 @@ instance affineShiftKernel.instIsMarkov (νX : Measure ℝ) [IsProbabilityMeasur
   have : Measurable fun x : ℝ ↦ x + c * z := by fun_prop
   exact Measure.isProbabilityMeasure_map this.aemeasurable
 
-/-- Plumbing core (buildable, **not** a Mathlib wall): the pushforward of the product
+/-- Plumbing core (buildable, not a Mathlib wall): the pushforward of the product
 measure `νZ ⊗ νX` through the affine map `g (z, x) = (z, x + c·z)` equals the composition
 product of `νZ` with the z-dependent affine-shift kernel `affineShiftKernel νX c`.
 
@@ -296,7 +296,7 @@ theorem prod_map_affine_eq_compProd
   rw [Measure.map_apply hshift (measurable_prodMk_left hs)]
   congr 1
 
-/-- **Independent-sum fibre identification**: for `X ⊥ Z`,
+/-- Fibre identification for an independent sum: for `X ⊥ Z`,
 `h(X + c·Z | Z) = h(X)`.
 
 Conditioned on `Z = z`, the variable `fun ω => X ω + c · Z ω` is the constant shift
@@ -359,7 +359,7 @@ theorem condDifferentialEntropy_indep_add_eq
     exact differentialEntropy_map_add_const hX_ac (c * z)
 
 set_option linter.unusedVariables false in
-/-- **(β) device form** — convolution does not decrease differential entropy,
+/-- The (β) device form: convolution does not decrease differential entropy,
 stated through an underlying independent pair `X ⊥ Z` with `Z` Gaussian.
 
 `h(X) ≤ h(X + √s·Z)` via the chain `h(X) = h(X+√s·Z | Z) ≤ h(X+√s·Z)`
@@ -416,7 +416,7 @@ theorem differentialEntropy_indep_gaussian_add_ge
   rw [← h_fibre]
   exact h_le
 
-/-- **(β) density form** — the target consumed by the EPI G2 sandwich layer-2.
+/-- The (β) density form: the target consumed by the EPI G2 sandwich layer-2.
 
 Convolution with a Gaussian does not decrease the `negMulLog` entropy integral:
 `∫ negMulLog pX ≤ ∫ negMulLog (pX ∗ g_{u n})`. Equivalently `h(pX) ≤ h(pX ∗ g_t)`.

@@ -29,12 +29,12 @@ proved here (`sorryAx`-free).
 
 ## File layout
 
-* **§1. Encoding length + parent-theorem bridge** —
+* §1. Encoding length + parent-theorem bridge —
   `lz78GreedyEncodingLength`, its distinct-phrase count bound, and the
   Cover–Thomas bit-length / per-symbol-rate bounds.
-* **§2. `IsLZ78EncodingLengthBoundPassthrough`** — the
+* §2. `IsLZ78EncodingLengthBoundPassthrough` — the
   upper-bound pass-through predicate and its canonical discharge.
-* **§3. Parent-theorem bridge** — the two a.s.-eventual halves and the
+* §3. Parent-theorem bridge — the two a.s.-eventual halves and the
   `lz78_asymptotic_optimality_with_greedy` headline.
 
 ## Pattern source

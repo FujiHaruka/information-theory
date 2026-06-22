@@ -77,9 +77,10 @@ theorem rnDeriv_cond_eq (μ : Measure ℝ) [IsProbabilityMeasure μ] {s : Set �
   filter_upwards [h2] with x hx
   simp only [Pi.smul_apply, hx, smul_eq_mul]
 
-/-- **truncated sum law is dominated by the full sum law (measure level)**: pushing the truncated
-measure `truncW P W n = P[| {|W| ≤ n}]` forward through `W + V` is bounded above by the inverse-mass
-scaled pushforward of `P` through `W + V`. Pure measure monotonicity (no convolution / density):
+/-- At the measure level the truncated sum law is dominated by the full sum law: pushing the
+truncated measure `truncW P W n = P[| {|W| ≤ n}]` forward through `W + V` is bounded above by the
+inverse-mass scaled pushforward of `P` through `W + V`. Pure measure monotonicity
+(no convolution / density):
 `cond P E = (P E)⁻¹ • P.restrict E ≤ (P E)⁻¹ • P` via `restrict_le_self`, then push forward
 (`Measure.map_smul` + `Measure.map_mono`). Used downstream for the klDiv expansion of the truncated
 sum law. (`hn` is a regularity precondition kept for API symmetry; the `≤` direction does not use
@@ -107,7 +108,7 @@ theorem map_truncW_add_le_smul_map_add
   simp only [Measure.smul_apply, smul_eq_mul]
   exact mul_le_mul_right (hle s) _
 
-/-- **a.c. corollary of the truncated-sum-law domination**: the truncated sum law `truncW P W n`
+/-- A corollary of the truncated-sum-law domination: the truncated sum law `truncW P W n`
 pushed through `W + V` is absolutely continuous w.r.t. the full sum law `P.map (W + V)`. Immediate
 from `map_truncW_add_le_smul_map_add` via `absolutelyContinuous_of_le_smul` (`μ' ≤ c • μ → μ' ≪ μ`,
 unconditional in `c`). Used downstream for the klDiv expansion of the truncated truncW sum law.
@@ -300,7 +301,7 @@ theorem ennreal_gibbs_rearranged {μ ν : Measure ℝ}
   by_cases hA_top : A = ⊤
   · -- A(μ) = ⊤ branch. LHS = `⊤ + crossNeg = ⊤`; goal needs `crossPos μ ν = ⊤`, then RHS = ⊤.
     -- ⊤-case Gibbs: `A(μ) = ⊤ ⟹ crossPos μ ν = ⊤` via pointwise subadditivity
-    -- (`-log fμ = -log fν + -log r`, `r := dμ/dν`) + **negative part 1-bounded** (`-r log r ≤ 1`,
+    -- (`-log fμ = -log fν + -log r`, `r := dμ/dν`) + negative part 1-bounded (`-r log r ≤ 1`,
     -- = klFun ≥ 0 content). This needs no finiteness precondition.
     have hCP_top : crossPos μ ν = ⊤ := by
       -- The `dμ/dν` density as a real and the `μ`-a.e. chain `log fμ = log r + log fν`.
@@ -442,10 +443,10 @@ theorem integrable_negMulLog_rnDeriv_map_add_const
   -- transfer along the measure-preserving embedding `(· + y)`.
   exact (hmp.integrable_comp_emb hf).mp hcomp_int
 
-/-- **convolution density as translate-average** (only the LEFT factor a.c.): for `μW ≪ volume`
+/-- Convolution density as a translate-average (only the LEFT factor a.c.): for `μW ≪ volume`
 the sum law `μW ∗ μV` is `volume.withDensity (z ↦ ∫⁻ v, f_W (z - v) ∂μV)`
 where `f_W = μW.rnDeriv vol`.
-Unlike the route-T `convDensityAdd` machinery (`EPIConvDensity`, which requires **both** components
+Unlike the route-T `convDensityAdd` machinery (`EPIConvDensity`, which requires both components
 a.c.), this only needs `μW` a.c.; `μV` is a general (probability) measure.
 `lintegral_conv` (Tonelli)
 + `withDensity_rnDeriv_eq` (recover `μW = vol.withDensity f_W`) + translation invariance.
@@ -496,7 +497,7 @@ theorem conv_eq_withDensity_translate_average
         exact lintegral_const_mul (A.indicator 1 z)
           (hg_meas.comp ((measurable_const (a := z)).sub measurable_id))
 
-/-- **translate of an a.c. measure as withDensity**: `(vol.withDensity f).map (·+z) =
+/-- A translate of an a.c. measure expressed as a `withDensity`: `(vol.withDensity f).map (·+z) =
 vol.withDensity (f (·-z))`. Lebesgue translation invariance. Used to express the
 affine-shift fibre `(Q.map W).map(·+z)` as a `withDensity` for the per-fibre a.c. argument.
 @audit:ok -/
@@ -514,11 +515,11 @@ theorem map_add_const_withDensity (f : ℝ → ℝ≥0∞) (z : ℝ) :
   · rw [Set.indicator_of_mem hx, Set.indicator_of_mem (by simpa using hx), add_sub_cancel_right]
   · rw [Set.indicator_of_notMem hx, Set.indicator_of_notMem (by simpa using hx)]
 
-/-- **per-fibre a.c. (continuous disintegration, sum structure)**: for `W ⊥ V` under `Q` with
-`Q.map W ≪ volume`, the affine-shift fibre `(Q.map W).map (·+z)` (= the per-fibre conditional law
-of `W+V` given `V=z`, via `affineShiftKernel`) is a.c. w.r.t. the sum marginal
+/-- Per-fibre absolute continuity (continuous disintegration with sum structure): for `W ⊥ V`
+under `Q` with `Q.map W ≪ volume`, the affine-shift fibre `(Q.map W).map (·+z)` (= the per-fibre
+conditional law of `W+V` given `V=z`, via `affineShiftKernel`) is a.c. w.r.t. the sum marginal
 `(Q.map W) ∗ (Q.map V)`
-for a.e. `z ∂(Q.map V)`. This is the **continuous** version of the general disintegration fact
+for a.e. `z ∂(Q.map V)`. This is the continuous version of the general disintegration fact
 `condDistrib z ≪ μ.map X` (Mathlib's general/non-discrete version is absent; the in-tree
 `Bridge.condDistrib_ae_absolutelyContinuous_map` is `[Countable X]`-only, unusable for `X = ℝ`).
 
@@ -613,7 +614,7 @@ theorem convDensity_jensen_negMulLog_ae_bound
   have hCqf_int : Integrable (fun v ↦ max (φ (f v)) 0) μV := hzCq
   set Cm : ℝ → ℝ := fun v ↦ max (-(φ (f v))) 0 with hCm_def
   -- `Cm v = (negMulLog (f v))⁺ ≤ 1` pointwise (since `negMulLog t ≤ 1 - t ≤ 1` for `t ≥ 0`),
-  -- and constant `1` is integrable over the **probability** measure `μV`.
+  -- and constant `1` is integrable over the probability measure `μV`.
   have hCm_meas : Measurable Cm :=
     ((hφ_meas.comp (hfW_meas.comp (measurable_const.sub measurable_id))).neg).max measurable_const
   have hCm_le_one : ∀ v, Cm v ≤ 1 := by

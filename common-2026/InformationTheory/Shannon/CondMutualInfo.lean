@@ -394,7 +394,8 @@ For channel coding arguments involving reshaping such as `Y^n ↔ Y_i × Y^{≠i
 following lemmas establish invariance of `condMutualInfo` under `MeasurableEquiv` on
 each argument. -/
 
-/-- **Left reshape**: `I(e ∘ X; Y | Z) = I(X; Y | Z)` for any `MeasurableEquiv e : X ≃ᵐ X'`. -/
+/-- Reshaping the left argument leaves the CMI fixed: `I(e ∘ X; Y | Z) = I(X; Y | Z)` for any
+`MeasurableEquiv e : X ≃ᵐ X'`. -/
 @[entry_point]
 theorem condMutualInfo_map_left_measurableEquiv
     {X' : Type*} [MeasurableSpace X'] [StandardBorelSpace X'] [Nonempty X']
@@ -453,7 +454,8 @@ theorem condMutualInfo_map_left_measurableEquiv
     · exact (e.measurable.prodMap measurable_id)
   rw [h_joint, h_factored, klDiv_map_measurableEquiv]
 
-/-- **Right reshape (Y/middle)**: `I(X; e ∘ Y | Z) = I(X; Y | Z)` for `e : Y ≃ᵐ Y'`.
+/-- Reshaping the right (middle) argument leaves the CMI fixed: `I(X; e ∘ Y | Z) = I(X; Y | Z)`
+for `e : Y ≃ᵐ Y'`.
 
 Follows from `condMutualInfo_comm` and `condMutualInfo_map_left_measurableEquiv`. -/
 @[entry_point]
@@ -497,8 +499,8 @@ private lemma compProd_map_left_prodMap
   rw [Kernel.comap_apply _ e.symm.measurable]
   simp [Prod.map]
 
-/-- **Markov chain left post-processing**: if `Xs → Zc → Yo` is a Markov chain and
-`f : X → X'` is measurable, then `f ∘ Xs → Zc → Yo` is also a Markov chain. -/
+/-- Markov chains are stable under post-processing on the left: if `Xs → Zc → Yo` is a Markov
+chain and `f : X → X'` is measurable, then `f ∘ Xs → Zc → Yo` is also a Markov chain. -/
 @[entry_point]
 theorem isMarkovChain_map_left
     {X' : Type*} [MeasurableSpace X'] [StandardBorelSpace X'] [Nonempty X']

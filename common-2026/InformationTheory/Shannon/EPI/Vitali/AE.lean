@@ -10,20 +10,20 @@ import InformationTheory.Shannon.EPI.ApproxIdentityL1
 /-!
 # G2 Vitali witness — a.e. pointwise convergence of the entropy integrands (subsequence)
 
-This file supplies the **genuine** a.e.-convergence building block consumed by the
+This file supplies the genuine a.e.-convergence building block consumed by the
 layer-2 machinery `differentialEntropy_convDensity_integral_tendsto` in
 `EPIG2HeatFlowContinuity.lean`. Along any sequence `u → 0⁺`, the entropy
 integrands `negMulLog (convDensityAdd pX g_{u n})` converge to `negMulLog pX`
-**a.e. along a subsequence** `n ↦ u (ns n)` (`StrictMono ns`).
+a.e. along a subsequence `n ↦ u (ns n)` (`StrictMono ns`).
 
 ## Why a subsequence (and why that is enough)
 
-The genuine scaffolding is the **layer-1 L¹ convergence**
+The genuine scaffolding is the layer-1 L¹ convergence
 `convDensityAdd_tendsto_L1_zero` (`EPIApproxIdentityL1.lean`, `@audit:ok`).
 Composing it with `hu_lim` and feeding it through
 `tendstoInMeasure_of_tendsto_eLpNorm` (Lp → measure) and
 `TendstoInMeasure.exists_seq_tendsto_ae` (measure → a.e.) yields a.e. convergence
-of `convDensityAdd pX g_{u n} → pX` **along a subsequence** `f (ns i)`
+of `convDensityAdd pX g_{u n} → pX` along a subsequence `f (ns i)`
 (`StrictMono ns`), composed through the continuous map `Real.negMulLog`.
 
 Mathlib has no *full-sequence* a.e. lemma from L¹/measure convergence for the
@@ -32,7 +32,7 @@ Gaussian kernel (every route — `TendstoInMeasure.exists_seq_tendsto_ae` /
 mollifier lemma `ContDiffBump.ae_convolution_tendsto_right_of_locallyIntegrable`
 is compact-support-bump-limited, and `gaussianPDFReal` is not a `ContDiffBump`).
 Rather than carry a parked *full-sequence* witness, the layer-2 consumer is shaped
-to use this **subsequence** statement directly via `tendsto_of_subseq_tendsto`
+to use this subsequence statement directly via `tendsto_of_subseq_tendsto`
 (the same device Mathlib's own `tendsto_Lp_of_tendstoInMeasure` uses): the entropy
 integral limit is proved by showing every subsequence has a further a.e.-convergent
 sub-subsequence, which this lemma supplies. No full-sequence a.e. fact is needed,
@@ -45,12 +45,12 @@ open MeasureTheory Real ProbabilityTheory Filter
 open InformationTheory.Shannon.EPIConvDensity
 open scoped ENNReal NNReal Topology
 
-/-- **Genuine subsequence a.e. convergence** (the layer-2 Vitali a.e. building
+/-- Genuine subsequence a.e. convergence (the layer-2 Vitali a.e. building
 block).
 
 Along any sequence `u → 0⁺`, the entropy integrands
 `negMulLog (convDensityAdd pX g_{u n})` converge to `negMulLog (pX)`
-**a.e. along a subsequence** `n ↦ u (ns n)` (`StrictMono ns`).
+a.e. along a subsequence `n ↦ u (ns n)` (`StrictMono ns`).
 
 Genuine route: layer-1 L¹ convergence `convDensityAdd_tendsto_L1_zero`
 (`@audit:ok`) reparameterised to the sequence `u` via `hu_lim`,

@@ -6,7 +6,7 @@ import InformationTheory.Shannon.CramerBoundaryUpstream
 /-!
 # Cramér / Chernoff CLT-boundary closure
 
-This file closes the **boundary case** `a = m` (= tilted mean = `deriv (cgf Y μ₀) lam`)
+This file closes the boundary case `a = m` (= tilted mean = `deriv (cgf Y μ₀) lam`)
 of the residual window predicate `IsTiltedWindowEventuallyLarge`, the only piece left
 after the change-of-measure machinery is discharged. The interior case
 `a < m < a + ε` is handled by the existing two-sided LLN squeeze
@@ -83,7 +83,7 @@ theorem gaussianReal_Ici_eq_half {v : ℝ≥0} (hv : v ≠ 0) :
 
 variable {Ω₀ : Type*} [MeasurableSpace Ω₀]
 
-/-- **Gaussian self-law witness**: the identity map on `ℝ` has law
+/-- The Gaussian self-law witness: the identity map on `ℝ` has law
 `gaussianReal 0 w` under `gaussianReal 0 w`. Supplies the `HasLaw Y (gaussianReal 0 …)`
 argument of the CLT with the trivial witness `(ℝ, gaussianReal 0 w, id)`. -/
 theorem gaussianReal_hasLaw_id {w : ℝ≥0} :
@@ -91,7 +91,7 @@ theorem gaussianReal_hasLaw_id {w : ℝ≥0} :
   aemeasurable := aemeasurable_id
   map_eq := Measure.map_id
 
-/-- **Half-line mass tends to the Gaussian median** (CLT + portmanteau +
+/-- The half-line mass tends to the Gaussian median (CLT + portmanteau +
 scaling). The tilted-ambient mass (ℝ≥0∞-valued) of the half-line
 `{ω | m·n ≤ ∑_{i<n} Y(ω i)}` (at the tilted mean `m = ∫ Y ∂tilted`) converges to the
 Gaussian mass `gaussianReal 0 v.toNNReal (Ici 0)`.
@@ -194,7 +194,7 @@ theorem tilted_halfline_tendsto_gaussian
 
 /-! ## Half-line mass tends to `1/2` -/
 
-/-- **Half-line mass tends to `1/2`** (Gaussian median applied to the Gaussian half-line
+/-- The half-line mass tends to `1/2` (Gaussian median applied to the Gaussian half-line
 limit). The tilted-ambient `.real`-mass of `{ω | m·n ≤ ∑_{i<n} Y(ω i)}` tends to `1/2`. -/
 theorem tilted_halfline_tendsto_half
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
@@ -232,7 +232,7 @@ theorem tilted_halfline_tendsto_half
 
 /-! ## Window mass eventually `≥ 1/4` at the boundary -/
 
-/-- **Boundary window largeness**. At the boundary `a = m` (= tilted mean),
+/-- Boundary window largeness. At the boundary `a = m` (= tilted mean),
 the tilted infinite-product window mass `{ω | m·n ≤ ∑Y < (m+ε)·n}` is eventually `≥ 1/4`.
 The lower half-line tends to `1/2` (half-line mass + scaling + median); the upper half-line at
 `m + ε > m` vanishes by the one-sided LLN; their difference tends to `1/2 ≥ 1/4`.
@@ -320,7 +320,7 @@ theorem tiltedWindow_eventually_large_of_boundary
 
 /-! ## Relaxed window predicate + boundary discharge -/
 
-/-- **Per-instance change-of-measure half-line lower bound**. At a single
+/-- A per-instance change-of-measure half-line lower bound. At a single
 threshold `a` and `ε > 0`, eventual largeness `C ≤ tilted-window mass` lifts (via the
 finite-level change-of-measure `change_of_measure_lower_bound_pi` and the cylinder lift)
 to the un-tilted half-line lower bound `C·exp(-n(λa - Λ + λε)) ≤ P{a·n ≤ ∑Y}`. This is the
@@ -388,7 +388,7 @@ theorem tilted_window_lower_to_halfline
 
 /-! ## Cramér end-to-end lower bound at the interior optimal tilt -/
 
-/-- **Per-`ε` boundary liminf lower bound**. At the boundary `a = m`
+/-- A per-`ε` boundary liminf lower bound. At the boundary `a = m`
 (= tilted mean `∫ Y ∂tilted`), for each `ε > 0`, the half-line tail rate is eventually
 bounded below by `(1/n)·log((1/4)·exp(-n(λm - Λ + λε)))`, whose limit is
 `-(λm - Λ + λε)`. By `liminf_le_liminf`, `-(λm - Λ + λε) ≤ liminf (1/n)·log P{m·n ≤ ∑Y}`.
@@ -473,10 +473,10 @@ theorem boundary_liminf_lower_of_eps
       = liminf g atTop := hg_tendsto.liminf_eq.symm
     _ ≤ _ := liminf_le_liminf hev_le hbnd h_coboundedBelow
 
-/-- **Cramér lower bound, boundary closure**. At the interior optimal tilt
+/-- The Cramér lower bound, boundary closure. At the interior optimal tilt
 `a = m = ∫ Y ∂tilted` (= `deriv (cgf Y μ₀) lam`, the boundary of the residual window), the
 asymptotic upper-tail rate is bounded below by the per-`lam` Chernoff exponent
-`-(λm - Λ)`. The residual largeness hypothesis is **removed** — the boundary window mass is
+`-(λm - Λ)`. The residual largeness hypothesis is removed — the boundary window mass is
 supplied internally by the CLT (`tiltedWindow_eventually_large_of_boundary`). Only the
 regularity preconditions remain: boundedness, non-degeneracy `0 < Var`, and the cobounded
 hypothesis on the rate sequence (a precondition shared with `cramer_lower`). The `ε → 0⁺`
@@ -526,14 +526,14 @@ theorem cramer_lower_boundary
     rw [heq] at h
     exact h
 
-/-- **Cramér lower bound, boundary closure — consumer form**. The
+/-- The Cramér lower bound, boundary closure — consumer form. The
 infinitePi-side restatement of `cramer_lower_boundary` matching the conclusion shape of
 `Cramer.TiltedLLN.cramer_lower_phaseC_partial_discharge`: the cgf is written on the
 coordinate-eval family `Y ∘ eval 0` under the un-tilted product, and the threshold is the
 optimal tilt `a = deriv (cgf (Y∘eval 0) (infinitePi μ₀)) lam`. The optimal-tilt hypothesis
 `h_deriv` (the same regularity precondition carried by the consumer root) pins
 `a = m = ∫ Y ∂tilted` via `tiltedMean_eq_deriv_cgf` and the cgf-eval bridge, so the residual
-largeness hypothesis is **removed**: the boundary window mass is supplied internally by the
+largeness hypothesis is removed: the boundary window mass is supplied internally by the
 CLT. This is the unconditional internal-point form of the Cramér lower boundary.
 
 @audit:ok (`h_deriv`/`hVar`/`h_coboundedBelow` are all preconditions, not load-bearing —

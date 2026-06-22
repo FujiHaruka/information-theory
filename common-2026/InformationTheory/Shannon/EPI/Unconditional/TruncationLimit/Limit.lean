@@ -334,11 +334,11 @@ theorem differentialEntropyExt_truncW_tendsto_top
     intro n
     refine (Measure.AbsolutelyContinuous.trans ?_ hW_ac)
     rw [truncW]; exact (ProbabilityTheory.cond_absolutelyContinuous).map hW
-  -- **Step (2b): `A(μW) = ⊤`** (positive-part divergence from `h(μW) = ⊤`, `B(μW) < ⊤`).
+  -- Step (2b): `A(μW) = ⊤` (positive-part divergence from `h(μW) = ⊤`, `B(μW) < ⊤`).
   have hA_top :
       (∫⁻ x, ENNReal.ofReal (Real.negMulLog ((μW.rnDeriv volume x).toReal)) ∂volume) = ⊤ :=
     posPart_lintegral_eq_top_of_diffEntExt_top hW_ac hW_top
-  -- **Step (2a)+(2c): Fatou ⟹ `liminf A = ⊤`**.
+  -- Step (2a)+(2c): Fatou ⟹ `liminf A = ⊤`.
   have hfatou := differentialEntropyExt_posPart_le_liminf_of_ae_tendsto μW
     (fun n ↦ (truncW P W n).map W)
     (truncW_map_density_tendsto_ae W P hW hW_ac)
@@ -353,7 +353,7 @@ theorem differentialEntropyExt_truncW_tendsto_top
     intro k
     have hk_lt : (k : ℝ≥0∞) < Filter.liminf A atTop := by rw [hliminf_top]; exact ENNReal.coe_lt_top
     exact Filter.eventually_lt_of_lt_liminf hk_lt
-  -- **`B n` eventually bounded by a fixed finite constant `C`.**
+  -- `B n` eventually bounded by a fixed finite constant `C`.
   -- `C := 1 + 2 * B(μW)` (finite since `B(μW) = hW_negPart_fin < ⊤`).
   set Bμ : ℝ≥0∞ :=
     ∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((μW.rnDeriv volume x).toReal))) ∂volume with hBμ_def
@@ -416,7 +416,7 @@ theorem differentialEntropyExt_truncW_tendsto_top
             rw [show (2 : ℝ≥0∞) = ENNReal.ofReal 2 by simp]
             exact ENNReal.ofReal_le_ofReal hcbar2
       _ = C := by rw [hC_def]
-  -- **Final EReal Tendsto** via `tendsto_nhds_top_iff_real`.
+  -- Final EReal Tendsto via `tendsto_nhds_top_iff_real`.
   rw [EReal.tendsto_nhds_top_iff_real]
   intro M
   -- coe `A n → ⊤` to EReal.
@@ -446,7 +446,7 @@ theorem differentialEntropyExt_truncW_tendsto_top
     _ = ((M + C.toReal : ℝ) : EReal) := by rw [← EReal.coe_add]
     _ < (A n : EReal) := hAn
 
-/-- **Step-0 helper for the ⊤-branch assembly — `B(ν_n) ≠ ⊤`** (negative part of the truncated sum
+/-- Step-0 helper for the ⊤-branch assembly, `B(ν_n) ≠ ⊤` (negative part of the truncated sum
 law). `ν_n := (truncW P W n).map (W+V)`. Decomposes `ν_n = (Q_n.map W) ∗ (Q_n.map V)` (independence
 preserved under conditioning on the `W`-event `{|W| ≤ n}`), bounds `B(Q_n.map W) ≠ ⊤` via the per-n
 explicit bound `truncW_map_negPart_lintegral_le` (finite since `B(W) < ⊤` and `c_n ≠ 0`), then lifts
@@ -644,7 +644,7 @@ theorem differentialEntropyExt_top_of_indep_add_unconditional
     Measure.isProbabilityMeasure_map hV.aemeasurable
   haveI hν_prob : IsProbabilityMeasure ν :=
     Measure.isProbabilityMeasure_map (hW.add hV).aemeasurable
-  -- **Step 0 — regularity.**
+  -- Step 0 — regularity.
   -- ν = (P.map W) ∗ (P.map V) (independence).
   have hconv : ν = (P.map W) ∗ (P.map V) := by
     rw [hν_def]; exact hWV.map_add_eq_map_conv_map hW hV
@@ -660,7 +660,7 @@ theorem differentialEntropyExt_top_of_indep_add_unconditional
       ≠ ⊤ := by
     rw [hconv]
     exact negPart_negMulLog_conv_single_ne_top (P.map W) (P.map V) hW_ac hBW
-  -- **Step 1 — `h(ν_n) → ⊤`** (squeeze: per-n monotone below a tendsto-⊤ sequence).
+  -- Step 1 — `h(ν_n) → ⊤` (squeeze: per-n monotone below a tendsto-⊤ sequence).
   -- `h(Q_n.map W) → ⊤`.
   have hW_tendsto : Tendsto (fun n ↦ differentialEntropyExt ((truncW P W n).map W)) atTop
       (𝓝 (⊤ : EReal)) :=
@@ -697,7 +697,7 @@ theorem differentialEntropyExt_top_of_indep_add_unconditional
     rw [EReal.tendsto_nhds_top_iff_real] at hW_tendsto
     filter_upwards [hW_tendsto M, hmono_ev] with n hMn hmn
     exact lt_of_lt_of_le hMn hmn
-  -- **Steps 2–4 — `A(ν) = ⊤`** (by_contra + per-n Gibbs + measure domination).
+  -- Steps 2–4 — `A(ν) = ⊤` (by_contra + per-n Gibbs + measure domination).
   set Aν : ℝ≥0∞ := ∫⁻ x, ENNReal.ofReal (Real.negMulLog ((ν.rnDeriv volume x).toReal)) ∂volume
     with hAν_def
   have hAν_top : Aν = ⊤ := by
@@ -747,7 +747,7 @@ theorem differentialEntropyExt_top_of_indep_add_unconditional
       (EReal.coe_ennreal_toReal h2Aν_fin).symm
     rw [this] at hubn
     exact absurd (lt_of_lt_of_le hMn hubn) (by simp)
-  -- **conclude `h(ν) = ⊤`** : `h(ν) = (Aν:EReal) - (B(ν):EReal) = ⊤ - fin = ⊤`.
+  -- Conclude `h(ν) = ⊤`: `h(ν) = (Aν:EReal) - (B(ν):EReal) = ⊤ - fin = ⊤`.
   rw [differentialEntropyExt_of_ac hν_ac, ← hAν_def, hAν_top, EReal.coe_ennreal_top,
     ← EReal.coe_ennreal_toReal hBν, EReal.top_sub_coe]
 
@@ -775,7 +775,7 @@ theorem differentialEntropyExt_integrable_of_finite {μ : Measure ℝ} (hac : μ
   -- `h(μ) = (A : EReal) - (B : EReal)`.
   have hsplit : differentialEntropyExt μ = (A : EReal) - (B : EReal) := by
     rw [differentialEntropyExt_of_ac hac]
-  -- **`A ≠ ⊤`**: otherwise `⊤ - B` is `⊤` (B≠⊤) or `⊥` (B=⊤), both excluded.
+  -- `A ≠ ⊤`, since otherwise `⊤ - B` is `⊤` (B≠⊤) or `⊥` (B=⊤), both excluded.
   have hA_ne_top : A ≠ ⊤ := by
     intro hAtop
     by_cases hBtop : (B : EReal) = ⊤
@@ -785,7 +785,7 @@ theorem differentialEntropyExt_integrable_of_finite {μ : Measure ℝ} (hac : μ
     · -- `⊤ - (coe) = ⊤` contradicts `hne_top`.
       apply hne_top
       rw [hsplit, hAtop, EReal.coe_ennreal_top, EReal.top_sub hBtop]
-  -- **`B ≠ ⊤`**: with `A < ⊤`, `(A : EReal) - ⊤ = ⊥` contradicts `hne_bot`.
+  -- `B ≠ ⊤`, since with `A < ⊤`, `(A : EReal) - ⊤ = ⊥` contradicts `hne_bot`.
   have hB_ne_top : B ≠ ⊤ := by
     intro hBtop
     apply hne_bot
@@ -806,14 +806,14 @@ theorem differentialEntropyExt_mono_add_unconditional
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
     (hW_ac : (P.map W) ≪ volume) :
     differentialEntropyExt (P.map W) ≤ differentialEntropyExt (P.map (fun ω ↦ W ω + V ω)) := by
-  -- **⊥ branch**: `h(W) = ⊥ ≤ anything`.
+  -- The `⊥` branch: `h(W) = ⊥ ≤ anything`.
   rcases eq_bot_or_bot_lt (differentialEntropyExt (P.map W)) with hbot | hpos
   · rw [hbot]; exact bot_le
   · have hne_bot : differentialEntropyExt (P.map W) ≠ ⊥ := hpos.ne'
     by_cases htop : differentialEntropyExt (P.map W) = ⊤
-    · -- **⊤ branch**: route β' gives `h(W+V) = ⊤`, so `⊤ ≤ ⊤`.
+    · -- The `⊤` branch: route β' gives `h(W+V) = ⊤`, so `⊤ ≤ ⊤`.
       rw [htop, differentialEntropyExt_top_of_indep_add_unconditional W V P hW hV hWV hW_ac htop]
-    · -- **finite branch**: bridge finiteness → integrability, then per-fibre Gibbs.
+    · -- The finite branch: bridge finiteness → integrability, then per-fibre Gibbs.
       exact differentialEntropyExt_mono_add_of_integrable W V P hW hV hWV hW_ac
         (differentialEntropyExt_integrable_of_finite hW_ac htop hne_bot)
 

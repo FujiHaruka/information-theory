@@ -63,7 +63,7 @@ open InformationTheory.Shannon.EPIGaussianDensityRoute (convDensityAdd_gaussian_
 
 /-! ## Integrated pipeline predicate -/
 
-/-- **Integrated pipeline predicate**.
+/-- The integrated pipeline predicate.
 
 Carries the genuine Stam inequality (Cover–Thomas Lemma 17.7.2 signature) as its
 single field. The Stam-to-EPI *bridge* (Cover–Thomas Lemma 17.7.3 coupling) is not a
@@ -79,7 +79,7 @@ structure IsEPIL3IntegratedPipeline {Ω : Type*} [MeasurableSpace Ω]
 
 /-! ## Gaussian pipeline witness -/
 
-/-- **Gaussian pipeline witness from an honest Stam hypothesis**.
+/-- A Gaussian pipeline witness from an honest Stam hypothesis.
 
 For independent Gaussians `X, Y` with non-zero variance, the *Stam* field is supplied
 as an honest `IsStamInequalityHyp X Y P` argument, not discharged. The
@@ -101,8 +101,7 @@ theorem isEPIL3IntegratedPipeline_of_gaussian
 
 /-! ## Pipeline predicate manipulation -/
 
-/-- **Symmetry of integrated pipeline**: `IsEPIL3IntegratedPipeline X Y P`
-implies `IsEPIL3IntegratedPipeline Y X P`. -/
+/-- `IsEPIL3IntegratedPipeline X Y P` implies `IsEPIL3IntegratedPipeline Y X P`. -/
 @[entry_point]
 theorem isEPIL3IntegratedPipeline_symm
     {Ω : Type*} [MeasurableSpace Ω]
@@ -111,7 +110,7 @@ theorem isEPIL3IntegratedPipeline_symm
     IsEPIL3IntegratedPipeline Y X P where
   stam := isStamInequalityHyp_symm h.stam
 
-/-- **Pipeline from a Stam residual directly** (mirrors `epi_via_stam`).
+/-- A pipeline built from a Stam residual directly (mirrors `epi_via_stam`).
 
 The pipeline is built from the genuine Stam residual alone; the Stam-to-EPI bridge
 is discharged internally by consumers via `stamToEPIBridge_holds`. -/
@@ -129,7 +128,7 @@ The genuine Gaussian EPI is `entropy_power_inequality_gaussian_full` below (dire
 `entropyPower_gaussian_additivity`); the integrated-pipeline form takes a real
 `IsStamInequalityHyp` argument. -/
 
-/-- **Gaussian EPI hypothesis-free**: combine the Gaussian saturation case
+/-- The Gaussian entropy power inequality, combining the Gaussian saturation case
 directly (no Stam predicate needed for the inequality itself; the predicate
 is only needed for the integrated pipeline form). -/
 @[entry_point]
@@ -147,8 +146,8 @@ theorem entropy_power_inequality_gaussian_full
 
 /-! ## Final sanity-check theorems -/
 
-/-- **Round-trip**: building a pipeline from the Stam residual and then
-extracting it yields the original. -/
+/-- Building a pipeline from the Stam residual and then extracting it yields the
+original. -/
 @[entry_point]
 theorem integrated_pipeline_roundtrip
     {Ω : Type*} [MeasurableSpace Ω]
@@ -188,7 +187,7 @@ The Gaussian instance `isDeBruijnTailHyp_of_gaussian` uses `h_inf := ⊤` and ro
 the closed form `differentialEntropy_gaussianConvolution_of_gaussian` through
 `Real.tendsto_log_atTop` and the standard `atTop`-shift / `atTop`-scaling chain. -/
 
-/-- **De Bruijn tail-analysis hypothesis** (`IsDeBruijnTailHyp X Z P`).
+/-- The de Bruijn tail-analysis hypothesis `IsDeBruijnTailHyp X Z P`.
 
 Externalizes the `T → ∞` tail-analysis of the heat-flow differential entropy
 `T ↦ h(P.map (X + √T · Z))` as a load-bearing hypothesis with EReal lift
@@ -248,7 +247,7 @@ theorem differentialEntropy_gaussianConvolution_at_zero
 
 /-! ### Gaussian per-time-point V2 family lift -/
 
-/-- **Gaussian per-time-point V2 family lift** (Gaussian restricted, hypothesis-free).
+/-- The Gaussian per-time-point V2 family lift (Gaussian restricted, hypothesis-free).
 
 For independent Gaussian `X ∼ 𝒩(m, v)` (with `v ≠ 0`) and standard normal
 `Z ∼ 𝒩(0, 1)`, the V2 de Bruijn regularity `IsRegularDeBruijnHypV2 X Z P t`
@@ -319,7 +318,7 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
 
 /-! ### Gaussian closed-form entropy at the heat-flow boundary -/
 
-/-- **Gaussian heat-flow entropy boundary value at `T`** for `T ≥ 0`. -/
+/-- The Gaussian heat-flow entropy boundary value at `T`, for `T ≥ 0`. -/
 @[entry_point]
 theorem differentialEntropy_gaussianConvolution_of_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
@@ -344,7 +343,7 @@ The Gaussian instance constructor for `IsDeBruijnTailHyp`, discharged with
 combined with `Real.tendsto_log_atTop` and the standard `atTop`-shift /
 `atTop`-scaling chain, lifted to `EReal` by `EReal.tendsto_coe_nhds_top_iff`. -/
 
-/-- **Gaussian instance of `IsDeBruijnTailHyp`**.
+/-- The Gaussian instance of `IsDeBruijnTailHyp`.
 
 When `P.map X = gaussianReal m v` with `v ≠ 0`, `P.map Z = gaussianReal 0 1`,
 and `X ⊥ Z`, the heat-flow entropy diverges to `+∞` (Gaussian sub-entropy
@@ -414,7 +413,7 @@ direct consequence of Mathlib's bounded FTC and the family lift above. Stated as
 standalone identity (not via `IsDeBruijnIntegrationHyp`, which carries the
 `∃ fPath` shape). -/
 
-/-- **Heat-flow entropy derivative (Gaussian, on `s > 0` neighbourhood)**.
+/-- The heat-flow entropy derivative (Gaussian, on an `s > 0` neighbourhood).
 
 For Gaussian `X` and `s > 0`, the derivative of `s' ↦ differentialEntropy(P.map
 (X + √s' · Z))` at `s` equals `1/(2(v+s))`. This is the per-point statement
@@ -458,7 +457,7 @@ theorem hasDerivAt_differentialEntropy_heat_flow_gaussian
   -- our `h_eventually` (no `.symm` needed).
   exact h_log_deriv.congr_of_eventuallyEq h_eventually
 
-/-- **Continuity of `1/(2(v+t))` on `[0, T]`** for `v > 0`, `T ≥ 0`. -/
+/-- Continuity of `1/(2(v+t))` on `[0, T]`, for `v > 0`, `T ≥ 0`. -/
 theorem continuousOn_one_div_two_times_v_plus
     {v : ℝ≥0} (hv : v ≠ 0) (T : ℝ) :
     ContinuousOn (fun t : ℝ ↦ 1 / (2 * ((v : ℝ) + t))) (Set.Icc 0 T) := by
@@ -524,7 +523,7 @@ theorem continuousOn_differentialEntropy_heat_flow_gaussian
     exact (h_arg_pos s' hs').ne'
   exact continuousOn_const.mul h_log_cont
 
-/-- **Bounded-T FTC application (Gaussian case)**.
+/-- The bounded-`T` FTC application (Gaussian case).
 
 For Gaussian `X ∼ 𝒩(m, v)` with `v ≠ 0`, the heat-flow entropy gap over
 the bounded interval `(0, T)` equals the path integral of `1/(2(v+t))`:
@@ -594,7 +593,7 @@ by the live EPI ratio line in `EPIStamToBridge.lean`
 (`csiszarLogRatioGap_hasDerivAt` → `csiszarLogRatioGap_antitoneOn_Ici_zero` →
 `isStamToEPIScalingHyp_of_*`). -/
 
-/-- **1-source Csiszár log-ratio gap** (monotone object).
+/-- The 1-source Csiszár log-ratio gap (a monotone object).
 
 `r(t) = log (N_sum t) − log (N_X t + N_Y t)` where
 `N_sum = entropyPower (P.map (X+Y+√t·(Z_X+Z_Y)))`,
@@ -611,7 +610,7 @@ noncomputable def csiszarLogRatioGap {Ω : Type*} [MeasurableSpace Ω]
         (entropyPower (P.map (fun ω ↦ X ω + Real.sqrt t * Z_X ω))
           + entropyPower (P.map (fun ω ↦ Y ω + Real.sqrt t * Z_Y ω)))
 
-/-- **Endpoint `t = 0` of the log-ratio gap**: reduces to
+/-- At the endpoint `t = 0` the log-ratio gap reduces to
 `log (eP(X+Y)) − log (eP X + eP Y)`, the form bridging to EPI
 (`r(0) ≥ 0 ⟺ entropyPower (X+Y) ≥ entropyPower X + entropyPower Y`). -/
 @[entry_point]
@@ -636,7 +635,7 @@ theorem csiszarLogRatioGap_at_zero {Ω : Type*} [MeasurableSpace Ω]
     simp [Real.sqrt_zero]
   rw [h_sum_funext, h_X_funext, h_Y_funext]
 
-/-- **Endpoint `t = 1` of the log-ratio gap is zero (Gaussian saturation)**.
+/-- At the endpoint `t = 1` the log-ratio gap is zero (Gaussian saturation).
 
 At `t = 1` the 1-source heat-flow paths are `X + Z_X`, `Y + Z_Y`, and their sum
 `X + Y + (Z_X + Z_Y) = (X + Z_X) + (Y + Z_Y)`. When the convolved endpoints

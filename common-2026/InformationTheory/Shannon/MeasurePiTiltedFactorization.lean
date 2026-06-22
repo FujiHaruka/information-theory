@@ -8,7 +8,7 @@ import InformationTheory.Meta.EntryPoint
 /-!
 # Finite `Measure.pi` tilt factorization
 
-This file builds the **finite-product tilt factorization** lemma, a building block
+This file builds the finite-product tilt factorization lemma, a building block
 for the `IsMeasureInfinitePiTiltedEq` reduction in
 `InformationTheory/Shannon/Cramer/LC2PhaseC.lean`.
 
@@ -43,7 +43,7 @@ variable {Ω₀ : Type*} [MeasurableSpace Ω₀]
 
 /-! ## Lintegral product factorization over `Measure.pi` -/
 
-/-- **Unrestricted lintegral Fubini** for `Measure.pi` of a per-coordinate
+/-- Unrestricted lintegral Fubini for `Measure.pi` of a per-coordinate
 product of nonnegative measurable functions. The lintegral analogue of
 `MeasureTheory.integral_fin_nat_prod_eq_prod`; not present in Mathlib. -/
 @[entry_point]
@@ -72,7 +72,7 @@ theorem lintegral_pi_prod {n : ℕ} {E : Fin n → Type*}
       conv_rhs => rw [← n_ih (fun i ↦ hg i.succ)]
       exact hpm
 
-/-- **Box-restricted Tonelli**: the lintegral over the box `pi univ s` of a
+/-- Box-restricted Tonelli: the lintegral over the box `pi univ s` of a
 per-coordinate product factors as the product of the per-coordinate
 box-restricted lintegrals. -/
 @[entry_point]

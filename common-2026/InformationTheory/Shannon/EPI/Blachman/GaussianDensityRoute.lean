@@ -151,7 +151,7 @@ theorem integrable_logDeriv_mul_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v 
 
 /-! ## Step 0 — linchpin: density-level Gaussian convolution closed form -/
 
-/-- **Linchpin**: the pointwise density convolution closed form for Gaussians.
+/-- The pointwise density convolution closed form for Gaussians.
 
 `convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) z
    = gaussianPDFReal (mX+mY) (vX+vY) z` for every `z`.
@@ -588,7 +588,7 @@ theorem integrable_inner_scoreWeight_sq_condDensityX_mul_convDensityAdd_gaussian
 
 /-! ## Steps 2/3 — `IsBlachmanConvReady` Gaussian witness (19 fields) -/
 
-/-- **Gaussian witness** for `IsBlachmanConvReady` — density-route non-vacuousness.
+/-- A Gaussian witness for `IsBlachmanConvReady`, establishing density-route non-vacuousness.
 
 The structure literal supplies each of the 19 fields from the existing Gaussian
 lemmas (and the linchpin for `int_fisherZ`). **All 19 fields are now genuine
@@ -696,7 +696,7 @@ density-route core `convex_fisher_bound_of_ready`, so the convex Fisher bound
 `J(Z) ≤ λ² J(X) + (1-λ)² J(Y)` fires for Gaussian densities through the density route.
 -/
 
-/-- **Density-route convex Fisher bound for Gaussians.**
+/-- The density-route convex Fisher bound for Gaussians.
 
 The density-route convex Fisher bound `convex_fisher_bound_of_ready` fires end-to-end
 on Gaussian densities: feeding the proven `IsBlachmanConvReady` witness +
@@ -715,7 +715,7 @@ theorem convex_fisher_bound_gaussian_via_density_route
     (integral_gaussianPDFReal_eq_one mX hvX) (integral_gaussianPDFReal_eq_one mY hvY)
     (isBlachmanConvReady_gaussianPDFReal hvX hvY)
 
-/-- **Density-route Gaussian Fisher bound in closed form.**
+/-- The density-route Gaussian Fisher bound in closed form.
 
 Specializing `convex_fisher_bound_gaussian_via_density_route` via the Gaussian Fisher
 closed form `J(𝒩(m,v)) = 1/v` (`fisherInfoOfDensity_gaussianPDFReal`) and the

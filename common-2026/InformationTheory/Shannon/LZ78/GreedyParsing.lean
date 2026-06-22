@@ -8,7 +8,7 @@ import Mathlib.Data.List.Range
 /-!
 # LZ78 greedy parsing — per-phrase bit length
 
-This file publishes the **per-phrase bit-length cost** of an LZ78
+This file publishes the per-phrase bit-length cost of an LZ78
 phrase: the number of bits needed to encode one `(parent-index, symbol)`
 pair given a dictionary size and an alphabet size. This is the
 Cover–Thomas Ch.13.5 per-phrase cost form
@@ -27,7 +27,7 @@ uniquely-decodable token code
 
 ## File layout
 
-* **§1. Per-phrase bit length** — `LZ78Phrase.bitLength`: the number
+* §1. Per-phrase bit length — `LZ78Phrase.bitLength`: the number
   of bits to encode one `(parent-index, symbol)` pair given a
   dictionary size and alphabet size, together with its `simp` normal
   form, monotonicity in the dictionary size, and positivity.
@@ -45,7 +45,7 @@ section PhraseBitLength
 
 variable {α : Type*}
 
-/-- **Bit length of a single LZ78 phrase**.
+/-- The bit length of a single LZ78 phrase.
 
 Given dictionary size `c` and alphabet size `a`, encoding one phrase
 `(parent, symbol)` requires:

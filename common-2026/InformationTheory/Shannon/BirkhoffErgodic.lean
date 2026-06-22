@@ -29,9 +29,9 @@ The proof uses Garsia's elementary proof of the **maximal ergodic
 inequality**, followed by a sandwich argument bounding both
 `limsup A_n` and `liminf A_n` by `∫f dμ`.
 
-> **Historical note.** A previous iteration of this file attempted the
+> Historical note. A previous iteration of this file attempted the
 > backward-martingale Hopf identity route (Williams §14.4). That route
-> is only valid for **i.i.d. processes** and is **mathematically false**
+> is only valid for i.i.d. processes and is mathematically false
 > for general measure-preserving ergodic systems: the cyclic system on
 > `{0, 1, 2}` with `T(x) = (x + 1) mod 3` and `f(x) = x` is a concrete
 > counter-example to the would-be exchangeability lemma
@@ -41,14 +41,14 @@ inequality**, followed by a sandwich argument bounding both
 
 ## Proof structure
 
-* **§1 Definitions** — `birkhoffAverageReal`, `birkhoffPartialSum`,
+* §1 sets up the definitions `birkhoffAverageReal`, `birkhoffPartialSum`,
   `maxPartialSum` (running max `M_n := max(S_0, S_1, …, S_n)`).
-* **§2 Integral preservation** — `∫ A_n dμ = ∫ f dμ`.
-* **§3 Birkhoff sum recursion** — `S_{k+1}(ω) = f(ω) + S_k(T ω)`,
+* §2 establishes integral preservation `∫ A_n dμ = ∫ f dμ`.
+* §3 gives the Birkhoff sum recursion `S_{k+1}(ω) = f(ω) + S_k(T ω)`,
   `A_n(T ω) = ((n+2)·A_{n+1}(ω) - f(ω))/(n+1)`.
-* **§4 Garsia maximal ergodic inequality** — `∫_{M_n > 0} f dμ ≥ 0`.
-* **§5 Sandwich** — `limsup A_n ≤ ∫f` and `liminf A_n ≥ ∫f` a.e.
-* **§6 Main theorem** — `birkhoff_ergodic_ae`.
+* §4 proves the Garsia maximal ergodic inequality `∫_{M_n > 0} f dμ ≥ 0`.
+* §5 is the sandwich `limsup A_n ≤ ∫f` and `liminf A_n ≥ ∫f` a.e.
+* §6 is the main theorem `birkhoff_ergodic_ae`.
 
 ## Main results
 
@@ -59,7 +59,7 @@ inequality**, followed by a sandwich argument bounding both
   `M_n(ω) - M_n(T ω) ≤ 1_{M_n > 0}(ω) · f(ω)`.
 * `maximal_ergodic_inequality` — `∫_{M_n > 0} f dμ ≥ 0`.
 * `birkhoff_ergodic_ae_of_limit` — γ.3 + γ.4 hypothesis form.
-* `birkhoff_ergodic_ae` — **main theorem**.
+* `birkhoff_ergodic_ae` — the main theorem.
 -/
 
 namespace InformationTheory.Shannon
@@ -295,7 +295,7 @@ lemma exists_pos_index_attaining_max (T : Ω → Ω) (f : Ω → ℝ) (n : ℕ) 
       refine ⟨k, hk1, hkn.trans n.le_succ, ?_⟩
       rw [h_max, hk_eq]
 
-/-- **Garsia pointwise inequality** (key step for the maximal ergodic
+/-- The Garsia pointwise inequality (key step for the maximal ergodic
 inequality): for all `ω : Ω`,
 
   M_n(ω) - M_n(T ω) ≤ 1_{M_n > 0}(ω) · f(ω).
@@ -328,7 +328,7 @@ lemma maxPartialSum_sub_comp_T_le_indicator
     rw [h_zero]
     linarith [maxPartialSum_nonneg T f n (T ω)]
 
-/-- **Maximal ergodic inequality** (Garsia 1965). For `T : Ω → Ω`
+/-- The maximal ergodic inequality (Garsia 1965). For `T : Ω → Ω`
 measure-preserving on a probability/finite-measure space and `f : Ω → ℝ`
 integrable, for every `n : ℕ`,
 
@@ -499,7 +499,7 @@ lemma birkhoff_neg_mean_sup_null (hT : MeasurePreserving T μ μ) (_hT_erg : Erg
     exact (integral_eq_setIntegral h_ae_in g).symm
   linarith
 
-/-- **Hardy bound (finite n)**: for any `m n : ℕ`,
+/-- The Hardy bound (finite `n`): for any `m n : ℕ`,
 `m · μ({maxPartialSum T (g - m) n > 0}) ≤ ‖g‖₁`.
 
 The maximal ergodic inequality `0 ≤ ∫_E (g - m)` rearranges to
@@ -546,7 +546,7 @@ lemma maxPartialSum_meas_le
   rw [← ENNReal.ofReal_mul h_m_nn]
   exact ENNReal.ofReal_le_ofReal h_real
 
-/-- **Hardy bound (union)**: union of `{maxPartialSum (g - m) n > 0}` over
+/-- The Hardy bound (union): the union of `{maxPartialSum (g - m) n > 0}` over
 `n` is bounded by `‖g‖₁ / m` (in ENNReal). -/
 lemma maxPartialSum_meas_iUnion_le
     (hT : MeasurePreserving T μ μ)
@@ -569,7 +569,7 @@ lemma maxPartialSum_meas_iUnion_le
   rw [h_mono.measure_iUnion, ENNReal.mul_iSup]
   exact iSup_le fun n ↦ maxPartialSum_meas_le hT hg hg_int m n
 
-/-- **A.e. boundedness of Birkhoff averages** (Hardy-Littlewood-style).
+/-- A.e. boundedness of Birkhoff averages (Hardy-Littlewood-style).
 For `T` measure-preserving and `g` integrable, the sequence
 `n ↦ birkhoffAverageReal T g n ω` has bounded range a.e.
 
@@ -657,7 +657,7 @@ lemma birkhoffAverageReal_ae_bddAbove
       ≤ (ε : ℝ≥0∞) := le_of_lt h_lt
     _ = 0 + (ε : ℝ≥0∞) := by rw [zero_add]
 
-/-- **T-invariance of the Birkhoff-average limsup (a.e.)**. For measure
+/-- The Birkhoff-average limsup is `T`-invariant (a.e.). For measure
 preserving `T` and integrable `f`, the function
 `limsupAvg ω := limsup_n A_n(f, ω)` satisfies `limsupAvg ∘ T =ᵐ limsupAvg`.
 
@@ -829,7 +829,7 @@ lemma birkhoffAverageReal_limsup_aestronglyMeasurable
   unfold birkhoffAverageReal
   exact ((Finset.measurable_sum _ (fun i _ ↦ hf.comp (hT_meas.iterate i))).div_const _)
 
-/-- **Ergodic limsup discharge**: for ergodic `T` and integrable `g` with
+/-- For ergodic `T` and integrable `g` with
 `∫g dμ < 0`, the limsup of Birkhoff averages of `g` is `≤ 0` a.e.
 
 Proof: by T-invariance (`birkhoffAverageReal_limsup_comp_T_ae`) and
@@ -909,7 +909,7 @@ lemma birkhoffAverageReal_limsup_le_zero_of_int_neg
   -- {good}ᶜ = {ω | ¬ good ω}, so μ {good}ᶜ = 0 ⟺ μ {good} = 1.
   exact (prob_compl_eq_zero_iff h_meas_set).mp h_inf_often
 
-/-- **Upper sandwich**: for every `ε > 0`, a.e. `ω`, eventually
+/-- The upper sandwich: for every `ε > 0`, a.e. `ω`, eventually
 `birkhoffAverageReal T f n ω < ∫f dμ + ε`. -/
 lemma birkhoff_eventually_lt_integral_add
     (hT : MeasurePreserving T μ μ) (hT_erg : Ergodic T μ)
@@ -963,7 +963,7 @@ lemma birkhoff_eventually_lt_integral_add
     ring
   linarith [h_decomp, hn]
 
-/-- **Lower sandwich**: for every `ε > 0`, a.e. `ω`, eventually
+/-- The lower sandwich: for every `ε > 0`, a.e. `ω`, eventually
 `∫f dμ - ε < birkhoffAverageReal T f n ω`.
 
 Proof: apply the upper sandwich to `-f` and negate. -/
@@ -992,7 +992,7 @@ end Sandwich
 
 /-! ## §6 Main theorem -/
 
-/-- **Birkhoff individual ergodic theorem.**
+/-- The Birkhoff individual ergodic theorem.
 
 For a probability-preserving ergodic transformation `T : Ω → Ω` and an
 integrable observable `f : Ω → ℝ`, the Birkhoff time averages

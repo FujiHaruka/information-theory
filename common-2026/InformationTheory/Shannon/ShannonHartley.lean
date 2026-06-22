@@ -101,7 +101,7 @@ theorem twoW_perSample_eq_shannonHartley
 
 /-! ## §E — Main theorem: Shannon-Hartley formula (hypothesis pass-through). -/
 
-/-- **Shannon-Hartley formula** (Cover-Thomas Theorem 9.6.1):
+/-- The Shannon-Hartley formula (Cover-Thomas Theorem 9.6.1):
 `C = W · log(1 + P/(N₀·W))` conditional on the three bandlimited-channel hypotheses.
 
 The hypothesis `h_two_w : IsTwoWDegreesOfFreedom W N₀ P C` carries the `2W`

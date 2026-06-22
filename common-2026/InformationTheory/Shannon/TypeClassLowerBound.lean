@@ -49,7 +49,7 @@ private lemma cnt_mul_log_div
     ring
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **Bridge identity**: `(n^n) / ∏ a, (c a)^{c a} = exp (n · H(c/n))` for
+/-- The bridge identity `(n^n) / ∏ a, (c a)^{c a} = exp (n · H(c/n))` for
 `∑ c = n`. Holds for all `n` including `n = 0` (both sides equal 1). -/
 @[entry_point]
 lemma pow_div_prod_pow_eq_exp_n_entropyByCount

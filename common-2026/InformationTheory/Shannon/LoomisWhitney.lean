@@ -313,7 +313,7 @@ theorem jointEntropySubset_le_log_projectionExcept_card
 
 /-! ## Loomis–Whitney main theorem -/
 
-/-- **Loomis–Whitney inequality** (information-theoretic proof).
+/-- The Loomis–Whitney inequality (information-theoretic proof).
 
 For any non-empty `A : Finset (Fin n → α)`,
 `A.card ^ (n - 1) ≤ ∏ i : Fin n, (projectionExcept i A).card`. -/

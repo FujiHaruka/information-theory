@@ -15,7 +15,7 @@ the common foundational helper for the density-route Stam and de Bruijn argument
 ## Implementation notes
 
 The 6 Mathlib `HasCompactSupport.*_convolution_*` lemmas require the smooth factor
-to have **compact support**, which the Gaussian heat kernel does not have. We go
+to have compact support, which the Gaussian heat kernel does not have. We go
 through `hasDerivAt_integral_of_dominated_loc_of_deriv_le`
 (`Mathlib/Analysis/Calculus/ParametricIntegral.lean`): differentiation under the
 integral sign, with the Gaussian-tail domination supplied as regularity
@@ -37,7 +37,7 @@ open scoped ENNReal NNReal
 noncomputable def convDensityAdd (pX pY : ℝ → ℝ) : ℝ → ℝ :=
   fun z ↦ ∫ x, pX x * pY (z - x) ∂volume
 
-/-- **Commutativity of the convolution density**: `pX ⋆ pY = pY ⋆ pX`.
+/-- The convolution density is commutative: `pX ⋆ pY = pY ⋆ pX`.
 Genuine fact via the reflection substitution `x ↦ z - x` (volume-preserving). -/
 theorem convDensityAdd_comm (pX pY : ℝ → ℝ) :
     convDensityAdd pX pY = convDensityAdd pY pX := by
@@ -61,7 +61,7 @@ theorem convDensityAdd_comm (pX pY : ℝ → ℝ) :
 noncomputable def convDensityAddDeriv (pX pY : ℝ → ℝ) : ℝ → ℝ → ℝ :=
   fun z x ↦ pX x * deriv pY (z - x)
 
-/-- **Gateway atom.** Under Gaussian-tail / integrability regularity preconditions,
+/-- Under Gaussian-tail / integrability regularity preconditions,
 `convDensityAdd pX pY` is differentiable at `z₀` with derivative
 `∫ x, p_X x · p_Y' (z₀ - x)`.
 
@@ -118,9 +118,10 @@ theorem convDensityAdd_logDeriv
       bound_integrable h_diff
   rw [logDeriv_apply, hderiv.deriv]
 
-/-- **Public gateway API**: the convolution density is differentiable at `z₀`, with
-the `logDeriv` (score) given by the score-of-convolution formula. Bundles the two
-atoms above for the downstream Blachman and de Bruijn arguments.
+/-- The convolution density is differentiable at `z₀`, with the `logDeriv` (score)
+given by the score-of-convolution formula. Bundles the two atoms above for the
+downstream Blachman and de Bruijn arguments. The public gateway for those
+consumers.
 @audit:ok -/
 @[entry_point]
 theorem convDensity_add_differentiable

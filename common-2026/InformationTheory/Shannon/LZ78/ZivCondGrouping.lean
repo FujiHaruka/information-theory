@@ -23,13 +23,13 @@ the Ziv connection). This file instead uses the **conditional** per-`k`-state
 product sub-distribution `condQkState μ p k s` (from `markovFactor`) as
 the grouping vehicle, fibering phrases by the **pair** `(k-state, length)`:
 
-1. **Outer grouping** over `ι = (Fin k → α) × ℕ`: apply
+1. Group over `ι = (Fin k → α) × ℕ`: apply
    `card_mul_log_le_sum_group_mul_log_add_card_log` to the image
    `G = phrases.image (st w, w.length)`, giving
    `c · log c ≤ ∑_g c_g · log c_g + c · log (G.card)`, where the fibers
    `grp g = phrases.filter (st w, w.length) = g` partition `phrases`.
 
-2. **Per-fiber log-sum step**: within a fiber `(s, ℓ)`, all phrases have length
+2. Apply the per-fiber log-sum step: within a fiber `(s, ℓ)`, all phrases have length
    `ℓ`, so `toFinVec ℓ` injects them into `Fin ℓ → α`. With
    `P Z = (condQkState μ p k s ℓ Z).toReal`, `group_card_mul_log_le_sum_neg_log`
    gives `card · log card ≤ ∑ -log P`.
@@ -39,7 +39,7 @@ the grouping vehicle, fibering phrases by the **pair** `(k-state, length)`:
      `≤ 1 < ⊤`, so finite) and `ENNReal.toReal_mono`. This is the route's `.toReal`
      bridge `(iii)`.
 
-3. **Aggregation**: sum the per-fiber bounds back into a single sum over phrases.
+3. Aggregate: sum the per-fiber bounds back into a single sum over phrases.
 
 The result `condState_grouping_bound` is stated abstractly (a `Finset (List α)`
 of phrases with an arbitrary `k`-state assignment `st`); wiring it to the actual
@@ -73,7 +73,7 @@ lemma condQkState_le_one
 /-! ## The `.toReal` sub-distribution bridge (route step iii) -/
 
 omit [DecidableEq α] in
-/-- **`.toReal` sub-distribution bound**: the real-valued conditional masses on a
+/-- The real-valued conditional masses on a
 finite set `S` of distinct strings sum to at most `1`. Pushes the `ℝ≥0∞` fact
 `condQkState_sum_le_one` through `.toReal` (each term `≤ 1 < ⊤`). -/
 lemma sum_condQkState_toReal_le_one

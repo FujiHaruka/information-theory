@@ -36,7 +36,7 @@ open scoped ENNReal NNReal Real
 
 /-! ## §1 — Arithmetic kernel (Gaussian-independent) -/
 
-/-- **Stam arithmetic kernel.** For positive `a, b` and `λ ∈ [0,1]`,
+/-- The Stam arithmetic kernel. For positive `a, b` and `λ ∈ [0,1]`,
 `1/(a+b) ≤ λ²/a + (1-λ)²/b`. This is the pure real-number content of the convex
 Fisher bound after substituting the Gaussian closed form `J(𝒩(m,v)) = 1/v`.
 
@@ -53,7 +53,7 @@ theorem stam_fisher_arith (a b lam : ℝ) (ha : 0 < a) (hb : 0 < b)
 
 /-! ## §2 — Gaussian convex Fisher bound (V2-keyed, non-vacuous) -/
 
-/-- **Gaussian Stam convex Fisher bound.** For Gaussian laws `𝒩(m₁,v₁)`, `𝒩(m₂,v₂)`
+/-- The Gaussian Stam convex Fisher bound. For Gaussian laws `𝒩(m₁,v₁)`, `𝒩(m₂,v₂)`
 with `v₁, v₂ ≠ 0`, the V2 Fisher information of the sum law `𝒩(m₁+m₂, v₁+v₂)`
 satisfies `J(X+Y) ≤ λ² J(X) + (1-λ)² J(Y)` for every `λ ∈ [0,1]`.
 Each Fisher info evaluates to the closed form `1/v` via `fisherInfoOfMeasureV2_gaussianReal`. -/

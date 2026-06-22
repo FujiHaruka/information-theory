@@ -26,7 +26,7 @@ namespace InformationTheory.Shannon
 open scoped Matrix MatrixOrder
 open Finset
 
-/-- **AM-GM for the determinant of a positive-definite matrix.**
+/-- AM-GM for the determinant of a positive-definite matrix.
 
 For a positive-definite `A : Matrix n n ℝ`, the `n`-th root of the determinant is
 bounded above by the arithmetic mean of its eigenvalues:
@@ -71,7 +71,7 @@ theorem det_rpow_le_arith_mean_eigenvalues
   rw [hprod_eq, harith_eq] at hAMGM
   simpa [hN] using hAMGM
 
-/-- **Scalar Minkowski (superadditivity of the geometric mean).**
+/-- Scalar Minkowski (superadditivity of the geometric mean).
 
 For nonnegative reals `a i, b i` with `a i + b i > 0`,
 `(∏ a i)^(1/n) + (∏ b i)^(1/n) ≤ (∏ (a i + b i))^(1/n)`.

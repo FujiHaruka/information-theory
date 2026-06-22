@@ -76,7 +76,7 @@ private theorem csiszarLogRatioGap_eventually_eq_logRatio
 `csiszarLogRatioGap_tendsto_zero_atTop`: composing §2 (cancellation), §3 (per-path
 limits), and Gaussian additivity yields `R t → 0`. -/
 
-/-- **`R t → 0` as `t → ∞`** (entropic-CLT-free). Combining the scaling cancellation
+/-- `R t → 0` as `t → ∞` (entropic-CLT-free). Combining the scaling cancellation
 (`entropyPower_path_scaling`), the three per-path limits
 (`entropyPower_rescaled_path_tendsto`), Gaussian additivity of the noise
 (`entropyPower_gaussian_additivity`), and continuity of `log` on positive reals.
@@ -201,16 +201,16 @@ pillars:
 * `csiszarLogRatioGap_tendsto_zero_atTop` (§4, genuine): `R t → 0` as `t → ∞`.
 
 By the order-limit bridge §1 `epi_of_csiszarLogRatioGap_tendsto`, antitonicity +
-`R t → 0` force `R 0 ≥ 0`, hence EPI. **No entropic CLT** — the saturation `R t → 0`
+`R t → 0` force `R 0 ≥ 0`, hence EPI. No entropic CLT — the saturation `R t → 0`
 is the scaling squeeze of §4.
 
-All hypotheses are **honest regularity preconditions**, the union of the two
+All hypotheses are honest regularity preconditions, the union of the two
 pillars' preconditions: pairwise + joint independence (`hXZX`/`hYZY`/`hXYZXY`), the
 three `IsDeBruijnRegularityHyp` / `IsHeatFlowEndpointRegular` density-witness bundles,
 the per-`t` `h_pos_stam` Fisher/Stam/Blachman bundle (ratio antitone side), the noise
 Gaussian laws + a.c. (`hZX_law`/`hZY_law`/`hZXZY_indep`/`hZX_ac`/`hZY_ac`/`hZXZY_ac`),
 the per-`t` scaling regularity (`h_scale_X/Y/sum`), and the per-path variance data +
-three `IsRescaledPathRegular` bundles (§4 side). **None is load-bearing**: the EPI /
+three `IsRescaledPathRegular` bundles (§4 side). None is load-bearing: the EPI /
 Stam core is supplied genuinely inside the two pillars; the conclusion
 `N(X+Y) ≥ N(X)+N(Y)` is not encoded in any hypothesis. Honest naming
 (`_of_regular`, not bare `_unconditional`): the regularity preconditions are real.
@@ -224,7 +224,7 @@ regularity bundles; granting them (incl. the per-`t` `h_pos_stam` whose
 does NOT hand the EPI conclusion — that requires the pillars' genuine de Bruijn
 integration + scaling squeeze, neither encoded in any hypothesis. Sufficiency: the body
 threads pillar args in matching order and composes via the §1 bridge.
-**@audit:superseded-by(entropyPowerExt_add_ge_unconditional)**: superseded by the
+@audit:superseded-by(entropyPowerExt_add_ge_unconditional) Superseded by the
 unconditional EPI; the sole consumer `entropyPower_add_ge_case1_of_methodX` is a dead leaf.
 Retained as proof-done. The two-time variant `entropyPower_add_ge_case1_of_regular_twotime` is
 separate and live. -/
@@ -422,12 +422,12 @@ theorem rescaledPath_ac_and_negMulLog_integrable
     integral_nonneg fun y ↦ mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg _ _ _)
   rw [hx, ENNReal.toReal_ofReal hcd_nn]
 
-/-- **Case-1 EPI under method-X regularity** (entropic-CLT-free, unit-noise form).
-`N(P.map(X+Y)) ≥ N(P.map X) + N(P.map Y)` for a.c. inputs, reduced to **method-X
-regularity** (a.c. inputs + finite second moments + **standard-normal** `𝒩(0,1)`
-noise laws + 4-tuple independence) **plus de Bruijn per-time regularity**.
+/-- Case-1 EPI under method-X regularity (entropic-CLT-free, unit-noise form).
+`N(P.map(X+Y)) ≥ N(P.map X) + N(P.map Y)` for a.c. inputs, reduced to method-X
+regularity (a.c. inputs + finite second moments + standard-normal `𝒩(0,1)`
+noise laws + 4-tuple independence) plus de Bruijn per-time regularity.
 
-**Unit-noise restate**: the noise
+On the unit-noise restatement: the noise
 laws were generalized `gaussianReal 0 v_X`/`gaussianReal 0 v_Y` (`v_X v_Y` arbitrary
 nonzero). Since the conclusion `N(X+Y) ≥ N(X)+N(Y)` does not mention the noise, the noise
 is an auxiliary variable and fixing it to `𝒩(0,1)` loses no generality. This is required
@@ -468,11 +468,11 @@ This wrapper discharges the supply-able preconditions of
 * the variance bounds (`varX/Y/S := Var[·;P]`) via `IndepFun.variance_fun_add` +
   variance scaling, which hold with equality.
 
-The **de Bruijn per-time regularity group** (`h_reg_*'` / `h_endpt_*` / `h_pos_stam`)
-is **not supplied from method-X** (it depends on the moonshot
+The de Bruijn per-time regularity group (`h_reg_*'` / `h_endpt_*` / `h_pos_stam`)
+is not supplied from method-X (it depends on the moonshot
 `epi-debruijn-pertime-closure`) and is threaded as an honest precondition.
 
-**@audit:superseded-by(entropyPowerExt_add_ge_unconditional)**: 0 consumers, carries an
+@audit:superseded-by(entropyPowerExt_add_ge_unconditional) Has 0 consumers, carries an
 unresolved de Bruijn per-time wall (`@residual` below). Superseded by the unconditional EPI.
 The de Bruijn closure plan `epi-debruijn-pertime-closure` remains a valid standalone goal
 independently of this supersession.

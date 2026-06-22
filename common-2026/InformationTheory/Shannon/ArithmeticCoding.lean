@@ -7,7 +7,7 @@ import Mathlib.Logic.Equiv.Defs
 /-!
 # Arithmetic Coding / Shannon-Fano-Elias (Cover-Thomas Theorem 13.3.3)
 
-For a finite-alphabet probability distribution `P` on `α`, the **arithmetic code**
+For a finite-alphabet probability distribution `P` on `α`, the arithmetic code
 assigns each symbol `a : α` a binary codeword of length `ℓ(a) = ⌈-log₂ P(a)⌉ + 1`,
 achieving the expected-length sandwich `H₂(P) ≤ E[L] ≤ H₂(P) + 2` and prefix-freeness.
 
@@ -50,13 +50,13 @@ set_option linter.unusedSectionVars false
 variable {α : Type*} [Fintype α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-- **Shannon-Fano-Elias codeword length**: `ℓ(a) = ⌈-log₂ P(a)⌉ + 1`. -/
+/-- The Shannon-Fano-Elias codeword length `ℓ(a) = ⌈-log₂ P(a)⌉ + 1`. -/
 noncomputable def sfeLength (P : Measure α) (a : α) : ℕ := shannonLength 2 P a + 1
 
 lemma sfeLength_pos (P : Measure α) (a : α) : 0 < sfeLength P a := by
   unfold sfeLength; exact Nat.succ_pos _
 
-/-- **`sfeLength` satisfies the Kraft inequality** `Σ 2^(-ℓ(a)) ≤ 1`.
+/-- `sfeLength` satisfies the Kraft inequality `Σ 2^(-ℓ(a)) ≤ 1`.
 
 Each term halves the Shannon-length term: `2^(-(l+1)) = 2^(-l)/2`, so the whole
 sum is `(1/2) · kraftSum 2 (shannonLength 2 P) ≤ 1/2 ≤ 1`. -/
@@ -74,7 +74,7 @@ lemma sfeLength_kraft_le_one
   push_cast
   omega
 
-/-- **Expected-length sandwich** (full discharge): `H₂(P) ≤ E[L] ≤ H₂(P) + 2`. -/
+/-- The expected-length sandwich: `H₂(P) ≤ E[L] ≤ H₂(P) + 2`. -/
 @[entry_point]
 theorem arithmeticCode_expected_length_bounds
     (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a : α, 0 < P.real {a}) :
@@ -105,7 +105,7 @@ theorem arithmeticCode_expected_length_bounds
     rw [h_lin]
     linarith
 
-/-- **Prefix-free construction** (full discharge): there is a binary code of
+/-- The prefix-free construction: there is a binary code of
 length `sfeLength P` that is injective and prefix-free. -/
 @[entry_point]
 theorem arithmeticCode_prefix_free
@@ -155,7 +155,7 @@ private lemma uncons_eq_of_flatten_eq
   subst hab
   exact ⟨rfl, List.append_cancel_left h⟩
 
-/-- **Unique decodability** (Cover-Thomas 5.2.2): for a prefix-free code with
+/-- Unique decodability (Cover-Thomas 5.2.2): for a prefix-free code with
 nonempty codewords, the map `s ↦ (s.map c).flatten` is injective. Proved by
 induction, peeling one block at a time via `uncons_eq_of_flatten_eq`. -/
 @[entry_point]

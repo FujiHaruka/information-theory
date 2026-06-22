@@ -10,7 +10,7 @@ This file hoists the `IsMeasureInfinitePiTiltedEq` predicate (formerly in
 `InformationTheory/Shannon/Cramer/LC2PhaseC.lean`) together with the seven
 change-of-measure / tilted-LLN-window theorems (formerly in
 `InformationTheory/Shannon/Cramer/InfinitePiTiltedChangeOfMeasure.lean`) into a
-single **upstream** module that does NOT import `CramerLC2PhaseC.lean`.
+single upstream module that does NOT import `CramerLC2PhaseC.lean`.
 
 ## Why this module exists (import-cycle break)
 
@@ -45,7 +45,7 @@ variable {Ω₀ : Type*} [MeasurableSpace Ω₀]
 
 /-! ## n-letter RN-deriv identification predicate (hoisted) -/
 
-/-- **Cramér n-letter change-of-measure predicate** (Mathlib gap abstraction).
+/-- The Cramér n-letter change-of-measure predicate (Mathlib gap abstraction).
 
 Captures the missing Mathlib compatibility lemma
 `Measure.infinitePi (fun _ => μ₀.tilted (lam * Y ·)) ↔
@@ -72,7 +72,7 @@ def IsMeasureInfinitePiTiltedEq (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam
 
 /-! ## Cylinder lift (hoisted) -/
 
-/-- **Cylinder lift**: an event over the first `n` coordinates of the infinite
+/-- The cylinder lift: an event over the first `n` coordinates of the infinite
 product, expressed via a predicate on the partial sum, has `infinitePi` mass
 equal to the corresponding `Measure.pi (Fin n)` mass. Works for any constant
 factor `ν` (apply with `ν = μ₀` and `ν = μ₀.tilted ...`). -/
@@ -119,7 +119,7 @@ theorem infinitePi_partialSum_event_eq_pi {ν : Measure Ω₀} [IsProbabilityMea
 
 /-! ## Finite change-of-measure lower bound (hoisted) -/
 
-/-- **Finite change-of-measure lower bound** (`Measure.pi` level).
+/-- The finite change-of-measure lower bound (`Measure.pi` level).
 
 For `lam ≥ 0`, on the window `W_n := {x | a·n ≤ ∑ Y(x i) < (a+ε)·n}` the
 un-tilted product mass of the half-line event `E_n := {x | a·n ≤ ∑ Y(x i)}` is
@@ -215,7 +215,7 @@ theorem change_of_measure_lower_bound_pi {n : ℕ} {μ₀ : Measure Ω₀} [IsPr
 
 /-! ## Residual predicate + reduction to `IsMeasureInfinitePiTiltedEq` (hoisted) -/
 
-/-- **Residual predicate**: the tilted infinite-product
+/-- The residual predicate: the tilted infinite-product
 window mass is eventually at least `1/2`. This is the *only* piece left after the
 change-of-measure machinery is discharged; it holds precisely when
 the tilted mean `∫ Y ∂μ₀.tilted` lies in the window `[a, a+ε)`, which is the
@@ -228,7 +228,7 @@ def IsTiltedWindowEventuallyLarge (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (l
           {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)
             ∧ ∑ i ∈ Finset.range n, Y (ω i) < (a + ε) * n}
 
-/-- **Residual reduction**: the residual window predicate implies the full
+/-- The residual reduction: the residual window predicate implies the full
 n-letter RN-deriv predicate `IsMeasureInfinitePiTiltedEq`. The change-of-measure
 lower bound plus the cylinder lift reduce the predicate to
 the eventual largeness of the tilted window mass, discharged here with `C = 1/2`.
@@ -298,7 +298,7 @@ theorem isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge
 
 /-! ## Per-instance window largeness from interior of the tilted mean (hoisted) -/
 
-/-- **Per-instance tilted window mass → 1** (interior case).
+/-- The per-instance tilted window mass tends to `1` (interior case).
 
 The `∀a∀ε` predicate `IsTiltedWindowEventuallyLarge` is *false* in general (for
 `a` far from the tilted mean the window has vanishing mass). The meaningful
@@ -373,7 +373,7 @@ theorem tiltedWindow_eventually_tendsto_one
   · -- always `μ.real (window n) ≤ 1`
     exact Eventually.of_forall (fun n ↦ measureReal_le_one)
 
-/-- **Per-instance tilted window mass ≥ 1/2** (interior case, `≥ 1/2` corollary).
+/-- The per-instance tilted window mass is `≥ 1/2` (interior case, `≥ 1/2` corollary).
 
 Immediate from `tiltedWindow_eventually_tendsto_one` and `1/2 < 1`: the window
 mass is eventually ≥ 1/2. This is the per-instance replacement for the
@@ -393,7 +393,7 @@ theorem tiltedWindow_eventually_large_of_interior
 
 /-! ## cgf-calculus form of the interior window condition (hoisted) -/
 
-/-- **Tilted mean = cgf derivative** (cgf-derivative bridge).
+/-- The tilted mean equals the cgf derivative (cgf-derivative bridge).
 
 For a bounded measurable `Y` under a probability measure `μ₀`, the tilted mean
 `∫ Y ∂(μ₀.tilted (lam·Y))` equals the first derivative of the cgf at `lam`:

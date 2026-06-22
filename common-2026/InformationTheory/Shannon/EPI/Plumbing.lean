@@ -98,9 +98,8 @@ noncomputable def gaussianEntropyPowerConst : ℝ := 2 * Real.pi * Real.exp 1
 theorem gaussianEntropyPowerConst_pos : 0 < gaussianEntropyPowerConst := by
   unfold gaussianEntropyPowerConst; positivity
 
-/-- **`(2πe)⁻¹`-normalized form for Gaussian**: under the Cover-Thomas
-`N(μ) := (2πe)⁻¹ · entropyPower μ` normalization, the Gaussian saturating
-case takes the closed form `N(gaussianReal m v) = v`. -/
+/-- Under the Cover-Thomas `N(μ) := (2πe)⁻¹ · entropyPower μ` normalization, the
+Gaussian saturating case takes the closed form `N(gaussianReal m v) = v`. -/
 @[entry_point]
 theorem entropyPower_div_two_pi_e_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     entropyPower (gaussianReal m v) / gaussianEntropyPowerConst = (v : ℝ) := by
@@ -163,8 +162,8 @@ theorem entropyPower_map_affine
 
 /-! ## §6 — 4-argument EPI chain -/
 
-/-- **4-arg EPI pass-through**: for independent `X, Y, Z, W` with the appropriate
-entropy-power-inequality hypotheses, `entropyPower (X+Y+Z+W) ≥ Σ entropyPower (·)`.
+/-- For independent `X, Y, Z, W` with the appropriate entropy-power-inequality
+hypotheses, `entropyPower (X+Y+Z+W) ≥ Σ entropyPower (·)`.
 
 Chains three applications of the 2-arg `IsEntropyPowerInequalityHypothesis`
 predicate: once on `((X+Y)+Z) vs W`, once on `(X+Y) vs Z`, once on `X vs Y`.

@@ -17,7 +17,7 @@ entropy rate:
 lim_{n → ∞} (1/n) · ℓ(LZ78(X^n)) = H(𝓧)   a.s.
 ```
 
-This is the **universal source-coding analogue** of Shannon's source-coding
+This is the universal source-coding analogue of Shannon's source-coding
 theorem: LZ78 achieves the entropy-rate lower bound without any prior
 knowledge of the source statistics.
 
@@ -25,11 +25,11 @@ knowledge of the source statistics.
 
 This single file publishes:
 
-* **§1. LZ78 phrase data structures** (`LZ78Phrase α`, `LZ78Parsing α`)
+* §1. LZ78 phrase data structures (`LZ78Phrase α`, `LZ78Parsing α`)
   — the type-level encoding of an LZ78 dictionary parsing.
-* **§2. Generic sandwich combinator** — `lz78_asymptotic_optimality`
+* §2. Generic sandwich combinator — `lz78_asymptotic_optimality`
   (and its alias / bundled forms), the LZ78-flavored wrapper of
-  `tendsto_of_le_liminf_of_limsup_le`. This is **not** the LZ78
+  `tendsto_of_le_liminf_of_limsup_le`. This is not the LZ78
   optimality claim itself; it derives a.s. convergence from a
   caller-supplied two-sided sandwich. The genuine optimality headline
   (with the sandwich halves discharged as proven theorems, sorryAx-free)
@@ -42,7 +42,7 @@ The two halves of LZ78 asymptotic optimality — the achievability upper
 bound `∀ᵐ ω, limsup (lz/n) ≤ entropyRate₂`
 (Ziv's inequality, Cover–Thomas Lemma 13.5.5) and the converse lower
 bound `∀ᵐ ω, entropyRate₂ ≤ liminf (lz/n)` (Cover–Thomas Theorem 13.5.3
-lower bound) — are the **single source of truth** in the two proven
+lower bound) — are the single source of truth in the two proven
 theorems
 `lz78Greedy_achievability_ae` / `lz78Greedy_converse_ae`
 in `InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`
@@ -55,13 +55,13 @@ discharged upstream (`shannon_mcmillan_breiman`).
   parsing implementation is supplied externally; the generic combinator
   consumes a generic encoding-length function
   `lz78EncodingLength : ∀ n, (Fin n → α) → ℕ` supplied as a parameter.
-* The generic combinator `lz78_asymptotic_optimality` is **not** an
-  identity wrap of its conclusion, and **not** the LZ78 optimality claim:
+* The generic combinator `lz78_asymptotic_optimality` is not an
+  identity wrap of its conclusion, and not the LZ78 optimality claim:
   it takes a caller-supplied two-sided sandwich on `lz/n` — the liminf
   lower bound `entropyRate ≤ liminf (lz/n)`, the limsup upper bound
   `limsup (lz/n) ≤ entropyRate`, and the two boundedness arguments — and
   *derives* the a.s. Tendsto via `tendsto_of_le_liminf_of_limsup_le`. Its
-  `h_lower`/`h_upper` are **generic caller-supplied arguments**, not a
+  `h_lower`/`h_upper` are generic caller-supplied arguments, not a
   built-in claim that any encoding achieves the entropy rate. For the
   genuine greedy LZ78 parser those two halves are the Cover–Thomas
   Eq. 13.124 / 13.130 substance of Thm 13.5.3, whose genuine discharge
@@ -76,7 +76,7 @@ blockRV), `InformationTheory/Shannon/EntropyRate.lean` (`entropyRate`,
 `entropyRate_exists_of_stationary`), and `InformationTheory/Shannon/
 ShannonMcMillanBreiman.lean` (`blockLogAvg`,
 `shannon_mcmillan_breiman_of_sandwich`, `tendsto_expected_blockLogAvg`)
-are imported and re-used as **black boxes**: the present file does not
+are imported and re-used as black boxes: the present file does not
 re-prove any of those results, it merely refers to them through the
 type-level signatures.
 
@@ -104,7 +104,7 @@ set_option linter.unusedSectionVars false
 
 section LZ78Structures
 
-/-- An **LZ78 dictionary phrase** is a pair `(parent, symbol)` where:
+/-- An LZ78 dictionary phrase is a pair `(parent, symbol)` where:
 
 * `parent : Option ℕ` references the earlier phrase being extended, or
 `none` for the empty-prefix root (the very first phrase ever emitted).
@@ -148,7 +148,7 @@ lemma ext_iff {p q : LZ78Phrase α} :
 
 end LZ78Phrase
 
-/-- An **LZ78 parsing** of a finite input is a list of dictionary phrases
+/-- An LZ78 parsing of a finite input is a list of dictionary phrases
 together with the structural invariant that every `parent = some k`
 references an earlier (strictly smaller) phrase index.
 
@@ -202,16 +202,16 @@ variable [Fintype α] [DecidableEq α] [Nonempty α]
 variable [MeasurableSpace Ω]
 
 omit [DecidableEq α] in
-/-- **Generic two-sided sandwich-combine lemma for per-symbol coding
-rates** (the LZ78-flavored wrapper of `tendsto_of_le_liminf_of_limsup_le`).
+/-- The generic two-sided sandwich-combine lemma for per-symbol coding
+rates (the LZ78-flavored wrapper of `tendsto_of_le_liminf_of_limsup_le`).
 
-This is **NOT** the LZ78 asymptotic-optimality claim itself. It is a
+This is NOT the LZ78 asymptotic-optimality claim itself. It is a
 generic combinator: given *any* encoding-length function
 `lz78EncodingLength`, *any* limit value `L : ℝ`, and a two-sided a.s.
 sandwich on the per-symbol rate (`L ≤ liminf` and `limsup ≤ L`, plus a.s.
 boundedness), it derives a.s. convergence of `lz/n` to `L` via
 `tendsto_of_le_liminf_of_limsup_le` (a 1-step squeeze). The hypotheses
-`h_lower` / `h_upper` are **generic caller-supplied arguments**, not a
+`h_lower` / `h_upper` are generic caller-supplied arguments, not a
 claim that any particular encoding achieves any particular limit — the
 caller is responsible for supplying them (for the concrete greedy LZ78
 parser, with `L = entropyRate₂` the bit-rate target, that supply is the
@@ -266,12 +266,12 @@ theorem lz78_asymptotic_optimality
   exact tendsto_of_le_liminf_of_limsup_le hl hu hba hbb
 
 omit [DecidableEq α] in
-/-- **Generic two-sided sandwich-combine — alias form**.
+/-- The generic two-sided sandwich-combine, alias form.
 
 Alias for the generic combinator `lz78_asymptotic_optimality` with the
 same four arguments (liminf lower bound, limsup upper bound, two
 `Filter.IsBoundedUnder` boundedness arguments). Like its target this is
-**not** the LZ78 optimality claim — `h_lower` / `h_upper` are generic
+not the LZ78 optimality claim — `h_lower` / `h_upper` are generic
 caller-supplied sandwich arguments. The body is a genuine forward, not an
 identity wrap of the conclusion. -/
 theorem lz78_asymptotic_optimality_two_sided
@@ -314,12 +314,12 @@ theorem lz78_asymptotic_optimality_two_sided
     h_lower h_upper h_bdd_above h_bdd_below
 
 omit [DecidableEq α] in
-/-- **Generic two-sided sandwich-combine — bundled-conjunction form**.
+/-- The generic two-sided sandwich-combine, bundled-conjunction form.
 
 Bundles the four generic sandwich arguments into a single conjunction
 `h_combined` (lower / upper / above / below); the body destructures and
 forwards to `lz78_asymptotic_optimality_two_sided`, a genuine
-application, not an identity wrap. As with its target this is **not** the
+application, not an identity wrap. As with its target this is not the
 LZ78 optimality claim — the bundled `h_lower` / `h_upper` conjuncts are
 generic caller-supplied sandwich arguments. -/
 theorem lz78_asymptotic_optimality_of_bounds

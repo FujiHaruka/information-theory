@@ -45,7 +45,7 @@ open scoped ENNReal NNReal Real
 
 /-! ## Real-variance Gaussian density -/
 
-/-- **Real-variance Gaussian density** `(√(2πv))⁻¹ · exp(−(x−m)²/(2v))`.
+/-- The real-variance Gaussian density `(√(2πv))⁻¹ · exp(−(x−m)²/(2v))`.
 
 This is `gaussianPDFReal m v x` with the variance `v` taken as a *real* number
 (rather than `ℝ≥0`), so that we can differentiate in `v`. For `v > 0` it agrees
@@ -62,7 +62,7 @@ theorem gaussianPDFRealVar_eq_gaussianPDFReal (m : ℝ) {v : ℝ} (hv : 0 < v) (
 
 /-! ## Variance-derivative lemma (the Mathlib gap closure) -/
 
-/-- **Variance-derivative of the `(√(2πv))⁻¹` normalising factor.**
+/-- The variance-derivative of the `(√(2πv))⁻¹` normalising factor.
 
 `∂_v (√(2πv))⁻¹ = -(1/(2v)) · (√(2πv))⁻¹`. The `√` cancels: the log-derivative
 of `(√(2πv))⁻¹` is rational. -/
@@ -90,7 +90,7 @@ theorem hasDerivAt_gaussianNorm_variance {v : ℝ} (hv : 0 < v) :
   rw [Real.sq_sqrt h2piv_pos.le]
   field_simp
 
-/-- **Variance-derivative of the exponential factor.**
+/-- The variance-derivative of the exponential factor.
 
 `∂_v exp(−(x−m)²/(2v)) = ((x−m)²/(2v²)) · exp(−(x−m)²/(2v))`. -/
 @[entry_point]
@@ -115,7 +115,7 @@ theorem hasDerivAt_gaussianExp_variance (m x : ℝ) {v : ℝ} (hv : 0 < v) :
   convert h_exp using 1
   ring
 
-/-- **The variance-derivative lemma (Mathlib-gap closure).**
+/-- The variance-derivative lemma (Mathlib-gap closure).
 
 `∂_v gaussianPDFRealVar m v x
    = ((x−m)²/(2v²) − 1/(2v)) · gaussianPDFRealVar m v x`,
@@ -142,7 +142,7 @@ theorem hasDerivAt_gaussianPDFRealVar_variance (m x : ℝ) {v : ℝ} (hv : 0 < v
 
 /-! ## Heat-kernel time derivative (m = 0) -/
 
-/-- **Time-derivative of the Gaussian heat kernel.**
+/-- The time-derivative of the Gaussian heat kernel.
 
 `∂_t g_t x = (1/2)(x²/t² − 1/t)·g_t x = (1/2) Δ_x g_t x`, i.e. `g_t` solves the
 heat equation `∂_t p = (1/2) Δ_x p`. This is the `m = 0` specialization of
@@ -171,7 +171,7 @@ theorem hasDerivAt_heatKernel_time {t : ℝ} (ht : 0 < t) (x : ℝ) :
 
 /-! ## Proof of `IsHeatTimeDerivHyp` -/
 
-/-- **Gaussian heat kernel satisfies the time-derivative sub-predicate.**
+/-- The Gaussian heat kernel satisfies the time-derivative sub-predicate.
 
 `IsHeatTimeDerivHyp` for the Gaussian heat kernel with
 `Δp t x := spatialLaplacianHeatKernel t x`. -/

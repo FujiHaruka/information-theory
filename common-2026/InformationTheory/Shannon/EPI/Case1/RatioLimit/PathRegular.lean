@@ -54,7 +54,7 @@ theorem epi_of_csiszarLogRatioGap_tendsto
 
 `N(law(X+√t·Z_X)) = t · N(law(X/√t + Z_X))` via `entropyPower_map_mul_const`. -/
 
-/-- **Single-path scaling identity**: for `t > 0`,
+/-- The single-path scaling identity: for `t > 0`,
 `entropyPower (P.map (fun ω => A ω + √t · B ω))
    = t · entropyPower (P.map (fun ω => A ω / √t + B ω))`.
 
@@ -180,7 +180,7 @@ def IsRescaledPathRegular (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeas
             (((P.map (fun ω ↦ A ω / Real.sqrt t + B ω)).rnDeriv volume x).toReal))
           volume)
 
-/-- **Per-path entropy-power limit**: as `t → ∞`, the rescaled W-path entropy power
+/-- As `t → ∞`, the rescaled W-path entropy power
 `N(law(A/√t + B))` converges to the noise entropy power `N(law B)` when `B` has a
 Gaussian law of nonzero variance.
 
@@ -318,7 +318,7 @@ conditional-KL cross-entropy integrabilities) are closed genuinely using `hA_ac`
 (`convCrossEntropy_perFibre_integrable` / `convCrossEntropy_zAvg_integrable` /
 `convJointLlr_integrable`, `EPIG2ConvEntropyDensity.lean`). -/
 
-/-- **Scaling preserves a.c.**: if `P.map A ≪ volume` then `P.map (A/√t) ≪ volume`
+/-- Scaling preserves absolute continuity: if `P.map A ≪ volume` then `P.map (A/√t) ≪ volume`
 for `t > 0` (the map `(·/√t)` is a Lebesgue-a.c. linear isomorphism). Genuine. -/
 theorem map_div_sqrt_absolutelyContinuous
     (A : Ω → ℝ) (P : Measure Ω) (hA : Measurable A) (hA_ac : (P.map A) ≪ volume)
@@ -345,7 +345,7 @@ theorem map_div_sqrt_absolutelyContinuous
   rw [hvol]
   exact Measure.smul_absolutelyContinuous
 
-/-- **Density witness for `A/√t`**: from `P.map A ≪ volume`, the rescaled input
+/-- A density witness for `A/√t`: from `P.map A ≪ volume`, the rescaled input
 `A/√t` admits a Real density witness `pX := ((P.map (A/√t)).rnDeriv volume).toReal`
 with all the regularity (`≥ 0`, measurable, `withDensity` law, integrable, mass `= 1`,
 finite second moment) needed to invoke `convDensityAdd_negMulLog_integrable_pub` and the

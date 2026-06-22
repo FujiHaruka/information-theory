@@ -54,7 +54,7 @@ variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β]
 
 omit [DecidableEq β] in
-/-- **Entropy subadditivity on `Fin n`**: `H(Y^n) ≤ ∑ H(Y_i)`.
+/-- Entropy is subadditive on `Fin n`: `H(Y^n) ≤ ∑ H(Y_i)`.
 
 This is encoder-agnostic — holds for any family `Ys : Fin n → Ω → β` without any
 memoryless or independence assumption. Cover-Thomas Thm 2.6.6.
@@ -93,7 +93,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β]
 
-/-- **Conditional 2-variable chain rule** (helper):
+/-- The conditional two-variable chain rule (helper):
 `H((A, B) | C) = H(A | C) + H(B | (C, A))`.
 
 Derived from the unconditional 2-var chain rule
@@ -144,7 +144,7 @@ private lemma condEntropy_pair_eq_condEntropy_add_condEntropy
   linarith
 
 omit [DecidableEq β] in
-/-- **Conditional joint entropy chain rule on `Fin n`** (generalized over an
+/-- The conditional joint entropy chain rule on `Fin n` (generalized over an
 arbitrary conditioner type `χ`):
 `H(Y^n | X) = ∑ i, H(Y_i | X, Y^{<i})`.
 
@@ -249,7 +249,7 @@ lemma condEntropy_pi_chain_rule_aux
     congr 1
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Conditional joint entropy chain rule on `Fin n`** (specialization of
+/-- The conditional joint entropy chain rule on `Fin n` (specialization of
 `condEntropy_pi_chain_rule_aux` with conditioner `Xs : Ω → (Fin n → α)`).
 `H(Y^n | X^n) = ∑ i, H(Y_i | X^n, Y^{<i})`. Building Block 2 of Cover-Thomas Thm 7.9. -/
 @[entry_point]
@@ -278,7 +278,7 @@ variable {γ : Type*} [Fintype γ] [DecidableEq γ] [Nonempty γ]
   [MeasurableSpace γ] [MeasurableSingletonClass γ] [StandardBorelSpace γ]
 
 omit [StandardBorelSpace α] [DecidableEq α] [DecidableEq β] [DecidableEq γ] in
-/-- **Markov-drop for conditional entropy**: under Markov chain `Yo → Zc → Wc`,
+/-- The Markov-drop property for conditional entropy: under Markov chain `Yo → Zc → Wc`,
 `H(Yo | Zc, Wc) = H(Yo | Zc)`.
 
 Direct consequence of `condMutualInfo_eq_zero_of_markov` via
@@ -315,7 +315,8 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
-/-- **Markov chain endpoint swap**: `IsMarkovChain μ Xs Zc Yo ↔ IsMarkovChain μ Yo Zc Xs`.
+/-- A Markov chain is symmetric under swapping its endpoints:
+`IsMarkovChain μ Xs Zc Yo ↔ IsMarkovChain μ Yo Zc Xs`.
 
 The γ-form definition `μ.map (Z, X, Y) = (μ.map Z) ⊗ₘ (K_X ×ₖ K_Y)` is symmetric in
 `X`/`Y`: pushing both sides forward by the measurable equiv `Z × (X × Y) ≃ᵐ Z × (Y × X)`
@@ -358,7 +359,7 @@ private lemma isMarkovChain_swap
   congr 1
   exact Kernel.prodComm_prod
 
-/-- **Markov chain right post-processing**: `IsMarkovChain μ Xs Zc Yo` and a
+/-- Markov chains are stable under post-processing on the right: `IsMarkovChain μ Xs Zc Yo` and a
 measurable `f : Y → Y'` give `IsMarkovChain μ Xs Zc (f ∘ Yo)`.
 
 Reduce to `isMarkovChain_map_left` via two endpoint swaps. -/
@@ -382,7 +383,7 @@ private lemma isMarkovChain_map_right
     isMarkovChain_map_left μ Yo Zc Xs hYo hZc hXs hf h1
   exact isMarkovChain_swap μ (fun ω ↦ f (Yo ω)) Zc Xs (hf.comp hYo) hZc hXs h2
 
-/-- **Local copy of `Fin n → β ≃ᵐ β × ({j : Fin n // j ≠ i} → β)`**, for use in
+/-- A local copy of `Fin n → β ≃ᵐ β × ({j : Fin n // j ≠ i} → β)`, for use in
 `condEntropy_pi_eq_sum_of_memoryless_strong`. Mirrors `measurableEquivExtract` in
 `ChannelCodingConverseGeneralStrong.lean` but defined locally to keep this file
 upstream. -/
@@ -393,7 +394,7 @@ private noncomputable def measurableEquivExtractLocal {β' : Type*} [MeasurableS
     ((MeasurableEquiv.funUnique {j : Fin n // j = i} β').prodCongr (.refl _))
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Conditional joint entropy of outputs given inputs, under strong memoryless DMC**:
+/-- The conditional joint entropy of outputs given inputs under a strong memoryless DMC:
 `H(Y^n | X^n) = ∑ i, H(Y_i | X_i)`.
 
 Combines `condEntropy_pi_chain_rule` (Building Block 2) with the per-summand
@@ -543,7 +544,7 @@ variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Cover-Thomas Thm 7.9 / per-letter MI bound from strong memoryless DMC**:
+/-- The per-letter mutual-information bound from a strong memoryless DMC (Cover-Thomas Thm 7.9):
 `(I(X^n; Y^n)).toReal ≤ ∑ i, (I(X_i; Y_i)).toReal`.
 
 The encoder-agnostic Cover-Thomas chain:

@@ -213,7 +213,7 @@ theorem ziv_error_seq_tendsto_zero (cp : ℕ → ℝ) (k : ℕ) (La L : ℝ)
   field_simp
   ring
 
-/-- **Lemma 1 (core)**: for each fixed `k`, the a.s.-eventual limsup of the
+/-- The core lemma: for each fixed `k`, the a.s.-eventual limsup of the
 greedy bit-rate is at most the `k`-th conditional tail entropy in bits.
 
 This is the per-`k` Ziv bound: combining the achievability composition
@@ -392,7 +392,7 @@ theorem ziv_aseventual_le_condEntropyTail_bits
   rw [hU_tend.limsup_eq] at hlim_le
   exact hlim_le
 
-/-- **Lemma 2 (diagonalization = inf over `k`)**: the a.s.-eventual limsup of
+/-- Diagonalizing over `k` (taking the infimum), the a.s.-eventual limsup of
 the greedy bit-rate is at most the bit entropy rate.
 
 From Lemma 1 (`ziv_aseventual_le_condEntropyTail_bits`) for all `k`
@@ -419,7 +419,7 @@ theorem ziv_aseventual_le_entropyRate₂
     simpa only [entropyRate₂] using h
   exact ge_of_tendsto h_tend (Filter.Eventually.of_forall hω)
 
-/-- **a.s.-eventual Ziv comparison**: the limsup of the greedy bit-rate is at
+/-- The a.s.-eventual Ziv comparison: the limsup of the greedy bit-rate is at
 most the limsup of `blockLogAvg₂`.
 
 The achievability crux (Cover–Thomas Lemma 13.5.5): combining the Ziv product
@@ -583,7 +583,7 @@ Units: the convergence target is the bit entropy rate
 Against the nat-unit target the achievability half — and hence this headline —
 would be FALSE on a uniform i.i.d. source (the bit-rate `lz/n` converges to the
 bit entropy rate). With the
-bit target the headline is a **TRUE-as-framed proposition**: on a uniform
+bit target the headline is a true-as-framed proposition: on a uniform
 i.i.d. source on A symbols the bit-rate limit is `log₂ A = entropyRate₂`
 exactly (A=2: `entropyRate₂ = log₂ 2 = 1`, so the two halves squeeze
 `rate → 1`, the genuine LZ78-optimal bit rate); on the degenerate
