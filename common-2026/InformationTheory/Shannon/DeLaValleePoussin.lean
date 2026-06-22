@@ -22,13 +22,7 @@ infinite measures such as `volume`.
 The intended downstream consumer is the EPI G2 Vitali witness chain
 (`wall:approx-identity-L1`), where `μ = volume` and `f n = negMulLog (pX ∗ g_{u n})`.
 
-`@audit:ok` — independent honesty audit 2026-06-04 (commit `ebb960e`): `#print axioms`
-= `[propext, Classical.choice, Quot.sound]` (sorryAx-free, mechanically re-verified);
-signature honest (no `*Hypothesis` bundle, `UnifIntegrable` conclusion not taken as a
-hypothesis, `hC`/`hbound`/`hG_superlinear` all genuine de la VP preconditions);
-`Superlinear` non-vacuous (satisfied by `G t = t²`) and non-circular (pure `G` growth
-predicate, references neither `f` nor `UnifIntegrable`); Mathlib gap confirmed
-(loogle `UnifIntegrable, ConvexOn = Found 0`).
+`@audit:ok`
 -/
 
 open MeasureTheory ENNReal NNReal Filter Topology Set
@@ -46,7 +40,7 @@ the usable statement. -/
 def Superlinear (G : ℝ≥0∞ → ℝ≥0∞) : Prop :=
   ∀ K : ℝ≥0∞, ∃ M : ℝ≥0, ∀ t : ℝ≥0∞, (M : ℝ≥0∞) ≤ t → K * t ≤ G t
 
-/-- The de la Vallée-Poussin criterion (forward direction).
+/-- The **de la Vallée-Poussin criterion** (forward direction).
 
 If `G : ℝ≥0∞ → ℝ≥0∞` is superlinear (`Superlinear G`, i.e. `K * t ≤ G t` eventually for
 every slope `K`) and the family `f` satisfies a uniform bound

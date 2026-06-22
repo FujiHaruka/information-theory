@@ -365,7 +365,7 @@ theorem convLogDeriv_sq_mul_le
       ≤ p_s x * ∫ y, (x - y) ^ 2 * (pX y * g (x - y)) ∂volume := hCS
     _ = (∫ y, (x - y) ^ 2 * (pX y * g (x - y)) ∂volume) * p_s x := by ring
 
-/-- Stam convolution Fisher information bound: `J(pX ∗ g_s) ≤ 1/s` for any probability
+/-- **Stam convolution Fisher information bound**: `J(pX ∗ g_s) ≤ 1/s` for any probability
 density `pX` and Gaussian kernel `g_s` of variance `s > 0`.
 @audit:ok -/
 theorem gaussianConv_fisher_le_inv_var
