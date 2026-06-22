@@ -92,7 +92,8 @@ theorem csiszar_ratio_deriv_le_zero_arith
 
 /-- The log-ratio gap derivative: `csiszarLogRatioGap X Y Z_X Z_Y P` has derivative
 `J_sum − (N_X · J_X + N_Y · J_Y) / (N_X + N_Y)` at any `t > 0`, where
-`N_i = entropyPower (P.map path_i t)` and `J_i = fisherInfoOfDensityReal ((h_reg_i.reg_at t ht).density_t)`.
+`N_i = entropyPower (P.map path_i t)` and
+`J_i = fisherInfoOfDensityReal ((h_reg_i.reg_at t ht).density_t)`.
 Built from the three per-term entropy-power derivatives (via the de Bruijn V2 identity and the
 chain-rule helper), `HasDerivAt.log` for the two log terms, composed by `HasDerivAt.sub`. The
 `h_reg_*` are regularity preconditions.

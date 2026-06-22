@@ -14,7 +14,8 @@ norm `tvNorm` is shared with the weak form in `Pinsker/Basic.lean`.
 ## Main statements
 
 * `klFun_sharp_lower` — the pointwise sharp bound `3 * (t - 1)^2 ≤ 2 * (t + 2) * klFun t`.
-* `tvNorm_le_sqrt_klDiv_div_two` — the sharp Pinsker inequality `tvNorm P Q ≤ √((klDiv P Q).toReal / 2)`.
+* `tvNorm_le_sqrt_klDiv_div_two` — the sharp Pinsker inequality
+  `tvNorm P Q ≤ √((klDiv P Q).toReal / 2)`.
 
 ## Implementation notes
 

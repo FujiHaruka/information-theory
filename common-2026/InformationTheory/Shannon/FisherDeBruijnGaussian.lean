@@ -20,7 +20,8 @@ Both analytic halves of `∂_t g_t = (1/2) Δ_x g_t` for the centred Gaussian he
   (positivity + measurability internal; only `Z_law` remains as input).
 * `isHeatFlowDensity_gaussian_heatKernel` — `IsHeatFlowDensity` witness with
   the heat equation backed by `isHeatTimeDerivHyp_gaussian`.
-* `heatKernel_heat_equation` — `∂_t g_t = (1/2) Δ_x g_t` with `Δ_x g_t = spatialLaplacianHeatKernel`.
+* `heatKernel_heat_equation` — `∂_t g_t = (1/2) Δ_x g_t` with
+  `Δ_x g_t = spatialLaplacianHeatKernel`.
 * `deBruijn_gaussian_heatFlow_witness` — de Bruijn identity with heat-flow-density side internal.
 * `isRegularDeBruijnHypV2_gaussian_heatFlow` — packaged `IsRegularDeBruijnHypV2`.
 

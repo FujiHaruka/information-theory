@@ -397,7 +397,8 @@ noncomputable def isDeBruijnTailHyp_of_gaussian
     -- Congr with entropy form on `T ≥ 0`.
     have h_entropy : Tendsto
         (fun T : ℝ => InformationTheory.Shannon.differentialEntropy
-            (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z T))) atTop atTop := by
+            (P.map (InformationTheory.Shannon.FisherInfo.gaussianConvolution X Z T)))
+        atTop atTop := by
       refine h_closed.congr' ?_
       filter_upwards [Filter.eventually_ge_atTop (0 : ℝ)] with T hT
       exact

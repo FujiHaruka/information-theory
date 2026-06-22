@@ -188,7 +188,8 @@ lemma pmfLogCondMarkov_eq_neg_log_markovFactor
     unfold pmfLogCondMarkov
     simp [Nat.not_le.mpr hki]
   rw [hmarkov_eq]
-  -- `pmfLogCond μ p k (T^[i-k] ω) = -log ((cd (obs k) (blockRV k) μ (blockRV k (T^[i-k] ω))).real {obs k (T^[i-k] ω)})`.
+  -- `pmfLogCond μ p k (T^[i-k] ω) =`
+  -- `  -log ((cd (obs k) (blockRV k) μ (blockRV k (T^[i-k] ω))).real {obs k (T^[i-k] ω)})`.
   unfold pmfLogCond
   congr 2
   -- Identify the kernel singleton with `markovFactor μ p k i (blockRV (i+1) ω)`.

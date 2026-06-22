@@ -140,7 +140,8 @@ theorem geom_mean_superadditive
   rw [hN] at hkey ⊢
   exact hkey
 
--- `[DecidableEq n]` is required by the conclusion type `(CFC.sqrt A).PosDef` (the definition of CFC.sqrt).
+-- `[DecidableEq n]` is required by the conclusion type `(CFC.sqrt A).PosDef`
+-- (the definition of CFC.sqrt).
 -- Suppress the linter's "outside of proofs" false positive locally.
 set_option linter.unusedDecidableInType false in
 /-- The CFC square root of a positive-definite matrix is positive definite.

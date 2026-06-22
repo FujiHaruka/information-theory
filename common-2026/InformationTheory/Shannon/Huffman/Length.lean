@@ -433,7 +433,8 @@ noncomputable def huffmanLengthAux
       fun _ => 0
 termination_by s.card
 
-/-- Initial working multiset: each element `a : α` maps to the singleton group `({a}, P.real {a})`. -/
+/-- Initial working multiset: each element `a : α` maps to the singleton group
+`({a}, P.real {a})`. -/
 noncomputable def initMultiset (P : Measure α) : Multiset (Finset α × ℝ) :=
   (Finset.univ : Finset α).val.map (fun a => ({a}, P.real {a}))
 

@@ -206,7 +206,8 @@ lemma rdAmbient_iidYs_isProbabilityMeasure
 
 /-! ## Expected distortion bridge
 
-`expectedJointDistortion (rdAmbient qStar) (iidXs 0) (iidYs 0) d = expectedDistortionPmf d qStar`. -/
+`expectedJointDistortion (rdAmbient qStar) (iidXs 0) (iidYs 0) d`
+`= expectedDistortionPmf d qStar`. -/
 
 /-- The expected joint distortion under `rdAmbient qStar` equals the pmf-form
 `expectedDistortionPmf d qStar`. Proved by unfolding the integral over the

@@ -206,7 +206,8 @@ theorem entropy_power_inequality_four_arg {Ω : Type*} {mΩ : MeasurableSpace Ω
 
 /-! ## §7 — Misc. corollaries -/
 
-/-- The entropy-power-inequality hypothesis is symmetric in `X` and `Y` (when the sum is reordered). -/
+/-- The entropy-power-inequality hypothesis is symmetric in `X` and `Y`
+(when the sum is reordered). -/
 theorem isEntropyPowerInequalityHypothesis_symm
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     {P : Measure Ω} {X Y : Ω → ℝ}

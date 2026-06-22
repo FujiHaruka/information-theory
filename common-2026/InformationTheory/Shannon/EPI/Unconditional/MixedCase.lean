@@ -156,7 +156,8 @@ theorem entropyPowerExt_mixed_add_ge
       ≤ differentialEntropy (P.map (fun ω => X ω + Y ω)) :=
     differentialEntropy_add_ge_of_indep X Y P hX hY hXY hX_ac hW_ac h_ac h_int hκ_v
       hκ_logp_int hκ_cross_int h_fibreEnt_int h_cross_int h_logq_int
-  -- Lift to ℝ≥0∞: both endpoints are a.c. with finite differential entropy, so `N = ofReal (exp (2h))`.
+  -- Lift to ℝ≥0∞: both endpoints are a.c. with finite differential entropy,
+  -- so `N = ofReal (exp (2h))`.
   rw [entropyPowerExt_of_ac_integrable hX_ac hX_ent, entropyPowerExt_of_ac_integrable hW_ac hW_ent]
   exact ENNReal.ofReal_le_ofReal (Real.exp_le_exp.mpr (by linarith))
 

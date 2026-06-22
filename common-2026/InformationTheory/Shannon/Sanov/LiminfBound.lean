@@ -178,7 +178,8 @@ theorem sanov_ldp_lower_bound_pointwise
     filter_upwards [this] with n hn; exact hn.1.le
   -- Need IsCoboundedUnder (· ≥ ·) atTop f: dual of bounded above. We have f bounded below ≥ log m,
   -- but `IsCoboundedUnder (· ≥ ·)` needs: ∃ b, ∀ b' (s.t. eventually b' ≥ f), b' ≥ b.
-  -- Equivalently: f's eventual lower bounds are bounded. Since f ≥ log m (some fixed value), this holds.
+  -- Equivalently: f's eventual lower bounds are bounded. Since f ≥ log m (some fixed value),
+  -- this holds.
   -- Use that bounded below ⟹ cobounded for `≥`.
   -- Actually IsCoboundedUnder (· ≥ ·) f = IsCobounded (· ≥ ·) (map f atTop).
   -- For atTop in ℝ, this should follow from bounded above. Let me derive.
