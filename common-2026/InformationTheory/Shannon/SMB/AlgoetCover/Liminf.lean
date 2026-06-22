@@ -8,7 +8,17 @@ import Mathlib.Analysis.PSeries
 import Mathlib.Topology.Algebra.Order.LiminfLimsup
 import InformationTheory.Shannon.SMB.AlgoetCover.Boundedness
 import InformationTheory.Shannon.SMB.AlgoetCover.TwoSidedRatio
+/-!
+# SMB Algoet–Cover liminf direction and hypothesis-free capstone
 
+This file proves the liminf half of the Algoet–Cover sandwich and assembles
+the hypothesis-free Shannon–McMillan–Breiman theorem `shannon_mcmillan_breiman`.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
+  Wiley, 2006. Theorem 16.8.1.
+-/
 namespace InformationTheory.Shannon
 
 open MeasureTheory ProbabilityTheory Filter
@@ -473,20 +483,16 @@ theorem algoet_cover_liminf_bound
 /-! ## D.7 — Main theorem (hypothesis-free assembly) -/
 
 omit [DecidableEq α] in
-/-- Shannon–McMillan–Breiman theorem (Cover–Thomas 16.8.1).
-
-For a stationary ergodic process with finite alphabet `α`, the per-symbol
-negative log-likelihood `blockLogAvg μ p n` converges almost surely to the
-entropy rate `entropyRate μ p`.
+/-- **Shannon–McMillan–Breiman theorem**: for a stationary ergodic process with
+finite alphabet `α`, the per-symbol negative log-likelihood `blockLogAvg μ p n`
+converges almost surely to the entropy rate `entropyRate μ p`.
 
 This is the hypothesis-free capstone: the four hypotheses of
-`shannon_mcmillan_breiman_of_sandwich` are discharged unconditionally by the
-Algoet–Cover sandwich bounds (`algoet_cover_liminf_bound`,
-`algoet_cover_limsup_bound`) and the a.s. boundedness lemmas
-(`blockLogAvg_bddAbove_ae`, `blockLogAvg_bddBelow_ae`), all of which rest on
-the Birkhoff ergodic theorem, the two-sided projective-limit construction
-(`InformationTheory.Probability.TwoSidedExtension`), and backward-martingale
-convergence. -/
+`shannon_mcmillan_breiman_of_sandwich` hold unconditionally for an ergodic
+process.
+
+See also `algoet_cover_liminf_bound`, `algoet_cover_limsup_bound`,
+`blockLogAvg_bddAbove_ae`, `blockLogAvg_bddBelow_ae`. -/
 @[entry_point]
 theorem shannon_mcmillan_breiman
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :

@@ -30,6 +30,11 @@ Cesàro sandwich use to discharge the four hypotheses of
 * `block_singleton_pos_ae_at` — a.s. positivity of `P_n({block_n ω})` for each `n`.
 * `log_block_eq_sum_pmfLogCond` — a.s. log identity (chain rule):
   `-log P_n({block_n ω}) = ∑_{i<n} pmfLogCond μ p i ω`.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
+  Wiley, 2006. Section 16.8, equation (16.107).
 -/
 
 namespace InformationTheory.Shannon
@@ -252,13 +257,8 @@ spatial average used by the sandwich. -/
 
 omit [DecidableEq α] in
 /-- The expected per-step conditional log-likelihood equals the conditional
-entropy tail (Cover–Thomas (16.107) expectation):
-`∫ ω, pmfLogCond μ p l ω dμ = conditionalEntropyTail μ p l`.
-
-Proof: push forward through `(blockRV l, obs l)`, disintegrate via
-`compProd_map_condDistrib`, apply Fubini, evaluate the inner integral over the
-finite alphabet via `integral_fintype`, and recognize the result as the
-definition of `conditionalEntropyTail`. -/
+entropy tail:
+`∫ ω, pmfLogCond μ p l ω dμ = conditionalEntropyTail μ p l`. -/
 @[entry_point]
 theorem integral_pmfLogCond_eq_conditionalEntropyTail
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -350,13 +350,7 @@ omit [DecidableEq α] in
 For an ergodic process and fixed level `l`, the Birkhoff time average of
 `pmfLogCond p l` converges a.s. to `conditionalEntropyTail μ p l`:
 
-  `(1/(n+1)) ∑_{i=0}^{n} pmfLogCond p l (T^[i] ω) → H_l = H(X_l | X_0, …, X_{l-1})`.
-
-The proof composes:
-* `birkhoff_ergodic_ae` (file `BirkhoffErgodic.lean`) for the abstract Birkhoff
-  convergence;
-* `integrable_pmfLogCond` for integrability;
-* `integral_pmfLogCond_eq_conditionalEntropyTail` for the integral identity. -/
+  `(1/(n+1)) ∑_{i=0}^{n} pmfLogCond p l (T^[i] ω) → H_l = H(X_l | X_0, …, X_{l-1})`. -/
 @[entry_point]
 theorem birkhoffAverage_pmfLogCond_tendsto
     (μ : Measure Ω) [IsProbabilityMeasure μ]

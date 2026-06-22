@@ -80,14 +80,10 @@ lemma measurable_blockLogAvg
 /-! ## Sandwich form (Cover–Thomas 16.8.1) -/
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- Shannon–McMillan–Breiman, sandwich form.
-
-If the per-symbol log-likelihood average `blockLogAvg μ p n` satisfies the
-two Cover–Thomas 16.8 bounds (liminf ≥ entropy rate, limsup ≤ entropy rate)
-and is a.s. bounded, then it converges to the entropy rate a.s.
-
-Once Birkhoff supplies the two sandwich inequalities a.s., the conclusion
-follows immediately from `tendsto_of_le_liminf_of_limsup_le`. -/
+/-- **Shannon–McMillan–Breiman theorem** (sandwich form): if the per-symbol
+log-likelihood average `blockLogAvg μ p n` satisfies the two sandwich bounds
+(liminf ≥ entropy rate, limsup ≤ entropy rate) and is a.s. bounded, then it
+converges to the entropy rate a.s. -/
 @[entry_point]
 theorem shannon_mcmillan_breiman_of_sandwich
     (μ : Measure Ω) [IsProbabilityMeasure μ]

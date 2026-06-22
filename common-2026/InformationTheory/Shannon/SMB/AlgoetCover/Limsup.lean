@@ -60,8 +60,8 @@ theorem blockLogAvg_le_negLogQk_plus_error
   linarith
 
 omit [DecidableEq α] in
-/-- Taking `limsup` in `blockLogAvg_le_negLogQk_plus_error` and using
-Birkhoff for the `k`-Markov approximation gives the per-`k` limsup bound. -/
+/-- Per-`k` limsup bound: `limsup blockLogAvg ≤ conditionalEntropyTail μ p k`
+a.s. -/
 @[entry_point]
 theorem limsup_blockLogAvg_le_condEntropyTail
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) (k : ℕ) :
@@ -120,9 +120,7 @@ theorem limsup_blockLogAvg_le_condEntropyTail
   exact h_limsup_bound.trans h_rhs.limsup_eq.le
 
 omit [DecidableEq α] in
-/-- Letting `k → ∞` in the per-`k` bound and using
-`entropyRate_eq_lim_condEntropy` discharges the `limsup` hypothesis of
-`shannon_mcmillan_breiman_of_sandwich`. -/
+/-- Algoet–Cover limsup bound: `limsup blockLogAvg ≤ entropyRate μ p` a.s. -/
 @[entry_point]
 theorem algoet_cover_limsup_bound
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
