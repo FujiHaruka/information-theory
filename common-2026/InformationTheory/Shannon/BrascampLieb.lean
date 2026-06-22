@@ -73,7 +73,7 @@ theorem jointEntropySubset_le_log_projectionSubset_card
 
 /-! ## Brascamp–Lieb inequality -/
 
-/-- Brascamp–Lieb inequality (combinatorial form).
+/-- **Brascamp–Lieb inequality (combinatorial form)**.
 
 If `S : ι → Finset (Fin n)` is a cover family such that each `j : Fin n` is covered
 at least `k` times, then for any nonempty finite set `A : Finset (Fin n → α)`:

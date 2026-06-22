@@ -328,15 +328,11 @@ lemma maxPartialSum_sub_comp_T_le_indicator
     rw [h_zero]
     linarith [maxPartialSum_nonneg T f n (T ω)]
 
-/-- The maximal ergodic inequality (Garsia 1965). For `T : Ω → Ω`
+/-- The **maximal ergodic inequality** (Garsia 1965). For `T : Ω → Ω`
 measure-preserving on a probability/finite-measure space and `f : Ω → ℝ`
 integrable, for every `n : ℕ`,
 
-  ∫_{ω : 0 < maxPartialSum T f n ω} f dμ ≥ 0.
-
-Proof: integrate the Garsia pointwise inequality
-`M_n(ω) - M_n(T ω) ≤ 1_{M_n > 0}(ω) · f(ω)` over `μ`, and use
-`∫ M_n ∘ T dμ = ∫ M_n dμ` (measure preservation). -/
+  ∫_{ω : 0 < maxPartialSum T f n ω} f dμ ≥ 0. -/
 @[entry_point]
 theorem maximal_ergodic_inequality {μ : Measure Ω} [IsFiniteMeasure μ]
     {T : Ω → Ω} (hT : MeasurePreserving T μ μ)
@@ -992,7 +988,7 @@ end Sandwich
 
 /-! ## §6 Main theorem -/
 
-/-- The Birkhoff individual ergodic theorem.
+/-- The **Birkhoff individual ergodic theorem**.
 
 For a probability-preserving ergodic transformation `T : Ω → Ω` and an
 integrable observable `f : Ω → ℝ`, the Birkhoff time averages

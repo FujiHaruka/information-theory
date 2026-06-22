@@ -118,7 +118,7 @@ theorem klDiv_map_le {α β : Type*}
         ofReal_integral_eq_lintegral_ofReal h_int_klFun h_klFun_nn]
   exact h_step1.trans h_step2.le
 
-/-- Data processing inequality: `I(X; f(Y)) ≤ I(X; Y)` for measurable `f`. -/
+/-- **Data processing inequality**: `I(X; f(Y)) ≤ I(X; Y)` for measurable `f`. -/
 @[entry_point]
 theorem mutualInfo_le_of_postprocess
     (μ : Measure Ω) [IsFiniteMeasure μ]
