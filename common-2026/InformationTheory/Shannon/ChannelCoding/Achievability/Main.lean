@@ -14,6 +14,11 @@ Part of the longFile split of `Achievability.lean`. This part holds the
 probabilistic-method pigeonhole `exists_codebook_le_avg` and the headline theorem
 `channel_coding_achievability`, which combines the random-codebook average bound
 from `...Achievability.RandomCodebook` with the pigeonhole.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
+  Theorem 7.7.1.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
@@ -206,17 +211,10 @@ theorem complementProbReal_le_of_one_sub_le
 /-! ### Main theorem -/
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- Channel coding achievability (Cover-Thomas 7.7.1, achievability half).
-For any rate `R < I(p; W)` and target error probability `ε' > 0`, there exists
+/-- **Shannon's noisy channel coding theorem** (achievability):
+for any rate `R < I(p; W)` and target error probability `ε' > 0`, there exists
 `N` such that for all `n ≥ N` there is a block code of length `n` with at least
-`exp (n · R)` messages whose average error probability is `< ε'`.
-
-The proof instantiates the abstract random-codebook average bound
-`random_codebook_average_le` on the concrete i.i.d. ambient `Ω := ℕ → α × β`,
-`μ := iidAmbientMeasure p W`, then runs `exists_codebook_le_avg` to extract a
-single codebook from the codebook average bound. The rate slack
-`ε := (I - R)/6` ensures both the E1 term (joint AEP) and the E2 term
-`(M-1)·exp(-n(I - 3ε))` tend to 0 as `n → ∞`. -/
+`exp (n · R)` messages whose average error probability is `< ε'`. -/
 @[entry_point]
 theorem channel_coding_achievability
     (W : Channel α β) [IsMarkovKernel W]

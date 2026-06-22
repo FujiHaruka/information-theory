@@ -26,6 +26,11 @@ arbitrary encoders (counterexample: n = 2, i = 0, `X_1 := X_0`). The proof there
 takes the entropy-subadditivity route (`mutualInfo_le_sum_per_letter_of_memoryless_strong`),
 which holds for any encoder and bypasses `h_yother_zero`. The lemmas `h_markov_xprefix_of_strong`
 and `h_split_of_strong` are not called in the main proof but are retained for potential future use.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
+  Theorem 7.9.
 -/
 
 namespace InformationTheory.Shannon.ChannelCodingConverseGeneral
@@ -70,10 +75,7 @@ variable {n : ℕ}
 variable {β : Type*} [MeasurableSpace β]
 
 /-- `Fin n → β ≃ᵐ β × ({j : Fin n // j ≠ i} → β)`: extracts the `i`-th component
-and pairs it with the rest.
-
-Uses `MeasurableEquiv.piEquivPiSubtypeProd` followed by `MeasurableEquiv.funUnique`
-to collapse `{j // j = i} → β` to `β`. -/
+and pairs it with the rest. -/
 noncomputable def measurableEquivExtract (i : Fin n) :
     (Fin n → β) ≃ᵐ β × ({j : Fin n // j ≠ i} → β) :=
   -- (∀ j, β) ≃ᵐ ({j // j = i} → β) × ({j // j ≠ i} → β)
@@ -91,8 +93,8 @@ variable {n : ℕ}
 variable {α : Type*} [MeasurableSpace α] [Nonempty α] [StandardBorelSpace α]
 variable {β : Type*} [MeasurableSpace β] [Nonempty β] [StandardBorelSpace β]
 
-/-- Augmented prefix Markov chain `(X^{<i}, X_i) → X_i → Y_i` derived from
-`IsMemorylessChannelStrong.per_letter_markov` via `isMarkovChain_map_left`. -/
+/-- Augmented prefix Markov chain `(X^{<i}, X_i) → X_i → Y_i` from
+`IsMemorylessChannelStrong`. -/
 @[entry_point]
 lemma h_markov_xprefix_of_strong
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -118,10 +120,7 @@ lemma h_markov_xprefix_of_strong
     h_full_meas (hXs i) (hYs i) hf (h_strong.per_letter_markov i)
 
 /-- Conditional mutual information reshape (independent of memorylessness):
-`condMI X_i Y^n Xprefix = condMI X_i Y_i Xprefix + condMI X_i Y^{≠i} (Xprefix, Y_i)`.
-
-Reshapes `Y^n` to `(Y_i, Y^{≠i})` via `condMutualInfo_map_middle_measurableEquiv`,
-then applies `condMutualInfo_chain_rule_Y_2var`. -/
+`condMI X_i Y^n Xprefix = condMI X_i Y_i Xprefix + condMI X_i Y^{≠i} (Xprefix, Y_i)`. -/
 @[entry_point]
 lemma h_split_of_strong
     [Fintype α] [MeasurableSingletonClass α]
@@ -230,12 +229,10 @@ variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
 omit [DecidableEq M] [DecidableEq α] [DecidableEq β] in
-/-- Channel coding converse, strong memoryless DMC (Cover-Thomas Thm 7.9):
+/-- **Shannon's noisy channel coding theorem** (converse, strong memoryless DMC form):
 under `IsMemorylessChannelStrong`,
 `log |M| ≤ ∑ I(X_i; Y_i).toReal + h(Pe) + Pe · log(|M| - 1)`.
 
-The proof combines the single-shot Markov-encoder converse with
-`mutualInfo_le_sum_per_letter_of_memoryless_strong` (entropy subadditivity route).
 The argument `_h_memo : IsMemorylessChannel` is unused in the current proof but
 retained for API compatibility. -/
 @[entry_point]

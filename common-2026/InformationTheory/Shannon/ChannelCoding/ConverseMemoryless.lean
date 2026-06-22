@@ -41,11 +41,7 @@ variable {X Y Z : Type*}
 
 If `Markov μ As Zc Yo`, then `Markov μ (As, Zc) Zc Yo`: bundling the conditioner `Zc` as a
 copy on the left endpoint preserves the Markov chain (since `Zc` is determined by the
-conditioning, the extra copy carries no new conditional information).
-
-Strategy: identify `condDistrib (As, Zc) Zc μ =ᵐ[μ.map Zc] (condDistrib As Zc μ) ×ₖ Kernel.id`
-via `condDistrib_ae_eq_of_measure_eq_compProd`, then push the original γ-form through
-`g : Z × (X × Y) → Z × ((X × Z) × Y)`. -/
+conditioning, the extra copy carries no new conditional information). -/
 private lemma isMarkovChain_bundle_left_with_conditioner
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (As : Ω → X) (Zc : Ω → Z) (Yo : Ω → Y)
@@ -205,15 +201,7 @@ private lemma condDistrib_prodMk_right_ae_eq_comap
 `Yo ⫫ Bs | (Zc, As)`).
 
 This is the graphoid weak union axiom: bundle a piece of the joint left endpoint into
-the conditioner.
-
-Proof structure (`Measure.ext_of_lintegral`):
-1. Unfold the goal `IsMarkovChain` to a `compProd` equality at the level of `μ.map`.
-2. Expand `μ.map (Z, A)` via `compProd_map_condDistrib` to `(μ.map Z) ⊗ₘ K_A`.
-3. Identify `condDistrib Yo (Zc, As) μ =ᵐ[μ.map (Zc, As)] (K_Y).comap Prod.fst _`
-   by reducing to `μ.map ((Z, A), Y) = (μ.map (Z, A)) ⊗ₘ (K_Y.comap fst)` and applying
-   the original Markov to compute `μ.map (Z, A, Y)`.
-4. Match the iterated lintegral on both sides. -/
+the conditioner. -/
 private lemma isMarkovChain_weakUnion_left_to_conditioner
     {A B : Type*}
     [MeasurableSpace A] [StandardBorelSpace A] [Nonempty A]
@@ -510,14 +498,7 @@ variable {α : Type*} [MeasurableSpace α] [Nonempty α] [StandardBorelSpace α]
 variable {β : Type*} [MeasurableSpace β] [Nonempty β] [StandardBorelSpace β]
 
 /-- Per-letter Markov chain from memoryless: derive `Markov μ (Xs full) (Xs i) (Ys i)`
-from `IsMemorylessChannel`.
-
-Steps:
-1. Drop `Yother` from the left RV `(Xother, Yother)` via `Prod.fst` and `isMarkovChain_map_left`.
-2. Bundle `Xs i` to the left via `isMarkovChain_bundle_left_with_conditioner`, yielding
-   `Markov μ (Xother, Xs i) (Xs i) (Ys i)`.
-3. Reshape `(Xother, Xs i) ≃ᵐ (Fin n → α)` via `measurableEquivExtract.symm`, push left via
-   `isMarkovChain_map_left`. -/
+from `IsMemorylessChannel`. -/
 theorem per_letter_markov_of_memoryless
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
@@ -569,15 +550,7 @@ theorem per_letter_markov_of_memoryless
   exact h3
 
 /-- Outputs conditional independence from memoryless: derive
-`Markov μ Y^{≠i} (X^n) Y_i` from `IsMemorylessChannel`.
-
-Steps:
-1. Apply `isMarkovChain_weakUnion_left_to_conditioner` to the original γ-form Markov
-   `(X^{≠i}, Y^{≠i}) → X_i → Y_i` (with `As := X^{≠i}, Bs := Y^{≠i}, Zc := X_i, Yo := Y_i`),
-   yielding `Markov μ Y^{≠i} (X_i, X^{≠i}) Y_i`.
-2. Reshape conditioner `(X_i, X^{≠i}) ≃ᵐ X^n` via `measurableEquivExtract.symm`,
-   pushed via `isMarkovChain_map_right_conditioner`-style reshape. Since the conditioner
-   is bijectively related, we use `isMarkovChain_map_right_via_swap`. -/
+`Markov μ Y^{≠i} (X^n) Y_i` from `IsMemorylessChannel`. -/
 theorem outputs_cond_indep_of_memoryless
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
@@ -646,11 +619,10 @@ variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
 omit [DecidableEq M] [DecidableEq α] [DecidableEq β] in
-/-- Channel coding converse, pure memoryless DMC form.
-
-Under `h_memo : IsMemorylessChannel μ Xs Ys`, auto-derives the per-letter Markov chain
-`X^n → X_i → Y_i` and outputs conditional independence `Y^{≠i} → X^n → Y_i`, then
-delegates to `channel_coding_converse_general_memoryless_strong`. -/
+/-- **Shannon's noisy channel coding theorem** (converse, memoryless form):
+the bound holds under `h_memo : IsMemorylessChannel μ Xs Ys` alone, with both Markov
+axioms of the strong form (`channel_coding_converse_general_memoryless_strong`)
+auto-derived from `h_memo`. -/
 @[entry_point]
 theorem channel_coding_converse_general_memoryless_pure
     (μ : Measure Ω) [IsProbabilityMeasure μ]

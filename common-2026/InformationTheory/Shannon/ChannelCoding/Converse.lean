@@ -27,10 +27,9 @@ variable {α β : Type*}
   [MeasurableSpace β] [MeasurableSingletonClass β]
 
 omit [DecidableEq M] [DecidableEq α] [DecidableEq β] in
-/-- Channel coding converse, n-variable i.i.d. form (Markov encoder).
-
-Under a Markov chain `Msg → encoder ∘ Msg → Y^n` and an i.i.d. joint
-distribution assumption:
+/-- **Shannon's noisy channel coding theorem** (converse, n-letter i.i.d. form):
+under a Markov chain `Msg → encoder ∘ Msg → Y^n` and an i.i.d. joint
+distribution assumption,
 
 ```
 log |M| ≤ n · I(X_0; Y_0).toReal + h(Pe) + Pe · log(|M| - 1)

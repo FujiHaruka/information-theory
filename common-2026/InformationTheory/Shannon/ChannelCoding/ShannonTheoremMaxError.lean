@@ -41,7 +41,7 @@ variable {α β : Type*}
 /-! ## Main theorem -/
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- Shannon noisy channel coding theorem (max-error achievability): for `R < capacity W`
+/-- **Shannon's noisy channel coding theorem** (general, max-error form): for `R < capacity W`
 and any `ε > 0`, there exists `N` such that for all `n ≥ N` there is a code with
 `M ≥ ⌈exp(nR)⌉` codewords achieving max-error less than `ε`. -/
 @[entry_point]

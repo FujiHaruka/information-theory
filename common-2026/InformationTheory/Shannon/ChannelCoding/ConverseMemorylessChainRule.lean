@@ -160,9 +160,7 @@ omit [StandardBorelSpace W] [Nonempty W] in
 I((X, X'); Y | Wc) = I(X; Y | Wc) + I(X'; Y | (Wc, X))
 ```
 
-Derived from three applications of the bare 2-variable chain rule
-`mutualInfo_chain_rule` together with a `prodAssoc` reshape on the left, then
-cancellation of the common term `I(Wc; Y)` (requires `I(Wc; Y) ≠ ∞`). -/
+The cancellation of the common term `I(Wc; Y)` requires `I(Wc; Y) ≠ ∞`. -/
 theorem condMutualInfo_chain_rule_X_2var
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (X_RV : Ω → X) (X'_RV : Ω → X') (Yo : Ω → Y) (Wc : Ω → W)
@@ -241,8 +239,7 @@ omit [StandardBorelSpace W] [Nonempty W] in
 I(X; (A, B) | Wc) = I(X; A | Wc) + I(X; B | (Wc, A))
 ```
 
-Derived from the X-axis 2-var conditional chain rule by `condMutualInfo_comm`.
-Requires `I(Wc; X) ≠ ∞` (post-comm: the "Y" of the X-axis becomes the original `X`). -/
+Requires `I(Wc; X) ≠ ∞`. -/
 theorem condMutualInfo_chain_rule_Y_2var
     {α' β' : Type*}
     [MeasurableSpace α'] [StandardBorelSpace α'] [Nonempty α']

@@ -36,9 +36,8 @@ variable {α β : Type*}
   [MeasurableSpace β] [MeasurableSingletonClass β]
 
 omit [DecidableEq M] [DecidableEq α] [DecidableEq β] in
-/-- Channel coding converse, general input form (Markov encoder, chain-rule decomposition).
-
-Under a Markov chain `Msg → encoder ∘ Msg → Y^n` (without any i.i.d. assumption):
+/-- **Shannon's noisy channel coding theorem** (converse, general chain-rule form):
+under a Markov chain `Msg → encoder ∘ Msg → Y^n` (without any i.i.d. assumption),
 
 ```
 log |M| ≤ ∑ i, I(X_i; Y^n | X^{<i}).toReal + h(Pe) + Pe · log(|M| - 1)

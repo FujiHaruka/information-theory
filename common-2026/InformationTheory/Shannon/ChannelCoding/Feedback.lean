@@ -27,6 +27,11 @@ a hypothesis `h_per_letter`; its internal proof is in `FeedbackComplete`.
   `I(M; Y^n) ≤ n • C`.
 * `channel_coding_feedback_converse`: Combines Fano inequality with the above to give
   `log |M| ≤ n · C + h(Pe) + Pe · log(|M| - 1)`.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
+  Theorem 7.12.
 -/
 
 namespace InformationTheory.Shannon.ChannelCodingFeedback
@@ -100,10 +105,7 @@ variable {β : Type*} [Fintype β] [MeasurableSpace β] [MeasurableSingletonClas
   [Nonempty β] [StandardBorelSpace β]
 
 /-- Y-axis n-variable chain rule for mutual information:
-`I(Msg; Y_0, …, Y_{n-1}) = ∑ i, I(Msg; Y_i | (Y_0, …, Y_{i-1}))`.
-
-Derived from `mutualInfo_chain_rule_fin` by swapping left/right roles via
-`mutualInfo_comm` and `condMutualInfo_comm`. -/
+`I(Msg; Y_0, …, Y_{n-1}) = ∑ i, I(Msg; Y_i | (Y_0, …, Y_{i-1}))`. -/
 @[entry_point]
 theorem mutualInfo_chain_rule_Y_axis_fin
     {n : ℕ}
@@ -144,7 +146,7 @@ variable {α : Type*} [MeasurableSpace α]
 variable {β : Type*} [Fintype β] [MeasurableSpace β] [MeasurableSingletonClass β]
   [Nonempty β] [StandardBorelSpace β]
 
-/-- Chain-rule converse (Cover-Thomas 7.12, chain step, hypothesis form):
+/-- Chain-rule converse (chain step, hypothesis form):
 under the per-letter bound `I(Msg; Y_i | Y^{<i}) ≤ I(X_i; Y_i)`,
 `I(Msg; Y^n) ≤ ∑ i, I(X_i; Y_i)`.
 
@@ -164,7 +166,7 @@ theorem channel_coding_feedback_converse_chain
   rw [mutualInfo_chain_rule_Y_axis_fin μ Msg Ys hMsg hYs]
   exact Finset.sum_le_sum (fun i _ ↦ h_per_letter i)
 
-/-- Capacity upper bound (Cover-Thomas 7.12, hypothesis form):
+/-- Capacity upper bound (hypothesis form):
 per-letter bound + `I(X_i; Y_i) ≤ C` for all `i` implies `I(Msg; Y^n) ≤ n • C`
 (where `n • C` is `nsmul` in `ℝ≥0∞`).
 
@@ -203,7 +205,7 @@ variable {β : Type*} [Fintype β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
 omit [DecidableEq M] in
-/-- Feedback channel coding converse (Cover-Thomas Theorem 7.12) — hypothesis form.
+/-- Feedback channel coding converse, hypothesis form.
 
 Under the per-letter bound `I(Msg; Y_i | Y^{<i}) ≤ I(X_i; Y_i)` and `I(X_i; Y_i) ≤ C`
 for all `i`, combined with the Fano inequality:

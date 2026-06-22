@@ -24,6 +24,11 @@ import InformationTheory.Shannon.MutualInfo
 The left RV in `IsMemorylessFeedback` is `(Y^{<i}, Msg)` (prefix first, message second),
 aligning with the chain rule shape `mutualInfo μ (fun ω => (Zc ω, Xs ω)) Yo`. This
 avoids a swap step via `mutualInfo_map_left_measurableEquiv`.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
+  Theorem 7.12.
 -/
 
 namespace InformationTheory.Shannon.ChannelCodingFeedback
@@ -135,7 +140,7 @@ variable {β : Type*} [Fintype β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
 omit [DecidableEq M] in
-/-- Feedback channel coding converse, memoryless form (Cover-Thomas Thm. 7.12).
+/-- **Feedback channel coding theorem** (converse, memoryless form).
 
 Variant of `channel_coding_feedback_converse` with `h_per_letter` replaced by
 `IsMemorylessFeedback`. The per-letter inequality is discharged internally via

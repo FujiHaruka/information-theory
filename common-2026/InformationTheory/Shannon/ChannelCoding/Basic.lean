@@ -24,6 +24,11 @@ import Mathlib.Probability.Kernel.Composition.MeasureCompProd
 * Joint distribution is `p ⊗ₘ W` (`MeasureTheory.Measure.compProd`), so `(X, Y) ∼ p ⊗ₘ W`.
 * The block channel `W^n` is not constructed explicitly; the i.i.d. product is expressed as
   `Measure.pi (fun _ => jointDistribution p W)` reshaped to `(Fin n → α) × (Fin n → β)`.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
+  Theorem 7.6.1.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
@@ -306,13 +311,11 @@ lemma jointlyTypicalSet_finite
     (jointlyTypicalSet μ Xs Ys n ε).Finite := Set.toFinite _
 
 /-- Bound (b): size of the jointly typical set. The size is bounded by the size of
-the joint single-axis typical set, which (by `typicalSet_card_le` applied to the joint
-sequence over `α × β`) is at most `exp(n · (H(X, Y) + ε))`.
+the joint single-axis typical set, at most `exp(n · (H(X, Y) + ε))`.
 
-We bound `|A_ε^n|` by the cardinality of the joint typical set, which is a strictly
+This bounds `|A_ε^n|` by the cardinality of the joint typical set, which is a strictly
 weaker (larger) bound than `2^{n(H(X,Y)+ε)}` but suffices for the channel coding
-argument. The textbook bound `|A_ε^n| ≤ 2^{n(H(X,Y)+ε)}` (in `Real.exp` base) follows
-by intersecting with the joint condition. -/
+argument. -/
 @[entry_point]
 theorem jointlyTypicalSet_card_le
     [Nonempty α] [Nonempty β]
@@ -442,11 +445,7 @@ private theorem measure_inter3_tendsto_one {Ω' : Type*} [MeasurableSpace Ω']
   simpa using h_step
 
 /-- Bound (a): joint AEP probability. The probability that the block-joint pair
-`(X^n, Y^n)` lies in the jointly typical set tends to `1`.
-
-Strategy: the event "(X^n, Y^n) jointly typical" is the intersection of three single-axis
-typical events; its complement is contained in the union of three single-axis complements,
-each of which has measure tending to `0` by the single-axis `typicalSet_prob_tendsto_one`. -/
+`(X^n, Y^n)` lies in the jointly typical set tends to `1`. -/
 @[entry_point]
 theorem jointlyTypicalSet_prob_tendsto_one
     [Nonempty α] [Nonempty β]
@@ -532,11 +531,6 @@ theorem jointlyTypicalSet_prob_tendsto_one
 measure `μX^n × μY^n` (where `μX^n := μ.map (jointRV Xs n)` and similarly for `Y`) that
 `(X̃, Y)` lies in the jointly typical set is bounded by `exp(-n(I - 3ε))` (in the
 log form: `exp(n · (H(X,Y) - H(X) - H(Y) + 3ε))`).
-
-This is Cover-Thomas Theorem 7.6.1 (7.71). The key inputs are
-`typicalSet_prob_le` (new AEP lemma, point-wise upper bound on the probability of
-each typical block) applied to the `X` and `Y` axes, and `jointlyTypicalSet_card_le`
-for the cardinality of the joint typical set.
 
 Mutual independence (`iIndepFun`) along each of the `X` and `Y` axes is required
 to factorise the block laws `μ.map (jointRV Xs n) = Measure.pi (μ.map (Xs ·))`. The

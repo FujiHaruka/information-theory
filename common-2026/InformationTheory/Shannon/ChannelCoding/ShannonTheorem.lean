@@ -32,6 +32,11 @@ and the main achievability argument.
 * `mutualInfoOfChannel_restrict_to_support` — MI is invariant under restriction to support.
 * `shannon_noisy_channel_coding_theorem` — for any `R < capacity W` and `ε > 0`,
   there exists `N` such that for all `n ≥ N`, a code of size `≥ exp(n R)` with max error `< ε`.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
+  Theorems 7.5, 7.7.1.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
@@ -94,8 +99,7 @@ lemma pmfToMeasure_real_singleton
   rw [pmfToMeasure_apply_singleton]
   exact ENNReal.toReal_ofReal (hp.1 a)
 
-/-- Channel capacity (Cover-Thomas 7.5):
-`capacity W := sup { I(p; W).toReal | p ∈ stdSimplex }`. -/
+/-- Channel capacity `capacity W := sup { I(p; W).toReal | p ∈ stdSimplex }`. -/
 noncomputable def capacity (W : Channel α β) : ℝ :=
   sSup ((fun p : α → ℝ ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal) ''
         stdSimplex ℝ α)
@@ -726,9 +730,7 @@ private lemma absolutelyContinuous_map_iff_of_measurableEmbedding
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
 /-- `klDiv` is invariant under `MeasurableEmbedding`-pushforward of both arguments
-(finite-measure side). Proof: split on `μ ≪ ν`; in the AC case use the lintegral form
-`klDiv_eq_lintegral_klFun_of_ac` + `MeasurableEmbedding.rnDeriv_map` +
-`MeasurableEmbedding.lintegral_map`; in the not-AC case both sides are `∞`. -/
+(finite-measure side). -/
 private lemma klDiv_map_measurableEmbedding
     {α' β' : Type*} {_ : MeasurableSpace α'} {_ : MeasurableSpace β'} {f : α' → β'}
     (hf : MeasurableEmbedding f) (μ ν : Measure α')
@@ -978,12 +980,9 @@ lemma continuous_pSmooth (p₀ : α → ℝ) : Continuous (fun δ : ℝ ↦ pSmo
     |>.add (continuous_id.mul continuous_const)
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- Shannon noisy channel coding theorem (Cover-Thomas 7.7.1): for any `R < capacity W`
+/-- **Shannon's noisy channel coding theorem**: for any `R < capacity W`
 and `ε > 0`, there exists `N` such that for all `n ≥ N` there is a code of size `≥ exp(n R)`
-achieving max error probability `< ε`.
-
-Proof: extract `p₀` with `R < I(p₀; W)`, smooth to `pSmooth p₀ δ₀` to get full support,
-then apply the expurgation wrapper `channel_coding_achievability_max_error`. -/
+achieving max error probability `< ε`. -/
 @[entry_point]
 theorem shannon_noisy_channel_coding_theorem
     (W : Channel α β) [IsMarkovKernel W]
