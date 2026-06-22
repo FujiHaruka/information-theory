@@ -172,7 +172,7 @@ lemma lintegral_lt_top_of_monotone_tendsto_le {β : Type*} {mβ : MeasurableSpac
   exact lt_of_le_of_lt (iSup_le hf_bound) hC
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Auxiliary integrability** (key technical lemma for both integrability theorems).
+/-- Auxiliary integrability (key technical lemma for both integrability theorems).
 
 For any `m`-strongly-measurable `g : (∀ _ : ℤ, α) → ℝ` with `g ∈ [0, 1]` a.s. and
 `g =ᵐ μZ[1_{coord0=a} | m]`, the function `1_{coord0=a} · (-log g)` is `μZ`-integrable.
@@ -383,7 +383,7 @@ theorem integrable_pmfLogCondInfty :
   exact condProbInfty_eq_condExp_tail μ p a
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **AE positivity of the realized conditional probability**.
+/-- AE positivity of the realized conditional probability.
 
 Almost surely under `μZ`, the infinite-past conditional probability of the
 realized `coord0` value is strictly positive. This is a standard fact: the
@@ -469,13 +469,13 @@ lemma ae_condProbInfty_coord0_pos :
   exact h_bad_zero a
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Forward Lévy upward convergence**: per-step conditional log-likelihood on
+/-- Forward Lévy upward convergence: per-step conditional log-likelihood on
 longer-and-longer finite past converges to `pmfLogCondInfty`. Application of
 `MeasureTheory.tendsto_ae_condExp` (one application per `a : α`, combined
 by continuity of `-log` and the inner-sum identity
 `∑ a, indicator(coord0=a) * f a = f (coord0 x)`).
 
-**Caveat**: convergence holds on the AE set where
+Caveat: convergence holds on the AE set where
 `condProbInfty (coord0 x) x > 0` (provided by `ae_condProbInfty_coord0_pos`);
 on the null set where the conditional probability of the realized coord0
 value is `0`, `Real.log` is discontinuous, and we report
@@ -517,7 +517,7 @@ theorem pmfLogCondPast_tendsto_pmfLogCondInfty :
   exact (hcont.tendsto.comp hlimit).neg
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Pull-out identity for `pmfLogCondPast`**: integrating
+/-- Pull-out identity for `pmfLogCondPast`: integrating
 `1_{coord_0=a} * (-log condProbPast a k)` equals integrating
 `negMulLog(condProbPast a k)`.
 
@@ -681,7 +681,7 @@ private lemma condEntropy_μZ_eq_condEntropy_μ (k : ℕ) :
   exact joint_pastBlock_coord0_eq μ p k
 
 omit [DecidableEq α] in
-/-- **Per-step integral identity**: integrating `pmfLogCondPast k` against `μZ`
+/-- Per-step integral identity: integrating `pmfLogCondPast k` against `μZ`
 gives `conditionalEntropyTail μ p k`.
 
 The proof structure:
@@ -712,7 +712,7 @@ theorem integral_pmfLogCondPast_eq_conditionalEntropyTail (k : ℕ) :
   rfl
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Pull-out identity for `pmfLogCondInfty`** (analogue of
+/-- Pull-out identity for `pmfLogCondInfty` (analogue of
 `integral_indicator_mul_negLog_condProbPast` for the infinite-past condExp):
 integrating `1_{coord_0=a} * (-log condProbInfty a)` equals integrating
 `negMulLog(condProbInfty a)`. -/
@@ -802,7 +802,7 @@ private lemma integral_pmfLogCondInfty_eq_sum :
   exact integral_indicator_mul_negLog_condProbInfty μ p a
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **DCT step for each summand**: by forward Lévy a.s. convergence of
+/-- DCT step for each summand: by forward Lévy a.s. convergence of
 `condProbPast a k → condProbInfty a` and the uniform bound `negMulLog ∈ [0, 1]`
 on `[0, 1]`, the integral `∫ negMulLog(condProbPast a k)` converges to
 `∫ negMulLog(condProbInfty a)`. -/
@@ -850,7 +850,7 @@ private lemma tendsto_integral_negMulLog_condProbPast (a : α) :
     h_meas h_bound_int h_bound h_ae
 
 omit [DecidableEq α] in
-/-- **The SMB integral identity** `∫ pmfLogCondInfty dμZ = entropyRate μ p`.
+/-- The SMB integral identity `∫ pmfLogCondInfty dμZ = entropyRate μ p`.
 
 Combines:
 * `integral_pmfLogCondPast_eq_conditionalEntropyTail` — the per-step identity;

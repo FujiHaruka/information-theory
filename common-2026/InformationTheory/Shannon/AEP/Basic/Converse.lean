@@ -102,7 +102,7 @@ private lemma indepFun_Xs_prefix_of_iIndepFun
   exact h_lifted
 
 omit [DecidableEq α] in
-/-- **Entropy chain rule for i.i.d. blocks**: `H(X^n) = n · H(X_0)`. -/
+/-- Entropy chain rule for i.i.d. blocks: `H(X^n) = n · H(X_0)`. -/
 @[entry_point]
 theorem entropy_jointRV_eq_n_smul
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -273,7 +273,7 @@ theorem source_coding_per_n_bound
 /-! ### Converse theorem in `Filter.liminf` form -/
 
 omit [DecidableEq α] in
-/-- **Source coding theorem, weak converse**:
+/-- Source coding theorem, weak converse:
 For any block code `(c_n, d_n)` with `M_n` codewords and i.i.d. discrete source,
 if the error probability vanishes then the rate is at least the entropy.
 

@@ -1026,7 +1026,7 @@ sequence of binning encoders and joint typicality decoders whose error probabili
 tends to `0`. -/
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Slepian–Wolf full rate region achievability** (Cover–Thomas 15.4.1). For an
+/-- Slepian–Wolf full rate region achievability (Cover–Thomas 15.4.1). For an
 i.i.d. source `(Xⁿ, Yⁿ)` with full support, any rate pair `(R_X, R_Y)` with
 `R_X > H(X|Y)`, `R_Y > H(Y|X)`, `R_X + R_Y > H(X,Y)` is achievable: there are
 codebook sizes `M_X, M_Y` with the required asymptotic rates and encoders/decoders

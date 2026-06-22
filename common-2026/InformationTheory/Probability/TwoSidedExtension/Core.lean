@@ -103,7 +103,7 @@ lemma obsZ_succ_shift {J : Finset ℤ} (N k : ℕ)
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [IsProbabilityMeasure μ] in
-/-- **N-invariance of `obsZ` under push-forward** (stationarity, single-shift step).
+/-- N-invariance of `obsZ` under push-forward (stationarity, single-shift step).
 For any valid shift `N`, pushing forward by `obsZ μ p (N + k) J` agrees with pushing
 forward by `obsZ μ p N J`. -/
 lemma map_obsZ_succ {J : Finset ℤ} (N k : ℕ) (hN : ∀ j ∈ J, (0 : ℤ) ≤ j + N) :
@@ -114,7 +114,7 @@ lemma map_obsZ_succ {J : Finset ℤ} (N k : ℕ) (hN : ∀ j ∈ J, (0 : ℤ) �
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [IsProbabilityMeasure μ] in
-/-- **N-invariance of the pushforward law** (general form): any two valid shifts
+/-- N-invariance of the pushforward law (general form): any two valid shifts
 yield the same pushforward measure. -/
 theorem map_obsZ_eq_of_shift {J : Finset ℤ} (N₁ N₂ : ℕ)
     (h₁ : ∀ j ∈ J, (0 : ℤ) ≤ j + N₁)
@@ -147,7 +147,7 @@ instance instIsProbabilityMeasure_shiftedMarginal (J : Finset ℤ) :
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [IsProbabilityMeasure μ] in
-/-- **Projective consistency**: for `J ⊆ I`, restricting `shiftedMarginal μ p I` along
+/-- Projective consistency: for `J ⊆ I`, restricting `shiftedMarginal μ p I` along
 the inclusion gives `shiftedMarginal μ p J`. -/
 @[entry_point]
 theorem isProjectiveMeasureFamily_shiftedMarginal :
@@ -215,7 +215,7 @@ omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
 /-- σ-additivity input: for any antitone sequence of measurable cylinders with empty
 intersection, the content tends to 0.
 
-The proof uses the **finite-type Cantor argument**: equipping `α` with the discrete
+The proof uses the finite-type Cantor argument: equipping `α` with the discrete
 topology turns `ℤ → α` into a compact Hausdorff space (`Pi.compactSpace` from finite
 discrete factors), every cylinder `cylinder I S` is closed (preimage of a finite, hence
 closed, set), and every closed subset of a compact space is compact. Cantor's
@@ -617,7 +617,7 @@ end Coupling
 
 /-! ## `ergodic_shiftZ`
 
-Two-sided shift ergodicity via **cylinder approximation + ℕ-factor transfer**.
+Two-sided shift ergodicity via cylinder approximation + ℕ-factor transfer.
 
 For a `shiftZ`-invariant measurable set `A ⊆ (ℤ → α)`:
 
@@ -835,7 +835,7 @@ lemma measurable_natProj_posSigma :
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [IsProbabilityMeasure μ] in
 /-- A `posSigma`-measurable set is the `natProj`-preimage of a measurable set
-in `ℕ → α`. This is the **factoring lemma**: positive-index events factor through `natProj`. -/
+in `ℕ → α`. This is the factoring lemma: positive-index events factor through `natProj`. -/
 lemma exists_preimage_natProj_of_posSigma
     {A : Set (∀ _ : ℤ, α)} (hA : MeasurableSet[posSigma (α := α)] A) :
     ∃ B : Set (∀ _ : ℕ, α), MeasurableSet B ∧ A = natProj ⁻¹' B := by

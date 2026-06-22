@@ -184,7 +184,7 @@ variable {α : Type*} [Fintype α] [Nonempty α]
 variable {β : Type*} [Fintype β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β]
 
-/-- Slepian–Wolf converse, **X bound**:
+/-- Slepian–Wolf converse, X bound:
 `log Mx ≥ H(X | Y) - h(Pe_X) - Pe_X · log(|α| - 1)`,
 where `Pe_X = μ {ω | Xs ω ≠ decX (Ys ω, eX (Xs ω))}` is the marginal `X` error and
 `decX : β × Fin Mx → α` is the `X` component of the joint decoder,
@@ -264,7 +264,7 @@ theorem slepian_wolf_converse_X
   -- log Mx ≥ H(EX) ≥ H(EX | Ys) ≥ H(X | Ys) - H(X | Ys, EX) ≥ H(X | Ys) - δ(Pe_X)
   linarith
 
-/-- Slepian–Wolf converse, **Y bound** (the `X`/`Y`-symmetric form):
+/-- Slepian–Wolf converse, Y bound (the `X`/`Y`-symmetric form):
 `log My ≥ H(Y | X) - h(Pe_Y) - Pe_Y · log(|β| - 1)`. -/
 @[entry_point]
 theorem slepian_wolf_converse_Y
@@ -332,7 +332,7 @@ theorem slepian_wolf_converse_Y
     fano_inequality_with_side_info μ Ys Xs EY decY hYs hXs hEY hdec hcard
   linarith
 
-/-- Slepian–Wolf converse, **sum bound**:
+/-- Slepian–Wolf converse, sum bound:
 `log Mx + log My ≥ H(X, Y) - h(Pe) - Pe · log(|α × β| - 1)`,
 where `Pe = μ {ω | (Xs ω, Ys ω) ≠ dec (eX (Xs ω), eY (Ys ω))}` is the joint error. -/
 @[entry_point]

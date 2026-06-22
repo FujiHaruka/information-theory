@@ -28,11 +28,11 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 /-! ## Forward filtration of the finite past + `pmfLogCond` Lévy convergence
 
 The forward filtration is the monotone (in `ℕ`) family of σ-algebras `pastSigma k`
-of events depending only on the **finite past** `{coord_i : -k ≤ i ≤ -1}` of length
+of events depending only on the finite past `{coord_i : -k ≤ i ≤ -1}` of length
 `k`. As `k → ∞`, the filtration's `⨆`-limit is the σ-algebra
-`cylinderEvents {i : ℤ | i ≤ -1}` of the **infinite negative past**.
+`cylinderEvents {i : ℤ | i ≤ -1}` of the infinite negative past.
 
-This is the shape needed by **`MeasureTheory.Integrable.tendsto_ae_condExp`**
+This is the shape needed by `MeasureTheory.Integrable.tendsto_ae_condExp`
 (forward Lévy upward convergence): if `g` is `(⨆ k, ℱ k)`-strongly measurable
 and integrable, then `μ[g | ℱ k] → g` a.s.
 
@@ -92,7 +92,7 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
 @[simp] lemma pastFiltration_apply (k : ℕ) :
     (pastFiltration (α := α)) k = pastSigma (α := α) k := rfl
 
-/-- The σ-algebra of events depending on the **infinite negative past**
+/-- The σ-algebra of events depending on the infinite negative past
 `{coord_i : i ≤ -1}`. This is `⨆ k, pastSigma k`. -/
 @[reducible] def negPastSigma : MeasurableSpace (∀ _ : ℤ, α) :=
   cylinderEvents (X := fun _ : ℤ ↦ α) {i : ℤ | i ≤ -1}
@@ -205,7 +205,7 @@ noncomputable def condProbInfty (a : α) : (∀ _ : ℤ, α) → ℝ :=
     | ⨆ k : ℕ, (pastFiltration (α := α)) k]
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Forward Lévy upward convergence**: `condProbPast a k → condProbInfty a` a.s.
+/-- Forward Lévy upward convergence: `condProbPast a k → condProbInfty a` a.s.
 as `k → ∞`. Direct application of
 `MeasureTheory.Integrable.tendsto_ae_condExp` (Lévy's upward theorem). -/
 @[entry_point]

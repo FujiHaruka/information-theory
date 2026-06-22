@@ -212,7 +212,7 @@ private lemma typicalSet_compl_eq
   rw [h_sum]
 
 omit [DecidableEq α] in
-/-- **Explicit-rate AEP**: for any `ε, η > 0`, there is `N(ε, η)` such that for all
+/-- Explicit-rate AEP: for any `ε, η > 0`, there is `N(ε, η)` such that for all
 `n ≥ N`, the typical set has μ-measure ≥ `1 - η`. The explicit bound is
 `N := ⌈pmfLogVariance / (η · ε²)⌉ + 1`, so `n ≥ N ⇒ pmfLogVariance / (n · ε²) ≤ η`. -/
 @[entry_point]
@@ -383,7 +383,7 @@ private theorem badEvt_toReal_le_of_good_bound
   rw [h_compl_eq]; linarith
 
 omit [DecidableEq α] in
-/-- **Joint AEP — closed-form rate**: for any `ε, η > 0`, there exists `N` such that for all
+/-- Joint AEP — closed-form rate: for any `ε, η > 0`, there exists `N` such that for all
 `n ≥ N`, the jointly typical set has μ-measure ≥ `1 - η`. The bound `N` is built from three
 independent applications of `typicalSet_prob_ge_of_rate` (X, Y, Z = X × Y), with `η / 3` each
 plus a union bound (Bonferroni). -/

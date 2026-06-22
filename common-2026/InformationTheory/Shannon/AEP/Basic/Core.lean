@@ -132,7 +132,7 @@ lemma indepFun_logLikelihood
   simpa [logLikelihood_eq_comp] using h.comp hpf hpf
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Probability AEP — almost sure version**: for an i.i.d. discrete sequence
+/-- Probability AEP — almost sure version: for an i.i.d. discrete sequence
 `Xs : ℕ → Ω → α` with finite alphabet `α`, the empirical entropy estimator
 `(1/n) ∑ i, (−log P(Xs i ω))` converges almost surely to the entropy `H(Xs 0)`. -/
 @[entry_point]
@@ -162,7 +162,7 @@ theorem aep_ae
   simpa [h_int_eq] using hω
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Probability AEP — convergence in probability**: the empirical entropy estimator
+/-- Probability AEP — convergence in probability: the empirical entropy estimator
 converges to `entropy μ (Xs 0)` in probability. -/
 @[entry_point]
 theorem aep_inProbability
@@ -208,7 +208,7 @@ theorem aep_inProbability
 
 /-! ### Typical set `T_ε^n` -/
 
-/-- **Typical set**: blocks `x : Fin n → α` whose empirical entropy is within `ε`
+/-- Typical set: blocks `x : Fin n → α` whose empirical entropy is within `ε`
 of the true entropy `H(Xs 0)`. -/
 noncomputable def typicalSet
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (n : ℕ) (ε : ℝ) :
@@ -233,7 +233,7 @@ theorem measurableSet_typicalSet
   exact (Set.toFinite (typicalSet μ Xs n ε)).measurableSet
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Size bound**: `|T_ε^n| ≤ exp (n · (H + ε))`. The bound is stated with
+/-- Size bound: `|T_ε^n| ≤ exp (n · (H + ε))`. The bound is stated with
 `Real.exp` rather than `2^x` to avoid the `log 2` plumbing; the textbook form
 follows by re-basing the logarithm.
 
@@ -357,7 +357,7 @@ theorem typicalSet_card_le
     linarith
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Typicality probability**: `P(jointRV Xs n ∈ T_ε^n) → 1`.
+/-- Typicality probability: `P(jointRV Xs n ∈ T_ε^n) → 1`.
 
 The event `{ω | jointRV Xs n ω ∈ typicalSet μ Xs n ε}` is the complement of
 `{ω | ε ≤ |...|}` from `aep_inProbability`, so the probability tends to

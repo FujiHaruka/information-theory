@@ -354,7 +354,7 @@ lemma codebookSize_log_div_tendsto
   have h_const : Tendsto (fun _ : ℕ ↦ R) atTop (𝓝 R) := tendsto_const_nhds
   exact tendsto_of_tendsto_of_tendsto_of_le_of_le' h_const h_g_tendsto h_lower h_upper
 
-/-- **Source coding theorem, achievability**:
+/-- Source coding theorem, achievability:
 For any rate `R > entropy μ (Xs 0)`, there exists a block code with rate `R` and
 vanishing error. -/
 @[entry_point]
@@ -459,7 +459,7 @@ theorem mem_achievableRates_of_gt_entropy
   obtain ⟨R', hR'⟩ := hRate.bddAbove_range
   exact ⟨R', fun n ↦ hR' (Set.mem_range_self n)⟩
 
-/-- **Source coding theorem**:
+/-- Source coding theorem:
 The infimum of asymptotic rates of achievable block source codes equals the
 entropy of the source. -/
 @[entry_point]
@@ -499,7 +499,7 @@ mutual independence (`iIndepFun`), not just pairwise independence. It is obtaine
 via `iIndepFun_iff_map_fun_eq_pi_map` after restricting indices `ℕ → Fin n` with
 `iIndepFun.precomp Fin.val_injective`. -/
 
-/-- **Point-wise upper bound on typical-set mass**: `(μ.map (jointRV Xs n)).real {x}
+/-- Point-wise upper bound on typical-set mass: `(μ.map (jointRV Xs n)).real {x}
 ≤ exp(- n · (H - ε))` for any `x ∈ T_ε^n`. -/
 @[entry_point]
 theorem typicalSet_prob_le
@@ -624,7 +624,7 @@ inequality `(∑ pmfLog)/n - H < ε`); the size lower bound is obtained by
 rearranging `μ(T) = ∑_{x∈T} p(x) ≤ |T| · exp(-n(H-ε))` (the point-wise upper
 bound). -/
 
-/-- **Point-wise lower bound on typical-set mass**: for `x ∈ T_ε^n`,
+/-- Point-wise lower bound on typical-set mass: for `x ∈ T_ε^n`,
 `exp(-n · (H + ε)) ≤ (μ.map (jointRV Xs n)).real {x}`. Dual of
 `typicalSet_prob_le`. -/
 @[entry_point]
@@ -714,7 +714,7 @@ theorem typicalSet_prob_ge
     rw [hreal]
     exact hle
 
-/-- **Size lower bound on typical set**: if `μ(T_ε^n) ≥ 1 - η`, then
+/-- Size lower bound on typical set: if `μ(T_ε^n) ≥ 1 - η`, then
 `(1-η) · exp(n · (H - ε)) ≤ |T_ε^n|`. Combined with `typicalSet_prob_tendsto_one`
 this yields the eventually-large-n form of Cover-Thomas 3.1.2 (b)(4). -/
 @[entry_point]

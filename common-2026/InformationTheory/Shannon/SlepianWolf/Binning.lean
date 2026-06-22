@@ -6,8 +6,8 @@ import Mathlib.MeasureTheory.Constructions.Pi
 /-!
 # Slepian–Wolf random binning machinery
 
-This file introduces the **random-binning measure** `binningMeasure α n M` on the
-hash-function space `(Fin n → α) → Fin M`, plus the **collision-probability**
+This file introduces the random-binning measure `binningMeasure α n M` on the
+hash-function space `(Fin n → α) → Fin M`, plus the collision-probability
 collapse `𝔼_f[1_{f x = f x'}] = 1/M` for `x ≠ x'` (and `= 1` for `x = x'`).
 
 ## Main definitions
@@ -41,7 +41,7 @@ variable {α : Type*} [Fintype α] [Nonempty α]
 
 /-! ## The random binning measure and basic instances -/
 
-/-- **Random binning measure.** Each input sequence `x ∈ (Fin n → α)` is hashed
+/-- Random binning measure. Each input sequence `x ∈ (Fin n → α)` is hashed
 independently to a uniformly random bin index in `Fin M`. The total law on the
 hash-function space `(Fin n → α) → Fin M` is the product of `|α|^n` copies of
 `uniformOn (Set.univ : Set (Fin M))`.
@@ -52,7 +52,7 @@ Encoder-side mirror of `ChannelCodingAchievability.codebookMeasure`:
 * `binningMeasure α n M` = `Measure.pi (fun _ : (Fin n → α) => uniformOn univ)`
   ("`|α|^n` hash bins drawn uniformly").
 
-The outer-`Measure.pi` index is the **input-sequence space** `(Fin n → α)`,
+The outer-`Measure.pi` index is the input-sequence space `(Fin n → α)`,
 which is a `Fintype` because `α` is finite. -/
 noncomputable def binningMeasure
     (α : Type*) [Fintype α] [MeasurableSpace α]
@@ -67,7 +67,7 @@ instance binningMeasure.instIsProbabilityMeasure
   unfold binningMeasure
   infer_instance
 
-/-- **Singleton mass.** For any hash function `f : (Fin n → α) → Fin M`,
+/-- Singleton mass. For any hash function `f : (Fin n → α) → Fin M`,
 its `binningMeasure`-mass is `(1/M)^{|α|^n}` (each of the `|α|^n` input
 sequences independently picks one of `M` bins). -/
 @[entry_point]

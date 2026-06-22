@@ -5,7 +5,7 @@ import InformationTheory.Shannon.ChannelCoding.Basic
 /-!
 # Slepian–Wolf conditional typical slice
 
-This file publishes the **conditional typical slice size bound**, the key new
+This file publishes the conditional typical slice size bound, the key new
 ingredient for the full Slepian–Wolf rate region (Cover–Thomas Theorem 15.4.1).
 For a fixed `Y`-block `y : Fin n → β`, the `X`-fiber of the jointly typical set
 is bounded in size by `exp(n · (H(X|Y) + 2ε))`, where `H(X|Y) := H(X, Y) - H(Y)`.
@@ -45,7 +45,7 @@ variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
 
 /-! ## Definition of the conditional typical slice -/
 
-/-- The **conditional typical slice** at `y`: the X-fiber of the jointly
+/-- The conditional typical slice at `y`: the X-fiber of the jointly
 typical set `jointlyTypicalSet μ Xs Ys n ε` at the Y-block `y`. Each
 element `x` of this slice forms a jointly typical pair `(x, y)`. -/
 noncomputable def conditionalTypicalSlice
@@ -133,7 +133,7 @@ private lemma jointRV_jointSequence_proj_measureReal_eq
   rw [Measure.map_apply hZmeas h_meas_pre, Measure.map_apply hYmeas h_meas_y, hpre_eq]
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- **Conditional typical slice size bound**: for any `Y`-block `y`, the
+/-- Conditional typical slice size bound: for any `Y`-block `y`, the
 cardinality of the `X`-fiber of the jointly typical set at `y` is at most
 `exp(n · (H(X, Y) - H(Y) + 2ε))`, equivalently `exp(n · (H(X|Y) + 2ε))`. -/
 @[entry_point]

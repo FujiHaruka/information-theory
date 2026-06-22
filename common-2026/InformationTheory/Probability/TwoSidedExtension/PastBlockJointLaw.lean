@@ -291,7 +291,7 @@ lemma map_obs_blockRV_apply_singleton (k : ℕ) (a : α) (s : Fin k → α) :
       exact hj
 
 omit [DecidableEq α] [Nonempty α] in
-/-- **Joint-law equality** (the key bridge for the integral identity).
+/-- Joint-law equality (the key bridge for the integral identity).
 
 The pushforward of `μZ` under the joint map `x ↦ (coord0 x, pastBlock k x)`
 equals the pushforward of `μ` under `ω ↦ (p.obs k ω, p.blockRV k ω)`.
@@ -327,7 +327,7 @@ theorem joint_pastBlock_coord0_eq (k : ℕ) :
     map_obs_blockRV_apply_singleton μ p k a s]
 
 omit [DecidableEq α] in
-/-- **Conditional expectation identification**: `condProbPast a k` agrees a.s.
+/-- Conditional expectation identification: `condProbPast a k` agrees a.s.
 with the `condDistrib`-form regular conditional probability built from
 `(coord0, pastBlock k)`. -/
 lemma condProbPast_ae_eq_condDistrib (a : α) (k : ℕ) :

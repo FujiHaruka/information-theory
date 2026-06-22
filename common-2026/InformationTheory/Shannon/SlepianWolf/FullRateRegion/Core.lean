@@ -38,7 +38,7 @@ noncomputable def swJointTypicalDecoder
 
 /-! ## The four error events -/
 
-/-- `E_0`: the **true** source pair is not jointly typical. -/
+/-- `E_0`: the true source pair is not jointly typical. -/
 def swError_E0
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (n : ℕ) (ε : ℝ) : Set Ω :=
@@ -81,7 +81,7 @@ def swError_EXY
 /-! ## Decoder equation under a unique witness -/
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- If `(X^n, Y^n)` is jointly typical **and** is the **unique** source pair (across
+/-- If `(X^n, Y^n)` is jointly typical and is the unique source pair (across
 all source pairs) compatible with its bin pair under joint typicality, then the
 joint typical decoder recovers it exactly. -/
 lemma swJointTypicalDecoder_eq_of_unique
@@ -121,7 +121,7 @@ lemma swJointTypicalDecoder_eq_of_unique
 
 omit [DecidableEq α] [DecidableEq β] in
 set_option linter.unusedVariables false in
-/-- **Main 4-way error decomposition.** The Slepian–Wolf error probability under the
+/-- Main 4-way error decomposition. The Slepian–Wolf error probability under the
 joint typicality decoder is bounded above by the sum of probabilities of the four
 error events `E_0`, `E_X`, `E_Y`, `E_{XY}`.
 
