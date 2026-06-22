@@ -51,7 +51,7 @@ variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 
 /-! ## Block-level n-letter converse -/
 
-/-- Stage 1 — block-level n-letter rate-distortion converse.
+/-- **Rate-distortion theorem** (converse, n-letter block form).
 
 For any block lossy code `c : LossyCode M n α β` (with `encoder : (Fin n → α) → Fin M`,
 `decoder : Fin M → (Fin n → β)`) and i.i.d. source `P_X` on `α`, if
@@ -64,9 +64,7 @@ function satisfies
 
 This is a direct `(α := Fin n → α, β := Fin n → β, M := Fin M)` instantiation of
 `rate_distortion_converse_single_shot_specified` with the block distortion as the
-distortion measure. The proof packages the lossy code into the
-`(encoder, decoder)` shape required by the parent theorem and routes the
-i.i.d. source through `Measure.pi`. -/
+distortion measure. -/
 @[entry_point]
 theorem rate_distortion_converse_n_letter_block
     [Fintype α] [Nonempty α] [MeasurableSingletonClass α]
@@ -413,17 +411,12 @@ private lemma entropy_pi_eq_sum_of_indep
     indepFun_prefix_of_iIndepFun_fin μ Xs hXs hindep i
   exact condEntropy_eq_entropy_of_indepFun μ (Xs i) prefix_i (hXs i) hprefix_meas h_indep
 
-/-- Gateway piece (b): conditional-entropy subadditivity on the block.
-For any `Xs : Fin n → Ω → α` and any reconstruction family `Xhs : Fin n → Ω → β`,
+/-- Conditional-entropy subadditivity on the block: for any `Xs : Fin n → Ω → α`
+and any reconstruction family `Xhs : Fin n → Ω → β`,
 ```
 H(X^n | X̂^n) ≤ ∑ i, H(X_i | X̂_i).
 ```
-Encoder/decoder-agnostic; no independence needed. This is the conditional-entropy
-analogue of subadditivity, obtained from the conditional chain rule
-`condEntropy_pi_chain_rule` (`H(X^n | X̂^n) = ∑ H(X_i | X̂^n, X^{<i})`) followed by
-dropping the extra conditioners `(X̂^n, X^{<i})` down to `X̂_i` via
-`condEntropy_le_condEntropy_of_pair` (conditioning on a superset can only lower
-conditional entropy).
+Encoder/decoder-agnostic; no independence needed.
 
 @audit:ok -/
 lemma condEntropy_pi_le_sum_condEntropy_per_letter
@@ -525,18 +518,11 @@ lemma condEntropy_pi_le_sum_condEntropy_per_letter
     (fun ω ↦ (XhnoI ω, Xprefix ω)) (hXs i) (hXhs i)
     (hXhnoI_meas.prodMk hXprefix_meas)
 
-/-- Stage 2 core: mutual-information superadditivity for an independent source.
-For `Xs : Fin n → Ω → α` *mutually independent* and any reconstruction family
+/-- Mutual-information superadditivity for an independent source: for
+`Xs : Fin n → Ω → α` *mutually independent* and any reconstruction family
 `Xhs : Fin n → Ω → β`,
 ```
 ∑ i, (I(X_i; X̂_i)).toReal ≤ (I(X^n; X̂^n)).toReal.
-```
-Standard chain:
-```
-I(X^n; X̂^n) = H(X^n) - H(X^n | X̂^n)
-            = ∑ H(X_i) - H(X^n | X̂^n)            -- independence (Block, equality)
-            ≥ ∑ H(X_i) - ∑ H(X_i | X̂_i)           -- gateway (b)
-            = ∑ (H(X_i) - H(X_i | X̂_i)) = ∑ I(X_i; X̂_i).
 ```
 The independence hypothesis `hindep` is a genuine precondition: it is consumed
 inside `entropy_pi_eq_sum_of_indep` to collapse `H(X^n)` to `∑ H(Xᵢ)`, and
@@ -653,7 +639,7 @@ private theorem blockDistortion_eq_avg_perLetter
           rw [LossyCode.expectedBlockDistortion]
           rfl
 
-/-- Single-letterized n-letter rate-distortion converse.
+/-- **Rate-distortion theorem** (converse, n-letter single-letterized form).
 
 Given a block lossy code, an i.i.d. source `P_X`, and a probability space
 `(Ω, μ)` where `Xs i : Ω → α` are i.i.d. copies of `P_X` (mutual independence
@@ -662,21 +648,6 @@ the single-letter rate-distortion function satisfies
 ```
 (rateDistortionFunction (d as ℝ-valued) P_X D).toReal ≤ (1/n) · Real.log M.
 ```
-
-The proof composes:
-1. Block-distortion identity: `(1/n) ∑ᵢ Dᵢ = c.expectedBlockDistortion P_X d`
-   via the product law `μ.map X^n = Measure.pi (fun _ => P_X)`
-   (`iIndepFun_iff_map_fun_eq_pi_map` + `hXs_law`), `integral_map`, and Fubini
-   linearity over the finite sum.
-2. Antitonicity: `R(P_X, D) ≤ R(P_X, (1/n)∑Dᵢ)` since `(1/n)∑Dᵢ ≤ D` (`hD`).
-3. n-way Jensen: `R(P_X, (1/n)∑Dᵢ) ≤ ∑ ofReal(1/n) · R(P_X, Dᵢ)` built by
-   induction on `n` from the binary convexity `rateDistortionFunction_convexOn`
-   (`rateDistortionFunction_jensen_uniform`).
-4. Per-letter feasibility: `R(P_X, Dᵢ) ≤ I(Xᵢ; X̂ᵢ)` via
-   `rateDistortionFunction_le_mutualInfo_perLetter` (`μ.map (Xs i) = P_X`).
-5. MI superadditivity (independent source): `∑ I(Xᵢ; X̂ᵢ) ≤ I(X^n; X̂^n)` via
-   `mutualInfo_superadditive_of_indep`.
-6. Block MI bound: `I(X^n; X̂^n).toReal ≤ log M` (`mutualInfo_block_le_log_card`).
 
 The independence and i.i.d. preconditions (`hindep` + `hXs_law`) are genuine: the
 conclusion is false without them (`n = 2, X₁ = X₂` gives `R = log 2 > (1/2)log 2`).

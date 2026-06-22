@@ -33,6 +33,10 @@ Real.log M ≥ entropy μ W                    -- entropy_le_log_card
 
 The distortion measure is `d : α → β → ℝ` with no non-negativity assumption.
 Finiteness of the mutual information is taken as a hypothesis.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 10.4.
 -/
 
 namespace InformationTheory.Shannon
@@ -122,7 +126,7 @@ private lemma expectedDistortion_map
   unfold expectedDistortion
   rw [integral_map (hX.prodMk hXh).aemeasurable hd.aestronglyMeasurable]
 
-/-- Single-shot rate-distortion converse.
+/-- **Rate-distortion theorem** (converse, single-shot form).
 
 For any single-shot lossy code `(encoder, decoder)` with image alphabet `M` and
 source random variable `X : Ω → α`, the rate-distortion function evaluated at
@@ -131,7 +135,7 @@ the achieved distortion `D̃ := 𝔼 d(X, decoder(encoder X))` is bounded above 
 ```
 (rateDistortionFunction d P_X D̃).toReal ≤ Real.log |M|.
 ```
-This is the single-shot form of Cover–Thomas 10.4. -/
+-/
 @[entry_point]
 theorem rate_distortion_converse_single_shot
     [Fintype α] [Nonempty α] [MeasurableSingletonClass α]

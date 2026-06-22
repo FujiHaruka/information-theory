@@ -26,6 +26,10 @@ singular components) → `klDiv_mixture_le` → `rateDistortionFunction_convexOn
 The infimum over feasible joints is pressed through
 `ENNReal.mul_iInf_of_ne` / `iInf_add` / `add_iInf`, with the boundary weights
 `λ = 0, 1` handled in separate branches.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 10.4.
 -/
 
 namespace InformationTheory.Shannon
@@ -362,18 +366,12 @@ theorem klDiv_mixture_le
 
 /-! ### Convexity of the rate-distortion function (infimum press) -/
 
-/-- `R(D)` is convex: the rate-distortion function is convex in the distortion
-threshold (Cover–Thomas 10.4),
+/-- The rate-distortion function is convex in the distortion threshold,
 `R(λ D₁ + (1-λ) D₂) ≤ λ R(D₁) + (1-λ) R(D₂)`.
 
-Take any feasible witnesses `ν₁` (at `D₁`) and `ν₂` (at `D₂`); their convex
-combination `mixtureMeasure λ ν₁ ν₂` is feasible at `λ D₁ + (1-λ) D₂`
-(`mixtureMeasure_feasible`), and the joint convexity of `klDiv`
-(`klDiv_mixture_le`) gives the per-pair bound; pressing the `iInf` over feasible
-witnesses yields convexity. The hypothesis `h_int_witness` (integrability of `d`
-on every joint with `Prod.fst`-marginal `P`) is a regularity precondition,
-needed so that the mixture witness has well-defined feasibility
-(`expectedDistortion` linearity).
+The hypothesis `h_int_witness` (integrability of `d` on every joint with
+`Prod.fst`-marginal `P`) is a regularity precondition, needed so that the
+mixture witness has well-defined feasibility (`expectedDistortion` linearity).
 
 @audit:ok -/
 @[entry_point]

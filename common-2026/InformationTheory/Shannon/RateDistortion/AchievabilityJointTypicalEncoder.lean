@@ -37,6 +37,10 @@ The intersection of `jointlyTypicalSet` with the empirical-distortion constraint
   whose empirical block distortion is within `δ` of the joint expectation.
 * basic structure lemmas: subset to `jointlyTypicalSet`, membership iff,
   `MeasurableSet`, finiteness.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 10.5, equation (10.85).
 -/
 
 namespace InformationTheory.Shannon
@@ -89,8 +93,7 @@ noncomputable def expectedJointDistortion
 /-- Distortion typical set. Pairs `(x, y) ∈ (Fin n → α) × (Fin n → β)` that are
 both (a) jointly typical in the entropy sense (`jointlyTypicalSet μ Xs Ys n ε`) and
 (b) whose empirical block distortion is within `δ` of the joint expectation
-`𝔼[d(X_0, Y_0)]`. The set used by Cover-Thomas 10.5 to bound the distortion on
-encoder-success events. -/
+`𝔼[d(X_0, Y_0)]`. -/
 noncomputable def distortionTypicalSet
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (d : DistortionFn α β) (n : ℕ) (ε δ : ℝ) :
@@ -102,8 +105,7 @@ noncomputable def distortionTypicalSet
 
 omit [DecidableEq α] [DecidableEq β] in
 /-- On `distortionTypicalSet`, the empirical block distortion is bounded
-by the joint expectation plus `δ`. This is the structural fact that drives the
-distortion bound on encoder-success events in Cover-Thomas 10.5 (10.85). -/
+by the joint expectation plus `δ`. -/
 theorem blockDistortion_le_of_mem_distortionTypicalSet
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (d : DistortionFn α β) (n : ℕ) (ε δ : ℝ)
@@ -246,8 +248,9 @@ private theorem jointlyTypicalSet_card_ge
 omit [DecidableEq α] [DecidableEq β] in
 /-- Anti-direction (lower-bound) joint-AEP indep probability.
 The probability under the product measure `μX^n × μY^n` that `(X̃, Ỹ)` lies in
-the jointly typical set is bounded below by `(1 - η) · exp(-n · (I + 3ε))`,
-which is Cover-Thomas (10.85). Mirror of `jointlyTypicalSet_indep_prob_le`. -/
+the jointly typical set is bounded below by `(1 - η) · exp(-n · (I + 3ε))`.
+
+See also `jointlyTypicalSet_indep_prob_le`. -/
 @[entry_point]
 theorem jointlyTypicalSet_indep_prob_ge
     (μ : Measure Ω) [IsProbabilityMeasure μ]

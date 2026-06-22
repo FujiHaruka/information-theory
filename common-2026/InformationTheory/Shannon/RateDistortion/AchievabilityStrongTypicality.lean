@@ -78,7 +78,7 @@ variable [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass �
 
 /-! ## Final theorem: `rate_distortion_achievability` -/
 
-/-- Rate-distortion achievability (strong-typicality variant, positive `qStar`).
+/-- **Rate-distortion theorem** (achievability, strong-typicality form).
 
 Given a feasible joint pmf `qStar ∈ RDConstraint P_X_pmf d D` with strictly
 positive mass on every `(a, b)`, and a rate `R > mutualInfoPmf qStar`, for any
@@ -174,10 +174,12 @@ theorem rate_distortion_achievability_strong
     (h_codebook_avg_failure := h_codebook_avg_failure)
     (h_slack := h_slack)
 
-/-- Rate-distortion achievability — public alias for the strong-typicality
-form `rate_distortion_achievability_strong`, to which the body delegates
-verbatim. The unconditional (no `hqStar_pos`) form requires a perturbation
-argument. -/
+/-- **Rate-distortion theorem** (achievability).
+
+The public form; the unconditional (no `hqStar_pos`) statement requires a
+perturbation argument.
+
+See also `rate_distortion_achievability_strong`. -/
 @[entry_point]
 theorem rate_distortion_achievability
     (P_X_pmf : α → ℝ) (d : DistortionFn α β) {D : ℝ}

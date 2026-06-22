@@ -34,13 +34,8 @@ variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 
 /-! ## Monotonicity of `rateDistortionFunction` -/
 
-/-- Antitone monotonicity of `R(D)`. The rate-distortion function is antitone
-in the distortion threshold: enlarging the feasibility budget can only lower the
-infimum.
-
-Proof: any joint feasible at `D₁` (i.e. `expectedDistortion d ν ≤ D₁`) is also
-feasible at `D₂` (since `D₁ ≤ D₂`), so the `iInf` at `D₂` is over a *larger*
-set and hence smaller. -/
+/-- The rate-distortion function is antitone in the distortion threshold:
+enlarging the feasibility budget can only lower the infimum. -/
 @[entry_point]
 theorem rateDistortionFunction_antitone
     (d : α → β → ℝ) (P : Measure α)
@@ -54,7 +49,7 @@ theorem rateDistortionFunction_antitone
 
 /-! ## Specified-distortion single-shot converse -/
 
-/-- Single-shot rate-distortion converse, specified-distortion form.
+/-- **Rate-distortion theorem** (converse, specified-distortion form).
 
 For any single-shot lossy code `(encoder, decoder)` with image alphabet `M` and
 source random variable `X : Ω → α`, if the actual expected distortion
@@ -66,9 +61,7 @@ bounded by `Real.log |M|`:
 ⟹ (rateDistortionFunction d (μ.map X) D).toReal ≤ Real.log |M|.
 ```
 
-This is the form most commonly seen in textbooks (`R(D) ≤ rate`) and is the
-specified-distortion lift of `rate_distortion_converse_single_shot` via R(D)
-monotonicity. -/
+This is the form most commonly seen in textbooks (`R(D) ≤ rate`). -/
 @[entry_point]
 theorem rate_distortion_converse_single_shot_specified
     [Fintype α] [Nonempty α] [MeasurableSingletonClass α]
