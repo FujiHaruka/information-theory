@@ -1,6 +1,6 @@
 # docstring tidy-up plan — Mathlib スタイルへの寄せ込み（英語化含む）
 
-**Status**: Phase 0–3 + 2.5 ALL DONE (2026-06-14、コードベース全体 CJK 0 / プロセス語彙 0 / full build green) / **Parent**: なし (standalone) /
+**Status**: Phase 0–3 + 2.5 DONE (2026-06-14、CJK 0 / プロセス語彙 0 / full build green)。**Phase 4 進行中** (2026-06-22、bold-label→prose + 末尾ピリオド) / **Parent**: なし (standalone) /
 **関連**: 規約 SoT [`rules/docstrings.md`](rules/docstrings.md) ・実測 [`mathlib-conventions-gap.md`](mathlib-conventions-gap.md) ・honesty タグ SoT [`audit/audit-tags.md`](audit/audit-tags.md)
 
 分割リファクタ (footprint の裾を named lemma に割る) に着手する**前に**、既存 docstring を Mathlib スタイルへ整える。
@@ -232,6 +232,20 @@ retreat-line・task-code・roadmap-stage slug。保持: 全 `@residual`/`@audit`
 (`Phase`/`-plan`/`judgment`/`wave`/`T-code`/`L-slug`/`roadmap M`/`parked-status`/`dated` = 0、
 残る `scope-out` 3 は `@audit:closed-by-successor` タグの正当な根拠散文) / CJK 0 / **full `lake build` 3471 jobs green**。
 honesty audit 不要 (新規 sorry/@residual を導入しないため。タグ数保存で代替検証)。
+
+### Phase 4 — bold-label 剥がし + 末尾ピリオド (2026-06-22 着手)
+
+[`rules/docstrings.md`](rules/docstrings.md) 乖離表の残り 2 軸（太字 topic ラベル始まり / 末尾ピリオド無し）を、
+「無害ゆえ随時」から **能動一括移行** へ切替 (ユーザー決定 2026-06-22)。
+
+- **対象**: `**Label**:` 形の topic ラベル始まり docstring 386 箇所 / 119 ファイル。
+- **スタイル (ユーザー決定)**: ラベルを落とし **完全文の地の文** へ書き換え (pilot Stein.lean / MaxEntropy.Basic 既定と一致、最も Mathlib 忠実)。
+  太字は inline named-theorem 言及のみ残す。
+- **同時処理**: 末尾ピリオド無し (完全文のみ付与、formula 末尾は不要) / 太字に巻き込まれた honesty タグの unwrap
+  (`**@audit:...**` → タグは bold 外、Assembly.lean 2 件) / 残存プロセス語彙 (`deferred to next pass` 等) の除去。
+- **invariant**: Phase 2 と同じ (@residual/@audit タグ数不変・proof 不変・compile 不変・rename しない・新規 docstring 追加しない)。
+- **進め方**: pilot (MaxEntropy/Basic.lean) で style 確定 → ファミリ単位 subagent dispatch (text-only, file 所有分離)
+  → 検証 (bold-label count→0 / full build green / tag 数照合)。
 
 ## DoD
 

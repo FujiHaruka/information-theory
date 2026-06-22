@@ -227,8 +227,8 @@ theorem klDiv_uniformOn_univ_toReal_eq
 /-! ## Main theorem via Jensen's inequality -/
 
 omit [DecidableEq α] in
-/-- **Maximum entropy**: the Shannon entropy of a finite-alphabet random variable is at most
-`log |α|`. Proved by `ConcaveOn.le_map_sum` applied to `negMulLog` with uniform weights `1/N`. -/
+/-- The Shannon entropy of a finite-alphabet random variable is at most `log |α|`. Proved by
+`ConcaveOn.le_map_sum` applied to `negMulLog` with uniform weights `1/N`. -/
 @[entry_point]
 theorem entropy_le_log_card
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -267,7 +267,7 @@ theorem entropy_le_log_card
 /-! ## Equality condition -/
 
 omit [DecidableEq α] in
-/-- **Equality condition**: `entropy μ X = log |α|` if and only if `μ.map X = uniformOn univ`,
+/-- Equality `entropy μ X = log |α|` holds if and only if `μ.map X = uniformOn univ`,
 via the strict-concave Jensen equality case `StrictConcaveOn.map_sum_eq_iff`. -/
 @[entry_point]
 theorem entropy_eq_log_card_iff
