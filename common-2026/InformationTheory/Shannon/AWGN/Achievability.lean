@@ -20,6 +20,10 @@ The body is a direct call to `isAwgnTypicalityHypothesis`, a
 genuine assembly that lives in `AchievabilityCodeExistence.lean` (the continuous joint
 typical set on `ℝⁿ × ℝⁿ`, the Gaussian random codebook, the three continuous-AEP bounds,
 and the sphere volume formula). This file imports the `Achievability*` discharge modules.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 9.1.1.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -31,7 +35,7 @@ open scoped ENNReal NNReal BigOperators Topology
 
 /-! ## Achievability -/
 
-/-- AWGN achievability theorem (Cover–Thomas 9.1.1).
+/-- **AWGN achievability theorem**.
 
 For any rate `R < C = (1/2) log(1+P/N)` and target error probability `ε > 0`, there
 exists `N₀` such that for every block length `n ≥ N₀` there is an `AwgnCode` (output

@@ -22,6 +22,10 @@ exposed as the hypothesis `h_meas : IsAwgnChannelMeasurable N`.
 
 The wrapper lives in this file rather than at the end of the `awgnChannel` base file so
 that it can import both `Achievability` and `Converse` without creating an import cycle.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorems 9.1.1–9.1.2.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -33,7 +37,7 @@ open scoped ENNReal NNReal BigOperators Topology
 
 /-! ## Main theorem — `awgn_channel_coding_theorem` -/
 
-/-- AWGN channel coding theorem (Cover-Thomas 9.1.1 + 9.1.2).
+/-- **AWGN channel coding theorem**.
 
 For the additive white Gaussian noise channel `Y = X + Z`, `Z ∼ 𝒩(0, N)`, with
 output power constraint `E[X²] ≤ P`:

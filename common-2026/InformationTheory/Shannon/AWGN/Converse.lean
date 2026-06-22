@@ -35,6 +35,10 @@ The proof follows the standard route:
 * The mixture output law `perLetterYLaw` has a real density bounded above by the
   Gaussian peak and below by a single component, which gives the quadratic envelope
   used to prove integrability of its log-density.
+
+## References
+
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 9.1.2.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -590,7 +594,7 @@ theorem awgn_per_letter_mi_bridge_genuine
 
 /-! ## The converse rate bound -/
 
-/-- AWGN converse theorem (Cover–Thomas, Theorem 9.1.2). For every code with
+/-- **AWGN converse theorem**. For every code with
 `M ≥ 2` messages, block length `n`, output-power constraint `P` and average error
 probability `Pe`, the rate satisfies
 
