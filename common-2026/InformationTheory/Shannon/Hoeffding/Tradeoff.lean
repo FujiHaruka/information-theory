@@ -197,9 +197,8 @@ lemma hoeffdingConstraintSet_convex
 /-! ## Pythagoras-based minimizer bound -/
 
 omit [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- Hoeffding Sanov minimizer: for any `P ∈ K` with full support,
-`klDivPmf Qstar P₂ ≤ klDivPmf P P₂`, via the Csiszar Pythagoras inequality
-`klDivPmf P P₂ ≥ klDivPmf P Qstar + klDivPmf Qstar P₂`. -/
+/-- Hoeffding Sanov minimizer: for any `P ∈ K` with full support and minimizer
+`Qstar`, `klDivPmf Qstar P₂ ≤ klDivPmf P P₂`. -/
 @[entry_point]
 lemma hoeffding_minimizer_ge
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)

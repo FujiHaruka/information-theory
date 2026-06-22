@@ -152,8 +152,7 @@ lemma hoeffdingTilt_kl_P₁_lam_one
 
 /-- IVT constraint-match: for any `alpha ∈ [0, klDivPmf P₂ P₁]` there is a
 tilt parameter `lam ∈ [0,1]` whose tilt hits the Type-I constraint *exactly*:
-`klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁ = alpha`. Discharged from
-`intermediate_value_Icc`. -/
+`klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁ = alpha`. -/
 theorem exists_lam_hoeffdingTilt_kl_eq
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)

@@ -49,15 +49,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 omit [DecidableEq α] in
 /-- The rate sequence
 `-(1/n) log (steinTypeII_at_level_pmf P₁ P₂ n alpha)` is bounded below by `0`
-along `atTop`.
-
-Derivation:
-* `steinTypeII_at_level_pmf ≤ 1` (`HoeffdingTradeoff.steinTypeII_at_level_pmf_le_one`),
-* if the infimum is `> 0`, `log ≤ 0`, and `-(1/n) ≤ 0` for `n ≥ 1`, so
-  `-(1/n) * log ≥ 0`.
-* if the infimum is `0`, `Real.log 0 = 0`, so the rate is `0`.
-
-In both cases `rate n ≥ 0`. -/
+along `atTop`. -/
 @[entry_point]
 lemma hoeffding_rate_isBoundedUnder_ge
     (P₁ P₂ : α → ℝ) (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
@@ -90,24 +82,9 @@ lemma hoeffding_rate_isBoundedUnder_ge
 /-! ## `IsBoundedUnder (· ≤ ·)`: rate bounded above -/
 
 omit [DecidableEq α] in
-/-- Lower bound on `steinTypeII_at_level_pmf` when `alpha < 1`
-under full support `P₁, P₂ > 0`.
-
-Strategy: pick the smallest `P₂` atom `a₀`. For any test `s` with Type I ≤ alpha,
-i.e. `∑_{x∈s} ∏ P₁(x_i) ≥ 1 - alpha`, we bound below by the
-worst single x term: each term `∏ P₂(x_i) ≥ p₂_min^n`. Combined with
-`|s| ≥ (1 - alpha) / (P₁_max)^n`, the Type II is at least
-`(1 - alpha) · (p₂_min / P₁_max)^n`. We further drop the `(/P₁_max)^n` factor
-by using `p₁_max ≤ 1` (pmf entries ≤ 1 in a probability simplex), giving
-the looser but cleaner bound
-
-  `Type II ≥ (1 - alpha) · p₂_min^n`.
-
-*Note*: we actually use the tighter argument
-`∑_{x∈s} ∏ P₂(x_i) ≥ (∑_{x∈s} ∏ P₁(x_i)) · (p₂_min / p₁_max)^n`,
-but it is simpler to bound each `∏ P₂(x_i)` by `p₂_min^n` directly and then
-`|s| · p₂_min^n ≥ p₂_min^n` (since `|s| ≥ 1`, which we obtain from
-`1 - alpha > 0`). This gives `steinTypeII ≥ p₂_min^n`. -/
+/-- Lower bound on `steinTypeII_at_level_pmf` when `alpha < 1` under full support
+`P₁, P₂ > 0`: `(1 - alpha) · (P₂ a₀)^n ≤ steinTypeII`, where `a₀` is a minimal
+`P₂` atom. -/
 lemma steinTypeII_at_level_pmf_ge_pow_pmin
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)

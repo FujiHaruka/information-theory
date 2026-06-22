@@ -169,9 +169,6 @@ Consequences for the two variational inequalities:
   `limsup rate ≤ E₂(alpha)`, contradicted at every `alpha` by the limits above.
 
 The genuine statement of the tradeoff is the exponential-level
-`hoeffding_tradeoff_exp` (`HoeffdingTradeoffExp.lean`). This file's two
-declarations — the constructive minimizer `exists_hoeffding_minimizer_full_support`
-(consumed by `HoeffdingTradeoffExp.lean`) and the boundary achievability
-`hoeffding_tradeoff_achievability_at_boundary` — are both genuine. -/
+`hoeffding_tradeoff_exp` (`HoeffdingTradeoffExp.lean`). -/
 
 end InformationTheory.Shannon.HoeffdingMinimizerExistence

@@ -122,8 +122,7 @@ lemma IsHoeffdingInteriorMinimizer.mk'
 /-! ## Bridge: interior predicate ⇒ full-support predicate -/
 
 /-- From `IsHoeffdingInteriorMinimizer`, the `IsHoeffdingMinimizerFullSupport` predicate of
-`HoeffdingBoundaryMinimizer` holds directly. This is the principal hand-off from the interior layer
-to the sandwich-body layer. -/
+`HoeffdingBoundaryMinimizer` holds directly. -/
 @[entry_point]
 lemma isHoeffdingMinimizerFullSupport_of_interior
     {P₁ P₂ : α → ℝ} {alpha : ℝ} {Qstar : α → ℝ}

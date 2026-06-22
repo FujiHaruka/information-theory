@@ -13,13 +13,28 @@ import InformationTheory.Shannon.Hoeffding.MinimizerExistence
 Unlike the constant-α `steinTypeII_at_level_pmf`, the operational quantity here
 is defined at the exponential level — the acceptance region is the
 KL-sublevel set of empirical types `E_r n = {c | klDivIndex c n P₁ ≤ r}` — and
-the resulting Type-II error converges to `hoeffdingE2 P₁ P₂ r`. The two
-directions are proved separately: the converse (limsup) via
-`sanov_ldp_upper_bound` on the non-perturbed minimizer `Qstar`, and the
-achievability (liminf) via `sanov_ldp_lower_bound_pointwise` on a perturbation
-`Qstar_ε = (1-ε)·Qstar + ε·P₁` (strict KL-interior, so the rounded types are
-eventually in `E_r`) followed by `ε → 0`. The headline `hoeffding_tradeoff_exp`
-holds on the interior `0 < r < klDivPmf P₂ P₁`.
+the resulting Type-II error converges to `hoeffdingE2 P₁ P₂ r`. The headline
+`hoeffding_tradeoff_exp` holds on the interior `0 < r < klDivPmf P₂ P₁`.
+
+## Implementation notes
+
+The two directions are proved separately:
+
+* the converse (limsup) via `sanov_ldp_upper_bound` on the non-perturbed
+  minimizer `Qstar`;
+* the achievability (liminf) via `sanov_ldp_lower_bound_pointwise` on a
+  perturbation `Qstar_ε = (1-ε)·Qstar + ε·P₁`, followed by `ε → 0`.
+
+The subtlety driving the perturbation is the *active-boundary obstruction*: the
+interior minimizer `Qstar` lies on the active boundary `klDivPmf Qstar P₁ = r`,
+so its rounded type converges to the boundary of the closed sublevel set
+`E_r n = {klDivIndex ≤ r}` and is not provably eventually inside. Enlarging
+`E_r` with a rounding margin would restore achievability but break the minimizer
+premise (a margin point may beat `Qstar`), so the two requirements conflict at
+the active constraint. Pushing `Qstar` slightly toward `P₁` lands strictly
+inside the constraint (by convexity of `klDivPmf · P₁` and `klDivPmf P₁ P₁ = 0`),
+restoring strict-interior eventual membership; the per-perturbation achievability
+bound is then carried to the limit by `ε → 0` continuity.
 -/
 
 namespace InformationTheory.Shannon.HoeffdingTradeoffExp
@@ -326,9 +341,7 @@ lemma hoeffding_exp_minimizer
 /-! ## Achievability via perturbation -/
 
 /-- Achievability rate bound at perturbation level `ε`: for the strictly
-interior perturbed minimizer `Qstar_ε`, the strict-interior
-`roundedTypeIndex_mem_E_r_eventually` feeds `sanov_ldp_lower_bound_pointwise`,
-yielding `-klDivPmf Qstar_ε P₂ ≤ liminf (rate)`. -/
+interior perturbed minimizer `Qstar_ε`, `-klDivPmf Qstar_ε P₂ ≤ liminf (rate)`. -/
 lemma hoeffding_exp_liminf_perturb
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
@@ -498,34 +511,16 @@ private lemma E_r_union_rate_isBoundedUnder_below
   have h := mul_le_mul_of_nonneg_left h_log_pow_le h_n_inv_pos.le
   rwa [show (1 / (n : ℝ)) * ((n : ℝ) * Real.log m) = Real.log m by field_simp] at h
 
-/-! ## Headline
+/-! ## Headline -/
 
-The Sanov two-sided collapse (`sanov_ldp_equality`), the minimizer premise
-(`hoeffding_exp_minimizer`), the KL bridges, the `Qstar` extraction
-(`exists_hoeffding_minimizer_full_support`) and the sign flip assemble below.
+/-- **Hoeffding's tradeoff** (exponential level, interior): the optimal Type-II
+error exponent of the exponential-level test converges to `hoeffdingE2 P₁ P₂ r`
+on the interior `0 < r < klDivPmf P₂ P₁`.
 
-The subtlety is that the interior minimizer `Qstar` lies on the *active* boundary
-`klDivPmf Qstar P₁ = r` (the tilt's constraint is an equality, see
-`exists_lam_hoeffdingTilt_kl_eq`), so the rounded type `roundedTypeIndex Qstar n`
-converges to the closed-sublevel *boundary* and is not provably eventually inside
-`E_r n = {klDivIndex ≤ r}`. Enlarging `E_r` with a rounding margin would restore
-achievability but break `hoeffding_exp_minimizer` (a margin point may beat
-`Qstar`), so the two requirements conflict at the active constraint. The
-resolution is the perturbation argument below. -/
-
-/-- Hoeffding tradeoff at the exponential level (interior).
-
-The active-boundary obstruction (the realizing minimizer `Qstar` sits on the
-*active* boundary `klDivPmf Qstar P₁ = r`, so its rounded type straddles the
-closed sublevel set `E_r n = {klDivIndex ≤ r}`) is resolved by a **perturbation
-argument**. Pushing `Qstar` slightly toward `P₁` (`Qstar_perturb`) lands strictly
-inside the constraint (`klDivPmf_perturb_lt`, by convexity of `klDivPmf · P₁` and
-`klDivPmf P₁ P₁ = 0`), restoring the strict-interior eventual membership
-(`roundedTypeIndex_mem_E_r_eventually`). The achievability (`liminf`) bound is
-proven per-perturbation (`hoeffding_exp_liminf_perturb`) and the perturbation is
-removed by ε→0 continuity (`klDivPmf_perturb_tendsto`). The converse (`limsup`)
-bound uses `sanov_ldp_upper_bound`, which needs only the minimizer premise; its
-positivity witness is supplied by the same perturbed sequence. -/
+The active-boundary obstruction — the realizing minimizer `Qstar` sits on the
+active boundary `klDivPmf Qstar P₁ = r`, so its rounded type straddles the closed
+sublevel set `E_r n = {klDivIndex ≤ r}` — is resolved by a perturbation argument
+(see the module-level implementation notes). -/
 @[entry_point]
 theorem hoeffding_tradeoff_exp
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
