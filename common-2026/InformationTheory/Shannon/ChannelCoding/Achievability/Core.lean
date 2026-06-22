@@ -143,7 +143,8 @@ theorem errorProbAt_le_E1_plus_E2
         · -- `m` is typical. Since not unique, some `m'' ≠ m` is also typical.
           -- Suppose for contradiction every typical witness equals `m`. Then
           -- `m` is the unique one — contradicting `¬ hu`.
-          have h_alias : ∃ m'' : Fin M, (codebook m'', y) ∈ jointlyTypicalSet μ Xs Ys n ε ∧ m'' ≠ m := by
+          have h_alias : ∃ m'' : Fin M,
+              (codebook m'', y) ∈ jointlyTypicalSet μ Xs Ys n ε ∧ m'' ≠ m := by
             by_contra h_none
             apply hu
             refine ⟨m, hm_typ, ?_⟩

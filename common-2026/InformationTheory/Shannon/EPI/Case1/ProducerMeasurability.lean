@@ -152,8 +152,9 @@ theorem deriv_convDensityAdd_gaussian_eq_scoreNum
       (m := 0) hv_ne
     have hY_bdd := EPIGaussianDensityRoute.bdd_gaussianPDFReal 0 t.toNNReal
     have hY'_bdd := EPIGaussianDensityRoute.bdd_deriv_gaussianPDFReal (m := 0) hv_ne
-    have hderiv := EPIConvDensityGaussianGateway.convDensityAdd_hasDerivAt_of_integrable_smoothKernel
-      pX (gaussianPDFReal 0 t.toNNReal) z hpX_int hregY hY_bdd hY'_bdd
+    have hderiv :=
+      EPIConvDensityGaussianGateway.convDensityAdd_hasDerivAt_of_integrable_smoothKernel
+        pX (gaussianPDFReal 0 t.toNNReal) z hpX_int hregY hY_bdd hY'_bdd
     rw [hderiv.deriv]
     rfl
   · -- t ≤ 0: variance is 0, the kernel is identically 0, both sides vanish.

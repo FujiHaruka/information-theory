@@ -1,6 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.FisherInfo.OfDensity
-import Mathlib.Analysis.Calculus.ParametricIntegral   -- hasDerivAt_integral_of_dominated_loc_of_deriv_le
+-- hasDerivAt_integral_of_dominated_loc_of_deriv_le
+import Mathlib.Analysis.Calculus.ParametricIntegral
 import Mathlib.Analysis.Calculus.LogDeriv
 import Mathlib.MeasureTheory.Group.Integral           -- integral_sub_left_eq_self (reflection)
 

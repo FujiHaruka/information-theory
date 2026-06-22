@@ -103,7 +103,8 @@ theorem convDensityAdd_deriv1_gaussian_eq
       hb1 hbound1_int hdiff
   -- `hgate.2 : HasDerivAt (fun ζ => ∫ y, pX y · kernel s (ζ-y)) (∫ y, pX y · kernel·(-(ζ-y)/s)) ζ`
   have hderiv : HasDerivAt (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩))
-      (∫ y, pX y * (heatFlow_density_heat_equation_kernel s (ζ - y) * (-((ζ - y) / s))) ∂volume) ζ := by
+      (∫ y, pX y *
+        (heatFlow_density_heat_equation_kernel s (ζ - y) * (-((ζ - y) / s))) ∂volume) ζ := by
     rw [hconv_eq]; exact hgate.2
   rw [hderiv.deriv]
   -- rewrite the kernel back to `gaussianPDFReal` inside the integral.

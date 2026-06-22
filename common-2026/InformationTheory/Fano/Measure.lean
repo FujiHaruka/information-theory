@@ -120,7 +120,8 @@ def diracPMF (Q : Measure X) [IsProbabilityMeasure Q] (xh : X) :
     have hInner : ∀ x : X,
         (∑ x' : X, if x' = xh then Q.real {x} else 0) = Q.real {x} := by
       intro x
-      rw [Finset.sum_eq_single xh (fun b _ hb => by simp [hb]) (fun h => (h (Finset.mem_univ _)).elim)]
+      rw [Finset.sum_eq_single xh (fun b _ hb => by simp [hb])
+        (fun h => (h (Finset.mem_univ _)).elim)]
       simp
     rw [Finset.sum_congr rfl (fun x _ => hInner x)]
     exact sum_real_singleton_eq_one Q

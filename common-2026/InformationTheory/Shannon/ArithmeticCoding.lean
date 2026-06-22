@@ -28,7 +28,8 @@ achieving the expected-length sandwich `H₂(P) ≤ E[L] ≤ H₂(P) + 2` and pr
 The textbook construction truncates the binary expansion of the cumulative midpoint
 `F̄(a) := F(a) - P(a)/2`; the real-valued binary expansion is a Mathlib gap and is
 avoided entirely. The expected-length bounds use a length-only linear lift of the
-Shannon-code machinery (`entropyD_le_expectedLength_of_kraft` / `expectedLength_shannon_lt_entropyD_add_one`),
+Shannon-code machinery (`entropyD_le_expectedLength_of_kraft` /
+`expectedLength_shannon_lt_entropyD_add_one`),
 and the prefix-free code is obtained from `exists_prefix_code_of_kraft` (integer-slot
 Kraft-reverse) lifted to `List Bool` via `finTwoEquiv`. The textbook midpoint-expansion
 equivalence is out of scope — it gives the same code and is not needed for the bounds.

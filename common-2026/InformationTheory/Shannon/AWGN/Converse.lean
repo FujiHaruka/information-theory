@@ -376,7 +376,8 @@ private lemma integrable_log_rnDeriv_perLetterYLaw
     exact (measurable_const.mul (Finset.measurable_sum _
       (fun m _ => (measurable_gaussianPDFReal (c.encoder m i) N))))
   -- `q.rnDeriv vol =ᵐ[vol] ofReal ∘ D`, transport to `=ᵐ[q]` (q ≪ vol)
-  have hq_ac : q ≪ MeasureTheory.volume := by rw [hq_def]; exact perLetterYLaw_ac_volume hN h_meas c i
+  have hq_ac : q ≪ MeasureTheory.volume := by
+    rw [hq_def]; exact perLetterYLaw_ac_volume hN h_meas c i
   have h_rn_vol : q.rnDeriv MeasureTheory.volume =ᵐ[MeasureTheory.volume]
       (fun y => ENNReal.ofReal (D y)) := by
     rw [hq_wd]; exact Measure.rnDeriv_withDensity MeasureTheory.volume hD_meas

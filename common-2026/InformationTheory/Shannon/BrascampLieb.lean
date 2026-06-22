@@ -35,7 +35,8 @@ open scoped ENNReal NNReal
 
 /-! ## Projection onto a coordinate subset -/
 
-/-- The image of `A : Finset (Fin n → α)` under restriction to coordinates in `S : Finset (Fin n)`. -/
+/-- The image of `A : Finset (Fin n → α)` under restriction to coordinates in
+`S : Finset (Fin n)`. -/
 def projectionSubset {n : ℕ} {α : Type*} [DecidableEq α]
     (S : Finset (Fin n)) (A : Finset (Fin n → α)) :
     Finset (↥S → α) :=

@@ -101,7 +101,8 @@ theorem pSmooth_smooth_capacity_gt_uniform
       (∀ a, 0 < pSmooth p₀ δ_p a) ∧
       pSmooth p₀ δ_p ∈ stdSimplex ℝ α ∧
       ∀ δ ∈ Set.Ioc (0 : ℝ) δ_B,
-        I_lb < (mutualInfoOfChannel (pmfToMeasure (pSmooth p₀ δ_p)) (Channel.smooth W δ)).toReal := by
+        I_lb <
+          (mutualInfoOfChannel (pmfToMeasure (pSmooth p₀ δ_p)) (Channel.smooth W δ)).toReal := by
   classical
   -- Step 1: extract p₀ with R < I(p₀; W).toReal.
   obtain ⟨p₀, hp₀_mem, hp₀_lt⟩ := capacity_lt_implies_exists_pmf W hR

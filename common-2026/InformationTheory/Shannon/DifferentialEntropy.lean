@@ -254,7 +254,8 @@ theorem differentialEntropy_map_mul_const
     have h_c_ne : (|c| : ℝ) ≠ 0 := hc_abs_pos.ne'
     have h_step := h_icmr
     have h_mul : ∫ y, Real.negMulLog ((μ.map (· * c)).rnDeriv volume y).toReal ∂volume
-        = |c| * (|c|⁻¹ * ∫ y, Real.negMulLog ((μ.map (· * c)).rnDeriv volume y).toReal ∂volume) := by
+        = |c| * (|c|⁻¹ *
+          ∫ y, Real.negMulLog ((μ.map (· * c)).rnDeriv volume y).toReal ∂volume) := by
       rw [← mul_assoc, mul_inv_cancel₀ h_c_ne, one_mul]
     rw [h_mul, h_step]
   rw [h_sub]

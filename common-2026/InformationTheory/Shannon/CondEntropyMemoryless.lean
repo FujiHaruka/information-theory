@@ -182,7 +182,8 @@ lemma condEntropy_pi_chain_rule_aux
       rw [Fintype.sum_unique]
       have _ : IsProbabilityMeasure (condDistrib (fun ω (j : Fin 0) => Ys j ω) Xs μ y) :=
         inferInstance
-      have hsingle : ((condDistrib (fun ω (j : Fin 0) => Ys j ω) Xs μ y).real {default} : ℝ) = 1 := by
+      have hsingle :
+          ((condDistrib (fun ω (j : Fin 0) => Ys j ω) Xs μ y).real {default} : ℝ) = 1 := by
         have huniv : ({default} : Set (Fin 0 → β)) = Set.univ := by
           ext f; simp [Subsingleton.elim f default]
         rw [huniv, measureReal_def, measure_univ, ENNReal.toReal_one]
