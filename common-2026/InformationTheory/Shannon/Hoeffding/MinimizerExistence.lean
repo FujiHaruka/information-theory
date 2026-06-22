@@ -50,7 +50,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 /-! ## Constructive full-support minimizer (3-case) -/
 
 omit [DecidableEq α] in
-/-- **Constructive 3-case minimizer**: an explicit full-support `Qstar` realising
+/-- Constructive 3-case minimizer: an explicit full-support `Qstar` realising
 `hoeffdingE2 P₁ P₂ alpha = klDivPmf Qstar P₂`, with `Qstar ∈ K`. -/
 lemma exists_hoeffding_minimizer_full_support
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -92,14 +92,14 @@ lemma exists_hoeffding_minimizer_full_support
 /-! ## Achievability `E2 ≤ liminf rate` on the boundary regime
 
 The achievability inequality `hoeffdingE2 P₁ P₂ alpha ≤ liminf rate` holds
-**unconditionally on the boundary regime** `klDivPmf P₂ P₁ ≤ alpha`, where
+unconditionally on the boundary regime `klDivPmf P₂ P₁ ≤ alpha`, where
 `hoeffdingE2 = 0` (`hoeffdingE2_eq_zero_at_alpha_ge_kl`) and the inequality reduces
 to `0 ≤ liminf rate`, i.e. the rate is non-negative (`steinTypeII ≤ 1 ⇒ log ≤ 0`).
 Outside the boundary it is *not* generally true — see the analysis below (it fails
 at `alpha = 0`, where `E₂(0) = D(P₁‖P₂) > 0 = liminf rate`). -/
 
 omit [DecidableEq α] in
-/-- **achievability at the boundary** (`klDivPmf P₂ P₁ ≤ alpha`, fully
+/-- achievability at the boundary (`klDivPmf P₂ P₁ ≤ alpha`, fully
 unconditional): there `hoeffdingE2 = 0 ≤ liminf rate`, since the rate is
 non-negative. -/
 @[entry_point]
@@ -140,32 +140,32 @@ theorem hoeffding_tradeoff_achievability_at_boundary
 
 /-! ## The fixed-`alpha` rate does not target the Hoeffding tradeoff curve
 
-A fixed-`alpha` `Tendsto rate → hoeffdingE2 P₁ P₂ alpha` does **not** hold:
+A fixed-`alpha` `Tendsto rate → hoeffdingE2 P₁ P₂ alpha` does not hold:
 `steinTypeII_at_level_pmf` bakes in a *constant* Type-I level `alpha`, whereas
 the Hoeffding tradeoff curve `E₂(alpha)` is the limit only in the
-**exponential-level** regime `alpha_n = exp(-n r)`. The fixed-`alpha` rate
+exponential-level regime `alpha_n = exp(-n r)`. The fixed-`alpha` rate
 `-(1/n) log steinTypeII_at_level_pmf` converges to `D(P₁‖P₂)`, *not* `E₂(alpha)`.
 Two concrete contradictions:
 
-* **`alpha = 0`**: with full-support `P₁`, the only Type-I-exact-`0` test is
+* `alpha = 0`: with full-support `P₁`, the only Type-I-exact-`0` test is
   `s = univ` (every other `Finset` has `∑ ∏ P₁ < 1`), so
   `steinTypeII_at_level_pmf P₁ P₂ n 0 = 1` and `rate n ≡ 0`. But
   `hoeffdingE2 P₁ P₂ 0 = klDivPmf P₁ P₂ = D(P₁‖P₂) > 0` in general. So
   `rate → 0 ≠ E₂(0)`.
 
-* **`0 < alpha < 1`**: `steinTypeII_at_level_pmf P₁ P₂ n alpha`
+* `0 < alpha < 1`: `steinTypeII_at_level_pmf P₁ P₂ n alpha`
   coincides with `steinOptimalBeta (pmfToMeasure P₁) (pmfToMeasure P₂) n alpha`
   (the pmf and measure β-sets agree on the finite alphabet), so by Stein's lemma
   `rate n → D(P₁‖P₂) = E₂(0) > E₂(alpha)`.
 
 Consequences for the two variational inequalities:
 
-* **achievability** `hoeffdingE2 alpha ≤ liminf rate`: holds whenever
-  `E₂(alpha) ≤ liminf rate`. On the **boundary** `klDivPmf P₂ P₁ ≤ alpha` we have
+* achievability `hoeffdingE2 alpha ≤ liminf rate`: holds whenever
+  `E₂(alpha) ≤ liminf rate`. On the boundary `klDivPmf P₂ P₁ ≤ alpha` we have
   `E₂(alpha) = 0 ≤ liminf rate` unconditionally
   (`hoeffding_tradeoff_achievability_at_boundary` above). At `alpha = 0` it is
   *false* (`E₂(0) = D > 0 = liminf rate`).
-* **converse** `limsup rate ≤ hoeffdingE2 alpha`: would require
+* converse `limsup rate ≤ hoeffdingE2 alpha`: would require
   `limsup rate ≤ E₂(alpha)`, contradicted at every `alpha` by the limits above.
 
 The genuine statement of the tradeoff is the exponential-level

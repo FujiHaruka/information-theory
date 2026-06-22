@@ -230,7 +230,7 @@ lemma klDivPmf_self_eq_zero
   have h_div : P a / P a = 1 := div_self (hP_pos a).ne'
   rw [h_div, InformationTheory.klFun_one, mul_zero]
 
-/-- **Hoeffding tradeoff exponent** at Type I level `alpha`:
+/-- Hoeffding tradeoff exponent at Type I level `alpha`:
 `E₂(α) := min { klDivPmf Q P₂ | Q ∈ stdSimplex ∧ klDivPmf Q P₁ ≤ α }`. -/
 noncomputable def hoeffdingE2 (P₁ P₂ : α → ℝ) (alpha : ℝ) : ℝ :=
   sInf ((fun Q : α → ℝ ↦ klDivPmf Q P₂) ''
@@ -242,7 +242,7 @@ def hoeffdingConstraintSet (P₁ : α → ℝ) (alpha : ℝ) : Set (α → ℝ) 
   {Q : α → ℝ | Q ∈ stdSimplex ℝ α ∧ klDivPmf Q P₁ ≤ alpha}
 
 omit [DecidableEq α] in
-/-- The Hoeffding constraint set is **non-empty** when `α ≥ 0` and `P₁` is a positive pmf:
+/-- The Hoeffding constraint set is non-empty when `α ≥ 0` and `P₁` is a positive pmf:
 `P₁` itself satisfies `klDivPmf P₁ P₁ = 0 ≤ α`. -/
 lemma hoeffdingConstraintSet_nonempty
     (P₁ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₁_sum : ∑ a, P₁ a = 1)
@@ -254,14 +254,14 @@ lemma hoeffdingConstraintSet_nonempty
     exact h_alpha_nn
 
 omit [DecidableEq α] in
-/-- The Hoeffding constraint set is a **subset of the simplex**. -/
+/-- The Hoeffding constraint set is a subset of the simplex. -/
 lemma hoeffdingConstraintSet_subset_stdSimplex
     (P₁ : α → ℝ) (alpha : ℝ) :
     hoeffdingConstraintSet P₁ alpha ⊆ stdSimplex ℝ α :=
   fun _ hQ ↦ hQ.1
 
 omit [DecidableEq α] in
-/-- The Hoeffding constraint set is **closed** (intersection of the closed simplex with
+/-- The Hoeffding constraint set is closed (intersection of the closed simplex with
 the closed sublevel set of the continuous function `Q ↦ klDivPmf Q P₁`). -/
 lemma hoeffdingConstraintSet_isClosed
     (P₁ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (alpha : ℝ) :
@@ -339,7 +339,7 @@ convexity. The endpoints `α = 0` and `α = 1` are handled separately, since the
 `1 < p` requirement of `Real.HolderConjugate`. -/
 
 omit [DecidableEq α] in
-/-- **Hölder multiplicative form** for the Chernoff partition function:
+/-- Hölder multiplicative form for the Chernoff partition function:
 `Z(αλ₁ + βλ₂) ≤ Z(λ₁)^α · Z(λ₂)^β` for `α, β ∈ (0, 1)`, `α + β = 1`.
 
 This is the engine of `convexOn_chernoffLogZ`. Stated under full-support `P₁, P₂ > 0`
@@ -524,7 +524,7 @@ lemma chernoffMediator_sum_eq_one
   exact div_self hZ_pos.ne'
 
 omit [DecidableEq α] in
-/-- **Mediator pmf bound**: at endpoints `lam = 0` (resp `lam = 1`), `T_λ = P₁` (resp `P₂`)
+/-- Mediator pmf bound: at endpoints `lam = 0` (resp `lam = 1`), `T_λ = P₁` (resp `P₂`)
 under full support + probability conditions. -/
 lemma chernoffMediator_lam_zero
     (P₁ P₂ : α → ℝ) [Nonempty α]
@@ -638,10 +638,10 @@ The achievability side of Cover–Thomas Theorem 11.9.1: the Chernoff bound
 `liminf_n -(1/n) log bayesErrorMinPmf ≥ chernoffInfo P₁ P₂`. The `n`-fold IID structure is written
 directly with a finite sum `∑_{x : Fin n → α}` of finite products `∏ i, P (x i)`. -/
 
-/-- **n-IID Bayes error** in pmf form:
+/-- n-IID Bayes error in pmf form:
 `bayesErrorMinPmf P₁ P₂ n := (1/2) · ∑_{x : Fin n → α} min(∏ P₁(x_i), ∏ P₂(x_i))`.
 
-This is the **optimal Bayes error** for the 2-class hypothesis test with equal priors
+This is the optimal Bayes error for the 2-class hypothesis test with equal priors
 `1/2 : 1/2` on `n` IID samples (Bayes-optimal rule decides `i := argmax_i P_i^n(x)`,
 giving error contribution `(1/2) · min(P₁^n(x), P₂^n(x))` per `x`). -/
 noncomputable def bayesErrorMinPmf (P₁ P₂ : α → ℝ) (n : ℕ) : ℝ :=
@@ -650,7 +650,7 @@ noncomputable def bayesErrorMinPmf (P₁ P₂ : α → ℝ) (n : ℕ) : ℝ :=
 /-! ### Per-point bound `min(a, b) ≤ a^(1-λ) · b^λ` -/
 
 omit [DecidableEq α] in
-/-- **Geometric mean inequality** (degenerate Hölder form):
+/-- Geometric mean inequality (degenerate Hölder form):
 `min(a, b) ≤ a^{1-λ} · b^λ` for `a, b ≥ 0`, `λ ∈ [0, 1]`. -/
 lemma min_le_rpow_mul_rpow
     {a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) {lam : ℝ}
@@ -685,7 +685,7 @@ lemma min_le_rpow_mul_rpow
 /-! ### `bayesErrorMinPmf ≤ (1/2) Z(λ)^n` -/
 
 omit [DecidableEq α] in
-/-- **Auxiliary: n-IID per-point factorization**:
+/-- Auxiliary: n-IID per-point factorization:
 `∏ i, (P₁ (x i)) ^ (1-lam) * (P₂ (x i)) ^ lam = (∏ i, P₁ (x i)) ^ (1-lam) * (∏ i, P₂ (x i)) ^ lam`
 under `P₁, P₂ ≥ 0`. -/
 lemma prod_rpow_mul_rpow
@@ -703,7 +703,7 @@ lemma prod_rpow_mul_rpow
   rw [h1, h2]
 
 omit [DecidableEq α] in
-/-- **n-IID Chernoff partition function via product factorization**:
+/-- n-IID Chernoff partition function via product factorization:
 `∑_{x : Fin n → α} (∏ i, P₁ (x i))^(1-lam) · (∏ i, P₂ (x i))^lam = Z(λ)^n`. -/
 lemma sum_prod_rpow_eq_Z_pow
     (P₁ P₂ : α → ℝ) (hP₁_nn : ∀ a, 0 ≤ P₁ a) (hP₂_nn : ∀ a, 0 ≤ P₂ a)
@@ -760,7 +760,7 @@ theorem bayesErrorMinPmf_le_half_Z_pow
 /-! ### Positivity of `bayesErrorMinPmf` -/
 
 omit [DecidableEq α] in
-/-- **`bayesErrorMinPmf > 0`** under full support `P₁, P₂ > 0`. -/
+/-- `bayesErrorMinPmf > 0` under full support `P₁, P₂ > 0`. -/
 lemma bayesErrorMinPmf_pos
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) (n : ℕ) :
@@ -853,7 +853,7 @@ lemma chernoff_rate_ge_chernoffInfo_eventually
   linarith
 
 omit [DecidableEq α] in
-/-- **Auxiliary upper bound**: `rate n ≤ -log p_min - (log 2)/n` (loose, just to get
+/-- Auxiliary upper bound: `rate n ≤ -log p_min - (log 2)/n` (loose, just to get
 boundedness for `liminf` plumbing). Here `p_min := min over a of (min (P₁ a) (P₂ a))`. -/
 private lemma chernoff_rate_le_aux_upper
     (P₁ P₂ : α → ℝ) [Nonempty α]
@@ -963,7 +963,7 @@ private lemma chernoff_rate_le_aux_upper
   linarith
 
 omit [DecidableEq α] in
-/-- **Chernoff achievability** (rate-side lower bound):
+/-- Chernoff achievability (rate-side lower bound):
 `liminf_n -(1/n) log bayesErrorMinPmf ≥ chernoffInfo P₁ P₂`. -/
 theorem chernoff_achievability
     (P₁ P₂ : α → ℝ) [Nonempty α]

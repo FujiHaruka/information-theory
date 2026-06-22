@@ -33,7 +33,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
   [MeasurableSingletonClass α] in
-/-- **Per-letter factorial-power inequality**:
+/-- Per-letter factorial-power inequality:
 `c! · c^k ≤ k! · c^c` for all c, k ∈ ℕ. -/
 private lemma factorial_pow_swap_le (c k : ℕ) :
     Nat.factorial c * c ^ k ≤ Nat.factorial k * c ^ c := by
@@ -61,7 +61,7 @@ private lemma factorial_pow_swap_le (c k : ℕ) :
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α]
   [MeasurableSingletonClass α] in
-/-- **Product over α of per-letter factorial-power inequality**.
+/-- Product over α of per-letter factorial-power inequality.
 `(∏ Nat.factorial (c a)) · (∏ (c a)^{k a}) ≤ (∏ (k a)!) · (∏ (c a)^{c a})`. -/
 private lemma prod_factorial_pow_swap_le (c k : α → ℕ) :
     (∏ a, Nat.factorial (c a)) * (∏ a, c a ^ k a)
@@ -71,7 +71,7 @@ private lemma prod_factorial_pow_swap_le (c k : α → ℕ) :
     (fun a _ ↦ factorial_pow_swap_le (c a) (k a))
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **Max-likelihood for the multinomial coefficient**: for c, k both summing to n,
+/-- Max-likelihood for the multinomial coefficient: for c, k both summing to n,
 `multinomial univ k · ∏ c(a)^{k a} ≤ multinomial univ c · ∏ c(a)^{c a}`.
 
 (In ratio form: `multinomial univ k / multinomial univ c ≤ ∏ c(a)^{c a - k a}` after div.) -/
@@ -127,9 +127,9 @@ private lemma multinomial_pow_le {n : ℕ} (c k : α → ℕ)
   exact Nat.le_of_mul_le_mul_left step2 h_pos
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **`multinomial univ c ≤ |T_c|`** (the bridge to the multinomial coefficient).
+/-- `multinomial univ c ≤ |T_c|` (the bridge to the multinomial coefficient).
 
-We use a **surjection** `Φ : Fin n → α → T_c` defined via `x₀ ∈ T_c`:
+We use a surjection `Φ : Fin n → α → T_c` defined via `x₀ ∈ T_c`:
 `Φ σ := x₀ ∘ σ`. By surjectivity of `Φ` (any `x ∈ T_c` is hit because both x, x₀ have
 type c so we can find a permutation taking one to the other), `n! = |Perm Fin n|`
 counts each `x ∈ T_c` with multiplicity = fiber size ≤ `∏ a, Nat.factorial (c a)` (the permutations
@@ -286,7 +286,7 @@ private lemma multinomial_le_typeClass_card {n : ℕ} (c : α → ℕ)
   exact Nat.le_of_mul_le_mul_left h_mul_le h_prod_pos
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **ℝ form of `multinomial_pow_le`**. -/
+/-- ℝ form of `multinomial_pow_le`. -/
 private lemma multinomial_pow_le_real {n : ℕ} (c k : α → ℕ)
     (hc_sum : (∑ a, c a) = n) (hk_sum : (∑ a, k a) = n) :
     (Nat.multinomial Finset.univ k : ℝ) * (∏ a, (c a : ℝ) ^ k a)
@@ -300,7 +300,7 @@ private lemma multinomial_pow_le_real {n : ℕ} (c k : α → ℕ)
   exact this
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **Card of `piAntidiag univ n` is bounded by `(n+1)^{|α|}`**. -/
+/-- Card of `piAntidiag univ n` is bounded by `(n+1)^{|α|}`. -/
 private lemma piAntidiag_card_le (n : ℕ) :
     (Finset.piAntidiag (Finset.univ : Finset α) n).card
       ≤ (n + 1) ^ Fintype.card α := by
@@ -389,7 +389,7 @@ theorem multinomial_mul_prod_ratio_pow_le
   exact multinomial_pow_le_real c k hc_sum hk_sum
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **Multinomial lower bound** (Cover-Thomas 11.1.3):
+/-- Multinomial lower bound (Cover-Thomas 11.1.3):
 `(n+1)^{-|α|} · n^n / ∏ c(a)^{c(a)} ≤ |T_c|`.
 
 Strategy: show `multinomial univ c · ∏ (c/n)^{c(a)} ≥ (n+1)^{-|α|}` via the multinomial
@@ -536,7 +536,7 @@ theorem typeClassByCount_card_ge
       (pow_pos hn_real_succ_pos _) h_prod_cc_pos (pow_pos hn_real_pos _) h_chain
 
 omit [Nonempty α] in
-/-- **Lower bound on `Q^n(T_c)`**: `Q^n(T_c) ≥ (n+1)^{-|α|} · exp(-n · klDivIndex c n Q)`.
+/-- Lower bound on `Q^n(T_c)`: `Q^n(T_c) ≥ (n+1)^{-|α|} · exp(-n · klDivIndex c n Q)`.
 
 Follows from `typeClassByCount_card_ge` and the identity
 `∏ Q(a)^{c(a)} · n^n / ∏ c(a)^{c(a)} = exp(-n · klDivIndex c n Q)`. -/

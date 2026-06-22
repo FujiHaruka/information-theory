@@ -6,8 +6,8 @@ import InformationTheory.Meta.EntryPoint
 /-!
 # Hoeffding tradeoff — sandwich body completion
 
-This file publishes the **`IsHoeffdingMinimizerFullSupport`** predicate plus the
-**boundary full-support discharges** (`α = 0` and `α ≥ klDivPmf P₂ P₁`) used by
+This file publishes the `IsHoeffdingMinimizerFullSupport` predicate plus the
+boundary full-support discharges (`α = 0` and `α ≥ klDivPmf P₂ P₁`) used by
 the constructive minimizer of `HoeffdingMinimizerExistence.lean` and the
 exponential-level closure `hoeffding_tradeoff_exp` (`HoeffdingTradeoffExp.lean`).
 
@@ -22,7 +22,7 @@ general-`alpha` discharge of this predicate (full support of any
 Csiszár-Pythagoras minimizer of `klDivPmf · P₂` on `K`) requires a log-singularity
 gradient argument and is supplied externally via the constructive minimizer.
 
-For **boundary values of α** the full-support claim is fully discharged from
+For boundary values of α the full-support claim is fully discharged from
 existing Mathlib + InformationTheory API:
 
 * `α = 0`: `klDivPmf Q P₁ ≤ 0` combined with `klDivPmf_nonneg` forces
@@ -36,18 +36,18 @@ existing Mathlib + InformationTheory API:
 
 ## What this file publishes
 
-* **`IsHoeffdingMinimizerFullSupport`** (`Prop` predicate, abbrev form): wraps
+* `IsHoeffdingMinimizerFullSupport` (`Prop` predicate, abbrev form): wraps
   the claim `∀ a, 0 < Qstar a`.
 
-* **`hoeffdingE2_minimizer_at_boundary_alpha_zero`** (full discharge): at `α = 0`,
+* `hoeffdingE2_minimizer_at_boundary_alpha_zero` (full discharge): at `α = 0`,
   every `Qstar ∈ K` (with `K = {P₁}` in this case) is full-support, i.e.
   `IsHoeffdingMinimizerFullSupport` holds for any such Qstar.
 
-* **`hoeffdingE2_minimizer_at_boundary_alpha_ge_kl`** (full discharge, witness
+* `hoeffdingE2_minimizer_at_boundary_alpha_ge_kl` (full discharge, witness
   form): at `α ≥ klDivPmf P₂ P₁`, the witness `Qstar := P₂` realises the
   minimum and is full-support.
 
-* **`hoeffding_minimizer_ge_via_predicate`**: variant of
+* `hoeffding_minimizer_ge_via_predicate`: variant of
   `hoeffding_minimizer_ge` taking `IsHoeffdingMinimizerFullSupport` instead of
   raw `hQs_pos`.
 
@@ -83,7 +83,7 @@ The general-α discharge of this predicate (any minimizer of `klDivPmf · P₂` 
 singularity computation on the directional derivative of `klDivPmf · P₂` at a
 `0`-atom.
 
-For **boundary** values of `α` (namely `α = 0` and `α ≥ klDivPmf P₂ P₁`), the
+For boundary values of `α` (namely `α = 0` and `α ≥ klDivPmf P₂ P₁`), the
 predicate is fully discharged from existing Mathlib + InformationTheory API. -/
 def IsHoeffdingMinimizerFullSupport (Qstar : α → ℝ) : Prop :=
   ∀ a, 0 < Qstar a
@@ -134,7 +134,7 @@ lemma P₂_mem_hoeffdingConstraintSet
     P₂ ∈ hoeffdingConstraintSet P₁ alpha := by
   refine ⟨⟨fun a ↦ (hP₂_pos a).le, hP₂_sum⟩, h_alpha_ge⟩
 
-/-- **E2 collapse**: when `α ≥ klDivPmf P₂ P₁`, the
+/-- E2 collapse: when `α ≥ klDivPmf P₂ P₁`, the
 `hoeffdingE2` value equals `0`, since `P₂` itself realises the minimum. -/
 lemma hoeffdingE2_eq_zero_at_alpha_ge_kl
     (P₁ P₂ : α → ℝ)
@@ -168,7 +168,7 @@ lemma hoeffdingE2_eq_zero_at_alpha_ge_kl
     hoeffdingE2_nonneg P₁ P₂ hP₁_pos hP₂_pos hP₁_sum alpha h_alpha_nn
   linarith
 
-/-- **Predicate form, witness**: at `α ≥ klDivPmf P₂ P₁`, the
+/-- Predicate form, witness: at `α ≥ klDivPmf P₂ P₁`, the
 witness `Qstar := P₂` lies in `K`, realises `hoeffdingE2 = klDivPmf P₂ P₂ = 0`,
 and is full-support (by `hP₂_pos`). -/
 lemma hoeffdingE2_minimizer_at_boundary_alpha_ge_kl
@@ -189,7 +189,7 @@ lemma hoeffdingE2_minimizer_at_boundary_alpha_ge_kl
 
 /-! ## Pythagoras-based minimizer integration via predicate -/
 
-/-- **`hoeffding_minimizer_ge` via predicate**: variant of
+/-- `hoeffding_minimizer_ge` via predicate: variant of
 `HoeffdingTradeoff.hoeffding_minimizer_ge` taking
 `IsHoeffdingMinimizerFullSupport` instead of raw `hQs_pos`. -/
 @[entry_point]

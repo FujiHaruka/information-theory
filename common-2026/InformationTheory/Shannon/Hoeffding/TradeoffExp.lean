@@ -11,7 +11,7 @@ import InformationTheory.Shannon.Hoeffding.MinimizerExistence
 # Hoeffding tradeoff — exponential-level redefinition
 
 Unlike the constant-α `steinTypeII_at_level_pmf`, the operational quantity here
-is defined at the **exponential level** — the acceptance region is the
+is defined at the exponential level — the acceptance region is the
 KL-sublevel set of empirical types `E_r n = {c | klDivIndex c n P₁ ≤ r}` — and
 the resulting Type-II error converges to `hoeffdingE2 P₁ P₂ r`. The two
 directions are proved separately: the converse (limsup) via
@@ -39,7 +39,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
 /-! ## `E_r` acceptance region + `steinTypeII_exp` definition -/
 
-/-- **Exponential-level acceptance region**: *valid* empirical types
+/-- Exponential-level acceptance region: *valid* empirical types
 (`∑ c = n`) whose KL divergence from `P₁` is within `r` (a closed KL-sublevel
 set, indexed by `TypeCountIndex`). The `∑ c = n` clause restricts to genuine
 empirical pmfs `c/n`; types with `∑ c ≠ n` have an empty type class
@@ -55,7 +55,7 @@ noncomputable def E_r (P₁ : α → ℝ) (hP₁_nn : ∀ a, 0 ≤ P₁ a) (hP�
       0 < n ∧ (∑ a, (c a : ℕ)) = n ∧
       klDivIndex (fun a ↦ (c a : ℕ)) n (pmfToMeasure P₁ hP₁_nn hP₁_sum) ≤ r)
 
-/-- **Type-II error of the exponential-level test**: the `P₂ⁿ` mass of the
+/-- Type-II error of the exponential-level test: the `P₂ⁿ` mass of the
 acceptance region `⋃_{c ∈ E_r} T_c`. -/
 noncomputable def steinTypeII_exp (P₁ P₂ : α → ℝ)
     (hP₁_nn : ∀ a, 0 ≤ P₁ a) (hP₁_sum : ∑ a, P₁ a = 1)
@@ -76,7 +76,7 @@ lemma mem_E_r_iff (P₁ : α → ℝ) (hP₁_nn : ∀ a, 0 ≤ P₁ a) (hP₁_su
 /-! ## KL bridges (count-0-tolerant) -/
 
 omit [DecidableEq α] in
-/-- **`klDivPmf` log-diff form tolerant of count-0 atoms in `P`**: requires only
+/-- `klDivPmf` log-diff form tolerant of count-0 atoms in `P`: requires only
 `Q` full support (and both sum to 1), not `P` full support. The `P a = 0` term
 matches on both sides (`Q a` vs `0 + Q a - 0`). -/
 lemma klDivPmf_eq_log_diff_sum_of_Q_pos
@@ -106,7 +106,7 @@ lemma klDivPmf_eq_log_diff_sum_of_Q_pos
   ring
 
 omit [DecidableEq α] in
-/-- **`klDivIndex` as `klDivPmf` of the empirical pmf** (count-0 tolerant):
+/-- `klDivIndex` as `klDivPmf` of the empirical pmf (count-0 tolerant):
 for `∑ c = n`, `n > 0`, `Q` full support,
 `klDivIndex c n Q = klDivPmf (c · / n) (Q.real ∘ singleton)`. -/
 lemma klDivIndex_eq_klDivPmf_empirical
@@ -127,7 +127,7 @@ lemma klDivIndex_eq_klDivPmf_empirical
 
 /-! ## `h_in_E` from rounded-type KL convergence -/
 
-/-- **Eventually accepted**: the rounded type of a strict-interior `Qstar`
+/-- Eventually accepted: the rounded type of a strict-interior `Qstar`
 (`klDivPmf Qstar P₁ < r`) lands in `E_r n` for all large `n`. -/
 lemma roundedTypeIndex_mem_E_r_eventually
     (P₁ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₁_sum : ∑ a, P₁ a = 1)
@@ -164,7 +164,7 @@ lemma roundedTypeIndex_mem_E_r_eventually
 
 /-! ## Perturbation toward `P₁` -/
 
-/-- **Perturbed minimizer** `Qstar_ε := (1-ε)·Qstar + ε·P₁`. -/
+/-- Perturbed minimizer `Qstar_ε := (1-ε)·Qstar + ε·P₁`. -/
 noncomputable def Qstar_perturb (Qstar P₁ : α → ℝ) (ε : ℝ) : α → ℝ :=
   fun a ↦ (1 - ε) * Qstar a + ε * P₁ a
 
@@ -190,7 +190,7 @@ lemma Qstar_perturb_sum {Qstar P₁ : α → ℝ}
   ring
 
 omit [DecidableEq α] in
-/-- **Strict interior of the perturbation**: by convexity of `klDivPmf · P₁`
+/-- Strict interior of the perturbation: by convexity of `klDivPmf · P₁`
 (`klDivPmf_strictConvexOn_left`) plus `klDivPmf P₁ P₁ = 0`, a tiny push toward
 `P₁` strictly lowers the constraint value below the active value
 `klDivPmf Qstar P₁ ≤ r`. -/
@@ -228,7 +228,7 @@ lemma klDivPmf_perturb_lt
       _ ≤ r := h_le
 
 omit [DecidableEq α] in
-/-- **ε-continuity of `klDivPmf Qstar_ε P₂`**: as `ε → 0`, the perturbed KL
+/-- ε-continuity of `klDivPmf Qstar_ε P₂`: as `ε → 0`, the perturbed KL
 divergence converges to `klDivPmf Qstar P₂` (continuity of `klDivPmf · P₂`). -/
 lemma klDivPmf_perturb_tendsto
     (P₁ P₂ : α → ℝ) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -256,7 +256,7 @@ lemma klDivPmf_perturb_tendsto
 
 /-! ## `h_minimizer` premise -/
 
-/-- **Minimizer premise**: for every `c ∈ E_r n`, the minimizer value
+/-- Minimizer premise: for every `c ∈ E_r n`, the minimizer value
 `klDivSumForm_ofVec Qstar (P₂.real ∘ singleton)` lower-bounds `klDivIndex c n P₂`.
 Holds for the strict-interior Qstar. -/
 lemma hoeffding_exp_minimizer
@@ -325,7 +325,7 @@ lemma hoeffding_exp_minimizer
 
 /-! ## Achievability via perturbation -/
 
-/-- **Achievability rate bound at perturbation level `ε`**: for the strictly
+/-- Achievability rate bound at perturbation level `ε`: for the strictly
 interior perturbed minimizer `Qstar_ε`, the strict-interior
 `roundedTypeIndex_mem_E_r_eventually` feeds `sanov_ldp_lower_bound_pointwise`,
 yielding `-klDivPmf Qstar_ε P₂ ≤ liminf (rate)`. -/
@@ -513,7 +513,7 @@ achievability but break `hoeffding_exp_minimizer` (a margin point may beat
 `Qstar`), so the two requirements conflict at the active constraint. The
 resolution is the perturbation argument below. -/
 
-/-- **Hoeffding tradeoff at the exponential level** (interior).
+/-- Hoeffding tradeoff at the exponential level (interior).
 
 The active-boundary obstruction (the realizing minimizer `Qstar` sits on the
 *active* boundary `klDivPmf Qstar P₁ = r`, so its rounded type straddles the

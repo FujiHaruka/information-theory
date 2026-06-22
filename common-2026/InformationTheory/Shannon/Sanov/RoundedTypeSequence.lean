@@ -100,7 +100,7 @@ private lemma roundedTypeIndexNat_le (P : α → ℝ) (n : ℕ) (a : α) :
   · exact Nat.sub_le _ _
   · exact min_le_right _ _
 
-/-- **Rounded type index** (achievable type sequence).
+/-- Rounded type index (achievable type sequence).
 `c a := ⌊n · P a⌋` for `a ≠ a₀`, and `c a₀ := n - ∑_{a ≠ a₀} ⌊n · P a⌋`
 where `a₀ := absorberLetter α`. The single "absorber" letter takes all the
 deficit, simplifying the `Fin (n+1)` range proof. -/
@@ -110,7 +110,7 @@ noncomputable def roundedTypeIndex (P : α → ℝ) (n : ℕ) :
 
 
 omit [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **Sum constraint**: `∑ a, roundedTypeIndex P n a = n`. -/
+/-- Sum constraint: `∑ a, roundedTypeIndex P n a = n`. -/
 lemma roundedTypeIndex_sum
     (P : α → ℝ) (hP : (∑ a, P a) = 1) (hP_nn : ∀ a, 0 ≤ P a)
     (n : ℕ) (_hn : 0 < n) :
@@ -149,7 +149,7 @@ lemma roundedTypeIndex_sum
   omega
 
 omit [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **Rounding distance bound**: `|(c a : ℝ)/n - P a| ≤ |α|/n` per letter.
+/-- Rounding distance bound: `|(c a : ℝ)/n - P a| ≤ |α|/n` per letter.
 The absorber letter takes up to `|α|-1` deficit; non-absorber letters
 differ from `n · P a` by `< 1`. Sufficient for Tendsto (sandwich with `→ 0`). -/
 lemma roundedTypeIndex_dist_le
@@ -249,7 +249,7 @@ lemma roundedTypeIndex_dist_le
     refine ⟨?_, ?_⟩ <;> linarith
 
 omit [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **Pointwise Tendsto**: `(roundedTypeIndex P n a : ℝ) / n → P a`. -/
+/-- Pointwise Tendsto: `(roundedTypeIndex P n a : ℝ) / n → P a`. -/
 lemma roundedTypeIndex_tendsto
     (P : α → ℝ) (hP : (∑ a, P a) = 1) (hP_nn : ∀ a, 0 ≤ P a)
     (a : α) :
@@ -286,7 +286,7 @@ lemma roundedTypeIndex_tendsto
     _ < ε := hN.1
 
 omit [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **Vector Tendsto** (`α → ℝ` Pi-topology). -/
+/-- Vector Tendsto (`α → ℝ` Pi-topology). -/
 lemma roundedTypeIndex_tendsto_vec
     (P : α → ℝ) (hP : (∑ a, P a) = 1) (hP_nn : ∀ a, 0 ≤ P a) :
     Tendsto (fun n : ℕ ↦ (fun a ↦ ((roundedTypeIndex P n a : ℕ) : ℝ) / n))
@@ -296,7 +296,7 @@ lemma roundedTypeIndex_tendsto_vec
   exact roundedTypeIndex_tendsto P hP hP_nn a
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **General witness lemma**: for any count `c : α → ℕ` with `∑ a, c a = n`,
+/-- General witness lemma: for any count `c : α → ℕ` with `∑ a, c a = n`,
 the type class `typeClassByCount c` is nonempty.
 Construction: define `g : Fin n → α` by packing `Σ a, Fin (c a)` into `Fin n`
 via cardinality equivalence, then projecting via `Sigma.fst`. -/
@@ -348,7 +348,7 @@ lemma typeClassByCount_nonempty_of_sum
 
 
 omit [MeasurableSingletonClass α] in
-/-- **KL convergence via `klDivSumForm_ofVec` continuity**:
+/-- KL convergence via `klDivSumForm_ofVec` continuity:
 `klDivIndex (roundedTypeIndex P n) n Q → klDivSumForm_ofVec P (Q.real ∘ singleton)`. -/
 theorem klDivIndex_rounded_tendsto
     (Q : Measure α) (hQpos : ∀ a, 0 < Q.real {a})

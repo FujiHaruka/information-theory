@@ -57,7 +57,7 @@ instance [Fintype α] (n : ℕ) : Fintype (TypeCountIndex α n) := by
   unfold TypeCountIndex; infer_instance
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **Polynomial cardinality bound**: `|TypeCountIndex α n| = (n+1)^|α|`. -/
+/-- Polynomial cardinality bound: `|TypeCountIndex α n| = (n+1)^|α|`. -/
 lemma typeCountIndex_card (n : ℕ) :
     Fintype.card (TypeCountIndex α n) = (n+1) ^ Fintype.card α := by
   show Fintype.card (α → Fin (n+1)) = (n+1) ^ Fintype.card α
@@ -70,12 +70,12 @@ lemma typeCountIndex_card (n : ℕ) :
 
 /-! ### Type class by integer counts + Sanov bound -/
 
-/-- **Type class by integer counts** `T(c) := {x | ∀ a, typeCount x a = c a}`. -/
+/-- Type class by integer counts `T(c) := {x | ∀ a, typeCount x a = c a}`. -/
 def typeClassByCount {n : ℕ} (c : α → ℕ) : Set (Fin n → α) :=
   { x | ∀ a, typeCount x a = c a }
 
 
-/-- **KL divergence at an empirical type** (rational form):
+/-- KL divergence at an empirical type (rational form):
 `klDivIndex c n Q := ∑ a, (c a / n) · (log (c a / n) - log Q.real{a})`. -/
 noncomputable def klDivIndex (c : α → ℕ) (n : ℕ) (Q : Measure α) : ℝ :=
   ∑ a : α, ((c a : ℝ) / n) * (Real.log ((c a : ℝ) / n) - Real.log (Q.real {a}))
@@ -99,7 +99,7 @@ lemma sum_const_aggr_of_mem_typeClassByCount
     exact_mod_cast h_count]
 
 omit [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Per-point identity** (index form): `x ∈ typeClassByCount c` implies
+/-- Per-point identity (index form): `x ∈ typeClassByCount c` implies
 `∏ i, Q.real {x i} = (∏ a, ((c a : ℝ)/n)^(c a)) · exp(-n · klDivIndex c n Q)`. -/
 lemma typeClassByCount_prod_eq
     (Q : Measure α)
@@ -190,7 +190,7 @@ lemma typeClassByCount_prod_eq
   ring
 
 set_option linter.unusedSectionVars false in
-/-- **Sanov upper bound (index form)**: for `c : α → ℕ` with `∑ c a = n`,
+/-- Sanov upper bound (index form): for `c : α → ℕ` with `∑ c a = n`,
 `Q^n(typeClassByCount c) ≤ exp(-n · klDivIndex c n Q)`. -/
 @[entry_point]
 theorem typeClassByCount_Qn_le
@@ -362,7 +362,7 @@ theorem typeClassByCount_union_Qn_le
     rw [typeClassByCount_empty_of_sum_ne h_sum]
     simp [Real.exp_nonneg]
 
-/-- **inf-form upper bound**: if `∀ c ∈ F, D ≤ klDivIndex c n Q` then
+/-- inf-form upper bound: if `∀ c ∈ F, D ≤ klDivIndex c n Q` then
 `Q^n(⋃ c ∈ F, typeClassByCount c) ≤ |F| · exp(-n · D)`. -/
 @[entry_point]
 theorem typeClassByCount_union_Qn_le_inf
@@ -430,7 +430,7 @@ lemma log_succ_div_tendsto_zero :
   have hn1_pos : (0 : ℝ) < (n : ℝ) + 1 := by linarith
   field_simp
 
-/-- **Sanov LDP upper bound** (Cover-Thomas Theorem 11.4.1):
+/-- Sanov LDP upper bound (Cover-Thomas Theorem 11.4.1):
 `(1/n) log Q^n({x | typeCount x ∈ E n}) ≤ -D + ε` for all large `n`,
 provided every `c ∈ E n` satisfies `D ≤ klDivIndex c n Q`.
 

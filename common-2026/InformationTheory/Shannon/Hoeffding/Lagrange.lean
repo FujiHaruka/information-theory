@@ -15,8 +15,8 @@ The interior Csiszár characterization `IsHoeffdingLagrangeHyp`
 
 The companion gradient sub-predicate `IsKLGradientHyp` is discharged in
 `HoeffdingTilt.lean` (`isKLGradientHyp_tilt`). This file
-discharges the **`mem`** half — the *constraint-match* — from the
-**Intermediate Value Theorem**, and reduces the remaining **`realises`** half to
+discharges the `mem` half — the *constraint-match* — from the
+**Intermediate Value Theorem**, and reduces the remaining `realises` half to
 a strictly-more-primitive *minimality* predicate `IsHoeffdingTiltMinimal` (the
 Csiszár I-projection minimality), with the bridge
 `IsHoeffdingTiltMinimal → realises` fully discharged.
@@ -51,7 +51,7 @@ flag + IVT then assembles a full `IsHoeffdingLagrangeHyp`.
 
 * `hoeffdingTilt_continuous_kl_P₁` — continuity of `g` on `ℝ`.
 * `hoeffdingTilt_kl_P₁_lam_zero` / `_lam_one` — endpoint values of `g`.
-* `exists_lam_hoeffdingTilt_kl_eq` — **IVT constraint-match**, fully discharged.
+* `exists_lam_hoeffdingTilt_kl_eq` — IVT constraint-match, fully discharged.
 * `hoeffdingTilt_mem_constraintSet_of_kl_eq` — `mem` from a constraint-match.
 * `IsHoeffdingTiltMinimal` — primitive minimality predicate (`IsMinOn`).
 * `isHoeffdingTiltMinimal_realises` — bridge `minimal → realises`.
@@ -150,7 +150,7 @@ lemma hoeffdingTilt_kl_P₁_lam_one
 
 /-! ## IVT constraint-match -/
 
-/-- **IVT constraint-match**: for any `alpha ∈ [0, klDivPmf P₂ P₁]` there is a
+/-- IVT constraint-match: for any `alpha ∈ [0, klDivPmf P₂ P₁]` there is a
 tilt parameter `lam ∈ [0,1]` whose tilt hits the Type-I constraint *exactly*:
 `klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁ = alpha`. Discharged from
 `intermediate_value_Icc`. -/
@@ -190,7 +190,7 @@ theorem hoeffdingTilt_mem_constraintSet_of_kl_eq
 
 /-! ## Primitive minimality predicate + bridge to `realises` -/
 
-/-- **Primitive tilt-minimality** (Csiszár I-projection): the tilt at `lam`
+/-- Primitive tilt-minimality (Csiszár I-projection): the tilt at `lam`
 minimises `klDivPmf · P₂` over the constraint set `K(α)`. This carries genuine
 content (an `IsMinOn` over all of `K`), distinct from the `sInf`-form
 `hoeffdingE2 = klDivPmf tilt P₂` of `IsHoeffdingLagrangeHyp.realises`. -/
@@ -198,7 +198,7 @@ def IsHoeffdingTiltMinimal (P₁ P₂ : α → ℝ) (alpha lam : ℝ) : Prop :=
   IsMinOn (fun Q : α → ℝ ↦ klDivPmf Q P₂)
     (hoeffdingConstraintSet P₁ alpha) (hoeffdingTilt P₁ P₂ lam)
 
-/-- **Bridge (minimal ⇒ realises)**: when the tilt at `lam` lies in `K(α)` and
+/-- Bridge (minimal ⇒ realises): when the tilt at `lam` lies in `K(α)` and
 minimises `klDivPmf · P₂` on `K(α)`, it realises the infimum
 `hoeffdingE2 P₁ P₂ alpha`. Discharged via the `sInf` characterisation. -/
 theorem isHoeffdingTiltMinimal_realises
@@ -233,7 +233,7 @@ theorem isHoeffdingTiltMinimal_realises
 
 /-! ## Assemble `IsHoeffdingLagrangeHyp` -/
 
-/-- **Assemble Lagrange hypothesis**: from an IVT constraint-match (`mem`,
+/-- Assemble Lagrange hypothesis: from an IVT constraint-match (`mem`,
 `klDivPmf tilt P₁ = alpha`) and the minimality primitive, build a full
 `IsHoeffdingLagrangeHyp`. The `mem` half is constructive; only minimality is
 carried. -/
@@ -249,7 +249,7 @@ theorem isHoeffdingLagrangeHyp_of_minimal
     { mem := h_mem
       realises := isHoeffdingTiltMinimal_realises P₁ P₂ hP₂_pos h_mem h_min }
 
-/-- **Existence form**: IVT supplies a `lam ∈ [0,1]` matching the constraint;
+/-- Existence form: IVT supplies a `lam ∈ [0,1]` matching the constraint;
 together with the minimality primitive at that `lam`, a full
 `IsHoeffdingLagrangeHyp` exists. The minimality hypothesis is quantified over
 the (otherwise unknown) IVT witness. -/

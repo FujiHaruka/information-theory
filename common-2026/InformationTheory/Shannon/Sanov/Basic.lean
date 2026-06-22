@@ -48,13 +48,13 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 noncomputable def typeCount {n : ℕ} (x : Fin n → α) (a : α) : ℕ :=
   (Finset.univ.filter (fun i : Fin n ↦ x i = a)).card
 
-/-- **Type class** `T(P)`: sequences `x : Fin n → α` whose empirical distribution equals `P`,
+/-- Type class `T(P)`: sequences `x : Fin n → α` whose empirical distribution equals `P`,
 i.e., `∀ a, (typeCount x a : ℝ) = n · P.real {a}`. -/
 noncomputable def typeClass (P : Measure α) (n : ℕ) : Set (Fin n → α) :=
   { x | ∀ a : α, (typeCount x a : ℝ) = (n : ℝ) * P.real {a} }
 
 
-/-- **Finite-alphabet KL sum form**:
+/-- Finite-alphabet KL sum form:
 `klDivSumForm P Q := ∑ a, P(a) · (log P(a) - log Q(a))`.
 
 Shorthand for the Sanov exponent; equals `(klDiv P Q).toReal` under `P ≪ Q`
@@ -101,7 +101,7 @@ lemma sum_llrPmf_eq_of_mem_typeClass
   rfl
 
 omit [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Per-point ratio identity**: `x ∈ typeClass P n` implies
+/-- Per-point ratio identity: `x ∈ typeClass P n` implies
 `∏ i, Q.real {x i} = (∏ i, P.real {x i}) · exp(-n · klDivSumForm P Q)`. -/
 lemma typeClass_prod_ratio
     (P Q : Measure α)
@@ -141,7 +141,7 @@ lemma typeClass_prod_ratio
 /-! ### Sanov A main theorem -/
 
 set_option linter.unusedSectionVars false in
-/-- **Sanov A form** (Cover-Thomas Theorem 11.1.4):
+/-- Sanov A form (Cover-Thomas Theorem 11.1.4):
 `Q^n(T(P)) ≤ exp(-n · klDivSumForm P Q)`. -/
 @[entry_point]
 theorem typeClass_Qn_le
@@ -272,7 +272,7 @@ theorem klDivSumForm_eq_toReal_klDiv
   rw [h_llr, smul_eq_mul]
 
 set_option linter.unusedSectionVars false in
-/-- **Sanov A form, `klDiv` exponent** (corollary of `typeClass_Qn_le`):
+/-- Sanov A form, `klDiv` exponent (corollary of `typeClass_Qn_le`):
 `Q^n(T(P)) ≤ exp(-n · (klDiv P Q).toReal)`. -/
 @[entry_point]
 theorem typeClass_Qn_le_klDiv

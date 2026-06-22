@@ -4,7 +4,7 @@ import InformationTheory.Meta.EntryPoint
 /-!
 # Hoeffding tradeoff — interior gradient body (Lagrange tilt)
 
-For the **interior** regime `0 < α < klDivPmf P₂ P₁`, the Csiszár I-projection
+For the interior regime `0 < α < klDivPmf P₂ P₁`, the Csiszár I-projection
 of `P₂` onto the constraint set `K(α)` is the one-parameter exponential tilt
 
       `Qstar a = c(λ) · P₁ a ^ (1 - λ) · P₂ a ^ λ`,
@@ -12,7 +12,7 @@ of `P₂` onto the constraint set `K(α)` is the one-parameter exponential tilt
 which is exactly `Chernoff.chernoffMediator P₁ P₂ λ`. This file reuses that
 family (no new definition) and proves its defining gradient property:
 
-      `log (Qstar a) - (1 - λ) · log (P₁ a) - λ · log (P₂ a)`  is **constant in a**
+      `log (Qstar a) - (1 - λ) · log (P₁ a) - λ · log (P₂ a)`  is constant in a
       (it equals `-log Z(λ)`).
 
 This is the Lagrange first-order condition `∇[D(Q‖P₂) + μ D(Q‖P₁)] = const`:
@@ -22,30 +22,30 @@ about `rpow`.
 
 The interior characterization decomposes into two sub-predicates:
 
-* **`IsKLGradientHyp P₁ P₂ alpha lam Qstar`** — discharged for the tilt
+* `IsKLGradientHyp P₁ P₂ alpha lam Qstar` — discharged for the tilt
   `Qstar = chernoffMediator P₁ P₂ lam`: the constant-log-ratio stationarity
   above, plus full support and `Qstar ∈ stdSimplex`.
 
-* **`IsHoeffdingLagrangeHyp P₁ P₂ alpha lam`** — the tilt at `lam` matches the
-  constraint (`klDivPmf (tilt) P₁ ≤ alpha`) **and** realises the infimum
+* `IsHoeffdingLagrangeHyp P₁ P₂ alpha lam` — the tilt at `lam` matches the
+  constraint (`klDivPmf (tilt) P₁ ≤ alpha`) and realises the infimum
   (`hoeffdingE2 = klDivPmf (tilt) P₂`). The existence of a `lam ∈ (0,1)` solving
   `klDivPmf (tilt) P₁ = alpha` is the implicit-function step (monotonicity of
   `λ ↦ klDivPmf T_λ P₁`).
 
 ## What this file publishes
 
-* **`hoeffdingTilt`** — the closed-form Lagrange minimizer (a `chernoffMediator`
+* `hoeffdingTilt` — the closed-form Lagrange minimizer (a `chernoffMediator`
   alias) with its positivity / pmf facts re-exported.
 
-* **`hoeffdingTilt_log_ratio_const`** — the Lagrange gradient identity
+* `hoeffdingTilt_log_ratio_const` — the Lagrange gradient identity
   (constant log-ratio across the alphabet).
 
-* **`IsKLGradientHyp`** — gradient sub-predicate, with constructor
+* `IsKLGradientHyp` — gradient sub-predicate, with constructor
   `isKLGradientHyp_tilt` discharging it for the tilt family.
 
-* **`IsHoeffdingLagrangeHyp`** — Lagrange constraint-match sub-predicate.
+* `IsHoeffdingLagrangeHyp` — Lagrange constraint-match sub-predicate.
 
-* **`isHoeffdingMinimizerFullSupport_of_lagrange`** — the tilt is full support
+* `isHoeffdingMinimizerFullSupport_of_lagrange` — the tilt is full support
   (purely constructive from `hoeffdingTilt_pos`).
 -/
 
@@ -67,7 +67,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
 /-! ## Closed-form Lagrange minimizer (`chernoffMediator` alias) -/
 
-/-- **Closed-form Lagrange / KKT minimizer** of `klDivPmf · P₂` on `K(α)`:
+/-- Closed-form Lagrange / KKT minimizer of `klDivPmf · P₂` on `K(α)`:
 the exponential tilt `Qstar a = P₁ a ^ (1-λ) · P₂ a ^ λ / Z(λ)`.
 
 This is definitionally `Chernoff.chernoffMediator P₁ P₂ lam`; we expose it under
@@ -108,12 +108,12 @@ lemma hoeffdingTilt_mem_stdSimplex
 /-! ## Lagrange gradient identity (constant log-ratio) -/
 
 omit [DecidableEq α] in
-/-- **Lagrange gradient stationarity (constant log-ratio)**: for the tilt
+/-- Lagrange gradient stationarity (constant log-ratio): for the tilt
 `Qstar = hoeffdingTilt P₁ P₂ lam`, the log-likelihood combination
 
     `log (Qstar a) - (1 - lam) · log (P₁ a) - lam · log (P₂ a)`
 
-is **constant in `a`** (it equals `-log Z(λ)`). This is the Csiszár Lagrange
+is constant in `a` (it equals `-log Z(λ)`). This is the Csiszár Lagrange
 first-order condition `∇[D(·‖P₂) + μ D(·‖P₁)] = const`; the explicit constant
 makes the stationarity dischargeable as pure `rpow` algebra. -/
 lemma hoeffdingTilt_log_ratio_const
@@ -141,7 +141,7 @@ lemma hoeffdingTilt_log_ratio_const
   ring
 
 omit [DecidableEq α] in
-/-- **Pairwise flatness**: a corollary stating that the log-ratio combination
+/-- Pairwise flatness: a corollary stating that the log-ratio combination
 agrees at any two points `a, b`. This is the gradient condition in the form
 "`∇` is constant", convenient for the KKT consumer. -/
 lemma hoeffdingTilt_log_ratio_eq
@@ -156,7 +156,7 @@ lemma hoeffdingTilt_log_ratio_eq
 
 /-! ## Gradient sub-predicate (`IsKLGradientHyp`) -/
 
-/-- **KL gradient sub-predicate**: bundles the constant-log-ratio gradient
+/-- KL gradient sub-predicate: bundles the constant-log-ratio gradient
 stationarity at parameter `lam` together with full support and simplex
 membership of `Qstar`.
 
@@ -175,7 +175,7 @@ structure IsKLGradientHyp
       = Real.log (Qstar b) - (1 - lam) * Real.log (P₁ b) - lam * Real.log (P₂ b)
 
 omit [DecidableEq α] in
-/-- **Gradient discharge for the tilt family**: the closed-form tilt
+/-- Gradient discharge for the tilt family: the closed-form tilt
 `hoeffdingTilt P₁ P₂ lam` satisfies `IsKLGradientHyp` (no hypothesis on
 `alpha`). -/
 @[entry_point]
@@ -189,7 +189,7 @@ theorem isKLGradientHyp_tilt
 
 /-! ## Lagrange constraint-match sub-predicate -/
 
-/-- **Lagrange constraint-match sub-predicate**: at parameter `lam`, the tilt
+/-- Lagrange constraint-match sub-predicate: at parameter `lam`, the tilt
 `hoeffdingTilt P₁ P₂ lam` lies in the constraint set `K(α)` and realises the
 infimum `hoeffdingE2 P₁ P₂ alpha`.
 
@@ -215,7 +215,7 @@ structure IsHoeffdingLagrangeHyp
 /-! ## Full-support flag via Lagrange tilt -/
 
 omit [DecidableEq α] in
-/-- **Tilt is full support**: the closed-form tilt minimizer satisfies the
+/-- Tilt is full support: the closed-form tilt minimizer satisfies the
 `IsHoeffdingMinimizerFullSupport` predicate. This is purely constructive
 — `hoeffdingTilt_pos` discharges full support directly from `hP₁_pos` /
 `hP₂_pos`, so no Lagrange hypothesis is needed. -/

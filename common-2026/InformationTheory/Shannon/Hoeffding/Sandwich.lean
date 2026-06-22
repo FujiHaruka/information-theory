@@ -95,7 +95,7 @@ under full support `P₁, P₂ > 0`.
 
 Strategy: pick the smallest `P₂` atom `a₀`. For any test `s` with Type I ≤ alpha,
 i.e. `∑_{x∈s} ∏ P₁(x_i) ≥ 1 - alpha`, we bound below by the
-**worst single x term**: each term `∏ P₂(x_i) ≥ p₂_min^n`. Combined with
+worst single x term: each term `∏ P₂(x_i) ≥ p₂_min^n`. Combined with
 `|s| ≥ (1 - alpha) / (P₁_max)^n`, the Type II is at least
 `(1 - alpha) · (p₂_min / P₁_max)^n`. We further drop the `(/P₁_max)^n` factor
 by using `p₁_max ≤ 1` (pmf entries ≤ 1 in a probability simplex), giving

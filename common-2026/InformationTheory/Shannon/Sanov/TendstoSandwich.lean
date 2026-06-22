@@ -112,7 +112,7 @@ theorem log_le_inv_mul_log_iUnion_of_forall_le
   rw [show (1 / (n : ℝ)) * ((n : ℝ) * Real.log m) = Real.log m by field_simp] at h
   exact h
 
-/-- **Sanov LDP equality form** (Cover-Thomas Theorem 11.4.1):
+/-- Sanov LDP equality form (Cover-Thomas Theorem 11.4.1):
 
 ```
 (1/n) log Q^n(⋃ c ∈ E n, T_c)  →  -klDivSumForm_ofVec P (Q.real ∘ singleton)

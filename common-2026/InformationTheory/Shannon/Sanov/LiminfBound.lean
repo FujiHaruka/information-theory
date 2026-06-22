@@ -121,7 +121,7 @@ theorem inv_mul_log_iUnion_typeClassByCount_le_zero
     · exact h_Qn_le_one
   exact mul_nonpos_of_nonneg_of_nonpos h_one_div_nn h_log_le
 
-/-- **Sanov LDP lower bound (rounding sequence)**:
+/-- Sanov LDP lower bound (rounding sequence):
 if `roundedTypeIndex P n ∈ E n` eventually, then
 `liminf (1/n) log Q^n(⋃ c ∈ E n, T_c) ≥ -klDivSumForm_ofVec P (Q.real ∘ singleton)`. -/
 theorem sanov_ldp_lower_bound_pointwise

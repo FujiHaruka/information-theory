@@ -86,7 +86,7 @@ lemma pmfToMeasure_real_singleton
 
 /-- n-IID Type II error set (pmf form).
 
-`s : Finset (Fin n → α)` is the **acceptance region for H₀**. The Type I error is
+`s : Finset (Fin n → α)` is the acceptance region for H₀. The Type I error is
 `1 - ∑_{x ∈ s} ∏ P₁(x_i)` and the Type II error is `∑_{x ∈ s} ∏ P₂(x_i)`.
 Convention matches `Stein/OptimalExponent.lean :: steinBetaSet` (Measure path) with `Finset`
 instead of `Set + MeasurableSet`. -/
@@ -161,7 +161,7 @@ lemma steinTypeII_at_level_pmf_le_one
 /-! ## Hoeffding constraint set convexity + Qstar full support -/
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- The Hoeffding constraint set is **convex**: intersection of the convex simplex with
+/-- The Hoeffding constraint set is convex: intersection of the convex simplex with
 the convex sublevel set of the convex functional `Q ↦ klDivPmf Q P₁`. -/
 @[entry_point]
 lemma hoeffdingConstraintSet_convex
@@ -197,7 +197,7 @@ lemma hoeffdingConstraintSet_convex
 /-! ## Pythagoras-based minimizer bound -/
 
 omit [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **Hoeffding Sanov minimizer**: for any `P ∈ K` with full support,
+/-- Hoeffding Sanov minimizer: for any `P ∈ K` with full support,
 `klDivPmf Qstar P₂ ≤ klDivPmf P P₂`, via the Csiszar Pythagoras inequality
 `klDivPmf P P₂ ≥ klDivPmf P Qstar + klDivPmf Qstar P₂`. -/
 @[entry_point]

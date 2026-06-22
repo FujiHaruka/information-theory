@@ -12,13 +12,13 @@ strictly-primitive predicate
         := `IsMinOn (klDivPmf · P₂) (hoeffdingConstraintSet P₁ α) (hoeffdingTilt P₁ P₂ λ)`,
 
 the Csiszár I-projection minimality of the exponential tilt. This file
-**discharges** that minimality fully, for the interior regime `0 < λ ≤ 1` with
+discharges that minimality fully, for the interior regime `0 < λ ≤ 1` with
 the IVT constraint-match `klDivPmf (tilt) P₁ = α`.
 
 ## Approach
 
 The discharge is the exponential-family Pythagorean identity, derived from the
-**log-linearity** of the tilt and a per-coordinate algebraic identity that holds
+log-linearity of the tilt and a per-coordinate algebraic identity that holds
 *even at zero atoms* (so the minimality extends to the whole constraint set `K`,
 boundary included).
 
@@ -32,12 +32,12 @@ with weights `λ`, `1 - λ`, `-1` makes the `Q log Q` terms cancel (coefficients
 `λ + (1-λ) - 1 = 0`) and the `Q log R` terms collapse via the tilt's
 constant-log-ratio identity `log T - (1-λ) log P₁ - λ log P₂ = -log Z`
 (`hoeffdingTilt_log_ratio_const`) into the *flat* term `Q · (-log Z)`. Summing
-over the simplex (`∑ Q = 1`) gives the **master identity**
+over the simplex (`∑ Q = 1`) gives the master identity
 
       `λ · D(Q‖P₂) + (1-λ) · D(Q‖P₁) - D(Q‖T) = -log Z`        (∀ Q ∈ stdSimplex).
 
-Specialising to `Q = T` (`D(T‖T)=0`) and subtracting yields the **Pythagorean
-difference**
+Specialising to `Q = T` (`D(T‖T)=0`) and subtracting yields the Pythagorean
+difference
 
       `λ (D(Q‖P₂) - D(T‖P₂)) + (1-λ)(D(Q‖P₁) - D(T‖P₁)) = D(Q‖T) ≥ 0`.
 
@@ -78,7 +78,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
 /-! ## Per-coordinate `klFun` identity (valid at zero atoms) -/
 
-/-- **Per-coordinate `klFun` identity**: for a positive reference `R` and any
+/-- Per-coordinate `klFun` identity: for a positive reference `R` and any
 `Q ≥ 0` (including `Q = 0`, where `0 · log 0 = 0`),
 `R · klFun (Q / R) = Q · log Q - Q · log R + (R - Q)`. -/
 lemma klFun_ref_mul {R Q : ℝ} (hR : 0 < R) (hQ : 0 ≤ Q) :
@@ -99,7 +99,7 @@ lemma klFun_ref_mul {R Q : ℝ} (hR : 0 < R) (hQ : 0 ≤ Q) :
 /-! ## `klDivPmf` cross-entropy sum form (no full support) -/
 
 omit [DecidableEq α] in
-/-- **Cross-entropy sum form** of `klDivPmf`, valid for any `Q ∈ stdSimplex`
+/-- Cross-entropy sum form of `klDivPmf`, valid for any `Q ∈ stdSimplex`
 (full support *not* required) and full-support reference `R`:
 `klDivPmf Q R = ∑ a, (Q a · log (Q a) - Q a · log (R a) + (R a - Q a))`. -/
 lemma klDivPmf_eq_entropyCross_sum
@@ -113,7 +113,7 @@ lemma klDivPmf_eq_entropyCross_sum
 /-! ## Master exponential-family identity -/
 
 omit [DecidableEq α] in
-/-- **Master identity**: for every `Q ∈ stdSimplex` the log-linear weighting of
+/-- Master identity: for every `Q ∈ stdSimplex` the log-linear weighting of
 the three KL divergences against `P₂`, `P₁`, and the tilt collapses to the flat
 `-log Z`:
 
@@ -174,7 +174,7 @@ lemma hoeffdingTilt_kl_master
 /-! ## Pythagorean difference identity -/
 
 omit [DecidableEq α] in
-/-- **Pythagorean difference identity** (Csiszár): subtracting the master
+/-- Pythagorean difference identity (Csiszár): subtracting the master
 identity at `Q` and at the tilt `T` (where `klDivPmf T T = 0`):
 
     `λ (klDivPmf Q P₂ - klDivPmf T P₂) + (1-λ)(klDivPmf Q P₁ - klDivPmf T P₁)
@@ -204,7 +204,7 @@ lemma hoeffdingTilt_kl_pythagoras_diff
 /-! ## `IsHoeffdingTiltMinimal` discharge -/
 
 omit [DecidableEq α] in
-/-- **I-projection minimality discharge**: for `0 < λ ≤ 1` and the IVT
+/-- I-projection minimality discharge: for `0 < λ ≤ 1` and the IVT
 constraint-match `klDivPmf (tilt) P₁ = α`, the tilt minimises `klDivPmf · P₂`
 over the constraint set `K(α)`. This *fully discharges* the primitive
 `IsHoeffdingTiltMinimal` (whole constraint set, boundary included). -/
@@ -252,7 +252,7 @@ theorem isHoeffdingTiltMinimal_of_constraint_eq
 /-! ## Constructive `IsHoeffdingLagrangeHyp` (both halves) -/
 
 omit [DecidableEq α] in
-/-- **Fully constructive Lagrange hypothesis**: from `0 < λ ≤ 1` and the IVT
+/-- Fully constructive Lagrange hypothesis: from `0 < λ ≤ 1` and the IVT
 constraint-match, build `IsHoeffdingLagrangeHyp` with both `mem` *and*
 `realises` constructive — no minimality hypothesis carried. -/
 theorem isHoeffdingLagrangeHyp_of_constraint_eq
@@ -269,7 +269,7 @@ theorem isHoeffdingLagrangeHyp_of_constraint_eq
 /-! ## Interior existence (IVT + discharged minimality) -/
 
 omit [DecidableEq α] in
-/-- **Interior existence**: for interior `0 < α ≤ klDivPmf P₂ P₁`, the IVT
+/-- Interior existence: for interior `0 < α ≤ klDivPmf P₂ P₁`, the IVT
 supplies a `λ ∈ (0,1]` whose tilt matches the constraint, and the in-file
 minimality discharge upgrades it to a *fully constructive*
 `IsHoeffdingLagrangeHyp` — no external minimality hypothesis. -/
