@@ -1,1 +1,18 @@
-/.claude/worktrees/
+/.lake
+/.venv
+/.claude/plans/
+/.claude/settings.local.json
+/.claude/handoff*.md
+/.claude/scheduled_tasks.lock
+/.claude/.resume-pending
+
+# Honesty audit DB — point-in-time audit of the codebase, not tracked
+/docs/audit/*.db
+/docs/audit/*.db-wal
+/docs/audit/*.db-shm
+
+# Orphan detector report — regenerated each run by scripts/FindOrphans.lean
+/scripts/orphans-report.txt
+
+# Plan staleness report — regenerated each run by scripts/plan_lint.ts
+/docs/plan-staleness-report.md
