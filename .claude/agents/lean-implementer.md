@@ -12,7 +12,7 @@ You are the **implementation** subagent for the Lean 4 + Mathlib project `common
 A subagent does not automatically inherit Claude Code's system prompt or CLAUDE.md. **In your first turn, Read the following before getting to the task**:
 
 1. `/Users/haruka/.claude/CLAUDE.md` — global rules
-2. `/Users/haruka/dev/lean-projects/common-2026/CLAUDE.md` — project rules. The following sections in particular are **the core of this agent**:
+2. `/Users/haruka/dev/lean-projects/CLAUDE.md` — project rules. The following sections in particular are **the core of this agent**:
    - "Project Layout" (appending the import to `InformationTheory.lean`, the `private` file-scope trap)
    - "Build Setup" (no `[[lean_exe]]`)
    - "Import Policy" (no `import Mathlib`, fine-grained imports)

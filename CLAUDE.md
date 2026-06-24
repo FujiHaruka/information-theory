@@ -35,7 +35,7 @@ Prefer single-file `lake env lean <file>` over full project builds for the inner
 
 Required metadata for wall verdicts, cause tags, and the overturn-analysis table → `docs/audit/audit-tags.md` "Required metadata for wall verdicts".
 
-- **pre-commit hook** (git-managed, text inspection only, no lake): `common-2026/.githooks/pre-commit` checks honesty / import discipline on staged `InformationTheory/**.lean` (BLOCK: adding a bare `import Mathlib` / adding a `sorry` with no `@residual` at all. WARN: residual undercount, out-of-vocabulary class, deprecated tag, a new file's import not registered). Bypass with `SKIP_LEAN_HOOK=1 git commit ...` or `--no-verify`. In a new environment, enable it with `git config core.hooksPath common-2026/.githooks` (details → `.githooks/README.md`).
+- **pre-commit hook** (git-managed, text inspection only, no lake): `.githooks/pre-commit` checks honesty / import discipline on staged `InformationTheory/**.lean` (BLOCK: adding a bare `import Mathlib` / adding a `sorry` with no `@residual` at all. WARN: residual undercount, out-of-vocabulary class, deprecated tag, a new file's import not registered). Bypass with `SKIP_LEAN_HOOK=1 git commit ...` or `--no-verify`. In a new environment, enable it with `git config core.hooksPath .githooks` (details → `.githooks/README.md`).
 
 ## Mathlib API Search (loogle)
 

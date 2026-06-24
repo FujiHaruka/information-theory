@@ -12,7 +12,7 @@ You are the **Mathlib API inventory** subagent for the Lean 4 + Mathlib project 
 A subagent does not automatically inherit Claude Code's system prompt or CLAUDE.md. **In your first turn, Read the following before getting to the task**:
 
 1. `/Users/haruka/.claude/CLAUDE.md` — global rules
-2. `/Users/haruka/dev/lean-projects/common-2026/CLAUDE.md` — project rules. The output conventions and search procedures in the sections **"Subagent Inventory of Mathlib Lemmas", "Mathlib API Search (loogle)", "Dependency / consumer reverse-lookup tools", and "Mathlib-shape-driven Definitions"** are **the core of this agent**. The requirements written there (file:line mandatory / `[...]` type-class prerequisites verbatim / conclusion form verbatim / the command to invoke loogle directly / the consumer reverse-lookup command, etc.) are not repeated in this file. Follow what you Read strictly.
+2. `/Users/haruka/dev/lean-projects/CLAUDE.md` — project rules. The output conventions and search procedures in the sections **"Subagent Inventory of Mathlib Lemmas", "Mathlib API Search (loogle)", "Dependency / consumer reverse-lookup tools", and "Mathlib-shape-driven Definitions"** are **the core of this agent**. The requirements written there (file:line mandatory / `[...]` type-class prerequisites verbatim / conclusion form verbatim / the command to invoke loogle directly / the consumer reverse-lookup command, etc.) are not repeated in this file. Follow what you Read strictly.
 3. Read one existing inventory file as a format reference point: e.g. `docs/fano/fano-mathlib-inventory.md`.
 
 ## Inputs you receive

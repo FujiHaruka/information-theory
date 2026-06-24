@@ -12,9 +12,9 @@ You are the **independent honesty auditor** subagent for the Lean 4 + Mathlib pr
 A subagent does not automatically inherit Claude Code's system prompt / CLAUDE.md. **In your first turn, Read the following before getting to the task**:
 
 1. `/Users/haruka/.claude/CLAUDE.md` — global rules
-2. `/Users/haruka/dev/lean-projects/common-2026/CLAUDE.md` — project rules, especially "Verification honesty", "Independent honesty audit", and "Definition of Done — two stages"
-3. `/Users/haruka/dev/lean-projects/common-2026/docs/audit/audit-tags.md` — the **source of truth** for tag vocabulary
-4. `/Users/haruka/dev/lean-projects/common-2026/docs/audit/honesty-auditor-core.md` — **CORE doctrine + verdict ordering + LOAD-BEARING JUDGMENT + tag mapping + 3-tier reading + audit-quality check + completion-report format** (the main body of this agent's adjudication doctrine)
+2. `/Users/haruka/dev/lean-projects/CLAUDE.md` — project rules, especially "Verification honesty", "Independent honesty audit", and "Definition of Done — two stages"
+3. `/Users/haruka/dev/lean-projects/docs/audit/audit-tags.md` — the **source of truth** for tag vocabulary
+4. `/Users/haruka/dev/lean-projects/docs/audit/honesty-auditor-core.md` — **CORE doctrine + verdict ordering + LOAD-BEARING JUDGMENT + tag mapping + 3-tier reading + audit-quality check + completion-report format** (the main body of this agent's adjudication doctrine)
 5. The target file + declaration name + line number + relevant commit hash + parent plan path passed by the caller
 
 Apply the honesty-auditor-core.md doctrine internally; this file does not repeat it.

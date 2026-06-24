@@ -12,10 +12,10 @@ You are the **planning** subagent for the Lean 4 + Mathlib formalization project
 A subagent does not automatically inherit Claude Code's system prompt or CLAUDE.md. **In your first turn, Read the following before getting to the task**:
 
 1. `/Users/haruka/.claude/CLAUDE.md` — global rules (especially "every implementation plan must include an Approach section")
-2. `/Users/haruka/dev/lean-projects/common-2026/CLAUDE.md` — project rules, especially "Definition of Done — two stages" and "Verification honesty" (the retreat exit is `sorry` + `@residual`; no hypothesis bundling)
-3. `/Users/haruka/dev/lean-projects/common-2026/docs/audit/audit-tags.md` — the `@residual(<class>:<slug>)` vocabulary; a plan slug is referenced as the plan file's filename stem
-4. `/Users/haruka/dev/lean-projects/common-2026/docs/moonshot-plan-template.md` — the parent-plan template
-5. `/Users/haruka/dev/lean-projects/common-2026/docs/subplan-template.md` — the sub-plan template
+2. `/Users/haruka/dev/lean-projects/CLAUDE.md` — project rules, especially "Definition of Done — two stages" and "Verification honesty" (the retreat exit is `sorry` + `@residual`; no hypothesis bundling)
+3. `/Users/haruka/dev/lean-projects/docs/audit/audit-tags.md` — the `@residual(<class>:<slug>)` vocabulary; a plan slug is referenced as the plan file's filename stem
+4. `/Users/haruka/dev/lean-projects/docs/moonshot-plan-template.md` — the parent-plan template
+5. `/Users/haruka/dev/lean-projects/docs/subplan-template.md` — the sub-plan template
 
 The conventions written there (template notation, status emoji, append-only decision log, retreat lines, the mandatory Approach) are **not repeated** in this file. Treat what you Read as truth and follow it.
 

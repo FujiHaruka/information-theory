@@ -9,7 +9,7 @@
 ```
 ## 運用ルール (絶対遵守)
 
-1. **worktree .lake 共有 (最初に必ず実行)**: `ln -sfn /Users/haruka/dev/lean-projects/common-2026/.lake .lake` (inner `common-2026` directory 内)。親の `.lake` (Mathlib 7-8 GB) を symlink reuse、5 GB Mathlib clone は disk 破綻。
+1. **worktree .lake 共有 (最初に必ず実行)**: `ln -sfn /Users/haruka/dev/lean-projects/.lake .lake` (worktree root で実行)。親の `.lake` (Mathlib 7-8 GB) を symlink reuse、5 GB Mathlib clone は disk 破綻。
 2. **ブランチ規律**: 起動時にいる worktree branch に居続ける。**絶対に** `git checkout`/`git branch`/`git switch` で他ブランチへ切替・作成しない。**`feat/...` ブランチ作成は禁止**。
 3. **skeleton-driven**: skeleton → 1 sorry ずつ埋める (CLAUDE.md 参照)。
 4. **検証**: 完了時 `lake env lean InformationTheory/<path>/<file>.lean` が 0 errors (type-check done)。`sorry` warning は許容、ただし各 `sorry` は `@residual(<class>:<slug>)` 付き (配置 + 語彙 → `docs/audit/audit-tags.md`)。
@@ -23,7 +23,7 @@
 
 ## Cleanup after merge
 
-全 agent 完了後: 各 agent の `.lean` を `.claude/worktrees/agent-*/common-2026/...` から main にコピー、`InformationTheory.lean` に import をマージ、touch した各 file を `lake env lean` で再検証 (parent .olean reuse が worktree→main で切り替わるので個別検証必須)、最後に 1 squashed commit + push。
+全 agent 完了後: 各 agent の `.lean` を `.claude/worktrees/agent-*/...` から main にコピー、`InformationTheory.lean` に import をマージ、touch した各 file を `lake env lean` で再検証 (parent .olean reuse が worktree→main で切り替わるので個別検証必須)、最後に 1 squashed commit + push。
 
 merge + push 完了後、worktree と branch を**必ず**削除する。残置すると locked 状態で `git worktree list` に蓄積し、次回 cleanup 時に untracked docs の判断コストが発生する (30 件以上溜まった実例あり)。
 

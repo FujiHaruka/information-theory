@@ -9,7 +9,7 @@
 `core.hooksPath` はローカル config なので commit されない。各環境で 1 回:
 
 ```bash
-git config core.hooksPath common-2026/.githooks
+git config core.hooksPath .githooks
 ```
 
 (リポジトリ root = `/Users/haruka/dev/lean-projects` 基準の相対パス。worktree でも committed な

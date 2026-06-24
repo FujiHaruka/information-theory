@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# common-2026 pre-commit — fast text-only honesty / import-policy gate (NO lake compile).
+# pre-commit — fast text-only honesty / import-policy gate (NO lake compile).
 #
 # 設計理由: compile-check (lake env lean) は cold olean で分単位になり、高頻度自走コミットと
 # inner-loop 検証の冗長になるため blocking には載せない (compile は非同期で別途)。代わりに
 # grep だけで本プロジェクトの実再発失敗モード (honesty 規律 / import policy) を最安段階で止める。
 #
-# 対象: staged な common-2026/InformationTheory/**.lean (docs-only コミットは即通過)。
+# 対象: staged な InformationTheory/**.lean (docs-only コミットは即通過)。
 # BLOCK: bare `import Mathlib` 追加 / 実 `sorry` 追加なのに @residual タグ皆無。
 # WARN : 実 sorry>residual の undercount / @residual class 語彙外 / deprecated tag / 新規 file の import 未登録。
 #        sorry / @residual の計数は Lean コメント除去後の実 token のみ (docstring 散文を数えない)。
 # Bypass: `SKIP_LEAN_HOOK=1 git commit ...` または `git commit --no-verify`。
 #
-# git 管理 (core.hooksPath=common-2026/.githooks)。worktree でも committed な本 file がそのまま効く。
+# git 管理 (core.hooksPath=.githooks)。worktree でも committed な本 file がそのまま効く。
 set -u
 
 [ "${SKIP_LEAN_HOOK:-}" = "1" ] && exit 0

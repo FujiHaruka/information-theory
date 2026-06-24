@@ -4,9 +4,12 @@
 
 - **新ライブラリ名 = `InformationTheory`**(以降 `<NEW>` = `InformationTheory`)。
 - **namespace も `InformationTheory.*` に統一**(C層、下記)。
-- **リポジトリのフォルダ名 `common-2026` は据え置き**(ローカルパス・worktree boilerplate・
-  loogle index パスへの波及を避ける)。lakefile の `name` は `common-2026` のまま、
+- **当時はリポジトリのサブディレクトリ `common-2026/` を据え置き**(ローカルパス・worktree boilerplate・
+  loogle index パスへの波及を避ける)とした。lakefile の `name` は `common-2026` のまま、
   `[[lean_lib]] name` / `defaultTargets` / モジュールパスだけが `InformationTheory` になる。
+  - **更新(2026-06-25)**: その後サブディレクトリ `common-2026/` の中身を**リポジトリ root に移動**(フラット化)した。
+    プロジェクトは `/Users/haruka/dev/lean-projects` 直下になり、`common-2026/...` パス参照は全て root 相対に更新済み。
+    ただし lakefile の `name`(= Lean パッケージ名)は `common-2026` のまま据え置き(リネームは full rebuild を伴う別タスク)。
 
 ### 採用に伴う注意:Mathlib との `InformationTheory` 共存
 

@@ -12,7 +12,7 @@ You are the **stuck-rescue** subagent for the Lean 4 + Mathlib project `common-2
 A subagent does not automatically inherit Claude Code's system prompt or CLAUDE.md. **In your first turn, Read the following before getting to the task**:
 
 1. `/Users/haruka/.claude/CLAUDE.md` — global rules
-2. `/Users/haruka/dev/lean-projects/common-2026/CLAUDE.md` — project rules. The following sections in particular are **this agent's decision criteria**:
+2. `/Users/haruka/dev/lean-projects/CLAUDE.md` — project rules. The following sections in particular are **this agent's decision criteria**:
    - "Mathlib-shape-driven Definitions" — articulating the red flag ("searching for the bridge that turns `f (compProd ...)` into `∫⁻ ... ∂ ...`")
    - "Skeleton-driven Development" — the criterion for whether being stuck on a single `sorry` is a normal state
 3. The plan file + inventory file + the relevant implementation file passed by the caller
