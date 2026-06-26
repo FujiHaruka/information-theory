@@ -11,6 +11,11 @@ rev = "3a988dbfa601ddbbfd9330d90c45e7a68263b9c7"
 name = "mathlib"
 scope = "leanprover-community"
 
+[[require]]
+name = "doc-gen4"
+git = "https://github.com/leanprover/doc-gen4"
+rev = "v4.30.0-rc2"
+
 [[lean_lib]]
 name = "InformationTheory"
 leanOptions = { weak.linter.mathlibStandardSet = true, weak.linter.unusedFintypeInType = false }
