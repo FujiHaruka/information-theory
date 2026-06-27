@@ -710,9 +710,7 @@ the average error probability tends to `1`.
 
 The capacity-achieving input `p` (existing by `exists_capacity_achiever`) is received explicitly
 together with the regularity precondition `hq_pos` (full-support output, so the log-likelihood
-ratios are well-defined); both are preconditions, not load-bearing hypotheses.
-
-@residual(plan:channel-coding-strong-converse-plan) -/
+ratios are well-defined); both are preconditions, not load-bearing hypotheses. -/
 @[entry_point]
 theorem channelCoding_strong_converse_asymptotic
     (W : Channel α β) [IsMarkovKernel W]
@@ -724,6 +722,72 @@ theorem channelCoding_strong_converse_asymptotic
     (hq_pos : ∀ b : β, 0 < (outputDistribution (pmfToMeasure p) W).real {b})
     (hrate : ∀ᶠ n in atTop, capacity W + δ ≤ Real.log (M n) / n) :
     Tendsto (fun n ↦ ((c n).averageErrorProb W).toReal) atTop (𝓝 1) := by
-  sorry
+  -- Probability-measure instances for the i.i.d. reference `Q := q*^n`.
+  haveI hPp : IsProbabilityMeasure (pmfToMeasure p) := pmfToMeasure_isProbabilityMeasure hp
+  haveI hqProb : IsProbabilityMeasure (outputDistribution (pmfToMeasure p) W) := inferInstance
+  -- (Phase B black box) the average high-LLR tail mass tends to `0`.
+  have hT0 := channelCoding_highLLR_tendsto_zero W hδ hp hp_max hq_pos M c
+  -- (C-1) the exponential term `exp (n·(C + δ/2)) / M n` tends to `0`.
+  have hE0 : Tendsto (fun n : ℕ ↦ Real.exp ((n : ℝ) * (capacity W + δ / 2)) / (M n : ℝ))
+      atTop (𝓝 0) := by
+    -- The dominating sequence `exp (-n·δ/2)` tends to `0`.
+    have hdom : Tendsto (fun n : ℕ ↦ Real.exp (-((n : ℝ) * (δ / 2)))) atTop (𝓝 0) := by
+      have htop : Tendsto (fun n : ℕ ↦ (n : ℝ) * (δ / 2)) atTop atTop :=
+        Filter.Tendsto.atTop_mul_const (by linarith : (0 : ℝ) < δ / 2)
+          tendsto_natCast_atTop_atTop
+      exact Real.tendsto_exp_atBot.comp (Filter.tendsto_neg_atTop_atBot.comp htop)
+    refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hdom
+      (Filter.Eventually.of_forall (fun n ↦ by positivity)) ?_
+    filter_upwards [hrate, eventually_ge_atTop 1] with n hr hn1
+    have hn_pos : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn1
+    have hMn_pos : (0 : ℝ) < (M n : ℝ) := by exact_mod_cast hM n
+    -- From the rate gap: `(C + δ)·n ≤ log (M n)`.
+    have hlog : (capacity W + δ) * (n : ℝ) ≤ Real.log (M n) := (le_div_iff₀ hn_pos).mp hr
+    have hrw : Real.exp ((n : ℝ) * (capacity W + δ / 2)) / (M n : ℝ)
+        = Real.exp ((n : ℝ) * (capacity W + δ / 2) - Real.log (M n)) := by
+      rw [Real.exp_sub, Real.exp_log hMn_pos]
+    rw [hrw]
+    apply Real.exp_le_exp.mpr
+    have h2 : (capacity W + δ) * (n : ℝ)
+        = (n : ℝ) * (capacity W + δ / 2) + (n : ℝ) * (δ / 2) := by ring
+    linarith [hlog, h2]
+  -- The single-shot Verdú-Han bound, specialized to `Q := q*^n` and `threshold := n·(C + δ/2)`.
+  have hbase : ∀ n : ℕ, 1 - ((c n).averageErrorProb W).toReal
+      ≤ Real.exp ((n : ℝ) * (capacity W + δ / 2)) / (M n : ℝ)
+        + (1 / (M n : ℝ)) * ∑ m : Fin (M n),
+            (Measure.pi (fun i ↦ W ((c n).encoder m i))).real
+              (highLLRSet W (c n)
+                (Measure.pi (fun _ : Fin n ↦ outputDistribution (pmfToMeasure p) W))
+                ((n : ℝ) * (capacity W + δ / 2)) m) := by
+    intro n
+    exact channelCoding_average_success_le (hM n) W (c n)
+      (Measure.pi (fun _ : Fin n ↦ outputDistribution (pmfToMeasure p) W))
+      ((n : ℝ) * (capacity W + δ / 2))
+  -- The whole right-hand side tends to `0`.
+  have hRHS0 : Tendsto (fun n : ℕ ↦
+      Real.exp ((n : ℝ) * (capacity W + δ / 2)) / (M n : ℝ)
+        + (1 / (M n : ℝ)) * ∑ m : Fin (M n),
+            (Measure.pi (fun i ↦ W ((c n).encoder m i))).real
+              (highLLRSet W (c n)
+                (Measure.pi (fun _ : Fin n ↦ outputDistribution (pmfToMeasure p) W))
+                ((n : ℝ) * (capacity W + δ / 2)) m)) atTop (𝓝 0) := by
+    simpa using hE0.add hT0
+  -- Lower squeeze: `1 - avgPe ≥ 0` because `avgPe ≤ 1`.
+  have hlow : ∀ n : ℕ, 0 ≤ 1 - ((c n).averageErrorProb W).toReal := by
+    intro n
+    have h := (c n).averageErrorProb_le_one W
+    have hle1 : ((c n).averageErrorProb W).toReal ≤ 1 := by
+      calc ((c n).averageErrorProb W).toReal
+          ≤ (1 : ℝ≥0∞).toReal := ENNReal.toReal_mono ENNReal.one_ne_top h
+        _ = 1 := ENNReal.toReal_one
+    linarith
+  -- Squeeze `1 - avgPe → 0`.
+  have hsq : Tendsto (fun n : ℕ ↦ 1 - ((c n).averageErrorProb W).toReal) atTop (𝓝 0) :=
+    tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hRHS0
+      (Filter.Eventually.of_forall hlow) (Filter.Eventually.of_forall hbase)
+  -- Hence `avgPe → 1`.
+  have hgoal : Tendsto (fun n : ℕ ↦ 1 - (1 - ((c n).averageErrorProb W).toReal)) atTop
+      (𝓝 (1 - 0)) := tendsto_const_nhds.sub hsq
+  simpa using hgoal
 
 end InformationTheory.Shannon.ChannelCoding
