@@ -52,8 +52,16 @@ first-order condition of the `chernoffInfo` inf) the first term vanishes, giving
   too far apart) handled separately or excluded by a non-overlap regularity hyp.
 - **Phase B — error region = type-class union + Sanov lower bound.** Express
   `{x : P₁ⁿ(x) ≤ P₂ⁿ(x)}` as `⋃ c∈E n, typeClassByCount c` with `E n` the discretised
-  half-space; instantiate `sanov_ldp_equality` (Q=P₁, P=T_λ*, minimiser condition = Pythagoras).
-  This is the heavy bookkeeping phase (rounding / `roundedTypeIndex` / `klDivIndex` ↔ region).
+  half-space. **Route corrected (2026-06-27 inventory)**: instantiate
+  `sanov_ldp_lower_bound_pointwise` (`Sanov/LiminfBound.lean:132`, **no `h_minimizer` premise**),
+  NOT `sanov_ldp_equality` — the converse only needs the liminf lower bound `-D ≤ liminf`, and
+  `h_minimizer` is undischargeable because `chernoffHalfSpace` requires strict positivity while
+  Sanov quantifies over boundary type-classes with zero entries. Closest precedent:
+  `Hoeffding/TradeoffExp.lean` (`E_r` / `steinTypeII_exp` / `Qstar_perturb`) does the identical
+  Sanov-instantiation; Phase B is largely a re-skin. Decomposition H1–H8 +
+  the 2-world bridge facts → `docs/shannon/chernoff-converse-phaseB-inventory.md`.
+  **Headline `chernoff_converse` must add `[Nonempty α] [MeasurableSpace α]
+  [MeasurableSingletonClass α]`** (Sanov demands them).
 - **Phase C — assemble.** `bayesErrorMinPmf ≥ (1/2)·P₁ⁿ(region)` (easy: `∑ min ≥ ∑_region P₁ⁿ`);
   combine with Phase B limit and Phase A identity → `limsup -(1/n) log bayesError ≤ chernoffInfo`.
   Headline `chernoff_converse`.
