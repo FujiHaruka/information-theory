@@ -47,20 +47,12 @@ output power constraint `E[X²] ≤ P`:
   with `M ≥ ⌈exp(nR)⌉` messages and per-message error probability < ε.
 
 This is the achievability-half statement; the converse is available separately via
-`awgn_converse`, which is transitively sorryAx-free. The hypothesis `h_meas` exposes
-the kernel measurability.
+`awgn_converse`. The hypothesis `h_meas` exposes the kernel measurability. The body is
+an honest pass-through to `awgn_achievability`.
 
 `@audit:closed-by-successor(awgn-moonshot-plan)`
 
-@audit:ok (independent honesty audit 2026-06-12, commit e728ebf: `h_mi_bridge`
-removal verified as a pure signature-strengthening — the pre-refactor body of this
-theorem was already `awgn_achievability P hP N hN h_meas hR_pos hR_lt_C hε` and never
-referenced `h_mi_bridge` (confirmed by `git show e728ebf^`), so the dropped hypothesis
-was genuinely dead. Body is an honest pass-through to the sorryAx-free `@audit:ok`
-headline `awgn_achievability`; the conclusion is produced verbatim by that callee
-(sufficiency holds — no false-as-framed). `#print axioms awgn_channel_coding_theorem`
-= `[propext, Classical.choice, Quot.sound]` re-confirmed by this audit on fresh
-oleans.) -/
+@audit:ok -/
 @[entry_point]
 theorem awgn_channel_coding_theorem
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)

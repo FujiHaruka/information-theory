@@ -74,17 +74,11 @@ theorem isAwgnChannelMeasurable (N : ℝ≥0) : IsAwgnChannelMeasurable N := by
 
 /-- The AWGN channel coding theorem, re-published with the kernel-measurability
 hypothesis discharged by `isAwgnChannelMeasurable N`, so it no longer appears in
-the signature.
+the signature. The body delegates to `awgn_channel_coding_theorem`.
 
 `@audit:closed-by-successor(awgn-moonshot-plan)`
 
-@audit:ok (independent honesty audit 2026-06-12, commit e728ebf: `h_mi_bridge`
-removed from signature. Pure strengthening — the parent `awgn_channel_coding_theorem`
-never consumed `h_mi_bridge` in its body, so this wrapper's old `h_mi_bridge`
-pass-through was dead. Post-removal body delegates to `awgn_channel_coding_theorem`
-(itself a sorryAx-free pass-through of `awgn_achievability`); conclusion follows
-verbatim. `#print axioms awgn_theorem_F1_discharged` = `[propext, Classical.choice,
-Quot.sound]` re-confirmed by this audit.) -/
+@audit:ok -/
 @[entry_point]
 theorem awgn_theorem_F1_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)

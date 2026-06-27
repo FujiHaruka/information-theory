@@ -489,15 +489,13 @@ Proved unconditionally in `lz78_phrase_count_fiber_card_le_nat` via
 `fintype_card_parentIdx` = `c!`, times `|α|^c`, times `c+1`), with the empty
 fiber for `c > n` handled by `lz78PhraseStrings_count_le`.
 
-@audit:ok (FINAL completion audit 2026-06-21, commit `bd28e0e`, independent
-subagent). Genuine counting bound — the injection `x ↦ (parent, sym, tailIdx)`
+@audit:ok (genuine counting bound — the injection `x ↦ (parent, sym, tailIdx)`
 in `lz78_phrase_count_fiber_card_le_nat` is really injective (strong induction
 reconstructs each phrase's `dropLast` from the parent index via the
 parent-extension invariant, recovers the last symbol from `sym`, reassembles
 the phrase, then recovers `x` via `flatten ++ tail` + `List.ofFn_injective`);
 no smuggling. Non-circular, non-degenerate; the `(c+1) ≤ (n+1)` cast upgrade
-+ empty-fiber-for-`c>n` are genuine. `#print axioms =
-[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-confirmed). -/
++ empty-fiber-for-`c>n` are genuine.) -/
 theorem lz78_phrase_count_fiber_card_le (n c : ℕ) :
     ((Finset.univ.filter
           (fun x : Fin n → α ↦ (lz78PhraseStrings (List.ofFn x)).length = c)).card : ℝ)
@@ -1003,13 +1001,11 @@ degenerate `entropyRate = 0` boundary it reads `0 ≤ liminf` (`entropyRate₂ =
 0`), again genuine. Signature takes only source data (`μ`, `p`), no
 load-bearing hypothesis.
 
-@audit:ok (FINAL completion audit 2026-06-21, commit `bd28e0e`, independent
-subagent). Non-circular, non-bundled (signature `(μ, p)` +
+@audit:ok (non-circular, non-bundled (signature `(μ, p)` +
 `[IsProbabilityMeasure μ]` only), non-degenerate, sufficiency TRUE-as-framed:
 the body genuinely wires SMB-in-bits (`Low n → entropyRate₂`) with the Barron
 a.s.-eventual lift (`Low n ≤ lz/n` eventually, `err_n → 0` proven) via
-`liminf_le_liminf`. `#print axioms = [propext, Classical.choice, Quot.sound]`
-(sorryAx-free, machine-confirmed). -/
+`liminf_le_liminf`.) -/
 theorem lz78Greedy_converse_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α) :

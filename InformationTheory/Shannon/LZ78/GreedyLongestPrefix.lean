@@ -295,8 +295,7 @@ phrase list (or `[]`), bounding its length by the longest phrase. Proved by indu
 on `fuel`, threading the invariant `cur ∈ dict ∨ cur = []` (preserved on both the
 keep-growing and emit branches).
 
-@audit:ok (independent audit 2026-06-21, sorryAx-free `[propext, Classical.choice,
-Quot.sound]`; genuine fuel-induction establishing the tail ∈ dict ∪ {[]} invariant, no
+@audit:ok (genuine fuel-induction establishing the tail ∈ dict ∪ {[]} invariant, no
 sorry). -/
 theorem lz78PhraseStringsAux_tail_mem :
     ∀ (fuel : ℕ) (dict : List (List α)) (cur input : List α),
@@ -493,8 +492,7 @@ theorem lz78PhraseStringsAux_dropLast_earlier :
 greedy parse, each emitted phrase's `dropLast` is either `[]` or an earlier
 emitted phrase.
 
-@audit:ok (FINAL completion audit 2026-06-21, commit `bd28e0e`, independent
-subagent). NON-VACUOUS — the property is genuinely FALSE for an arbitrary list
+@audit:ok (NON-VACUOUS — the property is genuinely FALSE for an arbitrary list
 (e.g. `L = [[a,b]]`: `L[0].dropLast = [a] ∉ L.take 0 = []` and `≠ []`), so it
 genuinely captures the LZ78 dictionary structure (dictionaries grow only by
 appending `cur ++ [s]` with `cur` an earlier entry). The worker fuel-induction
@@ -502,8 +500,7 @@ is honest: the base / `nil` cases return the accumulated dict unchanged and
 discharge via the threaded running invariant `hdict` (NOT a degenerate
 fuel-exhaustion shortcut), the `cons`-emit case proves
 `(cur ++ [s]).dropLast = cur ∈ dict` via `List.dropLast_concat`. Top-level uses
-the genuine sufficient fuel `input.length + 1`. `#print axioms =
-[propext, Quot.sound]` (sorryAx-free, machine-confirmed). -/
+the genuine sufficient fuel `input.length + 1`.) -/
 theorem lz78PhraseStrings_dropLast_earlier (input : List α) :
     ∀ j, ∀ h : j < (lz78PhraseStrings input).length,
       ((lz78PhraseStrings input)[j]'h).dropLast ∈ (lz78PhraseStrings input).take j
@@ -624,8 +621,7 @@ This is the pure list-combinatorial heart of the LZ78 threading tiling: it carri
 the phrase *lengths* only (the downstream threading reads phrase content directly
 off the process, never the parse strings' content).
 
-@audit:ok (independent audit 2026-06-21, sorryAx-free `[propext, Classical.choice,
-Quot.sound]`; pure list-combinatorial core, no hypothesis bundling; non-vacuity genuine —
+@audit:ok (pure list-combinatorial core, no hypothesis bundling; non-vacuity genuine —
 `c := parseCount - bAbsorbed` with `bAbsorbed = Nat.find` (least index with cumulative
 length `> k`), so `c > 0` whenever `parseCount > k+1`, not an empty tiling; `bAbsorbed ≤
 k+1` and the boundary bounds `n - e ≤ Lmax` / `b ≤ k + Lmax` are genuinely proved (tail

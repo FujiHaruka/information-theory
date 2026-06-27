@@ -552,18 +552,15 @@ which is part of the downstream achievability content, not of this tiling atom. 
 lemma is the a.s. threading
 mechanism + non-vacuity anchor + boundary-length bounds (genuine, sorryAx-free).
 
-@audit:ok (independent audit 2026-06-21, sorryAx-free `[propext, Classical.choice,
-Quot.sound]`; non-circular, non-bundled = only `[IsProbabilityMeasure μ]` regularity +
+@audit:ok (non-circular, non-bundled — only `[IsProbabilityMeasure μ]` regularity +
 produces the existential; the a.s. `∀ᵐ ω, ∃ …` shape is the genuinely-provable form
-(per-ω positivity is false — it comes only from `cond_singleton_pos_ae`); vs. the prior
-per-ω skeleton no conjunct was dropped — every partition/positivity conjunct preserved,
-`bAbsorbed ≤ k` relaxed to the provable `≤ k+1`, two W2 boundary conjuncts added;
-non-vacuity genuine: `c + bAbsorbed = parseCount ∧ bAbsorbed ≤ k+1` forces `c > 0` for
+(per-ω positivity is false — it comes only from `cond_singleton_pos_ae`); non-vacuity
+genuine: `c + bAbsorbed = parseCount ∧ bAbsorbed ≤ k+1` forces `c > 0` for
 `parseCount > k+1`; wall slug `lz78-aseventual-ziv` correctly NOT on this closed decl —
-it lives at `ziv_aseventual_le_blockLogAvg₂`). The existential output also carries one
+it lives at `ziv_aseventual_le_blockLogAvg₂`. The existential output also carries one
 slice/content conjunct (`∀ j, (lz78PhraseStrings …)[bAbsorbed+j]? = some (slice)`,
-threaded sorryAx-free from `lz78_parse_tiling_positions`'s slice conjunct) with no new
-input hypothesis / `*Hypothesis` predicate. -/
+threaded from `lz78_parse_tiling_positions`'s slice conjunct) with no new
+input hypothesis / `*Hypothesis` predicate.) -/
 lemma lz78_block_tiling
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (k n : ℕ) :
@@ -620,13 +617,10 @@ internally both to derive the equality and to produce the per-phrase positivity 
 carries the slice/content correspondence conjunct (from `lz78_block_tiling`). This is the
 bridge consumed by the `(k-state, length)` grouping / limsup discharge.
 
-@audit:ok (independent audit 2026-06-21, commit `1ef7700`, sorryAx-free `[propext,
-Classical.choice, Quot.sound]`; non-circular, non-bundled = only `[IsProbabilityMeasure μ]`
-regularity input + produces the existential, no `*Hypothesis` predicate; vs. the prior
-output two conjuncts were APPENDED (slice/content correspondence + per-phrase positivity),
-no input hypothesis added and no prior conjunct dropped or weakened = pure
-output-strengthening, both new conjuncts discharged genuinely from `lz78_block_tiling`'s
-`hslice` and the per-position `hposfac` respectively). -/
+@audit:ok (non-circular, non-bundled — only `[IsProbabilityMeasure μ]` regularity input
++ produces the existential, no `*Hypothesis` predicate; both the slice/content
+correspondence and per-phrase positivity conjuncts are discharged genuinely from
+`lz78_block_tiling`'s `hslice` and the per-position `hposfac` respectively). -/
 lemma negLogQk_parse_threading
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (k n : ℕ) :
     ∀ᵐ ω ∂μ, ∃ (b c e bAbsorbed Lmax : ℕ) (N : Fin (c + 1) → ℕ),

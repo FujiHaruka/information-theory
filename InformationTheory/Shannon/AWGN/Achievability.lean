@@ -42,25 +42,13 @@ exists `N₀` such that for every block length `n ≥ N₀` there is an `AwgnCod
 power ≤ `P`, measurable decoder) with `M ≥ ⌈exp(nR)⌉` messages whose per-message error
 probability is below `ε`.
 
-The body is a direct call to
-`isAwgnTypicalityHypothesis P hP N hN h_meas hR_pos hR hε`, a
-genuine assembly (sphere packing, Gaussian random codebook, the three continuous-AEP
-bounds, and the union bound).
+The body is a direct call to `isAwgnTypicalityHypothesis`, a 580-line genuine assembly
+(sphere packing, Gaussian random codebook, the three continuous-AEP bounds, and the
+union bound). Its only hypotheses are regularity preconditions (`0 < P`, `(N : ℝ) ≠ 0`,
+measurability); the name is a historical artefact, not a load-bearing `*Hypothesis`
+predicate.
 
-@audit:ok (independent honesty audit 2026-06-12, commit c44be72: discharged from
-`by sorry` to `isAwgnTypicalityHypothesis P hP N hN h_meas hR_pos hR hε`. Signature
-UNCHANGED vs the parent `39677f9` Tier-2 sorry form (verified by `git diff`: only the
-body, docstring, and the added import changed). The callee's conclusion matches this
-headline's modulo currying — `isAwgnTypicalityHypothesis` returns the same `∃ N₀, ...`
-body with `awgnChannel N h_meas`, and the curried `{R}`/`hR_pos`/`hR`/`{ε}`/`hε`
-arguments recover this signature's binders exactly. The callee is a 580-line genuine
-assembly whose only hypotheses are regularity preconditions (`0 < P`, `(N:ℝ) ≠ 0`,
-measurability) — no load-bearing `*Hypothesis` predicate is passed (the name
-`isAwgnTypicalityHypothesis` is a historical artefact, not a bundled-conclusion arg).
-`#print axioms awgn_achievability` = `[propext, Classical.choice, Quot.sound]`
-(sorryAx-free, machine-verified by this audit). The old `@residual(plan:...)` /
-`@audit:closed-by-successor(...)` tags were removed; the prose above records the
-closure provenance honestly.) -/
+@audit:ok -/
 theorem awgn_achievability
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)

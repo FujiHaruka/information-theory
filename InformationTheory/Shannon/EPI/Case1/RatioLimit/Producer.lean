@@ -156,51 +156,19 @@ With them the bound is supplied in two steps:
 The rest of the group is the standard regularity plumbing, and the finite-Fisher precondition is
 in place so PB-6 can thread it to the case-1 wrapper.
 
-@audit:ok (independent honesty audit): the
-`integrable_deriv` `t`-measurability is supplied (not residual). The stale
-`@residual(plan:epi-case1-debruijn-producer-plan)` tag was retired. All threaded preconditions
-(`IsRegularDensityV2` / normalization / `IsBlachmanConvReady` / finite Fisher / a.c. / second
-moment) are regularity, NOT load-bearing; the `IsDeBruijnRegularityHyp` structure's
-`density_t_eq` anti-trivial-zero pin keeps the conclusion non-degenerate.
-@audit-note: independent honesty audit.
-Verified: (i) `pX` series (pX_nn/pX_meas/pX_law/pX_mom) is a verbatim mirror of
-`IsRegularDeBruijnHypV2.ofHeatFlow`'s `@audit:ok` plumbing (`FisherInfoDeBruijnHeatFlow.lean:275-`,
-`withDensity_rnDeriv_eq` + `integrable_map_measure`), derived from `hX_ac`/`h_mom_X`,
-NON-circular. (ii) `reg_at` fields are all regularity/witness (the structure
-`IsRegularDeBruijnHypV2` carries NO analytic-core field — de Bruijn is delivered externally by
-`debruijnIdentityV2_holds_assembled`), so NO load-bearing `*Hypothesis` bundling; going direct
-on `Z_law := hZX_law` rather than via `IsHeatFlowDensity` is honest (only `Z_law` is consumed).
-(iii) `density_t_eq := fun _ _ => rfl` genuine (density_t IS the conv-pin). (iv) the
-`integrable_deriv` field is classified as under-hypothesized (it needs the
-finite-entropy/Fisher precondition), resolved by threading that precondition (design (b))
-rather than as a Mathlib analytic wall. Under design (b) the uniform Fisher-monotonicity bound
-is supplied by PB-2b (`fisherInfoOfDensity_convDensityAdd_le` fires on `pX`/`g_t` via the threaded
-input-regularity preconditions `hreg_pX`/`hnorm_pX`/`hready_pX`/`h_fisher_X`). All four added
-preconditions are regularity (regular density / normalization / Integrable-boundedness bundle /
-finite Fisher), NOT load-bearing — they do not encode the inequality core.
-@audit-note: INDEPENDENT honesty audit of the design-(b) change. (1) The 3 added preconditions
-are genuine regularity, NOT load-bearing: `hreg_pX` = 7-field `IsRegularDensityV2`
-(diff / pos / tails→0 / integrable-deriv / ∫deriv=0); `hnorm_pX` = normalization;
-`hready_pX` = the 19-field
-`IsBlachmanConvReady` bundle (`EPIBlachmanDensity.lean:712-761`, read verbatim) whose every field
-is `Integrable (…)` / `∃ M, |·| ≤ M` / `0 < …` — the `int_inner`/`int_prod{1,2,3}`/`int_W`/
-`int_Wsq` fields assert only INTEGRABILITY of the Tonelli-expansion integrands, never their
-*values* nor any inequality, so the Fisher-monotonicity conclusion `J(conv)≤J(pX)` is NOT smuggled
-through `hready_pX` — it is produced by `convex_fisher_bound_of_ready` (`@audit:ok`) at `lam=1`
-(RHS collapses to `1²·J(pX)+0²·J(g_t)=J(pX)`). (2) The bound branch is GENUINE, not vacuous:
-`integrableOn_of_bounded` (`IntegrableOn.lean:649`) has 3 obligations — `s_finite` (discharged),
-`f_mble : AEStronglyMeasurable` (now GENUINE, see below), `f_bdd` (discharged from `hbound`).
-`hbound` fires PB-2b on `pX`/`g_t` with `t.toNNReal≠0` genuinely from `t>0`, giving a uniform
-`t`-independent finite bound `C=(1/2)·J(pX).toReal`; the rfl bridge `fisherInfoOfMeasureV2_def`
-(`FisherInfoDeBruijn.lean:90`, genuine `rfl`) is legitimate. (3) sufficiency: non-circular
-(conclusion ≢ any hyp), non-degenerate (`density_t_eq:=fun _ _=>rfl` genuine, no `:True` slot).
-(4) the `f_mble` `t`-measurability is
-discharged by `EPICase1ProducerMeasurability.aestronglyMeasurable_fisherInfo_t`
-via the C-b closed-form score route (`measurable_deriv_with_param` fully avoided): the joint
-`(t,x)`-measurability of `logDeriv (convDensityAdd pX g_t)` follows from `deriv (conv_t) =
-∫ x, pX x · deriv g_t (z-x)` (differentiation-under-integral for `t>0`, both sides `0` for
-`t≤0`) divided by `conv_t`, then `Measurable.lintegral_prod_right`. `Integrable pX` is supplied
-via `Measure.integrable_toReal_rnDeriv`. No deprecated tags in this declaration. -/
+@audit:ok (the `integrable_deriv` `t`-measurability is supplied (not residual), via
+`EPICase1ProducerMeasurability.aestronglyMeasurable_fisherInfo_t` (the closed-form score
+route; the joint `(t,x)`-measurability of `logDeriv (convDensityAdd pX g_t)` follows from
+`deriv (conv_t) = ∫ x, pX x · deriv g_t (z-x)` divided by `conv_t`). All threaded
+preconditions (`IsRegularDensityV2` / normalization / `IsBlachmanConvReady` / finite
+Fisher / a.c. / second moment) are regularity, NOT load-bearing: the
+`IsDeBruijnRegularityHyp` structure carries no analytic-core field — de Bruijn is
+delivered externally by `debruijnIdentityV2_holds_assembled`, and `IsBlachmanConvReady`'s
+fields assert only integrability of the Tonelli-expansion integrands, never their values
+or any inequality, so the Fisher-monotonicity conclusion `J(conv) ≤ J(pX)` is not smuggled
+through them — it is produced by `convex_fisher_bound_of_ready` at `lam = 1`. The
+`density_t_eq := fun _ _ => rfl` anti-trivial-zero pin keeps the conclusion
+non-degenerate.) -/
 noncomputable def isDeBruijnRegularityHyp_of_methodX_unitnoise
     (X Z_X : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (_hZX : Measurable Z_X) (_hXZX : IndepFun X Z_X P)

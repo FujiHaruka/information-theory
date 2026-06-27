@@ -560,14 +560,10 @@ uniform i.i.d. source on A symbols the bit-rate limit is `log₂ A = entropyRate
 exactly, and on the degenerate `entropyRate = 0` boundary the target is
 `entropyRate₂ = 0`.
 
-@audit:ok (FINAL completion audit 2026-06-21, commit `bd28e0e`, independent
-subagent not involved in implementation). Four honesty checks PASS: non-circular,
-non-bundled (signature is `(μ, p)` + `[IsProbabilityMeasure μ]` only; both
-`IsBoundedUnder` witnesses + both sandwich halves are constructed internally),
+@audit:ok (non-circular, non-bundled (signature is `(μ, p)` + `[IsProbabilityMeasure μ]`
+only; both `IsBoundedUnder` witnesses + both sandwich halves are constructed internally),
 non-degenerate, sufficiency TRUE-as-framed (bit `entropyRate₂` target, genuine
-`tendsto_of_le_liminf_of_limsup_le` squeeze via `lz78_asymptotic_optimality`).
-`#print axioms = [propext, Classical.choice, Quot.sound]` (sorryAx-free,
-machine-confirmed; both files compile with 0 sorry warnings). -/
+`tendsto_of_le_liminf_of_limsup_le` squeeze via `lz78_asymptotic_optimality`)). -/
 @[entry_point]
 theorem lz78_asymptotic_optimality_with_greedy
     (μ : Measure Ω) [IsProbabilityMeasure μ]

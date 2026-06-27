@@ -215,15 +215,7 @@ Stam core is supplied genuinely inside the two pillars; the conclusion
 `N(X+Y) ≥ N(X)+N(Y)` is not encoded in any hypothesis. Honest naming
 (`_of_regular`, not bare `_unconditional`): the regularity preconditions are real.
 
-@audit:ok (independent honesty audit): assembly of two `@audit:ok`
-pillars through one `@audit:ok` bridge. Over-claim check: the conclusion is verbatim the
-case-1 EPI `N(X+Y) ≥ N(X)+N(Y)`, no weaker substitute. Non-load-bearing AFFIRMED via
-core-reconstruction test: the ~30 preconditions are the union of the two pillars'
-regularity bundles; granting them (incl. the per-`t` `h_pos_stam` whose
-`IsStamInequalityHyp` is itself genuinely provable, `wall:stam-step2-density`)
-does NOT hand the EPI conclusion — that requires the pillars' genuine de Bruijn
-integration + scaling squeeze, neither encoded in any hypothesis. Sufficiency: the body
-threads pillar args in matching order and composes via the §1 bridge.
+@audit:ok
 @audit:superseded-by(entropyPowerExt_add_ge_unconditional) Superseded by the
 unconditional EPI; the sole consumer `entropyPower_add_ge_case1_of_methodX` is a dead leaf.
 Retained as proof-done. The two-time variant `entropyPower_add_ge_case1_of_regular_twotime` is

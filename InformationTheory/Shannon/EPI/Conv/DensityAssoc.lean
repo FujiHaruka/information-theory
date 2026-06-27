@@ -31,14 +31,12 @@ then closes Fisher integrability via `convDensityAdd_fisher_integrand_integrable
 `convDensityAdd (convDensityAdd pX pY) g_{2t}` arm needs `pX∗pY` to be a normalized
 probability density (nonneg, measurable, integrable, mass 1).
 
-@audit:ok (file-level, regularity helpers) — independent honesty audit (2026-06-01):
-`convolutionExistsAt_of_integrable_bdd`, `convDensityAdd_pXpY_measurable`,
-`convDensityAdd_bdd_of_integrable_bdd`, `convDensityAdd_pXpY_nonneg`,
-`convDensityAdd_pXpY_integrable`, `convDensityAdd_pXpY_integral_eq` are all constructive
-regularity lemmas (integrand integrability / measurability / global bound / nonneg / mass)
-with only regularity hypotheses; no circular / `:True` / bundled-core / degenerate shape.
-sorryAx-free transitively (the consuming `convDensityAdd_convGaussian_interchange` is
-machine-confirmed `[propext, Classical.choice, Quot.sound]`).
+@audit:ok (file-level, regularity helpers): `convolutionExistsAt_of_integrable_bdd`,
+`convDensityAdd_pXpY_measurable`, `convDensityAdd_bdd_of_integrable_bdd`,
+`convDensityAdd_pXpY_nonneg`, `convDensityAdd_pXpY_integrable`,
+`convDensityAdd_pXpY_integral_eq` are all constructive regularity lemmas (integrand
+integrability / measurability / global bound / nonneg / mass) with only regularity
+hypotheses; no circular / `:True` / bundled-core / degenerate shape.
 -/
 
 namespace InformationTheory.Shannon.EPIConvDensity
