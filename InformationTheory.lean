@@ -68,6 +68,7 @@ import InformationTheory.Shannon.CondEntropyMemoryless
 import InformationTheory.Shannon.ChannelCoding.ConverseMemorylessMarkov
 import InformationTheory.Shannon.ChannelCoding.ConverseMemoryless
 import InformationTheory.Shannon.ChannelCoding.StrongConverse
+import InformationTheory.Shannon.ChannelCoding.StrongConverseAsymptotic
 import InformationTheory.Shannon.ChannelCoding.Feedback
 import InformationTheory.Shannon.ChannelCoding.FeedbackMemoryless
 import InformationTheory.Shannon.ChannelCoding.ShannonTheorem
