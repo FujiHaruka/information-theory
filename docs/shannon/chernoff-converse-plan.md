@@ -78,8 +78,9 @@ first-order condition of the `chernoffInfo` inf) the first term vanishes, giving
   `def chernoffHalfSpace` + `chernoffInfo_eq_mediator_div` (`chernoffInfo = klDivPmf (T_λ*) P₁`) ·
   `chernoffMediator_isMinOn` (`IsMinOn (klDivPmf · P₁) K (T_λ*)`). Interiority `0 < λ* < 1` is the
   only non-degeneracy hyp (balance is *derived*, not assumed — Cramér-`Var>0` analogue). Selection
-  facts `hlam_min`/`hinfo` discharge from `chernoffInfo_attained`. File still standalone (not
-  root-wired; 0-`sorry` invariant — wire only once `chernoff_converse` headline is proven).
+  fact `hlam_min` discharges from `chernoffInfo_attained`; the `chernoffInfo = -log Z(λ*)` equation
+  is now *derived* internally (`chernoffInfo_eq_neg_logZ_of_isMinOn`, see refactor note below), not
+  a hyp. File still standalone (not root-wired; 0-`sorry` invariant — wire only once headline proven).
 - **Phase B Milestone 1 (H1–H6) COMPLETE** (`Chernoff/Converse.lean`, `section PhaseB`, all
   sorryAx-free). Added: `chernoffErrorCounts` (+`mem_..._iff`) (H1, `E_r` clone) ·
   `prod_aggr_of_mem_typeClassByCount` (+`typeCount_le`/`_sum_eq`) (H2) ·
@@ -95,8 +96,14 @@ first-order condition of the `chernoffInfo` inf) the first term vanishes, giving
   `sanov_ldp_lower_bound_pointwise` (no `h_minimizer`) + degenerate/non-degenerate split
   (`klDivPmf_eq_zero_iff_pmf`) + liminf→limsup flip. Headline `chernoff_converse` sorryAx-free
   (`[propext, Classical.choice, Quot.sound]`), root-wired (`InformationTheory.lean`), independent
-  honesty audit PASS (tier-1, `hlam_io`/`hlam_min`/`hinfo` confirmed preconditions, not
-  load-bearing). README table updated. Re-verify: `#print axioms chernoff_converse`.
+  honesty audit PASS (tier-1, `hlam_io`/`hlam_min` confirmed preconditions, not load-bearing).
+  README table updated. Re-verify: `#print axioms chernoff_converse`.
+- **Refactor — redundant `hinfo` hyp dropped** (commit `e5258cb5`). The equation
+  `chernoffInfo = -log Z(λ*)` was a derivable (non-load-bearing) hyp; extracted new helper
+  `chernoffInfo_eq_neg_logZ_of_isMinOn` (`IsMinOn` + `λ* ∈ Icc 0 1` ⟹ the equation, via
+  `IsLeast.csInf_eq`) and removed `hinfo` from `chernoffInfo_eq_mediator_div` /
+  `chernoffMediator_klDivSumForm_eq_chernoffInfo` / `chernoff_converse`. Headline now self-contained,
+  sorryAx-free preserved, independent honesty re-audit PASS (`@audit:ok` retained).
 
 ## Retreat lines
 
