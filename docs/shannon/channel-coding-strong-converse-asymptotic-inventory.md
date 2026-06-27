@@ -6,6 +6,8 @@
 ## 一行サマリ
 
 **漸近接続（情報密度の集中ステップ）で使う API のうち、ツールキット（単発下界・Chebyshev・積測度分散加法性・有界 MemLp・pi 因数分解）は ~80% が Mathlib/in-project に既存。自作が必要なのは 2 件のみ — (A) capacity 鞍点 `∀ a, D(W(a)‖q*) ≤ C`（in-project KKT 開発、~200–350 行、Mathlib 壁ではない）、(B) 非 iid・有界分散列の Chebyshev 集中の組み立て（既存 primitive の配線、~150–250 行）。** 真の Mathlib 壁は **0 件**（非 iid WLLN は単発の既製補題が無い＝loogle Found 0 だが、`meas_ge_le_variance_div_sq` + `variance_sum_pi` で組める）。最危険な発見: **`strong_law_ae` / `steinTypicalSet_P_prob_tendsto_one` はともに `hident`（同分布）を要求し、チャネル出力（独立・非同分布）には流用不可** — 既存 iid AEP/LLN 路は使えず、Chebyshev 直叩き路へ切替が必須。
+>
+> **訂正 (2026-06-27, 実装確定に同期)**: 鞍点 gateway atom は当初 two-sided `HasDerivAt … 0` を想定していたが、**境界 achiever (`p a = 0`) で機械的に偽**と判明（`pmfToMeasure` の `ENNReal.ofReal` clamp が `t < 0` 側で確率測度を外し corner を作る; 反例 `α=β=Bool, p=δ_false, a=true`; auditor 検証済）。実装は one-sided `HasDerivWithinAt (Set.Ici 0) 0`（右微分）に訂正済 = `mutualInfo_segment_hasDerivAt`（`StrongConverseAsymptotic.lean:86`）。下流の `csiszar_first_order_condition` の `𝓝[>] 0` slope がちょうどこの片側形を消費する。鞍点本体は子計画 [`capacity-saddle-point.md`](capacity-saddle-point.md) に R-SC1 行使で切り出し済（`@residual(plan:capacity-saddle-point)` の closure 先が存在）。実装済 4 sorry は `StrongConverseAsymptotic.lean`（type-check done）。
 
 ---
 
@@ -21,13 +23,19 @@ theorem channelCoding_strong_converse_asymptotic
     [Fintype α] [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
     [Fintype β] [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β]
     (W : Channel α β) [IsMarkovKernel W]
-    (M : ℕ → ℕ) (hM : ∀ n, 0 < M n)
-    (c : ∀ n, Code (M n) n α β)
+    (M : ℕ → ℕ) (hM : ∀ n, 0 < M n) (c : ∀ n, Code (M n) n α β)
     {δ : ℝ} (hδ : 0 < δ)
+    -- capacity achiever + full-support output as regularity preconditions (NOT load-bearing):
+    (p : α → ℝ) (hp : p ∈ stdSimplex ℝ α)
+    (hp_max : IsMaxOn (fun p : α → ℝ ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal)
+      (stdSimplex ℝ α) p)
+    (hq_pos : ∀ b : β, 0 < (outputDistribution (pmfToMeasure p) W).real {b})
     -- rate strictly above capacity, eventually:
     (hrate : ∀ᶠ n in atTop, capacity W + δ ≤ Real.log (M n) / n) :
     Tendsto (fun n ↦ ((c n).averageErrorProb W).toReal) atTop (𝓝 1)
 ```
+
+> 実装確定形（`StrongConverseAsymptotic.lean:132`）に同期。`exists_capacity_achiever` で取れる `p` を明示引数に上げ、`hq_pos`（出力 full-support）と共に regularity precondition として受ける（load-bearing ではない）。
 
 証明戦略（既存 `channelCoding_average_success_le` に乗せる、6–10 行 pseudo-Lean）:
 
@@ -90,8 +98,9 @@ have tail_to_0 : Pm(highLLR_m) ≤ Var/(n(δ/2))² ≤ V_max/(n δ²/4) → 0   
 | 概念 | API（file:line） | シグネチャ verbatim | 状態 | 鞍点 (A) での扱い |
 |---|---|---|---|---|
 | 離散 KL（PMF） | `klDivPmf` (`InformationTheory/Shannon/CsiszarProjection.lean:61`) | `(P Q : α → ℝ) : ℝ` := `∑ a, Q a * klFun (P a / Q a)`（実体は `klFun` 経由、`klDivPmf_eq_log_diff_sum:240` で log 差和形に） | ✅ 既存 | `D(W(a)‖q*)` の離散表現 |
-| セグメント方向微分（固定 Q） | `csiszar_segment_hasDerivAt` (`CsiszarProjection.lean:299`) | `{Q Qstar P : α → ℝ} (hQ_pos : ∀ a, 0 < Q a) (hQs_pos : ∀ a, 0 < Qstar a) : HasDerivAt (fun t : ℝ ↦ klDivPmf ((1 - t) • Qstar + t • P) Q) (∑ a : α, (P a - Qstar a) * (Real.log (Qstar a) - Real.log (Q a))) 0` | ✅ 既存（**固定** reference Q） | **写経元**。鞍点は I(p;W) の方向微分（reference q_p が p と共に動く）なので新計算が要る — テンプレートは強いが直接不可 |
+| セグメント方向微分（固定 Q） | `csiszar_segment_hasDerivAt` (`CsiszarProjection.lean:299`) | `{Q Qstar P : α → ℝ} (hQ_pos : ∀ a, 0 < Q a) (hQs_pos : ∀ a, 0 < Qstar a) : HasDerivAt (fun t : ℝ ↦ klDivPmf ((1 - t) • Qstar + t • P) Q) (∑ a : α, (P a - Qstar a) * (Real.log (Qstar a) - Real.log (Q a))) 0` | ✅ 既存（**固定** reference Q、two-sided `HasDerivAt`） | **写経元**。ここは Q 固定で `klDivPmf` を実ベクトルに直接適用（`pmfToMeasure` を経由しない）ので **two-sided で正当**。鞍点 `I(p;W)` は reference `q_p` が p と共に動く＋`pmfToMeasure` 経由なので新計算が要る → 自作 `mutualInfo_segment_hasDerivAt`（下行、**片側**）。テンプレートは強いが直接不可 |
 | 1 階最適性条件 | `csiszar_first_order_condition` (`CsiszarProjection.lean:389`) | I-projection 最小化点での `∑ a, (P a − Q* a)(log Q* a − log Q a) ≥ 0`（minimality `φ(0) ≤ φ(t)` から） | ✅ 既存 | **写経元**。`IsMaxOn` ⟹ 方向微分 ≤ 0 の論法をそのまま転用（不等号の向きのみ反転） |
+| 鞍点方向微分（**自作 gateway atom**） | `mutualInfo_segment_hasDerivAt` (`StrongConverseAsymptotic.lean:86`) | `(W : Channel α β) [IsMarkovKernel W] {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α) (hq_pos : ∀ b : β, 0 < (outputDistribution (pmfToMeasure p) W).real {b}) (a : α) : HasDerivWithinAt (fun t : ℝ ↦ (mutualInfoOfChannel (pmfToMeasure ((1 - t) • p + t • Pi.single a 1)) W).toReal) (klDivPmf (fun b ↦ (W a).real {b}) (fun b ↦ (outputDistribution (pmfToMeasure p) W).real {b}) - (mutualInfoOfChannel (pmfToMeasure p) W).toReal) (Set.Ici 0) 0` | 🔨 自作 (sorry, `@residual(plan:capacity-saddle-point)`) | **片側 `HasDerivWithinAt (Set.Ici 0) 0`**（右微分）。two-sided `HasDerivAt … 0` は境界 achiever (`p a = 0`) で**機械的に偽**: `pmfToMeasure` の `ENNReal.ofReal` clamp が `t < 0` 側で負座標を 0 に潰し確率測度を外す → `I(p_t;W).toReal` が滑らかな simplex functional から外れ corner（左微分 ≠ 右微分）。反例 `α=β=Bool, p=δ_false, a=true`（`W false` full support, `W true ≠ W false`）: 右微分 `D(W true‖W false) > 0` だが左枝は非確率 functional でズレる。下流 `csiszar_first_order_condition` の `𝓝[>] 0` slope がちょうど片側形を消費。auditor 検証済 |
 
 ---
 
@@ -105,9 +114,9 @@ have tail_to_0 : Pm(highLLR_m) ≤ Var/(n(δ/2))² ≤ V_max/(n δ²/4) → 0   
   - `[∀ i, IsProbabilityMeasure (μ i)]`: `μ i = W (c.encoder m i)`、`IsMarkovKernel W` から各 `W a` は probability。OK
   - `(h : ∀ i, MemLp (X i) 2 (μ i))`: 各 per-letter llr の MemLp（有界、上と同じ `q* > 0` 依存）
   - 形が `∑ i, fun ω ↦ X i (ω i)` 固定 — highLLR の和 `∑_i llr(y_i)` をこの形に整形する糊が要る（`Finset.sum_apply` 系）
-- **鞍点 (A) の方向微分（自作）**
-  - `IsMaxOn (I(·;W)) (stdSimplex) p*` を **simplex 内部点でない場合に注意**（p* が境界 = ある input の確率 0）。`csiszar_first_order_condition` 同様、片側微分 `t ∈ [0,1]` での `φ(0) ≥ φ(t)` を使い境界を回避できる（segment `(1−t)p* + t δ_a` は t∈[0,1] で simplex 内）
-  - `I(p;W) = ∑_x p(x) D(W(x)‖q_p)` 恒等式 + その方向微分が `D(W(a)‖q*) − C` になる計算（q_p の p-依存の微分が相殺する envelope 性）が新規
+- **鞍点 (A) の方向微分（自作 = gateway atom `mutualInfo_segment_hasDerivAt`）**
+  - **片側 `HasDerivWithinAt (Set.Ici 0)` でなければならない（two-sided は偽）**: `IsMaxOn (I(·;W)) (stdSimplex) p*` は **simplex 内部点とは限らない**（p* が境界 = ある input の確率 0）。境界 achiever (`p* a = 0`) では segment `p_t a = t < 0`（t<0）で `pmfToMeasure` の `ENNReal.ofReal` clamp が負座標を 0 に潰し確率測度を外す → `t ↦ I(p_t;W).toReal` が `0` で corner（左微分 ≠ 右微分）。よって two-sided `HasDerivAt … 0` は機械的に偽（反例 `α=β=Bool, p=δ_false, a=true`、auditor 検証済）。`csiszar_first_order_condition` 同様、片側微分 `𝓝[>] 0`（segment `(1−t)p* + t δ_a` は t∈[0,1] で simplex 内）の `φ(0) ≥ φ(t)` を使い境界を回避＝この片側形をそのまま消費する
+  - `I(p;W) = ∑_x p(x) D(W(x)‖q_p)`（keystone 恒等式、**in-project 不在 = 自作**）+ その片側方向微分が `D(W(a)‖q*) − C` になる計算（q_p の p-依存の微分が相殺する envelope 性）が新規
 
 ---
 
@@ -115,9 +124,11 @@ have tail_to_0 : Pm(highLLR_m) ≤ Var/(n(δ/2))² ≤ V_max/(n δ²/4) → 0   
 
 ### (A) capacity 鞍点 `∀ a : α, (klDivPmf (W a の pmf) (q* の pmf)) ≤ capacity W` 【最重要・load-bearing】
 
-- **推奨実装**: `exists_capacity_achiever` で `p*` を取得 → `q* := outputDistribution (pmfToMeasure p*) W` → セグメント `p_t := (1−t)•p* + t•(Pi.single a 1)` 上で `g(t) := (mutualInfoOfChannel (pmfToMeasure p_t) W).toReal` の `HasDerivAt g (D(W(a)‖q*) − C) 0` を示す → `IsMaxOn` ⟹ 右微分 ≤ 0 ⟹ `D(W(a)‖q*) ≤ C`。
+- **推奨実装**: `exists_capacity_achiever` で `p*` を取得 → `q* := outputDistribution (pmfToMeasure p*) W` → セグメント `p_t := (1−t)•p* + t•(Pi.single a 1)` 上で `g(t) := (mutualInfoOfChannel (pmfToMeasure p_t) W).toReal` の **片側** `HasDerivWithinAt g (D(W(a)‖q*) − C) (Set.Ici 0) 0`（右微分）を示す → `IsMaxOn` ⟹ 右微分 ≤ 0 ⟹ `D(W(a)‖q*) ≤ C`。
+  - **two-sided `HasDerivAt g … 0` は使えない（機械的に偽）**: 境界 achiever (`p* a = 0`) では `t < 0` で `p_t a = (1-t)·0 + t = t < 0` となり、`pmfToMeasure` の `ENNReal.ofReal` clamp が負座標を 0 に潰す → 確率測度を外れて `g` が左側で滑らかな simplex functional から外れ corner を持つ。実装は `mutualInfo_segment_hasDerivAt`（`StrongConverseAsymptotic.lean:86`）で one-sided 形に確定済（auditor 検証済、反例 `α=β=Bool, p=δ_false, a=true`）。`IsMaxOn` ⟹ 右微分 ≤ 0 の論法（`csiszar_first_order_condition` の `𝓝[>] 0` slope）はこの片側形をそのまま消費する。
 - **テンプレート（gateway-atom 候補）**: `csiszar_segment_hasDerivAt`（CsiszarProjection.lean:299、**固定** reference の klDivPmf 方向微分）+ `csiszar_first_order_condition`（:389、`IsMaxOn`/`IsMinOn` ⟹ 微分符号）。論法骨格はそのまま、不等号の向きを反転。
-- **自作行数見積もり**: ~200–350 行。内訳: (i) `I(p;W) = ∑_x p(x)·klDivPmf (W x) q_p` 恒等式（~60 行、`mutualInfoOfChannel_eq_HX_add_HY_sub_HZ`:122 を経由 or klDiv 直接展開）、(ii) 方向微分 `D(W(a)‖q*) − C`（~120 行、q_p の動きを含む chain rule。`csiszar_segment_hasDerivAt` は q 固定なのでこの部分が新規・最難）、(iii) `IsMaxOn` ⟹ ≤ 0（~30 行）。
+- **keystone bridge（Phase A 本体の最初の自作 = load-bearing）**: 恒等式 `I(p;W).toReal = ∑_x p(x)·klDivPmf (W x の pmf) (q_p の pmf)`（または entropy 形 `H(q_p) − ∑_x p(x) H(W x)`）は **in-project 不在**。rg 横断検索で `mutualInfoOfChannel` と `klDivPmf` を**同時に参照するファイルは 0 件**（`rg -l mutualInfoOfChannel … | xargs rg -l klDivPmf` → 空）。既存の `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ`（`ChannelCoding/Basic.lean:122`）は **entropy 三項形 `HX + HY − HZ`** であって、weighted `klDivPmf` 和形ではない（loogle は Mathlib 専用 index なので in-project decl は索引外＝rg negative が authoritative）。この恒等式が envelope `HasDerivWithinAt`（gateway atom）の前提となる最初の自作。
+- **自作行数見積もり**: ~200–350 行。内訳: (i) keystone 恒等式 `I(p;W) = ∑_x p(x)·klDivPmf (W x) q_p`（~60 行、`mutualInfoOfChannel_eq_HX_add_HY_sub_HZ`（`ChannelCoding/Basic.lean:122`）の entropy 形を経由 or klDiv 直接展開）、(ii) **片側**方向微分 `HasDerivWithinAt … (Set.Ici 0) 0`、値 `D(W(a)‖q*) − C`（~120 行、q_p の動きを含む chain rule。`csiszar_segment_hasDerivAt` は q 固定 two-sided なのでこの部分が新規・最難）、(iii) `IsMaxOn` ⟹ 右微分 ≤ 0（~30 行）。
 - **落とし穴**:
   - **`q* > 0`（出力 support 全域）**: 鞍点の log・llr の well-defined 性に必須だが、一般チャネルでは保証されない（degenerate output）。鞍点を `q*(b) = 0` の b で扱うには `D(W(a)‖q*)` の `+∞` 規約と整合させるか、`q* > 0` を仮定として持ち上げる必要。**主定理の hypothesis に `∀ b, 0 < (outputDistribution (pmfToMeasure p*) W).real {b}` を足すのが現実的**（regularity 前提＝OK、load-bearing ではない）。
   - 方向微分の envelope 相殺（q_p の p-依存分の微分が消える）を Lean で出すのが計算重い。`HasDerivAt.sum` + `klFun` の `hasDerivAt_klFun`（CsiszarProjection で使用済）を流用。
@@ -153,9 +164,9 @@ have tail_to_0 : Pm(highLLR_m) ≤ Var/(n(δ/2))² ≤ V_max/(n δ²/4) → 0   
 | 想定壁 | loogle 確認 | 判定 | 代替 route |
 |---|---|---|---|
 | 非 iid（独立・非同分布）有界分散列の WLLN（単発補題） | `"weak_law_of_large_numbers"` → **Found 0**；`"law_of_large"` → `strong_law_ae`（iid 専用）のみ；`"tendsto_average"` → Vitali/density 系のみ（LLN 無し） | **壁ではない（配線）** | `meas_ge_le_variance_div_sq`（Variance.lean:397）+ `variance_sum_pi`（Variance.lean:447）で組む。両者 verbatim 確認済 |
-| capacity 鞍点 `∀a, D(W(a)‖q*) ≤ C`（Mathlib 既製） | Mathlib に channel-capacity KKT は不在（`mutualInfoOfChannel` 自体が in-project 定義） | **壁ではない（in-project 自作、template 有）** | `csiszar_segment_hasDerivAt` + `csiszar_first_order_condition` + `exists_capacity_achiever` の写経・転用 |
+| capacity 鞍点 `∀a, D(W(a)‖q*) ≤ C`（Mathlib 既製） | Mathlib に channel-capacity KKT は不在（`mutualInfoOfChannel` 自体が in-project 定義） | **壁ではない（in-project 自作、template 有）。子計画 [`capacity-saddle-point.md`](capacity-saddle-point.md) に切り出し済 = `@residual(plan:capacity-saddle-point)` の closure 先が存在** | `csiszar_segment_hasDerivAt` + `csiszar_first_order_condition` + `exists_capacity_achiever` の写経・転用（gateway atom は**片側** `HasDerivWithinAt`） |
 
-→ **共有 sorry-lemma 化の推奨**: 鞍点 (A) は「Wolfowitz 強逆」以外にも、将来の channel 系（max-error 強逆、feedback 強逆、type-counting 路）で再利用が見込まれる **唯一の load-bearing 補題**。`InformationTheory/Shannon/ChannelCoding/` 直下に `theorem klDiv_channel_le_capacity (… ) : … ≤ capacity W := by sorry` + `@residual(plan:capacity-saddle-point)` の **単一補題として切り出し**、(B) 以降はそれを呼ぶ構成を推奨（`docs/audit/audit-tags.md`「Shared Mathlib walls: the shared sorry-lemma pattern」に倣う）。ただし wall ではなく **plan** 分類（self-buildable なので）。
+→ **共有 sorry-lemma 化（実施済）**: 鞍点 (A) は「Wolfowitz 強逆」以外にも、将来の channel 系（max-error 強逆、feedback 強逆、type-counting 路）で再利用が見込まれる **唯一の load-bearing 補題**。**実装で `theorem klDiv_channel_le_capacity (…) : … ≤ capacity W := by sorry` + `@residual(plan:capacity-saddle-point)` を `StrongConverseAsymptotic.lean:54` に単一補題として切り出し済**（その内部依存の gateway atom `mutualInfo_segment_hasDerivAt`（`:86`）も同 `@residual`）。(B) `channelCoding_highLLR_tendsto_zero`（`:106`）以降はこれを黒箱として呼ぶ構成（`docs/audit/audit-tags.md`「Shared Mathlib walls: the shared sorry-lemma pattern」に倣う）。closure は子計画 [`capacity-saddle-point.md`](capacity-saddle-point.md) が担う。wall ではなく **plan** 分類（self-buildable）。
 
 ---
 
@@ -172,7 +183,8 @@ have tail_to_0 : Pm(highLLR_m) ≤ Var/(n(δ/2))² ≤ V_max/(n δ²/4) → 0   
 
 **撤退ライン抵触判定**: 親計画に明示的な撤退ライン（L-* 等）の記載は無く、asymptotic は「後続 plan へ deferred」状態。**新規撤退ラインを提案**:
 
-- **新規撤退ライン R-SC1**: 鞍点 (A) の方向微分（envelope 相殺）が **着手 1 週間以内に `HasDerivAt` 形で出せない**場合 → 主定理シグネチャ（`R > capacity W ⟹ Pe → 1`）は**そのまま維持**し、鞍点補題 `klDiv_channel_le_capacity` のみ `sorry` + `@residual(plan:capacity-saddle-point)` で deferred 化。残り (B)(C)(D) は鞍点を黒箱として配線完了させ、type-check done で commit。
+- **撤退ライン R-SC1（行使済）**: 鞍点 (A) の方向微分（envelope 相殺）が **着手 1 週間以内に片側 `HasDerivWithinAt` 形で出せない**場合 → 主定理シグネチャ（`R > capacity W ⟹ Pe → 1`）は**そのまま維持**し、鞍点補題 `klDiv_channel_le_capacity` ＋ gateway atom `mutualInfo_segment_hasDerivAt` のみ `sorry` + `@residual(plan:capacity-saddle-point)` で deferred 化。残り (B)(C)(D) は鞍点を黒箱として配線完了させ、type-check done で commit。
+  - **実績（2026-06-27）**: R-SC1 を行使し、鞍点本体を子計画 [`capacity-saddle-point.md`](capacity-saddle-point.md) に切り出し済。`StrongConverseAsymptotic.lean` は 4 sorry（鞍点 `:54` / gateway atom `:86` は `@residual(plan:capacity-saddle-point)`、highLLR `:106` / 主定理 `:132` は `@residual(plan:channel-coding-strong-converse-plan)`）で type-check done。gateway atom は当初想定の two-sided `HasDerivAt` が境界 achiever で偽と判明し one-sided `HasDerivWithinAt (Set.Ici 0)` に訂正（auditor 検証済）。**抵触はするが degenerate fallback には至らず**（主定理シグネチャは維持、`p`/`hq_pos` は regularity precondition のみで縮退ではない）。
   - **退避出口は sorry + @residual のみ**（鞍点を `*Hypothesis` predicate にバンドルして主定理の前提に積むのは **禁止** = load-bearing hypothesis bundling）。
   - 縮退版の代替主張は作らない（degenerate fallback としては「`q*` 正値・有限 support のチャネルに限定」だが、これは regularity 前提なので主定理 hypothesis に足すだけで縮退ではない）。
 
@@ -180,7 +192,7 @@ have tail_to_0 : Pm(highLLR_m) ≤ Var/(n(δ/2))² ≤ V_max/(n δ²/4) → 0   
 
 ## 着手のための skeleton
 
-`InformationTheory/Shannon/ChannelCoding/StrongConverseAsymptotic.lean`（新規）の出だし:
+`InformationTheory/Shannon/ChannelCoding/StrongConverseAsymptotic.lean`（**実装済 = type-check done、4 sorry**）の構成（verbatim 転記）:
 
 ```lean
 import InformationTheory.Meta.EntryPoint
@@ -193,14 +205,15 @@ import Mathlib.Topology.Algebra.Order.LiminfLimsup
 namespace InformationTheory.Shannon.ChannelCoding
 
 open MeasureTheory ProbabilityTheory InformationTheory Filter
+open InformationTheory.Shannon.CsiszarProjection
 open scoped ENNReal NNReal BigOperators Topology
 
 variable {α β : Type*}
   [Fintype α] [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β]
 
-/-- ★ load-bearing 自作 (A): capacity 鞍点。容量達成 input `p*` の出力 `q*` に対し、
-任意の入力記号 `a` で `D(W(a)‖q*) ≤ capacity W`。共有 sorry-lemma として切り出す。 -/
+/-- ★ load-bearing 自作 (A): capacity 鞍点。容量達成 input `p` の出力 `q*` に対し、
+任意の入力記号 `a` で `D(W(a)‖q*) ≤ capacity W`。共有 sorry-lemma として切り出し済。 -/
 theorem klDiv_channel_le_capacity
     (W : Channel α β) [IsMarkovKernel W]
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
@@ -213,31 +226,62 @@ theorem klDiv_channel_le_capacity
       ≤ capacity W := by
   sorry -- @residual(plan:capacity-saddle-point)
 
-/-- ★ 配線 (B): 固定 codeword `m` 下の per-codeword highLLR 質量が `n→∞` で 0 へ
-（非 iid Chebyshev: meas_ge_le_variance_div_sq + variance_sum_pi）。 -/
+/-- ★ gateway atom (Phase A): セグメント `p_t := (1 - t) • p + t • δ_a`（`δ_a = Pi.single a 1`）
+上の `t ↦ I(p_t; W).toReal` の **片側（右）方向微分**。値は `D(W(a)‖q*) − I(p; W)`（envelope 相殺）。
+two-sided `HasDerivAt … 0` は境界 achiever (`p a = 0`) で**機械的に偽**（`pmfToMeasure` の
+`ENNReal.ofReal` clamp が `t < 0` 側で確率測度を外し corner を作る）なので
+one-sided `HasDerivWithinAt (Set.Ici 0)` で固定。 -/
+theorem mutualInfo_segment_hasDerivAt
+    (W : Channel α β) [IsMarkovKernel W]
+    {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
+    (hq_pos : ∀ b : β, 0 < (outputDistribution (pmfToMeasure p) W).real {b})
+    (a : α) :
+    HasDerivWithinAt
+      (fun t : ℝ ↦
+        (mutualInfoOfChannel (pmfToMeasure ((1 - t) • p + t • Pi.single a 1)) W).toReal)
+      (klDivPmf (fun b ↦ (W a).real {b})
+          (fun b ↦ (outputDistribution (pmfToMeasure p) W).real {b})
+        - (mutualInfoOfChannel (pmfToMeasure p) W).toReal)
+      (Set.Ici 0) 0 := by
+  sorry -- @residual(plan:capacity-saddle-point)
+
+/-- ★ 配線 (B): 平均 highLLR 質量が `n→∞` で 0 へ
+（非 iid Chebyshev: meas_ge_le_variance_div_sq + variance_sum_pi; 鞍点 (A) に依存）。 -/
 theorem channelCoding_highLLR_tendsto_zero
     (W : Channel α β) [IsMarkovKernel W] {δ : ℝ} (hδ : 0 < δ)
-    (p : α → ℝ) (hp : p ∈ stdSimplex ℝ α) (hp_max : IsMaxOn _ _ p)
+    {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
+    (hp_max : IsMaxOn (fun p : α → ℝ ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal)
+      (stdSimplex ℝ α) p)
     (hq_pos : ∀ b : β, 0 < (outputDistribution (pmfToMeasure p) W).real {b})
     (M : ℕ → ℕ) (c : ∀ n, Code (M n) n α β) :
-    -- ∀ ε>0, ∀ᶠ n, ∀ m, Pm(highLLR_m) < ε  （一様、threshold = n(capacity W + δ/2)）
-    True := by
-  sorry -- @residual(plan:capacity-saddle-point)  -- (A) に依存
+    Tendsto
+      (fun n ↦ (1 / (M n : ℝ)) * ∑ m : Fin (M n),
+        (Measure.pi (fun i ↦ W ((c n).encoder m i))).real
+          (highLLRSet W (c n)
+            (Measure.pi (fun _ : Fin n ↦ outputDistribution (pmfToMeasure p) W))
+            ((n : ℝ) * (capacity W + δ / 2)) m))
+      atTop (𝓝 0) := by
+  sorry -- @residual(plan:channel-coding-strong-converse-plan)
 
-/-- 漸近強逆（Wolfowitz）: `log(M n)/n ≥ capacity W + δ` eventually なら `avgPe → 1`。 -/
+/-- 漸近強逆（Wolfowitz）: `log(M n)/n ≥ capacity W + δ` eventually なら `avgPe → 1`。
+`p` / `hq_pos` は regularity precondition（load-bearing ではない）。 -/
 @[entry_point]
 theorem channelCoding_strong_converse_asymptotic
     (W : Channel α β) [IsMarkovKernel W]
     (M : ℕ → ℕ) (hM : ∀ n, 0 < M n) (c : ∀ n, Code (M n) n α β)
     {δ : ℝ} (hδ : 0 < δ)
+    (p : α → ℝ) (hp : p ∈ stdSimplex ℝ α)
+    (hp_max : IsMaxOn (fun p : α → ℝ ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal)
+      (stdSimplex ℝ α) p)
+    (hq_pos : ∀ b : β, 0 < (outputDistribution (pmfToMeasure p) W).real {b})
     (hrate : ∀ᶠ n in atTop, capacity W + δ ≤ Real.log (M n) / n) :
     Tendsto (fun n ↦ ((c n).averageErrorProb W).toReal) atTop (𝓝 1) := by
-  sorry -- @residual(plan:capacity-saddle-point)
+  sorry -- @residual(plan:channel-coding-strong-converse-plan)
 
 end InformationTheory.Shannon.ChannelCoding
 ```
 
-最初の `sorry` を `klDiv_channel_le_capacity`（鞍点）から割り、(B)(C)(D) を鞍点を黒箱として配線するのが着手 M1。鞍点が出れば残りは `channelCoding_average_success_le` への純上乗せ。
+最初の 2 sorry（`klDiv_channel_le_capacity` / gateway atom `mutualInfo_segment_hasDerivAt`）は子計画 [`capacity-saddle-point.md`](capacity-saddle-point.md) が担い、(B) `channelCoding_highLLR_tendsto_zero` 以降は鞍点を黒箱として `channelCoding_average_success_le` に純上乗せ配線する。`channelCoding_highLLR_tendsto_zero` の `True` プレースホルダ（旧 skeleton の禁止 `:True` slot）は実装で real な Tendsto 文へ置換済。
 
 ---
 
@@ -248,5 +292,6 @@ end InformationTheory.Shannon.ChannelCoding
 - 自作 2 件: (A) capacity 鞍点（load-bearing、~200–350 行、`csiszar_*` template 有、**Mathlib 壁ではない**）、(B) 非 iid Chebyshev 集中（plumbing、~150–250 行、鞍点に依存）
 - 真の Mathlib 壁 **0 件**（非 iid WLLN は `meas_ge_le_variance_div_sq` + `variance_sum_pi` で組める）
 - 最危険: **`strong_law_ae` / `steinTypicalSet_P_prob_tendsto_one` は `hident` 必須でチャネル出力（非同分布）に流用不可** — iid AEP/LLN 路は全面的に使えず、Chebyshev 直叩きへ切替必須
-- 撤退ライン R-SC1（鞍点が出ないとき）を新規提案: 主定理シグネチャ維持・鞍点のみ `sorry`+`@residual(plan:capacity-saddle-point)`・hypothesis バンドル禁止
-- 着手 ready（単発下界 CLOSED に上乗せ、signature 変更不要）
+- **訂正 (2026-06-27)**: 鞍点 gateway atom は two-sided `HasDerivAt … 0` が境界 achiever で機械的に偽 → one-sided `HasDerivWithinAt (Set.Ici 0)` に確定（`mutualInfo_segment_hasDerivAt`、auditor 検証済）。keystone 恒等式 `I(p;W) = ∑_x p(x)·klDivPmf` は in-project 不在（rg 横断 negative）＝ Phase A 最初の自作
+- 撤退ライン R-SC1 **行使済**: 主定理シグネチャ維持・鞍点 + gateway atom のみ `sorry`+`@residual(plan:capacity-saddle-point)`・hypothesis バンドルなし。closure は子計画 [`capacity-saddle-point.md`](capacity-saddle-point.md)
+- 実装済 = `StrongConverseAsymptotic.lean`（4 sorry、type-check done。単発下界 CLOSED に上乗せ、signature 変更不要）
