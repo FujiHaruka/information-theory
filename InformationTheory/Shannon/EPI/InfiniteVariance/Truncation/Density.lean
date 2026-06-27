@@ -395,11 +395,11 @@ private theorem condTrunc_marginal_density_tendsto (P : Measure Ω) [IsProbabili
     exact h
   have hmreal_tendsto : Tendsto (fun n ↦ ((P.map Z) (Sn n)).toReal) atTop (𝓝 (1 : ℝ)) := by
     have := (ENNReal.tendsto_toReal (ENNReal.one_ne_top)).comp hm_tendsto
-    simpa using this
+    simpa [Function.comp_def] using this
   have hc_tendsto : Tendsto (fun n ↦ (((P.map Z) (Sn n))⁻¹).toReal) atTop (𝓝 1) := by
     have h1 : Tendsto (fun n ↦ ((P.map Z) (Sn n)).toReal⁻¹) atTop (𝓝 1) := by
       have := (continuousAt_inv₀ (by norm_num : (1 : ℝ) ≠ 0)).tendsto.comp hmreal_tendsto
-      simpa using this
+      simpa [Function.comp_def] using this
     refine h1.congr (fun n ↦ ?_)
     rw [ENNReal.toReal_inv]
   -- per-`n` a.e. equality (only for positive-mass indices `n ≥ n₀`):

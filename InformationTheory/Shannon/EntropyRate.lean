@@ -260,7 +260,7 @@ lemma condEntropy_eq_pushforward
     -- h : condDistrib Prod.fst Prod.snd (μ.map (Xs,Yo))
     --     =ᵐ[μ.map (Prod.snd ∘ (Xs,Yo))] condDistrib (Prod.fst ∘ (Xs,Yo)) (Prod.snd ∘ (Xs,Yo)) μ
     -- Both compositions reduce by rfl: Prod.snd ∘ (Xs,Yo) = Yo, Prod.fst ∘ (Xs,Yo) = Xs.
-    simpa [hν_def] using h
+    exact h
   -- Now unfold both sides; both are integrals over `μ.map Yo` of
   -- `∑ x, negMulLog (condDistrib · · y).real {x}`. The condDistribs are
   -- ae-equal, so integrands agree ae and integrals agree.

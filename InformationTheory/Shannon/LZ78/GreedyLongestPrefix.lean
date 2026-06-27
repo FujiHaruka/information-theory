@@ -237,7 +237,7 @@ theorem lz78PhraseStrings_total_length_le (input : List α) :
       ≤ input.length := by
   have h := lz78PhraseStringsAux_total_length (input.length + 1) [] [] input
     (by omega)
-  simpa using h
+  simpa [lz78PhraseStrings] using h
 
 /-- The worker conserves the flattened string: the concatenation
 (`List.flatten`) of all emitted phrase strings, followed by an unfinished
@@ -286,7 +286,7 @@ theorem lz78PhraseStrings_flatten_prefix (input : List α) :
     ∃ tail : List α, (lz78PhraseStrings input).flatten ++ tail = input := by
   obtain ⟨tail, htail⟩ :=
     lz78PhraseStringsAux_flatten_conserve (input.length + 1) [] [] input (by omega)
-  exact ⟨tail, by simpa using htail⟩
+  exact ⟨tail, htail⟩
 
 /-- The worker conserves the flattened string and bounds the tail: the unfinished
 tail at termination is the final candidate prefix `cur`, which the greedy invariant
@@ -334,7 +334,7 @@ theorem lz78PhraseStrings_flatten_tail_mem (input : List α) :
       (tail ∈ lz78PhraseStrings input ∨ tail = []) := by
   obtain ⟨tail, htail, hmem⟩ :=
     lz78PhraseStringsAux_tail_mem (input.length + 1) [] [] input (by omega) (Or.inr rfl)
-  exact ⟨tail, by simpa using htail, hmem⟩
+  exact ⟨tail, htail, hmem⟩
 
 omit [DecidableEq α] in
 /-- The `flatten` length equals the additive `foldr` total, bridging the

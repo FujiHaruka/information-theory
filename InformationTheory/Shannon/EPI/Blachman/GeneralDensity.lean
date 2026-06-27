@@ -97,7 +97,7 @@ theorem convDensityAdd_fisher_integrand_integrable
       apply (hpX_meas.comp measurable_snd).mul
       exact hgt_meas.comp ((measurable_fst).sub measurable_snd)
     have h := huncurry.integral_prod_right (ν := volume)
-    simpa only [hp_def, convDensityAdd] using h.measurable
+    exact h.measurable
   have hderiv_meas : Measurable (deriv p_t) := measurable_deriv p_t
   have hlogderiv_meas : Measurable (logDeriv p_t) := by
     simp only [logDeriv]

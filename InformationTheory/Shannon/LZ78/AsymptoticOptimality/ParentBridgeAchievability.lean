@@ -188,7 +188,7 @@ theorem ziv_error_seq_tendsto_zero (cp : ℕ → ℝ) (k : ℕ) (La L : ℝ)
       Filter.atTop (𝓝 0) := by
     have hR : Filter.Tendsto (fun x : ℝ ↦ Real.log x ^ 1 / (1 * x + 0))
         Filter.atTop (𝓝 0) := Real.tendsto_pow_log_div_mul_add_atTop 1 0 1 (by norm_num)
-    simpa using hR.comp tendsto_natCast_atTop_atTop
+    simpa [Function.comp_def] using hR.comp tendsto_natCast_atTop_atTop
   set g : ℕ → ℝ := fun n ↦
     (2 / Real.log 2) * Real.sqrt (cp n / (n : ℝ))
     + (1 / Real.log 2) * (cp n / (n : ℝ))

@@ -147,15 +147,15 @@ theorem differentialEntropy_map_condTrunc_tendsto (P : Measure Ω) [IsProbabilit
   -- `m_n.toReal → 1`.
   have hmreal_tendsto : Tendsto (fun n ↦ ((P.map Z) (Sn n)).toReal) atTop (𝓝 (1 : ℝ)) := by
     have := (ENNReal.tendsto_toReal (ENNReal.one_ne_top)).comp hm_tendsto
-    simpa using this
+    simpa [Function.comp_def] using this
   -- `c_n := (m_n.toReal)⁻¹ → 1`.
   have hc_tendsto : Tendsto (fun n ↦ ((P.map Z) (Sn n)).toReal⁻¹) atTop (𝓝 1) := by
     have := (continuousAt_inv₀ (by norm_num : (1 : ℝ) ≠ 0)).tendsto.comp hmreal_tendsto
-    simpa using this
+    simpa [Function.comp_def] using this
   -- `log m_n.toReal → log 1 = 0`.
   have hlogm_tendsto : Tendsto (fun n ↦ Real.log ((P.map Z) (Sn n)).toReal) atTop (𝓝 0) := by
     have := (Real.continuousAt_log (by norm_num : (1 : ℝ) ≠ 0)).tendsto.comp hmreal_tendsto
-    simpa [Real.log_one] using this
+    simpa [Real.log_one, Function.comp_def] using this
   -- `∫ Sn.indicator (negMulLog ∘ p) → ∫ negMulLog ∘ p = h(P.map Z)` via DCT.
   have hint_tendsto :
       Tendsto (fun n ↦ ∫ x, (Sn n).indicator

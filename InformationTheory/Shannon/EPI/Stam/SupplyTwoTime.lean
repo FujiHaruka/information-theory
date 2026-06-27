@@ -847,7 +847,7 @@ theorem twoTime_stam_supply {Ω : Type*} [MeasurableSpace Ω]
     have hcombA : Measurable (fun q : ℝ × ℝ ↦ q.1 + Real.sqrt σ * q.2) := by fun_prop
     have hcombB : Measurable (fun q : ℝ × ℝ ↦ q.1 + Real.sqrt τ * q.2) := by fun_prop
     have := hpair_indep.comp hcombA hcombB
-    simpa [Function.comp, A, B] using this
+    exact this
   -- genuine Stam hyp via step3
   have hStam : StamEPIBridge.IsStamInequalityHyp A B P :=
     StamFisherCoupling.isStamInequalityHyp_via_step3 P A B hA_meas hB_meas hAB_indep

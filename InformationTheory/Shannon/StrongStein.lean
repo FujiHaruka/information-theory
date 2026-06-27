@@ -283,7 +283,7 @@ theorem steinOptimalBeta_log_le_of_strong_converse
     have h_cont : ContinuousAt ENNReal.toReal 1 :=
       ENNReal.continuousAt_toReal (by simp)
     have := h_cont.tendsto.comp h_P_pi_to_one
-    simpa using this
+    simpa [Function.comp_def] using this
   -- Eventually P^n(T) - ε > (1-ε)/2 > 0.
   have h_mid_pos : 0 < (1 - ε) / 2 := by linarith
   have h_target_pos : 0 < (1 - ε) / 2 + ε := by linarith

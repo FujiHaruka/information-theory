@@ -212,7 +212,7 @@ lemma aep_errorProb_tendsto_zero
           (𝓝 ((1 : ℝ≥0∞) - 1)) := h_cont.tendsto _ |>.comp h_pos
       simp only [tsub_self] at h_step
       have h_toReal := (ENNReal.tendsto_toReal (by simp : (0 : ℝ≥0∞) ≠ ∞)).comp h_step
-      simpa using h_toReal
+      simpa [Function.comp_def] using h_toReal
     refine Tendsto.congr (fun n ↦ ?_) h_toReal_tendsto
     rw [h_id n]
   -- errorProb n = μ.real {error event} ≤ μ.real {... ∉ T} which → 0.

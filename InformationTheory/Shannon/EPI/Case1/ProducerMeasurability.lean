@@ -79,7 +79,7 @@ theorem measurable_convDensityAdd_gaussian_uncurry
     (hpX.comp measurable_snd).mul hmeas_g
   have hsm : StronglyMeasurable (Function.uncurry (fun (p : ℝ × ℝ) (x : ℝ) ↦
       pX x * gaussianPDFReal 0 p.1.toNNReal (p.2 - x))) := by
-    simpa [Function.uncurry] using hmeas_F.stronglyMeasurable
+    exact hmeas_F.stronglyMeasurable
   exact (MeasureTheory.StronglyMeasurable.integral_prod_right hsm).measurable
 
 /-- The Gaussian spatial-derivative closed form `deriv (gaussianPDFReal 0 v) w =
@@ -130,7 +130,7 @@ theorem measurable_scoreNum_gaussian_uncurry
   have hsm : StronglyMeasurable (Function.uncurry (fun (p : ℝ × ℝ) (x : ℝ) ↦
       pX x * (-(p.2 - x) / (p.1.toNNReal : ℝ)
         * gaussianPDFReal 0 p.1.toNNReal (p.2 - x)))) := by
-    simpa [Function.uncurry] using hmeas_F.stronglyMeasurable
+    exact hmeas_F.stronglyMeasurable
   exact (MeasureTheory.StronglyMeasurable.integral_prod_right hsm).measurable
 
 /-- The key identity `deriv (convDensityAdd pX g_t) z = ∫ x, pX x · deriv g_t (z - x)`
@@ -218,7 +218,7 @@ theorem aestronglyMeasurable_fisherInfo_t
         ENNReal.ofReal (EPIConvDensity.convDensityAdd pX
           (gaussianPDFReal 0 p.1.toNNReal) p.2)) :=
       hconv.ennreal_ofReal
-    simpa [Function.uncurry] using h1.mul h2
+    exact h1.mul h2
   -- `t ↦ J(conv_t) = ∫⁻ x, integrand t x` is measurable.
   have hlint : Measurable (fun t : ℝ ↦
       FisherInfo.fisherInfoOfDensity

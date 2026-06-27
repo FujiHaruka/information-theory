@@ -480,7 +480,7 @@ theorem differentialEntropyExt_mono_add_of_integrable
   -- The sum law equals the convolution of the W- and V-marginals (independence).
   have hsum_conv : Q.map (fun ω ↦ W ω + V ω) = (Q.map W) ∗ (Q.map V) := by
     have := hindep.map_add_eq_map_conv_map hW hV
-    simpa [Pi.add_apply] using this
+    exact this
   -- W + V is a.c. under `Q` (`hW_ac_Q` + independence).
   have hWV_ac_Q : (Q.map (fun ω ↦ W ω + V ω)) ≪ volume :=
     map_add_absolutelyContinuous W V Q hW hV hindep hW_ac_Q

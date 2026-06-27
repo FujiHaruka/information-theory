@@ -176,7 +176,7 @@ theorem matchedSum_law_eq
         = (P.map W).map (fun y ↦ Real.sqrt c * y) := by
       have hmm := Measure.map_map (μ := P) (g := fun y : ℝ ↦ Real.sqrt c * y) (f := W)
         (measurable_const.mul measurable_id) hW
-      simpa [Function.comp] using hmm.symm
+      exact hmm.symm
     rw [h_compose, hW_law, gaussianReal_map_const_mul]
     congr 1
     · ring
@@ -217,7 +217,7 @@ theorem matchedSum_law_eq
     have hmap : Measurable (fun p : ℝ × ℝ ↦ Real.sqrt s_t * p.1 + Real.sqrt r_t * p.2) := by
       fun_prop
     have := hXY_ZXZY_pair.comp (measurable_id) hmap
-    simpa [Function.comp] using this
+    exact this
   -- `B ⊥ (√τ·Z)` from `B ⊥ Z`.
   have hB_noiseR_indep : IndepFun B (fun ω ↦ Real.sqrt (s_t + r_t) * Z ω) P :=
     hXY_Z.comp measurable_id hmul_τ
@@ -372,7 +372,7 @@ theorem twoTimeLogRatioGap_hasDerivAt
     -- `comp` of the log-heat-flow (at `s t + r t`) with `τ(u) = s u + r u` (at `t`).
     have hcomp := h_log_sum.comp t h_tau_deriv
     -- `comp` yields value `J_S * τ'(t)`; match by `mul_comm`.
-    simpa only [Function.comp, mul_comm] using hcomp
+    convert hcomp using 1 <;> first | rfl | ring
   -- Step 1: rewrite `log (sumHeatFlowEP ... (s u) (r u))` to the single-noise heat flow
   -- on a neighborhood of `t`, via `matchedSum_law_eq` (eventually `s u, r u > 0`).
   have h_log_sumHeat :
@@ -406,7 +406,7 @@ theorem twoTimeLogRatioGap_hasDerivAt
       HasDerivAt (fun u : ℝ ↦ twoTimeLogRatioGap X Y Z_X Z_Y P s r u)
         (J_S * (1 / J_X (s t) + 1 / J_Y (r t)) - 0 - 1) t := by
     have := (h_log_sumHeat.sub h_const).sub h_id
-    simpa only [twoTimeLogRatioGap] using this
+    exact this
   -- Match the stated derivative value.
   have hval : J_S * (1 / J_X (s t) + 1 / J_Y (r t)) - 0 - 1
       = J_S * (1 / J_X (s t) + 1 / J_Y (r t)) - 1 := by ring

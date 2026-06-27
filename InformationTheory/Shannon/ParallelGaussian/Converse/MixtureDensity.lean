@@ -291,7 +291,7 @@ theorem parallelOutput_logDensity_lower_bound (P : ℝ) (hP : 0 ≤ P)
         (fun x : Fin n → ℝ ↦ ∏ i, gaussianPDF (x i) (N i) (z i)) := by
       have := (piGaussProxy_measurable N).comp
         (measurable_id.prodMk (measurable_const : Measurable fun _ : Fin n → ℝ ↦ z))
-      simpa [piGaussProxy] using this
+      exact this
     calc ENNReal.ofReal (∏ i, Kr i (z i)) * (1 / 2)
         ≤ ENNReal.ofReal (∏ i, Kr i (z i)) * p S := by gcongr
       _ = ∫⁻ _x in S, ENNReal.ofReal (∏ i, Kr i (z i)) ∂p := by
@@ -600,7 +600,7 @@ theorem parallelOutputMean_eq (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
     funext x
     have h_id_g : Integrable (fun z : ℝ ↦ z) (gaussianReal 0 (N i)) := by
       have := (memLp_id_gaussianReal (μ := 0) (v := N i) 1).integrable (by norm_num)
-      simpa using this
+      exact this
     rw [integral_add (integrable_const _) h_id_g, integral_const,
       ProbabilityTheory.integral_id_gaussianReal]
     simp
@@ -883,7 +883,7 @@ theorem parallel_mi_decomp_value (P : ℝ) (hP : 0 ≤ P) (hN : ∀ i, (N i : �
       rw [← h_eq]; exact hF_meas
     have := (integrable_map_measure hF_meas' measurable_snd.aemeasurable).mp
       (by rw [← h_eq]; exact h5)
-    simpa [Function.comp] using this
+    exact this
   have h_lift := parallel_mutualInfoOfChannel_toReal_eq_diffEntropyPi_sub N h_meas h_parallel_meas p
     hW_ac hWx_q hq_ac h_joint_ac g hg_meas hg_ae h_int_fibre h_int_out
   exact h_lift

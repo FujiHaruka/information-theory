@@ -312,7 +312,7 @@ private theorem llr_compProd_prod_split_gen
           =ᵐ[W a] fun b ↦ (W a).rnDeriv q b := by
         have := (hWx_q a).ae_le
           (Kernel.rnDeriv_eq_rnDeriv_measure (κ := W) (η := Kernel.const α q) (a := a))
-        simpa only [Kernel.const_apply] using this
+        exact this
       filter_upwards [hker, log_rnDeriv_split_gen (vol := vol) (hWx_q a) hq_vol, hg_ae a]
         with b hb hb_split hg_b
       rw [hb, hb_split, hg_b]

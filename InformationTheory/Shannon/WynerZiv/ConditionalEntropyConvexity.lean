@@ -103,7 +103,6 @@ lemma negMulLog_marginal_gap_le_joint_gap
     intro r hr w hw hwle
     refine log_sum_inequality_negMulLog Finset.univ r (fun x ↦ m x)
       (fun x _ ↦ hr x) (fun x _ ↦ hm_nn x) (fun x _ hmx ↦ ?_)
-    simp only at hmx
     have hwr0 : w * r x ≤ 0 := by have := hwle x; rwa [hmx] at this
     have hwr_nn : 0 ≤ w * r x := mul_nonneg hw.le (hr x)
     have : w * r x = 0 := le_antisymm hwr0 hwr_nn
@@ -160,10 +159,9 @@ lemma negMulLog_marginal_gap_le_joint_gap
         · ring
       · -- a, b > 0: combine the two log-sum bounds linearly.
         have hR1 := key_R (fun x ↦ r₁ (x, y)) (fun x ↦ hr₁ (x, y)) a hapos
-          (fun x ↦ by simp only; rw [hm_def]; nlinarith [mul_nonneg hb (hr₂ (x, y))])
+          (fun x ↦ by rw [hm_def]; nlinarith [mul_nonneg hb (hr₂ (x, y))])
         have hR2 := key_R (fun x ↦ r₂ (x, y)) (fun x ↦ hr₂ (x, y)) b hbpos
-          (fun x ↦ by simp only; rw [hm_def]; nlinarith [mul_nonneg ha (hr₁ (x, y))])
-        simp only at hR1 hR2
+          (fun x ↦ by rw [hm_def]; nlinarith [mul_nonneg ha (hr₁ (x, y))])
         -- a·hR1 + b·hR2.
         have hsum := add_le_add (mul_le_mul_of_nonneg_left hR1 ha)
           (mul_le_mul_of_nonneg_left hR2 hb)

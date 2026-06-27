@@ -537,7 +537,7 @@ theorem stein_achievability
     have h_cont : ContinuousAt ENNReal.toReal 1 :=
       ENNReal.continuousAt_toReal (by simp)
     have := h_cont.tendsto.comp h_P_pi_to_one
-    simpa using this
+    simpa [Function.comp_def] using this
   -- Hence `P^n(steinTypicalSetᶜ).toReal = 1 - P^n(steinTypicalSet).toReal → 0`.
   have h_P_compl_R_to_zero : Tendsto
       (fun n : ℕ ↦ ((Measure.pi (fun _ : Fin n ↦ P))

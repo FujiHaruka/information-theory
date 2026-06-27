@@ -63,7 +63,7 @@ theorem convDensityAdd_fisher_integrable
       apply (hpX_meas.comp measurable_snd).mul
       exact hgt_meas.comp ((measurable_fst).sub measurable_snd)
     have h := huncurry.integral_prod_right (ν := volume)
-    simpa only [hp_def, convDensityAdd] using h.measurable
+    exact h.measurable
   have hderiv_meas : Measurable (deriv p_t) := measurable_deriv p_t
   have hlogderiv_meas : Measurable (logDeriv p_t) := by
     simp only [logDeriv]
@@ -709,7 +709,7 @@ theorem convDensityAdd_logFactor_deriv2_integrable
       apply (hpX_meas.comp measurable_snd).mul
       exact hg_meas.comp ((measurable_fst).sub measurable_snd)
     have h := huncurry.integral_prod_right (ν := volume)
-    simpa only [convDensityAdd] using h.measurable
+    exact h.measurable
   have hf_meas : AEStronglyMeasurable f volume := by
     rw [hf_def]
     have hlog_meas : Measurable
@@ -794,7 +794,7 @@ theorem convDensityAdd_logFactor_deriv_integrable
       apply (hpX_meas.comp measurable_snd).mul
       exact hg_pdf.comp ((measurable_fst).sub measurable_snd)
     have h := huncurry.integral_prod_right (ν := volume)
-    simpa only [convDensityAdd] using h.measurable
+    exact h.measurable
   have htarget_meas : AEStronglyMeasurable
       (fun x ↦ (- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) - 1)
         * deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)) x) volume := by
@@ -909,7 +909,7 @@ private theorem convDensityAdd_sq_mul_integrable
         apply (hpX_meas.comp measurable_snd).mul
         exact (measurable_gaussianPDFReal 0 _).comp ((measurable_fst).sub measurable_snd)
       have h := huncurry.integral_prod_right (ν := volume)
-      simpa only [convDensityAdd] using h.measurable
+      exact h.measurable
     exact ((by fun_prop : Measurable (fun x : ℝ ↦ x ^ 2)).mul hpt_meas).aestronglyMeasurable
   refine Integrable.mono' hH_int htarget_meas ?_
   filter_upwards with x
@@ -1065,7 +1065,7 @@ theorem convDensityAdd_negMulLog_integrable
         apply (hpX_meas.comp measurable_snd).mul
         exact (measurable_gaussianPDFReal 0 _).comp ((measurable_fst).sub measurable_snd)
       have h := huncurry.integral_prod_right (ν := volume)
-      simpa only [convDensityAdd] using h.measurable
+      exact h.measurable
     exact (Real.continuous_negMulLog.measurable.comp hpt_meas).aestronglyMeasurable
   refine Integrable.mono' hD_int hnegMulLog_meas ?_
   filter_upwards [hLog] with x hLogx

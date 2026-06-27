@@ -159,7 +159,7 @@ noncomputable def isHeatFlowEndpointRegular_of_map_eq_rnDeriv
       rw [integrable_map_measure
         ((by fun_prop : Measurable (fun y : ℝ ↦ y ^ 2)).aestronglyMeasurable)
         hW.aemeasurable]
-      simpa [Function.comp] using hmom
+      exact hmom
     rw [show P.map W = volume.withDensity (fun x ↦ ENNReal.ofReal (p x)) from
       hmap ▸ hp_law] at hsq_law
     rw [integrable_withDensity_iff_integrable_smul₀'
@@ -493,7 +493,7 @@ lemma integrable_sq_mul_of_map_eq_withDensity_ofReal
     rw [integrable_map_measure
       ((by fun_prop : Measurable (fun y : ℝ ↦ y ^ 2)).aestronglyMeasurable)
       hV.aemeasurable]
-    simpa [Function.comp] using hmom
+    exact hmom
   rw [hlaw] at hsq_law
   rw [integrable_withDensity_iff_integrable_smul₀'
     hp_meas.ennreal_ofReal.aemeasurable
@@ -658,7 +658,7 @@ theorem entropyPower_smoothed_epi_perT
   have hXtYt_indep : IndepFun Xt Yt P := by
     have hmap : Measurable (fun q : ℝ × ℝ ↦ q.1 + Real.sqrt t * q.2) := by fun_prop
     have := hpair_XZX_YZY.comp hmap hmap
-    simpa [Function.comp, hXt_def, hYt_def] using this
+    exact this
   -- ===== sum-variable identity: Xt + Yt = S + √t·W =====
   set S : Ω → ℝ := fun ω ↦ X ω + Y ω with hS_def
   set W : Ω → ℝ := fun ω ↦ Z_X ω + Z_Y ω with hW_def
@@ -676,7 +676,7 @@ theorem entropyPower_smoothed_epi_perT
   have hS_W_indep : IndepFun S W P := by
     have hmap : Measurable (fun q : ℝ × ℝ ↦ q.1 + q.2) := by fun_prop
     have := hpair_XY_ZXZY.comp hmap hmap
-    simpa [Function.comp, hS_def, hW_def] using this
+    exact this
   -- ===== a.c. of smoothed variables =====
   -- Xt = X + √t·Z_X ; X ⊥ √t·Z_X ; P.map X ≪ volume.
   have hXt_ac : (P.map Xt) ≪ volume := by
@@ -981,7 +981,7 @@ theorem entropy_power_add_ge_of_finite_variance
       simpa using this
     have hsum : Measurable (fun q : ℝ × ℝ ↦ q.1 + q.2) := by fun_prop
     have := hpair.comp hsum hsum
-    simpa [Function.comp, hWsum] using this
+    exact this
   -- entropy integrability transported to the lift's marginals.
   have hent_X' : Integrable
       (fun x ↦ Real.negMulLog (((P.map X).rnDeriv volume x).toReal)) volume := hX_ent

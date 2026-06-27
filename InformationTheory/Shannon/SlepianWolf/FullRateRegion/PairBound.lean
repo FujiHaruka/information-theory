@@ -1141,7 +1141,7 @@ theorem slepian_wolf_full_rate_region_achievability
           (Xs := fun ω ↦ (Xs 0 ω, Ys 0 ω))
           (hXs := (hXs 0).prodMk (hYs 0))
           (MeasurableEquiv.prodComm : (α × β) ≃ᵐ (β × α))
-        simpa [jointSequence, MeasurableEquiv.prodComm] using he.symm
+        exact he.symm
       rw [hswap]
       exact entropy_joint_sub_marginal_eq_condEntropy μ (Ys 0) (Xs 0) (hYs 0) (hXs 0)
     -- B n → 0 (sum of four tendsto-to-0 sequences).

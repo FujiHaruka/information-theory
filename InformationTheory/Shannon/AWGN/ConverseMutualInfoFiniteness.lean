@@ -550,7 +550,7 @@ private lemma integrable_log_blockYLaw_on_component
     have h_1d : Integrable (fun y : ℝ ↦ (y - c.encoder m i) ^ 2)
         (gaussianReal (c.encoder m i) N) := by
       have h_id : Integrable (fun y : ℝ ↦ y) (gaussianReal (c.encoder m i) N) := by
-        simpa using (memLp_id_gaussianReal (μ := c.encoder m i) (v := N) 1).integrable (by norm_num)
+        exact (memLp_id_gaussianReal (μ := c.encoder m i) (v := N) 1).integrable (by norm_num)
       have h_sq : Integrable (fun y : ℝ ↦ y ^ 2) (gaussianReal (c.encoder m i) N) :=
         (memLp_id_gaussianReal (μ := c.encoder m i) (v := N) 2).integrable_sq
       have hrw : (fun y : ℝ ↦ (y - c.encoder m i) ^ 2)
@@ -761,7 +761,7 @@ private lemma integrable_log_component_rnDeriv_blockYLaw
     have h_1d : Integrable (fun y : ℝ ↦ (y - c.encoder m i) ^ 2 / (2 * (N : ℝ)))
         (gaussianReal (c.encoder m i) N) := by
       have h_id : Integrable (fun y : ℝ ↦ y) (gaussianReal (c.encoder m i) N) := by
-        simpa using (memLp_id_gaussianReal (μ := c.encoder m i) (v := N) 1).integrable (by norm_num)
+        exact (memLp_id_gaussianReal (μ := c.encoder m i) (v := N) 1).integrable (by norm_num)
       have h_sq : Integrable (fun y : ℝ ↦ y ^ 2) (gaussianReal (c.encoder m i) N) :=
         (memLp_id_gaussianReal (μ := c.encoder m i) (v := N) 2).integrable_sq
       have hrw : (fun y : ℝ ↦ (y - c.encoder m i) ^ 2 / (2 * (N : ℝ)))

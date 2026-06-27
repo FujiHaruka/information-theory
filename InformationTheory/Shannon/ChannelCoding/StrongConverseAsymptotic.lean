@@ -237,11 +237,11 @@ theorem mutualInfo_segment_hasDerivAt
       have h0 : HasDerivAt (fun t : ℝ ↦ (1 : ℝ) - t) (-1) 0 := by
         simpa using (hasDerivAt_id (0 : ℝ)).const_sub 1
       have := h0.mul_const (p x)
-      convert this using 1; ring
+      convert this using 1 <;> first | rfl | ring
     have hB : HasDerivAt (fun t : ℝ ↦ t * e x) (e x) 0 := by
       simpa using (hasDerivAt_id (0 : ℝ)).mul_const (e x)
     have hsum : HasDerivAt (fun t : ℝ ↦ (1 - t) * p x + t * e x) (e x - p x) 0 := by
-      have h := hA.add hB; convert h using 1; ring
+      have h := hA.add hB; convert h using 1 <;> first | rfl | ring
     exact hsum.mul_const c
   -- Inner sum derivative for each output letter.
   have hSb : ∀ b : β,
@@ -392,7 +392,7 @@ theorem klDiv_channel_le_capacity
             (fun b ↦ (outputDistribution (pmfToMeasure p) W).real {b})
           - (mutualInfoOfChannel (pmfToMeasure p) W).toReal)) := by
     have h := hasDerivWithinAt_iff_tendsto_slope.mp hderiv
-    rwa [Set.Ici_diff_left] at h
+    rwa [Set.Ici_sdiff_left] at h
   have h_gap_le : klDivPmf (fun b ↦ (W a).real {b})
         (fun b ↦ (outputDistribution (pmfToMeasure p) W).real {b})
       - (mutualInfoOfChannel (pmfToMeasure p) W).toReal ≤ 0 := by

@@ -334,7 +334,7 @@ theorem swError_E0_prob_tendsto_zero
         {ω | (jointRV Xs n ω, jointRV Ys n ω) ∈ jointlyTypicalSet μ Xs Ys n ε})
       Filter.atTop (𝓝 1) := by
     have h_step := (ENNReal.tendsto_toReal (by simp : (1 : ℝ≥0∞) ≠ ∞)).comp h_good
-    simpa [Measure.real] using h_step
+    simpa [Measure.real, Function.comp_def] using h_step
   -- 1 - μ.real (good) → 1 - 1 = 0.
   refine Filter.Tendsto.congr (fun n ↦ (h_compl_id n).symm) ?_
   have h_const : Filter.Tendsto (fun _ : ℕ ↦ (1 : ℝ)) Filter.atTop (𝓝 1) :=

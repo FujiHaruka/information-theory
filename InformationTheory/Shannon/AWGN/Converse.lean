@@ -348,7 +348,7 @@ private lemma perLetterYLaw_sq_sub_integrable
   intro m _
   -- `(y − a₀)²` integrable against each `gaussianReal (encoder m i) N`
   have h_id : Integrable (fun y : ℝ ↦ y) (gaussianReal (c.encoder m i) N) := by
-    simpa using (memLp_id_gaussianReal (μ := c.encoder m i) (v := N) 1).integrable (by norm_num)
+    exact (memLp_id_gaussianReal (μ := c.encoder m i) (v := N) 1).integrable (by norm_num)
   have h_sq : Integrable (fun y : ℝ ↦ y ^ 2) (gaussianReal (c.encoder m i) N) :=
     (memLp_id_gaussianReal (μ := c.encoder m i) (v := N) 2).integrable_sq
   have hrw : (fun y : ℝ ↦ (y - a₀) ^ 2) = fun y ↦ y ^ 2 - 2 * a₀ * y + a₀ ^ 2 := by
@@ -552,7 +552,7 @@ theorem awgn_per_letter_mi_bridge_genuine
       refine ⟨Filter.Eventually.of_forall (fun x ↦ ?_), ?_⟩
       · -- per-fibre `Integrable (fun y => (y − x)²) (W x = gaussianReal x N)`
         have h_id : Integrable (fun y : ℝ ↦ y) (gaussianReal x N) := by
-          simpa using (memLp_id_gaussianReal (μ := x) (v := N) 1).integrable (by norm_num)
+          exact (memLp_id_gaussianReal (μ := x) (v := N) 1).integrable (by norm_num)
         have h_sq2 : Integrable (fun y : ℝ ↦ y ^ 2) (gaussianReal x N) :=
           (memLp_id_gaussianReal (μ := x) (v := N) 2).integrable_sq
         have hrw : (fun y : ℝ ↦ (y - x) ^ 2) = fun y ↦ y ^ 2 - 2 * x * y + x ^ 2 := by

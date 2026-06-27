@@ -85,10 +85,11 @@ theorem hasDerivAt_gaussianNorm_variance {v : ℝ} (hv : 0 < v) :
   -- inverse: derivative `-((2π)/(2·√(2πv))) / (√(2πv))²`
   have h_inv := h_sqrt.inv hsqrt_ne
   -- reshape the derivative value
-  convert h_inv using 1
   -- goal: `-(1/(2v)) · (√(2πv))⁻¹ = -((2π)/(2·√(2πv))) / (√(2πv))²`
-  rw [Real.sq_sqrt h2piv_pos.le]
-  field_simp
+  convert h_inv using 1 <;>
+    first
+    | rfl
+    | (rw [Real.sq_sqrt h2piv_pos.le]; field_simp)
 
 /-- The variance-derivative of the exponential factor.
 

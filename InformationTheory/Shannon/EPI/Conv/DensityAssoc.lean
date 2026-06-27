@@ -79,7 +79,7 @@ theorem convDensityAdd_pXpY_measurable (pX pY : ℝ → ℝ)
     apply (hpX_meas.comp measurable_snd).mul
     exact hpY_meas.comp ((measurable_fst).sub measurable_snd)
   have h := huncurry.integral_prod_right (ν := volume)
-  simpa only [convDensityAdd] using h.measurable
+  exact h.measurable
 
 /-- Global bound of `convDensityAdd a b` when one factor is bounded:
 `|conv a b z| ≤ (∫|a|)·M`. (Stated for `a` nonneg so `∫|a| = ∫a`.) -/

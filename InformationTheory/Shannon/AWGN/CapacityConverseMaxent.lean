@@ -120,7 +120,7 @@ theorem integral_sub_sq_gaussianReal (N : ℝ≥0) (hN : N ≠ 0) (c : ℝ) :
     ∫ z, (z - c) ^ 2 ∂(gaussianReal 0 N) = (N : ℝ) + c ^ 2 := by
   have h_id : Integrable (fun z : ℝ ↦ z) (gaussianReal 0 N) := by
     have := (memLp_id_gaussianReal (μ := 0) (v := N) 1).integrable (by norm_num)
-    simpa using this
+    exact this
   have h_sq : Integrable (fun z : ℝ ↦ z ^ 2) (gaussianReal 0 N) :=
     (memLp_id_gaussianReal (μ := 0) (v := N) 2).integrable_sq
   -- `∫ z² ∂𝒩(0,N) = Var[id] + (∫ z)² = N + 0`

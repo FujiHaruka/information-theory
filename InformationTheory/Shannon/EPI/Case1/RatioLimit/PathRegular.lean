@@ -408,7 +408,7 @@ theorem rescaledInput_density_witness
       rw [integrable_map_measure
         ((by fun_prop : Measurable (fun y : ℝ ↦ y ^ 2)).aestronglyMeasurable)
         hZt_meas.aemeasurable]
-      simpa [Function.comp] using hZt_sq
+      exact hZt_sq
     -- Move from `P.map Zt = withDensity (ofReal ∘ pX)` to the `y²·pX` integral on volume.
     rw [hpX_law] at hsq_law
     rw [integrable_withDensity_iff_integrable_smul₀'
@@ -564,7 +564,7 @@ theorem rescaledPath_variance_regular
           (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x)) volume := by
       rw [show (⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩ : ℝ≥0) = v_B from hvar_eq]
       have hv_B_pos' : (0 : ℝ) < v_B := hv_B_pos
-      simpa using InformationTheory.Shannon.convDensityAdd_negMulLog_integrable_pub
+      exact InformationTheory.Shannon.convDensityAdd_negMulLog_integrable_pub
         hpX_nn hpX_meas hpX_int hpX_mass hpX_mom (t := (v_B : ℝ)) hv_B_pos'
     -- Transfer along the a.e. density identification.
     refine h_asset.congr ?_
@@ -827,7 +827,7 @@ theorem integrable_condDistrib_indep_gaussian_add_crossEntropy_zAvg
     rw [integrable_map_measure
       ((by fun_prop : Measurable (fun y : ℝ ↦ y ^ 2)).aestronglyMeasurable)
       hZt_meas.aemeasurable]
-    simpa [Function.comp] using hZt_sq
+    exact hZt_sq
   have hbase := InformationTheory.Shannon.convCrossEntropy_zAvg_integrable
     (gaussianPDFReal 0 v_B) pX (gaussianPDFReal_nonneg 0 v_B) (measurable_gaussianPDFReal 0 v_B)
     (integrable_gaussianPDFReal 0 v_B) (integral_gaussianPDFReal_eq_one 0 hv_B)
@@ -881,7 +881,7 @@ theorem integrable_llr_compProd_condDistrib_indep_gaussian_add
       exact (hpX_meas.comp measurable_snd).mul
         (hg_pdf.comp (measurable_fst.sub measurable_snd))
     have h := huncurry.integral_prod_right (ν := volume)
-    simpa only [InformationTheory.Shannon.EPIConvDensity.convDensityAdd] using h.measurable
+    exact h.measurable
   have h_g_rnDeriv : (P.map (fun ω ↦ B ω + Zt ω)).rnDeriv volume
       =ᵐ[volume] fun x ↦ ENNReal.ofReal (g x) := by
     filter_upwards [h_path_rnDeriv] with x hx
@@ -939,7 +939,7 @@ theorem integrable_llr_compProd_condDistrib_indep_gaussian_add
     rw [integrable_map_measure
       ((by fun_prop : Measurable (fun y : ℝ ↦ y ^ 2)).aestronglyMeasurable)
       hZt_meas.aemeasurable]
-    simpa [Function.comp] using hZt_sq
+    exact hZt_sq
   exact InformationTheory.Shannon.convJointLlr_integrable P Zt (fun ω ↦ B ω + Zt ω)
     (gaussianPDFReal 0 v_B) g (gaussianPDFReal_nonneg 0 v_B) hg_nn
     (measurable_gaussianPDFReal 0 v_B) hg_meas Amaj Bmaj one_pos
@@ -983,7 +983,7 @@ theorem integrable_log_map_indep_gaussian_add
     apply NNReal.coe_injective; show (1 : ℝ) * (v_B : ℝ) = (v_B : ℝ); rw [one_mul]
   have h_negMulLog : Integrable (fun x ↦ Real.negMulLog (g x)) volume := by
     rw [hg_def, show (⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩ : ℝ≥0) = v_B from hvar_eq]
-    simpa using InformationTheory.Shannon.convDensityAdd_negMulLog_integrable_pub
+    exact InformationTheory.Shannon.convDensityAdd_negMulLog_integrable_pub
       hpX_nn hpX_meas hpX_int hpX_mass hpX_mom (t := (v_B : ℝ)) hv_B_pos'
   have hW_ac' : (P.map (fun ω ↦ B ω + Zt ω))
       = volume.withDensity (fun x ↦ ENNReal.ofReal (g x)) := by

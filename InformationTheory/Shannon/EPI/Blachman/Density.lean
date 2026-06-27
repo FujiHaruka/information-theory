@@ -571,8 +571,7 @@ theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
           have h1 := (hint_prod1.const_mul (lam ^ 2))
           have h2 := (hint_prod2.const_mul ((1 - lam) ^ 2))
           have h3 := (hint_prod3.const_mul (2 * lam * (1 - lam)))
-          simpa only [Function.uncurry, hT1_def, hT2_def, hT3_def] using
-            (h1.add h2).add h3)]
+          exact (h1.add h2).add h3)]
   -- Split the product integral into the 3 scaled pieces.
   have hi1 : Integrable (fun p : ℝ × ℝ ↦ lam ^ 2 * T1 p.1 p.2) (volume.prod volume) :=
     hint_prod1.const_mul (lam ^ 2)

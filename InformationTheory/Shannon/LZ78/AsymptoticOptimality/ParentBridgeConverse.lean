@@ -1034,7 +1034,7 @@ theorem lz78Greedy_converse_ae
         Filter.atTop (𝓝 0) := by
       have hR : Filter.Tendsto (fun x : ℝ ↦ Real.log x ^ 1 / (1 * x + 0))
           Filter.atTop (𝓝 0) := Real.tendsto_pow_log_div_mul_add_atTop 1 0 1 (by norm_num)
-      simpa using hR.comp tendsto_natCast_atTop_atTop
+      simpa [Function.comp_def] using hR.comp tendsto_natCast_atTop_atTop
     have hlogn1 : Filter.Tendsto (fun n : ℕ ↦ Real.log ((n : ℝ) + 1) / (n : ℝ))
         Filter.atTop (𝓝 0) := by
       have hR : Filter.Tendsto (fun x : ℝ ↦ Real.log x ^ 1 / (1 * x + (-1)))

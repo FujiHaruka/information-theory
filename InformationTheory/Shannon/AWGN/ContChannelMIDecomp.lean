@@ -111,7 +111,7 @@ theorem integrable_sq_sub_gaussianReal (m m' : ℝ) (v' : ℝ≥0) :
     (memLp_id_gaussianReal (μ := m') (v := v') 2).integrable_sq
   have h_id : Integrable (fun y : ℝ ↦ y) (gaussianReal m' v') := by
     have := (memLp_id_gaussianReal (μ := m') (v := v') 1).integrable (by norm_num)
-    simpa using this
+    exact this
   have h_eq : (fun y : ℝ ↦ (y - m) ^ 2)
       = fun y ↦ y ^ 2 - 2 * m * y + m ^ 2 := by
     funext y; ring

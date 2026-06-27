@@ -239,7 +239,7 @@ private lemma gaussianReal_integrable_sub_sq (a : ℝ) {N : ℝ≥0} (m : ℝ) :
     memLp_id_gaussianReal' 2 ENNReal.ofNat_ne_top
   have h_sub : MemLp (fun x : ℝ ↦ x - m) 2 (gaussianReal a N) := by
     have := h_id.sub (memLp_const m)
-    simpa using this
+    exact this
   exact h_sub.integrable_sq
 
 /-- Integrability of `(x - m)²` against `perLetterYLaw`. -/

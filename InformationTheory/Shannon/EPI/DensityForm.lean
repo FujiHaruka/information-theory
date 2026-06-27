@@ -73,7 +73,7 @@ noncomputable def isHeatFlowEndpointRegular_of_canonical_rnDeriv
       rw [integrable_map_measure
         ((by fun_prop : Measurable (fun y : ℝ ↦ y ^ 2)).aestronglyMeasurable)
         hW.aemeasurable]
-      simpa [Function.comp] using hmom
+      exact hmom
     rw [show P.map W = volume.withDensity (fun x ↦ ENNReal.ofReal (p x)) from
       hmap ▸ hp_law] at hsq_law
     rw [integrable_withDensity_iff_integrable_smul₀'
@@ -192,7 +192,7 @@ lemma rescaled_path_absolutelyContinuous_and_negMulLog_integrable
         (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x)) volume := by
     rw [show (⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩ : ℝ≥0) = v_B from hvar_eq]
     have hv_B_pos' : (0 : ℝ) < v_B := hv_B_pos
-    simpa using InformationTheory.Shannon.convDensityAdd_negMulLog_integrable_pub
+    exact InformationTheory.Shannon.convDensityAdd_negMulLog_integrable_pub
       hpX_nn hpX_meas hpX_int hpX_mass hpX_mom (t := (v_B : ℝ)) hv_B_pos'
   refine h_asset.congr ?_
   filter_upwards [h_path_rnDeriv] with x hx
@@ -366,7 +366,7 @@ lemma liftMeasure3_pairwise_indep
       simpa using this
     have hsum : Measurable (fun q : ℝ × ℝ ↦ q.1 + q.2) := by fun_prop
     have := hpair.comp hsum measurable_id
-    simpa [Function.comp] using this
+    exact this
   have hXY_ZXZY_pair :
       IndepFun (fun p ↦ X' p + Y' p) (fun p ↦ (ZX p, ZY p)) (liftMeasure3 P) := by
     have hpair : IndepFun (fun a ↦ (X' a, Y' a)) (fun a ↦ (ZX a, ZY a)) (liftMeasure3 P) := by
@@ -375,7 +375,7 @@ lemma liftMeasure3_pairwise_indep
       simpa using this
     have hsum : Measurable (fun q : ℝ × ℝ ↦ q.1 + q.2) := by fun_prop
     have := hpair.comp hsum (measurable_id : Measurable (id : ℝ × ℝ → ℝ × ℝ))
-    simpa [Function.comp] using this
+    exact this
   exact ⟨hXZX, hYZY, hX'Y'_indep, hZX_ZY, hpair_indep, hXYZ, hXY_ZXZY_pair⟩
 
 /-- Entropy power inequality for absolutely continuous distributions with regular densities.

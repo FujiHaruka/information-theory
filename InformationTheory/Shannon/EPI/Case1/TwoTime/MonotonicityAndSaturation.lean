@@ -127,7 +127,7 @@ theorem twoTimeLogRatioGap_continuousWithinAt_zero
           (P.map (fun ω ↦ (X ω + Y ω) + Real.sqrt (s t + r t) * Z ω)))
         (Set.Ioi (0 : ℝ)) 0 := by
     have hcomp := h_endpt.comp_of_eq hτ_cwa hτ_maps hτ0
-    simpa [Function.comp] using hcomp
+    exact hcomp
   -- `log` of the heat flow, continuous within `Ioi 0` at `0`
   -- (`entropyPower` at `τ 0 = 0` is positive).
   have hpos0 : (0 : ℝ) < entropyPower
@@ -630,7 +630,7 @@ theorem twoTimeLogRatioGap_tendsto_zero_atTop
   have h_logratio_tendsto :
       Filter.Tendsto (fun t : ℝ ↦ Real.log (A t / B t)) Filter.atTop (nhds (0 : ℝ)) := by
     have := (Real.continuousAt_log (one_ne_zero)).tendsto.comp h_ratio_tendsto
-    simpa using this
+    simpa [Function.comp_def] using this
   -- `log (A/B) = log A − log B` (both positive, eventually for `t ≥ 0`).
   have h_eventually_eq : ∀ᶠ t in Filter.atTop,
       Real.log (A t / B t) = twoTimeLogRatioGap X Y Z_X Z_Y P s r t := by

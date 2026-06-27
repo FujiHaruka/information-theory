@@ -88,7 +88,7 @@ theorem fibre_rnDeriv_integrable_iff
       have := (hf.integrable_map_iff
         (g := fun x ↦ Φ (((ν.map (fun y : ℝ ↦ y + c)).rnDeriv volume x).toReal))).mp
         (by rw [hvol]; exact h)
-      simpa [Function.comp] using this
+      exact this
     refine h2.congr ?_
     filter_upwards [h_rn] with x hx
     rw [hx]
@@ -100,7 +100,7 @@ theorem fibre_rnDeriv_integrable_iff
       rw [hx]
     have := (hf.integrable_map_iff
       (g := fun x ↦ Φ (((ν.map (fun y : ℝ ↦ y + c)).rnDeriv volume x).toReal))).mpr
-      (by simpa [Function.comp] using h2)
+      (by exact h2)
     rw [hvol] at this
     exact this
 
@@ -186,7 +186,7 @@ theorem convCrossEntropy_perFibre_integrable
       apply Measurable.stronglyMeasurable
       exact (hpX_meas.comp measurable_snd).mul (hg_pdf.comp (measurable_fst.sub measurable_snd))
     have h := huncurry.integral_prod_right (ν := volume)
-    simpa only [convDensityAdd] using h.measurable
+    exact h.measurable
   -- `q·first-moment` is integrable: `|y·q y| ≤ q + y²·q`.
   have hq_mom1 : Integrable (fun y ↦ y * q y) volume := by
     refine Integrable.mono' (hq_int.add hq_mom)
@@ -259,7 +259,7 @@ theorem convCrossEntropy_zAvg_integrable
       apply Measurable.stronglyMeasurable
       exact (hpX_meas.comp measurable_snd).mul (hg_pdf.comp (measurable_fst.sub measurable_snd))
     have h := huncurry.integral_prod_right (ν := volume)
-    simpa only [convDensityAdd] using h.measurable
+    exact h.measurable
   -- Translate moments of `q`.
   set M2 : ℝ := ∫ y, y ^ 2 * q y ∂volume with hM2
   set Fclean : ℝ → ℝ :=
@@ -797,7 +797,7 @@ theorem negMulLog_convDensity_entropy_ge_density
       apply (hpX_meas.comp measurable_snd).mul
       exact hg_pdf.comp ((measurable_fst).sub measurable_snd)
     have h := huncurry.integral_prod_right (ν := volume)
-    simpa only [convDensityAdd] using h.measurable
+    exact h.measurable
   -- Marginal `μ.map W = withDensity (ofReal p_t)` and `volume ≪ μ.map W` (full support).
   have hW_ac : (μ.map W) ≪ volume := by
     have hW_law : μ.map W = (μ.map X) ∗ gaussianReal 0 ⟨s * (v_Z : ℝ), by positivity⟩ :=

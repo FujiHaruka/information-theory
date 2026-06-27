@@ -206,7 +206,7 @@ noncomputable def IsRegularDeBruijnHypV2.ofHeatFlow
       rw [integrable_map_measure
         ((by fun_prop : Measurable (fun y : ℝ ↦ y ^ 2)).aestronglyMeasurable)
         hX.aemeasurable]
-      simpa [Function.comp] using h_mom_X
+      exact h_mom_X
     rw [hpX_law] at hsq_law
     rw [integrable_withDensity_iff_integrable_smul₀'
       hpX_meas.ennreal_ofReal.aemeasurable

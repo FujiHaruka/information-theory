@@ -120,7 +120,7 @@ theorem gaussianConvolution_law_of_gaussian
       have := Measure.map_map (μ := P) h_meas_mul hZ
       -- `(P.map Z).map (fun y => √t * y) = P.map ((fun y => √t * y) ∘ Z)`.
       -- The RHS is `P.map (fun ω => √t * Z ω)`.
-      simpa [Function.comp] using this.symm
+      exact this.symm
     rw [h_compose, hZ_law, gaussianReal_map_const_mul]
     -- Need: `gaussianReal (√t · 0) (⟨(√t)², _⟩ * 1) = gaussianReal 0 ⟨t, ht⟩`.
     congr 1
@@ -233,7 +233,7 @@ theorem hasDerivAt_half_log_gaussian_entropy
       convert h_add using 1; ring
     have h_mul := h_add'.const_mul (2 * Real.pi * Real.exp 1)
     -- `h_mul : HasDerivAt _ (2πe * 1) s`. Rewrite to `2πe`.
-    convert h_mul using 1; ring
+    convert h_mul using 1 <;> first | rfl | ring
   -- Apply log chain rule. Need `2π e (v + s) ≠ 0`.
   have h2πe_pos : (0 : ℝ) < 2 * Real.pi * Real.exp 1 := by positivity
   have h_prod_pos : (0 : ℝ) < 2 * Real.pi * Real.exp 1 * ((v : ℝ) + s) :=
@@ -273,7 +273,7 @@ theorem differentialEntropy_gaussianReal_heat_path
     rw [NNReal.coe_add] at h_coe
     show False
     have : (v : ℝ) + s = 0 := by
-      convert h_coe using 1
+      exact h_coe
     linarith
   rw [InformationTheory.Shannon.differentialEntropy_gaussianReal m hvs_nn]
   -- The `(v + ⟨s, hs⟩ : ℝ≥0).toReal = (v : ℝ) + s` step.
@@ -333,7 +333,7 @@ theorem deBruijn_identity_v2_gaussian
     intro h
     have h_coe : ((v + ⟨t, ht.le⟩ : ℝ≥0) : ℝ) = 0 := by rw [h]; simp
     rw [NNReal.coe_add] at h_coe
-    have : (v : ℝ) + t = 0 := by convert h_coe using 1
+    have : (v : ℝ) + t = 0 := by exact h_coe
     linarith [v.coe_nonneg]
   have h_fisher : fisherInfoOfMeasureV2Real (P.map (gaussianConvolution X Z t))
       (gaussianPDFReal m (v + ⟨t, ht.le⟩))

@@ -670,7 +670,6 @@ theorem llr_split_from_density_factorize
         * (μX.rnDeriv volume z.1 * μY.rnDeriv volume z.2).toReal
         = (μ.rnDeriv volume z).toReal := by
     have := congrArg ENNReal.toReal h_eq
-    simp only at this
     rw [ENNReal.toReal_mul] at this
     exact this
   -- the two factors on the LHS are strictly positive as reals

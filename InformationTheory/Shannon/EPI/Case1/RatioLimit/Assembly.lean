@@ -413,7 +413,7 @@ theorem rescaledPath_ac_and_negMulLog_integrable
         (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x)) volume := by
     rw [show (⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩ : ℝ≥0) = v_B from hvar_eq]
     have hv_B_pos' : (0 : ℝ) < v_B := hv_B_pos
-    simpa using InformationTheory.Shannon.convDensityAdd_negMulLog_integrable_pub
+    exact InformationTheory.Shannon.convDensityAdd_negMulLog_integrable_pub
       hpX_nn hpX_meas hpX_int hpX_mass hpX_mom (t := (v_B : ℝ)) hv_B_pos'
   refine h_asset.congr ?_
   filter_upwards [h_path_rnDeriv] with x hx
@@ -562,7 +562,7 @@ theorem entropyPower_add_ge_case1_of_methodX
       simpa using this
     have hsum : Measurable (fun p : ℝ × ℝ ↦ p.1 + p.2) := by fun_prop
     have := hpair.comp hsum hsum
-    simpa [Function.comp] using this
+    exact this
   -- ===== C-3b: noise a.c. from Gaussian a.c. + independent-sum a.c. =====
   have hZX_ac : (P.map Z_X) ≪ volume := by
     rw [hZX_law]; exact gaussianReal_absolutelyContinuous 0 hv_X

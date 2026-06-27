@@ -50,7 +50,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step
     -- `HasDerivAt (log ∘ p_t) (deriv p_t x / p_t x) x` via `Real.hasDerivAt_log`.
     have hlog : HasDerivAt (fun x ↦ Real.log (p_t x)) (deriv p_t x / p_t x) x := by
       have := (Real.hasDerivAt_log (hp_pos x).ne').comp x hpt_diff
-      simpa [one_div, div_eq_mul_inv, mul_comm] using this
+      convert this using 1 <;> first | rfl | ring
     -- `u x = - log (p_t x) - 1`, `u' x = - logDeriv p_t x = - (deriv p_t x / p_t x)`.
     have : HasDerivAt u (-(deriv p_t x / p_t x)) x := by
       simpa [hu_def] using (hlog.neg.sub_const 1)
@@ -458,7 +458,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_parametric
           apply (hpX_meas.comp measurable_snd).mul
           exact hg_meas.comp ((measurable_fst).sub measurable_snd)
         have h := huncurry.integral_prod_right (ν := volume)
-        simpa only [convDensityAdd] using h.measurable
+        exact h.measurable
       exact (Real.continuous_negMulLog.measurable.comp hpath_meas).aestronglyMeasurable
     -- `hderiv_meas`: a.e.-strong-measurability of `entDerivFn t` (genuine).
     have hderiv_meas : AEStronglyMeasurable (entDerivFn t) volume := by
@@ -473,7 +473,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_parametric
           apply (hpX_meas.comp measurable_snd).mul
           exact hg_meas.comp ((measurable_fst).sub measurable_snd)
         have h := huncurry.integral_prod_right (ν := volume)
-        simpa only [convDensityAdd] using h.measurable
+        exact h.measurable
       have hlog_meas : Measurable
           (fun x ↦ - Real.log (convDensityAdd pX
             (gaussianPDFReal 0 ⟨max t 0, le_max_right t 0⟩) x) - 1) :=

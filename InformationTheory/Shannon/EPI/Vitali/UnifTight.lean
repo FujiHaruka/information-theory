@@ -70,7 +70,7 @@ private theorem integral_sq_mul_gaussianPDFReal_shift {t : ℝ} (ht : 0 < t) (y 
     have hid_g : Integrable (fun u ↦ u) (gaussianReal 0 ⟨t, ht.le⟩) := by
       have := (memLp_one_iff_integrable (μ := gaussianReal 0 ⟨t, ht.le⟩)
         (f := (id : ℝ → ℝ))).mp hmem
-      simpa using this
+      exact this
     rw [gaussianReal_of_var_ne_zero _ hv_ne] at hid_g
     rw [integrable_withDensity_iff (measurable_gaussianPDF _ _)
       (ae_of_all _ fun _ ↦ gaussianPDF_lt_top)] at hid_g
@@ -161,7 +161,7 @@ theorem convDensityAdd_second_moment
     have hid_g : Integrable (fun u ↦ u) (gaussianReal 0 ⟨t, ht.le⟩) := by
       have := (memLp_one_iff_integrable (μ := gaussianReal 0 ⟨t, ht.le⟩)
         (f := (id : ℝ → ℝ))).mp hmem
-      simpa using this
+      exact this
     rw [gaussianReal_of_var_ne_zero _ hv_ne] at hid_g
     rw [integrable_withDensity_iff (measurable_gaussianPDF _ _)
       (ae_of_all _ fun _ ↦ gaussianPDF_lt_top)] at hid_g

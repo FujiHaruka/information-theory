@@ -63,7 +63,7 @@ theorem gaussianConvolution_law_conv
       have h_meas_mul : Measurable (fun y : ℝ ↦ Real.sqrt s * y) :=
         measurable_const.mul measurable_id
       have := Measure.map_map (μ := P) h_meas_mul hZ
-      simpa [Function.comp] using this.symm
+      exact this.symm
     rw [h_compose, hZ_law, gaussianReal_map_const_mul]
     congr 1
     · ring
@@ -229,12 +229,10 @@ theorem heatFlow_density_heat_equation_kernel_x_deriv1
     have h1 : HasDerivAt (fun ξ : ℝ ↦ -ξ ^ 2) (-(2 * u)) u := by
       simpa using ((hasDerivAt_pow 2 u).const_mul (-1 : ℝ))
     have := h1.div_const (2 * σ)
-    convert this using 1
-    field_simp
+    convert this using 1 <;> first | rfl | field_simp
   have hexp := he.exp
   have hcm := hexp.const_mul (Real.sqrt (2 * Real.pi * σ))⁻¹
-  convert hcm using 1
-  ring
+  convert hcm using 1 <;> first | rfl | ring
 
 /-- The spatial second derivative of the Gaussian heat kernel:
 `∂²_u g_σ(u) = g_σ(u) · (u²/σ² - 1/σ)`.
@@ -248,11 +246,9 @@ theorem heatFlow_density_heat_equation_kernel_x_deriv2
   have hg := heatFlow_density_heat_equation_kernel_x_deriv1 hσ u
   have hlin : HasDerivAt (fun ξ : ℝ ↦ -(ξ / σ)) (-(1 / σ)) u := by
     have := (hasDerivAt_id u).div_const σ
-    simpa using this.neg
+    exact this.neg
   have hprod := hg.mul hlin
-  convert hprod using 1
-  field_simp
-  ring
+  convert hprod using 1 <;> first | rfl | (field_simp; ring)
 
 /-- The σ-derivative of the Gaussian heat kernel:
 `∂_σ g_σ(u) = (1/2) · g_σ(u) · (u²/σ² - 1/σ)`.
@@ -276,7 +272,7 @@ theorem heatFlow_density_heat_equation_kernel_sigma_deriv
   -- ∂_τ exp(-u²/(2τ))
   have hexp_inner : HasDerivAt (fun τ : ℝ ↦ -u ^ 2 / (2 * τ)) (u ^ 2 / (2 * σ ^ 2)) σ := by
     have hinv2 : HasDerivAt (fun τ : ℝ ↦ τ⁻¹) (-1 / σ ^ 2) σ := by
-      simpa using (hasDerivAt_id σ).inv hσ.ne'
+      exact (hasDerivAt_id σ).inv hσ.ne'
     have hcm := hinv2.const_mul (-u ^ 2 / 2)
     have heq : (fun τ : ℝ ↦ (-u ^ 2 / 2) * τ⁻¹) = (fun τ : ℝ ↦ -u ^ 2 / (2 * τ)) := by
       funext τ
@@ -284,16 +280,14 @@ theorem heatFlow_density_heat_equation_kernel_sigma_deriv
       · simp [h]
       · field_simp
     rw [heq] at hcm
-    convert hcm using 1
-    field_simp
+    convert hcm using 1 <;> first | rfl | field_simp
   have hexp := hexp_inner.exp
   -- product rule, then close the algebra (uses √(2πσ)² = 2πσ)
   have hprod := hinv.mul hexp
-  convert hprod using 1
-  simp only [Pi.inv_apply]
-  rw [Real.sq_sqrt hpos2pi']
-  field_simp
-  ring
+  convert hprod using 1 <;>
+    first
+    | rfl
+    | (simp only [Pi.inv_apply]; rw [Real.sq_sqrt hpos2pi']; field_simp; ring)
 
 /-- The Gaussian heat kernel solves the heat equation `∂_σ g_σ(u) = (1/2) · ∂²_u g_σ(u)`; both
 sides equal `(1/2) · g_σ(u) · (u²/σ² - 1/σ)`.

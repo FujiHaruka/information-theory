@@ -88,7 +88,7 @@ theorem translation_continuous_L1
   -- to get `f₀ (· - y) =ᵐ pX (· - y)`.
   have hcy : (fun x ↦ (f₀ : ℝ → ℝ) (x - y)) =ᵐ[volume] (fun x ↦ pX (x - y)) := by
     have := (measurePreserving_subRightCM y).quasiMeasurePreserving.ae_eq_comp hc
-    simpa [subRightCM, Function.comp] using this
+    exact this
   filter_upwards [hy, h0, hc, hcy] with x hyx h0x hcx hcyx
   simp only [Pi.sub_apply]
   rw [hyx, h0x]
@@ -344,7 +344,7 @@ private theorem psi_tendsto_zero
           (s := Set.Ioi 0)
         simpa using this.tendsto
       have hcont : Continuous fun r : ℝ ↦ ENNReal.ofReal r := ENNReal.continuous_ofReal
-      simpa using (hcont.tendsto 0).comp this
+      simpa [Function.comp_def] using (hcont.tendsto 0).comp this
     have := ENNReal.Tendsto.const_mul (a := 2 * C) h0 (Or.inr h2C_ne)
     simpa using this
   have htail_ev : ∀ᶠ t in 𝓝[Set.Ioi 0] 0, (2 * C) * ENNReal.ofReal (t / δ ^ 2) ≤ ε / 2 :=

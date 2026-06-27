@@ -90,7 +90,7 @@ theorem truncW_map_density_tendsto_ae
   set cr : ℕ → ℝ := fun n ↦ (c n).toReal with hcr_def
   have hcr_lim : Tendsto cr atTop (𝓝 1) := by
     have := (ENNReal.tendsto_toReal (by simp : (1 : ℝ≥0∞) ≠ ⊤)).comp hc_lim
-    simpa [hcr_def, Function.comp] using this
+    simpa [hcr_def, Function.comp_def] using this
   -- eventually `c n ≠ 0`.
   have hc_ne : ∀ᶠ n in atTop, c n ≠ 0 := by
     have h_nhds : {x : ℝ≥0∞ | x ≠ 0} ∈ 𝓝 (1 : ℝ≥0∞) := isOpen_ne.mem_nhds one_ne_zero
@@ -384,7 +384,7 @@ theorem differentialEntropyExt_truncW_tendsto_top
     have hcbar_lim : Tendsto (fun n ↦ ((cc n)⁻¹).toReal) atTop (𝓝 1) := by
       have hcr_lim : Tendsto (fun n ↦ (cc n).toReal) atTop (𝓝 1) := by
         have := (ENNReal.tendsto_toReal (by simp : (1 : ℝ≥0∞) ≠ ⊤)).comp hcc_lim
-        simpa [Function.comp] using this
+        simpa [Function.comp_def] using this
       have heq : (fun n ↦ ((cc n).toReal)⁻¹) =ᶠ[atTop] fun n ↦ ((cc n)⁻¹).toReal := by
         filter_upwards [hcc_ne] with n hn; rw [ENNReal.toReal_inv]
       refine Tendsto.congr' heq ?_
@@ -506,7 +506,7 @@ private theorem negPart_lintegral_map_truncW_add_ne_top
   -- the sum law equals the convolution of the marginals.
   have hsum_conv : Q.map (fun ω ↦ W ω + V ω) = (Q.map W) ∗ (Q.map V) := by
     have := hindep.map_add_eq_map_conv_map hW hV
-    simpa [Pi.add_apply] using this
+    exact this
   -- `B(Q.map W) ≠ ⊤` via the explicit per-n bound (finite under `B(W) < ⊤` and `c_n ≠ 0`).
   have hcn' : (P.map W) {r : ℝ | |r| ≤ (n : ℝ)} ≠ 0 := by
     have hmeas : MeasurableSet {r : ℝ | |r| ≤ (n : ℝ)} :=
@@ -721,7 +721,7 @@ theorem differentialEntropyExt_top_of_indep_add_unconditional
       have hcinv_lim : Tendsto (fun n ↦ ((P (E n))⁻¹).toReal) atTop (𝓝 1) := by
         have hr_lim : Tendsto (fun n ↦ (P (E n)).toReal) atTop (𝓝 1) := by
           have := (ENNReal.tendsto_toReal (by simp : (1 : ℝ≥0∞) ≠ ⊤)).comp hlim
-          simpa [Function.comp] using this
+          simpa [Function.comp_def] using this
         have heq : (fun n ↦ ((P (E n)).toReal)⁻¹) =ᶠ[atTop] fun n ↦ ((P (E n))⁻¹).toReal := by
           filter_upwards [hcn_ev] with n hn; rw [ENNReal.toReal_inv]
         refine Tendsto.congr' heq ?_
