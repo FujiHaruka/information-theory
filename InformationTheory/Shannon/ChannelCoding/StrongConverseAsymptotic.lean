@@ -72,12 +72,15 @@ Stated as a `HasDerivWithinAt` over `Set.Ici 0` (right derivative), NOT a two-si
 `HasDerivAt`. The two-sided form is FALSE for boundary achievers: when `p a = 0`, for `t < 0`
 the segment leaves the simplex (`p_t a = t < 0`), `pmfToMeasure` clamps the negative coordinate
 via `ENNReal.ofReal` to `0`, giving the non-probability measure `(1 - t) • pmfToMeasure p`, so
-`I(p_t; W).toReal` no longer follows the smooth simplex formula and develops a corner at `0`.
-Concrete refutation: `α = β = Bool`, `p = δ_false`, `a = true`, any channel with `W false` full
-support and `W true ≠ W false`; then the right derivative is `D(W true‖W false) > 0` while the
-left derivative is `0`. The one-sided form is also exactly what the downstream first-order
-optimality argument consumes (cf. `csiszar_first_order_condition`, which uses the `𝓝[>] 0`
-slope). See the orchestrator report / plan `capacity-saddle-point` for the signature correction.
+`I(p_t; W).toReal` no longer follows the smooth simplex functional and develops a corner at `0`
+(left derivative ≠ right derivative). Concrete refutation: `α = β = Bool`, `p = δ_false`,
+`a = true`, any channel with `W false` full support and `W true ≠ W false`; the right derivative
+is `D(W true‖W false) > 0`, but the left branch is the non-probability functional
+`t ↦ (klDiv ((1-t) • J) ((1-t)² • (J)) ).toReal` (here the input-deterministic joint `J` equals
+the product measure), whose derivative at `0` does not match. The one-sided form is also exactly
+what the downstream first-order optimality argument consumes (cf. `csiszar_first_order_condition`,
+which uses the `𝓝[>] 0` slope). See the orchestrator report / plan `capacity-saddle-point` for
+the signature correction.
 
 @residual(plan:capacity-saddle-point) -/
 theorem mutualInfo_segment_hasDerivAt
