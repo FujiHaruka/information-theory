@@ -61,17 +61,22 @@ first-order condition of the `chernoffInfo` inf) the first term vanishes, giving
 ## Status
 
 - 2026-06-27: gateway evaluation done (tractable verdict). **Phase A core atom
-  `chernoffMediator_klDiv_eq` DONE** (`Chernoff/Converse.lean`, sorryAx-free, machine-verified
-  `[propext, Classical.choice, Quot.sound]`) — the mediator-divergence closed form
-  `klDivPmf (T_λ) P₁ = λ·E_{T_λ}[log(P₂/P₁)] - log Z(λ)`. File is standalone (not yet root-wired;
-  the `chernoff_converse` headline is kept out of code until proven, to preserve the project's
-  0-`sorry` invariant — the README claims "no sorry", enforced by `gen_readme_table --check`).
-- **Next**: Phase A remainder — `chernoffMediator_is_Iprojection` (T_λ* satisfies
-  `csiszar_first_order_condition` for the half-space K) + `chernoffInfo_eq_Iproj_div`
-  (`chernoffInfo = klDivPmf (T_λ*) P₁`, via interior-λ* balance `mean LLR = 0` from
-  `d/dλ log Z(λ*) = 0`). The interior-λ* balance is the one genuine analytic obligation. Then
-  Phase B (Sanov bookkeeping, heaviest) → Phase C (assembly). Only commit a proven (sorryAx-free)
-  `chernoff_converse` headline; do NOT commit it as `sorry` (CI honesty gate forbids it).
+  `chernoffMediator_klDiv_eq` DONE** (`Chernoff/Converse.lean`, sorryAx-free).
+- **Phase A COMPLETE** (`Chernoff/Converse.lean`, all sorryAx-free, machine-verified
+  `[propext, Classical.choice, Quot.sound]`). 5 decls added on top of the atom:
+  `chernoffMediator_log_sub` (per-term log identity) · `chernoffLogZ_hasDerivAt`
+  (`d/dλ log Z(λ) = ∑ a, T_λ(a)·log(P₂ a/P₁ a)`, the analytic core via `HasDerivAt.const_rpow`
+  + `.log`) · `chernoffMediator_balance` (Fermat FOC at interior λ* ⟹ balance = 0) ·
+  `def chernoffHalfSpace` + `chernoffInfo_eq_mediator_div` (`chernoffInfo = klDivPmf (T_λ*) P₁`) ·
+  `chernoffMediator_isMinOn` (`IsMinOn (klDivPmf · P₁) K (T_λ*)`). Interiority `0 < λ* < 1` is the
+  only non-degeneracy hyp (balance is *derived*, not assumed — Cramér-`Var>0` analogue). Selection
+  facts `hlam_min`/`hinfo` discharge from `chernoffInfo_attained`. File still standalone (not
+  root-wired; 0-`sorry` invariant — wire only once `chernoff_converse` headline is proven).
+- **Next**: Phase B — Sanov lower bound (heaviest). Express error region
+  `{x : P₁ⁿ(x) ≤ P₂ⁿ(x)}` as a type-class union and instantiate `sanov_ldp_equality`
+  (`TendstoSandwich.lean:128`) with Q=P₁, P=T_λ*, minimiser condition from `chernoffMediator_isMinOn`
+  / Pythagoras; rate `klDivSumForm_ofVec T_λ* (P₁.real∘singleton)` ↔ `klDivPmf (T_λ*) P₁ = chernoffInfo`.
+  Then Phase C (assembly). Only commit a proven (sorryAx-free) `chernoff_converse` headline.
 
 ## Retreat lines
 
