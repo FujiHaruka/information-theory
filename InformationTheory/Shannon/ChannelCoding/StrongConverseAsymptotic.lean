@@ -410,12 +410,238 @@ theorem klDiv_channel_le_capacity
     le_csSup (capacity_bddAbove W) ⟨p, hp, rfl⟩
   exact le_trans h1 h2
 
+/-! ## Phase B: non-i.i.d. Chebyshev concentration of the information density -/
+
+omit [Fintype α] [DecidableEq α] [MeasurableSingletonClass α] [Nonempty β] in
+/-- Singleton masses of a probability measure on the finite output alphabet sum to `1`. -/
+lemma sum_prob_real_singleton_eq_one (μ : Measure β) [IsProbabilityMeasure μ] :
+    ∑ b : β, μ.real {b} = 1 := by
+  rw [show (∑ b : β, μ.real {b}) = ∑ b ∈ (Finset.univ : Finset β), μ.real {b} from rfl,
+    sum_measureReal_singleton, Finset.coe_univ, probReal_univ]
+
+omit [Fintype α] [DecidableEq α] [MeasurableSingletonClass α] [Nonempty β] in
+/-- The expectation of the per-letter log-likelihood ratio `log (W a)(·) − log q*(·)` under the
+channel fiber `W a` is the discrete KL divergence `D(W a ‖ q*)`. -/
+lemma integral_logRatio_eq_klDivPmf
+    (W : Channel α β) [IsMarkovKernel W] (a : α) {qf : β → ℝ}
+    (hqf_sum : ∑ b, qf b = 1) (hqf_pos : ∀ b, 0 < qf b) :
+    ∫ b, (Real.log ((W a).real {b}) - Real.log (qf b)) ∂(W a)
+      = klDivPmf (fun b ↦ (W a).real {b}) qf := by
+  haveI : IsProbabilityMeasure (W a) := inferInstance
+  rw [integral_fintype Integrable.of_finite,
+    klDivPmf_crossEntropy (fun b ↦ measureReal_nonneg)
+      (sum_channel_real_singleton_eq_one W a) hqf_sum hqf_pos]
+  simp only [smul_eq_mul, mul_sub]
+  rw [Finset.sum_sub_distrib]
+
+/-- Uniform bound on the per-letter log-likelihood ratio `log (W a)(b) − log q*(b)` across the
+finite input/output alphabets; an `n`-independent variance bound for the information density. -/
+noncomputable def llrUnifBound (W : Channel α β) (p : α → ℝ) : ℝ :=
+  ∑ a : α, ∑ b : β,
+    |Real.log ((W a).real {b}) - Real.log ((outputDistribution (pmfToMeasure p) W).real {b})|
+
+/-- Per-codeword Chebyshev bound: for block length `n ≥ 1`, the channel-output mass of the
+high-LLR set for codeword `m` is at most `B² / (δ/2)² · (1/n)`, where `B := llrUnifBound W p`
+is an `n`-independent uniform bound on the per-letter log-likelihood ratios. Uses the saddle
+point `klDiv_channel_le_capacity` for the uniform mean bound. -/
+lemma highLLRSet_real_le
+    (W : Channel α β) [IsMarkovKernel W] {δ : ℝ} (hδ : 0 < δ)
+    {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
+    (hp_max : IsMaxOn (fun p : α → ℝ ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal)
+      (stdSimplex ℝ α) p)
+    (hq_pos : ∀ b : β, 0 < (outputDistribution (pmfToMeasure p) W).real {b})
+    {n : ℕ} (hn : 0 < n) {M : ℕ} (c : Code M n α β) (m : Fin M) :
+    (Measure.pi (fun i ↦ W (c.encoder m i))).real
+        (highLLRSet W c
+          (Measure.pi (fun _ : Fin n ↦ outputDistribution (pmfToMeasure p) W))
+          ((n : ℝ) * (capacity W + δ / 2)) m)
+      ≤ (llrUnifBound W p) ^ 2 / (δ / 2) ^ 2 * (1 / (n : ℝ)) := by
+  classical
+  haveI : ∀ i, IsProbabilityMeasure (W (c.encoder m i)) := fun i ↦ inferInstance
+  haveI hPmI : IsProbabilityMeasure (Measure.pi (fun i ↦ W (c.encoder m i))) := inferInstance
+  haveI : IsProbabilityMeasure (pmfToMeasure p) := pmfToMeasure_isProbabilityMeasure hp
+  haveI : IsProbabilityMeasure (outputDistribution (pmfToMeasure p) W) := inferInstance
+  -- Abbreviations.
+  set qf : β → ℝ := fun b ↦ (outputDistribution (pmfToMeasure p) W).real {b} with hqf_def
+  set L : α → β → ℝ := fun a b ↦ Real.log ((W a).real {b}) - Real.log (qf b) with hL_def
+  set B : ℝ := llrUnifBound W p with hB_def
+  set Pm : Measure (Fin n → β) := Measure.pi (fun i ↦ W (c.encoder m i)) with hPm_def
+  set Q : Measure (Fin n → β) :=
+    Measure.pi (fun _ : Fin n ↦ outputDistribution (pmfToMeasure p) W) with hQ_def
+  set thr : ℝ := (n : ℝ) * (capacity W + δ / 2) with hthr_def
+  set S : (Fin n → β) → ℝ := fun y ↦ ∑ i, L (c.encoder m i) (y i) with hS_def
+  set cR : ℝ := (n : ℝ) * (δ / 2) with hcR_def
+  haveI : IsProbabilityMeasure Pm := by rw [hPm_def]; infer_instance
+  -- Basic pmf facts.
+  have hqf_pos : ∀ b, 0 < qf b := hq_pos
+  have hqf_sum : ∑ b, qf b = 1 := sum_prob_real_singleton_eq_one _
+  have hWa_sum : ∀ a, ∑ b : β, (W a).real {b} = 1 := sum_channel_real_singleton_eq_one W
+  have hLB : B = ∑ a : α, ∑ b : β, |L a b| := by
+    rw [hB_def]; simp only [llrUnifBound, hL_def, hqf_def]
+  have hB_nonneg : 0 ≤ B := by
+    rw [hLB]; exact Finset.sum_nonneg (fun a _ ↦ Finset.sum_nonneg (fun b _ ↦ abs_nonneg _))
+  have hL_bound : ∀ a b, |L a b| ≤ B := by
+    intro a b
+    rw [hLB]
+    calc |L a b| ≤ ∑ b' : β, |L a b'| :=
+          Finset.single_le_sum (f := fun b' ↦ |L a b'|) (fun b' _ ↦ abs_nonneg _)
+            (Finset.mem_univ b)
+      _ ≤ ∑ a' : α, ∑ b' : β, |L a' b'| :=
+          Finset.single_le_sum (f := fun a' ↦ ∑ b' : β, |L a' b'|)
+            (fun a' _ ↦ Finset.sum_nonneg (fun b' _ ↦ abs_nonneg _)) (Finset.mem_univ a)
+  -- (H4) each per-letter ratio is in `L²`.
+  have hX_memlp : ∀ i, MemLp (L (c.encoder m i)) 2 (W (c.encoder m i)) := by
+    intro i
+    have hbound : ∀ b', L (c.encoder m i) b' ∈ Set.Icc (-B) B := by
+      intro b'
+      rw [Set.mem_Icc]
+      have h := hL_bound (c.encoder m i) b'
+      rw [abs_le] at h
+      exact ⟨h.1, h.2⟩
+    exact memLp_of_bounded (Filter.Eventually.of_forall hbound)
+      (measurable_of_finite _).aestronglyMeasurable 2
+  -- (H4') the information density is in `L²`.
+  have hS_memlp : MemLp S 2 Pm := by
+    have hSbound : ∀ y, S y ∈ Set.Icc (-((n : ℝ) * B)) ((n : ℝ) * B) := by
+      intro y
+      rw [Set.mem_Icc]
+      have habs : |S y| ≤ (n : ℝ) * B := by
+        show |∑ i, L (c.encoder m i) (y i)| ≤ (n : ℝ) * B
+        calc |∑ i, L (c.encoder m i) (y i)|
+            ≤ ∑ i, |L (c.encoder m i) (y i)| := Finset.abs_sum_le_sum_abs _ _
+          _ ≤ ∑ _i : Fin n, B := Finset.sum_le_sum (fun i _ ↦ hL_bound _ _)
+          _ = (n : ℝ) * B := by
+              rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+      rw [abs_le] at habs
+      exact ⟨habs.1, habs.2⟩
+    exact memLp_of_bounded (Filter.Eventually.of_forall hSbound)
+      (measurable_of_finite _).aestronglyMeasurable 2
+  -- (H2) the mean of the information density is at most `n·C`.
+  have hmean_le : (∫ x, S x ∂Pm) ≤ (n : ℝ) * capacity W := by
+    have hint : ∀ i : Fin n, (∫ x, L (c.encoder m i) (x i) ∂Pm)
+        = klDivPmf (fun b ↦ (W (c.encoder m i)).real {b}) qf := by
+      intro i
+      have hmp : MeasurePreserving (Function.eval i) Pm (W (c.encoder m i)) := by
+        rw [hPm_def]; exact measurePreserving_eval (fun j ↦ W (c.encoder m j)) i
+      have hmarg : (∫ x, L (c.encoder m i) (x i) ∂Pm)
+          = ∫ b, L (c.encoder m i) b ∂(W (c.encoder m i)) := by
+        rw [← hmp.map_eq, integral_map hmp.measurable.aemeasurable
+          (measurable_of_finite _).aestronglyMeasurable]
+      rw [hmarg]
+      exact integral_logRatio_eq_klDivPmf W (c.encoder m i) hqf_sum hqf_pos
+    have hsum_eq : (∫ x, S x ∂Pm) = ∑ i, ∫ x, L (c.encoder m i) (x i) ∂Pm := by
+      show (∫ x, ∑ i, L (c.encoder m i) (x i) ∂Pm) = ∑ i, ∫ x, L (c.encoder m i) (x i) ∂Pm
+      exact integral_finsetSum Finset.univ (fun i _ ↦ Integrable.of_finite)
+    rw [hsum_eq]
+    calc ∑ i, ∫ x, L (c.encoder m i) (x i) ∂Pm
+        = ∑ i, klDivPmf (fun b ↦ (W (c.encoder m i)).real {b}) qf :=
+          Finset.sum_congr rfl (fun i _ ↦ hint i)
+      _ ≤ ∑ _i : Fin n, capacity W :=
+          Finset.sum_le_sum
+            (fun i _ ↦ klDiv_channel_le_capacity W hp hp_max hq_pos (c.encoder m i))
+      _ = (n : ℝ) * capacity W := by
+          rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+  -- (H3) the variance is at most `n·B²`.
+  have hvar_le : variance S Pm ≤ (n : ℝ) * B ^ 2 := by
+    have hSeq : S = ∑ i, fun ω ↦ L (c.encoder m i) (ω i) := by
+      rw [hS_def]; funext y; rw [Finset.sum_apply]
+    have hvar_eq : variance S Pm = ∑ i, variance (L (c.encoder m i)) (W (c.encoder m i)) := by
+      rw [hSeq, hPm_def]; exact variance_sum_pi hX_memlp
+    have hbi : ∀ i : Fin n, variance (L (c.encoder m i)) (W (c.encoder m i)) ≤ B ^ 2 := by
+      intro i
+      have hicc : ∀ b', L (c.encoder m i) b' ∈ Set.Icc (-B) B := by
+        intro b'
+        rw [Set.mem_Icc]
+        have h := hL_bound (c.encoder m i) b'
+        rw [abs_le] at h
+        exact ⟨h.1, h.2⟩
+      have hbound := variance_le_sq_of_bounded (μ := W (c.encoder m i))
+        (Filter.Eventually.of_forall hicc) (measurable_of_finite _).aemeasurable
+      calc variance (L (c.encoder m i)) (W (c.encoder m i)) ≤ ((B - (-B)) / 2) ^ 2 := hbound
+        _ = B ^ 2 := by ring
+    rw [hvar_eq]
+    calc ∑ i, variance (L (c.encoder m i)) (W (c.encoder m i))
+        ≤ ∑ _i : Fin n, B ^ 2 := Finset.sum_le_sum (fun i _ ↦ hbi i)
+      _ = (n : ℝ) * B ^ 2 := by
+          rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+  -- (H1) the high-LLR set forces the information density above the threshold.
+  have hincl1 : ∀ y, y ∈ highLLRSet W c Q thr m → thr < S y := by
+    intro y hy
+    simp only [highLLRSet, Set.mem_setOf_eq] at hy
+    have hy' : Real.exp thr * Q.real {y}
+        < (Measure.pi (fun i ↦ W (c.encoder m i))).real {y} := hy
+    -- factorize both singleton masses into products
+    have hPmr : (Measure.pi (fun i ↦ W (c.encoder m i))).real {y}
+        = ∏ i, (W (c.encoder m i)).real {y i} := by
+      show ((Measure.pi (fun i ↦ W (c.encoder m i))) {y}).toReal = ∏ i, (W (c.encoder m i)).real {y i}
+      rw [Measure.pi_singleton, ENNReal.toReal_prod]; rfl
+    have hQr : Q.real {y} = ∏ i, qf (y i) := by
+      rw [hQ_def]
+      show ((Measure.pi (fun _ : Fin n ↦ outputDistribution (pmfToMeasure p) W)) {y}).toReal
+          = ∏ i, qf (y i)
+      rw [Measure.pi_singleton, ENNReal.toReal_prod]; rfl
+    have hexp_pos : 0 < Real.exp thr := Real.exp_pos _
+    have hQr_pos : 0 < Q.real {y} := by
+      rw [hQr]; exact Finset.prod_pos (fun i _ ↦ hqf_pos (y i))
+    have hPmr_pos : 0 < (Measure.pi (fun i ↦ W (c.encoder m i))).real {y} :=
+      lt_trans (mul_pos hexp_pos hQr_pos) hy'
+    have hWfac_pos : ∀ i, 0 < (W (c.encoder m i)).real {y i} := by
+      intro i
+      by_contra h
+      rw [not_lt] at h
+      have hle : (W (c.encoder m i)).real {y i} = 0 := le_antisymm h measureReal_nonneg
+      have hz : ∏ j, (W (c.encoder m j)).real {y j} = 0 :=
+        Finset.prod_eq_zero (Finset.mem_univ i) hle
+      rw [← hPmr] at hz
+      linarith [hPmr_pos]
+    -- take logs of the strict inequality
+    have hloglt : Real.log (Real.exp thr * Q.real {y})
+        < Real.log ((Measure.pi (fun i ↦ W (c.encoder m i))).real {y}) :=
+      Real.log_lt_log (mul_pos hexp_pos hQr_pos) hy'
+    rw [Real.log_mul (ne_of_gt hexp_pos) (ne_of_gt hQr_pos), Real.log_exp, hPmr, hQr,
+      Real.log_prod (fun i _ ↦ (hWfac_pos i).ne'),
+      Real.log_prod (fun i _ ↦ (hqf_pos (y i)).ne')] at hloglt
+    -- conclude `thr < S y`
+    have hSeq : S y = ∑ i, (Real.log ((W (c.encoder m i)).real {y i}) - Real.log (qf (y i))) := rfl
+    rw [hSeq, Finset.sum_sub_distrib]
+    linarith [hloglt]
+  -- Chebyshev.
+  have hcR_pos : 0 < cR := by rw [hcR_def]; positivity
+  have hcheb : Pm {ω | cR ≤ |S ω - ∫ x, S x ∂Pm|}
+      ≤ ENNReal.ofReal (variance S Pm / cR ^ 2) :=
+    meas_ge_le_variance_div_sq hS_memlp hcR_pos
+  have hsub_meas : Pm (highLLRSet W c Q thr m) ≤ ENNReal.ofReal (variance S Pm / cR ^ 2) := by
+    refine le_trans (measure_mono fun y hy ↦ ?_) hcheb
+    show cR ≤ |S y - ∫ x, S x ∂Pm|
+    have h1 : thr < S y := hincl1 y hy
+    have hgap : thr - (n : ℝ) * capacity W = cR := by rw [hthr_def, hcR_def]; ring
+    have hlt : cR < S y - ∫ x, S x ∂Pm := by linarith [hmean_le, h1, hgap]
+    exact le_of_lt (lt_of_lt_of_le hlt (le_abs_self _))
+  -- Take real parts and finish the arithmetic.
+  rw [measureReal_def]
+  have hle1 : (Pm (highLLRSet W c Q thr m)).toReal ≤ variance S Pm / cR ^ 2 := by
+    calc (Pm (highLLRSet W c Q thr m)).toReal
+        ≤ (ENNReal.ofReal (variance S Pm / cR ^ 2)).toReal :=
+          ENNReal.toReal_mono ENNReal.ofReal_ne_top hsub_meas
+      _ = variance S Pm / cR ^ 2 :=
+          ENNReal.toReal_ofReal (div_nonneg (variance_nonneg S Pm) (by positivity))
+  have hfin : variance S Pm / cR ^ 2 ≤ B ^ 2 / (δ / 2) ^ 2 * (1 / (n : ℝ)) := by
+    have hnum : variance S Pm ≤ (n : ℝ) * B ^ 2 := hvar_le
+    have hcR2_pos : (0 : ℝ) < cR ^ 2 := by positivity
+    have step : variance S Pm / cR ^ 2 ≤ (n : ℝ) * B ^ 2 / cR ^ 2 := by gcongr
+    have eq2 : (n : ℝ) * B ^ 2 / cR ^ 2 = B ^ 2 / (δ / 2) ^ 2 * (1 / (n : ℝ)) := by
+      rw [hcR_def]
+      have hn0 : (n : ℝ) ≠ 0 := by exact_mod_cast hn.ne'
+      have hδ2 : (δ / 2 : ℝ) ≠ 0 := (show (0 : ℝ) < δ / 2 by linarith).ne'
+      rw [mul_pow]
+      field_simp
+    linarith [step, eq2.le, eq2.ge]
+  exact le_trans hle1 hfin
+
 /-- Phase B: the average high-LLR tail mass vanishes as the block length grows, using the
 non-i.i.d. Chebyshev concentration (`meas_ge_le_variance_div_sq` + `variance_sum_pi`) with the
 i.i.d. reference `q*^n` and threshold `n·(capacity W + δ/2)`. Depends on the saddle point
-`klDiv_channel_le_capacity` for the uniform per-codeword mean bound.
-
-@residual(plan:channel-coding-strong-converse-plan) -/
+`klDiv_channel_le_capacity` for the uniform per-codeword mean bound. -/
 theorem channelCoding_highLLR_tendsto_zero
     (W : Channel α β) [IsMarkovKernel W] {δ : ℝ} (hδ : 0 < δ)
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
@@ -430,7 +656,53 @@ theorem channelCoding_highLLR_tendsto_zero
             (Measure.pi (fun _ : Fin n ↦ outputDistribution (pmfToMeasure p) W))
             ((n : ℝ) * (capacity W + δ / 2)) m))
       atTop (𝓝 0) := by
-  sorry
+  set S0 : ℕ → ℝ := fun n ↦ (1 / (M n : ℝ)) * ∑ m : Fin (M n),
+    (Measure.pi (fun i ↦ W ((c n).encoder m i))).real
+      (highLLRSet W (c n)
+        (Measure.pi (fun _ : Fin n ↦ outputDistribution (pmfToMeasure p) W))
+        ((n : ℝ) * (capacity W + δ / 2)) m) with hS0_def
+  set K : ℝ := (llrUnifBound W p) ^ 2 / (δ / 2) ^ 2 with hK_def
+  have hK_nonneg : (0 : ℝ) ≤ K := by rw [hK_def]; positivity
+  -- The dominating bound `K · (1/n)` tends to `0`.
+  have hg : Tendsto (fun n : ℕ ↦ K * (1 / (n : ℝ))) atTop (𝓝 0) := by
+    have h := (tendsto_one_div_atTop_nhds_zero_nat (𝕜 := ℝ)).const_mul K
+    simpa using h
+  -- Lower squeeze: the average tail mass is nonnegative.
+  have hlow : ∀ n : ℕ, 0 ≤ S0 n := by
+    intro n
+    simp only [hS0_def]
+    exact mul_nonneg (by positivity) (Finset.sum_nonneg (fun m _ ↦ measureReal_nonneg))
+  -- Upper squeeze: for `n ≥ 1` the average tail mass is at most `K · (1/n)`.
+  have hupp : ∀ᶠ n in atTop, S0 n ≤ K * (1 / (n : ℝ)) := by
+    filter_upwards [eventually_ge_atTop 1] with n hn
+    have hnpos : 0 < n := hn
+    simp only [hS0_def]
+    set g : Fin (M n) → ℝ := fun m ↦
+      (Measure.pi (fun i ↦ W ((c n).encoder m i))).real
+        (highLLRSet W (c n)
+          (Measure.pi (fun _ : Fin n ↦ outputDistribution (pmfToMeasure p) W))
+          ((n : ℝ) * (capacity W + δ / 2)) m) with hg_def
+    have hterm : ∀ m, g m ≤ K * (1 / (n : ℝ)) := by
+      intro m
+      have hb := highLLRSet_real_le W hδ hp hp_max hq_pos hnpos (c n) m
+      rw [← hK_def] at hb
+      exact hb
+    have hRHS_nn : (0 : ℝ) ≤ K * (1 / (n : ℝ)) := mul_nonneg hK_nonneg (by positivity)
+    rcases Nat.eq_zero_or_pos (M n) with hM0 | hMpos
+    · haveI : IsEmpty (Fin (M n)) := by rw [hM0]; infer_instance
+      rw [Finset.univ_eq_empty, Finset.sum_empty, mul_zero]
+      exact hRHS_nn
+    · have hsum_le : (∑ m, g m) ≤ ∑ _m : Fin (M n), K * (1 / (n : ℝ)) :=
+        Finset.sum_le_sum (fun m _ ↦ hterm m)
+      rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul] at hsum_le
+      have h1mnn : (0 : ℝ) ≤ 1 / (M n : ℝ) := by positivity
+      have hmn : (M n : ℝ) ≠ 0 := by exact_mod_cast hMpos.ne'
+      calc (1 / (M n : ℝ)) * ∑ m, g m
+          ≤ (1 / (M n : ℝ)) * ((M n : ℝ) * (K * (1 / (n : ℝ)))) :=
+            mul_le_mul_of_nonneg_left hsum_le h1mnn
+        _ = K * (1 / (n : ℝ)) := by rw [one_div, inv_mul_cancel_left₀ hmn]
+  exact tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hg
+    (Filter.Eventually.of_forall hlow) hupp
 
 /-- **Wolfowitz strong converse (asymptotic)**: for a memoryless channel `W` over finite
 alphabets, if the rate `log (M n) / n` eventually exceeds `capacity W + δ` (with `δ > 0`), then
