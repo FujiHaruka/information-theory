@@ -5,6 +5,11 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Run at most one CI per ref; a newer run cancels any in-progress one on the same ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
