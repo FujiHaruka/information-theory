@@ -4,9 +4,16 @@
 > roadmap 側は 1 行サマリ + 本ファイルへのポインタのみ。Ch.17 の詳細状態はここが SoT。
 > コード内の `@audit:*` / `@residual` タグが最終 SoT であることは不変 (`docs/audit/audit-tags.md`)。
 
-## 現状サマリ (2026-06-10 destale — 一般 EPI **CLOSED**)
+## 現状サマリ (2026-06-27 — 一般 EPI + Fisher 情報路 standalone **CLOSED**)
 
-**Ch.17 は一般 EPI も含め全て publishable。scope 内 frontier は 0 件。**
+**Ch.17 は一般 EPI も Fisher 情報路 (Stam 不等式 + de Bruijn 恒等式) standalone も含め全て publishable。scope 内 frontier は 0 件。**
+
+**Fisher 情報路 standalone は 2026-06-27 に完成** (`stam-debruijn-standalone-moonshot-plan` 完遂、§proof-done 参照):
+`stam_inequality_smoothed_density` / `debruijn_identity_per_time` / `debruijn_identity_integrated` (+`_gaussian`)
+が proof done (sorryAx-free + 独立 audit `@audit:ok`)。当初「唯一のフロンティア」とした de Bruijn 積分形の
+path-integrability (`IsDeBruijnPathRegular` の inhabitant 構成) は per-time de Bruijn + subinterval FTC + MCT で
+**非循環に genuine closure** (struct 無改変、load-bearing field なし)。これにより `wall:debruijn-integration` /
+`wall:fisher-finiteness` 系の de Bruijn 積分側 gap も解消済 (下記履歴テーブルの per-time 残記述は obsolete)。
 **一般 EPI は 2026-06-08 に完成** (`epi-unconditional-moonshot-plan` 完了、roadmap 判断ログ #18):
 
 - **完全無条件版** `entropyPowerExt_add_ge_unconditional` (`EPI/Unconditional/DispatchFull.lean`、
@@ -36,6 +43,15 @@
 - `entropyPower_gaussian_additivity` + `entropyPower_pos/nonneg/gaussianReal` 等 (Gaussian EPI =
   variance additivity) ✅
 - CT 17.9 Minkowski determinant: Gaussian additivity から導出可能 (新規 ✅ promote 候補)
+- **Fisher 情報路 standalone (CT Ch.17.7) ✅ (2026-06-27、`stam-debruijn-standalone-moonshot-plan` 完遂)**:
+  各 `@audit:ok`・`#print axioms` = `[propext, Classical.choice, Quot.sound]`・独立 audit PASS。
+  - **Stam 不等式** `stam_inequality_smoothed_density` (`EPI/Stam/Standalone.lean`) — CT Lemma 17.7.2 /
+    Blachman 1965、`1/J(fX∗fY) ≥ 1/J(fX)+1/J(fY)` (調和平均逆形)。Gaussian-smoothed 密度クラス
+    (任意確率密度 ∗ g_t) で非空虚 = Gaussian 等号限定でない。
+  - **de Bruijn 恒等式 (per-time)** `debruijn_identity_per_time` (`FisherInfo/DeBruijnStandalone.lean`) —
+    CT Thm 17.7.2、`(d/dt) h(X+√t·Z) = (1/2)·J(X+√t·Z)`。
+  - **de Bruijn 恒等式 (積分形)** `debruijn_identity_integrated` (一般 a.c.) + `debruijn_identity_integrated_gaussian`
+    (Gaussian、同 file) — `h(X+√T·Z) − h(X) = ∫₀ᵀ (1/2)·J(X+√t·Z) dt`。
 
 ## ~~frontier = 一般 EPI headline closure のみ~~ (obsolete 2026-06-06、§現状サマリ参照)
 

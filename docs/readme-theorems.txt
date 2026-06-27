@@ -79,3 +79,6 @@ loomis_whitney
 brascamp_lieb_finset
 entropy_power_inequality_of_density
 minkowskiDeterminantInequality | Minkowski determinant
+stam_inequality_smoothed_density | Stam inequality (Gaussian-smoothed densities)
+debruijn_identity_per_time | de Bruijn identity (per-time)
+debruijn_identity_integrated | de Bruijn identity (integrated)

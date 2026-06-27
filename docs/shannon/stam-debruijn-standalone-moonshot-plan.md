@@ -1,17 +1,19 @@
 # Stam 不等式 + de Bruijn 恒等式 + Fisher 情報 — standalone genuine 完成 ムーンショット計画 🌙
 
+> **Status: CLOSED ✅（2026-06-27）** — 3 主結果すべて proof done（sorryAx-free + 独立 honesty audit PASS）。再検証は `#print axioms`（下記判断ログ）で都度再導出（プロセスで cache しない）。
+>
 > **関連 SoT**: [`ch17-inequalities-status.md`](ch17-inequalities-status.md)（Ch.17 状態の SoT）、コード内 `@audit:*` / `@residual` タグ（最終 SoT、`docs/audit/audit-tags.md`）。
 > **隣接 plan（重複起草しない）**: [`epi-blachman-general-density-plan.md`](epi-blachman-general-density-plan.md)（producer 層）、[`epi-stam-to-conclusion-plan.md`](epi-stam-to-conclusion-plan.md)（Stam→EPI、CLOSED）、[`epi-debruijn-pertime-closure-plan.md`](epi-debruijn-pertime-closure-plan.md)（per-time de Bruijn）。
 > **位置付け**: 本 plan は EPI の無条件化路ではなく、Cover-Thomas Ch.17.7 の **Fisher 情報路の主結果そのもの**を、散在した conditional 部品から **clean な standalone genuine 定理**として組み上げ、かつ **非空虚性（規則性バンドルが Gaussian 以外でも discharge 可能であること）を担保**する。
 
 ## 進捗
 
-- [ ] Phase M0 — 在庫確認 + 配線マップ 📋 → [stam-debruijn-standalone-mathlib-inventory.md](stam-debruijn-standalone-mathlib-inventory.md)
-- [ ] Phase 1 — Fisher 基本性質 audit + smoothed-density Fisher 正値性 producer 📋
-- [ ] Phase 2 — Stam standalone headline（H1、非空虚 instantiation）📋
-- [ ] Phase 3 — de Bruijn per-time standalone headline（H2a、再 export + 非空虚 witness）📋
-- [ ] Phase 4 — de Bruijn integration (path) producer + 非空虚化（H2b、唯一の実質フロンティア）📋
-- [ ] Phase 5 — headline 配線（`InformationTheory.lean` / README）+ 独立 honesty audit 📋
+- [x] Phase M0 — 在庫確認 + 配線マップ（実装に畳み込み済。別 inventory file は作成せず、Approach (A) 表で 9 decl を verbatim 確認済）
+- [x] Phase 1 — Fisher 基本性質 audit + smoothed-density Fisher 正値性 producer（`fisherInfoOfDensity_convDensityAdd_gaussian_pos` 等、Standalone.lean）
+- [x] Phase 2 — Stam standalone headline（H1 = `stam_inequality_smoothed_density`、非空虚 instantiation）
+- [x] Phase 3 — de Bruijn per-time standalone headline（H2a = `debruijn_identity_per_time`）
+- [x] Phase 4 — de Bruijn integration (path) producer + 非空虚化（H2b = `debruijn_identity_integrated`〔一般 a.c.〕/ `debruijn_identity_integrated_gaussian`〔Gaussian〕）
+- [x] Phase 5 — headline 配線（`InformationTheory.lean` / README）+ 独立 honesty audit（PASS）
 
 ## ゴール / Approach
 
@@ -77,7 +79,7 @@ H1 は密度レベル形を primary headline とする（`convex_fisher_bound_of
 
 ## Phase M0 — 在庫確認 + 配線マップ 📋
 
-proof-log: no（在庫は `mathlib-inventory` 担当、`docs/shannon/stam-debruijn-standalone-mathlib-inventory.md` に出力）。
+proof-log: no（M0 は実装に畳み込み済 — 別 inventory file は作成せず、上記 Approach (A) 表で 9 decl を verbatim 確認した）。
 
 本 plan の部品は大半が in-project の既存資産なので、M0 は「Mathlib 新規探索」よりも **既存 producer / bridge の verbatim 配線確認**が主。
 
@@ -199,4 +201,4 @@ proof-log: no。
 
 書く頻度: 方針変更 / 撤退 / 当初仮定の修正があったとき。決着済 entry は削除（git が履歴）、active な判断のみ残す（→ CLAUDE.md「Plan / docs hygiene」）。プラン予算 ≤ 600 行 / active 判断ログ ≤ 10 entry。
 
-1. **(2026-06-27) 非空虚性の事前確定 + フロンティア局在**: orchestrator の現状報告を verbatim 検証した結果、(i) Stam の非空虚 discharge は `isBlachmanConvReady_convDensityAdd_gaussian`（19/19 field genuine, `@audit:ok`）により **Gaussian-smoothed 密度クラス（任意確率密度 ∗ g_t）で確立済**＝ Gaussian 等号限定ではない、(ii) Stam 核 `isStamInequalityHyp_of_primitives` は sorryAx-free・load-bearing でない、(iii) de Bruijn per-time も `ofHeatFlow` で一般 a.c. 非空虚、と確認。**唯一の非空虚性 gap = de Bruijn 積分形の `IsDeBruijnPathRegular`（inhabitant 0 件、Gaussian 証人すら無い）** → Phase 4 に局在。よって本ムーンショットの総合判定は「ほぼ組み上げ（Phase 1/2/3/5 は小〜中）+ Phase 4 のみ実質新規（path-regularity producer、ただし 3 field とも CLOSED 機構で裏付け、PR 級壁ではない）」。
+1. **(2026-06-27) moonshot 完遂 ✅**: 3 主結果すべて proof done（sorryAx-free + 独立監査 PASS）。新 headline = `stam_inequality_smoothed_density`（`EPI/Stam/Standalone.lean`）/ `debruijn_identity_per_time` + `debruijn_identity_integrated`（一般 a.c.）+ `debruijn_identity_integrated_gaussian`（`FisherInfo/DeBruijnStandalone.lean`）、各 `@audit:ok`・`#print axioms` = `[propext, Classical.choice, Quot.sound]`。当初「唯一のフロンティア」とした de Bruijn 積分形の `integrable` field は per-time de Bruijn + subinterval FTC + 単調収束（MCT）で **非循環に genuine closure**（前任実装者の「循環で不可」診断は不完全 = 反証成功例。`IsDeBruijnPathRegular` struct は無改変で inhabitant を構成し、load-bearing field は足していない）。実装 commit: `48f60e3f`（Stam）/ `31d7a72d`（de Bruijn skeleton+gateway）/ `46aa12a4`（integrable closure）+ 独立 audit 2 件。
