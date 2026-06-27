@@ -115,7 +115,6 @@ Closing the `2W` degrees-of-freedom identity requires the Whittaker-Shannon
 sampling theorem + continuous AEP (not in Mathlib).
 
 `@audit:retract-candidate(load-bearing-predicate)`
-`@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)`
 `@residual(plan:whittaker-shannon-partial-moonshot-plan)`
 -/
 @[entry_point]

@@ -76,8 +76,6 @@ theorem isAwgnChannelMeasurable (N : ℝ≥0) : IsAwgnChannelMeasurable N := by
 hypothesis discharged by `isAwgnChannelMeasurable N`, so it no longer appears in
 the signature. The body delegates to `awgn_channel_coding_theorem`.
 
-`@audit:closed-by-successor(awgn-moonshot-plan)`
-
 @audit:ok -/
 @[entry_point]
 theorem awgn_theorem_F1_discharged

@@ -50,8 +50,6 @@ This is the achievability-half statement; the converse is available separately v
 `awgn_converse`. The hypothesis `h_meas` exposes the kernel measurability. The body is
 an honest pass-through to `awgn_achievability`.
 
-`@audit:closed-by-successor(awgn-moonshot-plan)`
-
 @audit:ok -/
 @[entry_point]
 theorem awgn_channel_coding_theorem
