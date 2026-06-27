@@ -222,6 +222,7 @@ import InformationTheory.Shannon.EPI.G2.KLVariationalLower
 import InformationTheory.Shannon.EPI.Stam.ToBridge
 import InformationTheory.Shannon.EPI.NoiseExtension
 import InformationTheory.Shannon.EPI.Stam.Inequality
+import InformationTheory.Shannon.EPI.Stam.Standalone
 import InformationTheory.Shannon.FisherInfo.DeBruijnHeatFlow
 import InformationTheory.Shannon.LZ78.ConverseAsymptotic
 import InformationTheory.Shannon.Hoeffding.InteriorMinimizer
