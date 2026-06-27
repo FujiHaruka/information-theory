@@ -45,23 +45,102 @@ variable {α β : Type*}
   [Fintype α] [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β]
 
-/-- Capacity saddle point (Phase A, load-bearing self-build): for a capacity-achieving input
-`p` with full-support output `q* := outputDistribution (pmfToMeasure p) W`, every input symbol
-`a` satisfies `D(W(a)‖q*) ≤ capacity W`. Carved out as a shared lemma for reuse across the
-channel-coding converse family.
+/-! ## Phase A self-build: keystone bridge + envelope directional derivative -/
 
-@residual(plan:capacity-saddle-point) -/
-theorem klDiv_channel_le_capacity
-    (W : Channel α β) [IsMarkovKernel W]
-    {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
-    (hp_max : IsMaxOn (fun p : α → ℝ ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal)
-      (stdSimplex ℝ α) p)
-    (hq_pos : ∀ b : β, 0 < (outputDistribution (pmfToMeasure p) W).real {b})
-    (a : α) :
-    klDivPmf (fun b ↦ (W a).real {b})
-        (fun b ↦ (outputDistribution (pmfToMeasure p) W).real {b})
-      ≤ capacity W := by
-  sorry
+omit [Fintype α] [DecidableEq α] [MeasurableSingletonClass α] [Nonempty β] in
+/-- For a Markov channel each fiber `W x` is a probability measure, so its singleton masses
+sum to `1` over the finite output alphabet. -/
+lemma sum_channel_real_singleton_eq_one (W : Channel α β) [IsMarkovKernel W] (x : α) :
+    ∑ b : β, (W x).real {b} = 1 := by
+  haveI : IsProbabilityMeasure (W x) := inferInstance
+  rw [show (∑ b : β, (W x).real {b}) = ∑ b ∈ (Finset.univ : Finset β), (W x).real {b} from rfl,
+    sum_measureReal_singleton, Finset.coe_univ, probReal_univ]
+
+omit [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β] in
+/-- Cross-entropy form of `klDivPmf`: for a sub-probability-free pmf `P` (only required
+non-negative and summing to `1`) and a full-support pmf `Q`, `klDivPmf P Q` equals the
+cross-entropy minus the entropy of `P`. Unlike `klDivPmf_eq_log_diff_sum`, `P` may vanish. -/
+lemma klDivPmf_crossEntropy {P Q : β → ℝ}
+    (hP_nn : ∀ b, 0 ≤ P b) (hP_sum : ∑ b, P b = 1)
+    (hQ_sum : ∑ b, Q b = 1) (hQ_pos : ∀ b, 0 < Q b) :
+    klDivPmf P Q
+      = (∑ b : β, P b * Real.log (P b)) - ∑ b : β, P b * Real.log (Q b) := by
+  unfold klDivPmf
+  have hterm : ∀ b : β,
+      Q b * klFun (P b / Q b)
+        = P b * Real.log (P b) - P b * Real.log (Q b) + (Q b - P b) := by
+    intro b
+    rcases eq_or_lt_of_le (hP_nn b) with hPb | hPb
+    · -- P b = 0
+      rw [← hPb, zero_div, klFun_zero]
+      simp
+    · -- 0 < P b
+      have hQb : 0 < Q b := hQ_pos b
+      have h_log_div : Real.log (P b / Q b) = Real.log (P b) - Real.log (Q b) :=
+        Real.log_div hPb.ne' hQb.ne'
+      unfold klFun
+      rw [h_log_div]
+      field_simp
+      ring
+  have hsum0 : ∑ b : β, (Q b - P b) = 0 := by
+    rw [Finset.sum_sub_distrib, hQ_sum, hP_sum]; ring
+  calc ∑ b : β, Q b * klFun (P b / Q b)
+      = ∑ b : β, (P b * Real.log (P b) - P b * Real.log (Q b) + (Q b - P b)) := by
+        simp_rw [hterm]
+    _ = (∑ b : β, (P b * Real.log (P b) - P b * Real.log (Q b))) + ∑ b : β, (Q b - P b) := by
+        rw [Finset.sum_add_distrib]
+    _ = ((∑ b : β, P b * Real.log (P b)) - ∑ b : β, P b * Real.log (Q b)) + 0 := by
+        rw [Finset.sum_sub_distrib, hsum0]
+    _ = (∑ b : β, P b * Real.log (P b)) - ∑ b : β, P b * Real.log (Q b) := by ring
+
+omit [DecidableEq α] in
+/-- Keystone bridge (`I = H(Y) − H(Y|X)`): for `p ∈ stdSimplex`, the channel mutual information
+equals the output entropy minus the weighted conditional entropy of the fibers. -/
+lemma mutualInfoOfChannel_toReal_eq_outputEntropy_sub
+    [Nonempty α] {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
+    (W : Channel α β) [IsMarkovKernel W] :
+    (mutualInfoOfChannel (pmfToMeasure p) W).toReal
+      = (∑ b : β, Real.negMulLog (∑ x : α, p x * (W x).real {b}))
+        - ∑ x : α, p x * (∑ b : β, Real.negMulLog ((W x).real {b})) := by
+  classical
+  rw [mutualInfoOfChannel_toReal_eq_of_stdSimplex hp W]
+  -- The 3-entropy form is `H(X) + H(Y) − H(X,Y)`; we collapse `H(X) − H(X,Y)` into the
+  -- weighted fiber conditional entropy via `negMulLog_mul`.
+  rw [Fintype.sum_prod_type
+    (f := fun ab : α × β ↦ Real.negMulLog (p ab.1 * (W ab.1).real {ab.2}))]
+  -- Per-input identity: negMulLog (p x) − ∑_b negMulLog (p x · W x b) = − p x · ∑_b negMulLog (W x b)
+  have hper : ∀ x : α,
+      Real.negMulLog (p x) - (∑ b : β, Real.negMulLog (p x * (W x).real {b}))
+        = - (p x * ∑ b : β, Real.negMulLog ((W x).real {b})) := by
+    intro x
+    have hexpand : (∑ b : β, Real.negMulLog (p x * (W x).real {b}))
+        = Real.negMulLog (p x) + p x * ∑ b : β, Real.negMulLog ((W x).real {b}) := by
+      calc (∑ b : β, Real.negMulLog (p x * (W x).real {b}))
+          = ∑ b : β, ((W x).real {b} * Real.negMulLog (p x)
+              + p x * Real.negMulLog ((W x).real {b})) := by
+            refine Finset.sum_congr rfl (fun b _ ↦ ?_)
+            rw [Real.negMulLog_mul]
+        _ = (∑ b : β, (W x).real {b}) * Real.negMulLog (p x)
+              + p x * ∑ b : β, Real.negMulLog ((W x).real {b}) := by
+            rw [Finset.sum_add_distrib, ← Finset.sum_mul, ← Finset.mul_sum]
+        _ = Real.negMulLog (p x) + p x * ∑ b : β, Real.negMulLog ((W x).real {b}) := by
+            rw [sum_channel_real_singleton_eq_one W x, one_mul]
+    rw [hexpand]; ring
+  -- Combine: H(X) − H(X,Y) = ∑_x [negMulLog (p x) − ∑_b negMulLog (p x · W x b)]
+  --                        = − ∑_x p x · ∑_b negMulLog (W x b).
+  have hHX_sub : (∑ a : α, Real.negMulLog (p a))
+        - (∑ a : α, ∑ b : β, Real.negMulLog (p a * (W a).real {b}))
+      = - ∑ x : α, p x * ∑ b : β, Real.negMulLog ((W x).real {b}) := by
+    rw [← Finset.sum_sub_distrib, ← Finset.sum_neg_distrib]
+    exact Finset.sum_congr rfl (fun x _ ↦ hper x)
+  -- Final rearrangement.
+  have : (∑ a : α, Real.negMulLog (p a))
+        + (∑ b : β, Real.negMulLog (∑ a : α, p a * (W a).real {b}))
+        - (∑ a : α, ∑ b : β, Real.negMulLog (p a * (W a).real {b}))
+      = (∑ b : β, Real.negMulLog (∑ x : α, p x * (W x).real {b}))
+        - ∑ x : α, p x * ∑ b : β, Real.negMulLog ((W x).real {b}) := by
+    linarith [hHX_sub]
+  linarith [this]
 
 /-- Gateway atom (Phase A): the one-sided (right) directional derivative of
 `t ↦ I(p_t; W).toReal` at `t = 0` along the segment `p_t := (1 - t) • p + t • δ_a` towards the
@@ -79,10 +158,7 @@ is `D(W true‖W false) > 0`, but the left branch is the non-probability functio
 `t ↦ (klDiv ((1-t) • J) ((1-t)² • (J)) ).toReal` (here the input-deterministic joint `J` equals
 the product measure), whose derivative at `0` does not match. The one-sided form is also exactly
 what the downstream first-order optimality argument consumes (cf. `csiszar_first_order_condition`,
-which uses the `𝓝[>] 0` slope). See the orchestrator report / plan `capacity-saddle-point` for
-the signature correction.
-
-@residual(plan:capacity-saddle-point) -/
+which uses the `𝓝[>] 0` slope). -/
 theorem mutualInfo_segment_hasDerivAt
     (W : Channel α β) [IsMarkovKernel W]
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
@@ -95,7 +171,244 @@ theorem mutualInfo_segment_hasDerivAt
           (fun b ↦ (outputDistribution (pmfToMeasure p) W).real {b})
         - (mutualInfoOfChannel (pmfToMeasure p) W).toReal)
       (Set.Ici 0) 0 := by
-  sorry
+  classical
+  haveI : Nonempty α := ⟨a⟩
+  set e : α → ℝ := Pi.single a (1 : ℝ) with he_def
+  -- The explicit output pmf `q_p(b) = ∑_x p(x) W(x)(b)`.
+  set qf : β → ℝ := fun b ↦ ∑ x : α, p x * (W x).real {b} with hqf_def
+  have hqf_pos : ∀ b : β, 0 < qf b := by
+    intro b
+    have h := hq_pos b
+    rw [outputDistribution_real_singleton_of_stdSimplex hp W b] at h
+    exact h
+  -- `qf` is itself a pmf.
+  have hqf_sum : ∑ b : β, qf b = 1 := by
+    have hswap : (∑ b : β, qf b)
+        = ∑ x : α, p x * (∑ b : β, (W x).real {b}) := by
+      show (∑ b : β, ∑ x : α, p x * (W x).real {b})
+          = ∑ x : α, p x * (∑ b : β, (W x).real {b})
+      rw [Finset.sum_comm]
+      exact Finset.sum_congr rfl (fun x _ ↦ (Finset.mul_sum _ _ _).symm)
+    rw [hswap]
+    simp_rw [sum_channel_real_singleton_eq_one W, mul_one]
+    exact hp.2
+  -- `e` selects the `a`-coordinate.
+  have hsingle : ∀ f : α → ℝ, (∑ x : α, e x * f x) = f a := by
+    intro f
+    rw [Finset.sum_eq_single a]
+    · rw [he_def, Pi.single_eq_same, one_mul]
+    · intro x _ hx; rw [he_def, Pi.single_eq_of_ne hx, zero_mul]
+    · intro h; exact absurd (Finset.mem_univ a) h
+  -- The envelope difference `∑_x (e_x − p_x) W(x)(b) = W(a)(b) − q_p(b)`.
+  have hΔ : ∀ b : β, (∑ x : α, (e x - p x) * (W x).real {b})
+      = (W a).real {b} - qf b := by
+    intro b
+    have hsub : (∑ x : α, (e x - p x) * (W x).real {b})
+        = (∑ x : α, e x * (W x).real {b}) - (∑ x : α, p x * (W x).real {b}) := by
+      rw [← Finset.sum_sub_distrib]
+      exact Finset.sum_congr rfl (fun x _ ↦ by ring)
+    rw [hsub, hsingle (fun x ↦ (W x).real {b})]
+  -- The keystone form applied to the convex segment `p_t := (1−t)•p + t•e`.
+  set G : ℝ → ℝ := fun t ↦
+    (∑ b : β, Real.negMulLog (∑ x : α, ((1 - t) • p + t • e) x * (W x).real {b}))
+      - ∑ x : α, ((1 - t) • p + t • e) x * (∑ b : β, Real.negMulLog ((W x).real {b}))
+    with hG_def
+  set F : ℝ → ℝ := fun t ↦
+    (mutualInfoOfChannel (pmfToMeasure ((1 - t) • p + t • e)) W).toReal with hF_def
+  have he_mem : e ∈ stdSimplex ℝ α := single_mem_stdSimplex ℝ a
+  have hconv := convex_stdSimplex ℝ α
+  have hpt_mem : ∀ t ∈ Set.Icc (0 : ℝ) 1, ((1 - t) • p + t • e) ∈ stdSimplex ℝ α := by
+    intro t ht
+    exact hconv hp he_mem (by linarith [ht.2]) ht.1 (by ring)
+  have hkey : ∀ t ∈ Set.Icc (0 : ℝ) 1, F t = G t := by
+    intro t ht
+    rw [hF_def, hG_def]
+    exact mutualInfoOfChannel_toReal_eq_outputEntropy_sub (hpt_mem t ht) W
+  -- Per-coordinate affine derivative.
+  have haff : ∀ (x : α) (c : ℝ),
+      HasDerivAt (fun t : ℝ ↦ ((1 - t) • p + t • e) x * c) ((e x - p x) * c) 0 := by
+    intro x c
+    have hpt : (fun t : ℝ ↦ ((1 - t) • p + t • e) x * c)
+        = fun t : ℝ ↦ ((1 - t) * p x + t * e x) * c := by
+      funext t; simp [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
+    rw [hpt]
+    have hA : HasDerivAt (fun t : ℝ ↦ (1 - t) * p x) (-(p x)) 0 := by
+      have h0 : HasDerivAt (fun t : ℝ ↦ (1 : ℝ) - t) (-1) 0 := by
+        simpa using (hasDerivAt_id (0 : ℝ)).const_sub 1
+      have := h0.mul_const (p x)
+      convert this using 1; ring
+    have hB : HasDerivAt (fun t : ℝ ↦ t * e x) (e x) 0 := by
+      simpa using (hasDerivAt_id (0 : ℝ)).mul_const (e x)
+    have hsum : HasDerivAt (fun t : ℝ ↦ (1 - t) * p x + t * e x) (e x - p x) 0 := by
+      have h := hA.add hB; convert h using 1; ring
+    exact hsum.mul_const c
+  -- Inner sum derivative for each output letter.
+  have hSb : ∀ b : β,
+      HasDerivAt (fun t : ℝ ↦ ∑ x : α, ((1 - t) • p + t • e) x * (W x).real {b})
+        (∑ x : α, (e x - p x) * (W x).real {b}) 0 :=
+    fun b ↦ HasDerivAt.fun_sum (fun x _ ↦ haff x ((W x).real {b}))
+  -- `negMulLog`-composed derivative for each output letter (the moving reference contribution).
+  have hcomp : ∀ b : β,
+      HasDerivAt (fun t : ℝ ↦
+          Real.negMulLog (∑ x : α, ((1 - t) • p + t • e) x * (W x).real {b}))
+        ((-Real.log (qf b) - 1) * (∑ x : α, (e x - p x) * (W x).real {b})) 0 := by
+    intro b
+    have hbase : (∑ x : α, ((1 - (0 : ℝ)) • p + (0 : ℝ) • e) x * (W x).real {b}) = qf b := by
+      show (∑ x : α, ((1 - (0 : ℝ)) • p + (0 : ℝ) • e) x * (W x).real {b})
+          = ∑ x : α, p x * (W x).real {b}
+      refine Finset.sum_congr rfl (fun x _ ↦ ?_)
+      congr 1
+      simp [Pi.add_apply]
+    have hg : HasDerivAt Real.negMulLog (-Real.log (qf b) - 1)
+        (∑ x : α, ((1 - (0 : ℝ)) • p + (0 : ℝ) • e) x * (W x).real {b}) := by
+      rw [hbase]; exact Real.hasDerivAt_negMulLog (hqf_pos b).ne'
+    have hcc := hg.comp (0 : ℝ) (hSb b)
+    simpa [Function.comp_def] using hcc
+  -- Assemble the two pieces of `G`.
+  have hterm1 :
+      HasDerivAt (fun t : ℝ ↦
+          ∑ b : β, Real.negMulLog (∑ x : α, ((1 - t) • p + t • e) x * (W x).real {b}))
+        (∑ b : β, (-Real.log (qf b) - 1) * (∑ x : α, (e x - p x) * (W x).real {b})) 0 :=
+    HasDerivAt.fun_sum (fun b _ ↦ hcomp b)
+  have hterm2 :
+      HasDerivAt (fun t : ℝ ↦
+          ∑ x : α, ((1 - t) • p + t • e) x * (∑ b : β, Real.negMulLog ((W x).real {b})))
+        (∑ x : α, (e x - p x) * (∑ b : β, Real.negMulLog ((W x).real {b}))) 0 :=
+    HasDerivAt.fun_sum (fun x _ ↦ haff x (∑ b : β, Real.negMulLog ((W x).real {b})))
+  -- The directional derivative value equals the saddle gap (envelope cancellation).
+  have hklqf : klDivPmf (fun b ↦ (W a).real {b}) qf
+      = (∑ b : β, (W a).real {b} * Real.log ((W a).real {b}))
+        - ∑ b : β, (W a).real {b} * Real.log (qf b) :=
+    klDivPmf_crossEntropy (fun b ↦ measureReal_nonneg)
+      (sum_channel_real_singleton_eq_one W a) hqf_sum hqf_pos
+  have hWalog : (∑ b : β, (W a).real {b} * Real.log ((W a).real {b}))
+      = - ∑ b : β, Real.negMulLog ((W a).real {b}) := by
+    rw [← Finset.sum_neg_distrib]
+    refine Finset.sum_congr rfl (fun b _ ↦ ?_)
+    rw [show Real.negMulLog ((W a).real {b}) = -(W a).real {b} * Real.log ((W a).real {b}) from rfl]
+    ring
+  have hqfneg : (∑ b : β, Real.negMulLog (qf b)) = - ∑ b : β, qf b * Real.log (qf b) := by
+    rw [← Finset.sum_neg_distrib]
+    refine Finset.sum_congr rfl (fun b _ ↦ ?_)
+    rw [show Real.negMulLog (qf b) = -qf b * Real.log (qf b) from rfl]
+    ring
+  have hI : (mutualInfoOfChannel (pmfToMeasure p) W).toReal
+      = (∑ b : β, Real.negMulLog (qf b))
+        - ∑ x : α, p x * (∑ b : β, Real.negMulLog ((W x).real {b})) := by
+    rw [mutualInfoOfChannel_toReal_eq_outputEntropy_sub hp W]
+  have hqref : (fun b ↦ (outputDistribution (pmfToMeasure p) W).real {b}) = qf := by
+    funext b; exact outputDistribution_real_singleton_of_stdSimplex hp W b
+  have hV1 : (∑ b : β, (-Real.log (qf b) - 1) * (∑ x : α, (e x - p x) * (W x).real {b}))
+      = (∑ b : β, qf b * Real.log (qf b)) - (∑ b : β, (W a).real {b} * Real.log (qf b)) := by
+    have step1 : (∑ b : β, (-Real.log (qf b) - 1) * (∑ x : α, (e x - p x) * (W x).real {b}))
+        = ∑ b : β, (-Real.log (qf b) - 1) * ((W a).real {b} - qf b) := by
+      refine Finset.sum_congr rfl (fun b _ ↦ ?_); rw [hΔ b]
+    rw [step1]
+    have step2 : ∀ b : β, (-Real.log (qf b) - 1) * ((W a).real {b} - qf b)
+        = (qf b * Real.log (qf b) - (W a).real {b} * Real.log (qf b))
+          + (qf b - (W a).real {b}) := fun b ↦ by ring
+    simp_rw [step2]
+    have hsum0 : ∑ b : β, (qf b - (W a).real {b}) = 0 := by
+      rw [Finset.sum_sub_distrib, hqf_sum, sum_channel_real_singleton_eq_one W a]; ring
+    rw [Finset.sum_add_distrib, Finset.sum_sub_distrib, hsum0, add_zero]
+  have hV2 : (∑ x : α, (e x - p x) * (∑ b : β, Real.negMulLog ((W x).real {b})))
+      = (∑ b : β, Real.negMulLog ((W a).real {b}))
+        - (∑ x : α, p x * (∑ b : β, Real.negMulLog ((W x).real {b}))) := by
+    have hsub : (∑ x : α, (e x - p x) * (∑ b : β, Real.negMulLog ((W x).real {b})))
+        = (∑ x : α, e x * (∑ b : β, Real.negMulLog ((W x).real {b})))
+          - (∑ x : α, p x * (∑ b : β, Real.negMulLog ((W x).real {b}))) := by
+      rw [← Finset.sum_sub_distrib]
+      exact Finset.sum_congr rfl (fun x _ ↦ by ring)
+    rw [hsub, hsingle (fun x ↦ ∑ b : β, Real.negMulLog ((W x).real {b}))]
+  have hVD : (∑ b : β, (-Real.log (qf b) - 1) * (∑ x : α, (e x - p x) * (W x).real {b}))
+              - (∑ x : α, (e x - p x) * (∑ b : β, Real.negMulLog ((W x).real {b})))
+            = klDivPmf (fun b ↦ (W a).real {b})
+                (fun b ↦ (outputDistribution (pmfToMeasure p) W).real {b})
+              - (mutualInfoOfChannel (pmfToMeasure p) W).toReal := by
+    rw [hqref, hklqf, hI, hV1, hV2, hWalog, hqfneg]; ring
+  have hG_deriv : HasDerivAt G
+      (klDivPmf (fun b ↦ (W a).real {b})
+          (fun b ↦ (outputDistribution (pmfToMeasure p) W).real {b})
+        - (mutualInfoOfChannel (pmfToMeasure p) W).toReal) 0 := by
+    have h0 : HasDerivAt G
+        ((∑ b : β, (-Real.log (qf b) - 1) * (∑ x : α, (e x - p x) * (W x).real {b}))
+          - (∑ x : α, (e x - p x) * (∑ b : β, Real.negMulLog ((W x).real {b})))) 0 :=
+      hterm1.sub hterm2
+    rwa [hVD] at h0
+  -- Transfer to the genuine mutual-information functional via local agreement on `[0, 1]`.
+  have hIcc_mem : Set.Icc (0 : ℝ) 1 ∈ 𝓝[Set.Ici (0 : ℝ)] 0 := by
+    rw [mem_nhdsWithin]
+    exact ⟨Set.Iio 1, isOpen_Iio, by norm_num, fun x hx ↦ ⟨hx.2, le_of_lt hx.1⟩⟩
+  have hev : F =ᶠ[𝓝[Set.Ici (0 : ℝ)] 0] G :=
+    Filter.eventuallyEq_of_mem hIcc_mem (fun t ht ↦ hkey t ht)
+  have hx0 : F 0 = G 0 := hkey 0 (by norm_num)
+  exact (hG_deriv.hasDerivWithinAt).congr_of_eventuallyEq hev hx0
+
+/-- Capacity saddle point (Phase A, load-bearing self-build): for a capacity-achieving input
+`p` with full-support output `q* := outputDistribution (pmfToMeasure p) W`, every input symbol
+`a` satisfies `D(W(a)‖q*) ≤ capacity W`. Carved out as a shared lemma for reuse across the
+channel-coding converse family. -/
+theorem klDiv_channel_le_capacity
+    (W : Channel α β) [IsMarkovKernel W]
+    {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
+    (hp_max : IsMaxOn (fun p : α → ℝ ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal)
+      (stdSimplex ℝ α) p)
+    (hq_pos : ∀ b : β, 0 < (outputDistribution (pmfToMeasure p) W).real {b})
+    (a : α) :
+    klDivPmf (fun b ↦ (W a).real {b})
+        (fun b ↦ (outputDistribution (pmfToMeasure p) W).real {b})
+      ≤ capacity W := by
+  classical
+  haveI : Nonempty α := ⟨a⟩
+  set e : α → ℝ := Pi.single a (1 : ℝ) with he_def
+  set F : ℝ → ℝ := fun t ↦
+    (mutualInfoOfChannel (pmfToMeasure ((1 - t) • p + t • e)) W).toReal with hF_def
+  -- The gateway atom: the right derivative of `F` at `0` is the saddle gap.
+  have hderiv : HasDerivWithinAt F
+      (klDivPmf (fun b ↦ (W a).real {b})
+          (fun b ↦ (outputDistribution (pmfToMeasure p) W).real {b})
+        - (mutualInfoOfChannel (pmfToMeasure p) W).toReal)
+      (Set.Ici 0) 0 :=
+    mutualInfo_segment_hasDerivAt W hp hq_pos a
+  -- `F` has a maximum at `t = 0` along the simplex segment.
+  have he_mem : e ∈ stdSimplex ℝ α := single_mem_stdSimplex ℝ a
+  have hconv := convex_stdSimplex ℝ α
+  have hpt_mem : ∀ t ∈ Set.Icc (0 : ℝ) 1, ((1 - t) • p + t • e) ∈ stdSimplex ℝ α := by
+    intro t ht
+    exact hconv hp he_mem (by linarith [ht.2]) ht.1 (by ring)
+  have hF0 : F 0 = (mutualInfoOfChannel (pmfToMeasure p) W).toReal := by
+    show (mutualInfoOfChannel (pmfToMeasure ((1 - (0 : ℝ)) • p + (0 : ℝ) • e)) W).toReal = _
+    simp
+  have h_max_le : ∀ t ∈ Set.Icc (0 : ℝ) 1, F t ≤ F 0 := by
+    intro t ht
+    rw [hF0]
+    exact hp_max (hpt_mem t ht)
+  -- The right-derivative slope is non-positive, so the saddle gap is `≤ 0`.
+  have hslope_tendsto : Tendsto (slope F 0)
+      (𝓝[Set.Ioi (0 : ℝ)] 0)
+      (𝓝 (klDivPmf (fun b ↦ (W a).real {b})
+            (fun b ↦ (outputDistribution (pmfToMeasure p) W).real {b})
+          - (mutualInfoOfChannel (pmfToMeasure p) W).toReal)) := by
+    have h := hasDerivWithinAt_iff_tendsto_slope.mp hderiv
+    rwa [Set.Ici_diff_left] at h
+  have h_gap_le : klDivPmf (fun b ↦ (W a).real {b})
+        (fun b ↦ (outputDistribution (pmfToMeasure p) W).real {b})
+      - (mutualInfoOfChannel (pmfToMeasure p) W).toReal ≤ 0 := by
+    refine le_of_tendsto hslope_tendsto ?_
+    have h_event : Set.Ioc (0 : ℝ) 1 ∈ 𝓝[Set.Ioi (0 : ℝ)] 0 := by
+      rw [mem_nhdsWithin]
+      exact ⟨Set.Iio 1, isOpen_Iio, by norm_num, fun x hx ↦ ⟨hx.2, le_of_lt hx.1⟩⟩
+    filter_upwards [h_event] with t ht
+    rw [slope_def_field]
+    have hF_le : F t ≤ F 0 := h_max_le t ⟨le_of_lt ht.1, ht.2⟩
+    exact div_nonpos_iff.mpr (Or.inr ⟨by linarith, by linarith [ht.1]⟩)
+  -- Hence `D(W(a)‖q*) ≤ I(p; W) ≤ capacity W`.
+  have h1 : klDivPmf (fun b ↦ (W a).real {b})
+        (fun b ↦ (outputDistribution (pmfToMeasure p) W).real {b})
+      ≤ (mutualInfoOfChannel (pmfToMeasure p) W).toReal := by linarith
+  have h2 : (mutualInfoOfChannel (pmfToMeasure p) W).toReal ≤ capacity W :=
+    le_csSup (capacity_bddAbove W) ⟨p, hp, rfl⟩
+  exact le_trans h1 h2
 
 /-- Phase B: the average high-LLR tail mass vanishes as the block length grows, using the
 non-i.i.d. Chebyshev concentration (`meas_ge_le_variance_div_sq` + `variance_sum_pi`) with the

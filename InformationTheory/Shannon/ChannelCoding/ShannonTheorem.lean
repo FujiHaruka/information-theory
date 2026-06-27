@@ -157,7 +157,7 @@ theorem capacity_nonneg (W : Channel α β) [IsMarkovKernel W] : 0 ≤ capacity 
 omit [Nonempty α] [DecidableEq α] [Fintype β] [DecidableEq β] [Nonempty β] in
 /-- For `p ∈ stdSimplex`, the output marginal `(p ⊗ₘ W).snd` real-value on `{b}` is
 `∑ a, p a · (W a).real {b}`. -/
-private lemma outputDistribution_real_singleton_of_stdSimplex
+lemma outputDistribution_real_singleton_of_stdSimplex
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
     (W : Channel α β) [IsMarkovKernel W] (b : β) :
     (outputDistribution (pmfToMeasure p) W).real {b}
@@ -264,7 +264,7 @@ private lemma jointMap_id_real_singleton_of_stdSimplex
 omit [DecidableEq α] [DecidableEq β] in
 /-- For `p ∈ stdSimplex`, `I(pmfToMeasure p; W).toReal` equals the 3-entropy expression
 in `p`. -/
-private lemma mutualInfoOfChannel_toReal_eq_of_stdSimplex
+lemma mutualInfoOfChannel_toReal_eq_of_stdSimplex
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
     (W : Channel α β) [IsMarkovKernel W] :
     (mutualInfoOfChannel (pmfToMeasure p) W).toReal
