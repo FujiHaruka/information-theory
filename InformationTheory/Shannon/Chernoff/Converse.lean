@@ -430,39 +430,6 @@ lemma bayesErrorMinPmf_ge_half_sum
     rw [hstep1]; exact hstep2
   linarith [hcomb]
 
-/-- H6 (rate bridge ii): the Sanov rate `klDivSumForm_ofVec T_λ (Q₁.real ∘ singleton)` equals the
-pmf divergence `klDivPmf T_λ P₁`, where `Q₁ = pmfToMeasure P₁`. -/
-lemma chernoffMediator_klDivSumForm_eq
-    (P₁ P₂ : α → ℝ)
-    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (hP₁_sum : ∑ a, P₁ a = 1)
-    (lam : ℝ) :
-    klDivSumForm_ofVec (chernoffMediator P₁ P₂ lam)
-        (fun a ↦ (pmfToMeasure P₁ (fun a ↦ (hP₁_pos a).le) hP₁_sum).real {a})
-      = klDivPmf (chernoffMediator P₁ P₂ lam) P₁ := by
-  have hT_pos : ∀ a, 0 < chernoffMediator P₁ P₂ lam a :=
-    fun a ↦ chernoffMediator_pos P₁ P₂ hP₁_pos hP₂_pos lam a
-  have hT_sum : ∑ a, chernoffMediator P₁ P₂ lam a = 1 :=
-    chernoffMediator_sum_eq_one P₁ P₂ hP₁_pos hP₂_pos lam
-  rw [klDivSumForm_ofVec, klDivPmf_eq_log_diff_sum hT_sum hP₁_sum hT_pos hP₁_pos]
-  refine Finset.sum_congr rfl fun a _ ↦ ?_
-  rw [pmfToMeasure_real_singleton]
-
-/-- H6 (rate identity): the Sanov rate at the optimal mediator equals the Chernoff information. -/
-lemma chernoffMediator_klDivSumForm_eq_chernoffInfo
-    (P₁ P₂ : α → ℝ)
-    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (hP₁_sum : ∑ a, P₁ a = 1)
-    (lam : ℝ)
-    (hlam_min : IsMinOn (fun l : ℝ ↦ Real.log (chernoffZSum P₁ P₂ l)) (Set.Icc 0 1) lam)
-    (hlam_io : lam ∈ Set.Ioo (0:ℝ) 1) :
-    klDivSumForm_ofVec (chernoffMediator P₁ P₂ lam)
-        (fun a ↦ (pmfToMeasure P₁ (fun a ↦ (hP₁_pos a).le) hP₁_sum).real {a})
-      = chernoffInfo P₁ P₂ := by
-  rw [chernoffMediator_klDivSumForm_eq P₁ P₂ hP₁_pos hP₂_pos hP₁_sum lam]
-  exact (chernoffInfo_eq_mediator_div P₁ P₂ hP₁_pos hP₂_pos hP₁_sum lam
-    hlam_min hlam_io).symm
-
 /-! #### H7 — perturbation membership + degenerate handling -/
 
 /-- The likelihood-ratio membership `∏ P₁^c ≤ ∏ P₂^c` is equivalent to the log-form

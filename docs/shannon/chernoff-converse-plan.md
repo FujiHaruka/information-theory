@@ -104,6 +104,10 @@ first-order condition of the `chernoffInfo` inf) the first term vanishes, giving
   `IsLeast.csInf_eq`) and removed `hinfo` from `chernoffInfo_eq_mediator_div` /
   `chernoffMediator_klDivSumForm_eq_chernoffInfo` / `chernoff_converse`. Headline now self-contained,
   sorryAx-free preserved, independent honesty re-audit PASS (`@audit:ok` retained).
+- **Cleanup — dead H6 rate-bridge removed** (commit follows). `chernoffMediator_klDivSumForm_eq`
+  (+`_eq_chernoffInfo`) had 0 consumers: the final `chernoff_converse` inlines the rate via
+  `klDivSumForm_ofVec_eq_klDivPmf_left` + `chernoffInfo_eq_mediator_div`, so the H6 bridge was never
+  reached. Both removed (24 decls, sorryAx-free preserved). H1–H5/H7/H8 helpers unaffected.
 
 ## Retreat lines
 
