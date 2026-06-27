@@ -39,6 +39,7 @@ huffmanLength_optimal
 shannon_noisy_channel_coding_theorem_general_full
 channel_coding_feedback_converse
 shannon_converse_single_shot
+channelCoding_strong_converse_asymptotic | Wolfowitz strong converse (asymptotic)
 
 @ 8 | Differential entropy
 differentialEntropy_gaussianReal
