@@ -91,7 +91,7 @@ theorem convDensityAdd_hasDerivAt
       (F := fun z x ↦ pX x * pY (z - x))
       (F' := fun z x ↦ convDensityAddDeriv pX pY z x)
       (bound := bound) hs hF_meas hF_int hF'_meas h_bound bound_integrable h_diff
-  simpa only [convDensityAdd] using hgate.2
+  convert hgate.2 using 1 <;> rfl
 
 /-- `logDeriv p_Z` representation at `z₀` (score of the convolution density):
 `logDeriv (convDensityAdd pX pY) z₀ = (∫ x, p_X x · p_Y'(z₀ - x)) / p_Z(z₀)`.

@@ -198,7 +198,7 @@ private lemma diracPMF_errorProb (Q : Measure X) [IsProbabilityMeasure Q] (xh : 
     rw [diracPMF_mass, if_pos rfl]
   rw [Finset.sum_congr rfl (fun x _ ↦ hInner x)]
   -- Split the xh term out (it is 0), leaving ∑ x ∈ univ \ {xh}, Q.real {x}.
-  rw [Finset.sum_eq_sum_diff_singleton_add (Finset.mem_univ xh)
+  rw [Finset.sum_eq_sum_sdiff_singleton_add (Finset.mem_univ xh)
       (fun x ↦ (if x = xh then (0:ℝ) else Q.real {x}))]
   rw [if_pos rfl, add_zero]
   have hDiff : ∀ x ∈ ((Finset.univ : Finset X) \ ({xh} : Finset X)),

@@ -87,7 +87,7 @@ lemma condEntropy_measurableEquiv_comp
     have := entropy_measurableEquiv_comp μ
       (fun ω ↦ (Yo ω, Xc ω)) (hYo.prodMk hXc)
       (MeasurableEquiv.prodCongr e (.refl α))
-    simpa using this
+    exact this
   linarith
 
 /-! ## Basic inequality for conditional entropy -/

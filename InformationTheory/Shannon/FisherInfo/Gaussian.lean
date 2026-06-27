@@ -122,7 +122,8 @@ lemma tendsto_gaussianPDFReal_atBot (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
   -- Equate `gaussianPDFReal` with `c * exp(-(x-m)^2 / (2v))`.
   have h_abs : Filter.Tendsto (fun x : ℝ ↦ |x - m|) Filter.atBot Filter.atTop := by
     have h_sub : Filter.Tendsto (fun x : ℝ ↦ x - m) Filter.atBot Filter.atBot := by
-      simpa using Filter.tendsto_atBot_add_const_right (Filter.atBot) (-m) Filter.tendsto_id
+      simpa [sub_eq_add_neg] using
+        Filter.tendsto_atBot_add_const_right (Filter.atBot) (-m) Filter.tendsto_id
     exact Filter.tendsto_abs_atBot_atTop.comp h_sub
   have h_quot := tendsto_quadratic_div_atTop m hv Filter.atBot h_abs
   -- `-(quadratic) → -∞`.
@@ -148,7 +149,8 @@ lemma tendsto_gaussianPDFReal_atTop (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     Filter.Tendsto (gaussianPDFReal m v) Filter.atTop (nhds 0) := by
   have h_abs : Filter.Tendsto (fun x : ℝ ↦ |x - m|) Filter.atTop Filter.atTop := by
     have h_sub : Filter.Tendsto (fun x : ℝ ↦ x - m) Filter.atTop Filter.atTop := by
-      simpa using Filter.tendsto_atTop_add_const_right (Filter.atTop) (-m) Filter.tendsto_id
+      simpa [sub_eq_add_neg] using
+        Filter.tendsto_atTop_add_const_right (Filter.atTop) (-m) Filter.tendsto_id
     exact Filter.tendsto_abs_atTop_atTop.comp h_sub
   have h_quot := tendsto_quadratic_div_atTop m hv Filter.atTop h_abs
   have h_neg : Filter.Tendsto (fun x : ℝ ↦ -((x - m) ^ 2 / (2 * v))) Filter.atTop

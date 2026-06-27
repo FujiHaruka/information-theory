@@ -68,7 +68,6 @@ theorem lintegral_pi_prod {n : ℕ} {E : Fin n → Type*}
           (hg 0).aemeasurable
           (Finset.measurable_prod _ (fun i _ ↦ (hg i.succ).comp
             (measurable_pi_apply i))).aemeasurable
-      simp only at hpm
       conv_rhs => rw [← n_ih (fun i ↦ hg i.succ)]
       exact hpm
 

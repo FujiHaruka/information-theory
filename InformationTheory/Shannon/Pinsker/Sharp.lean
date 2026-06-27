@@ -58,21 +58,20 @@ private lemma hasDerivAt_H {t : ℝ} (ht : 0 < t) :
     simpa using this
   have h2 : HasDerivAt klFun (Real.log t) t := hasDerivAt_klFun ht_ne
   have h3 : HasDerivAt (fun t ↦ 2 * (t + 2) * klFun t)
-      (2 * klFun t + 2 * (t + 2) * Real.log t) t := by
-    have hmul := h1.mul h2
-    convert hmul using 1
+      (2 * klFun t + 2 * (t + 2) * Real.log t) t :=
+    h1.fun_mul h2
   -- derivative of `3 * (t - 1) ^ 2` is `6 * (t - 1)`
   have hid' : HasDerivAt (fun t : ℝ ↦ t - 1) 1 t :=
     (hasDerivAt_id t).sub_const 1
   have h4 : HasDerivAt (fun t : ℝ ↦ (t - 1) ^ 2) (2 * (t - 1) * 1) t := by
-    have := hid'.pow 2
+    have := hid'.fun_pow 2
     simpa using this
   have h5 : HasDerivAt (fun t ↦ 3 * (t - 1) ^ 2) (3 * (2 * (t - 1) * 1)) t :=
     h4.const_mul 3
   have h_sub := h3.sub h5
-  convert h_sub using 1
-  unfold klFun
-  ring
+  convert h_sub using 1 <;> first
+    | rfl
+    | (unfold klFun; ring)
 
 private lemma hasDerivAt_Hderiv {t : ℝ} (ht : 0 < t) :
     HasDerivAt Hderiv (Hderiv2 t) t := by
@@ -96,9 +95,9 @@ private lemma hasDerivAt_Hderiv {t : ℝ} (ht : 0 < t) :
   have h_inner := h_t1_log.sub h_2tm1
   -- derivative of `4 * (...)`: `4 * (log t + (t+1)/t - 2)`
   have h_4 := h_inner.const_mul 4
-  convert h_4 using 1
-  field_simp
-  ring
+  convert h_4 using 1 <;> first
+    | rfl
+    | (field_simp; ring)
 
 private lemma Hderiv2_nonneg {t : ℝ} (ht : 0 < t) : 0 ≤ Hderiv2 t := by
   unfold Hderiv2

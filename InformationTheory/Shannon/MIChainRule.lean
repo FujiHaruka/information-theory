@@ -191,7 +191,7 @@ theorem mutualInfo_chain_rule_fin
             condMutualInfo μ (Xs i.castSucc) Yo
               (fun ω (j : Fin i.val) ↦
                 Xs ⟨j.val, j.isLt.trans i.castSucc.isLt⟩ ω) := by
-      convert IH' using 2
+      convert IH' using 2 <;> rfl
     rw [h_mi_f]
     -- Rewrite RHS via Fin.sum_univ_castSucc.
     rw [Fin.sum_univ_castSucc]

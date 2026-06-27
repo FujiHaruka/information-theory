@@ -131,7 +131,6 @@ lemma klDivPmf_strictConvexOn_left (Q : α → ℝ) (hQ_pos : ∀ a, 0 < Q a) :
     have hQne : Q a₀ ≠ 0 := (hQ_pos a₀).ne'
     apply ha₀
     have := congrArg (· * Q a₀) h_eq_ratio
-    simp only at this
     field_simp at this
     exact this
   have h_strict_a₀ :

@@ -140,6 +140,6 @@ lemma comap_T_tailSigma_le (T : Ω → Ω) (hT : Measurable T) :
       have h_iter : (T^[k]) ∘ T = T^[k+1] := (Function.iterate_succ T k).symm
       rw [MeasurableSpace.comap_comp, h_iter]
     rw [h_eq] at h_step
-    simpa [backwardFiltration_apply] using h_step
+    simpa only [backwardFiltration_apply, OrderDual.ofDual_toDual] using h_step
 
 end InformationTheory.Shannon

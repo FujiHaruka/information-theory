@@ -10,11 +10,12 @@ rev = "3a988dbfa601ddbbfd9330d90c45e7a68263b9c7"
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
+rev = "v4.31.0"
 
 [[require]]
 name = "doc-gen4"
 git = "https://github.com/leanprover/doc-gen4"
-rev = "v4.30.0-rc2"
+rev = "v4.31.0"
 
 [[lean_lib]]
 name = "InformationTheory"

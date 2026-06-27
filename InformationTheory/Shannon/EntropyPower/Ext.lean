@@ -166,8 +166,8 @@ theorem integrable_negMulLog_gaussianReal_density (m : ℝ) {v : ℝ≥0} (hv : 
   have h2mom : Integrable (fun x ↦ (x - m)^2) (gaussianReal m v) := by
     have h_sq : Integrable (fun y : ℝ ↦ y ^ 2) (gaussianReal m v) :=
       (memLp_id_gaussianReal (μ := m) (v := v) 2).integrable_sq
-    have h_id : Integrable (fun y : ℝ ↦ y) (gaussianReal m v) := by
-      simpa using (memLp_id_gaussianReal (μ := m) (v := v) 1).integrable (by norm_num)
+    have h_id : Integrable (fun y : ℝ ↦ y) (gaussianReal m v) :=
+      (memLp_id_gaussianReal (μ := m) (v := v) 1).integrable (by norm_num)
     have h_eq : (fun y : ℝ ↦ (y - m) ^ 2) = fun y ↦ y ^ 2 - 2 * m * y + m ^ 2 := by
       funext y; ring
     rw [h_eq]

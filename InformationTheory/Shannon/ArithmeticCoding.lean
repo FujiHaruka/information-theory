@@ -126,6 +126,7 @@ theorem arithmeticCode_prefix_free
     have h := sfeLength_kraft_le_one P hP
     unfold kraftSum at h
     convert h using 2 with a
+    norm_num
   -- Obtain `c₀ : α → List (Fin 2)` via the integer-slot construction.
   obtain ⟨c₀, hc₀_inj, hc₀_len, hc₀_pf⟩ :=
     exists_prefix_code_of_kraft (D := 2) (by norm_num) (sfeLength P)
