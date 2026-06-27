@@ -89,14 +89,14 @@ first-order condition of the `chernoffInfo` inf) the first term vanishes, giving
   (H5, pure real-pmf) · `chernoffMediator_klDivSumForm_eq` (+`_eq_chernoffInfo`) (H6 rate bridge).
   H5 is parametrized over an arbitrary sub-region `S` + `hS` (cleaner than baking a real-`≤`
   filter into the type). Imports added: `Sanov.LDP`, `KLDivContinuous`, `Hoeffding.Tradeoff`.
-- **Next**: Phase B Milestone 2 — **H7** `h_in_E` (T_λ*'s rounded type eventually in the error
-  region; perturbation toward the strict half-space interior, clone `Qstar_perturb` from
-  `Hoeffding/TradeoffExp.lean`; heaviest ~80–120 lines) + **H8** assembly via
-  `sanov_ldp_lower_bound_pointwise` (`Sanov/LiminfBound.lean:132`, **no `h_minimizer`**) →
-  `liminf (1/n) log P₁ⁿ(region) ≥ -chernoffInfo`, then liminf→limsup flip with H5/H4 → headline
-  `chernoff_converse` (`[Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]`).
-  Only commit a proven (sorryAx-free) `chernoff_converse`. Decomposition detail →
-  `docs/shannon/chernoff-converse-phaseB-inventory.md`.
+- **DONE — proof-done + audited** (commit `b7595c43` headline; `3c609c47` `@audit:ok` + README).
+  Phase B Milestone 2 closed: H7 (perturbation toward P₂, `chernoffMediator_perturb_llr_pos` +
+  `roundedType_mem_chernoffErrorCounts_eventually`) + H8 assembly via
+  `sanov_ldp_lower_bound_pointwise` (no `h_minimizer`) + degenerate/non-degenerate split
+  (`klDivPmf_eq_zero_iff_pmf`) + liminf→limsup flip. Headline `chernoff_converse` sorryAx-free
+  (`[propext, Classical.choice, Quot.sound]`), root-wired (`InformationTheory.lean`), independent
+  honesty audit PASS (tier-1, `hlam_io`/`hlam_min`/`hinfo` confirmed preconditions, not
+  load-bearing). README table updated. Re-verify: `#print axioms chernoff_converse`.
 
 ## Retreat lines
 
