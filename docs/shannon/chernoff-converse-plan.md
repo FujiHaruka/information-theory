@@ -80,11 +80,23 @@ first-order condition of the `chernoffInfo` inf) the first term vanishes, giving
   only non-degeneracy hyp (balance is *derived*, not assumed — Cramér-`Var>0` analogue). Selection
   facts `hlam_min`/`hinfo` discharge from `chernoffInfo_attained`. File still standalone (not
   root-wired; 0-`sorry` invariant — wire only once `chernoff_converse` headline is proven).
-- **Next**: Phase B — Sanov lower bound (heaviest). Express error region
-  `{x : P₁ⁿ(x) ≤ P₂ⁿ(x)}` as a type-class union and instantiate `sanov_ldp_equality`
-  (`TendstoSandwich.lean:128`) with Q=P₁, P=T_λ*, minimiser condition from `chernoffMediator_isMinOn`
-  / Pythagoras; rate `klDivSumForm_ofVec T_λ* (P₁.real∘singleton)` ↔ `klDivPmf (T_λ*) P₁ = chernoffInfo`.
-  Then Phase C (assembly). Only commit a proven (sorryAx-free) `chernoff_converse` headline.
+- **Phase B Milestone 1 (H1–H6) COMPLETE** (`Chernoff/Converse.lean`, `section PhaseB`, all
+  sorryAx-free). Added: `chernoffErrorCounts` (+`mem_..._iff`) (H1, `E_r` clone) ·
+  `prod_aggr_of_mem_typeClassByCount` (+`typeCount_le`/`_sum_eq`) (H2) ·
+  `chernoffErrorRegion_eq_union` (H3, region = type-class union) ·
+  `measurePi_toReal_eq_sum` (H4, measure→sum extraction, needs `[MeasurableSpace α]
+  [MeasurableSingletonClass α] [IsProbabilityMeasure Q]`) · `bayesErrorMinPmf_ge_half_sum`
+  (H5, pure real-pmf) · `chernoffMediator_klDivSumForm_eq` (+`_eq_chernoffInfo`) (H6 rate bridge).
+  H5 is parametrized over an arbitrary sub-region `S` + `hS` (cleaner than baking a real-`≤`
+  filter into the type). Imports added: `Sanov.LDP`, `KLDivContinuous`, `Hoeffding.Tradeoff`.
+- **Next**: Phase B Milestone 2 — **H7** `h_in_E` (T_λ*'s rounded type eventually in the error
+  region; perturbation toward the strict half-space interior, clone `Qstar_perturb` from
+  `Hoeffding/TradeoffExp.lean`; heaviest ~80–120 lines) + **H8** assembly via
+  `sanov_ldp_lower_bound_pointwise` (`Sanov/LiminfBound.lean:132`, **no `h_minimizer`**) →
+  `liminf (1/n) log P₁ⁿ(region) ≥ -chernoffInfo`, then liminf→limsup flip with H5/H4 → headline
+  `chernoff_converse` (`[Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]`).
+  Only commit a proven (sorryAx-free) `chernoff_converse`. Decomposition detail →
+  `docs/shannon/chernoff-converse-phaseB-inventory.md`.
 
 ## Retreat lines
 
