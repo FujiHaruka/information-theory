@@ -115,6 +115,7 @@ import InformationTheory.Shannon.Huffman.ExpectedLength
 import InformationTheory.Shannon.Huffman.Optimality
 import InformationTheory.Shannon.CsiszarProjection
 import InformationTheory.Shannon.Chernoff.Basic
+import InformationTheory.Shannon.Chernoff.Converse
 import InformationTheory.Shannon.Chernoff.NLetterZSum
 import InformationTheory.Shannon.Cramer.Cramer
 import InformationTheory.Shannon.Cramer.TiltedIID
