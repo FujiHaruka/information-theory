@@ -151,6 +151,6 @@
    "inputRev": "v4.30.0-rc2",
    "inherited": true,
    "configFile": "lakefile.toml"}],
- "name": "«common-2026»",
+ "name": "InformationTheory",
  "lakeDir": ".lake",
  "fixedToolchain": false}

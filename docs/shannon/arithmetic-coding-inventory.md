@@ -60,7 +60,7 @@ theorem arithmeticCode_prefix_free (P : Measure α) (hP : ∀ a, 0 < P.real {a})
 
 ---
 
-## ブロック A — 既存 common-2026 機構 (再利用元)
+## ブロック A — 既存 InformationTheory 機構 (再利用元)
 
 ### A1. `InformationTheory/Shannon/ShannonCode.lean` (Cover-Thomas 5.4 / 5.8.1)
 

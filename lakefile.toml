@@ -1,4 +1,4 @@
-name = "common-2026"
+name = "InformationTheory"
 version = "0.1.0"
 defaultTargets = ["InformationTheory"]
 
