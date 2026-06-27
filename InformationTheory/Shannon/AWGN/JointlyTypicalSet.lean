@@ -2,11 +2,10 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.AWGN.ChannelMeasurability
 
 /-!
-# AWGN jointly typical set and capacity re-publish
+# AWGN jointly typical set
 
 The continuous jointly typical set for the AWGN channel coding theorem
-(Cover–Thomas Ch. 9), together with the thin re-publish of the AWGN coding theorem
-and its capacity closed form with the kernel-measurability layer discharged.
+(Cover–Thomas Ch. 9).
 
 ## Main definitions
 
@@ -18,9 +17,6 @@ and its capacity closed form with the kernel-measurability layer discharged.
 * `AWGNJointlyTypicalSet_zero`, `AWGNJointlyTypicalSet_subset_of_le_ε`,
   `AWGNJointlyTypicalSet_measurable` — degenerate case, monotonicity in the slack,
   and measurability of the jointly typical set.
-* `awgn_capacity_closed_form_of_maxent_hypotheses` — the AWGN capacity closed form,
-  with the kernel-measurability layer discharged and the max-entropy / boundedness
-  conditions taken as hypotheses.
 -/
 
 namespace InformationTheory.Shannon.AWGN
