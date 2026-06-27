@@ -184,7 +184,7 @@ theorem gaussianInput_mem_constraintSet (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) :
 /-- The AWGN capacity is bounded below by `(1/2) log(1 + P/N)`, achieved by the
 Gaussian input via the closed-form mutual information hypothesis `h_bridge_gauss`.
 
-`@audit:closed-by-successor(awgn-moonshot-plan)` -/
+`@audit:superseded-by(awgn_capacity_closed_form_genuine)` -/
 @[entry_point]
 theorem awgnCapacity_ge_gaussian
     (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -209,7 +209,7 @@ theorem awgnCapacity_ge_gaussian
 satisfying the second-moment constraint has mutual information at most
 `(1/2) log(1 + P/N)` via the Gaussian max-entropy bound `h_max_ent`.
 
-`@audit:closed-by-successor(awgn-moonshot-plan)` -/
+`@audit:superseded-by(awgn_capacity_closed_form_genuine)` -/
 @[entry_point]
 theorem awgnCapacity_le_gaussian
     (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -234,7 +234,7 @@ the Gaussian-achievable lower bound and the max-entropy upper bound. The hypothe
 `h_bridge_gauss`, `h_max_ent`, `h_bdd` carry the closed-form mutual information and
 boundedness inputs whose discharge is deferred to follow-up plans.
 
-`@audit:closed-by-successor(awgn-moonshot-plan)` -/
+`@audit:superseded-by(awgn_capacity_closed_form_genuine)` -/
 @[entry_point]
 theorem awgnCapacity_eq
     (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)

@@ -94,7 +94,7 @@ theorem awgn_theorem_F1_discharged
 hypothesis discharged by `isAwgnChannelMeasurable N`. The remaining hypotheses
 (`h_bridge_gauss`, `h_bdd`, `h_max_ent`) are unchanged.
 
-`@audit:closed-by-successor(awgn-mi-bridge-plan)` -/
+`@audit:superseded-by(awgn_capacity_closed_form_genuine)` -/
 @[entry_point]
 theorem awgn_capacity_closed_form_F1_discharged
     (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)

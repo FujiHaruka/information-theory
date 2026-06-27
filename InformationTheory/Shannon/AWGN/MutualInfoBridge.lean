@@ -98,7 +98,7 @@ bind/conv bridge `IsAwgnBindEqConv`. The mutual-information decomposition
 (`h_decomp`), the boundedness `h_bdd`, and the max-entropy bound (`h_max_ent`)
 remain as hypotheses; only the output-Gaussian fact is supplied here.
 
-`@audit:closed-by-successor(awgn-mi-decomp-plan)` -/
+`@audit:superseded-by(awgn_capacity_closed_form_genuine)` -/
 @[entry_point]
 theorem awgn_capacity_closed_form_of_maxent_bindconv
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)

@@ -164,8 +164,7 @@ I.toReal = h(out) − h(Y|X)                    [IsAwgnMIDecomp]
          = h(𝒩(0, P+N)) − h(Y|X)               [IsAwgnOutputGaussian]
          = h(𝒩(0, P+N)) − h(𝒩(0, N))           [IsAwgnCondEntropyEqNoise]
 ```
-
-`@audit:closed-by-successor(awgn-mi-decomp-plan)` -/
+-/
 @[entry_point]
 theorem awgn_mi_bridge_of_primitives
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
@@ -186,9 +185,7 @@ theorem awgn_mi_bridge_of_primitives
 
 /-- The Gaussian-input AWGN channel mutual information equals `(1/2) log(1 + P/N)`,
 obtained by combining the three primitives into `awgn_mi_bridge_of_primitives` and
-running the Gaussian closed-form `differentialEntropy_gaussianReal` log algebra inline.
-
-`@audit:closed-by-successor(awgn-mi-decomp-plan)` -/
+running the Gaussian closed-form `differentialEntropy_gaussianReal` log algebra inline. -/
 @[entry_point]
 theorem awgn_mi_gaussian_closed_form_of_primitives
     (P : ℝ) (hP_pos : (0 : ℝ) < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -252,7 +249,7 @@ theorem awgn_mi_gaussian_closed_form_of_primitives
 fact reduced to the two primitives `IsAwgnOutputGaussian` and `IsAwgnMIDecomp`. The
 remaining hypotheses (`h_bdd`, `h_max_ent`) are unchanged.
 
-`@audit:closed-by-successor(awgn-mi-decomp-plan)` -/
+`@audit:superseded-by(awgn_capacity_closed_form_genuine)` -/
 @[entry_point]
 theorem awgn_capacity_closed_form_F2_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)

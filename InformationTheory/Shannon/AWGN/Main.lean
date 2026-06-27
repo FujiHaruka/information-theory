@@ -72,7 +72,7 @@ The hypotheses `h_bridge_gauss`, `h_bdd`, `h_max_ent` supply the Gaussian-input 
 form, the bounded-above property of the MI image, and the max-entropy upper bound. See
 `AWGN.awgnCapacity_eq` for the underlying sandwich.
 
-`@audit:closed-by-successor(awgn-moonshot-plan)` -/
+`@audit:superseded-by(awgn_capacity_closed_form_genuine)` -/
 @[entry_point]
 theorem awgn_capacity_closed_form
     (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)

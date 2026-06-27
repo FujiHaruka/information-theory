@@ -69,16 +69,12 @@ They are consumed as explicit hypotheses by `shannon_hartley_formula`. -/
 The intended content is the Whittaker-Shannon sampling-equivalence between the
 continuous-time bandlimited AWGN channel and a sequence of independent per-sample
 AWGN channels at rate `2W`. That equivalence requires Whittaker-Shannon /
-Nyquist-Fourier machinery not in Mathlib; this predicate carries only positivity.
-
-`@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
+Nyquist-Fourier machinery not in Mathlib; this predicate carries only positivity. -/
 def IsBandlimitedSamplingHypothesis (W N₀ P : ℝ) : Prop :=
   0 < W ∧ 0 < N₀ ∧ 0 ≤ P
 
 /-- Bandlimited-kernel hypothesis: positivity stand-in `0 < W` for continuous-time AWGN noise
-kernel measurability.
-
-`@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
+kernel measurability. -/
 def IsBandlimitedKernel (W : ℝ) : Prop := 0 < W
 
 /-- The `2W` degrees-of-freedom per second identity `C = 2W · perSampleAwgnCapacity`.
@@ -86,8 +82,7 @@ def IsBandlimitedKernel (W : ℝ) : Prop := 0 < W
 Requires Whittaker-Shannon sampling theorem + continuous AEP (not in Mathlib);
 taken as the caller's hypothesis.
 
-`@audit:retract-candidate(load-bearing-predicate)`
-`@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate)` -/
 def IsTwoWDegreesOfFreedom (W N₀ P C : ℝ) : Prop :=
   C = 2 * W * perSampleAwgnCapacity W N₀ P
 

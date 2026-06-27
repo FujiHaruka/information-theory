@@ -112,34 +112,4 @@ lemma AWGNJointlyTypicalSet_measurable (n : ℕ) (P N ε : ℝ) :
   rw [h_eq]
   exact (h1.inter h2).inter h3
 
-/-! ## Capacity closed form re-publish -/
-
-/-- The AWGN capacity closed form, re-published with the kernel-measurability layer
-discharged. The Gaussian MI value `h_bridge_gauss`, boundedness `h_bdd`, and the
-max-entropy bound `h_max_ent` are taken as hypotheses.
-
-`@audit:closed-by-successor(awgn-converse-aux-plan)` -/
-@[entry_point]
-theorem awgn_capacity_closed_form_of_maxent_hypotheses
-    (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
-    (h_bridge_gauss :
-        (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
-            (gaussianReal 0 P.toNNReal)
-            (awgnChannel N (isAwgnChannelMeasurable N))).toReal
-          = (1/2) * Real.log (1 + P / (N : ℝ)))
-    (h_bdd :
-        BddAbove ((fun p : Measure ℝ ↦
-            (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
-                p (awgnChannel N (isAwgnChannelMeasurable N))).toReal) ''
-          awgnPowerConstraintSet P))
-    (h_max_ent :
-        ∀ p ∈ awgnPowerConstraintSet P,
-          (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
-              p (awgnChannel N (isAwgnChannelMeasurable N))).toReal
-            ≤ (1/2) * Real.log (1 + P / (N : ℝ))) :
-    awgnCapacity P N (isAwgnChannelMeasurable N)
-      = (1/2) * Real.log (1 + P / (N : ℝ)) :=
-  awgn_capacity_closed_form_F1_discharged P hP N hN
-    h_bridge_gauss h_bdd h_max_ent
-
 end InformationTheory.Shannon.AWGN

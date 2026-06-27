@@ -170,9 +170,9 @@ theorem isEntropyPowerInequalityHypothesis_of_gaussian
 -- The discharge path from `IsEntropyPowerInequalityHypothesis` to
 -- `IsStamToEPIBridge` (Gaussian-saturation → bridge) is publicly available
 -- via `StamEPIBridge.isStamToEPIBridgeHyp_of_gaussian`, so an
--- in-file `IsStamToEPIBridge` wrapper would be redundant. (Former
--- `@audit:retract-candidate(load-bearing-predicate)`
--- + `@audit:closed-by-successor(epi-stam-to-conclusion-plan)`.)
+-- in-file `IsStamToEPIBridge` wrapper would be redundant. (This former
+-- load-bearing-predicate wrapper, once slated for the EPI Stam-to-conclusion
+-- closure plan, is now retired in favor of that public lemma.)
 
 /-! ### Corollaries -/
 

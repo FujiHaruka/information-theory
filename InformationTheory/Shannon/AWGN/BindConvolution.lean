@@ -86,7 +86,7 @@ bind/convolution bridge (so `IsAwgnBindEqConv` is supplied automatically) and th
 decomposition `h_decomp`, boundedness `h_bdd`, and max-entropy bound `h_max_ent`
 taken as hypotheses.
 
-`@audit:closed-by-successor(awgn-moonshot-plan)` -/
+`@audit:superseded-by(awgn_capacity_closed_form_genuine)` -/
 @[entry_point]
 theorem awgn_capacity_closed_form_of_maxent_bindconv_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
