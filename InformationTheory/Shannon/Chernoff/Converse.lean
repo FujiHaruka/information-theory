@@ -191,6 +191,22 @@ def chernoffHalfSpace (P₁ P₂ : α → ℝ) : Set (α → ℝ) :=
   {p | (∀ a, 0 < p a) ∧ (∑ a, p a = 1) ∧ 0 ≤ ∑ a, p a * Real.log (P₂ a / P₁ a)}
 
 omit [DecidableEq α] in
+/-- At a minimizer `λ*` of `log Z` over `[0,1]`, the Chernoff information equals `-log Z(λ*)`.
+This recovers the defining `-sInf` identity from the minimizer condition, so callers carrying an
+`IsMinOn` witness need not pass `chernoffInfo = -log Z(λ*)` as a separate hypothesis. -/
+theorem chernoffInfo_eq_neg_logZ_of_isMinOn
+    (P₁ P₂ : α → ℝ)
+    (lam : ℝ)
+    (hlam_min : IsMinOn (fun l : ℝ ↦ Real.log (chernoffZSum P₁ P₂ l)) (Set.Icc 0 1) lam)
+    (hlam_mem : lam ∈ Set.Icc (0:ℝ) 1) :
+    chernoffInfo P₁ P₂ = -(Real.log (chernoffZSum P₁ P₂ lam)) := by
+  unfold chernoffInfo
+  rw [neg_inj]
+  refine IsLeast.csInf_eq ⟨⟨lam, hlam_mem, rfl⟩, ?_⟩
+  rintro y ⟨l, hl, rfl⟩
+  exact isMinOn_iff.mp hlam_min l hl
+
+omit [DecidableEq α] in
 /-- At an interior minimizer `λ*` of `log Z`, the mediator divergence equals the Chernoff
 information: `chernoffInfo P₁ P₂ = klDivPmf (T_λ*) P₁`. -/
 theorem chernoffInfo_eq_mediator_div
@@ -199,10 +215,11 @@ theorem chernoffInfo_eq_mediator_div
     (hP₁_sum : ∑ a, P₁ a = 1)
     (lam : ℝ)
     (hlam_min : IsMinOn (fun l : ℝ ↦ Real.log (chernoffZSum P₁ P₂ l)) (Set.Icc 0 1) lam)
-    (hlam_io : lam ∈ Set.Ioo (0:ℝ) 1)
-    (hinfo : chernoffInfo P₁ P₂ = -(Real.log (chernoffZSum P₁ P₂ lam))) :
+    (hlam_io : lam ∈ Set.Ioo (0:ℝ) 1) :
     chernoffInfo P₁ P₂ = klDivPmf (chernoffMediator P₁ P₂ lam) P₁ := by
   have hbal := chernoffMediator_balance P₁ P₂ hP₁_pos hP₂_pos lam hlam_min hlam_io
+  have hinfo := chernoffInfo_eq_neg_logZ_of_isMinOn P₁ P₂ lam hlam_min
+    (Set.Ioo_subset_Icc_self hlam_io)
   rw [chernoffMediator_klDiv_eq P₁ P₂ hP₁_pos hP₂_pos hP₁_sum lam, hbal, mul_zero, zero_sub]
   exact hinfo
 
@@ -438,14 +455,13 @@ lemma chernoffMediator_klDivSumForm_eq_chernoffInfo
     (hP₁_sum : ∑ a, P₁ a = 1)
     (lam : ℝ)
     (hlam_min : IsMinOn (fun l : ℝ ↦ Real.log (chernoffZSum P₁ P₂ l)) (Set.Icc 0 1) lam)
-    (hlam_io : lam ∈ Set.Ioo (0:ℝ) 1)
-    (hinfo : chernoffInfo P₁ P₂ = -(Real.log (chernoffZSum P₁ P₂ lam))) :
+    (hlam_io : lam ∈ Set.Ioo (0:ℝ) 1) :
     klDivSumForm_ofVec (chernoffMediator P₁ P₂ lam)
         (fun a ↦ (pmfToMeasure P₁ (fun a ↦ (hP₁_pos a).le) hP₁_sum).real {a})
       = chernoffInfo P₁ P₂ := by
   rw [chernoffMediator_klDivSumForm_eq P₁ P₂ hP₁_pos hP₂_pos hP₁_sum lam]
   exact (chernoffInfo_eq_mediator_div P₁ P₂ hP₁_pos hP₂_pos hP₁_sum lam
-    hlam_min hlam_io hinfo).symm
+    hlam_min hlam_io).symm
 
 /-! #### H7 — perturbation membership + degenerate handling -/
 
@@ -662,8 +678,7 @@ theorem chernoff_converse
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
     (lam : ℝ)
     (hlam_min : IsMinOn (fun l : ℝ ↦ Real.log (chernoffZSum P₁ P₂ l)) (Set.Icc 0 1) lam)
-    (hlam_io : lam ∈ Set.Ioo (0:ℝ) 1)
-    (hinfo : chernoffInfo P₁ P₂ = -(Real.log (chernoffZSum P₁ P₂ lam))) :
+    (hlam_io : lam ∈ Set.Ioo (0:ℝ) 1) :
     Filter.limsup (fun n : ℕ ↦ -((1:ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) atTop
       ≤ chernoffInfo P₁ P₂ := by
   classical
@@ -768,7 +783,7 @@ theorem chernoff_converse
           (fun a ↦ μ₁.real {a}) = chernoffInfo P₁ P₂ := by
         rw [klDivSumForm_ofVec_eq_klDivPmf_left P₁ hP₁_pos hP₁_sum μ₁ hμ₁_real hmed_nn hmed_sum]
         exact (chernoffInfo_eq_mediator_div P₁ P₂ hP₁_pos hP₂_pos hP₁_sum lam
-          hlam_min hlam_io hinfo).symm
+          hlam_min hlam_io).symm
       rw [h_rate] at h_lb
       exact h_lb
     exact key (chernoffMediator P₁ P₂ lam) hmed_sum hmed_nn h_inE₀ h_liminf
@@ -818,7 +833,7 @@ theorem chernoff_converse
       have h_tendsto : Tendsto
           (fun ε : ℝ ↦ -klDivPmf (Qstar_perturb (chernoffMediator P₁ P₂ lam) P₂ ε) P₁)
           (𝓝[>] 0) (𝓝 (-chernoffInfo P₁ P₂)) := by
-        rw [chernoffInfo_eq_mediator_div P₁ P₂ hP₁_pos hP₂_pos hP₁_sum lam hlam_min hlam_io hinfo]
+        rw [chernoffInfo_eq_mediator_div P₁ P₂ hP₁_pos hP₂_pos hP₁_sum lam hlam_min hlam_io]
         exact (klDivPmf_perturb_tendsto P₂ P₁ hP₁_pos
           (Qstar := chernoffMediator P₁ P₂ lam)).neg
       exact le_of_tendsto h_tendsto h_event
