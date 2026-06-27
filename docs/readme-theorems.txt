@@ -56,6 +56,7 @@ rate_distortion_converse_n_letter_singleLetter
 @ 11 | Hypothesis testing & large deviations
 stein_converse_finite_n
 sanov_ldp_upper_bound
+cramer_lower_boundary_unconditional | Cramér large-deviation lower bound
 tvNorm_le_sqrt_klDiv | Pinsker
 
 @ 12 | Maximum entropy
@@ -75,3 +76,4 @@ shearer_inequality
 loomis_whitney
 brascamp_lieb_finset
 entropy_power_inequality_of_density
+minkowskiDeterminantInequality | Minkowski determinant
