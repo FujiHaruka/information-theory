@@ -59,7 +59,9 @@ open scoped ENNReal NNReal Real
 a probability density (nonnegative, measurable) carrying the `withDensity` law `pX_law` and a
 finite second moment `hpX_mom`, together with the standard-normal law of `Z`. The density witness
 `density_t` is pinned to the smooth convolution `convDensityAdd pX g_t`, so `density_t_eq` is
-`rfl`. -/
+`rfl`.
+
+@audit:ok -/
 noncomputable def isRegularDeBruijnHypV2_of_density
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     {X Z : Ω → ℝ} (hZ_law : P.map Z = gaussianReal 0 1)
@@ -91,7 +93,9 @@ The class is non-vacuous: Gaussian `X ∼ 𝒩(m, v)` instantiates it with
 absolutely-continuous `X` with finite second
 moment supplies `pX = (P.map X).rnDeriv volume` (see `isDeBruijnPathRegular_of_heat_flow`).
 
-References: [CoverThomas2006] Theorem 17.7.2. -/
+References: [CoverThomas2006] Theorem 17.7.2.
+
+@audit:ok -/
 @[entry_point]
 theorem debruijn_identity_per_time
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
@@ -117,7 +121,9 @@ bounded continuous closed form `1 / (v + t)`, so the path integrand is interval-
 heat-flow entropy is the closed form `(1/2)·log(2π e (v + s))`, continuous on `[0, T]`.
 
 This witness shows `IsDeBruijnPathRegular` (and hence `debruijnIntegrationIdentity_holds`) is
-non-vacuous. -/
+non-vacuous.
+
+@audit:ok -/
 noncomputable def isDeBruijnPathRegular_gaussian
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
@@ -182,7 +188,9 @@ form `h(X + √T·Z) − h(X) = ∫₀ᵀ (1/2)·J(X + √t·Z) dt` for a Gaussi
 obtained by
 applying `debruijnIntegrationIdentity_holds` to the Gaussian path-regularity witness.
 
-References: [CoverThomas2006] Theorem 17.7.2. -/
+References: [CoverThomas2006] Theorem 17.7.2.
+
+@audit:ok -/
 @[entry_point]
 theorem debruijn_identity_integrated_gaussian
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
