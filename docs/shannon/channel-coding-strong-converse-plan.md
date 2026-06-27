@@ -9,13 +9,13 @@
 
 | 子 plan | 担当 Phase | 状態 |
 |---|---|---|
-| [`capacity-saddle-point.md`](capacity-saddle-point.md) | Phase A（capacity 鞍点 core） | done ✅（鞍点 + gateway atom genuine closure） |
+| [`capacity-saddle-point-plan.md`](capacity-saddle-point-plan.md) | Phase A（capacity 鞍点 core） | done ✅（鞍点 + gateway atom genuine closure） |
 
 ## 進捗
 
 - [x] Phase 0 — Mathlib/in-project API 在庫 ✅ → [inventory](channel-coding-strong-converse-asymptotic-inventory.md)（真壁 0 件、自作 2 件確定）
 - [x] 基盤 — 単発 Verdú-Han 下界 `channelCoding_average_success_le` CLOSED ✅（`StrongConverse.lean:248`、signature 変更なしで上載せ可）
-- [x] Phase A — capacity 鞍点 `klDiv_channel_le_capacity` ✅（子 plan [`capacity-saddle-point.md`](capacity-saddle-point.md) で genuine closure、commit `3db9d443`、proof-log: yes）
+- [x] Phase A — capacity 鞍点 `klDiv_channel_le_capacity` ✅（子 plan [`capacity-saddle-point-plan.md`](capacity-saddle-point-plan.md) で genuine closure、commit `3db9d443`、proof-log: yes）
 - [x] Phase B — 非 iid Chebyshev 集中 `channelCoding_highLLR_tendsto_zero` ✅（Phase A を黒箱配線、commit `9ad30170`）
 - [x] Phase C — 単発下界 + 集中の配線 → headline `channelCoding_strong_converse_asymptotic` closure ✅（commit `08d18601`）
 
@@ -88,7 +88,7 @@ free `Q`（IsProbabilityMeasure）+ free `threshold` を取る → 漸近版は 
 
 ## Phase A — capacity 鞍点 `klDiv_channel_le_capacity` ✅（compressed）
 
-子 plan [`capacity-saddle-point.md`](capacity-saddle-point.md) が SoT（詳細・退化境界・経緯）。gateway atom
+子 plan [`capacity-saddle-point-plan.md`](capacity-saddle-point-plan.md) が SoT（詳細・退化境界・経緯）。gateway atom
 `mutualInfo_segment_hasDerivAt`（片側 `HasDerivWithinAt (Set.Ici 0) 0`、two-sided は境界達成点で偽）の
 envelope cancellation が genuine に出て鞍点 `∀a, D(W(a)‖q*) ≤ C` を closure、`klDiv_channel_le_capacity` の `sorry`
 除去（commit `3db9d443`）。Phase B はこれを **黒箱**として呼ぶ（仮説に積まない）。
@@ -113,4 +113,4 @@ moonshot 完遂につき active な判断は無し。下記は machine-再導出
 
 1. **iid 路 流用不可（設計記録）**: `strong_law_ae` / `steinTypicalSet_P_prob_tendsto_one` はともに `hident`（同分布）必須。チャネル出力は独立だが**非同分布** → 既存 iid AEP/LLN 路は全面不可、Phase B は **Chebyshev 直叩き（`meas_ge_le_variance_div_sq` + `variance_sum_pi`）** で組んだ（inventory §D）。整形（`pi_singleton`→`∏`→`log`→per-letter 和）は `StrongStein` 写経可だが収束 step だけは iid 専用で流用不可だった点が核。
 2. **`hq_pos`（full-support 出力）は load-bearing でない precondition（誠実性記録）**: headline regularity hyp。`llr` well-defined のため必須だが proof 核を encode しない＝honest precondition（non-full-support 出力が唯一 guard する退化境界）。headline 監査時の確認点。
-3. **退避ライン R-SC1/2/3 は全て決着（行使せず closure）**: Phase A の鞍点を `*Hypothesis` predicate に bundle する load-bearing bundling は禁止（CLAUDE.md「検証の誠実性」）だったが、gateway atom が genuine に出たため退避口は不要、3 Phase とも sorry を残さず closure（commit `3db9d443`/`9ad30170`/`08d18601`）。gateway atom の two-sided→片側 訂正の詳細は子 plan [`capacity-saddle-point.md`](capacity-saddle-point.md) 判断ログ #1 が SoT。
+3. **退避ライン R-SC1/2/3 は全て決着（行使せず closure）**: Phase A の鞍点を `*Hypothesis` predicate に bundle する load-bearing bundling は禁止（CLAUDE.md「検証の誠実性」）だったが、gateway atom が genuine に出たため退避口は不要、3 Phase とも sorry を残さず closure（commit `3db9d443`/`9ad30170`/`08d18601`）。gateway atom の two-sided→片側 訂正の詳細は子 plan [`capacity-saddle-point-plan.md`](capacity-saddle-point-plan.md) 判断ログ #1 が SoT。

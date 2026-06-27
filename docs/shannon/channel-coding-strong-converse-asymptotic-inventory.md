@@ -7,7 +7,7 @@
 
 **漸近接続（情報密度の集中ステップ）で使う API のうち、ツールキット（単発下界・Chebyshev・積測度分散加法性・有界 MemLp・pi 因数分解）は ~80% が Mathlib/in-project に既存。自作が必要なのは 2 件のみ — (A) capacity 鞍点 `∀ a, D(W(a)‖q*) ≤ C`（in-project KKT 開発、~200–350 行、Mathlib 壁ではない）、(B) 非 iid・有界分散列の Chebyshev 集中の組み立て（既存 primitive の配線、~150–250 行）。** 真の Mathlib 壁は **0 件**（非 iid WLLN は単発の既製補題が無い＝loogle Found 0 だが、`meas_ge_le_variance_div_sq` + `variance_sum_pi` で組める）。最危険な発見: **`strong_law_ae` / `steinTypicalSet_P_prob_tendsto_one` はともに `hident`（同分布）を要求し、チャネル出力（独立・非同分布）には流用不可** — 既存 iid AEP/LLN 路は使えず、Chebyshev 直叩き路へ切替が必須。
 >
-> **訂正 (2026-06-27, 実装確定に同期)**: 鞍点 gateway atom は当初 two-sided `HasDerivAt … 0` を想定していたが、**境界 achiever (`p a = 0`) で機械的に偽**と判明（`pmfToMeasure` の `ENNReal.ofReal` clamp が `t < 0` 側で確率測度を外し corner を作る; 反例 `α=β=Bool, p=δ_false, a=true`; auditor 検証済）。実装は one-sided `HasDerivWithinAt (Set.Ici 0) 0`（右微分）に訂正済 = `mutualInfo_segment_hasDerivAt`（`StrongConverseAsymptotic.lean:86`）。下流の `csiszar_first_order_condition` の `𝓝[>] 0` slope がちょうどこの片側形を消費する。鞍点本体は子計画 [`capacity-saddle-point.md`](capacity-saddle-point.md) に R-SC1 行使で切り出し済（`@residual(plan:capacity-saddle-point)` の closure 先が存在）。実装済 4 sorry は `StrongConverseAsymptotic.lean`（type-check done）。
+> **訂正 (2026-06-27, 実装確定に同期)**: 鞍点 gateway atom は当初 two-sided `HasDerivAt … 0` を想定していたが、**境界 achiever (`p a = 0`) で機械的に偽**と判明（`pmfToMeasure` の `ENNReal.ofReal` clamp が `t < 0` 側で確率測度を外し corner を作る; 反例 `α=β=Bool, p=δ_false, a=true`; auditor 検証済）。実装は one-sided `HasDerivWithinAt (Set.Ici 0) 0`（右微分）に訂正済 = `mutualInfo_segment_hasDerivAt`（`StrongConverseAsymptotic.lean:86`）。下流の `csiszar_first_order_condition` の `𝓝[>] 0` slope がちょうどこの片側形を消費する。鞍点本体は子計画 [`capacity-saddle-point-plan.md`](capacity-saddle-point-plan.md) に R-SC1 行使で切り出し済（`@residual(plan:capacity-saddle-point)` の closure 先が存在）。実装済 4 sorry は `StrongConverseAsymptotic.lean`（type-check done）。
 
 ---
 
@@ -164,9 +164,9 @@ have tail_to_0 : Pm(highLLR_m) ≤ Var/(n(δ/2))² ≤ V_max/(n δ²/4) → 0   
 | 想定壁 | loogle 確認 | 判定 | 代替 route |
 |---|---|---|---|
 | 非 iid（独立・非同分布）有界分散列の WLLN（単発補題） | `"weak_law_of_large_numbers"` → **Found 0**；`"law_of_large"` → `strong_law_ae`（iid 専用）のみ；`"tendsto_average"` → Vitali/density 系のみ（LLN 無し） | **壁ではない（配線）** | `meas_ge_le_variance_div_sq`（Variance.lean:397）+ `variance_sum_pi`（Variance.lean:447）で組む。両者 verbatim 確認済 |
-| capacity 鞍点 `∀a, D(W(a)‖q*) ≤ C`（Mathlib 既製） | Mathlib に channel-capacity KKT は不在（`mutualInfoOfChannel` 自体が in-project 定義） | **壁ではない（in-project 自作、template 有）。子計画 [`capacity-saddle-point.md`](capacity-saddle-point.md) に切り出し済 = `@residual(plan:capacity-saddle-point)` の closure 先が存在** | `csiszar_segment_hasDerivAt` + `csiszar_first_order_condition` + `exists_capacity_achiever` の写経・転用（gateway atom は**片側** `HasDerivWithinAt`） |
+| capacity 鞍点 `∀a, D(W(a)‖q*) ≤ C`（Mathlib 既製） | Mathlib に channel-capacity KKT は不在（`mutualInfoOfChannel` 自体が in-project 定義） | **壁ではない（in-project 自作、template 有）。子計画 [`capacity-saddle-point-plan.md`](capacity-saddle-point-plan.md) に切り出し済 = `@residual(plan:capacity-saddle-point)` の closure 先が存在** | `csiszar_segment_hasDerivAt` + `csiszar_first_order_condition` + `exists_capacity_achiever` の写経・転用（gateway atom は**片側** `HasDerivWithinAt`） |
 
-→ **共有 sorry-lemma 化（実施済）**: 鞍点 (A) は「Wolfowitz 強逆」以外にも、将来の channel 系（max-error 強逆、feedback 強逆、type-counting 路）で再利用が見込まれる **唯一の load-bearing 補題**。**実装で `theorem klDiv_channel_le_capacity (…) : … ≤ capacity W := by sorry` + `@residual(plan:capacity-saddle-point)` を `StrongConverseAsymptotic.lean:54` に単一補題として切り出し済**（その内部依存の gateway atom `mutualInfo_segment_hasDerivAt`（`:86`）も同 `@residual`）。(B) `channelCoding_highLLR_tendsto_zero`（`:106`）以降はこれを黒箱として呼ぶ構成（`docs/audit/audit-tags.md`「Shared Mathlib walls: the shared sorry-lemma pattern」に倣う）。closure は子計画 [`capacity-saddle-point.md`](capacity-saddle-point.md) が担う。wall ではなく **plan** 分類（self-buildable）。
+→ **共有 sorry-lemma 化（実施済）**: 鞍点 (A) は「Wolfowitz 強逆」以外にも、将来の channel 系（max-error 強逆、feedback 強逆、type-counting 路）で再利用が見込まれる **唯一の load-bearing 補題**。**実装で `theorem klDiv_channel_le_capacity (…) : … ≤ capacity W := by sorry` + `@residual(plan:capacity-saddle-point)` を `StrongConverseAsymptotic.lean:54` に単一補題として切り出し済**（その内部依存の gateway atom `mutualInfo_segment_hasDerivAt`（`:86`）も同 `@residual`）。(B) `channelCoding_highLLR_tendsto_zero`（`:106`）以降はこれを黒箱として呼ぶ構成（`docs/audit/audit-tags.md`「Shared Mathlib walls: the shared sorry-lemma pattern」に倣う）。closure は子計画 [`capacity-saddle-point-plan.md`](capacity-saddle-point-plan.md) が担う。wall ではなく **plan** 分類（self-buildable）。
 
 ---
 
@@ -184,7 +184,7 @@ have tail_to_0 : Pm(highLLR_m) ≤ Var/(n(δ/2))² ≤ V_max/(n δ²/4) → 0   
 **撤退ライン抵触判定**: 親計画に明示的な撤退ライン（L-* 等）の記載は無く、asymptotic は「後続 plan へ deferred」状態。**新規撤退ラインを提案**:
 
 - **撤退ライン R-SC1（行使済）**: 鞍点 (A) の方向微分（envelope 相殺）が **着手 1 週間以内に片側 `HasDerivWithinAt` 形で出せない**場合 → 主定理シグネチャ（`R > capacity W ⟹ Pe → 1`）は**そのまま維持**し、鞍点補題 `klDiv_channel_le_capacity` ＋ gateway atom `mutualInfo_segment_hasDerivAt` のみ `sorry` + `@residual(plan:capacity-saddle-point)` で deferred 化。残り (B)(C)(D) は鞍点を黒箱として配線完了させ、type-check done で commit。
-  - **実績（2026-06-27）**: R-SC1 を行使し、鞍点本体を子計画 [`capacity-saddle-point.md`](capacity-saddle-point.md) に切り出し済。`StrongConverseAsymptotic.lean` は 4 sorry（鞍点 `:54` / gateway atom `:86` は `@residual(plan:capacity-saddle-point)`、highLLR `:106` / 主定理 `:132` は `@residual(plan:channel-coding-strong-converse-plan)`）で type-check done。gateway atom は当初想定の two-sided `HasDerivAt` が境界 achiever で偽と判明し one-sided `HasDerivWithinAt (Set.Ici 0)` に訂正（auditor 検証済）。**抵触はするが degenerate fallback には至らず**（主定理シグネチャは維持、`p`/`hq_pos` は regularity precondition のみで縮退ではない）。
+  - **実績（2026-06-27）**: R-SC1 を行使し、鞍点本体を子計画 [`capacity-saddle-point-plan.md`](capacity-saddle-point-plan.md) に切り出し済。`StrongConverseAsymptotic.lean` は 4 sorry（鞍点 `:54` / gateway atom `:86` は `@residual(plan:capacity-saddle-point)`、highLLR `:106` / 主定理 `:132` は `@residual(plan:channel-coding-strong-converse-plan)`）で type-check done。gateway atom は当初想定の two-sided `HasDerivAt` が境界 achiever で偽と判明し one-sided `HasDerivWithinAt (Set.Ici 0)` に訂正（auditor 検証済）。**抵触はするが degenerate fallback には至らず**（主定理シグネチャは維持、`p`/`hq_pos` は regularity precondition のみで縮退ではない）。
   - **退避出口は sorry + @residual のみ**（鞍点を `*Hypothesis` predicate にバンドルして主定理の前提に積むのは **禁止** = load-bearing hypothesis bundling）。
   - 縮退版の代替主張は作らない（degenerate fallback としては「`q*` 正値・有限 support のチャネルに限定」だが、これは regularity 前提なので主定理 hypothesis に足すだけで縮退ではない）。
 
@@ -281,7 +281,7 @@ theorem channelCoding_strong_converse_asymptotic
 end InformationTheory.Shannon.ChannelCoding
 ```
 
-最初の 2 sorry（`klDiv_channel_le_capacity` / gateway atom `mutualInfo_segment_hasDerivAt`）は子計画 [`capacity-saddle-point.md`](capacity-saddle-point.md) が担い、(B) `channelCoding_highLLR_tendsto_zero` 以降は鞍点を黒箱として `channelCoding_average_success_le` に純上乗せ配線する。`channelCoding_highLLR_tendsto_zero` の `True` プレースホルダ（旧 skeleton の禁止 `:True` slot）は実装で real な Tendsto 文へ置換済。
+最初の 2 sorry（`klDiv_channel_le_capacity` / gateway atom `mutualInfo_segment_hasDerivAt`）は子計画 [`capacity-saddle-point-plan.md`](capacity-saddle-point-plan.md) が担い、(B) `channelCoding_highLLR_tendsto_zero` 以降は鞍点を黒箱として `channelCoding_average_success_le` に純上乗せ配線する。`channelCoding_highLLR_tendsto_zero` の `True` プレースホルダ（旧 skeleton の禁止 `:True` slot）は実装で real な Tendsto 文へ置換済。
 
 ---
 
@@ -293,5 +293,5 @@ end InformationTheory.Shannon.ChannelCoding
 - 真の Mathlib 壁 **0 件**（非 iid WLLN は `meas_ge_le_variance_div_sq` + `variance_sum_pi` で組める）
 - 最危険: **`strong_law_ae` / `steinTypicalSet_P_prob_tendsto_one` は `hident` 必須でチャネル出力（非同分布）に流用不可** — iid AEP/LLN 路は全面的に使えず、Chebyshev 直叩きへ切替必須
 - **訂正 (2026-06-27)**: 鞍点 gateway atom は two-sided `HasDerivAt … 0` が境界 achiever で機械的に偽 → one-sided `HasDerivWithinAt (Set.Ici 0)` に確定（`mutualInfo_segment_hasDerivAt`、auditor 検証済）。keystone 恒等式 `I(p;W) = ∑_x p(x)·klDivPmf` は in-project 不在（rg 横断 negative）＝ Phase A 最初の自作
-- 撤退ライン R-SC1 **行使済**: 主定理シグネチャ維持・鞍点 + gateway atom のみ `sorry`+`@residual(plan:capacity-saddle-point)`・hypothesis バンドルなし。closure は子計画 [`capacity-saddle-point.md`](capacity-saddle-point.md)
+- 撤退ライン R-SC1 **行使済**: 主定理シグネチャ維持・鞍点 + gateway atom のみ `sorry`+`@residual(plan:capacity-saddle-point)`・hypothesis バンドルなし。closure は子計画 [`capacity-saddle-point-plan.md`](capacity-saddle-point-plan.md)
 - 実装済 = `StrongConverseAsymptotic.lean`（4 sorry、type-check done。単発下界 CLOSED に上乗せ、signature 変更不要）
