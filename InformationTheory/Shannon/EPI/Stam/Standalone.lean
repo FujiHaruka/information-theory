@@ -41,7 +41,9 @@ open InformationTheory.Shannon.EPIBlachmanGeneralDensity
 /-- A regular density (`IsRegularDensityV2`) has strictly positive Fisher information: if it were
 zero, the score `logDeriv f` would vanish a.e., forcing `deriv f = 0` a.e., hence (by the
 fundamental theorem of calculus and the integrability of `deriv f`) `f` constant, contradicting the
-tail-vanishing and strict positivity of a regular density. -/
+tail-vanishing and strict positivity of a regular density.
+
+@audit:ok -/
 theorem fisherInfoOfDensity_ne_zero_of_regular {f : ℝ → ℝ}
     (h_reg : IsRegularDensityV2 f) : fisherInfoOfDensity f ≠ 0 := by
   intro hzero
@@ -95,7 +97,9 @@ theorem fisherInfoOfDensity_ne_zero_of_regular {f : ℝ → ℝ}
 
 /-- **Phase 1 positivity producer.** The Fisher information of a Gaussian-smoothed probability
 density `pX ∗ g_t` (`t > 0`) is strictly positive (as a real number): finiteness comes from the
-convolution Fisher bound `J ≤ 1/t`, and nonzero-ness from regularity. -/
+convolution Fisher bound `J ≤ 1/t`, and nonzero-ness from regularity.
+
+@audit:ok -/
 theorem fisherInfoOfDensity_convDensityAdd_gaussian_pos
     (pX : ℝ → ℝ) {t : ℝ} (ht : 0 < t)
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -123,7 +127,9 @@ Fisher information inequality
 The Gaussian-smoothed class is non-vacuous (it contains every heat-flow smoothing of an arbitrary
 probability density, not just Gaussian equality cases), so the inequality is not vacuously true.
 
-References: [CoverThomas2006] Lemma 17.7.2; [Blachman1965]. -/
+References: [CoverThomas2006] Lemma 17.7.2; [Blachman1965].
+
+@audit:ok -/
 @[entry_point]
 theorem stam_inequality_smoothed_density
     (pX pY : ℝ → ℝ) {t : ℝ} (ht : 0 < t)

@@ -225,7 +225,9 @@ bounded (by `(1/2)/ε` via `gaussianConv_fisher_le_inv_var`) and measurable (it 
 `ε ↓ 0` the endpoint `f ε → f 0` by the genuine G2 continuity, so the subinterval integrals are
 bounded uniformly, and the improper-integral criterion
 `integrableOn_Ioc_of_intervalIntegral_norm_bounded_left` upgrades to integrability on `(0, T)`.
-This routes only through the per-time identity, never the integrated form, so it is non-circular. -/
+This routes only through the per-time identity, never the integrated form, so it is non-circular.
+
+@audit:ok -/
 private lemma debruijnHeatPath_intervalIntegrable
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
@@ -366,7 +368,9 @@ convolution bound `J(pX ∗ g_t) ≤ 1/t` (`gaussianConv_fisher_le_inv_var`), bo
 `∫_ε^T = h(X + √T·Z) − h(X + √ε·Z)`, and the genuine G2 endpoint continuity (`ε ↓ 0`) bounds
 these uniformly, upgrading to integrability on `(0, T)` via
 `integrableOn_Ioc_of_intervalIntegral_norm_bounded_left`. This routes only through the per-time
-de Bruijn identity, never its integrated form, so it is non-circular. -/
+de Bruijn identity, never its integrated form, so it is non-circular.
+
+@audit:ok -/
 noncomputable def isDeBruijnPathRegular_of_heat_flow
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
@@ -419,7 +423,9 @@ form `h(X + √T·Z) − h(X) = ∫₀ᵀ (1/2)·J(X + √t·Z) dt` for a genera
 `X`, obtained by applying `debruijnIntegrationIdentity_holds` to the general path-regularity
 producer `isDeBruijnPathRegular_of_heat_flow` (now fully genuine).
 
-References: [CoverThomas2006] Theorem 17.7.2. -/
+References: [CoverThomas2006] Theorem 17.7.2.
+
+@audit:ok -/
 @[entry_point]
 theorem debruijn_identity_integrated
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
