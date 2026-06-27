@@ -102,7 +102,7 @@ non-i.i.d. Chebyshev concentration (`meas_ge_le_variance_div_sq` + `variance_sum
 i.i.d. reference `q*^n` and threshold `n·(capacity W + δ/2)`. Depends on the saddle point
 `klDiv_channel_le_capacity` for the uniform per-codeword mean bound.
 
-@residual(plan:capacity-saddle-point) -/
+@residual(plan:channel-coding-strong-converse-plan) -/
 theorem channelCoding_highLLR_tendsto_zero
     (W : Channel α β) [IsMarkovKernel W] {δ : ℝ} (hδ : 0 < δ)
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
@@ -127,7 +127,7 @@ The capacity-achieving input `p` (existing by `exists_capacity_achiever`) is rec
 together with the regularity precondition `hq_pos` (full-support output, so the log-likelihood
 ratios are well-defined); both are preconditions, not load-bearing hypotheses.
 
-@residual(plan:capacity-saddle-point) -/
+@residual(plan:channel-coding-strong-converse-plan) -/
 @[entry_point]
 theorem channelCoding_strong_converse_asymptotic
     (W : Channel α β) [IsMarkovKernel W]
