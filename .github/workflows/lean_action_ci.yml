@@ -12,3 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: leanprover/lean-action@v1
+
+  readme-table:
+    # Fast, lean-free: verify the README results table is in sync with the manifest and code
+    # (every listed theorem resolves; 0 sorry; 0 custom axiom). Regenerate locally with
+    # `deno run -A scripts/gen_readme_table.ts --write` after editing docs/readme-theorems.txt.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno run -A scripts/gen_readme_table.ts --check

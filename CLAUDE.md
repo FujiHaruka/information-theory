@@ -83,6 +83,13 @@ scripts/sig_view.ts --no-context <file.lean>  # drop namespace/section/variable/
 
 Each decl is shown with its `Lnnn` line number (jump with `Read`), and flagged `⟨sorry⟩` / `⟨@residual(...)⟩` where present. Direct-executable via shebang (`scripts/sig_view.ts …`) or `deno run -A scripts/sig_view.ts …`.
 
+## README results table (`scripts/gen_readme_table.ts`)
+
+The "Formalized results" table in `README.md` is a **generated artifact, not hand-edited** (a hand-kept table silently drifts when a theorem is renamed / moved / scoped-out → the public README lies). Curation lives only in `docs/readme-theorems.txt` (chapter → headline theorem names, one per line, `NAME | note` / `NAME @ path-substring` to disambiguate same-named decls). Paths are **not** stored — the script resolves each name against `InformationTheory/` every run, so a moved file self-heals and only a true rename/delete fails.
+
+- After adding/renaming a headline theorem: edit `docs/readme-theorems.txt`, then `deno run -A scripts/gen_readme_table.ts --write` to regenerate the table between the README `<!-- THEOREMS:START/END -->` markers. Never edit inside the markers by hand.
+- `--check` (CI job `readme-table` + manual) fails on any unresolved name, ambiguity, table drift, or the honesty invariant breaking (it asserts project-wide **0 real `sorry` + 0 custom `axiom`**, which — Mathlib being sorry-free — is what backs the README's "no sorry, no axioms beyond `propext`/`Classical.choice`/`Quot.sound`" claim).
+
 ## Subagent Inventory of Mathlib Lemmas
 
 When delegating Mathlib API inventory to a subagent ("find candidate lemmas for X"), require **structured per-lemma output**, not prose summaries. For each candidate, the subagent must record:
