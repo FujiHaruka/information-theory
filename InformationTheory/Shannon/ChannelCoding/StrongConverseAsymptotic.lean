@@ -21,7 +21,7 @@ term and the high-information-density tail term to `0`.
 ## Main statements
 
 * `klDiv_channel_le_capacity` — the capacity saddle point `D(W(a)‖q*) ≤ capacity W`
-  (Phase A, load-bearing; deferred to `capacity-saddle-point`).
+  (Phase A, the load-bearing core).
 * `mutualInfo_segment_hasDerivAt` — the one-sided directional derivative of `I(p_t; W)`
   along the segment towards the Dirac input `δ_a` (the gateway atom for Phase A).
 * `channelCoding_highLLR_tendsto_zero` — the average high-LLR tail mass tends to `0`
@@ -158,7 +158,8 @@ is `D(W true‖W false) > 0`, but the left branch is the non-probability functio
 `t ↦ (klDiv ((1-t) • J) ((1-t)² • (J)) ).toReal` (here the input-deterministic joint `J` equals
 the product measure), whose derivative at `0` does not match. The one-sided form is also exactly
 what the downstream first-order optimality argument consumes (cf. `csiszar_first_order_condition`,
-which uses the `𝓝[>] 0` slope). -/
+which uses the `𝓝[>] 0` slope).
+@audit:ok -/
 theorem mutualInfo_segment_hasDerivAt
     (W : Channel α β) [IsMarkovKernel W]
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
@@ -347,7 +348,8 @@ theorem mutualInfo_segment_hasDerivAt
 /-- Capacity saddle point (Phase A, load-bearing self-build): for a capacity-achieving input
 `p` with full-support output `q* := outputDistribution (pmfToMeasure p) W`, every input symbol
 `a` satisfies `D(W(a)‖q*) ≤ capacity W`. Carved out as a shared lemma for reuse across the
-channel-coding converse family. -/
+channel-coding converse family.
+@audit:ok -/
 theorem klDiv_channel_le_capacity
     (W : Channel α β) [IsMarkovKernel W]
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
@@ -710,7 +712,8 @@ the average error probability tends to `1`.
 
 The capacity-achieving input `p` (existing by `exists_capacity_achiever`) is received explicitly
 together with the regularity precondition `hq_pos` (full-support output, so the log-likelihood
-ratios are well-defined); both are preconditions, not load-bearing hypotheses. -/
+ratios are well-defined); both are preconditions, not load-bearing hypotheses.
+@audit:ok -/
 @[entry_point]
 theorem channelCoding_strong_converse_asymptotic
     (W : Channel α β) [IsMarkovKernel W]
