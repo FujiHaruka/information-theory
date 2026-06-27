@@ -57,6 +57,7 @@ rate_distortion_converse_n_letter_singleLetter
 stein_converse_finite_n
 sanov_ldp_upper_bound
 cramer_lower_boundary_unconditional | Cramér large-deviation lower bound
+chernoff_converse | Chernoff information error exponent (Bayesian, converse)
 tvNorm_le_sqrt_klDiv | Pinsker
 
 @ 12 | Maximum entropy

@@ -654,7 +654,8 @@ private lemma chernoffRegion_rate_isBoundedUnder_below
 /-- **Chernoff converse** (Cover–Thomas Theorem 11.9.1, converse half): the optimal Bayes
 error exponent cannot exceed the Chernoff information. Proved on the interior `0 < λ* < 1`
 (the overlapping-support / non-degenerate case; `hlam_io` is a non-degeneracy precondition,
-not load-bearing). -/
+not load-bearing).
+@audit:ok -/
 theorem chernoff_converse
     (P₁ P₂ : α → ℝ)
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
