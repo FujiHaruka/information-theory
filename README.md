@@ -3,10 +3,6 @@
 A Lean 4 + [Mathlib](https://github.com/leanprover-community/mathlib4) formalization of
 Shannon information theory, following Cover & Thomas, *Elements of Information Theory*.
 
-The project targets **Mathlib-PR quality**: an English codebase that follows Mathlib's
-naming, documentation, and module-structure conventions, so finished material can
-eventually be upstreamed.
-
 ## Formalized results
 
 Selected headline theorems, organized after the chapters of Cover & Thomas. Every result
@@ -30,24 +26,3 @@ standard `propext` / `Classical.choice` / `Quot.sound`**. Names link to their so
 | 17 | Entropy inequalities | [`han_inequality`](InformationTheory/Shannon/Han/Basic.lean) · [`shearer_inequality`](InformationTheory/Shannon/Han/DShearer.lean) · [`loomis_whitney`](InformationTheory/Shannon/LoomisWhitney.lean) · [`brascamp_lieb_finset`](InformationTheory/Shannon/BrascampLieb.lean) · [`entropy_power_inequality_of_density`](InformationTheory/Shannon/EPI/DensityForm.lean) |
 
 The library root [`InformationTheory.lean`](InformationTheory.lean) imports every module.
-
-## Build
-
-Single-file checks against warm Mathlib oleans are the inner loop:
-
-```bash
-lake env lean InformationTheory/<path>.lean   # definitive synchronous check; silent = clean
-```
-
-This is a theorem-proving library: do not `import Mathlib` (it pulls in 8000+ modules) and
-do not add a `[[lean_exe]]` target (it forces native compilation of all of Mathlib). See
-[`CLAUDE.md`](CLAUDE.md) for the full import and build policy.
-
-## Repository
-
-- [`InformationTheory/`](InformationTheory/) — the Lean library.
-- [`docs/rules/`](docs/rules/) — code conventions (naming, docstrings, Lean style, module structure).
-- [`docs/`](docs/) — plans, inventories, and the textbook roadmap.
-- [`CLAUDE.md`](CLAUDE.md) — project rules and workflow.
-</content>
-</invoke>
