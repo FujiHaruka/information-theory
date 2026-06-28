@@ -17,6 +17,7 @@ import InformationTheory.Shannon.MutualInfo
 import InformationTheory.Shannon.DPI
 import InformationTheory.Shannon.Bridge
 import InformationTheory.Shannon.CondMutualInfo
+import InformationTheory.Shannon.CondMIChainRule
 import InformationTheory.Shannon.Converse
 import InformationTheory.Shannon.Entropy
 import InformationTheory.Shannon.SlepianWolf.Basic
@@ -85,6 +86,9 @@ import InformationTheory.Shannon.MultipleAccess.IIDAmbient
 import InformationTheory.Shannon.MultipleAccess.AchievabilityCore
 import InformationTheory.Shannon.MultipleAccess.Achievability
 import InformationTheory.Shannon.MultipleAccess.Reconciliation
+import InformationTheory.Shannon.BroadcastChannel.Basic
+import InformationTheory.Shannon.BroadcastChannel.ConverseGateway
+import InformationTheory.Shannon.BroadcastChannel.Converse
 import InformationTheory.Shannon.BlockwiseChannel.Definition
 import InformationTheory.Shannon.BlockwiseChannel.MemorylessCapacity
 import InformationTheory.Shannon.BlockwiseChannel.CapacityLimit
