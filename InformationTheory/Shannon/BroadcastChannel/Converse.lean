@@ -223,6 +223,21 @@ independent of `W₂` given `X_i`). This is essential — with a bare memoryless
 *free* `W₂`, the bound is false (a "collider" message `W₂ = Y₁,j ⊕ X_k` opens a path that
 breaks the per-letter reduction). It is a structural/regularity precondition (true in the
 genuine operational setup where `Xⁿ = encoder (W₁, W₂)`), not load-bearing.
+
+@audit:defect(false-statement) — STILL FALSE AS FRAMED (a distinct mechanism from the
+`8cffe3cb` `free W₂` collider fix). The `W₂`-inclusive `h_memo` blocks `(W₂, X^{≠i},
+Y₁^{≠i})` at `X_i` but does NOT block `Y₂^{≠i}`, and `h_degraded` is only per-letter, so the
+degraded output of an early letter may leak a *later* letter's input. Machine-checkable
+counterexample: `n = 2`, `M₂ = 1` (so `W₂` is the constant on `Fin 1`),
+`α = β₁ = β₂ = Bool`, `Ω = Bool × Bool` uniform; with first/second bit `a, b`, set
+`X₀ = Y₁₀ = a`, `X₁ = Y₁₁ = b`, `Y₂₀ = b`, `Y₂₁ = b`. Both hypotheses hold trivially (each
+`Y₁ᵢ` is a function of `Xᵢ`, so `Y₁ᵢ ⊥ rest | Xᵢ`; `Y₂ᵢ ⊥ Xᵢ | Y₁ᵢ`), yet the LHS
+`I(X⁰¹; Y₁⁰¹ | W₂) = H(a, b) = 2` while the RHS
+`I(X₀; Y₁₀) + I(X₁; Y₁₁ | Y₂₀) = 1 + I(b; b | b) = 1 + 0 = 1`, so the claimed `2 ≤ 1`
+fails. The fix is a *joint-output* memoryless hypothesis
+`(W₂, X^{≠i}, Y₁^{≠i}, Y₂^{≠i}) → Xᵢ → (Y₁ᵢ, Y₂ᵢ)` (blocking `Y₂^{≠i}` as well), or an
+equivalent block-degradedness assumption — a signature change owned by the plan.
+@audit:closed-by-successor(bc-degraded-converse-plan)
 @residual(plan:bc-degraded-converse-plan) -/
 theorem bc_input_singleletterize
     [NeZero M₂]
