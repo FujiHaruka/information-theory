@@ -278,7 +278,8 @@ theorem mac_random_codebook_average_le
 omit [DecidableEq α₁] [Nonempty α₁] [DecidableEq α₂] [Nonempty α₂]
   [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
 /-- Pigeonhole over the product codebook law: if the two-codebook expectation is `≤ B`,
-some deterministic codebook pair achieves `averageErrorProb ≤ B`. -/
+some deterministic codebook pair achieves `averageErrorProb ≤ B`.
+@audit:ok -/
 theorem mac_exists_codebook_le_avg
     {Ω : Type*} [MeasurableSpace Ω]
     (μ : Measure Ω) (X1s : ℕ → Ω → α₁) (X2s : ℕ → Ω → α₂) (Ys : ℕ → Ω → β)
@@ -358,7 +359,8 @@ theorem mac_exists_codebook_le_avg
 
 /-- Closed-form `N` for the two-user (E3) "both indices wrong" term: with the AEP gap
 `Iboth − (R₁ + R₂) − 3ε > 0`, the product `(⌈exp(nR₁)⌉−1)(⌈exp(nR₂)⌉−1)` of the two
-codebook sizes times `exp(n(−Iboth+3ε))` falls below any tolerance for large `n`. -/
+codebook sizes times `exp(n(−Iboth+3ε))` falls below any tolerance for large `n`.
+@audit:ok -/
 theorem mac_E3_lt_of_rate {Iboth R₁ R₂ ε ε' : ℝ}
     (hgap : 0 < Iboth - (R₁ + R₂) - 3 * ε) (hε' : 0 < ε') :
     ∃ N : ℕ, ∀ n ≥ N,
