@@ -7,6 +7,7 @@ import InformationTheory.Shannon.CondMutualInfo
 import InformationTheory.Shannon.MIChainRule
 import InformationTheory.Shannon.CondMIChainRule
 import InformationTheory.Shannon.ChannelCoding.ConverseMemorylessChainRule
+import InformationTheory.Shannon.ChannelCoding.ConverseMemorylessMarkov
 
 /-!
 # Degraded broadcast channel — converse (outer bound)
@@ -205,40 +206,37 @@ theorem bc_converse_message_level
 
 /-! ## Receiver-1 single-letterization (Csiszár-sum half, bound (b)) -/
 
-/-- **BC converse, receiver-1 input-level single-letterization** (the Csiszár-sum core): under
-degradedness `X → Y₁ → Y₂` and a memoryless channel with the conditioning message `W₂` upstream
-of the channel, the conditional block input–output mutual information collapses to the
-per-letter auxiliary-variable sum `I(Xⁿ; Y₁ⁿ | W₂) ≤ ∑ᵢ I(Xᵢ; Y_{1,i} | Uᵢ)` with
-`Uᵢ = (W₂, Y₂^{i-1})`.
+/-- **BC converse, receiver-1 input-level single-letterization** (Route B, term-by-term
+degradedness): under a memoryless broadcast channel with the conditioning message `W₂`
+upstream of the channel and physical degradedness `X → Y₁ → Y₂`, the conditional block
+input–output mutual information collapses to the per-letter auxiliary-variable sum
+`I(Xⁿ; Y₁ⁿ | W₂) ≤ ∑ᵢ I(Xᵢ; Y_{1,i} | Uᵢ)` with `Uᵢ = (W₂, Y₂^{i-1})`.
 
-This is the decisive analytic atom of the degraded-BC converse: the prefix conditioner
-`Y₁^{i-1}` is swapped for the suffix-of-the-degraded-output `Y₂^{i-1}` via the Csiszár sum
-identity (`csiszar_sum_identity`), and the memoryless + degradedness structure reduces each
-term to the single-letter channel quantity.
+Proof (entropy-difference route, mirroring the MAC single-letterization
+`condMutualInfo_singleletter_le_of_memoryless`): both sides reduce to conditional-entropy
+differences `H(Y₁ | ·) − H(Y₁ | ·, X)`.  The joint-output memoryless hypothesis `h_memo`
+collapses every "noise" term `H(Y₁ᵢ | …, Xᵢ)` to the common `H(Y₁ᵢ | Xᵢ)` on both sides, so
+those cancel; what remains is `H(Y₁ⁿ | W₂) ≤ ∑ᵢ H(Y₁ᵢ | W₂, Y₂^{i-1})`, which holds
+term-by-term via the LHS chain rule and the conditioner swap
+`H(Y₁ᵢ | W₂, Y₁^{<i}) ≤ H(Y₁ᵢ | W₂, Y₂^{<i})` (block-prefix degradedness `h_deg_block` plus
+conditioning-reduces-entropy).
 
-The memoryless hypothesis `h_memo` is the **`W₂`-inclusive** form `Y_{1,i} ⟂ (W₂, X^{≠i},
-Y₁^{≠i}) | X_i`: it blocks the conditioning message `W₂` together with the other letters at
-`X_i`, encoding that `W₂` is *upstream* of the channel (the noise generating `Y₁,i` is
-independent of `W₂` given `X_i`). This is essential — with a bare memoryless channel and a
-*free* `W₂`, the bound is false (a "collider" message `W₂ = Y₁,j ⊕ X_k` opens a path that
-breaks the per-letter reduction). It is a structural/regularity precondition (true in the
-genuine operational setup where `Xⁿ = encoder (W₁, W₂)`), not load-bearing.
+The two structural preconditions encode the channel, not the conclusion:
 
-@audit:defect(false-statement) — STILL FALSE AS FRAMED (a distinct mechanism from the
-`8cffe3cb` `free W₂` collider fix). The `W₂`-inclusive `h_memo` blocks `(W₂, X^{≠i},
-Y₁^{≠i})` at `X_i` but does NOT block `Y₂^{≠i}`, and `h_degraded` is only per-letter, so the
-degraded output of an early letter may leak a *later* letter's input. Machine-checkable
-counterexample: `n = 2`, `M₂ = 1` (so `W₂` is the constant on `Fin 1`),
-`α = β₁ = β₂ = Bool`, `Ω = Bool × Bool` uniform; with first/second bit `a, b`, set
-`X₀ = Y₁₀ = a`, `X₁ = Y₁₁ = b`, `Y₂₀ = b`, `Y₂₁ = b`. Both hypotheses hold trivially (each
-`Y₁ᵢ` is a function of `Xᵢ`, so `Y₁ᵢ ⊥ rest | Xᵢ`; `Y₂ᵢ ⊥ Xᵢ | Y₁ᵢ`), yet the LHS
-`I(X⁰¹; Y₁⁰¹ | W₂) = H(a, b) = 2` while the RHS
-`I(X₀; Y₁₀) + I(X₁; Y₁₁ | Y₂₀) = 1 + I(b; b | b) = 1 + 0 = 1`, so the claimed `2 ≤ 1`
-fails. The fix is a *joint-output* memoryless hypothesis
-`(W₂, X^{≠i}, Y₁^{≠i}, Y₂^{≠i}) → Xᵢ → (Y₁ᵢ, Y₂ᵢ)` (blocking `Y₂^{≠i}` as well), or an
-equivalent block-degradedness assumption — a signature change owned by the plan.
-@audit:closed-by-successor(bc-degraded-converse-plan)
-@residual(plan:bc-degraded-converse-plan) -/
+* `h_memo` — **joint-output memoryless**: `Y₁ᵢ ⫫ (W₂, X^{≠i}, Y₁^{≠i}, Y₂^{≠i}) | Xᵢ`.  It
+  blocks the conditioning message `W₂` and *all* other letters (including the degraded
+  outputs `Y₂^{≠i}`) at `Xᵢ`.  Blocking `Y₂^{≠i}` is essential: with only `W₂`-inclusive but
+  `Y₂`-free memorylessness the bound is false (an early degraded output can leak a later
+  letter's input — the documented `n = 2` collider counterexample).
+* `h_deg_block` — **block-prefix degradedness**: `Y₁ᵢ ⫫ Y₂^{<i} | (W₂, Y₁^{<i})`.  This is the
+  d-separation consequence of physical per-letter degradedness `X → Y₁ → Y₂` together with
+  memorylessness; per-letter degradedness `Y₂ⱼ ⫫ Xⱼ | Y₁ⱼ` alone is insufficient (it is
+  satisfied by the collider counterexample that breaks the bound), and deriving the block
+  form from the per-letter form needs graphoid / d-separation machinery absent from Mathlib,
+  so it is taken as a structural precondition (parity with `h_memo`).
+
+Both are regularity / structural preconditions (true in the operational degraded-memoryless
+setup where `Xⁿ = encoder (W₁, W₂)`), not load-bearing. -/
 theorem bc_input_singleletterize
     [NeZero M₂]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -249,15 +247,245 @@ theorem bc_input_singleletterize
       IsMarkovChain μ
         (fun ω ↦ (W₂ ω,
           ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
-           (fun (j : {j : Fin n // j ≠ i}) ↦ Y₁s j.val ω))))
+           ((fun (j : {j : Fin n // j ≠ i}) ↦ Y₁s j.val ω),
+            (fun (j : {j : Fin n // j ≠ i}) ↦ Y₂s j.val ω)))))
         (Xs i) (Y₁s i))
-    (h_degraded : ∀ i, IsMarkovChain μ (Xs i) (Y₁s i) (Y₂s i)) :
+    (h_deg_block : ∀ i : Fin n,
+      IsMarkovChain μ (Y₁s i)
+        (fun ω ↦ (W₂ ω,
+          fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω))
+        (fun ω (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω)) :
     condMutualInfo μ (fun ω j ↦ Xs j ω) (fun ω j ↦ Y₁s j ω) W₂
       ≤ ∑ i : Fin n,
           condMutualInfo μ (Xs i) (Y₁s i)
             (fun ω ↦ (W₂ ω,
               fun (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω)) := by
-  sorry
+  classical
+  set Xpi : Ω → (Fin n → α) := fun ω j ↦ Xs j ω with hXpi_def
+  set Y₁pi : Ω → (Fin n → β₁) := fun ω j ↦ Y₁s j ω with hY₁pi_def
+  have hXpi : Measurable Xpi := measurable_pi_iff.mpr hXs
+  have hY₁pi : Measurable Y₁pi := measurable_pi_iff.mpr hY₁s
+  -- per-letter prefix / auxiliary conditioner measurabilities.
+  have hY₁pre : ∀ i : Fin n, Measurable
+      (fun ω (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω) := fun i ↦
+    measurable_pi_iff.mpr fun j ↦ hY₁s _
+  have hY₂pre : ∀ i : Fin n, Measurable
+      (fun ω (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω) := fun i ↦
+    measurable_pi_iff.mpr fun j ↦ hY₂s _
+  have hUi : ∀ i : Fin n, Measurable
+      (fun ω ↦ (W₂ ω, fun (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω)) := fun i ↦
+    hW₂.prodMk (hY₂pre i)
+  have hV₁ : ∀ i : Fin n, Measurable
+      (fun ω ↦ (W₂ ω, fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω)) := fun i ↦
+    hW₂.prodMk (hY₁pre i)
+  -- LHS as a conditional-entropy difference.
+  have hLHS : (condMutualInfo μ Xpi Y₁pi W₂).toReal
+      = MeasureFano.condEntropy μ Y₁pi W₂
+        - MeasureFano.condEntropy μ Y₁pi (fun ω ↦ (W₂ ω, Xpi ω)) := by
+    rw [condMutualInfo_comm μ Xpi Y₁pi W₂ hXpi hY₁pi hW₂]
+    exact condMutualInfo_eq_condEntropy_sub_condEntropy μ Y₁pi W₂ Xpi hY₁pi hW₂ hXpi
+  -- LHS chain rule on `H(Y₁ⁿ | W₂)`.
+  have hLHSchain : MeasureFano.condEntropy μ Y₁pi W₂
+      = ∑ i : Fin n, MeasureFano.condEntropy μ (Y₁s i)
+          (fun ω ↦ (W₂ ω,
+            fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω)) :=
+    condEntropy_pi_chain_rule_aux μ W₂ Y₁s hW₂ hY₁s
+  -- LHS noise collapse `H(Y₁ⁿ | (W₂, Xⁿ)) = ∑ᵢ H(Y₁ᵢ | Xᵢ)`.
+  have hLHSnoise : MeasureFano.condEntropy μ Y₁pi (fun ω ↦ (W₂ ω, Xpi ω))
+      = ∑ i : Fin n, MeasureFano.condEntropy μ (Y₁s i) (Xs i) := by
+    rw [condEntropy_pi_chain_rule_aux μ (fun ω ↦ (W₂ ω, Xpi ω)) Y₁s (hW₂.prodMk hXpi) hY₁s]
+    refine Finset.sum_congr rfl fun i _ ↦ ?_
+    -- Goal: `H(Y₁ᵢ | ((W₂, Xⁿ), Y₁^{<i})) = H(Y₁ᵢ | Xᵢ)`.
+    -- Extract equiv splitting `Xⁿ ↔ (Xᵢ, X^{≠i})`.
+    let eX : (Fin n → α) ≃ᵐ α × ({j : Fin n // j ≠ i} → α) :=
+      ChannelCodingConverseGeneral.measurableEquivExtract (β := α) i
+    have hext : (fun ω ↦ eX.symm (Xs i ω,
+        fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω)) = Xpi := by
+      funext ω j
+      change eX.symm (Xs i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω) j = Xs j ω
+      by_cases hj : j = i
+      · subst hj
+        simp [eX, ChannelCodingConverseGeneral.measurableEquivExtract,
+          MeasurableEquiv.piEquivPiSubtypeProd, MeasurableEquiv.funUnique,
+          MeasurableEquiv.prodCongr]
+      · simp [eX, ChannelCodingConverseGeneral.measurableEquivExtract,
+          MeasurableEquiv.piEquivPiSubtypeProd, MeasurableEquiv.funUnique,
+          MeasurableEquiv.prodCongr, hj]
+    -- Markov `Y₁ᵢ ⫫ (X^{≠i}, (W₂, Y₁^{<i})) | Xᵢ`, projected from `h_memo i` and swapped.
+    have hblock : Measurable (fun ω ↦ (W₂ ω,
+        ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
+         ((fun (j : {j : Fin n // j ≠ i}) ↦ Y₁s j.val ω),
+          (fun (j : {j : Fin n // j ≠ i}) ↦ Y₂s j.val ω))))) :=
+      hW₂.prodMk
+        ((measurable_pi_iff.mpr fun (j : {j : Fin n // j ≠ i}) ↦ hXs j.val).prodMk
+        ((measurable_pi_iff.mpr fun (j : {j : Fin n // j ≠ i}) ↦ hY₁s j.val).prodMk
+          (measurable_pi_iff.mpr fun (j : {j : Fin n // j ≠ i}) ↦ hY₂s j.val)))
+    have hRESTmeas : Measurable (fun ω ↦
+        ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
+         (W₂ ω, fun (k : Fin i.val) ↦ Y₁s ⟨k.val, k.isLt.trans i.isLt⟩ ω))) :=
+      (measurable_pi_iff.mpr fun (j : {j : Fin n // j ≠ i}) ↦ hXs j.val).prodMk
+        (hW₂.prodMk (hY₁pre i))
+    have hf2 : Measurable (fun (p : Fin M₂ × ((({j : Fin n // j ≠ i} → α)) ×
+          ((({j : Fin n // j ≠ i} → β₁)) × ({j : Fin n // j ≠ i} → β₂)))) ↦
+        (p.2.1,
+         (p.1, fun (k : Fin i.val) ↦ p.2.2.1 ⟨⟨k.val, k.isLt.trans i.isLt⟩,
+           by intro h; have hval : k.val = i.val := congrArg Fin.val h
+              have hk := k.isLt; omega⟩))) :=
+      (measurable_fst.comp measurable_snd).prodMk
+        (measurable_fst.prodMk (measurable_pi_iff.mpr fun k ↦
+          (measurable_pi_apply _).comp (measurable_fst.comp (measurable_snd.comp measurable_snd))))
+    have hml := isMarkovChain_map_left μ _ (Xs i) (Y₁s i) hblock (hXs i) (hY₁s i) hf2 (h_memo i)
+    have hml' : IsMarkovChain μ (fun ω ↦
+        ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
+         (W₂ ω, fun (k : Fin i.val) ↦ Y₁s ⟨k.val, k.isLt.trans i.isLt⟩ ω)))
+        (Xs i) (Y₁s i) := hml
+    have hmkv := isMarkovChain_swap μ _ (Xs i) (Y₁s i) hRESTmeas (hXs i) (hY₁s i) hml'
+    have hd := condEntropy_drop_irrelevant_of_markov μ (Y₁s i) (Xs i) _
+      (hY₁s i) (hXs i) hRESTmeas hmkv
+    -- Reshape the chain-rule conditioner to `(Xᵢ, (X^{≠i}, (W₂, Y₁^{<i})))`, then drop.
+    let Efull : α × ((({j : Fin n // j ≠ i} → α)) × (Fin M₂ × (Fin i.val → β₁)))
+          ≃ᵐ (Fin M₂ × (Fin n → α)) × (Fin i.val → β₁) :=
+      (MeasurableEquiv.prodAssoc.symm.trans
+        (eX.symm.prodCongr (MeasurableEquiv.refl (Fin M₂ × (Fin i.val → β₁))))).trans
+        (MeasurableEquiv.prodAssoc.symm.trans
+          (MeasurableEquiv.prodComm.prodCongr (MeasurableEquiv.refl (Fin i.val → β₁))))
+    have hreshape : (fun ω ↦ ((W₂ ω, Xpi ω),
+          fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω))
+        = fun ω ↦ Efull (Xs i ω,
+            ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
+             (W₂ ω, fun (k : Fin i.val) ↦ Y₁s ⟨k.val, k.isLt.trans i.isLt⟩ ω))) := by
+      funext ω
+      have hx := congrFun hext ω
+      rw [show Efull (Xs i ω,
+            ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
+             (W₂ ω, fun (k : Fin i.val) ↦ Y₁s ⟨k.val, k.isLt.trans i.isLt⟩ ω)))
+          = ((W₂ ω, eX.symm (Xs i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω)),
+             fun (k : Fin i.val) ↦ Y₁s ⟨k.val, k.isLt.trans i.isLt⟩ ω) from rfl, hx]
+    rw [hreshape, condEntropy_measurableEquiv_comp μ (Y₁s i) (hY₁s i)
+      (fun ω ↦ (Xs i ω,
+        ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
+         (W₂ ω, fun (k : Fin i.val) ↦ Y₁s ⟨k.val, k.isLt.trans i.isLt⟩ ω))))
+      ((hXs i).prodMk hRESTmeas) Efull]
+    exact hd
+  -- RHS per-term as a conditional-entropy difference (noise collapses to `H(Y₁ᵢ | Xᵢ)`).
+  have hRHS : ∀ i : Fin n,
+      (condMutualInfo μ (Xs i) (Y₁s i)
+          (fun ω ↦ (W₂ ω,
+            fun (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω))).toReal
+        = MeasureFano.condEntropy μ (Y₁s i)
+            (fun ω ↦ (W₂ ω,
+              fun (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω))
+          - MeasureFano.condEntropy μ (Y₁s i) (Xs i) := by
+    intro i
+    rw [condMutualInfo_comm μ (Xs i) (Y₁s i) _ (hXs i) (hY₁s i) (hUi i),
+      condMutualInfo_eq_condEntropy_sub_condEntropy μ (Y₁s i) _ (Xs i)
+        (hY₁s i) (hUi i) (hXs i)]
+    have hdrop : MeasureFano.condEntropy μ (Y₁s i)
+        (fun ω ↦ ((W₂ ω,
+            fun (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω), Xs i ω))
+        = MeasureFano.condEntropy μ (Y₁s i) (Xs i) := by
+      -- Markov `Y₁ᵢ ⫫ (W₂, Y₂^{<i}) | Xᵢ`, projected from `h_memo i` and swapped.
+      have hblock : Measurable (fun ω ↦ (W₂ ω,
+          ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
+           ((fun (j : {j : Fin n // j ≠ i}) ↦ Y₁s j.val ω),
+            (fun (j : {j : Fin n // j ≠ i}) ↦ Y₂s j.val ω))))) :=
+        hW₂.prodMk
+          ((measurable_pi_iff.mpr fun (j : {j : Fin n // j ≠ i}) ↦ hXs j.val).prodMk
+          ((measurable_pi_iff.mpr fun (j : {j : Fin n // j ≠ i}) ↦ hY₁s j.val).prodMk
+            (measurable_pi_iff.mpr fun (j : {j : Fin n // j ≠ i}) ↦ hY₂s j.val)))
+      have hf : Measurable (fun (p : Fin M₂ × ((({j : Fin n // j ≠ i} → α)) ×
+            ((({j : Fin n // j ≠ i} → β₁)) × ({j : Fin n // j ≠ i} → β₂)))) ↦
+          (p.1, fun (k : Fin i.val) ↦ p.2.2.2 ⟨⟨k.val, k.isLt.trans i.isLt⟩,
+            by intro h; have hval : k.val = i.val := congrArg Fin.val h
+               have hk := k.isLt; omega⟩)) :=
+        measurable_fst.prodMk (measurable_pi_iff.mpr fun k ↦
+          (measurable_pi_apply _).comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))
+      have hml := isMarkovChain_map_left μ _ (Xs i) (Y₁s i) hblock (hXs i) (hY₁s i) hf (h_memo i)
+      have hml' : IsMarkovChain μ
+          (fun ω ↦ (W₂ ω,
+            fun (k : Fin i.val) ↦ Y₂s ⟨k.val, k.isLt.trans i.isLt⟩ ω)) (Xs i) (Y₁s i) := hml
+      have hmkv := isMarkovChain_swap μ _ (Xs i) (Y₁s i) (hUi i) (hXs i) (hY₁s i) hml'
+      have hd := condEntropy_drop_irrelevant_of_markov μ (Y₁s i) (Xs i)
+        (fun ω ↦ (W₂ ω, fun (k : Fin i.val) ↦ Y₂s ⟨k.val, k.isLt.trans i.isLt⟩ ω))
+        (hY₁s i) (hXs i) (hUi i) hmkv
+      have hcomm := condEntropy_measurableEquiv_comp μ (Y₁s i) (hY₁s i)
+        (fun ω ↦ ((W₂ ω,
+          fun (k : Fin i.val) ↦ Y₂s ⟨k.val, k.isLt.trans i.isLt⟩ ω), Xs i ω))
+        ((hUi i).prodMk (hXs i)) MeasurableEquiv.prodComm
+      rw [show (fun ω ↦ (MeasurableEquiv.prodComm ((W₂ ω,
+              fun (k : Fin i.val) ↦ Y₂s ⟨k.val, k.isLt.trans i.isLt⟩ ω), Xs i ω)))
+            = (fun ω ↦ (Xs i ω, (W₂ ω,
+              fun (k : Fin i.val) ↦ Y₂s ⟨k.val, k.isLt.trans i.isLt⟩ ω))) from rfl] at hcomm
+      rw [← hcomm, hd]
+    rw [hdrop]
+  -- Per-letter conditioner swap `H(Y₁ᵢ | W₂, Y₁^{<i}) ≤ H(Y₁ᵢ | W₂, Y₂^{<i})`.
+  have hStep : ∀ i : Fin n,
+      MeasureFano.condEntropy μ (Y₁s i)
+          (fun ω ↦ (W₂ ω,
+            fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω))
+        ≤ MeasureFano.condEntropy μ (Y₁s i)
+            (fun ω ↦ (W₂ ω,
+              fun (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω)) := by
+    intro i
+    -- Step (i): `H(Y₁ᵢ | W₂, Y₁^{<i}) = H(Y₁ᵢ | (W₂, Y₁^{<i}), Y₂^{<i})` via `h_deg_block`.
+    have h1 := (condEntropy_drop_irrelevant_of_markov μ (Y₁s i)
+      (fun ω ↦ (W₂ ω, fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω))
+      (fun ω (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω)
+      (hY₁s i) (hV₁ i) (hY₂pre i) (h_deg_block i)).symm
+    rw [h1]
+    -- Step (ii): reshape `((W₂,Y₁^{<i}),Y₂^{<i}) ↦ ((W₂,Y₂^{<i}),Y₁^{<i})` then drop `Y₁^{<i}`.
+    let e : (Fin M₂ × (Fin i.val → β₁)) × (Fin i.val → β₂)
+          ≃ᵐ (Fin M₂ × (Fin i.val → β₂)) × (Fin i.val → β₁) :=
+      (MeasurableEquiv.prodAssoc.trans
+        ((MeasurableEquiv.refl (Fin M₂)).prodCongr MeasurableEquiv.prodComm)).trans
+        MeasurableEquiv.prodAssoc.symm
+    have hreshape : MeasureFano.condEntropy μ (Y₁s i)
+          (fun ω ↦ ((W₂ ω, fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω),
+            fun (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω))
+        = MeasureFano.condEntropy μ (Y₁s i)
+            (fun ω ↦ ((W₂ ω, fun (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω),
+              fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω)) := by
+      have h := condEntropy_measurableEquiv_comp μ (Y₁s i) (hY₁s i)
+        (fun ω ↦ ((W₂ ω, fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω),
+          fun (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω))
+        ((hW₂.prodMk (hY₁pre i)).prodMk (hY₂pre i)) e
+      rw [show (fun ω ↦ e ((W₂ ω,
+              fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω),
+            fun (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω))
+          = (fun ω ↦ ((W₂ ω,
+              fun (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω),
+            fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω)) from rfl] at h
+      exact h.symm
+    rw [hreshape]
+    exact condEntropy_le_condEntropy_of_pair μ (Y₁s i)
+      (fun ω ↦ (W₂ ω, fun (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω))
+      (fun ω (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω)
+      (hY₁s i) (hUi i) (hY₁pre i)
+  -- Assemble the real inequality.
+  have hreal : (condMutualInfo μ Xpi Y₁pi W₂).toReal
+      ≤ ∑ i : Fin n,
+          (condMutualInfo μ (Xs i) (Y₁s i)
+            (fun ω ↦ (W₂ ω,
+              fun (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω))).toReal := by
+    rw [Finset.sum_congr rfl (fun i _ ↦ hRHS i), Finset.sum_sub_distrib, hLHS, hLHSchain,
+      hLHSnoise]
+    have hsum := Finset.sum_le_sum (fun i (_ : i ∈ Finset.univ) ↦ hStep i)
+    linarith
+  -- Lift back to `ℝ≥0∞`.
+  have hLfin : condMutualInfo μ Xpi Y₁pi W₂ ≠ ∞ :=
+    condMutualInfo_ne_top μ Xpi Y₁pi W₂ hXpi hY₁pi hW₂
+  have hRfin : ∀ i : Fin n,
+      condMutualInfo μ (Xs i) (Y₁s i)
+        (fun ω ↦ (W₂ ω,
+          fun (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω)) ≠ ∞ := fun i ↦
+    condMutualInfo_ne_top μ (Xs i) (Y₁s i) _ (hXs i) (hY₁s i) (hUi i)
+  have hsumfin : (∑ i : Fin n,
+      condMutualInfo μ (Xs i) (Y₁s i)
+        (fun ω ↦ (W₂ ω,
+          fun (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω))) ≠ ∞ :=
+    (ENNReal.sum_lt_top.mpr fun i _ ↦ (hRfin i).lt_top).ne
+  rw [← ENNReal.toReal_le_toReal hLfin hsumfin, ENNReal.toReal_sum (fun i _ ↦ hRfin i)]
+  exact hreal
 
 /-- **BC converse, receiver-1 single-letterized corner bound** (bound (b)): the message–output
 mutual information `I(W₁; (W₂, Y₁ⁿ))` is bounded by the per-letter auxiliary-variable sum
@@ -278,9 +506,14 @@ theorem bc_singleletterize_bound₁
       IsMarkovChain μ
         (fun ω ↦ (W₂ ω,
           ((fun (j : {j : Fin n // j ≠ i}) ↦ c.encoder (W₁ ω, W₂ ω) j.val),
-           (fun (j : {j : Fin n // j ≠ i}) ↦ Y₁s j.val ω))))
+           ((fun (j : {j : Fin n // j ≠ i}) ↦ Y₁s j.val ω),
+            (fun (j : {j : Fin n // j ≠ i}) ↦ Y₂s j.val ω)))))
         (fun ω ↦ c.encoder (W₁ ω, W₂ ω) i) (Y₁s i))
-    (h_degraded : ∀ i, IsMarkovChain μ (fun ω ↦ c.encoder (W₁ ω, W₂ ω) i) (Y₁s i) (Y₂s i))
+    (h_deg_block : ∀ i : Fin n,
+      IsMarkovChain μ (Y₁s i)
+        (fun ω ↦ (W₂ ω,
+          fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω))
+        (fun ω (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω))
     (hmarkov : IsMarkovChain μ (fun ω ↦ (W₂ ω, W₁ ω))
       (fun ω ↦ (W₂ ω, fun j ↦ c.encoder (W₁ ω, W₂ ω) j)) (fun ω j ↦ Y₁s j ω)) :
     mutualInfo μ W₁ (fun ω ↦ (W₂ ω, fun i ↦ Y₁s i ω))
@@ -311,7 +544,7 @@ theorem bc_singleletterize_bound₁
     ChannelCodingConverseGeneral.condMutualInfo_le_of_markov_joint μ
       W₁ Xpi (fun ω j ↦ Y₁s j ω) W₂ hW₁ hXpi hY₁pi hW₂ hmarkov hWcYo_fin
   -- Step 3: input-level single-letterization (Csiszár-sum core).
-  have hstep3 := bc_input_singleletterize μ W₂ Xs Y₁s Y₂s hW₂ hXs hY₁s hY₂s h_memo h_degraded
+  have hstep3 := bc_input_singleletterize μ W₂ Xs Y₁s Y₂s hW₂ hXs hY₁s hY₂s h_memo h_deg_block
   rw [hstep1]
   exact hstep2.trans hstep3
 
@@ -342,9 +575,14 @@ theorem bc_converse
       IsMarkovChain μ
         (fun ω ↦ (W₂ ω,
           ((fun (j : {j : Fin n // j ≠ i}) ↦ c.encoder (W₁ ω, W₂ ω) j.val),
-           (fun (j : {j : Fin n // j ≠ i}) ↦ Y₁s j.val ω))))
+           ((fun (j : {j : Fin n // j ≠ i}) ↦ Y₁s j.val ω),
+            (fun (j : {j : Fin n // j ≠ i}) ↦ Y₂s j.val ω)))))
         (fun ω ↦ c.encoder (W₁ ω, W₂ ω) i) (Y₁s i))
-    (h_degraded : ∀ i, IsMarkovChain μ (fun ω ↦ c.encoder (W₁ ω, W₂ ω) i) (Y₁s i) (Y₂s i))
+    (h_deg_block : ∀ i : Fin n,
+      IsMarkovChain μ (Y₁s i)
+        (fun ω ↦ (W₂ ω,
+          fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω))
+        (fun ω (j : Fin i.val) ↦ Y₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω))
     (hmarkov : IsMarkovChain μ (fun ω ↦ (W₂ ω, W₁ ω))
       (fun ω ↦ (W₂ ω, fun j ↦ c.encoder (W₁ ω, W₂ ω) j)) (fun ω j ↦ Y₁s j ω))
     (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) :
@@ -370,7 +608,7 @@ theorem bc_converse
   have hX₁s : ∀ i, Measurable (fun ω ↦ c.encoder (W₁ ω, W₂ ω) i) := fun i ↦
     (measurable_pi_apply i).comp ((measurable_of_countable c.encoder).comp (hW₁.prodMk hW₂))
   have hbound₁ := bc_singleletterize_bound₁ μ W₁ W₂ Y₁s Y₂s c hW₁ hW₂ hY₁s hY₂s
-    h_indep h_memo h_degraded hmarkov
+    h_indep h_memo h_deg_block hmarkov
   have hbound₂ := bc_singleletterize_bound₂ μ W₂ Y₂s hW₂ hY₂s
   have hfin₁ : (∑ i : Fin n,
       condMutualInfo μ (fun ω ↦ c.encoder (W₁ ω, W₂ ω) i) (Y₁s i)
