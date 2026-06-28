@@ -190,4 +190,226 @@ theorem relay_mac_cut_outer_bound
 
 end MacCutOuterBound
 
+section BroadcastCutTelescope
+
+variable {Ω : Type*} [MeasurableSpace Ω]
+variable {α α₁ β β₁ : Type*}
+  [Fintype α] [DecidableEq α] [Nonempty α]
+    [MeasurableSpace α] [MeasurableSingletonClass α] [StandardBorelSpace α]
+  [Fintype α₁] [DecidableEq α₁] [Nonempty α₁]
+    [MeasurableSpace α₁] [MeasurableSingletonClass α₁] [StandardBorelSpace α₁]
+  [Fintype β] [DecidableEq β] [Nonempty β]
+    [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
+  [Fintype β₁] [DecidableEq β₁] [Nonempty β₁]
+    [MeasurableSpace β₁] [MeasurableSingletonClass β₁] [StandardBorelSpace β₁]
+variable {M n : ℕ} [NeZero M]
+
+omit [DecidableEq α] [DecidableEq α₁] [DecidableEq β] [DecidableEq β₁] in
+/-- **Broadcast-cut message-level telescoping** (relay channel, Cover–Thomas Thm 15.10.1,
+broadcast cut): the message–output mutual information `I(W; Yⁿ)` is bounded directly by the
+per-letter conditional sum `∑ᵢ I(Xᵢ; Y₁ᵢ, Yᵢ | X₁ᵢ)`, where `Xᵢ = encoder(W)ᵢ` is the i-th
+sender symbol and `X₁ᵢ = relay i (Y₁^{<i})` is the i-th relay symbol read causally from the
+relay's past observations.
+
+This is the gateway atom for the broadcast cut: it cannot be obtained from
+`relay_broadcast_cut_singleletterize` (which single-letterizes the *block* conditional
+`I(Xⁿ; Y₁ⁿ, Yⁿ | X₁ⁿ)`), because routing through the block quantity leaves a chain-rule
+remainder `I(W; X₁ⁿ) ≠ 0` (the relay input `X₁ⁿ` depends causally on `W` through the
+feedback). The proof instead telescopes per-letter with the causal conditioner `X₁ᵢ`:
+
+```
+I(W; Yⁿ) ≤ I(W; (Y₁ⁿ, Yⁿ))                                     -- post-processing
+         = ∑ᵢ [H(Vᵢ | V^{<i}) − H(Vᵢ | W, V^{<i})]              -- chain rule, Vᵢ = (Y₁ᵢ, Yᵢ)
+         ≤ ∑ᵢ [H(Vᵢ | X₁ᵢ) − H(Vᵢ | Xᵢ, X₁ᵢ)]                  -- per-letter (below)
+         = ∑ᵢ I(Xᵢ; Vᵢ | X₁ᵢ).
+```
+
+The per-letter step uses two facts:
+
+* `H(Vᵢ | V^{<i}) ≤ H(Vᵢ | X₁ᵢ)` — conditioning reduces entropy: `X₁ᵢ = relay i (Y₁^{<i})` is
+  a deterministic function of the past pairs `V^{<i}`, so conditioning on `V^{<i}` is a
+  refinement of conditioning on `X₁ᵢ`.  Structural, derived (not assumed).
+* `H(Vᵢ | W, V^{<i}) = H(Vᵢ | Xᵢ, X₁ᵢ)` — memorylessness: both `Xᵢ = encoder(W)ᵢ` (a function
+  of `W`) and `X₁ᵢ` (a function of `V^{<i}`) are deterministic functions of `(W, V^{<i})`, and
+  given the i-th channel input `(Xᵢ, X₁ᵢ)` the i-th output `Vᵢ` is independent of `(W, V^{<i})`.
+
+The single precondition `h_memo` is exactly the latter independence,
+`Vᵢ ⫫ (W, V^{<i}) | (Xᵢ, X₁ᵢ)`, the d-separation property of a memoryless relay channel: the
+i-th output is conditionally independent of the message and the past output pairs given the
+i-th channel input.  It encodes the channel's memoryless structure, not the conclusion (it is
+true in the operational setup where `Vᵢ` is fresh channel noise applied to `(Xᵢ, X₁ᵢ)`), so it
+is a *regularity precondition*, not load-bearing — mirroring the `h_memo` of
+`bc_input_singleletterize`.  It is **not** the false independence `W ⫫ X₁ⁿ` (which fails for a
+causal relay): the conditioning here is on the i-th input, not on a fictitious second message.
+@audit:ok -/
+theorem relay_broadcast_cut_message_telescope
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (W : Ω → Fin M)
+    (c : RelayCode M n α α₁ β β₁)
+    (Ys : Fin n → Ω → β) (Y₁s : Fin n → Ω → β₁)
+    (hW : Measurable W)
+    (hYs : ∀ i, Measurable (Ys i)) (hY₁s : ∀ i, Measurable (Y₁s i))
+    (h_memo : ∀ i : Fin n,
+      IsMarkovChain μ
+        (fun ω ↦ (Y₁s i ω, Ys i ω))
+        (fun ω ↦ (c.encoder (W ω) i,
+          c.relay i (fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω)))
+        (fun ω ↦ (W ω,
+          fun (j : Fin i.val) ↦
+            (Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω, Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω)))) :
+    (mutualInfo μ W (fun ω j ↦ Ys j ω)).toReal
+      ≤ ∑ i : Fin n,
+          (condMutualInfo μ (fun ω ↦ c.encoder (W ω) i) (fun ω ↦ (Y₁s i ω, Ys i ω))
+            (fun ω ↦ c.relay i
+              (fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω))).toReal := by
+  classical
+  -- Abbreviations matching the conclusion's syntactic shape.
+  set Xs : Fin n → Ω → α := fun i ω ↦ c.encoder (W ω) i with hXs_def
+  set X₁s : Fin n → Ω → α₁ := fun i ω ↦
+    c.relay i (fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω) with hX₁s_def
+  set Vs : Fin n → Ω → (β₁ × β) := fun i ω ↦ (Y₁s i ω, Ys i ω) with hVs_def
+  set Vpi : Ω → (Fin n → β₁ × β) := fun ω j ↦ Vs j ω with hVpi_def
+  -- per-letter prefix `V^{<i}` and conditioners.
+  set Vpre : ∀ i : Fin n, Ω → (Fin i.val → β₁ × β) := fun i ω (j : Fin i.val) ↦
+    Vs ⟨j.val, j.isLt.trans i.isLt⟩ ω with hVpre_def
+  set WVpre : ∀ i : Fin n, Ω → (Fin M × (Fin i.val → β₁ × β)) := fun i ω ↦
+    (W ω, Vpre i ω) with hWVpre_def
+  set Js : Fin n → Ω → (α × α₁) := fun i ω ↦ (Xs i ω, X₁s i ω) with hJs_def
+  -- Measurabilities.
+  have hXs_meas : ∀ i, Measurable (Xs i) := fun i ↦
+    (measurable_of_countable (fun w ↦ c.encoder w i)).comp hW
+  have hX₁s_meas : ∀ i, Measurable (X₁s i) := fun i ↦
+    (measurable_of_countable (c.relay i)).comp
+      (measurable_pi_iff.mpr fun j ↦ hY₁s _)
+  have hVs_meas : ∀ i, Measurable (Vs i) := fun i ↦ (hY₁s i).prodMk (hYs i)
+  have hVpi_meas : Measurable Vpi := measurable_pi_iff.mpr hVs_meas
+  have hYpi_meas : Measurable (fun ω j ↦ Ys j ω) := measurable_pi_iff.mpr hYs
+  have hVpre_meas : ∀ i, Measurable (Vpre i) := fun i ↦
+    measurable_pi_iff.mpr fun j ↦ hVs_meas _
+  have hWVpre_meas : ∀ i, Measurable (WVpre i) := fun i ↦ hW.prodMk (hVpre_meas i)
+  have hJs_meas : ∀ i, Measurable (Js i) := fun i ↦ (hXs_meas i).prodMk (hX₁s_meas i)
+  -- Step 1: post-processing `I(W; Yⁿ) ≤ I(W; Vⁿ)` (`Yⁿ` is `π₂` of `Vⁿ`).
+  have hMI_Vpi_fin : mutualInfo μ W Vpi ≠ ∞ := mutualInfo_ne_top μ W Vpi hW hVpi_meas
+  have hPost : (mutualInfo μ W (fun ω j ↦ Ys j ω)).toReal ≤ (mutualInfo μ W Vpi).toReal := by
+    refine ENNReal.toReal_mono hMI_Vpi_fin ?_
+    have h := mutualInfo_le_of_postprocess μ W Vpi hW hVpi_meas
+      (f := fun (v : Fin n → β₁ × β) (j : Fin n) ↦ (v j).2) (measurable_pi_iff.mpr fun j ↦
+        (measurable_pi_apply j).snd)
+    have hfun : ((fun (v : Fin n → β₁ × β) (j : Fin n) ↦ (v j).2) ∘ Vpi)
+        = fun ω j ↦ Ys j ω := by
+      funext ω j; simp [hVpi_def, hVs_def]
+    rwa [hfun] at h
+  -- Step 2: `I(W; Vⁿ) = H(Vⁿ) − H(Vⁿ | W)`.
+  have hLHS : (mutualInfo μ W Vpi).toReal
+      = entropy μ Vpi - InformationTheory.MeasureFano.condEntropy μ Vpi W := by
+    rw [mutualInfo_comm μ W Vpi hW hVpi_meas]
+    exact mutualInfo_eq_entropy_sub_condEntropy μ Vpi W hVpi_meas hW
+  -- Step 3: chain rules.
+  have hEnt : entropy μ Vpi
+      = ∑ i : Fin n, InformationTheory.MeasureFano.condEntropy μ (Vs i) (Vpre i) :=
+    jointEntropy_chain_rule μ Vs hVs_meas
+  have hCondEnt : InformationTheory.MeasureFano.condEntropy μ Vpi W
+      = ∑ i : Fin n, InformationTheory.MeasureFano.condEntropy μ (Vs i) (WVpre i) :=
+    condEntropy_pi_chain_rule_aux μ W Vs hW hVs_meas
+  -- Step 4: per-letter RHS as a conditional-entropy difference.
+  have hRHS : ∀ i : Fin n,
+      (condMutualInfo μ (Xs i) (Vs i) (X₁s i)).toReal
+        = InformationTheory.MeasureFano.condEntropy μ (Vs i) (X₁s i)
+          - InformationTheory.MeasureFano.condEntropy μ (Vs i)
+              (fun ω ↦ (X₁s i ω, Xs i ω)) := by
+    intro i
+    rw [condMutualInfo_comm μ (Xs i) (Vs i) (X₁s i) (hXs_meas i) (hVs_meas i) (hX₁s_meas i)]
+    exact condMutualInfo_eq_condEntropy_sub_condEntropy μ (Vs i) (X₁s i) (Xs i)
+      (hVs_meas i) (hX₁s_meas i) (hXs_meas i)
+  -- Step 5 (conditioning reduces entropy): `H(Vᵢ | V^{<i}) ≤ H(Vᵢ | X₁ᵢ)`.
+  have hCond : ∀ i : Fin n,
+      InformationTheory.MeasureFano.condEntropy μ (Vs i) (Vpre i)
+        ≤ InformationTheory.MeasureFano.condEntropy μ (Vs i) (X₁s i) := by
+    intro i
+    -- `X₁ᵢ` is the deterministic relay function of the past pairs `V^{<i}`.
+    set relayF : (Fin i.val → β₁ × β) → α₁ :=
+      fun v ↦ c.relay i (fun j ↦ (v j).1) with hrelayF_def
+    have hrelayF_meas : Measurable relayF := measurable_of_countable relayF
+    have hX₁_eq : (fun ω ↦ relayF (Vpre i ω)) = X₁s i := by
+      funext ω; simp [hrelayF_def, hVpre_def, hVs_def, hX₁s_def]
+    have hmk : IsMarkovChain μ (Vs i) (Vpre i) (X₁s i) := by
+      have h := isMarkovChain_comp_conditioner_right μ (Vs i) (Vpre i)
+        (hVs_meas i) (hVpre_meas i) hrelayF_meas
+      rwa [hX₁_eq] at h
+    have hdrop := condEntropy_drop_irrelevant_of_markov μ (Vs i) (Vpre i) (X₁s i)
+      (hVs_meas i) (hVpre_meas i) (hX₁s_meas i) hmk
+    have hcomm := condEntropy_measurableEquiv_comp μ (Vs i) (hVs_meas i)
+      (fun ω ↦ (Vpre i ω, X₁s i ω)) ((hVpre_meas i).prodMk (hX₁s_meas i))
+      MeasurableEquiv.prodComm
+    rw [show (fun ω ↦ MeasurableEquiv.prodComm (Vpre i ω, X₁s i ω))
+          = (fun ω ↦ (X₁s i ω, Vpre i ω)) from rfl] at hcomm
+    have hle := condEntropy_le_condEntropy_of_pair μ (Vs i) (X₁s i) (Vpre i)
+      (hVs_meas i) (hX₁s_meas i) (hVpre_meas i)
+    calc InformationTheory.MeasureFano.condEntropy μ (Vs i) (Vpre i)
+        = InformationTheory.MeasureFano.condEntropy μ (Vs i)
+            (fun ω ↦ (Vpre i ω, X₁s i ω)) := hdrop.symm
+      _ = InformationTheory.MeasureFano.condEntropy μ (Vs i)
+            (fun ω ↦ (X₁s i ω, Vpre i ω)) := hcomm.symm
+      _ ≤ InformationTheory.MeasureFano.condEntropy μ (Vs i) (X₁s i) := hle
+  -- Step 6 (memoryless collapse): `H(Vᵢ | W, V^{<i}) = H(Vᵢ | X₁ᵢ, Xᵢ)`.
+  have hMemo : ∀ i : Fin n,
+      InformationTheory.MeasureFano.condEntropy μ (Vs i) (WVpre i)
+        = InformationTheory.MeasureFano.condEntropy μ (Vs i)
+            (fun ω ↦ (X₁s i ω, Xs i ω)) := by
+    intro i
+    -- `(Xᵢ, X₁ᵢ)` is the deterministic channel input read off `(W, V^{<i})`.
+    set inputF : (Fin M × (Fin i.val → β₁ × β)) → (α × α₁) :=
+      fun p ↦ (c.encoder p.1 i, c.relay i (fun j ↦ (p.2 j).1)) with hinputF_def
+    have hinputF_meas : Measurable inputF := measurable_of_countable inputF
+    have hJs_eq : (fun ω ↦ inputF (WVpre i ω)) = Js i := by
+      funext ω
+      simp [hinputF_def, hWVpre_def, hVpre_def, hVs_def, hJs_def, hXs_def, hX₁s_def]
+    have hmk1 : IsMarkovChain μ (Vs i) (WVpre i) (Js i) := by
+      have h := isMarkovChain_comp_conditioner_right μ (Vs i) (WVpre i)
+        (hVs_meas i) (hWVpre_meas i) hinputF_meas
+      rwa [hJs_eq] at h
+    have hdrop1 := condEntropy_drop_irrelevant_of_markov μ (Vs i) (WVpre i) (Js i)
+      (hVs_meas i) (hWVpre_meas i) (hJs_meas i) hmk1
+    have hcomm1 := condEntropy_measurableEquiv_comp μ (Vs i) (hVs_meas i)
+      (fun ω ↦ (WVpre i ω, Js i ω)) ((hWVpre_meas i).prodMk (hJs_meas i))
+      MeasurableEquiv.prodComm
+    rw [show (fun ω ↦ MeasurableEquiv.prodComm (WVpre i ω, Js i ω))
+          = (fun ω ↦ (Js i ω, WVpre i ω)) from rfl] at hcomm1
+    have hdrop2 := condEntropy_drop_irrelevant_of_markov μ (Vs i) (Js i) (WVpre i)
+      (hVs_meas i) (hJs_meas i) (hWVpre_meas i) (h_memo i)
+    have hcomm2 := condEntropy_measurableEquiv_comp μ (Vs i) (hVs_meas i)
+      (Js i) (hJs_meas i) MeasurableEquiv.prodComm
+    rw [show (fun ω ↦ MeasurableEquiv.prodComm (Js i ω))
+          = (fun ω ↦ (X₁s i ω, Xs i ω)) from rfl] at hcomm2
+    calc InformationTheory.MeasureFano.condEntropy μ (Vs i) (WVpre i)
+        = InformationTheory.MeasureFano.condEntropy μ (Vs i)
+            (fun ω ↦ (WVpre i ω, Js i ω)) := hdrop1.symm
+      _ = InformationTheory.MeasureFano.condEntropy μ (Vs i)
+            (fun ω ↦ (Js i ω, WVpre i ω)) := hcomm1.symm
+      _ = InformationTheory.MeasureFano.condEntropy μ (Vs i) (Js i) := hdrop2
+      _ = InformationTheory.MeasureFano.condEntropy μ (Vs i)
+            (fun ω ↦ (X₁s i ω, Xs i ω)) := hcomm2.symm
+  -- Assemble.
+  have hPerLetter : ∀ i : Fin n,
+      InformationTheory.MeasureFano.condEntropy μ (Vs i) (Vpre i)
+          - InformationTheory.MeasureFano.condEntropy μ (Vs i) (WVpre i)
+        ≤ (condMutualInfo μ (Xs i) (Vs i) (X₁s i)).toReal := by
+    intro i
+    rw [hRHS i, hMemo i]
+    linarith [hCond i]
+  calc (mutualInfo μ W (fun ω j ↦ Ys j ω)).toReal
+      ≤ (mutualInfo μ W Vpi).toReal := hPost
+    _ = entropy μ Vpi - InformationTheory.MeasureFano.condEntropy μ Vpi W := hLHS
+    _ = (∑ i : Fin n, InformationTheory.MeasureFano.condEntropy μ (Vs i) (Vpre i))
+          - ∑ i : Fin n, InformationTheory.MeasureFano.condEntropy μ (Vs i) (WVpre i) := by
+        rw [hEnt, hCondEnt]
+    _ = ∑ i : Fin n,
+          (InformationTheory.MeasureFano.condEntropy μ (Vs i) (Vpre i)
+            - InformationTheory.MeasureFano.condEntropy μ (Vs i) (WVpre i)) := by
+        rw [Finset.sum_sub_distrib]
+    _ ≤ ∑ i : Fin n, (condMutualInfo μ (Xs i) (Vs i) (X₁s i)).toReal :=
+        Finset.sum_le_sum fun i _ ↦ hPerLetter i
+
+end BroadcastCutTelescope
+
 end InformationTheory.Shannon.Relay
