@@ -362,20 +362,19 @@ lemma condMutualInfo_singleletter_le_of_memoryless
   rw [hrhs_eq, hswap_sum]
   linarith [hSub]
 
+omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
 /-- **Operational link** (steps 1–2): under message independence and the block channel
 Markov chain `(M₁, M₂) → (X₁ⁿ, X₂ⁿ) → Yⁿ`, the message-level mutual information is bounded
 by the block input–output conditional mutual information,
 `I(M₁; (M₂, Yⁿ)) ≤ I(X₁ⁿ; Yⁿ | X₂ⁿ)`.
 
 Step 1 (`I(M₁; (M₂, Yⁿ)) = I(M₁; Yⁿ | M₂)` via the Y-axis chain rule and message
-independence) is discharged below.  Step 2 (the data-processing reduction
-`I(M₁; Yⁿ | M₂) ≤ I(X₁ⁿ; Yⁿ | X₂ⁿ)`) is the remaining residual: it lowers both the data
-variable `M₁ → X₁ⁿ` and the conditioner `M₂ → X₂ⁿ` (each a deterministic function of the
-message) under the block channel Markov chain.  The blocker is in-project Markov-chain
-plumbing — a public `IsMarkovChain` reversal and a deterministic-function-of-conditioner
-Markov chain (`condDistrib_comp_self`-backed); neither is currently exported (the swap is
-`private` in `CondEntropyMemoryless.lean`).  This is plumbing, not an analytic gap.
-@residual(plan:mac-moonshot-plan) -/
+independence) is the first half.  Step 2 (the data-processing reduction
+`I(M₁; Yⁿ | M₂) ≤ I(X₁ⁿ; Yⁿ | X₂ⁿ)`) lowers both the data variable `M₁ → X₁ⁿ` and the
+conditioner `M₂ → X₂ⁿ` (each a deterministic function of the message) under the block channel
+Markov chain.  It is carried out on the entropy difference: `I(·;·|·) = H(Yⁿ|·) − H(Yⁿ|·,·)`,
+with `H(Yⁿ | (M₂, M₁)) = H(Yⁿ | (X₂ⁿ, X₁ⁿ))` (deterministic encoders plus the block Markov
+chain) and `H(Yⁿ | M₂) ≤ H(Yⁿ | X₂ⁿ)` (conditioning on the finer message reduces entropy). -/
 lemma mac_message_le_condMI
     [NeZero M₁] [NeZero M₂]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -400,9 +399,145 @@ lemma mac_message_le_condMI
     rw [mutualInfo_comm μ Msg₂ Msg₁ hMsg₂ hMsg₁, h_indep, zero_add]
     exact condMutualInfo_comm μ (fun ω j ↦ Ys j ω) Msg₁ Msg₂ hYpi hMsg₁ hMsg₂
   rw [hstep1]
-  -- Step 2: data-processing reduction `I(M₁; Yⁿ | M₂) ≤ I(X₁ⁿ; Yⁿ | X₂ⁿ)`.
-  -- @residual(plan:mac-moonshot-plan)
-  sorry
+  -- Step 2: data-processing reduction `I(M₁; Yⁿ | M₂) ≤ I(X₁ⁿ; Yⁿ | X₂ⁿ)`, via the entropy
+  -- route.  `X₁ⁿ`/`X₂ⁿ` are deterministic encoders of `M₁`/`M₂`, so conditioning on the
+  -- (finer) messages dominates conditioning on the (coarser) codewords.
+  have hX₁ : Measurable (fun ω j ↦ c.encoder₁ (Msg₁ ω) j) :=
+    (measurable_of_countable c.encoder₁).comp hMsg₁
+  have hX₂ : Measurable (fun ω j ↦ c.encoder₂ (Msg₂ ω) j) :=
+    (measurable_of_countable c.encoder₂).comp hMsg₂
+  -- Entropy-difference bridges for both conditional mutual informations.
+  have hLbridge : (condMutualInfo μ Msg₁ (fun ω j ↦ Ys j ω) Msg₂).toReal
+      = MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω) Msg₂
+        - MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω) (fun ω ↦ (Msg₂ ω, Msg₁ ω)) := by
+    rw [condMutualInfo_comm μ Msg₁ (fun ω j ↦ Ys j ω) Msg₂ hMsg₁ hYpi hMsg₂]
+    exact condMutualInfo_eq_condEntropy_sub_condEntropy μ (fun ω j ↦ Ys j ω) Msg₂ Msg₁
+      hYpi hMsg₂ hMsg₁
+  have hRbridge : (condMutualInfo μ (fun ω j ↦ c.encoder₁ (Msg₁ ω) j) (fun ω j ↦ Ys j ω)
+        (fun ω j ↦ c.encoder₂ (Msg₂ ω) j)).toReal
+      = MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω) (fun ω j ↦ c.encoder₂ (Msg₂ ω) j)
+        - MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω)
+            (fun ω ↦ ((fun j ↦ c.encoder₂ (Msg₂ ω) j), (fun j ↦ c.encoder₁ (Msg₁ ω) j))) := by
+    rw [condMutualInfo_comm μ (fun ω j ↦ c.encoder₁ (Msg₁ ω) j) (fun ω j ↦ Ys j ω)
+      (fun ω j ↦ c.encoder₂ (Msg₂ ω) j) hX₁ hYpi hX₂]
+    exact condMutualInfo_eq_condEntropy_sub_condEntropy μ (fun ω j ↦ Ys j ω)
+      (fun ω j ↦ c.encoder₂ (Msg₂ ω) j) (fun ω j ↦ c.encoder₁ (Msg₁ ω) j) hYpi hX₂ hX₁
+  rw [hLbridge, hRbridge]
+  -- OL-2: `H(Yⁿ | M₂) ≤ H(Yⁿ | X₂ⁿ)`  (`X₂ⁿ = enc₂ ∘ M₂` is a coarsening of `M₂`).
+  have hOL2 : MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω) Msg₂
+      ≤ MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω) (fun ω j ↦ c.encoder₂ (Msg₂ ω) j) := by
+    have hmk : IsMarkovChain μ (fun ω j ↦ Ys j ω) Msg₂ (fun ω j ↦ c.encoder₂ (Msg₂ ω) j) :=
+      isMarkovChain_comp_conditioner_right μ (fun ω j ↦ Ys j ω) Msg₂ hYpi hMsg₂
+        (measurable_of_countable c.encoder₂)
+    have hdrop : MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω)
+          (fun ω ↦ (Msg₂ ω, (fun j ↦ c.encoder₂ (Msg₂ ω) j)))
+        = MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω) Msg₂ :=
+      condEntropy_drop_irrelevant_of_markov μ (fun ω j ↦ Ys j ω) Msg₂
+        (fun ω j ↦ c.encoder₂ (Msg₂ ω) j) hYpi hMsg₂ hX₂ hmk
+    have hpair_le : MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω)
+          (fun ω ↦ ((fun j ↦ c.encoder₂ (Msg₂ ω) j), Msg₂ ω))
+        ≤ MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω) (fun ω j ↦ c.encoder₂ (Msg₂ ω) j) :=
+      condEntropy_le_condEntropy_of_pair μ (fun ω j ↦ Ys j ω)
+        (fun ω j ↦ c.encoder₂ (Msg₂ ω) j) Msg₂ hYpi hX₂ hMsg₂
+    have hreshape : MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω)
+          (fun ω ↦ ((fun j ↦ c.encoder₂ (Msg₂ ω) j), Msg₂ ω))
+        = MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω)
+          (fun ω ↦ (Msg₂ ω, (fun j ↦ c.encoder₂ (Msg₂ ω) j))) := by
+      have hE : (fun ω ↦ ((fun j ↦ c.encoder₂ (Msg₂ ω) j), Msg₂ ω))
+          = fun ω ↦ (MeasurableEquiv.prodComm (α := Fin M₂) (β := Fin n → α₂))
+              (Msg₂ ω, (fun j ↦ c.encoder₂ (Msg₂ ω) j)) := by
+        funext ω; simp [MeasurableEquiv.prodComm]
+      rw [hE]
+      exact condEntropy_measurableEquiv_comp μ (fun ω j ↦ Ys j ω) hYpi
+        (fun ω ↦ (Msg₂ ω, (fun j ↦ c.encoder₂ (Msg₂ ω) j))) (hMsg₂.prodMk hX₂)
+        (MeasurableEquiv.prodComm (α := Fin M₂) (β := Fin n → α₂))
+    linarith [hdrop, hpair_le, hreshape]
+  -- OL-1: `H(Yⁿ | (M₂, M₁)) = H(Yⁿ | (X₂ⁿ, X₁ⁿ))`.  Both conditioners carry the same
+  -- information once the deterministic encoders and the block channel Markov chain are used.
+  have hOL1 : MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω) (fun ω ↦ (Msg₂ ω, Msg₁ ω))
+      = MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω)
+          (fun ω ↦ ((fun j ↦ c.encoder₂ (Msg₂ ω) j), (fun j ↦ c.encoder₁ (Msg₁ ω) j))) := by
+    -- Reshape A: H(Yⁿ | (M₂, M₁)) = H(Yⁿ | (M₁, M₂)).
+    have hreshapeA : MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω) (fun ω ↦ (Msg₂ ω, Msg₁ ω))
+        = MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω) (fun ω ↦ (Msg₁ ω, Msg₂ ω)) := by
+      have hE : (fun ω ↦ (Msg₂ ω, Msg₁ ω))
+          = fun ω ↦ (MeasurableEquiv.prodComm (α := Fin M₁) (β := Fin M₂)) (Msg₁ ω, Msg₂ ω) := by
+        funext ω; simp [MeasurableEquiv.prodComm]
+      rw [hE]
+      exact condEntropy_measurableEquiv_comp μ (fun ω j ↦ Ys j ω) hYpi
+        (fun ω ↦ (Msg₁ ω, Msg₂ ω)) (hMsg₁.prodMk hMsg₂)
+        (MeasurableEquiv.prodComm (α := Fin M₁) (β := Fin M₂))
+    -- Reshape B: H(Yⁿ | (X₂ⁿ, X₁ⁿ)) = H(Yⁿ | (X₁ⁿ, X₂ⁿ)).
+    have hreshapeB : MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω)
+          (fun ω ↦ ((fun j ↦ c.encoder₂ (Msg₂ ω) j), (fun j ↦ c.encoder₁ (Msg₁ ω) j)))
+        = MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω)
+          (fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j))) := by
+      have hE : (fun ω ↦ ((fun j ↦ c.encoder₂ (Msg₂ ω) j), (fun j ↦ c.encoder₁ (Msg₁ ω) j)))
+          = fun ω ↦ (MeasurableEquiv.prodComm (α := Fin n → α₁) (β := Fin n → α₂))
+              ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)) := by
+        funext ω; simp [MeasurableEquiv.prodComm]
+      rw [hE]
+      exact condEntropy_measurableEquiv_comp μ (fun ω j ↦ Ys j ω) hYpi
+        (fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)))
+        (hX₁.prodMk hX₂) (MeasurableEquiv.prodComm (α := Fin n → α₁) (β := Fin n → α₂))
+    -- Core: H(Yⁿ | (M₁, M₂)) = H(Yⁿ | (X₁ⁿ, X₂ⁿ)) in the natural order matching `hmarkov`.
+    have hcore : MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω) (fun ω ↦ (Msg₁ ω, Msg₂ ω))
+        = MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω)
+            (fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j))) := by
+      -- Add the codewords (deterministic function of the messages).
+      have hmk1 : IsMarkovChain μ (fun ω j ↦ Ys j ω) (fun ω ↦ (Msg₁ ω, Msg₂ ω))
+          (fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j))) :=
+        isMarkovChain_comp_conditioner_right μ (fun ω j ↦ Ys j ω) (fun ω ↦ (Msg₁ ω, Msg₂ ω))
+          hYpi (hMsg₁.prodMk hMsg₂)
+          (measurable_of_countable
+            (fun p : Fin M₁ × Fin M₂ ↦
+              ((fun j ↦ c.encoder₁ p.1 j), (fun j ↦ c.encoder₂ p.2 j))))
+      have hadd : MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω)
+            (fun ω ↦ ((Msg₁ ω, Msg₂ ω),
+              ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j))))
+          = MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω) (fun ω ↦ (Msg₁ ω, Msg₂ ω)) :=
+        condEntropy_drop_irrelevant_of_markov μ (fun ω j ↦ Ys j ω) (fun ω ↦ (Msg₁ ω, Msg₂ ω))
+          (fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)))
+          hYpi (hMsg₁.prodMk hMsg₂) (hX₁.prodMk hX₂) hmk1
+      -- Drop the messages under the swapped block channel Markov chain `Yⁿ → (X₁ⁿ,X₂ⁿ) → (M₁,M₂)`.
+      have hmk2 : IsMarkovChain μ (fun ω j ↦ Ys j ω)
+          (fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)))
+          (fun ω ↦ (Msg₁ ω, Msg₂ ω)) :=
+        isMarkovChain_swap μ (fun ω ↦ (Msg₁ ω, Msg₂ ω))
+          (fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)))
+          (fun ω j ↦ Ys j ω) (hMsg₁.prodMk hMsg₂) (hX₁.prodMk hX₂) hYpi hmarkov
+      have hdropM : MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω)
+            (fun ω ↦ (((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)),
+              (Msg₁ ω, Msg₂ ω)))
+          = MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω)
+            (fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j))) :=
+        condEntropy_drop_irrelevant_of_markov μ (fun ω j ↦ Ys j ω)
+          (fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)))
+          (fun ω ↦ (Msg₁ ω, Msg₂ ω)) hYpi (hX₁.prodMk hX₂) (hMsg₁.prodMk hMsg₂) hmk2
+      -- Reshape the conditioner ((M₁,M₂),(X₁ⁿ,X₂ⁿ)) → ((X₁ⁿ,X₂ⁿ),(M₁,M₂)).
+      have hswapcond : MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω)
+            (fun ω ↦ ((Msg₁ ω, Msg₂ ω),
+              ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j))))
+          = MeasureFano.condEntropy μ (fun ω j ↦ Ys j ω)
+            (fun ω ↦ (((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)),
+              (Msg₁ ω, Msg₂ ω))) := by
+        have hE : (fun ω ↦ ((Msg₁ ω, Msg₂ ω),
+              ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j))))
+            = fun ω ↦ (MeasurableEquiv.prodComm
+                (α := (Fin n → α₁) × (Fin n → α₂)) (β := Fin M₁ × Fin M₂))
+                (((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)),
+                  (Msg₁ ω, Msg₂ ω)) := by
+          funext ω; simp [MeasurableEquiv.prodComm]
+        rw [hE]
+        exact condEntropy_measurableEquiv_comp μ (fun ω j ↦ Ys j ω) hYpi
+          (fun ω ↦ (((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)),
+            (Msg₁ ω, Msg₂ ω)))
+          ((hX₁.prodMk hX₂).prodMk (hMsg₁.prodMk hMsg₂))
+          (MeasurableEquiv.prodComm
+            (α := (Fin n → α₁) × (Fin n → α₂)) (β := Fin M₁ × Fin M₂))
+      rw [← hadd, hswapcond, hdropM]
+    rw [hreshapeA, hcore, hreshapeB]
+  linarith [hOL1, hOL2]
 
 /-- **MAC converse, user-1 single-letterized corner bound** (gateway atom): under a
 memoryless joint channel, independent messages, and the block channel Markov chain,

@@ -326,7 +326,8 @@ gives the analogous identity with `X`/`Y` swapped.
 * RHS `(μ.map Z) ⊗ₘ (K_X ×ₖ K_Y) ↦ (μ.map Z) ⊗ₘ ((K_X ×ₖ K_Y).map Prod.swap)`
   via `Measure.compProd_map`, then `Kernel.prodComm_prod` to identify the inner
   pushforward as `K_Y ×ₖ K_X`. -/
-private lemma isMarkovChain_swap
+@[entry_point]
+lemma isMarkovChain_swap
     {X' Y' Z' : Type*} [MeasurableSpace X'] [MeasurableSpace Y'] [MeasurableSpace Z']
     [StandardBorelSpace X'] [Nonempty X']
     [StandardBorelSpace Y'] [Nonempty Y']
@@ -358,6 +359,62 @@ private lemma isMarkovChain_swap
       ← Measure.compProd_map MeasurableEquiv.prodComm.measurable]
   congr 1
   exact Kernel.prodComm_prod
+
+/-- A Markov chain whose right endpoint is a deterministic function of the conditioner:
+`As → Zc → f ∘ Zc`.
+
+Given the conditioner `Zc`, the value `f (Zc ω)` is determined, so `As` and `f ∘ Zc` are
+trivially conditionally independent given `Zc`. Concretely `condDistrib (f ∘ Zc) Zc μ`
+collapses to the deterministic kernel (`condDistrib_comp_self`), and the joint distribution of
+`(Zc, As, f ∘ Zc)` factorizes through the graph map `(z, a) ↦ (z, a, f z)`. -/
+@[entry_point]
+lemma isMarkovChain_comp_conditioner_right
+    {A' Z' W' : Type*} [MeasurableSpace A'] [MeasurableSpace Z'] [MeasurableSpace W']
+    [StandardBorelSpace A'] [Nonempty A']
+    [StandardBorelSpace W'] [Nonempty W']
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (As : Ω → A') (Zc : Ω → Z') {f : Z' → W'}
+    (hAs : Measurable As) (hZc : Measurable Zc) (hf : Measurable f) :
+    IsMarkovChain μ As Zc (fun ω ↦ f (Zc ω)) := by
+  haveI : IsProbabilityMeasure (μ.map Zc) :=
+    Measure.isProbabilityMeasure_map hZc.aemeasurable
+  unfold IsMarkovChain
+  set K_A : Kernel Z' A' := condDistrib As Zc μ with hK_A_def
+  -- The right conditional distribution collapses to the deterministic kernel.
+  have h_cd : condDistrib (fun ω ↦ f (Zc ω)) Zc μ
+      =ᵐ[μ.map Zc] Kernel.deterministic f hf := condDistrib_comp_self (μ := μ) Zc hf
+  -- Replace it inside the product kernel on the RHS.
+  have h_compProd_ae_eq :
+      (μ.map Zc) ⊗ₘ (K_A ×ₖ condDistrib (fun ω ↦ f (Zc ω)) Zc μ)
+        = (μ.map Zc) ⊗ₘ (K_A ×ₖ Kernel.deterministic f hf) := by
+    refine Measure.compProd_congr ?_
+    filter_upwards [h_cd] with z hz
+    ext s hs
+    rw [Kernel.prod_apply, Kernel.prod_apply, hz]
+  rw [h_compProd_ae_eq]
+  -- LHS: the joint `(Zc, As, f ∘ Zc)` is the graph-map pushforward of `(Zc, As)`.
+  have hg_meas : Measurable (fun p : Z' × A' ↦ (p.1, p.2, f p.1)) :=
+    measurable_fst.prodMk (measurable_snd.prodMk (hf.comp measurable_fst))
+  have h_LHS :
+      μ.map (fun ω ↦ (Zc ω, As ω, f (Zc ω)))
+        = (μ.map (fun ω ↦ (Zc ω, As ω))).map (fun p : Z' × A' ↦ (p.1, p.2, f p.1)) := by
+    rw [Measure.map_map hg_meas (hZc.prodMk hAs)]
+    rfl
+  have h_marginal : μ.map (fun ω ↦ (Zc ω, As ω)) = (μ.map Zc) ⊗ₘ K_A :=
+    (compProd_map_condDistrib hAs.aemeasurable).symm
+  rw [h_LHS, h_marginal]
+  -- Both sides reduce to `∫⁻ z, ∫⁻ a, g (z, a, f z) ∂(K_A z) ∂(μ.map Zc)`.
+  refine Measure.ext_of_lintegral _ fun g hg ↦ ?_
+  rw [lintegral_map hg hg_meas]
+  rw [Measure.lintegral_compProd hg]
+  rw [show (fun a : Z' × A' ↦ g (a.1, a.2, f a.1))
+      = (fun a : Z' × A' ↦ (fun p : Z' × A' ↦ g (p.1, p.2, f p.1)) a) from rfl]
+  rw [Measure.lintegral_compProd
+        (show Measurable (fun p : Z' × A' ↦ g (p.1, p.2, f p.1)) from hg.comp hg_meas)]
+  refine lintegral_congr fun z ↦ ?_
+  rw [Kernel.lintegral_prod_deterministic hf K_A z
+        (show Measurable (fun p : A' × W' ↦ g (z, p)) from
+          hg.comp (measurable_const.prodMk measurable_id))]
 
 /-- Markov chains are stable under post-processing on the right: `IsMarkovChain μ Xs Zc Yo` and a
 measurable `f : Y → Y'` give `IsMarkovChain μ Xs Zc (f ∘ Yo)`.
