@@ -225,18 +225,22 @@ The two structural preconditions encode the channel, not the conclusion:
 
 * `h_memo` — **joint-output memoryless**: `Y₁ᵢ ⫫ (W₂, X^{≠i}, Y₁^{≠i}, Y₂^{≠i}) | Xᵢ`.  It
   blocks the conditioning message `W₂` and *all* other letters (including the degraded
-  outputs `Y₂^{≠i}`) at `Xᵢ`.  Blocking `Y₂^{≠i}` is essential: with only `W₂`-inclusive but
-  `Y₂`-free memorylessness the bound is false (an early degraded output can leak a later
-  letter's input — the documented `n = 2` collider counterexample).
+  outputs `Y₂^{≠i}`) at `Xᵢ`.  Blocking `Y₂^{≠i}` is needed by the entropy-difference route:
+  it collapses the RHS noise term `H(Y₁ᵢ | W₂, Y₂^{<i}, Xᵢ)` to the common `H(Y₁ᵢ | Xᵢ)`.
 * `h_deg_block` — **block-prefix degradedness**: `Y₁ᵢ ⫫ Y₂^{<i} | (W₂, Y₁^{<i})`.  This is the
   d-separation consequence of physical per-letter degradedness `X → Y₁ → Y₂` together with
   memorylessness; per-letter degradedness `Y₂ⱼ ⫫ Xⱼ | Y₁ⱼ` alone is insufficient (it is
-  satisfied by the collider counterexample that breaks the bound), and deriving the block
-  form from the per-letter form needs graphoid / d-separation machinery absent from Mathlib,
-  so it is taken as a structural precondition (parity with `h_memo`).
+  satisfied by the documented `n = 2` collider counterexample — an early degraded output
+  leaking a later letter's input — which breaks the bound), and deriving the block form from
+  the per-letter form needs graphoid / d-separation machinery absent from Mathlib, so it is
+  taken as a structural precondition (parity with `h_memo`).  This is the hypothesis that
+  rules out the collider counterexample (it fails there: `Y₁₁ ⫫ Y₂₀ | (·, Y₁₀)` is false when
+  `Y₁₁ = Y₂₀`), whereas the strengthened `h_memo` still holds in it.
 
 Both are regularity / structural preconditions (true in the operational degraded-memoryless
-setup where `Xⁿ = encoder (W₁, W₂)`), not load-bearing. -/
+setup where `Xⁿ = encoder (W₁, W₂)`), not load-bearing.
+
+@audit:ok -/
 theorem bc_input_singleletterize
     [NeZero M₂]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -492,8 +496,10 @@ mutual information `I(W₁; (W₂, Y₁ⁿ))` is bounded by the per-letter auxil
 `∑ᵢ I(Xᵢ; Y_{1,i} | Uᵢ)` with `Uᵢ = (W₂, Y₂^{i-1})`, `Xᵢ = (encoder (W₁, W₂))ᵢ`.
 
 Reduction: independence gives `I(W₁; (W₂, Y₁ⁿ)) = I(W₁; Y₁ⁿ | W₂)`; data processing along
-`W₁ → Xⁿ → Y₁ⁿ` (conditioned on `W₂`) gives `≤ I(Xⁿ; Y₁ⁿ | W₂)`; then the Csiszár-sum
-single-letterization `bc_input_singleletterize` closes the bound. -/
+`W₁ → Xⁿ → Y₁ⁿ` (conditioned on `W₂`) gives `≤ I(Xⁿ; Y₁ⁿ | W₂)`; then the input-level
+single-letterization `bc_input_singleletterize` closes the bound.
+
+@audit:ok -/
 theorem bc_singleletterize_bound₁
     [NeZero M₁] [NeZero M₂]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -560,7 +566,9 @@ auxiliary-variable capacity region whose information bounds are the per-letter c
 The degradedness and memoryless structure are preconditions (parity with the single-user
 `channel_coding_converse_general_memoryless_pure` and `mac_converse`). The operational
 instantiation — building `μ` from uniform messages through the encoder and the channel — is a
-separate wrapper, not part of this statement. -/
+separate wrapper, not part of this statement.
+
+@audit:ok -/
 theorem bc_converse
     [NeZero M₁] [NeZero M₂]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
