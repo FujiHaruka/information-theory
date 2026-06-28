@@ -12,10 +12,10 @@
 - `relay_broadcast_cut_singleletterize`: `I(Xⁿ;Y₁ⁿ,Yⁿ|X₁ⁿ) ≤ ∑ I(Xᵢ;Y₁ᵢ,Yᵢ|X₁ᵢ)` — `condMutualInfo_singleletter_le_of_memoryless` 直接適用 (var X, cond X₁, joint out (Y₁,Y))。
 - 両者 `h_memo : IsMemorylessChannel` を **precondition (regularity)** として受け結論を genuinely 証明 = honest (監査が load-bearing でないと確認、core = entropy subadditivity の独立ステップ)。gateway-atom-first で「壁でない」確定。
 
-**残 = headline assembly (operational 層, 次 leg)** — `relay_cutset_outer_bound : log M ≤ relayCutsetBound Im Ib`:
+**残 = headline assembly (operational 層, 次 leg)** — `relay_cutset_outer_bound : log M ≤ relayCutsetBound Im Ib` — サブ計画 → [`relay-cutset-headline-plan.md`](relay-cutset-headline-plan.md):
 - 雛形 = Line A `bc_converse` (BroadcastChannel/Converse.lean:572): message-level Fano + single-letterization を `.mono` 合成。relay は単一メッセージ + `le_min_iff` で 2 cut を合成。
 - **MAC-cut (易)**: `log M ≤ I(W;Yⁿ)+Fano` (単一ユーザ converse `channel_coding_converse_general_chainRule` / `shannon_converse_single_shot_markov_encoder` @ ConverseGeneral.lean) → `I(W;Yⁿ) ≤ I(Xⁿ,X₁ⁿ;Yⁿ)` (`mutualInfo_le_of_markov` @ CondMutualInfo.lean:356, precondition: block Markov `W→(Xⁿ,X₁ⁿ)→Yⁿ`) → `relay_mac_cut_singleletterize`。
-- **BC-cut (核・要設計、partial wall リスク)**: `I(W;Yⁿ) ≤ I(W;Y₁ⁿ,Yⁿ) ≤ I(Xⁿ;Y₁ⁿ,Yⁿ|X₁ⁿ)` の operational 橋渡しが relay の causal 構造 (X₁,i = f(過去 Y₁ⁿ⁻¹)) に依存し、CT 15.10.1 の per-letter telescoping を要する。conditional DPI 資産 `condMutualInfo_le_of_markov_joint` (ConverseMemorylessChainRule.lean:113, Line A Step 2 で使用) が橋の一部だが、`I(W;X₁ⁿ)` 項の処理が非自明。**次 leg の planner で operational 層を設計 + wall 判定**。honest なら Markov 構造を precondition 化、wall なら scope 切って MAC-cut 単独 + BC-cut sorry+@residual。
+- **BC-cut (核, wall-likely 判定済 → child §BC-cut 壁判定)**: 既存 `relay_broadcast_cut_singleletterize` (block 条件付き MI) は headline で直接消費不可。MAC `mac_message_le_condMI` の message→block 橋は `h_indep` (`I(Msg₁;Msg₂)=0`) load-bearing で、relay には独立第二メッセージが無く `I(W;X₁ⁿ)≠0` (causal feedback) ゆえ analog が FALSE。CT 15.10.1 の per-letter causal telescoping (~150-250 行, in-project 資産無し) が必要。child Phase 3 で gateway atom `relay_broadcast_cut_message_telescope` を 1 本 dispatch して tractability を確定 (gateway-atom-first)。閉じねば MAC-cut 単独 genuine publish + BC sorry+`@residual(plan:relay-cutset-headline-plan)` で partial、user-decision 停止。
 - min 合成: `le_min_iff`。relayCutsetBound の `Ib`(BC-cut) / `Im`(MAC-cut) は per-letter-sum (+ Fano slack) を呼び出し側が渡す scalar 形 (max over p は外出し、Line A 同様)。
 
 > **Parent**:
