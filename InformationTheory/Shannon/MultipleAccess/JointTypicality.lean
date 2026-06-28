@@ -73,7 +73,9 @@ lemma measurable_macJointSequence
 /-- The three-way jointly typical set `A_ε^n ⊆ (Fin n → α₁) × (Fin n → α₂) × (Fin n → β)`:
 triples `(x₁, x₂, y)` that are simultaneously typical along every single axis, every pair
 of axes, and the three-way joint axis.  The seven conditions are exactly what the three
-achievability error events `E1`/`E2`/`E3` require. -/
+achievability error events `E1`/`E2`/`E3` require.
+
+@audit:ok -/
 noncomputable def macJointlyTypicalSet
     (μ : Measure Ω) (X1s : ℕ → Ω → α₁) (X2s : ℕ → Ω → α₂) (Ys : ℕ → Ω → β)
     (n : ℕ) (ε : ℝ) :

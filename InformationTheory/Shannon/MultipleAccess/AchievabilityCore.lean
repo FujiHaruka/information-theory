@@ -43,7 +43,9 @@ triple lands in the three-way jointly typical set is at most
 
 The measure is the product of user 1's block law and the joint block law of `(X₂, Y)`.
 The exponent is the single-user exit form; combined with input independence (downstream)
-it equals `exp(-n·(I(X₁;Y|X₂) − 3ε))`. -/
+it equals `exp(-n·(I(X₁;Y|X₂) − 3ε))`.
+
+@audit:ok -/
 @[entry_point]
 theorem macJTS_indep_prob_le_X1
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -173,7 +175,9 @@ omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
 
 This is the direct three-axis analogue of the single-user independent-pair bound, with the
 `(X₁,X₂)` axes grouped as the "input" and `Y` as the "output".  Combined with input
-independence (downstream) the exponent equals `exp(-n·(I(X₁,X₂;Y) − 3ε))`. -/
+independence (downstream) the exponent equals `exp(-n·(I(X₁,X₂;Y) − 3ε))`.
+
+@audit:ok -/
 @[entry_point]
 theorem macJTS_indep_prob_le_both
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -260,7 +264,9 @@ drawn independently of the jointly distributed pair `(X₁, Y)`, the probability
 
 This is the user-1/user-2 mirror image of `macJTS_indep_prob_le_X1`, with `(X₁, Y)` as the
 jointly distributed "output" axis.  Combined with input independence (downstream) the
-exponent equals `exp(-n·(I(X₂;Y|X₁) − 3ε))`. -/
+exponent equals `exp(-n·(I(X₂;Y|X₁) − 3ε))`.
+
+@audit:ok -/
 @[entry_point]
 theorem macJTS_indep_prob_le_X2
     (μ : Measure Ω) [IsProbabilityMeasure μ]
