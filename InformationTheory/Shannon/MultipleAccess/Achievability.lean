@@ -1077,8 +1077,57 @@ lemma mac_random_codebook_E0_swap
       ≤ (macAmbientMeasure p₁ p₂ W).real
           {ω | (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω) ∉
               macJointlyTypicalSet (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs n ε} := by
-  -- @residual(plan:mac-achievability-bonferroni-plan)
-  sorry
+  classical
+  set J : Set ((Fin n → α₁) × (Fin n → α₂) × (Fin n → β)) :=
+    macJointlyTypicalSet (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs n ε with hJ_def
+  -- Step 1: marginalize c₂ (row m₂) then c₁ (row m₁) to the distributed form `D`.
+  have h_marg :
+      ∑ c₁ : MACCodebook M₁ n α₁, ∑ c₂ : MACCodebook M₂ n α₂,
+          (codebookMeasure p₁ M₁ n).real {c₁} * (codebookMeasure p₂ M₂ n).real {c₂} *
+          (Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ m₁, c₂ m₂, y) ∉ J}
+        = ∑ x₁ : Fin n → α₁, ∑ x₂ : Fin n → α₂,
+            (Measure.pi (fun _ : Fin n ↦ p₁)).real {x₁} *
+              (Measure.pi (fun _ : Fin n ↦ p₂)).real {x₂} *
+              (Measure.pi (fun i ↦ W (x₁ i, x₂ i))).real {y | (x₁, x₂, y) ∉ J} := by
+    have h_c2 : ∀ c₁ : MACCodebook M₁ n α₁,
+        (∑ c₂ : MACCodebook M₂ n α₂,
+          (codebookMeasure p₁ M₁ n).real {c₁} * (codebookMeasure p₂ M₂ n).real {c₂} *
+          (Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ m₁, c₂ m₂, y) ∉ J})
+        = (codebookMeasure p₁ M₁ n).real {c₁} *
+            ∑ x₂ : Fin n → α₂, (Measure.pi (fun _ : Fin n ↦ p₂)).real {x₂} *
+              (Measure.pi (fun i ↦ W (c₁ m₁ i, x₂ i))).real {y | (c₁ m₁, x₂, y) ∉ J} := by
+      intro c₁
+      rw [← codebook_marginal_one p₂ M₂ n m₂
+            (fun x₂ ↦ (Measure.pi (fun i ↦ W (c₁ m₁ i, x₂ i))).real {y | (c₁ m₁, x₂, y) ∉ J})
+            (fun _ ↦ measureReal_nonneg), Finset.mul_sum]
+      exact Finset.sum_congr rfl (fun c₂ _ ↦ by ring)
+    rw [Finset.sum_congr rfl (fun c₁ _ ↦ h_c2 c₁)]
+    rw [codebook_marginal_one p₁ M₁ n m₁
+        (fun x₁ ↦ ∑ x₂ : Fin n → α₂, (Measure.pi (fun _ : Fin n ↦ p₂)).real {x₂} *
+          (Measure.pi (fun i ↦ W (x₁ i, x₂ i))).real {y | (x₁, x₂, y) ∉ J})
+        (fun _ ↦ Finset.sum_nonneg (fun _ _ ↦ mul_nonneg measureReal_nonneg measureReal_nonneg))]
+    refine Finset.sum_congr rfl (fun x₁ _ ↦ ?_)
+    rw [Finset.mul_sum]
+    refine Finset.sum_congr rfl (fun x₂ _ ↦ by ring)
+  -- Step 2: the right side equals the same distributed form `D` via the triple fold.
+  have h_rhs : (macAmbientMeasure p₁ p₂ W).real
+        {ω | (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω) ∉ J}
+      = ∑ x₁ : Fin n → α₁, ∑ x₂ : Fin n → α₂,
+          (Measure.pi (fun _ : Fin n ↦ p₁)).real {x₁} *
+            (Measure.pi (fun _ : Fin n ↦ p₂)).real {x₂} *
+            (Measure.pi (fun i ↦ W (x₁ i, x₂ i))).real {y | (x₁, x₂, y) ∉ J} := by
+    have hg₀_meas : Measurable (fun ω : ℕ → α₁ × α₂ × β ↦
+        (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω)) :=
+      (measurable_jointRV macX1s measurable_macX1s n).prodMk
+        ((measurable_jointRV macX2s measurable_macX2s n).prodMk
+          (measurable_jointRV macYs measurable_macYs n))
+    rw [show {ω | (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω) ∉ J}
+          = (fun ω ↦ (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω)) ⁻¹'
+              {t | t ∉ J} from rfl,
+      ← map_measureReal_apply hg₀_meas (Set.toFinite _).measurableSet,
+      mac_chan_fold_triple_set p₁ p₂ W n {t | t ∉ J}]
+    simp only [Set.mem_setOf_eq]
+  exact le_of_eq (h_marg.trans h_rhs.symm)
 
 /-- **E1 swap (user-1 alias).**  The two-codebook average of the user-1 alias event
 (`m₁' ≠ m₁`, user 2 correct) is bounded by `exp(n·(−I(X₁;(X₂,Y)) + 3ε))`. -/
@@ -1226,8 +1275,114 @@ lemma mac_random_codebook_E2_swap
           {y | (c₁ m₁, c₂ m₂', y) ∈
             macJointlyTypicalSet (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs n ε}
       ≤ Real.exp ((n : ℝ) * (-(macInfo₂ p₁ p₂ W) + 3 * ε)) := by
-  -- @residual(plan:mac-achievability-bonferroni-plan)
-  sorry
+  classical
+  haveI hμX2prob : IsProbabilityMeasure ((macAmbientMeasure p₁ p₂ W).map (jointRV macX2s n)) :=
+    Measure.isProbabilityMeasure_map (measurable_jointRV macX2s measurable_macX2s n).aemeasurable
+  haveI hνA1prob : IsProbabilityMeasure ((macAmbientMeasure p₁ p₂ W).map
+      (fun ω ↦ (jointRV macX1s n ω, jointRV macYs n ω))) :=
+    Measure.isProbabilityMeasure_map ((measurable_jointRV macX1s measurable_macX1s n).prodMk
+      (measurable_jointRV macYs measurable_macYs n)).aemeasurable
+  set J : Set ((Fin n → α₁) × (Fin n → α₂) × (Fin n → β)) :=
+    macJointlyTypicalSet (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs n ε with hJ_def
+  -- Step 1: marginalize c₁ (row m₁) then c₂ (rows m₂, m₂') to the distributed form `D`.
+  have h_marg :
+      ∑ c₁ : MACCodebook M₁ n α₁, ∑ c₂ : MACCodebook M₂ n α₂,
+          (codebookMeasure p₁ M₁ n).real {c₁} * (codebookMeasure p₂ M₂ n).real {c₂} *
+          (Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ m₁, c₂ m₂', y) ∈ J}
+        = ∑ xb : Fin n → α₂, ∑ x₁ : Fin n → α₁, ∑ x₂ : Fin n → α₂,
+            (Measure.pi (fun _ : Fin n ↦ p₂)).real {xb} *
+              (Measure.pi (fun _ : Fin n ↦ p₁)).real {x₁} *
+              (Measure.pi (fun _ : Fin n ↦ p₂)).real {x₂} *
+              (Measure.pi (fun i ↦ W (x₁ i, x₂ i))).real {y | (x₁, xb, y) ∈ J} := by
+    rw [Finset.sum_comm]
+    have h_c1 : ∀ c₂ : MACCodebook M₂ n α₂,
+        (∑ c₁ : MACCodebook M₁ n α₁,
+          (codebookMeasure p₁ M₁ n).real {c₁} * (codebookMeasure p₂ M₂ n).real {c₂} *
+          (Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ m₁, c₂ m₂', y) ∈ J})
+        = (codebookMeasure p₂ M₂ n).real {c₂} *
+            ∑ x₁ : Fin n → α₁, (Measure.pi (fun _ : Fin n ↦ p₁)).real {x₁} *
+              (Measure.pi (fun i ↦ W (x₁ i, c₂ m₂ i))).real {y | (x₁, c₂ m₂', y) ∈ J} := by
+      intro c₂
+      rw [← codebook_marginal_one p₁ M₁ n m₁
+            (fun x₁ ↦ (Measure.pi (fun i ↦ W (x₁ i, c₂ m₂ i))).real {y | (x₁, c₂ m₂', y) ∈ J})
+            (fun _ ↦ measureReal_nonneg), Finset.mul_sum]
+      exact Finset.sum_congr rfl (fun c₁ _ ↦ by ring)
+    rw [Finset.sum_congr rfl (fun c₂ _ ↦ h_c1 c₂)]
+    rw [codebook_marginal_two p₂ M₂ n m₂ m₂' hne
+        (fun x₂ xb ↦ ∑ x₁ : Fin n → α₁, (Measure.pi (fun _ : Fin n ↦ p₁)).real {x₁} *
+          (Measure.pi (fun i ↦ W (x₁ i, x₂ i))).real {y | (x₁, xb, y) ∈ J})
+        (fun _ _ ↦ Finset.sum_nonneg (fun _ _ ↦ mul_nonneg measureReal_nonneg measureReal_nonneg))]
+    -- Reorder ∑x₂∑xb∑x₁ → ∑xb∑x₁∑x₂ and distribute the codeword masses.
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl (fun xb _ ↦ ?_)
+    refine (Finset.sum_congr rfl (fun x₂ _ ↦ Finset.mul_sum _ _ _)).trans ?_
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl (fun x₁ _ ↦ Finset.sum_congr rfl (fun x₂ _ ↦ by ring))
+  -- Step 2: the gateway product equals the same distributed form `D`.
+  have h_prod :
+      (((macAmbientMeasure p₁ p₂ W).map (jointRV macX2s n)).prod
+          ((macAmbientMeasure p₁ p₂ W).map
+            (fun ω ↦ (jointRV macX1s n ω, jointRV macYs n ω)))).real
+          {q : (Fin n → α₂) × ((Fin n → α₁) × (Fin n → β)) | (q.2.1, q.1, q.2.2) ∈ J}
+        = ∑ xb : Fin n → α₂, ∑ x₁ : Fin n → α₁, ∑ x₂ : Fin n → α₂,
+            (Measure.pi (fun _ : Fin n ↦ p₂)).real {xb} *
+              (Measure.pi (fun _ : Fin n ↦ p₁)).real {x₁} *
+              (Measure.pi (fun _ : Fin n ↦ p₂)).real {x₂} *
+              (Measure.pi (fun i ↦ W (x₁ i, x₂ i))).real {y | (x₁, xb, y) ∈ J} := by
+    rw [mac_prodReal_eq_slice_sum ((macAmbientMeasure p₁ p₂ W).map (jointRV macX2s n))
+        ((macAmbientMeasure p₁ p₂ W).map (fun ω ↦ (jointRV macX1s n ω, jointRV macYs n ω)))
+        {q : (Fin n → α₂) × ((Fin n → α₁) × (Fin n → β)) | (q.2.1, q.1, q.2.2) ∈ J},
+      mac_block_law_X2 p₁ p₂ W n]
+    refine Finset.sum_congr rfl (fun xb _ ↦ ?_)
+    rw [mac_chan_fold_X1Y_set p₁ p₂ W n
+        {b : (Fin n → α₁) × (Fin n → β) |
+          (xb, b) ∈ {q : (Fin n → α₂) × ((Fin n → α₁) × (Fin n → β)) | (q.2.1, q.1, q.2.2) ∈ J}},
+      Finset.mul_sum]
+    refine Finset.sum_congr rfl (fun x₁ _ ↦ ?_)
+    rw [Finset.mul_sum]
+    refine Finset.sum_congr rfl (fun x₂ _ ↦ ?_)
+    show (Measure.pi (fun _ : Fin n ↦ p₂)).real {xb} *
+        ((Measure.pi (fun _ : Fin n ↦ p₁)).real {x₁} *
+          (Measure.pi (fun _ : Fin n ↦ p₂)).real {x₂} *
+          (Measure.pi (fun i ↦ W (x₁ i, x₂ i))).real {y | (x₁, xb, y) ∈ J}) = _
+    ring
+  -- Step 3: the gateway exponential bound, exponent rewritten to `-(macInfo₂) + 3ε`.
+  have h_gw := macJTS_indep_prob_le_X2_split p₁ p₂ W hp₁ hp₂ hW n hε
+  rw [← hJ_def] at h_gw
+  have he_id : entropy (macAmbientMeasure p₁ p₂ W) (macJointSequence macX1s macX2s macYs 0)
+      = entropy (macJointDistribution p₁ p₂ W) id := by
+    rw [show (macJointSequence macX1s macX2s macYs 0 : (ℕ → α₁ × α₂ × β) → α₁ × α₂ × β)
+          = fun ω ↦ id (ω 0) from rfl]
+    exact macAmbient_entropy_coord p₁ p₂ W id measurable_id 0
+  have he_x2 : entropy (macAmbientMeasure p₁ p₂ W) (macX2s 0)
+      = entropy (macJointDistribution p₁ p₂ W) (fun q ↦ q.2.1) := by
+    rw [show (macX2s 0 : (ℕ → α₁ × α₂ × β) → α₂) = fun ω ↦ (fun q : α₁ × α₂ × β ↦ q.2.1) (ω 0)
+          from rfl]
+    exact macAmbient_entropy_coord p₁ p₂ W (fun q ↦ q.2.1) (measurable_fst.comp measurable_snd) 0
+  have he_x1y : entropy (macAmbientMeasure p₁ p₂ W) (jointSequence macX1s macYs 0)
+      = entropy (macJointDistribution p₁ p₂ W) (fun q ↦ (q.1, q.2.2)) := by
+    rw [show (jointSequence macX1s macYs 0 : (ℕ → α₁ × α₂ × β) → α₁ × β)
+          = fun ω ↦ (fun q : α₁ × α₂ × β ↦ (q.1, q.2.2)) (ω 0) from rfl]
+    exact macAmbient_entropy_coord p₁ p₂ W (fun q ↦ (q.1, q.2.2))
+      (measurable_fst.prodMk (measurable_snd.comp measurable_snd)) 0
+  have h_exp : ((entropy (macAmbientMeasure p₁ p₂ W) (macJointSequence macX1s macX2s macYs 0)
+        - entropy (macAmbientMeasure p₁ p₂ W) (macX2s 0)
+        - entropy (macAmbientMeasure p₁ p₂ W) (jointSequence macX1s macYs 0)) + 3 * ε)
+      = -(macInfo₂ p₁ p₂ W) + 3 * ε := by
+    rw [he_id, he_x2, he_x1y, macInfo₂]; ring
+  calc ∑ c₁ : MACCodebook M₁ n α₁, ∑ c₂ : MACCodebook M₂ n α₂,
+          (codebookMeasure p₁ M₁ n).real {c₁} * (codebookMeasure p₂ M₂ n).real {c₂} *
+          (Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ m₁, c₂ m₂', y) ∈ J}
+      = (((macAmbientMeasure p₁ p₂ W).map (jointRV macX2s n)).prod
+          ((macAmbientMeasure p₁ p₂ W).map
+            (fun ω ↦ (jointRV macX1s n ω, jointRV macYs n ω)))).real
+          {q : (Fin n → α₂) × ((Fin n → α₁) × (Fin n → β)) | (q.2.1, q.1, q.2.2) ∈ J} :=
+        h_marg.trans h_prod.symm
+    _ ≤ Real.exp ((n : ℝ) * ((entropy (macAmbientMeasure p₁ p₂ W)
+          (macJointSequence macX1s macX2s macYs 0)
+          - entropy (macAmbientMeasure p₁ p₂ W) (macX2s 0)
+          - entropy (macAmbientMeasure p₁ p₂ W) (jointSequence macX1s macYs 0)) + 3 * ε)) := h_gw
+    _ = Real.exp ((n : ℝ) * (-(macInfo₂ p₁ p₂ W) + 3 * ε)) := by rw [h_exp]
 
 /-- **E3 swap (both aliases).** -/
 lemma mac_random_codebook_E3_swap
