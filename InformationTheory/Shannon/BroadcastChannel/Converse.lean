@@ -206,22 +206,36 @@ theorem bc_converse_message_level
 /-! ## Receiver-1 single-letterization (Csiszár-sum half, bound (b)) -/
 
 /-- **BC converse, receiver-1 input-level single-letterization** (the Csiszár-sum core): under
-degradedness `X → Y₁ → Y₂` and a memoryless channel, the conditional block input–output mutual
-information collapses to the per-letter auxiliary-variable sum
-`I(Xⁿ; Y₁ⁿ | W₂) ≤ ∑ᵢ I(Xᵢ; Y_{1,i} | Uᵢ)` with `Uᵢ = (W₂, Y₂^{i-1})`.
+degradedness `X → Y₁ → Y₂` and a memoryless channel with the conditioning message `W₂` upstream
+of the channel, the conditional block input–output mutual information collapses to the
+per-letter auxiliary-variable sum `I(Xⁿ; Y₁ⁿ | W₂) ≤ ∑ᵢ I(Xᵢ; Y_{1,i} | Uᵢ)` with
+`Uᵢ = (W₂, Y₂^{i-1})`.
 
 This is the decisive analytic atom of the degraded-BC converse: the prefix conditioner
 `Y₁^{i-1}` is swapped for the suffix-of-the-degraded-output `Y₂^{i-1}` via the Csiszár sum
 identity (`csiszar_sum_identity`), and the memoryless + degradedness structure reduces each
-term to the single-letter channel quantity. The degradedness and memoryless hypotheses are
-preconditions (regularity), not load-bearing.
+term to the single-letter channel quantity.
+
+The memoryless hypothesis `h_memo` is the **`W₂`-inclusive** form `Y_{1,i} ⟂ (W₂, X^{≠i},
+Y₁^{≠i}) | X_i`: it blocks the conditioning message `W₂` together with the other letters at
+`X_i`, encoding that `W₂` is *upstream* of the channel (the noise generating `Y₁,i` is
+independent of `W₂` given `X_i`). This is essential — with a bare memoryless channel and a
+*free* `W₂`, the bound is false (a "collider" message `W₂ = Y₁,j ⊕ X_k` opens a path that
+breaks the per-letter reduction). It is a structural/regularity precondition (true in the
+genuine operational setup where `Xⁿ = encoder (W₁, W₂)`), not load-bearing.
 @residual(plan:bc-degraded-converse-plan) -/
 theorem bc_input_singleletterize
+    [NeZero M₂]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (W₂ : Ω → Fin M₂) (Xs : Fin n → Ω → α) (Y₁s : Fin n → Ω → β₁) (Y₂s : Fin n → Ω → β₂)
     (hW₂ : Measurable W₂) (hXs : ∀ i, Measurable (Xs i))
     (hY₁s : ∀ i, Measurable (Y₁s i)) (hY₂s : ∀ i, Measurable (Y₂s i))
-    (h_memo : ChannelCodingConverseGeneral.IsMemorylessChannel μ Xs Y₁s)
+    (h_memo : ∀ i : Fin n,
+      IsMarkovChain μ
+        (fun ω ↦ (W₂ ω,
+          ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
+           (fun (j : {j : Fin n // j ≠ i}) ↦ Y₁s j.val ω))))
+        (Xs i) (Y₁s i))
     (h_degraded : ∀ i, IsMarkovChain μ (Xs i) (Y₁s i) (Y₂s i)) :
     condMutualInfo μ (fun ω j ↦ Xs j ω) (fun ω j ↦ Y₁s j ω) W₂
       ≤ ∑ i : Fin n,
@@ -245,8 +259,12 @@ theorem bc_singleletterize_bound₁
     (hW₁ : Measurable W₁) (hW₂ : Measurable W₂)
     (hY₁s : ∀ i, Measurable (Y₁s i)) (hY₂s : ∀ i, Measurable (Y₂s i))
     (h_indep : mutualInfo μ W₁ W₂ = 0)
-    (h_memo : ChannelCodingConverseGeneral.IsMemorylessChannel μ
-        (fun i ω ↦ c.encoder (W₁ ω, W₂ ω) i) Y₁s)
+    (h_memo : ∀ i : Fin n,
+      IsMarkovChain μ
+        (fun ω ↦ (W₂ ω,
+          ((fun (j : {j : Fin n // j ≠ i}) ↦ c.encoder (W₁ ω, W₂ ω) j.val),
+           (fun (j : {j : Fin n // j ≠ i}) ↦ Y₁s j.val ω))))
+        (fun ω ↦ c.encoder (W₁ ω, W₂ ω) i) (Y₁s i))
     (h_degraded : ∀ i, IsMarkovChain μ (fun ω ↦ c.encoder (W₁ ω, W₂ ω) i) (Y₁s i) (Y₂s i))
     (hmarkov : IsMarkovChain μ (fun ω ↦ (W₂ ω, W₁ ω))
       (fun ω ↦ (W₂ ω, fun j ↦ c.encoder (W₁ ω, W₂ ω) j)) (fun ω j ↦ Y₁s j ω)) :
@@ -305,8 +323,12 @@ theorem bc_converse
     (hW₁_uniform : μ.map W₁ = (Fintype.card (Fin M₁) : ℝ≥0∞)⁻¹ • Measure.count)
     (hW₂_uniform : μ.map W₂ = (Fintype.card (Fin M₂) : ℝ≥0∞)⁻¹ • Measure.count)
     (h_indep : mutualInfo μ W₁ W₂ = 0)
-    (h_memo : ChannelCodingConverseGeneral.IsMemorylessChannel μ
-        (fun i ω ↦ c.encoder (W₁ ω, W₂ ω) i) Y₁s)
+    (h_memo : ∀ i : Fin n,
+      IsMarkovChain μ
+        (fun ω ↦ (W₂ ω,
+          ((fun (j : {j : Fin n // j ≠ i}) ↦ c.encoder (W₁ ω, W₂ ω) j.val),
+           (fun (j : {j : Fin n // j ≠ i}) ↦ Y₁s j.val ω))))
+        (fun ω ↦ c.encoder (W₁ ω, W₂ ω) i) (Y₁s i))
     (h_degraded : ∀ i, IsMarkovChain μ (fun ω ↦ c.encoder (W₁ ω, W₂ ω) i) (Y₁s i) (Y₂s i))
     (hmarkov : IsMarkovChain μ (fun ω ↦ (W₂ ω, W₁ ω))
       (fun ω ↦ (W₂ ω, fun j ↦ c.encoder (W₁ ω, W₂ ω) j)) (fun ω j ↦ Y₁s j ω))
