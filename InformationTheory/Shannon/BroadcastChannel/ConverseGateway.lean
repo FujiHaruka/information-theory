@@ -41,7 +41,8 @@ variable {n : ℕ}
 `I(W; Bⁿ) = ∑ᵢ I(W; Bᵢ | B^{<i})`.
 
 Derived from the left-axis `mutualInfo_chain_rule_fin` by `mutualInfo_comm` +
-`condMutualInfo_comm`.  Prefix conditioner `B^{<i}` only — no suffix machinery. -/
+`condMutualInfo_comm`.  Prefix conditioner `B^{<i}` only — no suffix machinery.
+@audit:ok -/
 lemma mutualInfo_chain_rule_Y_fin
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (W : Ω → γ) (Bs : Fin n → Ω → γ)
@@ -65,7 +66,8 @@ lemma mutualInfo_chain_rule_Y_fin
 
 Chain-rule plumbing: expand `I(W₂; Y₂ⁿ)` via the Y-axis chain rule into
 `∑ᵢ I(W₂; Y_{2,i} | Y₂^{i-1})`, then bound each summand by `I((W₂, Y₂^{i-1}); Y_{2,i})`
-(adding the prefix to the data variable can only increase MI).  Prefix conditioner only. -/
+(adding the prefix to the data variable can only increase MI).  Prefix conditioner only.
+@audit:ok -/
 theorem bc_converse_bound_a
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (W₂ : Ω → γ) (Y₂s : Fin n → Ω → γ)
@@ -110,7 +112,8 @@ Here `A^{i-1}` is the *prefix* `fun j : Fin i.val ↦ Aⱼ` and `B_{i+1}ⁿ` is 
 `condMutualInfo_prefix_chain_rule` for the left, the reflection-based suffix chain rule
 `condMutualInfo_suffix_chain_rule` for the right) to the common triangular double sum
 `∑_{k<i} I(Aₖ; Bᵢ | A^{k-1}, B_{i+1}ⁿ)`, matched termwise by `condMutualInfo_comm` plus a
-`prodComm` relabel of the conditioner (El Gamal–Kim). -/
+`prodComm` relabel of the conditioner (El Gamal–Kim).
+@audit:ok -/
 theorem csiszar_sum_identity
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (As Bs : Fin n → Ω → γ)

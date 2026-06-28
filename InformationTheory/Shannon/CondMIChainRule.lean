@@ -62,7 +62,8 @@ def revSuffixEquiv {n : ℕ} (i : Fin n) :
 
 /-- Additive prefix chain rule: prepending a `Fin m` prefix of `As` to the background
 conditioner `Z` decomposes the mutual information additively as
-`I((Z, A^{<m}); C) = I(Z; C) + ∑_{k<m} I(A_k; C | (Z, A^{<k}))`. Proven by induction on `m`. -/
+`I((Z, A^{<m}); C) = I(Z; C) + ∑_{k<m} I(A_k; C | (Z, A^{<k}))`. Proven by induction on `m`.
+@audit:ok -/
 theorem mutualInfo_prefix_chain_rule_add
     {m : ℕ}
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -140,7 +141,8 @@ theorem mutualInfo_prefix_chain_rule_add
 /-- Conditional prefix chain rule:
 `I(A^{<m}; C | Z) = ∑_{k<m} I(A_k; C | (Z, A^{<k}))`.
 
-Derived from the additive form by cancelling the common term `I(Z; C)` (requires it finite). -/
+Derived from the additive form by cancelling the common term `I(Z; C)` (requires it finite).
+@audit:ok -/
 theorem condMutualInfo_prefix_chain_rule
     {m : ℕ}
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -162,7 +164,8 @@ theorem condMutualInfo_prefix_chain_rule
 `I(B^{>i}; C | Z) = ∑_{j > i} I(B_j; C | (Z, B^{>j}))`, where the left variable expands a
 *suffix* `B^{>i} = (B_{i+1}, …, B_{n-1})` peeling off each `B_j` while conditioning on the
 larger-index suffix `B^{>j}`. Obtained by reindexing the suffix onto a `Fin`-prefix with the
-order-reversing `revSuffixEquiv` and invoking `condMutualInfo_prefix_chain_rule`. -/
+order-reversing `revSuffixEquiv` and invoking `condMutualInfo_prefix_chain_rule`.
+@audit:ok -/
 theorem condMutualInfo_suffix_chain_rule
     {n : ℕ} (i : Fin n)
     (μ : Measure Ω) [IsProbabilityMeasure μ]

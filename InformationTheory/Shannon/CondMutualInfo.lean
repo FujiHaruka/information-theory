@@ -502,7 +502,8 @@ private lemma compProd_map_left_prodMap
 /-- Reshaping the conditioner leaves the CMI fixed: `I(X; Y | e ∘ Z) = I(X; Y | Z)` for any
 `MeasurableEquiv e : Z ≃ᵐ Z'`. The conditioner carries the same information after a
 measurable-equiv relabel. Companion to `condMutualInfo_map_left_measurableEquiv` and
-`condMutualInfo_map_middle_measurableEquiv` (the third argument slot). -/
+`condMutualInfo_map_middle_measurableEquiv` (the third argument slot).
+@audit:ok -/
 @[entry_point]
 theorem condMutualInfo_map_cond_measurableEquiv
     {Z' : Type*} [MeasurableSpace Z']
