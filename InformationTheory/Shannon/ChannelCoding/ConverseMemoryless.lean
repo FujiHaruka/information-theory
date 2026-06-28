@@ -394,7 +394,8 @@ private lemma cond_reshape_kernel_lemma {X' Z Z' : Type*}
 
 /-- Markov chain conditioner reshape via measurable equiv: if `Markov μ Xs (e ∘ Z') Yo`
 and `e : Z' ≃ᵐ Z`, then `Markov μ Xs Z' Yo`. -/
-private lemma isMarkovChain_map_conditioner_measurableEquiv
+@[entry_point]
+lemma isMarkovChain_map_conditioner_measurableEquiv
     {X Z Z' : Type*}
     [MeasurableSpace X] [StandardBorelSpace X] [Nonempty X]
     [MeasurableSpace Z] [StandardBorelSpace Z] [Nonempty Z]

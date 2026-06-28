@@ -595,6 +595,299 @@ theorem mac_singleletterize_bound₁
     ENNReal.toReal_sum (fun i _ ↦ hRHS_fin i)]
   exact h_link.trans h_single
 
+/-- **MAC converse, user-2 single-letterized corner bound**: symmetric to
+`mac_singleletterize_bound₁` with the two users swapped. -/
+theorem mac_singleletterize_bound₂
+    [NeZero M₁] [NeZero M₂]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Msg₁ : Ω → Fin M₁) (Msg₂ : Ω → Fin M₂) (Ys : Fin n → Ω → β)
+    (c : MACCode M₁ M₂ n α₁ α₂ β)
+    (hMsg₁ : Measurable Msg₁) (hMsg₂ : Measurable Msg₂) (hYs : ∀ i, Measurable (Ys i))
+    (h_memo : IsMemorylessChannel μ
+        (fun i ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i)) Ys)
+    (h_indep : mutualInfo μ Msg₁ Msg₂ = 0)
+    (hmarkov : IsMarkovChain μ (fun ω ↦ (Msg₁ ω, Msg₂ ω))
+      (fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)))
+      (fun ω j ↦ Ys j ω)) :
+    mutualInfo μ Msg₂ (fun ω ↦ (Msg₁ ω, fun i ↦ Ys i ω))
+      ≤ ∑ i : Fin n,
+          condMutualInfo μ (fun ω ↦ c.encoder₂ (Msg₂ ω) i) (Ys i)
+            (fun ω ↦ c.encoder₁ (Msg₁ ω) i) := by
+  classical
+  have hX₁s : ∀ i, Measurable (fun ω ↦ c.encoder₁ (Msg₁ ω) i) := fun i ↦
+    (measurable_pi_apply i).comp ((measurable_of_countable c.encoder₁).comp hMsg₁)
+  have hX₂s : ∀ i, Measurable (fun ω ↦ c.encoder₂ (Msg₂ ω) i) := fun i ↦
+    (measurable_pi_apply i).comp ((measurable_of_countable c.encoder₂).comp hMsg₂)
+  have hJoint : ∀ i, Measurable
+      (fun ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i)) := fun i ↦
+    (hX₁s i).prodMk (hX₂s i)
+  have hYpi : Measurable (fun ω j ↦ Ys j ω) := measurable_pi_iff.mpr hYs
+  have hX₁pi : Measurable (fun ω j ↦ c.encoder₁ (Msg₁ ω) j) :=
+    (measurable_of_countable c.encoder₁).comp hMsg₁
+  have hX₂pi : Measurable (fun ω j ↦ c.encoder₂ (Msg₂ ω) j) :=
+    (measurable_of_countable c.encoder₂).comp hMsg₂
+  -- Swapped `MACCode` to reuse the user-1 message link for user 2.
+  let c' : MACCode M₂ M₁ n α₂ α₁ β :=
+    { encoder₁ := c.encoder₂, encoder₂ := c.encoder₁, decoder := fun y ↦ Prod.swap (c.decoder y) }
+  -- Block channel Markov chain in swapped order `(M₂, M₁) → (X₂ⁿ, X₁ⁿ) → Yⁿ`.
+  have hmL : IsMarkovChain μ (fun ω ↦ (Msg₂ ω, Msg₁ ω))
+      (fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)))
+      (fun ω j ↦ Ys j ω) :=
+    isMarkovChain_map_left μ (fun ω ↦ (Msg₁ ω, Msg₂ ω))
+      (fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)))
+      (fun ω j ↦ Ys j ω) (hMsg₁.prodMk hMsg₂) (hX₁pi.prodMk hX₂pi) hYpi
+      (f := Prod.swap) (measurable_snd.prodMk measurable_fst) hmarkov
+  have hmarkov₂ : IsMarkovChain μ (fun ω ↦ (Msg₂ ω, Msg₁ ω))
+      (fun ω ↦ ((fun j ↦ c.encoder₂ (Msg₂ ω) j), (fun j ↦ c.encoder₁ (Msg₁ ω) j)))
+      (fun ω j ↦ Ys j ω) := by
+    refine isMarkovChain_map_conditioner_measurableEquiv μ
+      (fun ω ↦ (Msg₂ ω, Msg₁ ω))
+      (fun ω ↦ ((fun j ↦ c.encoder₂ (Msg₂ ω) j), (fun j ↦ c.encoder₁ (Msg₁ ω) j)))
+      (fun ω j ↦ Ys j ω) (hMsg₂.prodMk hMsg₁) (hX₂pi.prodMk hX₁pi) hYpi
+      (MeasurableEquiv.prodComm (α := Fin n → α₂) (β := Fin n → α₁)) ?_
+    have hE : (fun ω ↦ (MeasurableEquiv.prodComm (α := Fin n → α₂) (β := Fin n → α₁))
+          ((fun j ↦ c.encoder₂ (Msg₂ ω) j), (fun j ↦ c.encoder₁ (Msg₁ ω) j)))
+        = fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)) := by
+      funext ω; simp [MeasurableEquiv.prodComm]
+    rw [hE]; exact hmL
+  -- Per-letter Markov structure for the swapped joint input `(X₂ᵢ, X₁ᵢ)`.
+  have h_per_letter_nat := per_letter_markov_of_memoryless μ
+    (fun i ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i)) Ys hJoint hYs h_memo
+  have h_outputs_nat := outputs_cond_indep_of_memoryless μ
+    (fun i ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i)) Ys hJoint hYs h_memo
+  have h_per_letter_swap : ∀ i : Fin n,
+      IsMarkovChain μ (fun ω j ↦ (c.encoder₂ (Msg₂ ω) j, c.encoder₁ (Msg₁ ω) j))
+        (fun ω ↦ (c.encoder₂ (Msg₂ ω) i, c.encoder₁ (Msg₁ ω) i)) (Ys i) := by
+    intro i
+    have hleft : IsMarkovChain μ (fun ω j ↦ (c.encoder₂ (Msg₂ ω) j, c.encoder₁ (Msg₁ ω) j))
+        (fun ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i)) (Ys i) :=
+      isMarkovChain_map_left μ
+        (fun ω j ↦ (c.encoder₁ (Msg₁ ω) j, c.encoder₂ (Msg₂ ω) j))
+        (fun ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i)) (Ys i)
+        (measurable_pi_iff.mpr hJoint) (hJoint i) (hYs i)
+        (f := fun g j ↦ Prod.swap (g j))
+        (measurable_pi_iff.mpr fun j ↦
+          (measurable_snd.prodMk measurable_fst).comp (measurable_pi_apply j))
+        (h_per_letter_nat i)
+    refine isMarkovChain_map_conditioner_measurableEquiv μ
+      (fun ω j ↦ (c.encoder₂ (Msg₂ ω) j, c.encoder₁ (Msg₁ ω) j))
+      (fun ω ↦ (c.encoder₂ (Msg₂ ω) i, c.encoder₁ (Msg₁ ω) i)) (Ys i)
+      (measurable_pi_iff.mpr fun j ↦ (hX₂s j).prodMk (hX₁s j)) ((hX₂s i).prodMk (hX₁s i))
+      (hYs i) (MeasurableEquiv.prodComm (α := α₂) (β := α₁)) ?_
+    have hE : (fun ω ↦ (MeasurableEquiv.prodComm (α := α₂) (β := α₁))
+          (c.encoder₂ (Msg₂ ω) i, c.encoder₁ (Msg₁ ω) i))
+        = fun ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i) := by
+      funext ω; simp [MeasurableEquiv.prodComm]
+    rw [hE]; exact hleft
+  have h_outputs_swap : ∀ i : Fin n,
+      IsMarkovChain μ (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys j.val ω)
+        (fun ω j ↦ (c.encoder₂ (Msg₂ ω) j, c.encoder₁ (Msg₁ ω) j)) (Ys i) := by
+    intro i
+    refine isMarkovChain_map_conditioner_measurableEquiv μ
+      (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys j.val ω)
+      (fun ω j ↦ (c.encoder₂ (Msg₂ ω) j, c.encoder₁ (Msg₁ ω) j)) (Ys i)
+      (measurable_pi_iff.mpr fun j ↦ hYs j.val)
+      (measurable_pi_iff.mpr fun j ↦ (hX₂s j).prodMk (hX₁s j)) (hYs i)
+      (MeasurableEquiv.piCongrRight fun _ : Fin n ↦
+        MeasurableEquiv.prodComm (α := α₂) (β := α₁)) ?_
+    have hE : (fun ω ↦ (MeasurableEquiv.piCongrRight fun _ : Fin n ↦
+            MeasurableEquiv.prodComm (α := α₂) (β := α₁))
+          (fun j ↦ (c.encoder₂ (Msg₂ ω) j, c.encoder₁ (Msg₁ ω) j)))
+        = fun ω j ↦ (c.encoder₁ (Msg₁ ω) j, c.encoder₂ (Msg₂ ω) j) := by
+      funext ω j; simp [MeasurableEquiv.piCongrRight, MeasurableEquiv.prodComm]
+    rw [hE]; exact h_outputs_nat i
+  -- Message link for user 2 and single-letterization.
+  have h_indep₂ : mutualInfo μ Msg₂ Msg₁ = 0 :=
+    (mutualInfo_comm μ Msg₂ Msg₁ hMsg₂ hMsg₁).trans h_indep
+  have h_link := mac_message_le_condMI μ Msg₂ Msg₁ Ys c' hMsg₂ hMsg₁ hYs h_indep₂ hmarkov₂
+  have h_single := condMutualInfo_singleletter_le_of_memoryless μ
+    (fun i ω ↦ c.encoder₂ (Msg₂ ω) i) (fun i ω ↦ c.encoder₁ (Msg₁ ω) i) Ys
+    hX₂s hX₁s hYs h_per_letter_swap h_outputs_swap
+  -- Finiteness for the lift.
+  have hLHS_fin : mutualInfo μ Msg₂ (fun ω ↦ (Msg₁ ω, fun i ↦ Ys i ω)) ≠ ∞ :=
+    mutualInfo_ne_top μ Msg₂ (fun ω ↦ (Msg₁ ω, fun i ↦ Ys i ω)) hMsg₂
+      (hMsg₁.prodMk hYpi)
+  have hRHS_fin : ∀ i, condMutualInfo μ (fun ω ↦ c.encoder₂ (Msg₂ ω) i) (Ys i)
+      (fun ω ↦ c.encoder₁ (Msg₁ ω) i) ≠ ∞ := fun i ↦
+    condMutualInfo_ne_top μ _ _ _ (hX₂s i) (hYs i) (hX₁s i)
+  have hSum_fin : (∑ i : Fin n,
+      condMutualInfo μ (fun ω ↦ c.encoder₂ (Msg₂ ω) i) (Ys i)
+        (fun ω ↦ c.encoder₁ (Msg₁ ω) i)) ≠ ∞ :=
+    (ENNReal.sum_lt_top.mpr fun i _ ↦ (hRHS_fin i).lt_top).ne
+  rw [← ENNReal.toReal_le_toReal hLHS_fin hSum_fin,
+    ENNReal.toReal_sum (fun i _ ↦ hRHS_fin i)]
+  exact h_link.trans h_single
+
+/-- **MAC converse, sum-rate single-letterized bound**: treating `(M₁, M₂)` as one joint
+message and `(X₁ᵢ, X₂ᵢ)` as one joint input, the joint message–output mutual information
+`I((M₁, M₂); Yⁿ)` is bounded by the unconditional per-letter sum `∑ᵢ I((X₁ᵢ, X₂ᵢ); Yᵢ)`. -/
+theorem mac_singleletterize_bound_sum
+    [NeZero M₁] [NeZero M₂]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Msg₁ : Ω → Fin M₁) (Msg₂ : Ω → Fin M₂) (Ys : Fin n → Ω → β)
+    (c : MACCode M₁ M₂ n α₁ α₂ β)
+    (hMsg₁ : Measurable Msg₁) (hMsg₂ : Measurable Msg₂) (hYs : ∀ i, Measurable (Ys i))
+    (h_memo : IsMemorylessChannel μ
+        (fun i ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i)) Ys)
+    (hmarkov : IsMarkovChain μ (fun ω ↦ (Msg₁ ω, Msg₂ ω))
+      (fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)))
+      (fun ω j ↦ Ys j ω)) :
+    mutualInfo μ (fun ω ↦ (Msg₁ ω, Msg₂ ω)) (fun ω i ↦ Ys i ω)
+      ≤ ∑ i : Fin n,
+          mutualInfo μ (fun ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i)) (Ys i) := by
+  classical
+  have hX₁s : ∀ i, Measurable (fun ω ↦ c.encoder₁ (Msg₁ ω) i) := fun i ↦
+    (measurable_pi_apply i).comp ((measurable_of_countable c.encoder₁).comp hMsg₁)
+  have hX₂s : ∀ i, Measurable (fun ω ↦ c.encoder₂ (Msg₂ ω) i) := fun i ↦
+    (measurable_pi_apply i).comp ((measurable_of_countable c.encoder₂).comp hMsg₂)
+  have hJoint : ∀ i, Measurable
+      (fun ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i)) := fun i ↦
+    (hX₁s i).prodMk (hX₂s i)
+  have hYpi : Measurable (fun ω j ↦ Ys j ω) := measurable_pi_iff.mpr hYs
+  have hW : Measurable (fun ω ↦ (Msg₁ ω, Msg₂ ω)) := hMsg₁.prodMk hMsg₂
+  have hX₁pi : Measurable (fun ω j ↦ c.encoder₁ (Msg₁ ω) j) :=
+    (measurable_of_countable c.encoder₁).comp hMsg₁
+  have hX₂pi : Measurable (fun ω j ↦ c.encoder₂ (Msg₂ ω) j) :=
+    (measurable_of_countable c.encoder₂).comp hMsg₂
+  have hXX : Measurable
+      (fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j))) :=
+    hX₁pi.prodMk hX₂pi
+  -- Step 1: data processing `I((M₁,M₂); Yⁿ) ≤ I((X₁ⁿ,X₂ⁿ); Yⁿ)` under the block Markov chain.
+  have hDPI := mutualInfo_le_of_markov μ (fun ω ↦ (Msg₁ ω, Msg₂ ω))
+    (fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)))
+    (fun ω j ↦ Ys j ω) hW hXX hYpi hmarkov
+  -- Step 2: reshape `(X₁ⁿ, X₂ⁿ)` (pair of pi) into the joint input `(X₁ᵢ, X₂ᵢ)ⁿ` (pi of pairs).
+  let E : (Fin n → α₁) × (Fin n → α₂) ≃ᵐ (Fin n → α₁ × α₂) :=
+    (MeasurableEquiv.arrowProdEquivProdArrow α₁ α₂ (Fin n)).symm
+  have hReshape :
+      mutualInfo μ (fun ω j ↦ (c.encoder₁ (Msg₁ ω) j, c.encoder₂ (Msg₂ ω) j))
+          (fun ω j ↦ Ys j ω)
+        = mutualInfo μ
+            (fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)))
+            (fun ω j ↦ Ys j ω) := by
+    have hE : (fun ω j ↦ (c.encoder₁ (Msg₁ ω) j, c.encoder₂ (Msg₂ ω) j))
+        = fun ω ↦ E ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)) := by
+      funext ω j
+      simp [E, MeasurableEquiv.arrowProdEquivProdArrow]
+    rw [hE]
+    exact mutualInfo_map_left_measurableEquiv μ
+      (fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)))
+      (fun ω j ↦ Ys j ω) hXX hYpi E
+  -- Step 3: single-letterize `I((X₁ᵢ,X₂ᵢ)ⁿ; Yⁿ) ≤ ∑ᵢ I((X₁ᵢ,X₂ᵢ); Yᵢ)` (single-user, no conditioner).
+  have h_per_letter := per_letter_markov_of_memoryless μ
+    (fun i ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i)) Ys hJoint hYs h_memo
+  have h_outputs := outputs_cond_indep_of_memoryless μ
+    (fun i ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i)) Ys hJoint hYs h_memo
+  have h_single := mutualInfo_le_sum_per_letter_of_memoryless_strong μ
+    (fun i ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i)) Ys hJoint hYs
+    h_per_letter h_outputs
+  -- Finiteness for the lift.
+  have hRHS_fin : ∀ i, mutualInfo μ (fun ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i))
+      (Ys i) ≠ ∞ := fun i ↦ mutualInfo_ne_top μ _ _ (hJoint i) (hYs i)
+  have hSum_fin : (∑ i : Fin n,
+      mutualInfo μ (fun ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i)) (Ys i)) ≠ ∞ :=
+    (ENNReal.sum_lt_top.mpr fun i _ ↦ (hRHS_fin i).lt_top).ne
+  have hJoint_fin : mutualInfo μ
+      (fun ω j ↦ (c.encoder₁ (Msg₁ ω) j, c.encoder₂ (Msg₂ ω) j)) (fun ω j ↦ Ys j ω) ≠ ∞ :=
+    mutualInfo_ne_top μ _ _ (measurable_pi_iff.mpr hJoint) hYpi
+  have h_single_lift :
+      mutualInfo μ (fun ω j ↦ (c.encoder₁ (Msg₁ ω) j, c.encoder₂ (Msg₂ ω) j))
+          (fun ω j ↦ Ys j ω)
+        ≤ ∑ i : Fin n,
+            mutualInfo μ (fun ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i)) (Ys i) := by
+    rw [← ENNReal.toReal_le_toReal hJoint_fin hSum_fin,
+      ENNReal.toReal_sum (fun i _ ↦ hRHS_fin i)]
+    exact h_single
+  calc mutualInfo μ (fun ω ↦ (Msg₁ ω, Msg₂ ω)) (fun ω i ↦ Ys i ω)
+      ≤ mutualInfo μ
+          (fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)))
+          (fun ω j ↦ Ys j ω) := hDPI
+    _ = mutualInfo μ (fun ω j ↦ (c.encoder₁ (Msg₁ ω) j, c.encoder₂ (Msg₂ ω) j))
+          (fun ω j ↦ Ys j ω) := hReshape.symm
+    _ ≤ _ := h_single_lift
+
+/-- **MAC converse — genuine per-letter-sum outer bound** (Cover–Thomas Thm 15.3.1): for
+uniform, independent messages sent over a memoryless joint channel and decoded jointly, the
+rate pair `(log |M₁|, log |M₂|)` lies in the capacity region whose information bounds are the
+per-letter single-letter channel sums (plus the Fano error slack).
+
+This is the genuine single-letterized MAC converse, distinct from the message-level
+`mac_converse_message_level`: the information slots are the per-time-step channel quantities
+`∑ᵢ I(X₁ᵢ; Yᵢ | X₂ᵢ)`, `∑ᵢ I(X₂ᵢ; Yᵢ | X₁ᵢ)`, `∑ᵢ I((X₁ᵢ, X₂ᵢ); Yᵢ)`, obtained from the
+message-level bound via the single-letterization lemmas and `InMACCapacityRegion.mono`.
+
+The target is the **per-letter sum** (each time step's marginal input distribution); the
+single-distribution / time-sharing convex-hull form is a separate refinement. -/
+@[entry_point]
+theorem mac_converse
+    [NeZero M₁] [NeZero M₂]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Msg₁ : Ω → Fin M₁) (Msg₂ : Ω → Fin M₂) (Ys : Fin n → Ω → β)
+    (c : MACCode M₁ M₂ n α₁ α₂ β)
+    (hMsg₁ : Measurable Msg₁) (hMsg₂ : Measurable Msg₂) (hYs : ∀ i, Measurable (Ys i))
+    (hMsg₁_uniform : μ.map Msg₁ = (Fintype.card (Fin M₁) : ℝ≥0∞)⁻¹ • Measure.count)
+    (hMsg₂_uniform : μ.map Msg₂ = (Fintype.card (Fin M₂) : ℝ≥0∞)⁻¹ • Measure.count)
+    (hMsg₁₂_uniform :
+      μ.map (fun ω ↦ (Msg₁ ω, Msg₂ ω))
+        = (Fintype.card (Fin M₁ × Fin M₂) : ℝ≥0∞)⁻¹ • Measure.count)
+    (h_memo : IsMemorylessChannel μ
+        (fun i ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i)) Ys)
+    (h_indep : mutualInfo μ Msg₁ Msg₂ = 0)
+    (hmarkov : IsMarkovChain μ (fun ω ↦ (Msg₁ ω, Msg₂ ω))
+      (fun ω ↦ ((fun j ↦ c.encoder₁ (Msg₁ ω) j), (fun j ↦ c.encoder₂ (Msg₂ ω) j)))
+      (fun ω j ↦ Ys j ω))
+    (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) :
+    InMACCapacityRegion (Real.log (M₁ : ℝ)) (Real.log (M₂ : ℝ))
+      ((∑ i : Fin n,
+          condMutualInfo μ (fun ω ↦ c.encoder₁ (Msg₁ ω) i) (Ys i)
+            (fun ω ↦ c.encoder₂ (Msg₂ ω) i)).toReal
+        + Real.binEntropy
+            (MeasureFano.errorProb μ Msg₁ (fun ω ↦ (Msg₂ ω, fun i ↦ Ys i ω))
+              (fun p ↦ (c.decoder p.2).1))
+        + MeasureFano.errorProb μ Msg₁ (fun ω ↦ (Msg₂ ω, fun i ↦ Ys i ω))
+              (fun p ↦ (c.decoder p.2).1) * Real.log ((M₁ : ℝ) - 1))
+      ((∑ i : Fin n,
+          condMutualInfo μ (fun ω ↦ c.encoder₂ (Msg₂ ω) i) (Ys i)
+            (fun ω ↦ c.encoder₁ (Msg₁ ω) i)).toReal
+        + Real.binEntropy
+            (MeasureFano.errorProb μ Msg₂ (fun ω ↦ (Msg₁ ω, fun i ↦ Ys i ω))
+              (fun p ↦ (c.decoder p.2).2))
+        + MeasureFano.errorProb μ Msg₂ (fun ω ↦ (Msg₁ ω, fun i ↦ Ys i ω))
+              (fun p ↦ (c.decoder p.2).2) * Real.log ((M₂ : ℝ) - 1))
+      ((∑ i : Fin n,
+          mutualInfo μ (fun ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i)) (Ys i)).toReal
+        + Real.binEntropy
+            (MeasureFano.errorProb μ (fun ω ↦ (Msg₁ ω, Msg₂ ω)) (fun ω i ↦ Ys i ω)
+              c.decoder)
+        + MeasureFano.errorProb μ (fun ω ↦ (Msg₁ ω, Msg₂ ω)) (fun ω i ↦ Ys i ω)
+              c.decoder * Real.log (((M₁ * M₂ : ℕ) : ℝ) - 1)) := by
+  have hX₁s : ∀ i, Measurable (fun ω ↦ c.encoder₁ (Msg₁ ω) i) := fun i ↦
+    (measurable_pi_apply i).comp ((measurable_of_countable c.encoder₁).comp hMsg₁)
+  have hX₂s : ∀ i, Measurable (fun ω ↦ c.encoder₂ (Msg₂ ω) i) := fun i ↦
+    (measurable_pi_apply i).comp ((measurable_of_countable c.encoder₂).comp hMsg₂)
+  have hbound₁ := mac_singleletterize_bound₁ μ Msg₁ Msg₂ Ys c hMsg₁ hMsg₂ hYs h_memo h_indep hmarkov
+  have hbound₂ := mac_singleletterize_bound₂ μ Msg₁ Msg₂ Ys c hMsg₁ hMsg₂ hYs h_memo h_indep hmarkov
+  have hbound_sum := mac_singleletterize_bound_sum μ Msg₁ Msg₂ Ys c hMsg₁ hMsg₂ hYs h_memo hmarkov
+  have hfin₁ : (∑ i : Fin n,
+      condMutualInfo μ (fun ω ↦ c.encoder₁ (Msg₁ ω) i) (Ys i)
+        (fun ω ↦ c.encoder₂ (Msg₂ ω) i)) ≠ ∞ :=
+    (ENNReal.sum_lt_top.mpr fun i _ ↦
+      (condMutualInfo_ne_top μ _ _ _ (hX₁s i) (hYs i) (hX₂s i)).lt_top).ne
+  have hfin₂ : (∑ i : Fin n,
+      condMutualInfo μ (fun ω ↦ c.encoder₂ (Msg₂ ω) i) (Ys i)
+        (fun ω ↦ c.encoder₁ (Msg₁ ω) i)) ≠ ∞ :=
+    (ENNReal.sum_lt_top.mpr fun i _ ↦
+      (condMutualInfo_ne_top μ _ _ _ (hX₂s i) (hYs i) (hX₁s i)).lt_top).ne
+  have hfin_sum : (∑ i : Fin n,
+      mutualInfo μ (fun ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i)) (Ys i)) ≠ ∞ :=
+    (ENNReal.sum_lt_top.mpr fun i _ ↦
+      (mutualInfo_ne_top μ _ _ ((hX₁s i).prodMk (hX₂s i)) (hYs i)).lt_top).ne
+  refine (mac_converse_message_level μ Msg₁ Msg₂ Ys c hMsg₁ hMsg₂ hYs
+    hMsg₁_uniform hMsg₂_uniform hMsg₁₂_uniform hcard₁ hcard₂).mono ?_ ?_ ?_
+  · linarith [ENNReal.toReal_mono hfin₁ hbound₁]
+  · linarith [ENNReal.toReal_mono hfin₂ hbound₂]
+  · linarith [ENNReal.toReal_mono hfin_sum hbound_sum]
+
 end SingleLetterization
 
 end InformationTheory.Shannon.MAC
