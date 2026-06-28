@@ -1747,13 +1747,10 @@ exponential alias terms `E1`/`E2`/`E3` controlled by the gateway atoms
 `macJTS_indep_prob_le_X1`/`_X2`/`_both`.
 
 This is the two-codebook generalisation of the single-user
-`random_codebook_average_le`; the genuine proof requires re-deriving the single-user
-Fubini-swap infrastructure (`codebook_marginal_one`/`_two`) for the three-codeword
-marginalisation (true user-1, alias user-1, true user-2) of the paired channel input,
-plus the conditional-output fold-in identity and the per-atom reshape.  Left as the
-single localized incompleteness of MAC achievability.
-
-@residual(plan:mac-achievability-bonferroni-plan) -/
+`random_codebook_average_le`, assembled from the four per-event swaps
+(`mac_random_codebook_E0_swap`/`_E1_swap`/`_E2_swap`/`_E3_swap`), the four-event linearity
+decomposition (`mac_sum_weighted_quad_decomp`), and the per-pair aggregation
+(`mac_quad_aggregate`). -/
 theorem mac_random_codebook_average_le
     (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
     (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
@@ -1772,7 +1769,94 @@ theorem mac_random_codebook_average_le
         + ((M₂ : ℝ) - 1) * Real.exp ((n : ℝ) * (-(macInfo₂ p₁ p₂ W) + 3 * ε))
         + ((M₁ : ℝ) - 1) * ((M₂ : ℝ) - 1) *
             Real.exp ((n : ℝ) * (-(macInfoBoth p₁ p₂ W) + 3 * ε)) := by
-  sorry
+  classical
+  set J : Set ((Fin n → α₁) × (Fin n → α₂) × (Fin n → β)) :=
+    macJointlyTypicalSet (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs n ε with hJ_def
+  have hMpos : 0 < M₁ * M₂ := Nat.mul_pos hM₁ hM₂
+  have hMcast_ne : ((M₁ * M₂ : ℕ) : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr hMpos.ne'
+  -- Per-codebook-pair averaging bound via the four-event Bonferroni union bound.
+  have h_avg_le : ∀ (c₁ : MACCodebook M₁ n α₁) (c₂ : MACCodebook M₂ n α₂),
+      ((macCodebookToCode (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs
+          hM₁ hM₂ ε c₁ c₂).averageErrorProb W).toReal
+        ≤ ((M₁ * M₂ : ℕ) : ℝ)⁻¹ * ∑ m₁ : Fin M₁, ∑ m₂ : Fin M₂,
+            ((Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ m₁, c₂ m₂, y) ∉ J}
+              + ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m₁,
+                  (Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ m₁', c₂ m₂, y) ∈ J}
+              + ∑ m₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m₂,
+                  (Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ m₁, c₂ m₂', y) ∈ J}
+              + ∑ p ∈ ((Finset.univ : Finset (Fin M₁)).erase m₁) ×ˢ
+                        ((Finset.univ : Finset (Fin M₂)).erase m₂),
+                  (Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ p.1, c₂ p.2, y) ∈ J}) := by
+    intro c₁ c₂
+    rw [mac_averageErrorProb_toReal_eq _ W hMpos
+        (fun m ↦ mac_errorProbAt_ne_top (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs W
+          hM₁ hM₂ ε c₁ c₂ m), Fintype.sum_prod_type]
+    refine mul_le_mul_of_nonneg_left ?_ (by positivity)
+    refine Finset.sum_le_sum (fun m₁ _ ↦ Finset.sum_le_sum (fun m₂ _ ↦ ?_))
+    exact mac_errorProbAt_le_bonferroni4 (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs W
+      hM₁ hM₂ c₁ c₂ m₁ m₂
+  -- Weighted sum over the product codebook law.
+  have h_weighted :
+      ∑ c₁ : MACCodebook M₁ n α₁, ∑ c₂ : MACCodebook M₂ n α₂,
+          (codebookMeasure p₁ M₁ n).real {c₁} * (codebookMeasure p₂ M₂ n).real {c₂} *
+          ((macCodebookToCode (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs
+              hM₁ hM₂ ε c₁ c₂).averageErrorProb W).toReal
+        ≤ ∑ c₁ : MACCodebook M₁ n α₁, ∑ c₂ : MACCodebook M₂ n α₂,
+            (codebookMeasure p₁ M₁ n).real {c₁} * (codebookMeasure p₂ M₂ n).real {c₂} *
+            (((M₁ * M₂ : ℕ) : ℝ)⁻¹ * ∑ m₁ : Fin M₁, ∑ m₂ : Fin M₂,
+              ((Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ m₁, c₂ m₂, y) ∉ J}
+                + ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m₁,
+                    (Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ m₁', c₂ m₂, y) ∈ J}
+                + ∑ m₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m₂,
+                    (Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ m₁, c₂ m₂', y) ∈ J}
+                + ∑ p ∈ ((Finset.univ : Finset (Fin M₁)).erase m₁) ×ˢ
+                          ((Finset.univ : Finset (Fin M₂)).erase m₂),
+                    (Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real
+                      {y | (c₁ p.1, c₂ p.2, y) ∈ J})) :=
+    Finset.sum_le_sum (fun c₁ _ ↦ Finset.sum_le_sum (fun c₂ _ ↦
+      mul_le_mul_of_nonneg_left (h_avg_le c₁ c₂)
+        (mul_nonneg measureReal_nonneg measureReal_nonneg)))
+  refine le_trans h_weighted ?_
+  rw [mac_sum_weighted_quad_decomp
+      (fun c₁ : MACCodebook M₁ n α₁ ↦ (codebookMeasure p₁ M₁ n).real {c₁})
+      (fun c₂ : MACCodebook M₂ n α₂ ↦ (codebookMeasure p₂ M₂ n).real {c₂})
+      (fun c₁ c₂ m₁ m₂ ↦
+        (Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ m₁, c₂ m₂, y) ∉ J})
+      (fun c₁ c₂ m₁ m₂ m₁' ↦
+        (Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ m₁', c₂ m₂, y) ∈ J})
+      (fun c₁ c₂ m₁ m₂ m₂' ↦
+        (Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ m₁, c₂ m₂', y) ∈ J})
+      (fun c₁ c₂ m₁ m₂ p ↦
+        (Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ p.1, c₂ p.2, y) ∈ J})
+      (((M₁ * M₂ : ℕ) : ℝ)⁻¹)]
+  exact mac_quad_aggregate hM₁ hM₂
+    ((macAmbientMeasure p₁ p₂ W).real
+      {ω | (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω) ∉ J})
+    (Real.exp ((n : ℝ) * (-(macInfo₁ p₁ p₂ W) + 3 * ε)))
+    (Real.exp ((n : ℝ) * (-(macInfo₂ p₁ p₂ W) + 3 * ε)))
+    (Real.exp ((n : ℝ) * (-(macInfoBoth p₁ p₂ W) + 3 * ε)))
+    (fun m₁ m₂ ↦ ∑ c₁ : MACCodebook M₁ n α₁, ∑ c₂ : MACCodebook M₂ n α₂,
+      (codebookMeasure p₁ M₁ n).real {c₁} * (codebookMeasure p₂ M₂ n).real {c₂} *
+      (Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ m₁, c₂ m₂, y) ∉ J})
+    (fun m₁ m₂ m₁' ↦ ∑ c₁ : MACCodebook M₁ n α₁, ∑ c₂ : MACCodebook M₂ n α₂,
+      (codebookMeasure p₁ M₁ n).real {c₁} * (codebookMeasure p₂ M₂ n).real {c₂} *
+      (Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ m₁', c₂ m₂, y) ∈ J})
+    (fun m₁ m₂ m₂' ↦ ∑ c₁ : MACCodebook M₁ n α₁, ∑ c₂ : MACCodebook M₂ n α₂,
+      (codebookMeasure p₁ M₁ n).real {c₁} * (codebookMeasure p₂ M₂ n).real {c₂} *
+      (Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ m₁, c₂ m₂', y) ∈ J})
+    (fun m₁ m₂ p ↦ ∑ c₁ : MACCodebook M₁ n α₁, ∑ c₂ : MACCodebook M₂ n α₂,
+      (codebookMeasure p₁ M₁ n).real {c₁} * (codebookMeasure p₂ M₂ n).real {c₂} *
+      (Measure.pi (fun i ↦ W (c₁ m₁ i, c₂ m₂ i))).real {y | (c₁ p.1, c₂ p.2, y) ∈ J})
+    (((M₁ * M₂ : ℕ) : ℝ)⁻¹) (by positivity) (inv_mul_cancel₀ hMcast_ne)
+    (fun m₁ m₂ ↦ mac_random_codebook_E0_swap p₁ p₂ W hp₁ hp₂ hW m₁ m₂)
+    (fun m₁ m₂ m₁' hm₁' ↦ mac_random_codebook_E1_swap p₁ p₂ W hp₁ hp₂ hW hε m₁ m₁' m₂
+      ((Finset.mem_erase.mp hm₁').1).symm)
+    (fun m₁ m₂ m₂' hm₂' ↦ mac_random_codebook_E2_swap p₁ p₂ W hp₁ hp₂ hW hε m₁ m₂ m₂'
+      ((Finset.mem_erase.mp hm₂').1).symm)
+    (fun m₁ m₂ p hp ↦ mac_random_codebook_E3_swap p₁ p₂ W hp₁ hp₂ hW hε m₁ p.1 m₂ p.2
+      ((Finset.mem_erase.mp (Finset.mem_product.mp hp).1).1).symm
+      ((Finset.mem_erase.mp (Finset.mem_product.mp hp).2).1).symm)
+    (Real.exp_pos _).le (Real.exp_pos _).le (Real.exp_pos _).le
 
 /-! ### Random → deterministic (two-codebook pigeonhole) -/
 
