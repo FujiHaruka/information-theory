@@ -74,6 +74,7 @@ slepian_wolf_full_rate_region_achievability
 mac_converse | MAC capacity-region outer bound (per-letter conditional MI sum form)
 mac_achievability | MAC achievability (corner-point form)
 mac_capacity_region_reconciliation | MAC reconciliation: achievability corner informations = converse conditional/joint MI on the same single-letter law
+bc_converse | degraded broadcast-channel converse, single-letter auxiliary-variable capacity-region outer bound (Cover–Thomas Thm 15.6.2)
 
 @ 17 | Entropy inequalities
 han_inequality
