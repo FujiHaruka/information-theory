@@ -18,7 +18,7 @@
 - [x] Phase B — gateway atom `macJTS_indep_prob_le_X1`/`_X2`/`_both` (E1/E2/E3) ✅ sorryAx-free + `@audit:ok`。所見: 単一ユーザ `jointlyTypicalSet_indep_prob_le` への regrouping wrapper で plumbing 化、achievability genuine-closure viable 確定
 - [x] Phase C-rest — 正解 pair AEP `macJointlyTypicalSet_prob_tendsto_one` (7-event 交差→1) ✅ sorryAx-free。card_le は不要
 - [x] Phase D-1 — 4-event Bonferroni `mac_errorProbAt_le_bonferroni4` + `macJointTypicalDecoder`/`macCodebookToCode` ✅ sorryAx-free
-- [ ] Phase D-2 — 2-codebook averaging + iidAmbient infra + closed-form rate 境界 + headline `mac_achievability` 📋（残・最重量、単一ユーザ `RandomCodebook.lean`+`Main.lean` の 2-codebook 版）
+- [ ] Phase D-2 — 2-codebook averaging（`mac_random_codebook_average_le`、唯一の残 sorry）📋 → [mac-achievability-bonferroni-plan.md](mac-achievability-bonferroni-plan.md)（iidAmbient infra / closed-form rate 境界 / pigeonhole / headline `mac_achievability` 配線は既に sorryAx-free、残るは averaging 補題 1 本）
 - [ ] Phase V — verify (`lake env lean` + `#print axioms` sorryAx-free + 独立 honesty 監査) + 最終 wire-in 📋
 
 ## ゴール / Approach
@@ -183,7 +183,7 @@ variable {α₁ α₂ β : Type*}
 **proof-log**: yes (2-codebook averaging + random→deterministic の凸結合論法は手数が多い)
 
 - [ ] **D-1 4-event Bonferroni**: per-codeword pair 誤り ≤ E0 + E1 + E2 + E3 の union bound。gateway atom `mac_errorProbAt_le_bonferroni4` (4-event subset、`Achievability/Core.lean:83` の `errorProbAt_le_E1_plus_E2` を 4-event 拡張、union-bound は同型 plumbing)
-- [ ] **D-2 2-codebook 期待値**: `Codebook M₁ n α₁ × Codebook M₂ n α₂` の独立積上で期待値 ≤ ∑ 各 event 期待値 (Fubini / IndepFun は `iIndepFun_infinitePi` 既存パターン、`iidAmbientMeasure`)
+- [ ] **D-2 2-codebook 期待値** (唯一の残 sorry、子計画 → [mac-achievability-bonferroni-plan.md](mac-achievability-bonferroni-plan.md)): `MACCodebook M₁ n α₁ × MACCodebook M₂ n α₂` の独立積上で期待値 ≤ E0_avg + 3 alias 項 (Fubini swap + 単一ユーザ `random_codebook_average_le` の 2-codebook / 4-event 一般化、`mac_random_codebook_average_le` 本体)
 - [ ] **D-3 random → deterministic**: `exists_codebook_le_avg` (`Achievability/Main.lean:47`) の凸結合論法を 2-codebook 版に拡張 (`random_codebook_average_le` `RandomCodebook.lean:1157` 同型)
 - [ ] **D-4 headline `mac_achievability`**: `R₁<I₁ ∧ R₂<I₂ ∧ R₁+R₂<Iboth` で全 4 項 →0 → `∃ codebook, avgErr < ε'`。template = 単一ユーザ `channel_coding_achievability` (`Achievability/Main.lean:219`、1 rate→rate pair / 1 codebook→2 codebook / E1+E2→E0..E3)
 
