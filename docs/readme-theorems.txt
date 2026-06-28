@@ -71,6 +71,8 @@ arithmeticCode_expected_length_bounds
 
 @ 15 | Distributed source coding
 slepian_wolf_full_rate_region_achievability
+mac_converse | MAC capacity-region outer bound (per-letter conditional MI sum form)
+mac_achievability | MAC achievability (corner-point form)
 
 @ 17 | Entropy inequalities
 han_inequality
