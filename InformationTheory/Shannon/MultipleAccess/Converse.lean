@@ -817,7 +817,15 @@ This is the genuine single-letterized MAC converse, distinct from the message-le
 message-level bound via the single-letterization lemmas and `InMACCapacityRegion.mono`.
 
 The target is the **per-letter sum** (each time step's marginal input distribution); the
-single-distribution / time-sharing convex-hull form is a separate refinement. -/
+single-distribution / time-sharing convex-hull form is a separate refinement.
+
+The Fano slack is stated in terms of the joint-decoder error probability
+`MeasureFano.errorProb`, with the memoryless channel structure and block Markov chain taken
+as preconditions (parity with the single-user `channel_coding_converse_general_memoryless_pure`).
+The operational instantiation — building `μ` from uniform messages through the encoders and
+the memoryless channel `W`, and identifying the error with `MACCode.averageErrorProb W` — is a
+separate wrapper, not part of this statement.
+@audit:ok -/
 @[entry_point]
 theorem mac_converse
     [NeZero M₁] [NeZero M₂]
