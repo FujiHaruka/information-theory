@@ -1,8 +1,22 @@
 # T3-F Relay Channel + Cut-set Outer Bound ムーンショット計画 🌙
 
-**Status**: CLOSED ✅ — Relay channel cut-set outer bound (Cover-Thomas Ch.15.10.1) は scope-out。MAC/BC/Relay/Wyner-Ziv main は textbook-roadmap Ch.15 で「Distributed Source Coding mini-chapter (Slepian-Wolf + Wyner-Ziv convexity body) として publish、Draft 本体は捨てる」と確定済。本 plan が前提とした `RelayCutset.lean` 系 flat ファイルは削除済。
+**Status**: GENUINE-CLOSURE ラインで再活性 (2026-06-29, relay scopeout chain leg 3) — 旧 hypothesis pass-through 設計 (`_h_csiszar:True` で結論を bundle) を排し、cut-set の核を **実際に証明** する方針に転換。旧 scope-out (下記履歴) は pass-through 設計に対する判断であり、genuine closure は別物。
 
 **SoT**: `docs/textbook-roadmap.md` Ch.15。詳細履歴は git。
+
+## Genuine-closure 進捗 (active)
+
+**完了 (leg 3, commit 62f99f95 / 9546e947, @audit:ok, sorryAx-free)** — `InformationTheory/Shannon/RelayCutset.lean`:
+- `RelayChannel` (abbrev) / `RelayCode` (structure, causal relay field) / `relayCutsetBound (Ib Im) := min Ib Im` (scalar)。
+- `relay_mac_cut_singleletterize`: `I(Xⁿ,X₁ⁿ;Yⁿ) ≤ ∑ I(Xᵢ,X₁ᵢ;Yᵢ)` — `mutualInfo_le_sum_per_letter_of_memoryless_strong` 直接適用 (joint input `(Xᵢ,X₁ᵢ)`, no conditioner)。
+- `relay_broadcast_cut_singleletterize`: `I(Xⁿ;Y₁ⁿ,Yⁿ|X₁ⁿ) ≤ ∑ I(Xᵢ;Y₁ᵢ,Yᵢ|X₁ᵢ)` — `condMutualInfo_singleletter_le_of_memoryless` 直接適用 (var X, cond X₁, joint out (Y₁,Y))。
+- 両者 `h_memo : IsMemorylessChannel` を **precondition (regularity)** として受け結論を genuinely 証明 = honest (監査が load-bearing でないと確認、core = entropy subadditivity の独立ステップ)。gateway-atom-first で「壁でない」確定。
+
+**残 = headline assembly (operational 層, 次 leg)** — `relay_cutset_outer_bound : log M ≤ relayCutsetBound Im Ib`:
+- 雛形 = Line A `bc_converse` (BroadcastChannel/Converse.lean:572): message-level Fano + single-letterization を `.mono` 合成。relay は単一メッセージ + `le_min_iff` で 2 cut を合成。
+- **MAC-cut (易)**: `log M ≤ I(W;Yⁿ)+Fano` (単一ユーザ converse `channel_coding_converse_general_chainRule` / `shannon_converse_single_shot_markov_encoder` @ ConverseGeneral.lean) → `I(W;Yⁿ) ≤ I(Xⁿ,X₁ⁿ;Yⁿ)` (`mutualInfo_le_of_markov` @ CondMutualInfo.lean:356, precondition: block Markov `W→(Xⁿ,X₁ⁿ)→Yⁿ`) → `relay_mac_cut_singleletterize`。
+- **BC-cut (核・要設計、partial wall リスク)**: `I(W;Yⁿ) ≤ I(W;Y₁ⁿ,Yⁿ) ≤ I(Xⁿ;Y₁ⁿ,Yⁿ|X₁ⁿ)` の operational 橋渡しが relay の causal 構造 (X₁,i = f(過去 Y₁ⁿ⁻¹)) に依存し、CT 15.10.1 の per-letter telescoping を要する。conditional DPI 資産 `condMutualInfo_le_of_markov_joint` (ConverseMemorylessChainRule.lean:113, Line A Step 2 で使用) が橋の一部だが、`I(W;X₁ⁿ)` 項の処理が非自明。**次 leg の planner で operational 層を設計 + wall 判定**。honest なら Markov 構造を precondition 化、wall なら scope 切って MAC-cut 単独 + BC-cut sorry+@residual。
+- min 合成: `le_min_iff`。relayCutsetBound の `Ib`(BC-cut) / `Im`(MAC-cut) は per-letter-sum (+ Fano slack) を呼び出し側が渡す scalar 形 (max over p は外出し、Line A 同様)。
 
 > **Parent**:
 > - [`textbook-roadmap.md`](../textbook-roadmap.md) §「Tier 3 — T3-F. Relay Channel + Cut-set bound (Cover-Thomas Ch.15.7 / 15.10)」
