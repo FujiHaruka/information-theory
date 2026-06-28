@@ -77,7 +77,8 @@ omit [DecidableEq α] [DecidableEq α₁] [DecidableEq β] in
 /-- **MAC-cut single-letterization**: under a memoryless relay channel (joint input
 `(Xᵢ, X₁ᵢ)` to receiver output `Yᵢ`), the block mutual information `I(Xⁿ, X₁ⁿ; Yⁿ)` is bounded
 by the per-letter sum `∑ᵢ I(Xᵢ, X₁ᵢ; Yᵢ)`. The memoryless structure is a precondition; the
-inequality (the genuine content) is proven, not assumed. -/
+inequality (the genuine content) is proven, not assumed.
+@audit:ok -/
 theorem relay_mac_cut_singleletterize
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (X₁s : Fin n → Ω → α₁) (Ys : Fin n → Ω → β)
@@ -97,7 +98,8 @@ theorem relay_mac_cut_singleletterize
 omit [DecidableEq α] [DecidableEq β] [DecidableEq β₁] in
 /-- **Broadcast-cut single-letterization**: the conditional block mutual information
 `I(Xⁿ; Y₁ⁿ, Yⁿ | X₁ⁿ)` is bounded by the per-letter sum `∑ᵢ I(Xᵢ; Y₁ᵢ, Yᵢ | X₁ᵢ)`, under the
-memoryless relay channel with joint input `(Xᵢ, X₁ᵢ)` and joint output `(Y₁ᵢ, Yᵢ)`. -/
+memoryless relay channel with joint input `(Xᵢ, X₁ᵢ)` and joint output `(Y₁ᵢ, Yᵢ)`.
+@audit:ok -/
 theorem relay_broadcast_cut_singleletterize
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (X₁s : Fin n → Ω → α₁)
