@@ -78,6 +78,8 @@ import InformationTheory.Shannon.ChannelCoding.ShannonTheoremMaxError.PmfLogBoun
 import InformationTheory.Shannon.ChannelCoding.ShannonTheoremMaxError.SmoothInstantiation
 import InformationTheory.Shannon.ChannelCoding.ShannonTheoremMaxError.OuterN
 import InformationTheory.Shannon.ChannelCoding.ShannonTheoremMaxError
+import InformationTheory.Shannon.MultipleAccess.Basic
+import InformationTheory.Shannon.MultipleAccess.Converse
 import InformationTheory.Shannon.BlockwiseChannel.Definition
 import InformationTheory.Shannon.BlockwiseChannel.MemorylessCapacity
 import InformationTheory.Shannon.BlockwiseChannel.CapacityLimit
