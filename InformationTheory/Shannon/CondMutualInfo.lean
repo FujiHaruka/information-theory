@@ -499,6 +499,70 @@ private lemma compProd_map_left_prodMap
   rw [Kernel.comap_apply _ e.symm.measurable]
   simp [Prod.map]
 
+/-- Reshaping the conditioner leaves the CMI fixed: `I(X; Y | e ∘ Z) = I(X; Y | Z)` for any
+`MeasurableEquiv e : Z ≃ᵐ Z'`. The conditioner carries the same information after a
+measurable-equiv relabel. Companion to `condMutualInfo_map_left_measurableEquiv` and
+`condMutualInfo_map_middle_measurableEquiv` (the third argument slot). -/
+@[entry_point]
+theorem condMutualInfo_map_cond_measurableEquiv
+    {Z' : Type*} [MeasurableSpace Z']
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    [StandardBorelSpace X] [Nonempty X]
+    [StandardBorelSpace Y] [Nonempty Y]
+    (Xs : Ω → X) (Yo : Ω → Y) (Zc : Ω → Z)
+    (hXs : Measurable Xs) (hYo : Measurable Yo) (hZc : Measurable Zc)
+    (e : Z ≃ᵐ Z') :
+    condMutualInfo μ Xs Yo (fun ω ↦ e (Zc ω)) = condMutualInfo μ Xs Yo Zc := by
+  haveI : IsProbabilityMeasure (μ.map Zc) :=
+    Measure.isProbabilityMeasure_map hZc.aemeasurable
+  have heZc : Measurable (fun ω ↦ e (Zc ω)) := e.measurable.comp hZc
+  haveI : IsProbabilityMeasure (μ.map (fun ω ↦ e (Zc ω))) :=
+    Measure.isProbabilityMeasure_map heZc.aemeasurable
+  have hmap_e : μ.map (fun ω ↦ e (Zc ω)) = (μ.map Zc).map e :=
+    (Measure.map_map e.measurable hZc).symm
+  unfold condMutualInfo
+  set K_X := condDistrib Xs Zc μ with hK_X
+  set K_Y := condDistrib Yo Zc μ with hK_Y
+  have hXY : Measurable (fun ω ↦ (Xs ω, Yo ω)) := hXs.prodMk hYo
+  -- The reshape on `Z × (X × Y)`: apply `e × id`.
+  let eZ : Z × (X × Y) ≃ᵐ Z' × (X × Y) := e.prodCongr (.refl (X × Y))
+  -- Joint side: both via `compProd_map_condDistrib` + `Measure.map_map`.
+  have h_joint :
+      (μ.map (fun ω ↦ e (Zc ω))) ⊗ₘ condDistrib (fun ω ↦ (Xs ω, Yo ω)) (fun ω ↦ e (Zc ω)) μ
+        = ((μ.map Zc) ⊗ₘ condDistrib (fun ω ↦ (Xs ω, Yo ω)) Zc μ).map eZ := by
+    rw [compProd_map_condDistrib hXY.aemeasurable,
+        compProd_map_condDistrib hXY.aemeasurable,
+        Measure.map_map eZ.measurable (hZc.prodMk hXY)]
+    rfl
+  -- Per-marginal: reparametrizing the conditioning variable by `e` is `comap e.symm`.
+  have hX_eq : condDistrib Xs (fun ω ↦ e (Zc ω)) μ
+      =ᵐ[μ.map (fun ω ↦ e (Zc ω))] K_X.comap e.symm e.symm.measurable := by
+    refine condDistrib_ae_eq_of_measure_eq_compProd (fun ω ↦ e (Zc ω)) hXs.aemeasurable ?_
+    rw [hmap_e, hK_X, ← compProd_map_left_prodMap (μ.map Zc) (condDistrib Xs Zc μ) e,
+        compProd_map_condDistrib hXs.aemeasurable,
+        Measure.map_map (e.measurable.prodMap measurable_id) (hZc.prodMk hXs)]
+    rfl
+  have hY_eq : condDistrib Yo (fun ω ↦ e (Zc ω)) μ
+      =ᵐ[μ.map (fun ω ↦ e (Zc ω))] K_Y.comap e.symm e.symm.measurable := by
+    refine condDistrib_ae_eq_of_measure_eq_compProd (fun ω ↦ e (Zc ω)) hYo.aemeasurable ?_
+    rw [hmap_e, hK_Y, ← compProd_map_left_prodMap (μ.map Zc) (condDistrib Yo Zc μ) e,
+        compProd_map_condDistrib hYo.aemeasurable,
+        Measure.map_map (e.measurable.prodMap measurable_id) (hZc.prodMk hYo)]
+    rfl
+  -- Factored side.
+  have h_factored :
+      (μ.map (fun ω ↦ e (Zc ω))) ⊗ₘ
+          (condDistrib Xs (fun ω ↦ e (Zc ω)) μ ×ₖ condDistrib Yo (fun ω ↦ e (Zc ω)) μ)
+        = ((μ.map Zc) ⊗ₘ (K_X ×ₖ K_Y)).map eZ := by
+    rw [show ((μ.map Zc) ⊗ₘ (K_X ×ₖ K_Y)).map eZ
+          = ((μ.map Zc) ⊗ₘ (K_X ×ₖ K_Y)).map (Prod.map e id) from rfl,
+        compProd_map_left_prodMap (μ.map Zc) (K_X ×ₖ K_Y) e, Kernel.comap_prod, ← hmap_e]
+    refine (Measure.compProd_congr ?_).symm
+    filter_upwards [hX_eq, hY_eq] with z hzx hzy
+    ext s hs
+    rw [Kernel.prod_apply, Kernel.prod_apply, hzx, hzy]
+  rw [h_joint, h_factored, klDiv_map_measurableEquiv]
+
 /-- Markov chains are stable under post-processing on the left: if `Xs → Zc → Yo` is a Markov
 chain and `f : X → X'` is measurable, then `f ∘ Xs → Zc → Yo` is also a Markov chain. -/
 @[entry_point]
