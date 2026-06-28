@@ -14,11 +14,12 @@
 - [x] Phase 0 — MAC 基盤定義 (Basic.lean) ✅ sorryAx-free
 - [x] Phase A1 — converse **message-level** (`mac_converse_message_level`、3× 単一ユーザ Fano) ✅ sorryAx-free (genuine MAC converse ではない、A2 が本体)
 - [x] Phase A2 — converse **genuine frontier** (single-letterization = 本ゲートウェイ、`mac_converse` per-letter 条件付き MI 和形) ✅ sorryAx-free + `@audit:ok`
-- [ ] Phase C-def — 3-way JTS 定義 (JointTypicality.lean、gap1 の定義部のみ) 📋
-- [ ] Phase B — achievability gateway atom `macJTS_indep_prob_le_X1` (gap2 E1、analytic 核) 📋 → gateway-atom-first
-- [ ] Phase C-rest — JTS 濃度上界 + AEP (gap1 残) 📋
-- [ ] Phase D — 4-event Bonferroni + 2-codebook averaging + achievability headline (gap3) 📋
-- [ ] Phase V — verify (`lake env lean` + `#print axioms` sorryAx-free + 独立 honesty 監査) 📋
+- [x] Phase C-def — 3-way JTS 定義 (JointTypicality.lean、7条件交差) ✅ sorryAx-free
+- [x] Phase B — gateway atom `macJTS_indep_prob_le_X1`/`_X2`/`_both` (E1/E2/E3) ✅ sorryAx-free + `@audit:ok`。所見: 単一ユーザ `jointlyTypicalSet_indep_prob_le` への regrouping wrapper で plumbing 化、achievability genuine-closure viable 確定
+- [x] Phase C-rest — 正解 pair AEP `macJointlyTypicalSet_prob_tendsto_one` (7-event 交差→1) ✅ sorryAx-free。card_le は不要
+- [x] Phase D-1 — 4-event Bonferroni `mac_errorProbAt_le_bonferroni4` + `macJointTypicalDecoder`/`macCodebookToCode` ✅ sorryAx-free
+- [ ] Phase D-2 — 2-codebook averaging + iidAmbient infra + closed-form rate 境界 + headline `mac_achievability` 📋（残・最重量、単一ユーザ `RandomCodebook.lean`+`Main.lean` の 2-codebook 版）
+- [ ] Phase V — verify (`lake env lean` + `#print axioms` sorryAx-free + 独立 honesty 監査) + 最終 wire-in 📋
 
 ## ゴール / Approach
 
