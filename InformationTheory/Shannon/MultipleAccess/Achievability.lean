@@ -1543,6 +1543,7 @@ lemma mac_errorProbAt_ne_top
   ne_top_of_le_ne_top ENNReal.one_ne_top
     ((macCodebookToCode μ X1s X2s Ys hM₁ hM₂ ε c₁ c₂).errorProbAt_le_one W m)
 
+set_option maxHeartbeats 1000000 in
 /-- Linearity decomposition of the product-codebook expectation into the four error-event
 sums (E0 diagonal + the three alias families), with the codebook-weight average swapped to
 the inside of each term. -/
@@ -1570,7 +1571,83 @@ lemma mac_sum_weighted_quad_decomp
             + ∑ p ∈ ((Finset.univ : Finset (Fin M₁)).erase m₁) ×ˢ
                       ((Finset.univ : Finset (Fin M₂)).erase m₂),
                 ∑ c₁ : ι₁, ∑ c₂ : ι₂, w₁ c₁ * w₂ c₂ * b3 c₁ c₂ m₁ m₂ p) := by
-  sorry
+  classical
+  -- Reorder `∑c₁∑c₂∑m₁∑m₂` to `∑m₁∑m₂∑c₁∑c₂`.
+  have hcomm : ∀ F : ι₁ → ι₂ → Fin M₁ → Fin M₂ → ℝ,
+      ∑ c₁ : ι₁, ∑ c₂ : ι₂, ∑ m₁ : Fin M₁, ∑ m₂ : Fin M₂, F c₁ c₂ m₁ m₂
+      = ∑ m₁ : Fin M₁, ∑ m₂ : Fin M₂, ∑ c₁ : ι₁, ∑ c₂ : ι₂, F c₁ c₂ m₁ m₂ := by
+    intro F
+    calc ∑ c₁ : ι₁, ∑ c₂ : ι₂, ∑ m₁ : Fin M₁, ∑ m₂ : Fin M₂, F c₁ c₂ m₁ m₂
+        = ∑ c : ι₁ × ι₂, ∑ m : Fin M₁ × Fin M₂, F c.1 c.2 m.1 m.2 := by
+          rw [Fintype.sum_prod_type]
+          refine Finset.sum_congr rfl (fun c₁ _ ↦ Finset.sum_congr rfl (fun c₂ _ ↦ ?_))
+          rw [Fintype.sum_prod_type]
+      _ = ∑ m : Fin M₁ × Fin M₂, ∑ c : ι₁ × ι₂, F c.1 c.2 m.1 m.2 := Finset.sum_comm
+      _ = ∑ m₁ : Fin M₁, ∑ m₂ : Fin M₂, ∑ c₁ : ι₁, ∑ c₂ : ι₂, F c₁ c₂ m₁ m₂ := by
+          rw [Fintype.sum_prod_type]
+          refine Finset.sum_congr rfl (fun m₁ _ ↦ Finset.sum_congr rfl (fun m₂ _ ↦ ?_))
+          rw [Fintype.sum_prod_type]
+  -- Reorder `∑c₁∑c₂∑z∈s` to `∑z∈s∑c₁∑c₂`.
+  have hcomm3 : ∀ {γ : Type} (s : Finset γ) (G : ι₁ → ι₂ → γ → ℝ),
+      ∑ c₁ : ι₁, ∑ c₂ : ι₂, ∑ z ∈ s, G c₁ c₂ z
+      = ∑ z ∈ s, ∑ c₁ : ι₁, ∑ c₂ : ι₂, G c₁ c₂ z := by
+    intro γ s G
+    rw [Finset.sum_congr rfl (fun c₁ _ ↦ Finset.sum_comm), Finset.sum_comm]
+  -- Step 1: pull `Minv` and the codebook weights inside the message sums.
+  have step1 : ∀ (c₁ : ι₁) (c₂ : ι₂),
+      w₁ c₁ * w₂ c₂ *
+        (Minv * ∑ m₁ : Fin M₁, ∑ m₂ : Fin M₂,
+          (a c₁ c₂ m₁ m₂
+            + ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m₁, b1 c₁ c₂ m₁ m₂ m₁'
+            + ∑ m₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m₂, b2 c₁ c₂ m₁ m₂ m₂'
+            + ∑ p ∈ ((Finset.univ : Finset (Fin M₁)).erase m₁) ×ˢ
+                      ((Finset.univ : Finset (Fin M₂)).erase m₂), b3 c₁ c₂ m₁ m₂ p))
+      = Minv * ∑ m₁ : Fin M₁, ∑ m₂ : Fin M₂,
+          (w₁ c₁ * w₂ c₂ * a c₁ c₂ m₁ m₂
+            + ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m₁,
+                w₁ c₁ * w₂ c₂ * b1 c₁ c₂ m₁ m₂ m₁'
+            + ∑ m₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m₂,
+                w₁ c₁ * w₂ c₂ * b2 c₁ c₂ m₁ m₂ m₂'
+            + ∑ p ∈ ((Finset.univ : Finset (Fin M₁)).erase m₁) ×ˢ
+                      ((Finset.univ : Finset (Fin M₂)).erase m₂),
+                w₁ c₁ * w₂ c₂ * b3 c₁ c₂ m₁ m₂ p) := by
+    intro c₁ c₂
+    rw [← mul_assoc, mul_comm (w₁ c₁ * w₂ c₂) Minv, mul_assoc, Finset.mul_sum]
+    congr 1
+    refine Finset.sum_congr rfl (fun m₁ _ ↦ ?_)
+    rw [Finset.mul_sum]
+    refine Finset.sum_congr rfl (fun m₂ _ ↦ ?_)
+    rw [mul_add, mul_add, mul_add, Finset.mul_sum, Finset.mul_sum, Finset.mul_sum]
+  rw [Finset.sum_congr rfl (fun c₁ _ ↦ Finset.sum_congr rfl (fun c₂ _ ↦ step1 c₁ c₂))]
+  -- Step 2: pull `Minv` out past the codebook sums and swap message sums outward.
+  rw [Finset.sum_congr rfl (fun c₁ _ ↦ (Finset.mul_sum _ _ _).symm), ← Finset.mul_sum]
+  congr 1
+  rw [hcomm (fun c₁ c₂ m₁ m₂ ↦ w₁ c₁ * w₂ c₂ * a c₁ c₂ m₁ m₂
+      + ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m₁, w₁ c₁ * w₂ c₂ * b1 c₁ c₂ m₁ m₂ m₁'
+      + ∑ m₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m₂, w₁ c₁ * w₂ c₂ * b2 c₁ c₂ m₁ m₂ m₂'
+      + ∑ p ∈ ((Finset.univ : Finset (Fin M₁)).erase m₁) ×ˢ
+                ((Finset.univ : Finset (Fin M₂)).erase m₂), w₁ c₁ * w₂ c₂ * b3 c₁ c₂ m₁ m₂ p)]
+  refine Finset.sum_congr rfl (fun m₁ _ ↦ Finset.sum_congr rfl (fun m₂ _ ↦ ?_))
+  -- Step 3: distribute `∑c₁∑c₂` over the four terms and pull the alias sums outward.
+  have r1 : (∑ c₁ : ι₁, ∑ c₂ : ι₂, ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m₁,
+                w₁ c₁ * w₂ c₂ * b1 c₁ c₂ m₁ m₂ m₁')
+      = ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m₁,
+          ∑ c₁ : ι₁, ∑ c₂ : ι₂, w₁ c₁ * w₂ c₂ * b1 c₁ c₂ m₁ m₂ m₁' :=
+    hcomm3 ((Finset.univ : Finset (Fin M₁)).erase m₁) _
+  have r2 : (∑ c₁ : ι₁, ∑ c₂ : ι₂, ∑ m₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m₂,
+                w₁ c₁ * w₂ c₂ * b2 c₁ c₂ m₁ m₂ m₂')
+      = ∑ m₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m₂,
+          ∑ c₁ : ι₁, ∑ c₂ : ι₂, w₁ c₁ * w₂ c₂ * b2 c₁ c₂ m₁ m₂ m₂' :=
+    hcomm3 ((Finset.univ : Finset (Fin M₂)).erase m₂) _
+  have r3 : (∑ c₁ : ι₁, ∑ c₂ : ι₂, ∑ p ∈ ((Finset.univ : Finset (Fin M₁)).erase m₁) ×ˢ
+                ((Finset.univ : Finset (Fin M₂)).erase m₂), w₁ c₁ * w₂ c₂ * b3 c₁ c₂ m₁ m₂ p)
+      = ∑ p ∈ ((Finset.univ : Finset (Fin M₁)).erase m₁) ×ˢ
+                ((Finset.univ : Finset (Fin M₂)).erase m₂),
+          ∑ c₁ : ι₁, ∑ c₂ : ι₂, w₁ c₁ * w₂ c₂ * b3 c₁ c₂ m₁ m₂ p :=
+    hcomm3 (((Finset.univ : Finset (Fin M₁)).erase m₁) ×ˢ
+            ((Finset.univ : Finset (Fin M₂)).erase m₂)) _
+  simp only [Finset.sum_add_distrib]
+  rw [r1, r2, r3]
 
 /-- Per-pair aggregation of the four uniform bounds into the closed-form average bound. -/
 lemma mac_quad_aggregate
@@ -1596,7 +1673,68 @@ lemma mac_quad_aggregate
                     ((Finset.univ : Finset (Fin M₂)).erase m₂), b3 m₁ m₂ p)
       ≤ A + ((M₁ : ℝ) - 1) * e1 + ((M₂ : ℝ) - 1) * e2
           + ((M₁ : ℝ) - 1) * ((M₂ : ℝ) - 1) * e3 := by
-  sorry
+  classical
+  set B : ℝ := A + ((M₁ : ℝ) - 1) * e1 + ((M₂ : ℝ) - 1) * e2
+      + ((M₁ : ℝ) - 1) * ((M₂ : ℝ) - 1) * e3 with hB_def
+  have hcard1 : ∀ m : Fin M₁, (((Finset.univ : Finset (Fin M₁)).erase m).card : ℝ) = (M₁ : ℝ) - 1 := by
+    intro m
+    rw [Finset.card_erase_of_mem (Finset.mem_univ _), Finset.card_univ, Fintype.card_fin,
+      Nat.cast_sub hM₁, Nat.cast_one]
+  have hcard2 : ∀ m : Fin M₂, (((Finset.univ : Finset (Fin M₂)).erase m).card : ℝ) = (M₂ : ℝ) - 1 := by
+    intro m
+    rw [Finset.card_erase_of_mem (Finset.mem_univ _), Finset.card_univ, Fintype.card_fin,
+      Nat.cast_sub hM₂, Nat.cast_one]
+  -- Each per-pair inner four-term sum is bounded by `B`.
+  have h_inner : ∀ (m₁ : Fin M₁) (m₂ : Fin M₂),
+      (d m₁ m₂
+        + ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m₁, b1 m₁ m₂ m₁'
+        + ∑ m₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m₂, b2 m₁ m₂ m₂'
+        + ∑ p ∈ ((Finset.univ : Finset (Fin M₁)).erase m₁) ×ˢ
+                  ((Finset.univ : Finset (Fin M₂)).erase m₂), b3 m₁ m₂ p) ≤ B := by
+    intro m₁ m₂
+    have hb1sum : ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m₁, b1 m₁ m₂ m₁'
+        ≤ ((M₁ : ℝ) - 1) * e1 := by
+      calc ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m₁, b1 m₁ m₂ m₁'
+          ≤ ∑ _m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m₁, e1 :=
+            Finset.sum_le_sum (hb1 m₁ m₂)
+        _ = ((M₁ : ℝ) - 1) * e1 := by rw [Finset.sum_const, nsmul_eq_mul, hcard1 m₁]
+    have hb2sum : ∑ m₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m₂, b2 m₁ m₂ m₂'
+        ≤ ((M₂ : ℝ) - 1) * e2 := by
+      calc ∑ m₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m₂, b2 m₁ m₂ m₂'
+          ≤ ∑ _m₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m₂, e2 :=
+            Finset.sum_le_sum (hb2 m₁ m₂)
+        _ = ((M₂ : ℝ) - 1) * e2 := by rw [Finset.sum_const, nsmul_eq_mul, hcard2 m₂]
+    have hb3sum : ∑ p ∈ ((Finset.univ : Finset (Fin M₁)).erase m₁) ×ˢ
+            ((Finset.univ : Finset (Fin M₂)).erase m₂), b3 m₁ m₂ p
+        ≤ ((M₁ : ℝ) - 1) * ((M₂ : ℝ) - 1) * e3 := by
+      calc ∑ p ∈ ((Finset.univ : Finset (Fin M₁)).erase m₁) ×ˢ
+              ((Finset.univ : Finset (Fin M₂)).erase m₂), b3 m₁ m₂ p
+          ≤ ∑ _p ∈ ((Finset.univ : Finset (Fin M₁)).erase m₁) ×ˢ
+              ((Finset.univ : Finset (Fin M₂)).erase m₂), e3 :=
+            Finset.sum_le_sum (hb3 m₁ m₂)
+        _ = ((M₁ : ℝ) - 1) * ((M₂ : ℝ) - 1) * e3 := by
+            rw [Finset.sum_const, nsmul_eq_mul, Finset.card_product, Nat.cast_mul, hcard1 m₁,
+              hcard2 m₂]
+    rw [hB_def]
+    have := add_le_add (add_le_add (add_le_add (hd m₁ m₂) hb1sum) hb2sum) hb3sum
+    linarith [this]
+  -- Aggregate over `(m₁, m₂)` and cancel `Minv * (M₁ M₂)`.
+  have hsum_const : ∑ _m₁ : Fin M₁, ∑ _m₂ : Fin M₂, B = ((M₁ * M₂ : ℕ) : ℝ) * B := by
+    rw [Finset.sum_congr rfl (fun _ _ ↦ by
+      rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul])]
+    rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul, ← mul_assoc,
+      Nat.cast_mul]
+  calc Minv * ∑ m₁ : Fin M₁, ∑ m₂ : Fin M₂,
+          (d m₁ m₂
+            + ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m₁, b1 m₁ m₂ m₁'
+            + ∑ m₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m₂, b2 m₁ m₂ m₂'
+            + ∑ p ∈ ((Finset.univ : Finset (Fin M₁)).erase m₁) ×ˢ
+                      ((Finset.univ : Finset (Fin M₂)).erase m₂), b3 m₁ m₂ p)
+      ≤ Minv * ∑ m₁ : Fin M₁, ∑ m₂ : Fin M₂, B :=
+        mul_le_mul_of_nonneg_left
+          (Finset.sum_le_sum (fun m₁ _ ↦ Finset.sum_le_sum (fun m₂ _ ↦ h_inner m₁ m₂))) hMinv
+    _ = Minv * (((M₁ * M₂ : ℕ) : ℝ) * B) := by rw [hsum_const]
+    _ = B := by rw [← mul_assoc, hMinvM, one_mul]
 
 /-! ### Two-codebook averaging -/
 
