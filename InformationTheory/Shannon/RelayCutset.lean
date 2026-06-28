@@ -436,7 +436,8 @@ The proof chains destination Fano (`shannon_converse_single_shot`) with the broa
 message-level telescoping (`relay_broadcast_cut_message_telescope`). The memoryless d-separation
 hypothesis is a *precondition* (channel structure / regularity); the per-letter inequality (the
 genuine content) is proven, not assumed. The outer maximisation over joint input pmfs is left to
-callers, which is why the conclusion keeps the explicit per-letter sum. -/
+callers, which is why the conclusion keeps the explicit per-letter sum.
+@audit:ok -/
 theorem relay_broadcast_cut_outer_bound
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (W : Ω → Fin M)
@@ -489,7 +490,8 @@ The proof combines the two cut bounds (`relay_broadcast_cut_outer_bound` and
 *preconditions* (channel structure / regularity); the genuine content is carried by the two
 single-letterization cut lemmas and is proven, not assumed. The outer maximisation over joint
 input pmfs `p(x, x₁)` — the textbook `n · max_p` — is left to callers, which is why the conclusion
-keeps the explicit per-letter sums. -/
+keeps the explicit per-letter sums.
+@audit:ok -/
 theorem relay_cutset_outer_bound
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (W : Ω → Fin M)
