@@ -759,6 +759,7 @@ lemma mac_chan_fold_X1Y_set
     rw [Measure.map_map hproj_meas hmeas_triple]; rfl
   rw [hmap, map_measureReal_apply hproj_meas (Set.toFinite T).measurableSet,
     mac_chan_fold_triple_set p₁ p₂ W n ((fun t ↦ (t.1, t.2.2)) ⁻¹' T)]
+  simp only [Set.mem_preimage]
 
 /-- The `Y`-block-law fold, derived from the master triple fold by projecting out both
 inputs. -/
@@ -772,7 +773,23 @@ lemma mac_chan_fold_Y_set
           (Measure.pi (fun _ : Fin n ↦ p₁)).real {x₁}
             * (Measure.pi (fun _ : Fin n ↦ p₂)).real {x₂}
             * (Measure.pi (fun i ↦ W (x₁ i, x₂ i))).real {y | y ∈ T} := by
-  sorry
+  classical
+  have hmeas_triple : Measurable (fun ω : ℕ → α₁ × α₂ × β ↦
+      (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω)) :=
+    (measurable_jointRV macX1s measurable_macX1s n).prodMk
+      ((measurable_jointRV macX2s measurable_macX2s n).prodMk
+        (measurable_jointRV macYs measurable_macYs n))
+  have hproj_meas : Measurable
+      (fun t : (Fin n → α₁) × (Fin n → α₂) × (Fin n → β) ↦ t.2.2) :=
+    measurable_snd.comp measurable_snd
+  have hmap : (macAmbientMeasure p₁ p₂ W).map (jointRV macYs n)
+      = ((macAmbientMeasure p₁ p₂ W).map
+          (fun ω ↦ (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω))).map
+        (fun t ↦ t.2.2) := by
+    rw [Measure.map_map hproj_meas hmeas_triple]; rfl
+  rw [hmap, map_measureReal_apply hproj_meas (Set.toFinite T).measurableSet,
+    mac_chan_fold_triple_set p₁ p₂ W n ((fun t ↦ t.2.2) ⁻¹' T)]
+  simp only [Set.mem_preimage]
 
 /-- The `(X₁, X₂)`-split joint block-law singleton mass equals `p₁ⁿ{x₁} · p₂ⁿ{x₂}`, derived
 from the master triple fold by projecting out the output. -/
@@ -785,7 +802,75 @@ lemma mac_block_law_X1X2_singleton
         (fun ω ↦ (jointRV macX1s n ω, jointRV macX2s n ω))).real {(xa, xb)}
       = (Measure.pi (fun _ : Fin n ↦ p₁)).real {xa}
           * (Measure.pi (fun _ : Fin n ↦ p₂)).real {xb} := by
-  sorry
+  classical
+  set μ : Measure (ℕ → α₁ × α₂ × β) := macAmbientMeasure p₁ p₂ W with hμ_def
+  haveI : IsProbabilityMeasure μ := by rw [hμ_def]; infer_instance
+  set g₀ : (ℕ → α₁ × α₂ × β) → (Fin n → α₁) × (Fin n → α₂) :=
+    fun ω ↦ (jointRV macX1s n ω, jointRV macX2s n ω) with hg₀_def
+  set ê : (Fin n → α₁) × (Fin n → α₂) → (Fin n → α₁ × α₂) :=
+    fun q i ↦ (q.1 i, q.2 i) with hê_def
+  have hg₀_meas : Measurable g₀ :=
+    (measurable_jointRV macX1s measurable_macX1s n).prodMk
+      (measurable_jointRV macX2s measurable_macX2s n)
+  have hê_meas : Measurable ê :=
+    measurable_pi_lambda _ fun i ↦
+      ((measurable_pi_apply i).comp measurable_fst).prodMk
+        ((measurable_pi_apply i).comp measurable_snd)
+  have hmap12 : (macJointDistribution p₁ p₂ W).map (fun q : α₁ × α₂ × β ↦ (q.1, q.2.1))
+      = p₁.prod p₂ := by
+    unfold macJointDistribution
+    rw [Measure.map_map (show Measurable (fun q : α₁ × α₂ × β ↦ (q.1, q.2.1)) from
+          measurable_fst.prodMk (measurable_fst.comp measurable_snd))
+        MeasurableEquiv.prodAssoc.measurable]
+    have h_comp : ((fun q : α₁ × α₂ × β ↦ (q.1, q.2.1)) ∘ (MeasurableEquiv.prodAssoc :
+        (α₁ × α₂) × β ≃ᵐ α₁ × α₂ × β)) = (Prod.fst : (α₁ × α₂) × β → α₁ × α₂) := by
+      funext r; rfl
+    rw [h_comp]
+    show (jointDistribution (p₁.prod p₂) W).fst = p₁.prod p₂
+    rw [jointDistribution_def]
+    exact Measure.fst_compProd _ _
+  set ρ : Measure (Fin n → α₁ × α₂) :=
+    μ.map (jointRV (jointSequence macX1s macX2s) n) with hρ_def
+  have hρ_eq : ρ = Measure.pi (fun _ : Fin n ↦ p₁.prod p₂) := by
+    refine block_law_X_eq_pi_p μ (jointSequence macX1s macX2s)
+      (fun i ↦ measurable_jointSequence macX1s macX2s measurable_macX1s measurable_macX2s i)
+      ?_ ?_ (p₁.prod p₂) ?_ n
+    · exact macAmbient_iIndepFun_coord p₁ p₂ W (fun q ↦ (q.1, q.2.1))
+        (measurable_fst.prodMk (measurable_fst.comp measurable_snd))
+    · exact fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W (fun q ↦ (q.1, q.2.1))
+        (measurable_fst.prodMk (measurable_fst.comp measurable_snd)) i
+    · rw [show (jointSequence macX1s macX2s 0 : (ℕ → α₁ × α₂ × β) → α₁ × α₂)
+            = fun ω ↦ (fun q : α₁ × α₂ × β ↦ (q.1, q.2.1)) (ω 0) from rfl,
+        macAmbient_map_coord p₁ p₂ W (fun q ↦ (q.1, q.2.1))
+          (measurable_fst.prodMk (measurable_fst.comp measurable_snd)) 0,
+        hmap12]
+  have hν_eq_ρ : (μ.map g₀).map ê = ρ := by
+    rw [Measure.map_map hê_meas hg₀_meas, hρ_def]
+    congr 1
+  have h_pre : ê ⁻¹' {ê (xa, xb)} = {((xa, xb) : (Fin n → α₁) × (Fin n → α₂))} := by
+    ext ⟨u, v⟩
+    simp only [Set.mem_preimage, Set.mem_singleton_iff]
+    constructor
+    · intro h
+      have hu : u = xa := by funext i; exact (Prod.mk.injEq _ _ _ _).mp (congrFun h i) |>.1
+      have hv : v = xb := by funext i; exact (Prod.mk.injEq _ _ _ _).mp (congrFun h i) |>.2
+      rw [hu, hv]
+    · intro h; rw [h]
+  calc (μ.map g₀).real {(xa, xb)}
+      = (μ.map g₀).real (ê ⁻¹' {ê (xa, xb)}) := by rw [h_pre]
+    _ = ((μ.map g₀).map ê).real {ê (xa, xb)} :=
+        (map_measureReal_apply hê_meas (measurableSet_singleton _)).symm
+    _ = ρ.real {ê (xa, xb)} := by rw [hν_eq_ρ]
+    _ = (Measure.pi (fun _ : Fin n ↦ p₁.prod p₂)).real {fun i ↦ (xa i, xb i)} := by rw [hρ_eq]
+    _ = ∏ i, (p₁.prod p₂).real {(xa i, xb i)} := measureReal_pi_singleton_eq_prod _ _
+    _ = ∏ i, (p₁.real {xa i} * p₂.real {xb i}) := by
+        refine Finset.prod_congr rfl (fun i _ ↦ ?_)
+        rw [← Set.singleton_prod_singleton, measureReal_prod_prod]
+    _ = (∏ i, p₁.real {xa i}) * (∏ i, p₂.real {xb i}) := Finset.prod_mul_distrib
+    _ = (Measure.pi (fun _ : Fin n ↦ p₁)).real {xa}
+          * (Measure.pi (fun _ : Fin n ↦ p₂)).real {xb} := by
+        rw [measureReal_pi_singleton_eq_prod (fun _ : Fin n ↦ p₁) xa,
+          measureReal_pi_singleton_eq_prod (fun _ : Fin n ↦ p₂) xb]
 
 /-- **Split-form restatement of the user-2 gateway atom.**  The reshaped-product /
 preimage-set conclusion of `macJTS_indep_prob_le_X2` recast over the split product
@@ -807,7 +892,79 @@ lemma macJTS_indep_prob_le_X2_split
           ((entropy (macAmbientMeasure p₁ p₂ W) (macJointSequence macX1s macX2s macYs 0)
             - entropy (macAmbientMeasure p₁ p₂ W) (macX2s 0)
             - entropy (macAmbientMeasure p₁ p₂ W) (jointSequence macX1s macYs 0)) + 3 * ε)) := by
-  sorry
+  classical
+  set ê : (Fin n → α₁) × (Fin n → β) → (Fin n → α₁ × β) :=
+    fun q i ↦ (q.1 i, q.2 i) with hê_def
+  have hê_meas : Measurable ê :=
+    measurable_pi_lambda _ fun i ↦
+      ((measurable_pi_apply i).comp measurable_fst).prodMk
+        ((measurable_pi_apply i).comp measurable_snd)
+  set μX2 : Measure (Fin n → α₂) := (macAmbientMeasure p₁ p₂ W).map (jointRV macX2s n)
+    with hμX2_def
+  set νsplit : Measure ((Fin n → α₁) × (Fin n → β)) :=
+    (macAmbientMeasure p₁ p₂ W).map (fun ω ↦ (jointRV macX1s n ω, jointRV macYs n ω))
+    with hνsplit_def
+  haveI : IsProbabilityMeasure μX2 :=
+    Measure.isProbabilityMeasure_map (measurable_jointRV macX2s measurable_macX2s n).aemeasurable
+  haveI : IsProbabilityMeasure νsplit :=
+    Measure.isProbabilityMeasure_map ((measurable_jointRV macX1s measurable_macX1s n).prodMk
+      (measurable_jointRV macYs measurable_macYs n)).aemeasurable
+  -- The gateway atom (reshaped form).
+  have h_gw := macJTS_indep_prob_le_X2 (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs
+    measurable_macX1s measurable_macX2s measurable_macYs
+    (macAmbient_iIndepFun_coord p₁ p₂ W (fun q ↦ q.2.1) (measurable_fst.comp measurable_snd))
+    (fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W (fun q ↦ q.2.1)
+      (measurable_fst.comp measurable_snd) i)
+    (macAmbient_iIndepFun_coord p₁ p₂ W (fun q ↦ (q.1, q.2.2))
+      (measurable_fst.prodMk (measurable_snd.comp measurable_snd)))
+    (fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W (fun q ↦ (q.1, q.2.2))
+      (measurable_fst.prodMk (measurable_snd.comp measurable_snd)) i)
+    (fun x ↦ macAmbient_map_coord_real_singleton_pos p₁ p₂ W hp₁ hp₂ hW (fun q ↦ q.2.1)
+      (measurable_fst.comp measurable_snd) 0 x (Classical.arbitrary α₁, x, Classical.arbitrary β) rfl)
+    (fun q ↦ macAmbient_map_coord_real_singleton_pos p₁ p₂ W hp₁ hp₂ hW (fun r ↦ (r.1, r.2.2))
+      (measurable_fst.prodMk (measurable_snd.comp measurable_snd)) 0 q
+      (q.1, Classical.arbitrary α₂, q.2) rfl)
+    (fun q ↦ macAmbient_map_coord_real_singleton_pos p₁ p₂ W hp₁ hp₂ hW
+      (fun r ↦ (r.2.1, r.1, r.2.2))
+      ((measurable_fst.comp measurable_snd).prodMk
+        (measurable_fst.prodMk (measurable_snd.comp measurable_snd))) 0 q
+      (q.2.1, q.1, q.2.2) rfl)
+    n hε
+  -- Pushforward of the split `(X₁, Y)` block law through the reshape.
+  have h_push : νsplit.map ê
+      = (macAmbientMeasure p₁ p₂ W).map (jointRV (jointSequence macX1s macYs) n) := by
+    rw [hνsplit_def, Measure.map_map hê_meas ((measurable_jointRV macX1s measurable_macX1s n).prodMk
+      (measurable_jointRV macYs measurable_macYs n))]
+    rfl
+  have h_prodpush : (μX2.prod νsplit).map (Prod.map (@id (Fin n → α₂)) ê)
+      = μX2.prod ((macAmbientMeasure p₁ p₂ W).map (jointRV (jointSequence macX1s macYs) n)) := by
+    have hmp := Measure.map_prod_map μX2 νsplit (measurable_id) hê_meas
+    rw [Measure.map_id, h_push] at hmp
+    exact hmp.symm
+  have hE_meas : Measurable (Prod.map (@id (Fin n → α₂)) ê) := measurable_id.prodMap hê_meas
+  calc (μX2.prod νsplit).real
+          {q : (Fin n → α₂) × ((Fin n → α₁) × (Fin n → β)) |
+            (q.2.1, q.1, q.2.2) ∈
+              macJointlyTypicalSet (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs n ε}
+      = (μX2.prod νsplit).real ((Prod.map (@id (Fin n → α₂)) ê) ⁻¹'
+          ((fun q : (Fin n → α₂) × (Fin n → α₁ × β) ↦
+              (((fun i ↦ (q.2 i).1) : Fin n → α₁),
+                (q.1, ((fun i ↦ (q.2 i).2) : Fin n → β)))) ⁻¹'
+            macJointlyTypicalSet (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs n ε)) := rfl
+    _ = ((μX2.prod νsplit).map (Prod.map (@id (Fin n → α₂)) ê)).real
+          ((fun q : (Fin n → α₂) × (Fin n → α₁ × β) ↦
+              (((fun i ↦ (q.2 i).1) : Fin n → α₁),
+                (q.1, ((fun i ↦ (q.2 i).2) : Fin n → β)))) ⁻¹'
+            macJointlyTypicalSet (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs n ε) :=
+        (map_measureReal_apply hE_meas (Set.toFinite _).measurableSet).symm
+    _ = (μX2.prod ((macAmbientMeasure p₁ p₂ W).map
+          (jointRV (jointSequence macX1s macYs) n))).real
+          ((fun q : (Fin n → α₂) × (Fin n → α₁ × β) ↦
+              (((fun i ↦ (q.2 i).1) : Fin n → α₁),
+                (q.1, ((fun i ↦ (q.2 i).2) : Fin n → β)))) ⁻¹'
+            macJointlyTypicalSet (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs n ε) := by
+        rw [h_prodpush]
+    _ ≤ _ := h_gw
 
 /-- **Split-form restatement of the both-users gateway atom.**  The reshaped-product /
 preimage-set conclusion of `macJTS_indep_prob_le_both` recast over the split product
@@ -829,7 +986,78 @@ lemma macJTS_indep_prob_le_both_split
           ((entropy (macAmbientMeasure p₁ p₂ W) (macJointSequence macX1s macX2s macYs 0)
             - entropy (macAmbientMeasure p₁ p₂ W) (jointSequence macX1s macX2s 0)
             - entropy (macAmbientMeasure p₁ p₂ W) (macYs 0)) + 3 * ε)) := by
-  sorry
+  classical
+  set ê : (Fin n → α₁) × (Fin n → α₂) → (Fin n → α₁ × α₂) :=
+    fun q i ↦ (q.1 i, q.2 i) with hê_def
+  have hê_meas : Measurable ê :=
+    measurable_pi_lambda _ fun i ↦
+      ((measurable_pi_apply i).comp measurable_fst).prodMk
+        ((measurable_pi_apply i).comp measurable_snd)
+  set νsplit12 : Measure ((Fin n → α₁) × (Fin n → α₂)) :=
+    (macAmbientMeasure p₁ p₂ W).map (fun ω ↦ (jointRV macX1s n ω, jointRV macX2s n ω))
+    with hνsplit12_def
+  set μY : Measure (Fin n → β) := (macAmbientMeasure p₁ p₂ W).map (jointRV macYs n)
+    with hμY_def
+  haveI : IsProbabilityMeasure νsplit12 :=
+    Measure.isProbabilityMeasure_map ((measurable_jointRV macX1s measurable_macX1s n).prodMk
+      (measurable_jointRV macX2s measurable_macX2s n)).aemeasurable
+  haveI : IsProbabilityMeasure μY :=
+    Measure.isProbabilityMeasure_map (measurable_jointRV macYs measurable_macYs n).aemeasurable
+  -- The gateway atom (reshaped form).
+  have h_gw := macJTS_indep_prob_le_both (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs
+    measurable_macX1s measurable_macX2s measurable_macYs
+    (macAmbient_iIndepFun_coord p₁ p₂ W (fun q ↦ (q.1, q.2.1))
+      (measurable_fst.prodMk (measurable_fst.comp measurable_snd)))
+    (fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W (fun q ↦ (q.1, q.2.1))
+      (measurable_fst.prodMk (measurable_fst.comp measurable_snd)) i)
+    (macAmbient_iIndepFun_coord p₁ p₂ W (fun q ↦ q.2.2) (measurable_snd.comp measurable_snd))
+    (fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W (fun q ↦ q.2.2)
+      (measurable_snd.comp measurable_snd) i)
+    (fun q ↦ macAmbient_map_coord_real_singleton_pos p₁ p₂ W hp₁ hp₂ hW (fun r ↦ (r.1, r.2.1))
+      (measurable_fst.prodMk (measurable_fst.comp measurable_snd)) 0 q
+      (q.1, q.2, Classical.arbitrary β) rfl)
+    (fun y ↦ macAmbient_map_coord_real_singleton_pos p₁ p₂ W hp₁ hp₂ hW (fun r ↦ r.2.2)
+      (measurable_snd.comp measurable_snd) 0 y (Classical.arbitrary α₁, Classical.arbitrary α₂, y) rfl)
+    (fun q ↦ macAmbient_map_coord_real_singleton_pos p₁ p₂ W hp₁ hp₂ hW
+      (fun r ↦ ((r.1, r.2.1), r.2.2))
+      ((measurable_fst.prodMk (measurable_fst.comp measurable_snd)).prodMk
+        (measurable_snd.comp measurable_snd)) 0 q
+      (q.1.1, q.1.2, q.2) rfl)
+    n hε
+  -- Pushforward of the split `(X₁, X₂)` block law through the reshape.
+  have h_push : νsplit12.map ê
+      = (macAmbientMeasure p₁ p₂ W).map (jointRV (jointSequence macX1s macX2s) n) := by
+    rw [hνsplit12_def, Measure.map_map hê_meas ((measurable_jointRV macX1s measurable_macX1s n).prodMk
+      (measurable_jointRV macX2s measurable_macX2s n))]
+    rfl
+  have h_prodpush : (νsplit12.prod μY).map (Prod.map ê (@id (Fin n → β)))
+      = ((macAmbientMeasure p₁ p₂ W).map (jointRV (jointSequence macX1s macX2s) n)).prod μY := by
+    have hmp := Measure.map_prod_map νsplit12 μY hê_meas (measurable_id)
+    rw [Measure.map_id, h_push] at hmp
+    exact hmp.symm
+  have hE_meas : Measurable (Prod.map ê (@id (Fin n → β))) := hê_meas.prodMap measurable_id
+  calc (νsplit12.prod μY).real
+          {q : ((Fin n → α₁) × (Fin n → α₂)) × (Fin n → β) |
+            (q.1.1, q.1.2, q.2) ∈
+              macJointlyTypicalSet (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs n ε}
+      = (νsplit12.prod μY).real ((Prod.map ê (@id (Fin n → β))) ⁻¹'
+          ((fun q : (Fin n → α₁ × α₂) × (Fin n → β) ↦
+              (((fun i ↦ (q.1 i).1) : Fin n → α₁),
+                (((fun i ↦ (q.1 i).2) : Fin n → α₂), q.2))) ⁻¹'
+            macJointlyTypicalSet (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs n ε)) := rfl
+    _ = ((νsplit12.prod μY).map (Prod.map ê (@id (Fin n → β)))).real
+          ((fun q : (Fin n → α₁ × α₂) × (Fin n → β) ↦
+              (((fun i ↦ (q.1 i).1) : Fin n → α₁),
+                (((fun i ↦ (q.1 i).2) : Fin n → α₂), q.2))) ⁻¹'
+            macJointlyTypicalSet (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs n ε) :=
+        (map_measureReal_apply hE_meas (Set.toFinite _).measurableSet).symm
+    _ = (((macAmbientMeasure p₁ p₂ W).map (jointRV (jointSequence macX1s macX2s) n)).prod μY).real
+          ((fun q : (Fin n → α₁ × α₂) × (Fin n → β) ↦
+              (((fun i ↦ (q.1 i).1) : Fin n → α₁),
+                (((fun i ↦ (q.1 i).2) : Fin n → α₂), q.2))) ⁻¹'
+            macJointlyTypicalSet (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs n ε) := by
+        rw [h_prodpush]
+    _ ≤ _ := h_gw
 
 /-! ### Two-codebook averaging: per-event swaps -/
 
