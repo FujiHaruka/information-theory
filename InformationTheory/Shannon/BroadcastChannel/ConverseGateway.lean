@@ -2,6 +2,7 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.MutualInfo
 import InformationTheory.Shannon.CondMutualInfo
 import InformationTheory.Shannon.MIChainRule
+import InformationTheory.Shannon.CondMIChainRule
 import InformationTheory.Shannon.Entropy
 import InformationTheory.Shannon.CondEntropyMemoryless
 import InformationTheory.Shannon.ChannelCoding.ConverseMemorylessChainRule
@@ -105,10 +106,11 @@ sequences `As`, `Bs` over `Fin n`,
 `∑ᵢ I(A^{i-1}; Bᵢ | B_{i+1}ⁿ) = ∑ᵢ I(B_{i+1}ⁿ; Aᵢ | A^{i-1})`.
 
 Here `A^{i-1}` is the *prefix* `fun j : Fin i.val ↦ Aⱼ` and `B_{i+1}ⁿ` is the *suffix*
-`fun j : {j : Fin n // i.val < j.val} ↦ Bⱼ`. This is a rearrangement of the MI chain rule
-(El Gamal–Kim), but the suffix conditioner `B_{i+1}ⁿ` has no in-project precedent.
-
-@residual(plan:bc-degraded-converse-plan) -/
+`fun j : {j : Fin n // i.val < j.val} ↦ Bⱼ`. Both sides expand (via the prefix chain rule
+`condMutualInfo_prefix_chain_rule` for the left, the reflection-based suffix chain rule
+`condMutualInfo_suffix_chain_rule` for the right) to the common triangular double sum
+`∑_{k<i} I(Aₖ; Bᵢ | A^{k-1}, B_{i+1}ⁿ)`, matched termwise by `condMutualInfo_comm` plus a
+`prodComm` relabel of the conditioner (El Gamal–Kim). -/
 theorem csiszar_sum_identity
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (As Bs : Fin n → Ω → γ)
@@ -123,6 +125,50 @@ theorem csiszar_sum_identity
             (fun ω (j : {j : Fin n // i.val < j.val}) ↦ Bs j.val ω)
             (As i)
             (fun ω (j : Fin i.val) ↦ As ⟨j.val, j.isLt.trans i.isLt⟩ ω) := by
-  sorry
+  classical
+  -- Finiteness of the background mutual informations (finite alphabets).
+  have hfinB : ∀ i : Fin n,
+      mutualInfo μ (fun ω (j : {j : Fin n // i.val < j.val}) ↦ Bs j.val ω) (Bs i) ≠ ∞ :=
+    fun i ↦ mutualInfo_ne_top μ _ (Bs i) (measurable_pi_iff.mpr fun j ↦ hBs _) (hBs i)
+  have hfinA : ∀ i : Fin n,
+      mutualInfo μ (fun ω (j : Fin i.val) ↦ As ⟨j.val, j.isLt.trans i.isLt⟩ ω) (As i) ≠ ∞ :=
+    fun i ↦ mutualInfo_ne_top μ _ (As i) (measurable_pi_iff.mpr fun j ↦ hAs _) (hAs i)
+  -- Common double-sum term (after both expansions, modulo `comm`/`prodComm` on the conditioner).
+  -- LHS expands by the *prefix* chain rule; RHS by the *suffix* chain rule.
+  -- Expand each summand.
+  rw [Finset.sum_congr rfl (fun i (_ : i ∈ Finset.univ) ↦
+        condMutualInfo_prefix_chain_rule μ
+          (fun (j : Fin i.val) ω ↦ As ⟨j.val, j.isLt.trans i.isLt⟩ ω) (Bs i)
+          (fun ω (j : {j : Fin n // i.val < j.val}) ↦ Bs j.val ω)
+          (fun j ↦ hAs _) (hBs i) (measurable_pi_iff.mpr fun j ↦ hBs _) (hfinB i)),
+     Finset.sum_congr rfl (fun i (_ : i ∈ Finset.univ) ↦
+        condMutualInfo_suffix_chain_rule i μ Bs (As i)
+          (fun ω (j : Fin i.val) ↦ As ⟨j.val, j.isLt.trans i.isLt⟩ ω)
+          hBs (hAs i) (measurable_pi_iff.mpr fun j ↦ hAs _) (hfinA i))]
+  -- Merge nested sums into sigma sums.
+  rw [Finset.sum_sigma' Finset.univ (fun _ ↦ Finset.univ),
+      Finset.sum_sigma' Finset.univ (fun _ ↦ Finset.univ)]
+  -- Bijection between the two index sets `{(i,k) : k<i}` and `{(i,j) : i<j}` (transpose).
+  refine Finset.sum_nbij'
+    (i := fun x ↦ ⟨⟨x.2.val, x.2.isLt.trans x.1.isLt⟩, ⟨x.1, x.2.isLt⟩⟩)
+    (j := fun y ↦ ⟨y.2.val, ⟨y.1.val, y.2.property⟩⟩)
+    (fun x _ ↦ Finset.mem_sigma.mpr ⟨Finset.mem_univ _, Finset.mem_univ _⟩)
+    (fun y _ ↦ Finset.mem_sigma.mpr ⟨Finset.mem_univ _, Finset.mem_univ _⟩)
+    (fun x _ ↦ rfl) (fun y _ ↦ rfl) ?_
+  rintro ⟨i, k⟩ _
+  -- Per-term: `comm` to swap roles, then `R1` (`prodComm`) to swap the conditioner pair.
+  simp only
+  rw [condMutualInfo_comm μ (As ⟨k.val, k.isLt.trans i.isLt⟩) (Bs i)
+        (fun ω ↦ ((fun (j : {j : Fin n // i.val < j.val}) ↦ Bs j.val ω),
+          fun (a : Fin k.val) ↦ As ⟨a.val, a.isLt.trans (k.isLt.trans i.isLt)⟩ ω))
+        (hAs _) (hBs i)
+        ((measurable_pi_iff.mpr fun j ↦ hBs _).prodMk (measurable_pi_iff.mpr fun a ↦ hAs _))]
+  rw [← condMutualInfo_map_cond_measurableEquiv μ (Bs i) (As ⟨k.val, k.isLt.trans i.isLt⟩)
+        (fun ω ↦ ((fun (j : {j : Fin n // i.val < j.val}) ↦ Bs j.val ω),
+          fun (a : Fin k.val) ↦ As ⟨a.val, a.isLt.trans (k.isLt.trans i.isLt)⟩ ω))
+        (hBs i) (hAs _)
+        ((measurable_pi_iff.mpr fun j ↦ hBs _).prodMk (measurable_pi_iff.mpr fun a ↦ hAs _))
+        MeasurableEquiv.prodComm]
+  rfl
 
 end InformationTheory.Shannon.BroadcastChannel
