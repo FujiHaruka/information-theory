@@ -20,13 +20,13 @@ conditioning message in the *output* slot:
 
 Here `I(M₁; (M₂, Yⁿ)) = I(M₁; Yⁿ | M₂)` under message independence, the standard converse
 intermediate. The single-letterization to the channel quantities `I(X₁; Y | X₂)` etc. is a
-separate refinement (`mac-converse-singleletterize-plan`).
+separate refinement, tracked in `mac-moonshot-plan.md` (Phase A2).
 
 ## Main statements
 
 * `mac_converse_bound₁` / `mac_converse_bound₂` / `mac_converse_bound_sum` — the three
   corner-point inequalities.
-* `mac_converse` — the packaged `InMACCapacityRegion` outer bound.
+* `mac_converse_message_level` — the packaged `InMACCapacityRegion` outer bound.
 -/
 
 namespace InformationTheory.Shannon.MAC
@@ -138,11 +138,17 @@ theorem mac_converse_bound_sum
   rw [hlog] at h
   exact h
 
-/-- **MAC converse (outer bound)**: for uniform, independent messages decoded by a joint
-decoder, the rate pair `(log |M₁|, log |M₂|)` lies in the corner-point capacity region cut
-out by the three message-level Fano information bounds. -/
+/-- **MAC converse — message-level Fano outer bound**: for uniform messages decoded by a
+joint decoder, the rate pair `(log |M₁|, log |M₂|)` satisfies the three message-level Fano
+information bounds, packaged as `InMACCapacityRegion`.
+
+This is the **message-level step only**: the information slots are the n-letter
+message–output mutual informations, not the single-letter channel quantities
+`I(X₁; Y | X₂)` etc. The single-letterization that turns this into the textbook MAC
+converse (Cover–Thomas Thm 15.3.1) is not yet done; it is tracked in
+`mac-moonshot-plan.md` (Phase A2). -/
 @[entry_point]
-theorem mac_converse
+theorem mac_converse_message_level
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Msg₁ : Ω → Fin M₁) (Msg₂ : Ω → Fin M₂) (Ys : Fin n → Ω → β)
     (c : MACCode M₁ M₂ n α₁ α₂ β)

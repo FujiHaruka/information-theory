@@ -126,9 +126,19 @@ end MACCode
 
 /-! ## Corner-point capacity region -/
 
-/-- The corner-point MAC capacity-region predicate for a fixed product input: the rate pair
-`(R₁, R₂)` lies in the region cut out by the three single-letterized informations
-`I₁ = I(X₁; Y | X₂)`, `I₂ = I(X₂; Y | X₁)`, `Iboth = I(X₁, X₂; Y)`. -/
+/-- The corner-point capacity-region predicate: a *generic* bundle of the three
+inequalities `R₁ ≤ I₁`, `R₂ ≤ I₂`, `R₁ + R₂ ≤ Iboth` on five real numbers. The slots
+`I₁, I₂, Iboth` are abstract information bounds — the predicate does **not** fix their
+meaning. Two distinct instantiations are intended:
+
+* **message level** (proven, `mac_converse_message_level`): `I₁, I₂, Iboth` are the n-letter
+  message–output mutual informations plus Fano terms.
+* **single letter** (not yet done — the standard Cover–Thomas Thm 15.3.1 form): after
+  single-letterization, `I₁ = I(X₁; Y | X₂)`, `I₂ = I(X₂; Y | X₁)`,
+  `Iboth = I(X₁, X₂; Y)`.
+
+`InMACCapacityRegion.mono` (enlarging the information bounds keeps the rate pair inside)
+is the bridge from the message-level form to the single-letter form. -/
 structure InMACCapacityRegion (R₁ R₂ I₁ I₂ Iboth : ℝ) : Prop where
   /-- User-1 rate bound. -/
   bound₁   : R₁ ≤ I₁
