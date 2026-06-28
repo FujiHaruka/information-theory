@@ -84,6 +84,7 @@ import InformationTheory.Shannon.MultipleAccess.JointTypicality
 import InformationTheory.Shannon.MultipleAccess.IIDAmbient
 import InformationTheory.Shannon.MultipleAccess.AchievabilityCore
 import InformationTheory.Shannon.MultipleAccess.Achievability
+import InformationTheory.Shannon.MultipleAccess.Reconciliation
 import InformationTheory.Shannon.BlockwiseChannel.Definition
 import InformationTheory.Shannon.BlockwiseChannel.MemorylessCapacity
 import InformationTheory.Shannon.BlockwiseChannel.CapacityLimit

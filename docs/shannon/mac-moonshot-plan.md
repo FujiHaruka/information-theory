@@ -6,6 +6,8 @@
 > **Status**: **CLOSED — MAC 容量領域 full closure 達成 (2026-06-28)**。converse (`mac_converse`、Phase A2) + achievability (`mac_achievability`、Phase D-2) ともに genuine (`@[entry_point]`、`@audit:ok`、`#print axioms` = `[propext, Classical.choice, Quot.sound]` sorryAx-free)。**目標 = Cover–Thomas 2nd ed. Theorem 15.3.1 (2-user DMC capacity region、corner-point/per-letter 和形) を標準B (proof done) で genuine closure** = 達成。time-sharing 全凸包形 (L-MAC5) は scope-out 維持。旧 statement-level pass-through plan (CLOSED) と `mac-l1-discharge-moonshot-plan.md` (partial discharge) を本 genuine-closure 計画で置換、旧版の本文は git 履歴。
 >
 > **親整合 注記 (2026-06-28 完了)**: converse + achievability の両 genuine closure を受け、orchestrator が roadmap Ch.15 (L22 段落 + 章状態表 row 15) + README 定理表 (`mac_converse` / `mac_achievability` 2 行) を MAC 容量領域 full closure へ同期済。本 moonshot は CLOSED。
+>
+> **Follow-up (2026-06-28)**: optional な converse–achievability reconciliation bridge も genuine closure (`MultipleAccess/Reconciliation.lean`、headline `mac_capacity_region_reconciliation` + 3 corner 等価補題 `macInfo₁/₂_eq_condMutualInfo_toReal` / `macInfoBoth_eq_mutualInfo_toReal`、全 `@[entry_point]`・`@audit:ok`・sorryAx-free)。独立入力 `p₁⊗p₂` 下で achievability の corner 情報量 (entropy 差) = converse の `condMutualInfo`/`mutualInfo` `.toReal` を chain rule + 入力独立性 `I(X₁;X₂)=0` で結び、達成領域述語 = 逆領域述語の substantive iff を建てた。README 定理表へ headline 1 行追記済 (計 47 定理)。
 
 ## 進捗
 
