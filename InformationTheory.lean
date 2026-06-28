@@ -80,6 +80,10 @@ import InformationTheory.Shannon.ChannelCoding.ShannonTheoremMaxError.OuterN
 import InformationTheory.Shannon.ChannelCoding.ShannonTheoremMaxError
 import InformationTheory.Shannon.MultipleAccess.Basic
 import InformationTheory.Shannon.MultipleAccess.Converse
+import InformationTheory.Shannon.MultipleAccess.JointTypicality
+import InformationTheory.Shannon.MultipleAccess.IIDAmbient
+import InformationTheory.Shannon.MultipleAccess.AchievabilityCore
+import InformationTheory.Shannon.MultipleAccess.Achievability
 import InformationTheory.Shannon.BlockwiseChannel.Definition
 import InformationTheory.Shannon.BlockwiseChannel.MemorylessCapacity
 import InformationTheory.Shannon.BlockwiseChannel.CapacityLimit
