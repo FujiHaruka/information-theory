@@ -412,4 +412,135 @@ theorem relay_broadcast_cut_message_telescope
 
 end BroadcastCutTelescope
 
+section CutsetHeadline
+
+variable {Ω : Type*} [MeasurableSpace Ω]
+variable {α α₁ β β₁ : Type*}
+  [Fintype α] [Nonempty α]
+    [MeasurableSpace α] [MeasurableSingletonClass α] [StandardBorelSpace α]
+  [Fintype α₁] [Nonempty α₁]
+    [MeasurableSpace α₁] [MeasurableSingletonClass α₁] [StandardBorelSpace α₁]
+  [Fintype β] [Nonempty β]
+    [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
+  [Fintype β₁] [Nonempty β₁]
+    [MeasurableSpace β₁] [MeasurableSingletonClass β₁] [StandardBorelSpace β₁]
+variable {M n : ℕ} [NeZero M]
+
+/-- **Broadcast-cut operational outer bound** (relay channel, Cover–Thomas Thm 15.10.1, broadcast
+cut): for a uniformly distributed message `W` decoded from the receiver output `Yⁿ`, the rate is
+bounded by the per-letter broadcast-cut sum plus a Fano slack,
+`log M ≤ ∑ᵢ I(Xᵢ; Y₁ᵢ, Yᵢ | X₁ᵢ) + h(Pe) + Pe · log(M - 1)`, where `Xᵢ = encoder(W)ᵢ`,
+`X₁ᵢ = relay i (Y₁^{<i})`, and `Pe` is the block decoding error probability.
+
+The proof chains destination Fano (`shannon_converse_single_shot`) with the broadcast-cut
+message-level telescoping (`relay_broadcast_cut_message_telescope`). The memoryless d-separation
+hypothesis is a *precondition* (channel structure / regularity); the per-letter inequality (the
+genuine content) is proven, not assumed. The outer maximisation over joint input pmfs is left to
+callers, which is why the conclusion keeps the explicit per-letter sum. -/
+theorem relay_broadcast_cut_outer_bound
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (W : Ω → Fin M)
+    (c : RelayCode M n α α₁ β β₁)
+    (Ys : Fin n → Ω → β) (Y₁s : Fin n → Ω → β₁)
+    (hW : Measurable W)
+    (hYs : ∀ i, Measurable (Ys i)) (hY₁s : ∀ i, Measurable (Y₁s i))
+    (hW_uniform : μ.map W = (Fintype.card (Fin M) : ℝ≥0∞)⁻¹ • Measure.count)
+    (hcard : 2 ≤ M)
+    (h_memo : ∀ i : Fin n,
+      IsMarkovChain μ
+        (fun ω ↦ (Y₁s i ω, Ys i ω))
+        (fun ω ↦ (c.encoder (W ω) i,
+          c.relay i (fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω)))
+        (fun ω ↦ (W ω,
+          fun (j : Fin i.val) ↦
+            (Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω, Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω)))) :
+    Real.log (M : ℝ) ≤
+      (∑ i : Fin n,
+          (condMutualInfo μ (fun ω ↦ c.encoder (W ω) i) (fun ω ↦ (Y₁s i ω, Ys i ω))
+            (fun ω ↦ c.relay i
+              (fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω))).toReal)
+        + Real.binEntropy (MeasureFano.errorProb μ W (fun ω j ↦ Ys j ω) c.decoder)
+        + MeasureFano.errorProb μ W (fun ω j ↦ Ys j ω) c.decoder * Real.log ((M : ℝ) - 1) := by
+  have hYpi : Measurable (fun ω j ↦ Ys j ω) := measurable_pi_iff.mpr hYs
+  have hMI_W : mutualInfo μ W (fun ω j ↦ Ys j ω) ≠ ∞ :=
+    mutualInfo_ne_top μ W (fun ω j ↦ Ys j ω) hW hYpi
+  have hcard' : 2 ≤ Fintype.card (Fin M) := by rw [Fintype.card_fin]; exact hcard
+  have hdec : Measurable c.decoder := measurable_of_countable c.decoder
+  -- Step 1: destination Fano `log M ≤ I(W; Yⁿ) + h(Pe) + Pe · log(M − 1)`.
+  have hStep1 := shannon_converse_single_shot μ W (fun ω j ↦ Ys j ω) c.decoder
+    hW hYpi hdec hW_uniform hcard' hMI_W
+  rw [Fintype.card_fin] at hStep1
+  -- Step 2: broadcast-cut message-level telescoping `I(W; Yⁿ) ≤ ∑ᵢ I(Xᵢ; Y₁ᵢ, Yᵢ | X₁ᵢ)`.
+  have hStep2 := relay_broadcast_cut_message_telescope μ W c Ys Y₁s hW hYs hY₁s h_memo
+  linarith [hStep1, hStep2]
+
+/-- **Cut-set outer bound** (relay channel, Cover–Thomas Thm 15.10.1): for a uniformly distributed
+message `W` decoded from the receiver output `Yⁿ`, the rate is bounded by the `min` of the two cut
+rates, each taken as its per-letter sum plus a common Fano slack:
+
+* the **broadcast cut** `∑ᵢ I(Xᵢ; Y₁ᵢ, Yᵢ | X₁ᵢ) + h(Pe) + Pe · log(M - 1)`, and
+* the **MAC cut** `∑ᵢ I(Xᵢ, X₁ᵢ; Yᵢ) + h(Pe) + Pe · log(M - 1)`,
+
+where `Xᵢ = encoder(W)ᵢ`, `X₁ᵢ = relay i (Y₁^{<i})`, and `Pe` is the block decoding error
+probability.
+
+The proof combines the two cut bounds (`relay_broadcast_cut_outer_bound` and
+`relay_mac_cut_outer_bound`) via `le_min`. The memoryless / Markov / causal-relay hypotheses are
+*preconditions* (channel structure / regularity); the genuine content is carried by the two
+single-letterization cut lemmas and is proven, not assumed. The outer maximisation over joint
+input pmfs `p(x, x₁)` — the textbook `n · max_p` — is left to callers, which is why the conclusion
+keeps the explicit per-letter sums. -/
+theorem relay_cutset_outer_bound
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (W : Ω → Fin M)
+    (c : RelayCode M n α α₁ β β₁)
+    (Ys : Fin n → Ω → β) (Y₁s : Fin n → Ω → β₁)
+    (hW : Measurable W)
+    (hYs : ∀ i, Measurable (Ys i)) (hY₁s : ∀ i, Measurable (Y₁s i))
+    (hW_uniform : μ.map W = (Fintype.card (Fin M) : ℝ≥0∞)⁻¹ • Measure.count)
+    (hcard : 2 ≤ M)
+    (h_markov_mac : IsMarkovChain μ W
+      (fun ω j ↦ (c.encoder (W ω) j,
+        c.relay j (fun (k : Fin j.val) ↦ Y₁s ⟨k.val, k.isLt.trans j.isLt⟩ ω)))
+      (fun ω j ↦ Ys j ω))
+    (h_memo_mac : IsMemorylessChannel μ
+      (fun i ω ↦ (c.encoder (W ω) i,
+        c.relay i (fun (k : Fin i.val) ↦ Y₁s ⟨k.val, k.isLt.trans i.isLt⟩ ω))) Ys)
+    (h_memo_bc : ∀ i : Fin n,
+      IsMarkovChain μ
+        (fun ω ↦ (Y₁s i ω, Ys i ω))
+        (fun ω ↦ (c.encoder (W ω) i,
+          c.relay i (fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω)))
+        (fun ω ↦ (W ω,
+          fun (j : Fin i.val) ↦
+            (Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω, Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω)))) :
+    Real.log (M : ℝ) ≤ relayCutsetBound
+      ((∑ i : Fin n,
+          (condMutualInfo μ (fun ω ↦ c.encoder (W ω) i) (fun ω ↦ (Y₁s i ω, Ys i ω))
+            (fun ω ↦ c.relay i
+              (fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω))).toReal)
+        + Real.binEntropy (MeasureFano.errorProb μ W (fun ω j ↦ Ys j ω) c.decoder)
+        + MeasureFano.errorProb μ W (fun ω j ↦ Ys j ω) c.decoder * Real.log ((M : ℝ) - 1))
+      ((∑ i : Fin n,
+          (mutualInfo μ (fun ω ↦ (c.encoder (W ω) i,
+            c.relay i (fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω)))
+              (Ys i)).toReal)
+        + Real.binEntropy (MeasureFano.errorProb μ W (fun ω j ↦ Ys j ω) c.decoder)
+        + MeasureFano.errorProb μ W (fun ω j ↦ Ys j ω) c.decoder * Real.log ((M : ℝ) - 1)) := by
+  rw [relayCutsetBound_def]
+  refine le_min ?_ ?_
+  · -- broadcast cut
+    exact relay_broadcast_cut_outer_bound μ W c Ys Y₁s hW hYs hY₁s hW_uniform hcard h_memo_bc
+  · -- MAC cut
+    exact relay_mac_cut_outer_bound μ W c.decoder
+      (fun i ω ↦ c.encoder (W ω) i)
+      (fun i ω ↦ c.relay i (fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω))
+      Ys hW (measurable_of_countable c.decoder)
+      (fun i ↦ (measurable_of_countable (fun w ↦ c.encoder w i)).comp hW)
+      (fun i ↦ (measurable_of_countable (c.relay i)).comp
+        (measurable_pi_iff.mpr fun j ↦ hY₁s _))
+      hYs hW_uniform hcard h_markov_mac h_memo_mac
+
+end CutsetHeadline
+
 end InformationTheory.Shannon.Relay
