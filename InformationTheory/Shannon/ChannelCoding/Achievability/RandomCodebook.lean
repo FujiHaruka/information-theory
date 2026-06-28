@@ -122,8 +122,13 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
 /-- Block X-law identification. Under `iIndepFun (Xs ·) μ` and
 `h_match_X : μ.map (Xs 0) = p`, the block law `μ.map (jointRV Xs n)` equals
 `Measure.pi (fun _ : Fin n => p)`. This is the bridge to the
-`codebookMeasure p M n` structure. -/
-private lemma block_law_X_eq_pi_p
+`codebookMeasure p M n` structure.
+
+Promoted to non-`private` so the two-codebook MAC achievability averaging in
+`InformationTheory.Shannon.MultipleAccess.Achievability` can reuse it for the
+user-1 alias axis and the `(X₂, Y)` joint-sequence axis (signature unchanged; no
+cross-file consumer existed before). -/
+lemma block_law_X_eq_pi_p
     {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
     (hindepX : iIndepFun (fun i ↦ Xs i) μ)
@@ -277,8 +282,11 @@ lemma sum_prod_measureReal_singleton_eq_one
 
 omit [DecidableEq α] [Nonempty α] [Fintype β]
   [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
-/-- Single-row marginalization. Sum out all rows other than `m`. -/
-private lemma codebook_marginal_one
+/-- Single-row marginalization. Sum out all rows other than `m`.
+
+Promoted to non-`private` for reuse by the two-codebook MAC achievability averaging
+(both `Codebook`/`MACCodebook` reduce to `Fin M → Fin n → α`). -/
+lemma codebook_marginal_one
     (p : Measure α) [IsProbabilityMeasure p] (M n : ℕ)
     (m : Fin M) (f : (Fin n → α) → ℝ) (_hf_nn : ∀ x, 0 ≤ f x) :
     ∑ c : Codebook M n α, (codebookMeasure p M n).real {c} * f (c m)
@@ -429,8 +437,11 @@ private lemma codebook_marginal_one
 omit [DecidableEq α] [Nonempty α] [Fintype β]
   [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
 /-- Two-row marginalization. Sum out all rows other than `m` and `m'` (with
-`m ≠ m'`). -/
-private lemma codebook_marginal_two
+`m ≠ m'`).
+
+Promoted to non-`private` for reuse by the two-codebook MAC achievability averaging
+(the user-1 true/alias two-row marginalization). -/
+lemma codebook_marginal_two
     (p : Measure α) [IsProbabilityMeasure p] (M n : ℕ)
     (m m' : Fin M) (hne : m ≠ m')
     (f : (Fin n → α) → (Fin n → α) → ℝ) (_hf_nn : ∀ x x', 0 ≤ f x x') :
