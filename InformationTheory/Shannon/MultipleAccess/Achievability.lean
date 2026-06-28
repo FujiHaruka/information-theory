@@ -1750,7 +1750,8 @@ This is the two-codebook generalisation of the single-user
 `random_codebook_average_le`, assembled from the four per-event swaps
 (`mac_random_codebook_E0_swap`/`_E1_swap`/`_E2_swap`/`_E3_swap`), the four-event linearity
 decomposition (`mac_sum_weighted_quad_decomp`), and the per-pair aggregation
-(`mac_quad_aggregate`). -/
+(`mac_quad_aggregate`).
+@audit:ok -/
 theorem mac_random_codebook_average_le
     (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
     (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
@@ -1985,7 +1986,8 @@ channel `W`, any rate pair `(R₁, R₂)` strictly inside the corner-point regio
 `R₁ < I(X₁; (X₂, Y))`, `R₂ < I(X₂; (X₁, Y))`, `R₁ + R₂ < I((X₁, X₂); Y)` is
 achievable: for every target error `ε' > 0` there is `N` such that for all `n ≥ N`
 there is a length-`n` two-user code with at least `exp(n R₁)` / `exp(n R₂)` messages per
-user whose average error probability is `< ε'`. -/
+user whose average error probability is `< ε'`.
+@audit:ok -/
 @[entry_point]
 theorem mac_achievability
     (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
