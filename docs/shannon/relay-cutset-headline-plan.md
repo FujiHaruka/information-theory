@@ -2,12 +2,15 @@
 
 > **Parent**: [`relay-cutset-moonshot-plan.md`](relay-cutset-moonshot-plan.md) §「残 = headline assembly (operational 層, 次 leg)」
 
-## 進捗
+## 進捗 — ✅ CLOSED (2026-06-29)
 
-- [ ] M0 — verbatim API 確認 (5 asset) 📋
-- [ ] Phase 1 — headline skeleton + destination Fano 配線 📋
-- [ ] Phase 2 — MAC-cut genuine closure (`relay_mac_cut_outer_bound`) 📋
-- [ ] Phase 3 — BC-cut gateway atom dispatch + combined headline (`relay_cutset_outer_bound`) 📋
+**`relay_cutset_outer_bound` genuine closure 達成** (sorryAx-free + 独立 honesty audit `@audit:ok`)。BC-cut の当初 **wall-likely 判定は gateway-atom-first で覆った** (= tractable, not wall): per-letter causal telescoping は既存資産 `mutualInfo_le_of_postprocess` + `jointEntropy_chain_rule` + `isMarkovChain_comp_conditioner_right` で組め、d-separation 自作機構 (~150-250 行見積り) は不要だった。`relay_broadcast_cut_singleletterize` (block 条件付き MI) は予測通り headline では未使用 (telescoping が直接 per-letter sum を出す)。
+
+- [x] M0 — verbatim API 確認 ✅
+- [x] Phase 2 — MAC-cut genuine closure (`relay_mac_cut_outer_bound`, commit `be67233f`) ✅
+- [x] Phase 3 — BC-cut gateway atom (`relay_broadcast_cut_message_telescope`, commit `786b15e2`, wall-likely 覆る) + combined headline (`relay_broadcast_cut_outer_bound` + `relay_cutset_outer_bound`, commit `f2547c93`, `@audit:ok` commit `9b4de42d`) ✅
+
+成果 (`InformationTheory/Shannon/RelayCutset.lean`, 全 `@audit:ok`・0/0/0 sorryAx-free): 2 single-letterization (leg 3) + `relay_mac_cut_outer_bound` + `relay_broadcast_cut_message_telescope` + `relay_broadcast_cut_outer_bound` + `relay_cutset_outer_bound`。撤退ライン (BC sorry+@residual / user-decision 停止) は **不発** (BC genuine 閉)。以下は設計史 (参照用、再作業不要)。
 
 ## ゴール / Approach
 
