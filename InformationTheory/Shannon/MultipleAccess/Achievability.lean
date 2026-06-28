@@ -577,6 +577,260 @@ lemma mac_chan_fold_set
           refine Finset.sum_congr rfl (fun x₁ _ ↦ ?_); ring
         · rw [if_neg h, if_neg h]
 
+/-- The second-input marginal of the per-coordinate MAC joint law is `p₂`. -/
+lemma macJointDistribution_map_X2
+    (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
+    (macJointDistribution p₁ p₂ W).map (fun q : α₁ × α₂ × β ↦ q.2.1) = p₂ := by
+  unfold macJointDistribution
+  rw [Measure.map_map (show Measurable (fun q : α₁ × α₂ × β ↦ q.2.1) from
+        measurable_fst.comp measurable_snd) MeasurableEquiv.prodAssoc.measurable]
+  have h_comp : ((fun q : α₁ × α₂ × β ↦ q.2.1) ∘ (MeasurableEquiv.prodAssoc :
+      (α₁ × α₂) × β ≃ᵐ α₁ × α₂ × β))
+      = (Prod.snd : α₁ × α₂ → α₂) ∘ (Prod.fst : (α₁ × α₂) × β → α₁ × α₂) := by
+    funext r; rfl
+  rw [h_comp, ← Measure.map_map measurable_snd measurable_fst]
+  have h1 : (jointDistribution (p₁.prod p₂) W).map Prod.fst = p₁.prod p₂ := by
+    show (jointDistribution (p₁.prod p₂) W).fst = p₁.prod p₂
+    rw [jointDistribution_def]
+    exact Measure.fst_compProd _ _
+  rw [h1]
+  show (p₁.prod p₂).snd = p₂
+  exact Measure.snd_prod
+
+/-- The `X₂`-block law under the MAC ambient measure equals `Measure.pi p₂`. -/
+lemma mac_block_law_X2
+    (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] (n : ℕ) :
+    (macAmbientMeasure p₁ p₂ W).map (jointRV macX2s n)
+      = Measure.pi (fun _ : Fin n ↦ p₂) := by
+  refine block_law_X_eq_pi_p (macAmbientMeasure p₁ p₂ W) macX2s measurable_macX2s ?_ ?_ p₂ ?_ n
+  · exact macAmbient_iIndepFun_coord p₁ p₂ W (fun q ↦ q.2.1) (measurable_fst.comp measurable_snd)
+  · exact fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W (fun q ↦ q.2.1)
+      (measurable_fst.comp measurable_snd) i
+  · rw [show (macX2s 0 : (ℕ → α₁ × α₂ × β) → α₂) = fun ω ↦ (fun q : α₁ × α₂ × β ↦ q.2.1) (ω 0)
+        from rfl,
+      macAmbient_map_coord p₁ p₂ W (fun q ↦ q.2.1) (measurable_fst.comp measurable_snd) 0,
+      macJointDistribution_map_X2]
+
+/-- Full-triple split block-law singleton mass factorizes over coordinates as a product of
+the per-coordinate MAC joint masses. -/
+lemma mac_block_law_triple_singleton
+    (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    (n : ℕ) (x₁ : Fin n → α₁) (x₂ : Fin n → α₂) (y : Fin n → β) :
+    ((macAmbientMeasure p₁ p₂ W).map
+        (fun ω ↦ (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω))).real {(x₁, x₂, y)}
+      = ∏ i, (macJointDistribution p₁ p₂ W).real {(x₁ i, x₂ i, y i)} := by
+  classical
+  set μ : Measure (ℕ → α₁ × α₂ × β) := macAmbientMeasure p₁ p₂ W with hμ_def
+  haveI : IsProbabilityMeasure μ := by rw [hμ_def]; infer_instance
+  set g₀ : (ℕ → α₁ × α₂ × β) → (Fin n → α₁) × (Fin n → α₂) × (Fin n → β) :=
+    fun ω ↦ (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω) with hg₀_def
+  set ê : (Fin n → α₁) × (Fin n → α₂) × (Fin n → β) → (Fin n → α₁ × α₂ × β) :=
+    fun q i ↦ (q.1 i, q.2.1 i, q.2.2 i) with hê_def
+  have hg₀_meas : Measurable g₀ :=
+    (measurable_jointRV macX1s measurable_macX1s n).prodMk
+      ((measurable_jointRV macX2s measurable_macX2s n).prodMk
+        (measurable_jointRV macYs measurable_macYs n))
+  have hê_meas : Measurable ê :=
+    measurable_pi_lambda _ fun i ↦
+      ((measurable_pi_apply i).comp measurable_fst).prodMk
+        (((measurable_pi_apply i).comp (measurable_fst.comp measurable_snd)).prodMk
+          ((measurable_pi_apply i).comp (measurable_snd.comp measurable_snd)))
+  set ρ : Measure (Fin n → α₁ × α₂ × β) :=
+    μ.map (jointRV (macJointSequence macX1s macX2s macYs) n) with hρ_def
+  have hρ_eq : ρ = Measure.pi (fun _ : Fin n ↦ macJointDistribution p₁ p₂ W) := by
+    refine block_law_X_eq_pi_p μ (macJointSequence macX1s macX2s macYs)
+      (fun i ↦ measurable_macJointSequence macX1s macX2s macYs
+        measurable_macX1s measurable_macX2s measurable_macYs i)
+      ?_ ?_ (macJointDistribution p₁ p₂ W) ?_ n
+    · exact macAmbient_iIndepFun_coord p₁ p₂ W id measurable_id
+    · exact fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W id measurable_id i
+    · rw [show (macJointSequence macX1s macX2s macYs 0 : (ℕ → α₁ × α₂ × β) → α₁ × α₂ × β)
+            = fun ω ↦ id (ω 0) from rfl,
+        macAmbient_map_coord p₁ p₂ W id measurable_id 0, Measure.map_id]
+  have hν_eq_ρ : (μ.map g₀).map ê = ρ := by
+    rw [Measure.map_map hê_meas hg₀_meas, hρ_def]
+    congr 1
+  have h_pre : ê ⁻¹' {ê (x₁, x₂, y)}
+      = {((x₁, x₂, y) : (Fin n → α₁) × (Fin n → α₂) × (Fin n → β))} := by
+    ext ⟨u, v, w⟩
+    simp only [Set.mem_preimage, Set.mem_singleton_iff]
+    constructor
+    · intro h
+      have hu : u = x₁ := by funext i; exact congrArg (·.1) (congrFun h i)
+      have hv : v = x₂ := by funext i; exact congrArg (fun p ↦ p.2.1) (congrFun h i)
+      have hw : w = y := by funext i; exact congrArg (fun p ↦ p.2.2) (congrFun h i)
+      rw [hu, hv, hw]
+    · intro h; rw [h]
+  calc (μ.map g₀).real {(x₁, x₂, y)}
+      = (μ.map g₀).real (ê ⁻¹' {ê (x₁, x₂, y)}) := by rw [h_pre]
+    _ = ((μ.map g₀).map ê).real {ê (x₁, x₂, y)} :=
+        (map_measureReal_apply hê_meas (measurableSet_singleton _)).symm
+    _ = ρ.real {ê (x₁, x₂, y)} := by rw [hν_eq_ρ]
+    _ = (Measure.pi (fun _ : Fin n ↦ macJointDistribution p₁ p₂ W)).real
+          {fun i ↦ (x₁ i, x₂ i, y i)} := by rw [hρ_eq]
+    _ = ∏ i, (macJointDistribution p₁ p₂ W).real {(x₁ i, x₂ i, y i)} :=
+        measureReal_pi_singleton_eq_prod _ _
+
+/-- **Master pair-channel fold (full triple).**  The full-triple split block law of a finite
+set `T` equals the average over the true codeword pair `(x₁, x₂) ~ p₁ⁿ ⊗ p₂ⁿ` of the
+paired-channel mass of the corresponding slice of `T`. -/
+lemma mac_chan_fold_triple_set
+    (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    (n : ℕ) (T : Set ((Fin n → α₁) × (Fin n → α₂) × (Fin n → β))) :
+    ((macAmbientMeasure p₁ p₂ W).map
+        (fun ω ↦ (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω))).real T
+      = ∑ x₁ : Fin n → α₁, ∑ x₂ : Fin n → α₂,
+          (Measure.pi (fun _ : Fin n ↦ p₁)).real {x₁}
+            * (Measure.pi (fun _ : Fin n ↦ p₂)).real {x₂}
+            * (Measure.pi (fun i ↦ W (x₁ i, x₂ i))).real {y | (x₁, x₂, y) ∈ T} := by
+  classical
+  set νt : Measure ((Fin n → α₁) × (Fin n → α₂) × (Fin n → β)) :=
+    (macAmbientMeasure p₁ p₂ W).map
+      (fun ω ↦ (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω)) with hνt_def
+  haveI : IsProbabilityMeasure νt := by
+    rw [hνt_def]
+    exact Measure.isProbabilityMeasure_map
+      ((measurable_jointRV macX1s measurable_macX1s n).prodMk
+        ((measurable_jointRV macX2s measurable_macX2s n).prodMk
+          (measurable_jointRV macYs measurable_macYs n))).aemeasurable
+  -- Per-coordinate factorization of the full-triple singleton mass.
+  have h_single : ∀ (x₁ : Fin n → α₁) (x₂ : Fin n → α₂) (y : Fin n → β),
+      νt.real {(x₁, x₂, y)}
+        = (Measure.pi (fun _ : Fin n ↦ p₁)).real {x₁}
+          * (Measure.pi (fun _ : Fin n ↦ p₂)).real {x₂}
+          * (Measure.pi (fun i ↦ W (x₁ i, x₂ i))).real {y} := by
+    intro x₁ x₂ y
+    rw [hνt_def, mac_block_law_triple_singleton p₁ p₂ W n x₁ x₂ y,
+      Finset.prod_congr rfl (fun i _ ↦
+        macJointDistribution_triple_singleton p₁ p₂ W (x₁ i) (x₂ i) (y i)),
+      Finset.prod_mul_distrib, Finset.prod_mul_distrib,
+      ← measureReal_pi_singleton_eq_prod (fun _ : Fin n ↦ p₁) x₁,
+      ← measureReal_pi_singleton_eq_prod (fun _ : Fin n ↦ p₂) x₂,
+      ← measureReal_pi_singleton_eq_prod (fun i ↦ W (x₁ i, x₂ i)) y]
+  -- Enumerate the LHS as an indicator triple sum, then collapse the output sum.
+  rw [hνt_def] at *
+  rw [measureReal_eq_sum_ite νt T, Fintype.sum_prod_type]
+  refine Finset.sum_congr rfl (fun x₁ _ ↦ ?_)
+  rw [Fintype.sum_prod_type]
+  refine Finset.sum_congr rfl (fun x₂ _ ↦ ?_)
+  rw [measureReal_eq_sum_ite (Measure.pi (fun i ↦ W (x₁ i, x₂ i))) {y | (x₁, x₂, y) ∈ T},
+    Finset.mul_sum]
+  refine Finset.sum_congr rfl (fun y _ ↦ ?_)
+  simp only [Set.mem_setOf_eq]
+  rw [h_single x₁ x₂ y]
+  by_cases h : (x₁, x₂, y) ∈ T
+  · rw [if_pos h, if_pos h]
+  · rw [if_neg h, if_neg h, mul_zero]
+
+/-- The `(X₁, Y)`-split joint block-law fold, derived from the master triple fold by
+projecting out `X₂`. -/
+lemma mac_chan_fold_X1Y_set
+    (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    (n : ℕ) (T : Set ((Fin n → α₁) × (Fin n → β))) :
+    ((macAmbientMeasure p₁ p₂ W).map
+        (fun ω ↦ (jointRV macX1s n ω, jointRV macYs n ω))).real T
+      = ∑ x₁ : Fin n → α₁, ∑ x₂ : Fin n → α₂,
+          (Measure.pi (fun _ : Fin n ↦ p₁)).real {x₁}
+            * (Measure.pi (fun _ : Fin n ↦ p₂)).real {x₂}
+            * (Measure.pi (fun i ↦ W (x₁ i, x₂ i))).real {y | (x₁, y) ∈ T} := by
+  classical
+  have hmeas_triple : Measurable (fun ω : ℕ → α₁ × α₂ × β ↦
+      (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω)) :=
+    (measurable_jointRV macX1s measurable_macX1s n).prodMk
+      ((measurable_jointRV macX2s measurable_macX2s n).prodMk
+        (measurable_jointRV macYs measurable_macYs n))
+  have hproj_meas : Measurable
+      (fun t : (Fin n → α₁) × (Fin n → α₂) × (Fin n → β) ↦ (t.1, t.2.2)) :=
+    measurable_fst.prodMk (measurable_snd.comp measurable_snd)
+  have hmap : (macAmbientMeasure p₁ p₂ W).map (fun ω ↦ (jointRV macX1s n ω, jointRV macYs n ω))
+      = ((macAmbientMeasure p₁ p₂ W).map
+          (fun ω ↦ (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω))).map
+        (fun t ↦ (t.1, t.2.2)) := by
+    rw [Measure.map_map hproj_meas hmeas_triple]; rfl
+  rw [hmap, map_measureReal_apply hproj_meas (Set.toFinite T).measurableSet,
+    mac_chan_fold_triple_set p₁ p₂ W n ((fun t ↦ (t.1, t.2.2)) ⁻¹' T)]
+
+/-- The `Y`-block-law fold, derived from the master triple fold by projecting out both
+inputs. -/
+lemma mac_chan_fold_Y_set
+    (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    (n : ℕ) (T : Set (Fin n → β)) :
+    ((macAmbientMeasure p₁ p₂ W).map (jointRV macYs n)).real T
+      = ∑ x₁ : Fin n → α₁, ∑ x₂ : Fin n → α₂,
+          (Measure.pi (fun _ : Fin n ↦ p₁)).real {x₁}
+            * (Measure.pi (fun _ : Fin n ↦ p₂)).real {x₂}
+            * (Measure.pi (fun i ↦ W (x₁ i, x₂ i))).real {y | y ∈ T} := by
+  sorry
+
+/-- The `(X₁, X₂)`-split joint block-law singleton mass equals `p₁ⁿ{x₁} · p₂ⁿ{x₂}`, derived
+from the master triple fold by projecting out the output. -/
+lemma mac_block_law_X1X2_singleton
+    (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    (n : ℕ) (xa : Fin n → α₁) (xb : Fin n → α₂) :
+    ((macAmbientMeasure p₁ p₂ W).map
+        (fun ω ↦ (jointRV macX1s n ω, jointRV macX2s n ω))).real {(xa, xb)}
+      = (Measure.pi (fun _ : Fin n ↦ p₁)).real {xa}
+          * (Measure.pi (fun _ : Fin n ↦ p₂)).real {xb} := by
+  sorry
+
+/-- **Split-form restatement of the user-2 gateway atom.**  The reshaped-product /
+preimage-set conclusion of `macJTS_indep_prob_le_X2` recast over the split product
+`X₂-block ⊗ (X₁, Y)-joint-block`. -/
+lemma macJTS_indep_prob_le_X2_split
+    (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    (hp₁ : ∀ a : α₁, 0 < p₁.real {a}) (hp₂ : ∀ a : α₂, 0 < p₂.real {a})
+    (hW : ∀ a : α₁ × α₂, ∀ b : β, 0 < (W a).real {b})
+    (n : ℕ) {ε : ℝ} (hε : 0 < ε) :
+    (((macAmbientMeasure p₁ p₂ W).map (jointRV macX2s n)).prod
+        ((macAmbientMeasure p₁ p₂ W).map
+          (fun ω ↦ (jointRV macX1s n ω, jointRV macYs n ω)))).real
+        {q : (Fin n → α₂) × ((Fin n → α₁) × (Fin n → β)) |
+          (q.2.1, q.1, q.2.2) ∈
+            macJointlyTypicalSet (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs n ε}
+      ≤ Real.exp ((n : ℝ) *
+          ((entropy (macAmbientMeasure p₁ p₂ W) (macJointSequence macX1s macX2s macYs 0)
+            - entropy (macAmbientMeasure p₁ p₂ W) (macX2s 0)
+            - entropy (macAmbientMeasure p₁ p₂ W) (jointSequence macX1s macYs 0)) + 3 * ε)) := by
+  sorry
+
+/-- **Split-form restatement of the both-users gateway atom.**  The reshaped-product /
+preimage-set conclusion of `macJTS_indep_prob_le_both` recast over the split product
+`(X₁, X₂)-joint-block ⊗ Y-block`. -/
+lemma macJTS_indep_prob_le_both_split
+    (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    (hp₁ : ∀ a : α₁, 0 < p₁.real {a}) (hp₂ : ∀ a : α₂, 0 < p₂.real {a})
+    (hW : ∀ a : α₁ × α₂, ∀ b : β, 0 < (W a).real {b})
+    (n : ℕ) {ε : ℝ} (hε : 0 < ε) :
+    (((macAmbientMeasure p₁ p₂ W).map
+          (fun ω ↦ (jointRV macX1s n ω, jointRV macX2s n ω))).prod
+        ((macAmbientMeasure p₁ p₂ W).map (jointRV macYs n))).real
+        {q : ((Fin n → α₁) × (Fin n → α₂)) × (Fin n → β) |
+          (q.1.1, q.1.2, q.2) ∈
+            macJointlyTypicalSet (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs n ε}
+      ≤ Real.exp ((n : ℝ) *
+          ((entropy (macAmbientMeasure p₁ p₂ W) (macJointSequence macX1s macX2s macYs 0)
+            - entropy (macAmbientMeasure p₁ p₂ W) (jointSequence macX1s macX2s 0)
+            - entropy (macAmbientMeasure p₁ p₂ W) (macYs 0)) + 3 * ε)) := by
+  sorry
+
 /-! ### Two-codebook averaging: per-event swaps -/
 
 /-- **E0 swap (correct-pair atypicality).** -/
@@ -788,6 +1042,61 @@ lemma mac_errorProbAt_ne_top
     (macCodebookToCode μ X1s X2s Ys hM₁ hM₂ ε c₁ c₂).errorProbAt W m ≠ ∞ :=
   ne_top_of_le_ne_top ENNReal.one_ne_top
     ((macCodebookToCode μ X1s X2s Ys hM₁ hM₂ ε c₁ c₂).errorProbAt_le_one W m)
+
+/-- Linearity decomposition of the product-codebook expectation into the four error-event
+sums (E0 diagonal + the three alias families), with the codebook-weight average swapped to
+the inside of each term. -/
+lemma mac_sum_weighted_quad_decomp
+    {ι₁ ι₂ : Type*} [Fintype ι₁] [DecidableEq ι₁] [Fintype ι₂] [DecidableEq ι₂]
+    {M₁ M₂ : ℕ} (w₁ : ι₁ → ℝ) (w₂ : ι₂ → ℝ)
+    (a : ι₁ → ι₂ → Fin M₁ → Fin M₂ → ℝ)
+    (b1 : ι₁ → ι₂ → Fin M₁ → Fin M₂ → Fin M₁ → ℝ)
+    (b2 : ι₁ → ι₂ → Fin M₁ → Fin M₂ → Fin M₂ → ℝ)
+    (b3 : ι₁ → ι₂ → Fin M₁ → Fin M₂ → Fin M₁ × Fin M₂ → ℝ)
+    (Minv : ℝ) :
+    ∑ c₁ : ι₁, ∑ c₂ : ι₂, w₁ c₁ * w₂ c₂ *
+        (Minv * ∑ m₁ : Fin M₁, ∑ m₂ : Fin M₂,
+          (a c₁ c₂ m₁ m₂
+            + ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m₁, b1 c₁ c₂ m₁ m₂ m₁'
+            + ∑ m₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m₂, b2 c₁ c₂ m₁ m₂ m₂'
+            + ∑ p ∈ ((Finset.univ : Finset (Fin M₁)).erase m₁) ×ˢ
+                      ((Finset.univ : Finset (Fin M₂)).erase m₂), b3 c₁ c₂ m₁ m₂ p))
+      = Minv * ∑ m₁ : Fin M₁, ∑ m₂ : Fin M₂,
+          ((∑ c₁ : ι₁, ∑ c₂ : ι₂, w₁ c₁ * w₂ c₂ * a c₁ c₂ m₁ m₂)
+            + ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m₁,
+                ∑ c₁ : ι₁, ∑ c₂ : ι₂, w₁ c₁ * w₂ c₂ * b1 c₁ c₂ m₁ m₂ m₁'
+            + ∑ m₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m₂,
+                ∑ c₁ : ι₁, ∑ c₂ : ι₂, w₁ c₁ * w₂ c₂ * b2 c₁ c₂ m₁ m₂ m₂'
+            + ∑ p ∈ ((Finset.univ : Finset (Fin M₁)).erase m₁) ×ˢ
+                      ((Finset.univ : Finset (Fin M₂)).erase m₂),
+                ∑ c₁ : ι₁, ∑ c₂ : ι₂, w₁ c₁ * w₂ c₂ * b3 c₁ c₂ m₁ m₂ p) := by
+  sorry
+
+/-- Per-pair aggregation of the four uniform bounds into the closed-form average bound. -/
+lemma mac_quad_aggregate
+    {M₁ M₂ : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂)
+    (A : ℝ) (e1 e2 e3 : ℝ)
+    (d : Fin M₁ → Fin M₂ → ℝ)
+    (b1 : Fin M₁ → Fin M₂ → Fin M₁ → ℝ)
+    (b2 : Fin M₁ → Fin M₂ → Fin M₂ → ℝ)
+    (b3 : Fin M₁ → Fin M₂ → Fin M₁ × Fin M₂ → ℝ)
+    (Minv : ℝ) (hMinv : 0 ≤ Minv)
+    (hMinvM : Minv * ((M₁ * M₂ : ℕ) : ℝ) = 1)
+    (hd : ∀ m₁ m₂, d m₁ m₂ ≤ A)
+    (hb1 : ∀ m₁ m₂, ∀ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m₁, b1 m₁ m₂ m₁' ≤ e1)
+    (hb2 : ∀ m₁ m₂, ∀ m₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m₂, b2 m₁ m₂ m₂' ≤ e2)
+    (hb3 : ∀ m₁ m₂, ∀ p ∈ ((Finset.univ : Finset (Fin M₁)).erase m₁) ×ˢ
+        ((Finset.univ : Finset (Fin M₂)).erase m₂), b3 m₁ m₂ p ≤ e3)
+    (he1 : 0 ≤ e1) (he2 : 0 ≤ e2) (he3 : 0 ≤ e3) :
+    Minv * ∑ m₁ : Fin M₁, ∑ m₂ : Fin M₂,
+        (d m₁ m₂
+          + ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m₁, b1 m₁ m₂ m₁'
+          + ∑ m₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m₂, b2 m₁ m₂ m₂'
+          + ∑ p ∈ ((Finset.univ : Finset (Fin M₁)).erase m₁) ×ˢ
+                    ((Finset.univ : Finset (Fin M₂)).erase m₂), b3 m₁ m₂ p)
+      ≤ A + ((M₁ : ℝ) - 1) * e1 + ((M₂ : ℝ) - 1) * e2
+          + ((M₁ : ℝ) - 1) * ((M₂ : ℝ) - 1) * e3 := by
+  sorry
 
 /-! ### Two-codebook averaging -/
 
