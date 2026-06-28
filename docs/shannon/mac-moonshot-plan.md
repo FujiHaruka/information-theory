@@ -3,11 +3,9 @@
 > **Parent**: [`textbook-roadmap.md`](../textbook-roadmap.md) §Ch.15 (Network IT / DSC mini-chapter)
 > **Inventory**: [`mac-inventory.md`](mac-inventory.md) (§A in-project 流用 / §B Mathlib / §C 削除済 scaffold 型 / §D gap)
 
-> **Status**: **converse genuine-closed** (Phase 0 / A1 / A2 ✅、achievability 残)。**目標 = Cover–Thomas 2nd ed. Theorem 15.3.1 (2-user DMC capacity region) を標準B (proof done = 0 sorry / 0 @residual) で genuine closure。** 旧 statement-level pass-through plan (CLOSED) と `mac-l1-discharge-moonshot-plan.md` (partial discharge) を **本 genuine-closure 計画で置換**。旧版の本文は git 履歴。
+> **Status**: **CLOSED — MAC 容量領域 full closure 達成 (2026-06-28)**。converse (`mac_converse`、Phase A2) + achievability (`mac_achievability`、Phase D-2) ともに genuine (`@[entry_point]`、`@audit:ok`、`#print axioms` = `[propext, Classical.choice, Quot.sound]` sorryAx-free)。**目標 = Cover–Thomas 2nd ed. Theorem 15.3.1 (2-user DMC capacity region、corner-point/per-letter 和形) を標準B (proof done) で genuine closure** = 達成。time-sharing 全凸包形 (L-MAC5) は scope-out 維持。旧 statement-level pass-through plan (CLOSED) と `mac-l1-discharge-moonshot-plan.md` (partial discharge) を本 genuine-closure 計画で置換、旧版の本文は git 履歴。
 >
-> **親整合 注記 (要 orchestrator アクション、本 planner は roadmap / README 不可侵)**: **Phase A2 (genuine MAC converse、per-letter 条件付き MI 和形) が proof done に達した** (sorryAx-free + 独立 honesty 監査 `@audit:ok`、下記 A2 節)。よって converse はもう scope-out ではない。orchestrator が同期すべき 2 点:
-> - (a) **roadmap Ch.15 行 + judgment #10**: 「MAC main = scope-out」→「**converse genuine-closed / achievability pending**」に書換 (converse はもう真壁でも原稿優先でもない、achievability gap2 のみ残)。
-> - (b) **README**: 推奨は **full capacity region (converse + achievability) 完成まで defer** — converse 単独行を今足すと「MAC done」と誤読されうる。converse row を先行追加するなら名前は `mac_converse` (genuine per-letter MI 和形) と明記し achievability 未達を併記。判断は orchestrator。
+> **親整合 注記 (2026-06-28 完了)**: converse + achievability の両 genuine closure を受け、orchestrator が roadmap Ch.15 (L22 段落 + 章状態表 row 15) + README 定理表 (`mac_converse` / `mac_achievability` 2 行) を MAC 容量領域 full closure へ同期済。本 moonshot は CLOSED。
 
 ## 進捗
 
@@ -18,8 +16,8 @@
 - [x] Phase B — gateway atom `macJTS_indep_prob_le_X1`/`_X2`/`_both` (E1/E2/E3) ✅ sorryAx-free + `@audit:ok`。所見: 単一ユーザ `jointlyTypicalSet_indep_prob_le` への regrouping wrapper で plumbing 化、achievability genuine-closure viable 確定
 - [x] Phase C-rest — 正解 pair AEP `macJointlyTypicalSet_prob_tendsto_one` (7-event 交差→1) ✅ sorryAx-free。card_le は不要
 - [x] Phase D-1 — 4-event Bonferroni `mac_errorProbAt_le_bonferroni4` + `macJointTypicalDecoder`/`macCodebookToCode` ✅ sorryAx-free
-- [ ] Phase D-2 — 2-codebook averaging（`mac_random_codebook_average_le`、唯一の残 sorry）📋 → [mac-achievability-bonferroni-plan.md](mac-achievability-bonferroni-plan.md)（iidAmbient infra / closed-form rate 境界 / pigeonhole / headline `mac_achievability` 配線は既に sorryAx-free、残るは averaging 補題 1 本）
-- [ ] Phase V — verify (`lake env lean` + `#print axioms` sorryAx-free + 独立 honesty 監査) + 最終 wire-in 📋
+- [x] Phase D-2 — 2-codebook averaging（`mac_random_codebook_average_le`）✅ CLOSED → [mac-achievability-bonferroni-plan.md](mac-achievability-bonferroni-plan.md)（gateway-atom-first E1 swap genuine、4-event 分配 + 集約 + 組立で averaging 補題 sorryAx-free 化、headline `mac_achievability` 推移的 proof done）
+- [x] Phase V — verify ✅ (`#print axioms mac_converse`/`mac_achievability` = `[propext, Classical.choice, Quot.sound]` sorryAx-free、独立 honesty 監査 `@audit:ok`、`InformationTheory.lean` に 5 MAC ファイル wire-in 済、`lake build InformationTheory` clean)
 
 ## ゴール / Approach
 
@@ -157,7 +155,7 @@ variable {α₁ α₂ β : Type*}
 - **依存 in-project decl**: `ChannelCoding/Basic.lean:540` (`jointlyTypicalSet_indep_prob_le`、E1/E2/E3 のひな型); `:320` (`jointlyTypicalSet_card_le`); C-def の `macJointlyTypicalSet`; `MutualInfo.lean:122` (`mutualInfoOfChannel_eq_HX_add_HY_sub_HZ`、指数 = `H(Z₀)-H(X₀)-H(Y₀) = -I` の条件付き類比); 前提 `iIndepFun (fun i ↦ Xs i) μ` (full mutual independence、pairwise 不足) + per-letter iid
 - **gateway atom**: `macJTS_indep_prob_le_X1` (E1)。通れば E2 対称 / E3 流用で連鎖 = achievability genuine closure 確定。
 - **予想規模**: ~400-600 行 (E1/E2 条件付き fiber が新規、E3 は (c) 流用で軽い)。**本計画の重心 (唯一の重い analytic gap)**。
-- **撤退条件**: gateway atom dispatch が **通らない**場合のみ E1/E2/E3 を **3 本の shared sorry 補題** `@residual(wall:joint-typicality-multi)` で開ける (register 済壁、audit-tags.md「Shared Mathlib walls」)。achievability headline (Phase D) は **これら sorry 補題を直接呼び出す**形で受ける (`*Hypothesis` predicate に bundle しない = 旧 `IsMACPerEventAEPDecay` primitive bundle 禁止)。converse (Phase A) は壁なしゆえ achievability 縮退時も単独で proof done 到達可能。
+- **撤退条件 (未発動、CLOSED)**: 当初の退避口は「gateway atom dispatch が通らない場合のみ E1/E2/E3 を 3 本の shared sorry 補題 (audit-tags register の Ch.15 multi-user joint typicality 壁) で開ける」だったが、**gateway-atom-first が genuine に通り achievability closure 達成ゆえ退避線は不発動** (shared sorry 補題は作られず、code 側に当該壁の `@residual` は存在しない)。converse (Phase A) は壁なしで closure 済。
 
 ---
 
@@ -232,7 +230,7 @@ frozen slug (他 doc / 旧 plan が参照、削除不可):
 - **L-MAC4** (outer bound `InMACCapacityRegion` pass-through): **RESOLVED** (genuine outer bound = per-letter 和形 `mac_converse` 完成、Phase A2)。`InMACCapacityRegion` predicate は load-bearing でない generic bundle。
 - **L-MAC5** (time-sharing 全凸包): **scope-out 維持** (撤退ライン明記)。corner-point form のみが genuine target。full hull は §B `convexHull` で将来対応 (本タスク対象外)。
 
-**唯一の register 済壁** (achievability 側、converse は壁なしで closure 済): gap2 不通時の退避先 = `@residual(wall:joint-typicality-multi)` (audit-tags.md、Ch.15 MAC/BC/Relay)。**ただし gateway-atom-first で E1 を試し、通れば壁ではなく genuine closure** (CLAUDE.md「壁判定は反証を 1 度試みる」)。
+**退避先 (未発動)**: gap2 不通時の退避先として audit-tags register の Ch.15 multi-user joint typicality 壁を想定していたが、**gateway-atom-first で E1 を試したところ genuine に通り壁ではなかった** (CLAUDE.md「壁判定は反証を 1 度試みる」)。achievability は壁なしで genuine closure、code 側に当該壁の `@residual` は存在しない。
 
 ---
 
@@ -252,6 +250,6 @@ append-only。決着済 entry は削除 (git が履歴)、active のみ残す。
 
 1. **region 表現 = corner-point form 確定**: `InMACCapacityRegion` の 3 不等式を headline とする。凸包 / closure は Mathlib 完備 (`convexHull` / `closedConvexHull_eq_closure_convexHull`) で **gap でなく設計選択**、time-sharing 全凸包 (L-MAC5) は scope-out 維持。full hull form は将来別途。
 2. **achievability 攻略順序 (active、converse は closure 済)**: gap2 E1 gateway atom `macJTS_indep_prob_le_X1` を **gateway-atom-first で dispatch** → 通れば E2 対称 / E3 流用 + gap1/gap3 plumbing で genuine closure 確定、不通なら gap2 のみ shared sorry 壁に縮退 (#3)。
-3. **gap2 撤退の honest 形**: gateway atom 不通時のみ E1/E2/E3 を **3 本の shared sorry 補題** `@residual(wall:joint-typicality-multi)` で開け、headline はそれを **直呼び** (predicate bundle 禁止、旧 `IsMACPerEventAEPDecay` を踏襲しない)。
+3. **gap2 撤退の honest 形 (未発動、settled)**: gateway atom 不通時のみ E1/E2/E3 を 3 本の shared sorry 補題 (audit-tags register の Ch.15 multi-user joint typicality 壁) で開け headline は直呼び、という退避線を用意していたが gateway-atom-first が genuine に通り不発動。achievability genuine closure 達成。
 4. **親整合 (要 orchestrator アクション、active)**: converse が genuine-closed になったので、orchestrator が roadmap Ch.15 行 + judgment #10 を「scope-out」→「converse genuine-closed / achievability pending」に書換 + README 方針決定 (推奨 = full region 完成まで defer)。本 planner は roadmap / README 不可侵 (editing boundary 外)。詳細 → 冒頭「親整合 注記」。
 5. **A2 closed + ゲートウェイ反転の教訓 (#5〜#8 を集約、settled)**: L-MAC2/L-MAC4 を genuine MAC converse `mac_converse` (per-letter 条件付き MI 和形) で closure (commits `3a8dbc6d`/`383a0807`/`56563e17`、sorryAx-free + `@audit:ok`)。**教訓 = ゲートウェイ反転**: 当初 A2-1 (操作的 `averageErrorProb` リンク) をゲートウェイと置いたが誤りで、実体は A2-2 (single-letterization)。単一ユーザに `averageErrorProb` 結論の操作的 weak converse が不在 (settled-facts) ゆえ honest genuine 基準 = generic Fano + memoryless precondition の per-letter MI 和 = 単一ユーザ parity。inventory の「converse 純配線」は A1/A2 混同だった (cause:plumbing で旧 step-2「壁」も解消)。rename (`mac_converse`→`mac_converse_message_level`) + docstring ref 是正は実施済 (git 履歴)。
