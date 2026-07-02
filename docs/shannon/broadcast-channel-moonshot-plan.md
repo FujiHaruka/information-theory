@@ -1,6 +1,6 @@
 # T3-C Broadcast Channel (degraded) Capacity Region ムーンショット計画 🌙
 
-**Status**: CLOSED ✅ — degraded BC converse single-letterization (Cover–Thomas Thm 15.6.2) を **L-BC2 再開で genuine closure 済**: headline `bc_converse` (auxiliary-variable 容量領域 membership) + 核 `bc_input_singleletterize` / `bc_singleletterize_bound₁` は `@audit:ok`・`InformationTheory.lean` 登録済 (子 [`bc-degraded-converse-plan.md`](bc-degraded-converse-plan.md))。BC achievability (superposition inner bound) / 一般 (non-degraded) BC + Marton (L-BC5) は scope-out 継続 (textbook-roadmap Ch.15)。
+**Status**: CLOSED ✅ — degraded BC converse single-letterization (Cover–Thomas Thm 15.6.2) を **L-BC2 再開で genuine closure 済**: headline `bc_converse` (auxiliary-variable 容量領域 membership) + 核 `bc_input_singleletterize` / `bc_singleletterize_bound₁` は `@audit:ok`・`InformationTheory.lean` 登録済 (子 [`bc-degraded-converse-plan.md`](bc-degraded-converse-plan.md))。BC achievability (superposition inner bound) は 2026-07-03 relay で **再開** (子 [`bc-achievability-plan.md`](bc-achievability-plan.md)、進行中)。一般 (non-degraded) BC + Marton (L-BC5) は scope-out 継続 (textbook-roadmap Ch.15)。
 **SoT**: `docs/textbook-roadmap.md` Ch.15 + 子 plan。詳細履歴は git。
 
 > **Parent**:
