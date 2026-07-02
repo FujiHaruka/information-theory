@@ -160,7 +160,7 @@ satellite `x` is jointly typical with `(u, y₁)` is at most `exp(−n (I(X; Y�
 This is the receiver-1 "wrong satellite, correct cloud" sub-event of the superposition
 random-coding argument (Cover–Thomas Thm 15.6.2); the exponent matches `bcInfo₁`
 out of the box.
-@residual(plan:bc-superposition-inner) -/
+@residual(plan:bc-achievability-plan) -/
 theorem bc_conditional_slice_prob_le
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -189,7 +189,7 @@ is achievable: for all large enough block lengths `n` there is a `BroadcastCode`
 per-receiver average error probabilities are both below any prescribed `ε' > 0`.  The proof
 is the two-tier superposition random-coding argument; degradedness `X → Y₁ → Y₂` is a
 structural precondition ensuring the receiver-1 joint-decoding rate sum is met automatically.
-@residual(plan:bc-superposition-inner) -/
+@residual(plan:bc-achievability-plan) -/
 theorem bc_achievability
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
