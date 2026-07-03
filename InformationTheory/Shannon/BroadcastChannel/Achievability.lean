@@ -848,6 +848,125 @@ theorem bc_cloud_indep_prob_le
   unfold bcInfo₂
   ring
 
+/-! ### Receiver-1 (strong) error analysis -/
+
+/-- **Receiver-1 three-event Bonferroni bound.**  When the pair `m` is sent, the receiver-1
+per-pair error probability of the superposition joint-typical decoder is bounded by three
+sub-events along the `β₁`-projection `fun i ↦ (y i).1` of the block output:
+
+* `E0` — the correct triple `(Uⁿ(m₂), Xⁿ(m), y₁)` is not jointly typical;
+* `E_b` (wrong satellite, correct cloud) — some `m₁' ≠ m₁` makes
+  `(Uⁿ(m₂), Xⁿ(m₁', m₂), y₁)` jointly typical;
+* `E_c` (wrong cloud, any satellite) — some cloud alias `m₂' ≠ m₂` with any `m₁'` makes
+  `(Uⁿ(m₂'), Xⁿ(m₁', m₂'), y₁)` jointly typical.
+
+Because a wrong-cloud alias steers its satellite from an independent cloud, the two "correct
+cloud / wrong cloud" families collapse the four MAC alias events into three: the MAC
+`E1`/`E2`/`E3` split is absorbed as `E_b` (`m₂' = m₂`, `m₁' ≠ m₁`) and `E_c`
+(`m₂' ≠ m₂`, any `m₁'`).  This is the receiver-1 analogue of `mac_errorProbAt_le_bonferroni4`
+reworked to the superposition decoder; `E_b`/`E_c` are left as raw measure terms for the
+exponent-bounding legs. -/
+theorem bc_errorProbAt₁_le_bonferroni3
+    (pU : Measure U) (K : Kernel U α) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    {M₁ M₂ n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) {ε : ℝ}
+    (cU : BCCloudCodebook M₂ n U) (cX : BCSatelliteCodebook M₁ M₂ n α)
+    (m : Fin M₁ × Fin M₂) :
+    ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).errorProbAt₁ W m).toReal
+      ≤ (Measure.pi (fun i ↦ W (cX m i))).real
+          { y : Fin n → β₁ × β₂ |
+            (cU m.2, cX m, fun i ↦ (y i).1) ∉
+              macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε }
+        + ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m.1,
+            (Measure.pi (fun i ↦ W (cX m i))).real
+              { y : Fin n → β₁ × β₂ |
+                (cU m.2, cX (m₁', m.2), fun i ↦ (y i).1) ∈
+                  macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε }
+        + ∑ p ∈ ((Finset.univ : Finset (Fin M₂)).erase m.2) ×ˢ
+                  (Finset.univ : Finset (Fin M₁)),
+            (Measure.pi (fun i ↦ W (cX m i))).real
+              { y : Fin n → β₁ × β₂ |
+                (cU p.1, cX (p.2, p.1), fun i ↦ (y i).1) ∈
+                  macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε } := by
+  classical
+  set μ := bcAmbientMeasure pU K W with hμ_def
+  set J : Set ((Fin n → U) × (Fin n → α) × (Fin n → β₁)) :=
+    macJointlyTypicalSet μ bcUs bcXs bcY₁s n ε with hJ_def
+  -- Index sets for the two alias families.
+  set S_b : Finset (Fin M₁) := (Finset.univ : Finset (Fin M₁)).erase m.1 with hS_b_def
+  set S_c : Finset (Fin M₂ × Fin M₁) :=
+    (Finset.univ : Finset (Fin M₂)).erase m.2 ×ˢ (Finset.univ : Finset (Fin M₁)) with hS_c_def
+  set c : BroadcastCode M₁ M₂ n α β₁ β₂ := bcCodebookToCode pU K W hM₁ hM₂ ε cU cX with hc_def
+  set ν : Measure (Fin n → β₁ × β₂) := Measure.pi (fun i ↦ W (cX m i)) with hν_def
+  haveI : IsProbabilityMeasure ν := by rw [hν_def]; infer_instance
+  -- The three error events: E0 (correct triple atypical), E_b (wrong satellite / correct
+  -- cloud), E_c (wrong cloud / any satellite).
+  set E0 : Set (Fin n → β₁ × β₂) :=
+    { y | (cU m.2, cX m, fun i ↦ (y i).1) ∉ J } with hE0_def
+  set E_b : Fin M₁ → Set (Fin n → β₁ × β₂) :=
+    fun a ↦ { y | (cU m.2, cX (a, m.2), fun i ↦ (y i).1) ∈ J } with hE_b_def
+  set E_c : Fin M₂ × Fin M₁ → Set (Fin n → β₁ × β₂) :=
+    fun p ↦ { y | (cU p.1, cX (p.2, p.1), fun i ↦ (y i).1) ∈ J } with hE_c_def
+  -- Step 1: the receiver-1 error event is contained in the union of the three events.
+  have h_sub : c.errorEvent₁ m ⊆ (E0 ∪ ⋃ a ∈ S_b, E_b a) ∪ ⋃ p ∈ S_c, E_c p := by
+    intro y hy
+    rw [BroadcastCode.errorEvent₁, Set.mem_setOf_eq] at hy
+    set y₁ : Fin n → β₁ := fun i ↦ (y i).1 with hy₁_def
+    -- A typical alias pair `q ≠ (m.1, m.2)` lands in one of the two alias unions.
+    have place : ∀ q : Fin M₁ × Fin M₂,
+        (cU q.2, cX q, y₁) ∈ J → q ≠ (m.1, m.2) →
+        y ∈ (E0 ∪ ⋃ a ∈ S_b, E_b a) ∪ ⋃ p ∈ S_c, E_c p := by
+      intro q hq_mem hq_ne
+      by_cases hb : q.2 = m.2
+      · -- correct cloud, so the satellite index must be wrong (E_b).
+        have ha : q.1 ≠ m.1 := fun ha ↦ hq_ne (Prod.ext_iff.mpr ⟨ha, hb⟩)
+        refine Or.inl (Or.inr ?_)
+        refine Set.mem_iUnion.mpr ⟨q.1, ?_⟩
+        refine Set.mem_iUnion.mpr ⟨Finset.mem_erase.mpr ⟨ha, Finset.mem_univ _⟩, ?_⟩
+        show (cU m.2, cX (q.1, m.2), y₁) ∈ J
+        rw [← hb]; exact hq_mem
+      · -- wrong cloud, any satellite index (E_c).
+        refine Or.inr ?_
+        refine Set.mem_iUnion.mpr ⟨(q.2, q.1), ?_⟩
+        refine Set.mem_iUnion.mpr
+          ⟨Finset.mem_product.mpr ⟨Finset.mem_erase.mpr ⟨hb, Finset.mem_univ _⟩,
+            Finset.mem_univ _⟩, ?_⟩
+        show (cU q.2, cX (q.1, q.2), y₁) ∈ J
+        exact hq_mem
+    -- Case analyse on whether the correct triple is typical.
+    by_cases hc_typ : (cU m.2, cX m, y₁) ∈ J
+    · by_cases h_alias : ∃ q : Fin M₁ × Fin M₂, (cU q.2, cX q, y₁) ∈ J ∧ q ≠ (m.1, m.2)
+      · obtain ⟨q, hq_mem, hq_ne⟩ := h_alias
+        exact place q hq_mem hq_ne
+      · exfalso
+        apply hy
+        -- No alias ⇒ `(m.1, m.2)` is the unique typical pair ⇒ the decoder outputs it.
+        have huniq : ∃! p : Fin M₁ × Fin M₂,
+            (cU p.2, cX p, y₁) ∈
+              macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε := by
+          refine ⟨(m.1, m.2), hc_typ, ?_⟩
+          intro p hp
+          by_contra hne
+          exact h_alias ⟨p, hp, hne⟩
+        change (bcJointTypicalDecoder pU K W hM₁ hM₂ ε cU cX y₁).1 = m.1
+        unfold bcJointTypicalDecoder
+        rw [dif_pos huniq]
+        rw [huniq.unique (Classical.choose_spec huniq.exists) hc_typ]
+    · exact Or.inl (Or.inl hc_typ)
+  -- Step 2: `errorProbAt₁` is the block-law measure of the error event (defeq).
+  have h_real_eq : (c.errorProbAt₁ W m).toReal = ν.real (c.errorEvent₁ m) := rfl
+  rw [h_real_eq]
+  -- Step 3: monotonicity + union bound over the three events.
+  calc ν.real (c.errorEvent₁ m)
+      ≤ ν.real ((E0 ∪ ⋃ a ∈ S_b, E_b a) ∪ ⋃ p ∈ S_c, E_c p) :=
+        measureReal_mono h_sub (measure_ne_top _ _)
+    _ ≤ ν.real (E0 ∪ ⋃ a ∈ S_b, E_b a) + ν.real (⋃ p ∈ S_c, E_c p) :=
+        measureReal_union_le _ _
+    _ ≤ (ν.real E0 + ν.real (⋃ a ∈ S_b, E_b a)) + ν.real (⋃ p ∈ S_c, E_c p) :=
+        add_le_add (measureReal_union_le _ _) le_rfl
+    _ ≤ (ν.real E0 + ∑ a ∈ S_b, ν.real (E_b a)) + ∑ p ∈ S_c, ν.real (E_c p) :=
+        add_le_add (add_le_add le_rfl (measureReal_biUnion_finset_le _ _))
+          (measureReal_biUnion_finset_le _ _)
+
 /-! ### Headline: degraded broadcast achievability -/
 
 /-- **Broadcast channel achievability (degraded, superposition inner bound).**
