@@ -1451,7 +1451,8 @@ theorem bc_errorProbAt₁_le_bonferroni3
 /-- Two-coordinate marginalization of a finite product measure: summing a `(cᵢ, cⱼ)`-weighted
 functional against `Measure.pi ρ` factors into the double sum over the two independent
 coordinate marginals `ρ i`, `ρ j` (for distinct `i ≠ j`).  The satellite generalization of
-`codebook_marginal_two`, allowing the per-coordinate measures to differ. -/
+`codebook_marginal_two`, allowing the per-coordinate measures to differ.
+@audit:ok -/
 private lemma pi_marginal_two {ι δ : Type*} [Fintype ι] [DecidableEq ι]
     [Fintype δ] [MeasurableSpace δ] [MeasurableSingletonClass δ]
     (ρ : ι → Measure δ) [∀ i, IsProbabilityMeasure (ρ i)]
@@ -1566,7 +1567,8 @@ private lemma pi_marginal_two {ι δ : Type*} [Fintype ι] [DecidableEq ι]
 
 /-- **`(U, Y₁)` channel fold (β₁-marginal form).**  The `Y₁`-block law of a finite set `T`
 equals the cloud/satellite/channel average of the `β₁`-projected channel mass.  The
-receiver-1 analogue of `bc_chan_fold_Y₂_set`. -/
+receiver-1 analogue of `bc_chan_fold_Y₂_set`.
+@audit:ok -/
 lemma bc_chan_fold_Y₁_set
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -1600,7 +1602,8 @@ lemma bc_chan_fold_Y₁_set
 /-- The joint information `I((U, X); Y₁) = H(U, X) + H(Y₁) − H(U, X, Y₁)` of the per-coordinate
 joint law.  This is the exponent of the receiver-1 wrong-cloud error: a wrong cloud alias
 carries an *independent* `(U, X)` pair, so the false-alarm exponent is the full joint
-information `I((U, X); Y₁)` (which under degradedness dominates `R₁ + R₂`). -/
+information `I((U, X); Y₁)` (which under degradedness dominates `R₁ + R₂`).
+@audit:ok -/
 noncomputable def bcInfoJoint
     (pU : Measure U) (K : Kernel U α) (W : BCChannel α β₁ β₂) : ℝ :=
   entropy (bcJointDistribution pU K W) (fun q ↦ (q.1, q.2.1))
@@ -1608,7 +1611,8 @@ noncomputable def bcInfoJoint
     - entropy (bcJointDistribution pU K W) (fun q ↦ (q.1, q.2.1, q.2.2.1))
 
 /-- The `(U, X)`-split block-law singleton mass factorizes as `pUⁿ{u} · Kⁿ(u){x}`, derived
-from the ambient block law of the paired `(U, X)` coordinate. -/
+from the ambient block law of the paired `(U, X)` coordinate.
+@audit:ok -/
 lemma bc_block_law_UX_paired_singleton
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -1645,7 +1649,8 @@ lemma bc_block_law_UX_paired_singleton
 /-- **Receiver-1 wrong-cloud independent-pair bound.**  The distributed average over an
 independent `(U, X)` pair and the `Y₁`-block law of the jointly-typical event is at most
 `exp(−n (I((U, X); Y₁) − 3ε))`.  BC instantiation of `macJTS_indep_prob_le_both` with the
-axes `(U, X) ⟂ Y₁`. -/
+axes `(U, X) ⟂ Y₁`.
+@audit:ok -/
 theorem bc_joint_indep_prob_le
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -1749,7 +1754,8 @@ theorem bc_joint_indep_prob_le
 /-- **Unconditional conditional-slice satellite covering bound.**  The typicality hypotheses
 of `bc_conditional_slice_prob_le` are dropped: when `u` or `y₁` is atypical the slice is empty
 (joint typicality forces both marginals typical), so the bound holds vacuously; when both are
-typical it is the gateway atom. -/
+typical it is the gateway atom.
+@audit:ok -/
 theorem bc_conditional_slice_prob_le_uncond
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -1788,7 +1794,8 @@ index `m₁' ≠ m.1` (same cloud column `m.2`), the two-tier random-codebook av
 wrong-satellite alias event is at most `exp(−n (I(X; Y₁ ∣ U) − 4ε))`.  Both the transmitted
 satellite `cX m` (channel driver) and the alias `cX (m₁', m.2)` are drawn i.i.d. from the same
 cloud column `m.2`; averaging out the alias inside the channel integral yields the conditional
-covering bound `bc_conditional_slice_prob_le_uncond`. -/
+covering bound `bc_conditional_slice_prob_le_uncond`.
+@audit:ok -/
 theorem bc_random_codebook_Eb_swap
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -1910,7 +1917,8 @@ theorem bc_random_codebook_Eb_swap
 (with any satellite index `p.2`), the two-tier random-codebook average of the wrong-cloud alias
 event is at most `exp(−n (I((U, X); Y₁) − 3ε))`.  The wrong cloud `cU p.1` and its satellite
 `cX (p.2, p.1)` are drawn independently of the transmitted `(cX m)`-driven channel, giving the
-independent-pair bound `bc_joint_indep_prob_le`. -/
+independent-pair bound `bc_joint_indep_prob_le`.
+@audit:ok -/
 theorem bc_random_codebook_Ec_swap
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
