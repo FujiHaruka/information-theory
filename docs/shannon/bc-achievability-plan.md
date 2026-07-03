@@ -14,7 +14,7 @@
 - [~] M0 — inventory は advisor 精査が代替 (seed 3 本 file:line 確認済)。独立 inventory phase は skip。
 - [x] Leg 1 — skeleton + `bcJointDistribution` + `bcInfo₁/₂` + region target ✅ (cfd4a595、type-check done、監査 PASS)
 - [~] Leg 2 — two-tier codebook 型 + conditional codebook/ambient (compProd) def。**BC-ambient iid infra は Leg 5 で建造済** (bcAmbient_* coord lemmas / marginal factorization / positivity)。codebook averaging swap は残 (Leg 6)
-- [ ] Leg 3 — receiver-2 cloud decoder + error via `macJTS_indep_prob_le_X1` 再利用 📋
+- [x] Leg 3 — receiver-2 cloud decoder/code scaffold + Bonferroni + indep bound ✅ (0a0221e2、`bcCloudTypicalDecoder`/`bcJointTypicalDecoder`/`bcCodebookToCode` def + `bc_errorProbAt₂_le_bonferroni`/`bc_cloud_indep_prob_le` 2本 genuine sorryAx-free。単一ユーザ `jointlyTypicalSet_indep_prob_le` 直用、conditional tier 不要を実証)
 - [ ] Leg 4 — receiver-1 joint decoder + per-receiver 3-subevent Bonferroni 再構成 📋
 - [x] Leg 5 — ★ conditional-slice satellite prob atom ✅ **CLOSED** (`bc_conditional_slice_prob_le`、4f394dae、sorryAx-free、**家系 GO**。card×per-seq route、exponent 4ε、seed 3 本 as-advertised、Mathlib gap なし)
 - [ ] Leg 6 — conditional random-coding swap (compProd marginalization、HIGH RISK) 📋
