@@ -2059,8 +2059,7 @@ lemma bcAmbient_pairwise_coord {γ : Type*} [MeasurableSpace γ]
 
 /-- **`(U, X, Y₁)` channel fold.**  The `(U, X, Y₁)`-block law of a finite set `T` equals the
 cloud/satellite/channel average of the `β₁`-projected channel mass.  Receiver-1 analogue of
-`bc_chan_fold_UY₂_set`, obtained from the master fold by projecting the pair output to `β₁`.
-@residual(plan:bc-achievability-plan) -/
+`bc_chan_fold_UY₂_set`, obtained from the master fold by projecting the pair output to `β₁`. -/
 lemma bc_chan_fold_UXY₁_set
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -2072,12 +2071,34 @@ lemma bc_chan_fold_UXY₁_set
           (Measure.pi (fun _ : Fin n ↦ pU)).real {u}
             * (Measure.pi (fun l ↦ K (u l))).real {x}
             * (Measure.pi (fun i ↦ W (x i))).real {y | (u, x, fun i ↦ (y i).1) ∈ T} := by
-  sorry
+  classical
+  have hmeas_master : Measurable (fun ω : ℕ → U × α × β₁ × β₂ ↦
+      (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcYPs n ω)) :=
+    (measurable_jointRV bcUs (fun i ↦ (measurable_pi_apply i).fst) n).prodMk
+      ((measurable_jointRV bcXs (fun i ↦ (measurable_pi_apply i).snd.fst) n).prodMk
+        (measurable_jointRV bcYPs (fun i ↦ (measurable_pi_apply i).snd.snd) n))
+  have hproj_meas : Measurable
+      (fun t : (Fin n → U) × (Fin n → α) × (Fin n → β₁ × β₂) ↦
+        ((t.1, t.2.1, fun i ↦ (t.2.2 i).1) : (Fin n → U) × (Fin n → α) × (Fin n → β₁))) :=
+    measurable_fst.prodMk
+      ((measurable_fst.comp measurable_snd).prodMk
+        (measurable_pi_lambda _ fun i ↦
+          ((measurable_pi_apply i).comp (measurable_snd.comp measurable_snd)).fst))
+  have hmap : (bcAmbientMeasure pU K W).map
+        (fun ω ↦ (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcY₁s n ω))
+      = ((bcAmbientMeasure pU K W).map
+          (fun ω ↦ (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcYPs n ω))).map
+        (fun t ↦ (t.1, t.2.1, fun i ↦ (t.2.2 i).1)) := by
+    rw [Measure.map_map hproj_meas hmeas_master]; rfl
+  rw [hmap, map_measureReal_apply hproj_meas (Set.toFinite T).measurableSet,
+    bc_chan_fold_master pU K W n
+      ((fun t ↦ ((t.1, t.2.1, fun i ↦ (t.2.2 i).1) :
+        (Fin n → U) × (Fin n → α) × (Fin n → β₁))) ⁻¹' T)]
+  simp only [Set.mem_preimage]
 
 /-- **Receiver-1 correct-triple averaged swap (E0).**  The two-tier random-codebook average of
 the correct-triple atypical event equals the joint `(U, X, Y₁)`-block law of the atypical set.
-Receiver-1 analogue of `bc_random_codebook_E0₂_swap`.
-@residual(plan:bc-achievability-plan) -/
+Receiver-1 analogue of `bc_random_codebook_E0₂_swap`. -/
 theorem bc_random_codebook_E0₁_swap
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -2097,11 +2118,60 @@ theorem bc_random_codebook_E0₁_swap
             (fun ω ↦ (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcY₁s n ω))).real
           { q : (Fin n → U) × (Fin n → α) × (Fin n → β₁) |
             q ∉ macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε } := by
-  sorry
+  classical
+  set μ := bcAmbientMeasure pU K W with hμ_def
+  set J := macJointlyTypicalSet μ bcUs bcXs bcY₁s n ε with hJ_def
+  -- Step 1: satellite single-row marginalization (per cloud codebook).  The correct row `m`
+  -- both drives the channel and indexes the atypical slice.
+  have hsat : ∀ cU : BCCloudCodebook M₂ n U,
+      (∑ cX : BCSatelliteCodebook M₁ M₂ n α, (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX}
+          * (Measure.pi (fun i ↦ W (cX m i))).real
+              { y : Fin n → β₁ × β₂ | (cU m.2, cX m, fun i ↦ (y i).1) ∉ J })
+        = ∑ x : Fin n → α, (Measure.pi (fun l ↦ K (cU m.2 l))).real {x}
+            * (Measure.pi (fun i ↦ W (x i))).real
+                { y : Fin n → β₁ × β₂ | (cU m.2, x, fun i ↦ (y i).1) ∉ J } := by
+    intro cU
+    haveI : IsProbabilityMeasure (bcSatelliteCodebookMeasure K M₁ M₂ n cU) := by
+      unfold bcSatelliteCodebookMeasure; infer_instance
+    have hmp : (bcSatelliteCodebookMeasure K M₁ M₂ n cU).map (Function.eval m)
+        = Measure.pi (fun l ↦ K (cU m.2 l)) :=
+      (measurePreserving_eval
+        (fun p : Fin M₁ × Fin M₂ ↦ Measure.pi (fun l ↦ K (cU p.2 l))) m).map_eq
+    have h1 := sum_weighted_map (bcSatelliteCodebookMeasure K M₁ M₂ n cU) (Function.eval m)
+      (measurable_pi_apply m)
+      (fun z : Fin n → α ↦ (Measure.pi (fun i ↦ W (z i))).real
+        { y : Fin n → β₁ × β₂ | (cU m.2, z, fun i ↦ (y i).1) ∉ J })
+    rw [hmp] at h1
+    exact h1
+  -- Step 2: reduce the cloud codebook to the single transmitted row `m.2`.
+  rw [show bcCloudCodebookMeasure pU M₂ n = codebookMeasure pU M₂ n from rfl]
+  have e1 : ∑ cU : Codebook M₂ n U, (codebookMeasure pU M₂ n).real {cU}
+        * ∑ cX : BCSatelliteCodebook M₁ M₂ n α,
+            (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX}
+              * (Measure.pi (fun i ↦ W (cX m i))).real
+                  { y : Fin n → β₁ × β₂ | (cU m.2, cX m, fun i ↦ (y i).1) ∉ J }
+      = ∑ cU : Codebook M₂ n U, (codebookMeasure pU M₂ n).real {cU}
+        * (fun a ↦ ∑ x : Fin n → α, (Measure.pi (fun l ↦ K (a l))).real {x}
+            * (Measure.pi (fun i ↦ W (x i))).real
+                { y : Fin n → β₁ × β₂ | (a, x, fun i ↦ (y i).1) ∉ J }) (cU m.2) := by
+    refine Finset.sum_congr rfl (fun cU _ ↦ ?_)
+    rw [hsat cU]
+  rw [e1, codebook_marginal_one pU M₂ n m.2
+      (fun a ↦ ∑ x : Fin n → α, (Measure.pi (fun l ↦ K (a l))).real {x}
+        * (Measure.pi (fun i ↦ W (x i))).real
+            { y : Fin n → β₁ × β₂ | (a, x, fun i ↦ (y i).1) ∉ J })
+      (fun _ ↦ Finset.sum_nonneg
+        (fun _ _ ↦ mul_nonneg measureReal_nonneg measureReal_nonneg))]
+  -- Step 3: fold the cloud/satellite/channel average back into the joint `(U, X, Y₁)`-block law.
+  rw [bc_chan_fold_UXY₁_set pU K W n {q | q ∉ J}]
+  simp only [Set.mem_setOf_eq]
+  refine Finset.sum_congr rfl (fun a _ ↦ ?_)
+  rw [Finset.mul_sum]
+  refine Finset.sum_congr rfl (fun x _ ↦ ?_)
+  ring
 
 /-- **Receiver-2 E0 vanishing.**  The correct-cloud atypical `(U, Y₂)`-block mass tends to `0`
-by the two-variable joint AEP (`jointlyTypicalSet_prob_tendsto_one`).
-@residual(plan:bc-achievability-plan) -/
+by the two-variable joint AEP (`jointlyTypicalSet_prob_tendsto_one`). -/
 theorem bc_E0₂_vanishing
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -2114,11 +2184,54 @@ theorem bc_E0₂_vanishing
           { q : (Fin n → U) × (Fin n → β₂) |
             q ∉ jointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcY₂s n ε })
       Filter.atTop (nhds 0) := by
-  sorry
+  classical
+  set μ := bcAmbientMeasure pU K W with hμ_def
+  haveI : IsProbabilityMeasure μ := by rw [hμ_def]; infer_instance
+  have hmU : ∀ i, Measurable (bcUs i : (ℕ → U × α × β₁ × β₂) → U) :=
+    fun i ↦ (measurable_pi_apply i).fst
+  have hmY₂ : ∀ i, Measurable (bcY₂s i : (ℕ → U × α × β₁ × β₂) → β₂) :=
+    fun i ↦ (measurable_pi_apply i).snd.snd.snd
+  have hgY₂ : Measurable (fun q : U × α × β₁ × β₂ ↦ q.2.2.2) :=
+    measurable_snd.comp (measurable_snd.comp measurable_snd)
+  have hgUY₂ : Measurable (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.2.2)) :=
+    measurable_fst.prodMk hgY₂
+  -- The AEP: the correct-cloud typical probability tends to 1.
+  have h_aep := jointlyTypicalSet_prob_tendsto_one μ bcUs bcY₂s hmU hmY₂
+    (bcAmbient_pairwise_coord pU K W (fun q ↦ q.1) measurable_fst)
+    (fun i ↦ bcAmbient_identDistrib_coord pU K W (fun q ↦ q.1) measurable_fst i)
+    (bcAmbient_pairwise_coord pU K W (fun q ↦ q.2.2.2) hgY₂)
+    (fun i ↦ bcAmbient_identDistrib_coord pU K W (fun q ↦ q.2.2.2) hgY₂ i)
+    (bcAmbient_pairwise_coord pU K W (fun q ↦ (q.1, q.2.2.2)) hgUY₂)
+    (fun i ↦ bcAmbient_identDistrib_coord pU K W (fun q ↦ (q.1, q.2.2.2)) hgUY₂ i)
+    hε
+  -- Real version: the typical probability (as a real) tends to 1.
+  have h_real : Filter.Tendsto
+      (fun n : ℕ ↦ μ.real {ω | (jointRV bcUs n ω, jointRV bcY₂s n ω) ∈
+          jointlyTypicalSet μ bcUs bcY₂s n ε}) Filter.atTop (nhds 1) :=
+    Filter.Tendsto.congr (fun _ ↦ rfl) ((ENNReal.tendsto_toReal (by simp)).comp h_aep)
+  -- The map-form atypical mass equals `1 − (typical real)`.
+  have hg_n : ∀ n, Measurable
+      (fun ω : ℕ → U × α × β₁ × β₂ ↦ (jointRV bcUs n ω, jointRV bcY₂s n ω)) :=
+    fun n ↦ (measurable_jointRV bcUs hmU n).prodMk (measurable_jointRV bcY₂s hmY₂ n)
+  have key : ∀ n, ((μ.map (fun ω ↦ (jointRV bcUs n ω, jointRV bcY₂s n ω))).real
+        { q : (Fin n → U) × (Fin n → β₂) | q ∉ jointlyTypicalSet μ bcUs bcY₂s n ε })
+      = 1 - μ.real {ω | (jointRV bcUs n ω, jointRV bcY₂s n ω) ∈
+          jointlyTypicalSet μ bcUs bcY₂s n ε} := by
+    intro n
+    rw [show { q : (Fin n → U) × (Fin n → β₂) | q ∉ jointlyTypicalSet μ bcUs bcY₂s n ε }
+          = (jointlyTypicalSet μ bcUs bcY₂s n ε)ᶜ from rfl,
+      map_measureReal_apply (hg_n n) (measurableSet_jointlyTypicalSet μ bcUs bcY₂s n ε).compl,
+      Set.preimage_compl,
+      probReal_compl_eq_one_sub ((hg_n n) (measurableSet_jointlyTypicalSet μ bcUs bcY₂s n ε))]
+    rfl
+  have h0 : Filter.Tendsto
+      (fun n : ℕ ↦ 1 - μ.real {ω | (jointRV bcUs n ω, jointRV bcY₂s n ω) ∈
+          jointlyTypicalSet μ bcUs bcY₂s n ε}) Filter.atTop (nhds 0) := by
+    simpa using h_real.const_sub (1 : ℝ)
+  exact Filter.Tendsto.congr (fun n ↦ (key n).symm) h0
 
 /-- **Receiver-1 E0 vanishing.**  The correct-triple atypical `(U, X, Y₁)`-block mass tends to
-`0` by the three-variable joint AEP (`macJointlyTypicalSet_prob_tendsto_one`).
-@residual(plan:bc-achievability-plan) -/
+`0` by the three-variable joint AEP (`macJointlyTypicalSet_prob_tendsto_one`). -/
 theorem bc_E0₁_vanishing
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -2131,14 +2244,76 @@ theorem bc_E0₁_vanishing
           { q : (Fin n → U) × (Fin n → α) × (Fin n → β₁) |
             q ∉ macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε })
       Filter.atTop (nhds 0) := by
-  sorry
+  classical
+  set μ := bcAmbientMeasure pU K W with hμ_def
+  haveI : IsProbabilityMeasure μ := by rw [hμ_def]; infer_instance
+  have hmU : ∀ i, Measurable (bcUs i : (ℕ → U × α × β₁ × β₂) → U) :=
+    fun i ↦ (measurable_pi_apply i).fst
+  have hmX : ∀ i, Measurable (bcXs i : (ℕ → U × α × β₁ × β₂) → α) :=
+    fun i ↦ (measurable_pi_apply i).snd.fst
+  have hmY₁ : ∀ i, Measurable (bcY₁s i : (ℕ → U × α × β₁ × β₂) → β₁) :=
+    fun i ↦ (measurable_pi_apply i).snd.snd.fst
+  have hgX : Measurable (fun q : U × α × β₁ × β₂ ↦ q.2.1) := measurable_fst.comp measurable_snd
+  have hgY₁ : Measurable (fun q : U × α × β₁ × β₂ ↦ q.2.2.1) :=
+    measurable_fst.comp (measurable_snd.comp measurable_snd)
+  have hgUX : Measurable (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1)) := measurable_fst.prodMk hgX
+  have hgUY₁ : Measurable (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.2.1)) := measurable_fst.prodMk hgY₁
+  have hgXY₁ : Measurable (fun q : U × α × β₁ × β₂ ↦ (q.2.1, q.2.2.1)) := hgX.prodMk hgY₁
+  have hgUXY₁ : Measurable (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2.1)) :=
+    measurable_fst.prodMk (hgX.prodMk hgY₁)
+  -- The AEP: the correct-triple typical probability tends to 1.
+  have h_aep := macJointlyTypicalSet_prob_tendsto_one μ bcUs bcXs bcY₁s hmU hmX hmY₁
+    (bcAmbient_pairwise_coord pU K W (fun q ↦ q.1) measurable_fst)
+    (fun i ↦ bcAmbient_identDistrib_coord pU K W (fun q ↦ q.1) measurable_fst i)
+    (bcAmbient_pairwise_coord pU K W (fun q ↦ q.2.1) hgX)
+    (fun i ↦ bcAmbient_identDistrib_coord pU K W (fun q ↦ q.2.1) hgX i)
+    (bcAmbient_pairwise_coord pU K W (fun q ↦ q.2.2.1) hgY₁)
+    (fun i ↦ bcAmbient_identDistrib_coord pU K W (fun q ↦ q.2.2.1) hgY₁ i)
+    (bcAmbient_pairwise_coord pU K W (fun q ↦ (q.1, q.2.1)) hgUX)
+    (fun i ↦ bcAmbient_identDistrib_coord pU K W (fun q ↦ (q.1, q.2.1)) hgUX i)
+    (bcAmbient_pairwise_coord pU K W (fun q ↦ (q.1, q.2.2.1)) hgUY₁)
+    (fun i ↦ bcAmbient_identDistrib_coord pU K W (fun q ↦ (q.1, q.2.2.1)) hgUY₁ i)
+    (bcAmbient_pairwise_coord pU K W (fun q ↦ (q.2.1, q.2.2.1)) hgXY₁)
+    (fun i ↦ bcAmbient_identDistrib_coord pU K W (fun q ↦ (q.2.1, q.2.2.1)) hgXY₁ i)
+    (bcAmbient_pairwise_coord pU K W (fun q ↦ (q.1, q.2.1, q.2.2.1)) hgUXY₁)
+    (fun i ↦ bcAmbient_identDistrib_coord pU K W (fun q ↦ (q.1, q.2.1, q.2.2.1)) hgUXY₁ i)
+    hε
+  have h_real : Filter.Tendsto
+      (fun n : ℕ ↦ μ.real {ω | (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcY₁s n ω) ∈
+          macJointlyTypicalSet μ bcUs bcXs bcY₁s n ε}) Filter.atTop (nhds 1) :=
+    Filter.Tendsto.congr (fun _ ↦ rfl) ((ENNReal.tendsto_toReal (by simp)).comp h_aep)
+  have hg_n : ∀ n, Measurable
+      (fun ω : ℕ → U × α × β₁ × β₂ ↦
+        (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcY₁s n ω)) :=
+    fun n ↦ (measurable_jointRV bcUs hmU n).prodMk
+      ((measurable_jointRV bcXs hmX n).prodMk (measurable_jointRV bcY₁s hmY₁ n))
+  have key : ∀ n, ((μ.map
+          (fun ω ↦ (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcY₁s n ω))).real
+        { q : (Fin n → U) × (Fin n → α) × (Fin n → β₁) |
+          q ∉ macJointlyTypicalSet μ bcUs bcXs bcY₁s n ε })
+      = 1 - μ.real {ω | (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcY₁s n ω) ∈
+          macJointlyTypicalSet μ bcUs bcXs bcY₁s n ε} := by
+    intro n
+    rw [show { q : (Fin n → U) × (Fin n → α) × (Fin n → β₁) |
+              q ∉ macJointlyTypicalSet μ bcUs bcXs bcY₁s n ε }
+          = (macJointlyTypicalSet μ bcUs bcXs bcY₁s n ε)ᶜ from rfl,
+      map_measureReal_apply (hg_n n)
+        (measurableSet_macJointlyTypicalSet μ bcUs bcXs bcY₁s n ε).compl,
+      Set.preimage_compl,
+      probReal_compl_eq_one_sub
+        ((hg_n n) (measurableSet_macJointlyTypicalSet μ bcUs bcXs bcY₁s n ε))]
+    rfl
+  have h0 : Filter.Tendsto
+      (fun n : ℕ ↦ 1 - μ.real {ω | (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcY₁s n ω) ∈
+          macJointlyTypicalSet μ bcUs bcXs bcY₁s n ε}) Filter.atTop (nhds 0) := by
+    simpa using h_real.const_sub (1 : ℝ)
+  exact Filter.Tendsto.congr (fun n ↦ (key n).symm) h0
 
 /-! #### C.2 — per-codebook `averageErrorProb.toReal` decomposition -/
 
 /-- **Receiver-2 per-codebook averaging bound.**  The `.toReal` of the receiver-2 average error
 probability of the deterministic code `bcCodebookToCode cU cX` is at most the uniform average of
-the two-event Bonferroni bound (`bc_errorProbAt₂_le_bonferroni`).
-@residual(plan:bc-achievability-plan) -/
+the two-event Bonferroni bound (`bc_errorProbAt₂_le_bonferroni`). -/
 theorem bc_averageErrorProb₂_toReal_le
     (pU : Measure U) (K : Kernel U α) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     {M₁ M₂ n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) {ε : ℝ}
@@ -2154,12 +2329,24 @@ theorem bc_averageErrorProb₂_toReal_le
                   { y : Fin n → β₁ × β₂ |
                     (cU w₂', fun i ↦ (y i).2) ∈
                       jointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcY₂s n ε }) := by
-  sorry
+  have hMpos : 0 < M₁ * M₂ := Nat.mul_pos hM₁ hM₂
+  have h_ne_top : ∀ m : Fin M₁ × Fin M₂,
+      (bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).errorProbAt₂ W m ≠ ⊤ :=
+    fun m ↦ ne_top_of_le_ne_top ENNReal.one_ne_top
+      ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).errorProbAt₂_le_one W m)
+  have h_eq : ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).averageErrorProb₂ W).toReal
+      = ((M₁ * M₂ : ℕ) : ℝ)⁻¹ * ∑ m : Fin M₁ × Fin M₂,
+          ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).errorProbAt₂ W m).toReal := by
+    unfold BroadcastCode.averageErrorProb₂
+    rw [if_neg hMpos.ne', ENNReal.toReal_mul, ENNReal.toReal_inv, ENNReal.toReal_natCast,
+      ENNReal.toReal_sum (fun m _ ↦ h_ne_top m)]
+  rw [h_eq]
+  refine mul_le_mul_of_nonneg_left ?_ (by positivity)
+  exact Finset.sum_le_sum (fun m _ ↦ bc_errorProbAt₂_le_bonferroni pU K W hM₁ hM₂ cU cX m)
 
 /-- **Receiver-1 per-codebook averaging bound.**  The `.toReal` of the receiver-1 average error
 probability of `bcCodebookToCode cU cX` is at most the uniform average of the three-event
-Bonferroni bound (`bc_errorProbAt₁_le_bonferroni3`).
-@residual(plan:bc-achievability-plan) -/
+Bonferroni bound (`bc_errorProbAt₁_le_bonferroni3`). -/
 theorem bc_averageErrorProb₁_toReal_le
     (pU : Measure U) (K : Kernel U α) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     {M₁ M₂ n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) {ε : ℝ}
@@ -2181,7 +2368,20 @@ theorem bc_averageErrorProb₁_toReal_le
                   { y : Fin n → β₁ × β₂ |
                     (cU p.1, cX (p.2, p.1), fun i ↦ (y i).1) ∈
                       macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε }) := by
-  sorry
+  have hMpos : 0 < M₁ * M₂ := Nat.mul_pos hM₁ hM₂
+  have h_ne_top : ∀ m : Fin M₁ × Fin M₂,
+      (bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).errorProbAt₁ W m ≠ ⊤ :=
+    fun m ↦ ne_top_of_le_ne_top ENNReal.one_ne_top
+      ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).errorProbAt₁_le_one W m)
+  have h_eq : ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).averageErrorProb₁ W).toReal
+      = ((M₁ * M₂ : ℕ) : ℝ)⁻¹ * ∑ m : Fin M₁ × Fin M₂,
+          ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).errorProbAt₁ W m).toReal := by
+    unfold BroadcastCode.averageErrorProb₁
+    rw [if_neg hMpos.ne', ENNReal.toReal_mul, ENNReal.toReal_inv, ENNReal.toReal_natCast,
+      ENNReal.toReal_sum (fun m _ ↦ h_ne_top m)]
+  rw [h_eq]
+  refine mul_le_mul_of_nonneg_left ?_ (by positivity)
+  exact Finset.sum_le_sum (fun m _ ↦ bc_errorProbAt₁_le_bonferroni3 pU K W hM₁ hM₂ cU cX m)
 
 /-! #### C.3 — two-codebook average bounds -/
 
