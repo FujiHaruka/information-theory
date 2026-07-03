@@ -2467,11 +2467,15 @@ theorem bc_degraded_infoJoint_ge
   sorry
 
 /-- **Receiver-1 wrong-cloud rate-slack vanishing (`E_c`).**  With the joint AEP gap
-`I((U, X); Y₁) − (R₁ + R₂) − 3ε > 0`, the wrong-cloud prefactor `(⌈exp(nR₂)⌉−1)·⌈exp(nR₁)⌉`
-times `exp(n(−I((U, X); Y₁) + 3ε))` falls below any tolerance for large `n`.
+`I((U, X); Y₁) − (R₁ + R₂) − 3ε > 0` and non-negative rate `0 ≤ R₁`, the wrong-cloud
+prefactor `(⌈exp(nR₂)⌉−1)·⌈exp(nR₁)⌉` times `exp(n(−I((U, X); Y₁) + 3ε))` falls below any
+tolerance for large `n`.  The `0 ≤ R₁` hypothesis is essential: for `R₁ < 0` the ceil
+`⌈exp(nR₁)⌉` floors at `1` instead of shrinking like `exp(nR₁)`, so the negative slack the
+gap allocates to the `R₁` factor is not delivered and the prefactor diverges.  The caller
+`bc_achievability` supplies `0 < R₁`, so this precondition is met.
 @residual(plan:bc-achievability-plan) -/
 theorem bc_Ec_lt_of_rate {Ijoint R₁ R₂ ε ε' : ℝ}
-    (hgap : 0 < Ijoint - (R₁ + R₂) - 3 * ε) (hε' : 0 < ε') :
+    (hR₁ : 0 ≤ R₁) (hgap : 0 < Ijoint - (R₁ + R₂) - 3 * ε) (hε' : 0 < ε') :
     ∃ N : ℕ, ∀ n ≥ N,
       ((Nat.ceil (Real.exp ((n : ℝ) * R₂)) : ℝ) - 1) *
         (Nat.ceil (Real.exp ((n : ℝ) * R₁)) : ℝ) *
