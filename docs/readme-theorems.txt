@@ -75,6 +75,7 @@ mac_converse | MAC capacity-region outer bound (per-letter conditional MI sum fo
 mac_achievability | MAC achievability (corner-point form)
 mac_capacity_region_reconciliation | MAC reconciliation: achievability corner informations = converse conditional/joint MI on the same single-letter law
 bc_converse | degraded broadcast-channel converse, single-letter auxiliary-variable capacity-region outer bound (Cover–Thomas Thm 15.6.2)
+bc_achievability | degraded broadcast-channel achievability, superposition-coding inner bound (Cover–Thomas Thm 15.6.2)
 relay_cutset_outer_bound | relay-channel cut-set outer bound, min of broadcast-cut and MAC-cut per-letter sums (Cover–Thomas Thm 15.10.1)
 
 @ 17 | Entropy inequalities
