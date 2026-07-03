@@ -89,6 +89,7 @@ import InformationTheory.Shannon.MultipleAccess.Reconciliation
 import InformationTheory.Shannon.BroadcastChannel.Basic
 import InformationTheory.Shannon.BroadcastChannel.ConverseGateway
 import InformationTheory.Shannon.BroadcastChannel.Converse
+import InformationTheory.Shannon.BroadcastChannel.Achievability
 import InformationTheory.Shannon.RelayCutset
 import InformationTheory.Shannon.BlockwiseChannel.Definition
 import InformationTheory.Shannon.BlockwiseChannel.MemorylessCapacity

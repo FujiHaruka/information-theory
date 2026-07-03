@@ -3,6 +3,9 @@ import InformationTheory.Shannon.BroadcastChannel.Basic
 import InformationTheory.Shannon.MultipleAccess.JointTypicality
 import InformationTheory.Shannon.MultipleAccess.IIDAmbient
 import InformationTheory.Shannon.MultipleAccess.Achievability
+import InformationTheory.Shannon.MultipleAccess.Reconciliation
+import InformationTheory.Shannon.CondMutualInfo
+import InformationTheory.Shannon.CondEntropyMemoryless
 import InformationTheory.Shannon.SlepianWolf.ConditionalTypicalSlice
 
 /-!
@@ -2603,7 +2606,7 @@ lemma bc_pair_aggregate₁ {κU κX : Type*} [Fintype κU] [Fintype κX]
 
 /-- **Receiver-2 two-codebook average bound.**  The random-codebook expectation of the
 receiver-2 average error is at most the (vanishing) E0 mass plus the wrong-cloud exponent.
-@residual(plan:bc-achievability-plan) -/
+-/
 theorem bc_random_codebook_average₂_le
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -2645,7 +2648,7 @@ theorem bc_random_codebook_average₂_le
 /-- **Receiver-1 two-codebook average bound.**  The random-codebook expectation of the
 receiver-1 average error is at most the (vanishing) E0 mass plus the wrong-satellite (`E_b`)
 and wrong-cloud (`E_c`) exponents.
-@residual(plan:bc-achievability-plan) -/
+-/
 theorem bc_random_codebook_average₁_le
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -2795,19 +2798,231 @@ theorem bc_exists_codebook_le_avg
 
 /-! #### C.5 — degradedness + rate slack -/
 
+/-- Kernel identity: composing `κ` with a conditioner-only append `prodMkRight A' Q` equals
+the plain product kernel `κ ×ₖ Q`. -/
+private lemma kernel_compProd_prodMkRight_eq_prod
+    {Z' A' B' : Type*} [MeasurableSpace Z'] [MeasurableSpace A'] [MeasurableSpace B']
+    (κ : Kernel Z' A') [IsSFiniteKernel κ] (Q : Kernel Z' B') [IsSFiniteKernel Q] :
+    κ ⊗ₖ Kernel.prodMkRight A' Q = κ ×ₖ Q := by
+  rw [Kernel.ext_fun_iff]
+  intro z f hf
+  rw [Kernel.lintegral_compProd _ _ _ hf, Kernel.lintegral_prod _ _ _ hf]
+  rfl
+
+/-- If the target `Bs` is generated from the conditioner `Zc` by a Markov kernel `Q` (an
+append that ignores `As`), then `As → Zc → Bs` is a Markov chain.  This is the stochastic
+analogue of `isMarkovChain_comp_conditioner_right`, whose right endpoint is only a
+*deterministic* function of the conditioner. -/
+private lemma isMarkovChain_of_append
+    {Ω' A' Z' B' : Type*}
+    [MeasurableSpace Ω'] [MeasurableSpace A'] [MeasurableSpace Z'] [MeasurableSpace B']
+    [StandardBorelSpace A'] [Nonempty A']
+    [StandardBorelSpace B'] [Nonempty B']
+    (μ : Measure Ω') [IsProbabilityMeasure μ]
+    (As : Ω' → A') (Zc : Ω' → Z') (Bs : Ω' → B')
+    (hAs : Measurable As) (hZc : Measurable Zc) (hBs : Measurable Bs)
+    (Q : Kernel Z' B') [IsMarkovKernel Q]
+    (h_app : μ.map (fun ω ↦ ((Zc ω, As ω), Bs ω))
+           = (μ.map (fun ω ↦ (Zc ω, As ω))) ⊗ₘ (Kernel.prodMkRight A' Q)) :
+    IsMarkovChain μ As Zc Bs := by
+  haveI : IsProbabilityMeasure (μ.map Zc) := Measure.isProbabilityMeasure_map hZc.aemeasurable
+  have hZcAs : Measurable (fun ω ↦ (Zc ω, As ω)) := hZc.prodMk hAs
+  have hg : Measurable (fun p : (Z' × A') × B' ↦ (p.1.1, p.2)) :=
+    (measurable_fst.comp measurable_fst).prodMk measurable_snd
+  have hmarg : μ.map (fun ω ↦ (Zc ω, Bs ω)) = (μ.map Zc) ⊗ₘ Q := by
+    have e1 : μ.map (fun ω ↦ (Zc ω, Bs ω))
+        = (μ.map (fun ω ↦ ((Zc ω, As ω), Bs ω))).map (fun p : (Z' × A') × B' ↦ (p.1.1, p.2)) := by
+      rw [Measure.map_map hg (hZcAs.prodMk hBs)]; rfl
+    rw [e1, h_app]
+    refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
+    have hF : Measurable (fun z ↦ ∫⁻ b, f (z, b) ∂(Q z)) :=
+      hf.lintegral_kernel_prod_right'
+    have hF2 : Measurable (fun a : (Z' × A') × B' ↦ f (a.1.1, a.2)) := hf.comp hg
+    rw [lintegral_map hf hg, Measure.lintegral_compProd hF2,
+        Measure.lintegral_compProd hf]
+    have hfst : μ.map Zc = (μ.map (fun ω ↦ (Zc ω, As ω))).map Prod.fst := by
+      rw [Measure.map_map measurable_fst hZcAs]; rfl
+    rw [hfst, lintegral_map hF measurable_fst]
+    rfl
+  have hcd_B : condDistrib Bs Zc μ =ᵐ[μ.map Zc] Q :=
+    condDistrib_ae_eq_of_measure_eq_compProd Zc hBs.aemeasurable hmarg
+  unfold IsMarkovChain
+  have hLHS : μ.map (fun ω ↦ (Zc ω, As ω, Bs ω))
+      = (μ.map (fun ω ↦ ((Zc ω, As ω), Bs ω))).map MeasurableEquiv.prodAssoc := by
+    rw [Measure.map_map MeasurableEquiv.prodAssoc.measurable (hZcAs.prodMk hBs)]; rfl
+  rw [hLHS, h_app, ← compProd_map_condDistrib hAs.aemeasurable, Measure.compProd_assoc']
+  refine Measure.compProd_congr ?_
+  rw [kernel_compProd_prodMkRight_eq_prod]
+  filter_upwards [hcd_B] with z hz
+  rw [Kernel.prod_apply, Kernel.prod_apply, hz]
+
+/-- Under physical degradedness `W a = ((W a).map fst) >>= (append `Q`)`, the degraded output
+`Y₂` is appended to the `(Y₁, (U, X))` joint by the degrading kernel `Q` acting on `Y₁` alone. -/
+private lemma bcDegraded_append
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (Q : Kernel β₁ β₂) [IsMarkovKernel Q]
+    (hQeq : ∀ a : α, W a
+        = ((W a).map Prod.fst).bind (fun y₁ ↦ (Q y₁).map (fun y₂ ↦ (y₁, y₂)))) :
+    (bcJointDistribution pU K W).map
+        (fun q : U × α × β₁ × β₂ ↦ ((q.2.2.1, (q.1, q.2.1)), q.2.2.2))
+      = ((bcJointDistribution pU K W).map
+          (fun q : U × α × β₁ × β₂ ↦ (q.2.2.1, (q.1, q.2.1))))
+          ⊗ₘ (Kernel.prodMkRight (U × α) Q) := by
+  have hψL : Measurable (fun q : U × α × β₁ × β₂ ↦ ((q.2.2.1, (q.1, q.2.1)), q.2.2.2)) := by
+    fun_prop
+  have hψB : Measurable (fun q : U × α × β₁ × β₂ ↦ (q.2.2.1, (q.1, q.2.1))) := by fun_prop
+  have hPL : Measurable (fun p : (U × α) × (β₁ × β₂) ↦ ((p.2.1, p.1), p.2.2)) := by fun_prop
+  have hPB : Measurable (fun p : (U × α) × (β₁ × β₂) ↦ (p.2.1, p.1)) := by fun_prop
+  have hapQ : Measurable (fun y₁ : β₁ ↦ (Q y₁).map (fun y₂ ↦ (y₁, y₂))) := by
+    have heq : (fun y₁ : β₁ ↦ (Q y₁).map (fun y₂ ↦ (y₁, y₂)))
+        = fun y₁ ↦ (Kernel.deterministic (id : β₁ → β₁) measurable_id ×ₖ Q) y₁ := by
+      funext y₁
+      rw [Kernel.prod_apply, Kernel.deterministic_apply, Measure.dirac_prod]
+      rfl
+    rw [heq]
+    exact (Kernel.deterministic (id : β₁ → β₁) measurable_id ×ₖ Q).measurable
+  have hbind : ∀ (x : α) (g : β₁ × β₂ → ℝ≥0∞), Measurable g →
+      ∫⁻ yy, g yy ∂(W x)
+        = ∫⁻ y₁, ∫⁻ y₂, g (y₁, y₂) ∂(Q y₁) ∂((W x).map Prod.fst) := by
+    intro x g hg
+    have hmap : ∀ y₁ : β₁, ∫⁻ yy, g yy ∂((Q y₁).map (fun y₂ ↦ (y₁, y₂)))
+        = ∫⁻ y₂, g (y₁, y₂) ∂(Q y₁) :=
+      fun y₁ ↦ lintegral_map hg measurable_prodMk_left
+    conv_lhs => rw [hQeq x]
+    rw [Measure.lintegral_bind hapQ.aemeasurable hg.aemeasurable]
+    simp_rw [hmap]
+  rw [bcJointDistribution, Measure.map_map hψL MeasurableEquiv.prodAssoc.measurable,
+      Measure.map_map hψB MeasurableEquiv.prodAssoc.measurable]
+  have hcompL :
+      (fun q : U × α × β₁ × β₂ ↦ ((q.2.2.1, (q.1, q.2.1)), q.2.2.2))
+          ∘ ⇑(MeasurableEquiv.prodAssoc (α := U) (β := α) (γ := β₁ × β₂))
+        = (fun p : (U × α) × (β₁ × β₂) ↦ ((p.2.1, p.1), p.2.2)) := rfl
+  have hcompB :
+      (fun q : U × α × β₁ × β₂ ↦ (q.2.2.1, (q.1, q.2.1)))
+          ∘ ⇑(MeasurableEquiv.prodAssoc (α := U) (β := α) (γ := β₁ × β₂))
+        = (fun p : (U × α) × (β₁ × β₂) ↦ (p.2.1, p.1)) := rfl
+  rw [hcompL, hcompB]
+  refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
+  have hfPL : Measurable (fun p : (U × α) × (β₁ × β₂) ↦ f ((p.2.1, p.1), p.2.2)) := hf.comp hPL
+  have hLHS :
+      ∫⁻ z, f z ∂(((pU ⊗ₘ K) ⊗ₘ (W.comap Prod.snd measurable_snd)).map
+          (fun p : (U × α) × (β₁ × β₂) ↦ ((p.2.1, p.1), p.2.2)))
+        = ∫⁻ ux : U × α, ∫⁻ y₁ : β₁, ∫⁻ y₂ : β₂, f ((y₁, ux), y₂)
+            ∂(Q y₁) ∂((W ux.2).map Prod.fst) ∂(pU ⊗ₘ K) := by
+    rw [lintegral_map hf hPL, Measure.lintegral_compProd hfPL]
+    refine lintegral_congr fun ux ↦ ?_
+    rw [Kernel.comap_apply]
+    exact hbind ux.2 (fun yy ↦ f ((yy.1, ux), yy.2)) (by fun_prop)
+  have hG : Measurable (fun w : β₁ × (U × α) ↦ ∫⁻ y₂ : β₂, f (w, y₂) ∂(Q w.1)) :=
+    hf.lintegral_kernel_prod_right' (κ := Q.comap Prod.fst measurable_fst)
+  have hRHS :
+      ∫⁻ z, f z ∂((((pU ⊗ₘ K) ⊗ₘ (W.comap Prod.snd measurable_snd)).map
+          (fun p : (U × α) × (β₁ × β₂) ↦ (p.2.1, p.1))) ⊗ₘ (Kernel.prodMkRight (U × α) Q))
+        = ∫⁻ ux : U × α, ∫⁻ y₁ : β₁, ∫⁻ y₂ : β₂, f ((y₁, ux), y₂)
+            ∂(Q y₁) ∂((W ux.2).map Prod.fst) ∂(pU ⊗ₘ K) := by
+    rw [Measure.lintegral_compProd hf]
+    simp only [Kernel.prodMkRight_apply]
+    have hFPB : Measurable (fun p : (U × α) × (β₁ × β₂) ↦
+        ∫⁻ y₂ : β₂, f ((p.2.1, p.1), y₂) ∂(Q (p.2.1, p.1).1)) := hG.comp hPB
+    rw [lintegral_map hG hPB, Measure.lintegral_compProd hFPB]
+    refine lintegral_congr fun ux ↦ ?_
+    rw [Kernel.comap_apply]
+    have hG'ux : Measurable (fun y₁ : β₁ ↦ ∫⁻ y₂ : β₂, f ((y₁, ux), y₂) ∂(Q y₁)) :=
+      (hf.comp ((measurable_fst.prodMk measurable_const).prodMk
+        measurable_snd)).lintegral_kernel_prod_right' (κ := Q)
+    rw [lintegral_map hG'ux measurable_fst]
+  rw [hLHS, hRHS]
+
+/-- Base data-processing Markov chain `(U, X) → Y₁ → Y₂` for the degraded broadcast joint
+law: under physical degradedness the degraded output `Y₂` is a stochastic function of `Y₁`
+alone (via the degrading kernel `Q`), hence conditionally independent of the cloud/input
+pair `(U, X)` given `Y₁`. -/
+lemma bcMarkovChain_UX_Y₁_Y₂
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hdeg : IsBCDegraded W) :
+    IsMarkovChain (bcJointDistribution pU K W)
+      (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1))
+      (fun q : U × α × β₁ × β₂ ↦ q.2.2.1)
+      (fun q : U × α × β₁ × β₂ ↦ q.2.2.2) := by
+  obtain ⟨Q, hQm, hQeq⟩ := hdeg
+  haveI : IsMarkovKernel Q := hQm
+  have hAs : Measurable (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1)) :=
+    measurable_fst.prodMk (measurable_fst.comp measurable_snd)
+  have hZc : Measurable (fun q : U × α × β₁ × β₂ ↦ q.2.2.1) :=
+    (measurable_fst.comp measurable_snd).comp measurable_snd
+  have hBs : Measurable (fun q : U × α × β₁ × β₂ ↦ q.2.2.2) :=
+    (measurable_snd.comp measurable_snd).comp measurable_snd
+  exact isMarkovChain_of_append (bcJointDistribution pU K W) (fun q ↦ (q.1, q.2.1))
+    (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2) hAs hZc hBs Q (bcDegraded_append pU K W Q hQeq)
+
 /-- **Degradedness superadditivity.**  Under physical degradedness `X → Y₁ → Y₂`, the joint
 information `I((U, X); Y₁)` dominates the sum of the two per-receiver informations
 `I(X; Y₁ ∣ U) + I(U; Y₂)`.  Chain rule `I((U, X); Y₁) = I(U; Y₁) + I(X; Y₁ ∣ U)` plus data
 processing `I(U; Y₁) ≥ I(U; Y₂)`.  This makes the receiver-1 joint-decoding rate sum
-`R₁ + R₂ < I((U, X); Y₁)` follow automatically from the two corner constraints.
-@residual(plan:bc-achievability-plan) -/
+`R₁ + R₂ < I((U, X); Y₁)` follow automatically from the two corner constraints. -/
 theorem bc_degraded_infoJoint_ge
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hdeg : IsBCDegraded W) :
     bcInfo₁ pU K W + bcInfo₂ pU K W ≤ bcInfoJoint pU K W := by
-  sorry
+  classical
+  set μ := bcJointDistribution pU K W with hμ
+  -- Coordinate selectors and their measurability.
+  have hU : Measurable (Prod.fst : U × α × β₁ × β₂ → U) := measurable_fst
+  have hY₁ : Measurable (fun q : U × α × β₁ × β₂ ↦ q.2.2.1) :=
+    (measurable_fst.comp measurable_snd).comp measurable_snd
+  have hY₂ : Measurable (fun q : U × α × β₁ × β₂ ↦ q.2.2.2) :=
+    (measurable_snd.comp measurable_snd).comp measurable_snd
+  have hUX : Measurable (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1)) :=
+    measurable_fst.prodMk (measurable_fst.comp measurable_snd)
+  -- Markov chain `(U, X) → Y₁ → Y₂` from degradedness.
+  have hbase := bcMarkovChain_UX_Y₁_Y₂ pU K W hdeg
+  -- Post-process the source `(U, X) ↦ U`, giving `U → Y₁ → Y₂`.
+  have hUY :
+      IsMarkovChain μ (Prod.fst : U × α × β₁ × β₂ → U)
+        (fun q : U × α × β₁ × β₂ ↦ q.2.2.1) (fun q : U × α × β₁ × β₂ ↦ q.2.2.2) :=
+    isMarkovChain_map_left μ (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1))
+      (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2) hUX hY₁ hY₂ (f := Prod.fst) measurable_fst hbase
+  -- Swap endpoints: `Y₂ → Y₁ → U`.
+  have hswap :
+      IsMarkovChain μ (fun q : U × α × β₁ × β₂ ↦ q.2.2.2)
+        (fun q : U × α × β₁ × β₂ ↦ q.2.2.1) (Prod.fst : U × α × β₁ × β₂ → U) :=
+    isMarkovChain_swap μ (Prod.fst : U × α × β₁ × β₂ → U) (fun q ↦ q.2.2.1)
+      (fun q ↦ q.2.2.2) hU hY₁ hY₂ hUY
+  -- Data processing: `I(Y₂; U) ≤ I(Y₁; U)`.
+  have hdpi :
+      mutualInfo μ (fun q : U × α × β₁ × β₂ ↦ q.2.2.2) (Prod.fst : U × α × β₁ × β₂ → U)
+        ≤ mutualInfo μ (fun q : U × α × β₁ × β₂ ↦ q.2.2.1) (Prod.fst : U × α × β₁ × β₂ → U) :=
+    mutualInfo_le_of_markov μ (fun q ↦ q.2.2.2) (fun q ↦ q.2.2.1)
+      (Prod.fst : U × α × β₁ × β₂ → U) hY₂ hY₁ hU hswap
+  -- Symmetrize to `I(U; Y₂) ≤ I(U; Y₁)`.
+  have hmi :
+      mutualInfo μ (Prod.fst : U × α × β₁ × β₂ → U) (fun q ↦ q.2.2.2)
+        ≤ mutualInfo μ (Prod.fst : U × α × β₁ × β₂ → U) (fun q ↦ q.2.2.1) := by
+    rw [mutualInfo_comm μ (Prod.fst : U × α × β₁ × β₂ → U) (fun q ↦ q.2.2.2) hU hY₂,
+        mutualInfo_comm μ (Prod.fst : U × α × β₁ × β₂ → U) (fun q ↦ q.2.2.1) hU hY₁]
+    exact hdpi
+  -- Push through `.toReal` (finiteness of the informations on finite alphabets).
+  have hne1 : mutualInfo μ (Prod.fst : U × α × β₁ × β₂ → U) (fun q ↦ q.2.2.1) ≠ ⊤ :=
+    mutualInfo_ne_top μ Prod.fst (fun q ↦ q.2.2.1) hU hY₁
+  have htoReal :
+      (mutualInfo μ (Prod.fst : U × α × β₁ × β₂ → U) (fun q ↦ q.2.2.2)).toReal
+        ≤ (mutualInfo μ (Prod.fst : U × α × β₁ × β₂ → U) (fun q ↦ q.2.2.1)).toReal :=
+    ENNReal.toReal_mono hne1 hmi
+  -- Entropy-form bridge: `I(U; Y₂) = H(U) + H(Y₂) − H(U, Y₂)`, similarly for `Y₁`.
+  have hb2 := mutualInfo_toReal_eq_entropy_form μ (Prod.fst : U × α × β₁ × β₂ → U)
+    (fun q ↦ q.2.2.2) hU hY₂
+  have hb1 := mutualInfo_toReal_eq_entropy_form μ (Prod.fst : U × α × β₁ × β₂ → U)
+    (fun q ↦ q.2.2.1) hU hY₁
+  rw [hb2, hb1] at htoReal
+  -- Reduce the three-information inequality to the entropy inequality.
+  simp only [bcInfo₁, bcInfo₂, bcInfoJoint, ← hμ]
+  linarith [htoReal]
 
 /-- **Receiver-1 wrong-cloud rate-slack vanishing (`E_c`).**  With the joint AEP gap
 `I((U, X); Y₁) − (R₁ + R₂) − 3ε > 0` and non-negative rate `0 ≤ R₁`, the wrong-cloud
@@ -2816,7 +3031,7 @@ tolerance for large `n`.  The `0 ≤ R₁` hypothesis is essential: for `R₁ < 
 `⌈exp(nR₁)⌉` floors at `1` instead of shrinking like `exp(nR₁)`, so the negative slack the
 gap allocates to the `R₁` factor is not delivered and the prefactor diverges.  The caller
 `bc_achievability` supplies `0 < R₁`, so this precondition is met.
-@residual(plan:bc-achievability-plan) -/
+-/
 theorem bc_Ec_lt_of_rate {Ijoint R₁ R₂ ε ε' : ℝ}
     (hR₁ : 0 ≤ R₁) (hgap : 0 < Ijoint - (R₁ + R₂) - 3 * ε) (hε' : 0 < ε') :
     ∃ N : ℕ, ∀ n ≥ N,
@@ -2874,7 +3089,7 @@ is achievable: for all large enough block lengths `n` there is a `BroadcastCode`
 per-receiver average error probabilities are both below any prescribed `ε' > 0`.  The proof
 is the two-tier superposition random-coding argument; degradedness `X → Y₁ → Y₂` is a
 structural precondition ensuring the receiver-1 joint-decoding rate sum is met automatically.
-@residual(plan:bc-achievability-plan) -/
+-/
 theorem bc_achievability
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
