@@ -18,4 +18,4 @@
 |---|---|---|
 | [`bc-degraded-converse-plan.md`](bc-degraded-converse-plan.md) | L-BC2 degraded converse single-letterization (`bc_converse` / `bc_input_singleletterize`、Route B) | CLOSED ✅ (genuine、`@audit:ok`、root 登録済) |
 | [`broadcast-channel-signature-rewrite-plan.md`](broadcast-channel-signature-rewrite-plan.md) | BC rate-bound declaration の defect → genuine signature rewrite | CLOSED ✅ |
-| [`bc-achievability-plan.md`](bc-achievability-plan.md) | BC (degraded) achievability = superposition inner bound (`bc_achievability`、Cover–Thomas Thm 15.6.2 達成側) | 進行中 — ★gateway atom `bc_conditional_slice_prob_le` **CLOSED** (家系 GO)、headline 残 (relay) |
+| [`bc-achievability-plan.md`](bc-achievability-plan.md) | BC (degraded) achievability = superposition inner bound (`bc_achievability`、Cover–Thomas Thm 15.6.2 達成側) | 進行中 (relay) — ★atom + recv2 vertical slice (decoder/Bonferroni/indep) + recv1 3-event Bonferroni + chan-fold 基盤 + recv2 wrong-cloud swap 全 genuine。残 = recv1 conditional swap (★本丸) + E0₂ + headline 組上げ |
