@@ -2747,7 +2747,42 @@ theorem bc_Ec_lt_of_rate {Ijoint R₁ R₂ ε ε' : ℝ}
       ((Nat.ceil (Real.exp ((n : ℝ) * R₂)) : ℝ) - 1) *
         (Nat.ceil (Real.exp ((n : ℝ) * R₁)) : ℝ) *
         Real.exp ((n : ℝ) * (-Ijoint + 3 * ε)) < ε' := by
-  sorry
+  obtain ⟨N, hN⟩ := exp_neg_mul_lt_of_rate hgap (half_pos hε')
+  refine ⟨N, fun n hn ↦ ?_⟩
+  -- Receiver-2 codebook factor: `⌈exp(nR₂)⌉ − 1 ≤ exp(nR₂)`.
+  have he2 : (Nat.ceil (Real.exp ((n : ℝ) * R₂)) : ℝ) - 1 ≤ Real.exp ((n : ℝ) * R₂) := by
+    have := Nat.ceil_lt_add_one (Real.exp_pos ((n : ℝ) * R₂)).le; linarith
+  have hnn2 : 0 ≤ (Nat.ceil (Real.exp ((n : ℝ) * R₂)) : ℝ) - 1 := by
+    have h1 : (1 : ℝ) ≤ (Nat.ceil (Real.exp ((n : ℝ) * R₂)) : ℝ) := by
+      exact_mod_cast Nat.ceil_pos.mpr (Real.exp_pos _)
+    linarith
+  -- Receiver-1 codebook factor: `⌈exp(nR₁)⌉ ≤ 2·exp(nR₁)`, using `exp(nR₁) ≥ 1` from `0 ≤ R₁`.
+  have hnR₁_nonneg : 0 ≤ (n : ℝ) * R₁ := mul_nonneg (Nat.cast_nonneg n) hR₁
+  have hexp1_ge : (1 : ℝ) ≤ Real.exp ((n : ℝ) * R₁) := by
+    rw [← Real.exp_zero]; exact Real.exp_le_exp.mpr hnR₁_nonneg
+  have he1 : (Nat.ceil (Real.exp ((n : ℝ) * R₁)) : ℝ) ≤ 2 * Real.exp ((n : ℝ) * R₁) := by
+    have hlt := Nat.ceil_lt_add_one (Real.exp_pos ((n : ℝ) * R₁)).le
+    linarith
+  -- Collapse the three exponentials into `2·exp(−n·gap)`.
+  have hrw : Real.exp ((n : ℝ) * R₂) * (2 * Real.exp ((n : ℝ) * R₁)) *
+        Real.exp ((n : ℝ) * (-Ijoint + 3 * ε))
+      = 2 * Real.exp (-(n : ℝ) * (Ijoint - (R₁ + R₂) - 3 * ε)) := by
+    have e1 : Real.exp ((n : ℝ) * R₂) * Real.exp ((n : ℝ) * R₁) *
+          Real.exp ((n : ℝ) * (-Ijoint + 3 * ε))
+        = Real.exp (-(n : ℝ) * (Ijoint - (R₁ + R₂) - 3 * ε)) := by
+      rw [← Real.exp_add, ← Real.exp_add]; congr 1; ring
+    calc Real.exp ((n : ℝ) * R₂) * (2 * Real.exp ((n : ℝ) * R₁)) *
+            Real.exp ((n : ℝ) * (-Ijoint + 3 * ε))
+        = 2 * (Real.exp ((n : ℝ) * R₂) * Real.exp ((n : ℝ) * R₁) *
+            Real.exp ((n : ℝ) * (-Ijoint + 3 * ε))) := by ring
+      _ = 2 * Real.exp (-(n : ℝ) * (Ijoint - (R₁ + R₂) - 3 * ε)) := by rw [e1]
+  calc ((Nat.ceil (Real.exp ((n : ℝ) * R₂)) : ℝ) - 1) *
+          (Nat.ceil (Real.exp ((n : ℝ) * R₁)) : ℝ) *
+          Real.exp ((n : ℝ) * (-Ijoint + 3 * ε))
+      ≤ Real.exp ((n : ℝ) * R₂) * (2 * Real.exp ((n : ℝ) * R₁)) *
+          Real.exp ((n : ℝ) * (-Ijoint + 3 * ε)) := by gcongr
+    _ = 2 * Real.exp (-(n : ℝ) * (Ijoint - (R₁ + R₂) - 3 * ε)) := hrw
+    _ < ε' := by linarith [hN n hn]
 
 /-! ### Headline: degraded broadcast achievability -/
 
