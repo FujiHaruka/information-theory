@@ -2938,7 +2938,8 @@ private lemma bcDegraded_append
 /-- Base data-processing Markov chain `(U, X) → Y₁ → Y₂` for the degraded broadcast joint
 law: under physical degradedness the degraded output `Y₂` is a stochastic function of `Y₁`
 alone (via the degrading kernel `Q`), hence conditionally independent of the cloud/input
-pair `(U, X)` given `Y₁`. -/
+pair `(U, X)` given `Y₁`.
+@audit:ok -/
 lemma bcMarkovChain_UX_Y₁_Y₂
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -2963,7 +2964,8 @@ lemma bcMarkovChain_UX_Y₁_Y₂
 information `I((U, X); Y₁)` dominates the sum of the two per-receiver informations
 `I(X; Y₁ ∣ U) + I(U; Y₂)`.  Chain rule `I((U, X); Y₁) = I(U; Y₁) + I(X; Y₁ ∣ U)` plus data
 processing `I(U; Y₁) ≥ I(U; Y₂)`.  This makes the receiver-1 joint-decoding rate sum
-`R₁ + R₂ < I((U, X); Y₁)` follow automatically from the two corner constraints. -/
+`R₁ + R₂ < I((U, X); Y₁)` follow automatically from the two corner constraints.
+@audit:ok -/
 theorem bc_degraded_infoJoint_ge
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -3089,7 +3091,7 @@ is achievable: for all large enough block lengths `n` there is a `BroadcastCode`
 per-receiver average error probabilities are both below any prescribed `ε' > 0`.  The proof
 is the two-tier superposition random-coding argument; degradedness `X → Y₁ → Y₂` is a
 structural precondition ensuring the receiver-1 joint-decoding rate sum is met automatically.
--/
+@audit:ok -/
 theorem bc_achievability
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
