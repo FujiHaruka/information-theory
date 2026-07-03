@@ -653,6 +653,201 @@ theorem bc_conditional_slice_prob_le
         unfold bcInfo₁
         ring
 
+/-! ### Two-tier decoders and the assembled broadcast code -/
+
+/-- Receiver-2 (cloud / degraded receiver) joint-typical decoder.  Given a received word
+`y₂`, returns the unique cloud message `w₂` whose codeword `Uⁿ(w₂)` is jointly typical with
+`y₂`, falling back to `⟨0, hM₂⟩` if no such `w₂` exists or it is not unique.  This is a
+single-user joint-typical decoder over the cloud codebook — receiver 2 never needs the
+satellite tier. -/
+noncomputable def bcCloudTypicalDecoder
+    (pU : Measure U) (K : Kernel U α) (W : BCChannel α β₁ β₂)
+    {M₂ n : ℕ} (hM₂ : 0 < M₂) (ε : ℝ) (cU : BCCloudCodebook M₂ n U) :
+    (Fin n → β₂) → Fin M₂ := fun y₂ ↦
+  haveI : Decidable (∃! w₂ : Fin M₂,
+      (cU w₂, y₂) ∈ jointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcY₂s n ε) :=
+    Classical.propDecidable _
+  if h : ∃! w₂ : Fin M₂,
+      (cU w₂, y₂) ∈ jointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcY₂s n ε
+    then Classical.choose h.exists
+    else ⟨0, hM₂⟩
+
+/-- Receiver-1 (strong receiver) superposition joint-typical decoder.  Given a received word
+`y₁`, returns the unique message pair `(w₁, w₂)` such that the cloud/satellite/output triple
+`(Uⁿ(w₂), Xⁿ(w₁, w₂), y₁)` is jointly typical, falling back to `(⟨0, hM₁⟩, ⟨0, hM₂⟩)`
+otherwise.  The typical-set argument order `bcUs, bcXs, bcY₁s` matches the covering bound
+`bc_conditional_slice_prob_le`. -/
+noncomputable def bcJointTypicalDecoder
+    (pU : Measure U) (K : Kernel U α) (W : BCChannel α β₁ β₂)
+    {M₁ M₂ n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) (ε : ℝ)
+    (cU : BCCloudCodebook M₂ n U) (cX : BCSatelliteCodebook M₁ M₂ n α) :
+    (Fin n → β₁) → Fin M₁ × Fin M₂ := fun y₁ ↦
+  haveI : Decidable (∃! p : Fin M₁ × Fin M₂,
+      (cU p.2, cX p, y₁) ∈ macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε) :=
+    Classical.propDecidable _
+  if h : ∃! p : Fin M₁ × Fin M₂,
+      (cU p.2, cX p, y₁) ∈ macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε
+    then Classical.choose h.exists
+    else (⟨0, hM₁⟩, ⟨0, hM₂⟩)
+
+/-- Bundle a cloud codebook `cU` and satellite codebook `cX` into a `BroadcastCode`: `cX` is
+the joint encoder, receiver 1 uses the superposition joint decoder, receiver 2 the cloud
+decoder. -/
+noncomputable def bcCodebookToCode
+    (pU : Measure U) (K : Kernel U α) (W : BCChannel α β₁ β₂)
+    {M₁ M₂ n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) (ε : ℝ)
+    (cU : BCCloudCodebook M₂ n U) (cX : BCSatelliteCodebook M₁ M₂ n α) :
+    BroadcastCode M₁ M₂ n α β₁ β₂ where
+  encoder := cX
+  decoder₁ := fun y₁ ↦ (bcJointTypicalDecoder pU K W hM₁ hM₂ ε cU cX y₁).1
+  decoder₂ := bcCloudTypicalDecoder pU K W hM₂ ε cU
+
+/-! ### Receiver-2 (cloud) error analysis -/
+
+/-- **Receiver-2 two-event Bonferroni bound.**  When the pair `m` is sent, the receiver-2
+per-pair error probability of the cloud joint-typical decoder is bounded by the correct-cloud
+atypical event `E0` plus the wrong-cloud alias union bound.  This is the single-user
+`errorProbAt_le_E1_plus_E2` applied along the `β₂`-projection `fun i ↦ (y i).2` of the block
+output. -/
+theorem bc_errorProbAt₂_le_bonferroni
+    (pU : Measure U) (K : Kernel U α) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    {M₁ M₂ n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) {ε : ℝ}
+    (cU : BCCloudCodebook M₂ n U) (cX : BCSatelliteCodebook M₁ M₂ n α)
+    (m : Fin M₁ × Fin M₂) :
+    ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).errorProbAt₂ W m).toReal
+      ≤ (Measure.pi (fun i ↦ W (cX m i))).real
+          { y : Fin n → β₁ × β₂ |
+            (cU m.2, fun i ↦ (y i).2) ∉ jointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcY₂s n ε }
+        + ∑ w₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m.2,
+            (Measure.pi (fun i ↦ W (cX m i))).real
+              { y : Fin n → β₁ × β₂ |
+                (cU w₂', fun i ↦ (y i).2) ∈
+                  jointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcY₂s n ε } := by
+  classical
+  set μ := bcAmbientMeasure pU K W with hμ_def
+  set JTS : Set ((Fin n → U) × (Fin n → β₂)) := jointlyTypicalSet μ bcUs bcY₂s n ε with hJTS_def
+  set c : BroadcastCode M₁ M₂ n α β₁ β₂ := bcCodebookToCode pU K W hM₁ hM₂ ε cU cX with hc_def
+  set ν : Measure (Fin n → β₁ × β₂) := Measure.pi (fun i ↦ W (cX m i)) with hν_def
+  haveI : IsProbabilityMeasure ν := by rw [hν_def]; infer_instance
+  -- The correct-cloud atypical event and the wrong-cloud alias events.
+  set E0 : Set (Fin n → β₁ × β₂) :=
+    { y | (cU m.2, fun i ↦ (y i).2) ∉ JTS } with hE0_def
+  set Ealias : Fin M₂ → Set (Fin n → β₁ × β₂) :=
+    fun w₂' ↦ { y | (cU w₂', fun i ↦ (y i).2) ∈ JTS } with hEalias_def
+  -- Step 1: `c.errorEvent₂ m ⊆ E0 ∪ (⋃ w₂' ∈ univ.erase m.2, Ealias w₂')`.
+  have h_sub :
+      c.errorEvent₂ m ⊆ E0 ∪ ⋃ w₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m.2, Ealias w₂' := by
+    intro y hy
+    rw [BroadcastCode.errorEvent₂, Set.mem_setOf_eq] at hy
+    -- `c.decoder₂ (fun i ↦ (y i).2) = bcCloudTypicalDecoder … cU (fun i ↦ (y i).2)`.
+    have hdec : c.decoder₂ (fun i ↦ (y i).2)
+        = bcCloudTypicalDecoder pU K W hM₂ ε cU (fun i ↦ (y i).2) := rfl
+    by_cases hu : ∃! w₂ : Fin M₂, (cU w₂, fun i ↦ (y i).2) ∈ JTS
+    · -- A unique typical cloud exists; the decoder returns `Classical.choose hu.exists`.
+      have hch : c.decoder₂ (fun i ↦ (y i).2) = Classical.choose hu.exists := by
+        rw [hdec]; unfold bcCloudTypicalDecoder; rw [dif_pos hu]
+      set w₂' := Classical.choose hu.exists with hw₂'_def
+      have hw₂'_mem : (cU w₂', fun i ↦ (y i).2) ∈ JTS := Classical.choose_spec hu.exists
+      have hw₂'_ne : w₂' ≠ m.2 := by
+        intro hmm; apply hy; rw [hch, ← hmm]
+      by_cases hm_typ : (cU m.2, fun i ↦ (y i).2) ∈ JTS
+      · exact absurd (hu.unique hw₂'_mem hm_typ) hw₂'_ne
+      · exact Or.inl hm_typ
+    · by_cases hexists : ∃ w₂ : Fin M₂, (cU w₂, fun i ↦ (y i).2) ∈ JTS
+      · by_cases hm_typ : (cU m.2, fun i ↦ (y i).2) ∈ JTS
+        · -- `m.2` typical but not unique ⇒ some `w₂'' ≠ m.2` is also typical.
+          have h_alias : ∃ w₂'' : Fin M₂,
+              (cU w₂'', fun i ↦ (y i).2) ∈ JTS ∧ w₂'' ≠ m.2 := by
+            by_contra h_none
+            apply hu
+            refine ⟨m.2, hm_typ, ?_⟩
+            intro w₂'' hw₂''_typ
+            by_contra hne
+            exact h_none ⟨w₂'', hw₂''_typ, hne⟩
+          obtain ⟨w₂'', hw₂''_typ, hw₂''_ne⟩ := h_alias
+          refine Or.inr ?_
+          refine Set.mem_iUnion.mpr ⟨w₂'', ?_⟩
+          exact Set.mem_iUnion.mpr ⟨Finset.mem_erase.mpr ⟨hw₂''_ne, Finset.mem_univ _⟩, hw₂''_typ⟩
+        · exact Or.inl hm_typ
+      · refine Or.inl ?_
+        intro hm_typ
+        exact hexists ⟨m.2, hm_typ⟩
+  -- Step 2: `c.errorProbAt₂ W m = ν (c.errorEvent₂ m)` (defeq of `bcCodebookToCode`).
+  have h_real_eq : (c.errorProbAt₂ W m).toReal = ν.real (c.errorEvent₂ m) := rfl
+  rw [h_real_eq]
+  -- Step 3: monotonicity + union bound.
+  calc ν.real (c.errorEvent₂ m)
+      ≤ ν.real (E0 ∪ ⋃ w₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m.2, Ealias w₂') :=
+        measureReal_mono h_sub (measure_ne_top _ _)
+    _ ≤ ν.real E0 + ν.real (⋃ w₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m.2, Ealias w₂') :=
+        measureReal_union_le _ _
+    _ ≤ ν.real E0 + ∑ w₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m.2, ν.real (Ealias w₂') := by
+        gcongr
+        exact measureReal_biUnion_finset_le _ _
+
+/-- **Receiver-2 cloud independent-pair bound.**  Under the product of the cloud block law and
+the `Y₂` block law (the random-coding measure for a wrong cloud codeword drawn independently of
+the received output), the probability of joint typicality is at most `exp(−n (I(U; Y₂) − 3ε))`.
+A wrapper of the single-user `jointlyTypicalSet_indep_prob_le` with the exponent rewritten into
+the `bcInfo₂` form; full support is a regularity precondition, not load-bearing. -/
+theorem bc_cloud_indep_prob_le
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hpU : ∀ a : U, 0 < pU.real {a}) (hK : ∀ (a : U) (b : α), 0 < (K a).real {b})
+    (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
+    (n : ℕ) {ε : ℝ} (hε : 0 < ε) :
+    (((bcAmbientMeasure pU K W).map (jointRV bcUs n)).prod
+        ((bcAmbientMeasure pU K W).map (jointRV bcY₂s n))).real
+        (jointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcY₂s n ε)
+      ≤ Real.exp (-(n : ℝ) * (bcInfo₂ pU K W - 3 * ε)) := by
+  classical
+  set μ := bcAmbientMeasure pU K W with hμ_def
+  -- Coordinate selectors and their measurabilities.
+  have hgU_meas : Measurable (fun q : U × α × β₁ × β₂ ↦ q.1) := measurable_fst
+  have hgY₂_meas : Measurable (fun q : U × α × β₁ × β₂ ↦ q.2.2.2) :=
+    measurable_snd.comp (measurable_snd.comp measurable_snd)
+  have hgUY₂_meas : Measurable (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.2.2)) :=
+    measurable_fst.prodMk (measurable_snd.comp (measurable_snd.comp measurable_snd))
+  have hbcUs : ∀ i, Measurable (bcUs (U := U) (α := α) (β₁ := β₁) (β₂ := β₂) i) :=
+    fun i ↦ (measurable_pi_apply i).fst
+  have hbcY₂s : ∀ i, Measurable (bcY₂s (U := U) (α := α) (β₁ := β₁) (β₂ := β₂) i) :=
+    fun i ↦ (measurable_pi_apply i).snd.snd.snd
+  -- Independence / identical distribution of the two axes.
+  have hindepU : iIndepFun (fun i ↦ bcUs i) μ :=
+    bcAmbient_iIndepFun_coord pU K W (fun q ↦ q.1) hgU_meas
+  have hidentU : ∀ i, IdentDistrib (bcUs i) (bcUs 0) μ μ :=
+    fun i ↦ bcAmbient_identDistrib_coord pU K W (fun q ↦ q.1) hgU_meas i
+  have hindepY₂ : iIndepFun (fun i ↦ bcY₂s i) μ :=
+    bcAmbient_iIndepFun_coord pU K W (fun q ↦ q.2.2.2) hgY₂_meas
+  have hidentY₂ : ∀ i, IdentDistrib (bcY₂s i) (bcY₂s 0) μ μ :=
+    fun i ↦ bcAmbient_identDistrib_coord pU K W (fun q ↦ q.2.2.2) hgY₂_meas i
+  -- Positivity of the two coordinate marginals and the joint marginal.
+  have hposU : ∀ x : U, 0 < (μ.map (bcUs 0)).real {x} := fun x ↦
+    bcAmbient_coord_marginal_pos pU K W hpU hK hW (fun q ↦ q.1) hgU_meas 0
+      x (x, Classical.arbitrary α, Classical.arbitrary β₁, Classical.arbitrary β₂) rfl
+  have hposY₂ : ∀ y : β₂, 0 < (μ.map (bcY₂s 0)).real {y} := fun y ↦
+    bcAmbient_coord_marginal_pos pU K W hpU hK hW (fun q ↦ q.2.2.2) hgY₂_meas 0
+      y (Classical.arbitrary U, Classical.arbitrary α, Classical.arbitrary β₁, y) rfl
+  have hposZ : ∀ p : U × β₂, 0 < (μ.map (jointSequence bcUs bcY₂s 0)).real {p} := fun p ↦
+    bcAmbient_coord_marginal_pos pU K W hpU hK hW (fun q ↦ (q.1, q.2.2.2)) hgUY₂_meas 0
+      p (p.1, Classical.arbitrary α, Classical.arbitrary β₁, p.2) rfl
+  -- Entropy identities: coordinate entropies equal the joint-law entropies in `bcInfo₂`.
+  have hHU : entropy μ (bcUs 0) = entropy (bcJointDistribution pU K W) Prod.fst :=
+    bcAmbient_entropy_coord pU K W (fun q ↦ q.1) measurable_fst 0
+  have hHY₂ : entropy μ (bcY₂s 0) = entropy (bcJointDistribution pU K W) (fun q ↦ q.2.2.2) :=
+    bcAmbient_entropy_coord pU K W (fun q ↦ q.2.2.2) hgY₂_meas 0
+  have hHUY₂ : entropy μ (jointSequence bcUs bcY₂s 0)
+      = entropy (bcJointDistribution pU K W) (fun q ↦ (q.1, q.2.2.2)) :=
+    bcAmbient_entropy_coord pU K W (fun q ↦ (q.1, q.2.2.2)) hgUY₂_meas 0
+  -- The single-user independent-pair bound, then rewrite the exponent to `bcInfo₂`.
+  refine (jointlyTypicalSet_indep_prob_le μ bcUs bcY₂s hbcUs hbcY₂s hindepU hidentU
+    hindepY₂ hidentY₂ hposU hposY₂ hposZ n hε).trans (le_of_eq ?_)
+  congr 1
+  rw [hHU, hHY₂, hHUY₂]
+  unfold bcInfo₂
+  ring
+
 /-! ### Headline: degraded broadcast achievability -/
 
 /-- **Broadcast channel achievability (degraded, superposition inner bound).**
