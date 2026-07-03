@@ -2697,10 +2697,55 @@ theorem bc_random_codebook_average₁_le
 
 /-! #### C.4 — random → deterministic (two-tier pigeonhole) -/
 
+/-- Abstract two-tier pigeonhole.  Nonnegative outer weights `wU` summing to `1`, and for every
+outer index a nonnegative inner-weight family `wX cU` summing to `1`, whose weighted double
+average of `val` is `≤ B`, force some index pair with `val cU cX ≤ B`.  (If every pair had
+`val > B` the weighted average would strictly exceed `B`.) -/
+lemma bc_two_tier_pigeonhole {κU κX : Type*} [Fintype κU] [Fintype κX]
+    (wU : κU → ℝ) (wX : κU → κX → ℝ) (val : κU → κX → ℝ)
+    (hwU_nn : ∀ cU, 0 ≤ wU cU) (hwX_nn : ∀ cU cX, 0 ≤ wX cU cX)
+    (hwU_sum : ∑ cU, wU cU = 1) (hwX_sum : ∀ cU, ∑ cX, wX cU cX = 1)
+    (B : ℝ)
+    (h_avg : ∑ cU, wU cU * ∑ cX, wX cU cX * val cU cX ≤ B) :
+    ∃ (cU : κU) (cX : κX), val cU cX ≤ B := by
+  classical
+  by_contra h_none
+  simp only [not_exists, not_le] at h_none
+  -- For every outer index the inner weighted average strictly exceeds `B`.
+  have hinner_gt : ∀ cU, B < ∑ cX, wX cU cX * val cU cX := by
+    intro cU
+    obtain ⟨cX₀, hcX₀⟩ : ∃ cX, 0 < wX cU cX := by
+      by_contra h
+      push_neg at h
+      have hz : ∑ cX, wX cU cX = 0 :=
+        Finset.sum_eq_zero (fun cX _ ↦ le_antisymm (h cX) (hwX_nn cU cX))
+      rw [hwX_sum cU] at hz; exact one_ne_zero hz
+    calc B = B * ∑ cX, wX cU cX := by rw [hwX_sum cU, mul_one]
+      _ = ∑ cX, wX cU cX * B := by
+          rw [Finset.mul_sum]; exact Finset.sum_congr rfl (fun _ _ ↦ by ring)
+      _ < ∑ cX, wX cU cX * val cU cX :=
+          Finset.sum_lt_sum
+            (fun cX _ ↦ mul_le_mul_of_nonneg_left (h_none cU cX).le (hwX_nn cU cX))
+            ⟨cX₀, Finset.mem_univ _, mul_lt_mul_of_pos_left (h_none cU cX₀) hcX₀⟩
+  -- Some outer weight is positive.
+  obtain ⟨cU₀, hcU₀⟩ : ∃ cU, 0 < wU cU := by
+    by_contra h
+    push_neg at h
+    have hz : ∑ cU, wU cU = 0 := Finset.sum_eq_zero (fun cU _ ↦ le_antisymm (h cU) (hwU_nn cU))
+    rw [hwU_sum] at hz; exact one_ne_zero hz
+  have h_contra : B < ∑ cU, wU cU * ∑ cX, wX cU cX * val cU cX := by
+    calc B = B * ∑ cU, wU cU := by rw [hwU_sum, mul_one]
+      _ = ∑ cU, wU cU * B := by
+          rw [Finset.mul_sum]; exact Finset.sum_congr rfl (fun _ _ ↦ by ring)
+      _ < ∑ cU, wU cU * ∑ cX, wX cU cX * val cU cX :=
+          Finset.sum_lt_sum
+            (fun cU _ ↦ mul_le_mul_of_nonneg_left (hinner_gt cU).le (hwU_nn cU))
+            ⟨cU₀, Finset.mem_univ _, mul_lt_mul_of_pos_left (hinner_gt cU₀) hcU₀⟩
+  exact absurd h_avg (not_le.mpr h_contra)
+
 /-- **Two-tier pigeonhole.**  If the random-codebook expectation of the summed per-receiver
 errors is `≤ B`, some deterministic cloud/satellite codebook pair achieves the summed error
-`≤ B`.  Bounding the *sum* lets a single codebook meet both receivers' targets simultaneously.
-@residual(plan:bc-achievability-plan) -/
+`≤ B`.  Bounding the *sum* lets a single codebook meet both receivers' targets simultaneously. -/
 theorem bc_exists_codebook_le_avg
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -2715,7 +2760,38 @@ theorem bc_exists_codebook_le_avg
     ∃ (cU : BCCloudCodebook M₂ n U) (cX : BCSatelliteCodebook M₁ M₂ n α),
       ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).averageErrorProb₁ W).toReal
         + ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).averageErrorProb₂ W).toReal ≤ B := by
-  sorry
+  classical
+  haveI : MeasurableSingletonClass (BCCloudCodebook M₂ n U) := Pi.instMeasurableSingletonClass
+  haveI : MeasurableSingletonClass (BCSatelliteCodebook M₁ M₂ n α) :=
+    Pi.instMeasurableSingletonClass
+  haveI : IsProbabilityMeasure (bcCloudCodebookMeasure pU M₂ n) := by
+    unfold bcCloudCodebookMeasure; infer_instance
+  -- The inner (conditional-satellite) law sums to `1` for every cloud codebook.
+  have hwX_sum : ∀ cU : BCCloudCodebook M₂ n U,
+      ∑ cX : BCSatelliteCodebook M₁ M₂ n α,
+        (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX} = 1 := by
+    intro cU
+    haveI : IsProbabilityMeasure (bcSatelliteCodebookMeasure K M₁ M₂ n cU) := by
+      unfold bcSatelliteCodebookMeasure; infer_instance
+    have h_real_univ : (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real
+        ((Finset.univ : Finset (BCSatelliteCodebook M₁ M₂ n α)) : Set _) = 1 := by
+      rw [Finset.coe_univ, measureReal_def, measure_univ]; rfl
+    rw [sum_measureReal_singleton (μ := bcSatelliteCodebookMeasure K M₁ M₂ n cU)
+      (Finset.univ : Finset (BCSatelliteCodebook M₁ M₂ n α)), h_real_univ]
+  -- The outer (cloud) law sums to `1`.
+  have hwU_sum : ∑ cU : BCCloudCodebook M₂ n U,
+      (bcCloudCodebookMeasure pU M₂ n).real {cU} = 1 := by
+    have h_real_univ : (bcCloudCodebookMeasure pU M₂ n).real
+        ((Finset.univ : Finset (BCCloudCodebook M₂ n U)) : Set _) = 1 := by
+      rw [Finset.coe_univ, measureReal_def, measure_univ]; rfl
+    rw [sum_measureReal_singleton (μ := bcCloudCodebookMeasure pU M₂ n)
+      (Finset.univ : Finset (BCCloudCodebook M₂ n U)), h_real_univ]
+  exact bc_two_tier_pigeonhole
+    (fun cU ↦ (bcCloudCodebookMeasure pU M₂ n).real {cU})
+    (fun cU cX ↦ (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX})
+    (fun cU cX ↦ ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).averageErrorProb₁ W).toReal
+      + ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).averageErrorProb₂ W).toReal)
+    (fun _ ↦ measureReal_nonneg) (fun _ _ ↦ measureReal_nonneg) hwU_sum hwX_sum B h_avg
 
 /-! #### C.5 — degradedness + rate slack -/
 
