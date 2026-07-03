@@ -2,6 +2,7 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.BroadcastChannel.Basic
 import InformationTheory.Shannon.MultipleAccess.JointTypicality
 import InformationTheory.Shannon.MultipleAccess.IIDAmbient
+import InformationTheory.Shannon.MultipleAccess.Achievability
 import InformationTheory.Shannon.SlepianWolf.ConditionalTypicalSlice
 
 /-!
@@ -847,6 +848,391 @@ theorem bc_cloud_indep_prob_le
   rw [hHU, hHY₂, hHUY₂]
   unfold bcInfo₂
   ring
+
+/-! ### Receiver-2 random-codebook averaging: `(U, Y₂)` channel fold and wrong-cloud swap
+
+The receiver-2 random-coding legs.  The single point of departure from the MAC flat-product
+averaging is the broadcast **pair output** `β₁ × β₂`: the block output law lives on
+`Fin n → β₁ × β₂` and receiver 2 sees only the `β₂`-projection.  The `(U, Y₂)` channel fold
+(`bc_chan_fold_Y₂_set`) folds the cloud/satellite/channel chain into the ambient `Y₂`-block
+marginal after marginalizing `β₂`; the wrong-cloud swap (`bc_random_codebook_wrongcloud_swap`)
+recognizes the codebook average of a wrong cloud alias as the independent product law
+`(U-block) ⊗ (Y₂-block)` and applies `bc_cloud_indep_prob_le`. -/
+
+/-- The strong/degraded output *pair* coordinate `ω ↦ (ω i).2.2 : β₁ × β₂`. -/
+def bcYPs : ℕ → (ℕ → U × α × β₁ × β₂) → β₁ × β₂ := fun i ω ↦ (ω i).2.2
+
+/-- Finite-sum change of variables under a pushforward. -/
+private lemma sum_weighted_map {γ δ : Type*}
+    [Fintype γ] [MeasurableSpace γ] [MeasurableSingletonClass γ]
+    [Fintype δ] [MeasurableSpace δ] [MeasurableSingletonClass δ]
+    (μ : Measure γ) [IsProbabilityMeasure μ] (f : γ → δ) (hf : Measurable f) (g : δ → ℝ) :
+    ∑ c : γ, μ.real {c} * g (f c) = ∑ z : δ, (μ.map f).real {z} * g z := by
+  classical
+  have hmap : ∀ z : δ, (μ.map f).real {z} = ∑ c : γ, (if f c = z then μ.real {c} else 0) := by
+    intro z
+    rw [map_measureReal_apply hf (measurableSet_singleton z), measureReal_eq_sum_ite μ (f ⁻¹' {z})]
+    refine Finset.sum_congr rfl (fun c _ ↦ ?_)
+    simp only [Set.mem_preimage, Set.mem_singleton_iff]
+  have hrhs : ∑ z : δ, (μ.map f).real {z} * g z
+      = ∑ z : δ, ∑ c : γ, (if f c = z then μ.real {c} else 0) * g z := by
+    refine Finset.sum_congr rfl (fun z _ ↦ ?_)
+    rw [hmap z, Finset.sum_mul]
+  rw [hrhs, Finset.sum_comm]
+  refine Finset.sum_congr rfl (fun c _ ↦ ?_)
+  have hpush : ∀ z : δ, (if f c = z then μ.real {c} else 0) * g z
+      = (if f c = z then μ.real {c} * g z else 0) := by
+    intro z; by_cases h : f c = z <;> simp [h]
+  rw [Finset.sum_congr rfl (fun z _ ↦ hpush z),
+    Finset.sum_ite_eq Finset.univ (f c) (fun z ↦ μ.real {c} * g z)]
+  simp
+
+/-- The BC per-coordinate joint law singleton mass:
+`ν{(u, a, y₁, y₂)} = pU{u} · K(u){a} · W(a){(y₁, y₂)}`. -/
+lemma bcJointDistribution_singleton_eq
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (u : U) (a : α) (y₁ : β₁) (y₂ : β₂) :
+    (bcJointDistribution pU K W).real {(u, a, y₁, y₂)}
+      = pU.real {u} * (K u).real {a} * (W a).real {(y₁, y₂)} := by
+  unfold bcJointDistribution
+  rw [Measure.real,
+    Measure.map_apply MeasurableEquiv.prodAssoc.measurable (measurableSet_singleton _)]
+  have h_pre : (MeasurableEquiv.prodAssoc ⁻¹' ({(u, a, y₁, y₂)} : Set (U × α × β₁ × β₂)))
+      = ({((u, a), y₁, y₂)} : Set ((U × α) × β₁ × β₂)) := by
+    ext ⟨⟨u', a'⟩, p'⟩
+    simp only [Set.mem_preimage, Set.mem_singleton_iff, MeasurableEquiv.prodAssoc,
+      MeasurableEquiv.coe_mk, Equiv.prodAssoc_apply, Prod.mk.injEq]
+    tauto
+  rw [h_pre]
+  have h_val := jointDistribution_singleton (pU ⊗ₘ K)
+    (W.comap Prod.snd measurable_snd) (u, a) (y₁, y₂)
+  rw [jointDistribution_def, Kernel.comap_apply] at h_val
+  have h_ux := jointDistribution_singleton pU K u a
+  rw [jointDistribution_def] at h_ux
+  rw [h_val, h_ux, ENNReal.toReal_mul, ENNReal.toReal_mul]
+  rfl
+
+/-- The `U`-block law under the BC ambient measure equals `Measure.pi pU`. -/
+lemma bc_block_law_U
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W] (n : ℕ) :
+    (bcAmbientMeasure pU K W).map (jointRV bcUs n) = Measure.pi (fun _ : Fin n ↦ pU) := by
+  refine block_law_X_eq_pi_p (bcAmbientMeasure pU K W) bcUs
+    (fun i ↦ (measurable_pi_apply i).fst)
+    (bcAmbient_iIndepFun_coord pU K W (fun q ↦ q.1) measurable_fst)
+    (fun i ↦ bcAmbient_identDistrib_coord pU K W (fun q ↦ q.1) measurable_fst i) pU ?_ n
+  rw [show (bcUs 0 : (ℕ → U × α × β₁ × β₂) → U) = fun ω ↦ (fun q : U × α × β₁ × β₂ ↦ q.1) (ω 0)
+      from rfl,
+    bcAmbient_map_coord pU K W (fun q ↦ q.1) measurable_fst 0, bcJointDistribution_map_fst]
+
+/-- The per-coordinate `(U, X, Ypair)`-reshaped joint law singleton mass factorizes as
+`pU{u} · K(u){a} · W(a){yp}`. -/
+lemma bcJointDistribution_map_UXY_singleton
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (u : U) (a : α) (yp : β₁ × β₂) :
+    ((bcJointDistribution pU K W).map
+        (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2))).real {(u, a, yp)}
+      = pU.real {u} * (K u).real {a} * (W a).real {yp} := by
+  obtain ⟨y₁, y₂⟩ := yp
+  have hmeas : Measurable (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2)) :=
+    measurable_fst.prodMk
+      ((measurable_fst.comp measurable_snd).prodMk (measurable_snd.comp measurable_snd))
+  rw [map_measureReal_apply hmeas (measurableSet_singleton _)]
+  have h_pre : (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2)) ⁻¹' {(u, a, (y₁, y₂))}
+      = ({(u, a, y₁, y₂)} : Set (U × α × β₁ × β₂)) := by
+    ext ⟨u', a', z₁', z₂'⟩
+    simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.mk.injEq]
+  rw [h_pre, bcJointDistribution_singleton_eq pU K W u a y₁ y₂]
+
+/-- The `(U, X, Ypair)`-split block-law singleton mass factorizes over coordinates as a product
+of the per-coordinate reshaped joint masses. -/
+lemma bc_block_law_UXY_singleton
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (n : ℕ) (u : Fin n → U) (x : Fin n → α) (yp : Fin n → β₁ × β₂) :
+    ((bcAmbientMeasure pU K W).map
+        (fun ω ↦ (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcYPs n ω))).real {(u, x, yp)}
+      = ∏ i, ((bcJointDistribution pU K W).map
+          (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2))).real {(u i, x i, yp i)} := by
+  classical
+  have hbcUs : ∀ i, Measurable (bcUs (U := U) (α := α) (β₁ := β₁) (β₂ := β₂) i) :=
+    fun i ↦ (measurable_pi_apply i).fst
+  have hbcXs : ∀ i, Measurable (bcXs (U := U) (α := α) (β₁ := β₁) (β₂ := β₂) i) :=
+    fun i ↦ (measurable_pi_apply i).snd.fst
+  have hbcYPs : ∀ i, Measurable (bcYPs (U := U) (α := α) (β₁ := β₁) (β₂ := β₂) i) :=
+    fun i ↦ (measurable_pi_apply i).snd.snd
+  have hg_meas : Measurable (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2)) :=
+    measurable_fst.prodMk
+      ((measurable_fst.comp measurable_snd).prodMk (measurable_snd.comp measurable_snd))
+  set g₀ : (ℕ → U × α × β₁ × β₂) → (Fin n → U) × (Fin n → α) × (Fin n → β₁ × β₂) :=
+    fun ω ↦ (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcYPs n ω) with hg₀_def
+  set ê : (Fin n → U) × (Fin n → α) × (Fin n → β₁ × β₂) → (Fin n → U × α × (β₁ × β₂)) :=
+    fun q i ↦ (q.1 i, q.2.1 i, q.2.2 i) with hê_def
+  have hg₀_meas : Measurable g₀ :=
+    (measurable_jointRV bcUs hbcUs n).prodMk
+      ((measurable_jointRV bcXs hbcXs n).prodMk (measurable_jointRV bcYPs hbcYPs n))
+  have hê_meas : Measurable ê :=
+    measurable_pi_lambda _ fun i ↦
+      ((measurable_pi_apply i).comp measurable_fst).prodMk
+        (((measurable_pi_apply i).comp (measurable_fst.comp measurable_snd)).prodMk
+          ((measurable_pi_apply i).comp (measurable_snd.comp measurable_snd)))
+  set ρ : Measure (Fin n → U × α × (β₁ × β₂)) :=
+    (bcAmbientMeasure pU K W).map (jointRV (macJointSequence bcUs bcXs bcYPs) n) with hρ_def
+  haveI : IsProbabilityMeasure
+      ((bcJointDistribution pU K W).map (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2))) :=
+    Measure.isProbabilityMeasure_map hg_meas.aemeasurable
+  have hρ_eq : ρ = Measure.pi (fun _ : Fin n ↦
+      (bcJointDistribution pU K W).map (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2))) := by
+    refine block_law_X_eq_pi_p (bcAmbientMeasure pU K W) (macJointSequence bcUs bcXs bcYPs)
+      (fun i ↦ measurable_macJointSequence bcUs bcXs bcYPs hbcUs hbcXs hbcYPs i)
+      (bcAmbient_iIndepFun_coord pU K W (fun q ↦ (q.1, q.2.1, q.2.2)) hg_meas)
+      (fun i ↦ bcAmbient_identDistrib_coord pU K W (fun q ↦ (q.1, q.2.1, q.2.2)) hg_meas i)
+      ((bcJointDistribution pU K W).map (fun q ↦ (q.1, q.2.1, q.2.2))) ?_ n
+    rw [show (macJointSequence bcUs bcXs bcYPs 0 : (ℕ → U × α × β₁ × β₂) → U × α × (β₁ × β₂))
+          = fun ω ↦ (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2)) (ω 0) from rfl,
+      bcAmbient_map_coord pU K W (fun q ↦ (q.1, q.2.1, q.2.2)) hg_meas 0]
+  have hν_eq_ρ : ((bcAmbientMeasure pU K W).map g₀).map ê = ρ := by
+    rw [Measure.map_map hê_meas hg₀_meas, hρ_def]; congr 1
+  have h_pre : ê ⁻¹' {ê (u, x, yp)}
+      = {((u, x, yp) : (Fin n → U) × (Fin n → α) × (Fin n → β₁ × β₂))} := by
+    ext ⟨v, w, z⟩
+    simp only [Set.mem_preimage, Set.mem_singleton_iff]
+    constructor
+    · intro h
+      have hv : v = u := by funext i; exact congrArg (·.1) (congrFun h i)
+      have hw : w = x := by funext i; exact congrArg (fun p ↦ p.2.1) (congrFun h i)
+      have hz : z = yp := by funext i; exact congrArg (fun p ↦ p.2.2) (congrFun h i)
+      rw [hv, hw, hz]
+    · intro h; rw [h]
+  calc ((bcAmbientMeasure pU K W).map g₀).real {(u, x, yp)}
+      = ((bcAmbientMeasure pU K W).map g₀).real (ê ⁻¹' {ê (u, x, yp)}) := by rw [h_pre]
+    _ = (((bcAmbientMeasure pU K W).map g₀).map ê).real {ê (u, x, yp)} :=
+        (map_measureReal_apply hê_meas (measurableSet_singleton _)).symm
+    _ = ρ.real {ê (u, x, yp)} := by rw [hν_eq_ρ]
+    _ = (Measure.pi (fun _ : Fin n ↦
+          (bcJointDistribution pU K W).map (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2)))).real
+          {fun i ↦ (u i, x i, yp i)} := by rw [hρ_eq]
+    _ = ∏ i, ((bcJointDistribution pU K W).map
+          (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2))).real {(u i, x i, yp i)} :=
+        measureReal_pi_singleton_eq_prod _ _
+
+/-- **Master superposition channel fold.**  The `(U, X, Ypair)`-split block law of a finite
+set `T` equals the average over the cloud codeword `u ~ pUⁿ` and the *conditional* satellite
+codeword `x ~ Πₗ K(uₗ)` of the paired-channel mass of the corresponding slice of `T`.  This is
+the BC analogue of `mac_chan_fold_triple_set`, with the conditional (superposition) satellite
+law replacing the second MAC input's flat product. -/
+lemma bc_chan_fold_master
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (n : ℕ) (T : Set ((Fin n → U) × (Fin n → α) × (Fin n → β₁ × β₂))) :
+    ((bcAmbientMeasure pU K W).map
+        (fun ω ↦ (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcYPs n ω))).real T
+      = ∑ u : Fin n → U, ∑ x : Fin n → α,
+          (Measure.pi (fun _ : Fin n ↦ pU)).real {u}
+            * (Measure.pi (fun l ↦ K (u l))).real {x}
+            * (Measure.pi (fun i ↦ W (x i))).real {y | (u, x, y) ∈ T} := by
+  classical
+  set νt : Measure ((Fin n → U) × (Fin n → α) × (Fin n → β₁ × β₂)) :=
+    (bcAmbientMeasure pU K W).map
+      (fun ω ↦ (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcYPs n ω)) with hνt_def
+  haveI : IsProbabilityMeasure νt := by
+    rw [hνt_def]
+    exact Measure.isProbabilityMeasure_map
+      ((measurable_jointRV bcUs (fun i ↦ (measurable_pi_apply i).fst) n).prodMk
+        ((measurable_jointRV bcXs (fun i ↦ (measurable_pi_apply i).snd.fst) n).prodMk
+          (measurable_jointRV bcYPs (fun i ↦ (measurable_pi_apply i).snd.snd) n))).aemeasurable
+  have h_single : ∀ (u : Fin n → U) (x : Fin n → α) (yp : Fin n → β₁ × β₂),
+      νt.real {(u, x, yp)}
+        = (Measure.pi (fun _ : Fin n ↦ pU)).real {u}
+          * (Measure.pi (fun l ↦ K (u l))).real {x}
+          * (Measure.pi (fun i ↦ W (x i))).real {yp} := by
+    intro u x yp
+    rw [hνt_def, bc_block_law_UXY_singleton pU K W n u x yp,
+      Finset.prod_congr rfl
+        (fun i _ ↦ bcJointDistribution_map_UXY_singleton pU K W (u i) (x i) (yp i)),
+      Finset.prod_mul_distrib, Finset.prod_mul_distrib,
+      ← measureReal_pi_singleton_eq_prod (fun _ : Fin n ↦ pU) u,
+      ← measureReal_pi_singleton_eq_prod (fun l ↦ K (u l)) x,
+      ← measureReal_pi_singleton_eq_prod (fun i ↦ W (x i)) yp]
+  rw [measureReal_eq_sum_ite νt T, Fintype.sum_prod_type]
+  refine Finset.sum_congr rfl (fun u _ ↦ ?_)
+  rw [Fintype.sum_prod_type]
+  refine Finset.sum_congr rfl (fun x _ ↦ ?_)
+  rw [measureReal_eq_sum_ite (Measure.pi (fun i ↦ W (x i))) {y | (u, x, y) ∈ T}, Finset.mul_sum]
+  refine Finset.sum_congr rfl (fun yp _ ↦ ?_)
+  simp only [Set.mem_setOf_eq]
+  rw [h_single u x yp]
+  by_cases h : (u, x, yp) ∈ T
+  · rw [if_pos h, if_pos h]
+  · rw [if_neg h, if_neg h, mul_zero]
+
+/-- **`(U, Y₂)` channel fold (β₂-marginal form).**  The `Y₂`-block law of a finite set `T`
+equals the cloud/satellite/channel average of the `β₂`-projected channel mass.  Derived from
+the master fold by projecting out `U`, `X`, and the `β₁`-output.  This is the receiver-2
+analytic core: the pair output is marginalized to `β₂`. -/
+lemma bc_chan_fold_Y₂_set
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (n : ℕ) (T : Set (Fin n → β₂)) :
+    ((bcAmbientMeasure pU K W).map (jointRV bcY₂s n)).real T
+      = ∑ u : Fin n → U, ∑ x : Fin n → α,
+          (Measure.pi (fun _ : Fin n ↦ pU)).real {u}
+            * (Measure.pi (fun l ↦ K (u l))).real {x}
+            * (Measure.pi (fun i ↦ W (x i))).real {y | (fun i ↦ (y i).2) ∈ T} := by
+  classical
+  have hmeas_master : Measurable (fun ω : ℕ → U × α × β₁ × β₂ ↦
+      (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcYPs n ω)) :=
+    (measurable_jointRV bcUs (fun i ↦ (measurable_pi_apply i).fst) n).prodMk
+      ((measurable_jointRV bcXs (fun i ↦ (measurable_pi_apply i).snd.fst) n).prodMk
+        (measurable_jointRV bcYPs (fun i ↦ (measurable_pi_apply i).snd.snd) n))
+  have hproj_meas : Measurable
+      (fun t : (Fin n → U) × (Fin n → α) × (Fin n → β₁ × β₂) ↦ (fun i ↦ (t.2.2 i).2 : Fin n → β₂)) :=
+    measurable_pi_lambda _ fun i ↦
+      ((measurable_pi_apply i).comp (measurable_snd.comp measurable_snd)).snd
+  have hmap : (bcAmbientMeasure pU K W).map (jointRV bcY₂s n)
+      = ((bcAmbientMeasure pU K W).map
+          (fun ω ↦ (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcYPs n ω))).map
+        (fun t ↦ fun i ↦ (t.2.2 i).2) := by
+    rw [Measure.map_map hproj_meas hmeas_master]; rfl
+  rw [hmap, map_measureReal_apply hproj_meas (Set.toFinite T).measurableSet,
+    bc_chan_fold_master pU K W n
+      ((fun t ↦ (fun i ↦ (t.2.2 i).2 : Fin n → β₂)) ⁻¹' T)]
+  simp only [Set.mem_preimage]
+
+/-- **Receiver-2 wrong-cloud averaged swap.**  For a wrong cloud message `w₂' ≠ m.2`, the
+two-tier random-codebook average of the wrong-cloud alias event (drawn independently of the
+transmitted satellite `cX m`) equals the independent product law `(U-block) ⊗ (Y₂-block)`, and
+is therefore at most `exp(−n (I(U; Y₂) − 3ε))`.  Combines the satellite single-row marginal
+(`measurePreserving_eval`), the cloud two-row marginal (`codebook_marginal_two`), the `(U, Y₂)`
+channel fold, and the independent-pair bound `bc_cloud_indep_prob_le`. -/
+theorem bc_random_codebook_wrongcloud_swap
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hpU : ∀ u : U, 0 < pU.real {u}) (hK : ∀ (u : U) (a : α), 0 < (K u).real {a})
+    (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
+    {M₁ M₂ n : ℕ} {ε : ℝ} (hε : 0 < ε)
+    (m : Fin M₁ × Fin M₂) (w₂' : Fin M₂) (hne : w₂' ≠ m.2) :
+    ∑ cU : BCCloudCodebook M₂ n U, (bcCloudCodebookMeasure pU M₂ n).real {cU}
+        * ∑ cX : BCSatelliteCodebook M₁ M₂ n α,
+            (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX}
+              * (Measure.pi (fun i ↦ W (cX m i))).real
+                  { y : Fin n → β₁ × β₂ |
+                    (cU w₂', fun i ↦ (y i).2)
+                      ∈ jointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcY₂s n ε }
+      ≤ Real.exp (-(n : ℝ) * (bcInfo₂ pU K W - 3 * ε)) := by
+  classical
+  set μ := bcAmbientMeasure pU K W with hμ_def
+  set JTS := jointlyTypicalSet μ bcUs bcY₂s n ε with hJTS_def
+  haveI : IsProbabilityMeasure (μ.map (jointRV bcUs n)) :=
+    Measure.isProbabilityMeasure_map
+      (measurable_jointRV bcUs (fun i ↦ (measurable_pi_apply i).fst) n).aemeasurable
+  haveI : IsProbabilityMeasure (μ.map (jointRV bcY₂s n)) :=
+    Measure.isProbabilityMeasure_map
+      (measurable_jointRV bcY₂s (fun i ↦ (measurable_pi_apply i).snd.snd.snd) n).aemeasurable
+  -- Step 1: satellite single-row marginalization (per cloud codebook).
+  have hsat : ∀ cU : BCCloudCodebook M₂ n U,
+      (∑ cX : BCSatelliteCodebook M₁ M₂ n α, (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX}
+          * (Measure.pi (fun i ↦ W (cX m i))).real
+              { y : Fin n → β₁ × β₂ | (cU w₂', fun i ↦ (y i).2) ∈ JTS })
+        = ∑ x : Fin n → α, (Measure.pi (fun l ↦ K (cU m.2 l))).real {x}
+            * (Measure.pi (fun i ↦ W (x i))).real
+                { y : Fin n → β₁ × β₂ | (cU w₂', fun i ↦ (y i).2) ∈ JTS } := by
+    intro cU
+    haveI : IsProbabilityMeasure (bcSatelliteCodebookMeasure K M₁ M₂ n cU) := by
+      unfold bcSatelliteCodebookMeasure; infer_instance
+    have hmp : (bcSatelliteCodebookMeasure K M₁ M₂ n cU).map (Function.eval m)
+        = Measure.pi (fun l ↦ K (cU m.2 l)) :=
+      (measurePreserving_eval
+        (fun p : Fin M₁ × Fin M₂ ↦ Measure.pi (fun l ↦ K (cU p.2 l))) m).map_eq
+    have h1 := sum_weighted_map (bcSatelliteCodebookMeasure K M₁ M₂ n cU) (Function.eval m)
+      (measurable_pi_apply m)
+      (fun z : Fin n → α ↦ (Measure.pi (fun i ↦ W (z i))).real
+        { y : Fin n → β₁ × β₂ | (cU w₂', fun i ↦ (y i).2) ∈ JTS })
+    rw [hmp] at h1
+    exact h1
+  -- Step 2: the codebook average equals the independent product law of `(U-block) ⊗ (Y₂-block)`.
+  have hmain :
+      ∑ cU : BCCloudCodebook M₂ n U, (bcCloudCodebookMeasure pU M₂ n).real {cU}
+          * ∑ cX : BCSatelliteCodebook M₁ M₂ n α,
+              (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX}
+                * (Measure.pi (fun i ↦ W (cX m i))).real
+                    { y : Fin n → β₁ × β₂ | (cU w₂', fun i ↦ (y i).2) ∈ JTS }
+        = ((μ.map (jointRV bcUs n)).prod (μ.map (jointRV bcY₂s n))).real JTS := by
+    rw [show bcCloudCodebookMeasure pU M₂ n = codebookMeasure pU M₂ n from rfl]
+    -- Fold the satellite tier and reduce the cloud codebook to two rows.
+    have e1 : ∑ cU : Codebook M₂ n U, (codebookMeasure pU M₂ n).real {cU}
+          * ∑ cX : BCSatelliteCodebook M₁ M₂ n α,
+              (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX}
+                * (Measure.pi (fun i ↦ W (cX m i))).real
+                    { y : Fin n → β₁ × β₂ | (cU w₂', fun i ↦ (y i).2) ∈ JTS }
+        = ∑ cU : Codebook M₂ n U, (codebookMeasure pU M₂ n).real {cU}
+          * (fun a b ↦ ∑ x : Fin n → α, (Measure.pi (fun l ↦ K (a l))).real {x}
+              * (Measure.pi (fun i ↦ W (x i))).real
+                  { y : Fin n → β₁ × β₂ | (b, fun i ↦ (y i).2) ∈ JTS }) (cU m.2) (cU w₂') := by
+      refine Finset.sum_congr rfl (fun cU _ ↦ ?_)
+      rw [hsat cU]
+    rw [e1, codebook_marginal_two pU M₂ n m.2 w₂' hne.symm
+        (fun a b ↦ ∑ x : Fin n → α, (Measure.pi (fun l ↦ K (a l))).real {x}
+          * (Measure.pi (fun i ↦ W (x i))).real
+              { y : Fin n → β₁ × β₂ | (b, fun i ↦ (y i).2) ∈ JTS })
+        (fun _ _ ↦ Finset.sum_nonneg
+          (fun _ _ ↦ mul_nonneg measureReal_nonneg measureReal_nonneg))]
+    rw [mac_prodReal_eq_slice_sum (μ.map (jointRV bcUs n)) (μ.map (jointRV bcY₂s n)) JTS,
+      Finset.sum_comm]
+    refine Finset.sum_congr rfl (fun b _ ↦ ?_)
+    rw [bc_block_law_U pU K W n]
+    have hslice : (μ.map (jointRV bcY₂s n)).real
+          {y₂ : Fin n → β₂ | (b, y₂) ∈ JTS}
+        = ∑ a : Fin n → U, ∑ x : Fin n → α,
+            (Measure.pi (fun _ : Fin n ↦ pU)).real {a}
+              * (Measure.pi (fun l ↦ K (a l))).real {x}
+              * (Measure.pi (fun i ↦ W (x i))).real
+                  { y : Fin n → β₁ × β₂ | (b, fun i ↦ (y i).2) ∈ JTS } := by
+      rw [bc_chan_fold_Y₂_set pU K W n {y₂ : Fin n → β₂ | (b, y₂) ∈ JTS}]
+      rfl
+    rw [hslice, Finset.mul_sum]
+    refine Finset.sum_congr rfl (fun a _ ↦ ?_)
+    rw [Finset.mul_sum, Finset.mul_sum]
+    refine Finset.sum_congr rfl (fun x _ ↦ ?_)
+    ring
+  rw [hmain]
+  exact bc_cloud_indep_prob_le pU K W hpU hK hW n hε
+
+/-- **Receiver-2 correct-cloud averaged swap (E0).**  The two-tier random-codebook average of
+the correct-cloud atypical event equals the *joint* `(U, Y₂)`-block law of the atypical set:
+the correct cloud `cU m.2` steers the satellite, so `(cU m.2, Y₂)` follows the ambient joint
+law (not the independent product).  Skeleton for the receiver-2 vanishing leg; the joint
+`(U, Y₂)` channel fold and the two-variable typicality LLN are the remaining pieces.
+@residual(plan:bc-achievability-plan) -/
+theorem bc_random_codebook_E0₂_swap
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hpU : ∀ u : U, 0 < pU.real {u}) (hK : ∀ (u : U) (a : α), 0 < (K u).real {a})
+    (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
+    {M₁ M₂ n : ℕ} {ε : ℝ}
+    (m : Fin M₁ × Fin M₂) :
+    ∑ cU : BCCloudCodebook M₂ n U, (bcCloudCodebookMeasure pU M₂ n).real {cU}
+        * ∑ cX : BCSatelliteCodebook M₁ M₂ n α,
+            (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX}
+              * (Measure.pi (fun i ↦ W (cX m i))).real
+                  { y : Fin n → β₁ × β₂ |
+                    (cU m.2, fun i ↦ (y i).2)
+                      ∉ jointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcY₂s n ε }
+      = ((bcAmbientMeasure pU K W).map
+            (fun ω ↦ (jointRV bcUs n ω, jointRV bcY₂s n ω))).real
+          { q : (Fin n → U) × (Fin n → β₂) |
+            q ∉ jointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcY₂s n ε } := by
+  sorry
 
 /-! ### Receiver-1 (strong) error analysis -/
 
