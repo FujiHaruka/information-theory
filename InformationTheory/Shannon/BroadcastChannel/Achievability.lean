@@ -2383,7 +2383,223 @@ theorem bc_averageErrorProb₁_toReal_le
   refine mul_le_mul_of_nonneg_left ?_ (by positivity)
   exact Finset.sum_le_sum (fun m _ ↦ bc_errorProbAt₁_le_bonferroni3 pU K W hM₁ hM₂ cU cX m)
 
-/-! #### C.3 — two-codebook average bounds -/
+/-! #### C.3 — two-codebook average bounds
+
+The two-tier codebook expectation is the nonnegative-weighted "linear functional"
+`L f = ∑ cU, wU cU * ∑ cX, wX cU cX * f cU cX`.  The generic `bc_weighted_two_tier_*`
+lemmas express its monotonicity and linearity; the per-alias swaps evaluate `L` on each
+Bonferroni term, and `bc_pair_aggregate₂/₁` fold them into the closed-form bounds. -/
+
+/-- Monotonicity of the two-tier nonnegative-weighted codebook average. -/
+lemma bc_weighted_two_tier_mono {κU κX : Type*} [Fintype κU] [Fintype κX]
+    (wU : κU → ℝ) (wX : κU → κX → ℝ)
+    (hwU : ∀ cU, 0 ≤ wU cU) (hwX : ∀ cU cX, 0 ≤ wX cU cX)
+    (f g : κU → κX → ℝ) (hfg : ∀ cU cX, f cU cX ≤ g cU cX) :
+    ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * f cU cX
+      ≤ ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * g cU cX :=
+  Finset.sum_le_sum (fun cU _ ↦ mul_le_mul_of_nonneg_left
+    (Finset.sum_le_sum (fun cX _ ↦ mul_le_mul_of_nonneg_left (hfg cU cX) (hwX cU cX)))
+    (hwU cU))
+
+/-- Additivity of the two-tier weighted codebook average. -/
+lemma bc_weighted_two_tier_add {κU κX : Type*} [Fintype κU] [Fintype κX]
+    (wU : κU → ℝ) (wX : κU → κX → ℝ) (f g : κU → κX → ℝ) :
+    ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * (f cU cX + g cU cX)
+      = (∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * f cU cX)
+        + (∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * g cU cX) := by
+  rw [← Finset.sum_add_distrib]
+  refine Finset.sum_congr rfl (fun cU _ ↦ ?_)
+  rw [← mul_add]
+  congr 1
+  rw [← Finset.sum_add_distrib]
+  exact Finset.sum_congr rfl (fun cX _ ↦ by ring)
+
+/-- Pulling a constant scalar out of the two-tier weighted codebook average. -/
+lemma bc_weighted_two_tier_const_mul {κU κX : Type*} [Fintype κU] [Fintype κX]
+    (wU : κU → ℝ) (wX : κU → κX → ℝ) (c : ℝ) (f : κU → κX → ℝ) :
+    ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * (c * f cU cX)
+      = c * ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * f cU cX := by
+  simp only [Finset.mul_sum]
+  exact Finset.sum_congr rfl (fun cU _ ↦ Finset.sum_congr rfl (fun cX _ ↦ by ring))
+
+/-- Interchanging a finite index sum with the two-tier weighted codebook average. -/
+lemma bc_weighted_two_tier_sum_index {κU κX ι : Type*} [Fintype κU] [Fintype κX]
+    (s : Finset ι) (wU : κU → ℝ) (wX : κU → κX → ℝ) (h : ι → κU → κX → ℝ) :
+    ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * (∑ i ∈ s, h i cU cX)
+      = ∑ i ∈ s, ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * h i cU cX := by
+  have h1 : ∀ cU : κU, ∑ cX : κX, wX cU cX * (∑ i ∈ s, h i cU cX)
+      = ∑ i ∈ s, ∑ cX : κX, wX cU cX * h i cU cX := by
+    intro cU
+    rw [Finset.sum_congr rfl (fun cX _ ↦ Finset.mul_sum _ _ _), Finset.sum_comm]
+  calc ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * (∑ i ∈ s, h i cU cX)
+      = ∑ cU : κU, ∑ i ∈ s, wU cU * ∑ cX : κX, wX cU cX * h i cU cX := by
+        refine Finset.sum_congr rfl (fun cU _ ↦ ?_)
+        rw [h1 cU, Finset.mul_sum]
+    _ = ∑ i ∈ s, ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * h i cU cX := Finset.sum_comm
+
+/-- **Receiver-2 aggregation.**  Fold the per-message two-event Bonferroni bound and the two
+`L`-evaluated swaps (E0 mass `A`, wrong-cloud exponent `e2`) into the closed form. -/
+lemma bc_pair_aggregate₂ {κU κX : Type*} [Fintype κU] [Fintype κX]
+    {M₁ M₂ : ℕ} (hM₂ : 0 < M₂)
+    (wU : κU → ℝ) (wX : κU → κX → ℝ)
+    (hwU : ∀ cU, 0 ≤ wU cU) (hwX : ∀ cU cX, 0 ≤ wX cU cX)
+    (P : κU → κX → ℝ)
+    (E0 : Fin M₁ × Fin M₂ → κU → κX → ℝ)
+    (wc : Fin M₁ × Fin M₂ → Fin M₂ → κU → κX → ℝ)
+    (A e2 : ℝ)
+    (Minv : ℝ) (hMinv : 0 ≤ Minv) (hMinvM : Minv * ((M₁ * M₂ : ℕ) : ℝ) = 1)
+    (hP : ∀ cU cX, P cU cX ≤ Minv * ∑ m : Fin M₁ × Fin M₂,
+        (E0 m cU cX + ∑ w₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m.2, wc m w₂' cU cX))
+    (hE0 : ∀ m, ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * E0 m cU cX = A)
+    (hwc : ∀ (m : Fin M₁ × Fin M₂), ∀ w₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m.2,
+        ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * wc m w₂' cU cX ≤ e2) :
+    ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * P cU cX ≤ A + ((M₂ : ℝ) - 1) * e2 := by
+  classical
+  refine le_trans (bc_weighted_two_tier_mono wU wX hwU hwX _ _ hP) ?_
+  have hdist : ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * (Minv * ∑ m : Fin M₁ × Fin M₂,
+        (E0 m cU cX + ∑ w₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m.2, wc m w₂' cU cX))
+      = Minv * ∑ m : Fin M₁ × Fin M₂,
+          ((∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * E0 m cU cX)
+            + ∑ w₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m.2,
+                ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * wc m w₂' cU cX) := by
+    rw [bc_weighted_two_tier_const_mul wU wX Minv]
+    congr 1
+    rw [bc_weighted_two_tier_sum_index (Finset.univ : Finset (Fin M₁ × Fin M₂)) wU wX
+      (fun m cU cX ↦ E0 m cU cX + ∑ w₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m.2,
+        wc m w₂' cU cX)]
+    refine Finset.sum_congr rfl (fun m _ ↦ ?_)
+    rw [bc_weighted_two_tier_add wU wX,
+      bc_weighted_two_tier_sum_index ((Finset.univ : Finset (Fin M₂)).erase m.2) wU wX
+        (fun w₂' cU cX ↦ wc m w₂' cU cX)]
+  rw [hdist]
+  have hbound : ∀ m : Fin M₁ × Fin M₂,
+      ((∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * E0 m cU cX)
+        + ∑ w₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m.2,
+            ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * wc m w₂' cU cX)
+      ≤ A + ((M₂ : ℝ) - 1) * e2 := by
+    intro m
+    rw [hE0 m]
+    have hw : ∑ w₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m.2,
+          ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * wc m w₂' cU cX ≤ ((M₂ : ℝ) - 1) * e2 := by
+      calc ∑ w₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m.2,
+              ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * wc m w₂' cU cX
+          ≤ ∑ _w₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m.2, e2 :=
+            Finset.sum_le_sum (hwc m)
+        _ = ((M₂ : ℝ) - 1) * e2 := by
+            rw [Finset.sum_const, nsmul_eq_mul, Finset.card_erase_of_mem (Finset.mem_univ _),
+              Finset.card_univ, Fintype.card_fin, Nat.cast_sub hM₂, Nat.cast_one]
+    linarith [hw]
+  calc Minv * ∑ m : Fin M₁ × Fin M₂,
+          ((∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * E0 m cU cX)
+            + ∑ w₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m.2,
+                ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * wc m w₂' cU cX)
+      ≤ Minv * ∑ _m : Fin M₁ × Fin M₂, (A + ((M₂ : ℝ) - 1) * e2) :=
+        mul_le_mul_of_nonneg_left (Finset.sum_le_sum (fun m _ ↦ hbound m)) hMinv
+    _ = A + ((M₂ : ℝ) - 1) * e2 := by
+        rw [Finset.sum_const, Finset.card_univ, Fintype.card_prod, Fintype.card_fin,
+          Fintype.card_fin, nsmul_eq_mul, ← mul_assoc, hMinvM, one_mul]
+
+/-- **Receiver-1 aggregation.**  Fold the per-message three-event Bonferroni bound and the
+three `L`-evaluated swaps (E0 mass `A`, wrong-satellite exponent `eb`, wrong-cloud exponent
+`ec`) into the closed form. -/
+lemma bc_pair_aggregate₁ {κU κX : Type*} [Fintype κU] [Fintype κX]
+    {M₁ M₂ : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂)
+    (wU : κU → ℝ) (wX : κU → κX → ℝ)
+    (hwU : ∀ cU, 0 ≤ wU cU) (hwX : ∀ cU cX, 0 ≤ wX cU cX)
+    (P : κU → κX → ℝ)
+    (E0 : Fin M₁ × Fin M₂ → κU → κX → ℝ)
+    (Eb : Fin M₁ × Fin M₂ → Fin M₁ → κU → κX → ℝ)
+    (Ec : Fin M₁ × Fin M₂ → Fin M₂ × Fin M₁ → κU → κX → ℝ)
+    (A eb ec : ℝ)
+    (Minv : ℝ) (hMinv : 0 ≤ Minv) (hMinvM : Minv * ((M₁ * M₂ : ℕ) : ℝ) = 1)
+    (hP : ∀ cU cX, P cU cX ≤ Minv * ∑ m : Fin M₁ × Fin M₂,
+        (E0 m cU cX
+          + ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m.1, Eb m m₁' cU cX
+          + ∑ p ∈ ((Finset.univ : Finset (Fin M₂)).erase m.2) ×ˢ
+                    (Finset.univ : Finset (Fin M₁)), Ec m p cU cX))
+    (hE0 : ∀ m, ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * E0 m cU cX = A)
+    (hEb : ∀ (m : Fin M₁ × Fin M₂), ∀ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m.1,
+        ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * Eb m m₁' cU cX ≤ eb)
+    (hEc : ∀ (m : Fin M₁ × Fin M₂), ∀ p ∈ ((Finset.univ : Finset (Fin M₂)).erase m.2) ×ˢ
+              (Finset.univ : Finset (Fin M₁)),
+        ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * Ec m p cU cX ≤ ec) :
+    ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * P cU cX
+      ≤ A + ((M₁ : ℝ) - 1) * eb + ((M₂ : ℝ) - 1) * (M₁ : ℝ) * ec := by
+  classical
+  refine le_trans (bc_weighted_two_tier_mono wU wX hwU hwX _ _ hP) ?_
+  have hdist : ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * (Minv * ∑ m : Fin M₁ × Fin M₂,
+        (E0 m cU cX
+          + ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m.1, Eb m m₁' cU cX
+          + ∑ p ∈ ((Finset.univ : Finset (Fin M₂)).erase m.2) ×ˢ
+                    (Finset.univ : Finset (Fin M₁)), Ec m p cU cX))
+      = Minv * ∑ m : Fin M₁ × Fin M₂,
+          ((∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * E0 m cU cX)
+            + ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m.1,
+                ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * Eb m m₁' cU cX
+            + ∑ p ∈ ((Finset.univ : Finset (Fin M₂)).erase m.2) ×ˢ
+                      (Finset.univ : Finset (Fin M₁)),
+                ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * Ec m p cU cX) := by
+    rw [bc_weighted_two_tier_const_mul wU wX Minv]
+    congr 1
+    rw [bc_weighted_two_tier_sum_index (Finset.univ : Finset (Fin M₁ × Fin M₂)) wU wX
+      (fun m cU cX ↦ E0 m cU cX
+        + ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m.1, Eb m m₁' cU cX
+        + ∑ p ∈ ((Finset.univ : Finset (Fin M₂)).erase m.2) ×ˢ
+                  (Finset.univ : Finset (Fin M₁)), Ec m p cU cX)]
+    refine Finset.sum_congr rfl (fun m _ ↦ ?_)
+    rw [bc_weighted_two_tier_add wU wX, bc_weighted_two_tier_add wU wX,
+      bc_weighted_two_tier_sum_index ((Finset.univ : Finset (Fin M₁)).erase m.1) wU wX
+        (fun m₁' cU cX ↦ Eb m m₁' cU cX),
+      bc_weighted_two_tier_sum_index (((Finset.univ : Finset (Fin M₂)).erase m.2) ×ˢ
+        (Finset.univ : Finset (Fin M₁))) wU wX (fun p cU cX ↦ Ec m p cU cX)]
+  rw [hdist]
+  have hbound : ∀ m : Fin M₁ × Fin M₂,
+      ((∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * E0 m cU cX)
+        + ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m.1,
+            ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * Eb m m₁' cU cX
+        + ∑ p ∈ ((Finset.univ : Finset (Fin M₂)).erase m.2) ×ˢ
+                  (Finset.univ : Finset (Fin M₁)),
+            ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * Ec m p cU cX)
+      ≤ A + ((M₁ : ℝ) - 1) * eb + ((M₂ : ℝ) - 1) * (M₁ : ℝ) * ec := by
+    intro m
+    rw [hE0 m]
+    have hb : ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m.1,
+          ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * Eb m m₁' cU cX ≤ ((M₁ : ℝ) - 1) * eb := by
+      calc ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m.1,
+              ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * Eb m m₁' cU cX
+          ≤ ∑ _m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m.1, eb :=
+            Finset.sum_le_sum (hEb m)
+        _ = ((M₁ : ℝ) - 1) * eb := by
+            rw [Finset.sum_const, nsmul_eq_mul, Finset.card_erase_of_mem (Finset.mem_univ _),
+              Finset.card_univ, Fintype.card_fin, Nat.cast_sub hM₁, Nat.cast_one]
+    have hc : ∑ p ∈ ((Finset.univ : Finset (Fin M₂)).erase m.2) ×ˢ
+                (Finset.univ : Finset (Fin M₁)),
+          ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * Ec m p cU cX
+        ≤ ((M₂ : ℝ) - 1) * (M₁ : ℝ) * ec := by
+      calc ∑ p ∈ ((Finset.univ : Finset (Fin M₂)).erase m.2) ×ˢ
+                (Finset.univ : Finset (Fin M₁)),
+              ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * Ec m p cU cX
+          ≤ ∑ _p ∈ ((Finset.univ : Finset (Fin M₂)).erase m.2) ×ˢ
+                (Finset.univ : Finset (Fin M₁)), ec :=
+            Finset.sum_le_sum (hEc m)
+        _ = ((M₂ : ℝ) - 1) * (M₁ : ℝ) * ec := by
+            rw [Finset.sum_const, nsmul_eq_mul, Finset.card_product,
+              Finset.card_erase_of_mem (Finset.mem_univ _), Finset.card_univ, Fintype.card_fin,
+              Finset.card_univ, Fintype.card_fin, Nat.cast_mul, Nat.cast_sub hM₂, Nat.cast_one]
+    linarith [hb, hc]
+  calc Minv * ∑ m : Fin M₁ × Fin M₂,
+          ((∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * E0 m cU cX)
+            + ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m.1,
+                ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * Eb m m₁' cU cX
+            + ∑ p ∈ ((Finset.univ : Finset (Fin M₂)).erase m.2) ×ˢ
+                      (Finset.univ : Finset (Fin M₁)),
+                ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * Ec m p cU cX)
+      ≤ Minv * ∑ _m : Fin M₁ × Fin M₂,
+          (A + ((M₁ : ℝ) - 1) * eb + ((M₂ : ℝ) - 1) * (M₁ : ℝ) * ec) :=
+        mul_le_mul_of_nonneg_left (Finset.sum_le_sum (fun m _ ↦ hbound m)) hMinv
+    _ = A + ((M₁ : ℝ) - 1) * eb + ((M₂ : ℝ) - 1) * (M₁ : ℝ) * ec := by
+        rw [Finset.sum_const, Finset.card_univ, Fintype.card_prod, Fintype.card_fin,
+          Fintype.card_fin, nsmul_eq_mul, ← mul_assoc, hMinvM, one_mul]
 
 /-- **Receiver-2 two-codebook average bound.**  The random-codebook expectation of the
 receiver-2 average error is at most the (vanishing) E0 mass plus the wrong-cloud exponent.
@@ -2403,7 +2619,28 @@ theorem bc_random_codebook_average₂_le
             (fun ω ↦ (jointRV bcUs n ω, jointRV bcY₂s n ω))).real
           { q | q ∉ jointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcY₂s n ε }
         + ((M₂ : ℝ) - 1) * Real.exp ((n : ℝ) * (-(bcInfo₂ pU K W) + 3 * ε)) := by
-  sorry
+  classical
+  have hexp₂ : Real.exp (-(n : ℝ) * (bcInfo₂ pU K W - 3 * ε))
+      = Real.exp ((n : ℝ) * (-(bcInfo₂ pU K W) + 3 * ε)) := by
+    rw [show -(n : ℝ) * (bcInfo₂ pU K W - 3 * ε)
+      = (n : ℝ) * (-(bcInfo₂ pU K W) + 3 * ε) from by ring]
+  exact bc_pair_aggregate₂ hM₂
+    (fun cU ↦ (bcCloudCodebookMeasure pU M₂ n).real {cU})
+    (fun cU cX ↦ (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX})
+    (fun _ ↦ measureReal_nonneg) (fun _ _ ↦ measureReal_nonneg)
+    (fun cU cX ↦ ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).averageErrorProb₂ W).toReal)
+    (fun m cU cX ↦ (Measure.pi (fun i ↦ W (cX m i))).real
+        { y : Fin n → β₁ × β₂ | (cU m.2, fun i ↦ (y i).2)
+            ∉ jointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcY₂s n ε })
+    (fun m w₂' cU cX ↦ (Measure.pi (fun i ↦ W (cX m i))).real
+        { y : Fin n → β₁ × β₂ | (cU w₂', fun i ↦ (y i).2)
+            ∈ jointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcY₂s n ε })
+    _ _ _ (by positivity)
+    (inv_mul_cancel₀ (Nat.cast_ne_zero.mpr (Nat.mul_pos hM₁ hM₂).ne'))
+    (fun cU cX ↦ bc_averageErrorProb₂_toReal_le pU K W hM₁ hM₂ cU cX)
+    (fun m ↦ bc_random_codebook_E0₂_swap pU K W hpU hK hW m)
+    (fun m w₂' hmem ↦ le_of_le_of_eq (bc_random_codebook_wrongcloud_swap pU K W hpU hK hW hε m w₂'
+      (Finset.mem_erase.mp hmem).1) hexp₂)
 
 /-- **Receiver-1 two-codebook average bound.**  The random-codebook expectation of the
 receiver-1 average error is at most the (vanishing) E0 mass plus the wrong-satellite (`E_b`)
@@ -2426,7 +2663,37 @@ theorem bc_random_codebook_average₁_le
         + ((M₁ : ℝ) - 1) * Real.exp ((n : ℝ) * (-(bcInfo₁ pU K W) + 4 * ε))
         + ((M₂ : ℝ) - 1) * (M₁ : ℝ) *
             Real.exp ((n : ℝ) * (-(bcInfoJoint pU K W) + 3 * ε)) := by
-  sorry
+  classical
+  have hexpb : Real.exp (-(n : ℝ) * (bcInfo₁ pU K W - 4 * ε))
+      = Real.exp ((n : ℝ) * (-(bcInfo₁ pU K W) + 4 * ε)) := by
+    rw [show -(n : ℝ) * (bcInfo₁ pU K W - 4 * ε)
+      = (n : ℝ) * (-(bcInfo₁ pU K W) + 4 * ε) from by ring]
+  have hexpc : Real.exp (-(n : ℝ) * (bcInfoJoint pU K W - 3 * ε))
+      = Real.exp ((n : ℝ) * (-(bcInfoJoint pU K W) + 3 * ε)) := by
+    rw [show -(n : ℝ) * (bcInfoJoint pU K W - 3 * ε)
+      = (n : ℝ) * (-(bcInfoJoint pU K W) + 3 * ε) from by ring]
+  exact bc_pair_aggregate₁ hM₁ hM₂
+    (fun cU ↦ (bcCloudCodebookMeasure pU M₂ n).real {cU})
+    (fun cU cX ↦ (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX})
+    (fun _ ↦ measureReal_nonneg) (fun _ _ ↦ measureReal_nonneg)
+    (fun cU cX ↦ ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).averageErrorProb₁ W).toReal)
+    (fun m cU cX ↦ (Measure.pi (fun i ↦ W (cX m i))).real
+        { y : Fin n → β₁ × β₂ | (cU m.2, cX m, fun i ↦ (y i).1)
+            ∉ macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε })
+    (fun m m₁' cU cX ↦ (Measure.pi (fun i ↦ W (cX m i))).real
+        { y : Fin n → β₁ × β₂ | (cU m.2, cX (m₁', m.2), fun i ↦ (y i).1)
+            ∈ macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε })
+    (fun m p cU cX ↦ (Measure.pi (fun i ↦ W (cX m i))).real
+        { y : Fin n → β₁ × β₂ | (cU p.1, cX (p.2, p.1), fun i ↦ (y i).1)
+            ∈ macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε })
+    _ _ _ _ (by positivity)
+    (inv_mul_cancel₀ (Nat.cast_ne_zero.mpr (Nat.mul_pos hM₁ hM₂).ne'))
+    (fun cU cX ↦ bc_averageErrorProb₁_toReal_le pU K W hM₁ hM₂ cU cX)
+    (fun m ↦ bc_random_codebook_E0₁_swap pU K W hpU hK hW m)
+    (fun m m₁' hmem ↦ le_of_le_of_eq (bc_random_codebook_Eb_swap pU K W hpU hK hW m m₁'
+      (Finset.mem_erase.mp hmem).1) hexpb)
+    (fun m p hmem ↦ le_of_le_of_eq (bc_random_codebook_Ec_swap pU K W hpU hK hW hε m p
+      (Finset.mem_erase.mp (Finset.mem_product.mp hmem).1).1) hexpc)
 
 /-! #### C.4 — random → deterministic (two-tier pigeonhole) -/
 
