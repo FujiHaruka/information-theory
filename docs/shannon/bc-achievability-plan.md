@@ -1,138 +1,48 @@
 # Shannon: degraded BC achievability (superposition inner bound) サブ計画
 
 > **Parent**: [`broadcast-channel-moonshot-plan.md`](broadcast-channel-moonshot-plan.md)
-> 撤退スロット = 親の frozen slug **L-BC1** (joint typicality multi-receiver body) / **L-BC3** (inner-bound existence pass-through)。
 
-**Status**: 進行中 — Leg 1-6 genuine (receiver-2/receiver-1 の random-coding swap 全て sorryAx-free + 独立監査 `@audit:ok`)。残 = Leg 7 assembly + Leg 8 headline。残 sorry は headline `bc_achievability` **1 本のみ** (`@residual(plan:bc-achievability-plan)`)。
-**SoT**: [`docs/textbook-roadmap.md`](../textbook-roadmap.md) Ch.15 (Cover–Thomas Thm 15.6.2 の **達成側** = superposition inner bound)。詳細履歴は git。
-**再検証** (prose にキャッシュしない): `scripts/sig_view.ts --sorry InformationTheory/Shannon/BroadcastChannel/Achievability.lean` / `#print axioms InformationTheory.Shannon.BroadcastChannel.bc_achievability`。
+**Status**: CLOSED ✅ — headline `bc_achievability` genuine closure (proof done = 0 sorry ∧ 0 @residual、sorryAx-free、独立監査 `@audit:ok`)。degraded broadcast-channel achievability / superposition-coding inner bound (Cover–Thomas Thm 15.6.2 の**達成側**)。`InformationTheory.lean` root 登録済 + README Ch.15 表登録済。撤退スロット L-BC1 / L-BC3 (親 frozen slug) は **未使用** — 全 leg が genuine で閉じたため sorry 退避せずに済んだ。
+**SoT**: [`docs/textbook-roadmap.md`](../textbook-roadmap.md) Ch.15。詳細履歴は git。
+**再検証** (prose にキャッシュしない): `#print axioms InformationTheory.Shannon.BroadcastChannel.bc_achievability` (= `[propext, Classical.choice, Quot.sound]`) / `scripts/sig_view.ts --sorry InformationTheory/Shannon/BroadcastChannel/Achievability.lean` (0 件)。
 
-目標 = headline `bc_achievability` を **genuine closure** (proof done = 0 sorry ∧ 0 @residual、sorryAx-free、独立監査 `@audit:ok`)。
+## 進捗 (全 leg 完了 — 1 行 + commit に圧縮)
 
-## 進捗
+- [x] M0 — inventory は advisor 精査で代替 (独立 phase skip)。
+- [x] Leg 1 — skeleton + `bcJointDistribution` + `bcInfo₁/₂` + region target (cfd4a595)。
+- [x] Leg 2 — two-tier codebook 型 + conditional codebook/ambient (compProd) def。BC-ambient iid infra は Leg 5、codebook averaging swap は Leg 6 で建造。
+- [x] Leg 3 — receiver-2 cloud decoder + Bonferroni + indep bound (0a0221e2)。
+- [x] Leg 4 — receiver-1 3-subevent Bonferroni `bc_errorProbAt₁_le_bonferroni3` (68efa06b)。
+- [x] Leg 5 — ★ gateway atom `bc_conditional_slice_prob_le` (4f394dae、exponent 4ε、家系 GO、Mathlib gap なし)。
+- [x] Leg 6 — random-coding swap 群 全 sorryAx-free + 独立監査 全 8 件 `@audit:ok` (5ec0063e)。新 def `bcInfoJoint` (= I((U,X);Y₁)) + E0₂ / E_b / E_c / wrong-cloud averaged swap。
+- [x] Leg 7 — assembly ✅ — receiver-1/2 E0 vanishing (typicality-LLN) + averaged bound 組上げ + two-tier pigeonhole 存在抽出 + ε-selection。
+- [x] Leg 8 — headline `bc_achievability` ✅ genuine closure + 独立監査 `@audit:ok` (`bc_achievability` / gate `bc_degraded_infoJoint_ge` / helper `bcMarkovChain_UX_Y₁_Y₂`) + root 配線 + README Ch.15 表。commits: e15f78cf (DPI closure + root wiring) / acd50a3e (@audit:ok) / 6f0c687d (README)。
 
-- [~] M0 — inventory は advisor 精査が代替 (seed 3 本 file:line 確認済)。独立 inventory phase は skip。
-- [x] Leg 1 — skeleton + `bcJointDistribution` + `bcInfo₁/₂` + region target ✅ (cfd4a595、type-check done、監査 PASS)
-- [x] Leg 2 — two-tier codebook 型 + conditional codebook/ambient (compProd) def ✅。**BC-ambient iid infra は Leg 5 で建造済** (bcAmbient_* coord lemmas / marginal factorization / positivity)。codebook averaging swap は Leg 6 で完了
-- [x] Leg 3 — receiver-2 cloud decoder/code scaffold + Bonferroni + indep bound ✅ (0a0221e2、`bcCloudTypicalDecoder`/`bcJointTypicalDecoder`/`bcCodebookToCode` def + `bc_errorProbAt₂_le_bonferroni`/`bc_cloud_indep_prob_le` 2本 genuine sorryAx-free。単一ユーザ `jointlyTypicalSet_indep_prob_le` 直用、conditional tier 不要を実証)
-- [x] Leg 4 — receiver-1 per-codebook 3-subevent Bonferroni ✅ (68efa06b、`bc_errorProbAt₁_le_bonferroni3` genuine sorryAx-free。`mac_errorProbAt_le_bonferroni4` 4→3 rework、E0 + E_b(wrong-sat/correct-cloud) + E_c(wrong-cloud/任意-sat)。E_b/E_c は measure 項のまま = Leg 6/7 で指数境界化)
-- [x] Leg 5 — ★ conditional-slice satellite prob atom ✅ **CLOSED** (`bc_conditional_slice_prob_le`、4f394dae、sorryAx-free、**家系 GO**。card×per-seq route、exponent 4ε、seed 3 本 as-advertised、Mathlib gap なし)
-- [x] Leg 6 — random-coding swap 群 ✅ **完了** (全 sorryAx-free + 独立監査 全 8 件 `@audit:ok`、5ec0063e)。**6a** (ee6af6c8): chan-fold 基盤 `bc_chan_fold_master`/`bc_chan_fold_Y₂_set` (pair 出力 β₂ 周辺化 = BC 固有点を局在) + receiver-2 wrong-cloud `bc_random_codebook_wrongcloud_swap` genuine。**(i) E0₂ swap** (d3c73151): `bc_random_codebook_E0₂_swap` genuine、correct-cloud (U,Y₂) joint fold `bc_chan_fold_UY₂_set` 追加、**LLN 不要**。**(ii) receiver-1 E_b/E_c averaged swap** (752c36fd): 新 def `bcInfoJoint` (= I((U,X);Y₁)) + `bc_conditional_slice_prob_le_uncond` / `bc_random_codebook_Eb_swap` (exp `bcInfo₁−4ε`) / `bc_random_codebook_Ec_swap` (exp `bcInfoJoint−3ε`) / `bc_joint_indep_prob_le` / `bc_chan_fold_Y₁_set` / `bc_block_law_UX_paired_singleton`。監査で bcInfoJoint 妥当・非バンドル・exponent 整合を確認。
-- [~] Leg 7 — **assembly (current)** 🚧 — receiver-2 E0 vanishing (2-var typicality-LLN) + `averageErrorProb₂` averaged bound 組上げ + receiver-1 E0 vanishing + E_b/E_c/wrong-cloud を Leg 4 の 3-subevent slot に注入して `averageErrorProb₁` averaged bound 組上げ。写経元 = MAC `mac_random_codebook_average_le` (`Achievability.lean:1755`、`mac_quad_aggregate` で 4 swap 束ね) / `mac_exists_codebook_le_avg` (`:1869`、pigeonhole 存在抽出)。**degradedness で `bcInfoJoint ≥ bcInfo₂ + bcInfo₁ > R₂ + R₁` を出して wrong-cloud を消す**。
-- [ ] Leg 8 — `averageError₁∧₂ → 0` (rate slack から) + headline `bc_achievability` + 独立監査 + root 配線 (`InformationTheory.lean` に import 追加) + README/roadmap Ch.15 同期 📋
+## ゴール / Approach (達成、再利用しうる設計事実)
 
-## ゴール / Approach
+MAC achievability テンプレを ~55-60% 再利用 + 唯一の net-new tier = conditional (superposition) random coding を新規建造。**MAC↔BC 差分は codebook measure 形に 100% 局在**: satellite codeword を conditional compProd `Πᵢ K(Uᵢ)` で平均 (cloud center `U^n(w₂)` に条件付け)、flat product ではない。gateway-atom-first で Leg 5 ★ atom を最初に gate → GO。
 
-全体戦略 = 直近 CLOSED の MAC achievability テンプレ (`MultipleAccess/Achievability.lean` ~2115 行 + `JointTypicality.lean` + `AchievabilityCore.lean`) を **~55-60% 再利用**しつつ、唯一の net-new tier = **conditional (superposition) random coding** を新規建造する。
+**最終ゲート `bc_degraded_infoJoint_ge`** (degradedness superadditivity `bcInfo₁ + bcInfo₂ ≤ bcInfoJoint`、これで wrong-cloud を消す) は、`IsBCDegraded` から stochastic-degradation Markov chain `U→Y₁→Y₂` を自作 (reusable helper `isMarkovChain_of_append` = `isMarkovChain_comp_conditioner_right` の stochastic 版) + 既存 DPI `mutualInfo_le_of_markov` で genuine closure。
 
-**支配的な設計事実 — MAC↔BC の差分は `codebook measure の形` に 100% 局在**: union bound でも typicality-LLN でも SLLN でもない。MAC は flat product `codebookMeasure p₁ × codebookMeasure p₂` で平均するが、superposition は **衛星 codeword を conditional compProd `Πᵢ K(Uᵢ)` で平均**する (cloud center `U^n(w₂)` に条件付け)。この 1 点が全 net-new work を局在させ、典型集合 LLN / vanishing / Bonferroni / SLLN は MAC 資産の純配線 (plumbing) で流用できる。
+## 新規 def (Mathlib-shape-driven)
 
-**gateway-atom-first**: ★ atom (Leg 5、下記 conditional-slice satellite typicality probability bound) を可能な限り早く dispatch して**家系全体を gate**する。★ が通れば GO、詰まれば L-BC1/L-BC3 sorry 退避。CLAUDE.md「Mathlib-shape-driven Definitions」を **in-project atom の exponent と def を揃える**形で適用 (def が atom の結論形と out-of-box で一致するよう `bcInfo₁` を独立 def で建てる)。
-
-## Statement shape (verbatim 候補、`BroadcastChannel/Basic.lean` の型に整合)
-
-`BroadcastCode` (`Basic.lean:41`) は joint encoder `Fin M₁ × Fin M₂ → (Fin n → α)` + 2 分離 decoder。combined error は無く `averageErrorProb₁` (`Basic.lean:87`) / `averageErrorProb₂` (`Basic.lean:94`)、各 `ℝ≥0∞`。よって結論は 2 本の `.toReal < ε'` の連言。対応雛形 = `mac_achievability` (`Achievability.lean:1992`)。
-
-```lean
-theorem bc_achievability
-    {U : Type*} [Fintype U] [DecidableEq U] [Nonempty U]
-      [MeasurableSpace U] [MeasurableSingletonClass U]
-    (pU : Measure U) [IsProbabilityMeasure pU]
-    (K : Kernel U α) [IsMarkovKernel K]                 -- conditional input pmf p(x|u), cloud→satellite
-    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
-    (hpU : ∀ u, 0 < pU.real {u}) (hK : ∀ u a, 0 < (K u).real {a}) (hW : ∀ a b, 0 < (W a).real {b})
-    -- degradedness fork (a): X → Y₁ → Y₂ precondition (詳細下記)
-    {R₁ R₂ : ℝ} (_hR₁ : 0 < R₁) (_hR₂ : 0 < R₂)
-    (hR₁lt : R₁ < bcInfo₁ pU K W)                        -- I(X;Y₁|U)
-    (hR₂lt : R₂ < bcInfo₂ pU K W)                        -- I(U;Y₂)
-    {ε' : ℝ} (hε' : 0 < ε') :
-    ∃ N, ∀ n, N ≤ n → ∃ (M₁ M₂ : ℕ)
-      (_hM₁ : Nat.ceil (Real.exp (n*R₁)) ≤ M₁) (_hM₂ : Nat.ceil (Real.exp (n*R₂)) ≤ M₂)
-      (c : BroadcastCode M₁ M₂ n α β₁ β₂),
-      (c.averageErrorProb₁ W).toReal < ε' ∧ (c.averageErrorProb₂ W).toReal < ε'
-```
-
-## 新規 def (Mathlib-shape-driven、macJointDistribution / macInfo と parity)
-
-`bcInfo`/`bcJointDistribution` は現状 `BroadcastChannel/` に不在 (`rg` 確認)、Leg 1 で net-new 建造。
-
-| def | 型 / 定義 | 備考 |
+| def | 定義 | 備考 |
 |---|---|---|
-| `bcJointDistribution pU K W` | `Measure (U × α × β₁ × β₂)` = `pU`→`K`→`W` の compProd | `macJointDistribution` (`IIDAmbient.lean:48`) を U 先頭に one-tier 拡張 |
-| `bcInfo₂ pU K W` | `H(U)+H(Y₂)−H(U,Y₂)` (= `I(U;Y₂)`) | `macInfo₂` (`Achievability.lean:225`) と同じ 3-entropy 形 |
-| `bcInfo₁ pU K W` | `H(U,X)+H(U,Y₁)−H(U,X,Y₁)−H(U)` (= `I(X;Y₁\|U)`) | **4-entropy 式・conditional MI**。macInfo は unconditional なので純 relabel でない → **独立 def**。★ atom exponent (`exp(−n(bcInfo₁−4ε))`、4ε = 4 typicality window slack) と型・結論形を揃える |
-| two-tier codebook | cloud `Fin M₂ → (Fin n → U)` iid `pU`; satellite `Fin M₁ × Fin M₂ → (Fin n → α)` を `K(U(w₂,i))` から draw | satellite measure は **compProd / dependent**、flat product ではない ← MAC との唯一の構造差 |
-
-## Degradedness fork
-
-- **(a) 推奨**: degradedness Markov precondition `X → Y₁ → Y₂` を hypothesis で足す。これで receiver-1 joint decoding が要求する `R₁+R₂ < I(X;Y₁)` が `R₂<I(U;Y₂)≤I(U;Y₁)` から**自動充足**、`bc_converse` (`Converse.lean`) の `h_deg_block` / `h_memo` world (子 [`bc-degraded-converse-plan.md`](bc-degraded-converse-plan.md)) と parity。**regularity precondition であって load-bearing でない** (CI 構造仮説、独立監査で確認する)。
-- **(b) 代替 (併記のみ)**: general inner bound + explicit 第 3 hypothesis `hRsum : R₁+R₂ < bcInfoJoint pU K W` (= `I(X;Y₁)`)、degradedness なし。recommend は (a)。実装で (a) が joint decoding の `R₁+R₂` 自動充足に効かない兆候が出たら (b) にピボット。
-
-**honesty 注意**: degradedness / memoryless / full-support (`hpU`/`hK`/`hW`) は全て precondition。「レート対 ∈ 達成領域」や covering bound を仮説に bundle しない (tier-5 禁止、下記撤退ライン)。
-
-## ★ gateway atom (Leg 5、最初に gate)
-
-**conditional-independence satellite typicality probability bound** (superposition covering step、receiver-1 の "wrong satellite, correct cloud" 部分事象 (b)):
-
-> typical cloud `u` と受信 `y₁` に対し、conditional-product measure `Πᵢ K(uᵢ)` での `{x : (u,x,y₁) ∈ jointlyTypical}` の質量が `≤ exp(−n(I(X;Y₁|U)−4ε))`。
-
-**✅ CLOSED (4f394dae、sorryAx-free)**: card×per-seq route で closure。exponent は **4ε** (= 4 typicality window の slack、MAC atoms の 3ε と同型。plan 初稿の `−ε` は shorthand で AEP typicality からは証明不能 = likely false-as-framed だった)。full-support precondition `hpU`/`hK`/`hW` 追加 (regularity、監査確認予定)。`hy₁` は card×per-seq route では未使用 (benign warning)。`bc_achievability` が ε をスケールして吸収。
-
-- seed infra (conclusion form 確認済、ただし drop-in ではない):
-  - `conditionalTypicalSlice_card_le` (`SlepianWolf/ConditionalTypicalSlice.lean:140`) — **card 版・unconditional draw** なので slice の per-sequence mass を上乗せする必要あり。
-  - `conditionalTypeClass_card_ge` (`ConditionalMethodOfTypes/Core.lean:776`) + `productMass_eq_columnProd` (`Core.lean:815`) — per-column 質量 = kernel 積の分解。
-- 自作見積り **~120-200 行**。**Mathlib gap ではない** (in-project new-build、seed 3 本あり conclusion-shape 確認済) → `@residual(wall:...)` ではなく `@residual(plan:...)` 相当。
-- **この atom で家系全体を gate**。通れば GO、詰まれば下記撤退。
-
-## 再利用 MAC 資産 (plumbing = 純配線、read-only 呼出、file:line)
-
-signature 改変なし (既存 lemma を呼ぶだけ) → 共有 lemma ripple なし、`dep_consumers` 対象外。
-
-| 資産 | 場所 | 用途 |
-|---|---|---|
-| `macJointlyTypicalSet` + `_prob_tendsto_one` | `JointTypicality.lean:79` / `:195` | E0 (correct triple typical) vanishing |
-| `macJTS_indep_prob_le_both` | `AchievabilityCore.lean:182` | receiver-1 wrong-cloud (c) `P ≤ exp(−n(I(X;Y₁)−·))` |
-| `macJTS_indep_prob_le_X1` | `AchievabilityCore.lean:50` | receiver-2 cloud error `P ≤ exp(−n(I(U;Y₂)−·))` |
-| `mac_errorProbAt_le_bonferroni4` | `Achievability.lean:91` | per-receiver 3-subevent Bonferroni に ~50% rework |
-
-## Phase (Leg) 分解 (relay cap 8、各 leg は cold な次 leg が carryon で拾える粒度)
-
-M0 は inventory 側 dispatch (docs-only、`mathlib-inventory`)、実装 leg cap 8 には数えない。`proof-log` = 当該 leg で proof-log を残すか。
-
-| Phase | 内容 | risk | proof-log |
-|---|---|---|---|
-| **M0** | conditional random coding 側 API 在庫 (`bc-achievability-mathlib-inventory.md`)。対象: (i) `Kernel.pi`/`compProd`/`bind` の質量 lemma、(ii) `productMass_eq_columnProd` 質量版持ち上げに要る Kernel mass API、(iii) 4-entropy conditional MI の in-tree 補題 (converse family 資産の再利用可否)。per-lemma 構造化出力 (file:line + `[...]` verbatim) | 低 | no |
-| 1 | Skeleton (`Achievability.lean` 全 def + 全 theorem `:= by sorry` 型チェック通過) + `bcJointDistribution` + `bcInfo₁/₂` + region target。数値/型予測 verbatim 確認 (`bcInfo` の `EReal`/`ℝ` 境界が exponent 結論形と整合するか) | 低 | no |
-| 2 | two-tier codebook 型 + conditional codebook/ambient (compProd) def。satellite measure を **compProd / dependent** で構成 (flat product に潰さない)。`integral_compProd` が drop-in で効く shape に揃える | 中 | no |
-| 3 | receiver-2 cloud decoder + error via `macJTS_indep_prob_le_X1` 再利用 (cloud は iid `pU` draw なので MAC 資産直流用、conditional tier 不関与) | 中 | no |
-| 4 | receiver-1 joint decoder + per-receiver 3-subevent Bonferroni 再構成 (`mac_errorProbAt_le_bonferroni4` を 4→3 sub-event に ~50% rework)。error を (a) correct-pair miss / (b) wrong satellite・correct cloud / (c) wrong cloud に分解、(b)/(c) を Leg 5/7 注入 slot として穴あけ | 中 | **yes** |
-| **5** | **★ conditional-slice satellite prob atom (gate here)**。上記 seed を質量版へ持ち上げ + per-column kernel 積分解。反証チェック (`K`=Dirac / `bcInfo₁=0` 退化境界で statement が生きるか 1 度置換) | **高** | **yes** |
-| 6 | conditional random-coding swap (compProd marginalization)。satellite dependent measure `Πᵢ K(uᵢ)` を Leg 5 per-slice bound と接続、MAC の flat-product Fubini を compProd 版に差替え | 高 | **yes** |
-| 7 | wrong-cloud (c) `macJTS_indep_prob_le_both` 再利用 + Leg 4 の 3-subevent slot に (a)=vanishing/(b)=Leg5/(c)=本leg 注入して receiver-1 per-message error を組上げ | 中 | no |
-| 8 | `averageError₁∧₂ → 0` (rate slack から) + headline `bc_achievability` + 独立監査 (`honesty-auditor`、新 sorry/新 def 導入で orchestrator mandatory) + `InformationTheory.lean` root 配線 + README/roadmap Ch.15 同期 | 中 | no |
-
-8 leg 収束は **leg 5/6 (conditional tier) が validate すること**が条件。gateway-atom-first で leg 5 を早めに叩く。
-
-## 撤退ライン (L-BC1 / L-BC3 frozen slot)
-
-- **skeleton / 未実装 sorry の slug**: 本 plan が owner なので `@residual(plan:bc-achievability-plan)` (filename stem、audit-tags.md 慣習 line 59)。
-- **Leg 5/6 の conditional tier が in-session で閉じない (genuine wall) 場合のみ**: closure-plan-split 機構で `bc-superposition-inner-plan.md` を新規起草し、slug を `plan:bc-superposition-inner` に付替えて core を移管 (tier 2、**full statement 維持**)。それまでは本 plan が owner。
-  - Leg 5 atom / Leg 6 swap の sorry = 親 **L-BC1「joint typicality multi-receiver body」**に対応。
-  - headline 存在部の pass-through sorry = 親 **L-BC3「inner bound existence pass-through」**に対応。
-- **禁止 (tier-5 load-bearing)**: covering bound (★ atom) を `IsBCSuperpositionCoveringHypothesis` 等の `*Hypothesis` predicate に bundle して仮説で渡し body を機械展開だけにするのは **禁止** (CLAUDE.md「検証の誠実性」)。詰まったら必ず `sorry` + `@residual` で抜ける。degradedness / memoryless / full-support は precondition なので OK。
-- **shared 壁化の条件**: RD (`SlepianWolf`) / WynerZiv と共有な conditional-covering 壁が **真に** 現れたら (= 2+ family で shared sorry 補題として再利用が確定)、`audit-tags.md`「提案中 wall」の `relay-cf-wz-binning` / `csiszar-sum-conditional` の promote 判定に乗せて shared sorry-lemma 化。それまでは `plan:` slug で揃える (デフォルト方針)。**壁判定前に ★ atom を 1 本 dispatch** (gateway-atom-first)。
+| `bcJointDistribution pU K W` | `pU`→`K`→`W` compProd | `macJointDistribution` を U 先頭に拡張 |
+| `bcInfo₂ pU K W` | `I(U;Y₂)` (3-entropy) | `macInfo₂` parity |
+| `bcInfo₁ pU K W` | `I(X;Y₁\|U)` (4-entropy conditional MI) | 独立 def、★ atom exponent (4ε) と結論形整合 |
+| `bcInfoJoint pU K W` | `I((U,X);Y₁)` | receiver-1 wrong-cloud 用、degradedness superadditivity ゲートの対象 |
+| two-tier codebook | cloud iid `pU` / satellite compProd `K(U(w₂,i))` | satellite measure は dependent (MAC との唯一の構造差) |
 
 ## Settled facts
 
 | claim | confidence | 再検証 | notes |
 |---|---|---|---|
-| BC scaffolding (BroadcastCode/error/region) 既存・0 sorry | machine | `scripts/sig_view.ts InformationTheory/Shannon/BroadcastChannel/Basic.lean` | `Basic.lean` scaffolding |
-| ★ atom (conditional-slice satellite prob) は Mathlib gap でなく in-project new-build | machine | `#print axioms ...bc_conditional_slice_prob_le` | Leg 5 CLOSED (4f394dae、sorryAx-free) で機械裏取り済 |
+| `bc_achievability` proof-done (0 sorry / 0 @residual、sorryAx-free) | machine | `#print axioms InformationTheory.Shannon.BroadcastChannel.bc_achievability` (= 標準 3 公理) | Leg 8 CLOSED、独立監査 `@audit:ok` |
+| ★ atom (conditional-slice satellite prob) は Mathlib gap でなく in-project new-build | machine | `#print axioms ...bc_conditional_slice_prob_le` | Leg 5 CLOSED (4f394dae) |
 
 ## 判断ログ
 
-書く頻度: 方針変更 / 撤退 / 当初仮定の修正があったとき。決着済 entry は削除 (git が履歴)、active な判断のみ残す。
-
-1. **MAC↔BC 差分は codebook measure 形に局在 (設計軸)**: union bound / typicality-LLN / SLLN は MAC 資産で純配線、net-new は conditional (superposition) random coding 1 tier のみ。★ atom (Leg 5) を gateway-atom-first で最初に gate。
-2. **Degradedness fork = (a) 採用**: `X → Y₁ → Y₂` Markov を precondition で足し `bc_converse` の `h_deg_block` world と parity (regularity、非 load-bearing)。(b) general + `hRsum` は fallback。
-3. **slug 方針**: 未実装 sorry は `plan:bc-achievability-plan` (本 plan が owner)。conditional tier が genuine wall 化したら `bc-superposition-inner-plan.md` split + slug 付替え (closure plan 機構)。shared 壁化 (RD/SW 共有) は 2+ family 再利用が確定したときのみ promote。
+1. **MAC↔BC 差分は codebook measure 形に局在 (設計軸)**: net-new は conditional (superposition) random coding 1 tier のみ、★ atom を gateway-atom-first で最初に gate → GO で家系全体を validate。
+2. **Degradedness fork = (a) 採用**: `X → Y₁ → Y₂` Markov を precondition (regularity、非 load-bearing、独立監査確認)。closure では `bcInfoJoint ≥ bcInfo₁ + bcInfo₂` (superadditivity) を stochastic Markov `U→Y₁→Y₂` 自作 + DPI で genuine 化 = wrong-cloud を消す最終ゲート。
+3. **撤退スロット未使用**: L-BC1 (joint typicality multi-receiver body) / L-BC3 (existence pass-through) は取らずに済んだ (全 genuine)。closure-plan-split (`bc-superposition-inner`) も不要。covering bound は `*Hypothesis` predicate に bundle せず (tier-5 禁止) genuine atom で供給。
