@@ -2890,6 +2890,125 @@ theorem bc_achievability
         (_hM₂ : Nat.ceil (Real.exp ((n : ℝ) * R₂)) ≤ M₂)
         (c : BroadcastCode M₁ M₂ n α β₁ β₂),
         (c.averageErrorProb₁ W).toReal < ε' ∧ (c.averageErrorProb₂ W).toReal < ε' := by
-  sorry
+  classical
+  -- Degradedness supplies the joint-decoding rate-sum constraint `R₁ + R₂ < I((U, X); Y₁)`.
+  have hdeg_sum : bcInfo₁ pU K W + bcInfo₂ pU K W ≤ bcInfoJoint pU K W :=
+    bc_degraded_infoJoint_ge pU K W hdeg
+  have hRsum : R₁ + R₂ < bcInfoJoint pU K W := by linarith
+  -- Rate slack `ε = gap/8` (the receiver-1 wrong-satellite window is `4ε`, hence `/8`, not `/6`).
+  set gap : ℝ := min (min (bcInfo₁ pU K W - R₁) (bcInfo₂ pU K W - R₂))
+      (bcInfoJoint pU K W - (R₁ + R₂)) with hgap_def
+  have hgapA : gap ≤ bcInfo₁ pU K W - R₁ := le_trans (min_le_left _ _) (min_le_left _ _)
+  have hgapB : gap ≤ bcInfo₂ pU K W - R₂ := le_trans (min_le_left _ _) (min_le_right _ _)
+  have hgapC : gap ≤ bcInfoJoint pU K W - (R₁ + R₂) := min_le_right _ _
+  have hgap_pos : 0 < gap := lt_min (lt_min (by linarith) (by linarith)) (by linarith)
+  set ε : ℝ := gap / 8 with hε_def
+  have hε_pos : 0 < ε := by rw [hε_def]; linarith
+  have hgapb : 0 < bcInfo₁ pU K W - R₁ - 4 * ε := by rw [hε_def]; linarith
+  have hgap₂ : 0 < bcInfo₂ pU K W - R₂ - 3 * ε := by rw [hε_def]; linarith
+  have hgapc : 0 < bcInfoJoint pU K W - (R₁ + R₂) - 3 * ε := by rw [hε_def]; linarith
+  have hε'5 : 0 < ε' / 5 := by linarith
+  -- Threshold indices for the five vanishing contributions.
+  obtain ⟨N₀₂, hN₀₂⟩ := Filter.eventually_atTop.mp
+    ((bc_E0₂_vanishing pU K W hε_pos).eventually_lt_const hε'5)
+  obtain ⟨N₀₁, hN₀₁⟩ := Filter.eventually_atTop.mp
+    ((bc_E0₁_vanishing pU K W hε_pos).eventually_lt_const hε'5)
+  obtain ⟨N₂, hN₂⟩ := channelCoding_E2_lt_of_rate (I := bcInfo₂ pU K W) (R := R₂)
+    (ε := ε) (ε' := ε' / 5) hgap₂ hε'5
+  obtain ⟨Nb, hNb⟩ := channelCoding_E2_lt_of_rate (I := bcInfo₁ pU K W) (R := R₁)
+    (ε := 4 * ε / 3) (ε' := ε' / 5)
+    (by have h34 : 3 * (4 * ε / 3) = 4 * ε := by ring
+        rw [h34]; exact hgapb) hε'5
+  obtain ⟨Nc, hNc⟩ := bc_Ec_lt_of_rate (Ijoint := bcInfoJoint pU K W) (R₁ := R₁) (R₂ := R₂)
+    (ε := ε) (ε' := ε' / 5) _hR₁.le hgapc hε'5
+  refine ⟨max (max N₀₂ N₀₁) (max (max N₂ Nb) Nc), fun n hn ↦ ?_⟩
+  have hn₀₂ : N₀₂ ≤ n := le_trans (le_trans (le_max_left _ _) (le_max_left _ _)) hn
+  have hn₀₁ : N₀₁ ≤ n := le_trans (le_trans (le_max_right _ _) (le_max_left _ _)) hn
+  have hn₂ : N₂ ≤ n :=
+    le_trans (le_trans (le_trans (le_max_left _ _) (le_max_left _ _)) (le_max_right _ _)) hn
+  have hnb : Nb ≤ n :=
+    le_trans (le_trans (le_trans (le_max_right _ _) (le_max_left _ _)) (le_max_right _ _)) hn
+  have hnc : Nc ≤ n := le_trans (le_trans (le_max_right _ _) (le_max_right _ _)) hn
+  set M₁ : ℕ := Nat.ceil (Real.exp ((n : ℝ) * R₁)) with hM₁_def
+  set M₂ : ℕ := Nat.ceil (Real.exp ((n : ℝ) * R₂)) with hM₂_def
+  have hM₁_pos : 0 < M₁ := Nat.ceil_pos.mpr (Real.exp_pos _)
+  have hM₂_pos : 0 < M₂ := Nat.ceil_pos.mpr (Real.exp_pos _)
+  -- The two per-receiver random-codebook averaged bounds.
+  have h_avg₂ := bc_random_codebook_average₂_le (M₁ := M₁) (M₂ := M₂) (n := n)
+    pU K W hpU hK hW hM₁_pos hM₂_pos hε_pos
+  have h_avg₁ := bc_random_codebook_average₁_le (M₁ := M₁) (M₂ := M₂) (n := n)
+    pU K W hpU hK hW hM₁_pos hM₂_pos hε_pos
+  -- Each of the five contributions is `< ε'/5`.
+  have hE0₂ : ((bcAmbientMeasure pU K W).map
+        (fun ω ↦ (jointRV bcUs n ω, jointRV bcY₂s n ω))).real
+      { q | q ∉ jointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcY₂s n ε } < ε' / 5 :=
+    hN₀₂ n hn₀₂
+  have hE0₁ : ((bcAmbientMeasure pU K W).map
+        (fun ω ↦ (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcY₁s n ω))).real
+      { q | q ∉ macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε } < ε' / 5 :=
+    hN₀₁ n hn₀₁
+  have hexp₂ : ((M₂ : ℝ) - 1) * Real.exp ((n : ℝ) * (-(bcInfo₂ pU K W) + 3 * ε)) < ε' / 5 := by
+    rw [hM₂_def]; exact hN₂ n hn₂
+  have hexpb : ((M₁ : ℝ) - 1) * Real.exp ((n : ℝ) * (-(bcInfo₁ pU K W) + 4 * ε)) < ε' / 5 := by
+    rw [hM₁_def, show (n : ℝ) * (-(bcInfo₁ pU K W) + 4 * ε)
+        = (n : ℝ) * (-(bcInfo₁ pU K W) + 3 * (4 * ε / 3)) from by ring]
+    exact hNb n hnb
+  have hexpc : ((M₂ : ℝ) - 1) * (M₁ : ℝ) *
+      Real.exp ((n : ℝ) * (-(bcInfoJoint pU K W) + 3 * ε)) < ε' / 5 := by
+    rw [hM₂_def, hM₁_def]; exact hNc n hnc
+  -- The summed random-codebook bound `B`, and `B < ε'`.
+  set B : ℝ :=
+    (((bcAmbientMeasure pU K W).map
+          (fun ω ↦ (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcY₁s n ω))).real
+        { q | q ∉ macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε }
+      + ((M₁ : ℝ) - 1) * Real.exp ((n : ℝ) * (-(bcInfo₁ pU K W) + 4 * ε))
+      + ((M₂ : ℝ) - 1) * (M₁ : ℝ) * Real.exp ((n : ℝ) * (-(bcInfoJoint pU K W) + 3 * ε)))
+    + (((bcAmbientMeasure pU K W).map
+          (fun ω ↦ (jointRV bcUs n ω, jointRV bcY₂s n ω))).real
+        { q | q ∉ jointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcY₂s n ε }
+      + ((M₂ : ℝ) - 1) * Real.exp ((n : ℝ) * (-(bcInfo₂ pU K W) + 3 * ε))) with hB_def
+  have hB_lt : B < ε' := by rw [hB_def]; linarith
+  -- The summed averaged error is `≤ B` (split the two receivers additively).
+  have h_avg_le :
+      ∑ cU : BCCloudCodebook M₂ n U, (bcCloudCodebookMeasure pU M₂ n).real {cU}
+        * ∑ cX : BCSatelliteCodebook M₁ M₂ n α,
+            (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX}
+              * (((bcCodebookToCode pU K W hM₁_pos hM₂_pos ε cU cX).averageErrorProb₁ W).toReal
+                 + ((bcCodebookToCode pU K W hM₁_pos hM₂_pos ε cU cX).averageErrorProb₂ W).toReal)
+        ≤ B := by
+    rw [hB_def]
+    calc ∑ cU : BCCloudCodebook M₂ n U, (bcCloudCodebookMeasure pU M₂ n).real {cU}
+          * ∑ cX : BCSatelliteCodebook M₁ M₂ n α,
+              (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX}
+                * (((bcCodebookToCode pU K W hM₁_pos hM₂_pos ε cU cX).averageErrorProb₁ W).toReal
+                   + ((bcCodebookToCode pU K W hM₁_pos hM₂_pos ε cU cX).averageErrorProb₂ W).toReal)
+        = (∑ cU : BCCloudCodebook M₂ n U, (bcCloudCodebookMeasure pU M₂ n).real {cU}
+              * ∑ cX : BCSatelliteCodebook M₁ M₂ n α,
+                  (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX}
+                    * ((bcCodebookToCode pU K W hM₁_pos hM₂_pos ε cU cX).averageErrorProb₁ W).toReal)
+          + (∑ cU : BCCloudCodebook M₂ n U, (bcCloudCodebookMeasure pU M₂ n).real {cU}
+              * ∑ cX : BCSatelliteCodebook M₁ M₂ n α,
+                  (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX}
+                    * ((bcCodebookToCode pU K W hM₁_pos hM₂_pos ε cU cX).averageErrorProb₂ W).toReal)
+          := bc_weighted_two_tier_add
+            (fun cU ↦ (bcCloudCodebookMeasure pU M₂ n).real {cU})
+            (fun cU cX ↦ (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX})
+            (fun cU cX ↦
+              ((bcCodebookToCode pU K W hM₁_pos hM₂_pos ε cU cX).averageErrorProb₁ W).toReal)
+            (fun cU cX ↦
+              ((bcCodebookToCode pU K W hM₁_pos hM₂_pos ε cU cX).averageErrorProb₂ W).toReal)
+      _ ≤ _ := add_le_add h_avg₁ h_avg₂
+  -- Pigeonhole to a deterministic codebook pair, then split the summed error.
+  obtain ⟨cU, cX, hcb⟩ := bc_exists_codebook_le_avg pU K W hM₁_pos hM₂_pos B h_avg_le
+  have hsum_lt : ((bcCodebookToCode pU K W hM₁_pos hM₂_pos ε cU cX).averageErrorProb₁ W).toReal
+      + ((bcCodebookToCode pU K W hM₁_pos hM₂_pos ε cU cX).averageErrorProb₂ W).toReal < ε' :=
+    lt_of_le_of_lt hcb hB_lt
+  have hnn₁ : 0 ≤ ((bcCodebookToCode pU K W hM₁_pos hM₂_pos ε cU cX).averageErrorProb₁ W).toReal :=
+    ENNReal.toReal_nonneg
+  have hnn₂ : 0 ≤ ((bcCodebookToCode pU K W hM₁_pos hM₂_pos ε cU cX).averageErrorProb₂ W).toReal :=
+    ENNReal.toReal_nonneg
+  refine ⟨M₁, M₂, le_refl _, le_refl _, bcCodebookToCode pU K W hM₁_pos hM₂_pos ε cU cX, ?_, ?_⟩
+  · linarith
+  · linarith
 
 end InformationTheory.Shannon.BroadcastChannel
