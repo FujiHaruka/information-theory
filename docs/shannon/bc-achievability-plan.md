@@ -11,12 +11,12 @@
 
 ## 進捗
 
-- [ ] M0 — conditional random coding 側 Mathlib/in-project API 在庫 📋 → `bc-achievability-mathlib-inventory.md` (別 agent `mathlib-inventory`)
-- [ ] Leg 1 — skeleton + `bcJointDistribution` + `bcInfo₁/₂` + region target 📋
-- [ ] Leg 2 — two-tier codebook 型 + conditional codebook/ambient (compProd) def 📋
+- [~] M0 — inventory は advisor 精査が代替 (seed 3 本 file:line 確認済)。独立 inventory phase は skip。
+- [x] Leg 1 — skeleton + `bcJointDistribution` + `bcInfo₁/₂` + region target ✅ (cfd4a595、type-check done、監査 PASS)
+- [~] Leg 2 — two-tier codebook 型 + conditional codebook/ambient (compProd) def。**BC-ambient iid infra は Leg 5 で建造済** (bcAmbient_* coord lemmas / marginal factorization / positivity)。codebook averaging swap は残 (Leg 6)
 - [ ] Leg 3 — receiver-2 cloud decoder + error via `macJTS_indep_prob_le_X1` 再利用 📋
 - [ ] Leg 4 — receiver-1 joint decoder + per-receiver 3-subevent Bonferroni 再構成 📋
-- [ ] Leg 5 — ★ conditional-slice satellite prob atom (HIGH RISK、家系 gate) 📋
+- [x] Leg 5 — ★ conditional-slice satellite prob atom ✅ **CLOSED** (`bc_conditional_slice_prob_le`、4f394dae、sorryAx-free、**家系 GO**。card×per-seq route、exponent 4ε、seed 3 本 as-advertised、Mathlib gap なし)
 - [ ] Leg 6 — conditional random-coding swap (compProd marginalization、HIGH RISK) 📋
 - [ ] Leg 7 — wrong-cloud (c) `macJTS_indep_prob_le_both` 再利用 + assemble 📋
 - [ ] Leg 8 — `averageError₁∧₂ → 0` + headline `bc_achievability` + 独立監査 + root 配線 📋
@@ -60,7 +60,7 @@ theorem bc_achievability
 |---|---|---|
 | `bcJointDistribution pU K W` | `Measure (U × α × β₁ × β₂)` = `pU`→`K`→`W` の compProd | `macJointDistribution` (`IIDAmbient.lean:48`) を U 先頭に one-tier 拡張 |
 | `bcInfo₂ pU K W` | `H(U)+H(Y₂)−H(U,Y₂)` (= `I(U;Y₂)`) | `macInfo₂` (`Achievability.lean:225`) と同じ 3-entropy 形 |
-| `bcInfo₁ pU K W` | `H(U,X)+H(U,Y₁)−H(U,X,Y₁)−H(U)` (= `I(X;Y₁\|U)`) | **4-entropy 式・conditional MI**。macInfo は unconditional なので純 relabel でない → **独立 def**。★ atom exponent (`exp(−n(bcInfo₁−ε))`) と型・結論形を揃える |
+| `bcInfo₁ pU K W` | `H(U,X)+H(U,Y₁)−H(U,X,Y₁)−H(U)` (= `I(X;Y₁\|U)`) | **4-entropy 式・conditional MI**。macInfo は unconditional なので純 relabel でない → **独立 def**。★ atom exponent (`exp(−n(bcInfo₁−4ε))`、4ε = 4 typicality window slack) と型・結論形を揃える |
 | two-tier codebook | cloud `Fin M₂ → (Fin n → U)` iid `pU`; satellite `Fin M₁ × Fin M₂ → (Fin n → α)` を `K(U(w₂,i))` から draw | satellite measure は **compProd / dependent**、flat product ではない ← MAC との唯一の構造差 |
 
 ## Degradedness fork
@@ -74,7 +74,9 @@ theorem bc_achievability
 
 **conditional-independence satellite typicality probability bound** (superposition covering step、receiver-1 の "wrong satellite, correct cloud" 部分事象 (b)):
 
-> typical cloud `u` と受信 `y₁` に対し、conditional-product measure `Πᵢ K(uᵢ)` での `{x : (u,x,y₁) ∈ jointlyTypical}` の質量が `≤ exp(−n(I(X;Y₁|U)−ε))`。
+> typical cloud `u` と受信 `y₁` に対し、conditional-product measure `Πᵢ K(uᵢ)` での `{x : (u,x,y₁) ∈ jointlyTypical}` の質量が `≤ exp(−n(I(X;Y₁|U)−4ε))`。
+
+**✅ CLOSED (4f394dae、sorryAx-free)**: card×per-seq route で closure。exponent は **4ε** (= 4 typicality window の slack、MAC atoms の 3ε と同型。plan 初稿の `−ε` は shorthand で AEP typicality からは証明不能 = likely false-as-framed だった)。full-support precondition `hpU`/`hK`/`hW` 追加 (regularity、監査確認予定)。`hy₁` は card×per-seq route では未使用 (benign warning)。`bc_achievability` が ε をスケールして吸収。
 
 - seed infra (conclusion form 確認済、ただし drop-in ではない):
   - `conditionalTypicalSlice_card_le` (`SlepianWolf/ConditionalTypicalSlice.lean:140`) — **card 版・unconditional draw** なので slice の per-sequence mass を上乗せする必要あり。
