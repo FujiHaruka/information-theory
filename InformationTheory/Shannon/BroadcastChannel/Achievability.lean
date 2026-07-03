@@ -559,7 +559,8 @@ This is the receiver-1 "wrong satellite, correct cloud" sub-event of the superpo
 random-coding argument (Cover–Thomas Thm 15.6.2); the exponent matches `bcInfo₁`, with the
 `4ε` slack the sum of the four entropy-typicality windows (matching the `3ε` slack of the
 MAC atoms `macJTS_indep_prob_le_*`).  Full support (`hpU`/`hK`/`hW`) is a regularity
-precondition of the AEP mass bounds, not load-bearing. -/
+precondition of the AEP mass bounds, not load-bearing.
+@audit:ok -/
 theorem bc_conditional_slice_prob_le
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
