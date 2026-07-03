@@ -2028,6 +2028,256 @@ theorem bc_random_codebook_Ec_swap
   rw [hreorder]
   exact bc_joint_indep_prob_le pU K W hpU hK hW n hε
 
+/-! ### Assembly (superposition random-coding, two receivers)
+
+The receiver-1/receiver-2 swap lemmas above are stitched into the headline through the
+same skeleton as the MAC achievability assembly (`InformationTheory.Shannon.MAC`
+`Achievability.lean`), adapted to the two-tier (cloud / conditional-satellite) codebook and
+the two per-receiver error probabilities:
+
+* **C.1** — E0 vanishing: the correct-cloud (`(U, Y₂)`) and correct-triple (`(U, X, Y₁)`)
+  atypical masses tend to `0` (AEP / LLN).
+* **C.2** — per-codebook `averageErrorProb.toReal` decomposition into the Bonferroni terms.
+* **C.3** — two-codebook average bounds (weight-summed swaps).
+* **C.4** — pigeonhole to a deterministic codebook pair.
+* **C.5** — rate-slack vanishing + degradedness `I((U, X); Y₁) ≥ I(X; Y₁ ∣ U) + I(U; Y₂)`.
+-/
+
+/-- Pairwise independence of any BC coordinate selector under the ambient measure. -/
+lemma bcAmbient_pairwise_coord {γ : Type*} [MeasurableSpace γ]
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (g : U × α × β₁ × β₂ → γ) (hg : Measurable g) :
+    Pairwise fun i j ↦
+      IndepFun (fun ω : ℕ → U × α × β₁ × β₂ ↦ g (ω i)) (fun ω ↦ g (ω j))
+        (bcAmbientMeasure pU K W) := by
+  intro i j hij
+  exact (bcAmbient_iIndepFun_coord pU K W g hg).indepFun hij
+
+/-! #### C.1 — E0 vanishing -/
+
+/-- **`(U, X, Y₁)` channel fold.**  The `(U, X, Y₁)`-block law of a finite set `T` equals the
+cloud/satellite/channel average of the `β₁`-projected channel mass.  Receiver-1 analogue of
+`bc_chan_fold_UY₂_set`, obtained from the master fold by projecting the pair output to `β₁`.
+@residual(plan:bc-achievability-plan) -/
+lemma bc_chan_fold_UXY₁_set
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (n : ℕ) (T : Set ((Fin n → U) × (Fin n → α) × (Fin n → β₁))) :
+    ((bcAmbientMeasure pU K W).map
+        (fun ω ↦ (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcY₁s n ω))).real T
+      = ∑ u : Fin n → U, ∑ x : Fin n → α,
+          (Measure.pi (fun _ : Fin n ↦ pU)).real {u}
+            * (Measure.pi (fun l ↦ K (u l))).real {x}
+            * (Measure.pi (fun i ↦ W (x i))).real {y | (u, x, fun i ↦ (y i).1) ∈ T} := by
+  sorry
+
+/-- **Receiver-1 correct-triple averaged swap (E0).**  The two-tier random-codebook average of
+the correct-triple atypical event equals the joint `(U, X, Y₁)`-block law of the atypical set.
+Receiver-1 analogue of `bc_random_codebook_E0₂_swap`.
+@residual(plan:bc-achievability-plan) -/
+theorem bc_random_codebook_E0₁_swap
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hpU : ∀ u : U, 0 < pU.real {u}) (hK : ∀ (u : U) (a : α), 0 < (K u).real {a})
+    (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
+    {M₁ M₂ n : ℕ} {ε : ℝ}
+    (m : Fin M₁ × Fin M₂) :
+    ∑ cU : BCCloudCodebook M₂ n U, (bcCloudCodebookMeasure pU M₂ n).real {cU}
+        * ∑ cX : BCSatelliteCodebook M₁ M₂ n α,
+            (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX}
+              * (Measure.pi (fun i ↦ W (cX m i))).real
+                  { y : Fin n → β₁ × β₂ |
+                    (cU m.2, cX m, fun i ↦ (y i).1)
+                      ∉ macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε }
+      = ((bcAmbientMeasure pU K W).map
+            (fun ω ↦ (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcY₁s n ω))).real
+          { q : (Fin n → U) × (Fin n → α) × (Fin n → β₁) |
+            q ∉ macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε } := by
+  sorry
+
+/-- **Receiver-2 E0 vanishing.**  The correct-cloud atypical `(U, Y₂)`-block mass tends to `0`
+by the two-variable joint AEP (`jointlyTypicalSet_prob_tendsto_one`).
+@residual(plan:bc-achievability-plan) -/
+theorem bc_E0₂_vanishing
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    {ε : ℝ} (hε : 0 < ε) :
+    Filter.Tendsto
+      (fun n : ℕ ↦
+        ((bcAmbientMeasure pU K W).map
+            (fun ω ↦ (jointRV bcUs n ω, jointRV bcY₂s n ω))).real
+          { q : (Fin n → U) × (Fin n → β₂) |
+            q ∉ jointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcY₂s n ε })
+      Filter.atTop (nhds 0) := by
+  sorry
+
+/-- **Receiver-1 E0 vanishing.**  The correct-triple atypical `(U, X, Y₁)`-block mass tends to
+`0` by the three-variable joint AEP (`macJointlyTypicalSet_prob_tendsto_one`).
+@residual(plan:bc-achievability-plan) -/
+theorem bc_E0₁_vanishing
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    {ε : ℝ} (hε : 0 < ε) :
+    Filter.Tendsto
+      (fun n : ℕ ↦
+        ((bcAmbientMeasure pU K W).map
+            (fun ω ↦ (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcY₁s n ω))).real
+          { q : (Fin n → U) × (Fin n → α) × (Fin n → β₁) |
+            q ∉ macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε })
+      Filter.atTop (nhds 0) := by
+  sorry
+
+/-! #### C.2 — per-codebook `averageErrorProb.toReal` decomposition -/
+
+/-- **Receiver-2 per-codebook averaging bound.**  The `.toReal` of the receiver-2 average error
+probability of the deterministic code `bcCodebookToCode cU cX` is at most the uniform average of
+the two-event Bonferroni bound (`bc_errorProbAt₂_le_bonferroni`).
+@residual(plan:bc-achievability-plan) -/
+theorem bc_averageErrorProb₂_toReal_le
+    (pU : Measure U) (K : Kernel U α) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    {M₁ M₂ n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) {ε : ℝ}
+    (cU : BCCloudCodebook M₂ n U) (cX : BCSatelliteCodebook M₁ M₂ n α) :
+    ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).averageErrorProb₂ W).toReal
+      ≤ ((M₁ * M₂ : ℕ) : ℝ)⁻¹ * ∑ m : Fin M₁ × Fin M₂,
+          ((Measure.pi (fun i ↦ W (cX m i))).real
+              { y : Fin n → β₁ × β₂ |
+                (cU m.2, fun i ↦ (y i).2) ∉
+                  jointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcY₂s n ε }
+            + ∑ w₂' ∈ (Finset.univ : Finset (Fin M₂)).erase m.2,
+                (Measure.pi (fun i ↦ W (cX m i))).real
+                  { y : Fin n → β₁ × β₂ |
+                    (cU w₂', fun i ↦ (y i).2) ∈
+                      jointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcY₂s n ε }) := by
+  sorry
+
+/-- **Receiver-1 per-codebook averaging bound.**  The `.toReal` of the receiver-1 average error
+probability of `bcCodebookToCode cU cX` is at most the uniform average of the three-event
+Bonferroni bound (`bc_errorProbAt₁_le_bonferroni3`).
+@residual(plan:bc-achievability-plan) -/
+theorem bc_averageErrorProb₁_toReal_le
+    (pU : Measure U) (K : Kernel U α) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    {M₁ M₂ n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) {ε : ℝ}
+    (cU : BCCloudCodebook M₂ n U) (cX : BCSatelliteCodebook M₁ M₂ n α) :
+    ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).averageErrorProb₁ W).toReal
+      ≤ ((M₁ * M₂ : ℕ) : ℝ)⁻¹ * ∑ m : Fin M₁ × Fin M₂,
+          ((Measure.pi (fun i ↦ W (cX m i))).real
+              { y : Fin n → β₁ × β₂ |
+                (cU m.2, cX m, fun i ↦ (y i).1) ∉
+                  macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε }
+            + ∑ m₁' ∈ (Finset.univ : Finset (Fin M₁)).erase m.1,
+                (Measure.pi (fun i ↦ W (cX m i))).real
+                  { y : Fin n → β₁ × β₂ |
+                    (cU m.2, cX (m₁', m.2), fun i ↦ (y i).1) ∈
+                      macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε }
+            + ∑ p ∈ ((Finset.univ : Finset (Fin M₂)).erase m.2) ×ˢ
+                      (Finset.univ : Finset (Fin M₁)),
+                (Measure.pi (fun i ↦ W (cX m i))).real
+                  { y : Fin n → β₁ × β₂ |
+                    (cU p.1, cX (p.2, p.1), fun i ↦ (y i).1) ∈
+                      macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε }) := by
+  sorry
+
+/-! #### C.3 — two-codebook average bounds -/
+
+/-- **Receiver-2 two-codebook average bound.**  The random-codebook expectation of the
+receiver-2 average error is at most the (vanishing) E0 mass plus the wrong-cloud exponent.
+@residual(plan:bc-achievability-plan) -/
+theorem bc_random_codebook_average₂_le
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hpU : ∀ u : U, 0 < pU.real {u}) (hK : ∀ (u : U) (a : α), 0 < (K u).real {a})
+    (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
+    {M₁ M₂ n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) {ε : ℝ} (hε : 0 < ε) :
+    ∑ cU : BCCloudCodebook M₂ n U, (bcCloudCodebookMeasure pU M₂ n).real {cU}
+        * ∑ cX : BCSatelliteCodebook M₁ M₂ n α,
+            (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX}
+              * ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).averageErrorProb₂ W).toReal
+      ≤ ((bcAmbientMeasure pU K W).map
+            (fun ω ↦ (jointRV bcUs n ω, jointRV bcY₂s n ω))).real
+          { q | q ∉ jointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcY₂s n ε }
+        + ((M₂ : ℝ) - 1) * Real.exp ((n : ℝ) * (-(bcInfo₂ pU K W) + 3 * ε)) := by
+  sorry
+
+/-- **Receiver-1 two-codebook average bound.**  The random-codebook expectation of the
+receiver-1 average error is at most the (vanishing) E0 mass plus the wrong-satellite (`E_b`)
+and wrong-cloud (`E_c`) exponents.
+@residual(plan:bc-achievability-plan) -/
+theorem bc_random_codebook_average₁_le
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hpU : ∀ u : U, 0 < pU.real {u}) (hK : ∀ (u : U) (a : α), 0 < (K u).real {a})
+    (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
+    {M₁ M₂ n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) {ε : ℝ} (hε : 0 < ε) :
+    ∑ cU : BCCloudCodebook M₂ n U, (bcCloudCodebookMeasure pU M₂ n).real {cU}
+        * ∑ cX : BCSatelliteCodebook M₁ M₂ n α,
+            (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX}
+              * ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).averageErrorProb₁ W).toReal
+      ≤ ((bcAmbientMeasure pU K W).map
+            (fun ω ↦ (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcY₁s n ω))).real
+          { q | q ∉ macJointlyTypicalSet (bcAmbientMeasure pU K W) bcUs bcXs bcY₁s n ε }
+        + ((M₁ : ℝ) - 1) * Real.exp ((n : ℝ) * (-(bcInfo₁ pU K W) + 4 * ε))
+        + ((M₂ : ℝ) - 1) * (M₁ : ℝ) *
+            Real.exp ((n : ℝ) * (-(bcInfoJoint pU K W) + 3 * ε)) := by
+  sorry
+
+/-! #### C.4 — random → deterministic (two-tier pigeonhole) -/
+
+/-- **Two-tier pigeonhole.**  If the random-codebook expectation of the summed per-receiver
+errors is `≤ B`, some deterministic cloud/satellite codebook pair achieves the summed error
+`≤ B`.  Bounding the *sum* lets a single codebook meet both receivers' targets simultaneously.
+@residual(plan:bc-achievability-plan) -/
+theorem bc_exists_codebook_le_avg
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    {M₁ M₂ n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) {ε : ℝ} (B : ℝ)
+    (h_avg :
+      ∑ cU : BCCloudCodebook M₂ n U, (bcCloudCodebookMeasure pU M₂ n).real {cU}
+        * ∑ cX : BCSatelliteCodebook M₁ M₂ n α,
+            (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX}
+              * (((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).averageErrorProb₁ W).toReal
+                 + ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).averageErrorProb₂ W).toReal) ≤ B) :
+    ∃ (cU : BCCloudCodebook M₂ n U) (cX : BCSatelliteCodebook M₁ M₂ n α),
+      ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).averageErrorProb₁ W).toReal
+        + ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).averageErrorProb₂ W).toReal ≤ B := by
+  sorry
+
+/-! #### C.5 — degradedness + rate slack -/
+
+/-- **Degradedness superadditivity.**  Under physical degradedness `X → Y₁ → Y₂`, the joint
+information `I((U, X); Y₁)` dominates the sum of the two per-receiver informations
+`I(X; Y₁ ∣ U) + I(U; Y₂)`.  Chain rule `I((U, X); Y₁) = I(U; Y₁) + I(X; Y₁ ∣ U)` plus data
+processing `I(U; Y₁) ≥ I(U; Y₂)`.  This makes the receiver-1 joint-decoding rate sum
+`R₁ + R₂ < I((U, X); Y₁)` follow automatically from the two corner constraints.
+@residual(plan:bc-achievability-plan) -/
+theorem bc_degraded_infoJoint_ge
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hdeg : IsBCDegraded W) :
+    bcInfo₁ pU K W + bcInfo₂ pU K W ≤ bcInfoJoint pU K W := by
+  sorry
+
+/-- **Receiver-1 wrong-cloud rate-slack vanishing (`E_c`).**  With the joint AEP gap
+`I((U, X); Y₁) − (R₁ + R₂) − 3ε > 0`, the wrong-cloud prefactor `(⌈exp(nR₂)⌉−1)·⌈exp(nR₁)⌉`
+times `exp(n(−I((U, X); Y₁) + 3ε))` falls below any tolerance for large `n`.
+@residual(plan:bc-achievability-plan) -/
+theorem bc_Ec_lt_of_rate {Ijoint R₁ R₂ ε ε' : ℝ}
+    (hgap : 0 < Ijoint - (R₁ + R₂) - 3 * ε) (hε' : 0 < ε') :
+    ∃ N : ℕ, ∀ n ≥ N,
+      ((Nat.ceil (Real.exp ((n : ℝ) * R₂)) : ℝ) - 1) *
+        (Nat.ceil (Real.exp ((n : ℝ) * R₁)) : ℝ) *
+        Real.exp ((n : ℝ) * (-Ijoint + 3 * ε)) < ε' := by
+  sorry
+
 /-! ### Headline: degraded broadcast achievability -/
 
 /-- **Broadcast channel achievability (degraded, superposition inner bound).**
