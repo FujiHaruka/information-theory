@@ -3,7 +3,7 @@
 > **Parent**: [`broadcast-channel-moonshot-plan.md`](broadcast-channel-moonshot-plan.md)
 > 撤退スロット = 親の frozen slug **L-BC1** (joint typicality multi-receiver body) / **L-BC3** (inner-bound existence pass-through)。
 
-**Status**: 起草 — 未着手 (relay 無人多 leg 実装用)。
+**Status**: 進行中 — Leg 1-6 genuine (receiver-2/receiver-1 の random-coding swap 全て sorryAx-free + 独立監査 `@audit:ok`)。残 = Leg 7 assembly + Leg 8 headline。残 sorry は headline `bc_achievability` **1 本のみ** (`@residual(plan:bc-achievability-plan)`)。
 **SoT**: [`docs/textbook-roadmap.md`](../textbook-roadmap.md) Ch.15 (Cover–Thomas Thm 15.6.2 の **達成側** = superposition inner bound)。詳細履歴は git。
 **再検証** (prose にキャッシュしない): `scripts/sig_view.ts --sorry InformationTheory/Shannon/BroadcastChannel/Achievability.lean` / `#print axioms InformationTheory.Shannon.BroadcastChannel.bc_achievability`。
 
@@ -13,13 +13,13 @@
 
 - [~] M0 — inventory は advisor 精査が代替 (seed 3 本 file:line 確認済)。独立 inventory phase は skip。
 - [x] Leg 1 — skeleton + `bcJointDistribution` + `bcInfo₁/₂` + region target ✅ (cfd4a595、type-check done、監査 PASS)
-- [~] Leg 2 — two-tier codebook 型 + conditional codebook/ambient (compProd) def。**BC-ambient iid infra は Leg 5 で建造済** (bcAmbient_* coord lemmas / marginal factorization / positivity)。codebook averaging swap は残 (Leg 6)
+- [x] Leg 2 — two-tier codebook 型 + conditional codebook/ambient (compProd) def ✅。**BC-ambient iid infra は Leg 5 で建造済** (bcAmbient_* coord lemmas / marginal factorization / positivity)。codebook averaging swap は Leg 6 で完了
 - [x] Leg 3 — receiver-2 cloud decoder/code scaffold + Bonferroni + indep bound ✅ (0a0221e2、`bcCloudTypicalDecoder`/`bcJointTypicalDecoder`/`bcCodebookToCode` def + `bc_errorProbAt₂_le_bonferroni`/`bc_cloud_indep_prob_le` 2本 genuine sorryAx-free。単一ユーザ `jointlyTypicalSet_indep_prob_le` 直用、conditional tier 不要を実証)
 - [x] Leg 4 — receiver-1 per-codebook 3-subevent Bonferroni ✅ (68efa06b、`bc_errorProbAt₁_le_bonferroni3` genuine sorryAx-free。`mac_errorProbAt_le_bonferroni4` 4→3 rework、E0 + E_b(wrong-sat/correct-cloud) + E_c(wrong-cloud/任意-sat)。E_b/E_c は measure 項のまま = Leg 6/7 で指数境界化)
 - [x] Leg 5 — ★ conditional-slice satellite prob atom ✅ **CLOSED** (`bc_conditional_slice_prob_le`、4f394dae、sorryAx-free、**家系 GO**。card×per-seq route、exponent 4ε、seed 3 本 as-advertised、Mathlib gap なし)
-- [~] Leg 6 — random-coding swap。**6a 完了** (ee6af6c8、監査 PASS): BC block-law/chan-fold 基盤 `bc_chan_fold_master`/`bc_chan_fold_Y₂_set` (pair 出力 β₂ 周辺化 = BC 固有点を局在) + receiver-2 flat-product `bc_random_codebook_wrongcloud_swap` genuine sorryAx-free (import `MultipleAccess.Achievability` 追加)。**残**: (i) `bc_random_codebook_E0₂_swap` (L1216、sorry+@residual、監査 PASS = TRUE-as-framed equality、closure = `bc_chan_fold_master` の (U,Y₂)-projection のみ **LLN 不要**) / (ii) **receiver-1 conditional compProd swap** (E_b→★atom `bc_conditional_slice_prob_le` 適用 / E_c→`macJTS_indep_prob_le_both`、HIGH RISK 本丸) = 未着手 📋
-- [ ] Leg 7 — receiver-2 E0 vanishing (2-var typicality-LLN) + `averageErrorProb₂` averaged bound 組上げ (Base 4) + receiver-1 wrong-cloud (c) assemble 📋
-- [ ] Leg 8 — `averageError₁∧₂ → 0` + headline `bc_achievability` + 独立監査 + root 配線 (`InformationTheory.lean` に import 追加) + README/roadmap 同期 📋
+- [x] Leg 6 — random-coding swap 群 ✅ **完了** (全 sorryAx-free + 独立監査 全 8 件 `@audit:ok`、5ec0063e)。**6a** (ee6af6c8): chan-fold 基盤 `bc_chan_fold_master`/`bc_chan_fold_Y₂_set` (pair 出力 β₂ 周辺化 = BC 固有点を局在) + receiver-2 wrong-cloud `bc_random_codebook_wrongcloud_swap` genuine。**(i) E0₂ swap** (d3c73151): `bc_random_codebook_E0₂_swap` genuine、correct-cloud (U,Y₂) joint fold `bc_chan_fold_UY₂_set` 追加、**LLN 不要**。**(ii) receiver-1 E_b/E_c averaged swap** (752c36fd): 新 def `bcInfoJoint` (= I((U,X);Y₁)) + `bc_conditional_slice_prob_le_uncond` / `bc_random_codebook_Eb_swap` (exp `bcInfo₁−4ε`) / `bc_random_codebook_Ec_swap` (exp `bcInfoJoint−3ε`) / `bc_joint_indep_prob_le` / `bc_chan_fold_Y₁_set` / `bc_block_law_UX_paired_singleton`。監査で bcInfoJoint 妥当・非バンドル・exponent 整合を確認。
+- [~] Leg 7 — **assembly (current)** 🚧 — receiver-2 E0 vanishing (2-var typicality-LLN) + `averageErrorProb₂` averaged bound 組上げ + receiver-1 E0 vanishing + E_b/E_c/wrong-cloud を Leg 4 の 3-subevent slot に注入して `averageErrorProb₁` averaged bound 組上げ。写経元 = MAC `mac_random_codebook_average_le` (`Achievability.lean:1755`、`mac_quad_aggregate` で 4 swap 束ね) / `mac_exists_codebook_le_avg` (`:1869`、pigeonhole 存在抽出)。**degradedness で `bcInfoJoint ≥ bcInfo₂ + bcInfo₁ > R₂ + R₁` を出して wrong-cloud を消す**。
+- [ ] Leg 8 — `averageError₁∧₂ → 0` (rate slack から) + headline `bc_achievability` + 独立監査 + root 配線 (`InformationTheory.lean` に import 追加) + README/roadmap Ch.15 同期 📋
 
 ## ゴール / Approach
 
@@ -122,23 +122,12 @@ M0 は inventory 側 dispatch (docs-only、`mathlib-inventory`)、実装 leg cap
 - **禁止 (tier-5 load-bearing)**: covering bound (★ atom) を `IsBCSuperpositionCoveringHypothesis` 等の `*Hypothesis` predicate に bundle して仮説で渡し body を機械展開だけにするのは **禁止** (CLAUDE.md「検証の誠実性」)。詰まったら必ず `sorry` + `@residual` で抜ける。degradedness / memoryless / full-support は precondition なので OK。
 - **shared 壁化の条件**: RD (`SlepianWolf`) / WynerZiv と共有な conditional-covering 壁が **真に** 現れたら (= 2+ family で shared sorry 補題として再利用が確定)、`audit-tags.md`「提案中 wall」の `relay-cf-wz-binning` / `csiszar-sum-conditional` の promote 判定に乗せて shared sorry-lemma 化。それまでは `plan:` slug で揃える (デフォルト方針)。**壁判定前に ★ atom を 1 本 dispatch** (gateway-atom-first)。
 
-## 親へ追記すべき backlink 行 (orchestrator が反映 — 本 plan は親を編集しない)
-
-親 `broadcast-channel-moonshot-plan.md` の「## Sub-plan 一覧」表に以下 1 行を追加:
-
-```
-| [`bc-achievability-plan.md`](bc-achievability-plan.md) | L-BC1/L-BC3 degraded BC achievability (superposition inner bound、`bc_achievability`、conditional random coding) | 起草 — 未着手 📋 |
-```
-
-併せて親 Status 行の「BC achievability (superposition inner bound) … は scope-out 継続」を「achievability は子 [`bc-achievability-plan.md`] で再開 (起草)」に更新すべき (親 Status は現状 achievability を scope-out と記載、本 plan 起草で drift。pre-commit が「子更新時に親 co-stage」を WARN するので同一 commit に親を含める)。
-
 ## Settled facts
 
 | claim | confidence | 再検証 | notes |
 |---|---|---|---|
 | BC scaffolding (BroadcastCode/error/region) 既存・0 sorry | machine | `scripts/sig_view.ts InformationTheory/Shannon/BroadcastChannel/Basic.lean` | `Basic.lean` scaffolding |
-| `Achievability.lean` 未作成 | machine | `ls InformationTheory/Shannon/BroadcastChannel/` | Leg 1 で新規 |
-| ★ atom は Mathlib gap でなく in-project new-build | human-judgment | — | advisor 精査、要 gateway-atom 再確認 (低信頼、Leg 5 dispatch で機械裏取り) |
+| ★ atom (conditional-slice satellite prob) は Mathlib gap でなく in-project new-build | machine | `#print axioms ...bc_conditional_slice_prob_le` | Leg 5 CLOSED (4f394dae、sorryAx-free) で機械裏取り済 |
 
 ## 判断ログ
 

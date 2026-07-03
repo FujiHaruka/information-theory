@@ -1,6 +1,6 @@
 # T3-C Broadcast Channel (degraded) Capacity Region ムーンショット計画 🌙
 
-**Status**: CLOSED ✅ — degraded BC converse single-letterization (Cover–Thomas Thm 15.6.2) を **L-BC2 再開で genuine closure 済**: headline `bc_converse` (auxiliary-variable 容量領域 membership) + 核 `bc_input_singleletterize` / `bc_singleletterize_bound₁` は `@audit:ok`・`InformationTheory.lean` 登録済 (子 [`bc-degraded-converse-plan.md`](bc-degraded-converse-plan.md))。BC achievability (superposition inner bound) は 2026-07-03 relay で **再開** (子 [`bc-achievability-plan.md`](bc-achievability-plan.md)、進行中)。一般 (non-degraded) BC + Marton (L-BC5) は scope-out 継続 (textbook-roadmap Ch.15)。
+**Status**: CLOSED ✅ — degraded BC converse single-letterization (Cover–Thomas Thm 15.6.2) を **L-BC2 再開で genuine closure 済**: headline `bc_converse` (auxiliary-variable 容量領域 membership) + 核 `bc_input_singleletterize` / `bc_singleletterize_bound₁` は `@audit:ok`・`InformationTheory.lean` 登録済 (子 [`bc-degraded-converse-plan.md`](bc-degraded-converse-plan.md))。BC achievability (superposition inner bound) は 2026-07-03 relay で **再開・進行中** (子 [`bc-achievability-plan.md`](bc-achievability-plan.md)): receiver-2/receiver-1 の random-coding swap 全て genuine + 独立監査 PASS、残るは assembly + headline `bc_achievability`。一般 (non-degraded) BC + Marton (L-BC5) は scope-out 継続 (textbook-roadmap Ch.15)。
 **SoT**: `docs/textbook-roadmap.md` Ch.15 + 子 plan。詳細履歴は git。
 
 > **Parent**:
@@ -18,4 +18,4 @@
 |---|---|---|
 | [`bc-degraded-converse-plan.md`](bc-degraded-converse-plan.md) | L-BC2 degraded converse single-letterization (`bc_converse` / `bc_input_singleletterize`、Route B) | CLOSED ✅ (genuine、`@audit:ok`、root 登録済) |
 | [`broadcast-channel-signature-rewrite-plan.md`](broadcast-channel-signature-rewrite-plan.md) | BC rate-bound declaration の defect → genuine signature rewrite | CLOSED ✅ |
-| [`bc-achievability-plan.md`](bc-achievability-plan.md) | BC (degraded) achievability = superposition inner bound (`bc_achievability`、Cover–Thomas Thm 15.6.2 達成側) | 進行中 (relay) — ★atom + recv2 vertical slice (decoder/Bonferroni/indep) + recv1 3-event Bonferroni + chan-fold 基盤 + recv2 wrong-cloud swap 全 genuine。残 = recv1 conditional swap (★本丸) + E0₂ + headline 組上げ |
+| [`bc-achievability-plan.md`](bc-achievability-plan.md) | BC (degraded) achievability = superposition inner bound (`bc_achievability`、Cover–Thomas Thm 15.6.2 達成側) | 進行中 (relay) — Leg 1-6 genuine: receiver-2/receiver-1 の random-coding swap 全て sorryAx-free + **独立監査 全 8 件 @audit:ok** (recv1 は新 def `bcInfoJoint` + E_b/E_c/E0₂ averaged swap)。残 = Leg 7 assembly (averaged bound 組上げ) + Leg 8 headline + 配線。残 sorry は headline `bc_achievability` 1 本のみ |
