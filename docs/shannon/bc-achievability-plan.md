@@ -15,11 +15,11 @@
 - [x] Leg 1 — skeleton + `bcJointDistribution` + `bcInfo₁/₂` + region target ✅ (cfd4a595、type-check done、監査 PASS)
 - [~] Leg 2 — two-tier codebook 型 + conditional codebook/ambient (compProd) def。**BC-ambient iid infra は Leg 5 で建造済** (bcAmbient_* coord lemmas / marginal factorization / positivity)。codebook averaging swap は残 (Leg 6)
 - [x] Leg 3 — receiver-2 cloud decoder/code scaffold + Bonferroni + indep bound ✅ (0a0221e2、`bcCloudTypicalDecoder`/`bcJointTypicalDecoder`/`bcCodebookToCode` def + `bc_errorProbAt₂_le_bonferroni`/`bc_cloud_indep_prob_le` 2本 genuine sorryAx-free。単一ユーザ `jointlyTypicalSet_indep_prob_le` 直用、conditional tier 不要を実証)
-- [ ] Leg 4 — receiver-1 joint decoder + per-receiver 3-subevent Bonferroni 再構成 📋
+- [x] Leg 4 — receiver-1 per-codebook 3-subevent Bonferroni ✅ (68efa06b、`bc_errorProbAt₁_le_bonferroni3` genuine sorryAx-free。`mac_errorProbAt_le_bonferroni4` 4→3 rework、E0 + E_b(wrong-sat/correct-cloud) + E_c(wrong-cloud/任意-sat)。E_b/E_c は measure 項のまま = Leg 6/7 で指数境界化)
 - [x] Leg 5 — ★ conditional-slice satellite prob atom ✅ **CLOSED** (`bc_conditional_slice_prob_le`、4f394dae、sorryAx-free、**家系 GO**。card×per-seq route、exponent 4ε、seed 3 本 as-advertised、Mathlib gap なし)
-- [ ] Leg 6 — conditional random-coding swap (compProd marginalization、HIGH RISK) 📋
-- [ ] Leg 7 — wrong-cloud (c) `macJTS_indep_prob_le_both` 再利用 + assemble 📋
-- [ ] Leg 8 — `averageError₁∧₂ → 0` + headline `bc_achievability` + 独立監査 + root 配線 📋
+- [~] Leg 6 — random-coding swap。**6a 完了** (ee6af6c8、監査 PASS): BC block-law/chan-fold 基盤 `bc_chan_fold_master`/`bc_chan_fold_Y₂_set` (pair 出力 β₂ 周辺化 = BC 固有点を局在) + receiver-2 flat-product `bc_random_codebook_wrongcloud_swap` genuine sorryAx-free (import `MultipleAccess.Achievability` 追加)。**残**: (i) `bc_random_codebook_E0₂_swap` (L1216、sorry+@residual、監査 PASS = TRUE-as-framed equality、closure = `bc_chan_fold_master` の (U,Y₂)-projection のみ **LLN 不要**) / (ii) **receiver-1 conditional compProd swap** (E_b→★atom `bc_conditional_slice_prob_le` 適用 / E_c→`macJTS_indep_prob_le_both`、HIGH RISK 本丸) = 未着手 📋
+- [ ] Leg 7 — receiver-2 E0 vanishing (2-var typicality-LLN) + `averageErrorProb₂` averaged bound 組上げ (Base 4) + receiver-1 wrong-cloud (c) assemble 📋
+- [ ] Leg 8 — `averageError₁∧₂ → 0` + headline `bc_achievability` + 独立監査 + root 配線 (`InformationTheory.lean` に import 追加) + README/roadmap 同期 📋
 
 ## ゴール / Approach
 
