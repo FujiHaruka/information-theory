@@ -247,13 +247,14 @@ regularity precondition**（load-bearing bundling でない）。**下流 CV へ
 ### CV — converse headline assemble
 **proof-log**: no（Gap 0/A/B′/C の組立 plumbing）
 
-- [ ] **（NEW、Gap C の `hac`/`hbc` 供給）pentagon well-formedness 補題** 2 本:
-  `mac_macInfo₁_le_macInfoBoth` / `mac_macInfo₂_le_macInfoBoth`（product 入力 `p₁⊗p₂` で
-  `macInfo₁ p₁ p₂ W ≤ macInfoBoth p₁ p₂ W` / `macInfo₂ ≤ macInfoBoth`）。チェーン則
-  `macInfoBoth − macInfo₁ = I(X₂;Y) ≥ 0` / `= I(X₁;Y) ≥ 0`（entropy 差の再配置 + MI 非負）。
-  **既存補題なし**（`rg` 確認）= 新規 ~40-80 行 × 2（共有 helper 化も可）。詰まれば **その 1 本のみ**
-  sorry + `@residual(plan:mac-timesharing-converse-plan)`。macInfo 定義は `Achievability.lean:218-236`
-  （`macInfo₁ = H(X₁)+H(X₂,Y)−H(X₁,X₂,Y) = I(X₁;(X₂,Y))` 等、verbatim 確認済）。
+- [x] **（Gap C の `hac`/`hbc` 供給）pentagon well-formedness 補題** 2 本 ✅ **proof-done sorryAx-free**
+  （commit `b7a7379f`、`TimeSharingConverse.lean`）: `mac_macInfo₁_le_macInfoBoth` /
+  `mac_macInfo₂_le_macInfoBoth`。**reconciliation bridge 経由が entropy-direct より lea**: `@audit:ok` 橋
+  `macInfo₁_eq_condMutualInfo_toReal` 等 + `mutualInfo_chain_rule`（`I((X₁,X₂);Y)=I(X₁;Y)+I(X₂;Y|X₁)`）
+  + `self_le_add_left` + `ENNReal.toReal_mono`（各 3 行）。予測「40-80 行 ×2」は over-budget だった
+  （bridge が既に condMutualInfo に押し込んでいた）→ **同 bridge に乗る Gap B′ も予測より軽い公算**。
+  precondition に `[StandardBorelSpace α_i]`（Proposal F、bridge 要求、honest regularity）追加、`import
+  Reconciliation` を追加（cycle なし）。
 - [ ] `mac_timesharing_converse`（上記 Goal signature）:
   達成 `(R₁,R₂) ∈ {MACAchievable}` から、Gap A で rate 不等式 → Gap 0 で ambient → Gap B′ で
   per-letter 点 `(macInfo₁ᵢ, macInfo₂ᵢ)` が `p₁ᵢ⊗p₂ᵢ` のペンタゴン点 → 上 well-formedness で
