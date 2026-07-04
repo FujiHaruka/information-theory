@@ -461,6 +461,118 @@ lemma macConverseMsg₁₂_uniform
     rw [macConverseAmbient]; exact Measure.fst_compProd _ _
   rw [hfst, macConverseInput_eq]
 
+/-- Codeword → output block kernel: given an encoded input-pair codeword `x = (x₁, x₂)`, the
+output law is the per-letter product `∏ᵢ W (x₁ i, x₂ i)` of the MAC channel. -/
+noncomputable def macConverseCodeKernel (W : MACChannel α₁ α₂ β) :
+    Kernel ((Fin n → α₁) × (Fin n → α₂)) (Fin n → β) :=
+  Kernel.ofFunOfCountable (fun x ↦ Measure.pi (fun i ↦ W (x.1 i, x.2 i)))
+
+instance macConverseCodeKernel_isMarkovKernel (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
+    IsMarkovKernel (macConverseCodeKernel (n := n) (α₁ := α₁) (α₂ := α₂) (β := β) W) := by
+  refine ⟨fun x ↦ ?_⟩
+  show IsProbabilityMeasure (Measure.pi (fun i ↦ W (x.1 i, x.2 i)))
+  infer_instance
+
+/-- Abstract Markov-chain factorization `M → g M → Y` for an ambient `ν ⊗ₘ κ` in which the
+message-to-output kernel `κ` factors through a deterministic encoder `g : M → Z` and a
+codeword kernel `Wcode : Z → Y` (i.e. `κ m = Wcode (g m)`).  This is the general shape behind
+the concrete MAC-converse Markov chain; it needs no product/pi structure, only the
+factorization `hκ`. -/
+private lemma isMarkovChain_of_compProd_encoder
+    {M Z Y : Type*}
+    [MeasurableSpace M] [StandardBorelSpace M] [Nonempty M]
+    [MeasurableSpace Z]
+    [MeasurableSpace Y] [StandardBorelSpace Y] [Nonempty Y]
+    (ν : Measure M) [IsProbabilityMeasure ν]
+    (g : M → Z) (hg : Measurable g)
+    (κ : Kernel M Y) [IsMarkovKernel κ]
+    (Wcode : Kernel Z Y) [IsMarkovKernel Wcode]
+    (hκ : ∀ m : M, κ m = Wcode (g m)) :
+    IsMarkovChain (ν ⊗ₘ κ)
+      (Prod.fst : M × Y → M)
+      (fun ω : M × Y ↦ g ω.1)
+      (Prod.snd : M × Y → Y) := by
+  set μ : Measure (M × Y) := ν ⊗ₘ κ with hμ_def
+  haveI : IsProbabilityMeasure μ := by rw [hμ_def]; infer_instance
+  set Xs : M × Y → M := Prod.fst with hXs_def
+  set Zc : M × Y → Z := fun ω ↦ g ω.1 with hZc_def
+  set Yo : M × Y → Y := Prod.snd with hYo_def
+  have hXs_meas : Measurable Xs := measurable_fst
+  have hZc_meas : Measurable Zc := hg.comp measurable_fst
+  have hYo_meas : Measurable Yo := measurable_snd
+  -- Message marginal `μ.map Xs = ν`, hence codeword law `μ.map Zc = ν.map g`.
+  have h_map_Xs : μ.map Xs = ν := by rw [hμ_def, hXs_def]; exact Measure.fst_compProd _ _
+  have h_map_Zc : μ.map Zc = ν.map g := by
+    have hcomp : Zc = g ∘ Xs := rfl
+    rw [hcomp, ← Measure.map_map hg hXs_meas, h_map_Xs]
+  -- Linchpin: `μ.map (Zc, Yo) = (μ.map Zc) ⊗ₘ Wcode`.
+  have h_pair_eq : μ.map (fun ω ↦ (Zc ω, Yo ω)) = (μ.map Zc) ⊗ₘ Wcode := by
+    rw [h_map_Zc]
+    refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
+    have hFmeas : Measurable (fun ω : M × Y ↦ f (Zc ω, Yo ω)) :=
+      hf.comp (hZc_meas.prodMk hYo_meas)
+    have hF_meas : Measurable (fun z : Z ↦ ∫⁻ y : Y, f (z, y) ∂(Wcode z)) :=
+      Measurable.lintegral_kernel_prod_right' (κ := Wcode) hf
+    rw [lintegral_map hf (hZc_meas.prodMk hYo_meas), hμ_def,
+      Measure.lintegral_compProd hFmeas, Measure.lintegral_compProd hf,
+      lintegral_map hF_meas hg]
+    refine lintegral_congr fun m ↦ ?_
+    rw [hκ]
+  -- Identify `condDistrib Yo Zc μ =ᵐ Wcode`.
+  haveI : IsProbabilityMeasure (μ.map Zc) :=
+    Measure.isProbabilityMeasure_map hZc_meas.aemeasurable
+  have hK_Y_eq : condDistrib Yo Zc μ =ᵐ[μ.map Zc] Wcode :=
+    condDistrib_ae_eq_of_measure_eq_compProd Zc hYo_meas.aemeasurable h_pair_eq
+  unfold IsMarkovChain
+  set K_X : Kernel Z M := condDistrib Xs Zc μ with hK_X_def
+  have h_compProd_eq :
+      (μ.map Zc) ⊗ₘ (K_X ×ₖ condDistrib Yo Zc μ) = (μ.map Zc) ⊗ₘ (K_X ×ₖ Wcode) := by
+    refine Measure.compProd_congr ?_
+    filter_upwards [hK_Y_eq] with a ha
+    ext s hs
+    rw [Kernel.prod_apply, Kernel.prod_apply, ha]
+  rw [h_compProd_eq]
+  -- Triple-joint factorization via `ext_of_lintegral`.
+  have h_LHS_meas : Measurable (fun ω ↦ (Zc ω, Xs ω, Yo ω)) :=
+    hZc_meas.prodMk (hXs_meas.prodMk hYo_meas)
+  have hKX_fold : (μ.map Zc) ⊗ₘ K_X = μ.map (fun ω ↦ (Zc ω, Xs ω)) :=
+    compProd_map_condDistrib (μ := μ) (X := Zc) (Y := Xs) hXs_meas.aemeasurable
+  refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
+  rw [lintegral_map hf h_LHS_meas, Measure.lintegral_compProd hf]
+  have h_inner_split : ∀ z : Z,
+      ∫⁻ p : M × Y, f (z, p.1, p.2) ∂((K_X ×ₖ Wcode) z)
+        = ∫⁻ x : M, ∫⁻ y : Y, f (z, x, y) ∂(Wcode z) ∂(K_X z) := by
+    intro z
+    rw [Kernel.prod_apply,
+      lintegral_prod (fun p : M × Y ↦ f (z, p.1, p.2))
+        (hf.comp (measurable_const.prodMk (measurable_fst.prodMk measurable_snd))).aemeasurable]
+  simp_rw [h_inner_split]
+  set G : Z × M → ℝ≥0∞ := fun p ↦ ∫⁻ y : Y, f (p.1, p.2, y) ∂(Wcode p.1) with hG_def
+  have hG_meas : Measurable G := by
+    let K' : Kernel (Z × M) Y := Wcode.comap (Prod.fst : Z × M → Z) measurable_fst
+    have h_eq_K' : G = fun p : Z × M ↦ ∫⁻ y : Y, f (p.1, p.2, y) ∂(K' p) := by
+      funext p; simp [G, K', Kernel.comap_apply]
+    rw [h_eq_K']
+    exact Measurable.lintegral_kernel_prod_right' (κ := K')
+      (f := fun pp : (Z × M) × Y ↦ f (pp.1.1, pp.1.2, pp.2))
+      (hf.comp (((measurable_fst.comp measurable_fst).prodMk
+        ((measurable_snd.comp measurable_fst).prodMk measurable_snd))))
+  have h_RHS_is_G : ∀ z : Z, ∀ x : M,
+      ∫⁻ y : Y, f (z, x, y) ∂(Wcode z) = G (z, x) := fun _ _ ↦ rfl
+  simp_rw [h_RHS_is_G]
+  have hFmeas2 : Measurable (fun ω : M × Y ↦ f (Zc ω, Xs ω, Yo ω)) := hf.comp h_LHS_meas
+  have hGmeas2 : Measurable (fun ω : M × Y ↦ G (Zc ω, Xs ω)) :=
+    hG_meas.comp (hZc_meas.prodMk hXs_meas)
+  rw [← Measure.lintegral_compProd hG_meas, hKX_fold,
+    lintegral_map hG_meas (hZc_meas.prodMk hXs_meas), hμ_def,
+    Measure.lintegral_compProd hFmeas2, Measure.lintegral_compProd hGmeas2]
+  refine lintegral_congr fun m ↦ ?_
+  rw [hκ]
+  have hRHSconst : (fun y : Y ↦ G (Zc (m, y), Xs (m, y)))
+      = (fun _ : Y ↦ ∫⁻ y' : Y, f (g m, m, y') ∂(Wcode (g m))) := by
+    funext y; show G (g m, m) = _; rw [hG_def]
+  rw [hRHSconst, lintegral_const, measure_univ, mul_one]
+
 /-- Memoryless-channel property of the constructed ambient: the per-letter output is conditionally
 independent of the other letters given the current input pair.
 @residual(plan:mac-timesharing-converse-plan) -/
@@ -498,7 +610,12 @@ lemma macConverse_isMarkovChain
       (fun ω ↦ ((fun j ↦ c.encoder₁ (macConverseMsg₁ ω) j),
         (fun j ↦ c.encoder₂ (macConverseMsg₂ ω) j)))
       (fun ω j ↦ macConverseYs j ω) := by
-  sorry
+  have h := isMarkovChain_of_compProd_encoder (M := Fin M₁ × Fin M₂)
+    (Z := (Fin n → α₁) × (Fin n → α₂)) (Y := Fin n → β)
+    (macConverseInput M₁ M₂)
+    (fun m ↦ (c.encoder₁ m.1, c.encoder₂ m.2)) (measurable_of_countable _)
+    (macConverseKernel c W) (macConverseCodeKernel W) (fun m ↦ rfl)
+  exact h
 
 /-- **MAC converse, from a bare code** (Gap 0 bridge).  For any two-user MAC block code `c` and
 Markov channel `W`, the canonical ambient measure `macConverseAmbient c W` discharges every
