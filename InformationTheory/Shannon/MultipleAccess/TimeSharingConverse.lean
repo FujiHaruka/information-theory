@@ -1386,7 +1386,7 @@ lemma mac_converse_shrunk_point_mem
     have hstep3 : (n : ℝ) * R₁ * (1 - Pe) ≤ (n : ℝ) * R₁ * (1 - Pe₁) :=
       mul_le_mul_of_nonneg_left (by linarith) (mul_nonneg (Nat.cast_nonneg n) hR₁)
     have key1 : (n : ℝ) * R₁ * (1 - Pe) ≤ S₁ + Real.log 2 := hstep3.trans (hstep2.trans hstep1)
-    rw [sub_le_iff_le_add, div_add_div_same, le_div_iff₀ hn',
+    rw [sub_le_iff_le_add, ← add_div, le_div_iff₀ hn',
       show R₁ * (1 - Pe) * (n : ℝ) = (n : ℝ) * R₁ * (1 - Pe) from by ring]
     exact key1
   -- user-2 clean Fano bound: `R₂(1-Pe) - log2/n ≤ S₂/n`
@@ -1403,7 +1403,7 @@ lemma mac_converse_shrunk_point_mem
     have hstep3 : (n : ℝ) * R₂ * (1 - Pe) ≤ (n : ℝ) * R₂ * (1 - Pe₂) :=
       mul_le_mul_of_nonneg_left (by linarith) (mul_nonneg (Nat.cast_nonneg n) hR₂)
     have key2 : (n : ℝ) * R₂ * (1 - Pe) ≤ S₂ + Real.log 2 := hstep3.trans (hstep2.trans hstep1)
-    rw [sub_le_iff_le_add, div_add_div_same, le_div_iff₀ hn',
+    rw [sub_le_iff_le_add, ← add_div, le_div_iff₀ hn',
       show R₂ * (1 - Pe) * (n : ℝ) = (n : ℝ) * R₂ * (1 - Pe) from by ring]
     exact key2
   -- sum clean Fano bound: `(R₁+R₂)(1-Pe) - log2/n ≤ Sb/n`
@@ -1428,7 +1428,7 @@ lemma mac_converse_shrunk_point_mem
     have hstepS2 : (n : ℝ) * (R₁ + R₂) * (1 - Pe) ≤ (Real.log (M₁ : ℝ) + Real.log (M₂ : ℝ)) * (1 - Pe) :=
       mul_le_mul_of_nonneg_right hnR12 (by linarith)
     have keyS : (n : ℝ) * (R₁ + R₂) * (1 - Pe) ≤ Sb + Real.log 2 := hstepS2.trans hstepS1
-    rw [sub_le_iff_le_add, div_add_div_same, le_div_iff₀ hn',
+    rw [sub_le_iff_le_add, ← add_div, le_div_iff₀ hn',
       show (R₁ + R₂) * (1 - Pe) * (n : ℝ) = (n : ℝ) * (R₁ + R₂) * (1 - Pe) from by ring]
     exact keyS
   -- identify the symbolic sums with the per-letter `macInfo` sums (Gap B′): distribute `.toReal`
@@ -1581,8 +1581,8 @@ lemma mac_timesharing_converse_axis2 (W : MACChannel α₁ α₂ β) [IsMarkovKe
   sorry
 
 /-- **MAC time-sharing converse (CV headline).**  Every achievable first-quadrant rate pair lies in
-the closed convex hull of the union of all per-input pentagons `macPentagon p₁ p₂ W` over probability
-inputs `p₁`, `p₂`.  Assembled by casework on whether each rate is zero or strictly positive:
+the closed convex hull of the union of all per-input pentagons `macPentagon p₁ p₂ W` over
+probability inputs `p₁`, `p₂`.  Assembled by casework on whether each rate is zero or positive:
 the interior case uses the Fano→0 limit `mac_timesharing_converse_interior`, the origin `(0,0)` lies
 in any pentagon, and the two axis cases are honest gaps (see `mac_timesharing_converse_axis1/2`). -/
 theorem mac_timesharing_converse (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
