@@ -589,7 +589,8 @@ forces `M₁ = ⌈exp (n·0)⌉ = 1`, so the two alias terms carrying the `(M₁
 `E3`) collapse to `0` and only the correct-pair atypicality `E0` (AEP) and the user-2 alias
 `E2` (controlled by `R₂ < macInfo₂`) remain.  The corner conditions `R₁ < macInfo₁` and
 `R₁ + R₂ < macInfoBoth` of `mac_achievability` — vacuous when `macInfo₁ ≤ 0` — are therefore
-not needed. -/
+not needed.
+@audit:ok -/
 theorem mac_axis1_achievable
     (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
     (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
@@ -686,7 +687,8 @@ omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
 /-- **Single-user axis (user 2 silent).**  The rate pair `(R₁, 0)` with `R₁ < macInfo₁` is
 achievable.  Symmetric to `mac_axis1_achievable`: `R₂ = 0` forces `M₂ = 1`, collapsing the
 `(M₂ - 1)`-carrying alias terms (`E2`, `E3`) and leaving only `E0` (AEP) and the user-1 alias
-`E1` (controlled by `R₁ < macInfo₁`). -/
+`E1` (controlled by `R₁ < macInfo₁`).
+@audit:ok -/
 theorem mac_axis2_achievable
     (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
     (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
@@ -785,7 +787,8 @@ omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
 /-- Every rate pair of a full-support product input's pentagon lies in the capacity region.
 Strictly-interior points are directly achievable (`mac_strict_interior_achievable`); every
 other point is a limit of interior points via a convex combination toward an interior
-witness. -/
+witness.
+@audit:ok -/
 theorem mac_pentagon_subset_capacityRegion
     (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
     (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
@@ -878,7 +881,8 @@ theorem mac_pentagon_subset_capacityRegion
 omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
 /-- **MAC time-sharing achievability (convex-hull form, Cover–Thomas Theorem 15.3.1).**  The
 closed convex hull of the per-input pentagons of full-support product inputs is contained in
-the operational capacity region. -/
+the operational capacity region.
+@audit:ok -/
 @[entry_point]
 theorem mac_achievability_region (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     (hW : ∀ a : α₁ × α₂, ∀ b : β, 0 < (W a).real {b}) :
