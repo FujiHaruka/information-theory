@@ -1,5 +1,6 @@
 import InformationTheory.Shannon.MultipleAccess.TimeSharing
 import InformationTheory.Shannon.MultipleAccess.Reconciliation
+import InformationTheory.Shannon.MultipleAccess.Converse
 import Mathlib.Analysis.Convex.Combination
 
 /-!
@@ -285,5 +286,268 @@ theorem mac_macInfo₂_le_macInfoBoth
     exact self_le_add_left _ _
 
 end PentagonWellFormedness
+
+/-! ### Code → ambient bridge (Gap 0)
+
+`mac_converse` is a *floating* message-level statement: it takes the ambient probability space
+`μ`, the message/output projections, and all the memoryless / Markov / independence / uniformity
+hypotheses as preconditions.  This section constructs, from a bare `MACCode c` and a Markov
+channel `W`, the canonical ambient measure
+
+`macConverseAmbient c W := (uniform on Fin M₁ × Fin M₂) ⊗ₘ (per-letter product channel)`
+
+on `Ω := (Fin M₁ × Fin M₂) × (Fin n → β)`, reads the messages and outputs off as coordinate
+projections, and discharges the `mac_converse` hypotheses.  The resulting bridge
+`mac_converse_from_code` is the true operational starting point of the converse. -/
+
+section CodeToAmbient
+
+open MeasureTheory ProbabilityTheory InformationTheory InformationTheory.Shannon
+open InformationTheory.Shannon.ChannelCodingConverseGeneral
+open scoped ENNReal
+
+variable {α₁ α₂ β : Type*}
+  [Fintype α₁] [DecidableEq α₁] [Nonempty α₁] [MeasurableSpace α₁]
+    [MeasurableSingletonClass α₁] [StandardBorelSpace α₁]
+  [Fintype α₂] [DecidableEq α₂] [Nonempty α₂] [MeasurableSpace α₂]
+    [MeasurableSingletonClass α₂] [StandardBorelSpace α₂]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
+    [MeasurableSingletonClass β] [StandardBorelSpace β]
+variable {M₁ M₂ n : ℕ}
+
+/-- The uniform probability law `(card X)⁻¹ • count` on a nonempty finite type. -/
+instance uniformCount_isProbabilityMeasure {X : Type*}
+    [Fintype X] [Nonempty X] [MeasurableSpace X] [MeasurableSingletonClass X] :
+    IsProbabilityMeasure ((Fintype.card X : ℝ≥0∞)⁻¹ • Measure.count : Measure X) := by
+  constructor
+  have hcard : (Measure.count (Set.univ : Set X)) = (Fintype.card X : ℝ≥0∞) := by
+    rw [Measure.count_apply_finite Set.univ Set.finite_univ]
+    simp
+  rw [Measure.smul_apply, smul_eq_mul, hcard,
+    ENNReal.inv_mul_cancel (by exact_mod_cast Fintype.card_ne_zero)
+      (ENNReal.natCast_ne_top _)]
+
+/-- Uniform input law on the message pair: the product of the two uniform message laws. -/
+noncomputable def macConverseInput (M₁ M₂ : ℕ) : Measure (Fin M₁ × Fin M₂) :=
+  ((Fintype.card (Fin M₁) : ℝ≥0∞)⁻¹ • Measure.count).prod
+    ((Fintype.card (Fin M₂) : ℝ≥0∞)⁻¹ • Measure.count)
+
+instance macConverseInput_isProbabilityMeasure [NeZero M₁] [NeZero M₂] :
+    IsProbabilityMeasure (macConverseInput M₁ M₂) := by
+  unfold macConverseInput; infer_instance
+
+/-- Per-letter product-channel kernel: given the message pair `m`, the output law is the product
+over the `n` letters of the channel `W` applied to the encoded pair `(encoder₁ m₁ i, encoder₂ m₂ i)`.
+The channel input is deterministic in the messages (through the encoders). -/
+noncomputable def macConverseKernel
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) :
+    Kernel (Fin M₁ × Fin M₂) (Fin n → β) :=
+  Kernel.ofFunOfCountable
+    (fun m ↦ Measure.pi (fun i ↦ W (c.encoder₁ m.1 i, c.encoder₂ m.2 i)))
+
+instance macConverseKernel_isMarkovKernel
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
+    IsMarkovKernel (macConverseKernel c W) := by
+  refine ⟨fun m ↦ ?_⟩
+  show IsProbabilityMeasure (Measure.pi (fun i ↦ W (c.encoder₁ m.1 i, c.encoder₂ m.2 i)))
+  infer_instance
+
+/-- Canonical ambient measure for the MAC converse: a uniform message pair passed through the
+per-letter product channel. -/
+noncomputable def macConverseAmbient
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) :
+    Measure ((Fin M₁ × Fin M₂) × (Fin n → β)) :=
+  (macConverseInput M₁ M₂) ⊗ₘ (macConverseKernel c W)
+
+instance macConverseAmbient_isProbabilityMeasure
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] :
+    IsProbabilityMeasure (macConverseAmbient c W) := by
+  unfold macConverseAmbient; infer_instance
+
+/-- Message-1 projection `ω ↦ ω.1.1`. -/
+def macConverseMsg₁ : ((Fin M₁ × Fin M₂) × (Fin n → β)) → Fin M₁ := fun ω ↦ ω.1.1
+
+/-- Message-2 projection `ω ↦ ω.1.2`. -/
+def macConverseMsg₂ : ((Fin M₁ × Fin M₂) × (Fin n → β)) → Fin M₂ := fun ω ↦ ω.1.2
+
+/-- Output projection `i ↦ ω ↦ ω.2 i`. -/
+def macConverseYs : Fin n → ((Fin M₁ × Fin M₂) × (Fin n → β)) → β := fun i ω ↦ ω.2 i
+
+omit [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β]
+  [StandardBorelSpace β] in
+lemma measurable_macConverseMsg₁ :
+    Measurable (macConverseMsg₁ (M₁ := M₁) (M₂ := M₂) (n := n) (β := β)) :=
+  measurable_fst.fst
+
+omit [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β]
+  [StandardBorelSpace β] in
+lemma measurable_macConverseMsg₂ :
+    Measurable (macConverseMsg₂ (M₁ := M₁) (M₂ := M₂) (n := n) (β := β)) :=
+  measurable_fst.snd
+
+omit [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β]
+  [StandardBorelSpace β] in
+lemma measurable_macConverseYs (i : Fin n) :
+    Measurable (macConverseYs (M₁ := M₁) (M₂ := M₂) (n := n) (β := β) i) :=
+  (measurable_pi_apply i).comp measurable_snd
+
+lemma macConverseInput_map_fst [NeZero M₁] [NeZero M₂] :
+    (macConverseInput M₁ M₂).map Prod.fst
+      = (Fintype.card (Fin M₁) : ℝ≥0∞)⁻¹ • Measure.count := by
+  unfold macConverseInput
+  rw [Measure.map_fst_prod, measure_univ, one_smul]
+
+lemma macConverseInput_map_snd [NeZero M₁] [NeZero M₂] :
+    (macConverseInput M₁ M₂).map Prod.snd
+      = (Fintype.card (Fin M₂) : ℝ≥0∞)⁻¹ • Measure.count := by
+  unfold macConverseInput
+  rw [Measure.map_snd_prod, measure_univ, one_smul]
+
+lemma macConverseInput_eq :
+    macConverseInput M₁ M₂ = (Fintype.card (Fin M₁ × Fin M₂) : ℝ≥0∞)⁻¹ • Measure.count := by
+  refine Measure.ext_of_singleton (fun q ↦ ?_)
+  obtain ⟨a, b⟩ := q
+  have hsgl : ({(a, b)} : Set (Fin M₁ × Fin M₂)) = {a} ×ˢ {b} := by
+    ext ⟨x, y⟩; simp [Prod.ext_iff]
+  have hR : ((Fintype.card (Fin M₁ × Fin M₂) : ℝ≥0∞)⁻¹ • Measure.count) {(a, b)}
+      = (Fintype.card (Fin M₁ × Fin M₂) : ℝ≥0∞)⁻¹ := by
+    rw [Measure.smul_apply, smul_eq_mul, Measure.count_singleton, mul_one]
+  have hL : (macConverseInput M₁ M₂) {(a, b)}
+      = (Fintype.card (Fin M₁) : ℝ≥0∞)⁻¹ * (Fintype.card (Fin M₂) : ℝ≥0∞)⁻¹ := by
+    unfold macConverseInput
+    rw [hsgl, Measure.prod_prod, Measure.smul_apply, Measure.smul_apply, smul_eq_mul,
+      smul_eq_mul, Measure.count_singleton, Measure.count_singleton, mul_one, mul_one]
+  rw [hL, hR, Fintype.card_prod, Nat.cast_mul,
+    ENNReal.mul_inv (Or.inr (ENNReal.natCast_ne_top _)) (Or.inl (ENNReal.natCast_ne_top _))]
+
+/-- The map `ω ↦ (Msg₁ ω, Msg₂ ω)` is the outer first projection `Prod.fst` on the ambient. -/
+lemma macConverse_msgPair_eq_fst :
+    (fun ω : (Fin M₁ × Fin M₂) × (Fin n → β) ↦ (macConverseMsg₁ ω, macConverseMsg₂ ω))
+      = Prod.fst := by
+  funext ω; exact Prod.mk.eta
+
+lemma macConverseMsg₁_uniform
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] :
+    (macConverseAmbient c W).map macConverseMsg₁
+      = (Fintype.card (Fin M₁) : ℝ≥0∞)⁻¹ • Measure.count := by
+  have hcomp : (macConverseMsg₁ (M₁ := M₁) (M₂ := M₂) (n := n) (β := β))
+      = Prod.fst ∘ Prod.fst := rfl
+  rw [hcomp, ← Measure.map_map measurable_fst measurable_fst]
+  have hfst : (macConverseAmbient c W).map Prod.fst = macConverseInput M₁ M₂ := by
+    rw [macConverseAmbient]; exact Measure.fst_compProd _ _
+  rw [hfst, macConverseInput_map_fst]
+
+lemma macConverseMsg₂_uniform
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] :
+    (macConverseAmbient c W).map macConverseMsg₂
+      = (Fintype.card (Fin M₂) : ℝ≥0∞)⁻¹ • Measure.count := by
+  have hcomp : (macConverseMsg₂ (M₁ := M₁) (M₂ := M₂) (n := n) (β := β))
+      = Prod.snd ∘ Prod.fst := rfl
+  rw [hcomp, ← Measure.map_map measurable_snd measurable_fst]
+  have hfst : (macConverseAmbient c W).map Prod.fst = macConverseInput M₁ M₂ := by
+    rw [macConverseAmbient]; exact Measure.fst_compProd _ _
+  rw [hfst, macConverseInput_map_snd]
+
+lemma macConverseMsg₁₂_uniform
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] :
+    (macConverseAmbient c W).map (fun ω ↦ (macConverseMsg₁ ω, macConverseMsg₂ ω))
+      = (Fintype.card (Fin M₁ × Fin M₂) : ℝ≥0∞)⁻¹ • Measure.count := by
+  rw [macConverse_msgPair_eq_fst]
+  have hfst : (macConverseAmbient c W).map Prod.fst = macConverseInput M₁ M₂ := by
+    rw [macConverseAmbient]; exact Measure.fst_compProd _ _
+  rw [hfst, macConverseInput_eq]
+
+/-- Memoryless-channel property of the constructed ambient: the per-letter output is conditionally
+independent of the other letters given the current input pair.
+@residual(plan:mac-timesharing-converse-plan) -/
+lemma macConverse_memorylessChannel
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] :
+    IsMemorylessChannel (macConverseAmbient c W)
+      (fun i ω ↦ (c.encoder₁ (macConverseMsg₁ ω) i, c.encoder₂ (macConverseMsg₂ ω) i))
+      macConverseYs := by
+  sorry
+
+/-- The two messages are independent under the constructed ambient (uniform product input law),
+hence their mutual information vanishes. -/
+lemma macConverse_mutualInfo_eq_zero
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] :
+    mutualInfo (macConverseAmbient c W) macConverseMsg₁ macConverseMsg₂ = 0 := by
+  rw [mutualInfo_eq_zero_iff_indep (macConverseAmbient c W) macConverseMsg₁ macConverseMsg₂
+      measurable_macConverseMsg₁ measurable_macConverseMsg₂,
+    indepFun_iff_map_prod_eq_prod_map_map measurable_macConverseMsg₁.aemeasurable
+      measurable_macConverseMsg₂.aemeasurable,
+    macConverseMsg₁_uniform c W, macConverseMsg₂_uniform c W, macConverse_msgPair_eq_fst]
+  have hfst : (macConverseAmbient c W).map Prod.fst = macConverseInput M₁ M₂ := by
+    rw [macConverseAmbient]; exact Measure.fst_compProd _ _
+  rw [hfst, macConverseInput]
+
+/-- Markov chain `(messages) → (encoded inputs) → (outputs)` for the constructed ambient.
+@residual(plan:mac-timesharing-converse-plan) -/
+lemma macConverse_isMarkovChain
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] :
+    IsMarkovChain (macConverseAmbient c W)
+      (fun ω ↦ (macConverseMsg₁ ω, macConverseMsg₂ ω))
+      (fun ω ↦ ((fun j ↦ c.encoder₁ (macConverseMsg₁ ω) j),
+        (fun j ↦ c.encoder₂ (macConverseMsg₂ ω) j)))
+      (fun ω j ↦ macConverseYs j ω) := by
+  sorry
+
+/-- **MAC converse, from a bare code** (Gap 0 bridge).  For any two-user MAC block code `c` and
+Markov channel `W`, the canonical ambient measure `macConverseAmbient c W` discharges every
+hypothesis of the floating message-level converse `mac_converse`, so the rate pair
+`(log M₁, log M₂)` lies in the corner-point region determined by the per-letter conditional and
+joint mutual informations (still carrying the Fano slack, removed later in Gap A). -/
+theorem mac_converse_from_code
+    [NeZero M₁] [NeZero M₂]
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) :
+    InMACCapacityRegion (Real.log (M₁ : ℝ)) (Real.log (M₂ : ℝ))
+      ((∑ i : Fin n,
+          condMutualInfo (macConverseAmbient c W)
+              (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i) (macConverseYs i)
+              (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i)).toReal
+        + Real.binEntropy
+            (MeasureFano.errorProb (macConverseAmbient c W) macConverseMsg₁
+              (fun ω ↦ (macConverseMsg₂ ω, fun i ↦ macConverseYs i ω))
+              (fun p ↦ (c.decoder p.2).1))
+        + MeasureFano.errorProb (macConverseAmbient c W) macConverseMsg₁
+              (fun ω ↦ (macConverseMsg₂ ω, fun i ↦ macConverseYs i ω))
+              (fun p ↦ (c.decoder p.2).1) * Real.log ((M₁ : ℝ) - 1))
+      ((∑ i : Fin n,
+          condMutualInfo (macConverseAmbient c W)
+              (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i) (macConverseYs i)
+              (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i)).toReal
+        + Real.binEntropy
+            (MeasureFano.errorProb (macConverseAmbient c W) macConverseMsg₂
+              (fun ω ↦ (macConverseMsg₁ ω, fun i ↦ macConverseYs i ω))
+              (fun p ↦ (c.decoder p.2).2))
+        + MeasureFano.errorProb (macConverseAmbient c W) macConverseMsg₂
+              (fun ω ↦ (macConverseMsg₁ ω, fun i ↦ macConverseYs i ω))
+              (fun p ↦ (c.decoder p.2).2) * Real.log ((M₂ : ℝ) - 1))
+      ((∑ i : Fin n,
+          mutualInfo (macConverseAmbient c W)
+              (fun ω ↦ (c.encoder₁ (macConverseMsg₁ ω) i, c.encoder₂ (macConverseMsg₂ ω) i))
+              (macConverseYs i)).toReal
+        + Real.binEntropy
+            (MeasureFano.errorProb (macConverseAmbient c W)
+              (fun ω ↦ (macConverseMsg₁ ω, macConverseMsg₂ ω)) (fun ω i ↦ macConverseYs i ω)
+              c.decoder)
+        + MeasureFano.errorProb (macConverseAmbient c W)
+              (fun ω ↦ (macConverseMsg₁ ω, macConverseMsg₂ ω)) (fun ω i ↦ macConverseYs i ω)
+              c.decoder * Real.log (((M₁ * M₂ : ℕ) : ℝ) - 1)) := by
+  exact mac_converse (macConverseAmbient c W) macConverseMsg₁ macConverseMsg₂ macConverseYs c
+    measurable_macConverseMsg₁ measurable_macConverseMsg₂ measurable_macConverseYs
+    (macConverseMsg₁_uniform c W) (macConverseMsg₂_uniform c W) (macConverseMsg₁₂_uniform c W)
+    (macConverse_memorylessChannel c W) (macConverse_mutualInfo_eq_zero c W)
+    (macConverse_isMarkovChain c W) hcard₁ hcard₂
+
+end CodeToAmbient
 
 end InformationTheory.Shannon.MAC
