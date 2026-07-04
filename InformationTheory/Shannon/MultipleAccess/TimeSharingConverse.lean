@@ -1245,4 +1245,374 @@ lemma mac_mutualInfo_eq_macInfoBoth_at
 
 end PerLetterInfo
 
+/-! ### CV assembly (Dispatch B): Fano→0 limit + point construction + axis casework
+
+The converse-half headline `mac_timesharing_converse`.  An achievable rate pair `(R₁, R₂)` in the
+first quadrant lies in the closed convex hull of the union of all per-input pentagons.  The core is
+the interior case `0 < R₁`, `0 < R₂`: for a sequence of block codes with error `→ 0` and length
+`→ ∞`, the uniformly-shrunk rate point `(R₁(1−Pe) − log2/n, R₂(1−Pe) − log2/n)` lies in the hull
+(per-code, via the geometric gateway `mac_avgPentagon_mem_convexHull`), and converges to `(R₁, R₂)`,
+which is therefore in the *closed* hull. -/
+
+section CVAssembly
+
+open MeasureTheory ProbabilityTheory InformationTheory InformationTheory.Shannon
+open InformationTheory.Shannon.ChannelCodingConverseGeneral
+open Filter
+open scoped ENNReal Topology
+
+variable {α₁ α₂ β : Type*}
+  [Fintype α₁] [DecidableEq α₁] [Nonempty α₁] [MeasurableSpace α₁]
+    [MeasurableSingletonClass α₁] [StandardBorelSpace α₁]
+  [Fintype α₂] [DecidableEq α₂] [Nonempty α₂] [MeasurableSpace α₂]
+    [MeasurableSingletonClass α₂] [StandardBorelSpace α₂]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
+    [MeasurableSingletonClass β] [StandardBorelSpace β]
+variable {M₁ M₂ n : ℕ}
+
+/-- Per-letter mutual-information superadditivity under input independence (Dispatch A deliverable).
+`I((X₁, X₂); Y) ≤ I(X₁; Y | X₂) + I(X₂; Y | X₁)`.  This is the `hsub` well-formedness hypothesis of
+`mac_avgPentagon_mem_convexHull`; it is a universal geometric fact about the product input, threaded
+here exactly like the existing `hac`/`hbc` corners `mac_macInfo₁/₂_le_macInfoBoth`.
+@residual(plan:mac-timesharing-converse-plan) Dispatch A (MI superadditivity, `n = 2` case of
+`mutualInfo_superadditive_of_indep`). -/
+lemma mac_perletter_superadd (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂] (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
+    macInfoBoth p₁ p₂ W ≤ macInfo₁ p₁ p₂ W + macInfo₂ p₁ p₂ W := by
+  sorry
+
+/-- Nonnegativity of the corner information `macInfo₁` for probability inputs. -/
+lemma macInfo₁_nonneg (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂] (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
+    0 ≤ macInfo₁ p₁ p₂ W := by
+  rw [macInfo₁_eq_condMutualInfo_toReal]; exact ENNReal.toReal_nonneg
+
+/-- Nonnegativity of the corner information `macInfo₂` for probability inputs. -/
+lemma macInfo₂_nonneg (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂] (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
+    0 ≤ macInfo₂ p₁ p₂ W := by
+  rw [macInfo₂_eq_condMutualInfo_toReal]; exact ENNReal.toReal_nonneg
+
+/-- Nonnegativity of the corner information `macInfoBoth` for probability inputs. -/
+lemma macInfoBoth_nonneg (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂] (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
+    0 ≤ macInfoBoth p₁ p₂ W := by
+  rw [macInfoBoth_eq_mutualInfo_toReal]; exact ENNReal.toReal_nonneg
+
+/-- **Per-code shrunk-point membership** (Dispatch B analytic core).  For a length-`n` two-user code
+with `2 ≤ M₁`, `2 ≤ M₂` and `⌈exp (n Rⱼ)⌉ ≤ Mⱼ`, if the uniformly-shrunk rate point
+`(R₁(1−Pe) − log2/n, R₂(1−Pe) − log2/n)` (with `Pe` the average error probability) is in the first
+quadrant, then it lies in the closed convex hull of all per-input pentagons.  Combines the finite-`n`
+Fano bounds with the geometric gateway `mac_avgPentagon_mem_convexHull` and the per-letter
+identification of Gap B′. -/
+lemma mac_converse_shrunk_point_mem
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    (hn : 0 < n) (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂)
+    {R₁ R₂ : ℝ} (hR₁ : 0 ≤ R₁) (hR₂ : 0 ≤ R₂)
+    (hM₁ : Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M₁)
+    (hM₂ : Nat.ceil (Real.exp ((n : ℝ) * R₂)) ≤ M₂)
+    (hx1 : 0 ≤ R₁ * (1 - (c.averageErrorProb W).toReal) - Real.log 2 / (n : ℝ))
+    (hx2 : 0 ≤ R₂ * (1 - (c.averageErrorProb W).toReal) - Real.log 2 / (n : ℝ)) :
+    (R₁ * (1 - (c.averageErrorProb W).toReal) - Real.log 2 / (n : ℝ),
+     R₂ * (1 - (c.averageErrorProb W).toReal) - Real.log 2 / (n : ℝ))
+      ∈ closedConvexHull ℝ (⋃ (p₁ : Measure α₁) (p₂ : Measure α₂)
+          (_ : IsProbabilityMeasure p₁) (_ : IsProbabilityMeasure p₂), macPentagon p₁ p₂ W) := by
+  haveI : NeZero M₁ := ⟨by omega⟩
+  haveI : NeZero M₂ := ⟨by omega⟩
+  have hn' : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have hM₁R : (2 : ℝ) ≤ (M₁ : ℝ) := by exact_mod_cast hcard₁
+  have hM₂R : (2 : ℝ) ≤ (M₂ : ℝ) := by exact_mod_cast hcard₂
+  have hM₁ne : (M₁ : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
+  have hM₂ne : (M₂ : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
+  -- the finite-`n` converse from the code
+  have h := mac_converse_from_code c W hcard₁ hcard₂
+  -- per-letter product-input marginals
+  set p₁ : Fin n → Measure α₁ :=
+    fun i => (macConverseAmbient c W).map (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i) with hp₁def
+  set p₂ : Fin n → Measure α₂ :=
+    fun i => (macConverseAmbient c W).map (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i) with hp₂def
+  have hp₁prob : ∀ i, IsProbabilityMeasure (p₁ i) := fun i =>
+    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+  have hp₂prob : ∀ i, IsProbabilityMeasure (p₂ i) := fun i =>
+    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+  -- abbreviate the average error and the three symbolic per-letter information sums
+  set Pe := (c.averageErrorProb W).toReal with hPeDef
+  set Pe₁ := MeasureFano.errorProb (macConverseAmbient c W) macConverseMsg₁
+    (fun ω ↦ (macConverseMsg₂ ω, fun i ↦ macConverseYs i ω)) (fun p ↦ (c.decoder p.2).1) with hPe₁def
+  set Pe₂ := MeasureFano.errorProb (macConverseAmbient c W) macConverseMsg₂
+    (fun ω ↦ (macConverseMsg₁ ω, fun i ↦ macConverseYs i ω)) (fun p ↦ (c.decoder p.2).2) with hPe₂def
+  set S₁ := (∑ i : Fin n, condMutualInfo (macConverseAmbient c W)
+      (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i) (macConverseYs i)
+      (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i)).toReal with hS₁def
+  set S₂ := (∑ i : Fin n, condMutualInfo (macConverseAmbient c W)
+      (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i) (macConverseYs i)
+      (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i)).toReal with hS₂def
+  set Sb := (∑ i : Fin n, mutualInfo (macConverseAmbient c W)
+      (fun ω ↦ (c.encoder₁ (macConverseMsg₁ ω) i, c.encoder₂ (macConverseMsg₂ ω) i))
+      (macConverseYs i)).toReal with hSbdef
+  -- the joint decode error equals the code's average error probability `Pe`
+  have hjoint : MeasureFano.errorProb (macConverseAmbient c W)
+      (fun ω ↦ (macConverseMsg₁ ω, macConverseMsg₂ ω)) (fun ω i ↦ macConverseYs i ω) c.decoder = Pe :=
+    mac_converse_ambient_errorProb_joint_eq c W
+  -- error-probability bounds
+  have hPe_0 : 0 ≤ Pe := ENNReal.toReal_nonneg
+  have hPe_1 : Pe ≤ 1 := by rw [← hjoint]; exact measureReal_le_one
+  have hPe1_0 : 0 ≤ Pe₁ := measureReal_nonneg
+  have hPe1_1 : Pe₁ ≤ 1 := measureReal_le_one
+  have hPe1_le : Pe₁ ≤ Pe := (mac_converse_ambient_errorProb_user1_le c W).trans (le_of_eq hjoint)
+  have hPe2_0 : 0 ≤ Pe₂ := measureReal_nonneg
+  have hPe2_1 : Pe₂ ≤ 1 := measureReal_le_one
+  have hPe2_le : Pe₂ ≤ Pe := (mac_converse_ambient_errorProb_user2_le c W).trans (le_of_eq hjoint)
+  -- log-slack pieces
+  have hnR1 : (n : ℝ) * R₁ ≤ Real.log (M₁ : ℝ) := le_log_of_ceil_exp_le hM₁
+  have hnR2 : (n : ℝ) * R₂ ≤ Real.log (M₂ : ℝ) := le_log_of_ceil_exp_le hM₂
+  have hlogm1 : Real.log ((M₁ : ℝ) - 1) ≤ Real.log (M₁ : ℝ) :=
+    Real.log_le_log (by linarith) (by linarith)
+  have hlogm2 : Real.log ((M₂ : ℝ) - 1) ≤ Real.log (M₂ : ℝ) :=
+    Real.log_le_log (by linarith) (by linarith)
+  have hlog2n_nonneg : 0 ≤ Real.log 2 / (n : ℝ) :=
+    div_nonneg (le_of_lt (Real.log_pos (by norm_num))) (le_of_lt hn')
+  -- user-1 clean Fano bound: `R₁(1-Pe) - log2/n ≤ S₁/n`
+  have hbound1 : R₁ * (1 - Pe) - Real.log 2 / (n : ℝ) ≤ S₁ / (n : ℝ) := by
+    have hb1 := h.bound₁
+    have hbe1 : Real.binEntropy Pe₁ ≤ Real.log 2 := Real.binEntropy_le_log_two
+    have hprod1 : Pe₁ * Real.log ((M₁ : ℝ) - 1) ≤ Pe₁ * Real.log (M₁ : ℝ) :=
+      mul_le_mul_of_nonneg_left hlogm1 hPe1_0
+    have hstep1 : Real.log (M₁ : ℝ) * (1 - Pe₁) ≤ S₁ + Real.log 2 := by
+      have e : Real.log (M₁ : ℝ) * (1 - Pe₁) = Real.log (M₁ : ℝ) - Pe₁ * Real.log (M₁ : ℝ) := by ring
+      rw [e]; linarith [hb1, hbe1, hprod1]
+    have hstep2 : (n : ℝ) * R₁ * (1 - Pe₁) ≤ Real.log (M₁ : ℝ) * (1 - Pe₁) :=
+      mul_le_mul_of_nonneg_right hnR1 (by linarith)
+    have hstep3 : (n : ℝ) * R₁ * (1 - Pe) ≤ (n : ℝ) * R₁ * (1 - Pe₁) :=
+      mul_le_mul_of_nonneg_left (by linarith) (mul_nonneg (Nat.cast_nonneg n) hR₁)
+    have key1 : (n : ℝ) * R₁ * (1 - Pe) ≤ S₁ + Real.log 2 := hstep3.trans (hstep2.trans hstep1)
+    rw [sub_le_iff_le_add, div_add_div_same, le_div_iff₀ hn',
+      show R₁ * (1 - Pe) * (n : ℝ) = (n : ℝ) * R₁ * (1 - Pe) from by ring]
+    exact key1
+  -- user-2 clean Fano bound: `R₂(1-Pe) - log2/n ≤ S₂/n`
+  have hbound2 : R₂ * (1 - Pe) - Real.log 2 / (n : ℝ) ≤ S₂ / (n : ℝ) := by
+    have hb2 := h.bound₂
+    have hbe2 : Real.binEntropy Pe₂ ≤ Real.log 2 := Real.binEntropy_le_log_two
+    have hprod2 : Pe₂ * Real.log ((M₂ : ℝ) - 1) ≤ Pe₂ * Real.log (M₂ : ℝ) :=
+      mul_le_mul_of_nonneg_left hlogm2 hPe2_0
+    have hstep1 : Real.log (M₂ : ℝ) * (1 - Pe₂) ≤ S₂ + Real.log 2 := by
+      have e : Real.log (M₂ : ℝ) * (1 - Pe₂) = Real.log (M₂ : ℝ) - Pe₂ * Real.log (M₂ : ℝ) := by ring
+      rw [e]; linarith [hb2, hbe2, hprod2]
+    have hstep2 : (n : ℝ) * R₂ * (1 - Pe₂) ≤ Real.log (M₂ : ℝ) * (1 - Pe₂) :=
+      mul_le_mul_of_nonneg_right hnR2 (by linarith)
+    have hstep3 : (n : ℝ) * R₂ * (1 - Pe) ≤ (n : ℝ) * R₂ * (1 - Pe₂) :=
+      mul_le_mul_of_nonneg_left (by linarith) (mul_nonneg (Nat.cast_nonneg n) hR₂)
+    have key2 : (n : ℝ) * R₂ * (1 - Pe) ≤ S₂ + Real.log 2 := hstep3.trans (hstep2.trans hstep1)
+    rw [sub_le_iff_le_add, div_add_div_same, le_div_iff₀ hn',
+      show R₂ * (1 - Pe) * (n : ℝ) = (n : ℝ) * R₂ * (1 - Pe) from by ring]
+    exact key2
+  -- sum clean Fano bound: `(R₁+R₂)(1-Pe) - log2/n ≤ Sb/n`
+  have hboundS : (R₁ + R₂) * (1 - Pe) - Real.log 2 / (n : ℝ) ≤ Sb / (n : ℝ) := by
+    have hbs := h.boundSum
+    rw [hjoint] at hbs
+    have hbeJ : Real.binEntropy Pe ≤ Real.log 2 := Real.binEntropy_le_log_two
+    have hge4 : (4 : ℝ) ≤ ((M₁ * M₂ : ℕ) : ℝ) := by exact_mod_cast Nat.mul_le_mul hcard₁ hcard₂
+    have hlogJ : Real.log (((M₁ * M₂ : ℕ) : ℝ) - 1) ≤ Real.log (M₁ : ℝ) + Real.log (M₂ : ℝ) := by
+      rw [← Real.log_mul hM₁ne hM₂ne, ← Nat.cast_mul]
+      exact Real.log_le_log (by linarith) (by linarith)
+    have hprodJ : Pe * Real.log (((M₁ * M₂ : ℕ) : ℝ) - 1) ≤ Pe * (Real.log (M₁ : ℝ) + Real.log (M₂ : ℝ)) :=
+      mul_le_mul_of_nonneg_left hlogJ hPe_0
+    have hnR12 : (n : ℝ) * (R₁ + R₂) ≤ Real.log (M₁ : ℝ) + Real.log (M₂ : ℝ) := by
+      have e : (n : ℝ) * (R₁ + R₂) = (n : ℝ) * R₁ + (n : ℝ) * R₂ := by ring
+      rw [e]; linarith [hnR1, hnR2]
+    have hstepS1 : (Real.log (M₁ : ℝ) + Real.log (M₂ : ℝ)) * (1 - Pe) ≤ Sb + Real.log 2 := by
+      have e : (Real.log (M₁ : ℝ) + Real.log (M₂ : ℝ)) * (1 - Pe)
+          = (Real.log (M₁ : ℝ) + Real.log (M₂ : ℝ)) - Pe * (Real.log (M₁ : ℝ) + Real.log (M₂ : ℝ)) := by
+        ring
+      rw [e]; linarith [hbs, hbeJ, hprodJ]
+    have hstepS2 : (n : ℝ) * (R₁ + R₂) * (1 - Pe) ≤ (Real.log (M₁ : ℝ) + Real.log (M₂ : ℝ)) * (1 - Pe) :=
+      mul_le_mul_of_nonneg_right hnR12 (by linarith)
+    have keyS : (n : ℝ) * (R₁ + R₂) * (1 - Pe) ≤ Sb + Real.log 2 := hstepS2.trans hstepS1
+    rw [sub_le_iff_le_add, div_add_div_same, le_div_iff₀ hn',
+      show (R₁ + R₂) * (1 - Pe) * (n : ℝ) = (n : ℝ) * (R₁ + R₂) * (1 - Pe) from by ring]
+    exact keyS
+  -- identify the symbolic sums with the per-letter `macInfo` sums (Gap B′): distribute `.toReal`
+  -- over the finite sum (each term finite on the finite alphabets) and apply the per-letter values
+  have hSm1 : S₁ = ∑ i : Fin n, macInfo₁ (p₁ i) (p₂ i) W := by
+    rw [hS₁def, ENNReal.toReal_sum (fun i _ => condMutualInfo_ne_top _ _ _ _
+      (measurable_of_countable _) (measurable_of_countable _) (measurable_of_countable _))]
+    exact Finset.sum_congr rfl (fun i _ => mac_condMI_eq_macInfo₁_at c W i)
+  have hSm2 : S₂ = ∑ i : Fin n, macInfo₂ (p₁ i) (p₂ i) W := by
+    rw [hS₂def, ENNReal.toReal_sum (fun i _ => condMutualInfo_ne_top _ _ _ _
+      (measurable_of_countable _) (measurable_of_countable _) (measurable_of_countable _))]
+    exact Finset.sum_congr rfl (fun i _ => mac_condMI_eq_macInfo₂_at c W i)
+  have hSmb : Sb = ∑ i : Fin n, macInfoBoth (p₁ i) (p₂ i) W := by
+    rw [hSbdef, ENNReal.toReal_sum (fun i _ => mutualInfo_ne_top _ _ _
+      (measurable_of_countable _) (measurable_of_countable _))]
+    exact Finset.sum_congr rfl (fun i _ => mac_mutualInfo_eq_macInfoBoth_at c W i)
+  -- the gateway hypotheses in `macInfo` form
+  have h1 : R₁ * (1 - Pe) - Real.log 2 / (n : ℝ) ≤ (∑ i : Fin n, macInfo₁ (p₁ i) (p₂ i) W) / (n : ℝ) :=
+    hSm1 ▸ hbound1
+  have h2 : R₂ * (1 - Pe) - Real.log 2 / (n : ℝ) ≤ (∑ i : Fin n, macInfo₂ (p₁ i) (p₂ i) W) / (n : ℝ) :=
+    hSm2 ▸ hbound2
+  have hs : (R₁ * (1 - Pe) - Real.log 2 / (n : ℝ)) + (R₂ * (1 - Pe) - Real.log 2 / (n : ℝ))
+      ≤ (∑ i : Fin n, macInfoBoth (p₁ i) (p₂ i) W) / (n : ℝ) := by
+    have hboundS' : (R₁ + R₂) * (1 - Pe) - Real.log 2 / (n : ℝ)
+        ≤ (∑ i : Fin n, macInfoBoth (p₁ i) (p₂ i) W) / (n : ℝ) := hSmb ▸ hboundS
+    calc (R₁ * (1 - Pe) - Real.log 2 / (n : ℝ)) + (R₂ * (1 - Pe) - Real.log 2 / (n : ℝ))
+        = (R₁ + R₂) * (1 - Pe) - 2 * (Real.log 2 / (n : ℝ)) := by ring
+      _ ≤ (R₁ + R₂) * (1 - Pe) - Real.log 2 / (n : ℝ) := by linarith
+      _ ≤ (∑ i : Fin n, macInfoBoth (p₁ i) (p₂ i) W) / (n : ℝ) := hboundS'
+  -- geometric gateway
+  have hmem : (R₁ * (1 - Pe) - Real.log 2 / (n : ℝ), R₂ * (1 - Pe) - Real.log 2 / (n : ℝ))
+      ∈ convexHull ℝ (⋃ i : Fin n,
+          ({p | 0 ≤ p.1 ∧ 0 ≤ p.2 ∧ p.1 ≤ macInfo₁ (p₁ i) (p₂ i) W
+            ∧ p.2 ≤ macInfo₂ (p₁ i) (p₂ i) W ∧ p.1 + p.2 ≤ macInfoBoth (p₁ i) (p₂ i) W}
+           : Set (ℝ × ℝ))) :=
+    mac_avgPentagon_mem_convexHull hn
+      (fun i => macInfo₁ (p₁ i) (p₂ i) W) (fun i => macInfo₂ (p₁ i) (p₂ i) W)
+      (fun i => macInfoBoth (p₁ i) (p₂ i) W)
+      (fun i => by haveI := hp₁prob i; haveI := hp₂prob i; exact macInfo₁_nonneg (p₁ i) (p₂ i) W)
+      (fun i => by haveI := hp₁prob i; haveI := hp₂prob i; exact macInfo₂_nonneg (p₁ i) (p₂ i) W)
+      (fun i => by haveI := hp₁prob i; haveI := hp₂prob i; exact mac_macInfo₁_le_macInfoBoth (p₁ i) (p₂ i) W)
+      (fun i => by haveI := hp₁prob i; haveI := hp₂prob i; exact mac_macInfo₂_le_macInfoBoth (p₁ i) (p₂ i) W)
+      (fun i => by haveI := hp₁prob i; haveI := hp₂prob i; exact mac_perletter_superadd (p₁ i) (p₂ i) W)
+      hx1 hx2 h1 h2 hs
+  -- reindex the raw per-letter union into the master probability-input union
+  have hsubset : (⋃ i : Fin n,
+        ({p | 0 ≤ p.1 ∧ 0 ≤ p.2 ∧ p.1 ≤ macInfo₁ (p₁ i) (p₂ i) W
+          ∧ p.2 ≤ macInfo₂ (p₁ i) (p₂ i) W ∧ p.1 + p.2 ≤ macInfoBoth (p₁ i) (p₂ i) W}
+         : Set (ℝ × ℝ)))
+      ⊆ (⋃ (q₁ : Measure α₁) (q₂ : Measure α₂)
+          (_ : IsProbabilityMeasure q₁) (_ : IsProbabilityMeasure q₂), macPentagon q₁ q₂ W) := by
+    intro pt hpt
+    rw [Set.mem_iUnion] at hpt
+    obtain ⟨i, hi⟩ := hpt
+    haveI := hp₁prob i; haveI := hp₂prob i
+    simp only [Set.mem_iUnion]
+    exact ⟨p₁ i, p₂ i, hp₁prob i, hp₂prob i, hi⟩
+  exact convexHull_subset_closedConvexHull (convexHull_mono hsubset hmem)
+
+/-- **Interior case** of the converse: for strictly positive rates, an achievable pair lies in the
+closed convex hull of the per-input pentagons. -/
+lemma mac_timesharing_converse_interior (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    {R₁ R₂ : ℝ} (hR₁ : 0 < R₁) (hR₂ : 0 < R₂) (hach : MACAchievable W R₁ R₂) :
+    (R₁, R₂) ∈ closedConvexHull ℝ (⋃ (p₁ : Measure α₁) (p₂ : Measure α₂)
+        (_ : IsProbabilityMeasure p₁) (_ : IsProbabilityMeasure p₂), macPentagon p₁ p₂ W) := by
+  -- for each `k`, extract a length-`nₖ ≥ k+1` code with `2 ≤ M₁, M₂` and error `< 1/(k+1)`
+  have hex : ∀ k : ℕ, ∃ (nn m₁ m₂ : ℕ) (c : MACCode m₁ m₂ nn α₁ α₂ β),
+      0 < nn ∧ 2 ≤ m₁ ∧ 2 ≤ m₂ ∧ (k : ℝ) + 1 ≤ (nn : ℝ)
+        ∧ Nat.ceil (Real.exp ((nn : ℝ) * R₁)) ≤ m₁ ∧ Nat.ceil (Real.exp ((nn : ℝ) * R₂)) ≤ m₂
+        ∧ (c.averageErrorProb W).toReal < 1 / ((k : ℝ) + 1) := by
+    intro k
+    obtain ⟨N, hN⟩ := hach (1 / ((k : ℝ) + 1)) (by positivity)
+    obtain ⟨m₁, m₂, hm₁, hm₂, c, hPe⟩ := hN (max N (k + 1)) (le_max_left _ _)
+    have hnnpos : 0 < max N (k + 1) := lt_of_lt_of_le (Nat.succ_pos k) (le_max_right _ _)
+    have hnge : (k : ℝ) + 1 ≤ ((max N (k + 1) : ℕ) : ℝ) := by
+      have hle : k + 1 ≤ max N (k + 1) := le_max_right _ _
+      calc (k : ℝ) + 1 = ((k + 1 : ℕ) : ℝ) := by push_cast; ring
+        _ ≤ ((max N (k + 1) : ℕ) : ℝ) := by exact_mod_cast hle
+    have hcard : ∀ R : ℝ, 0 < R → ∀ M : ℕ, Nat.ceil (Real.exp (((max N (k + 1) : ℕ) : ℝ) * R)) ≤ M
+        → 2 ≤ M := by
+      intro R hR M hM
+      have hpos : (0 : ℝ) < ((max N (k + 1) : ℕ) : ℝ) * R := mul_pos (by exact_mod_cast hnnpos) hR
+      have h1lt : (1 : ℝ) < Real.exp (((max N (k + 1) : ℕ) : ℝ) * R) := by
+        rw [show (1 : ℝ) = Real.exp 0 from (Real.exp_zero).symm]; exact Real.exp_lt_exp.mpr hpos
+      have h1c : (1 : ℝ) < (Nat.ceil (Real.exp (((max N (k + 1) : ℕ) : ℝ) * R)) : ℝ) :=
+        lt_of_lt_of_le h1lt (Nat.le_ceil _)
+      have : 1 < Nat.ceil (Real.exp (((max N (k + 1) : ℕ) : ℝ) * R)) := by exact_mod_cast h1c
+      omega
+    exact ⟨max N (k + 1), m₁, m₂, c, hnnpos, hcard R₁ hR₁ m₁ hm₁, hcard R₂ hR₂ m₂ hm₂, hnge,
+      hm₁, hm₂, hPe⟩
+  choose nn m₁ m₂ c hnpos hcard₁ hcard₂ hnge hM₁ hM₂ hPe using hex
+  -- the average error probabilities converge to `0`, hence so does `log2/nₖ`
+  have hPe0 : Tendsto (fun k => ((c k).averageErrorProb W).toReal) atTop (𝓝 0) :=
+    squeeze_zero (fun _ => ENNReal.toReal_nonneg) (fun k => (hPe k).le)
+      tendsto_one_div_add_atTop_nhds_zero_nat
+  have hnn_top : Tendsto (fun k => (nn k : ℝ)) atTop atTop :=
+    tendsto_atTop_mono (fun k => le_trans (by linarith) (hnge k)) tendsto_natCast_atTop_atTop
+  have hlog0 : Tendsto (fun k => Real.log 2 / (nn k : ℝ)) atTop (𝓝 0) :=
+    Tendsto.div_atTop tendsto_const_nhds hnn_top
+  -- each coordinate of the shrunk-rate sequence converges to `Rⱼ`
+  have hf1 : Tendsto (fun k => R₁ * (1 - ((c k).averageErrorProb W).toReal) - Real.log 2 / (nn k : ℝ))
+      atTop (𝓝 R₁) := by
+    have hlim : Tendsto (fun k => R₁ * (1 - ((c k).averageErrorProb W).toReal)
+        - Real.log 2 / (nn k : ℝ)) atTop (𝓝 (R₁ * (1 - 0) - 0)) :=
+      (tendsto_const_nhds.mul (tendsto_const_nhds.sub hPe0)).sub hlog0
+    simpa using hlim
+  have hf2 : Tendsto (fun k => R₂ * (1 - ((c k).averageErrorProb W).toReal) - Real.log 2 / (nn k : ℝ))
+      atTop (𝓝 R₂) := by
+    have hlim : Tendsto (fun k => R₂ * (1 - ((c k).averageErrorProb W).toReal)
+        - Real.log 2 / (nn k : ℝ)) atTop (𝓝 (R₂ * (1 - 0) - 0)) :=
+      (tendsto_const_nhds.mul (tendsto_const_nhds.sub hPe0)).sub hlog0
+    simpa using hlim
+  have htend : Tendsto (fun k => (R₁ * (1 - ((c k).averageErrorProb W).toReal) - Real.log 2 / (nn k : ℝ),
+      R₂ * (1 - ((c k).averageErrorProb W).toReal) - Real.log 2 / (nn k : ℝ))) atTop (𝓝 (R₁, R₂)) :=
+    hf1.prodMk_nhds hf2
+  -- eventually the shrunk point is in the first quadrant
+  have hpos1 : ∀ᶠ k in atTop, 0 ≤ R₁ * (1 - ((c k).averageErrorProb W).toReal) - Real.log 2 / (nn k : ℝ) := by
+    filter_upwards [hf1.eventually (isOpen_Ioi.mem_nhds (Set.mem_Ioi.mpr hR₁))] with k hk
+    exact le_of_lt hk
+  have hpos2 : ∀ᶠ k in atTop, 0 ≤ R₂ * (1 - ((c k).averageErrorProb W).toReal) - Real.log 2 / (nn k : ℝ) := by
+    filter_upwards [hf2.eventually (isOpen_Ioi.mem_nhds (Set.mem_Ioi.mpr hR₂))] with k hk
+    exact le_of_lt hk
+  -- eventually the shrunk point lies in the closed convex hull (via the per-code lemma)
+  have hev : ∀ᶠ k in atTop, (R₁ * (1 - ((c k).averageErrorProb W).toReal) - Real.log 2 / (nn k : ℝ),
+      R₂ * (1 - ((c k).averageErrorProb W).toReal) - Real.log 2 / (nn k : ℝ))
+      ∈ closedConvexHull ℝ (⋃ (p₁ : Measure α₁) (p₂ : Measure α₂)
+          (_ : IsProbabilityMeasure p₁) (_ : IsProbabilityMeasure p₂), macPentagon p₁ p₂ W) := by
+    filter_upwards [hpos1, hpos2] with k hk1 hk2
+    exact mac_converse_shrunk_point_mem (c k) W (hnpos k) (hcard₁ k) (hcard₂ k) hR₁.le hR₂.le
+      (hM₁ k) (hM₂ k) hk1 hk2
+  exact isClosed_closedConvexHull.mem_of_tendsto htend hev
+
+/-- **Axis case, user 1** (`R₂ = 0`).  Left as an honest gap: at `R₂ = 0` the achievability yields
+codes with `⌈exp (n·0)⌉ = 1 ≤ M₂`, so `M₂` may be `1`, which violates the `2 ≤ M₂` requirement of
+the converse `mac_converse_from_code`; closing it needs a separate single-user converse.
+@residual(plan:mac-timesharing-converse-plan) axis sub-case (`M₂ = 1` obstruction). -/
+lemma mac_timesharing_converse_axis1 (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    {R₁ : ℝ} (hR₁ : 0 < R₁) (hach : MACAchievable W R₁ 0) :
+    (R₁, (0 : ℝ)) ∈ closedConvexHull ℝ (⋃ (p₁ : Measure α₁) (p₂ : Measure α₂)
+        (_ : IsProbabilityMeasure p₁) (_ : IsProbabilityMeasure p₂), macPentagon p₁ p₂ W) := by
+  sorry
+
+/-- **Axis case, user 2** (`R₁ = 0`).  Symmetric to `mac_timesharing_converse_axis1`; the `M₁ = 1`
+obstruction blocks the converse `mac_converse_from_code` (which needs `2 ≤ M₁`).
+@residual(plan:mac-timesharing-converse-plan) axis sub-case (`M₁ = 1` obstruction). -/
+lemma mac_timesharing_converse_axis2 (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    {R₂ : ℝ} (hR₂ : 0 < R₂) (hach : MACAchievable W 0 R₂) :
+    ((0 : ℝ), R₂) ∈ closedConvexHull ℝ (⋃ (p₁ : Measure α₁) (p₂ : Measure α₂)
+        (_ : IsProbabilityMeasure p₁) (_ : IsProbabilityMeasure p₂), macPentagon p₁ p₂ W) := by
+  sorry
+
+/-- **MAC time-sharing converse (CV headline).**  Every achievable first-quadrant rate pair lies in
+the closed convex hull of the union of all per-input pentagons `macPentagon p₁ p₂ W` over probability
+inputs `p₁`, `p₂`.  Assembled by casework on whether each rate is zero or strictly positive:
+the interior case uses the Fano→0 limit `mac_timesharing_converse_interior`, the origin `(0,0)` lies
+in any pentagon, and the two axis cases are honest gaps (see `mac_timesharing_converse_axis1/2`). -/
+theorem mac_timesharing_converse (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
+    {p | MACAchievable W p.1 p.2 ∧ 0 ≤ p.1 ∧ 0 ≤ p.2}
+      ⊆ closedConvexHull ℝ (⋃ (p₁ : Measure α₁) (p₂ : Measure α₂)
+          (_ : IsProbabilityMeasure p₁) (_ : IsProbabilityMeasure p₂), macPentagon p₁ p₂ W) := by
+  rintro ⟨R₁, R₂⟩ ⟨hach, hR₁0, hR₂0⟩
+  rcases hR₁0.lt_or_eq with hR₁ | hR₁
+  · rcases hR₂0.lt_or_eq with hR₂ | hR₂
+    · exact mac_timesharing_converse_interior W hR₁ hR₂ hach
+    · subst hR₂
+      exact mac_timesharing_converse_axis1 W hR₁ hach
+  · subst hR₁
+    rcases hR₂0.lt_or_eq with hR₂ | hR₂
+    · exact mac_timesharing_converse_axis2 W hR₂ hach
+    · subst hR₂
+      -- origin: `(0, 0)` lies in every pentagon (all five inequalities are `0 ≤ nonneg`)
+      apply subset_closedConvexHull
+      haveI hd1 : IsProbabilityMeasure (Measure.dirac (Classical.arbitrary α₁) : Measure α₁) :=
+        inferInstance
+      haveI hd2 : IsProbabilityMeasure (Measure.dirac (Classical.arbitrary α₂) : Measure α₂) :=
+        inferInstance
+      simp only [Set.mem_iUnion]
+      refine ⟨Measure.dirac (Classical.arbitrary α₁), Measure.dirac (Classical.arbitrary α₂),
+        hd1, hd2, le_refl _, le_refl _, ?_, ?_, ?_⟩
+      · exact macInfo₁_nonneg _ _ W
+      · exact macInfo₂_nonneg _ _ W
+      · simpa using macInfoBoth_nonneg (Measure.dirac (Classical.arbitrary α₁))
+          (Measure.dirac (Classical.arbitrary α₂)) W
+
+end CVAssembly
+
 end InformationTheory.Shannon.MAC
