@@ -977,4 +977,272 @@ lemma mac_converse_ambient_errorProb_user2_le
 
 end RateExtract
 
+section PerLetterInfo
+
+open MeasureTheory ProbabilityTheory InformationTheory InformationTheory.Shannon
+open InformationTheory.Shannon.ChannelCodingConverseGeneral
+open scoped ENNReal
+
+variable {α₁ α₂ β : Type*}
+  [Fintype α₁] [DecidableEq α₁] [Nonempty α₁] [MeasurableSpace α₁]
+    [MeasurableSingletonClass α₁] [StandardBorelSpace α₁]
+  [Fintype α₂] [DecidableEq α₂] [Nonempty α₂] [MeasurableSpace α₂]
+    [MeasurableSingletonClass α₂] [StandardBorelSpace α₂]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
+    [MeasurableSingletonClass β] [StandardBorelSpace β]
+variable {M₁ M₂ n : ℕ}
+
+/-- **Per-letter joint pushforward of a product-channel compProd.**  For an ambient
+`ν ⊗ₘ κ` whose message-to-output kernel factors as the per-letter product
+`κ m = ∏ⱼ W (x m j)`, the joint law of the `i`-th input-output pair `(x ω.1 i, ω.2 i)` is the
+channel joint `(ν.map (· i ∘ x)) ⊗ₘ W`.  This is the `h_pair_eq` core of
+`isMemorylessChannel_of_compProd_pi`, isolated as the single genuinely-new measure identity
+behind Gap B′. -/
+private lemma compProd_pi_map_pair_eq
+    {M A B : Type*} [MeasurableSpace M] [MeasurableSpace A] [MeasurableSpace B]
+    {k : ℕ} (ν : Measure M) [IsProbabilityMeasure ν]
+    (x : M → Fin k → A) (hx : Measurable x)
+    (W : Kernel A B) [IsMarkovKernel W]
+    (κ : Kernel M (Fin k → B)) [IsMarkovKernel κ]
+    (hκ : ∀ m, κ m = Measure.pi (fun j ↦ W (x m j))) (i : Fin k) :
+    (ν ⊗ₘ κ).map (fun ω ↦ (x ω.1 i, ω.2 i)) = (ν.map (fun m ↦ x m i)) ⊗ₘ W := by
+  set μ : Measure (M × (Fin k → B)) := ν ⊗ₘ κ with hμ_def
+  haveI : IsProbabilityMeasure μ := by rw [hμ_def]; infer_instance
+  set Zc : M × (Fin k → B) → A := fun ω ↦ x ω.1 i with hZc_def
+  set Yo : M × (Fin k → B) → B := fun ω ↦ ω.2 i with hYo_def
+  have hxi_meas : Measurable (fun m ↦ x m i) := (measurable_pi_apply i).comp hx
+  have hZc_meas : Measurable Zc := hxi_meas.comp measurable_fst
+  have hYo_meas : Measurable Yo := (measurable_pi_apply i).comp measurable_snd
+  show μ.map (fun ω ↦ (Zc ω, Yo ω)) = (ν.map (fun m ↦ x m i)) ⊗ₘ W
+  refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
+  have hFmeas : Measurable (fun ω : M × (Fin k → B) ↦ f (Zc ω, Yo ω)) :=
+    hf.comp (hZc_meas.prodMk hYo_meas)
+  have hFm2 : Measurable (fun z : A ↦ ∫⁻ b : B, f (z, b) ∂(W z)) :=
+    Measurable.lintegral_kernel_prod_right' (κ := W) hf
+  rw [lintegral_map hf (hZc_meas.prodMk hYo_meas), hμ_def,
+    Measure.lintegral_compProd hFmeas, Measure.lintegral_compProd hf,
+    lintegral_map hFm2 hxi_meas]
+  refine lintegral_congr fun m ↦ ?_
+  rw [hκ]
+  exact lintegral_pi_eval (fun j ↦ W (x m j)) i (fun b ↦ f (x m i, b))
+    (hf.comp (measurable_const.prodMk measurable_id))
+
+/-- Mutual information is invariant under a shared pushforward of both random variables:
+`I(f; g) = I(f ∘ T; g ∘ T)` when the pair law on `μ.map T` matches the pair law of the composed
+variables on `μ`. -/
+private lemma mutualInfo_map_comp
+    {Ω Ω' A B : Type*} [MeasurableSpace Ω] [MeasurableSpace Ω']
+    [MeasurableSpace A] [MeasurableSpace B]
+    (μ : Measure Ω) (T : Ω → Ω') (hT : Measurable T)
+    (f : Ω' → A) (hf : Measurable f) (g : Ω' → B) (hg : Measurable g) :
+    mutualInfo (μ.map T) f g = mutualInfo μ (fun ω ↦ f (T ω)) (fun ω ↦ g (T ω)) := by
+  unfold mutualInfo
+  rw [Measure.map_map (hf.prodMk hg) hT, Measure.map_map hf hT, Measure.map_map hg hT]
+  rfl
+
+/-- `condDistrib` is stable under a shared pushforward of the conditioning and conditioned
+variables: `condDistrib f h (μ.map T) =ᵃ condDistrib (f ∘ T) (h ∘ T) μ` on the conditioning
+marginal. -/
+private lemma condDistrib_map_comp
+    {Ω Ω' A C : Type*} [MeasurableSpace Ω] [MeasurableSpace Ω']
+    [MeasurableSpace A] [StandardBorelSpace A] [Nonempty A]
+    [MeasurableSpace C]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (T : Ω → Ω') (hT : Measurable T)
+    (f : Ω' → A) (hf : Measurable f) (h : Ω' → C) (hh : Measurable h) :
+    condDistrib f h (μ.map T)
+      =ᵐ[(μ.map T).map h] condDistrib (fun ω ↦ f (T ω)) (fun ω ↦ h (T ω)) μ := by
+  haveI : IsProbabilityMeasure (μ.map T) := Measure.isProbabilityMeasure_map hT.aemeasurable
+  refine condDistrib_ae_eq_of_measure_eq_compProd h hf.aemeasurable ?_
+  rw [Measure.map_map (hh.prodMk hf) hT, Measure.map_map hh hT]
+  exact (compProd_map_condDistrib (X := fun ω ↦ h (T ω)) (Y := fun ω ↦ f (T ω))
+    (hf.comp hT).aemeasurable).symm
+
+/-- Conditional mutual information is invariant under a shared pushforward of all three random
+variables: `I(f; g | h) = I(f ∘ T; g ∘ T | h ∘ T)`. -/
+private lemma condMutualInfo_map_comp
+    {Ω Ω' A B C : Type*} [MeasurableSpace Ω] [MeasurableSpace Ω']
+    [MeasurableSpace A] [StandardBorelSpace A] [Nonempty A]
+    [MeasurableSpace B] [StandardBorelSpace B] [Nonempty B]
+    [MeasurableSpace C]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (T : Ω → Ω') (hT : Measurable T)
+    (f : Ω' → A) (hf : Measurable f) (g : Ω' → B) (hg : Measurable g)
+    (h : Ω' → C) (hh : Measurable h) :
+    condMutualInfo (μ.map T) f g h
+      = condMutualInfo μ (fun ω ↦ f (T ω)) (fun ω ↦ g (T ω)) (fun ω ↦ h (T ω)) := by
+  haveI : IsProbabilityMeasure (μ.map T) := Measure.isProbabilityMeasure_map hT.aemeasurable
+  have hbase : (μ.map T).map h = μ.map (fun ω ↦ h (T ω)) := Measure.map_map hh hT
+  have hpair := condDistrib_map_comp μ T hT (fun q ↦ (f q, g q)) (hf.prodMk hg) h hh
+  have hf' := condDistrib_map_comp μ T hT f hf h hh
+  have hg' := condDistrib_map_comp μ T hT g hg h hh
+  have hprodk :
+      (condDistrib f h (μ.map T)) ×ₖ (condDistrib g h (μ.map T))
+        =ᵐ[(μ.map T).map h]
+      (condDistrib (fun ω ↦ f (T ω)) (fun ω ↦ h (T ω)) μ)
+        ×ₖ (condDistrib (fun ω ↦ g (T ω)) (fun ω ↦ h (T ω)) μ) := by
+    filter_upwards [hf', hg'] with a haf hag
+    ext s hs
+    rw [Kernel.prod_apply, Kernel.prod_apply, haf, hag]
+  rw [hbase] at hpair hprodk
+  unfold condMutualInfo
+  rw [hbase]
+  congr 1
+  · exact Measure.compProd_congr hpair
+  · exact Measure.compProd_congr hprodk
+
+/-- `condMutualInfo_map_comp` phrased against any measure `ρ` propositionally equal to `μ.map T`.
+The equation hypothesis is substituted (transporting its `IsFiniteMeasure` instance), which sidesteps
+the ill-typed motive of rewriting the measure argument of `condMutualInfo` directly. -/
+private lemma condMutualInfo_map_comp'
+    {Ω Ω' A B C : Type*} [MeasurableSpace Ω] [MeasurableSpace Ω']
+    [MeasurableSpace A] [StandardBorelSpace A] [Nonempty A]
+    [MeasurableSpace B] [StandardBorelSpace B] [Nonempty B]
+    [MeasurableSpace C]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (T : Ω → Ω') (hT : Measurable T)
+    (ρ : Measure Ω') [IsFiniteMeasure ρ] (hρ : ρ = μ.map T)
+    (f : Ω' → A) (hf : Measurable f) (g : Ω' → B) (hg : Measurable g)
+    (h : Ω' → C) (hh : Measurable h) :
+    condMutualInfo ρ f g h
+      = condMutualInfo μ (fun ω ↦ f (T ω)) (fun ω ↦ g (T ω)) (fun ω ↦ h (T ω)) := by
+  subst hρ
+  exact condMutualInfo_map_comp μ T hT f hf g hg h hh
+
+/-- **Step 1 (Gap B′): per-letter joint law identification.**  Under the converse ambient
+`macConverseAmbient c W`, the joint law of the `i`-th per-letter triple
+`(X₁ᵢ, X₂ᵢ, Yᵢ)` equals the achievability per-coordinate joint `macJointDistribution p₁ᵢ p₂ᵢ W`
+of the product of the per-letter input marginals `p₁ᵢ = μ.map X₁ᵢ`, `p₂ᵢ = μ.map X₂ᵢ`.  The two
+inputs are independent (functions of the independent uniform messages), and the output is
+conditionally `W`-distributed by the per-letter product-channel structure. -/
+lemma macConverse_map_triple_eq
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] (i : Fin n) :
+    (macConverseAmbient c W).map
+        (fun ω ↦ (c.encoder₁ (macConverseMsg₁ ω) i, c.encoder₂ (macConverseMsg₂ ω) i,
+                  macConverseYs i ω))
+      = macJointDistribution
+          ((macConverseAmbient c W).map (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i))
+          ((macConverseAmbient c W).map (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i)) W := by
+  have hx : Measurable (fun (m : Fin M₁ × Fin M₂) (j : Fin n) ↦
+      (c.encoder₁ m.1 j, c.encoder₂ m.2 j)) := measurable_of_countable _
+  have hpairmeas : Measurable
+      (fun ω : (Fin M₁ × Fin M₂) × (Fin n → β) ↦
+        ((c.encoder₁ ω.1.1 i, c.encoder₂ ω.1.2 i), ω.2 i)) := measurable_of_countable _
+  -- per-letter input-output pair law
+  have hpair : (macConverseAmbient c W).map
+        (fun ω ↦ ((c.encoder₁ ω.1.1 i, c.encoder₂ ω.1.2 i), ω.2 i))
+      = (macConverseInput M₁ M₂).map (fun m ↦ (c.encoder₁ m.1 i, c.encoder₂ m.2 i)) ⊗ₘ W := by
+    rw [macConverseAmbient]
+    exact compProd_pi_map_pair_eq (macConverseInput M₁ M₂)
+      (fun m j ↦ (c.encoder₁ m.1 j, c.encoder₂ m.2 j)) hx W (macConverseKernel c W)
+      (fun m ↦ rfl) i
+  -- the per-letter input marginals are the product of the two message-encoder marginals
+  have hmarg : (macConverseInput M₁ M₂).map (fun m ↦ (c.encoder₁ m.1 i, c.encoder₂ m.2 i))
+      = ((macConverseAmbient c W).map (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i)).prod
+        ((macConverseAmbient c W).map (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i)) := by
+    have hu1 : (macConverseAmbient c W).map (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i)
+        = ((Fintype.card (Fin M₁) : ℝ≥0∞)⁻¹ • Measure.count).map (fun m₁ ↦ c.encoder₁ m₁ i) := by
+      rw [show (fun ω : (Fin M₁ × Fin M₂) × (Fin n → β) ↦ c.encoder₁ (macConverseMsg₁ ω) i)
+            = (fun m₁ ↦ c.encoder₁ m₁ i) ∘ macConverseMsg₁ from rfl,
+          ← Measure.map_map (measurable_of_countable _) measurable_macConverseMsg₁,
+          macConverseMsg₁_uniform c W]
+    have hu2 : (macConverseAmbient c W).map (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i)
+        = ((Fintype.card (Fin M₂) : ℝ≥0∞)⁻¹ • Measure.count).map (fun m₂ ↦ c.encoder₂ m₂ i) := by
+      rw [show (fun ω : (Fin M₁ × Fin M₂) × (Fin n → β) ↦ c.encoder₂ (macConverseMsg₂ ω) i)
+            = (fun m₂ ↦ c.encoder₂ m₂ i) ∘ macConverseMsg₂ from rfl,
+          ← Measure.map_map (measurable_of_countable _) measurable_macConverseMsg₂,
+          macConverseMsg₂_uniform c W]
+    rw [hu1, hu2, macConverseInput,
+        show (fun m : Fin M₁ × Fin M₂ ↦ (c.encoder₁ m.1 i, c.encoder₂ m.2 i))
+          = Prod.map (fun m₁ ↦ c.encoder₁ m₁ i) (fun m₂ ↦ c.encoder₂ m₂ i) from rfl]
+    exact (Measure.map_prod_map _ _ (measurable_of_countable _) (measurable_of_countable _)).symm
+  rw [show (fun ω : (Fin M₁ × Fin M₂) × (Fin n → β) ↦
+        (c.encoder₁ (macConverseMsg₁ ω) i, c.encoder₂ (macConverseMsg₂ ω) i, macConverseYs i ω))
+      = ⇑MeasurableEquiv.prodAssoc ∘
+        (fun ω ↦ ((c.encoder₁ ω.1.1 i, c.encoder₂ ω.1.2 i), ω.2 i)) from rfl,
+    ← Measure.map_map MeasurableEquiv.prodAssoc.measurable hpairmeas, hpair, hmarg]
+  rfl
+
+/-- **Per-letter identification, user 1** (Gap B′ deliverable).  The ambient per-letter
+conditional mutual information `I(X₁ᵢ; Yᵢ | X₂ᵢ)` equals the achievability corner information
+`macInfo₁` of the per-letter product input.  This rewrites the user-1 sum term of
+`mac_converse_rate_extract` into `∑ᵢ macInfo₁ p₁ᵢ p₂ᵢ W`. -/
+lemma mac_condMI_eq_macInfo₁_at
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] (i : Fin n) :
+    (condMutualInfo (macConverseAmbient c W)
+        (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i) (macConverseYs i)
+        (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i)).toReal
+      = macInfo₁ ((macConverseAmbient c W).map (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i))
+          ((macConverseAmbient c W).map (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i)) W := by
+  haveI : IsProbabilityMeasure ((macConverseAmbient c W).map
+      (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i)) :=
+    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+  haveI : IsProbabilityMeasure ((macConverseAmbient c W).map
+      (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i)) :=
+    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+  rw [macInfo₁_eq_condMutualInfo_toReal]
+  congr 1
+  exact (condMutualInfo_map_comp' (macConverseAmbient c W)
+    (fun ω ↦ (c.encoder₁ (macConverseMsg₁ ω) i, c.encoder₂ (macConverseMsg₂ ω) i,
+              macConverseYs i ω)) (measurable_of_countable _)
+    _ (macConverse_map_triple_eq c W i).symm
+    Prod.fst measurable_fst (fun q ↦ q.2.2) measurable_snd.snd
+    (fun q ↦ q.2.1) measurable_snd.fst).symm
+
+/-- **Per-letter identification, user 2** (Gap B′ deliverable).  The ambient per-letter
+conditional mutual information `I(X₂ᵢ; Yᵢ | X₁ᵢ)` equals `macInfo₂` of the per-letter product
+input. -/
+lemma mac_condMI_eq_macInfo₂_at
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] (i : Fin n) :
+    (condMutualInfo (macConverseAmbient c W)
+        (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i) (macConverseYs i)
+        (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i)).toReal
+      = macInfo₂ ((macConverseAmbient c W).map (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i))
+          ((macConverseAmbient c W).map (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i)) W := by
+  haveI : IsProbabilityMeasure ((macConverseAmbient c W).map
+      (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i)) :=
+    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+  haveI : IsProbabilityMeasure ((macConverseAmbient c W).map
+      (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i)) :=
+    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+  rw [macInfo₂_eq_condMutualInfo_toReal]
+  congr 1
+  exact (condMutualInfo_map_comp' (macConverseAmbient c W)
+    (fun ω ↦ (c.encoder₁ (macConverseMsg₁ ω) i, c.encoder₂ (macConverseMsg₂ ω) i,
+              macConverseYs i ω)) (measurable_of_countable _)
+    _ (macConverse_map_triple_eq c W i).symm
+    (fun q ↦ q.2.1) measurable_snd.fst (fun q ↦ q.2.2) measurable_snd.snd
+    Prod.fst measurable_fst).symm
+
+/-- **Per-letter identification, sum corner** (Gap B′ deliverable).  The ambient per-letter
+joint mutual information `I((X₁ᵢ, X₂ᵢ); Yᵢ)` equals `macInfoBoth` of the per-letter product
+input. -/
+lemma mac_mutualInfo_eq_macInfoBoth_at
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] (i : Fin n) :
+    (mutualInfo (macConverseAmbient c W)
+        (fun ω ↦ (c.encoder₁ (macConverseMsg₁ ω) i, c.encoder₂ (macConverseMsg₂ ω) i))
+        (macConverseYs i)).toReal
+      = macInfoBoth ((macConverseAmbient c W).map (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i))
+          ((macConverseAmbient c W).map (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i)) W := by
+  haveI : IsProbabilityMeasure ((macConverseAmbient c W).map
+      (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i)) :=
+    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+  haveI : IsProbabilityMeasure ((macConverseAmbient c W).map
+      (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i)) :=
+    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+  rw [macInfoBoth_eq_mutualInfo_toReal]
+  congr 1
+  rw [← macConverse_map_triple_eq c W i,
+    mutualInfo_map_comp (macConverseAmbient c W)
+      (fun ω ↦ (c.encoder₁ (macConverseMsg₁ ω) i, c.encoder₂ (macConverseMsg₂ ω) i,
+                macConverseYs i ω)) (measurable_of_countable _)
+      (fun q ↦ (q.1, q.2.1)) (measurable_fst.prodMk measurable_snd.fst)
+      (fun q ↦ q.2.2) measurable_snd.snd]
+
+end PerLetterInfo
+
 end InformationTheory.Shannon.MAC
