@@ -28,7 +28,7 @@ bridge で genuine closure する自立サブ計画。壁想定無し。
 
 | サブテーマ | 子プラン | 状態 |
 |---|---|---|
-| 6.1.3 副情報増分 = MI | [`gambling-side-information-plan.md`](gambling-side-information-plan.md) | 📋 未着手 |
+| 6.1.3 副情報増分 = MI | [`gambling-side-information-plan.md`](gambling-side-information-plan.md) | ✅ proof-done + 監査 PASS (2026-07-04、headline `sideInfo_doublingRate_increment_eq_mutualInfo` + 条件付き Kelly `condDoublingRate_le_proportional`、ともに `@[entry_point]`・`@audit:ok`・sorryAx-free、root+README+roadmap 登録済) |
 
 ## 進捗 (全 Phase DONE)
 

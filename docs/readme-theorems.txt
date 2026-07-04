@@ -38,6 +38,8 @@ huffmanLength_optimal
 @ 6 | Gambling & the doubling rate
 doublingRate_le_proportional | Kelly optimality
 doublingRate_eq_proportional_iff
+sideInfo_doublingRate_increment_eq_mutualInfo | side information ΔW = I(X;Y) (CT 6.1.3)
+condDoublingRate_le_proportional | conditional Kelly optimality
 
 @ 7 | Channel capacity
 shannon_noisy_channel_coding_theorem_general_full

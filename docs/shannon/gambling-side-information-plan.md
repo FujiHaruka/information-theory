@@ -4,16 +4,16 @@
 
 ## 進捗
 
-- [ ] M0 在庫 (再利用 3 補題 verbatim 署名 + 対称 MI 定義形 + reuse-vs-local 判断) 📋
-- [ ] Phase 1 — skeleton (def 4 本 + 2 headline + 補助補題を `sorry` 化、root 登録) 📋
-- [ ] Phase 2 — marginal / joint が pmf (stdSimplex membership) 📋
-- [ ] Phase 3 — オッズ相殺補題 (`sum_comm`) 📋
-- [ ] Phase 4 — 条件付き Kelly 最適性 headline #1 📋
-- [ ] Phase 5 — 条件付き閉形式組立 `W*(X|Y) = ∑ pX·log o − H(X|Y)` 📋
-- [ ] Phase 6 — chain rule bridge `H(X,Y) = H(Y) + H(X|Y)` (正直性の要) 📋
-- [ ] Phase 7 — headline #2 `ΔW = I(X;Y)` 組立 📋
-- [ ] Phase 8 — 配線 (root / README / roadmap / facts) + 独立 honesty 監査 → `@audit:ok` 📋
-- [ ] Phase 9 (optional) — reuse 同値補題 / `ΔW ≥ 0` 系（proof-done 必須外） 📋
+- [x] M0 在庫 (再利用 3 補題 verbatim 署名 + 対称 MI 定義形 + reuse-vs-local 判断) 📋
+- [x] Phase 1 — skeleton (def 4 本 + 2 headline + 補助補題を `sorry` 化、root 登録) 📋
+- [x] Phase 2 — marginal / joint が pmf (stdSimplex membership) 📋
+- [x] Phase 3 — オッズ相殺補題 (`sum_comm`) 📋
+- [x] Phase 4 — 条件付き Kelly 最適性 headline #1 📋
+- [x] Phase 5 — 条件付き閉形式組立 `W*(X|Y) = ∑ pX·log o − H(X|Y)` 📋
+- [x] Phase 6 — chain rule bridge `H(X,Y) = H(Y) + H(X|Y)` (正直性の要) 📋
+- [x] Phase 7 — headline #2 `ΔW = I(X;Y)` 組立 📋
+- [x] Phase 8 — 配線 (root / README / roadmap) + 独立 honesty 監査 → `@audit:ok` (facts は gambling family に facts ファイル不在ゆえ該当なし)
+- [ ] Phase 9 (optional) — reuse 同値補題 / `ΔW ≥ 0` 系（proof-done 必須外、未実施） 📋
 
 ## Context
 
@@ -298,3 +298,6 @@ chain rule / 閉形式は **恒等式 (=)** であり、詰まっても仮説で
 2. **reuse-vs-local mirror**: primary = local mirror（`RateDistortion` 経由の重 import + gambling→RD 逆依存 +
    `mutualInfoPmf` の MeasurableSpace 引き摺り懸念を回避）。M0 で import weight を確認し軽微なら
    Phase 9(a) 同値補題で anti-duplication を担保。
+3. **facts ファイルは gambling family に不在ゆえ配線対象外**: Phase 8 の facts 追記項目は
+   `docs/shannon/shannon-facts.md` 等の family facts ファイルが gambling に存在しないため該当なし。
+   sorryAx-free / `@audit:ok` は `#print axioms` で機械再導出可能ゆえ prose cache 不要（re-derive > cache）。

@@ -160,6 +160,7 @@ rate. For any full-support strategy `b` and positive odds `o`,
 Quot.sound]`); genuine per-`y` reuse of `doublingRate_le_proportional` weighted by
 `pY y ≥ 0`, no bundling. All hypotheses are regularity preconditions (`hpY`/`hcond` pmf,
 `hb`/`hb_pos` full-support bet, `ho` positive odds), none load-bearing. -/
+@[entry_point]
 theorem condDoublingRate_le_proportional
     (b : γ → α → ℝ) (o : α → ℝ) (pY : γ → ℝ) (pXgivenY : γ → α → ℝ)
     (hpY : pY ∈ stdSimplex ℝ γ)
