@@ -204,4 +204,44 @@ theorem seqLogWealth_proportional_asymptotically_optimal
   filter_upwards [h_b, h_kelly] with ω hωb hωk
   exact ⟨hωb, hωk, h_opt⟩
 
+/-- **Exponential wealth growth** (Cover–Thomas §6.3): if the doubling rate is positive,
+the log-wealth `log S_n` diverges to `+∞` almost surely, i.e. wealth grows exponentially.
+Operationally, a positive doubling rate means the gambler gets rich. -/
+@[entry_point]
+theorem seqLogWealth_tendsto_atTop_of_pos_doublingRate
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (b o : α → ℝ)
+    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
+    (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hpos : 0 < doublingRate b o (lawPmf μ (Xs 0))) :
+    ∀ᵐ ω ∂μ, Tendsto (fun n : ℕ ↦ seqLogWealth b o Xs n ω) atTop atTop := by
+  have h1 := seqLogWealth_div_tendsto_doublingRate μ b o Xs hXs hindep hident
+  filter_upwards [h1] with ω hω
+  -- `log S_n = (log S_n / n) · n`, with `(log S_n / n) → W > 0` and `n → +∞`.
+  have hmul : Tendsto (fun n : ℕ ↦ seqLogWealth b o Xs n ω / n * n) atTop atTop :=
+    hω.pos_mul_atTop hpos tendsto_natCast_atTop_atTop
+  refine hmul.congr' ?_
+  filter_upwards [eventually_gt_atTop 0] with n hn
+  exact div_mul_cancel₀ _ (Nat.cast_ne_zero.mpr hn.ne')
+
+/-- **Ruin under a losing bet** (Cover–Thomas §6.3): if the doubling rate is negative,
+the log-wealth `log S_n` diverges to `−∞` almost surely, i.e. wealth decays to zero
+exponentially. Operationally, a negative doubling rate means the gambler goes broke. -/
+@[entry_point]
+theorem seqLogWealth_tendsto_atBot_of_neg_doublingRate
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (b o : α → ℝ)
+    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (hindep : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
+    (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hneg : doublingRate b o (lawPmf μ (Xs 0)) < 0) :
+    ∀ᵐ ω ∂μ, Tendsto (fun n : ℕ ↦ seqLogWealth b o Xs n ω) atTop atBot := by
+  have h1 := seqLogWealth_div_tendsto_doublingRate μ b o Xs hXs hindep hident
+  filter_upwards [h1] with ω hω
+  -- `log S_n = (log S_n / n) · n`, with `(log S_n / n) → W < 0` and `n → +∞`.
+  have hmul : Tendsto (fun n : ℕ ↦ seqLogWealth b o Xs n ω / n * n) atTop atBot :=
+    hω.neg_mul_atTop hneg tendsto_natCast_atTop_atTop
+  refine hmul.congr' ?_
+  filter_upwards [eventually_gt_atTop 0] with n hn
+  exact div_mul_cancel₀ _ (Nat.cast_ne_zero.mpr hn.ne')
+
 end InformationTheory.Shannon.Gambling
