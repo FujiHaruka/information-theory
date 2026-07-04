@@ -206,7 +206,14 @@ theorem seqLogWealth_proportional_asymptotically_optimal
 
 /-- **Exponential wealth growth** (Cover–Thomas §6.3): if the doubling rate is positive,
 the log-wealth `log S_n` diverges to `+∞` almost surely, i.e. wealth grows exponentially.
-Operationally, a positive doubling rate means the gambler gets rich. -/
+Operationally, a positive doubling rate means the gambler gets rich.
+@audit:ok — independent audit 2026-07-04: sorryAx-free (`[propext, Classical.choice,
+Quot.sound]`). Pure corollary of H1 (`seqLogWealth_div_tendsto_doublingRate`) via
+`log S_n = (log S_n / n)·n` + `Tendsto.pos_mul_atTop`; the limit `W*` comes from H1's
+conclusion, NOT a bundled `(h : Tendsto … (𝓝 W*))` hypothesis. `hpos : 0 < W*` is a
+genuine sign precondition (the divergence direction depends on the sign; at `W*=0` the
+direction is indeterminate), not load-bearing. Conclusion `Tendsto … atTop` is a real
+claim, not vacuous; the `n=0` boundary is handled via `eventually_gt_atTop 0`. -/
 @[entry_point]
 theorem seqLogWealth_tendsto_atTop_of_pos_doublingRate
     (μ : Measure Ω) [IsProbabilityMeasure μ] (b o : α → ℝ)
@@ -226,7 +233,14 @@ theorem seqLogWealth_tendsto_atTop_of_pos_doublingRate
 
 /-- **Ruin under a losing bet** (Cover–Thomas §6.3): if the doubling rate is negative,
 the log-wealth `log S_n` diverges to `−∞` almost surely, i.e. wealth decays to zero
-exponentially. Operationally, a negative doubling rate means the gambler goes broke. -/
+exponentially. Operationally, a negative doubling rate means the gambler goes broke.
+@audit:ok — independent audit 2026-07-04: sorryAx-free (`[propext, Classical.choice,
+Quot.sound]`). Pure corollary of H1 (`seqLogWealth_div_tendsto_doublingRate`) via
+`log S_n = (log S_n / n)·n` + `Tendsto.neg_mul_atTop`; the limit `W*` comes from H1's
+conclusion, NOT a bundled `(h : Tendsto … (𝓝 W*))` hypothesis. `hneg : W* < 0` is a
+genuine sign precondition (the divergence direction depends on the sign; at `W*=0` the
+direction is indeterminate), not load-bearing. Conclusion `Tendsto … atBot` is a real
+claim, not vacuous; the `n=0` boundary is handled via `eventually_gt_atTop 0`. -/
 @[entry_point]
 theorem seqLogWealth_tendsto_atBot_of_neg_doublingRate
     (μ : Measure Ω) [IsProbabilityMeasure μ] (b o : α → ℝ)
