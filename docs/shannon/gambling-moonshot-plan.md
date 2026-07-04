@@ -20,6 +20,16 @@ sorryAx-free / 独立 `@audit:ok`) まで形式化する。Ch.6 (Gambling) は `
 - commits: `d22bc953` (実装) + `8671b350` (独立 honesty 監査 `@audit:ok`)。
 - 残: operational gambling / horse-race operational / 株式市場 (Ch.6 stock-market) は scope-out 継続。
 
+## 残課題 (side-information 増分) — 子プラン
+
+Cover–Thomas **Thm 6.1.3 (gambling with side information)**: 副情報 Y の倍加率増分 ΔW = I(X;Y)。
+親 Basic.lean の `doublingRate_proportional_eq` を周辺化・条件付けへ持ち上げ、対称 pmf MI + chain rule
+bridge で genuine closure する自立サブ計画。壁想定無し。
+
+| サブテーマ | 子プラン | 状態 |
+|---|---|---|
+| 6.1.3 副情報増分 = MI | [`gambling-side-information-plan.md`](gambling-side-information-plan.md) | 📋 未着手 |
+
 ## 進捗 (全 Phase DONE)
 
 - [x] Phase 0 — M0 API 在庫 (5 補題 verbatim 署名確認)
