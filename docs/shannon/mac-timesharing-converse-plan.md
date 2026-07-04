@@ -191,6 +191,30 @@ regularity precondition**（load-bearing bundling でない）。**下流 CV へ
 ### Gap 0 — code→ambient bridge（`mac_converse` hyp 群 discharge）
 **proof-log**: yes（本計画最大の greenfield、ambient 構成、再開根拠必須）
 
+**M0 在庫（`mac_converse` signature verbatim、`Converse.lean:830-847`、orchestrator 確認済）**。
+discharge する引数（10 個中の非型クラス分）:
+```
+[NeZero M₁] [NeZero M₂]
+(μ : Measure Ω) [IsProbabilityMeasure μ]                                    -- ← 構成対象
+(Msg₁ : Ω → Fin M₁) (Msg₂ : Ω → Fin M₂) (Ys : Fin n → Ω → β)                 -- ← 構成対象（射影）
+(c : MACCode M₁ M₂ n α₁ α₂ β)
+hMsg₁ hMsg₂ : Measurable ;  hYs : ∀ i, Measurable (Ys i)                     -- 可測性
+hMsg₁_uniform : μ.map Msg₁ = (card (Fin M₁))⁻¹ • Measure.count               -- uniform 周辺
+hMsg₂_uniform : μ.map Msg₂ = (card (Fin M₂))⁻¹ • Measure.count
+hMsg₁₂_uniform : μ.map (Msg₁,Msg₂) = (card (Fin M₁ × Fin M₂))⁻¹ • Measure.count -- joint uniform
+h_memo : IsMemorylessChannel μ (fun i ω ↦ (c.encoder₁ (Msg₁ ω) i, c.encoder₂ (Msg₂ ω) i)) Ys
+h_indep : mutualInfo μ Msg₁ Msg₂ = 0                                          -- message 独立
+hmarkov : IsMarkovChain μ (fun ω ↦ (Msg₁ ω, Msg₂ ω))
+            (fun ω ↦ (fun j ↦ c.encoder₁ (Msg₁ ω) j, fun j ↦ c.encoder₂ (Msg₂ ω) j))
+            (fun ω j ↦ Ys j ω)
+hcard₁ : 2 ≤ M₁ ; hcard₂ : 2 ≤ M₂                                            -- ← Gap A の軸 casework へ
+```
+結論 = `InMACCapacityRegion (log M₁) (log M₂) [B₁] [B₂] [Bboth]`（各 `Bᵢ` に Fano 項 = Gap A で消去）。
+自然な ambient: `Ω = Fin M₁ × Fin M₂ × (Fin n → β)`、`(m₁,m₂) ~ uniform ⊗ uniform`、
+`(Yᵢ) | (m₁,m₂) ~ ∏ᵢ W(encoder₁ m₁ i, encoder₂ m₂ i)`（`Measure.compProd` + per-letter kernel）。
+`Msg₁,Msg₂,Ys` は Ω の射影。**`IsMemorylessChannel` / `IsMarkovChain` の `*_def` を Read** して
+discharge 形を掴む（M0 残）。
+
 - [ ] **ambient 構成** `macConverseAmbient c := uniform(Fin M₁ × Fin M₂) ⊗ (per-letter channel W)`。
   message は uniform、input は `c.encoder₁ / c.encoder₂` 経由の deterministic map、output は W。
   `IIDAmbient.macAmbientMeasure`（`:64`）は **固定 product input `p₁⊗p₂` の i.i.d. ambient** ゆえ
