@@ -58,7 +58,11 @@ noncomputable def condDoublingRate
 
 /-- The mutual information `I(X; Y)` in symmetric pmf form
 `I(X; Y) = H(X) + H(Y) − H(X, Y)`, where the entropies are the finite-alphabet Shannon
-entropies of the marginals and the joint. -/
+entropies of the marginals and the joint.
+@audit:ok — independent audit 2026-07-04: the symmetric form carries the joint entropy
+`H(X, Y)` as an independent term, so it is not crafted to match the Phase-5 increment
+`H(X) − H(X|Y)`; recognizing it as that increment forces a genuine detour through the
+chain-rule bridge (`sideInfoJointEntropy_eq_chain`). Not trivial-circular. -/
 noncomputable def sideInfoMutualInfo (pY : γ → ℝ) (pXgivenY : γ → α → ℝ) : ℝ :=
   (∑ x, Real.negMulLog (sideMarginalX pY pXgivenY x))
     + (∑ y, Real.negMulLog (pY y))
@@ -113,6 +117,12 @@ lemma condDoublingRate_proportional_eq (o : α → ℝ) (pY : γ → ℝ) (pXgiv
     rw [doublingRate_proportional_eq (pXgivenY y) o (hcond y) ho, mul_sub]
   rw [key, sideInfo_logOdds_cancel]
 
+/-- Chain rule bridge `H(X, Y) = H(Y) + H(X | Y)` in pmf form (the honesty linchpin of
+Theorem 6.1.3: it lets the symmetric `sideInfoMutualInfo` be recognized as the doubling-rate
+increment without defining the latter to match).
+@audit:ok — independent audit 2026-07-04: sorryAx-free (`[propext, Classical.choice,
+Quot.sound]`); a genuine independent identity via the unconditional `Real.negMulLog_mul`
+plus each row sum `∑ x, pXgivenY y x = 1`, and does not assume the conclusion. -/
 lemma sideInfoJointEntropy_eq_chain (pY : γ → ℝ) (pXgivenY : γ → α → ℝ)
     (hcond : ∀ y, pXgivenY y ∈ stdSimplex ℝ α) :
     (∑ p, Real.negMulLog (sideInfoJoint pY pXgivenY p))
@@ -145,7 +155,11 @@ lemma sideInfoJointEntropy_eq_chain (pY : γ → ℝ) (pXgivenY : γ → α → 
 /-- **Conditional Kelly optimality** (Cover–Thomas, towards Theorem 6.1.3): proportional
 betting on each observed value of the side information maximizes the conditional doubling
 rate. For any full-support strategy `b` and positive odds `o`,
-`W(b | Y) ≤ W(pXgivenY | Y)`. -/
+`W(b | Y) ≤ W(pXgivenY | Y)`.
+@audit:ok — independent audit 2026-07-04: sorryAx-free (`[propext, Classical.choice,
+Quot.sound]`); genuine per-`y` reuse of `doublingRate_le_proportional` weighted by
+`pY y ≥ 0`, no bundling. All hypotheses are regularity preconditions (`hpY`/`hcond` pmf,
+`hb`/`hb_pos` full-support bet, `ho` positive odds), none load-bearing. -/
 theorem condDoublingRate_le_proportional
     (b : γ → α → ℝ) (o : α → ℝ) (pY : γ → ℝ) (pXgivenY : γ → α → ℝ)
     (hpY : pY ∈ stdSimplex ℝ γ)
@@ -162,7 +176,13 @@ theorem condDoublingRate_le_proportional
 /-- **Theorem 6.1.3** (Cover–Thomas, gambling with side information): the increment of the
 optimal doubling rate obtained from the side information `Y` equals the mutual information
 `I(X; Y)`. Writing `W*(X | Y)` for the optimal conditional doubling rate and `W*(X)` for
-the optimal doubling rate of the `X`-marginal, `W*(X | Y) − W*(X) = I(X; Y)`. -/
+the optimal doubling rate of the `X`-marginal, `W*(X | Y) − W*(X) = I(X; Y)`.
+@audit:ok — independent audit 2026-07-04: sorryAx-free (`[propext, Classical.choice,
+Quot.sound]`). Not trivial-circular: the increment reduces to `H(X) − H(X|Y)`, but the RHS
+`sideInfoMutualInfo` is the symmetric `H(X) + H(Y) − H(X, Y)`, so the closing `linarith`
+genuinely consumes the chain-rule bridge `sideInfoJointEntropy_eq_chain` to cancel the joint
+entropy term (dropping it leaves the goal underdetermined). All hypotheses
+(`hpY`/`hcond` pmf, `ho` positive odds) are regularity preconditions, none load-bearing. -/
 @[entry_point]
 theorem sideInfo_doublingRate_increment_eq_mutualInfo
     (o : α → ℝ) (pY : γ → ℝ) (pXgivenY : γ → α → ℝ)
