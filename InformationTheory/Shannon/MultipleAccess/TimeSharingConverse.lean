@@ -478,7 +478,8 @@ instance macConverseCodeKernel_isMarkovKernel (W : MACChannel α₁ α₂ β) [I
 message-to-output kernel `κ` factors through a deterministic encoder `g : M → Z` and a
 codeword kernel `Wcode : Z → Y` (i.e. `κ m = Wcode (g m)`).  This is the general shape behind
 the concrete MAC-converse Markov chain; it needs no product/pi structure, only the
-factorization `hκ`. -/
+factorization `hκ`.
+@audit:ok -/
 private lemma isMarkovChain_of_compProd_encoder
     {M Z Y : Type*}
     [MeasurableSpace M] [StandardBorelSpace M] [Nonempty M]
@@ -576,7 +577,8 @@ private lemma isMarkovChain_of_compProd_encoder
 
 /-- Re-randomizing a single coordinate of a product of probability measures leaves the
 `Measure.pi`-integral unchanged.  Used to peel the `i`-th output letter off the block channel
-`∏ⱼ W (xⱼ)` in the memoryless-channel derivation. -/
+`∏ⱼ W (xⱼ)` in the memoryless-channel derivation.
+@audit:ok -/
 private lemma lintegral_pi_reRandomize {γ : Type*} [MeasurableSpace γ]
     {k : ℕ} (ζ : Fin k → Measure γ) [∀ j, IsProbabilityMeasure (ζ j)]
     (i : Fin k) (F : (Fin k → γ) → ℝ≥0∞) (hF : Measurable F) :
@@ -596,7 +598,8 @@ private lemma lintegral_pi_reRandomize {γ : Type*} [MeasurableSpace γ]
   simp_rw [MeasureTheory.lmarginal_update_of_mem ζ (Finset.mem_singleton_self i) F]
   rw [lintegral_const, measure_univ, mul_one]
 
-/-- Marginalization of a product of probability measures at a single coordinate. -/
+/-- Marginalization of a product of probability measures at a single coordinate.
+@audit:ok -/
 private lemma lintegral_pi_eval {γ : Type*} [MeasurableSpace γ]
     {k : ℕ} (ζ : Fin k → Measure γ) [∀ j, IsProbabilityMeasure (ζ j)]
     (i : Fin k) (g : γ → ℝ≥0∞) (hg : Measurable g) :
@@ -608,7 +611,8 @@ private lemma lintegral_pi_eval {γ : Type*} [MeasurableSpace γ]
 /-- **Memoryless-channel property from a product-channel ambient.**  If the message-to-output
 kernel factors as the per-letter product `κ m = ∏ⱼ W (x m j)` of a channel `W` applied to a
 deterministic codeword `x m`, the ambient `ν ⊗ₘ κ` is a memoryless channel with per-letter
-inputs `x ω.1 i` and per-letter outputs `ω.2 i`. -/
+inputs `x ω.1 i` and per-letter outputs `ω.2 i`.
+@audit:ok -/
 private lemma isMemorylessChannel_of_compProd_pi
     {M A B : Type*}
     [MeasurableSpace M] [StandardBorelSpace M] [Nonempty M]
@@ -729,7 +733,8 @@ private lemma isMemorylessChannel_of_compProd_pi
   · exact Function.update_self i b y
 
 /-- Memoryless-channel property of the constructed ambient: the per-letter output is conditionally
-independent of the other letters given the current input pair. -/
+independent of the other letters given the current input pair.
+@audit:ok -/
 lemma macConverse_memorylessChannel
     (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     [NeZero M₁] [NeZero M₂] :
@@ -756,7 +761,8 @@ lemma macConverse_mutualInfo_eq_zero
     rw [macConverseAmbient]; exact Measure.fst_compProd _ _
   rw [hfst, macConverseInput]
 
-/-- Markov chain `(messages) → (encoded inputs) → (outputs)` for the constructed ambient. -/
+/-- Markov chain `(messages) → (encoded inputs) → (outputs)` for the constructed ambient.
+@audit:ok -/
 lemma macConverse_isMarkovChain
     (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     [NeZero M₁] [NeZero M₂] :
@@ -776,7 +782,8 @@ lemma macConverse_isMarkovChain
 Markov channel `W`, the canonical ambient measure `macConverseAmbient c W` discharges every
 hypothesis of the floating message-level converse `mac_converse`, so the rate pair
 `(log M₁, log M₂)` lies in the corner-point region determined by the per-letter conditional and
-joint mutual informations (still carrying the Fano slack, removed later in Gap A). -/
+joint mutual informations (still carrying the Fano slack, removed later in Gap A).
+@audit:ok -/
 theorem mac_converse_from_code
     [NeZero M₁] [NeZero M₂]
     (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
