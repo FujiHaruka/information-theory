@@ -1274,12 +1274,85 @@ variable {M₁ M₂ n : ℕ}
 `I((X₁, X₂); Y) ≤ I(X₁; Y | X₂) + I(X₂; Y | X₁)`.  This is the `hsub` well-formedness hypothesis of
 `mac_avgPentagon_mem_convexHull`; it is a universal geometric fact about the product input, threaded
 here exactly like the existing `hac`/`hbc` corners `mac_macInfo₁/₂_le_macInfoBoth`.
-@residual(plan:mac-timesharing-converse-plan) Dispatch A (MI superadditivity, `n = 2` case of
-`mutualInfo_superadditive_of_indep`). -/
+Proved by the two chain-rule decompositions `I((X₁, X₂); Y) = I(X₂; Y) + I(X₁; Y | X₂)` and the
+identity `I(X₂; Y | X₁) = I(X₂; Y) + I(X₁; X₂ | Y)` (the `I(X₁; X₂) = 0` term drops under the
+independent product input), so `I(X₂; Y) ≤ I(X₂; Y | X₁)` and the claim follows. -/
 lemma mac_perletter_superadd (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
     (p₂ : Measure α₂) [IsProbabilityMeasure p₂] (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
     macInfoBoth p₁ p₂ W ≤ macInfo₁ p₁ p₂ W + macInfo₂ p₁ p₂ W := by
-  sorry
+  have hX1 : Measurable (Prod.fst : α₁ × α₂ × β → α₁) := measurable_fst
+  have hX2 : Measurable (fun q : α₁ × α₂ × β ↦ q.2.1) := measurable_fst.comp measurable_snd
+  have hY : Measurable (fun q : α₁ × α₂ × β ↦ q.2.2) := measurable_snd.comp measurable_snd
+  rw [macInfoBoth_eq_mutualInfo_toReal p₁ p₂ W, macInfo₁_eq_condMutualInfo_toReal p₁ p₂ W,
+      macInfo₂_eq_condMutualInfo_toReal p₁ p₂ W]
+  set J := macJointDistribution p₁ p₂ W with hJ
+  -- Finiteness of the two corner informations.
+  have hC1_ne : condMutualInfo J Prod.fst (fun q ↦ q.2.2) (fun q ↦ q.2.1) ≠ ∞ :=
+    condMutualInfo_ne_top J Prod.fst (fun q ↦ q.2.2) (fun q ↦ q.2.1) hX1 hY hX2
+  have hC2_ne : condMutualInfo J (fun q ↦ q.2.1) (fun q ↦ q.2.2) Prod.fst ≠ ∞ :=
+    condMutualInfo_ne_top J (fun q ↦ q.2.1) (fun q ↦ q.2.2) Prod.fst hX2 hY hX1
+  -- Independence of the two inputs under the product law `p₁ ⊗ p₂`.
+  have indep0 : mutualInfo J Prod.fst (fun q : α₁ × α₂ × β ↦ q.2.1) = 0 :=
+    macJoint_mutualInfo_X1_X2_eq_zero p₁ p₂ W
+  -- Chain-rule decomposition A: `I((X₁, X₂); Y) = I(X₂; Y) + I(X₁; Y | X₂)`.
+  have heqA1 : mutualInfo J (fun q : α₁ × α₂ × β ↦ (q.1, q.2.1)) (fun q ↦ q.2.2)
+      = mutualInfo J (fun q : α₁ × α₂ × β ↦ (q.2.1, q.1)) (fun q ↦ q.2.2) :=
+    mutualInfo_map_left_measurableEquiv J (fun q : α₁ × α₂ × β ↦ (q.2.1, q.1))
+      (fun q ↦ q.2.2) (hX2.prodMk hX1) hY MeasurableEquiv.prodComm
+  have hchainA : mutualInfo J (fun q : α₁ × α₂ × β ↦ (q.2.1, q.1)) (fun q ↦ q.2.2)
+      = mutualInfo J (fun q ↦ q.2.1) (fun q ↦ q.2.2)
+        + condMutualInfo J Prod.fst (fun q ↦ q.2.2) (fun q ↦ q.2.1) :=
+    mutualInfo_chain_rule J Prod.fst (fun q ↦ q.2.2) (fun q ↦ q.2.1) hX1 hY hX2
+  have decompA := heqA1.trans hchainA
+  -- Reshaping and chain rules feeding `I(X₂; Y) ≤ I(X₂; Y | X₁)`.
+  have reshapeE : mutualInfo J (fun q : α₁ × α₂ × β ↦ (q.1, q.2.2)) (fun q ↦ q.2.1)
+      = mutualInfo J (fun q : α₁ × α₂ × β ↦ (q.2.2, q.1)) (fun q ↦ q.2.1) :=
+    mutualInfo_map_left_measurableEquiv J (fun q : α₁ × α₂ × β ↦ (q.2.2, q.1))
+      (fun q ↦ q.2.1) (hY.prodMk hX1) hX2 MeasurableEquiv.prodComm
+  -- `I((X₁, Y); X₂) = I(X₁; X₂) + I(Y; X₂ | X₁)`.
+  have chainB : mutualInfo J (fun q : α₁ × α₂ × β ↦ (q.1, q.2.2)) (fun q ↦ q.2.1)
+      = mutualInfo J Prod.fst (fun q ↦ q.2.1)
+        + condMutualInfo J (fun q ↦ q.2.2) (fun q ↦ q.2.1) Prod.fst :=
+    mutualInfo_chain_rule J (fun q ↦ q.2.2) (fun q ↦ q.2.1) Prod.fst hY hX2 hX1
+  -- `I((Y, X₁); X₂) = I(Y; X₂) + I(X₁; X₂ | Y)`.
+  have chainD : mutualInfo J (fun q : α₁ × α₂ × β ↦ (q.2.2, q.1)) (fun q ↦ q.2.1)
+      = mutualInfo J (fun q ↦ q.2.2) (fun q ↦ q.2.1)
+        + condMutualInfo J Prod.fst (fun q ↦ q.2.1) (fun q ↦ q.2.2) :=
+    mutualInfo_chain_rule J Prod.fst (fun q ↦ q.2.1) (fun q ↦ q.2.2) hX1 hX2 hY
+  -- `I((Y, X₁); X₂) = I(Y; X₂ | X₁)` (the `I(X₁; X₂) = 0` term drops out).
+  have e2 : mutualInfo J (fun q : α₁ × α₂ × β ↦ (q.2.2, q.1)) (fun q ↦ q.2.1)
+      = condMutualInfo J (fun q ↦ q.2.2) (fun q ↦ q.2.1) Prod.fst := by
+    rw [← reshapeE, chainB, indep0, zero_add]
+  -- `I(Y; X₂ | X₁) = I(Y; X₂) + I(X₁; X₂ | Y)`.
+  have hCMI : condMutualInfo J (fun q ↦ q.2.2) (fun q ↦ q.2.1) Prod.fst
+      = mutualInfo J (fun q ↦ q.2.2) (fun q ↦ q.2.1)
+        + condMutualInfo J Prod.fst (fun q ↦ q.2.1) (fun q ↦ q.2.2) := by
+    rw [← e2, chainD]
+  -- Commute to `I(X₂; Y | X₁)` (the `macInfo₂` corner form).
+  have commC2 : condMutualInfo J (fun q ↦ q.2.2) (fun q ↦ q.2.1) Prod.fst
+      = condMutualInfo J (fun q ↦ q.2.1) (fun q ↦ q.2.2) Prod.fst :=
+    condMutualInfo_comm J (fun q ↦ q.2.2) (fun q ↦ q.2.1) Prod.fst hY hX2 hX1
+  have hC2 : condMutualInfo J (fun q ↦ q.2.1) (fun q ↦ q.2.2) Prod.fst
+      = mutualInfo J (fun q ↦ q.2.2) (fun q ↦ q.2.1)
+        + condMutualInfo J Prod.fst (fun q ↦ q.2.1) (fun q ↦ q.2.2) := by
+    rw [← commC2, hCMI]
+  -- Conditioning increases mutual information under independence: `I(X₂; Y) ≤ I(X₂; Y | X₁)`.
+  have comm2 : mutualInfo J (fun q ↦ q.2.1) (fun q ↦ q.2.2)
+      = mutualInfo J (fun q ↦ q.2.2) (fun q ↦ q.2.1) :=
+    mutualInfo_comm J (fun q ↦ q.2.1) (fun q ↦ q.2.2) hX2 hY
+  have hSub : mutualInfo J (fun q ↦ q.2.1) (fun q ↦ q.2.2)
+      ≤ condMutualInfo J (fun q ↦ q.2.1) (fun q ↦ q.2.2) Prod.fst := by
+    rw [hC2, comm2]
+    exact self_le_add_right _ _
+  -- Assemble: `I((X₁, X₂); Y) = I(X₂; Y) + I(X₁; Y | X₂) ≤ I(X₁; Y | X₂) + I(X₂; Y | X₁)`.
+  have hMBle : mutualInfo J (fun q : α₁ × α₂ × β ↦ (q.1, q.2.1)) (fun q ↦ q.2.2)
+      ≤ condMutualInfo J Prod.fst (fun q ↦ q.2.2) (fun q ↦ q.2.1)
+        + condMutualInfo J (fun q ↦ q.2.1) (fun q ↦ q.2.2) Prod.fst := by
+    rw [decompA, add_comm (condMutualInfo J Prod.fst (fun q ↦ q.2.2) (fun q ↦ q.2.1))
+        (condMutualInfo J (fun q ↦ q.2.1) (fun q ↦ q.2.2) Prod.fst)]
+    gcongr
+  rw [← ENNReal.toReal_add hC1_ne hC2_ne]
+  exact ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨hC1_ne, hC2_ne⟩) hMBle
 
 /-- Nonnegativity of the corner information `macInfo₁` for probability inputs. -/
 lemma macInfo₁_nonneg (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
