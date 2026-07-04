@@ -29,7 +29,7 @@ concatenation.
 
 namespace InformationTheory.Shannon.MAC
 
-open MeasureTheory ProbabilityTheory InformationTheory.Shannon
+open MeasureTheory ProbabilityTheory InformationTheory.Shannon Filter
 open scoped ENNReal NNReal BigOperators Topology
 
 variable {α₁ α₂ β : Type*}
@@ -482,5 +482,158 @@ theorem mac_timesharing_strict (W : MACChannel α₁ α₂ β) [IsMarkovKernel W
         _ = (c₁.averageErrorProb W).toReal + (c₂.averageErrorProb W).toReal :=
             ENNReal.toReal_add (c₁.averageErrorProb_ne_top W) (c₂.averageErrorProb_ne_top W)
         _ < ε' := by linarith [hc₁, hc₂]
+
+/-! ## Convexity and closedness of the capacity region -/
+
+omit [Fintype α₁] [DecidableEq α₁] [Nonempty α₁] [MeasurableSingletonClass α₁]
+  [Fintype α₂] [DecidableEq α₂] [Nonempty α₂] [MeasurableSingletonClass α₂]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
+/-- A rate pair whose strictly-smaller (in both coordinates) perturbations are all
+achievable lies in the capacity region.  The perturbed points `(p.1 - ε, p.2 - ε)` form a
+sequence in the achievable set converging to `p`, so `p` is in its closure. -/
+theorem mac_mem_closure_of_strictly_below (W : MACChannel α₁ α₂ β) (p : ℝ × ℝ)
+    (h : ∀ ε : ℝ, 0 < ε → MACAchievable W (p.1 - ε) (p.2 - ε)) :
+    p ∈ closure {q : ℝ × ℝ | MACAchievable W q.1 q.2} := by
+  rw [mem_closure_iff_seq_limit]
+  refine ⟨fun k => (p.1 - 1 / ((k : ℝ) + 1), p.2 - 1 / ((k : ℝ) + 1)), ?_, ?_⟩
+  · intro k
+    have hpos : 0 < 1 / ((k : ℝ) + 1) := by positivity
+    exact h _ hpos
+  · have ht : Tendsto (fun k : ℕ => 1 / ((k : ℝ) + 1)) atTop (𝓝 0) :=
+      tendsto_one_div_add_atTop_nhds_zero_nat
+    have h1 : Tendsto (fun k : ℕ => p.1 - 1 / ((k : ℝ) + 1)) atTop (𝓝 p.1) := by
+      simpa using tendsto_const_nhds.sub ht
+    have h2 : Tendsto (fun k : ℕ => p.2 - 1 / ((k : ℝ) + 1)) atTop (𝓝 p.2) := by
+      simpa using tendsto_const_nhds.sub ht
+    exact h1.prodMk_nhds h2
+
+omit [Fintype α₁] [DecidableEq α₁] [Nonempty α₁] [MeasurableSingletonClass α₁]
+  [Fintype α₂] [DecidableEq α₂] [Nonempty α₂] [MeasurableSingletonClass α₂]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
+/-- The capacity region is closed (it is defined as a closure). -/
+theorem mac_capacityRegion_isClosed (W : MACChannel α₁ α₂ β) :
+    IsClosed (macCapacityRegion W) := isClosed_closure
+
+omit [Fintype α₁] [DecidableEq α₁] [Nonempty α₁] [MeasurableSingletonClass α₁]
+  [Fintype α₂] [DecidableEq α₂] [Nonempty α₂] [MeasurableSingletonClass α₂]
+  [DecidableEq β] [Nonempty β] in
+/-- The capacity region is convex.  Convexity of the closure follows from time-sharing:
+the segment between any two achievable points lies in the closure (via
+`mac_timesharing_strict`), and this lifts to closure points by a sequential limit. -/
+theorem mac_capacityRegion_convex (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
+    Convex ℝ (macCapacityRegion W) := by
+  -- The segment between two achievable points lies in the capacity region.
+  have seg : ∀ x : ℝ × ℝ, MACAchievable W x.1 x.2 → ∀ y : ℝ × ℝ, MACAchievable W y.1 y.2 →
+      ∀ a b : ℝ, 0 ≤ a → 0 ≤ b → a + b = 1 →
+      a • x + b • y ∈ macCapacityRegion W := by
+    intro x hx y hy a b ha hb hab
+    apply mac_mem_closure_of_strictly_below
+    intro ε hε
+    have hla : a ∈ Set.Icc (0 : ℝ) 1 := ⟨ha, by linarith⟩
+    have e1 : (a • x + b • y).1 = a * x.1 + b * y.1 := by simp [smul_eq_mul]
+    have e2 : (a • x + b • y).2 = a * x.2 + b * y.2 := by simp [smul_eq_mul]
+    rw [e1, e2]
+    have hb' : b = 1 - a := by linarith
+    refine mac_timesharing_strict W hx hy hla ?_ ?_
+    · rw [hb']; linarith
+    · rw [hb']; linarith
+  -- Lift convexity to the closure by a sequential limit.
+  intro x hx y hy a b ha hb hab
+  obtain ⟨u, hu_mem, hu_tend⟩ := mem_closure_iff_seq_limit.mp hx
+  obtain ⟨v, hv_mem, hv_tend⟩ := mem_closure_iff_seq_limit.mp hy
+  have hw_mem : ∀ k, a • u k + b • v k ∈ macCapacityRegion W := fun k =>
+    seg (u k) (hu_mem k) (v k) (hv_mem k) a b ha hb hab
+  have hw_tend : Tendsto (fun k => a • u k + b • v k) atTop (𝓝 (a • x + b • y)) :=
+    (hu_tend.const_smul a).add (hv_tend.const_smul b)
+  exact (mac_capacityRegion_isClosed W).mem_of_tendsto hw_tend (Eventually.of_forall hw_mem)
+
+/-! ## Each pentagon lies in the capacity region -/
+
+omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
+/-- Every rate pair of a full-support product input's pentagon lies in the capacity region.
+Strictly-interior points are directly achievable (`mac_strict_interior_achievable`); every
+other point is a limit of interior points via a convex combination toward an interior
+witness. -/
+theorem mac_pentagon_subset_capacityRegion
+    (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    (hp₁ : ∀ a : α₁, 0 < p₁.real {a}) (hp₂ : ∀ a : α₂, 0 < p₂.real {a})
+    (hW : ∀ a : α₁ × α₂, ∀ b : β, 0 < (W a).real {b}) :
+    macPentagon p₁ p₂ W ⊆ macCapacityRegion W := by
+  intro R hR
+  obtain ⟨hR1nn, hR2nn, hR1le, hR2le, hRsumle⟩ := hR
+  by_cases hpos : 0 < macInfo₁ p₁ p₂ W ∧ 0 < macInfo₂ p₁ p₂ W ∧ 0 < macInfoBoth p₁ p₂ W
+  · -- Nonempty interior: approximate `R` by a convex combination toward an interior witness.
+    obtain ⟨hI1, hI2, hIb⟩ := hpos
+    set c₁ : ℝ := min (macInfo₁ p₁ p₂ W) (macInfoBoth p₁ p₂ W) / 3 with hc₁def
+    set c₂ : ℝ := min (macInfo₂ p₁ p₂ W) (macInfoBoth p₁ p₂ W) / 3 with hc₂def
+    have hc₁pos : 0 < c₁ := by rw [hc₁def]; linarith [lt_min hI1 hIb]
+    have hc₂pos : 0 < c₂ := by rw [hc₂def]; linarith [lt_min hI2 hIb]
+    have hc₁ltI : c₁ < macInfo₁ p₁ p₂ W := by
+      rw [hc₁def]; linarith [min_le_left (macInfo₁ p₁ p₂ W) (macInfoBoth p₁ p₂ W), hI1]
+    have hc₂ltI : c₂ < macInfo₂ p₁ p₂ W := by
+      rw [hc₂def]; linarith [min_le_left (macInfo₂ p₁ p₂ W) (macInfoBoth p₁ p₂ W), hI2]
+    have hcsum : c₁ + c₂ < macInfoBoth p₁ p₂ W := by
+      rw [hc₁def, hc₂def]
+      linarith [min_le_right (macInfo₁ p₁ p₂ W) (macInfoBoth p₁ p₂ W),
+        min_le_right (macInfo₂ p₁ p₂ W) (macInfoBoth p₁ p₂ W), hIb]
+    -- Every `t`-combination toward `(c₁, c₂)` (`0 < t ≤ 1`) is strictly interior, hence achievable.
+    have key : ∀ t : ℝ, 0 < t → t ≤ 1 →
+        MACAchievable W (R.1 + t * (c₁ - R.1)) (R.2 + t * (c₂ - R.2)) := by
+      intro t ht0 ht1
+      have h1t : (0 : ℝ) ≤ 1 - t := by linarith
+      refine mac_strict_interior_achievable p₁ p₂ W hp₁ hp₂ hW ?_ ?_ ?_ ?_ ?_
+      · nlinarith [mul_pos ht0 hc₁pos, mul_nonneg h1t hR1nn]
+      · nlinarith [mul_pos ht0 hc₂pos, mul_nonneg h1t hR2nn]
+      · nlinarith [mul_le_mul_of_nonneg_left hR1le h1t, mul_lt_mul_of_pos_left hc₁ltI ht0]
+      · nlinarith [mul_le_mul_of_nonneg_left hR2le h1t, mul_lt_mul_of_pos_left hc₂ltI ht0]
+      · nlinarith [mul_le_mul_of_nonneg_left hRsumle h1t, mul_lt_mul_of_pos_left hcsum ht0]
+    -- `R` is the limit of these interior points, hence in the closure.
+    refine mem_closure_iff_seq_limit.mpr
+      ⟨fun k => R + (1 / ((k : ℝ) + 1)) • (((c₁, c₂) : ℝ × ℝ) - R), ?_, ?_⟩
+    · intro k
+      have ht0 : (0 : ℝ) < 1 / ((k : ℝ) + 1) := by positivity
+      have ht1 : 1 / ((k : ℝ) + 1) ≤ 1 := by
+        rw [div_le_one (by positivity)]; linarith [Nat.cast_nonneg (α := ℝ) k]
+      have hk := key _ ht0 ht1
+      show MACAchievable W (R + (1 / ((k : ℝ) + 1)) • (((c₁, c₂) : ℝ × ℝ) - R)).1
+        (R + (1 / ((k : ℝ) + 1)) • (((c₁, c₂) : ℝ × ℝ) - R)).2
+      have e1 : (R + (1 / ((k : ℝ) + 1)) • (((c₁, c₂) : ℝ × ℝ) - R)).1
+          = R.1 + (1 / ((k : ℝ) + 1)) * (c₁ - R.1) := by simp [smul_eq_mul]
+      have e2 : (R + (1 / ((k : ℝ) + 1)) • (((c₁, c₂) : ℝ × ℝ) - R)).2
+          = R.2 + (1 / ((k : ℝ) + 1)) * (c₂ - R.2) := by simp [smul_eq_mul]
+      rw [e1, e2]; exact hk
+    · have ht : Tendsto (fun k : ℕ => 1 / ((k : ℝ) + 1)) atTop (𝓝 0) :=
+        tendsto_one_div_add_atTop_nhds_zero_nat
+      have hlim := tendsto_const_nhds (x := R) (f := atTop) |>.add
+        (ht.smul_const (((c₁, c₂) : ℝ × ℝ) - R))
+      simpa using hlim
+  · -- Degenerate pentagon: some `macInfo` is `0`, so the pentagon collapses onto an axis and
+    -- the point requires single-user achievability (user 1 or 2 silent), which is not derivable
+    -- from `mac_achievability` (it needs both rates strictly positive).
+    -- @residual(plan:mac-timesharing-plan)
+    sorry
+
+/-! ## Achievability headline: the closed convex hull of the pentagons -/
+
+omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
+/-- **MAC time-sharing achievability (convex-hull form, Cover–Thomas Theorem 15.3.1).**  The
+closed convex hull of the per-input pentagons of full-support product inputs is contained in
+the operational capacity region. -/
+@[entry_point]
+theorem mac_achievability_region (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    (hW : ∀ a : α₁ × α₂, ∀ b : β, 0 < (W a).real {b}) :
+    closedConvexHull ℝ
+      (⋃ (p₁ : Measure α₁) (p₂ : Measure α₂) (_ : IsProbabilityMeasure p₁)
+         (_ : IsProbabilityMeasure p₂) (_ : ∀ a, 0 < p₁.real {a}) (_ : ∀ a, 0 < p₂.real {a}),
+         macPentagon p₁ p₂ W)
+      ⊆ macCapacityRegion W := by
+  refine closedConvexHull_min ?_ (mac_capacityRegion_convex W) (mac_capacityRegion_isClosed W)
+  simp only [Set.iUnion_subset_iff]
+  intro p₁ p₂ hp₁inst hp₂inst hp₁ hp₂
+  haveI := hp₁inst
+  haveI := hp₂inst
+  exact mac_pentagon_subset_capacityRegion p₁ p₂ W hp₁ hp₂ hW
 
 end InformationTheory.Shannon.MAC
