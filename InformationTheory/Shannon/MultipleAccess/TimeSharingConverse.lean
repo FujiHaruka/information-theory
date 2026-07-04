@@ -2041,7 +2041,8 @@ lemma mac_timesharing_converse_axis2 (W : MACChannel α₁ α₂ β) [IsMarkovKe
 the closed convex hull of the union of all per-input pentagons `macPentagon p₁ p₂ W` over
 probability inputs `p₁`, `p₂`.  Assembled by casework on whether each rate is zero or positive:
 the interior case uses the Fano→0 limit `mac_timesharing_converse_interior`, the origin `(0,0)` lies
-in any pentagon, and the two axis cases are honest gaps (see `mac_timesharing_converse_axis1/2`). -/
+in any pentagon, and the two axis cases reduce to the single-user Fano corner via
+`mac_timesharing_converse_axis1/2`. -/
 theorem mac_timesharing_converse (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
     {p | MACAchievable W p.1 p.2 ∧ 0 ≤ p.1 ∧ 0 ≤ p.2}
       ⊆ closedConvexHull ℝ (⋃ (p₁ : Measure α₁) (p₂ : Measure α₂)
@@ -2071,5 +2072,110 @@ theorem mac_timesharing_converse (W : MACChannel α₁ α₂ β) [IsMarkovKernel
           (Measure.dirac (Classical.arbitrary α₂)) W
 
 end CVAssembly
+
+section VAssembly
+
+open MeasureTheory ProbabilityTheory InformationTheory InformationTheory.Shannon Filter
+open scoped ENNReal Topology
+
+variable {α₁ α₂ β : Type*}
+  [Fintype α₁] [DecidableEq α₁] [Nonempty α₁] [MeasurableSpace α₁]
+    [MeasurableSingletonClass α₁] [StandardBorelSpace α₁]
+  [Fintype α₂] [DecidableEq α₂] [Nonempty α₂] [MeasurableSpace α₂]
+    [MeasurableSingletonClass α₂] [StandardBorelSpace α₂]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
+    [MeasurableSingletonClass β] [StandardBorelSpace β]
+
+omit [Fintype α₁] [DecidableEq α₁] [Nonempty α₁] [MeasurableSingletonClass α₁] [StandardBorelSpace α₁]
+  [Fintype α₂] [DecidableEq α₂] [Nonempty α₂] [MeasurableSingletonClass α₂] [StandardBorelSpace α₂]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] [StandardBorelSpace β] in
+/-- Clamping a rate pair into the first quadrant does not change achievability.  `MACAchievable`
+depends on the rates `R₁`, `R₂` only through the message-count thresholds `⌈exp (n Rⱼ)⌉ ≤ Mⱼ`,
+and `⌈exp (n R)⌉ = ⌈exp (n (max R 0))⌉` for every block length `n` (for `R < 0` both ceilings
+equal `1`, since `exp (n R) ∈ (0, 1]`).  This lets the antisymmetry argument fold a negative
+achievable rate back onto the axis. -/
+theorem mac_achievable_clamp_iff (W : MACChannel α₁ α₂ β) (R₁ R₂ : ℝ) :
+    MACAchievable W R₁ R₂ ↔ MACAchievable W (max R₁ 0) (max R₂ 0) := by
+  -- the ceiling thresholds are unchanged by clamping the rate to the first quadrant
+  have key : ∀ (R : ℝ) (n : ℕ),
+      Nat.ceil (Real.exp ((n : ℝ) * max R 0)) = Nat.ceil (Real.exp ((n : ℝ) * R)) := by
+    intro R n
+    by_cases hR : 0 ≤ R
+    · rw [max_eq_left hR]
+    · replace hR : R < 0 := not_le.mp hR
+      rw [max_eq_right hR.le, mul_zero, Real.exp_zero, Nat.ceil_one]
+      symm
+      apply le_antisymm
+      · apply Nat.ceil_le.mpr
+        rw [Nat.cast_one, ← Real.exp_zero]
+        exact Real.exp_le_exp.mpr (mul_nonpos_of_nonneg_of_nonpos (Nat.cast_nonneg n) hR.le)
+      · exact Nat.ceil_pos.mpr (Real.exp_pos _)
+  constructor
+  · intro h ε' hε'
+    obtain ⟨N, hN⟩ := h ε' hε'
+    refine ⟨N, fun n hn ↦ ?_⟩
+    obtain ⟨M₁, M₂, hM₁, hM₂, c, hc⟩ := hN n hn
+    refine ⟨M₁, M₂, ?_, ?_, c, hc⟩
+    · rw [key R₁ n]; exact hM₁
+    · rw [key R₂ n]; exact hM₂
+  · intro h ε' hε'
+    obtain ⟨N, hN⟩ := h ε' hε'
+    refine ⟨N, fun n hn ↦ ?_⟩
+    obtain ⟨M₁, M₂, hM₁, hM₂, c, hc⟩ := hN n hn
+    refine ⟨M₁, M₂, ?_, ?_, c, hc⟩
+    · rw [← key R₁ n]; exact hM₁
+    · rw [← key R₂ n]; exact hM₂
+
+/-- **MAC time-sharing capacity region (full first-quadrant characterization).**  The operational
+capacity region, intersected with the first quadrant, equals the closed convex hull of the union of
+all per-input pentagons `macPentagon p₁ p₂ W` over probability inputs `p₁`, `p₂` (Cover–Thomas
+Theorem 15.3.1).  The `⊆` half is the converse (`mac_timesharing_converse`, with negative rates
+clamped back to the axis via `mac_achievable_clamp_iff`); the `⊇` half is achievability
+(`mac_achievability_region_allprob`, whose pentagons already lie in the first quadrant). -/
+@[entry_point]
+theorem mac_timesharing_capacity_region (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    (hW : ∀ a : α₁ × α₂, ∀ b : β, 0 < (W a).real {b}) :
+    macCapacityRegion W ∩ {p : ℝ × ℝ | 0 ≤ p.1 ∧ 0 ≤ p.2}
+      = closedConvexHull ℝ (⋃ (p₁ : Measure α₁) (p₂ : Measure α₂)
+          (_ : IsProbabilityMeasure p₁) (_ : IsProbabilityMeasure p₂), macPentagon p₁ p₂ W) := by
+  apply Set.Subset.antisymm
+  · -- converse: an achievable first-quadrant pair lies in the hull (clamp negative rates to axis)
+    rintro x ⟨hxcap, hx1, hx2⟩
+    have hxcl : x ∈ closure {p : ℝ × ℝ | MACAchievable W p.1 p.2} := hxcap
+    rw [mem_closure_iff_seq_limit] at hxcl
+    obtain ⟨u, hu_mem, hu_lim⟩ := hxcl
+    -- the clamping map `p ↦ (max p.1 0, max p.2 0)` is continuous and fixes `x`
+    have hcont : Continuous (fun p : ℝ × ℝ => (max p.1 0, max p.2 0)) :=
+      (continuous_fst.max continuous_const).prodMk (continuous_snd.max continuous_const)
+    have htend : Tendsto (fun n => (max (u n).1 0, max (u n).2 0)) atTop (𝓝 x) := by
+      have h := (hcont.tendsto x).comp hu_lim
+      have hx_eq : (max x.1 0, max x.2 0) = x := by rw [max_eq_left hx1, max_eq_left hx2]
+      rwa [hx_eq] at h
+    -- each clamped point is achievable in the first quadrant, hence in the hull via the converse
+    have hmem : ∀ n, (max (u n).1 0, max (u n).2 0)
+        ∈ closedConvexHull ℝ (⋃ (p₁ : Measure α₁) (p₂ : Measure α₂)
+            (_ : IsProbabilityMeasure p₁) (_ : IsProbabilityMeasure p₂), macPentagon p₁ p₂ W) := by
+      intro n
+      exact mac_timesharing_converse W
+        ⟨(mac_achievable_clamp_iff W (u n).1 (u n).2).mp (hu_mem n),
+          le_max_right _ _, le_max_right _ _⟩
+    exact isClosed_closedConvexHull.mem_of_tendsto htend (Eventually.of_forall hmem)
+  · -- achievability: the hull is in the capacity region and in the first quadrant
+    have hset : {p : ℝ × ℝ | 0 ≤ p.1 ∧ 0 ≤ p.2} = Set.Ici 0 ×ˢ Set.Ici 0 := by
+      ext p; simp only [Set.mem_setOf_eq, Set.mem_prod, Set.mem_Ici]
+    have hQconv : Convex ℝ {p : ℝ × ℝ | 0 ≤ p.1 ∧ 0 ≤ p.2} := by
+      rw [hset]; exact (convex_Ici 0).prod (convex_Ici 0)
+    have hQclosed : IsClosed {p : ℝ × ℝ | 0 ≤ p.1 ∧ 0 ≤ p.2} := by
+      rw [hset]; exact isClosed_Ici.prod isClosed_Ici
+    have hunion_sub_Q : (⋃ (p₁ : Measure α₁) (p₂ : Measure α₂)
+        (_ : IsProbabilityMeasure p₁) (_ : IsProbabilityMeasure p₂), macPentagon p₁ p₂ W)
+        ⊆ {p : ℝ × ℝ | 0 ≤ p.1 ∧ 0 ≤ p.2} := by
+      simp only [Set.iUnion_subset_iff]
+      intro p₁ p₂ _ _ pt hpt
+      exact ⟨hpt.1, hpt.2.1⟩
+    exact Set.subset_inter (mac_achievability_region_allprob W hW)
+      (closedConvexHull_min hunion_sub_Q hQconv hQclosed)
+
+end VAssembly
 
 end InformationTheory.Shannon.MAC
