@@ -11,6 +11,7 @@
 - [x] Phase 4 — headline `seqLogWealth_div_tendsto_doublingRate` (SLLN 組立) ✅
 - [x] Phase 5 — `lawPmf ∈ stdSimplex` + 比例賭け閉形式 corollary ✅
 - [x] Phase 6 — 最適性 corollary + 配線 (root / README / roadmap) + 独立 honesty 監査 ✅ (proof-done, sorryAx-free, `@audit:ok`)
+- [x] 追補 — §6.3 operational punchline の 2 発散系 corollary を post-headline で追加: `seqLogWealth_tendsto_atTop_of_pos_doublingRate` (`W*>0 ⟹ log Sₙ → +∞` a.s. = 指数成長) / `seqLogWealth_tendsto_atBot_of_neg_doublingRate` (`W*<0 ⟹ log Sₙ → −∞` a.s. = 破産)、ともに `@[entry_point]`・proof-done・`@audit:ok`、root+README 登録済 ✅
 
 ## Context
 

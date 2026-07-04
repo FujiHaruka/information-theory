@@ -43,6 +43,8 @@ condDoublingRate_le_proportional | conditional Kelly optimality
 seqLogWealth_div_tendsto_doublingRate | operational doubling rate (1/n)·log Sₙ → W(b,o,p) a.s. (CT 6.3)
 seqLogWealth_proportional_div_tendsto | Kelly growth rate over sequences (CT 6.3)
 seqLogWealth_proportional_asymptotically_optimal | Kelly asymptotic optimality over sequences (CT 6.3)
+seqLogWealth_tendsto_atTop_of_pos_doublingRate | exponential wealth growth: W*>0 ⟹ log Sₙ→∞ a.s. (CT 6.3)
+seqLogWealth_tendsto_atBot_of_neg_doublingRate | ruin: W*<0 ⟹ log Sₙ→−∞ a.s. (CT 6.3)
 
 @ 7 | Channel capacity
 shannon_noisy_channel_coding_theorem_general_full
