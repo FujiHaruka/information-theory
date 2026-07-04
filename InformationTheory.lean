@@ -87,6 +87,7 @@ import InformationTheory.Shannon.MultipleAccess.AchievabilityCore
 import InformationTheory.Shannon.MultipleAccess.Achievability
 import InformationTheory.Shannon.MultipleAccess.Reconciliation
 import InformationTheory.Shannon.MultipleAccess.TimeSharing
+import InformationTheory.Shannon.MultipleAccess.TimeSharingConverse
 import InformationTheory.Shannon.BroadcastChannel.Basic
 import InformationTheory.Shannon.BroadcastChannel.ConverseGateway
 import InformationTheory.Shannon.BroadcastChannel.Converse
