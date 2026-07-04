@@ -230,7 +230,7 @@ frozen slug (他 doc / 旧 plan が参照、削除不可):
 - **L-MAC2** (multi-user Fano + chain rule): **RESOLVED** (genuine MAC converse 完成、Phase A2)。message-level (A1) + genuine single-letterization (A2 = `mac_converse`、entropy ルート、cause:plumbing で旧 step-2「壁」を解消) の双方を sorryAx-free + `@audit:ok` で closure。
 - **L-MAC3** (inner bound existence pass-through): gap2+gap3 (Phase B/D) が触れる。**achievability 残・open**。gap2 が唯一の重い analytic 核 → gateway-atom-first で genuine 化試行。
 - **L-MAC4** (outer bound `InMACCapacityRegion` pass-through): **RESOLVED** (genuine outer bound = per-letter 和形 `mac_converse` 完成、Phase A2)。`InMACCapacityRegion` predicate は load-bearing でない generic bundle。
-- **L-MAC5** (time-sharing 全凸包): **scope-out 維持** (撤退ライン明記)。corner-point form のみが genuine target。full hull は §B `convexHull` で将来対応 (本タスク対象外)。
+- **L-MAC5** (time-sharing 全凸包): **着手中 (scope-out 解除)** — 子 plan [`mac-timesharing-plan.md`](mac-timesharing-plan.md) で time-sharing operational full convex-hull を genuine closure 計画。gateway atom = `mac_timesharing_concat_achievable` (`MACAchievable` 凸性)。
 
 **退避先 (未発動)**: gap2 不通時の退避先として audit-tags register の Ch.15 multi-user joint typicality 壁を想定していたが、**gateway-atom-first で E1 を試したところ genuine に通り壁ではなかった** (CLAUDE.md「壁判定は反証を 1 度試みる」)。achievability は壁なしで genuine closure、code 側に当該壁の `@residual` は存在しない。
 
@@ -250,7 +250,7 @@ frozen slug (他 doc / 旧 plan が参照、削除不可):
 
 append-only。決着済 entry は削除 (git が履歴)、active のみ残す。≤ 10 entry。
 
-1. **region 表現 = corner-point form 確定**: `InMACCapacityRegion` の 3 不等式を headline とする。凸包 / closure は Mathlib 完備 (`convexHull` / `closedConvexHull_eq_closure_convexHull`) で **gap でなく設計選択**、time-sharing 全凸包 (L-MAC5) は scope-out 維持。full hull form は将来別途。
+1. **region 表現 = corner-point form 確定**: `InMACCapacityRegion` の 3 不等式を headline とする。凸包 / closure は Mathlib 完備 (`convexHull` / `closedConvexHull_eq_closure_convexHull`) で **gap でなく設計選択**、time-sharing 全凸包 (L-MAC5) は **着手中 (scope-out 解除)** = 子 plan [`mac-timesharing-plan.md`](mac-timesharing-plan.md) で operational full convex-hull を genuine closure 計画。
 2. **achievability 攻略順序 (active、converse は closure 済)**: gap2 E1 gateway atom `macJTS_indep_prob_le_X1` を **gateway-atom-first で dispatch** → 通れば E2 対称 / E3 流用 + gap1/gap3 plumbing で genuine closure 確定、不通なら gap2 のみ shared sorry 壁に縮退 (#3)。
 3. **gap2 撤退の honest 形 (未発動、settled)**: gateway atom 不通時のみ E1/E2/E3 を 3 本の shared sorry 補題 (audit-tags register の Ch.15 multi-user joint typicality 壁) で開け headline は直呼び、という退避線を用意していたが gateway-atom-first が genuine に通り不発動。achievability genuine closure 達成。
 4. **親整合 (要 orchestrator アクション、active)**: converse が genuine-closed になったので、orchestrator が roadmap Ch.15 行 + judgment #10 を「scope-out」→「converse genuine-closed / achievability pending」に書換 + README 方針決定 (推奨 = full region 完成まで defer)。本 planner は roadmap / README 不可侵 (editing boundary 外)。詳細 → 冒頭「親整合 注記」。
