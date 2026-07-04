@@ -275,6 +275,7 @@ import InformationTheory.Shannon.Hoeffding.MinimizerExistence
 import InformationTheory.Shannon.Hoeffding.TradeoffExp
 import InformationTheory.Shannon.Gambling.Basic
 import InformationTheory.Shannon.Gambling.SideInformation
+import InformationTheory.Shannon.Gambling.OperationalSequences
 import InformationTheory.Shannon.LZ78.ZivEntropyBridge
 import InformationTheory.Shannon.Stationary.Kernel
 import InformationTheory.Shannon.LZ78.ConverseUDObject
