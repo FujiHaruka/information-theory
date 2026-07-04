@@ -490,7 +490,8 @@ omit [Fintype α₁] [DecidableEq α₁] [Nonempty α₁] [MeasurableSingletonCl
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
 /-- A rate pair whose strictly-smaller (in both coordinates) perturbations are all
 achievable lies in the capacity region.  The perturbed points `(p.1 - ε, p.2 - ε)` form a
-sequence in the achievable set converging to `p`, so `p` is in its closure. -/
+sequence in the achievable set converging to `p`, so `p` is in its closure.
+@audit:ok -/
 theorem mac_mem_closure_of_strictly_below (W : MACChannel α₁ α₂ β) (p : ℝ × ℝ)
     (h : ∀ ε : ℝ, 0 < ε → MACAchievable W (p.1 - ε) (p.2 - ε)) :
     p ∈ closure {q : ℝ × ℝ | MACAchievable W q.1 q.2} := by
@@ -510,7 +511,8 @@ theorem mac_mem_closure_of_strictly_below (W : MACChannel α₁ α₂ β) (p : �
 omit [Fintype α₁] [DecidableEq α₁] [Nonempty α₁] [MeasurableSingletonClass α₁]
   [Fintype α₂] [DecidableEq α₂] [Nonempty α₂] [MeasurableSingletonClass α₂]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
-/-- The capacity region is closed (it is defined as a closure). -/
+/-- The capacity region is closed (it is defined as a closure).
+@audit:ok -/
 theorem mac_capacityRegion_isClosed (W : MACChannel α₁ α₂ β) :
     IsClosed (macCapacityRegion W) := isClosed_closure
 
@@ -519,7 +521,8 @@ omit [Fintype α₁] [DecidableEq α₁] [Nonempty α₁] [MeasurableSingletonCl
   [DecidableEq β] [Nonempty β] in
 /-- The capacity region is convex.  Convexity of the closure follows from time-sharing:
 the segment between any two achievable points lies in the closure (via
-`mac_timesharing_strict`), and this lifts to closure points by a sequential limit. -/
+`mac_timesharing_strict`), and this lifts to closure points by a sequential limit.
+@audit:ok -/
 theorem mac_capacityRegion_convex (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
     Convex ℝ (macCapacityRegion W) := by
   -- The segment between two achievable points lies in the capacity region.
