@@ -1,6 +1,8 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.MultipleAccess.Achievability
+import InformationTheory.Shannon.MultipleAccess.Reconciliation
 import Mathlib.Analysis.Convex.Topology
+import Mathlib.Probability.Distributions.Uniform
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.Logic.Equiv.Fin.Basic
 import Mathlib.Data.Fin.Tuple.Basic
@@ -897,5 +899,328 @@ theorem mac_achievability_region (W : MACChannel α₁ α₂ β) [IsMarkovKernel
   haveI := hp₁inst
   haveI := hp₂inst
   exact mac_pentagon_subset_capacityRegion p₁ p₂ W hp₁ hp₂ hW
+
+/-! ## All-probability upgrade of achievability
+
+The headline `mac_achievability_region` above only covers the closed convex hull of the
+pentagons of *full-support* product inputs.  The converse half exposes per-letter marginals
+`μ.map (encoder)` that are probability measures but generally not full-support, so closing the
+full time-sharing region requires the achievability side to cover the closed convex hull of the
+pentagons of *all* probability inputs.  This is obtained by smoothing an arbitrary probability
+input toward a fixed uniform anchor, `p ↦ (1 - ε) • p + ε • uniform`, and passing to the limit
+`ε → 0⁺` using continuity of the corner informations in the mixing parameter. -/
+
+/-- The clamped mixing weight `min 1 (max 0 ε) ∈ [0, 1]`, used to keep the smoothed input a
+probability measure for every real `ε` while agreeing with `ε` on `[0, 1]`. -/
+noncomputable def macMixWeight (ε : ℝ) : ℝ := min 1 (max 0 ε)
+
+lemma macMixWeight_nonneg (ε : ℝ) : 0 ≤ macMixWeight ε :=
+  le_min zero_le_one (le_max_left 0 ε)
+
+lemma macMixWeight_le_one (ε : ℝ) : macMixWeight ε ≤ 1 := min_le_left _ _
+
+lemma macMixWeight_zero : macMixWeight 0 = 0 := by simp [macMixWeight]
+
+lemma macMixWeight_pos {ε : ℝ} (hε : 0 < ε) : 0 < macMixWeight ε :=
+  lt_min zero_lt_one (lt_of_lt_of_le hε (le_max_right 0 ε))
+
+lemma macMixWeight_continuous : Continuous macMixWeight :=
+  continuous_const.min (continuous_const.max continuous_id)
+
+section Perturbation
+variable {X : Type*} [MeasurableSpace X] [MeasurableSingletonClass X]
+
+/-- The smoothing of a probability input `p` toward a fixed anchor `μ₀`:
+`macMix p μ₀ ε = (1 - macMixWeight ε) • p + macMixWeight ε • μ₀`.  For `ε ∈ (0, 1]` and a
+full-support anchor `μ₀`, this is a full-support probability measure; at `ε = 0` it is `p`. -/
+noncomputable def macMix (p μ₀ : Measure X) (ε : ℝ) : Measure X :=
+  ENNReal.ofReal (1 - macMixWeight ε) • p + ENNReal.ofReal (macMixWeight ε) • μ₀
+
+instance macMix.instIsProbabilityMeasure (p μ₀ : Measure X) [IsProbabilityMeasure p]
+    [IsProbabilityMeasure μ₀] (ε : ℝ) : IsProbabilityMeasure (macMix p μ₀ ε) := by
+  refine ⟨?_⟩
+  unfold macMix
+  rw [Measure.add_apply, Measure.smul_apply, Measure.smul_apply]
+  simp only [smul_eq_mul, measure_univ, mul_one]
+  rw [← ENNReal.ofReal_add (by linarith [macMixWeight_le_one ε]) (macMixWeight_nonneg ε),
+    show (1 - macMixWeight ε) + macMixWeight ε = 1 by ring, ENNReal.ofReal_one]
+
+omit [MeasurableSingletonClass X] in
+lemma macMix_zero (p μ₀ : Measure X) : macMix p μ₀ 0 = p := by
+  unfold macMix
+  rw [macMixWeight_zero]
+  simp
+
+omit [MeasurableSingletonClass X] in
+lemma macMix_real_apply (p μ₀ : Measure X) [IsProbabilityMeasure p] [IsProbabilityMeasure μ₀]
+    (ε : ℝ) (a : X) :
+    (macMix p μ₀ ε).real {a}
+      = (1 - macMixWeight ε) * p.real {a} + macMixWeight ε * μ₀.real {a} := by
+  unfold macMix
+  rw [measureReal_def, Measure.add_apply, Measure.smul_apply, Measure.smul_apply]
+  simp only [smul_eq_mul]
+  rw [ENNReal.toReal_add (by finiteness) (by finiteness), ENNReal.toReal_mul, ENNReal.toReal_mul,
+    ENNReal.toReal_ofReal (by linarith [macMixWeight_le_one ε]),
+    ENNReal.toReal_ofReal (macMixWeight_nonneg ε)]
+  rfl
+
+omit [MeasurableSingletonClass X] in
+lemma macMix_full_support (p μ₀ : Measure X) [IsProbabilityMeasure p] [IsProbabilityMeasure μ₀]
+    (hμ₀ : ∀ a : X, 0 < μ₀.real {a}) {ε : ℝ} (hε : 0 < ε) (a : X) :
+    0 < (macMix p μ₀ ε).real {a} := by
+  rw [macMix_real_apply]
+  have h1 : 0 ≤ (1 - macMixWeight ε) * p.real {a} :=
+    mul_nonneg (by linarith [macMixWeight_le_one ε]) measureReal_nonneg
+  have h2 : 0 < macMixWeight ε * μ₀.real {a} := mul_pos (macMixWeight_pos hε) (hμ₀ a)
+  linarith
+
+omit [MeasurableSingletonClass X] in
+lemma macMix_real_continuous (p μ₀ : Measure X) [IsProbabilityMeasure p] [IsProbabilityMeasure μ₀]
+    (a : X) : Continuous (fun ε : ℝ => (macMix p μ₀ ε).real {a}) := by
+  have hrw : (fun ε : ℝ => (macMix p μ₀ ε).real {a})
+      = (fun ε : ℝ => (1 - macMixWeight ε) * p.real {a} + macMixWeight ε * μ₀.real {a}) := by
+    funext ε; exact macMix_real_apply p μ₀ ε a
+  rw [hrw]
+  exact ((continuous_const.sub macMixWeight_continuous).mul continuous_const).add
+    (macMixWeight_continuous.mul continuous_const)
+
+end Perturbation
+
+omit [DecidableEq α₁] [Nonempty α₁] [DecidableEq α₂] [Nonempty α₂] [DecidableEq β] [Nonempty β] in
+/-- Singleton mass of a pushforward as a finite fibre sum. -/
+lemma map_real_singleton_fiber_sum {γ : Type*} [MeasurableSpace γ] [MeasurableSingletonClass γ]
+    [DecidableEq γ] (μ : Measure (α₁ × α₂ × β)) [SigmaFinite μ]
+    (f : α₁ × α₂ × β → γ) (hf : Measurable f) (x : γ) :
+    (μ.map f).real {x}
+      = ∑ q ∈ Finset.univ.filter (fun q => f q = x), μ.real {q} := by
+  rw [map_measureReal_apply hf (measurableSet_singleton x)]
+  have hset : f ⁻¹' {x} = ↑(Finset.univ.filter (fun q => f q = x)) := by
+    ext q; simp [Set.mem_preimage, Finset.coe_filter]
+  rw [hset, sum_measureReal_singleton]
+
+lemma macMixJoint_real_continuous
+    (p₁ μ₀₁ : Measure α₁) [IsProbabilityMeasure p₁] [IsProbabilityMeasure μ₀₁]
+    (p₂ μ₀₂ : Measure α₂) [IsProbabilityMeasure p₂] [IsProbabilityMeasure μ₀₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] (q : α₁ × α₂ × β) :
+    Continuous (fun ε : ℝ =>
+      (macJointDistribution (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W).real {q}) := by
+  obtain ⟨a₁, a₂, b⟩ := q
+  have hrw : (fun ε : ℝ =>
+      (macJointDistribution (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W).real {(a₁, a₂, b)})
+      = (fun ε : ℝ =>
+        (macMix p₁ μ₀₁ ε).real {a₁} * (macMix p₂ μ₀₂ ε).real {a₂} * (W (a₁, a₂)).real {b}) := by
+    funext ε
+    exact macJointDistribution_triple_singleton (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W a₁ a₂ b
+  rw [hrw]
+  exact ((macMix_real_continuous p₁ μ₀₁ a₁).mul
+    (macMix_real_continuous p₂ μ₀₂ a₂)).mul continuous_const
+
+lemma macMixJoint_map_real_continuous {γ : Type*} [Fintype γ] [DecidableEq γ]
+    [MeasurableSpace γ] [MeasurableSingletonClass γ]
+    (p₁ μ₀₁ : Measure α₁) [IsProbabilityMeasure p₁] [IsProbabilityMeasure μ₀₁]
+    (p₂ μ₀₂ : Measure α₂) [IsProbabilityMeasure p₂] [IsProbabilityMeasure μ₀₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] (f : α₁ × α₂ × β → γ) (hf : Measurable f) (x : γ) :
+    Continuous (fun ε : ℝ =>
+      ((macJointDistribution (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W).map f).real {x}) := by
+  have hrw : (fun ε : ℝ =>
+      ((macJointDistribution (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W).map f).real {x})
+      = (fun ε : ℝ => ∑ q ∈ Finset.univ.filter (fun q => f q = x),
+        (macJointDistribution (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W).real {q}) := by
+    funext ε
+    exact map_real_singleton_fiber_sum _ f hf x
+  rw [hrw]
+  exact continuous_finsetSum _ (fun q _ => macMixJoint_real_continuous p₁ μ₀₁ p₂ μ₀₂ W q)
+
+lemma macMix_entropy_continuous {γ : Type*} [Fintype γ] [DecidableEq γ] [Nonempty γ]
+    [MeasurableSpace γ] [MeasurableSingletonClass γ]
+    (p₁ μ₀₁ : Measure α₁) [IsProbabilityMeasure p₁] [IsProbabilityMeasure μ₀₁]
+    (p₂ μ₀₂ : Measure α₂) [IsProbabilityMeasure p₂] [IsProbabilityMeasure μ₀₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] (f : α₁ × α₂ × β → γ) (hf : Measurable f) :
+    Continuous (fun ε : ℝ =>
+      entropy (macJointDistribution (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W) f) := by
+  unfold entropy
+  exact continuous_finsetSum _ (fun x _ =>
+    Real.continuous_negMulLog.comp (macMixJoint_map_real_continuous p₁ μ₀₁ p₂ μ₀₂ W f hf x))
+
+lemma macInfo₁_perturb_continuous
+    (p₁ μ₀₁ : Measure α₁) [IsProbabilityMeasure p₁] [IsProbabilityMeasure μ₀₁]
+    (p₂ μ₀₂ : Measure α₂) [IsProbabilityMeasure p₂] [IsProbabilityMeasure μ₀₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
+    Continuous (fun ε : ℝ => macInfo₁ (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W) := by
+  unfold macInfo₁
+  exact ((macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W Prod.fst measurable_fst).add
+    (macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W Prod.snd measurable_snd)).sub
+    (macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W id measurable_id)
+
+lemma macInfo₂_perturb_continuous
+    (p₁ μ₀₁ : Measure α₁) [IsProbabilityMeasure p₁] [IsProbabilityMeasure μ₀₁]
+    (p₂ μ₀₂ : Measure α₂) [IsProbabilityMeasure p₂] [IsProbabilityMeasure μ₀₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
+    Continuous (fun ε : ℝ => macInfo₂ (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W) := by
+  unfold macInfo₂
+  exact ((macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W (fun q => q.2.1)
+      (measurable_fst.comp measurable_snd)).add
+    (macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W (fun q => (q.1, q.2.2))
+      (measurable_fst.prodMk (measurable_snd.comp measurable_snd)))).sub
+    (macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W id measurable_id)
+
+lemma macInfoBoth_perturb_continuous
+    (p₁ μ₀₁ : Measure α₁) [IsProbabilityMeasure p₁] [IsProbabilityMeasure μ₀₁]
+    (p₂ μ₀₂ : Measure α₂) [IsProbabilityMeasure p₂] [IsProbabilityMeasure μ₀₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
+    Continuous (fun ε : ℝ => macInfoBoth (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W) := by
+  unfold macInfoBoth
+  exact ((macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W (fun q => (q.1, q.2.1))
+      (measurable_fst.prodMk (measurable_fst.comp measurable_snd))).add
+    (macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W (fun q => q.2.2)
+      (measurable_snd.comp measurable_snd))).sub
+    (macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W id measurable_id)
+
+lemma macInfo₁_nonneg (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂] (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
+    0 ≤ macInfo₁ p₁ p₂ W := by
+  rw [macInfo₁_eq_mutualInfo_toReal]; exact ENNReal.toReal_nonneg
+
+lemma macInfo₂_nonneg (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂] (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
+    0 ≤ macInfo₂ p₁ p₂ W := by
+  rw [macInfo₂_eq_mutualInfo_toReal]; exact ENNReal.toReal_nonneg
+
+lemma macInfoBoth_nonneg (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂] (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
+    0 ≤ macInfoBoth p₁ p₂ W := by
+  rw [macInfoBoth_eq_mutualInfo_toReal]; exact ENNReal.toReal_nonneg
+
+lemma sum_max_shift {x y M δ : ℝ} (hx : 0 ≤ x) (hy : 0 ≤ y) (hδ : 0 ≤ δ) (hM : x + y ≤ M) :
+    max 0 (x - δ) + max 0 (y - δ) ≤ max 0 (M - δ) := by
+  have hxle : x ≤ M := by linarith
+  have hyle : y ≤ M := by linarith
+  rcases le_or_gt (x - δ) 0 with hx' | hx' <;> rcases le_or_gt (y - δ) 0 with hy' | hy'
+  · rw [max_eq_left hx', max_eq_left hy', add_zero]; exact le_max_left _ _
+  · rw [max_eq_left hx', max_eq_right hy'.le, zero_add]
+    exact le_max_of_le_right (by linarith)
+  · rw [max_eq_right hx'.le, max_eq_left hy', add_zero]
+    exact le_max_of_le_right (by linarith)
+  · rw [max_eq_right hx'.le, max_eq_right hy'.le]
+    exact le_max_of_le_right (by linarith)
+
+omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
+/-- Every rate pair of an arbitrary probability product input's pentagon lies in the capacity
+region.  The full-support case is `mac_pentagon_subset_capacityRegion`; the general case
+smooths the input toward the uniform anchor and passes to the limit. -/
+theorem mac_pentagon_subset_capacityRegion_allprob
+    (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    (hW : ∀ a : α₁ × α₂, ∀ b : β, 0 < (W a).real {b}) :
+    macPentagon p₁ p₂ W ⊆ macCapacityRegion W := by
+  classical
+  intro R hR
+  obtain ⟨hR1nn, hR2nn, hR1le, hR2le, hRsumle⟩ := hR
+  -- Uniform full-support anchors.
+  have hμ₀₁pos : ∀ a : α₁, 0 < ((PMF.uniformOfFintype α₁).toMeasure).real {a} := by
+    intro a
+    rw [measureReal_def, PMF.toMeasure_apply_singleton _ _ (measurableSet_singleton a),
+      PMF.uniformOfFintype_apply, ENNReal.toReal_inv, ENNReal.toReal_natCast]
+    exact inv_pos.mpr (by exact_mod_cast Fintype.card_pos)
+  have hμ₀₂pos : ∀ a : α₂, 0 < ((PMF.uniformOfFintype α₂).toMeasure).real {a} := by
+    intro a
+    rw [measureReal_def, PMF.toMeasure_apply_singleton _ _ (measurableSet_singleton a),
+      PMF.uniformOfFintype_apply, ENNReal.toReal_inv, ENNReal.toReal_natCast]
+    exact inv_pos.mpr (by exact_mod_cast Fintype.card_pos)
+  set μ₀₁ : Measure α₁ := (PMF.uniformOfFintype α₁).toMeasure with hμ₀₁
+  set μ₀₂ : Measure α₂ := (PMF.uniformOfFintype α₂).toMeasure with hμ₀₂
+  haveI : IsProbabilityMeasure μ₀₁ := by rw [hμ₀₁]; infer_instance
+  haveI : IsProbabilityMeasure μ₀₂ := by rw [hμ₀₂]; infer_instance
+  -- Smoothing sequence `εₖ = 1/(k+1) ∈ (0, 1]` tending to `0`.
+  set ε : ℕ → ℝ := fun k => 1 / ((k : ℝ) + 1) with hεdef
+  have hε_pos : ∀ k, 0 < ε k := fun k => by rw [hεdef]; positivity
+  have hε_tendsto : Tendsto ε atTop (𝓝 0) := tendsto_one_div_add_atTop_nhds_zero_nat
+  -- Corner informations converge along the smoothing.
+  have hAk : Tendsto (fun k => macInfo₁ (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W)
+      atTop (𝓝 (macInfo₁ p₁ p₂ W)) := by
+    have hc := (macInfo₁_perturb_continuous p₁ μ₀₁ p₂ μ₀₂ W).tendsto 0
+    rw [macMix_zero, macMix_zero] at hc
+    exact hc.comp hε_tendsto
+  have hBk : Tendsto (fun k => macInfo₂ (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W)
+      atTop (𝓝 (macInfo₂ p₁ p₂ W)) := by
+    have hc := (macInfo₂_perturb_continuous p₁ μ₀₁ p₂ μ₀₂ W).tendsto 0
+    rw [macMix_zero, macMix_zero] at hc
+    exact hc.comp hε_tendsto
+  have hCk : Tendsto (fun k => macInfoBoth (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W)
+      atTop (𝓝 (macInfoBoth p₁ p₂ W)) := by
+    have hc := (macInfoBoth_perturb_continuous p₁ μ₀₁ p₂ μ₀₂ W).tendsto 0
+    rw [macMix_zero, macMix_zero] at hc
+    exact hc.comp hε_tendsto
+  -- Uniform shrink amount `gapₖ ≥ 0` bounding all three corner losses, tending to `0`.
+  set gap : ℕ → ℝ := fun k =>
+    max 0 (max (macInfo₁ p₁ p₂ W - macInfo₁ (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W)
+      (max (macInfo₂ p₁ p₂ W - macInfo₂ (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W)
+        (macInfoBoth p₁ p₂ W - macInfoBoth (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W)))
+    with hgapdef
+  have hgap_nn : ∀ k, 0 ≤ gap k := fun k => le_max_left _ _
+  have hgap_tendsto : Tendsto gap atTop (𝓝 0) := by
+    rw [hgapdef]
+    have h1 := (tendsto_const_nhds (x := macInfo₁ p₁ p₂ W)).sub hAk
+    have h2 := (tendsto_const_nhds (x := macInfo₂ p₁ p₂ W)).sub hBk
+    have h3 := (tendsto_const_nhds (x := macInfoBoth p₁ p₂ W)).sub hCk
+    simp only [sub_self] at h1 h2 h3
+    simpa using (tendsto_const_nhds (x := (0 : ℝ))).max (h1.max (h2.max h3))
+  -- Approximating points `Qₖ → R`, each in a full-support pentagon hence in the region.
+  set Q : ℕ → ℝ × ℝ := fun k => (max 0 (R.1 - gap k), max 0 (R.2 - gap k)) with hQdef
+  have hQmem : ∀ k, Q k ∈ macCapacityRegion W := by
+    intro k
+    have hgapA : macInfo₁ p₁ p₂ W
+        - macInfo₁ (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W ≤ gap k := by
+      rw [hgapdef]; exact le_trans (le_max_left _ _) (le_max_right _ _)
+    have hgapB : macInfo₂ p₁ p₂ W
+        - macInfo₂ (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W ≤ gap k := by
+      rw [hgapdef]
+      exact le_trans (le_trans (le_max_left _ _) (le_max_right _ _)) (le_max_right _ _)
+    have hgapC : macInfoBoth p₁ p₂ W
+        - macInfoBoth (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W ≤ gap k := by
+      rw [hgapdef]
+      exact le_trans (le_trans (le_max_right _ _) (le_max_right _ _)) (le_max_right _ _)
+    refine mac_pentagon_subset_capacityRegion (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W
+      (fun a => macMix_full_support p₁ μ₀₁ hμ₀₁pos (hε_pos k) a)
+      (fun a => macMix_full_support p₂ μ₀₂ hμ₀₂pos (hε_pos k) a) hW ?_
+    refine ⟨le_max_left _ _, le_max_left _ _, ?_, ?_, ?_⟩
+    · exact max_le (macInfo₁_nonneg _ _ _) (by linarith)
+    · exact max_le (macInfo₂_nonneg _ _ _) (by linarith)
+    · exact le_trans (sum_max_shift hR1nn hR2nn (hgap_nn k) hRsumle)
+        (max_le (macInfoBoth_nonneg _ _ _) (by linarith))
+  have hQ_tendsto : Tendsto Q atTop (𝓝 R) := by
+    rw [hQdef]
+    have hg1 : Tendsto (fun k => R.1 - gap k) atTop (𝓝 R.1) := by
+      simpa using (tendsto_const_nhds (x := R.1)).sub hgap_tendsto
+    have hg2 : Tendsto (fun k => R.2 - gap k) atTop (𝓝 R.2) := by
+      simpa using (tendsto_const_nhds (x := R.2)).sub hgap_tendsto
+    have hm1 : Tendsto (fun k => max 0 (R.1 - gap k)) atTop (𝓝 (max 0 R.1)) :=
+      (tendsto_const_nhds (x := (0 : ℝ))).max hg1
+    have hm2 : Tendsto (fun k => max 0 (R.2 - gap k)) atTop (𝓝 (max 0 R.2)) :=
+      (tendsto_const_nhds (x := (0 : ℝ))).max hg2
+    rw [max_eq_right hR1nn] at hm1
+    rw [max_eq_right hR2nn] at hm2
+    have := hm1.prodMk_nhds hm2
+    rwa [Prod.mk.eta] at this
+  exact (mac_capacityRegion_isClosed W).mem_of_tendsto hQ_tendsto (Eventually.of_forall hQmem)
+
+omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
+/-- **MAC time-sharing achievability (convex-hull form, all-probability inputs).**  The closed
+convex hull of the per-input pentagons of *all* probability product inputs is contained in the
+operational capacity region.  Upgrades `mac_achievability_region` from full-support inputs. -/
+@[entry_point]
+theorem mac_achievability_region_allprob (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    (hW : ∀ a : α₁ × α₂, ∀ b : β, 0 < (W a).real {b}) :
+    closedConvexHull ℝ
+      (⋃ (p₁ : Measure α₁) (p₂ : Measure α₂) (_ : IsProbabilityMeasure p₁)
+         (_ : IsProbabilityMeasure p₂), macPentagon p₁ p₂ W)
+      ⊆ macCapacityRegion W := by
+  refine closedConvexHull_min ?_ (mac_capacityRegion_convex W) (mac_capacityRegion_isClosed W)
+  simp only [Set.iUnion_subset_iff]
+  intro p₁ p₂ hp₁inst hp₂inst
+  haveI := hp₁inst
+  haveI := hp₂inst
+  exact mac_pentagon_subset_capacityRegion_allprob p₁ p₂ W hW
 
 end InformationTheory.Shannon.MAC

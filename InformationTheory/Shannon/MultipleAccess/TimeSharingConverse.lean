@@ -1354,23 +1354,9 @@ lemma mac_perletter_superadd (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
   rw [← ENNReal.toReal_add hC1_ne hC2_ne]
   exact ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨hC1_ne, hC2_ne⟩) hMBle
 
-/-- Nonnegativity of the corner information `macInfo₁` for probability inputs. -/
-lemma macInfo₁_nonneg (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
-    (p₂ : Measure α₂) [IsProbabilityMeasure p₂] (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
-    0 ≤ macInfo₁ p₁ p₂ W := by
-  rw [macInfo₁_eq_condMutualInfo_toReal]; exact ENNReal.toReal_nonneg
-
-/-- Nonnegativity of the corner information `macInfo₂` for probability inputs. -/
-lemma macInfo₂_nonneg (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
-    (p₂ : Measure α₂) [IsProbabilityMeasure p₂] (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
-    0 ≤ macInfo₂ p₁ p₂ W := by
-  rw [macInfo₂_eq_condMutualInfo_toReal]; exact ENNReal.toReal_nonneg
-
-/-- Nonnegativity of the corner information `macInfoBoth` for probability inputs. -/
-lemma macInfoBoth_nonneg (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
-    (p₂ : Measure α₂) [IsProbabilityMeasure p₂] (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
-    0 ≤ macInfoBoth p₁ p₂ W := by
-  rw [macInfoBoth_eq_mutualInfo_toReal]; exact ENNReal.toReal_nonneg
+-- `macInfo₁_nonneg` / `macInfo₂_nonneg` / `macInfoBoth_nonneg` now live in
+-- `InformationTheory.Shannon.MultipleAccess.TimeSharing` (needed there for the all-probability
+-- achievability upgrade) and are inherited via the import.
 
 /-- **Per-code shrunk-point membership** (Dispatch B analytic core).  For a length-`n` two-user code
 with `2 ≤ M₁`, `2 ≤ M₂` and `⌈exp (n Rⱼ)⌉ ≤ Mⱼ`, if the uniformly-shrunk rate point
