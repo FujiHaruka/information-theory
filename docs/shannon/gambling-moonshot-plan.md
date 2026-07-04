@@ -10,14 +10,24 @@ sorryAx-free / 独立 `@audit:ok`) まで形式化する。Ch.6 (Gambling) は `
 `InformationTheory.Shannon.Gambling`。親 moonshot 無し (roadmap の 1 row を genuine 化する
 自立計画)。
 
-## 進捗
+## Closure summary — DONE ✅ (2026-07-04)
 
-- [ ] Phase 0 — M0 API 在庫 (5 補題の verbatim 署名再確認) 📋
-- [ ] Phase 1 — skeleton (def + 5 定理 `:= by sorry`、root import 登録) 📋
-- [ ] Phase 2 — 閉形式 `doublingRate_proportional_eq` + 保存則系 #5 📋
-- [ ] Phase 3 — headline `doublingRate_le_proportional` (CT 6.1.2) 📋
-- [ ] Phase 4 — 等号条件 `doublingRate_eq_proportional_iff` 📋
-- [ ] Phase 5 — 配線 (README / roadmap / 独立監査) 📋
+**proof-done 到達**。前 scope-out だった Cover–Thomas Thm 6.1.2 (Kelly 比例賭け倍加率最適性) を genuine closure。
+
+- headline `doublingRate_le_proportional` + 等号条件 `doublingRate_eq_proportional_iff`、閉形式 `doublingRate_proportional_eq`、保存則 `doublingRate_proportional_add_entropy` — 全 `InformationTheory/Shannon/Gambling/Basic.lean`、`@[entry_point]` headline は `@audit:ok`、`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free、0 sorry / 0 @residual)。
+- Approach どおり `klDivPmf` Gibbs ルートで着地: `W* − W(b) = klDivPmf p b ≥ 0`（等号 `⟺ b = p`）。壁なし、既存 sorryAx-free asset 再利用のみ、共有補題の署名変更なし。
+- 配線完了: root `InformationTheory.lean` import 済、README 定理表 Ch.6 節登録済、roadmap 章対応表 Ch.6 `🟡 (倍加率最適性)` + scope-out 注記済、`docs/shannon/shannon-facts.md` 再検証コマンド追記済。
+- commits: `d22bc953` (実装) + `8671b350` (独立 honesty 監査 `@audit:ok`)。
+- 残: operational gambling / horse-race operational / 株式市場 (Ch.6 stock-market) は scope-out 継続。
+
+## 進捗 (全 Phase DONE)
+
+- [x] Phase 0 — M0 API 在庫 (5 補題 verbatim 署名確認)
+- [x] Phase 1 — skeleton (def + 5 定理、root import 登録)
+- [x] Phase 2 — 閉形式 `doublingRate_proportional_eq` + 保存則 `doublingRate_proportional_add_entropy`
+- [x] Phase 3 — headline `doublingRate_le_proportional` (CT 6.1.2)
+- [x] Phase 4 — 等号条件 `doublingRate_eq_proportional_iff`
+- [x] Phase 5 — 配線 (README / roadmap / facts / 独立監査 `@audit:ok`)
 
 ## ゴール / Approach
 
@@ -94,55 +104,14 @@ W* − W(b) = ∑ p x (log(p x·o x) − log(b x·o x)) = ∑ p x (log p x − l
 Mathlib 側 (transitive 供給、明示 import 不要): `Real.log_mul` / `Real.negMulLog`
 (= `-x·log x`、`negMulLog 0 = 0`) / `Finset.sum` / `stdSimplex`。
 
-## Phase 0 — M0 API 在庫 📋  proof-log: no
+## Phase 詳細 (全 DONE、settled — 1 行圧縮)
 
-- [ ] 上記 5 補題の cited line を Read し、`[…]` typeclass 括弧含め署名を verbatim 確認
-      (特に #2 の pointwise 非負前提 + #3 の `_hQ` 位置引数 + `Real.negMulLog 0 = 0`)
-- [ ] `Real.log_mul` (両因子 `≠ 0` 要求) の署名確認 → `p x = 0` 分岐を回避せず per-term で場合分けする方針を固定
-- 撤退ライン: 在庫 Phase につき sorry 対象なし。
-
-## Phase 1 — skeleton 📋  proof-log: no
-
-- [ ] file 作成: namespace `InformationTheory.Shannon.Gambling`、import は §配線に列挙の specific module のみ
-- [ ] `doublingRate` def + 5 定理を `:= by sorry` で state、LSP で型検査通過を確認 (sorry warning のみ)
-- [ ] `InformationTheory.lean` root に import 行を追記
-- 撤退ライン: skeleton 段階では各 `sorry` に `@residual(plan:gambling-moonshot-plan)` を付す。
-
-## Phase 2 — 閉形式 #2 + 保存則 #5 📋  proof-log: no
-
-- [ ] per-term 補題: `p x = 0` / `0 < p x` の場合分けで `p x * log(p x·o x) = p x·log o x − negMulLog(p x)` を証明
-      (`0 < p x` 側で `Real.log_mul (p x ≠ 0) (o x ≠ 0)`、`negMulLog(p x) = -p x·log p x`)
-- [ ] `doublingRate_proportional_eq` = per-term を `Finset.sum` に持ち上げ
-- [ ] `doublingRate_proportional_add_entropy` (#5) = #2 の `linarith`/`ring` rearrange
-- 撤退ライン: log 分解が難所化したら該当定理を `sorry` + `@residual(plan:gambling-moonshot-plan)`。
-  **禁止**: 恒等式を `*Hypothesis` predicate に束ねる撤退 (honesty defect)。
-
-## Phase 3 — headline #3 (CT Thm 6.1.2) 📋  proof-log: **yes**
-
-- [ ] per-term `o` 分解補題: `o x > 0`・`b x > 0` の下で
-      `p x * (log(p x·o x) − log(b x·o x)) = p x * (log p x − log b x)` (`p x = 0` は両辺 0)
-- [ ] gap = `∑ p x (log p x − log b x)` を `klDivPmf_eq_log_diff_sum_of_Q_pos` (P=p, Q=b) で **逆向き** に `klDivPmf p b` へ
-- [ ] `klDivPmf_nonneg p b hp.1 (fun a => (hb_pos a).le)` で `0 ≤ klDivPmf p b` → `doublingRate b o p ≤ doublingRate p o p`
-- proof-log: `docs/proof-log-gambling-headline.md` に per-term o-split の場合分け + 引数向き (p b) を記録
-- 撤退ライン: `sorry` + `@residual(plan:gambling-moonshot-plan)`。hypothesis 束ね禁止。
-
-## Phase 4 — 等号条件 #4 📋  proof-log: no
-
-- [ ] gap = `klDivPmf p b` の同定を Phase 3 と共有し、`klDivPmf_eq_zero_iff_pmf hp hb hb_pos : klDivPmf p b = 0 ↔ p = b`
-- [ ] `doublingRate b o p = doublingRate p o p ↔ klDivPmf p b = 0 ↔ p = b`、最後に `eq_comm` で `b = p`
-- 撤退ライン: `sorry` + `@residual(plan:gambling-moonshot-plan)`。
-
-## Phase 5 — 配線 + 完成監査 📋  proof-log: no
-
-- [ ] README: `docs/readme-theorems.txt` の Ch.6 節に `doublingRate_le_proportional` を追記 →
-      `deno run -A scripts/gen_readme_table.ts --write` で再生成 (markers 内は手編集しない)
-- [ ] roadmap `docs/textbook-roadmap.md`: Ch.6 は現状 `## scope-out` ブロック (l.13
-      `Ch.6 Gambling / Ch.14 … / Ch.16 …`) にグルーピングされ、章対応表 (`## 章対応進捗`) も `✖`。
-      MAC/BC/EPI の「もはや scope-out ではない」注記の書式に倣い、doubling-rate 最適性は genuine
-      closure 済 / 残る operational (株式市場 / horse-race operational) は scope-out 継続、と注記追加
-- [ ] `docs/shannon/shannon-facts.md` に headline の再検証コマンド (`#print axioms doublingRate_le_proportional`) を 1 行追記
-- [ ] proof-done 到達時: 独立 `honesty-auditor` を dispatch し headline に `@audit:ok`
-      (sorry 導入が無くとも本計画ゴールが独立 `@audit:ok` を要求するため)
+- Phase 0 (M0 在庫): 5 補題 verbatim 署名確認済 (#2 pointwise 非負前提 / #3 `_hQ` 位置引数 / `Real.negMulLog 0 = 0` / `Real.log_mul` 両因子 `≠ 0`)。詳細は下の M0 在庫節が SoT。
+- Phase 1 (skeleton): namespace `InformationTheory.Shannon.Gambling`、def + 5 定理 state、root import 登録済。
+- Phase 2 (閉形式 + 保存則): per-term log 分解 (`p x = 0` / `0 < p x` 場合分け) を `Finset.sum` に持ち上げ → `doublingRate_proportional_eq` + `doublingRate_proportional_add_entropy`、hypothesis 束ねなし。
+- Phase 3 (headline CT 6.1.2): per-term o-split → gap = `∑ p x (log p x − log b x)` を `klDivPmf_eq_log_diff_sum_of_Q_pos` (P=p,Q=b) 逆向き → `klDivPmf_nonneg` で不等式。
+- Phase 4 (等号条件): gap = `klDivPmf p b` を Phase 3 と共有、`klDivPmf_eq_zero_iff_pmf hp hb hb_pos` + `eq_comm` で `b = p`。
+- Phase 5 (配線 + 監査): README / roadmap / facts 配線 + 独立 `honesty-auditor` PASS → headline `@audit:ok` (commit `8671b350`)。
 
 ## 正直性メモ (precondition の性質)
 

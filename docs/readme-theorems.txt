@@ -35,6 +35,10 @@ shannonCode_expected_length_bounds
 kraftSum_le_one_of_uniquelyDecodable | McMillan
 huffmanLength_optimal
 
+@ 6 | Gambling & the doubling rate
+doublingRate_le_proportional | Kelly optimality
+doublingRate_eq_proportional_iff
+
 @ 7 | Channel capacity
 shannon_noisy_channel_coding_theorem_general_full
 channel_coding_feedback_converse
