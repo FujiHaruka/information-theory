@@ -156,6 +156,7 @@ form, `W(p, o, p) = ∑ x, p x · log (o x) − H(p)`.
 Quot.sound]`). `lawPmf μ (Xs 0)` is a definitional binding; `ho` (positive odds) is a
 `log 0 = 0`-convention correctness precondition, not load-bearing. The closed form is a
 genuine rewrite of H1's limit via `doublingRate_proportional_eq`, non-circular. -/
+@[entry_point]
 theorem seqLogWealth_proportional_div_tendsto
     (μ : Measure Ω) [IsProbabilityMeasure μ] (o : α → ℝ) (ho : ∀ x, 0 < o x)
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))

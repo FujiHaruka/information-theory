@@ -4,13 +4,13 @@
 
 ## 進捗
 
-- [ ] M0 在庫 (SLLN 署名 + discrete-expectation bridge テンプレ + 親 Basic.lean 3 資産 verbatim) 📋
-- [ ] Phase 1 — skeleton (def 3 本 + 補助補題 5 本 + headline/corollary 3 本を `sorry` 化、root 登録) 📋
-- [ ] Phase 2 — discrete-expectation bridge `integral_comp_law` (中心計算) 📋
-- [ ] Phase 3 — iid plumbing (Integrable / IdentDistrib / IndepFun の `.comp` 持ち上げ) 📋
-- [ ] Phase 4 — headline `seqLogWealth_div_tendsto_doublingRate` (SLLN 組立) 📋
-- [ ] Phase 5 — `lawPmf ∈ stdSimplex` + 比例賭け閉形式 corollary 📋
-- [ ] Phase 6 — 最適性 corollary + 配線 (root / README / roadmap) + 独立 honesty 監査 📋
+- [x] M0 在庫 (SLLN 署名 + discrete-expectation bridge テンプレ + 親 Basic.lean 3 資産 verbatim) ✅
+- [x] Phase 1 — skeleton (def 3 本 + 補助補題 5 本 + headline/corollary 3 本を `sorry` 化、root 登録) ✅
+- [x] Phase 2 — discrete-expectation bridge `integral_comp_law` (中心計算) ✅
+- [x] Phase 3 — iid plumbing (Integrable / IdentDistrib / IndepFun の `.comp` 持ち上げ) ✅
+- [x] Phase 4 — headline `seqLogWealth_div_tendsto_doublingRate` (SLLN 組立) ✅
+- [x] Phase 5 — `lawPmf ∈ stdSimplex` + 比例賭け閉形式 corollary ✅
+- [x] Phase 6 — 最適性 corollary + 配線 (root / README / roadmap) + 独立 honesty 監査 ✅ (proof-done, sorryAx-free, `@audit:ok`)
 
 ## Context
 
