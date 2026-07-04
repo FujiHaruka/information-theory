@@ -473,7 +473,8 @@ lemma macConverse_memorylessChannel
   sorry
 
 /-- The two messages are independent under the constructed ambient (uniform product input law),
-hence their mutual information vanishes. -/
+hence their mutual information vanishes.
+@audit:ok -/
 lemma macConverse_mutualInfo_eq_zero
     (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     [NeZero M₁] [NeZero M₂] :
