@@ -109,8 +109,7 @@ omit [Fintype α₁] [DecidableEq α₁] [MeasurableSingletonClass α₁]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
 /-- The zero rate pair `(0, 0)` is achievable: the trivial single-message code
 (`M₁ = M₂ = 1`) never errs, because `Fin 1 × Fin 1` has a unique message pair, so the
-decoder is always correct and the average error probability is `0`.
-@audit:ok -/
+decoder is always correct and the average error probability is `0`. -/
 theorem mac_achievable_zero_zero (W : MACChannel α₁ α₂ β) :
     MACAchievable W 0 0 := by
   classical
