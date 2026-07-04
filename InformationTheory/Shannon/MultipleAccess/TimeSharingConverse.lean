@@ -1,4 +1,5 @@
 import InformationTheory.Shannon.MultipleAccess.TimeSharing
+import InformationTheory.Shannon.MultipleAccess.Reconciliation
 import Mathlib.Analysis.Convex.Combination
 
 /-!
@@ -207,5 +208,82 @@ theorem mac_avgPentagon_mem_convexHull {n : ℕ} (hn : 0 < n)
             have := hsumq; rw [hval1] at this; linarith
           rw [hq2eq]; linarith [hs]
   exact convexHull_mem_of_le hpos hdown hqmem hR₁ hR₂ hq1 hq2
+
+/-! ### Pentagon well-formedness for the product input
+
+The convex-geometry gateway `mac_avgPentagon_mem_convexHull` needs the two single-user bounds
+`a i ≤ c i` and `b i ≤ c i`.  In the MAC application these are the two information inequalities
+`macInfo₁ ≤ macInfoBoth` and `macInfo₂ ≤ macInfoBoth`, i.e. `I(X₁; (X₂, Y)) ≤ I((X₁, X₂); Y)` and
+`I(X₂; (X₁, Y)) ≤ I((X₁, X₂); Y)`.  Both follow from the chain rule
+`I((X₁, X₂); Y) = I(X_j; Y) + I(X_{3-j}; Y | X_j)` and nonnegativity of mutual information (finite
+alphabets, so no independence hypothesis is needed here). -/
+
+section PentagonWellFormedness
+
+open MeasureTheory ProbabilityTheory InformationTheory InformationTheory.Shannon
+open InformationTheory.Shannon.ChannelCoding
+
+variable {α₁ α₂ β : Type*}
+  [Fintype α₁] [DecidableEq α₁] [Nonempty α₁] [MeasurableSpace α₁]
+    [MeasurableSingletonClass α₁] [StandardBorelSpace α₁]
+  [Fintype α₂] [DecidableEq α₂] [Nonempty α₂] [MeasurableSpace α₂]
+    [MeasurableSingletonClass α₂] [StandardBorelSpace α₂]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
+    [MeasurableSingletonClass β] [StandardBorelSpace β]
+
+omit [StandardBorelSpace α₂] in
+/-- Pentagon well-formedness (user 1): `macInfo₁ ≤ macInfoBoth`, i.e.
+`I(X₁; (X₂, Y)) ≤ I((X₁, X₂); Y)`.  Supplies the `a i ≤ c i` hypothesis of
+`mac_avgPentagon_mem_convexHull`.  Proved by the chain rule
+`I((X₂, X₁); Y) = I(X₂; Y) + I(X₁; Y | X₂)` (after `prodComm`) and `condMutualInfo_nonneg`. -/
+theorem mac_macInfo₁_le_macInfoBoth
+    (p₁ : Measure α₁) [IsProbabilityMeasure p₁] (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
+    macInfo₁ p₁ p₂ W ≤ macInfoBoth p₁ p₂ W := by
+  have hX1 : Measurable (Prod.fst : α₁ × α₂ × β → α₁) := measurable_fst
+  have hX2 : Measurable (fun q : α₁ × α₂ × β ↦ q.2.1) := measurable_fst.comp measurable_snd
+  have hY : Measurable (fun q : α₁ × α₂ × β ↦ q.2.2) := measurable_snd.comp measurable_snd
+  rw [macInfo₁_eq_condMutualInfo_toReal p₁ p₂ W, macInfoBoth_eq_mutualInfo_toReal p₁ p₂ W]
+  set J := macJointDistribution p₁ p₂ W with hJ
+  refine ENNReal.toReal_mono ?_ ?_
+  · exact mutualInfo_ne_top J _ _ (hX1.prodMk hX2) hY
+  · -- `I((X₁, X₂); Y) = I((X₂, X₁); Y)` (prodComm), then chain rule
+    -- `I((X₂, X₁); Y) = I(X₂; Y) + I(X₁; Y | X₂)`, then drop the nonneg `I(X₂; Y)`.
+    have heq : mutualInfo J (fun q : α₁ × α₂ × β ↦ (q.1, q.2.1)) (fun q ↦ q.2.2)
+        = mutualInfo J (fun q : α₁ × α₂ × β ↦ (q.2.1, q.1)) (fun q ↦ q.2.2) :=
+      mutualInfo_map_left_measurableEquiv J (fun q : α₁ × α₂ × β ↦ (q.2.1, q.1))
+        (fun q ↦ q.2.2) (hX2.prodMk hX1) hY MeasurableEquiv.prodComm
+    have hchain : mutualInfo J (fun q : α₁ × α₂ × β ↦ (q.2.1, q.1)) (fun q ↦ q.2.2)
+        = mutualInfo J (fun q ↦ q.2.1) (fun q ↦ q.2.2)
+          + condMutualInfo J Prod.fst (fun q ↦ q.2.2) (fun q ↦ q.2.1) :=
+      mutualInfo_chain_rule J Prod.fst (fun q ↦ q.2.2) (fun q ↦ q.2.1) hX1 hY hX2
+    rw [heq, hchain]
+    exact self_le_add_left _ _
+
+omit [StandardBorelSpace α₁] in
+/-- Pentagon well-formedness (user 2): `macInfo₂ ≤ macInfoBoth`, i.e.
+`I(X₂; (X₁, Y)) ≤ I((X₁, X₂); Y)`.  Supplies the `b i ≤ c i` hypothesis of
+`mac_avgPentagon_mem_convexHull`.  Proved by the chain rule
+`I((X₁, X₂); Y) = I(X₁; Y) + I(X₂; Y | X₁)` and `condMutualInfo_nonneg`. -/
+theorem mac_macInfo₂_le_macInfoBoth
+    (p₁ : Measure α₁) [IsProbabilityMeasure p₁] (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
+    macInfo₂ p₁ p₂ W ≤ macInfoBoth p₁ p₂ W := by
+  have hX1 : Measurable (Prod.fst : α₁ × α₂ × β → α₁) := measurable_fst
+  have hX2 : Measurable (fun q : α₁ × α₂ × β ↦ q.2.1) := measurable_fst.comp measurable_snd
+  have hY : Measurable (fun q : α₁ × α₂ × β ↦ q.2.2) := measurable_snd.comp measurable_snd
+  rw [macInfo₂_eq_condMutualInfo_toReal p₁ p₂ W, macInfoBoth_eq_mutualInfo_toReal p₁ p₂ W]
+  set J := macJointDistribution p₁ p₂ W with hJ
+  refine ENNReal.toReal_mono ?_ ?_
+  · exact mutualInfo_ne_top J _ _ (hX1.prodMk hX2) hY
+  · -- chain rule `I((X₁, X₂); Y) = I(X₁; Y) + I(X₂; Y | X₁)`, then drop the nonneg `I(X₁; Y)`.
+    have hchain : mutualInfo J (fun q : α₁ × α₂ × β ↦ (q.1, q.2.1)) (fun q ↦ q.2.2)
+        = mutualInfo J Prod.fst (fun q ↦ q.2.2)
+          + condMutualInfo J (fun q ↦ q.2.1) (fun q ↦ q.2.2) Prod.fst :=
+      mutualInfo_chain_rule J (fun q ↦ q.2.1) (fun q ↦ q.2.2) Prod.fst hX2 hY hX1
+    rw [hchain]
+    exact self_le_add_left _ _
+
+end PentagonWellFormedness
 
 end InformationTheory.Shannon.MAC
