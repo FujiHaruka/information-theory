@@ -580,6 +580,205 @@ theorem mac_capacityRegion_convex (W : MACChannel α₁ α₂ β) [IsMarkovKerne
     (hu_tend.const_smul a).add (hv_tend.const_smul b)
   exact (mac_capacityRegion_isClosed W).mem_of_tendsto hw_tend (Eventually.of_forall hw_mem)
 
+/-! ## Single-user axes: M₁ = 1 (resp. M₂ = 1) specialisation of the achievability engine -/
+
+omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
+/-- **Single-user axis (user 1 silent).**  The rate pair `(0, R₂)` with `R₂ < macInfo₂` is
+achievable.  This is the `R₁ = 0` specialisation of the achievability engine: `R₁ = 0`
+forces `M₁ = ⌈exp (n·0)⌉ = 1`, so the two alias terms carrying the `(M₁ - 1)` factor (`E1`,
+`E3`) collapse to `0` and only the correct-pair atypicality `E0` (AEP) and the user-2 alias
+`E2` (controlled by `R₂ < macInfo₂`) remain.  The corner conditions `R₁ < macInfo₁` and
+`R₁ + R₂ < macInfoBoth` of `mac_achievability` — vacuous when `macInfo₁ ≤ 0` — are therefore
+not needed. -/
+theorem mac_axis1_achievable
+    (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    (hp₁ : ∀ a : α₁, 0 < p₁.real {a}) (hp₂ : ∀ a : α₂, 0 < p₂.real {a})
+    (hW : ∀ a : α₁ × α₂, ∀ b : β, 0 < (W a).real {b})
+    {R₂ : ℝ} (hR₂lt : R₂ < macInfo₂ p₁ p₂ W) :
+    MACAchievable W 0 R₂ := by
+  classical
+  intro ε' hε'
+  set μ : Measure (ℕ → α₁ × α₂ × β) := macAmbientMeasure p₁ p₂ W with hμ_def
+  haveI : IsProbabilityMeasure μ := by rw [hμ_def]; infer_instance
+  -- Rate slack `ε`: a sixth of the single user-2 gap.
+  set ε : ℝ := (macInfo₂ p₁ p₂ W - R₂) / 6 with hε_def
+  have hε_pos : 0 < ε := by rw [hε_def]; linarith
+  have hgap2 : 0 < macInfo₂ p₁ p₂ W - R₂ - 3 * ε := by rw [hε_def]; linarith
+  have hε'2 : 0 < ε' / 2 := by linarith
+  -- Measurability of the four coordinate selectors used by the AEP.
+  have hm_X2 : Measurable (fun q : α₁ × α₂ × β ↦ q.2.1) := measurable_fst.comp measurable_snd
+  have hm_Y : Measurable (fun q : α₁ × α₂ × β ↦ q.2.2) := measurable_snd.comp measurable_snd
+  have hm_X1X2 : Measurable (fun q : α₁ × α₂ × β ↦ (q.1, q.2.1)) :=
+    measurable_fst.prodMk (measurable_fst.comp measurable_snd)
+  have hm_X1Y : Measurable (fun q : α₁ × α₂ × β ↦ (q.1, q.2.2)) :=
+    measurable_fst.prodMk (measurable_snd.comp measurable_snd)
+  -- (N₀) AEP: the correct-pair-typical probability tends to 1.
+  have h_aep := macJointlyTypicalSet_prob_tendsto_one μ macX1s macX2s macYs
+    measurable_macX1s measurable_macX2s measurable_macYs
+    (macAmbient_pairwise_coord p₁ p₂ W Prod.fst measurable_fst)
+    (fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W Prod.fst measurable_fst i)
+    (macAmbient_pairwise_coord p₁ p₂ W (fun q ↦ q.2.1) hm_X2)
+    (fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W (fun q ↦ q.2.1) hm_X2 i)
+    (macAmbient_pairwise_coord p₁ p₂ W (fun q ↦ q.2.2) hm_Y)
+    (fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W (fun q ↦ q.2.2) hm_Y i)
+    (macAmbient_pairwise_coord p₁ p₂ W (fun q ↦ (q.1, q.2.1)) hm_X1X2)
+    (fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W (fun q ↦ (q.1, q.2.1)) hm_X1X2 i)
+    (macAmbient_pairwise_coord p₁ p₂ W (fun q ↦ (q.1, q.2.2)) hm_X1Y)
+    (fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W (fun q ↦ (q.1, q.2.2)) hm_X1Y i)
+    (macAmbient_pairwise_coord p₁ p₂ W Prod.snd measurable_snd)
+    (fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W Prod.snd measurable_snd i)
+    (macAmbient_pairwise_coord p₁ p₂ W id measurable_id)
+    (fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W id measurable_id i)
+    hε_pos
+  have h_aep_real : Filter.Tendsto
+      (fun n : ℕ ↦ (μ {ω | (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω) ∈
+          macJointlyTypicalSet μ macX1s macX2s macYs n ε}).toReal)
+      Filter.atTop (𝓝 1) := by
+    have h := (ENNReal.tendsto_toReal (a := (1 : ℝ≥0∞)) (by simp)).comp h_aep
+    simpa [Function.comp_def] using h
+  obtain ⟨N₀, hN₀⟩ := Filter.eventually_atTop.mp
+    (h_aep_real.eventually (eventually_gt_nhds (show (1 : ℝ) - ε' / 2 < 1 by linarith)))
+  -- (N₂) exponential decay of the user-2 alias term.
+  obtain ⟨N₂, hN₂⟩ := channelCoding_E2_lt_of_rate (I := macInfo₂ p₁ p₂ W) (R := R₂)
+    (ε := ε) (ε' := ε' / 2) hgap2 hε'2
+  refine ⟨max N₀ N₂, fun n hn ↦ ?_⟩
+  have hn0 : N₀ ≤ n := le_trans (le_max_left _ _) hn
+  have hn2 : N₂ ≤ n := le_trans (le_max_right _ _) hn
+  set M₂ : ℕ := Nat.ceil (Real.exp ((n : ℝ) * R₂)) with hM₂_def
+  have hM₂_pos : 0 < M₂ := Nat.ceil_pos.mpr (Real.exp_pos _)
+  -- The two-codebook average bound with `M₁ = 1`; the `(M₁ - 1)` alias terms vanish.
+  have h_avg_bound := mac_random_codebook_average_le (M₁ := 1) (M₂ := M₂) (n := n)
+    p₁ p₂ W hp₁ hp₂ hW Nat.one_pos hM₂_pos hε_pos
+  simp only [Nat.cast_one, sub_self, zero_mul, add_zero] at h_avg_bound
+  -- Bound the two surviving terms.
+  have hE0 : μ.real {ω | (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω) ∉
+      macJointlyTypicalSet μ macX1s macX2s macYs n ε} ≤ ε' / 2 := by
+    have h_meas_good : MeasurableSet
+        {ω | (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω) ∈
+            macJointlyTypicalSet μ macX1s macX2s macYs n ε} := by
+      have h_meas_triple : Measurable (fun ω : ℕ → α₁ × α₂ × β ↦
+          (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω)) :=
+        (measurable_jointRV (α := α₁) macX1s measurable_macX1s n).prodMk
+          ((measurable_jointRV (α := α₂) macX2s measurable_macX2s n).prodMk
+            (measurable_jointRV (α := β) macYs measurable_macYs n))
+      exact h_meas_triple (measurableSet_macJointlyTypicalSet μ macX1s macX2s macYs n ε)
+    exact InformationTheory.Shannon.ChannelCoding.complementProbReal_le_of_one_sub_le
+      h_meas_good (le_of_lt (hN₀ n hn0))
+  have hE2 : ((M₂ : ℝ) - 1) * Real.exp ((n : ℝ) * (-(macInfo₂ p₁ p₂ W) + 3 * ε)) < ε' / 2 := by
+    have := hN₂ n hn2
+    rwa [hM₂_def]
+  have hRHS_lt :
+      μ.real {ω | (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω) ∉
+            macJointlyTypicalSet μ macX1s macX2s macYs n ε}
+        + ((M₂ : ℝ) - 1) * Real.exp ((n : ℝ) * (-(macInfo₂ p₁ p₂ W) + 3 * ε)) < ε' := by
+    linarith
+  -- Pigeonhole to a deterministic codebook pair, then package the code (a `MACCode 1 M₂ n`).
+  obtain ⟨c₁, c₂, hcb⟩ := mac_exists_codebook_le_avg μ macX1s macX2s macYs W p₁ p₂
+    Nat.one_pos hM₂_pos _ h_avg_bound
+  refine ⟨1, M₂, ?_, le_refl _,
+    macCodebookToCode μ macX1s macX2s macYs Nat.one_pos hM₂_pos ε c₁ c₂, ?_⟩
+  · rw [mul_zero, Real.exp_zero, Nat.ceil_one]
+  · exact lt_of_le_of_lt hcb hRHS_lt
+
+omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
+/-- **Single-user axis (user 2 silent).**  The rate pair `(R₁, 0)` with `R₁ < macInfo₁` is
+achievable.  Symmetric to `mac_axis1_achievable`: `R₂ = 0` forces `M₂ = 1`, collapsing the
+`(M₂ - 1)`-carrying alias terms (`E2`, `E3`) and leaving only `E0` (AEP) and the user-1 alias
+`E1` (controlled by `R₁ < macInfo₁`). -/
+theorem mac_axis2_achievable
+    (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
+    (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
+    (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    (hp₁ : ∀ a : α₁, 0 < p₁.real {a}) (hp₂ : ∀ a : α₂, 0 < p₂.real {a})
+    (hW : ∀ a : α₁ × α₂, ∀ b : β, 0 < (W a).real {b})
+    {R₁ : ℝ} (hR₁lt : R₁ < macInfo₁ p₁ p₂ W) :
+    MACAchievable W R₁ 0 := by
+  classical
+  intro ε' hε'
+  set μ : Measure (ℕ → α₁ × α₂ × β) := macAmbientMeasure p₁ p₂ W with hμ_def
+  haveI : IsProbabilityMeasure μ := by rw [hμ_def]; infer_instance
+  -- Rate slack `ε`: a sixth of the single user-1 gap.
+  set ε : ℝ := (macInfo₁ p₁ p₂ W - R₁) / 6 with hε_def
+  have hε_pos : 0 < ε := by rw [hε_def]; linarith
+  have hgap1 : 0 < macInfo₁ p₁ p₂ W - R₁ - 3 * ε := by rw [hε_def]; linarith
+  have hε'2 : 0 < ε' / 2 := by linarith
+  -- Measurability of the four coordinate selectors used by the AEP.
+  have hm_X2 : Measurable (fun q : α₁ × α₂ × β ↦ q.2.1) := measurable_fst.comp measurable_snd
+  have hm_Y : Measurable (fun q : α₁ × α₂ × β ↦ q.2.2) := measurable_snd.comp measurable_snd
+  have hm_X1X2 : Measurable (fun q : α₁ × α₂ × β ↦ (q.1, q.2.1)) :=
+    measurable_fst.prodMk (measurable_fst.comp measurable_snd)
+  have hm_X1Y : Measurable (fun q : α₁ × α₂ × β ↦ (q.1, q.2.2)) :=
+    measurable_fst.prodMk (measurable_snd.comp measurable_snd)
+  -- (N₀) AEP: the correct-pair-typical probability tends to 1.
+  have h_aep := macJointlyTypicalSet_prob_tendsto_one μ macX1s macX2s macYs
+    measurable_macX1s measurable_macX2s measurable_macYs
+    (macAmbient_pairwise_coord p₁ p₂ W Prod.fst measurable_fst)
+    (fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W Prod.fst measurable_fst i)
+    (macAmbient_pairwise_coord p₁ p₂ W (fun q ↦ q.2.1) hm_X2)
+    (fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W (fun q ↦ q.2.1) hm_X2 i)
+    (macAmbient_pairwise_coord p₁ p₂ W (fun q ↦ q.2.2) hm_Y)
+    (fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W (fun q ↦ q.2.2) hm_Y i)
+    (macAmbient_pairwise_coord p₁ p₂ W (fun q ↦ (q.1, q.2.1)) hm_X1X2)
+    (fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W (fun q ↦ (q.1, q.2.1)) hm_X1X2 i)
+    (macAmbient_pairwise_coord p₁ p₂ W (fun q ↦ (q.1, q.2.2)) hm_X1Y)
+    (fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W (fun q ↦ (q.1, q.2.2)) hm_X1Y i)
+    (macAmbient_pairwise_coord p₁ p₂ W Prod.snd measurable_snd)
+    (fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W Prod.snd measurable_snd i)
+    (macAmbient_pairwise_coord p₁ p₂ W id measurable_id)
+    (fun i ↦ macAmbient_identDistrib_coord p₁ p₂ W id measurable_id i)
+    hε_pos
+  have h_aep_real : Filter.Tendsto
+      (fun n : ℕ ↦ (μ {ω | (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω) ∈
+          macJointlyTypicalSet μ macX1s macX2s macYs n ε}).toReal)
+      Filter.atTop (𝓝 1) := by
+    have h := (ENNReal.tendsto_toReal (a := (1 : ℝ≥0∞)) (by simp)).comp h_aep
+    simpa [Function.comp_def] using h
+  obtain ⟨N₀, hN₀⟩ := Filter.eventually_atTop.mp
+    (h_aep_real.eventually (eventually_gt_nhds (show (1 : ℝ) - ε' / 2 < 1 by linarith)))
+  -- (N₁) exponential decay of the user-1 alias term.
+  obtain ⟨N₁, hN₁⟩ := channelCoding_E2_lt_of_rate (I := macInfo₁ p₁ p₂ W) (R := R₁)
+    (ε := ε) (ε' := ε' / 2) hgap1 hε'2
+  refine ⟨max N₀ N₁, fun n hn ↦ ?_⟩
+  have hn0 : N₀ ≤ n := le_trans (le_max_left _ _) hn
+  have hn1 : N₁ ≤ n := le_trans (le_max_right _ _) hn
+  set M₁ : ℕ := Nat.ceil (Real.exp ((n : ℝ) * R₁)) with hM₁_def
+  have hM₁_pos : 0 < M₁ := Nat.ceil_pos.mpr (Real.exp_pos _)
+  -- The two-codebook average bound with `M₂ = 1`; the `(M₂ - 1)` alias terms vanish.
+  have h_avg_bound := mac_random_codebook_average_le (M₁ := M₁) (M₂ := 1) (n := n)
+    p₁ p₂ W hp₁ hp₂ hW hM₁_pos Nat.one_pos hε_pos
+  simp only [Nat.cast_one, sub_self, zero_mul, mul_zero, add_zero] at h_avg_bound
+  -- Bound the two surviving terms.
+  have hE0 : μ.real {ω | (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω) ∉
+      macJointlyTypicalSet μ macX1s macX2s macYs n ε} ≤ ε' / 2 := by
+    have h_meas_good : MeasurableSet
+        {ω | (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω) ∈
+            macJointlyTypicalSet μ macX1s macX2s macYs n ε} := by
+      have h_meas_triple : Measurable (fun ω : ℕ → α₁ × α₂ × β ↦
+          (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω)) :=
+        (measurable_jointRV (α := α₁) macX1s measurable_macX1s n).prodMk
+          ((measurable_jointRV (α := α₂) macX2s measurable_macX2s n).prodMk
+            (measurable_jointRV (α := β) macYs measurable_macYs n))
+      exact h_meas_triple (measurableSet_macJointlyTypicalSet μ macX1s macX2s macYs n ε)
+    exact InformationTheory.Shannon.ChannelCoding.complementProbReal_le_of_one_sub_le
+      h_meas_good (le_of_lt (hN₀ n hn0))
+  have hE1 : ((M₁ : ℝ) - 1) * Real.exp ((n : ℝ) * (-(macInfo₁ p₁ p₂ W) + 3 * ε)) < ε' / 2 := by
+    have := hN₁ n hn1
+    rwa [hM₁_def]
+  have hRHS_lt :
+      μ.real {ω | (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω) ∉
+            macJointlyTypicalSet μ macX1s macX2s macYs n ε}
+        + ((M₁ : ℝ) - 1) * Real.exp ((n : ℝ) * (-(macInfo₁ p₁ p₂ W) + 3 * ε)) < ε' := by
+    linarith
+  -- Pigeonhole to a deterministic codebook pair, then package the code (a `MACCode M₁ 1 n`).
+  obtain ⟨c₁, c₂, hcb⟩ := mac_exists_codebook_le_avg μ macX1s macX2s macYs W p₁ p₂
+    hM₁_pos Nat.one_pos _ h_avg_bound
+  refine ⟨M₁, 1, le_refl _, ?_,
+    macCodebookToCode μ macX1s macX2s macYs hM₁_pos Nat.one_pos ε c₁ c₂, ?_⟩
+  · rw [mul_zero, Real.exp_zero, Nat.ceil_one]
+  · exact lt_of_le_of_lt hcb hRHS_lt
+
 /-! ## Each pentagon lies in the capacity region -/
 
 omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
@@ -648,18 +847,24 @@ theorem mac_pentagon_subset_capacityRegion
       simp only [not_or, not_le] at h
       exact hpos h
     rcases hcases with h1 | h2 | hb
-    · -- `macInfo₁ ≤ 0` ⇒ `R.1 = 0`: the point `(0, R.2)` needs single-user achievability with
-      -- user 1 silent (user 2 achieves any rate `≤ macInfo₂`).  This is genuine operational
-      -- content — user 1 must transmit a `p₁`-typical fixed sequence so that user 2 sees the
-      -- averaged single-user channel — and is not derivable from `mac_achievability`, which
-      -- requires `macInfo₁ > 0` (its `R₁ < macInfo₁` corner is empty here).
+    · -- `macInfo₁ ≤ 0` ⇒ `R.1 = 0`: user 1 is silent and user 2 achieves any rate below
+      -- `macInfo₂`.  Although the `R₁ < macInfo₁` corner of `mac_achievability` as-stated is
+      -- empty here, the point is achievable via its `M₁ = 1` internal specialisation
+      -- (`mac_axis1_achievable`): every strictly-smaller perturbation `(−ε, R.2 − ε)` reduces
+      -- to `MACAchievable W 0 (R.2 − ε)` (with `R.2 − ε < macInfo₂`) by monotonicity, so `R`
+      -- is a limit of achievable points.
       have hR1zero : R.1 = 0 := le_antisymm (hR1le.trans h1) hR1nn
-      -- @residual(plan:mac-timesharing-plan)
-      sorry
-    · -- `macInfo₂ ≤ 0` ⇒ `R.2 = 0`: symmetric single-user achievability with user 2 silent.
+      refine mac_mem_closure_of_strictly_below W R (fun ε hε => ?_)
+      have hax : MACAchievable W 0 (R.2 - ε) :=
+        mac_axis1_achievable p₁ p₂ W hp₁ hp₂ hW (by linarith [hR2le])
+      exact mac_achievable_mono hax (by rw [hR1zero]; linarith) le_rfl
+    · -- `macInfo₂ ≤ 0` ⇒ `R.2 = 0`: symmetric single-user achievability with user 2 silent,
+      -- via the `M₂ = 1` internal specialisation `mac_axis2_achievable`.
       have hR2zero : R.2 = 0 := le_antisymm (hR2le.trans h2) hR2nn
-      -- @residual(plan:mac-timesharing-plan)
-      sorry
+      refine mac_mem_closure_of_strictly_below W R (fun ε hε => ?_)
+      have hax : MACAchievable W (R.1 - ε) 0 :=
+        mac_axis2_achievable p₁ p₂ W hp₁ hp₂ hW (by linarith [hR1le])
+      exact mac_achievable_mono hax le_rfl (by rw [hR2zero]; linarith)
     · -- `macInfoBoth ≤ 0` ⇒ `R = (0, 0)`: the trivial single-message code is achievable.
       have hsum0 : R.1 + R.2 ≤ 0 := hRsumle.trans hb
       have hR1zero : R.1 = 0 := le_antisymm (by linarith) hR1nn
