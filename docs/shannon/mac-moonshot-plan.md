@@ -3,7 +3,7 @@
 > **Parent**: [`textbook-roadmap.md`](../textbook-roadmap.md) §Ch.15 (Network IT / DSC mini-chapter)
 > **Inventory**: [`mac-inventory.md`](mac-inventory.md) (§A in-project 流用 / §B Mathlib / §C 削除済 scaffold 型 / §D gap)
 
-> **Status**: **CLOSED — MAC 容量領域 full closure 達成 (2026-06-28)**。converse (`mac_converse`、Phase A2) + achievability (`mac_achievability`、Phase D-2) ともに genuine (`@[entry_point]`、`@audit:ok`、`#print axioms` = `[propext, Classical.choice, Quot.sound]` sorryAx-free)。**目標 = Cover–Thomas 2nd ed. Theorem 15.3.1 (2-user DMC capacity region、corner-point/per-letter 和形) を標準B (proof done) で genuine closure** = 達成。time-sharing 全凸包形 (L-MAC5) は scope-out 維持。旧 statement-level pass-through plan (CLOSED) と `mac-l1-discharge-moonshot-plan.md` (partial discharge) を本 genuine-closure 計画で置換、旧版の本文は git 履歴。
+> **Status**: **CLOSED — MAC 容量領域 full closure 達成 (2026-06-28)**。converse (`mac_converse`、Phase A2) + achievability (`mac_achievability`、Phase D-2) ともに genuine (`@[entry_point]`、`@audit:ok`、`#print axioms` = `[propext, Classical.choice, Quot.sound]` sorryAx-free)。**目標 = Cover–Thomas 2nd ed. Theorem 15.3.1 (2-user DMC capacity region、corner-point/per-letter 和形) を標準B (proof done) で genuine closure** = 達成。time-sharing 全凸包形 (L-MAC5) は **本 corner-point moonshot とは別途 fully CLOSED (2026-07-05、子 [`mac-timesharing-plan.md`](mac-timesharing-plan.md)、§撤退ライン L-MAC5 行参照)**。旧 statement-level pass-through plan (CLOSED) と `mac-l1-discharge-moonshot-plan.md` (partial discharge) を本 genuine-closure 計画で置換、旧版の本文は git 履歴。
 >
 > **親整合 注記 (2026-06-28 完了)**: converse + achievability の両 genuine closure を受け、orchestrator が roadmap Ch.15 (L22 段落 + 章状態表 row 15) + README 定理表 (`mac_converse` / `mac_achievability` 2 行) を MAC 容量領域 full closure へ同期済。本 moonshot は CLOSED。
 >
@@ -81,7 +81,7 @@ variable {α₁ α₂ β : Type*}
 - [ ] **corner cut rate 定義** (Mathlib-shape-driven、`condMutualInfo` 結論形を直接返す): `I₁ = condMutualInfo μ X₁ Y X₂` / `I₂ = condMutualInfo μ X₂ Y X₁` / `Iboth = mutualInfo μ (fun ω ↦ (X₁ ω, X₂ ω)) Y`
 - [ ] `structure InMACCapacityRegion (R₁ R₂ I₁ I₂ Iboth : ℝ) : Prop` (3 field) + `mk'` / `iff_and` / `mono` 等の基本 lemma
 
-**設計選択 (inventory §D 所見、確定)**: 凸包 / closure は Mathlib 完備 (`convexHull` :46 / `closedConvexHull_eq_closure_convexHull` :332) だが gap でなく**設計選択**。**headline は corner-point form (`InMACCapacityRegion` の 3 不等式)** とし、time-sharing 全凸包 (L-MAC5) は scope-out 維持。full hull form は将来 §B 借用で別途。
+**設計選択 (inventory §D 所見、確定)**: 凸包 / closure は Mathlib 完備 (`convexHull` :46 / `closedConvexHull_eq_closure_convexHull` :332) だが gap でなく**設計選択**。**headline は corner-point form (`InMACCapacityRegion` の 3 不等式)** とする。time-sharing 全凸包 (L-MAC5) は本 corner-point moonshot の scope 外だが、別途 fully CLOSED 済 (子 [`mac-timesharing-plan.md`](mac-timesharing-plan.md)、full hull form を operational に genuine closure)。
 
 - **依存 in-project decl**: `ChannelCoding/Basic.lean:145` (`Code`)、`:192` (`errorProbAt`)、`:207` (`averageErrorProb_le_one`); Mathlib `Measure.pi` (`Pi.lean:212`, `irreducible_def` — `pi_pi` API 経由で評価、直 unfold 不可)
 - **gateway atom**: 無し (定義 Phase)。リスク低、greenfield。
@@ -125,7 +125,7 @@ variable {α₁ α₂ β : Type*}
 
 **旧「step-2 壁」は plumbing で壁ではなかった** — export + det-conditioner Markov 補題で closure 済 (cause:plumbing)。Converse.lean に residual なし。
 
-**honest target (L-MAC5 と区別、維持)**: 達成 converse は **per-letter 和形** (各時刻の周辺入力分布での和)。固定 product input `p(x₁)p(x₂)` での single-letter 領域は time-sharing/凸包 (L-MAC5 = scope-out) を要し本計画対象外。
+**honest target (L-MAC5 と区別、維持)**: 達成 converse は **per-letter 和形** (各時刻の周辺入力分布での和)。固定 product input `p(x₁)p(x₂)` での single-letter 領域は time-sharing/凸包 (L-MAC5) を要し本 corner-point 計画対象外 (L-MAC5 は別途 fully CLOSED、子 [`mac-timesharing-plan.md`](mac-timesharing-plan.md))。
 
 ---
 
@@ -230,7 +230,16 @@ frozen slug (他 doc / 旧 plan が参照、削除不可):
 - **L-MAC2** (multi-user Fano + chain rule): **RESOLVED** (genuine MAC converse 完成、Phase A2)。message-level (A1) + genuine single-letterization (A2 = `mac_converse`、entropy ルート、cause:plumbing で旧 step-2「壁」を解消) の双方を sorryAx-free + `@audit:ok` で closure。
 - **L-MAC3** (inner bound existence pass-through): gap2+gap3 (Phase B/D) が触れる。**achievability 残・open**。gap2 が唯一の重い analytic 核 → gateway-atom-first で genuine 化試行。
 - **L-MAC4** (outer bound `InMACCapacityRegion` pass-through): **RESOLVED** (genuine outer bound = per-letter 和形 `mac_converse` 完成、Phase A2)。`InMACCapacityRegion` predicate は load-bearing でない generic bundle。
-- **L-MAC5** (time-sharing 全凸包): **achievability half proof-done (2026-07-04)、converse half 着手中 (凸包側 done: Gap C `302dbe03` + well-formedness `b7a7379f`; measure 側 Gap 0 code→ambient bridge done `3377eba5`、`mac_converse_from_code` sorryAx-free + 独立監査 PASS; 残 Gap A/B′ + CV/V assemble)** — 子 plan [`mac-timesharing-plan.md`](mac-timesharing-plan.md) → converse sub-plan [`mac-timesharing-converse-plan.md`](mac-timesharing-converse-plan.md)。achievability (`mac_achievability_region` `@[entry_point]`、pentagon 凸包 ⊆ 容量領域) は sorryAx-free + 独立監査 PASS (`@audit:ok`、退化軸は `mac_axis1/2_achievable` の M=1 engine 特殊化で genuine close)。残 = CV (converse `{MACAchievable} ⊆ closedConvexHull`) + V (full-region antisymmetry)。
+- **L-MAC5** (time-sharing 全凸包): **fully CLOSED (2026-07-05)**。converse half (CV
+  `mac_timesharing_converse`) + full-region antisymmetry (V `mac_timesharing_capacity_region`
+  `@[entry_point]`、intersection 形 `macCapacityRegion ∩ Q = closedConvexHull(all-prob pentagons)`)
+  ともに proof-done sorryAx-free（`#print axioms mac_timesharing_capacity_region` =
+  `[propext, Classical.choice, Quot.sound]`、commits 軸 `c37333dc` / Dispatch C all-prob upgrade
+  `2d45273c` / Dispatch D clamp+antisymmetry `67283ec4`）。achievability half + CV + V の両ファイル
+  `TimeSharing.lean` / `TimeSharingConverse.lean` は 0 sorry / 0 @residual、独立監査 PASS (`@audit:ok`)。
+  **Cover–Thomas Thm 15.3.1 の time-sharing 全凸包形を標準B (proof done) で完全達成** — 子 plan
+  [`mac-timesharing-plan.md`](mac-timesharing-plan.md) → converse sub-plan
+  [`mac-timesharing-converse-plan.md`](mac-timesharing-converse-plan.md) が SoT。
 
 **退避先 (未発動)**: gap2 不通時の退避先として audit-tags register の Ch.15 multi-user joint typicality 壁を想定していたが、**gateway-atom-first で E1 を試したところ genuine に通り壁ではなかった** (CLAUDE.md「壁判定は反証を 1 度試みる」)。achievability は壁なしで genuine closure、code 側に当該壁の `@residual` は存在しない。
 
@@ -250,7 +259,7 @@ frozen slug (他 doc / 旧 plan が参照、削除不可):
 
 append-only。決着済 entry は削除 (git が履歴)、active のみ残す。≤ 10 entry。
 
-1. **region 表現 = corner-point form 確定**: `InMACCapacityRegion` の 3 不等式を headline とする。凸包 / closure は Mathlib 完備 (`convexHull` / `closedConvexHull_eq_closure_convexHull`) で **gap でなく設計選択**、time-sharing 全凸包 (L-MAC5) は **着手中 (scope-out 解除)** = 子 plan [`mac-timesharing-plan.md`](mac-timesharing-plan.md) で operational full convex-hull を genuine closure 計画。
+1. **region 表現 = corner-point form 確定**: `InMACCapacityRegion` の 3 不等式を headline とする。凸包 / closure は Mathlib 完備 (`convexHull` / `closedConvexHull_eq_closure_convexHull`) で **gap でなく設計選択**、time-sharing 全凸包 (L-MAC5) は **別途 fully CLOSED (2026-07-05)** = 子 plan [`mac-timesharing-plan.md`](mac-timesharing-plan.md) で operational full convex-hull を genuine closure 達成。
 2. **achievability 攻略順序 (active、converse は closure 済)**: gap2 E1 gateway atom `macJTS_indep_prob_le_X1` を **gateway-atom-first で dispatch** → 通れば E2 対称 / E3 流用 + gap1/gap3 plumbing で genuine closure 確定、不通なら gap2 のみ shared sorry 壁に縮退 (#3)。
 3. **gap2 撤退の honest 形 (未発動、settled)**: gateway atom 不通時のみ E1/E2/E3 を 3 本の shared sorry 補題 (audit-tags register の Ch.15 multi-user joint typicality 壁) で開け headline は直呼び、という退避線を用意していたが gateway-atom-first が genuine に通り不発動。achievability genuine closure 達成。
 4. **親整合 (要 orchestrator アクション、active)**: converse が genuine-closed になったので、orchestrator が roadmap Ch.15 行 + judgment #10 を「scope-out」→「converse genuine-closed / achievability pending」に書換 + README 方針決定 (推奨 = full region 完成まで defer)。本 planner は roadmap / README 不可侵 (editing boundary 外)。詳細 → 冒頭「親整合 注記」。
