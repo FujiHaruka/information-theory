@@ -830,4 +830,151 @@ theorem mac_converse_from_code
 
 end CodeToAmbient
 
+section RateExtract
+
+open MeasureTheory ProbabilityTheory InformationTheory InformationTheory.Shannon
+open InformationTheory.Shannon.ChannelCodingConverseGeneral
+open scoped ENNReal
+
+variable {α₁ α₂ β : Type*}
+  [Fintype α₁] [DecidableEq α₁] [Nonempty α₁] [MeasurableSpace α₁]
+    [MeasurableSingletonClass α₁] [StandardBorelSpace α₁]
+  [Fintype α₂] [DecidableEq α₂] [Nonempty α₂] [MeasurableSpace α₂]
+    [MeasurableSingletonClass α₂] [StandardBorelSpace α₂]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
+    [MeasurableSingletonClass β] [StandardBorelSpace β]
+variable {M₁ M₂ n : ℕ}
+
+/-- If `⌈exp x⌉₊ ≤ M` then `x ≤ log M`: the block-length-to-rate atom.  `exp x ≤ ⌈exp x⌉₊ ≤ M`,
+so taking logs (both sides positive) gives `x = log (exp x) ≤ log M`. -/
+lemma le_log_of_ceil_exp_le {x : ℝ} {M : ℕ}
+    (hM : Nat.ceil (Real.exp x) ≤ M) : x ≤ Real.log (M : ℝ) := by
+  have h1 : Real.exp x ≤ (Nat.ceil (Real.exp x) : ℝ) := Nat.le_ceil _
+  have h2 : ((Nat.ceil (Real.exp x) : ℕ) : ℝ) ≤ (M : ℝ) := Nat.cast_le.mpr hM
+  have h3 : Real.exp x ≤ (M : ℝ) := h1.trans h2
+  calc x = Real.log (Real.exp x) := (Real.log_exp x).symm
+    _ ≤ Real.log (M : ℝ) := Real.log_le_log (Real.exp_pos x) h3
+
+/-- **Weak-converse finite-`n` rate extraction** (Gap A core).  For a fixed two-user block code
+whose message counts satisfy `⌈exp (n R₁)⌉ ≤ M₁`, `⌈exp (n R₂)⌉ ≤ M₂`, chaining the code→ambient
+converse `mac_converse_from_code` with `n Rⱼ ≤ log Mⱼ` moves the rate scaled by `n` inside the
+corner-point region determined by the per-letter conditional/joint mutual informations plus the
+Fano slack (still symbolic; the Fano→0 limit is the later CV step). -/
+lemma mac_converse_rate_extract [NeZero M₁] [NeZero M₂]
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) {R₁ R₂ : ℝ}
+    (hM₁ : Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M₁)
+    (hM₂ : Nat.ceil (Real.exp ((n : ℝ) * R₂)) ≤ M₂) :
+    InMACCapacityRegion ((n : ℝ) * R₁) ((n : ℝ) * R₂)
+      ((∑ i : Fin n,
+          condMutualInfo (macConverseAmbient c W)
+              (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i) (macConverseYs i)
+              (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i)).toReal
+        + Real.binEntropy
+            (MeasureFano.errorProb (macConverseAmbient c W) macConverseMsg₁
+              (fun ω ↦ (macConverseMsg₂ ω, fun i ↦ macConverseYs i ω))
+              (fun p ↦ (c.decoder p.2).1))
+        + MeasureFano.errorProb (macConverseAmbient c W) macConverseMsg₁
+              (fun ω ↦ (macConverseMsg₂ ω, fun i ↦ macConverseYs i ω))
+              (fun p ↦ (c.decoder p.2).1) * Real.log ((M₁ : ℝ) - 1))
+      ((∑ i : Fin n,
+          condMutualInfo (macConverseAmbient c W)
+              (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i) (macConverseYs i)
+              (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i)).toReal
+        + Real.binEntropy
+            (MeasureFano.errorProb (macConverseAmbient c W) macConverseMsg₂
+              (fun ω ↦ (macConverseMsg₁ ω, fun i ↦ macConverseYs i ω))
+              (fun p ↦ (c.decoder p.2).2))
+        + MeasureFano.errorProb (macConverseAmbient c W) macConverseMsg₂
+              (fun ω ↦ (macConverseMsg₁ ω, fun i ↦ macConverseYs i ω))
+              (fun p ↦ (c.decoder p.2).2) * Real.log ((M₂ : ℝ) - 1))
+      ((∑ i : Fin n,
+          mutualInfo (macConverseAmbient c W)
+              (fun ω ↦ (c.encoder₁ (macConverseMsg₁ ω) i, c.encoder₂ (macConverseMsg₂ ω) i))
+              (macConverseYs i)).toReal
+        + Real.binEntropy
+            (MeasureFano.errorProb (macConverseAmbient c W)
+              (fun ω ↦ (macConverseMsg₁ ω, macConverseMsg₂ ω)) (fun ω i ↦ macConverseYs i ω)
+              c.decoder)
+        + MeasureFano.errorProb (macConverseAmbient c W)
+              (fun ω ↦ (macConverseMsg₁ ω, macConverseMsg₂ ω)) (fun ω i ↦ macConverseYs i ω)
+              c.decoder * Real.log (((M₁ * M₂ : ℕ) : ℝ) - 1)) := by
+  have h := mac_converse_from_code c W hcard₁ hcard₂
+  have hlog₁ : (n : ℝ) * R₁ ≤ Real.log (M₁ : ℝ) := le_log_of_ceil_exp_le hM₁
+  have hlog₂ : (n : ℝ) * R₂ ≤ Real.log (M₂ : ℝ) := le_log_of_ceil_exp_le hM₂
+  exact ⟨hlog₁.trans h.bound₁, hlog₂.trans h.bound₂,
+    (add_le_add hlog₁ hlog₂).trans h.boundSum⟩
+
+/-- **Joint error-probability reconciliation** (Gap A error bridge).  The ambient *joint* decode
+error under `macConverseAmbient c W` equals the code's average error probability: the ambient was
+built as `uniform(messages) ⊗ per-letter product channel` precisely to model uniform-message
+transmission, so its joint error event has probability `averageErrorProb`. -/
+lemma mac_converse_ambient_errorProb_joint_eq
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] :
+    MeasureFano.errorProb (macConverseAmbient c W)
+        (fun ω ↦ (macConverseMsg₁ ω, macConverseMsg₂ ω)) (fun ω i ↦ macConverseYs i ω)
+        c.decoder
+      = (c.averageErrorProb W).toReal := by
+  have hM : M₁ * M₂ ≠ 0 := Nat.mul_ne_zero (NeZero.ne M₁) (NeZero.ne M₂)
+  set S : Set ((Fin M₁ × Fin M₂) × (Fin n → β)) := {ω | ω.1 ≠ c.decoder ω.2} with hS_def
+  have hS_meas : MeasurableSet S := (Set.toFinite S).measurableSet
+  -- the joint error event is the ambient set `{ω | ω.1 ≠ c.decoder ω.2}`
+  have h_err : MeasureFano.errorProb (macConverseAmbient c W)
+      (fun ω ↦ (macConverseMsg₁ ω, macConverseMsg₂ ω)) (fun ω i ↦ macConverseYs i ω) c.decoder
+      = (macConverseAmbient c W).real S := rfl
+  -- each kernel fibre measures exactly the pointwise error probability
+  have h_ker : ∀ m : Fin M₁ × Fin M₂,
+      (macConverseKernel c W) m (Prod.mk m ⁻¹' S) = c.errorProbAt W m := by
+    intro m
+    have h_sec : Prod.mk m ⁻¹' S = c.errorEvent m := by
+      ext y
+      simp only [Set.mem_preimage, hS_def, Set.mem_setOf_eq, MACCode.mem_errorEvent]
+      exact ne_comm
+    rw [h_sec]
+    rfl
+  have h_measure : (macConverseAmbient c W) S = c.averageErrorProb W := by
+    rw [macConverseAmbient, Measure.compProd_apply hS_meas]
+    simp_rw [h_ker]
+    rw [macConverseInput_eq, lintegral_smul_measure, lintegral_count, tsum_fintype,
+      MACCode.averageErrorProb, if_neg hM, smul_eq_mul]
+    congr 1
+    rw [Fintype.card_prod, Fintype.card_fin, Fintype.card_fin, Nat.cast_mul]
+  rw [h_err, measureReal_def, h_measure]
+
+/-- The ambient user-1 marginal decode error is at most the joint decode error: the event
+`{msg₁ mis-decoded}` is contained in `{message pair mis-decoded}`. -/
+lemma mac_converse_ambient_errorProb_user1_le
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] :
+    MeasureFano.errorProb (macConverseAmbient c W) macConverseMsg₁
+        (fun ω ↦ (macConverseMsg₂ ω, fun i ↦ macConverseYs i ω))
+        (fun p ↦ (c.decoder p.2).1)
+      ≤ MeasureFano.errorProb (macConverseAmbient c W)
+        (fun ω ↦ (macConverseMsg₁ ω, macConverseMsg₂ ω)) (fun ω i ↦ macConverseYs i ω)
+        c.decoder := by
+  refine measureReal_mono ?_ (measure_ne_top _ _)
+  intro ω hω
+  simp only [Set.mem_setOf_eq] at hω ⊢
+  intro hcontra
+  exact hω (congrArg Prod.fst hcontra)
+
+/-- The ambient user-2 marginal decode error is at most the joint decode error. -/
+lemma mac_converse_ambient_errorProb_user2_le
+    (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] :
+    MeasureFano.errorProb (macConverseAmbient c W) macConverseMsg₂
+        (fun ω ↦ (macConverseMsg₁ ω, fun i ↦ macConverseYs i ω))
+        (fun p ↦ (c.decoder p.2).2)
+      ≤ MeasureFano.errorProb (macConverseAmbient c W)
+        (fun ω ↦ (macConverseMsg₁ ω, macConverseMsg₂ ω)) (fun ω i ↦ macConverseYs i ω)
+        c.decoder := by
+  refine measureReal_mono ?_ (measure_ne_top _ _)
+  intro ω hω
+  simp only [Set.mem_setOf_eq] at hω ⊢
+  intro hcontra
+  exact hω (congrArg Prod.snd hcontra)
+
+end RateExtract
+
 end InformationTheory.Shannon.MAC
