@@ -104,6 +104,36 @@ theorem mac_strict_interior_achievable
   intro ε' hε'
   exact mac_achievability p₁ p₂ W hp₁ hp₂ hW hR₁ hR₂ hR₁lt hR₂lt hRsum hε'
 
+omit [Fintype α₁] [DecidableEq α₁] [MeasurableSingletonClass α₁]
+  [Fintype α₂] [DecidableEq α₂] [MeasurableSingletonClass α₂]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
+/-- The zero rate pair `(0, 0)` is achievable: the trivial single-message code
+(`M₁ = M₂ = 1`) never errs, because `Fin 1 × Fin 1` has a unique message pair, so the
+decoder is always correct and the average error probability is `0`.
+@audit:ok -/
+theorem mac_achievable_zero_zero (W : MACChannel α₁ α₂ β) :
+    MACAchievable W 0 0 := by
+  classical
+  intro ε' hε'
+  refine ⟨0, fun n _ => ?_⟩
+  set c : MACCode 1 1 n α₁ α₂ β :=
+    { encoder₁ := fun _ _ => Classical.arbitrary α₁
+      encoder₂ := fun _ _ => Classical.arbitrary α₂
+      decoder := fun _ => (0, 0) } with hc
+  have herr : ∀ m : Fin 1 × Fin 1, c.errorProbAt W m = 0 := by
+    intro m
+    have hev : c.errorEvent m = (∅ : Set (Fin n → β)) := by
+      unfold MACCode.errorEvent MACCode.decodingRegion
+      rw [Set.eq_empty_iff_forall_notMem]
+      intro y hy
+      simp only [Set.mem_compl_iff, Set.mem_setOf_eq] at hy
+      exact hy (Subsingleton.elim _ _)
+    rw [MACCode.errorProbAt, hev, measure_empty]
+  have hzero : c.averageErrorProb W = 0 := by
+    rw [MACCode.averageErrorProb]
+    simp [herr]
+  exact ⟨1, 1, by simp, by simp, c, by rw [hzero]; simpa using hε'⟩
+
 /-! ## Gateway: time-sharing convexity via block concatenation -/
 
 omit [Fintype α₁] [DecidableEq α₁] [Nonempty α₁] [MeasurableSingletonClass α₁]
@@ -612,11 +642,31 @@ theorem mac_pentagon_subset_capacityRegion
       have hlim := tendsto_const_nhds (x := R) (f := atTop) |>.add
         (ht.smul_const (((c₁, c₂) : ℝ × ℝ) - R))
       simpa using hlim
-  · -- Degenerate pentagon: some `macInfo` is `0`, so the pentagon collapses onto an axis and
-    -- the point requires single-user achievability (user 1 or 2 silent), which is not derivable
-    -- from `mac_achievability` (it needs both rates strictly positive).
-    -- @residual(plan:mac-timesharing-plan)
-    sorry
+  · -- Degenerate pentagon: some `macInfo ≤ 0`, forcing a rate coordinate to `0`.
+    have hcases : macInfo₁ p₁ p₂ W ≤ 0 ∨ macInfo₂ p₁ p₂ W ≤ 0 ∨ macInfoBoth p₁ p₂ W ≤ 0 := by
+      by_contra h
+      simp only [not_or, not_le] at h
+      exact hpos h
+    rcases hcases with h1 | h2 | hb
+    · -- `macInfo₁ ≤ 0` ⇒ `R.1 = 0`: the point `(0, R.2)` needs single-user achievability with
+      -- user 1 silent (user 2 achieves any rate `≤ macInfo₂`).  This is genuine operational
+      -- content — user 1 must transmit a `p₁`-typical fixed sequence so that user 2 sees the
+      -- averaged single-user channel — and is not derivable from `mac_achievability`, which
+      -- requires `macInfo₁ > 0` (its `R₁ < macInfo₁` corner is empty here).
+      have hR1zero : R.1 = 0 := le_antisymm (hR1le.trans h1) hR1nn
+      -- @residual(plan:mac-timesharing-plan)
+      sorry
+    · -- `macInfo₂ ≤ 0` ⇒ `R.2 = 0`: symmetric single-user achievability with user 2 silent.
+      have hR2zero : R.2 = 0 := le_antisymm (hR2le.trans h2) hR2nn
+      -- @residual(plan:mac-timesharing-plan)
+      sorry
+    · -- `macInfoBoth ≤ 0` ⇒ `R = (0, 0)`: the trivial single-message code is achievable.
+      have hsum0 : R.1 + R.2 ≤ 0 := hRsumle.trans hb
+      have hR1zero : R.1 = 0 := le_antisymm (by linarith) hR1nn
+      have hR2zero : R.2 = 0 := le_antisymm (by linarith) hR2nn
+      have hach : MACAchievable W R.1 R.2 := by
+        rw [hR1zero, hR2zero]; exact mac_achievable_zero_zero W
+      exact subset_closure hach
 
 /-! ## Achievability headline: the closed convex hull of the pentagons -/
 
