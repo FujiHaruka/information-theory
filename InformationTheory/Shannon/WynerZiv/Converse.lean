@@ -2,6 +2,11 @@ import InformationTheory.Shannon.WynerZiv.Operational
 import InformationTheory.Shannon.WynerZiv.FactorizableRate
 import InformationTheory.Shannon.WynerZiv.ConverseGateway
 import InformationTheory.Shannon.ChannelCoding.ConverseMemorylessMarkov
+import Mathlib.Analysis.Convex.Caratheodory
+import Mathlib.Analysis.Convex.Combination
+import Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
+import Mathlib.LinearAlgebra.Dimension.Constructions
+import Mathlib.Data.Fin.Embedding
 
 /-!
 # Wyner–Ziv converse (operational lower bound on the rate)
@@ -2066,6 +2071,88 @@ lemma wzKernelObjective_eq_blockSum (V : Type*) [Fintype V] [MeasurableSpace V]
   simp only [wzKernelObjective, wzMutualInfoXU, wzMutualInfoYU, mutualInfoPmf]
   rw [hFstX, hFstY, hSndU, hJXU, hJYU, Finset.sum_sub_distrib, ← hq]
   ring
+
+/-- Zero-padding a `Fin m`-indexed sum into `Fin K` (`m ≤ K`): padded entries vanish. -/
+private lemma wz_fin_pad_sum {K m : ℕ} (hmK : m ≤ K) {N : Type*} [AddCommMonoid N]
+    (g : Fin m → N) :
+    (∑ j : Fin K, if hj : (j : ℕ) < m then g ⟨(j : ℕ), hj⟩ else 0) = ∑ i : Fin m, g i := by
+  classical
+  rw [← Finset.sum_subset (Finset.subset_univ (Finset.univ.map (Fin.castLEEmb hmK)))]
+  · rw [Finset.sum_map]
+    refine Finset.sum_congr rfl (fun i _ => ?_)
+    simp only [Fin.castLEEmb_apply, Fin.val_castLE]
+    rw [dif_pos i.isLt]
+  · intro j _ hj
+    rw [dif_neg]
+    intro hlt
+    exact hj (by
+      simp only [Finset.mem_map, Finset.mem_univ, true_and, Fin.castLEEmb_apply]
+      exact ⟨⟨(j : ℕ), hlt⟩, by ext; simp [Fin.castLE]⟩)
+
+/-- **Generic Carathéodory support reduction.** A convex combination of points `Φ i` in
+`D → ℝ` (`D` finite) is a convex combination of at most `card D + 1` of them (bare
+Carathéodory). Returns the reduced weights and an index map into the original letters. -/
+private lemma wz_caratheodory_reduce {D : Type*} [Fintype D] {ι : Type*} [Fintype ι]
+    (Φ : ι → (D → ℝ)) (M : D → ℝ)
+    (w : ι → ℝ) (hw0 : ∀ i, 0 ≤ w i) (hw1 : ∑ i, w i = 1)
+    (hmix : ∑ i, w i • Φ i = M) :
+    ∃ (lam : Fin (Fintype.card D + 1) → ℝ) (σ : Fin (Fintype.card D + 1) → ι),
+      (∀ j, 0 ≤ lam j) ∧ (∑ j, lam j = 1) ∧ (∑ j, lam j • Φ (σ j) = M) := by
+  classical
+  haveI : Nonempty ι := by
+    by_contra h
+    rw [not_nonempty_iff] at h
+    rw [Finset.univ_eq_empty, Finset.sum_empty] at hw1
+    exact zero_ne_one hw1
+  have hM : M ∈ convexHull ℝ (Set.range Φ) :=
+    mem_convexHull_of_exists_fintype w Φ hw0 hw1 (fun i => Set.mem_range_self i) hmix
+  obtain ⟨ι', _, z, w', hzr, haff, hw'pos, hw'1, hw'mix⟩ :=
+    eq_pos_convex_span_of_mem_convexHull hM
+  have hcard : Fintype.card ι' ≤ Fintype.card D + 1 := by
+    calc Fintype.card ι' ≤ Module.finrank ℝ (vectorSpan ℝ (Set.range z)) + 1 :=
+            haff.card_le_finrank_succ
+      _ ≤ Module.finrank ℝ (D → ℝ) + 1 := by gcongr; exact Submodule.finrank_le _
+      _ = Fintype.card D + 1 := by rw [Module.finrank_pi]
+  have hpre : ∀ i' : ι', ∃ u : ι, Φ u = z i' := fun i' => hzr (Set.mem_range_self i')
+  set σ' : ι' → ι := fun i' => Classical.choose (hpre i') with hσ'
+  have hσ'eq : ∀ i', Φ (σ' i') = z i' := fun i' => Classical.choose_spec (hpre i')
+  set m := Fintype.card ι' with hm
+  set e : ι' ≃ Fin m := Fintype.equivFin ι' with he
+  set lam : Fin (Fintype.card D + 1) → ℝ :=
+    fun j => if hj : (j : ℕ) < m then w' (e.symm ⟨(j : ℕ), hj⟩) else 0 with hlamdef
+  set σ : Fin (Fintype.card D + 1) → ι :=
+    fun j => if hj : (j : ℕ) < m then σ' (e.symm ⟨(j : ℕ), hj⟩) else Classical.arbitrary ι
+    with hσdef
+  refine ⟨lam, σ, ?_, ?_, ?_⟩
+  · intro j
+    rw [hlamdef]
+    dsimp only
+    split_ifs with hj
+    · exact (hw'pos _).le
+    · exact le_refl 0
+  · have hmK : m ≤ Fintype.card D + 1 := hcard
+    calc (∑ j, lam j)
+        = ∑ i : Fin m, w' (e.symm i) := by
+          rw [hlamdef]; exact wz_fin_pad_sum hmK (fun i => w' (e.symm i))
+      _ = ∑ i' : ι', w' i' := Equiv.sum_comp e.symm w'
+      _ = 1 := hw'1
+  · have hmK : m ≤ Fintype.card D + 1 := hcard
+    have hterm : ∀ j, lam j • Φ (σ j)
+        = if hj : (j : ℕ) < m then w' (e.symm ⟨(j : ℕ), hj⟩) • z (e.symm ⟨(j : ℕ), hj⟩) else 0 := by
+      intro j
+      rw [hlamdef, hσdef]
+      dsimp only
+      split_ifs with hj
+      · rw [hσ'eq]
+      · rw [zero_smul]
+    calc (∑ j, lam j • Φ (σ j))
+        = ∑ j : Fin (Fintype.card D + 1),
+            (if hj : (j : ℕ) < m then w' (e.symm ⟨(j : ℕ), hj⟩) • z (e.symm ⟨(j : ℕ), hj⟩) else 0) :=
+          Finset.sum_congr rfl (fun j _ => hterm j)
+      _ = ∑ i : Fin m, w' (e.symm i) • z (e.symm i) :=
+          wz_fin_pad_sum hmK (fun i => w' (e.symm i) • z (e.symm i))
+      _ = ∑ i' : ι', w' i' • z i' := Equiv.sum_comp e.symm (fun i' => w' i' • z i')
+      _ = M := hw'mix
 
 /-- **Carathéodory support reduction (the L1 crux).** Any feasible factorisable kernel at
 an arbitrary finite auxiliary alphabet `Fin k` reduces to a feasible kernel at the fixed
