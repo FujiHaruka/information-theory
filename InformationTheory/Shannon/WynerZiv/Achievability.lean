@@ -1121,6 +1121,15 @@ with it decays doubly-exponentially: `∫ x, (1 − p_typ x)^{M₁} ≤ exp(−M
 by `exp(−n(I + δ))` via `wz_covering_sideInfo_mass_ge`). The bound is
 `encoder_failure_prob_le_exp_neg_M_avg` composed with that mass lower bound; the body
 is stubbed for a later leg.
+
+signature corrected leg-17: mass-bound hypothesis `hmass` added; conclusion now
+non-vacuously follows. `hmass` is the per-source covering-acceptance mass lower bound
+`exp(−n(I+δ)) ≤ p_typ x` — the derived precondition the docstring asserts holds via
+`wz_covering_sideInfo_mass_ge`. With it, `(1−p)^M₁ ≤ e^{−M₁ p} ≤ e^{−M₁·exp(−n(I+δ))}`
+pointwise (`p_typ x ∈ [0,1]`, `p ≥ exp(−n(I+δ))`), then integrate over the probability
+measure `P_X`. The old signature's degenerate refutations (`p_typ x ≡ 0`, or `I → −∞`)
+are now excluded: `hmass` would force `exp(−n(I+δ)) ≤ 0`, impossible for the positive
+exponential. Body is `sorry` and no consumer (S6) uses this yet.
 @residual(plan:wyner-ziv-main-plan) -/
 lemma wz_covering_failure_prob_le {α' : Type*}
     [Fintype α'] [DecidableEq α'] [Nonempty α']
@@ -1129,7 +1138,10 @@ lemma wz_covering_failure_prob_le {α' : Type*}
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α') (Us : ℕ → Ω → Fin k) (ε : ℝ)
     (P_X : Measure (Fin n → α')) [IsProbabilityMeasure P_X]
-    (I δ : ℝ) :
+    (I δ : ℝ)
+    (hmass : ∀ x : Fin n → α', Real.exp (-(n : ℝ) * (I + δ)) ≤
+        (Measure.pi fun _ : Fin n ↦ μ.map (Us 0)).real
+          {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) :
     ∫ x, (1 - (Measure.pi fun _ : Fin n ↦ μ.map (Us 0)).real
               {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁ ∂P_X
       ≤ Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))) := by
@@ -1151,14 +1163,33 @@ codebook** (`M₁ = ⌈exp(n·I(X;U))⌉` members), so the alias count is `M₁`
 when `R > I(X;U) − I(Y;U)` — the Wyner–Ziv rate. A later leg must prove this by an AEP
 union bound over the (random) covering codebook members that are independent of `Y^n`,
 NOT by instantiating the all-sequences gateway atom.
-@residual(plan:wyner-ziv-main-plan) -/
+
+signature corrected leg-17: mass-bound + collision hypotheses added; conclusion now
+non-vacuously follows. `hmass` is the per-codeword joint-typicality mass UPPER bound
+`μ{codeword m' typical with Y^n} ≤ exp(−n·I_YU)` (the AEP bound for a covering codeword
+independent of `Y^n`); `hcollision` is the binning-collision property
+`binMeas{f | f m' = f m} = M⁻¹` for distinct indices, mirroring `binning_collision_prob`.
+The codebook-restricted union over `m' : Fin M₁` stays in the CONCLUSION/body (NOT a
+hypothesis — the E2 crux per finding #10 is the codebook restriction of the count): swap
+the order of integration, bound the per-`ω` `binMeas`-slice by union bound + `hcollision`
+as `M⁻¹ · #{m' typical}`, integrate over `μ`, then apply `hmass` to each of the `M₁`
+codewords to get `M⁻¹ · M₁ · exp(−n·I_YU)`. The old signature's degenerate refutation
+(`I_YU → +∞` with positive typical mass) is now excluded: `hmass` would force
+`μ{typical} ≤ exp(−n·I_YU) → 0`, contradicting positive mass. Body is `sorry` and S6 does
+not consume this yet. @residual(plan:wyner-ziv-main-plan) -/
 lemma wz_codebook_confusion_expectation_le {α' : Type*} [MeasurableSpace α']
     {Ω : Type*} [MeasurableSpace Ω] {k n M M₁ : ℕ} [Nonempty (Fin k)] [NeZero M]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Us : ℕ → Ω → Fin k) (Ys : ℕ → Ω → β) (ε : ℝ)
     (c₁ : LossyCode M₁ n α' (Fin k)) (trueIdx : Ω → Fin M₁)
     (binMeas : Measure (Fin M₁ → Fin M)) [IsProbabilityMeasure binMeas]
-    (I_YU : ℝ) :
+    (I_YU : ℝ)
+    (hmass : ∀ m' : Fin M₁,
+        μ.real {ω | (c₁.decoder m', jointRV Ys n ω)
+            ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε}
+          ≤ Real.exp (-(n : ℝ) * I_YU))
+    (hcollision : ∀ m' m : Fin M₁, m' ≠ m →
+        binMeas.real {f | f m' = f m} = (M : ℝ)⁻¹) :
     ∫ f, μ.real {ω | ∃ m' : Fin M₁,
             m' ≠ trueIdx ω
           ∧ f m' = f (trueIdx ω)
@@ -1202,6 +1233,16 @@ All hypotheses are genuine covering data / regularity produced by Steps 1–2 �
 covering `LossyCode` family, the distortion feasibility, positivity and simplex
 membership. No error-probability or decoder-correctness claim is a hypothesis (those
 are derived in the body via S5a/S5b). The body is stubbed for a later leg.
+
+Independent honesty audit 2026-07-06: honest residual — signature PASSES the
+core-reconstruction test. Granting the 13 hypotheses (`q'`/`κ'`/`qStar`/`d'` witnesses +
+factorisation/positivity/simplex/feasibility, and `hcov` = the Step 1–2 covering
+`LossyCode` family) does NOT hand you the binned WZ-code achievability: the binning, the
+bin-decoder, and the confusion-error exponent remain the body's own (currently `sorry`)
+work — none is smuggled into a hypothesis. `hobj'` is the rate objective (precondition,
+not the conclusion); `hcov` is the separately-established rate-distortion covering result,
+not a bundling of S6's own claim. Classification `plan` (in-project binning composition,
+not a Mathlib gap) is correct.
 @residual(plan:wyner-ziv-main-plan) -/
 lemma wz_perDelta_covering_binning
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -1250,6 +1291,12 @@ build the code family (Steps 3–7: binning + decoder `wzCodeOfCoveringBinning` 
 `wz_codebook_confusion_expectation_le`, derandomize, squeeze, and the source
 extension `wzLiftSupportCode`). The preconditions are feasibility/objective only
 (`hqf`/`hobj`); the residual `sorry` lives in the S5/S6 sub-lemmas, not here.
+
+Independent honesty audit 2026-07-06: genuine reduction — the body has no `sorry` of its
+own; it `obtain`s the covering data from `wz_coveringFamily_of_testChannel` (Steps 1–2) and
+`exact`s the S6 capstone `wz_perDelta_covering_binning`. Not an opaque re-sorry, not
+bundling: `hqf`/`hobj` are feasibility/objective preconditions and the transitive residual
+lives in S6 (and, once wired, S5a/S5b). Honest residual (inherited).
 @residual(plan:wyner-ziv-main-plan) -/
 private lemma wz_perDelta_codes_exist
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
