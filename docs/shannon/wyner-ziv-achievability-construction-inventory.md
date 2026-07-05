@@ -454,10 +454,23 @@ The covering codebook, binning function, and conditional-slice decoder compose i
    - **E1 covering failure** (no covering codeword typical with `X^n`):
      `encoder_failure_prob_le_exp_neg_M_avg` → `exp(−M₁·mass)`, `M₁ ≈ exp(nI(X;U))` kills it
      via `ceil_exp_mul_exp_neg_tendsto_atTop`.
-   - **E2 decoder confusion** (wrong codeword in same bin, typical with `Y^n`): gateway 1
-     `wz_sideInfo_decoder_confusion_expectation_le` → `exp(n(H(U|Y)+2ε))/M`, `M ≈ exp(nR)` and
-     `R > I(X;U)−I(Y;U) = H(U)−H(U|Y)`… the collision term needs `exp(n·H(U|Y))/M → 0`, i.e.
-     the `tendsto_exp_mul_codebookSize_inv` (private) direction.
+   - **E2 decoder confusion** (wrong codeword in same bin, typical with `Y^n`).
+     **⚠ CORRECTION (leg 16, verbatim-confirmed): gateway 1 is INSUFFICIENT for the WZ rate.**
+     Gateway 1 `wz_sideInfo_decoder_confusion_expectation_le` bounds `∫ swError_EX ∂binning ≤
+     exp(n(H(U|Y)+2ε))/M`, and `swError_EX` (`SlepianWolf/FullRateRegion/Core.lean:49`) ranges
+     the alias `x'` over **ALL `Fin n → U`** (not codebook members) → SW-style exponent `H(U|Y)`.
+     It vanishes only for `R > H(U|Y)`. But the WZ headline rate (`hobj`) is
+     `R > I(X;U)−I(Y;U) = H(U|Y) − H(U|X)` (the earlier "`= H(U)−H(U|Y)`" was WRONG:
+     `H(U)−H(U|Y) = I(U;Y)`). Since `H(U|X) > 0` for any noisy test channel (the generic WZ
+     case), `H(U|Y) > I(X;U)−I(Y;U)`, so gateway 1 does NOT drive E2 → 0 in the operative
+     regime `I(X;U)−I(Y;U) < R < H(U|Y)`. **A NEW codebook-restricted confusion lemma is
+     required** (the genuine WZ crux, distinguishing WZ from SW-with-side-info): union over the
+     `exp(nR₁)` i.i.d. covering codewords (independent of `Y`), each conditionally typical with
+     `Y^n` w.p. `≈ exp(−nI(U;Y))` (packing bound via `conditionalTypicalSlice_card_le` +
+     codeword-marginal prob), bin-collision `1/M` (`binning_collision_prob`) →
+     `exp(n(I(X;U)−I(U;Y)))/M = exp(n(I(X;U)−I(Y;U)))/M → 0` for `R > I(X;U)−I(Y;U)` via
+     `wz_tendsto_exp_mul_codebookSize_inv`. Assemblable from existing atoms but genuinely new
+     work — NOT "reuse gateway 1 as-is" (§523 verdict corrected below).
    - **E3 covering acceptance** (true codeword rejected by side-info): gateway 2
      `wz_covering_sideInfo_mass_ge` → mass `≥ exp(−n(I(U;Y)+slack))`, high-probability accept.
 6. **Good deterministic codebook** by `exists_codebook_low_avg` (pigeonhole over the
@@ -468,11 +481,18 @@ The covering codebook, binning function, and conditional-slice decoder compose i
    `exp_neg_tendsto_zero_of_tendsto_atTop`; then `η_n → 0` and `τ → 0` diagonalize so the
    perturbed objective's slack vanishes and the bound reaches `D + ε` for every `ε`.
 
-Audit note: the gateway atoms are `@audit:ok` (already proved), so the retreat line "reduce
-the side-info covering atom to a shared sorry" (parent plan §57) is **NOT triggered** — the
-covering atom passed gateway-atom-first. Full support is **proof-internal** (perturbation),
-never a signature hypothesis, so the construction remains TRUE-as-framed with only
-`hqf`/`hobj` (feasibility + objective) as preconditions.
+Audit note: gateway 2 (E3 covering acceptance) is `@audit:ok` and reusable. **But gateway 1
+(E2 decoder confusion) is INSUFFICIENT for the WZ rate (leg-16 correction, see §5 above):
+it gives the SW exponent `H(U|Y)`, not the codebook-restricted WZ exponent `I(X;U)−I(Y;U)`.
+A new codebook-restricted confusion lemma is required — the genuine WZ crux.** This does NOT
+break the statement's truth: the construction remains TRUE-as-framed with only `hqf`/`hobj`
+(the theorem IS provable at the WZ rate), and full support stays proof-internal (perturbation),
+never a signature hypothesis. What it breaks is the "composition plumbing / gateways = hard
+part done" *effort estimate*: E2 needs a genuinely new lemma (assemblable from
+`conditionalTypicalSlice_card_le` + `binning_collision_prob` + a codebook first-moment, but
+non-trivial). The parent-plan §57 retreat (reduce the covering atom to a shared sorry) is still
+NOT triggered for the covering/E3 side; the new pressure is on E2, whose honest exit if it
+stalls is `sorry + @residual(plan:wyner-ziv-main-plan)`.
 
 ---
 
@@ -520,8 +540,8 @@ produce).
 | `rdAmbient` + marginal/positivity lemmas | **reuse — instantiate twice** (X,U) and (U,Y) marginals (gap #2) |
 | `binningMeasure`, `binning_collision_prob` | **reuse as-is** (`[NeZero M]` free) |
 | `conditionalTypicalSlice`, `conditionalTypicalSlice_card_le` | **reuse as-is** |
-| gateway 1 `wz_sideInfo_decoder_confusion_expectation_le` | **reuse — supply full i.i.d. bundle** (gap #2) |
-| gateway 2 `wz_covering_sideInfo_mass_ge` | **reuse — supply full bundle + KL-domination slack** (gap #2 + preconditions box) |
+| gateway 1 `wz_sideInfo_decoder_confusion_expectation_le` | **⚠ INSUFFICIENT for the WZ rate (leg-16 correction)** — bins ALL `Fin n → U` (SW-style), gives `H(U|Y)`, needs `R > H(U|Y)`, but headline is `R > I(X;U)−I(Y;U) = H(U|Y)−H(U|X) < H(U|Y)`. **Needs a NEW codebook-restricted confusion lemma** (E2, §5 above). NOT reuse-as-is. |
+| gateway 2 `wz_covering_sideInfo_mass_ge` | **reuse — supply full bundle + KL-domination slack** (gap #2 + preconditions box). E3 OK. |
 | `ceil_exp_mul_exp_neg_tendsto_atTop`, `exp_neg_tendsto_zero_of_tendsto_atTop` | **reuse as-is** |
 | `codebookSize` / `codebookSize_pos` / `codebookSize_neZero` / `codebookSize_log_div_tendsto` | **reuse as-is** |
 | `tendsto_exp_mul_codebookSize_inv` | **needs an adapter — `private`; add a public alias or re-prove (~15 lines)** |
