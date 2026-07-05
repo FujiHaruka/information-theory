@@ -804,7 +804,20 @@ regularity precondition (false for a source with memory). Proof (chain-rule rout
 disintegration): the pair `(Xᵢ, Yᵢ)` is independent of `(X^{<i}, Y_{\i})`, hence
 `I((Xᵢ, Yᵢ); (X^{<i}, Y_{\i})) = 0`; expanding the joint MI by the chain rule bounds the
 conditional term `I(Xᵢ; X^{<i} | (Yᵢ, Y_{\i}))` below it, so it is `0`; a
-conditioner reshape `(Yᵢ, Y_{\i}) ≅ Yⁿ` finishes. -/
+conditioner reshape `(Yᵢ, Y_{\i}) ≅ Yⁿ` finishes.
+
+@audit:ok (independent honesty audit 2026-07-05: TRUE-as-framed for the memoryless source.
+Conclusion `I(Xᵢ; X^{<i} | Yⁿ) = 0` (conditioner is the FULL block `Yⁿ`, middle is the past
+inputs `X^{<i}`), non-circular (no hypothesis has the `condMutualInfo … = 0` shape),
+non-bundled (`hindep : iIndepFun` is a memoryless-source regularity precondition, not a
+`*Hypothesis` core), non-vacuous (`condMutualInfo` is the genuine KL def; nontrivial for
+`i>0`, trivially `0` only at the `i=0` boundary where `X^{<i}` is the empty tuple).
+Load-bearing check: the channel-coding X/Y-dual `Y^{≠i}⊥Xᵢ|Yᵢ`
+(`ConverseMemorylessMarkov.lean:205-215`) is FALSE only because there `X` is a structured
+codeword so `(Xᵢ,X^{≠i})` is unconstrained; that counterexample violates `hindep`, whereas
+here the full joint blocks `(Xⱼ,Yⱼ)` are iid so `(Xᵢ,Yᵢ)⊥(X^{<i},Y_{\i})` genuinely holds —
+the distinction is correctly effected by `hindep`. `#print axioms` =
+`[propext, Classical.choice, Quot.sound]`, sorryAx-free.) -/
 private theorem wz_inputs_cond_indep
     {Ω : Type*} [MeasurableSpace Ω]
     {n : ℕ} (i : Fin n)
@@ -913,7 +926,18 @@ This is the deepest atom of the converse single-letterisation.
 `hindep` is load-bearing (both `hstep2` and `hsum` are false without memorylessness); it is a
 memoryless-source regularity precondition, not a bundled proof core. The chain is the standard
 Wyner–Ziv converse (Cover–Thomas §15.9). Sorry-free (`#print axioms` =
-`[propext, Classical.choice, Quot.sound]`, 2026-07-05). -/
+`[propext, Classical.choice, Quot.sound]`, 2026-07-05).
+
+@audit:ok (independent honesty audit 2026-07-05: the conclusion
+`∑ᵢ (I(Xᵢ;Uᵢ) − I(Yᵢ;Uᵢ)).toReal ≤ (I(J;Xⁿ) − I(J;Yⁿ)).toReal` follows genuinely from the
+hypotheses via the standard converse chain. `hstep2` (memoryless collapse) and `hsum`
+(super-additivity) are closed by genuine lemma applications (`condMutualInfo_chain_rule_Y_2var`,
+`condMutualInfo_prefix_chain_rule`, `wz_inputs_cond_indep`, deterministic-encoder Markov), NOT
+by a load-bearing `*Hypothesis` bundle; `hindep` is a memoryless-source regularity precondition.
+Underscoring `_hn : 0 < n` / `_hdecoder : Measurable c.decoder` removes unused preconditions
+(strengthening — the conclusion is unchanged and holds even at `n=0`, where both sides are `0`),
+not a weakening/vacuity. Own body sorry-free, `#print axioms` =
+`[propext, Classical.choice, Quot.sound]`, sorryAx-free.) -/
 private theorem wz_singleletter_rate_le
     {Ω : Type*} [MeasurableSpace Ω]
     {M n : ℕ} [NeZero M] (_hn : 0 < n)
