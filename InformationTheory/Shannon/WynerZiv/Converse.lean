@@ -2093,10 +2093,11 @@ private lemma wz_fin_pad_sum {K m : ℕ} (hmK : m ≤ K) {N : Type*} [AddCommMon
 `D → ℝ` (`D` finite) is a convex combination of at most `card D + 1` of them (bare
 Carathéodory). Returns the reduced weights and an index map into the original letters. -/
 private lemma wz_caratheodory_reduce {D : Type*} [Fintype D] {ι : Type*} [Fintype ι]
+    {K : ℕ} (hcardK : Fintype.card D + 1 ≤ K)
     (Φ : ι → (D → ℝ)) (M : D → ℝ)
     (w : ι → ℝ) (hw0 : ∀ i, 0 ≤ w i) (hw1 : ∑ i, w i = 1)
     (hmix : ∑ i, w i • Φ i = M) :
-    ∃ (lam : Fin (Fintype.card D + 1) → ℝ) (σ : Fin (Fintype.card D + 1) → ι),
+    ∃ (lam : Fin K → ℝ) (σ : Fin K → ι),
       (∀ j, 0 ≤ lam j) ∧ (∑ j, lam j = 1) ∧ (∑ j, lam j • Φ (σ j) = M) := by
   classical
   haveI : Nonempty ι := by
@@ -2117,10 +2118,11 @@ private lemma wz_caratheodory_reduce {D : Type*} [Fintype D] {ι : Type*} [Finty
   set σ' : ι' → ι := fun i' => Classical.choose (hpre i') with hσ'
   have hσ'eq : ∀ i', Φ (σ' i') = z i' := fun i' => Classical.choose_spec (hpre i')
   set m := Fintype.card ι' with hm
+  have hmK : m ≤ K := le_trans hcard hcardK
   set e : ι' ≃ Fin m := Fintype.equivFin ι' with he
-  set lam : Fin (Fintype.card D + 1) → ℝ :=
+  set lam : Fin K → ℝ :=
     fun j => if hj : (j : ℕ) < m then w' (e.symm ⟨(j : ℕ), hj⟩) else 0 with hlamdef
-  set σ : Fin (Fintype.card D + 1) → ι :=
+  set σ : Fin K → ι :=
     fun j => if hj : (j : ℕ) < m then σ' (e.symm ⟨(j : ℕ), hj⟩) else Classical.arbitrary ι
     with hσdef
   refine ⟨lam, σ, ?_, ?_, ?_⟩
@@ -2130,14 +2132,12 @@ private lemma wz_caratheodory_reduce {D : Type*} [Fintype D] {ι : Type*} [Finty
     split_ifs with hj
     · exact (hw'pos _).le
     · exact le_refl 0
-  · have hmK : m ≤ Fintype.card D + 1 := hcard
-    calc (∑ j, lam j)
+  · calc (∑ j, lam j)
         = ∑ i : Fin m, w' (e.symm i) := by
           rw [hlamdef]; exact wz_fin_pad_sum hmK (fun i => w' (e.symm i))
       _ = ∑ i' : ι', w' i' := Equiv.sum_comp e.symm w'
       _ = 1 := hw'1
-  · have hmK : m ≤ Fintype.card D + 1 := hcard
-    have hterm : ∀ j, lam j • Φ (σ j)
+  · have hterm : ∀ j, lam j • Φ (σ j)
         = if hj : (j : ℕ) < m then w' (e.symm ⟨(j : ℕ), hj⟩) • z (e.symm ⟨(j : ℕ), hj⟩) else 0 := by
       intro j
       rw [hlamdef, hσdef]
@@ -2146,7 +2146,7 @@ private lemma wz_caratheodory_reduce {D : Type*} [Fintype D] {ι : Type*} [Finty
       · rw [hσ'eq]
       · rw [zero_smul]
     calc (∑ j, lam j • Φ (σ j))
-        = ∑ j : Fin (Fintype.card D + 1),
+        = ∑ j : Fin K,
             (if hj : (j : ℕ) < m then w' (e.symm ⟨(j : ℕ), hj⟩) • z (e.symm ⟨(j : ℕ), hj⟩) else 0) :=
           Finset.sum_congr rfl (fun j _ => hterm j)
       _ = ∑ i : Fin m, w' (e.symm i) • z (e.symm i) :=
@@ -2227,6 +2227,123 @@ theorem wz_support_reduce
       κ' ∈ wzKernelFeasible (Fin (Fintype.card α + 3)) P_XY d D ∧
       wzKernelObjective (Fin (Fintype.card α + 3)) P_XY κ'
         ≤ wzKernelObjective (Fin k) P_XY κ := by
+  classical
+  obtain ⟨⟨hκnn, hκsum⟩, f, hf⟩ := hκ
+  -- Division cancellation guarded by "numerator vanishes when denominator does".
+  have hcancel : ∀ a b : ℝ, (b = 0 → a = 0) → b * (a / b) = a := by
+    intro a b hab
+    by_cases hb : b = 0
+    · rw [hb, hab hb]; simp
+    · rw [mul_div_cancel₀ _ hb]
+  -- Source `X`-marginal `P_X`.
+  set PX : α → ℝ := marginalFst P_XY with hPX
+  have hPXnn : ∀ x, 0 ≤ PX x := fun x => Finset.sum_nonneg (fun y _ => h_pmf.1 (x, y))
+  have hPXle : ∀ x y, P_XY (x, y) ≤ PX x := fun x y => by
+    rw [hPX]; simp only [marginalFst]
+    exact Finset.single_le_sum (fun y' _ => h_pmf.1 (x, y')) (Finset.mem_univ y)
+  have hPXeq : ∀ x, PX x = ∑ y, P_XY (x, y) := fun x => rfl
+  have hPXsum : ∑ x, PX x = 1 := by
+    simp only [hPX, marginalFst]
+    rw [← Fintype.sum_prod_type]; exact h_pmf.2
+  -- Kernel joint and its marginals.
+  set q := wzJointOfKernel (Fin k) P_XY κ with hq
+  have hmXU : ∀ x u, wzMarginalXU (Fin k) q (x, u) = κ x u * PX x := by
+    intro x u
+    simp only [wzMarginalXU, hq, wzJointOfKernel, hPX, marginalFst]
+    rw [Finset.mul_sum]
+  have hmYU : ∀ y u, wzMarginalYU (Fin k) q (y, u) = ∑ x, κ x u * P_XY (x, y) := by
+    intro y u; simp only [wzMarginalYU, hq, wzJointOfKernel]
+  -- Auxiliary-letter mass `P_U u = ∑_x κ(x,u) P_X(x)`.
+  set PU : Fin k → ℝ := fun u => ∑ x, κ x u * PX x with hPU
+  have hPUnn : ∀ u, 0 ≤ PU u := fun u =>
+    Finset.sum_nonneg (fun x _ => mul_nonneg (hκnn x u) (hPXnn x))
+  have hPUsum : ∑ u, PU u = 1 := by
+    simp only [hPU]
+    rw [Finset.sum_comm]
+    calc (∑ x, ∑ u, κ x u * PX x) = ∑ x, PX x := by
+          refine Finset.sum_congr rfl (fun x _ => ?_)
+          rw [← Finset.sum_mul, hκsum x, one_mul]
+      _ = 1 := hPXsum
+  have hPU0X : ∀ u x, PU u = 0 → κ x u * PX x = 0 := by
+    intro u x hu
+    exact (Finset.sum_eq_zero_iff_of_nonneg
+      (fun x' _ => mul_nonneg (hκnn x' u) (hPXnn x'))).mp hu x (Finset.mem_univ x)
+  have hPU0kP : ∀ u x y, PU u = 0 → κ x u * P_XY (x, y) = 0 := by
+    intro u x y hu
+    rcases mul_eq_zero.mp (hPU0X u x hu) with hk | hPXx
+    · rw [hk, zero_mul]
+    · have : P_XY (x, y) = 0 := le_antisymm (le_trans (hPXle x y) (le_of_eq hPXx)) (h_pmf.1 (x, y))
+      rw [this, mul_zero]
+  -- Per-letter mass equalities (both marginals total `P_U u`).
+  have hmassX : ∀ u, ∑ x, wzMarginalXU (Fin k) q (x, u) = PU u := fun u => by
+    simp only [hmXU, hPU]
+  have hmassY : ∀ u, ∑ y, wzMarginalYU (Fin k) q (y, u) = PU u := fun u => by
+    simp only [hmYU, hPU]
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl (fun x _ => ?_)
+    rw [← Finset.mul_sum, ← hPXeq x]
+  -- Objective-density block and distortion density per letter.
+  set blk : Fin k → ℝ := fun u =>
+    (∑ y, Real.negMulLog (wzMarginalYU (Fin k) q (y, u)))
+      - (∑ x, Real.negMulLog (wzMarginalXU (Fin k) q (x, u))) with hblk
+  set dst : Fin k → ℝ := fun u => ∑ x, ∑ y, κ x u * P_XY (x, y) * d x (f (u, y)) with hdst
+  have hblk0 : ∀ u, PU u = 0 → blk u = 0 := by
+    intro u hu
+    have hX : ∀ x, wzMarginalXU (Fin k) q (x, u) = 0 := fun x => by
+      rw [hmXU]; exact hPU0X u x hu
+    have hY : ∀ y, wzMarginalYU (Fin k) q (y, u) = 0 := fun y => by
+      rw [hmYU]; exact Finset.sum_eq_zero (fun x _ => hPU0kP u x y hu)
+    simp only [hblk, hX, hY, Real.negMulLog_zero, Finset.sum_const_zero, sub_zero]
+  have hdst0 : ∀ u, PU u = 0 → dst u = 0 := by
+    intro u hu
+    simp only [hdst]
+    refine Finset.sum_eq_zero (fun x _ => Finset.sum_eq_zero (fun y _ => ?_))
+    rw [hPU0kP u x y hu, zero_mul]
+  -- Encoding of each letter into `ℝ^{|α|+2}` (`α ⊕ Bool`) and the target mixture point.
+  set Φ : Fin k → (α ⊕ Bool → ℝ) := fun u =>
+    Sum.elim (fun x => wzMarginalXU (Fin k) q (x, u) / PU u)
+             (fun b => bif b then dst u / PU u else blk u / PU u) with hΦ
+  set M : α ⊕ Bool → ℝ :=
+    Sum.elim PX (fun b => bif b then ∑ u, dst u else ∑ u, blk u) with hM
+  have hmix : ∑ u, PU u • Φ u = M := by
+    funext c
+    simp only [Finset.sum_apply, Pi.smul_apply, smul_eq_mul]
+    cases c with
+    | inl x =>
+      simp only [hΦ, Sum.elim_inl, hM]
+      calc (∑ u, PU u * (wzMarginalXU (Fin k) q (x, u) / PU u))
+          = ∑ u, wzMarginalXU (Fin k) q (x, u) :=
+            Finset.sum_congr rfl (fun u _ =>
+              hcancel _ _ (fun h => by rw [hmXU]; exact hPU0X u x h))
+        _ = PX x := by
+            simp only [hmXU]
+            rw [← Finset.sum_mul, hκsum x, one_mul]
+    | inr b =>
+      cases b with
+      | false =>
+        simp only [hΦ, Sum.elim_inr, hM, cond_false]
+        exact Finset.sum_congr rfl (fun u _ => hcancel _ _ (hblk0 u))
+      | true =>
+        simp only [hΦ, Sum.elim_inr, hM, cond_true]
+        exact Finset.sum_congr rfl (fun u _ => hcancel _ _ (hdst0 u))
+  -- Carathéodory support reduction: `M` is a convex combination of `≤ |α|+3` letters.
+  have hcardK : Fintype.card (α ⊕ Bool) + 1 ≤ Fintype.card α + 3 := by
+    simp [Fintype.card_sum, Fintype.card_bool]
+  obtain ⟨lam, σ, hlam0, hlam1, hlammix⟩ :=
+    wz_caratheodory_reduce hcardK Φ M PU hPUnn hPUsum hmix
+  -- Coordinate equations extracted from the mixture identity.
+  have hPcoord : ∀ x, ∑ j, lam j * (wzMarginalXU (Fin k) q (x, σ j) / PU (σ j)) = PX x := by
+    intro x
+    have h := congrFun hlammix (Sum.inl x)
+    simpa only [Finset.sum_apply, Pi.smul_apply, smul_eq_mul, hΦ, Sum.elim_inl, hM] using h
+  have hGcoord : ∑ j, lam j * (blk (σ j) / PU (σ j)) = ∑ u, blk u := by
+    have h := congrFun hlammix (Sum.inr false)
+    simpa only [Finset.sum_apply, Pi.smul_apply, smul_eq_mul, hΦ, Sum.elim_inr, hM,
+      cond_false] using h
+  have hDcoord : ∑ j, lam j * (dst (σ j) / PU (σ j)) = ∑ u, dst u := by
+    have h := congrFun hlammix (Sum.inr true)
+    simpa only [Finset.sum_apply, Pi.smul_apply, smul_eq_mul, hΦ, Sum.elim_inr, hM,
+      cond_true] using h
   sorry
 
 /-- **L1 — Carathéodory fixed-`K` identification of the reshaped Wyner–Ziv rate.**
