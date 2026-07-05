@@ -2,7 +2,7 @@
 
 > **Parent**: [`wyner-ziv-moonshot-plan.md`](wyner-ziv-moonshot-plan.md) §operational main relay
 
-**Status**: ACTIVE 🚧 — **converse single-letterisation core (witness `wz_converse_perletter_witness`、sub2/sub3 含む) CLOSED (leg 8、sorryAx-free + 独立監査 PASS)**。残 converse own-sorry は **1 本 = 左端点右連続 `wynerZivRate_le_of_forall_pos_add_endpoint` (`Converse.lean:1773`、Carathéodory route)**。Goal の残り半分 = **achievability P3 (未着手)**。次 leg 群は endpoint L1 か P3 を選ぶ。operational code ↔ R_WZ(D) を繋ぐ **achievability + converse** (Cover–Thomas Thm 15.9.1) を genuine closure する。情報側 R_WZ(D) は完成済 (`WynerZiv/` 5 file、0 sorry)。
+**Status**: ACTIVE 🚧 — **converse single-letterisation core CLOSED (leg 8) + 左端点右連続 endpoint own-body + L2/L3 CLOSED sorry-free (leg 9、独立監査 PASS)**。single-letterisation core 3 decl は leg 9 で `@audit:ok` へ移行 (sorryAx-free 機械確認)。**残 converse own-sorry は 1 本 = L1 Carathéodory `wynerZivRate_eq_factorizable_finK` (`Converse.lean` ~:1975、`@residual(plan:wz-auxiliary-cardinality-bound)`)** — endpoint を完全 close する最後の crux。Goal の残り = **L1 Carathéodory + achievability P3 (未着手)**。operational code ↔ R_WZ(D) を繋ぐ **achievability + converse** (Cover–Thomas Thm 15.9.1) を genuine closure する。情報側 R_WZ(D) は完成済 (`WynerZiv/` 5 file、0 sorry)。
 
 **SoT / 在庫**: [`wyner-ziv-main-inventory.md`](wyner-ziv-main-inventory.md) (§2 提案 statement / §5 achievability 資産 / §6 converse 資産 / §7 self-build 7 項目 / §10 gateway atom)。
 
@@ -12,10 +12,10 @@
 
 - [x] M0 — API 在庫 (既存 [`wyner-ziv-main-inventory.md`](wyner-ziv-main-inventory.md) で代替) + converse gateway 実証 ✅ (`csiszar_sum_identity_hetero`、sorryAx-free、`ConverseGateway.lean:48`)
 - [x] P1 — statement scaffolding ✅ **proof-done sorryAx-free** (`fdbae7f9`)。`WynerZivAchievable` (distortion-only、`@audit:ok`) + pmf↔measure MI 橋 2 本 (`wzMutualInfoXU/YU_eq_mutualInfo`、closed sorry-free)。`wzErrorProb` は predicate 外に (achievability-internal、P3 へ)。`Operational.lean` 全 0 sorry
-- [~] P2 — converse **single-letterisation core CLOSED (leg 8)、残 own-sorry 1 本 = 左端点右連続**。両 headline (`wyner_ziv_converse` + 中間 `wyner_ziv_converse_n_letter_singleLetter`) は `wynerZivRate` に retarget 済。**leg 4-8 で genuine closure (sorryAx-free + 独立監査 PASS)**: DPI 非負 `wzObjective_nonneg_of_factorizable`、time-sharing 基盤 (`wzRateValueSet_timeShare_mem`/`_avg_mem` [`FactorizableRate.lean:1230`]/`_weightedSum_mem` [:1162]/`wynerZivRate_convex_in_D`)、headline body、feasible-point landing `wz_converse_feasible_point`、**single-letterisation witness `wz_converse_perletter_witness` の 5 sub-lemma 全** (sub2 `wz_perletter_factorizable` `95f4abc5`/`321abbc6`、sub3 `wz_singleletter_rate_le` + 新 atom `wz_inputs_cond_indep` `72a9077e`/`021d7732`、gateway `wz_perletter_markov` `4eb1a788`)。**残 own-sorry = `wynerZivRate_le_of_forall_pos_add_endpoint` (`Converse.lean:1773`) 1 本のみ** (左端点 `D=D_min` 右連続、`@residual(plan:wyner-ziv-main-plan)`、下記 L1/L2/L3 route)。🚧
+- [~] P2 — converse **single-letterisation core CLOSED (leg 8)、残 own-sorry 1 本 = 左端点右連続**。両 headline (`wyner_ziv_converse` + 中間 `wyner_ziv_converse_n_letter_singleLetter`) は `wynerZivRate` に retarget 済。**leg 4-8 で genuine closure (sorryAx-free + 独立監査 PASS)**: DPI 非負 `wzObjective_nonneg_of_factorizable`、time-sharing 基盤 (`wzRateValueSet_timeShare_mem`/`_avg_mem` [`FactorizableRate.lean:1230`]/`_weightedSum_mem` [:1162]/`wynerZivRate_convex_in_D`)、headline body、feasible-point landing `wz_converse_feasible_point`、**single-letterisation witness `wz_converse_perletter_witness` の 5 sub-lemma 全** (sub2 `wz_perletter_factorizable` `95f4abc5`/`321abbc6`、sub3 `wz_singleletter_rate_le` + 新 atom `wz_inputs_cond_indep` `72a9077e`/`021d7732`、gateway `wz_perletter_markov` `4eb1a788`)。**leg 9: endpoint own-body + L2 (fixed-K 右連続、kernel-space compactness) + L3 (assembly) を sorry-free に closure、残 own-sorry = L1 Carathéodory `wynerZivRate_eq_factorizable_finK` 1 本のみ** (`@residual(plan:wz-auxiliary-cardinality-bound)`、下記 route)。🚧
 - [ ] P3 — achievability body (binning + covering ハイブリッド、**Goal の残り半分、未着手**) 📋
 - [ ] PV — verify (`#print axioms` sorryAx-free + 独立 honesty 監査 + root 配線) 📋
-- [ ] **endpoint `wynerZivRate_le_of_forall_pos_add_endpoint` (`Converse.lean:1773`) の L1/L2/L3 route** (leg 8 proof-pivot-advisor、下記 P2)。唯一残る converse own-sorry。headline case C (`Converse.lean:1934`) から**のみ** consume = transitively load-bearing (permanent scope-out 不可、次 leg 群で必ず閉じる)。次 leg は **L1 (Carathéodory、slug `wz-auxiliary-cardinality-bound`) を gateway-atom-first dispatch**。interior は time-sharing perturbation で既に閉、残は左端点のみ
+- [~] **endpoint `wynerZivRate_le_of_forall_pos_add_endpoint` の L1/L2/L3 route**: leg 9 で **L2+L3+endpoint own-body CLOSED sorry-free** (独立監査 PASS)。残 = **L1 Carathéodory `wynerZivRate_eq_factorizable_finK` (`@residual(plan:wz-auxiliary-cardinality-bound)`)** のみ。headline case C から**のみ** consume = transitively load-bearing (permanent scope-out 不可)。次 leg は **L1 Carathéodory 本体を gateway-atom-first dispatch** (停滞なら split-out plan `wz-auxiliary-cardinality-bound.md` 起票 + 設計先行)
 
 ## ゴール / Approach
 
@@ -108,29 +108,30 @@ variable {α β γ U : Type*}
 
 ---
 
-## P2 — converse body (single-letterisation core CLOSED、残 own-sorry 1 本 = 左端点右連続)
+## P2 — converse body (single-letterisation core + endpoint scaffold CLOSED、残 own-sorry 1 本 = L1 Carathéodory)
 
 **ファイル**: `InformationTheory/Shannon/WynerZiv/Converse.lean` (`ConverseGateway` + `FactorizableRate` §10 + `Operational` に依存)
 **proof-log**: yes (single-letterization は converse の実体、再開根拠に必須)
 
 reshape (`4532bd48`) で両 headline を `wynerZivRate` に retarget 済、`hU_card` は不要。leg 4-8 で **DPI 非負 / n-ary time-sharing 基盤 / headline body / feasible-point landing / single-letterisation witness `wz_converse_perletter_witness` (5 sub-lemma 全) をすべて sorry-free に closure** (sorryAx-free + 独立監査 PASS)。**残 own-sorry は 1 本** (`@residual(plan:wyner-ziv-main-plan)`、再検証 `scripts/sig_view.ts --sorry InformationTheory/Shannon/WynerZiv/Converse.lean`):
 
-- [ ] **(残 sorry) `wynerZivRate_le_of_forall_pos_add_endpoint`** (`Converse.lean:1773`): 左端点 `D=D_min` の右連続性。headline case C (`Converse.lean:1934`) から**のみ** consume = transitively load-bearing (permanent scope-out 不可、次 leg 群で必ず閉じる)。interior は time-sharing perturbation で既に閉、残は左端点のみ。**L1/L2/L3 route は下記。**
+- [x] **endpoint `wynerZivRate_le_of_forall_pos_add_endpoint` own-body CLOSED (leg 9、sorry-free assembly)** + **L2 `wynerZivRateFactorizable_right_continuous_le` CLOSED** (kernel-space compactness、Cantor FIP + argmin-decoder)。headline case C から**のみ** consume。
+- [ ] **(残 sorry) L1 `wynerZivRate_eq_factorizable_finK`** (`Converse.lean` ~:1975、`@residual(plan:wz-auxiliary-cardinality-bound)`): `wynerZivRate = wynerZivRateFactorizable (Fin (|α|+1))`。Carathéodory auxiliary-cardinality bound。endpoint を完全 close する最後の crux。**L1 route は下記。**
 - [x] **CLOSED (leg 4-8、sorryAx-free)**: headline `wyner_ziv_converse` body + `wz_converse_feasible_point` landing + **witness `wz_converse_perletter_witness` の 5 sub-lemma 全**。single-letterisation の真ルート = `Uᵢ=(J,Y_{\i})` + conditional-MI chain (真 gateway = `iIndepFun → Markov Uᵢ−Xᵢ−Yᵢ` `wz_perletter_markov` `4eb1a788`、Csiszár `csiszar_sum_identity_hetero` は本ルート orphaned = sorryAx-free 維持・削除せず・wall ではない、判断ログ #2)。sub2 `wz_perletter_factorizable` (`95f4abc5`/`321abbc6`)、sub3 `wz_singleletter_rate_le` + 新 atom `wz_inputs_cond_indep` (`72a9077e`/`021d7732`)、sub4 distortion-avg + assembly。再検証は `#print axioms` (prose にキャッシュしない)。
 
 ### 残: 左端点右連続 `wynerZivRate_le_of_forall_pos_add_endpoint` の L1/L2/L3 route (leg 8 proof-pivot-advisor)
 
-proof-pivot-advisor は **大型 self-build** と判定 (quick win 不可、安価な単調極限ルートは minimax 障害で証明的にブロック)。3 分解:
+proof-pivot-advisor は **大型 self-build** と判定 (quick win 不可、安価な単調極限ルートは minimax 障害で証明的にブロック)。3 分解 (leg 9 で L2/L3 CLOSED、残 L1):
 
-- **L1 (crux)**: 固定-K rate 同定 `wynerZivRate = wynerZivRatePmf (Fin K)` (K = |α|+1)、**Carathéodory auxiliary-cardinality bound**。slug **`wz-auxiliary-cardinality-bound`**、~200-400 行、**HIGH risk**。本体 = Mathlib convex-hull Carathéodory (`Analysis/Convex/Caratheodory`) を WZ objective に配線、in-project 類似なし。
-- **L2**: fixed-K 右連続性、~100-180 行、MED。既存 infra 流用: `continuous_wzObjective` (`Basic.lean:159`、FREE) + `isCompact_stdSimplex` + `RDConstraint_isCompact` (`RateDistortion/Achievability.lean:185`) を WZ constraint 用に transcribe。
-- **L3**: assembly、~30-50 行、LOW。
+- **L1 (crux、残 sorry)**: 固定-K rate 同定 `wynerZivRate = wynerZivRateFactorizable (Fin K)` (K=|α|+1、**⚠ leg 9 で `wynerZivRatePmf` でなく `wynerZivRateFactorizable` = 同一 factorizable 制約族と確定**)、**Carathéodory auxiliary-cardinality bound**。slug **`wz-auxiliary-cardinality-bound`**、~200-400 行、**HIGH risk**。両包含とも Carathéodory を要す (`sInf ∅=0` collapse ゆえ ≤ 方向も自明でない: S_K≠∅ 保証が要、≥ が reduction 本体)。本体 = Mathlib `Analysis/Convex/Caratheodory` (`Finset.convexHull_eq`/`Finset.mem_convexHull`/`Finset.centerMass_mem_convexHull`) を WZ objective に配線、in-project 類似なし。`wynerZivRate_eq_factorizable_finK` (`Converse.lean` ~:1975) として isolate 済。
+- **L2 ✅ CLOSED (leg 9、sorry-free)**: `wynerZivRateFactorizable_right_continuous_le`。scout の subsequence route でなく **kernel(κ)-space compactness** で構築 (feasible kernel = 標準単体の直積 `isCompact_univ_pi`、q-space の存在射影閉性を回避)。Cantor FIP `IsCompact.nonempty_iInter_of_sequence_nonempty_isCompact_isClosed` + argmin-decoder `Finite.exists_min`。bridge `wynerZivRateFactorizable_eq_sInf_kernel` が rate↔kernel を橋渡し。support scaffold: `wzJointOfKernel`/`wzKernelSet`/`wzKernelFeasible` + 8 continuity/compactness/closedness 補題 (全 `Converse.lean`、leg 9 追加、sorry-free)。
+- **L3 ✅ CLOSED (leg 9、sorry-free)**: endpoint own-body assembly。unused-hyp (`h_ne`/`h_endpoint`) 保持は honest (より弱い仮定で証明 = 非 load-bearing、`set_option linter.unusedVariables false in` scoped、監査 PASS)。
 
-**攻略順序 (gateway-atom-first)**: 次 leg は **L1 を単独 dispatch**。L1 通れば L2+L3 は transcription で連鎖。L1 停滞なら **L1 だけ** `sorry + @residual(plan:wz-auxiliary-cardinality-bound)` (kebab-case、新 plan filename stem) に isolate し、L2+L3 をその signature の上に閉じる (honest 撤退)。
+**攻略順序 (gateway-atom-first)**: leg 9 で L1 停滞 → **Proposal B 実施済** (L1 isolate + L2/L3 sorry-free closure、残差を crux 1 点に narrowing)。次 leg は **L1 Carathéodory 本体を gateway-atom-first dispatch**。停滞持続なら split-out plan `wz-auxiliary-cardinality-bound.md` (kebab-case、slug 一致) を起票し設計 (convex-hull ambient / vector map u↦v_u / reduction sub-lemma / kernel 再構成) を先行。auxiliary sizing を `*Hypothesis`/`*Reduction` に **bundle しない** (tier-5 禁止)。regularity hyp (`stdSimplex` / `Nonempty` / `BddBelow`) は precondition で OK。
 
 **罠**: `rg cardinality` の ChannelCoding/Fano/method-of-types hit は全て `log|set|` entropy bound で false-positive (convex-hull support-size とは別物)。keyword でなく **conclusion-shape で照合**。
 
-- **依存 in-project decl**: `FactorizableRate.lean:636` (`wynerZivRate`) / `Basic.lean:233` (`wynerZivRatePmf`)、`Basic.lean:159` (`continuous_wzObjective`)、`RateDistortion/Achievability.lean:185` (`RDConstraint_isCompact`)、`Converse.lean:1934` (endpoint consumer = headline case C)。
+- **依存 in-project decl**: `FactorizableRate.lean:636` (`wynerZivRate`) / `FactorizableRate.lean:382` (`wynerZivRateFactorizable`、L1 の fixed-K 対象)、`Basic.lean:159` (`continuous_wzObjective`)、`Converse.lean` L1/L2/L3 helper 群 (leg 9 追加)、endpoint consumer = headline case C。
 - **gateway atom**: L1 (Carathéodory auxiliary-cardinality bound)。
 - **撤退条件 (honest、hypothesis bundling 禁止)**: L1 stall → **L1 単独**に `sorry + @residual(plan:wz-auxiliary-cardinality-bound)`、L2+L3 はその signature の上に build。auxiliary sizing を `*Hypothesis`/`*Reduction` predicate に **bundle しない** (tier-5 禁止)。regularity hyp (`stdSimplex` membership / `IsProbabilityMeasure` / 可測性 / `Nonempty`) は precondition で OK。
 
