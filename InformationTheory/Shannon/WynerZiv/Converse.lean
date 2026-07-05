@@ -804,15 +804,29 @@ Route (conditional-MI chain, **not** Csiszár): the memoryless per-letter Markov
 with `J − Xⁿ − Yⁿ` yields `∑ᵢ I(Xᵢ; J | Yⁿ) ≤ I(Xⁿ; J | Yⁿ) = I(J; Xⁿ) − I(J; Yⁿ)`.
 This is the deepest atom of the converse single-letterisation.
 
-Independent honesty audit 2026-07-05 (PASS, honest_residual): genuine residual, not a
-bundle. All hypotheses are source-regularity preconditions (measurability / `iIndepFun`
-memorylessness / `IsProbabilityMeasure` / `0 < n`); none carries the rate inequality.
-Sufficiency holds: the conditional-MI chain above is the standard Wyner–Ziv converse
-(Cover–Thomas §15.9) and is TRUE-as-framed — the memoryless collapse `I(Xᵢ; Y_{\i} | Yᵢ) = 0`
-needs `hindep` (dropping it breaks the chain), and the RHS `I(J; Xⁿ) − I(J; Yⁿ) ≥ 0` since
-`J − Xⁿ − Yⁿ` (deterministic encoder) forces `I(J; Yⁿ) ≤ I(J; Xⁿ)` by DPI. Degenerate
-`n = 1` gives `Y_{\i}` over an empty index, `Uᵢ = J`, and the claim becomes an equality
-(alive). Class `plan` correct (in-project atom, not a Mathlib wall).
+**Progress decomposition (2026-07-05).** The proof body is split into four parts, of which
+the first and last are now genuinely closed (sorry-free) and the residual is isolated in two
+narrower conditional-MI sub-goals:
+
+* `hstep1` (**closed**): the per-letter identity `I(Xᵢ; Uᵢ) − I(Yᵢ; Uᵢ) = I(Xᵢ; Uᵢ | Yᵢ)`,
+  from the twofold chain rule together with `I(Yᵢ; Uᵢ | Xᵢ) = 0` (the per-letter Markov chain
+  `Uᵢ − Xᵢ − Yᵢ`, `wz_perletter_markov`);
+* `hstep2` (**residual** `@residual(plan:wyner-ziv-main-plan)`): the memoryless collapse
+  `I(Xᵢ; Uᵢ | Yᵢ) = I(Xᵢ; J | Yⁿ)`;
+* `hsum` (**residual** `@residual(plan:wyner-ziv-main-plan)`): the sum bound
+  `∑ᵢ I(Xᵢ; J | Yⁿ) ≤ I(J; Xⁿ) − I(J; Yⁿ)`;
+* the final assembly (**closed**): the `ℝ≥0∞`-truncated-subtraction / `.toReal` bookkeeping
+  reducing the goal to `hstep1`, `hstep2`, `hsum` (`ENNReal.toReal_sum` + `ENNReal.toReal_mono`,
+  each summand and the block MI difference finite over the finite alphabets).
+
+Both residuals are genuine (not bundles): they are precise conditional-MI (in)equalities on
+`condMutualInfo`/`mutualInfo`, and all hypotheses remain source-regularity preconditions
+(measurability / `iIndepFun` memorylessness / `IsProbabilityMeasure` / `0 < n`); `hindep` is
+load-bearing (both `hstep2` and `hsum` are false without memorylessness). The chain is the
+standard Wyner–Ziv converse (Cover–Thomas §15.9), TRUE-as-framed, and `n = 1` degenerates to
+an equality (alive). Class `plan` (in-project atoms, not Mathlib walls). The prior
+single-`sorry` state carried a PASS audit (2026-07-05); this decomposition narrows the
+residual and awaits an independent re-audit of the two new sub-goals.
 @residual(plan:wyner-ziv-main-plan) -/
 private theorem wz_singleletter_rate_le
     {Ω : Type*} [MeasurableSpace Ω]
@@ -831,7 +845,127 @@ private theorem wz_singleletter_rate_le
           fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))).toReal
       ≤ (mutualInfo μ (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) (fun ω j ↦ Xs j ω)
           - mutualInfo μ (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) (fun ω j ↦ Ys j ω)).toReal := by
-  sorry
+  classical
+  -- Block-variable abbreviations (fold the RHS of the goal).
+  set Jn : Ω → Fin M := fun ω ↦ c.encoder (fun j ↦ Xs j ω) with hJn_def
+  set Xn : Ω → (Fin n → α) := fun ω j ↦ Xs j ω with hXn_def
+  set Yn : Ω → (Fin n → β) := fun ω j ↦ Ys j ω with hYn_def
+  have hXn_meas : Measurable Xn := by rw [hXn_def]; exact measurable_pi_lambda _ fun j ↦ hXs j
+  have hYn_meas : Measurable Yn := by rw [hYn_def]; exact measurable_pi_lambda _ fun j ↦ hYs j
+  have hJn_meas : Measurable Jn := by
+    rw [hJn_def]; exact hencoder.comp (measurable_pi_lambda _ fun j ↦ hXs j)
+  -- Per-letter auxiliary `Uᵢ = (J, Y_{\i})` and its measurability.
+  have hU_meas : ∀ i : Fin n, Measurable
+      (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+        fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) := fun i ↦
+    (hencoder.comp (measurable_pi_lambda _ fun j ↦ hXs j)).prodMk
+      (measurable_pi_lambda _ fun j ↦ hYs ↑j)
+  -- Finiteness of the per-letter mutual informations (finite alphabets).
+  have hfin_XU : ∀ i : Fin n,
+      mutualInfo μ (Xs i)
+        (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+          fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) ≠ ∞ := fun i ↦
+    mutualInfo_ne_top μ (Xs i) _ (hXs i) (hU_meas i)
+  have hfin_YU : ∀ i : Fin n,
+      mutualInfo μ (Ys i)
+        (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+          fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) ≠ ∞ := fun i ↦
+    mutualInfo_ne_top μ (Ys i) _ (hYs i) (hU_meas i)
+  -- STEP 1 (closed): per-letter identity `I(Xᵢ; Uᵢ) − I(Yᵢ; Uᵢ) = I(Xᵢ; Uᵢ | Yᵢ)`.
+  -- Twofold chain rule `I((Xᵢ,Yᵢ); Uᵢ) = I(Yᵢ; Uᵢ) + I(Xᵢ; Uᵢ | Yᵢ) = I(Xᵢ; Uᵢ) + I(Yᵢ; Uᵢ | Xᵢ)`
+  -- with `I(Yᵢ; Uᵢ | Xᵢ) = 0` (per-letter Markov chain `Uᵢ − Xᵢ − Yᵢ`, `wz_perletter_markov`).
+  have hstep1 : ∀ i : Fin n,
+      mutualInfo μ (Xs i)
+          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
+        - mutualInfo μ (Ys i)
+          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
+        = condMutualInfo μ (Xs i)
+          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Ys i) := by
+    intro i
+    have hc1 := mutualInfo_chain_rule μ (Xs i)
+      (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+        fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Ys i) (hXs i) (hU_meas i) (hYs i)
+    have hc2 := mutualInfo_chain_rule μ (Ys i)
+      (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+        fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Xs i) (hYs i) (hU_meas i) (hXs i)
+    have hswap : mutualInfo μ (fun ω ↦ (Ys i ω, Xs i ω))
+          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
+        = mutualInfo μ (fun ω ↦ (Xs i ω, Ys i ω))
+          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) := by
+      have h := mutualInfo_map_left_measurableEquiv μ (fun ω ↦ (Ys i ω, Xs i ω))
+        (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+          fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
+        ((hYs i).prodMk (hXs i)) (hU_meas i) MeasurableEquiv.prodComm
+      rw [show (fun ω ↦ (MeasurableEquiv.prodComm (Ys i ω, Xs i ω) : α × β))
+            = fun ω ↦ (Xs i ω, Ys i ω) from rfl] at h
+      exact h.symm
+    have hmarkov := wz_perletter_markov i c μ Xs Ys hXs hYs hindep
+    have hzero : condMutualInfo μ (Ys i)
+        (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+          fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Xs i) = 0 := by
+      rw [condMutualInfo_comm μ (Ys i) _ (Xs i) (hYs i) (hU_meas i) (hXs i)]
+      exact condMutualInfo_eq_zero_of_markov μ _ (Xs i) (Ys i)
+        (hU_meas i) (hXs i) (hYs i) hmarkov
+    rw [hzero, add_zero] at hc2
+    have hkey : mutualInfo μ (Ys i)
+          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
+        + condMutualInfo μ (Xs i)
+          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Ys i)
+        = mutualInfo μ (Xs i)
+          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) := by
+      rw [← hc1, hswap]; exact hc2
+    rw [← hkey, ENNReal.add_sub_cancel_left (hfin_YU i)]
+  -- STEP 2 (residual): memoryless collapse `I(Xᵢ; Uᵢ | Yᵢ) = I(Xᵢ; J | Yⁿ)`. Needs the
+  -- conditional chain rule on the middle argument `Uᵢ = (J, Y_{\i})` plus the memoryless
+  -- conditional independence `I(Xᵢ; Y_{\i} | Yᵢ) = 0` and the reshape `(Y_{\i}, Yᵢ) ≅ Yⁿ`.
+  have hstep2 : ∀ i : Fin n,
+      condMutualInfo μ (Xs i)
+          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Ys i)
+        = condMutualInfo μ (Xs i) Jn Yn := by
+    intro i
+    -- @residual(plan:wyner-ziv-main-plan)
+    sorry
+  -- STEP 3 (residual): sum bound `∑ᵢ I(Xᵢ; J | Yⁿ) ≤ I(J; Xⁿ) − I(J; Yⁿ)`. Needs the
+  -- conditional chain rule `I(Xⁿ; J | Yⁿ) = ∑ᵢ I(Xᵢ; J | (Yⁿ, X^{<i}))`, memoryless
+  -- monotonicity `I(Xᵢ; J | Yⁿ) ≤ I(Xᵢ; J | (Yⁿ, X^{<i}))`, and the deterministic-encoder
+  -- Markov chain `J − Xⁿ − Yⁿ` giving `I(Xⁿ; J | Yⁿ) = I(J; Xⁿ) − I(J; Yⁿ)`.
+  have hsum : ∑ i : Fin n, condMutualInfo μ (Xs i) Jn Yn
+      ≤ mutualInfo μ Jn Xn - mutualInfo μ Jn Yn := by
+    -- @residual(plan:wyner-ziv-main-plan)
+    sorry
+  -- ASSEMBLY: `.toReal`-bookkeeping tying steps 1–3 together.
+  have hsummand_ne : ∀ i : Fin n,
+      mutualInfo μ (Xs i)
+          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
+        - mutualInfo μ (Ys i)
+          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) ≠ ∞ := fun i ↦
+    ne_top_of_le_ne_top (hfin_XU i) tsub_le_self
+  rw [← ENNReal.toReal_sum fun i _ ↦ hsummand_ne i]
+  have hRHS_ne : mutualInfo μ Jn Xn - mutualInfo μ Jn Yn ≠ ∞ :=
+    ne_top_of_le_ne_top (mutualInfo_ne_top μ Jn Xn hJn_meas hXn_meas) tsub_le_self
+  refine ENNReal.toReal_mono hRHS_ne ?_
+  calc ∑ i : Fin n,
+        (mutualInfo μ (Xs i)
+            (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+              fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
+          - mutualInfo μ (Ys i)
+            (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+              fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)))
+      = ∑ i : Fin n, condMutualInfo μ (Xs i) Jn Yn := by
+        refine Finset.sum_congr rfl fun i _ ↦ ?_
+        rw [hstep1 i, hstep2 i]
+    _ ≤ mutualInfo μ Jn Xn - mutualInfo μ Jn Yn := hsum
 
 /-- **Per-letter time-sharing witness of the Wyner–Ziv converse.**
 
