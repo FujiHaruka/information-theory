@@ -99,7 +99,8 @@ side-information analogue of the Slepian–Wolf alias bound, with the covering
 codeword `U` in the source role and the side information `Y` as the conditioning
 variable; the proof is a direct instantiation of `swError_EX_expectation_le`,
 witnessing that the binning ∘ conditional-typicality composition closes as
-plumbing over an existing atom. -/
+plumbing over an existing atom.
+@audit:ok -/
 theorem wz_sideInfo_decoder_confusion_expectation_le
     {Ω : Type*} [MeasurableSpace Ω]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -136,7 +137,8 @@ strongly typical with `u` is bounded below by `exp(−n · (H(U) + H(Y) − H(U,
 slack))`, i.e. `exp(−n · (I(U;Y) + slack))`. This is the covering-acceptance half
 of Wyner–Ziv achievability: the correct covering codeword is conditionally typical
 with the side information with high probability. Direct instantiation of
-`conditionalStronglyTypicalSlice_mass_ge`. -/
+`conditionalStronglyTypicalSlice_mass_ge`.
+@audit:ok -/
 theorem wz_covering_sideInfo_mass_ge
     {Ω : Type*} [MeasurableSpace Ω]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
