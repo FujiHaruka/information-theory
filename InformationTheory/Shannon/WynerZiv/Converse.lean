@@ -1974,40 +1974,156 @@ theorem wynerZivRateFactorizable_right_continuous_le (U : Type*) [Fintype U] [No
     rw [hne0, Set.image_empty, Real.sInf_empty]
     exact hR
 
+/-- The Wyner–Ziv objective `I(X;U) − I(Y;U)` evaluated on the joint pmf induced by a
+kernel `κ`. This is the kernel-space form of the objective minimised by
+`wynerZivRateFactorizable`. -/
+noncomputable def wzKernelObjective (U : Type*) [Fintype U] [MeasurableSpace U]
+    (P_XY : α × β → ℝ) (κ : α → U → ℝ) : ℝ :=
+  wzMutualInfoXU U (wzJointOfKernel U P_XY κ)
+    - wzMutualInfoYU U (wzJointOfKernel U P_XY κ)
+
+/-- The objective image over the factorisable constraint set equals the objective image
+over the feasible kernel set (the extensional form of the `himg` step inside
+`wynerZivRateFactorizable_eq_sInf_kernel`). -/
+lemma wz_constraint_image_eq_kernel_image (U : Type*) [Fintype U] [MeasurableSpace U]
+    (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) :
+    (fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
+        wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
+      '' WynerZivFactorizableConstraint U P_XY d D
+      = wzKernelObjective U P_XY '' wzKernelFeasible U P_XY d D := by
+  ext v
+  constructor
+  · rintro ⟨qf, ⟨hfact, hdist⟩, rfl⟩
+    obtain ⟨κ, hκnn, hκsum, hκeq⟩ := hfact
+    have hq : wzJointOfKernel U P_XY κ = qf.1 := by
+      funext p; obtain ⟨x, y, u⟩ := p; exact (hκeq x y u).symm
+    refine ⟨κ, ⟨⟨hκnn, hκsum⟩, qf.2, ?_⟩, ?_⟩
+    · rw [hq]; exact hdist
+    · simp only [wzKernelObjective]; rw [hq]
+  · rintro ⟨κ, ⟨hκ, f, hdist⟩, rfl⟩
+    exact ⟨(wzJointOfKernel U P_XY κ, f),
+      ⟨wzJointOfKernel_isFactorizable U hκ, hdist⟩, rfl⟩
+
+/-- The reshaped value set is the union, over all finite auxiliary alphabets `Fin k`, of
+the kernel-space objective images. Kernel-space form of `wzRateValueSet`. -/
+lemma wzRateValueSet_eq_iUnion_kernel_image
+    (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) :
+    wzRateValueSet P_XY d D
+      = ⋃ k : ℕ, wzKernelObjective (Fin k) P_XY '' wzKernelFeasible (Fin k) P_XY d D := by
+  unfold wzRateValueSet
+  exact Set.iUnion_congr fun k ↦ wz_constraint_image_eq_kernel_image (Fin k) P_XY d D
+
+/-- **Carathéodory support reduction (the L1 crux).** Any feasible factorisable kernel at
+an arbitrary finite auxiliary alphabet `Fin k` reduces to a feasible kernel at the fixed
+alphabet `Fin (|α| + 2)` with objective `≤` the original. The auxiliary size `|α| + 2`
+comes from bare Carathéodory in `ℝ^{|α|+2}`: encode each auxiliary letter `u` by the
+vector `(P_{X|U=u}, g(P_{X|U=u}), dist_u)` where `g` is the per-letter objective density
+`D(P_{X|U=u} ‖ P_X) − D(P_{Y|U=u} ‖ P_Y)` and `dist_u` its distortion contribution; the
+auxiliary-marginal-weighted mixture equals `(P_X, objective, distortion)`, which lies in
+the convex hull of the encoded letters, so by Carathéodory (`convexHull_eq_union` +
+`Finset.mem_convexHull'`) it is a convex combination of at most
+`finrank ℝ (Fin (|α|+2) → ℝ) + 1 = |α| + 2` of them; reconstruct `κ'` from that reduced
+support (zero-padding unused indices).
+
+The tighter Fenchel–Eggleston `|α| + 1` support bound (a connected compact set needs only
+`d` points) is absent from Mathlib (`IsConnected, convexHull, Finset.card` → loogle
+`Found 0`), so the implementable bound is the bare Carathéodory `d + 1 = |α| + 2`; the
+K-agnostic endpoint assembly (`wynerZivRate_le_of_forall_pos_add_endpoint`, L2 is generic
+in `U`) makes this choice non-load-bearing.
+
+Signature honest: `h_pmf` (simplex membership) and `hκ` (the input feasible kernel — the
+DATA being reduced) are preconditions, NOT a `*Hypothesis`/`*Reduction` predicate bundling
+the reduction's core. The residual is the genuine convex-geometry reduction plus the
+entropy-mixture identity `objective(κ) = ∑_u P_U(u) g(P_{X|U=u})`; the convex geometry is
+in Mathlib (see `docs/shannon/wz-l1-caratheodory-inventory.md`), the entropy-mixture
+identity is an in-project self-build.
+@residual(plan:wz-auxiliary-cardinality-bound) -/
+theorem wz_support_reduce
+    {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) {d : α → γ → ℝ} {D : ℝ}
+    {k : ℕ} {κ : α → Fin k → ℝ}
+    (hκ : κ ∈ wzKernelFeasible (Fin k) P_XY d D) :
+    ∃ κ' : α → Fin (Fintype.card α + 2) → ℝ,
+      κ' ∈ wzKernelFeasible (Fin (Fintype.card α + 2)) P_XY d D ∧
+      wzKernelObjective (Fin (Fintype.card α + 2)) P_XY κ'
+        ≤ wzKernelObjective (Fin k) P_XY κ := by
+  sorry
+
 /-- **L1 — Carathéodory fixed-`K` identification of the reshaped Wyner–Ziv rate.**
 The reshaped rate `wynerZivRate` (an infimum over *all* finite auxiliary alphabets)
-is attained already at the fixed auxiliary alphabet `Fin (|α| + 1)`: every feasible
-factorisable point at any `Fin k` reduces, by Carathéodory's theorem on the convex
-hull (the rate-optimal auxiliary mixes at most `|α| + 1` extreme kernels), to a
-feasible point at `Fin (|α| + 1)` with objective `≤` the original. Hence the two
+is attained already at the fixed auxiliary alphabet `Fin (|α| + 2)`: every feasible
+factorisable point at any `Fin k` reduces, by the Carathéodory support reduction
+`wz_support_reduce` (the rate-optimal auxiliary mixes at most `|α| + 2` extreme kernels),
+to a feasible point at `Fin (|α| + 2)` with objective `≤` the original. Hence the two
 infima agree.
 
-Both inclusions genuinely rely on the Carathéodory reduction and are isolated as a
-single `sorry`. In particular the `≤` direction is *not* free: were the fixed
-`Fin (|α|+1)` constraint empty while the union is nonempty,
-`wynerZivRateFactorizable (Fin (|α|+1))` would collapse to `sInf ∅ = 0` while
-`wynerZivRate ≥ 0` could be strictly positive — so the reduction is exactly what
-guarantees the fixed-`K` constraint is nonempty (and cofinal below) whenever the union
-is. Deferred to its own closure plan.
+The auxiliary size is `|α| + 2` (bare Carathéodory in `ℝ^{|α|+2}`), not the tighter
+Fenchel–Eggleston `|α| + 1` (which is absent from Mathlib); the endpoint assembly that
+consumes L1 is K-agnostic (L2 is generic in `U`), so this choice is non-load-bearing.
 
-Independent honesty audit 2026-07-05 (PASS, honest_residual — the new isolated `sorry`).
-Classification `plan` (not `wall`) VERIFIED: convex Carathéodory IS in Mathlib
-(`Mathlib/Analysis/Convex/Caratheodory.lean` + `Finset.convexHull_eq` /
-`Finset.mem_convexHull` / `Finset.centerMass_mem_convexHull`), so the gap is in-project
-wiring of that theorem to the WZ objective, not a missing Mathlib result. Slug
-`wz-auxiliary-cardinality-bound` is a valid kebab-case future-plan stem; the parent
-`wyner-ziv-main-plan.md` documents it as the L1 crux and defers the split-out plan file
-until L1 stalls (no file required yet). Signature honest: `h_pmf` (simplex membership) +
-`d`, `D` explicit are regularity/data preconditions — NO `*Hypothesis`/`*Reduction`
-predicate bundles the Carathéodory reduction. Both inclusions genuinely need Carathéodory
-(the `≤` direction is NOT immediate; the docstring correctly flags the `sInf ∅ = 0` collapse
-risk if the fixed-`K` set were empty). This is the file's sole `sorry` (machine-confirmed).
+**Body is now sorry-free; the only residual is transitive.** Both `sInf` inclusions are
+genuinely proved here, reduced to the single core lemma `wz_support_reduce`:
+* `≥` (`sInf S_K ≤ sInf(⋃ T_k)`): every union witness reduces (via `wz_support_reduce`)
+  into `S_K` with objective `≤`, so `sInf S_K` lower-bounds the union.
+* `≤` (`sInf(⋃ T_k) ≤ sInf S_K`): `S_K = T_K ⊆ ⋃ T_k`, so `csInf_le_csInf`; the
+  `sInf ∅ = 0` collapse is handled by the nonemptiness equivalence `⋃ T_k ≠ ∅ ↔ S_K ≠ ∅`
+  (⟸ trivial since `S_K ⊆ ⋃`; ⟹ via the same reduction), so both infima are `0` in the
+  empty case. This is exactly why the `≤` direction is *not* free — the reduction is what
+  guarantees the fixed-`K` set is nonempty whenever the union is.
+
+The only reachable `sorry` is `wz_support_reduce`'s Carathéodory reduction, tagged
+`@residual(plan:wz-auxiliary-cardinality-bound)`; carried transitively here.
 @residual(plan:wz-auxiliary-cardinality-bound) -/
 theorem wynerZivRate_eq_factorizable_finK
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) (d : α → γ → ℝ) (D : ℝ) :
     wynerZivRate P_XY d D
-      = wynerZivRateFactorizable (Fin (Fintype.card α + 1)) P_XY d D := by
-  sorry
+      = wynerZivRateFactorizable (Fin (Fintype.card α + 2)) P_XY d D := by
+  classical
+  have hfactK : wynerZivRateFactorizable (Fin (Fintype.card α + 2)) P_XY d D
+      = sInf (wzKernelObjective (Fin (Fintype.card α + 2)) P_XY
+          '' wzKernelFeasible (Fin (Fintype.card α + 2)) P_XY d D) := by
+    rw [wynerZivRateFactorizable_eq_sInf_kernel]
+    rfl
+  have hunion : wzRateValueSet P_XY d D
+      = ⋃ j : ℕ, wzKernelObjective (Fin j) P_XY '' wzKernelFeasible (Fin j) P_XY d D :=
+    wzRateValueSet_eq_iUnion_kernel_image P_XY d D
+  unfold wynerZivRate
+  rw [hfactK]
+  set A := wzRateValueSet P_XY d D with hAdef
+  set B := wzKernelObjective (Fin (Fintype.card α + 2)) P_XY
+      '' wzKernelFeasible (Fin (Fintype.card α + 2)) P_XY d D with hBdef
+  -- `B = T_K ⊆ ⋃ T_j = A`.
+  have hSK_sub : B ⊆ A := by
+    rw [hunion]
+    exact Set.subset_iUnion
+      (fun j : ℕ ↦ wzKernelObjective (Fin j) P_XY '' wzKernelFeasible (Fin j) P_XY d D)
+      (Fintype.card α + 2)
+  have hSU_bdd : BddBelow A := wzRateValueSet_bddBelow_of_pmf h_pmf d D
+  have hSK_bdd : BddBelow B := hSU_bdd.mono hSK_sub
+  -- The reduction lands every union witness into `B` with objective `≤`.
+  have hreduce : ∀ v ∈ A, ∃ w ∈ B, w ≤ v := by
+    intro v hv
+    rw [hunion, Set.mem_iUnion] at hv
+    obtain ⟨j, κ, hκ, hκv⟩ := hv
+    obtain ⟨κ', hκ'feas, hκ'le⟩ := wz_support_reduce h_pmf hκ
+    refine ⟨wzKernelObjective (Fin (Fintype.card α + 2)) P_XY κ', ⟨κ', hκ'feas, rfl⟩, ?_⟩
+    rw [← hκv]; exact hκ'le
+  have hne_iff : A.Nonempty ↔ B.Nonempty := by
+    constructor
+    · rintro ⟨v, hv⟩
+      obtain ⟨w, hw, _⟩ := hreduce v hv
+      exact ⟨w, hw⟩
+    · rintro ⟨w, hw⟩; exact ⟨w, hSK_sub hw⟩
+  by_cases hne : A.Nonempty
+  · have hBne : B.Nonempty := hne_iff.mp hne
+    refine le_antisymm ?_ ?_
+    · exact csInf_le_csInf hSU_bdd hBne hSK_sub
+    · refine le_csInf hne ?_
+      intro v hv
+      obtain ⟨w, hwB, hwle⟩ := hreduce v hv
+      exact le_trans (csInf_le hSK_bdd hwB) hwle
+  · have hBe : ¬ B.Nonempty := fun h ↦ hne (hne_iff.mpr h)
+    rw [Set.not_nonempty_iff_eq_empty] at hne hBe
+    rw [hne, hBe, Real.sInf_empty]
 
 set_option linter.unusedVariables false in
 /-- **Left-endpoint right-continuity of the reshaped Wyner–Ziv rate.**
@@ -2018,11 +2134,11 @@ and `R_WZ(D + ε) ≤ R` for every `ε > 0`, then `R_WZ(D) ≤ R`.
 
 **Proof status — body is now sorry-free; the only residual is transitive.** The body
 assembles two lemmas: `wynerZivRate_eq_factorizable_finK` (L1, the Carathéodory fixed-`K`
-identification, isolated as a single `sorry`) and
+identification, itself sorry-free modulo the isolated core `wz_support_reduce`) and
 `wynerZivRateFactorizable_right_continuous_le` (L2, fixed-`U` right-continuity, proved
-sorry-free by compactness). After L1 rewrites `R_WZ(·)` to the fixed-`Fin (|α|+1)`
+sorry-free by compactness). After L1 rewrites `R_WZ(·)` to the fixed-`Fin (|α|+2)`
 factorisable rate at both `D` and each `D + ε`, L2 closes the goal. The only `sorry`
-reachable from this theorem is therefore L1's, tagged
+reachable from this theorem is therefore `wz_support_reduce`'s, tagged
 `@residual(plan:wz-auxiliary-cardinality-bound)`.
 
 **Why the conclusion is genuine (not vacuous, not false-as-framed).** `R_WZ` is
@@ -2062,7 +2178,7 @@ theorem wynerZivRate_le_of_forall_pos_add_endpoint
   -- L3 assembly: identify with the fixed-`K` factorisable rate (L1), then apply
   -- fixed-`K` right-continuity (L2), transporting `hstep` through L1 at each `D + ε`.
   rw [wynerZivRate_eq_factorizable_finK h_pmf d D]
-  refine wynerZivRateFactorizable_right_continuous_le (Fin (Fintype.card α + 1)) h_pmf hR ?_
+  refine wynerZivRateFactorizable_right_continuous_le (Fin (Fintype.card α + 2)) h_pmf hR ?_
   intro ε hε
   rw [← wynerZivRate_eq_factorizable_finK h_pmf d (D + ε)]
   exact hstep ε hε
@@ -2106,10 +2222,11 @@ residual is transitive only. From `h_ach` we extract the code sequence and:
   (C) the left-endpoint case (`h_endpoint`) is discharged by the isolated
       right-continuity residual `wynerZivRate_le_of_forall_pos_add_endpoint`.
 
-The only `sorry` reachable from this theorem is transitive: `wynerZivRate_eq_factorizable_finK`
-(L1, the Carathéodory fixed-`K` identification behind case (C)'s now-sorry-free endpoint
-lemma, `@residual(plan:wz-auxiliary-cardinality-bound)`). Step 1's single-letterisation
-witness `wz_converse_feasible_point` is closed sorryAx-free, so it contributes no residual.
+The only `sorry` reachable from this theorem is transitive: `wz_support_reduce`
+(the Carathéodory support reduction behind L1 `wynerZivRate_eq_factorizable_finK`, itself
+behind case (C)'s now-sorry-free endpoint lemma, `@residual(plan:wz-auxiliary-cardinality-bound)`).
+Step 1's single-letterisation witness `wz_converse_feasible_point` is closed sorryAx-free,
+so it contributes no residual.
 `h_ach` is a pure existential operational
 antecedent (`WynerZivAchievable` = ∃ codes with rate → R and vanishing-slack
 distortion), NOT a load-bearing hypothesis (`WynerZivAchievable` is `@audit:ok`).
@@ -2120,13 +2237,13 @@ in the achievable regime).
 
 Independent honesty audit 2026-07-05 (auditor-verified, not self-reported) covered the
 Step 2 case split below; the case (C) endpoint was subsequently refactored to the L1/L2
-route (endpoint body now sorry-free), so its transitive residual moved from the endpoint
-body to `wynerZivRate_eq_factorizable_finK` (L1) — that fresh audit of the isolation was
-performed 2026-07-05 (PASS, honest_residual; see L1's docstring and the endpoint lemma,
-both audited). `#print axioms` = [propext, sorryAx, Classical.choice, Quot.sound]; the
-`sorryAx` traces only to `wynerZivRate_eq_factorizable_finK` (L1, reached via case C's
-endpoint lemma) — `rg` confirms L1's body is the file's only `sorry` (Step 1's
-`wz_converse_feasible_point` is closed sorryAx-free). Step 2 case split is exhaustive and disjoint:
+route (endpoint body now sorry-free), and L1 was then decomposed so its own body is
+sorry-free, isolating the Carathéodory reduction as the single lemma `wz_support_reduce`
+(the two `sInf` inclusions of L1 are genuinely proved). `#print axioms` = [propext,
+sorryAx, Classical.choice, Quot.sound]; the `sorryAx` traces only to `wz_support_reduce`
+(reached via L1 and case C's endpoint lemma) — `rg` confirms `wz_support_reduce`'s body is
+the file's only `sorry` (Step 1's `wz_converse_feasible_point` is closed sorryAx-free).
+Step 2 case split is exhaustive and disjoint:
 `S(D) = ∅` (A) / `S(D) ≠ ∅ ∧ ∃ anchor` (B) / `S(D) ≠ ∅ ∧ ∀ D₀<D ¬nonempty` (C). (A)/(B)
 are sorry-free and genuine: (A) is `sInf ∅ = 0 ≤ R`; (B)'s perturbation algebra
 `(1-t)(D+ε)+t·D₀ = D` with `t = ε/(D+ε-D₀) ∈ (0,1)` is correct and lands via the
