@@ -471,6 +471,176 @@ theorem wzRateValueSet_bddBelow_of_pmf
     · exact ⟨⟨0, hk⟩⟩
   exact wzObjective_nonneg_of_factorizable h_pmf hfact
 
+/-! ### Gateway atom: per-letter Markov chain from a memoryless source
+
+The single-letterisation core needs the per-letter Markov chain `Uᵢ − Xᵢ − Yᵢ`
+with the auxiliary `Uᵢ := (J, Y_{\i})` (the encoder output together with all the
+*other* side-information symbols). This is derived from a general reusable utility:
+if a pair `(A, C)` is independent of a side variable `W` and the target `U` is a
+measurable function `g(A, W)` of `A` and `W` only, then `U − A − C` is a Markov
+chain (conditionally on `A`, `U` is a function of `A` and the `C`-independent `W`,
+hence conditionally independent of `C`). -/
+
+/-- **Markov chain from an independent side variable.** If the pair `(As, Cs)` is
+independent of `Ws`, and the target `U ω := g (As ω) (Ws ω)` depends only on `As`
+and `Ws`, then `U − As − Cs` is a Markov chain (`IsMarkovChain μ U As Cs`).
+
+Genuine measure-theoretic utility: `Q := condDistrib Cs As μ` is the conditioner-only
+kernel, and the append identity
+`μ.map ((As, U), Cs) = (μ.map (As, U)) ⊗ₘ prodMkRight K Q` is verified by pushing
+everything through the product law `μ.map ((As, Cs), Ws) = ρ.prod π` (from `hindep`),
+`ρ = (μ.map As) ⊗ₘ Q` (`compProd_map_condDistrib`), and Fubini; the append form then
+lands the chain via `wzIsMarkovChain_of_append`. -/
+private lemma wz_isMarkovChain_of_indepFun_side
+    {Ω A B K W : Type*}
+    [MeasurableSpace Ω]
+    [MeasurableSpace A]
+    [MeasurableSpace B] [StandardBorelSpace B] [Nonempty B]
+    [MeasurableSpace K] [StandardBorelSpace K] [Nonempty K]
+    [MeasurableSpace W]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (As : Ω → A) (Cs : Ω → B) (Ws : Ω → W)
+    (g : A → W → K)
+    (hAs : Measurable As) (hCs : Measurable Cs) (hWs : Measurable Ws)
+    (hg : Measurable (fun p : A × W ↦ g p.1 p.2))
+    (hindep : IndepFun (fun ω ↦ (As ω, Cs ω)) Ws μ) :
+    IsMarkovChain μ (fun ω ↦ g (As ω) (Ws ω)) As Cs := by
+  classical
+  have hU : Measurable (fun ω ↦ g (As ω) (Ws ω)) := hg.comp (hAs.prodMk hWs)
+  set Q : Kernel A B := condDistrib Cs As μ with hQ_def
+  haveI : IsProbabilityMeasure (μ.map As) := Measure.isProbabilityMeasure_map hAs.aemeasurable
+  haveI : IsProbabilityMeasure (μ.map Ws) := Measure.isProbabilityMeasure_map hWs.aemeasurable
+  haveI : IsProbabilityMeasure (μ.map (fun ω ↦ (As ω, Cs ω))) :=
+    Measure.isProbabilityMeasure_map (hAs.prodMk hCs).aemeasurable
+  -- `ρ = (μ.map As) ⊗ₘ Q` (disintegration of the `(As, Cs)` law).
+  have hρ_split : μ.map (fun ω ↦ (As ω, Cs ω)) = (μ.map As) ⊗ₘ Q :=
+    (compProd_map_condDistrib hCs.aemeasurable).symm
+  -- `μ.map ((As, Cs), Ws) = ρ.prod π` (independence).
+  have hjoint : μ.map (fun ω ↦ ((As ω, Cs ω), Ws ω))
+      = (μ.map (fun ω ↦ (As ω, Cs ω))).prod (μ.map Ws) :=
+    hindep.map_prod_eq_prod_map_map (hAs.prodMk hCs).aemeasurable hWs.aemeasurable
+  -- Transfer maps.
+  have hΨ : Measurable (fun q : (A × B) × W ↦ ((q.1.1, g q.1.1 q.2), q.1.2)) :=
+    (((measurable_fst.comp measurable_fst).prodMk
+        (hg.comp ((measurable_fst.comp measurable_fst).prodMk measurable_snd))).prodMk
+      (measurable_snd.comp measurable_fst))
+  have hΦ : Measurable (fun q : (A × B) × W ↦ (q.1.1, g q.1.1 q.2)) :=
+    (measurable_fst.comp measurable_fst).prodMk
+      (hg.comp ((measurable_fst.comp measurable_fst).prodMk measurable_snd))
+  have hJ : Measurable (fun ω ↦ ((As ω, Cs ω), Ws ω)) := (hAs.prodMk hCs).prodMk hWs
+  have hmapΨ : μ.map (fun ω ↦ ((As ω, g (As ω) (Ws ω)), Cs ω))
+      = ((μ.map (fun ω ↦ (As ω, Cs ω))).prod (μ.map Ws)).map
+          (fun q : (A × B) × W ↦ ((q.1.1, g q.1.1 q.2), q.1.2)) := by
+    rw [← hjoint, Measure.map_map hΨ hJ]; rfl
+  have hmapΦ : μ.map (fun ω ↦ (As ω, g (As ω) (Ws ω)))
+      = ((μ.map (fun ω ↦ (As ω, Cs ω))).prod (μ.map Ws)).map
+          (fun q : (A × B) × W ↦ (q.1.1, g q.1.1 q.2)) := by
+    rw [← hjoint, Measure.map_map hΦ hJ]; rfl
+  -- Append identity.
+  have h_app : μ.map (fun ω ↦ ((As ω, g (As ω) (Ws ω)), Cs ω))
+      = (μ.map (fun ω ↦ (As ω, g (As ω) (Ws ω)))) ⊗ₘ (Kernel.prodMkRight K Q) := by
+    refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
+    -- LHS reduces to the triple integral (order a, c, w).
+    have hLHS : ∫⁻ p, f p ∂(μ.map (fun ω ↦ ((As ω, g (As ω) (Ws ω)), Cs ω)))
+        = ∫⁻ a, ∫⁻ c, ∫⁻ w, f ((a, g a w), c) ∂(μ.map Ws) ∂(Q a) ∂(μ.map As) := by
+      rw [hmapΨ, lintegral_map hf hΨ,
+        lintegral_prod (fun q : (A × B) × W ↦ f ((q.1.1, g q.1.1 q.2), q.1.2))
+          (hf.comp hΨ).aemeasurable,
+        hρ_split,
+        Measure.lintegral_compProd
+          (f := fun x : A × B ↦ ∫⁻ w, f ((x.1, g x.1 w), x.2) ∂(μ.map Ws))
+          (hf.comp hΨ).lintegral_prod_right']
+    -- RHS reduces to a `c'`-collapsed / swapped triple integral (order a, c', w, c).
+    have hGmeas : Measurable
+        (fun au : A × K ↦ ∫⁻ c, f (au, c) ∂((Kernel.prodMkRight K Q) au)) :=
+      hf.lintegral_kernel_prod_right' (κ := Kernel.prodMkRight K Q)
+    have hRHS : ∫⁻ p, f p ∂((μ.map (fun ω ↦ (As ω, g (As ω) (Ws ω)))) ⊗ₘ (Kernel.prodMkRight K Q))
+        = ∫⁻ a, ∫⁻ _c', ∫⁻ w, ∫⁻ c, f ((a, g a w), c) ∂(Q a) ∂(μ.map Ws) ∂(Q a) ∂(μ.map As) := by
+      rw [Measure.lintegral_compProd hf, hmapΦ, lintegral_map hGmeas hΦ,
+        lintegral_prod (fun q : (A × B) × W ↦
+            ∫⁻ c, f ((q.1.1, g q.1.1 q.2), c) ∂((Kernel.prodMkRight K Q) (q.1.1, g q.1.1 q.2)))
+          (hGmeas.comp hΦ).aemeasurable,
+        hρ_split,
+        Measure.lintegral_compProd
+          (f := fun x : A × B ↦ ∫⁻ w, ∫⁻ c,
+              f ((x.1, g x.1 w), c) ∂((Kernel.prodMkRight K Q) (x.1, g x.1 w)) ∂(μ.map Ws))
+          (hGmeas.comp hΦ).lintegral_prod_right']
+      simp only [Kernel.prodMkRight_apply]
+    rw [hLHS, hRHS]
+    refine lintegral_congr fun a ↦ ?_
+    haveI : IsProbabilityMeasure (Q a) := IsMarkovKernel.isProbabilityMeasure a
+    -- Collapse the `c'` integral (integrand independent of `c'`) and swap `c ↔ w`.
+    rw [lintegral_const, measure_univ, mul_one]
+    exact lintegral_lintegral_swap
+      (hf.comp ((measurable_const.prodMk
+        (hg.comp (measurable_const.prodMk measurable_snd))).prodMk measurable_fst)).aemeasurable
+  exact wzIsMarkovChain_of_append μ (fun ω ↦ g (As ω) (Ws ω)) As Cs hU hAs hCs Q h_app
+
+/-- **Gateway atom: per-letter Markov chain of a memoryless Wyner–Ziv source.**
+For a memoryless source `(Xⁿ, Yⁿ)` (mutual independence `hindep`) and a fixed
+time index `i`, the single-letterisation auxiliary `Uᵢ := (J, Y_{\i})` — the
+deterministic encoder output `J = c.encoder Xⁿ` together with all the *other*
+side-information symbols `Y_{\i} = (Yⱼ)_{j≠i}` — satisfies the Markov chain
+`Uᵢ − Xᵢ − Yᵢ` (`IsMarkovChain μ Uᵢ (Xs i) (Ys i)`).
+
+This is the deepest atom of the converse single-letterisation. `hindep` (memoryless
+source) is a genuine regularity precondition: the chain is false for a source with
+memory. Proof: `Uᵢ` is a measurable function `g (Xᵢ) (Y_{\i}, X_{\i})` of `Xᵢ` and
+the *rest* of the block, and by memorylessness the `i`-th pair `(Xᵢ, Yᵢ)` is
+independent of the rest — so `wz_isMarkovChain_of_indepFun_side` applies. -/
+private theorem wz_perletter_markov
+    {Ω : Type*} [MeasurableSpace Ω]
+    {M n : ℕ} [NeZero M] (i : Fin n)
+    (c : WynerZivCode M n α β γ)
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
+    (hXs : ∀ j, Measurable (Xs j)) (hYs : ∀ j, Measurable (Ys j))
+    (hindep : iIndepFun (fun j ω ↦ (Xs j ω, Ys j ω)) μ) :
+    IsMarkovChain μ
+      (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+        fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
+      (Xs i) (Ys i) := by
+  classical
+  -- The "rest of the block" side variable `Ws = (X_{\i}, Y_{\i})`.
+  set Ws : Ω → (({j : Fin n // j ≠ i} → α) × ({j : Fin n // j ≠ i} → β)) :=
+    fun ω ↦ ((fun j ↦ Xs (↑j) ω), (fun j ↦ Ys (↑j) ω)) with hWs_def
+  -- The deterministic map reconstructing `Uᵢ = (J, Y_{\i})` from `Xᵢ` and `Ws`.
+  set g : α → (({j : Fin n // j ≠ i} → α) × ({j : Fin n // j ≠ i} → β)) →
+      (Fin M × ({j : Fin n // j ≠ i} → β)) :=
+    fun a p ↦ (c.encoder (fun j ↦ if h : j = i then a else p.1 ⟨j, h⟩), p.2) with hg_def
+  have hWs_meas : Measurable Ws :=
+    (measurable_pi_lambda (fun ω (j : {j : Fin n // j ≠ i}) ↦ Xs (↑j) ω)
+        (fun j ↦ hXs ↑j)).prodMk
+      (measurable_pi_lambda (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) (fun j ↦ hYs ↑j))
+  have hg_meas : Measurable
+      (fun p : α × (({j : Fin n // j ≠ i} → α) × ({j : Fin n // j ≠ i} → β)) ↦ g p.1 p.2) :=
+    Measurable.of_discrete
+  -- Independence of the `i`-th pair from the rest of the block (memorylessness).
+  have hindep_pair : IndepFun (fun ω ↦ (Xs i ω, Ys i ω)) Ws μ := by
+    have hf_meas : ∀ j, Measurable (fun ω ↦ (Xs j ω, Ys j ω)) := fun j ↦ (hXs j).prodMk (hYs j)
+    have hfin := hindep.indepFun_finset {i} (Finset.univ \ {i}) Finset.disjoint_sdiff hf_meas
+    exact hfin.comp
+      (φ := fun r : (({i} : Finset (Fin n)) → α × β) ↦ r ⟨i, Finset.mem_singleton_self i⟩)
+      (ψ := fun r : ((Finset.univ \ {i} : Finset (Fin n)) → α × β) ↦
+        ((fun j : {j : Fin n // j ≠ i} ↦ (r ⟨↑j, by simp [j.2]⟩).1),
+         (fun j : {j : Fin n // j ≠ i} ↦ (r ⟨↑j, by simp [j.2]⟩).2)))
+      Measurable.of_discrete Measurable.of_discrete
+  -- Identify the auxiliary as `g (Xᵢ) (Ws)`.
+  have hU_eq : (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+        fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
+      = (fun ω ↦ g (Xs i ω) (Ws ω)) := by
+    funext ω
+    simp only [hg_def, hWs_def]
+    congr 1
+    congr 1
+    funext j
+    split_ifs with h
+    · rw [h]
+    · rfl
+  rw [hU_eq]
+  exact wz_isMarkovChain_of_indepFun_side μ (Xs i) (Ys i) Ws g (hXs i) (hYs i) hWs_meas hg_meas
+    hindep_pair
+
 /-- **Per-letter time-sharing witness of the Wyner–Ziv converse.**
 
 For a block Wyner–Ziv code on an i.i.d. source `(Xⁿ, Yⁿ)` with expected block
