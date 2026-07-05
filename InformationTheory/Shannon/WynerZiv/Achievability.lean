@@ -547,8 +547,7 @@ lets a code built on the support subtype `α' := {x // 0 < P_X x}` extend to a c
 on the full alphabet `α` without changing its distortion.
 
 `hagree` is a genuine agreement precondition (not a bundled covering bound); the
-conclusion is the measure-level distortion equality only.
-@residual(plan:wyner-ziv-main-plan) -/
+conclusion is the measure-level distortion equality only. -/
 private lemma wz_expectedBlockDistortion_source_agree
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) {M n : ℕ} (c₁ c₂ : WynerZivCode M n α β γ)
@@ -556,7 +555,41 @@ private lemma wz_expectedBlockDistortion_source_agree
         (∀ i, 0 < ∑ y', P_XY.real {(x i, y')}) →
           c₁.decoder (c₁.encoder x, y) = c₂.decoder (c₂.encoder x, y)) :
     c₁.expectedBlockDistortion P_XY d = c₂.expectedBlockDistortion P_XY d := by
-  sorry
+  classical
+  -- The full-support source event holds `Measure.pi P_XY`-a.e.: a sequence hitting a
+  -- zero atom of the `X`-marginal `P_X` lies in a null coordinate cylinder.
+  have hfull : ∀ᵐ p ∂(Measure.pi (fun _ : Fin n ↦ P_XY)),
+      ∀ i, 0 < ∑ y', P_XY.real {((p i).1, y')} := by
+    rw [ae_all_iff]
+    intro i
+    -- The `i`-th coordinate marginal of the product source is `P_XY`.
+    have hmp : MeasurePreserving (Function.eval i)
+        (Measure.pi (fun _ : Fin n ↦ P_XY)) P_XY :=
+      measurePreserving_eval (fun _ : Fin n ↦ P_XY) i
+    rw [ae_iff]
+    -- The bad set is the coordinate-`i` preimage of a bad first-marginal set.
+    have hset : {p : Fin n → α × β | ¬ 0 < ∑ y', P_XY.real {((p i).1, y')}}
+        = Function.eval i ⁻¹'
+            {q : α × β | ¬ 0 < ∑ y', P_XY.real {(q.1, y')}} := rfl
+    rw [hset, hmp.measure_preimage ((Set.toFinite _).measurableSet.nullMeasurableSet)]
+    -- The first-marginal bad set is `P_XY`-null: each of its atoms is a zero atom of `P_X`.
+    have hreal : P_XY.real {q : α × β | ¬ 0 < ∑ y', P_XY.real {(q.1, y')}} = 0 := by
+      have hfin : ({q : α × β | ¬ 0 < ∑ y', P_XY.real {(q.1, y')}}).Finite :=
+        Set.toFinite _
+      rw [← hfin.coe_toFinset, ← sum_measureReal_singleton]
+      refine Finset.sum_eq_zero fun q hq => ?_
+      rw [hfin.mem_toFinset] at hq
+      have hq' : ¬ 0 < ∑ y', P_XY.real {(q.1, y')} := hq
+      have hsum_zero : ∑ y', P_XY.real {(q.1, y')} = 0 :=
+        le_antisymm (not_lt.mp hq') (Finset.sum_nonneg fun y' _ => measureReal_nonneg)
+      exact (Finset.sum_eq_zero_iff_of_nonneg
+        (fun y' _ => measureReal_nonneg)).mp hsum_zero q.2 (Finset.mem_univ q.2)
+    exact (measureReal_eq_zero_iff (measure_ne_top P_XY _)).mp hreal
+  -- On that full-support event the two codes decode identically, so the integrands agree a.e.
+  unfold WynerZivCode.expectedBlockDistortion
+  refine integral_congr_ae ?_
+  filter_upwards [hfull] with p hp
+  rw [hagree (fun i ↦ (p i).1) (fun i ↦ (p i).2) hp]
 
 /-- **(C) Rate-distortion covering layer.** For a strictly positive joint pmf
 `qStar` on `α' × Fin k` with `mutualInfoPmf qStar < R₁` and a proxy distortion `d'`
