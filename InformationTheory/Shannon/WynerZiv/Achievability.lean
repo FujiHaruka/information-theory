@@ -865,7 +865,8 @@ theorem (which measures distortion `X ↔ U` via `d'`) discharge the Wyner–Ziv
 feasibility (`X ↔ γ` via `f`). It holds because `P_X x · (P_XY(x,y) / P_X x) =
 P_XY(x,y)` on the support (where `P_X x > 0`), and the zero atoms of `P_X`
 contribute nothing on either side (`q'` vanishes there since every `P_XY(x,y) = 0`
-when `P_X x = 0`). -/
+when `P_X x = 0`).
+@audit:ok -/
 private lemma wz_coveringDistortion_reconcile
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) {k : ℕ}
@@ -949,7 +950,8 @@ covering rate `R₁` strictly above the covering mutual information
 ≤ D + δ` is the reconciliation identity (`wz_coveringDistortion_reconcile`) applied
 to the perturbation's distortion bound. All conclusions are genuinely constructed;
 the only preconditions are feasibility (`hqf`), the objective margin (`hobj`), and
-the slack `δ`. -/
+the slack `δ`.
+@audit:ok -/
 private lemma wz_coveringFamily_of_testChannel
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
