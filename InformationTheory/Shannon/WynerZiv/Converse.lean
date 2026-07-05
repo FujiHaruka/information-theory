@@ -2013,6 +2013,60 @@ lemma wzRateValueSet_eq_iUnion_kernel_image
   unfold wzRateValueSet
   exact Set.iUnion_congr fun k ↦ wz_constraint_image_eq_kernel_image (Fin k) P_XY d D
 
+/-- **① Entropy-mixture identity (the L1 gateway atom).** The kernel-space Wyner–Ziv
+objective splits as the source marginal-entropy difference `H(X) − H(Y)` plus the sum over
+auxiliary letters of the per-`u` conditional-entropy-difference block
+`∑_y neg(m_YU(y,u)) − ∑_x neg(m_XU(x,u))`. The auxiliary-marginal entropy terms
+`∑_u neg(P_U u)` in `I(X;U)` and `I(Y;U)` cancel, leaving the block sum. This is the affine
+functional (in the per-letter mixture) that the Carathéodory support reduction acts on. -/
+lemma wzKernelObjective_eq_blockSum (V : Type*) [Fintype V] [MeasurableSpace V]
+    (P_XY : α × β → ℝ) (κ : α → V → ℝ) (hκ : κ ∈ wzKernelSet V) :
+    wzKernelObjective V P_XY κ
+      = (∑ x, Real.negMulLog (marginalFst P_XY x)
+          - ∑ y, Real.negMulLog (marginalSnd P_XY y))
+        + ∑ u : V, ((∑ y, Real.negMulLog (wzMarginalYU V (wzJointOfKernel V P_XY κ) (y, u)))
+              - ∑ x, Real.negMulLog (wzMarginalXU V (wzJointOfKernel V P_XY κ) (x, u))) := by
+  classical
+  set q := wzJointOfKernel V P_XY κ with hq
+  -- (X,Y)-marginal of the kernel joint is the source `P_XY` (row-stochastic κ).
+  have hXY : wzMarginalXY V q = P_XY := by
+    funext p
+    obtain ⟨x, y⟩ := p
+    simp only [wzMarginalXY, hq, wzJointOfKernel]
+    rw [← Finset.sum_mul, hκ.2 x, one_mul]
+  -- `X`-marginal of the XU-marginal equals `marginalFst P_XY`.
+  have hFstX : marginalFst (wzMarginalXU V q) = marginalFst P_XY := by
+    funext x
+    simp only [marginalFst, wzMarginalXU]
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl (fun y _ ↦ ?_)
+    have : ∑ u, q (x, y, u) = P_XY (x, y) := by
+      have := congrFun hXY (x, y); simpa [wzMarginalXY] using this
+    simpa using this
+  -- `Y`-marginal (first coord of the YU-marginal) equals `marginalSnd P_XY`.
+  have hFstY : marginalFst (wzMarginalYU V q) = marginalSnd P_XY := by
+    funext y
+    simp only [marginalFst, marginalSnd, wzMarginalYU]
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl (fun x _ ↦ ?_)
+    have := congrFun hXY (x, y); simpa [wzMarginalXY] using this
+  -- The `U`-marginals of the XU and YU marginals agree (cancellation of `H(U)`).
+  have hSndU : marginalSnd (wzMarginalXU V q) = marginalSnd (wzMarginalYU V q) := by
+    funext u
+    simp only [marginalSnd, wzMarginalXU, wzMarginalYU]
+    exact Finset.sum_comm
+  -- Split the two joint-entropy blocks over `α × V` / `β × V` into `∑_u ∑_·`.
+  have hJXU : (∑ p : α × V, Real.negMulLog (wzMarginalXU V q p))
+      = ∑ u, ∑ x, Real.negMulLog (wzMarginalXU V q (x, u)) := by
+    rw [Fintype.sum_prod_type, Finset.sum_comm]
+  have hJYU : (∑ p : β × V, Real.negMulLog (wzMarginalYU V q p))
+      = ∑ u, ∑ y, Real.negMulLog (wzMarginalYU V q (y, u)) := by
+    rw [Fintype.sum_prod_type, Finset.sum_comm]
+  -- Unfold both mutual informations and rewrite the shared terms.
+  simp only [wzKernelObjective, wzMutualInfoXU, wzMutualInfoYU, mutualInfoPmf]
+  rw [hFstX, hFstY, hSndU, hJXU, hJYU, Finset.sum_sub_distrib, ← hq]
+  ring
+
 /-- **Carathéodory support reduction (the L1 crux).** Any feasible factorisable kernel at
 an arbitrary finite auxiliary alphabet `Fin k` reduces to a feasible kernel at the fixed
 alphabet `Fin (|α| + 2)` with objective `≤` the original. The auxiliary size `|α| + 2`
@@ -2033,10 +2087,28 @@ in `U`) makes this choice non-load-bearing.
 
 Signature honest: `h_pmf` (simplex membership) and `hκ` (the input feasible kernel — the
 DATA being reduced) are preconditions, NOT a `*Hypothesis`/`*Reduction` predicate bundling
-the reduction's core. The residual is the genuine convex-geometry reduction plus the
-entropy-mixture identity `objective(κ) = ∑_u P_U(u) g(P_{X|U=u})`; the convex geometry is
-in Mathlib (see `docs/shannon/wz-l1-caratheodory-inventory.md`), the entropy-mixture
-identity is an in-project self-build.
+the reduction's core.
+
+**① (entropy-mixture identity) is now CLOSED** as `wzKernelObjective_eq_blockSum`
+(sorry-free, above): `wzKernelObjective V P_XY κ = (H(X) − H(Y)) + ∑_u block_u(κ)`, where
+`block_u(κ) = ∑_y neg(m_YU(y,u)) − ∑_x neg(m_XU(x,u))` is the per-`u` affine functional the
+Carathéodory reduction acts on. The residual is now narrowed to ②③:
+* ② the convex-geometry support reduction — encode each auxiliary letter `u` (with
+  `P_U(u) > 0`) as `Φ_u = (P_{X|U=u}, g_u, δ_u)` with objective density `g_u = block_u/P_U(u)`
+  and distortion density `δ_u`; the `P_U`-weighted mixture `M = ∑_u P_U(u) Φ_u =
+  (P_X, objective−(H(X)−H(Y)), distortion)` lies in `convexHull {Φ_u}`, so by Carathéodory it
+  is a convex combination of at most `|α|+2` of them. The tight `|α|+2` count needs the
+  encoding in `ℝ^{|α|+1}` (or the vectorSpan hyperplane refinement `∑ P_{X|U=u} = 1`); bare
+  Carathéodory in `ℝ^{|α|+2}` gives only `|α|+3`, which zero-column padding cannot reduce.
+* ③ kernel reconstruction — from the reduced support build `κ'(x,j) = κ(x,u_j)·λ_j/P_U(u_j)`
+  (rescaled original columns, with a `P_X(x)=0` row override for row-stochasticity), inherit
+  the decoder slice `f'(j,·) = f(u_j,·)`, and verify feasibility (distortion' = distortion ≤ D
+  via `δ`-coordinate) and objective' = objective (via the g-coordinate + `block_j(κ') =
+  (λ_j/P_U(u_j))·block_{u_j}(κ)` column-scaling).
+
+The convex geometry is 0-gap in Mathlib (`convexHull_eq_union` + `Finset.mem_convexHull'` +
+`AffineIndependent.card_le_finrank_succ`, see `docs/shannon/wz-l1-caratheodory-inventory.md`);
+②③ are in-project plumbing/self-build (~400-500 lines), no wall.
 
 Independent honesty audit 2026-07-05 (PASS, honest_residual — the newly isolated `sorry`).
 (1) Signature honesty: NON-circular (`hκ` is the input datum, no `:= h`; the conclusion is
