@@ -766,7 +766,18 @@ mutualInfoPmf mix = a · mutualInfoPmf p₁ + b · mutualInfoPmf p₂.
 The branch entropy `H(a, b)` cancels between the `H(U)` term and the `H(X, U)`
 term; the shared-first-marginal hypothesis is what kills the `H(X)`-side
 contribution. This is the reusable engine for Wyner–Ziv time-sharing (both the
-value-set closure and the operational converse feasible-point step). -/
+value-set closure and the operational converse feasible-point step).
+
+@audit:ok (independent honesty audit 2026-07-05, auditor-verified not self-reported:
+sorryAx-free, `#print axioms` = [propext, Classical.choice, Quot.sound]). Signature
+honest: `h₁sum`/`h₂sum` are pmf total-mass-1 regularity, `hmix₁`/`hmix₂` merely
+*define* the disjoint-union mixture (not the conclusion), `hab` is the weight
+normalisation. `h_marg` (shared first marginal) is a genuine precondition ON THE
+INPUTS — verified load-bearing for TRUTH (dropping it makes the identity false,
+since `H(X)` is concave not affine) yet NOT bundling the conclusion (the affine
+identity is a claim about the mixture's `mutualInfoPmf`, proven in-body via the
+`H(a,b)` branch-entropy cancellation). Coefficients `a`,`b` verified correct
+(right, not swapped); `a=0`/`a=1` degenerate boundaries stay alive and true. -/
 lemma mutualInfoPmf_mixture_affine
     {A B₁ B₂ : Type*} [Fintype A] [Fintype B₁] [Fintype B₂]
     {p₁ : A × B₁ → ℝ} {p₂ : A × B₂ → ℝ}
@@ -919,7 +930,20 @@ mixture `a·v₁ + b·v₂` is attainable at the mixed budget `a·D₁ + b·D₂
 The witness is the disjoint-union auxiliary kernel `κ(x, inl u) = a·κ₁(x, u)`,
 `κ(x, inr u) = b·κ₂(x, u)` at auxiliary alphabet `Fin k₁ ⊕ Fin k₂`: it is
 row-stochastic, its distortion splits as `a·dist₁ + b·dist₂`, and its objective
-is affine by `mutualInfoPmf_mixture_affine`. -/
+is affine by `mutualInfoPmf_mixture_affine`.
+
+@audit:ok (independent honesty audit 2026-07-05, auditor-verified not self-reported:
+sorryAx-free, `#print axioms` = [propext, Classical.choice, Quot.sound]). All
+hypotheses are genuine convex-combination preconditions: `h_pmf` (P_XY a pmf,
+supplies total-mass-1 for the affine engine), `hv₁`/`hv₂` (the input value-set
+memberships of a closure statement), `ha`/`hb` (weight non-negativity, feeds
+kernel non-negativity + distortion bound), `hab` (weight normalisation, feeds
+row-stochasticity). NONE bundles the conclusion — the mixture kernel, its
+feasibility (row-stochastic + distortion budget), and the affine objective are all
+CONSTRUCTED/PROVEN in-body (~150 lines). The combined point lands at a genuine
+`Fin (k₁+k₂)` index via `wzRateValueSet_reindex_mem` (not empty/degenerate).
+Stated over the reshaped ⋃-over-`Fin k` value set. Break attempts: `a=0` reduces
+to `hv₂` (alive, non-vacuous); `D₁=D₂` gives genuine midpoint time-sharing. -/
 theorem wzRateValueSet_timeShare_mem
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
     {d : α → γ → ℝ} {D₁ D₂ : ℝ} {v₁ v₂ : ℝ}
@@ -1083,7 +1107,18 @@ lies in the value set at the mixed budget, so its infimum is bounded above by
 `a·v₁ + b·v₂` for all attainable `v₁, v₂`; taking nested infima gives the convex
 bound. The `Nonempty` side conditions feed `le_csInf` (via `le_mul_csInf`) and
 `BddBelow` at the mixed budget feeds `csInf_le`; both are standard regularity
-preconditions, not load-bearing core. -/
+preconditions, not load-bearing core.
+
+@audit:ok (independent honesty audit 2026-07-05, auditor-verified not self-reported:
+sorryAx-free, `#print axioms` = [propext, Classical.choice, Quot.sound]). Signature
+honest: `h_ne₁`/`h_ne₂` are the `Nonempty` side conditions of `le_csInf` (via
+`le_mul_csInf`), `h_bdd_mix` is the `BddBelow` side condition of `csInf_le` — both
+standard infimum regularity (side conditions of the sInf lemmas, NOT the theorem's
+asserted value, mirroring the already-audited `wynerZivRate_antitone`). `h_pmf`
+feeds `wzRateValueSet_timeShare_mem`; `ha`/`hb`/`hab` are convex weights. The
+convexity content is proven in-body via the time-sharing closure + nested infima,
+not bundled. Convexity direction and coefficients verified correct; `a=1,b=0`
+boundary reduces to reflexivity (alive), stated over the reshaped `wynerZivRate`. -/
 theorem wynerZivRate_convex_in_D
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
     {d : α → γ → ℝ} {D₁ D₂ : ℝ}
