@@ -2022,7 +2022,12 @@ objective splits as the source marginal-entropy difference `H(X) − H(Y)` plus 
 auxiliary letters of the per-`u` conditional-entropy-difference block
 `∑_y neg(m_YU(y,u)) − ∑_x neg(m_XU(x,u))`. The auxiliary-marginal entropy terms
 `∑_u neg(P_U u)` in `I(X;U)` and `I(Y;U)` cancel, leaving the block sum. This is the affine
-functional (in the per-letter mixture) that the Carathéodory support reduction acts on. -/
+functional (in the per-letter mixture) that the Carathéodory support reduction acts on.
+@audit:ok (independent honesty audit 2026-07-05: sorryAx-free
+`[propext, Classical.choice, Quot.sound]`. Genuine algebraic identity — `hκ` is
+row-stochasticity regularity (used only to fold the joint's (X,Y)-marginal back to `P_XY`
+and to cancel `H(U)`), not a bundled core; the split is proven by `Finset.sum_comm` /
+`sum_sub_distrib` / `ring`, non-vacuous.) -/
 lemma wzKernelObjective_eq_blockSum (V : Type*) [Fintype V] [MeasurableSpace V]
     (P_XY : α × β → ℝ) (κ : α → V → ℝ) (hκ : κ ∈ wzKernelSet V) :
     wzKernelObjective V P_XY κ
@@ -2090,7 +2095,16 @@ private lemma wz_fin_pad_sum {K m : ℕ} (hmK : m ≤ K) {N : Type*} [AddCommMon
 
 /-- **Generic Carathéodory support reduction.** A convex combination of points `Φ i` in
 `D → ℝ` (`D` finite) is a convex combination of at most `card D + 1` of them (bare
-Carathéodory). Returns the reduced weights and an index map into the original letters. -/
+Carathéodory). Returns the reduced weights and an index map into the original letters.
+@audit:ok (independent honesty audit 2026-07-05: sorryAx-free
+`[propext, Classical.choice, Quot.sound]`. Genuine generic Carathéodory: `hmix`+`hw0`+`hw1`
+place `M ∈ convexHull (range Φ)`, then `eq_pos_convex_span_of_mem_convexHull` +
+`card_le_finrank_succ` + `finrank_pi` (all genuine Mathlib — sorryAx-freedom proves no
+stub) bound the support by `finrank ℝ (D → ℝ) + 1 = card D + 1 ≤ K`, then zero-pad/reindex
+into `Fin K`. Correctly hypothesized (no hypothesis assumes the reduced support it
+produces): degenerate probes — empty `ι` makes `hw1 : 0 = 1` unsatisfiable (body derives
+`Nonempty ι` by contradiction); `card D = 0` gives ambient singleton `D → ℝ`, K ≥ 1
+suffices, mixture trivially holds — neither vacuous nor false.) -/
 private lemma wz_caratheodory_reduce {D : Type*} [Fintype D] {ι : Type*} [Fintype ι]
     {K : ℕ} (hcardK : Fintype.card D + 1 ≤ K)
     (Φ : ι → (D → ℝ)) (M : D → ℝ)
@@ -2201,7 +2215,17 @@ Every convex-geometry ingredient is in Mathlib (no wall; see
 `docs/shannon/wz-l1-caratheodory-inventory.md`); ②③ are in-project self-build. Body is
 sorry-free (`#print axioms wz_support_reduce = [propext, Classical.choice, Quot.sound]`,
 machine-confirmed after olean refresh); closing this makes `wyner_ziv_converse` sorryAx-free.
-Pending independent milestone honesty audit (no self-written `@audit:ok`). -/
+@audit:ok (independent honesty audit 2026-07-05, milestone: auditor-verified, not
+self-reported. `#print axioms wz_support_reduce = [propext, Classical.choice, Quot.sound]`
+(no `sorryAx`, transient `lake env lean` on this file). (a) NON-CIRCULAR + NON-BUNDLED:
+`h_pmf` is simplex regularity, `hκ ∈ wzKernelFeasible (Fin k)` is the INPUT DATUM being
+reduced (row-stochastic kernel + ∃ decoder ≤ D), not a `*Hypothesis`/`*Reduction`
+predicate; conclusion `∃ κ' : Fin (|α|+3)` feasible with objective ≤ is NOT a hypothesis
+restated. (d) SUFFICIENCY: body is a ~240-line constructive reduction (encode letters into
+ℝ^{α⊕Bool}, bare Carathéodory, reconstruct κ'), objective proven EQUAL (`hobj_eq`, stronger
+than ≤) and distortion preserved exactly — genuinely follows. The `PX x = 0` row override
+`δ_{j₀}` is invisible (`P_XY(x,·)=0` there via `hPXle`), not a degenerate cheat. K = |α|+3
+honesty-neutral (only appears internally, never in a headline signature). -/
 theorem wz_support_reduce
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) {d : α → γ → ℝ} {D : ℝ}
     {k : ℕ} {κ : α → Fin k → ℝ}
@@ -2469,7 +2493,12 @@ The claim is a genuine EQUALITY of two infima (both sides depend on `P_XY, d, D`
 weakened into triviality; the `≥` direction still requires the Carathéodory reduction, so it
 is not vacuous. `#print axioms wynerZivRate_eq_factorizable_finK =
 [propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-confirmed after olean
-refresh). -/
+refresh).
+@audit:ok (independent honesty audit 2026-07-05: sorryAx-free re-confirmed on this file.
+Genuine EQUALITY of two infima: `≤` from `B ⊆ A` (`csInf_le_csInf`), `≥` from the genuine
+`wz_support_reduce` landing every union witness into `B` with objective ≤. K = |α|+3 is
+exactly the minimal size for `hcardK` (`card(α⊕Bool)+1 = |α|+3`); a too-small K would break
+`≥` (reduction wouldn't land), so the equality is genuinely true as-framed, not vacuous.) -/
 theorem wynerZivRate_eq_factorizable_finK
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) (d : α → γ → ℝ) (D : ℝ) :
     wynerZivRate P_XY d D
@@ -2560,7 +2589,13 @@ single decl) and alters no signature. Body is sorry-free (assembles L1 + L2), an
 `wz_support_reduce` now closed it is sorryAx-free (`#print axioms` =
 [propext, Classical.choice, Quot.sound], machine-confirmed after olean refresh). The
 `Fin (|α|+3)` sizing (bare ambient Carathéodory) is a non-load-bearing choice since L2 is
-generic in `U`. -/
+generic in `U`.
+@audit:ok (independent honesty audit 2026-07-05: sorryAx-free re-confirmed on this file.
+Body assembles L1 (`wynerZivRate_eq_factorizable_finK`) + L2
+(`wynerZivRateFactorizable_right_continuous_le`); the retained-but-unused
+`h_ne`/`h_endpoint` make this a STRONGER claim (proved from fewer assumptions), NOT
+load-bearing; `hR`/`hstep` are genuine preconditions; conclusion genuinely follows via
+compactness, not a hypothesis.) -/
 theorem wynerZivRate_le_of_forall_pos_add_endpoint
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) {d : α → γ → ℝ} {R D : ℝ}
     (hR : 0 ≤ R)
@@ -2639,8 +2674,17 @@ are sorry-free and genuine: (A) is `sInf ∅ = 0 ≤ R`; (B)'s perturbation alge
 limit. `h_ach` is consumed as a pure operational existential (`obtain ⟨M,…⟩`), not
 load-bearing; `wynerZivRate_le_of_code` realises the genuine i.i.d. source
 `Measure.pi (fun _ ↦ P_XY)` (coordinate projections, independence via
-`iIndepFun_iff_map_fun_eq_pi_map`), not a vacuous/degenerate measure. Pending independent
-milestone honesty audit (no self-written `@audit:ok`). -/
+`iIndepFun_iff_map_fun_eq_pi_map`), not a vacuous/degenerate measure.
+@audit:ok (independent honesty audit 2026-07-05, MILESTONE — headline sorryAx-free:
+auditor-verified, not self-reported. `#print axioms wyner_ziv_converse =
+[propext, Classical.choice, Quot.sound]` (no `sorryAx`, transient `lake env lean` on this
+file; the whole chain `wz_support_reduce`/`wz_caratheodory_reduce`/`wzKernelObjective_eq_
+blockSum`/`wynerZivRate_eq_factorizable_finK`/`wynerZivRate_le_of_forall_pos_add_endpoint`
+all sorryAx-free). `h_ach : WynerZivAchievable` is the operational ANTECEDENT (∃ codes),
+genuinely consumed via `obtain` + `ge_of_tendsto`, NOT the conclusion bundled; dropping it
+would let R be arbitrary. Conclusion `wynerZivRate ≤ R` is non-vacuous (`wynerZivRate` is
+`sInf` bounded below by 0 via DPI `wzObjective_nonneg_of_factorizable`, not junk `sInf ∅`).
+Step-2 case split (A/B/C) exhaustive + disjoint, genuinely proven.) -/
 @[entry_point]
 theorem wyner_ziv_converse
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
