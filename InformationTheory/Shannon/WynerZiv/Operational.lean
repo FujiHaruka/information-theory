@@ -60,7 +60,8 @@ sequence of Wyner–Ziv block codes `c n : WynerZivCode (M n) n α β γ` such t
 
 The distortion condition is the distortion-only "eventually `≤ D + ε`" form
 (equivalently `limsup ≤ D`). This is a pure existential over code sequences plus
-the two limit conditions; no proof content is carried in the predicate. -/
+the two limit conditions; no proof content is carried in the predicate.
+@audit:ok -/
 def WynerZivAchievable
     (P_XY : Measure (α × β)) (d : DistortionFn α γ) (R D : ℝ) : Prop :=
   ∃ (M : ℕ → ℕ) (_hM : ∀ n, 0 < M n) (c : ∀ n, WynerZivCode (M n) n α β γ),
