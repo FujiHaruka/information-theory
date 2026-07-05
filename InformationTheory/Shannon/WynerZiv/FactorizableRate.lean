@@ -720,6 +720,404 @@ theorem wynerZivRate_antitone
   unfold wynerZivRate
   exact csInf_le_csInf h_bdd h_ne (wzRateValueSet_mono_in_D hD)
 
+/-! ### §10.1 Time-sharing infrastructure -/
+
+/-- Time-sharing helper. From `X ≤ c · s` for every `s` in a nonempty set `S`
+together with `0 ≤ c`, conclude `X ≤ c · sInf S`. Isolates the `c = 0` boundary
+from the `c > 0` division step. -/
+lemma le_mul_csInf {S : Set ℝ} (hne : S.Nonempty)
+    {c X : ℝ} (hc : 0 ≤ c) (h : ∀ s ∈ S, X ≤ c * s) :
+    X ≤ c * sInf S := by
+  rcases hc.eq_or_lt with hc0 | hc0
+  · obtain ⟨s, hs⟩ := hne
+    have hXs := h s hs
+    rw [← hc0] at hXs ⊢
+    simpa using hXs
+  · have hle : X / c ≤ sInf S := by
+      refine le_csInf hne ?_
+      intro s hs
+      rw [div_le_iff₀ hc0, mul_comm]
+      exact h s hs
+    calc X = c * (X / c) := by rw [mul_div_cancel₀ X hc0.ne']
+      _ ≤ c * sInf S := mul_le_mul_of_nonneg_left hle hc
+
+/-- Total mass of the second marginal equals the total mass of the joint. -/
+lemma sum_marginalSnd {A B : Type*} [Fintype A] [Fintype B] (p : A × B → ℝ) :
+    ∑ b, marginalSnd p b = ∑ z, p z := by
+  unfold marginalSnd
+  rw [Finset.sum_comm]
+  exact (Fintype.sum_prod_type p).symm
+
+/-- **Mixture-affinity of pmf mutual information.** For two joint pmfs
+`p₁ : A × B₁ → ℝ` and `p₂ : A × B₂ → ℝ`, each of total mass `1` and sharing the
+*same* first marginal (`marginalFst p₁ = marginalFst p₂`, i.e. `I(X ; branch) = 0`),
+form the disjoint-union mixture `mix : A × (B₁ ⊕ B₂) → ℝ` with
+
+```
+mix (x, inl b₁) = a · p₁ (x, b₁),   mix (x, inr b₂) = b · p₂ (x, b₂)
+```
+
+for weights `a + b = 1`. Then the pmf mutual information is affine:
+
+```
+mutualInfoPmf mix = a · mutualInfoPmf p₁ + b · mutualInfoPmf p₂.
+```
+
+The branch entropy `H(a, b)` cancels between the `H(U)` term and the `H(X, U)`
+term; the shared-first-marginal hypothesis is what kills the `H(X)`-side
+contribution. This is the reusable engine for Wyner–Ziv time-sharing (both the
+value-set closure and the operational converse feasible-point step). -/
+lemma mutualInfoPmf_mixture_affine
+    {A B₁ B₂ : Type*} [Fintype A] [Fintype B₁] [Fintype B₂]
+    {p₁ : A × B₁ → ℝ} {p₂ : A × B₂ → ℝ}
+    (h₁sum : ∑ z, p₁ z = 1) (h₂sum : ∑ z, p₂ z = 1)
+    (h_marg : marginalFst p₁ = marginalFst p₂)
+    {a b : ℝ} (hab : a + b = 1)
+    {mix : A × (B₁ ⊕ B₂) → ℝ}
+    (hmix₁ : ∀ x b₁, mix (x, Sum.inl b₁) = a * p₁ (x, b₁))
+    (hmix₂ : ∀ x b₂, mix (x, Sum.inr b₂) = b * p₂ (x, b₂)) :
+    mutualInfoPmf mix = a * mutualInfoPmf p₁ + b * mutualInfoPmf p₂ := by
+  have hmass1 : ∑ b, marginalSnd p₁ b = 1 := by rw [sum_marginalSnd]; exact h₁sum
+  have hmass2 : ∑ b, marginalSnd p₂ b = 1 := by rw [sum_marginalSnd]; exact h₂sum
+  -- first marginal of the mixture equals the common first marginal
+  have hmFst : marginalFst mix = marginalFst p₁ := by
+    funext x
+    have hx : marginalFst mix x = a * marginalFst p₁ x + b * marginalFst p₂ x := by
+      show (∑ c, mix (x, c)) = a * (∑ b₁, p₁ (x, b₁)) + b * (∑ b₂, p₂ (x, b₂))
+      rw [Fintype.sum_sum_type]
+      simp_rw [hmix₁, hmix₂, ← Finset.mul_sum]
+    have hp : marginalFst p₂ x = marginalFst p₁ x := congrFun h_marg.symm x
+    rw [hx, hp, ← add_mul, hab, one_mul]
+  -- first-marginal term of the mixture, re-expressed as an affine combination
+  have hT1 : (∑ a', Real.negMulLog (marginalFst mix a'))
+      = a * (∑ a', Real.negMulLog (marginalFst p₁ a'))
+        + b * (∑ a', Real.negMulLog (marginalFst p₂ a')) := by
+    rw [hmFst, ← h_marg, ← add_mul, hab, one_mul]
+  -- second-marginal term splits into the two branch blocks
+  have hT2 : (∑ c, Real.negMulLog (marginalSnd mix c))
+      = (Real.negMulLog a + a * (∑ b₁, Real.negMulLog (marginalSnd p₁ b₁)))
+        + (Real.negMulLog b + b * (∑ b₂, Real.negMulLog (marginalSnd p₂ b₂))) := by
+    rw [Fintype.sum_sum_type]
+    congr 1
+    · have hb1 : ∀ b₁, marginalSnd mix (Sum.inl b₁) = a * marginalSnd p₁ b₁ := by
+        intro b₁
+        show (∑ x, mix (x, Sum.inl b₁)) = a * (∑ x, p₁ (x, b₁))
+        simp_rw [hmix₁, ← Finset.mul_sum]
+      simp_rw [hb1, Real.negMulLog_mul]
+      rw [Finset.sum_add_distrib, ← Finset.sum_mul, ← Finset.mul_sum, hmass1, one_mul]
+    · have hb2 : ∀ b₂, marginalSnd mix (Sum.inr b₂) = b * marginalSnd p₂ b₂ := by
+        intro b₂
+        show (∑ x, mix (x, Sum.inr b₂)) = b * (∑ x, p₂ (x, b₂))
+        simp_rw [hmix₂, ← Finset.mul_sum]
+      simp_rw [hb2, Real.negMulLog_mul]
+      rw [Finset.sum_add_distrib, ← Finset.sum_mul, ← Finset.mul_sum, hmass2, one_mul]
+  -- joint term splits into the two branch blocks
+  have hT3split : (∑ w : A × (B₁ ⊕ B₂), Real.negMulLog (mix w))
+      = (∑ z : A × B₁, Real.negMulLog (mix (z.1, Sum.inl z.2)))
+        + (∑ z : A × B₂, Real.negMulLog (mix (z.1, Sum.inr z.2))) := by
+    rw [Fintype.sum_prod_type]
+    simp_rw [Fintype.sum_sum_type]
+    rw [Finset.sum_add_distrib,
+      ← Fintype.sum_prod_type (f := fun z : A × B₁ ↦ Real.negMulLog (mix (z.1, Sum.inl z.2))),
+      ← Fintype.sum_prod_type (f := fun z : A × B₂ ↦ Real.negMulLog (mix (z.1, Sum.inr z.2)))]
+  have hT3 : (∑ w : A × (B₁ ⊕ B₂), Real.negMulLog (mix w))
+      = (Real.negMulLog a + a * (∑ z : A × B₁, Real.negMulLog (p₁ z)))
+        + (Real.negMulLog b + b * (∑ z : A × B₂, Real.negMulLog (p₂ z))) := by
+    rw [hT3split]
+    congr 1
+    · have h1 : ∀ z : A × B₁, mix (z.1, Sum.inl z.2) = a * p₁ z := fun z ↦ hmix₁ z.1 z.2
+      simp_rw [h1, Real.negMulLog_mul]
+      rw [Finset.sum_add_distrib, ← Finset.sum_mul, ← Finset.mul_sum, h₁sum, one_mul]
+    · have h2 : ∀ z : A × B₂, mix (z.1, Sum.inr z.2) = b * p₂ z := fun z ↦ hmix₂ z.1 z.2
+      simp_rw [h2, Real.negMulLog_mul]
+      rw [Finset.sum_add_distrib, ← Finset.sum_mul, ← Finset.mul_sum, h₂sum, one_mul]
+  unfold mutualInfoPmf
+  rw [hT1, hT2, hT3]
+  ring
+
+/-- `mutualInfoPmf` is invariant under reindexing the second coordinate by an
+equivalence. -/
+lemma mutualInfoPmf_reindex_right
+    {A B C : Type*} [Fintype A] [Fintype B] [Fintype C]
+    (σ : C ≃ B) (p : A × B → ℝ) :
+    mutualInfoPmf (fun z : A × C ↦ p (z.1, σ z.2)) = mutualInfoPmf p := by
+  have hFst : marginalFst (fun z : A × C ↦ p (z.1, σ z.2)) = marginalFst p := by
+    funext a
+    exact Equiv.sum_comp σ (fun b ↦ p (a, b))
+  have hSnd : (∑ c, Real.negMulLog (marginalSnd (fun z : A × C ↦ p (z.1, σ z.2)) c))
+      = ∑ b, Real.negMulLog (marginalSnd p b) := by
+    rw [← Equiv.sum_comp σ (fun b ↦ Real.negMulLog (marginalSnd p b))]
+    rfl
+  have hJoint : (∑ z : A × C, Real.negMulLog (p (z.1, σ z.2)))
+      = ∑ w : A × B, Real.negMulLog (p w) :=
+    Fintype.sum_equiv (Equiv.prodCongr (Equiv.refl A) σ) _ _ (fun z ↦ rfl)
+  unfold mutualInfoPmf
+  simp only []
+  rw [hFst, hSnd, hJoint]
+
+/-- The objective value of a feasible factorisable point at *any* finite
+auxiliary alphabet `U` lands in `wzRateValueSet` — reindex `U` to
+`Fin (Fintype.card U)`, under which factorisability, distortion, and the
+objective are all preserved. -/
+lemma wzRateValueSet_reindex_mem
+    {P_XY : α × β → ℝ} {d : α → γ → ℝ} {D : ℝ}
+    {U : Type*} [Fintype U] [MeasurableSpace U]
+    {q : α × β × U → ℝ} {f : U × β → γ}
+    (hqf : (q, f) ∈ WynerZivFactorizableConstraint U P_XY d D) :
+    wzMutualInfoXU U q - wzMutualInfoYU U q ∈ wzRateValueSet P_XY d D := by
+  classical
+  set e : U ≃ Fin (Fintype.card U) := Fintype.equivFin U with he
+  set k := Fintype.card U with hk
+  set q' : α × β × Fin k → ℝ := fun p ↦ q (p.1, p.2.1, e.symm p.2.2) with hq'
+  set f' : Fin k × β → γ := fun p ↦ f (e.symm p.1, p.2) with hf'
+  set E : α × β × U ≃ α × β × Fin k :=
+    Equiv.prodCongr (Equiv.refl α) (Equiv.prodCongr (Equiv.refl β) e) with hE
+  rw [mem_wzRateValueSet_iff]
+  refine ⟨k, (q', f'), ⟨?_, ?_⟩, ?_⟩
+  · -- factorisability transports
+    obtain ⟨κ, hκnn, hκsum, hκeq⟩ := hqf.1
+    refine ⟨fun x i ↦ κ x (e.symm i), ?_, ?_, ?_⟩
+    · intro x i; exact hκnn x (e.symm i)
+    · intro x
+      rw [Equiv.sum_comp e.symm (κ x)]
+      exact hκsum x
+    · intro x y i
+      show q (x, y, e.symm i) = κ x (e.symm i) * P_XY (x, y)
+      exact hκeq x y (e.symm i)
+  · -- distortion transports (reindex the auxiliary coordinate)
+    have hdisteq : wzExpectedDistortion (Fin k) d q' f'
+        = wzExpectedDistortion U d q f := by
+      unfold wzExpectedDistortion
+      symm
+      refine Fintype.sum_equiv E _ _ (fun w ↦ ?_)
+      obtain ⟨x, y, u⟩ := w
+      simp only [hE, Equiv.prodCongr_apply, Equiv.coe_refl, Prod.map_apply, id_eq,
+        hq', hf', Equiv.symm_apply_apply]
+    rw [hdisteq]; exact hqf.2
+  · -- objective transports via reindexing invariance of `mutualInfoPmf`
+    have hXeq : wzMutualInfoXU (Fin k) q' = wzMutualInfoXU U q := by
+      unfold wzMutualInfoXU
+      have hmarg : wzMarginalXU (Fin k) q'
+          = fun z : α × Fin k ↦ wzMarginalXU U q (z.1, e.symm z.2) := by
+        funext z; rfl
+      rw [hmarg, mutualInfoPmf_reindex_right e.symm (wzMarginalXU U q)]
+    have hYeq : wzMutualInfoYU (Fin k) q' = wzMutualInfoYU U q := by
+      unfold wzMutualInfoYU
+      have hmarg : wzMarginalYU (Fin k) q'
+          = fun z : β × Fin k ↦ wzMarginalYU U q (z.1, e.symm z.2) := by
+        funext z; rfl
+      rw [hmarg, mutualInfoPmf_reindex_right e.symm (wzMarginalYU U q)]
+    rw [hXeq, hYeq]
+
+/-! ### §10.2 Time-sharing of the reshaped value set and rate -/
+
+/-- **Time-sharing closure of the reshaped value set.** The set of attainable
+Wyner–Ziv objective values is closed under convex combination across distortion
+budgets: if `v₁` is attainable at budget `D₁` and `v₂` at budget `D₂`, then the
+mixture `a·v₁ + b·v₂` is attainable at the mixed budget `a·D₁ + b·D₂`.
+
+The witness is the disjoint-union auxiliary kernel `κ(x, inl u) = a·κ₁(x, u)`,
+`κ(x, inr u) = b·κ₂(x, u)` at auxiliary alphabet `Fin k₁ ⊕ Fin k₂`: it is
+row-stochastic, its distortion splits as `a·dist₁ + b·dist₂`, and its objective
+is affine by `mutualInfoPmf_mixture_affine`. -/
+theorem wzRateValueSet_timeShare_mem
+    {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
+    {d : α → γ → ℝ} {D₁ D₂ : ℝ} {v₁ v₂ : ℝ}
+    (hv₁ : v₁ ∈ wzRateValueSet P_XY d D₁)
+    (hv₂ : v₂ ∈ wzRateValueSet P_XY d D₂)
+    {a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) (hab : a + b = 1) :
+    a * v₁ + b * v₂ ∈ wzRateValueSet P_XY d (a * D₁ + b * D₂) := by
+  classical
+  rw [mem_wzRateValueSet_iff] at hv₁ hv₂
+  obtain ⟨k₁, ⟨q₁, f₁⟩, ⟨hfact₁, hdist₁⟩, hobj₁⟩ := hv₁
+  obtain ⟨k₂, ⟨q₂, f₂⟩, ⟨hfact₂, hdist₂⟩, hobj₂⟩ := hv₂
+  obtain ⟨κ₁, hκ₁nn, hκ₁sum, hκ₁eq⟩ := hfact₁
+  obtain ⟨κ₂, hκ₂nn, hκ₂sum, hκ₂eq⟩ := hfact₂
+  dsimp only at hobj₁ hobj₂ hdist₁ hdist₂ hκ₁eq hκ₂eq
+  -- mixture point on the disjoint-union auxiliary alphabet `Fin k₁ ⊕ Fin k₂`
+  set κmix : α → (Fin k₁ ⊕ Fin k₂) → ℝ :=
+    fun x ↦ Sum.elim (fun i ↦ a * κ₁ x i) (fun j ↦ b * κ₂ x j) with hκmix
+  set qmix : α × β × (Fin k₁ ⊕ Fin k₂) → ℝ :=
+    fun p ↦ κmix p.1 p.2.2 * P_XY (p.1, p.2.1) with hqmix
+  set fmix : (Fin k₁ ⊕ Fin k₂) × β → γ :=
+    fun p ↦ Sum.elim (fun i ↦ f₁ (i, p.2)) (fun j ↦ f₂ (j, p.2)) p.1 with hfmix
+  -- pointwise identities: the mixture joint restricts to a scaled copy on each branch
+  have hqmix_inl : ∀ x y i, qmix (x, y, Sum.inl i) = a * q₁ (x, y, i) := by
+    intro x y i
+    show a * κ₁ x i * P_XY (x, y) = a * q₁ (x, y, i)
+    rw [hκ₁eq x y i]; ring
+  have hqmix_inr : ∀ x y j, qmix (x, y, Sum.inr j) = b * q₂ (x, y, j) := by
+    intro x y j
+    show b * κ₂ x j * P_XY (x, y) = b * q₂ (x, y, j)
+    rw [hκ₂eq x y j]; ring
+  -- branch identities for the XU and YU marginals
+  have hmixXU_inl : ∀ x i, wzMarginalXU (Fin k₁ ⊕ Fin k₂) qmix (x, Sum.inl i)
+      = a * wzMarginalXU (Fin k₁) q₁ (x, i) := by
+    intro x i
+    show (∑ y, qmix (x, y, Sum.inl i)) = a * ∑ y, q₁ (x, y, i)
+    simp_rw [hqmix_inl, ← Finset.mul_sum]
+  have hmixXU_inr : ∀ x j, wzMarginalXU (Fin k₁ ⊕ Fin k₂) qmix (x, Sum.inr j)
+      = b * wzMarginalXU (Fin k₂) q₂ (x, j) := by
+    intro x j
+    show (∑ y, qmix (x, y, Sum.inr j)) = b * ∑ y, q₂ (x, y, j)
+    simp_rw [hqmix_inr, ← Finset.mul_sum]
+  have hmixYU_inl : ∀ y i, wzMarginalYU (Fin k₁ ⊕ Fin k₂) qmix (y, Sum.inl i)
+      = a * wzMarginalYU (Fin k₁) q₁ (y, i) := by
+    intro y i
+    show (∑ x, qmix (x, y, Sum.inl i)) = a * ∑ x, q₁ (x, y, i)
+    simp_rw [hqmix_inl, ← Finset.mul_sum]
+  have hmixYU_inr : ∀ y j, wzMarginalYU (Fin k₁ ⊕ Fin k₂) qmix (y, Sum.inr j)
+      = b * wzMarginalYU (Fin k₂) q₂ (y, j) := by
+    intro y j
+    show (∑ x, qmix (x, y, Sum.inr j)) = b * ∑ x, q₂ (x, y, j)
+    simp_rw [hqmix_inr, ← Finset.mul_sum]
+  -- both feasible points share the source's first marginal
+  have hfstXU1 : marginalFst (wzMarginalXU (Fin k₁) q₁) = fun x ↦ ∑ y, P_XY (x, y) := by
+    funext x
+    show (∑ i, ∑ y, q₁ (x, y, i)) = ∑ y, P_XY (x, y)
+    simp_rw [hκ₁eq]; rw [Finset.sum_comm]; simp_rw [← Finset.sum_mul, hκ₁sum, one_mul]
+  have hfstXU2 : marginalFst (wzMarginalXU (Fin k₂) q₂) = fun x ↦ ∑ y, P_XY (x, y) := by
+    funext x
+    show (∑ i, ∑ y, q₂ (x, y, i)) = ∑ y, P_XY (x, y)
+    simp_rw [hκ₂eq]; rw [Finset.sum_comm]; simp_rw [← Finset.sum_mul, hκ₂sum, one_mul]
+  have hfstYU1 : marginalFst (wzMarginalYU (Fin k₁) q₁) = fun y ↦ ∑ x, P_XY (x, y) := by
+    funext y
+    show (∑ u, ∑ x, q₁ (x, y, u)) = ∑ x, P_XY (x, y)
+    simp_rw [hκ₁eq]; rw [Finset.sum_comm]; simp_rw [← Finset.sum_mul, hκ₁sum, one_mul]
+  have hfstYU2 : marginalFst (wzMarginalYU (Fin k₂) q₂) = fun y ↦ ∑ x, P_XY (x, y) := by
+    funext y
+    show (∑ u, ∑ x, q₂ (x, y, u)) = ∑ x, P_XY (x, y)
+    simp_rw [hκ₂eq]; rw [Finset.sum_comm]; simp_rw [← Finset.sum_mul, hκ₂sum, one_mul]
+  have hmargXU : marginalFst (wzMarginalXU (Fin k₁) q₁)
+      = marginalFst (wzMarginalXU (Fin k₂) q₂) := by rw [hfstXU1, hfstXU2]
+  have hmargYU : marginalFst (wzMarginalYU (Fin k₁) q₁)
+      = marginalFst (wzMarginalYU (Fin k₂) q₂) := by rw [hfstYU1, hfstYU2]
+  -- total masses (both feasible points are pmfs)
+  have hmassXU1 : ∑ z, wzMarginalXU (Fin k₁) q₁ z = 1 := by
+    rw [Fintype.sum_prod_type (f := wzMarginalXU (Fin k₁) q₁)]
+    have h : ∀ x, ∑ i, wzMarginalXU (Fin k₁) q₁ (x, i) = ∑ y, P_XY (x, y) := by
+      intro x; have := congrFun hfstXU1 x; simpa [marginalFst] using this
+    simp_rw [h]; rw [← Fintype.sum_prod_type (f := P_XY)]; exact h_pmf.2
+  have hmassXU2 : ∑ z, wzMarginalXU (Fin k₂) q₂ z = 1 := by
+    rw [Fintype.sum_prod_type (f := wzMarginalXU (Fin k₂) q₂)]
+    have h : ∀ x, ∑ i, wzMarginalXU (Fin k₂) q₂ (x, i) = ∑ y, P_XY (x, y) := by
+      intro x; have := congrFun hfstXU2 x; simpa [marginalFst] using this
+    simp_rw [h]; rw [← Fintype.sum_prod_type (f := P_XY)]; exact h_pmf.2
+  have hmassYU1 : ∑ z, wzMarginalYU (Fin k₁) q₁ z = 1 := by
+    rw [Fintype.sum_prod_type (f := wzMarginalYU (Fin k₁) q₁)]
+    have h : ∀ y, ∑ u, wzMarginalYU (Fin k₁) q₁ (y, u) = ∑ x, P_XY (x, y) := by
+      intro y; have := congrFun hfstYU1 y; simpa [marginalFst] using this
+    simp_rw [h]; rw [Finset.sum_comm, ← Fintype.sum_prod_type (f := P_XY)]; exact h_pmf.2
+  have hmassYU2 : ∑ z, wzMarginalYU (Fin k₂) q₂ z = 1 := by
+    rw [Fintype.sum_prod_type (f := wzMarginalYU (Fin k₂) q₂)]
+    have h : ∀ y, ∑ u, wzMarginalYU (Fin k₂) q₂ (y, u) = ∑ x, P_XY (x, y) := by
+      intro y; have := congrFun hfstYU2 y; simpa [marginalFst] using this
+    simp_rw [h]; rw [Finset.sum_comm, ← Fintype.sum_prod_type (f := P_XY)]; exact h_pmf.2
+  -- objective is affine: mixture-affinity of `mutualInfoPmf`
+  have hXU : wzMutualInfoXU (Fin k₁ ⊕ Fin k₂) qmix
+      = a * wzMutualInfoXU (Fin k₁) q₁ + b * wzMutualInfoXU (Fin k₂) q₂ := by
+    unfold wzMutualInfoXU
+    exact mutualInfoPmf_mixture_affine hmassXU1 hmassXU2 hmargXU hab hmixXU_inl hmixXU_inr
+  have hYU : wzMutualInfoYU (Fin k₁ ⊕ Fin k₂) qmix
+      = a * wzMutualInfoYU (Fin k₁) q₁ + b * wzMutualInfoYU (Fin k₂) q₂ := by
+    unfold wzMutualInfoYU
+    exact mutualInfoPmf_mixture_affine hmassYU1 hmassYU2 hmargYU hab hmixYU_inl hmixYU_inr
+  have hobj : wzMutualInfoXU (Fin k₁ ⊕ Fin k₂) qmix - wzMutualInfoYU (Fin k₁ ⊕ Fin k₂) qmix
+      = a * v₁ + b * v₂ := by rw [hXU, hYU, ← hobj₁, ← hobj₂]; ring
+  -- feasibility of the mixture point at the mixed budget
+  have hfeas : (qmix, fmix)
+      ∈ WynerZivFactorizableConstraint (Fin k₁ ⊕ Fin k₂) P_XY d (a * D₁ + b * D₂) := by
+    refine ⟨⟨κmix, ?_, ?_, ?_⟩, ?_⟩
+    · -- non-negativity of the mixture kernel
+      intro x c
+      cases c with
+      | inl i => exact mul_nonneg ha (hκ₁nn x i)
+      | inr j => exact mul_nonneg hb (hκ₂nn x j)
+    · -- row-stochasticity of the mixture kernel
+      intro x
+      rw [Fintype.sum_sum_type]
+      simp only [hκmix, Sum.elim_inl, Sum.elim_inr]
+      rw [← Finset.mul_sum, ← Finset.mul_sum, hκ₁sum, hκ₂sum, mul_one, mul_one]
+      exact hab
+    · -- factorisation of the mixture joint
+      intro x y c; rfl
+    · -- distortion splits affinely, hence stays within the mixed budget
+      have hdistsplit : wzExpectedDistortion (Fin k₁ ⊕ Fin k₂) d qmix fmix
+          = a * wzExpectedDistortion (Fin k₁) d q₁ f₁
+            + b * wzExpectedDistortion (Fin k₂) d q₂ f₂ := by
+        let E' : (α × β × Fin k₁) ⊕ (α × β × Fin k₂) ≃ α × β × (Fin k₁ ⊕ Fin k₂) :=
+          { toFun := Sum.elim (fun p ↦ (p.1, p.2.1, Sum.inl p.2.2))
+              (fun p ↦ (p.1, p.2.1, Sum.inr p.2.2))
+            invFun := fun p ↦ Sum.elim (fun i ↦ Sum.inl (p.1, p.2.1, i))
+              (fun j ↦ Sum.inr (p.1, p.2.1, j)) p.2.2
+            left_inv := by rintro (⟨x, y, i⟩ | ⟨x, y, j⟩) <;> rfl
+            right_inv := by rintro ⟨x, y, (i | j)⟩ <;> rfl }
+        unfold wzExpectedDistortion
+        rw [← Equiv.sum_comp E' (fun p ↦ qmix p * d p.1 (fmix (p.2.2, p.2.1)))]
+        rw [Fintype.sum_sum_type]
+        congr 1
+        · rw [Finset.mul_sum]
+          refine Finset.sum_congr rfl (fun p₁ _ ↦ ?_)
+          obtain ⟨x, y, i⟩ := p₁
+          change qmix (x, y, Sum.inl i) * d x (f₁ (i, y))
+              = a * (q₁ (x, y, i) * d x (f₁ (i, y)))
+          rw [hqmix_inl]; ring
+        · rw [Finset.mul_sum]
+          refine Finset.sum_congr rfl (fun p₂ _ ↦ ?_)
+          obtain ⟨x, y, j⟩ := p₂
+          change qmix (x, y, Sum.inr j) * d x (f₂ (j, y))
+              = b * (q₂ (x, y, j) * d x (f₂ (j, y)))
+          rw [hqmix_inr]; ring
+      rw [hdistsplit]
+      have h1 : a * wzExpectedDistortion (Fin k₁) d q₁ f₁ ≤ a * D₁ :=
+        mul_le_mul_of_nonneg_left hdist₁ ha
+      have h2 : b * wzExpectedDistortion (Fin k₂) d q₂ f₂ ≤ b * D₂ :=
+        mul_le_mul_of_nonneg_left hdist₂ hb
+      linarith
+  have hmem := wzRateValueSet_reindex_mem (P_XY := P_XY) (d := d) hfeas
+  rwa [hobj] at hmem
+
+/-- **Convexity of the reshaped Wyner–Ziv rate in `D`.** Directly from the
+time-sharing closure `wzRateValueSet_timeShare_mem`: every mixture `a·v₁ + b·v₂`
+lies in the value set at the mixed budget, so its infimum is bounded above by
+`a·v₁ + b·v₂` for all attainable `v₁, v₂`; taking nested infima gives the convex
+bound. The `Nonempty` side conditions feed `le_csInf` (via `le_mul_csInf`) and
+`BddBelow` at the mixed budget feeds `csInf_le`; both are standard regularity
+preconditions, not load-bearing core. -/
+theorem wynerZivRate_convex_in_D
+    {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
+    {d : α → γ → ℝ} {D₁ D₂ : ℝ}
+    (h_ne₁ : (wzRateValueSet P_XY d D₁).Nonempty)
+    (h_ne₂ : (wzRateValueSet P_XY d D₂).Nonempty)
+    {a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) (hab : a + b = 1)
+    (h_bdd_mix : BddBelow (wzRateValueSet P_XY d (a * D₁ + b * D₂))) :
+    wynerZivRate P_XY d (a * D₁ + b * D₂)
+      ≤ a * wynerZivRate P_XY d D₁ + b * wynerZivRate P_XY d D₂ := by
+  -- every mixture value lies in the value set at the mixed budget
+  have key : ∀ v₁ ∈ wzRateValueSet P_XY d D₁, ∀ v₂ ∈ wzRateValueSet P_XY d D₂,
+      wynerZivRate P_XY d (a * D₁ + b * D₂) ≤ a * v₁ + b * v₂ := by
+    intro v₁ hv₁ v₂ hv₂
+    exact csInf_le h_bdd_mix (wzRateValueSet_timeShare_mem h_pmf hv₁ hv₂ ha hb hab)
+  -- infimum over the second budget
+  have step1 : ∀ v₁ ∈ wzRateValueSet P_XY d D₁,
+      wynerZivRate P_XY d (a * D₁ + b * D₂) ≤ a * v₁ + b * wynerZivRate P_XY d D₂ := by
+    intro v₁ hv₁
+    have hstep : wynerZivRate P_XY d (a * D₁ + b * D₂) - a * v₁
+        ≤ b * wynerZivRate P_XY d D₂ := by
+      refine le_mul_csInf h_ne₂ hb ?_
+      intro v₂ hv₂
+      have hk := key v₁ hv₁ v₂ hv₂
+      linarith
+    linarith
+  -- infimum over the first budget
+  have hstep : wynerZivRate P_XY d (a * D₁ + b * D₂) - b * wynerZivRate P_XY d D₂
+      ≤ a * wynerZivRate P_XY d D₁ := by
+    refine le_mul_csInf h_ne₁ ha ?_
+    intro v₁ hv₁
+    have := step1 v₁ hv₁
+    linarith
+  linarith
+
 end AllAuxRate
 
 end InformationTheory.Shannon
