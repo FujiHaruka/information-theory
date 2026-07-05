@@ -616,13 +616,14 @@ private lemma wz_perDelta_codes_exist
 slack `δ > 0`, each eventually within `D + δ`, diagonalises to a single Wyner–Ziv
 code sequence that is eventually within `D + ε` for *every* `ε > 0`.
 
-This is a general diagonalization over the slack parameter: choosing `δ_m = 1/m`,
-extracting a per-`m` code sequence, and interleaving them along an increasing
-threshold schedule `N_m` produces the single diagonal sequence whose eventual bound
-reaches every `ε`. The hypothesis is the per-slack achievability family (the output
-of the covering+binning assembly `wz_perDelta_codes_exist`); the diagonalization
-argument is the body.
-@residual(plan:wyner-ziv-main-plan) -/
+This is a general diagonalization over the slack parameter: choosing `δ_m =
+1/(m+1)`, extracting a per-`m` code sequence `C m` with an eventual threshold
+`N m`, dominating those thresholds by a diverging schedule `Ñ m ≥ max(N₀ … N_m, m)`,
+and diagonalising by `c n := C (idx n) n` where `idx n = Nat.findGreatest (Ñ · ≤ n)
+n` selects the largest admissible slack level. Since `idx n → ∞` (as `Ñ` diverges),
+the diagonal sequence's eventual bound reaches every `ε`. The hypothesis is the
+per-slack achievability family (the output of the covering+binning assembly
+`wz_perDelta_codes_exist`); the diagonalization argument is the (sorry-free) body. -/
 private lemma wz_diagonalize_slack
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
@@ -631,7 +632,45 @@ private lemma wz_diagonalize_slack
     ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
       ∀ ε : ℝ, 0 < ε → ∀ᶠ n in Filter.atTop,
         (c n).expectedBlockDistortion P_XY d ≤ D + ε := by
-  sorry
+  -- Extract a per-slack code sequence `C m` for the slack `δ_m = 1/(m+1)`,
+  -- together with an eventual threshold `N m` beyond which its distortion is
+  -- within `D + 1/(m+1)`.
+  have hδpos : ∀ m : ℕ, (0 : ℝ) < 1 / (m + 1) := fun m => by positivity
+  choose C hC using fun m : ℕ => hfam (1 / (m + 1)) (hδpos m)
+  choose N hN using fun m => Filter.eventually_atTop.mp (hC m)
+  -- A monotone-in-effect threshold schedule dominating every `N m` and diverging:
+  -- `Ñ m ≥ N m` (so `hN` applies) and `Ñ m ≥ m` (so `Ñ m → ∞`).
+  set Ñ : ℕ → ℕ := fun m => (Finset.range (m + 1)).sup N + m with hÑdef
+  have hÑ_ge_N : ∀ m, N m ≤ Ñ m := fun m =>
+    le_trans (Finset.le_sup (Finset.self_mem_range_succ m)) (Nat.le_add_right _ _)
+  have hÑ_ge_self : ∀ m, m ≤ Ñ m := fun m => Nat.le_add_left _ _
+  -- Diagonal code `c n := C (idx n) n`, where `idx n` is the largest `j ≤ n` with
+  -- `Ñ j ≤ n`; the diagonal is well-typed since `C (idx n) n : WynerZivCode …`.
+  refine ⟨fun n => C (Nat.findGreatest (fun j => Ñ j ≤ n) n) n, ?_⟩
+  intro ε hε
+  -- Pick `m` with `1/(m+1) < ε` (Archimedean), and show the eventual bound holds
+  -- from `n ≥ Ñ m` onward.
+  obtain ⟨m, hm⟩ := exists_nat_one_div_lt hε
+  rw [Filter.eventually_atTop]
+  refine ⟨Ñ m, fun n hn => ?_⟩
+  show (C (Nat.findGreatest (fun j => Ñ j ≤ n) n) n).expectedBlockDistortion P_XY d ≤ D + ε
+  -- `hn : Ñ m ≤ n` witnesses `P m` for `P j := Ñ j ≤ n`; also `m ≤ n`.
+  have hmn : m ≤ n := le_trans (hÑ_ge_self m) hn
+  -- The selected index is `≥ m` and satisfies its own threshold `Ñ (idx n) ≤ n`.
+  have hjge : m ≤ Nat.findGreatest (fun j => Ñ j ≤ n) n := Nat.le_findGreatest hmn hn
+  have hjspec : Ñ (Nat.findGreatest (fun j => Ñ j ≤ n) n) ≤ n :=
+    Nat.findGreatest_spec (P := fun j => Ñ j ≤ n) hmn hn
+  have hNle : N (Nat.findGreatest (fun j => Ñ j ≤ n) n) ≤ n :=
+    le_trans (hÑ_ge_N _) hjspec
+  -- Apply the per-slack eventual bound at the selected index.
+  have hdist := hN (Nat.findGreatest (fun j => Ñ j ≤ n) n) n hNle
+  -- `1/(idx n + 1) ≤ 1/(m+1) < ε` since `idx n ≥ m`.
+  have hmono : (1 : ℝ) / ((Nat.findGreatest (fun j => Ñ j ≤ n) n : ℝ) + 1) ≤ 1 / ((m : ℝ) + 1) := by
+    apply one_div_le_one_div_of_le
+    · positivity
+    · have : (m : ℝ) ≤ (Nat.findGreatest (fun j => Ñ j ≤ n) n : ℝ) := by exact_mod_cast hjge
+      linarith
+  linarith [hdist, hmono, hm]
 
 /-- **Covering + binning construction (Steps 1–5, the hard leg).** From a
 feasible factorisable test channel `qf` at auxiliary alphabet `Fin k` whose
@@ -674,10 +713,11 @@ deferred to the construction sub-lemmas.
 
 The body is now a `sorry`-free reduction: `wz_perDelta_codes_exist` builds, for each
 slack `δ > 0`, a code sequence eventually within `D + δ` (the covering + binning
-assembly), and `wz_diagonalize_slack` diagonalises those into a single sequence
-within `D + ε` for every `ε`. The residual `sorry + @residual(plan:wyner-ziv-main-plan)`
-lives in those two sub-lemmas (and the covering / source-support atoms they consume,
-`wz_covering_lossyCode_exists` / `wz_expectedBlockDistortion_source_agree`), not here. -/
+assembly), and `wz_diagonalize_slack` (now proved sorry-free) diagonalises those into
+a single sequence within `D + ε` for every `ε`. The residual `sorry +
+@residual(plan:wyner-ziv-main-plan)` lives in `wz_perDelta_codes_exist` (and the
+covering / source-support atoms it consumes, `wz_covering_lossyCode_exists` /
+`wz_expectedBlockDistortion_source_agree`), not here. -/
 private lemma wz_goodCode_exists_of_testChannel
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
