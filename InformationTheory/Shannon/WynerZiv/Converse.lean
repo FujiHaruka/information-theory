@@ -75,9 +75,12 @@ data-processing non-negativity `wzObjective_nonneg_of_factorizable` is likewise
 discharged genuinely (sorryAx-free) via the measure-form DPI + the pmf↔measure bridges +
 a discrete Markov-chain realisation (`wzFactorizable_isMarkovChain`), so
 `wzRateValueSet_bddBelow_of_pmf` (the reshaped rate's non-degeneracy `BddBelow` guard) is
-likewise unconditional. The only residual left (`@residual(plan:wyner-ziv-main-plan)`) is
-the endpoint lemma `wynerZivRate_le_of_forall_pos_add_endpoint` and the converse-assembly
-theorems (`wz_converse_feasible_point` and above) that carry it transitively.
+likewise unconditional. The single-letterisation witness `wz_converse_feasible_point` is
+itself closed sorryAx-free (machine-checked `#print axioms`). The sole residual reachable
+from the converse headline is `wynerZivRate_eq_factorizable_finK` (L1,
+`@residual(plan:wz-auxiliary-cardinality-bound)`, the Carathéodory fixed-`K`
+identification behind the now-sorry-free endpoint lemma
+`wynerZivRate_le_of_forall_pos_add_endpoint`), carried transitively.
 -/
 
 namespace InformationTheory.Shannon
@@ -1859,12 +1862,99 @@ every `D + ε` (`ε > 0`) is `≤ R`, then so is the rate at `D`. Proved by comp
 near-optimal feasible kernels at `D + εₙ` live in the compact kernel set; Cantor's
 intersection theorem produces a common limit kernel, feasible at `D` (a decoder
 attaining the budget survives to the limit) with objective `≤ R`. -/
-theorem wynerZivRateFactorizable_right_continuous_le (U : Type*) [Fintype U] [MeasurableSpace U]
+theorem wynerZivRateFactorizable_right_continuous_le (U : Type*) [Fintype U] [Nonempty U]
+    [MeasurableSpace U] [MeasurableSingletonClass U]
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) {d : α → γ → ℝ} {D R : ℝ}
     (hR : 0 ≤ R)
     (hstep : ∀ ε > 0, wynerZivRateFactorizable U P_XY d (D + ε) ≤ R) :
     wynerZivRateFactorizable U P_XY d D ≤ R := by
-  sorry
+  classical
+  -- Bridge the rate to the kernel-space infimum, and abbreviate the objective.
+  rw [wynerZivRateFactorizable_eq_sInf_kernel]
+  set F : (α → U → ℝ) → ℝ :=
+    fun κ ↦ wzMutualInfoXU U (wzJointOfKernel U P_XY κ)
+              - wzMutualInfoYU U (wzJointOfKernel U P_XY κ) with hF
+  have hFcont : Continuous F := by
+    rw [hF]; exact (continuous_wzObjective U).comp' (continuous_wzJointOfKernel U P_XY)
+  -- The objective is `≥ 0` on the feasible kernel set (data-processing), hence the
+  -- image is bounded below by `0`.
+  have hFnonneg : ∀ κ ∈ wzKernelSet U, 0 ≤ F κ := by
+    intro κ hκ
+    rw [hF]
+    exact wzObjective_nonneg_of_factorizable h_pmf (wzJointOfKernel_isFactorizable U hκ)
+  have hbdd : ∀ D' : ℝ, BddBelow (F '' wzKernelFeasible U P_XY d D') := by
+    intro D'
+    refine ⟨0, ?_⟩
+    rintro v ⟨κ, hκ, rfl⟩
+    exact hFnonneg κ hκ.1
+  by_cases hne0 : (wzKernelFeasible U P_XY d D).Nonempty
+  · -- Nonempty case: Cantor's intersection theorem on the nested closed sets
+    -- `A n = {κ ∈ FKer(D + 1/(n+1)) | F κ ≤ R}`.
+    set A : ℕ → Set (α → U → ℝ) :=
+      fun n ↦ {κ | κ ∈ wzKernelFeasible U P_XY d (D + 1 / ((n : ℝ) + 1)) ∧ F κ ≤ R} with hA
+    have hεpos : ∀ n : ℕ, (0 : ℝ) < 1 / ((n : ℝ) + 1) := fun n ↦ by positivity
+    have hFKne : ∀ n : ℕ,
+        (wzKernelFeasible U P_XY d (D + 1 / ((n : ℝ) + 1))).Nonempty := fun n ↦
+      hne0.mono (wzKernelFeasible_mono U P_XY d (by linarith [hεpos n]))
+    have hrate : ∀ n : ℕ,
+        sInf (F '' wzKernelFeasible U P_XY d (D + 1 / ((n : ℝ) + 1))) ≤ R := by
+      intro n
+      rw [hF, ← wynerZivRateFactorizable_eq_sInf_kernel]
+      exact hstep _ (hεpos n)
+    have hAne : ∀ n : ℕ, (A n).Nonempty := by
+      intro n
+      obtain ⟨κ₀, hκ₀mem, hκ₀min⟩ :=
+        (wzKernelFeasible_isCompact U P_XY d (D + 1 / ((n : ℝ) + 1))).exists_isMinOn
+          (hFKne n) hFcont.continuousOn
+      have hlb : F κ₀ ≤ sInf (F '' wzKernelFeasible U P_XY d (D + 1 / ((n : ℝ) + 1))) := by
+        refine le_csInf ((hFKne n).image F) ?_
+        rintro b ⟨κ', hκ', rfl⟩
+        exact (isMinOn_iff.mp hκ₀min) κ' hκ'
+      exact ⟨κ₀, hκ₀mem, le_trans hlb (hrate n)⟩
+    have hAcl : ∀ n : ℕ, IsClosed (A n) := by
+      intro n
+      have hAeq : A n
+          = wzKernelFeasible U P_XY d (D + 1 / ((n : ℝ) + 1)) ∩ {κ | F κ ≤ R} := by
+        rw [hA]; ext κ; simp only [Set.mem_setOf_eq, Set.mem_inter_iff]
+      rw [hAeq]
+      exact (wzKernelFeasible_isClosed U P_XY d _).inter (isClosed_le hFcont continuous_const)
+    have hAanti : ∀ n : ℕ, A (n + 1) ⊆ A n := by
+      intro n κ hκ
+      refine ⟨wzKernelFeasible_mono U P_XY d ?_ hκ.1, hκ.2⟩
+      have h1 : (1 : ℝ) / ((↑(n + 1) : ℝ) + 1) ≤ 1 / ((n : ℝ) + 1) := by
+        apply one_div_le_one_div_of_le (by positivity)
+        push_cast; linarith
+      linarith
+    have hA0c : IsCompact (A 0) :=
+      (wzKernelFeasible_isCompact U P_XY d (D + 1 / ((0 : ℕ) + 1))).of_isClosed_subset
+        (hAcl 0) (fun κ hκ ↦ hκ.1)
+    obtain ⟨κstar, hκstar⟩ :=
+      IsCompact.nonempty_iInter_of_sequence_nonempty_isCompact_isClosed
+        A hAanti hAne hA0c hAcl
+    rw [Set.mem_iInter] at hκstar
+    have hstar_mem : ∀ n : ℕ,
+        κstar ∈ wzKernelFeasible U P_XY d (D + 1 / ((n : ℝ) + 1)) := fun n ↦ (hκstar n).1
+    have hstar_R : F κstar ≤ R := (hκstar 0).2
+    have hstar_ker : κstar ∈ wzKernelSet U := (hstar_mem 0).1
+    obtain ⟨f₀, hf₀⟩ :=
+      Finite.exists_min
+        (fun f : U × β → γ ↦ wzExpectedDistortion U d (wzJointOfKernel U P_XY κstar) f)
+    have hf₀_le : wzExpectedDistortion U d (wzJointOfKernel U P_XY κstar) f₀ ≤ D := by
+      have hbound : ∀ n : ℕ,
+          wzExpectedDistortion U d (wzJointOfKernel U P_XY κstar) f₀ ≤ D + 1 / ((n : ℝ) + 1) := by
+        intro n
+        obtain ⟨_, f, hf⟩ := hstar_mem n
+        exact le_trans (hf₀ f) hf
+      have htend : Filter.Tendsto (fun n : ℕ ↦ D + 1 / ((n : ℝ) + 1)) Filter.atTop (nhds D) := by
+        have h0 := (tendsto_one_div_add_atTop_nhds_zero_nat (𝕜 := ℝ)).const_add D
+        simpa using h0
+      exact ge_of_tendsto htend (Filter.Eventually.of_forall hbound)
+    have hstar_feas : κstar ∈ wzKernelFeasible U P_XY d D := ⟨hstar_ker, f₀, hf₀_le⟩
+    exact le_trans (csInf_le (hbdd D) ⟨κstar, hstar_feas, rfl⟩) hstar_R
+  · -- Empty case: `sInf ∅ = 0 ≤ R`.
+    rw [Set.not_nonempty_iff_eq_empty] at hne0
+    rw [hne0, Set.image_empty, Real.sInf_empty]
+    exact hR
 
 /-- **L1 — Carathéodory fixed-`K` identification of the reshaped Wyner–Ziv rate.**
 The reshaped rate `wynerZivRate` (an infimum over *all* finite auxiliary alphabets)
@@ -1874,9 +1964,13 @@ hull (the rate-optimal auxiliary mixes at most `|α| + 1` extreme kernels), to a
 feasible point at `Fin (|α| + 1)` with objective `≤` the original. Hence the two
 infima agree.
 
-The easy inclusion `wynerZivRate ≤ wynerZivRateFactorizable (Fin (|α|+1))` is
-immediate (`Fin (|α|+1)` is one of the alphabets in the union); the reverse is the
-Carathéodory cardinality bound, deferred to its own closure plan.
+Both inclusions genuinely rely on the Carathéodory reduction and are isolated as a
+single `sorry`. In particular the `≤` direction is *not* free: were the fixed
+`Fin (|α|+1)` constraint empty while the union is nonempty,
+`wynerZivRateFactorizable (Fin (|α|+1))` would collapse to `sInf ∅ = 0` while
+`wynerZivRate ≥ 0` could be strictly positive — so the reduction is exactly what
+guarantees the fixed-`K` constraint is nonempty (and cofinal below) whenever the union
+is. Deferred to its own closure plan.
 @residual(plan:wz-auxiliary-cardinality-bound) -/
 theorem wynerZivRate_eq_factorizable_finK
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) (d : α → γ → ℝ) (D : ℝ) :
@@ -1884,47 +1978,40 @@ theorem wynerZivRate_eq_factorizable_finK
       = wynerZivRateFactorizable (Fin (Fintype.card α + 1)) P_XY d D := by
   sorry
 
+set_option linter.unusedVariables false in
 /-- **Left-endpoint right-continuity of the reshaped Wyner–Ziv rate.**
 
 If `R ≥ 0`, the value set at `D` is nonempty but *no* value set strictly below `D`
 is nonempty (so `D` is the left endpoint `D_min` of the rate function's domain),
 and `R_WZ(D + ε) ≤ R` for every `ε > 0`, then `R_WZ(D) ≤ R`.
 
-**Why this is a genuine residual (not vacuous, not false-as-framed).** The conclusion
-is *right-continuity of the reshaped rate at the left endpoint*: `R_WZ` is antitone, so
-`R_WZ(D + ε) ≤ R_WZ(D)` (the wrong direction) and `hstep` alone does not force
-`R_WZ(D) ≤ R`. One must show `R_WZ(D) = lim_{ε→0⁺} R_WZ(D + ε)`, i.e. right-continuity
-at `D_min`. Away from the left endpoint this is delivered by the time-sharing
-perturbation (an anchor `D₀ < D` with a nonempty value set), which is exactly what
-`h_endpoint` rules out here. At the left endpoint the perturbation has no anchor below
-`D`, and right-continuity there needs the auxiliary-cardinality / compactness argument
-(a Carathéodory bound making the infimum attained, hence continuous up to the endpoint;
-slug `wz-auxiliary-cardinality-bound`), deferred to `wyner-ziv-main-plan`.
+**Proof status — body is now sorry-free; the only residual is transitive.** The body
+assembles two lemmas: `wynerZivRate_eq_factorizable_finK` (L1, the Carathéodory fixed-`K`
+identification, isolated as a single `sorry`) and
+`wynerZivRateFactorizable_right_continuous_le` (L2, fixed-`U` right-continuity, proved
+sorry-free by compactness). After L1 rewrites `R_WZ(·)` to the fixed-`Fin (|α|+1)`
+factorisable rate at both `D` and each `D + ε`, L2 closes the goal. The only `sorry`
+reachable from this theorem is therefore L1's, tagged
+`@residual(plan:wz-auxiliary-cardinality-bound)`.
 
-The statement is TRUE (right-continuity holds for these finite-alphabet rate
-functions — the reshaped rate is continuous on its whole domain), and the `h_endpoint`
-case genuinely occurs (when the minimal block distortion is attained, `S(D)` is
-nonempty while `S(D₀)` is empty for `D₀ < D`). `hR` / `h_ne` / `h_endpoint` / `hstep`
-are all genuine preconditions: `hR` bounds the trivial `S(D) = ∅` degeneration away,
-`h_ne` places `D` in the domain, `h_endpoint` selects the left-endpoint case, and
-`hstep` is the right-continuity input. None is load-bearing (the right-continuity core
-is not encoded in them).
+**Why the conclusion is genuine (not vacuous, not false-as-framed).** `R_WZ` is
+antitone, so `R_WZ(D + ε) ≤ R_WZ(D)` (the wrong direction) and `hstep` alone does not
+force `R_WZ(D) ≤ R`; one needs right-continuity `R_WZ(D) = lim_{ε→0⁺} R_WZ(D + ε)`. The
+abstract monotone-limit implication is FALSE (a convex antitone function may jump *up* at
+the left endpoint), but the signature names the *concrete* `wynerZivRate`, whose fixed-`K`
+form `wynerZivRateFactorizable (Fin (|α|+1))` is an infimum over a *compact* set of
+kernels with a continuous objective. L2 exploits exactly that: for each `ε`, the fixed-`K`
+infimum is attained by a feasible kernel with objective `≤ R`; these live in one compact
+kernel set, so Cantor's intersection theorem produces a common limit kernel, feasible at
+`D` (its best decoder's distortion survives the `ε → 0` limit) with objective `≤ R`,
+whence `R_WZ(D) ≤ R`.
 
-Independent honesty audit 2026-07-05 (auditor-verified, not self-reported): residual
-classification + honest signature PASS. Sufficiency (the key risk) checks out: the
-abstract implication is genuinely FALSE (a convex antitone function satisfies
-`limsup_{ε→0⁺} R(D+ε) ≤ R(D)`, so it may jump *up* at the left endpoint, and `hstep`
-only bounds the open side), but the signature names the *concrete* `wynerZivRate`, for
-which right-continuity at `D_min` holds: near-optimal feasible kernels at `D+εₙ` admit a
-convergent subsequence (bounded-auxiliary Carathéodory compactness + continuity of
-finite-alphabet MI), whose limit is `D`-feasible with objective `= limₙ R(D+εₙ) ≥ R(D)`;
-combined with antitone `R(D+εₙ) ≤ R(D)` this forces `limₙ R(D+εₙ) = R(D)`. So the
-statement is TRUE-as-framed and the `wz-auxiliary-cardinality-bound` compactness argument
-is exactly the deferred core — a genuine in-project self-build (not a Mathlib wall).
-Break attempt (degenerate boundary) failed to refute: no finite `α,β,d` gives
-`h_endpoint ∧ hstep ∧ hR` with `rate D > R`, since the jump is killed by compactness.
-Docstring honestly flags the reliance on concrete structure (no overclaim).
-@residual(plan:wyner-ziv-main-plan) -/
+**Hypotheses.** `hR` (`0 ≤ R`, handling the `S(D) = ∅ ⟹ sInf = 0` boundary) and `hstep`
+(the right-continuity input) are used; `h_ne` and `h_endpoint` are *not* needed by the
+compactness proof (L2 holds at every `D`, not only the left endpoint) but are retained
+as declared preconditions. None is load-bearing (the right-continuity core lives in L1's
+Carathéodory reduction and L2's compactness, not in a hypothesis).
+@residual(plan:wz-auxiliary-cardinality-bound) -/
 theorem wynerZivRate_le_of_forall_pos_add_endpoint
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) {d : α → γ → ℝ} {R D : ℝ}
     (hR : 0 ≤ R)
@@ -1979,10 +2066,11 @@ residual is transitive only. From `h_ach` we extract the code sequence and:
   (C) the left-endpoint case (`h_endpoint`) is discharged by the isolated
       right-continuity residual `wynerZivRate_le_of_forall_pos_add_endpoint`.
 
-The only `sorry` reachable from this theorem is transitive: `wz_converse_feasible_point`
-(the single-letterisation witness, used by Step 1 via the `n`-letter lemma) and
-`wynerZivRate_le_of_forall_pos_add_endpoint` (case (C) right-continuity). Both are
-`@residual(plan:wyner-ziv-main-plan)`. `h_ach` is a pure existential operational
+The only `sorry` reachable from this theorem is transitive: `wynerZivRate_eq_factorizable_finK`
+(L1, the Carathéodory fixed-`K` identification behind case (C)'s now-sorry-free endpoint
+lemma, `@residual(plan:wz-auxiliary-cardinality-bound)`). Step 1's single-letterisation
+witness `wz_converse_feasible_point` is closed sorryAx-free, so it contributes no residual.
+`h_ach` is a pure existential operational
 antecedent (`WynerZivAchievable` = ∃ codes with rate → R and vanishing-slack
 distortion), NOT a load-bearing hypothesis (`WynerZivAchievable` is `@audit:ok`).
 Dropping `hU_card` is sound: `wynerZivRate` = inf over all finite auxiliaries is the
@@ -1990,11 +2078,14 @@ weakest converse claim, so `R_WZ(D) ≤ R` genuinely follows without a sizing
 precondition and is non-vacuous (bounded below by `0` via the DPI residual, and `R ≥ 0`
 in the achievable regime).
 
-Independent honesty audit 2026-07-05 (auditor-verified, not self-reported): body
-honesty PASS. `#print axioms` = [propext, sorryAx, Classical.choice, Quot.sound]; the
-`sorryAx` traces only to the two `@residual` residuals `wz_converse_feasible_point`
-(Step 1) and `wynerZivRate_le_of_forall_pos_add_endpoint` (case C) — `rg` confirms these
-are the file's only two `sorry` bodies. Step 2 case split is exhaustive and disjoint:
+Independent honesty audit 2026-07-05 (auditor-verified, not self-reported) covered the
+Step 2 case split below; the case (C) endpoint was subsequently refactored to the L1/L2
+route (endpoint body now sorry-free), so its transitive residual moved from the endpoint
+body to `wynerZivRate_eq_factorizable_finK` (L1) — a fresh audit of that isolation is
+warranted. `#print axioms` = [propext, sorryAx, Classical.choice, Quot.sound]; the
+`sorryAx` traces only to `wynerZivRate_eq_factorizable_finK` (L1, reached via case C's
+endpoint lemma) — `rg` confirms L1's body is the file's only `sorry` (Step 1's
+`wz_converse_feasible_point` is closed sorryAx-free). Step 2 case split is exhaustive and disjoint:
 `S(D) = ∅` (A) / `S(D) ≠ ∅ ∧ ∃ anchor` (B) / `S(D) ≠ ∅ ∧ ∀ D₀<D ¬nonempty` (C). (A)/(B)
 are sorry-free and genuine: (A) is `sInf ∅ = 0 ≤ R`; (B)'s perturbation algebra
 `(1-t)(D+ε)+t·D₀ = D` with `t = ε/(D+ε-D₀) ∈ (0,1)` is correct and lands via the
@@ -2005,7 +2096,7 @@ load-bearing; `wynerZivRate_le_of_code` realises the genuine i.i.d. source
 `iIndepFun_iff_map_fun_eq_pi_map`), not a vacuous/degenerate measure. Docstring's
 "sorry-free in its own body; residual transitive only" is accurate (no "proof done"
 overclaim).
-@residual(plan:wyner-ziv-main-plan) -/
+@residual(plan:wz-auxiliary-cardinality-bound) -/
 @[entry_point]
 theorem wyner_ziv_converse
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
