@@ -715,6 +715,21 @@ are all genuine preconditions: `hR` bounds the trivial `S(D) = ∅` degeneration
 `h_ne` places `D` in the domain, `h_endpoint` selects the left-endpoint case, and
 `hstep` is the right-continuity input. None is load-bearing (the right-continuity core
 is not encoded in them).
+
+Independent honesty audit 2026-07-05 (auditor-verified, not self-reported): residual
+classification + honest signature PASS. Sufficiency (the key risk) checks out: the
+abstract implication is genuinely FALSE (a convex antitone function satisfies
+`limsup_{ε→0⁺} R(D+ε) ≤ R(D)`, so it may jump *up* at the left endpoint, and `hstep`
+only bounds the open side), but the signature names the *concrete* `wynerZivRate`, for
+which right-continuity at `D_min` holds: near-optimal feasible kernels at `D+εₙ` admit a
+convergent subsequence (bounded-auxiliary Carathéodory compactness + continuity of
+finite-alphabet MI), whose limit is `D`-feasible with objective `= limₙ R(D+εₙ) ≥ R(D)`;
+combined with antitone `R(D+εₙ) ≤ R(D)` this forces `limₙ R(D+εₙ) = R(D)`. So the
+statement is TRUE-as-framed and the `wz-auxiliary-cardinality-bound` compactness argument
+is exactly the deferred core — a genuine in-project self-build (not a Mathlib wall).
+Break attempt (degenerate boundary) failed to refute: no finite `α,β,d` gives
+`h_endpoint ∧ hstep ∧ hR` with `rate D > R`, since the jump is killed by compactness.
+Docstring honestly flags the reliance on concrete structure (no overclaim).
 @residual(plan:wyner-ziv-main-plan) -/
 theorem wynerZivRate_le_of_forall_pos_add_endpoint
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) {d : α → γ → ℝ} {R D : ℝ}
@@ -774,6 +789,22 @@ Dropping `hU_card` is sound: `wynerZivRate` = inf over all finite auxiliaries is
 weakest converse claim, so `R_WZ(D) ≤ R` genuinely follows without a sizing
 precondition and is non-vacuous (bounded below by `0` via the DPI residual, and `R ≥ 0`
 in the achievable regime).
+
+Independent honesty audit 2026-07-05 (auditor-verified, not self-reported): body
+honesty PASS. `#print axioms` = [propext, sorryAx, Classical.choice, Quot.sound]; the
+`sorryAx` traces only to the two `@residual` residuals `wz_converse_feasible_point`
+(Step 1) and `wynerZivRate_le_of_forall_pos_add_endpoint` (case C) — `rg` confirms these
+are the file's only two `sorry` bodies. Step 2 case split is exhaustive and disjoint:
+`S(D) = ∅` (A) / `S(D) ≠ ∅ ∧ ∃ anchor` (B) / `S(D) ≠ ∅ ∧ ∀ D₀<D ¬nonempty` (C). (A)/(B)
+are sorry-free and genuine: (A) is `sInf ∅ = 0 ≤ R`; (B)'s perturbation algebra
+`(1-t)(D+ε)+t·D₀ = D` with `t = ε/(D+ε-D₀) ∈ (0,1)` is correct and lands via the
+`@audit:ok` `wzRateValueSet_timeShare_mem` + `csInf_le`/`le_mul_csInf` + the `ε→0⁺`
+limit. `h_ach` is consumed as a pure operational existential (`obtain ⟨M,…⟩`), not
+load-bearing; `wynerZivRate_le_of_code` realises the genuine i.i.d. source
+`Measure.pi (fun _ ↦ P_XY)` (coordinate projections, independence via
+`iIndepFun_iff_map_fun_eq_pi_map`), not a vacuous/degenerate measure. Docstring's
+"sorry-free in its own body; residual transitive only" is accurate (no "proof done"
+overclaim).
 @residual(plan:wyner-ziv-main-plan) -/
 @[entry_point]
 theorem wyner_ziv_converse
