@@ -3,6 +3,7 @@ import InformationTheory.Shannon.WynerZiv.FactorizableRate
 import InformationTheory.Shannon.WynerZiv.Converse
 import InformationTheory.Shannon.SlepianWolf.FullRateRegion.AliasBound
 import InformationTheory.Shannon.ConditionalMethodOfTypes.Mass
+import InformationTheory.Shannon.RateDistortion.AchievabilityStrongTypicality
 
 /-!
 # Wyner–Ziv operational achievability (binning + covering)
@@ -462,6 +463,174 @@ private lemma wz_tendsto_exp_mul_codebookSize_inv {c R : ℝ} (hcR : c < R) :
           mul_le_mul_of_nonneg_left (h_inv_le n) (Real.exp_pos _).le
       _ = Real.exp ((n : ℝ) * (c - R)) := by rw [← Real.exp_add]; ring_nf
 
+/-! ### Covering + binning construction skeleton (S1/S2/C/BD/E)
+
+The monolithic covering+binning body of `wz_goodCode_exists_of_testChannel` is
+decomposed into an ordered chain of sub-lemmas. The pure-regularity leaf
+`wz_restrictedCoveringJoint_pos` (S1) is proved here; the heavy covering /
+source-support / binning-decoder / diagonalization steps
+(`wz_covering_lossyCode_exists`, `wz_expectedBlockDistortion_source_agree`,
+`wz_perDelta_codes_exist`, `wz_diagonalize_slack`) are laid as `sorry`-bodied atoms
+`@residual(plan:wyner-ziv-main-plan)` for follow-up legs. Full support of the
+covering source stays proof-internal (restricted to the subtype `{x // 0 < P_X x}`),
+never a signature hypothesis. -/
+
+/-- **(S1) Restricted covering joint, full support (leaf).** From a strictly
+positive row-stochastic kernel `κ'` and the source marginal `P_X x = ∑_y P_XY(x,y)`,
+the `(X, U)` joint `κ'(x, u) · P_X(x)` restricted to the support subtype
+`α' := {x // 0 < P_X x}` is a strictly positive pmf on `α' × Fin k`:
+
+* `α'` is nonempty (a probability measure cannot have every row of `P_X` vanish);
+* the joint is strictly positive on `α' × Fin k` (both factors are positive there);
+* it lies in the standard simplex (row-sums collapse to `∑_{x' : α'} P_X(x'.1) = 1`,
+  the zero atoms of `P_X` contributing nothing).
+
+This is the global-full-support source the rate-distortion covering theorem
+`rate_distortion_achievability` hard-requires (`hqStar_pos`), obtained on the
+restricted alphabet because factorisability forces `P_X`'s zero atoms into the
+joint regardless of `κ'`. -/
+private lemma wz_restrictedCoveringJoint_pos
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ)
+    (hκ'pos : ∀ x u, 0 < κ' x u) (hκ'sum : ∀ x, ∑ u, κ' x u = 1) :
+    Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}
+      ∧ (∀ p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k,
+            0 < κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+      ∧ (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k ↦
+            κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+          ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) := by
+  -- The X-marginal `P_X x = ∑_y P_XY(x,y)` is non-negative and totals `1`.
+  have hPnn : ∀ x : α, 0 ≤ ∑ y, P_XY.real {(x, y)} :=
+    fun x ↦ Finset.sum_nonneg fun y _ ↦ measureReal_nonneg
+  have htot : (∑ x : α, ∑ y : β, P_XY.real {(x, y)}) = 1 := by
+    have h1 : (∑ p : α × β, P_XY.real {p}) = 1 := by
+      have h2 : (∑ p : α × β, P_XY.real {p})
+          = P_XY.real (Finset.univ : Finset (α × β)) := by
+        simp [sum_measureReal_singleton]
+      rw [h2, Finset.coe_univ]; exact probReal_univ
+    rw [← h1, Fintype.sum_prod_type]
+  -- Nonemptiness: not every row can vanish, else the total would be `0`.
+  have hne : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := by
+    by_contra h
+    rw [not_nonempty_iff] at h
+    have hall : ∀ x : α, (∑ y, P_XY.real {(x, y)}) = 0 := by
+      intro x
+      by_contra hx
+      exact h.false ⟨x, lt_of_le_of_ne (hPnn x) (Ne.symm hx)⟩
+    have hz : (∑ x : α, ∑ y : β, P_XY.real {(x, y)}) = 0 :=
+      Finset.sum_eq_zero fun x _ ↦ hall x
+    rw [htot] at hz
+    exact one_ne_zero hz
+  -- Positivity of the restricted joint on `α' × Fin k`.
+  have hpos : ∀ p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k,
+      0 < κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)} :=
+    fun p ↦ mul_pos (hκ'pos p.1.1 p.2) p.1.2
+  refine ⟨hne, hpos, fun p ↦ (hpos p).le, ?_⟩
+  -- Row-sums: `∑_{(x',u)} κ'(x'.1,u)·P_X(x'.1) = ∑_{x' : α'} P_X(x'.1) = 1`.
+  simp only [Fintype.sum_prod_type]
+  trans (∑ x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}, ∑ y, P_XY.real {(x'.1, y)})
+  · refine Finset.sum_congr rfl fun x' _ ↦ ?_
+    rw [← Finset.sum_mul, hκ'sum x'.1, one_mul]
+  · rw [← Finset.sum_subtype (Finset.univ.filter (fun x ↦ 0 < ∑ y, P_XY.real {(x, y)}))
+          (fun x ↦ by simp) (fun x ↦ ∑ y, P_XY.real {(x, y)})]
+    rw [Finset.sum_subset (Finset.filter_subset _ _)
+          (fun x _ hx ↦ le_antisymm (not_lt.mp (by simpa using hx)) (hPnn x))]
+    exact htot
+
+/-- **(S2) Source-support block-distortion reconciliation.** Two Wyner–Ziv codes
+that decode identically on every source sequence hitting only support atoms of
+`P_X` have equal expected block distortion, because `Measure.pi P_XY` assigns zero
+mass to sequences reaching a zero atom of `P_X`. This is the null-set transport that
+lets a code built on the support subtype `α' := {x // 0 < P_X x}` extend to a code
+on the full alphabet `α` without changing its distortion.
+
+`hagree` is a genuine agreement precondition (not a bundled covering bound); the
+conclusion is the measure-level distortion equality only.
+@residual(plan:wyner-ziv-main-plan) -/
+private lemma wz_expectedBlockDistortion_source_agree
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) {M n : ℕ} (c₁ c₂ : WynerZivCode M n α β γ)
+    (hagree : ∀ (x : Fin n → α) (y : Fin n → β),
+        (∀ i, 0 < ∑ y', P_XY.real {(x i, y')}) →
+          c₁.decoder (c₁.encoder x, y) = c₂.decoder (c₂.encoder x, y)) :
+    c₁.expectedBlockDistortion P_XY d = c₂.expectedBlockDistortion P_XY d := by
+  sorry
+
+/-- **(C) Rate-distortion covering layer.** For a strictly positive joint pmf
+`qStar` on `α' × Fin k` with `mutualInfoPmf qStar < R₁` and a proxy distortion `d'`
+feasible at `D`, the rate-distortion achievability theorem yields, for all large
+block lengths `n`, a lossy code with `≥ ⌈exp(n R₁)⌉` codewords whose expected block
+distortion (under the `rdAmbient`-pushed source) is within `D + ε'`.
+
+The full support `hpos` is a regularity precondition (the covering theorem's
+`hqStar_pos`); the rate-distortion slack quintet (`ε_X … δ_typ`, `qZ_min`) is
+constructed in the body, not exposed. The reconciliation between the covering proxy
+`d'` (X↔U) and the Wyner–Ziv distortion (X↔γ) stays load-bearing in the body / (BD),
+never bundled into a predicate.
+@residual(plan:wyner-ziv-main-plan) -/
+private lemma wz_covering_lossyCode_exists
+    {k : ℕ} [Nonempty (Fin k)] {α' : Type*} [Fintype α'] [DecidableEq α']
+    [Nonempty α'] [MeasurableSpace α'] [MeasurableSingletonClass α']
+    (qStar : α' × Fin k → ℝ) (hpos : ∀ p, 0 < qStar p)
+    (hmem : qStar ∈ stdSimplex ℝ (α' × Fin k)) (d' : DistortionFn α' (Fin k))
+    {R₁ D : ℝ} (hI : mutualInfoPmf qStar < R₁)
+    (hfeas : expectedDistortionPmf d' qStar ≤ D) {ε' : ℝ} (hε' : 0 < ε') :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ, Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
+      ∃ c : LossyCode M n α' (Fin k),
+        c.expectedBlockDistortion ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d' ≤ D + ε' := by
+  sorry
+
+/-- **(BD) Per-slack Wyner–Ziv code family.** From a feasible factorisable test
+channel `qf` (auxiliary `Fin k`, distortion `≤ D`, Wyner–Ziv objective `< R`), for
+every slack `δ > 0` there is a sequence of Wyner–Ziv block codes at the operational
+rate `R` (`codebookSize R n` messages) whose expected block distortion is eventually
+within `D + δ`.
+
+This is the heavy covering+binning assembly for a fixed slack: internally it
+perturbs `qf` to full support (`wz_fullKernelSupport_perturbation`), restricts the
+covering source to `α' := {x // 0 < P_X x}` and supplies the covering joint
+(`wz_restrictedCoveringJoint_pos` → `wz_covering_lossyCode_exists`), extends back to
+`α` (`wz_expectedBlockDistortion_source_agree`), bins the covering index and decodes
+by a conditional-typicality slice (bounding the two error events by the gateway
+exponents `wz_sideInfo_decoder_confusion_expectation_le` /
+`wz_covering_sideInfo_mass_ge` and the covering-failure exponent
+`encoder_failure_prob_le_exp_neg_M_avg`), extracts a good deterministic codebook by
+`exists_codebook_low_avg`, and squeezes the residual distortion excess to `0` over
+`n → ∞` for the fixed `δ`. The preconditions are feasibility/objective only
+(`hqf`/`hobj`); the covering+binning core stays in the body.
+@residual(plan:wyner-ziv-main-plan) -/
+private lemma wz_perDelta_codes_exist
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (R D : ℝ)
+    (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
+            (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
+    (hobj : wzMutualInfoXU (Fin k) qf.1 - wzMutualInfoYU (Fin k) qf.1 < R) :
+    ∀ δ : ℝ, 0 < δ → ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
+      ∀ᶠ n in Filter.atTop, (c n).expectedBlockDistortion P_XY d ≤ D + δ := by
+  sorry
+
+/-- **(E) Slack diagonalization.** A family of Wyner–Ziv code sequences, one per
+slack `δ > 0`, each eventually within `D + δ`, diagonalises to a single Wyner–Ziv
+code sequence that is eventually within `D + ε` for *every* `ε > 0`.
+
+This is a general diagonalization over the slack parameter: choosing `δ_m = 1/m`,
+extracting a per-`m` code sequence, and interleaving them along an increasing
+threshold schedule `N_m` produces the single diagonal sequence whose eventual bound
+reaches every `ε`. The hypothesis is the per-slack achievability family (the output
+of the covering+binning assembly `wz_perDelta_codes_exist`); the diagonalization
+argument is the body.
+@residual(plan:wyner-ziv-main-plan) -/
+private lemma wz_diagonalize_slack
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (R D : ℝ)
+    (hfam : ∀ δ : ℝ, 0 < δ → ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
+      ∀ᶠ n in Filter.atTop, (c n).expectedBlockDistortion P_XY d ≤ D + δ) :
+    ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
+      ∀ ε : ℝ, 0 < ε → ∀ᶠ n in Filter.atTop,
+        (c n).expectedBlockDistortion P_XY d ≤ D + ε := by
+  sorry
+
 /-- **Covering + binning construction (Steps 1–5, the hard leg).** From a
 feasible factorisable test channel `qf` at auxiliary alphabet `Fin k` whose
 Wyner–Ziv objective `I(X;U) − I(Y;U)` is strictly below `R`, build a sequence of
@@ -499,8 +668,14 @@ gives zero mass to sequences hitting a zero atom, so restricting to `supp(P_X)` 
 WLOG). The leaf lemma `wz_fullKernelSupport_perturbation` supplies the *kernel*
 full support `0 < κ' x u` (hence full `(X,U)`-joint support on `supp(P_X)` and the
 objective/distortion slack); the remaining move is the support-subtype transport,
-deferred with this body.
-@residual(plan:wyner-ziv-main-plan) -/
+deferred to the construction sub-lemmas.
+
+The body is now a `sorry`-free reduction: `wz_perDelta_codes_exist` builds, for each
+slack `δ > 0`, a code sequence eventually within `D + δ` (the covering + binning
+assembly), and `wz_diagonalize_slack` diagonalises those into a single sequence
+within `D + ε` for every `ε`. The residual `sorry + @residual(plan:wyner-ziv-main-plan)`
+lives in those two sub-lemmas (and the covering / source-support atoms they consume,
+`wz_covering_lossyCode_exists` / `wz_expectedBlockDistortion_source_agree`), not here. -/
 private lemma wz_goodCode_exists_of_testChannel
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
@@ -510,8 +685,9 @@ private lemma wz_goodCode_exists_of_testChannel
     (hobj : wzMutualInfoXU (Fin k) qf.1 - wzMutualInfoYU (Fin k) qf.1 < R) :
     ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
       ∀ ε : ℝ, 0 < ε → ∀ᶠ n in Filter.atTop,
-        (c n).expectedBlockDistortion P_XY d ≤ D + ε := by
-  sorry
+        (c n).expectedBlockDistortion P_XY d ≤ D + ε :=
+  wz_diagonalize_slack P_XY d R D
+    (wz_perDelta_codes_exist P_XY d R D k qf hqf hobj)
 
 /-- Existence of a Wyner–Ziv code sequence (at the operational message rate `R`)
 whose expected block distortion is eventually within `D + ε`.
