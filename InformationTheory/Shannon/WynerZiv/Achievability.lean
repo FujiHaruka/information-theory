@@ -1118,19 +1118,17 @@ lemma wzBinTypicalDecoder_eq_of_unique {α' : Type*} [MeasurableSpace α']
 that a strongly-typical source `x` finds **no** covering codeword jointly typical
 with it decays doubly-exponentially: `∫ x, (1 − p_typ x)^{M₁} ≤ exp(−M₁ · exp(−n(I +
 δ)))`, where `p_typ x` is the per-codeword conditional-typicality mass (bounded below
-by `exp(−n(I + δ))` via `wz_covering_sideInfo_mass_ge`). The bound is
-`encoder_failure_prob_le_exp_neg_M_avg` composed with that mass lower bound; the body
-is stubbed for a later leg.
+by `exp(−n(I + δ))` via `wz_covering_sideInfo_mass_ge`), passed here as `hmass`.
 
-signature corrected leg-17: mass-bound hypothesis `hmass` added; conclusion now
-non-vacuously follows. `hmass` is the per-source covering-acceptance mass lower bound
-`exp(−n(I+δ)) ≤ p_typ x` — the derived precondition the docstring asserts holds via
-`wz_covering_sideInfo_mass_ge`. With it, `(1−p)^M₁ ≤ e^{−M₁ p} ≤ e^{−M₁·exp(−n(I+δ))}`
-pointwise (`p_typ x ∈ [0,1]`, `p ≥ exp(−n(I+δ))`), then integrate over the probability
-measure `P_X`. The old signature's degenerate refutations (`p_typ x ≡ 0`, or `I → −∞`)
-are now excluded: `hmass` would force `exp(−n(I+δ)) ≤ 0`, impossible for the positive
-exponential. Body is `sorry` and no consumer (S6) uses this yet.
-@residual(plan:wyner-ziv-main-plan) -/
+`hmass` is the per-source covering-acceptance mass lower bound `exp(−n(I+δ)) ≤ p_typ x`.
+With it, `(1−p)^M₁ ≤ e^{−M₁ p} ≤ e^{−M₁·exp(−n(I+δ))}` pointwise (`p_typ x ∈ [0,1]`,
+`p ≥ exp(−n(I+δ))`), then integrate over the probability measure `P_X`. The pointwise
+`p_typ x ≤ 1` holds even without measurability of `Us 0`: `μ.map (Us 0)` is a
+sub-probability measure (`Measure.isFiniteMeasure_map` + `map` mass `≤ 1`), so its
+product `Measure.pi` is a sub-probability measure (`Measure.pi_univ`), and the mass of
+any set is `≤ 1`. The `(1−t)^M ≤ e^{−Mt}` step reuses `one_sub_pow_le_exp_neg_mul`.
+@audit:ok (leg-17, sorryAx-free: depends only on `[propext, Classical.choice,
+Quot.sound]`; pending independent honesty audit). -/
 lemma wz_covering_failure_prob_le {α' : Type*}
     [Fintype α'] [DecidableEq α'] [Nonempty α']
     [MeasurableSpace α'] [MeasurableSingletonClass α']
@@ -1145,8 +1143,69 @@ lemma wz_covering_failure_prob_le {α' : Type*}
     ∫ x, (1 - (Measure.pi fun _ : Fin n ↦ μ.map (Us 0)).real
               {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁ ∂P_X
       ≤ Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))) := by
-  -- @residual(plan:wyner-ziv-main-plan)
-  sorry
+  set ν : Measure (Fin n → Fin k) := Measure.pi fun _ : Fin n ↦ μ.map (Us 0) with hν
+  -- The map of the probability measure `μ` is a finite (sub-probability) measure,
+  -- irrespective of whether `Us 0` is measurable.
+  haveI hfin : IsFiniteMeasure (μ.map (Us 0)) := Measure.isFiniteMeasure_map μ (Us 0)
+  have hfac : (μ.map (Us 0)) Set.univ ≤ 1 := by
+    by_cases hae : AEMeasurable (Us 0) μ
+    · rw [Measure.map_apply_of_aemeasurable hae MeasurableSet.univ]; simp
+    · rw [Measure.map_of_not_aemeasurable hae]; simp
+  -- Hence the product measure `ν` is a sub-probability measure.
+  have hν_univ : ν Set.univ ≤ 1 := by
+    rw [hν, Measure.pi_univ]
+    exact Finset.prod_le_one' (fun _ _ ↦ hfac)
+  -- The per-source covering mass lies in `[0, 1]`.
+  have h1 : ∀ x : Fin n → α',
+      ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε} ≤ 1 := by
+    intro x
+    have hle : ν {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε} ≤ 1 :=
+      le_trans (measure_mono (Set.subset_univ _)) hν_univ
+    calc ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}
+        = (ν {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}).toReal := rfl
+      _ ≤ (1 : ℝ≥0∞).toReal := ENNReal.toReal_mono (by simp) hle
+      _ = 1 := by simp
+  -- Pointwise doubly-exponential bound to the constant right-hand side.
+  have hbound : ∀ x : Fin n → α',
+      (1 - ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁
+        ≤ Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))) := by
+    intro x
+    have h0 : 0 ≤ ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε} :=
+      measureReal_nonneg
+    have step1 :
+        (1 - ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁
+          ≤ Real.exp (-(M₁ : ℝ) *
+              ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) :=
+      one_sub_pow_le_exp_neg_mul M₁ h0 (h1 x)
+    have step2 :
+        Real.exp (-(M₁ : ℝ) *
+            ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε})
+          ≤ Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))) := by
+      apply Real.exp_le_exp.mpr
+      have hM₁ : (0 : ℝ) ≤ (M₁ : ℝ) := Nat.cast_nonneg _
+      nlinarith [hmass x, hM₁]
+    exact le_trans step1 step2
+  -- Integrability of the (bounded, finitely-supported-domain) integrand.
+  have h_int : Integrable (fun x : Fin n → α' ↦
+      (1 - ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁) P_X := by
+    have h_meas : Measurable (fun x : Fin n → α' ↦
+        (1 - ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁) :=
+      measurable_of_finite _
+    refine Integrable.mono' (g := fun _ ↦
+        Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))))
+      (integrable_const _) h_meas.aestronglyMeasurable ?_
+    refine Filter.Eventually.of_forall (fun x ↦ ?_)
+    have hpow_nn : 0 ≤ (1 -
+        ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁ :=
+      pow_nonneg (by linarith [h1 x]) M₁
+    rw [Real.norm_eq_abs, abs_of_nonneg hpow_nn]
+    exact hbound x
+  calc ∫ x, (1 - ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁ ∂P_X
+      ≤ ∫ _x : Fin n → α',
+          Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))) ∂P_X :=
+        integral_mono h_int (integrable_const _) hbound
+    _ = Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))) := by
+        rw [integral_const]; simp
 
 /-- **(S5b) Codebook-restricted decoder confusion exponent (E2, the crux).** The
 binning-averaged probability that some **codebook member** `c₁.decoder m'` other than
