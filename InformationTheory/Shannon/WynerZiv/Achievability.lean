@@ -236,19 +236,81 @@ and `wz_covering_sideInfo_mass_ge`, with a good codebook extracted by the
 pigeonhole averaging `exists_codebook_low_avg`. Deferred as the remaining plumbing
 body of this plan. -/
 
+/-- **Witness extraction (Step 0).** From the feasibility guard `h_ne` and the
+rate strict inequality `h_rate`, extract a concrete finite auxiliary alphabet
+`Fin k`, a factorisable test channel `qf` feasible at distortion `D`, whose
+Wyner–Ziv objective `I(X;U) − I(Y;U)` is strictly below `R`.
+
+This is `exists_lt_of_csInf_lt` on the infimum-of-values definition of
+`wynerZivRate` (`= sInf (wzRateValueSet …)`), with the resulting value unpacked
+by `mem_wzRateValueSet_iff` into a feasible factorisable point. -/
+private lemma wz_testChannel_of_rate_lt
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (R D : ℝ)
+    (h_ne : (wzRateValueSet (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D).Nonempty)
+    (h_rate : wynerZivRate (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D < R) :
+    ∃ (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ)),
+      qf ∈ WynerZivFactorizableConstraint (Fin k)
+            (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D
+        ∧ wzMutualInfoXU (Fin k) qf.1 - wzMutualInfoYU (Fin k) qf.1 < R := by
+  unfold wynerZivRate at h_rate
+  obtain ⟨v, hv_mem, hv_lt⟩ := exists_lt_of_csInf_lt h_ne h_rate
+  rw [mem_wzRateValueSet_iff] at hv_mem
+  obtain ⟨k, qf, hqf, hval⟩ := hv_mem
+  refine ⟨k, qf, hqf, ?_⟩
+  rw [hval]; exact hv_lt
+
+/-- **Covering + binning construction (Steps 1–5, the hard leg).** From a
+feasible factorisable test channel `qf` at auxiliary alphabet `Fin k` whose
+Wyner–Ziv objective `I(X;U) − I(Y;U)` is strictly below `R`, build a sequence of
+Wyner–Ziv block codes at the operational message rate `R` (`codebookSize R n =
+⌈exp(n R)⌉` messages) whose expected block distortion is eventually within
+`D + ε` for every `ε > 0`.
+
+The construction is the two-layer hybrid: rate-distortion covering `X → U`
+(`jointTypicalLossyEncoder` over the codebook alphabet `U = Fin k`) fused with
+Slepian–Wolf binning of the covering index (`binningMeasure`), decoded by a
+conditional-typicality slice search (`conditionalTypicalSlice`). The three error
+exponents — covering failure (E1, `encoder_failure_prob_le_exp_neg_M_avg`),
+decoder confusion (E2, `wz_sideInfo_decoder_confusion_expectation_le`) and
+covering acceptance (E3, `wz_covering_sideInfo_mass_ge`) — are threaded through
+the rate split `R = I(X;U) − I(Y;U)`, with a good deterministic codebook
+extracted by the pigeonhole averaging `exists_codebook_low_avg` and the residual
+distortion excess squeezed to `0` by `ceil_exp_mul_exp_neg_tendsto_atTop`.
+
+The test channel `qf` is a feasibility/regularity hypothesis (a single-letter
+pmf feasible at `D`, objective below `R`), NOT the load-bearing covering+binning
+core; the whole construction stays in the `sorry` body.
+@residual(plan:wyner-ziv-main-plan) -/
+private lemma wz_goodCode_exists_of_testChannel
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (R D : ℝ)
+    (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
+            (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
+    (hobj : wzMutualInfoXU (Fin k) qf.1 - wzMutualInfoYU (Fin k) qf.1 < R) :
+    ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
+      ∀ ε : ℝ, 0 < ε → ∀ᶠ n in Filter.atTop,
+        (c n).expectedBlockDistortion P_XY d ≤ D + ε := by
+  sorry
+
 /-- Existence of a Wyner–Ziv code sequence (at the operational message rate `R`)
-whose expected block distortion is eventually within `D + ε`, from a feasible test
-channel strictly below `R`. The remaining covering + binning plumbing.
+whose expected block distortion is eventually within `D + ε`.
+
+The body is now a genuine reduction (sorry-free itself): `wz_testChannel_of_rate_lt`
+extracts a feasible factorisable test channel below `R` from the feasibility guard
+`h_ne` and `h_rate`, and `wz_goodCode_exists_of_testChannel` builds the code
+sequence from it. `sorryAx` enters only via that construction lemma, whose covering
++ binning body is the remaining plumbing.
 
 The feasibility precondition `h_ne` (the rate-distortion value set is nonempty at
-`D`) is now present, so the signature is well-posed: it rules out the infeasible
-regime `D` below the min achievable distortion (e.g. any `D < 0` for a `NNReal`
-distortion), where `wzRateValueSet` is empty and `wynerZivRate = sInf ∅ = 0` would
-otherwise let `h_rate : 0 < R` coexist with a FALSE existence claim. `h_ne` is a
+`D`) makes the signature well-posed: it rules out the infeasible regime `D` below
+the min achievable distortion (e.g. any `D < 0` for a `NNReal` distortion), where
+`wzRateValueSet` is empty and `wynerZivRate = sInf ∅ = 0` would otherwise let
+`h_rate : 0 < R` coexist with a FALSE existence claim. `h_ne` is a
 regularity/feasibility precondition, NOT the load-bearing covering+binning core
-(which stays in the `sorry` body); the converse side already threads exactly this
-guard (`wynerZivRate_antitone`, `Converse.lean:2602`). With it in place the `sorry`
-is an ordinary under-construction marker.
+(which stays in the construction lemma's `sorry` body); the converse side already
+threads exactly this guard (`wynerZivRate_antitone`, `Converse.lean:2602`).
 @residual(plan:wyner-ziv-main-plan) -/
 theorem wyner_ziv_achievability_codes
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -258,7 +320,8 @@ theorem wyner_ziv_achievability_codes
     ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
       ∀ ε : ℝ, 0 < ε → ∀ᶠ n in Filter.atTop,
         (c n).expectedBlockDistortion P_XY d ≤ D + ε := by
-  sorry
+  obtain ⟨k, qf, hqf, hobj⟩ := wz_testChannel_of_rate_lt P_XY d R D h_ne h_rate
+  exact wz_goodCode_exists_of_testChannel P_XY d R D k qf hqf hobj
 
 /-! ## Operational achievability headline -/
 
