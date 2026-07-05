@@ -81,11 +81,10 @@ discharged genuinely (sorryAx-free) via the measure-form DPI + the pmf↔measure
 a discrete Markov-chain realisation (`wzFactorizable_isMarkovChain`), so
 `wzRateValueSet_bddBelow_of_pmf` (the reshaped rate's non-degeneracy `BddBelow` guard) is
 likewise unconditional. The single-letterisation witness `wz_converse_feasible_point` is
-itself closed sorryAx-free (machine-checked `#print axioms`). The sole residual reachable
-from the converse headline is `wynerZivRate_eq_factorizable_finK` (L1,
-`@residual(plan:wz-auxiliary-cardinality-bound)`, the Carathéodory fixed-`K`
-identification behind the now-sorry-free endpoint lemma
-`wynerZivRate_le_of_forall_pos_add_endpoint`), carried transitively.
+itself closed sorryAx-free (machine-checked `#print axioms`). The L1 Carathéodory fixed-`K`
+identification `wynerZivRate_eq_factorizable_finK` and its core `wz_support_reduce` (the
+support-cardinality reduction to `Fin (|α|+3)`) are now closed sorry-free, so the entire
+converse headline `wyner_ziv_converse` is sorryAx-free.
 -/
 
 namespace InformationTheory.Shannon
@@ -2146,79 +2145,63 @@ private lemma wz_caratheodory_reduce {D : Type*} [Fintype D] {ι : Type*} [Finty
       · rw [hσ'eq]
       · rw [zero_smul]
     calc (∑ j, lam j • Φ (σ j))
-        = ∑ j : Fin K,
-            (if hj : (j : ℕ) < m then w' (e.symm ⟨(j : ℕ), hj⟩) • z (e.symm ⟨(j : ℕ), hj⟩) else 0) :=
+        = ∑ j : Fin K, (if hj : (j : ℕ) < m then
+            w' (e.symm ⟨(j : ℕ), hj⟩) • z (e.symm ⟨(j : ℕ), hj⟩) else 0) :=
           Finset.sum_congr rfl (fun j _ => hterm j)
       _ = ∑ i : Fin m, w' (e.symm i) • z (e.symm i) :=
           wz_fin_pad_sum hmK (fun i => w' (e.symm i) • z (e.symm i))
       _ = ∑ i' : ι', w' i' • z i' := Equiv.sum_comp e.symm (fun i' => w' i' • z i')
       _ = M := hw'mix
 
+/-- Reorder a triple sum, bringing the innermost index to the outside. -/
+private lemma wz_sum_reorder3 {A B W : Type*} [Fintype A] [Fintype B] [Fintype W]
+    (G : A → B → W → ℝ) :
+    (∑ x, ∑ y, ∑ w, G x y w) = ∑ w, ∑ x, ∑ y, G x y w := by
+  calc (∑ x, ∑ y, ∑ w, G x y w)
+      = ∑ x, ∑ w, ∑ y, G x y w := Finset.sum_congr rfl (fun x _ => Finset.sum_comm)
+    _ = ∑ w, ∑ x, ∑ y, G x y w := Finset.sum_comm
+
 /-- **Carathéodory support reduction (the L1 crux).** Any feasible factorisable kernel at
 an arbitrary finite auxiliary alphabet `Fin k` reduces to a feasible kernel at the fixed
-alphabet `Fin (|α| + 2)` with objective `≤` the original. The auxiliary size `|α| + 2`
-comes from bare Carathéodory in `ℝ^{|α|+2}`: encode each auxiliary letter `u` by the
-vector `(P_{X|U=u}, g(P_{X|U=u}), dist_u)` where `g` is the per-letter objective density
-`D(P_{X|U=u} ‖ P_X) − D(P_{Y|U=u} ‖ P_Y)` and `dist_u` its distortion contribution; the
-auxiliary-marginal-weighted mixture equals `(P_X, objective, distortion)`, which lies in
-the convex hull of the encoded letters, so by Carathéodory (`convexHull_eq_union` +
-`Finset.mem_convexHull'`) it is a convex combination of at most
-`finrank ℝ (Fin (|α|+2) → ℝ) + 1 = |α| + 2` of them; reconstruct `κ'` from that reduced
-support (zero-padding unused indices).
+alphabet `Fin (|α| + 3)` with objective `≤` the original.
 
-The tighter Fenchel–Eggleston `|α| + 1` support bound (a connected compact set needs only
-`d` points) is absent from Mathlib (`IsConnected, convexHull, Finset.card` → loogle
-`Found 0`), so the implementable bound is the bare Carathéodory `d + 1 = |α| + 2`; the
-K-agnostic endpoint assembly (`wynerZivRate_le_of_forall_pos_add_endpoint`, L2 is generic
-in `U`) makes this choice non-load-bearing.
+**Route C (bare ambient Carathéodory).** Encode each auxiliary letter `u` with `P_U(u) > 0`
+by the vector `Φ_u = (P_{X|U=u}, g_u, δ_u) ∈ ℝ^{|α|+2}` (coordinates indexed by `α ⊕ Bool`),
+where `P_{X|U=u}(x) = m_XU(x,u)/P_U(u)`, the objective density `g_u = block_u(κ)/P_U(u)` with
+`block_u(κ) = ∑_y neg(m_YU(y,u)) − ∑_x neg(m_XU(x,u))`, and the distortion density
+`δ_u = dist_u/P_U(u)`. The `P_U`-weighted mixture `M = ∑_u P_U(u) Φ_u =
+(P_X, objective−(H(X)−H(Y)), distortion)` lies in `convexHull (range Φ) ⊆ ℝ^{|α|+2}`, so by
+bare Carathéodory (`eq_pos_convex_span_of_mem_convexHull` + `card_le_finrank_succ`, with
+`finrank ℝ (α ⊕ Bool → ℝ) = |α|+2`) it is a convex combination of at most `|α|+3` of the
+`Φ_u`. This deliberately relaxes the target size to `|α|+3` (rather than the tighter `|α|+2`,
+which would need the vectorSpan hyperplane refinement `∑ P_{X|U=u} = 1`, or the
+Fenchel–Eggleston `|α|+1` improvement absent from Mathlib): the K-agnostic endpoint assembly
+(`wynerZivRate_le_of_forall_pos_add_endpoint`, L2 is generic in `U`) makes this
+non-load-bearing, and a larger-than-tight `K` only eases the ∃-claim, never falsifies it.
 
 Signature honest: `h_pmf` (simplex membership) and `hκ` (the input feasible kernel — the
 DATA being reduced) are preconditions, NOT a `*Hypothesis`/`*Reduction` predicate bundling
 the reduction's core.
 
-**① (entropy-mixture identity) is now CLOSED** as `wzKernelObjective_eq_blockSum`
-(sorry-free, above): `wzKernelObjective V P_XY κ = (H(X) − H(Y)) + ∑_u block_u(κ)`, where
-`block_u(κ) = ∑_y neg(m_YU(y,u)) − ∑_x neg(m_XU(x,u))` is the per-`u` affine functional the
-Carathéodory reduction acts on. The residual is now narrowed to ②③:
-* ② the convex-geometry support reduction — encode each auxiliary letter `u` (with
-  `P_U(u) > 0`) as `Φ_u = (P_{X|U=u}, g_u, δ_u)` with objective density `g_u = block_u/P_U(u)`
-  and distortion density `δ_u`; the `P_U`-weighted mixture `M = ∑_u P_U(u) Φ_u =
-  (P_X, objective−(H(X)−H(Y)), distortion)` lies in `convexHull {Φ_u}`, so by Carathéodory it
-  is a convex combination of at most `|α|+2` of them. The tight `|α|+2` count needs the
-  encoding in `ℝ^{|α|+1}` (or the vectorSpan hyperplane refinement `∑ P_{X|U=u} = 1`); bare
-  Carathéodory in `ℝ^{|α|+2}` gives only `|α|+3`, which zero-column padding cannot reduce.
-* ③ kernel reconstruction — from the reduced support build `κ'(x,j) = κ(x,u_j)·λ_j/P_U(u_j)`
-  (rescaled original columns, with a `P_X(x)=0` row override for row-stochasticity), inherit
-  the decoder slice `f'(j,·) = f(u_j,·)`, and verify feasibility (distortion' = distortion ≤ D
-  via `δ`-coordinate) and objective' = objective (via the g-coordinate + `block_j(κ') =
-  (λ_j/P_U(u_j))·block_{u_j}(κ)` column-scaling).
+**Proof (now sorry-free).** Assembled from four genuine pieces:
+* ① entropy-mixture identity `wzKernelObjective_eq_blockSum` (above, sorry-free):
+  `wzKernelObjective V P_XY κ = (H(X) − H(Y)) + ∑_u block_u(κ)`.
+* mass equality: both letter marginals total `P_U u` (`∑_x m_XU(x,u) = P_U u = ∑_y m_YU(y,u)`),
+  the identity that makes the block-scaling corrections cancel.
+* ② convex geometry `wz_caratheodory_reduce` (bare Carathéodory + zero-padding reindex
+  `wz_fin_pad_sum`): reduces `M ∈ convexHull (range Φ)` to weights `λ_j` on letters `u_j = σ j`.
+* ③ kernel reconstruction — `κ'(x,j) = (λ_j/P_U(u_j))·κ(x,u_j)` on `P_X(x) > 0` rows (with a
+  fixed-pmf override on `P_X(x)=0` rows, invisible since `P_XY(x,·)=0` there); decoder slice
+  `f'(j,·) = f(u_j,·)`. Feasibility (`distortion' = distortion ≤ D`, via the `δ`-coordinate)
+  and objective equality (`objective' = objective`, via the `g`-coordinate + the block-scaling
+  `block_j(κ') = (λ_j/P_U(u_j))·block_{u_j}(κ)` from `Real.negMulLog_mul` + mass equality) are
+  proved directly, so `objective' = objective`, whence `≤`.
 
-The convex geometry is 0-gap in Mathlib (`convexHull_eq_union` + `Finset.mem_convexHull'` +
-`AffineIndependent.card_le_finrank_succ`, see `docs/shannon/wz-l1-caratheodory-inventory.md`);
-②③ are in-project plumbing/self-build (~400-500 lines), no wall.
-
-Independent honesty audit 2026-07-05 (PASS, honest_residual — the newly isolated `sorry`).
-(1) Signature honesty: NON-circular (`hκ` is the input datum, no `:= h`; the conclusion is
-`∃ κ'` feasible with objective `≤`, not any hypothesis restated). NON-bundled — `hκ ∈
-wzKernelFeasible (Fin k) …` unfolds to `κ ∈ wzKernelSet ∧ ∃ f, wzExpectedDistortion … ≤ D`,
-a concrete row-stochastic-kernel-plus-decoder DATA predicate = the feasible kernel being
-reduced, NOT a `*Hypothesis`/`*Reduction` predicate smuggling the reduction; `h_pmf` is
-simplex regularity. No `:True` slot, no degenerate-definition abuse.
-(2) Sufficiency (does the conclusion follow, not false-as-framed): YES — this is the
-classical support lemma; the encoding space `(P_{X|U=u}, g_u, dist_u)` has affine dimension
-`(|α|−1)+1+1 = |α|+1`, so bare Carathéodory yields `|α|+2` support points, a VALID (loose,
-not tight) cardinality — larger-than-tight only eases existence, never falsifies. Degenerate
-probe: `k = 0` ⇒ `wzKernelSet (Fin 0)` demands `∑_{∅} = 0 = 1` (false) ⇒ `hκ` vacuously
-unsatisfiable, so no false claim; target `Fin (|α|+2)` is always nonempty (`|α|+2 ≥ 2`). No
-dropped constraint (under-hypothesized-safe).
-(3) Classification `plan:wz-auxiliary-cardinality-bound` VERIFIED: `plan` (not `wall`) —
-`Mathlib/Analysis/Convex/Caratheodory.lean` is present and `wz-l1-caratheodory-inventory.md`
-confirms every ingredient exists in Mathlib (~100% existing-ratio, no gap); the residual is
-in-project plumbing + the entropy-mixture self-build. Slug documented as the L1 crux in the
-parent `wyner-ziv-main-plan.md` + `wyner-ziv-moonshot-plan.md` (split-out plan file deferred
-by design until L1 stalls). Machine: file's sole `sorry` (only warning, at this decl);
-`#print axioms` = [propext, sorryAx, Classical.choice, Quot.sound].
-@residual(plan:wz-auxiliary-cardinality-bound) -/
+Every convex-geometry ingredient is in Mathlib (no wall; see
+`docs/shannon/wz-l1-caratheodory-inventory.md`); ②③ are in-project self-build. Body is
+sorry-free (`#print axioms wz_support_reduce = [propext, Classical.choice, Quot.sound]`,
+machine-confirmed after olean refresh); closing this makes `wyner_ziv_converse` sorryAx-free.
+Pending independent milestone honesty audit (no self-written `@audit:ok`). -/
 theorem wz_support_reduce
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) {d : α → γ → ℝ} {D : ℝ}
     {k : ℕ} {κ : α → Fin k → ℝ}
@@ -2344,22 +2327,136 @@ theorem wz_support_reduce
     have h := congrFun hlammix (Sum.inr true)
     simpa only [Finset.sum_apply, Pi.smul_apply, smul_eq_mul, hΦ, Sum.elim_inr, hM,
       cond_true] using h
-  sorry
+  -- === Reconstruct the reduced kernel `κ'` on `Fin (|α|+3)`. ===
+  have hK0 : 0 < Fintype.card α + 3 := by positivity
+  set j₀ : Fin (Fintype.card α + 3) := ⟨0, hK0⟩ with hj₀
+  set cc : Fin (Fintype.card α + 3) → ℝ := fun j => lam j / PU (σ j) with hcc
+  set κ' : α → Fin (Fintype.card α + 3) → ℝ :=
+    fun x j => if 0 < PX x then cc j * κ x (σ j) else (if j = j₀ then 1 else 0) with hκ'
+  set q' := wzJointOfKernel (Fin (Fintype.card α + 3)) P_XY κ' with hq'
+  set f' : Fin (Fintype.card α + 3) × β → γ := fun p => f (σ p.1, p.2) with hf'
+  -- Per-source-letter scaling of the reconstructed kernel.
+  have hkPX' : ∀ x j, κ' x j * PX x = cc j * (κ x (σ j) * PX x) := by
+    intro x j
+    simp only [hκ']
+    split_ifs with hpx hj0
+    · ring
+    all_goals
+      rw [not_lt] at hpx
+      have hx0 : PX x = 0 := le_antisymm hpx (hPXnn x)
+      rw [hx0]; ring
+  have hkP' : ∀ x j y, κ' x j * P_XY (x, y) = cc j * (κ x (σ j) * P_XY (x, y)) := by
+    intro x j y
+    simp only [hκ']
+    split_ifs with hpx hj0
+    · ring
+    all_goals
+      rw [not_lt] at hpx
+      have hx0 : PX x = 0 := le_antisymm hpx (hPXnn x)
+      have hy0 : P_XY (x, y) = 0 :=
+        le_antisymm (le_trans (hPXle x y) (le_of_eq hx0)) (h_pmf.1 (x, y))
+      rw [hy0]; ring
+  -- `κ'` is a row-stochastic kernel.
+  have hκ'nn : ∀ x j, 0 ≤ κ' x j := by
+    intro x j
+    simp only [hκ']
+    split_ifs with hpx hj0
+    · exact mul_nonneg (div_nonneg (hlam0 j) (hPUnn (σ j))) (hκnn x (σ j))
+    · exact zero_le_one
+    · exact le_refl 0
+  have hκ'sum : ∀ x, ∑ j, κ' x j = 1 := by
+    intro x
+    by_cases hpx : 0 < PX x
+    · have hkey : ∀ j, PX x * κ' x j
+          = lam j * (wzMarginalXU (Fin k) q (x, σ j) / PU (σ j)) := by
+        intro j
+        rw [hmXU x (σ j)]
+        have hval : κ' x j = cc j * κ x (σ j) := by simp only [hκ']; rw [if_pos hpx]
+        rw [hval]; simp only [hcc]; ring
+      have h1 : PX x * (∑ j, κ' x j) = PX x * 1 := by
+        rw [mul_one, Finset.mul_sum, Finset.sum_congr rfl (fun j _ => hkey j)]
+        exact hPcoord x
+      exact mul_left_cancel₀ hpx.ne' h1
+    · have hval : ∀ j, κ' x j = if j = j₀ then (1 : ℝ) else 0 := by
+        intro j; simp only [hκ']; rw [if_neg hpx]
+      rw [Finset.sum_congr rfl (fun j _ => hval j)]
+      simp
+  -- Reconstructed marginals scale by `cc j` against the original letter `σ j`.
+  have hmXU' : ∀ x j, wzMarginalXU (Fin (Fintype.card α + 3)) q' (x, j)
+      = cc j * wzMarginalXU (Fin k) q (x, σ j) := by
+    intro x j
+    have h0 : wzMarginalXU (Fin (Fintype.card α + 3)) q' (x, j) = κ' x j * PX x := by
+      simp only [wzMarginalXU, hq', wzJointOfKernel]
+      rw [← Finset.mul_sum, ← hPXeq x]
+    rw [h0, hkPX' x j, hmXU x (σ j)]
+  have hmYU' : ∀ y j, wzMarginalYU (Fin (Fintype.card α + 3)) q' (y, j)
+      = cc j * wzMarginalYU (Fin k) q (y, σ j) := by
+    intro y j
+    have h0 : wzMarginalYU (Fin (Fintype.card α + 3)) q' (y, j) = ∑ x, κ' x j * P_XY (x, y) := by
+      simp only [wzMarginalYU, hq', wzJointOfKernel]
+    rw [h0, hmYU y (σ j), Finset.mul_sum]
+    exact Finset.sum_congr rfl (fun x _ => hkP' x j y)
+  -- Per-letter block-scaling: the objective density of `κ'` at `j` is `cc j · block (σ j)`.
+  have hblk' : ∀ j, (∑ y, Real.negMulLog (wzMarginalYU (Fin (Fintype.card α + 3)) q' (y, j)))
+        - (∑ x, Real.negMulLog (wzMarginalXU (Fin (Fintype.card α + 3)) q' (x, j)))
+      = cc j * blk (σ j) := by
+    intro j
+    simp only [hmYU', hmXU', Real.negMulLog_mul]
+    rw [Finset.sum_add_distrib, Finset.sum_add_distrib,
+        ← Finset.sum_mul, ← Finset.sum_mul, ← Finset.mul_sum, ← Finset.mul_sum,
+        hmassX (σ j), hmassY (σ j)]
+    simp only [hblk]
+    ring
+  -- Distortion of `κ'` equals that of `κ` (via the `δ`-coordinate).
+  have hdst_eq : ∑ u, dst u = wzExpectedDistortion (Fin k) d q f := by
+    simp only [hdst, wzExpectedDistortion, hq, wzJointOfKernel, Fintype.sum_prod_type]
+    exact (wz_sum_reorder3 _).symm
+  have hdisteq : wzExpectedDistortion (Fin (Fintype.card α + 3)) d q' f'
+      = ∑ j, cc j * dst (σ j) := by
+    have hslice : ∀ j, (∑ x, ∑ y, κ' x j * P_XY (x, y) * d x (f (σ j, y))) = cc j * dst (σ j) := by
+      intro j
+      simp only [hdst, Finset.mul_sum]
+      refine Finset.sum_congr rfl (fun x _ => Finset.sum_congr rfl (fun y _ => ?_))
+      rw [hkP' x j y]; ring
+    simp only [wzExpectedDistortion, hq', wzJointOfKernel, hf', Fintype.sum_prod_type]
+    rw [wz_sum_reorder3]
+    exact Finset.sum_congr rfl (fun j _ => hslice j)
+  have hdist' : wzExpectedDistortion (Fin (Fintype.card α + 3)) d q' f' ≤ D := by
+    rw [hdisteq]
+    calc (∑ j, cc j * dst (σ j))
+        = ∑ j, lam j * (dst (σ j) / PU (σ j)) :=
+          Finset.sum_congr rfl (fun j _ => by simp only [hcc]; ring)
+      _ = ∑ u, dst u := hDcoord
+      _ = wzExpectedDistortion (Fin k) d q f := hdst_eq
+      _ ≤ D := hf
+  -- Objective of `κ'` equals that of `κ` (via ① + block-scaling + the `g`-coordinate).
+  have hobj_eq : wzKernelObjective (Fin (Fintype.card α + 3)) P_XY κ'
+      = wzKernelObjective (Fin k) P_XY κ := by
+    rw [wzKernelObjective_eq_blockSum (Fin (Fintype.card α + 3)) P_XY κ' ⟨hκ'nn, hκ'sum⟩,
+        wzKernelObjective_eq_blockSum (Fin k) P_XY κ ⟨hκnn, hκsum⟩]
+    congr 1
+    calc (∑ j, ((∑ y, Real.negMulLog (wzMarginalYU (Fin (Fintype.card α + 3)) q' (y, j)))
+            - (∑ x, Real.negMulLog (wzMarginalXU (Fin (Fintype.card α + 3)) q' (x, j)))))
+        = ∑ j, cc j * blk (σ j) := Finset.sum_congr rfl (fun j _ => hblk' j)
+      _ = ∑ j, lam j * (blk (σ j) / PU (σ j)) :=
+          Finset.sum_congr rfl (fun j _ => by simp only [hcc]; ring)
+      _ = ∑ u, blk u := hGcoord
+  exact ⟨κ', ⟨⟨hκ'nn, hκ'sum⟩, f', hdist'⟩, le_of_eq hobj_eq⟩
 
 /-- **L1 — Carathéodory fixed-`K` identification of the reshaped Wyner–Ziv rate.**
 The reshaped rate `wynerZivRate` (an infimum over *all* finite auxiliary alphabets)
-is attained already at the fixed auxiliary alphabet `Fin (|α| + 2)`: every feasible
+is attained already at the fixed auxiliary alphabet `Fin (|α| + 3)`: every feasible
 factorisable point at any `Fin k` reduces, by the Carathéodory support reduction
-`wz_support_reduce` (the rate-optimal auxiliary mixes at most `|α| + 2` extreme kernels),
-to a feasible point at `Fin (|α| + 2)` with objective `≤` the original. Hence the two
+`wz_support_reduce` (the rate-optimal auxiliary mixes at most `|α| + 3` extreme kernels),
+to a feasible point at `Fin (|α| + 3)` with objective `≤` the original. Hence the two
 infima agree.
 
-The auxiliary size is `|α| + 2` (bare Carathéodory in `ℝ^{|α|+2}`), not the tighter
-Fenchel–Eggleston `|α| + 1` (which is absent from Mathlib); the endpoint assembly that
-consumes L1 is K-agnostic (L2 is generic in `U`), so this choice is non-load-bearing.
+The auxiliary size is `|α| + 3` (bare ambient Carathéodory in `ℝ^{|α|+2}`); the endpoint
+assembly that consumes L1 is K-agnostic (L2 is generic in `U`), so this choice is
+non-load-bearing.
 
-**Body is now sorry-free; the only residual is transitive.** Both `sInf` inclusions are
-genuinely proved here, reduced to the single core lemma `wz_support_reduce`:
+**Body is sorry-free.** Both `sInf` inclusions are genuinely proved here, reduced to the
+single core lemma `wz_support_reduce` (itself now sorry-free):
 * `≥` (`sInf S_K ≤ sInf(⋃ T_k)`): every union witness reduces (via `wz_support_reduce`)
   into `S_K` with objective `≤`, so `sInf S_K` lower-bounds the union.
 * `≤` (`sInf(⋃ T_k) ≤ sInf S_K`): `S_K = T_K ⊆ ⋃ T_k`, so `csInf_le_csInf`; the
@@ -2368,20 +2465,11 @@ genuinely proved here, reduced to the single core lemma `wz_support_reduce`:
   empty case. This is exactly why the `≤` direction is *not* free — the reduction is what
   guarantees the fixed-`K` set is nonempty whenever the union is.
 
-The only reachable `sorry` is `wz_support_reduce`'s Carathéodory reduction, tagged
-`@residual(plan:wz-auxiliary-cardinality-bound)`; carried transitively here.
-
-Independent honesty audit 2026-07-05 (PASS, honest_residual). Body VERIFIED sorry-free:
-both `sInf` inclusions are genuinely proved (`≤` via `csInf_le_csInf` on `B ⊆ A`; `≥` via
-`le_csInf` + `wz_support_reduce`'s objective-`≤` landing; empty case via the `A.Nonempty ↔
-B.Nonempty` equivalence, so no `sInf ∅ = 0` collapse). The `Fin (|α|+1)` → `Fin (|α|+2)`
-signature change is HONEST — the claim is a genuine EQUALITY of two infima (both sides
-depend on `P_XY, d, D`), NOT weakened into triviality; the `≥` direction still requires the
-Carathéodory reduction, so it is not vacuous. `#print axioms` = [propext, sorryAx,
-Classical.choice, Quot.sound]; the sorryAx is transitive via `wz_support_reduce` only (this
-decl's own body carries no `sorry` — machine-confirmed, the file's single `sorry` warning is
-on `wz_support_reduce`, not here).
-@residual(plan:wz-auxiliary-cardinality-bound) -/
+The claim is a genuine EQUALITY of two infima (both sides depend on `P_XY, d, D`), NOT
+weakened into triviality; the `≥` direction still requires the Carathéodory reduction, so it
+is not vacuous. `#print axioms wynerZivRate_eq_factorizable_finK =
+[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-confirmed after olean
+refresh). -/
 theorem wynerZivRate_eq_factorizable_finK
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) (d : α → γ → ℝ) (D : ℝ) :
     wynerZivRate P_XY d D
@@ -2441,21 +2529,18 @@ If `R ≥ 0`, the value set at `D` is nonempty but *no* value set strictly below
 is nonempty (so `D` is the left endpoint `D_min` of the rate function's domain),
 and `R_WZ(D + ε) ≤ R` for every `ε > 0`, then `R_WZ(D) ≤ R`.
 
-**Proof status — body is now sorry-free; the only residual is transitive.** The body
-assembles two lemmas: `wynerZivRate_eq_factorizable_finK` (L1, the Carathéodory fixed-`K`
-identification, itself sorry-free modulo the isolated core `wz_support_reduce`) and
-`wynerZivRateFactorizable_right_continuous_le` (L2, fixed-`U` right-continuity, proved
-sorry-free by compactness). After L1 rewrites `R_WZ(·)` to the fixed-`Fin (|α|+2)`
-factorisable rate at both `D` and each `D + ε`, L2 closes the goal. The only `sorry`
-reachable from this theorem is therefore `wz_support_reduce`'s, tagged
-`@residual(plan:wz-auxiliary-cardinality-bound)`.
+**Proof status — sorry-free.** The body assembles two lemmas:
+`wynerZivRate_eq_factorizable_finK` (L1, the Carathéodory fixed-`K` identification, now
+sorry-free) and `wynerZivRateFactorizable_right_continuous_le` (L2, fixed-`U`
+right-continuity, sorry-free by compactness). After L1 rewrites `R_WZ(·)` to the fixed-`Fin
+(|α|+3)` factorisable rate at both `D` and each `D + ε`, L2 closes the goal.
 
 **Why the conclusion is genuine (not vacuous, not false-as-framed).** `R_WZ` is
 antitone, so `R_WZ(D + ε) ≤ R_WZ(D)` (the wrong direction) and `hstep` alone does not
 force `R_WZ(D) ≤ R`; one needs right-continuity `R_WZ(D) = lim_{ε→0⁺} R_WZ(D + ε)`. The
 abstract monotone-limit implication is FALSE (a convex antitone function may jump *up* at
 the left endpoint), but the signature names the *concrete* `wynerZivRate`, whose fixed-`K`
-form `wynerZivRateFactorizable (Fin (|α|+2))` is an infimum over a *compact* set of
+form `wynerZivRateFactorizable (Fin (|α|+3))` is an infimum over a *compact* set of
 kernels with a continuous objective. L2 exploits exactly that: for each `ε`, the fixed-`K`
 infimum is attained by a feasible kernel with objective `≤ R`; these live in one compact
 kernel set, so Cantor's intersection theorem produces a common limit kernel, feasible at
@@ -2468,22 +2553,14 @@ compactness proof (L2 holds at every `D`, not only the left endpoint) but are re
 as declared preconditions. None is load-bearing (the right-continuity core lives in L1's
 Carathéodory reduction and L2's compactness, not in a hypothesis).
 
-Independent honesty audit 2026-07-05 (PASS, honest_residual). Signature honesty VERIFIED:
-the retained-but-unused `h_ne` / `h_endpoint` make this a STRONGER claim (proved from fewer
-assumptions) — NOT load-bearing, NOT a defect; no core is smuggled into a hypothesis. The
-signature is unchanged from the pre-existing 5-hyp form. The `set_option
-linter.unusedVariables false in` is correctly scoped (`in`, single decl) and alters no
-signature. Body is sorry-free (assembles L1 + L2); the only reachable `sorry` is the
-transitive Carathéodory residual `wz_support_reduce`, now reached through the sorry-free
-L1 `wynerZivRate_eq_factorizable_finK` (`#print axioms` = [propext, sorryAx,
-Classical.choice, Quot.sound], sorryAx tracing solely to `wz_support_reduce`).
-
-Re-audit 2026-07-05 (independent, post-decomposition): the `Fin (|α|+1)` → `Fin (|α|+2)`
-consumer update is HONEST — L2 is generic in `U`, so consuming the fixed-`K` right-
-continuity at `Fin (|α|+2)` (bare Carathéodory) instead of `Fin (|α|+1)` (Fenchel–
-Eggleston, absent from Mathlib) is a non-load-bearing sizing choice; type-checks
-sorry-free, sorryAx transitive via L1 → `wz_support_reduce` (machine-verified).
-@residual(plan:wz-auxiliary-cardinality-bound) -/
+Signature honesty: the retained-but-unused `h_ne` / `h_endpoint` make this a STRONGER claim
+(proved from fewer assumptions) — NOT load-bearing, NOT a defect; no core is smuggled into a
+hypothesis. The `set_option linter.unusedVariables false in` is correctly scoped (`in`,
+single decl) and alters no signature. Body is sorry-free (assembles L1 + L2), and with L1 →
+`wz_support_reduce` now closed it is sorryAx-free (`#print axioms` =
+[propext, Classical.choice, Quot.sound], machine-confirmed after olean refresh). The
+`Fin (|α|+3)` sizing (bare ambient Carathéodory) is a non-load-bearing choice since L2 is
+generic in `U`. -/
 theorem wynerZivRate_le_of_forall_pos_add_endpoint
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) {d : α → γ → ℝ} {R D : ℝ}
     (hR : 0 ≤ R)
@@ -2524,8 +2601,8 @@ Non-degeneracy: `wynerZivRate` is `sInf (wzRateValueSet …)`, guarded against t
 pmf lies in the simplex by `measureReal_pmf_mem_stdSimplex`. So `sInf ≤ R` is a genuine
 bound, not vacuously true.
 
-Proof structure — this theorem is now **sorry-free in its own body**; the remaining
-residual is transitive only. From `h_ach` we extract the code sequence and:
+Proof structure — this theorem and everything it depends on are now **sorry-free**. From
+`h_ach` we extract the code sequence and:
 * **Step 0** `0 ≤ R` (`M n ≥ 1 ⟹ log (M n) ≥ 0`, then `ge_of_tendsto`);
 * **Step 1** `∀ ε > 0, R_WZ(D + ε) ≤ R`, by applying the `n`-letter converse
   `wyner_ziv_converse_n_letter_singleLetter` to the canonical i.i.d. source
@@ -2538,11 +2615,10 @@ residual is transitive only. From `h_ach` we extract the code sequence and:
   (C) the left-endpoint case (`h_endpoint`) is discharged by the isolated
       right-continuity residual `wynerZivRate_le_of_forall_pos_add_endpoint`.
 
-The only `sorry` reachable from this theorem is transitive: `wz_support_reduce`
-(the Carathéodory support reduction behind L1 `wynerZivRate_eq_factorizable_finK`, itself
-behind case (C)'s now-sorry-free endpoint lemma, `@residual(plan:wz-auxiliary-cardinality-bound)`).
-Step 1's single-letterisation witness `wz_converse_feasible_point` is closed sorryAx-free,
-so it contributes no residual.
+The former transitive residual — the Carathéodory support reduction `wz_support_reduce`
+behind L1 `wynerZivRate_eq_factorizable_finK` and case (C)'s endpoint lemma — is now closed
+sorry-free, so no `sorry` is reachable from this theorem. Step 1's single-letterisation
+witness `wz_converse_feasible_point` is closed sorryAx-free.
 `h_ach` is a pure existential operational
 antecedent (`WynerZivAchievable` = ∃ codes with rate → R and vanishing-slack
 distortion), NOT a load-bearing hypothesis (`WynerZivAchievable` is `@audit:ok`).
@@ -2551,15 +2627,11 @@ weakest converse claim, so `R_WZ(D) ≤ R` genuinely follows without a sizing
 precondition and is non-vacuous (bounded below by `0` via the DPI residual, and `R ≥ 0`
 in the achievable regime).
 
-Independent honesty audit 2026-07-05 (auditor-verified, not self-reported) covered the
-Step 2 case split below; the case (C) endpoint was subsequently refactored to the L1/L2
-route (endpoint body now sorry-free), and L1 was then decomposed so its own body is
-sorry-free, isolating the Carathéodory reduction as the single lemma `wz_support_reduce`
-(the two `sInf` inclusions of L1 are genuinely proved). `#print axioms` = [propext,
-sorryAx, Classical.choice, Quot.sound]; the `sorryAx` traces only to `wz_support_reduce`
-(reached via L1 and case C's endpoint lemma) — `rg` confirms `wz_support_reduce`'s body is
-the file's only `sorry` (Step 1's `wz_converse_feasible_point` is closed sorryAx-free).
-Step 2 case split is exhaustive and disjoint:
+The case (C) endpoint is discharged by the L1/L2 route (`wynerZivRate_le_of_forall_pos_add_
+endpoint`), whose L1 core `wynerZivRate_eq_factorizable_finK` reduces to the Carathéodory
+support reduction `wz_support_reduce` — all now closed sorry-free. Hence the entire converse
+is sorryAx-free: `#print axioms wyner_ziv_converse = [propext, Classical.choice, Quot.sound]`
+(machine-confirmed after olean refresh). Step 2 case split is exhaustive and disjoint:
 `S(D) = ∅` (A) / `S(D) ≠ ∅ ∧ ∃ anchor` (B) / `S(D) ≠ ∅ ∧ ∀ D₀<D ¬nonempty` (C). (A)/(B)
 are sorry-free and genuine: (A) is `sInf ∅ = 0 ≤ R`; (B)'s perturbation algebra
 `(1-t)(D+ε)+t·D₀ = D` with `t = ε/(D+ε-D₀) ∈ (0,1)` is correct and lands via the
@@ -2567,10 +2639,8 @@ are sorry-free and genuine: (A) is `sInf ∅ = 0 ≤ R`; (B)'s perturbation alge
 limit. `h_ach` is consumed as a pure operational existential (`obtain ⟨M,…⟩`), not
 load-bearing; `wynerZivRate_le_of_code` realises the genuine i.i.d. source
 `Measure.pi (fun _ ↦ P_XY)` (coordinate projections, independence via
-`iIndepFun_iff_map_fun_eq_pi_map`), not a vacuous/degenerate measure. Docstring's
-"sorry-free in its own body; residual transitive only" is accurate (no "proof done"
-overclaim).
-@residual(plan:wz-auxiliary-cardinality-bound) -/
+`iIndepFun_iff_map_fun_eq_pi_map`), not a vacuous/degenerate measure. Pending independent
+milestone honesty audit (no self-written `@audit:ok`). -/
 @[entry_point]
 theorem wyner_ziv_converse
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
