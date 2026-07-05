@@ -70,6 +70,39 @@ variable {α β γ U : Type*}
 
 /-! ## `n`-letter single-letterized converse -/
 
+/-- Step 6 of the converse: for a `Fin M`-valued encoder output `Jn`, a finite
+source block `Xn`, and any side-information block `Yn`, the mutual-information
+difference is bounded by the log-cardinality rate:
+`(I(Jn; Xn) − I(Jn; Yn)).toReal ≤ log M`.
+
+Since `I(Jn; Yn) ≥ 0`, the truncated difference is `≤ I(Jn; Xn)`, and
+`I(Jn; Xn).toReal = H(Jn) − H(Jn | Xn) ≤ H(Jn) ≤ log |Fin M| = log M`
+(`entropy_le_log_card` + `condEntropy_nonneg`). This is the WZ analogue of the
+rate-distortion `mutualInfo_block_le_log_card`. -/
+private lemma mutualInfo_diff_le_log_card
+    {Ω : Type*} [MeasurableSpace Ω]
+    {A B : Type*}
+    [MeasurableSpace A] [Fintype A] [MeasurableSingletonClass A]
+    [MeasurableSpace B]
+    {M : ℕ} [NeZero M]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Jn : Ω → Fin M) (Xn : Ω → A) (Yn : Ω → B)
+    (hJn : Measurable Jn) (hXn : Measurable Xn) :
+    (mutualInfo μ Jn Xn - mutualInfo μ Jn Yn).toReal ≤ Real.log (M : ℝ) := by
+  have hA_ne : mutualInfo μ Jn Xn ≠ ∞ := mutualInfo_ne_top μ Jn Xn hJn hXn
+  have h_diff_le :
+      (mutualInfo μ Jn Xn - mutualInfo μ Jn Yn).toReal ≤ (mutualInfo μ Jn Xn).toReal :=
+    ENNReal.toReal_mono hA_ne tsub_le_self
+  have h_A_le : (mutualInfo μ Jn Xn).toReal ≤ Real.log (M : ℝ) := by
+    rw [mutualInfo_eq_entropy_sub_condEntropy μ Jn Xn hJn hXn]
+    have h_ent : entropy μ Jn ≤ Real.log (Fintype.card (Fin M)) :=
+      InformationTheory.Shannon.MaxEntropy.entropy_le_log_card μ Jn hJn
+    have h_ce : 0 ≤ InformationTheory.MeasureFano.condEntropy μ Jn Xn :=
+      condEntropy_nonneg μ Jn Xn
+    rw [Fintype.card_fin] at h_ent
+    linarith
+  exact le_trans h_diff_le h_A_le
+
 /-- **Wyner–Ziv converse, `n`-letter single-letterized form.**
 
 For a block Wyner–Ziv code `c` with a measurable deterministic encoder / decoder on
@@ -87,9 +120,14 @@ preconditions (the conclusion is false without them, mirroring
 statement true for the fixed auxiliary type `U` (see the module docstring); it is a
 non-load-bearing precondition on the auxiliary alphabet.
 
-The proof (single-letterization via `bc_input_singleletterize` + cross-term
-cancellation via `csiszar_sum_identity_hetero` + convexity/antitone of `R_WZ` +
-the pmf↔measure bridges + Carathéodory reduction) is the converse core.
+Proof structure: step 6 (block bound `(I(J; Xⁿ) − I(J; Yⁿ)).toReal ≤ log M`) is
+discharged genuinely (sorry-free) via `mutualInfo_diff_le_log_card`, and the final
+`(1/n)`-scaling is genuine. The single remaining `sorry` (`h_sl`) is the
+single-letterization core: chain-rule identification of `Uᵢ := (J, Y^{i-1})` +
+cross-term cancellation via `csiszar_sum_identity_hetero` + per-letter feasibility
+with convexity/antitone of `R_WZ` + the pmf↔measure bridges + the Carathéodory
+reduction into the fixed `U` (supplied by `hU_card`), giving
+`R_WZ(D) ≤ (1/n)(I(J; Xⁿ) − I(J; Yⁿ)).toReal`.
 
 Independent honesty audit 2026-07-05 (PASS): `sorry` is genuine (no `:True` slot,
 no `:= h` circularity). `hU_card` is a non-load-bearing sizing precondition (pure
@@ -116,7 +154,33 @@ theorem wyner_ziv_converse_n_letter_singleLetter
     (hD : c.expectedBlockDistortion P_XY d ≤ D) :
     wynerZivRateFactorizable U (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D
       ≤ (1 / (n : ℝ)) * Real.log (M : ℝ) := by
-  sorry
+  classical
+  -- Encoder output `J = encoder(Xⁿ)` and the block source / side-information RVs.
+  set Jn : Ω → Fin M := fun ω ↦ c.encoder (fun j ↦ Xs j ω) with hJn_def
+  set Xn : Ω → (Fin n → α) := fun ω j ↦ Xs j ω with hXn_def
+  set Yn : Ω → (Fin n → β) := fun ω j ↦ Ys j ω with hYn_def
+  have hXn_meas : Measurable Xn := measurable_pi_iff.mpr hXs
+  have hYn_meas : Measurable Yn := measurable_pi_iff.mpr hYs
+  have hJn_meas : Measurable Jn := hencoder.comp hXn_meas
+  -- Step 6 (genuine): the block bound `(I(J; Xⁿ) − I(J; Yⁿ)).toReal ≤ log M`.
+  have h_block : (mutualInfo μ Jn Xn - mutualInfo μ Jn Yn).toReal ≤ Real.log (M : ℝ) :=
+    mutualInfo_diff_le_log_card μ Jn Xn Yn hJn_meas hXn_meas
+  -- Steps 7–10 + Carathéodory reduction (single-letterization core, residual):
+  -- chain rule identifies `Uᵢ := (J, Y^{i-1})`, cross terms cancel via
+  -- `csiszar_sum_identity_hetero`, per-letter feasibility + convexity/antitone of
+  -- `R_WZ` land `R_WZ(D) ≤ (1/n) ∑ᵢ [I(Xᵢ; Uᵢ) − I(Yᵢ; Uᵢ)] = (1/n)(I(J;Xⁿ) − I(J;Yⁿ))`,
+  -- with the Carathéodory embedding into the fixed `U` supplied by `hU_card`.
+  have h_sl :
+      wynerZivRateFactorizable U (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D
+        ≤ (1 / (n : ℝ)) * (mutualInfo μ Jn Xn - mutualInfo μ Jn Yn).toReal := by
+    -- @residual(plan:wyner-ziv-main-plan)
+    sorry
+  calc
+    wynerZivRateFactorizable U (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D
+        ≤ (1 / (n : ℝ)) * (mutualInfo μ Jn Xn - mutualInfo μ Jn Yn).toReal := h_sl
+    _ ≤ (1 / (n : ℝ)) * Real.log (M : ℝ) := by
+        apply mul_le_mul_of_nonneg_left h_block
+        positivity
 
 /-! ## Operational converse headline -/
 
