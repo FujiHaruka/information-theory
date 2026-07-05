@@ -13,7 +13,7 @@
 
 | 子サブ計画 | scope | 状態 |
 |---|---|---|
-| [`wyner-ziv-main-plan.md`](wyner-ziv-main-plan.md) | operational main (achievability + converse、Thm 15.9.1) | ACTIVE 🚧 — M0 gateway + P1 済 (`Operational.lean` proof-done、`fdbae7f9`) / P2 converse・P3 achievability 未 |
+| [`wyner-ziv-main-plan.md`](wyner-ziv-main-plan.md) | operational main (achievability + converse、Thm 15.9.1) | ACTIVE 🚧 — M0 gateway + P1 proof-done (`fdbae7f9`) + P2 converse scaffold type-check done & audit PASS (`32b69c9f`/`521b5225`、headline hU_card 訂正済) / **残: P2 single-letterization core (~400-700行) + P3 achievability** |
 | [`wynerziv-sorry-migration-plan.md`](wynerziv-sorry-migration-plan.md) | 旧 flat file の sorry-based 移行 | (履歴、git 参照) |
 
 ## 情報側 完成 record (保存、再利用しうる設計)

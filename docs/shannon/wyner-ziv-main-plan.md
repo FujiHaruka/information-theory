@@ -12,7 +12,7 @@
 
 - [x] M0 — API 在庫 (既存 [`wyner-ziv-main-inventory.md`](wyner-ziv-main-inventory.md) で代替) + converse gateway 実証 ✅ (`csiszar_sum_identity_hetero`、sorryAx-free、`ConverseGateway.lean:48`)
 - [x] P1 — statement scaffolding ✅ **proof-done sorryAx-free** (`fdbae7f9`)。`WynerZivAchievable` (distortion-only、`@audit:ok`) + pmf↔measure MI 橋 2 本 (`wzMutualInfoXU/YU_eq_mutualInfo`、closed sorry-free)。`wzErrorProb` は predicate 外に (achievability-internal、P3 へ)。`Operational.lean` 全 0 sorry
-- [ ] P2 — converse body (single-letterization、confidence-builder = pure plumbing 公算大) 📋
+- [~] P2 — converse **scaffold type-check done** (`32b69c9f`、audit PASS `521b5225`)。`Converse.lean`: headline `wyner_ziv_converse` (**hU_card 修正済 honest**) + 中間 `wyner_ziv_converse_n_letter_singleLetter`、両 `sorry + @residual(plan:wyner-ziv-main-plan)`。**残**: single-letterization core (step 7 auxiliary `Uᵢ:=(J,Y^{i-1})` 同定 + `bc_input_singleletterize` WZ clone + Carathéodory 埋込、~400-700 行)。clean-plumbing 段 (Csiszár/convex/antitone/bridge) は core proof body 内の直呼びで未 exercise 🚧
 - [ ] P3 — achievability body (binning + covering ハイブリッド、本計画の重心) 📋
 - [ ] PV — verify (`#print axioms` sorryAx-free + 独立 honesty 監査 + root 配線) 📋
 - [ ] (Deferred) 補助 alphabet cardinality bound `|U| ≤ |α|+1` → 別 plan `wz-auxiliary-cardinality-bound`（本計画 scope 外、main は `U` を Fintype 引数で受ける）
@@ -24,16 +24,25 @@
 i.i.d. source `Measure.pi (fun _ ↦ P_XY)`、decoder side-info `Y^n`、補助 alphabet `U` を **Fintype 引数**で受ける (cardinality bound は別 plan)。二つの operational headline:
 
 ```lean
+-- ⚠️ P2 実地訂正 (2026-07-05, commit 32b69c9f + audit 521b5225):
+--   (i) `Measure.pmf` は in-project に不在 → pmf 引数は `fun p ↦ P_XY.real {p}`、d は `fun a b ↦ (d a b : ℝ)`。
+--   (ii) converse は `∀ U` だと FALSE-as-framed (下記)。sizing 前提 `hU_card : |α|+1 ≤ |U|` が必須。
+--   (iii) achievability は `∀ U` のまま TRUE (sInf-over-U 単調性ゆえ asymmetric、P3 は hU_card を付けてはいけない)。
 theorem wyner_ziv_achievability
-    (P_XY : Measure (α × β)) (d : DistortionFn α γ) (R D : ℝ)
-    (h_rate : wynerZivRateFactorizable U P_XY.pmf d D < R) :
-    WynerZivAchievable P_XY d R D
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (R D : ℝ)
+    (h_rate : wynerZivRateFactorizable U (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D < R) :
+    WynerZivAchievable P_XY d R D          -- ∀ U (hU_card 不要)
 
 theorem wyner_ziv_converse
-    (P_XY : Measure (α × β)) (d : DistortionFn α γ) (R D : ℝ)
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (R D : ℝ)
+    (hU_card : Fintype.card α + 1 ≤ Fintype.card U)   -- Carathéodory sizing (必須、下記)
     (h_ach : WynerZivAchievable P_XY d R D) :
-    wynerZivRateFactorizable U P_XY.pmf d D ≤ R
+    wynerZivRateFactorizable U (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D ≤ R
 ```
+
+**`hU_card` 必須の理由 (audit 521b5225 で三方向 CONFIRMED)**: `wynerZivRateFactorizable U` は `U`-値 auxiliary 上の sInf ゆえ `|U|` に antitone (小さい `U` = より制限された inf = 大きい値)。converse が証明するのは `R ≥ R_WZ(D)` (Carathéodory 最適 = `|U|≥|α|+1` での値) のみ。`U = Fin |α|` (1 個足りない) で最適 auxiliary が `|α|+1` 記号を要する source を取ると `wynerZivRateFactorizable U > R_WZ(D) = R` (achievable) となり `≤ R` が破れる → **`∀ U` は false-statement**。`hU_card` は `R`/`D`/rate に一切言及しない純 cardinality 不等式 = **非 load-bearing sizing precondition** (bundling でない)。deferred plan `wz-auxiliary-cardinality-bound` の `|U| ≤ |α|+1` interface と一致。
 
 `WynerZivAchievable P_XY d R D : Prop` = `∃ M, ∃ (c : ∀ n, WynerZivCode (M n) n α β γ), Tendsto rate → R ∧ (誤り確率 → 0 ∧ limsup 歪 ≤ D)` (SW existential の 1-rate 化、inventory §3C)。
 
