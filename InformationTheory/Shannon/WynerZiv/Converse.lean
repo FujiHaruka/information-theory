@@ -119,7 +119,8 @@ manifold (Markov chain `U − X − Y`), which discharges the `BddBelow` guard t
 prevents a junk `sInf` collapse to `≤ 0`. -/
 
 /-- The source pmf `fun p ↦ P_XY.real {p}` of a probability measure lies in the
-standard simplex. -/
+standard simplex.
+@audit:ok (independent honesty audit 2026-07-05: genuine body, sorryAx-free) -/
 private lemma measureReal_pmf_mem_stdSimplex
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] :
     (fun p ↦ P_XY.real {p}) ∈ stdSimplex ℝ (α × β) := by
@@ -149,6 +150,16 @@ measure-form data-processing inequality `mutualInfo_le_of_markov` with the Marko
 chain `Y − X − U` read off the factorisation `q = κ(u|x)·P_XY`. All three
 ingredients are in-project; the residual is the measure realisation + Markov
 derivation plumbing.
+
+Independent honesty audit 2026-07-05 (PASS, honest_residual): the `sorry` is
+genuine (no `:True` slot / no `:= h` circularity). `hq` (factorisation) is the
+domain constraint defining the manifold — it supplies the Markov structure
+`U − X − Y` that DPI consumes, it does *not* bundle the conclusion (the DPI
+non-negativity is real work left to the sorry). `h_pmf` / `Nonempty V` are
+regularity preconditions. Statement is TRUE-as-framed (sufficiency: factorisation
+⟹ Markov `U − X − Y` ⟹ DPI `I(Y;U) ≤ I(X;U)`). `plan:` class correct — the
+measure-form DPI `mutualInfo_le_of_markov` exists in-project, so this is a self-build
+(measure realisation + Markov-from-factorisation plumbing), NOT a Mathlib wall.
 @residual(plan:wyner-ziv-main-plan) -/
 theorem wzObjective_nonneg_of_factorizable
     {V : Type*} [Fintype V] [MeasurableSpace V] [MeasurableSingletonClass V] [Nonempty V]
@@ -162,7 +173,12 @@ theorem wzObjective_nonneg_of_factorizable
 source is a pmf. This discharges the `BddBelow` guard of the reshaped rate,
 certifying non-degeneracy: every objective value is `≥ 0` by the data-processing
 non-negativity `wzObjective_nonneg_of_factorizable`, so the `sInf` cannot
-collapse to a junk `≤ 0`. -/
+collapse to a junk `≤ 0`.
+
+Independent honesty audit 2026-07-05 (PASS): genuine body, no independent `sorry`;
+its only `sorryAx` dependence is transitive, through the single honest residual
+`wzObjective_nonneg_of_factorizable`. The `k = 0` handling (empty `Fin 0` kernel
+sum `0 ≠ 1`) is genuine, not a degenerate escape. -/
 theorem wzRateValueSet_bddBelow_of_pmf
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
     (d : α → γ → ℝ) (D : ℝ) :
@@ -216,6 +232,16 @@ auxiliary landing as a feasible `Fin k` point (`wynerZivRate_le_of_feasible`, wi
 `BddBelow` from `wzRateValueSet_bddBelow_of_pmf`) + the pmf↔measure bridges, giving
 `R_WZ(D) ≤ (1/n)(I(J; Xⁿ) − I(J; Yⁿ)).toReal`. No Carathéodory support lemma is on
 the critical path.
+
+Independent honesty audit 2026-07-05 (PASS, honest_residual): the `h_sl` `sorry` is
+genuine; `h_block` + the `(1/n)`-scaling are sorry-free. Dropping `hU_card` is SOUND,
+not under-hypothesised: `wynerZivRate` is the infimum over the union of images across
+*all* `Fin k`, hence `≤` any single fixed-`U` rate, i.e. the WEAKEST (smallest-LHS)
+converse claim — the single-letterisation auxiliary lands directly, so no sizing
+precondition is needed and no false-statement is introduced. Non-vacuous: `wynerZivRate
+≥ 0` via the DPI residual (`wzRateValueSet_bddBelow_of_pmf`), and `M ≥ 1 ⟹ log M ≥ 0`,
+so `R_WZ(D) ≤ (1/n) log M` is a substantive bound. `hindep` / `hlaw` are genuine i.i.d.
+regularity preconditions (conclusion false without them), not bundled core.
 @residual(plan:wyner-ziv-main-plan) -/
 theorem wyner_ziv_converse_n_letter_singleLetter
     {Ω : Type*} [MeasurableSpace Ω]
@@ -291,6 +317,14 @@ The proof reduces `WynerZivAchievable` to a sequence of block codes, applies the
 each, and passes to the limit `(1/n) log (M n) → R`. `h_ach` is the operational
 antecedent, not a bundled core (`WynerZivAchievable` is `@audit:ok`, a pure
 existential).
+
+Independent honesty audit 2026-07-05 (PASS, honest_residual): the `sorry` is genuine.
+`h_ach` is a pure existential operational antecedent (`WynerZivAchievable` = ∃ codes
+with rate → R and vanishing-slack distortion), NOT a load-bearing hypothesis. Dropping
+`hU_card` is sound (see the `n`-letter lemma): `wynerZivRate` = inf over all finite
+auxiliaries is the weakest converse claim, so `R_WZ(D) ≤ R` genuinely follows without a
+sizing precondition and is non-vacuous (bounded below by `0` via the DPI residual, and
+`R ≥ 0` in the achievable regime). `plan:` class correct.
 @residual(plan:wyner-ziv-main-plan) -/
 @[entry_point]
 theorem wyner_ziv_converse

@@ -13,12 +13,12 @@
 
 | 子サブ計画 | scope | 状態 |
 |---|---|---|
-| [`wyner-ziv-main-plan.md`](wyner-ziv-main-plan.md) | operational main (achievability + converse、Thm 15.9.1) | ACTIVE 🚧 — M0 gateway + P1 proof-done (`fdbae7f9`) + P2 converse scaffold type-check done & audit PASS (`32b69c9f`/`521b5225`、headline hU_card 訂正済) / **残: P2 single-letterization core (~400-700行) + P3 achievability** |
+| [`wyner-ziv-main-plan.md`](wyner-ziv-main-plan.md) | operational main (achievability + converse、Thm 15.9.1)。goal object = **reshape 後 `wynerZivRate`** (全有限補助 alphabet 上 inf) | ACTIVE 🚧 — M0 gateway + P1 proof-done (`fdbae7f9`) + P2 converse **reshape retarget → 3-sorry decomposition, type-check done** (`4532bd48`、hU_card/Carathéodory 撤去、honesty-audit PASS) / **残: P2 の 3 sorry (DPI 非負 `wzObjective_nonneg_of_factorizable` / single-letterization core `h_sl` / headline `wyner_ziv_converse`) + P3 achievability** |
 | [`wynerziv-sorry-migration-plan.md`](wynerziv-sorry-migration-plan.md) | 旧 flat file の sorry-based 移行 | (履歴、git 参照) |
 
 ## 情報側 完成 record (保存、再利用しうる設計)
 
 - **完成済 live asset**: R_WZ(D) 情報側 (`InformationTheory/Shannon/WynerZiv/` の `Basic` / `FactorizableRate` / `ConditionalEntropyConvexity` / `ObjectiveConvexity` / `RateMonotonicity`、convexity body `wynerZivCondEntDiffConvex_holds` 含む、0 sorry)。converse gateway `ConverseGateway.lean` (`csiszar_sum_identity_hetero`、sorryAx-free) も追加済。
-- 採った形: source-coding 系 (`R(D)`) と distributed-coding 系 (Slepian-Wolf) の hybrid。auxiliary alphabet `U` を `Fintype` として引数で受け、cardinality bound (`|U| ≤ |α|+1`、Carathéodory reduction) は別 plan へ分離 (子計画 deferred、slug `wz-auxiliary-cardinality-bound`)。
-- converse は Csiszár's sum identity + `R_WZ(D)` 凸性を骨格 (`rate_distortion_converse_n_letter_singleLetter`) クローンで組む (子計画 P2)。**hypothesis pass-through は取らない** — 撤退口は `sorry + @residual(plan:…)` のみ (子計画 撤退ライン)。
+- 採った形: source-coding 系 (`R(D)`) と distributed-coding 系 (Slepian-Wolf) の hybrid。情報側 rate は固定-`U` の `wynerZivRateFactorizable U` を持つ。**reshape (`4532bd48`)**: operational headline は代わりに `wynerZivRate` (全有限補助 alphabet `Fin k` 上 inf、union-of-images `sInf`、`FactorizableRate.lean:636`) を目標にする — 固定-`U` は小さい `U` で false-as-framed だったが inf-over-all で source から解消。Carathéodory reduction (`wynerZivRate = wynerZivRateFactorizable (Fin (|α|+1))`) は critical path から外れた cosmetic equivalence (slug `wz-auxiliary-cardinality-bound`、現時点 file 不要)。
+- converse は Csiszár's exact sum identity (`csiszar_sum_identity_hetero`) + `R_WZ(D)` 凸性を骨格 (`rate_distortion_converse_n_letter_singleLetter`) クローンで組み、reshape 後は large auxiliary を `wynerZivRate_le_of_feasible` で feasible 点に着地させる (子計画 P2)。broadcast-channel の `bc_input_singleletterize` テンプレは不採用 (channel single-letterization、premise が別)。**hypothesis pass-through は取らない** — 撤退口は `sorry + @residual(plan:…)` のみ (子計画 撤退ライン)。
 - **StandardBorel 訂正 (2026-07-05 実測)**: `condMutualInfo` の `[StandardBorelSpace]` 要求は `[Fintype + MSC]` から `#synth` で **自動 derive** する (旧 record の「自動で出ない → `attribute [local instance]` file 限定発火」は誤り)。明示追加は `[Nonempty]` のみ = local-instance 設計不要 (子計画 型クラス設定)。

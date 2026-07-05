@@ -626,7 +626,13 @@ alphabet `Fin k` at once, rather than a single caller-fixed `U`.
 
 This is the `∀`-clean form needed by the operational converse: the
 single-letterisation auxiliary lands directly as a feasible point (see
-`wynerZivRate_le_of_feasible`), with no Carathéodory cardinality reduction. -/
+`wynerZivRate_le_of_feasible`), with no Carathéodory cardinality reduction.
+
+@audit:ok (independent honesty audit 2026-07-05, non-degeneracy check PASS): the
+union-of-images form `wzRateValueSet` genuinely avoids the junk `sInf ∅ = 0`
+collapse — an empty-constraint index `k` (e.g. `Fin 0`) contributes the *empty*
+image to the `⋃`, injecting no `0`, so `wynerZivRate ≤ R` is a substantive claim
+(NOT the degenerate `⨅ k, sInf(image_k)` form that would inject `0`s). -/
 noncomputable def wynerZivRate
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) : ℝ :=
   sInf (wzRateValueSet P_XY d D)
@@ -663,7 +669,12 @@ auxiliary alphabet `Fin k` bounds the reshaped rate from above. This is what
 lets the single-letterisation auxiliary land *directly*, with no cardinality
 reduction. The `BddBelow` side condition is discharged (via the objective's
 data-processing non-negativity) in `Converse.lean` by
-`wzRateValueSet_bddBelow_of_pmf`. -/
+`wzRateValueSet_bddBelow_of_pmf`.
+
+@audit:ok (independent honesty audit 2026-07-05: sorryAx-free, verified by
+`#print axioms`). `hbdd : BddBelow …` is a genuine regularity precondition (the
+exact hypothesis of `csInf_le`), mirroring `wynerZivRatePmf_le_of_feasible`; it
+does NOT smuggle the proof core — the body is the standard `csInf_le` shape. -/
 theorem wynerZivRate_le_of_feasible
     {P_XY : α × β → ℝ} {d : α → γ → ℝ} {D : ℝ}
     (hbdd : BddBelow (wzRateValueSet P_XY d D))
