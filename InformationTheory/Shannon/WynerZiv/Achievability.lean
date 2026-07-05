@@ -1127,8 +1127,9 @@ With it, `(1−p)^M₁ ≤ e^{−M₁ p} ≤ e^{−M₁·exp(−n(I+δ))}` point
 sub-probability measure (`Measure.isFiniteMeasure_map` + `map` mass `≤ 1`), so its
 product `Measure.pi` is a sub-probability measure (`Measure.pi_univ`), and the mass of
 any set is `≤ 1`. The `(1−t)^M ≤ e^{−Mt}` step reuses `one_sub_pow_le_exp_neg_mul`.
-@audit:ok (leg-17, sorryAx-free: depends only on `[propext, Classical.choice,
-Quot.sound]`; pending independent honesty audit). -/
+@audit:ok (leg-17, sorryAx-free: `#print axioms` = `[propext, Classical.choice,
+Quot.sound]`, orchestrator-verified after independent signature audit confirmed the
+`hmass`-corrected statement non-vacuous). -/
 lemma wz_covering_failure_prob_le {α' : Type*}
     [Fintype α'] [DecidableEq α'] [Nonempty α']
     [MeasurableSpace α'] [MeasurableSingletonClass α']
