@@ -13,7 +13,7 @@
 
 | 子サブ計画 | scope | 状態 |
 |---|---|---|
-| [`wyner-ziv-main-plan.md`](wyner-ziv-main-plan.md) | operational main (achievability + converse、Thm 15.9.1)。goal object = **reshape 後 `wynerZivRate`** (全有限補助 alphabet 上 inf) | ACTIVE 🚧 — M0 gateway + P1 proof-done (`fdbae7f9`) + P2 converse **reshape retarget → 3-sorry decomposition, type-check done** (`4532bd48`、hU_card/Carathéodory 撤去、honesty-audit PASS) / **残: P2 の 3 sorry (DPI 非負 `wzObjective_nonneg_of_factorizable` / single-letterization core `h_sl` / headline `wyner_ziv_converse`) + P3 achievability** |
+| [`wyner-ziv-main-plan.md`](wyner-ziv-main-plan.md) | operational main (achievability + converse、Thm 15.9.1)。goal object = **reshape 後 `wynerZivRate`** (全有限補助 alphabet 上 inf) | ACTIVE 🚧 — M0 gateway + P1 proof-done (`fdbae7f9`) + P2 **headline body closed + time-sharing 基盤完成** (leg 5、`481e0c37`)。DPI 非負 `wzObjective_nonneg_of_factorizable` / time-sharing 基盤 (`wzRateValueSet_timeShare_mem`+`wynerZivRate_convex_in_D`+`mutualInfoPmf_mixture_affine`) / **headline `wyner_ziv_converse` body すべて sorryAx-free + 独立監査 PASS**。**残: P2 sorry 2 本 (single-letterization core `wz_converse_feasible_point` L519 [残の重心] / 左端点右連続 `wynerZivRate_le_of_forall_pos_add_endpoint` L719 [`wz-auxiliary-cardinality-bound` = Carathéodory、critical path に再浮上]) + P3 achievability** |
 | [`wynerziv-sorry-migration-plan.md`](wynerziv-sorry-migration-plan.md) | 旧 flat file の sorry-based 移行 | (履歴、git 参照) |
 
 ## 情報側 完成 record (保存、再利用しうる設計)
