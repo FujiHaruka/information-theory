@@ -29,6 +29,11 @@ i.i.d. source `Measure.pi (fun _ ↦ P_XY)`、decoder side-info `Y^n`。operatio
 theorem wyner_ziv_achievability
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
+    -- feasibility / well-posedness guard (achievability only): rules out the
+    -- infeasible regime (e.g. D<0 → wzRateValueSet empty → wynerZivRate = sInf ∅ = 0),
+    -- where h_rate degenerates to 0<R while WynerZivAchievable is false. The converse
+    -- is vacuous in that regime, so it needs no such guard.
+    (h_ne : (wzRateValueSet (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D).Nonempty)
     (h_rate : wynerZivRate (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D < R) :
     WynerZivAchievable P_XY d R D
 
@@ -206,5 +211,6 @@ append-only。決着済 entry は削除 (git が履歴)、active のみ残す。
 4. **撤退 class = `plan` (wall ではない、active)**: WZ gap は Mathlib gap でなく in-project atom 合成の未実装 (inventory §8)。既定退避 = `@residual(plan:wyner-ziv-main-plan)`、split-out は `wz-binning-covering`/`wz-auxiliary-singleletter`。wall 昇格は side-info covering が真の Mathlib gap と gateway-atom-first で判明した場合のみ後続 PR で。
 5. **親再開の注記 (active)**: 親 [`wyner-ziv-moonshot-plan.md`](wyner-ziv-moonshot-plan.md) は ACTIVE (情報側完成 record 保存)。textbook-roadmap Ch.15 の「WZ main scope-out」行は **closure まで維持** (attack ≠ scope 再開の確定、roadmap は本 planner の editing boundary 外)。
 6. **P3 gateway atoms CLOSED (leg 12、active、本線 = plumbing)**: gateway-atom-first PASS。新規 `Achievability.lean` に `wz_sideInfo_decoder_confusion_expectation_le` (decoder confusion) + `wz_covering_sideInfo_mass_ge` (covering acceptance) を stated → 両者 sorryAx-free + 独立監査 `@audit:ok` (`108ba475`/`72133a7e`)。**決定的 de-risk 所見**: (a) strong/weak slice 転置は非問題 = 2 つの独立誤り事象を disjoint slice で bound する自然な分割 (reconciliation lemma 不要)、(b) decoder-confusion atom は既存汎用 `ChannelCoding.swError_EX_expectation_le` の直接 instantiation、(c) WZ 3 誤り指数すべて既存 in-project atom (E1 covering X→U = `encoder_failure_prob_le_exp_neg_M_avg` (α:=X,β:=U)、E2 decoder confusion、E3 covering acceptance)。→ 残 plumbing = `WynerZivCode` 構築 (covering encoder → binning → conditional-slice decoder) + 誤り事象 threading + rate split `R=I(X;U)−I(Y;U)` + `exists_codebook_low_avg` pigeonhole、**新 atom なし**。次 leg 本線 = plumbing body。
+7. **achievability headline に feasibility guard 追加 (active)**: `wyner_ziv_achievability` + `wyner_ziv_achievability_codes` に precondition `(wzRateValueSet (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D).Nonempty` を追加。無ければ `D<0` で false-as-framed: `DistortionFn=α→γ→NNReal≥0` ゆえ `D<0` (一般に最小達成歪未満) で feasible set が空 → `wynerZivRate = sInf ∅ = 0` → `h_rate` が `0<R` に退化 (充足可) しつつ `WynerZivAchievable` は偽。反例 Bool/Hamming/uniform/R=1/D=-1。guard は feasibility precondition (load-bearing でない、converse は既に `wynerZivRate_antitone` で同 guard を threading 済)。監査 `e39115eb`→本 leg で修正済 (docstring の `@audit:defect(false-statement)` 解消、headline body は sorry-free 維持、codes lemma の sorry のみ残置)。
 
 _(decision #4「distortion 述語形」は P1 で確定・削除: **distortion-only** `∀ε>0,∀ᶠ n, 歪≤D+ε` (= limsup≤D) を採用。誤り確率は predicate 外の achievability-internal 量に。`WynerZivAchievable` は `@audit:ok`。)_
