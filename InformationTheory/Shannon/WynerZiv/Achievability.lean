@@ -183,7 +183,16 @@ The reshaped Wyner–Ziv rate is non-negative: every factorisable feasible objec
 non-degenerate value set is `≥ 0`. Combined with `h_rate`, this pins `0 < R`, which
 is exactly what the codebook-rate tendsto `codebookSize_log_div_tendsto` needs. -/
 
-/-- The reshaped Wyner–Ziv rate for a probability-measure source is `≥ 0`. -/
+/-- The reshaped Wyner–Ziv rate for a probability-measure source is `≥ 0`.
+@audit:ok (independent honesty audit 2026-07-06: sorryAx-free, `#print axioms` =
+[propext, Classical.choice, Quot.sound], machine-verified. Genuine closure: via
+`Real.sInf_nonneg`, every value is the objective of a feasible factorisable point,
+which is `≥ 0` by DPI `wzObjective_nonneg_of_factorizable`; the empty-`Fin 0`
+`Nonempty (Fin k)` step is a SOUND derivation, not a degenerate-definition abuse —
+a feasible factorisable point forces `k > 0` because a `Fin 0` kernel has row-sum
+`∑_{u:Fin 0} κ x u = 0 ≠ 1`. TRUE-as-framed even in the empty-feasible-set regime
+(`0 ≤ sInf ∅ = 0`), so unlike the codes lemma below this decl has NO under-hypothesis
+defect: `Real.sInf_nonneg`'s premise is vacuously satisfied when the set is empty.) -/
 private lemma wynerZivRate_nonneg
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (D : ℝ) :
@@ -230,7 +239,25 @@ body of this plan. -/
 /-- Existence of a Wyner–Ziv code sequence (at the operational message rate `R`)
 whose expected block distortion is eventually within `D + ε`, from a feasible test
 channel strictly below `R`. The remaining covering + binning plumbing.
-@residual(plan:wyner-ziv-main-plan) -/
+@residual(plan:wyner-ziv-main-plan)
+@audit:defect(false-statement) — SIGNATURE under-hypothesised (the `sorry` is an
+honest marker, but the statement as framed is universally false in one regime, so
+the residual can NEVER be honestly closed as stated). `DistortionFn α γ := α → γ →
+NNReal`, so `expectedBlockDistortion ≥ 0` always (`expectedBlockDistortion_nonneg`)
+and every factorisable `wzExpectedDistortion ≥ 0`. Hence for any `D < 0` (more
+generally `D` below the min achievable distortion) `WynerZivFactorizableConstraint`
+is empty at every `Fin k`, so `wzRateValueSet` is EMPTY and `wynerZivRate = sInf ∅ =
+0` (`Real.sInf_empty`). Then `h_rate : 0 < R` is satisfiable (e.g. `R = 1`) yet the
+existence claim is FALSE: no code has `expectedBlockDistortion ≤ D + ε` for `ε =
+|D|/2` (RHS `< 0`, LHS `≥ 0`). Counterexample: `α = γ = Bool`, `d` Hamming,
+`P_XY` uniform, `R = 1`, `D = -1`. FIX (next leg, before building the construction):
+add the feasibility precondition `(wzRateValueSet (fun p ↦ P_XY.real {p})
+(fun a b ↦ (d a b : ℝ)) D).Nonempty` — a precondition (feasibility of the
+rate-distortion point), NOT the load-bearing covering+binning core (that stays in
+the sorry body), so honest. Note: the converse side already threads exactly this
+guard (`wynerZivRate_antitone`, `Converse.lean:2602`); achievability is the only leg
+that drops it. Mirror the guard onto the headline `wyner_ziv_achievability`.
+@audit:closed-by-successor(wyner-ziv-main-plan) -/
 theorem wyner_ziv_achievability_codes
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
@@ -254,7 +281,17 @@ The body is assembled: the message sequence is fixed to `codebookSize R n =
 (using `0 < R`, from `wynerZivRate_nonneg` and `h_rate`); the distortion sequence is
 supplied by the covering + binning construction `wyner_ziv_achievability_codes`,
 which carries the remaining plumbing `sorry`. The headline itself is `sorry`-free
-(it reduces to that one residual lemma). -/
+(it reduces to that one residual lemma).
+
+@audit:defect(false-statement) — the body is a genuine reduction (sorry-free itself,
+`sorryAx` enters only via `wyner_ziv_achievability_codes`), but this SIGNATURE
+inherits the SAME under-hypothesis defect as that codes lemma: for `D` below the
+min achievable distortion (e.g. any `D < 0`) `wzRateValueSet` is empty,
+`wynerZivRate = sInf ∅ = 0`, so `h_rate : 0 < R` is satisfiable while
+`WynerZivAchievable P_XY d R D` is FALSE. FIX (next leg): add the same feasibility
+precondition `(wzRateValueSet (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ))
+D).Nonempty` here as on the codes lemma. See that lemma's docstring for the full
+counterexample. @audit:closed-by-successor(wyner-ziv-main-plan) -/
 theorem wyner_ziv_achievability
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
