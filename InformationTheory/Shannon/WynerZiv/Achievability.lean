@@ -488,7 +488,9 @@ the `(X, U)` joint `κ'(x, u) · P_X(x)` restricted to the support subtype
 This is the global-full-support source the rate-distortion covering theorem
 `rate_distortion_achievability` hard-requires (`hqStar_pos`), obtained on the
 restricted alphabet because factorisability forces `P_X`'s zero atoms into the
-joint regardless of `κ'`. -/
+joint regardless of `κ'`.
+@audit:ok (independent honesty audit 2026-07-06: genuine leaf, sorry-free with no
+hidden residual; `#print axioms` = `[propext, Classical.choice, Quot.sound]`) -/
 private lemma wz_restrictedCoveringJoint_pos
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} (κ' : α → Fin k → ℝ)
@@ -736,7 +738,8 @@ which carries the remaining plumbing `sorry`. The headline itself is `sorry`-fre
 
 The signature carries the same feasibility precondition `h_ne` as the codes lemma,
 so it is well-posed: the body is a genuine reduction (sorry-free itself, `sorryAx`
-enters only via `wyner_ziv_achievability_codes`) and the statement is honest. -/
+enters only via `wyner_ziv_achievability_codes`) and the statement is honest.
+@residual(plan:wyner-ziv-main-plan) -/
 theorem wyner_ziv_achievability
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
