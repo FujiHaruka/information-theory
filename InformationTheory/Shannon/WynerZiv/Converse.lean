@@ -1729,6 +1729,161 @@ private lemma wynerZivRate_le_of_code
   exact wyner_ziv_converse_n_letter_singleLetter hn c hencoder hdecoder d μ Xs Ys
     hXs hYs hindep P_XY hlaw hD
 
+/-! ### Endpoint right-continuity infrastructure (L1/L2/L3)
+
+The left-endpoint residual `wynerZivRate_le_of_forall_pos_add_endpoint` is closed
+through three lemmas: a fixed-`K` Carathéodory identification (`L1`,
+`wynerZivRate_eq_factorizable_finK`), a fixed-`U` right-continuity via compactness
+(`L2`, `wynerZivRateFactorizable_right_continuous_le`), and the assembly (`L3`, the
+endpoint body). The compactness argument works in *kernel* space: the feasible set
+of row-stochastic kernels is a product of simplices, hence compact, and the joint
+pmf, objective and distortion are all continuous in the kernel. -/
+
+/-- Joint pmf induced by a transition kernel `κ : α → U → ℝ` and source `P_XY`:
+`q(x, y, u) = κ x u · P_XY (x, y)`. -/
+def wzJointOfKernel (U : Type*) (P_XY : α × β → ℝ) (κ : α → U → ℝ) :
+    α × β × U → ℝ :=
+  fun p ↦ κ p.1 p.2.2 * P_XY (p.1, p.2.1)
+
+/-- The set of row-stochastic transition kernels `α → U → ℝ` (per-row non-negative,
+per-row sum `1`) — a product of standard simplices, hence compact. -/
+def wzKernelSet (U : Type*) [Fintype U] : Set (α → U → ℝ) :=
+  {κ | (∀ x u, 0 ≤ κ x u) ∧ ∀ x, ∑ u, κ x u = 1}
+
+/-- Feasible kernels at distortion budget `D`: row-stochastic kernels admitting a
+side-information decoder whose expected distortion is within the budget. -/
+def wzKernelFeasible (U : Type*) [Fintype U] [MeasurableSpace U]
+    (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) : Set (α → U → ℝ) :=
+  {κ | κ ∈ wzKernelSet U ∧
+        ∃ f : U × β → γ, wzExpectedDistortion U d (wzJointOfKernel U P_XY κ) f ≤ D}
+
+/-- `wzJointOfKernel` is continuous in the kernel `κ`. -/
+lemma continuous_wzJointOfKernel (U : Type*) (P_XY : α × β → ℝ) :
+    Continuous (fun κ : α → U → ℝ ↦ wzJointOfKernel U P_XY κ) := by
+  unfold wzJointOfKernel
+  fun_prop
+
+/-- A row-stochastic kernel induces a factorisable joint. -/
+lemma wzJointOfKernel_isFactorizable (U : Type*) [Fintype U] [MeasurableSpace U]
+    {P_XY : α × β → ℝ} {κ : α → U → ℝ} (hκ : κ ∈ wzKernelSet U) :
+    IsWynerZivFactorizable U P_XY (wzJointOfKernel U P_XY κ) := by
+  exact ⟨κ, hκ.1, hκ.2, fun x y u ↦ rfl⟩
+
+/-- The kernel set is compact (a product of standard simplices). -/
+lemma wzKernelSet_isCompact (U : Type*) [Fintype U] :
+    IsCompact (wzKernelSet U : Set (α → U → ℝ)) := by
+  have hEq : (wzKernelSet U : Set (α → U → ℝ))
+      = Set.univ.pi (fun _ : α ↦ stdSimplex ℝ U) := by
+    ext κ
+    rw [Set.mem_univ_pi]
+    constructor
+    · rintro ⟨hnn, hsum⟩ x
+      exact ⟨fun u ↦ hnn x u, hsum x⟩
+    · intro h
+      exact ⟨fun x u ↦ (h x).1 u, fun x ↦ (h x).2⟩
+  rw [hEq]
+  exact isCompact_univ_pi fun _ ↦ isCompact_stdSimplex ℝ U
+
+/-- Expected distortion is continuous in the joint pmf `q`. -/
+lemma continuous_wzExpectedDistortion (U : Type*) [Fintype U] [MeasurableSpace U]
+    (d : α → γ → ℝ) (f : U × β → γ) :
+    Continuous (fun q : α × β × U → ℝ ↦ wzExpectedDistortion U d q f) := by
+  unfold wzExpectedDistortion
+  refine continuous_finsetSum _ fun p _ ↦ ?_
+  exact (continuous_apply p).mul continuous_const
+
+/-- The feasible kernel set is closed. -/
+lemma wzKernelFeasible_isClosed (U : Type*) [Fintype U] [MeasurableSpace U]
+    (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) :
+    IsClosed (wzKernelFeasible U P_XY d D) := by
+  have hset : wzKernelFeasible U P_XY d D
+      = (wzKernelSet U : Set (α → U → ℝ)) ∩
+          (⋃ f : U × β → γ,
+            {κ : α → U → ℝ | wzExpectedDistortion U d (wzJointOfKernel U P_XY κ) f ≤ D}) := by
+    ext κ
+    simp only [wzKernelFeasible, Set.mem_setOf_eq, Set.mem_inter_iff, Set.mem_iUnion]
+  rw [hset]
+  refine IsClosed.inter (wzKernelSet_isCompact U).isClosed ?_
+  refine isClosed_iUnion_of_finite fun f ↦ ?_
+  exact isClosed_le
+    ((continuous_wzExpectedDistortion U d f).comp (continuous_wzJointOfKernel U P_XY))
+    continuous_const
+
+/-- The feasible kernel set is compact. -/
+lemma wzKernelFeasible_isCompact (U : Type*) [Fintype U] [MeasurableSpace U]
+    (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) :
+    IsCompact (wzKernelFeasible U P_XY d D) :=
+  (wzKernelSet_isCompact U).of_isClosed_subset (wzKernelFeasible_isClosed U P_XY d D)
+    (fun _ hκ ↦ hκ.1)
+
+/-- The feasible kernel set is monotone in the distortion budget. -/
+lemma wzKernelFeasible_mono (U : Type*) [Fintype U] [MeasurableSpace U]
+    (P_XY : α × β → ℝ) (d : α → γ → ℝ) {D D' : ℝ} (hD : D ≤ D') :
+    wzKernelFeasible U P_XY d D ⊆ wzKernelFeasible U P_XY d D' := by
+  rintro κ ⟨hκ, f, hf⟩
+  exact ⟨hκ, f, le_trans hf hD⟩
+
+/-- **Kernel-space form of the factorisable rate.** The factorisable rate equals
+the infimum of the Wyner–Ziv objective over feasible *kernels* (a compact set). -/
+theorem wynerZivRateFactorizable_eq_sInf_kernel (U : Type*) [Fintype U] [MeasurableSpace U]
+    (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) :
+    wynerZivRateFactorizable U P_XY d D
+      = sInf ((fun κ : α → U → ℝ ↦
+          wzMutualInfoXU U (wzJointOfKernel U P_XY κ)
+            - wzMutualInfoYU U (wzJointOfKernel U P_XY κ))
+        '' wzKernelFeasible U P_XY d D) := by
+  have himg : (fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
+        wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
+      '' WynerZivFactorizableConstraint U P_XY d D
+      = (fun κ : α → U → ℝ ↦
+          wzMutualInfoXU U (wzJointOfKernel U P_XY κ)
+            - wzMutualInfoYU U (wzJointOfKernel U P_XY κ))
+        '' wzKernelFeasible U P_XY d D := by
+    ext v
+    constructor
+    · rintro ⟨qf, ⟨hfact, hdist⟩, rfl⟩
+      obtain ⟨κ, hκnn, hκsum, hκeq⟩ := hfact
+      have hq : wzJointOfKernel U P_XY κ = qf.1 := by
+        funext p; obtain ⟨x, y, u⟩ := p; exact (hκeq x y u).symm
+      refine ⟨κ, ⟨⟨hκnn, hκsum⟩, qf.2, ?_⟩, ?_⟩
+      · rw [hq]; exact hdist
+      · dsimp only; rw [hq]
+    · rintro ⟨κ, ⟨hκ, f, hdist⟩, rfl⟩
+      exact ⟨(wzJointOfKernel U P_XY κ, f),
+        ⟨wzJointOfKernel_isFactorizable U hκ, hdist⟩, rfl⟩
+  unfold wynerZivRateFactorizable
+  rw [himg]
+
+/-- **L2 — fixed-`U` right-continuity of the factorisable rate.** If the rate at
+every `D + ε` (`ε > 0`) is `≤ R`, then so is the rate at `D`. Proved by compactness:
+near-optimal feasible kernels at `D + εₙ` live in the compact kernel set; Cantor's
+intersection theorem produces a common limit kernel, feasible at `D` (a decoder
+attaining the budget survives to the limit) with objective `≤ R`. -/
+theorem wynerZivRateFactorizable_right_continuous_le (U : Type*) [Fintype U] [MeasurableSpace U]
+    {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) {d : α → γ → ℝ} {D R : ℝ}
+    (hR : 0 ≤ R)
+    (hstep : ∀ ε > 0, wynerZivRateFactorizable U P_XY d (D + ε) ≤ R) :
+    wynerZivRateFactorizable U P_XY d D ≤ R := by
+  sorry
+
+/-- **L1 — Carathéodory fixed-`K` identification of the reshaped Wyner–Ziv rate.**
+The reshaped rate `wynerZivRate` (an infimum over *all* finite auxiliary alphabets)
+is attained already at the fixed auxiliary alphabet `Fin (|α| + 1)`: every feasible
+factorisable point at any `Fin k` reduces, by Carathéodory's theorem on the convex
+hull (the rate-optimal auxiliary mixes at most `|α| + 1` extreme kernels), to a
+feasible point at `Fin (|α| + 1)` with objective `≤` the original. Hence the two
+infima agree.
+
+The easy inclusion `wynerZivRate ≤ wynerZivRateFactorizable (Fin (|α|+1))` is
+immediate (`Fin (|α|+1)` is one of the alphabets in the union); the reverse is the
+Carathéodory cardinality bound, deferred to its own closure plan.
+@residual(plan:wz-auxiliary-cardinality-bound) -/
+theorem wynerZivRate_eq_factorizable_finK
+    {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) (d : α → γ → ℝ) (D : ℝ) :
+    wynerZivRate P_XY d D
+      = wynerZivRateFactorizable (Fin (Fintype.card α + 1)) P_XY d D := by
+  sorry
+
 /-- **Left-endpoint right-continuity of the reshaped Wyner–Ziv rate.**
 
 If `R ≥ 0`, the value set at `D` is nonempty but *no* value set strictly below `D`
@@ -1777,7 +1932,13 @@ theorem wynerZivRate_le_of_forall_pos_add_endpoint
     (h_endpoint : ∀ D₀ < D, ¬ (wzRateValueSet P_XY d D₀).Nonempty)
     (hstep : ∀ ε > 0, wynerZivRate P_XY d (D + ε) ≤ R) :
     wynerZivRate P_XY d D ≤ R := by
-  sorry
+  -- L3 assembly: identify with the fixed-`K` factorisable rate (L1), then apply
+  -- fixed-`K` right-continuity (L2), transporting `hstep` through L1 at each `D + ε`.
+  rw [wynerZivRate_eq_factorizable_finK h_pmf d D]
+  refine wynerZivRateFactorizable_right_continuous_le (Fin (Fintype.card α + 1)) h_pmf hR ?_
+  intro ε hε
+  rw [← wynerZivRate_eq_factorizable_finK h_pmf d (D + ε)]
+  exact hstep ε hε
 
 /-! ## Operational converse headline -/
 
