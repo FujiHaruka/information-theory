@@ -591,6 +591,110 @@ private lemma wz_expectedBlockDistortion_source_agree
   filter_upwards [hfull] with p hp
   rw [hagree (fun i ↦ (p i).1) (fun i ↦ (p i).2) hp]
 
+open ChannelCoding in
+/-- Strong-typicality ⟹ distortion-typicality bridge for the `rdAmbient` source.
+A joint strongly typical pair `(x, y)` (within `ε_join`) is entropy-typical on all
+three axes and its empirical block distortion is within `δ_typ` of the expected
+distortion, provided the three axis slacks fit under `ε_dist` and the aggregate
+distortion drift fits under `δ_typ`. Used to discharge the covering theorem's
+`h_jts_subset_dts` premise. -/
+private lemma wz_jointStronglyTypical_mem_distortionTypical
+    {k : ℕ} [Nonempty (Fin k)] {α' : Type*} [Fintype α'] [DecidableEq α'] [Nonempty α']
+    [MeasurableSpace α'] [MeasurableSingletonClass α']
+    (qStar : α' × Fin k → ℝ) (hmem : qStar ∈ stdSimplex ℝ (α' × Fin k))
+    (d' : DistortionFn α' (Fin k)) {ε_join ε_dist δ_typ : ℝ} (hej_nn : 0 ≤ ε_join)
+    (hbX : (Fintype.card (Fin k) : ℝ) * ε_join
+        * logSumAbs (rdAmbient qStar) iidXs < ε_dist)
+    (hbY : (Fintype.card α' : ℝ) * ε_join
+        * logSumAbs (rdAmbient qStar) iidYs < ε_dist)
+    (hbJ : ε_join * logSumAbs (rdAmbient qStar) (jointSequence iidXs iidYs) < ε_dist)
+    (hdist : ε_join * ∑ p : α' × Fin k, ((d' p.1 p.2 : NNReal) : ℝ) ≤ δ_typ)
+    {n : ℕ} (hn : 0 < n) (x : Fin n → α') (y : Fin n → Fin k)
+    (hxy : (x, y) ∈ jointStronglyTypicalSet (rdAmbient qStar) iidXs iidYs n ε_join) :
+    (x, y) ∈ distortionTypicalSet (rdAmbient qStar) iidXs iidYs d' n ε_dist δ_typ := by
+  haveI hμprob : IsProbabilityMeasure (rdAmbient qStar) :=
+    rdAmbient_isProbabilityMeasure qStar hmem
+  have hmarg_X : ((rdAmbient qStar).map (jointSequence iidXs iidYs 0)).map Prod.fst
+      = (rdAmbient qStar).map (iidXs 0) := by
+    rw [rdAmbient_map_jointSequence qStar hmem, rdAmbient_map_iidXs qStar hmem]
+  have hmarg_Y : ((rdAmbient qStar).map (jointSequence iidXs iidYs 0)).map Prod.snd
+      = (rdAmbient qStar).map (iidYs 0) := by
+    rw [rdAmbient_map_jointSequence qStar hmem, rdAmbient_map_iidYs qStar hmem]
+  refine ⟨?_, ?_⟩
+  · rw [mem_jointlyTypicalSet_iff]
+    refine ⟨?_, ?_, ?_⟩
+    · have hxs : x ∈ stronglyTypicalSet (rdAmbient qStar) iidXs n
+          ((Fintype.card (Fin k) : ℝ) * ε_join) :=
+        jointStronglyTypicalSet_implies_X_stronglyTypical (rdAmbient qStar)
+          iidXs iidYs measurable_iidXs measurable_iidYs hmarg_X hn hej_nn x y hxy
+      exact stronglyTypicalSet_subset_typicalSet (rdAmbient qStar) iidXs
+        measurable_iidXs hn hbX hxs
+    · have hys : y ∈ stronglyTypicalSet (rdAmbient qStar) iidYs n
+          ((Fintype.card α' : ℝ) * ε_join) :=
+        jointStronglyTypicalSet_implies_Y_stronglyTypical (rdAmbient qStar)
+          iidXs iidYs measurable_iidXs measurable_iidYs hmarg_Y hn hej_nn x y hxy
+      exact stronglyTypicalSet_subset_typicalSet (rdAmbient qStar) iidYs
+        measurable_iidYs hn hbY hys
+    · have hzs : (fun i ↦ (x i, y i)) ∈ stronglyTypicalSet (rdAmbient qStar)
+          (jointSequence iidXs iidYs) n ε_join := hxy
+      exact stronglyTypicalSet_subset_typicalSet (rdAmbient qStar)
+        (jointSequence iidXs iidYs)
+        (fun i ↦ measurable_jointSequence iidXs iidYs measurable_iidXs measurable_iidYs i)
+        hn hbJ hzs
+  · show blockDistortion d' n x y
+        ≤ expectedJointDistortion (rdAmbient qStar) (iidXs 0) (iidYs 0) d' + δ_typ
+    rw [expectedJointDistortion_rdAmbient qStar hmem d']
+    set z : Fin n → α' × Fin k := fun i ↦ (x i, y i) with hz_def
+    set g : α' × Fin k → ℝ := fun p ↦ ((d' p.1 p.2 : NNReal) : ℝ) with hg_def
+    have hz_typ : ∀ p, |(typeCount z p : ℝ) / n - qStar p| ≤ ε_join := by
+      intro p
+      have hzmem : z ∈ stronglyTypicalSet (rdAmbient qStar)
+          (jointSequence iidXs iidYs) n ε_join := hxy
+      rw [mem_stronglyTypicalSet_iff] at hzmem
+      have hlaw : ((rdAmbient qStar).map (jointSequence iidXs iidYs 0)).real {p}
+          = qStar p := by
+        rw [rdAmbient_map_jointSequence qStar hmem]
+        exact pmfToMeasure_real_singleton hmem p
+      rw [← hlaw]; exact hzmem p
+    have hbd : blockDistortion d' n x y
+        = (1 / (n : ℝ)) * ∑ p, (typeCount z p : ℝ) * g p := by
+      unfold blockDistortion
+      congr 1
+      show ∑ i, g (z i) = ∑ p, (typeCount z p : ℝ) * g p
+      have h_maps : ∀ i ∈ (Finset.univ : Finset (Fin n)),
+          z i ∈ (Finset.univ : Finset (α' × Fin k)) := fun i _ ↦ Finset.mem_univ _
+      have h := Finset.sum_fiberwise_of_maps_to'
+        (s := (Finset.univ : Finset (Fin n)))
+        (t := (Finset.univ : Finset (α' × Fin k))) h_maps g
+      rw [← h]
+      refine Finset.sum_congr rfl fun p _ ↦ ?_
+      rw [Finset.sum_const, nsmul_eq_mul]
+      rfl
+    have h_edp : expectedDistortionPmf d' qStar = ∑ p, qStar p * g p := by
+      unfold expectedDistortionPmf
+      rw [Fintype.sum_prod_type]
+    rw [hbd, h_edp, Finset.mul_sum]
+    have hkey : ∀ p, (1 / (n : ℝ)) * ((typeCount z p : ℝ) * g p) - qStar p * g p
+        ≤ ε_join * g p := by
+      intro p
+      have hg : 0 ≤ g p := NNReal.coe_nonneg _
+      have hrw : (1 / (n : ℝ)) * ((typeCount z p : ℝ) * g p) - qStar p * g p
+          = ((typeCount z p : ℝ) / n - qStar p) * g p := by ring
+      rw [hrw]
+      calc ((typeCount z p : ℝ) / n - qStar p) * g p
+          ≤ |(typeCount z p : ℝ) / n - qStar p| * g p :=
+            mul_le_mul_of_nonneg_right (le_abs_self _) hg
+        _ ≤ ε_join * g p := mul_le_mul_of_nonneg_right (hz_typ p) hg
+    have hstep : ∑ p, (1 / (n : ℝ)) * ((typeCount z p : ℝ) * g p)
+        - ∑ p, qStar p * g p ≤ ε_join * ∑ p, g p := by
+      rw [← Finset.sum_sub_distrib]
+      calc ∑ p, ((1 / (n : ℝ)) * ((typeCount z p : ℝ) * g p) - qStar p * g p)
+          ≤ ∑ p, ε_join * g p := Finset.sum_le_sum fun p _ ↦ hkey p
+        _ = ε_join * ∑ p, g p := by rw [← Finset.mul_sum]
+    linarith [hstep, hdist]
+
+set_option maxHeartbeats 800000 in
+open ChannelCoding in
 /-- **(C) Rate-distortion covering layer.** For a strictly positive joint pmf
 `qStar` on `α' × Fin k` with `mutualInfoPmf qStar < R₁` and a proxy distortion `d'`
 feasible at `D`, the rate-distortion achievability theorem yields, for all large
@@ -601,8 +705,7 @@ The full support `hpos` is a regularity precondition (the covering theorem's
 `hqStar_pos`); the rate-distortion slack quintet (`ε_X … δ_typ`, `qZ_min`) is
 constructed in the body, not exposed. The reconciliation between the covering proxy
 `d'` (X↔U) and the Wyner–Ziv distortion (X↔γ) stays load-bearing in the body / (BD),
-never bundled into a predicate.
-@residual(plan:wyner-ziv-main-plan) -/
+never bundled into a predicate. -/
 private lemma wz_covering_lossyCode_exists
     {k : ℕ} [Nonempty (Fin k)] {α' : Type*} [Fintype α'] [DecidableEq α']
     [Nonempty α'] [MeasurableSpace α'] [MeasurableSingletonClass α']
@@ -613,7 +716,140 @@ private lemma wz_covering_lossyCode_exists
     ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ, Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
       ∃ c : LossyCode M n α' (Fin k),
         c.expectedBlockDistortion ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d' ≤ D + ε' := by
-  sorry
+  classical
+  haveI hμprob : IsProbabilityMeasure (rdAmbient qStar) :=
+    rdAmbient_isProbabilityMeasure qStar hmem
+  -- The feasible pmf lies in the rate-distortion constraint set with `P_X := marginalFst qStar`.
+  have hmemRD : qStar ∈ RDConstraint (marginalFst qStar) d' D := ⟨hmem, rfl, hfeas⟩
+  -- Nonnegative constants from the ambient log-sum and the distortion table.
+  set Lx : ℝ := logSumAbs (rdAmbient qStar) iidXs with hLx_def
+  set Ly : ℝ := logSumAbs (rdAmbient qStar) iidYs with hLy_def
+  set Lj : ℝ := logSumAbs (rdAmbient qStar) (jointSequence iidXs iidYs) with hLj_def
+  have hLx_nn : 0 ≤ Lx := logSumAbs_nonneg _ _
+  have hLy_nn : 0 ≤ Ly := logSumAbs_nonneg _ _
+  have hLj_nn : 0 ≤ Lj := logSumAbs_nonneg _ _
+  set Sd : ℝ := ∑ p : α' × Fin k, ((d' p.1 p.2 : NNReal) : ℝ) with hSd_def
+  have hSd_nn : 0 ≤ Sd := Finset.sum_nonneg fun p _ => NNReal.coe_nonneg _
+  set cA : ℝ := (Fintype.card α' : ℝ) with hcA_def
+  set cB : ℝ := (Fintype.card (Fin k) : ℝ) with hcB_def
+  have hcA_pos : 0 < cA := by rw [hcA_def]; exact_mod_cast Fintype.card_pos
+  have hcB_pos : 0 < cB := by rw [hcB_def]; exact_mod_cast Fintype.card_pos
+  -- Minimal singleton mass, positive by full support.
+  set qZ_min : ℝ := Finset.univ.inf' Finset.univ_nonempty qStar with hqZ_def
+  have hqZ_pos : 0 < qZ_min := by
+    rw [hqZ_def, Finset.lt_inf'_iff]; exact fun p _ => hpos p
+  have hqZ_le : ∀ p : α' × Fin k,
+      qZ_min ≤ (pmfToMeasure (α := α' × Fin k) qStar).real {p} := by
+    intro p
+    rw [pmfToMeasure_real_singleton hmem p, hqZ_def]
+    exact Finset.inf'_le _ (Finset.mem_univ p)
+  -- Rate gap and its linear/quadratic coefficients.
+  set gap : ℝ := R₁ - mutualInfoPmf qStar with hgap_def
+  have hgap_pos : 0 < gap := by rw [hgap_def]; linarith
+  clear_value gap
+  set Cc : ℝ := cA * Ly + Lx + Lj with hCc_def
+  have hCc_nn : 0 ≤ Cc := by
+    rw [hCc_def]; have : 0 ≤ cA * Ly := mul_nonneg hcA_pos.le hLy_nn; linarith
+  clear_value Cc
+  set Kk : ℝ := 8 * cA * cB / qZ_min with hKk_def
+  have hKk_nn : 0 ≤ Kk := by
+    rw [hKk_def]
+    exact div_nonneg (mul_nonneg (mul_nonneg (by norm_num) hcA_pos.le) hcB_pos.le) hqZ_pos.le
+  -- The slack quintet: choose everything small against the rate gap and `ε'`.
+  have hden1 : 0 < 2 * (Cc + Kk + 1) := by nlinarith [hCc_nn, hKk_nn]
+  have hden2 : 0 < 2 * (Sd + 1) := by nlinarith [hSd_nn]
+  set ε_join : ℝ :=
+    min 1 (min (gap / (2 * (Cc + Kk + 1))) (ε' / (2 * (Sd + 1)))) with hej_def
+  have hej_pos : 0 < ε_join := by
+    rw [hej_def]
+    exact lt_min one_pos (lt_min (div_pos hgap_pos hden1) (div_pos hε' hden2))
+  have hej_le1 : ε_join ≤ 1 := by rw [hej_def]; exact min_le_left _ _
+  have hej_le_gap : ε_join ≤ gap / (2 * (Cc + Kk + 1)) := by
+    rw [hej_def]; exact le_trans (min_le_right _ _) (min_le_left _ _)
+  have hej_le_eps : ε_join ≤ ε' / (2 * (Sd + 1)) := by
+    rw [hej_def]; exact le_trans (min_le_right _ _) (min_le_right _ _)
+  clear_value Kk ε_join
+  set ε_X : ℝ := ε_join / 2 with hex_def
+  have hex_pos : 0 < ε_X := by rw [hex_def]; linarith
+  have hex_lt_ej : ε_X < ε_join := by rw [hex_def]; linarith
+  have hex_le1 : ε_X ≤ 1 := by rw [hex_def]; linarith
+  clear_value ε_X
+  set δ_typ : ℝ := ε' / 2 with hdtyp_def
+  have hdtyp_nn : 0 ≤ δ_typ := by rw [hdtyp_def]; linarith
+  set ε_dist : ℝ := cB * ε_join * Lx + cA * ε_join * Ly + ε_join * Lj + 1 with hed_def
+  have hed_pos : 0 < ε_dist := by
+    rw [hed_def]
+    have h1 : 0 ≤ cB * ε_join * Lx := by
+      exact mul_nonneg (mul_nonneg hcB_pos.le hej_pos.le) hLx_nn
+    have h2 : 0 ≤ cA * ε_join * Ly := by
+      exact mul_nonneg (mul_nonneg hcA_pos.le hej_pos.le) hLy_nn
+    have h3 : 0 ≤ ε_join * Lj := mul_nonneg hej_pos.le hLj_nn
+    linarith
+  set δ_kl : ℝ := Kk * ε_X ^ 2 with hdkl_def
+  have hdkl_pos : 0 < δ_kl := by
+    rw [hdkl_def, hKk_def]
+    have hnum : 0 < 8 * cA * cB :=
+      mul_pos (mul_pos (by norm_num) hcA_pos) hcB_pos
+    positivity
+  -- Numeric obligations of the covering theorem.
+  have h_rategap : mutualInfoPmf qStar
+      + (cA * ε_X * Ly + ε_X * Lx + ε_X * Lj + δ_kl) < R₁ := by
+    have hlin : cA * ε_X * Ly + ε_X * Lx + ε_X * Lj = ε_X * Cc := by
+      rw [hCc_def]; ring
+    have hdkl_le : δ_kl ≤ Kk * ε_X := by
+      rw [hdkl_def]; nlinarith [hKk_nn, hex_pos.le, hex_le1]
+    have hεX_le : ε_X * (2 * (Cc + Kk + 1)) ≤ gap :=
+      (le_div_iff₀ hden1).mp (le_trans hex_lt_ej.le hej_le_gap)
+    have hkey : ε_X * Cc + δ_kl < gap := by
+      nlinarith [hdkl_le, hεX_le, hex_pos, hCc_nn, hKk_nn]
+    rw [hlin]
+    linarith [hkey, hgap_def]
+  have h_slack : expectedDistortionPmf d' qStar + δ_typ ≤ D + ε' / 2 := by
+    rw [hdtyp_def]; linarith
+  have h_distslack : ε_join * Sd ≤ δ_typ := by
+    rw [hdtyp_def]
+    have h1 : ε_join * (2 * (Sd + 1)) ≤ ε' := (le_div_iff₀ hden2).mp hej_le_eps
+    nlinarith [hej_pos.le, hSd_nn, h1]
+  have h_dominates : 8 * cA * cB * ε_X ^ 2 ≤ δ_kl * qZ_min := by
+    have hne : qZ_min ≠ 0 := ne_of_gt hqZ_pos
+    have hKq : Kk * qZ_min = 8 * cA * cB := by
+      rw [hKk_def]; exact div_mul_cancel₀ _ hne
+    have heq : δ_kl * qZ_min = 8 * cA * cB * ε_X ^ 2 := by
+      rw [hdkl_def, mul_right_comm, hKq]
+    exact le_of_eq heq.symm
+  -- Strong-typicality ⟹ distortion-typicality bridge: the three axis slacks fit
+  -- under `ε_dist` and the distortion drift under `δ_typ`, then delegate.
+  have hbX : (Fintype.card (Fin k) : ℝ) * ε_join * Lx < ε_dist := by
+    rw [hed_def]
+    have h2 : 0 ≤ cA * ε_join * Ly := mul_nonneg (mul_nonneg hcA_pos.le hej_pos.le) hLy_nn
+    have h3 : 0 ≤ ε_join * Lj := mul_nonneg hej_pos.le hLj_nn
+    nlinarith [h2, h3]
+  have hbY : (Fintype.card α' : ℝ) * ε_join * Ly < ε_dist := by
+    rw [hed_def]
+    have h1 : 0 ≤ cB * ε_join * Lx := mul_nonneg (mul_nonneg hcB_pos.le hej_pos.le) hLx_nn
+    have h3 : 0 ≤ ε_join * Lj := mul_nonneg hej_pos.le hLj_nn
+    nlinarith [h1, h3]
+  have hbJ : ε_join * Lj < ε_dist := by
+    rw [hed_def]
+    have h1 : 0 ≤ cB * ε_join * Lx := mul_nonneg (mul_nonneg hcB_pos.le hej_pos.le) hLx_nn
+    have h2 : 0 ≤ cA * ε_join * Ly := mul_nonneg (mul_nonneg hcA_pos.le hej_pos.le) hLy_nn
+    nlinarith [h1, h2]
+  have h_jts : ∀ {n : ℕ}, 0 < n → ∀ (x : Fin n → α') (y : Fin n → Fin k),
+      (x, y) ∈ jointStronglyTypicalSet (rdAmbient qStar) iidXs iidYs n ε_join →
+      (x, y) ∈ distortionTypicalSet (rdAmbient qStar) iidXs iidYs d' n ε_dist δ_typ :=
+    fun {n} hn x y hxy =>
+      wz_jointStronglyTypical_mem_distortionTypical qStar hmem d' hej_pos.le
+        hbX hbY hbJ h_distslack hn x y hxy
+  -- Apply the rate-distortion covering theorem and repackage its conclusion.
+  clear_value ε_dist δ_kl δ_typ qZ_min
+  obtain ⟨N, hN⟩ := rate_distortion_achievability (marginalFst qStar) d'
+    qStar hmemRD hpos hI hε' ε_X ε_join ε_dist δ_kl δ_typ
+    hex_pos hej_pos hed_pos hdkl_pos hdtyp_nn hex_lt_ej h_rategap h_slack
+    h_distslack (fun {n} hn x y hxy => h_jts hn x y hxy) qZ_min hqZ_pos hqZ_le
+    h_dominates
+  refine ⟨N, fun n hn => ?_⟩
+  obtain ⟨M, hM_lb, c, hc⟩ := hN n hn
+  exact ⟨M, hM_lb, c, hc⟩
 
 /-- **(BD) Per-slack Wyner–Ziv code family.** From a feasible factorisable test
 channel `qf` (auxiliary `Fin k`, distortion `≤ D`, Wyner–Ziv objective `< R`), for
