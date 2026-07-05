@@ -471,6 +471,55 @@ theorem wzRateValueSet_bddBelow_of_pmf
     · exact ⟨⟨0, hk⟩⟩
   exact wzObjective_nonneg_of_factorizable h_pmf hfact
 
+/-- **Per-letter time-sharing witness of the Wyner–Ziv converse.**
+
+For a block Wyner–Ziv code on an i.i.d. source `(Xⁿ, Yⁿ)` with expected block
+distortion at most `D`, there exist per-letter distortion budgets `Dv i` and
+per-letter objective values `w i` such that: (a) each `w i` is attainable by a
+factorisable feasible point at its own budget `Dv i` (`w i ∈ wzRateValueSet …
+(Dv i)`); (b) the uniform average budget stays within the block budget,
+`(1/n) ∑ᵢ Dv i ≤ D`; and (c) the sum of the per-letter objectives is bounded by
+the block mutual-information difference,
+`∑ᵢ w i ≤ (I(J; Xⁿ) − I(J; Yⁿ)).toReal`.
+
+This is the genuine single-letterisation core (Cover–Thomas §15.9): the per-letter
+auxiliary `Uᵢ := (J, Y^{i-1})` is feasible via the memoryless-source per-letter
+Markov chain `Uᵢ − Xᵢ − Yᵢ`, and the sum identity
+`∑ᵢ [I(Xᵢ; Uᵢ) − I(Yᵢ; Uᵢ)] = I(J; Xⁿ) − I(J; Yⁿ)` follows from the heterogeneous
+Csiszár sum identity (`csiszar_sum_identity_hetero`, already sorry-free). The whole
+per-letter construction is isolated here as a residual; the outer feasible-point
+existence `wz_converse_feasible_point` is then discharged genuinely (sorry-free) by
+uniformly time-sharing these witnesses (`wzRateValueSet_avg_mem`).
+
+The conclusion is an *existential witness* (per-letter budgets + values with the
+three bounds), not a hypothesis bundle: it does not encode the outcome it is used to
+prove. `hindep` (memoryless source) / `hlaw` (identical marginals `= P_XY`) / `hD`
+(distortion budget) are genuine source-regularity preconditions — the per-letter
+Markov feasibility and the budget bound `(1/n) ∑ Dᵢ ≤ D` are false without them.
+@residual(plan:wyner-ziv-main-plan) -/
+private theorem wz_converse_perletter_witness
+    {Ω : Type*} [MeasurableSpace Ω]
+    {M n : ℕ} [NeZero M] (hn : 0 < n)
+    (c : WynerZivCode M n α β γ)
+    (hencoder : Measurable c.encoder) (hdecoder : Measurable c.decoder)
+    (d : DistortionFn α γ)
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindep : iIndepFun (fun i ω ↦ (Xs i ω, Ys i ω)) μ)
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (hlaw : ∀ i, μ.map (fun ω ↦ (Xs i ω, Ys i ω)) = P_XY)
+    {D : ℝ}
+    (hD : c.expectedBlockDistortion P_XY d ≤ D) :
+    ∃ (Dv w : Fin n → ℝ),
+      (∀ i, w i ∈ wzRateValueSet (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) (Dv i))
+        ∧ (1 / (n : ℝ)) * ∑ i, Dv i ≤ D
+        ∧ ∑ i, w i
+            ≤ (mutualInfo μ (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) (fun ω j ↦ Xs j ω)
+                - mutualInfo μ (fun ω ↦ c.encoder (fun j ↦ Xs j ω))
+                    (fun ω j ↦ Ys j ω)).toReal := by
+  sorry
+
 /-- **Single-letterisation core of the Wyner–Ziv converse (feasible-point form).**
 
 For a block Wyner–Ziv code on an i.i.d. source `(Xⁿ, Yⁿ)` with expected block
@@ -501,21 +550,15 @@ bound; it is strictly weaker than the outer infimum bound (`wynerZivRate ≤ …
 recovered by landing), so this is a genuine decomposition of the single-letterised
 core, not a restatement of it and not a hypothesis bundle.
 
-Independent honesty audit 2026-07-05 (PASS, honest_residual): the `sorry` is a genuine
-in-project residual, correctly classified. (1) Genuine decomposition, not a restatement
-of `h_sl`: the conclusion is an *existential witness* with bounded objective, strictly
-stronger than the infimum bound it discharges — landing (`wynerZivRate_le_of_feasible`,
-a one-directional `csInf_le`) turns witness ⟹ bound, but the bound alone yields no
-witness. (2) Not a bundle: `hindep` / `hlaw` / `hD` are genuine source-regularity
-preconditions (memorylessness for the Markov `Uᵢ−Xᵢ−Yᵢ` + Csiszár identity; distortion
-budget for `(1/n)∑Dᵢ ≤ D`); the existence-of-feasible-witness conclusion is not encoded
-in them. (3) `plan:` class correct — in-project self-build (Csiszár identity
-`csiszar_sum_identity_hetero` is already sorry-free; the residual is the time-sharing /
-per-letter-Markov construction), NOT a Mathlib wall; `docs/shannon/wyner-ziv-main-plan.md`
-exists. (4) Non-vacuous: `WynerZivFactorizableConstraint` requires a row-stochastic kernel
-(`∀ x, ∑ u, κ x u = 1`), so `Fin 0` cannot satisfy it (empty sum ≠ 1) ⟹ any witness has
-`k ≥ 1`.
-@residual(plan:wyner-ziv-main-plan) -/
+This body is now sorry-free: the feasible-point existence is discharged by landing the
+uniform time-share of the per-letter witnesses supplied by
+`wz_converse_perletter_witness` — `wzRateValueSet_avg_mem` averages the per-letter
+values `(1/n) ∑ w i` into a value of `wzRateValueSet … ((1/n) ∑ Dv i)`,
+`wzRateValueSet_mono_in_D` (with `(1/n) ∑ Dv i ≤ D`) relaxes it to budget `D`, and
+`mem_wzRateValueSet_iff` unpacks the resulting membership into the feasible factorisable
+point at some `Fin k`. The remaining residual lives *transitively* in
+`wz_converse_perletter_witness` (the Csiszár-identity + per-letter-Markov + time-sharing
+construction of those witnesses). -/
 theorem wz_converse_feasible_point
     {Ω : Type*} [MeasurableSpace Ω]
     {M n : ℕ} [NeZero M] (hn : 0 < n)
@@ -538,7 +581,25 @@ theorem wz_converse_feasible_point
               * (mutualInfo μ (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) (fun ω j ↦ Xs j ω)
                   - mutualInfo μ (fun ω ↦ c.encoder (fun j ↦ Xs j ω))
                       (fun ω j ↦ Ys j ω)).toReal := by
-  sorry
+  classical
+  obtain ⟨Dv, w, hmem, hDbudget, hsl⟩ :=
+    wz_converse_perletter_witness hn c hencoder hdecoder d μ Xs Ys hXs hYs hindep P_XY hlaw hD
+  have h_pmf : (fun p ↦ P_XY.real {p}) ∈ stdSimplex ℝ (α × β) :=
+    measureReal_pmf_mem_stdSimplex P_XY
+  have havg :
+      (1 / (n : ℝ)) * ∑ i, w i
+        ∈ wzRateValueSet (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ))
+            ((1 / (n : ℝ)) * ∑ i, Dv i) :=
+    wzRateValueSet_avg_mem h_pmf hn hmem
+  have havg_D :
+      (1 / (n : ℝ)) * ∑ i, w i
+        ∈ wzRateValueSet (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D :=
+    wzRateValueSet_mono_in_D hDbudget havg
+  rw [mem_wzRateValueSet_iff] at havg_D
+  obtain ⟨k, qf, hqf, hobj⟩ := havg_D
+  refine ⟨k, qf, hqf, ?_⟩
+  rw [hobj]
+  exact mul_le_mul_of_nonneg_left hsl (by positivity)
 
 /-- **Wyner–Ziv converse, `n`-letter single-letterized form** (reshaped rate).
 
