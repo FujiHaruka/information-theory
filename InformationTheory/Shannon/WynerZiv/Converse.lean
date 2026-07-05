@@ -672,6 +672,18 @@ the finite auxiliary type `Fin M × ({j // j ≠ i} → β)` to a `Fin k` and pa
 side-information decoder `f (u, y)` reconstructing `X̂ᵢ` lands the per-letter objective
 `(I(Xᵢ; Uᵢ) − I(Yᵢ; Uᵢ)).toReal` as a value of `wzRateValueSet` at the per-letter budget
 `Dv i = 𝔼[d(Xᵢ, X̂ᵢ)]`. `hlaw` fixes the `(Xᵢ, Yᵢ)`-marginal to `P_XY`.
+
+Independent honesty audit 2026-07-05 (PASS, honest_residual): the `sorry` is a genuine
+residual, not a hidden bundle. All hypotheses are source-regularity preconditions
+(measurability / `iIndepFun` memorylessness / `hlaw` marginal `= P_XY` /
+`IsProbabilityMeasure`); none encodes the factorisability conclusion. Sufficiency holds:
+dropping `hindep` breaks the per-letter Markov chain `Uᵢ − Xᵢ − Yᵢ`, so the empirical
+`(Xᵢ, Yᵢ, Uᵢ)` need not be factorisable and the point need not land in `wzRateValueSet` —
+so `hindep` is necessary, not under-hypothesised. Class `plan` is correct (not `wall`): the
+WZ gap is an unimplemented in-project atom (Markov ⟹ empirical-factorisable pmf), NOT a
+Mathlib gap — only the *reverse* helper `wzFactorizable_isMarkovChain` exists in-project
+(loogle: operational coding theory / method-of-types Found 0). Plan `wyner-ziv-main-plan`
+exists and P2 §5-sub-lemma covers this (sub-lemma 2).
 @residual(plan:wyner-ziv-main-plan) -/
 private theorem wz_perletter_factorizable
     {Ω : Type*} [MeasurableSpace Ω]
@@ -703,7 +715,12 @@ most `D` by `hD`. Proof clones the rate-distortion
 `blockDistortion_eq_avg_perLetter` for the side-information decoder: the joint law
 `μ.map (ω ↦ (Xⁿ ω, Yⁿ ω)) = Measure.pi (fun _ ↦ P_XY)` (from `hindep` + `hlaw`) turns
 each `μ`-integral into a `pi`-integral, and the sum collapses into the block-distortion
-integral. Body is sorry-free (genuine clone of the rate-distortion side). -/
+integral. Body is sorry-free (genuine clone of the rate-distortion side).
+@audit:ok (independent honesty audit 2026-07-05: sorryAx-free, `#print axioms` =
+[propext, Classical.choice, Quot.sound] machine-verified. Genuine body — the real content
+is the identity `(1/n) ∑ᵢ Dv i = expectedBlockDistortion` (product-law change of variables
++ Fubini + block-distortion assembly); `hD` is a genuine distortion-budget precondition
+chained after the identity, NOT circular and NOT load-bearing.) -/
 private theorem wz_perletter_distortion_avg
     {Ω : Type*} [MeasurableSpace Ω]
     {M n : ℕ} [NeZero M] (_hn : 0 < n)
@@ -786,6 +803,16 @@ Route (conditional-MI chain, **not** Csiszár): the memoryless per-letter Markov
 `(Y_{\i}, Yᵢ) = Yⁿ` turns this into `I(Xᵢ; J | Yⁿ)`, and the conditional chain rule
 with `J − Xⁿ − Yⁿ` yields `∑ᵢ I(Xᵢ; J | Yⁿ) ≤ I(Xⁿ; J | Yⁿ) = I(J; Xⁿ) − I(J; Yⁿ)`.
 This is the deepest atom of the converse single-letterisation.
+
+Independent honesty audit 2026-07-05 (PASS, honest_residual): genuine residual, not a
+bundle. All hypotheses are source-regularity preconditions (measurability / `iIndepFun`
+memorylessness / `IsProbabilityMeasure` / `0 < n`); none carries the rate inequality.
+Sufficiency holds: the conditional-MI chain above is the standard Wyner–Ziv converse
+(Cover–Thomas §15.9) and is TRUE-as-framed — the memoryless collapse `I(Xᵢ; Y_{\i} | Yᵢ) = 0`
+needs `hindep` (dropping it breaks the chain), and the RHS `I(J; Xⁿ) − I(J; Yⁿ) ≥ 0` since
+`J − Xⁿ − Yⁿ` (deterministic encoder) forces `I(J; Yⁿ) ≤ I(J; Xⁿ)` by DPI. Degenerate
+`n = 1` gives `Y_{\i}` over an empty index, `Uᵢ = J`, and the claim becomes an equality
+(alive). Class `plan` correct (in-project atom, not a Mathlib wall).
 @residual(plan:wyner-ziv-main-plan) -/
 private theorem wz_singleletter_rate_le
     {Ω : Type*} [MeasurableSpace Ω]
@@ -848,7 +875,19 @@ prove. `hindep` (memoryless source) / `hlaw` (identical marginals `= P_XY`) / `h
 (distortion budget) are genuine source-regularity preconditions — the per-letter
 Markov feasibility and the budget bound `(1/n) ∑ Dᵢ ≤ D` are false without them. Any
 residual reachable from this witness lives *transitively* in the three sub-lemmas above
-(all `@residual(plan:wyner-ziv-main-plan)` where still open), not in a hidden bundle. -/
+(all `@residual(plan:wyner-ziv-main-plan)` where still open), not in a hidden bundle.
+
+Independent honesty audit 2026-07-05 (PASS, honest_residual — signature/decomposition
+verified): this decl's own body is now genuinely sorry-free (it does NOT appear in the
+file's `sorry` warnings; `Dv`/`w` are explicitly constructed, the three conjuncts are
+discharged by `wz_perletter_factorizable` / `wz_perletter_distortion_avg` /
+`wz_singleletter_rate_le`). This is a GENUINE existential decomposition, not hypothesis
+bundling: the conclusion asserts the *existence* of per-letter budgets/values meeting the
+three bounds — it does not encode the outcome it is used to prove, and all hypotheses
+(`hindep` / `hlaw` / `hD` + measurability / `IsProbabilityMeasure`) are source-regularity
+preconditions. The residual is exactly the transitive one in sub-lemmas 2 (feasibility) and
+3 (conditional-MI rate bound); sub-lemma 4 (distortion avg) is sorryAx-free. NOT `@audit:ok`
+(transitive sorries remain in sub 2/3). -/
 private theorem wz_converse_perletter_witness
     {Ω : Type*} [MeasurableSpace Ω]
     {M n : ℕ} [NeZero M] (hn : 0 < n)
