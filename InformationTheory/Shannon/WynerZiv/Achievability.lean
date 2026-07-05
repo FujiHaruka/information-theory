@@ -1,5 +1,6 @@
 import InformationTheory.Shannon.WynerZiv.Operational
 import InformationTheory.Shannon.WynerZiv.FactorizableRate
+import InformationTheory.Shannon.WynerZiv.Converse
 import InformationTheory.Shannon.SlepianWolf.FullRateRegion.AliasBound
 import InformationTheory.Shannon.ConditionalMethodOfTypes.Mass
 
@@ -174,6 +175,71 @@ theorem wz_covering_sideInfo_mass_ge
     hposZ hposX hposY hmarg_X hmarg_Y hε hε_X hε_X_lt_ε hδ qZ_min hqZ_min_pos
     hqZ_min_le hδ_dominates_kl
 
+/-! ## Rate non-negativity leaf (data-processing)
+
+The reshaped Wyner–Ziv rate is non-negative: every factorisable feasible objective
+`I(X;U) − I(Y;U)` is `≥ 0` by the data-processing inequality for the Markov chain
+`U − X − Y` (`wzObjective_nonneg_of_factorizable`), so its infimum over the
+non-degenerate value set is `≥ 0`. Combined with `h_rate`, this pins `0 < R`, which
+is exactly what the codebook-rate tendsto `codebookSize_log_div_tendsto` needs. -/
+
+/-- The reshaped Wyner–Ziv rate for a probability-measure source is `≥ 0`. -/
+private lemma wynerZivRate_nonneg
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (D : ℝ) :
+    0 ≤ wynerZivRate (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D := by
+  classical
+  have h_pmf : (fun p ↦ P_XY.real {p}) ∈ stdSimplex ℝ (α × β) := by
+    refine ⟨fun p ↦ measureReal_nonneg, ?_⟩
+    have h1 : (∑ p : α × β, P_XY.real {p})
+        = P_XY.real (Finset.univ : Finset (α × β)) := by
+      simp [sum_measureReal_singleton]
+    rw [h1, Finset.coe_univ]
+    exact probReal_univ
+  unfold wynerZivRate
+  refine Real.sInf_nonneg ?_
+  rintro v hv
+  rw [mem_wzRateValueSet_iff] at hv
+  obtain ⟨k, qf, hqf, rfl⟩ := hv
+  have hfact : IsWynerZivFactorizable (Fin k) (fun p ↦ P_XY.real {p}) qf.1 := hqf.1
+  haveI : Nonempty (Fin k) := by
+    rcases Nat.eq_zero_or_pos k with hk | hk
+    · exfalso
+      subst hk
+      obtain ⟨κ, _, hκsum, _⟩ := hfact
+      obtain ⟨x⟩ := (inferInstance : Nonempty α)
+      have hsum := hκsum x
+      simp only [Finset.univ_eq_empty, Finset.sum_empty] at hsum
+      exact absurd hsum (by norm_num)
+    · exact ⟨⟨0, hk⟩⟩
+  exact wzObjective_nonneg_of_factorizable h_pmf hfact
+
+/-! ## Covering + binning construction (hard leg)
+
+The centrepiece of Wyner–Ziv achievability: from a feasible test channel below the
+rate `R`, build a sequence of Wyner–Ziv block codes with `codebookSize R n =
+⌈exp(n R)⌉` messages whose expected block distortion is eventually within `D + ε`.
+
+The construction is the two-layer hybrid (rate-distortion covering on the `X → U`
+side, Slepian–Wolf binning on the side-information `Y` side) whose two error
+mechanisms are the gateway atoms `wz_sideInfo_decoder_confusion_expectation_le`
+and `wz_covering_sideInfo_mass_ge`, with a good codebook extracted by the
+pigeonhole averaging `exists_codebook_low_avg`. Deferred as the remaining plumbing
+body of this plan. -/
+
+/-- Existence of a Wyner–Ziv code sequence (at the operational message rate `R`)
+whose expected block distortion is eventually within `D + ε`, from a feasible test
+channel strictly below `R`. The remaining covering + binning plumbing.
+@residual(plan:wyner-ziv-main-plan) -/
+theorem wyner_ziv_achievability_codes
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (R D : ℝ)
+    (h_rate : wynerZivRate (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D < R) :
+    ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
+      ∀ ε : ℝ, 0 < ε → ∀ᶠ n in Filter.atTop,
+        (c n).expectedBlockDistortion P_XY d ≤ D + ε := by
+  sorry
+
 /-! ## Operational achievability headline -/
 
 /-- **Wyner–Ziv operational achievability.** If the information-theoretic
@@ -183,15 +249,20 @@ achievable at distortion `D`: there is a sequence of Wyner–Ziv block codes who
 log-cardinality rate tends to `R` and whose expected block distortion is
 eventually within `D + ε` for every `ε > 0`.
 
-The body assembles the binning + covering hybrid over the two gateway atoms
-`wz_sideInfo_decoder_confusion_expectation_le` and `wz_covering_sideInfo_mass_ge`;
-it is deferred to a follow-up leg.
-@residual(plan:wyner-ziv-main-plan) -/
+The body is assembled: the message sequence is fixed to `codebookSize R n =
+⌈exp(n R)⌉`, whose log-cardinality rate tends to `R` via `codebookSize_log_div_tendsto`
+(using `0 < R`, from `wynerZivRate_nonneg` and `h_rate`); the distortion sequence is
+supplied by the covering + binning construction `wyner_ziv_achievability_codes`,
+which carries the remaining plumbing `sorry`. The headline itself is `sorry`-free
+(it reduces to that one residual lemma). -/
 theorem wyner_ziv_achievability
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
     (h_rate : wynerZivRate (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D < R) :
     WynerZivAchievable P_XY d R D := by
-  sorry
+  have hR : 0 < R := lt_of_le_of_lt (wynerZivRate_nonneg P_XY d D) h_rate
+  obtain ⟨c, hc⟩ := wyner_ziv_achievability_codes P_XY d R D h_rate
+  exact ⟨codebookSize R, fun n ↦ codebookSize_pos R n, c,
+    codebookSize_log_div_tendsto hR, hc⟩
 
 end InformationTheory.Shannon
