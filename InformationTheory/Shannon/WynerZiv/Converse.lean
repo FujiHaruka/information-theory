@@ -496,6 +496,34 @@ three bounds), not a hypothesis bundle: it does not encode the outcome it is use
 prove. `hindep` (memoryless source) / `hlaw` (identical marginals `= P_XY`) / `hD`
 (distortion budget) are genuine source-regularity preconditions — the per-letter
 Markov feasibility and the budget bound `(1/n) ∑ Dᵢ ≤ D` are false without them.
+
+Independent honesty audit 2026-07-05 (PASS, honest_residual — auditor-verified, not
+self-reported): all four honesty checks pass. (1) Non-circular / non-bundled: no
+hypothesis has type ≡ the existential conclusion; `hindep` / `hlaw` / `hD` +
+measurability are genuine source-regularity preconditions, not a `*Hypothesis` /
+`*Reduction` bundle carrying the single-letterisation core (which lives in the
+conclusion). (2) Non-vacuous: `wzRateValueSet … (Dv i)` membership requires a
+row-stochastic kernel `∑_u κ x u = 1`, so `Fin 0` cannot satisfy it — the witness has
+genuine content. (3) Sufficiency (the key risk) checks out: the statement is
+TRUE-as-framed (Wyner–Ziv converse single-letterisation, Cover–Thomas §15.9). For the
+memoryless source `hindep`, the per-letter auxiliary `Uᵢ := (J, Y^{i-1})` genuinely
+satisfies `Uᵢ − Xᵢ − Yᵢ` (given `Xᵢ`, `Yᵢ ⊥ (X_{-i}, Y^{i-1})` by memorylessness, hence
+`Yᵢ ⊥ (J, Y^{i-1})`), and `∑ᵢ[I(Xᵢ;Uᵢ) − I(Yᵢ;Uᵢ)] = I(J;Xⁿ) − I(J;Yⁿ)` via the
+sorry-free `csiszar_sum_identity_hetero`; the DPI-nonnegative objective (`≥ 0`) makes
+`∑ w i ≤ (I(J;Xⁿ) − I(J;Yⁿ)).toReal` a substantive (non-trivial) bound (`I(J;Xⁿ) ≥
+I(J;Yⁿ)` by the `J − Xⁿ − Yⁿ` Markov chain). Break attempts failed to refute: `n = 1`
+gives `U₁ = J`, budget `D₁ ≤ D`, sum a single term = the block difference; the
+independent-`Y` boundary keeps the identity alive via Csiszár (does not collapse the
+claim). `hlaw` is load-bearing as a *precondition* — without identical marginals each
+per-letter point would be feasible w.r.t. its own marginal, not the single `P_XY` of
+the value set. (4) Classification `@residual(plan:wyner-ziv-main-plan)` is correct: the
+residual is the in-project single-letterisation *construction* (Csiszár identity +
+per-letter Markov + time-sharing), all in-tree assets, NOT a Mathlib gap — `plan`, not
+`wall`. The plan exists (`docs/shannon/wyner-ziv-main-plan.md`) and covers this
+single-letterisation core (P2 §"single-letterization core"). `#print axioms` on the
+consumer `wz_converse_feasible_point` confirms its only `sorryAx` source is transitive
+through this witness (its own body wires the sorryAx-free `wzRateValueSet_avg_mem` +
+`wzRateValueSet_mono_in_D` + `mem_wzRateValueSet_iff`, no hidden bundle).
 @residual(plan:wyner-ziv-main-plan) -/
 private theorem wz_converse_perletter_witness
     {Ω : Type*} [MeasurableSpace Ω]
