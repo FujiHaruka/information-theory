@@ -2136,9 +2136,9 @@ theorem wz_support_reduce
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) {d : α → γ → ℝ} {D : ℝ}
     {k : ℕ} {κ : α → Fin k → ℝ}
     (hκ : κ ∈ wzKernelFeasible (Fin k) P_XY d D) :
-    ∃ κ' : α → Fin (Fintype.card α + 2) → ℝ,
-      κ' ∈ wzKernelFeasible (Fin (Fintype.card α + 2)) P_XY d D ∧
-      wzKernelObjective (Fin (Fintype.card α + 2)) P_XY κ'
+    ∃ κ' : α → Fin (Fintype.card α + 3) → ℝ,
+      κ' ∈ wzKernelFeasible (Fin (Fintype.card α + 3)) P_XY d D ∧
+      wzKernelObjective (Fin (Fintype.card α + 3)) P_XY κ'
         ≤ wzKernelObjective (Fin k) P_XY κ := by
   sorry
 
@@ -2181,11 +2181,11 @@ on `wz_support_reduce`, not here).
 theorem wynerZivRate_eq_factorizable_finK
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) (d : α → γ → ℝ) (D : ℝ) :
     wynerZivRate P_XY d D
-      = wynerZivRateFactorizable (Fin (Fintype.card α + 2)) P_XY d D := by
+      = wynerZivRateFactorizable (Fin (Fintype.card α + 3)) P_XY d D := by
   classical
-  have hfactK : wynerZivRateFactorizable (Fin (Fintype.card α + 2)) P_XY d D
-      = sInf (wzKernelObjective (Fin (Fintype.card α + 2)) P_XY
-          '' wzKernelFeasible (Fin (Fintype.card α + 2)) P_XY d D) := by
+  have hfactK : wynerZivRateFactorizable (Fin (Fintype.card α + 3)) P_XY d D
+      = sInf (wzKernelObjective (Fin (Fintype.card α + 3)) P_XY
+          '' wzKernelFeasible (Fin (Fintype.card α + 3)) P_XY d D) := by
     rw [wynerZivRateFactorizable_eq_sInf_kernel]
     rfl
   have hunion : wzRateValueSet P_XY d D
@@ -2194,14 +2194,14 @@ theorem wynerZivRate_eq_factorizable_finK
   unfold wynerZivRate
   rw [hfactK]
   set A := wzRateValueSet P_XY d D with hAdef
-  set B := wzKernelObjective (Fin (Fintype.card α + 2)) P_XY
-      '' wzKernelFeasible (Fin (Fintype.card α + 2)) P_XY d D with hBdef
+  set B := wzKernelObjective (Fin (Fintype.card α + 3)) P_XY
+      '' wzKernelFeasible (Fin (Fintype.card α + 3)) P_XY d D with hBdef
   -- `B = T_K ⊆ ⋃ T_j = A`.
   have hSK_sub : B ⊆ A := by
     rw [hunion]
     exact Set.subset_iUnion
       (fun j : ℕ ↦ wzKernelObjective (Fin j) P_XY '' wzKernelFeasible (Fin j) P_XY d D)
-      (Fintype.card α + 2)
+      (Fintype.card α + 3)
   have hSU_bdd : BddBelow A := wzRateValueSet_bddBelow_of_pmf h_pmf d D
   have hSK_bdd : BddBelow B := hSU_bdd.mono hSK_sub
   -- The reduction lands every union witness into `B` with objective `≤`.
@@ -2210,7 +2210,7 @@ theorem wynerZivRate_eq_factorizable_finK
     rw [hunion, Set.mem_iUnion] at hv
     obtain ⟨j, κ, hκ, hκv⟩ := hv
     obtain ⟨κ', hκ'feas, hκ'le⟩ := wz_support_reduce h_pmf hκ
-    refine ⟨wzKernelObjective (Fin (Fintype.card α + 2)) P_XY κ', ⟨κ', hκ'feas, rfl⟩, ?_⟩
+    refine ⟨wzKernelObjective (Fin (Fintype.card α + 3)) P_XY κ', ⟨κ', hκ'feas, rfl⟩, ?_⟩
     rw [← hκv]; exact hκ'le
   have hne_iff : A.Nonempty ↔ B.Nonempty := by
     constructor
@@ -2290,7 +2290,7 @@ theorem wynerZivRate_le_of_forall_pos_add_endpoint
   -- L3 assembly: identify with the fixed-`K` factorisable rate (L1), then apply
   -- fixed-`K` right-continuity (L2), transporting `hstep` through L1 at each `D + ε`.
   rw [wynerZivRate_eq_factorizable_finK h_pmf d D]
-  refine wynerZivRateFactorizable_right_continuous_le (Fin (Fintype.card α + 2)) h_pmf hR ?_
+  refine wynerZivRateFactorizable_right_continuous_le (Fin (Fintype.card α + 3)) h_pmf hR ?_
   intro ε hε
   rw [← wynerZivRate_eq_factorizable_finK h_pmf d (D + ε)]
   exact hstep ε hε
