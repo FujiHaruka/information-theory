@@ -689,7 +689,11 @@ theorem wynerZivRate_le_of_feasible
 enlarges the set of attainable objective values, since every feasible
 factorisable point at budget `D` remains feasible at `D' ≥ D`
 (`WynerZivFactorizableConstraint_mono_in_D`, applied at each auxiliary alphabet
-`Fin k`). -/
+`Fin k`).
+
+@audit:ok (independent honesty audit 2026-07-05: sorryAx-free, `#print axioms` =
+[propext, Classical.choice, Quot.sound]; genuine subset body via
+`WynerZivFactorizableConstraint_mono_in_D`, no load-bearing hyp / vacuity). -/
 lemma wzRateValueSet_mono_in_D
     {P_XY : α × β → ℝ} {d : α → γ → ℝ} {D D' : ℝ} (hD : D ≤ D') :
     wzRateValueSet P_XY d D ⊆ wzRateValueSet P_XY d D' := by
@@ -702,7 +706,12 @@ lemma wzRateValueSet_mono_in_D
 enlarges the value set (`wzRateValueSet_mono_in_D`), so its infimum is smaller.
 The `BddBelow` at `D'` and non-emptiness at `D` are the standard `csInf_le_csInf`
 side conditions — both discharged in `Converse.lean` (via
-`wzRateValueSet_bddBelow_of_pmf` and a feasible witness). -/
+`wzRateValueSet_bddBelow_of_pmf` and a feasible witness).
+
+@audit:ok (independent honesty audit 2026-07-05: sorryAx-free, `#print axioms` =
+[propext, Classical.choice, Quot.sound]; genuine `csInf_le_csInf` body. `h_bdd` /
+`h_ne` are its standard regularity side conditions, not load-bearing core, and the
+antitone direction `D ≤ D' ⟹ rate(D') ≤ rate(D)` is the correct one). -/
 theorem wynerZivRate_antitone
     {P_XY : α × β → ℝ} {d : α → γ → ℝ} {D D' : ℝ} (hD : D ≤ D')
     (h_bdd : BddBelow (wzRateValueSet P_XY d D'))

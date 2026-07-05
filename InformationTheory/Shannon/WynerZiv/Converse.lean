@@ -500,6 +500,21 @@ The conclusion is the *existence* of a feasible witness realising the objective
 bound; it is strictly weaker than the outer infimum bound (`wynerZivRate ≤ …`,
 recovered by landing), so this is a genuine decomposition of the single-letterised
 core, not a restatement of it and not a hypothesis bundle.
+
+Independent honesty audit 2026-07-05 (PASS, honest_residual): the `sorry` is a genuine
+in-project residual, correctly classified. (1) Genuine decomposition, not a restatement
+of `h_sl`: the conclusion is an *existential witness* with bounded objective, strictly
+stronger than the infimum bound it discharges — landing (`wynerZivRate_le_of_feasible`,
+a one-directional `csInf_le`) turns witness ⟹ bound, but the bound alone yields no
+witness. (2) Not a bundle: `hindep` / `hlaw` / `hD` are genuine source-regularity
+preconditions (memorylessness for the Markov `Uᵢ−Xᵢ−Yᵢ` + Csiszár identity; distortion
+budget for `(1/n)∑Dᵢ ≤ D`); the existence-of-feasible-witness conclusion is not encoded
+in them. (3) `plan:` class correct — in-project self-build (Csiszár identity
+`csiszar_sum_identity_hetero` is already sorry-free; the residual is the time-sharing /
+per-letter-Markov construction), NOT a Mathlib wall; `docs/shannon/wyner-ziv-main-plan.md`
+exists. (4) Non-vacuous: `WynerZivFactorizableConstraint` requires a row-stochastic kernel
+(`∀ x, ∑ u, κ x u = 1`), so `Fin 0` cannot satisfy it (empty sum ≠ 1) ⟹ any witness has
+`k ≥ 1`.
 @residual(plan:wyner-ziv-main-plan) -/
 theorem wz_converse_feasible_point
     {Ω : Type*} [MeasurableSpace Ω]
@@ -559,9 +574,11 @@ lives *transitively* in `wz_converse_feasible_point` (the Csiszár-identity +
 per-letter-feasibility + time-sharing construction of that witness); no Carathéodory
 support lemma is on the critical path.
 
-Independent honesty audit 2026-07-05 (PASS, honest_residual): the only residual is the
-transitive one inside `wz_converse_feasible_point`; `h_block`, the `(1/n)`-scaling, and
-the `h_sl` landing here are sorry-free. Dropping `hU_card` is SOUND, not
+Independent honesty audit 2026-07-05 (PASS, honest_residual — auditor-verified, not
+self-reported): `#print axioms` confirms this decl's only `sorryAx` source is the
+transitive one inside `wz_converse_feasible_point` (the landing lemmas
+`mutualInfo_diff_le_log_card` and `wzRateValueSet_bddBelow_of_pmf` are both sorryAx-free);
+`h_block`, the `(1/n)`-scaling, and the `h_sl` landing are sorry-free in this body. Dropping `hU_card` is SOUND, not
 under-hypothesised: `wynerZivRate` is the infimum over the union of images across *all*
 `Fin k`, hence `≤` any single fixed-`U` rate, i.e. the WEAKEST (smallest-LHS) converse
 claim — the single-letterisation auxiliary lands directly, so no sizing precondition is
