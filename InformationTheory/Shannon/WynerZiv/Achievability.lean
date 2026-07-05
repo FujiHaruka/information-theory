@@ -1023,6 +1023,214 @@ private lemma wz_coveringFamily_of_testChannel
           * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
     hI hfeas hε'
 
+/-! ### Steps 3–7 decomposition (binning / decoder / error exponents / squeeze)
+
+The covering data of Steps 1–2 (`wz_coveringFamily_of_testChannel`) is consumed by
+the binning + decoder leg. This leg is decomposed into:
+
+* **S3** `wzCodeOfCoveringBinning` — the Wyner–Ziv code assembled from a covering
+  codebook, a binning of the covering index, and a bin/side-information decoder
+  (pure def).
+* **S4** `wzBinTypicalDecoder` (+ uniqueness `wzBinTypicalDecoder_eq_of_unique`) —
+  the bin-restricted conditional-typicality decoder, searching a bin's covering
+  **codebook members** for the one jointly typical with `Y^n` (pure def + the
+  decoder equation under a unique witness), mirroring Slepian–Wolf
+  `swJointTypicalDecoder` / `swJointTypicalDecoder_eq_of_unique`.
+* **S5a** `wz_covering_failure_prob_le` — covering-failure exponent (E1).
+* **S5b** `wz_codebook_confusion_expectation_le` — codebook-restricted decoder
+  confusion exponent (E2, the crux).
+* **S6** `wz_perDelta_covering_binning` — the capstone consuming the covering data
+  and producing the per-slack code family (binning + decoder + error exponents +
+  derandomize + squeeze + source extension).
+* **S7** `wzLiftSupportCode` — the source-extension lift `α' → α` (pure def), used
+  together with the sorry-free `wz_expectedBlockDistortion_source_agree`.
+-/
+
+/-- **(S3) Wyner–Ziv code from a covering codebook + binning + bin decoder.**
+The encoder covers the source with the covering codebook (`c₁.encoder`) and bins
+the covering index (`f`). The decoder reconstructs `γ^n` letterwise via `rec`
+(the test-channel decoder `qf.2 : Fin k × β → γ`) from the bin decoder's word
+`dec (m, y) : Fin n → Fin k` and the side information `y`. Pure assembly; the
+covering codebook `c₁`, the binning `f`, the reconstruction map `rec` and the bin
+decoder `dec` are all supplied. -/
+def wzCodeOfCoveringBinning {α' : Type*} [MeasurableSpace α'] {k M M₁ n : ℕ}
+    (c₁ : LossyCode M₁ n α' (Fin k)) (f : Fin M₁ → Fin M)
+    (rec : Fin k × β → γ)
+    (dec : Fin M × (Fin n → β) → (Fin n → Fin k)) :
+    WynerZivCode M n α' β γ where
+  encoder := fun x ↦ f (c₁.encoder x)
+  decoder := fun my ↦ fun i ↦ rec (dec my i, my.2 i)
+
+/-- **(S4) Bin/side-information conditional-typicality decoder.** Given a bin `m`
+and side information `y`, search the bin's covering **codebook members**
+`{c₁.decoder m' | f m' = m}` for the unique word jointly typical with `y`, returning
+that `Fin n → Fin k` word (falling back to an arbitrary word if none exists or the
+witness is not unique). The search ranges over codebook members only (indexed by the
+covering index `m'`), not over all `Fin n → Fin k` words — this restriction is what
+makes the decoder-confusion event (S5b) achievable at the Wyner–Ziv rate. Mirror of
+Slepian–Wolf `swJointTypicalDecoder`. -/
+noncomputable def wzBinTypicalDecoder {α' : Type*} [MeasurableSpace α']
+    {Ω : Type*} [MeasurableSpace Ω] {k M M₁ n : ℕ} [Nonempty (Fin k)]
+    (μ : Measure Ω) (Us : ℕ → Ω → Fin k) (Ys : ℕ → Ω → β) (ε : ℝ)
+    (c₁ : LossyCode M₁ n α' (Fin k)) (f : Fin M₁ → Fin M) :
+    Fin M × (Fin n → β) → (Fin n → Fin k) := fun my ↦
+  haveI : Decidable (∃! u : Fin n → Fin k,
+      (∃ m' : Fin M₁, f m' = my.1 ∧ c₁.decoder m' = u)
+        ∧ (u, my.2) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε) :=
+    Classical.propDecidable _
+  if h : ∃! u : Fin n → Fin k,
+      (∃ m' : Fin M₁, f m' = my.1 ∧ c₁.decoder m' = u)
+        ∧ (u, my.2) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε
+    then Classical.choose h.exists
+    else Classical.arbitrary _
+
+/-- If the covering codeword `c₁.decoder m₁` is jointly typical with `y` and is the
+unique bin-`f m₁` codebook member so typical, then `wzBinTypicalDecoder` recovers it.
+Mirror of `swJointTypicalDecoder_eq_of_unique`. -/
+lemma wzBinTypicalDecoder_eq_of_unique {α' : Type*} [MeasurableSpace α']
+    {Ω : Type*} [MeasurableSpace Ω] {k M M₁ n : ℕ} [Nonempty (Fin k)]
+    (μ : Measure Ω) (Us : ℕ → Ω → Fin k) (Ys : ℕ → Ω → β) (ε : ℝ)
+    (c₁ : LossyCode M₁ n α' (Fin k)) (f : Fin M₁ → Fin M)
+    {m₁ : Fin M₁} {y : Fin n → β}
+    (htrue : (c₁.decoder m₁, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε)
+    (hunique : ∀ u : Fin n → Fin k,
+        (∃ m' : Fin M₁, f m' = f m₁ ∧ c₁.decoder m' = u) →
+        (u, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε →
+        u = c₁.decoder m₁) :
+    wzBinTypicalDecoder μ Us Ys ε c₁ f (f m₁, y) = c₁.decoder m₁ := by
+  have hExUnique : ∃! u : Fin n → Fin k,
+      (∃ m' : Fin M₁, f m' = f m₁ ∧ c₁.decoder m' = u)
+        ∧ (u, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε := by
+    refine ⟨c₁.decoder m₁, ⟨⟨m₁, rfl, rfl⟩, htrue⟩, ?_⟩
+    intro u hu
+    exact hunique u hu.1 hu.2
+  unfold wzBinTypicalDecoder
+  rw [dif_pos hExUnique]
+  have hch_spec :
+      (∃ m' : Fin M₁, f m' = f m₁
+          ∧ c₁.decoder m' = Classical.choose hExUnique.exists)
+        ∧ (Classical.choose hExUnique.exists, y)
+            ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε :=
+    Classical.choose_spec hExUnique.exists
+  exact hunique (Classical.choose hExUnique.exists) hch_spec.1 hch_spec.2
+
+/-- **(S5a) Covering-failure exponent (E1).** The codebook-averaged probability
+that a strongly-typical source `x` finds **no** covering codeword jointly typical
+with it decays doubly-exponentially: `∫ x, (1 − p_typ x)^{M₁} ≤ exp(−M₁ · exp(−n(I +
+δ)))`, where `p_typ x` is the per-codeword conditional-typicality mass (bounded below
+by `exp(−n(I + δ))` via `wz_covering_sideInfo_mass_ge`). The bound is
+`encoder_failure_prob_le_exp_neg_M_avg` composed with that mass lower bound; the body
+is stubbed for a later leg.
+@residual(plan:wyner-ziv-main-plan) -/
+lemma wz_covering_failure_prob_le {α' : Type*}
+    [Fintype α'] [DecidableEq α'] [Nonempty α']
+    [MeasurableSpace α'] [MeasurableSingletonClass α']
+    {Ω : Type*} [MeasurableSpace Ω] {k n M₁ : ℕ} [Nonempty (Fin k)]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α') (Us : ℕ → Ω → Fin k) (ε : ℝ)
+    (P_X : Measure (Fin n → α')) [IsProbabilityMeasure P_X]
+    (I δ : ℝ) :
+    ∫ x, (1 - (Measure.pi fun _ : Fin n ↦ μ.map (Us 0)).real
+              {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁ ∂P_X
+      ≤ Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))) := by
+  -- @residual(plan:wyner-ziv-main-plan)
+  sorry
+
+/-- **(S5b) Codebook-restricted decoder confusion exponent (E2, the crux).** The
+binning-averaged probability that some **codebook member** `c₁.decoder m'` other than
+the true covering codeword shares the true bin and is jointly typical with `Y^n` is at
+most `M₁ · exp(−n · I(U;Y)) · M⁻¹`.
+
+**Crux — what a later leg must build.** Gateway atom
+`wz_sideInfo_decoder_confusion_expectation_le` bins **all** `u`-sequences (giving the
+count `exp(n·H(U|Y))`), which forces the achievable rate down to `H(U|Y)` — too weak
+for Wyner–Ziv. This bound instead restricts the confusable set to the **covering
+codebook** (`M₁ = ⌈exp(n·I(X;U))⌉` members), so the alias count is `M₁` rather than
+`exp(n·H(U|Y))`. With `M = ⌈exp(n·R)⌉` bins, the bound is
+`M₁ · exp(−n·I(U;Y)) / M ≈ exp(n·(I(X;U) − I(U;Y) − R))`, which vanishes precisely
+when `R > I(X;U) − I(Y;U)` — the Wyner–Ziv rate. A later leg must prove this by an AEP
+union bound over the (random) covering codebook members that are independent of `Y^n`,
+NOT by instantiating the all-sequences gateway atom.
+@residual(plan:wyner-ziv-main-plan) -/
+lemma wz_codebook_confusion_expectation_le {α' : Type*} [MeasurableSpace α']
+    {Ω : Type*} [MeasurableSpace Ω] {k n M M₁ : ℕ} [Nonempty (Fin k)] [NeZero M]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Us : ℕ → Ω → Fin k) (Ys : ℕ → Ω → β) (ε : ℝ)
+    (c₁ : LossyCode M₁ n α' (Fin k)) (trueIdx : Ω → Fin M₁)
+    (binMeas : Measure (Fin M₁ → Fin M)) [IsProbabilityMeasure binMeas]
+    (I_YU : ℝ) :
+    ∫ f, μ.real {ω | ∃ m' : Fin M₁,
+            m' ≠ trueIdx ω
+          ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω)
+              ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε}
+        ∂binMeas
+      ≤ (M₁ : ℝ) * Real.exp (-(n : ℝ) * I_YU) * ((M : ℝ))⁻¹ := by
+  -- @residual(plan:wyner-ziv-main-plan)
+  sorry
+
+/-- **(S7) Source-extension lift `α' → α`.** Lift a Wyner–Ziv code over the source
+support subtype `α' := {x // 0 < P_X x}` to a code over the full alphabet `α`, using
+the default support element `x₀` for out-of-support coordinates (which have zero
+`Measure.pi P_XY`-mass, so the lift preserves expected block distortion via
+`wz_expectedBlockDistortion_source_agree`). The decoder is unchanged (it does not
+touch `α`). Pure def. -/
+noncomputable def wzLiftSupportCode
+    (P_XY : Measure (α × β)) {M n : ℕ}
+    (x₀ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}})
+    (cSupp : WynerZivCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} β γ) :
+    WynerZivCode M n α β γ where
+  encoder := fun x ↦ cSupp.encoder (fun i ↦
+    haveI := Classical.propDecidable (0 < ∑ y, P_XY.real {(x i, y)})
+    if h : 0 < ∑ y, P_XY.real {(x i, y)} then ⟨x i, h⟩ else x₀)
+  decoder := cSupp.decoder
+
+/-- **(S6) Covering + binning capstone (Steps 3–7).** Consuming the Step 1–2 covering
+data (the full-support factorisable joint `q'` with kernel `κ'`, the restricted
+covering joint `qStar`, the covering proxy distortion `d'`, the covering feasibility
+`hfeas`, and the covering `LossyCode` family `hcov`), assemble the per-slack Wyner–Ziv
+code family at the operational rate `R`: bin the covering index down to
+`codebookSize R n` messages, decode by the bin conditional-typicality search (S3/S4),
+bound the covering-failure (S5a) and codebook-restricted decoder-confusion (S5b) error
+events, extract a good deterministic codebook + binning by double derandomization
+(`exists_codebook_low_avg` / `exists_pair_le_of_binning_integral_le`), squeeze the
+residual distortion excess to `0` (`source_avg_distortion_le_simpler`,
+`ceil_exp_mul_exp_neg_tendsto_atTop`), and extend the covering code `α' → α`
+(`wzLiftSupportCode` + `wz_expectedBlockDistortion_source_agree`).
+
+All hypotheses are genuine covering data / regularity produced by Steps 1–2 — the
+covering `LossyCode` family, the distortion feasibility, positivity and simplex
+membership. No error-probability or decoder-correctness claim is a hypothesis (those
+are derived in the body via S5a/S5b). The body is stubbed for a later leg.
+@residual(plan:wyner-ziv-main-plan) -/
+lemma wz_perDelta_covering_binning
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (R D : ℝ)
+    (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (δ : ℝ) (hδ : 0 < δ)
+    (q' : α × β × Fin k → ℝ) (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
+    (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
+    (hκ'pos : ∀ x u, 0 < κ' x u)
+    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (hobj' : wzMutualInfoXU (Fin k) q' - wzMutualInfoYU (Fin k) q' < R)
+    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    (hqStar_pos : ∀ p, 0 < qStar p)
+    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    (hfeas : expectedDistortionPmf d' qStar ≤ D + δ)
+    (hcov : ∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' →
+        ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
+          Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
+          ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
+            c.expectedBlockDistortion
+                ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
+              ≤ (D + δ) + ε') :
+    ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
+      ∀ᶠ n in Filter.atTop, (c n).expectedBlockDistortion P_XY d ≤ D + δ := by
+  -- @residual(plan:wyner-ziv-main-plan)
+  sorry
+
 /-- **(BD) Per-slack Wyner–Ziv code family.** From a feasible factorisable test
 channel `qf` (auxiliary `Fin k`, distortion `≤ D`, Wyner–Ziv objective `< R`), for
 every slack `δ > 0` there is a sequence of Wyner–Ziv block codes at the operational
@@ -1033,14 +1241,15 @@ This is the heavy covering+binning assembly for a fixed slack: internally it
 perturbs `qf` to full support (`wz_fullKernelSupport_perturbation`), restricts the
 covering source to `α' := {x // 0 < P_X x}` and supplies the covering joint
 (`wz_restrictedCoveringJoint_pos` → `wz_covering_lossyCode_exists`), extends back to
-`α` (`wz_expectedBlockDistortion_source_agree`), bins the covering index and decodes
-by a conditional-typicality slice (bounding the two error events by the gateway
-exponents `wz_sideInfo_decoder_confusion_expectation_le` /
-`wz_covering_sideInfo_mass_ge` and the covering-failure exponent
-`encoder_failure_prob_le_exp_neg_M_avg`), extracts a good deterministic codebook by
-`exists_codebook_low_avg`, and squeezes the residual distortion excess to `0` over
-`n → ∞` for the fixed `δ`. The preconditions are feasibility/objective only
-(`hqf`/`hobj`); the covering+binning core stays in the body.
+`α`, bins the covering index and decodes by a bin conditional-typicality search.
+
+The body is a reduction: Steps 1–2 (`wz_coveringFamily_of_testChannel`) supply the
+covering data, and the capstone `wz_perDelta_covering_binning` (S6) consumes it to
+build the code family (Steps 3–7: binning + decoder `wzCodeOfCoveringBinning` /
+`wzBinTypicalDecoder`, the error exponents `wz_covering_failure_prob_le` /
+`wz_codebook_confusion_expectation_le`, derandomize, squeeze, and the source
+extension `wzLiftSupportCode`). The preconditions are feasibility/objective only
+(`hqf`/`hobj`); the residual `sorry` lives in the S5/S6 sub-lemmas, not here.
 @residual(plan:wyner-ziv-main-plan) -/
 private lemma wz_perDelta_codes_exist
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -1060,30 +1269,21 @@ private lemma wz_perDelta_codes_exist
   obtain ⟨q', κ', qStar, d', hfact_eq, hκ'pos, hκ'sum, hobj', hqStar_eq,
       hqStar_pos, hqStar_mem, hfeas, hcov⟩ :=
     wz_coveringFamily_of_testChannel P_XY d R D k qf hqf hobj δ hδ
-  -- Steps 3–7 remain (the binning / decoder / error-exponent / pigeonhole / squeeze
-  -- leg), consuming the covering data above. Remaining map (7-step sketch, inventory
-  -- §434–475):
-  --   3. binning: hash the covering index-word `Fin M → …` to `codebookSize R n`
-  --      messages via `binningMeasure (Fin k) n (codebookSize R n)`; the rate split
-  --      `R₁ = I(X;U)`, net `R = I(X;U) − I(Y;U)` chooses `R₁` against `hobj'` and
-  --      the covering MI identity `mutualInfoPmf qStar = wzMutualInfoXU q'`.
-  --   4. decoder: conditional-typicality slice search of the bin against `Y^n`,
-  --      reconstruct `γ^n` letterwise via `qf.2` (`conditionalTypicalSlice`).
-  --   5. three error exponents (built from the full-support `q'`, kernel `κ'`):
-  --      E1 covering failure `encoder_failure_prob_le_exp_neg_M_avg`;
-  --      E2 decoder confusion `wz_sideInfo_decoder_confusion_expectation_le`
-  --         (gateway 1) with `exp(n·H(U|Y))/codebookSize R n → 0` via
-  --         `wz_tendsto_exp_mul_codebookSize_inv`;
-  --      E3 covering acceptance `wz_covering_sideInfo_mass_ge` (gateway 2), the
-  --         gateways fed by the (U,Y) ambient `rdAmbient (wzMarginalYU q')`.
-  --   6. good deterministic codebook by pigeonhole `exists_codebook_low_avg` over the
-  --      covering codebook + binning measures.
-  --   7. distortion squeeze: extend the `α'` covering code back to `α`
-  --      (`wz_expectedBlockDistortion_source_agree`) and squeeze the excess
-  --      `≤ distortionMax d · P(error) → 0` (`source_avg_distortion_le_simpler`,
-  --      `ceil_exp_mul_exp_neg_tendsto_atTop`) to reach `D + δ` eventually.
-  -- @residual(plan:wyner-ziv-main-plan)
-  sorry
+  -- Steps 3–7 (binning / decoder / error exponents / derandomize / squeeze / source
+  -- extension) are packaged in the capstone `wz_perDelta_covering_binning` (S6),
+  -- which consumes the covering data obtained above:
+  --   3. binning: hash the covering index to `codebookSize R n` messages; the rate
+  --      split `R₁ = I(X;U)`, net `R = I(X;U) − I(Y;U)`, against `hobj'`.
+  --   4. decoder: bin conditional-typicality search (`wzBinTypicalDecoder`, S4),
+  --      reconstruct `γ^n` letterwise via `qf.2` (`wzCodeOfCoveringBinning`, S3).
+  --   5. error exponents: E1 covering failure (`wz_covering_failure_prob_le`, S5a);
+  --      E2 codebook-restricted decoder confusion
+  --      (`wz_codebook_confusion_expectation_le`, S5b, the crux).
+  --   6. good deterministic codebook + binning by double derandomization.
+  --   7. squeeze + source extension `α' → α` (`wzLiftSupportCode`, S7 /
+  --      `wz_expectedBlockDistortion_source_agree`).
+  exact wz_perDelta_covering_binning P_XY d R D k qf δ hδ q' κ' qStar d'
+    hfact_eq hκ'pos hκ'sum hobj' hqStar_eq hqStar_pos hqStar_mem hfeas hcov
 
 /-- **(E) Slack diagonalization.** A family of Wyner–Ziv code sequences, one per
 slack `δ > 0`, each eventually within `D + δ`, diagonalises to a single Wyner–Ziv
