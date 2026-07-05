@@ -243,7 +243,13 @@ Wyner–Ziv objective `I(X;U) − I(Y;U)` is strictly below `R`.
 
 This is `exists_lt_of_csInf_lt` on the infimum-of-values definition of
 `wynerZivRate` (`= sInf (wzRateValueSet …)`), with the resulting value unpacked
-by `mem_wzRateValueSet_iff` into a feasible factorisable point. -/
+by `mem_wzRateValueSet_iff` into a feasible factorisable point.
+@audit:ok (independent honesty audit 2026-07-06: sorryAx-free, `#print axioms` =
+[propext, Classical.choice, Quot.sound], machine-verified. Genuine witness
+extraction, not degenerate: `exists_lt_of_csInf_lt` requires `h_ne` (value set
+nonempty) so the `sInf < R` is realised by an actual value, and
+`mem_wzRateValueSet_iff` unpacks it into a factorisable feasible point `(k, qf)`
+with objective `< R` — no vacuous/`sInf ∅` shortcut.) -/
 private lemma wz_testChannel_of_rate_lt
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
