@@ -640,6 +640,91 @@ theorem wyner_ziv_converse_n_letter_singleLetter
         apply mul_le_mul_of_nonneg_left h_block
         positivity
 
+/-- **Per-code converse bound (i.i.d.-source realisation).** For a single block
+Wyner–Ziv code `c : WynerZivCode M n α β γ` with expected block distortion at most
+`D`, the reshaped Wyner–Ziv rate is bounded by the block log-cardinality rate
+`(1/n) · log M`.
+
+This is the i.i.d.-source plumbing of the converse: the canonical i.i.d. source is
+the product measure `Measure.pi (fun _ ↦ P_XY)` on `(α × β)^n` with coordinate
+projections `Xs i ω := (ω i).1`, `Ys i ω := (ω i).2`, whose independence and
+identical marginals (`= P_XY`) are supplied by `iIndepFun_iff_map_fun_eq_pi_map` and
+`Measure.pi_map_eval`. The bound is then the `n`-letter single-letterised converse
+`wyner_ziv_converse_n_letter_singleLetter`. The remaining residual lives transitively
+in `wz_converse_feasible_point`. -/
+private lemma wynerZivRate_le_of_code
+    {M n : ℕ} [NeZero M] (hn : 0 < n)
+    (c : WynerZivCode M n α β γ)
+    (d : DistortionFn α γ)
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {D : ℝ}
+    (hD : c.expectedBlockDistortion P_XY d ≤ D) :
+    wynerZivRate (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D
+      ≤ (1 / (n : ℝ)) * Real.log (M : ℝ) := by
+  classical
+  set μ : Measure (Fin n → α × β) := Measure.pi (fun _ : Fin n ↦ P_XY) with hμ
+  haveI : IsProbabilityMeasure μ := by rw [hμ]; infer_instance
+  set Xs : Fin n → (Fin n → α × β) → α := fun i ω ↦ (ω i).1 with hXs_def
+  set Ys : Fin n → (Fin n → α × β) → β := fun i ω ↦ (ω i).2 with hYs_def
+  have hXs : ∀ i, Measurable (Xs i) := fun i ↦ (measurable_pi_apply i).fst
+  have hYs : ∀ i, Measurable (Ys i) := fun i ↦ (measurable_pi_apply i).snd
+  have hencoder : Measurable c.encoder := measurable_of_countable c.encoder
+  have hdecoder : Measurable c.decoder := measurable_of_countable c.decoder
+  have hlaw : ∀ i, μ.map (fun ω ↦ (Xs i ω, Ys i ω)) = P_XY := by
+    intro i
+    have heval : (fun ω : (Fin n → α × β) ↦ (Xs i ω, Ys i ω)) = Function.eval i := by
+      funext ω; rfl
+    rw [heval, hμ, Measure.pi_map_eval]
+    simp
+  have hindep : iIndepFun (fun i ω ↦ (Xs i ω, Ys i ω)) μ := by
+    rw [iIndepFun_iff_map_fun_eq_pi_map (fun i ↦ ((hXs i).prodMk (hYs i)).aemeasurable)]
+    have hRHS : Measure.pi (fun i : Fin n ↦ μ.map (fun ω ↦ (Xs i ω, Ys i ω))) = μ := by
+      have hpi : (fun i : Fin n ↦ μ.map (fun ω ↦ (Xs i ω, Ys i ω))) = fun _ ↦ P_XY := by
+        funext i; exact hlaw i
+      rw [hpi, ← hμ]
+    rw [hRHS]
+    have hid : (fun (ω : Fin n → α × β) (i : Fin n) ↦ (Xs i ω, Ys i ω)) = id := by
+      funext ω i; rfl
+    rw [hid]
+    exact Measure.map_id
+  exact wyner_ziv_converse_n_letter_singleLetter hn c hencoder hdecoder d μ Xs Ys
+    hXs hYs hindep P_XY hlaw hD
+
+/-- **Left-endpoint right-continuity of the reshaped Wyner–Ziv rate.**
+
+If `R ≥ 0`, the value set at `D` is nonempty but *no* value set strictly below `D`
+is nonempty (so `D` is the left endpoint `D_min` of the rate function's domain),
+and `R_WZ(D + ε) ≤ R` for every `ε > 0`, then `R_WZ(D) ≤ R`.
+
+**Why this is a genuine residual (not vacuous, not false-as-framed).** The conclusion
+is *right-continuity of the reshaped rate at the left endpoint*: `R_WZ` is antitone, so
+`R_WZ(D + ε) ≤ R_WZ(D)` (the wrong direction) and `hstep` alone does not force
+`R_WZ(D) ≤ R`. One must show `R_WZ(D) = lim_{ε→0⁺} R_WZ(D + ε)`, i.e. right-continuity
+at `D_min`. Away from the left endpoint this is delivered by the time-sharing
+perturbation (an anchor `D₀ < D` with a nonempty value set), which is exactly what
+`h_endpoint` rules out here. At the left endpoint the perturbation has no anchor below
+`D`, and right-continuity there needs the auxiliary-cardinality / compactness argument
+(a Carathéodory bound making the infimum attained, hence continuous up to the endpoint;
+slug `wz-auxiliary-cardinality-bound`), deferred to `wyner-ziv-main-plan`.
+
+The statement is TRUE (right-continuity holds for these finite-alphabet rate
+functions — the reshaped rate is continuous on its whole domain), and the `h_endpoint`
+case genuinely occurs (when the minimal block distortion is attained, `S(D)` is
+nonempty while `S(D₀)` is empty for `D₀ < D`). `hR` / `h_ne` / `h_endpoint` / `hstep`
+are all genuine preconditions: `hR` bounds the trivial `S(D) = ∅` degeneration away,
+`h_ne` places `D` in the domain, `h_endpoint` selects the left-endpoint case, and
+`hstep` is the right-continuity input. None is load-bearing (the right-continuity core
+is not encoded in them).
+@residual(plan:wyner-ziv-main-plan) -/
+theorem wynerZivRate_le_of_forall_pos_add_endpoint
+    {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) {d : α → γ → ℝ} {R D : ℝ}
+    (hR : 0 ≤ R)
+    (h_ne : (wzRateValueSet P_XY d D).Nonempty)
+    (h_endpoint : ∀ D₀ < D, ¬ (wzRateValueSet P_XY d D₀).Nonempty)
+    (hstep : ∀ ε > 0, wynerZivRate P_XY d (D + ε) ≤ R) :
+    wynerZivRate P_XY d D ≤ R := by
+  sorry
+
 /-! ## Operational converse headline -/
 
 /-- **Wyner–Ziv converse** (Cover–Thomas Thm 15.9.1, operational lower bound).
@@ -665,19 +750,30 @@ Non-degeneracy: `wynerZivRate` is `sInf (wzRateValueSet …)`, guarded against t
 pmf lies in the simplex by `measureReal_pmf_mem_stdSimplex`. So `sInf ≤ R` is a genuine
 bound, not vacuously true.
 
-The proof reduces `WynerZivAchievable` to a sequence of block codes, applies the
-`n`-letter single-letterised converse `wyner_ziv_converse_n_letter_singleLetter` to
-each, and passes to the limit `(1/n) log (M n) → R`. `h_ach` is the operational
-antecedent, not a bundled core (`WynerZivAchievable` is `@audit:ok`, a pure
-existential).
+Proof structure — this theorem is now **sorry-free in its own body**; the remaining
+residual is transitive only. From `h_ach` we extract the code sequence and:
+* **Step 0** `0 ≤ R` (`M n ≥ 1 ⟹ log (M n) ≥ 0`, then `ge_of_tendsto`);
+* **Step 1** `∀ ε > 0, R_WZ(D + ε) ≤ R`, by applying the `n`-letter converse
+  `wyner_ziv_converse_n_letter_singleLetter` to the canonical i.i.d. source
+  `Measure.pi (fun _ ↦ P_XY)` (via `wynerZivRate_le_of_code`) at each eventually-small
+  block and passing `(1/n) log (M n) → R` through `ge_of_tendsto`;
+* **Step 2** the limit `ε → 0⁺`, split on the value set at `D`:
+  (A) `S(D) = ∅` gives `R_WZ(D) = sInf ∅ = 0 ≤ R` (genuine);
+  (B) an anchor `D₀ < D` with `S(D₀)` nonempty gives the bound by the time-sharing
+      perturbation `wzRateValueSet_timeShare_mem` plus `t(ε) → 0` (genuine, sorry-free);
+  (C) the left-endpoint case (`h_endpoint`) is discharged by the isolated
+      right-continuity residual `wynerZivRate_le_of_forall_pos_add_endpoint`.
 
-Independent honesty audit 2026-07-05 (PASS, honest_residual): the `sorry` is genuine.
-`h_ach` is a pure existential operational antecedent (`WynerZivAchievable` = ∃ codes
-with rate → R and vanishing-slack distortion), NOT a load-bearing hypothesis. Dropping
-`hU_card` is sound (see the `n`-letter lemma): `wynerZivRate` = inf over all finite
-auxiliaries is the weakest converse claim, so `R_WZ(D) ≤ R` genuinely follows without a
-sizing precondition and is non-vacuous (bounded below by `0` via the DPI residual, and
-`R ≥ 0` in the achievable regime). `plan:` class correct.
+The only `sorry` reachable from this theorem is transitive: `wz_converse_feasible_point`
+(the single-letterisation witness, used by Step 1 via the `n`-letter lemma) and
+`wynerZivRate_le_of_forall_pos_add_endpoint` (case (C) right-continuity). Both are
+`@residual(plan:wyner-ziv-main-plan)`. `h_ach` is a pure existential operational
+antecedent (`WynerZivAchievable` = ∃ codes with rate → R and vanishing-slack
+distortion), NOT a load-bearing hypothesis (`WynerZivAchievable` is `@audit:ok`).
+Dropping `hU_card` is sound: `wynerZivRate` = inf over all finite auxiliaries is the
+weakest converse claim, so `R_WZ(D) ≤ R` genuinely follows without a sizing
+precondition and is non-vacuous (bounded below by `0` via the DPI residual, and `R ≥ 0`
+in the achievable regime).
 @residual(plan:wyner-ziv-main-plan) -/
 @[entry_point]
 theorem wyner_ziv_converse
@@ -685,6 +781,91 @@ theorem wyner_ziv_converse
     (d : DistortionFn α γ) (R D : ℝ)
     (h_ach : WynerZivAchievable P_XY d R D) :
     wynerZivRate (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D ≤ R := by
-  sorry
+  classical
+  obtain ⟨M, hM, c, htend, hdist⟩ := h_ach
+  set P_XY' : α × β → ℝ := fun p ↦ P_XY.real {p} with hP'
+  set d' : α → γ → ℝ := fun a b ↦ (d a b : ℝ) with hd'
+  have h_pmf : P_XY' ∈ stdSimplex ℝ (α × β) := measureReal_pmf_mem_stdSimplex P_XY
+  -- Step 0: `0 ≤ R` (the achievable rate is non-negative).
+  have hR : 0 ≤ R := by
+    refine ge_of_tendsto htend ?_
+    filter_upwards [Filter.eventually_gt_atTop 0] with n hn
+    exact div_nonneg (Real.log_nonneg (by exact_mod_cast (hM n))) (Nat.cast_nonneg n)
+  -- Step 1: `∀ ε > 0, R_WZ(D + ε) ≤ R`.
+  have hstep : ∀ ε > 0, wynerZivRate P_XY' d' (D + ε) ≤ R := by
+    intro ε hε
+    refine ge_of_tendsto htend ?_
+    filter_upwards [hdist ε hε, Filter.eventually_gt_atTop 0] with n hn_dist hn_pos
+    haveI : NeZero (M n) := ⟨(hM n).ne'⟩
+    have hle := wynerZivRate_le_of_code hn_pos (c n) d P_XY hn_dist
+    rwa [one_div_mul_eq_div] at hle
+  -- Step 2: pass to the limit `ε → 0⁺`.
+  by_cases hSD : (wzRateValueSet P_XY' d' D).Nonempty
+  · by_cases hanchor : ∃ D₀ < D, (wzRateValueSet P_XY' d' D₀).Nonempty
+    · -- Case (B): an anchor `D₀ < D` exists; time-sharing perturbation.
+      obtain ⟨D₀, hD0, w, hw⟩ := hanchor
+      have hbdd : ∀ D' : ℝ, BddBelow (wzRateValueSet P_XY' d' D') := fun D' ↦
+        wzRateValueSet_bddBelow_of_pmf h_pmf d' D'
+      have hbound : ∀ ε > 0,
+          wynerZivRate P_XY' d' D ≤ R + (ε / (D + ε - D₀)) * (w - R) := by
+        intro ε hε
+        have hden : 0 < D + ε - D₀ := by linarith
+        set t : ℝ := ε / (D + ε - D₀) with ht_def
+        have ht_pos : 0 < t := div_pos hε hden
+        have ht_lt : t < 1 := by rw [ht_def, div_lt_one hden]; linarith
+        have h1t : 0 ≤ 1 - t := by linarith
+        have hab : (1 - t) + t = 1 := by ring
+        have hmix_eq : (1 - t) * (D + ε) + t * D₀ = D := by
+          rw [ht_def]; field_simp; ring
+        have hne_De : (wzRateValueSet P_XY' d' (D + ε)).Nonempty := by
+          obtain ⟨v, hv⟩ := hSD
+          exact ⟨v, wzRateValueSet_mono_in_D (by linarith) hv⟩
+        have hkey : ∀ v ∈ wzRateValueSet P_XY' d' (D + ε),
+            wynerZivRate P_XY' d' D - t * w ≤ (1 - t) * v := by
+          intro v hv
+          have hmem := wzRateValueSet_timeShare_mem h_pmf hv hw h1t ht_pos.le hab
+          rw [hmix_eq] at hmem
+          have hle : wynerZivRate P_XY' d' D ≤ (1 - t) * v + t * w :=
+            csInf_le (hbdd D) hmem
+          linarith
+        have hinf : wynerZivRate P_XY' d' D - t * w
+            ≤ (1 - t) * wynerZivRate P_XY' d' (D + ε) :=
+          le_mul_csInf hne_De h1t hkey
+        have hstepε := hstep ε hε
+        have hmono : (1 - t) * wynerZivRate P_XY' d' (D + ε) ≤ (1 - t) * R :=
+          mul_le_mul_of_nonneg_left hstepε h1t
+        have hfinal : wynerZivRate P_XY' d' D ≤ (1 - t) * R + t * w := by linarith
+        calc wynerZivRate P_XY' d' D
+            ≤ (1 - t) * R + t * w := hfinal
+          _ = R + t * (w - R) := by ring
+      -- The ε-parametrised bound tends to `R` as `ε → 0⁺`.
+      have hden0 : (D : ℝ) - D₀ ≠ 0 := by
+        have : (0 : ℝ) < D - D₀ := by linarith
+        exact ne_of_gt this
+      have hcont : ContinuousAt
+          (fun ε : ℝ ↦ R + (ε / (D + ε - D₀)) * (w - R)) 0 := by
+        have hden_cont : ContinuousAt (fun ε : ℝ ↦ D + ε - D₀) 0 := by fun_prop
+        have hnum_cont : ContinuousAt (fun ε : ℝ ↦ ε) 0 := continuousAt_id
+        have hdiv : ContinuousAt (fun ε : ℝ ↦ ε / (D + ε - D₀)) 0 :=
+          hnum_cont.div hden_cont (by simpa using hden0)
+        exact continuousAt_const.add (hdiv.mul continuousAt_const)
+      have htendsto : Filter.Tendsto
+          (fun ε : ℝ ↦ R + (ε / (D + ε - D₀)) * (w - R))
+          (nhdsWithin 0 (Set.Ioi 0)) (nhds R) := by
+        have h0 : Filter.Tendsto (fun ε : ℝ ↦ R + (ε / (D + ε - D₀)) * (w - R))
+            (nhds 0) (nhds R) := by simpa using hcont.tendsto
+        exact h0.mono_left nhdsWithin_le_nhds
+      refine ge_of_tendsto htendsto ?_
+      exact eventually_nhdsWithin_of_forall (fun ε hε ↦ hbound ε hε)
+    · -- Case (C): left endpoint; the isolated right-continuity residual.
+      have hanchor' : ∀ D₀ < D, ¬ (wzRateValueSet P_XY' d' D₀).Nonempty := by
+        intro D₀ hD0 hne
+        exact hanchor ⟨D₀, hD0, hne⟩
+      exact wynerZivRate_le_of_forall_pos_add_endpoint h_pmf hR hSD hanchor' hstep
+  · -- Case (A): `S(D) = ∅`, so `R_WZ(D) = sInf ∅ = 0 ≤ R`.
+    rw [Set.not_nonempty_iff_eq_empty] at hSD
+    show sInf (wzRateValueSet P_XY' d' D) ≤ R
+    rw [hSD, Real.sInf_empty]
+    exact hR
 
 end InformationTheory.Shannon
