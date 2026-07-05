@@ -851,6 +851,176 @@ private lemma wz_covering_lossyCode_exists
   obtain ⟨M, hM_lb, c, hc⟩ := hN n hn
   exact ⟨M, hM_lb, c, hc⟩
 
+/-- **Covering-distortion reconciliation identity (Step 1–2 core).** The covering
+proxy distortion `d'` on the source-support subtype `α' := {x // 0 < P_X x}`,
+defined as the `Y`-conditional expectation
+`d'(⟨x, _⟩, u) := ∑_y (P_XY(x,y) / P_X x) · d(x, f(u, y))`, reconciles with the
+Wyner–Ziv distortion functional: for the restricted `(X, U)`-joint
+`qStar(⟨x, _⟩, u) := κ'(x, u) · P_X x`, the pmf-form expected distortion of `d'`
+equals the Wyner–Ziv expected distortion of the factorisable joint
+`q'(x, y, u) := κ'(x, u) · P_XY(x, y)` under the reconstruction `f`.
+
+The identity is the load-bearing bridge that lets the rate-distortion covering
+theorem (which measures distortion `X ↔ U` via `d'`) discharge the Wyner–Ziv
+feasibility (`X ↔ γ` via `f`). It holds because `P_X x · (P_XY(x,y) / P_X x) =
+P_XY(x,y)` on the support (where `P_X x > 0`), and the zero atoms of `P_X`
+contribute nothing on either side (`q'` vanishes there since every `P_XY(x,y) = 0`
+when `P_X x = 0`). -/
+private lemma wz_coveringDistortion_reconcile
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) {k : ℕ}
+    (κ' : α → Fin k → ℝ) (f : Fin k × β → γ) :
+    expectedDistortionPmf
+        (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) =>
+          Real.toNNReal (∑ y : β, (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+              * ((d x'.1 (f (u, y)) : NNReal) : ℝ)))
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k =>
+          κ' p.1.1 p.2 * ∑ y : β, P_XY.real {(p.1.1, y)})
+      = wzExpectedDistortion (Fin k) (fun a b ↦ (d a b : ℝ))
+          (fun p : α × β × Fin k => κ' p.1 p.2.2 * P_XY.real {(p.1, p.2.1)}) f := by
+  classical
+  -- The full-alphabet per-source-symbol inner double sum.
+  set G : α → ℝ := fun x =>
+    ∑ y : β, ∑ u : Fin k, κ' x u * P_XY.real {(x, y)} * ((d x (f (u, y)) : NNReal) : ℝ)
+    with hG
+  have hPnn : ∀ x : α, 0 ≤ ∑ y, P_XY.real {(x, y)} :=
+    fun x => Finset.sum_nonneg fun y _ => measureReal_nonneg
+  -- RHS = ∑ x : α, G x.
+  have hRHS : wzExpectedDistortion (Fin k) (fun a b ↦ (d a b : ℝ))
+      (fun p : α × β × Fin k => κ' p.1 p.2.2 * P_XY.real {(p.1, p.2.1)}) f
+      = ∑ x : α, G x := by
+    unfold wzExpectedDistortion
+    rw [Fintype.sum_prod_type]
+    refine Finset.sum_congr rfl fun x _ => ?_
+    rw [Fintype.sum_prod_type]
+  -- LHS = ∑ a : α', G a.1.
+  have hLHS : expectedDistortionPmf
+      (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) =>
+        Real.toNNReal (∑ y : β, (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+            * ((d x'.1 (f (u, y)) : NNReal) : ℝ)))
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k =>
+        κ' p.1.1 p.2 * ∑ y : β, P_XY.real {(p.1.1, y)})
+      = ∑ a : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}, G a.1 := by
+    unfold expectedDistortionPmf
+    refine Finset.sum_congr rfl fun a _ => ?_
+    have hPxpos : 0 < ∑ y : β, P_XY.real {(a.1, y)} := a.2
+    have hPxne : (∑ y : β, P_XY.real {(a.1, y)}) ≠ 0 := ne_of_gt hPxpos
+    simp only [hG]
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl fun b _ => ?_
+    rw [Real.coe_toNNReal _
+      (Finset.sum_nonneg fun y _ =>
+        mul_nonneg (div_nonneg measureReal_nonneg hPxpos.le) (NNReal.coe_nonneg _))]
+    rw [Finset.mul_sum]
+    refine Finset.sum_congr rfl fun y _ => ?_
+    field_simp
+  -- Extend the support-subtype sum back to the full alphabet (zero atoms of `P_X`
+  -- contribute nothing: `q'` vanishes there).
+  have hGzero : ∀ x : α, (∑ y, P_XY.real {(x, y)}) = 0 → G x = 0 := by
+    intro x hx
+    simp only [hG]
+    refine Finset.sum_eq_zero fun y _ => ?_
+    have hxy : P_XY.real {(x, y)} = 0 :=
+      (Finset.sum_eq_zero_iff_of_nonneg (fun y' _ => measureReal_nonneg)).mp hx y
+        (Finset.mem_univ y)
+    refine Finset.sum_eq_zero fun u _ => ?_
+    rw [hxy]; ring
+  have hext : (∑ a : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}, G a.1) = ∑ x : α, G x := by
+    rw [← Finset.sum_subtype (Finset.univ.filter (fun x => 0 < ∑ y, P_XY.real {(x, y)}))
+          (fun x => by simp) G]
+    exact Finset.sum_subset (Finset.filter_subset _ _)
+      (fun x _ hx => hGzero x (le_antisymm (not_lt.mp (by simpa using hx)) (hPnn x)))
+  rw [hLHS, hext, hRHS]
+
+open ChannelCoding in
+/-- **(Steps 1–2) Covering LossyCode family from a feasible test channel.**
+Perturbs the feasible factorisable test channel `qf` to a full-support kernel
+`κ'` (Step 1, `wz_fullKernelSupport_perturbation`), restricts the covering source
+to the support subtype `α' := {x // 0 < P_X x}`, and produces the rate-distortion
+covering LossyCode family (Step 2, `wz_covering_lossyCode_exists`) for the proxy
+distortion `d'` (the `Y`-conditional expectation of `d ∘ qf.2`).
+
+The output packages, for downstream binning (Steps 3–7), the perturbed full-support
+factorisable joint `q'` (with kernel `κ'`), the restricted covering joint `qStar`,
+the covering proxy `d'`, the Wyner–Ziv objective margin `< R`, and — for every
+covering rate `R₁` strictly above the covering mutual information
+`mutualInfoPmf qStar` — the covering LossyCode family with block distortion within
+`(D + δ) + ε'`. The covering-distortion feasibility `expectedDistortionPmf d' qStar
+≤ D + δ` is the reconciliation identity (`wz_coveringDistortion_reconcile`) applied
+to the perturbation's distortion bound. All conclusions are genuinely constructed;
+the only preconditions are feasibility (`hqf`), the objective margin (`hobj`), and
+the slack `δ`. -/
+private lemma wz_coveringFamily_of_testChannel
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (R D : ℝ)
+    (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
+            (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
+    (hobj : wzMutualInfoXU (Fin k) qf.1 - wzMutualInfoYU (Fin k) qf.1 < R)
+    (δ : ℝ) (hδ : 0 < δ) :
+    ∃ (q' : α × β × Fin k → ℝ) (κ' : α → Fin k → ℝ)
+      (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+      (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
+        (∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
+        ∧ (∀ x u, 0 < κ' x u)
+        ∧ (∀ x, ∑ u, κ' x u = 1)
+        ∧ (wzMutualInfoXU (Fin k) q' - wzMutualInfoYU (Fin k) q' < R)
+        ∧ (∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+        ∧ (∀ p, 0 < qStar p)
+        ∧ qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k)
+        ∧ expectedDistortionPmf d' qStar ≤ D + δ
+        ∧ (∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' →
+            ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
+              Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
+              ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
+                c.expectedBlockDistortion
+                    ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
+                  ≤ (D + δ) + ε') := by
+  classical
+  -- Step 1: perturb the feasible test channel to a full-support kernel `κ'`.
+  rw [mem_WynerZivFactorizableConstraint_iff] at hqf
+  obtain ⟨hfact, hdist⟩ := hqf
+  haveI : Nonempty (Fin k) := wz_nonempty_of_factorizable hfact
+  obtain ⟨q', κ', hq'eq, hκ'pos, hκ'sum, _hfact', hobj', hdist'⟩ :=
+    wz_fullKernelSupport_perturbation (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D
+      hfact hdist hobj hδ
+  -- Restricted covering joint (S1): full support + simplex on the source-support subtype.
+  obtain ⟨hne, hqStar_pos, hqStar_mem⟩ :=
+    wz_restrictedCoveringJoint_pos P_XY κ' hκ'pos hκ'sum
+  haveI : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := hne
+  -- The perturbed joint, packaged as a clean pointwise identity.
+  have hq'clean : ∀ p : α × β × Fin k, q' p = κ' p.1 p.2.2 * P_XY.real {(p.1, p.2.1)} :=
+    fun p => hq'eq p.1 p.2.1 p.2.2
+  have hconv :
+      (fun p : α × β × Fin k => κ' p.1 p.2.2 * P_XY.real {(p.1, p.2.1)}) = q' := by
+    funext p; exact (hq'clean p).symm
+  -- Covering-distortion feasibility via the reconciliation identity (Step 1–2 core).
+  have hfeas : expectedDistortionPmf
+      (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) =>
+        Real.toNNReal (∑ y : β, (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+            * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k =>
+        κ' p.1.1 p.2 * ∑ y : β, P_XY.real {(p.1.1, y)}) ≤ D + δ := by
+    rw [wz_coveringDistortion_reconcile P_XY d κ' qf.2, hconv]
+    exact hdist'
+  -- Step 2: assemble the covering LossyCode family from the covering theorem (C).
+  refine ⟨q', κ',
+    (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k =>
+      κ' p.1.1 p.2 * ∑ y : β, P_XY.real {(p.1.1, y)}),
+    (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) =>
+      Real.toNNReal (∑ y : β, (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ))),
+    hq'eq, hκ'pos, hκ'sum, hobj', fun _ => rfl, hqStar_pos, hqStar_mem, hfeas, ?_⟩
+  intro R₁ hI ε' hε'
+  exact wz_covering_lossyCode_exists
+    (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k =>
+      κ' p.1.1 p.2 * ∑ y : β, P_XY.real {(p.1.1, y)})
+    hqStar_pos hqStar_mem
+    (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) =>
+      Real.toNNReal (∑ y : β, (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
+    hI hfeas hε'
+
 /-- **(BD) Per-slack Wyner–Ziv code family.** From a feasible factorisable test
 channel `qf` (auxiliary `Fin k`, distortion `≤ D`, Wyner–Ziv objective `< R`), for
 every slack `δ > 0` there is a sequence of Wyner–Ziv block codes at the operational
@@ -879,6 +1049,38 @@ private lemma wz_perDelta_codes_exist
     (hobj : wzMutualInfoXU (Fin k) qf.1 - wzMutualInfoYU (Fin k) qf.1 < R) :
     ∀ δ : ℝ, 0 < δ → ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
       ∀ᶠ n in Filter.atTop, (c n).expectedBlockDistortion P_XY d ≤ D + δ := by
+  intro δ hδ
+  -- Steps 1–2 (covering-distortion reconciliation + covering LossyCode family):
+  -- perturb `qf` to full support, restrict to the source support `α'`, and produce
+  -- the covering LossyCode family at any rate `R₁ > mutualInfoPmf qStar`, with the
+  -- covering proxy `d'` reconciled against the Wyner–Ziv distortion (feasibility
+  -- `expectedDistortionPmf d' qStar ≤ D + δ`).
+  obtain ⟨q', κ', qStar, d', hfact_eq, hκ'pos, hκ'sum, hobj', hqStar_eq,
+      hqStar_pos, hqStar_mem, hfeas, hcov⟩ :=
+    wz_coveringFamily_of_testChannel P_XY d R D k qf hqf hobj δ hδ
+  -- Steps 3–7 remain (the binning / decoder / error-exponent / pigeonhole / squeeze
+  -- leg), consuming the covering data above. Remaining map (7-step sketch, inventory
+  -- §434–475):
+  --   3. binning: hash the covering index-word `Fin M → …` to `codebookSize R n`
+  --      messages via `binningMeasure (Fin k) n (codebookSize R n)`; the rate split
+  --      `R₁ = I(X;U)`, net `R = I(X;U) − I(Y;U)` chooses `R₁` against `hobj'` and
+  --      the covering MI identity `mutualInfoPmf qStar = wzMutualInfoXU q'`.
+  --   4. decoder: conditional-typicality slice search of the bin against `Y^n`,
+  --      reconstruct `γ^n` letterwise via `qf.2` (`conditionalTypicalSlice`).
+  --   5. three error exponents (built from the full-support `q'`, kernel `κ'`):
+  --      E1 covering failure `encoder_failure_prob_le_exp_neg_M_avg`;
+  --      E2 decoder confusion `wz_sideInfo_decoder_confusion_expectation_le`
+  --         (gateway 1) with `exp(n·H(U|Y))/codebookSize R n → 0` via
+  --         `wz_tendsto_exp_mul_codebookSize_inv`;
+  --      E3 covering acceptance `wz_covering_sideInfo_mass_ge` (gateway 2), the
+  --         gateways fed by the (U,Y) ambient `rdAmbient (wzMarginalYU q')`.
+  --   6. good deterministic codebook by pigeonhole `exists_codebook_low_avg` over the
+  --      covering codebook + binning measures.
+  --   7. distortion squeeze: extend the `α'` covering code back to `α`
+  --      (`wz_expectedBlockDistortion_source_agree`) and squeeze the excess
+  --      `≤ distortionMax d · P(error) → 0` (`source_avg_distortion_le_simpler`,
+  --      `ceil_exp_mul_exp_neg_tendsto_atTop`) to reach `D + δ` eventually.
+  -- @residual(plan:wyner-ziv-main-plan)
   sorry
 
 /-- **(E) Slack diagonalization.** A family of Wyner–Ziv code sequences, one per
