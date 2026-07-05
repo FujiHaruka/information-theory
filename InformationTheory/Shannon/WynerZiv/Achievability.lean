@@ -266,6 +266,202 @@ private lemma wz_testChannel_of_rate_lt
   refine ⟨k, qf, hqf, ?_⟩
   rw [hval]; exact hv_lt
 
+/-! ### Leaf atoms for the covering + binning construction
+
+The following helper lemmas are the small, fully-proved atoms that the heavy
+covering+binning core (`wz_goodCode_exists_of_testChannel`) consumes: a
+`Nonempty (Fin k)` extractor from feasibility (P0), a full-support kernel
+perturbation (P1), and a public `exp(n c)/codebookSize R n → 0` decay adapter
+(P2, re-proved locally because the Slepian–Wolf original is `private`). -/
+
+/-- **Nonempty auxiliary alphabet (Step 0 leaf).** A Wyner–Ziv factorisable
+joint over a source pmf on `α × β` forces a nonempty covering alphabet `Fin k`:
+the row-stochastic kernel condition `∑_{u : Fin k} κ x u = 1` is impossible for
+`k = 0` (the empty sum is `0 ≠ 1`), using `Nonempty α` to pick a row `x`. -/
+private lemma wz_nonempty_of_factorizable
+    {P : α × β → ℝ} {k : ℕ} {q : α × β × Fin k → ℝ}
+    (hfact : IsWynerZivFactorizable (Fin k) P q) :
+    Nonempty (Fin k) := by
+  rcases Nat.eq_zero_or_pos k with hk | hk
+  · exfalso
+    subst hk
+    obtain ⟨κ, _, hκsum, _⟩ := hfact
+    obtain ⟨x⟩ := (inferInstance : Nonempty α)
+    have hsum := hκsum x
+    simp only [Finset.univ_eq_empty, Finset.sum_empty] at hsum
+    exact absurd hsum (by norm_num)
+  · exact ⟨⟨0, hk⟩⟩
+
+/-- **Full-support kernel perturbation (Step 1 leaf).** From a feasible
+factorisable test channel `qf` (row-stochastic kernel, distortion `≤ D`) whose
+Wyner–Ziv objective is strictly below `R`, and any slack `δ > 0`, produce a
+perturbed factorisable channel `q'` with a *strictly positive kernel* `κ'`
+(full support), whose objective is still `< R` and whose distortion is `≤ D + δ`.
+
+The perturbation is `q' := (1 - τ) • qf.1 + τ • q_unif` with `q_unif` the
+uniform-kernel factorisable joint and `τ ∈ (0, 1]` small: convex combination
+preserves factorisability (`IsWynerZivFactorizable_convex_combination`) and
+distortion feasibility (`WynerZivFactorizableConstraint_convex_combination`),
+the kernel `κ' = (1 - τ) κ + τ/k ≥ τ/k > 0` gains full support, and continuity
+of the objective (`continuous_wzObjective`) keeps it `< R` for small `τ`.
+
+Note this yields full support of the *kernel*, hence full support of the
+`(X, U)` joint marginal `wzMarginalXU q'` only on `{x | 0 < P_X x}` (see the
+construction lemma's stall note): `wzMarginalXU q' (x,u) = κ'(x,u)·P_X(x)`. -/
+private lemma wz_fullKernelSupport_perturbation
+    (P : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ)
+    {k : ℕ} {qf : (α × β × Fin k → ℝ) × (Fin k × β → γ)}
+    (hfact : IsWynerZivFactorizable (Fin k) P qf.1)
+    (hdist : wzExpectedDistortion (Fin k) d qf.1 qf.2 ≤ D)
+    {R : ℝ} (hobj : wzMutualInfoXU (Fin k) qf.1 - wzMutualInfoYU (Fin k) qf.1 < R)
+    {δ : ℝ} (hδ : 0 < δ) :
+    ∃ (q' : α × β × Fin k → ℝ) (κ' : α → Fin k → ℝ),
+      (∀ x y u, q' (x, y, u) = κ' x u * P (x, y))
+      ∧ (∀ x u, 0 < κ' x u)
+      ∧ (∀ x, ∑ u, κ' x u = 1)
+      ∧ IsWynerZivFactorizable (Fin k) P q'
+      ∧ (wzMutualInfoXU (Fin k) q' - wzMutualInfoYU (Fin k) q' < R)
+      ∧ wzExpectedDistortion (Fin k) d q' qf.2 ≤ D + δ := by
+  -- Nonempty covering alphabet ⇒ `0 < k`, so the uniform kernel `1/k` is well-defined.
+  have hne : Nonempty (Fin k) := wz_nonempty_of_factorizable hfact
+  have hkpos : 0 < k := Fin.pos_iff_nonempty.mpr hne
+  have hkR : (0 : ℝ) < (k : ℝ) := by exact_mod_cast hkpos
+  -- Extract the row-stochastic kernel of `qf.1`.
+  obtain ⟨κ, hκnn, hκsum, hκeq⟩ := hfact
+  -- Uniform kernel and its factorisable joint `qu (x,y,u) = (1/k) · P(x,y)`.
+  set qu : α × β × Fin k → ℝ := fun p ↦ (k : ℝ)⁻¹ * P (p.1, p.2.1) with hqu
+  have huniform_sum : (∑ _u : Fin k, (k : ℝ)⁻¹) = 1 := by
+    rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+    exact mul_inv_cancel₀ hkR.ne'
+  have hfact_qu : IsWynerZivFactorizable (Fin k) P qu := by
+    refine ⟨fun _ _ ↦ (k : ℝ)⁻¹, fun _ _ ↦ (inv_nonneg.mpr hkR.le), fun _ ↦ huniform_sum,
+      fun x y u ↦ ?_⟩
+    rfl
+  -- Feasibility memberships at thresholds `D` and `Du`.
+  set Du : ℝ := wzExpectedDistortion (Fin k) d qu qf.2 with hDudef
+  have hmem_qf : (qf.1, qf.2) ∈ WynerZivFactorizableConstraint (Fin k) P d D :=
+    ⟨⟨κ, hκnn, hκsum, hκeq⟩, hdist⟩
+  have hmem_qu : (qu, qf.2) ∈ WynerZivFactorizableConstraint (Fin k) P d Du :=
+    ⟨hfact_qu, le_refl _⟩
+  -- The perturbation path `τ ↦ (1-τ)·qf.1 + τ·qu`.
+  set pert : ℝ → (α × β × Fin k → ℝ) := fun τ ↦ (1 - τ) • qf.1 + τ • qu with hpert
+  have hpert_cont : Continuous pert :=
+    ((continuous_const.sub continuous_id).smul continuous_const).add
+      (continuous_id.smul continuous_const)
+  -- Objective is continuous along the path, `< R` at `τ = 0` (where `pert 0 = qf.1`).
+  set F : (α × β × Fin k → ℝ) → ℝ :=
+    fun q ↦ wzMutualInfoXU (Fin k) q - wzMutualInfoYU (Fin k) q with hF
+  have hFcont : Continuous F := continuous_wzObjective (Fin k)
+  have hpert0 : pert 0 = qf.1 := by
+    simp only [hpert, sub_zero, one_smul, zero_smul, add_zero]
+  have hFpert0_lt : F (pert 0) < R := by rw [hpert0]; exact hobj
+  have hgcont : Continuous (fun τ ↦ F (pert τ)) := hFcont.comp hpert_cont
+  -- Neighbourhood of `0` on which the objective stays `< R`.
+  obtain ⟨ρ, hρpos, hρ⟩ :=
+    Metric.continuousAt_iff.mp hgcont.continuousAt (R - F (pert 0)) (by linarith)
+  -- Distortion slack control constant.
+  set C : ℝ := |Du - D| + 1 with hCdef
+  have hCpos : 0 < C := by positivity
+  -- Choose `τ` small: below `ρ` (objective), `≤ 1` (convex weight), `≤ δ/C` (distortion).
+  set τ : ℝ := min (ρ / 2) (min 1 (δ / C)) with hτdef
+  have hτpos : 0 < τ :=
+    lt_min (by linarith) (lt_min one_pos (div_pos hδ hCpos))
+  have hτle1 : τ ≤ 1 := (min_le_right _ _).trans (min_le_left _ _)
+  have hτltρ : τ < ρ := (min_le_left _ _).trans_lt (by linarith)
+  have hτleδC : τ ≤ δ / C := (min_le_right _ _).trans (min_le_right _ _)
+  have hτ0 : (0 : ℝ) ≤ 1 - τ := by linarith
+  -- Objective bound at the chosen `τ`.
+  have hdτ : dist τ (0 : ℝ) < ρ := by
+    rw [Real.dist_eq, sub_zero, abs_of_pos hτpos]; exact hτltρ
+  have hFpertτ : F (pert τ) < R := by
+    have h := hρ hdτ
+    rw [Real.dist_eq] at h
+    have h2 : F (pert τ) - F (pert 0) ≤ |F (pert τ) - F (pert 0)| := le_abs_self _
+    linarith
+  -- Distortion bound at the chosen `τ` via the convex-combination feasibility.
+  have hmem_τ : (pert τ, qf.2) ∈
+      WynerZivFactorizableConstraint (Fin k) P d ((1 - τ) * D + τ * Du) :=
+    WynerZivFactorizableConstraint_convex_combination (Fin k) P d qf.2
+      hmem_qf hmem_qu hτ0 hτpos.le (by ring)
+  have hDuDC : Du - D ≤ C := le_trans (le_abs_self _) (by rw [hCdef]; linarith)
+  have hτC : τ * C ≤ δ := by
+    have h := mul_le_mul_of_nonneg_right hτleδC hCpos.le
+    rwa [div_mul_cancel₀ δ hCpos.ne'] at h
+  have hτDuD : τ * (Du - D) ≤ δ :=
+    (mul_le_mul_of_nonneg_left hDuDC hτpos.le).trans hτC
+  have hdistτ : wzExpectedDistortion (Fin k) d (pert τ) qf.2 ≤ D + δ := by
+    calc wzExpectedDistortion (Fin k) d (pert τ) qf.2
+        ≤ (1 - τ) * D + τ * Du := hmem_τ.2
+      _ = D + τ * (Du - D) := by ring
+      _ ≤ D + δ := by linarith
+  -- Assemble the perturbed channel with its explicit full-support kernel.
+  refine ⟨pert τ, fun x u ↦ (1 - τ) * κ x u + τ * (k : ℝ)⁻¹, ?_, ?_, ?_, ?_, hFpertτ, hdistτ⟩
+  · -- factorisation identity
+    intro x y u
+    simp only [hpert, Pi.add_apply, Pi.smul_apply, smul_eq_mul, hqu, hκeq x y u]
+    ring
+  · -- strict kernel positivity
+    intro x u
+    have h1 : 0 ≤ (1 - τ) * κ x u := mul_nonneg hτ0 (hκnn x u)
+    have h2 : 0 < τ * (k : ℝ)⁻¹ := mul_pos hτpos (inv_pos.mpr hkR)
+    linarith
+  · -- row-sum `1`
+    intro x
+    have : (∑ u, ((1 - τ) * κ x u + τ * (k : ℝ)⁻¹))
+        = (1 - τ) * (∑ u, κ x u) + τ * (∑ _u : Fin k, (k : ℝ)⁻¹) := by
+      rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum]
+    rw [this, hκsum x, huniform_sum]; ring
+  · -- `IsWynerZivFactorizable` witness
+    refine ⟨fun x u ↦ (1 - τ) * κ x u + τ * (k : ℝ)⁻¹, fun x u ↦ ?_, fun x ↦ ?_, fun x y u ↦ ?_⟩
+    · have h1 : 0 ≤ (1 - τ) * κ x u := mul_nonneg hτ0 (hκnn x u)
+      have h2 : 0 ≤ τ * (k : ℝ)⁻¹ := (mul_pos hτpos (inv_pos.mpr hkR)).le
+      linarith
+    · have : (∑ u, ((1 - τ) * κ x u + τ * (k : ℝ)⁻¹))
+          = (1 - τ) * (∑ u, κ x u) + τ * (∑ _u : Fin k, (k : ℝ)⁻¹) := by
+        rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum]
+      rw [this, hκsum x, huniform_sum]; ring
+    · simp only [hpert, Pi.add_apply, Pi.smul_apply, smul_eq_mul, hqu, hκeq x y u]
+      ring
+
+/-- **Message-count decay adapter (Step 6 leaf).** For `c < R`, the ratio
+`exp(n c) / codebookSize R n → 0` as `n → ∞`. This is the E2 decoder-confusion
+decay term (collision mass over the bin count). Re-proved locally here because
+the Slepian–Wolf original `tendsto_exp_mul_codebookSize_inv` is `private` to
+`PairBound.lean`; the proof is a `squeeze_zero` against `exp(n (c − R))` using
+`(codebookSize R n)⁻¹ ≤ exp(−n R)` from `Nat.le_ceil`. -/
+private lemma wz_tendsto_exp_mul_codebookSize_inv {c R : ℝ} (hcR : c < R) :
+    Filter.Tendsto
+      (fun n : ℕ ↦ Real.exp ((n : ℝ) * c) * ((codebookSize R n : ℝ))⁻¹)
+      Filter.atTop (𝓝 0) := by
+  -- `(codebookSize R n)⁻¹ ≤ exp(-n R)` from `exp(n R) ≤ ⌈exp(n R)⌉`.
+  have h_inv_le : ∀ n : ℕ,
+      ((codebookSize R n : ℝ))⁻¹ ≤ Real.exp (-(n : ℝ) * R) := by
+    intro n
+    have hpos : (0 : ℝ) < Real.exp ((n : ℝ) * R) := Real.exp_pos _
+    have hle : Real.exp ((n : ℝ) * R) ≤ (codebookSize R n : ℝ) := by
+      unfold codebookSize
+      exact Nat.le_ceil _
+    calc ((codebookSize R n : ℝ))⁻¹
+        ≤ (Real.exp ((n : ℝ) * R))⁻¹ := inv_anti₀ hpos hle
+      _ = Real.exp (-(n : ℝ) * R) := by rw [← Real.exp_neg]; ring_nf
+  -- Upper bound by `exp(n (c - R)) → 0`, then squeeze.
+  have hub : Filter.Tendsto
+      (fun n : ℕ ↦ Real.exp ((n : ℝ) * (c - R))) Filter.atTop (𝓝 0) := by
+    have hRc : 0 < R - c := sub_pos.mpr hcR
+    have htend : Filter.Tendsto
+        (fun n : ℕ ↦ (n : ℝ) * (R - c)) Filter.atTop Filter.atTop :=
+      Filter.Tendsto.atTop_mul_const hRc tendsto_natCast_atTop_atTop
+    have hcomp := Real.tendsto_exp_neg_atTop_nhds_zero.comp htend
+    refine hcomp.congr (fun n ↦ ?_)
+    simp only [Function.comp_apply]
+    rw [show (n : ℝ) * (c - R) = -((n : ℝ) * (R - c)) by ring]
+  refine squeeze_zero (fun n ↦ ?_) (fun n ↦ ?_) hub
+  · exact mul_nonneg (Real.exp_pos _).le (inv_nonneg.mpr (by positivity))
+  · calc Real.exp ((n : ℝ) * c) * ((codebookSize R n : ℝ))⁻¹
+        ≤ Real.exp ((n : ℝ) * c) * Real.exp (-(n : ℝ) * R) :=
+          mul_le_mul_of_nonneg_left (h_inv_le n) (Real.exp_pos _).le
+      _ = Real.exp ((n : ℝ) * (c - R)) := by rw [← Real.exp_add]; ring_nf
+
 /-- **Covering + binning construction (Steps 1–5, the hard leg).** From a
 feasible factorisable test channel `qf` at auxiliary alphabet `Fin k` whose
 Wyner–Ziv objective `I(X;U) − I(Y;U)` is strictly below `R`, build a sequence of
@@ -287,6 +483,23 @@ distortion excess squeezed to `0` by `ceil_exp_mul_exp_neg_tendsto_atTop`.
 The test channel `qf` is a feasibility/regularity hypothesis (a single-letter
 pmf feasible at `D`, objective below `R`), NOT the load-bearing covering+binning
 core; the whole construction stays in the `sorry` body.
+
+**Full-support (source-support) note — the leg-14 stall map.** The covering half
+`rate_distortion_achievability` (`AchievabilityStrongTypicality.lean:184`) demands
+`hqStar_pos : ∀ p, 0 < qStar p` on the `(X,U)` joint `qStar = wzMarginalXU (Fin k)
+qf.1`. This is **not** obtainable by kernel perturbation alone: factorisability
+forces `qStar (x,u) = κ(x,u) · P_X(x)` (with `P_X(x) = ∑_y P_XY(x,y)`), which
+vanishes at every zero atom of `P_X` regardless of `κ`. So of the options
+(a) covering tolerates support-only positivity, (b) restrict the source alphabet
+to `supp(P_X)` upstream, (c) genuine obstruction, the resolution is **(b)**: the
+RD covering theorem hard-requires positivity over its *whole* alphabet, so the
+construction must instantiate its source alphabet `α` with the subtype
+`{x // 0 < P_X x}` (the block distortion is measured under `Measure.pi P_X`, which
+gives zero mass to sequences hitting a zero atom, so restricting to `supp(P_X)` is
+WLOG). The leaf lemma `wz_fullKernelSupport_perturbation` supplies the *kernel*
+full support `0 < κ' x u` (hence full `(X,U)`-joint support on `supp(P_X)` and the
+objective/distortion slack); the remaining move is the support-subtype transport,
+deferred with this body.
 @residual(plan:wyner-ziv-main-plan) -/
 private lemma wz_goodCode_exists_of_testChannel
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
