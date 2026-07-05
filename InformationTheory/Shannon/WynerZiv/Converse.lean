@@ -826,7 +826,16 @@ load-bearing (both `hstep2` and `hsum` are false without memorylessness). The ch
 standard Wyner–Ziv converse (Cover–Thomas §15.9), TRUE-as-framed, and `n = 1` degenerates to
 an equality (alive). Class `plan` (in-project atoms, not Mathlib walls). The prior
 single-`sorry` state carried a PASS audit (2026-07-05); this decomposition narrows the
-residual and awaits an independent re-audit of the two new sub-goals.
+residual, and both new sub-goals PASSED an independent honesty re-audit (2026-07-05,
+leg8): `hstep2`/`hsum` are non-circular, non-bundled (local `have`s, not signature
+hypotheses; `hindep` is a memoryless-source precondition), and TRUE-as-framed (memoryless
+collapse; prefix-chain super-additivity), degenerating to equalities at `n = 1` (alive).
+Class `plan` confirmed: `condMutualInfo` is project-defined (loogle: Mathlib `unknown
+identifier`), so these are in-project self-build atoms covered by the plan, not Mathlib
+walls; `condMutualInfo_prefix_chain_rule` (`@audit:ok`) is the reusable atom for `hsum`,
+and the super-additivity direction differs from the MAC/BC `condMutualInfo_singleletter_
+le_of_memoryless` (opposite bound), so no shared-wall re-use applies yet. Step 1 +
+assembly type-check with sub3's only two remaining sorries being `hstep2`/`hsum`.
 @residual(plan:wyner-ziv-main-plan) -/
 private theorem wz_singleletter_rate_le
     {Ω : Type*} [MeasurableSpace Ω]
