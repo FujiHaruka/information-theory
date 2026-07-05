@@ -18,13 +18,24 @@ For a block Wyner–Ziv code with deterministic encoder `J : (Fin n → α) → 
 and side-information decoder on an i.i.d. source `(Xⁿ, Yⁿ)`:
 
 6. `n·R ≥ H(J) ≥ I(J; Xⁿ) − I(J; Yⁿ)` (deterministic encoder + data processing).
-7. Chain rule identifies the single-letter auxiliary `Uᵢ := (J, Y^{i-1})`, giving
-   `I(J; Xⁿ) − I(J; Yⁿ) = ∑ᵢ [I(Xᵢ; Uᵢ) − I(Yᵢ; Uᵢ)]` after cross-term cancellation.
-8. Cross terms cancel via the heterogeneous Csiszár sum identity
-   (`csiszar_sum_identity_hetero`, proved sorry-free).
-9. Per-letter feasibility + convexity of `R_WZ` (`wynerZivRateFactorizable_convex_in_D`)
-   give `∑ᵢ [I(Xᵢ; Uᵢ) − I(Yᵢ; Uᵢ)] ≥ ∑ᵢ R_WZ(Dᵢ) ≥ n · R_WZ((1/n) ∑ Dᵢ)`.
-10. Antitonicity (`wynerZivRateFactorizable_antitone`) reaches `n · R_WZ(D)`.
+7. The single-letter auxiliary is `Uᵢ := (J, Y_{\i})` — the encoder output `J`
+   together with *all the other* side-information symbols `Y_{\i} = (Yⱼ)_{j≠i}`.
+   The full block `Yⁿ = (Y_{\i}, Yᵢ)` is forced onto `Uᵢ` because the per-letter
+   reconstruction `X̂ᵢ = (decoder (J, Yⁿ))ᵢ` depends on the *entire* `Yⁿ`; a
+   one-sided `Y^{i-1}` auxiliary is therefore ruled out (distortion-hostile).
+8. Memorylessness gives the per-letter Markov chain `Uᵢ − Xᵢ − Yᵢ`
+   (`wz_perletter_markov`, proved sorry-free from `iIndepFun`). Together with the
+   *conditional* mutual-information chain — **not** the heterogeneous Csiszár sum
+   identity, which is orphaned on this route —
+   `∑ᵢ [I(Xᵢ; Uᵢ) − I(Yᵢ; Uᵢ)] = ∑ᵢ I(Xᵢ; Uᵢ | Yᵢ)` (Markov ⟹ `I(Yᵢ; Uᵢ | Xᵢ) = 0`)
+   `= ∑ᵢ I(Xᵢ; J | Yⁿ)` (`(Y_{\i}, Yᵢ) = Yⁿ` + memoryless collapse)
+   `≤ I(Xⁿ; J | Yⁿ) = I(J; Xⁿ) − I(J; Yⁿ)` (conditional chain rule + `J − Xⁿ − Yⁿ`).
+9. Per-letter feasibility (each empirical `(Xᵢ, Yᵢ, Uᵢ)` is `IsWynerZivFactorizable`
+   via the Markov chain) lands each objective as a value of `wzRateValueSet` at its
+   own budget `Dᵢ`; time-sharing (`wzRateValueSet_avg_mem`) averages them.
+10. The average distortion budget `(1/n) ∑ᵢ Dᵢ ≤ D` (from `hD`) with
+    `wzRateValueSet_mono_in_D` and the reshaped landing `wynerZivRate_le_of_feasible`
+    reaches `R_WZ(D) ≤ (1/n)(I(J; Xⁿ) − I(J; Yⁿ)) ≤ (1/n) log M`.
 
 The per-letter measure-form mutual informations are landed onto the pmf-form
 `wzMutualInfoXU` / `wzMutualInfoYU` via the proved bridges
@@ -32,7 +43,7 @@ The per-letter measure-form mutual informations are landed onto the pmf-form
 
 ## Auxiliary-alphabet quantification (reshape rationale)
 
-The single-letterized auxiliary `Uᵢ := (J, Y^{i-1})` constructed in the proof has a
+The single-letterized auxiliary `Uᵢ := (J, Y_{\i})` constructed in the proof has a
 type that varies with `i` and `n` and a cardinality that grows with the block length.
 The fixed-`U` rate `wynerZivRateFactorizable U` cannot receive such an auxiliary
 without a Carathéodory cardinality reduction (embedding the rate-optimal auxiliary into
@@ -42,10 +53,11 @@ Jensen on the converse's critical path.
 The **reshape** (proposal A) removes both: the converse concludes against
 `wynerZivRate`, the infimum of the objective over feasible factorisable points at
 *every* finite auxiliary alphabet `Fin k` at once (`FactorizableRate.lean` §10). A
-large single-letterisation auxiliary of any finite type then lands *directly* as a
-feasible point of the reshaped infimum via `wynerZivRate_le_of_feasible`, with no
-cardinality bound and no support lemma. The reshaped statement is `∀`-clean: it carries
-no auxiliary sizing precondition.
+large single-letterisation auxiliary of any finite type (here `Uᵢ` of type
+`Fin M × ({j // j ≠ i} → β)`) then lands *directly* as a feasible point of the
+reshaped infimum via `wynerZivRate_le_of_feasible`, with no cardinality bound and no
+support lemma. The reshaped statement is `∀`-clean: it carries no auxiliary sizing
+precondition.
 
 Non-degeneracy (junk-`sInf` guard): `wynerZivRate = sInf (wzRateValueSet …)` and, in
 `ℝ`, `sInf ∅ = 0`. The union-of-images form of `wzRateValueSet` injects no junk (empty
@@ -641,6 +653,159 @@ private theorem wz_perletter_markov
   exact wz_isMarkovChain_of_indepFun_side μ (Xs i) (Ys i) Ws g (hXs i) (hYs i) hWs_meas hg_meas
     hindep_pair
 
+/-! ### Single-letterisation sub-lemmas (conjuncts of the per-letter witness)
+
+The per-letter witness `wz_converse_perletter_witness` is the mechanical assembly of
+three sub-lemmas, one per conjunct, all sharing the auxiliary `Uᵢ := (J, Y_{\i})`
+(of type `Fin M × ({j // j ≠ i} → β)`, the encoder output together with all the other
+side-information symbols):
+
+* `wz_perletter_factorizable` — conjunct (a), per-letter feasibility;
+* `wz_perletter_distortion_avg` — conjunct (b), the average distortion budget;
+* `wz_singleletter_rate_le` — conjunct (c), the conditional-MI chain (deepest atom). -/
+
+/-- **Sub-lemma 2 (per-letter feasibility).** For each time index `i`, the empirical
+joint law of `(Xᵢ, Yᵢ, Uᵢ)` with `Uᵢ := (J, Y_{\i})` is Wyner–Ziv factorisable over
+the source pmf `P_XY.real`, with kernel `condDistrib Uᵢ Xᵢ` (well-defined off the
+memoryless per-letter Markov chain `Uᵢ − Xᵢ − Yᵢ`, `wz_perletter_markov`). Relabelling
+the finite auxiliary type `Fin M × ({j // j ≠ i} → β)` to a `Fin k` and pairing with the
+side-information decoder `f (u, y)` reconstructing `X̂ᵢ` lands the per-letter objective
+`(I(Xᵢ; Uᵢ) − I(Yᵢ; Uᵢ)).toReal` as a value of `wzRateValueSet` at the per-letter budget
+`Dv i = 𝔼[d(Xᵢ, X̂ᵢ)]`. `hlaw` fixes the `(Xᵢ, Yᵢ)`-marginal to `P_XY`.
+@residual(plan:wyner-ziv-main-plan) -/
+private theorem wz_perletter_factorizable
+    {Ω : Type*} [MeasurableSpace Ω]
+    {M n : ℕ} [NeZero M] (i : Fin n)
+    (c : WynerZivCode M n α β γ)
+    (hencoder : Measurable c.encoder) (hdecoder : Measurable c.decoder)
+    (d : DistortionFn α γ)
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindep : iIndepFun (fun i ω ↦ (Xs i ω, Ys i ω)) μ)
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (hlaw : ∀ i, μ.map (fun ω ↦ (Xs i ω, Ys i ω)) = P_XY) :
+    (mutualInfo μ (Xs i)
+        (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+          fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
+      - mutualInfo μ (Ys i)
+        (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+          fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))).toReal
+      ∈ wzRateValueSet (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ))
+          (∫ ω, (d (Xs i ω)
+              ((c.decoder (c.encoder (fun j ↦ Xs j ω), fun j ↦ Ys j ω)) i) : ℝ) ∂μ) := by
+  sorry
+
+/-- **Sub-lemma 4 (average per-letter distortion).** The uniform average of the
+per-letter distortions `Dv i = 𝔼[d(Xᵢ, X̂ᵢ)]` (with `X̂ᵢ = (decoder (J, Yⁿ))ᵢ`) equals
+the expected block distortion of the code under the i.i.d. source `P_XY`, hence is at
+most `D` by `hD`. Proof clones the rate-distortion
+`blockDistortion_eq_avg_perLetter` for the side-information decoder: the joint law
+`μ.map (ω ↦ (Xⁿ ω, Yⁿ ω)) = Measure.pi (fun _ ↦ P_XY)` (from `hindep` + `hlaw`) turns
+each `μ`-integral into a `pi`-integral, and the sum collapses into the block-distortion
+integral. Body is sorry-free (genuine clone of the rate-distortion side). -/
+private theorem wz_perletter_distortion_avg
+    {Ω : Type*} [MeasurableSpace Ω]
+    {M n : ℕ} [NeZero M] (_hn : 0 < n)
+    (c : WynerZivCode M n α β γ)
+    (_hencoder : Measurable c.encoder) (_hdecoder : Measurable c.decoder)
+    (d : DistortionFn α γ)
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindep : iIndepFun (fun i ω ↦ (Xs i ω, Ys i ω)) μ)
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (hlaw : ∀ i, μ.map (fun ω ↦ (Xs i ω, Ys i ω)) = P_XY)
+    {D : ℝ}
+    (hD : c.expectedBlockDistortion P_XY d ≤ D) :
+    (1 / (n : ℝ)) * ∑ i, (∫ ω, (d (Xs i ω)
+        ((c.decoder (c.encoder (fun j ↦ Xs j ω), fun j ↦ Ys j ω)) i) : ℝ) ∂μ) ≤ D := by
+  classical
+  set d' : α → γ → ℝ := fun a b ↦ ((d a b : NNReal) : ℝ) with hd'_def
+  set Wn : Ω → (Fin n → α × β) := fun ω i ↦ (Xs i ω, Ys i ω) with hWn_def
+  have hWn_meas : Measurable Wn := measurable_pi_iff.mpr (fun i ↦ (hXs i).prodMk (hYs i))
+  -- Product law: μ.map Wn = Measure.pi (fun _ ↦ P_XY).
+  have h_pi_law : μ.map Wn = Measure.pi (fun _ : Fin n ↦ P_XY) := by
+    have h := (iIndepFun_iff_map_fun_eq_pi_map (μ := μ) (f := fun i ω ↦ (Xs i ω, Ys i ω))
+      (fun i ↦ ((hXs i).prodMk (hYs i)).aemeasurable)).mp hindep
+    simp only [hWn_def]
+    rw [h]
+    congr 1
+    funext i
+    exact hlaw i
+  -- Each per-letter distortion as a `pi`-integral (change of variables).
+  have h_each : ∀ i, (∫ ω, (d (Xs i ω)
+        ((c.decoder (c.encoder (fun j ↦ Xs j ω), fun j ↦ Ys j ω)) i) : ℝ) ∂μ)
+      = ∫ p : Fin n → α × β,
+          d' ((p i).1) ((c.decoder (c.encoder (fun j ↦ (p j).1), fun j ↦ (p j).2)) i)
+            ∂(Measure.pi (fun _ : Fin n ↦ P_XY)) := by
+    intro i
+    have hg_meas : Measurable (fun p : Fin n → α × β ↦
+        d' ((p i).1) ((c.decoder (c.encoder (fun j ↦ (p j).1), fun j ↦ (p j).2)) i)) :=
+      measurable_of_countable _
+    have hgoal : (fun ω ↦ ((d (Xs i ω)
+          ((c.decoder (c.encoder (fun j ↦ Xs j ω), fun j ↦ Ys j ω)) i) : NNReal) : ℝ))
+        = fun ω ↦ (fun p : Fin n → α × β ↦
+            d' ((p i).1) ((c.decoder (c.encoder (fun j ↦ (p j).1), fun j ↦ (p j).2)) i)) (Wn ω) :=
+      rfl
+    rw [hgoal, ← integral_map hWn_meas.aemeasurable hg_meas.aestronglyMeasurable, h_pi_law]
+  -- Assemble the average into the block-distortion integral.
+  have h_id : (1 / (n : ℝ)) * ∑ i, (∫ ω, (d (Xs i ω)
+        ((c.decoder (c.encoder (fun j ↦ Xs j ω), fun j ↦ Ys j ω)) i) : ℝ) ∂μ)
+      = c.expectedBlockDistortion P_XY d := by
+    calc (1 / (n : ℝ)) * ∑ i, (∫ ω, (d (Xs i ω)
+            ((c.decoder (c.encoder (fun j ↦ Xs j ω), fun j ↦ Ys j ω)) i) : ℝ) ∂μ)
+        = (1 / (n : ℝ)) * ∑ i, ∫ p : Fin n → α × β,
+            d' ((p i).1) ((c.decoder (c.encoder (fun j ↦ (p j).1), fun j ↦ (p j).2)) i)
+              ∂(Measure.pi (fun _ : Fin n ↦ P_XY)) := by
+            rw [Finset.sum_congr rfl (fun i _ ↦ h_each i)]
+      _ = (1 / (n : ℝ)) * ∫ p : Fin n → α × β,
+            ∑ i, d' ((p i).1) ((c.decoder (c.encoder (fun j ↦ (p j).1), fun j ↦ (p j).2)) i)
+              ∂(Measure.pi (fun _ : Fin n ↦ P_XY)) := by
+            rw [integral_finsetSum]
+            exact fun i _ ↦ Integrable.of_finite
+      _ = ∫ p : Fin n → α × β,
+            (1 / (n : ℝ)) * ∑ i,
+              d' ((p i).1) ((c.decoder (c.encoder (fun j ↦ (p j).1), fun j ↦ (p j).2)) i)
+              ∂(Measure.pi (fun _ : Fin n ↦ P_XY)) := by
+            rw [integral_const_mul]
+      _ = c.expectedBlockDistortion P_XY d := by
+            rw [WynerZivCode.expectedBlockDistortion]
+            rfl
+  rw [h_id]
+  exact hD
+
+/-- **Sub-lemma 3 (single-letterised rate bound, conditional-MI chain).** The sum of the
+per-letter Wyner–Ziv objectives is bounded by the block mutual-information difference:
+```
+∑ᵢ [I(Xᵢ; Uᵢ) − I(Yᵢ; Uᵢ)] ≤ I(J; Xⁿ) − I(J; Yⁿ),   Uᵢ := (J, Y_{\i}).
+```
+Route (conditional-MI chain, **not** Csiszár): the memoryless per-letter Markov chain
+`Uᵢ − Xᵢ − Yᵢ` (`wz_perletter_markov`) gives `I(Yᵢ; Uᵢ | Xᵢ) = 0`, so
+`I(Xᵢ; Uᵢ) − I(Yᵢ; Uᵢ) = I(Xᵢ; Uᵢ | Yᵢ)`; the memoryless collapse
+`(Y_{\i}, Yᵢ) = Yⁿ` turns this into `I(Xᵢ; J | Yⁿ)`, and the conditional chain rule
+with `J − Xⁿ − Yⁿ` yields `∑ᵢ I(Xᵢ; J | Yⁿ) ≤ I(Xⁿ; J | Yⁿ) = I(J; Xⁿ) − I(J; Yⁿ)`.
+This is the deepest atom of the converse single-letterisation.
+@residual(plan:wyner-ziv-main-plan) -/
+private theorem wz_singleletter_rate_le
+    {Ω : Type*} [MeasurableSpace Ω]
+    {M n : ℕ} [NeZero M] (hn : 0 < n)
+    (c : WynerZivCode M n α β γ)
+    (hencoder : Measurable c.encoder) (hdecoder : Measurable c.decoder)
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindep : iIndepFun (fun i ω ↦ (Xs i ω, Ys i ω)) μ) :
+    ∑ i, (mutualInfo μ (Xs i)
+        (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+          fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
+      - mutualInfo μ (Ys i)
+        (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+          fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))).toReal
+      ≤ (mutualInfo μ (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) (fun ω j ↦ Xs j ω)
+          - mutualInfo μ (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) (fun ω j ↦ Ys j ω)).toReal := by
+  sorry
+
 /-- **Per-letter time-sharing witness of the Wyner–Ziv converse.**
 
 For a block Wyner–Ziv code on an i.i.d. source `(Xⁿ, Yⁿ)` with expected block
@@ -652,49 +817,38 @@ factorisable feasible point at its own budget `Dv i` (`w i ∈ wzRateValueSet �
 the block mutual-information difference,
 `∑ᵢ w i ≤ (I(J; Xⁿ) − I(J; Yⁿ)).toReal`.
 
-This is the genuine single-letterisation core (Cover–Thomas §15.9): the per-letter
-auxiliary `Uᵢ := (J, Y^{i-1})` is feasible via the memoryless-source per-letter
-Markov chain `Uᵢ − Xᵢ − Yᵢ`, and the sum identity
-`∑ᵢ [I(Xᵢ; Uᵢ) − I(Yᵢ; Uᵢ)] = I(J; Xⁿ) − I(J; Yⁿ)` follows from the heterogeneous
-Csiszár sum identity (`csiszar_sum_identity_hetero`, already sorry-free). The whole
-per-letter construction is isolated here as a residual; the outer feasible-point
-existence `wz_converse_feasible_point` is then discharged genuinely (sorry-free) by
-uniformly time-sharing these witnesses (`wzRateValueSet_avg_mem`).
+This is the genuine single-letterisation core (Cover–Thomas §15.9). The per-letter
+auxiliary is `Uᵢ := (J, Y_{\i})` — the encoder output `J` together with *all the
+other* side-information symbols `Y_{\i} = (Yⱼ)_{j≠i}` (the full block `Yⁿ = (Y_{\i},
+Yᵢ)` is forced onto `Uᵢ` because the reconstruction `X̂ᵢ = (decoder (J, Yⁿ))ᵢ` depends
+on the entire `Yⁿ`; a one-sided `Y^{i-1}` auxiliary is distortion-hostile and ruled
+out). Its role is split across three sub-lemmas:
+
+* `wz_perletter_factorizable` gives conjunct (a): the empirical joint `(Xᵢ, Yᵢ, Uᵢ)`
+  is `IsWynerZivFactorizable` via the memoryless-source per-letter Markov chain
+  `Uᵢ − Xᵢ − Yᵢ` (`wz_perletter_markov`, sorry-free), landing `w i` as a value of
+  `wzRateValueSet` at budget `Dv i`;
+* `wz_perletter_distortion_avg` gives conjunct (b): the average distortion identity
+  `(1/n) ∑ᵢ Dv i = expectedBlockDistortion P_XY d ≤ D`;
+* `wz_singleletter_rate_le` gives conjunct (c) via the **conditional** mutual-info
+  chain `∑ᵢ [I(Xᵢ; Uᵢ) − I(Yᵢ; Uᵢ)] = ∑ᵢ I(Xᵢ; Uᵢ | Yᵢ) = ∑ᵢ I(Xᵢ; J | Yⁿ) ≤
+  I(Xⁿ; J | Yⁿ) = I(J; Xⁿ) − I(J; Yⁿ)`. This route does **not** go through the
+  heterogeneous Csiszár sum identity (`csiszar_sum_identity_hetero`): that prefix/suffix
+  unconditional-MI form generates exactly the one-sided `Y^{i-1}` auxiliary the
+  distortion side rules out, so it is *orphaned* on this route (kept sorry-free for
+  reuse elsewhere, but not on this critical path).
+
+The body is the mechanical assembly of these three sub-lemmas; the outer feasible-point
+existence `wz_converse_feasible_point` is discharged genuinely (sorry-free) by uniformly
+time-sharing these witnesses (`wzRateValueSet_avg_mem`).
 
 The conclusion is an *existential witness* (per-letter budgets + values with the
 three bounds), not a hypothesis bundle: it does not encode the outcome it is used to
 prove. `hindep` (memoryless source) / `hlaw` (identical marginals `= P_XY`) / `hD`
 (distortion budget) are genuine source-regularity preconditions — the per-letter
-Markov feasibility and the budget bound `(1/n) ∑ Dᵢ ≤ D` are false without them.
-
-Independent honesty audit 2026-07-05 (PASS, honest_residual — auditor-verified, not
-self-reported): all four honesty checks pass. (1) Non-circular / non-bundled: no
-hypothesis has type ≡ the existential conclusion; `hindep` / `hlaw` / `hD` +
-measurability are genuine source-regularity preconditions, not a `*Hypothesis` /
-`*Reduction` bundle carrying the single-letterisation core (which lives in the
-conclusion). (2) Non-vacuous: `wzRateValueSet … (Dv i)` membership requires a
-row-stochastic kernel `∑_u κ x u = 1`, so `Fin 0` cannot satisfy it — the witness has
-genuine content. (3) Sufficiency (the key risk) checks out: the statement is
-TRUE-as-framed (Wyner–Ziv converse single-letterisation, Cover–Thomas §15.9). For the
-memoryless source `hindep`, the per-letter auxiliary `Uᵢ := (J, Y^{i-1})` genuinely
-satisfies `Uᵢ − Xᵢ − Yᵢ` (given `Xᵢ`, `Yᵢ ⊥ (X_{-i}, Y^{i-1})` by memorylessness, hence
-`Yᵢ ⊥ (J, Y^{i-1})`), and `∑ᵢ[I(Xᵢ;Uᵢ) − I(Yᵢ;Uᵢ)] = I(J;Xⁿ) − I(J;Yⁿ)` via the
-sorry-free `csiszar_sum_identity_hetero`; the DPI-nonnegative objective (`≥ 0`) makes
-`∑ w i ≤ (I(J;Xⁿ) − I(J;Yⁿ)).toReal` a substantive (non-trivial) bound (`I(J;Xⁿ) ≥
-I(J;Yⁿ)` by the `J − Xⁿ − Yⁿ` Markov chain). Break attempts failed to refute: `n = 1`
-gives `U₁ = J`, budget `D₁ ≤ D`, sum a single term = the block difference; the
-independent-`Y` boundary keeps the identity alive via Csiszár (does not collapse the
-claim). `hlaw` is load-bearing as a *precondition* — without identical marginals each
-per-letter point would be feasible w.r.t. its own marginal, not the single `P_XY` of
-the value set. (4) Classification `@residual(plan:wyner-ziv-main-plan)` is correct: the
-residual is the in-project single-letterisation *construction* (Csiszár identity +
-per-letter Markov + time-sharing), all in-tree assets, NOT a Mathlib gap — `plan`, not
-`wall`. The plan exists (`docs/shannon/wyner-ziv-main-plan.md`) and covers this
-single-letterisation core (P2 §"single-letterization core"). `#print axioms` on the
-consumer `wz_converse_feasible_point` confirms its only `sorryAx` source is transitive
-through this witness (its own body wires the sorryAx-free `wzRateValueSet_avg_mem` +
-`wzRateValueSet_mono_in_D` + `mem_wzRateValueSet_iff`, no hidden bundle).
-@residual(plan:wyner-ziv-main-plan) -/
+Markov feasibility and the budget bound `(1/n) ∑ Dᵢ ≤ D` are false without them. Any
+residual reachable from this witness lives *transitively* in the three sub-lemmas above
+(all `@residual(plan:wyner-ziv-main-plan)` where still open), not in a hidden bundle. -/
 private theorem wz_converse_perletter_witness
     {Ω : Type*} [MeasurableSpace Ω]
     {M n : ℕ} [NeZero M] (hn : 0 < n)
@@ -716,7 +870,23 @@ private theorem wz_converse_perletter_witness
             ≤ (mutualInfo μ (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) (fun ω j ↦ Xs j ω)
                 - mutualInfo μ (fun ω ↦ c.encoder (fun j ↦ Xs j ω))
                     (fun ω j ↦ Ys j ω)).toReal := by
-  sorry
+  classical
+  -- Per-letter budgets `Dv i = 𝔼[d(Xᵢ, X̂ᵢ)]` and objectives `w i = I(Xᵢ;Uᵢ) − I(Yᵢ;Uᵢ)`.
+  refine ⟨fun i ↦ ∫ ω, (d (Xs i ω)
+            ((c.decoder (c.encoder (fun j ↦ Xs j ω), fun j ↦ Ys j ω)) i) : ℝ) ∂μ,
+          fun i ↦ (mutualInfo μ (Xs i)
+              (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+                fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
+            - mutualInfo μ (Ys i)
+              (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+                fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))).toReal,
+          ?_, ?_, ?_⟩
+  · -- Conjunct (a): per-letter feasibility.
+    exact fun i ↦ wz_perletter_factorizable i c hencoder hdecoder d μ Xs Ys hXs hYs hindep P_XY hlaw
+  · -- Conjunct (b): average distortion budget.
+    exact wz_perletter_distortion_avg hn c hencoder hdecoder d μ Xs Ys hXs hYs hindep P_XY hlaw hD
+  · -- Conjunct (c): single-letterised rate bound (conditional-MI chain).
+    exact wz_singleletter_rate_le hn c hencoder hdecoder μ Xs Ys hXs hYs hindep
 
 /-- **Single-letterisation core of the Wyner–Ziv converse (feasible-point form).**
 
@@ -727,10 +897,12 @@ distortion at most `D`, there is a *single-letterised* feasible factorisable poi
 `(1/n)(I(J; Xⁿ) − I(J; Yⁿ))`.
 
 This is the analytic heart of the converse (Cover–Thomas §15.9): the auxiliary
-`Uᵢ := (J, Y^{i-1})` gives, via the heterogeneous Csiszár sum identity
-(`csiszar_sum_identity_hetero`, proved sorry-free) and per-letter feasibility from
-the memoryless source (Markov `Uᵢ − Xᵢ − Yᵢ`),
-`∑ᵢ [I(Xᵢ;Uᵢ) − I(Yᵢ;Uᵢ)] = I(J;Xⁿ) − I(J;Yⁿ)`; the time-sharing auxiliary
+`Uᵢ := (J, Y_{\i})` gives, via the **conditional** mutual-information chain
+`∑ᵢ [I(Xᵢ;Uᵢ) − I(Yᵢ;Uᵢ)] = ∑ᵢ I(Xᵢ;Uᵢ|Yᵢ) = ∑ᵢ I(Xᵢ;J|Yⁿ) ≤ I(Xⁿ;J|Yⁿ) =
+I(J;Xⁿ) − I(J;Yⁿ)` (not the heterogeneous Csiszár sum identity, which is orphaned on
+this route) and per-letter feasibility from the memoryless source (Markov
+`Uᵢ − Xᵢ − Yᵢ`, `wz_perletter_markov`), the sum bound
+`∑ᵢ [I(Xᵢ;Uᵢ) − I(Yᵢ;Uᵢ)] ≤ I(J;Xⁿ) − I(J;Yⁿ)`; the time-sharing auxiliary
 `U* = (Q, U_Q)` (with `Q` uniform on the time index `Fin n`) assembles the per-letter
 points into one factorisable point of distortion `(1/n) ∑ᵢ Dᵢ ≤ D` (from `hD`) and
 objective `(1/n) ∑ᵢ [I(Xᵢ;Uᵢ) − I(Yᵢ;Uᵢ)]`.
@@ -755,8 +927,8 @@ values `(1/n) ∑ w i` into a value of `wzRateValueSet … ((1/n) ∑ Dv i)`,
 `wzRateValueSet_mono_in_D` (with `(1/n) ∑ Dv i ≤ D`) relaxes it to budget `D`, and
 `mem_wzRateValueSet_iff` unpacks the resulting membership into the feasible factorisable
 point at some `Fin k`. The remaining residual lives *transitively* in
-`wz_converse_perletter_witness` (the Csiszár-identity + per-letter-Markov + time-sharing
-construction of those witnesses). -/
+`wz_converse_perletter_witness` (the conditional-MI-chain + per-letter-Markov +
+per-letter-factorizability construction of those witnesses). -/
 theorem wz_converse_feasible_point
     {Ω : Type*} [MeasurableSpace Ω]
     {M n : ℕ} [NeZero M] (hn : 0 < n)
@@ -814,7 +986,7 @@ objective over feasible factorisable points at *every* finite auxiliary alphabet
 `Fin k` (`FactorizableRate.lean` §10). This `∀`-clean form removes the Carathéodory
 sizing precondition `hU_card : |α| + 1 ≤ |U|` that the fixed-`U`
 `wynerZivRateFactorizable` version required: the single-letterisation auxiliary
-`Uᵢ := (J, Y^{i-1})` (whose cardinality grows with `n`) now lands *directly* as a
+`Uᵢ := (J, Y_{\i})` (whose cardinality grows with `n`) now lands *directly* as a
 feasible point of the reshaped infimum via `wynerZivRate_le_of_feasible`, with no
 cardinality bound.
 
@@ -829,7 +1001,7 @@ by *landing* the isolated feasible-point existence `wz_converse_feasible_point`:
 `wynerZivRate_le_of_feasible` (with `BddBelow` from `wzRateValueSet_bddBelow_of_pmf`)
 turns "some feasible factorisable point at `Fin k` has objective `≤ (1/n)(I(J;Xⁿ) −
 I(J;Yⁿ))`" into `R_WZ(D) ≤ (1/n)(I(J;Xⁿ) − I(J;Yⁿ)).toReal`. The remaining `sorry`
-lives *transitively* in `wz_converse_feasible_point` (the Csiszár-identity +
+lives *transitively* in `wz_converse_feasible_point` (the conditional-MI-chain +
 per-letter-feasibility + time-sharing construction of that witness); no Carathéodory
 support lemma is on the critical path.
 
@@ -878,7 +1050,7 @@ theorem wyner_ziv_converse_n_letter_singleLetter
   -- (at some `Fin k`) feasible at budget `D` whose objective is `≤ (1/n)(I(J;Xⁿ) −
   -- I(J;Yⁿ))`; landing it via `wynerZivRate_le_of_feasible` (BddBelow from
   -- `wzRateValueSet_bddBelow_of_pmf`) gives the converse bound. Only the
-  -- feasible-point construction (Csiszár identity + per-letter feasibility +
+  -- feasible-point construction (conditional-MI chain + per-letter feasibility +
   -- time-sharing) remains a residual; the landing here is genuine.
   have h_sl :
       wynerZivRate (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D
