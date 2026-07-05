@@ -654,6 +654,108 @@ private theorem wz_perletter_markov
   exact wz_isMarkovChain_of_indepFun_side μ (Xs i) (Ys i) Ws g (hXs i) (hYs i) hWs_meas hg_meas
     hindep_pair
 
+/-- Singleton evaluation of a semidirect product `ρ ⊗ₘ K` on finite spaces:
+`(ρ ⊗ₘ K) {(z, w)} = K z {w} · ρ {z}`. Genuine measure-theoretic utility used to read
+the factorisation `q(x,y,u) = κ(u|x)·P_XY(x,y)` off the per-letter Markov chain. -/
+private lemma wz_compProd_markov_singleton
+    {Z W : Type*} [MeasurableSpace Z] [MeasurableSingletonClass Z]
+    [MeasurableSpace W] [MeasurableSingletonClass W]
+    (ρ : Measure Z) [SFinite ρ] (K : Kernel Z W) [IsMarkovKernel K] (z : Z) (w : W) :
+    (ρ ⊗ₘ K) {(z, w)} = K z {w} * ρ {z} := by
+  classical
+  have hsingle : ({(z, w)} : Set (Z × W)) = ({z} : Set Z) ×ˢ ({w} : Set W) := by
+    ext p; simp [Prod.ext_iff]
+  rw [hsingle,
+      Measure.compProd_apply ((measurableSet_singleton z).prod (measurableSet_singleton w))]
+  have hfun : (fun z' ↦ K z' (Prod.mk z' ⁻¹' (({z} : Set Z) ×ˢ ({w} : Set W))))
+      = fun z' ↦ ({z} : Set Z).indicator (fun z'' ↦ K z'' {w}) z' := by
+    funext z'
+    rw [Set.mk_preimage_prod_right_eq_if]
+    by_cases hz : z' ∈ ({z} : Set Z)
+    · rw [if_pos hz, Set.indicator_of_mem hz]
+    · rw [if_neg hz, Set.indicator_of_notMem hz, measure_empty]
+  rw [hfun, lintegral_indicator (measurableSet_singleton z),
+      lintegral_singleton' (K.measurable_coe (measurableSet_singleton w))]
+
+/-- **Empirical factorisability of the per-letter joint (crux of sub-lemma 2).** For a
+memoryless source `(Xⁿ, Yⁿ)` and time index `i`, the empirical joint law of
+`(Xᵢ, Yᵢ, Uᵢ)` with `Uᵢ := (J, Y_{\i})` is Wyner–Ziv factorisable over the source pmf
+`P_XY.real`, with the conditioner-only kernel `κ(u|x) := (condDistrib Uᵢ Xᵢ μ x).real {u}`.
+The factorisation `q(x,y,u) = κ(u|x)·P_XY(x,y)` is read off the per-letter Markov chain
+`Uᵢ − Xᵢ − Yᵢ` (`wz_perletter_markov`) by singleton evaluation of the joint law. -/
+private theorem wz_perletter_empirical_factorizable
+    {Ω : Type*} [MeasurableSpace Ω]
+    {M n : ℕ} [NeZero M] (i : Fin n)
+    (c : WynerZivCode M n α β γ)
+    (hencoder : Measurable c.encoder)
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindep : iIndepFun (fun i ω ↦ (Xs i ω, Ys i ω)) μ)
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (hlaw : ∀ i, μ.map (fun ω ↦ (Xs i ω, Ys i ω)) = P_XY) :
+    IsWynerZivFactorizable (Fin M × ({j : Fin n // j ≠ i} → β))
+      (fun p ↦ P_XY.real {p})
+      (fun p ↦ (μ.map (fun ω ↦ (Xs i ω, Ys i ω,
+          (c.encoder (fun j ↦ Xs j ω), fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)))).real {p}) := by
+  classical
+  set Uᵢ : Ω → (Fin M × ({j : Fin n // j ≠ i} → β)) :=
+    fun ω ↦ (c.encoder (fun j ↦ Xs j ω), fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)
+    with hUᵢ_def
+  have hUᵢ_meas : Measurable Uᵢ :=
+    (hencoder.comp (measurable_pi_lambda _ (fun j ↦ hXs j))).prodMk
+      (measurable_pi_lambda _ (fun j ↦ hYs ↑j))
+  haveI : IsProbabilityMeasure (μ.map (Xs i)) :=
+    Measure.isProbabilityMeasure_map (hXs i).aemeasurable
+  -- The per-letter Markov chain `Uᵢ − Xᵢ − Yᵢ`, as a measure equation.
+  have hmarkov_eq : μ.map (fun ω ↦ (Xs i ω, Uᵢ ω, Ys i ω))
+      = (μ.map (Xs i)) ⊗ₘ ((condDistrib Uᵢ (Xs i) μ) ×ₖ (condDistrib (Ys i) (Xs i) μ)) :=
+    wz_perletter_markov i c μ Xs Ys hXs hYs hindep
+  -- Witness kernel: `κ(u|x) = (condDistrib Uᵢ Xᵢ μ x).real {u}`.
+  refine ⟨fun x u ↦ ((condDistrib Uᵢ (Xs i) μ) x).real {u}, ?_, ?_, ?_⟩
+  · intro x u; exact measureReal_nonneg
+  · intro x
+    haveI : IsProbabilityMeasure ((condDistrib Uᵢ (Xs i) μ) x) :=
+      IsMarkovKernel.isProbabilityMeasure x
+    have h1 : (∑ u, ((condDistrib Uᵢ (Xs i) μ) x).real {u})
+        = ((condDistrib Uᵢ (Xs i) μ) x).real (Finset.univ :
+            Finset (Fin M × ({j : Fin n // j ≠ i} → β))) := by
+      simp [sum_measureReal_singleton]
+    rw [h1, Finset.coe_univ]
+    exact probReal_univ
+  · intro x y u
+    -- Singleton factorisation of the empirical joint law (ENNReal level).
+    have hjoint : (μ.map (fun ω ↦ (Xs i ω, Ys i ω, Uᵢ ω))) {(x, y, u)}
+        = ((condDistrib Uᵢ (Xs i) μ) x) {u}
+            * (μ.map (fun ω ↦ (Xs i ω, Ys i ω))) {(x, y)} := by
+      have hreorder : (μ.map (fun ω ↦ (Xs i ω, Ys i ω, Uᵢ ω))) {(x, y, u)}
+          = (μ.map (fun ω ↦ (Xs i ω, Uᵢ ω, Ys i ω))) {(x, u, y)} := by
+        rw [Measure.map_apply ((hXs i).prodMk ((hYs i).prodMk hUᵢ_meas))
+              (measurableSet_singleton _),
+            Measure.map_apply ((hXs i).prodMk (hUᵢ_meas.prodMk (hYs i)))
+              (measurableSet_singleton _)]
+        congr 1
+        ext ω
+        simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.mk.injEq]
+        tauto
+      rw [hreorder, hmarkov_eq,
+          wz_compProd_markov_singleton (μ.map (Xs i))
+            ((condDistrib Uᵢ (Xs i) μ) ×ₖ (condDistrib (Ys i) (Xs i) μ)) x (u, y)]
+      have hprod : ((condDistrib Uᵢ (Xs i) μ) ×ₖ (condDistrib (Ys i) (Xs i) μ)) x {(u, y)}
+          = ((condDistrib Uᵢ (Xs i) μ) x) {u} * ((condDistrib (Ys i) (Xs i) μ) x) {y} := by
+        have hset : ({(u, y)} : Set ((Fin M × ({j : Fin n // j ≠ i} → β)) × β))
+            = ({u} : Set _) ×ˢ ({y} : Set β) := by ext p; simp [Prod.ext_iff]
+        rw [hset, Kernel.prod_apply_prod]
+      have hXY : (μ.map (fun ω ↦ (Xs i ω, Ys i ω))) {(x, y)}
+          = ((condDistrib (Ys i) (Xs i) μ) x) {y} * (μ.map (Xs i)) {x} := by
+        rw [← compProd_map_condDistrib (hYs i).aemeasurable,
+            wz_compProd_markov_singleton (μ.map (Xs i)) (condDistrib (Ys i) (Xs i) μ) x y]
+      rw [hprod, hXY]; ring
+    show (μ.map (fun ω ↦ (Xs i ω, Ys i ω, Uᵢ ω))).real {(x, y, u)}
+        = ((condDistrib Uᵢ (Xs i) μ) x).real {u} * P_XY.real {(x, y)}
+    unfold Measure.real
+    rw [hjoint, ENNReal.toReal_mul, ← hlaw i]
+
 /-! ### Single-letterisation sub-lemmas (conjuncts of the per-letter witness)
 
 The per-letter witness `wz_converse_perletter_witness` is the mechanical assembly of
@@ -674,23 +776,20 @@ side-information decoder `f (u, y)` reconstructing `X̂ᵢ` lands the per-letter
 `(I(Xᵢ; Uᵢ) − I(Yᵢ; Uᵢ)).toReal` as a value of `wzRateValueSet` at the per-letter budget
 `Dv i = 𝔼[d(Xᵢ, X̂ᵢ)]`. `hlaw` fixes the `(Xᵢ, Yᵢ)`-marginal to `P_XY`.
 
-Independent honesty audit 2026-07-05 (PASS, honest_residual): the `sorry` is a genuine
-residual, not a hidden bundle. All hypotheses are source-regularity preconditions
-(measurability / `iIndepFun` memorylessness / `hlaw` marginal `= P_XY` /
-`IsProbabilityMeasure`); none encodes the factorisability conclusion. Sufficiency holds:
-dropping `hindep` breaks the per-letter Markov chain `Uᵢ − Xᵢ − Yᵢ`, so the empirical
-`(Xᵢ, Yᵢ, Uᵢ)` need not be factorisable and the point need not land in `wzRateValueSet` —
-so `hindep` is necessary, not under-hypothesised. Class `plan` is correct (not `wall`): the
-WZ gap is an unimplemented in-project atom (Markov ⟹ empirical-factorisable pmf), NOT a
-Mathlib gap — only the *reverse* helper `wzFactorizable_isMarkovChain` exists in-project
-(loogle: operational coding theory / method-of-types Found 0). Plan `wyner-ziv-main-plan`
-exists and P2 §5-sub-lemma covers this (sub-lemma 2).
-@residual(plan:wyner-ziv-main-plan) -/
+Genuine closure (sorryAx-free). The empirical joint's factorisability is discharged by
+`wz_perletter_empirical_factorizable` (singleton evaluation of the per-letter Markov chain
+`Uᵢ − Xᵢ − Yᵢ`); the distortion identity `wzExpectedDistortion = 𝔼[d(Xᵢ, X̂ᵢ)]` is a
+`Measure.map` change of variables; `wzRateValueSet_reindex_mem` lands the pmf-form objective,
+the pmf↔measure bridges `wzMutualInfoXU_eq_mutualInfo` / `_YU_` identify it with the
+measure-form MI, and `ENNReal.toReal_sub_of_le` (off the data-processing non-negativity
+`wzObjective_nonneg_of_factorizable`) reassembles the `.toReal` difference. All hypotheses
+are source-regularity preconditions (measurability / `iIndepFun` memorylessness / `hlaw`
+marginal `= P_XY` / `IsProbabilityMeasure`); none encodes the factorisability conclusion. -/
 private theorem wz_perletter_factorizable
     {Ω : Type*} [MeasurableSpace Ω]
     {M n : ℕ} [NeZero M] (i : Fin n)
     (c : WynerZivCode M n α β γ)
-    (hencoder : Measurable c.encoder) (hdecoder : Measurable c.decoder)
+    (hencoder : Measurable c.encoder) (_hdecoder : Measurable c.decoder)
     (d : DistortionFn α γ)
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
@@ -707,7 +806,74 @@ private theorem wz_perletter_factorizable
       ∈ wzRateValueSet (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ))
           (∫ ω, (d (Xs i ω)
               ((c.decoder (c.encoder (fun j ↦ Xs j ω), fun j ↦ Ys j ω)) i) : ℝ) ∂μ) := by
-  sorry
+  classical
+  -- The single-letterisation auxiliary `Uᵢ := (J, Y_{\i})`.
+  set Uᵢ : Ω → (Fin M × ({j : Fin n // j ≠ i} → β)) :=
+    fun ω ↦ (c.encoder (fun j ↦ Xs j ω), fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)
+    with hUᵢ_def
+  have hUᵢ_meas : Measurable Uᵢ :=
+    (hencoder.comp (measurable_pi_lambda _ (fun j ↦ hXs j))).prodMk
+      (measurable_pi_lambda _ (fun j ↦ hYs ↑j))
+  -- The distortion budget of the per-letter reconstruction.
+  set D : ℝ := ∫ ω, (d (Xs i ω)
+      ((c.decoder (c.encoder (fun j ↦ Xs j ω), fun j ↦ Ys j ω)) i) : ℝ) ∂μ with hD_def
+  -- The empirical joint pmf and the side-information decoder.
+  set q : α × β × (Fin M × ({j : Fin n // j ≠ i} → β)) → ℝ :=
+    fun p ↦ (μ.map (fun ω ↦ (Xs i ω, Ys i ω, Uᵢ ω))).real {p} with hq_def
+  set f : (Fin M × ({j : Fin n // j ≠ i} → β)) × β → γ :=
+    fun p ↦ (c.decoder (p.1.1, fun j ↦ if h : j = i then p.2 else p.1.2 ⟨j, h⟩)) i with hf_def
+  -- Crux #1: the empirical joint is factorisable.
+  have hfact : IsWynerZivFactorizable (Fin M × ({j : Fin n // j ≠ i} → β))
+      (fun p ↦ P_XY.real {p}) q :=
+    wz_perletter_empirical_factorizable i c hencoder μ Xs Ys hXs hYs hindep P_XY hlaw
+  -- Crux #3: the pmf-form distortion equals the per-letter budget `D`.
+  have hJoint_meas : Measurable (fun ω ↦ (Xs i ω, Ys i ω, Uᵢ ω)) :=
+    (hXs i).prodMk ((hYs i).prodMk hUᵢ_meas)
+  haveI : IsProbabilityMeasure (μ.map (fun ω ↦ (Xs i ω, Ys i ω, Uᵢ ω))) :=
+    Measure.isProbabilityMeasure_map hJoint_meas.aemeasurable
+  have hdist : wzExpectedDistortion (Fin M × ({j : Fin n // j ≠ i} → β))
+      (fun a b ↦ (d a b : ℝ)) q f ≤ D := by
+    refine le_of_eq ?_
+    have hstep1 : wzExpectedDistortion (Fin M × ({j : Fin n // j ≠ i} → β))
+        (fun a b ↦ (d a b : ℝ)) q f
+        = ∫ p, (d p.1 (f (p.2.2, p.2.1)) : ℝ) ∂(μ.map (fun ω ↦ (Xs i ω, Ys i ω, Uᵢ ω))) := by
+      unfold wzExpectedDistortion
+      rw [integral_fintype (Integrable.of_finite)]
+      refine Finset.sum_congr rfl (fun p _ ↦ ?_)
+      simp only [hq_def, smul_eq_mul]
+    rw [hstep1, integral_map hJoint_meas.aemeasurable
+        ((measurable_of_countable _).aestronglyMeasurable), hD_def]
+    refine integral_congr_ae (Filter.Eventually.of_forall (fun ω ↦ ?_))
+    simp only [hf_def, hUᵢ_def]
+    have hblock : (fun j : Fin n ↦ if h : j = i then Ys i ω else Ys j ω)
+        = fun j ↦ Ys j ω := by
+      funext j; split_ifs with h
+      · rw [h]
+      · rfl
+    rw [hblock]
+  -- Landing: the objective value lies in `wzRateValueSet` at budget `D`.
+  have hmem : (q, f) ∈ WynerZivFactorizableConstraint (Fin M × ({j : Fin n // j ≠ i} → β))
+      (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D := ⟨hfact, hdist⟩
+  have hland := wzRateValueSet_reindex_mem hmem
+  -- Bridge the pmf-form objective onto the measure form.
+  have hXU : wzMutualInfoXU (Fin M × ({j : Fin n // j ≠ i} → β)) q
+      = (mutualInfo μ (Xs i) Uᵢ).toReal := by
+    rw [hq_def]
+    exact wzMutualInfoXU_eq_mutualInfo μ (Xs i) (Ys i) Uᵢ (hXs i) (hYs i) hUᵢ_meas
+  have hYU : wzMutualInfoYU (Fin M × ({j : Fin n // j ≠ i} → β)) q
+      = (mutualInfo μ (Ys i) Uᵢ).toReal := by
+    rw [hq_def]
+    exact wzMutualInfoYU_eq_mutualInfo μ (Xs i) (Ys i) Uᵢ (hXs i) (hYs i) hUᵢ_meas
+  rw [hXU, hYU] at hland
+  -- Data-processing non-negativity `I(Y;U) ≤ I(X;U)` (via the factorisable manifold DPI).
+  have hnn := wzObjective_nonneg_of_factorizable (measureReal_pmf_mem_stdSimplex P_XY) hfact
+  rw [hXU, hYU] at hnn
+  have hXne : mutualInfo μ (Xs i) Uᵢ ≠ ∞ := mutualInfo_ne_top μ (Xs i) Uᵢ (hXs i) hUᵢ_meas
+  have hYne : mutualInfo μ (Ys i) Uᵢ ≠ ∞ := mutualInfo_ne_top μ (Ys i) Uᵢ (hYs i) hUᵢ_meas
+  have hle : mutualInfo μ (Ys i) Uᵢ ≤ mutualInfo μ (Xs i) Uᵢ :=
+    (ENNReal.toReal_le_toReal hYne hXne).mp (by linarith)
+  rw [ENNReal.toReal_sub_of_le hle hXne]
+  exact hland
 
 /-- **Sub-lemma 4 (average per-letter distortion).** The uniform average of the
 per-letter distortions `Dv i = 𝔼[d(Xᵢ, X̂ᵢ)]` (with `X̂ᵢ = (decoder (J, Yⁿ))ᵢ`) equals
