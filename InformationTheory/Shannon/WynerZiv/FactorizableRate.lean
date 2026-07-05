@@ -574,4 +574,106 @@ theorem wynerZivRateFactorizable_convex_in_D
 
 end RateLevelConvexity
 
+/-! ## §10 Auxiliary-alphabet infimum rate (reshape: inf over all finite `Fin k`)
+
+The headline operational rate `wynerZivRateFactorizable U` fixes the auxiliary
+alphabet type `U` up front. For the *operational converse* this forces a
+Carathéodory support argument (the single-letterisation auxiliary
+`Uᵢ := (J, Y^{i-1})` has a cardinality that grows with the block length, so it
+does not embed into a fixed `U` without the `|U| ≤ |α| + 1` reduction).
+
+This section adds the reshaped rate `wynerZivRate` — the infimum of the
+objective over feasible factorisable points at *every* finite auxiliary
+alphabet `Fin k` simultaneously. A large single-letterisation auxiliary then
+lands directly as a feasible point of the reshaped infimum, with no cardinality
+bound.
+
+### Non-degeneracy (junk-`sInf` guard)
+
+`wynerZivRateFactorizable U = sInf (image)` and, in `ℝ`, `sInf ∅ = 0`. A naive
+`⨅ k, wynerZivRateFactorizable (Fin k) D` would inject a junk `0` at every index
+`k` whose factorisable constraint is empty (e.g. `k = 0`: `Fin 0` is empty, so
+no row-stochastic kernel exists), collapsing the infimum to `≤ 0`. That would
+make the converse `wynerZivRate ≤ R` vacuously true — a degenerate-definition
+defect.
+
+The `⋃`-then-`sInf` form (`wzRateValueSet`) avoids this: empty-constraint
+indices contribute the *empty* image, so they inject no value. The remaining
+lower bound comes from the objective's non-negativity on the factorisable
+manifold (data-processing inequality `I(X;U) − I(Y;U) ≥ 0` for the Markov chain
+`U − X − Y`), established in `Converse.lean` and used to discharge `BddBelow`. -/
+
+section AllAuxRate
+
+variable {α β γ : Type*}
+variable [Fintype α] [Fintype β]
+  [MeasurableSpace α] [MeasurableSpace β]
+
+/-- The set of Wyner–Ziv objective values `I(X;U) − I(Y;U)` attainable by a
+factorisable feasible point at *some* finite auxiliary alphabet `Fin k`, with
+`k` ranging over all of `ℕ`. Feasibility-empty indices contribute the empty
+image (no value), so this set carries no junk `sInf ∅ = 0` term. -/
+def wzRateValueSet
+    (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) : Set ℝ :=
+  ⋃ k : ℕ,
+    (fun qf : (α × β × Fin k → ℝ) × (Fin k × β → γ) ↦
+        wzMutualInfoXU (Fin k) qf.1 - wzMutualInfoYU (Fin k) qf.1)
+      '' WynerZivFactorizableConstraint (Fin k) P_XY d D
+
+/-- Reshaped Wyner–Ziv operational rate: the infimum of the objective
+`I(X;U) − I(Y;U)` over feasible factorisable points at *every* finite auxiliary
+alphabet `Fin k` at once, rather than a single caller-fixed `U`.
+
+This is the `∀`-clean form needed by the operational converse: the
+single-letterisation auxiliary lands directly as a feasible point (see
+`wynerZivRate_le_of_feasible`), with no Carathéodory cardinality reduction. -/
+noncomputable def wynerZivRate
+    (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) : ℝ :=
+  sInf (wzRateValueSet P_XY d D)
+
+/-- Membership in `wzRateValueSet`: a real `v` is a value iff it is the objective
+of a feasible factorisable point at some finite auxiliary alphabet `Fin k`. -/
+lemma mem_wzRateValueSet_iff
+    {P_XY : α × β → ℝ} {d : α → γ → ℝ} {D : ℝ} {v : ℝ} :
+    v ∈ wzRateValueSet P_XY d D ↔
+      ∃ (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ)),
+        qf ∈ WynerZivFactorizableConstraint (Fin k) P_XY d D
+          ∧ wzMutualInfoXU (Fin k) qf.1 - wzMutualInfoYU (Fin k) qf.1 = v := by
+  unfold wzRateValueSet
+  constructor
+  · intro hv
+    rw [Set.mem_iUnion] at hv
+    obtain ⟨k, qf, hqf, rfl⟩ := hv
+    exact ⟨k, qf, hqf, rfl⟩
+  · rintro ⟨k, qf, hqf, rfl⟩
+    exact Set.mem_iUnion.mpr ⟨k, qf, hqf, rfl⟩
+
+/-- A feasible factorisable point at auxiliary alphabet `Fin k` produces a value
+in `wzRateValueSet` (witness for non-emptiness). -/
+lemma objective_mem_wzRateValueSet
+    {P_XY : α × β → ℝ} {d : α → γ → ℝ} {D : ℝ}
+    {k : ℕ} {qf : (α × β × Fin k → ℝ) × (Fin k × β → γ)}
+    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k) P_XY d D) :
+    wzMutualInfoXU (Fin k) qf.1 - wzMutualInfoYU (Fin k) qf.1
+      ∈ wzRateValueSet P_XY d D :=
+  mem_wzRateValueSet_iff.mpr ⟨k, qf, hqf, rfl⟩
+
+/-- **Landing lemma (direct, `Fin k` form).** Any feasible factorisable point at
+auxiliary alphabet `Fin k` bounds the reshaped rate from above. This is what
+lets the single-letterisation auxiliary land *directly*, with no cardinality
+reduction. The `BddBelow` side condition is discharged (via the objective's
+data-processing non-negativity) in `Converse.lean` by
+`wzRateValueSet_bddBelow_of_pmf`. -/
+theorem wynerZivRate_le_of_feasible
+    {P_XY : α × β → ℝ} {d : α → γ → ℝ} {D : ℝ}
+    (hbdd : BddBelow (wzRateValueSet P_XY d D))
+    {k : ℕ} {qf : (α × β × Fin k → ℝ) × (Fin k × β → γ)}
+    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k) P_XY d D) :
+    wynerZivRate P_XY d D
+      ≤ wzMutualInfoXU (Fin k) qf.1 - wzMutualInfoYU (Fin k) qf.1 := by
+  unfold wynerZivRate
+  exact csInf_le hbdd (objective_mem_wzRateValueSet hqf)
+
+end AllAuxRate
+
 end InformationTheory.Shannon
