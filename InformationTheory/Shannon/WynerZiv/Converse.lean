@@ -91,6 +91,13 @@ The proof (single-letterization via `bc_input_singleletterize` + cross-term
 cancellation via `csiszar_sum_identity_hetero` + convexity/antitone of `R_WZ` +
 the pmf↔measure bridges + Carathéodory reduction) is the converse core.
 
+Independent honesty audit 2026-07-05 (PASS): `sorry` is genuine (no `:True` slot,
+no `:= h` circularity). `hU_card` is a non-load-bearing sizing precondition (pure
+`Fintype.card` inequality with no rate / distortion / information content);
+`hindep` / `hlaw` / measurability / `IsProbabilityMeasure` / `hD` are i.i.d.-source
++ code-distortion regularity preconditions, not the single-letterization core in
+disguise. Classification `plan:wyner-ziv-main-plan` correct (in-project atom
+composition, not a Mathlib wall).
 @residual(plan:wyner-ziv-main-plan) -/
 theorem wyner_ziv_converse_n_letter_singleLetter
     {Ω : Type*} [MeasurableSpace Ω]
@@ -128,6 +135,18 @@ The proof reduces `WynerZivAchievable` to a sequence of block codes, applies the
 each, and passes to the limit `(1/n) log (M n) → R` (with the distortion slack
 `D + ε → D` absorbed by antitonicity of `R_WZ`).
 
+Independent honesty audit 2026-07-05 (PASS): the `hU_card` correction of the plan's
+original `∀ U` design is verified in all three directions. Necessity — the objective
+`I(X;U) − I(Y;U)` is minimised over `U`-valued factorisable kernels, so `sInf` is
+antitone in `|U|`; for a source whose rate-optimal auxiliary needs the full `|α| + 1`
+Carathéodory symbols, `U = Fin |α|` restricts the `sInf` strictly above the achievable
+`R = R_WZ(D)`, so the unconditional form is false-as-framed (a would-be `false_statement`
+defect, correctly averted). Honesty — `hU_card` constrains only the auxiliary alphabet
+size, not the rate, so it is a sizing precondition, not load-bearing. Sufficiency — with
+`|α| + 1 ≤ |U|` the Carathéodory-optimal auxiliary embeds into `U`, giving a `U`-feasible
+point with objective `R_WZ(D) ≤ R`, so `sInf ≤ R` (true, non-vacuous). `h_ach` is the
+operational antecedent, not a bundled core (`WynerZivAchievable` is `@audit:ok`, a pure
+existential). `sorry` genuine; classification `plan:` correct.
 @residual(plan:wyner-ziv-main-plan) -/
 @[entry_point]
 theorem wyner_ziv_converse
