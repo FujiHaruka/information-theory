@@ -1445,9 +1445,9 @@ The conclusion is an *existential witness* (per-letter budgets + values with the
 three bounds), not a hypothesis bundle: it does not encode the outcome it is used to
 prove. `hindep` (memoryless source) / `hlaw` (identical marginals `= P_XY`) / `hD`
 (distortion budget) are genuine source-regularity preconditions — the per-letter
-Markov feasibility and the budget bound `(1/n) ∑ Dᵢ ≤ D` are false without them. Any
-residual reachable from this witness lives *transitively* in the three sub-lemmas above
-(all `@residual(plan:wyner-ziv-main-plan)` where still open), not in a hidden bundle.
+Markov feasibility and the budget bound `(1/n) ∑ Dᵢ ≤ D` are false without them. The three
+sub-lemmas above are all now closed sorryAx-free (leg 8), so no residual is reachable from
+this witness and nothing is bundled.
 
 Independent honesty audit 2026-07-05 (PASS, honest_residual — signature/decomposition
 verified): this decl's own body is now genuinely sorry-free (it does NOT appear in the
@@ -1457,9 +1457,11 @@ discharged by `wz_perletter_factorizable` / `wz_perletter_distortion_avg` /
 bundling: the conclusion asserts the *existence* of per-letter budgets/values meeting the
 three bounds — it does not encode the outcome it is used to prove, and all hypotheses
 (`hindep` / `hlaw` / `hD` + measurability / `IsProbabilityMeasure`) are source-regularity
-preconditions. The residual is exactly the transitive one in sub-lemmas 2 (feasibility) and
-3 (conditional-MI rate bound); sub-lemma 4 (distortion avg) is sorryAx-free. NOT `@audit:ok`
-(transitive sorries remain in sub 2/3). -/
+preconditions. Re-audit 2026-07-05: sub-lemmas 2 (feasibility) and 3 (conditional-MI rate
+bound) have since been closed sorryAx-free, so the whole transitive tree here is clean —
+`#print axioms wz_converse_perletter_witness` = [propext, Classical.choice, Quot.sound]. The
+earlier "transitive sorries remain in sub 2/3 → NOT `@audit:ok`" note is superseded.
+@audit:ok -/
 private theorem wz_converse_perletter_witness
     {Ω : Type*} [MeasurableSpace Ω]
     {M n : ℕ} [NeZero M] (hn : 0 < n)
@@ -1537,9 +1539,17 @@ uniform time-share of the per-letter witnesses supplied by
 values `(1/n) ∑ w i` into a value of `wzRateValueSet … ((1/n) ∑ Dv i)`,
 `wzRateValueSet_mono_in_D` (with `(1/n) ∑ Dv i ≤ D`) relaxes it to budget `D`, and
 `mem_wzRateValueSet_iff` unpacks the resulting membership into the feasible factorisable
-point at some `Fin k`. The remaining residual lives *transitively* in
-`wz_converse_perletter_witness` (the conditional-MI-chain + per-letter-Markov +
-per-letter-factorizability construction of those witnesses). -/
+point at some `Fin k`.
+
+Independent honesty audit 2026-07-05 (PASS): this decl and its whole transitive tree
+(`wz_converse_perletter_witness` + the conditional-MI-chain / per-letter-Markov /
+per-letter-factorizability sub-lemmas) are now genuinely closed — `#print axioms
+wz_converse_feasible_point` = [propext, Classical.choice, Quot.sound] (sorryAx-free). The
+conclusion is a genuine existential witness (feasible factorisable point + objective bound),
+not a hypothesis bundle; `hindep`/`hlaw`/`hD` are source-regularity preconditions. L1's
+Carathéodory residual is NOT reachable from here (this is the single-letterisation route, not
+the endpoint route). The prior "remaining residual lives transitively" prose was stale.
+@audit:ok -/
 theorem wz_converse_feasible_point
     {Ω : Type*} [MeasurableSpace Ω]
     {M n : ℕ} [NeZero M] (hn : 0 < n)
@@ -1628,7 +1638,15 @@ needed and no false-statement is introduced. Non-vacuous: `wynerZivRate ≥ 0` v
 residual (`wzRateValueSet_bddBelow_of_pmf`), and `M ≥ 1 ⟹ log M ≥ 0`, so `R_WZ(D) ≤
 (1/n) log M` is a substantive bound. `hindep` / `hlaw` are genuine i.i.d. regularity
 preconditions (conclusion false without them), not bundled core.
-@residual(plan:wyner-ziv-main-plan) -/
+
+Independent honesty audit 2026-07-05 (PASS, migrated from stale
+`@residual(plan:wyner-ziv-main-plan)`): the single-letterisation core is fully closed
+sorryAx-free — `#print axioms` = [propext, Classical.choice, Quot.sound] (no transitive
+`sorryAx`; L1's Carathéodory residual is NOT on this critical path, which lands via
+`wz_converse_feasible_point`). Signature honest: `hindep`/`hlaw`/`hD` + measurability are
+operational-regularity preconditions, the converse core is proved in the body (not bundled).
+The prior `plan:wyner-ziv-main-plan` tag was stale since commit `008d7583`.
+@audit:ok -/
 theorem wyner_ziv_converse_n_letter_singleLetter
     {Ω : Type*} [MeasurableSpace Ω]
     {M n : ℕ} [NeZero M] (hn : 0 < n)
@@ -1971,6 +1989,19 @@ single `sorry`. In particular the `≤` direction is *not* free: were the fixed
 `wynerZivRate ≥ 0` could be strictly positive — so the reduction is exactly what
 guarantees the fixed-`K` constraint is nonempty (and cofinal below) whenever the union
 is. Deferred to its own closure plan.
+
+Independent honesty audit 2026-07-05 (PASS, honest_residual — the new isolated `sorry`).
+Classification `plan` (not `wall`) VERIFIED: convex Carathéodory IS in Mathlib
+(`Mathlib/Analysis/Convex/Caratheodory.lean` + `Finset.convexHull_eq` /
+`Finset.mem_convexHull` / `Finset.centerMass_mem_convexHull`), so the gap is in-project
+wiring of that theorem to the WZ objective, not a missing Mathlib result. Slug
+`wz-auxiliary-cardinality-bound` is a valid kebab-case future-plan stem; the parent
+`wyner-ziv-main-plan.md` documents it as the L1 crux and defers the split-out plan file
+until L1 stalls (no file required yet). Signature honest: `h_pmf` (simplex membership) +
+`d`, `D` explicit are regularity/data preconditions — NO `*Hypothesis`/`*Reduction`
+predicate bundles the Carathéodory reduction. Both inclusions genuinely need Carathéodory
+(the `≤` direction is NOT immediate; the docstring correctly flags the `sInf ∅ = 0` collapse
+risk if the fixed-`K` set were empty). This is the file's sole `sorry` (machine-confirmed).
 @residual(plan:wz-auxiliary-cardinality-bound) -/
 theorem wynerZivRate_eq_factorizable_finK
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) (d : α → γ → ℝ) (D : ℝ) :
@@ -2011,6 +2042,15 @@ whence `R_WZ(D) ≤ R`.
 compactness proof (L2 holds at every `D`, not only the left endpoint) but are retained
 as declared preconditions. None is load-bearing (the right-continuity core lives in L1's
 Carathéodory reduction and L2's compactness, not in a hypothesis).
+
+Independent honesty audit 2026-07-05 (PASS, honest_residual). Signature honesty VERIFIED:
+the retained-but-unused `h_ne` / `h_endpoint` make this a STRONGER claim (proved from fewer
+assumptions) — NOT load-bearing, NOT a defect; no core is smuggled into a hypothesis. The
+signature is unchanged from the pre-existing 5-hyp form. The `set_option
+linter.unusedVariables false in` is correctly scoped (`in`, single decl) and alters no
+signature. Body is sorry-free (assembles L1 + L2); the only reachable `sorry` is L1's
+transitive Carathéodory residual (`#print axioms` = [propext, sorryAx, Classical.choice,
+Quot.sound], sorryAx tracing solely to `wynerZivRate_eq_factorizable_finK`).
 @residual(plan:wz-auxiliary-cardinality-bound) -/
 theorem wynerZivRate_le_of_forall_pos_add_endpoint
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) {d : α → γ → ℝ} {R D : ℝ}
@@ -2081,8 +2121,9 @@ in the achievable regime).
 Independent honesty audit 2026-07-05 (auditor-verified, not self-reported) covered the
 Step 2 case split below; the case (C) endpoint was subsequently refactored to the L1/L2
 route (endpoint body now sorry-free), so its transitive residual moved from the endpoint
-body to `wynerZivRate_eq_factorizable_finK` (L1) — a fresh audit of that isolation is
-warranted. `#print axioms` = [propext, sorryAx, Classical.choice, Quot.sound]; the
+body to `wynerZivRate_eq_factorizable_finK` (L1) — that fresh audit of the isolation was
+performed 2026-07-05 (PASS, honest_residual; see L1's docstring and the endpoint lemma,
+both audited). `#print axioms` = [propext, sorryAx, Classical.choice, Quot.sound]; the
 `sorryAx` traces only to `wynerZivRate_eq_factorizable_finK` (L1, reached via case C's
 endpoint lemma) — `rg` confirms L1's body is the file's only `sorry` (Step 1's
 `wz_converse_feasible_point` is closed sorryAx-free). Step 2 case split is exhaustive and disjoint:
