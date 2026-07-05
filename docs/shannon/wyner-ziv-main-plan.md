@@ -11,7 +11,7 @@
 ## 進捗
 
 - [x] M0 — API 在庫 (既存 [`wyner-ziv-main-inventory.md`](wyner-ziv-main-inventory.md) で代替) + converse gateway 実証 ✅ (`csiszar_sum_identity_hetero`、sorryAx-free、`ConverseGateway.lean:48`)
-- [ ] P1 — statement scaffolding (`WynerZivAchievable` + `wzErrorProb` + pmf↔measure R_WZ 橋) 📋
+- [x] P1 — statement scaffolding ✅ **proof-done sorryAx-free** (`fdbae7f9`)。`WynerZivAchievable` (distortion-only、`@audit:ok`) + pmf↔measure MI 橋 2 本 (`wzMutualInfoXU/YU_eq_mutualInfo`、closed sorry-free)。`wzErrorProb` は predicate 外に (achievability-internal、P3 へ)。`Operational.lean` 全 0 sorry
 - [ ] P2 — converse body (single-letterization、confidence-builder = pure plumbing 公算大) 📋
 - [ ] P3 — achievability body (binning + covering ハイブリッド、本計画の重心) 📋
 - [ ] PV — verify (`#print axioms` sorryAx-free + 独立 honesty 監査 + root 配線) 📋
@@ -197,5 +197,6 @@ append-only。決着済 entry は削除 (git が履歴)、active のみ残す。
 1. **攻略順序 = converse-first (confidence-builder)**: converse は decisive gateway (hetero Csiszár) が既に sorryAx-free で proved = pure plumbing 公算大ゆえ先に閉じ、achievability (重心、gateway 未試行) を後に回す。P1 scaffolding は両 leg の前提ゆえ最初。
 2. **StandardBorel 訂正を反映 (item #6 MOOT)**: `#synth` で StandardBorel が `[Fintype+MSC]` から自動 derive すると実測判明 (gateway probe)。inventory §4/§6/§7 の「自動導出されない → `attribute [local instance]` file 限定発火」は誤り、local-instance サブタスク不要、明示追加は `[Nonempty]` のみ。
 3. **撤退 class = `plan` (wall ではない、active)**: WZ gap は Mathlib gap でなく in-project atom 合成の未実装 (inventory §8)。既定退避 = `@residual(plan:wyner-ziv-main-plan)`、split-out は `wz-binning-covering`/`wz-auxiliary-singleletter`。wall 昇格は side-info covering が真の Mathlib gap と gateway-atom-first で判明した場合のみ後続 PR で。
-4. **distortion 述語形の未確定 (active、P1 で確定)**: `WynerZivAchievable` の歪項を `Tendsto (𝓝 D)` にするか `limsup ≤ D+ε` にするかで converse 帰着が変わる (inventory §7 #1)。WZ は誤り確率→0 **かつ** 歪≤D+ε の両条件を採る方向。P1 実装時に converse の帰着形と整合させて最終確定。
-5. **親再開の注記 (要 orchestrator アクション、active)**: 本サブ計画の起票に伴い親 [`wyner-ziv-moonshot-plan.md`](wyner-ziv-moonshot-plan.md) を CLOSED→ACTIVE に flip 済 (情報側完成 record は保存)。ただし textbook-roadmap Ch.15 の「WZ main scope-out」行は **closure まで維持** (attack ≠ scope 再開の確定、roadmap は本 planner の editing boundary 外)。
+4. **親再開の注記 (要 orchestrator アクション、active)**: 本サブ計画の起票に伴い親 [`wyner-ziv-moonshot-plan.md`](wyner-ziv-moonshot-plan.md) を CLOSED→ACTIVE に flip 済 (情報側完成 record は保存)。ただし textbook-roadmap Ch.15 の「WZ main scope-out」行は **closure まで維持** (attack ≠ scope 再開の確定、roadmap は本 planner の editing boundary 外)。
+
+_(decision #4「distortion 述語形」は P1 で確定・削除: **distortion-only** `∀ε>0,∀ᶠ n, 歪≤D+ε` (= limsup≤D) を採用。誤り確率は predicate 外の achievability-internal 量に。`WynerZivAchievable` は `@audit:ok`。)_
