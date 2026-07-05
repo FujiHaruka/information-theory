@@ -2037,6 +2037,28 @@ the reduction's core. The residual is the genuine convex-geometry reduction plus
 entropy-mixture identity `objective(κ) = ∑_u P_U(u) g(P_{X|U=u})`; the convex geometry is
 in Mathlib (see `docs/shannon/wz-l1-caratheodory-inventory.md`), the entropy-mixture
 identity is an in-project self-build.
+
+Independent honesty audit 2026-07-05 (PASS, honest_residual — the newly isolated `sorry`).
+(1) Signature honesty: NON-circular (`hκ` is the input datum, no `:= h`; the conclusion is
+`∃ κ'` feasible with objective `≤`, not any hypothesis restated). NON-bundled — `hκ ∈
+wzKernelFeasible (Fin k) …` unfolds to `κ ∈ wzKernelSet ∧ ∃ f, wzExpectedDistortion … ≤ D`,
+a concrete row-stochastic-kernel-plus-decoder DATA predicate = the feasible kernel being
+reduced, NOT a `*Hypothesis`/`*Reduction` predicate smuggling the reduction; `h_pmf` is
+simplex regularity. No `:True` slot, no degenerate-definition abuse.
+(2) Sufficiency (does the conclusion follow, not false-as-framed): YES — this is the
+classical support lemma; the encoding space `(P_{X|U=u}, g_u, dist_u)` has affine dimension
+`(|α|−1)+1+1 = |α|+1`, so bare Carathéodory yields `|α|+2` support points, a VALID (loose,
+not tight) cardinality — larger-than-tight only eases existence, never falsifies. Degenerate
+probe: `k = 0` ⇒ `wzKernelSet (Fin 0)` demands `∑_{∅} = 0 = 1` (false) ⇒ `hκ` vacuously
+unsatisfiable, so no false claim; target `Fin (|α|+2)` is always nonempty (`|α|+2 ≥ 2`). No
+dropped constraint (under-hypothesized-safe).
+(3) Classification `plan:wz-auxiliary-cardinality-bound` VERIFIED: `plan` (not `wall`) —
+`Mathlib/Analysis/Convex/Caratheodory.lean` is present and `wz-l1-caratheodory-inventory.md`
+confirms every ingredient exists in Mathlib (~100% existing-ratio, no gap); the residual is
+in-project plumbing + the entropy-mixture self-build. Slug documented as the L1 crux in the
+parent `wyner-ziv-main-plan.md` + `wyner-ziv-moonshot-plan.md` (split-out plan file deferred
+by design until L1 stalls). Machine: file's sole `sorry` (only warning, at this decl);
+`#print axioms` = [propext, sorryAx, Classical.choice, Quot.sound].
 @residual(plan:wz-auxiliary-cardinality-bound) -/
 theorem wz_support_reduce
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) {d : α → γ → ℝ} {D : ℝ}
@@ -2072,6 +2094,17 @@ genuinely proved here, reduced to the single core lemma `wz_support_reduce`:
 
 The only reachable `sorry` is `wz_support_reduce`'s Carathéodory reduction, tagged
 `@residual(plan:wz-auxiliary-cardinality-bound)`; carried transitively here.
+
+Independent honesty audit 2026-07-05 (PASS, honest_residual). Body VERIFIED sorry-free:
+both `sInf` inclusions are genuinely proved (`≤` via `csInf_le_csInf` on `B ⊆ A`; `≥` via
+`le_csInf` + `wz_support_reduce`'s objective-`≤` landing; empty case via the `A.Nonempty ↔
+B.Nonempty` equivalence, so no `sInf ∅ = 0` collapse). The `Fin (|α|+1)` → `Fin (|α|+2)`
+signature change is HONEST — the claim is a genuine EQUALITY of two infima (both sides
+depend on `P_XY, d, D`), NOT weakened into triviality; the `≥` direction still requires the
+Carathéodory reduction, so it is not vacuous. `#print axioms` = [propext, sorryAx,
+Classical.choice, Quot.sound]; the sorryAx is transitive via `wz_support_reduce` only (this
+decl's own body carries no `sorry` — machine-confirmed, the file's single `sorry` warning is
+on `wz_support_reduce`, not here).
 @residual(plan:wz-auxiliary-cardinality-bound) -/
 theorem wynerZivRate_eq_factorizable_finK
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) (d : α → γ → ℝ) (D : ℝ) :
@@ -2146,7 +2179,7 @@ antitone, so `R_WZ(D + ε) ≤ R_WZ(D)` (the wrong direction) and `hstep` alone 
 force `R_WZ(D) ≤ R`; one needs right-continuity `R_WZ(D) = lim_{ε→0⁺} R_WZ(D + ε)`. The
 abstract monotone-limit implication is FALSE (a convex antitone function may jump *up* at
 the left endpoint), but the signature names the *concrete* `wynerZivRate`, whose fixed-`K`
-form `wynerZivRateFactorizable (Fin (|α|+1))` is an infimum over a *compact* set of
+form `wynerZivRateFactorizable (Fin (|α|+2))` is an infimum over a *compact* set of
 kernels with a continuous objective. L2 exploits exactly that: for each `ε`, the fixed-`K`
 infimum is attained by a feasible kernel with objective `≤ R`; these live in one compact
 kernel set, so Cantor's intersection theorem produces a common limit kernel, feasible at
@@ -2164,9 +2197,16 @@ the retained-but-unused `h_ne` / `h_endpoint` make this a STRONGER claim (proved
 assumptions) — NOT load-bearing, NOT a defect; no core is smuggled into a hypothesis. The
 signature is unchanged from the pre-existing 5-hyp form. The `set_option
 linter.unusedVariables false in` is correctly scoped (`in`, single decl) and alters no
-signature. Body is sorry-free (assembles L1 + L2); the only reachable `sorry` is L1's
-transitive Carathéodory residual (`#print axioms` = [propext, sorryAx, Classical.choice,
-Quot.sound], sorryAx tracing solely to `wynerZivRate_eq_factorizable_finK`).
+signature. Body is sorry-free (assembles L1 + L2); the only reachable `sorry` is the
+transitive Carathéodory residual `wz_support_reduce`, now reached through the sorry-free
+L1 `wynerZivRate_eq_factorizable_finK` (`#print axioms` = [propext, sorryAx,
+Classical.choice, Quot.sound], sorryAx tracing solely to `wz_support_reduce`).
+
+Re-audit 2026-07-05 (independent, post-decomposition): the `Fin (|α|+1)` → `Fin (|α|+2)`
+consumer update is HONEST — L2 is generic in `U`, so consuming the fixed-`K` right-
+continuity at `Fin (|α|+2)` (bare Carathéodory) instead of `Fin (|α|+1)` (Fenchel–
+Eggleston, absent from Mathlib) is a non-load-bearing sizing choice; type-checks
+sorry-free, sorryAx transitive via L1 → `wz_support_reduce` (machine-verified).
 @residual(plan:wz-auxiliary-cardinality-bound) -/
 theorem wynerZivRate_le_of_forall_pos_add_endpoint
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β)) {d : α → γ → ℝ} {R D : ℝ}
