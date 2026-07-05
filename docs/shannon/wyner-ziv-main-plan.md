@@ -4,7 +4,7 @@
 
 **Status**: ACTIVE 🚧 — **converse (P2) は FULLY CLOSED sorry-free + 独立監査 PASS (leg 11)**。最後の converse own-sorry `wz_support_reduce` を route C (K=`|α|+3`、bare ambient Carathéodory) で genuine closure → **`wyner_ziv_converse` は sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`、`@audit:ok`)**。converse own-sorry は **ゼロ**。**achievability P3: gateway atoms (side-info decoder confusion + covering acceptance) は leg 12 で closed sorry-free + 独立監査 `@audit:ok` (`108ba475`/`72133a7e`)、両者は既存 in-project atom の直接 instantiation。残 = plumbing body (`WynerZivCode` 構築 + 誤り事象 threading、headline `wyner_ziv_achievability` は `sorry + @residual(plan:wyner-ziv-main-plan)`)**。情報側 R_WZ(D) は完成済 (`WynerZiv/` 5 file、0 sorry)。
 
-**SoT / 在庫**: [`wyner-ziv-main-inventory.md`](wyner-ziv-main-inventory.md) (§2 提案 statement / §5 achievability 資産 / §6 converse 資産 / §7 self-build 7 項目 / §10 gateway atom)。
+**SoT / 在庫**: [`wyner-ziv-main-inventory.md`](wyner-ziv-main-inventory.md) (§2 提案 statement / §5 achievability 資産 / §6 converse 資産 / §7 self-build 7 項目 / §10 gateway atom)。**構築本体 (`wz_goodCode_exists_of_testChannel`) 専用在庫 (leg 13)**: [`wyner-ziv-achievability-construction-inventory.md`](wyner-ziv-achievability-construction-inventory.md) — ~26 atom verbatim signature (RD covering / SW binning / gateway / asymptotic)、**genuinely absent = 0** (残 sorry は純 composition plumbing)、hypothesis-supply gap 3 (full-support perturbation / i.i.d. ambient bundle / `Nonempty (Fin k)`、全 regularity manufacture、load-bearing でない)、reuse blocker 1 (`tendsto_exp_mul_codebookSize_inv` が `private` → public alias 要) + adapter 1 (`LossyCode`→`WynerZivCode` 橋)。
 
 **再検証** (prose にキャッシュしない): `scripts/sig_view.ts --sorry InformationTheory/Shannon/WynerZiv/*.lean` / `#print axioms <headline>`。
 
