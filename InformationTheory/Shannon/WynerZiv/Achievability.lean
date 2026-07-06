@@ -1475,7 +1475,14 @@ instance wzIndexBinningMeasure.instIsProbabilityMeasure (M₁ M : ℕ) [NeZero M
 /-- **Index-binning collision probability.** Two distinct covering indices `m' ≠ m`
 hash to the same bin with probability exactly `1/M`. Supplies `hcollision` to
 `wz_codebook_confusion_expectation_le` (S5b); the `Fin M₁`-index mirror of
-`binning_collision_prob`. -/
+`binning_collision_prob`.
+
+Independent honesty audit 2026-07-06: honest residual, non-bundled (`@residual` on the
+`sorry` below). Genuine collision-probability leaf — the `Fin M₁`-index analogue of
+`binning_collision_prob` (same `(M : ℝ)⁻¹` conclusion, same `[NeZero M]`). Not vacuous:
+`[NeZero M]` makes `(M : ℝ)⁻¹` well-defined and `m' ≠ m` is load-bearing (for `m' = m`
+the mass is `1`, not `1/M`). Classification `plan:wyner-ziv-main-plan` correct (in-project
+`Measure.pi` computation, not a Mathlib gap). -/
 lemma wzIndexBinningMeasure_collision {M₁ M : ℕ} [NeZero M]
     {m' m : Fin M₁} (h : m' ≠ m) :
     (wzIndexBinningMeasure M₁ M).real {f | f m' = f m} = (M : ℝ)⁻¹ := by
@@ -1503,6 +1510,23 @@ The capstone `wz_perDelta_covering_binning` (S6) is the pure `Filter.atTop`/choi
 over this lemma — all covering + binning content is the (stubbed) body here. The
 hypotheses are the identical genuine Step 1–2 covering data / regularity as S6 (no
 error-probability or decoder-correctness claim is a hypothesis).
+
+Independent honesty audit 2026-07-06: honest residual, non-bundled. The 13 covering-data
+hypotheses (`q'`/`κ'`/`qStar`/`d'` witnesses + `hfact_eq`/`hκ'pos`/`hκ'sum`/`hobj'`/
+`hqStar_eq`/`hqStar_pos`/`hqStar_mem`/`hfeas`/`hcov`) are identical to S6's modulo the
+conclusion shape and pass the joint core-reconstruction test: granting all 13 hands you a
+feasible test channel plus a *covering* `LossyCode` family at the covering rate `R₁`, but
+NOT the WZ binned code at the operational rate `R` — the index binning (to `codebookSize R n`
+messages), the bin conditional-typicality decoder, and the confusion-error exponent remain
+genuine work in the (stubbed) body. `hobj'` is the rate objective and `hfeas` the distortion
+feasibility (preconditions on the test channel, not the operational conclusion); `hcov` is
+the separately-established rate-distortion covering result, not a restatement of this
+lemma's WZ claim (the binning rate reduction `I(X;U) → I(X;U)−I(Y;U)` is the sorry content).
+Conclusion shape `∃ N, ∀ n, ∃ c, N ≤ n → dist ≤ D + δ` is non-degenerate: `∃ c` sits inside
+`∀ n` (per-block-length code) and the `n < N` branch is benignly vacuous (`WynerZivCode` is
+inhabited via `[Nonempty γ]` + `codebookSize_pos`), so the claim is NOT trivially true — for
+the infinitely many `n ≥ N` a genuinely good code is required (no large-`N` escape).
+Classification `plan:wyner-ziv-main-plan` correct.
 @residual(plan:wyner-ziv-main-plan) -/
 lemma wz_perDelta_covering_binning_eventual
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -1563,6 +1587,14 @@ glue — none is smuggled into a hypothesis. `hobj'` is the rate objective (prec
 not the conclusion); `hcov` is the separately-established rate-distortion covering result,
 not a bundling of S6's own claim. Classification `plan` (in-project binning composition,
 not a Mathlib gap) is correct.
+
+Body glue re-audited 2026-07-06 (body changed this leg): `obtain … := …_eventual …;
+choose c hc using hN; exact ⟨c, Filter.eventually_atTop.2 ⟨N, fun n hn => hc n hn⟩⟩`
+genuinely derives S6's `∃ c, ∀ᶠ n, …` from (D)'s `∃ N, ∀ n, ∃ c, N ≤ n → …` — `choose`
+extracts the per-`n` codes into the sequence, `eventually_atTop` packages the threshold
+`N`, no hidden `sorry`, no weakening. The decl still carries a *transitive* residual
+(`#print axioms` = `[propext, sorryAx, Classical.choice, Quot.sound]`, the `sorryAx`
+inherited from the stubbed (D)), so it remains tier-2 `@residual`, NOT `@audit:ok`.
 @residual(plan:wyner-ziv-main-plan) -/
 lemma wz_perDelta_covering_binning
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
