@@ -1697,6 +1697,85 @@ lemma wz_mutualInfo_restriction_eq
   unfold wzMutualInfoXU mutualInfoPmf
   rw [hA, hB, hC]
 
+/-! ### pmf-side product bounds for D2
+
+The per-codeword AEP mass bound D2 is assembled purely from single-symbol pmf
+products (no joint-sequence independence is available in D2's hypotheses). The
+following three leaves convert the typical-set membership predicate into product
+bounds on the alphabet-side laws `μ.map (Xs 0)`. -/
+
+/-- `exp(-∑ pmfLog) = ∏ P`: the per-block likelihood as a product of single-symbol
+masses, valid on a full-support alphabet. -/
+private lemma exp_neg_sum_pmfLog_eq_prod
+    {Ω A : Type*} [MeasurableSpace Ω] [Fintype A] [MeasurableSpace A]
+    [MeasurableSingletonClass A]
+    (μ : Measure Ω) (Xs : ℕ → Ω → A)
+    (hpos : ∀ a : A, 0 < (μ.map (Xs 0)).real {a})
+    (n : ℕ) (x : Fin n → A) :
+    Real.exp (-(∑ i : Fin n, pmfLog μ Xs (x i)))
+      = ∏ i : Fin n, (μ.map (Xs 0)).real {x i} := by
+  rw [← Finset.sum_neg_distrib, Real.exp_sum]
+  refine Finset.prod_congr rfl fun i _ ↦ ?_
+  have hlog : -(pmfLog μ Xs (x i)) = Real.log ((μ.map (Xs 0)).real {x i}) := by
+    simp only [pmfLog, neg_neg]
+  rw [hlog, Real.exp_log (hpos (x i))]
+
+/-- pmf-side upper bound: for a typical block `x`, the product of single-symbol
+masses is `≤ exp(-n(H - ε))`. Independence-free companion of `typicalSet_prob_le`. -/
+private lemma prod_map_singleton_le_of_mem_typicalSet
+    {Ω A : Type*} [MeasurableSpace Ω] [Fintype A] [DecidableEq A] [Nonempty A]
+    [MeasurableSpace A] [MeasurableSingletonClass A]
+    (μ : Measure Ω) (Xs : ℕ → Ω → A)
+    (hpos : ∀ a : A, 0 < (μ.map (Xs 0)).real {a})
+    (n : ℕ) {ε : ℝ} (x : Fin n → A) (hx : x ∈ typicalSet μ Xs n ε) :
+    ∏ i : Fin n, (μ.map (Xs 0)).real {x i}
+      ≤ Real.exp (-(n : ℝ) * (entropy μ (Xs 0) - ε)) := by
+  rw [mem_typicalSet_iff] at hx
+  rcases Nat.eq_zero_or_pos n with hn0 | hnpos
+  · subst hn0; simp
+  · have hnR : (0 : ℝ) < n := by exact_mod_cast hnpos
+    have hlower : -ε < (∑ i : Fin n, pmfLog μ Xs (x i)) / n - entropy μ (Xs 0) :=
+      (abs_lt.mp hx).1
+    have hsum_gt : (n : ℝ) * (entropy μ (Xs 0) - ε) < ∑ i : Fin n, pmfLog μ Xs (x i) := by
+      have h := (lt_div_iff₀ hnR).mp (by linarith :
+        entropy μ (Xs 0) - ε < (∑ i : Fin n, pmfLog μ Xs (x i)) / n)
+      linarith
+    have hexp : Real.exp (-(∑ i : Fin n, pmfLog μ Xs (x i)))
+        < Real.exp (-((n : ℝ) * (entropy μ (Xs 0) - ε))) :=
+      Real.exp_lt_exp.mpr (by linarith)
+    rw [exp_neg_sum_pmfLog_eq_prod μ Xs hpos n x] at hexp
+    calc ∏ i : Fin n, (μ.map (Xs 0)).real {x i}
+        ≤ Real.exp (-((n : ℝ) * (entropy μ (Xs 0) - ε))) := hexp.le
+      _ = Real.exp (-(n : ℝ) * (entropy μ (Xs 0) - ε)) := by rw [neg_mul]
+
+/-- pmf-side lower bound: for a typical block `x`, the product of single-symbol
+masses is `≥ exp(-n(H + ε))`. Independence-free companion of `typicalSet_prob_ge`. -/
+private lemma prod_map_singleton_ge_of_mem_typicalSet
+    {Ω A : Type*} [MeasurableSpace Ω] [Fintype A] [DecidableEq A] [Nonempty A]
+    [MeasurableSpace A] [MeasurableSingletonClass A]
+    (μ : Measure Ω) (Xs : ℕ → Ω → A)
+    (hpos : ∀ a : A, 0 < (μ.map (Xs 0)).real {a})
+    (n : ℕ) {ε : ℝ} (x : Fin n → A) (hx : x ∈ typicalSet μ Xs n ε) :
+    Real.exp (-(n : ℝ) * (entropy μ (Xs 0) + ε))
+      ≤ ∏ i : Fin n, (μ.map (Xs 0)).real {x i} := by
+  rw [mem_typicalSet_iff] at hx
+  rcases Nat.eq_zero_or_pos n with hn0 | hnpos
+  · subst hn0; simp
+  · have hnR : (0 : ℝ) < n := by exact_mod_cast hnpos
+    have hupper : (∑ i : Fin n, pmfLog μ Xs (x i)) / n - entropy μ (Xs 0) < ε :=
+      (abs_lt.mp hx).2
+    have hsum_lt : (∑ i : Fin n, pmfLog μ Xs (x i)) < (n : ℝ) * (entropy μ (Xs 0) + ε) := by
+      have h := (div_lt_iff₀ hnR).mp (by linarith :
+        (∑ i : Fin n, pmfLog μ Xs (x i)) / n < entropy μ (Xs 0) + ε)
+      linarith
+    have hexp : Real.exp (-((n : ℝ) * (entropy μ (Xs 0) + ε)))
+        < Real.exp (-(∑ i : Fin n, pmfLog μ Xs (x i))) :=
+      Real.exp_lt_exp.mpr (by linarith)
+    rw [exp_neg_sum_pmfLog_eq_prod μ Xs hpos n x] at hexp
+    calc Real.exp (-(n : ℝ) * (entropy μ (Xs 0) + ε))
+        = Real.exp (-((n : ℝ) * (entropy μ (Xs 0) + ε))) := by rw [neg_mul]
+      _ ≤ ∏ i : Fin n, (μ.map (Xs 0)).real {x i} := hexp.le
+
 /-- **(D2) Covering-codeword side-information mass upper bound (E2 AEP crux).** For any
 fixed covering codeword `u : Fin n → Fin k`, the probability (over the noise generating
 `Y^n = jointRV Ys n`) that `u` is jointly typical with `Y^n` is at most
@@ -1706,34 +1785,25 @@ the covering codewords are drawn independently of the side information `Y`, a fi
 covering codeword lands in a `Y^n`-conditional typical slice with the packing exponent
 `exp(−n · I(U;Y))`.
 
-The bound is genuinely **absent** from the current in-project AEP layer: the closest
-atom `ChannelCoding.jointlyTypicalSet_indep_prob_le`
-(`ChannelCoding/Basic.lean:540`) is the independent-**pair** form (averaging over *both*
-the `U`-codeword and `Y^n`), not this per-fixed-codeword conditional-slice form. The
-per-codeword form is assemblable from `conditionalTypicalSlice_card_le`
-(`SlepianWolf/ConditionalTypicalSlice.lean:140`, the slice cardinality
-`≤ exp(n·H(Y|U))`) together with a typical-`Y^n` per-atom mass bound
-(`≤ exp(−n·H(Y))`), giving the product `exp(−n·I(U;Y))` — genuinely new work, hence
-stubbed. The exponent slack is pinned by `hI_YU : I_YU ≤ I(U;Y) − 3ε` (a derived
-precondition, finding #11, keeping the statement TRUE-as-framed: for an atypical `u` the
-slice is empty and the mass is `0`, for a typical `u` the packing bound applies).
+Closed sorry-free (leg-19): the per-codeword form is assembled directly from single-symbol
+pmf products (no joint-sequence independence is needed and none is available in the
+hypotheses). Reframing the `ω`-event as the `Y`-law mass of the fixed-`u` slice
+`{y | (u, y) ∈ jointlyTypicalSet}` (via `map_measureReal_apply` on `jointRV Ys n`), the
+slice mass is bounded by `∑_{y} exp(−n(H(Y)−ε)) · [1 ≤ exp(n(H(Z)+ε))·∏ P_Z(u,y)]`; folding
+in the joint-typical product lower bound (`prod_map_singleton_ge_of_mem_typicalSet`) and
+marginalising `∑_y ∏_i P_Z(u_i,y_i) = ∏_i P_U(u_i)` (`Finset.prod_univ_sum` +
+`sum_real_prod_singleton_of_map_fst_eq`), the `U`-typical product bound
+(`prod_map_singleton_le_of_mem_typicalSet`) gives `mass ≤ exp(−n(H(U)+H(Y)−H(U,Y)−3ε))
+= exp(−n(I(U;Y)−3ε)) ≤ exp(−n·I_YU)` since `hI_YU : I_YU ≤ I(U;Y) − 3ε`. For an atypical `u`
+the slice is empty and the mass is `0`. `#print axioms` = `[propext, Classical.choice,
+Quot.sound]`.
 
-Independent honesty audit 2026-07-06: honest residual, non-bundled + TRUE-as-framed.
-(1) Non-circular: `hI_YU` is a scalar entropy inequality, the conclusion a measure
-inequality — no `:= h`. (2) Non-bundled: the AEP regularity hyps (measurability,
-independence, ident-distrib, full-support positivity) are preconditions; `hI_YU` is NOT
-load-bearing — since the conclusion RHS is `exp(−n·I_YU)`, the *upper* bound
-`I_YU ≤ I(U;Y) − 3ε` makes the RHS *larger* (a weaker target), so it supplies the standard
-typicality slack rather than the bound itself. The genuine per-codeword AEP mass bound
-`mass ≤ exp(−n·(I(U;Y) − 3ε))` remains the sorry body content. (3) Non-degenerate: `I_YU`
-is a free real bounded only from above, no exfalso/vacuity. (4) Sufficiency: the conclusion
-follows from the genuine AEP bound by transitivity, and is alive at boundaries — `n = 0`
-gives `mass ≤ 1` (trivially true), `I_YU` at its pinned `I(U;Y) − 3ε` gives the tightest
-RHS = the true packing bound, an atypical `u` gives an empty slice (`mass = 0`).
-Classification `plan:wyner-ziv-main-plan` correct: an in-project AEP composition
-(`conditionalTypicalSlice_card_le` × a typical-`Y` per-atom mass), not a Mathlib gap — the
-independent-*pair* form `jointlyTypicalSet_indep_prob_le` is a different atom.
-@residual(plan:wyner-ziv-main-plan) -/
+The exponent slack `3ε` is exactly the sum of the joint-product slack (`ε`) and the
+`Y`/`U` typicality slacks (`ε` each); `hI_YU` is a precondition supplying the standard
+typicality slack, not load-bearing (the upper bound on `I_YU` only weakens the RHS
+`exp(−n·I_YU)`). `hindepU`/`hidentU`/`hε` are inherited regularity preconditions that the
+pmf-side assembly does not consume.
+@audit:ok -/
 lemma wz_covering_codeword_sideInfo_mass_le
     {Ω : Type*} [MeasurableSpace Ω] {k n : ℕ} [Nonempty (Fin k)]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -1754,8 +1824,170 @@ lemma wz_covering_codeword_sideInfo_mass_le
       μ.real {ω | (u, jointRV Ys n ω)
           ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε}
         ≤ Real.exp (-(n : ℝ) * I_YU) := by
-  -- @residual(plan:wyner-ziv-main-plan)
-  sorry
+  classical
+  intro u
+  have hYmeas : Measurable (jointRV Ys n) := measurable_jointRV Ys hYs n
+  haveI hMYprob : IsProbabilityMeasure (μ.map (jointRV Ys n)) :=
+    Measure.isProbabilityMeasure_map hYmeas.aemeasurable
+  haveI hMZprob : IsProbabilityMeasure (μ.map (ChannelCoding.jointSequence Us Ys 0)) :=
+    Measure.isProbabilityMeasure_map
+      (ChannelCoding.measurable_jointSequence Us Ys hUs hYs 0).aemeasurable
+  -- Reframe the ω-event as the Y-law mass of the fixed-`u` fiber slice.
+  have hpre : {ω | (u, jointRV Ys n ω)
+        ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε}
+      = jointRV Ys n ⁻¹' {y | (u, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε} := rfl
+  have hkey : μ.real {ω | (u, jointRV Ys n ω)
+        ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε}
+      = (μ.map (jointRV Ys n)).real
+          {y | (u, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε} := by
+    rw [hpre, map_measureReal_apply hYmeas ((Set.toFinite _).measurableSet)]
+  rw [hkey]
+  set S : Set (Fin n → β) :=
+    {y | (u, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε} with hS_def
+  by_cases hu : u ∈ typicalSet μ Us n ε
+  · -- Main case: `u` is `U`-typical.
+    set F : Finset (Fin n → β) := (Set.toFinite S).toFinset with hF_def
+    have hcoe : (F : Set (Fin n → β)) = S := by
+      rw [hF_def]; exact (Set.toFinite S).coe_toFinset
+    have hmem : ∀ y ∈ F, (u, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε := by
+      intro y hy
+      have hyS : y ∈ S := (Set.Finite.mem_toFinset (Set.toFinite S)).mp hy
+      exact hyS
+    -- Y-side per-atom mass bound.
+    have hYterm : ∀ y ∈ F,
+        (μ.map (jointRV Ys n)).real {y}
+          ≤ Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε)) := by
+      intro y hy
+      have hy2 : y ∈ typicalSet μ Ys n ε :=
+        ((ChannelCoding.mem_jointlyTypicalSet_iff μ Us Ys n ε u y).mp (hmem y hy)).2.1
+      exact typicalSet_prob_le μ Ys hYs hindepY hidentY hposY n y hy2
+    -- Joint-side per-atom product lower bound.
+    have hZterm : ∀ y ∈ F,
+        Real.exp (-(n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε))
+          ≤ ∏ i : Fin n, (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} := by
+      intro y hy
+      have hy3 : (fun i ↦ (u i, y i))
+          ∈ typicalSet μ (ChannelCoding.jointSequence Us Ys) n ε :=
+        ((ChannelCoding.mem_jointlyTypicalSet_iff μ Us Ys n ε u y).mp (hmem y hy)).2.2
+      exact prod_map_singleton_ge_of_mem_typicalSet μ
+        (ChannelCoding.jointSequence Us Ys) hposZ n (fun i ↦ (u i, y i)) hy3
+    -- Combined per-term bound: fold the trivial factor `1 ≤ exp · ∏`.
+    have hperterm : ∀ y ∈ F,
+        (μ.map (jointRV Ys n)).real {y}
+          ≤ (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
+              * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
+            * ∏ i : Fin n,
+                (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} := by
+      intro y hy
+      have h1 := hYterm y hy
+      have h2 := hZterm y hy
+      have hC2pos : (0 : ℝ) <
+          Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)) :=
+        Real.exp_pos _
+      have heq1 :
+          Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε))
+            * Real.exp (-(n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε))
+            = 1 := by
+        rw [← Real.exp_add]; simp
+      have hone : (1 : ℝ) ≤
+          Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε))
+            * ∏ i : Fin n,
+                (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} := by
+        have hmul := mul_le_mul_of_nonneg_left h2 hC2pos.le
+        rwa [heq1] at hmul
+      calc (μ.map (jointRV Ys n)).real {y}
+          ≤ Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε)) := h1
+        _ = Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε)) * 1 := (mul_one _).symm
+        _ ≤ Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
+              * (Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε))
+                * ∏ i : Fin n,
+                    (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)}) :=
+              mul_le_mul_of_nonneg_left hone (Real.exp_nonneg _)
+        _ = (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
+              * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
+            * ∏ i : Fin n,
+                (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} := by
+              rw [mul_assoc]
+    -- Marginalisation: summing the joint product over all `y` recovers `∏ P_U`.
+    have hmarg :
+        (μ.map (ChannelCoding.jointSequence Us Ys 0)).map Prod.fst = μ.map (Us 0) := by
+      rw [Measure.map_map measurable_fst
+        (ChannelCoding.measurable_jointSequence Us Ys hUs hYs 0)]
+      rfl
+    have hmarginal :
+        (∑ y : Fin n → β, ∏ i : Fin n,
+            (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)})
+          = ∏ i : Fin n, (μ.map (Us 0)).real {u i} := by
+      have hpe := Finset.prod_univ_sum (fun _ : Fin n ↦ (Finset.univ : Finset β))
+        (fun (i : Fin n) (b : β) ↦
+          (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, b)})
+      rw [Fintype.piFinset_univ] at hpe
+      rw [← hpe]
+      refine Finset.prod_congr rfl (fun i _ ↦ ?_)
+      exact sum_real_prod_singleton_of_map_fst_eq
+        (μ.map (ChannelCoding.jointSequence Us Ys 0)) (μ.map (Us 0)) hmarg (u i)
+    -- `∏ P_U ≤ exp(-n(H(U) - ε))` from `U`-typicality of `u`.
+    have hUbound : ∏ i : Fin n, (μ.map (Us 0)).real {u i}
+        ≤ Real.exp (-(n : ℝ) * (entropy μ (Us 0) - ε)) :=
+      prod_map_singleton_le_of_mem_typicalSet μ Us hposU n u hu
+    -- Constant-factor closure of the exponents.
+    have hExpFactor :
+        (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
+          * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
+          * Real.exp (-(n : ℝ) * (entropy μ (Us 0) - ε))
+        ≤ Real.exp (-(n : ℝ) * I_YU) := by
+      rw [← Real.exp_add, ← Real.exp_add]
+      apply Real.exp_le_exp.mpr
+      have hexp_eq :
+          -(n : ℝ) * (entropy μ (Ys 0) - ε)
+            + (n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)
+            + -(n : ℝ) * (entropy μ (Us 0) - ε)
+          = -(n : ℝ) * (entropy μ (Us 0) + entropy μ (Ys 0)
+              - entropy μ (ChannelCoding.jointSequence Us Ys 0) - 3 * ε) := by ring
+      rw [hexp_eq]
+      have hn : (0 : ℝ) ≤ n := Nat.cast_nonneg n
+      have := mul_le_mul_of_nonneg_left hI_YU hn
+      rw [neg_mul, neg_mul]
+      linarith
+    -- Chain everything.
+    calc (μ.map (jointRV Ys n)).real S
+        = ∑ y ∈ F, (μ.map (jointRV Ys n)).real {y} := by
+          rw [← hcoe, ← sum_measureReal_singleton]
+      _ ≤ ∑ y ∈ F,
+            (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
+              * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
+            * ∏ i : Fin n,
+                (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} :=
+          Finset.sum_le_sum hperterm
+      _ = (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
+            * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
+          * ∑ y ∈ F, ∏ i : Fin n,
+              (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} := by
+          rw [← Finset.mul_sum]
+      _ ≤ (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
+            * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
+          * ∑ y : Fin n → β, ∏ i : Fin n,
+              (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} := by
+          apply mul_le_mul_of_nonneg_left _ (by positivity)
+          exact Finset.sum_le_sum_of_subset_of_nonneg (Finset.subset_univ F)
+            (fun y _ _ ↦ Finset.prod_nonneg (fun i _ ↦ measureReal_nonneg))
+      _ = (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
+            * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
+          * ∏ i : Fin n, (μ.map (Us 0)).real {u i} := by rw [hmarginal]
+      _ ≤ (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
+            * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
+          * Real.exp (-(n : ℝ) * (entropy μ (Us 0) - ε)) := by
+          apply mul_le_mul_of_nonneg_left hUbound (by positivity)
+      _ ≤ Real.exp (-(n : ℝ) * I_YU) := hExpFactor
+  · -- `u` not `U`-typical: the slice is empty, mass is `0`.
+    have hSempty : S = ∅ := by
+      rw [hS_def]
+      ext y
+      simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false]
+      intro hy
+      exact hu ((ChannelCoding.mem_jointlyTypicalSet_iff μ Us Ys n ε u y).mp hy).1
+    rw [hSempty, measureReal_empty]
+    exact (Real.exp_pos _).le
 
 /-- **(D3) Per-`n` Wyner–Ziv code family at a fixed covering rate (Steps 2–7).** Given
 the Step 1–2 covering data together with an already-chosen covering rate `R₁` (strictly
