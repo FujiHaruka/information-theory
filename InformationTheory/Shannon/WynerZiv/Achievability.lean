@@ -1606,8 +1606,17 @@ above `wzMutualInfoXU q' = I(X;U)`.
 Closed sorry-free (leg-19): `#print axioms` = `[propext, Classical.choice, Quot.sound]`.
 The support-restriction principle (`key`) sums the vanishing off-support terms away
 (`Real.negMulLog 0 = 0`), matching the three marginal/joint entropy sums of `qStar` (over
-the support subtype) against those of `wzMarginalXU q'` (over the full alphabet). Pending
-independent honesty audit. -/
+the support subtype) against those of `wzMarginalXU q'` (over the full alphabet).
+
+Independent honesty audit 2026-07-06: genuine closure. `#print axioms` re-verified
+sorryAx-free (`[propext, Classical.choice, Quot.sound]`). Non-vacuous: this is a real
+equality of two mutual informations established by the body's three entropy-sum matchings,
+not a definitional/degenerate coincidence. The factorisation hypotheses
+`hfact_eq`/`hκ'sum`/`hqStar_eq` are genuine definitional constraints (without them the two
+mutual informations differ, since `qStar` lives over the support subtype and `q'` over the
+full alphabet); none is the conclusion (no `:= h` circularity), and the body carries the
+real support-restriction argument.
+@audit:ok -/
 lemma wz_mutualInfo_restriction_eq
     (P_XY : Measure (α × β)) (k : ℕ)
     (q' : α × β × Fin k → ℝ) (κ' : α → Fin k → ℝ)
@@ -1708,6 +1717,22 @@ per-codeword form is assemblable from `conditionalTypicalSlice_card_le`
 stubbed. The exponent slack is pinned by `hI_YU : I_YU ≤ I(U;Y) − 3ε` (a derived
 precondition, finding #11, keeping the statement TRUE-as-framed: for an atypical `u` the
 slice is empty and the mass is `0`, for a typical `u` the packing bound applies).
+
+Independent honesty audit 2026-07-06: honest residual, non-bundled + TRUE-as-framed.
+(1) Non-circular: `hI_YU` is a scalar entropy inequality, the conclusion a measure
+inequality — no `:= h`. (2) Non-bundled: the AEP regularity hyps (measurability,
+independence, ident-distrib, full-support positivity) are preconditions; `hI_YU` is NOT
+load-bearing — since the conclusion RHS is `exp(−n·I_YU)`, the *upper* bound
+`I_YU ≤ I(U;Y) − 3ε` makes the RHS *larger* (a weaker target), so it supplies the standard
+typicality slack rather than the bound itself. The genuine per-codeword AEP mass bound
+`mass ≤ exp(−n·(I(U;Y) − 3ε))` remains the sorry body content. (3) Non-degenerate: `I_YU`
+is a free real bounded only from above, no exfalso/vacuity. (4) Sufficiency: the conclusion
+follows from the genuine AEP bound by transitivity, and is alive at boundaries — `n = 0`
+gives `mass ≤ 1` (trivially true), `I_YU` at its pinned `I(U;Y) − 3ε` gives the tightest
+RHS = the true packing bound, an atypical `u` gives an empty slice (`mass = 0`).
+Classification `plan:wyner-ziv-main-plan` correct: an in-project AEP composition
+(`conditionalTypicalSlice_card_le` × a typical-`Y` per-atom mass), not a Mathlib gap — the
+independent-*pair* form `jointlyTypicalSet_indep_prob_le` is a different atom.
 @residual(plan:wyner-ziv-main-plan) -/
 lemma wz_covering_codeword_sideInfo_mass_le
     {Ω : Type*} [MeasurableSpace Ω] {k n : ℕ} [Nonempty (Fin k)]
@@ -1760,6 +1785,23 @@ rate-distortion covering `LossyCode` family (not the binned Wyner–Ziv code), a
 binning rate reduction `I(X;U) → I(X;U) − I(Y;U)` together with the confusion exponent is
 the residual body content. `hobj'`/`hsplit`/`hfeas` are objective/feasibility
 preconditions on the test channel; positivity and simplex membership are regularity.
+
+Independent honesty audit 2026-07-06: honest residual, non-bundled + TRUE-as-framed —
+inherits (D)'s leg-18 non-bundled status with `R₁` made explicit. (1) Non-circular: no
+hypothesis has the conclusion's type. (2) Non-bundled (load-bearing test): `hcov₁` is the
+rate-distortion *covering* `LossyCode M n α' (Fin k)` family at covering rate `R₁`
+(≈ `I(X;U)`), NOT the binned `WynerZivCode (codebookSize R n)` at operational rate `R` —
+granting it hands the covering code only; the index binning (`M → ⌈exp(n·R)⌉` bins via
+`wzIndexBinningMeasure`), the bin conditional-typicality decoder (S4), and the confusion
+exponent (S5b) remain genuine body work. `hobj'`/`hsplit`/`hfeas` are rate/feasibility
+preconditions, not the operational conclusion; positivity, `hκ'sum`, simplex membership are
+regularity. (3) Non-degenerate: same `∃ c` inside `∀ n` shape as (D) — the `n < N` branch
+is benignly vacuous while the infinitely many `n ≥ N` require genuine codes. (4)
+Sufficiency: the WZ binning theorem gives the conclusion from (`hcov₁` at `R₁`) +
+(`hsplit : R₁ − I(Y;U) < R`, the binning rate reduction) + `hfeas`; `hsplit` is a genuine
+feasibility precondition (binning drops the rate by `I(Y;U)`), and the hypotheses are
+jointly satisfiable exactly when `hobj' : I(X;U) − I(Y;U) < R` holds. Classification
+`plan:wyner-ziv-main-plan` correct (in-project binning composition, not a Mathlib wall).
 @residual(plan:wyner-ziv-main-plan) -/
 lemma wz_perN_covering_binning_code
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -1836,6 +1878,18 @@ Conclusion shape `∃ N, ∀ n, ∃ c, N ≤ n → dist ≤ D + δ` is non-degen
 inhabited via `[Nonempty γ]` + `codebookSize_pos`), so the claim is NOT trivially true — for
 the infinitely many `n ≥ N` a genuinely good code is required (no large-`N` escape).
 Classification `plan:wyner-ziv-main-plan` correct.
+
+Body glue re-audited 2026-07-06 (body changed this leg: `sorry` → rate-split glue). The
+glue does genuine rate-split work, not a rename/reshape of D3: it (a) uses D1
+(`wz_mutualInfo_restriction_eq`) to identify the covering premise `mutualInfoPmf qStar`
+with `I(X;U)`, (b) *constructs* an intermediate covering rate
+`R₁ = I(X;U) + (R − (I(X;U) − I(Y;U)))/2` and proves both `mutualInfoPmf qStar < R₁` and
+`hsplit : R₁ − I(Y;U) < R` by `linarith [hobj']`, then (c) specialises `hcov` to `R₁` and
+hands off to D3 (`wz_perN_covering_binning_code`), which takes `R₁`/`hsplit`/`hcov₁` as
+GIVEN. The `R₁` existence + rate arithmetic is real work done here. Signature (binders +
+conclusion) unchanged from before the commit (verified by diff). `#print axioms` =
+`[propext, sorryAx, Classical.choice, Quot.sound]` (transitive `sorryAx` from the stubbed
+D2/D3), so tier-2 `@residual`, NOT `@audit:ok`.
 @residual(plan:wyner-ziv-main-plan) -/
 lemma wz_perDelta_covering_binning_eventual
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
