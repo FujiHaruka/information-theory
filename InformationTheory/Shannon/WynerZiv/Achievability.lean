@@ -2018,8 +2018,9 @@ binning rate reduction `I(X;U) → I(X;U) − I(Y;U)` together with the confusio
 the residual body content. `hobj'`/`hsplit`/`hfeas` are objective/feasibility
 preconditions on the test channel; positivity and simplex membership are regularity.
 
-Independent honesty audit 2026-07-06: honest residual, non-bundled + TRUE-as-framed —
-inherits (D)'s leg-18 non-bundled status with `R₁` made explicit. (1) Non-circular: no
+Independent honesty audit 2026-07-06: honest residual, non-bundled, BUT the sufficiency
+claim (4) below was OVERTURNED (leg-20, 2026-07-06) — the signature is under-hypothesized
+(false-as-framed); see the retraction and δ-split fix in (4). (1)-(3) still hold. (1) Non-circular: no
 hypothesis has the conclusion's type. (2) Non-bundled (load-bearing test): `hcov₁` is the
 rate-distortion *covering* `LossyCode M n α' (Fin k)` family at covering rate `R₁`
 (≈ `I(X;U)`), NOT the binned `WynerZivCode (codebookSize R n)` at operational rate `R` —
@@ -2029,12 +2030,27 @@ exponent (S5b) remain genuine body work. `hobj'`/`hsplit`/`hfeas` are rate/feasi
 preconditions, not the operational conclusion; positivity, `hκ'sum`, simplex membership are
 regularity. (3) Non-degenerate: same `∃ c` inside `∀ n` shape as (D) — the `n < N` branch
 is benignly vacuous while the infinitely many `n ≥ N` require genuine codes. (4)
-Sufficiency: the WZ binning theorem gives the conclusion from (`hcov₁` at `R₁`) +
-(`hsplit : R₁ − I(Y;U) < R`, the binning rate reduction) + `hfeas`; `hsplit` is a genuine
-feasibility precondition (binning drops the rate by `I(Y;U)`), and the hypotheses are
-jointly satisfiable exactly when `hobj' : I(X;U) − I(Y;U) < R` holds. Classification
-`plan:wyner-ziv-main-plan` correct (in-project binning composition, not a Mathlib wall).
-@residual(plan:wyner-ziv-main-plan) -/
+Sufficiency — **FALSE-AS-FRAMED, RETRACTED (leg-20, 2026-07-06)**: the earlier claim that
+(`hcov₁` at `R₁`) + `hsplit` + `hfeas` suffice for the EXACT conclusion `≤ D+δ` is WRONG.
+The WZ distortion decomposes (RD precedent `source_avg_distortion_le_simpler`,
+`RateDistortion/AchievabilityAsymptoticFailureDecay.lean:203`) as good-event proxy +
+`distortionMax d · (P[E1]+P[E2])`, and `hfeas : expectedDistortionPmf d' qStar ≤ D+δ`
+spends the WHOLE budget on the good-event proxy, leaving no room for the strictly-positive
+finite-`n` error term. Airtight degenerate counterexample: with `expectedDistortionPmf d'
+qStar = D+δ` (perturbation tuned to full `δ`), `distortionMax d = D+δ+η` (η>0, generic
+non-constant `d`), generic positive `P[error]`, the WZ distortion is `(D+δ)+η·P[error](n) >
+D+δ` for every `n`, so `∃N ∀n≥N …≤ D+δ` fails while all frozen hypotheses hold. Confirmed
+by the RD sister theorem `rate_distortion_achievability`, which reaches only `≤ D+ε'`
+(never exact `D+δ`) via an explicit slack hypothesis `expectedDistortionPmf + δ_typ ≤
+D+ε'/2` RESERVING `ε'/2` for the error term — D3 asks for a stricter conclusion with less
+reserved room, which is impossible. FIX (honest, cheap, non-load-bearing): δ-split — tighten
+`hfeas` and `hcov₁`'s target to `D + δ/2`, reserving `δ/2` for the WZ errors (mirrors the
+RD `h_slack`); ripple contained to ~5 private sigs in this file
+(`wz_coveringFamily_of_testChannel` → `wz_perDelta_covering_binning_eventual` → D3 → S6 →
+`wz_perDelta_codes_exist`), `∃N∀n` shapes unchanged. Classification `plan:wyner-ziv-main-plan`
+still correct (in-project, not a Mathlib wall). cause:false-statement.
+@residual(plan:wyner-ziv-main-plan)
+@audit:defect(false-statement) @audit:closed-by-successor(wz-binning-covering) -/
 lemma wz_perN_covering_binning_code
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
