@@ -1593,39 +1593,244 @@ theorem wzIndexBinningMeasure_collision {M₁ M : ℕ} [NeZero M]
   rw [hN_eq, mul_inv, mul_comm ((M : ℝ) ^ (N - 1))⁻¹ _, mul_assoc]
   rw [inv_mul_cancel₀ (pow_ne_zero _ hM_ne), mul_one]
 
+/-- **(D1) Mutual-information restriction identity (Step 1 rate leaf).** The covering
+mutual information computed on the support-restricted joint `qStar` (over the source
+support subtype `α' := {x // 0 < P_X x}`) equals the Wyner–Ziv covering objective
+`wzMutualInfoXU` computed on the full-alphabet factorisable joint `q'`. The support
+restriction drops only zero atoms of the source marginal `P_X`, which contribute
+`Real.negMulLog 0 = 0` to every marginal and joint entropy sum, so the two mutual
+informations coincide. This algebraic leaf lets the covering family `hcov` — whose
+premise is `mutualInfoPmf qStar < R₁` — be fed at a covering rate `R₁` chosen strictly
+above `wzMutualInfoXU q' = I(X;U)`.
+
+Closed sorry-free (leg-19): `#print axioms` = `[propext, Classical.choice, Quot.sound]`.
+The support-restriction principle (`key`) sums the vanishing off-support terms away
+(`Real.negMulLog 0 = 0`), matching the three marginal/joint entropy sums of `qStar` (over
+the support subtype) against those of `wzMarginalXU q'` (over the full alphabet). Pending
+independent honesty audit. -/
+lemma wz_mutualInfo_restriction_eq
+    (P_XY : Measure (α × β)) (k : ℕ)
+    (q' : α × β × Fin k → ℝ) (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
+    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) :
+    mutualInfoPmf qStar = wzMutualInfoXU (Fin k) q' := by
+  classical
+  set PX : α → ℝ := fun x => ∑ y, P_XY.real {(x, y)} with hPX
+  have hPX_nn : ∀ x, (0 : ℝ) ≤ PX x :=
+    fun x => Finset.sum_nonneg (fun y _ => measureReal_nonneg)
+  -- Support-restriction: a function vanishing off `supp(P_X)` has equal `α`- and
+  -- support-subtype sums (off-support terms are `0`, so they drop out).
+  have key : ∀ f : α → ℝ, (∀ x, ¬ (0 < PX x) → f x = 0) →
+      ∑ x : {x : α // 0 < PX x}, f x.1 = ∑ x : α, f x := by
+    intro f hf
+    rw [← Finset.sum_subtype (Finset.univ.filter (fun x => 0 < PX x))
+        (fun x => by simp) f]
+    refine Finset.sum_subset (Finset.filter_subset _ _) ?_
+    intro x _ hx
+    exact hf x (by simpa using hx)
+  -- Pointwise pmf values: on the support subtype `qStar` and the full-alphabet
+  -- `wzMarginalXU q'` both equal `κ'(x,u)·P_X(x)`.
+  have hqStar_val : ∀ (a : {x : α // 0 < PX x}) (u : Fin k),
+      qStar (a, u) = κ' a.1 u * PX a.1 := fun a u => hqStar_eq (a, u)
+  have hwz_val : ∀ (x : α) (u : Fin k),
+      wzMarginalXU (Fin k) q' (x, u) = κ' x u * PX x := by
+    intro x u
+    show (∑ y, q' (x, y, u)) = κ' x u * ∑ y, P_XY.real {(x, y)}
+    rw [Finset.mul_sum]
+    exact Finset.sum_congr rfl (fun y _ => hfact_eq x y u)
+  -- Marginals: `marginalFst` of both equals `P_X`; `marginalSnd` of both agree pointwise.
+  have hmargFst_star : ∀ a : {x : α // 0 < PX x}, marginalFst qStar a = PX a.1 := by
+    intro a
+    show (∑ u, qStar (a, u)) = PX a.1
+    simp_rw [hqStar_val a]
+    rw [← Finset.sum_mul, hκ'sum a.1, one_mul]
+  have hmargFst_wz : ∀ x : α,
+      marginalFst (wzMarginalXU (Fin k) q') x = PX x := by
+    intro x
+    show (∑ u, wzMarginalXU (Fin k) q' (x, u)) = PX x
+    simp_rw [hwz_val x]
+    rw [← Finset.sum_mul, hκ'sum x, one_mul]
+  have hmargSnd_eq : ∀ u : Fin k,
+      marginalSnd qStar u = marginalSnd (wzMarginalXU (Fin k) q') u := by
+    intro u
+    show (∑ a : {x : α // 0 < PX x}, qStar (a, u))
+        = ∑ x : α, wzMarginalXU (Fin k) q' (x, u)
+    simp_rw [hqStar_val _ u, hwz_val _ u]
+    exact key (fun x => κ' x u * PX x) (fun x hx => by
+      rw [le_antisymm (not_lt.mp hx) (hPX_nn x), mul_zero])
+  -- Assemble the three entropy sums.
+  have hA : (∑ a : {x : α // 0 < PX x}, Real.negMulLog (marginalFst qStar a))
+      = ∑ a : α, Real.negMulLog (marginalFst (wzMarginalXU (Fin k) q') a) := by
+    rw [Finset.sum_congr rfl (fun a _ => by rw [hmargFst_star a] :
+        ∀ a ∈ (Finset.univ : Finset {x : α // 0 < PX x}),
+          Real.negMulLog (marginalFst qStar a) = Real.negMulLog (PX a.1))]
+    rw [key (fun x => Real.negMulLog (PX x)) (fun x hx => by
+        rw [le_antisymm (not_lt.mp hx) (hPX_nn x)]; exact Real.negMulLog_zero)]
+    exact Finset.sum_congr rfl (fun x _ => by rw [hmargFst_wz x])
+  have hB : (∑ b : Fin k, Real.negMulLog (marginalSnd qStar b))
+      = ∑ b : Fin k, Real.negMulLog (marginalSnd (wzMarginalXU (Fin k) q') b) :=
+    Finset.sum_congr rfl (fun u _ => by rw [hmargSnd_eq u])
+  have hC : (∑ p : {x : α // 0 < PX x} × Fin k, Real.negMulLog (qStar p))
+      = ∑ p : α × Fin k, Real.negMulLog (wzMarginalXU (Fin k) q' p) := by
+    simp_rw [Fintype.sum_prod_type]
+    rw [Finset.sum_congr rfl (fun a _ =>
+        Finset.sum_congr rfl (fun u _ => by rw [hqStar_val a u]) :
+        ∀ a ∈ (Finset.univ : Finset {x : α // 0 < PX x}),
+          (∑ u, Real.negMulLog (qStar (a, u)))
+            = ∑ u, Real.negMulLog (κ' a.1 u * PX a.1))]
+    rw [key (fun x => ∑ u, Real.negMulLog (κ' x u * PX x)) (fun x hx => by
+        rw [le_antisymm (not_lt.mp hx) (hPX_nn x)]
+        simp [Real.negMulLog_zero])]
+    exact Finset.sum_congr rfl (fun x _ =>
+      Finset.sum_congr rfl (fun u _ => by rw [hwz_val x u]))
+  unfold wzMutualInfoXU mutualInfoPmf
+  rw [hA, hB, hC]
+
+/-- **(D2) Covering-codeword side-information mass upper bound (E2 AEP crux).** For any
+fixed covering codeword `u : Fin n → Fin k`, the probability (over the noise generating
+`Y^n = jointRV Ys n`) that `u` is jointly typical with `Y^n` is at most
+`exp(−n · I_YU)`, where `I_YU ≲ I(U;Y)`. This is the per-codeword AEP mass bound that
+`wz_codebook_confusion_expectation_le` (S5b) consumes as its `hmass` hypothesis: because
+the covering codewords are drawn independently of the side information `Y`, a fixed
+covering codeword lands in a `Y^n`-conditional typical slice with the packing exponent
+`exp(−n · I(U;Y))`.
+
+The bound is genuinely **absent** from the current in-project AEP layer: the closest
+atom `ChannelCoding.jointlyTypicalSet_indep_prob_le`
+(`ChannelCoding/Basic.lean:540`) is the independent-**pair** form (averaging over *both*
+the `U`-codeword and `Y^n`), not this per-fixed-codeword conditional-slice form. The
+per-codeword form is assemblable from `conditionalTypicalSlice_card_le`
+(`SlepianWolf/ConditionalTypicalSlice.lean:140`, the slice cardinality
+`≤ exp(n·H(Y|U))`) together with a typical-`Y^n` per-atom mass bound
+(`≤ exp(−n·H(Y))`), giving the product `exp(−n·I(U;Y))` — genuinely new work, hence
+stubbed. The exponent slack is pinned by `hI_YU : I_YU ≤ I(U;Y) − 3ε` (a derived
+precondition, finding #11, keeping the statement TRUE-as-framed: for an atypical `u` the
+slice is empty and the mass is `0`, for a typical `u` the packing bound applies).
+@residual(plan:wyner-ziv-main-plan) -/
+lemma wz_covering_codeword_sideInfo_mass_le
+    {Ω : Type*} [MeasurableSpace Ω] {k n : ℕ} [Nonempty (Fin k)]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Us : ℕ → Ω → Fin k) (Ys : ℕ → Ω → β) (ε : ℝ) (hε : 0 < ε)
+    (hUs : ∀ i, Measurable (Us i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindepU : iIndepFun (fun i ↦ Us i) μ)
+    (hidentU : ∀ i, IdentDistrib (Us i) (Us 0) μ μ)
+    (hindepY : iIndepFun (fun i ↦ Ys i) μ)
+    (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
+    (hposU : ∀ u : Fin k, 0 < (μ.map (Us 0)).real {u})
+    (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
+    (hposZ : ∀ p : Fin k × β,
+        0 < (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {p})
+    (I_YU : ℝ)
+    (hI_YU : I_YU ≤ entropy μ (Us 0) + entropy μ (Ys 0)
+        - entropy μ (ChannelCoding.jointSequence Us Ys 0) - 3 * ε) :
+    ∀ u : Fin n → Fin k,
+      μ.real {ω | (u, jointRV Ys n ω)
+          ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε}
+        ≤ Real.exp (-(n : ℝ) * I_YU) := by
+  -- @residual(plan:wyner-ziv-main-plan)
+  sorry
+
+/-- **(D3) Per-`n` Wyner–Ziv code family at a fixed covering rate (Steps 2–7).** Given
+the Step 1–2 covering data together with an already-chosen covering rate `R₁` (strictly
+above `I(X;U)`, so that `hcov₁` — the covering `LossyCode` family at rate `R₁` — is
+available) and the net-rate gap `hsplit : R₁ − I(Y;U) < R`, assemble the per-`n`
+Wyner–Ziv code family at the operational rate `R`: bin the covering index down to
+`codebookSize R n` messages (`wzIndexBinningMeasure`), decode by the bin
+conditional-typicality search (S3 `wzCodeOfCoveringBinning` / S4 `wzBinTypicalDecoder`),
+bound the covering-failure (S5a `wz_covering_failure_prob_le`, fed the mass lower bound
+via gateway 2 `wz_covering_sideInfo_mass_ge`) and the codebook-restricted
+decoder-confusion (S5b `wz_codebook_confusion_expectation_le`, fed the per-codeword mass
+upper bound via D2 `wz_covering_codeword_sideInfo_mass_le` and the collision
+`wzIndexBinningMeasure_collision` (B)) error events, extract a good deterministic
+codebook + binning by double derandomization
+(`exists_codebook_low_avg` / `exists_pair_le_of_binning_integral_le`), squeeze the
+residual distortion excess to `0` (`source_avg_distortion_le_simpler`,
+`ceil_exp_mul_exp_neg_tendsto_atTop`, `wz_tendsto_exp_mul_codebookSize_inv`), and extend
+the covering code `α' → α` (S7 `wzLiftSupportCode` +
+`wz_expectedBlockDistortion_source_agree`).
+
+The rate split is separated out: this lemma pins the covering rate `R₁` and the confusion
+exponent `I(Y;U)` explicitly, and consumes the covering family only at `R₁` (`hcov₁`);
+the choice of the intermediate covering rate `R₁ ∈ (I(X;U), …)` is the caller's glue
+(`wz_perDelta_covering_binning_eventual`, via the rate identity D1). No error-probability
+or decoder-correctness claim is a hypothesis: `hcov₁` is the separately-established
+rate-distortion covering `LossyCode` family (not the binned Wyner–Ziv code), and the
+binning rate reduction `I(X;U) → I(X;U) − I(Y;U)` together with the confusion exponent is
+the residual body content. `hobj'`/`hsplit`/`hfeas` are objective/feasibility
+preconditions on the test channel; positivity and simplex membership are regularity.
+@residual(plan:wyner-ziv-main-plan) -/
+lemma wz_perN_covering_binning_code
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (R D : ℝ)
+    (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (δ : ℝ) (hδ : 0 < δ)
+    (q' : α × β × Fin k → ℝ) (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
+    (R₁ : ℝ)
+    (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
+    (hκ'pos : ∀ x u, 0 < κ' x u)
+    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (hobj' : wzMutualInfoXU (Fin k) q' - wzMutualInfoYU (Fin k) q' < R)
+    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    (hqStar_pos : ∀ p, 0 < qStar p)
+    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    (hfeas : expectedDistortionPmf d' qStar ≤ D + δ)
+    (hsplit : R₁ - wzMutualInfoYU (Fin k) q' < R)
+    (hcov₁ : ∀ ε' : ℝ, 0 < ε' →
+        ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
+          Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
+          ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
+            c.expectedBlockDistortion
+                ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
+              ≤ (D + δ) + ε') :
+    ∃ N : ℕ, ∀ n : ℕ, ∃ c : WynerZivCode (codebookSize R n) n α β γ,
+      N ≤ n → c.expectedBlockDistortion P_XY d ≤ D + δ := by
+  -- @residual(plan:wyner-ziv-main-plan)
+  sorry
+
 /-- **(D) Per-slack per-`n` good deterministic Wyner–Ziv code (Steps 3–6).** Consuming
 the same Step 1–2 covering data as the capstone `wz_perDelta_covering_binning` (S6),
 produce for every block length `n` a Wyner–Ziv code at the operational rate `R`
 (`codebookSize R n` messages), together with a single threshold `N` beyond which the
 code's expected block distortion is within `D + δ`.
 
-This is the covering + binning core: bin the covering index to `codebookSize R n`
-messages (`wzIndexBinningMeasure`), decode by the bin conditional-typicality search
-(`wzBinTypicalDecoder`, S4) reconstructing `γ^n` via `wzCodeOfCoveringBinning` (S3),
-bound the covering-failure (S5a `wz_covering_failure_prob_le`) and codebook-restricted
-decoder-confusion (S5b `wz_codebook_confusion_expectation_le`) error events, and
-derandomize (`exists_codebook_low_avg` / `exists_pair_le_of_binning_integral_le`) to a
-deterministic code whose distortion is squeezed to `D + δ`
-(`source_avg_distortion_le_simpler`, `ceil_exp_mul_exp_neg_tendsto_atTop`); the source
-support extension `α' → α` uses `wzLiftSupportCode` (S7) together with the sorry-free
-`wz_expectedBlockDistortion_source_agree`.
+Decomposition (leg-19): this lemma's body is now the sorry-free **rate-split glue**.
+Step 1 uses the rate identity `wz_mutualInfo_restriction_eq` (D1, closed sorry-free) to
+pick an intermediate covering rate `R₁ ∈ (I(X;U), …)` with `R₁ − I(Y;U) < R`, feeds the
+covering family `hcov` at `R₁`, and hands the whole per-`n` construction (Steps 2–7) to
+the giant `wz_perN_covering_binning_code` (D3). D3 bins the covering index to
+`codebookSize R n` messages (`wzIndexBinningMeasure`), decodes by the bin
+conditional-typicality search (`wzBinTypicalDecoder`, S4) reconstructing `γ^n` via
+`wzCodeOfCoveringBinning` (S3), bounds the covering-failure (S5a
+`wz_covering_failure_prob_le`) and codebook-restricted decoder-confusion (S5b
+`wz_codebook_confusion_expectation_le`, whose per-codeword mass upper bound is the AEP
+crux `wz_covering_codeword_sideInfo_mass_le`, D2) error events, derandomizes
+(`exists_codebook_low_avg` / `exists_pair_le_of_binning_integral_le`), squeezes the
+distortion to `D + δ` (`source_avg_distortion_le_simpler`,
+`ceil_exp_mul_exp_neg_tendsto_atTop`), and extends the source `α' → α` (`wzLiftSupportCode`
+S7 + the sorry-free `wz_expectedBlockDistortion_source_agree`).
 
 The capstone `wz_perDelta_covering_binning` (S6) is the pure `Filter.atTop`/choice glue
-over this lemma — all covering + binning content is the (stubbed) body here. The
-hypotheses are the identical genuine Step 1–2 covering data / regularity as S6 (no
-error-probability or decoder-correctness claim is a hypothesis).
+over this lemma. The hypotheses are the identical genuine Step 1–2 covering data /
+regularity as S6 (no error-probability or decoder-correctness claim is a hypothesis).
 
-Independent honesty audit 2026-07-06: honest residual, non-bundled. The 13 covering-data
-hypotheses (`q'`/`κ'`/`qStar`/`d'` witnesses + `hfact_eq`/`hκ'pos`/`hκ'sum`/`hobj'`/
-`hqStar_eq`/`hqStar_pos`/`hqStar_mem`/`hfeas`/`hcov`) are identical to S6's modulo the
-conclusion shape and pass the joint core-reconstruction test: granting all 13 hands you a
-feasible test channel plus a *covering* `LossyCode` family at the covering rate `R₁`, but
-NOT the WZ binned code at the operational rate `R` — the index binning (to `codebookSize R n`
-messages), the bin conditional-typicality decoder, and the confusion-error exponent remain
-genuine work in the (stubbed) body. `hobj'` is the rate objective and `hfeas` the distortion
+Independent honesty audit 2026-07-06 (pre-decomposition): honest residual, non-bundled.
+The 13 covering-data hypotheses (`q'`/`κ'`/`qStar`/`d'` witnesses + `hfact_eq`/`hκ'pos`/
+`hκ'sum`/`hobj'`/`hqStar_eq`/`hqStar_pos`/`hqStar_mem`/`hfeas`/`hcov`) are identical to
+S6's modulo the conclusion shape and pass the joint core-reconstruction test: granting all
+13 hands you a feasible test channel plus a *covering* `LossyCode` family at the covering
+rate `R₁`, but NOT the WZ binned code at the operational rate `R` — the index binning (to
+`codebookSize R n` messages), the bin conditional-typicality decoder, and the
+confusion-error exponent remain genuine work, now in the (stubbed) bodies of D2/D3 that
+this glue consumes. `hobj'` is the rate objective and `hfeas` the distortion
 feasibility (preconditions on the test channel, not the operational conclusion); `hcov` is
 the separately-established rate-distortion covering result, not a restatement of this
-lemma's WZ claim (the binning rate reduction `I(X;U) → I(X;U)−I(Y;U)` is the sorry content).
+lemma's WZ claim (the binning rate reduction `I(X;U) → I(X;U)−I(Y;U)` is the sorry content
+of D3). The residual is now transitive (D1 closed sorry-free; the `sorryAx` is inherited
+from D2/D3 via the sorry-free glue).
 Conclusion shape `∃ N, ∀ n, ∃ c, N ≤ n → dist ≤ D + δ` is non-degenerate: `∃ c` sits inside
 `∀ n` (per-block-length code) and the `n < N` branch is benignly vacuous (`WynerZivCode` is
 inhabited via `[Nonempty γ]` + `codebookSize_pos`), so the claim is NOT trivially true — for
@@ -1657,8 +1862,22 @@ lemma wz_perDelta_covering_binning_eventual
               ≤ (D + δ) + ε') :
     ∃ N : ℕ, ∀ n : ℕ, ∃ c : WynerZivCode (codebookSize R n) n α β γ,
       N ≤ n → c.expectedBlockDistortion P_XY d ≤ D + δ := by
-  -- @residual(plan:wyner-ziv-main-plan)
-  sorry
+  -- Step 1 (rate split): the covering rate identity D1 lets the covering family `hcov`
+  -- be fed at a covering rate `R₁` strictly above `I(X;U) = mutualInfoPmf qStar`, chosen
+  -- so the net rate `R₁ − I(Y;U)` still lies below `R` (the Wyner–Ziv objective `hobj'`).
+  -- The per-`n` construction (Steps 2–7) is then the giant `wz_perN_covering_binning_code`.
+  have hid : mutualInfoPmf qStar = wzMutualInfoXU (Fin k) q' :=
+    wz_mutualInfo_restriction_eq P_XY k q' κ' qStar hfact_eq hκ'sum hqStar_eq
+  obtain ⟨R₁, hR₁_lb, hsplit⟩ :
+      ∃ R₁ : ℝ, mutualInfoPmf qStar < R₁
+        ∧ R₁ - wzMutualInfoYU (Fin k) q' < R := by
+    refine ⟨wzMutualInfoXU (Fin k) q'
+        + (R - (wzMutualInfoXU (Fin k) q' - wzMutualInfoYU (Fin k) q')) / 2, ?_, ?_⟩
+    · rw [hid]; linarith [hobj']
+    · linarith [hobj']
+  exact wz_perN_covering_binning_code P_XY d R D k qf δ hδ q' κ' qStar d'
+    R₁ hfact_eq hκ'pos hκ'sum hobj' hqStar_eq hqStar_pos hqStar_mem hfeas hsplit
+    (fun ε' hε' => hcov R₁ hR₁_lb ε' hε')
 
 /-- **(S6) Covering + binning capstone (Steps 3–7).** Consuming the Step 1–2 covering
 data (the full-support factorisable joint `q'` with kernel `κ'`, the restricted
