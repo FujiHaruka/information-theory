@@ -1457,6 +1457,81 @@ noncomputable def wzLiftSupportCode
     if h : 0 < ∑ y, P_XY.real {(x i, y)} then ⟨x i, h⟩ else x₀)
   decoder := cSupp.decoder
 
+/-- **(B) Index-binning measure.** Hash each of the `M₁` covering-codebook *indices*
+`Fin M₁` independently to a uniformly random bin in `Fin M`. This is the `Fin M₁`-index
+analogue of `binningMeasure` (which hashes whole sequences `(Fin n → α) → Fin M`); it is
+the concrete `binMeas : Measure (Fin M₁ → Fin M)` that the codebook-restricted
+decoder-confusion exponent `wz_codebook_confusion_expectation_le` (S5b) consumes. -/
+noncomputable def wzIndexBinningMeasure (M₁ M : ℕ) [NeZero M] :
+    Measure (Fin M₁ → Fin M) :=
+  Measure.pi (fun _ : Fin M₁ ↦ uniformOn (Set.univ : Set (Fin M)))
+
+/-- The index-binning measure is a probability measure. -/
+instance wzIndexBinningMeasure.instIsProbabilityMeasure (M₁ M : ℕ) [NeZero M] :
+    IsProbabilityMeasure (wzIndexBinningMeasure M₁ M) := by
+  unfold wzIndexBinningMeasure
+  infer_instance
+
+/-- **Index-binning collision probability.** Two distinct covering indices `m' ≠ m`
+hash to the same bin with probability exactly `1/M`. Supplies `hcollision` to
+`wz_codebook_confusion_expectation_le` (S5b); the `Fin M₁`-index mirror of
+`binning_collision_prob`. -/
+lemma wzIndexBinningMeasure_collision {M₁ M : ℕ} [NeZero M]
+    {m' m : Fin M₁} (h : m' ≠ m) :
+    (wzIndexBinningMeasure M₁ M).real {f | f m' = f m} = (M : ℝ)⁻¹ := by
+  -- @residual(plan:wyner-ziv-main-plan)
+  sorry
+
+/-- **(D) Per-slack per-`n` good deterministic Wyner–Ziv code (Steps 3–6).** Consuming
+the same Step 1–2 covering data as the capstone `wz_perDelta_covering_binning` (S6),
+produce for every block length `n` a Wyner–Ziv code at the operational rate `R`
+(`codebookSize R n` messages), together with a single threshold `N` beyond which the
+code's expected block distortion is within `D + δ`.
+
+This is the covering + binning core: bin the covering index to `codebookSize R n`
+messages (`wzIndexBinningMeasure`), decode by the bin conditional-typicality search
+(`wzBinTypicalDecoder`, S4) reconstructing `γ^n` via `wzCodeOfCoveringBinning` (S3),
+bound the covering-failure (S5a `wz_covering_failure_prob_le`) and codebook-restricted
+decoder-confusion (S5b `wz_codebook_confusion_expectation_le`) error events, and
+derandomize (`exists_codebook_low_avg` / `exists_pair_le_of_binning_integral_le`) to a
+deterministic code whose distortion is squeezed to `D + δ`
+(`source_avg_distortion_le_simpler`, `ceil_exp_mul_exp_neg_tendsto_atTop`); the source
+support extension `α' → α` uses `wzLiftSupportCode` (S7) together with the sorry-free
+`wz_expectedBlockDistortion_source_agree`.
+
+The capstone `wz_perDelta_covering_binning` (S6) is the pure `Filter.atTop`/choice glue
+over this lemma — all covering + binning content is the (stubbed) body here. The
+hypotheses are the identical genuine Step 1–2 covering data / regularity as S6 (no
+error-probability or decoder-correctness claim is a hypothesis).
+@residual(plan:wyner-ziv-main-plan) -/
+lemma wz_perDelta_covering_binning_eventual
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (R D : ℝ)
+    (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (δ : ℝ) (hδ : 0 < δ)
+    (q' : α × β × Fin k → ℝ) (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
+    (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
+    (hκ'pos : ∀ x u, 0 < κ' x u)
+    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (hobj' : wzMutualInfoXU (Fin k) q' - wzMutualInfoYU (Fin k) q' < R)
+    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    (hqStar_pos : ∀ p, 0 < qStar p)
+    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    (hfeas : expectedDistortionPmf d' qStar ≤ D + δ)
+    (hcov : ∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' →
+        ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
+          Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
+          ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
+            c.expectedBlockDistortion
+                ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
+              ≤ (D + δ) + ε') :
+    ∃ N : ℕ, ∀ n : ℕ, ∃ c : WynerZivCode (codebookSize R n) n α β γ,
+      N ≤ n → c.expectedBlockDistortion P_XY d ≤ D + δ := by
+  -- @residual(plan:wyner-ziv-main-plan)
+  sorry
+
 /-- **(S6) Covering + binning capstone (Steps 3–7).** Consuming the Step 1–2 covering
 data (the full-support factorisable joint `q'` with kernel `κ'`, the restricted
 covering joint `qStar`, the covering proxy distortion `d'`, the covering feasibility
@@ -1473,14 +1548,18 @@ residual distortion excess to `0` (`source_avg_distortion_le_simpler`,
 All hypotheses are genuine covering data / regularity produced by Steps 1–2 — the
 covering `LossyCode` family, the distortion feasibility, positivity and simplex
 membership. No error-probability or decoder-correctness claim is a hypothesis (those
-are derived in the body via S5a/S5b). The body is stubbed for a later leg.
+are derived in the body via S5a/S5b). The body is now the pure `Filter.atTop`/choice
+glue over `wz_perDelta_covering_binning_eventual` (D), which carries all the covering +
+binning content; S6 itself is `sorry`-free and its residual is transitive (inherited
+from (D)).
 
 Independent honesty audit 2026-07-06: honest residual — signature PASSES the
 core-reconstruction test. Granting the 13 hypotheses (`q'`/`κ'`/`qStar`/`d'` witnesses +
 factorisation/positivity/simplex/feasibility, and `hcov` = the Step 1–2 covering
 `LossyCode` family) does NOT hand you the binned WZ-code achievability: the binning, the
-bin-decoder, and the confusion-error exponent remain the body's own (currently `sorry`)
-work — none is smuggled into a hypothesis. `hobj'` is the rate objective (precondition,
+bin-decoder, and the confusion-error exponent remain genuine proof work — now in the
+body of `wz_perDelta_covering_binning_eventual` (D), which S6 consumes as sorry-free
+glue — none is smuggled into a hypothesis. `hobj'` is the rate objective (precondition,
 not the conclusion); `hcov` is the separately-established rate-distortion covering result,
 not a bundling of S6's own claim. Classification `plan` (in-project binning composition,
 not a Mathlib gap) is correct.
@@ -1510,8 +1589,14 @@ lemma wz_perDelta_covering_binning
               ≤ (D + δ) + ε') :
     ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
       ∀ᶠ n in Filter.atTop, (c n).expectedBlockDistortion P_XY d ≤ D + δ := by
-  -- @residual(plan:wyner-ziv-main-plan)
-  sorry
+  -- Steps 3–7 are the covering + binning core `wz_perDelta_covering_binning_eventual`
+  -- (D), which produces, for every `n`, a code together with a single threshold `N`
+  -- beyond which the distortion is within `D + δ`. S6 is the pure choice + `atTop`
+  -- glue: assemble the per-`n` codes into a sequence and read off the eventual bound.
+  obtain ⟨N, hN⟩ := wz_perDelta_covering_binning_eventual P_XY d R D k qf δ hδ
+    q' κ' qStar d' hfact_eq hκ'pos hκ'sum hobj' hqStar_eq hqStar_pos hqStar_mem hfeas hcov
+  choose c hc using hN
+  exact ⟨c, Filter.eventually_atTop.2 ⟨N, fun n hn => hc n hn⟩⟩
 
 /-- **(BD) Per-slack Wyner–Ziv code family.** From a feasible factorisable test
 channel `qf` (auxiliary `Fin k`, distortion `≤ D`, Wyner–Ziv objective `< R`), for
