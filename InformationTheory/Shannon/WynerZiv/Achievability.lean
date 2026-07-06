@@ -1238,7 +1238,19 @@ codewords to get `M⁻¹ · M₁ · exp(−n·I_YU)`. The old signature's degene
 `μ{typical} ≤ exp(−n·I_YU) → 0`, contradicting positive mass. Regularity preconditions
 `hYs`/`htrueIdx` (measurability of the side-information block RV and of the covering
 index) are added for the Tonelli swap; both are discharged by S6, which supplies
-measurable i.i.d. RVs and a measurable covering index. -/
+measurable i.i.d. RVs and a measurable covering index.
+
+Independent honesty audit 2026-07-06: closed sorry-free (`#print axioms` =
+`[propext, Classical.choice, Quot.sound]`, sorryAx-free). All four honesty checks pass:
+(1) non-circular; (2) non-bundled — the E2 crux (codebook-restricted union over
+`m' : Fin M₁`, finding #10) lives in the body (`hUnion`/`hStepA` + `Finset.sum_const`
+supplies the `M₁` factor), so `hmass` (per-codeword AEP mass upper bound) and
+`hcollision` (`M⁻¹` collision) are genuine mass-bound + collision preconditions, not a
+bundling of the count; `hYs`/`htrueIdx` are pure measurability regularity; (3)
+non-degenerate (`NeZero M`; the `M₁ = 0` case is a genuine `0 ≤ 0` boundary, not vacuity
+abuse); (4) sufficiency — the body genuinely derives the conclusion, and the
+`I_YU → +∞` refutation is excluded by `hmass`.
+@audit:ok -/
 lemma wz_codebook_confusion_expectation_le {α' : Type*} [MeasurableSpace α']
     {Ω : Type*} [MeasurableSpace Ω] {k n M M₁ : ℕ} [Nonempty (Fin k)] [NeZero M]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
