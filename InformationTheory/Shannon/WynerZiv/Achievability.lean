@@ -1472,22 +1472,126 @@ instance wzIndexBinningMeasure.instIsProbabilityMeasure (M₁ M : ℕ) [NeZero M
   unfold wzIndexBinningMeasure
   infer_instance
 
+/-- Singleton mass for the index-binning measure. For any hash function
+`f : Fin M₁ → Fin M`, its `wzIndexBinningMeasure`-mass is `(1/M)^{M₁}` (each of the
+`M₁` covering indices independently picks one of `M` bins). The `Fin M₁`-index mirror
+of `binningMeasure_singleton_real`. -/
+lemma wzIndexBinningMeasure_singleton_real
+    (M₁ M : ℕ) [NeZero M] (f : Fin M₁ → Fin M) :
+    (wzIndexBinningMeasure M₁ M).real {f}
+      = (((M : ℝ))⁻¹) ^ (Fintype.card (Fin M₁)) := by
+  classical
+  haveI : MeasurableSingletonClass (Fin M₁ → Fin M) :=
+    Pi.instMeasurableSingletonClass
+  unfold wzIndexBinningMeasure
+  rw [measureReal_def, Measure.pi_singleton, ENNReal.toReal_prod]
+  -- Each factor is `uniformOn univ {f j}` = `1 / Fintype.card (Fin M)`.
+  have h_factor : ∀ j : Fin M₁,
+      ((uniformOn (Set.univ : Set (Fin M))) {f j}).toReal = (M : ℝ)⁻¹ := by
+    intro j
+    rw [uniformOn_univ]
+    rw [Measure.count_singleton, Fintype.card_fin]
+    rw [ENNReal.toReal_div]
+    simp
+  rw [Finset.prod_congr rfl (fun j _ ↦ h_factor j)]
+  rw [Finset.prod_const]
+  rfl
+
 /-- **Index-binning collision probability.** Two distinct covering indices `m' ≠ m`
 hash to the same bin with probability exactly `1/M`. Supplies `hcollision` to
 `wz_codebook_confusion_expectation_le` (S5b); the `Fin M₁`-index mirror of
-`binning_collision_prob`.
-
-Independent honesty audit 2026-07-06: honest residual, non-bundled (`@residual` on the
-`sorry` below). Genuine collision-probability leaf — the `Fin M₁`-index analogue of
-`binning_collision_prob` (same `(M : ℝ)⁻¹` conclusion, same `[NeZero M]`). Not vacuous:
-`[NeZero M]` makes `(M : ℝ)⁻¹` well-defined and `m' ≠ m` is load-bearing (for `m' = m`
-the mass is `1`, not `1/M`). Classification `plan:wyner-ziv-main-plan` correct (in-project
-`Measure.pi` computation, not a Mathlib gap). -/
-lemma wzIndexBinningMeasure_collision {M₁ M : ℕ} [NeZero M]
+`binning_collision_prob`. -/
+theorem wzIndexBinningMeasure_collision {M₁ M : ℕ} [NeZero M]
     {m' m : Fin M₁} (h : m' ≠ m) :
     (wzIndexBinningMeasure M₁ M).real {f | f m' = f m} = (M : ℝ)⁻¹ := by
-  -- @residual(plan:wyner-ziv-main-plan)
-  sorry
+  classical
+  haveI : Nonempty (Fin M₁) := ⟨m'⟩
+  haveI : MeasurableSingletonClass (Fin M₁ → Fin M) :=
+    Pi.instMeasurableSingletonClass
+  -- Expand the collision event as a finite sum of singleton masses.
+  set HashFn : Type _ := Fin M₁ → Fin M with hHashFn_def
+  haveI : DecidableEq (Fin M₁) := Classical.decEq _
+  haveI : DecidableEq (Fin M) := Classical.decEq _
+  haveI : Fintype HashFn := Pi.instFintype
+  haveI : DecidableEq HashFn := Classical.decEq _
+  have h_collision_sum :
+      (wzIndexBinningMeasure M₁ M).real {f : HashFn | f m' = f m}
+        = ∑ f : HashFn, (wzIndexBinningMeasure M₁ M).real {f} *
+            (if f m' = f m then (1 : ℝ) else 0) := by
+    set S : Finset HashFn := (Finset.univ : Finset HashFn).filter (fun f ↦ f m' = f m)
+    have h_S_eq : (S : Set HashFn) = {f : HashFn | f m' = f m} := by
+      ext f; simp [S]
+    rw [← h_S_eq, ← sum_measureReal_singleton (μ := wzIndexBinningMeasure M₁ M) S]
+    rw [Finset.sum_filter]
+    refine Finset.sum_congr rfl (fun f _ ↦ ?_)
+    split_ifs with hfx
+    · rw [mul_one]
+    · rw [mul_zero]
+  rw [h_collision_sum]
+  -- Substitute the singleton mass `(1/M)^{M₁}`.
+  have h_sub : ∀ f : HashFn,
+      (wzIndexBinningMeasure M₁ M).real {f} * (if f m' = f m then (1 : ℝ) else 0)
+        = ((M : ℝ)⁻¹) ^ (Fintype.card (Fin M₁)) *
+            (if f m' = f m then (1 : ℝ) else 0) := by
+    intro f
+    rw [wzIndexBinningMeasure_singleton_real M₁ M f]
+  rw [Finset.sum_congr rfl (fun f _ ↦ h_sub f)]
+  rw [← Finset.mul_sum]
+  -- The indicator sum counts `{f | f m' = f m}`.
+  have h_sum_indicator :
+      (∑ f : HashFn, (if f m' = f m then (1 : ℝ) else 0))
+        = (Fintype.card {f : HashFn // f m' = f m} : ℝ) := by
+    rw [Fintype.card_subtype]
+    rw [← Finset.sum_filter]
+    rw [Finset.sum_const]
+    simp
+  rw [h_sum_indicator]
+  -- Count `{f | f m' = f m}` via the bijection that drops the coordinate `m`
+  -- (whose value is forced to equal `f m'`).
+  let toFun : {f : HashFn // f m' = f m} → ({j : Fin M₁ // j ≠ m} → Fin M) :=
+    fun ⟨f, _⟩ j ↦ f j.1
+  let invFun : ({j : Fin M₁ // j ≠ m} → Fin M) → {f : HashFn // f m' = f m} :=
+    fun g ↦ ⟨fun j ↦ if hj : j = m then g ⟨m', h⟩ else g ⟨j, hj⟩, by simp [h]⟩
+  have left_inv : ∀ p, invFun (toFun p) = p := by
+    intro ⟨f, hf⟩
+    apply Subtype.ext
+    funext j
+    by_cases hj : j = m
+    · subst hj
+      show (if hjj : j = j then f m' else f j) = f j
+      simp [hf.symm]
+    · show (if hjj : j = m then f m' else f j) = f j
+      simp [hj]
+  have right_inv : ∀ g, toFun (invFun g) = g := by
+    intro g
+    funext ⟨j, hj⟩
+    show (if hj_eq : j = m then g ⟨m', h⟩ else g ⟨j, hj_eq⟩) = g ⟨j, hj⟩
+    simp [hj]
+  set e : {f : HashFn // f m' = f m} ≃ ({j : Fin M₁ // j ≠ m} → Fin M) :=
+    { toFun := toFun, invFun := invFun, left_inv := left_inv, right_inv := right_inv }
+  rw [Fintype.card_congr e]
+  have h_card_pi :
+      Fintype.card ({j : Fin M₁ // j ≠ m} → Fin M)
+        = M ^ (Fintype.card (Fin M₁) - 1) := by
+    rw [Fintype.card_pi, Finset.prod_const, Fintype.card_fin]
+    congr 1
+    rw [Finset.card_univ, Fintype.card_subtype_compl]
+    simp
+  rw [h_card_pi]
+  set N : ℕ := Fintype.card (Fin M₁) with hN_def
+  have hN_pos : 1 ≤ N := by
+    rw [hN_def]
+    exact Fintype.card_pos
+  have hM_ne : (M : ℝ) ≠ 0 := by
+    have : NeZero M := inferInstance
+    exact_mod_cast NeZero.ne M
+  push_cast
+  rw [inv_pow]
+  have hN_eq : (M : ℝ) ^ N = (M : ℝ) ^ (N - 1) * (M : ℝ) := by
+    conv_lhs => rw [show N = (N - 1) + 1 from (Nat.sub_add_cancel hN_pos).symm]
+    rw [pow_succ]
+  rw [hN_eq, mul_inv, mul_comm ((M : ℝ) ^ (N - 1))⁻¹ _, mul_assoc]
+  rw [inv_mul_cancel₀ (pow_ne_zero _ hM_ne), mul_one]
 
 /-- **(D) Per-slack per-`n` good deterministic Wyner–Ziv code (Steps 3–6).** Consuming
 the same Step 1–2 covering data as the capstone `wz_perDelta_covering_binning` (S6),
