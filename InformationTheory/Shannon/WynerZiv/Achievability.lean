@@ -1235,13 +1235,16 @@ the order of integration, bound the per-`ω` `binMeas`-slice by union bound + `h
 as `M⁻¹ · #{m' typical}`, integrate over `μ`, then apply `hmass` to each of the `M₁`
 codewords to get `M⁻¹ · M₁ · exp(−n·I_YU)`. The old signature's degenerate refutation
 (`I_YU → +∞` with positive typical mass) is now excluded: `hmass` would force
-`μ{typical} ≤ exp(−n·I_YU) → 0`, contradicting positive mass. Body is `sorry` and S6 does
-not consume this yet. @residual(plan:wyner-ziv-main-plan) -/
+`μ{typical} ≤ exp(−n·I_YU) → 0`, contradicting positive mass. Regularity preconditions
+`hYs`/`htrueIdx` (measurability of the side-information block RV and of the covering
+index) are added for the Tonelli swap; both are discharged by S6, which supplies
+measurable i.i.d. RVs and a measurable covering index. -/
 lemma wz_codebook_confusion_expectation_le {α' : Type*} [MeasurableSpace α']
     {Ω : Type*} [MeasurableSpace Ω] {k n M M₁ : ℕ} [Nonempty (Fin k)] [NeZero M]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Us : ℕ → Ω → Fin k) (Ys : ℕ → Ω → β) (ε : ℝ)
     (c₁ : LossyCode M₁ n α' (Fin k)) (trueIdx : Ω → Fin M₁)
+    (hYs : ∀ i, Measurable (Ys i)) (htrueIdx : Measurable trueIdx)
     (binMeas : Measure (Fin M₁ → Fin M)) [IsProbabilityMeasure binMeas]
     (I_YU : ℝ)
     (hmass : ∀ m' : Fin M₁,
@@ -1257,8 +1260,174 @@ lemma wz_codebook_confusion_expectation_le {α' : Type*} [MeasurableSpace α']
               ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε}
         ∂binMeas
       ≤ (M₁ : ℝ) * Real.exp (-(n : ℝ) * I_YU) * ((M : ℝ))⁻¹ := by
-  -- @residual(plan:wyner-ziv-main-plan)
-  sorry
+  classical
+  haveI : MeasurableSingletonClass (Fin M₁ → Fin M) := Pi.instMeasurableSingletonClass
+  set jts : Set ((Fin n → Fin k) × (Fin n → β)) :=
+    ChannelCoding.jointlyTypicalSet μ Us Ys n ε with hjts_def
+  have hjts_meas : MeasurableSet jts :=
+    ChannelCoding.measurableSet_jointlyTypicalSet μ Us Ys n ε
+  -- Measurability of the per-codeword typicality set in `ω`.
+  have hC_meas : ∀ m' : Fin M₁,
+      MeasurableSet {ω | (c₁.decoder m', jointRV Ys n ω) ∈ jts} := by
+    intro m'
+    have hmap : Measurable (fun ω => (c₁.decoder m', jointRV Ys n ω)) :=
+      measurable_const.prodMk (measurable_jointRV Ys hYs n)
+    exact hmap hjts_meas
+  -- Measurability of the per-`(f, m')` confusion set in `ω`.
+  have hbad_meas : ∀ (f : Fin M₁ → Fin M) (m' : Fin M₁),
+      MeasurableSet {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+        ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} := by
+    intro f m'
+    have hA : MeasurableSet {ω | m' ≠ trueIdx ω} := by
+      have hpre : {ω | m' ≠ trueIdx ω} = (trueIdx ⁻¹' {m'})ᶜ := by
+        ext ω
+        simp only [Set.mem_setOf_eq, Set.mem_compl_iff, Set.mem_preimage,
+          Set.mem_singleton_iff]
+        exact ne_comm
+      rw [hpre]; exact (htrueIdx (measurableSet_singleton m')).compl
+    have hB : MeasurableSet {ω | f m' = f (trueIdx ω)} :=
+      htrueIdx ((Set.toFinite {m₀ : Fin M₁ | f m' = f m₀}).measurableSet)
+    exact hA.inter (hB.inter (hC_meas m'))
+  -- Step D: the per-`m'` integral bound `∫ f, μ.real (confusion set) ≤ exp(−n·I_YU)·M⁻¹`.
+  have hD : ∀ m' : Fin M₁,
+      ∫ f, μ.real {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂binMeas
+        ≤ Real.exp (-(n : ℝ) * I_YU) * ((M : ℝ))⁻¹ := by
+    intro m'
+    have h_nn : 0 ≤ᵐ[binMeas] fun f => μ.real {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+        ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} :=
+      Filter.Eventually.of_forall fun _ => measureReal_nonneg
+    have h_aesm : AEStronglyMeasurable
+        (fun f => μ.real {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}) binMeas :=
+      (measurable_of_finite _).aestronglyMeasurable
+    rw [integral_eq_lintegral_of_nonneg_ae h_nn h_aesm,
+      ChannelCoding.lintegral_ofReal_measureReal_eq_lintegral_measure μ binMeas
+        (fun f => {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts})]
+    -- Tonelli swap over `binMeas ⊗ μ`.
+    have hE_meas : MeasurableSet {q : (Fin M₁ → Fin M) × Ω |
+        q.2 ∈ {ω | m' ≠ trueIdx ω ∧ q.1 m' = q.1 (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}} := by
+      have h_decomp : {q : (Fin M₁ → Fin M) × Ω |
+          q.2 ∈ {ω | m' ≠ trueIdx ω ∧ q.1 m' = q.1 (trueIdx ω)
+            ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}}
+          = ⋃ f₀ : Fin M₁ → Fin M, ({f₀} : Set (Fin M₁ → Fin M)) ×ˢ
+            {ω | m' ≠ trueIdx ω ∧ f₀ m' = f₀ (trueIdx ω)
+              ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} := by
+        ext ⟨g, ω⟩; simp
+      rw [h_decomp]
+      exact MeasurableSet.iUnion fun f₀ =>
+        (measurableSet_singleton f₀).prod (hbad_meas f₀ m')
+    rw [ChannelCoding.lintegral_measure_swap_of_prod_measurableSet binMeas μ
+      (fun f => {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+        ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}) hE_meas]
+    simp only [Set.mem_setOf_eq]
+    -- Per-`ω` inner bound: the `binMeas`-slice is `≤ M⁻¹` on the typical set, else `0`.
+    have h_inner : ∀ ω : Ω,
+        binMeas {f | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}
+          ≤ ENNReal.ofReal ((M : ℝ)⁻¹) *
+              Set.indicator {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts} 1 ω := by
+      intro ω
+      by_cases htyp : (c₁.decoder m', jointRV Ys n ω) ∈ jts
+      · by_cases hidx : m' = trueIdx ω
+        · have hempty : {f : Fin M₁ → Fin M | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+              ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} = ∅ := by
+            ext f
+            simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false]
+            rintro ⟨hne, -, -⟩
+            exact hne hidx
+          rw [hempty]; simp
+        · have hset : {f : Fin M₁ → Fin M | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+              ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}
+              = {f | f m' = f (trueIdx ω)} := by
+            ext f
+            simp only [Set.mem_setOf_eq]
+            exact ⟨fun h => h.2.1, fun h => ⟨hidx, h, htyp⟩⟩
+          rw [hset]
+          have hmem : ω ∈ {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts} := htyp
+          rw [Set.indicator_of_mem hmem]
+          simp only [Pi.one_apply, mul_one]
+          rw [← ofReal_measureReal (measure_ne_top binMeas {f | f m' = f (trueIdx ω)}),
+            hcollision m' (trueIdx ω) hidx]
+      · have hempty : {f : Fin M₁ → Fin M | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+            ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} = ∅ := by
+          ext f
+          simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false]
+          rintro ⟨-, -, htyp'⟩
+          exact htyp htyp'
+        rw [hempty]; simp
+    have hind_meas : Measurable
+        (Set.indicator {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts} (1 : Ω → ℝ≥0∞)) :=
+      measurable_const.indicator (hC_meas m')
+    have h_lint_le :
+        ∫⁻ ω, binMeas {f | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+            ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂μ
+          ≤ ENNReal.ofReal (Real.exp (-(n : ℝ) * I_YU) * (M : ℝ)⁻¹) := by
+      calc ∫⁻ ω, binMeas {f | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+              ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂μ
+          ≤ ∫⁻ ω, ENNReal.ofReal ((M : ℝ)⁻¹) *
+              Set.indicator {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts} 1 ω ∂μ :=
+            lintegral_mono h_inner
+        _ = ENNReal.ofReal ((M : ℝ)⁻¹) *
+              ∫⁻ ω, Set.indicator {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts} 1 ω ∂μ :=
+            lintegral_const_mul _ hind_meas
+        _ = ENNReal.ofReal ((M : ℝ)⁻¹) *
+              μ {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts} := by
+            rw [lintegral_indicator_one (hC_meas m')]
+        _ ≤ ENNReal.ofReal ((M : ℝ)⁻¹) *
+              ENNReal.ofReal (Real.exp (-(n : ℝ) * I_YU)) := by
+            gcongr
+            calc μ {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts}
+                = ENNReal.ofReal (μ.real {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts}) :=
+                  (ofReal_measureReal (measure_ne_top μ _)).symm
+              _ ≤ ENNReal.ofReal (Real.exp (-(n : ℝ) * I_YU)) :=
+                  ENNReal.ofReal_le_ofReal (hmass m')
+        _ = ENNReal.ofReal (Real.exp (-(n : ℝ) * I_YU) * (M : ℝ)⁻¹) := by
+            rw [← ENNReal.ofReal_mul (by positivity)]
+            congr 1
+            ring
+    calc (∫⁻ ω, binMeas {f | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+            ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂μ).toReal
+        ≤ (ENNReal.ofReal (Real.exp (-(n : ℝ) * I_YU) * (M : ℝ)⁻¹)).toReal :=
+          ENNReal.toReal_mono ENNReal.ofReal_ne_top h_lint_le
+      _ = Real.exp (-(n : ℝ) * I_YU) * (M : ℝ)⁻¹ :=
+          ENNReal.toReal_ofReal (by positivity)
+  -- Union bound over the codebook members at each hash `f`, then integrate the sum.
+  have hUnion : ∀ f : Fin M₁ → Fin M,
+      {ω | ∃ m' : Fin M₁, m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}
+        = ⋃ m' ∈ (Finset.univ : Finset (Fin M₁)),
+            {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+              ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} := by
+    intro f; ext ω; simp
+  have hStepA : ∀ f : Fin M₁ → Fin M,
+      μ.real {ω | ∃ m' : Fin M₁, m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}
+        ≤ ∑ m' : Fin M₁, μ.real {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+            ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} := by
+    intro f
+    rw [hUnion f]
+    exact measureReal_biUnion_finset_le Finset.univ _
+  have hInt_outer : Integrable (fun f => μ.real {ω | ∃ m' : Fin M₁, m' ≠ trueIdx ω
+      ∧ f m' = f (trueIdx ω) ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}) binMeas :=
+    Integrable.of_finite
+  have hInt_sum : Integrable (fun f => ∑ m' : Fin M₁, μ.real {ω | m' ≠ trueIdx ω
+      ∧ f m' = f (trueIdx ω) ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}) binMeas :=
+    Integrable.of_finite
+  calc ∫ f, μ.real {ω | ∃ m' : Fin M₁, m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂binMeas
+      ≤ ∫ f, ∑ m' : Fin M₁, μ.real {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂binMeas :=
+        integral_mono hInt_outer hInt_sum hStepA
+    _ = ∑ m' : Fin M₁, ∫ f, μ.real {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂binMeas :=
+        integral_finsetSum Finset.univ fun _ _ => Integrable.of_finite
+    _ ≤ ∑ _m' : Fin M₁, Real.exp (-(n : ℝ) * I_YU) * ((M : ℝ))⁻¹ :=
+        Finset.sum_le_sum fun m' _ => hD m'
+    _ = (M₁ : ℝ) * Real.exp (-(n : ℝ) * I_YU) * ((M : ℝ))⁻¹ := by
+        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]; ring
 
 /-- **(S7) Source-extension lift `α' → α`.** Lift a Wyner–Ziv code over the source
 support subtype `α' := {x // 0 < P_X x}` to a code over the full alphabet `α`, using
