@@ -2648,6 +2648,58 @@ lemma wz_perN_covering_binning_code
               ≤ (D + δ / 2) + ε') :
     ∃ N : ℕ, ∀ n : ℕ, ∃ c : WynerZivCode (codebookSize R n) n α β γ,
       N ≤ n → c.expectedBlockDistortion P_XY d ≤ D + δ := by
+  classical
+  -- The auxiliary covering alphabet is nonempty (the row-stochastic kernel of the
+  -- factorisable test channel forces `k > 0`).
+  haveI hkne : Nonempty (Fin k) := wz_nonempty_of_factorizable hqf.1
+  -- Reduce the `∃ N, ∀ n, ∃ c, N ≤ n → …` conclusion to the per-`n` (for `n ≥ N`)
+  -- code-existence claim; the `n < N` branch is discharged by an arbitrary inhabitant of
+  -- `WynerZivCode` (available since `[Nonempty γ]` and `codebookSize R n > 0`).
+  suffices hfam : ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
+      ∃ c : WynerZivCode (codebookSize R n) n α β γ,
+        c.expectedBlockDistortion P_XY d ≤ D + δ by
+    obtain ⟨N, hN⟩ := hfam
+    refine ⟨N, fun n => ?_⟩
+    by_cases hn : N ≤ n
+    · obtain ⟨c, hc⟩ := hN n hn
+      exact ⟨c, fun _ => hc⟩
+    · exact ⟨{ encoder := fun _ => ⟨0, codebookSize_pos R n⟩,
+                decoder := fun _ _ => Classical.arbitrary γ },
+             fun hle => absurd hle hn⟩
+  -- ═══════════════════════════════════════════════════════════════════════════
+  -- Analytic core (Legs A–D). Six-step assembly; STEP 1 (covering-side derandomize) is
+  -- genuine glue below; STEPS 1'–6 remain a `sorry` tagged `@residual(plan:wz-binning-covering)`.
+  -- ═══════════════════════════════════════════════════════════════════════════
+  -- STEP 1 (derandomize, covering side — genuine).  Feed `hcov₁` at slack `ε' := δ/4` to
+  -- obtain the threshold `N` and, for every `n ≥ N`, the covering codebook
+  -- `c₁ : LossyCode M n α' (Fin k)` whose covering distortion — over the i.i.d. covering
+  -- ambient `(rdAmbient qStar).map (iidXs 0)`, w.r.t. the proxy `d'` — is `≤ (D+δ/2)+δ/4`,
+  -- with codebook size `M ≥ ⌈exp(n·R₁)⌉`.
+  obtain ⟨N, hN⟩ := hcov₁ (δ / 4) (div_pos hδ (by norm_num))
+  refine ⟨N, fun n hn => ?_⟩
+  obtain ⟨M, hM_ge, c₁, hc₁_dist⟩ := hN n hn
+  -- STEPS 1'–6 (the residual analytic body):
+  --  STEP 1' (derandomize, binning side): derandomize the index binning
+  --    `f : Fin M → Fin (codebookSize R n)` via `exists_pair_le_of_binning_integral_le`,
+  --    fed the averaged confusion bound from S5b (STEP 4).
+  --  STEP 2 (Leg C bridge): `wz_covering_binning_distortion_decomp` gives, for the code
+  --    `wzCodeOfCoveringBinning c₁ f qf.2 (wzBinTypicalDecoder …)`,
+  --      dist ≤ (D+δ/2) + distortionMax · (Pr[E1]+Pr[E2]).
+  --  STEP 3 (Pr[E1]→0): covering-failure typicality — `wz_covering_failure_prob_le` (S5a)
+  --    fed the mass lower bound via gateway-2 `wz_covering_sideInfo_mass_ge`, over the
+  --    covering ambient `rdAmbient qStar` (Leg A).
+  --  STEP 4 (Pr[E2]→0): codebook-restricted confusion —
+  --    `wz_codebook_confusion_expectation_le` (S5b) fed D2
+  --    `wz_covering_codeword_sideInfo_mass_le` + collision
+  --    `wzIndexBinningMeasure_collision`, over the (U,Y) side-info ambient
+  --    `rdAmbient (wzSideInfoMarginal P_XY κ')` (Leg A).
+  --  STEP 5 (squeeze): distortionMax · (Pr[E1]+Pr[E2]) → 0 exponentially, so `≤ δ/2` for
+  --    `n` beyond the threshold (`ceil_exp_mul_exp_neg_tendsto_atTop`,
+  --    `exp_neg_tendsto_zero_of_tendsto_atTop`, `wz_tendsto_exp_mul_codebookSize_inv`);
+  --    combined with the STEP 2 proxy `≤ D+δ/2` this gives `≤ D+δ`.
+  --  STEP 6 (α'→α lift): package via `wzLiftSupportCode`, transporting the source measure
+  --    (Leg B `wz_covering_source_measure_map_val_eq`) and the null-set decoder agreement
+  --    (`wz_expectedBlockDistortion_source_agree`).
   -- @residual(plan:wz-binning-covering)
   sorry
 
