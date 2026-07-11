@@ -2545,7 +2545,12 @@ Here `α' := {x // 0 < P_X x}`, `β' := {y // 0 < P_Y y}`, `dα' x' g := d x'.1 
 /-- The co-restricted source pmf `P_XY` on `α' × β` (source restricted to the positive
 `X`-marginal subtype `α'`, side information kept on full `β`) lies in the standard simplex;
 hence `pmfToMeasure` of it is a probability measure. Off-support `X`-atoms carry zero mass,
-so the total collapses to the full source mass `1`. -/
+so the total collapses to the full source mass `1`.
+
+Independent honesty audit 2026-07-11: sorry-free and sorryAx-free (`#print axioms` =
+`[propext, Classical.choice, Quot.sound]`); genuine simplex-membership (nonneg + total mass
+`1`), non-vacuous.
+@audit:ok -/
 private lemma wz_QXY_mem_stdSimplex
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] :
     (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})
@@ -2577,7 +2582,14 @@ distortion is `≤ distortionMax ≤ ideal + distortionMax` (the ideal is nonneg
 covering-distortion-failure event `E1` of `wz_covering_binning_distortion_decomp` is dropped:
 `hcov₁` supplies an *expected* covering distortion (not typicality), so `E1` is not squeezable
 and the ideal term is carried as an integral, not bounded by a constant `P`.
-@residual(plan:wz-binning-covering) -/
+
+Independent honesty audit 2026-07-11: sorry-free and sorryAx-free (`#print axioms` =
+`[propext, Classical.choice, Quot.sound]`). Genuine: the pointwise bound
+`F p ≤ ideal p + dMax · 1_E2 p` (inside `E2`, `F ≤ dMax ≤ ideal + dMax` since `ideal ≥ 0`;
+outside `E2` the bin decoder recovers the true covering codeword, so `F = ideal`) integrates to
+the claim. Decoder-agnostic, non-vacuous, no bundled hypothesis (`μ`/`Us`/`Ys`/`ε` merely
+parametrize the decoder). This decl carries no `sorry`; the earlier `@residual` is cleared.
+@audit:ok -/
 lemma wz_expectedBlockDistortion_le_ideal_add_E2
     {α' : Type*} [Fintype α'] [DecidableEq α'] [Nonempty α']
     [MeasurableSpace α'] [MeasurableSingletonClass α']
@@ -2680,7 +2692,13 @@ with the co-restricted distortion `dα' x' g := d x'.1 g`. Pure source-measure c
 variables (`α' → α`), the distortion-side companion of Leg B
 `wz_covering_source_measure_map_val_eq` and the null-set transport
 `wz_expectedBlockDistortion_source_agree`.
-@residual(plan:wz-binning-covering) -/
+
+Independent honesty audit 2026-07-11: sorry-free and sorryAx-free (`#print axioms` =
+`[propext, Classical.choice, Quot.sound]`). Genuine change of variables along
+`φ = (Subtype.val, id)` (`(Q_XY)^n.map φ = P_XY^n`, off-support `X`-atoms null both sides via
+`wz_QXY_mem_stdSimplex`), non-vacuous. This decl carries no `sorry`; the earlier `@residual`
+is cleared.
+@audit:ok -/
 lemma wz_lift_expectedBlockDistortion_eq
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) {M n : ℕ}
@@ -2761,6 +2779,14 @@ ambient `(rdAmbient qStar).map (iidXs 0)` with the proxy distortion `d'`. Fubini
 product source + the proxy reconciliation `hd'_eq` (`d' = 𝔼_{Y|X}[d ∘ qf.2]`) + Leg B source
 change of variables (`wz_covering_source_measure_map_val_eq`). This is the identity that lets
 `hcov₁`'s covering bound bound the ideal term.
+
+Independent honesty audit 2026-07-11: honest tier-2 residual, classification correct.
+Non-circular (no hypothesis is the conclusion), non-bundled (`hd'_eq`/`hqStar_eq`/`hqStar_mem`/
+`hκ'sum` are the reconciliation + source-consistency preconditions — same kind as D3's — not the
+identity itself; the Fubini + change-of-variables identity is genuine body work). Sufficiency
+OK: `hd'_eq` pins `d'` to `𝔼_{Y|X}[d ∘ qf.2]` and `hqStar_eq` pins `qStar`'s X-marginal, so the
+two expectations genuinely coincide. Class `plan` correct (in-project atom gap, not a Mathlib
+wall; slug matches `wz-binning-covering-plan`).
 @residual(plan:wz-binning-covering) -/
 lemma wz_ideal_expectation_eq_covering
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -2799,6 +2825,14 @@ identification.
 The covering codebook size upper bound `(M₁ : ℝ) ≤ exp(n·R₁) + 1` is a genuine precondition:
 the confusion count scales with the number of codewords, so the squeeze needs `M₁` capped near
 `⌈exp(n·R₁)⌉` (the size the covering theorem actually produces), not merely bounded below.
+
+Independent honesty audit 2026-07-11: honest tier-2 residual, classification correct.
+Non-bundled: the E2 probability is the CONCLUSION (bounded in the body), not a hypothesis; the
+`(M₁ : ℝ) ≤ exp(n·R₁) + 1` precondition is a GENUINE size precondition (correctly present here —
+the underivability of this bound is a defect of the *caller* D3, not of this lemma), `hsplit`
+is the rate gap, `hκ'pos`/`hκ'sum`/`hfact_eq` are regularity. Sufficiency OK: with `M₁ ≲
+exp(n·R₁)` and `R₁ − I(Y;U) < R` the confusion mass `M₁ · exp(−n·I_YU) / codebookSize R n → 0`.
+Class `plan` correct.
 @residual(plan:wz-binning-covering) -/
 lemma wz_exists_binning_E2_bound
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -2919,8 +2953,33 @@ conclusion. Both new hyps discharged by construction at the caller
 IS that expression, `hqf` = the pre-`rw` input copy `hqf₀`), and threaded — not dropped or
 re-proven — through D/S6/`wz_perDelta_codes_exist`. Caller sorryAx-free (`#print axioms` =
 `[propext, Classical.choice, Quot.sound]`); D3 carries only transitive `sorryAx` from its own
-body. No third under-hypothesization axis found.
+body. (The Leg-C.5 audit's "no third axis" conclusion is OVERTURNED — see the M-axis finding
+below.)
 Classification `plan` correct (in-project, not a Mathlib wall).
+
+Independent honesty audit 2026-07-11 (Leg D, M-axis): DEFECT LEFT IN PLACE
+(under-hypothesization, 3rd axis of the Leg-0/Leg-C.5 family; the Leg-C.5 "no third axis" claim
+above was wrong). `hcov₁` supplies only a LOWER bound on the covering codebook size
+(`⌈exp(n·R₁)⌉ ≤ M`), but the bin-decoder confusion count scales LINEARLY with the covering
+codebook size (S5b `wz_codebook_confusion_expectation_le`: `≤ (codewords) · exp(−n·I_YU) /
+(bins)`), so the E2 squeeze (A3 `wz_exists_binning_E2_bound`, which correctly TAKES the upper
+bound as a precondition) needs `M` bounded ABOVE — a fact `hcov₁` does not expose. The body
+localizes the gap honestly as `hM_ub : (M : ℝ) ≤ exp(n·R₁) + 1`, a `sorry` NOT derivable from
+the current hypotheses: it is FALSE for an inflated-`M` `hcov₁` witness (redundant covering
+codewords never hurt covering distortion, so they satisfy `hcov₁`, yet drive `Pr[E2] → 1`, so
+the constructed code's distortion `→ distortionMax > D + δ`). Independently verified: the
+inflated-`M` counterexample satisfies every D3 hypothesis while defeating the intended
+construction, and `hM_ub` is genuinely non-vacuous (`hcov₁` only lower-bounds `M`). Per the
+Leg-0/Leg-C.5 discipline this decl is FALSE-AS-FRAMED in the M-direction until `hcov₁` is
+tightened to pin `M = codebookSize R₁ n` (threaded through D/S6/`wz_perDelta_codes_exist`,
+discharged by construction at `wz_coveringFamily_of_testChannel` — the Leg-C.6 fix). First
+choice (fix the signature this session) was infeasible: the launching brief over-constrained
+"D3 signature unchanged", deferring the precondition-tightening to Leg C.6. The fix stays
+Achievability.lean-file-contained and does NOT touch the headline
+(`wz_goodCode_exists_of_testChannel` / `wyner_ziv_achievability`) signature (parent #9 crux
+invariant). A2/A3 remain genuine tier-2 residuals; only D3's discharge of the M-bound is
+defective.
+@audit:defect(false-statement) @audit:closed-by-successor(wz-binning-covering)
 @residual(plan:wz-binning-covering) -/
 lemma wz_perN_covering_binning_code
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
