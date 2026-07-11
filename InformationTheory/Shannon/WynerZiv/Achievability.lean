@@ -2596,6 +2596,24 @@ by `rfl` (the returned `d'` witness IS that expression) and `hqf` = the original
 The distortion-decomposition bridge (Leg C `wz_covering_binning_distortion_decomp`) is
 built standalone and NOT on top of this — the signature is now honest and the `sorry` is
 honestly closeable as-framed.
+
+Independent honesty audit 2026-07-11 (Leg C.5, reconciliation axis): PASS. Every
+distortion-relevant parameter is load-bearing (no surviving degenerate counterexample):
+`hd'_eq` pins `d'` to `𝔼_{Y|X}[d ∘ qf.2]` — the `d' := 0` counterexample is killed since
+`d' = 0` now forces `d ∘ qf.2 = 0` on the support (`d ≥ 0`, weighted `toNNReal`), so the
+real WZ distortion is genuinely 0; `hqStar_eq`+`hκ'sum` pin `qStar`'s X-marginal to `P_X`
+(source-consistency, no third gap); `hfeas`+reconcile (`f := qf.2`) equate the covering
+budget under `d'` with `wzExpectedDistortion d q' qf.2`, connecting the proxy budget to the
+real block distortion (over `P_XY^n`) via `qf.2`, the SAME reconstruction that
+`wzCodeOfCoveringBinning`/the Leg-C decomposition bridge use. `hqf` is a legitimate
+factorizability/feasibility precondition (redundant-but-honestly-discharged for the
+distortion axis, supplies the Markov `U-X-Y` structure), NOT load-bearing on the operational
+conclusion. Both new hyps discharged by construction at the caller
+(`wz_coveringFamily_of_testChannel`, L961: `hd'_eq` by `rfl` since the returned `d'` witness
+IS that expression, `hqf` = the pre-`rw` input copy `hqf₀`), and threaded — not dropped or
+re-proven — through D/S6/`wz_perDelta_codes_exist`. Caller sorryAx-free (`#print axioms` =
+`[propext, Classical.choice, Quot.sound]`); D3 carries only transitive `sorryAx` from its own
+body. No third under-hypothesization axis found.
 Classification `plan` correct (in-project, not a Mathlib wall).
 @residual(plan:wz-binning-covering) -/
 lemma wz_perN_covering_binning_code
