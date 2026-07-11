@@ -2225,6 +2225,104 @@ lemma wzSideInfoMarginal_subtype_nonempty
         Finset.single_le_sum (f := fun x => P_XY.real {(x, y₀)})
           (fun x _ ↦ measureReal_nonneg) (Finset.mem_univ x₀)
 
+/-! ### Leg B — `α' → α` source-measure change of variables
+
+The covering `LossyCode` (D3 hypothesis `hcov₁`) measures its block distortion under the
+i.i.d. covering ambient `(rdAmbient qStar).map (iidXs 0)` on the source-support subtype
+`α' := {x // 0 < P_X x}`, whereas the Wyner–Ziv conclusion measures the lifted code under
+`Measure.pi P_XY` on `α × β`. This block reconciles the *source* side of that change of
+variables: the covering ambient's `X`-marginal, pushed from `α'` back to the full alphabet
+`α` by `Subtype.val`, is exactly the source `X`-marginal `P_XY.map Prod.fst`. On the
+support the covering `X`-marginal singleton is `∑_u qStar(⟨a,·⟩, u) = ∑_y P_XY{(a,y)}` (by
+`hqStar_eq` and `hκ'sum`); off the support both sides carry zero mass. This is pure
+source-measure transport — no decoder, error event, or distortion function enters — the
+source-measure companion of the null-set decoder transport
+`wz_expectedBlockDistortion_source_agree` (S2). -/
+
+/-- The covering ambient's `X`-marginal, pushed to the full alphabet `α` by `Subtype.val`,
+agrees with the source `X`-marginal `P_XY.map Prod.fst` on every singleton. -/
+private lemma wz_covering_source_marginal_real_singleton
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ}
+    (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    (a : α) :
+    (((rdAmbient qStar).map (ChannelCoding.iidXs 0)).map Subtype.val).real {a}
+      = (P_XY.map Prod.fst).real {a} := by
+  classical
+  -- The covering data forces the index type `α' × Fin k` to be nonempty (`∑ = 1`), so the
+  -- `Nonempty` instances the ambient-marginal lemmas need are available.
+  haveI hne_prod : Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
+    Finset.univ_nonempty_iff.mp
+      (Finset.nonempty_of_sum_ne_zero (by rw [hqStar_mem.2]; exact one_ne_zero))
+  haveI : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := hne_prod.map Prod.fst
+  haveI : Nonempty (Fin k) := hne_prod.map Prod.snd
+  -- The source `X`-marginal singleton equals the coordinate sum `∑_y P_XY{(a,y)}`.
+  have hRHS : (P_XY.map Prod.fst).real {a} = ∑ y, P_XY.real {(a, y)} :=
+    (sum_real_prod_singleton_of_map_fst_eq P_XY (P_XY.map Prod.fst) rfl a).symm
+  -- Push the outer `Subtype.val` map into a preimage.
+  rw [map_measureReal_apply measurable_subtype_coe (MeasurableSet.singleton a)]
+  by_cases ha : 0 < ∑ y, P_XY.real {(a, y)}
+  · -- On the support the preimage is the singleton `{⟨a, ha⟩}`.
+    have hpre : (Subtype.val ⁻¹' {a} : Set {x : α // 0 < ∑ y, P_XY.real {(x, y)}})
+        = {(⟨a, ha⟩ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}})} := by
+      ext x'
+      simp only [Set.mem_preimage, Set.mem_singleton_iff, Subtype.ext_iff]
+    rw [hpre, hRHS, rdAmbient_map_iidXs qStar hqStar_mem,
+        pmfToMeasure_map_fst_real_singleton hqStar_mem ⟨a, ha⟩]
+    -- `marginalFst qStar ⟨a,ha⟩ = ∑_u κ' a u · (∑_y P_XY{(a,y)}) = ∑_y P_XY{(a,y)}`.
+    unfold marginalFst
+    have hval : ∀ u : Fin k, qStar (⟨a, ha⟩, u) = κ' a u * ∑ y, P_XY.real {(a, y)} :=
+      fun u ↦ hqStar_eq (⟨a, ha⟩, u)
+    rw [Finset.sum_congr rfl (fun u _ ↦ hval u), ← Finset.sum_mul, hκ'sum a, one_mul]
+  · -- Off the support the preimage is empty and the coordinate sum vanishes.
+    have hpre : (Subtype.val ⁻¹' {a} : Set {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) = ∅ := by
+      ext x'
+      simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_empty_iff_false, iff_false]
+      intro hx'
+      exact ha (hx' ▸ x'.2)
+    rw [hpre, measureReal_empty, hRHS]
+    exact (le_antisymm (not_lt.mp ha)
+      (Finset.sum_nonneg fun y _ ↦ measureReal_nonneg)).symm
+
+/-- **(Leg B) Source-measure change of variables `α' → α`.** The covering ambient's
+`X`-marginal, transported from the support subtype `α'` to the full alphabet `α` by
+`Subtype.val`, equals the source `X`-marginal `P_XY.map Prod.fst`. This is the source-side
+half of the lift `α' → α`; the decoder side is handled null-set-wise by
+`wz_expectedBlockDistortion_source_agree` (S2). No decoder / error-probability content
+enters — pure source-measure transport. -/
+private lemma wz_covering_source_measure_map_val_eq
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ}
+    (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k)) :
+    ((rdAmbient qStar).map (ChannelCoding.iidXs 0)).map Subtype.val
+      = P_XY.map Prod.fst := by
+  classical
+  haveI hne_prod : Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
+    Finset.univ_nonempty_iff.mp
+      (Finset.nonempty_of_sum_ne_zero (by rw [hqStar_mem.2]; exact one_ne_zero))
+  haveI : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := hne_prod.map Prod.fst
+  haveI : Nonempty (Fin k) := hne_prod.map Prod.snd
+  haveI : IsProbabilityMeasure ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) :=
+    rdAmbient_iidXs_isProbabilityMeasure qStar hqStar_mem
+  haveI : IsProbabilityMeasure
+      (((rdAmbient qStar).map (ChannelCoding.iidXs 0)).map Subtype.val) :=
+    Measure.isProbabilityMeasure_map measurable_subtype_coe.aemeasurable
+  haveI : IsProbabilityMeasure (P_XY.map Prod.fst) :=
+    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+  -- Two finite measures on the finite alphabet `α` agree iff they agree on singletons.
+  refine MeasureTheory.Measure.ext_of_singleton (fun a ↦ ?_)
+  have h := wz_covering_source_marginal_real_singleton P_XY κ' qStar hκ'sum hqStar_eq hqStar_mem a
+  simp only [Measure.real] at h
+  exact (ENNReal.toReal_eq_toReal_iff' (measure_ne_top _ _) (measure_ne_top _ _)).mp h
+
 /-- **(D3) Per-`n` Wyner–Ziv code family at a fixed covering rate (Steps 2–7).** Given
 the Step 1–2 covering data together with an already-chosen covering rate `R₁` (strictly
 above `I(X;U)`, so that `hcov₁` — the covering `LossyCode` family at rate `R₁` — is
