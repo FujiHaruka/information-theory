@@ -2565,9 +2565,28 @@ is a PRECONDITION tightening, NOT bundling: the covering atom
 `wz_covering_lossyCode_exists` accepts any target `≤ D` and returns `≤ target + ε'`, so
 `D + δ/2` is genuinely achievable; the reserved `δ/2` is absorbed by the error exponents
 (S5a/S5b/D2/(B) → 0), which is real analytic work (Leg C), not encoded into a hypothesis.
-The conclusion `≤ D+δ` is unchanged and the body stays `sorry` (the distortion-decomposition
-bridge is filled in Leg C). Classification `plan` correct (in-project, not a Mathlib wall).
-@residual(plan:wz-binning-covering) -/
+The conclusion `≤ D+δ` is unchanged and the body stays `sorry`.
+
+**SECOND under-hypothesization axis — found in Leg C (2026-07-11), NOT fixed yet.** The
+δ-split (Leg 0) fixed the budget axis but the signature is STILL false-as-framed on a
+distinct axis the Leg-0 audit missed: `d'` (covering proxy `DistortionFn α' (Fin k)`) and
+`qf` (test channel + reconstruction `Fin k × β → γ`) arrive as OPAQUE, mutually-unrelated
+parameters — no hypothesis ties `d'` to the real distortion `d` via `qf.2`. In the real
+construction `wz_coveringFamily_of_testChannel` (L957) defines `d' = 𝔼_{Y|X}[d ∘ qf.2]`
+(`wz_coveringDistortion_reconcile`, L872), but D3 does not require it, and `qf` carries no
+`WynerZivFactorizableConstraint`. Degenerate counterexample: `d' := 0` makes `hfeas`/`hcov₁`
+trivially hold while the WZ code's real distortion under `d` (via `qf.2`) is unconstrained,
+so the conclusion `≤ D+δ` fails — the `sorry` cannot be honestly closed as-framed. FIX
+(Leg C.5, non-load-bearing precondition threading, same kind as `hfact_eq`/`hqStar_eq`):
+thread `hd'_eq : ∀ x' u, d' x' u = Real.toNNReal (∑ y, (P_XY.real{(x'.1,y)} / ∑ y',
+P_XY.real{(x'.1,y')}) · (d x'.1 (qf.2 (u,y))))` (i.e. `wz_coveringDistortion_reconcile`) +
+`hqf : qf ∈ WynerZivFactorizableConstraint …` through D3/D/S6/`wz_perDelta_codes_exist`; the
+caller discharges both by construction. Ripple mirrors the Leg-0 δ-split (file-contained).
+The distortion-decomposition bridge (Leg C `wz_covering_binning_distortion_decomp`) is built
+standalone and NOT on top of this defect.
+Classification `plan` correct (in-project, not a Mathlib wall).
+@residual(plan:wz-binning-covering)
+@audit:defect(false-statement) @audit:closed-by-successor(wz-binning-covering) -/
 lemma wz_perN_covering_binning_code
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)

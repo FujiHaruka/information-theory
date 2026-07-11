@@ -2,17 +2,18 @@
 
 > **Parent**: [`wyner-ziv-main-plan.md`](wyner-ziv-main-plan.md) §P3 D3 split-out
 
-**Status**: ACTIVE 🚧 — 残 sorry は **D3 `wz_perN_covering_binning_code` 唯一** (`InformationTheory/Shannon/WynerZiv/Achievability.lean:2082`、`@residual(plan:wz-binning-covering)`)。**Leg 0 (δ-split 署名修正) DONE** (`a59e37cb`、独立 honesty-auditor PASS): `hfeas`/`hcov₁` の target を `D+δ/2` に締め `δ/2` を誤差予約 → 署名は TRUE-as-framed に honest 化、`@audit:defect(false-statement)` 除去済。**body は依然 sorry** (genuine closure は Leg A-D)。WZ achievability 全体の残 sorry はこの D3 1 本のみ (S1-S7 / D1 / D2 / (B) / gateway 1-2 は全て CLOSED sorry-free、legs 12-19)。**次の本線 = Leg A (two-ambient 構成、Leg 0 と独立)**。
+**Status**: ACTIVE 🚧 — 残 sorry は **D3 `wz_perN_covering_binning_code` 唯一** (`rg -n 'lemma wz_perN_covering_binning_code'` で位置、`@residual(plan:wz-binning-covering)`)。**Leg 0/A/B/C DONE** (sorry-free、`a59e37cb`/`dfdf3e42`/`02ea97d7`/`25629b0a`): Leg 0 δ-split (budget 軸 honest 化、honesty-auditor PASS) / Leg A two-ambient regularity API / Leg B source-marginal identity / Leg C distortion-decomposition bridge (`wz_expectedBlockDistortion_le_of_badSet` + `wz_covering_binning_distortion_decomp`)。**⚠ D3 は再び `@audit:defect(false-statement)`**: Leg C で **第2 under-hypothesization 軸** 判明 — `d'`(proxy)/`qf` が無関係 opaque param で `d'=𝔼_{Y|X}[d∘qf.2]` (`wz_coveringDistortion_reconcile`) を encode する仮説なし → `d':=0` 反例で結論不従。Leg 0 監査は budget 軸のみ検証しこの軸を暗黙仮定していた。**次の本線 = Leg C.5 (D3 に `hd'_eq`+`hqf` を precondition threading、δ-split 同型の非 bundling fix) → 独立監査 → Leg D**。WZ achievability 全体の残 sorry はこの D3 1 本のみ (S1-S7 / D1 / D2 / (B) / gateway 1-2 は全て CLOSED sorry-free、legs 12-19)。
 
 **再検証** (prose にキャッシュしない): `scripts/sig_view.ts --sorry InformationTheory/Shannon/WynerZiv/Achievability.lean` / `#print axioms wyner_ziv_achievability`。
 
 ## 進捗
 
 - [x] Leg 0 — δ-split 署名修正 (D3 honest 化、tier-5 fix、5-decl file-contained ripple) ✅ (`a59e37cb`、独立監査 PASS)
-- [ ] Leg A — two-ambient WZ-joint 構成 (pure regularity) 📋
-- [ ] Leg B — α'→α source-measure 変数変換 lemma (medium) 📋
-- [ ] Leg C — WZ distortion-decomposition bridge (解析コア、**Leg 0 後**) 📋
-- [ ] Leg D — derandomize + squeeze glue → D3 sorryAx-free closure (**A+B+C 後**) 📋
+- [x] Leg A — two-ambient WZ-joint 構成 (pure regularity) ✅ (`dfdf3e42`、sorry-free)
+- [x] Leg B — α'→α source-measure 変数変換 lemma (medium) ✅ (`02ea97d7`、sorry-free)
+- [x] Leg C — WZ distortion-decomposition bridge (解析コア) ✅ (`25629b0a`、bridge 2本 sorry-free)。**finding: D3 に第2 under-hyp 軸 → Leg C.5 へ**
+- [ ] Leg C.5 — D3 署名 reconciliation 修正 (`hd'_eq` + `hqf` threading、第2 tier-5 fix、**Leg D 前**) 📋
+- [ ] Leg D — derandomize + squeeze glue → D3 sorryAx-free closure (**C.5 後**) 📋
 
 ## ゴール / Approach
 
@@ -83,6 +84,16 @@ D3 の署名 (現状、Achievability.lean:2054-2080、δ-split 前):
 - **撤退**: `sorry + @residual(plan:wz-binning-covering)`。
 - **依存**: **Leg 0 の δ-split 修正後** (honest 署名 `hfeas ≤ D+δ/2` を前提に proxy budget へ δ/2 slack を確保してから解析)。Leg A の two-ambient 出力を消費。
 
+### Leg C.5 — D3 署名 reconciliation 修正 (第2 tier-5 fix、Leg D 前)
+
+**proof-log**: no (署名 threading + call-site discharge + 再監査、mechanical、Leg 0 と同型)
+
+- **finding (Leg C、2026-07-11)**: D3 `wz_perN_covering_binning_code` / D `wz_perDelta_covering_binning_eventual` / S6 `wz_perDelta_covering_binning` は `d'` (covering proxy `DistortionFn α' (Fin k)`) と `qf` (test channel + reconstruction) を **無関係な opaque param** として受け、実構築での `d' = 𝔼_{Y|X}[d ∘ qf.2]` (`wz_coveringDistortion_reconcile:872`) を encode する仮説を欠く。`qf` も `WynerZivFactorizableConstraint` 無し。→ `d':=0` で `hfeas`/`hcov₁` 自明成立・実歪 `d` 結論不従 = **under-hypothesized (false-as-framed 第2軸)**。**Leg 0 δ-split 監査は budget 軸のみ検証し reconciliation を暗黙仮定していた** (監査の穴)。
+- **FIX (非 load-bearing precondition threading、δ-split 同型)**: `hd'_eq : ∀ x' u, d' x' u = Real.toNNReal (∑ y, (P_XY.real{(x'.1,y)} / ∑ y', P_XY.real{(x'.1,y')}) · (d x'.1 (qf.2 (u,y))))` (= `wz_coveringDistortion_reconcile`) + `hqf : qf ∈ WynerZivFactorizableConstraint (Fin k) …` を **D3/D/S6/`wz_perDelta_codes_exist` に threading**。これらは `hfact_eq`/`hqStar_eq` と同種の **definitional/regularity precondition** (proof の核を bundle しない)。caller `wz_coveringFamily_of_testChannel` (`d'` をこの形で定義、`hqf` 保持) が **construction で discharge**。ripple は Leg 0 と同型 (Achievability.lean file-contained)。
+- **honesty**: 修正後、D3 の `@audit:defect(false-statement)` + `@audit:closed-by-successor` を除去 (署名が honest 化)。**上流 chain (@audit:ok の `wz_coveringFamily_of_testChannel` 含む) への波及ゆえ独立 honesty-auditor 1 pass** (orchestrator-mandatory)。この監査は budget 軸 (Leg 0) と reconciliation 軸 (Leg C.5) の両方 + **他に隠れた under-hyp 軸が無いか**を確認する (Leg 0 監査の穴を踏まえ網羅的に)。
+- **撤退**: threading が invasive なら D3 body は `sorry` 維持、ただし `@audit:defect` は署名 honest 化まで除去禁止、Leg D の assembly に進まない。
+- **依存**: Leg C 後、**Leg D 前** (Leg D の bridge 実体化に `hd'_eq` が要る)。
+
 ### Leg D — derandomize + squeeze glue → D3 closure
 
 **proof-log**: yes (最終組立、再開根拠)
@@ -115,3 +126,4 @@ append-only。決着済 entry は削除 (git が履歴)、active のみ残す。
 1. **Leg 0 (δ-split) を最初に + honesty gate (active、本線)**: D3 は budget 使い切りで false-as-framed (leg-20)。FIX = δ-split (`hfeas`/`hcov₁` の target を `D+δ/2` に締め `δ/2` を誤差に予約、RD `h_slack` mirror)。ripple は Achievability.lean 内 5-decl chain (機械確認: cross-file consumer 0)、`∃N∀n` conclusion shape 不変。**Leg 0 完了 (署名 honest 化 + `@audit:defect(false-statement)` 除去) 前に Leg C の body fill に進まない** (偽 statement を fill しないため)。完了時に上流 @audit:ok の再監査を独立 honesty-auditor 1 pass。これは親 #11 under-hypothesization トラップの family 再発 (free-budget exact 結論版)。
 2. **two-ambient subtlety (Leg A、親 §B4/#10 継承)**: TWO ambients — covering ambient `rdAmbient qStar` (S5a/E3 駆動) と (U,Y) side-info ambient (S5b/D2 駆動) は同一 3-var `q'` の 2 marginal で、共有 U-marginal を通じ rate split `R = I(X;U) − I(Y;U)` が一貫。regularity は `rdAmbient_*` で discharge (bundle しない)。
 3. **E2 = codebook-restricted confusion が WZ の真の核 (親 #10 継承、settled)**: gateway-1 (SW exponent H(U|Y)) では消えず、S5b `wz_codebook_confusion_expectation_le:1254` (codebook 限定、CLOSED sorry-free) が WZ rate `I(X;U)−I(Y;U)` で E2 を駆動。Leg C が消費 (この atom は既に閉じている、Leg では再証明しない)。
+4. **D3 第2 under-hypothesization 軸 (Leg C finding、2026-07-11、active、本線)**: δ-split (Leg 0) は budget 軸を直したが、D3/D/S6 は `d'`(proxy)/`qf` を無関係 opaque param として受け `d'=𝔼_{Y|X}[d∘qf.2]` (`wz_coveringDistortion_reconcile`) を欠く → `d':=0` 反例で結論不従 = false-as-framed 第2軸。**Leg 0 の独立監査がこの軸を見落とした** (budget のみ検証し reconciliation を暗黙仮定)。教訓: under-hyp は複数軸を持ちうる、監査は「全 param が結論に semantically 効くか」を param ごとに確認せよ (単一軸の refute で満足しない)。FIX = `hd'_eq`+`hqf` を precondition threading (Leg C.5、δ-split 同型の非 bundling、caller discharge)。修正後の再監査は両軸 + 残存軸網羅を要求。D3 に `@audit:defect(false-statement)` 再付与済 (Leg C commit 後)。cause:false-statement。これは親 #11 under-hyp family トラップの再発 (今回は proxy↔real distortion の未 threading 版)。
