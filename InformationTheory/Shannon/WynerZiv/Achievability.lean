@@ -2973,6 +2973,18 @@ M-direction (TRUE-as-framed); the headline signature
 (`wz_goodCode_exists_of_testChannel` / `wyner_ziv_achievability`) is untouched (parent #9 crux
 invariant). The remaining residual is transitive from the still-open A2
 (`wz_ideal_expectation_eq_covering`) / A3 (`wz_exists_binning_E2_bound`) sub-lemmas.
+
+Independent honesty audit 2026-07-11 (Leg C.6, M-axis): PASS, tier-2 `@residual` retained
+(A2/A3 open, so NOT `@audit:ok`). Confirmed: the M-axis `hM_ub` `sorry` is genuinely removed —
+D3's own body is now `sorry`-free (only A2/A3 emit `sorry` warnings), and the threaded upper
+bound is the genuine ceiling size the RD covering theorem produces (`witness_form_strong`'s
+`Mn = ⌈exp(n·R)⌉` + `Nat.ceil_lt_add_one`, machine-verified `sorry`-free), a non-load-bearing
+precondition tightening. Fourth-axis sufficiency check (M was the 4th under-hyp axis): the
+conclusion's driving quantities are all now constrained — covering distortion `≤ (D+δ/2)+δ/4`
+(hcov₁+A2), `distortionMax·Pr[E2] ≤ δ/4` (A3, now fed the M cap), `M` bounded BOTH sides,
+bins `= codebookSize R n` fixed by `(R,n)`, `I(Y;U)` fixed by `q'` via `hfact_eq`, `hsplit`
+present; the inflated-`M` counterexample is closed and no residual degenerate substitution
+(δ→0 barred by `hδ`, M-boundary capped, generic `d`) refutes the framed statement.
 @residual(plan:wz-binning-covering) -/
 lemma wz_perN_covering_binning_code
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
