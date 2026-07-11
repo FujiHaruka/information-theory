@@ -2976,13 +2976,48 @@ The covering codebook size upper bound `(M₁ : ℝ) ≤ exp(n·R₁) + 1` is a 
 the confusion count scales with the number of codewords, so the squeeze needs `M₁` capped near
 `⌈exp(n·R₁)⌉` (the size the covering theorem actually produces), not merely bounded below.
 
-Independent honesty audit 2026-07-11: honest tier-2 residual, classification correct.
-Non-bundled: the E2 probability is the CONCLUSION (bounded in the body), not a hypothesis; the
-`(M₁ : ℝ) ≤ exp(n·R₁) + 1` precondition is a GENUINE size precondition (correctly present here —
-the underivability of this bound is a defect of the *caller* D3, not of this lemma), `hsplit`
-is the rate gap, `hκ'pos`/`hκ'sum`/`hfact_eq` are regularity. Sufficiency OK: with `M₁ ≲
-exp(n·R₁)` and `R₁ − I(Y;U) < R` the confusion mass `M₁ · exp(−n·I_YU) / codebookSize R n → 0`.
-Class `plan` correct.
+Independent honesty audit 2026-07-11 (leg-0): checks 1-3 PASS (non-circular; non-bundled —
+the E2 probability is the CONCLUSION, not a hypothesis; the `(M₁ : ℝ) ≤ exp(n·R₁) + 1`
+precondition is a GENUINE size precondition, `hsplit` is the rate gap,
+`hκ'pos`/`hκ'sum`/`hfact_eq` are regularity). But the check-4 (sufficiency) note "confusion
+mass `M₁ · exp(−n·I_YU) / codebookSize R n → 0`" is **OVERTURNED** (independent adjudication
+2026-07-12): it is FALSE-AS-FRAMED on the covering-ACCEPTANCE axis.
+
+**OVERTURN (check-4 false negative, false-statement).** G2
+(`wz_expectedBlockDistortion_le_ideal_add_E2`, sorry-free) fixes `E2 = { p |
+wzBinTypicalDecoder … (f(enc x), y) ≠ c₁.decoder (c₁.encoder x) }`, i.e. the FULL "bin decoder
+fails to recover the true covering word" event. By `wzBinTypicalDecoder` (fallback to
+`Classical.arbitrary` unless the true word is jointly typical with `y` AND unique in its bin)
+and `wzBinTypicalDecoder_eq_of_unique` (recovery needs `htrue`: true word jointly typical), E2
+decomposes as `E2 ⊆ E2b {some other bin member typical, confusion}  ∪  C2 {true word NOT
+jointly typical, covering-acceptance failure}`. The overturned sufficiency note bounded only
+the E2b sub-exponent (via S5b+D2, `M₁·exp(−n·I_YU)/codebookSize → 0`) and mistook it for all of
+E2 — it silently dropped C2. C2 is UNCONTROLLED here: the ONLY hypothesis on `c₁` is the size
+cap `hM_ub`; there is NO covering-acceptance / typicality-mass lower bound (no `hmass`-style
+hyp as in S5a `wz_covering_failure_prob_le`, no random-codebook hyp). `LossyCode`
+(`RateDistortion/Achievability.lean:81`) is a bare structure (encoder/decoder only, no
+goodness constraint), so an adversarial size-capped `c₁` whose codewords are never jointly
+typical with the realized `y` (or all share one empirical type) is a valid witness of the
+`∀ c₁` — and for it, for EVERY prover choice `(ε, f)`: `ε` small ⇒ C2 always (acceptance
+fails) ⇒ fallback ⇒ Pr[E2]≈1; `ε` large ⇒ many typical members per bin (`M₁ ≫ codebookSize
+R n`) ⇒ uniqueness fails ⇒ fallback ⇒ Pr[E2]≈1. For generic `d` (`distortionMax dα' ≥ 1`) and
+small `δ`, `distortionMax dα' · Pr[E2] ≈ distortionMax dα' > δ/4`, refuting the conclusion. The
+`∀ c₁` does not even require the hcov₁ distortion bound, so distortion-goodness vs
+typicality-acceptance need not be shown to decouple (they do — `d'` constrains the (X,U)
+reconstruction, joint typicality is a (U,Y) empirical-type property).
+
+Why the three prior audits missed C2: the 2026-07-11 sufficiency note and the Leg C.6 4th-axis
+check ("no 3rd under-hyp axis beyond M") both treated A3's `distortionMax·Pr[E2] ≤ δ/4` as an
+ATOM (a settled sub-result of S5b/D2) and did not read inside E2; the acceptance axis (C2)
+lives strictly inside A3's conclusion and is a distinct under-hyp axis from the M-axis and
+distortion-failure E1 (E1, distortion `{ideal>P}`, was correctly dropped by G2; C2, typicality
+acceptance, was conflated with it and its bound S5a dead-judged). Honest fix (NOT applied here
+— rewrite is the orchestrator/pivot-advisor's job): ADD a covering-acceptance hypothesis to A3
+(per-source typicality-mass lower bound / covering-good `c₁`) and supply it from D3 (strengthen
+`hcov₁` or add a covering-acceptance atom); the signature stays in defect form and the body
+stays `sorry`.
+@audit:defect(false-statement)
+@audit:closed-by-successor(wz-binning-covering)
 @residual(plan:wz-binning-covering) -/
 lemma wz_exists_binning_E2_bound
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
