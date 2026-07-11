@@ -987,29 +987,26 @@ identity `hd'_eq` (`d'` = the `Y`-conditional expectation of `d ∘ qf.2`, disch
 `hqf` (the original input membership), so downstream binning (D3) can honestly relate
 the covering proxy `d'` to the real distortion `d` via `qf.2`.
 
-Leg E (covering-acceptance C2, 2026-07-12): the covering `LossyCode` family conclusion
-also exports, for the returned code `c`, a covering-acceptance-failure mass bound —
-`∃ ε > 0`, the product source–side measure of `wzCoveringAcceptFailSet P_XY κ' c ε` (the
-event that the true covering word is NOT jointly typical with the side information) is
-`≤ δ / (8 · (distortionMax d + 1))`, a fixed vanishing tolerance. The covering-acceptance
-failure `C2` is the true-word joint-AEP failure and decays to 0 (so `≤` any fixed positive
-tolerance eventually); it is the covering half of the Wyner–Ziv `E2` error event
-(`C2 ⊆ E2`), a precondition-exposure of the covering code's own property (same kind as the
-covering-size cap `hM_ub` / Leg C.6), threaded to `wz_exists_binning_E2_bound` (A3,
-`hcov_accept`) and discharged by construction — NOT the operational conclusion (the
-`distortionMax d` scaling only sizes the tolerance so `dMax · Pr[C2]` is absorbable; the
-E2b confusion crux stays in A3). The discharge (joint distortion + acceptance derandomize
-with the S5a `(1-p)^M₁` → `codebookMeasure`-average `Fubini` bridge, fed the gateway-2
-acceptance mass lower bound `wz_covering_sideInfo_mass_ge`) is the residual `sorry`; the
-A3-fill leg closes it.
-
-Independent honesty audit 2026-07-12 (Leg E): the `sorry` is a GENUINE residual for the
-distortion existential (via `wz_covering_lossyCode_exists`), but the ADDED acceptance conjunct
-`∃ ε > 0, mass(wzCoveringAcceptFailSet … c ε) ≤ tol` is VACUOUS as framed (large ε ⇒
-jointly-typical set = whole finite space ⇒ fail set ∅ ⇒ mass 0 ≤ tol for any c/tol), so it does
-NOT strengthen the covering family and cannot supply A3 a usable C2 bound (see
-`wz_exists_binning_E2_bound` audit note). Rework needed: the exported acceptance bound must pin
-the radius (fixed/goldilocks ε threaded to A3's decoder), not a free `∃ ε`.
+Pinned-ε rework applied 2026-07-12 (Leg E): the covering `LossyCode` family conclusion
+also exports, for the returned code `c`, a covering-acceptance-failure mass bound at a
+radius `ε` that is now UNIVERSALLY quantified as an explicit binder (`∀ R₁ …, ∀ ε' …, ∀ ε,
+0 < ε → ∃ N …`), NOT existentially quantified inside the code existential. The product
+source–side measure of `wzCoveringAcceptFailSet P_XY κ' c ε` (the event that the true
+covering word is NOT jointly typical with the side information) is
+`≤ δ / (8 · (distortionMax d + 1))`, a fixed vanishing tolerance. Because `ε` is a family
+binder, the caller (D3) chooses the SAME `ε` it feeds the A3 bin-decoder radius (from the
+rate gap, with the huge-`ε` vacuity regime excluded by A3's `hε_conf`), so the union bound
+`C2 ⊆ E2` uses a MATCHING radius — the prior free-`∃ε` form (vacuous at huge `ε`) is
+removed. The covering-acceptance failure `C2` is the true-word joint-AEP failure and decays
+to 0 (so `≤` any fixed positive tolerance eventually); it is the covering half of the
+Wyner–Ziv `E2` error event (`C2 ⊆ E2`), a precondition-exposure of the covering code's own
+property (same kind as the covering-size cap `hM_ub` / Leg C.6), threaded to
+`wz_exists_binning_E2_bound` (A3) and discharged by construction — NOT the operational
+conclusion (the `distortionMax d` scaling only sizes the tolerance so `dMax · Pr[C2]` is
+absorbable; the E2b confusion crux stays in A3). The discharge (joint distortion +
+acceptance derandomize with the S5a `(1-p)^M₁` → `codebookMeasure`-average `Fubini` bridge,
+fed the gateway-2 acceptance mass lower bound `wz_covering_sideInfo_mass_ge`) is the residual
+`sorry`; the A3-fill leg closes it. Pending independent honesty audit.
 @residual(plan:wz-binning-covering) -/
 private lemma wz_coveringFamily_of_testChannel
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -1036,7 +1033,7 @@ private lemma wz_coveringFamily_of_testChannel
                  * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
         ∧ (qf ∈ WynerZivFactorizableConstraint (Fin k)
              (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
-        ∧ (∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' →
+        ∧ (∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' → ∀ ε : ℝ, 0 < ε →
             ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
               Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
               (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 ∧
@@ -1044,12 +1041,11 @@ private lemma wz_coveringFamily_of_testChannel
                 c.expectedBlockDistortion
                     ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
                   ≤ (D + δ) + ε'
-                ∧ ∃ ε : ℝ, 0 < ε ∧
-                    (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-                        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-                          P_XY.real {(p.1.1, p.2)}))).real
-                      (wzCoveringAcceptFailSet P_XY κ' c ε)
-                      ≤ δ / (8 * (distortionMax d + 1))) := by
+                ∧ (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+                      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                        P_XY.real {(p.1.1, p.2)}))).real
+                    (wzCoveringAcceptFailSet P_XY κ' c ε)
+                    ≤ δ / (8 * (distortionMax d + 1))) := by
   classical
   -- Step 1: perturb the feasible test channel to a full-support kernel `κ'`.
   -- Keep a pristine copy of the factorizability membership: `hqf` is mutated by the
@@ -3018,13 +3014,14 @@ lemma wz_ideal_expectation_eq_covering
   rw [← Finset.mul_sum, mul_left_comm]
 
 /-- **(Leg D, A3) Codebook-restricted confusion (E2) probability is squeezable.** For a
-covering codebook of size `M₁ ≲ exp(n·R₁)` and `n` beyond a threshold, there is a
-derandomized index binning `f` (and a typicality radius `ε`) making the bin-decoder confusion
-probability so small that `distortionMax · Pr[E2] ≤ δ/4`. Combines the binning-averaged
-confusion exponent (S5b `wz_codebook_confusion_expectation_le`, fed D2
-`wz_covering_codeword_sideInfo_mass_le` + collision `wzIndexBinningMeasure_collision`,
+covering codebook of size `M₁ ≲ exp(n·R₁)` and `n` beyond a threshold, at the shared
+conditional-typicality radius `ε` (an explicit input, pinned to the covering-acceptance mass
+precondition and used as the bin-decoder radius) there is a derandomized index binning `f`
+making the bin-decoder confusion probability so small that `distortionMax dα' · Pr[E2] ≤ δ/4`.
+Combines the binning-averaged confusion exponent (S5b `wz_codebook_confusion_expectation_le`,
+fed D2 `wz_covering_codeword_sideInfo_mass_le` + collision `wzIndexBinningMeasure_collision`,
 instantiated over the positive-`Y`-marginal subtype `β'`), the binning derandomization, and
-the exponent squeeze (`hsplit : R₁ − I(Y;U) < R`), with the source ↔ side-info-ambient
+the exponent squeeze (`hε_conf : R₁ − I(Y;U) + 3·ε < R`), with the source ↔ side-info-ambient
 identification.
 
 The covering codebook size upper bound `(M₁ : ℝ) ≤ exp(n·R₁) + 1` is a genuine precondition:
@@ -3068,47 +3065,28 @@ lives strictly inside A3's conclusion and is a distinct under-hyp axis from the 
 distortion-failure E1 (E1, distortion `{ideal>P}`, was correctly dropped by G2; C2, typicality
 acceptance, was conflated with it and its bound S5a dead-judged).
 
-Leg E (covering-acceptance C2, 2026-07-12 — signature fix APPLIED): the prescribed honest fix
-is now applied at the signature level. A new covering-acceptance precondition `hcov_accept` is
-added: for the covering code `c₁`, `∃ ε > 0`, the product source–side mass of
-`wzCoveringAcceptFailSet P_XY κ' c₁ ε` (the C2 event: the true covering word is NOT jointly
-typical with the side information) is `≤ δ / 2 / (8 · (distortionMax d + 1))` — a fixed
-vanishing tolerance the adversarial all-atypical-image codebook counterexample violated. C2 is
-the true-word joint-AEP failure and decays to 0 (so is `≤` any fixed positive tolerance
-eventually). It is supplied from D3, which threads it out of the strengthened covering family
-`hcov₁` (the covering atom `wz_coveringFamily_of_testChannel` exports it alongside the
-distortion bound). This is a precondition-exposure of the covering code's own property (same
-kind as the size cap `hM_ub` / Leg C.6), NOT bundling: the `distortionMax d` scaling only
-sizes the tolerance so `distortionMax dα' · Pr[C2] ≤ δ/8` is absorbable in A3's arithmetic; the
-covering-acceptance decay is the S5a/gateway-2 analytic work done in the covering construction,
-and the E2b confusion crux (S5b) + union + threshold remain genuine A3-body work (`d` = full
-alphabet, so `distortionMax d ≥ distortionMax dα'` gives an A3-sufficient tolerance without the
-subtype `Nonempty`). The C2 (4th) under-hyp axis is thereby closed at the signature level; the
-body stays `sorry` (the A3 fill — union-bounding C2 via `hcov_accept` with E2b via S5b — is a
-later leg).
+Pinned-ε rework applied 2026-07-12 (Leg E): the free-`∃ε`/`dα'`-scaling defect of the prior
+first move is fixed at the signature level. (1) The covering-acceptance mass is now PINNED at a
+single explicit radius `ε`, supplied as an input binder (not existentially quantified inside a
+precondition). The huge-`ε` regime that makes `wzCoveringAcceptFailSet` vacuously empty is
+excluded by `hε_conf : R₁ − I(Y;U) + 3·ε < R` — a rate inequality (same species as the RD rate
+condition / `hM_ub` / `hsplit`), NOT a claim that the conclusion follows without the AEP body.
+`ε` is chosen in D3 from the rate gap `gap = R − (R₁ − I(Y;U)) > 0` (`ε := gap/6`, so
+`3·ε = gap/2 < gap`) and threaded to BOTH the acceptance precondition and the decoder radius.
+(2) The `dα'`-vs-`d` scaling axis is closed by the definitional link `hd'_link : ∀ x' g,
+dα' x' g = d x'.1 g`, discharged by `rfl` at D3's call site (where `dα' := fun x' g ↦ d x'.1 g`;
+Leg-C.5-style reconciliation). The C2 (covering-acceptance) mass ≤ `δ/2/(8·(distortionMax d+1))`
+is a precondition-exposure of the covering code's own S5a/gateway-2 property (threaded from the
+strengthened covering family `hcov₁`), same kind as `hM_ub`; it is NOT the analytic core. The
+analytic bodies remain `sorry`: (a) the covering-acceptance mass bound (S5a/gateway-2 Fubini
+bridge, in the covering atom `wz_coveringFamily_of_testChannel`), and (b) the E2b confusion
+exponent → 0 (S5b/D2) union-bounded with the pinned C2 here — both `@residual(plan:wz-binning-covering)`.
 
-Independent honesty audit 2026-07-12 (Leg E, C2 axis): DEFECT CONFIRMED — `@audit:defect`
-retained, NOT downgraded to tier-2. The claim "the C2 (4th) under-hyp axis is closed at the
-signature level" is OVERTURNED on two counts. (i) **Degenerate `∃ ε` quantifier (primary).**
-`hcov_accept` = `∃ ε > 0, mass(wzCoveringAcceptFailSet … c₁ ε) ≤ tol` is VACUOUSLY satisfiable:
-`typicalSet` uses a strict `|empirical − true entropy| < ε` on a finite space with a
-full-support reference (`rdAmbient (wzSideInfoMarginal …)`, `pmfLog` finite), so for ε above the
-(finite) max deviation the jointly-typical set is the WHOLE space and `wzCoveringAcceptFailSet`
-(its complement) is ∅ ⇒ mass 0 ≤ tol for ANY c₁, ANY tol ≥ 0. The `∃ ε` picks the useless huge-ε
-witness; at such ε the decoder-side E2b (confusion) is ≈ 1, and A3's conclusion binds its OWN
-`ε'` decoupled from `hcov_accept`'s ε, so the union bound `C2 ⊆ E2` (which needs MATCHING radius)
-gains nothing. C2 stays unbounded at any goldilocks radius — the fix does not close the axis. The
-non-vacuous statement needs the radius PINNED (threaded as the SAME ε the decoder uses, or a
-`∀ ε ∈ (0, ε₀]` goldilocks-range form fed by gateway-2), not a free `∃ ε`. (ii) **`dα'`-vs-`d`
-scaling (5th axis).** `dα'` is a FREE parameter; the tolerance is in `distortionMax d` but the
-conclusion scales `distortionMax dα'`. No hypothesis ties them (the "d = full alphabet, so
-`distortionMax d ≥ distortionMax dα'`" defense is an UNSTATED assumption true only at D3's call
-site `dα' := fun x' g ↦ d x'.1 g`). Counterexample: `d ≡ 0` (tol = δ/16), `dα' ≡ 5`, a c₁ with
-`0 < Pr[C2] ≤ δ/16` ⇒ `distortionMax dα' · Pr[E2] ≥ 5·Pr[C2] > δ/4`. Honest fix = add a
-`∀ x' g, dα' x' g = d x'.1 g` (or `distortionMax dα' ≤ distortionMax d`) precondition discharged
-by `rfl`/`le` at D3 (Leg-C.5-style reconciliation). Orchestrator/pivot-advisor rewrite needed
-(pin ε + add dα'–d link); signature stays defect-form, body stays `sorry`.
-@audit:defect(false-statement)
+Degenerate-binder check (each free binder's degenerate extreme is blocked by an unsatisfiable
+hypothesis, not a hidden vacuity): `ε` huge ⇒ `hε_conf` false; `dα' ≫ d` (e.g. `dα' ≡ 5`,
+`d ≡ 0`) ⇒ `hd'_link` false; `M₁` inflated ⇒ `hM_ub` false; the mass is pinned at the single
+input `ε` (no residual `∃ ε` anywhere in A3 or its consumed `hcov₁`). Pending independent
+honesty audit.
 @audit:closed-by-successor(wz-binning-covering)
 @residual(plan:wz-binning-covering) -/
 lemma wz_exists_binning_E2_bound
@@ -3118,20 +3096,21 @@ lemma wz_exists_binning_E2_bound
     (κ' : α → Fin k → ℝ) (hκ'pos : ∀ x u, 0 < κ' x u) (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
     (q' : α × β × Fin k → ℝ)
     (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
-    (R₁ : ℝ) (hsplit : R₁ - wzMutualInfoYU (Fin k) q' < R)
+    (R₁ : ℝ) (ε : ℝ) (hε_pos : 0 < ε)
+    (hε_conf : R₁ - wzMutualInfoYU (Fin k) q' + 3 * ε < R)
     (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
     (dα' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} γ)
+    (hd'_link : ∀ x' g, dα' x' g = d x'.1 g)
     (δ : ℝ) (hδ : 0 < δ) :
     ∃ N_E2 : ℕ, ∀ n : ℕ, N_E2 ≤ n →
       ∀ (M₁ : ℕ) (c₁ : LossyCode M₁ n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
         (M₁ : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 →
-        (∃ ε : ℝ, 0 < ε ∧
-            (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-                (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-                  P_XY.real {(p.1.1, p.2)}))).real
-              (wzCoveringAcceptFailSet P_XY κ' c₁ ε)
-              ≤ δ / 2 / (8 * (distortionMax d + 1))) →
-        ∃ (ε : ℝ) (f : Fin M₁ → Fin (codebookSize R n)),
+        (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+              P_XY.real {(p.1.1, p.2)}))).real
+          (wzCoveringAcceptFailSet P_XY κ' c₁ ε)
+          ≤ δ / 2 / (8 * (distortionMax d + 1)) →
+        ∃ f : Fin M₁ → Fin (codebookSize R n),
           distortionMax dα' *
             (Measure.pi (fun _ : Fin n ↦
                 ChannelCoding.pmfToMeasure (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
@@ -3290,7 +3269,7 @@ lemma wz_perN_covering_binning_code
     (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
             (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
     (hsplit : R₁ - wzMutualInfoYU (Fin k) q' < R)
-    (hcov₁ : ∀ ε' : ℝ, 0 < ε' →
+    (hcov₁ : ∀ ε' : ℝ, 0 < ε' → ∀ ε : ℝ, 0 < ε →
         ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
           Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
           (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 ∧
@@ -3298,12 +3277,11 @@ lemma wz_perN_covering_binning_code
             c.expectedBlockDistortion
                 ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
               ≤ (D + δ / 2) + ε'
-            ∧ ∃ ε : ℝ, 0 < ε ∧
-                (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-                    (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-                      P_XY.real {(p.1.1, p.2)}))).real
-                  (wzCoveringAcceptFailSet P_XY κ' c ε)
-                  ≤ δ / 2 / (8 * (distortionMax d + 1))) :
+            ∧ (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+                  (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                    P_XY.real {(p.1.1, p.2)}))).real
+                (wzCoveringAcceptFailSet P_XY κ' c ε)
+                ≤ δ / 2 / (8 * (distortionMax d + 1))) :
     ∃ N : ℕ, ∀ n : ℕ, ∃ c : WynerZivCode (codebookSize R n) n α β γ,
       N ≤ n → c.expectedBlockDistortion P_XY d ≤ D + δ := by
   classical
@@ -3343,13 +3321,20 @@ lemma wz_perN_covering_binning_code
   -- `c₁ : LossyCode M n α' (Fin k)` whose covering distortion — over the i.i.d. covering
   -- ambient `(rdAmbient qStar).map (iidXs 0)`, w.r.t. the proxy `d'` — is `≤ (D+δ/2)+δ/4`,
   -- with codebook size `M ≥ ⌈exp(n·R₁)⌉`.
-  obtain ⟨N_cov, hN_cov⟩ := hcov₁ (δ / 4) (div_pos hδ (by norm_num))
+  -- Choose the shared conditional-typicality radius `ε` from the rate gap `hsplit`.  The
+  -- covering-acceptance mass (C2) and the decoder-confusion (E2b) are bound at the SAME
+  -- radius `ε`; the huge-`ε` regime that makes `wzCoveringAcceptFailSet` vacuously empty is
+  -- excluded by `hε_conf : R₁ − I(Y;U) + 3·ε < R` (`3·ε = gap/2 < gap`).
+  set ε : ℝ := (R - (R₁ - wzMutualInfoYU (Fin k) q')) / 6 with hε_def
+  have hε_pos : 0 < ε := by rw [hε_def]; linarith [hsplit]
+  have hε_conf : R₁ - wzMutualInfoYU (Fin k) q' + 3 * ε < R := by rw [hε_def]; linarith [hsplit]
+  obtain ⟨N_cov, hN_cov⟩ := hcov₁ (δ / 4) (div_pos hδ (by norm_num)) ε hε_pos
   -- STEP 4 / 1' (binning-side derandomize + E2 squeeze, Leg D A3).  Obtain the confusion
   -- threshold `N_E2`: beyond it, for a covering codebook of size `M ≲ exp(n·R₁)`, a good
   -- binning `f` (radius `ε`) makes `distortionMax dα' · Pr[E2] ≤ δ/4`.
   obtain ⟨N_E2, hN_E2⟩ :=
-    wz_exists_binning_E2_bound P_XY d R κ' hκ'pos hκ'sum q' hfact_eq R₁ hsplit qf
-      (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g) δ hδ
+    wz_exists_binning_E2_bound P_XY d R κ' hκ'pos hκ'sum q' hfact_eq R₁ ε hε_pos hε_conf qf
+      (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g) (fun _ _ => rfl) δ hδ
   refine ⟨max N_cov N_E2, fun n hn => ?_⟩
   obtain ⟨M, hM_ge, hM_ub, c₁, hc₁_dist, hAccept⟩ := hN_cov n (le_trans (le_max_left _ _) hn)
   have x₀ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := Classical.arbitrary _
@@ -3378,7 +3363,7 @@ lemma wz_perN_covering_binning_code
   -- `(M : ℝ) ≤ exp(n·R₁) + 1` is the size the covering theorem actually produces (`M =
   -- ⌈exp(n·R₁)⌉`, `Nat.ceil_lt_add_one`); it is threaded through `hcov₁` (Leg C.6), so
   -- `hM_ub` is now supplied by the covering family together with the codebook `c₁`.
-  obtain ⟨εTyp, f, hE2⟩ := hN_E2 n (le_trans (le_max_right _ _) hn) M c₁ hM_ub hAccept
+  obtain ⟨f, hE2⟩ := hN_E2 n (le_trans (le_max_right _ _) hn) M c₁ hM_ub hAccept
   -- The co-restricted source measure `Q_XY` is a probability measure.
   haveI hQ_prob : IsProbabilityMeasure
       (ChannelCoding.pmfToMeasure
@@ -3389,13 +3374,13 @@ lemma wz_perN_covering_binning_code
       (wzBinTypicalDecoder (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs
         (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
             ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
-        εTyp c₁ f), ?_⟩
+        ε c₁ f), ?_⟩
   rw [wz_lift_expectedBlockDistortion_eq P_XY d x₀ _]
   calc (wzCodeOfCoveringBinning c₁ f qf.2
           (wzBinTypicalDecoder (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs
             (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
                 ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
-            εTyp c₁ f)).expectedBlockDistortion
+            ε c₁ f)).expectedBlockDistortion
           (ChannelCoding.pmfToMeasure
             (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
           (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g)
@@ -3418,14 +3403,14 @@ lemma wz_perN_covering_binning_code
                       (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
                           ((ChannelCoding.iidYs i ω :
                               {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
-                      εTyp c₁ f
+                      ε c₁ f
                       (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
                     ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) } :=
         wz_expectedBlockDistortion_le_ideal_add_E2 (rdAmbient (wzSideInfoMarginal P_XY κ'))
           ChannelCoding.iidXs
           (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
               ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
-          εTyp c₁ f qf.2 (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g)
+          ε c₁ f qf.2 (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g)
           (ChannelCoding.pmfToMeasure
             (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
     _ = c₁.expectedBlockDistortion ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
@@ -3440,7 +3425,7 @@ lemma wz_perN_covering_binning_code
                         (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
                             ((ChannelCoding.iidYs i ω :
                                 {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
-                        εTyp c₁ f
+                        ε c₁ f
                         (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
                       ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) } := by
         rw [wz_ideal_expectation_eq_covering P_XY d κ' hκ'sum qStar hqStar_eq hqStar_mem d' qf
@@ -3529,7 +3514,7 @@ lemma wz_perDelta_covering_binning_eventual
           * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
     (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
             (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
-    (hcov : ∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' →
+    (hcov : ∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' → ∀ ε : ℝ, 0 < ε →
         ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
           Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
           (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 ∧
@@ -3537,12 +3522,11 @@ lemma wz_perDelta_covering_binning_eventual
             c.expectedBlockDistortion
                 ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
               ≤ (D + δ / 2) + ε'
-            ∧ ∃ ε : ℝ, 0 < ε ∧
-                (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-                    (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-                      P_XY.real {(p.1.1, p.2)}))).real
-                  (wzCoveringAcceptFailSet P_XY κ' c ε)
-                  ≤ δ / 2 / (8 * (distortionMax d + 1))) :
+            ∧ (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+                  (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                    P_XY.real {(p.1.1, p.2)}))).real
+                (wzCoveringAcceptFailSet P_XY κ' c ε)
+                ≤ δ / 2 / (8 * (distortionMax d + 1))) :
     ∃ N : ℕ, ∀ n : ℕ, ∃ c : WynerZivCode (codebookSize R n) n α β γ,
       N ≤ n → c.expectedBlockDistortion P_XY d ≤ D + δ := by
   -- Step 1 (rate split): the covering rate identity D1 lets the covering family `hcov`
@@ -3624,7 +3608,7 @@ lemma wz_perDelta_covering_binning
           * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
     (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
             (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
-    (hcov : ∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' →
+    (hcov : ∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' → ∀ ε : ℝ, 0 < ε →
         ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
           Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
           (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 ∧
@@ -3632,12 +3616,11 @@ lemma wz_perDelta_covering_binning
             c.expectedBlockDistortion
                 ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
               ≤ (D + δ / 2) + ε'
-            ∧ ∃ ε : ℝ, 0 < ε ∧
-                (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-                    (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-                      P_XY.real {(p.1.1, p.2)}))).real
-                  (wzCoveringAcceptFailSet P_XY κ' c ε)
-                  ≤ δ / 2 / (8 * (distortionMax d + 1))) :
+            ∧ (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+                  (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                    P_XY.real {(p.1.1, p.2)}))).real
+                (wzCoveringAcceptFailSet P_XY κ' c ε)
+                ≤ δ / 2 / (8 * (distortionMax d + 1))) :
     ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
       ∀ᶠ n in Filter.atTop, (c n).expectedBlockDistortion P_XY d ≤ D + δ := by
   -- Steps 3–7 are the covering + binning core `wz_perDelta_covering_binning_eventual`
