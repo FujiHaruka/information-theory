@@ -2525,6 +2525,178 @@ lemma wz_covering_binning_distortion_decomp
           (measureReal_union_le (μ := Measure.pi (fun _ : Fin n ↦ Q)) E1 E2) h_dMax_nn
         linarith
 
+/-! ### Leg D — E2-only decomposition adapters (G2 / A1 / A2 / A3)
+
+The four adapters `wz_perN_covering_binning_code` (D3) consumes to close its inner body
+via sorry-free glue. Each carries an honest signature (only definitional/regularity
+preconditions; no error-probability, decoder-correctness, or covering lower bound is a
+hypothesis) and its own `@residual(plan:wz-binning-covering)`. Composition:
+
+```
+A1  : lift identity      LHS(P_XY,d) = codeSupp.EBD Q_XY dα'
+G2  : E2-only decomp     codeSupp.EBD Q_XY dα' ≤ 𝔼_{Q_XY}[ideal via qf.2] + distortionMax·Pr[E2]
+A2  : ideal = covering   𝔼_{Q_XY}[ideal via qf.2] = c₁.EBD P_X' d'   (≤ (D+δ/2)+δ/4 by hcov₁)
+A3  : E2 squeeze         distortionMax·Pr[E2] ≤ δ/4                   (∃ good binning f, radius ε)
+```
+
+Here `α' := {x // 0 < P_X x}`, `β' := {y // 0 < P_Y y}`, `dα' x' g := d x'.1 g`, and
+`Q_XY := pmfToMeasure (P_XY co-restricted to α' × β)` (the WZ block-distortion source). -/
+
+/-- The co-restricted source pmf `P_XY` on `α' × β` (source restricted to the positive
+`X`-marginal subtype `α'`, side information kept on full `β`) lies in the standard simplex;
+hence `pmfToMeasure` of it is a probability measure. Off-support `X`-atoms carry zero mass,
+so the total collapses to the full source mass `1`. -/
+private lemma wz_QXY_mem_stdSimplex
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] :
+    (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})
+      ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) := by
+  classical
+  refine ⟨fun _ ↦ measureReal_nonneg, ?_⟩
+  have hPnn : ∀ x : α, 0 ≤ ∑ y, P_XY.real {(x, y)} :=
+    fun x ↦ Finset.sum_nonneg fun y _ ↦ measureReal_nonneg
+  have htot : (∑ x : α, ∑ y : β, P_XY.real {(x, y)}) = 1 := by
+    have h1 : (∑ p : α × β, P_XY.real {p}) = 1 := by
+      have h2 : (∑ p : α × β, P_XY.real {p}) = P_XY.real (Finset.univ : Finset (α × β)) := by
+        simp [sum_measureReal_singleton]
+      rw [h2, Finset.coe_univ]; exact probReal_univ
+    rw [← h1, Fintype.sum_prod_type]
+  rw [Fintype.sum_prod_type]
+  rw [← Finset.sum_subtype (Finset.univ.filter (fun x ↦ 0 < ∑ y, P_XY.real {(x, y)}))
+        (fun x ↦ by simp) (fun x ↦ ∑ y, P_XY.real {(x, y)})]
+  rw [Finset.sum_subset (Finset.filter_subset _ _)
+        (fun x _ hx ↦ le_antisymm (not_lt.mp (by simpa using hx)) (hPnn x))]
+  exact htot
+
+/-- **(Leg D, G2) E2-only distortion decomposition for a covering+binning code.** The
+E2-only refinement of `wz_covering_binning_distortion_decomp`: for the covering+binning code
+`wzCodeOfCoveringBinning c₁ f rec (bin decoder)`, the source-averaged actual block distortion
+is at most the *ideal* (true-covering-codeword) block distortion plus `distortionMax · Pr[E2]`,
+where `E2` is the bin-decoder confusion event. Outside `E2` the decoder recovers the true
+covering codeword, so the actual reconstruction equals the ideal one; inside `E2` the actual
+distortion is `≤ distortionMax ≤ ideal + distortionMax` (the ideal is nonnegative). The
+covering-distortion-failure event `E1` of `wz_covering_binning_distortion_decomp` is dropped:
+`hcov₁` supplies an *expected* covering distortion (not typicality), so `E1` is not squeezable
+and the ideal term is carried as an integral, not bounded by a constant `P`.
+@residual(plan:wz-binning-covering) -/
+lemma wz_expectedBlockDistortion_le_ideal_add_E2
+    {α' : Type*} [Fintype α'] [DecidableEq α'] [Nonempty α']
+    [MeasurableSpace α'] [MeasurableSingletonClass α']
+    {Ω : Type*} [MeasurableSpace Ω] {k M M₁ n : ℕ} [Nonempty (Fin k)]
+    (μ : Measure Ω) (Us : ℕ → Ω → Fin k) (Ys : ℕ → Ω → β) (ε : ℝ)
+    (c₁ : LossyCode M₁ n α' (Fin k)) (f : Fin M₁ → Fin M)
+    (rec : Fin k × β → γ) (dα' : DistortionFn α' γ)
+    (Q : Measure (α' × β)) [IsProbabilityMeasure Q] :
+    (wzCodeOfCoveringBinning c₁ f rec
+          (wzBinTypicalDecoder μ Us Ys ε c₁ f)).expectedBlockDistortion Q dα'
+      ≤ (∫ p : Fin n → α' × β,
+            blockDistortion dα' n (fun i ↦ (p i).1)
+              (fun i ↦ rec (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2))
+          ∂(Measure.pi (fun _ : Fin n ↦ Q)))
+        + distortionMax dα'
+          * (Measure.pi (fun _ : Fin n ↦ Q)).real
+              { p : Fin n → α' × β |
+                  wzBinTypicalDecoder μ Us Ys ε c₁ f
+                      (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+                    ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) } := by
+  sorry
+
+/-- **(Leg D, A1) Source-support lift distortion identity.** The lifted Wyner–Ziv code's
+expected block distortion under `P_XY` equals the support-restricted code's expected block
+distortion under the co-restricted source measure `Q_XY := pmfToMeasure (P_XY on α' × β)`
+with the co-restricted distortion `dα' x' g := d x'.1 g`. Pure source-measure change of
+variables (`α' → α`), the distortion-side companion of Leg B
+`wz_covering_source_measure_map_val_eq` and the null-set transport
+`wz_expectedBlockDistortion_source_agree`.
+@residual(plan:wz-binning-covering) -/
+lemma wz_lift_expectedBlockDistortion_eq
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) {M n : ℕ}
+    (x₀ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}})
+    (codeSupp : WynerZivCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} β γ) :
+    (wzLiftSupportCode P_XY x₀ codeSupp).expectedBlockDistortion P_XY d
+      = codeSupp.expectedBlockDistortion
+          (ChannelCoding.pmfToMeasure (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+              P_XY.real {(p.1.1, p.2)}))
+          (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g) := by
+  sorry
+
+/-- **(Leg D, A2) Ideal distortion = covering distortion.** The ideal (true covering
+codeword) block distortion of the binned code, integrated over the co-restricted source
+`Q_XY`, equals the covering `LossyCode`'s expected block distortion under the i.i.d. covering
+ambient `(rdAmbient qStar).map (iidXs 0)` with the proxy distortion `d'`. Fubini over the
+product source + the proxy reconciliation `hd'_eq` (`d' = 𝔼_{Y|X}[d ∘ qf.2]`) + Leg B source
+change of variables (`wz_covering_source_measure_map_val_eq`). This is the identity that lets
+`hcov₁`'s covering bound bound the ideal term.
+@residual(plan:wz-binning-covering) -/
+lemma wz_ideal_expectation_eq_covering
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) {k M₁ n : ℕ}
+    (κ' : α → Fin k → ℝ) (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
+    (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (hd'_eq : ∀ x' u, d' x' u = Real.toNNReal (∑ y : β,
+        (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
+    (c₁ : LossyCode M₁ n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)) :
+    (∫ p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β,
+        blockDistortion (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g) n
+          (fun i ↦ (p i).1)
+          (fun i ↦ qf.2 (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2))
+      ∂(Measure.pi (fun _ : Fin n ↦
+          ChannelCoding.pmfToMeasure (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+              P_XY.real {(p.1.1, p.2)}))))
+      = c₁.expectedBlockDistortion
+          ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d' := by
+  sorry
+
+/-- **(Leg D, A3) Codebook-restricted confusion (E2) probability is squeezable.** For a
+covering codebook of size `M₁ ≲ exp(n·R₁)` and `n` beyond a threshold, there is a
+derandomized index binning `f` (and a typicality radius `ε`) making the bin-decoder confusion
+probability so small that `distortionMax · Pr[E2] ≤ δ/4`. Combines the binning-averaged
+confusion exponent (S5b `wz_codebook_confusion_expectation_le`, fed D2
+`wz_covering_codeword_sideInfo_mass_le` + collision `wzIndexBinningMeasure_collision`,
+instantiated over the positive-`Y`-marginal subtype `β'`), the binning derandomization, and
+the exponent squeeze (`hsplit : R₁ − I(Y;U) < R`), with the source ↔ side-info-ambient
+identification.
+
+The covering codebook size upper bound `(M₁ : ℝ) ≤ exp(n·R₁) + 1` is a genuine precondition:
+the confusion count scales with the number of codewords, so the squeeze needs `M₁` capped near
+`⌈exp(n·R₁)⌉` (the size the covering theorem actually produces), not merely bounded below.
+@residual(plan:wz-binning-covering) -/
+lemma wz_exists_binning_E2_bound
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
+    (d : DistortionFn α γ) (R : ℝ) {k : ℕ} [Nonempty (Fin k)]
+    (κ' : α → Fin k → ℝ) (hκ'pos : ∀ x u, 0 < κ' x u) (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (q' : α × β × Fin k → ℝ)
+    (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
+    (R₁ : ℝ) (hsplit : R₁ - wzMutualInfoYU (Fin k) q' < R)
+    (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (dα' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} γ)
+    (δ : ℝ) (hδ : 0 < δ) :
+    ∃ N_E2 : ℕ, ∀ n : ℕ, N_E2 ≤ n →
+      ∀ (M₁ : ℕ) (c₁ : LossyCode M₁ n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
+        (M₁ : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 →
+        ∃ (ε : ℝ) (f : Fin M₁ → Fin (codebookSize R n)),
+          distortionMax dα' *
+            (Measure.pi (fun _ : Fin n ↦
+                ChannelCoding.pmfToMeasure (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                    P_XY.real {(p.1.1, p.2)}))).real
+              { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+                  wzBinTypicalDecoder (rdAmbient (wzSideInfoMarginal P_XY κ'))
+                      ChannelCoding.iidXs
+                      (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                          ((ChannelCoding.iidYs i ω :
+                              {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
+                      ε c₁ f
+                      (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+                    ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) }
+            ≤ δ / 4 := by
+  sorry
+
 /-- **(D3) Per-`n` Wyner–Ziv code family at a fixed covering rate (Steps 2–7).** Given
 the Step 1–2 covering data together with an already-chosen covering rate `R₁` (strictly
 above `I(X;U)`, so that `hcov₁` — the covering `LossyCode` family at rate `R₁` — is
@@ -2671,23 +2843,30 @@ lemma wz_perN_covering_binning_code
   -- STEP 6 outer packaging (the `wzLiftSupportCode` factorization) are genuine glue below;
   -- STEPS 1'–5 + inner Step 6 remain a `sorry` tagged `@residual(plan:wz-binning-covering)`.
   -- ═══════════════════════════════════════════════════════════════════════════
-  -- STEP 1 (derandomize, covering side — genuine).  Feed `hcov₁` at slack `ε' := δ/4` to
-  -- obtain the threshold `N` and, for every `n ≥ N`, the covering codebook
-  -- `c₁ : LossyCode M n α' (Fin k)` whose covering distortion — over the i.i.d. covering
-  -- ambient `(rdAmbient qStar).map (iidXs 0)`, w.r.t. the proxy `d'` — is `≤ (D+δ/2)+δ/4`,
-  -- with codebook size `M ≥ ⌈exp(n·R₁)⌉`.
-  obtain ⟨N, hN⟩ := hcov₁ (δ / 4) (div_pos hδ (by norm_num))
-  refine ⟨N, fun n hn => ?_⟩
-  obtain ⟨M, hM_ge, c₁, hc₁_dist⟩ := hN n hn
   -- The source-support subtype `α'` is nonempty (its `stdSimplex` pmf `qStar` has total
-  -- mass `1 ≠ 0`), so it has an inhabitant `x₀` for the `α' → α` support lift.
+  -- mass `1 ≠ 0`), so it has an inhabitant `x₀` for the `α' → α` support lift and the
+  -- `Nonempty α'` instance the E2-squeeze adapter (A3) needs.
   haveI hne_prod :
       Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
     Finset.univ_nonempty_iff.mp
       (Finset.nonempty_of_sum_ne_zero (by rw [hqStar_mem.2]; exact one_ne_zero))
   haveI hneα' : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} :=
     hne_prod.map Prod.fst
-  obtain ⟨x₀⟩ := hneα'
+  -- STEP 1 (derandomize, covering side — genuine).  Feed `hcov₁` at slack `ε' := δ/4` to
+  -- obtain the covering threshold `N_cov` and, for every `n ≥ N_cov`, the covering codebook
+  -- `c₁ : LossyCode M n α' (Fin k)` whose covering distortion — over the i.i.d. covering
+  -- ambient `(rdAmbient qStar).map (iidXs 0)`, w.r.t. the proxy `d'` — is `≤ (D+δ/2)+δ/4`,
+  -- with codebook size `M ≥ ⌈exp(n·R₁)⌉`.
+  obtain ⟨N_cov, hN_cov⟩ := hcov₁ (δ / 4) (div_pos hδ (by norm_num))
+  -- STEP 4 / 1' (binning-side derandomize + E2 squeeze, Leg D A3).  Obtain the confusion
+  -- threshold `N_E2`: beyond it, for a covering codebook of size `M ≲ exp(n·R₁)`, a good
+  -- binning `f` (radius `ε`) makes `distortionMax dα' · Pr[E2] ≤ δ/4`.
+  obtain ⟨N_E2, hN_E2⟩ :=
+    wz_exists_binning_E2_bound P_XY d R κ' hκ'pos hκ'sum q' hfact_eq R₁ hsplit qf
+      (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g) δ hδ
+  refine ⟨max N_cov N_E2, fun n hn => ?_⟩
+  obtain ⟨M, hM_ge, c₁, hc₁_dist⟩ := hN_cov n (le_trans (le_max_left _ _) hn)
+  have x₀ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := Classical.arbitrary _
   -- ═══════════════════════════════════════════════════════════════════════════
   -- STEP 6 (outer packaging — genuine).  The Wyner–Ziv code is the `α' → α` support lift
   -- (`wzLiftSupportCode`) of a support-restricted code `codeSupp` over the source-support
@@ -2701,37 +2880,90 @@ lemma wz_perN_covering_binning_code
     obtain ⟨codeSupp, hcodeSupp⟩ := hsupp
     exact ⟨wzLiftSupportCode P_XY x₀ codeSupp, hcodeSupp⟩
   -- ═══════════════════════════════════════════════════════════════════════════
-  -- STEPS 1'–5 + inner Step 6 (the residual analytic body):
-  --  STEP 1' (derandomize, binning side): derandomize the index binning
-  --    `f : Fin M → Fin (codebookSize R n)` via `exists_pair_le_of_binning_integral_le`,
-  --    fed the averaged confusion bound from S5b (STEP 4).
-  --  STEP 2 (Leg C bridge): `wz_covering_binning_distortion_decomp` gives, for the code
-  --    `codeSupp := wzCodeOfCoveringBinning c₁ f qf.2 (wzBinTypicalDecoder …)`,
-  --      codeSupp.expectedBlockDistortion Q d' ≤ (D+δ/2) + distortionMax d' · (Pr[E1]+Pr[E2]),
-  --    over the α'×β source measure `Q` (the true joint `P_XY` transported to α').
-  --  STEP 3 (Pr[E1]→0): covering-failure typicality — `wz_covering_failure_prob_le` (S5a)
-  --    fed the mass lower bound via gateway-2 `wz_covering_sideInfo_mass_ge`, over the
-  --    covering ambient `rdAmbient qStar` (Leg A).
-  --  STEP 4 (Pr[E2]→0): codebook-restricted confusion —
-  --    `wz_codebook_confusion_expectation_le` (S5b) fed D2
-  --    `wz_covering_codeword_sideInfo_mass_le` + collision
-  --    `wzIndexBinningMeasure_collision`, over the (U,Y) side-info ambient
-  --    `rdAmbient (wzSideInfoMarginal P_XY κ')` (Leg A).
-  --  STEP 5 (squeeze): distortionMax d' · (Pr[E1]+Pr[E2]) → 0 exponentially, so `≤ δ/2` for
-  --    `n` beyond the threshold (`ceil_exp_mul_exp_neg_tendsto_atTop`,
-  --    `exp_neg_tendsto_zero_of_tendsto_atTop`, `wz_tendsto_exp_mul_codebookSize_inv`);
-  --    combined with the STEP 2 proxy `≤ D+δ/2` this gives `≤ D+δ`.
-  --  STEP 6 (inner α'→α transport): equate
-  --    `(wzLiftSupportCode P_XY x₀ codeSupp).expectedBlockDistortion P_XY d`
-  --    with `codeSupp.expectedBlockDistortion Q d'` — the source-measure change of
-  --    variables (Leg B `wz_covering_source_measure_map_val_eq`) together with the proxy
-  --    reconciliation `hd'_eq` (`d' = 𝔼_{Y|X}[d ∘ qf.2]`) and the null-set decoder
-  --    agreement (`wz_expectedBlockDistortion_source_agree`).
-  -- BLOCKER: pinning the α'×β source measure `Q` reconciling `Measure.pi P_XY` with the
-  -- covering/side-info two-ambient structure, and the matching decoder ambient
-  -- (`Ys : ℕ → Ω → β`), is the unresolved design core of Leg D.
+  -- STEPS 1'–5 + inner Step 6 (E2-only assembly via the Leg D adapters G2/A1/A2/A3):
+  --   A3 (`hN_E2`) → binning `f` + radius `ε` with `distortionMax dα' · Pr[E2] ≤ δ/4`;
+  --   A1 (`wz_lift_expectedBlockDistortion_eq`)  : lift identity `P_XY,d ↦ Q_XY,dα'`;
+  --   G2 (`wz_expectedBlockDistortion_le_ideal_add_E2`) : actual ≤ ideal + dMax·Pr[E2];
+  --   A2 (`wz_ideal_expectation_eq_covering`) : ideal = covering distortion ≤ (D+δ/2)+δ/4.
+  -- Arithmetic: ((D+δ/2)+δ/4) + δ/4 = D+δ.
+  -- ═══════════════════════════════════════════════════════════════════════════
+  -- Covering codebook size cap (M-direction).  The confusion count scales with the number
+  -- of covering codewords, so A3 needs `M ≲ exp(n·R₁)`.  hcov₁ exposes only the LOWER bound
+  -- `⌈exp(n·R₁)⌉ ≤ M`; the matching upper bound is the size the covering theorem actually
+  -- produces but is not currently threaded through `hcov₁` (an M-direction under-hypothesis
+  -- of the fixed D3 signature — see the Leg-D report, deferred to a Leg-C.6-style fix).
   -- @residual(plan:wz-binning-covering)
-  sorry
+  have hM_ub : (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 := by
+    sorry
+  obtain ⟨εTyp, f, hE2⟩ := hN_E2 n (le_trans (le_max_right _ _) hn) M c₁ hM_ub
+  -- The co-restricted source measure `Q_XY` is a probability measure.
+  haveI hQ_prob : IsProbabilityMeasure
+      (ChannelCoding.pmfToMeasure
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
+  -- Assemble the support-restricted covering + binning code and bound its distortion.
+  refine ⟨wzCodeOfCoveringBinning c₁ f qf.2
+      (wzBinTypicalDecoder (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs
+        (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+            ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
+        εTyp c₁ f), ?_⟩
+  rw [wz_lift_expectedBlockDistortion_eq P_XY d x₀ _]
+  calc (wzCodeOfCoveringBinning c₁ f qf.2
+          (wzBinTypicalDecoder (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs
+            (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
+            εTyp c₁ f)).expectedBlockDistortion
+          (ChannelCoding.pmfToMeasure
+            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
+          (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g)
+      ≤ (∫ p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β,
+            blockDistortion (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g) n
+              (fun i ↦ (p i).1)
+              (fun i ↦ qf.2 (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2))
+          ∂(Measure.pi (fun _ : Fin n ↦
+              ChannelCoding.pmfToMeasure
+                (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                  P_XY.real {(p.1.1, p.2)}))))
+        + distortionMax (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g)
+          * (Measure.pi (fun _ : Fin n ↦
+                ChannelCoding.pmfToMeasure
+                  (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                    P_XY.real {(p.1.1, p.2)}))).real
+              { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+                  wzBinTypicalDecoder (rdAmbient (wzSideInfoMarginal P_XY κ'))
+                      ChannelCoding.iidXs
+                      (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                          ((ChannelCoding.iidYs i ω :
+                              {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
+                      εTyp c₁ f
+                      (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+                    ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) } :=
+        wz_expectedBlockDistortion_le_ideal_add_E2 (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          ChannelCoding.iidXs
+          (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+              ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
+          εTyp c₁ f qf.2 (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g)
+          (ChannelCoding.pmfToMeasure
+            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
+    _ = c₁.expectedBlockDistortion ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
+          + distortionMax (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g)
+            * (Measure.pi (fun _ : Fin n ↦
+                  ChannelCoding.pmfToMeasure
+                    (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                      P_XY.real {(p.1.1, p.2)}))).real
+                { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+                    wzBinTypicalDecoder (rdAmbient (wzSideInfoMarginal P_XY κ'))
+                        ChannelCoding.iidXs
+                        (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                            ((ChannelCoding.iidYs i ω :
+                                {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
+                        εTyp c₁ f
+                        (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+                      ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) } := by
+        rw [wz_ideal_expectation_eq_covering P_XY d κ' hκ'sum qStar hqStar_eq hqStar_mem d' qf
+          hd'_eq c₁]
+    _ ≤ ((D + δ / 2) + δ / 4) + δ / 4 := by linarith [hc₁_dist, hE2]
+    _ = D + δ := by ring
 
 /-- **(D) Per-slack per-`n` good deterministic Wyner–Ziv code (Steps 3–6).** Consuming
 the same Step 1–2 covering data as the capstone `wz_perDelta_covering_binning` (S6),
