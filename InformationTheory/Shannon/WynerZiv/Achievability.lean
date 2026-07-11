@@ -2018,9 +2018,9 @@ binning rate reduction `I(X;U) → I(X;U) − I(Y;U)` together with the confusio
 the residual body content. `hobj'`/`hsplit`/`hfeas` are objective/feasibility
 preconditions on the test channel; positivity and simplex membership are regularity.
 
-Independent honesty audit 2026-07-06: honest residual, non-bundled, BUT the sufficiency
-claim (4) below was OVERTURNED (leg-20, 2026-07-06) — the signature is under-hypothesized
-(false-as-framed); see the retraction and δ-split fix in (4). (1)-(3) still hold. (1) Non-circular: no
+Independent honesty audit 2026-07-06: honest residual, non-bundled. The sufficiency
+claim (4) below was OVERTURNED (leg-20, 2026-07-06) as false-as-framed and then honest-ified
+by the δ-split fix (Leg 0, 2026-07-11); see (4). (1)-(3) still hold. (1) Non-circular: no
 hypothesis has the conclusion's type. (2) Non-bundled (load-bearing test): `hcov₁` is the
 rate-distortion *covering* `LossyCode M n α' (Fin k)` family at covering rate `R₁`
 (≈ `I(X;U)`), NOT the binned `WynerZivCode (codebookSize R n)` at operational rate `R` —
@@ -2030,27 +2030,22 @@ exponent (S5b) remain genuine body work. `hobj'`/`hsplit`/`hfeas` are rate/feasi
 preconditions, not the operational conclusion; positivity, `hκ'sum`, simplex membership are
 regularity. (3) Non-degenerate: same `∃ c` inside `∀ n` shape as (D) — the `n < N` branch
 is benignly vacuous while the infinitely many `n ≥ N` require genuine codes. (4)
-Sufficiency — **FALSE-AS-FRAMED, RETRACTED (leg-20, 2026-07-06)**: the earlier claim that
-(`hcov₁` at `R₁`) + `hsplit` + `hfeas` suffice for the EXACT conclusion `≤ D+δ` is WRONG.
-The WZ distortion decomposes (RD precedent `source_avg_distortion_le_simpler`,
-`RateDistortion/AchievabilityAsymptoticFailureDecay.lean:203`) as good-event proxy +
-`distortionMax d · (P[E1]+P[E2])`, and `hfeas : expectedDistortionPmf d' qStar ≤ D+δ`
-spends the WHOLE budget on the good-event proxy, leaving no room for the strictly-positive
-finite-`n` error term. Airtight degenerate counterexample: with `expectedDistortionPmf d'
-qStar = D+δ` (perturbation tuned to full `δ`), `distortionMax d = D+δ+η` (η>0, generic
-non-constant `d`), generic positive `P[error]`, the WZ distortion is `(D+δ)+η·P[error](n) >
-D+δ` for every `n`, so `∃N ∀n≥N …≤ D+δ` fails while all frozen hypotheses hold. Confirmed
-by the RD sister theorem `rate_distortion_achievability`, which reaches only `≤ D+ε'`
-(never exact `D+δ`) via an explicit slack hypothesis `expectedDistortionPmf + δ_typ ≤
-D+ε'/2` RESERVING `ε'/2` for the error term — D3 asks for a stricter conclusion with less
-reserved room, which is impossible. FIX (honest, cheap, non-load-bearing): δ-split — tighten
-`hfeas` and `hcov₁`'s target to `D + δ/2`, reserving `δ/2` for the WZ errors (mirrors the
-RD `h_slack`); ripple contained to ~5 private sigs in this file
-(`wz_coveringFamily_of_testChannel` → `wz_perDelta_covering_binning_eventual` → D3 → S6 →
-`wz_perDelta_codes_exist`), `∃N∀n` shapes unchanged. Classification `plan:wyner-ziv-main-plan`
-still correct (in-project, not a Mathlib wall). cause:false-statement.
-@residual(plan:wyner-ziv-main-plan)
-@audit:defect(false-statement) @audit:closed-by-successor(wz-binning-covering) -/
+Sufficiency — honest-as-framed since the δ-split fix (Leg 0, 2026-07-11). The earlier
+signature (exact `≤ D+δ` conclusion with `hfeas`/`hcov₁` *also* budgeted at `D+δ`) was
+FALSE-AS-FRAMED (leg-20 OVERTURN, mechanically confirmed): the WZ distortion decomposes
+(RD precedent `source_avg_distortion_le_simpler`) as good-event proxy +
+`distortionMax d · (P[E1]+P[E2])`, so spending the WHOLE `D+δ` budget on the proxy left no
+room for the strictly-positive finite-`n` error term (degenerate counterexample: proxy
+`= D+δ`, `distortionMax d = D+δ+η`, generic positive `P[error]` ⇒ WZ distortion `> D+δ`
+∀n). δ-split FIX: `hfeas` and `hcov₁`'s target are tightened to `D + δ/2`, reserving `δ/2`
+for the WZ errors (mirrors the RD sister `rate_distortion_achievability`'s `h_slack`). This
+is a PRECONDITION tightening, NOT bundling: the covering atom
+`wz_covering_lossyCode_exists` accepts any target `≤ D` and returns `≤ target + ε'`, so
+`D + δ/2` is genuinely achievable; the reserved `δ/2` is absorbed by the error exponents
+(S5a/S5b/D2/(B) → 0), which is real analytic work (Leg C), not encoded into a hypothesis.
+The conclusion `≤ D+δ` is unchanged and the body stays `sorry` (the distortion-decomposition
+bridge is filled in Leg C). Classification `plan` correct (in-project, not a Mathlib wall).
+@residual(plan:wz-binning-covering) -/
 lemma wz_perN_covering_binning_code
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
@@ -2067,7 +2062,7 @@ lemma wz_perN_covering_binning_code
     (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
     (hqStar_pos : ∀ p, 0 < qStar p)
     (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
-    (hfeas : expectedDistortionPmf d' qStar ≤ D + δ)
+    (hfeas : expectedDistortionPmf d' qStar ≤ D + δ / 2)
     (hsplit : R₁ - wzMutualInfoYU (Fin k) q' < R)
     (hcov₁ : ∀ ε' : ℝ, 0 < ε' →
         ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
@@ -2075,10 +2070,10 @@ lemma wz_perN_covering_binning_code
           ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
             c.expectedBlockDistortion
                 ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
-              ≤ (D + δ) + ε') :
+              ≤ (D + δ / 2) + ε') :
     ∃ N : ℕ, ∀ n : ℕ, ∃ c : WynerZivCode (codebookSize R n) n α β γ,
       N ≤ n → c.expectedBlockDistortion P_XY d ≤ D + δ := by
-  -- @residual(plan:wyner-ziv-main-plan)
+  -- @residual(plan:wz-binning-covering)
   sorry
 
 /-- **(D) Per-slack per-`n` good deterministic Wyner–Ziv code (Steps 3–6).** Consuming
@@ -2154,14 +2149,14 @@ lemma wz_perDelta_covering_binning_eventual
     (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
     (hqStar_pos : ∀ p, 0 < qStar p)
     (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
-    (hfeas : expectedDistortionPmf d' qStar ≤ D + δ)
+    (hfeas : expectedDistortionPmf d' qStar ≤ D + δ / 2)
     (hcov : ∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' →
         ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
           Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
           ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
             c.expectedBlockDistortion
                 ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
-              ≤ (D + δ) + ε') :
+              ≤ (D + δ / 2) + ε') :
     ∃ N : ℕ, ∀ n : ℕ, ∃ c : WynerZivCode (codebookSize R n) n α β γ,
       N ≤ n → c.expectedBlockDistortion P_XY d ≤ D + δ := by
   -- Step 1 (rate split): the covering rate identity D1 lets the covering family `hcov`
@@ -2236,14 +2231,14 @@ lemma wz_perDelta_covering_binning
     (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
     (hqStar_pos : ∀ p, 0 < qStar p)
     (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
-    (hfeas : expectedDistortionPmf d' qStar ≤ D + δ)
+    (hfeas : expectedDistortionPmf d' qStar ≤ D + δ / 2)
     (hcov : ∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' →
         ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
           Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
           ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
             c.expectedBlockDistortion
                 ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
-              ≤ (D + δ) + ε') :
+              ≤ (D + δ / 2) + ε') :
     ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
       ∀ᶠ n in Filter.atTop, (c n).expectedBlockDistortion P_XY d ≤ D + δ := by
   -- Steps 3–7 are the covering + binning core `wz_perDelta_covering_binning_eventual`
@@ -2296,9 +2291,13 @@ private lemma wz_perDelta_codes_exist
   -- the covering LossyCode family at any rate `R₁ > mutualInfoPmf qStar`, with the
   -- covering proxy `d'` reconciled against the Wyner–Ziv distortion (feasibility
   -- `expectedDistortionPmf d' qStar ≤ D + δ`).
+  -- Call the covering family at the tightened slack `δ/2`, reserving the remaining `δ/2`
+  -- for the Wyner–Ziv error terms (S5a/S5b/D2/(B) exponents). `wz_coveringFamily_of_testChannel`
+  -- is `δ`-generic, so it returns `hfeas ≤ D + δ/2` and covering target `≤ (D + δ/2) + ε'`,
+  -- exactly what the tightened capstone `wz_perDelta_covering_binning` (S6) consumes.
   obtain ⟨q', κ', qStar, d', hfact_eq, hκ'pos, hκ'sum, hobj', hqStar_eq,
       hqStar_pos, hqStar_mem, hfeas, hcov⟩ :=
-    wz_coveringFamily_of_testChannel P_XY d R D k qf hqf hobj δ hδ
+    wz_coveringFamily_of_testChannel P_XY d R D k qf hqf hobj (δ / 2) (half_pos hδ)
   -- Steps 3–7 (binning / decoder / error exponents / derandomize / squeeze / source
   -- extension) are packaged in the capstone `wz_perDelta_covering_binning` (S6),
   -- which consumes the covering data obtained above:
