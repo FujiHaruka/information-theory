@@ -2667,8 +2667,9 @@ lemma wz_perN_covering_binning_code
                 decoder := fun _ _ => Classical.arbitrary γ },
              fun hle => absurd hle hn⟩
   -- ═══════════════════════════════════════════════════════════════════════════
-  -- Analytic core (Legs A–D). Six-step assembly; STEP 1 (covering-side derandomize) is
-  -- genuine glue below; STEPS 1'–6 remain a `sorry` tagged `@residual(plan:wz-binning-covering)`.
+  -- Analytic core (Legs A–D). Six-step assembly; STEP 1 (covering-side derandomize) and
+  -- STEP 6 outer packaging (the `wzLiftSupportCode` factorization) are genuine glue below;
+  -- STEPS 1'–5 + inner Step 6 remain a `sorry` tagged `@residual(plan:wz-binning-covering)`.
   -- ═══════════════════════════════════════════════════════════════════════════
   -- STEP 1 (derandomize, covering side — genuine).  Feed `hcov₁` at slack `ε' := δ/4` to
   -- obtain the threshold `N` and, for every `n ≥ N`, the covering codebook
@@ -2678,13 +2679,36 @@ lemma wz_perN_covering_binning_code
   obtain ⟨N, hN⟩ := hcov₁ (δ / 4) (div_pos hδ (by norm_num))
   refine ⟨N, fun n hn => ?_⟩
   obtain ⟨M, hM_ge, c₁, hc₁_dist⟩ := hN n hn
-  -- STEPS 1'–6 (the residual analytic body):
+  -- The source-support subtype `α'` is nonempty (its `stdSimplex` pmf `qStar` has total
+  -- mass `1 ≠ 0`), so it has an inhabitant `x₀` for the `α' → α` support lift.
+  haveI hne_prod :
+      Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
+    Finset.univ_nonempty_iff.mp
+      (Finset.nonempty_of_sum_ne_zero (by rw [hqStar_mem.2]; exact one_ne_zero))
+  haveI hneα' : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} :=
+    hne_prod.map Prod.fst
+  obtain ⟨x₀⟩ := hneα'
+  -- ═══════════════════════════════════════════════════════════════════════════
+  -- STEP 6 (outer packaging — genuine).  The Wyner–Ziv code is the `α' → α` support lift
+  -- (`wzLiftSupportCode`) of a support-restricted code `codeSupp` over the source-support
+  -- subtype `α'`.  This factors the α-side conclusion through the α'-side construction; the
+  -- remaining source-measure transport / proxy reconciliation (the *inner* half of Step 6)
+  -- lives inside the `codeSupp` existential below.
+  -- ═══════════════════════════════════════════════════════════════════════════
+  suffices hsupp : ∃ codeSupp : WynerZivCode (codebookSize R n) n
+      {x : α // 0 < ∑ y, P_XY.real {(x, y)}} β γ,
+      (wzLiftSupportCode P_XY x₀ codeSupp).expectedBlockDistortion P_XY d ≤ D + δ by
+    obtain ⟨codeSupp, hcodeSupp⟩ := hsupp
+    exact ⟨wzLiftSupportCode P_XY x₀ codeSupp, hcodeSupp⟩
+  -- ═══════════════════════════════════════════════════════════════════════════
+  -- STEPS 1'–5 + inner Step 6 (the residual analytic body):
   --  STEP 1' (derandomize, binning side): derandomize the index binning
   --    `f : Fin M → Fin (codebookSize R n)` via `exists_pair_le_of_binning_integral_le`,
   --    fed the averaged confusion bound from S5b (STEP 4).
   --  STEP 2 (Leg C bridge): `wz_covering_binning_distortion_decomp` gives, for the code
-  --    `wzCodeOfCoveringBinning c₁ f qf.2 (wzBinTypicalDecoder …)`,
-  --      dist ≤ (D+δ/2) + distortionMax · (Pr[E1]+Pr[E2]).
+  --    `codeSupp := wzCodeOfCoveringBinning c₁ f qf.2 (wzBinTypicalDecoder …)`,
+  --      codeSupp.expectedBlockDistortion Q d' ≤ (D+δ/2) + distortionMax d' · (Pr[E1]+Pr[E2]),
+  --    over the α'×β source measure `Q` (the true joint `P_XY` transported to α').
   --  STEP 3 (Pr[E1]→0): covering-failure typicality — `wz_covering_failure_prob_le` (S5a)
   --    fed the mass lower bound via gateway-2 `wz_covering_sideInfo_mass_ge`, over the
   --    covering ambient `rdAmbient qStar` (Leg A).
@@ -2693,13 +2717,19 @@ lemma wz_perN_covering_binning_code
   --    `wz_covering_codeword_sideInfo_mass_le` + collision
   --    `wzIndexBinningMeasure_collision`, over the (U,Y) side-info ambient
   --    `rdAmbient (wzSideInfoMarginal P_XY κ')` (Leg A).
-  --  STEP 5 (squeeze): distortionMax · (Pr[E1]+Pr[E2]) → 0 exponentially, so `≤ δ/2` for
+  --  STEP 5 (squeeze): distortionMax d' · (Pr[E1]+Pr[E2]) → 0 exponentially, so `≤ δ/2` for
   --    `n` beyond the threshold (`ceil_exp_mul_exp_neg_tendsto_atTop`,
   --    `exp_neg_tendsto_zero_of_tendsto_atTop`, `wz_tendsto_exp_mul_codebookSize_inv`);
   --    combined with the STEP 2 proxy `≤ D+δ/2` this gives `≤ D+δ`.
-  --  STEP 6 (α'→α lift): package via `wzLiftSupportCode`, transporting the source measure
-  --    (Leg B `wz_covering_source_measure_map_val_eq`) and the null-set decoder agreement
-  --    (`wz_expectedBlockDistortion_source_agree`).
+  --  STEP 6 (inner α'→α transport): equate
+  --    `(wzLiftSupportCode P_XY x₀ codeSupp).expectedBlockDistortion P_XY d`
+  --    with `codeSupp.expectedBlockDistortion Q d'` — the source-measure change of
+  --    variables (Leg B `wz_covering_source_measure_map_val_eq`) together with the proxy
+  --    reconciliation `hd'_eq` (`d' = 𝔼_{Y|X}[d ∘ qf.2]`) and the null-set decoder
+  --    agreement (`wz_expectedBlockDistortion_source_agree`).
+  -- BLOCKER: pinning the α'×β source measure `Q` reconciling `Measure.pi P_XY` with the
+  -- covering/side-info two-ambient structure, and the matching decoder ambient
+  -- (`Ys : ℕ → Ω → β`), is the unresolved design core of Leg D.
   -- @residual(plan:wz-binning-covering)
   sorry
 
