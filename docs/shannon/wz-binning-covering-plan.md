@@ -2,160 +2,117 @@
 
 > **Parent**: [`wyner-ziv-main-plan.md`](wyner-ziv-main-plan.md) §P3 D3 split-out
 
-**Status**: ACTIVE 🚧 — **D3 は再び `@audit:defect(false-statement)` (M-axis under-hyp、Leg D で発見、独立監査 confirm)**。残 sorry 3 = A2 `wz_ideal_expectation_eq_covering` + A3 `wz_exists_binning_E2_bound` (共に honest tier-2 `@residual`) + D3 body `hM_ub` (M-axis defect の localization、Leg C.6 で解消)。**Leg 0/A/B/C/C.5 + Leg D の G2/A1 DONE** (sorry-free): Leg 0 δ-split (budget 軸) / Leg A two-ambient regularity / Leg B source-marginal / Leg C bridge / Leg C.5 reconciliation (`hd'_eq`+`hqf`) / **Leg D G2 `wz_expectedBlockDistortion_le_ideal_add_E2` (E2-only decomp、`@audit:ok`) + A1 `wz_lift_expectedBlockDistortion_eq` (lift identity、`@audit:ok`)**。**次の本線 = Leg C.6 (hcov₁ に M 上界を pin して M-axis defect を除去) → その後 A2/A3 fill** (C.6 前に A2/A3 を埋めると defect の上に積む)。**警告: Leg 0(budget)/C.5(reconciliation) を直しても第3軸 (M-direction) が残っていた** — under-hyp は多軸、監査は毎回全 param 網羅 (judgment-log #4/#6)。
+**Status**: ACTIVE 🚧 — **残 literal sorry 1 = A3 `wz_exists_binning_E2_bound` (Achievability.lean:3022)**、**第4 under-hyp 軸 = covering-acceptance C2** で `@audit:defect(false-statement)` (コード側マーク済、独立監査 CONFIRMED)。**Leg C.6 (D3 M-axis fix、第3軸解消) DONE** (`fe3d9482`/`90996ed1`、独立監査 all-PASS): RD covering chain の結論に `M ≤ exp(nR₁)+1` 上界を露出 → hcov₁ threading → D3 body で discharge、D3 の `@audit:defect` 除去 honest tier-2 復帰。**A2 `wz_ideal_expectation_eq_covering` DONE** sorry-free + sorryAx-free (`84393413`、finite-sum marginalization、独立監査は Leg E closure 時に A3 と comprehensive 実施)。**Leg D G2/A1 (E2-only decomp + lift identity) DONE** `@audit:ok`。**Leg 0/A/B/C/C.5 DONE** sorry-free。**次の本線 = Leg E (covering-acceptance C2 再設計、Proposal A)**: E2-only 分解 G2 は正しいので維持、E2 = E2b(confusion, S5b) ∪ C2(acceptance, S5a) と分け **S5a/gateway-2 を復活** させ covering codebook を distortion+acceptance に joint-derandomize (署名 fix は Leg C.6 同型 precondition-exposure、bundling でない)。
 
 **再検証** (prose にキャッシュしない): `scripts/sig_view.ts --sorry InformationTheory/Shannon/WynerZiv/Achievability.lean` / `#print axioms wyner_ziv_achievability`。
 
 ## 進捗
 
-- [x] Leg 0 — δ-split 署名修正 (D3 honest 化、tier-5 fix、5-decl file-contained ripple) ✅ (`a59e37cb`、独立監査 PASS)
-- [x] Leg A — two-ambient WZ-joint 構成 (pure regularity) ✅ (`dfdf3e42`、sorry-free)
-- [x] Leg B — α'→α source-measure 変数変換 lemma (medium) ✅ (`02ea97d7`、sorry-free)
-- [x] Leg C — WZ distortion-decomposition bridge (解析コア) ✅ (`25629b0a`、bridge 2本 sorry-free)。**finding: D3 に第2 under-hyp 軸 → Leg C.5 へ**
-- [x] Leg C.5 — D3 署名 reconciliation 修正 (`hd'_eq` + `hqf` threading、第2 tier-5 fix) ✅ (`22b64afa`、独立監査 PASS、per-param 網羅確認で第3軸なし)
-- [~] Leg D — E2-only decomp + squeeze glue → D3 closure 🚧: Step 6 outer packaging `7c9c508d` + **G2/A1 DONE sorry-free `@audit:ok`** (`a5e23439`/`1bb1d1ad`) + D3 body を 4-adapter glue 化 (`bea06061`)。残 = A2/A3 fill (**C.6 後**) + M-axis defect (下記 Leg C.6)。E2-only pivot 2026-07-11。
-- [ ] Leg C.6 — hcov₁ M-pin (M-axis under-hyp fix、**Leg D で発見・監査 confirm**、A2/A3 fill より前) 📋
+- [x] Leg 0 — δ-split 署名修正 (budget 軸、第1 tier-5 fix) ✅ (`a59e37cb`、独立監査 PASS)
+- [x] Leg A — two-ambient WZ-joint 構成 (regularity) ✅ (`dfdf3e42`、sorry-free)
+- [x] Leg B — α'→α source-measure 変数変換 ✅ (`02ea97d7`、sorry-free)
+- [x] Leg C — WZ distortion-decomposition bridge ✅ (`25629b0a`、sorry-free)
+- [x] Leg C.5 — D3 署名 reconciliation (`hd'_eq`+`hqf`、第2 tier-5 fix) ✅ (`22b64afa`、独立監査 PASS)
+- [x] Leg C.6 — hcov₁ M-pin (M-axis under-hyp fix、第3軸解消) ✅ (`fe3d9482`/`90996ed1`、独立監査 all-PASS、D3 `@audit:defect` 除去 honest tier-2 復帰)
+- [~] Leg D — E2-only decomp glue: **G2/A1/A2 DONE** sorry-free (`a5e23439`/`1bb1d1ad`/`84393413`)、残 A3 は第4軸 (covering-acceptance C2) で false-as-framed → Leg E へ 🚧
+- [ ] Leg E — covering-acceptance C2 再設計 (Proposal A、**active 本線**): E2 = E2b∪C2 で S5a/gateway-2 復活 + covering codebook joint-derandomize 📋
 
 ## ゴール / Approach
 
 ### Goal
 
-親 §P3 の唯一の残 sorry である D3 `wz_perN_covering_binning_code` (Achievability.lean:2054、sorry L2082) を、**まず δ-split で honest 化** (Leg 0、false-as-framed 訂正) した上で **genuine closure** (Leg A-D)、WZ achievability headline `wyner_ziv_achievability` を sorryAx-free (`[propext, Classical.choice, Quot.sound]`) へ到達させる。
+親 §P3 の唯一の残 sorry である achievability の per-n covering+binning 構成を genuine closure し、WZ achievability headline `wyner_ziv_achievability` を sorryAx-free (`[propext, Classical.choice, Quot.sound]`) へ到達させる。現状の唯一の literal sorry は A3 `wz_exists_binning_E2_bound` (Achievability.lean:3022)、E2 probability bound の第4 under-hyp 軸 (covering-acceptance C2) で `@audit:defect(false-statement)`。
 
-D3 の署名 (現状、Achievability.lean:2054-2080、δ-split 前):
-
-```lean
--- hfeas : expectedDistortionPmf d' qStar ≤ D + δ            -- ← Leg 0 で ≤ D + δ/2 に締める
--- hcov₁ : … c.expectedBlockDistortion (…) d' ≤ (D + δ) + ε'  -- ← Leg 0 で ≤ (D + δ/2) + ε' に締める
--- 結論: ∃ N, ∀ n, ∃ c : WynerZivCode (codebookSize R n) n α β γ,
---         N ≤ n → c.expectedBlockDistortion P_XY d ≤ D + δ   -- ← 不変 (δ/2 を誤差に予約)
-```
+D3 `wz_perN_covering_binning_code` (Achievability.lean:3172) は G2/A1/A2/A3 の 4 adapter を consume する sorry-free reduction (M-axis defect は Leg C.6 で解消、`@residual` は A3 から transitive 継承)。
 
 ### Approach (overall strategy / shape of solution)
 
-解の全体像は 4 段:
+解の全体像 (Leg 0-C.6 で honest 化済 + Leg E で closure):
 
-1. **署名を honest 化 (Leg 0、δ-split)** — D3 の `hfeas`/`hcov₁` の target を `D + δ/2` に締め、`δ/2` を WZ 誤差項に予約する (RD 姉妹定理 `rate_distortion_achievability` の明示 slack 仮説 `h_slack` と同型)。これは precondition の締めであって bundling ではない: covering atom `wz_covering_lossyCode_exists` (Achievability.lean:709) は任意 target `≤ D` を受けて `≤ target + ε'` を返す flexible atom ゆえ、target `D + δ/2` は genuinely achievable。
-2. **閉じた error 事象確率 atom を実 distortion に橋渡し** — error 事象確率の閉じた atom 群 (S5a covering-failure / S5b codebook-restricted confusion / D2 codeword mass upper bound / (B) binning collision / gateway-2 E3 covering-acceptance) を、**two-ambient WZ-joint 構成 (Leg A)** + **α'→α 測度変換 (Leg B)** + **distortion-decomposition bridge (Leg C)** で `wzCodeOfCoveringBinning` の実 `expectedBlockDistortion P_XY d` に接続する。
-3. **derandomize + squeeze (Leg D)** — per-n error 確率 (E1+E2+E3) → 0 を double derandomization で決定的 codebook + binning に固定し、squeeze で残 distortion excess を `δ/2` に押さえて `≤ D + δ` を得る。
-4. **伝播** — D3 body の sorry が消えると、Achievability.lean 内の上流 chain (D `wz_perDelta_covering_binning_eventual` → S6 → `wz_perDelta_codes_exist` → `wz_goodCode_exists_of_testChannel` → headline) が transitive sorryAx を失い、`wyner_ziv_achievability` が sorryAx-free になる。
-
-**未構築の load-bearing コア 3 つ** (leg-20 finding、`wzCodeOfCoveringBinning` は def+docstring 以外に消費者ゼロ = error 確率 atom を実 distortion に橋渡しする bridge が未着手):
-
-- **(i) distortion-decomposition bridge** (Leg C、解析コア): `(wzCodeOfCoveringBinning …).expectedBlockDistortion P_XY d ≤ (expectedDistortionPmf d' qStar + δ_typ) + distortionMax d · (P[E1]+P[E2])`。RD `source_avg_distortion_le_simpler` (AchievabilityAsymptoticFailureDecay.lean:203) の bin-decoder 版 — S4 `wzBinTypicalDecoder` (Achievability.lean:1072) は bin member のみ探索するので RD flat-codebook 版から再構築要。
-- **(ii) two-ambient 構成** (Leg A、regularity): D3 仮説に Ω / iid RV は無い。covering ambient `rdAmbient qStar` (Xs=iidXs, Us=iidYs) が S5a / covering-acceptance を、別の (U,Y) ambient が S5b / decoder-confusion を駆動する。同一 3-var `q'` の 2 marginal (共有 U-marginal で coupling)、rate split `R = I(X;U) − I(Y;U)` が 2 指数を分ける。regularity は `rdAmbient_*` / `measurable_iid*` (AchievabilityAmbientMeasure.lean:153-235) で discharge。
-- **(iii) α'→α source-measure 変数変換** (Leg B): 既存 `wz_expectedBlockDistortion_source_agree` (Achievability.lean:551) は同一 `P_XY` 下の 2 α-code 比較 (null-set) のみで、iid ambient (α' = `{x // 0 < P_X x}`) から `Measure.pi P_XY` (α×β) への測度変換は未提供 → 新 lemma 要。
+1. **署名 honest 化 (Leg 0/C.5/C.6、DONE)** — D3/D/S6/`wz_perDelta_codes_exist` の署名を 3 段の precondition-exposure で honest 化: budget (δ-split、Leg 0)、reconciliation (`hd'_eq`/`hqf`、Leg C.5)、M-pin (`M ≤ exp(nR₁)+1`、Leg C.6)。いずれも caller `wz_coveringFamily_of_testChannel` の construction で discharge = bundling でない。
+2. **error 事象 atom を実 distortion に橋渡し (Leg A/B/C、DONE)** — two-ambient WZ-joint (Leg A) + α'→α 測度変換 (Leg B) + distortion-decomposition bridge (Leg C) で closed error atom を実 `expectedBlockDistortion P_XY d` に接続。
+3. **E2-only decomposition + joint derandomize (Leg D/E)** — `𝔼[actual] ≤ 𝔼[ideal] + distortionMax·Pr[E2]` (G2、DONE)。**E2 = E2b(confusion, S5b) ∪ C2(covering-acceptance, S5a)** ゆえ covering codebook を distortion **と** acceptance の両方に good に joint-derandomize (Leg E)、binning `f` は confusion に single-derandomize。squeeze で残 excess を `δ/2` に押さえ `≤ D + δ`。
+4. **伝播** — A3 の sorry が消えると D3 body sorry-free → 上流 chain (D → S6 → `wz_perDelta_codes_exist` → `wz_goodCode_exists_of_testChannel` → headline) が transitive sorryAx を失い `wyner_ziv_achievability` sorryAx-free。
 
 ## Leg 詳細
 
-### Leg 0 — δ-split 署名修正 (D3 honest 化)
+### 完了 leg (settled、詳細 git)
 
-**proof-log**: no (署名 literal 締め + call-site 変更 + 5-decl chain 再監査、mechanical)
+- **Leg 0** (`a59e37cb`) — δ-split: `hfeas`/`hcov₁` の target を `D+δ/2` に締め `δ/2` を誤差に予約 (budget 軸 honest 化、RD `h_slack` mirror)。
+- **Leg A** (`dfdf3e42`) — two-ambient WZ-joint 構成 (covering ambient `rdAmbient qStar` = S5a/C2 駆動、(U,Y) side-info ambient = S5b 駆動、共有 U-marginal で coupling、rate split `R = I(X;U) − I(Y;U)`)。regularity は `rdAmbient_*` (AchievabilityAmbientMeasure.lean) で discharge。
+- **Leg B** (`02ea97d7`) — α'→α source-measure 変数変換 (iid ambient `(rdAmbient qStar).map (iidXs 0)` → `Measure.pi P_XY` の X-marginal)。
+- **Leg C** (`25629b0a`) — WZ distortion-decomposition bridge (RD `source_avg_distortion_le_simpler` の bin-decoder 版)。
+- **Leg C.5** (`22b64afa`) — reconciliation: `hd'_eq` (proxy `d' = 𝔼_{Y|X}[d∘qf.2]`) + `hqf` (factorizable) threading (reconciliation 軸 honest 化)。
+- **Leg C.6** (`fe3d9482`/`90996ed1`) — hcov₁ M-pin: RD covering chain 結論に `M ≤ exp(nR₁)+1` 上界を露出 → hcov₁ threading → D3 body で discharge (M-axis 第3軸 honest 化)。D3 `@audit:defect` 除去 honest tier-2 復帰。
 
-- **修正内容**: D3 / D `wz_perDelta_covering_binning_eventual` (2142) / S6 `wz_perDelta_covering_binning` (2224) の 3 署名で `hfeas` を `≤ D + δ/2`、`hcov`/`hcov₁` の target を `≤ (D + δ/2) + ε'` に締める。**結論 `≤ D + δ` は 3 署名とも不変** (δ/2 を誤差に予約)。covering data を供給する `wz_perDelta_codes_exist` (2284) は `wz_coveringFamily_of_testChannel` を `δ/2` (`half_pos hδ`) で呼ぶ **call-site 変更のみ** (署名不変、conclusion `≤ D + δ`)。`wz_coveringFamily_of_testChannel` (955) は δ generic ゆえ **署名不変**、δ/2 を渡すと出力 bound が自動で `D + δ/2` になる (@audit:ok 保持)。
-- **ripple (機械確認済、file-contained)**: 触れる 5-decl chain = `wz_coveringFamily_of_testChannel:955` / `wz_perDelta_covering_binning_eventual:2142` / D3 `wz_perN_covering_binning_code:2054` / S6 `wz_perDelta_covering_binning:2224` / `wz_perDelta_codes_exist:2284`。**この 5 decl はいずれも Achievability.lean 内でのみ参照** (`rg -l` で cross-file consumer 0、root olean stale ゆえ `dep_consumers.sh` は不可、text-level 確認)。よって blast radius は Achievability.lean 単一ファイル。`wz_goodCode_exists_of_testChannel:2424` + `wz_diagonalize_slack` は δ を内部導入するため **不変** (per-δ 結論が `≤ D + δ` のまま)。
-- **honesty**: D3 の `@audit:defect(false-statement)` + `@audit:closed-by-successor(wz-binning-covering)` は **署名 tighten 後に除去** (body が sorry のままでも、署名が honest = TRUE-as-framed になった時点で defect tag を外し `@residual(plan:wz-binning-covering)` 単独に戻す)。δ-split は precondition の締め (bundling でない、上記 Approach 1)。修正後、chain の @audit:ok (`wz_coveringFamily_of_testChannel`) + tier-2 (D/S6/`wz_perDelta_codes_exist` の δ/2 threading) が honest かを **独立 honesty-auditor 1 pass** (orchestrator-mandatory: 既存 @audit:ok の honesty-relevant 署名変更)。
-- **撤退**: 署名 tighten が過度に invasive なら D3 body は `sorry + @residual(plan:wz-binning-covering)` 維持だが、**`@audit:defect(false-statement)` は署名が honest 化するまで除去禁止**、かつ **Leg 0 未完のまま Leg C の body fill に進まない** (偽 statement を fill することになる)。
+上記 6 leg は全て caller discharge の precondition-exposure (bundling でない)、ripple は Achievability.lean file-contained、独立監査 PASS。
 
-### Leg A — two-ambient WZ-joint 構成 (pure regularity)
+### Leg D — E2-only decomposition glue (G2/A1/A2 DONE、A3 は Leg E へ)
 
-**proof-log**: no (regularity plumbing、再開根拠不要)
+**proof-log**: yes (最終組立)
 
-- **目標**: D3 body 内で 2 つの ambient を構成 — covering ambient `rdAmbient qStar` (`(…).map (iidXs 0)` = X 側、`iidYs` = U 側) が S5a covering-failure / gateway-2 covering-acceptance を、別の (U,Y) side-info ambient が S5b decoder-confusion / D2 codeword mass を駆動。同一 3-var `q'` の 2 marginal (`wzMarginalXU` / `wzMarginalYU`) で、共有 U-marginal を通じ coupling。gateway atom の i.i.d. bundle (`iIndepFun` / `IdentDistrib` / `hpos*` / `hmarg_X/Y`) を regularity として discharge。
-- **消費 atom** (AchievabilityAmbientMeasure.lean、verbatim): `rdAmbient:153` / `rdAmbient_isProbabilityMeasure:156` / `rdAmbient_map_iidXs:165` / `rdAmbient_map_iidYs:174` / `rdAmbient_map_jointSequence:183` / `rdAmbient_iidXs_isProbabilityMeasure:191` / `rdAmbient_iidYs_isProbabilityMeasure:199` / `expectedJointDistortion_rdAmbient:216`。親 §B4 / gap #2 の two-ambient subtlety。
-- **撤退**: stall 時 sub-lemma を signature 維持のまま `sorry + @residual(plan:wz-binning-covering)`。regularity を `*Hypothesis` に bundle しない。
-- **依存**: Leg 0 と独立 (regularity は署名 δ に依存しない) ゆえ Leg 0 の次に着手 (δ-split 修正から最も独立)。
+**3 measures** (明示): `α' = {x:α // 0 < ∑ y P_XY.real{(x,y)}}`、`Q_XY := pmfToMeasure (fun p:α'×β ↦ P_XY.real{(p.1.1,p.2)})` (WZ block-distortion source)、`P_X' := (rdAmbient qStar).map (iidXs 0)` (covering ambient X-marginal、`hcov₁` が score)、decoder ambient `rdAmbient (wzSideInfoMarginal P_XY κ')` (E2 typicality 用)。bridge は実歪 `dα' := fun (x':α') g ↦ d x'.1 g` で score (proxy `d'` は `γ` を score 不能)。
 
-### Leg B — α'→α source-measure 変数変換 lemma
+**4-adapter split の現状**:
+- **G2** `wz_expectedBlockDistortion_le_ideal_add_E2` (L2595) — E2-only generic decomp、**DONE sorry-free `@audit:ok`** (`a5e23439`)。
+- **A1** (lift identity `(wzLiftSupportCode …).expectedBlockDistortion P_XY d = codeSupp.expectedBlockDistortion Q_XY dα'`) — **DONE sorry-free `@audit:ok`** (`1bb1d1ad`)。
+- **A2** `wz_ideal_expectation_eq_covering` (L2879) — `𝔼_{Q_XY}[ideal blockDist under dα'] = c₁.expectedBlockDistortion P_X' d'`、**DONE sorry-free + sorryAx-free** (`84393413`、finite-sum marginalization + `hd'_eq` + Leg B)。→ `hcov₁` で `≤ (D+δ/2)+δ/4`。
+- **A3** `wz_exists_binning_E2_bound` (L3022) — `Pr_{Measure.pi Q_XY}[E2] ≤ δ/(4·dMax)`、**第4軸で false-as-framed → Leg E で再設計** (下記)。
 
-**proof-log**: yes (測度変換の枠組みは再開根拠に保存)
+**Y-type reconciliation (維持)**: D2/S5b の `hposY` は full β で fail ゆえ **D2/S5b を `β := β'` (subtype) で instantiate** (`wzSideInfoMarginal_pos` が `hposY` discharge)。A3 内 full-β side-info への transfer は codeword law 同定でなく pure Y-marginal 一致。
 
-- **目標**: 新 lemma — iid ambient `(rdAmbient qStar).map (iidXs 0)` (α' = `{x // 0 < ∑ y P_XY(x,y)}` 上) の block distortion を `Measure.pi P_XY` (α×β 上) の `expectedBlockDistortion` に変換。既存 `wz_expectedBlockDistortion_source_agree` (551) は同一 `P_XY` 下の 2 α-code 比較 (null-set transport) のみで α'-ambient → `Measure.pi P_XY` の測度変換は無い。
-- **消費 atom**: `wz_expectedBlockDistortion_source_agree:551` (α-code 側 null-set transport)、`wzLiftSupportCode:1450` (S7、α'→α support lift)、`measurePreserving_eval` coordinate marginal。
-- **撤退**: `sorry + @residual(plan:wz-binning-covering)`。
-- **依存**: Leg 0 / A と独立 (medium)。
+### Leg E — covering-acceptance C2 再設計 (Proposal A、active 本線)
 
-### Leg C — WZ distortion-decomposition bridge (解析コア)
+**proof-log**: yes (再設計コア、再開根拠に必須)
 
-**proof-log**: yes (解析コア、再開根拠に必須)
+**finding (2026-07-11、独立監査 CONFIRMED)**: A3 の E2 probability bound は E2 = E2b(confusion)∪C2(covering-acceptance) の C2 を bound する仮説を欠き **false-as-framed (第4軸)**。C2 = true covering word `c₁.decoder(trueIdx)` が side-info `Y^n` と jointly typical でない事象。`wzBinTypicalDecoder_eq_of_unique` (L1108) が回復に acceptance (joint typicality) を要求ゆえ **C2 ⊂ E2** (acceptance-failure ⇒ 非回復)。現 A3 署名は `LossyCode` bare + hcov₁ が distortion のみ供給 → C2 unbounded → **反例 = adversarial all-atypical-image covering codebook** (全 covering word が Y と atypical、hcov₁ の distortion は満たすが `dMax·Pr[E2]≈dMax > δ/4`)。**Leg D pivot の「S5a/gateway-2 dead」判定が誤り** (C2 を distortion-failure E1 と event-label 類似で混同、settled-facts OVERTURN)。
 
-- **目標** (上記 Approach (i)): `(wzCodeOfCoveringBinning …).expectedBlockDistortion P_XY d ≤ (expectedDistortionPmf d' qStar + δ_typ) + distortionMax d · (P[E1]+P[E2])`。RD `source_avg_distortion_le_simpler` (AchievabilityAsymptoticFailureDecay.lean:203) の bin-decoder 版を再構築 (S4 `wzBinTypicalDecoder:1072` は bin member 限定探索)。
-- **消費 atom**: `source_avg_distortion_le_simpler` (AchievabilityAsymptoticFailureDecay.lean:203)、S3 `wzCodeOfCoveringBinning:1056` / S4 `wzBinTypicalDecoder:1072`、閉じた error atom S5a `wz_covering_failure_prob_le:1133` / S5b `wz_codebook_confusion_expectation_le:1254` / D2 `wz_covering_codeword_sideInfo_mass_le:1807` / (B) `wzIndexBinningMeasure_collision:1504` / gateway-2 E3 `wz_covering_sideInfo_mass_ge:144`。Leg A の two-ambient error 確率が入力。
-- **honesty**: distortion-shape 整合 (被覆歪 X↔U proxy `d'` vs WZ 実歪 X↔γ + side-info) は body に置く load-bearing subtlety、`*Hypothesis`/`*Reduction` に bundle 禁止。
-- **撤退**: `sorry + @residual(plan:wz-binning-covering)`。
-- **依存**: **Leg 0 の δ-split 修正後** (honest 署名 `hfeas ≤ D+δ/2` を前提に proxy budget へ δ/2 slack を確保してから解析)。Leg A の two-ambient 出力を消費。
+#### Approach (Proposal A、solution shape)
 
-### Leg C.5 — D3 署名 reconciliation 修正 (第2 tier-5 fix、Leg D 前)
+E2-only 分解 (G2) は維持。`E2 = E2b(confusion, S5b) ∪ C2(acceptance, S5a)` として **S5a/gateway-2 を復活**させ、covering codebook を distortion **と** acceptance の両方に good に **joint-derandomize** する。5 段:
 
-**proof-log**: no (署名 threading + call-site discharge + 再監査、mechanical、Leg 0 と同型)
+1. **署名 fix (Leg C.6 同型 precondition-exposure、bundling でない)**: `hcov₁` の返り値 `c` に covering-acceptance-failure bound conjunct (S5a-form set-mass `≤ exp(-M₁·exp(-n(I+δ)))`) を追加 → A3 に対応する `hcov_accept` 仮説を追加 → upgrade 済 covering atom の construction で discharge (`wz_coveringFamily_of_testChannel:962` 単一 call-site)。**新 `*Hypothesis` predicate は作らない**。
+2. **covering atom upgrade**: `wz_covering_lossyCode_exists` (L711) は RD `rate_distortion_achievability` 由来で distortion-only。acceptance-average は既に proven — S5a `wz_covering_failure_prob_le` (L1151、`@audit:ok`) + feeder gateway-2 `wz_covering_sideInfo_mass_ge` (L144、proven)。**`RateDistortion/AchievabilityStrongTypicality/SupportingBounds.lean:461-488` が既に distortion+failure の joint-averaging をやっている = 必要な joint-derandomize テンプレそのもの**。唯一の新規解析 = S5a の `(1-p)^M₁` を `codebookMeasure`-average summand に変える Fubini/`Measure.pi`-product bridge (~40 行 plumbing、新 AEP 壁ではない)。
+3. **derandomize 再編**: covering `c₁` = joint derandomize (distortion+acceptance、`exists_codebook_low_avg` (`RateDistortion/AchievabilityCodebookMatchProbability.lean:138`)); binning `f` = single derandomize (confusion、`exists_pair_le_of_binning_integral_le` (`SlepianWolf/FullRateRegion/PairBound.lean:848`、private → public 化要)) を `c₁` 固定 **後**。radius double-bind (ε小→C2 / ε大→E2b) は rate gap `hsplit` で共通 ε に解消。
+4. **A3 fill**: `hcov_accept` (C2 側) + S5b (E2b 側) を union bound で合成し `Pr[E2] ≤ Pr[C2] + Pr[E2b] ≤ δ/(4·dMax)` (large n、S5a/S5b の指数 → 0)。
+5. **伝播**: A3 sorry 消滅 → D3 body sorry-free → headline sorryAx-free。
 
-- **finding (Leg C、2026-07-11)**: D3 `wz_perN_covering_binning_code` / D `wz_perDelta_covering_binning_eventual` / S6 `wz_perDelta_covering_binning` は `d'` (covering proxy `DistortionFn α' (Fin k)`) と `qf` (test channel + reconstruction) を **無関係な opaque param** として受け、実構築での `d' = 𝔼_{Y|X}[d ∘ qf.2]` (`wz_coveringDistortion_reconcile:872`) を encode する仮説を欠く。`qf` も `WynerZivFactorizableConstraint` 無し。→ `d':=0` で `hfeas`/`hcov₁` 自明成立・実歪 `d` 結論不従 = **under-hypothesized (false-as-framed 第2軸)**。**Leg 0 δ-split 監査は budget 軸のみ検証し reconciliation を暗黙仮定していた** (監査の穴)。
-- **FIX (非 load-bearing precondition threading、δ-split 同型)**: `hd'_eq : ∀ x' u, d' x' u = Real.toNNReal (∑ y, (P_XY.real{(x'.1,y)} / ∑ y', P_XY.real{(x'.1,y')}) · (d x'.1 (qf.2 (u,y))))` (= `wz_coveringDistortion_reconcile`) + `hqf : qf ∈ WynerZivFactorizableConstraint (Fin k) …` を **D3/D/S6/`wz_perDelta_codes_exist` に threading**。これらは `hfact_eq`/`hqStar_eq` と同種の **definitional/regularity precondition** (proof の核を bundle しない)。caller `wz_coveringFamily_of_testChannel` (`d'` をこの形で定義、`hqf` 保持) が **construction で discharge**。ripple は Leg 0 と同型 (Achievability.lean file-contained)。
-- **honesty**: 修正後、D3 の `@audit:defect(false-statement)` + `@audit:closed-by-successor` を除去 (署名が honest 化)。**上流 chain (@audit:ok の `wz_coveringFamily_of_testChannel` 含む) への波及ゆえ独立 honesty-auditor 1 pass** (orchestrator-mandatory)。この監査は budget 軸 (Leg 0) と reconciliation 軸 (Leg C.5) の両方 + **他に隠れた under-hyp 軸が無いか**を確認する (Leg 0 監査の穴を踏まえ網羅的に)。
-- **撤退**: threading が invasive なら D3 body は `sorry` 維持、ただし `@audit:defect` は署名 honest 化まで除去禁止、Leg D の assembly に進まない。
-- **依存**: Leg C 後、**Leg D 前** (Leg D の bridge 実体化に `hd'_eq` が要る)。
+**headline crux 維持 = YES** (親 #9): full-support/acceptance 仮説を headline `wz_goodCode_exists_of_testChannel`/`wyner_ziv_achievability` に追加しない (support-restriction は proof-internal、acceptance は construction 内 discharge)。
 
-### Leg D — E2-only decomposition + squeeze glue → D3 closure
+**ripple**: Leg C.6 と同じ file-contained 5-decl chain (D3:3172 / D `wz_perDelta_covering_binning_eventual` / S6 `wz_perDelta_covering_binning` / `wz_perDelta_codes_exist` / `wz_coveringFamily_of_testChannel:962`) + covering atom `wz_covering_lossyCode_exists:711`。cross-file consumer 0 (機械確認済 settled-facts)。effort ~3-5 leg、wall リスク LOW。
 
-**proof-log**: yes (最終組立、再開根拠)
+- **消費 atom**: S5a `wz_covering_failure_prob_le:1151` / gateway-2 `wz_covering_sideInfo_mass_ge:144` / S5b `wz_codebook_confusion_expectation_le` / covering atom `wz_covering_lossyCode_exists:711` (upgrade) / joint-averaging テンプレ `SupportingBounds.lean:461-488` / `exists_codebook_low_avg` / `exists_pair_le_of_binning_integral_le` (public 化後) / G2 `wz_expectedBlockDistortion_le_ideal_add_E2:2595` / A1 / A2 `wz_ideal_expectation_eq_covering:2879`。
+- **first move**: covering atom upgrade (acceptance-average conjunct 追加) → hcov₁/A3 署名 threading → skeleton 型チェック → G2/A1/A2 は不変 (再消費) → A3 fill。新 sorry commit は独立 honesty-auditor 1 pass、A2+A3 の comprehensive 監査を Leg E closure 時に実施。
+- **撤退**: `sorry + @residual(plan:wz-binning-covering)` (各 sub-lemma)。covering-acceptance を construction 無しの opaque hyp として A3 に仮定するのは **禁止 (tier-5 bundling)**。
+- **依存**: Leg 0-C.6 + D の G2/A1/A2 完了後 (全 DONE)。
 
-**進捗** (Achievability.lean、`7c9c508d`):
-- [x] **Step 6 outer packaging** (genuine、sorry-free): D3 body を `suffices ∃ codeSupp : WynerZivCode … n α' β γ, (wzLiftSupportCode P_XY x₀ codeSupp).expectedBlockDistortion P_XY d ≤ D+δ` に factor (α'→α lift の外殻)。`Nonempty α'` は `hqStar_mem.2` (∑qStar=1≠0) から導出。inner sorry (L2734) が `codeSupp` 存在を残す。
-- [ ] **inner core** = Steps 1'–5 + inner Step 6 (下記 4-adapter split で埋める) 📋
+#### 対抗案 (reject 記録)
 
-**pivot (2026-07-11、proof-pivot-advisor)**: 旧 plan の E1+E2 分解 (`wz_covering_binning_distortion_decomp` L2460、RD `source_avg_distortion_le_simpler` 由来) は本ルートで **over-built**。`hcov₁` は covering-typicality でなく **expected distortion** を供給するので、fixed distortion-derandomized `c₁` に対し **E1 (`{ideal blockDist > P}`) は squeeze 不能** (Markov `Pr[E1] ≤ 𝔼[ideal]/P ≈ 1`)。→ **E1 と共に S5a `wz_covering_failure_prob_le` + gateway-2 `wz_covering_sideInfo_mass_ge` は D3 で dead** (別 consumer は残るので削除せず、`dep_consumers.sh` で D3 dead を確認)。正しい分解は **E2-only**: `𝔼[actual] ≤ 𝔼[ideal] + distortionMax · Pr[E2]` (E2 外で bin decoder が true covering word を回復 = actual=ideal、E2 内で actual ≤ dMax ≤ ideal+dMax)。arithmetic: `((D+δ/2)+δ/4) + δ/4 = D+δ` (δ/4 = covering ε'、δ/4 = E2 error)。
-
-**3 measures (明示、これが欠けていた)**:
-- `α' = {x:α // 0 < ∑ y P_XY.real{(x,y)}}`、`β' = {y:β // 0 < ∑ x P_XY.real{(x,y)}}`、`dα' := fun (x':α') g ↦ d x'.1 g : DistortionFn α' γ` (**bridge は proxy `d'` でなく実歪 `dα'` で score** — 旧 brief の `…Q d'` は型エラー、`d':Fin k` は `γ` を score 不能)。
-- **`Q_XY := pmfToMeasure (fun p:α'×β ↦ P_XY.real{(p.1.1,p.2)}) : Measure (α'×β)`** (WZ block-distortion source、P_XY を positive-X-marginal subtype に co-restrict、prob measure)。
-- `P_X' := (rdAmbient qStar).map (iidXs 0) : Measure α'` (covering ambient X-marginal、`hcov₁` が `c₁` を score する測度、Leg B で `Q_XY` の X-marginal = P_X')。
-- decoder ambient `rdAmbient (wzSideInfoMarginal P_XY κ')` over `ℕ → Fin k × β'` (別空間、E2 typicality 用)。
-
-**4-adapter split (各 honest sub-sorry、G2→A1→A2→A3 の順で fill)**:
-- **G2** (generic E2-only decomp、~20行、low risk): `…expectedBlockDistortion Q dα' ≤ 𝔼_Q[ideal via qf.2] + distortionMax dα' · (Measure.pi Q).real E2` (decoder-agnostic、`wz_expectedBlockDistortion_le_of_badSet` の隣、good-event bound が定数 P でなく pointwise ideal)。
-- **A1** (lift identity、~50-70行、low-med): `(wzLiftSupportCode P_XY x₀ codeSupp).expectedBlockDistortion P_XY d = codeSupp.expectedBlockDistortion Q_XY dα'`。
-- **A2** (ideal-expectation = covering distortion、~80-120行、**high、解析コア**): `𝔼_{Q_XY}[ideal blockDist under dα'] = c₁.expectedBlockDistortion P_X' d'` (Fubini + `hd'_eq` + Leg B `wz_covering_source_measure_map_val_eq`)。→ `hcov₁` で `≤ (D+δ/2)+δ/4`。
-- **A3** (E2 probability bound、~100+行、**high、multi-gap**): `Pr_{Measure.pi Q_XY}[E2] ≤ M₁·exp(-n·I_YU)/M` → `≤ δ/(4·dMax)` (large n)。
-
-**assembly** (sorry-free glue): STEP1 `hcov₁`→`c₁` (done) → `Q_XY`/`dα'`/decoder ambient set → A1 → G2 → A2 (`≤(D+δ/2)+δ/4` by `hcov₁`) → A3 (`≤δ/4`) → `linarith` → `≤ D+δ`。
-
-**Y-type reconciliation (crux-2)**: D2/S5b の `hposY : ∀ y, 0<(μ.map (Ys 0)).real{y}` は full β で fail。→ **D2/S5b を `β := β'` (subtype) で instantiate** (`β` は file-level variable L82、`β'` は全 instance 満たす、`wzSideInfoMarginal_pos` が `hposY` を discharge)。S5b feed: `μ := rdAmbient (wzSideInfoMarginal P_XY κ')`, `Us := iidXs` (Fin k=U slot), `Ys := iidYs` (β'-valued)。A3 内で `Q_XY` の full-β side-info への transfer は **codeword law 同定でなく pure Y-marginal 一致** (confusable word `c₁.decoder m'` は定数、`Q_XY` の Y-marginal = wzSideInfoMarginal の Y-marginal = P_Y、out-of-β' atom は null)。→ typicality set の小さな `Subtype.val`-commutation adapter (Y-lift code 複製は不要)。
-
-**A3 内の second-order gaps (dispatch 前に周知、mid-dispatch 再発見を防ぐ)**:
-1. **entropy identity**: S5b の `I_YU` を `= wzMutualInfoYU (Fin k) q'` と示す (別 sub-lemma) → `hsplit: R₁−I(Y;U)<R` で負指数 `R₁−I_YU−R<0`。
-2. **binning `f` derandomize**: S5b は `binMeas`-averaged、`exists_pair_le_of_binning_integral_le` (PairBound.lean:848) で good `f` を pick。`codeSupp` (ゆえ `Q_XY` bound) は `f` fix **後** に形成 — 順序 threading 注意。
-3. **M/M₁ squeeze 方向**: `M=codebookSize R n`, `M₁≥⌈exp(n R₁)⌉`。`M₁·exp(-n I_YU)/M→0` に `wz_tendsto_exp_mul_codebookSize_inv` + `ceil_exp_mul_exp_neg_tendsto_atTop`。`⌈·⌉` 下界が `M₁·(…)` の **上界**を与える向きを確認。
-
-- **消費 atom**: G2 (新規) / A1-A3 (新規) / `wzLiftSupportCode:1466` / `wz_covering_source_measure_map_val_eq:2311` (Leg B) / `wz_expectedBlockDistortion_source_agree:551` / S5b `wz_codebook_confusion_expectation_le:1270` / D2 `wz_covering_codeword_sideInfo_mass_le:1823` / collision `wzIndexBinningMeasure_collision:1520` / `exists_pair_le_of_binning_integral_le` (PairBound.lean:848) / exponent tendsto `ceil_exp_mul_exp_neg_tendsto_atTop` / `wz_tendsto_exp_mul_codebookSize_inv`。**S5a `wz_covering_failure_prob_le` + gateway-2 は本ルートで dead** (E1-free)。
-- **first move**: G2/A1/A2/A3 を `:= by sorry + @residual(plan:wz-binning-covering)` で skeleton 化 → D3 goal に対し型チェック確認 (これが「Q fabricate or spin」失敗モードを殺す、型が `Q_XY`/`dα'` を強制) → type-check done で commit → G2→A1→A2→A3 の順に fill。**新 adapter が sorry を持つ commit は独立 honesty-auditor 1 pass (orchestrator-mandatory)**。
-- **撤退**: `sorry + @residual(plan:wz-binning-covering)` (各 adapter)。bundling 禁止 (E2 error 確率 / decoder-correctness を仮説化しない)。D3/headline 署名不変。
-- **依存**: A + B + C + C.5 完了後 (全 DONE)。Leg D 完了で D3 body sorry 消滅 → 上流 chain が sorryAx-free に伝播 (Approach 4)。
+- **案 E (reject)**: `wzBinTypicalDecoder` を distortion-based decoder に置換 → sorry-free G2 + S3/S4 chain を破棄し、C2 が distortion tail で再出。net で悪化。
+- **禁止 C**: acceptance を construction 無しの opaque hyp で A3 に仮定 = load-bearing hypothesis bundling (tier-5)。
 
 ## 撤退ライン / honesty (集約)
 
-- **撤退口は `sorry + @residual(plan:wz-binning-covering)` のみ** (class は **`plan` 固定**)。WZ の gap は Mathlib gap でなく in-project atom の未実装 (親 §200、inventory §8) ゆえ **`wall` は使わない** (誤分類)。slug は本 plan filename stem `wz-binning-covering` に一致。
-- **bundling 禁止**: covering 下界 / error 確率 / decoder-correctness を `*Hypothesis`/`*Reduction`/`IsXxxClaim` predicate に bundle しない。`Prop := True` slot 禁止、退化定義悪用禁止。regularity hyp (full-support / `IsProbabilityMeasure` / 可測性 / `iIndepFun` / `Nonempty` / uniform message) は precondition で OK。
-- **δ-split は precondition 締めであって bundling でない**: `hfeas`/`hcov₁` を `D + δ/2` に締めるのは、任意 target `≤ D` を受ける flexible な covering atom (`wz_covering_lossyCode_exists:709`) に対する要求を「genuinely achievable な値」に締めるだけ。誤差項 `δ/2` は AEP 指数 (S5a/S5b/D2/(B)) が → 0 を保証する実解析 work であり、仮説に encode しない (RD `h_slack` mirror)。
-- **Leg 0 の上流波及**: δ-split は Achievability.lean 内 5-decl chain (うち @audit:ok = `wz_coveringFamily_of_testChannel`) に波及するので、修正完了時に **独立 honesty-auditor 1 pass** (orchestrator-mandatory)。
-- **headline signature 不変 (crux、親 #9 継承)**: `wz_goodCode_exists_of_testChannel` / `wyner_ziv_achievability` の signature に full-support 仮説を追加しない。support-restriction は proof-internal (subtype α' 経由、D3 body 内)。
+- **撤退口は `sorry + @residual(plan:wz-binning-covering)` のみ** (class は **`plan` 固定**、slug = 本 plan filename stem)。WZ の gap は Mathlib gap でなく in-project atom の未実装 (親 §200、inventory §8) ゆえ **`wall` は使わない**。
+- **bundling 禁止**: covering 下界 / covering-acceptance / error 確率 / decoder-correctness を `*Hypothesis`/`*Reduction`/`IsXxxClaim` predicate に bundle しない。`Prop := True` slot 禁止、退化定義悪用禁止。regularity hyp (full-support / `IsProbabilityMeasure` / 可測性 / `iIndepFun` / `Nonempty` / uniform message) は precondition で OK。
+- **precondition-exposure は bundling でない**: hcov₁ への acceptance-failure bound conjunct 追加 (Leg E) は、Leg 0/C.5/C.6 と同型で caller construction が discharge する派生 precondition の露出。core を仮説に encode しない (S5a/gateway-2 の指数 → 0 は実解析 work)。
+- **A2 監査 pending**: A2 `wz_ideal_expectation_eq_covering` は sorry-free だが独立監査未実施。Leg E closure 時に A3 と併せ comprehensive 独立 honesty-auditor 1 pass。
+- **headline signature 不変 (crux、親 #9 継承)**: `wz_goodCode_exists_of_testChannel` / `wyner_ziv_achievability` に full-support/acceptance 仮説を追加しない。
 
 ## settled-facts (minimal、再導出可能なものは都度 `#print axioms` / `rg`)
 
-- **D3 false-as-framed 判定 (leg-20、機械確認済 human-judgment)**: exact `≤ D+δ` は budget 使い切りで偽。反例 — `expectedDistortionPmf d' qStar = D+δ` (摂動を full δ に調律)、`distortionMax d = D+δ+η` (η>0, generic 非定数 d)、generic 正の P[error] → WZ 歪 = `(D+δ)+η·P[error](n) > D+δ` ∀n ゆえ `∃N∀n≥N …≤ D+δ` が全 hyp 成立下で fail。姉妹定理 `rate_distortion_achievability` (AchievabilityStrongTypicality.lean:184) は exact D+δ に到達せず `≤ D+ε'` 止まりで、明示 slack 仮説 `expectedDistortionPmf + δ_typ ≤ D+ε'/2` (L118/L202) が ε'/2 を誤差項に予約している (cross-check)。confidence: human-judgment (機械確認済、leg-20 独立監査 OVERTURN)。
-- **δ-split fix が honest な根拠**: (a) precondition 締め — covering atom `wz_covering_lossyCode_exists:709` は任意 target `≤ D` を受けて `≤ target + ε'` を返す flexible atom ゆえ target `D + δ/2` は genuinely achievable、(b) non-load-bearing — 予約された `δ/2` は error 指数 (S5a/S5b/D2/(B)) が → 0 の実解析 work で仮説化しない。confidence: human-judgment (RD `h_slack` mirror)。
-- **δ-split ripple = Achievability.lean file-contained**: 5-decl chain (`wz_coveringFamily_of_testChannel:955` / D:2142 / D3:2054 / S6:2224 / `wz_perDelta_codes_exist:2284`) は全て Achievability.lean 内でのみ参照 (cross-file consumer 0)。confidence: machine (`rg -l` 確認、root olean stale ゆえ `dep_consumers.sh` 代替)。
-- **M-axis under-hyp (第3軸、Leg D 発見・独立監査 confirm 2026-07-11)**: `hcov₁` は covering codebook size M に下界 `⌈exp(nR₁)⌉ ≤ M` のみ課す。だが confusion error (S5b `wz_codebook_confusion_expectation_le`) は M に線形比例 (`≤ M₁·exp(-n·I_YU)·M_bins⁻¹`) → M 上界なしで D3 結論が偽 (反例: 冗長 covering codebook `M=exp(2n)·⌈exp(nR₁)⌉` は `hcov₁` を満たす=余分な codeword は covering 歪を悪化させない、が `Pr[E2]→1` で `≤D+δ` fail)。FIX = Leg C.6 (M pin)。confidence: machine (反例 + S5b 線形性を監査が independent 確認)。**Leg 0/C.5 と同 family の第3軸、C.5 監査の「第3軸なし PASS」を overturn** (M は ∃-witness ゆえ param 網羅の盲点、judgment-log #4)。
-- **E1 (covering-distortion-failure event) は D3 で squeeze 不能 → E2-only decomposition (pivot 2026-07-11)**: `hcov₁` は **expected distortion** (`c₁.expectedBlockDistortion P_X' d' ≤ (D+δ/2)+δ/4`) を供給し covering-typicality でない。fixed `c₁` に対し `Pr[E1={ideal blockDist>P}] ≤ 𝔼[ideal]/P ≈ ((D+δ/2)+δ/4)/(D+δ/2) > 1` (Markov) ゆえ E1→0 不可。∴ `𝔼[actual] ≤ 𝔼[ideal] + distortionMax·Pr[E2]` (E2-only) が正しい shape。S5a/gateway-2 は D3 で dead (別 consumer 用に残置)。confidence: human-judgment (Markov 反証、`𝔼[X]≤c` から `Pr[X>c]→0` は導けない = concentration 要、`hcov₁` は非供給)。CLAUDE.md「wrong Mathlib/RD precedent 由来の lemma-shape」事例 (RD `source_avg_distortion_le_simpler` の E1+E2 は typicality-derandomized codebook 前提)。
+- **E1 (covering-distortion-failure `{ideal blockDist > P}`) は D3 で squeeze 不能 → E2-only decomposition が正しい shape (pivot 2026-07-11、維持)**: `hcov₁` は **expected distortion** を供給し covering-typicality でない。fixed `c₁` に対し `Pr[E1] ≤ 𝔼[ideal]/P > 1` (Markov) ゆえ E1→0 不可。∴ `𝔼[actual] ≤ 𝔼[ideal] + distortionMax·Pr[E2]` (G2 `wz_expectedBlockDistortion_le_ideal_add_E2:2595` `@audit:ok`)。confidence: human-judgment (Markov 反証)。
+- **【OVERTURN 2026-07-11 第4軸】S5a/gateway-2 は D3 で dead ではない**: 旧 settled-fact は「E1 と共に S5a `wz_covering_failure_prob_le:1151` + gateway-2 `wz_covering_sideInfo_mass_ge:144` も D3 で dead」と記録したが **誤り**。E2 = E2b(confusion, S5b) **∪** C2(covering-acceptance failure = true covering word が side-info Y と jointly typical でない) で、`wzBinTypicalDecoder_eq_of_unique:1108` が回復に acceptance を要求ゆえ **C2 ⊂ E2**。C2 の bound には covering-goodness の **下界** が要り、それを S5a + gateway-2 が供給 = **live**。genuinely dead なのは E1 (distortion-failure) のみ。過去 pivot の誤り = C2 (acceptance-failure、E2 sub-event) を E1 (distortion-failure) と event-label 類似で同一視。confidence: **machine** (独立監査 CONFIRMED、反例 = all-atypical-image covering codebook で hcov₁ の distortion を満たしつつ `dMax·Pr[E2]≈dMax > δ/4`)。
+- **署名 fix ripple = Achievability.lean file-contained**: Leg 0/C.5/C.6/E の precondition threading は 5-decl chain (`wz_coveringFamily_of_testChannel:962` / D `wz_perDelta_covering_binning_eventual` / D3 `wz_perN_covering_binning_code:3172` / S6 `wz_perDelta_covering_binning` / `wz_perDelta_codes_exist`) + covering atom `wz_covering_lossyCode_exists:711` に限局、全て Achievability.lean 内参照 (cross-file consumer 0)。headline 署名不変 (親 #9 crux)。confidence: machine (`rg -l` 確認)。
 
-(再導出可能なもの = sorryAx-free / decl 存在 / D3 sorry の有無 はキャッシュしない。`#print axioms wyner_ziv_achievability` / `scripts/sig_view.ts --sorry` で都度。)
+(budget 軸 = Leg 0 / reconciliation 軸 = Leg C.5 / M-axis 第3軸 = Leg C.6 は解消済 = 再導出可能ゆえ settled-facts から除去、git 履歴保持。再導出可能なもの = sorryAx-free / decl 存在 / sorry の有無 はキャッシュしない、`#print axioms` / `scripts/sig_view.ts --sorry` で都度。)
 
 ## 判断ログ
 
 append-only。決着済 entry は削除 (git が履歴)、active のみ残す。≤ 10 entry。
 
-1. **Leg 0 (δ-split) を最初に + honesty gate (active、本線)**: D3 は budget 使い切りで false-as-framed (leg-20)。FIX = δ-split (`hfeas`/`hcov₁` の target を `D+δ/2` に締め `δ/2` を誤差に予約、RD `h_slack` mirror)。ripple は Achievability.lean 内 5-decl chain (機械確認: cross-file consumer 0)、`∃N∀n` conclusion shape 不変。**Leg 0 完了 (署名 honest 化 + `@audit:defect(false-statement)` 除去) 前に Leg C の body fill に進まない** (偽 statement を fill しないため)。完了時に上流 @audit:ok の再監査を独立 honesty-auditor 1 pass。これは親 #11 under-hypothesization トラップの family 再発 (free-budget exact 結論版)。
-2. **two-ambient subtlety (Leg A、親 §B4/#10 継承)**: TWO ambients — covering ambient `rdAmbient qStar` (S5a/E3 駆動) と (U,Y) side-info ambient (S5b/D2 駆動) は同一 3-var `q'` の 2 marginal で、共有 U-marginal を通じ rate split `R = I(X;U) − I(Y;U)` が一貫。regularity は `rdAmbient_*` で discharge (bundle しない)。
-3. **E2 = codebook-restricted confusion が WZ の真の核 (親 #10 継承、settled)**: gateway-1 (SW exponent H(U|Y)) では消えず、S5b `wz_codebook_confusion_expectation_le:1270` (codebook 限定、CLOSED sorry-free) が WZ rate `I(X;U)−I(Y;U)` で E2 を駆動。Leg D が消費 (この atom は既に閉じている、Leg では再証明しない)。**pivot 2026-07-11 (settled-facts 参照)**: D3 は E1-free = **E2 が唯一の error 事象** (E1/S5a/gateway-2 は dead)、`𝔼[actual] ≤ 𝔼[ideal] + dMax·Pr[E2]`。E2 が真の核という判断はより強まった (E1 は元々 squeeze 不能で除外)。
-5. **Leg D E2-only pivot + 4-adapter split (active、本線、2026-07-11)**: proof-pivot-advisor が `hcov₁`=expected distortion ゆえ E1 squeeze 不能を発見 (settled-facts)、旧 E1+E2 bridge を E2-only decomp に置換。D3 body を G2 (E2-only generic) / A1 (lift identity) / A2 (ideal-exp = covering distortion、解析コア) / A3 (E2 prob bound、multi-gap) の 4 adapter に split。3 measures 明示 (`Q_XY`/`P_X'`/decoder ambient)、bridge は実歪 `dα'` で score (proxy `d'` は型エラー)。Y-type は D2/S5b を `β':=subtype` で instantiate。first move = 4 adapter skeleton 型チェック (「Q fabricate or spin」失敗モードを型で殺す) → G2→A1→A2→A3 fill。新 adapter sorry commit は独立 honesty-auditor 1 pass。
-4. **教訓: under-hyp は複数軸を持ちうる (Leg C→C.5→D、settled、強化)**: D3 は budget 軸 (Leg 0 δ-split) を直しても reconciliation 軸 (`d'`(proxy)/`qf` 無関係 opaque param、`d':=0` 反例) が残り、それも直した後 **さらに第3軸 = M-axis (`hcov₁` が M 下界のみ、confusion は M 比例 → 上界なしで反例) が残っていた** (Leg D 発見、監査 confirm)。**Leg C.5 監査の「per-param 網羅で第3軸なし PASS」は誤り** — M 軸を見落とした (M は `hcov₁` 内の存在量化変数で「param 網羅」の盲点)。教訓 = under-hyp 軸は「明示 param」だけでなく **存在量化された内部量 (M)** にも潜む。監査は結論を駆動する全 quantity (明示 param + ∃-witness) を網羅せよ。親 #11 under-hyp family トラップの 3 度目。
-6. **Leg C.6 = M-axis defect fix (active、本線、C.6 前に A2/A3 を埋めない)**: `hcov₁` を `M = codebookSize R₁ n` に pin (下界のみ → exact)。FIX は Leg 0/C.5 と同型の precondition tightening: D3/D `wz_perDelta_covering_binning_eventual`/S6 `wz_perDelta_covering_binning`/`wz_perDelta_codes_exist` に threading、`wz_coveringFamily_of_testChannel` が construction で discharge (`wz_covering_lossyCode_exists` は exact `codebookSize R₁ n` を返す)。ripple = Achievability.lean file-contained、headline 署名不変 (親 #9 crux)。完了で D3 `hM_ub` sorry-free + `@audit:defect` 除去 → honest tier-2 に復帰。上流 @audit:ok 波及ゆえ独立 honesty-auditor 1 pass。**A2/A3 fill は C.6 後** (defect の上に積まない、監査指示)。
+2. **two-ambient subtlety (Leg A DONE、親 §B4/#10 継承、structural、Leg E も依拠)**: TWO ambients — covering ambient `rdAmbient qStar` (S5a/C2 駆動) と (U,Y) side-info ambient (S5b/E2b 駆動) は同一 3-var `q'` の 2 marginal、共有 U-marginal で rate split `R = I(X;U) − I(Y;U)` 一貫。regularity は `rdAmbient_*` で discharge (bundle しない)。
+3. **E2 = E2b(confusion) ∪ C2(acceptance) が WZ の真の核 (親 #10 継承 + 第4軸で細分、active)**: WZ を SW と分ける核は codebook 限定 confusion E2b (S5b `wz_codebook_confusion_expectation_le`、CLOSED sorry-free)。**pivot 2026-07-11 では「D3 は E1-free = E2 唯一 error、S5a/gateway-2 dead」としたが第4軸で撤回** (settled-facts OVERTURN): E2 は E2b **と** covering-acceptance failure C2 の union (acceptance 要求 `wzBinTypicalDecoder_eq_of_unique:1108` ゆえ C2 ⊂ E2)、C2 の bound を S5a (L1151) + gateway-2 (L144) が供給 = **S5a/gateway-2 は live**。dead なのは E1 (distortion-failure) のみ。Leg E が E2b (S5b) + C2 (S5a) を両方消費。
+4. **M-axis (第3軸) 解消済 (Leg C.6、settled)**: `hcov₁` に `M ≤ exp(nR₁)+1` 上界を pin (Leg 0/C.5 同型 precondition tightening)、D3 body で discharge → D3 `@audit:defect` 除去 honest tier-2 復帰 (`fe3d9482`/`90996ed1`、独立監査 all-PASS)。教訓 (under-hyp は明示 param + ∃-witness の両方に潜む) は下記 #6 第4軸 entry で sub-event まで一般化。
+5. **Leg D E2-only 分解は正しい (G2/A1/A2 DONE) が A3 が第4軸で false-as-framed → Leg E (active、本線、2026-07-11)**: E2-only decomp G2 (`wz_expectedBlockDistortion_le_ideal_add_E2:2595` `@audit:ok`) は正しく維持、A1 (lift identity) / A2 (`wz_ideal_expectation_eq_covering:2879`、finite-sum marginalization、`84393413`) も sorry-free。だが A3 (E2 probability bound) は E2 = E2b∪C2 の C2 (covering-acceptance) を bound する仮説を欠き false-as-framed (第4軸)。**Leg D pivot の「S5a/gateway-2 dead」判定が誤りだった** (C2 を E1 と混同、上記 #3/settled-facts)。→ Leg E で S5a/gateway-2 を復活 + covering codebook joint-derandomize。A2/A3 の comprehensive 独立監査は Leg E closure 時に実施。
+6. **第4軸 = covering-acceptance C2 発見 → Leg E 再設計 (Proposal A、active、本線、2026-07-11、独立監査 CONFIRMED)**: A3 の残 sorry は E2 = E2b(confusion)∪C2(acceptance) の C2 を bound する仮説を欠き false-as-framed。C2 = true covering word が side-info Y と jointly typical でない事象、`wzBinTypicalDecoder_eq_of_unique:1108` が回復に acceptance を要求ゆえ C2 ⊂ E2。現 A3 署名は `LossyCode` bare + hcov₁ が distortion のみ供給 → C2 unbounded → 反例 (adversarial all-atypical-image codebook) で `dMax·Pr[E2]≈dMax > δ/4`。**FIX = Leg E (Proposal A)**: E2-only 分解 G2 は維持、S5a (L1151) + gateway-2 (L144) を復活させ C2 を bound、covering codebook を distortion+acceptance に joint-derandomize (`SupportingBounds.lean:461-488` の既存 joint-averaging テンプレ流用、~40 行 Fubini plumbing)。署名 fix = hcov₁ に acceptance-failure bound conjunct 追加 + A3 に `hcov_accept` 追加 (Leg C.6 同型 precondition-exposure、bundling でない、新 `*Hypothesis` predicate は作らない)。**教訓 (proof-pivot-advisor)**: error-event atom を event-name の類似で dead-judge するな (Leg D が S5a を「E1 と同種」と誤判定)。dead 判定は informal な事象ラベルでなく **conclusion の集合所属述語**で検証。under-hyp 軸は明示 param + ∃-witness(M) + **conclusion の sub-event 内 (C2 ⊂ E2)** にも潜む (第4軸、#11 family トラップ 4 度目)。cause:false-statement (Leg E で解消予定)。
