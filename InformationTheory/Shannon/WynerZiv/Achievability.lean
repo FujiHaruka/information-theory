@@ -2774,6 +2774,90 @@ lemma wz_lift_expectedBlockDistortion_eq
   · exact (measurable_pi_lambda _ (fun i ↦ hφ_meas.comp (measurable_pi_apply i))).aemeasurable
   · exact (measurable_of_finite _).aestronglyMeasurable
 
+/-- Marginalize a single coordinate of a product-pmf sum whose integrand depends on that
+coordinate only. For a product weight `∏ i, w (x i) (y i)` and a factor `g (y j)` touching only
+coordinate `j`, summing over all `y : Fin m → τ` factors as the `j`-marginal `∑ b, w (x j) b · g b`
+times the product of the remaining coordinate totals `∑ b, w (x i) b`. -/
+private lemma wz_prod_sum_marginalize {σ τ : Type*} [Fintype τ] {m : ℕ}
+    (w : σ → τ → ℝ) (x : Fin m → σ) (j : Fin m) (g : τ → ℝ) :
+    ∑ y : Fin m → τ, (∏ i, w (x i) (y i)) * g (y j)
+      = (∑ b, w (x j) b * g b) * ∏ i ∈ Finset.univ.erase j, (∑ b, w (x i) b) := by
+  classical
+  -- Fold the coordinate-`j` factor `g (y j)` into the product.
+  have key : ∀ y : Fin m → τ, (∏ i, w (x i) (y i)) * g (y j)
+      = ∏ i, w (x i) (y i) * (if i = j then g (y i) else 1) := by
+    intro y
+    rw [Finset.prod_mul_distrib, Finset.prod_ite_eq' Finset.univ j (fun i ↦ g (y i))]
+    simp
+  simp_rw [key]
+  -- Sum of products over the product index = product of the coordinate sums.
+  have hpf := Finset.sum_prod_piFinset (ι := Fin m) (Finset.univ : Finset τ)
+      (fun i b ↦ w (x i) b * (if i = j then g b else 1))
+  rw [Fintype.piFinset_univ] at hpf
+  rw [hpf]
+  -- Evaluate each coordinate total: at `j` it is the weighted `j`-marginal, elsewhere the total.
+  have hfac : ∀ i, (∑ b, w (x i) b * (if i = j then g b else 1))
+      = if i = j then (∑ b, w (x j) b * g b) else (∑ b, w (x i) b) := by
+    intro i
+    by_cases hi : i = j
+    · subst hi; simp
+    · simp [hi]
+  simp_rw [hfac]
+  -- Peel the `j`-factor out of the full product.
+  rw [← Finset.mul_prod_erase Finset.univ
+        (fun i ↦ if i = j then (∑ b, w (x j) b * g b) else (∑ b, w (x i) b))
+        (Finset.mem_univ j), if_pos rfl]
+  congr 1
+  refine Finset.prod_congr rfl (fun i hi ↦ ?_)
+  rw [if_neg (Finset.ne_of_mem_erase hi)]
+
+/-- The `X`-marginal of the covering ambient equals the source `X`-marginal on `α'`-singletons:
+`((rdAmbient qStar).map (iidXs 0)).real {x'} = ∑ y, P_XY.real {(x'.1, y)}`. -/
+private lemma wz_ideal_PX_real
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] {k : ℕ}
+    (κ' : α → Fin k → ℝ) (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) :
+    ((rdAmbient qStar).map (ChannelCoding.iidXs 0)).real {x'} = ∑ y, P_XY.real {(x'.1, y)} := by
+  classical
+  haveI hne_prod : Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
+    Finset.univ_nonempty_iff.mp
+      (Finset.nonempty_of_sum_ne_zero (by rw [hqStar_mem.2]; exact one_ne_zero))
+  haveI : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := hne_prod.map Prod.fst
+  haveI : Nonempty (Fin k) := hne_prod.map Prod.snd
+  rw [rdAmbient_map_iidXs qStar hqStar_mem, pmfToMeasure_map_fst_real_singleton hqStar_mem x']
+  unfold marginalFst
+  simp_rw [hqStar_eq]
+  rw [← Finset.sum_mul, hκ'sum, one_mul]
+
+/-- The proxy distortion `d'`, weighted by the source `X`-marginal, unfolds to the raw
+conditional distortion sum: `(∑ y', P_XY.real {(x'.1, y')}) · (d' x' u) = ∑ y, P_XY.real {(x'.1, y)}
+· d x'.1 (qf.2 (u, y))`. The `X`-marginal is positive (`x' : α'`), so the reconciliation
+`hd'_eq` (a conditional expectation with the marginal in the denominator) clears. -/
+private lemma wz_ideal_marg_mul_dprime
+    (P_XY : Measure (α × β)) {k : ℕ}
+    (d : DistortionFn α γ)
+    (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
+    (hd'_eq : ∀ x' u, d' x' u = Real.toNNReal (∑ y : β,
+        (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
+    (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) :
+    (∑ y' : β, P_XY.real {(x'.1, y')}) * ((d' x' u : NNReal) : ℝ)
+      = ∑ y : β, P_XY.real {(x'.1, y)} * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ) := by
+  have hpos : 0 < ∑ y' : β, P_XY.real {(x'.1, y')} := x'.2
+  have hS_nn : 0 ≤ ∑ y : β, (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+      * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ) :=
+    Finset.sum_nonneg fun y _ ↦
+      mul_nonneg (div_nonneg measureReal_nonneg hpos.le) (NNReal.coe_nonneg _)
+  rw [hd'_eq, Real.coe_toNNReal _ hS_nn, Finset.mul_sum]
+  refine Finset.sum_congr rfl fun y _ ↦ ?_
+  rw [← mul_assoc]
+  congr 1
+  rw [mul_comm, div_mul_cancel₀ _ hpos.ne']
+
 /-- **(Leg D, A2) Ideal distortion = covering distortion.** The ideal (true covering
 codeword) block distortion of the binned code, integrated over the co-restricted source
 `Q_XY`, equals the covering `LossyCode`'s expected block distortion under the i.i.d. covering
@@ -2782,14 +2866,16 @@ product source + the proxy reconciliation `hd'_eq` (`d' = 𝔼_{Y|X}[d ∘ qf.2]
 change of variables (`wz_covering_source_measure_map_val_eq`). This is the identity that lets
 `hcov₁`'s covering bound bound the ideal term.
 
-Independent honesty audit 2026-07-11: honest tier-2 residual, classification correct.
-Non-circular (no hypothesis is the conclusion), non-bundled (`hd'_eq`/`hqStar_eq`/`hqStar_mem`/
-`hκ'sum` are the reconciliation + source-consistency preconditions — same kind as D3's — not the
-identity itself; the Fubini + change-of-variables identity is genuine body work). Sufficiency
-OK: `hd'_eq` pins `d'` to `𝔼_{Y|X}[d ∘ qf.2]` and `hqStar_eq` pins `qStar`'s X-marginal, so the
-two expectations genuinely coincide. Class `plan` correct (in-project atom gap, not a Mathlib
-wall; slug matches `wz-binning-covering-plan`).
-@residual(plan:wz-binning-covering) -/
+Now sorry-free (genuine closure, pending independent honesty audit). The body reduces both
+finite-alphabet integrals to sums (`integral_fintype` + `Measure.pi_singleton`), splits the
+product source into its `α'`- and `β`-coordinate factors (`arrowProdEquivProdArrow`), and for
+each source sequence `x` marginalizes the `β`-coordinates one at a time
+(`wz_prod_sum_marginalize`); the reconciliation `hd'_eq` (`d' = 𝔼_{Y|X}[d ∘ qf.2]`, cleared by
+the positive `X`-marginal via `wz_ideal_marg_mul_dprime`) and the source-marginal identity
+`wz_ideal_PX_real` turn the ideal per-letter distortion into the proxy distortion. Non-circular
+(no hypothesis is the conclusion), non-bundled (`hd'_eq`/`hqStar_eq`/`hqStar_mem`/`hκ'sum` are the
+reconciliation + source-consistency preconditions — same kind as D3's — not the identity itself;
+the Fubini + change-of-variables identity is genuine body work). -/
 lemma wz_ideal_expectation_eq_covering
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) {k M₁ n : ℕ}
@@ -2812,7 +2898,69 @@ lemma wz_ideal_expectation_eq_covering
               P_XY.real {(p.1.1, p.2)}))))
       = c₁.expectedBlockDistortion
           ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d' := by
-  sorry
+  classical
+  haveI hne_prod : Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
+    Finset.univ_nonempty_iff.mp
+      (Finset.nonempty_of_sum_ne_zero (by rw [hqStar_mem.2]; exact one_ne_zero))
+  haveI hneS : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := hne_prod.map Prod.fst
+  haveI hnek : Nonempty (Fin k) := hne_prod.map Prod.snd
+  set Q := ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}) with hQdef
+  set PX := (rdAmbient qStar).map (ChannelCoding.iidXs 0) with hPXdef
+  haveI hQprob : IsProbabilityMeasure Q :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
+  haveI hPXprob : IsProbabilityMeasure PX :=
+    rdAmbient_iidXs_isProbabilityMeasure qStar hqStar_mem
+  -- Pi-measure singleton reals factor as products of coordinate singleton reals.
+  have hpiQ : ∀ z : Fin n → ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β),
+      (Measure.pi (fun _ : Fin n ↦ Q)).real {z} = ∏ i, Q.real {z i} := by
+    intro z; rw [measureReal_def, Measure.pi_singleton, ENNReal.toReal_prod]; rfl
+  have hpiPX : ∀ z : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}},
+      (Measure.pi (fun _ : Fin n ↦ PX)).real {z} = ∏ i, PX.real {z i} := by
+    intro z; rw [measureReal_def, Measure.pi_singleton, ENNReal.toReal_prod]; rfl
+  have hQreal : ∀ a : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β,
+      Q.real {a} = P_XY.real {(a.1.1, a.2)} := fun a ↦
+    ChannelCoding.pmfToMeasure_real_singleton (wz_QXY_mem_stdSimplex P_XY) a
+  have hPXreal : ∀ x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}},
+      PX.real {x'} = ∑ y, P_XY.real {(x'.1, y)} := fun x' ↦
+    wz_ideal_PX_real P_XY κ' hκ'sum qStar hqStar_eq hqStar_mem x'
+  -- Convert both integrals to finite sums over the product source.
+  unfold LossyCode.expectedBlockDistortion
+  rw [MeasureTheory.integral_fintype Integrable.of_finite,
+      MeasureTheory.integral_fintype Integrable.of_finite]
+  simp only [smul_eq_mul]
+  simp_rw [hpiQ, hpiPX, hQreal, hPXreal, blockDistortion]
+  -- Split the product source into its `α'`- and `β`-coordinate factors.
+  rw [← Equiv.sum_comp (Equiv.arrowProdEquivProdArrow (Fin n)
+        (fun _ : Fin n ↦ {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (fun _ : Fin n ↦ β)).symm,
+      Fintype.sum_prod_type]
+  simp only [Equiv.arrowProdEquivProdArrow_symm_apply]
+  refine Finset.sum_congr rfl fun x _ ↦ ?_
+  set U := c₁.decoder (c₁.encoder x) with hU
+  -- Coordinate marginalization of the ideal distortion into the proxy distortion.
+  have key : ∀ j : Fin n,
+      ∑ y : Fin n → β, (∏ i, P_XY.real {((x i).1, y i)})
+          * ((d (x j).1 (qf.2 (U j, y j)) : NNReal) : ℝ)
+        = (∏ i, ∑ b, P_XY.real {((x i).1, b)}) * ((d' (x j) (U j) : NNReal) : ℝ) := by
+    intro j
+    rw [wz_prod_sum_marginalize
+          (fun (x'' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (b : β) ↦ P_XY.real {(x''.1, b)})
+          x j (fun b ↦ ((d (x j).1 (qf.2 (U j, b)) : NNReal) : ℝ)),
+        ← wz_ideal_marg_mul_dprime P_XY d qf d' hd'_eq (x j) (U j),
+        ← Finset.mul_prod_erase Finset.univ
+          (fun i ↦ ∑ b, P_XY.real {((x i).1, b)}) (Finset.mem_univ j)]
+    ring
+  -- Rearrange both sides to `(1/n) · ∑ⱼ (∏ᵢ marg) · d'`.
+  have expand : ∀ y : Fin n → β,
+      (∏ i, P_XY.real {((x i).1, y i)})
+          * (1 / (n : ℝ) * ∑ j, ((d (x j).1 (qf.2 (U j, y j)) : NNReal) : ℝ))
+        = 1 / (n : ℝ) * ∑ j, (∏ i, P_XY.real {((x i).1, y i)})
+            * ((d (x j).1 (qf.2 (U j, y j)) : NNReal) : ℝ) := by
+    intro y; rw [mul_left_comm, Finset.mul_sum]
+  simp_rw [expand]
+  rw [← Finset.mul_sum, Finset.sum_comm]
+  simp_rw [key]
+  rw [← Finset.mul_sum, mul_left_comm]
 
 /-- **(Leg D, A3) Codebook-restricted confusion (E2) probability is squeezable.** For a
 covering codebook of size `M₁ ≲ exp(n·R₁)` and `n` beyond a threshold, there is a
