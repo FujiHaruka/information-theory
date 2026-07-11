@@ -952,7 +952,11 @@ covering rate `R₁` strictly above the covering mutual information
 ≤ D + δ` is the reconciliation identity (`wz_coveringDistortion_reconcile`) applied
 to the perturbation's distortion bound. All conclusions are genuinely constructed;
 the only preconditions are feasibility (`hqf`), the objective margin (`hobj`), and
-the slack `δ`.
+the slack `δ`. The output existential also exports, alongside `d'`, the reconciliation
+identity `hd'_eq` (`d'` = the `Y`-conditional expectation of `d ∘ qf.2`, discharged by
+`rfl` since the witness IS that expression) and the test channel's factorizability
+`hqf` (the original input membership), so downstream binning (D3) can honestly relate
+the covering proxy `d'` to the real distortion `d` via `qf.2`.
 @audit:ok -/
 private lemma wz_coveringFamily_of_testChannel
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -973,6 +977,12 @@ private lemma wz_coveringFamily_of_testChannel
         ∧ (∀ p, 0 < qStar p)
         ∧ qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k)
         ∧ expectedDistortionPmf d' qStar ≤ D + δ
+        ∧ (∀ (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k),
+             d' x' u = Real.toNNReal (∑ y : β,
+               (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+                 * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
+        ∧ (qf ∈ WynerZivFactorizableConstraint (Fin k)
+             (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
         ∧ (∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' →
             ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
               Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
@@ -982,6 +992,9 @@ private lemma wz_coveringFamily_of_testChannel
                   ≤ (D + δ) + ε') := by
   classical
   -- Step 1: perturb the feasible test channel to a full-support kernel `κ'`.
+  -- Keep a pristine copy of the factorizability membership: `hqf` is mutated by the
+  -- `rw` below, but the output existential re-exports the original membership (`hqf₀`).
+  have hqf₀ := hqf
   rw [mem_WynerZivFactorizableConstraint_iff] at hqf
   obtain ⟨hfact, hdist⟩ := hqf
   haveI : Nonempty (Fin k) := wz_nonempty_of_factorizable hfact
@@ -1014,7 +1027,8 @@ private lemma wz_coveringFamily_of_testChannel
     (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) =>
       Real.toNNReal (∑ y : β, (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
           * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ))),
-    hq'eq, hκ'pos, hκ'sum, hobj', fun _ => rfl, hqStar_pos, hqStar_mem, hfeas, ?_⟩
+    hq'eq, hκ'pos, hκ'sum, hobj', fun _ => rfl, hqStar_pos, hqStar_mem, hfeas,
+    (fun _ _ => rfl), hqf₀, ?_⟩
   intro R₁ hI ε' hε'
   exact wz_covering_lossyCode_exists
     (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k =>
@@ -2567,26 +2581,23 @@ is a PRECONDITION tightening, NOT bundling: the covering atom
 (S5a/S5b/D2/(B) → 0), which is real analytic work (Leg C), not encoded into a hypothesis.
 The conclusion `≤ D+δ` is unchanged and the body stays `sorry`.
 
-**SECOND under-hypothesization axis — found in Leg C (2026-07-11), NOT fixed yet.** The
-δ-split (Leg 0) fixed the budget axis but the signature is STILL false-as-framed on a
-distinct axis the Leg-0 audit missed: `d'` (covering proxy `DistortionFn α' (Fin k)`) and
-`qf` (test channel + reconstruction `Fin k × β → γ`) arrive as OPAQUE, mutually-unrelated
-parameters — no hypothesis ties `d'` to the real distortion `d` via `qf.2`. In the real
-construction `wz_coveringFamily_of_testChannel` (L957) defines `d' = 𝔼_{Y|X}[d ∘ qf.2]`
-(`wz_coveringDistortion_reconcile`, L872), but D3 does not require it, and `qf` carries no
-`WynerZivFactorizableConstraint`. Degenerate counterexample: `d' := 0` makes `hfeas`/`hcov₁`
-trivially hold while the WZ code's real distortion under `d` (via `qf.2`) is unconstrained,
-so the conclusion `≤ D+δ` fails — the `sorry` cannot be honestly closed as-framed. FIX
-(Leg C.5, non-load-bearing precondition threading, same kind as `hfact_eq`/`hqStar_eq`):
-thread `hd'_eq : ∀ x' u, d' x' u = Real.toNNReal (∑ y, (P_XY.real{(x'.1,y)} / ∑ y',
-P_XY.real{(x'.1,y')}) · (d x'.1 (qf.2 (u,y))))` (i.e. `wz_coveringDistortion_reconcile`) +
-`hqf : qf ∈ WynerZivFactorizableConstraint …` through D3/D/S6/`wz_perDelta_codes_exist`; the
-caller discharges both by construction. Ripple mirrors the Leg-0 δ-split (file-contained).
-The distortion-decomposition bridge (Leg C `wz_covering_binning_distortion_decomp`) is built
-standalone and NOT on top of this defect.
+**Reconciliation now threaded (Leg C.5, 2026-07-11).** The distinct
+under-hypothesization axis the Leg-0 audit missed is now closed at the signature level.
+Previously `d'` (covering proxy `DistortionFn α' (Fin k)`) and `qf` (test channel +
+reconstruction `Fin k × β → γ`) arrived as OPAQUE, mutually-unrelated parameters — no
+hypothesis tied `d'` to the real distortion `d` via `qf.2` (degenerate counterexample:
+`d' := 0` makes `hfeas`/`hcov₁` trivially hold while the WZ code's real distortion under
+`d ∘ qf.2` is unconstrained, so `≤ D+δ` would fail). Two non-load-bearing preconditions
+(same kind as `hfact_eq`/`hqStar_eq`) close that gap: `hd'_eq` pins `d'` to the
+`Y`-conditional expectation of `d ∘ qf.2` (exactly `wz_coveringDistortion_reconcile`,
+L872) and `hqf` supplies the test channel's `WynerZivFactorizableConstraint` membership.
+Both are discharged by construction in `wz_coveringFamily_of_testChannel` (L957): `hd'_eq`
+by `rfl` (the returned `d'` witness IS that expression) and `hqf` = the original input.
+The distortion-decomposition bridge (Leg C `wz_covering_binning_distortion_decomp`) is
+built standalone and NOT on top of this — the signature is now honest and the `sorry` is
+honestly closeable as-framed.
 Classification `plan` correct (in-project, not a Mathlib wall).
-@residual(plan:wz-binning-covering)
-@audit:defect(false-statement) @audit:closed-by-successor(wz-binning-covering) -/
+@residual(plan:wz-binning-covering) -/
 lemma wz_perN_covering_binning_code
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
@@ -2604,6 +2615,11 @@ lemma wz_perN_covering_binning_code
     (hqStar_pos : ∀ p, 0 < qStar p)
     (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
     (hfeas : expectedDistortionPmf d' qStar ≤ D + δ / 2)
+    (hd'_eq : ∀ x' u, d' x' u = Real.toNNReal (∑ y : β,
+        (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
+    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
+            (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
     (hsplit : R₁ - wzMutualInfoYU (Fin k) q' < R)
     (hcov₁ : ∀ ε' : ℝ, 0 < ε' →
         ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
@@ -2693,6 +2709,11 @@ lemma wz_perDelta_covering_binning_eventual
     (hqStar_pos : ∀ p, 0 < qStar p)
     (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
     (hfeas : expectedDistortionPmf d' qStar ≤ D + δ / 2)
+    (hd'_eq : ∀ x' u, d' x' u = Real.toNNReal (∑ y : β,
+        (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
+    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
+            (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
     (hcov : ∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' →
         ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
           Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
@@ -2716,7 +2737,7 @@ lemma wz_perDelta_covering_binning_eventual
     · rw [hid]; linarith [hobj']
     · linarith [hobj']
   exact wz_perN_covering_binning_code P_XY d R D k qf δ hδ q' κ' qStar d'
-    R₁ hfact_eq hκ'pos hκ'sum hobj' hqStar_eq hqStar_pos hqStar_mem hfeas hsplit
+    R₁ hfact_eq hκ'pos hκ'sum hobj' hqStar_eq hqStar_pos hqStar_mem hfeas hd'_eq hqf hsplit
     (fun ε' hε' => hcov R₁ hR₁_lb ε' hε')
 
 /-- **(S6) Covering + binning capstone (Steps 3–7).** Consuming the Step 1–2 covering
@@ -2776,6 +2797,11 @@ lemma wz_perDelta_covering_binning
     (hqStar_pos : ∀ p, 0 < qStar p)
     (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
     (hfeas : expectedDistortionPmf d' qStar ≤ D + δ / 2)
+    (hd'_eq : ∀ x' u, d' x' u = Real.toNNReal (∑ y : β,
+        (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
+    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
+            (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
     (hcov : ∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' →
         ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
           Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
@@ -2790,7 +2816,8 @@ lemma wz_perDelta_covering_binning
   -- beyond which the distortion is within `D + δ`. S6 is the pure choice + `atTop`
   -- glue: assemble the per-`n` codes into a sequence and read off the eventual bound.
   obtain ⟨N, hN⟩ := wz_perDelta_covering_binning_eventual P_XY d R D k qf δ hδ
-    q' κ' qStar d' hfact_eq hκ'pos hκ'sum hobj' hqStar_eq hqStar_pos hqStar_mem hfeas hcov
+    q' κ' qStar d' hfact_eq hκ'pos hκ'sum hobj' hqStar_eq hqStar_pos hqStar_mem hfeas
+    hd'_eq hqf hcov
   choose c hc using hN
   exact ⟨c, Filter.eventually_atTop.2 ⟨N, fun n hn => hc n hn⟩⟩
 
@@ -2841,7 +2868,7 @@ private lemma wz_perDelta_codes_exist
   -- is `δ`-generic, so it returns `hfeas ≤ D + δ/2` and covering target `≤ (D + δ/2) + ε'`,
   -- exactly what the tightened capstone `wz_perDelta_covering_binning` (S6) consumes.
   obtain ⟨q', κ', qStar, d', hfact_eq, hκ'pos, hκ'sum, hobj', hqStar_eq,
-      hqStar_pos, hqStar_mem, hfeas, hcov⟩ :=
+      hqStar_pos, hqStar_mem, hfeas, hd'_eq, hqf', hcov⟩ :=
     wz_coveringFamily_of_testChannel P_XY d R D k qf hqf hobj (δ / 2) (half_pos hδ)
   -- Steps 3–7 (binning / decoder / error exponents / derandomize / squeeze / source
   -- extension) are packaged in the capstone `wz_perDelta_covering_binning` (S6),
@@ -2857,7 +2884,7 @@ private lemma wz_perDelta_codes_exist
   --   7. squeeze + source extension `α' → α` (`wzLiftSupportCode`, S7 /
   --      `wz_expectedBlockDistortion_source_agree`).
   exact wz_perDelta_covering_binning P_XY d R D k qf δ hδ q' κ' qStar d'
-    hfact_eq hκ'pos hκ'sum hobj' hqStar_eq hqStar_pos hqStar_mem hfeas hcov
+    hfact_eq hκ'pos hκ'sum hobj' hqStar_eq hqStar_pos hqStar_mem hfeas hd'_eq hqf' hcov
 
 /-- **(E) Slack diagonalization.** A family of Wyner–Ziv code sequences, one per
 slack `δ > 0`, each eventually within `D + δ`, diagonalises to a single Wyner–Ziv
