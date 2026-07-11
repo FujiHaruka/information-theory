@@ -468,12 +468,14 @@ private lemma wz_tendsto_exp_mul_codebookSize_inv {c R : ℝ} (hcR : c < R) :
 The monolithic covering+binning body of `wz_goodCode_exists_of_testChannel` is
 decomposed into an ordered chain of sub-lemmas. The pure-regularity leaf
 `wz_restrictedCoveringJoint_pos` (S1) is proved here; the heavy covering /
-source-support / binning-decoder / diagonalization steps
+source-support / diagonalization steps
 (`wz_covering_lossyCode_exists`, `wz_expectedBlockDistortion_source_agree`,
-`wz_perDelta_codes_exist`, `wz_diagonalize_slack`) are laid as `sorry`-bodied atoms
-`@residual(plan:wyner-ziv-main-plan)` for follow-up legs. Full support of the
-covering source stays proof-internal (restricted to the subtype `{x // 0 < P_X x}`),
-never a signature hypothesis. -/
+`wz_diagonalize_slack`) are now closed sorry-free (`@audit:ok`). The sole remaining
+residual is the per-`n` binning+covering assembly `wz_perN_covering_binning_code`
+(D3), carried transitively through the sorry-free reduction `wz_perDelta_codes_exist`
+and tagged `@residual(plan:wz-binning-covering)` (split-out child plan). Full support
+of the covering source stays proof-internal (restricted to the subtype
+`{x // 0 < P_X x}`), never a signature hypothesis. -/
 
 /-- **(S1) Restricted covering joint, full support (leaf).** From a strictly
 positive row-stochastic kernel `κ'` and the source marginal `P_X x = ∑_y P_XY(x,y)`,
@@ -2132,8 +2134,10 @@ hands off to D3 (`wz_perN_covering_binning_code`), which takes `R₁`/`hsplit`/`
 GIVEN. The `R₁` existence + rate arithmetic is real work done here. Signature (binders +
 conclusion) unchanged from before the commit (verified by diff). `#print axioms` =
 `[propext, sorryAx, Classical.choice, Quot.sound]` (transitive `sorryAx` from the stubbed
-D2/D3), so tier-2 `@residual`, NOT `@audit:ok`.
-@residual(plan:wyner-ziv-main-plan) -/
+D2/D3), so tier-2 `@residual`, NOT `@audit:ok`. The only remaining `sorry` in the whole
+chain is D3, so the transitive residual is repointed to D3's closure vehicle (the child
+plan `wz-binning-covering`, the SoT established by the Leg-0 δ-split).
+@residual(plan:wz-binning-covering) -/
 lemma wz_perDelta_covering_binning_eventual
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
@@ -2214,8 +2218,9 @@ genuinely derives S6's `∃ c, ∀ᶠ n, …` from (D)'s `∃ N, ∀ n, ∃ c, N
 extracts the per-`n` codes into the sequence, `eventually_atTop` packages the threshold
 `N`, no hidden `sorry`, no weakening. The decl still carries a *transitive* residual
 (`#print axioms` = `[propext, sorryAx, Classical.choice, Quot.sound]`, the `sorryAx`
-inherited from the stubbed (D)), so it remains tier-2 `@residual`, NOT `@audit:ok`.
-@residual(plan:wyner-ziv-main-plan) -/
+inherited from the stubbed (D)), so it remains tier-2 `@residual`, NOT `@audit:ok`. The
+sole remaining `sorry` is D3, so the transitive residual points at D3's closure vehicle.
+@residual(plan:wz-binning-covering) -/
 lemma wz_perDelta_covering_binning
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
@@ -2274,8 +2279,9 @@ Independent honesty audit 2026-07-06: genuine reduction — the body has no `sor
 own; it `obtain`s the covering data from `wz_coveringFamily_of_testChannel` (Steps 1–2) and
 `exact`s the S6 capstone `wz_perDelta_covering_binning`. Not an opaque re-sorry, not
 bundling: `hqf`/`hobj` are feasibility/objective preconditions and the transitive residual
-lives in S6 (and, once wired, S5a/S5b). Honest residual (inherited).
-@residual(plan:wyner-ziv-main-plan) -/
+lives in S6 (and, once wired, S5a/S5b). Honest residual (inherited). The sole remaining
+`sorry` is D3, so the transitive residual points at D3's closure vehicle.
+@residual(plan:wz-binning-covering) -/
 private lemma wz_perDelta_codes_exist
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
@@ -2417,7 +2423,7 @@ The body is now a `sorry`-free reduction: `wz_perDelta_codes_exist` builds, for 
 slack `δ > 0`, a code sequence eventually within `D + δ` (the covering + binning
 assembly), and `wz_diagonalize_slack` (now proved sorry-free) diagonalises those into
 a single sequence within `D + ε` for every `ε`. The residual `sorry +
-@residual(plan:wyner-ziv-main-plan)` lives in `wz_perDelta_codes_exist` (and the
+@residual(plan:wz-binning-covering)` lives in `wz_perDelta_codes_exist` (and the
 covering / source-support atoms it consumes, `wz_covering_lossyCode_exists` /
 `wz_expectedBlockDistortion_source_agree`), not here. -/
 private lemma wz_goodCode_exists_of_testChannel

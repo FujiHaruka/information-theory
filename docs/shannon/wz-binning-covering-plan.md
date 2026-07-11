@@ -2,13 +2,13 @@
 
 > **Parent**: [`wyner-ziv-main-plan.md`](wyner-ziv-main-plan.md) §P3 D3 split-out
 
-**Status**: ACTIVE 🚧 — 残 sorry は **D3 `wz_perN_covering_binning_code` 唯一** (`InformationTheory/Shannon/WynerZiv/Achievability.lean:2082`)。現状 `@audit:defect(false-statement)` + `@audit:closed-by-successor(wz-binning-covering)`: exact `≤ D+δ` 結論が budget 使い切りで false-as-framed (leg-20 独立監査 OVERTURN、機械確認済)。**δ-split 署名修正 (Leg 0) が前提で、それ以前は body fill 不可** (honest 化しないと偽 statement を証明することになる)。WZ achievability 全体の残 sorry はこの D3 1 本のみ (S1-S7 / D1 / D2 / (B) / gateway 1-2 は全て CLOSED sorry-free、legs 12-19)。
+**Status**: ACTIVE 🚧 — 残 sorry は **D3 `wz_perN_covering_binning_code` 唯一** (`InformationTheory/Shannon/WynerZiv/Achievability.lean:2082`、`@residual(plan:wz-binning-covering)`)。**Leg 0 (δ-split 署名修正) DONE** (`a59e37cb`、独立 honesty-auditor PASS): `hfeas`/`hcov₁` の target を `D+δ/2` に締め `δ/2` を誤差予約 → 署名は TRUE-as-framed に honest 化、`@audit:defect(false-statement)` 除去済。**body は依然 sorry** (genuine closure は Leg A-D)。WZ achievability 全体の残 sorry はこの D3 1 本のみ (S1-S7 / D1 / D2 / (B) / gateway 1-2 は全て CLOSED sorry-free、legs 12-19)。**次の本線 = Leg A (two-ambient 構成、Leg 0 と独立)**。
 
 **再検証** (prose にキャッシュしない): `scripts/sig_view.ts --sorry InformationTheory/Shannon/WynerZiv/Achievability.lean` / `#print axioms wyner_ziv_achievability`。
 
 ## 進捗
 
-- [ ] Leg 0 — δ-split 署名修正 (D3 honest 化、tier-5 fix、~5-decl file-contained ripple) 📋
+- [x] Leg 0 — δ-split 署名修正 (D3 honest 化、tier-5 fix、5-decl file-contained ripple) ✅ (`a59e37cb`、独立監査 PASS)
 - [ ] Leg A — two-ambient WZ-joint 構成 (pure regularity) 📋
 - [ ] Leg B — α'→α source-measure 変数変換 lemma (medium) 📋
 - [ ] Leg C — WZ distortion-decomposition bridge (解析コア、**Leg 0 後**) 📋
