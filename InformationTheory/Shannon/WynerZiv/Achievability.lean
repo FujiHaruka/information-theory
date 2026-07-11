@@ -2691,7 +2691,68 @@ lemma wz_lift_expectedBlockDistortion_eq
           (ChannelCoding.pmfToMeasure (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
               P_XY.real {(p.1.1, p.2)}))
           (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g) := by
-  sorry
+  classical
+  -- The coordinatewise embedding `φ = (Subtype.val, id) : α' × β → α × β`.
+  set φ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β → α × β := fun p ↦ (p.1.1, p.2) with hφ
+  have hφ_meas : Measurable φ :=
+    (measurable_subtype_coe.comp measurable_fst).prodMk measurable_snd
+  haveI hQ_prob : IsProbabilityMeasure
+      (ChannelCoding.pmfToMeasure
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
+  -- `Q_XY.map φ = P_XY`: singleton agreement (off-support X-atoms carry zero mass both sides).
+  have hmapφ : (ChannelCoding.pmfToMeasure
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})).map φ
+      = P_XY := by
+    refine Measure.ext_of_singleton (fun ab ↦ ?_)
+    obtain ⟨a, b⟩ := ab
+    rw [Measure.map_apply hφ_meas (measurableSet_singleton _)]
+    by_cases ha : 0 < ∑ y, P_XY.real {(a, y)}
+    · have hpre : φ ⁻¹' {(a, b)}
+          = {((⟨a, ha⟩ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}), b)} := by
+        ext p
+        simp only [hφ, Set.mem_preimage, Set.mem_singleton_iff, Prod.ext_iff, Subtype.ext_iff]
+      rw [hpre, ChannelCoding.pmfToMeasure_apply_singleton]
+      exact ENNReal.ofReal_toReal (measure_ne_top _ _)
+    · have hpre : φ ⁻¹' {(a, b)} = (∅ : Set ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β)) := by
+        ext p
+        simp only [hφ, Set.mem_preimage, Set.mem_singleton_iff, Prod.ext_iff,
+          Set.mem_empty_iff_false, iff_false, not_and]
+        intro h1 _
+        exact absurd (h1 ▸ p.1.2) ha
+      have hPzero : P_XY {(a, b)} = 0 := by
+        have hsum : ∑ y, P_XY.real {(a, y)} = 0 :=
+          le_antisymm (not_lt.mp ha) (Finset.sum_nonneg fun _ _ ↦ measureReal_nonneg)
+        have hb := (Finset.sum_eq_zero_iff_of_nonneg
+          (fun _ _ ↦ measureReal_nonneg)).mp hsum b (Finset.mem_univ b)
+        rwa [Measure.real, ENNReal.toReal_eq_zero_iff, or_iff_left (measure_ne_top _ _)] at hb
+      rw [hpre, measure_empty, hPzero]
+  -- Product pushforward: `(Q_XY^n).map (coordinatewise φ) = P_XY^n`.
+  haveI hSF : SigmaFinite ((ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})).map φ) := by
+    rw [hmapφ]; infer_instance
+  have hpimap : (Measure.pi (fun _ : Fin n ↦
+        ChannelCoding.pmfToMeasure
+          (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))).map
+        (fun q (i : Fin n) ↦ φ (q i))
+      = Measure.pi (fun _ : Fin n ↦ P_XY) := by
+    rw [Measure.pi_map_pi (hμ := fun _ ↦ hSF) (fun _ ↦ hφ_meas.aemeasurable)]
+    simp_rw [hmapφ]
+  -- Change of variables + pointwise integrand equality.
+  unfold WynerZivCode.expectedBlockDistortion
+  rw [← hpimap, integral_map]
+  · refine integral_congr_ae (Filter.Eventually.of_forall (fun q ↦ ?_))
+    simp only [wzLiftSupportCode, hφ]
+    have hdite : (fun i ↦ dite (0 < ∑ y, P_XY.real {(((q i).1 : α), y)})
+          (fun h ↦ (⟨((q i).1 : α), h⟩ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}))
+          (fun _ ↦ x₀))
+        = fun i ↦ (q i).1 := by
+      funext i
+      exact dif_pos (q i).1.2
+    rw [hdite]
+    rfl
+  · exact (measurable_pi_lambda _ (fun i ↦ hφ_meas.comp (measurable_pi_apply i))).aemeasurable
+  · exact (measurable_of_finite _).aestronglyMeasurable
 
 /-- **(Leg D, A2) Ideal distortion = covering distortion.** The ideal (true covering
 codeword) block distortion of the binned code, integrated over the co-restricted source
