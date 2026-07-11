@@ -2323,6 +2323,194 @@ private lemma wz_covering_source_measure_map_val_eq
   simp only [Measure.real] at h
   exact (ENNReal.toReal_eq_toReal_iff' (measure_ne_top _ _) (measure_ne_top _ _)).mp h
 
+/-! ### Steps 3–7 (Leg C) — the distortion-decomposition bridge
+
+The bridge that the derandomize + squeeze glue (Leg D) consumes: it decomposes the
+Wyner–Ziv code's actual expected block distortion into a good-event proxy plus
+`distortionMax · Pr[error]`, mirroring the rate-distortion `source_avg_distortion_le_simpler`
+(`AchievabilityAsymptoticFailureDecay.lean`) but for the **bin conditional-typicality
+decoder** (`wzBinTypicalDecoder`, S4) threaded through `wzCodeOfCoveringBinning` (S3).
+
+* `wz_expectedBlockDistortion_le_of_badSet` — the generic, decoder-agnostic
+  measure-theoretic decomposition (the reusable analytic core; sorry-free).
+* `wz_covering_binning_distortion_decomp` — the specialisation to the covering+binning
+  code, splitting `Pr[error]` into the covering-distortion-failure event `E1` and the
+  bin-decoder confusion event `E2` (the shape Leg D bounds via S5a/S5b/D2/(B)).
+-/
+
+/-- **(Leg C, generic) Codebook-fixed distortion decomposition for a Wyner–Ziv code.**
+The bin-decoder analogue of the rate-distortion `source_avg_distortion_le_simpler`: for
+*any* Wyner–Ziv code `c`, any "bad set" `B` of source blocks, and any proxy value
+`P ≥ 0` such that **outside** `B` the empirical block distortion is at most `P`, the
+source-averaged block distortion decomposes as `P + distortionMax d · Pr[B]`.
+
+This is the reusable measure-theoretic core of the Wyner–Ziv distortion analysis. It is
+**decoder-agnostic** — it applies verbatim to the bin conditional-typicality decoder (S4)
+threaded through `wzCodeOfCoveringBinning` (S3) — so the bin-decoder specifics enter only
+when `B` and `P` are instantiated (`wz_covering_binning_distortion_decomp`). Sorry-free. -/
+lemma wz_expectedBlockDistortion_le_of_badSet {M n : ℕ}
+    (c : WynerZivCode M n α β γ) (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (B : Set (Fin n → α × β)) (P : ℝ) (hP : 0 ≤ P)
+    (hgood : ∀ p : Fin n → α × β, p ∉ B →
+        blockDistortion d n (fun i ↦ (p i).1)
+            (c.decoder (c.encoder (fun i ↦ (p i).1), fun i ↦ (p i).2)) ≤ P) :
+    c.expectedBlockDistortion P_XY d
+      ≤ P + distortionMax d * (Measure.pi (fun _ : Fin n ↦ P_XY)).real B := by
+  classical
+  haveI : MeasurableSingletonClass (α × β) := by infer_instance
+  haveI : MeasurableSingletonClass (Fin n → α × β) := Pi.instMeasurableSingletonClass
+  unfold WynerZivCode.expectedBlockDistortion
+  set dMax : ℝ := distortionMax d with hdMax_def
+  have h_dMax_nn : 0 ≤ dMax := distortionMax_nonneg d
+  set Q : Measure (Fin n → α × β) := Measure.pi (fun _ : Fin n ↦ P_XY) with hQ_def
+  haveI : IsProbabilityMeasure Q := by rw [hQ_def]; infer_instance
+  set F : (Fin n → α × β) → ℝ := fun p ↦
+      blockDistortion d n (fun i ↦ (p i).1)
+        (c.decoder (c.encoder (fun i ↦ (p i).1), fun i ↦ (p i).2)) with hF_def
+  have h_B_meas : MeasurableSet B := (Set.toFinite _).measurableSet
+  -- Pointwise: `F p ≤ P + dMax · (B.indicator 1 p)`.
+  have h_pointwise : ∀ p, F p ≤ P + dMax * (B.indicator (fun _ ↦ (1 : ℝ)) p) := by
+    intro p
+    by_cases hpB : p ∈ B
+    · have h_bd : F p ≤ dMax := blockDistortion_le_distortionMax d n _ _
+      have h_ind : B.indicator (fun _ : Fin n → α × β ↦ (1 : ℝ)) p = 1 :=
+        Set.indicator_of_mem hpB _
+      rw [h_ind]; nlinarith [h_bd, hP, h_dMax_nn]
+    · have h_bd : F p ≤ P := hgood p hpB
+      have h_ind : B.indicator (fun _ : Fin n → α × β ↦ (1 : ℝ)) p = 0 :=
+        Set.indicator_of_notMem hpB _
+      rw [h_ind]; nlinarith [h_bd, h_dMax_nn]
+  -- Both sides are bounded, hence integrable on the probability measure `Q`.
+  have h_meas_F : Measurable F := measurable_of_finite _
+  have h_meas_g : Measurable
+      (fun p : Fin n → α × β ↦ P + dMax * (B.indicator (fun _ ↦ (1 : ℝ)) p)) :=
+    measurable_of_finite _
+  have h_F_le : ∀ p, ‖F p‖ ≤ dMax := by
+    intro p
+    rw [Real.norm_eq_abs, abs_of_nonneg (blockDistortion_nonneg d n _ _)]
+    exact blockDistortion_le_distortionMax d n _ _
+  have h_int_F : Integrable F Q :=
+    Integrable.mono' (integrable_const dMax) h_meas_F.aestronglyMeasurable
+      (Filter.Eventually.of_forall h_F_le)
+  have h_int_g : Integrable
+      (fun p : Fin n → α × β ↦ P + dMax * (B.indicator (fun _ ↦ (1 : ℝ)) p)) Q := by
+    refine Integrable.mono' (integrable_const (P + dMax)) h_meas_g.aestronglyMeasurable ?_
+    refine Filter.Eventually.of_forall (fun p ↦ ?_)
+    have h_ind_le : (B.indicator (fun _ : Fin n → α × β ↦ (1 : ℝ)) p) ≤ 1 := by
+      by_cases hpB : p ∈ B
+      · rw [Set.indicator_of_mem hpB]
+      · rw [Set.indicator_of_notMem hpB]; linarith
+    have h_ind_nn : 0 ≤ (B.indicator (fun _ : Fin n → α × β ↦ (1 : ℝ)) p) :=
+      Set.indicator_nonneg (fun _ _ ↦ zero_le_one) p
+    have h_val_nn : 0 ≤ P + dMax * (B.indicator (fun _ : Fin n → α × β ↦ (1 : ℝ)) p) :=
+      add_nonneg hP (mul_nonneg h_dMax_nn h_ind_nn)
+    rw [Real.norm_eq_abs, abs_of_nonneg h_val_nn]
+    nlinarith [mul_le_mul_of_nonneg_left h_ind_le h_dMax_nn]
+  -- Integrate the pointwise bound and evaluate the indicator integral.
+  have h_int_mono : ∫ p, F p ∂Q
+      ≤ ∫ p, P + dMax * (B.indicator (fun _ : Fin n → α × β ↦ (1 : ℝ)) p) ∂Q :=
+    integral_mono h_int_F h_int_g h_pointwise
+  rw [integral_const_add_indicator_one Q B h_B_meas P dMax] at h_int_mono
+  exact h_int_mono
+
+/-- **(Leg C) Wyner–Ziv covering + binning distortion-decomposition bridge.**
+For the covering+binning Wyner–Ziv code `wzCodeOfCoveringBinning c₁ f qf.2 (bin decoder)`
+(S3 assembled with the bin conditional-typicality decoder S4), the source-averaged actual
+block distortion decomposes as
+
+```
+𝔼[dⁿ]  ≤  P  +  distortionMax dα' · ( Pr[E1] + Pr[E2] )
+```
+
+where the two error events over the source blocks `Fin n → α' × β` are
+
+* `E1` — the **covering-distortion-failure** event: the reconstruction from the *true*
+  covering codeword `c₁.decoder (c₁.encoder x)` (via the test-channel reconstruction map
+  `qf.2` and the side information `y`) has block distortion exceeding the proxy budget `P`;
+* `E2` — the **bin-decoder confusion** event: the bin conditional-typicality decoder
+  returns a covering word different from the true covering codeword.
+
+Outside `E1 ∪ E2` the decoder recovers the true covering codeword, so the actual
+reconstruction *equals* the ideal one and its block distortion is `≤ P`; the decomposition
+is then the generic `wz_expectedBlockDistortion_le_of_badSet` plus a union bound. This is
+the shape the derandomize + squeeze glue (Leg D) consumes: it bounds `Pr[E1]` by the
+covering-distortion typicality (`hfeas` + S5a `wz_covering_failure_prob_le`) and `Pr[E2]` by
+the codebook-restricted confusion exponent (S5b `wz_codebook_confusion_expectation_le`, fed
+D2 `wz_covering_codeword_sideInfo_mass_le` + (B) `wzIndexBinningMeasure_collision`), with the
+two-ambient source ↔ codebook identification of Leg A.
+
+Non-bundled: the distortion-shape reconciliation (covering proxy `dα'` vs actual block
+distortion via `qf.2`) is carried by the concrete event `E1` whose probability Leg D bounds
+— it is not hypothesised. The bound on `Pr[E1] + Pr[E2]` (the real analytic work) is *not* a
+hypothesis here; only the proxy nonnegativity `hP` is required. Sorry-free. -/
+lemma wz_covering_binning_distortion_decomp
+    {α' : Type*} [Fintype α'] [DecidableEq α'] [Nonempty α']
+    [MeasurableSpace α'] [MeasurableSingletonClass α']
+    {Ω : Type*} [MeasurableSpace Ω] {k M M₁ n : ℕ} [Nonempty (Fin k)]
+    (μ : Measure Ω) (Us : ℕ → Ω → Fin k) (Ys : ℕ → Ω → β) (ε : ℝ)
+    (c₁ : LossyCode M₁ n α' (Fin k)) (f : Fin M₁ → Fin M)
+    (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (dα' : DistortionFn α' γ)
+    (Q : Measure (α' × β)) [IsProbabilityMeasure Q]
+    (P : ℝ) (hP : 0 ≤ P) :
+    (wzCodeOfCoveringBinning c₁ f qf.2
+          (wzBinTypicalDecoder μ Us Ys ε c₁ f)).expectedBlockDistortion Q dα'
+      ≤ P
+        + distortionMax dα'
+          * ((Measure.pi (fun _ : Fin n ↦ Q)).real
+                { p : Fin n → α' × β |
+                    P < blockDistortion dα' n (fun i ↦ (p i).1)
+                          (fun i ↦ qf.2
+                            (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2)) }
+              + (Measure.pi (fun _ : Fin n ↦ Q)).real
+                { p : Fin n → α' × β |
+                    wzBinTypicalDecoder μ Us Ys ε c₁ f
+                        (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+                      ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) }) := by
+  classical
+  set c : WynerZivCode M n α' β γ :=
+    wzCodeOfCoveringBinning c₁ f qf.2 (wzBinTypicalDecoder μ Us Ys ε c₁ f) with hc_def
+  set E1 : Set (Fin n → α' × β) :=
+      { p | P < blockDistortion dα' n (fun i ↦ (p i).1)
+              (fun i ↦ qf.2 (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2)) } with hE1
+  set E2 : Set (Fin n → α' × β) :=
+      { p | wzBinTypicalDecoder μ Us Ys ε c₁ f
+              (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+            ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) } with hE2
+  have h_dMax_nn : 0 ≤ distortionMax dα' := distortionMax_nonneg dα'
+  -- Good-event pointwise bound: outside `E1 ∪ E2` the actual block distortion is `≤ P`.
+  have hgood : ∀ p : Fin n → α' × β, p ∉ E1 ∪ E2 →
+      blockDistortion dα' n (fun i ↦ (p i).1)
+        (c.decoder (c.encoder (fun i ↦ (p i).1), fun i ↦ (p i).2)) ≤ P := by
+    intro p hp
+    rw [Set.mem_union, not_or] at hp
+    obtain ⟨hp1, hp2⟩ := hp
+    -- Bin decoder recovers the true covering codeword (`p ∉ E2`).
+    have hdec : wzBinTypicalDecoder μ Us Ys ε c₁ f
+        (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+          = c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) := by
+      by_contra hne; exact hp2 (by rw [hE2]; exact hne)
+    -- Hence the actual reconstruction equals the ideal (true-codeword) one.
+    have hrec : (c.decoder (c.encoder (fun i ↦ (p i).1), fun i ↦ (p i).2))
+        = fun i ↦ qf.2 (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2) := by
+      funext i
+      simp only [hc_def, wzCodeOfCoveringBinning]
+      rw [hdec]
+    rw [hrec]
+    -- Outside `E1`, the ideal reconstruction's block distortion is `≤ P`.
+    have hp1' := hp1
+    rw [hE1] at hp1'
+    simpa only [Set.mem_setOf_eq, not_lt] using hp1'
+  -- Generic decomposition with bad set `E1 ∪ E2`, then a union bound.
+  have hdecomp := wz_expectedBlockDistortion_le_of_badSet c Q dα' (E1 ∪ E2) P hP hgood
+  calc c.expectedBlockDistortion Q dα'
+      ≤ P + distortionMax dα' * (Measure.pi (fun _ : Fin n ↦ Q)).real (E1 ∪ E2) := hdecomp
+    _ ≤ P + distortionMax dα' * ((Measure.pi (fun _ : Fin n ↦ Q)).real E1
+          + (Measure.pi (fun _ : Fin n ↦ Q)).real E2) := by
+        have hmul := mul_le_mul_of_nonneg_left
+          (measureReal_union_le (μ := Measure.pi (fun _ : Fin n ↦ Q)) E1 E2) h_dMax_nn
+        linarith
+
 /-- **(D3) Per-`n` Wyner–Ziv code family at a fixed covering rate (Steps 2–7).** Given
 the Step 1–2 covering data together with an already-chosen covering rate `R₁` (strictly
 above `I(X;U)`, so that `hcov₁` — the covering `LossyCode` family at rate `R₁` — is
