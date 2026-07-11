@@ -1352,7 +1352,20 @@ under the SOURCE product measure `Measure.pi P_XY` with the typical set defined 
 concrete `jointlyTypicalSet μ Us Ys n ε` could never match. The per-codeword mass `hmass`
 is supplied by A3 via a side-information-marginal transfer to `wz_covering_codeword_sideInfo_mass_le`
 (D2). Honesty checks (1)-(4) unchanged (the body is identical modulo the abstract `jts`).
-Re-audit pending (signature relaxation of an `@audit:ok` lemma). -/
+
+Independent honesty re-audit 2026-07-12 (post abstract-`jts` generalization, commit
+`d1f2445a`): `@audit:ok` RE-CONFIRMED. The generalization is a pure signature relaxation
+(a strengthening — the lemma now applies to any measurable `jts`, not a weakening): (1) still
+non-circular; (2) still non-bundled — `hmass` (per-codeword mass upper bound) and
+`hcollision` (`M⁻¹` collision) are genuine mass + collision preconditions, and the `M₁`
+union-bound count is derived in-body (`hUnion`/`hStepA` + `Finset.sum_const`), not encoded in
+a hypothesis; (3) non-vacuous — the conclusion is a real arithmetic bound following from
+`hmass`+`hcollision` (instantiating `jts := univ` would force `hmass` to constrain
+`I_YU ≤ 0`, so no degenerate instantiation makes it trivially useless); (4) sufficiency —
+the body genuinely derives the conclusion and the sole call site (A3
+`wz_exists_binning_E2_bound`, L3325) instantiates `jts` with the concrete side-information
+`jointlyTypicalSet` on the ambient, not a degenerate set. `#print axioms` =
+`[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified 2026-07-12). -/
 lemma wz_codebook_confusion_expectation_le {α' : Type*} [MeasurableSpace α']
     {Ω : Type*} [MeasurableSpace Ω] {k n M M₁ : ℕ} [Nonempty (Fin k)] [NeZero M]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -3064,6 +3077,23 @@ ambient's `(U,Y)` law. Non-bundled: the conclusion is a per-codeword mass upper 
 are the covering-kernel regularity preconditions. The residual body is the
 marginal-agreement + entropy-bridge assembly (in-project, comparable to the covering-atom
 Markov-lemma leg), correctly `@residual(plan:wz-binning-covering)`.
+
+Independent honesty audit 2026-07-12 (commit `d1f2445a`, laundering/bundling check): PASS
+as honest residual (NOT laundering). (i) TRUE-as-framed — the standard AEP packing bound; the
+degenerate boundaries survive (`n = 0` ⇒ empty-product typicality ⇒ mass `= 1 ≤ exp 0 = 1`;
+`k = 1` ⇒ `I(Y;U) = 0` ⇒ RHS `= exp(3nε) ≥ 1`; `I(Y;U) − 3ε < 0` ⇒ RHS `> 1`, bound trivial),
+so no missing precondition makes it false; the exponent `wzMutualInfoYU q'` equals the
+ambient `I(U;Y)` by construction of `wzSideInfoMarginal` (bridge `wzMutualInfoYU_eq_mutualInfo`),
+so it does not overstate the true decay. (ii) Precondition-shaped — the conclusion is a single
+per-codeword mass UPPER bound (`Measure.real {…} ≤ exp(…)`), the SAME shape as D2
+`wz_covering_codeword_sideInfo_mass_le` (`@audit:ok`), NOT the E2/confusion integral (S5b's
+conclusion) and NOT A3's operational `distortionMax · Pr[E2] ≤ δ/4`. A3's actual core (the
+`{decoder ≠ true} ⊆ C2 ∪ E2b` decomposition, the `M₁` union bound, the derandomization, the
+δ/4 squeeze) is genuinely in A3's own sorry-free body — this lemma only supplies S5b's `hmass`
+argument, so it is a legitimate atomic sub-lemma, not A3's core renamed into a called sorry.
+(iii) Class correct — this is an in-project transport of the proven D2 (side-information-marginal
+agreement + entropy→MI bridge), NOT a Mathlib gap, so `@residual(plan:wz-binning-covering)` is
+right (plan file present; class `plan`, not `wall`).
 @residual(plan:wz-binning-covering) -/
 lemma wz_source_codeword_sideInfo_mass_le
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -3196,6 +3226,21 @@ conclusion — the C2 acceptance decay (covering-atom body) and the E2b confusio
 classification correct (in-project constructive fix; plan slug present). Caller (D3)
 discharges: `hε_conf`/`hε_pos` by `linarith` (ε := gap/6 ⇒ 3ε = gap/2 < gap), `hd'_link` by
 `rfl` (dα' := fun x' g ↦ d x'.1 g), `hcov_accept` from the strengthened `hcov₁` at the same ε.
+
+Independent honesty audit 2026-07-12 (commit `d1f2445a`, post-fill body genuineness): PASS.
+The signature is confirmed FROZEN (byte-identical to the parent commit — only the body was
+filled). The now-`sorry`-free body is a GENUINE proof, not a circular `:= h` / `:True` slot /
+degenerate abuse: it proves the set inclusion `{decoder ≠ true word} ⊆ C2 ∪ E2b` (`hFAIL_incl`
+via the `wzBinTypicalDecoder_eq_of_unique` contrapositive), bounds C2 by the `hcov_accept`
+premise (`hC2`), bounds E2b by a single derandomization (`MeasureTheory.exists_le_integral`
+over `wzIndexBinningMeasure`) fed the abstract-`jts` S5b `wz_codebook_confusion_expectation_le`
+whose `hmass` is the transported D2 mass lemma `wz_source_codeword_sideInfo_mass_le` (`hE2b`,
+with the degenerate `M₁ ≤ 1` empty-confusion case handled by `Subsingleton (Fin M₁)`), then
+combines by measure subadditivity and squeezes to `δ/4` (`distortionMax dα' ≤ distortionMax d`
+via `hd'_link`). The body carries NO literal `sorry`; the SOLE residual is transitively
+inherited from the called `wz_source_codeword_sideInfo_mass_le` (independently audited PASS as
+an honest per-codeword mass atom, not laundering), so tier-2 `@residual(plan:wz-binning-covering)`
+is correct (NOT `@audit:ok` — transitive sorry remains).
 @audit:closed-by-successor(wz-binning-covering)
 @residual(plan:wz-binning-covering) -/
 lemma wz_exists_binning_E2_bound
