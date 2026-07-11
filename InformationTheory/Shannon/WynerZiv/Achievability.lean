@@ -1991,6 +1991,240 @@ lemma wz_covering_codeword_sideInfo_mass_le
     rw [hSempty, measureReal_empty]
     exact (Real.exp_pos _).le
 
+/-! ### Leg A — two-ambient WZ-joint regularity construction
+
+The per-`n` binned code (D3) reduces the WZ error to closed error-event atoms that each
+consume an i.i.d. ambient plus a *regularity bundle* (measurability / `iIndepFun` /
+`IdentDistrib` / marginal positivity / marginal identities). This section supplies those
+bundles from D3's covering data (`qStar` / `κ'`), for the **two** ambients the error
+decomposition runs on:
+
+* the **covering ambient** `rdAmbient qStar` on `ℕ → ({x // 0 < P_X x} × Fin k)`
+  (`iidXs` = source, `iidYs` = covering codeword `U`) drives the covering-acceptance
+  gateway atom `wz_covering_sideInfo_mass_ge` (instantiated with the source in the
+  strong-typicality role and `U` in the conditioning role) and the covering-failure
+  integral `wz_covering_failure_prob_le` (S5a);
+* the **side-information ambient** `rdAmbient (wzSideInfoMarginal P_XY κ')` on
+  `ℕ → (Fin k × {y // 0 < P_Y y})` (`iidXs` = covering codeword `U`, `iidYs` = side
+  information `Y`) drives the per-codeword mass bound `wz_covering_codeword_sideInfo_mass_le`
+  (D2) and the codebook-confusion integral `wz_codebook_confusion_expectation_le` (S5b).
+
+The first block gives a generic `rdAmbient`-level regularity API (reusable for either
+ambient); the second constructs the `(U, Y)`-marginal pmf `wzSideInfoMarginal` on the
+positive-`Y`-marginal subtype together with its simplex membership and full support (the
+covering side already receives `hqStar_mem` / `hqStar_pos` as D3 hypotheses). No
+error-probability or decoder-correctness statement is produced here — the deliverable is
+pure regularity, consumed downstream by Leg C/D. -/
+
+section LegAAmbientRegularity
+
+variable {A B : Type*}
+  [Fintype A] [DecidableEq A] [Nonempty A] [MeasurableSpace A] [MeasurableSingletonClass A]
+  [Fintype B] [DecidableEq B] [Nonempty B] [MeasurableSpace B] [MeasurableSingletonClass B]
+
+lemma rdAmbient_iIndepFun_iidXs (q : A × B → ℝ) (hq : q ∈ stdSimplex ℝ (A × B)) :
+    iIndepFun (fun i : ℕ ↦ ChannelCoding.iidXs (α := A) (β := B) i) (rdAmbient q) := by
+  haveI : IsProbabilityMeasure (ChannelCoding.pmfToMeasure (α := A × B) q) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure hq
+  exact iidAmbientJoint_iIndepFun_iidXs (ChannelCoding.pmfToMeasure (α := A × B) q)
+
+lemma rdAmbient_iIndepFun_iidYs (q : A × B → ℝ) (hq : q ∈ stdSimplex ℝ (A × B)) :
+    iIndepFun (fun i : ℕ ↦ ChannelCoding.iidYs (α := A) (β := B) i) (rdAmbient q) := by
+  haveI : IsProbabilityMeasure (ChannelCoding.pmfToMeasure (α := A × B) q) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure hq
+  exact iIndepFun_infinitePi
+    (P := fun _ : ℕ ↦ ChannelCoding.pmfToMeasure (α := A × B) q)
+    (X := fun _ : ℕ ↦ (Prod.snd : A × B → B))
+    (fun _ ↦ measurable_snd)
+
+lemma rdAmbient_iIndepFun_jointSequence (q : A × B → ℝ) (hq : q ∈ stdSimplex ℝ (A × B)) :
+    iIndepFun
+      (fun i : ℕ ↦ ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs i)
+      (rdAmbient q) := by
+  haveI : IsProbabilityMeasure (ChannelCoding.pmfToMeasure (α := A × B) q) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure hq
+  exact iidAmbientJoint_iIndepFun_joint (ChannelCoding.pmfToMeasure (α := A × B) q)
+
+lemma rdAmbient_pairwise_indep_jointSequence (q : A × B → ℝ) (hq : q ∈ stdSimplex ℝ (A × B)) :
+    Pairwise fun i j ↦
+      ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs i
+        ⟂ᵢ[rdAmbient q]
+      ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs j := by
+  intro i j hij
+  exact (rdAmbient_iIndepFun_jointSequence q hq).indepFun hij
+
+lemma rdAmbient_identDistrib_iidXs (q : A × B → ℝ) (hq : q ∈ stdSimplex ℝ (A × B)) (i : ℕ) :
+    IdentDistrib (ChannelCoding.iidXs (α := A) (β := B) i) (ChannelCoding.iidXs 0)
+      (rdAmbient q) (rdAmbient q) := by
+  haveI : IsProbabilityMeasure (ChannelCoding.pmfToMeasure (α := A × B) q) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure hq
+  exact iidAmbientJoint_identDistrib_iidXs (ChannelCoding.pmfToMeasure (α := A × B) q) i
+
+lemma rdAmbient_identDistrib_iidYs (q : A × B → ℝ) (hq : q ∈ stdSimplex ℝ (A × B)) (i : ℕ) :
+    IdentDistrib (ChannelCoding.iidYs (α := A) (β := B) i) (ChannelCoding.iidYs 0)
+      (rdAmbient q) (rdAmbient q) where
+  aemeasurable_fst := (ChannelCoding.measurable_iidYs i).aemeasurable
+  aemeasurable_snd := (ChannelCoding.measurable_iidYs 0).aemeasurable
+  map_eq := by
+    haveI : IsProbabilityMeasure (ChannelCoding.pmfToMeasure (α := A × B) q) :=
+      ChannelCoding.pmfToMeasure_isProbabilityMeasure hq
+    show Measure.map (ChannelCoding.iidYs (α := A) (β := B) i)
+          (iidAmbientJointMeasure (ChannelCoding.pmfToMeasure (α := A × B) q))
+        = Measure.map (ChannelCoding.iidYs (α := A) (β := B) 0)
+          (iidAmbientJointMeasure (ChannelCoding.pmfToMeasure (α := A × B) q))
+    rw [iidAmbientJoint_map_iidYs, iidAmbientJoint_map_iidYs]
+
+lemma rdAmbient_identDistrib_jointSequence
+    (q : A × B → ℝ) (hq : q ∈ stdSimplex ℝ (A × B)) (i : ℕ) :
+    IdentDistrib
+      (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs i)
+      (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs 0)
+      (rdAmbient q) (rdAmbient q) := by
+  haveI : IsProbabilityMeasure (ChannelCoding.pmfToMeasure (α := A × B) q) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure hq
+  exact iidAmbientJoint_identDistrib_joint (ChannelCoding.pmfToMeasure (α := A × B) q) i
+
+lemma rdAmbient_iidXs_real_singleton_pos
+    (q : A × B → ℝ) (hq : q ∈ stdSimplex ℝ (A × B)) (hpos : ∀ p : A × B, 0 < q p) (x : A) :
+    0 < ((rdAmbient q).map (ChannelCoding.iidXs (α := A) (β := B) 0)).real {x} := by
+  haveI : IsProbabilityMeasure (ChannelCoding.pmfToMeasure (α := A × B) q) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure hq
+  exact iidAmbientJoint_iidXs_real_singleton_pos (ChannelCoding.pmfToMeasure (α := A × B) q)
+    (fun p ↦ pmfToMeasure_real_singleton_pos hq hpos p) x
+
+lemma rdAmbient_iidYs_real_singleton_pos
+    (q : A × B → ℝ) (hq : q ∈ stdSimplex ℝ (A × B)) (hpos : ∀ p : A × B, 0 < q p) (y : B) :
+    0 < ((rdAmbient q).map (ChannelCoding.iidYs (α := A) (β := B) 0)).real {y} := by
+  haveI : IsProbabilityMeasure (ChannelCoding.pmfToMeasure (α := A × B) q) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure hq
+  exact iidAmbientJoint_iidYs_real_singleton_pos (ChannelCoding.pmfToMeasure (α := A × B) q)
+    (fun p ↦ pmfToMeasure_real_singleton_pos hq hpos p) y
+
+lemma rdAmbient_jointSequence_real_singleton_pos
+    (q : A × B → ℝ) (hq : q ∈ stdSimplex ℝ (A × B)) (hpos : ∀ p : A × B, 0 < q p) (p : A × B) :
+    0 < ((rdAmbient q).map
+          (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs 0)).real {p} := by
+  haveI : IsProbabilityMeasure (ChannelCoding.pmfToMeasure (α := A × B) q) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure hq
+  exact iidAmbientJoint_joint_real_singleton_pos (ChannelCoding.pmfToMeasure (α := A × B) q)
+    (fun p ↦ pmfToMeasure_real_singleton_pos hq hpos p) p
+
+lemma rdAmbient_map_fst_jointSequence (q : A × B → ℝ) (hq : q ∈ stdSimplex ℝ (A × B)) :
+    ((rdAmbient q).map
+          (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs 0)).map Prod.fst
+      = (rdAmbient q).map (ChannelCoding.iidXs (α := A) (β := B) 0) := by
+  rw [rdAmbient_map_jointSequence q hq, rdAmbient_map_iidXs q hq]
+
+lemma rdAmbient_map_snd_jointSequence (q : A × B → ℝ) (hq : q ∈ stdSimplex ℝ (A × B)) :
+    ((rdAmbient q).map
+          (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs 0)).map Prod.snd
+      = (rdAmbient q).map (ChannelCoding.iidYs (α := A) (β := B) 0) := by
+  rw [rdAmbient_map_jointSequence q hq, rdAmbient_map_iidYs q hq]
+
+end LegAAmbientRegularity
+
+/-- The `(U, Y)`-marginal joint pmf feeding the side-information ambient, restricted to the
+positive-`Y`-marginal subtype. For a full-support covering kernel `κ'` and the source law
+`P_XY`, the value at `(u, y)` is `∑ₓ κ'(x, u) · P_XY{(x, y)}`, the `Y`-side analogue of the
+covering pmf `qStar` (which lives on the positive-`X`-marginal subtype). -/
+noncomputable def wzSideInfoMarginal (P_XY : Measure (α × β)) {k : ℕ} (κ' : α → Fin k → ℝ) :
+    Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}} → ℝ :=
+  fun p ↦ ∑ x, κ' x p.1 * P_XY.real {(x, p.2.1)}
+
+lemma wzSideInfoMarginal_pos
+    (P_XY : Measure (α × β)) {k : ℕ} (κ' : α → Fin k → ℝ)
+    (hκ'pos : ∀ x u, 0 < κ' x u) :
+    ∀ p, 0 < wzSideInfoMarginal P_XY κ' p := by
+  intro p
+  have hpos_sum : 0 < ∑ x, P_XY.real {(x, p.2.1)} := p.2.2
+  show 0 < ∑ x, κ' x p.1 * P_XY.real {(x, p.2.1)}
+  refine Finset.sum_pos' (fun x _ ↦ mul_nonneg (hκ'pos x p.1).le measureReal_nonneg) ?_
+  by_contra h
+  push_neg at h
+  refine absurd hpos_sum (not_lt.mpr ?_)
+  refine le_of_eq (Finset.sum_eq_zero fun x _ ↦ ?_)
+  by_contra hx
+  exact absurd (mul_pos (hκ'pos x p.1)
+    (lt_of_le_of_ne measureReal_nonneg (Ne.symm hx))) (not_lt.mpr (h x (Finset.mem_univ x)))
+
+lemma wzSideInfoMarginal_sum_eq_one
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] {k : ℕ} (κ' : α → Fin k → ℝ)
+    (hκ'sum : ∀ x, ∑ u, κ' x u = 1) :
+    ∑ p, wzSideInfoMarginal P_XY κ' p = 1 := by
+  classical
+  -- The `Y`-marginal at `x`, summed over the positive-`Y`-marginal subtype, equals the
+  -- full `Y`-marginal (the excluded `y` carry zero mass).
+  have hsubtype : ∀ x : α,
+      ∑ ys : {y : β // 0 < ∑ x', P_XY.real {(x', y)}}, P_XY.real {(x, ys.1)}
+        = ∑ y : β, P_XY.real {(x, y)} := by
+    intro x
+    letI : DecidablePred (fun y : β => 0 < ∑ x', P_XY.real {(x', y)}) :=
+      Classical.decPred _
+    rw [← Finset.sum_subtype
+        (Finset.univ.filter (fun y : β => 0 < ∑ x', P_XY.real {(x', y)}))
+        (fun y => by simp) (fun y => P_XY.real {(x, y)})]
+    refine Finset.sum_subset (Finset.filter_subset _ _) ?_
+    intro y _ hy
+    rw [Finset.mem_filter] at hy
+    push_neg at hy
+    have hle : ∑ x', P_XY.real {(x', y)} ≤ 0 := hy (Finset.mem_univ y)
+    have hz : ∑ x', P_XY.real {(x', y)} = 0 :=
+      le_antisymm hle (Finset.sum_nonneg fun _ _ ↦ measureReal_nonneg)
+    exact (Finset.sum_eq_zero_iff_of_nonneg (fun _ _ ↦ measureReal_nonneg)).mp hz x
+      (Finset.mem_univ x)
+  -- Total mass over `α × β` is `1`.
+  have hsum1 : ∑ p : α × β, P_XY.real {p} = 1 := by
+    have h1 : (∑ p : α × β, P_XY.real {p}) = P_XY.real (Finset.univ : Finset (α × β)) := by
+      simp [sum_measureReal_singleton]
+    rw [h1, Finset.coe_univ, probReal_univ]
+  show ∑ p : Fin k × {y : β // 0 < ∑ x', P_XY.real {(x', y)}},
+      ∑ x, κ' x p.1 * P_XY.real {(x, p.2.1)} = 1
+  rw [Fintype.sum_prod_type]
+  have hstep : ∀ u : Fin k,
+      ∑ ys : {y : β // 0 < ∑ x', P_XY.real {(x', y)}}, ∑ x, κ' x u * P_XY.real {(x, ys.1)}
+        = ∑ x, κ' x u * ∑ y : β, P_XY.real {(x, y)} := by
+    intro u
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl (fun x _ ↦ ?_)
+    rw [← Finset.mul_sum, hsubtype x]
+  simp_rw [hstep]
+  rw [Finset.sum_comm]
+  have hstep2 : ∀ x : α,
+      ∑ u : Fin k, κ' x u * ∑ y : β, P_XY.real {(x, y)} = ∑ y : β, P_XY.real {(x, y)} := by
+    intro x
+    rw [← Finset.sum_mul, hκ'sum x, one_mul]
+  simp_rw [hstep2]
+  rw [Fintype.sum_prod_type] at hsum1
+  exact hsum1
+
+lemma wzSideInfoMarginal_mem_stdSimplex
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] {k : ℕ} (κ' : α → Fin k → ℝ)
+    (hκ'pos : ∀ x u, 0 < κ' x u) (hκ'sum : ∀ x, ∑ u, κ' x u = 1) :
+    wzSideInfoMarginal P_XY κ'
+      ∈ stdSimplex ℝ (Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) :=
+  ⟨fun p ↦ (wzSideInfoMarginal_pos P_XY κ' hκ'pos p).le,
+    wzSideInfoMarginal_sum_eq_one P_XY κ' hκ'sum⟩
+
+lemma wzSideInfoMarginal_subtype_nonempty
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] :
+    Nonempty {y : β // 0 < ∑ x, P_XY.real {(x, y)}} := by
+  have hsum1 : ∑ p : α × β, P_XY.real {p} = 1 := by
+    have h1 : (∑ p : α × β, P_XY.real {p}) = P_XY.real (Finset.univ : Finset (α × β)) := by
+      simp [sum_measureReal_singleton]
+    rw [h1, Finset.coe_univ, probReal_univ]
+  obtain ⟨x₀, y₀, hxy⟩ : ∃ x y, 0 < P_XY.real {(x, y)} := by
+    by_contra h
+    push_neg at h
+    have hzero : ∑ p : α × β, P_XY.real {p} = 0 :=
+      Finset.sum_eq_zero fun p _ ↦ le_antisymm (h p.1 p.2) measureReal_nonneg
+    rw [hsum1] at hzero
+    exact one_ne_zero hzero
+  refine ⟨⟨y₀, ?_⟩⟩
+  calc (0 : ℝ) < P_XY.real {(x₀, y₀)} := hxy
+    _ ≤ ∑ x, P_XY.real {(x, y₀)} :=
+        Finset.single_le_sum (f := fun x => P_XY.real {(x, y₀)})
+          (fun x _ ↦ measureReal_nonneg) (Finset.mem_univ x₀)
+
 /-- **(D3) Per-`n` Wyner–Ziv code family at a fixed covering rate (Steps 2–7).** Given
 the Step 1–2 covering data together with an already-chosen covering rate `R₁` (strictly
 above `I(X;U)`, so that `hcov₁` — the covering `LossyCode` family at rate `R₁` — is
