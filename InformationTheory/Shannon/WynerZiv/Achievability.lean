@@ -936,6 +936,34 @@ private lemma wz_coveringDistortion_reconcile
       (fun x _ hx => hGzero x (le_antisymm (not_lt.mp (by simpa using hx)) (hPnn x)))
   rw [hLHS, hext, hRHS]
 
+/-- The `(U, Y)`-marginal joint pmf feeding the side-information ambient, restricted to the
+positive-`Y`-marginal subtype. For a full-support covering kernel `κ'` and the source law
+`P_XY`, the value at `(u, y)` is `∑ₓ κ'(x, u) · P_XY{(x, y)}`, the `Y`-side analogue of the
+covering pmf `qStar` (which lives on the positive-`X`-marginal subtype). -/
+noncomputable def wzSideInfoMarginal (P_XY : Measure (α × β)) {k : ℕ} (κ' : α → Fin k → ℝ) :
+    Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}} → ℝ :=
+  fun p ↦ ∑ x, κ' x p.1 * P_XY.real {(x, p.2.1)}
+
+/-- **Covering-acceptance failure event (C2).** For a covering `LossyCode` `c` on the
+source-support subtype `α' := {x // 0 < P_X x}`, the set of block source–side pairs
+`p : Fin n → α' × β` whose true covering codeword `c.decoder (c.encoder x)` is *not*
+jointly (strongly) typical, at radius `ε`, with the side information `y` in the
+side-information ambient `rdAmbient (wzSideInfoMarginal P_XY κ')`. This is the covering
+half of the Wyner–Ziv error event `E2`: acceptance failure of the correct covering word
+(`wzBinTypicalDecoder_eq_of_unique` requires this joint typicality to recover it), so
+`C2 ⊆ E2`. Pure event set (data), used to state the covering-acceptance-failure mass
+bound threaded from the covering construction to `wz_exists_binning_E2_bound` (A3). -/
+def wzCoveringAcceptFailSet (P_XY : Measure (α × β)) {k : ℕ}
+    (κ' : α → Fin k → ℝ) {M n : ℕ}
+    (c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)) (ε : ℝ) :
+    Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
+  { p | (c.decoder (c.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+      ∉ ChannelCoding.jointlyTypicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          ChannelCoding.iidXs
+          (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+            ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
+          n ε }
+
 open ChannelCoding in
 /-- **(Steps 1–2) Covering LossyCode family from a feasible test channel.**
 Perturbs the feasible factorisable test channel `qf` to a full-support kernel
@@ -958,7 +986,23 @@ identity `hd'_eq` (`d'` = the `Y`-conditional expectation of `d ∘ qf.2`, disch
 `rfl` since the witness IS that expression) and the test channel's factorizability
 `hqf` (the original input membership), so downstream binning (D3) can honestly relate
 the covering proxy `d'` to the real distortion `d` via `qf.2`.
-@audit:ok -/
+
+Leg E (covering-acceptance C2, 2026-07-12): the covering `LossyCode` family conclusion
+also exports, for the returned code `c`, a covering-acceptance-failure mass bound —
+`∃ ε > 0`, the product source–side measure of `wzCoveringAcceptFailSet P_XY κ' c ε` (the
+event that the true covering word is NOT jointly typical with the side information) is
+`≤ δ / (8 · (distortionMax d + 1))`, a fixed vanishing tolerance. The covering-acceptance
+failure `C2` is the true-word joint-AEP failure and decays to 0 (so `≤` any fixed positive
+tolerance eventually); it is the covering half of the Wyner–Ziv `E2` error event
+(`C2 ⊆ E2`), a precondition-exposure of the covering code's own property (same kind as the
+covering-size cap `hM_ub` / Leg C.6), threaded to `wz_exists_binning_E2_bound` (A3,
+`hcov_accept`) and discharged by construction — NOT the operational conclusion (the
+`distortionMax d` scaling only sizes the tolerance so `dMax · Pr[C2]` is absorbable; the
+E2b confusion crux stays in A3). The discharge (joint distortion + acceptance derandomize
+with the S5a `(1-p)^M₁` → `codebookMeasure`-average `Fubini` bridge, fed the gateway-2
+acceptance mass lower bound `wz_covering_sideInfo_mass_ge`) is the residual `sorry`; the
+A3-fill leg closes it.
+@residual(plan:wz-binning-covering) -/
 private lemma wz_coveringFamily_of_testChannel
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
@@ -991,7 +1035,13 @@ private lemma wz_coveringFamily_of_testChannel
               ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
                 c.expectedBlockDistortion
                     ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
-                  ≤ (D + δ) + ε') := by
+                  ≤ (D + δ) + ε'
+                ∧ ∃ ε : ℝ, 0 < ε ∧
+                    (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+                        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                          P_XY.real {(p.1.1, p.2)}))).real
+                      (wzCoveringAcceptFailSet P_XY κ' c ε)
+                      ≤ δ / (8 * (distortionMax d + 1))) := by
   classical
   -- Step 1: perturb the feasible test channel to a full-support kernel `κ'`.
   -- Keep a pristine copy of the factorizability membership: `hqf` is mutated by the
@@ -1031,15 +1081,20 @@ private lemma wz_coveringFamily_of_testChannel
           * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ))),
     hq'eq, hκ'pos, hκ'sum, hobj', fun _ => rfl, hqStar_pos, hqStar_mem, hfeas,
     (fun _ _ => rfl), hqf₀, ?_⟩
-  intro R₁ hI ε' hε'
-  exact wz_covering_lossyCode_exists
-    (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k =>
-      κ' p.1.1 p.2 * ∑ y : β, P_XY.real {(p.1.1, y)})
-    hqStar_pos hqStar_mem
-    (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) =>
-      Real.toNNReal (∑ y : β, (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
-          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
-    hI hfeas hε'
+  -- The covering `LossyCode` family must now be good for BOTH the covering distortion
+  -- (component atom `wz_covering_lossyCode_exists`, a distortion-only derandomize via
+  -- `rate_distortion_achievability`) AND the covering-acceptance failure C2 (gateway-2
+  -- `wz_covering_sideInfo_mass_ge` + S5a `wz_covering_failure_prob_le`). Since
+  -- `rate_distortion_achievability` derandomizes for distortion only, its output code is not
+  -- automatically acceptance-good; the TRUE-as-framed conclusion is that a *jointly*
+  -- derandomized code (good for both functionals) exists — the S5a `(1-p)^M₁` →
+  -- `codebookMeasure`-average `Fubini`/`Measure.pi`-product bridge over both failure
+  -- functionals. Deferring the whole joint existential (rather than committing to the
+  -- distortion-only witness and sorry-ing an acceptance claim that need not hold of *that*
+  -- code) keeps the residual honest. Closed by the A3-fill leg, which reuses
+  -- `wz_covering_lossyCode_exists` as the distortion component of the joint construction.
+  -- @residual(plan:wz-binning-covering)
+  sorry
 
 /-! ### Steps 3–7 decomposition (binning / decoder / error exponents / squeeze)
 
@@ -2139,14 +2194,6 @@ lemma rdAmbient_map_snd_jointSequence (q : A × B → ℝ) (hq : q ∈ stdSimple
 
 end LegAAmbientRegularity
 
-/-- The `(U, Y)`-marginal joint pmf feeding the side-information ambient, restricted to the
-positive-`Y`-marginal subtype. For a full-support covering kernel `κ'` and the source law
-`P_XY`, the value at `(u, y)` is `∑ₓ κ'(x, u) · P_XY{(x, y)}`, the `Y`-side analogue of the
-covering pmf `qStar` (which lives on the positive-`X`-marginal subtype). -/
-noncomputable def wzSideInfoMarginal (P_XY : Measure (α × β)) {k : ℕ} (κ' : α → Fin k → ℝ) :
-    Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}} → ℝ :=
-  fun p ↦ ∑ x, κ' x p.1 * P_XY.real {(x, p.2.1)}
-
 lemma wzSideInfoMarginal_pos
     (P_XY : Measure (α × β)) {k : ℕ} (κ' : α → Fin k → ℝ)
     (hκ'pos : ∀ x u, 0 < κ' x u) :
@@ -3011,11 +3058,26 @@ check ("no 3rd under-hyp axis beyond M") both treated A3's `distortionMax·Pr[E2
 ATOM (a settled sub-result of S5b/D2) and did not read inside E2; the acceptance axis (C2)
 lives strictly inside A3's conclusion and is a distinct under-hyp axis from the M-axis and
 distortion-failure E1 (E1, distortion `{ideal>P}`, was correctly dropped by G2; C2, typicality
-acceptance, was conflated with it and its bound S5a dead-judged). Honest fix (NOT applied here
-— rewrite is the orchestrator/pivot-advisor's job): ADD a covering-acceptance hypothesis to A3
-(per-source typicality-mass lower bound / covering-good `c₁`) and supply it from D3 (strengthen
-`hcov₁` or add a covering-acceptance atom); the signature stays in defect form and the body
-stays `sorry`.
+acceptance, was conflated with it and its bound S5a dead-judged).
+
+Leg E (covering-acceptance C2, 2026-07-12 — signature fix APPLIED): the prescribed honest fix
+is now applied at the signature level. A new covering-acceptance precondition `hcov_accept` is
+added: for the covering code `c₁`, `∃ ε > 0`, the product source–side mass of
+`wzCoveringAcceptFailSet P_XY κ' c₁ ε` (the C2 event: the true covering word is NOT jointly
+typical with the side information) is `≤ δ / 2 / (8 · (distortionMax d + 1))` — a fixed
+vanishing tolerance the adversarial all-atypical-image codebook counterexample violated. C2 is
+the true-word joint-AEP failure and decays to 0 (so is `≤` any fixed positive tolerance
+eventually). It is supplied from D3, which threads it out of the strengthened covering family
+`hcov₁` (the covering atom `wz_coveringFamily_of_testChannel` exports it alongside the
+distortion bound). This is a precondition-exposure of the covering code's own property (same
+kind as the size cap `hM_ub` / Leg C.6), NOT bundling: the `distortionMax d` scaling only
+sizes the tolerance so `distortionMax dα' · Pr[C2] ≤ δ/8` is absorbable in A3's arithmetic; the
+covering-acceptance decay is the S5a/gateway-2 analytic work done in the covering construction,
+and the E2b confusion crux (S5b) + union + threshold remain genuine A3-body work (`d` = full
+alphabet, so `distortionMax d ≥ distortionMax dα'` gives an A3-sufficient tolerance without the
+subtype `Nonempty`). The C2 (4th) under-hyp axis is thereby closed at the signature level; the
+body stays `sorry` (the A3 fill — union-bounding C2 via `hcov_accept` with E2b via S5b — is a
+later leg). Classification of the new framing pending the independent honesty audit.
 @audit:defect(false-statement)
 @audit:closed-by-successor(wz-binning-covering)
 @residual(plan:wz-binning-covering) -/
@@ -3033,6 +3095,12 @@ lemma wz_exists_binning_E2_bound
     ∃ N_E2 : ℕ, ∀ n : ℕ, N_E2 ≤ n →
       ∀ (M₁ : ℕ) (c₁ : LossyCode M₁ n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
         (M₁ : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 →
+        (∃ ε : ℝ, 0 < ε ∧
+            (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+                (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                  P_XY.real {(p.1.1, p.2)}))).real
+              (wzCoveringAcceptFailSet P_XY κ' c₁ ε)
+              ≤ δ / 2 / (8 * (distortionMax d + 1))) →
         ∃ (ε : ℝ) (f : Fin M₁ → Fin (codebookSize R n)),
           distortionMax dα' *
             (Measure.pi (fun _ : Fin n ↦
@@ -3199,7 +3267,13 @@ lemma wz_perN_covering_binning_code
           ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
             c.expectedBlockDistortion
                 ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
-              ≤ (D + δ / 2) + ε') :
+              ≤ (D + δ / 2) + ε'
+            ∧ ∃ ε : ℝ, 0 < ε ∧
+                (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+                    (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                      P_XY.real {(p.1.1, p.2)}))).real
+                  (wzCoveringAcceptFailSet P_XY κ' c ε)
+                  ≤ δ / 2 / (8 * (distortionMax d + 1))) :
     ∃ N : ℕ, ∀ n : ℕ, ∃ c : WynerZivCode (codebookSize R n) n α β γ,
       N ≤ n → c.expectedBlockDistortion P_XY d ≤ D + δ := by
   classical
@@ -3247,7 +3321,7 @@ lemma wz_perN_covering_binning_code
     wz_exists_binning_E2_bound P_XY d R κ' hκ'pos hκ'sum q' hfact_eq R₁ hsplit qf
       (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g) δ hδ
   refine ⟨max N_cov N_E2, fun n hn => ?_⟩
-  obtain ⟨M, hM_ge, hM_ub, c₁, hc₁_dist⟩ := hN_cov n (le_trans (le_max_left _ _) hn)
+  obtain ⟨M, hM_ge, hM_ub, c₁, hc₁_dist, hAccept⟩ := hN_cov n (le_trans (le_max_left _ _) hn)
   have x₀ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := Classical.arbitrary _
   -- ═══════════════════════════════════════════════════════════════════════════
   -- STEP 6 (outer packaging — genuine).  The Wyner–Ziv code is the `α' → α` support lift
@@ -3274,7 +3348,7 @@ lemma wz_perN_covering_binning_code
   -- `(M : ℝ) ≤ exp(n·R₁) + 1` is the size the covering theorem actually produces (`M =
   -- ⌈exp(n·R₁)⌉`, `Nat.ceil_lt_add_one`); it is threaded through `hcov₁` (Leg C.6), so
   -- `hM_ub` is now supplied by the covering family together with the codebook `c₁`.
-  obtain ⟨εTyp, f, hE2⟩ := hN_E2 n (le_trans (le_max_right _ _) hn) M c₁ hM_ub
+  obtain ⟨εTyp, f, hE2⟩ := hN_E2 n (le_trans (le_max_right _ _) hn) M c₁ hM_ub hAccept
   -- The co-restricted source measure `Q_XY` is a probability measure.
   haveI hQ_prob : IsProbabilityMeasure
       (ChannelCoding.pmfToMeasure
@@ -3432,7 +3506,13 @@ lemma wz_perDelta_covering_binning_eventual
           ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
             c.expectedBlockDistortion
                 ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
-              ≤ (D + δ / 2) + ε') :
+              ≤ (D + δ / 2) + ε'
+            ∧ ∃ ε : ℝ, 0 < ε ∧
+                (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+                    (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                      P_XY.real {(p.1.1, p.2)}))).real
+                  (wzCoveringAcceptFailSet P_XY κ' c ε)
+                  ≤ δ / 2 / (8 * (distortionMax d + 1))) :
     ∃ N : ℕ, ∀ n : ℕ, ∃ c : WynerZivCode (codebookSize R n) n α β γ,
       N ≤ n → c.expectedBlockDistortion P_XY d ≤ D + δ := by
   -- Step 1 (rate split): the covering rate identity D1 lets the covering family `hcov`
@@ -3521,7 +3601,13 @@ lemma wz_perDelta_covering_binning
           ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
             c.expectedBlockDistortion
                 ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
-              ≤ (D + δ / 2) + ε') :
+              ≤ (D + δ / 2) + ε'
+            ∧ ∃ ε : ℝ, 0 < ε ∧
+                (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+                    (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                      P_XY.real {(p.1.1, p.2)}))).real
+                  (wzCoveringAcceptFailSet P_XY κ' c ε)
+                  ≤ δ / 2 / (8 * (distortionMax d + 1))) :
     ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
       ∀ᶠ n in Filter.atTop, (c n).expectedBlockDistortion P_XY d ≤ D + δ := by
   -- Steps 3–7 are the covering + binning core `wz_perDelta_covering_binning_eventual`
