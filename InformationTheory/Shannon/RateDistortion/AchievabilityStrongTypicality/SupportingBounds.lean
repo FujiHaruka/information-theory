@@ -398,6 +398,7 @@ theorem rate_distortion_achievability_witness_form_strong
     (h_slack : expectedDistortionPmf d qStar + δ_typ ≤ D + ε' / 2) :
     ∃ N : ℕ, ∀ n, N ≤ n →
       ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
+        (_hM_ub : (M : ℝ) ≤ Real.exp ((n : ℝ) * R) + 1)
         (c : LossyCode M n α β),
         c.expectedBlockDistortion (μ.map (Xs 0)) d ≤ D + ε' := by
   classical
@@ -480,7 +481,11 @@ theorem rate_distortion_achievability_witness_form_strong
       h_per_codebook h_step3
   obtain ⟨c₀, hc₀_le⟩ :=
     exists_codebook_low_avg (M := Mn) (n := n) (μ.map (Ys 0)) f h_avg_bound
-  refine ⟨Mn, le_refl _, lossyCodeOfCodebookStrong μ Xs Ys hMn_pos ε_join c₀, ?_⟩
+  have hMn_ub : (Mn : ℝ) ≤ Real.exp ((n : ℝ) * R) + 1 := by
+    rw [hMn_def]
+    exact (Nat.ceil_lt_add_one (Real.exp_pos _).le).le
+  refine ⟨Mn, le_refl _, hMn_ub,
+    lossyCodeOfCodebookStrong μ Xs Ys hMn_pos ε_join c₀, ?_⟩
   have hf_unfold : f c₀ =
       (lossyCodeOfCodebookStrong μ Xs Ys hMn_pos ε_join c₀).expectedBlockDistortion
         (μ.map (Xs 0)) d := rfl
@@ -540,6 +545,7 @@ theorem rate_distortion_achievability_partial_discharge_strong
     (h_slack : expectedDistortionPmf d qStar + δ_typ ≤ D + ε' / 2) :
     ∃ N : ℕ, ∀ n, N ≤ n →
       ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
+        (_hM_ub : (M : ℝ) ≤ Real.exp ((n : ℝ) * R) + 1)
         (c : LossyCode M n α β),
         c.expectedBlockDistortion
             ((rdAmbient qStar).map (iidXs (α := α) (β := β) 0)) d ≤ D + ε' := by

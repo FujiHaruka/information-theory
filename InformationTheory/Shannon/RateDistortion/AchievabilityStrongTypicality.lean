@@ -132,6 +132,7 @@ theorem rate_distortion_achievability_strong
           ≤ δ_kl * qZ_min) :
     ∃ N : ℕ, ∀ n, N ≤ n →
       ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
+        (_hM_ub : (M : ℝ) ≤ Real.exp ((n : ℝ) * R) + 1)
         (c : LossyCode M n α β),
         c.expectedBlockDistortion
             ((rdAmbient qStar).map (iidXs (α := α) (β := β) 0)) d ≤ D + ε' := by
@@ -214,6 +215,7 @@ theorem rate_distortion_achievability
           ≤ δ_kl * qZ_min) :
     ∃ N : ℕ, ∀ n, N ≤ n →
       ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
+        (_hM_ub : (M : ℝ) ≤ Real.exp ((n : ℝ) * R) + 1)
         (c : LossyCode M n α β),
         c.expectedBlockDistortion
             ((rdAmbient qStar).map (iidXs (α := α) (β := β) 0)) d ≤ D + ε' :=

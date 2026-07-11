@@ -716,6 +716,7 @@ private lemma wz_covering_lossyCode_exists
     {R₁ D : ℝ} (hI : mutualInfoPmf qStar < R₁)
     (hfeas : expectedDistortionPmf d' qStar ≤ D) {ε' : ℝ} (hε' : 0 < ε') :
     ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ, Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
+      (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 ∧
       ∃ c : LossyCode M n α' (Fin k),
         c.expectedBlockDistortion ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d' ≤ D + ε' := by
   classical
@@ -850,8 +851,8 @@ private lemma wz_covering_lossyCode_exists
     h_distslack (fun {n} hn x y hxy => h_jts hn x y hxy) qZ_min hqZ_pos hqZ_le
     h_dominates
   refine ⟨N, fun n hn => ?_⟩
-  obtain ⟨M, hM_lb, c, hc⟩ := hN n hn
-  exact ⟨M, hM_lb, c, hc⟩
+  obtain ⟨M, hM_lb, hM_ub, c, hc⟩ := hN n hn
+  exact ⟨M, hM_lb, hM_ub, c, hc⟩
 
 /-- **Covering-distortion reconciliation identity (Step 1–2 core).** The covering
 proxy distortion `d'` on the source-support subtype `α' := {x // 0 < P_X x}`,
@@ -986,6 +987,7 @@ private lemma wz_coveringFamily_of_testChannel
         ∧ (∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' →
             ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
               Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
+              (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 ∧
               ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
                 c.expectedBlockDistortion
                     ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
@@ -2957,29 +2959,20 @@ body. (The Leg-C.5 audit's "no third axis" conclusion is OVERTURNED — see the 
 below.)
 Classification `plan` correct (in-project, not a Mathlib wall).
 
-Independent honesty audit 2026-07-11 (Leg D, M-axis): DEFECT LEFT IN PLACE
-(under-hypothesization, 3rd axis of the Leg-0/Leg-C.5 family; the Leg-C.5 "no third axis" claim
-above was wrong). `hcov₁` supplies only a LOWER bound on the covering codebook size
-(`⌈exp(n·R₁)⌉ ≤ M`), but the bin-decoder confusion count scales LINEARLY with the covering
-codebook size (S5b `wz_codebook_confusion_expectation_le`: `≤ (codewords) · exp(−n·I_YU) /
-(bins)`), so the E2 squeeze (A3 `wz_exists_binning_E2_bound`, which correctly TAKES the upper
-bound as a precondition) needs `M` bounded ABOVE — a fact `hcov₁` does not expose. The body
-localizes the gap honestly as `hM_ub : (M : ℝ) ≤ exp(n·R₁) + 1`, a `sorry` NOT derivable from
-the current hypotheses: it is FALSE for an inflated-`M` `hcov₁` witness (redundant covering
-codewords never hurt covering distortion, so they satisfy `hcov₁`, yet drive `Pr[E2] → 1`, so
-the constructed code's distortion `→ distortionMax > D + δ`). Independently verified: the
-inflated-`M` counterexample satisfies every D3 hypothesis while defeating the intended
-construction, and `hM_ub` is genuinely non-vacuous (`hcov₁` only lower-bounds `M`). Per the
-Leg-0/Leg-C.5 discipline this decl is FALSE-AS-FRAMED in the M-direction until `hcov₁` is
-tightened to pin `M = codebookSize R₁ n` (threaded through D/S6/`wz_perDelta_codes_exist`,
-discharged by construction at `wz_coveringFamily_of_testChannel` — the Leg-C.6 fix). First
-choice (fix the signature this session) was infeasible: the launching brief over-constrained
-"D3 signature unchanged", deferring the precondition-tightening to Leg C.6. The fix stays
-Achievability.lean-file-contained and does NOT touch the headline
-(`wz_goodCode_exists_of_testChannel` / `wyner_ziv_achievability`) signature (parent #9 crux
-invariant). A2/A3 remain genuine tier-2 residuals; only D3's discharge of the M-bound is
-defective.
-@audit:defect(false-statement) @audit:closed-by-successor(wz-binning-covering)
+M-axis under-hypothesization (Leg D finding) resolved by Leg C.6: `hcov₁` now exposes, in
+addition to the covering-size lower bound `⌈exp(n·R₁)⌉ ≤ M`, the matching upper bound
+`(M : ℝ) ≤ exp(n·R₁) + 1`. This is not a hypothesis carrying the proof's core — it is the
+size the rate-distortion covering theorem actually produces (`M = ⌈exp(n·R₁)⌉`,
+`Nat.ceil_lt_add_one`), a precondition tightening (Leg-0/Leg-C.5-style) re-exposed from the
+covering construction and threaded through D/S6/`wz_perDelta_codes_exist`, discharged by
+construction at `wz_coveringFamily_of_testChannel`. It closes the former inflated-`M`
+counterexample (redundant covering codewords satisfying `hcov₁` while driving `Pr[E2] → 1`):
+the E2 squeeze (A3 `wz_exists_binning_E2_bound`) needs `M` bounded ABOVE, now supplied by the
+covering family together with the codebook `c₁`. The D3 signature is therefore honest in the
+M-direction (TRUE-as-framed); the headline signature
+(`wz_goodCode_exists_of_testChannel` / `wyner_ziv_achievability`) is untouched (parent #9 crux
+invariant). The remaining residual is transitive from the still-open A2
+(`wz_ideal_expectation_eq_covering`) / A3 (`wz_exists_binning_E2_bound`) sub-lemmas.
 @residual(plan:wz-binning-covering) -/
 lemma wz_perN_covering_binning_code
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -3007,6 +3000,7 @@ lemma wz_perN_covering_binning_code
     (hcov₁ : ∀ ε' : ℝ, 0 < ε' →
         ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
           Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
+          (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 ∧
           ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
             c.expectedBlockDistortion
                 ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
@@ -3058,7 +3052,7 @@ lemma wz_perN_covering_binning_code
     wz_exists_binning_E2_bound P_XY d R κ' hκ'pos hκ'sum q' hfact_eq R₁ hsplit qf
       (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g) δ hδ
   refine ⟨max N_cov N_E2, fun n hn => ?_⟩
-  obtain ⟨M, hM_ge, c₁, hc₁_dist⟩ := hN_cov n (le_trans (le_max_left _ _) hn)
+  obtain ⟨M, hM_ge, hM_ub, c₁, hc₁_dist⟩ := hN_cov n (le_trans (le_max_left _ _) hn)
   have x₀ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := Classical.arbitrary _
   -- ═══════════════════════════════════════════════════════════════════════════
   -- STEP 6 (outer packaging — genuine).  The Wyner–Ziv code is the `α' → α` support lift
@@ -3081,13 +3075,10 @@ lemma wz_perN_covering_binning_code
   -- Arithmetic: ((D+δ/2)+δ/4) + δ/4 = D+δ.
   -- ═══════════════════════════════════════════════════════════════════════════
   -- Covering codebook size cap (M-direction).  The confusion count scales with the number
-  -- of covering codewords, so A3 needs `M ≲ exp(n·R₁)`.  hcov₁ exposes only the LOWER bound
-  -- `⌈exp(n·R₁)⌉ ≤ M`; the matching upper bound is the size the covering theorem actually
-  -- produces but is not currently threaded through `hcov₁` (an M-direction under-hypothesis
-  -- of the fixed D3 signature — see the Leg-D report, deferred to a Leg-C.6-style fix).
-  -- @residual(plan:wz-binning-covering)
-  have hM_ub : (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 := by
-    sorry
+  -- of covering codewords, so A3 needs `M ≲ exp(n·R₁)`.  The matching upper bound
+  -- `(M : ℝ) ≤ exp(n·R₁) + 1` is the size the covering theorem actually produces (`M =
+  -- ⌈exp(n·R₁)⌉`, `Nat.ceil_lt_add_one`); it is threaded through `hcov₁` (Leg C.6), so
+  -- `hM_ub` is now supplied by the covering family together with the codebook `c₁`.
   obtain ⟨εTyp, f, hE2⟩ := hN_E2 n (le_trans (le_max_right _ _) hn) M c₁ hM_ub
   -- The co-restricted source measure `Q_XY` is a probability measure.
   haveI hQ_prob : IsProbabilityMeasure
@@ -3242,6 +3233,7 @@ lemma wz_perDelta_covering_binning_eventual
     (hcov : ∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' →
         ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
           Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
+          (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 ∧
           ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
             c.expectedBlockDistortion
                 ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
@@ -3330,6 +3322,7 @@ lemma wz_perDelta_covering_binning
     (hcov : ∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' →
         ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
           Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
+          (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 ∧
           ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
             c.expectedBlockDistortion
                 ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
