@@ -1006,7 +1006,20 @@ conclusion (the `distortionMax d` scaling only sizes the tolerance so `dMax · P
 absorbable; the E2b confusion crux stays in A3). The discharge (joint distortion +
 acceptance derandomize with the S5a `(1-p)^M₁` → `codebookMeasure`-average `Fubini` bridge,
 fed the gateway-2 acceptance mass lower bound `wz_covering_sideInfo_mass_ge`) is the residual
-`sorry`; the A3-fill leg closes it. Pending independent honesty audit.
+`sorry`; the A3-fill leg closes it.
+
+Independent honesty audit 2026-07-12 (Leg E pinned-ε rework): PASS. The exported
+covering-acceptance conjunct is now UNIVERSALLY quantified per radius (`… ∀ ε, 0 < ε → ∃ N …`),
+NOT a free `∃ ε` inside the code existential (grep-confirmed: no `∃ ε` remains). The mass bound
+`≤ δ/(8·(distortionMax d+1))` at each fixed `ε` is a genuine (TRUE-as-framed) residual: by AEP
+the true covering word's joint-typicality-failure mass → 0 as `n → ∞` for every fixed `ε > 0`,
+so `N` may depend on `ε` (the `∀ ε, ∃ N` shape is honest, non-vacuous). The whole covering
+`LossyCode` family existential (distortion `≤ (D+δ)+ε'` AND acceptance) is deferred to the
+single `sorry` because a distortion-only witness (`wz_covering_lossyCode_exists`) need not be
+acceptance-good — the joint S5a/gateway-2 (`wz_covering_sideInfo_mass_ge`) Fubini derandomize
+is the residual analytic work, correctly classified `@residual(plan:wz-binning-covering)`
+(in-project construction, not a Mathlib wall). D3 instantiates this `∀ ε` at the shared
+`ε := gap/6` threaded into A3's decoder radius.
 @residual(plan:wz-binning-covering) -/
 private lemma wz_coveringFamily_of_testChannel
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -2926,7 +2939,19 @@ the positive `X`-marginal via `wz_ideal_marg_mul_dprime`) and the source-margina
 `wz_ideal_PX_real` turn the ideal per-letter distortion into the proxy distortion. Non-circular
 (no hypothesis is the conclusion), non-bundled (`hd'_eq`/`hqStar_eq`/`hqStar_mem`/`hκ'sum` are the
 reconciliation + source-consistency preconditions — same kind as D3's — not the identity itself;
-the Fubini + change-of-variables identity is genuine body work). -/
+the Fubini + change-of-variables identity is genuine body work).
+
+Independent honesty audit 2026-07-12 (Leg E comprehensive pass): PASS, genuine closure.
+Non-circular (no hypothesis has the conclusion's marginalization-equality type), non-bundled
+(`hκ'sum`/`hqStar_eq`/`hqStar_mem`/`hd'_eq` are source-consistency + proxy-reconciliation
+preconditions consumed by `wz_ideal_PX_real`/`wz_ideal_marg_mul_dprime`, not the equality),
+non-degenerate (`hqStar_mem`'s simplex-sum-1 field yields `Nonempty α'`, so both integrals are
+over genuine probability measures), sufficiency holds (the LHS ideal distortion genuinely
+marginalizes to the RHS covering distortion via `wz_prod_sum_marginalize` + `hd'_eq`; no
+degenerate substitution refutes the framed equality). Body `sorry`-free and transitively
+sorryAx-free: `#print axioms wz_ideal_expectation_eq_covering = [propext, Classical.choice,
+Quot.sound]` (machine-verified 2026-07-12).
+@audit:ok -/
 lemma wz_ideal_expectation_eq_covering
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) {k M₁ n : ℕ}
@@ -3085,8 +3110,29 @@ exponent → 0 (S5b/D2) union-bounded with the pinned C2 here — both `@residua
 Degenerate-binder check (each free binder's degenerate extreme is blocked by an unsatisfiable
 hypothesis, not a hidden vacuity): `ε` huge ⇒ `hε_conf` false; `dα' ≫ d` (e.g. `dα' ≡ 5`,
 `d ≡ 0`) ⇒ `hd'_link` false; `M₁` inflated ⇒ `hM_ub` false; the mass is pinned at the single
-input `ε` (no residual `∃ ε` anywhere in A3 or its consumed `hcov₁`). Pending independent
-honesty audit.
+input `ε` (no residual `∃ ε` anywhere in A3 or its consumed `hcov₁`).
+
+Independent honesty audit 2026-07-12 (Leg E pinned-ε rework): PASS at the signature level;
+the pinned-ε signature is honest and the C2 (4th) + dα'-d (5th) under-hyp axes are closed.
+The residual body `sorry` is a genuine tier-2 residual (NOT downgraded to `@audit:ok`). The
+prior first-move DEFECT (free-`∃ε` vacuity + dα'-d scaling) is genuinely resolved.
+Degenerate-binder table verified (each extreme blocked by an UNSATISFIABLE hyp, not hidden
+vacuity): (i) `ε` huge ⇒ `hε_conf : R₁ − I(Y;U) + 3ε < R` false (LHS → ∞), forcing
+`ε < gap/3`; (ii) `dα' ≫ d` (e.g. `dα'≡5`, `d≡0`) ⇒ `hd'_link : ∀ x' g, dα' x' g = d x'.1 g`
+false — and since `hd'_link` forces `dα' = d∘(·.1)`, `distortionMax dα' ≤ distortionMax d`,
+killing the r5 5th-axis counterexample; (iii) `M₁` inflated ⇒ `hM_ub` false; (iv) the
+acceptance mass is PINNED at the single input `ε` with NO residual `∃ ε` (grep-confirmed: the
+only `∃ ε` in the file is prose). `wzCoveringAcceptFailSet` is the complement of the
+strict-`< ε` `jointlyTypicalSet` on a finite full-support space, so its mass is monotone
+DECREASING in `ε` — the pin is load-bearing (not trivially satisfiable at a goldilocks `ε`).
+Non-bundled: `hε_conf` (static rate inequality) / `hd'_link` (definitional) / the pinned
+`hcov_accept` (precondition-exposure of the covering code's S5a/gateway-2 property, threaded
+from `hcov₁`) are the same species as `hM_ub`/`hd'_eq`; `hε_conf` alone does NOT imply the
+conclusion — the C2 acceptance decay (covering-atom body) and the E2b confusion exponent → 0
+(S5b/D2) remain genuine `sorry`-body analytic work. `@residual(plan:wz-binning-covering)`
+classification correct (in-project constructive fix; plan slug present). Caller (D3)
+discharges: `hε_conf`/`hε_pos` by `linarith` (ε := gap/6 ⇒ 3ε = gap/2 < gap), `hd'_link` by
+`rfl` (dα' := fun x' g ↦ d x'.1 g), `hcov_accept` from the strengthened `hcov₁` at the same ε.
 @audit:closed-by-successor(wz-binning-covering)
 @residual(plan:wz-binning-covering) -/
 lemma wz_exists_binning_E2_bound
