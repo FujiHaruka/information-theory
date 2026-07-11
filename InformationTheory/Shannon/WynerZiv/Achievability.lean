@@ -2598,7 +2598,80 @@ lemma wz_expectedBlockDistortion_le_ideal_add_E2
                   wzBinTypicalDecoder μ Us Ys ε c₁ f
                       (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
                     ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) } := by
-  sorry
+  classical
+  haveI : MeasurableSingletonClass (α' × β) := by infer_instance
+  haveI : MeasurableSingletonClass (Fin n → α' × β) := Pi.instMeasurableSingletonClass
+  set c : WynerZivCode M n α' β γ :=
+    wzCodeOfCoveringBinning c₁ f rec (wzBinTypicalDecoder μ Us Ys ε c₁ f) with hc_def
+  set dMax : ℝ := distortionMax dα' with hdMax_def
+  have h_dMax_nn : 0 ≤ dMax := distortionMax_nonneg dα'
+  set Q' : Measure (Fin n → α' × β) := Measure.pi (fun _ : Fin n ↦ Q) with hQ'_def
+  haveI : IsProbabilityMeasure Q' := by rw [hQ'_def]; infer_instance
+  set E2 : Set (Fin n → α' × β) :=
+    { p | wzBinTypicalDecoder μ Us Ys ε c₁ f
+            (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+          ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) } with hE2_def
+  set ideal : (Fin n → α' × β) → ℝ := fun p ↦
+    blockDistortion dα' n (fun i ↦ (p i).1)
+      (fun i ↦ rec (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2)) with hideal_def
+  set F : (Fin n → α' × β) → ℝ := fun p ↦
+    blockDistortion dα' n (fun i ↦ (p i).1)
+      (c.decoder (c.encoder (fun i ↦ (p i).1), fun i ↦ (p i).2)) with hF_def
+  have h_E2_meas : MeasurableSet E2 := (Set.toFinite _).measurableSet
+  -- Pointwise: `F p ≤ ideal p + dMax · (E2.indicator 1 p)`.
+  have h_pointwise : ∀ p, F p ≤ ideal p + dMax * (E2.indicator (fun _ ↦ (1 : ℝ)) p) := by
+    intro p
+    by_cases hp : p ∈ E2
+    · have h_bd : F p ≤ dMax := blockDistortion_le_distortionMax dα' n _ _
+      have h_ideal_nn : 0 ≤ ideal p := blockDistortion_nonneg dα' n _ _
+      have h_ind : E2.indicator (fun _ : Fin n → α' × β ↦ (1 : ℝ)) p = 1 :=
+        Set.indicator_of_mem hp _
+      rw [h_ind]; nlinarith [h_bd, h_ideal_nn, h_dMax_nn]
+    · -- Outside `E2` the bin decoder recovers the true covering codeword, so `F p = ideal p`.
+      have hdec : wzBinTypicalDecoder μ Us Ys ε c₁ f
+          (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+            = c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) := by
+        by_contra hne; exact hp (by rw [hE2_def]; exact hne)
+      have hrec : c.decoder (c.encoder (fun i ↦ (p i).1), fun i ↦ (p i).2)
+          = fun i ↦ rec (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2) := by
+        funext i
+        simp only [hc_def, wzCodeOfCoveringBinning]
+        rw [hdec]
+      have hFI : F p = ideal p := by simp only [hF_def, hideal_def]; rw [hrec]
+      have h_ind : E2.indicator (fun _ : Fin n → α' × β ↦ (1 : ℝ)) p = 0 :=
+        Set.indicator_of_notMem hp _
+      rw [hFI, h_ind]; simp
+  -- Integrability of the (bounded) integrands.
+  have h_F_le : ∀ p, ‖F p‖ ≤ dMax := by
+    intro p
+    rw [Real.norm_eq_abs, abs_of_nonneg (blockDistortion_nonneg dα' n _ _)]
+    exact blockDistortion_le_distortionMax dα' n _ _
+  have h_int_F : Integrable F Q' :=
+    Integrable.mono' (integrable_const dMax) (measurable_of_finite _).aestronglyMeasurable
+      (Filter.Eventually.of_forall h_F_le)
+  have h_ideal_le : ∀ p, ‖ideal p‖ ≤ dMax := by
+    intro p
+    rw [Real.norm_eq_abs, abs_of_nonneg (blockDistortion_nonneg dα' n _ _)]
+    exact blockDistortion_le_distortionMax dα' n _ _
+  have h_int_ideal : Integrable ideal Q' :=
+    Integrable.mono' (integrable_const dMax) (measurable_of_finite _).aestronglyMeasurable
+      (Filter.Eventually.of_forall h_ideal_le)
+  have h_int_ind : Integrable
+      (fun p : Fin n → α' × β ↦ dMax * E2.indicator (fun _ ↦ (1 : ℝ)) p) Q' :=
+    (integrable_const (1 : ℝ)).indicator h_E2_meas |>.const_mul dMax
+  have h_int_g : Integrable
+      (fun p : Fin n → α' × β ↦ ideal p + dMax * E2.indicator (fun _ ↦ (1 : ℝ)) p) Q' :=
+    h_int_ideal.add h_int_ind
+  calc c.expectedBlockDistortion Q dα'
+      = ∫ p, F p ∂Q' := rfl
+    _ ≤ ∫ p, (ideal p + dMax * E2.indicator (fun _ ↦ (1 : ℝ)) p) ∂Q' :=
+        integral_mono h_int_F h_int_g h_pointwise
+    _ = (∫ p, ideal p ∂Q') + dMax * Q'.real E2 := by
+        rw [integral_add h_int_ideal h_int_ind]
+        congr 1
+        rw [integral_const_mul]
+        congr 1
+        exact integral_indicator_one h_E2_meas
 
 /-- **(Leg D, A1) Source-support lift distortion identity.** The lifted Wyner–Ziv code's
 expected block distortion under `P_XY` equals the support-restricted code's expected block
