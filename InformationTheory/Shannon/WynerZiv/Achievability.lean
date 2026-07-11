@@ -1002,6 +1002,14 @@ E2b confusion crux stays in A3). The discharge (joint distortion + acceptance de
 with the S5a `(1-p)^M₁` → `codebookMeasure`-average `Fubini` bridge, fed the gateway-2
 acceptance mass lower bound `wz_covering_sideInfo_mass_ge`) is the residual `sorry`; the
 A3-fill leg closes it.
+
+Independent honesty audit 2026-07-12 (Leg E): the `sorry` is a GENUINE residual for the
+distortion existential (via `wz_covering_lossyCode_exists`), but the ADDED acceptance conjunct
+`∃ ε > 0, mass(wzCoveringAcceptFailSet … c ε) ≤ tol` is VACUOUS as framed (large ε ⇒
+jointly-typical set = whole finite space ⇒ fail set ∅ ⇒ mass 0 ≤ tol for any c/tol), so it does
+NOT strengthen the covering family and cannot supply A3 a usable C2 bound (see
+`wz_exists_binning_E2_bound` audit note). Rework needed: the exported acceptance bound must pin
+the radius (fixed/goldilocks ε threaded to A3's decoder), not a free `∃ ε`.
 @residual(plan:wz-binning-covering) -/
 private lemma wz_coveringFamily_of_testChannel
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -3077,7 +3085,29 @@ and the E2b confusion crux (S5b) + union + threshold remain genuine A3-body work
 alphabet, so `distortionMax d ≥ distortionMax dα'` gives an A3-sufficient tolerance without the
 subtype `Nonempty`). The C2 (4th) under-hyp axis is thereby closed at the signature level; the
 body stays `sorry` (the A3 fill — union-bounding C2 via `hcov_accept` with E2b via S5b — is a
-later leg). Classification of the new framing pending the independent honesty audit.
+later leg).
+
+Independent honesty audit 2026-07-12 (Leg E, C2 axis): DEFECT CONFIRMED — `@audit:defect`
+retained, NOT downgraded to tier-2. The claim "the C2 (4th) under-hyp axis is closed at the
+signature level" is OVERTURNED on two counts. (i) **Degenerate `∃ ε` quantifier (primary).**
+`hcov_accept` = `∃ ε > 0, mass(wzCoveringAcceptFailSet … c₁ ε) ≤ tol` is VACUOUSLY satisfiable:
+`typicalSet` uses a strict `|empirical − true entropy| < ε` on a finite space with a
+full-support reference (`rdAmbient (wzSideInfoMarginal …)`, `pmfLog` finite), so for ε above the
+(finite) max deviation the jointly-typical set is the WHOLE space and `wzCoveringAcceptFailSet`
+(its complement) is ∅ ⇒ mass 0 ≤ tol for ANY c₁, ANY tol ≥ 0. The `∃ ε` picks the useless huge-ε
+witness; at such ε the decoder-side E2b (confusion) is ≈ 1, and A3's conclusion binds its OWN
+`ε'` decoupled from `hcov_accept`'s ε, so the union bound `C2 ⊆ E2` (which needs MATCHING radius)
+gains nothing. C2 stays unbounded at any goldilocks radius — the fix does not close the axis. The
+non-vacuous statement needs the radius PINNED (threaded as the SAME ε the decoder uses, or a
+`∀ ε ∈ (0, ε₀]` goldilocks-range form fed by gateway-2), not a free `∃ ε`. (ii) **`dα'`-vs-`d`
+scaling (5th axis).** `dα'` is a FREE parameter; the tolerance is in `distortionMax d` but the
+conclusion scales `distortionMax dα'`. No hypothesis ties them (the "d = full alphabet, so
+`distortionMax d ≥ distortionMax dα'`" defense is an UNSTATED assumption true only at D3's call
+site `dα' := fun x' g ↦ d x'.1 g`). Counterexample: `d ≡ 0` (tol = δ/16), `dα' ≡ 5`, a c₁ with
+`0 < Pr[C2] ≤ δ/16` ⇒ `distortionMax dα' · Pr[E2] ≥ 5·Pr[C2] > δ/4`. Honest fix = add a
+`∀ x' g, dα' x' g = d x'.1 g` (or `distortionMax dα' ≤ distortionMax d`) precondition discharged
+by `rfl`/`le` at D3 (Leg-C.5-style reconciliation). Orchestrator/pivot-advisor rewrite needed
+(pin ε + add dα'–d link); signature stays defect-form, body stays `sorry`.
 @audit:defect(false-statement)
 @audit:closed-by-successor(wz-binning-covering)
 @residual(plan:wz-binning-covering) -/
