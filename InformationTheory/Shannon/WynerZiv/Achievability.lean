@@ -5105,6 +5105,23 @@ function of the whole `x`-block, so `(U_i, Y_i)` is neither iid nor independent;
 from Mathlib and the codebase. The consistency + full-support hypotheses (`hκ'_pos`, `hκ'_sum`,
 `hqStar`) are mandatory: without them the statement is false-as-framed (a constant-word
 counterexample; see the inner-lemma docstring). Left `sorry` — a separate leg builds it.
+
+AUDIT VERDICT 2026-07-12 (independent honesty audit, HEAD `cca95d1c`): PASS, HONEST tier-2.
+(1) Signature honest: body is `sorry`, not `:= h`; no `:True`/degenerate slot. (2) Non-bundled:
+the three threaded hyps are preconditions (`hκ'_pos`/`hκ'_sum` = full-support proper pmf regularity;
+`hqStar` = qStar–κ' definitional consistency), NOT the acceptance conclusion — granting them does
+NOT hand over the correlated-joint concentration; the Markov-lemma content stays entirely in the
+`sorry`. (3) Sufficiency (NOT false-as-framed): the three hyps are PRESENT in the param list AND
+sufficient — the constant-word `c ≡ u₀ⁿ` + `qStar := P_X ⊗ δ_{u₀}` counterexample DIES: `hκ'_pos`
+forbids κ' being a point mass, and under `hqStar`+`hκ'_sum` qStar's U-marginal is forced `= P_U`,
+so u₀ⁿ has empirical conditional `δ_{u₀} ≠` full-support κ'(x)(·) and (X, u₀ⁿ) is not qStar-jointly
+typical → covering-success fails → intersection → 0 ≤ tol/4. No other adversarial κ'/c survives
+(qStar is pinned, the residual Markov lemma U—X—Y is a genuine theorem for all full-support κ'/c).
+(4) Class `plan` CORRECT: the correlated-joint conditional-typicality (Markov-lemma) UPPER
+concentration is a from-scratch in-project assembly, not a Mathlib wall; the only in-project
+ingredient `conditionalStronglyTypicalSlice_mass_ge` (Mass.lean:1274) is a `_mass_ge` LOWER bound on
+the INDEPENDENT-product Ys law (wrong direction + measure, not a drop-in). Ready for the Session B
+builder.
 @residual(plan:wz-binning-covering) -/
 private lemma wz_covering_jointBand_concentration
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
