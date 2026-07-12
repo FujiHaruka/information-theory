@@ -5403,6 +5403,89 @@ private lemma wz_srcBlock_condMeasure_split
   · have hmem' : yb ∉ {yb | (fun i ↦ (xb i, yb i)) ∈ S} := hmem
     rw [Set.indicator_of_notMem hmem, Set.indicator_of_notMem hmem', mul_zero]
 
+/-- **(Atom B — non-i.i.d. conditional Chebyshev engine).** On a finite product measure
+`Measure.pi ν` (each `ν i` a probability measure on the finite alphabet `β`), the empirical mean
+`(∑ᵢ ψᵢ(yᵢ))/n` of a *per-coordinate* (non-identically distributed) family of statistics
+`ψ : Fin n → β → ℝ` deviates from its mean `(∑ᵢ (νᵢ)[ψᵢ])/n` by at least `δ` on a set of mass at
+most `(∑ᵢ Var[ψᵢ; νᵢ])/(n²δ²)`. Finite-`n` Chebyshev via `variance_sum_pi` (pairwise independence
+of coordinate evaluations under `Measure.pi`, `IdentDistrib`-free) — the conditional-AEP engine for
+the Wyner–Ziv Markov core: each summand `ψᵢ = -log wsm(uᵢ, ·)` is a function of the single
+coordinate `yᵢ`, so the `νᵢ = P(·|xᵢ)` product structure makes them independent-but-not-identical. -/
+private lemma wz_pi_nonuniform_mean_concentration
+    {n : ℕ} (hn : 0 < n)
+    (ν : Fin n → Measure β) [∀ i, IsProbabilityMeasure (ν i)]
+    (ψ : Fin n → β → ℝ) {δ : ℝ} (hδ : 0 < δ) :
+    (Measure.pi ν).real
+        { yb : Fin n → β | δ ≤ |(∑ i, ψ i (yb i)) / (n : ℝ)
+            - (∑ i, ∫ y, ψ i y ∂(ν i)) / (n : ℝ)| }
+      ≤ (∑ i, variance (ψ i) (ν i)) / ((n : ℝ) ^ 2 * δ ^ 2) := by
+  classical
+  set μpi : Measure (Fin n → β) := Measure.pi ν with hμpi
+  haveI : IsProbabilityMeasure μpi := by rw [hμpi]; infer_instance
+  have hnR : (0 : ℝ) < n := by exact_mod_cast hn
+  -- Each `ψ i` is MemLp 2 (finite alphabet + probability measure).
+  have hmemν : ∀ i, MemLp (ψ i) 2 (ν i) := fun i ↦ MemLp.of_discrete
+  -- Coordinate evaluations are MemLp 2 under `μpi`.
+  have hmemcoord : ∀ i : Fin n, MemLp (fun yb : Fin n → β ↦ ψ i (yb i)) 2 μpi :=
+    fun i ↦ (hmemν i).comp_measurePreserving (measurePreserving_eval ν i)
+  set S : (Fin n → β) → ℝ := fun yb ↦ ∑ i, ψ i (yb i) with hS
+  have hSmem : MemLp S 2 μpi := by
+    have := memLp_finsetSum (μ := μpi) (p := (2 : ℝ≥0∞)) Finset.univ
+      (f := fun (i : Fin n) (yb : Fin n → β) ↦ ψ i (yb i)) (fun i _ ↦ hmemcoord i)
+    simpa [hS] using this
+  -- Variance of `S` = ∑ per-coordinate variance (`variance_sum_pi`).
+  have hVarS : variance S μpi = ∑ i, variance (ψ i) (ν i) := by
+    have hpi := variance_sum_pi (ι := Fin n) (Ω := fun _ : Fin n ↦ β)
+      (μ := ν) (X := ψ) hmemν
+    rw [hS, show (fun yb : Fin n → β ↦ ∑ i, ψ i (yb i))
+        = (∑ i, fun ω : Fin n → β ↦ ψ i (ω i)) by
+      funext yb; simp [Finset.sum_apply]]
+    rw [hpi]
+  -- Mean of `S` = ∑ per-coordinate mean.
+  have hmeanS : μpi[S] = ∑ i, ∫ y, ψ i y ∂(ν i) := by
+    have hint : ∀ i : Fin n, μpi[fun yb : Fin n → β ↦ ψ i (yb i)] = ∫ y, ψ i y ∂(ν i) := by
+      intro i
+      have hmp : MeasurePreserving (Function.eval i) μpi (ν i) := measurePreserving_eval ν i
+      calc μpi[fun yb : Fin n → β ↦ ψ i (yb i)]
+          = ∫ yb, ψ i (Function.eval i yb) ∂μpi := rfl
+        _ = ∫ y, ψ i y ∂(Measure.map (Function.eval i) μpi) := by
+              rw [integral_map hmp.measurable.aemeasurable]
+              exact (hmemν i).aestronglyMeasurable.aemeasurable.aestronglyMeasurable.mono_ac
+                (by rw [hmp.map_eq])
+        _ = ∫ y, ψ i y ∂(ν i) := by rw [hmp.map_eq]
+    rw [hS, integral_finsetSum]
+    · exact Finset.sum_congr rfl (fun i _ ↦ hint i)
+    · exact fun i _ ↦ (hmemcoord i).integrable (by norm_num)
+  -- Absolute-value identity linking empirical-mean deviation and centred-sum deviation.
+  have habs : ∀ yb : Fin n → β,
+      |S yb - μpi[S]| = (n : ℝ) * |(∑ i, ψ i (yb i)) / (n : ℝ)
+          - (∑ i, ∫ y, ψ i y ∂(ν i)) / (n : ℝ)| := by
+    intro yb
+    rw [hmeanS]
+    rw [show (n : ℝ) * |(∑ i, ψ i (yb i)) / (n : ℝ) - (∑ i, ∫ y, ψ i y ∂(ν i)) / (n : ℝ)|
+          = |(n : ℝ) * ((∑ i, ψ i (yb i)) / (n : ℝ)
+              - (∑ i, ∫ y, ψ i y ∂(ν i)) / (n : ℝ))| by
+        rw [abs_mul, abs_of_pos hnR]]
+    congr 1
+    simp only [hS]
+    field_simp
+  have hset : { yb : Fin n → β | δ ≤ |(∑ i, ψ i (yb i)) / (n : ℝ)
+          - (∑ i, ∫ y, ψ i y ∂(ν i)) / (n : ℝ)| }
+      = { yb : Fin n → β | (n : ℝ) * δ ≤ |S yb - μpi[S]| } := by
+    ext yb
+    simp only [Set.mem_setOf_eq, habs yb]
+    constructor
+    · intro h; exact mul_le_mul_of_nonneg_left h hnR.le
+    · intro h; exact le_of_mul_le_mul_left h hnR
+  rw [measureReal_def, hset]
+  have hcheb := meas_ge_le_variance_div_sq (μ := μpi) hSmem (c := (n : ℝ) * δ) (by positivity)
+  calc (μpi { yb : Fin n → β | (n : ℝ) * δ ≤ |S yb - μpi[S]| }).toReal
+      ≤ (ENNReal.ofReal (variance S μpi / ((n : ℝ) * δ) ^ 2)).toReal :=
+        ENNReal.toReal_mono ENNReal.ofReal_ne_top hcheb
+    _ = variance S μpi / ((n : ℝ) * δ) ^ 2 :=
+        ENNReal.toReal_ofReal (div_nonneg (variance_nonneg S μpi) (by positivity))
+    _ = (∑ i, variance (ψ i) (ν i)) / ((n : ℝ) ^ 2 * δ ^ 2) := by rw [hVarS, mul_pow]
+
 open ChannelCoding in
 /-- **(L4 part 2 — THE MARKOV CORE) Correlated-joint conditional-typicality concentration.**
 For `n` large the source-measure mass of {covering-success ∧ `(x,y)`-block jointly typical ∧
