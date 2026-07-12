@@ -215,6 +215,10 @@ An intermediate state during implementation only needs type-check done (commit /
 
 Standard B (unconditional machine verification) is this project's verification bar. **`0 sorry` alone is not a completion verdict** — if you allow the pattern of erasing `sorry` by making a hypothesis carry the core, you can manufacture endless states where the compiler passes (≈ 0 sorry) yet the proof is not complete. proof done is "0 sorry **and** 0 residual".
 
+**`sorryAx`-free is necessary but not sufficient — `#print axioms` is blind to an explicit load-bearing hypothesis.** A load-bearing hyp passed as an *explicit argument* is not a `sorry`, so it emits no `sorryAx`; a headline can be `#print axioms`-clean yet still conditional on an open optimization / typicality core hidden in its signature (this trap recurred twice: Ch.9 parallel-Gaussian `h_opt` and AWGN-capacity `h_max_ent` were both `sorryAx`-free but load-bearing). `sorryAx`-free ≠ unconditional. A completion verdict therefore requires **both** `#print axioms` sorryAx-free **and** a signature scan confirming every hypothesis is a regularity precondition, not the proof's core.
+
+**Deciding a statement is FALSE via a small-case simulator: verify the sim against the real Lean `def`s first.** When you use a script / hand simulation to conclude a Lean statement is false (before marking `@audit:defect(false-statement)` or leaving it as an honest `sorry`), the counterexample is valid *only if the simulator's semantics mirror the actual Lean definitions verbatim*. Confirm the sim reproduces the real `def`s (`groupKey` / `huffmanStep` / the predicate's `*_def`, etc.) before trusting the verdict — otherwise the "counterexample" may be an artefact of the sim, not a property of the statement (Huffman per-symbol identity: an independent auditor re-checked sim ↔ Lean-def fidelity before the FALSE verdict stood).
+
 Even while working directly on a task, **do not create** the honesty defects below + **alert immediately if you find one**. Don't wait for a dedicated audit.
 
 **Signs of a defect (tells):**
