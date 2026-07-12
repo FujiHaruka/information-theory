@@ -3832,6 +3832,90 @@ private lemma wz_covering_lossyCode_joint_exists
       mul_nonneg (mul_nonneg hcA_pos.le hej_pos.le) hLy_nn
     nlinarith [hej_pos, hLj_nn, h1, h2]
   clear_value ε_dist δ_kl δ_typ qZ_min
+  -- ## Probabilistic content.
+  have hindepX_pair : Pairwise fun i j ↦
+      ChannelCoding.iidXs (α := {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (β := Fin k) i
+        ⟂ᵢ[rdAmbient qStar] ChannelCoding.iidXs j :=
+    fun i j hij ↦ (rdAmbient_iIndepFun_iidXs qStar hmem).indepFun hij
+  have hidentX : ∀ i, IdentDistrib
+      (ChannelCoding.iidXs (α := {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (β := Fin k) i)
+      (ChannelCoding.iidXs 0) (rdAmbient qStar) (rdAmbient qStar) :=
+    fun i ↦ rdAmbient_identDistrib_iidXs qStar hmem i
+  haveI hμX_prob : IsProbabilityMeasure ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) :=
+    rdAmbient_iidXs_isProbabilityMeasure qStar hmem
+  haveI hμY_prob : IsProbabilityMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) :=
+    rdAmbient_iidYs_isProbabilityMeasure qStar hmem
+  have h_ent_bridge :
+      entropy (rdAmbient qStar) (ChannelCoding.iidXs 0)
+        + entropy (rdAmbient qStar) (ChannelCoding.iidYs 0)
+        - entropy (rdAmbient qStar)
+            (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs 0)
+        = mutualInfoPmf qStar :=
+    rdAmbient_entropy_diff_eq_mutualInfoPmf qStar hmem
+  set dMax : ℝ := distortionMax d' with hdMax_def
+  have hdMax_nn : 0 ≤ dMax := distortionMax_nonneg d'
+  set P_X : (n : ℕ) → Measure (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) :=
+    fun n ↦ Measure.pi (fun _ : Fin n ↦ (rdAmbient qStar).map (ChannelCoding.iidXs 0))
+    with hP_X_def
+  set Mn : ℕ → ℕ := fun n ↦ Nat.ceil (Real.exp ((n : ℝ) * R₁)) with hMn_def
+  have hMn_pos : ∀ n, 0 < Mn n := fun n ↦ Nat.ceil_pos.mpr (Real.exp_pos _)
+  set I_plus_slack : ℝ :=
+    mutualInfoPmf qStar + (cA * ε_X * Ly + ε_X * Lx + ε_X * Lj + δ_kl) with hIslack_def
+  set target : ℕ → ℝ := fun n ↦
+    Real.exp (-(n : ℝ) *
+      (entropy (rdAmbient qStar) (ChannelCoding.iidXs 0)
+        + entropy (rdAmbient qStar) (ChannelCoding.iidYs 0)
+        - entropy (rdAmbient qStar)
+            (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs 0)
+        + (cA * ε_X * Ly + ε_X * Lx + ε_X * Lj + δ_kl))) with htarget_def
+  have h_target_eq : ∀ n : ℕ, target n = Real.exp (-(n : ℝ) * I_plus_slack) := by
+    intro n; simp only [htarget_def, hIslack_def, h_ent_bridge]
+  -- Step B: codebook-level no-match bound.
+  obtain ⟨N_B, hN_B⟩ := encoder_strong_failure_prob_le_rdAmbient qStar hmem hpos
+    hej_pos hex_pos.le hex_lt_ej hdkl_pos qZ_min hqZ_pos hqZ_le h_dominates
+  -- Step 1: `P_X[X ∉ T*_X] → 0`.
+  have h_aep := stronglyTypicalSet_prob_tendsto_one (rdAmbient qStar) ChannelCoding.iidXs
+    ChannelCoding.measurable_iidXs hindepX_pair hidentX hex_pos
+  have h_pi_compl_tendsto :
+      Filter.Tendsto (fun n : ℕ ↦ (P_X n).real
+        {x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
+          x ∉ stronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs n ε_X})
+        Filter.atTop (𝓝 0) :=
+    tendsto_measureReal_map_notMem_zero_of_tendsto_prob_one (rdAmbient qStar)
+      (fun n ↦ InformationTheory.Shannon.jointRV ChannelCoding.iidXs n)
+      (fun n ↦ InformationTheory.Shannon.measurable_jointRV ChannelCoding.iidXs
+        ChannelCoding.measurable_iidXs n)
+      (fun n ↦ stronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs n ε_X)
+      (fun _ ↦ (Set.toFinite _).measurableSet)
+      P_X (fun n ↦ rdAmbient_block_law_iidXs qStar hmem n) h_aep
+  -- Step 2: `exp(-Mn·target) → 0`.
+  have h_exp_neg_Mn_target_tendsto :
+      Filter.Tendsto (fun n : ℕ ↦ Real.exp (-((Mn n : ℝ) * target n))) Filter.atTop (𝓝 0) :=
+    exp_neg_ceilExp_mul_tendsto_zero_of_lt target R₁ I_plus_slack
+      (by rw [hIslack_def]; exact h_rategap) h_target_eq
+  set upper : ℕ → ℝ := fun n ↦ (P_X n).real
+      {x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
+        x ∉ stronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs n ε_X}
+    + Real.exp (-((Mn n : ℝ) * target n)) with hupper_def
+  have hupper_nn : ∀ n, 0 ≤ upper n := fun n ↦ by
+    rw [hupper_def]; exact add_nonneg measureReal_nonneg (Real.exp_pos _).le
+  have h_upper_tendsto : Filter.Tendsto upper Filter.atTop (𝓝 0) := by
+    rw [hupper_def]; simpa using h_pi_compl_tendsto.add h_exp_neg_Mn_target_tendsto
+  have h2upper_tendsto : Filter.Tendsto (fun n ↦ 2 * upper n) Filter.atTop (𝓝 0) := by
+    simpa using h_upper_tendsto.const_mul (2 : ℝ)
+  set thr : ℝ := min (ε' / (2 * (dMax + 1))) tol with hthr_def
+  have hthr_pos : 0 < thr := by
+    rw [hthr_def]; exact lt_min (by positivity) htol
+  obtain ⟨N₀, hN₀⟩ := (Metric.tendsto_atTop.mp h2upper_tendsto) thr hthr_pos
+  refine ⟨max (max N_B N₀) 1, fun n hn ↦ ?_⟩
+  have hn_NB : N_B ≤ n := le_trans (le_max_left _ _) (le_of_max_le_left hn)
+  have hn_N0 : N₀ ≤ n := le_trans (le_max_right _ _) (le_of_max_le_left hn)
+  have hn_pos : 0 < n := lt_of_lt_of_le Nat.zero_lt_one (le_of_max_le_right hn)
+  -- `2·upper n < thr` at this `n`.
+  have h2upper_lt : 2 * upper n < thr := by
+    have := hN₀ n hn_N0
+    rw [Real.dist_eq, sub_zero, abs_of_nonneg (by positivity : (0:ℝ) ≤ 2 * upper n)] at this
+    exact this
   sorry
 
 open ChannelCoding in
