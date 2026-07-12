@@ -5269,6 +5269,140 @@ private lemma wz_wsm_negLog_condMean_eq_entropy
         _ = κ' x u * P_XY.real {(x, ys.1)}
               * (- Real.log (wzSideInfoMarginal P_XY κ' (u, ys))) := by rw [hcancel]
 
+/-- Any `pmfToMeasure q` on a finite alphabet is a finite measure (its total mass is the
+finite sum `∑ a, ENNReal.ofReal (q a) < ∞`), regardless of whether `q` is a proper pmf. -/
+private lemma wz_pmfToMeasure_isFiniteMeasure
+    {T : Type*} [Fintype T]
+    [MeasurableSpace T] [MeasurableSingletonClass T] (q : T → ℝ) :
+    IsFiniteMeasure (ChannelCoding.pmfToMeasure q) := by
+  refine ⟨?_⟩
+  unfold ChannelCoding.pmfToMeasure
+  rw [Measure.finsetSum_apply Finset.univ _ Set.univ]
+  have h_each : ∀ a ∈ (Finset.univ : Finset T),
+      (ENNReal.ofReal (q a) • Measure.dirac a) (Set.univ : Set T) = ENNReal.ofReal (q a) := by
+    intro a _; simp [Measure.smul_apply]
+  rw [Finset.sum_congr rfl h_each]
+  exact ENNReal.sum_lt_top.mpr (fun a _ ↦ ENNReal.ofReal_lt_top)
+
+/-- **(Atom A — helper) Real singleton-sum for a product of `pmfToMeasure`.** On the finite
+block space `Fin n → T`, the `Measure.pi`-mass of any set `S` reads off atom-by-atom:
+`(Measure.pi (fun i ↦ pmfToMeasure (q i))).real S = ∑_p S.indicator (∏ i, q i (p i))`.
+Uses `measure_biUnion_finset` over the singletons `{p}` (each a `Set.pi` box, evaluated by
+`Measure.pi_pi` + `pmfToMeasure_apply_singleton`). -/
+private lemma wz_pi_pmf_real_eq_sum
+    {T : Type*} [Fintype T]
+    [MeasurableSpace T] [MeasurableSingletonClass T] {n : ℕ} (q : Fin n → T → ℝ)
+    (hq : ∀ i t, 0 ≤ q i t) (S : Set (Fin n → T)) :
+    (Measure.pi (fun i ↦ ChannelCoding.pmfToMeasure (q i))).real S
+      = ∑ p : Fin n → T, S.indicator (fun p ↦ ∏ i, q i (p i)) p := by
+  classical
+  haveI hfin : ∀ i, IsFiniteMeasure (ChannelCoding.pmfToMeasure (q i)) :=
+    fun i ↦ wz_pmfToMeasure_isFiniteMeasure (q i)
+  -- ENNReal singleton-sum via `measure_biUnion_finset` + `Measure.pi_pi`.
+  have hmeas : (Measure.pi (fun i ↦ ChannelCoding.pmfToMeasure (q i))) S
+      = ∑ p ∈ Finset.univ.filter (fun p ↦ p ∈ S),
+          ∏ i, ENNReal.ofReal (q i (p i)) := by
+    have hSU : S = ⋃ p ∈ Finset.univ.filter (fun p ↦ p ∈ S),
+        ({p} : Set (Fin n → T)) := by
+      ext x; simp [Finset.mem_filter]
+    conv_lhs => rw [hSU]
+    rw [measure_biUnion_finset]
+    · refine Finset.sum_congr rfl (fun p _ ↦ ?_)
+      have hsing : ({p} : Set (Fin n → T))
+          = Set.pi Set.univ (fun i ↦ ({p i} : Set T)) := by
+        ext x
+        simp only [Set.mem_singleton_iff, Set.mem_pi, Set.mem_univ, true_implies]
+        exact ⟨fun h i ↦ by rw [h], fun h ↦ funext h⟩
+      rw [hsing, Measure.pi_pi]
+      refine Finset.prod_congr rfl (fun i _ ↦ ?_)
+      exact ChannelCoding.pmfToMeasure_apply_singleton (q i) (p i)
+    · intro p₁ _ p₂ _ hp
+      show Disjoint ({p₁} : Set (Fin n → T)) ({p₂} : Set (Fin n → T))
+      rw [Set.disjoint_singleton]; exact hp
+    · intro p _
+      exact MeasurableSet.singleton p
+  -- Rewrite the RHS indicator sum as a filter sum, then take `toReal`.
+  have hRHS : (∑ p : Fin n → T, S.indicator (fun p ↦ ∏ i, q i (p i)) p)
+      = ∑ p ∈ Finset.univ.filter (fun p ↦ p ∈ S), ∏ i, q i (p i) := by
+    simp only [Set.indicator_apply, Finset.sum_filter]
+  rw [hRHS, Measure.real, hmeas,
+    ENNReal.toReal_sum (fun p _ ↦ ENNReal.prod_ne_top (fun i _ ↦ ENNReal.ofReal_ne_top))]
+  refine Finset.sum_congr rfl (fun p _ ↦ ?_)
+  rw [ENNReal.toReal_prod]
+  refine Finset.prod_congr rfl (fun i _ ↦ ?_)
+  exact ENNReal.toReal_ofReal (hq i (p i))
+
+/-- **(Atom A — finite-Fubini disintegration split).** The source-block measure
+`SRC = Measure.pi (fun _ ↦ pmfToMeasure Src)` with `Src (x, y) = P_XY{(x, y)}` disintegrates over
+the `x`-block: for any block event `S`,
+`SRC.real S = ∑_{xb} (∏_i P_X(xb_i)) · condY(xb).real (xb-slice of S)`,
+where `P_X(x) = ∑_y P_XY{(x, y)}` (positive on the `x`-alphabet subtype) and the conditional
+`y`-block measure `condY(xb) = Measure.pi (fun i ↦ pmfToMeasure (P(·|xb_i)))` uses the *normalized*
+per-coordinate law `P(y|x) = P_XY{(x, y)} / P_X(x)`, hence a genuine probability measure — the
+form the conditional-Chebyshev step (Atom B) consumes. This avoids general `condDistrib` on
+`Measure.pi` (a Mathlib 0-hit); it is elementary finite Fubini via `pmfToMeasure` atomicity and
+`Measure.pi_pi`. No AEP. Proved sorry-free (equality; the useful monotone bound for Atom D is a
+consequence). -/
+private lemma wz_srcBlock_condMeasure_split
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] {n : ℕ}
+    (S : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β)) :
+    (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+          P_XY.real {(p.1.1, p.2)}))).real S
+      = ∑ xb : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}},
+          (∏ i, ∑ y, P_XY.real {((xb i).1, y)})
+            * (Measure.pi (fun i ↦ ChannelCoding.pmfToMeasure
+                (fun y : β ↦ P_XY.real {((xb i).1, y)}
+                  / ∑ y', P_XY.real {((xb i).1, y')}))).real
+                {yb | (fun i ↦ (xb i, yb i)) ∈ S} := by
+  classical
+  -- The `x`-alphabet subtype has positive `P_X`, so the conditional denominator cancels.
+  have hcancel : ∀ (x : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (y : β),
+      (∑ y', P_XY.real {(x.1, y')}) * (P_XY.real {(x.1, y)} / ∑ y', P_XY.real {(x.1, y')})
+        = P_XY.real {(x.1, y)} := by
+    intro x y
+    have hx : (∑ y', P_XY.real {(x.1, y')}) ≠ 0 := x.2.ne'
+    field_simp
+  -- LHS: apply the singleton-sum helper, then reindex the block sum over the x-block via the
+  -- equiv `(Fin n → α'×β) ≃ (Fin n → α') × (Fin n → β)` (its `symm` is `fun i ↦ (xb i, yb i)`).
+  have hLHS :
+      (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+          (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+            P_XY.real {(p.1.1, p.2)}))).real S
+        = ∑ xb : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}}, ∑ yb : Fin n → β,
+            S.indicator (fun p ↦ ∏ i, P_XY.real {((p i).1.1, (p i).2)})
+              (fun i ↦ (xb i, yb i)) := by
+    rw [wz_pi_pmf_real_eq_sum
+      (fun _ : Fin n ↦ fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+        P_XY.real {(p.1.1, p.2)}) (fun _ _ ↦ measureReal_nonneg) S]
+    rw [← Equiv.sum_comp (Equiv.arrowProdEquivProdArrow (Fin n)
+          (fun _ ↦ {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (fun _ ↦ β)).symm
+        (fun p ↦ S.indicator (fun p ↦ ∏ i, P_XY.real {((p i).1.1, (p i).2)}) p),
+      Fintype.sum_prod_type]
+    refine Finset.sum_congr rfl (fun xb _ ↦ Finset.sum_congr rfl (fun yb _ ↦ ?_))
+    rfl
+  -- RHS: apply the singleton-sum helper to each conditional y-block measure.
+  have hcond : ∀ xb : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}},
+      (Measure.pi (fun i ↦ ChannelCoding.pmfToMeasure
+          (fun y : β ↦ P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')}))).real
+          {yb | (fun i ↦ (xb i, yb i)) ∈ S}
+        = ∑ yb : Fin n → β, {yb | (fun i ↦ (xb i, yb i)) ∈ S}.indicator
+            (fun yb ↦ ∏ i, P_XY.real {((xb i).1, yb i)} / ∑ y', P_XY.real {((xb i).1, y')}) yb :=
+    fun xb ↦ wz_pi_pmf_real_eq_sum
+      (fun i ↦ fun y : β ↦ P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')})
+      (fun _ _ ↦ div_nonneg measureReal_nonneg (Finset.sum_nonneg fun _ _ ↦ measureReal_nonneg))
+      {yb | (fun i ↦ (xb i, yb i)) ∈ S}
+  rw [hLHS]
+  refine Finset.sum_congr rfl (fun xb _ ↦ ?_)
+  rw [hcond, Finset.mul_sum]
+  refine Finset.sum_congr rfl (fun yb _ ↦ ?_)
+  by_cases hmem : (fun i ↦ (xb i, yb i)) ∈ S
+  · have hmem' : yb ∈ {yb | (fun i ↦ (xb i, yb i)) ∈ S} := hmem
+    rw [Set.indicator_of_mem hmem, Set.indicator_of_mem hmem', ← Finset.prod_mul_distrib]
+    exact Finset.prod_congr rfl (fun i _ ↦ (hcancel (xb i) (yb i)).symm)
+  · have hmem' : yb ∉ {yb | (fun i ↦ (xb i, yb i)) ∈ S} := hmem
+    rw [Set.indicator_of_notMem hmem, Set.indicator_of_notMem hmem', mul_zero]
+
 open ChannelCoding in
 /-- **(L4 part 2 — THE MARKOV CORE) Correlated-joint conditional-typicality concentration.**
 For `n` large the source-measure mass of {covering-success ∧ `(x,y)`-block jointly typical ∧
