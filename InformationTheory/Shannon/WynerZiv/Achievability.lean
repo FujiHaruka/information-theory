@@ -5707,45 +5707,74 @@ private lemma wz_pi_nonuniform_concentration_tendsto
       _ = B ^ 2 / ((n : ℝ) * δ ^ 2) := hstep2
       _ ≤ tol := hstep3
 
+/-- **(Strong covering radius, Proposal A.)** The radius `ε_cov = ε / (2·(1 + C))` at which the
+covering word is required to be strongly `(x, U)`-typical, where `C = ∑_{x,u} |g(x, u)|` is the
+mean-pin amplification constant of `wz_wsm_negLog_mean_pin_of_stronglyTypical` (`g =
+wzCondMeanKernel`). The mean-pin bounds `|M(xb) − H(wsm)|` by `C · (strong radius)`, so to keep
+the conditional-mean statistic within `ε/2` of `H(wsm)` — the slack the correlated Markov core
+needs to absorb the acceptance-band radius `ε` — the strong covering radius must be `≤ ε/(2C)`.
+Using `ε/(2·(1 + C))` makes the choice unconditional (`C ≥ 0`) and keeps `ε_cov > 0`. This is a
+computed term of `ε`, `κ'`, `P_XY` (NOT a new lemma parameter), so the chain signatures stay
+fixed. Strong typicality at the *same* radius `ε` would only pin `M` within `C·ε ≫ ε`, leaving an
+`O(ε)` partial-relabel counterexample class open (a scaled-down label swap); the smaller radius
+closes that class. -/
+private noncomputable def wzCoveringStrongRadius
+    (P_XY : Measure (α × β)) {k : ℕ} (κ' : α → Fin k → ℝ) (ε : ℝ) : ℝ :=
+  ε / (2 * (1 + ∑ p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k,
+    |wzCondMeanKernel P_XY κ' p|))
+
+/-- The strong covering radius is positive for `ε > 0` (the denominator `2·(1 + ∑|g|)` is `≥ 2`). -/
+private lemma wzCoveringStrongRadius_pos
+    (P_XY : Measure (α × β)) {k : ℕ} (κ' : α → Fin k → ℝ) {ε : ℝ} (hε : 0 < ε) :
+    0 < wzCoveringStrongRadius P_XY κ' ε := by
+  unfold wzCoveringStrongRadius
+  have hC : (0 : ℝ) ≤ ∑ p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k,
+      |wzCondMeanKernel P_XY κ' p| := Finset.sum_nonneg fun _ _ ↦ abs_nonneg _
+  positivity
+
 open ChannelCoding in
 /-- **(Strong covering-success event, Proposal A.)** The covering-success event for the
 strong-`Ecov` Wyner–Ziv covering chain: the chosen covering word `c.decoder (c.encoder x)` is
 jointly typical with the source `x` in the covering ambient `rdAmbient qStar`, in BOTH readings.
 
-* The **strong** reading (`jointStronglyTypicalSet`) is a per-symbol type pin; it is the
-  strengthening that makes the correlated Markov core `wz_covering_jointBand_markov_core`
-  true-as-framed, by pinning the conditional-mean statistic to `H(wzSideInfoMarginal)` through
-  `wz_wsm_negLog_mean_pin_of_stronglyTypical` and thereby killing the entropy-preserving
-  label-swap counterexample that made the weak-only statement false.
-* The **weak** reading (`jointlyTypicalSet`) is an entropy band; it is retained so that the
-  acceptance-band `U`-typicality plumbing `wz_covering_success_subset_uTypical` — which needs the
-  weak `U`-band at the *same* radius `ε` — goes through unchanged.
+* The **strong** reading (`jointStronglyTypicalSet`) is a per-symbol type pin at the *smaller*
+  radius `wzCoveringStrongRadius P_XY κ' ε = ε/(2(1 + C))`; it is the strengthening that makes the
+  correlated Markov core `wz_covering_jointBand_markov_core` true-as-framed, by pinning the
+  conditional-mean statistic `M(xb)` to within `C · ε_cov < ε/2` of `H(wzSideInfoMarginal)`
+  through `wz_wsm_negLog_mean_pin_of_stronglyTypical`. This kills not only the full
+  entropy-preserving label-swap counterexample but the whole `O(ε)` partial-relabel class that
+  strong typicality at the *same* radius `ε` would leave open (there `|M − H| ≤ C·ε ≫ ε`).
+* The **weak** reading (`jointlyTypicalSet`) is an entropy band at radius `ε`; it is retained so
+  that the acceptance-band `U`-typicality plumbing `wz_covering_success_subset_uTypical` — which
+  needs the weak `U`-band at radius `ε` — goes through unchanged.
 
-Strong typicality at radius `ε` does not imply the weak `U`-band at the same radius (the
-strong-to-weak bridge `stronglyTypicalSet_subset_typicalSet` widens the radius by the slack
-`ε·logSumAbs`), so the covering-success event is the intersection of the two readings rather than
-the strong one alone. This keeps every lemma signature in the chain fixed while making the
-correlated Markov concentration true-as-framed. -/
+Strong typicality at radius `ε_cov` does not imply the weak `U`-band at radius `ε` (the
+strong-to-weak bridge widens the radius by `ε_cov·logSumAbs`, an unrelated constant), so the
+covering-success event is the intersection of the two readings. This keeps every lemma signature
+in the chain fixed (the radii are computed terms of `ε`) while making the correlated Markov
+concentration true-as-framed. -/
 private def wzCoveringSuccessStrong
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    {k : ℕ} (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    {k : ℕ} (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
     {n : ℕ} {M : ℕ} (c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
     (ε : ℝ) : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
   { p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
       ∈ jointStronglyTypicalSet (rdAmbient qStar)
-          ChannelCoding.iidXs ChannelCoding.iidYs n ε }
+          ChannelCoding.iidXs ChannelCoding.iidYs n (wzCoveringStrongRadius P_XY κ' ε) }
   ∩ { p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
       ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
           ChannelCoding.iidXs ChannelCoding.iidYs n ε }
 
-/-- Strong covering-success implies weak covering-success (the second conjunct), the reading the
-`U`-typicality plumbing consumes. -/
+/-- Strong covering-success implies weak covering-success (the second conjunct, at radius `ε`),
+the reading the `U`-typicality plumbing consumes. -/
 private lemma wzCoveringSuccessStrong_subset_weak
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    {k : ℕ} (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    {k : ℕ} (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
     {n : ℕ} {M : ℕ} (c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
     (ε : ℝ) :
-    wzCoveringSuccessStrong P_XY qStar c ε
+    wzCoveringSuccessStrong P_XY κ' qStar c ε
       ⊆ { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
           (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
             ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
@@ -5804,20 +5833,23 @@ ingredient `conditionalStronglyTypicalSlice_mass_ge` (`ConditionalMethodOfTypes/
 and `conditionalTypicalSlice_card_le` (SlepianWolf) is a slice-cardinality bound, not the SRC-measure
 mass concentration. No deprecated tags; slug `wz-binning-covering` is the intended family-wide child.
 
-RESOLVED 2026-07-12 (Proposal A applied — the false-statement DEFECT discussed above is now
-HISTORICAL): the covering-success event is `wzCoveringSuccessStrong P_XY qStar c ε` = STRONG joint
-typicality (`jointStronglyTypicalSet`) ∩ weak `jointlyTypicalSet`. On the strong conjunct the
-per-symbol type pin forces the conditional-mean statistic `M(xb) = ⟨type_xu, g⟩` to
-`H(wzSideInfoMarginal)` (gateway `wz_wsm_negLog_mean_pin_of_stronglyTypical`), so the
-entropy-preserving LABEL-SWAP counterexample — whose per-symbol joint type differs from `qStar` — is
-EXCLUDED from covering-success (a label-swapped word is not `jointStronglyTypicalSet`-typical). The
-statement is therefore TRUE-as-framed; the weak conjunct is retained only so the `U`-typicality
-plumbing `wz_covering_success_subset_uTypical` keeps working at the same radius `ε` (strong at `ε`
-does not imply weak at `ε`; the slack `ε·logSumAbs` widens the radius). The body stays a genuine
-`sorry`: the from-scratch correlated-joint conditional-AEP concentration (recipe:
+RESOLVED 2026-07-12 (Proposal A applied, with a RADIUS SEPARATION — the false-statement DEFECT
+discussed above is now HISTORICAL): the covering-success event is
+`wzCoveringSuccessStrong P_XY κ' qStar c ε` = STRONG joint typicality (`jointStronglyTypicalSet`) at
+the SMALLER radius `ε_cov = wzCoveringStrongRadius P_XY κ' ε = ε/(2(1 + C))`, intersected with weak
+`jointlyTypicalSet` at radius `ε`. The strong conjunct at `ε_cov` pins the conditional-mean statistic
+`M(xb) = ⟨type_xu, g⟩` to within `C·ε_cov < ε/2` of `H(wzSideInfoMarginal)` (gateway
+`wz_wsm_negLog_mean_pin_of_stronglyTypical`, amplification constant `C = ∑_{x,u} |g(x,u)|`), so the
+`(u,y)` empirical entropy — which concentrates about `M(xb)` within `< ε/2` for large `n` — stays
+within `ε` of `H(wsm)`, i.e. NOT in the acceptance-atypical band `Euy`. Strong typicality at the
+*same* radius `ε` would be INSUFFICIENT (only `|M − H| ≤ C·ε ≫ ε`, leaving an `O(ε)` partial-relabel
+counterexample class open — a scaled-down label swap); the radius separation `ε_cov ≤ ε/(2C)` closes
+that class and makes the statement TRUE-as-framed. The weak conjunct at `ε` is retained so the
+`U`-typicality plumbing `wz_covering_success_subset_uTypical` keeps working at radius `ε`. The body
+stays a genuine `sorry`: the from-scratch correlated-joint conditional-AEP concentration (recipe:
 `wz_srcBlock_condMeasure_split` finite-Fubini split → `wz_wsm_negLog_mean_pin_of_stronglyTypical`
-mean pin → `wz_pi_nonuniform_concentration_tendsto` conditional Chebyshev), classified
-`@residual(plan:wz-binning-covering)`, NOT a Mathlib wall.
+mean pin at radius `ε_cov` → `wz_pi_nonuniform_concentration_tendsto` conditional Chebyshev with
+deviation `δ = ε/2`), classified `@residual(plan:wz-binning-covering)`, NOT a Mathlib wall.
 @residual(plan:wz-binning-covering) -/
 private lemma wz_covering_jointBand_markov_core
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -5832,7 +5864,7 @@ private lemma wz_covering_jointBand_markov_core
         (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
             (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
               P_XY.real {(p.1.1, p.2)}))).real
-          ((wzCoveringSuccessStrong P_XY qStar c ε
+          ((wzCoveringSuccessStrong P_XY κ' qStar c ε
             ∩ typicalSet (rdAmbient
                 (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
                 (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs) n ε)
@@ -5880,7 +5912,7 @@ the INDEPENDENT-product Ys law (wrong direction + measure, not a drop-in).
 
 RESOLVED 2026-07-12 (Proposal A applied — the false-statement DEFECT and the "(3) Sufficiency:
 RETRACTED … false-as-framed" finding above are HISTORICAL, applying to the WEAK-only covering event):
-the covering-success event is now `wzCoveringSuccessStrong P_XY qStar c ε` (strong
+the covering-success event is now `wzCoveringSuccessStrong P_XY κ' qStar c ε` (strong
 `jointStronglyTypicalSet` ∩ weak `jointlyTypicalSet`), which excludes the entropy-preserving label-swap
 counterexample via the strong per-symbol type pin (see the core lemma
 `wz_covering_jointBand_markov_core`). This outer reduction (case split + union bound) now consumes the
@@ -5901,7 +5933,7 @@ private lemma wz_covering_jointBand_concentration
         (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
             (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
               P_XY.real {(p.1.1, p.2)}))).real
-          (wzCoveringSuccessStrong P_XY qStar c ε
+          (wzCoveringSuccessStrong P_XY κ' qStar c ε
             ∩ { p | (fun i ↦ (c.decoder (c.encoder (fun j ↦ (p j).1)) i, (p i).2))
                 ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
                     (ChannelCoding.jointSequence ChannelCoding.iidXs
@@ -5927,7 +5959,7 @@ private lemma wz_covering_jointBand_concentration
     with hSRC_def
   haveI hSRC_prob : IsProbabilityMeasure SRC := by rw [hSRC_def]; infer_instance
   set Ecov : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
-    wzCoveringSuccessStrong P_XY qStar c ε with hEcov_def
+    wzCoveringSuccessStrong P_XY κ' qStar c ε with hEcov_def
   set Exytyp : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
     typicalSet (rdAmbient
         (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
@@ -6033,7 +6065,7 @@ of the counterexample (they pin qStar's U-marginal only, not type_xu in TV), so 
 
 RESOLVED 2026-07-12 (Proposal A applied — the false-statement DEFECT and the "AUDIT VERDICT 2026-07-12b
 … CONFIRMED false-as-framed" narrative above are HISTORICAL, applying to the WEAK-only covering event):
-the covering-success event is now `wzCoveringSuccessStrong P_XY qStar c ε` (strong
+the covering-success event is now `wzCoveringSuccessStrong P_XY κ' qStar c ε` (strong
 `jointStronglyTypicalSet` ∩ weak `jointlyTypicalSet`). The strong conjunct excludes the label-swap
 counterexample (its per-symbol joint type differs from `qStar`, see the core lemma), and the weak
 conjunct keeps the `Ecov ∩ Euf = ∅` step (`wz_covering_success_subset_uTypical` via
@@ -6056,7 +6088,7 @@ private lemma wz_covering_markov_concentration
         (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
             (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
               P_XY.real {(p.1.1, p.2)}))).real
-          (wzCoveringSuccessStrong P_XY qStar c ε
+          (wzCoveringSuccessStrong P_XY κ' qStar c ε
             ∩ wzCoveringAcceptFailSet P_XY κ' c ε)
           ≤ tol / 2 := by
   classical
@@ -6078,7 +6110,7 @@ private lemma wz_covering_markov_concentration
   haveI hSRC_prob : IsProbabilityMeasure SRC := by rw [hSRC_def]; infer_instance
   -- Name the covering-success event and the three band-failure witnesses.
   set Ecov : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
-    wzCoveringSuccessStrong P_XY qStar c ε with hEcov_def
+    wzCoveringSuccessStrong P_XY κ' qStar c ε with hEcov_def
   set Euf : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
     { p | c.decoder (c.encoder (fun j ↦ (p j).1))
         ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs n ε }
@@ -6115,7 +6147,7 @@ private lemma wz_covering_markov_concentration
     rw [Set.eq_empty_iff_forall_notMem]
     rintro p ⟨hcov, huf⟩
     exact huf (wz_covering_success_subset_uTypical P_XY κ' qStar hκ'_pos hκ'_sum hqStar ε n M c
-      (wzCoveringSuccessStrong_subset_weak P_XY qStar c ε hcov))
+      (wzCoveringSuccessStrong_subset_weak P_XY κ' qStar c ε hcov))
   have h1 : SRC.real (Ecov ∩ Euf) = 0 := by rw [hEmpty, measureReal_empty]
   have hunion1 : SRC.real ((Ecov ∩ Euf) ∪ Eyf ∪ (Ecov ∩ Ejf))
       ≤ SRC.real ((Ecov ∩ Euf) ∪ Eyf) + SRC.real (Ecov ∩ Ejf) := measureReal_union_le _ _
@@ -6216,7 +6248,7 @@ in TV, so the entropy-preserving relabel survives them. The d2e68b10 PASS remain
 
 RESOLVED 2026-07-12 (Proposal A applied — the false-statement DEFECT and all "false-as-framed /
 LABEL-SWAP" narrative above are HISTORICAL, applying to the WEAK-only covering event): the leaf's
-covering premise `hprem` is now the mass of the complement of `wzCoveringSuccessStrong P_XY qStar c ε`
+covering premise `hprem` is now the mass of the complement of `wzCoveringSuccessStrong P_XY κ' qStar c ε`
 (strong `jointStronglyTypicalSet` ∩ weak `jointlyTypicalSet`), and the inner bound `hinner` it consumes
 is TRUE-as-framed under the strong covering event (the strong per-symbol type pin excludes the label
 swap; see the core lemma). So the leaf conclusion (acceptance-failure mass ≤ tol) is true-as-framed.
@@ -6242,7 +6274,7 @@ private lemma wz_covering_chosenWord_sideInfo_typical
         (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
             (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
               P_XY.real {(p.1.1, p.2)}))).real
-          ((wzCoveringSuccessStrong P_XY qStar c ε)ᶜ)
+          ((wzCoveringSuccessStrong P_XY κ' qStar c ε)ᶜ)
           ≤ tol / 2 →
         (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
             (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
@@ -6266,17 +6298,17 @@ private lemma wz_covering_chosenWord_sideInfo_typical
   haveI hSRC_prob : IsProbabilityMeasure SRC := by rw [hSRC_def]; infer_instance
   -- Acceptance failure is covered by covering-failure ∪ (covering-success ∩ acceptance failure).
   have hincl : wzCoveringAcceptFailSet P_XY κ' c ε
-      ⊆ (wzCoveringSuccessStrong P_XY qStar c ε)ᶜ
-          ∪ (wzCoveringSuccessStrong P_XY qStar c ε
+      ⊆ (wzCoveringSuccessStrong P_XY κ' qStar c ε)ᶜ
+          ∪ (wzCoveringSuccessStrong P_XY κ' qStar c ε
               ∩ wzCoveringAcceptFailSet P_XY κ' c ε) := by
     intro p hp
-    by_cases hc : p ∈ wzCoveringSuccessStrong P_XY qStar c ε
+    by_cases hc : p ∈ wzCoveringSuccessStrong P_XY κ' qStar c ε
     · exact Or.inr ⟨hc, hp⟩
     · exact Or.inl hc
   -- Union bound over the covering-failure / covering-success split.
   have hunion : SRC.real (wzCoveringAcceptFailSet P_XY κ' c ε)
-      ≤ SRC.real ((wzCoveringSuccessStrong P_XY qStar c ε)ᶜ)
-        + SRC.real (wzCoveringSuccessStrong P_XY qStar c ε
+      ≤ SRC.real ((wzCoveringSuccessStrong P_XY κ' qStar c ε)ᶜ)
+        + SRC.real (wzCoveringSuccessStrong P_XY κ' qStar c ε
               ∩ wzCoveringAcceptFailSet P_XY κ' c ε) :=
     le_trans
       (measureReal_mono hincl
