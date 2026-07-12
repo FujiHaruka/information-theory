@@ -3563,6 +3563,81 @@ private lemma wz_covering_SRC_map_Xproj_eq
         rw [hmarg]
 
 open ChannelCoding in
+/-- **(Atom G — covering-failure ≤ encoder no-match.)** For any covering code `c`, the
+`SRC`-mass of the strong-covering-success complement is bounded by the covering ambient's
+block-`X`-law mass of the encoder-failure event `(x, c.decoder (c.encoder x)) ∉
+jointStronglyTypicalSet` at the encoder radius `ε_enc`. Measure alignment
+(`wz_covering_SRC_map_Xproj_eq`) pushes `SRC` to the block-`X`-law along the `X`-projection,
+and the radius bridge `wz_jointStrongly_mem_coveringSuccessJoint` (given `ε_enc ≤ ε_cov` and
+the three `logSumAbs` bounds) makes strong-`ε_enc` typicality of the chosen word land in the
+covering-success event, so its complement is contained in the encoder-failure event. -/
+private lemma wz_coveringSuccessStrong_compl_measureReal_le
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} [Nonempty (Fin k)] [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
+    (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    {n : ℕ} (hn : 0 < n) {M : ℕ}
+    (c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
+    {ε_enc ε : ℝ} (hε_enc_nn : 0 ≤ ε_enc)
+    (h_le_cov : ε_enc ≤ wzCoveringStrongRadius P_XY κ' ε)
+    (hX : (Fintype.card (Fin k) : ℝ) * ε_enc
+            * logSumAbs (rdAmbient qStar) ChannelCoding.iidXs < ε)
+    (hY : (Fintype.card {x : α // 0 < ∑ y, P_XY.real {(x, y)}} : ℝ) * ε_enc
+            * logSumAbs (rdAmbient qStar) ChannelCoding.iidYs < ε)
+    (hJ : ε_enc * logSumAbs (rdAmbient qStar)
+            (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs) < ε) :
+    (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+          P_XY.real {(p.1.1, p.2)}))).real
+        ((wzCoveringSuccessStrong P_XY κ' qStar c ε)ᶜ)
+      ≤ (Measure.pi (fun _ : Fin n ↦ (rdAmbient qStar).map (ChannelCoding.iidXs 0))).real
+          { x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
+              (x, c.decoder (c.encoder x)) ∉ jointStronglyTypicalSet (rdAmbient qStar)
+                  ChannelCoding.iidXs ChannelCoding.iidYs n ε_enc } := by
+  classical
+  haveI : IsProbabilityMeasure (rdAmbient qStar) :=
+    rdAmbient_isProbabilityMeasure qStar hqStar_mem
+  -- The `X`-projection and the covering-success base set on `X`-blocks.
+  set S : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) :=
+    { x | (x, c.decoder (c.encoder x)) ∈ jointStronglyTypicalSet (rdAmbient qStar)
+              ChannelCoding.iidXs ChannelCoding.iidYs n (wzCoveringStrongRadius P_XY κ' ε) }
+    ∩ { x | (x, c.decoder (c.encoder x)) ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
+              ChannelCoding.iidXs ChannelCoding.iidYs n ε } with hS
+  have hXproj_meas : Measurable
+      (fun p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ fun j ↦ (p j).1) :=
+    measurable_pi_lambda _ (fun j ↦ (measurable_pi_apply j).fst)
+  calc (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+          (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+            P_XY.real {(p.1.1, p.2)}))).real
+          ((wzCoveringSuccessStrong P_XY κ' qStar c ε)ᶜ)
+      = (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+          (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+            P_XY.real {(p.1.1, p.2)}))).real
+            ((fun p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+              fun j ↦ (p j).1) ⁻¹' Sᶜ) := rfl
+    _ = ((Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+          (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+            P_XY.real {(p.1.1, p.2)}))).map
+            (fun p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+              fun j ↦ (p j).1)).real Sᶜ :=
+        (map_measureReal_apply hXproj_meas (Set.toFinite _).measurableSet).symm
+    _ = (Measure.pi (fun _ : Fin n ↦ (rdAmbient qStar).map (ChannelCoding.iidXs 0))).real Sᶜ := by
+        rw [wz_covering_SRC_map_Xproj_eq P_XY κ' qStar hqStar_mem hκ'sum hqStar_eq n]
+    _ ≤ (Measure.pi (fun _ : Fin n ↦ (rdAmbient qStar).map (ChannelCoding.iidXs 0))).real
+          { x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
+              (x, c.decoder (c.encoder x)) ∉ jointStronglyTypicalSet (rdAmbient qStar)
+                  ChannelCoding.iidXs ChannelCoding.iidYs n ε_enc } := by
+        refine measureReal_mono ?_ (measure_ne_top _ _)
+        intro x hx
+        simp only [Set.mem_setOf_eq]
+        intro hxu
+        exact hx (wz_jointStrongly_mem_coveringSuccessJoint P_XY qStar hqStar_mem hn
+          hε_enc_nn h_le_cov hX hY hJ x (c.decoder (c.encoder x)) hxu)
+
+open ChannelCoding in
 /-- **(Steps 1–2) Covering LossyCode family from a feasible test channel.**
 Perturbs the feasible factorisable test channel `qf` to a full-support kernel
 `κ'` (Step 1, `wz_fullKernelSupport_perturbation`), restricts the covering source
