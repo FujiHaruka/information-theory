@@ -5223,6 +5223,25 @@ from-scratch in-project assembly, absent from Mathlib and the codebase (`plan`, 
 wall). The consistency + full-support hyps (`hκ'_pos`, `hκ'_sum`, `hqStar`) are mandatory (pin
 qStar's `U`-marginal `= P_U =` wzSideInfoMarginal's `U`-marginal; without them a constant-word
 counterexample makes the statement false-as-framed). Left `sorry` — the residual Markov kernel.
+
+AUDIT VERDICT 2026-07-12 (independent honesty audit, HEAD `845f523a`): PASS, HONEST tier-2 —
+mainline target for the next build leg (Session C). (1) Signature honest: body is `sorry`, not
+`:= h`; no `:True`/degenerate slot. (2) Non-bundled: the three threaded hyps are preconditions
+(`hκ'_pos`/`hκ'_sum` = full-support proper-pmf regularity; `hqStar` = qStar–κ' definitional
+consistency), NOT the acceptance conclusion — the core-reconstruction test fails to hand over the
+`(u,y)`-typicality; the conditional-AEP (Markov-lemma) concentration stays entirely in the `sorry`.
+(3) Sufficiency (NOT false-as-framed): the three hyps are PRESENT and SUFFICIENT — the constant-word
+`c ≡ u₀ⁿ` + `qStar := P_X ⊗ δ_{u₀}` counterexample DIES: `hκ'_pos` forbids κ' being a point mass, and
+under `hqStar`+`hκ'_sum` qStar's U-marginal is pinned `= P_U = ` wzSideInfoMarginal's U-marginal, so
+the constant word's empirical conditional `δ_{u₀} ≠` full-support κ'(x)(·) → `(x, u₀ⁿ)` is not
+qStar-jointly typical → covering-success fails → intersection is empty ≤ tol/8. No other adversarial
+full-support κ'/c survives: the residual Markov lemma U—X—Y (`u = f(x-block) ⊥ y | x`) is a genuine
+theorem for all full-support κ'/c. (4) Class `plan` CORRECT: the correlated-joint conditional-AEP
+UPPER concentration is a from-scratch in-project assembly, not a Mathlib wall — the nearest in-tree
+ingredient `conditionalStronglyTypicalSlice_mass_ge` (`ConditionalMethodOfTypes/Mass.lean:1274`) is a
+`_mass_ge` LOWER bound on the INDEPENDENT-product Ys law (wrong direction + measure, not a drop-in),
+and `conditionalTypicalSlice_card_le` (SlepianWolf) is a slice-cardinality bound, not the SRC-measure
+mass concentration. No deprecated tags; slug `wz-binning-covering` is the intended family-wide child.
 @residual(plan:wz-binning-covering) -/
 private lemma wz_covering_jointBand_markov_core
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
