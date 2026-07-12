@@ -944,6 +944,100 @@ noncomputable def wzSideInfoMarginal (P_XY : Measure (α × β)) {k : ℕ} (κ' 
     Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}} → ℝ :=
   fun p ↦ ∑ x, κ' x p.1 * P_XY.real {(x, p.2.1)}
 
+lemma wzSideInfoMarginal_pos
+    (P_XY : Measure (α × β)) {k : ℕ} (κ' : α → Fin k → ℝ)
+    (hκ'pos : ∀ x u, 0 < κ' x u) :
+    ∀ p, 0 < wzSideInfoMarginal P_XY κ' p := by
+  intro p
+  have hpos_sum : 0 < ∑ x, P_XY.real {(x, p.2.1)} := p.2.2
+  show 0 < ∑ x, κ' x p.1 * P_XY.real {(x, p.2.1)}
+  refine Finset.sum_pos' (fun x _ ↦ mul_nonneg (hκ'pos x p.1).le measureReal_nonneg) ?_
+  by_contra h
+  push_neg at h
+  refine absurd hpos_sum (not_lt.mpr ?_)
+  refine le_of_eq (Finset.sum_eq_zero fun x _ ↦ ?_)
+  by_contra hx
+  exact absurd (mul_pos (hκ'pos x p.1)
+    (lt_of_le_of_ne measureReal_nonneg (Ne.symm hx))) (not_lt.mpr (h x (Finset.mem_univ x)))
+
+lemma wzSideInfoMarginal_sum_eq_one
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] {k : ℕ} (κ' : α → Fin k → ℝ)
+    (hκ'sum : ∀ x, ∑ u, κ' x u = 1) :
+    ∑ p, wzSideInfoMarginal P_XY κ' p = 1 := by
+  classical
+  -- The `Y`-marginal at `x`, summed over the positive-`Y`-marginal subtype, equals the
+  -- full `Y`-marginal (the excluded `y` carry zero mass).
+  have hsubtype : ∀ x : α,
+      ∑ ys : {y : β // 0 < ∑ x', P_XY.real {(x', y)}}, P_XY.real {(x, ys.1)}
+        = ∑ y : β, P_XY.real {(x, y)} := by
+    intro x
+    letI : DecidablePred (fun y : β => 0 < ∑ x', P_XY.real {(x', y)}) :=
+      Classical.decPred _
+    rw [← Finset.sum_subtype
+        (Finset.univ.filter (fun y : β => 0 < ∑ x', P_XY.real {(x', y)}))
+        (fun y => by simp) (fun y => P_XY.real {(x, y)})]
+    refine Finset.sum_subset (Finset.filter_subset _ _) ?_
+    intro y _ hy
+    rw [Finset.mem_filter] at hy
+    push_neg at hy
+    have hle : ∑ x', P_XY.real {(x', y)} ≤ 0 := hy (Finset.mem_univ y)
+    have hz : ∑ x', P_XY.real {(x', y)} = 0 :=
+      le_antisymm hle (Finset.sum_nonneg fun _ _ ↦ measureReal_nonneg)
+    exact (Finset.sum_eq_zero_iff_of_nonneg (fun _ _ ↦ measureReal_nonneg)).mp hz x
+      (Finset.mem_univ x)
+  -- Total mass over `α × β` is `1`.
+  have hsum1 : ∑ p : α × β, P_XY.real {p} = 1 := by
+    have h1 : (∑ p : α × β, P_XY.real {p}) = P_XY.real (Finset.univ : Finset (α × β)) := by
+      simp [sum_measureReal_singleton]
+    rw [h1, Finset.coe_univ, probReal_univ]
+  show ∑ p : Fin k × {y : β // 0 < ∑ x', P_XY.real {(x', y)}},
+      ∑ x, κ' x p.1 * P_XY.real {(x, p.2.1)} = 1
+  rw [Fintype.sum_prod_type]
+  have hstep : ∀ u : Fin k,
+      ∑ ys : {y : β // 0 < ∑ x', P_XY.real {(x', y)}}, ∑ x, κ' x u * P_XY.real {(x, ys.1)}
+        = ∑ x, κ' x u * ∑ y : β, P_XY.real {(x, y)} := by
+    intro u
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl (fun x _ ↦ ?_)
+    rw [← Finset.mul_sum, hsubtype x]
+  simp_rw [hstep]
+  rw [Finset.sum_comm]
+  have hstep2 : ∀ x : α,
+      ∑ u : Fin k, κ' x u * ∑ y : β, P_XY.real {(x, y)} = ∑ y : β, P_XY.real {(x, y)} := by
+    intro x
+    rw [← Finset.sum_mul, hκ'sum x, one_mul]
+  simp_rw [hstep2]
+  rw [Fintype.sum_prod_type] at hsum1
+  exact hsum1
+
+lemma wzSideInfoMarginal_mem_stdSimplex
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] {k : ℕ} (κ' : α → Fin k → ℝ)
+    (hκ'pos : ∀ x u, 0 < κ' x u) (hκ'sum : ∀ x, ∑ u, κ' x u = 1) :
+    wzSideInfoMarginal P_XY κ'
+      ∈ stdSimplex ℝ (Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) :=
+  ⟨fun p ↦ (wzSideInfoMarginal_pos P_XY κ' hκ'pos p).le,
+    wzSideInfoMarginal_sum_eq_one P_XY κ' hκ'sum⟩
+
+lemma wzSideInfoMarginal_subtype_nonempty
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] :
+    Nonempty {y : β // 0 < ∑ x, P_XY.real {(x, y)}} := by
+  have hsum1 : ∑ p : α × β, P_XY.real {p} = 1 := by
+    have h1 : (∑ p : α × β, P_XY.real {p}) = P_XY.real (Finset.univ : Finset (α × β)) := by
+      simp [sum_measureReal_singleton]
+    rw [h1, Finset.coe_univ, probReal_univ]
+  obtain ⟨x₀, y₀, hxy⟩ : ∃ x y, 0 < P_XY.real {(x, y)} := by
+    by_contra h
+    push_neg at h
+    have hzero : ∑ p : α × β, P_XY.real {p} = 0 :=
+      Finset.sum_eq_zero fun p _ ↦ le_antisymm (h p.1 p.2) measureReal_nonneg
+    rw [hsum1] at hzero
+    exact one_ne_zero hzero
+  refine ⟨⟨y₀, ?_⟩⟩
+  calc (0 : ℝ) < P_XY.real {(x₀, y₀)} := hxy
+    _ ≤ ∑ x, P_XY.real {(x, y₀)} :=
+        Finset.single_le_sum (f := fun x => P_XY.real {(x, y₀)})
+          (fun x _ ↦ measureReal_nonneg) (Finset.mem_univ x₀)
+
 /-- **Covering-acceptance failure event (C2).** For a covering `LossyCode` `c` on the
 source-support subtype `α' := {x // 0 < P_X x}`, the set of block source–side pairs
 `p : Fin n → α' × β` whose true covering codeword `c.decoder (c.encoder x)` is *not*
@@ -988,6 +1082,248 @@ private lemma wz_QXY_mem_stdSimplex
   rw [Finset.sum_subset (Finset.filter_subset _ _)
         (fun x _ hx ↦ le_antisymm (not_lt.mp (by simpa using hx)) (hPnn x))]
   exact htot
+
+/-! ### Leg F inner concentration — de-entangled sub-lemmas L0–L5
+
+The Markov-lemma concentration `wz_covering_markov_concentration` (Leg F inner leaf) is
+assembled from six de-entangled band sub-lemmas (proof-pivot-advisor 2026-07-12). The
+covering-acceptance failure event unfolds — via `mem_jointlyTypicalSet_iff` — into a
+conjunction of three independent entropy-band typicalities (U-band ∧ Y-band ∧ joint-band),
+so its De Morgan complement is a union of three band-failures, each with an independent
+witness:
+
+* **L0** (`wz_covering_uMarginal_map_eq`) — the covering pmf `qStar`'s `U`-marginal equals the
+  side-information marginal `wzSideInfoMarginal`'s `U`-marginal (both `= P_U`); this is what
+  makes the `U`-band consistent between the two ambients.
+* **L1** (`wz_covering_success_subset_uTypical`) — covering-success ⊆ {chosen word `U`-typical
+  in the side-information ambient}; the covering `U`-band plus L0 makes `U`-typicality identical
+  in the two ambients (mass-0 set inclusion, no threshold `N`).
+* **L2** (`wz_covering_src_yProj_eq_pi`) — the `Y`-projection of the source product measure is
+  the product of the source `Y`-law (`Measure.pi_map_pi`).
+* **L3** (`wz_covering_yBand_aep`) — the source-measure `Y`-band failure has mass `≤ tol/4` for
+  `n` large (a one-dimensional AEP on the iid side-information sequence, independent of the code).
+* **L4** (`wz_covering_jointBand_concentration`) — THE HARD KERNEL: covering-success ∩
+  {joint `(U,Y)`-band failure} has mass `≤ tol/4`. The correlated-joint conditional-typicality
+  concentration (the Markov lemma); `U = c.decoder (c.encoder x)` is a function of the whole
+  `x`-block, so `(U_i, Y_i)` is neither iid nor independent — a from-scratch in-project assembly
+  absent from Mathlib and the codebase. Left `sorry`, `@residual(plan:wz-binning-covering)`.
+* **L5** — the assembly (the body of `wz_covering_markov_concentration`): `N := max N_Y N_J`,
+  union bound over the three band-failures gives `0 + tol/4 + tol/4 = tol/2`.
+-/
+
+open ChannelCoding in
+/-- **(L0) `U`-marginal consistency between the two ambients.** The covering pmf `qStar`'s
+`Fin k`-marginal (`iidYs 0` law of `rdAmbient qStar`) equals the side-information marginal
+`wzSideInfoMarginal`'s `Fin k`-marginal (`iidXs 0` law of `rdAmbient (wzSideInfoMarginal …)`);
+both are the covering-word law `P_U(u) = ∑ₓ κ'(x, u)·P_X(x)`. This aligns the `U`-band of the
+covering-success set (measured in `rdAmbient qStar`) with the `U`-band of the acceptance set
+(measured in the side-information ambient). -/
+private lemma wz_covering_uMarginal_map_eq
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hκ'_pos : ∀ x u, 0 < κ' x u)
+    (hκ'_sum : ∀ x, ∑ u, κ' x u = 1)
+    (hqStar : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) :
+    (rdAmbient qStar).map
+        (ChannelCoding.iidYs (α := {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (β := Fin k) 0)
+      = (rdAmbient (wzSideInfoMarginal P_XY κ')).map
+          (ChannelCoding.iidXs (α := Fin k) (β := {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) 0) := by
+  classical
+  obtain ⟨hne_α', -, hq_qStar_fun⟩ := wz_restrictedCoveringJoint_pos P_XY κ' hκ'_pos hκ'_sum
+  haveI := hne_α'
+  have hq_qStar : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) := by
+    rw [funext hqStar]; exact hq_qStar_fun
+  haveI hne_prod : Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
+    Finset.univ_nonempty_iff.mp
+      (Finset.nonempty_of_sum_ne_zero (by rw [hq_qStar.2]; exact one_ne_zero))
+  haveI : Nonempty (Fin k) := hne_prod.map Prod.snd
+  haveI hne_β' : Nonempty {y : β // 0 < ∑ x, P_XY.real {(x, y)}} :=
+    wzSideInfoMarginal_subtype_nonempty P_XY
+  have hq_wsm := wzSideInfoMarginal_mem_stdSimplex P_XY κ' hκ'_pos hκ'_sum
+  rw [rdAmbient_map_iidYs qStar hq_qStar,
+      rdAmbient_map_iidXs (wzSideInfoMarginal P_XY κ') hq_wsm]
+  haveI : IsProbabilityMeasure (ChannelCoding.pmfToMeasure qStar) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure hq_qStar
+  haveI : IsProbabilityMeasure (ChannelCoding.pmfToMeasure (wzSideInfoMarginal P_XY κ')) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure hq_wsm
+  haveI : IsProbabilityMeasure ((ChannelCoding.pmfToMeasure qStar).map Prod.snd) :=
+    Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+  haveI : IsProbabilityMeasure
+      ((ChannelCoding.pmfToMeasure (wzSideInfoMarginal P_XY κ')).map Prod.fst) :=
+    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+  apply Measure.ext_of_singleton
+  intro u
+  -- The two `U`-marginal singletons agree as reals, both `= ∑ₓ κ'(x, u)·P_X(x)`.
+  have hMS : marginalSnd qStar u = ∑ x, κ' x u * ∑ y, P_XY.real {(x, y)} := by
+    simp only [marginalSnd]
+    rw [Finset.sum_congr rfl (fun x' _ ↦ hqStar (x', u))]
+    letI : DecidablePred (fun x : α => 0 < ∑ y, P_XY.real {(x, y)}) := Classical.decPred _
+    rw [← Finset.sum_subtype (Finset.univ.filter (fun x : α => 0 < ∑ y, P_XY.real {(x, y)}))
+        (fun x => by simp) (fun x => κ' x u * ∑ y, P_XY.real {(x, y)})]
+    refine Finset.sum_subset (Finset.filter_subset _ _) ?_
+    intro x _ hx
+    rw [Finset.mem_filter] at hx
+    push_neg at hx
+    have hz : ∑ y, P_XY.real {(x, y)} = 0 :=
+      le_antisymm (hx (Finset.mem_univ x)) (Finset.sum_nonneg fun _ _ ↦ measureReal_nonneg)
+    rw [hz, mul_zero]
+  have hMF : marginalFst (wzSideInfoMarginal P_XY κ') u = ∑ x, κ' x u * ∑ y, P_XY.real {(x, y)} := by
+    simp only [marginalFst, wzSideInfoMarginal]
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl (fun x _ ↦ ?_)
+    rw [← Finset.mul_sum]
+    congr 1
+    letI : DecidablePred (fun y : β => 0 < ∑ x, P_XY.real {(x, y)}) := Classical.decPred _
+    rw [← Finset.sum_subtype (Finset.univ.filter (fun y : β => 0 < ∑ x, P_XY.real {(x, y)}))
+        (fun y => by simp) (fun y => P_XY.real {(x, y)})]
+    refine Finset.sum_subset (Finset.filter_subset _ _) ?_
+    intro y _ hy
+    rw [Finset.mem_filter] at hy
+    push_neg at hy
+    have hz : ∑ x', P_XY.real {(x', y)} = 0 :=
+      le_antisymm (hy (Finset.mem_univ y)) (Finset.sum_nonneg fun _ _ ↦ measureReal_nonneg)
+    exact (Finset.sum_eq_zero_iff_of_nonneg (fun _ _ ↦ measureReal_nonneg)).mp hz x (Finset.mem_univ x)
+  have hreal : ((ChannelCoding.pmfToMeasure qStar).map Prod.snd).real {u}
+      = ((ChannelCoding.pmfToMeasure (wzSideInfoMarginal P_XY κ')).map Prod.fst).real {u} := by
+    rw [pmfToMeasure_map_snd_real_singleton hq_qStar u,
+        pmfToMeasure_map_fst_real_singleton hq_wsm u, hMS, hMF]
+  have hL := measure_ne_top ((ChannelCoding.pmfToMeasure qStar).map Prod.snd) {u}
+  have hR := measure_ne_top
+    ((ChannelCoding.pmfToMeasure (wzSideInfoMarginal P_XY κ')).map Prod.fst) {u}
+  rw [← ENNReal.ofReal_toReal hL, ← ENNReal.ofReal_toReal hR]
+  exact congrArg ENNReal.ofReal hreal
+
+open ChannelCoding in
+/-- **(L1) Covering-success ⊆ chosen-word `U`-typical (in the side-information ambient).** If the
+chosen covering word `c.decoder (c.encoder x)` typically covers `x` (covering-success in
+`rdAmbient qStar`), then it is `U`-typical in the side-information ambient. The covering-success
+`U`-band bands the word against `qStar`'s `U`-marginal; L0 makes that identical to the
+side-information ambient's `U`-marginal, so the two `U`-typical sets coincide. Pure set
+inclusion (no threshold `N`). -/
+private lemma wz_covering_success_subset_uTypical
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hκ'_pos : ∀ x u, 0 < κ' x u)
+    (hκ'_sum : ∀ x, ∑ u, κ' x u = 1)
+    (hqStar : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    (ε : ℝ) (n : ℕ) (M : ℕ)
+    (c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)) :
+    { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+        (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
+          ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
+              ChannelCoding.iidXs ChannelCoding.iidYs n ε }
+      ⊆ { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+          c.decoder (c.encoder (fun j ↦ (p j).1))
+            ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs n ε } := by
+  have hmap := wz_covering_uMarginal_map_eq P_XY κ' qStar hκ'_pos hκ'_sum hqStar
+  -- `pmfLog` and `entropy` of the two `U`-marginals coincide (L0).
+  have hpmf : pmfLog (rdAmbient qStar)
+        (ChannelCoding.iidYs (α := {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (β := Fin k))
+      = pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          (ChannelCoding.iidXs (α := Fin k) (β := {y : β // 0 < ∑ x, P_XY.real {(x, y)}})) := by
+    funext u'
+    simp only [pmfLog]
+    rw [hmap]
+  have hent : entropy (rdAmbient qStar)
+        (ChannelCoding.iidYs (α := {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (β := Fin k) 0)
+      = entropy (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          (ChannelCoding.iidXs (α := Fin k) (β := {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) 0) := by
+    simp only [entropy]
+    rw [hmap]
+  have hset : typicalSet (rdAmbient qStar)
+        (ChannelCoding.iidYs (α := {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (β := Fin k)) n ε
+      = typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          (ChannelCoding.iidXs (α := Fin k) (β := {y : β // 0 < ∑ x, P_XY.real {(x, y)}})) n ε := by
+    unfold typicalSet
+    rw [hpmf, hent]
+  intro p hp
+  rw [Set.mem_setOf_eq, ChannelCoding.mem_jointlyTypicalSet_iff] at hp
+  obtain ⟨_, hu, _⟩ := hp
+  rw [Set.mem_setOf_eq, ← hset]
+  exact hu
+
+open ChannelCoding in
+/-- **(L2) `Y`-projection of the source product measure.** Pushing the source product measure
+`Measure.pi (pmfToMeasure P_XY{(x'.1, y)})` along the coordinatewise `Y`-projection gives the
+product of the source `Y`-law `(pmfToMeasure P_XY{(x'.1, y)}).map Prod.snd`. Direct
+`Measure.pi_map_pi`. -/
+private lemma wz_covering_src_yProj_eq_pi
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] (n : ℕ) :
+    (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+          P_XY.real {(p.1.1, p.2)}))).map (fun p (i : Fin n) ↦ (p i).2)
+      = Measure.pi (fun _ : Fin n ↦ (ChannelCoding.pmfToMeasure
+          (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+            P_XY.real {(p.1.1, p.2)})).map Prod.snd) := by
+  haveI : IsProbabilityMeasure (ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
+  haveI : IsProbabilityMeasure ((ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})).map
+        Prod.snd) := Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+  exact Measure.pi_map_pi (hμ := fun _ ↦ inferInstance) (fun _ ↦ measurable_snd.aemeasurable)
+
+open ChannelCoding in
+/-- **(L3) `Y`-band AEP under the source product measure.** For `n` large the source-measure
+mass of the `Y`-band failure — the side-information block `y` is not typical in the
+side-information ambient — is at most `tol/4`. A one-dimensional AEP on the iid `Y`-sequence
+(law `P_Y = ∑ₓ P_XY{(x, ·)}`), independent of the code `c` and of covering-success. Transports
+`typicalSet_prob_ge_of_rate` (the ℕ-process AEP) onto the source product measure via the
+`β'`↔`β` coercion, mirroring the `wz_source_codeword_sideInfo_mass_le` transport. -/
+private lemma wz_covering_yBand_aep
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ)
+    (hκ'_pos : ∀ x u, 0 < κ' x u)
+    (hκ'_sum : ∀ x, ∑ u, κ' x u = 1)
+    (ε : ℝ) (hε : 0 < ε) (tol : ℝ) (htol : 0 < tol) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
+      (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+          (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+            P_XY.real {(p.1.1, p.2)}))).real
+        { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+            (fun i ↦ (p i).2) ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+                (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                  ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε }
+        ≤ tol / 4 := by
+  sorry
+
+open ChannelCoding in
+/-- **(L4 — THE HARD KERNEL) Joint `(U,Y)`-band concentration.** For `n` large the
+source-measure mass of the event {covering-success ∧ the chosen word `U` and the side
+information `Y` are jointly `(U,Y)`-atypical} is at most `tol/4`. This is the correlated-joint
+conditional-typicality concentration — the Markov lemma. `U = c.decoder (c.encoder x)` is a
+function of the whole `x`-block, so `(U_i, Y_i)` is neither iid nor independent; the plain
+`aep_chebyshev_bound` (`Rate.lean:108`) does not apply. From-scratch in-project assembly, absent
+from Mathlib and the codebase. The consistency + full-support hypotheses (`hκ'_pos`, `hκ'_sum`,
+`hqStar`) are mandatory: without them the statement is false-as-framed (a constant-word
+counterexample; see the inner-lemma docstring). Left `sorry` — a separate leg builds it.
+@residual(plan:wz-binning-covering) -/
+private lemma wz_covering_jointBand_concentration
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (ε : ℝ) (hε : 0 < ε) (tol : ℝ) (htol : 0 < tol)
+    (hκ'_pos : ∀ x u, 0 < κ' x u)
+    (hκ'_sum : ∀ x, ∑ u, κ' x u = 1)
+    (hqStar : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (M : ℕ)
+        (c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
+        (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+              P_XY.real {(p.1.1, p.2)}))).real
+          ({ p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
+              ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
+                  ChannelCoding.iidXs ChannelCoding.iidYs n ε }
+            ∩ { p | (fun i ↦ (c.decoder (c.encoder (fun j ↦ (p j).1)) i, (p i).2))
+                ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+                    (ChannelCoding.jointSequence ChannelCoding.iidXs
+                      (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                        ((ChannelCoding.iidYs i ω :
+                            {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))) n ε })
+          ≤ tol / 4 := by
+  sorry
 
 /-! ## Gateway atom 3 (Leg F) — covering chosen-word side-information acceptance (Markov lemma)
 
@@ -1079,7 +1415,73 @@ private lemma wz_covering_markov_concentration
                   ChannelCoding.iidXs ChannelCoding.iidYs n ε }
             ∩ wzCoveringAcceptFailSet P_XY κ' c ε)
           ≤ tol / 2 := by
-  sorry
+  classical
+  obtain ⟨N_Y, hN_Y⟩ := wz_covering_yBand_aep P_XY κ' hκ'_pos hκ'_sum ε hε tol htol
+  obtain ⟨N_J, hN_J⟩ :=
+    wz_covering_jointBand_concentration P_XY κ' qStar ε hε tol htol hκ'_pos hκ'_sum hqStar
+  refine ⟨max N_Y N_J, fun n hn M c ↦ ?_⟩
+  have hn_Y : N_Y ≤ n := (le_max_left _ _).trans hn
+  have hn_J : N_J ≤ n := (le_max_right _ _).trans hn
+  have hyf := hN_Y n hn_Y
+  have hjf := hN_J n hn_J M c
+  haveI hQ_prob : IsProbabilityMeasure (ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
+  set SRC : Measure (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
+    Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
+    with hSRC_def
+  haveI hSRC_prob : IsProbabilityMeasure SRC := by rw [hSRC_def]; infer_instance
+  -- Name the covering-success event and the three band-failure witnesses.
+  set Ecov : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
+    { p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
+        ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
+            ChannelCoding.iidXs ChannelCoding.iidYs n ε } with hEcov_def
+  set Euf : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
+    { p | c.decoder (c.encoder (fun j ↦ (p j).1))
+        ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs n ε }
+    with hEuf_def
+  set Eyf : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
+    { p | (fun i ↦ (p i).2) ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+        (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+          ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε }
+    with hEyf_def
+  set Ejf : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
+    { p | (fun i ↦ (c.decoder (c.encoder (fun j ↦ (p j).1)) i, (p i).2))
+        ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+            (ChannelCoding.jointSequence ChannelCoding.iidXs
+              (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))) n ε }
+    with hEjf_def
+  -- De Morgan: covering-success ∩ acceptance-failure splits along the three bands.
+  have hincl : Ecov ∩ wzCoveringAcceptFailSet P_XY κ' c ε
+      ⊆ (Ecov ∩ Euf) ∪ Eyf ∪ (Ecov ∩ Ejf) := by
+    intro p hp
+    obtain ⟨hcov, hfail⟩ := hp
+    rw [wzCoveringAcceptFailSet, Set.mem_setOf_eq,
+      ChannelCoding.mem_jointlyTypicalSet_iff] at hfail
+    by_cases hu : c.decoder (c.encoder (fun j ↦ (p j).1))
+        ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs n ε
+    · by_cases hy : (fun i ↦ (p i).2) ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+            ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε
+      · exact Or.inr ⟨hcov, fun hjt ↦ hfail ⟨hu, hy, hjt⟩⟩
+      · exact Or.inl (Or.inr hy)
+    · exact Or.inl (Or.inl ⟨hcov, hu⟩)
+  -- The `U`-band-failure part is empty on covering-success (L1).
+  have hEmpty : Ecov ∩ Euf = ∅ := by
+    rw [Set.eq_empty_iff_forall_notMem]
+    rintro p ⟨hcov, huf⟩
+    exact huf (wz_covering_success_subset_uTypical P_XY κ' qStar hκ'_pos hκ'_sum hqStar ε n M c hcov)
+  have h1 : SRC.real (Ecov ∩ Euf) = 0 := by rw [hEmpty, measureReal_empty]
+  have hunion1 : SRC.real ((Ecov ∩ Euf) ∪ Eyf ∪ (Ecov ∩ Ejf))
+      ≤ SRC.real ((Ecov ∩ Euf) ∪ Eyf) + SRC.real (Ecov ∩ Ejf) := measureReal_union_le _ _
+  have hunion2 : SRC.real ((Ecov ∩ Euf) ∪ Eyf)
+      ≤ SRC.real (Ecov ∩ Euf) + SRC.real Eyf := measureReal_union_le _ _
+  have hmono : SRC.real (Ecov ∩ wzCoveringAcceptFailSet P_XY κ' c ε)
+      ≤ SRC.real ((Ecov ∩ Euf) ∪ Eyf ∪ (Ecov ∩ Ejf)) :=
+    measureReal_mono hincl (measure_ne_top _ _)
+  linarith [hyf, hjf, h1, hunion1, hunion2, hmono]
 
 open ChannelCoding in
 /-- **(Leg F gateway atom) Covering chosen-word side-information acceptance (Markov lemma).**
@@ -2503,100 +2905,6 @@ lemma rdAmbient_map_snd_jointSequence (q : A × B → ℝ) (hq : q ∈ stdSimple
   rw [rdAmbient_map_jointSequence q hq, rdAmbient_map_iidYs q hq]
 
 end LegAAmbientRegularity
-
-lemma wzSideInfoMarginal_pos
-    (P_XY : Measure (α × β)) {k : ℕ} (κ' : α → Fin k → ℝ)
-    (hκ'pos : ∀ x u, 0 < κ' x u) :
-    ∀ p, 0 < wzSideInfoMarginal P_XY κ' p := by
-  intro p
-  have hpos_sum : 0 < ∑ x, P_XY.real {(x, p.2.1)} := p.2.2
-  show 0 < ∑ x, κ' x p.1 * P_XY.real {(x, p.2.1)}
-  refine Finset.sum_pos' (fun x _ ↦ mul_nonneg (hκ'pos x p.1).le measureReal_nonneg) ?_
-  by_contra h
-  push_neg at h
-  refine absurd hpos_sum (not_lt.mpr ?_)
-  refine le_of_eq (Finset.sum_eq_zero fun x _ ↦ ?_)
-  by_contra hx
-  exact absurd (mul_pos (hκ'pos x p.1)
-    (lt_of_le_of_ne measureReal_nonneg (Ne.symm hx))) (not_lt.mpr (h x (Finset.mem_univ x)))
-
-lemma wzSideInfoMarginal_sum_eq_one
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] {k : ℕ} (κ' : α → Fin k → ℝ)
-    (hκ'sum : ∀ x, ∑ u, κ' x u = 1) :
-    ∑ p, wzSideInfoMarginal P_XY κ' p = 1 := by
-  classical
-  -- The `Y`-marginal at `x`, summed over the positive-`Y`-marginal subtype, equals the
-  -- full `Y`-marginal (the excluded `y` carry zero mass).
-  have hsubtype : ∀ x : α,
-      ∑ ys : {y : β // 0 < ∑ x', P_XY.real {(x', y)}}, P_XY.real {(x, ys.1)}
-        = ∑ y : β, P_XY.real {(x, y)} := by
-    intro x
-    letI : DecidablePred (fun y : β => 0 < ∑ x', P_XY.real {(x', y)}) :=
-      Classical.decPred _
-    rw [← Finset.sum_subtype
-        (Finset.univ.filter (fun y : β => 0 < ∑ x', P_XY.real {(x', y)}))
-        (fun y => by simp) (fun y => P_XY.real {(x, y)})]
-    refine Finset.sum_subset (Finset.filter_subset _ _) ?_
-    intro y _ hy
-    rw [Finset.mem_filter] at hy
-    push_neg at hy
-    have hle : ∑ x', P_XY.real {(x', y)} ≤ 0 := hy (Finset.mem_univ y)
-    have hz : ∑ x', P_XY.real {(x', y)} = 0 :=
-      le_antisymm hle (Finset.sum_nonneg fun _ _ ↦ measureReal_nonneg)
-    exact (Finset.sum_eq_zero_iff_of_nonneg (fun _ _ ↦ measureReal_nonneg)).mp hz x
-      (Finset.mem_univ x)
-  -- Total mass over `α × β` is `1`.
-  have hsum1 : ∑ p : α × β, P_XY.real {p} = 1 := by
-    have h1 : (∑ p : α × β, P_XY.real {p}) = P_XY.real (Finset.univ : Finset (α × β)) := by
-      simp [sum_measureReal_singleton]
-    rw [h1, Finset.coe_univ, probReal_univ]
-  show ∑ p : Fin k × {y : β // 0 < ∑ x', P_XY.real {(x', y)}},
-      ∑ x, κ' x p.1 * P_XY.real {(x, p.2.1)} = 1
-  rw [Fintype.sum_prod_type]
-  have hstep : ∀ u : Fin k,
-      ∑ ys : {y : β // 0 < ∑ x', P_XY.real {(x', y)}}, ∑ x, κ' x u * P_XY.real {(x, ys.1)}
-        = ∑ x, κ' x u * ∑ y : β, P_XY.real {(x, y)} := by
-    intro u
-    rw [Finset.sum_comm]
-    refine Finset.sum_congr rfl (fun x _ ↦ ?_)
-    rw [← Finset.mul_sum, hsubtype x]
-  simp_rw [hstep]
-  rw [Finset.sum_comm]
-  have hstep2 : ∀ x : α,
-      ∑ u : Fin k, κ' x u * ∑ y : β, P_XY.real {(x, y)} = ∑ y : β, P_XY.real {(x, y)} := by
-    intro x
-    rw [← Finset.sum_mul, hκ'sum x, one_mul]
-  simp_rw [hstep2]
-  rw [Fintype.sum_prod_type] at hsum1
-  exact hsum1
-
-lemma wzSideInfoMarginal_mem_stdSimplex
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] {k : ℕ} (κ' : α → Fin k → ℝ)
-    (hκ'pos : ∀ x u, 0 < κ' x u) (hκ'sum : ∀ x, ∑ u, κ' x u = 1) :
-    wzSideInfoMarginal P_XY κ'
-      ∈ stdSimplex ℝ (Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) :=
-  ⟨fun p ↦ (wzSideInfoMarginal_pos P_XY κ' hκ'pos p).le,
-    wzSideInfoMarginal_sum_eq_one P_XY κ' hκ'sum⟩
-
-lemma wzSideInfoMarginal_subtype_nonempty
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] :
-    Nonempty {y : β // 0 < ∑ x, P_XY.real {(x, y)}} := by
-  have hsum1 : ∑ p : α × β, P_XY.real {p} = 1 := by
-    have h1 : (∑ p : α × β, P_XY.real {p}) = P_XY.real (Finset.univ : Finset (α × β)) := by
-      simp [sum_measureReal_singleton]
-    rw [h1, Finset.coe_univ, probReal_univ]
-  obtain ⟨x₀, y₀, hxy⟩ : ∃ x y, 0 < P_XY.real {(x, y)} := by
-    by_contra h
-    push_neg at h
-    have hzero : ∑ p : α × β, P_XY.real {p} = 0 :=
-      Finset.sum_eq_zero fun p _ ↦ le_antisymm (h p.1 p.2) measureReal_nonneg
-    rw [hsum1] at hzero
-    exact one_ne_zero hzero
-  refine ⟨⟨y₀, ?_⟩⟩
-  calc (0 : ℝ) < P_XY.real {(x₀, y₀)} := hxy
-    _ ≤ ∑ x, P_XY.real {(x, y₀)} :=
-        Finset.single_le_sum (f := fun x => P_XY.real {(x, y₀)})
-          (fun x _ ↦ measureReal_nonneg) (Finset.mem_univ x₀)
 
 /-! ### Leg B — `α' → α` source-measure change of variables
 
