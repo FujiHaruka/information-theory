@@ -5572,18 +5572,43 @@ mainline target for the next build leg (Session C). (1) Signature honest: body i
 (`hκ'_pos`/`hκ'_sum` = full-support proper-pmf regularity; `hqStar` = qStar–κ' definitional
 consistency), NOT the acceptance conclusion — the core-reconstruction test fails to hand over the
 `(u,y)`-typicality; the conditional-AEP (Markov-lemma) concentration stays entirely in the `sorry`.
-(3) Sufficiency (NOT false-as-framed): the three hyps are PRESENT and SUFFICIENT — the constant-word
-`c ≡ u₀ⁿ` + `qStar := P_X ⊗ δ_{u₀}` counterexample DIES: `hκ'_pos` forbids κ' being a point mass, and
-under `hqStar`+`hκ'_sum` qStar's U-marginal is pinned `= P_U = ` wzSideInfoMarginal's U-marginal, so
-the constant word's empirical conditional `δ_{u₀} ≠` full-support κ'(x)(·) → `(x, u₀ⁿ)` is not
-qStar-jointly typical → covering-success fails → intersection is empty ≤ tol/8. No other adversarial
-full-support κ'/c survives: the residual Markov lemma U—X—Y (`u = f(x-block) ⊥ y | x`) is a genuine
-theorem for all full-support κ'/c. (4) Class `plan` CORRECT: the correlated-joint conditional-AEP
+(3) Sufficiency: RETRACTED (2026-07-12c independent re-audit) — this lemma is UNDER-HYPOTHESIZED
+(false-as-framed) under the in-project WEAK (entropy-only) `typicalSet`/`jointlyTypicalSet`, whose
+membership is the single scalar `|(∑ −log-mass)/n − H| < ε`, NOT a per-symbol type pin. The three
+hyps pin qStar's U-marginal (killing the constant-word `c ≡ u₀ⁿ` case: `δ_{u₀}` fails the U-marginal
+ENTROPY condition, empirical U-entropy 0 ≠ H(P_U) = log 2) but do NOT pin the empirical joint
+conditional type in TOTAL VARIATION. LABEL-SWAP COUNTEREXAMPLE (independently recomputed 2026-07-12c):
+α'=β={0,1}, k=2, P_X=(½,½), P(y|x)=BSC(0.9), full-support κ'(·|0)=(0.9,0.1)/κ'(·|1)=(0.1,0.9),
+qStar(x,u)=κ'(x)(u)·P_X(x). Adversary picks M=2ⁿ, an injective encoder, and a decoder realizing
+u=g(x-block) whose empirical conditional is label-swapped ν(·|0)=(0.1,0.9)/ν(·|1)=(0.9,0.1)
+(realizable block-wise: within the x_i=0 coords assign u=1 to 90%/u=0 to 10%, symmetrically for
+x_i=1). The swap is an ENTROPY-PRESERVING RELABELING: x-marginal, U-marginal (0.5,0.5) and joint (x,u)
+type (same probability multiset {0.45,0.05,0.05,0.45} as qStar) are all preserved, so ALL THREE weak
+covering-entropy conditions still pass → Ecov holds (∏P_X-mass→1); Exytyp (an (x,y)-only band) holds
+regardless. Yet the (u,y) empirical type ρ_UY=∑ₓ ν(x)(u)P_XY(x,y)={0.09,0.41,0.41,0.09} has
+cross-entropy CE(ρ_UY, wsm)≈2.135 nats ≠ H(wsm)≈1.165 nats → (u,y) atypical → Euy holds →
+{Ecov ∩ Exytyp ∩ Euy}→1 ≫ tol/8. ROOT CAUSE: Atom C `wz_wsm_negLog_mean_eq_entropy` gives
+⟨qStar-consistent-weight, g⟩ = H(wsm) (g(x,u)=∑_y P(y|x)(−log wsm(u,y))) only under the CONSISTENT
+weight; weak Ecov pins only the ENTROPY of type_xu, not type_xu in TV, so M(xb)=⟨type_xu, g⟩ is NOT
+pinned to H(wsm). The 2026-07-12/07-12b audits examined only the constant-word case and MISSED this
+entropy-preserving relabel. (4) Class `plan` CORRECT: the correlated-joint conditional-AEP
 UPPER concentration is a from-scratch in-project assembly, not a Mathlib wall — the nearest in-tree
 ingredient `conditionalStronglyTypicalSlice_mass_ge` (`ConditionalMethodOfTypes/Mass.lean:1274`) is a
 `_mass_ge` LOWER bound on the INDEPENDENT-product Ys law (wrong direction + measure, not a drop-in),
 and `conditionalTypicalSlice_card_le` (SlepianWolf) is a slice-cardinality bound, not the SRC-measure
 mass concentration. No deprecated tags; slug `wz-binning-covering` is the intended family-wide child.
+
+DEFECT (2026-07-12c, STATEMENT-level under-hypothesis; the body stays HONEST): the `sorry` body is
+honest (not `:= h`, no `*Hypothesis`/predicate bundling) — the defect is in the STATEMENT (the
+signature is under-hypothesized), NOT the body, so it cannot be repaired by editing the body. Identified
+fix = Proposal A: strengthen ONLY the covering-success event Ecov to STRONG joint typicality
+(`stronglyTypicalSet`, `StrongTypicality.lean:58`; `jointStronglyTypicalSet_indep_prob_ge`,
+`AchievabilityJointStrongTypicality.lean:29`), which pins type_xu per-symbol in TV
+(`∀ a, |typeCount/n − P(a)| ≤ ε`) and rules out the label-swap; Euy/Exytyp may stay weak. Deferred
+pending user judgment (a strategic def change that reopens the covering lower bound). The existing
+`@residual(plan:wz-binning-covering)` is KEPT (open residual, class `plan`) — the correlated-joint
+Markov concentration remains the closure target once Ecov is fixed.
+@audit:defect(false-statement)
 @residual(plan:wz-binning-covering) -/
 private lemma wz_covering_jointBand_markov_core
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -5629,17 +5654,30 @@ AUDIT VERDICT 2026-07-12 (independent honesty audit, HEAD `cca95d1c`): PASS, HON
 the three threaded hyps are preconditions (`hκ'_pos`/`hκ'_sum` = full-support proper pmf regularity;
 `hqStar` = qStar–κ' definitional consistency), NOT the acceptance conclusion — granting them does
 NOT hand over the correlated-joint concentration; the Markov-lemma content stays entirely in the
-`sorry`. (3) Sufficiency (NOT false-as-framed): the three hyps are PRESENT in the param list AND
-sufficient — the constant-word `c ≡ u₀ⁿ` + `qStar := P_X ⊗ δ_{u₀}` counterexample DIES: `hκ'_pos`
-forbids κ' being a point mass, and under `hqStar`+`hκ'_sum` qStar's U-marginal is forced `= P_U`,
-so u₀ⁿ has empirical conditional `δ_{u₀} ≠` full-support κ'(x)(·) and (X, u₀ⁿ) is not qStar-jointly
-typical → covering-success fails → intersection → 0 ≤ tol/4. No other adversarial κ'/c survives
-(qStar is pinned, the residual Markov lemma U—X—Y is a genuine theorem for all full-support κ'/c).
+`sorry`. (3) Sufficiency: RETRACTED (2026-07-12c independent re-audit) — this outer lemma INHERITS the
+core's false-as-framed defect. Its body is a genuine reduction (case split + union bound) consuming
+`wz_covering_jointBand_markov_core` (whose `sorry` is the core bound) and `wz_covering_xyBand_aep`; it
+is NOT `:= h` and NOT bundled — but the conclusion {Ecov ∩ Euy} ≤ tol/4 is derived from a
+false-as-framed lemma, so it is itself false-as-framed under the WEAK (entropy-only) typicalSet. The
+same LABEL-SWAP COUNTEREXAMPLE (see the core lemma docstring: BSC(0.9), full-support
+κ'(·|0)=(0.9,0.1)/(·|1)=(0.1,0.9), adversary injective encoder + label-swap decoder ν=swap(κ')) is an
+entropy-preserving relabel: Ecov holds (∏P_X-mass→1, all three weak covering entropies preserved) and
+Euy holds ((u,y) empirical type ρ_UY has CE(ρ_UY,wsm)≈2.135 ≠ H(wsm)≈1.165) → {Ecov ∩ Euy}→1 ≫ tol/4.
+The three hyps pin qStar's U-marginal (killing the constant-word case) but do NOT pin the empirical
+joint conditional type in TV. The 2026-07-12 audit examined only the constant-word case and MISSED the
+entropy-preserving relabel.
 (4) Class `plan` CORRECT: the correlated-joint conditional-typicality (Markov-lemma) UPPER
 concentration is a from-scratch in-project assembly, not a Mathlib wall; the only in-project
 ingredient `conditionalStronglyTypicalSlice_mass_ge` (Mass.lean:1274) is a `_mass_ge` LOWER bound on
-the INDEPENDENT-product Ys law (wrong direction + measure, not a drop-in). Ready for the Session B
-builder.
+the INDEPENDENT-product Ys law (wrong direction + measure, not a drop-in).
+
+DEFECT (2026-07-12c, STATEMENT-level under-hypothesis inherited from the core; body stays HONEST): the
+reduction body is honest (no `:= h`, no `*Hypothesis`/predicate bundling) — the defect is in the
+STATEMENT, propagated from `wz_covering_jointBand_markov_core`. Identified fix = Proposal A (strengthen
+ONLY the covering-success event Ecov to STRONG joint typicality; see the core lemma docstring), deferred
+pending user judgment (a strategic def change that reopens the covering lower bound). The existing
+`@residual(plan:wz-binning-covering)` is KEPT (open residual, class `plan`).
+@audit:defect(false-statement)
 @residual(plan:wz-binning-covering) -/
 private lemma wz_covering_jointBand_concentration
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
