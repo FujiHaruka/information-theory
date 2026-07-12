@@ -3,6 +3,12 @@
 A Lean 4 + [Mathlib](https://github.com/leanprover-community/mathlib4) formalization of
 Shannon information theory, following Cover & Thomas, *Elements of Information Theory*.
 
+## Entirely agent-authored
+
+The defining property of this project: **every proof was written entirely by a coding
+agent** (Claude Code), with no human-written proof steps. Each proof is machine-checked by
+Lean, so its correctness holds independently of who — or what — wrote it.
+
 ## Formalized results
 
 Selected headline theorems, organized after the chapters of Cover & Thomas. Every result
