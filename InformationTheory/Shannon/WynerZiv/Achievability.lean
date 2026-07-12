@@ -3649,8 +3649,7 @@ encoder radius `ε_join` (drives covering-success via
 the shared vanishing upper `(P_X n){Xⁿ ∉ T*_X} + exp(-Mₙ·exp(-n(I+slack)))`; the pigeonhole
 `exists_codebook_low_avg` on their sum extracts one codebook small for both. The encoder
 radius `ε_join` is chosen `≤ wzCoveringStrongRadius P_XY κ' ε` and small against the three
-`logSumAbs` widths, so the radius bridge applies.
-@residual(plan:wz-binning-covering) -/
+`logSumAbs` widths, so the radius bridge applies. Proved sorry-free. -/
 private lemma wz_covering_lossyCode_joint_exists
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} [Nonempty (Fin k)] [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
@@ -4122,34 +4121,24 @@ Wyner–Ziv `E2` error event (`C2 ⊆ E2`), a precondition-exposure of the cover
 property (same kind as the covering-size cap `hM_ub` / Leg C.6), threaded to
 `wz_exists_binning_E2_bound` (A3) and discharged by construction — NOT the operational
 conclusion (the `distortionMax d` scaling only sizes the tolerance so `dMax · Pr[C2]` is
-absorbable; the E2b confusion crux stays in A3). The discharge (joint distortion +
-acceptance derandomize with the S5a `(1-p)^M₁` → `codebookMeasure`-average `Fubini` bridge,
-fed the gateway-2 acceptance mass lower bound `wz_covering_sideInfo_mass_ge`) is the residual
-`sorry`; the A3-fill leg closes it.
+absorbable; the E2b confusion crux stays in A3).
 
-Independent honesty audit 2026-07-12 (Leg E pinned-ε rework): PASS. The exported
-covering-acceptance conjunct is now UNIVERSALLY quantified per radius (`… ∀ ε, 0 < ε → ∃ N …`),
-NOT a free `∃ ε` inside the code existential (grep-confirmed: no `∃ ε` remains). The mass bound
-`≤ δ/(8·(distortionMax d+1))` at each fixed `ε` is a genuine (TRUE-as-framed) residual: by AEP
-the true covering word's joint-typicality-failure mass → 0 as `n → ∞` for every fixed `ε > 0`,
-so `N` may depend on `ε` (the `∀ ε, ∃ N` shape is honest, non-vacuous). The whole covering
-`LossyCode` family existential (distortion `≤ (D+δ)+ε'` AND acceptance) is deferred to the
-single `sorry` because a distortion-only witness (`wz_covering_lossyCode_exists`) need not be
-acceptance-good — the joint S5a/gateway-2 (`wz_covering_sideInfo_mass_ge`) Fubini derandomize
-is the residual analytic work, correctly classified `@residual(plan:wz-binning-covering)`
-(in-project construction, not a Mathlib wall). D3 instantiates this `∀ ε` at the shared
-`ε := gap/6` threaded into A3's decoder radius.
-
-CAVEAT on the discharge path (2026-07-12c independent audit): this atom stays an HONEST `sorry` and
-its `∃ c` acceptance conjunct is TRUE-as-framed (the atom PICKS the covering code, and a
-strong-typical covering code satisfies the WEAK `wzCoveringAcceptFailSet` bound, since strong ⟹
-entropy typicality), so it carries no false honesty claim. BUT the currently-planned wiring discharge
-runs through `wz_covering_chosenWord_sideInfo_typical` / `wz_covering_markov_concentration`, which are
-false-as-framed under the WEAK (entropy-only) typicality (root defect:
-`wz_covering_jointBand_markov_core`, label-swap counterexample). Wiring the current weak-Ecov chain
-does NOT close this `sorry`; Proposal A (strengthen the covering-success event Ecov to STRONG joint
-typicality; see the core lemma docstring) is a prerequisite for a sound discharge.
-@residual(plan:wz-binning-covering) -/
+CLOSED sorry-free (Atom G, joint derandomize). The covering-acceptance conjunct is discharged by
+the joint derandomize `wz_covering_lossyCode_joint_exists`, which produces — for the SAME code — a
+low block distortion (`≤ (D+δ)+ε'`) AND a small strong-covering-failure mass
+(`SRC(wzCoveringSuccessStrong)ᶜ ≤ tol/2`). The strong-`Ecov` Markov-core leaf
+`wz_covering_chosenWord_sideInfo_typical` then turns that covering-success complement bound into the
+acceptance-failure bound `≤ tol = δ/(8·(distortionMax d + 1))`. The joint derandomize couples the
+distortion-typicality failure (drives block distortion via `source_avg_distortion_le_simpler_generic`)
+and the strong-joint-typicality failure at the encoder radius `ε_join` (drives covering-success via
+`wz_coveringSuccessStrong_compl_measureReal_le` + the measure alignment `wz_covering_SRC_map_Xproj_eq`
+and radius bridge `wz_jointStrongly_mem_coveringSuccessJoint`): both codebook-averaged failures are
+bounded by the shared vanishing upper `(P_X n){Xⁿ ∉ T*_X} + exp(-Mₙ·exp(-n(I+slack)))`, and
+`exists_codebook_low_avg` on their sum extracts one codebook good for both. The strong covering-success
+lower bound rests on the gateway `wz_covering_strongTypical_indep_mass_ge` (the WZ instance of
+`jointStronglyTypicalSet_indep_prob_ge`). The earlier weak-`Ecov` wiring concern is moot: the covering
+success event is now `wzCoveringSuccessStrong` (strong-at-`ε_cov` ∩ weak-at-`ε`), which makes the
+Markov-core chain true-as-framed. -/
 private lemma wz_coveringFamily_of_testChannel
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
@@ -4227,23 +4216,27 @@ private lemma wz_coveringFamily_of_testChannel
           * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ))),
     hq'eq, hκ'pos, hκ'sum, hobj', fun _ => rfl, hqStar_pos, hqStar_mem, hfeas,
     (fun _ _ => rfl), hqf₀, ?_⟩
-  -- The covering `LossyCode` family must now be good for BOTH the covering distortion
-  -- (component atom `wz_covering_lossyCode_exists`, a distortion-only derandomize via
-  -- `rate_distortion_achievability`) AND the covering-acceptance failure C2. The
-  -- acceptance bound is supplied by the strong-`Ecov` Markov-core leaf
-  -- `wz_covering_chosenWord_sideInfo_typical` (file tail): given a code whose covering-success
-  -- mass complement `SRC.real (wzCoveringSuccessStrong …)ᶜ` is `≤ tol/2`, the leaf gives
-  -- `SRC.real (wzCoveringAcceptFailSet …) ≤ tol`. The remaining Atom-G work is the JOINT
-  -- (distortion + covering-success) derandomize: a single code good for distortion AND
-  -- covering-success. The covering-success side rests on the now-staged strong-typical
-  -- per-codeword mass lower bound `wz_covering_strongTypical_indep_mass_ge` (gateway-atom-first,
-  -- sorryAx-free; the WZ instance of `jointStronglyTypicalSet_indep_prob_ge`), fed through a
-  -- strong analog of the covering-failure decay `wz_covering_failure_prob_le` +
-  -- `exists_codebook_low_avg`. Consuming the tail leaf here additionally needs a physical
-  -- reorder (the leaf and its chain currently follow this atom); both are plumbing, not a
-  -- Mathlib wall (gateway confirmed). Kept an honest `sorry` pending that wiring.
-  -- @residual(plan:wz-binning-covering)
-  sorry
+  -- The covering `LossyCode` family is good for BOTH the covering distortion AND the
+  -- covering-acceptance failure C2, via the joint derandomize `wz_covering_lossyCode_joint_exists`
+  -- (one code with low block distortion AND small strong-covering-failure mass) fed through the
+  -- strong-`Ecov` Markov-core leaf `wz_covering_chosenWord_sideInfo_typical`: the leaf turns the
+  -- covering-success complement bound `≤ tol/2` into the acceptance-failure bound `≤ tol`.
+  intro R₁ hR₁ ε' hε' ε hε
+  set tolAcc : ℝ := δ / (8 * (distortionMax d + 1)) with htolAcc_def
+  have htolAcc_pos : 0 < tolAcc := by
+    rw [htolAcc_def]
+    exact div_pos hδ (by have := distortionMax_nonneg d; positivity)
+  have hqStar_eq : ∀ p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k,
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k =>
+        κ' p.1.1 p.2 * ∑ y : β, P_XY.real {(p.1.1, y)}) p
+        = κ' p.1.1 p.2 * ∑ y : β, P_XY.real {(p.1.1, y)} := fun _ => rfl
+  obtain ⟨N_leaf, hleaf⟩ := wz_covering_chosenWord_sideInfo_typical P_XY κ' _ ε hε
+    tolAcc htolAcc_pos hκ'pos hκ'sum hqStar_eq
+  obtain ⟨N_der, hder⟩ := wz_covering_lossyCode_joint_exists P_XY κ' hκ'sum _ hqStar_pos
+    hqStar_mem hqStar_eq _ hR₁ hfeas hε' hε (half_pos htolAcc_pos)
+  refine ⟨max N_leaf N_der, fun n hn ↦ ?_⟩
+  obtain ⟨M, hMlb, hMub, c, hdist, hcovfail⟩ := hder n (le_trans (le_max_right _ _) hn)
+  exact ⟨M, hMlb, hMub, c, hdist, hleaf n (le_trans (le_max_left _ _) hn) M c hcovfail⟩
 
 /-! ### Steps 3–7 decomposition (binning / decoder / error exponents / squeeze)
 
