@@ -123,6 +123,7 @@ import InformationTheory.Shannon.RateDistortion.AchievabilityStrongTypicality.Su
 import InformationTheory.Shannon.RateDistortion.AchievabilityStrongTypicality.FailureTendstoZero
 import InformationTheory.Shannon.RateDistortion.AchievabilityStrongTypicality
 import InformationTheory.Shannon.RateDistortion.AchievabilityUnconditional
+import InformationTheory.Shannon.RateDistortion.AchievabilityGeneralSource
 import InformationTheory.Shannon.ShannonCode.Basic
 import InformationTheory.Shannon.ShannonCode.KraftReverse
 import InformationTheory.Shannon.McMillanKraftBridge
