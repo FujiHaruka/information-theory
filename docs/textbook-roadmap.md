@@ -17,7 +17,7 @@ Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理
 - **Ch.9 AWGN operational 符号化定理** — achievability `awgn_achievability` + converse `awgn_converse` 両側 sorryAx-free。converse 3 壁 (mi-bridge / multivariate-mi / continuous-mi-chain-rule) は false-wall overturn、achievability は continuous AEP / sphere packing / Gaussian random codebook を `isAwgnTypicalityHypothesis` (regularity precondition のみ) で discharge。facts → `shannon/awgn-facts.md`。
 - **Ch.11 Chernoff converse / Cramér 下界** — `chernoff_converse` sorryAx-free (achievability `chernoff_lemma_achievability` の片割れ)、`cramer_lower_boundary_unconditional` sorryAx-free。
 - **Ch.13 LZ78** — headline `lz78_asymptotic_optimality_with_greedy` proof done (M3 achievability + M4 converse 両壁 closed)。
-- **Ch.15 Network IT** — MAC 容量領域 full closure (`mac_converse` + `mac_achievability` + reconciliation `mac_capacity_region_reconciliation`)、degraded BC (`bc_converse` + `bc_achievability`)、relay cut-set outer bound (`relay_cutset_outer_bound`)、**Wyner-Ziv operational main (`wyner_ziv_achievability` + `wyner_ziv_converse`)** すべて `@audit:ok`・sorryAx-free。MAC time-sharing 全凸包形 (L-MAC5) のみ scope-out (corner-point/per-letter 和形が target)。
+- **Ch.15 Network IT** — MAC 容量領域 full closure (`mac_converse` + `mac_achievability` + reconciliation `mac_capacity_region_reconciliation`)、degraded BC (`bc_converse` + `bc_achievability`)、relay cut-set outer bound (`relay_cutset_outer_bound`)、**Wyner-Ziv operational main (`wyner_ziv_achievability` + `wyner_ziv_converse`)** すべて `@audit:ok`・sorryAx-free。MAC time-sharing 全凸包形 (L-MAC5) も `mac_timesharing_capacity_region` (`@[entry_point]`、intersection 形) で proof done・sorryAx-free (2026-07-05 CLOSED、子 `mac-timesharing-plan.md` が SoT)。
 - **Ch.17 EPI 一般版** — 完全無条件 `entropyPowerExt_add_ge_unconditional` + a.c. 版 `entropy_power_inequality_of_ac` sorryAx-free。CT 17.9 Minkowski determinant `minkowskiDeterminantInequality` も Gaussian additivity から導出済。
 
 **残る真の scope-out (章内)**:
@@ -26,7 +26,7 @@ Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理
 
 **当初 scope-out だが genuine closure して復帰済 (Ch.10)**:
 
-- **Ch.10 operational achievability 無条件形** — `rate_distortion_achievability_operational` (`@[entry_point]`, sorryAx-free, `@audit:ok`)。既存 conditional `rate_distortion_achievability` の pass-through 仮説 (`hqStar_pos` / `h_jts_subset_dts` / slack 群) を全て内部で discharge。full-support source (`∀ a, 0 < P_X a`) は marginal 保存摂動の strict-positive 着地に要る regularity precondition (load-bearing でない、独立監査 PASS)。残るは full-support を落とした完全一般 source 版 (regularity 緩和、真の壁ではない)。詳細 → `rate-distortion-achievability-unconditional-plan.md`。
+- **Ch.10 operational achievability 無条件形** — `rate_distortion_achievability_operational` (`@[entry_point]`, sorryAx-free, `@audit:ok`)。既存 conditional `rate_distortion_achievability` の pass-through 仮説 (`hqStar_pos` / `h_jts_subset_dts` / slack 群) を全て内部で discharge。full-support source (`∀ a, 0 < P_X a`) は marginal 保存摂動の strict-positive 着地に要る regularity precondition (load-bearing でない、独立監査 PASS)。残るは full-support を落とした完全一般 source 版 (regularity 緩和、真の壁ではない、着手中 → `rate-distortion-achievability-general-source-plan.md`)。詳細 → `rate-distortion-achievability-unconditional-plan.md`。
 
 ## 完成判定 (DoD 2 段階 = 標準 B)
 
@@ -73,7 +73,8 @@ Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理
 **proof 層はほぼ全 closure 済**。scope 内で残るのは:
 
 - **教科書原稿 (層 3)**: genuine ✅ 章を prose 化する作業が主フロンティア (下記「次の一手」)。
-- **真の壁 (scope-out 確定・honest 開示)**: Ch.9 Nyquist 2W-DOF (`IsTwoWDegreesOfFreedom` load-bearing、`@residual(plan:whittaker-shannon-partial-moonshot-plan)`)、Ch.10 operational achievability。
+- **真の壁 (scope-out 確定・honest 開示)**: Ch.9 Nyquist 2W-DOF (`IsTwoWDegreesOfFreedom` load-bearing、`@residual(plan:whittaker-shannon-partial-moonshot-plan)`)。
+- **壁ではない frontier (regularity 緩和、着手中)**: Ch.10 operational achievability の完全一般 source 版 — 現行 `rate_distortion_achievability_operational` の full-support 前提 (`hP_supp`) を落とす。台 subtype 制限で full-support 版を適用し code を lift する量の壁クラス。詳細 → `rate-distortion-achievability-general-source-plan.md`。
 
 legacy migration は完了済 (active な `@audit:suspect/staged/defer` タグ 0 件、`@audit:closed-by-successor` project-wide 0 件、circular `:= h` defect 0 件)。
 
