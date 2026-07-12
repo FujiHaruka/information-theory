@@ -5903,8 +5903,16 @@ no finer structure — so coarser-than-needed is repaired. `C = ∑_p |wzCondMea
 gateway amplification constant verbatim (same index type). No other counterexample class survives (the
 mean-pin bound is universal over the `ε_cov`-ball); degenerate `C = 0` is consistent (`H(wsm) = 0 = M`,
 non-vacuous). `ε_cov` is a computed `def` term of `(P_XY, κ', ε)`, NOT a smuggled hypothesis; file
-type-checks, chain signatures fixed, headline `wyner_ziv_achievability` untouched. Body stays a genuine
-`sorry` (the conditional-AEP is the sole residual).
+type-checks, chain signatures fixed, headline `wyner_ziv_achievability` untouched.
+
+BUILD 2026-07-12e: this wrapper is now `sorry`-free. Its body discharges the outer reduction
+genuinely — Atom-A finite-Fubini split (`wz_srcBlock_condMeasure_split`), the total `x`-block mass
+`∑ xb ∏ P_X = 1` (`Fintype.prod_sum` + source-pmf normalisation), and the good/bad `x`-block
+dichotomy (bad `xb`: covering-success fails so the slice is empty; good `xb`: consumes the isolated
+conditional-AEP kernel). The SOLE remaining residual is the from-scratch conditional-AEP kernel
+`wz_covering_uyBand_condSlice_le` (`sorry`, `@residual(plan:wz-binning-covering)`): for a
+strong-covering `x`-block the conditional side-info mass of the `(U,Y)`-atypical slice is `≤ tol/8`
+(mean-pin `< ε/2` + conditional Chebyshev `δ = ε/2`).
 @residual(plan:wz-binning-covering) -/
 private lemma wz_covering_jointBand_markov_core
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
