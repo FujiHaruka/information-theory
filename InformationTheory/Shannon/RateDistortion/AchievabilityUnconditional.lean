@@ -561,7 +561,9 @@ perturbation (`rdPerturb`), the strong-to-distortion inclusion
 
 `hP_supp : ∀ a, 0 < P_X a` is a regularity precondition, not load-bearing: it is
 required only so the marginal-preserving perturbation toward `P_X ⊗ uniform_β`
-lands strictly positive; the operational content is proved internally. -/
+lands strictly positive; the operational content is proved internally.
+
+@audit:ok -/
 @[entry_point]
 theorem rate_distortion_achievability_operational
     (P_X : α → ℝ) (hP_pmf : P_X ∈ stdSimplex ℝ α) (hP_supp : ∀ a, 0 < P_X a)
