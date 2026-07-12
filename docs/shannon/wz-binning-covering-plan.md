@@ -97,7 +97,7 @@ E2-only 分解 (G2) は維持。`E2 = E2b(confusion, S5b) ∪ C2(acceptance, Mar
 
 ### Leg F — C2 covering-acceptance の残核 = Markov-core (mainline、active)
 
-> **Sub-plan**: [`wz-markov-core-plan.md`](wz-markov-core-plan.md) — conditional-AEP atom 分解 (mean-identity / finite Fubini / conditional Chebyshev / 組立)。
+> **Sub-plan**: [`wz-markov-core-plan.md`](wz-markov-core-plan.md) — conditional-AEP atom 分解 (mean-identity / finite Fubini / conditional Chebyshev / 組立)。**Atom C (mean-identity) + A (finite-Fubini disintegration) done sorry-free** (`ef34494a`/`95a07fa4`、disintegration 壁 CLOSED)、残 = Atom B (conditional Chebyshev bulk) → D (組立)。孫 plan が atom 状態の SoT。
 
 **proof-log**: yes (from-scratch concentration、再開根拠に必須)
 
