@@ -3425,6 +3425,69 @@ private lemma wz_covering_chosenWord_sideInfo_typical
   linarith [hprem, hinner, hunion]
 
 open ChannelCoding in
+/-- **(Atom G — radius bridge.)** Strong joint typicality at the small encoder radius `ε_enc`
+implies BOTH conjuncts of the covering-success event: the strong conjunct at the covering radius
+`ε_cov` (via `ε_enc ≤ ε_cov` and radius monotonicity) and the weak conjunct at `ε` (via the
+strong-to-weak inclusion `stronglyTypicalSet_subset_typicalSet`, whose widening constants are the
+three `logSumAbs` bounds). No `T_X` restriction is needed — the bridge is a pure set inclusion. -/
+private lemma wz_jointStrongly_mem_coveringSuccessJoint
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} [Nonempty (Fin k)] [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hmem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    {n : ℕ} (hn : 0 < n) {ε_enc ε_cov ε : ℝ} (hε_enc_nn : 0 ≤ ε_enc)
+    (h_le_cov : ε_enc ≤ ε_cov)
+    (hX : (Fintype.card (Fin k) : ℝ) * ε_enc
+            * logSumAbs (rdAmbient qStar) ChannelCoding.iidXs < ε)
+    (hY : (Fintype.card {x : α // 0 < ∑ y, P_XY.real {(x, y)}} : ℝ) * ε_enc
+            * logSumAbs (rdAmbient qStar) ChannelCoding.iidYs < ε)
+    (hJ : ε_enc * logSumAbs (rdAmbient qStar)
+            (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs) < ε)
+    (x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin n → Fin k)
+    (hxu : (x, u) ∈ jointStronglyTypicalSet (rdAmbient qStar)
+            ChannelCoding.iidXs ChannelCoding.iidYs n ε_enc) :
+    (x, u) ∈ jointStronglyTypicalSet (rdAmbient qStar)
+        ChannelCoding.iidXs ChannelCoding.iidYs n ε_cov
+      ∧ (x, u) ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
+        ChannelCoding.iidXs ChannelCoding.iidYs n ε := by
+  classical
+  haveI : IsProbabilityMeasure (rdAmbient qStar) := rdAmbient_isProbabilityMeasure qStar hmem
+  refine ⟨?_, ?_⟩
+  · -- Strong conjunct at the larger radius `ε_cov` (radius monotonicity).
+    rw [mem_jointStronglyTypicalSet_iff, mem_stronglyTypicalSet_iff] at hxu ⊢
+    exact fun p ↦ le_trans (hxu p) h_le_cov
+  · -- Weak conjunct: all three entropy bands via strong-to-weak inclusion.
+    rw [ChannelCoding.mem_jointlyTypicalSet_iff]
+    have hmarg_X := rdAmbient_map_fst_jointSequence qStar hmem
+    have hmarg_Y := rdAmbient_map_snd_jointSequence qStar hmem
+    refine ⟨?_, ?_, ?_⟩
+    · -- X-band.
+      have hXstrong : x ∈ stronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs n
+          ((Fintype.card (Fin k) : ℝ) * ε_enc) :=
+        jointStronglyTypicalSet_implies_X_stronglyTypical (rdAmbient qStar)
+          ChannelCoding.iidXs ChannelCoding.iidYs
+          (fun i ↦ ChannelCoding.measurable_iidXs i) (fun i ↦ ChannelCoding.measurable_iidYs i)
+          hmarg_X hn hε_enc_nn x u hxu
+      exact stronglyTypicalSet_subset_typicalSet (rdAmbient qStar) ChannelCoding.iidXs
+        (fun i ↦ ChannelCoding.measurable_iidXs i) hn hX hXstrong
+    · -- Y-band.
+      have hYstrong : u ∈ stronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidYs n
+          ((Fintype.card {x : α // 0 < ∑ y, P_XY.real {(x, y)}} : ℝ) * ε_enc) :=
+        jointStronglyTypicalSet_implies_Y_stronglyTypical (rdAmbient qStar)
+          ChannelCoding.iidXs ChannelCoding.iidYs
+          (fun i ↦ ChannelCoding.measurable_iidXs i) (fun i ↦ ChannelCoding.measurable_iidYs i)
+          hmarg_Y hn hε_enc_nn x u hxu
+      exact stronglyTypicalSet_subset_typicalSet (rdAmbient qStar) ChannelCoding.iidYs
+        (fun i ↦ ChannelCoding.measurable_iidYs i) hn hY hYstrong
+    · -- Joint-band.
+      have hJstrong : (fun i ↦ (x i, u i)) ∈ stronglyTypicalSet (rdAmbient qStar)
+          (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs) n ε_enc := hxu
+      exact stronglyTypicalSet_subset_typicalSet (rdAmbient qStar)
+        (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs)
+        (fun i ↦ ChannelCoding.measurable_jointSequence ChannelCoding.iidXs ChannelCoding.iidYs
+          ChannelCoding.measurable_iidXs ChannelCoding.measurable_iidYs i) hn hJ hJstrong
+
+open ChannelCoding in
 /-- **(Steps 1–2) Covering LossyCode family from a feasible test channel.**
 Perturbs the feasible factorisable test channel `qf` to a full-support kernel
 `κ'` (Step 1, `wz_fullKernelSupport_perturbation`), restricts the covering source
