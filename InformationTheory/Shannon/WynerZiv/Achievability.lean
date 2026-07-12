@@ -61,11 +61,11 @@ an obstruction — it is exactly the decomposition the error analysis wants.
 
 ## Implementation notes
 
-The remaining work is pure plumbing: threading these two exponents through the
-Wyner–Ziv error decomposition, splitting the rate as `R = I(X;U) − I(Y;U)`, and
-extracting a good codebook by the pigeonhole averaging `exists_codebook_low_avg`.
-The headline body is deferred to a follow-up leg and marked
-`@residual(plan:wyner-ziv-main-plan)`.
+The construction threads these two exponents through the Wyner–Ziv error
+decomposition, splits the rate as `R = I(X;U) − I(Y;U)`, and extracts a good
+codebook by the pigeonhole averaging `exists_codebook_low_avg`. The headline
+is proved sorry-free (`#print axioms wyner_ziv_achievability` =
+`[propext, Classical.choice, Quot.sound]`).
 -/
 
 namespace InformationTheory.Shannon
@@ -467,15 +467,12 @@ private lemma wz_tendsto_exp_mul_codebookSize_inv {c R : ℝ} (hcR : c < R) :
 
 The monolithic covering+binning body of `wz_goodCode_exists_of_testChannel` is
 decomposed into an ordered chain of sub-lemmas. The pure-regularity leaf
-`wz_restrictedCoveringJoint_pos` (S1) is proved here; the heavy covering /
-source-support / diagonalization steps
-(`wz_covering_lossyCode_exists`, `wz_expectedBlockDistortion_source_agree`,
-`wz_diagonalize_slack`) are now closed sorry-free (`@audit:ok`). The sole remaining
-residual is the per-`n` binning+covering assembly `wz_perN_covering_binning_code`
-(D3), carried transitively through the sorry-free reduction `wz_perDelta_codes_exist`
-and tagged `@residual(plan:wz-binning-covering)` (split-out child plan). Full support
-of the covering source stays proof-internal (restricted to the subtype
-`{x // 0 < P_X x}`), never a signature hypothesis. -/
+`wz_restrictedCoveringJoint_pos` (S1) is proved here; the covering / source-support /
+diagonalization steps (`wz_covering_lossyCode_exists`, `wz_expectedBlockDistortion_source_agree`,
+`wz_diagonalize_slack`) and the per-`n` binning+covering assembly
+`wz_perN_covering_binning_code` (D3) are all closed sorry-free. Full support of the
+covering source stays proof-internal (restricted to the subtype `{x // 0 < P_X x}`),
+never a signature hypothesis. -/
 
 /-- **(S1) Restricted covering joint, full support (leaf).** From a strictly
 positive row-stochastic kernel `κ'` and the source marginal `P_X x = ∑_y P_XY(x,y)`,
@@ -1479,7 +1476,7 @@ witness:
   {joint `(U,Y)`-band failure} has mass `≤ tol/4`. The correlated-joint conditional-typicality
   concentration (the Markov lemma); `U = c.decoder (c.encoder x)` is a function of the whole
   `x`-block, so `(U_i, Y_i)` is neither iid nor independent — a from-scratch in-project assembly
-  absent from Mathlib and the codebase. Left `sorry`, `@residual(plan:wz-binning-covering)`.
+  absent from Mathlib and the codebase. Closed sorry-free (Atom G, joint-derandomize construction).
 * **L5** — the assembly (the body of `wz_covering_markov_concentration`): `N := max N_Y N_J`,
   union bound over the three band-failures gives `0 + tol/4 + tol/4 = tol/2`.
 -/
@@ -2889,9 +2886,10 @@ failure (`hgood hyb.1.1.1`); (d) weighted-sums `∑ (∏P_X)·(≤tol/8) ≤ 1·
 
 CLOSURE 2026-07-12 (kernel closed `e4490dbb`): this wrapper and the entire Markov-core chain
 (kernel/outer/inner/leaf) are now machine-verified sorryAx-free
-(`#print axioms` = `[propext, Classical.choice, Quot.sound]`); the residual tag is dropped. The sole
-open `sorry` reaching `wyner_ziv_achievability` is now the Atom-G covering atom
-`wz_coveringFamily_of_testChannel`. A final closure audit (Atom H) will stamp `@audit:ok`. -/
+(`#print axioms` = `[propext, Classical.choice, Quot.sound]`). The covering atom
+`wz_coveringFamily_of_testChannel` (Atom G) was subsequently closed sorry-free as well
+(Atom H closure gate, `@audit:ok`), making the headline `wyner_ziv_achievability`
+sorryAx-free. -/
 private lemma wz_covering_jointBand_markov_core
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} (κ' : α → Fin k → ℝ)
@@ -3022,10 +3020,9 @@ the covering-success event is now `wzCoveringSuccessStrong P_XY κ' qStar c ε` 
 `jointStronglyTypicalSet` ∩ weak `jointlyTypicalSet`), which excludes the entropy-preserving label-swap
 counterexample via the strong per-symbol type pin (see the core lemma
 `wz_covering_jointBand_markov_core`). This outer reduction (case split + union bound) now consumes the
-TRUE-as-framed core bound, so {covering-success ∩ Euy} ≤ tol/4 is true-as-framed. The reduction body is
-sorry-free; the sole residual is inherited from the core's genuine `sorry`, classified
-`@residual(plan:wz-binning-covering)`.
-@residual(plan:wz-binning-covering) -/
+TRUE-as-framed core bound, so {covering-success ∩ Euy} ≤ tol/4 is true-as-framed. The reduction body
+is sorry-free, and the core `wz_covering_jointBand_markov_core` was subsequently closed sorry-free
+(`e4490dbb`), so this lemma carries no residual. -/
 private lemma wz_covering_jointBand_concentration
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} (κ' : α → Fin k → ℝ)
@@ -3177,10 +3174,9 @@ counterexample (its per-symbol joint type differs from `qStar`, see the core lem
 conjunct keeps the `Ecov ∩ Euf = ∅` step (`wz_covering_success_subset_uTypical` via
 `wzCoveringSuccessStrong_subset_weak`) working at radius `ε`. This inner reduction (De Morgan split +
 union bound over the three acceptance bands) now consumes the TRUE-as-framed outer/core bounds, so
-{covering-success ∩ acceptance-failure} ≤ tol/2 is true-as-framed. The reduction body is sorry-free;
-the sole residual is inherited from the core's genuine `sorry`, classified
-`@residual(plan:wz-binning-covering)`.
-@residual(plan:wz-binning-covering) -/
+{covering-success ∩ acceptance-failure} ≤ tol/2 is true-as-framed. The reduction body is sorry-free,
+and the core `wz_covering_jointBand_markov_core` was subsequently closed sorry-free (`e4490dbb`), so
+this lemma carries no residual. -/
 private lemma wz_covering_markov_concentration
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} (κ' : α → Fin k → ℝ)
@@ -3359,10 +3355,10 @@ covering premise `hprem` is now the mass of the complement of `wzCoveringSuccess
 is TRUE-as-framed under the strong covering event (the strong per-symbol type pin excludes the label
 swap; see the core lemma). So the leaf conclusion (acceptance-failure mass ≤ tol) is true-as-framed.
 The reduction (acceptance-failure ⊆ covering-failure ∪ (covering-success ∩ acceptance-failure), union
-bound) body is sorry-free; the sole residual is inherited from the core's genuine `sorry`, classified
-`@residual(plan:wz-binning-covering)`. The strengthened premise is discharged w.h.p. by the covering
-atom `wz_coveringFamily_of_testChannel` supplying strong covering-success (the remaining Atom G wiring).
-@residual(plan:wz-binning-covering) -/
+bound) body is sorry-free, and the core `wz_covering_jointBand_markov_core` was subsequently closed
+sorry-free (`e4490dbb`), so this lemma carries no residual. The strengthened premise is discharged
+w.h.p. by the covering atom `wz_coveringFamily_of_testChannel` supplying strong covering-success
+(Atom G, closed sorry-free). -/
 private lemma wz_covering_chosenWord_sideInfo_typical
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} (κ' : α → Fin k → ℝ)
@@ -5566,7 +5562,7 @@ lemma wz_covering_binning_distortion_decomp
 The four adapters `wz_perN_covering_binning_code` (D3) consumes to close its inner body
 via sorry-free glue. Each carries an honest signature (only definitional/regularity
 preconditions; no error-probability, decoder-correctness, or covering lower bound is a
-hypothesis) and its own `@residual(plan:wz-binning-covering)`. Composition:
+hypothesis); all four are now closed sorry-free. Composition:
 
 ```
 A1  : lift identity      LHS(P_XY,d) = codeSupp.EBD Q_XY dα'
@@ -6501,12 +6497,9 @@ over `wzIndexBinningMeasure`) fed the abstract-`jts` S5b `wz_codebook_confusion_
 whose `hmass` is the transported D2 mass lemma `wz_source_codeword_sideInfo_mass_le` (`hE2b`,
 with the degenerate `M₁ ≤ 1` empty-confusion case handled by `Subsingleton (Fin M₁)`), then
 combines by measure subadditivity and squeezes to `δ/4` (`distortionMax dα' ≤ distortionMax d`
-via `hd'_link`). The body carries NO literal `sorry`; the SOLE residual is transitively
-inherited from the called `wz_source_codeword_sideInfo_mass_le` (independently audited PASS as
-an honest per-codeword mass atom, not laundering), so tier-2 `@residual(plan:wz-binning-covering)`
-is correct (NOT `@audit:ok` — transitive sorry remains).
-@audit:closed-by-successor(wz-binning-covering)
-@residual(plan:wz-binning-covering) -/
+via `hd'_link`). The body carries NO literal `sorry`, and the consumed
+`wz_source_codeword_sideInfo_mass_le` was subsequently closed sorry-free, so this lemma
+carries no residual. -/
 lemma wz_exists_binning_E2_bound
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
@@ -6849,8 +6842,8 @@ the E2 squeeze (A3 `wz_exists_binning_E2_bound`) needs `M` bounded ABOVE, now su
 covering family together with the codebook `c₁`. The D3 signature is therefore honest in the
 M-direction (TRUE-as-framed); the headline signature
 (`wz_goodCode_exists_of_testChannel` / `wyner_ziv_achievability`) is untouched (parent #9 crux
-invariant). The remaining residual is transitive from the still-open A2
-(`wz_ideal_expectation_eq_covering`) / A3 (`wz_exists_binning_E2_bound`) sub-lemmas.
+invariant). A2 (`wz_ideal_expectation_eq_covering`) and A3 (`wz_exists_binning_E2_bound`) were
+subsequently closed sorry-free as well.
 
 Independent honesty audit 2026-07-11 (Leg C.6, M-axis): PASS, tier-2 `@residual` retained
 (A2/A3 open, so NOT `@audit:ok`). Confirmed: the M-axis `hM_ub` `sorry` is genuinely removed —
@@ -6862,8 +6855,8 @@ conclusion's driving quantities are all now constrained — covering distortion 
 (hcov₁+A2), `distortionMax·Pr[E2] ≤ δ/4` (A3, now fed the M cap), `M` bounded BOTH sides,
 bins `= codebookSize R n` fixed by `(R,n)`, `I(Y;U)` fixed by `q'` via `hfact_eq`, `hsplit`
 present; the inflated-`M` counterexample is closed and no residual degenerate substitution
-(δ→0 barred by `hδ`, M-boundary capped, generic `d`) refutes the framed statement.
-@residual(plan:wz-binning-covering) -/
+(δ→0 barred by `hδ`, M-boundary capped, generic `d`) refutes the framed statement. A2 and A3
+were subsequently closed sorry-free, so this lemma carries no residual. -/
 lemma wz_perN_covering_binning_code
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
@@ -6923,7 +6916,7 @@ lemma wz_perN_covering_binning_code
   -- ═══════════════════════════════════════════════════════════════════════════
   -- Analytic core (Legs A–D). Six-step assembly; STEP 1 (covering-side derandomize) and
   -- STEP 6 outer packaging (the `wzLiftSupportCode` factorization) are genuine glue below;
-  -- STEPS 1'–5 + inner Step 6 remain a `sorry` tagged `@residual(plan:wz-binning-covering)`.
+  -- STEPS 1'–5 + inner Step 6 are genuine analytic work, all closed sorry-free.
   -- ═══════════════════════════════════════════════════════════════════════════
   -- The source-support subtype `α'` is nonempty (its `stdSimplex` pmf `qStar` has total
   -- mass `1 ≠ 0`), so it has an inhabitant `x₀` for the `α' → α` support lift and the
@@ -7105,12 +7098,9 @@ with `I(X;U)`, (b) *constructs* an intermediate covering rate
 `hsplit : R₁ − I(Y;U) < R` by `linarith [hobj']`, then (c) specialises `hcov` to `R₁` and
 hands off to D3 (`wz_perN_covering_binning_code`), which takes `R₁`/`hsplit`/`hcov₁` as
 GIVEN. The `R₁` existence + rate arithmetic is real work done here. Signature (binders +
-conclusion) unchanged from before the commit (verified by diff). `#print axioms` =
-`[propext, sorryAx, Classical.choice, Quot.sound]` (transitive `sorryAx` from the stubbed
-D2/D3), so tier-2 `@residual`, NOT `@audit:ok`. The only remaining `sorry` in the whole
-chain is D3, so the transitive residual is repointed to D3's closure vehicle (the child
-plan `wz-binning-covering`, the SoT established by the Leg-0 δ-split).
-@residual(plan:wz-binning-covering) -/
+conclusion) unchanged from before the commit (verified by diff). D3
+(`wz_perN_covering_binning_code`) was subsequently closed sorry-free, so this glue carries
+no residual (`#print axioms` = `[propext, Classical.choice, Quot.sound]`). -/
 lemma wz_perDelta_covering_binning_eventual
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
@@ -7200,11 +7190,9 @@ Body glue re-audited 2026-07-06 (body changed this leg): `obtain … := …_even
 choose c hc using hN; exact ⟨c, Filter.eventually_atTop.2 ⟨N, fun n hn => hc n hn⟩⟩`
 genuinely derives S6's `∃ c, ∀ᶠ n, …` from (D)'s `∃ N, ∀ n, ∃ c, N ≤ n → …` — `choose`
 extracts the per-`n` codes into the sequence, `eventually_atTop` packages the threshold
-`N`, no hidden `sorry`, no weakening. The decl still carries a *transitive* residual
-(`#print axioms` = `[propext, sorryAx, Classical.choice, Quot.sound]`, the `sorryAx`
-inherited from the stubbed (D)), so it remains tier-2 `@residual`, NOT `@audit:ok`. The
-sole remaining `sorry` is D3, so the transitive residual points at D3's closure vehicle.
-@residual(plan:wz-binning-covering) -/
+`N`, no hidden `sorry`, no weakening. (D) (`wz_perDelta_covering_binning_eventual`) was
+subsequently closed sorry-free, so this glue carries no residual (`#print axioms` =
+`[propext, Classical.choice, Quot.sound]`). -/
 lemma wz_perDelta_covering_binning
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
@@ -7274,10 +7262,9 @@ extension `wzLiftSupportCode`). The preconditions are feasibility/objective only
 Independent honesty audit 2026-07-06: genuine reduction — the body has no `sorry` of its
 own; it `obtain`s the covering data from `wz_coveringFamily_of_testChannel` (Steps 1–2) and
 `exact`s the S6 capstone `wz_perDelta_covering_binning`. Not an opaque re-sorry, not
-bundling: `hqf`/`hobj` are feasibility/objective preconditions and the transitive residual
-lives in S6 (and, once wired, S5a/S5b). Honest residual (inherited). The sole remaining
-`sorry` is D3, so the transitive residual points at D3's closure vehicle.
-@residual(plan:wz-binning-covering) -/
+bundling: `hqf`/`hobj` are feasibility/objective preconditions. S6
+(`wz_perDelta_covering_binning`) and the covering atom `wz_coveringFamily_of_testChannel`
+were subsequently closed sorry-free, so this lemma carries no residual. -/
 private lemma wz_perDelta_codes_exist
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
@@ -7418,10 +7405,10 @@ deferred to the construction sub-lemmas.
 The body is now a `sorry`-free reduction: `wz_perDelta_codes_exist` builds, for each
 slack `δ > 0`, a code sequence eventually within `D + δ` (the covering + binning
 assembly), and `wz_diagonalize_slack` (now proved sorry-free) diagonalises those into
-a single sequence within `D + ε` for every `ε`. The residual `sorry +
-@residual(plan:wz-binning-covering)` lives in `wz_perDelta_codes_exist` (and the
+a single sequence within `D + ε` for every `ε`. `wz_perDelta_codes_exist` (and the
 covering / source-support atoms it consumes, `wz_covering_lossyCode_exists` /
-`wz_expectedBlockDistortion_source_agree`), not here. -/
+`wz_expectedBlockDistortion_source_agree`) were subsequently closed sorry-free, so
+this lemma carries no residual. -/
 private lemma wz_goodCode_exists_of_testChannel
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
@@ -7438,21 +7425,21 @@ private lemma wz_goodCode_exists_of_testChannel
 /-- Existence of a Wyner–Ziv code sequence (at the operational message rate `R`)
 whose expected block distortion is eventually within `D + ε`.
 
-The body is now a genuine reduction (sorry-free itself): `wz_testChannel_of_rate_lt`
-extracts a feasible factorisable test channel below `R` from the feasibility guard
-`h_ne` and `h_rate`, and `wz_goodCode_exists_of_testChannel` builds the code
-sequence from it. `sorryAx` enters only via that construction lemma, whose covering
-+ binning body is the remaining plumbing.
+The body is a genuine reduction: `wz_testChannel_of_rate_lt` extracts a feasible
+factorisable test channel below `R` from the feasibility guard `h_ne` and `h_rate`,
+and `wz_goodCode_exists_of_testChannel` builds the code sequence from it. Both this
+theorem and its construction lemma are proved sorry-free
+(`#print axioms wyner_ziv_achievability_codes` =
+`[propext, Classical.choice, Quot.sound]`).
 
 The feasibility precondition `h_ne` (the rate-distortion value set is nonempty at
 `D`) makes the signature well-posed: it rules out the infeasible regime `D` below
 the min achievable distortion (e.g. any `D < 0` for a `NNReal` distortion), where
 `wzRateValueSet` is empty and `wynerZivRate = sInf ∅ = 0` would otherwise let
 `h_rate : 0 < R` coexist with a FALSE existence claim. `h_ne` is a
-regularity/feasibility precondition, NOT the load-bearing covering+binning core
-(which stays in the construction lemma's `sorry` body); the converse side already
-threads exactly this guard (`wynerZivRate_antitone`, `Converse.lean:2602`).
-@residual(plan:wyner-ziv-main-plan) -/
+regularity/feasibility precondition, NOT the load-bearing covering+binning core;
+the converse side already threads exactly this guard (`wynerZivRate_antitone`,
+`Converse.lean:2602`). -/
 theorem wyner_ziv_achievability_codes
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
@@ -7477,14 +7464,12 @@ eventually within `D + ε` for every `ε > 0`.
 The body is assembled: the message sequence is fixed to `codebookSize R n =
 ⌈exp(n R)⌉`, whose log-cardinality rate tends to `R` via `codebookSize_log_div_tendsto`
 (using `0 < R`, from `wynerZivRate_nonneg` and `h_rate`); the distortion sequence is
-supplied by the covering + binning construction `wyner_ziv_achievability_codes`,
-which carries the remaining plumbing `sorry`. The headline itself is `sorry`-free
-(it reduces to that one residual lemma).
+supplied by the covering + binning construction `wyner_ziv_achievability_codes`.
+Both are proved sorry-free (`#print axioms wyner_ziv_achievability` =
+`[propext, Classical.choice, Quot.sound]`).
 
 The signature carries the same feasibility precondition `h_ne` as the codes lemma,
-so it is well-posed: the body is a genuine reduction (sorry-free itself, `sorryAx`
-enters only via `wyner_ziv_achievability_codes`) and the statement is honest.
-@residual(plan:wyner-ziv-main-plan) -/
+so it is well-posed: the body is a genuine reduction and the statement is honest. -/
 theorem wyner_ziv_achievability
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)

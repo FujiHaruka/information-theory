@@ -284,6 +284,7 @@ import InformationTheory.Shannon.LZ78.ConverseUDObject
 import InformationTheory.Shannon.EPI.Stam.DeBruijnConclusion
 import InformationTheory.Shannon.WynerZiv.ConditionalEntropyConvexity
 import InformationTheory.Shannon.WynerZiv.ConverseGateway
+import InformationTheory.Shannon.WynerZiv.Achievability
 import InformationTheory.Shannon.MultivariateDiffEntropy
 import InformationTheory.Shannon.ParallelGaussian.PerCoord
 import InformationTheory.Shannon.ParallelGaussian.Converse.Core
