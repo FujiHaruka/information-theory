@@ -8,3 +8,7 @@
 - `mutualInfoPmf q := H(fst) + H(snd) − H(q)` (negMulLog 経由 entropy 形)。KL/log 比形は marginal 0 境界で連続性が崩れるため不採用。
 - `rateDistortionFunctionPmf := sInf (mutualInfoPmf '' RDConstraint)` (binder-`⨅` は ℝ の CCL で BddBelow 副条件で詰まるため image-sInf 形)。
 - 経路は Cover-Thomas 10.5 random codebook + joint typical encoder の lossy mirror。strong-typicality 詳細は phase-e-strong サブ計画参照。
+
+## Sub-plan 一覧
+- [phase-e-strong](rate-distortion-achievability-phase-e-strong-plan.md) — E-3''' fully-discharged (CLOSED ✅)
+- [unconditional](rate-distortion-achievability-unconditional-plan.md) — headline の honest pass-through 仮説を discharge しクリーンな operational 文へ (OPEN 📋)
