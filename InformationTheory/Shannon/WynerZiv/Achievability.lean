@@ -5279,6 +5279,154 @@ private lemma wz_wsm_negLog_condMean_eq_entropy
         _ = κ' x u * P_XY.real {(x, ys.1)}
               * (- Real.log (wzSideInfoMarginal P_XY κ' (u, ys))) := by rw [hcancel]
 
+/-- The Wyner–Ziv conditional-mean kernel `g(x, u) = ∑_ys P(ys | x) · (−log wsm(u, ys))`,
+where `P(ys | x) = P_XY{(x, ys)} / ∑_y P_XY{(x, y)}` is the per-letter conditional side-info
+law and `wsm = wzSideInfoMarginal P_XY κ'` is the `(U, Y)`-marginal. Indexed by the
+positive-`X`-marginal subtype `{x // 0 < ∑ y P_XY{(x, y)}} × Fin k`, on which the conditional
+denominator is positive. This is the per-symbol statistic whose empirical mean the
+strong-typicality mean-pin controls; `∑_{x,u} qStar(x, u) · g(x, u) = H(wsm)` under the
+`qStar–κ'` consistency (`wz_wsm_condMean_kernel_inner_eq_entropy`). -/
+private noncomputable def wzCondMeanKernel
+    (P_XY : Measure (α × β)) {k : ℕ} (κ' : α → Fin k → ℝ) :
+    {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ :=
+  fun p ↦ ∑ ys : {y : β // 0 < ∑ x', P_XY.real {(x', y)}},
+    (P_XY.real {(p.1.1, ys.1)} / ∑ y, P_XY.real {(p.1.1, y)})
+      * (- Real.log (wzSideInfoMarginal P_XY κ' (p.2, ys)))
+
+/-- **(Mean-pin — identity)** The `qStar`-weighted mean of the conditional-mean kernel equals
+the `wsm`-entropy: `∑_{p} qStar(p) · g(p) = H(wsm)`, where `qStar(x, u) = κ'(x, u) · P_X(x)` is
+the consistent covering joint pmf on the positive-`X`-marginal subtype. Reduces to the
+division-free Atom C identity `wz_wsm_negLog_mean_eq_entropy` after cancelling the conditional
+denominator (positive on the subtype) and extending the `x`-sum to the full alphabet
+(degenerate `x` with `P_X(x) = 0` contribute `0`). -/
+private lemma wz_wsm_condMean_kernel_inner_eq_entropy
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ) :
+    ∑ p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k,
+        (κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) * wzCondMeanKernel P_XY κ' p
+      = ∑ q, Real.negMulLog (wzSideInfoMarginal P_XY κ' q) := by
+  classical
+  -- Per-`p` cancellation of the conditional denominator: on the subtype `P_X(x) > 0`.
+  have hcancel : ∀ p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k,
+      (κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) * wzCondMeanKernel P_XY κ' p
+        = ∑ ys : {y : β // 0 < ∑ x', P_XY.real {(x', y)}},
+            κ' p.1.1 p.2 * P_XY.real {(p.1.1, ys.1)}
+              * (- Real.log (wzSideInfoMarginal P_XY κ' (p.2, ys))) := by
+    intro p
+    unfold wzCondMeanKernel
+    rw [Finset.mul_sum]
+    refine Finset.sum_congr rfl fun ys _ => ?_
+    have hpos : (∑ y, P_XY.real {(p.1.1, y)}) ≠ 0 := p.1.2.ne'
+    field_simp
+  simp_rw [hcancel]
+  rw [Fintype.sum_prod_type]
+  dsimp only
+  -- Extend the `x`-sum from the positive-marginal subtype to the full alphabet
+  -- (degenerate `x` with `P_X(x) = 0` contribute `0`), then apply Atom C.
+  have hext : (∑ x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}, ∑ u,
+        ∑ ys : {y : β // 0 < ∑ x', P_XY.real {(x', y)}},
+          κ' x'.1 u * P_XY.real {(x'.1, ys.1)}
+            * (- Real.log (wzSideInfoMarginal P_XY κ' (u, ys))))
+      = ∑ x : α, ∑ u,
+        ∑ ys : {y : β // 0 < ∑ x', P_XY.real {(x', y)}},
+          κ' x u * P_XY.real {(x, ys.1)}
+            * (- Real.log (wzSideInfoMarginal P_XY κ' (u, ys))) := by
+    letI : DecidablePred (fun x : α => 0 < ∑ y, P_XY.real {(x, y)}) := Classical.decPred _
+    rw [← Finset.sum_subtype (Finset.univ.filter (fun x : α => 0 < ∑ y, P_XY.real {(x, y)}))
+        (fun x => by simp)
+        (fun x => ∑ u, ∑ ys : {y : β // 0 < ∑ x', P_XY.real {(x', y)}},
+          κ' x u * P_XY.real {(x, ys.1)}
+            * (- Real.log (wzSideInfoMarginal P_XY κ' (u, ys))))]
+    refine Finset.sum_subset (Finset.filter_subset _ _) ?_
+    intro x _ hx
+    rw [Finset.mem_filter] at hx
+    push_neg at hx
+    have hz : ∑ y, P_XY.real {(x, y)} = 0 :=
+      le_antisymm (hx (Finset.mem_univ x)) (Finset.sum_nonneg fun _ _ => measureReal_nonneg)
+    refine Finset.sum_eq_zero fun u _ => Finset.sum_eq_zero fun ys _ => ?_
+    have hp0 : P_XY.real {(x, ys.1)} = 0 :=
+      (Finset.sum_eq_zero_iff_of_nonneg (fun _ _ => measureReal_nonneg)).mp hz ys.1
+        (Finset.mem_univ _)
+    rw [hp0]; ring
+  rw [hext]
+  exact wz_wsm_negLog_mean_eq_entropy P_XY κ'
+
+/-- **(Mean-pin — gateway atom, Proposal A)** *Strong typicality pins the linear functional
+`M` to `H(wsm)`.* If an empirical type `t` on the covering subtype `{x // 0 < P_X x} × Fin k`
+is within `ε` (in sup-norm) of the consistent covering pmf `qStar(x, u) = κ'(x, u) · P_X(x)`,
+then the conditional-mean statistic `M(t) = ∑_{x,u} t(x, u) · g(x, u)` is within `C · ε` of the
+`wsm`-entropy `H(wsm) = ∑_q negMulLog(wsm q)`, with the explicit constant
+`C = ∑_{x,u} |g(x, u)|`. This is the decisive Proposal-A step: strong joint typicality pins the
+empirical type in total variation (`∀ p, |typeCount/n − qStar p| ≤ ε`, from
+`mem_stronglyTypicalSet_iff`), which — unlike weak entropy-only typicality — pins every linear
+functional of the type, in particular `M`. The identity `⟨qStar, g⟩ = H(wsm)`
+(`wz_wsm_condMean_kernel_inner_eq_entropy`, from Atom C) turns the difference into
+`⟨t − qStar, g⟩`, bounded by `(∑|g|) · ε` via the triangle inequality. -/
+private lemma wz_wsm_negLog_mean_pin_of_type
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ)
+    (t : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ) {ε : ℝ} (hε : 0 ≤ ε)
+    (htype : ∀ p, |t p - κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}| ≤ ε) :
+    |(∑ p, t p * wzCondMeanKernel P_XY κ' p)
+        - ∑ q, Real.negMulLog (wzSideInfoMarginal P_XY κ' q)|
+      ≤ (∑ p, |wzCondMeanKernel P_XY κ' p|) * ε := by
+  classical
+  have hid := wz_wsm_condMean_kernel_inner_eq_entropy P_XY κ'
+  -- Rewrite the difference `M(t) − H(wsm)` as `⟨t − qStar, g⟩`.
+  have hdiff : (∑ p, t p * wzCondMeanKernel P_XY κ' p)
+      - ∑ q, Real.negMulLog (wzSideInfoMarginal P_XY κ' q)
+      = ∑ p, (t p - κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+          * wzCondMeanKernel P_XY κ' p := by
+    rw [← hid, ← Finset.sum_sub_distrib]
+    exact Finset.sum_congr rfl fun p _ => by ring
+  rw [hdiff]
+  calc |∑ p, (t p - κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+          * wzCondMeanKernel P_XY κ' p|
+      ≤ ∑ p, |(t p - κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+          * wzCondMeanKernel P_XY κ' p| := Finset.abs_sum_le_sum_abs _ _
+    _ ≤ ∑ p, ε * |wzCondMeanKernel P_XY κ' p| := by
+        refine Finset.sum_le_sum fun p _ => ?_
+        rw [abs_mul]
+        exact mul_le_mul_of_nonneg_right (htype p) (abs_nonneg _)
+    _ = (∑ p, |wzCondMeanKernel P_XY κ' p|) * ε := by
+        rw [← Finset.mul_sum, mul_comm]
+
+open ChannelCoding in
+/-- **(Mean-pin — strong-typicality reading)** The mean-pin `wz_wsm_negLog_mean_pin_of_type`
+read directly off strong joint typicality: a block `zb` that is strongly typical for the
+covering ambient `rdAmbient qStar` (`zb ∈ stronglyTypicalSet …`) has its conditional-mean
+statistic `∑_{x,u} (typeCount zb / n) · g(x, u)` within `(∑|g|) · ε` of `H(wsm)`. The
+strong-typicality membership yields the per-symbol type pin `∀ p, |typeCount zb p / n −
+qStar p| ≤ ε` (`mem_stronglyTypicalSet_iff` + the `rdAmbient` singleton law), and `hqStar`
+identifies `qStar p = κ'(p) · P_X(p)`. This is the form the strong-`Ecov` covering core
+consumes. -/
+private lemma wz_wsm_negLog_mean_pin_of_stronglyTypical
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hmem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    (hqStar : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    {ε : ℝ} (hε : 0 ≤ ε) {n : ℕ}
+    (zb : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k)
+    (hzb : zb ∈ stronglyTypicalSet (rdAmbient qStar) (jointSequence iidXs iidYs) n ε) :
+    |(∑ p, ((typeCount zb p : ℝ) / n) * wzCondMeanKernel P_XY κ' p)
+        - ∑ q, Real.negMulLog (wzSideInfoMarginal P_XY κ' q)|
+      ≤ (∑ p, |wzCondMeanKernel P_XY κ' p|) * ε := by
+  classical
+  haveI hne_prod : Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
+    Finset.univ_nonempty_iff.mp
+      (Finset.nonempty_of_sum_ne_zero (by rw [hmem.2]; exact one_ne_zero))
+  haveI hne_α' : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := hne_prod.map Prod.fst
+  haveI hne_k : Nonempty (Fin k) := hne_prod.map Prod.snd
+  refine wz_wsm_negLog_mean_pin_of_type P_XY κ' (fun p => (typeCount zb p : ℝ) / n) hε ?_
+  intro p
+  rw [mem_stronglyTypicalSet_iff] at hzb
+  have hlaw : ((rdAmbient qStar).map (jointSequence iidXs iidYs 0)).real {p} = qStar p := by
+    rw [rdAmbient_map_jointSequence qStar hmem]
+    exact pmfToMeasure_real_singleton hmem p
+  rw [← hqStar p, ← hlaw]
+  exact hzb p
+
 /-- Any `pmfToMeasure q` on a finite alphabet is a finite measure (its total mass is the
 finite sum `∑ a, ENNReal.ofReal (q a) < ∞`), regardless of whether `q` is a proper pmf. -/
 private lemma wz_pmfToMeasure_isFiniteMeasure
