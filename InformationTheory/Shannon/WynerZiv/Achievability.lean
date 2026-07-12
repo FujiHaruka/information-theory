@@ -1053,15 +1053,22 @@ save it. REQUIRED FIX = thread the same `qStar`–`κ'` consistency + full-suppo
 the signature is fixed): the correlated-joint conditional-typicality (Markov-lemma) concentration
 is a from-scratch in-project assembly (loogle/grep 0-hit re-confirmed in-plan), NOT a Mathlib wall;
 the only in-project ingredient `conditionalStronglyTypicalSlice_mass_ge` (Mass.lean:1274) is a
-lower/independent-product bound. Signature still in defect form ⟹ provisional tier-5 marker.
-@audit:defect(false-statement)
-@audit:closed-by-successor(wz-binning-covering)
+lower/independent-product bound.
+
+FIX APPLIED 2026-07-12 (per the audit above): the `qStar`–`κ'` consistency + full-support
+hypotheses (`hκ'_pos`, `hκ'_sum`, `hqStar`) are now threaded into this signature, matching the
+relations the sole consumer `wz_coveringFamily_of_testChannel` exports at its output. The
+false-as-framed defect is resolved (the constant-word counterexample fails covering-success under
+consistency); the statement is now HONEST tier-2. Only the Markov concentration itself stays open.
 @residual(plan:wz-binning-covering) -/
 private lemma wz_covering_markov_concentration
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} (κ' : α → Fin k → ℝ)
     (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
-    (ε : ℝ) (hε : 0 < ε) (tol : ℝ) (htol : 0 < tol) :
+    (ε : ℝ) (hε : 0 < ε) (tol : ℝ) (htol : 0 < tol)
+    (hκ'_pos : ∀ x u, 0 < κ' x u)
+    (hκ'_sum : ∀ x, ∑ u, κ' x u = 1)
+    (hqStar : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) :
     ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (M : ℕ)
         (c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
         (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
@@ -1149,17 +1156,22 @@ under consistency the counterexample's `qStar := P_X⊗δ_{u₀}` forces `P_U = 
 residual counterexample survives. HEADLINE-SAFE — leaf still unconsumed (private); the fix stays on
 this leaf + inner lemma, discharged at the covering atom, and does NOT propagate a
 full-support/acceptance hypothesis to `wz_goodCode_exists_of_testChannel` / `wyner_ziv_achievability`.
-Signature is still in defect form; the fix is a signature change with ripple to the consumer,
-reserved for the owner/planner per the audit boundary (first choice = signature fix deferred this
-session). Provisional tier-5 marker awaiting that fix; the sorry-body residual stays `plan`-classed.
-@audit:defect(false-statement)
-@audit:closed-by-successor(wz-binning-covering)
+FIX APPLIED 2026-07-12 (per the 2026-07-12b audit above): the `qStar`–`κ'` consistency +
+full-support hypotheses (`hκ'_pos`, `hκ'_sum`, `hqStar`) are now threaded into this leaf and passed
+through to `wz_covering_markov_concentration`. They match the relations the sole (future) consumer
+`wz_coveringFamily_of_testChannel` exports at its output (L1249-1252, an `exact`/`rfl`-clean
+discharge), so the false-as-framed defect is resolved and the leaf is now HONEST tier-2. The
+d2e68b10 PASS remains overturned (record preserved above); the residual Markov concentration itself
+(the outer decomposition's transitive `sorry` in `wz_covering_markov_concentration`) stays open.
 @residual(plan:wz-binning-covering) -/
 private lemma wz_covering_chosenWord_sideInfo_typical
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} (κ' : α → Fin k → ℝ)
     (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
-    (ε : ℝ) (hε : 0 < ε) (tol : ℝ) (htol : 0 < tol) :
+    (ε : ℝ) (hε : 0 < ε) (tol : ℝ) (htol : 0 < tol)
+    (hκ'_pos : ∀ x u, 0 < κ' x u)
+    (hκ'_sum : ∀ x, ∑ u, κ' x u = 1)
+    (hqStar : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) :
     ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (M : ℕ)
         (c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
         -- covering-typicality success (S5a-supplied premise): off a set of mass `≤ tol/2`,
@@ -1179,7 +1191,8 @@ private lemma wz_covering_chosenWord_sideInfo_typical
           (wzCoveringAcceptFailSet P_XY κ' c ε)
           ≤ tol := by
   -- Obtain the threshold `N` from the inner Markov-lemma concentration bound.
-  obtain ⟨N, hN⟩ := wz_covering_markov_concentration P_XY κ' qStar ε hε tol htol
+  obtain ⟨N, hN⟩ :=
+    wz_covering_markov_concentration P_XY κ' qStar ε hε tol htol hκ'_pos hκ'_sum hqStar
   refine ⟨N, fun n hn M c hprem ↦ ?_⟩
   -- The inner concentration: acceptance failure ON covering success has mass `≤ tol/2`.
   have hinner := hN n hn M c
