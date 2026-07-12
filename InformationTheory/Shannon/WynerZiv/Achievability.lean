@@ -1041,6 +1041,21 @@ covering atom's construction), NOT bundling the acceptance conclusion.
 Its body — the correlated-joint conditional-typicality concentration (the Markov lemma), given the
 consistency hypotheses — is a from-scratch assembly absent from Mathlib and the codebase (`plan`,
 not a Mathlib wall). Left `sorry` pending the signature fix above.
+
+AUDIT VERDICT 2026-07-12b (independent re-audit): the CAVEAT is CONFIRMED. This inner lemma
+inherits the SAME false-as-framed defect as the leaf: with free `qStar`/`κ'` its conclusion
+(covering-success ∩ acceptance-failure ≤ tol/2) is universally false — the constant-word
+`c ≡ u₀ⁿ` + `qStar := P_X ⊗ δ_{u₀}` counterexample (see the leaf docstring) makes covering-success
+mass → 1 and, for `−log P_U(u₀) ≠ H(P_U)`, that entire covering-success set lies in
+acceptance-failure, so the intersection → 1 > tol/2. Intersecting with covering-success does NOT
+save it. REQUIRED FIX = thread the same `qStar`–`κ'` consistency + full-support hypotheses
+(owner/planner boundary, deferred this session). RESIDUAL CLASSIFICATION `plan` is CORRECT (once
+the signature is fixed): the correlated-joint conditional-typicality (Markov-lemma) concentration
+is a from-scratch in-project assembly (loogle/grep 0-hit re-confirmed in-plan), NOT a Mathlib wall;
+the only in-project ingredient `conditionalStronglyTypicalSlice_mass_ge` (Mass.lean:1274) is a
+lower/independent-product bound. Signature still in defect form ⟹ provisional tier-5 marker.
+@audit:defect(false-statement)
+@audit:closed-by-successor(wz-binning-covering)
 @residual(plan:wz-binning-covering) -/
 private lemma wz_covering_markov_concentration
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -1070,7 +1085,9 @@ half `C2` of the Wyner–Ziv error `E2` (`C2 ⊆ E2`), isolated from `wz_coverin
 to be self-built by the Markov lemma (a correlated-joint conditional-typicality concentration
 bound absent from Mathlib and the codebase — `plan`, not a Mathlib wall).
 
-Independent honesty audit 2026-07-12 (Leg F leaf, commit `5d3ecd81`): PASS, tier-2
+Independent honesty audit 2026-07-12 (Leg F leaf, commit `5d3ecd81`): PASS [OVERTURNED
+2026-07-12b — the "Sufficiency confirmed … TRUE-as-framed" claim below is WRONG; see AUDIT
+VERDICT at the end of this docstring], tier-2
 `@residual`. Non-circular (the premise is the `x`–`u` covering slice in ambient
 `rdAmbient qStar`, the conclusion the `u`–`y` acceptance slice in a different ambient —
 the Markov bridge is genuinely open, body is `sorry`, not `:= h`). Non-bundled: the
@@ -1107,6 +1124,36 @@ so it missed this axis. FIX = precondition-exposure (thread the `qStar`–`κ'` 
 full-support hypotheses into this leaf and `wz_covering_markov_concentration`, discharged by the
 covering atom's construction; ripple to the single consumer `wz_coveringFamily_of_testChannel`);
 this is a signature change reserved for the orchestrator/planner, NOT acceptance-conclusion bundling.
+
+AUDIT VERDICT 2026-07-12b (independent re-audit, commits `9ecffb41`+`e1467fdd`): the
+under-hypothesis finding is CONFIRMED — this leaf is FALSE-as-framed with free `qStar`/`κ'`.
+Verbatim-reproduced counterexample: `typicalSet` bands the U-empirical-entropy against the
+U-marginal of the ambient (`pmfLog`/`entropy` of `μ.map (iidXs/iidYs 0)`). The covering-success
+premise measures U against `marginalSnd qStar` (qStar's `Fin k` marginal) whereas the acceptance
+conclusion measures U against `marginalFst (wzSideInfoMarginal) = P_U` — decoupled because `qStar`
+is a free param (signature demands NO stdSimplex/consistency on it). A constant-word `LossyCode`
+`c ≡ u₀ⁿ` (legal, `M=1`) with `qStar := P_X ⊗ δ_{u₀}` makes covering-success mass → 1 (premise ✓,
+qStar's U-marginal is `δ_{u₀}`, so `u₀ⁿ` is trivially U-typical there) while, for any `κ'` giving
+non-uniform `P_U` with `−log P_U(u₀) ≠ H(P_U)`, `u₀ⁿ` is NOT `P_U`-typical ⟹ acceptance-failure =
+whole space (mass 1 > tol), for arbitrarily large `n` ⟹ refutes the `∃ N` for every `N`. The prior
+`d2e68b10` PASS is OVERTURNED: it varied only the measure coupling (independent-product vs coupled),
+never `qStar`/the code adversarially, so it missed this axis. REQUIRED missing hypotheses (fix): the
+`qStar`–`κ'` consistency `qStar (x',u) = κ' x'.1 u · (∑ y, P_XY{(x'.1,y)})` + full-support
+(`0 < κ' x u`, `∑ u κ' x u = 1`) — both already exported by the sole (future) consumer
+`wz_coveringFamily_of_testChannel` (L1249-1252). Fix assessment: HONEST precondition-exposure (Leg
+C.5/C.6/E kind), NOT conclusion-bundling — granting consistency only aligns the two U-marginals
+(`marginalSnd qStar = P_U`); the Markov concentration `covering-x-typical ⟹ (u,y)-typical w.h.p.`
+stays genuinely open (the residual `sorry` in `wz_covering_markov_concentration`). SUFFICIENT —
+under consistency the counterexample's `qStar := P_X⊗δ_{u₀}` forces `P_U = δ_{u₀}`, so
+`−log P_U(u₀) = 0 = H(P_U)` and a mismatched constant word instead fails covering-success; no
+residual counterexample survives. HEADLINE-SAFE — leaf still unconsumed (private); the fix stays on
+this leaf + inner lemma, discharged at the covering atom, and does NOT propagate a
+full-support/acceptance hypothesis to `wz_goodCode_exists_of_testChannel` / `wyner_ziv_achievability`.
+Signature is still in defect form; the fix is a signature change with ripple to the consumer,
+reserved for the owner/planner per the audit boundary (first choice = signature fix deferred this
+session). Provisional tier-5 marker awaiting that fix; the sorry-body residual stays `plan`-classed.
+@audit:defect(false-statement)
+@audit:closed-by-successor(wz-binning-covering)
 @residual(plan:wz-binning-covering) -/
 private lemma wz_covering_chosenWord_sideInfo_typical
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
