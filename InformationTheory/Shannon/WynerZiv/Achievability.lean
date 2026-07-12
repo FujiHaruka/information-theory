@@ -964,6 +964,65 @@ def wzCoveringAcceptFailSet (P_XY : Measure (α × β)) {k : ℕ}
             ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
           n ε }
 
+/-! ## Gateway atom 3 (Leg F) — covering chosen-word side-information acceptance (Markov lemma)
+
+The decisive covering-acceptance (`C2`) leaf of Wyner–Ziv achievability, isolated from the
+covering atom `wz_coveringFamily_of_testChannel` (judgment log #8). For the covering `LossyCode`
+`c`, the *correlated joint source* mass of the acceptance-failure event
+`wzCoveringAcceptFailSet` — the event that the chosen covering word `c.decoder (c.encoder x)` is
+NOT jointly typical with the side information `y` (with `(x, y)` drawn from the true joint
+`P_XY`, so `x` and `y` are **correlated**) — is small, given only the covering-typicality success
+precondition (the chosen word covers the source `x`, an S5a-supplied regularity/precondition on
+the constructed code, NOT the acceptance conclusion).
+
+Its analytic core is the **Markov lemma**: if the chosen word `u = c.decoder (c.encoder x)`
+typically covers `x` and the source pair `(x, y)` is jointly typical, then `(u, y)` is jointly
+typical — so acceptance fails only off the (exp-small) covering-failure ∪ source-atypicality set.
+The measure is the *correlated* joint source
+`Measure.pi (pmfToMeasure (fun (x', y) ↦ P_XY{(x'.1, y)}))`; crucially the covering word
+`c.decoder (c.encoder x)` is a function of the source `x`, so the `u`–`y` correlation that makes
+acceptance likely is inherited from the `x`–`y` correlation and is **destroyed by fixing `u`
+independently**. Gateway-2 `wz_covering_sideInfo_mass_ge` (a *lower* bound on the *independent*
+product-`Y`-law slice mass) and the broadcast confusion bound `bc_conditional_slice_prob_le`
+(an *upper* bound on a *conditional-product* typical slice, the confusion/wrong-codeword
+direction) are on the wrong measure/direction and do not supply this (Leg F verdict). -/
+
+open ChannelCoding in
+/-- **(Leg F gateway atom) Covering chosen-word side-information acceptance (Markov lemma).**
+For every tolerance `tol > 0` there is an `N` such that for `n ≥ N` and every covering
+`LossyCode` `c` whose chosen words typically cover the source (the S5a-style covering-success
+premise, an implication hypothesis), the correlated-joint-source mass of the covering-acceptance
+failure `wzCoveringAcceptFailSet P_XY κ' c ε` (the chosen word `c.decoder (c.encoder x)` is not
+jointly typical, at radius `ε`, with the side information) is at most `tol`. This is the covering
+half `C2` of the Wyner–Ziv error `E2` (`C2 ⊆ E2`), isolated from `wz_coveringFamily_of_testChannel`
+to be self-built by the Markov lemma (a correlated-joint conditional-typicality concentration
+bound absent from Mathlib and the codebase — `plan`, not a Mathlib wall).
+@residual(plan:wz-binning-covering) -/
+private lemma wz_covering_chosenWord_sideInfo_typical
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (ε : ℝ) (hε : 0 < ε) (tol : ℝ) (htol : 0 < tol) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (M : ℕ)
+        (c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
+        -- covering-typicality success (S5a-supplied premise): off a set of mass `≤ tol/2`,
+        -- the chosen covering word `c.decoder (c.encoder x)` is jointly typical with the source
+        -- `x` in the covering ambient `rdAmbient qStar`. NOT the acceptance conclusion (different
+        -- ambient: covering is the `x`–`u` slice, acceptance the `u`–`y` slice).
+        (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+              P_XY.real {(p.1.1, p.2)}))).real
+          { p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
+              ∉ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
+                  ChannelCoding.iidXs ChannelCoding.iidYs n ε }
+          ≤ tol / 2 →
+        (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+              P_XY.real {(p.1.1, p.2)}))).real
+          (wzCoveringAcceptFailSet P_XY κ' c ε)
+          ≤ tol := by
+  sorry
+
 open ChannelCoding in
 /-- **(Steps 1–2) Covering LossyCode family from a feasible test channel.**
 Perturbs the feasible factorisable test channel `qf` to a full-support kernel
