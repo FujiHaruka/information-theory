@@ -1140,6 +1140,16 @@ acceptance-good — the joint S5a/gateway-2 (`wz_covering_sideInfo_mass_ge`) Fub
 is the residual analytic work, correctly classified `@residual(plan:wz-binning-covering)`
 (in-project construction, not a Mathlib wall). D3 instantiates this `∀ ε` at the shared
 `ε := gap/6` threaded into A3's decoder radius.
+
+CAVEAT on the discharge path (2026-07-12c independent audit): this atom stays an HONEST `sorry` and
+its `∃ c` acceptance conjunct is TRUE-as-framed (the atom PICKS the covering code, and a
+strong-typical covering code satisfies the WEAK `wzCoveringAcceptFailSet` bound, since strong ⟹
+entropy typicality), so it carries no false honesty claim. BUT the currently-planned wiring discharge
+runs through `wz_covering_chosenWord_sideInfo_typical` / `wz_covering_markov_concentration`, which are
+false-as-framed under the WEAK (entropy-only) typicality (root defect:
+`wz_covering_jointBand_markov_core`, label-swap counterexample). Wiring the current weak-Ecov chain
+does NOT close this `sorry`; Proposal A (strengthen the covering-success event Ecov to STRONG joint
+typicality; see the core lemma docstring) is a prerequisite for a sound discharge.
 @residual(plan:wz-binning-covering) -/
 private lemma wz_coveringFamily_of_testChannel
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -5812,11 +5822,27 @@ is a from-scratch in-project assembly (loogle/grep 0-hit re-confirmed in-plan), 
 the only in-project ingredient `conditionalStronglyTypicalSlice_mass_ge` (Mass.lean:1274) is a
 lower/independent-product bound.
 
-FIX APPLIED 2026-07-12 (per the audit above): the `qStar`–`κ'` consistency + full-support
-hypotheses (`hκ'_pos`, `hκ'_sum`, `hqStar`) are now threaded into this signature, matching the
-relations the sole consumer `wz_coveringFamily_of_testChannel` exports at its output. The
-false-as-framed defect is resolved (the constant-word counterexample fails covering-success under
-consistency); the statement is now HONEST tier-2. Only the Markov concentration itself stays open.
+FIX APPLIED 2026-07-12 — RETRACTED 2026-07-12c (independent re-audit): the "now HONEST tier-2 /
+false-as-framed defect resolved" claim is WRONG. Threading the `qStar`–`κ'` consistency + full-support
+hypotheses only kills the CONSTANT-WORD counterexample; it does NOT save the statement under the
+in-project WEAK (entropy-only) `typicalSet`/`jointlyTypicalSet`. This inner lemma is a genuine
+reduction (case split + union bound over the three bands, `Ecov ∩ Euf = ∅` via
+`wz_covering_success_subset_uTypical`, then `linarith`) that consumes the OUTER
+`wz_covering_jointBand_concentration` bound `hjf` on the joint (u,y)-band `Ecov ∩ Ejf` — which is
+itself false-as-framed (root: `wz_covering_jointBand_markov_core`). So this lemma INHERITS the
+false-as-framedness. LABEL-SWAP COUNTEREXAMPLE (see the core lemma docstring): the entropy-preserving
+relabel keeps covering-success (Ecov mass→1, U-band preserved so `Euf` stays empty) yet drives the
+chosen word into `wzCoveringAcceptFailSet` via the joint (u,y)-band (CE(ρ_UY,wsm)≈2.135 ≠
+H(wsm)≈1.165) → {Ecov ∩ wzCoveringAcceptFailSet}→1 ≫ tol/2. The consistency hyps satisfy the premises
+of the counterexample (they pin qStar's U-marginal only, not type_xu in TV), so it survives them.
+
+DEFECT (2026-07-12c, STATEMENT-level under-hypothesis INHERITED from the core; body stays HONEST): the
+reduction body is honest (no `:= h`, no `*Hypothesis`/predicate bundling); the defect is propagated
+from `wz_covering_jointBand_markov_core`/`wz_covering_jointBand_concentration`. Identified fix =
+Proposal A (strengthen ONLY the covering-success event Ecov to STRONG joint typicality; see the core
+lemma docstring), deferred pending user judgment (a strategic def change that reopens the covering
+lower bound). The existing `@residual(plan:wz-binning-covering)` is KEPT (open residual, class `plan`).
+@audit:defect(false-statement)
 @residual(plan:wz-binning-covering) -/
 private lemma wz_covering_markov_concentration
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -5979,13 +6005,26 @@ under consistency the counterexample's `qStar := P_X⊗δ_{u₀}` forces `P_U = 
 residual counterexample survives. HEADLINE-SAFE — leaf still unconsumed (private); the fix stays on
 this leaf + inner lemma, discharged at the covering atom, and does NOT propagate a
 full-support/acceptance hypothesis to `wz_goodCode_exists_of_testChannel` / `wyner_ziv_achievability`.
-FIX APPLIED 2026-07-12 (per the 2026-07-12b audit above): the `qStar`–`κ'` consistency +
-full-support hypotheses (`hκ'_pos`, `hκ'_sum`, `hqStar`) are now threaded into this leaf and passed
-through to `wz_covering_markov_concentration`. They match the relations the sole (future) consumer
-`wz_coveringFamily_of_testChannel` exports at its output (L1249-1252, an `exact`/`rfl`-clean
-discharge), so the false-as-framed defect is resolved and the leaf is now HONEST tier-2. The
-d2e68b10 PASS remains overturned (record preserved above); the residual Markov concentration itself
-(the outer decomposition's transitive `sorry` in `wz_covering_markov_concentration`) stays open.
+FIX APPLIED 2026-07-12 — RETRACTED 2026-07-12c (independent re-audit): the "false-as-framed defect
+resolved / leaf now HONEST tier-2" claim is WRONG. The threaded `qStar`–`κ'` consistency + full-support
+hypotheses kill only the CONSTANT-WORD counterexample; they do NOT rescue the statement under the
+in-project WEAK (entropy-only) typicality. This leaf is a genuine reduction (acceptance-failure ⊆
+covering-failure ∪ (covering-success ∩ acceptance-failure), first part bounded by the S5a implication
+premise `hprem`, second by the inner `wz_covering_markov_concentration` bound `hinner`) — no `:= h`,
+no bundling — but `hinner` is false-as-framed, so the leaf INHERITS the defect (root:
+`wz_covering_jointBand_markov_core`). Under the LABEL-SWAP COUNTEREXAMPLE (see the core lemma
+docstring), the premise `hprem` is satisfiable (covering-failure mass→0 ≤ tol/2) yet the chosen word
+lands in `wzCoveringAcceptFailSet` on mass→1 (joint (u,y)-band fails: CE(ρ_UY,wsm)≈2.135 ≠
+H(wsm)≈1.165) ≫ tol. The consistency hyps pin qStar's U-marginal only, not the empirical joint type
+in TV, so the entropy-preserving relabel survives them. The d2e68b10 PASS remains overturned.
+
+DEFECT (2026-07-12c, STATEMENT-level under-hypothesis INHERITED from the core; body stays HONEST): the
+reduction body is honest (no `:= h`, no `*Hypothesis`/predicate bundling); the defect is propagated
+from `wz_covering_jointBand_markov_core` through the inner lemma. Identified fix = Proposal A
+(strengthen ONLY the covering-success event Ecov to STRONG joint typicality; see the core lemma
+docstring), deferred pending user judgment (a strategic def change that reopens the covering lower
+bound). The existing `@residual(plan:wz-binning-covering)` is KEPT (open residual, class `plan`).
+@audit:defect(false-statement)
 @residual(plan:wz-binning-covering) -/
 private lemma wz_covering_chosenWord_sideInfo_typical
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
