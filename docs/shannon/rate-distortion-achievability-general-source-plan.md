@@ -3,7 +3,13 @@
 > **Parent**: [`rate-distortion-achievability-unconditional-plan.md`](rate-distortion-achievability-unconditional-plan.md) /
 > [`textbook-roadmap.md`](../textbook-roadmap.md) §Ch.10 frontier「壁ではない frontier」
 >
-> **Status**: 着手 (2026-07-13)。gateway-atom-first。
+> **Status**: **CLOSED ✅ (2026-07-13)** — `rate_distortion_achievability_operational_general`
+> (`@[entry_point]`, `AchievabilityGeneralSource.lean:410`) genuine proof-done / sorryAx-free /
+> 独立 honesty 監査 `@audit:ok` (`a4d6763c` + audit commit)。G0–G4 + Wrapper 全 proof done。
+> gateway G1 (restrict/pad 全単射 + 3 統計量保存) は finite-sum algebra で一発通過し approach 確定。
+> G4 の pushforward/marginal は `Measure.pi_map_pi` + `measurePreserving_eval` + `integral_map` で
+> 賄え、予測した自作 `Measure.pi` null 積補題は**不要**だった (facts ledger 参照)。
+> 新 load-bearing hyp ゼロ (`hP_supp` を除いただけ、監査確認)。
 
 ## Context
 
