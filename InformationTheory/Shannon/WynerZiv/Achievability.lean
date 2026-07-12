@@ -1083,561 +1083,6 @@ private lemma wz_QXY_mem_stdSimplex
         (fun x _ hx ↦ le_antisymm (not_lt.mp (by simpa using hx)) (hPnn x))]
   exact htot
 
-/-! ### Leg F inner concentration — de-entangled sub-lemmas L0–L5
-
-The Markov-lemma concentration `wz_covering_markov_concentration` (Leg F inner leaf) is
-assembled from six de-entangled band sub-lemmas (proof-pivot-advisor 2026-07-12). The
-covering-acceptance failure event unfolds — via `mem_jointlyTypicalSet_iff` — into a
-conjunction of three independent entropy-band typicalities (U-band ∧ Y-band ∧ joint-band),
-so its De Morgan complement is a union of three band-failures, each with an independent
-witness:
-
-* **L0** (`wz_covering_uMarginal_map_eq`) — the covering pmf `qStar`'s `U`-marginal equals the
-  side-information marginal `wzSideInfoMarginal`'s `U`-marginal (both `= P_U`); this is what
-  makes the `U`-band consistent between the two ambients.
-* **L1** (`wz_covering_success_subset_uTypical`) — covering-success ⊆ {chosen word `U`-typical
-  in the side-information ambient}; the covering `U`-band plus L0 makes `U`-typicality identical
-  in the two ambients (mass-0 set inclusion, no threshold `N`).
-* **L2** (`wz_covering_src_yProj_eq_pi`) — the `Y`-projection of the source product measure is
-  the product of the source `Y`-law (`Measure.pi_map_pi`).
-* **L3** (`wz_covering_yBand_aep`) — the source-measure `Y`-band failure has mass `≤ tol/4` for
-  `n` large (a one-dimensional AEP on the iid side-information sequence, independent of the code).
-* **L4** (`wz_covering_jointBand_concentration`) — THE HARD KERNEL: covering-success ∩
-  {joint `(U,Y)`-band failure} has mass `≤ tol/4`. The correlated-joint conditional-typicality
-  concentration (the Markov lemma); `U = c.decoder (c.encoder x)` is a function of the whole
-  `x`-block, so `(U_i, Y_i)` is neither iid nor independent — a from-scratch in-project assembly
-  absent from Mathlib and the codebase. Left `sorry`, `@residual(plan:wz-binning-covering)`.
-* **L5** — the assembly (the body of `wz_covering_markov_concentration`): `N := max N_Y N_J`,
-  union bound over the three band-failures gives `0 + tol/4 + tol/4 = tol/2`.
--/
-
-open ChannelCoding in
-/-- **(L0) `U`-marginal consistency between the two ambients.** The covering pmf `qStar`'s
-`Fin k`-marginal (`iidYs 0` law of `rdAmbient qStar`) equals the side-information marginal
-`wzSideInfoMarginal`'s `Fin k`-marginal (`iidXs 0` law of `rdAmbient (wzSideInfoMarginal …)`);
-both are the covering-word law `P_U(u) = ∑ₓ κ'(x, u)·P_X(x)`. This aligns the `U`-band of the
-covering-success set (measured in `rdAmbient qStar`) with the `U`-band of the acceptance set
-(measured in the side-information ambient). -/
-private lemma wz_covering_uMarginal_map_eq
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    {k : ℕ} (κ' : α → Fin k → ℝ)
-    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
-    (hκ'_pos : ∀ x u, 0 < κ' x u)
-    (hκ'_sum : ∀ x, ∑ u, κ' x u = 1)
-    (hqStar : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) :
-    (rdAmbient qStar).map
-        (ChannelCoding.iidYs (α := {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (β := Fin k) 0)
-      = (rdAmbient (wzSideInfoMarginal P_XY κ')).map
-          (ChannelCoding.iidXs (α := Fin k) (β := {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) 0) := by
-  classical
-  obtain ⟨hne_α', -, hq_qStar_fun⟩ := wz_restrictedCoveringJoint_pos P_XY κ' hκ'_pos hκ'_sum
-  haveI := hne_α'
-  have hq_qStar : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) := by
-    rw [funext hqStar]; exact hq_qStar_fun
-  haveI hne_prod : Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
-    Finset.univ_nonempty_iff.mp
-      (Finset.nonempty_of_sum_ne_zero (by rw [hq_qStar.2]; exact one_ne_zero))
-  haveI : Nonempty (Fin k) := hne_prod.map Prod.snd
-  haveI hne_β' : Nonempty {y : β // 0 < ∑ x, P_XY.real {(x, y)}} :=
-    wzSideInfoMarginal_subtype_nonempty P_XY
-  have hq_wsm := wzSideInfoMarginal_mem_stdSimplex P_XY κ' hκ'_pos hκ'_sum
-  rw [rdAmbient_map_iidYs qStar hq_qStar,
-      rdAmbient_map_iidXs (wzSideInfoMarginal P_XY κ') hq_wsm]
-  haveI : IsProbabilityMeasure (ChannelCoding.pmfToMeasure qStar) :=
-    ChannelCoding.pmfToMeasure_isProbabilityMeasure hq_qStar
-  haveI : IsProbabilityMeasure (ChannelCoding.pmfToMeasure (wzSideInfoMarginal P_XY κ')) :=
-    ChannelCoding.pmfToMeasure_isProbabilityMeasure hq_wsm
-  haveI : IsProbabilityMeasure ((ChannelCoding.pmfToMeasure qStar).map Prod.snd) :=
-    Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
-  haveI : IsProbabilityMeasure
-      ((ChannelCoding.pmfToMeasure (wzSideInfoMarginal P_XY κ')).map Prod.fst) :=
-    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
-  apply Measure.ext_of_singleton
-  intro u
-  -- The two `U`-marginal singletons agree as reals, both `= ∑ₓ κ'(x, u)·P_X(x)`.
-  have hMS : marginalSnd qStar u = ∑ x, κ' x u * ∑ y, P_XY.real {(x, y)} := by
-    simp only [marginalSnd]
-    rw [Finset.sum_congr rfl (fun x' _ ↦ hqStar (x', u))]
-    letI : DecidablePred (fun x : α => 0 < ∑ y, P_XY.real {(x, y)}) := Classical.decPred _
-    rw [← Finset.sum_subtype (Finset.univ.filter (fun x : α => 0 < ∑ y, P_XY.real {(x, y)}))
-        (fun x => by simp) (fun x => κ' x u * ∑ y, P_XY.real {(x, y)})]
-    refine Finset.sum_subset (Finset.filter_subset _ _) ?_
-    intro x _ hx
-    rw [Finset.mem_filter] at hx
-    push_neg at hx
-    have hz : ∑ y, P_XY.real {(x, y)} = 0 :=
-      le_antisymm (hx (Finset.mem_univ x)) (Finset.sum_nonneg fun _ _ ↦ measureReal_nonneg)
-    rw [hz, mul_zero]
-  have hMF : marginalFst (wzSideInfoMarginal P_XY κ') u = ∑ x, κ' x u * ∑ y, P_XY.real {(x, y)} := by
-    simp only [marginalFst, wzSideInfoMarginal]
-    rw [Finset.sum_comm]
-    refine Finset.sum_congr rfl (fun x _ ↦ ?_)
-    rw [← Finset.mul_sum]
-    congr 1
-    letI : DecidablePred (fun y : β => 0 < ∑ x, P_XY.real {(x, y)}) := Classical.decPred _
-    rw [← Finset.sum_subtype (Finset.univ.filter (fun y : β => 0 < ∑ x, P_XY.real {(x, y)}))
-        (fun y => by simp) (fun y => P_XY.real {(x, y)})]
-    refine Finset.sum_subset (Finset.filter_subset _ _) ?_
-    intro y _ hy
-    rw [Finset.mem_filter] at hy
-    push_neg at hy
-    have hz : ∑ x', P_XY.real {(x', y)} = 0 :=
-      le_antisymm (hy (Finset.mem_univ y)) (Finset.sum_nonneg fun _ _ ↦ measureReal_nonneg)
-    exact (Finset.sum_eq_zero_iff_of_nonneg (fun _ _ ↦ measureReal_nonneg)).mp hz x (Finset.mem_univ x)
-  have hreal : ((ChannelCoding.pmfToMeasure qStar).map Prod.snd).real {u}
-      = ((ChannelCoding.pmfToMeasure (wzSideInfoMarginal P_XY κ')).map Prod.fst).real {u} := by
-    rw [pmfToMeasure_map_snd_real_singleton hq_qStar u,
-        pmfToMeasure_map_fst_real_singleton hq_wsm u, hMS, hMF]
-  have hL := measure_ne_top ((ChannelCoding.pmfToMeasure qStar).map Prod.snd) {u}
-  have hR := measure_ne_top
-    ((ChannelCoding.pmfToMeasure (wzSideInfoMarginal P_XY κ')).map Prod.fst) {u}
-  rw [← ENNReal.ofReal_toReal hL, ← ENNReal.ofReal_toReal hR]
-  exact congrArg ENNReal.ofReal hreal
-
-open ChannelCoding in
-/-- **(L1) Covering-success ⊆ chosen-word `U`-typical (in the side-information ambient).** If the
-chosen covering word `c.decoder (c.encoder x)` typically covers `x` (covering-success in
-`rdAmbient qStar`), then it is `U`-typical in the side-information ambient. The covering-success
-`U`-band bands the word against `qStar`'s `U`-marginal; L0 makes that identical to the
-side-information ambient's `U`-marginal, so the two `U`-typical sets coincide. Pure set
-inclusion (no threshold `N`). -/
-private lemma wz_covering_success_subset_uTypical
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    {k : ℕ} (κ' : α → Fin k → ℝ)
-    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
-    (hκ'_pos : ∀ x u, 0 < κ' x u)
-    (hκ'_sum : ∀ x, ∑ u, κ' x u = 1)
-    (hqStar : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
-    (ε : ℝ) (n : ℕ) (M : ℕ)
-    (c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)) :
-    { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
-        (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
-          ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
-              ChannelCoding.iidXs ChannelCoding.iidYs n ε }
-      ⊆ { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
-          c.decoder (c.encoder (fun j ↦ (p j).1))
-            ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs n ε } := by
-  have hmap := wz_covering_uMarginal_map_eq P_XY κ' qStar hκ'_pos hκ'_sum hqStar
-  -- `pmfLog` and `entropy` of the two `U`-marginals coincide (L0).
-  have hpmf : pmfLog (rdAmbient qStar)
-        (ChannelCoding.iidYs (α := {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (β := Fin k))
-      = pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
-          (ChannelCoding.iidXs (α := Fin k) (β := {y : β // 0 < ∑ x, P_XY.real {(x, y)}})) := by
-    funext u'
-    simp only [pmfLog]
-    rw [hmap]
-  have hent : entropy (rdAmbient qStar)
-        (ChannelCoding.iidYs (α := {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (β := Fin k) 0)
-      = entropy (rdAmbient (wzSideInfoMarginal P_XY κ'))
-          (ChannelCoding.iidXs (α := Fin k) (β := {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) 0) := by
-    simp only [entropy]
-    rw [hmap]
-  have hset : typicalSet (rdAmbient qStar)
-        (ChannelCoding.iidYs (α := {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (β := Fin k)) n ε
-      = typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
-          (ChannelCoding.iidXs (α := Fin k) (β := {y : β // 0 < ∑ x, P_XY.real {(x, y)}})) n ε := by
-    unfold typicalSet
-    rw [hpmf, hent]
-  intro p hp
-  rw [Set.mem_setOf_eq, ChannelCoding.mem_jointlyTypicalSet_iff] at hp
-  obtain ⟨_, hu, _⟩ := hp
-  rw [Set.mem_setOf_eq, ← hset]
-  exact hu
-
-open ChannelCoding in
-/-- **(L2) `Y`-projection of the source product measure.** Pushing the source product measure
-`Measure.pi (pmfToMeasure P_XY{(x'.1, y)})` along the coordinatewise `Y`-projection gives the
-product of the source `Y`-law `(pmfToMeasure P_XY{(x'.1, y)}).map Prod.snd`. Direct
-`Measure.pi_map_pi`. -/
-private lemma wz_covering_src_yProj_eq_pi
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] (n : ℕ) :
-    (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-          P_XY.real {(p.1.1, p.2)}))).map (fun p (i : Fin n) ↦ (p i).2)
-      = Measure.pi (fun _ : Fin n ↦ (ChannelCoding.pmfToMeasure
-          (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-            P_XY.real {(p.1.1, p.2)})).map Prod.snd) := by
-  haveI : IsProbabilityMeasure (ChannelCoding.pmfToMeasure
-      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
-    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
-  haveI : IsProbabilityMeasure ((ChannelCoding.pmfToMeasure
-      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})).map
-        Prod.snd) := Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
-  exact Measure.pi_map_pi (hμ := fun _ ↦ inferInstance) (fun _ ↦ measurable_snd.aemeasurable)
-
-open ChannelCoding in
-/-- **(L3) `Y`-band AEP under the source product measure.** For `n` large the source-measure
-mass of the `Y`-band failure — the side-information block `y` is not typical in the
-side-information ambient — is at most `tol/4`. A one-dimensional AEP on the iid `Y`-sequence
-(law `P_Y = ∑ₓ P_XY{(x, ·)}`), independent of the code `c` and of covering-success. Transports
-`typicalSet_prob_ge_of_rate` (the ℕ-process AEP) onto the source product measure via the
-`β'`↔`β` coercion, mirroring the `wz_source_codeword_sideInfo_mass_le` transport. -/
-private lemma wz_covering_yBand_aep
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    {k : ℕ} (κ' : α → Fin k → ℝ)
-    (hκ'_pos : ∀ x u, 0 < κ' x u)
-    (hκ'_sum : ∀ x, ∑ u, κ' x u = 1)
-    (ε : ℝ) (hε : 0 < ε) (tol : ℝ) (htol : 0 < tol) :
-    ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
-      (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-          (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-            P_XY.real {(p.1.1, p.2)}))).real
-        { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
-            (fun i ↦ (p i).2) ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
-                (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-                  ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε }
-        ≤ tol / 4 := by
-  sorry
-
-open ChannelCoding in
-/-- **(L4 — THE HARD KERNEL) Joint `(U,Y)`-band concentration.** For `n` large the
-source-measure mass of the event {covering-success ∧ the chosen word `U` and the side
-information `Y` are jointly `(U,Y)`-atypical} is at most `tol/4`. This is the correlated-joint
-conditional-typicality concentration — the Markov lemma. `U = c.decoder (c.encoder x)` is a
-function of the whole `x`-block, so `(U_i, Y_i)` is neither iid nor independent; the plain
-`aep_chebyshev_bound` (`Rate.lean:108`) does not apply. From-scratch in-project assembly, absent
-from Mathlib and the codebase. The consistency + full-support hypotheses (`hκ'_pos`, `hκ'_sum`,
-`hqStar`) are mandatory: without them the statement is false-as-framed (a constant-word
-counterexample; see the inner-lemma docstring). Left `sorry` — a separate leg builds it.
-@residual(plan:wz-binning-covering) -/
-private lemma wz_covering_jointBand_concentration
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    {k : ℕ} (κ' : α → Fin k → ℝ)
-    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
-    (ε : ℝ) (hε : 0 < ε) (tol : ℝ) (htol : 0 < tol)
-    (hκ'_pos : ∀ x u, 0 < κ' x u)
-    (hκ'_sum : ∀ x, ∑ u, κ' x u = 1)
-    (hqStar : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) :
-    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (M : ℕ)
-        (c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
-        (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-              P_XY.real {(p.1.1, p.2)}))).real
-          ({ p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
-              ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
-                  ChannelCoding.iidXs ChannelCoding.iidYs n ε }
-            ∩ { p | (fun i ↦ (c.decoder (c.encoder (fun j ↦ (p j).1)) i, (p i).2))
-                ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
-                    (ChannelCoding.jointSequence ChannelCoding.iidXs
-                      (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-                        ((ChannelCoding.iidYs i ω :
-                            {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))) n ε })
-          ≤ tol / 4 := by
-  sorry
-
-/-! ## Gateway atom 3 (Leg F) — covering chosen-word side-information acceptance (Markov lemma)
-
-The decisive covering-acceptance (`C2`) leaf of Wyner–Ziv achievability, isolated from the
-covering atom `wz_coveringFamily_of_testChannel` (judgment log #8). For the covering `LossyCode`
-`c`, the *correlated joint source* mass of the acceptance-failure event
-`wzCoveringAcceptFailSet` — the event that the chosen covering word `c.decoder (c.encoder x)` is
-NOT jointly typical with the side information `y` (with `(x, y)` drawn from the true joint
-`P_XY`, so `x` and `y` are **correlated**) — is small, given only the covering-typicality success
-precondition (the chosen word covers the source `x`, an S5a-supplied regularity/precondition on
-the constructed code, NOT the acceptance conclusion).
-
-Its analytic core is the **Markov lemma**: if the chosen word `u = c.decoder (c.encoder x)`
-typically covers `x` and the source pair `(x, y)` is jointly typical, then `(u, y)` is jointly
-typical — so acceptance fails only off the (exp-small) covering-failure ∪ source-atypicality set.
-The measure is the *correlated* joint source
-`Measure.pi (pmfToMeasure (fun (x', y) ↦ P_XY{(x'.1, y)}))`; crucially the covering word
-`c.decoder (c.encoder x)` is a function of the source `x`, so the `u`–`y` correlation that makes
-acceptance likely is inherited from the `x`–`y` correlation and is **destroyed by fixing `u`
-independently**. Gateway-2 `wz_covering_sideInfo_mass_ge` (a *lower* bound on the *independent*
-product-`Y`-law slice mass) and the broadcast confusion bound `bc_conditional_slice_prob_le`
-(an *upper* bound on a *conditional-product* typical slice, the confusion/wrong-codeword
-direction) are on the wrong measure/direction and do not supply this (Leg F verdict). -/
-
-open ChannelCoding in
-/-- **(Leg F inner concentration — the Markov-lemma core).** The correlated-joint-source mass
-of the event that the chosen covering word `u = c.decoder (c.encoder x)` *typically covers* the
-source `x` (jointly typical in the covering ambient `rdAmbient qStar`) yet *fails acceptance*
-(`(u, y)` not jointly typical in the side-information ambient) is at most `tol/2` for `n` large.
-
-This is the analytic core isolated from `wz_covering_chosenWord_sideInfo_typical`: the outer lemma
-splits the acceptance-failure event along covering success/failure, sends the covering-failure part
-to the supplied premise (`≤ tol/2`), and reduces the acceptance-failure-on-covering-success part to
-this concentration bound. Unconditional in the covering premise: the intersection with the
-covering-success set makes the statement self-contained.
-
-CAVEAT (suspected under-hypothesis — flagged 2026-07-12, pending orchestrator re-audit): the
-Markov-concentration truth REQUIRES `qStar` to be the `κ'`-consistent covering joint
-`qStar (x', u) = κ' x'.1 u · (∑ y, P_XY{(x'.1, y)})` with `κ'` full-support
-(`0 < κ' x u`, `∑ u κ' x u = 1`) — exactly the relations the covering atom
-`wz_coveringFamily_of_testChannel` exports at its output but which the current signature (shared
-with the outer leaf) does NOT thread (`qStar`, `κ'` are free, unrelated params). Without them the
-statement is false-as-framed: for a constant-word code `c ≡ u₀` and the free choice
-`qStar := P_X ⊗ δ_{u₀}`, covering-success has mass → 1 (premise holds) yet, for generic `κ'` with
-`−log P_U(u₀) ≠ H(P_U)`, `u₀` is not `P_U`-typical so acceptance fails on the whole space
-(mass → 1 > tol/2). The consistency relation kills this counterexample (it forces `qStar`'s
-`U`-marginal `= P_U`, so a mismatched-`U`-marginal code fails covering-success). The fix is a
-precondition-exposure (add the `qStar`–`κ'` consistency + full-support hypotheses, discharged by the
-covering atom's construction), NOT bundling the acceptance conclusion.
-
-Its body — the correlated-joint conditional-typicality concentration (the Markov lemma), given the
-consistency hypotheses — is a from-scratch assembly absent from Mathlib and the codebase (`plan`,
-not a Mathlib wall). Left `sorry` pending the signature fix above.
-
-AUDIT VERDICT 2026-07-12b (independent re-audit): the CAVEAT is CONFIRMED. This inner lemma
-inherits the SAME false-as-framed defect as the leaf: with free `qStar`/`κ'` its conclusion
-(covering-success ∩ acceptance-failure ≤ tol/2) is universally false — the constant-word
-`c ≡ u₀ⁿ` + `qStar := P_X ⊗ δ_{u₀}` counterexample (see the leaf docstring) makes covering-success
-mass → 1 and, for `−log P_U(u₀) ≠ H(P_U)`, that entire covering-success set lies in
-acceptance-failure, so the intersection → 1 > tol/2. Intersecting with covering-success does NOT
-save it. REQUIRED FIX = thread the same `qStar`–`κ'` consistency + full-support hypotheses
-(owner/planner boundary, deferred this session). RESIDUAL CLASSIFICATION `plan` is CORRECT (once
-the signature is fixed): the correlated-joint conditional-typicality (Markov-lemma) concentration
-is a from-scratch in-project assembly (loogle/grep 0-hit re-confirmed in-plan), NOT a Mathlib wall;
-the only in-project ingredient `conditionalStronglyTypicalSlice_mass_ge` (Mass.lean:1274) is a
-lower/independent-product bound.
-
-FIX APPLIED 2026-07-12 (per the audit above): the `qStar`–`κ'` consistency + full-support
-hypotheses (`hκ'_pos`, `hκ'_sum`, `hqStar`) are now threaded into this signature, matching the
-relations the sole consumer `wz_coveringFamily_of_testChannel` exports at its output. The
-false-as-framed defect is resolved (the constant-word counterexample fails covering-success under
-consistency); the statement is now HONEST tier-2. Only the Markov concentration itself stays open.
-@residual(plan:wz-binning-covering) -/
-private lemma wz_covering_markov_concentration
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    {k : ℕ} (κ' : α → Fin k → ℝ)
-    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
-    (ε : ℝ) (hε : 0 < ε) (tol : ℝ) (htol : 0 < tol)
-    (hκ'_pos : ∀ x u, 0 < κ' x u)
-    (hκ'_sum : ∀ x, ∑ u, κ' x u = 1)
-    (hqStar : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) :
-    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (M : ℕ)
-        (c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
-        (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-              P_XY.real {(p.1.1, p.2)}))).real
-          ({ p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
-              ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
-                  ChannelCoding.iidXs ChannelCoding.iidYs n ε }
-            ∩ wzCoveringAcceptFailSet P_XY κ' c ε)
-          ≤ tol / 2 := by
-  classical
-  obtain ⟨N_Y, hN_Y⟩ := wz_covering_yBand_aep P_XY κ' hκ'_pos hκ'_sum ε hε tol htol
-  obtain ⟨N_J, hN_J⟩ :=
-    wz_covering_jointBand_concentration P_XY κ' qStar ε hε tol htol hκ'_pos hκ'_sum hqStar
-  refine ⟨max N_Y N_J, fun n hn M c ↦ ?_⟩
-  have hn_Y : N_Y ≤ n := (le_max_left _ _).trans hn
-  have hn_J : N_J ≤ n := (le_max_right _ _).trans hn
-  have hyf := hN_Y n hn_Y
-  have hjf := hN_J n hn_J M c
-  haveI hQ_prob : IsProbabilityMeasure (ChannelCoding.pmfToMeasure
-      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
-    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
-  set SRC : Measure (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
-    Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
-    with hSRC_def
-  haveI hSRC_prob : IsProbabilityMeasure SRC := by rw [hSRC_def]; infer_instance
-  -- Name the covering-success event and the three band-failure witnesses.
-  set Ecov : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
-    { p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
-        ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
-            ChannelCoding.iidXs ChannelCoding.iidYs n ε } with hEcov_def
-  set Euf : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
-    { p | c.decoder (c.encoder (fun j ↦ (p j).1))
-        ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs n ε }
-    with hEuf_def
-  set Eyf : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
-    { p | (fun i ↦ (p i).2) ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
-        (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-          ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε }
-    with hEyf_def
-  set Ejf : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
-    { p | (fun i ↦ (c.decoder (c.encoder (fun j ↦ (p j).1)) i, (p i).2))
-        ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
-            (ChannelCoding.jointSequence ChannelCoding.iidXs
-              (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-                ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))) n ε }
-    with hEjf_def
-  -- De Morgan: covering-success ∩ acceptance-failure splits along the three bands.
-  have hincl : Ecov ∩ wzCoveringAcceptFailSet P_XY κ' c ε
-      ⊆ (Ecov ∩ Euf) ∪ Eyf ∪ (Ecov ∩ Ejf) := by
-    intro p hp
-    obtain ⟨hcov, hfail⟩ := hp
-    rw [wzCoveringAcceptFailSet, Set.mem_setOf_eq,
-      ChannelCoding.mem_jointlyTypicalSet_iff] at hfail
-    by_cases hu : c.decoder (c.encoder (fun j ↦ (p j).1))
-        ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs n ε
-    · by_cases hy : (fun i ↦ (p i).2) ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
-          (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-            ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε
-      · exact Or.inr ⟨hcov, fun hjt ↦ hfail ⟨hu, hy, hjt⟩⟩
-      · exact Or.inl (Or.inr hy)
-    · exact Or.inl (Or.inl ⟨hcov, hu⟩)
-  -- The `U`-band-failure part is empty on covering-success (L1).
-  have hEmpty : Ecov ∩ Euf = ∅ := by
-    rw [Set.eq_empty_iff_forall_notMem]
-    rintro p ⟨hcov, huf⟩
-    exact huf (wz_covering_success_subset_uTypical P_XY κ' qStar hκ'_pos hκ'_sum hqStar ε n M c hcov)
-  have h1 : SRC.real (Ecov ∩ Euf) = 0 := by rw [hEmpty, measureReal_empty]
-  have hunion1 : SRC.real ((Ecov ∩ Euf) ∪ Eyf ∪ (Ecov ∩ Ejf))
-      ≤ SRC.real ((Ecov ∩ Euf) ∪ Eyf) + SRC.real (Ecov ∩ Ejf) := measureReal_union_le _ _
-  have hunion2 : SRC.real ((Ecov ∩ Euf) ∪ Eyf)
-      ≤ SRC.real (Ecov ∩ Euf) + SRC.real Eyf := measureReal_union_le _ _
-  have hmono : SRC.real (Ecov ∩ wzCoveringAcceptFailSet P_XY κ' c ε)
-      ≤ SRC.real ((Ecov ∩ Euf) ∪ Eyf ∪ (Ecov ∩ Ejf)) :=
-    measureReal_mono hincl (measure_ne_top _ _)
-  linarith [hyf, hjf, h1, hunion1, hunion2, hmono]
-
-open ChannelCoding in
-/-- **(Leg F gateway atom) Covering chosen-word side-information acceptance (Markov lemma).**
-For every tolerance `tol > 0` there is an `N` such that for `n ≥ N` and every covering
-`LossyCode` `c` whose chosen words typically cover the source (the S5a-style covering-success
-premise, an implication hypothesis), the correlated-joint-source mass of the covering-acceptance
-failure `wzCoveringAcceptFailSet P_XY κ' c ε` (the chosen word `c.decoder (c.encoder x)` is not
-jointly typical, at radius `ε`, with the side information) is at most `tol`. This is the covering
-half `C2` of the Wyner–Ziv error `E2` (`C2 ⊆ E2`), isolated from `wz_coveringFamily_of_testChannel`
-to be self-built by the Markov lemma (a correlated-joint conditional-typicality concentration
-bound absent from Mathlib and the codebase — `plan`, not a Mathlib wall).
-
-Independent honesty audit 2026-07-12 (Leg F leaf, commit `5d3ecd81`): PASS [OVERTURNED
-2026-07-12b — the "Sufficiency confirmed … TRUE-as-framed" claim below is WRONG; see AUDIT
-VERDICT at the end of this docstring], tier-2
-`@residual`. Non-circular (the premise is the `x`–`u` covering slice in ambient
-`rdAmbient qStar`, the conclusion the `u`–`y` acceptance slice in a different ambient —
-the Markov bridge is genuinely open, body is `sorry`, not `:= h`). Non-bundled: the
-covering-typicality-success premise is a genuine regularity precondition on the constructed
-code (S5a-suppliable, a property of the covering `LossyCode`), NOT the acceptance conclusion;
-granting it does not hand over the `u`–`y` typicality — the Markov concentration
-(covering-`x` typicality + source `(x,y)` typicality ⟹ `(u,y)` typicality) remains the sole
-residual. Sufficiency confirmed by degenerate-boundary refutation: the coupled
-correlated-joint-source form is TRUE-as-framed because `u = c.decoder (c.encoder x)` is a
-function of the source, so under `Measure.pi (pmfToMeasure P_XY{(x'.1,y)})` the empirical
-`(u,y)` law → `wzSideInfoMarginal` (acceptance-failure mass → 0) at every fixed `ε` and even
-at `I(U;Y)>0`. The proof-pivot-advisor's rejected FIXED-word/INDEPENDENT-product shape
-(`Measure.pi (μ.map (Ys 0))`) is FALSE-as-framed at `I(U;Y)>0` (independent empirical
-`(u,y)` → `P_U × P_Y ≠ wzSideInfoMarginal`, acceptance-failure mass → 1, violating `≤ tol`);
-it survives only at the degenerate `I(U;Y)=0` — so the implementer's override to the coupled
-form is justified. Class `plan` correct: the concentration ingredient
-`conditionalStronglyTypicalSlice_mass_ge` (`ConditionalMethodOfTypes/Mass.lean:1274`, a
-lower/independent bound) exists in-project; the correlated-joint Markov-lemma assembly is
-unbuilt in-project, not a Mathlib gap. NOT `@audit:ok` — the `sorry` remains.
-
-SUSPECTED UNDER-HYPOTHESIS (flagged 2026-07-12, implementation of the Markov-lemma leg —
-supersedes the "Sufficiency confirmed" claim above, pending orchestrator re-audit): `qStar` and
-`κ'` are FREE, unrelated parameters here, but the acceptance conclusion is FALSE-as-framed without
-the covering-joint consistency relation `qStar (x', u) = κ' x'.1 u · (∑ y, P_XY{(x'.1, y)})` and the
-full-support facts `0 < κ' x u`, `∑ u κ' x u = 1` — exactly the relations the covering atom
-`wz_coveringFamily_of_testChannel` exports at its output (L1218-1224) but does NOT thread into this
-leaf. Counterexample: a constant-word code `c ≡ u₀` with the free choice `qStar := P_X ⊗ δ_{u₀}`
-satisfies the covering-success premise (covering-typicality mass → 1) yet, for generic `κ'` with
-`−log P_U(u₀) ≠ H(P_U)` (`P_U := ∑ₓ κ'(x,·)·P_X(x)`), `u₀` is not `P_U`-typical so acceptance fails
-on the whole space (mass → 1 > tol). The consistency relation kills the counterexample (`qStar`'s
-`U`-marginal `= P_U`, so a mismatched code fails covering-success). The degenerate-boundary check
-above only varied the measure coupling (independent vs coupled), not the code/`qStar` adversarially,
-so it missed this axis. FIX = precondition-exposure (thread the `qStar`–`κ'` consistency +
-full-support hypotheses into this leaf and `wz_covering_markov_concentration`, discharged by the
-covering atom's construction; ripple to the single consumer `wz_coveringFamily_of_testChannel`);
-this is a signature change reserved for the orchestrator/planner, NOT acceptance-conclusion bundling.
-
-AUDIT VERDICT 2026-07-12b (independent re-audit, commits `9ecffb41`+`e1467fdd`): the
-under-hypothesis finding is CONFIRMED — this leaf is FALSE-as-framed with free `qStar`/`κ'`.
-Verbatim-reproduced counterexample: `typicalSet` bands the U-empirical-entropy against the
-U-marginal of the ambient (`pmfLog`/`entropy` of `μ.map (iidXs/iidYs 0)`). The covering-success
-premise measures U against `marginalSnd qStar` (qStar's `Fin k` marginal) whereas the acceptance
-conclusion measures U against `marginalFst (wzSideInfoMarginal) = P_U` — decoupled because `qStar`
-is a free param (signature demands NO stdSimplex/consistency on it). A constant-word `LossyCode`
-`c ≡ u₀ⁿ` (legal, `M=1`) with `qStar := P_X ⊗ δ_{u₀}` makes covering-success mass → 1 (premise ✓,
-qStar's U-marginal is `δ_{u₀}`, so `u₀ⁿ` is trivially U-typical there) while, for any `κ'` giving
-non-uniform `P_U` with `−log P_U(u₀) ≠ H(P_U)`, `u₀ⁿ` is NOT `P_U`-typical ⟹ acceptance-failure =
-whole space (mass 1 > tol), for arbitrarily large `n` ⟹ refutes the `∃ N` for every `N`. The prior
-`d2e68b10` PASS is OVERTURNED: it varied only the measure coupling (independent-product vs coupled),
-never `qStar`/the code adversarially, so it missed this axis. REQUIRED missing hypotheses (fix): the
-`qStar`–`κ'` consistency `qStar (x',u) = κ' x'.1 u · (∑ y, P_XY{(x'.1,y)})` + full-support
-(`0 < κ' x u`, `∑ u κ' x u = 1`) — both already exported by the sole (future) consumer
-`wz_coveringFamily_of_testChannel` (L1249-1252). Fix assessment: HONEST precondition-exposure (Leg
-C.5/C.6/E kind), NOT conclusion-bundling — granting consistency only aligns the two U-marginals
-(`marginalSnd qStar = P_U`); the Markov concentration `covering-x-typical ⟹ (u,y)-typical w.h.p.`
-stays genuinely open (the residual `sorry` in `wz_covering_markov_concentration`). SUFFICIENT —
-under consistency the counterexample's `qStar := P_X⊗δ_{u₀}` forces `P_U = δ_{u₀}`, so
-`−log P_U(u₀) = 0 = H(P_U)` and a mismatched constant word instead fails covering-success; no
-residual counterexample survives. HEADLINE-SAFE — leaf still unconsumed (private); the fix stays on
-this leaf + inner lemma, discharged at the covering atom, and does NOT propagate a
-full-support/acceptance hypothesis to `wz_goodCode_exists_of_testChannel` / `wyner_ziv_achievability`.
-FIX APPLIED 2026-07-12 (per the 2026-07-12b audit above): the `qStar`–`κ'` consistency +
-full-support hypotheses (`hκ'_pos`, `hκ'_sum`, `hqStar`) are now threaded into this leaf and passed
-through to `wz_covering_markov_concentration`. They match the relations the sole (future) consumer
-`wz_coveringFamily_of_testChannel` exports at its output (L1249-1252, an `exact`/`rfl`-clean
-discharge), so the false-as-framed defect is resolved and the leaf is now HONEST tier-2. The
-d2e68b10 PASS remains overturned (record preserved above); the residual Markov concentration itself
-(the outer decomposition's transitive `sorry` in `wz_covering_markov_concentration`) stays open.
-@residual(plan:wz-binning-covering) -/
-private lemma wz_covering_chosenWord_sideInfo_typical
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    {k : ℕ} (κ' : α → Fin k → ℝ)
-    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
-    (ε : ℝ) (hε : 0 < ε) (tol : ℝ) (htol : 0 < tol)
-    (hκ'_pos : ∀ x u, 0 < κ' x u)
-    (hκ'_sum : ∀ x, ∑ u, κ' x u = 1)
-    (hqStar : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) :
-    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (M : ℕ)
-        (c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
-        -- covering-typicality success (S5a-supplied premise): off a set of mass `≤ tol/2`,
-        -- the chosen covering word `c.decoder (c.encoder x)` is jointly typical with the source
-        -- `x` in the covering ambient `rdAmbient qStar`. NOT the acceptance conclusion (different
-        -- ambient: covering is the `x`–`u` slice, acceptance the `u`–`y` slice).
-        (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-              P_XY.real {(p.1.1, p.2)}))).real
-          { p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
-              ∉ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
-                  ChannelCoding.iidXs ChannelCoding.iidYs n ε }
-          ≤ tol / 2 →
-        (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-              P_XY.real {(p.1.1, p.2)}))).real
-          (wzCoveringAcceptFailSet P_XY κ' c ε)
-          ≤ tol := by
-  -- Obtain the threshold `N` from the inner Markov-lemma concentration bound.
-  obtain ⟨N, hN⟩ :=
-    wz_covering_markov_concentration P_XY κ' qStar ε hε tol htol hκ'_pos hκ'_sum hqStar
-  refine ⟨N, fun n hn M c hprem ↦ ?_⟩
-  -- The inner concentration: acceptance failure ON covering success has mass `≤ tol/2`.
-  have hinner := hN n hn M c
-  haveI hQ_prob : IsProbabilityMeasure
-      (ChannelCoding.pmfToMeasure
-        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
-    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
-  set SRC : Measure (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
-    Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
-    with hSRC_def
-  haveI hSRC_prob : IsProbabilityMeasure SRC := by rw [hSRC_def]; infer_instance
-  -- Acceptance failure is covered by covering-failure ∪ (covering-success ∩ acceptance failure).
-  have hincl : wzCoveringAcceptFailSet P_XY κ' c ε
-      ⊆ { p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
-                ∉ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
-                    ChannelCoding.iidXs ChannelCoding.iidYs n ε }
-          ∪ ({ p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
-                    ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
-                        ChannelCoding.iidXs ChannelCoding.iidYs n ε }
-              ∩ wzCoveringAcceptFailSet P_XY κ' c ε) := by
-    intro p hp
-    by_cases hc : (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
-        ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
-            ChannelCoding.iidXs ChannelCoding.iidYs n ε
-    · exact Or.inr ⟨hc, hp⟩
-    · exact Or.inl hc
-  -- Union bound over the covering-failure / covering-success split.
-  have hunion : SRC.real (wzCoveringAcceptFailSet P_XY κ' c ε)
-      ≤ SRC.real { p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
-                ∉ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
-                    ChannelCoding.iidXs ChannelCoding.iidYs n ε }
-        + SRC.real ({ p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
-                    ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
-                        ChannelCoding.iidXs ChannelCoding.iidYs n ε }
-              ∩ wzCoveringAcceptFailSet P_XY κ' c ε) :=
-    le_trans
-      (measureReal_mono hincl
-        (measure_union_ne_top (measure_ne_top _ _) (measure_ne_top _ _)))
-      (measureReal_union_le _ _)
-  -- Covering-failure part `≤ tol/2` (premise); covering-success ∩ acceptance-failure `≤ tol/2`
-  -- (inner concentration). Their sum is `≤ tol`.
-  linarith [hprem, hinner, hunion]
 
 open ChannelCoding in
 /-- **(Steps 1–2) Covering LossyCode family from a feasible test channel.**
@@ -5306,6 +4751,699 @@ theorem wyner_ziv_achievability_codes
         (c n).expectedBlockDistortion P_XY d ≤ D + ε := by
   obtain ⟨k, qf, hqf, hobj⟩ := wz_testChannel_of_rate_lt P_XY d R D h_ne h_rate
   exact wz_goodCode_exists_of_testChannel P_XY d R D k qf hqf hobj
+
+/-! ### Leg F inner concentration — de-entangled sub-lemmas L0–L5
+
+The Markov-lemma concentration `wz_covering_markov_concentration` (Leg F inner leaf) is
+assembled from six de-entangled band sub-lemmas (proof-pivot-advisor 2026-07-12). The
+covering-acceptance failure event unfolds — via `mem_jointlyTypicalSet_iff` — into a
+conjunction of three independent entropy-band typicalities (U-band ∧ Y-band ∧ joint-band),
+so its De Morgan complement is a union of three band-failures, each with an independent
+witness:
+
+* **L0** (`wz_covering_uMarginal_map_eq`) — the covering pmf `qStar`'s `U`-marginal equals the
+  side-information marginal `wzSideInfoMarginal`'s `U`-marginal (both `= P_U`); this is what
+  makes the `U`-band consistent between the two ambients.
+* **L1** (`wz_covering_success_subset_uTypical`) — covering-success ⊆ {chosen word `U`-typical
+  in the side-information ambient}; the covering `U`-band plus L0 makes `U`-typicality identical
+  in the two ambients (mass-0 set inclusion, no threshold `N`).
+* **L2** (`wz_covering_src_yProj_eq_pi`) — the `Y`-projection of the source product measure is
+  the product of the source `Y`-law (`Measure.pi_map_pi`).
+* **L3** (`wz_covering_yBand_aep`) — the source-measure `Y`-band failure has mass `≤ tol/4` for
+  `n` large (a one-dimensional AEP on the iid side-information sequence, independent of the code).
+* **L4** (`wz_covering_jointBand_concentration`) — THE HARD KERNEL: covering-success ∩
+  {joint `(U,Y)`-band failure} has mass `≤ tol/4`. The correlated-joint conditional-typicality
+  concentration (the Markov lemma); `U = c.decoder (c.encoder x)` is a function of the whole
+  `x`-block, so `(U_i, Y_i)` is neither iid nor independent — a from-scratch in-project assembly
+  absent from Mathlib and the codebase. Left `sorry`, `@residual(plan:wz-binning-covering)`.
+* **L5** — the assembly (the body of `wz_covering_markov_concentration`): `N := max N_Y N_J`,
+  union bound over the three band-failures gives `0 + tol/4 + tol/4 = tol/2`.
+-/
+
+open ChannelCoding in
+/-- **(L0) `U`-marginal consistency between the two ambients.** The covering pmf `qStar`'s
+`Fin k`-marginal (`iidYs 0` law of `rdAmbient qStar`) equals the side-information marginal
+`wzSideInfoMarginal`'s `Fin k`-marginal (`iidXs 0` law of `rdAmbient (wzSideInfoMarginal …)`);
+both are the covering-word law `P_U(u) = ∑ₓ κ'(x, u)·P_X(x)`. This aligns the `U`-band of the
+covering-success set (measured in `rdAmbient qStar`) with the `U`-band of the acceptance set
+(measured in the side-information ambient). -/
+private lemma wz_covering_uMarginal_map_eq
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hκ'_pos : ∀ x u, 0 < κ' x u)
+    (hκ'_sum : ∀ x, ∑ u, κ' x u = 1)
+    (hqStar : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) :
+    (rdAmbient qStar).map
+        (ChannelCoding.iidYs (α := {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (β := Fin k) 0)
+      = (rdAmbient (wzSideInfoMarginal P_XY κ')).map
+          (ChannelCoding.iidXs (α := Fin k) (β := {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) 0) := by
+  classical
+  obtain ⟨hne_α', -, hq_qStar_fun⟩ := wz_restrictedCoveringJoint_pos P_XY κ' hκ'_pos hκ'_sum
+  haveI := hne_α'
+  have hq_qStar : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) := by
+    rw [funext hqStar]; exact hq_qStar_fun
+  haveI hne_prod : Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
+    Finset.univ_nonempty_iff.mp
+      (Finset.nonempty_of_sum_ne_zero (by rw [hq_qStar.2]; exact one_ne_zero))
+  haveI : Nonempty (Fin k) := hne_prod.map Prod.snd
+  haveI hne_β' : Nonempty {y : β // 0 < ∑ x, P_XY.real {(x, y)}} :=
+    wzSideInfoMarginal_subtype_nonempty P_XY
+  have hq_wsm := wzSideInfoMarginal_mem_stdSimplex P_XY κ' hκ'_pos hκ'_sum
+  rw [rdAmbient_map_iidYs qStar hq_qStar,
+      rdAmbient_map_iidXs (wzSideInfoMarginal P_XY κ') hq_wsm]
+  haveI : IsProbabilityMeasure (ChannelCoding.pmfToMeasure qStar) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure hq_qStar
+  haveI : IsProbabilityMeasure (ChannelCoding.pmfToMeasure (wzSideInfoMarginal P_XY κ')) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure hq_wsm
+  haveI : IsProbabilityMeasure ((ChannelCoding.pmfToMeasure qStar).map Prod.snd) :=
+    Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+  haveI : IsProbabilityMeasure
+      ((ChannelCoding.pmfToMeasure (wzSideInfoMarginal P_XY κ')).map Prod.fst) :=
+    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+  apply Measure.ext_of_singleton
+  intro u
+  -- The two `U`-marginal singletons agree as reals, both `= ∑ₓ κ'(x, u)·P_X(x)`.
+  have hMS : marginalSnd qStar u = ∑ x, κ' x u * ∑ y, P_XY.real {(x, y)} := by
+    simp only [marginalSnd]
+    rw [Finset.sum_congr rfl (fun x' _ ↦ hqStar (x', u))]
+    letI : DecidablePred (fun x : α => 0 < ∑ y, P_XY.real {(x, y)}) := Classical.decPred _
+    rw [← Finset.sum_subtype (Finset.univ.filter (fun x : α => 0 < ∑ y, P_XY.real {(x, y)}))
+        (fun x => by simp) (fun x => κ' x u * ∑ y, P_XY.real {(x, y)})]
+    refine Finset.sum_subset (Finset.filter_subset _ _) ?_
+    intro x _ hx
+    rw [Finset.mem_filter] at hx
+    push_neg at hx
+    have hz : ∑ y, P_XY.real {(x, y)} = 0 :=
+      le_antisymm (hx (Finset.mem_univ x)) (Finset.sum_nonneg fun _ _ ↦ measureReal_nonneg)
+    rw [hz, mul_zero]
+  have hMF : marginalFst (wzSideInfoMarginal P_XY κ') u = ∑ x, κ' x u * ∑ y, P_XY.real {(x, y)} := by
+    simp only [marginalFst, wzSideInfoMarginal]
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl (fun x _ ↦ ?_)
+    rw [← Finset.mul_sum]
+    congr 1
+    letI : DecidablePred (fun y : β => 0 < ∑ x, P_XY.real {(x, y)}) := Classical.decPred _
+    rw [← Finset.sum_subtype (Finset.univ.filter (fun y : β => 0 < ∑ x, P_XY.real {(x, y)}))
+        (fun y => by simp) (fun y => P_XY.real {(x, y)})]
+    refine Finset.sum_subset (Finset.filter_subset _ _) ?_
+    intro y _ hy
+    rw [Finset.mem_filter] at hy
+    push_neg at hy
+    have hz : ∑ x', P_XY.real {(x', y)} = 0 :=
+      le_antisymm (hy (Finset.mem_univ y)) (Finset.sum_nonneg fun _ _ ↦ measureReal_nonneg)
+    exact (Finset.sum_eq_zero_iff_of_nonneg (fun _ _ ↦ measureReal_nonneg)).mp hz x (Finset.mem_univ x)
+  have hreal : ((ChannelCoding.pmfToMeasure qStar).map Prod.snd).real {u}
+      = ((ChannelCoding.pmfToMeasure (wzSideInfoMarginal P_XY κ')).map Prod.fst).real {u} := by
+    rw [pmfToMeasure_map_snd_real_singleton hq_qStar u,
+        pmfToMeasure_map_fst_real_singleton hq_wsm u, hMS, hMF]
+  have hL := measure_ne_top ((ChannelCoding.pmfToMeasure qStar).map Prod.snd) {u}
+  have hR := measure_ne_top
+    ((ChannelCoding.pmfToMeasure (wzSideInfoMarginal P_XY κ')).map Prod.fst) {u}
+  rw [← ENNReal.ofReal_toReal hL, ← ENNReal.ofReal_toReal hR]
+  exact congrArg ENNReal.ofReal hreal
+
+open ChannelCoding in
+/-- **(L1) Covering-success ⊆ chosen-word `U`-typical (in the side-information ambient).** If the
+chosen covering word `c.decoder (c.encoder x)` typically covers `x` (covering-success in
+`rdAmbient qStar`), then it is `U`-typical in the side-information ambient. The covering-success
+`U`-band bands the word against `qStar`'s `U`-marginal; L0 makes that identical to the
+side-information ambient's `U`-marginal, so the two `U`-typical sets coincide. Pure set
+inclusion (no threshold `N`). -/
+private lemma wz_covering_success_subset_uTypical
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hκ'_pos : ∀ x u, 0 < κ' x u)
+    (hκ'_sum : ∀ x, ∑ u, κ' x u = 1)
+    (hqStar : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    (ε : ℝ) (n : ℕ) (M : ℕ)
+    (c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)) :
+    { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+        (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
+          ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
+              ChannelCoding.iidXs ChannelCoding.iidYs n ε }
+      ⊆ { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+          c.decoder (c.encoder (fun j ↦ (p j).1))
+            ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs n ε } := by
+  have hmap := wz_covering_uMarginal_map_eq P_XY κ' qStar hκ'_pos hκ'_sum hqStar
+  -- `pmfLog` and `entropy` of the two `U`-marginals coincide (L0).
+  have hpmf : pmfLog (rdAmbient qStar)
+        (ChannelCoding.iidYs (α := {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (β := Fin k))
+      = pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          (ChannelCoding.iidXs (α := Fin k) (β := {y : β // 0 < ∑ x, P_XY.real {(x, y)}})) := by
+    funext u'
+    simp only [pmfLog]
+    rw [hmap]
+  have hent : entropy (rdAmbient qStar)
+        (ChannelCoding.iidYs (α := {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (β := Fin k) 0)
+      = entropy (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          (ChannelCoding.iidXs (α := Fin k) (β := {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) 0) := by
+    simp only [entropy]
+    rw [hmap]
+  have hset : typicalSet (rdAmbient qStar)
+        (ChannelCoding.iidYs (α := {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (β := Fin k)) n ε
+      = typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          (ChannelCoding.iidXs (α := Fin k) (β := {y : β // 0 < ∑ x, P_XY.real {(x, y)}})) n ε := by
+    unfold typicalSet
+    rw [hpmf, hent]
+  intro p hp
+  rw [Set.mem_setOf_eq, ChannelCoding.mem_jointlyTypicalSet_iff] at hp
+  obtain ⟨_, hu, _⟩ := hp
+  rw [Set.mem_setOf_eq, ← hset]
+  exact hu
+
+open ChannelCoding in
+/-- **(L2) `Y`-projection of the source product measure.** Pushing the source product measure
+`Measure.pi (pmfToMeasure P_XY{(x'.1, y)})` along the coordinatewise `Y`-projection gives the
+product of the source `Y`-law `(pmfToMeasure P_XY{(x'.1, y)}).map Prod.snd`. Direct
+`Measure.pi_map_pi`. -/
+private lemma wz_covering_src_yProj_eq_pi
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] (n : ℕ) :
+    (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+          P_XY.real {(p.1.1, p.2)}))).map (fun p (i : Fin n) ↦ (p i).2)
+      = Measure.pi (fun _ : Fin n ↦ (ChannelCoding.pmfToMeasure
+          (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+            P_XY.real {(p.1.1, p.2)})).map Prod.snd) := by
+  haveI : IsProbabilityMeasure (ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
+  haveI : IsProbabilityMeasure ((ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})).map
+        Prod.snd) := Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+  exact Measure.pi_map_pi (hμ := fun _ ↦ inferInstance) (fun _ ↦ measurable_snd.aemeasurable)
+
+open ChannelCoding in
+/-- **(L3) `Y`-band AEP under the source product measure.** For `n` large the source-measure
+mass of the `Y`-band failure — the side-information block `y` is not typical in the
+side-information ambient — is at most `tol/4`. A one-dimensional AEP on the iid `Y`-sequence
+(law `P_Y = ∑ₓ P_XY{(x, ·)}`), independent of the code `c` and of covering-success. Transports
+`typicalSet_prob_ge_of_rate` (the ℕ-process AEP) onto the source product measure via the
+`β'`↔`β` coercion, mirroring the `wz_source_codeword_sideInfo_mass_le` transport. -/
+private lemma wz_covering_yBand_aep
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ)
+    (hκ'_pos : ∀ x u, 0 < κ' x u)
+    (hκ'_sum : ∀ x, ∑ u, κ' x u = 1)
+    (ε : ℝ) (hε : 0 < ε) (tol : ℝ) (htol : 0 < tol) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
+      (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+          (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+            P_XY.real {(p.1.1, p.2)}))).real
+        { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+            (fun i ↦ (p i).2) ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+                (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                  ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε }
+        ≤ tol / 4 := by
+  classical
+  -- Nonempty instances for `α'`, `Fin k`, `β'`.
+  obtain ⟨hne_α', -, hstd_qlike⟩ := wz_restrictedCoveringJoint_pos P_XY κ' hκ'_pos hκ'_sum
+  haveI := hne_α'
+  haveI hne_prod : Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
+    Finset.univ_nonempty_iff.mp
+      (Finset.nonempty_of_sum_ne_zero (by rw [hstd_qlike.2]; exact one_ne_zero))
+  haveI : Nonempty (Fin k) := hne_prod.map Prod.snd
+  haveI hne_βs : Nonempty {y : β // 0 < ∑ x, P_XY.real {(x, y)}} :=
+    wzSideInfoMarginal_subtype_nonempty P_XY
+  have hq := wzSideInfoMarginal_mem_stdSimplex P_XY κ' hκ'_pos hκ'_sum
+  haveI hamb_prob : IsProbabilityMeasure (rdAmbient (wzSideInfoMarginal P_XY κ')) :=
+    rdAmbient_isProbabilityMeasure _ hq
+  haveI hsrc_prob : IsProbabilityMeasure (ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
+  -- The one-dimensional AEP on the iid side-information sequence (in the `β'` ambient).
+  obtain ⟨N, hN⟩ := typicalSet_prob_ge_of_rate (rdAmbient (wzSideInfoMarginal P_XY κ'))
+    (ChannelCoding.iidYs (α := Fin k) (β := {y : β // 0 < ∑ x, P_XY.real {(x, y)}}))
+    (fun i ↦ ChannelCoding.measurable_iidYs i)
+    (fun i j hij ↦ (rdAmbient_iIndepFun_iidYs (wzSideInfoMarginal P_XY κ') hq).indepFun hij)
+    (rdAmbient_identDistrib_iidYs (wzSideInfoMarginal P_XY κ') hq) hε (η := tol / 4) (by linarith)
+  refine ⟨N, fun n hn ↦ ?_⟩
+  have hAEP := hN n hn
+  -- Coercion / transport building blocks (mirror `wz_source_codeword_sideInfo_mass_le`).
+  have hval_inj : Function.Injective
+      (Subtype.val : {y : β // 0 < ∑ x, P_XY.real {(x, y)}} → β) := Subtype.val_injective
+  have hval_meas : Measurable
+      (Subtype.val : {y : β // 0 < ∑ x, P_XY.real {(x, y)}} → β) := measurable_subtype_coe
+  haveI : IsProbabilityMeasure ((ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})).map
+      Prod.snd) := Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+  haveI : IsProbabilityMeasure ((rdAmbient (wzSideInfoMarginal P_XY κ')).map
+      (ChannelCoding.iidYs (α := Fin k) 0)) :=
+    Measure.isProbabilityMeasure_map (ChannelCoding.measurable_iidYs 0).aemeasurable
+  haveI : IsProbabilityMeasure (((rdAmbient (wzSideInfoMarginal P_XY κ')).map
+      (ChannelCoding.iidYs (α := Fin k) 0)).map Subtype.val) :=
+    Measure.isProbabilityMeasure_map hval_meas.aemeasurable
+  -- `pmfLog` / `entropy` invariance of the `Y`-marginal under the `β'`↪`β` coercion.
+  have hpmfYeq : ∀ y' : {y : β // 0 < ∑ x, P_XY.real {(x, y)}},
+      pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+            ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) ((y' : β))
+        = pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ')) (ChannelCoding.iidYs (α := Fin k)) y' := by
+    intro y'
+    simp only [pmfLog]
+    rw [wz_map_injective_real_singleton (rdAmbient (wzSideInfoMarginal P_XY κ'))
+        (ChannelCoding.iidYs (α := Fin k) 0) (ChannelCoding.measurable_iidYs 0)
+        Subtype.val hval_inj hval_meas y']
+  have hentYeq : entropy (rdAmbient (wzSideInfoMarginal P_XY κ'))
+      (fun ω ↦ ((ChannelCoding.iidYs (α := Fin k) 0 ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
+        = entropy (rdAmbient (wzSideInfoMarginal P_XY κ')) (ChannelCoding.iidYs (α := Fin k) 0) :=
+    wz_entropy_map_injective (rdAmbient (wzSideInfoMarginal P_XY κ'))
+      (ChannelCoding.iidYs (α := Fin k) 0) (ChannelCoding.measurable_iidYs 0)
+      Subtype.val hval_inj hval_meas
+  have htypY : ∀ z : Fin n → {y : β // 0 < ∑ x, P_XY.real {(x, y)}},
+      ((fun i ↦ ((z i : β))) ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+            ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε)
+        ↔ (z ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+            (ChannelCoding.iidYs (α := Fin k)) n ε) := by
+    intro z
+    rw [mem_typicalSet_iff, mem_typicalSet_iff]
+    have hnum : (∑ i : Fin n, pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+            ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) ((z i : β)))
+        = ∑ i : Fin n, pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
+            (ChannelCoding.iidYs (α := Fin k)) (z i) :=
+      Finset.sum_congr rfl (fun i _ ↦ hpmfYeq (z i))
+    simp only [hnum, hentYeq]
+  -- Measure transport: the source `Y`-projection law is the `β`-image of the ambient `Y`-jointRV.
+  have hmeaseq : (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))).map
+        (fun p (i : Fin n) ↦ (p i).2)
+      = ((rdAmbient (wzSideInfoMarginal P_XY κ')).map
+          (jointRV (ChannelCoding.iidYs (α := Fin k)) n)).map
+          (fun (z : Fin n → {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) i ↦ ((z i : β))) := by
+    rw [wz_ambient_jointRV_iidYs_eq_pi P_XY κ' hκ'_pos hκ'_sum n,
+        Measure.pi_map_pi (hμ := fun _ ↦ inferInstance) (fun _ ↦ hval_meas.aemeasurable),
+        Measure.pi_map_pi (hμ := fun _ ↦ inferInstance) (fun _ ↦ measurable_snd.aemeasurable)]
+    refine congrArg Measure.pi (funext (fun _ ↦ ?_))
+    exact wz_source_snd_eq_ambient_snd_map P_XY κ' hκ'_pos hκ'_sum
+  have hYproj_meas : Measurable (fun p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+      fun i ↦ (p i).2) :=
+    measurable_pi_lambda _ (fun i ↦ measurable_snd.comp (measurable_pi_apply i))
+  have hΦ_meas : Measurable (fun z : Fin n → {y : β // 0 < ∑ x, P_XY.real {(x, y)}} ↦
+      fun i ↦ ((z i : β))) :=
+    measurable_pi_lambda _ (fun i ↦ hval_meas.comp (measurable_pi_apply i))
+  have hjrv_meas : Measurable (jointRV (ChannelCoding.iidYs (α := Fin k)
+      (β := {y : β // 0 < ∑ x, P_XY.real {(x, y)}})) n) :=
+    measurable_jointRV _ (fun i ↦ ChannelCoding.measurable_iidYs i) n
+  -- The atypical-`Y` preimage relabels along the coercion to the ambient atypical set.
+  have hΦS : (fun (z : Fin n → {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) i ↦ ((z i : β))) ⁻¹'
+        {yb : Fin n → β | yb ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+            (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+              ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε}
+      = {z : Fin n → {y : β // 0 < ∑ x, P_XY.real {(x, y)}} |
+          z ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+            (ChannelCoding.iidYs (α := Fin k)) n ε} := by
+    ext z
+    simp only [Set.mem_preimage, Set.mem_setOf_eq]
+    exact not_congr (htypY z)
+  -- Transport the source-measure atypical `Y`-band mass onto the ℕ-process atypical set.
+  rw [show { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+        (fun i ↦ (p i).2) ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+            (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+              ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε }
+      = (fun p (i : Fin n) ↦ (p i).2) ⁻¹' {yb : Fin n → β |
+          yb ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+            (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε} from rfl,
+      ← map_measureReal_apply hYproj_meas (Set.toFinite _).measurableSet,
+      hmeaseq,
+      map_measureReal_apply hΦ_meas (Set.toFinite _).measurableSet,
+      hΦS,
+      map_measureReal_apply hjrv_meas (Set.toFinite _).measurableSet,
+      Set.preimage_setOf_eq]
+  -- Complement of the AEP typical set: atypical mass `= 1 − typical mass ≤ tol/4`.
+  show (rdAmbient (wzSideInfoMarginal P_XY κ')).real
+      {ω | jointRV (ChannelCoding.iidYs (α := Fin k)) n ω
+          ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+              (ChannelCoding.iidYs (α := Fin k)) n ε}ᶜ ≤ tol / 4
+  rw [measureReal_compl (s := {ω | jointRV (ChannelCoding.iidYs (α := Fin k)) n ω
+        ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+            (ChannelCoding.iidYs (α := Fin k)) n ε})
+      (hjrv_meas (measurableSet_typicalSet _ _ _ _))]
+  have huniv : (rdAmbient (wzSideInfoMarginal P_XY κ')).real Set.univ = 1 := by
+    rw [measureReal_def, measure_univ, ENNReal.toReal_one]
+  have hbridge : (rdAmbient (wzSideInfoMarginal P_XY κ')).real
+      {ω | jointRV (ChannelCoding.iidYs (α := Fin k)) n ω
+          ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+              (ChannelCoding.iidYs (α := Fin k)) n ε}
+      = ((rdAmbient (wzSideInfoMarginal P_XY κ'))
+          {ω | jointRV (ChannelCoding.iidYs (α := Fin k)) n ω
+            ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+                (ChannelCoding.iidYs (α := Fin k)) n ε}).toReal := rfl
+  rw [huniv]
+  linarith [hAEP, hbridge]
+
+open ChannelCoding in
+/-- **(L4 — THE HARD KERNEL) Joint `(U,Y)`-band concentration.** For `n` large the
+source-measure mass of the event {covering-success ∧ the chosen word `U` and the side
+information `Y` are jointly `(U,Y)`-atypical} is at most `tol/4`. This is the correlated-joint
+conditional-typicality concentration — the Markov lemma. `U = c.decoder (c.encoder x)` is a
+function of the whole `x`-block, so `(U_i, Y_i)` is neither iid nor independent; the plain
+`aep_chebyshev_bound` (`Rate.lean:108`) does not apply. From-scratch in-project assembly, absent
+from Mathlib and the codebase. The consistency + full-support hypotheses (`hκ'_pos`, `hκ'_sum`,
+`hqStar`) are mandatory: without them the statement is false-as-framed (a constant-word
+counterexample; see the inner-lemma docstring). Left `sorry` — a separate leg builds it.
+@residual(plan:wz-binning-covering) -/
+private lemma wz_covering_jointBand_concentration
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (ε : ℝ) (hε : 0 < ε) (tol : ℝ) (htol : 0 < tol)
+    (hκ'_pos : ∀ x u, 0 < κ' x u)
+    (hκ'_sum : ∀ x, ∑ u, κ' x u = 1)
+    (hqStar : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (M : ℕ)
+        (c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
+        (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+              P_XY.real {(p.1.1, p.2)}))).real
+          ({ p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
+              ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
+                  ChannelCoding.iidXs ChannelCoding.iidYs n ε }
+            ∩ { p | (fun i ↦ (c.decoder (c.encoder (fun j ↦ (p j).1)) i, (p i).2))
+                ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+                    (ChannelCoding.jointSequence ChannelCoding.iidXs
+                      (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                        ((ChannelCoding.iidYs i ω :
+                            {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))) n ε })
+          ≤ tol / 4 := by
+  sorry
+
+/-! ## Gateway atom 3 (Leg F) — covering chosen-word side-information acceptance (Markov lemma)
+
+The decisive covering-acceptance (`C2`) leaf of Wyner–Ziv achievability, isolated from the
+covering atom `wz_coveringFamily_of_testChannel` (judgment log #8). For the covering `LossyCode`
+`c`, the *correlated joint source* mass of the acceptance-failure event
+`wzCoveringAcceptFailSet` — the event that the chosen covering word `c.decoder (c.encoder x)` is
+NOT jointly typical with the side information `y` (with `(x, y)` drawn from the true joint
+`P_XY`, so `x` and `y` are **correlated**) — is small, given only the covering-typicality success
+precondition (the chosen word covers the source `x`, an S5a-supplied regularity/precondition on
+the constructed code, NOT the acceptance conclusion).
+
+Its analytic core is the **Markov lemma**: if the chosen word `u = c.decoder (c.encoder x)`
+typically covers `x` and the source pair `(x, y)` is jointly typical, then `(u, y)` is jointly
+typical — so acceptance fails only off the (exp-small) covering-failure ∪ source-atypicality set.
+The measure is the *correlated* joint source
+`Measure.pi (pmfToMeasure (fun (x', y) ↦ P_XY{(x'.1, y)}))`; crucially the covering word
+`c.decoder (c.encoder x)` is a function of the source `x`, so the `u`–`y` correlation that makes
+acceptance likely is inherited from the `x`–`y` correlation and is **destroyed by fixing `u`
+independently**. Gateway-2 `wz_covering_sideInfo_mass_ge` (a *lower* bound on the *independent*
+product-`Y`-law slice mass) and the broadcast confusion bound `bc_conditional_slice_prob_le`
+(an *upper* bound on a *conditional-product* typical slice, the confusion/wrong-codeword
+direction) are on the wrong measure/direction and do not supply this (Leg F verdict). -/
+
+open ChannelCoding in
+/-- **(Leg F inner concentration — the Markov-lemma core).** The correlated-joint-source mass
+of the event that the chosen covering word `u = c.decoder (c.encoder x)` *typically covers* the
+source `x` (jointly typical in the covering ambient `rdAmbient qStar`) yet *fails acceptance*
+(`(u, y)` not jointly typical in the side-information ambient) is at most `tol/2` for `n` large.
+
+This is the analytic core isolated from `wz_covering_chosenWord_sideInfo_typical`: the outer lemma
+splits the acceptance-failure event along covering success/failure, sends the covering-failure part
+to the supplied premise (`≤ tol/2`), and reduces the acceptance-failure-on-covering-success part to
+this concentration bound. Unconditional in the covering premise: the intersection with the
+covering-success set makes the statement self-contained.
+
+CAVEAT (suspected under-hypothesis — flagged 2026-07-12, pending orchestrator re-audit): the
+Markov-concentration truth REQUIRES `qStar` to be the `κ'`-consistent covering joint
+`qStar (x', u) = κ' x'.1 u · (∑ y, P_XY{(x'.1, y)})` with `κ'` full-support
+(`0 < κ' x u`, `∑ u κ' x u = 1`) — exactly the relations the covering atom
+`wz_coveringFamily_of_testChannel` exports at its output but which the current signature (shared
+with the outer leaf) does NOT thread (`qStar`, `κ'` are free, unrelated params). Without them the
+statement is false-as-framed: for a constant-word code `c ≡ u₀` and the free choice
+`qStar := P_X ⊗ δ_{u₀}`, covering-success has mass → 1 (premise holds) yet, for generic `κ'` with
+`−log P_U(u₀) ≠ H(P_U)`, `u₀` is not `P_U`-typical so acceptance fails on the whole space
+(mass → 1 > tol/2). The consistency relation kills this counterexample (it forces `qStar`'s
+`U`-marginal `= P_U`, so a mismatched-`U`-marginal code fails covering-success). The fix is a
+precondition-exposure (add the `qStar`–`κ'` consistency + full-support hypotheses, discharged by the
+covering atom's construction), NOT bundling the acceptance conclusion.
+
+Its body — the correlated-joint conditional-typicality concentration (the Markov lemma), given the
+consistency hypotheses — is a from-scratch assembly absent from Mathlib and the codebase (`plan`,
+not a Mathlib wall). Left `sorry` pending the signature fix above.
+
+AUDIT VERDICT 2026-07-12b (independent re-audit): the CAVEAT is CONFIRMED. This inner lemma
+inherits the SAME false-as-framed defect as the leaf: with free `qStar`/`κ'` its conclusion
+(covering-success ∩ acceptance-failure ≤ tol/2) is universally false — the constant-word
+`c ≡ u₀ⁿ` + `qStar := P_X ⊗ δ_{u₀}` counterexample (see the leaf docstring) makes covering-success
+mass → 1 and, for `−log P_U(u₀) ≠ H(P_U)`, that entire covering-success set lies in
+acceptance-failure, so the intersection → 1 > tol/2. Intersecting with covering-success does NOT
+save it. REQUIRED FIX = thread the same `qStar`–`κ'` consistency + full-support hypotheses
+(owner/planner boundary, deferred this session). RESIDUAL CLASSIFICATION `plan` is CORRECT (once
+the signature is fixed): the correlated-joint conditional-typicality (Markov-lemma) concentration
+is a from-scratch in-project assembly (loogle/grep 0-hit re-confirmed in-plan), NOT a Mathlib wall;
+the only in-project ingredient `conditionalStronglyTypicalSlice_mass_ge` (Mass.lean:1274) is a
+lower/independent-product bound.
+
+FIX APPLIED 2026-07-12 (per the audit above): the `qStar`–`κ'` consistency + full-support
+hypotheses (`hκ'_pos`, `hκ'_sum`, `hqStar`) are now threaded into this signature, matching the
+relations the sole consumer `wz_coveringFamily_of_testChannel` exports at its output. The
+false-as-framed defect is resolved (the constant-word counterexample fails covering-success under
+consistency); the statement is now HONEST tier-2. Only the Markov concentration itself stays open.
+@residual(plan:wz-binning-covering) -/
+private lemma wz_covering_markov_concentration
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (ε : ℝ) (hε : 0 < ε) (tol : ℝ) (htol : 0 < tol)
+    (hκ'_pos : ∀ x u, 0 < κ' x u)
+    (hκ'_sum : ∀ x, ∑ u, κ' x u = 1)
+    (hqStar : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (M : ℕ)
+        (c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
+        (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+              P_XY.real {(p.1.1, p.2)}))).real
+          ({ p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
+              ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
+                  ChannelCoding.iidXs ChannelCoding.iidYs n ε }
+            ∩ wzCoveringAcceptFailSet P_XY κ' c ε)
+          ≤ tol / 2 := by
+  classical
+  obtain ⟨N_Y, hN_Y⟩ := wz_covering_yBand_aep P_XY κ' hκ'_pos hκ'_sum ε hε tol htol
+  obtain ⟨N_J, hN_J⟩ :=
+    wz_covering_jointBand_concentration P_XY κ' qStar ε hε tol htol hκ'_pos hκ'_sum hqStar
+  refine ⟨max N_Y N_J, fun n hn M c ↦ ?_⟩
+  have hn_Y : N_Y ≤ n := (le_max_left _ _).trans hn
+  have hn_J : N_J ≤ n := (le_max_right _ _).trans hn
+  have hyf := hN_Y n hn_Y
+  have hjf := hN_J n hn_J M c
+  haveI hQ_prob : IsProbabilityMeasure (ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
+  set SRC : Measure (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
+    Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
+    with hSRC_def
+  haveI hSRC_prob : IsProbabilityMeasure SRC := by rw [hSRC_def]; infer_instance
+  -- Name the covering-success event and the three band-failure witnesses.
+  set Ecov : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
+    { p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
+        ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
+            ChannelCoding.iidXs ChannelCoding.iidYs n ε } with hEcov_def
+  set Euf : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
+    { p | c.decoder (c.encoder (fun j ↦ (p j).1))
+        ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs n ε }
+    with hEuf_def
+  set Eyf : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
+    { p | (fun i ↦ (p i).2) ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+        (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+          ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε }
+    with hEyf_def
+  set Ejf : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
+    { p | (fun i ↦ (c.decoder (c.encoder (fun j ↦ (p j).1)) i, (p i).2))
+        ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+            (ChannelCoding.jointSequence ChannelCoding.iidXs
+              (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))) n ε }
+    with hEjf_def
+  -- De Morgan: covering-success ∩ acceptance-failure splits along the three bands.
+  have hincl : Ecov ∩ wzCoveringAcceptFailSet P_XY κ' c ε
+      ⊆ (Ecov ∩ Euf) ∪ Eyf ∪ (Ecov ∩ Ejf) := by
+    intro p hp
+    obtain ⟨hcov, hfail⟩ := hp
+    rw [wzCoveringAcceptFailSet, Set.mem_setOf_eq,
+      ChannelCoding.mem_jointlyTypicalSet_iff] at hfail
+    by_cases hu : c.decoder (c.encoder (fun j ↦ (p j).1))
+        ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs n ε
+    · by_cases hy : (fun i ↦ (p i).2) ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+            ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε
+      · exact Or.inr ⟨hcov, fun hjt ↦ hfail ⟨hu, hy, hjt⟩⟩
+      · exact Or.inl (Or.inr hy)
+    · exact Or.inl (Or.inl ⟨hcov, hu⟩)
+  -- The `U`-band-failure part is empty on covering-success (L1).
+  have hEmpty : Ecov ∩ Euf = ∅ := by
+    rw [Set.eq_empty_iff_forall_notMem]
+    rintro p ⟨hcov, huf⟩
+    exact huf (wz_covering_success_subset_uTypical P_XY κ' qStar hκ'_pos hκ'_sum hqStar ε n M c hcov)
+  have h1 : SRC.real (Ecov ∩ Euf) = 0 := by rw [hEmpty, measureReal_empty]
+  have hunion1 : SRC.real ((Ecov ∩ Euf) ∪ Eyf ∪ (Ecov ∩ Ejf))
+      ≤ SRC.real ((Ecov ∩ Euf) ∪ Eyf) + SRC.real (Ecov ∩ Ejf) := measureReal_union_le _ _
+  have hunion2 : SRC.real ((Ecov ∩ Euf) ∪ Eyf)
+      ≤ SRC.real (Ecov ∩ Euf) + SRC.real Eyf := measureReal_union_le _ _
+  have hmono : SRC.real (Ecov ∩ wzCoveringAcceptFailSet P_XY κ' c ε)
+      ≤ SRC.real ((Ecov ∩ Euf) ∪ Eyf ∪ (Ecov ∩ Ejf)) :=
+    measureReal_mono hincl (measure_ne_top _ _)
+  linarith [hyf, hjf, h1, hunion1, hunion2, hmono]
+
+open ChannelCoding in
+/-- **(Leg F gateway atom) Covering chosen-word side-information acceptance (Markov lemma).**
+For every tolerance `tol > 0` there is an `N` such that for `n ≥ N` and every covering
+`LossyCode` `c` whose chosen words typically cover the source (the S5a-style covering-success
+premise, an implication hypothesis), the correlated-joint-source mass of the covering-acceptance
+failure `wzCoveringAcceptFailSet P_XY κ' c ε` (the chosen word `c.decoder (c.encoder x)` is not
+jointly typical, at radius `ε`, with the side information) is at most `tol`. This is the covering
+half `C2` of the Wyner–Ziv error `E2` (`C2 ⊆ E2`), isolated from `wz_coveringFamily_of_testChannel`
+to be self-built by the Markov lemma (a correlated-joint conditional-typicality concentration
+bound absent from Mathlib and the codebase — `plan`, not a Mathlib wall).
+
+Independent honesty audit 2026-07-12 (Leg F leaf, commit `5d3ecd81`): PASS [OVERTURNED
+2026-07-12b — the "Sufficiency confirmed … TRUE-as-framed" claim below is WRONG; see AUDIT
+VERDICT at the end of this docstring], tier-2
+`@residual`. Non-circular (the premise is the `x`–`u` covering slice in ambient
+`rdAmbient qStar`, the conclusion the `u`–`y` acceptance slice in a different ambient —
+the Markov bridge is genuinely open, body is `sorry`, not `:= h`). Non-bundled: the
+covering-typicality-success premise is a genuine regularity precondition on the constructed
+code (S5a-suppliable, a property of the covering `LossyCode`), NOT the acceptance conclusion;
+granting it does not hand over the `u`–`y` typicality — the Markov concentration
+(covering-`x` typicality + source `(x,y)` typicality ⟹ `(u,y)` typicality) remains the sole
+residual. Sufficiency confirmed by degenerate-boundary refutation: the coupled
+correlated-joint-source form is TRUE-as-framed because `u = c.decoder (c.encoder x)` is a
+function of the source, so under `Measure.pi (pmfToMeasure P_XY{(x'.1,y)})` the empirical
+`(u,y)` law → `wzSideInfoMarginal` (acceptance-failure mass → 0) at every fixed `ε` and even
+at `I(U;Y)>0`. The proof-pivot-advisor's rejected FIXED-word/INDEPENDENT-product shape
+(`Measure.pi (μ.map (Ys 0))`) is FALSE-as-framed at `I(U;Y)>0` (independent empirical
+`(u,y)` → `P_U × P_Y ≠ wzSideInfoMarginal`, acceptance-failure mass → 1, violating `≤ tol`);
+it survives only at the degenerate `I(U;Y)=0` — so the implementer's override to the coupled
+form is justified. Class `plan` correct: the concentration ingredient
+`conditionalStronglyTypicalSlice_mass_ge` (`ConditionalMethodOfTypes/Mass.lean:1274`, a
+lower/independent bound) exists in-project; the correlated-joint Markov-lemma assembly is
+unbuilt in-project, not a Mathlib gap. NOT `@audit:ok` — the `sorry` remains.
+
+SUSPECTED UNDER-HYPOTHESIS (flagged 2026-07-12, implementation of the Markov-lemma leg —
+supersedes the "Sufficiency confirmed" claim above, pending orchestrator re-audit): `qStar` and
+`κ'` are FREE, unrelated parameters here, but the acceptance conclusion is FALSE-as-framed without
+the covering-joint consistency relation `qStar (x', u) = κ' x'.1 u · (∑ y, P_XY{(x'.1, y)})` and the
+full-support facts `0 < κ' x u`, `∑ u κ' x u = 1` — exactly the relations the covering atom
+`wz_coveringFamily_of_testChannel` exports at its output (L1218-1224) but does NOT thread into this
+leaf. Counterexample: a constant-word code `c ≡ u₀` with the free choice `qStar := P_X ⊗ δ_{u₀}`
+satisfies the covering-success premise (covering-typicality mass → 1) yet, for generic `κ'` with
+`−log P_U(u₀) ≠ H(P_U)` (`P_U := ∑ₓ κ'(x,·)·P_X(x)`), `u₀` is not `P_U`-typical so acceptance fails
+on the whole space (mass → 1 > tol). The consistency relation kills the counterexample (`qStar`'s
+`U`-marginal `= P_U`, so a mismatched code fails covering-success). The degenerate-boundary check
+above only varied the measure coupling (independent vs coupled), not the code/`qStar` adversarially,
+so it missed this axis. FIX = precondition-exposure (thread the `qStar`–`κ'` consistency +
+full-support hypotheses into this leaf and `wz_covering_markov_concentration`, discharged by the
+covering atom's construction; ripple to the single consumer `wz_coveringFamily_of_testChannel`);
+this is a signature change reserved for the orchestrator/planner, NOT acceptance-conclusion bundling.
+
+AUDIT VERDICT 2026-07-12b (independent re-audit, commits `9ecffb41`+`e1467fdd`): the
+under-hypothesis finding is CONFIRMED — this leaf is FALSE-as-framed with free `qStar`/`κ'`.
+Verbatim-reproduced counterexample: `typicalSet` bands the U-empirical-entropy against the
+U-marginal of the ambient (`pmfLog`/`entropy` of `μ.map (iidXs/iidYs 0)`). The covering-success
+premise measures U against `marginalSnd qStar` (qStar's `Fin k` marginal) whereas the acceptance
+conclusion measures U against `marginalFst (wzSideInfoMarginal) = P_U` — decoupled because `qStar`
+is a free param (signature demands NO stdSimplex/consistency on it). A constant-word `LossyCode`
+`c ≡ u₀ⁿ` (legal, `M=1`) with `qStar := P_X ⊗ δ_{u₀}` makes covering-success mass → 1 (premise ✓,
+qStar's U-marginal is `δ_{u₀}`, so `u₀ⁿ` is trivially U-typical there) while, for any `κ'` giving
+non-uniform `P_U` with `−log P_U(u₀) ≠ H(P_U)`, `u₀ⁿ` is NOT `P_U`-typical ⟹ acceptance-failure =
+whole space (mass 1 > tol), for arbitrarily large `n` ⟹ refutes the `∃ N` for every `N`. The prior
+`d2e68b10` PASS is OVERTURNED: it varied only the measure coupling (independent-product vs coupled),
+never `qStar`/the code adversarially, so it missed this axis. REQUIRED missing hypotheses (fix): the
+`qStar`–`κ'` consistency `qStar (x',u) = κ' x'.1 u · (∑ y, P_XY{(x'.1,y)})` + full-support
+(`0 < κ' x u`, `∑ u κ' x u = 1`) — both already exported by the sole (future) consumer
+`wz_coveringFamily_of_testChannel` (L1249-1252). Fix assessment: HONEST precondition-exposure (Leg
+C.5/C.6/E kind), NOT conclusion-bundling — granting consistency only aligns the two U-marginals
+(`marginalSnd qStar = P_U`); the Markov concentration `covering-x-typical ⟹ (u,y)-typical w.h.p.`
+stays genuinely open (the residual `sorry` in `wz_covering_markov_concentration`). SUFFICIENT —
+under consistency the counterexample's `qStar := P_X⊗δ_{u₀}` forces `P_U = δ_{u₀}`, so
+`−log P_U(u₀) = 0 = H(P_U)` and a mismatched constant word instead fails covering-success; no
+residual counterexample survives. HEADLINE-SAFE — leaf still unconsumed (private); the fix stays on
+this leaf + inner lemma, discharged at the covering atom, and does NOT propagate a
+full-support/acceptance hypothesis to `wz_goodCode_exists_of_testChannel` / `wyner_ziv_achievability`.
+FIX APPLIED 2026-07-12 (per the 2026-07-12b audit above): the `qStar`–`κ'` consistency +
+full-support hypotheses (`hκ'_pos`, `hκ'_sum`, `hqStar`) are now threaded into this leaf and passed
+through to `wz_covering_markov_concentration`. They match the relations the sole (future) consumer
+`wz_coveringFamily_of_testChannel` exports at its output (L1249-1252, an `exact`/`rfl`-clean
+discharge), so the false-as-framed defect is resolved and the leaf is now HONEST tier-2. The
+d2e68b10 PASS remains overturned (record preserved above); the residual Markov concentration itself
+(the outer decomposition's transitive `sorry` in `wz_covering_markov_concentration`) stays open.
+@residual(plan:wz-binning-covering) -/
+private lemma wz_covering_chosenWord_sideInfo_typical
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (ε : ℝ) (hε : 0 < ε) (tol : ℝ) (htol : 0 < tol)
+    (hκ'_pos : ∀ x u, 0 < κ' x u)
+    (hκ'_sum : ∀ x, ∑ u, κ' x u = 1)
+    (hqStar : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (M : ℕ)
+        (c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
+        -- covering-typicality success (S5a-supplied premise): off a set of mass `≤ tol/2`,
+        -- the chosen covering word `c.decoder (c.encoder x)` is jointly typical with the source
+        -- `x` in the covering ambient `rdAmbient qStar`. NOT the acceptance conclusion (different
+        -- ambient: covering is the `x`–`u` slice, acceptance the `u`–`y` slice).
+        (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+              P_XY.real {(p.1.1, p.2)}))).real
+          { p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
+              ∉ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
+                  ChannelCoding.iidXs ChannelCoding.iidYs n ε }
+          ≤ tol / 2 →
+        (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+              P_XY.real {(p.1.1, p.2)}))).real
+          (wzCoveringAcceptFailSet P_XY κ' c ε)
+          ≤ tol := by
+  -- Obtain the threshold `N` from the inner Markov-lemma concentration bound.
+  obtain ⟨N, hN⟩ :=
+    wz_covering_markov_concentration P_XY κ' qStar ε hε tol htol hκ'_pos hκ'_sum hqStar
+  refine ⟨N, fun n hn M c hprem ↦ ?_⟩
+  -- The inner concentration: acceptance failure ON covering success has mass `≤ tol/2`.
+  have hinner := hN n hn M c
+  haveI hQ_prob : IsProbabilityMeasure
+      (ChannelCoding.pmfToMeasure
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
+  set SRC : Measure (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
+    Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
+    with hSRC_def
+  haveI hSRC_prob : IsProbabilityMeasure SRC := by rw [hSRC_def]; infer_instance
+  -- Acceptance failure is covered by covering-failure ∪ (covering-success ∩ acceptance failure).
+  have hincl : wzCoveringAcceptFailSet P_XY κ' c ε
+      ⊆ { p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
+                ∉ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
+                    ChannelCoding.iidXs ChannelCoding.iidYs n ε }
+          ∪ ({ p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
+                    ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
+                        ChannelCoding.iidXs ChannelCoding.iidYs n ε }
+              ∩ wzCoveringAcceptFailSet P_XY κ' c ε) := by
+    intro p hp
+    by_cases hc : (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
+        ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
+            ChannelCoding.iidXs ChannelCoding.iidYs n ε
+    · exact Or.inr ⟨hc, hp⟩
+    · exact Or.inl hc
+  -- Union bound over the covering-failure / covering-success split.
+  have hunion : SRC.real (wzCoveringAcceptFailSet P_XY κ' c ε)
+      ≤ SRC.real { p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
+                ∉ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
+                    ChannelCoding.iidXs ChannelCoding.iidYs n ε }
+        + SRC.real ({ p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
+                    ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
+                        ChannelCoding.iidXs ChannelCoding.iidYs n ε }
+              ∩ wzCoveringAcceptFailSet P_XY κ' c ε) :=
+    le_trans
+      (measureReal_mono hincl
+        (measure_union_ne_top (measure_ne_top _ _) (measure_ne_top _ _)))
+      (measureReal_union_le _ _)
+  -- Covering-failure part `≤ tol/2` (premise); covering-success ∩ acceptance-failure `≤ tol/2`
+  -- (inner concentration). Their sum is `≤ tol`.
+  linarith [hprem, hinner, hunion]
 
 /-! ## Operational achievability headline -/
 
