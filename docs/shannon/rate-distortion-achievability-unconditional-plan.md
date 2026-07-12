@@ -2,7 +2,7 @@
 
 > **Parent**: [`rate-distortion-achievability-plan.md`](rate-distortion-achievability-plan.md) §Phase E (strong-typicality variant)
 
-**Status**: OPEN 📋
+**Status**: 実装全閉 ✅ (Piece B/C/A + Wrapper `rate_distortion_achievability_operational` genuine sorryAx-free) — 独立 honesty 監査待ち 🔍
 
 ## 要点 (≤5 行)
 - 既存 headline `rate_distortion_achievability` (`AchievabilityStrongTypicality.lean:185`, `@entry_point`, 0 sorry) は honest pass-through 仮説付き。本 plan はそれらを discharge して **クリーンな operational 文**「`R > R(D)` なら大 n で `distortion ≤ D+ε` の lossy code が存在」を publish する。
@@ -12,12 +12,12 @@
 
 ## 進捗
 
-- [ ] M0 — Mathlib/in-project API 在庫確認 📋 (proof-log: no)
-- [ ] Piece C — `jointStronglyTypicalSet ⊆ distortionTypicalSet` 包含補題 📋 (proof-log: yes) ← **gateway (最初に単独で閉じる)**
-- [ ] Piece B — full-support 摂動 (`hqStar_pos` + `hI_lt_R` + `E[d] ≤ D+ε/4`) 📋 (proof-log: yes)
-- [ ] Piece A — slack 存在ラッパー (残 slack 仮説群) 📋 (proof-log: no)
-- [ ] Wrapper — `rate_distortion_achievability_operational` 組立 + source-law bridge 📋 (proof-log: no)
-- [ ] 独立 honesty audit (新 sorry / 摂動補題の signature honesty) 📋
+- [x] M0 — Mathlib/in-project API 在庫確認 ✅ (Piece C 実装中に完了、strong⟹weak bridge 再利用確認)
+- [x] Piece C — `jointStronglyTypicalSet ⊆ distortionTypicalSet` 包含補題 ✅ (`jts_subset_dts_of_dist_slack`, genuine sorryAx-free, commit 47417b9f)
+- [x] Piece B — full-support 摂動 (`hqStar_pos` + `hI_lt_R` + `E[d] ≤ D+ε/4`) ✅ (`rdPerturb` + 5 補題, genuine sorryAx-free, commit 079babcc)
+- [x] Piece A — slack 存在ラッパー (残 slack 仮説群) ✅ (`rdSlack_exists`, 15-conjunct existential, genuine, commit 16c3d391)
+- [x] Wrapper — `rate_distortion_achievability_operational` 組立 + source-law bridge ✅ (`@[entry_point]`, source を `pmfToMeasure P_X` に bridge, genuine sorryAx-free, commit 16c3d391)
+- [ ] 独立 honesty audit (headline signature の load-bearing-free 判定、特に `hP_supp` regularity) 🔍 進行中
 
 ## ゴール / Approach
 
