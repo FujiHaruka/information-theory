@@ -5781,6 +5781,20 @@ private lemma wzCoveringSuccessStrong_subset_weak
                 ChannelCoding.iidXs ChannelCoding.iidYs n ε } :=
   fun _ hp ↦ hp.2
 
+/-- **(Type-count reindexing)** For a block `z : Fin n → T` on a finite alphabet `T`, summing a
+per-symbol statistic `f` over the coordinates equals summing over the alphabet weighted by the
+empirical counts: `∑ i, f (z i) = ∑ p, (typeCount z p) · f p`. This is the standard method-of-types
+regrouping (`Finset.sum_fiberwise_of_maps_to'` over the fibres `{i | z i = p}`). -/
+private lemma wz_sum_eq_typeCount_mul {T : Type*} [Fintype T] [DecidableEq T] {n : ℕ}
+    (z : Fin n → T) (f : T → ℝ) :
+    ∑ i, f (z i) = ∑ p : T, (typeCount z p : ℝ) * f p := by
+  classical
+  rw [← Finset.sum_fiberwise_of_maps_to' (s := (Finset.univ : Finset (Fin n)))
+        (t := (Finset.univ : Finset T)) (g := z) (fun i _ ↦ Finset.mem_univ _) f]
+  refine Finset.sum_congr rfl fun a _ ↦ ?_
+  rw [Finset.sum_const, nsmul_eq_mul]
+  rfl
+
 open ChannelCoding in
 /-- **(Markov-core conditional-AEP concentration — the sole analytic residual.)** For a
 strong-covering `x`-block `xb` — one whose induced `(x, U)` block
@@ -5795,7 +5809,8 @@ is the from-scratch conditional-AEP kernel; the surrounding Atom-A finite-Fubini
 `x`-block dichotomy and summation are discharged genuinely in `wz_covering_jointBand_markov_core`.
 
 INDEPENDENT AUDIT 2026-07-12 (Atom E-kernel isolation commits `b489d51f`+`4449e61f`,
-honesty-auditor): PASS, HONEST tier-2. (1) Signature honest: body is a bare `sorry`, not `:= h`;
+honesty-auditor) [HISTORICAL — this audit describes the pre-closure `sorry` state; the body is now
+genuine, see the BUILD note at the end]: PASS, HONEST tier-2. (1) Signature honest: body is a bare `sorry`, not `:= h`;
 no `:True`/degenerate slot. (2) NON-BUNDLED: the conclusion is a GENUINE conditional-concentration
 bound — the conditional side-info measure `condY(xb).real` of the `(U,Y)`-atypical slice `≤ tol/8` —
 which is exactly the mean-pin + Chebyshev body, NOT re-imported as a hypothesis. Every hypothesis is
@@ -5820,7 +5835,21 @@ template `wz_covering_yBand_aep`); parent plan `wz-markov-core-plan.md` §Atom E
 `wz_covering_jointBand_markov_core` verified genuinely sorry-free (build: sole new `sorry` warning at
 this decl, none at the wrapper) — the good/bad `x`-block dichotomy consumes this kernel honestly
 (good: `measureReal_mono` to `hN`; bad: strong-conjunct failure ⟹ empty slice), so the split is honest.
-@residual(plan:wz-binning-covering) -/
+
+BUILD 2026-07-12 (kernel closure): this body is now GENUINE (`sorry`-free, `#print axioms` =
+`[propext, Classical.choice, Quot.sound]`). The from-scratch correlated conditional AEP is assembled
+exactly as the audit recipe predicted, mirroring the in-tree template `wz_covering_yBand_aep`:
+(B1) the per-coordinate statistic `ψ i y = pmfLog (rdAmbient wsm) (jointSequence iidXs Yc) (U_i, y)`
+has the uniform sup-bound `|ψ i y| ≤ B = ∑_q |log wsm(q)|` (coerced-joint-law singleton via
+`wz_map_injective_real_singleton` on the relabel `Φ(u, y') = (u, ↑y')`, off-image mass `0`);
+(B2) its conditional mean `∫ ψ_i ∂ν_i = wzCondMeanKernel (xb_i, U_i)` (`integral_fintype` + the
+`β`-sum collapsing onto the positive-`Y`-marginal subtype); (B3) the ambient entropy
+`H = entropy (rdAmbient wsm) (jointSequence iidXs Yc 0) = ∑_q negMulLog(wsm q)` via
+`wz_entropy_map_injective`; the mean-pin `wz_wsm_negLog_mean_pin_of_stronglyTypical` plus the radius
+separation `C·ε_cov < ε/2` pin the conditional mean; and the Atom-B engine
+`wz_pi_nonuniform_concentration_tendsto` (δ = ε/2, tol/8) bounds the deviation set, into which the
+`(U,Y)`-atypical band injects by the strict triangle inequality. No `@residual` remains — proof done,
+pending independent re-audit. -/
 private lemma wz_covering_uyBand_condSlice_le
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} (κ' : α → Fin k → ℝ)
@@ -5845,7 +5874,212 @@ private lemma wz_covering_uyBand_condSlice_le
                       ((ChannelCoding.iidYs i ω :
                           {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))) n ε }
           ≤ tol / 8 := by
-  sorry
+  classical
+  -- Side-information coercion `Yc` (βs ↪ β) lifted to the joint relabel `Φ (u, y') = (u, ↑y')`.
+  set Yc : ℕ → (ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) → β :=
+    fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+      ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β) with hYc_def
+  set Φ : Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}} → Fin k × β :=
+    fun p ↦ (p.1, (p.2 : β)) with hΦ_def
+  -- Regularity of the side-information marginal `wsm`.
+  have hmem_wsm : wzSideInfoMarginal P_XY κ'
+      ∈ stdSimplex ℝ (Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) :=
+    wzSideInfoMarginal_mem_stdSimplex P_XY κ' hκ'_pos hκ'_sum
+  haveI hne_βs : Nonempty {y : β // 0 < ∑ x, P_XY.real {(x, y)}} :=
+    wzSideInfoMarginal_subtype_nonempty P_XY
+  haveI hne_prod : Nonempty (Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) :=
+    Finset.univ_nonempty_iff.mp
+      (Finset.nonempty_of_sum_ne_zero (by rw [hmem_wsm.2]; exact one_ne_zero))
+  haveI hne_k : Nonempty (Fin k) := hne_prod.map Prod.fst
+  haveI hamb_prob : IsProbabilityMeasure (rdAmbient (wzSideInfoMarginal P_XY κ')) :=
+    rdAmbient_isProbabilityMeasure _ hmem_wsm
+  -- `qStar ∈ stdSimplex` (from consistency with the full-support proper pmf `κ'`).
+  have hmem_q : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) := by
+    obtain ⟨_, _, hstd⟩ := wz_restrictedCoveringJoint_pos P_XY κ' hκ'_pos hκ'_sum
+    rwa [show qStar = (fun p ↦ κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) from funext hqStar]
+  -- Relabel properties.
+  have hΦ_inj : Function.Injective Φ := by
+    intro a b hab
+    have hab' : (a.1, (a.2 : β)) = (b.1, (b.2 : β)) := hab
+    have hcomp := (Prod.mk.injEq _ _ _ _).mp hab'
+    exact Prod.ext_iff.mpr ⟨hcomp.1, Subtype.val_injective hcomp.2⟩
+  have hΦ_meas : Measurable Φ :=
+    measurable_fst.prodMk (measurable_subtype_coe.comp measurable_snd)
+  have hjoint_meas : Measurable (ChannelCoding.jointSequence ChannelCoding.iidXs
+      ChannelCoding.iidYs 0 (α := Fin k) (β := {y : β // 0 < ∑ x, P_XY.real {(x, y)}})) :=
+    ChannelCoding.measurable_jointSequence _ _
+      (fun i ↦ ChannelCoding.measurable_iidXs i) (fun i ↦ ChannelCoding.measurable_iidYs i) 0
+  have hjointYc_meas : Measurable (ChannelCoding.jointSequence ChannelCoding.iidXs Yc 0) :=
+    ChannelCoding.measurable_jointSequence _ _
+      (fun i ↦ ChannelCoding.measurable_iidXs i)
+      (fun i ↦ measurable_subtype_coe.comp (ChannelCoding.measurable_iidYs i)) 0
+  -- `jointSequence iidXs Yc 0 = Φ ∘ (jointSequence iidXs iidYs 0)` (definitional).
+  have hYceq : ChannelCoding.jointSequence ChannelCoding.iidXs Yc 0
+      = fun ω ↦ Φ (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs 0 ω) := by
+    funext ω; rfl
+  -- Coerced joint-law singleton values (positive / off-image).
+  have hlaw_pos : ∀ (u : Fin k) (ys : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}),
+      ((rdAmbient (wzSideInfoMarginal P_XY κ')).map
+          (ChannelCoding.jointSequence ChannelCoding.iidXs Yc 0)).real {(u, ys.1)}
+        = wzSideInfoMarginal P_XY κ' (u, ys) := by
+    intro u ys
+    rw [hYceq]
+    have hbase := wz_map_injective_real_singleton (rdAmbient (wzSideInfoMarginal P_XY κ'))
+      (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs 0)
+      hjoint_meas Φ hΦ_inj hΦ_meas (u, ys)
+    rw [rdAmbient_map_jointSequence _ hmem_wsm, pmfToMeasure_real_singleton hmem_wsm] at hbase
+    exact hbase
+  have hlaw_zero : ∀ (u : Fin k) (y : β), ¬ (0 < ∑ x, P_XY.real {(x, y)}) →
+      ((rdAmbient (wzSideInfoMarginal P_XY κ')).map
+          (ChannelCoding.jointSequence ChannelCoding.iidXs Yc 0)).real {(u, y)} = 0 := by
+    intro u y hy
+    rw [map_measureReal_apply hjointYc_meas (MeasurableSet.singleton _)]
+    have hpre : (ChannelCoding.jointSequence ChannelCoding.iidXs Yc 0) ⁻¹' {(u, y)}
+        = (∅ : Set _) := by
+      ext ω
+      simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_empty_iff_false, iff_false]
+      intro hω
+      apply hy
+      have h2 : ((ChannelCoding.iidYs 0 ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β) = y :=
+        congrArg Prod.snd hω
+      rw [← h2]
+      exact (ChannelCoding.iidYs 0 ω).2
+    rw [hpre, measureReal_empty]
+  -- Uniform sup-bound `B = ∑_q |log wsm(q)|` and the entropy identity.
+  set B : ℝ := ∑ q : Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}},
+    |Real.log (wzSideInfoMarginal P_XY κ' q)| with hB_def
+  have hB_nonneg : 0 ≤ B := Finset.sum_nonneg fun _ _ ↦ abs_nonneg _
+  have hH : entropy (rdAmbient (wzSideInfoMarginal P_XY κ'))
+        (ChannelCoding.jointSequence ChannelCoding.iidXs Yc 0)
+      = ∑ q, Real.negMulLog (wzSideInfoMarginal P_XY κ' q) := by
+    rw [hYceq, wz_entropy_map_injective (rdAmbient (wzSideInfoMarginal P_XY κ'))
+        (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs 0)
+        hjoint_meas Φ hΦ_inj hΦ_meas]
+    unfold entropy
+    rw [rdAmbient_map_jointSequence _ hmem_wsm]
+    exact Finset.sum_congr rfl fun q _ => by rw [pmfToMeasure_real_singleton hmem_wsm]
+  -- `C · ε_cov < ε/2` (radius separation).
+  have hC_nonneg : 0 ≤ ∑ p, |wzCondMeanKernel P_XY κ' p| :=
+    Finset.sum_nonneg fun _ _ ↦ abs_nonneg _
+  have hkey : (∑ p, |wzCondMeanKernel P_XY κ' p|) * wzCoveringStrongRadius P_XY κ' ε < ε / 2 := by
+    unfold wzCoveringStrongRadius
+    set C := ∑ p, |wzCondMeanKernel P_XY κ' p| with hC
+    have hden : (0 : ℝ) < 2 * (1 + C) := by linarith [hC_nonneg]
+    rw [show C * (ε / (2 * (1 + C))) = C * ε / (2 * (1 + C)) from
+        (mul_div_assoc C ε (2 * (1 + C))).symm, div_lt_iff₀ hden]
+    nlinarith [hε, hC_nonneg, mul_nonneg hC_nonneg hε.le]
+  -- Uniform Chebyshev threshold from the Atom-B engine (δ = ε/2, tol = tol/8).
+  obtain ⟨N, hN⟩ := wz_pi_nonuniform_concentration_tendsto (β := β)
+    (B := B) (δ := ε / 2) (tol := tol / 8) (by linarith) (by linarith) hB_nonneg
+  refine ⟨N, fun n hn M c xb hgood ↦ ?_⟩
+  set U := c.decoder (c.encoder xb) with hU_def
+  set ψ : Fin n → β → ℝ :=
+    fun i y ↦ pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
+      (ChannelCoding.jointSequence ChannelCoding.iidXs Yc) (U i, y) with hψ_def
+  -- The conditional side-information law is a probability measure.
+  have hdens_std : ∀ i, (fun y : β ↦ P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')})
+      ∈ stdSimplex ℝ β := by
+    intro i
+    refine ⟨fun y ↦ div_nonneg measureReal_nonneg
+      (Finset.sum_nonneg fun _ _ ↦ measureReal_nonneg), ?_⟩
+    rw [← Finset.sum_div, div_self (xb i).2.ne']
+  haveI hν_prob : ∀ i, IsProbabilityMeasure (ChannelCoding.pmfToMeasure
+      (fun y : β ↦ P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')})) :=
+    fun i ↦ ChannelCoding.pmfToMeasure_isProbabilityMeasure (hdens_std i)
+  -- B1: uniform sup-bound on `ψ`.
+  have hB1 : ∀ i y, |ψ i y| ≤ B := by
+    intro i y
+    show |pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
+        (ChannelCoding.jointSequence ChannelCoding.iidXs Yc) (U i, y)| ≤ B
+    rw [show pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          (ChannelCoding.jointSequence ChannelCoding.iidXs Yc) (U i, y)
+        = - Real.log (((rdAmbient (wzSideInfoMarginal P_XY κ')).map
+            (ChannelCoding.jointSequence ChannelCoding.iidXs Yc 0)).real {(U i, y)}) from rfl]
+    by_cases hy : 0 < ∑ x, P_XY.real {(x, y)}
+    · rw [hlaw_pos (U i) ⟨y, hy⟩, abs_neg]
+      exact Finset.single_le_sum (f := fun q => |Real.log (wzSideInfoMarginal P_XY κ' q)|)
+        (fun q _ => abs_nonneg _)
+        (Finset.mem_univ ((U i, ⟨y, hy⟩) :
+          Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}))
+    · rw [hlaw_zero (U i) y hy, Real.log_zero, neg_zero, abs_zero]
+      exact hB_nonneg
+  -- B2: conditional mean of `ψ_i` equals the kernel `g(xb_i, U_i)`.
+  have hint : ∀ i, ∫ y, ψ i y ∂(ChannelCoding.pmfToMeasure
+        (fun y : β ↦ P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')}))
+      = wzCondMeanKernel P_XY κ' (xb i, U i) := by
+    intro i
+    rw [integral_fintype Integrable.of_finite]
+    simp_rw [pmfToMeasure_real_singleton (hdens_std i), smul_eq_mul]
+    -- ψ_i on the positive-`Y`-marginal subtype is `−log wsm(U_i, ·)`.
+    have hψval : ∀ ys : {y : β // 0 < ∑ x, P_XY.real {(x, y)}},
+        ψ i ys.1 = - Real.log (wzSideInfoMarginal P_XY κ' (U i, ys)) := by
+      intro ys
+      show pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          (ChannelCoding.jointSequence ChannelCoding.iidXs Yc) (U i, ys.1)
+        = - Real.log (wzSideInfoMarginal P_XY κ' (U i, ys))
+      rw [show pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
+            (ChannelCoding.jointSequence ChannelCoding.iidXs Yc) (U i, ys.1)
+          = - Real.log (((rdAmbient (wzSideInfoMarginal P_XY κ')).map
+              (ChannelCoding.jointSequence ChannelCoding.iidXs Yc 0)).real {(U i, ys.1)}) from rfl,
+          hlaw_pos (U i) ys]
+    -- The `β`-sum collapses onto the positive-`Y`-marginal subtype (excluded `y` carry mass 0).
+    have hβsub : (∑ y : β,
+          (P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')}) * ψ i y)
+        = ∑ ys : {y : β // 0 < ∑ x, P_XY.real {(x, y)}},
+            (P_XY.real {((xb i).1, ys.1)} / ∑ y', P_XY.real {((xb i).1, y')}) * ψ i ys.1 := by
+      letI : DecidablePred (fun y : β => 0 < ∑ x, P_XY.real {(x, y)}) := Classical.decPred _
+      rw [← Finset.sum_subtype (Finset.univ.filter (fun y : β => 0 < ∑ x, P_XY.real {(x, y)}))
+            (fun y => by simp)
+            (fun y => (P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')}) * ψ i y)]
+      refine (Finset.sum_subset (Finset.filter_subset _ _) ?_).symm
+      intro y _ hy
+      rw [Finset.mem_filter] at hy
+      push_neg at hy
+      have hz : ∑ x, P_XY.real {(x, y)} = 0 :=
+        le_antisymm (hy (Finset.mem_univ y)) (Finset.sum_nonneg fun _ _ => measureReal_nonneg)
+      have hp0 : P_XY.real {((xb i).1, y)} = 0 :=
+        (Finset.sum_eq_zero_iff_of_nonneg (fun _ _ => measureReal_nonneg)).mp hz (xb i).1
+          (Finset.mem_univ _)
+      rw [hp0, zero_div, zero_mul]
+    rw [hβsub]
+    unfold wzCondMeanKernel
+    refine Finset.sum_congr rfl fun ys _ => ?_
+    rw [hψval ys]
+  -- Mean identification and mean-pin `< ε/2`.
+  have hpin : |(∑ i, ∫ y, ψ i y ∂(ChannelCoding.pmfToMeasure
+        (fun y : β ↦ P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')}))) / (n : ℝ)
+      - ∑ q, Real.negMulLog (wzSideInfoMarginal P_XY κ' q)| < ε / 2 := by
+    have hMstat_eq : (∑ i, ∫ y, ψ i y ∂(ChannelCoding.pmfToMeasure
+          (fun y : β ↦ P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')}))) / (n : ℝ)
+        = ∑ p, ((typeCount (fun i ↦ (xb i, U i)) p : ℝ) / n) * wzCondMeanKernel P_XY κ' p := by
+      have hsum : (∑ i, ∫ y, ψ i y ∂(ChannelCoding.pmfToMeasure
+            (fun y : β ↦ P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')})))
+          = ∑ p, (typeCount (fun i ↦ (xb i, U i)) p : ℝ) * wzCondMeanKernel P_XY κ' p := by
+        rw [← wz_sum_eq_typeCount_mul (fun i ↦ (xb i, U i)) (wzCondMeanKernel P_XY κ')]
+        exact Finset.sum_congr rfl fun i _ => hint i
+      rw [hsum, Finset.sum_div]
+      exact Finset.sum_congr rfl fun p _ => by ring
+    rw [hMstat_eq]
+    refine lt_of_le_of_lt
+      (wz_wsm_negLog_mean_pin_of_stronglyTypical P_XY κ' qStar hmem_q hqStar
+        (wzCoveringStrongRadius_pos P_XY κ' hε).le (fun i ↦ (xb i, U i)) hgood) hkey
+  -- Atom B bounds the deviation set; the atypical band is included in it.
+  refine le_trans (measureReal_mono ?_ (measure_ne_top _ _))
+    (hN n hn
+      (fun i ↦ ChannelCoding.pmfToMeasure
+        (fun y : β ↦ P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')}))
+      hν_prob ψ hB1)
+  intro yb hyb
+  simp only [Set.mem_setOf_eq, mem_typicalSet_iff, not_lt] at hyb
+  simp only [Set.mem_setOf_eq]
+  -- Triangle inequality: `ε ≤ |A − H|`, `|Mstat − H| < ε/2` ⟹ `ε/2 ≤ |A − Mstat|`.
+  have htri := abs_sub_le
+    ((∑ i, ψ i (yb i)) / (n : ℝ))
+    ((∑ i, ∫ y, ψ i y ∂(ChannelCoding.pmfToMeasure
+        (fun y : β ↦ P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')}))) / (n : ℝ))
+    (∑ q, Real.negMulLog (wzSideInfoMarginal P_XY κ' q))
+  rw [hH] at hyb
+  linarith [hyb, htri, hpin]
 
 open ChannelCoding in
 /-- **(L4 part 2 — THE MARKOV CORE) Correlated-joint conditional-typicality concentration.**
