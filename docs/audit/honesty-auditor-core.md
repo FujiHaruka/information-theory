@@ -104,6 +104,8 @@ recommend the rewrite. The new system requires sorry-based residuals, not honest
 非循環 (`:= h` でない) + 非バンドル (load-bearing でない) は honesty の **必要条件であって十分条件ではない**。両者を通っても、**仮説群から結論が semantic に follow しなければ** signature は嘘をついている (false-as-framed → tier 5 `false_statement` / `false-hypothesis`)。SoT = audit-tags.md「監査スコープ — honesty の 4 check」。
 
 - 結論が仮説群から **semantic に follow** するか独立判定する。最低でも **反例構成を 1 つ試みて棄却できるか** 確認する (free variable を degenerate / 境界 case に振る、出口補題の前提を外す等)。
+- **class であって instance でない (1 反例では足りない)**: 2 つの構造的に異なる degenerate 境界を試す。特定反例を殺す fix (or 追加された consistency hyp) の後、**全仮説を満たす最も一般の対象を構成して再 test** する — fix が instance を patch しても反例 class が開いたまま残ることが多い (point-mass 反例を殺しても entropy 保存 relabel が破る)。
+- **pin される invariant を名指す**: 仮説が実際に pin する invariant を明示し、結論がそれと **同じ粒度** を要求するか確認。仮説が coarse な scalar 汎関数 (entropy) を pin するが結論が fine 構造 (full law / TV) を要求する = coarser-than-needed で false-as-framed (非循環・非バンドルでも)。target が named textbook object (Markov lemma 等) なら、その標準仮説の strength (strong vs weak typicality) を in-project 定義と diff する。
 - derivative-of-gap / 不等式系の結論では特に「**差分形 `g'` か、比 (log) `g'` か**」を Stam 等の出口形と照合する。出口形 (Stam の score-of-convolution は比の形で出る等) を取り違えると、非循環・非バンドルでも偽の含意になる。
 - sufficiency が破れていれば `false_statement` (precondition 欠落で universally false) verdict、tier 5 として orchestrator に rewrite (仮説追加 or 結論を出口形に reframe + sorry 化) を recommend。
 
@@ -234,6 +236,7 @@ verdict 返す前に self-check:
 - [ ] docstring の "honest", "genuine", "NOT load-bearing" 等の自己評価語を **疑って** code を読んだか
 - [ ] hypothesis bundle 全体に core-reconstruction test を適用したか (joint で判断)
 - [ ] **sufficiency check**: 仮説群から結論が semantic に follow するか、反例構成を 1 つ試みて棄却できるか確認したか (非循環・非バンドルは必要条件であって十分条件ではない。derivative-of-gap / 不等式は差分形 `g'` か比 (log) `g'` かを出口形と照合)。破れていれば tier 5 `false_statement`
+- [ ] **反例は class で確認したか** (fix 後に全仮説を満たす最も一般の対象を再 test — instance patch では反例 class が残る)、**pin される invariant を名指したか** (coarse な entropy pin で fine な full-law/TV 結論を主張していないか、named textbook object なら strong vs weak の strength を diff したか)
 - [ ] consumer body / theorem body を実際に Read して silent leak がないか確認したか
 - [ ] Mathlib 不在主張 (`@residual(wall:...)`) は loogle で裏取りしたか
 - [ ] **`ok` (proof done) verdict は `#print axioms` で `sorryAx` 非依存を裏取りしたか** (transient `#print axioms` + `lake env lean`、`rg sorry` だけでは transitive sorry を見逃す。上記「proof-done 裏取り」参照)
