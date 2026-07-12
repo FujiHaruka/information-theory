@@ -5793,6 +5793,33 @@ mean-pin (`wz_wsm_negLog_mean_pin_of_stronglyTypical`) puts the conditional mean
 `(U, Y)`-entropy there, so `(U, Y)`-atypicality (radius `ε`) has vanishing conditional mass. This
 is the from-scratch conditional-AEP kernel; the surrounding Atom-A finite-Fubini split, good/bad
 `x`-block dichotomy and summation are discharged genuinely in `wz_covering_jointBand_markov_core`.
+
+INDEPENDENT AUDIT 2026-07-12 (Atom E-kernel isolation commits `b489d51f`+`4449e61f`,
+honesty-auditor): PASS, HONEST tier-2. (1) Signature honest: body is a bare `sorry`, not `:= h`;
+no `:True`/degenerate slot. (2) NON-BUNDLED: the conclusion is a GENUINE conditional-concentration
+bound — the conditional side-info measure `condY(xb).real` of the `(U,Y)`-atypical slice `≤ tol/8` —
+which is exactly the mean-pin + Chebyshev body, NOT re-imported as a hypothesis. Every hypothesis is
+a precondition: `hκ'_pos`/`hκ'_sum` (full-support proper-pmf regularity), `hqStar` (qStar–κ'
+definitional consistency), `ε`/`tol` positivity, and the implication antecedent (strong typicality
+of the SPECIFIC `xb` = good-block selector, NOT a bundled `condY ≤ …`). No `*Hypothesis`/`*Reduction`
+predicate; the core-reconstruction test fails to hand over the concentration — it stays entirely in
+the `sorry`. (3) SUFFICIENCY: TRUE-as-framed at the CLASS level. The strong radius separation
+`ε_cov = ε/(2(1 + C))` makes the mean-pin gateway `wz_wsm_negLog_mean_pin_of_stronglyTypical`
+(verified sorry-free) give a UNIVERSAL bound `|M(t) − H(wsm)| ≤ C·ε_cov = (C/(1+C))·(ε/2) < ε/2`
+over the ENTIRE `ε_cov`-ball (via the type-level `wz_wsm_negLog_mean_pin_of_type`, not per-instance);
+composed with the conditional Chebyshev (`δ = ε/2`) via the strict triangle `< ε/2 + ε/2 = ε`, the
+`(U,Y)` empirical entropy lands strictly inside `typicalSet(wsm)`. The entropy-preserving
+label-swap / `O(ε)` partial-relabel counterexample CLASS that broke the weak-only version is closed
+because strong typicality pins the per-symbol `(x,u)`-type in TV, controlling the linear functional
+`M = ⟨type, g⟩` the conclusion needs — no finer structure required (coarser-than-needed repaired);
+degenerate `C = 0` is consistent (`H(wsm) = 0 = M`, non-vacuous). (4) Class `plan` CORRECT: from-scratch
+correlated conditional AEP, NOT a Mathlib wall — recipe ingredients all in-tree (Atom A split
+`wz_srcBlock_condMeasure_split`, engine `wz_pi_nonuniform_concentration_tendsto`, gateway above,
+template `wz_covering_yBand_aep`); parent plan `wz-markov-core-plan.md` §Atom E-kernel confirms
+"Mathlib gap なし". Name `_le` descriptive (no laundering); placement per convention. WRAPPER
+`wz_covering_jointBand_markov_core` verified genuinely sorry-free (build: sole new `sorry` warning at
+this decl, none at the wrapper) — the good/bad `x`-block dichotomy consumes this kernel honestly
+(good: `measureReal_mono` to `hN`; bad: strong-conjunct failure ⟹ empty slice), so the split is honest.
 @residual(plan:wz-binning-covering) -/
 private lemma wz_covering_uyBand_condSlice_le
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -5913,6 +5940,17 @@ conditional-AEP kernel). The SOLE remaining residual is the from-scratch conditi
 `wz_covering_uyBand_condSlice_le` (`sorry`, `@residual(plan:wz-binning-covering)`): for a
 strong-covering `x`-block the conditional side-info mass of the `(U,Y)`-atypical slice is `≤ tol/8`
 (mean-pin `< ε/2` + conditional Chebyshev `δ = ε/2`).
+
+INDEPENDENT AUDIT 2026-07-12 (wrapper sorry-free build `b489d51f`, honesty-auditor): PASS — the
+reduction is GENUINE, no hidden circular/vacuous step. Build confirms this wrapper emits NO `sorry`
+warning; the SOLE new residual is the isolated kernel (honest split — analytic core pushed to a
+kernel that is itself an honest statement, see its docstring audit). The body genuinely: (a) rewrites
+via the sorry-free Atom-A Fubini split `wz_srcBlock_condMeasure_split`; (b) normalises total `x`-block
+mass to `1` (`Fintype.prod_sum` + `wz_QXY_mem_stdSimplex`); (c) real good/bad dichotomy — good `xb`
+(strongly typical) `measureReal_mono`-includes into the kernel's `(U,Y)`-atypical slice and consumes
+`hN … xb hgood`, bad `xb` yields an EMPTY slice from `wzCoveringSuccessStrong`'s strong-conjunct
+failure (`hgood hyb.1.1.1`); (d) weighted-sums `∑ (∏P_X)·(≤tol/8) ≤ 1·tol/8`. NOT `@audit:ok`
+(transitive `sorry` remains in the kernel), correctly tier-2 `@residual(plan:wz-binning-covering)`.
 @residual(plan:wz-binning-covering) -/
 private lemma wz_covering_jointBand_markov_core
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
