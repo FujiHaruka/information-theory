@@ -62,6 +62,7 @@ parallel_gaussian_capacity_formula_minimal | water-filling
 
 @ 10 | Rate–distortion
 rate_distortion_achievability
+rate_distortion_achievability_operational | operational achievability, unconditional form (R > R(D), full-support source)
 rateDistortionFunction_convexOn
 rate_distortion_converse_n_letter_singleLetter
 

@@ -2,7 +2,7 @@
 
 > **Parent**: [`rate-distortion-achievability-plan.md`](rate-distortion-achievability-plan.md) §Phase E (strong-typicality variant)
 
-**Status**: 実装全閉 ✅ (Piece B/C/A + Wrapper `rate_distortion_achievability_operational` genuine sorryAx-free) — 独立 honesty 監査待ち 🔍
+**Status**: CLOSED ✅ — Piece B/C/A + Wrapper `rate_distortion_achievability_operational` (`@[entry_point]`) genuine sorryAx-free、独立 honesty 監査 `@audit:ok` (全仮説 regularity/operational、load-bearing ゼロ)。roadmap Ch.10 / README 反映済。
 
 ## 要点 (≤5 行)
 - 既存 headline `rate_distortion_achievability` (`AchievabilityStrongTypicality.lean:185`, `@entry_point`, 0 sorry) は honest pass-through 仮説付き。本 plan はそれらを discharge して **クリーンな operational 文**「`R > R(D)` なら大 n で `distortion ≤ D+ε` の lossy code が存在」を publish する。
@@ -17,7 +17,7 @@
 - [x] Piece B — full-support 摂動 (`hqStar_pos` + `hI_lt_R` + `E[d] ≤ D+ε/4`) ✅ (`rdPerturb` + 5 補題, genuine sorryAx-free, commit 079babcc)
 - [x] Piece A — slack 存在ラッパー (残 slack 仮説群) ✅ (`rdSlack_exists`, 15-conjunct existential, genuine, commit 16c3d391)
 - [x] Wrapper — `rate_distortion_achievability_operational` 組立 + source-law bridge ✅ (`@[entry_point]`, source を `pmfToMeasure P_X` に bridge, genuine sorryAx-free, commit 16c3d391)
-- [ ] 独立 honesty audit (headline signature の load-bearing-free 判定、特に `hP_supp` regularity) 🔍 進行中
+- [x] 独立 honesty audit (headline signature の load-bearing-free 判定、特に `hP_supp` regularity) ✅ (all OK、`@audit:ok` 付与、`hP_supp` は over-hyp regularity と確認)
 
 ## ゴール / Approach
 

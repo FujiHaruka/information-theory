@@ -1,6 +1,6 @@
 # Rate-distortion theorem achievability ムーンショット計画 🌙
 
-**Status**: CLOSED ✅ — Phase A-E すべて landing 済。headline `rate_distortion_achievability` を strong-typicality track で publish 済。`R(D)` 定義 (`RDConstraint` / `mutualInfoPmf` / `rateDistortionFunctionPmf`) + 達成性 + 連続性 + 単調性も完成。
+**Status**: CLOSED ✅ — Phase A-E すべて landing 済。headline `rate_distortion_achievability` を strong-typicality track で publish 済。`R(D)` 定義 (`RDConstraint` / `mutualInfoPmf` / `rateDistortionFunctionPmf`) + 達成性 + 連続性 + 単調性も完成。**無条件 operational 形 `rate_distortion_achievability_operational` も closure 済** (pass-through 仮説を全 discharge、[unconditional](rate-distortion-achievability-unconditional-plan.md) CLOSED ✅、`@audit:ok`)。
 **SoT**: `docs/textbook-roadmap.md` Ch.10。詳細履歴は git。
 
 ## 要点 (任意, ≤5 行)
@@ -11,4 +11,4 @@
 
 ## Sub-plan 一覧
 - [phase-e-strong](rate-distortion-achievability-phase-e-strong-plan.md) — E-3''' fully-discharged (CLOSED ✅)
-- [unconditional](rate-distortion-achievability-unconditional-plan.md) — headline の honest pass-through 仮説を discharge しクリーンな operational 文へ (OPEN 📋)
+- [unconditional](rate-distortion-achievability-unconditional-plan.md) — headline の honest pass-through 仮説を discharge しクリーンな operational 文へ (CLOSED ✅ `rate_distortion_achievability_operational`)
