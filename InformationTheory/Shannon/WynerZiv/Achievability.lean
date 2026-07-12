@@ -3488,6 +3488,81 @@ private lemma wz_jointStrongly_mem_coveringSuccessJoint
           ChannelCoding.measurable_iidXs ChannelCoding.measurable_iidYs i) hn hJ hJstrong
 
 open ChannelCoding in
+/-- **(Atom G — measure alignment.)** The covering source–side product measure `SRC`
+pushes forward under the block `X`-projection `p ↦ (fun j ↦ (p j).1)` to the covering
+ambient's block `X`-law `Measure.pi (fun _ ↦ (rdAmbient qStar).map (iidXs 0))`. The
+per-coordinate map is `Prod.fst`, so `Measure.pi_map_pi` reduces the claim to the
+single-coordinate marginal identity `(pmfToMeasure P_XY').map Prod.fst =
+(rdAmbient qStar).map (iidXs 0)`, which holds because both marginals equal `x ↦
+∑ y, P_XY(x.1, y)` (using `∑ u, κ' x u = 1` for the `qStar` side). -/
+private lemma wz_covering_SRC_map_Xproj_eq
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} [Nonempty (Fin k)] [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
+    (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    (n : ℕ) :
+    (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+          P_XY.real {(p.1.1, p.2)}))).map
+      (fun p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+        fun j ↦ (p j).1)
+    = Measure.pi (fun _ : Fin n ↦
+        (rdAmbient qStar).map (ChannelCoding.iidXs 0)) := by
+  classical
+  have hQmem := wz_QXY_mem_stdSimplex P_XY
+  haveI hQprob : IsProbabilityMeasure (ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure hQmem
+  haveI : IsProbabilityMeasure (rdAmbient qStar) :=
+    rdAmbient_isProbabilityMeasure qStar hqStar_mem
+  haveI hmapfst_prob : IsProbabilityMeasure ((ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+        P_XY.real {(p.1.1, p.2)})).map Prod.fst) :=
+    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+  haveI hmux_prob : IsProbabilityMeasure ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) :=
+    rdAmbient_iidXs_isProbabilityMeasure qStar hqStar_mem
+  -- Single-coordinate marginal identity.
+  have hmarg : (ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+        P_XY.real {(p.1.1, p.2)})).map Prod.fst
+        = (rdAmbient qStar).map (ChannelCoding.iidXs 0) := by
+    refine Measure.ext_of_singleton (fun a ↦ ?_)
+    have hlhs : ((ChannelCoding.pmfToMeasure
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+          P_XY.real {(p.1.1, p.2)})).map Prod.fst).real {a}
+          = ∑ y, P_XY.real {(a.1, y)} := by
+      rw [pmfToMeasure_map_fst_real_singleton hQmem a]; rfl
+    have hrhs : ((rdAmbient qStar).map (ChannelCoding.iidXs 0)).real {a}
+          = ∑ y, P_XY.real {(a.1, y)} := by
+      rw [rdAmbient_map_iidXs qStar hqStar_mem, pmfToMeasure_map_fst_real_singleton hqStar_mem a]
+      simp only [marginalFst]
+      calc (∑ u, qStar (a, u))
+          = ∑ u, κ' a.1 u * ∑ y, P_XY.real {(a.1, y)} :=
+            Finset.sum_congr rfl (fun u _ ↦ hqStar_eq (a, u))
+        _ = (∑ u, κ' a.1 u) * ∑ y, P_XY.real {(a.1, y)} := by rw [Finset.sum_mul]
+        _ = ∑ y, P_XY.real {(a.1, y)} := by rw [hκ'sum a.1, one_mul]
+    have heq_real := hlhs.trans hrhs.symm
+    exact (ENNReal.toReal_eq_toReal_iff' (measure_ne_top _ _) (measure_ne_top _ _)).mp heq_real
+  have key : (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+        P_XY.real {(p.1.1, p.2)}))).map (fun p (j : Fin n) ↦ Prod.fst (p j))
+      = Measure.pi (fun _ : Fin n ↦ (ChannelCoding.pmfToMeasure
+          (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+            P_XY.real {(p.1.1, p.2)})).map Prod.fst) :=
+    MeasureTheory.Measure.pi_map_pi (fun _ ↦ measurable_fst.aemeasurable)
+  calc (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+          P_XY.real {(p.1.1, p.2)}))).map (fun p ↦ fun j ↦ (p j).1)
+      = Measure.pi (fun _ : Fin n ↦ (ChannelCoding.pmfToMeasure
+          (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+            P_XY.real {(p.1.1, p.2)})).map Prod.fst) := key
+    _ = Measure.pi (fun _ : Fin n ↦ (rdAmbient qStar).map (ChannelCoding.iidXs 0)) := by
+        rw [hmarg]
+
+open ChannelCoding in
 /-- **(Steps 1–2) Covering LossyCode family from a feasible test channel.**
 Perturbs the feasible factorisable test channel `qf` to a full-support kernel
 `κ'` (Step 1, `wz_fullKernelSupport_perturbation`), restricts the covering source
