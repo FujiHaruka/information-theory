@@ -2,6 +2,9 @@
 
 > **Parent**: [`wz-binning-covering-plan.md`](wz-binning-covering-plan.md) §Leg F
 
+> **⚠ STATUS 2026-07-12 (Leg 12) — 弱 typicality Approach INVALIDATED、user-decision フォークで PAUSED**:
+> Atom B の機械的 bulk (conditional-Chebyshev engine 2 補題) は sorry-free で landing (`1b5be107`/`469ae6f2`、再利用可能) したが、**core `wz_covering_jointBand_markov_core` は弱 (entropy ベース) typicality の下で FALSE-AS-FRAMED** と判明 (proof-pivot-advisor + 独立 honesty-auditor が label-swap 反例で confirm、`1ddc2887` で core/outer に `@audit:defect(false-statement)`)。この Approach 全体 (Atoms C/A/B/D on weak typicalSet) の**根が壊れた**: Atom C の mean-identity は exact だが、弱 `Ecov` が empirical type を TV で pin しないため条件付き平均 `M(xb)` に転送できない。**修正 = Proposal A** (`Ecov` のみ strong joint typicality に強化、下 §Proposal A) = covering-success 下界 reopening を伴う戦略的 def 変更ゆえ**ユーザー判断待ち**。詳細 → `wz-facts.md` の false-as-framed 行 + 判断ログ #3。
+
 ## Context
 
 WZ achievability chain 唯一の genuine hard residual = `wz_covering_jointBand_markov_core`
@@ -15,11 +18,12 @@ covering word `U = c.decoder (c.encoder x-block)` (= x-block 全体の determini
 
 ## 進捗
 
-- [ ] M0 API 確認 — 大半 `wz-facts.md` 済 (finite-Fubini + `IndepFun.variance_sum`)、conditional product-measure 構成は Atom A で確定 (condY)。残 = Chebyshev tail lemma verbatim (Atom B 用) 📋
-- [x] Atom C — mean-identity (WARM-UP)、sorry-free (`ef34494a`) ✅
+- [x] M0 API 確認 — finite-Fubini + `IndepFun.variance_sum` + Chebyshev tail (`meas_ge_le_variance_div_sq`) verbatim 確定 ✅
+- [x] Atom C — mean-identity (WARM-UP)、sorry-free (`ef34494a`)。**恒等式は正しいが weak Ecov 下で M(xb) に転送不能 (判断ログ #3)** ✅
 - [x] Atom A — finite Fubini split (disintegration 回避)、sorry-free (`95a07fa4`) ✅
-- [ ] Atom B — conditional Chebyshev (bulk) 📋
-- [ ] Atom D — core 組立 (`wz_covering_jointBand_markov_core` body) 📋
+- [x] Atom B (機械的 bulk) — conditional-Chebyshev engine 2 補題 sorry-free (`1b5be107`/`469ae6f2`): `wz_pi_nonuniform_mean_concentration` (非-iid variance_sum_pi + Chebyshev)、`wz_pi_nonuniform_concentration_tendsto` (uniform variance bound + N)。**再利用可能な非-iid 集中プリミティブ** ✅
+- [ ] ~~Atom B (per-xb) / Atom D (core 組立)~~ — **BLOCKED / INVALIDATED**: per-xb bound も averaged core も弱 typicality で false-as-framed (判断ログ #3)。Proposal A (strong Ecov) 決定待ち 🛑
+- [ ] **Proposal A 決定 (user-decision フォーク)** — `Ecov` を strong joint typicality に強化する route の go/no-go。covering-success 下界 reopening を伴う。ユーザー判断待ち 🛑
 
 ## ゴール / Approach
 
@@ -139,6 +143,23 @@ concentration) は relay-CF / broadcast で再出しうる。**推奨 = WZ-inter
   **WZ instance を proved 化した後**、relay-CF が具体的に必要とした時点で shared 化 (候補 name 例
   `markov-lemma-conditional-aep`) を再判定する。今 over-engineer しない。
 
+## Proposal A — strong-Ecov 修正路 (user-decision フォーク、go/no-go 待ち)
+
+advisor + auditor が特定した唯一の honest closure 路。**headline に仮説を追加しない** (strength は定義由来、親 #9 crux 適合)。
+
+**honesty 状態 (auditor `88e24962` 確認)**: false-as-framed の core→outer→inner→leaf は **dead・unwired private cluster** (leaf は term-level consumer ゼロ) ゆえ **headline `wyner_ziv_achievability` に伝播しない** — headline は honest transitive residual を持つ (偽ではない)。実際の上流ノード = covering atom `wz_coveringFamily_of_testChannel` (L1144) で、その `∃ c` acceptance conjunct は **TRUE-as-framed** (atom が code を PICK する、strong-typical covering code は weak bound を満たす)。**ただしその sorry を閉じる discharge path は現状 weak leaf/inner を通る = 現 weak chain を wire しても閉じない**。∴ Proposal A (strong `Ecov`) は headline closure の**前提条件**であって、headline を偽から救う修正ではない。
+
+**変更**: core / outer / (伝播先の inner・leaf) で covering-success 事象 `Ecov` に使う typicality を **weak `jointlyTypicalSet` → strong joint typicality** に差し替える (`Euy`/`Exytyp` は弱のまま)。
+- 素材: `stronglyTypicalSet` (`InformationTheory/Shannon/StrongTypicality.lean:58`、`∀ a, |typeCount/n − P(a)| ≤ ε` = per-symbol TV type-pin)、`jointStronglyTypicalSet_indep_prob_ge` (`RateDistortion/AchievabilityJointStrongTypicality.lean:29/455`)、`stronglyTypicalSet_subset_typicalSet` (`StrongTypicality.lean:429`、strong→weak bridge)。RD sibling `AchievabilityStrongTypicality/` に類似 machinery。
+- **なぜ効くか**: strong `Ecov` は `type_xu ≈ qStar` を TV で pin ⟹ 任意の線形汎関数 (特に `M(xb)=⟨type_xu,g⟩`、g は `wsm>0` ゆえ有界) が `⟨qStar,g⟩=H(wsm)` に pin ⟹ Atom C の恒等式が転送可能 ⟹ label-swap 反例が死ぬ (非-qStar conditional は strong-typical でない)。Atom A (finite Fubini) + Atom B engine (Chebyshev) は**そのまま再利用**。
+- **主リスク / コスト (medium)**: **covering-success 下界の reopening** — 構成した codebook が今度は strong-typical codeword を w.h.p. で供給する必要 (`jointStronglyTypicalSet_indep_prob_ge` で再導出、RD sibling が前例)。WZ-internal blast radius (cross-family には及ばない)。chain 全体 (core→outer→inner→leaf→covering atom) を strong-Ecov で書き直す必要。
+- **stall 時の退避**: ~2 session で covering 下界が RD 資産で閉じなければ、strong-covering 補題を独立 atom に scope + core を interim `sorry`+`@audit:defect` のまま保持 (Proposal D)。
+
+**フォークの選択肢** (ユーザー判断):
+- **(A)** Proposal A を実行 (strong-Ecov 化、chain 全体 rework、covering 下界 reopen)。headline sorryAx-free を目指す既定路。
+- **(B)** WZ achievability を現時点で false-as-framed 残置とし scope-out (chain に `@audit:defect` を維持、README/moonshot に「strong-typicality 待ち」と記録)。
+- **(C)** 別証明路 (未特定)。
+
 ## 判断ログ
 
 1. **finite-vs-general disintegration = finite Fubini で解決 (active、durable)**: piece (a) は general
@@ -147,6 +168,16 @@ concentration) は relay-CF / broadcast で再出しうる。**推奨 = WZ-inter
    off-path。真の bulk は piece (b) conditional Chebyshev (`IndepFun.variance_sum`、IdentDistrib 不要)。→ 詳細 Approach、
    settled は `wz-facts.md`。
 2. **危惧された disintegration 壁は CLOSED sorry-free (Atom A `95a07fa4`)**: finite-Fubini 解決 (判断 1) を実装で確認、
-   `wz_srcBlock_condMeasure_split` (L5346) が genuine。残 bulk は Atom B (conditional Chebyshev) 単独。
-   低優先 TODO: `wz_pi_pmf_real_eq_sum` は `private` `measure_pi_eq_sum_singletons` (ShannonTheoremGeneral.lean:410) を
-   再導出しており、後で shared lemma 昇格の候補。
+   `wz_srcBlock_condMeasure_split` (L5346) が genuine。低優先 TODO: `wz_pi_pmf_real_eq_sum` は `private`
+   `measure_pi_eq_sum_singletons` (ShannonTheoremGeneral.lean:410) を再導出しており、後で shared lemma 昇格の候補。
+3. **core は weak typicality で FALSE-AS-FRAMED、Approach 無効化 (2026-07-12 Leg 12、active、決定的)**: Atom B の機械的
+   Chebyshev engine (`1b5be107`/`469ae6f2`) は sorry-free で完成したが、planner brief の per-xb Atom B を組もうとした実装者が
+   2 obstruction を報告 → proof-pivot-advisor が verdict **(A) averaged core も false-as-framed** を label-swap 反例で提示
+   → 独立 honesty-auditor が反例を自力再計算し confirm、`1ddc2887` で core/outer に `@audit:defect(false-statement)`、
+   inner/leaf の stale 「HONEST tier-2」も継承 defect として訂正。**根因**: 弱 `typicalSet` = `{|CE(type,law)−H(law)|<ε}` は
+   type の scalar entropy 汎関数のみ pin、TV では pin しない。covering-success (弱 `jointlyTypicalSet` under qStar) は
+   `type_xu` の 3 entropy のみ制約し、entropy 保存の label-swap relabel ν が qStar と同じ 3 entropy を持ちつつ (u,y)
+   cross-marginal を変え `M(xb)=⟨type_xu,g⟩` を `H(wsm)` から乖離させる (∏P_X-mass→1)。Atom C の恒等式 `⟨qStar-weight,g⟩=H(wsm)`
+   は正しいが weak Ecov 下で `M(xb)` に転送されない。→ Approach の Atom C/A/B/D on weak typicalSet は根が壊れ、**re-attempt でなく
+   revise が必要** (§Proposal A)。settled は `wz-facts.md`。**教訓**: not-a-wall/hypothesis-OK checklist の「退化境界を 2 つ試す」で
+   constant-word (point-mass κ') に加え entropy 保存 relabel を試せば前回監査で捕まえられた — 1 反例のみの監査は under-hyp を pass しうる。
