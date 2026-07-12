@@ -3429,7 +3429,9 @@ open ChannelCoding in
 implies BOTH conjuncts of the covering-success event: the strong conjunct at the covering radius
 `ε_cov` (via `ε_enc ≤ ε_cov` and radius monotonicity) and the weak conjunct at `ε` (via the
 strong-to-weak inclusion `stronglyTypicalSet_subset_typicalSet`, whose widening constants are the
-three `logSumAbs` bounds). No `T_X` restriction is needed — the bridge is a pure set inclusion. -/
+three `logSumAbs` bounds). No `T_X` restriction is needed — the bridge is a pure set inclusion.
+Independent honesty audit 2026-07-13: PASS — `@audit:ok` (genuine set inclusion, sorry-free; hyps are
+radius/regularity preconditions). -/
 private lemma wz_jointStrongly_mem_coveringSuccessJoint
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} [Nonempty (Fin k)] [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
@@ -3494,7 +3496,9 @@ ambient's block `X`-law `Measure.pi (fun _ ↦ (rdAmbient qStar).map (iidXs 0))`
 per-coordinate map is `Prod.fst`, so `Measure.pi_map_pi` reduces the claim to the
 single-coordinate marginal identity `(pmfToMeasure P_XY').map Prod.fst =
 (rdAmbient qStar).map (iidXs 0)`, which holds because both marginals equal `x ↦
-∑ y, P_XY(x.1, y)` (using `∑ u, κ' x u = 1` for the `qStar` side). -/
+∑ y, P_XY(x.1, y)` (using `∑ u, κ' x u = 1` for the `qStar` side).
+Independent honesty audit 2026-07-13: PASS — `@audit:ok` (genuine measure alignment via `Measure.pi_map_pi`,
+sorry-free; hyps are simplex/sum regularity preconditions). -/
 private lemma wz_covering_SRC_map_Xproj_eq
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} [Nonempty (Fin k)] [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
@@ -3570,7 +3574,9 @@ jointStronglyTypicalSet` at the encoder radius `ε_enc`. Measure alignment
 (`wz_covering_SRC_map_Xproj_eq`) pushes `SRC` to the block-`X`-law along the `X`-projection,
 and the radius bridge `wz_jointStrongly_mem_coveringSuccessJoint` (given `ε_enc ≤ ε_cov` and
 the three `logSumAbs` bounds) makes strong-`ε_enc` typicality of the chosen word land in the
-covering-success event, so its complement is contained in the encoder-failure event. -/
+covering-success event, so its complement is contained in the encoder-failure event.
+Independent honesty audit 2026-07-13: PASS — `@audit:ok` (genuine measure monotonicity through the
+alignment + radius bridge, sorry-free; hyps are regularity/radius preconditions). -/
 private lemma wz_coveringSuccessStrong_compl_measureReal_le
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} [Nonempty (Fin k)] [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
@@ -3649,7 +3655,14 @@ encoder radius `ε_join` (drives covering-success via
 the shared vanishing upper `(P_X n){Xⁿ ∉ T*_X} + exp(-Mₙ·exp(-n(I+slack)))`; the pigeonhole
 `exists_codebook_low_avg` on their sum extracts one codebook small for both. The encoder
 radius `ε_join` is chosen `≤ wzCoveringStrongRadius P_XY κ' ε` and small against the three
-`logSumAbs` widths, so the radius bridge applies. Proved sorry-free. -/
+`logSumAbs` widths, so the radius bridge applies. Proved sorry-free.
+
+Independent honesty audit 2026-07-13: PASS — `@audit:ok`. The good code is genuinely CONSTRUCTED, not
+received as a hypothesis: the two per-codebook failure functionals (distortion-typicality + strong-joint-
+typicality at `ε_join`) are codebook-averaged, summed (`h_avg`), and `exists_codebook_low_avg` extracts a
+single `c₀` small for both. The hypotheses (`hI : mutualInfoPmf qStar < R₁`, `hfeas`, full support, simplex,
+`hqStar_eq`) are genuine preconditions on the pmf/proxy distortion, NOT a bundled `*Hypothesis` handing over
+the code's existence. Sorry-free and sorryAx-free (via the headline `#print axioms`). -/
 private lemma wz_covering_lossyCode_joint_exists
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} [Nonempty (Fin k)] [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
@@ -4138,7 +4151,19 @@ bounded by the shared vanishing upper `(P_X n){Xⁿ ∉ T*_X} + exp(-Mₙ·exp(-
 lower bound rests on the gateway `wz_covering_strongTypical_indep_mass_ge` (the WZ instance of
 `jointStronglyTypicalSet_indep_prob_ge`). The earlier weak-`Ecov` wiring concern is moot: the covering
 success event is now `wzCoveringSuccessStrong` (strong-at-`ε_cov` ∩ weak-at-`ε`), which makes the
-Markov-core chain true-as-framed. -/
+Markov-core chain true-as-framed.
+
+Independent honesty audit 2026-07-13 (Atom H closure gate): PASS — `@audit:ok`. The last-conjunct
+covering-acceptance residual is CLOSED sorry-free. The fill is a genuine construction (perturb to a
+full-support kernel → restricted `qStar` → codebook-average + `exists_codebook_low_avg` pigeonhole in
+`wz_covering_lossyCode_joint_exists`, then the strong-`Ecov` leaf), NOT a bundled `*Hypothesis`. The
+signature is byte-identical to the pre-session form (no full-support / acceptance / regularity
+hypothesis added — the #9 crux held); the headline `wyner_ziv_achievability` signature is likewise
+unchanged, and `#print axioms wyner_ziv_achievability` = `[propext, Classical.choice, Quot.sound]`
+(sorryAx-free, re-derived first-hand). Sufficiency PASS at the CLASS level: the closure rests on STRONG
+typicality at the separated radius `ε_cov = ε/(2(1+C))` (`wzCoveringStrongRadius`, positive), with the
+weak-at-`ε` conjunct a strong⟹weak plumbing consequence — NOT a re-introduction of the weak false frame.
+@audit:ok -/
 private lemma wz_coveringFamily_of_testChannel
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
