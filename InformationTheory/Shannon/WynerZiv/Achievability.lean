@@ -3440,7 +3440,30 @@ side-information ambient onto the source product measure. Two facts do the work:
 Non-bundled: the conclusion is a per-codeword mass upper bound (`Measure.real {…} ≤ exp …`), the
 same shape as D2, not the operational error probability; `hκ'pos`/`hκ'sum`/`hfact_eq` are the
 covering-kernel regularity preconditions. Genuinely proven (sorry-free, sorryAx-free): consumed
-by `wz_exists_binning_E2_bound` (A3) to supply S5b's `hmass`. -/
+by `wz_exists_binning_E2_bound` (A3) to supply S5b's `hmass`.
+
+Independent honesty audit 2026-07-12 (commit `66417846`, Leg E-mass sorry-free closure): PASS.
+The four honesty checks hold. (1) Non-circular: the conclusion is a `Measure.real {…} ≤ exp …`
+mass bound; no hypothesis has type ≡ conclusion; the body is a genuine measure-transport proof
+(ending `exact hD2`, not `:= h`). (2) Non-bundled: the AEP concentration CORE is discharged by
+`wz_covering_codeword_sideInfo_mass_le` (D2, `@audit:ok`, genuinely proven in-file), NOT passed
+as a hypothesis; `hfact_eq` is the definitional link fixing `q'` as the factored covering pmf
+(structural, not the bound); `hκ'pos`/`hκ'sum` are pmf-regularity. (3) Non-degenerate: the bound
+holds and is non-vacuous across the extremes (`n=0` ⇒ `exp 0 = 1` trivial; `ε` huge ⇒ RHS ≥ 1,
+weaker not false; atypical `u` ⇒ mass 0 via D2; `Nonempty` guards the positive-marginal
+subtypes). (4) Sufficiency: the exponent `wzMutualInfoYU q'` is NOT a free parameter — it is
+pinned to the actual pmf by `hfact_eq` and equated to the ambient `H(U)+H(Y)−H(U,Y)` by the
+entropy triple (`wz_entropy_ambient_iidXs`/`_iidYs`/`_joint`) + the pmf-level MI bridge
+(`wz_mutualInfoPmf_wzMarginalYU_eq`), so D2 discharges `hI_YU` by `le_of_eq`; no free-exponent
+gap (the historical WZ trap is absent). The 11 new private helpers (L3074–3417) were each audited
+clean: all carry only regularity hypotheses (measurability / injectivity / positivity / pmf-sum /
+`Nonempty` / `stdSimplex`) and prove measure-theoretic identities that follow, none bundling the
+AEP core. The exponent bridge deviates from the brief's `wzMutualInfoYU_eq_mutualInfo`
+(Operational.lean:230) soundly: that lemma requires `q'` to be the empirical pmf of ambient RVs
+`(X,Y,Uc)`, whereas here `q'` is a fixed factored pmf, so the direct pmf-level `mutualInfoPmf`
+computation is the honest route, not a papered-over gap. `#print axioms` =
+`[propext, Classical.choice, Quot.sound]` (no `sorryAx`, machine-verified) — proof done.
+@audit:ok -/
 lemma wz_source_codeword_sideInfo_mass_le
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
