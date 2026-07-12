@@ -3637,6 +3637,203 @@ private lemma wz_coveringSuccessStrong_compl_measureReal_le
         exact hx (wz_jointStrongly_mem_coveringSuccessJoint P_XY qStar hqStar_mem hn
           hε_enc_nn h_le_cov hX hY hJ x (c.decoder (c.encoder x)) hxu)
 
+set_option maxHeartbeats 1600000 in
+open ChannelCoding in
+/-- **(Atom G — joint derandomize.)** On a single covering code good for BOTH the covering
+distortion (block distortion `≤ Dδ + ε'`) AND covering-success (`SRC`-mass of the
+strong-covering-success complement `≤ tol`). The two per-codebook failure functionals — the
+distortion-typicality failure (drives block distortion via
+`source_avg_distortion_le_simpler_generic`) and the strong-joint-typicality failure at the
+encoder radius `ε_join` (drives covering-success via
+`wz_coveringSuccessStrong_compl_measureReal_le`) — are both codebook-averaged and bounded by
+the shared vanishing upper `(P_X n){Xⁿ ∉ T*_X} + exp(-Mₙ·exp(-n(I+slack)))`; the pigeonhole
+`exists_codebook_low_avg` on their sum extracts one codebook small for both. The encoder
+radius `ε_join` is chosen `≤ wzCoveringStrongRadius P_XY κ' ε` and small against the three
+`logSumAbs` widths, so the radius bridge applies.
+@residual(plan:wz-binning-covering) -/
+private lemma wz_covering_lossyCode_joint_exists
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} [Nonempty (Fin k)] [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
+    (κ' : α → Fin k → ℝ) (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hpos : ∀ p, 0 < qStar p)
+    (hmem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
+    {R₁ Dδ : ℝ} (hI : mutualInfoPmf qStar < R₁)
+    (hfeas : expectedDistortionPmf d' qStar ≤ Dδ)
+    {ε' : ℝ} (hε' : 0 < ε') {ε : ℝ} (hε : 0 < ε) {tol : ℝ} (htol : 0 < tol) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ, Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
+      (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 ∧
+      ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
+        c.expectedBlockDistortion ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d' ≤ Dδ + ε'
+        ∧ (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+              P_XY.real {(p.1.1, p.2)}))).real
+            ((wzCoveringSuccessStrong P_XY κ' qStar c ε)ᶜ) ≤ tol := by
+  classical
+  haveI hμprob : IsProbabilityMeasure (rdAmbient qStar) :=
+    rdAmbient_isProbabilityMeasure qStar hmem
+  -- Nonnegative constants from the ambient log-sum and the distortion table.
+  set Lx : ℝ := logSumAbs (rdAmbient qStar) iidXs with hLx_def
+  set Ly : ℝ := logSumAbs (rdAmbient qStar) iidYs with hLy_def
+  set Lj : ℝ := logSumAbs (rdAmbient qStar) (jointSequence iidXs iidYs) with hLj_def
+  have hLx_nn : 0 ≤ Lx := logSumAbs_nonneg _ _
+  have hLy_nn : 0 ≤ Ly := logSumAbs_nonneg _ _
+  have hLj_nn : 0 ≤ Lj := logSumAbs_nonneg _ _
+  set Sd : ℝ := ∑ p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k,
+    ((d' p.1 p.2 : NNReal) : ℝ) with hSd_def
+  have hSd_nn : 0 ≤ Sd := Finset.sum_nonneg fun p _ => NNReal.coe_nonneg _
+  set cA : ℝ := (Fintype.card {x : α // 0 < ∑ y, P_XY.real {(x, y)}} : ℝ) with hcA_def
+  set cB : ℝ := (Fintype.card (Fin k) : ℝ) with hcB_def
+  have hcA_pos : 0 < cA := by rw [hcA_def]; exact_mod_cast Fintype.card_pos
+  have hcB_pos : 0 < cB := by rw [hcB_def]; exact_mod_cast Fintype.card_pos
+  -- Minimal singleton mass, positive by full support.
+  set qZ_min : ℝ := Finset.univ.inf' Finset.univ_nonempty qStar with hqZ_def
+  have hqZ_pos : 0 < qZ_min := by
+    rw [hqZ_def, Finset.lt_inf'_iff]; exact fun p _ => hpos p
+  have hqZ_le : ∀ p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k,
+      qZ_min ≤ (pmfToMeasure (α := {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) qStar).real {p} := by
+    intro p
+    rw [pmfToMeasure_real_singleton hmem p, hqZ_def]
+    exact Finset.inf'_le _ (Finset.mem_univ p)
+  -- Rate gap and its linear/quadratic coefficients.
+  set gap : ℝ := R₁ - mutualInfoPmf qStar with hgap_def
+  have hgap_pos : 0 < gap := by rw [hgap_def]; linarith
+  clear_value gap
+  set Cc : ℝ := cA * Ly + Lx + Lj with hCc_def
+  have hCc_nn : 0 ≤ Cc := by
+    rw [hCc_def]; have : 0 ≤ cA * Ly := mul_nonneg hcA_pos.le hLy_nn; linarith
+  clear_value Cc
+  set Kk : ℝ := 8 * cA * cB / qZ_min with hKk_def
+  have hKk_nn : 0 ≤ Kk := by
+    rw [hKk_def]
+    exact div_nonneg (mul_nonneg (mul_nonneg (by norm_num) hcA_pos.le) hcB_pos.le) hqZ_pos.le
+  -- Radius-bridge widths: ε_cov and the combined logSumAbs width.
+  set εcov : ℝ := wzCoveringStrongRadius P_XY κ' ε with hεcov_def
+  have hεcov_pos : 0 < εcov := by rw [hεcov_def]; exact wzCoveringStrongRadius_pos P_XY κ' hε
+  set Lrad : ℝ := 1 + cB * Lx + cA * Ly + Lj with hLrad_def
+  have hLrad_pos : 0 < Lrad := by
+    rw [hLrad_def]
+    have h1 : 0 ≤ cB * Lx := mul_nonneg hcB_pos.le hLx_nn
+    have h2 : 0 ≤ cA * Ly := mul_nonneg hcA_pos.le hLy_nn
+    linarith
+  -- The slack quintet: choose everything small against the rate gap, `ε'`, and radius widths.
+  have hden1 : 0 < 2 * (Cc + Kk + 1) := by nlinarith [hCc_nn, hKk_nn]
+  have hden2 : 0 < 2 * (Sd + 1) := by nlinarith [hSd_nn]
+  have hden3 : 0 < 2 * Lrad := by linarith
+  set ε_join : ℝ :=
+    min 1 (min (gap / (2 * (Cc + Kk + 1)))
+      (min (ε' / (2 * (Sd + 1))) (min εcov (ε / (2 * Lrad))))) with hej_def
+  have hej_pos : 0 < ε_join := by
+    rw [hej_def]
+    exact lt_min one_pos (lt_min (div_pos hgap_pos hden1)
+      (lt_min (div_pos hε' hden2) (lt_min hεcov_pos (div_pos hε hden3))))
+  have hej_le1 : ε_join ≤ 1 := by rw [hej_def]; exact min_le_left _ _
+  have hej_le_gap : ε_join ≤ gap / (2 * (Cc + Kk + 1)) := by
+    rw [hej_def]; exact le_trans (min_le_right _ _) (min_le_left _ _)
+  have hej_le_eps : ε_join ≤ ε' / (2 * (Sd + 1)) := by
+    rw [hej_def]
+    exact le_trans (min_le_right _ _) (le_trans (min_le_right _ _) (min_le_left _ _))
+  have hej_le_cov : ε_join ≤ εcov := by
+    rw [hej_def]
+    exact le_trans (min_le_right _ _) (le_trans (min_le_right _ _)
+      (le_trans (min_le_right _ _) (min_le_left _ _)))
+  have hej_le_rad : ε_join ≤ ε / (2 * Lrad) := by
+    rw [hej_def]
+    exact le_trans (min_le_right _ _) (le_trans (min_le_right _ _)
+      (le_trans (min_le_right _ _) (min_le_right _ _)))
+  clear_value Kk ε_join
+  set ε_X : ℝ := ε_join / 2 with hex_def
+  have hex_pos : 0 < ε_X := by rw [hex_def]; linarith
+  have hex_lt_ej : ε_X < ε_join := by rw [hex_def]; linarith
+  have hex_le1 : ε_X ≤ 1 := by rw [hex_def]; linarith
+  clear_value ε_X
+  set δ_typ : ℝ := ε' / 2 with hdtyp_def
+  have hdtyp_nn : 0 ≤ δ_typ := by rw [hdtyp_def]; linarith
+  set ε_dist : ℝ := cB * ε_join * Lx + cA * ε_join * Ly + ε_join * Lj + 1 with hed_def
+  have hed_pos : 0 < ε_dist := by
+    rw [hed_def]
+    have h1 : 0 ≤ cB * ε_join * Lx :=
+      mul_nonneg (mul_nonneg hcB_pos.le hej_pos.le) hLx_nn
+    have h2 : 0 ≤ cA * ε_join * Ly :=
+      mul_nonneg (mul_nonneg hcA_pos.le hej_pos.le) hLy_nn
+    have h3 : 0 ≤ ε_join * Lj := mul_nonneg hej_pos.le hLj_nn
+    linarith
+  set δ_kl : ℝ := Kk * ε_X ^ 2 with hdkl_def
+  have hdkl_pos : 0 < δ_kl := by
+    rw [hdkl_def, hKk_def]
+    have hnum : 0 < 8 * cA * cB := mul_pos (mul_pos (by norm_num) hcA_pos) hcB_pos
+    positivity
+  -- Numeric obligations.
+  have h_rategap : mutualInfoPmf qStar
+      + (cA * ε_X * Ly + ε_X * Lx + ε_X * Lj + δ_kl) < R₁ := by
+    have hlin : cA * ε_X * Ly + ε_X * Lx + ε_X * Lj = ε_X * Cc := by
+      rw [hCc_def]; ring
+    have hdkl_le : δ_kl ≤ Kk * ε_X := by
+      rw [hdkl_def]; nlinarith [hKk_nn, hex_pos.le, hex_le1]
+    have hεX_le : ε_X * (2 * (Cc + Kk + 1)) ≤ gap :=
+      (le_div_iff₀ hden1).mp (le_trans hex_lt_ej.le hej_le_gap)
+    have hkey : ε_X * Cc + δ_kl < gap := by
+      nlinarith [hdkl_le, hεX_le, hex_pos, hCc_nn, hKk_nn]
+    rw [hlin]; linarith [hkey, hgap_def]
+  have h_slack : expectedDistortionPmf d' qStar + δ_typ ≤ Dδ + ε' / 2 := by
+    rw [hdtyp_def]; linarith
+  have h_distslack : ε_join * Sd ≤ δ_typ := by
+    rw [hdtyp_def]
+    have h1 : ε_join * (2 * (Sd + 1)) ≤ ε' := (le_div_iff₀ hden2).mp hej_le_eps
+    nlinarith [hej_pos.le, hSd_nn, h1]
+  have h_dominates : 8 * cA * cB * ε_X ^ 2 ≤ δ_kl * qZ_min := by
+    have hne : qZ_min ≠ 0 := ne_of_gt hqZ_pos
+    have hKq : Kk * qZ_min = 8 * cA * cB := by
+      rw [hKk_def]; exact div_mul_cancel₀ _ hne
+    have heq : δ_kl * qZ_min = 8 * cA * cB * ε_X ^ 2 := by
+      rw [hdkl_def, mul_right_comm, hKq]
+    exact le_of_eq heq.symm
+  -- Strong-typicality ⟹ distortion-typicality bridge slacks.
+  have hbX : cB * ε_join * Lx < ε_dist := by
+    rw [hed_def]
+    have h2 : 0 ≤ cA * ε_join * Ly :=
+      mul_nonneg (mul_nonneg hcA_pos.le hej_pos.le) hLy_nn
+    have h3 : 0 ≤ ε_join * Lj := mul_nonneg hej_pos.le hLj_nn
+    nlinarith [h2, h3]
+  have hbY : cA * ε_join * Ly < ε_dist := by
+    rw [hed_def]
+    have h1 : 0 ≤ cB * ε_join * Lx :=
+      mul_nonneg (mul_nonneg hcB_pos.le hej_pos.le) hLx_nn
+    have h3 : 0 ≤ ε_join * Lj := mul_nonneg hej_pos.le hLj_nn
+    nlinarith [h1, h3]
+  have hbJ : ε_join * Lj < ε_dist := by
+    rw [hed_def]
+    have h1 : 0 ≤ cB * ε_join * Lx :=
+      mul_nonneg (mul_nonneg hcB_pos.le hej_pos.le) hLx_nn
+    have h2 : 0 ≤ cA * ε_join * Ly :=
+      mul_nonneg (mul_nonneg hcA_pos.le hej_pos.le) hLy_nn
+    nlinarith [h1, h2]
+  -- Radius-bridge obligations (for `wz_coveringSuccessStrong_compl_measureReal_le`).
+  have hLrad_ineq : ε_join * (2 * Lrad) ≤ ε := (le_div_iff₀ hden3).mp hej_le_rad
+  have hradX : cB * ε_join * Lx < ε := by
+    rw [hLrad_def] at hLrad_ineq
+    have h2 : 0 ≤ cA * ε_join * Ly :=
+      mul_nonneg (mul_nonneg hcA_pos.le hej_pos.le) hLy_nn
+    have h3 : 0 ≤ ε_join * Lj := mul_nonneg hej_pos.le hLj_nn
+    nlinarith [hej_pos, hLx_nn, h2, h3]
+  have hradY : cA * ε_join * Ly < ε := by
+    rw [hLrad_def] at hLrad_ineq
+    have h1 : 0 ≤ cB * ε_join * Lx :=
+      mul_nonneg (mul_nonneg hcB_pos.le hej_pos.le) hLx_nn
+    have h3 : 0 ≤ ε_join * Lj := mul_nonneg hej_pos.le hLj_nn
+    nlinarith [hej_pos, hLy_nn, h1, h3]
+  have hradJ : ε_join * Lj < ε := by
+    rw [hLrad_def] at hLrad_ineq
+    have h1 : 0 ≤ cB * ε_join * Lx :=
+      mul_nonneg (mul_nonneg hcB_pos.le hej_pos.le) hLx_nn
+    have h2 : 0 ≤ cA * ε_join * Ly :=
+      mul_nonneg (mul_nonneg hcA_pos.le hej_pos.le) hLy_nn
+    nlinarith [hej_pos, hLj_nn, h1, h2]
+  clear_value ε_dist δ_kl δ_typ qZ_min
+  sorry
+
 open ChannelCoding in
 /-- **(Steps 1–2) Covering LossyCode family from a feasible test channel.**
 Perturbs the feasible factorisable test channel `qf` to a full-support kernel
