@@ -5486,6 +5486,69 @@ private lemma wz_pi_nonuniform_mean_concentration
         ENNReal.toReal_ofReal (div_nonneg (variance_nonneg S μpi) (by positivity))
     _ = (∑ i, variance (ψ i) (ν i)) / ((n : ℝ) ^ 2 * δ ^ 2) := by rw [hVarS, mul_pow]
 
+/-- **(Atom B — vanishing conditional-Chebyshev tail).** Uniform-in-`(ν, ψ, w)` version of
+`wz_pi_nonuniform_mean_concentration`: given a common sup-bound `B` on every per-coordinate
+statistic `|ψᵢ| ≤ B`, the deviation of the empirical mean from *its own (conditional) mean* by
+`≥ δ` has `Measure.pi ν`-mass `≤ tol` for all `n ≥ N` (an explicit `N` depending only on
+`B, δ, tol`). This is the "concentration around the conditional mean" half of the Wyner–Ziv Markov
+core — the part that is a genuine theorem for *every* codeword block `w` and source block `xb`
+(the variance bound `Var[ψᵢ] ≤ B²` is uniform, so no typicality of `xb` is needed here). What is
+NOT supplied here — and is the residual Markov content — is that the conditional mean
+`(∑ᵢ (νᵢ)[ψᵢ])/n` is close to the ambient entropy `H(wsm)`; see the note on the core. -/
+private lemma wz_pi_nonuniform_concentration_tendsto
+    {B δ tol : ℝ} (hδ : 0 < δ) (htol : 0 < tol) (hB : 0 ≤ B) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (ν : Fin n → Measure β),
+        (∀ i, IsProbabilityMeasure (ν i)) → ∀ (ψ : Fin n → β → ℝ),
+        (∀ i y, |ψ i y| ≤ B) →
+        (Measure.pi ν).real
+            { yb : Fin n → β | δ ≤ |(∑ i, ψ i (yb i)) / (n : ℝ)
+                - (∑ i, ∫ y, ψ i y ∂(ν i)) / (n : ℝ)| }
+          ≤ tol := by
+  classical
+  obtain ⟨N₀, hN₀⟩ := exists_nat_gt (B ^ 2 / (tol * δ ^ 2))
+  refine ⟨N₀ + 1, fun n hn ν hν ψ hψ ↦ ?_⟩
+  have hn_pos : 0 < n := lt_of_lt_of_le (Nat.succ_pos N₀) hn
+  have hnR : (0 : ℝ) < n := by exact_mod_cast hn_pos
+  haveI : ∀ i, IsProbabilityMeasure (ν i) := hν
+  -- Chebyshev deviation bound from the engine.
+  have hcheb := wz_pi_nonuniform_mean_concentration hn_pos ν ψ (δ := δ) hδ
+  -- Uniform variance bound: each `variance (ψ i) (ν i) ≤ B²`.
+  have hvar_le : ∀ i, variance (ψ i) (ν i) ≤ B ^ 2 := by
+    intro i
+    have hIcc : ∀ᵐ y ∂(ν i), ψ i y ∈ Set.Icc (-B) B :=
+      Filter.Eventually.of_forall (fun y ↦ abs_le.mp (hψ i y))
+    have := variance_le_sq_of_bounded hIcc (measurable_of_finite (ψ i)).aemeasurable
+    calc variance (ψ i) (ν i) ≤ ((B - (-B)) / 2) ^ 2 := this
+      _ = B ^ 2 := by ring
+  have hsum_var : (∑ i, variance (ψ i) (ν i)) ≤ (n : ℝ) * B ^ 2 := by
+    calc (∑ i, variance (ψ i) (ν i)) ≤ ∑ _i : Fin n, B ^ 2 := Finset.sum_le_sum (fun i _ ↦ hvar_le i)
+      _ = (n : ℝ) * B ^ 2 := by rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+  -- Chain: mass ≤ (∑ var)/(n²δ²) ≤ nB²/(n²δ²) = B²/(nδ²) ≤ tol.
+  have hden : (0 : ℝ) < (n : ℝ) ^ 2 * δ ^ 2 := by positivity
+  have hstep1 : (∑ i, variance (ψ i) (ν i)) / ((n : ℝ) ^ 2 * δ ^ 2)
+      ≤ ((n : ℝ) * B ^ 2) / ((n : ℝ) ^ 2 * δ ^ 2) := by
+    gcongr
+  have hstep2 : ((n : ℝ) * B ^ 2) / ((n : ℝ) ^ 2 * δ ^ 2) = B ^ 2 / ((n : ℝ) * δ ^ 2) := by
+    have hn0 : (n : ℝ) ≠ 0 := ne_of_gt hnR
+    field_simp
+  have hstep3 : B ^ 2 / ((n : ℝ) * δ ^ 2) ≤ tol := by
+    have hnδ : (0 : ℝ) < (n : ℝ) * δ ^ 2 := by positivity
+    rw [div_le_iff₀ hnδ]
+    have htolδ : (0 : ℝ) < tol * δ ^ 2 := by positivity
+    have hn_gt : B ^ 2 / (tol * δ ^ 2) < (n : ℝ) := by
+      have : (N₀ : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn.trans' (Nat.le_succ N₀)
+      linarith [hN₀]
+    have : B ^ 2 < (n : ℝ) * (tol * δ ^ 2) := by
+      rw [div_lt_iff₀ htolδ] at hn_gt; linarith [hn_gt]
+    nlinarith [this]
+  calc (Measure.pi ν).real
+          { yb : Fin n → β | δ ≤ |(∑ i, ψ i (yb i)) / (n : ℝ)
+              - (∑ i, ∫ y, ψ i y ∂(ν i)) / (n : ℝ)| }
+        ≤ (∑ i, variance (ψ i) (ν i)) / ((n : ℝ) ^ 2 * δ ^ 2) := hcheb
+      _ ≤ ((n : ℝ) * B ^ 2) / ((n : ℝ) ^ 2 * δ ^ 2) := hstep1
+      _ = B ^ 2 / ((n : ℝ) * δ ^ 2) := hstep2
+      _ ≤ tol := hstep3
+
 open ChannelCoding in
 /-- **(L4 part 2 — THE MARKOV CORE) Correlated-joint conditional-typicality concentration.**
 For `n` large the source-measure mass of {covering-success ∧ `(x,y)`-block jointly typical ∧
