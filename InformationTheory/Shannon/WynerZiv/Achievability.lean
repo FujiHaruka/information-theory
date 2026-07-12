@@ -1084,1178 +1084,11 @@ private lemma wz_QXY_mem_stdSimplex
   exact htot
 
 
-open ChannelCoding in
-/-- **(Steps 1–2) Covering LossyCode family from a feasible test channel.**
-Perturbs the feasible factorisable test channel `qf` to a full-support kernel
-`κ'` (Step 1, `wz_fullKernelSupport_perturbation`), restricts the covering source
-to the support subtype `α' := {x // 0 < P_X x}`, and produces the rate-distortion
-covering LossyCode family (Step 2, `wz_covering_lossyCode_exists`) for the proxy
-distortion `d'` (the `Y`-conditional expectation of `d ∘ qf.2`).
 
-The output packages, for downstream binning (Steps 3–7), the perturbed full-support
-factorisable joint `q'` (with kernel `κ'`), the restricted covering joint `qStar`,
-the covering proxy `d'`, the Wyner–Ziv objective margin `< R`, and — for every
-covering rate `R₁` strictly above the covering mutual information
-`mutualInfoPmf qStar` — the covering LossyCode family with block distortion within
-`(D + δ) + ε'`. The covering-distortion feasibility `expectedDistortionPmf d' qStar
-≤ D + δ` is the reconciliation identity (`wz_coveringDistortion_reconcile`) applied
-to the perturbation's distortion bound. All conclusions are genuinely constructed;
-the only preconditions are feasibility (`hqf`), the objective margin (`hobj`), and
-the slack `δ`. The output existential also exports, alongside `d'`, the reconciliation
-identity `hd'_eq` (`d'` = the `Y`-conditional expectation of `d ∘ qf.2`, discharged by
-`rfl` since the witness IS that expression) and the test channel's factorizability
-`hqf` (the original input membership), so downstream binning (D3) can honestly relate
-the covering proxy `d'` to the real distortion `d` via `qf.2`.
-
-Pinned-ε rework applied 2026-07-12 (Leg E): the covering `LossyCode` family conclusion
-also exports, for the returned code `c`, a covering-acceptance-failure mass bound at a
-radius `ε` that is now UNIVERSALLY quantified as an explicit binder (`∀ R₁ …, ∀ ε' …, ∀ ε,
-0 < ε → ∃ N …`), NOT existentially quantified inside the code existential. The product
-source–side measure of `wzCoveringAcceptFailSet P_XY κ' c ε` (the event that the true
-covering word is NOT jointly typical with the side information) is
-`≤ δ / (8 · (distortionMax d + 1))`, a fixed vanishing tolerance. Because `ε` is a family
-binder, the caller (D3) chooses the SAME `ε` it feeds the A3 bin-decoder radius (from the
-rate gap, with the huge-`ε` vacuity regime excluded by A3's `hε_conf`), so the union bound
-`C2 ⊆ E2` uses a MATCHING radius — the prior free-`∃ε` form (vacuous at huge `ε`) is
-removed. The covering-acceptance failure `C2` is the true-word joint-AEP failure and decays
-to 0 (so `≤` any fixed positive tolerance eventually); it is the covering half of the
-Wyner–Ziv `E2` error event (`C2 ⊆ E2`), a precondition-exposure of the covering code's own
-property (same kind as the covering-size cap `hM_ub` / Leg C.6), threaded to
-`wz_exists_binning_E2_bound` (A3) and discharged by construction — NOT the operational
-conclusion (the `distortionMax d` scaling only sizes the tolerance so `dMax · Pr[C2]` is
-absorbable; the E2b confusion crux stays in A3). The discharge (joint distortion +
-acceptance derandomize with the S5a `(1-p)^M₁` → `codebookMeasure`-average `Fubini` bridge,
-fed the gateway-2 acceptance mass lower bound `wz_covering_sideInfo_mass_ge`) is the residual
-`sorry`; the A3-fill leg closes it.
-
-Independent honesty audit 2026-07-12 (Leg E pinned-ε rework): PASS. The exported
-covering-acceptance conjunct is now UNIVERSALLY quantified per radius (`… ∀ ε, 0 < ε → ∃ N …`),
-NOT a free `∃ ε` inside the code existential (grep-confirmed: no `∃ ε` remains). The mass bound
-`≤ δ/(8·(distortionMax d+1))` at each fixed `ε` is a genuine (TRUE-as-framed) residual: by AEP
-the true covering word's joint-typicality-failure mass → 0 as `n → ∞` for every fixed `ε > 0`,
-so `N` may depend on `ε` (the `∀ ε, ∃ N` shape is honest, non-vacuous). The whole covering
-`LossyCode` family existential (distortion `≤ (D+δ)+ε'` AND acceptance) is deferred to the
-single `sorry` because a distortion-only witness (`wz_covering_lossyCode_exists`) need not be
-acceptance-good — the joint S5a/gateway-2 (`wz_covering_sideInfo_mass_ge`) Fubini derandomize
-is the residual analytic work, correctly classified `@residual(plan:wz-binning-covering)`
-(in-project construction, not a Mathlib wall). D3 instantiates this `∀ ε` at the shared
-`ε := gap/6` threaded into A3's decoder radius.
-
-CAVEAT on the discharge path (2026-07-12c independent audit): this atom stays an HONEST `sorry` and
-its `∃ c` acceptance conjunct is TRUE-as-framed (the atom PICKS the covering code, and a
-strong-typical covering code satisfies the WEAK `wzCoveringAcceptFailSet` bound, since strong ⟹
-entropy typicality), so it carries no false honesty claim. BUT the currently-planned wiring discharge
-runs through `wz_covering_chosenWord_sideInfo_typical` / `wz_covering_markov_concentration`, which are
-false-as-framed under the WEAK (entropy-only) typicality (root defect:
-`wz_covering_jointBand_markov_core`, label-swap counterexample). Wiring the current weak-Ecov chain
-does NOT close this `sorry`; Proposal A (strengthen the covering-success event Ecov to STRONG joint
-typicality; see the core lemma docstring) is a prerequisite for a sound discharge.
-@residual(plan:wz-binning-covering) -/
-private lemma wz_coveringFamily_of_testChannel
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    (d : DistortionFn α γ) (R D : ℝ)
-    (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
-    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
-            (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
-    (hobj : wzMutualInfoXU (Fin k) qf.1 - wzMutualInfoYU (Fin k) qf.1 < R)
-    (δ : ℝ) (hδ : 0 < δ) :
-    ∃ (q' : α × β × Fin k → ℝ) (κ' : α → Fin k → ℝ)
-      (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
-      (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
-        (∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
-        ∧ (∀ x u, 0 < κ' x u)
-        ∧ (∀ x, ∑ u, κ' x u = 1)
-        ∧ (wzMutualInfoXU (Fin k) q' - wzMutualInfoYU (Fin k) q' < R)
-        ∧ (∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
-        ∧ (∀ p, 0 < qStar p)
-        ∧ qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k)
-        ∧ expectedDistortionPmf d' qStar ≤ D + δ
-        ∧ (∀ (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k),
-             d' x' u = Real.toNNReal (∑ y : β,
-               (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
-                 * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
-        ∧ (qf ∈ WynerZivFactorizableConstraint (Fin k)
-             (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
-        ∧ (∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' → ∀ ε : ℝ, 0 < ε →
-            ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
-              Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
-              (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 ∧
-              ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
-                c.expectedBlockDistortion
-                    ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
-                  ≤ (D + δ) + ε'
-                ∧ (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-                      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-                        P_XY.real {(p.1.1, p.2)}))).real
-                    (wzCoveringAcceptFailSet P_XY κ' c ε)
-                    ≤ δ / (8 * (distortionMax d + 1))) := by
-  classical
-  -- Step 1: perturb the feasible test channel to a full-support kernel `κ'`.
-  -- Keep a pristine copy of the factorizability membership: `hqf` is mutated by the
-  -- `rw` below, but the output existential re-exports the original membership (`hqf₀`).
-  have hqf₀ := hqf
-  rw [mem_WynerZivFactorizableConstraint_iff] at hqf
-  obtain ⟨hfact, hdist⟩ := hqf
-  haveI : Nonempty (Fin k) := wz_nonempty_of_factorizable hfact
-  obtain ⟨q', κ', hq'eq, hκ'pos, hκ'sum, _hfact', hobj', hdist'⟩ :=
-    wz_fullKernelSupport_perturbation (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D
-      hfact hdist hobj hδ
-  -- Restricted covering joint (S1): full support + simplex on the source-support subtype.
-  obtain ⟨hne, hqStar_pos, hqStar_mem⟩ :=
-    wz_restrictedCoveringJoint_pos P_XY κ' hκ'pos hκ'sum
-  haveI : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := hne
-  -- The perturbed joint, packaged as a clean pointwise identity.
-  have hq'clean : ∀ p : α × β × Fin k, q' p = κ' p.1 p.2.2 * P_XY.real {(p.1, p.2.1)} :=
-    fun p => hq'eq p.1 p.2.1 p.2.2
-  have hconv :
-      (fun p : α × β × Fin k => κ' p.1 p.2.2 * P_XY.real {(p.1, p.2.1)}) = q' := by
-    funext p; exact (hq'clean p).symm
-  -- Covering-distortion feasibility via the reconciliation identity (Step 1–2 core).
-  have hfeas : expectedDistortionPmf
-      (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) =>
-        Real.toNNReal (∑ y : β, (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
-            * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
-      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k =>
-        κ' p.1.1 p.2 * ∑ y : β, P_XY.real {(p.1.1, y)}) ≤ D + δ := by
-    rw [wz_coveringDistortion_reconcile P_XY d κ' qf.2, hconv]
-    exact hdist'
-  -- Step 2: assemble the covering LossyCode family from the covering theorem (C).
-  refine ⟨q', κ',
-    (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k =>
-      κ' p.1.1 p.2 * ∑ y : β, P_XY.real {(p.1.1, y)}),
-    (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) =>
-      Real.toNNReal (∑ y : β, (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
-          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ))),
-    hq'eq, hκ'pos, hκ'sum, hobj', fun _ => rfl, hqStar_pos, hqStar_mem, hfeas,
-    (fun _ _ => rfl), hqf₀, ?_⟩
-  -- The covering `LossyCode` family must now be good for BOTH the covering distortion
-  -- (component atom `wz_covering_lossyCode_exists`, a distortion-only derandomize via
-  -- `rate_distortion_achievability`) AND the covering-acceptance failure C2. The
-  -- acceptance bound is supplied by the strong-`Ecov` Markov-core leaf
-  -- `wz_covering_chosenWord_sideInfo_typical` (file tail): given a code whose covering-success
-  -- mass complement `SRC.real (wzCoveringSuccessStrong …)ᶜ` is `≤ tol/2`, the leaf gives
-  -- `SRC.real (wzCoveringAcceptFailSet …) ≤ tol`. The remaining Atom-G work is the JOINT
-  -- (distortion + covering-success) derandomize: a single code good for distortion AND
-  -- covering-success. The covering-success side rests on the now-staged strong-typical
-  -- per-codeword mass lower bound `wz_covering_strongTypical_indep_mass_ge` (gateway-atom-first,
-  -- sorryAx-free; the WZ instance of `jointStronglyTypicalSet_indep_prob_ge`), fed through a
-  -- strong analog of the covering-failure decay `wz_covering_failure_prob_le` +
-  -- `exists_codebook_low_avg`. Consuming the tail leaf here additionally needs a physical
-  -- reorder (the leaf and its chain currently follow this atom); both are plumbing, not a
-  -- Mathlib wall (gateway confirmed). Kept an honest `sorry` pending that wiring.
-  -- @residual(plan:wz-binning-covering)
-  sorry
-
-/-! ### Steps 3–7 decomposition (binning / decoder / error exponents / squeeze)
-
-The covering data of Steps 1–2 (`wz_coveringFamily_of_testChannel`) is consumed by
-the binning + decoder leg. This leg is decomposed into:
-
-* **S3** `wzCodeOfCoveringBinning` — the Wyner–Ziv code assembled from a covering
-  codebook, a binning of the covering index, and a bin/side-information decoder
-  (pure def).
-* **S4** `wzBinTypicalDecoder` (+ uniqueness `wzBinTypicalDecoder_eq_of_unique`) —
-  the bin-restricted conditional-typicality decoder, searching a bin's covering
-  **codebook members** for the one jointly typical with `Y^n` (pure def + the
-  decoder equation under a unique witness), mirroring Slepian–Wolf
-  `swJointTypicalDecoder` / `swJointTypicalDecoder_eq_of_unique`.
-* **S5a** `wz_covering_failure_prob_le` — covering-failure exponent (E1).
-* **S5b** `wz_codebook_confusion_expectation_le` — codebook-restricted decoder
-  confusion exponent (E2, the crux).
-* **S6** `wz_perDelta_covering_binning` — the capstone consuming the covering data
-  and producing the per-slack code family (binning + decoder + error exponents +
-  derandomize + squeeze + source extension).
-* **S7** `wzLiftSupportCode` — the source-extension lift `α' → α` (pure def), used
-  together with the sorry-free `wz_expectedBlockDistortion_source_agree`.
--/
-
-/-- **(S3) Wyner–Ziv code from a covering codebook + binning + bin decoder.**
-The encoder covers the source with the covering codebook (`c₁.encoder`) and bins
-the covering index (`f`). The decoder reconstructs `γ^n` letterwise via `rec`
-(the test-channel decoder `qf.2 : Fin k × β → γ`) from the bin decoder's word
-`dec (m, y) : Fin n → Fin k` and the side information `y`. Pure assembly; the
-covering codebook `c₁`, the binning `f`, the reconstruction map `rec` and the bin
-decoder `dec` are all supplied. -/
-def wzCodeOfCoveringBinning {α' : Type*} [MeasurableSpace α'] {k M M₁ n : ℕ}
-    (c₁ : LossyCode M₁ n α' (Fin k)) (f : Fin M₁ → Fin M)
-    (rec : Fin k × β → γ)
-    (dec : Fin M × (Fin n → β) → (Fin n → Fin k)) :
-    WynerZivCode M n α' β γ where
-  encoder := fun x ↦ f (c₁.encoder x)
-  decoder := fun my ↦ fun i ↦ rec (dec my i, my.2 i)
-
-/-- **(S4) Bin/side-information conditional-typicality decoder.** Given a bin `m`
-and side information `y`, search the bin's covering **codebook members**
-`{c₁.decoder m' | f m' = m}` for the unique word jointly typical with `y`, returning
-that `Fin n → Fin k` word (falling back to an arbitrary word if none exists or the
-witness is not unique). The search ranges over codebook members only (indexed by the
-covering index `m'`), not over all `Fin n → Fin k` words — this restriction is what
-makes the decoder-confusion event (S5b) achievable at the Wyner–Ziv rate. Mirror of
-Slepian–Wolf `swJointTypicalDecoder`. -/
-noncomputable def wzBinTypicalDecoder {α' : Type*} [MeasurableSpace α']
-    {Ω : Type*} [MeasurableSpace Ω] {k M M₁ n : ℕ} [Nonempty (Fin k)]
-    (μ : Measure Ω) (Us : ℕ → Ω → Fin k) (Ys : ℕ → Ω → β) (ε : ℝ)
-    (c₁ : LossyCode M₁ n α' (Fin k)) (f : Fin M₁ → Fin M) :
-    Fin M × (Fin n → β) → (Fin n → Fin k) := fun my ↦
-  haveI : Decidable (∃! u : Fin n → Fin k,
-      (∃ m' : Fin M₁, f m' = my.1 ∧ c₁.decoder m' = u)
-        ∧ (u, my.2) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε) :=
-    Classical.propDecidable _
-  if h : ∃! u : Fin n → Fin k,
-      (∃ m' : Fin M₁, f m' = my.1 ∧ c₁.decoder m' = u)
-        ∧ (u, my.2) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε
-    then Classical.choose h.exists
-    else Classical.arbitrary _
-
-/-- If the covering codeword `c₁.decoder m₁` is jointly typical with `y` and is the
-unique bin-`f m₁` codebook member so typical, then `wzBinTypicalDecoder` recovers it.
-Mirror of `swJointTypicalDecoder_eq_of_unique`. -/
-lemma wzBinTypicalDecoder_eq_of_unique {α' : Type*} [MeasurableSpace α']
-    {Ω : Type*} [MeasurableSpace Ω] {k M M₁ n : ℕ} [Nonempty (Fin k)]
-    (μ : Measure Ω) (Us : ℕ → Ω → Fin k) (Ys : ℕ → Ω → β) (ε : ℝ)
-    (c₁ : LossyCode M₁ n α' (Fin k)) (f : Fin M₁ → Fin M)
-    {m₁ : Fin M₁} {y : Fin n → β}
-    (htrue : (c₁.decoder m₁, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε)
-    (hunique : ∀ u : Fin n → Fin k,
-        (∃ m' : Fin M₁, f m' = f m₁ ∧ c₁.decoder m' = u) →
-        (u, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε →
-        u = c₁.decoder m₁) :
-    wzBinTypicalDecoder μ Us Ys ε c₁ f (f m₁, y) = c₁.decoder m₁ := by
-  have hExUnique : ∃! u : Fin n → Fin k,
-      (∃ m' : Fin M₁, f m' = f m₁ ∧ c₁.decoder m' = u)
-        ∧ (u, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε := by
-    refine ⟨c₁.decoder m₁, ⟨⟨m₁, rfl, rfl⟩, htrue⟩, ?_⟩
-    intro u hu
-    exact hunique u hu.1 hu.2
-  unfold wzBinTypicalDecoder
-  rw [dif_pos hExUnique]
-  have hch_spec :
-      (∃ m' : Fin M₁, f m' = f m₁
-          ∧ c₁.decoder m' = Classical.choose hExUnique.exists)
-        ∧ (Classical.choose hExUnique.exists, y)
-            ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε :=
-    Classical.choose_spec hExUnique.exists
-  exact hunique (Classical.choose hExUnique.exists) hch_spec.1 hch_spec.2
-
-/-- **(S5a) Covering-failure exponent (E1).** The codebook-averaged probability
-that a strongly-typical source `x` finds **no** covering codeword jointly typical
-with it decays doubly-exponentially: `∫ x, (1 − p_typ x)^{M₁} ≤ exp(−M₁ · exp(−n(I +
-δ)))`, where `p_typ x` is the per-codeword conditional-typicality mass (bounded below
-by `exp(−n(I + δ))` via `wz_covering_sideInfo_mass_ge`), passed here as `hmass`.
-
-`hmass` is the per-source covering-acceptance mass lower bound `exp(−n(I+δ)) ≤ p_typ x`.
-With it, `(1−p)^M₁ ≤ e^{−M₁ p} ≤ e^{−M₁·exp(−n(I+δ))}` pointwise (`p_typ x ∈ [0,1]`,
-`p ≥ exp(−n(I+δ))`), then integrate over the probability measure `P_X`. The pointwise
-`p_typ x ≤ 1` holds even without measurability of `Us 0`: `μ.map (Us 0)` is a
-sub-probability measure (`Measure.isFiniteMeasure_map` + `map` mass `≤ 1`), so its
-product `Measure.pi` is a sub-probability measure (`Measure.pi_univ`), and the mass of
-any set is `≤ 1`. The `(1−t)^M ≤ e^{−Mt}` step reuses `one_sub_pow_le_exp_neg_mul`.
-@audit:ok (leg-17, sorryAx-free: `#print axioms` = `[propext, Classical.choice,
-Quot.sound]`, orchestrator-verified after independent signature audit confirmed the
-`hmass`-corrected statement non-vacuous). -/
-lemma wz_covering_failure_prob_le {α' : Type*}
-    [Fintype α'] [DecidableEq α'] [Nonempty α']
-    [MeasurableSpace α'] [MeasurableSingletonClass α']
-    {Ω : Type*} [MeasurableSpace Ω] {k n M₁ : ℕ} [Nonempty (Fin k)]
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : ℕ → Ω → α') (Us : ℕ → Ω → Fin k) (ε : ℝ)
-    (P_X : Measure (Fin n → α')) [IsProbabilityMeasure P_X]
-    (I δ : ℝ)
-    (hmass : ∀ x : Fin n → α', Real.exp (-(n : ℝ) * (I + δ)) ≤
-        (Measure.pi fun _ : Fin n ↦ μ.map (Us 0)).real
-          {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) :
-    ∫ x, (1 - (Measure.pi fun _ : Fin n ↦ μ.map (Us 0)).real
-              {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁ ∂P_X
-      ≤ Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))) := by
-  set ν : Measure (Fin n → Fin k) := Measure.pi fun _ : Fin n ↦ μ.map (Us 0) with hν
-  -- The map of the probability measure `μ` is a finite (sub-probability) measure,
-  -- irrespective of whether `Us 0` is measurable.
-  haveI hfin : IsFiniteMeasure (μ.map (Us 0)) := Measure.isFiniteMeasure_map μ (Us 0)
-  have hfac : (μ.map (Us 0)) Set.univ ≤ 1 := by
-    by_cases hae : AEMeasurable (Us 0) μ
-    · rw [Measure.map_apply_of_aemeasurable hae MeasurableSet.univ]; simp
-    · rw [Measure.map_of_not_aemeasurable hae]; simp
-  -- Hence the product measure `ν` is a sub-probability measure.
-  have hν_univ : ν Set.univ ≤ 1 := by
-    rw [hν, Measure.pi_univ]
-    exact Finset.prod_le_one' (fun _ _ ↦ hfac)
-  -- The per-source covering mass lies in `[0, 1]`.
-  have h1 : ∀ x : Fin n → α',
-      ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε} ≤ 1 := by
-    intro x
-    have hle : ν {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε} ≤ 1 :=
-      le_trans (measure_mono (Set.subset_univ _)) hν_univ
-    calc ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}
-        = (ν {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}).toReal := rfl
-      _ ≤ (1 : ℝ≥0∞).toReal := ENNReal.toReal_mono (by simp) hle
-      _ = 1 := by simp
-  -- Pointwise doubly-exponential bound to the constant right-hand side.
-  have hbound : ∀ x : Fin n → α',
-      (1 - ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁
-        ≤ Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))) := by
-    intro x
-    have h0 : 0 ≤ ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε} :=
-      measureReal_nonneg
-    have step1 :
-        (1 - ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁
-          ≤ Real.exp (-(M₁ : ℝ) *
-              ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) :=
-      one_sub_pow_le_exp_neg_mul M₁ h0 (h1 x)
-    have step2 :
-        Real.exp (-(M₁ : ℝ) *
-            ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε})
-          ≤ Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))) := by
-      apply Real.exp_le_exp.mpr
-      have hM₁ : (0 : ℝ) ≤ (M₁ : ℝ) := Nat.cast_nonneg _
-      nlinarith [hmass x, hM₁]
-    exact le_trans step1 step2
-  -- Integrability of the (bounded, finitely-supported-domain) integrand.
-  have h_int : Integrable (fun x : Fin n → α' ↦
-      (1 - ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁) P_X := by
-    have h_meas : Measurable (fun x : Fin n → α' ↦
-        (1 - ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁) :=
-      measurable_of_finite _
-    refine Integrable.mono' (g := fun _ ↦
-        Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))))
-      (integrable_const _) h_meas.aestronglyMeasurable ?_
-    refine Filter.Eventually.of_forall (fun x ↦ ?_)
-    have hpow_nn : 0 ≤ (1 -
-        ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁ :=
-      pow_nonneg (by linarith [h1 x]) M₁
-    rw [Real.norm_eq_abs, abs_of_nonneg hpow_nn]
-    exact hbound x
-  calc ∫ x, (1 - ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁ ∂P_X
-      ≤ ∫ _x : Fin n → α',
-          Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))) ∂P_X :=
-        integral_mono h_int (integrable_const _) hbound
-    _ = Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))) := by
-        rw [integral_const]; simp
-
-/-- **(S5b) Codebook-restricted decoder confusion exponent (E2, the crux).** The
-binning-averaged probability that some **codebook member** `c₁.decoder m'` other than
-the true covering codeword shares the true bin and is jointly typical with `Y^n` is at
-most `M₁ · exp(−n · I(U;Y)) · M⁻¹`.
-
-**Crux — what a later leg must build.** Gateway atom
-`wz_sideInfo_decoder_confusion_expectation_le` bins **all** `u`-sequences (giving the
-count `exp(n·H(U|Y))`), which forces the achievable rate down to `H(U|Y)` — too weak
-for Wyner–Ziv. This bound instead restricts the confusable set to the **covering
-codebook** (`M₁ = ⌈exp(n·I(X;U))⌉` members), so the alias count is `M₁` rather than
-`exp(n·H(U|Y))`. With `M = ⌈exp(n·R)⌉` bins, the bound is
-`M₁ · exp(−n·I(U;Y)) / M ≈ exp(n·(I(X;U) − I(U;Y) − R))`, which vanishes precisely
-when `R > I(X;U) − I(Y;U)` — the Wyner–Ziv rate. A later leg must prove this by an AEP
-union bound over the (random) covering codebook members that are independent of `Y^n`,
-NOT by instantiating the all-sequences gateway atom.
-
-signature corrected leg-17: mass-bound + collision hypotheses added; conclusion now
-non-vacuously follows. `hmass` is the per-codeword joint-typicality mass UPPER bound
-`μ{codeword m' typical with Y^n} ≤ exp(−n·I_YU)` (the AEP bound for a covering codeword
-independent of `Y^n`); `hcollision` is the binning-collision property
-`binMeas{f | f m' = f m} = M⁻¹` for distinct indices, mirroring `binning_collision_prob`.
-The codebook-restricted union over `m' : Fin M₁` stays in the CONCLUSION/body (NOT a
-hypothesis — the E2 crux per finding #10 is the codebook restriction of the count): swap
-the order of integration, bound the per-`ω` `binMeas`-slice by union bound + `hcollision`
-as `M⁻¹ · #{m' typical}`, integrate over `μ`, then apply `hmass` to each of the `M₁`
-codewords to get `M⁻¹ · M₁ · exp(−n·I_YU)`. The old signature's degenerate refutation
-(`I_YU → +∞` with positive typical mass) is now excluded: `hmass` would force
-`μ{typical} ≤ exp(−n·I_YU) → 0`, contradicting positive mass. Regularity preconditions
-`hYs`/`htrueIdx` (measurability of the side-information block RV and of the covering
-index) are added for the Tonelli swap; both are discharged by S6, which supplies
-measurable i.i.d. RVs and a measurable covering index.
-
-Independent honesty audit 2026-07-06: closed sorry-free (`#print axioms` =
-`[propext, Classical.choice, Quot.sound]`, sorryAx-free). All four honesty checks pass:
-(1) non-circular; (2) non-bundled — the E2 crux (codebook-restricted union over
-`m' : Fin M₁`, finding #10) lives in the body (`hUnion`/`hStepA` + `Finset.sum_const`
-supplies the `M₁` factor), so `hmass` (per-codeword AEP mass upper bound) and
-`hcollision` (`M⁻¹` collision) are genuine mass-bound + collision preconditions, not a
-bundling of the count; `hYs`/`htrueIdx` are pure measurability regularity; (3)
-non-degenerate (`NeZero M`; the `M₁ = 0` case is a genuine `0 ≤ 0` boundary, not vacuity
-abuse); (4) sufficiency — the body genuinely derives the conclusion, and the
-`I_YU → +∞` refutation is excluded by `hmass`.
-
-Generalized 2026-07-12 (Leg E-A3 fill): the typical set is now an ABSTRACT measurable set
-`jts` (parameter `hjts_meas : MeasurableSet jts`) rather than the concrete
-`jointlyTypicalSet μ Us Ys n ε`. The body never used any property of `jointlyTypicalSet`
-beyond its measurability, so the generalization is a pure signature relaxation (the `Us`
-parameter — used only to build the concrete set — and the now-unused radius `ε` are
-dropped). This lets A3 (`wz_exists_binning_E2_bound`) instantiate the confusion integral
-under the SOURCE product measure `Measure.pi P_XY` with the typical set defined on the
-*side-information ambient* `rdAmbient (wzSideInfoMarginal …)` — two different measures, so a
-concrete `jointlyTypicalSet μ Us Ys n ε` could never match. The per-codeword mass `hmass`
-is supplied by A3 via a side-information-marginal transfer to `wz_covering_codeword_sideInfo_mass_le`
-(D2). Honesty checks (1)-(4) unchanged (the body is identical modulo the abstract `jts`).
-
-Independent honesty re-audit 2026-07-12 (post abstract-`jts` generalization, commit
-`d1f2445a`): `@audit:ok` RE-CONFIRMED. The generalization is a pure signature relaxation
-(a strengthening — the lemma now applies to any measurable `jts`, not a weakening): (1) still
-non-circular; (2) still non-bundled — `hmass` (per-codeword mass upper bound) and
-`hcollision` (`M⁻¹` collision) are genuine mass + collision preconditions, and the `M₁`
-union-bound count is derived in-body (`hUnion`/`hStepA` + `Finset.sum_const`), not encoded in
-a hypothesis; (3) non-vacuous — the conclusion is a real arithmetic bound following from
-`hmass`+`hcollision` (instantiating `jts := univ` would force `hmass` to constrain
-`I_YU ≤ 0`, so no degenerate instantiation makes it trivially useless); (4) sufficiency —
-the body genuinely derives the conclusion and the sole call site (A3
-`wz_exists_binning_E2_bound`, L3325) instantiates `jts` with the concrete side-information
-`jointlyTypicalSet` on the ambient, not a degenerate set. `#print axioms` =
-`[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified 2026-07-12). -/
-lemma wz_codebook_confusion_expectation_le {α' : Type*} [MeasurableSpace α']
-    {Ω : Type*} [MeasurableSpace Ω] {k n M M₁ : ℕ} [Nonempty (Fin k)] [NeZero M]
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Ys : ℕ → Ω → β)
-    (c₁ : LossyCode M₁ n α' (Fin k)) (trueIdx : Ω → Fin M₁)
-    (hYs : ∀ i, Measurable (Ys i)) (htrueIdx : Measurable trueIdx)
-    (binMeas : Measure (Fin M₁ → Fin M)) [IsProbabilityMeasure binMeas]
-    (jts : Set ((Fin n → Fin k) × (Fin n → β))) (hjts_meas : MeasurableSet jts)
-    (I_YU : ℝ)
-    (hmass : ∀ m' : Fin M₁,
-        μ.real {ω | (c₁.decoder m', jointRV Ys n ω) ∈ jts}
-          ≤ Real.exp (-(n : ℝ) * I_YU))
-    (hcollision : ∀ m' m : Fin M₁, m' ≠ m →
-        binMeas.real {f | f m' = f m} = (M : ℝ)⁻¹) :
-    ∫ f, μ.real {ω | ∃ m' : Fin M₁,
-            m' ≠ trueIdx ω
-          ∧ f m' = f (trueIdx ω)
-          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}
-        ∂binMeas
-      ≤ (M₁ : ℝ) * Real.exp (-(n : ℝ) * I_YU) * ((M : ℝ))⁻¹ := by
-  classical
-  haveI : MeasurableSingletonClass (Fin M₁ → Fin M) := Pi.instMeasurableSingletonClass
-  -- Measurability of the per-codeword typicality set in `ω`.
-  have hC_meas : ∀ m' : Fin M₁,
-      MeasurableSet {ω | (c₁.decoder m', jointRV Ys n ω) ∈ jts} := by
-    intro m'
-    have hmap : Measurable (fun ω => (c₁.decoder m', jointRV Ys n ω)) :=
-      measurable_const.prodMk (measurable_jointRV Ys hYs n)
-    exact hmap hjts_meas
-  -- Measurability of the per-`(f, m')` confusion set in `ω`.
-  have hbad_meas : ∀ (f : Fin M₁ → Fin M) (m' : Fin M₁),
-      MeasurableSet {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-        ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} := by
-    intro f m'
-    have hA : MeasurableSet {ω | m' ≠ trueIdx ω} := by
-      have hpre : {ω | m' ≠ trueIdx ω} = (trueIdx ⁻¹' {m'})ᶜ := by
-        ext ω
-        simp only [Set.mem_setOf_eq, Set.mem_compl_iff, Set.mem_preimage,
-          Set.mem_singleton_iff]
-        exact ne_comm
-      rw [hpre]; exact (htrueIdx (measurableSet_singleton m')).compl
-    have hB : MeasurableSet {ω | f m' = f (trueIdx ω)} :=
-      htrueIdx ((Set.toFinite {m₀ : Fin M₁ | f m' = f m₀}).measurableSet)
-    exact hA.inter (hB.inter (hC_meas m'))
-  -- Step D: the per-`m'` integral bound `∫ f, μ.real (confusion set) ≤ exp(−n·I_YU)·M⁻¹`.
-  have hD : ∀ m' : Fin M₁,
-      ∫ f, μ.real {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂binMeas
-        ≤ Real.exp (-(n : ℝ) * I_YU) * ((M : ℝ))⁻¹ := by
-    intro m'
-    have h_nn : 0 ≤ᵐ[binMeas] fun f => μ.real {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-        ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} :=
-      Filter.Eventually.of_forall fun _ => measureReal_nonneg
-    have h_aesm : AEStronglyMeasurable
-        (fun f => μ.real {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}) binMeas :=
-      (measurable_of_finite _).aestronglyMeasurable
-    rw [integral_eq_lintegral_of_nonneg_ae h_nn h_aesm,
-      ChannelCoding.lintegral_ofReal_measureReal_eq_lintegral_measure μ binMeas
-        (fun f => {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts})]
-    -- Tonelli swap over `binMeas ⊗ μ`.
-    have hE_meas : MeasurableSet {q : (Fin M₁ → Fin M) × Ω |
-        q.2 ∈ {ω | m' ≠ trueIdx ω ∧ q.1 m' = q.1 (trueIdx ω)
-          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}} := by
-      have h_decomp : {q : (Fin M₁ → Fin M) × Ω |
-          q.2 ∈ {ω | m' ≠ trueIdx ω ∧ q.1 m' = q.1 (trueIdx ω)
-            ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}}
-          = ⋃ f₀ : Fin M₁ → Fin M, ({f₀} : Set (Fin M₁ → Fin M)) ×ˢ
-            {ω | m' ≠ trueIdx ω ∧ f₀ m' = f₀ (trueIdx ω)
-              ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} := by
-        ext ⟨g, ω⟩; simp
-      rw [h_decomp]
-      exact MeasurableSet.iUnion fun f₀ =>
-        (measurableSet_singleton f₀).prod (hbad_meas f₀ m')
-    rw [ChannelCoding.lintegral_measure_swap_of_prod_measurableSet binMeas μ
-      (fun f => {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-        ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}) hE_meas]
-    simp only [Set.mem_setOf_eq]
-    -- Per-`ω` inner bound: the `binMeas`-slice is `≤ M⁻¹` on the typical set, else `0`.
-    have h_inner : ∀ ω : Ω,
-        binMeas {f | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}
-          ≤ ENNReal.ofReal ((M : ℝ)⁻¹) *
-              Set.indicator {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts} 1 ω := by
-      intro ω
-      by_cases htyp : (c₁.decoder m', jointRV Ys n ω) ∈ jts
-      · by_cases hidx : m' = trueIdx ω
-        · have hempty : {f : Fin M₁ → Fin M | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-              ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} = ∅ := by
-            ext f
-            simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false]
-            rintro ⟨hne, -, -⟩
-            exact hne hidx
-          rw [hempty]; simp
-        · have hset : {f : Fin M₁ → Fin M | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-              ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}
-              = {f | f m' = f (trueIdx ω)} := by
-            ext f
-            simp only [Set.mem_setOf_eq]
-            exact ⟨fun h => h.2.1, fun h => ⟨hidx, h, htyp⟩⟩
-          rw [hset]
-          have hmem : ω ∈ {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts} := htyp
-          rw [Set.indicator_of_mem hmem]
-          simp only [Pi.one_apply, mul_one]
-          rw [← ofReal_measureReal (measure_ne_top binMeas {f | f m' = f (trueIdx ω)}),
-            hcollision m' (trueIdx ω) hidx]
-      · have hempty : {f : Fin M₁ → Fin M | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-            ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} = ∅ := by
-          ext f
-          simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false]
-          rintro ⟨-, -, htyp'⟩
-          exact htyp htyp'
-        rw [hempty]; simp
-    have hind_meas : Measurable
-        (Set.indicator {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts} (1 : Ω → ℝ≥0∞)) :=
-      measurable_const.indicator (hC_meas m')
-    have h_lint_le :
-        ∫⁻ ω, binMeas {f | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-            ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂μ
-          ≤ ENNReal.ofReal (Real.exp (-(n : ℝ) * I_YU) * (M : ℝ)⁻¹) := by
-      calc ∫⁻ ω, binMeas {f | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-              ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂μ
-          ≤ ∫⁻ ω, ENNReal.ofReal ((M : ℝ)⁻¹) *
-              Set.indicator {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts} 1 ω ∂μ :=
-            lintegral_mono h_inner
-        _ = ENNReal.ofReal ((M : ℝ)⁻¹) *
-              ∫⁻ ω, Set.indicator {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts} 1 ω ∂μ :=
-            lintegral_const_mul _ hind_meas
-        _ = ENNReal.ofReal ((M : ℝ)⁻¹) *
-              μ {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts} := by
-            rw [lintegral_indicator_one (hC_meas m')]
-        _ ≤ ENNReal.ofReal ((M : ℝ)⁻¹) *
-              ENNReal.ofReal (Real.exp (-(n : ℝ) * I_YU)) := by
-            gcongr
-            calc μ {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts}
-                = ENNReal.ofReal (μ.real {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts}) :=
-                  (ofReal_measureReal (measure_ne_top μ _)).symm
-              _ ≤ ENNReal.ofReal (Real.exp (-(n : ℝ) * I_YU)) :=
-                  ENNReal.ofReal_le_ofReal (hmass m')
-        _ = ENNReal.ofReal (Real.exp (-(n : ℝ) * I_YU) * (M : ℝ)⁻¹) := by
-            rw [← ENNReal.ofReal_mul (by positivity)]
-            congr 1
-            ring
-    calc (∫⁻ ω, binMeas {f | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-            ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂μ).toReal
-        ≤ (ENNReal.ofReal (Real.exp (-(n : ℝ) * I_YU) * (M : ℝ)⁻¹)).toReal :=
-          ENNReal.toReal_mono ENNReal.ofReal_ne_top h_lint_le
-      _ = Real.exp (-(n : ℝ) * I_YU) * (M : ℝ)⁻¹ :=
-          ENNReal.toReal_ofReal (by positivity)
-  -- Union bound over the codebook members at each hash `f`, then integrate the sum.
-  have hUnion : ∀ f : Fin M₁ → Fin M,
-      {ω | ∃ m' : Fin M₁, m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}
-        = ⋃ m' ∈ (Finset.univ : Finset (Fin M₁)),
-            {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-              ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} := by
-    intro f; ext ω; simp
-  have hStepA : ∀ f : Fin M₁ → Fin M,
-      μ.real {ω | ∃ m' : Fin M₁, m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}
-        ≤ ∑ m' : Fin M₁, μ.real {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-            ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} := by
-    intro f
-    rw [hUnion f]
-    exact measureReal_biUnion_finset_le Finset.univ _
-  have hInt_outer : Integrable (fun f => μ.real {ω | ∃ m' : Fin M₁, m' ≠ trueIdx ω
-      ∧ f m' = f (trueIdx ω) ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}) binMeas :=
-    Integrable.of_finite
-  have hInt_sum : Integrable (fun f => ∑ m' : Fin M₁, μ.real {ω | m' ≠ trueIdx ω
-      ∧ f m' = f (trueIdx ω) ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}) binMeas :=
-    Integrable.of_finite
-  calc ∫ f, μ.real {ω | ∃ m' : Fin M₁, m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂binMeas
-      ≤ ∫ f, ∑ m' : Fin M₁, μ.real {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂binMeas :=
-        integral_mono hInt_outer hInt_sum hStepA
-    _ = ∑ m' : Fin M₁, ∫ f, μ.real {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
-          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂binMeas :=
-        integral_finsetSum Finset.univ fun _ _ => Integrable.of_finite
-    _ ≤ ∑ _m' : Fin M₁, Real.exp (-(n : ℝ) * I_YU) * ((M : ℝ))⁻¹ :=
-        Finset.sum_le_sum fun m' _ => hD m'
-    _ = (M₁ : ℝ) * Real.exp (-(n : ℝ) * I_YU) * ((M : ℝ))⁻¹ := by
-        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]; ring
-
-/-- **(S7) Source-extension lift `α' → α`.** Lift a Wyner–Ziv code over the source
-support subtype `α' := {x // 0 < P_X x}` to a code over the full alphabet `α`, using
-the default support element `x₀` for out-of-support coordinates (which have zero
-`Measure.pi P_XY`-mass, so the lift preserves expected block distortion via
-`wz_expectedBlockDistortion_source_agree`). The decoder is unchanged (it does not
-touch `α`). Pure def. -/
-noncomputable def wzLiftSupportCode
-    (P_XY : Measure (α × β)) {M n : ℕ}
-    (x₀ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}})
-    (cSupp : WynerZivCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} β γ) :
-    WynerZivCode M n α β γ where
-  encoder := fun x ↦ cSupp.encoder (fun i ↦
-    haveI := Classical.propDecidable (0 < ∑ y, P_XY.real {(x i, y)})
-    if h : 0 < ∑ y, P_XY.real {(x i, y)} then ⟨x i, h⟩ else x₀)
-  decoder := cSupp.decoder
-
-/-- **(B) Index-binning measure.** Hash each of the `M₁` covering-codebook *indices*
-`Fin M₁` independently to a uniformly random bin in `Fin M`. This is the `Fin M₁`-index
-analogue of `binningMeasure` (which hashes whole sequences `(Fin n → α) → Fin M`); it is
-the concrete `binMeas : Measure (Fin M₁ → Fin M)` that the codebook-restricted
-decoder-confusion exponent `wz_codebook_confusion_expectation_le` (S5b) consumes. -/
-noncomputable def wzIndexBinningMeasure (M₁ M : ℕ) [NeZero M] :
-    Measure (Fin M₁ → Fin M) :=
-  Measure.pi (fun _ : Fin M₁ ↦ uniformOn (Set.univ : Set (Fin M)))
-
-/-- The index-binning measure is a probability measure. -/
-instance wzIndexBinningMeasure.instIsProbabilityMeasure (M₁ M : ℕ) [NeZero M] :
-    IsProbabilityMeasure (wzIndexBinningMeasure M₁ M) := by
-  unfold wzIndexBinningMeasure
-  infer_instance
-
-/-- Singleton mass for the index-binning measure. For any hash function
-`f : Fin M₁ → Fin M`, its `wzIndexBinningMeasure`-mass is `(1/M)^{M₁}` (each of the
-`M₁` covering indices independently picks one of `M` bins). The `Fin M₁`-index mirror
-of `binningMeasure_singleton_real`. -/
-lemma wzIndexBinningMeasure_singleton_real
-    (M₁ M : ℕ) [NeZero M] (f : Fin M₁ → Fin M) :
-    (wzIndexBinningMeasure M₁ M).real {f}
-      = (((M : ℝ))⁻¹) ^ (Fintype.card (Fin M₁)) := by
-  classical
-  haveI : MeasurableSingletonClass (Fin M₁ → Fin M) :=
-    Pi.instMeasurableSingletonClass
-  unfold wzIndexBinningMeasure
-  rw [measureReal_def, Measure.pi_singleton, ENNReal.toReal_prod]
-  -- Each factor is `uniformOn univ {f j}` = `1 / Fintype.card (Fin M)`.
-  have h_factor : ∀ j : Fin M₁,
-      ((uniformOn (Set.univ : Set (Fin M))) {f j}).toReal = (M : ℝ)⁻¹ := by
-    intro j
-    rw [uniformOn_univ]
-    rw [Measure.count_singleton, Fintype.card_fin]
-    rw [ENNReal.toReal_div]
-    simp
-  rw [Finset.prod_congr rfl (fun j _ ↦ h_factor j)]
-  rw [Finset.prod_const]
-  rfl
-
-/-- **Index-binning collision probability.** Two distinct covering indices `m' ≠ m`
-hash to the same bin with probability exactly `1/M`. Supplies `hcollision` to
-`wz_codebook_confusion_expectation_le` (S5b); the `Fin M₁`-index mirror of
-`binning_collision_prob`. -/
-theorem wzIndexBinningMeasure_collision {M₁ M : ℕ} [NeZero M]
-    {m' m : Fin M₁} (h : m' ≠ m) :
-    (wzIndexBinningMeasure M₁ M).real {f | f m' = f m} = (M : ℝ)⁻¹ := by
-  classical
-  haveI : Nonempty (Fin M₁) := ⟨m'⟩
-  haveI : MeasurableSingletonClass (Fin M₁ → Fin M) :=
-    Pi.instMeasurableSingletonClass
-  -- Expand the collision event as a finite sum of singleton masses.
-  set HashFn : Type _ := Fin M₁ → Fin M with hHashFn_def
-  haveI : DecidableEq (Fin M₁) := Classical.decEq _
-  haveI : DecidableEq (Fin M) := Classical.decEq _
-  haveI : Fintype HashFn := Pi.instFintype
-  haveI : DecidableEq HashFn := Classical.decEq _
-  have h_collision_sum :
-      (wzIndexBinningMeasure M₁ M).real {f : HashFn | f m' = f m}
-        = ∑ f : HashFn, (wzIndexBinningMeasure M₁ M).real {f} *
-            (if f m' = f m then (1 : ℝ) else 0) := by
-    set S : Finset HashFn := (Finset.univ : Finset HashFn).filter (fun f ↦ f m' = f m)
-    have h_S_eq : (S : Set HashFn) = {f : HashFn | f m' = f m} := by
-      ext f; simp [S]
-    rw [← h_S_eq, ← sum_measureReal_singleton (μ := wzIndexBinningMeasure M₁ M) S]
-    rw [Finset.sum_filter]
-    refine Finset.sum_congr rfl (fun f _ ↦ ?_)
-    split_ifs with hfx
-    · rw [mul_one]
-    · rw [mul_zero]
-  rw [h_collision_sum]
-  -- Substitute the singleton mass `(1/M)^{M₁}`.
-  have h_sub : ∀ f : HashFn,
-      (wzIndexBinningMeasure M₁ M).real {f} * (if f m' = f m then (1 : ℝ) else 0)
-        = ((M : ℝ)⁻¹) ^ (Fintype.card (Fin M₁)) *
-            (if f m' = f m then (1 : ℝ) else 0) := by
-    intro f
-    rw [wzIndexBinningMeasure_singleton_real M₁ M f]
-  rw [Finset.sum_congr rfl (fun f _ ↦ h_sub f)]
-  rw [← Finset.mul_sum]
-  -- The indicator sum counts `{f | f m' = f m}`.
-  have h_sum_indicator :
-      (∑ f : HashFn, (if f m' = f m then (1 : ℝ) else 0))
-        = (Fintype.card {f : HashFn // f m' = f m} : ℝ) := by
-    rw [Fintype.card_subtype]
-    rw [← Finset.sum_filter]
-    rw [Finset.sum_const]
-    simp
-  rw [h_sum_indicator]
-  -- Count `{f | f m' = f m}` via the bijection that drops the coordinate `m`
-  -- (whose value is forced to equal `f m'`).
-  let toFun : {f : HashFn // f m' = f m} → ({j : Fin M₁ // j ≠ m} → Fin M) :=
-    fun ⟨f, _⟩ j ↦ f j.1
-  let invFun : ({j : Fin M₁ // j ≠ m} → Fin M) → {f : HashFn // f m' = f m} :=
-    fun g ↦ ⟨fun j ↦ if hj : j = m then g ⟨m', h⟩ else g ⟨j, hj⟩, by simp [h]⟩
-  have left_inv : ∀ p, invFun (toFun p) = p := by
-    intro ⟨f, hf⟩
-    apply Subtype.ext
-    funext j
-    by_cases hj : j = m
-    · subst hj
-      show (if hjj : j = j then f m' else f j) = f j
-      simp [hf.symm]
-    · show (if hjj : j = m then f m' else f j) = f j
-      simp [hj]
-  have right_inv : ∀ g, toFun (invFun g) = g := by
-    intro g
-    funext ⟨j, hj⟩
-    show (if hj_eq : j = m then g ⟨m', h⟩ else g ⟨j, hj_eq⟩) = g ⟨j, hj⟩
-    simp [hj]
-  set e : {f : HashFn // f m' = f m} ≃ ({j : Fin M₁ // j ≠ m} → Fin M) :=
-    { toFun := toFun, invFun := invFun, left_inv := left_inv, right_inv := right_inv }
-  rw [Fintype.card_congr e]
-  have h_card_pi :
-      Fintype.card ({j : Fin M₁ // j ≠ m} → Fin M)
-        = M ^ (Fintype.card (Fin M₁) - 1) := by
-    rw [Fintype.card_pi, Finset.prod_const, Fintype.card_fin]
-    congr 1
-    rw [Finset.card_univ, Fintype.card_subtype_compl]
-    simp
-  rw [h_card_pi]
-  set N : ℕ := Fintype.card (Fin M₁) with hN_def
-  have hN_pos : 1 ≤ N := by
-    rw [hN_def]
-    exact Fintype.card_pos
-  have hM_ne : (M : ℝ) ≠ 0 := by
-    have : NeZero M := inferInstance
-    exact_mod_cast NeZero.ne M
-  push_cast
-  rw [inv_pow]
-  have hN_eq : (M : ℝ) ^ N = (M : ℝ) ^ (N - 1) * (M : ℝ) := by
-    conv_lhs => rw [show N = (N - 1) + 1 from (Nat.sub_add_cancel hN_pos).symm]
-    rw [pow_succ]
-  rw [hN_eq, mul_inv, mul_comm ((M : ℝ) ^ (N - 1))⁻¹ _, mul_assoc]
-  rw [inv_mul_cancel₀ (pow_ne_zero _ hM_ne), mul_one]
-
-/-- **(D1) Mutual-information restriction identity (Step 1 rate leaf).** The covering
-mutual information computed on the support-restricted joint `qStar` (over the source
-support subtype `α' := {x // 0 < P_X x}`) equals the Wyner–Ziv covering objective
-`wzMutualInfoXU` computed on the full-alphabet factorisable joint `q'`. The support
-restriction drops only zero atoms of the source marginal `P_X`, which contribute
-`Real.negMulLog 0 = 0` to every marginal and joint entropy sum, so the two mutual
-informations coincide. This algebraic leaf lets the covering family `hcov` — whose
-premise is `mutualInfoPmf qStar < R₁` — be fed at a covering rate `R₁` chosen strictly
-above `wzMutualInfoXU q' = I(X;U)`.
-
-Closed sorry-free (leg-19): `#print axioms` = `[propext, Classical.choice, Quot.sound]`.
-The support-restriction principle (`key`) sums the vanishing off-support terms away
-(`Real.negMulLog 0 = 0`), matching the three marginal/joint entropy sums of `qStar` (over
-the support subtype) against those of `wzMarginalXU q'` (over the full alphabet).
-
-Independent honesty audit 2026-07-06: genuine closure. `#print axioms` re-verified
-sorryAx-free (`[propext, Classical.choice, Quot.sound]`). Non-vacuous: this is a real
-equality of two mutual informations established by the body's three entropy-sum matchings,
-not a definitional/degenerate coincidence. The factorisation hypotheses
-`hfact_eq`/`hκ'sum`/`hqStar_eq` are genuine definitional constraints (without them the two
-mutual informations differ, since `qStar` lives over the support subtype and `q'` over the
-full alphabet); none is the conclusion (no `:= h` circularity), and the body carries the
-real support-restriction argument.
-@audit:ok -/
-lemma wz_mutualInfo_restriction_eq
-    (P_XY : Measure (α × β)) (k : ℕ)
-    (q' : α × β × Fin k → ℝ) (κ' : α → Fin k → ℝ)
-    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
-    (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
-    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
-    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) :
-    mutualInfoPmf qStar = wzMutualInfoXU (Fin k) q' := by
-  classical
-  set PX : α → ℝ := fun x => ∑ y, P_XY.real {(x, y)} with hPX
-  have hPX_nn : ∀ x, (0 : ℝ) ≤ PX x :=
-    fun x => Finset.sum_nonneg (fun y _ => measureReal_nonneg)
-  -- Support-restriction: a function vanishing off `supp(P_X)` has equal `α`- and
-  -- support-subtype sums (off-support terms are `0`, so they drop out).
-  have key : ∀ f : α → ℝ, (∀ x, ¬ (0 < PX x) → f x = 0) →
-      ∑ x : {x : α // 0 < PX x}, f x.1 = ∑ x : α, f x := by
-    intro f hf
-    rw [← Finset.sum_subtype (Finset.univ.filter (fun x => 0 < PX x))
-        (fun x => by simp) f]
-    refine Finset.sum_subset (Finset.filter_subset _ _) ?_
-    intro x _ hx
-    exact hf x (by simpa using hx)
-  -- Pointwise pmf values: on the support subtype `qStar` and the full-alphabet
-  -- `wzMarginalXU q'` both equal `κ'(x,u)·P_X(x)`.
-  have hqStar_val : ∀ (a : {x : α // 0 < PX x}) (u : Fin k),
-      qStar (a, u) = κ' a.1 u * PX a.1 := fun a u => hqStar_eq (a, u)
-  have hwz_val : ∀ (x : α) (u : Fin k),
-      wzMarginalXU (Fin k) q' (x, u) = κ' x u * PX x := by
-    intro x u
-    show (∑ y, q' (x, y, u)) = κ' x u * ∑ y, P_XY.real {(x, y)}
-    rw [Finset.mul_sum]
-    exact Finset.sum_congr rfl (fun y _ => hfact_eq x y u)
-  -- Marginals: `marginalFst` of both equals `P_X`; `marginalSnd` of both agree pointwise.
-  have hmargFst_star : ∀ a : {x : α // 0 < PX x}, marginalFst qStar a = PX a.1 := by
-    intro a
-    show (∑ u, qStar (a, u)) = PX a.1
-    simp_rw [hqStar_val a]
-    rw [← Finset.sum_mul, hκ'sum a.1, one_mul]
-  have hmargFst_wz : ∀ x : α,
-      marginalFst (wzMarginalXU (Fin k) q') x = PX x := by
-    intro x
-    show (∑ u, wzMarginalXU (Fin k) q' (x, u)) = PX x
-    simp_rw [hwz_val x]
-    rw [← Finset.sum_mul, hκ'sum x, one_mul]
-  have hmargSnd_eq : ∀ u : Fin k,
-      marginalSnd qStar u = marginalSnd (wzMarginalXU (Fin k) q') u := by
-    intro u
-    show (∑ a : {x : α // 0 < PX x}, qStar (a, u))
-        = ∑ x : α, wzMarginalXU (Fin k) q' (x, u)
-    simp_rw [hqStar_val _ u, hwz_val _ u]
-    exact key (fun x => κ' x u * PX x) (fun x hx => by
-      rw [le_antisymm (not_lt.mp hx) (hPX_nn x), mul_zero])
-  -- Assemble the three entropy sums.
-  have hA : (∑ a : {x : α // 0 < PX x}, Real.negMulLog (marginalFst qStar a))
-      = ∑ a : α, Real.negMulLog (marginalFst (wzMarginalXU (Fin k) q') a) := by
-    rw [Finset.sum_congr rfl (fun a _ => by rw [hmargFst_star a] :
-        ∀ a ∈ (Finset.univ : Finset {x : α // 0 < PX x}),
-          Real.negMulLog (marginalFst qStar a) = Real.negMulLog (PX a.1))]
-    rw [key (fun x => Real.negMulLog (PX x)) (fun x hx => by
-        rw [le_antisymm (not_lt.mp hx) (hPX_nn x)]; exact Real.negMulLog_zero)]
-    exact Finset.sum_congr rfl (fun x _ => by rw [hmargFst_wz x])
-  have hB : (∑ b : Fin k, Real.negMulLog (marginalSnd qStar b))
-      = ∑ b : Fin k, Real.negMulLog (marginalSnd (wzMarginalXU (Fin k) q') b) :=
-    Finset.sum_congr rfl (fun u _ => by rw [hmargSnd_eq u])
-  have hC : (∑ p : {x : α // 0 < PX x} × Fin k, Real.negMulLog (qStar p))
-      = ∑ p : α × Fin k, Real.negMulLog (wzMarginalXU (Fin k) q' p) := by
-    simp_rw [Fintype.sum_prod_type]
-    rw [Finset.sum_congr rfl (fun a _ =>
-        Finset.sum_congr rfl (fun u _ => by rw [hqStar_val a u]) :
-        ∀ a ∈ (Finset.univ : Finset {x : α // 0 < PX x}),
-          (∑ u, Real.negMulLog (qStar (a, u)))
-            = ∑ u, Real.negMulLog (κ' a.1 u * PX a.1))]
-    rw [key (fun x => ∑ u, Real.negMulLog (κ' x u * PX x)) (fun x hx => by
-        rw [le_antisymm (not_lt.mp hx) (hPX_nn x)]
-        simp [Real.negMulLog_zero])]
-    exact Finset.sum_congr rfl (fun x _ =>
-      Finset.sum_congr rfl (fun u _ => by rw [hwz_val x u]))
-  unfold wzMutualInfoXU mutualInfoPmf
-  rw [hA, hB, hC]
-
-/-! ### pmf-side product bounds for D2
-
-The per-codeword AEP mass bound D2 is assembled purely from single-symbol pmf
-products (no joint-sequence independence is available in D2's hypotheses). The
-following three leaves convert the typical-set membership predicate into product
-bounds on the alphabet-side laws `μ.map (Xs 0)`. -/
-
-/-- `exp(-∑ pmfLog) = ∏ P`: the per-block likelihood as a product of single-symbol
-masses, valid on a full-support alphabet. -/
-private lemma exp_neg_sum_pmfLog_eq_prod
-    {Ω A : Type*} [MeasurableSpace Ω] [Fintype A] [MeasurableSpace A]
-    [MeasurableSingletonClass A]
-    (μ : Measure Ω) (Xs : ℕ → Ω → A)
-    (hpos : ∀ a : A, 0 < (μ.map (Xs 0)).real {a})
-    (n : ℕ) (x : Fin n → A) :
-    Real.exp (-(∑ i : Fin n, pmfLog μ Xs (x i)))
-      = ∏ i : Fin n, (μ.map (Xs 0)).real {x i} := by
-  rw [← Finset.sum_neg_distrib, Real.exp_sum]
-  refine Finset.prod_congr rfl fun i _ ↦ ?_
-  have hlog : -(pmfLog μ Xs (x i)) = Real.log ((μ.map (Xs 0)).real {x i}) := by
-    simp only [pmfLog, neg_neg]
-  rw [hlog, Real.exp_log (hpos (x i))]
-
-/-- pmf-side upper bound: for a typical block `x`, the product of single-symbol
-masses is `≤ exp(-n(H - ε))`. Independence-free companion of `typicalSet_prob_le`. -/
-private lemma prod_map_singleton_le_of_mem_typicalSet
-    {Ω A : Type*} [MeasurableSpace Ω] [Fintype A] [DecidableEq A] [Nonempty A]
-    [MeasurableSpace A] [MeasurableSingletonClass A]
-    (μ : Measure Ω) (Xs : ℕ → Ω → A)
-    (hpos : ∀ a : A, 0 < (μ.map (Xs 0)).real {a})
-    (n : ℕ) {ε : ℝ} (x : Fin n → A) (hx : x ∈ typicalSet μ Xs n ε) :
-    ∏ i : Fin n, (μ.map (Xs 0)).real {x i}
-      ≤ Real.exp (-(n : ℝ) * (entropy μ (Xs 0) - ε)) := by
-  rw [mem_typicalSet_iff] at hx
-  rcases Nat.eq_zero_or_pos n with hn0 | hnpos
-  · subst hn0; simp
-  · have hnR : (0 : ℝ) < n := by exact_mod_cast hnpos
-    have hlower : -ε < (∑ i : Fin n, pmfLog μ Xs (x i)) / n - entropy μ (Xs 0) :=
-      (abs_lt.mp hx).1
-    have hsum_gt : (n : ℝ) * (entropy μ (Xs 0) - ε) < ∑ i : Fin n, pmfLog μ Xs (x i) := by
-      have h := (lt_div_iff₀ hnR).mp (by linarith :
-        entropy μ (Xs 0) - ε < (∑ i : Fin n, pmfLog μ Xs (x i)) / n)
-      linarith
-    have hexp : Real.exp (-(∑ i : Fin n, pmfLog μ Xs (x i)))
-        < Real.exp (-((n : ℝ) * (entropy μ (Xs 0) - ε))) :=
-      Real.exp_lt_exp.mpr (by linarith)
-    rw [exp_neg_sum_pmfLog_eq_prod μ Xs hpos n x] at hexp
-    calc ∏ i : Fin n, (μ.map (Xs 0)).real {x i}
-        ≤ Real.exp (-((n : ℝ) * (entropy μ (Xs 0) - ε))) := hexp.le
-      _ = Real.exp (-(n : ℝ) * (entropy μ (Xs 0) - ε)) := by rw [neg_mul]
-
-/-- pmf-side lower bound: for a typical block `x`, the product of single-symbol
-masses is `≥ exp(-n(H + ε))`. Independence-free companion of `typicalSet_prob_ge`. -/
-private lemma prod_map_singleton_ge_of_mem_typicalSet
-    {Ω A : Type*} [MeasurableSpace Ω] [Fintype A] [DecidableEq A] [Nonempty A]
-    [MeasurableSpace A] [MeasurableSingletonClass A]
-    (μ : Measure Ω) (Xs : ℕ → Ω → A)
-    (hpos : ∀ a : A, 0 < (μ.map (Xs 0)).real {a})
-    (n : ℕ) {ε : ℝ} (x : Fin n → A) (hx : x ∈ typicalSet μ Xs n ε) :
-    Real.exp (-(n : ℝ) * (entropy μ (Xs 0) + ε))
-      ≤ ∏ i : Fin n, (μ.map (Xs 0)).real {x i} := by
-  rw [mem_typicalSet_iff] at hx
-  rcases Nat.eq_zero_or_pos n with hn0 | hnpos
-  · subst hn0; simp
-  · have hnR : (0 : ℝ) < n := by exact_mod_cast hnpos
-    have hupper : (∑ i : Fin n, pmfLog μ Xs (x i)) / n - entropy μ (Xs 0) < ε :=
-      (abs_lt.mp hx).2
-    have hsum_lt : (∑ i : Fin n, pmfLog μ Xs (x i)) < (n : ℝ) * (entropy μ (Xs 0) + ε) := by
-      have h := (div_lt_iff₀ hnR).mp (by linarith :
-        (∑ i : Fin n, pmfLog μ Xs (x i)) / n < entropy μ (Xs 0) + ε)
-      linarith
-    have hexp : Real.exp (-((n : ℝ) * (entropy μ (Xs 0) + ε)))
-        < Real.exp (-(∑ i : Fin n, pmfLog μ Xs (x i))) :=
-      Real.exp_lt_exp.mpr (by linarith)
-    rw [exp_neg_sum_pmfLog_eq_prod μ Xs hpos n x] at hexp
-    calc Real.exp (-(n : ℝ) * (entropy μ (Xs 0) + ε))
-        = Real.exp (-((n : ℝ) * (entropy μ (Xs 0) + ε))) := by rw [neg_mul]
-      _ ≤ ∏ i : Fin n, (μ.map (Xs 0)).real {x i} := hexp.le
-
-/-- **(D2) Covering-codeword side-information mass upper bound (E2 AEP crux).** For any
-fixed covering codeword `u : Fin n → Fin k`, the probability (over the noise generating
-`Y^n = jointRV Ys n`) that `u` is jointly typical with `Y^n` is at most
-`exp(−n · I_YU)`, where `I_YU ≲ I(U;Y)`. This is the per-codeword AEP mass bound that
-`wz_codebook_confusion_expectation_le` (S5b) consumes as its `hmass` hypothesis: because
-the covering codewords are drawn independently of the side information `Y`, a fixed
-covering codeword lands in a `Y^n`-conditional typical slice with the packing exponent
-`exp(−n · I(U;Y))`.
-
-Closed sorry-free (leg-19): the per-codeword form is assembled directly from single-symbol
-pmf products (no joint-sequence independence is needed and none is available in the
-hypotheses). Reframing the `ω`-event as the `Y`-law mass of the fixed-`u` slice
-`{y | (u, y) ∈ jointlyTypicalSet}` (via `map_measureReal_apply` on `jointRV Ys n`), the
-slice mass is bounded by `∑_{y} exp(−n(H(Y)−ε)) · [1 ≤ exp(n(H(Z)+ε))·∏ P_Z(u,y)]`; folding
-in the joint-typical product lower bound (`prod_map_singleton_ge_of_mem_typicalSet`) and
-marginalising `∑_y ∏_i P_Z(u_i,y_i) = ∏_i P_U(u_i)` (`Finset.prod_univ_sum` +
-`sum_real_prod_singleton_of_map_fst_eq`), the `U`-typical product bound
-(`prod_map_singleton_le_of_mem_typicalSet`) gives `mass ≤ exp(−n(H(U)+H(Y)−H(U,Y)−3ε))
-= exp(−n(I(U;Y)−3ε)) ≤ exp(−n·I_YU)` since `hI_YU : I_YU ≤ I(U;Y) − 3ε`. For an atypical `u`
-the slice is empty and the mass is `0`. `#print axioms` = `[propext, Classical.choice,
-Quot.sound]`.
-
-The exponent slack `3ε` is exactly the sum of the joint-product slack (`ε`) and the
-`Y`/`U` typicality slacks (`ε` each); `hI_YU` is a precondition supplying the standard
-typicality slack, not load-bearing (the upper bound on `I_YU` only weakens the RHS
-`exp(−n·I_YU)`). `hindepU`/`hidentU`/`hε` are inherited regularity preconditions that the
-pmf-side assembly does not consume.
-@audit:ok -/
-lemma wz_covering_codeword_sideInfo_mass_le
-    {Ω : Type*} [MeasurableSpace Ω] {k n : ℕ} [Nonempty (Fin k)]
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Us : ℕ → Ω → Fin k) (Ys : ℕ → Ω → β) (ε : ℝ) (hε : 0 < ε)
-    (hUs : ∀ i, Measurable (Us i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindepU : iIndepFun (fun i ↦ Us i) μ)
-    (hidentU : ∀ i, IdentDistrib (Us i) (Us 0) μ μ)
-    (hindepY : iIndepFun (fun i ↦ Ys i) μ)
-    (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
-    (hposU : ∀ u : Fin k, 0 < (μ.map (Us 0)).real {u})
-    (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
-    (hposZ : ∀ p : Fin k × β,
-        0 < (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {p})
-    (I_YU : ℝ)
-    (hI_YU : I_YU ≤ entropy μ (Us 0) + entropy μ (Ys 0)
-        - entropy μ (ChannelCoding.jointSequence Us Ys 0) - 3 * ε) :
-    ∀ u : Fin n → Fin k,
-      μ.real {ω | (u, jointRV Ys n ω)
-          ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε}
-        ≤ Real.exp (-(n : ℝ) * I_YU) := by
-  classical
-  intro u
-  have hYmeas : Measurable (jointRV Ys n) := measurable_jointRV Ys hYs n
-  haveI hMYprob : IsProbabilityMeasure (μ.map (jointRV Ys n)) :=
-    Measure.isProbabilityMeasure_map hYmeas.aemeasurable
-  haveI hMZprob : IsProbabilityMeasure (μ.map (ChannelCoding.jointSequence Us Ys 0)) :=
-    Measure.isProbabilityMeasure_map
-      (ChannelCoding.measurable_jointSequence Us Ys hUs hYs 0).aemeasurable
-  -- Reframe the ω-event as the Y-law mass of the fixed-`u` fiber slice.
-  have hpre : {ω | (u, jointRV Ys n ω)
-        ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε}
-      = jointRV Ys n ⁻¹' {y | (u, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε} := rfl
-  have hkey : μ.real {ω | (u, jointRV Ys n ω)
-        ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε}
-      = (μ.map (jointRV Ys n)).real
-          {y | (u, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε} := by
-    rw [hpre, map_measureReal_apply hYmeas ((Set.toFinite _).measurableSet)]
-  rw [hkey]
-  set S : Set (Fin n → β) :=
-    {y | (u, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε} with hS_def
-  by_cases hu : u ∈ typicalSet μ Us n ε
-  · -- Main case: `u` is `U`-typical.
-    set F : Finset (Fin n → β) := (Set.toFinite S).toFinset with hF_def
-    have hcoe : (F : Set (Fin n → β)) = S := by
-      rw [hF_def]; exact (Set.toFinite S).coe_toFinset
-    have hmem : ∀ y ∈ F, (u, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε := by
-      intro y hy
-      have hyS : y ∈ S := (Set.Finite.mem_toFinset (Set.toFinite S)).mp hy
-      exact hyS
-    -- Y-side per-atom mass bound.
-    have hYterm : ∀ y ∈ F,
-        (μ.map (jointRV Ys n)).real {y}
-          ≤ Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε)) := by
-      intro y hy
-      have hy2 : y ∈ typicalSet μ Ys n ε :=
-        ((ChannelCoding.mem_jointlyTypicalSet_iff μ Us Ys n ε u y).mp (hmem y hy)).2.1
-      exact typicalSet_prob_le μ Ys hYs hindepY hidentY hposY n y hy2
-    -- Joint-side per-atom product lower bound.
-    have hZterm : ∀ y ∈ F,
-        Real.exp (-(n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε))
-          ≤ ∏ i : Fin n, (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} := by
-      intro y hy
-      have hy3 : (fun i ↦ (u i, y i))
-          ∈ typicalSet μ (ChannelCoding.jointSequence Us Ys) n ε :=
-        ((ChannelCoding.mem_jointlyTypicalSet_iff μ Us Ys n ε u y).mp (hmem y hy)).2.2
-      exact prod_map_singleton_ge_of_mem_typicalSet μ
-        (ChannelCoding.jointSequence Us Ys) hposZ n (fun i ↦ (u i, y i)) hy3
-    -- Combined per-term bound: fold the trivial factor `1 ≤ exp · ∏`.
-    have hperterm : ∀ y ∈ F,
-        (μ.map (jointRV Ys n)).real {y}
-          ≤ (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
-              * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
-            * ∏ i : Fin n,
-                (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} := by
-      intro y hy
-      have h1 := hYterm y hy
-      have h2 := hZterm y hy
-      have hC2pos : (0 : ℝ) <
-          Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)) :=
-        Real.exp_pos _
-      have heq1 :
-          Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε))
-            * Real.exp (-(n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε))
-            = 1 := by
-        rw [← Real.exp_add]; simp
-      have hone : (1 : ℝ) ≤
-          Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε))
-            * ∏ i : Fin n,
-                (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} := by
-        have hmul := mul_le_mul_of_nonneg_left h2 hC2pos.le
-        rwa [heq1] at hmul
-      calc (μ.map (jointRV Ys n)).real {y}
-          ≤ Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε)) := h1
-        _ = Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε)) * 1 := (mul_one _).symm
-        _ ≤ Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
-              * (Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε))
-                * ∏ i : Fin n,
-                    (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)}) :=
-              mul_le_mul_of_nonneg_left hone (Real.exp_nonneg _)
-        _ = (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
-              * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
-            * ∏ i : Fin n,
-                (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} := by
-              rw [mul_assoc]
-    -- Marginalisation: summing the joint product over all `y` recovers `∏ P_U`.
-    have hmarg :
-        (μ.map (ChannelCoding.jointSequence Us Ys 0)).map Prod.fst = μ.map (Us 0) := by
-      rw [Measure.map_map measurable_fst
-        (ChannelCoding.measurable_jointSequence Us Ys hUs hYs 0)]
-      rfl
-    have hmarginal :
-        (∑ y : Fin n → β, ∏ i : Fin n,
-            (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)})
-          = ∏ i : Fin n, (μ.map (Us 0)).real {u i} := by
-      have hpe := Finset.prod_univ_sum (fun _ : Fin n ↦ (Finset.univ : Finset β))
-        (fun (i : Fin n) (b : β) ↦
-          (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, b)})
-      rw [Fintype.piFinset_univ] at hpe
-      rw [← hpe]
-      refine Finset.prod_congr rfl (fun i _ ↦ ?_)
-      exact sum_real_prod_singleton_of_map_fst_eq
-        (μ.map (ChannelCoding.jointSequence Us Ys 0)) (μ.map (Us 0)) hmarg (u i)
-    -- `∏ P_U ≤ exp(-n(H(U) - ε))` from `U`-typicality of `u`.
-    have hUbound : ∏ i : Fin n, (μ.map (Us 0)).real {u i}
-        ≤ Real.exp (-(n : ℝ) * (entropy μ (Us 0) - ε)) :=
-      prod_map_singleton_le_of_mem_typicalSet μ Us hposU n u hu
-    -- Constant-factor closure of the exponents.
-    have hExpFactor :
-        (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
-          * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
-          * Real.exp (-(n : ℝ) * (entropy μ (Us 0) - ε))
-        ≤ Real.exp (-(n : ℝ) * I_YU) := by
-      rw [← Real.exp_add, ← Real.exp_add]
-      apply Real.exp_le_exp.mpr
-      have hexp_eq :
-          -(n : ℝ) * (entropy μ (Ys 0) - ε)
-            + (n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)
-            + -(n : ℝ) * (entropy μ (Us 0) - ε)
-          = -(n : ℝ) * (entropy μ (Us 0) + entropy μ (Ys 0)
-              - entropy μ (ChannelCoding.jointSequence Us Ys 0) - 3 * ε) := by ring
-      rw [hexp_eq]
-      have hn : (0 : ℝ) ≤ n := Nat.cast_nonneg n
-      have := mul_le_mul_of_nonneg_left hI_YU hn
-      rw [neg_mul, neg_mul]
-      linarith
-    -- Chain everything.
-    calc (μ.map (jointRV Ys n)).real S
-        = ∑ y ∈ F, (μ.map (jointRV Ys n)).real {y} := by
-          rw [← hcoe, ← sum_measureReal_singleton]
-      _ ≤ ∑ y ∈ F,
-            (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
-              * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
-            * ∏ i : Fin n,
-                (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} :=
-          Finset.sum_le_sum hperterm
-      _ = (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
-            * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
-          * ∑ y ∈ F, ∏ i : Fin n,
-              (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} := by
-          rw [← Finset.mul_sum]
-      _ ≤ (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
-            * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
-          * ∑ y : Fin n → β, ∏ i : Fin n,
-              (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} := by
-          apply mul_le_mul_of_nonneg_left _ (by positivity)
-          exact Finset.sum_le_sum_of_subset_of_nonneg (Finset.subset_univ F)
-            (fun y _ _ ↦ Finset.prod_nonneg (fun i _ ↦ measureReal_nonneg))
-      _ = (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
-            * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
-          * ∏ i : Fin n, (μ.map (Us 0)).real {u i} := by rw [hmarginal]
-      _ ≤ (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
-            * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
-          * Real.exp (-(n : ℝ) * (entropy μ (Us 0) - ε)) := by
-          apply mul_le_mul_of_nonneg_left hUbound (by positivity)
-      _ ≤ Real.exp (-(n : ℝ) * I_YU) := hExpFactor
-  · -- `u` not `U`-typical: the slice is empty, mass is `0`.
-    have hSempty : S = ∅ := by
-      rw [hS_def]
-      ext y
-      simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false]
-      intro hy
-      exact hu ((ChannelCoding.mem_jointlyTypicalSet_iff μ Us Ys n ε u y).mp hy).1
-    rw [hSempty, measureReal_empty]
-    exact (Real.exp_pos _).le
-
-/-! ### Leg A — two-ambient WZ-joint regularity construction
-
-The per-`n` binned code (D3) reduces the WZ error to closed error-event atoms that each
-consume an i.i.d. ambient plus a *regularity bundle* (measurability / `iIndepFun` /
-`IdentDistrib` / marginal positivity / marginal identities). This section supplies those
-bundles from D3's covering data (`qStar` / `κ'`), for the **two** ambients the error
-decomposition runs on:
-
-* the **covering ambient** `rdAmbient qStar` on `ℕ → ({x // 0 < P_X x} × Fin k)`
-  (`iidXs` = source, `iidYs` = covering codeword `U`) drives the covering-acceptance
-  gateway atom `wz_covering_sideInfo_mass_ge` (instantiated with the source in the
-  strong-typicality role and `U` in the conditioning role) and the covering-failure
-  integral `wz_covering_failure_prob_le` (S5a);
-* the **side-information ambient** `rdAmbient (wzSideInfoMarginal P_XY κ')` on
-  `ℕ → (Fin k × {y // 0 < P_Y y})` (`iidXs` = covering codeword `U`, `iidYs` = side
-  information `Y`) drives the per-codeword mass bound `wz_covering_codeword_sideInfo_mass_le`
-  (D2) and the codebook-confusion integral `wz_codebook_confusion_expectation_le` (S5b).
-
-The first block gives a generic `rdAmbient`-level regularity API (reusable for either
-ambient); the second constructs the `(U, Y)`-marginal pmf `wzSideInfoMarginal` on the
-positive-`Y`-marginal subtype together with its simplex membership and full support (the
-covering side already receives `hqStar_mem` / `hqStar_pos` as D3 hypotheses). No
-error-probability or decoder-correctness statement is produced here — the deliverable is
-pure regularity, consumed downstream by Leg C/D. -/
+/-! ### (Hoisted for Atom G) Markov-core chain + its regularity helpers.
+Relocated verbatim from after `wyner_ziv_achievability_codes` to here so the covering
+atom `wz_coveringFamily_of_testChannel` (below) can consume the leaf
+`wz_covering_chosenWord_sideInfo_typical`. Pure relocation — no signature or proof change. -/
 
 section LegAAmbientRegularity
 
@@ -2408,720 +1241,6 @@ lemma rdAmbient_map_jointRV_jointSequence_eq_pi
         congr 1; funext i; exact rdAmbient_map_jointSequence q hq
 
 end LegAAmbientRegularity
-
-/-! ### Leg B — `α' → α` source-measure change of variables
-
-The covering `LossyCode` (D3 hypothesis `hcov₁`) measures its block distortion under the
-i.i.d. covering ambient `(rdAmbient qStar).map (iidXs 0)` on the source-support subtype
-`α' := {x // 0 < P_X x}`, whereas the Wyner–Ziv conclusion measures the lifted code under
-`Measure.pi P_XY` on `α × β`. This block reconciles the *source* side of that change of
-variables: the covering ambient's `X`-marginal, pushed from `α'` back to the full alphabet
-`α` by `Subtype.val`, is exactly the source `X`-marginal `P_XY.map Prod.fst`. On the
-support the covering `X`-marginal singleton is `∑_u qStar(⟨a,·⟩, u) = ∑_y P_XY{(a,y)}` (by
-`hqStar_eq` and `hκ'sum`); off the support both sides carry zero mass. This is pure
-source-measure transport — no decoder, error event, or distortion function enters — the
-source-measure companion of the null-set decoder transport
-`wz_expectedBlockDistortion_source_agree` (S2). -/
-
-/-- The covering ambient's `X`-marginal, pushed to the full alphabet `α` by `Subtype.val`,
-agrees with the source `X`-marginal `P_XY.map Prod.fst` on every singleton. -/
-private lemma wz_covering_source_marginal_real_singleton
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    {k : ℕ}
-    (κ' : α → Fin k → ℝ)
-    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
-    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
-    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
-    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
-    (a : α) :
-    (((rdAmbient qStar).map (ChannelCoding.iidXs 0)).map Subtype.val).real {a}
-      = (P_XY.map Prod.fst).real {a} := by
-  classical
-  -- The covering data forces the index type `α' × Fin k` to be nonempty (`∑ = 1`), so the
-  -- `Nonempty` instances the ambient-marginal lemmas need are available.
-  haveI hne_prod : Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
-    Finset.univ_nonempty_iff.mp
-      (Finset.nonempty_of_sum_ne_zero (by rw [hqStar_mem.2]; exact one_ne_zero))
-  haveI : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := hne_prod.map Prod.fst
-  haveI : Nonempty (Fin k) := hne_prod.map Prod.snd
-  -- The source `X`-marginal singleton equals the coordinate sum `∑_y P_XY{(a,y)}`.
-  have hRHS : (P_XY.map Prod.fst).real {a} = ∑ y, P_XY.real {(a, y)} :=
-    (sum_real_prod_singleton_of_map_fst_eq P_XY (P_XY.map Prod.fst) rfl a).symm
-  -- Push the outer `Subtype.val` map into a preimage.
-  rw [map_measureReal_apply measurable_subtype_coe (MeasurableSet.singleton a)]
-  by_cases ha : 0 < ∑ y, P_XY.real {(a, y)}
-  · -- On the support the preimage is the singleton `{⟨a, ha⟩}`.
-    have hpre : (Subtype.val ⁻¹' {a} : Set {x : α // 0 < ∑ y, P_XY.real {(x, y)}})
-        = {(⟨a, ha⟩ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}})} := by
-      ext x'
-      simp only [Set.mem_preimage, Set.mem_singleton_iff, Subtype.ext_iff]
-    rw [hpre, hRHS, rdAmbient_map_iidXs qStar hqStar_mem,
-        pmfToMeasure_map_fst_real_singleton hqStar_mem ⟨a, ha⟩]
-    -- `marginalFst qStar ⟨a,ha⟩ = ∑_u κ' a u · (∑_y P_XY{(a,y)}) = ∑_y P_XY{(a,y)}`.
-    unfold marginalFst
-    have hval : ∀ u : Fin k, qStar (⟨a, ha⟩, u) = κ' a u * ∑ y, P_XY.real {(a, y)} :=
-      fun u ↦ hqStar_eq (⟨a, ha⟩, u)
-    rw [Finset.sum_congr rfl (fun u _ ↦ hval u), ← Finset.sum_mul, hκ'sum a, one_mul]
-  · -- Off the support the preimage is empty and the coordinate sum vanishes.
-    have hpre : (Subtype.val ⁻¹' {a} : Set {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) = ∅ := by
-      ext x'
-      simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_empty_iff_false, iff_false]
-      intro hx'
-      exact ha (hx' ▸ x'.2)
-    rw [hpre, measureReal_empty, hRHS]
-    exact (le_antisymm (not_lt.mp ha)
-      (Finset.sum_nonneg fun y _ ↦ measureReal_nonneg)).symm
-
-/-- **(Leg B) Source-measure change of variables `α' → α`.** The covering ambient's
-`X`-marginal, transported from the support subtype `α'` to the full alphabet `α` by
-`Subtype.val`, equals the source `X`-marginal `P_XY.map Prod.fst`. This is the source-side
-half of the lift `α' → α`; the decoder side is handled null-set-wise by
-`wz_expectedBlockDistortion_source_agree` (S2). No decoder / error-probability content
-enters — pure source-measure transport. -/
-private lemma wz_covering_source_measure_map_val_eq
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    {k : ℕ}
-    (κ' : α → Fin k → ℝ)
-    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
-    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
-    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
-    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k)) :
-    ((rdAmbient qStar).map (ChannelCoding.iidXs 0)).map Subtype.val
-      = P_XY.map Prod.fst := by
-  classical
-  haveI hne_prod : Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
-    Finset.univ_nonempty_iff.mp
-      (Finset.nonempty_of_sum_ne_zero (by rw [hqStar_mem.2]; exact one_ne_zero))
-  haveI : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := hne_prod.map Prod.fst
-  haveI : Nonempty (Fin k) := hne_prod.map Prod.snd
-  haveI : IsProbabilityMeasure ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) :=
-    rdAmbient_iidXs_isProbabilityMeasure qStar hqStar_mem
-  haveI : IsProbabilityMeasure
-      (((rdAmbient qStar).map (ChannelCoding.iidXs 0)).map Subtype.val) :=
-    Measure.isProbabilityMeasure_map measurable_subtype_coe.aemeasurable
-  haveI : IsProbabilityMeasure (P_XY.map Prod.fst) :=
-    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
-  -- Two finite measures on the finite alphabet `α` agree iff they agree on singletons.
-  refine MeasureTheory.Measure.ext_of_singleton (fun a ↦ ?_)
-  have h := wz_covering_source_marginal_real_singleton P_XY κ' qStar hκ'sum hqStar_eq hqStar_mem a
-  simp only [Measure.real] at h
-  exact (ENNReal.toReal_eq_toReal_iff' (measure_ne_top _ _) (measure_ne_top _ _)).mp h
-
-/-! ### Steps 3–7 (Leg C) — the distortion-decomposition bridge
-
-The bridge that the derandomize + squeeze glue (Leg D) consumes: it decomposes the
-Wyner–Ziv code's actual expected block distortion into a good-event proxy plus
-`distortionMax · Pr[error]`, mirroring the rate-distortion `source_avg_distortion_le_simpler`
-(`AchievabilityAsymptoticFailureDecay.lean`) but for the **bin conditional-typicality
-decoder** (`wzBinTypicalDecoder`, S4) threaded through `wzCodeOfCoveringBinning` (S3).
-
-* `wz_expectedBlockDistortion_le_of_badSet` — the generic, decoder-agnostic
-  measure-theoretic decomposition (the reusable analytic core; sorry-free).
-* `wz_covering_binning_distortion_decomp` — the specialisation to the covering+binning
-  code, splitting `Pr[error]` into the covering-distortion-failure event `E1` and the
-  bin-decoder confusion event `E2` (the shape Leg D bounds via S5a/S5b/D2/(B)).
--/
-
-/-- **(Leg C, generic) Codebook-fixed distortion decomposition for a Wyner–Ziv code.**
-The bin-decoder analogue of the rate-distortion `source_avg_distortion_le_simpler`: for
-*any* Wyner–Ziv code `c`, any "bad set" `B` of source blocks, and any proxy value
-`P ≥ 0` such that **outside** `B` the empirical block distortion is at most `P`, the
-source-averaged block distortion decomposes as `P + distortionMax d · Pr[B]`.
-
-This is the reusable measure-theoretic core of the Wyner–Ziv distortion analysis. It is
-**decoder-agnostic** — it applies verbatim to the bin conditional-typicality decoder (S4)
-threaded through `wzCodeOfCoveringBinning` (S3) — so the bin-decoder specifics enter only
-when `B` and `P` are instantiated (`wz_covering_binning_distortion_decomp`). Sorry-free. -/
-lemma wz_expectedBlockDistortion_le_of_badSet {M n : ℕ}
-    (c : WynerZivCode M n α β γ) (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    (d : DistortionFn α γ) (B : Set (Fin n → α × β)) (P : ℝ) (hP : 0 ≤ P)
-    (hgood : ∀ p : Fin n → α × β, p ∉ B →
-        blockDistortion d n (fun i ↦ (p i).1)
-            (c.decoder (c.encoder (fun i ↦ (p i).1), fun i ↦ (p i).2)) ≤ P) :
-    c.expectedBlockDistortion P_XY d
-      ≤ P + distortionMax d * (Measure.pi (fun _ : Fin n ↦ P_XY)).real B := by
-  classical
-  haveI : MeasurableSingletonClass (α × β) := by infer_instance
-  haveI : MeasurableSingletonClass (Fin n → α × β) := Pi.instMeasurableSingletonClass
-  unfold WynerZivCode.expectedBlockDistortion
-  set dMax : ℝ := distortionMax d with hdMax_def
-  have h_dMax_nn : 0 ≤ dMax := distortionMax_nonneg d
-  set Q : Measure (Fin n → α × β) := Measure.pi (fun _ : Fin n ↦ P_XY) with hQ_def
-  haveI : IsProbabilityMeasure Q := by rw [hQ_def]; infer_instance
-  set F : (Fin n → α × β) → ℝ := fun p ↦
-      blockDistortion d n (fun i ↦ (p i).1)
-        (c.decoder (c.encoder (fun i ↦ (p i).1), fun i ↦ (p i).2)) with hF_def
-  have h_B_meas : MeasurableSet B := (Set.toFinite _).measurableSet
-  -- Pointwise: `F p ≤ P + dMax · (B.indicator 1 p)`.
-  have h_pointwise : ∀ p, F p ≤ P + dMax * (B.indicator (fun _ ↦ (1 : ℝ)) p) := by
-    intro p
-    by_cases hpB : p ∈ B
-    · have h_bd : F p ≤ dMax := blockDistortion_le_distortionMax d n _ _
-      have h_ind : B.indicator (fun _ : Fin n → α × β ↦ (1 : ℝ)) p = 1 :=
-        Set.indicator_of_mem hpB _
-      rw [h_ind]; nlinarith [h_bd, hP, h_dMax_nn]
-    · have h_bd : F p ≤ P := hgood p hpB
-      have h_ind : B.indicator (fun _ : Fin n → α × β ↦ (1 : ℝ)) p = 0 :=
-        Set.indicator_of_notMem hpB _
-      rw [h_ind]; nlinarith [h_bd, h_dMax_nn]
-  -- Both sides are bounded, hence integrable on the probability measure `Q`.
-  have h_meas_F : Measurable F := measurable_of_finite _
-  have h_meas_g : Measurable
-      (fun p : Fin n → α × β ↦ P + dMax * (B.indicator (fun _ ↦ (1 : ℝ)) p)) :=
-    measurable_of_finite _
-  have h_F_le : ∀ p, ‖F p‖ ≤ dMax := by
-    intro p
-    rw [Real.norm_eq_abs, abs_of_nonneg (blockDistortion_nonneg d n _ _)]
-    exact blockDistortion_le_distortionMax d n _ _
-  have h_int_F : Integrable F Q :=
-    Integrable.mono' (integrable_const dMax) h_meas_F.aestronglyMeasurable
-      (Filter.Eventually.of_forall h_F_le)
-  have h_int_g : Integrable
-      (fun p : Fin n → α × β ↦ P + dMax * (B.indicator (fun _ ↦ (1 : ℝ)) p)) Q := by
-    refine Integrable.mono' (integrable_const (P + dMax)) h_meas_g.aestronglyMeasurable ?_
-    refine Filter.Eventually.of_forall (fun p ↦ ?_)
-    have h_ind_le : (B.indicator (fun _ : Fin n → α × β ↦ (1 : ℝ)) p) ≤ 1 := by
-      by_cases hpB : p ∈ B
-      · rw [Set.indicator_of_mem hpB]
-      · rw [Set.indicator_of_notMem hpB]; linarith
-    have h_ind_nn : 0 ≤ (B.indicator (fun _ : Fin n → α × β ↦ (1 : ℝ)) p) :=
-      Set.indicator_nonneg (fun _ _ ↦ zero_le_one) p
-    have h_val_nn : 0 ≤ P + dMax * (B.indicator (fun _ : Fin n → α × β ↦ (1 : ℝ)) p) :=
-      add_nonneg hP (mul_nonneg h_dMax_nn h_ind_nn)
-    rw [Real.norm_eq_abs, abs_of_nonneg h_val_nn]
-    nlinarith [mul_le_mul_of_nonneg_left h_ind_le h_dMax_nn]
-  -- Integrate the pointwise bound and evaluate the indicator integral.
-  have h_int_mono : ∫ p, F p ∂Q
-      ≤ ∫ p, P + dMax * (B.indicator (fun _ : Fin n → α × β ↦ (1 : ℝ)) p) ∂Q :=
-    integral_mono h_int_F h_int_g h_pointwise
-  rw [integral_const_add_indicator_one Q B h_B_meas P dMax] at h_int_mono
-  exact h_int_mono
-
-/-- **(Leg C) Wyner–Ziv covering + binning distortion-decomposition bridge.**
-For the covering+binning Wyner–Ziv code `wzCodeOfCoveringBinning c₁ f qf.2 (bin decoder)`
-(S3 assembled with the bin conditional-typicality decoder S4), the source-averaged actual
-block distortion decomposes as
-
-```
-𝔼[dⁿ]  ≤  P  +  distortionMax dα' · ( Pr[E1] + Pr[E2] )
-```
-
-where the two error events over the source blocks `Fin n → α' × β` are
-
-* `E1` — the **covering-distortion-failure** event: the reconstruction from the *true*
-  covering codeword `c₁.decoder (c₁.encoder x)` (via the test-channel reconstruction map
-  `qf.2` and the side information `y`) has block distortion exceeding the proxy budget `P`;
-* `E2` — the **bin-decoder confusion** event: the bin conditional-typicality decoder
-  returns a covering word different from the true covering codeword.
-
-Outside `E1 ∪ E2` the decoder recovers the true covering codeword, so the actual
-reconstruction *equals* the ideal one and its block distortion is `≤ P`; the decomposition
-is then the generic `wz_expectedBlockDistortion_le_of_badSet` plus a union bound. This is
-the shape the derandomize + squeeze glue (Leg D) consumes: it bounds `Pr[E1]` by the
-covering-distortion typicality (`hfeas` + S5a `wz_covering_failure_prob_le`) and `Pr[E2]` by
-the codebook-restricted confusion exponent (S5b `wz_codebook_confusion_expectation_le`, fed
-D2 `wz_covering_codeword_sideInfo_mass_le` + (B) `wzIndexBinningMeasure_collision`), with the
-two-ambient source ↔ codebook identification of Leg A.
-
-Non-bundled: the distortion-shape reconciliation (covering proxy `dα'` vs actual block
-distortion via `qf.2`) is carried by the concrete event `E1` whose probability Leg D bounds
-— it is not hypothesised. The bound on `Pr[E1] + Pr[E2]` (the real analytic work) is *not* a
-hypothesis here; only the proxy nonnegativity `hP` is required. Sorry-free. -/
-lemma wz_covering_binning_distortion_decomp
-    {α' : Type*} [Fintype α'] [DecidableEq α'] [Nonempty α']
-    [MeasurableSpace α'] [MeasurableSingletonClass α']
-    {Ω : Type*} [MeasurableSpace Ω] {k M M₁ n : ℕ} [Nonempty (Fin k)]
-    (μ : Measure Ω) (Us : ℕ → Ω → Fin k) (Ys : ℕ → Ω → β) (ε : ℝ)
-    (c₁ : LossyCode M₁ n α' (Fin k)) (f : Fin M₁ → Fin M)
-    (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
-    (dα' : DistortionFn α' γ)
-    (Q : Measure (α' × β)) [IsProbabilityMeasure Q]
-    (P : ℝ) (hP : 0 ≤ P) :
-    (wzCodeOfCoveringBinning c₁ f qf.2
-          (wzBinTypicalDecoder μ Us Ys ε c₁ f)).expectedBlockDistortion Q dα'
-      ≤ P
-        + distortionMax dα'
-          * ((Measure.pi (fun _ : Fin n ↦ Q)).real
-                { p : Fin n → α' × β |
-                    P < blockDistortion dα' n (fun i ↦ (p i).1)
-                          (fun i ↦ qf.2
-                            (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2)) }
-              + (Measure.pi (fun _ : Fin n ↦ Q)).real
-                { p : Fin n → α' × β |
-                    wzBinTypicalDecoder μ Us Ys ε c₁ f
-                        (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
-                      ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) }) := by
-  classical
-  set c : WynerZivCode M n α' β γ :=
-    wzCodeOfCoveringBinning c₁ f qf.2 (wzBinTypicalDecoder μ Us Ys ε c₁ f) with hc_def
-  set E1 : Set (Fin n → α' × β) :=
-      { p | P < blockDistortion dα' n (fun i ↦ (p i).1)
-              (fun i ↦ qf.2 (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2)) } with hE1
-  set E2 : Set (Fin n → α' × β) :=
-      { p | wzBinTypicalDecoder μ Us Ys ε c₁ f
-              (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
-            ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) } with hE2
-  have h_dMax_nn : 0 ≤ distortionMax dα' := distortionMax_nonneg dα'
-  -- Good-event pointwise bound: outside `E1 ∪ E2` the actual block distortion is `≤ P`.
-  have hgood : ∀ p : Fin n → α' × β, p ∉ E1 ∪ E2 →
-      blockDistortion dα' n (fun i ↦ (p i).1)
-        (c.decoder (c.encoder (fun i ↦ (p i).1), fun i ↦ (p i).2)) ≤ P := by
-    intro p hp
-    rw [Set.mem_union, not_or] at hp
-    obtain ⟨hp1, hp2⟩ := hp
-    -- Bin decoder recovers the true covering codeword (`p ∉ E2`).
-    have hdec : wzBinTypicalDecoder μ Us Ys ε c₁ f
-        (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
-          = c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) := by
-      by_contra hne; exact hp2 (by rw [hE2]; exact hne)
-    -- Hence the actual reconstruction equals the ideal (true-codeword) one.
-    have hrec : (c.decoder (c.encoder (fun i ↦ (p i).1), fun i ↦ (p i).2))
-        = fun i ↦ qf.2 (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2) := by
-      funext i
-      simp only [hc_def, wzCodeOfCoveringBinning]
-      rw [hdec]
-    rw [hrec]
-    -- Outside `E1`, the ideal reconstruction's block distortion is `≤ P`.
-    have hp1' := hp1
-    rw [hE1] at hp1'
-    simpa only [Set.mem_setOf_eq, not_lt] using hp1'
-  -- Generic decomposition with bad set `E1 ∪ E2`, then a union bound.
-  have hdecomp := wz_expectedBlockDistortion_le_of_badSet c Q dα' (E1 ∪ E2) P hP hgood
-  calc c.expectedBlockDistortion Q dα'
-      ≤ P + distortionMax dα' * (Measure.pi (fun _ : Fin n ↦ Q)).real (E1 ∪ E2) := hdecomp
-    _ ≤ P + distortionMax dα' * ((Measure.pi (fun _ : Fin n ↦ Q)).real E1
-          + (Measure.pi (fun _ : Fin n ↦ Q)).real E2) := by
-        have hmul := mul_le_mul_of_nonneg_left
-          (measureReal_union_le (μ := Measure.pi (fun _ : Fin n ↦ Q)) E1 E2) h_dMax_nn
-        linarith
-
-/-! ### Leg D — E2-only decomposition adapters (G2 / A1 / A2 / A3)
-
-The four adapters `wz_perN_covering_binning_code` (D3) consumes to close its inner body
-via sorry-free glue. Each carries an honest signature (only definitional/regularity
-preconditions; no error-probability, decoder-correctness, or covering lower bound is a
-hypothesis) and its own `@residual(plan:wz-binning-covering)`. Composition:
-
-```
-A1  : lift identity      LHS(P_XY,d) = codeSupp.EBD Q_XY dα'
-G2  : E2-only decomp     codeSupp.EBD Q_XY dα' ≤ 𝔼_{Q_XY}[ideal via qf.2] + distortionMax·Pr[E2]
-A2  : ideal = covering   𝔼_{Q_XY}[ideal via qf.2] = c₁.EBD P_X' d'   (≤ (D+δ/2)+δ/4 by hcov₁)
-A3  : E2 squeeze         distortionMax·Pr[E2] ≤ δ/4                   (∃ good binning f, radius ε)
-```
-
-Here `α' := {x // 0 < P_X x}`, `β' := {y // 0 < P_Y y}`, `dα' x' g := d x'.1 g`, and
-`Q_XY := pmfToMeasure (P_XY co-restricted to α' × β)` (the WZ block-distortion source). -/
-
-/-- **(Leg D, G2) E2-only distortion decomposition for a covering+binning code.** The
-E2-only refinement of `wz_covering_binning_distortion_decomp`: for the covering+binning code
-`wzCodeOfCoveringBinning c₁ f rec (bin decoder)`, the source-averaged actual block distortion
-is at most the *ideal* (true-covering-codeword) block distortion plus `distortionMax · Pr[E2]`,
-where `E2` is the bin-decoder confusion event. Outside `E2` the decoder recovers the true
-covering codeword, so the actual reconstruction equals the ideal one; inside `E2` the actual
-distortion is `≤ distortionMax ≤ ideal + distortionMax` (the ideal is nonnegative). The
-covering-distortion-failure event `E1` of `wz_covering_binning_distortion_decomp` is dropped:
-`hcov₁` supplies an *expected* covering distortion (not typicality), so `E1` is not squeezable
-and the ideal term is carried as an integral, not bounded by a constant `P`.
-
-Independent honesty audit 2026-07-11: sorry-free and sorryAx-free (`#print axioms` =
-`[propext, Classical.choice, Quot.sound]`). Genuine: the pointwise bound
-`F p ≤ ideal p + dMax · 1_E2 p` (inside `E2`, `F ≤ dMax ≤ ideal + dMax` since `ideal ≥ 0`;
-outside `E2` the bin decoder recovers the true covering codeword, so `F = ideal`) integrates to
-the claim. Decoder-agnostic, non-vacuous, no bundled hypothesis (`μ`/`Us`/`Ys`/`ε` merely
-parametrize the decoder). This decl carries no `sorry`; the earlier `@residual` is cleared.
-@audit:ok -/
-lemma wz_expectedBlockDistortion_le_ideal_add_E2
-    {α' : Type*} [Fintype α'] [DecidableEq α'] [Nonempty α']
-    [MeasurableSpace α'] [MeasurableSingletonClass α']
-    {Ω : Type*} [MeasurableSpace Ω] {k M M₁ n : ℕ} [Nonempty (Fin k)]
-    (μ : Measure Ω) (Us : ℕ → Ω → Fin k) (Ys : ℕ → Ω → β) (ε : ℝ)
-    (c₁ : LossyCode M₁ n α' (Fin k)) (f : Fin M₁ → Fin M)
-    (rec : Fin k × β → γ) (dα' : DistortionFn α' γ)
-    (Q : Measure (α' × β)) [IsProbabilityMeasure Q] :
-    (wzCodeOfCoveringBinning c₁ f rec
-          (wzBinTypicalDecoder μ Us Ys ε c₁ f)).expectedBlockDistortion Q dα'
-      ≤ (∫ p : Fin n → α' × β,
-            blockDistortion dα' n (fun i ↦ (p i).1)
-              (fun i ↦ rec (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2))
-          ∂(Measure.pi (fun _ : Fin n ↦ Q)))
-        + distortionMax dα'
-          * (Measure.pi (fun _ : Fin n ↦ Q)).real
-              { p : Fin n → α' × β |
-                  wzBinTypicalDecoder μ Us Ys ε c₁ f
-                      (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
-                    ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) } := by
-  classical
-  haveI : MeasurableSingletonClass (α' × β) := by infer_instance
-  haveI : MeasurableSingletonClass (Fin n → α' × β) := Pi.instMeasurableSingletonClass
-  set c : WynerZivCode M n α' β γ :=
-    wzCodeOfCoveringBinning c₁ f rec (wzBinTypicalDecoder μ Us Ys ε c₁ f) with hc_def
-  set dMax : ℝ := distortionMax dα' with hdMax_def
-  have h_dMax_nn : 0 ≤ dMax := distortionMax_nonneg dα'
-  set Q' : Measure (Fin n → α' × β) := Measure.pi (fun _ : Fin n ↦ Q) with hQ'_def
-  haveI : IsProbabilityMeasure Q' := by rw [hQ'_def]; infer_instance
-  set E2 : Set (Fin n → α' × β) :=
-    { p | wzBinTypicalDecoder μ Us Ys ε c₁ f
-            (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
-          ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) } with hE2_def
-  set ideal : (Fin n → α' × β) → ℝ := fun p ↦
-    blockDistortion dα' n (fun i ↦ (p i).1)
-      (fun i ↦ rec (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2)) with hideal_def
-  set F : (Fin n → α' × β) → ℝ := fun p ↦
-    blockDistortion dα' n (fun i ↦ (p i).1)
-      (c.decoder (c.encoder (fun i ↦ (p i).1), fun i ↦ (p i).2)) with hF_def
-  have h_E2_meas : MeasurableSet E2 := (Set.toFinite _).measurableSet
-  -- Pointwise: `F p ≤ ideal p + dMax · (E2.indicator 1 p)`.
-  have h_pointwise : ∀ p, F p ≤ ideal p + dMax * (E2.indicator (fun _ ↦ (1 : ℝ)) p) := by
-    intro p
-    by_cases hp : p ∈ E2
-    · have h_bd : F p ≤ dMax := blockDistortion_le_distortionMax dα' n _ _
-      have h_ideal_nn : 0 ≤ ideal p := blockDistortion_nonneg dα' n _ _
-      have h_ind : E2.indicator (fun _ : Fin n → α' × β ↦ (1 : ℝ)) p = 1 :=
-        Set.indicator_of_mem hp _
-      rw [h_ind]; nlinarith [h_bd, h_ideal_nn, h_dMax_nn]
-    · -- Outside `E2` the bin decoder recovers the true covering codeword, so `F p = ideal p`.
-      have hdec : wzBinTypicalDecoder μ Us Ys ε c₁ f
-          (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
-            = c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) := by
-        by_contra hne; exact hp (by rw [hE2_def]; exact hne)
-      have hrec : c.decoder (c.encoder (fun i ↦ (p i).1), fun i ↦ (p i).2)
-          = fun i ↦ rec (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2) := by
-        funext i
-        simp only [hc_def, wzCodeOfCoveringBinning]
-        rw [hdec]
-      have hFI : F p = ideal p := by simp only [hF_def, hideal_def]; rw [hrec]
-      have h_ind : E2.indicator (fun _ : Fin n → α' × β ↦ (1 : ℝ)) p = 0 :=
-        Set.indicator_of_notMem hp _
-      rw [hFI, h_ind]; simp
-  -- Integrability of the (bounded) integrands.
-  have h_F_le : ∀ p, ‖F p‖ ≤ dMax := by
-    intro p
-    rw [Real.norm_eq_abs, abs_of_nonneg (blockDistortion_nonneg dα' n _ _)]
-    exact blockDistortion_le_distortionMax dα' n _ _
-  have h_int_F : Integrable F Q' :=
-    Integrable.mono' (integrable_const dMax) (measurable_of_finite _).aestronglyMeasurable
-      (Filter.Eventually.of_forall h_F_le)
-  have h_ideal_le : ∀ p, ‖ideal p‖ ≤ dMax := by
-    intro p
-    rw [Real.norm_eq_abs, abs_of_nonneg (blockDistortion_nonneg dα' n _ _)]
-    exact blockDistortion_le_distortionMax dα' n _ _
-  have h_int_ideal : Integrable ideal Q' :=
-    Integrable.mono' (integrable_const dMax) (measurable_of_finite _).aestronglyMeasurable
-      (Filter.Eventually.of_forall h_ideal_le)
-  have h_int_ind : Integrable
-      (fun p : Fin n → α' × β ↦ dMax * E2.indicator (fun _ ↦ (1 : ℝ)) p) Q' :=
-    (integrable_const (1 : ℝ)).indicator h_E2_meas |>.const_mul dMax
-  have h_int_g : Integrable
-      (fun p : Fin n → α' × β ↦ ideal p + dMax * E2.indicator (fun _ ↦ (1 : ℝ)) p) Q' :=
-    h_int_ideal.add h_int_ind
-  calc c.expectedBlockDistortion Q dα'
-      = ∫ p, F p ∂Q' := rfl
-    _ ≤ ∫ p, (ideal p + dMax * E2.indicator (fun _ ↦ (1 : ℝ)) p) ∂Q' :=
-        integral_mono h_int_F h_int_g h_pointwise
-    _ = (∫ p, ideal p ∂Q') + dMax * Q'.real E2 := by
-        rw [integral_add h_int_ideal h_int_ind]
-        congr 1
-        rw [integral_const_mul]
-        congr 1
-        exact integral_indicator_one h_E2_meas
-
-/-- **(Leg D, A1) Source-support lift distortion identity.** The lifted Wyner–Ziv code's
-expected block distortion under `P_XY` equals the support-restricted code's expected block
-distortion under the co-restricted source measure `Q_XY := pmfToMeasure (P_XY on α' × β)`
-with the co-restricted distortion `dα' x' g := d x'.1 g`. Pure source-measure change of
-variables (`α' → α`), the distortion-side companion of Leg B
-`wz_covering_source_measure_map_val_eq` and the null-set transport
-`wz_expectedBlockDistortion_source_agree`.
-
-Independent honesty audit 2026-07-11: sorry-free and sorryAx-free (`#print axioms` =
-`[propext, Classical.choice, Quot.sound]`). Genuine change of variables along
-`φ = (Subtype.val, id)` (`(Q_XY)^n.map φ = P_XY^n`, off-support `X`-atoms null both sides via
-`wz_QXY_mem_stdSimplex`), non-vacuous. This decl carries no `sorry`; the earlier `@residual`
-is cleared.
-@audit:ok -/
-lemma wz_lift_expectedBlockDistortion_eq
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    (d : DistortionFn α γ) {M n : ℕ}
-    (x₀ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}})
-    (codeSupp : WynerZivCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} β γ) :
-    (wzLiftSupportCode P_XY x₀ codeSupp).expectedBlockDistortion P_XY d
-      = codeSupp.expectedBlockDistortion
-          (ChannelCoding.pmfToMeasure (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-              P_XY.real {(p.1.1, p.2)}))
-          (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g) := by
-  classical
-  -- The coordinatewise embedding `φ = (Subtype.val, id) : α' × β → α × β`.
-  set φ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β → α × β := fun p ↦ (p.1.1, p.2) with hφ
-  have hφ_meas : Measurable φ :=
-    (measurable_subtype_coe.comp measurable_fst).prodMk measurable_snd
-  haveI hQ_prob : IsProbabilityMeasure
-      (ChannelCoding.pmfToMeasure
-        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
-    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
-  -- `Q_XY.map φ = P_XY`: singleton agreement (off-support X-atoms carry zero mass both sides).
-  have hmapφ : (ChannelCoding.pmfToMeasure
-        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})).map φ
-      = P_XY := by
-    refine Measure.ext_of_singleton (fun ab ↦ ?_)
-    obtain ⟨a, b⟩ := ab
-    rw [Measure.map_apply hφ_meas (measurableSet_singleton _)]
-    by_cases ha : 0 < ∑ y, P_XY.real {(a, y)}
-    · have hpre : φ ⁻¹' {(a, b)}
-          = {((⟨a, ha⟩ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}), b)} := by
-        ext p
-        simp only [hφ, Set.mem_preimage, Set.mem_singleton_iff, Prod.ext_iff, Subtype.ext_iff]
-      rw [hpre, ChannelCoding.pmfToMeasure_apply_singleton]
-      exact ENNReal.ofReal_toReal (measure_ne_top _ _)
-    · have hpre : φ ⁻¹' {(a, b)} = (∅ : Set ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β)) := by
-        ext p
-        simp only [hφ, Set.mem_preimage, Set.mem_singleton_iff, Prod.ext_iff,
-          Set.mem_empty_iff_false, iff_false, not_and]
-        intro h1 _
-        exact absurd (h1 ▸ p.1.2) ha
-      have hPzero : P_XY {(a, b)} = 0 := by
-        have hsum : ∑ y, P_XY.real {(a, y)} = 0 :=
-          le_antisymm (not_lt.mp ha) (Finset.sum_nonneg fun _ _ ↦ measureReal_nonneg)
-        have hb := (Finset.sum_eq_zero_iff_of_nonneg
-          (fun _ _ ↦ measureReal_nonneg)).mp hsum b (Finset.mem_univ b)
-        rwa [Measure.real, ENNReal.toReal_eq_zero_iff, or_iff_left (measure_ne_top _ _)] at hb
-      rw [hpre, measure_empty, hPzero]
-  -- Product pushforward: `(Q_XY^n).map (coordinatewise φ) = P_XY^n`.
-  haveI hSF : SigmaFinite ((ChannelCoding.pmfToMeasure
-      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})).map φ) := by
-    rw [hmapφ]; infer_instance
-  have hpimap : (Measure.pi (fun _ : Fin n ↦
-        ChannelCoding.pmfToMeasure
-          (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))).map
-        (fun q (i : Fin n) ↦ φ (q i))
-      = Measure.pi (fun _ : Fin n ↦ P_XY) := by
-    rw [Measure.pi_map_pi (hμ := fun _ ↦ hSF) (fun _ ↦ hφ_meas.aemeasurable)]
-    simp_rw [hmapφ]
-  -- Change of variables + pointwise integrand equality.
-  unfold WynerZivCode.expectedBlockDistortion
-  rw [← hpimap, integral_map]
-  · refine integral_congr_ae (Filter.Eventually.of_forall (fun q ↦ ?_))
-    simp only [wzLiftSupportCode, hφ]
-    have hdite : (fun i ↦ dite (0 < ∑ y, P_XY.real {(((q i).1 : α), y)})
-          (fun h ↦ (⟨((q i).1 : α), h⟩ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}))
-          (fun _ ↦ x₀))
-        = fun i ↦ (q i).1 := by
-      funext i
-      exact dif_pos (q i).1.2
-    rw [hdite]
-    rfl
-  · exact (measurable_pi_lambda _ (fun i ↦ hφ_meas.comp (measurable_pi_apply i))).aemeasurable
-  · exact (measurable_of_finite _).aestronglyMeasurable
-
-/-- Marginalize a single coordinate of a product-pmf sum whose integrand depends on that
-coordinate only. For a product weight `∏ i, w (x i) (y i)` and a factor `g (y j)` touching only
-coordinate `j`, summing over all `y : Fin m → τ` factors as the `j`-marginal `∑ b, w (x j) b · g b`
-times the product of the remaining coordinate totals `∑ b, w (x i) b`. -/
-private lemma wz_prod_sum_marginalize {σ τ : Type*} [Fintype τ] {m : ℕ}
-    (w : σ → τ → ℝ) (x : Fin m → σ) (j : Fin m) (g : τ → ℝ) :
-    ∑ y : Fin m → τ, (∏ i, w (x i) (y i)) * g (y j)
-      = (∑ b, w (x j) b * g b) * ∏ i ∈ Finset.univ.erase j, (∑ b, w (x i) b) := by
-  classical
-  -- Fold the coordinate-`j` factor `g (y j)` into the product.
-  have key : ∀ y : Fin m → τ, (∏ i, w (x i) (y i)) * g (y j)
-      = ∏ i, w (x i) (y i) * (if i = j then g (y i) else 1) := by
-    intro y
-    rw [Finset.prod_mul_distrib, Finset.prod_ite_eq' Finset.univ j (fun i ↦ g (y i))]
-    simp
-  simp_rw [key]
-  -- Sum of products over the product index = product of the coordinate sums.
-  have hpf := Finset.sum_prod_piFinset (ι := Fin m) (Finset.univ : Finset τ)
-      (fun i b ↦ w (x i) b * (if i = j then g b else 1))
-  rw [Fintype.piFinset_univ] at hpf
-  rw [hpf]
-  -- Evaluate each coordinate total: at `j` it is the weighted `j`-marginal, elsewhere the total.
-  have hfac : ∀ i, (∑ b, w (x i) b * (if i = j then g b else 1))
-      = if i = j then (∑ b, w (x j) b * g b) else (∑ b, w (x i) b) := by
-    intro i
-    by_cases hi : i = j
-    · subst hi; simp
-    · simp [hi]
-  simp_rw [hfac]
-  -- Peel the `j`-factor out of the full product.
-  rw [← Finset.mul_prod_erase Finset.univ
-        (fun i ↦ if i = j then (∑ b, w (x j) b * g b) else (∑ b, w (x i) b))
-        (Finset.mem_univ j), if_pos rfl]
-  congr 1
-  refine Finset.prod_congr rfl (fun i hi ↦ ?_)
-  rw [if_neg (Finset.ne_of_mem_erase hi)]
-
-/-- The `X`-marginal of the covering ambient equals the source `X`-marginal on `α'`-singletons:
-`((rdAmbient qStar).map (iidXs 0)).real {x'} = ∑ y, P_XY.real {(x'.1, y)}`. -/
-private lemma wz_ideal_PX_real
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] {k : ℕ}
-    (κ' : α → Fin k → ℝ) (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
-    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
-    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
-    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
-    (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) :
-    ((rdAmbient qStar).map (ChannelCoding.iidXs 0)).real {x'} = ∑ y, P_XY.real {(x'.1, y)} := by
-  classical
-  haveI hne_prod : Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
-    Finset.univ_nonempty_iff.mp
-      (Finset.nonempty_of_sum_ne_zero (by rw [hqStar_mem.2]; exact one_ne_zero))
-  haveI : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := hne_prod.map Prod.fst
-  haveI : Nonempty (Fin k) := hne_prod.map Prod.snd
-  rw [rdAmbient_map_iidXs qStar hqStar_mem, pmfToMeasure_map_fst_real_singleton hqStar_mem x']
-  unfold marginalFst
-  simp_rw [hqStar_eq]
-  rw [← Finset.sum_mul, hκ'sum, one_mul]
-
-/-- The proxy distortion `d'`, weighted by the source `X`-marginal, unfolds to the raw
-conditional distortion sum: `(∑ y', P_XY.real {(x'.1, y')}) · (d' x' u) = ∑ y, P_XY.real {(x'.1, y)}
-· d x'.1 (qf.2 (u, y))`. The `X`-marginal is positive (`x' : α'`), so the reconciliation
-`hd'_eq` (a conditional expectation with the marginal in the denominator) clears. -/
-private lemma wz_ideal_marg_mul_dprime
-    (P_XY : Measure (α × β)) {k : ℕ}
-    (d : DistortionFn α γ)
-    (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
-    (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
-    (hd'_eq : ∀ x' u, d' x' u = Real.toNNReal (∑ y : β,
-        (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
-          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
-    (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) :
-    (∑ y' : β, P_XY.real {(x'.1, y')}) * ((d' x' u : NNReal) : ℝ)
-      = ∑ y : β, P_XY.real {(x'.1, y)} * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ) := by
-  have hpos : 0 < ∑ y' : β, P_XY.real {(x'.1, y')} := x'.2
-  have hS_nn : 0 ≤ ∑ y : β, (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
-      * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ) :=
-    Finset.sum_nonneg fun y _ ↦
-      mul_nonneg (div_nonneg measureReal_nonneg hpos.le) (NNReal.coe_nonneg _)
-  rw [hd'_eq, Real.coe_toNNReal _ hS_nn, Finset.mul_sum]
-  refine Finset.sum_congr rfl fun y _ ↦ ?_
-  rw [← mul_assoc]
-  congr 1
-  rw [mul_comm, div_mul_cancel₀ _ hpos.ne']
-
-/-- **(Leg D, A2) Ideal distortion = covering distortion.** The ideal (true covering
-codeword) block distortion of the binned code, integrated over the co-restricted source
-`Q_XY`, equals the covering `LossyCode`'s expected block distortion under the i.i.d. covering
-ambient `(rdAmbient qStar).map (iidXs 0)` with the proxy distortion `d'`. Fubini over the
-product source + the proxy reconciliation `hd'_eq` (`d' = 𝔼_{Y|X}[d ∘ qf.2]`) + Leg B source
-change of variables (`wz_covering_source_measure_map_val_eq`). This is the identity that lets
-`hcov₁`'s covering bound bound the ideal term.
-
-Now sorry-free (genuine closure, pending independent honesty audit). The body reduces both
-finite-alphabet integrals to sums (`integral_fintype` + `Measure.pi_singleton`), splits the
-product source into its `α'`- and `β`-coordinate factors (`arrowProdEquivProdArrow`), and for
-each source sequence `x` marginalizes the `β`-coordinates one at a time
-(`wz_prod_sum_marginalize`); the reconciliation `hd'_eq` (`d' = 𝔼_{Y|X}[d ∘ qf.2]`, cleared by
-the positive `X`-marginal via `wz_ideal_marg_mul_dprime`) and the source-marginal identity
-`wz_ideal_PX_real` turn the ideal per-letter distortion into the proxy distortion. Non-circular
-(no hypothesis is the conclusion), non-bundled (`hd'_eq`/`hqStar_eq`/`hqStar_mem`/`hκ'sum` are the
-reconciliation + source-consistency preconditions — same kind as D3's — not the identity itself;
-the Fubini + change-of-variables identity is genuine body work).
-
-Independent honesty audit 2026-07-12 (Leg E comprehensive pass): PASS, genuine closure.
-Non-circular (no hypothesis has the conclusion's marginalization-equality type), non-bundled
-(`hκ'sum`/`hqStar_eq`/`hqStar_mem`/`hd'_eq` are source-consistency + proxy-reconciliation
-preconditions consumed by `wz_ideal_PX_real`/`wz_ideal_marg_mul_dprime`, not the equality),
-non-degenerate (`hqStar_mem`'s simplex-sum-1 field yields `Nonempty α'`, so both integrals are
-over genuine probability measures), sufficiency holds (the LHS ideal distortion genuinely
-marginalizes to the RHS covering distortion via `wz_prod_sum_marginalize` + `hd'_eq`; no
-degenerate substitution refutes the framed equality). Body `sorry`-free and transitively
-sorryAx-free: `#print axioms wz_ideal_expectation_eq_covering = [propext, Classical.choice,
-Quot.sound]` (machine-verified 2026-07-12).
-@audit:ok -/
-lemma wz_ideal_expectation_eq_covering
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    (d : DistortionFn α γ) {k M₁ n : ℕ}
-    (κ' : α → Fin k → ℝ) (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
-    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
-    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
-    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
-    (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
-    (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
-    (hd'_eq : ∀ x' u, d' x' u = Real.toNNReal (∑ y : β,
-        (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
-          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
-    (c₁ : LossyCode M₁ n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)) :
-    (∫ p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β,
-        blockDistortion (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g) n
-          (fun i ↦ (p i).1)
-          (fun i ↦ qf.2 (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2))
-      ∂(Measure.pi (fun _ : Fin n ↦
-          ChannelCoding.pmfToMeasure (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-              P_XY.real {(p.1.1, p.2)}))))
-      = c₁.expectedBlockDistortion
-          ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d' := by
-  classical
-  haveI hne_prod : Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
-    Finset.univ_nonempty_iff.mp
-      (Finset.nonempty_of_sum_ne_zero (by rw [hqStar_mem.2]; exact one_ne_zero))
-  haveI hneS : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := hne_prod.map Prod.fst
-  haveI hnek : Nonempty (Fin k) := hne_prod.map Prod.snd
-  set Q := ChannelCoding.pmfToMeasure
-      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}) with hQdef
-  set PX := (rdAmbient qStar).map (ChannelCoding.iidXs 0) with hPXdef
-  haveI hQprob : IsProbabilityMeasure Q :=
-    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
-  haveI hPXprob : IsProbabilityMeasure PX :=
-    rdAmbient_iidXs_isProbabilityMeasure qStar hqStar_mem
-  -- Pi-measure singleton reals factor as products of coordinate singleton reals.
-  have hpiQ : ∀ z : Fin n → ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β),
-      (Measure.pi (fun _ : Fin n ↦ Q)).real {z} = ∏ i, Q.real {z i} := by
-    intro z; rw [measureReal_def, Measure.pi_singleton, ENNReal.toReal_prod]; rfl
-  have hpiPX : ∀ z : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}},
-      (Measure.pi (fun _ : Fin n ↦ PX)).real {z} = ∏ i, PX.real {z i} := by
-    intro z; rw [measureReal_def, Measure.pi_singleton, ENNReal.toReal_prod]; rfl
-  have hQreal : ∀ a : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β,
-      Q.real {a} = P_XY.real {(a.1.1, a.2)} := fun a ↦
-    ChannelCoding.pmfToMeasure_real_singleton (wz_QXY_mem_stdSimplex P_XY) a
-  have hPXreal : ∀ x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}},
-      PX.real {x'} = ∑ y, P_XY.real {(x'.1, y)} := fun x' ↦
-    wz_ideal_PX_real P_XY κ' hκ'sum qStar hqStar_eq hqStar_mem x'
-  -- Convert both integrals to finite sums over the product source.
-  unfold LossyCode.expectedBlockDistortion
-  rw [MeasureTheory.integral_fintype Integrable.of_finite,
-      MeasureTheory.integral_fintype Integrable.of_finite]
-  simp only [smul_eq_mul]
-  simp_rw [hpiQ, hpiPX, hQreal, hPXreal, blockDistortion]
-  -- Split the product source into its `α'`- and `β`-coordinate factors.
-  rw [← Equiv.sum_comp (Equiv.arrowProdEquivProdArrow (Fin n)
-        (fun _ : Fin n ↦ {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (fun _ : Fin n ↦ β)).symm,
-      Fintype.sum_prod_type]
-  simp only [Equiv.arrowProdEquivProdArrow_symm_apply]
-  refine Finset.sum_congr rfl fun x _ ↦ ?_
-  set U := c₁.decoder (c₁.encoder x) with hU
-  -- Coordinate marginalization of the ideal distortion into the proxy distortion.
-  have key : ∀ j : Fin n,
-      ∑ y : Fin n → β, (∏ i, P_XY.real {((x i).1, y i)})
-          * ((d (x j).1 (qf.2 (U j, y j)) : NNReal) : ℝ)
-        = (∏ i, ∑ b, P_XY.real {((x i).1, b)}) * ((d' (x j) (U j) : NNReal) : ℝ) := by
-    intro j
-    rw [wz_prod_sum_marginalize
-          (fun (x'' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (b : β) ↦ P_XY.real {(x''.1, b)})
-          x j (fun b ↦ ((d (x j).1 (qf.2 (U j, b)) : NNReal) : ℝ)),
-        ← wz_ideal_marg_mul_dprime P_XY d qf d' hd'_eq (x j) (U j),
-        ← Finset.mul_prod_erase Finset.univ
-          (fun i ↦ ∑ b, P_XY.real {((x i).1, b)}) (Finset.mem_univ j)]
-    ring
-  -- Rearrange both sides to `(1/n) · ∑ⱼ (∏ᵢ marg) · d'`.
-  have expand : ∀ y : Fin n → β,
-      (∏ i, P_XY.real {((x i).1, y i)})
-          * (1 / (n : ℝ) * ∑ j, ((d (x j).1 (qf.2 (U j, y j)) : NNReal) : ℝ))
-        = 1 / (n : ℝ) * ∑ j, (∏ i, P_XY.real {((x i).1, y i)})
-            * ((d (x j).1 (qf.2 (U j, y j)) : NNReal) : ℝ) := by
-    intro y; rw [mul_left_comm, Finset.mul_sum]
-  simp_rw [expand]
-  rw [← Finset.mul_sum, Finset.sum_comm]
-  simp_rw [key]
-  rw [← Finset.mul_sum, mul_left_comm]
-
-/-! ### Leg E-mass helpers — source→ambient transport of the per-codeword AEP mass bound
-
-The per-covering-codeword side-information typicality mass, taken under the Wyner–Ziv source
-product measure `Measure.pi (source per-coord)` on `α' × β`, is transported to the abstract
-per-codeword AEP bound `wz_covering_codeword_sideInfo_mass_le` (D2) on the side-information
-ambient `rdAmbient (wzSideInfoMarginal P_XY κ')` over the positive-`Y`-marginal subtype `β'`.
-The transport combines (a) the `n`-fold side-information-law agreement (the source's `Y`-law is
-the `β`-image of the ambient's `β'`-`Y`-law), and (b) the entropy → `wzMutualInfoYU` exponent
-bridge. The generic injective-map helpers preserve `entropy` and per-atom mass under the
-`β' → β` coercion (the source lives over full `β`, the ambient over the subtype). -/
 
 /-- Per-atom mass is preserved by pushing forward along an injective (measurable) alphabet map:
 `(μ.map (g ∘ X)).real {g a} = (μ.map X).real {a}`. -/
@@ -3292,139 +1411,6 @@ private lemma wz_source_snd_eq_ambient_snd_map
   rw [← ENNReal.ofReal_toReal hL, ← ENNReal.ofReal_toReal hR]
   exact congrArg ENNReal.ofReal hreal
 
-/-- Ambient entropy of the covering codeword `U` equals the `negMulLog`-sum of the `U`-marginal
-of `wzSideInfoMarginal`. -/
-private lemma wz_entropy_ambient_iidXs
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    {k : ℕ} [Nonempty (Fin k)] (κ' : α → Fin k → ℝ)
-    (hκ'pos : ∀ x u, 0 < κ' x u) (hκ'sum : ∀ x, ∑ u, κ' x u = 1) :
-    entropy (rdAmbient (wzSideInfoMarginal P_XY κ')) (ChannelCoding.iidXs (α := Fin k) 0)
-      = ∑ u, Real.negMulLog (marginalFst (wzSideInfoMarginal P_XY κ') u) := by
-  haveI : Nonempty {y : β // 0 < ∑ x, P_XY.real {(x, y)}} :=
-    wzSideInfoMarginal_subtype_nonempty P_XY
-  have hq := wzSideInfoMarginal_mem_stdSimplex P_XY κ' hκ'pos hκ'sum
-  unfold entropy
-  refine Finset.sum_congr rfl (fun u _ ↦ ?_)
-  congr 1
-  rw [rdAmbient_map_iidXs (wzSideInfoMarginal P_XY κ') hq,
-      pmfToMeasure_map_fst_real_singleton hq u]
-
-/-- Ambient entropy of the side information `Y` equals the `negMulLog`-sum of the `β'`-`Y`-marginal
-of `wzSideInfoMarginal`. -/
-private lemma wz_entropy_ambient_iidYs
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    {k : ℕ} [Nonempty (Fin k)] (κ' : α → Fin k → ℝ)
-    (hκ'pos : ∀ x u, 0 < κ' x u) (hκ'sum : ∀ x, ∑ u, κ' x u = 1) :
-    entropy (rdAmbient (wzSideInfoMarginal P_XY κ')) (ChannelCoding.iidYs (α := Fin k) 0)
-      = ∑ y', Real.negMulLog (marginalSnd (wzSideInfoMarginal P_XY κ') y') := by
-  haveI : Nonempty {y : β // 0 < ∑ x, P_XY.real {(x, y)}} :=
-    wzSideInfoMarginal_subtype_nonempty P_XY
-  have hq := wzSideInfoMarginal_mem_stdSimplex P_XY κ' hκ'pos hκ'sum
-  unfold entropy
-  refine Finset.sum_congr rfl (fun y' _ ↦ ?_)
-  congr 1
-  rw [rdAmbient_map_iidYs (wzSideInfoMarginal P_XY κ') hq,
-      pmfToMeasure_map_snd_real_singleton hq y']
-
-/-- Ambient joint entropy `H(U, Y)` equals the `negMulLog`-sum of `wzSideInfoMarginal`. -/
-private lemma wz_entropy_ambient_joint
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    {k : ℕ} [Nonempty (Fin k)] (κ' : α → Fin k → ℝ)
-    (hκ'pos : ∀ x u, 0 < κ' x u) (hκ'sum : ∀ x, ∑ u, κ' x u = 1) :
-    entropy (rdAmbient (wzSideInfoMarginal P_XY κ'))
-        (ChannelCoding.jointSequence ChannelCoding.iidXs (ChannelCoding.iidYs (α := Fin k)) 0)
-      = ∑ p, Real.negMulLog (wzSideInfoMarginal P_XY κ' p) := by
-  haveI : Nonempty {y : β // 0 < ∑ x, P_XY.real {(x, y)}} :=
-    wzSideInfoMarginal_subtype_nonempty P_XY
-  have hq := wzSideInfoMarginal_mem_stdSimplex P_XY κ' hκ'pos hκ'sum
-  unfold entropy
-  refine Finset.sum_congr rfl (fun p _ ↦ ?_)
-  congr 1
-  rw [rdAmbient_map_jointSequence (wzSideInfoMarginal P_XY κ') hq,
-      ChannelCoding.pmfToMeasure_real_singleton hq p]
-
-/-- Exponent bridge: `mutualInfoPmf (wzMarginalYU q') = mutualInfoPmf (wzSideInfoMarginal)`, i.e.
-the full-`β` `(Y, U)`-marginal of `q'` and the `β'`-subtype `wzSideInfoMarginal` carry the same
-mutual information (the `β`-values outside `β'` have zero mass, `negMulLog 0 = 0`). -/
-private lemma wz_mutualInfoPmf_wzMarginalYU_eq
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    {k : ℕ} (κ' : α → Fin k → ℝ) (hκ'pos : ∀ x u, 0 < κ' x u) (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
-    (q' : α × β × Fin k → ℝ)
-    (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)}) :
-    mutualInfoPmf (wzMarginalYU (Fin k) q') = mutualInfoPmf (wzSideInfoMarginal P_XY κ') := by
-  classical
-  have hq1v : ∀ y u, wzMarginalYU (Fin k) q' (y, u) = ∑ x, κ' x u * P_XY.real {(x, y)} := by
-    intro y u
-    simp only [wzMarginalYU]
-    exact Finset.sum_congr rfl (fun x _ ↦ hfact_eq x y u)
-  have hq2v : ∀ (u : Fin k) (y' : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}),
-      wzSideInfoMarginal P_XY κ' (u, y') = ∑ x, κ' x u * P_XY.real {(x, y'.1)} := fun u y' ↦ rfl
-  have hcol0 : ∀ (u : Fin k) (y : β), ¬ (0 < ∑ x, P_XY.real {(x, y)}) →
-      (∑ x, κ' x u * P_XY.real {(x, y)}) = 0 := by
-    intro u y hy
-    have hz : ∑ x, P_XY.real {(x, y)} = 0 :=
-      le_antisymm (not_lt.mp hy) (Finset.sum_nonneg fun _ _ ↦ measureReal_nonneg)
-    refine Finset.sum_eq_zero (fun x _ ↦ ?_)
-    have hx0 : P_XY.real {(x, y)} = 0 :=
-      (Finset.sum_eq_zero_iff_of_nonneg (fun _ _ ↦ measureReal_nonneg)).mp hz x (Finset.mem_univ x)
-    rw [hx0, mul_zero]
-  have subsum : ∀ f : β → ℝ, (∀ y, ¬ (0 < ∑ x, P_XY.real {(x, y)}) → f y = 0) →
-      (∑ y : β, f y) = ∑ y' : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}, f y'.1 := by
-    intro f hf
-    letI : DecidablePred (fun y : β => 0 < ∑ x, P_XY.real {(x, y)}) := Classical.decPred _
-    rw [← Finset.sum_subtype (Finset.univ.filter (fun y : β => 0 < ∑ x, P_XY.real {(x, y)}))
-        (fun y => by simp) (fun y => f y)]
-    refine (Finset.sum_subset (Finset.filter_subset _ _) ?_).symm
-    intro y _ hy
-    rw [Finset.mem_filter] at hy
-    push_neg at hy
-    exact hf y (not_lt.mpr (hy (Finset.mem_univ y)))
-  have hUmarg : ∀ u : Fin k,
-      marginalSnd (wzMarginalYU (Fin k) q') u = marginalFst (wzSideInfoMarginal P_XY κ') u := by
-    intro u
-    simp only [marginalSnd, marginalFst]
-    rw [show (∑ y : β, wzMarginalYU (Fin k) q' (y, u))
-          = ∑ y : β, (∑ x, κ' x u * P_XY.real {(x, y)}) from
-        Finset.sum_congr rfl (fun y _ ↦ hq1v y u),
-        subsum (fun y ↦ ∑ x, κ' x u * P_XY.real {(x, y)}) (fun y hy ↦ hcol0 u y hy)]
-    exact Finset.sum_congr rfl (fun y' _ ↦ (hq2v u y').symm)
-  have hYmarg : ∀ y' : {y : β // 0 < ∑ x, P_XY.real {(x, y)}},
-      marginalFst (wzMarginalYU (Fin k) q') y'.1
-        = marginalSnd (wzSideInfoMarginal P_XY κ') y' := by
-    intro y'
-    simp only [marginalFst, marginalSnd]
-    rw [show (∑ u, wzMarginalYU (Fin k) q' (y'.1, u))
-          = ∑ u, (∑ x, κ' x u * P_XY.real {(x, y'.1)}) from
-        Finset.sum_congr rfl (fun u _ ↦ hq1v y'.1 u)]
-    exact Finset.sum_congr rfl (fun u _ ↦ (hq2v u y').symm)
-  unfold mutualInfoPmf
-  have hFst : (∑ y : β, Real.negMulLog (marginalFst (wzMarginalYU (Fin k) q') y))
-      = ∑ y', Real.negMulLog (marginalSnd (wzSideInfoMarginal P_XY κ') y') := by
-    rw [subsum (fun y ↦ Real.negMulLog (marginalFst (wzMarginalYU (Fin k) q') y)) ?_]
-    · exact Finset.sum_congr rfl (fun y' _ ↦ by rw [hYmarg y'])
-    · intro y hy
-      have hz : marginalFst (wzMarginalYU (Fin k) q') y = 0 := by
-        simp only [marginalFst]
-        rw [show (∑ u, wzMarginalYU (Fin k) q' (y, u))
-              = ∑ u, (∑ x, κ' x u * P_XY.real {(x, y)}) from
-            Finset.sum_congr rfl (fun u _ ↦ hq1v y u)]
-        exact Finset.sum_eq_zero (fun u _ ↦ hcol0 u y hy)
-      rw [hz, Real.negMulLog_zero]
-  have hSnd : (∑ u, Real.negMulLog (marginalSnd (wzMarginalYU (Fin k) q') u))
-      = ∑ u, Real.negMulLog (marginalFst (wzSideInfoMarginal P_XY κ') u) :=
-    Finset.sum_congr rfl (fun u _ ↦ by rw [hUmarg u])
-  have hJoint : (∑ p : β × Fin k, Real.negMulLog (wzMarginalYU (Fin k) q' p))
-      = ∑ p : Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}},
-          Real.negMulLog (wzSideInfoMarginal P_XY κ' p) := by
-    rw [Fintype.sum_prod_type, Fintype.sum_prod_type, Finset.sum_comm]
-    refine Finset.sum_congr rfl (fun u _ ↦ ?_)
-    rw [subsum (fun y ↦ Real.negMulLog (wzMarginalYU (Fin k) q' (y, u))) ?_]
-    · exact Finset.sum_congr rfl (fun y' _ ↦ by rw [hq1v y'.1 u, ← hq2v u y'])
-    · intro y hy
-      rw [hq1v y u, hcol0 u y hy, Real.negMulLog_zero]
-  rw [hFst, hSnd, hJoint]
-  ring
-
 /-- The `n`-fold side-information law of the ambient factorises as the product of its
 single-letter `β'`-`Y`-marginal. -/
 private lemma wz_ambient_jointRV_iidYs_eq_pi
@@ -3469,1346 +1455,6 @@ private lemma wz_ambient_jointRV_iidYs_eq_pi
     _ = Measure.pi (fun _ : Fin n ↦ (rdAmbient (wzSideInfoMarginal P_XY κ')).map
           (ChannelCoding.iidYs (α := Fin k) 0)) := by
         congr 1; funext i; exact hmap_eq i
-
-/-- **(A3 helper) Per-covering-codeword side-information typicality mass, under the source
-product measure.** For any fixed covering codeword `u : Fin n → Fin k`, the probability —
-under the Wyner–Ziv source product measure `Measure.pi` of `p ↦ P_XY{(p.1.1, p.2)}` on
-`α' × β` — that `u` is jointly typical (radius `ε`, side-information ambient
-`rdAmbient (wzSideInfoMarginal P_XY κ')`) with the side-information block `fun i ↦ (p i).2`
-is at most `exp(−n · (I(Y;U) − 3ε))`, where `I(Y;U) = wzMutualInfoYU (Fin k) q'`.
-
-This transports `wz_covering_codeword_sideInfo_mass_le` (D2, `@audit:ok`) from the
-side-information ambient onto the source product measure. Two facts do the work:
-
-* **Side-information-law agreement.** The source pair law's `β`-marginal is
-  `y ↦ ∑_x P_XY{(x,y)}`, and the `β`-coerced `β'`-marginal of `wzSideInfoMarginal` summed over
-  the covering codeword is `y ↦ ∑_x κ' x u · P_XY{(x,y)} = ∑_x P_XY{(x,y)}` by `hκ'sum` — so
-  the source's `n`-fold `Y`-law is the `β`-image (`Subtype.val`) of the ambient's `β'`-`Y`-law
-  (`Measure.pi_map_pi` + the iid `n`-fold law), and the fixed-`u` slice mass is preserved.
-  The `β`-vs-`β'` alphabet gap is absorbed by the coercion being injective, so the joint typical
-  set relabels along it (`entropy` and `pmfLog` are invariant under an injective relabeling).
-* **Exponent bridge.** `wzMutualInfoYU (Fin k) q'` equals the ambient's `I(U;Y) = H(U)+H(Y)-H(U,Y)`
-  (the `β`-values outside `β'` carry zero mass, `negMulLog 0 = 0`), which discharges D2's exponent
-  hypothesis at `I_YU := wzMutualInfoYU q' - 3ε`.
-
-Non-bundled: the conclusion is a per-codeword mass upper bound (`Measure.real {…} ≤ exp …`), the
-same shape as D2, not the operational error probability; `hκ'pos`/`hκ'sum`/`hfact_eq` are the
-covering-kernel regularity preconditions. Genuinely proven (sorry-free, sorryAx-free): consumed
-by `wz_exists_binning_E2_bound` (A3) to supply S5b's `hmass`.
-
-Independent honesty audit 2026-07-12 (commit `66417846`, Leg E-mass sorry-free closure): PASS.
-The four honesty checks hold. (1) Non-circular: the conclusion is a `Measure.real {…} ≤ exp …`
-mass bound; no hypothesis has type ≡ conclusion; the body is a genuine measure-transport proof
-(ending `exact hD2`, not `:= h`). (2) Non-bundled: the AEP concentration CORE is discharged by
-`wz_covering_codeword_sideInfo_mass_le` (D2, `@audit:ok`, genuinely proven in-file), NOT passed
-as a hypothesis; `hfact_eq` is the definitional link fixing `q'` as the factored covering pmf
-(structural, not the bound); `hκ'pos`/`hκ'sum` are pmf-regularity. (3) Non-degenerate: the bound
-holds and is non-vacuous across the extremes (`n=0` ⇒ `exp 0 = 1` trivial; `ε` huge ⇒ RHS ≥ 1,
-weaker not false; atypical `u` ⇒ mass 0 via D2; `Nonempty` guards the positive-marginal
-subtypes). (4) Sufficiency: the exponent `wzMutualInfoYU q'` is NOT a free parameter — it is
-pinned to the actual pmf by `hfact_eq` and equated to the ambient `H(U)+H(Y)−H(U,Y)` by the
-entropy triple (`wz_entropy_ambient_iidXs`/`_iidYs`/`_joint`) + the pmf-level MI bridge
-(`wz_mutualInfoPmf_wzMarginalYU_eq`), so D2 discharges `hI_YU` by `le_of_eq`; no free-exponent
-gap (the historical WZ trap is absent). The 11 new private helpers (L3074–3417) were each audited
-clean: all carry only regularity hypotheses (measurability / injectivity / positivity / pmf-sum /
-`Nonempty` / `stdSimplex`) and prove measure-theoretic identities that follow, none bundling the
-AEP core. The exponent bridge deviates from the brief's `wzMutualInfoYU_eq_mutualInfo`
-(Operational.lean:230) soundly: that lemma requires `q'` to be the empirical pmf of ambient RVs
-`(X,Y,Uc)`, whereas here `q'` is a fixed factored pmf, so the direct pmf-level `mutualInfoPmf`
-computation is the honest route, not a papered-over gap. `#print axioms` =
-`[propext, Classical.choice, Quot.sound]` (no `sorryAx`, machine-verified) — proof done.
-@audit:ok -/
-lemma wz_source_codeword_sideInfo_mass_le
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
-    {k : ℕ} [Nonempty (Fin k)]
-    (κ' : α → Fin k → ℝ) (hκ'pos : ∀ x u, 0 < κ' x u) (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
-    (q' : α × β × Fin k → ℝ)
-    (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
-    (ε : ℝ) (hε_pos : 0 < ε) (n : ℕ) (u : Fin n → Fin k) :
-    (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-          P_XY.real {(p.1.1, p.2)}))).real
-        { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
-            (u, fun i ↦ (p i).2)
-              ∈ ChannelCoding.jointlyTypicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
-                  ChannelCoding.iidXs
-                  (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-                      ((ChannelCoding.iidYs i ω :
-                          {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
-                  n ε }
-      ≤ Real.exp (-(n : ℝ) * (wzMutualInfoYU (Fin k) q' - 3 * ε)) := by
-  classical
-  haveI hne_βs : Nonempty {y : β // 0 < ∑ x, P_XY.real {(x, y)}} :=
-    wzSideInfoMarginal_subtype_nonempty P_XY
-  have hq := wzSideInfoMarginal_mem_stdSimplex P_XY κ' hκ'pos hκ'sum
-  haveI hamb_prob : IsProbabilityMeasure (rdAmbient (wzSideInfoMarginal P_XY κ')) :=
-    rdAmbient_isProbabilityMeasure _ hq
-  haveI hsrc_prob : IsProbabilityMeasure (ChannelCoding.pmfToMeasure
-      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
-    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_sourcePmf_mem_stdSimplex P_XY)
-  -- The injective `β' → β` coercion and its joint `Fin k × β' → Fin k × β` version.
-  have hval_inj : Function.Injective
-      (Subtype.val : {y : β // 0 < ∑ x, P_XY.real {(x, y)}} → β) := Subtype.val_injective
-  have hval_meas : Measurable
-      (Subtype.val : {y : β // 0 < ∑ x, P_XY.real {(x, y)}} → β) := measurable_subtype_coe
-  have hgj_meas : Measurable (fun p : Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}} ↦
-      (p.1, (p.2 : β))) := measurable_fst.prodMk (hval_meas.comp measurable_snd)
-  have hgj_inj : Function.Injective (fun p : Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}} ↦
-      (p.1, (p.2 : β))) := by
-    intro a b hab
-    simp only [Prod.mk.injEq] at hab
-    exact Prod.ext hab.1 (hval_inj hab.2)
-  -- Per-atom `pmfLog` and `entropy` invariance under the coercion.
-  have hpmfYeq : ∀ y' : {y : β // 0 < ∑ x, P_XY.real {(x, y)}},
-      pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
-          (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-            ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) ((y' : β))
-        = pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ')) (ChannelCoding.iidYs (α := Fin k)) y' := by
-    intro y'
-    simp only [pmfLog]
-    rw [wz_map_injective_real_singleton (rdAmbient (wzSideInfoMarginal P_XY κ'))
-        (ChannelCoding.iidYs (α := Fin k) 0) (ChannelCoding.measurable_iidYs 0)
-        Subtype.val hval_inj hval_meas y']
-  have hentYeq : entropy (rdAmbient (wzSideInfoMarginal P_XY κ'))
-      (fun ω ↦ ((ChannelCoding.iidYs (α := Fin k) 0 ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
-        = entropy (rdAmbient (wzSideInfoMarginal P_XY κ')) (ChannelCoding.iidYs (α := Fin k) 0) :=
-    wz_entropy_map_injective (rdAmbient (wzSideInfoMarginal P_XY κ'))
-      (ChannelCoding.iidYs (α := Fin k) 0) (ChannelCoding.measurable_iidYs 0)
-      Subtype.val hval_inj hval_meas
-  have hpmfJeq : ∀ p : Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}},
-      pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
-          (ChannelCoding.jointSequence ChannelCoding.iidXs
-            (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-              ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)))
-          (p.1, (p.2 : β))
-        = pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
-            (ChannelCoding.jointSequence ChannelCoding.iidXs (ChannelCoding.iidYs (α := Fin k))) p := by
-    intro p
-    simp only [pmfLog]
-    congr 2
-    exact wz_map_injective_real_singleton (rdAmbient (wzSideInfoMarginal P_XY κ'))
-        (ChannelCoding.jointSequence ChannelCoding.iidXs (ChannelCoding.iidYs (α := Fin k)) 0)
-        (ChannelCoding.measurable_jointSequence _ _ (fun i ↦ ChannelCoding.measurable_iidXs i)
-          (fun i ↦ ChannelCoding.measurable_iidYs i) 0)
-        (fun q : Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}} ↦ (q.1, (q.2 : β)))
-        hgj_inj hgj_meas p
-  have hentJeq : entropy (rdAmbient (wzSideInfoMarginal P_XY κ'))
-      (ChannelCoding.jointSequence ChannelCoding.iidXs
-        (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-          ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) 0)
-        = entropy (rdAmbient (wzSideInfoMarginal P_XY κ'))
-            (ChannelCoding.jointSequence ChannelCoding.iidXs (ChannelCoding.iidYs (α := Fin k)) 0) :=
-    wz_entropy_map_injective (rdAmbient (wzSideInfoMarginal P_XY κ'))
-      (ChannelCoding.jointSequence ChannelCoding.iidXs (ChannelCoding.iidYs (α := Fin k)) 0)
-      (ChannelCoding.measurable_jointSequence _ _ (fun i ↦ ChannelCoding.measurable_iidXs i)
-        (fun i ↦ ChannelCoding.measurable_iidYs i) 0)
-      (fun q : Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}} ↦ (q.1, (q.2 : β))) hgj_inj hgj_meas
-  -- Typical-set correspondence under the coercion.
-  have htypY : ∀ z : Fin n → {y : β // 0 < ∑ x, P_XY.real {(x, y)}},
-      ((fun i ↦ ((z i : β))) ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
-          (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-            ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε)
-        ↔ (z ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
-            (ChannelCoding.iidYs (α := Fin k)) n ε) := by
-    intro z
-    rw [mem_typicalSet_iff, mem_typicalSet_iff]
-    have hnum : (∑ i : Fin n, pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
-          (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-            ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) ((z i : β)))
-        = ∑ i : Fin n, pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
-            (ChannelCoding.iidYs (α := Fin k)) (z i) :=
-      Finset.sum_congr rfl (fun i _ ↦ hpmfYeq (z i))
-    simp only [hnum, hentYeq]
-  have htypJ : ∀ z : Fin n → {y : β // 0 < ∑ x, P_XY.real {(x, y)}},
-      ((fun i ↦ (u i, ((z i : β)))) ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
-          (ChannelCoding.jointSequence ChannelCoding.iidXs
-            (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-              ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))) n ε)
-        ↔ ((fun i ↦ (u i, z i)) ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
-            (ChannelCoding.jointSequence ChannelCoding.iidXs (ChannelCoding.iidYs (α := Fin k))) n ε) := by
-    intro z
-    rw [mem_typicalSet_iff, mem_typicalSet_iff]
-    have hnum : (∑ i : Fin n, pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
-          (ChannelCoding.jointSequence ChannelCoding.iidXs
-            (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-              ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)))
-          (u i, ((z i : β))))
-        = ∑ i : Fin n, pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
-            (ChannelCoding.jointSequence ChannelCoding.iidXs (ChannelCoding.iidYs (α := Fin k)))
-            (u i, z i) :=
-      Finset.sum_congr rfl (fun i _ ↦ hpmfJeq (u i, z i))
-    simp only [hnum, hentJeq]
-  -- The target set is the `Y`-projection preimage of the fixed-`u` typical fibre.
-  have hΦS :
-      (fun (z : Fin n → {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) i ↦ ((z i : β))) ⁻¹'
-          {y : Fin n → β | (u, y) ∈ ChannelCoding.jointlyTypicalSet
-              (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs
-              (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-                ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε}
-        = {z : Fin n → {y : β // 0 < ∑ x, P_XY.real {(x, y)}} |
-            (u, z) ∈ ChannelCoding.jointlyTypicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
-              ChannelCoding.iidXs (ChannelCoding.iidYs (α := Fin k)) n ε} := by
-    ext z
-    simp only [Set.mem_preimage, Set.mem_setOf_eq,
-      ChannelCoding.mem_jointlyTypicalSet_iff]
-    exact and_congr Iff.rfl (and_congr (htypY z) (htypJ z))
-  -- Entropy → `wzMutualInfoYU` exponent bridge.
-  have hbridge : wzMutualInfoYU (Fin k) q'
-      = entropy (rdAmbient (wzSideInfoMarginal P_XY κ')) (ChannelCoding.iidXs (α := Fin k) 0)
-        + entropy (rdAmbient (wzSideInfoMarginal P_XY κ')) (ChannelCoding.iidYs (α := Fin k) 0)
-        - entropy (rdAmbient (wzSideInfoMarginal P_XY κ'))
-            (ChannelCoding.jointSequence ChannelCoding.iidXs (ChannelCoding.iidYs (α := Fin k)) 0) := by
-    rw [wz_entropy_ambient_iidXs P_XY κ' hκ'pos hκ'sum,
-        wz_entropy_ambient_iidYs P_XY κ' hκ'pos hκ'sum,
-        wz_entropy_ambient_joint P_XY κ' hκ'pos hκ'sum]
-    show mutualInfoPmf (wzMarginalYU (Fin k) q') = _
-    rw [wz_mutualInfoPmf_wzMarginalYU_eq P_XY κ' hκ'pos hκ'sum q' hfact_eq]
-    rfl
-  -- Apply D2 on the side-information ambient over the subtype `β'`.
-  have hD2 := wz_covering_codeword_sideInfo_mass_le
-      (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs
-      (ChannelCoding.iidYs (α := Fin k)) ε hε_pos
-      (fun i ↦ ChannelCoding.measurable_iidXs i) (fun i ↦ ChannelCoding.measurable_iidYs i)
-      (rdAmbient_iIndepFun_iidXs _ hq) (rdAmbient_identDistrib_iidXs _ hq)
-      (rdAmbient_iIndepFun_iidYs _ hq) (rdAmbient_identDistrib_iidYs _ hq)
-      (fun x ↦ rdAmbient_iidXs_real_singleton_pos _ hq (wzSideInfoMarginal_pos P_XY κ' hκ'pos) x)
-      (fun y ↦ rdAmbient_iidYs_real_singleton_pos _ hq (wzSideInfoMarginal_pos P_XY κ' hκ'pos) y)
-      (fun p ↦ rdAmbient_jointSequence_real_singleton_pos _ hq
-        (wzSideInfoMarginal_pos P_XY κ' hκ'pos) p)
-      (wzMutualInfoYU (Fin k) q' - 3 * ε)
-      (le_of_eq (by rw [hbridge])) u
-  -- Measure reconciliation: the source `n`-fold `Y`-law is the `β`-image of the ambient's.
-  haveI : IsProbabilityMeasure ((ChannelCoding.pmfToMeasure
-      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})).map
-      Prod.snd) := Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
-  haveI : IsProbabilityMeasure ((rdAmbient (wzSideInfoMarginal P_XY κ')).map
-      (ChannelCoding.iidYs (α := Fin k) 0)) :=
-    Measure.isProbabilityMeasure_map (ChannelCoding.measurable_iidYs 0).aemeasurable
-  haveI : IsProbabilityMeasure (((rdAmbient (wzSideInfoMarginal P_XY κ')).map
-      (ChannelCoding.iidYs (α := Fin k) 0)).map Subtype.val) :=
-    Measure.isProbabilityMeasure_map hval_meas.aemeasurable
-  have hmeaseq : (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))).map
-        (fun p (i : Fin n) ↦ (p i).2)
-      = ((rdAmbient (wzSideInfoMarginal P_XY κ')).map
-          (jointRV (ChannelCoding.iidYs (α := Fin k)) n)).map
-          (fun (z : Fin n → {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) i ↦ ((z i : β))) := by
-    rw [wz_ambient_jointRV_iidYs_eq_pi P_XY κ' hκ'pos hκ'sum n,
-        Measure.pi_map_pi (hμ := fun _ ↦ inferInstance) (fun _ ↦ hval_meas.aemeasurable),
-        Measure.pi_map_pi (hμ := fun _ ↦ inferInstance) (fun _ ↦ measurable_snd.aemeasurable)]
-    refine congrArg Measure.pi (funext (fun _ ↦ ?_))
-    exact wz_source_snd_eq_ambient_snd_map P_XY κ' hκ'pos hκ'sum
-  -- Assemble the mass-transport chain.
-  have hYproj_meas : Measurable (fun p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-      fun i ↦ (p i).2) :=
-    measurable_pi_lambda _ (fun i ↦ measurable_snd.comp (measurable_pi_apply i))
-  have hΦ_meas : Measurable (fun z : Fin n → {y : β // 0 < ∑ x, P_XY.real {(x, y)}} ↦
-      fun i ↦ ((z i : β))) :=
-    measurable_pi_lambda _ (fun i ↦ hval_meas.comp (measurable_pi_apply i))
-  have hjrv_meas : Measurable (jointRV (ChannelCoding.iidYs (α := Fin k)
-      (β := {y : β // 0 < ∑ x, P_XY.real {(x, y)}})) n) :=
-    measurable_jointRV _ (fun i ↦ ChannelCoding.measurable_iidYs i) n
-  rw [show { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
-        (u, fun i ↦ (p i).2)
-          ∈ ChannelCoding.jointlyTypicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
-              ChannelCoding.iidXs
-              (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-                  ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε }
-      = (fun p (i : Fin n) ↦ (p i).2) ⁻¹' {y : Fin n → β | (u, y) ∈
-          ChannelCoding.jointlyTypicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
-            ChannelCoding.iidXs
-            (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-                ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε} from rfl,
-      ← map_measureReal_apply hYproj_meas (Set.toFinite _).measurableSet,
-      hmeaseq,
-      map_measureReal_apply hΦ_meas (Set.toFinite _).measurableSet,
-      hΦS,
-      map_measureReal_apply hjrv_meas (Set.toFinite _).measurableSet]
-  exact hD2
-
-/-- **(Leg D, A3) Codebook-restricted confusion (E2) probability is squeezable.** For a
-covering codebook of size `M₁ ≲ exp(n·R₁)` and `n` beyond a threshold, at the shared
-conditional-typicality radius `ε` (an explicit input, pinned to the covering-acceptance mass
-precondition and used as the bin-decoder radius) there is a derandomized index binning `f`
-making the bin-decoder confusion probability so small that `distortionMax dα' · Pr[E2] ≤ δ/4`.
-Combines the binning-averaged confusion exponent (S5b `wz_codebook_confusion_expectation_le`,
-fed D2 `wz_covering_codeword_sideInfo_mass_le` + collision `wzIndexBinningMeasure_collision`,
-instantiated over the positive-`Y`-marginal subtype `β'`), the binning derandomization, and
-the exponent squeeze (`hε_conf : R₁ − I(Y;U) + 3·ε < R`), with the source ↔ side-info-ambient
-identification.
-
-The covering codebook size upper bound `(M₁ : ℝ) ≤ exp(n·R₁) + 1` is a genuine precondition:
-the confusion count scales with the number of codewords, so the squeeze needs `M₁` capped near
-`⌈exp(n·R₁)⌉` (the size the covering theorem actually produces), not merely bounded below.
-
-Independent honesty audit 2026-07-11 (leg-0): checks 1-3 PASS (non-circular; non-bundled —
-the E2 probability is the CONCLUSION, not a hypothesis; the `(M₁ : ℝ) ≤ exp(n·R₁) + 1`
-precondition is a GENUINE size precondition, `hsplit` is the rate gap,
-`hκ'pos`/`hκ'sum`/`hfact_eq` are regularity). But the check-4 (sufficiency) note "confusion
-mass `M₁ · exp(−n·I_YU) / codebookSize R n → 0`" is **OVERTURNED** (independent adjudication
-2026-07-12): it is FALSE-AS-FRAMED on the covering-ACCEPTANCE axis.
-
-**OVERTURN (check-4 false negative, false-statement).** G2
-(`wz_expectedBlockDistortion_le_ideal_add_E2`, sorry-free) fixes `E2 = { p |
-wzBinTypicalDecoder … (f(enc x), y) ≠ c₁.decoder (c₁.encoder x) }`, i.e. the FULL "bin decoder
-fails to recover the true covering word" event. By `wzBinTypicalDecoder` (fallback to
-`Classical.arbitrary` unless the true word is jointly typical with `y` AND unique in its bin)
-and `wzBinTypicalDecoder_eq_of_unique` (recovery needs `htrue`: true word jointly typical), E2
-decomposes as `E2 ⊆ E2b {some other bin member typical, confusion}  ∪  C2 {true word NOT
-jointly typical, covering-acceptance failure}`. The overturned sufficiency note bounded only
-the E2b sub-exponent (via S5b+D2, `M₁·exp(−n·I_YU)/codebookSize → 0`) and mistook it for all of
-E2 — it silently dropped C2. C2 is UNCONTROLLED here: the ONLY hypothesis on `c₁` is the size
-cap `hM_ub`; there is NO covering-acceptance / typicality-mass lower bound (no `hmass`-style
-hyp as in S5a `wz_covering_failure_prob_le`, no random-codebook hyp). `LossyCode`
-(`RateDistortion/Achievability.lean:81`) is a bare structure (encoder/decoder only, no
-goodness constraint), so an adversarial size-capped `c₁` whose codewords are never jointly
-typical with the realized `y` (or all share one empirical type) is a valid witness of the
-`∀ c₁` — and for it, for EVERY prover choice `(ε, f)`: `ε` small ⇒ C2 always (acceptance
-fails) ⇒ fallback ⇒ Pr[E2]≈1; `ε` large ⇒ many typical members per bin (`M₁ ≫ codebookSize
-R n`) ⇒ uniqueness fails ⇒ fallback ⇒ Pr[E2]≈1. For generic `d` (`distortionMax dα' ≥ 1`) and
-small `δ`, `distortionMax dα' · Pr[E2] ≈ distortionMax dα' > δ/4`, refuting the conclusion. The
-`∀ c₁` does not even require the hcov₁ distortion bound, so distortion-goodness vs
-typicality-acceptance need not be shown to decouple (they do — `d'` constrains the (X,U)
-reconstruction, joint typicality is a (U,Y) empirical-type property).
-
-Why the three prior audits missed C2: the 2026-07-11 sufficiency note and the Leg C.6 4th-axis
-check ("no 3rd under-hyp axis beyond M") both treated A3's `distortionMax·Pr[E2] ≤ δ/4` as an
-ATOM (a settled sub-result of S5b/D2) and did not read inside E2; the acceptance axis (C2)
-lives strictly inside A3's conclusion and is a distinct under-hyp axis from the M-axis and
-distortion-failure E1 (E1, distortion `{ideal>P}`, was correctly dropped by G2; C2, typicality
-acceptance, was conflated with it and its bound S5a dead-judged).
-
-Pinned-ε rework applied 2026-07-12 (Leg E): the free-`∃ε`/`dα'`-scaling defect of the prior
-first move is fixed at the signature level. (1) The covering-acceptance mass is now PINNED at a
-single explicit radius `ε`, supplied as an input binder (not existentially quantified inside a
-precondition). The huge-`ε` regime that makes `wzCoveringAcceptFailSet` vacuously empty is
-excluded by `hε_conf : R₁ − I(Y;U) + 3·ε < R` — a rate inequality (same species as the RD rate
-condition / `hM_ub` / `hsplit`), NOT a claim that the conclusion follows without the AEP body.
-`ε` is chosen in D3 from the rate gap `gap = R − (R₁ − I(Y;U)) > 0` (`ε := gap/6`, so
-`3·ε = gap/2 < gap`) and threaded to BOTH the acceptance precondition and the decoder radius.
-(2) The `dα'`-vs-`d` scaling axis is closed by the definitional link `hd'_link : ∀ x' g,
-dα' x' g = d x'.1 g`, discharged by `rfl` at D3's call site (where `dα' := fun x' g ↦ d x'.1 g`;
-Leg-C.5-style reconciliation). The C2 (covering-acceptance) mass ≤ `δ/2/(8·(distortionMax d+1))`
-is a precondition-exposure of the covering code's own S5a/gateway-2 property (threaded from the
-strengthened covering family `hcov₁`), same kind as `hM_ub`; it is NOT the analytic core. The
-analytic bodies remain `sorry`: (a) the covering-acceptance mass bound (S5a/gateway-2 Fubini
-bridge, in the covering atom `wz_coveringFamily_of_testChannel`), and (b) the E2b confusion
-exponent → 0 (S5b/D2) union-bounded with the pinned C2 here — both `@residual(plan:wz-binning-covering)`.
-
-Degenerate-binder check (each free binder's degenerate extreme is blocked by an unsatisfiable
-hypothesis, not a hidden vacuity): `ε` huge ⇒ `hε_conf` false; `dα' ≫ d` (e.g. `dα' ≡ 5`,
-`d ≡ 0`) ⇒ `hd'_link` false; `M₁` inflated ⇒ `hM_ub` false; the mass is pinned at the single
-input `ε` (no residual `∃ ε` anywhere in A3 or its consumed `hcov₁`).
-
-Body filled 2026-07-12 (Leg E-A3): the confusion-probability architecture is now GENUINE
-and the body carries NO literal `sorry`. It proves `{decoder ≠ true covering word} ⊆ C2 ∪ E2b`
-(`wzBinTypicalDecoder_eq_of_unique` contrapositive), bounds C2 by the pinned `hcov_accept`
-premise, chooses the binning `f` by a single derandomization (`exists_le_integral` over
-`wzIndexBinningMeasure` + the abstract-`jts`-generalized S5b
-`wz_codebook_confusion_expectation_le`), and squeezes the confusion exponent to `0`
-(`wz_tendsto_exp_mul_codebookSize_inv`; the degenerate `M₁ ≤ 1` covering has an empty
-confusion event, handled by `Subsingleton (Fin M₁)`), then scales by
-`distortionMax dα' ≤ distortionMax d` (`hd'_link`). The SOLE remaining residual is the named
-sub-lemma `wz_source_codeword_sideInfo_mass_le` (the per-covering-codeword AEP mass bound —
-`wz_covering_codeword_sideInfo_mass_le` (D2) transported from the side-information ambient to
-the source product measure by side-information-marginal agreement + the entropy→pmf MI bridge),
-which A3 consumes to supply S5b's `hmass`. So A3 is TYPE-CHECK DONE with its residual isolated
-(and transitively inherited) into that mass-bound lemma, exactly like the covering-atom C2 leg.
-
-Independent honesty audit 2026-07-12 (Leg E pinned-ε rework): PASS at the signature level;
-the pinned-ε signature is honest and the C2 (4th) + dα'-d (5th) under-hyp axes are closed.
-The prior first-move DEFECT (free-`∃ε` vacuity + dα'-d scaling) is genuinely resolved.
-Degenerate-binder table verified (each extreme blocked by an UNSATISFIABLE hyp, not hidden
-vacuity): (i) `ε` huge ⇒ `hε_conf : R₁ − I(Y;U) + 3ε < R` false (LHS → ∞), forcing
-`ε < gap/3`; (ii) `dα' ≫ d` (e.g. `dα'≡5`, `d≡0`) ⇒ `hd'_link : ∀ x' g, dα' x' g = d x'.1 g`
-false — and since `hd'_link` forces `dα' = d∘(·.1)`, `distortionMax dα' ≤ distortionMax d`,
-killing the r5 5th-axis counterexample; (iii) `M₁` inflated ⇒ `hM_ub` false; (iv) the
-acceptance mass is PINNED at the single input `ε` with NO residual `∃ ε` (grep-confirmed: the
-only `∃ ε` in the file is prose). `wzCoveringAcceptFailSet` is the complement of the
-strict-`< ε` `jointlyTypicalSet` on a finite full-support space, so its mass is monotone
-DECREASING in `ε` — the pin is load-bearing (not trivially satisfiable at a goldilocks `ε`).
-Non-bundled: `hε_conf` (static rate inequality) / `hd'_link` (definitional) / the pinned
-`hcov_accept` (precondition-exposure of the covering code's S5a/gateway-2 property, threaded
-from `hcov₁`) are the same species as `hM_ub`/`hd'_eq`; `hε_conf` alone does NOT imply the
-conclusion — the C2 acceptance decay (covering-atom body) and the E2b confusion exponent → 0
-(S5b/D2) remain genuine `sorry`-body analytic work. `@residual(plan:wz-binning-covering)`
-classification correct (in-project constructive fix; plan slug present). Caller (D3)
-discharges: `hε_conf`/`hε_pos` by `linarith` (ε := gap/6 ⇒ 3ε = gap/2 < gap), `hd'_link` by
-`rfl` (dα' := fun x' g ↦ d x'.1 g), `hcov_accept` from the strengthened `hcov₁` at the same ε.
-
-Independent honesty audit 2026-07-12 (commit `d1f2445a`, post-fill body genuineness): PASS.
-The signature is confirmed FROZEN (byte-identical to the parent commit — only the body was
-filled). The now-`sorry`-free body is a GENUINE proof, not a circular `:= h` / `:True` slot /
-degenerate abuse: it proves the set inclusion `{decoder ≠ true word} ⊆ C2 ∪ E2b` (`hFAIL_incl`
-via the `wzBinTypicalDecoder_eq_of_unique` contrapositive), bounds C2 by the `hcov_accept`
-premise (`hC2`), bounds E2b by a single derandomization (`MeasureTheory.exists_le_integral`
-over `wzIndexBinningMeasure`) fed the abstract-`jts` S5b `wz_codebook_confusion_expectation_le`
-whose `hmass` is the transported D2 mass lemma `wz_source_codeword_sideInfo_mass_le` (`hE2b`,
-with the degenerate `M₁ ≤ 1` empty-confusion case handled by `Subsingleton (Fin M₁)`), then
-combines by measure subadditivity and squeezes to `δ/4` (`distortionMax dα' ≤ distortionMax d`
-via `hd'_link`). The body carries NO literal `sorry`; the SOLE residual is transitively
-inherited from the called `wz_source_codeword_sideInfo_mass_le` (independently audited PASS as
-an honest per-codeword mass atom, not laundering), so tier-2 `@residual(plan:wz-binning-covering)`
-is correct (NOT `@audit:ok` — transitive sorry remains).
-@audit:closed-by-successor(wz-binning-covering)
-@residual(plan:wz-binning-covering) -/
-lemma wz_exists_binning_E2_bound
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
-    (d : DistortionFn α γ) (R : ℝ) {k : ℕ} [Nonempty (Fin k)]
-    (κ' : α → Fin k → ℝ) (hκ'pos : ∀ x u, 0 < κ' x u) (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
-    (q' : α × β × Fin k → ℝ)
-    (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
-    (R₁ : ℝ) (ε : ℝ) (hε_pos : 0 < ε)
-    (hε_conf : R₁ - wzMutualInfoYU (Fin k) q' + 3 * ε < R)
-    (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
-    (dα' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} γ)
-    (hd'_link : ∀ x' g, dα' x' g = d x'.1 g)
-    (δ : ℝ) (hδ : 0 < δ) :
-    ∃ N_E2 : ℕ, ∀ n : ℕ, N_E2 ≤ n →
-      ∀ (M₁ : ℕ) (c₁ : LossyCode M₁ n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
-        (M₁ : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 →
-        (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-              P_XY.real {(p.1.1, p.2)}))).real
-          (wzCoveringAcceptFailSet P_XY κ' c₁ ε)
-          ≤ δ / 2 / (8 * (distortionMax d + 1)) →
-        ∃ f : Fin M₁ → Fin (codebookSize R n),
-          distortionMax dα' *
-            (Measure.pi (fun _ : Fin n ↦
-                ChannelCoding.pmfToMeasure (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-                    P_XY.real {(p.1.1, p.2)}))).real
-              { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
-                  wzBinTypicalDecoder (rdAmbient (wzSideInfoMarginal P_XY κ'))
-                      ChannelCoding.iidXs
-                      (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-                          ((ChannelCoding.iidYs i ω :
-                              {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
-                      ε c₁ f
-                      (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
-                    ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) }
-            ≤ δ / 4 := by
-  classical
-  -- The per-codeword AEP exponent supplied by D2 (transported to the source measure).
-  set IYU : ℝ := wzMutualInfoYU (Fin k) q' - 3 * ε with hIYU_def
-  -- Confusion decay (term A): `2·exp(m·(R₁−IYU))·(codebookSize R m)⁻¹ → 0`, since
-  -- `R₁ − IYU = R₁ − I(Y;U) + 3ε < R` (`hε_conf`).  The degenerate `M₁ ≤ 1` covering (empty
-  -- confusion) is handled separately in the body, so only this single-exponential term is needed.
-  obtain ⟨N_E2, hN_E2⟩ : ∃ N : ℕ, ∀ m : ℕ, N ≤ m →
-      2 * Real.exp ((m : ℝ) * (R₁ - IYU)) * ((codebookSize R m : ℝ))⁻¹
-        ≤ δ / 2 / (8 * (distortionMax d + 1)) := by
-    have hdd : (0 : ℝ) ≤ distortionMax d := distortionMax_nonneg d
-    have hc : R₁ - IYU < R := by rw [hIYU_def]; linarith [hε_conf]
-    have hL := wz_tendsto_exp_mul_codebookSize_inv hc
-    have h2 : Filter.Tendsto
-        (fun m : ℕ ↦ 2 * (Real.exp ((m : ℝ) * (R₁ - IYU)) * ((codebookSize R m : ℝ))⁻¹))
-        Filter.atTop (nhds 0) := by
-      have := hL.const_mul (2 : ℝ); simpa using this
-    have htol : 0 < δ / 2 / (8 * (distortionMax d + 1)) :=
-      div_pos (div_pos hδ (by norm_num)) (by positivity)
-    rw [Metric.tendsto_atTop] at h2
-    obtain ⟨N, hN⟩ := h2 (δ / 2 / (8 * (distortionMax d + 1))) htol
-    refine ⟨N, fun m hm ↦ ?_⟩
-    have hd := hN m hm
-    rw [Real.dist_eq, sub_zero,
-      abs_of_nonneg (by positivity : (0 : ℝ) ≤ 2 * (Real.exp ((m : ℝ) * (R₁ - IYU))
-        * ((codebookSize R m : ℝ))⁻¹))] at hd
-    rw [mul_assoc]
-    exact le_of_lt hd
-  refine ⟨N_E2, fun n hn M₁ c₁ hM_ub hcov_accept ↦ ?_⟩
-  -- Fixed-`n` abbreviations.
-  haveI hQ_prob : IsProbabilityMeasure
-      (ChannelCoding.pmfToMeasure
-        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
-    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
-  set SRC : Measure (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
-    Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
-    with hSRC_def
-  set AMB : Measure (ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) :=
-    rdAmbient (wzSideInfoMarginal P_XY κ') with hAMB_def
-  set iidYs' : ℕ → (ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) → β :=
-    fun i ω ↦ ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)
-    with hiidYs'_def
-  set jts : Set ((Fin n → Fin k) × (Fin n → β)) :=
-    ChannelCoding.jointlyTypicalSet AMB ChannelCoding.iidXs iidYs' n ε with hjts_def
-  have hjts_meas : MeasurableSet jts :=
-    ChannelCoding.measurableSet_jointlyTypicalSet AMB ChannelCoding.iidXs iidYs' n ε
-  -- The covering index of the source block, and the side-information block RV.
-  set trueIdx : (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) → Fin M₁ :=
-    fun p ↦ c₁.encoder (fun j ↦ (p j).1) with htrueIdx_def
-  set Ys : ℕ → (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) → β :=
-    fun i p ↦ if h : i < n then (p ⟨i, h⟩).2 else Classical.arbitrary β with hYs_def
-  have hjointRV : ∀ p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β,
-      jointRV Ys n p = fun i ↦ (p i).2 := by
-    intro p; funext i
-    simp only [jointRV, hYs_def, i.isLt, dif_pos]
-  -- STEP A (derandomize + S5b): a good binning `f` with confusion mass ≤ the count/bin ratio.
-  haveI hSRC_prob : IsProbabilityMeasure SRC := by rw [hSRC_def]; infer_instance
-  haveI hcs_ne : NeZero (codebookSize R n) := ⟨(codebookSize_pos R n).ne'⟩
-  have hYs_meas : ∀ i, Measurable (Ys i) := fun i ↦ measurable_of_finite _
-  have htrueIdx_meas : Measurable trueIdx := measurable_of_finite _
-  -- Per-covering-codeword AEP mass (D2 transported to the source measure).
-  have hmass : ∀ m' : Fin M₁,
-      SRC.real {p | (c₁.decoder m', jointRV Ys n p) ∈ jts}
-        ≤ Real.exp (-(n : ℝ) * IYU) := by
-    intro m'
-    have hset : {p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
-          (c₁.decoder m', jointRV Ys n p) ∈ jts}
-        = {p | (c₁.decoder m', fun i ↦ (p i).2) ∈ jts} := by
-      ext p; simp only [Set.mem_setOf_eq, hjointRV]
-    rw [hset, hIYU_def]
-    exact wz_source_codeword_sideInfo_mass_le P_XY κ' hκ'pos hκ'sum q' hfact_eq
-      ε hε_pos n (c₁.decoder m')
-  -- STEP A (derandomize + S5b): a good binning `f` with confusion mass ≤ the count/bin ratio.
-  obtain ⟨f, hf⟩ : ∃ f : Fin M₁ → Fin (codebookSize R n),
-      SRC.real {p | ∃ m' : Fin M₁, m' ≠ trueIdx p ∧ f m' = f (trueIdx p)
-          ∧ (c₁.decoder m', jointRV Ys n p) ∈ jts}
-        ≤ (M₁ : ℝ) * Real.exp (-(n : ℝ) * IYU) * ((codebookSize R n : ℝ))⁻¹ := by
-    set binMeas := wzIndexBinningMeasure M₁ (codebookSize R n) with hbin_def
-    have hG_int : Integrable
-        (fun g : Fin M₁ → Fin (codebookSize R n) ↦
-          SRC.real {p | ∃ m' : Fin M₁, m' ≠ trueIdx p ∧ g m' = g (trueIdx p)
-            ∧ (c₁.decoder m', jointRV Ys n p) ∈ jts}) binMeas :=
-      Integrable.of_finite
-    obtain ⟨f, hf_le⟩ := MeasureTheory.exists_le_integral hG_int
-    refine ⟨f, le_trans hf_le ?_⟩
-    have hcoll : ∀ m' m : Fin M₁, m' ≠ m →
-        binMeas.real {g | g m' = g m} = ((codebookSize R n : ℝ))⁻¹ :=
-      fun m' m h ↦ wzIndexBinningMeasure_collision h
-    exact wz_codebook_confusion_expectation_le SRC Ys c₁ trueIdx
-      hYs_meas htrueIdx_meas binMeas jts hjts_meas IYU hmass hcoll
-  refine ⟨f, ?_⟩
-  -- STEP B (set inclusion): the decoder recovers the true word off `C2 ∪ E2b`.
-  have hFAIL_incl :
-      { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
-          wzBinTypicalDecoder AMB ChannelCoding.iidXs iidYs' ε c₁ f
-              (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
-            ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) }
-        ⊆ wzCoveringAcceptFailSet P_XY κ' c₁ ε
-          ∪ {p | ∃ m' : Fin M₁, m' ≠ trueIdx p ∧ f m' = f (trueIdx p)
-              ∧ (c₁.decoder m', jointRV Ys n p) ∈ jts} := by
-    intro p hp
-    rw [Set.mem_union]
-    by_contra hpc
-    push_neg at hpc
-    obtain ⟨hpC2, hpE2b⟩ := hpc
-    apply hp
-    have htrue : (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2) ∈ jts := by
-      by_contra hcon
-      exact hpC2 hcon
-    have hunique : ∀ u : Fin n → Fin k,
-        (∃ m' : Fin M₁, f m' = f (c₁.encoder (fun j ↦ (p j).1)) ∧ c₁.decoder m' = u) →
-        (u, fun i ↦ (p i).2) ∈ jts →
-        u = c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) := by
-      rintro u ⟨m', hfm', hdec⟩ htyp
-      by_contra hne
-      refine hpE2b ⟨m', ?_, hfm', ?_⟩
-      · intro hm'eq
-        exact hne (by rw [← hdec, hm'eq])
-      · rw [hdec, hjointRV]; exact htyp
-    have hrec := wzBinTypicalDecoder_eq_of_unique AMB ChannelCoding.iidXs iidYs' ε c₁ f
-      (m₁ := c₁.encoder (fun j ↦ (p j).1)) (y := fun i ↦ (p i).2)
-      (by rw [← hjointRV] at htrue ⊢; exact htrue) ?_
-    · exact hrec
-    · intro u hex htyp
-      exact hunique u hex htyp
-  -- STEP C (measure subadditivity + hypotheses + threshold).
-  have hmeas_le :
-      SRC.real
-        { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
-            wzBinTypicalDecoder AMB ChannelCoding.iidXs iidYs' ε c₁ f
-                (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
-              ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) }
-        ≤ SRC.real (wzCoveringAcceptFailSet P_XY κ' c₁ ε)
-          + SRC.real {p | ∃ m' : Fin M₁, m' ≠ trueIdx p ∧ f m' = f (trueIdx p)
-              ∧ (c₁.decoder m', jointRV Ys n p) ∈ jts} := by
-    refine le_trans (measureReal_mono hFAIL_incl (by
-      exact measure_union_ne_top (measure_ne_top _ _) (measure_ne_top _ _))) ?_
-    exact measureReal_union_le _ _
-  -- STEP D (arithmetic).  `distortionMax dα' ≤ distortionMax d`, and each half ≤ `δ/16`.
-  have hdMax_le : distortionMax dα' ≤ distortionMax d := by
-    unfold distortionMax
-    refine Finset.sup'_le _ _ (fun q _ ↦ ?_)
-    rw [hd'_link]
-    exact Finset.le_sup' (f := fun ab : α × γ ↦ ((d ab.1 ab.2 : NNReal) : ℝ))
-      (Finset.mem_univ (q.1.1, q.2))
-  have hdMax_nn : 0 ≤ distortionMax dα' := distortionMax_nonneg dα'
-  have hd_nn : 0 ≤ distortionMax d := distortionMax_nonneg d
-  have hC2 : SRC.real (wzCoveringAcceptFailSet P_XY κ' c₁ ε)
-      ≤ δ / 2 / (8 * (distortionMax d + 1)) := hcov_accept
-  have hE2b : SRC.real {p | ∃ m' : Fin M₁, m' ≠ trueIdx p ∧ f m' = f (trueIdx p)
-        ∧ (c₁.decoder m', jointRV Ys n p) ∈ jts}
-      ≤ δ / 2 / (8 * (distortionMax d + 1)) := by
-    by_cases hM1 : 2 ≤ M₁
-    · -- `M₁ ≥ 2` ⇒ `exp(n·R₁) ≥ 1`, so `M₁ ≤ 2·exp(n·R₁)`; term-A decay finishes.
-      have hM2 : (2 : ℝ) ≤ (M₁ : ℝ) := by exact_mod_cast hM1
-      have hexp1 : (1 : ℝ) ≤ Real.exp ((n : ℝ) * R₁) := by linarith [hM_ub, hM2]
-      have hM1bound : (M₁ : ℝ) ≤ 2 * Real.exp ((n : ℝ) * R₁) := by linarith [hM_ub, hexp1]
-      refine le_trans hf (le_trans ?_ (hN_E2 n hn))
-      calc (M₁ : ℝ) * Real.exp (-(n : ℝ) * IYU) * ((codebookSize R n : ℝ))⁻¹
-          ≤ (2 * Real.exp ((n : ℝ) * R₁)) * Real.exp (-(n : ℝ) * IYU)
-              * ((codebookSize R n : ℝ))⁻¹ :=
-            mul_le_mul_of_nonneg_right
-              (mul_le_mul_of_nonneg_right hM1bound (Real.exp_nonneg _)) (by positivity)
-        _ = 2 * Real.exp ((n : ℝ) * (R₁ - IYU)) * ((codebookSize R n : ℝ))⁻¹ := by
-            rw [mul_assoc 2, ← Real.exp_add,
-              show (n : ℝ) * R₁ + -(n : ℝ) * IYU = (n : ℝ) * (R₁ - IYU) from by ring]
-    · -- `M₁ ≤ 1` ⇒ the confusion event is empty.
-      push_neg at hM1
-      haveI hsub : Subsingleton (Fin M₁) := by
-        rw [Fin.subsingleton_iff_le_one]; omega
-      have hempty : {p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
-          ∃ m' : Fin M₁, m' ≠ trueIdx p ∧ f m' = f (trueIdx p)
-            ∧ (c₁.decoder m', jointRV Ys n p) ∈ jts} = ∅ := by
-        ext p
-        simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_exists]
-        rintro m' ⟨hne, -, -⟩
-        exact hne (Subsingleton.elim m' (trueIdx p))
-      rw [hempty, measureReal_empty]
-      exact le_of_lt (div_pos (div_pos hδ (by norm_num)) (by positivity))
-  have hden_pos : 0 < 8 * (distortionMax d + 1) := by positivity
-  calc distortionMax dα' *
-        SRC.real
-          { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
-              wzBinTypicalDecoder AMB ChannelCoding.iidXs iidYs' ε c₁ f
-                  (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
-                ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) }
-      ≤ distortionMax dα' *
-          (δ / 2 / (8 * (distortionMax d + 1)) + δ / 2 / (8 * (distortionMax d + 1))) :=
-        mul_le_mul_of_nonneg_left (le_trans hmeas_le (add_le_add hC2 hE2b)) hdMax_nn
-    _ ≤ distortionMax d *
-          (δ / 2 / (8 * (distortionMax d + 1)) + δ / 2 / (8 * (distortionMax d + 1))) :=
-        mul_le_mul_of_nonneg_right hdMax_le (by positivity)
-    _ ≤ δ / 4 := by
-        have hXne : (8 * (distortionMax d + 1)) ≠ 0 := ne_of_gt hden_pos
-        have hkey : distortionMax d * (δ / 2 / (8 * (distortionMax d + 1))
-              + δ / 2 / (8 * (distortionMax d + 1)))
-            = distortionMax d * δ / (8 * (distortionMax d + 1)) := by
-          field_simp
-          ring
-        rw [hkey, div_le_iff₀ hden_pos]
-        nlinarith [mul_nonneg hd_nn hδ.le, hδ.le]
-
-/-- **(D3) Per-`n` Wyner–Ziv code family at a fixed covering rate (Steps 2–7).** Given
-the Step 1–2 covering data together with an already-chosen covering rate `R₁` (strictly
-above `I(X;U)`, so that `hcov₁` — the covering `LossyCode` family at rate `R₁` — is
-available) and the net-rate gap `hsplit : R₁ − I(Y;U) < R`, assemble the per-`n`
-Wyner–Ziv code family at the operational rate `R`: bin the covering index down to
-`codebookSize R n` messages (`wzIndexBinningMeasure`), decode by the bin
-conditional-typicality search (S3 `wzCodeOfCoveringBinning` / S4 `wzBinTypicalDecoder`),
-bound the covering-failure (S5a `wz_covering_failure_prob_le`, fed the mass lower bound
-via gateway 2 `wz_covering_sideInfo_mass_ge`) and the codebook-restricted
-decoder-confusion (S5b `wz_codebook_confusion_expectation_le`, fed the per-codeword mass
-upper bound via D2 `wz_covering_codeword_sideInfo_mass_le` and the collision
-`wzIndexBinningMeasure_collision` (B)) error events, extract a good deterministic
-codebook + binning by double derandomization
-(`exists_codebook_low_avg` / `exists_pair_le_of_binning_integral_le`), squeeze the
-residual distortion excess to `0` (`source_avg_distortion_le_simpler`,
-`ceil_exp_mul_exp_neg_tendsto_atTop`, `wz_tendsto_exp_mul_codebookSize_inv`), and extend
-the covering code `α' → α` (S7 `wzLiftSupportCode` +
-`wz_expectedBlockDistortion_source_agree`).
-
-The rate split is separated out: this lemma pins the covering rate `R₁` and the confusion
-exponent `I(Y;U)` explicitly, and consumes the covering family only at `R₁` (`hcov₁`);
-the choice of the intermediate covering rate `R₁ ∈ (I(X;U), …)` is the caller's glue
-(`wz_perDelta_covering_binning_eventual`, via the rate identity D1). No error-probability
-or decoder-correctness claim is a hypothesis: `hcov₁` is the separately-established
-rate-distortion covering `LossyCode` family (not the binned Wyner–Ziv code), and the
-binning rate reduction `I(X;U) → I(X;U) − I(Y;U)` together with the confusion exponent is
-the residual body content. `hobj'`/`hsplit`/`hfeas` are objective/feasibility
-preconditions on the test channel; positivity and simplex membership are regularity.
-
-Independent honesty audit 2026-07-06: honest residual, non-bundled. The sufficiency
-claim (4) below was OVERTURNED (leg-20, 2026-07-06) as false-as-framed and then honest-ified
-by the δ-split fix (Leg 0, 2026-07-11); see (4). (1)-(3) still hold. (1) Non-circular: no
-hypothesis has the conclusion's type. (2) Non-bundled (load-bearing test): `hcov₁` is the
-rate-distortion *covering* `LossyCode M n α' (Fin k)` family at covering rate `R₁`
-(≈ `I(X;U)`), NOT the binned `WynerZivCode (codebookSize R n)` at operational rate `R` —
-granting it hands the covering code only; the index binning (`M → ⌈exp(n·R)⌉` bins via
-`wzIndexBinningMeasure`), the bin conditional-typicality decoder (S4), and the confusion
-exponent (S5b) remain genuine body work. `hobj'`/`hsplit`/`hfeas` are rate/feasibility
-preconditions, not the operational conclusion; positivity, `hκ'sum`, simplex membership are
-regularity. (3) Non-degenerate: same `∃ c` inside `∀ n` shape as (D) — the `n < N` branch
-is benignly vacuous while the infinitely many `n ≥ N` require genuine codes. (4)
-Sufficiency — honest-as-framed since the δ-split fix (Leg 0, 2026-07-11). The earlier
-signature (exact `≤ D+δ` conclusion with `hfeas`/`hcov₁` *also* budgeted at `D+δ`) was
-FALSE-AS-FRAMED (leg-20 OVERTURN, mechanically confirmed): the WZ distortion decomposes
-(RD precedent `source_avg_distortion_le_simpler`) as good-event proxy +
-`distortionMax d · (P[E1]+P[E2])`, so spending the WHOLE `D+δ` budget on the proxy left no
-room for the strictly-positive finite-`n` error term (degenerate counterexample: proxy
-`= D+δ`, `distortionMax d = D+δ+η`, generic positive `P[error]` ⇒ WZ distortion `> D+δ`
-∀n). δ-split FIX: `hfeas` and `hcov₁`'s target are tightened to `D + δ/2`, reserving `δ/2`
-for the WZ errors (mirrors the RD sister `rate_distortion_achievability`'s `h_slack`). This
-is a PRECONDITION tightening, NOT bundling: the covering atom
-`wz_covering_lossyCode_exists` accepts any target `≤ D` and returns `≤ target + ε'`, so
-`D + δ/2` is genuinely achievable; the reserved `δ/2` is absorbed by the error exponents
-(S5a/S5b/D2/(B) → 0), which is real analytic work (Leg C), not encoded into a hypothesis.
-The conclusion `≤ D+δ` is unchanged and the body stays `sorry`.
-
-**Reconciliation now threaded (Leg C.5, 2026-07-11).** The distinct
-under-hypothesization axis the Leg-0 audit missed is now closed at the signature level.
-Previously `d'` (covering proxy `DistortionFn α' (Fin k)`) and `qf` (test channel +
-reconstruction `Fin k × β → γ`) arrived as OPAQUE, mutually-unrelated parameters — no
-hypothesis tied `d'` to the real distortion `d` via `qf.2` (degenerate counterexample:
-`d' := 0` makes `hfeas`/`hcov₁` trivially hold while the WZ code's real distortion under
-`d ∘ qf.2` is unconstrained, so `≤ D+δ` would fail). Two non-load-bearing preconditions
-(same kind as `hfact_eq`/`hqStar_eq`) close that gap: `hd'_eq` pins `d'` to the
-`Y`-conditional expectation of `d ∘ qf.2` (exactly `wz_coveringDistortion_reconcile`,
-L872) and `hqf` supplies the test channel's `WynerZivFactorizableConstraint` membership.
-Both are discharged by construction in `wz_coveringFamily_of_testChannel` (L957): `hd'_eq`
-by `rfl` (the returned `d'` witness IS that expression) and `hqf` = the original input.
-The distortion-decomposition bridge (Leg C `wz_covering_binning_distortion_decomp`) is
-built standalone and NOT on top of this — the signature is now honest and the `sorry` is
-honestly closeable as-framed.
-
-Independent honesty audit 2026-07-11 (Leg C.5, reconciliation axis): PASS. Every
-distortion-relevant parameter is load-bearing (no surviving degenerate counterexample):
-`hd'_eq` pins `d'` to `𝔼_{Y|X}[d ∘ qf.2]` — the `d' := 0` counterexample is killed since
-`d' = 0` now forces `d ∘ qf.2 = 0` on the support (`d ≥ 0`, weighted `toNNReal`), so the
-real WZ distortion is genuinely 0; `hqStar_eq`+`hκ'sum` pin `qStar`'s X-marginal to `P_X`
-(source-consistency, no third gap); `hfeas`+reconcile (`f := qf.2`) equate the covering
-budget under `d'` with `wzExpectedDistortion d q' qf.2`, connecting the proxy budget to the
-real block distortion (over `P_XY^n`) via `qf.2`, the SAME reconstruction that
-`wzCodeOfCoveringBinning`/the Leg-C decomposition bridge use. `hqf` is a legitimate
-factorizability/feasibility precondition (redundant-but-honestly-discharged for the
-distortion axis, supplies the Markov `U-X-Y` structure), NOT load-bearing on the operational
-conclusion. Both new hyps discharged by construction at the caller
-(`wz_coveringFamily_of_testChannel`, L961: `hd'_eq` by `rfl` since the returned `d'` witness
-IS that expression, `hqf` = the pre-`rw` input copy `hqf₀`), and threaded — not dropped or
-re-proven — through D/S6/`wz_perDelta_codes_exist`. Caller sorryAx-free (`#print axioms` =
-`[propext, Classical.choice, Quot.sound]`); D3 carries only transitive `sorryAx` from its own
-body. (The Leg-C.5 audit's "no third axis" conclusion is OVERTURNED — see the M-axis finding
-below.)
-Classification `plan` correct (in-project, not a Mathlib wall).
-
-M-axis under-hypothesization (Leg D finding) resolved by Leg C.6: `hcov₁` now exposes, in
-addition to the covering-size lower bound `⌈exp(n·R₁)⌉ ≤ M`, the matching upper bound
-`(M : ℝ) ≤ exp(n·R₁) + 1`. This is not a hypothesis carrying the proof's core — it is the
-size the rate-distortion covering theorem actually produces (`M = ⌈exp(n·R₁)⌉`,
-`Nat.ceil_lt_add_one`), a precondition tightening (Leg-0/Leg-C.5-style) re-exposed from the
-covering construction and threaded through D/S6/`wz_perDelta_codes_exist`, discharged by
-construction at `wz_coveringFamily_of_testChannel`. It closes the former inflated-`M`
-counterexample (redundant covering codewords satisfying `hcov₁` while driving `Pr[E2] → 1`):
-the E2 squeeze (A3 `wz_exists_binning_E2_bound`) needs `M` bounded ABOVE, now supplied by the
-covering family together with the codebook `c₁`. The D3 signature is therefore honest in the
-M-direction (TRUE-as-framed); the headline signature
-(`wz_goodCode_exists_of_testChannel` / `wyner_ziv_achievability`) is untouched (parent #9 crux
-invariant). The remaining residual is transitive from the still-open A2
-(`wz_ideal_expectation_eq_covering`) / A3 (`wz_exists_binning_E2_bound`) sub-lemmas.
-
-Independent honesty audit 2026-07-11 (Leg C.6, M-axis): PASS, tier-2 `@residual` retained
-(A2/A3 open, so NOT `@audit:ok`). Confirmed: the M-axis `hM_ub` `sorry` is genuinely removed —
-D3's own body is now `sorry`-free (only A2/A3 emit `sorry` warnings), and the threaded upper
-bound is the genuine ceiling size the RD covering theorem produces (`witness_form_strong`'s
-`Mn = ⌈exp(n·R)⌉` + `Nat.ceil_lt_add_one`, machine-verified `sorry`-free), a non-load-bearing
-precondition tightening. Fourth-axis sufficiency check (M was the 4th under-hyp axis): the
-conclusion's driving quantities are all now constrained — covering distortion `≤ (D+δ/2)+δ/4`
-(hcov₁+A2), `distortionMax·Pr[E2] ≤ δ/4` (A3, now fed the M cap), `M` bounded BOTH sides,
-bins `= codebookSize R n` fixed by `(R,n)`, `I(Y;U)` fixed by `q'` via `hfact_eq`, `hsplit`
-present; the inflated-`M` counterexample is closed and no residual degenerate substitution
-(δ→0 barred by `hδ`, M-boundary capped, generic `d`) refutes the framed statement.
-@residual(plan:wz-binning-covering) -/
-lemma wz_perN_covering_binning_code
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    (d : DistortionFn α γ) (R D : ℝ)
-    (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
-    (δ : ℝ) (hδ : 0 < δ)
-    (q' : α × β × Fin k → ℝ) (κ' : α → Fin k → ℝ)
-    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
-    (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
-    (R₁ : ℝ)
-    (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
-    (hκ'pos : ∀ x u, 0 < κ' x u)
-    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
-    (hobj' : wzMutualInfoXU (Fin k) q' - wzMutualInfoYU (Fin k) q' < R)
-    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
-    (hqStar_pos : ∀ p, 0 < qStar p)
-    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
-    (hfeas : expectedDistortionPmf d' qStar ≤ D + δ / 2)
-    (hd'_eq : ∀ x' u, d' x' u = Real.toNNReal (∑ y : β,
-        (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
-          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
-    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
-            (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
-    (hsplit : R₁ - wzMutualInfoYU (Fin k) q' < R)
-    (hcov₁ : ∀ ε' : ℝ, 0 < ε' → ∀ ε : ℝ, 0 < ε →
-        ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
-          Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
-          (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 ∧
-          ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
-            c.expectedBlockDistortion
-                ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
-              ≤ (D + δ / 2) + ε'
-            ∧ (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-                  (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-                    P_XY.real {(p.1.1, p.2)}))).real
-                (wzCoveringAcceptFailSet P_XY κ' c ε)
-                ≤ δ / 2 / (8 * (distortionMax d + 1))) :
-    ∃ N : ℕ, ∀ n : ℕ, ∃ c : WynerZivCode (codebookSize R n) n α β γ,
-      N ≤ n → c.expectedBlockDistortion P_XY d ≤ D + δ := by
-  classical
-  -- The auxiliary covering alphabet is nonempty (the row-stochastic kernel of the
-  -- factorisable test channel forces `k > 0`).
-  haveI hkne : Nonempty (Fin k) := wz_nonempty_of_factorizable hqf.1
-  -- Reduce the `∃ N, ∀ n, ∃ c, N ≤ n → …` conclusion to the per-`n` (for `n ≥ N`)
-  -- code-existence claim; the `n < N` branch is discharged by an arbitrary inhabitant of
-  -- `WynerZivCode` (available since `[Nonempty γ]` and `codebookSize R n > 0`).
-  suffices hfam : ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
-      ∃ c : WynerZivCode (codebookSize R n) n α β γ,
-        c.expectedBlockDistortion P_XY d ≤ D + δ by
-    obtain ⟨N, hN⟩ := hfam
-    refine ⟨N, fun n => ?_⟩
-    by_cases hn : N ≤ n
-    · obtain ⟨c, hc⟩ := hN n hn
-      exact ⟨c, fun _ => hc⟩
-    · exact ⟨{ encoder := fun _ => ⟨0, codebookSize_pos R n⟩,
-                decoder := fun _ _ => Classical.arbitrary γ },
-             fun hle => absurd hle hn⟩
-  -- ═══════════════════════════════════════════════════════════════════════════
-  -- Analytic core (Legs A–D). Six-step assembly; STEP 1 (covering-side derandomize) and
-  -- STEP 6 outer packaging (the `wzLiftSupportCode` factorization) are genuine glue below;
-  -- STEPS 1'–5 + inner Step 6 remain a `sorry` tagged `@residual(plan:wz-binning-covering)`.
-  -- ═══════════════════════════════════════════════════════════════════════════
-  -- The source-support subtype `α'` is nonempty (its `stdSimplex` pmf `qStar` has total
-  -- mass `1 ≠ 0`), so it has an inhabitant `x₀` for the `α' → α` support lift and the
-  -- `Nonempty α'` instance the E2-squeeze adapter (A3) needs.
-  haveI hne_prod :
-      Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
-    Finset.univ_nonempty_iff.mp
-      (Finset.nonempty_of_sum_ne_zero (by rw [hqStar_mem.2]; exact one_ne_zero))
-  haveI hneα' : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} :=
-    hne_prod.map Prod.fst
-  -- STEP 1 (derandomize, covering side — genuine).  Feed `hcov₁` at slack `ε' := δ/4` to
-  -- obtain the covering threshold `N_cov` and, for every `n ≥ N_cov`, the covering codebook
-  -- `c₁ : LossyCode M n α' (Fin k)` whose covering distortion — over the i.i.d. covering
-  -- ambient `(rdAmbient qStar).map (iidXs 0)`, w.r.t. the proxy `d'` — is `≤ (D+δ/2)+δ/4`,
-  -- with codebook size `M ≥ ⌈exp(n·R₁)⌉`.
-  -- Choose the shared conditional-typicality radius `ε` from the rate gap `hsplit`.  The
-  -- covering-acceptance mass (C2) and the decoder-confusion (E2b) are bound at the SAME
-  -- radius `ε`; the huge-`ε` regime that makes `wzCoveringAcceptFailSet` vacuously empty is
-  -- excluded by `hε_conf : R₁ − I(Y;U) + 3·ε < R` (`3·ε = gap/2 < gap`).
-  set ε : ℝ := (R - (R₁ - wzMutualInfoYU (Fin k) q')) / 6 with hε_def
-  have hε_pos : 0 < ε := by rw [hε_def]; linarith [hsplit]
-  have hε_conf : R₁ - wzMutualInfoYU (Fin k) q' + 3 * ε < R := by rw [hε_def]; linarith [hsplit]
-  obtain ⟨N_cov, hN_cov⟩ := hcov₁ (δ / 4) (div_pos hδ (by norm_num)) ε hε_pos
-  -- STEP 4 / 1' (binning-side derandomize + E2 squeeze, Leg D A3).  Obtain the confusion
-  -- threshold `N_E2`: beyond it, for a covering codebook of size `M ≲ exp(n·R₁)`, a good
-  -- binning `f` (radius `ε`) makes `distortionMax dα' · Pr[E2] ≤ δ/4`.
-  obtain ⟨N_E2, hN_E2⟩ :=
-    wz_exists_binning_E2_bound P_XY d R κ' hκ'pos hκ'sum q' hfact_eq R₁ ε hε_pos hε_conf qf
-      (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g) (fun _ _ => rfl) δ hδ
-  refine ⟨max N_cov N_E2, fun n hn => ?_⟩
-  obtain ⟨M, hM_ge, hM_ub, c₁, hc₁_dist, hAccept⟩ := hN_cov n (le_trans (le_max_left _ _) hn)
-  have x₀ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := Classical.arbitrary _
-  -- ═══════════════════════════════════════════════════════════════════════════
-  -- STEP 6 (outer packaging — genuine).  The Wyner–Ziv code is the `α' → α` support lift
-  -- (`wzLiftSupportCode`) of a support-restricted code `codeSupp` over the source-support
-  -- subtype `α'`.  This factors the α-side conclusion through the α'-side construction; the
-  -- remaining source-measure transport / proxy reconciliation (the *inner* half of Step 6)
-  -- lives inside the `codeSupp` existential below.
-  -- ═══════════════════════════════════════════════════════════════════════════
-  suffices hsupp : ∃ codeSupp : WynerZivCode (codebookSize R n) n
-      {x : α // 0 < ∑ y, P_XY.real {(x, y)}} β γ,
-      (wzLiftSupportCode P_XY x₀ codeSupp).expectedBlockDistortion P_XY d ≤ D + δ by
-    obtain ⟨codeSupp, hcodeSupp⟩ := hsupp
-    exact ⟨wzLiftSupportCode P_XY x₀ codeSupp, hcodeSupp⟩
-  -- ═══════════════════════════════════════════════════════════════════════════
-  -- STEPS 1'–5 + inner Step 6 (E2-only assembly via the Leg D adapters G2/A1/A2/A3):
-  --   A3 (`hN_E2`) → binning `f` + radius `ε` with `distortionMax dα' · Pr[E2] ≤ δ/4`;
-  --   A1 (`wz_lift_expectedBlockDistortion_eq`)  : lift identity `P_XY,d ↦ Q_XY,dα'`;
-  --   G2 (`wz_expectedBlockDistortion_le_ideal_add_E2`) : actual ≤ ideal + dMax·Pr[E2];
-  --   A2 (`wz_ideal_expectation_eq_covering`) : ideal = covering distortion ≤ (D+δ/2)+δ/4.
-  -- Arithmetic: ((D+δ/2)+δ/4) + δ/4 = D+δ.
-  -- ═══════════════════════════════════════════════════════════════════════════
-  -- Covering codebook size cap (M-direction).  The confusion count scales with the number
-  -- of covering codewords, so A3 needs `M ≲ exp(n·R₁)`.  The matching upper bound
-  -- `(M : ℝ) ≤ exp(n·R₁) + 1` is the size the covering theorem actually produces (`M =
-  -- ⌈exp(n·R₁)⌉`, `Nat.ceil_lt_add_one`); it is threaded through `hcov₁` (Leg C.6), so
-  -- `hM_ub` is now supplied by the covering family together with the codebook `c₁`.
-  obtain ⟨f, hE2⟩ := hN_E2 n (le_trans (le_max_right _ _) hn) M c₁ hM_ub hAccept
-  -- The co-restricted source measure `Q_XY` is a probability measure.
-  haveI hQ_prob : IsProbabilityMeasure
-      (ChannelCoding.pmfToMeasure
-        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
-    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
-  -- Assemble the support-restricted covering + binning code and bound its distortion.
-  refine ⟨wzCodeOfCoveringBinning c₁ f qf.2
-      (wzBinTypicalDecoder (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs
-        (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-            ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
-        ε c₁ f), ?_⟩
-  rw [wz_lift_expectedBlockDistortion_eq P_XY d x₀ _]
-  calc (wzCodeOfCoveringBinning c₁ f qf.2
-          (wzBinTypicalDecoder (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs
-            (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-                ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
-            ε c₁ f)).expectedBlockDistortion
-          (ChannelCoding.pmfToMeasure
-            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
-          (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g)
-      ≤ (∫ p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β,
-            blockDistortion (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g) n
-              (fun i ↦ (p i).1)
-              (fun i ↦ qf.2 (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2))
-          ∂(Measure.pi (fun _ : Fin n ↦
-              ChannelCoding.pmfToMeasure
-                (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-                  P_XY.real {(p.1.1, p.2)}))))
-        + distortionMax (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g)
-          * (Measure.pi (fun _ : Fin n ↦
-                ChannelCoding.pmfToMeasure
-                  (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-                    P_XY.real {(p.1.1, p.2)}))).real
-              { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
-                  wzBinTypicalDecoder (rdAmbient (wzSideInfoMarginal P_XY κ'))
-                      ChannelCoding.iidXs
-                      (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-                          ((ChannelCoding.iidYs i ω :
-                              {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
-                      ε c₁ f
-                      (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
-                    ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) } :=
-        wz_expectedBlockDistortion_le_ideal_add_E2 (rdAmbient (wzSideInfoMarginal P_XY κ'))
-          ChannelCoding.iidXs
-          (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-              ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
-          ε c₁ f qf.2 (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g)
-          (ChannelCoding.pmfToMeasure
-            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
-    _ = c₁.expectedBlockDistortion ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
-          + distortionMax (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g)
-            * (Measure.pi (fun _ : Fin n ↦
-                  ChannelCoding.pmfToMeasure
-                    (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-                      P_XY.real {(p.1.1, p.2)}))).real
-                { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
-                    wzBinTypicalDecoder (rdAmbient (wzSideInfoMarginal P_XY κ'))
-                        ChannelCoding.iidXs
-                        (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
-                            ((ChannelCoding.iidYs i ω :
-                                {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
-                        ε c₁ f
-                        (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
-                      ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) } := by
-        rw [wz_ideal_expectation_eq_covering P_XY d κ' hκ'sum qStar hqStar_eq hqStar_mem d' qf
-          hd'_eq c₁]
-    _ ≤ ((D + δ / 2) + δ / 4) + δ / 4 := by linarith [hc₁_dist, hE2]
-    _ = D + δ := by ring
-
-/-- **(D) Per-slack per-`n` good deterministic Wyner–Ziv code (Steps 3–6).** Consuming
-the same Step 1–2 covering data as the capstone `wz_perDelta_covering_binning` (S6),
-produce for every block length `n` a Wyner–Ziv code at the operational rate `R`
-(`codebookSize R n` messages), together with a single threshold `N` beyond which the
-code's expected block distortion is within `D + δ`.
-
-Decomposition (leg-19): this lemma's body is now the sorry-free **rate-split glue**.
-Step 1 uses the rate identity `wz_mutualInfo_restriction_eq` (D1, closed sorry-free) to
-pick an intermediate covering rate `R₁ ∈ (I(X;U), …)` with `R₁ − I(Y;U) < R`, feeds the
-covering family `hcov` at `R₁`, and hands the whole per-`n` construction (Steps 2–7) to
-the giant `wz_perN_covering_binning_code` (D3). D3 bins the covering index to
-`codebookSize R n` messages (`wzIndexBinningMeasure`), decodes by the bin
-conditional-typicality search (`wzBinTypicalDecoder`, S4) reconstructing `γ^n` via
-`wzCodeOfCoveringBinning` (S3), bounds the covering-failure (S5a
-`wz_covering_failure_prob_le`) and codebook-restricted decoder-confusion (S5b
-`wz_codebook_confusion_expectation_le`, whose per-codeword mass upper bound is the AEP
-crux `wz_covering_codeword_sideInfo_mass_le`, D2) error events, derandomizes
-(`exists_codebook_low_avg` / `exists_pair_le_of_binning_integral_le`), squeezes the
-distortion to `D + δ` (`source_avg_distortion_le_simpler`,
-`ceil_exp_mul_exp_neg_tendsto_atTop`), and extends the source `α' → α` (`wzLiftSupportCode`
-S7 + the sorry-free `wz_expectedBlockDistortion_source_agree`).
-
-The capstone `wz_perDelta_covering_binning` (S6) is the pure `Filter.atTop`/choice glue
-over this lemma. The hypotheses are the identical genuine Step 1–2 covering data /
-regularity as S6 (no error-probability or decoder-correctness claim is a hypothesis).
-
-Independent honesty audit 2026-07-06 (pre-decomposition): honest residual, non-bundled.
-The 13 covering-data hypotheses (`q'`/`κ'`/`qStar`/`d'` witnesses + `hfact_eq`/`hκ'pos`/
-`hκ'sum`/`hobj'`/`hqStar_eq`/`hqStar_pos`/`hqStar_mem`/`hfeas`/`hcov`) are identical to
-S6's modulo the conclusion shape and pass the joint core-reconstruction test: granting all
-13 hands you a feasible test channel plus a *covering* `LossyCode` family at the covering
-rate `R₁`, but NOT the WZ binned code at the operational rate `R` — the index binning (to
-`codebookSize R n` messages), the bin conditional-typicality decoder, and the
-confusion-error exponent remain genuine work, now in the (stubbed) bodies of D2/D3 that
-this glue consumes. `hobj'` is the rate objective and `hfeas` the distortion
-feasibility (preconditions on the test channel, not the operational conclusion); `hcov` is
-the separately-established rate-distortion covering result, not a restatement of this
-lemma's WZ claim (the binning rate reduction `I(X;U) → I(X;U)−I(Y;U)` is the sorry content
-of D3). The residual is now transitive (D1 closed sorry-free; the `sorryAx` is inherited
-from D2/D3 via the sorry-free glue).
-Conclusion shape `∃ N, ∀ n, ∃ c, N ≤ n → dist ≤ D + δ` is non-degenerate: `∃ c` sits inside
-`∀ n` (per-block-length code) and the `n < N` branch is benignly vacuous (`WynerZivCode` is
-inhabited via `[Nonempty γ]` + `codebookSize_pos`), so the claim is NOT trivially true — for
-the infinitely many `n ≥ N` a genuinely good code is required (no large-`N` escape).
-Classification `plan:wyner-ziv-main-plan` correct.
-
-Body glue re-audited 2026-07-06 (body changed this leg: `sorry` → rate-split glue). The
-glue does genuine rate-split work, not a rename/reshape of D3: it (a) uses D1
-(`wz_mutualInfo_restriction_eq`) to identify the covering premise `mutualInfoPmf qStar`
-with `I(X;U)`, (b) *constructs* an intermediate covering rate
-`R₁ = I(X;U) + (R − (I(X;U) − I(Y;U)))/2` and proves both `mutualInfoPmf qStar < R₁` and
-`hsplit : R₁ − I(Y;U) < R` by `linarith [hobj']`, then (c) specialises `hcov` to `R₁` and
-hands off to D3 (`wz_perN_covering_binning_code`), which takes `R₁`/`hsplit`/`hcov₁` as
-GIVEN. The `R₁` existence + rate arithmetic is real work done here. Signature (binders +
-conclusion) unchanged from before the commit (verified by diff). `#print axioms` =
-`[propext, sorryAx, Classical.choice, Quot.sound]` (transitive `sorryAx` from the stubbed
-D2/D3), so tier-2 `@residual`, NOT `@audit:ok`. The only remaining `sorry` in the whole
-chain is D3, so the transitive residual is repointed to D3's closure vehicle (the child
-plan `wz-binning-covering`, the SoT established by the Leg-0 δ-split).
-@residual(plan:wz-binning-covering) -/
-lemma wz_perDelta_covering_binning_eventual
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    (d : DistortionFn α γ) (R D : ℝ)
-    (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
-    (δ : ℝ) (hδ : 0 < δ)
-    (q' : α × β × Fin k → ℝ) (κ' : α → Fin k → ℝ)
-    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
-    (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
-    (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
-    (hκ'pos : ∀ x u, 0 < κ' x u)
-    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
-    (hobj' : wzMutualInfoXU (Fin k) q' - wzMutualInfoYU (Fin k) q' < R)
-    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
-    (hqStar_pos : ∀ p, 0 < qStar p)
-    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
-    (hfeas : expectedDistortionPmf d' qStar ≤ D + δ / 2)
-    (hd'_eq : ∀ x' u, d' x' u = Real.toNNReal (∑ y : β,
-        (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
-          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
-    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
-            (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
-    (hcov : ∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' → ∀ ε : ℝ, 0 < ε →
-        ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
-          Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
-          (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 ∧
-          ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
-            c.expectedBlockDistortion
-                ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
-              ≤ (D + δ / 2) + ε'
-            ∧ (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-                  (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-                    P_XY.real {(p.1.1, p.2)}))).real
-                (wzCoveringAcceptFailSet P_XY κ' c ε)
-                ≤ δ / 2 / (8 * (distortionMax d + 1))) :
-    ∃ N : ℕ, ∀ n : ℕ, ∃ c : WynerZivCode (codebookSize R n) n α β γ,
-      N ≤ n → c.expectedBlockDistortion P_XY d ≤ D + δ := by
-  -- Step 1 (rate split): the covering rate identity D1 lets the covering family `hcov`
-  -- be fed at a covering rate `R₁` strictly above `I(X;U) = mutualInfoPmf qStar`, chosen
-  -- so the net rate `R₁ − I(Y;U)` still lies below `R` (the Wyner–Ziv objective `hobj'`).
-  -- The per-`n` construction (Steps 2–7) is then the giant `wz_perN_covering_binning_code`.
-  have hid : mutualInfoPmf qStar = wzMutualInfoXU (Fin k) q' :=
-    wz_mutualInfo_restriction_eq P_XY k q' κ' qStar hfact_eq hκ'sum hqStar_eq
-  obtain ⟨R₁, hR₁_lb, hsplit⟩ :
-      ∃ R₁ : ℝ, mutualInfoPmf qStar < R₁
-        ∧ R₁ - wzMutualInfoYU (Fin k) q' < R := by
-    refine ⟨wzMutualInfoXU (Fin k) q'
-        + (R - (wzMutualInfoXU (Fin k) q' - wzMutualInfoYU (Fin k) q')) / 2, ?_, ?_⟩
-    · rw [hid]; linarith [hobj']
-    · linarith [hobj']
-  exact wz_perN_covering_binning_code P_XY d R D k qf δ hδ q' κ' qStar d'
-    R₁ hfact_eq hκ'pos hκ'sum hobj' hqStar_eq hqStar_pos hqStar_mem hfeas hd'_eq hqf hsplit
-    (fun ε' hε' => hcov R₁ hR₁_lb ε' hε')
-
-/-- **(S6) Covering + binning capstone (Steps 3–7).** Consuming the Step 1–2 covering
-data (the full-support factorisable joint `q'` with kernel `κ'`, the restricted
-covering joint `qStar`, the covering proxy distortion `d'`, the covering feasibility
-`hfeas`, and the covering `LossyCode` family `hcov`), assemble the per-slack Wyner–Ziv
-code family at the operational rate `R`: bin the covering index down to
-`codebookSize R n` messages, decode by the bin conditional-typicality search (S3/S4),
-bound the covering-failure (S5a) and codebook-restricted decoder-confusion (S5b) error
-events, extract a good deterministic codebook + binning by double derandomization
-(`exists_codebook_low_avg` / `exists_pair_le_of_binning_integral_le`), squeeze the
-residual distortion excess to `0` (`source_avg_distortion_le_simpler`,
-`ceil_exp_mul_exp_neg_tendsto_atTop`), and extend the covering code `α' → α`
-(`wzLiftSupportCode` + `wz_expectedBlockDistortion_source_agree`).
-
-All hypotheses are genuine covering data / regularity produced by Steps 1–2 — the
-covering `LossyCode` family, the distortion feasibility, positivity and simplex
-membership. No error-probability or decoder-correctness claim is a hypothesis (those
-are derived in the body via S5a/S5b). The body is now the pure `Filter.atTop`/choice
-glue over `wz_perDelta_covering_binning_eventual` (D), which carries all the covering +
-binning content; S6 itself is `sorry`-free and its residual is transitive (inherited
-from (D)).
-
-Independent honesty audit 2026-07-06: honest residual — signature PASSES the
-core-reconstruction test. Granting the 13 hypotheses (`q'`/`κ'`/`qStar`/`d'` witnesses +
-factorisation/positivity/simplex/feasibility, and `hcov` = the Step 1–2 covering
-`LossyCode` family) does NOT hand you the binned WZ-code achievability: the binning, the
-bin-decoder, and the confusion-error exponent remain genuine proof work — now in the
-body of `wz_perDelta_covering_binning_eventual` (D), which S6 consumes as sorry-free
-glue — none is smuggled into a hypothesis. `hobj'` is the rate objective (precondition,
-not the conclusion); `hcov` is the separately-established rate-distortion covering result,
-not a bundling of S6's own claim. Classification `plan` (in-project binning composition,
-not a Mathlib gap) is correct.
-
-Body glue re-audited 2026-07-06 (body changed this leg): `obtain … := …_eventual …;
-choose c hc using hN; exact ⟨c, Filter.eventually_atTop.2 ⟨N, fun n hn => hc n hn⟩⟩`
-genuinely derives S6's `∃ c, ∀ᶠ n, …` from (D)'s `∃ N, ∀ n, ∃ c, N ≤ n → …` — `choose`
-extracts the per-`n` codes into the sequence, `eventually_atTop` packages the threshold
-`N`, no hidden `sorry`, no weakening. The decl still carries a *transitive* residual
-(`#print axioms` = `[propext, sorryAx, Classical.choice, Quot.sound]`, the `sorryAx`
-inherited from the stubbed (D)), so it remains tier-2 `@residual`, NOT `@audit:ok`. The
-sole remaining `sorry` is D3, so the transitive residual points at D3's closure vehicle.
-@residual(plan:wz-binning-covering) -/
-lemma wz_perDelta_covering_binning
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    (d : DistortionFn α γ) (R D : ℝ)
-    (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
-    (δ : ℝ) (hδ : 0 < δ)
-    (q' : α × β × Fin k → ℝ) (κ' : α → Fin k → ℝ)
-    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
-    (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
-    (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
-    (hκ'pos : ∀ x u, 0 < κ' x u)
-    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
-    (hobj' : wzMutualInfoXU (Fin k) q' - wzMutualInfoYU (Fin k) q' < R)
-    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
-    (hqStar_pos : ∀ p, 0 < qStar p)
-    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
-    (hfeas : expectedDistortionPmf d' qStar ≤ D + δ / 2)
-    (hd'_eq : ∀ x' u, d' x' u = Real.toNNReal (∑ y : β,
-        (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
-          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
-    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
-            (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
-    (hcov : ∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' → ∀ ε : ℝ, 0 < ε →
-        ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
-          Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
-          (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 ∧
-          ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
-            c.expectedBlockDistortion
-                ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
-              ≤ (D + δ / 2) + ε'
-            ∧ (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
-                  (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
-                    P_XY.real {(p.1.1, p.2)}))).real
-                (wzCoveringAcceptFailSet P_XY κ' c ε)
-                ≤ δ / 2 / (8 * (distortionMax d + 1))) :
-    ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
-      ∀ᶠ n in Filter.atTop, (c n).expectedBlockDistortion P_XY d ≤ D + δ := by
-  -- Steps 3–7 are the covering + binning core `wz_perDelta_covering_binning_eventual`
-  -- (D), which produces, for every `n`, a code together with a single threshold `N`
-  -- beyond which the distortion is within `D + δ`. S6 is the pure choice + `atTop`
-  -- glue: assemble the per-`n` codes into a sequence and read off the eventual bound.
-  obtain ⟨N, hN⟩ := wz_perDelta_covering_binning_eventual P_XY d R D k qf δ hδ
-    q' κ' qStar d' hfact_eq hκ'pos hκ'sum hobj' hqStar_eq hqStar_pos hqStar_mem hfeas
-    hd'_eq hqf hcov
-  choose c hc using hN
-  exact ⟨c, Filter.eventually_atTop.2 ⟨N, fun n hn => hc n hn⟩⟩
-
-/-- **(BD) Per-slack Wyner–Ziv code family.** From a feasible factorisable test
-channel `qf` (auxiliary `Fin k`, distortion `≤ D`, Wyner–Ziv objective `< R`), for
-every slack `δ > 0` there is a sequence of Wyner–Ziv block codes at the operational
-rate `R` (`codebookSize R n` messages) whose expected block distortion is eventually
-within `D + δ`.
-
-This is the heavy covering+binning assembly for a fixed slack: internally it
-perturbs `qf` to full support (`wz_fullKernelSupport_perturbation`), restricts the
-covering source to `α' := {x // 0 < P_X x}` and supplies the covering joint
-(`wz_restrictedCoveringJoint_pos` → `wz_covering_lossyCode_exists`), extends back to
-`α`, bins the covering index and decodes by a bin conditional-typicality search.
-
-The body is a reduction: Steps 1–2 (`wz_coveringFamily_of_testChannel`) supply the
-covering data, and the capstone `wz_perDelta_covering_binning` (S6) consumes it to
-build the code family (Steps 3–7: binning + decoder `wzCodeOfCoveringBinning` /
-`wzBinTypicalDecoder`, the error exponents `wz_covering_failure_prob_le` /
-`wz_codebook_confusion_expectation_le`, derandomize, squeeze, and the source
-extension `wzLiftSupportCode`). The preconditions are feasibility/objective only
-(`hqf`/`hobj`); the residual `sorry` lives in the S5/S6 sub-lemmas, not here.
-
-Independent honesty audit 2026-07-06: genuine reduction — the body has no `sorry` of its
-own; it `obtain`s the covering data from `wz_coveringFamily_of_testChannel` (Steps 1–2) and
-`exact`s the S6 capstone `wz_perDelta_covering_binning`. Not an opaque re-sorry, not
-bundling: `hqf`/`hobj` are feasibility/objective preconditions and the transitive residual
-lives in S6 (and, once wired, S5a/S5b). Honest residual (inherited). The sole remaining
-`sorry` is D3, so the transitive residual points at D3's closure vehicle.
-@residual(plan:wz-binning-covering) -/
-private lemma wz_perDelta_codes_exist
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    (d : DistortionFn α γ) (R D : ℝ)
-    (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
-    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
-            (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
-    (hobj : wzMutualInfoXU (Fin k) qf.1 - wzMutualInfoYU (Fin k) qf.1 < R) :
-    ∀ δ : ℝ, 0 < δ → ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
-      ∀ᶠ n in Filter.atTop, (c n).expectedBlockDistortion P_XY d ≤ D + δ := by
-  intro δ hδ
-  -- Steps 1–2 (covering-distortion reconciliation + covering LossyCode family):
-  -- perturb `qf` to full support, restrict to the source support `α'`, and produce
-  -- the covering LossyCode family at any rate `R₁ > mutualInfoPmf qStar`, with the
-  -- covering proxy `d'` reconciled against the Wyner–Ziv distortion (feasibility
-  -- `expectedDistortionPmf d' qStar ≤ D + δ`).
-  -- Call the covering family at the tightened slack `δ/2`, reserving the remaining `δ/2`
-  -- for the Wyner–Ziv error terms (S5a/S5b/D2/(B) exponents). `wz_coveringFamily_of_testChannel`
-  -- is `δ`-generic, so it returns `hfeas ≤ D + δ/2` and covering target `≤ (D + δ/2) + ε'`,
-  -- exactly what the tightened capstone `wz_perDelta_covering_binning` (S6) consumes.
-  obtain ⟨q', κ', qStar, d', hfact_eq, hκ'pos, hκ'sum, hobj', hqStar_eq,
-      hqStar_pos, hqStar_mem, hfeas, hd'_eq, hqf', hcov⟩ :=
-    wz_coveringFamily_of_testChannel P_XY d R D k qf hqf hobj (δ / 2) (half_pos hδ)
-  -- Steps 3–7 (binning / decoder / error exponents / derandomize / squeeze / source
-  -- extension) are packaged in the capstone `wz_perDelta_covering_binning` (S6),
-  -- which consumes the covering data obtained above:
-  --   3. binning: hash the covering index to `codebookSize R n` messages; the rate
-  --      split `R₁ = I(X;U)`, net `R = I(X;U) − I(Y;U)`, against `hobj'`.
-  --   4. decoder: bin conditional-typicality search (`wzBinTypicalDecoder`, S4),
-  --      reconstruct `γ^n` letterwise via `qf.2` (`wzCodeOfCoveringBinning`, S3).
-  --   5. error exponents: E1 covering failure (`wz_covering_failure_prob_le`, S5a);
-  --      E2 codebook-restricted decoder confusion
-  --      (`wz_codebook_confusion_expectation_le`, S5b, the crux).
-  --   6. good deterministic codebook + binning by double derandomization.
-  --   7. squeeze + source extension `α' → α` (`wzLiftSupportCode`, S7 /
-  --      `wz_expectedBlockDistortion_source_agree`).
-  exact wz_perDelta_covering_binning P_XY d R D k qf δ hδ q' κ' qStar d'
-    hfact_eq hκ'pos hκ'sum hobj' hqStar_eq hqStar_pos hqStar_mem hfeas hd'_eq hqf' hcov
-
-/-- **(E) Slack diagonalization.** A family of Wyner–Ziv code sequences, one per
-slack `δ > 0`, each eventually within `D + δ`, diagonalises to a single Wyner–Ziv
-code sequence that is eventually within `D + ε` for *every* `ε > 0`.
-
-This is a general diagonalization over the slack parameter: choosing `δ_m =
-1/(m+1)`, extracting a per-`m` code sequence `C m` with an eventual threshold
-`N m`, dominating those thresholds by a diverging schedule `Ñ m ≥ max(N₀ … N_m, m)`,
-and diagonalising by `c n := C (idx n) n` where `idx n = Nat.findGreatest (Ñ · ≤ n)
-n` selects the largest admissible slack level. Since `idx n → ∞` (as `Ñ` diverges),
-the diagonal sequence's eventual bound reaches every `ε`. The hypothesis is the
-per-slack achievability family (the output of the covering+binning assembly
-`wz_perDelta_codes_exist`); the diagonalization argument is the (sorry-free) body. -/
-private lemma wz_diagonalize_slack
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    (d : DistortionFn α γ) (R D : ℝ)
-    (hfam : ∀ δ : ℝ, 0 < δ → ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
-      ∀ᶠ n in Filter.atTop, (c n).expectedBlockDistortion P_XY d ≤ D + δ) :
-    ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
-      ∀ ε : ℝ, 0 < ε → ∀ᶠ n in Filter.atTop,
-        (c n).expectedBlockDistortion P_XY d ≤ D + ε := by
-  -- Extract a per-slack code sequence `C m` for the slack `δ_m = 1/(m+1)`,
-  -- together with an eventual threshold `N m` beyond which its distortion is
-  -- within `D + 1/(m+1)`.
-  have hδpos : ∀ m : ℕ, (0 : ℝ) < 1 / (m + 1) := fun m => by positivity
-  choose C hC using fun m : ℕ => hfam (1 / (m + 1)) (hδpos m)
-  choose N hN using fun m => Filter.eventually_atTop.mp (hC m)
-  -- A monotone-in-effect threshold schedule dominating every `N m` and diverging:
-  -- `Ñ m ≥ N m` (so `hN` applies) and `Ñ m ≥ m` (so `Ñ m → ∞`).
-  set Ñ : ℕ → ℕ := fun m => (Finset.range (m + 1)).sup N + m with hÑdef
-  have hÑ_ge_N : ∀ m, N m ≤ Ñ m := fun m =>
-    le_trans (Finset.le_sup (Finset.self_mem_range_succ m)) (Nat.le_add_right _ _)
-  have hÑ_ge_self : ∀ m, m ≤ Ñ m := fun m => Nat.le_add_left _ _
-  -- Diagonal code `c n := C (idx n) n`, where `idx n` is the largest `j ≤ n` with
-  -- `Ñ j ≤ n`; the diagonal is well-typed since `C (idx n) n : WynerZivCode …`.
-  refine ⟨fun n => C (Nat.findGreatest (fun j => Ñ j ≤ n) n) n, ?_⟩
-  intro ε hε
-  -- Pick `m` with `1/(m+1) < ε` (Archimedean), and show the eventual bound holds
-  -- from `n ≥ Ñ m` onward.
-  obtain ⟨m, hm⟩ := exists_nat_one_div_lt hε
-  rw [Filter.eventually_atTop]
-  refine ⟨Ñ m, fun n hn => ?_⟩
-  show (C (Nat.findGreatest (fun j => Ñ j ≤ n) n) n).expectedBlockDistortion P_XY d ≤ D + ε
-  -- `hn : Ñ m ≤ n` witnesses `P m` for `P j := Ñ j ≤ n`; also `m ≤ n`.
-  have hmn : m ≤ n := le_trans (hÑ_ge_self m) hn
-  -- The selected index is `≥ m` and satisfies its own threshold `Ñ (idx n) ≤ n`.
-  have hjge : m ≤ Nat.findGreatest (fun j => Ñ j ≤ n) n := Nat.le_findGreatest hmn hn
-  have hjspec : Ñ (Nat.findGreatest (fun j => Ñ j ≤ n) n) ≤ n :=
-    Nat.findGreatest_spec (P := fun j => Ñ j ≤ n) hmn hn
-  have hNle : N (Nat.findGreatest (fun j => Ñ j ≤ n) n) ≤ n :=
-    le_trans (hÑ_ge_N _) hjspec
-  -- Apply the per-slack eventual bound at the selected index.
-  have hdist := hN (Nat.findGreatest (fun j => Ñ j ≤ n) n) n hNle
-  -- `1/(idx n + 1) ≤ 1/(m+1) < ε` since `idx n ≥ m`.
-  have hmono : (1 : ℝ) / ((Nat.findGreatest (fun j => Ñ j ≤ n) n : ℝ) + 1) ≤ 1 / ((m : ℝ) + 1) := by
-    apply one_div_le_one_div_of_le
-    · positivity
-    · have : (m : ℝ) ≤ (Nat.findGreatest (fun j => Ñ j ≤ n) n : ℝ) := by exact_mod_cast hjge
-      linarith
-  linarith [hdist, hmono, hm]
-
-/-- **Covering + binning construction (Steps 1–5, the hard leg).** From a
-feasible factorisable test channel `qf` at auxiliary alphabet `Fin k` whose
-Wyner–Ziv objective `I(X;U) − I(Y;U)` is strictly below `R`, build a sequence of
-Wyner–Ziv block codes at the operational message rate `R` (`codebookSize R n =
-⌈exp(n R)⌉` messages) whose expected block distortion is eventually within
-`D + ε` for every `ε > 0`.
-
-The construction is the two-layer hybrid: rate-distortion covering `X → U`
-(`jointTypicalLossyEncoder` over the codebook alphabet `U = Fin k`) fused with
-Slepian–Wolf binning of the covering index (`binningMeasure`), decoded by a
-conditional-typicality slice search (`conditionalTypicalSlice`). The three error
-exponents — covering failure (E1, `encoder_failure_prob_le_exp_neg_M_avg`),
-decoder confusion (E2, `wz_sideInfo_decoder_confusion_expectation_le`) and
-covering acceptance (E3, `wz_covering_sideInfo_mass_ge`) — are threaded through
-the rate split `R = I(X;U) − I(Y;U)`, with a good deterministic codebook
-extracted by the pigeonhole averaging `exists_codebook_low_avg` and the residual
-distortion excess squeezed to `0` by `ceil_exp_mul_exp_neg_tendsto_atTop`.
-
-The test channel `qf` is a feasibility/regularity hypothesis (a single-letter
-pmf feasible at `D`, objective below `R`), NOT the load-bearing covering+binning
-core; the whole construction stays in the `sorry` body.
-
-**Full-support (source-support) note — the leg-14 stall map.** The covering half
-`rate_distortion_achievability` (`AchievabilityStrongTypicality.lean:184`) demands
-`hqStar_pos : ∀ p, 0 < qStar p` on the `(X,U)` joint `qStar = wzMarginalXU (Fin k)
-qf.1`. This is **not** obtainable by kernel perturbation alone: factorisability
-forces `qStar (x,u) = κ(x,u) · P_X(x)` (with `P_X(x) = ∑_y P_XY(x,y)`), which
-vanishes at every zero atom of `P_X` regardless of `κ`. So of the options
-(a) covering tolerates support-only positivity, (b) restrict the source alphabet
-to `supp(P_X)` upstream, (c) genuine obstruction, the resolution is **(b)**: the
-RD covering theorem hard-requires positivity over its *whole* alphabet, so the
-construction must instantiate its source alphabet `α` with the subtype
-`{x // 0 < P_X x}` (the block distortion is measured under `Measure.pi P_X`, which
-gives zero mass to sequences hitting a zero atom, so restricting to `supp(P_X)` is
-WLOG). The leaf lemma `wz_fullKernelSupport_perturbation` supplies the *kernel*
-full support `0 < κ' x u` (hence full `(X,U)`-joint support on `supp(P_X)` and the
-objective/distortion slack); the remaining move is the support-subtype transport,
-deferred to the construction sub-lemmas.
-
-The body is now a `sorry`-free reduction: `wz_perDelta_codes_exist` builds, for each
-slack `δ > 0`, a code sequence eventually within `D + δ` (the covering + binning
-assembly), and `wz_diagonalize_slack` (now proved sorry-free) diagonalises those into
-a single sequence within `D + ε` for every `ε`. The residual `sorry +
-@residual(plan:wz-binning-covering)` lives in `wz_perDelta_codes_exist` (and the
-covering / source-support atoms it consumes, `wz_covering_lossyCode_exists` /
-`wz_expectedBlockDistortion_source_agree`), not here. -/
-private lemma wz_goodCode_exists_of_testChannel
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    (d : DistortionFn α γ) (R D : ℝ)
-    (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
-    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
-            (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
-    (hobj : wzMutualInfoXU (Fin k) qf.1 - wzMutualInfoYU (Fin k) qf.1 < R) :
-    ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
-      ∀ ε : ℝ, 0 < ε → ∀ᶠ n in Filter.atTop,
-        (c n).expectedBlockDistortion P_XY d ≤ D + ε :=
-  wz_diagonalize_slack P_XY d R D
-    (wz_perDelta_codes_exist P_XY d R D k qf hqf hobj)
-
-/-- Existence of a Wyner–Ziv code sequence (at the operational message rate `R`)
-whose expected block distortion is eventually within `D + ε`.
-
-The body is now a genuine reduction (sorry-free itself): `wz_testChannel_of_rate_lt`
-extracts a feasible factorisable test channel below `R` from the feasibility guard
-`h_ne` and `h_rate`, and `wz_goodCode_exists_of_testChannel` builds the code
-sequence from it. `sorryAx` enters only via that construction lemma, whose covering
-+ binning body is the remaining plumbing.
-
-The feasibility precondition `h_ne` (the rate-distortion value set is nonempty at
-`D`) makes the signature well-posed: it rules out the infeasible regime `D` below
-the min achievable distortion (e.g. any `D < 0` for a `NNReal` distortion), where
-`wzRateValueSet` is empty and `wynerZivRate = sInf ∅ = 0` would otherwise let
-`h_rate : 0 < R` coexist with a FALSE existence claim. `h_ne` is a
-regularity/feasibility precondition, NOT the load-bearing covering+binning core
-(which stays in the construction lemma's `sorry` body); the converse side already
-threads exactly this guard (`wynerZivRate_antitone`, `Converse.lean:2602`).
-@residual(plan:wyner-ziv-main-plan) -/
-theorem wyner_ziv_achievability_codes
-    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
-    (d : DistortionFn α γ) (R D : ℝ)
-    (h_ne : (wzRateValueSet (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D).Nonempty)
-    (h_rate : wynerZivRate (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D < R) :
-    ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
-      ∀ ε : ℝ, 0 < ε → ∀ᶠ n in Filter.atTop,
-        (c n).expectedBlockDistortion P_XY d ≤ D + ε := by
-  obtain ⟨k, qf, hqf, hobj⟩ := wz_testChannel_of_rate_lt P_XY d R D h_ne h_rate
-  exact wz_goodCode_exists_of_testChannel P_XY d R D k qf hqf hobj
 
 /-! ### Leg F inner concentration — de-entangled sub-lemmas L0–L5
 
@@ -6777,6 +3423,3370 @@ private lemma wz_covering_chosenWord_sideInfo_typical
   -- Covering-failure part `≤ tol/2` (premise); covering-success ∩ acceptance-failure `≤ tol/2`
   -- (inner concentration). Their sum is `≤ tol`.
   linarith [hprem, hinner, hunion]
+
+open ChannelCoding in
+/-- **(Steps 1–2) Covering LossyCode family from a feasible test channel.**
+Perturbs the feasible factorisable test channel `qf` to a full-support kernel
+`κ'` (Step 1, `wz_fullKernelSupport_perturbation`), restricts the covering source
+to the support subtype `α' := {x // 0 < P_X x}`, and produces the rate-distortion
+covering LossyCode family (Step 2, `wz_covering_lossyCode_exists`) for the proxy
+distortion `d'` (the `Y`-conditional expectation of `d ∘ qf.2`).
+
+The output packages, for downstream binning (Steps 3–7), the perturbed full-support
+factorisable joint `q'` (with kernel `κ'`), the restricted covering joint `qStar`,
+the covering proxy `d'`, the Wyner–Ziv objective margin `< R`, and — for every
+covering rate `R₁` strictly above the covering mutual information
+`mutualInfoPmf qStar` — the covering LossyCode family with block distortion within
+`(D + δ) + ε'`. The covering-distortion feasibility `expectedDistortionPmf d' qStar
+≤ D + δ` is the reconciliation identity (`wz_coveringDistortion_reconcile`) applied
+to the perturbation's distortion bound. All conclusions are genuinely constructed;
+the only preconditions are feasibility (`hqf`), the objective margin (`hobj`), and
+the slack `δ`. The output existential also exports, alongside `d'`, the reconciliation
+identity `hd'_eq` (`d'` = the `Y`-conditional expectation of `d ∘ qf.2`, discharged by
+`rfl` since the witness IS that expression) and the test channel's factorizability
+`hqf` (the original input membership), so downstream binning (D3) can honestly relate
+the covering proxy `d'` to the real distortion `d` via `qf.2`.
+
+Pinned-ε rework applied 2026-07-12 (Leg E): the covering `LossyCode` family conclusion
+also exports, for the returned code `c`, a covering-acceptance-failure mass bound at a
+radius `ε` that is now UNIVERSALLY quantified as an explicit binder (`∀ R₁ …, ∀ ε' …, ∀ ε,
+0 < ε → ∃ N …`), NOT existentially quantified inside the code existential. The product
+source–side measure of `wzCoveringAcceptFailSet P_XY κ' c ε` (the event that the true
+covering word is NOT jointly typical with the side information) is
+`≤ δ / (8 · (distortionMax d + 1))`, a fixed vanishing tolerance. Because `ε` is a family
+binder, the caller (D3) chooses the SAME `ε` it feeds the A3 bin-decoder radius (from the
+rate gap, with the huge-`ε` vacuity regime excluded by A3's `hε_conf`), so the union bound
+`C2 ⊆ E2` uses a MATCHING radius — the prior free-`∃ε` form (vacuous at huge `ε`) is
+removed. The covering-acceptance failure `C2` is the true-word joint-AEP failure and decays
+to 0 (so `≤` any fixed positive tolerance eventually); it is the covering half of the
+Wyner–Ziv `E2` error event (`C2 ⊆ E2`), a precondition-exposure of the covering code's own
+property (same kind as the covering-size cap `hM_ub` / Leg C.6), threaded to
+`wz_exists_binning_E2_bound` (A3) and discharged by construction — NOT the operational
+conclusion (the `distortionMax d` scaling only sizes the tolerance so `dMax · Pr[C2]` is
+absorbable; the E2b confusion crux stays in A3). The discharge (joint distortion +
+acceptance derandomize with the S5a `(1-p)^M₁` → `codebookMeasure`-average `Fubini` bridge,
+fed the gateway-2 acceptance mass lower bound `wz_covering_sideInfo_mass_ge`) is the residual
+`sorry`; the A3-fill leg closes it.
+
+Independent honesty audit 2026-07-12 (Leg E pinned-ε rework): PASS. The exported
+covering-acceptance conjunct is now UNIVERSALLY quantified per radius (`… ∀ ε, 0 < ε → ∃ N …`),
+NOT a free `∃ ε` inside the code existential (grep-confirmed: no `∃ ε` remains). The mass bound
+`≤ δ/(8·(distortionMax d+1))` at each fixed `ε` is a genuine (TRUE-as-framed) residual: by AEP
+the true covering word's joint-typicality-failure mass → 0 as `n → ∞` for every fixed `ε > 0`,
+so `N` may depend on `ε` (the `∀ ε, ∃ N` shape is honest, non-vacuous). The whole covering
+`LossyCode` family existential (distortion `≤ (D+δ)+ε'` AND acceptance) is deferred to the
+single `sorry` because a distortion-only witness (`wz_covering_lossyCode_exists`) need not be
+acceptance-good — the joint S5a/gateway-2 (`wz_covering_sideInfo_mass_ge`) Fubini derandomize
+is the residual analytic work, correctly classified `@residual(plan:wz-binning-covering)`
+(in-project construction, not a Mathlib wall). D3 instantiates this `∀ ε` at the shared
+`ε := gap/6` threaded into A3's decoder radius.
+
+CAVEAT on the discharge path (2026-07-12c independent audit): this atom stays an HONEST `sorry` and
+its `∃ c` acceptance conjunct is TRUE-as-framed (the atom PICKS the covering code, and a
+strong-typical covering code satisfies the WEAK `wzCoveringAcceptFailSet` bound, since strong ⟹
+entropy typicality), so it carries no false honesty claim. BUT the currently-planned wiring discharge
+runs through `wz_covering_chosenWord_sideInfo_typical` / `wz_covering_markov_concentration`, which are
+false-as-framed under the WEAK (entropy-only) typicality (root defect:
+`wz_covering_jointBand_markov_core`, label-swap counterexample). Wiring the current weak-Ecov chain
+does NOT close this `sorry`; Proposal A (strengthen the covering-success event Ecov to STRONG joint
+typicality; see the core lemma docstring) is a prerequisite for a sound discharge.
+@residual(plan:wz-binning-covering) -/
+private lemma wz_coveringFamily_of_testChannel
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (R D : ℝ)
+    (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
+            (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
+    (hobj : wzMutualInfoXU (Fin k) qf.1 - wzMutualInfoYU (Fin k) qf.1 < R)
+    (δ : ℝ) (hδ : 0 < δ) :
+    ∃ (q' : α × β × Fin k → ℝ) (κ' : α → Fin k → ℝ)
+      (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+      (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
+        (∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
+        ∧ (∀ x u, 0 < κ' x u)
+        ∧ (∀ x, ∑ u, κ' x u = 1)
+        ∧ (wzMutualInfoXU (Fin k) q' - wzMutualInfoYU (Fin k) q' < R)
+        ∧ (∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+        ∧ (∀ p, 0 < qStar p)
+        ∧ qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k)
+        ∧ expectedDistortionPmf d' qStar ≤ D + δ
+        ∧ (∀ (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k),
+             d' x' u = Real.toNNReal (∑ y : β,
+               (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+                 * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
+        ∧ (qf ∈ WynerZivFactorizableConstraint (Fin k)
+             (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
+        ∧ (∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' → ∀ ε : ℝ, 0 < ε →
+            ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
+              Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
+              (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 ∧
+              ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
+                c.expectedBlockDistortion
+                    ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
+                  ≤ (D + δ) + ε'
+                ∧ (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+                      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                        P_XY.real {(p.1.1, p.2)}))).real
+                    (wzCoveringAcceptFailSet P_XY κ' c ε)
+                    ≤ δ / (8 * (distortionMax d + 1))) := by
+  classical
+  -- Step 1: perturb the feasible test channel to a full-support kernel `κ'`.
+  -- Keep a pristine copy of the factorizability membership: `hqf` is mutated by the
+  -- `rw` below, but the output existential re-exports the original membership (`hqf₀`).
+  have hqf₀ := hqf
+  rw [mem_WynerZivFactorizableConstraint_iff] at hqf
+  obtain ⟨hfact, hdist⟩ := hqf
+  haveI : Nonempty (Fin k) := wz_nonempty_of_factorizable hfact
+  obtain ⟨q', κ', hq'eq, hκ'pos, hκ'sum, _hfact', hobj', hdist'⟩ :=
+    wz_fullKernelSupport_perturbation (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D
+      hfact hdist hobj hδ
+  -- Restricted covering joint (S1): full support + simplex on the source-support subtype.
+  obtain ⟨hne, hqStar_pos, hqStar_mem⟩ :=
+    wz_restrictedCoveringJoint_pos P_XY κ' hκ'pos hκ'sum
+  haveI : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := hne
+  -- The perturbed joint, packaged as a clean pointwise identity.
+  have hq'clean : ∀ p : α × β × Fin k, q' p = κ' p.1 p.2.2 * P_XY.real {(p.1, p.2.1)} :=
+    fun p => hq'eq p.1 p.2.1 p.2.2
+  have hconv :
+      (fun p : α × β × Fin k => κ' p.1 p.2.2 * P_XY.real {(p.1, p.2.1)}) = q' := by
+    funext p; exact (hq'clean p).symm
+  -- Covering-distortion feasibility via the reconciliation identity (Step 1–2 core).
+  have hfeas : expectedDistortionPmf
+      (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) =>
+        Real.toNNReal (∑ y : β, (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+            * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k =>
+        κ' p.1.1 p.2 * ∑ y : β, P_XY.real {(p.1.1, y)}) ≤ D + δ := by
+    rw [wz_coveringDistortion_reconcile P_XY d κ' qf.2, hconv]
+    exact hdist'
+  -- Step 2: assemble the covering LossyCode family from the covering theorem (C).
+  refine ⟨q', κ',
+    (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k =>
+      κ' p.1.1 p.2 * ∑ y : β, P_XY.real {(p.1.1, y)}),
+    (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) =>
+      Real.toNNReal (∑ y : β, (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ))),
+    hq'eq, hκ'pos, hκ'sum, hobj', fun _ => rfl, hqStar_pos, hqStar_mem, hfeas,
+    (fun _ _ => rfl), hqf₀, ?_⟩
+  -- The covering `LossyCode` family must now be good for BOTH the covering distortion
+  -- (component atom `wz_covering_lossyCode_exists`, a distortion-only derandomize via
+  -- `rate_distortion_achievability`) AND the covering-acceptance failure C2. The
+  -- acceptance bound is supplied by the strong-`Ecov` Markov-core leaf
+  -- `wz_covering_chosenWord_sideInfo_typical` (file tail): given a code whose covering-success
+  -- mass complement `SRC.real (wzCoveringSuccessStrong …)ᶜ` is `≤ tol/2`, the leaf gives
+  -- `SRC.real (wzCoveringAcceptFailSet …) ≤ tol`. The remaining Atom-G work is the JOINT
+  -- (distortion + covering-success) derandomize: a single code good for distortion AND
+  -- covering-success. The covering-success side rests on the now-staged strong-typical
+  -- per-codeword mass lower bound `wz_covering_strongTypical_indep_mass_ge` (gateway-atom-first,
+  -- sorryAx-free; the WZ instance of `jointStronglyTypicalSet_indep_prob_ge`), fed through a
+  -- strong analog of the covering-failure decay `wz_covering_failure_prob_le` +
+  -- `exists_codebook_low_avg`. Consuming the tail leaf here additionally needs a physical
+  -- reorder (the leaf and its chain currently follow this atom); both are plumbing, not a
+  -- Mathlib wall (gateway confirmed). Kept an honest `sorry` pending that wiring.
+  -- @residual(plan:wz-binning-covering)
+  sorry
+
+/-! ### Steps 3–7 decomposition (binning / decoder / error exponents / squeeze)
+
+The covering data of Steps 1–2 (`wz_coveringFamily_of_testChannel`) is consumed by
+the binning + decoder leg. This leg is decomposed into:
+
+* **S3** `wzCodeOfCoveringBinning` — the Wyner–Ziv code assembled from a covering
+  codebook, a binning of the covering index, and a bin/side-information decoder
+  (pure def).
+* **S4** `wzBinTypicalDecoder` (+ uniqueness `wzBinTypicalDecoder_eq_of_unique`) —
+  the bin-restricted conditional-typicality decoder, searching a bin's covering
+  **codebook members** for the one jointly typical with `Y^n` (pure def + the
+  decoder equation under a unique witness), mirroring Slepian–Wolf
+  `swJointTypicalDecoder` / `swJointTypicalDecoder_eq_of_unique`.
+* **S5a** `wz_covering_failure_prob_le` — covering-failure exponent (E1).
+* **S5b** `wz_codebook_confusion_expectation_le` — codebook-restricted decoder
+  confusion exponent (E2, the crux).
+* **S6** `wz_perDelta_covering_binning` — the capstone consuming the covering data
+  and producing the per-slack code family (binning + decoder + error exponents +
+  derandomize + squeeze + source extension).
+* **S7** `wzLiftSupportCode` — the source-extension lift `α' → α` (pure def), used
+  together with the sorry-free `wz_expectedBlockDistortion_source_agree`.
+-/
+
+/-- **(S3) Wyner–Ziv code from a covering codebook + binning + bin decoder.**
+The encoder covers the source with the covering codebook (`c₁.encoder`) and bins
+the covering index (`f`). The decoder reconstructs `γ^n` letterwise via `rec`
+(the test-channel decoder `qf.2 : Fin k × β → γ`) from the bin decoder's word
+`dec (m, y) : Fin n → Fin k` and the side information `y`. Pure assembly; the
+covering codebook `c₁`, the binning `f`, the reconstruction map `rec` and the bin
+decoder `dec` are all supplied. -/
+def wzCodeOfCoveringBinning {α' : Type*} [MeasurableSpace α'] {k M M₁ n : ℕ}
+    (c₁ : LossyCode M₁ n α' (Fin k)) (f : Fin M₁ → Fin M)
+    (rec : Fin k × β → γ)
+    (dec : Fin M × (Fin n → β) → (Fin n → Fin k)) :
+    WynerZivCode M n α' β γ where
+  encoder := fun x ↦ f (c₁.encoder x)
+  decoder := fun my ↦ fun i ↦ rec (dec my i, my.2 i)
+
+/-- **(S4) Bin/side-information conditional-typicality decoder.** Given a bin `m`
+and side information `y`, search the bin's covering **codebook members**
+`{c₁.decoder m' | f m' = m}` for the unique word jointly typical with `y`, returning
+that `Fin n → Fin k` word (falling back to an arbitrary word if none exists or the
+witness is not unique). The search ranges over codebook members only (indexed by the
+covering index `m'`), not over all `Fin n → Fin k` words — this restriction is what
+makes the decoder-confusion event (S5b) achievable at the Wyner–Ziv rate. Mirror of
+Slepian–Wolf `swJointTypicalDecoder`. -/
+noncomputable def wzBinTypicalDecoder {α' : Type*} [MeasurableSpace α']
+    {Ω : Type*} [MeasurableSpace Ω] {k M M₁ n : ℕ} [Nonempty (Fin k)]
+    (μ : Measure Ω) (Us : ℕ → Ω → Fin k) (Ys : ℕ → Ω → β) (ε : ℝ)
+    (c₁ : LossyCode M₁ n α' (Fin k)) (f : Fin M₁ → Fin M) :
+    Fin M × (Fin n → β) → (Fin n → Fin k) := fun my ↦
+  haveI : Decidable (∃! u : Fin n → Fin k,
+      (∃ m' : Fin M₁, f m' = my.1 ∧ c₁.decoder m' = u)
+        ∧ (u, my.2) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε) :=
+    Classical.propDecidable _
+  if h : ∃! u : Fin n → Fin k,
+      (∃ m' : Fin M₁, f m' = my.1 ∧ c₁.decoder m' = u)
+        ∧ (u, my.2) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε
+    then Classical.choose h.exists
+    else Classical.arbitrary _
+
+/-- If the covering codeword `c₁.decoder m₁` is jointly typical with `y` and is the
+unique bin-`f m₁` codebook member so typical, then `wzBinTypicalDecoder` recovers it.
+Mirror of `swJointTypicalDecoder_eq_of_unique`. -/
+lemma wzBinTypicalDecoder_eq_of_unique {α' : Type*} [MeasurableSpace α']
+    {Ω : Type*} [MeasurableSpace Ω] {k M M₁ n : ℕ} [Nonempty (Fin k)]
+    (μ : Measure Ω) (Us : ℕ → Ω → Fin k) (Ys : ℕ → Ω → β) (ε : ℝ)
+    (c₁ : LossyCode M₁ n α' (Fin k)) (f : Fin M₁ → Fin M)
+    {m₁ : Fin M₁} {y : Fin n → β}
+    (htrue : (c₁.decoder m₁, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε)
+    (hunique : ∀ u : Fin n → Fin k,
+        (∃ m' : Fin M₁, f m' = f m₁ ∧ c₁.decoder m' = u) →
+        (u, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε →
+        u = c₁.decoder m₁) :
+    wzBinTypicalDecoder μ Us Ys ε c₁ f (f m₁, y) = c₁.decoder m₁ := by
+  have hExUnique : ∃! u : Fin n → Fin k,
+      (∃ m' : Fin M₁, f m' = f m₁ ∧ c₁.decoder m' = u)
+        ∧ (u, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε := by
+    refine ⟨c₁.decoder m₁, ⟨⟨m₁, rfl, rfl⟩, htrue⟩, ?_⟩
+    intro u hu
+    exact hunique u hu.1 hu.2
+  unfold wzBinTypicalDecoder
+  rw [dif_pos hExUnique]
+  have hch_spec :
+      (∃ m' : Fin M₁, f m' = f m₁
+          ∧ c₁.decoder m' = Classical.choose hExUnique.exists)
+        ∧ (Classical.choose hExUnique.exists, y)
+            ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε :=
+    Classical.choose_spec hExUnique.exists
+  exact hunique (Classical.choose hExUnique.exists) hch_spec.1 hch_spec.2
+
+/-- **(S5a) Covering-failure exponent (E1).** The codebook-averaged probability
+that a strongly-typical source `x` finds **no** covering codeword jointly typical
+with it decays doubly-exponentially: `∫ x, (1 − p_typ x)^{M₁} ≤ exp(−M₁ · exp(−n(I +
+δ)))`, where `p_typ x` is the per-codeword conditional-typicality mass (bounded below
+by `exp(−n(I + δ))` via `wz_covering_sideInfo_mass_ge`), passed here as `hmass`.
+
+`hmass` is the per-source covering-acceptance mass lower bound `exp(−n(I+δ)) ≤ p_typ x`.
+With it, `(1−p)^M₁ ≤ e^{−M₁ p} ≤ e^{−M₁·exp(−n(I+δ))}` pointwise (`p_typ x ∈ [0,1]`,
+`p ≥ exp(−n(I+δ))`), then integrate over the probability measure `P_X`. The pointwise
+`p_typ x ≤ 1` holds even without measurability of `Us 0`: `μ.map (Us 0)` is a
+sub-probability measure (`Measure.isFiniteMeasure_map` + `map` mass `≤ 1`), so its
+product `Measure.pi` is a sub-probability measure (`Measure.pi_univ`), and the mass of
+any set is `≤ 1`. The `(1−t)^M ≤ e^{−Mt}` step reuses `one_sub_pow_le_exp_neg_mul`.
+@audit:ok (leg-17, sorryAx-free: `#print axioms` = `[propext, Classical.choice,
+Quot.sound]`, orchestrator-verified after independent signature audit confirmed the
+`hmass`-corrected statement non-vacuous). -/
+lemma wz_covering_failure_prob_le {α' : Type*}
+    [Fintype α'] [DecidableEq α'] [Nonempty α']
+    [MeasurableSpace α'] [MeasurableSingletonClass α']
+    {Ω : Type*} [MeasurableSpace Ω] {k n M₁ : ℕ} [Nonempty (Fin k)]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α') (Us : ℕ → Ω → Fin k) (ε : ℝ)
+    (P_X : Measure (Fin n → α')) [IsProbabilityMeasure P_X]
+    (I δ : ℝ)
+    (hmass : ∀ x : Fin n → α', Real.exp (-(n : ℝ) * (I + δ)) ≤
+        (Measure.pi fun _ : Fin n ↦ μ.map (Us 0)).real
+          {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) :
+    ∫ x, (1 - (Measure.pi fun _ : Fin n ↦ μ.map (Us 0)).real
+              {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁ ∂P_X
+      ≤ Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))) := by
+  set ν : Measure (Fin n → Fin k) := Measure.pi fun _ : Fin n ↦ μ.map (Us 0) with hν
+  -- The map of the probability measure `μ` is a finite (sub-probability) measure,
+  -- irrespective of whether `Us 0` is measurable.
+  haveI hfin : IsFiniteMeasure (μ.map (Us 0)) := Measure.isFiniteMeasure_map μ (Us 0)
+  have hfac : (μ.map (Us 0)) Set.univ ≤ 1 := by
+    by_cases hae : AEMeasurable (Us 0) μ
+    · rw [Measure.map_apply_of_aemeasurable hae MeasurableSet.univ]; simp
+    · rw [Measure.map_of_not_aemeasurable hae]; simp
+  -- Hence the product measure `ν` is a sub-probability measure.
+  have hν_univ : ν Set.univ ≤ 1 := by
+    rw [hν, Measure.pi_univ]
+    exact Finset.prod_le_one' (fun _ _ ↦ hfac)
+  -- The per-source covering mass lies in `[0, 1]`.
+  have h1 : ∀ x : Fin n → α',
+      ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε} ≤ 1 := by
+    intro x
+    have hle : ν {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε} ≤ 1 :=
+      le_trans (measure_mono (Set.subset_univ _)) hν_univ
+    calc ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}
+        = (ν {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}).toReal := rfl
+      _ ≤ (1 : ℝ≥0∞).toReal := ENNReal.toReal_mono (by simp) hle
+      _ = 1 := by simp
+  -- Pointwise doubly-exponential bound to the constant right-hand side.
+  have hbound : ∀ x : Fin n → α',
+      (1 - ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁
+        ≤ Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))) := by
+    intro x
+    have h0 : 0 ≤ ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε} :=
+      measureReal_nonneg
+    have step1 :
+        (1 - ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁
+          ≤ Real.exp (-(M₁ : ℝ) *
+              ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) :=
+      one_sub_pow_le_exp_neg_mul M₁ h0 (h1 x)
+    have step2 :
+        Real.exp (-(M₁ : ℝ) *
+            ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε})
+          ≤ Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))) := by
+      apply Real.exp_le_exp.mpr
+      have hM₁ : (0 : ℝ) ≤ (M₁ : ℝ) := Nat.cast_nonneg _
+      nlinarith [hmass x, hM₁]
+    exact le_trans step1 step2
+  -- Integrability of the (bounded, finitely-supported-domain) integrand.
+  have h_int : Integrable (fun x : Fin n → α' ↦
+      (1 - ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁) P_X := by
+    have h_meas : Measurable (fun x : Fin n → α' ↦
+        (1 - ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁) :=
+      measurable_of_finite _
+    refine Integrable.mono' (g := fun _ ↦
+        Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))))
+      (integrable_const _) h_meas.aestronglyMeasurable ?_
+    refine Filter.Eventually.of_forall (fun x ↦ ?_)
+    have hpow_nn : 0 ≤ (1 -
+        ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁ :=
+      pow_nonneg (by linarith [h1 x]) M₁
+    rw [Real.norm_eq_abs, abs_of_nonneg hpow_nn]
+    exact hbound x
+  calc ∫ x, (1 - ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε}) ^ M₁ ∂P_X
+      ≤ ∫ _x : Fin n → α',
+          Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))) ∂P_X :=
+        integral_mono h_int (integrable_const _) hbound
+    _ = Real.exp (-(M₁ : ℝ) * Real.exp (-(n : ℝ) * (I + δ))) := by
+        rw [integral_const]; simp
+
+/-- **(S5b) Codebook-restricted decoder confusion exponent (E2, the crux).** The
+binning-averaged probability that some **codebook member** `c₁.decoder m'` other than
+the true covering codeword shares the true bin and is jointly typical with `Y^n` is at
+most `M₁ · exp(−n · I(U;Y)) · M⁻¹`.
+
+**Crux — what a later leg must build.** Gateway atom
+`wz_sideInfo_decoder_confusion_expectation_le` bins **all** `u`-sequences (giving the
+count `exp(n·H(U|Y))`), which forces the achievable rate down to `H(U|Y)` — too weak
+for Wyner–Ziv. This bound instead restricts the confusable set to the **covering
+codebook** (`M₁ = ⌈exp(n·I(X;U))⌉` members), so the alias count is `M₁` rather than
+`exp(n·H(U|Y))`. With `M = ⌈exp(n·R)⌉` bins, the bound is
+`M₁ · exp(−n·I(U;Y)) / M ≈ exp(n·(I(X;U) − I(U;Y) − R))`, which vanishes precisely
+when `R > I(X;U) − I(Y;U)` — the Wyner–Ziv rate. A later leg must prove this by an AEP
+union bound over the (random) covering codebook members that are independent of `Y^n`,
+NOT by instantiating the all-sequences gateway atom.
+
+signature corrected leg-17: mass-bound + collision hypotheses added; conclusion now
+non-vacuously follows. `hmass` is the per-codeword joint-typicality mass UPPER bound
+`μ{codeword m' typical with Y^n} ≤ exp(−n·I_YU)` (the AEP bound for a covering codeword
+independent of `Y^n`); `hcollision` is the binning-collision property
+`binMeas{f | f m' = f m} = M⁻¹` for distinct indices, mirroring `binning_collision_prob`.
+The codebook-restricted union over `m' : Fin M₁` stays in the CONCLUSION/body (NOT a
+hypothesis — the E2 crux per finding #10 is the codebook restriction of the count): swap
+the order of integration, bound the per-`ω` `binMeas`-slice by union bound + `hcollision`
+as `M⁻¹ · #{m' typical}`, integrate over `μ`, then apply `hmass` to each of the `M₁`
+codewords to get `M⁻¹ · M₁ · exp(−n·I_YU)`. The old signature's degenerate refutation
+(`I_YU → +∞` with positive typical mass) is now excluded: `hmass` would force
+`μ{typical} ≤ exp(−n·I_YU) → 0`, contradicting positive mass. Regularity preconditions
+`hYs`/`htrueIdx` (measurability of the side-information block RV and of the covering
+index) are added for the Tonelli swap; both are discharged by S6, which supplies
+measurable i.i.d. RVs and a measurable covering index.
+
+Independent honesty audit 2026-07-06: closed sorry-free (`#print axioms` =
+`[propext, Classical.choice, Quot.sound]`, sorryAx-free). All four honesty checks pass:
+(1) non-circular; (2) non-bundled — the E2 crux (codebook-restricted union over
+`m' : Fin M₁`, finding #10) lives in the body (`hUnion`/`hStepA` + `Finset.sum_const`
+supplies the `M₁` factor), so `hmass` (per-codeword AEP mass upper bound) and
+`hcollision` (`M⁻¹` collision) are genuine mass-bound + collision preconditions, not a
+bundling of the count; `hYs`/`htrueIdx` are pure measurability regularity; (3)
+non-degenerate (`NeZero M`; the `M₁ = 0` case is a genuine `0 ≤ 0` boundary, not vacuity
+abuse); (4) sufficiency — the body genuinely derives the conclusion, and the
+`I_YU → +∞` refutation is excluded by `hmass`.
+
+Generalized 2026-07-12 (Leg E-A3 fill): the typical set is now an ABSTRACT measurable set
+`jts` (parameter `hjts_meas : MeasurableSet jts`) rather than the concrete
+`jointlyTypicalSet μ Us Ys n ε`. The body never used any property of `jointlyTypicalSet`
+beyond its measurability, so the generalization is a pure signature relaxation (the `Us`
+parameter — used only to build the concrete set — and the now-unused radius `ε` are
+dropped). This lets A3 (`wz_exists_binning_E2_bound`) instantiate the confusion integral
+under the SOURCE product measure `Measure.pi P_XY` with the typical set defined on the
+*side-information ambient* `rdAmbient (wzSideInfoMarginal …)` — two different measures, so a
+concrete `jointlyTypicalSet μ Us Ys n ε` could never match. The per-codeword mass `hmass`
+is supplied by A3 via a side-information-marginal transfer to `wz_covering_codeword_sideInfo_mass_le`
+(D2). Honesty checks (1)-(4) unchanged (the body is identical modulo the abstract `jts`).
+
+Independent honesty re-audit 2026-07-12 (post abstract-`jts` generalization, commit
+`d1f2445a`): `@audit:ok` RE-CONFIRMED. The generalization is a pure signature relaxation
+(a strengthening — the lemma now applies to any measurable `jts`, not a weakening): (1) still
+non-circular; (2) still non-bundled — `hmass` (per-codeword mass upper bound) and
+`hcollision` (`M⁻¹` collision) are genuine mass + collision preconditions, and the `M₁`
+union-bound count is derived in-body (`hUnion`/`hStepA` + `Finset.sum_const`), not encoded in
+a hypothesis; (3) non-vacuous — the conclusion is a real arithmetic bound following from
+`hmass`+`hcollision` (instantiating `jts := univ` would force `hmass` to constrain
+`I_YU ≤ 0`, so no degenerate instantiation makes it trivially useless); (4) sufficiency —
+the body genuinely derives the conclusion and the sole call site (A3
+`wz_exists_binning_E2_bound`, L3325) instantiates `jts` with the concrete side-information
+`jointlyTypicalSet` on the ambient, not a degenerate set. `#print axioms` =
+`[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified 2026-07-12). -/
+lemma wz_codebook_confusion_expectation_le {α' : Type*} [MeasurableSpace α']
+    {Ω : Type*} [MeasurableSpace Ω] {k n M M₁ : ℕ} [Nonempty (Fin k)] [NeZero M]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Ys : ℕ → Ω → β)
+    (c₁ : LossyCode M₁ n α' (Fin k)) (trueIdx : Ω → Fin M₁)
+    (hYs : ∀ i, Measurable (Ys i)) (htrueIdx : Measurable trueIdx)
+    (binMeas : Measure (Fin M₁ → Fin M)) [IsProbabilityMeasure binMeas]
+    (jts : Set ((Fin n → Fin k) × (Fin n → β))) (hjts_meas : MeasurableSet jts)
+    (I_YU : ℝ)
+    (hmass : ∀ m' : Fin M₁,
+        μ.real {ω | (c₁.decoder m', jointRV Ys n ω) ∈ jts}
+          ≤ Real.exp (-(n : ℝ) * I_YU))
+    (hcollision : ∀ m' m : Fin M₁, m' ≠ m →
+        binMeas.real {f | f m' = f m} = (M : ℝ)⁻¹) :
+    ∫ f, μ.real {ω | ∃ m' : Fin M₁,
+            m' ≠ trueIdx ω
+          ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}
+        ∂binMeas
+      ≤ (M₁ : ℝ) * Real.exp (-(n : ℝ) * I_YU) * ((M : ℝ))⁻¹ := by
+  classical
+  haveI : MeasurableSingletonClass (Fin M₁ → Fin M) := Pi.instMeasurableSingletonClass
+  -- Measurability of the per-codeword typicality set in `ω`.
+  have hC_meas : ∀ m' : Fin M₁,
+      MeasurableSet {ω | (c₁.decoder m', jointRV Ys n ω) ∈ jts} := by
+    intro m'
+    have hmap : Measurable (fun ω => (c₁.decoder m', jointRV Ys n ω)) :=
+      measurable_const.prodMk (measurable_jointRV Ys hYs n)
+    exact hmap hjts_meas
+  -- Measurability of the per-`(f, m')` confusion set in `ω`.
+  have hbad_meas : ∀ (f : Fin M₁ → Fin M) (m' : Fin M₁),
+      MeasurableSet {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+        ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} := by
+    intro f m'
+    have hA : MeasurableSet {ω | m' ≠ trueIdx ω} := by
+      have hpre : {ω | m' ≠ trueIdx ω} = (trueIdx ⁻¹' {m'})ᶜ := by
+        ext ω
+        simp only [Set.mem_setOf_eq, Set.mem_compl_iff, Set.mem_preimage,
+          Set.mem_singleton_iff]
+        exact ne_comm
+      rw [hpre]; exact (htrueIdx (measurableSet_singleton m')).compl
+    have hB : MeasurableSet {ω | f m' = f (trueIdx ω)} :=
+      htrueIdx ((Set.toFinite {m₀ : Fin M₁ | f m' = f m₀}).measurableSet)
+    exact hA.inter (hB.inter (hC_meas m'))
+  -- Step D: the per-`m'` integral bound `∫ f, μ.real (confusion set) ≤ exp(−n·I_YU)·M⁻¹`.
+  have hD : ∀ m' : Fin M₁,
+      ∫ f, μ.real {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂binMeas
+        ≤ Real.exp (-(n : ℝ) * I_YU) * ((M : ℝ))⁻¹ := by
+    intro m'
+    have h_nn : 0 ≤ᵐ[binMeas] fun f => μ.real {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+        ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} :=
+      Filter.Eventually.of_forall fun _ => measureReal_nonneg
+    have h_aesm : AEStronglyMeasurable
+        (fun f => μ.real {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}) binMeas :=
+      (measurable_of_finite _).aestronglyMeasurable
+    rw [integral_eq_lintegral_of_nonneg_ae h_nn h_aesm,
+      ChannelCoding.lintegral_ofReal_measureReal_eq_lintegral_measure μ binMeas
+        (fun f => {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts})]
+    -- Tonelli swap over `binMeas ⊗ μ`.
+    have hE_meas : MeasurableSet {q : (Fin M₁ → Fin M) × Ω |
+        q.2 ∈ {ω | m' ≠ trueIdx ω ∧ q.1 m' = q.1 (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}} := by
+      have h_decomp : {q : (Fin M₁ → Fin M) × Ω |
+          q.2 ∈ {ω | m' ≠ trueIdx ω ∧ q.1 m' = q.1 (trueIdx ω)
+            ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}}
+          = ⋃ f₀ : Fin M₁ → Fin M, ({f₀} : Set (Fin M₁ → Fin M)) ×ˢ
+            {ω | m' ≠ trueIdx ω ∧ f₀ m' = f₀ (trueIdx ω)
+              ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} := by
+        ext ⟨g, ω⟩; simp
+      rw [h_decomp]
+      exact MeasurableSet.iUnion fun f₀ =>
+        (measurableSet_singleton f₀).prod (hbad_meas f₀ m')
+    rw [ChannelCoding.lintegral_measure_swap_of_prod_measurableSet binMeas μ
+      (fun f => {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+        ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}) hE_meas]
+    simp only [Set.mem_setOf_eq]
+    -- Per-`ω` inner bound: the `binMeas`-slice is `≤ M⁻¹` on the typical set, else `0`.
+    have h_inner : ∀ ω : Ω,
+        binMeas {f | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}
+          ≤ ENNReal.ofReal ((M : ℝ)⁻¹) *
+              Set.indicator {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts} 1 ω := by
+      intro ω
+      by_cases htyp : (c₁.decoder m', jointRV Ys n ω) ∈ jts
+      · by_cases hidx : m' = trueIdx ω
+        · have hempty : {f : Fin M₁ → Fin M | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+              ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} = ∅ := by
+            ext f
+            simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false]
+            rintro ⟨hne, -, -⟩
+            exact hne hidx
+          rw [hempty]; simp
+        · have hset : {f : Fin M₁ → Fin M | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+              ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}
+              = {f | f m' = f (trueIdx ω)} := by
+            ext f
+            simp only [Set.mem_setOf_eq]
+            exact ⟨fun h => h.2.1, fun h => ⟨hidx, h, htyp⟩⟩
+          rw [hset]
+          have hmem : ω ∈ {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts} := htyp
+          rw [Set.indicator_of_mem hmem]
+          simp only [Pi.one_apply, mul_one]
+          rw [← ofReal_measureReal (measure_ne_top binMeas {f | f m' = f (trueIdx ω)}),
+            hcollision m' (trueIdx ω) hidx]
+      · have hempty : {f : Fin M₁ → Fin M | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+            ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} = ∅ := by
+          ext f
+          simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false]
+          rintro ⟨-, -, htyp'⟩
+          exact htyp htyp'
+        rw [hempty]; simp
+    have hind_meas : Measurable
+        (Set.indicator {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts} (1 : Ω → ℝ≥0∞)) :=
+      measurable_const.indicator (hC_meas m')
+    have h_lint_le :
+        ∫⁻ ω, binMeas {f | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+            ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂μ
+          ≤ ENNReal.ofReal (Real.exp (-(n : ℝ) * I_YU) * (M : ℝ)⁻¹) := by
+      calc ∫⁻ ω, binMeas {f | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+              ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂μ
+          ≤ ∫⁻ ω, ENNReal.ofReal ((M : ℝ)⁻¹) *
+              Set.indicator {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts} 1 ω ∂μ :=
+            lintegral_mono h_inner
+        _ = ENNReal.ofReal ((M : ℝ)⁻¹) *
+              ∫⁻ ω, Set.indicator {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts} 1 ω ∂μ :=
+            lintegral_const_mul _ hind_meas
+        _ = ENNReal.ofReal ((M : ℝ)⁻¹) *
+              μ {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts} := by
+            rw [lintegral_indicator_one (hC_meas m')]
+        _ ≤ ENNReal.ofReal ((M : ℝ)⁻¹) *
+              ENNReal.ofReal (Real.exp (-(n : ℝ) * I_YU)) := by
+            gcongr
+            calc μ {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts}
+                = ENNReal.ofReal (μ.real {ω' | (c₁.decoder m', jointRV Ys n ω') ∈ jts}) :=
+                  (ofReal_measureReal (measure_ne_top μ _)).symm
+              _ ≤ ENNReal.ofReal (Real.exp (-(n : ℝ) * I_YU)) :=
+                  ENNReal.ofReal_le_ofReal (hmass m')
+        _ = ENNReal.ofReal (Real.exp (-(n : ℝ) * I_YU) * (M : ℝ)⁻¹) := by
+            rw [← ENNReal.ofReal_mul (by positivity)]
+            congr 1
+            ring
+    calc (∫⁻ ω, binMeas {f | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+            ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂μ).toReal
+        ≤ (ENNReal.ofReal (Real.exp (-(n : ℝ) * I_YU) * (M : ℝ)⁻¹)).toReal :=
+          ENNReal.toReal_mono ENNReal.ofReal_ne_top h_lint_le
+      _ = Real.exp (-(n : ℝ) * I_YU) * (M : ℝ)⁻¹ :=
+          ENNReal.toReal_ofReal (by positivity)
+  -- Union bound over the codebook members at each hash `f`, then integrate the sum.
+  have hUnion : ∀ f : Fin M₁ → Fin M,
+      {ω | ∃ m' : Fin M₁, m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}
+        = ⋃ m' ∈ (Finset.univ : Finset (Fin M₁)),
+            {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+              ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} := by
+    intro f; ext ω; simp
+  have hStepA : ∀ f : Fin M₁ → Fin M,
+      μ.real {ω | ∃ m' : Fin M₁, m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}
+        ≤ ∑ m' : Fin M₁, μ.real {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+            ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} := by
+    intro f
+    rw [hUnion f]
+    exact measureReal_biUnion_finset_le Finset.univ _
+  have hInt_outer : Integrable (fun f => μ.real {ω | ∃ m' : Fin M₁, m' ≠ trueIdx ω
+      ∧ f m' = f (trueIdx ω) ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}) binMeas :=
+    Integrable.of_finite
+  have hInt_sum : Integrable (fun f => ∑ m' : Fin M₁, μ.real {ω | m' ≠ trueIdx ω
+      ∧ f m' = f (trueIdx ω) ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts}) binMeas :=
+    Integrable.of_finite
+  calc ∫ f, μ.real {ω | ∃ m' : Fin M₁, m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂binMeas
+      ≤ ∫ f, ∑ m' : Fin M₁, μ.real {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂binMeas :=
+        integral_mono hInt_outer hInt_sum hStepA
+    _ = ∑ m' : Fin M₁, ∫ f, μ.real {ω | m' ≠ trueIdx ω ∧ f m' = f (trueIdx ω)
+          ∧ (c₁.decoder m', jointRV Ys n ω) ∈ jts} ∂binMeas :=
+        integral_finsetSum Finset.univ fun _ _ => Integrable.of_finite
+    _ ≤ ∑ _m' : Fin M₁, Real.exp (-(n : ℝ) * I_YU) * ((M : ℝ))⁻¹ :=
+        Finset.sum_le_sum fun m' _ => hD m'
+    _ = (M₁ : ℝ) * Real.exp (-(n : ℝ) * I_YU) * ((M : ℝ))⁻¹ := by
+        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]; ring
+
+/-- **(S7) Source-extension lift `α' → α`.** Lift a Wyner–Ziv code over the source
+support subtype `α' := {x // 0 < P_X x}` to a code over the full alphabet `α`, using
+the default support element `x₀` for out-of-support coordinates (which have zero
+`Measure.pi P_XY`-mass, so the lift preserves expected block distortion via
+`wz_expectedBlockDistortion_source_agree`). The decoder is unchanged (it does not
+touch `α`). Pure def. -/
+noncomputable def wzLiftSupportCode
+    (P_XY : Measure (α × β)) {M n : ℕ}
+    (x₀ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}})
+    (cSupp : WynerZivCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} β γ) :
+    WynerZivCode M n α β γ where
+  encoder := fun x ↦ cSupp.encoder (fun i ↦
+    haveI := Classical.propDecidable (0 < ∑ y, P_XY.real {(x i, y)})
+    if h : 0 < ∑ y, P_XY.real {(x i, y)} then ⟨x i, h⟩ else x₀)
+  decoder := cSupp.decoder
+
+/-- **(B) Index-binning measure.** Hash each of the `M₁` covering-codebook *indices*
+`Fin M₁` independently to a uniformly random bin in `Fin M`. This is the `Fin M₁`-index
+analogue of `binningMeasure` (which hashes whole sequences `(Fin n → α) → Fin M`); it is
+the concrete `binMeas : Measure (Fin M₁ → Fin M)` that the codebook-restricted
+decoder-confusion exponent `wz_codebook_confusion_expectation_le` (S5b) consumes. -/
+noncomputable def wzIndexBinningMeasure (M₁ M : ℕ) [NeZero M] :
+    Measure (Fin M₁ → Fin M) :=
+  Measure.pi (fun _ : Fin M₁ ↦ uniformOn (Set.univ : Set (Fin M)))
+
+/-- The index-binning measure is a probability measure. -/
+instance wzIndexBinningMeasure.instIsProbabilityMeasure (M₁ M : ℕ) [NeZero M] :
+    IsProbabilityMeasure (wzIndexBinningMeasure M₁ M) := by
+  unfold wzIndexBinningMeasure
+  infer_instance
+
+/-- Singleton mass for the index-binning measure. For any hash function
+`f : Fin M₁ → Fin M`, its `wzIndexBinningMeasure`-mass is `(1/M)^{M₁}` (each of the
+`M₁` covering indices independently picks one of `M` bins). The `Fin M₁`-index mirror
+of `binningMeasure_singleton_real`. -/
+lemma wzIndexBinningMeasure_singleton_real
+    (M₁ M : ℕ) [NeZero M] (f : Fin M₁ → Fin M) :
+    (wzIndexBinningMeasure M₁ M).real {f}
+      = (((M : ℝ))⁻¹) ^ (Fintype.card (Fin M₁)) := by
+  classical
+  haveI : MeasurableSingletonClass (Fin M₁ → Fin M) :=
+    Pi.instMeasurableSingletonClass
+  unfold wzIndexBinningMeasure
+  rw [measureReal_def, Measure.pi_singleton, ENNReal.toReal_prod]
+  -- Each factor is `uniformOn univ {f j}` = `1 / Fintype.card (Fin M)`.
+  have h_factor : ∀ j : Fin M₁,
+      ((uniformOn (Set.univ : Set (Fin M))) {f j}).toReal = (M : ℝ)⁻¹ := by
+    intro j
+    rw [uniformOn_univ]
+    rw [Measure.count_singleton, Fintype.card_fin]
+    rw [ENNReal.toReal_div]
+    simp
+  rw [Finset.prod_congr rfl (fun j _ ↦ h_factor j)]
+  rw [Finset.prod_const]
+  rfl
+
+/-- **Index-binning collision probability.** Two distinct covering indices `m' ≠ m`
+hash to the same bin with probability exactly `1/M`. Supplies `hcollision` to
+`wz_codebook_confusion_expectation_le` (S5b); the `Fin M₁`-index mirror of
+`binning_collision_prob`. -/
+theorem wzIndexBinningMeasure_collision {M₁ M : ℕ} [NeZero M]
+    {m' m : Fin M₁} (h : m' ≠ m) :
+    (wzIndexBinningMeasure M₁ M).real {f | f m' = f m} = (M : ℝ)⁻¹ := by
+  classical
+  haveI : Nonempty (Fin M₁) := ⟨m'⟩
+  haveI : MeasurableSingletonClass (Fin M₁ → Fin M) :=
+    Pi.instMeasurableSingletonClass
+  -- Expand the collision event as a finite sum of singleton masses.
+  set HashFn : Type _ := Fin M₁ → Fin M with hHashFn_def
+  haveI : DecidableEq (Fin M₁) := Classical.decEq _
+  haveI : DecidableEq (Fin M) := Classical.decEq _
+  haveI : Fintype HashFn := Pi.instFintype
+  haveI : DecidableEq HashFn := Classical.decEq _
+  have h_collision_sum :
+      (wzIndexBinningMeasure M₁ M).real {f : HashFn | f m' = f m}
+        = ∑ f : HashFn, (wzIndexBinningMeasure M₁ M).real {f} *
+            (if f m' = f m then (1 : ℝ) else 0) := by
+    set S : Finset HashFn := (Finset.univ : Finset HashFn).filter (fun f ↦ f m' = f m)
+    have h_S_eq : (S : Set HashFn) = {f : HashFn | f m' = f m} := by
+      ext f; simp [S]
+    rw [← h_S_eq, ← sum_measureReal_singleton (μ := wzIndexBinningMeasure M₁ M) S]
+    rw [Finset.sum_filter]
+    refine Finset.sum_congr rfl (fun f _ ↦ ?_)
+    split_ifs with hfx
+    · rw [mul_one]
+    · rw [mul_zero]
+  rw [h_collision_sum]
+  -- Substitute the singleton mass `(1/M)^{M₁}`.
+  have h_sub : ∀ f : HashFn,
+      (wzIndexBinningMeasure M₁ M).real {f} * (if f m' = f m then (1 : ℝ) else 0)
+        = ((M : ℝ)⁻¹) ^ (Fintype.card (Fin M₁)) *
+            (if f m' = f m then (1 : ℝ) else 0) := by
+    intro f
+    rw [wzIndexBinningMeasure_singleton_real M₁ M f]
+  rw [Finset.sum_congr rfl (fun f _ ↦ h_sub f)]
+  rw [← Finset.mul_sum]
+  -- The indicator sum counts `{f | f m' = f m}`.
+  have h_sum_indicator :
+      (∑ f : HashFn, (if f m' = f m then (1 : ℝ) else 0))
+        = (Fintype.card {f : HashFn // f m' = f m} : ℝ) := by
+    rw [Fintype.card_subtype]
+    rw [← Finset.sum_filter]
+    rw [Finset.sum_const]
+    simp
+  rw [h_sum_indicator]
+  -- Count `{f | f m' = f m}` via the bijection that drops the coordinate `m`
+  -- (whose value is forced to equal `f m'`).
+  let toFun : {f : HashFn // f m' = f m} → ({j : Fin M₁ // j ≠ m} → Fin M) :=
+    fun ⟨f, _⟩ j ↦ f j.1
+  let invFun : ({j : Fin M₁ // j ≠ m} → Fin M) → {f : HashFn // f m' = f m} :=
+    fun g ↦ ⟨fun j ↦ if hj : j = m then g ⟨m', h⟩ else g ⟨j, hj⟩, by simp [h]⟩
+  have left_inv : ∀ p, invFun (toFun p) = p := by
+    intro ⟨f, hf⟩
+    apply Subtype.ext
+    funext j
+    by_cases hj : j = m
+    · subst hj
+      show (if hjj : j = j then f m' else f j) = f j
+      simp [hf.symm]
+    · show (if hjj : j = m then f m' else f j) = f j
+      simp [hj]
+  have right_inv : ∀ g, toFun (invFun g) = g := by
+    intro g
+    funext ⟨j, hj⟩
+    show (if hj_eq : j = m then g ⟨m', h⟩ else g ⟨j, hj_eq⟩) = g ⟨j, hj⟩
+    simp [hj]
+  set e : {f : HashFn // f m' = f m} ≃ ({j : Fin M₁ // j ≠ m} → Fin M) :=
+    { toFun := toFun, invFun := invFun, left_inv := left_inv, right_inv := right_inv }
+  rw [Fintype.card_congr e]
+  have h_card_pi :
+      Fintype.card ({j : Fin M₁ // j ≠ m} → Fin M)
+        = M ^ (Fintype.card (Fin M₁) - 1) := by
+    rw [Fintype.card_pi, Finset.prod_const, Fintype.card_fin]
+    congr 1
+    rw [Finset.card_univ, Fintype.card_subtype_compl]
+    simp
+  rw [h_card_pi]
+  set N : ℕ := Fintype.card (Fin M₁) with hN_def
+  have hN_pos : 1 ≤ N := by
+    rw [hN_def]
+    exact Fintype.card_pos
+  have hM_ne : (M : ℝ) ≠ 0 := by
+    have : NeZero M := inferInstance
+    exact_mod_cast NeZero.ne M
+  push_cast
+  rw [inv_pow]
+  have hN_eq : (M : ℝ) ^ N = (M : ℝ) ^ (N - 1) * (M : ℝ) := by
+    conv_lhs => rw [show N = (N - 1) + 1 from (Nat.sub_add_cancel hN_pos).symm]
+    rw [pow_succ]
+  rw [hN_eq, mul_inv, mul_comm ((M : ℝ) ^ (N - 1))⁻¹ _, mul_assoc]
+  rw [inv_mul_cancel₀ (pow_ne_zero _ hM_ne), mul_one]
+
+/-- **(D1) Mutual-information restriction identity (Step 1 rate leaf).** The covering
+mutual information computed on the support-restricted joint `qStar` (over the source
+support subtype `α' := {x // 0 < P_X x}`) equals the Wyner–Ziv covering objective
+`wzMutualInfoXU` computed on the full-alphabet factorisable joint `q'`. The support
+restriction drops only zero atoms of the source marginal `P_X`, which contribute
+`Real.negMulLog 0 = 0` to every marginal and joint entropy sum, so the two mutual
+informations coincide. This algebraic leaf lets the covering family `hcov` — whose
+premise is `mutualInfoPmf qStar < R₁` — be fed at a covering rate `R₁` chosen strictly
+above `wzMutualInfoXU q' = I(X;U)`.
+
+Closed sorry-free (leg-19): `#print axioms` = `[propext, Classical.choice, Quot.sound]`.
+The support-restriction principle (`key`) sums the vanishing off-support terms away
+(`Real.negMulLog 0 = 0`), matching the three marginal/joint entropy sums of `qStar` (over
+the support subtype) against those of `wzMarginalXU q'` (over the full alphabet).
+
+Independent honesty audit 2026-07-06: genuine closure. `#print axioms` re-verified
+sorryAx-free (`[propext, Classical.choice, Quot.sound]`). Non-vacuous: this is a real
+equality of two mutual informations established by the body's three entropy-sum matchings,
+not a definitional/degenerate coincidence. The factorisation hypotheses
+`hfact_eq`/`hκ'sum`/`hqStar_eq` are genuine definitional constraints (without them the two
+mutual informations differ, since `qStar` lives over the support subtype and `q'` over the
+full alphabet); none is the conclusion (no `:= h` circularity), and the body carries the
+real support-restriction argument.
+@audit:ok -/
+lemma wz_mutualInfo_restriction_eq
+    (P_XY : Measure (α × β)) (k : ℕ)
+    (q' : α × β × Fin k → ℝ) (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
+    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) :
+    mutualInfoPmf qStar = wzMutualInfoXU (Fin k) q' := by
+  classical
+  set PX : α → ℝ := fun x => ∑ y, P_XY.real {(x, y)} with hPX
+  have hPX_nn : ∀ x, (0 : ℝ) ≤ PX x :=
+    fun x => Finset.sum_nonneg (fun y _ => measureReal_nonneg)
+  -- Support-restriction: a function vanishing off `supp(P_X)` has equal `α`- and
+  -- support-subtype sums (off-support terms are `0`, so they drop out).
+  have key : ∀ f : α → ℝ, (∀ x, ¬ (0 < PX x) → f x = 0) →
+      ∑ x : {x : α // 0 < PX x}, f x.1 = ∑ x : α, f x := by
+    intro f hf
+    rw [← Finset.sum_subtype (Finset.univ.filter (fun x => 0 < PX x))
+        (fun x => by simp) f]
+    refine Finset.sum_subset (Finset.filter_subset _ _) ?_
+    intro x _ hx
+    exact hf x (by simpa using hx)
+  -- Pointwise pmf values: on the support subtype `qStar` and the full-alphabet
+  -- `wzMarginalXU q'` both equal `κ'(x,u)·P_X(x)`.
+  have hqStar_val : ∀ (a : {x : α // 0 < PX x}) (u : Fin k),
+      qStar (a, u) = κ' a.1 u * PX a.1 := fun a u => hqStar_eq (a, u)
+  have hwz_val : ∀ (x : α) (u : Fin k),
+      wzMarginalXU (Fin k) q' (x, u) = κ' x u * PX x := by
+    intro x u
+    show (∑ y, q' (x, y, u)) = κ' x u * ∑ y, P_XY.real {(x, y)}
+    rw [Finset.mul_sum]
+    exact Finset.sum_congr rfl (fun y _ => hfact_eq x y u)
+  -- Marginals: `marginalFst` of both equals `P_X`; `marginalSnd` of both agree pointwise.
+  have hmargFst_star : ∀ a : {x : α // 0 < PX x}, marginalFst qStar a = PX a.1 := by
+    intro a
+    show (∑ u, qStar (a, u)) = PX a.1
+    simp_rw [hqStar_val a]
+    rw [← Finset.sum_mul, hκ'sum a.1, one_mul]
+  have hmargFst_wz : ∀ x : α,
+      marginalFst (wzMarginalXU (Fin k) q') x = PX x := by
+    intro x
+    show (∑ u, wzMarginalXU (Fin k) q' (x, u)) = PX x
+    simp_rw [hwz_val x]
+    rw [← Finset.sum_mul, hκ'sum x, one_mul]
+  have hmargSnd_eq : ∀ u : Fin k,
+      marginalSnd qStar u = marginalSnd (wzMarginalXU (Fin k) q') u := by
+    intro u
+    show (∑ a : {x : α // 0 < PX x}, qStar (a, u))
+        = ∑ x : α, wzMarginalXU (Fin k) q' (x, u)
+    simp_rw [hqStar_val _ u, hwz_val _ u]
+    exact key (fun x => κ' x u * PX x) (fun x hx => by
+      rw [le_antisymm (not_lt.mp hx) (hPX_nn x), mul_zero])
+  -- Assemble the three entropy sums.
+  have hA : (∑ a : {x : α // 0 < PX x}, Real.negMulLog (marginalFst qStar a))
+      = ∑ a : α, Real.negMulLog (marginalFst (wzMarginalXU (Fin k) q') a) := by
+    rw [Finset.sum_congr rfl (fun a _ => by rw [hmargFst_star a] :
+        ∀ a ∈ (Finset.univ : Finset {x : α // 0 < PX x}),
+          Real.negMulLog (marginalFst qStar a) = Real.negMulLog (PX a.1))]
+    rw [key (fun x => Real.negMulLog (PX x)) (fun x hx => by
+        rw [le_antisymm (not_lt.mp hx) (hPX_nn x)]; exact Real.negMulLog_zero)]
+    exact Finset.sum_congr rfl (fun x _ => by rw [hmargFst_wz x])
+  have hB : (∑ b : Fin k, Real.negMulLog (marginalSnd qStar b))
+      = ∑ b : Fin k, Real.negMulLog (marginalSnd (wzMarginalXU (Fin k) q') b) :=
+    Finset.sum_congr rfl (fun u _ => by rw [hmargSnd_eq u])
+  have hC : (∑ p : {x : α // 0 < PX x} × Fin k, Real.negMulLog (qStar p))
+      = ∑ p : α × Fin k, Real.negMulLog (wzMarginalXU (Fin k) q' p) := by
+    simp_rw [Fintype.sum_prod_type]
+    rw [Finset.sum_congr rfl (fun a _ =>
+        Finset.sum_congr rfl (fun u _ => by rw [hqStar_val a u]) :
+        ∀ a ∈ (Finset.univ : Finset {x : α // 0 < PX x}),
+          (∑ u, Real.negMulLog (qStar (a, u)))
+            = ∑ u, Real.negMulLog (κ' a.1 u * PX a.1))]
+    rw [key (fun x => ∑ u, Real.negMulLog (κ' x u * PX x)) (fun x hx => by
+        rw [le_antisymm (not_lt.mp hx) (hPX_nn x)]
+        simp [Real.negMulLog_zero])]
+    exact Finset.sum_congr rfl (fun x _ =>
+      Finset.sum_congr rfl (fun u _ => by rw [hwz_val x u]))
+  unfold wzMutualInfoXU mutualInfoPmf
+  rw [hA, hB, hC]
+
+/-! ### pmf-side product bounds for D2
+
+The per-codeword AEP mass bound D2 is assembled purely from single-symbol pmf
+products (no joint-sequence independence is available in D2's hypotheses). The
+following three leaves convert the typical-set membership predicate into product
+bounds on the alphabet-side laws `μ.map (Xs 0)`. -/
+
+/-- `exp(-∑ pmfLog) = ∏ P`: the per-block likelihood as a product of single-symbol
+masses, valid on a full-support alphabet. -/
+private lemma exp_neg_sum_pmfLog_eq_prod
+    {Ω A : Type*} [MeasurableSpace Ω] [Fintype A] [MeasurableSpace A]
+    [MeasurableSingletonClass A]
+    (μ : Measure Ω) (Xs : ℕ → Ω → A)
+    (hpos : ∀ a : A, 0 < (μ.map (Xs 0)).real {a})
+    (n : ℕ) (x : Fin n → A) :
+    Real.exp (-(∑ i : Fin n, pmfLog μ Xs (x i)))
+      = ∏ i : Fin n, (μ.map (Xs 0)).real {x i} := by
+  rw [← Finset.sum_neg_distrib, Real.exp_sum]
+  refine Finset.prod_congr rfl fun i _ ↦ ?_
+  have hlog : -(pmfLog μ Xs (x i)) = Real.log ((μ.map (Xs 0)).real {x i}) := by
+    simp only [pmfLog, neg_neg]
+  rw [hlog, Real.exp_log (hpos (x i))]
+
+/-- pmf-side upper bound: for a typical block `x`, the product of single-symbol
+masses is `≤ exp(-n(H - ε))`. Independence-free companion of `typicalSet_prob_le`. -/
+private lemma prod_map_singleton_le_of_mem_typicalSet
+    {Ω A : Type*} [MeasurableSpace Ω] [Fintype A] [DecidableEq A] [Nonempty A]
+    [MeasurableSpace A] [MeasurableSingletonClass A]
+    (μ : Measure Ω) (Xs : ℕ → Ω → A)
+    (hpos : ∀ a : A, 0 < (μ.map (Xs 0)).real {a})
+    (n : ℕ) {ε : ℝ} (x : Fin n → A) (hx : x ∈ typicalSet μ Xs n ε) :
+    ∏ i : Fin n, (μ.map (Xs 0)).real {x i}
+      ≤ Real.exp (-(n : ℝ) * (entropy μ (Xs 0) - ε)) := by
+  rw [mem_typicalSet_iff] at hx
+  rcases Nat.eq_zero_or_pos n with hn0 | hnpos
+  · subst hn0; simp
+  · have hnR : (0 : ℝ) < n := by exact_mod_cast hnpos
+    have hlower : -ε < (∑ i : Fin n, pmfLog μ Xs (x i)) / n - entropy μ (Xs 0) :=
+      (abs_lt.mp hx).1
+    have hsum_gt : (n : ℝ) * (entropy μ (Xs 0) - ε) < ∑ i : Fin n, pmfLog μ Xs (x i) := by
+      have h := (lt_div_iff₀ hnR).mp (by linarith :
+        entropy μ (Xs 0) - ε < (∑ i : Fin n, pmfLog μ Xs (x i)) / n)
+      linarith
+    have hexp : Real.exp (-(∑ i : Fin n, pmfLog μ Xs (x i)))
+        < Real.exp (-((n : ℝ) * (entropy μ (Xs 0) - ε))) :=
+      Real.exp_lt_exp.mpr (by linarith)
+    rw [exp_neg_sum_pmfLog_eq_prod μ Xs hpos n x] at hexp
+    calc ∏ i : Fin n, (μ.map (Xs 0)).real {x i}
+        ≤ Real.exp (-((n : ℝ) * (entropy μ (Xs 0) - ε))) := hexp.le
+      _ = Real.exp (-(n : ℝ) * (entropy μ (Xs 0) - ε)) := by rw [neg_mul]
+
+/-- pmf-side lower bound: for a typical block `x`, the product of single-symbol
+masses is `≥ exp(-n(H + ε))`. Independence-free companion of `typicalSet_prob_ge`. -/
+private lemma prod_map_singleton_ge_of_mem_typicalSet
+    {Ω A : Type*} [MeasurableSpace Ω] [Fintype A] [DecidableEq A] [Nonempty A]
+    [MeasurableSpace A] [MeasurableSingletonClass A]
+    (μ : Measure Ω) (Xs : ℕ → Ω → A)
+    (hpos : ∀ a : A, 0 < (μ.map (Xs 0)).real {a})
+    (n : ℕ) {ε : ℝ} (x : Fin n → A) (hx : x ∈ typicalSet μ Xs n ε) :
+    Real.exp (-(n : ℝ) * (entropy μ (Xs 0) + ε))
+      ≤ ∏ i : Fin n, (μ.map (Xs 0)).real {x i} := by
+  rw [mem_typicalSet_iff] at hx
+  rcases Nat.eq_zero_or_pos n with hn0 | hnpos
+  · subst hn0; simp
+  · have hnR : (0 : ℝ) < n := by exact_mod_cast hnpos
+    have hupper : (∑ i : Fin n, pmfLog μ Xs (x i)) / n - entropy μ (Xs 0) < ε :=
+      (abs_lt.mp hx).2
+    have hsum_lt : (∑ i : Fin n, pmfLog μ Xs (x i)) < (n : ℝ) * (entropy μ (Xs 0) + ε) := by
+      have h := (div_lt_iff₀ hnR).mp (by linarith :
+        (∑ i : Fin n, pmfLog μ Xs (x i)) / n < entropy μ (Xs 0) + ε)
+      linarith
+    have hexp : Real.exp (-((n : ℝ) * (entropy μ (Xs 0) + ε)))
+        < Real.exp (-(∑ i : Fin n, pmfLog μ Xs (x i))) :=
+      Real.exp_lt_exp.mpr (by linarith)
+    rw [exp_neg_sum_pmfLog_eq_prod μ Xs hpos n x] at hexp
+    calc Real.exp (-(n : ℝ) * (entropy μ (Xs 0) + ε))
+        = Real.exp (-((n : ℝ) * (entropy μ (Xs 0) + ε))) := by rw [neg_mul]
+      _ ≤ ∏ i : Fin n, (μ.map (Xs 0)).real {x i} := hexp.le
+
+/-- **(D2) Covering-codeword side-information mass upper bound (E2 AEP crux).** For any
+fixed covering codeword `u : Fin n → Fin k`, the probability (over the noise generating
+`Y^n = jointRV Ys n`) that `u` is jointly typical with `Y^n` is at most
+`exp(−n · I_YU)`, where `I_YU ≲ I(U;Y)`. This is the per-codeword AEP mass bound that
+`wz_codebook_confusion_expectation_le` (S5b) consumes as its `hmass` hypothesis: because
+the covering codewords are drawn independently of the side information `Y`, a fixed
+covering codeword lands in a `Y^n`-conditional typical slice with the packing exponent
+`exp(−n · I(U;Y))`.
+
+Closed sorry-free (leg-19): the per-codeword form is assembled directly from single-symbol
+pmf products (no joint-sequence independence is needed and none is available in the
+hypotheses). Reframing the `ω`-event as the `Y`-law mass of the fixed-`u` slice
+`{y | (u, y) ∈ jointlyTypicalSet}` (via `map_measureReal_apply` on `jointRV Ys n`), the
+slice mass is bounded by `∑_{y} exp(−n(H(Y)−ε)) · [1 ≤ exp(n(H(Z)+ε))·∏ P_Z(u,y)]`; folding
+in the joint-typical product lower bound (`prod_map_singleton_ge_of_mem_typicalSet`) and
+marginalising `∑_y ∏_i P_Z(u_i,y_i) = ∏_i P_U(u_i)` (`Finset.prod_univ_sum` +
+`sum_real_prod_singleton_of_map_fst_eq`), the `U`-typical product bound
+(`prod_map_singleton_le_of_mem_typicalSet`) gives `mass ≤ exp(−n(H(U)+H(Y)−H(U,Y)−3ε))
+= exp(−n(I(U;Y)−3ε)) ≤ exp(−n·I_YU)` since `hI_YU : I_YU ≤ I(U;Y) − 3ε`. For an atypical `u`
+the slice is empty and the mass is `0`. `#print axioms` = `[propext, Classical.choice,
+Quot.sound]`.
+
+The exponent slack `3ε` is exactly the sum of the joint-product slack (`ε`) and the
+`Y`/`U` typicality slacks (`ε` each); `hI_YU` is a precondition supplying the standard
+typicality slack, not load-bearing (the upper bound on `I_YU` only weakens the RHS
+`exp(−n·I_YU)`). `hindepU`/`hidentU`/`hε` are inherited regularity preconditions that the
+pmf-side assembly does not consume.
+@audit:ok -/
+lemma wz_covering_codeword_sideInfo_mass_le
+    {Ω : Type*} [MeasurableSpace Ω] {k n : ℕ} [Nonempty (Fin k)]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Us : ℕ → Ω → Fin k) (Ys : ℕ → Ω → β) (ε : ℝ) (hε : 0 < ε)
+    (hUs : ∀ i, Measurable (Us i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindepU : iIndepFun (fun i ↦ Us i) μ)
+    (hidentU : ∀ i, IdentDistrib (Us i) (Us 0) μ μ)
+    (hindepY : iIndepFun (fun i ↦ Ys i) μ)
+    (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
+    (hposU : ∀ u : Fin k, 0 < (μ.map (Us 0)).real {u})
+    (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
+    (hposZ : ∀ p : Fin k × β,
+        0 < (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {p})
+    (I_YU : ℝ)
+    (hI_YU : I_YU ≤ entropy μ (Us 0) + entropy μ (Ys 0)
+        - entropy μ (ChannelCoding.jointSequence Us Ys 0) - 3 * ε) :
+    ∀ u : Fin n → Fin k,
+      μ.real {ω | (u, jointRV Ys n ω)
+          ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε}
+        ≤ Real.exp (-(n : ℝ) * I_YU) := by
+  classical
+  intro u
+  have hYmeas : Measurable (jointRV Ys n) := measurable_jointRV Ys hYs n
+  haveI hMYprob : IsProbabilityMeasure (μ.map (jointRV Ys n)) :=
+    Measure.isProbabilityMeasure_map hYmeas.aemeasurable
+  haveI hMZprob : IsProbabilityMeasure (μ.map (ChannelCoding.jointSequence Us Ys 0)) :=
+    Measure.isProbabilityMeasure_map
+      (ChannelCoding.measurable_jointSequence Us Ys hUs hYs 0).aemeasurable
+  -- Reframe the ω-event as the Y-law mass of the fixed-`u` fiber slice.
+  have hpre : {ω | (u, jointRV Ys n ω)
+        ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε}
+      = jointRV Ys n ⁻¹' {y | (u, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε} := rfl
+  have hkey : μ.real {ω | (u, jointRV Ys n ω)
+        ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε}
+      = (μ.map (jointRV Ys n)).real
+          {y | (u, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε} := by
+    rw [hpre, map_measureReal_apply hYmeas ((Set.toFinite _).measurableSet)]
+  rw [hkey]
+  set S : Set (Fin n → β) :=
+    {y | (u, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε} with hS_def
+  by_cases hu : u ∈ typicalSet μ Us n ε
+  · -- Main case: `u` is `U`-typical.
+    set F : Finset (Fin n → β) := (Set.toFinite S).toFinset with hF_def
+    have hcoe : (F : Set (Fin n → β)) = S := by
+      rw [hF_def]; exact (Set.toFinite S).coe_toFinset
+    have hmem : ∀ y ∈ F, (u, y) ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε := by
+      intro y hy
+      have hyS : y ∈ S := (Set.Finite.mem_toFinset (Set.toFinite S)).mp hy
+      exact hyS
+    -- Y-side per-atom mass bound.
+    have hYterm : ∀ y ∈ F,
+        (μ.map (jointRV Ys n)).real {y}
+          ≤ Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε)) := by
+      intro y hy
+      have hy2 : y ∈ typicalSet μ Ys n ε :=
+        ((ChannelCoding.mem_jointlyTypicalSet_iff μ Us Ys n ε u y).mp (hmem y hy)).2.1
+      exact typicalSet_prob_le μ Ys hYs hindepY hidentY hposY n y hy2
+    -- Joint-side per-atom product lower bound.
+    have hZterm : ∀ y ∈ F,
+        Real.exp (-(n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε))
+          ≤ ∏ i : Fin n, (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} := by
+      intro y hy
+      have hy3 : (fun i ↦ (u i, y i))
+          ∈ typicalSet μ (ChannelCoding.jointSequence Us Ys) n ε :=
+        ((ChannelCoding.mem_jointlyTypicalSet_iff μ Us Ys n ε u y).mp (hmem y hy)).2.2
+      exact prod_map_singleton_ge_of_mem_typicalSet μ
+        (ChannelCoding.jointSequence Us Ys) hposZ n (fun i ↦ (u i, y i)) hy3
+    -- Combined per-term bound: fold the trivial factor `1 ≤ exp · ∏`.
+    have hperterm : ∀ y ∈ F,
+        (μ.map (jointRV Ys n)).real {y}
+          ≤ (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
+              * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
+            * ∏ i : Fin n,
+                (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} := by
+      intro y hy
+      have h1 := hYterm y hy
+      have h2 := hZterm y hy
+      have hC2pos : (0 : ℝ) <
+          Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)) :=
+        Real.exp_pos _
+      have heq1 :
+          Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε))
+            * Real.exp (-(n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε))
+            = 1 := by
+        rw [← Real.exp_add]; simp
+      have hone : (1 : ℝ) ≤
+          Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε))
+            * ∏ i : Fin n,
+                (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} := by
+        have hmul := mul_le_mul_of_nonneg_left h2 hC2pos.le
+        rwa [heq1] at hmul
+      calc (μ.map (jointRV Ys n)).real {y}
+          ≤ Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε)) := h1
+        _ = Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε)) * 1 := (mul_one _).symm
+        _ ≤ Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
+              * (Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε))
+                * ∏ i : Fin n,
+                    (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)}) :=
+              mul_le_mul_of_nonneg_left hone (Real.exp_nonneg _)
+        _ = (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
+              * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
+            * ∏ i : Fin n,
+                (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} := by
+              rw [mul_assoc]
+    -- Marginalisation: summing the joint product over all `y` recovers `∏ P_U`.
+    have hmarg :
+        (μ.map (ChannelCoding.jointSequence Us Ys 0)).map Prod.fst = μ.map (Us 0) := by
+      rw [Measure.map_map measurable_fst
+        (ChannelCoding.measurable_jointSequence Us Ys hUs hYs 0)]
+      rfl
+    have hmarginal :
+        (∑ y : Fin n → β, ∏ i : Fin n,
+            (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)})
+          = ∏ i : Fin n, (μ.map (Us 0)).real {u i} := by
+      have hpe := Finset.prod_univ_sum (fun _ : Fin n ↦ (Finset.univ : Finset β))
+        (fun (i : Fin n) (b : β) ↦
+          (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, b)})
+      rw [Fintype.piFinset_univ] at hpe
+      rw [← hpe]
+      refine Finset.prod_congr rfl (fun i _ ↦ ?_)
+      exact sum_real_prod_singleton_of_map_fst_eq
+        (μ.map (ChannelCoding.jointSequence Us Ys 0)) (μ.map (Us 0)) hmarg (u i)
+    -- `∏ P_U ≤ exp(-n(H(U) - ε))` from `U`-typicality of `u`.
+    have hUbound : ∏ i : Fin n, (μ.map (Us 0)).real {u i}
+        ≤ Real.exp (-(n : ℝ) * (entropy μ (Us 0) - ε)) :=
+      prod_map_singleton_le_of_mem_typicalSet μ Us hposU n u hu
+    -- Constant-factor closure of the exponents.
+    have hExpFactor :
+        (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
+          * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
+          * Real.exp (-(n : ℝ) * (entropy μ (Us 0) - ε))
+        ≤ Real.exp (-(n : ℝ) * I_YU) := by
+      rw [← Real.exp_add, ← Real.exp_add]
+      apply Real.exp_le_exp.mpr
+      have hexp_eq :
+          -(n : ℝ) * (entropy μ (Ys 0) - ε)
+            + (n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)
+            + -(n : ℝ) * (entropy μ (Us 0) - ε)
+          = -(n : ℝ) * (entropy μ (Us 0) + entropy μ (Ys 0)
+              - entropy μ (ChannelCoding.jointSequence Us Ys 0) - 3 * ε) := by ring
+      rw [hexp_eq]
+      have hn : (0 : ℝ) ≤ n := Nat.cast_nonneg n
+      have := mul_le_mul_of_nonneg_left hI_YU hn
+      rw [neg_mul, neg_mul]
+      linarith
+    -- Chain everything.
+    calc (μ.map (jointRV Ys n)).real S
+        = ∑ y ∈ F, (μ.map (jointRV Ys n)).real {y} := by
+          rw [← hcoe, ← sum_measureReal_singleton]
+      _ ≤ ∑ y ∈ F,
+            (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
+              * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
+            * ∏ i : Fin n,
+                (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} :=
+          Finset.sum_le_sum hperterm
+      _ = (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
+            * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
+          * ∑ y ∈ F, ∏ i : Fin n,
+              (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} := by
+          rw [← Finset.mul_sum]
+      _ ≤ (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
+            * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
+          * ∑ y : Fin n → β, ∏ i : Fin n,
+              (μ.map (ChannelCoding.jointSequence Us Ys 0)).real {(u i, y i)} := by
+          apply mul_le_mul_of_nonneg_left _ (by positivity)
+          exact Finset.sum_le_sum_of_subset_of_nonneg (Finset.subset_univ F)
+            (fun y _ _ ↦ Finset.prod_nonneg (fun i _ ↦ measureReal_nonneg))
+      _ = (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
+            * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
+          * ∏ i : Fin n, (μ.map (Us 0)).real {u i} := by rw [hmarginal]
+      _ ≤ (Real.exp (-(n : ℝ) * (entropy μ (Ys 0) - ε))
+            * Real.exp ((n : ℝ) * (entropy μ (ChannelCoding.jointSequence Us Ys 0) + ε)))
+          * Real.exp (-(n : ℝ) * (entropy μ (Us 0) - ε)) := by
+          apply mul_le_mul_of_nonneg_left hUbound (by positivity)
+      _ ≤ Real.exp (-(n : ℝ) * I_YU) := hExpFactor
+  · -- `u` not `U`-typical: the slice is empty, mass is `0`.
+    have hSempty : S = ∅ := by
+      rw [hS_def]
+      ext y
+      simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false]
+      intro hy
+      exact hu ((ChannelCoding.mem_jointlyTypicalSet_iff μ Us Ys n ε u y).mp hy).1
+    rw [hSempty, measureReal_empty]
+    exact (Real.exp_pos _).le
+
+/-! ### Leg A — two-ambient WZ-joint regularity construction
+
+The per-`n` binned code (D3) reduces the WZ error to closed error-event atoms that each
+consume an i.i.d. ambient plus a *regularity bundle* (measurability / `iIndepFun` /
+`IdentDistrib` / marginal positivity / marginal identities). This section supplies those
+bundles from D3's covering data (`qStar` / `κ'`), for the **two** ambients the error
+decomposition runs on:
+
+* the **covering ambient** `rdAmbient qStar` on `ℕ → ({x // 0 < P_X x} × Fin k)`
+  (`iidXs` = source, `iidYs` = covering codeword `U`) drives the covering-acceptance
+  gateway atom `wz_covering_sideInfo_mass_ge` (instantiated with the source in the
+  strong-typicality role and `U` in the conditioning role) and the covering-failure
+  integral `wz_covering_failure_prob_le` (S5a);
+* the **side-information ambient** `rdAmbient (wzSideInfoMarginal P_XY κ')` on
+  `ℕ → (Fin k × {y // 0 < P_Y y})` (`iidXs` = covering codeword `U`, `iidYs` = side
+  information `Y`) drives the per-codeword mass bound `wz_covering_codeword_sideInfo_mass_le`
+  (D2) and the codebook-confusion integral `wz_codebook_confusion_expectation_le` (S5b).
+
+The first block gives a generic `rdAmbient`-level regularity API (reusable for either
+ambient); the second constructs the `(U, Y)`-marginal pmf `wzSideInfoMarginal` on the
+positive-`Y`-marginal subtype together with its simplex membership and full support (the
+covering side already receives `hqStar_mem` / `hqStar_pos` as D3 hypotheses). No
+error-probability or decoder-correctness statement is produced here — the deliverable is
+pure regularity, consumed downstream by Leg C/D. -/
+
+
+/-! ### Leg B — `α' → α` source-measure change of variables
+
+The covering `LossyCode` (D3 hypothesis `hcov₁`) measures its block distortion under the
+i.i.d. covering ambient `(rdAmbient qStar).map (iidXs 0)` on the source-support subtype
+`α' := {x // 0 < P_X x}`, whereas the Wyner–Ziv conclusion measures the lifted code under
+`Measure.pi P_XY` on `α × β`. This block reconciles the *source* side of that change of
+variables: the covering ambient's `X`-marginal, pushed from `α'` back to the full alphabet
+`α` by `Subtype.val`, is exactly the source `X`-marginal `P_XY.map Prod.fst`. On the
+support the covering `X`-marginal singleton is `∑_u qStar(⟨a,·⟩, u) = ∑_y P_XY{(a,y)}` (by
+`hqStar_eq` and `hκ'sum`); off the support both sides carry zero mass. This is pure
+source-measure transport — no decoder, error event, or distortion function enters — the
+source-measure companion of the null-set decoder transport
+`wz_expectedBlockDistortion_source_agree` (S2). -/
+
+/-- The covering ambient's `X`-marginal, pushed to the full alphabet `α` by `Subtype.val`,
+agrees with the source `X`-marginal `P_XY.map Prod.fst` on every singleton. -/
+private lemma wz_covering_source_marginal_real_singleton
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ}
+    (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    (a : α) :
+    (((rdAmbient qStar).map (ChannelCoding.iidXs 0)).map Subtype.val).real {a}
+      = (P_XY.map Prod.fst).real {a} := by
+  classical
+  -- The covering data forces the index type `α' × Fin k` to be nonempty (`∑ = 1`), so the
+  -- `Nonempty` instances the ambient-marginal lemmas need are available.
+  haveI hne_prod : Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
+    Finset.univ_nonempty_iff.mp
+      (Finset.nonempty_of_sum_ne_zero (by rw [hqStar_mem.2]; exact one_ne_zero))
+  haveI : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := hne_prod.map Prod.fst
+  haveI : Nonempty (Fin k) := hne_prod.map Prod.snd
+  -- The source `X`-marginal singleton equals the coordinate sum `∑_y P_XY{(a,y)}`.
+  have hRHS : (P_XY.map Prod.fst).real {a} = ∑ y, P_XY.real {(a, y)} :=
+    (sum_real_prod_singleton_of_map_fst_eq P_XY (P_XY.map Prod.fst) rfl a).symm
+  -- Push the outer `Subtype.val` map into a preimage.
+  rw [map_measureReal_apply measurable_subtype_coe (MeasurableSet.singleton a)]
+  by_cases ha : 0 < ∑ y, P_XY.real {(a, y)}
+  · -- On the support the preimage is the singleton `{⟨a, ha⟩}`.
+    have hpre : (Subtype.val ⁻¹' {a} : Set {x : α // 0 < ∑ y, P_XY.real {(x, y)}})
+        = {(⟨a, ha⟩ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}})} := by
+      ext x'
+      simp only [Set.mem_preimage, Set.mem_singleton_iff, Subtype.ext_iff]
+    rw [hpre, hRHS, rdAmbient_map_iidXs qStar hqStar_mem,
+        pmfToMeasure_map_fst_real_singleton hqStar_mem ⟨a, ha⟩]
+    -- `marginalFst qStar ⟨a,ha⟩ = ∑_u κ' a u · (∑_y P_XY{(a,y)}) = ∑_y P_XY{(a,y)}`.
+    unfold marginalFst
+    have hval : ∀ u : Fin k, qStar (⟨a, ha⟩, u) = κ' a u * ∑ y, P_XY.real {(a, y)} :=
+      fun u ↦ hqStar_eq (⟨a, ha⟩, u)
+    rw [Finset.sum_congr rfl (fun u _ ↦ hval u), ← Finset.sum_mul, hκ'sum a, one_mul]
+  · -- Off the support the preimage is empty and the coordinate sum vanishes.
+    have hpre : (Subtype.val ⁻¹' {a} : Set {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) = ∅ := by
+      ext x'
+      simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_empty_iff_false, iff_false]
+      intro hx'
+      exact ha (hx' ▸ x'.2)
+    rw [hpre, measureReal_empty, hRHS]
+    exact (le_antisymm (not_lt.mp ha)
+      (Finset.sum_nonneg fun y _ ↦ measureReal_nonneg)).symm
+
+/-- **(Leg B) Source-measure change of variables `α' → α`.** The covering ambient's
+`X`-marginal, transported from the support subtype `α'` to the full alphabet `α` by
+`Subtype.val`, equals the source `X`-marginal `P_XY.map Prod.fst`. This is the source-side
+half of the lift `α' → α`; the decoder side is handled null-set-wise by
+`wz_expectedBlockDistortion_source_agree` (S2). No decoder / error-probability content
+enters — pure source-measure transport. -/
+private lemma wz_covering_source_measure_map_val_eq
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ}
+    (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k)) :
+    ((rdAmbient qStar).map (ChannelCoding.iidXs 0)).map Subtype.val
+      = P_XY.map Prod.fst := by
+  classical
+  haveI hne_prod : Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
+    Finset.univ_nonempty_iff.mp
+      (Finset.nonempty_of_sum_ne_zero (by rw [hqStar_mem.2]; exact one_ne_zero))
+  haveI : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := hne_prod.map Prod.fst
+  haveI : Nonempty (Fin k) := hne_prod.map Prod.snd
+  haveI : IsProbabilityMeasure ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) :=
+    rdAmbient_iidXs_isProbabilityMeasure qStar hqStar_mem
+  haveI : IsProbabilityMeasure
+      (((rdAmbient qStar).map (ChannelCoding.iidXs 0)).map Subtype.val) :=
+    Measure.isProbabilityMeasure_map measurable_subtype_coe.aemeasurable
+  haveI : IsProbabilityMeasure (P_XY.map Prod.fst) :=
+    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+  -- Two finite measures on the finite alphabet `α` agree iff they agree on singletons.
+  refine MeasureTheory.Measure.ext_of_singleton (fun a ↦ ?_)
+  have h := wz_covering_source_marginal_real_singleton P_XY κ' qStar hκ'sum hqStar_eq hqStar_mem a
+  simp only [Measure.real] at h
+  exact (ENNReal.toReal_eq_toReal_iff' (measure_ne_top _ _) (measure_ne_top _ _)).mp h
+
+/-! ### Steps 3–7 (Leg C) — the distortion-decomposition bridge
+
+The bridge that the derandomize + squeeze glue (Leg D) consumes: it decomposes the
+Wyner–Ziv code's actual expected block distortion into a good-event proxy plus
+`distortionMax · Pr[error]`, mirroring the rate-distortion `source_avg_distortion_le_simpler`
+(`AchievabilityAsymptoticFailureDecay.lean`) but for the **bin conditional-typicality
+decoder** (`wzBinTypicalDecoder`, S4) threaded through `wzCodeOfCoveringBinning` (S3).
+
+* `wz_expectedBlockDistortion_le_of_badSet` — the generic, decoder-agnostic
+  measure-theoretic decomposition (the reusable analytic core; sorry-free).
+* `wz_covering_binning_distortion_decomp` — the specialisation to the covering+binning
+  code, splitting `Pr[error]` into the covering-distortion-failure event `E1` and the
+  bin-decoder confusion event `E2` (the shape Leg D bounds via S5a/S5b/D2/(B)).
+-/
+
+/-- **(Leg C, generic) Codebook-fixed distortion decomposition for a Wyner–Ziv code.**
+The bin-decoder analogue of the rate-distortion `source_avg_distortion_le_simpler`: for
+*any* Wyner–Ziv code `c`, any "bad set" `B` of source blocks, and any proxy value
+`P ≥ 0` such that **outside** `B` the empirical block distortion is at most `P`, the
+source-averaged block distortion decomposes as `P + distortionMax d · Pr[B]`.
+
+This is the reusable measure-theoretic core of the Wyner–Ziv distortion analysis. It is
+**decoder-agnostic** — it applies verbatim to the bin conditional-typicality decoder (S4)
+threaded through `wzCodeOfCoveringBinning` (S3) — so the bin-decoder specifics enter only
+when `B` and `P` are instantiated (`wz_covering_binning_distortion_decomp`). Sorry-free. -/
+lemma wz_expectedBlockDistortion_le_of_badSet {M n : ℕ}
+    (c : WynerZivCode M n α β γ) (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (B : Set (Fin n → α × β)) (P : ℝ) (hP : 0 ≤ P)
+    (hgood : ∀ p : Fin n → α × β, p ∉ B →
+        blockDistortion d n (fun i ↦ (p i).1)
+            (c.decoder (c.encoder (fun i ↦ (p i).1), fun i ↦ (p i).2)) ≤ P) :
+    c.expectedBlockDistortion P_XY d
+      ≤ P + distortionMax d * (Measure.pi (fun _ : Fin n ↦ P_XY)).real B := by
+  classical
+  haveI : MeasurableSingletonClass (α × β) := by infer_instance
+  haveI : MeasurableSingletonClass (Fin n → α × β) := Pi.instMeasurableSingletonClass
+  unfold WynerZivCode.expectedBlockDistortion
+  set dMax : ℝ := distortionMax d with hdMax_def
+  have h_dMax_nn : 0 ≤ dMax := distortionMax_nonneg d
+  set Q : Measure (Fin n → α × β) := Measure.pi (fun _ : Fin n ↦ P_XY) with hQ_def
+  haveI : IsProbabilityMeasure Q := by rw [hQ_def]; infer_instance
+  set F : (Fin n → α × β) → ℝ := fun p ↦
+      blockDistortion d n (fun i ↦ (p i).1)
+        (c.decoder (c.encoder (fun i ↦ (p i).1), fun i ↦ (p i).2)) with hF_def
+  have h_B_meas : MeasurableSet B := (Set.toFinite _).measurableSet
+  -- Pointwise: `F p ≤ P + dMax · (B.indicator 1 p)`.
+  have h_pointwise : ∀ p, F p ≤ P + dMax * (B.indicator (fun _ ↦ (1 : ℝ)) p) := by
+    intro p
+    by_cases hpB : p ∈ B
+    · have h_bd : F p ≤ dMax := blockDistortion_le_distortionMax d n _ _
+      have h_ind : B.indicator (fun _ : Fin n → α × β ↦ (1 : ℝ)) p = 1 :=
+        Set.indicator_of_mem hpB _
+      rw [h_ind]; nlinarith [h_bd, hP, h_dMax_nn]
+    · have h_bd : F p ≤ P := hgood p hpB
+      have h_ind : B.indicator (fun _ : Fin n → α × β ↦ (1 : ℝ)) p = 0 :=
+        Set.indicator_of_notMem hpB _
+      rw [h_ind]; nlinarith [h_bd, h_dMax_nn]
+  -- Both sides are bounded, hence integrable on the probability measure `Q`.
+  have h_meas_F : Measurable F := measurable_of_finite _
+  have h_meas_g : Measurable
+      (fun p : Fin n → α × β ↦ P + dMax * (B.indicator (fun _ ↦ (1 : ℝ)) p)) :=
+    measurable_of_finite _
+  have h_F_le : ∀ p, ‖F p‖ ≤ dMax := by
+    intro p
+    rw [Real.norm_eq_abs, abs_of_nonneg (blockDistortion_nonneg d n _ _)]
+    exact blockDistortion_le_distortionMax d n _ _
+  have h_int_F : Integrable F Q :=
+    Integrable.mono' (integrable_const dMax) h_meas_F.aestronglyMeasurable
+      (Filter.Eventually.of_forall h_F_le)
+  have h_int_g : Integrable
+      (fun p : Fin n → α × β ↦ P + dMax * (B.indicator (fun _ ↦ (1 : ℝ)) p)) Q := by
+    refine Integrable.mono' (integrable_const (P + dMax)) h_meas_g.aestronglyMeasurable ?_
+    refine Filter.Eventually.of_forall (fun p ↦ ?_)
+    have h_ind_le : (B.indicator (fun _ : Fin n → α × β ↦ (1 : ℝ)) p) ≤ 1 := by
+      by_cases hpB : p ∈ B
+      · rw [Set.indicator_of_mem hpB]
+      · rw [Set.indicator_of_notMem hpB]; linarith
+    have h_ind_nn : 0 ≤ (B.indicator (fun _ : Fin n → α × β ↦ (1 : ℝ)) p) :=
+      Set.indicator_nonneg (fun _ _ ↦ zero_le_one) p
+    have h_val_nn : 0 ≤ P + dMax * (B.indicator (fun _ : Fin n → α × β ↦ (1 : ℝ)) p) :=
+      add_nonneg hP (mul_nonneg h_dMax_nn h_ind_nn)
+    rw [Real.norm_eq_abs, abs_of_nonneg h_val_nn]
+    nlinarith [mul_le_mul_of_nonneg_left h_ind_le h_dMax_nn]
+  -- Integrate the pointwise bound and evaluate the indicator integral.
+  have h_int_mono : ∫ p, F p ∂Q
+      ≤ ∫ p, P + dMax * (B.indicator (fun _ : Fin n → α × β ↦ (1 : ℝ)) p) ∂Q :=
+    integral_mono h_int_F h_int_g h_pointwise
+  rw [integral_const_add_indicator_one Q B h_B_meas P dMax] at h_int_mono
+  exact h_int_mono
+
+/-- **(Leg C) Wyner–Ziv covering + binning distortion-decomposition bridge.**
+For the covering+binning Wyner–Ziv code `wzCodeOfCoveringBinning c₁ f qf.2 (bin decoder)`
+(S3 assembled with the bin conditional-typicality decoder S4), the source-averaged actual
+block distortion decomposes as
+
+```
+𝔼[dⁿ]  ≤  P  +  distortionMax dα' · ( Pr[E1] + Pr[E2] )
+```
+
+where the two error events over the source blocks `Fin n → α' × β` are
+
+* `E1` — the **covering-distortion-failure** event: the reconstruction from the *true*
+  covering codeword `c₁.decoder (c₁.encoder x)` (via the test-channel reconstruction map
+  `qf.2` and the side information `y`) has block distortion exceeding the proxy budget `P`;
+* `E2` — the **bin-decoder confusion** event: the bin conditional-typicality decoder
+  returns a covering word different from the true covering codeword.
+
+Outside `E1 ∪ E2` the decoder recovers the true covering codeword, so the actual
+reconstruction *equals* the ideal one and its block distortion is `≤ P`; the decomposition
+is then the generic `wz_expectedBlockDistortion_le_of_badSet` plus a union bound. This is
+the shape the derandomize + squeeze glue (Leg D) consumes: it bounds `Pr[E1]` by the
+covering-distortion typicality (`hfeas` + S5a `wz_covering_failure_prob_le`) and `Pr[E2]` by
+the codebook-restricted confusion exponent (S5b `wz_codebook_confusion_expectation_le`, fed
+D2 `wz_covering_codeword_sideInfo_mass_le` + (B) `wzIndexBinningMeasure_collision`), with the
+two-ambient source ↔ codebook identification of Leg A.
+
+Non-bundled: the distortion-shape reconciliation (covering proxy `dα'` vs actual block
+distortion via `qf.2`) is carried by the concrete event `E1` whose probability Leg D bounds
+— it is not hypothesised. The bound on `Pr[E1] + Pr[E2]` (the real analytic work) is *not* a
+hypothesis here; only the proxy nonnegativity `hP` is required. Sorry-free. -/
+lemma wz_covering_binning_distortion_decomp
+    {α' : Type*} [Fintype α'] [DecidableEq α'] [Nonempty α']
+    [MeasurableSpace α'] [MeasurableSingletonClass α']
+    {Ω : Type*} [MeasurableSpace Ω] {k M M₁ n : ℕ} [Nonempty (Fin k)]
+    (μ : Measure Ω) (Us : ℕ → Ω → Fin k) (Ys : ℕ → Ω → β) (ε : ℝ)
+    (c₁ : LossyCode M₁ n α' (Fin k)) (f : Fin M₁ → Fin M)
+    (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (dα' : DistortionFn α' γ)
+    (Q : Measure (α' × β)) [IsProbabilityMeasure Q]
+    (P : ℝ) (hP : 0 ≤ P) :
+    (wzCodeOfCoveringBinning c₁ f qf.2
+          (wzBinTypicalDecoder μ Us Ys ε c₁ f)).expectedBlockDistortion Q dα'
+      ≤ P
+        + distortionMax dα'
+          * ((Measure.pi (fun _ : Fin n ↦ Q)).real
+                { p : Fin n → α' × β |
+                    P < blockDistortion dα' n (fun i ↦ (p i).1)
+                          (fun i ↦ qf.2
+                            (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2)) }
+              + (Measure.pi (fun _ : Fin n ↦ Q)).real
+                { p : Fin n → α' × β |
+                    wzBinTypicalDecoder μ Us Ys ε c₁ f
+                        (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+                      ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) }) := by
+  classical
+  set c : WynerZivCode M n α' β γ :=
+    wzCodeOfCoveringBinning c₁ f qf.2 (wzBinTypicalDecoder μ Us Ys ε c₁ f) with hc_def
+  set E1 : Set (Fin n → α' × β) :=
+      { p | P < blockDistortion dα' n (fun i ↦ (p i).1)
+              (fun i ↦ qf.2 (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2)) } with hE1
+  set E2 : Set (Fin n → α' × β) :=
+      { p | wzBinTypicalDecoder μ Us Ys ε c₁ f
+              (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+            ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) } with hE2
+  have h_dMax_nn : 0 ≤ distortionMax dα' := distortionMax_nonneg dα'
+  -- Good-event pointwise bound: outside `E1 ∪ E2` the actual block distortion is `≤ P`.
+  have hgood : ∀ p : Fin n → α' × β, p ∉ E1 ∪ E2 →
+      blockDistortion dα' n (fun i ↦ (p i).1)
+        (c.decoder (c.encoder (fun i ↦ (p i).1), fun i ↦ (p i).2)) ≤ P := by
+    intro p hp
+    rw [Set.mem_union, not_or] at hp
+    obtain ⟨hp1, hp2⟩ := hp
+    -- Bin decoder recovers the true covering codeword (`p ∉ E2`).
+    have hdec : wzBinTypicalDecoder μ Us Ys ε c₁ f
+        (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+          = c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) := by
+      by_contra hne; exact hp2 (by rw [hE2]; exact hne)
+    -- Hence the actual reconstruction equals the ideal (true-codeword) one.
+    have hrec : (c.decoder (c.encoder (fun i ↦ (p i).1), fun i ↦ (p i).2))
+        = fun i ↦ qf.2 (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2) := by
+      funext i
+      simp only [hc_def, wzCodeOfCoveringBinning]
+      rw [hdec]
+    rw [hrec]
+    -- Outside `E1`, the ideal reconstruction's block distortion is `≤ P`.
+    have hp1' := hp1
+    rw [hE1] at hp1'
+    simpa only [Set.mem_setOf_eq, not_lt] using hp1'
+  -- Generic decomposition with bad set `E1 ∪ E2`, then a union bound.
+  have hdecomp := wz_expectedBlockDistortion_le_of_badSet c Q dα' (E1 ∪ E2) P hP hgood
+  calc c.expectedBlockDistortion Q dα'
+      ≤ P + distortionMax dα' * (Measure.pi (fun _ : Fin n ↦ Q)).real (E1 ∪ E2) := hdecomp
+    _ ≤ P + distortionMax dα' * ((Measure.pi (fun _ : Fin n ↦ Q)).real E1
+          + (Measure.pi (fun _ : Fin n ↦ Q)).real E2) := by
+        have hmul := mul_le_mul_of_nonneg_left
+          (measureReal_union_le (μ := Measure.pi (fun _ : Fin n ↦ Q)) E1 E2) h_dMax_nn
+        linarith
+
+/-! ### Leg D — E2-only decomposition adapters (G2 / A1 / A2 / A3)
+
+The four adapters `wz_perN_covering_binning_code` (D3) consumes to close its inner body
+via sorry-free glue. Each carries an honest signature (only definitional/regularity
+preconditions; no error-probability, decoder-correctness, or covering lower bound is a
+hypothesis) and its own `@residual(plan:wz-binning-covering)`. Composition:
+
+```
+A1  : lift identity      LHS(P_XY,d) = codeSupp.EBD Q_XY dα'
+G2  : E2-only decomp     codeSupp.EBD Q_XY dα' ≤ 𝔼_{Q_XY}[ideal via qf.2] + distortionMax·Pr[E2]
+A2  : ideal = covering   𝔼_{Q_XY}[ideal via qf.2] = c₁.EBD P_X' d'   (≤ (D+δ/2)+δ/4 by hcov₁)
+A3  : E2 squeeze         distortionMax·Pr[E2] ≤ δ/4                   (∃ good binning f, radius ε)
+```
+
+Here `α' := {x // 0 < P_X x}`, `β' := {y // 0 < P_Y y}`, `dα' x' g := d x'.1 g`, and
+`Q_XY := pmfToMeasure (P_XY co-restricted to α' × β)` (the WZ block-distortion source). -/
+
+/-- **(Leg D, G2) E2-only distortion decomposition for a covering+binning code.** The
+E2-only refinement of `wz_covering_binning_distortion_decomp`: for the covering+binning code
+`wzCodeOfCoveringBinning c₁ f rec (bin decoder)`, the source-averaged actual block distortion
+is at most the *ideal* (true-covering-codeword) block distortion plus `distortionMax · Pr[E2]`,
+where `E2` is the bin-decoder confusion event. Outside `E2` the decoder recovers the true
+covering codeword, so the actual reconstruction equals the ideal one; inside `E2` the actual
+distortion is `≤ distortionMax ≤ ideal + distortionMax` (the ideal is nonnegative). The
+covering-distortion-failure event `E1` of `wz_covering_binning_distortion_decomp` is dropped:
+`hcov₁` supplies an *expected* covering distortion (not typicality), so `E1` is not squeezable
+and the ideal term is carried as an integral, not bounded by a constant `P`.
+
+Independent honesty audit 2026-07-11: sorry-free and sorryAx-free (`#print axioms` =
+`[propext, Classical.choice, Quot.sound]`). Genuine: the pointwise bound
+`F p ≤ ideal p + dMax · 1_E2 p` (inside `E2`, `F ≤ dMax ≤ ideal + dMax` since `ideal ≥ 0`;
+outside `E2` the bin decoder recovers the true covering codeword, so `F = ideal`) integrates to
+the claim. Decoder-agnostic, non-vacuous, no bundled hypothesis (`μ`/`Us`/`Ys`/`ε` merely
+parametrize the decoder). This decl carries no `sorry`; the earlier `@residual` is cleared.
+@audit:ok -/
+lemma wz_expectedBlockDistortion_le_ideal_add_E2
+    {α' : Type*} [Fintype α'] [DecidableEq α'] [Nonempty α']
+    [MeasurableSpace α'] [MeasurableSingletonClass α']
+    {Ω : Type*} [MeasurableSpace Ω] {k M M₁ n : ℕ} [Nonempty (Fin k)]
+    (μ : Measure Ω) (Us : ℕ → Ω → Fin k) (Ys : ℕ → Ω → β) (ε : ℝ)
+    (c₁ : LossyCode M₁ n α' (Fin k)) (f : Fin M₁ → Fin M)
+    (rec : Fin k × β → γ) (dα' : DistortionFn α' γ)
+    (Q : Measure (α' × β)) [IsProbabilityMeasure Q] :
+    (wzCodeOfCoveringBinning c₁ f rec
+          (wzBinTypicalDecoder μ Us Ys ε c₁ f)).expectedBlockDistortion Q dα'
+      ≤ (∫ p : Fin n → α' × β,
+            blockDistortion dα' n (fun i ↦ (p i).1)
+              (fun i ↦ rec (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2))
+          ∂(Measure.pi (fun _ : Fin n ↦ Q)))
+        + distortionMax dα'
+          * (Measure.pi (fun _ : Fin n ↦ Q)).real
+              { p : Fin n → α' × β |
+                  wzBinTypicalDecoder μ Us Ys ε c₁ f
+                      (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+                    ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) } := by
+  classical
+  haveI : MeasurableSingletonClass (α' × β) := by infer_instance
+  haveI : MeasurableSingletonClass (Fin n → α' × β) := Pi.instMeasurableSingletonClass
+  set c : WynerZivCode M n α' β γ :=
+    wzCodeOfCoveringBinning c₁ f rec (wzBinTypicalDecoder μ Us Ys ε c₁ f) with hc_def
+  set dMax : ℝ := distortionMax dα' with hdMax_def
+  have h_dMax_nn : 0 ≤ dMax := distortionMax_nonneg dα'
+  set Q' : Measure (Fin n → α' × β) := Measure.pi (fun _ : Fin n ↦ Q) with hQ'_def
+  haveI : IsProbabilityMeasure Q' := by rw [hQ'_def]; infer_instance
+  set E2 : Set (Fin n → α' × β) :=
+    { p | wzBinTypicalDecoder μ Us Ys ε c₁ f
+            (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+          ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) } with hE2_def
+  set ideal : (Fin n → α' × β) → ℝ := fun p ↦
+    blockDistortion dα' n (fun i ↦ (p i).1)
+      (fun i ↦ rec (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2)) with hideal_def
+  set F : (Fin n → α' × β) → ℝ := fun p ↦
+    blockDistortion dα' n (fun i ↦ (p i).1)
+      (c.decoder (c.encoder (fun i ↦ (p i).1), fun i ↦ (p i).2)) with hF_def
+  have h_E2_meas : MeasurableSet E2 := (Set.toFinite _).measurableSet
+  -- Pointwise: `F p ≤ ideal p + dMax · (E2.indicator 1 p)`.
+  have h_pointwise : ∀ p, F p ≤ ideal p + dMax * (E2.indicator (fun _ ↦ (1 : ℝ)) p) := by
+    intro p
+    by_cases hp : p ∈ E2
+    · have h_bd : F p ≤ dMax := blockDistortion_le_distortionMax dα' n _ _
+      have h_ideal_nn : 0 ≤ ideal p := blockDistortion_nonneg dα' n _ _
+      have h_ind : E2.indicator (fun _ : Fin n → α' × β ↦ (1 : ℝ)) p = 1 :=
+        Set.indicator_of_mem hp _
+      rw [h_ind]; nlinarith [h_bd, h_ideal_nn, h_dMax_nn]
+    · -- Outside `E2` the bin decoder recovers the true covering codeword, so `F p = ideal p`.
+      have hdec : wzBinTypicalDecoder μ Us Ys ε c₁ f
+          (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+            = c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) := by
+        by_contra hne; exact hp (by rw [hE2_def]; exact hne)
+      have hrec : c.decoder (c.encoder (fun i ↦ (p i).1), fun i ↦ (p i).2)
+          = fun i ↦ rec (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2) := by
+        funext i
+        simp only [hc_def, wzCodeOfCoveringBinning]
+        rw [hdec]
+      have hFI : F p = ideal p := by simp only [hF_def, hideal_def]; rw [hrec]
+      have h_ind : E2.indicator (fun _ : Fin n → α' × β ↦ (1 : ℝ)) p = 0 :=
+        Set.indicator_of_notMem hp _
+      rw [hFI, h_ind]; simp
+  -- Integrability of the (bounded) integrands.
+  have h_F_le : ∀ p, ‖F p‖ ≤ dMax := by
+    intro p
+    rw [Real.norm_eq_abs, abs_of_nonneg (blockDistortion_nonneg dα' n _ _)]
+    exact blockDistortion_le_distortionMax dα' n _ _
+  have h_int_F : Integrable F Q' :=
+    Integrable.mono' (integrable_const dMax) (measurable_of_finite _).aestronglyMeasurable
+      (Filter.Eventually.of_forall h_F_le)
+  have h_ideal_le : ∀ p, ‖ideal p‖ ≤ dMax := by
+    intro p
+    rw [Real.norm_eq_abs, abs_of_nonneg (blockDistortion_nonneg dα' n _ _)]
+    exact blockDistortion_le_distortionMax dα' n _ _
+  have h_int_ideal : Integrable ideal Q' :=
+    Integrable.mono' (integrable_const dMax) (measurable_of_finite _).aestronglyMeasurable
+      (Filter.Eventually.of_forall h_ideal_le)
+  have h_int_ind : Integrable
+      (fun p : Fin n → α' × β ↦ dMax * E2.indicator (fun _ ↦ (1 : ℝ)) p) Q' :=
+    (integrable_const (1 : ℝ)).indicator h_E2_meas |>.const_mul dMax
+  have h_int_g : Integrable
+      (fun p : Fin n → α' × β ↦ ideal p + dMax * E2.indicator (fun _ ↦ (1 : ℝ)) p) Q' :=
+    h_int_ideal.add h_int_ind
+  calc c.expectedBlockDistortion Q dα'
+      = ∫ p, F p ∂Q' := rfl
+    _ ≤ ∫ p, (ideal p + dMax * E2.indicator (fun _ ↦ (1 : ℝ)) p) ∂Q' :=
+        integral_mono h_int_F h_int_g h_pointwise
+    _ = (∫ p, ideal p ∂Q') + dMax * Q'.real E2 := by
+        rw [integral_add h_int_ideal h_int_ind]
+        congr 1
+        rw [integral_const_mul]
+        congr 1
+        exact integral_indicator_one h_E2_meas
+
+/-- **(Leg D, A1) Source-support lift distortion identity.** The lifted Wyner–Ziv code's
+expected block distortion under `P_XY` equals the support-restricted code's expected block
+distortion under the co-restricted source measure `Q_XY := pmfToMeasure (P_XY on α' × β)`
+with the co-restricted distortion `dα' x' g := d x'.1 g`. Pure source-measure change of
+variables (`α' → α`), the distortion-side companion of Leg B
+`wz_covering_source_measure_map_val_eq` and the null-set transport
+`wz_expectedBlockDistortion_source_agree`.
+
+Independent honesty audit 2026-07-11: sorry-free and sorryAx-free (`#print axioms` =
+`[propext, Classical.choice, Quot.sound]`). Genuine change of variables along
+`φ = (Subtype.val, id)` (`(Q_XY)^n.map φ = P_XY^n`, off-support `X`-atoms null both sides via
+`wz_QXY_mem_stdSimplex`), non-vacuous. This decl carries no `sorry`; the earlier `@residual`
+is cleared.
+@audit:ok -/
+lemma wz_lift_expectedBlockDistortion_eq
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) {M n : ℕ}
+    (x₀ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}})
+    (codeSupp : WynerZivCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} β γ) :
+    (wzLiftSupportCode P_XY x₀ codeSupp).expectedBlockDistortion P_XY d
+      = codeSupp.expectedBlockDistortion
+          (ChannelCoding.pmfToMeasure (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+              P_XY.real {(p.1.1, p.2)}))
+          (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g) := by
+  classical
+  -- The coordinatewise embedding `φ = (Subtype.val, id) : α' × β → α × β`.
+  set φ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β → α × β := fun p ↦ (p.1.1, p.2) with hφ
+  have hφ_meas : Measurable φ :=
+    (measurable_subtype_coe.comp measurable_fst).prodMk measurable_snd
+  haveI hQ_prob : IsProbabilityMeasure
+      (ChannelCoding.pmfToMeasure
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
+  -- `Q_XY.map φ = P_XY`: singleton agreement (off-support X-atoms carry zero mass both sides).
+  have hmapφ : (ChannelCoding.pmfToMeasure
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})).map φ
+      = P_XY := by
+    refine Measure.ext_of_singleton (fun ab ↦ ?_)
+    obtain ⟨a, b⟩ := ab
+    rw [Measure.map_apply hφ_meas (measurableSet_singleton _)]
+    by_cases ha : 0 < ∑ y, P_XY.real {(a, y)}
+    · have hpre : φ ⁻¹' {(a, b)}
+          = {((⟨a, ha⟩ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}), b)} := by
+        ext p
+        simp only [hφ, Set.mem_preimage, Set.mem_singleton_iff, Prod.ext_iff, Subtype.ext_iff]
+      rw [hpre, ChannelCoding.pmfToMeasure_apply_singleton]
+      exact ENNReal.ofReal_toReal (measure_ne_top _ _)
+    · have hpre : φ ⁻¹' {(a, b)} = (∅ : Set ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β)) := by
+        ext p
+        simp only [hφ, Set.mem_preimage, Set.mem_singleton_iff, Prod.ext_iff,
+          Set.mem_empty_iff_false, iff_false, not_and]
+        intro h1 _
+        exact absurd (h1 ▸ p.1.2) ha
+      have hPzero : P_XY {(a, b)} = 0 := by
+        have hsum : ∑ y, P_XY.real {(a, y)} = 0 :=
+          le_antisymm (not_lt.mp ha) (Finset.sum_nonneg fun _ _ ↦ measureReal_nonneg)
+        have hb := (Finset.sum_eq_zero_iff_of_nonneg
+          (fun _ _ ↦ measureReal_nonneg)).mp hsum b (Finset.mem_univ b)
+        rwa [Measure.real, ENNReal.toReal_eq_zero_iff, or_iff_left (measure_ne_top _ _)] at hb
+      rw [hpre, measure_empty, hPzero]
+  -- Product pushforward: `(Q_XY^n).map (coordinatewise φ) = P_XY^n`.
+  haveI hSF : SigmaFinite ((ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})).map φ) := by
+    rw [hmapφ]; infer_instance
+  have hpimap : (Measure.pi (fun _ : Fin n ↦
+        ChannelCoding.pmfToMeasure
+          (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))).map
+        (fun q (i : Fin n) ↦ φ (q i))
+      = Measure.pi (fun _ : Fin n ↦ P_XY) := by
+    rw [Measure.pi_map_pi (hμ := fun _ ↦ hSF) (fun _ ↦ hφ_meas.aemeasurable)]
+    simp_rw [hmapφ]
+  -- Change of variables + pointwise integrand equality.
+  unfold WynerZivCode.expectedBlockDistortion
+  rw [← hpimap, integral_map]
+  · refine integral_congr_ae (Filter.Eventually.of_forall (fun q ↦ ?_))
+    simp only [wzLiftSupportCode, hφ]
+    have hdite : (fun i ↦ dite (0 < ∑ y, P_XY.real {(((q i).1 : α), y)})
+          (fun h ↦ (⟨((q i).1 : α), h⟩ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}))
+          (fun _ ↦ x₀))
+        = fun i ↦ (q i).1 := by
+      funext i
+      exact dif_pos (q i).1.2
+    rw [hdite]
+    rfl
+  · exact (measurable_pi_lambda _ (fun i ↦ hφ_meas.comp (measurable_pi_apply i))).aemeasurable
+  · exact (measurable_of_finite _).aestronglyMeasurable
+
+/-- Marginalize a single coordinate of a product-pmf sum whose integrand depends on that
+coordinate only. For a product weight `∏ i, w (x i) (y i)` and a factor `g (y j)` touching only
+coordinate `j`, summing over all `y : Fin m → τ` factors as the `j`-marginal `∑ b, w (x j) b · g b`
+times the product of the remaining coordinate totals `∑ b, w (x i) b`. -/
+private lemma wz_prod_sum_marginalize {σ τ : Type*} [Fintype τ] {m : ℕ}
+    (w : σ → τ → ℝ) (x : Fin m → σ) (j : Fin m) (g : τ → ℝ) :
+    ∑ y : Fin m → τ, (∏ i, w (x i) (y i)) * g (y j)
+      = (∑ b, w (x j) b * g b) * ∏ i ∈ Finset.univ.erase j, (∑ b, w (x i) b) := by
+  classical
+  -- Fold the coordinate-`j` factor `g (y j)` into the product.
+  have key : ∀ y : Fin m → τ, (∏ i, w (x i) (y i)) * g (y j)
+      = ∏ i, w (x i) (y i) * (if i = j then g (y i) else 1) := by
+    intro y
+    rw [Finset.prod_mul_distrib, Finset.prod_ite_eq' Finset.univ j (fun i ↦ g (y i))]
+    simp
+  simp_rw [key]
+  -- Sum of products over the product index = product of the coordinate sums.
+  have hpf := Finset.sum_prod_piFinset (ι := Fin m) (Finset.univ : Finset τ)
+      (fun i b ↦ w (x i) b * (if i = j then g b else 1))
+  rw [Fintype.piFinset_univ] at hpf
+  rw [hpf]
+  -- Evaluate each coordinate total: at `j` it is the weighted `j`-marginal, elsewhere the total.
+  have hfac : ∀ i, (∑ b, w (x i) b * (if i = j then g b else 1))
+      = if i = j then (∑ b, w (x j) b * g b) else (∑ b, w (x i) b) := by
+    intro i
+    by_cases hi : i = j
+    · subst hi; simp
+    · simp [hi]
+  simp_rw [hfac]
+  -- Peel the `j`-factor out of the full product.
+  rw [← Finset.mul_prod_erase Finset.univ
+        (fun i ↦ if i = j then (∑ b, w (x j) b * g b) else (∑ b, w (x i) b))
+        (Finset.mem_univ j), if_pos rfl]
+  congr 1
+  refine Finset.prod_congr rfl (fun i hi ↦ ?_)
+  rw [if_neg (Finset.ne_of_mem_erase hi)]
+
+/-- The `X`-marginal of the covering ambient equals the source `X`-marginal on `α'`-singletons:
+`((rdAmbient qStar).map (iidXs 0)).real {x'} = ∑ y, P_XY.real {(x'.1, y)}`. -/
+private lemma wz_ideal_PX_real
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] {k : ℕ}
+    (κ' : α → Fin k → ℝ) (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) :
+    ((rdAmbient qStar).map (ChannelCoding.iidXs 0)).real {x'} = ∑ y, P_XY.real {(x'.1, y)} := by
+  classical
+  haveI hne_prod : Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
+    Finset.univ_nonempty_iff.mp
+      (Finset.nonempty_of_sum_ne_zero (by rw [hqStar_mem.2]; exact one_ne_zero))
+  haveI : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := hne_prod.map Prod.fst
+  haveI : Nonempty (Fin k) := hne_prod.map Prod.snd
+  rw [rdAmbient_map_iidXs qStar hqStar_mem, pmfToMeasure_map_fst_real_singleton hqStar_mem x']
+  unfold marginalFst
+  simp_rw [hqStar_eq]
+  rw [← Finset.sum_mul, hκ'sum, one_mul]
+
+/-- The proxy distortion `d'`, weighted by the source `X`-marginal, unfolds to the raw
+conditional distortion sum: `(∑ y', P_XY.real {(x'.1, y')}) · (d' x' u) = ∑ y, P_XY.real {(x'.1, y)}
+· d x'.1 (qf.2 (u, y))`. The `X`-marginal is positive (`x' : α'`), so the reconciliation
+`hd'_eq` (a conditional expectation with the marginal in the denominator) clears. -/
+private lemma wz_ideal_marg_mul_dprime
+    (P_XY : Measure (α × β)) {k : ℕ}
+    (d : DistortionFn α γ)
+    (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
+    (hd'_eq : ∀ x' u, d' x' u = Real.toNNReal (∑ y : β,
+        (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
+    (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) :
+    (∑ y' : β, P_XY.real {(x'.1, y')}) * ((d' x' u : NNReal) : ℝ)
+      = ∑ y : β, P_XY.real {(x'.1, y)} * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ) := by
+  have hpos : 0 < ∑ y' : β, P_XY.real {(x'.1, y')} := x'.2
+  have hS_nn : 0 ≤ ∑ y : β, (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+      * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ) :=
+    Finset.sum_nonneg fun y _ ↦
+      mul_nonneg (div_nonneg measureReal_nonneg hpos.le) (NNReal.coe_nonneg _)
+  rw [hd'_eq, Real.coe_toNNReal _ hS_nn, Finset.mul_sum]
+  refine Finset.sum_congr rfl fun y _ ↦ ?_
+  rw [← mul_assoc]
+  congr 1
+  rw [mul_comm, div_mul_cancel₀ _ hpos.ne']
+
+/-- **(Leg D, A2) Ideal distortion = covering distortion.** The ideal (true covering
+codeword) block distortion of the binned code, integrated over the co-restricted source
+`Q_XY`, equals the covering `LossyCode`'s expected block distortion under the i.i.d. covering
+ambient `(rdAmbient qStar).map (iidXs 0)` with the proxy distortion `d'`. Fubini over the
+product source + the proxy reconciliation `hd'_eq` (`d' = 𝔼_{Y|X}[d ∘ qf.2]`) + Leg B source
+change of variables (`wz_covering_source_measure_map_val_eq`). This is the identity that lets
+`hcov₁`'s covering bound bound the ideal term.
+
+Now sorry-free (genuine closure, pending independent honesty audit). The body reduces both
+finite-alphabet integrals to sums (`integral_fintype` + `Measure.pi_singleton`), splits the
+product source into its `α'`- and `β`-coordinate factors (`arrowProdEquivProdArrow`), and for
+each source sequence `x` marginalizes the `β`-coordinates one at a time
+(`wz_prod_sum_marginalize`); the reconciliation `hd'_eq` (`d' = 𝔼_{Y|X}[d ∘ qf.2]`, cleared by
+the positive `X`-marginal via `wz_ideal_marg_mul_dprime`) and the source-marginal identity
+`wz_ideal_PX_real` turn the ideal per-letter distortion into the proxy distortion. Non-circular
+(no hypothesis is the conclusion), non-bundled (`hd'_eq`/`hqStar_eq`/`hqStar_mem`/`hκ'sum` are the
+reconciliation + source-consistency preconditions — same kind as D3's — not the identity itself;
+the Fubini + change-of-variables identity is genuine body work).
+
+Independent honesty audit 2026-07-12 (Leg E comprehensive pass): PASS, genuine closure.
+Non-circular (no hypothesis has the conclusion's marginalization-equality type), non-bundled
+(`hκ'sum`/`hqStar_eq`/`hqStar_mem`/`hd'_eq` are source-consistency + proxy-reconciliation
+preconditions consumed by `wz_ideal_PX_real`/`wz_ideal_marg_mul_dprime`, not the equality),
+non-degenerate (`hqStar_mem`'s simplex-sum-1 field yields `Nonempty α'`, so both integrals are
+over genuine probability measures), sufficiency holds (the LHS ideal distortion genuinely
+marginalizes to the RHS covering distortion via `wz_prod_sum_marginalize` + `hd'_eq`; no
+degenerate substitution refutes the framed equality). Body `sorry`-free and transitively
+sorryAx-free: `#print axioms wz_ideal_expectation_eq_covering = [propext, Classical.choice,
+Quot.sound]` (machine-verified 2026-07-12).
+@audit:ok -/
+lemma wz_ideal_expectation_eq_covering
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) {k M₁ n : ℕ}
+    (κ' : α → Fin k → ℝ) (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
+    (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (hd'_eq : ∀ x' u, d' x' u = Real.toNNReal (∑ y : β,
+        (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
+    (c₁ : LossyCode M₁ n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)) :
+    (∫ p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β,
+        blockDistortion (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g) n
+          (fun i ↦ (p i).1)
+          (fun i ↦ qf.2 (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2))
+      ∂(Measure.pi (fun _ : Fin n ↦
+          ChannelCoding.pmfToMeasure (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+              P_XY.real {(p.1.1, p.2)}))))
+      = c₁.expectedBlockDistortion
+          ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d' := by
+  classical
+  haveI hne_prod : Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
+    Finset.univ_nonempty_iff.mp
+      (Finset.nonempty_of_sum_ne_zero (by rw [hqStar_mem.2]; exact one_ne_zero))
+  haveI hneS : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := hne_prod.map Prod.fst
+  haveI hnek : Nonempty (Fin k) := hne_prod.map Prod.snd
+  set Q := ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}) with hQdef
+  set PX := (rdAmbient qStar).map (ChannelCoding.iidXs 0) with hPXdef
+  haveI hQprob : IsProbabilityMeasure Q :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
+  haveI hPXprob : IsProbabilityMeasure PX :=
+    rdAmbient_iidXs_isProbabilityMeasure qStar hqStar_mem
+  -- Pi-measure singleton reals factor as products of coordinate singleton reals.
+  have hpiQ : ∀ z : Fin n → ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β),
+      (Measure.pi (fun _ : Fin n ↦ Q)).real {z} = ∏ i, Q.real {z i} := by
+    intro z; rw [measureReal_def, Measure.pi_singleton, ENNReal.toReal_prod]; rfl
+  have hpiPX : ∀ z : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}},
+      (Measure.pi (fun _ : Fin n ↦ PX)).real {z} = ∏ i, PX.real {z i} := by
+    intro z; rw [measureReal_def, Measure.pi_singleton, ENNReal.toReal_prod]; rfl
+  have hQreal : ∀ a : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β,
+      Q.real {a} = P_XY.real {(a.1.1, a.2)} := fun a ↦
+    ChannelCoding.pmfToMeasure_real_singleton (wz_QXY_mem_stdSimplex P_XY) a
+  have hPXreal : ∀ x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}},
+      PX.real {x'} = ∑ y, P_XY.real {(x'.1, y)} := fun x' ↦
+    wz_ideal_PX_real P_XY κ' hκ'sum qStar hqStar_eq hqStar_mem x'
+  -- Convert both integrals to finite sums over the product source.
+  unfold LossyCode.expectedBlockDistortion
+  rw [MeasureTheory.integral_fintype Integrable.of_finite,
+      MeasureTheory.integral_fintype Integrable.of_finite]
+  simp only [smul_eq_mul]
+  simp_rw [hpiQ, hpiPX, hQreal, hPXreal, blockDistortion]
+  -- Split the product source into its `α'`- and `β`-coordinate factors.
+  rw [← Equiv.sum_comp (Equiv.arrowProdEquivProdArrow (Fin n)
+        (fun _ : Fin n ↦ {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (fun _ : Fin n ↦ β)).symm,
+      Fintype.sum_prod_type]
+  simp only [Equiv.arrowProdEquivProdArrow_symm_apply]
+  refine Finset.sum_congr rfl fun x _ ↦ ?_
+  set U := c₁.decoder (c₁.encoder x) with hU
+  -- Coordinate marginalization of the ideal distortion into the proxy distortion.
+  have key : ∀ j : Fin n,
+      ∑ y : Fin n → β, (∏ i, P_XY.real {((x i).1, y i)})
+          * ((d (x j).1 (qf.2 (U j, y j)) : NNReal) : ℝ)
+        = (∏ i, ∑ b, P_XY.real {((x i).1, b)}) * ((d' (x j) (U j) : NNReal) : ℝ) := by
+    intro j
+    rw [wz_prod_sum_marginalize
+          (fun (x'' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (b : β) ↦ P_XY.real {(x''.1, b)})
+          x j (fun b ↦ ((d (x j).1 (qf.2 (U j, b)) : NNReal) : ℝ)),
+        ← wz_ideal_marg_mul_dprime P_XY d qf d' hd'_eq (x j) (U j),
+        ← Finset.mul_prod_erase Finset.univ
+          (fun i ↦ ∑ b, P_XY.real {((x i).1, b)}) (Finset.mem_univ j)]
+    ring
+  -- Rearrange both sides to `(1/n) · ∑ⱼ (∏ᵢ marg) · d'`.
+  have expand : ∀ y : Fin n → β,
+      (∏ i, P_XY.real {((x i).1, y i)})
+          * (1 / (n : ℝ) * ∑ j, ((d (x j).1 (qf.2 (U j, y j)) : NNReal) : ℝ))
+        = 1 / (n : ℝ) * ∑ j, (∏ i, P_XY.real {((x i).1, y i)})
+            * ((d (x j).1 (qf.2 (U j, y j)) : NNReal) : ℝ) := by
+    intro y; rw [mul_left_comm, Finset.mul_sum]
+  simp_rw [expand]
+  rw [← Finset.mul_sum, Finset.sum_comm]
+  simp_rw [key]
+  rw [← Finset.mul_sum, mul_left_comm]
+
+/-! ### Leg E-mass helpers — source→ambient transport of the per-codeword AEP mass bound
+
+The per-covering-codeword side-information typicality mass, taken under the Wyner–Ziv source
+product measure `Measure.pi (source per-coord)` on `α' × β`, is transported to the abstract
+per-codeword AEP bound `wz_covering_codeword_sideInfo_mass_le` (D2) on the side-information
+ambient `rdAmbient (wzSideInfoMarginal P_XY κ')` over the positive-`Y`-marginal subtype `β'`.
+The transport combines (a) the `n`-fold side-information-law agreement (the source's `Y`-law is
+the `β`-image of the ambient's `β'`-`Y`-law), and (b) the entropy → `wzMutualInfoYU` exponent
+bridge. The generic injective-map helpers preserve `entropy` and per-atom mass under the
+`β' → β` coercion (the source lives over full `β`, the ambient over the subtype). -/
+
+
+/-- Ambient entropy of the covering codeword `U` equals the `negMulLog`-sum of the `U`-marginal
+of `wzSideInfoMarginal`. -/
+private lemma wz_entropy_ambient_iidXs
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} [Nonempty (Fin k)] (κ' : α → Fin k → ℝ)
+    (hκ'pos : ∀ x u, 0 < κ' x u) (hκ'sum : ∀ x, ∑ u, κ' x u = 1) :
+    entropy (rdAmbient (wzSideInfoMarginal P_XY κ')) (ChannelCoding.iidXs (α := Fin k) 0)
+      = ∑ u, Real.negMulLog (marginalFst (wzSideInfoMarginal P_XY κ') u) := by
+  haveI : Nonempty {y : β // 0 < ∑ x, P_XY.real {(x, y)}} :=
+    wzSideInfoMarginal_subtype_nonempty P_XY
+  have hq := wzSideInfoMarginal_mem_stdSimplex P_XY κ' hκ'pos hκ'sum
+  unfold entropy
+  refine Finset.sum_congr rfl (fun u _ ↦ ?_)
+  congr 1
+  rw [rdAmbient_map_iidXs (wzSideInfoMarginal P_XY κ') hq,
+      pmfToMeasure_map_fst_real_singleton hq u]
+
+/-- Ambient entropy of the side information `Y` equals the `negMulLog`-sum of the `β'`-`Y`-marginal
+of `wzSideInfoMarginal`. -/
+private lemma wz_entropy_ambient_iidYs
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} [Nonempty (Fin k)] (κ' : α → Fin k → ℝ)
+    (hκ'pos : ∀ x u, 0 < κ' x u) (hκ'sum : ∀ x, ∑ u, κ' x u = 1) :
+    entropy (rdAmbient (wzSideInfoMarginal P_XY κ')) (ChannelCoding.iidYs (α := Fin k) 0)
+      = ∑ y', Real.negMulLog (marginalSnd (wzSideInfoMarginal P_XY κ') y') := by
+  haveI : Nonempty {y : β // 0 < ∑ x, P_XY.real {(x, y)}} :=
+    wzSideInfoMarginal_subtype_nonempty P_XY
+  have hq := wzSideInfoMarginal_mem_stdSimplex P_XY κ' hκ'pos hκ'sum
+  unfold entropy
+  refine Finset.sum_congr rfl (fun y' _ ↦ ?_)
+  congr 1
+  rw [rdAmbient_map_iidYs (wzSideInfoMarginal P_XY κ') hq,
+      pmfToMeasure_map_snd_real_singleton hq y']
+
+/-- Ambient joint entropy `H(U, Y)` equals the `negMulLog`-sum of `wzSideInfoMarginal`. -/
+private lemma wz_entropy_ambient_joint
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} [Nonempty (Fin k)] (κ' : α → Fin k → ℝ)
+    (hκ'pos : ∀ x u, 0 < κ' x u) (hκ'sum : ∀ x, ∑ u, κ' x u = 1) :
+    entropy (rdAmbient (wzSideInfoMarginal P_XY κ'))
+        (ChannelCoding.jointSequence ChannelCoding.iidXs (ChannelCoding.iidYs (α := Fin k)) 0)
+      = ∑ p, Real.negMulLog (wzSideInfoMarginal P_XY κ' p) := by
+  haveI : Nonempty {y : β // 0 < ∑ x, P_XY.real {(x, y)}} :=
+    wzSideInfoMarginal_subtype_nonempty P_XY
+  have hq := wzSideInfoMarginal_mem_stdSimplex P_XY κ' hκ'pos hκ'sum
+  unfold entropy
+  refine Finset.sum_congr rfl (fun p _ ↦ ?_)
+  congr 1
+  rw [rdAmbient_map_jointSequence (wzSideInfoMarginal P_XY κ') hq,
+      ChannelCoding.pmfToMeasure_real_singleton hq p]
+
+/-- Exponent bridge: `mutualInfoPmf (wzMarginalYU q') = mutualInfoPmf (wzSideInfoMarginal)`, i.e.
+the full-`β` `(Y, U)`-marginal of `q'` and the `β'`-subtype `wzSideInfoMarginal` carry the same
+mutual information (the `β`-values outside `β'` have zero mass, `negMulLog 0 = 0`). -/
+private lemma wz_mutualInfoPmf_wzMarginalYU_eq
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ) (hκ'pos : ∀ x u, 0 < κ' x u) (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (q' : α × β × Fin k → ℝ)
+    (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)}) :
+    mutualInfoPmf (wzMarginalYU (Fin k) q') = mutualInfoPmf (wzSideInfoMarginal P_XY κ') := by
+  classical
+  have hq1v : ∀ y u, wzMarginalYU (Fin k) q' (y, u) = ∑ x, κ' x u * P_XY.real {(x, y)} := by
+    intro y u
+    simp only [wzMarginalYU]
+    exact Finset.sum_congr rfl (fun x _ ↦ hfact_eq x y u)
+  have hq2v : ∀ (u : Fin k) (y' : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}),
+      wzSideInfoMarginal P_XY κ' (u, y') = ∑ x, κ' x u * P_XY.real {(x, y'.1)} := fun u y' ↦ rfl
+  have hcol0 : ∀ (u : Fin k) (y : β), ¬ (0 < ∑ x, P_XY.real {(x, y)}) →
+      (∑ x, κ' x u * P_XY.real {(x, y)}) = 0 := by
+    intro u y hy
+    have hz : ∑ x, P_XY.real {(x, y)} = 0 :=
+      le_antisymm (not_lt.mp hy) (Finset.sum_nonneg fun _ _ ↦ measureReal_nonneg)
+    refine Finset.sum_eq_zero (fun x _ ↦ ?_)
+    have hx0 : P_XY.real {(x, y)} = 0 :=
+      (Finset.sum_eq_zero_iff_of_nonneg (fun _ _ ↦ measureReal_nonneg)).mp hz x (Finset.mem_univ x)
+    rw [hx0, mul_zero]
+  have subsum : ∀ f : β → ℝ, (∀ y, ¬ (0 < ∑ x, P_XY.real {(x, y)}) → f y = 0) →
+      (∑ y : β, f y) = ∑ y' : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}, f y'.1 := by
+    intro f hf
+    letI : DecidablePred (fun y : β => 0 < ∑ x, P_XY.real {(x, y)}) := Classical.decPred _
+    rw [← Finset.sum_subtype (Finset.univ.filter (fun y : β => 0 < ∑ x, P_XY.real {(x, y)}))
+        (fun y => by simp) (fun y => f y)]
+    refine (Finset.sum_subset (Finset.filter_subset _ _) ?_).symm
+    intro y _ hy
+    rw [Finset.mem_filter] at hy
+    push_neg at hy
+    exact hf y (not_lt.mpr (hy (Finset.mem_univ y)))
+  have hUmarg : ∀ u : Fin k,
+      marginalSnd (wzMarginalYU (Fin k) q') u = marginalFst (wzSideInfoMarginal P_XY κ') u := by
+    intro u
+    simp only [marginalSnd, marginalFst]
+    rw [show (∑ y : β, wzMarginalYU (Fin k) q' (y, u))
+          = ∑ y : β, (∑ x, κ' x u * P_XY.real {(x, y)}) from
+        Finset.sum_congr rfl (fun y _ ↦ hq1v y u),
+        subsum (fun y ↦ ∑ x, κ' x u * P_XY.real {(x, y)}) (fun y hy ↦ hcol0 u y hy)]
+    exact Finset.sum_congr rfl (fun y' _ ↦ (hq2v u y').symm)
+  have hYmarg : ∀ y' : {y : β // 0 < ∑ x, P_XY.real {(x, y)}},
+      marginalFst (wzMarginalYU (Fin k) q') y'.1
+        = marginalSnd (wzSideInfoMarginal P_XY κ') y' := by
+    intro y'
+    simp only [marginalFst, marginalSnd]
+    rw [show (∑ u, wzMarginalYU (Fin k) q' (y'.1, u))
+          = ∑ u, (∑ x, κ' x u * P_XY.real {(x, y'.1)}) from
+        Finset.sum_congr rfl (fun u _ ↦ hq1v y'.1 u)]
+    exact Finset.sum_congr rfl (fun u _ ↦ (hq2v u y').symm)
+  unfold mutualInfoPmf
+  have hFst : (∑ y : β, Real.negMulLog (marginalFst (wzMarginalYU (Fin k) q') y))
+      = ∑ y', Real.negMulLog (marginalSnd (wzSideInfoMarginal P_XY κ') y') := by
+    rw [subsum (fun y ↦ Real.negMulLog (marginalFst (wzMarginalYU (Fin k) q') y)) ?_]
+    · exact Finset.sum_congr rfl (fun y' _ ↦ by rw [hYmarg y'])
+    · intro y hy
+      have hz : marginalFst (wzMarginalYU (Fin k) q') y = 0 := by
+        simp only [marginalFst]
+        rw [show (∑ u, wzMarginalYU (Fin k) q' (y, u))
+              = ∑ u, (∑ x, κ' x u * P_XY.real {(x, y)}) from
+            Finset.sum_congr rfl (fun u _ ↦ hq1v y u)]
+        exact Finset.sum_eq_zero (fun u _ ↦ hcol0 u y hy)
+      rw [hz, Real.negMulLog_zero]
+  have hSnd : (∑ u, Real.negMulLog (marginalSnd (wzMarginalYU (Fin k) q') u))
+      = ∑ u, Real.negMulLog (marginalFst (wzSideInfoMarginal P_XY κ') u) :=
+    Finset.sum_congr rfl (fun u _ ↦ by rw [hUmarg u])
+  have hJoint : (∑ p : β × Fin k, Real.negMulLog (wzMarginalYU (Fin k) q' p))
+      = ∑ p : Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}},
+          Real.negMulLog (wzSideInfoMarginal P_XY κ' p) := by
+    rw [Fintype.sum_prod_type, Fintype.sum_prod_type, Finset.sum_comm]
+    refine Finset.sum_congr rfl (fun u _ ↦ ?_)
+    rw [subsum (fun y ↦ Real.negMulLog (wzMarginalYU (Fin k) q' (y, u))) ?_]
+    · exact Finset.sum_congr rfl (fun y' _ ↦ by rw [hq1v y'.1 u, ← hq2v u y'])
+    · intro y hy
+      rw [hq1v y u, hcol0 u y hy, Real.negMulLog_zero]
+  rw [hFst, hSnd, hJoint]
+  ring
+
+
+/-- **(A3 helper) Per-covering-codeword side-information typicality mass, under the source
+product measure.** For any fixed covering codeword `u : Fin n → Fin k`, the probability —
+under the Wyner–Ziv source product measure `Measure.pi` of `p ↦ P_XY{(p.1.1, p.2)}` on
+`α' × β` — that `u` is jointly typical (radius `ε`, side-information ambient
+`rdAmbient (wzSideInfoMarginal P_XY κ')`) with the side-information block `fun i ↦ (p i).2`
+is at most `exp(−n · (I(Y;U) − 3ε))`, where `I(Y;U) = wzMutualInfoYU (Fin k) q'`.
+
+This transports `wz_covering_codeword_sideInfo_mass_le` (D2, `@audit:ok`) from the
+side-information ambient onto the source product measure. Two facts do the work:
+
+* **Side-information-law agreement.** The source pair law's `β`-marginal is
+  `y ↦ ∑_x P_XY{(x,y)}`, and the `β`-coerced `β'`-marginal of `wzSideInfoMarginal` summed over
+  the covering codeword is `y ↦ ∑_x κ' x u · P_XY{(x,y)} = ∑_x P_XY{(x,y)}` by `hκ'sum` — so
+  the source's `n`-fold `Y`-law is the `β`-image (`Subtype.val`) of the ambient's `β'`-`Y`-law
+  (`Measure.pi_map_pi` + the iid `n`-fold law), and the fixed-`u` slice mass is preserved.
+  The `β`-vs-`β'` alphabet gap is absorbed by the coercion being injective, so the joint typical
+  set relabels along it (`entropy` and `pmfLog` are invariant under an injective relabeling).
+* **Exponent bridge.** `wzMutualInfoYU (Fin k) q'` equals the ambient's `I(U;Y) = H(U)+H(Y)-H(U,Y)`
+  (the `β`-values outside `β'` carry zero mass, `negMulLog 0 = 0`), which discharges D2's exponent
+  hypothesis at `I_YU := wzMutualInfoYU q' - 3ε`.
+
+Non-bundled: the conclusion is a per-codeword mass upper bound (`Measure.real {…} ≤ exp …`), the
+same shape as D2, not the operational error probability; `hκ'pos`/`hκ'sum`/`hfact_eq` are the
+covering-kernel regularity preconditions. Genuinely proven (sorry-free, sorryAx-free): consumed
+by `wz_exists_binning_E2_bound` (A3) to supply S5b's `hmass`.
+
+Independent honesty audit 2026-07-12 (commit `66417846`, Leg E-mass sorry-free closure): PASS.
+The four honesty checks hold. (1) Non-circular: the conclusion is a `Measure.real {…} ≤ exp …`
+mass bound; no hypothesis has type ≡ conclusion; the body is a genuine measure-transport proof
+(ending `exact hD2`, not `:= h`). (2) Non-bundled: the AEP concentration CORE is discharged by
+`wz_covering_codeword_sideInfo_mass_le` (D2, `@audit:ok`, genuinely proven in-file), NOT passed
+as a hypothesis; `hfact_eq` is the definitional link fixing `q'` as the factored covering pmf
+(structural, not the bound); `hκ'pos`/`hκ'sum` are pmf-regularity. (3) Non-degenerate: the bound
+holds and is non-vacuous across the extremes (`n=0` ⇒ `exp 0 = 1` trivial; `ε` huge ⇒ RHS ≥ 1,
+weaker not false; atypical `u` ⇒ mass 0 via D2; `Nonempty` guards the positive-marginal
+subtypes). (4) Sufficiency: the exponent `wzMutualInfoYU q'` is NOT a free parameter — it is
+pinned to the actual pmf by `hfact_eq` and equated to the ambient `H(U)+H(Y)−H(U,Y)` by the
+entropy triple (`wz_entropy_ambient_iidXs`/`_iidYs`/`_joint`) + the pmf-level MI bridge
+(`wz_mutualInfoPmf_wzMarginalYU_eq`), so D2 discharges `hI_YU` by `le_of_eq`; no free-exponent
+gap (the historical WZ trap is absent). The 11 new private helpers (L3074–3417) were each audited
+clean: all carry only regularity hypotheses (measurability / injectivity / positivity / pmf-sum /
+`Nonempty` / `stdSimplex`) and prove measure-theoretic identities that follow, none bundling the
+AEP core. The exponent bridge deviates from the brief's `wzMutualInfoYU_eq_mutualInfo`
+(Operational.lean:230) soundly: that lemma requires `q'` to be the empirical pmf of ambient RVs
+`(X,Y,Uc)`, whereas here `q'` is a fixed factored pmf, so the direct pmf-level `mutualInfoPmf`
+computation is the honest route, not a papered-over gap. `#print axioms` =
+`[propext, Classical.choice, Quot.sound]` (no `sorryAx`, machine-verified) — proof done.
+@audit:ok -/
+lemma wz_source_codeword_sideInfo_mass_le
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
+    {k : ℕ} [Nonempty (Fin k)]
+    (κ' : α → Fin k → ℝ) (hκ'pos : ∀ x u, 0 < κ' x u) (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (q' : α × β × Fin k → ℝ)
+    (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
+    (ε : ℝ) (hε_pos : 0 < ε) (n : ℕ) (u : Fin n → Fin k) :
+    (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+          P_XY.real {(p.1.1, p.2)}))).real
+        { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+            (u, fun i ↦ (p i).2)
+              ∈ ChannelCoding.jointlyTypicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+                  ChannelCoding.iidXs
+                  (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                      ((ChannelCoding.iidYs i ω :
+                          {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
+                  n ε }
+      ≤ Real.exp (-(n : ℝ) * (wzMutualInfoYU (Fin k) q' - 3 * ε)) := by
+  classical
+  haveI hne_βs : Nonempty {y : β // 0 < ∑ x, P_XY.real {(x, y)}} :=
+    wzSideInfoMarginal_subtype_nonempty P_XY
+  have hq := wzSideInfoMarginal_mem_stdSimplex P_XY κ' hκ'pos hκ'sum
+  haveI hamb_prob : IsProbabilityMeasure (rdAmbient (wzSideInfoMarginal P_XY κ')) :=
+    rdAmbient_isProbabilityMeasure _ hq
+  haveI hsrc_prob : IsProbabilityMeasure (ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_sourcePmf_mem_stdSimplex P_XY)
+  -- The injective `β' → β` coercion and its joint `Fin k × β' → Fin k × β` version.
+  have hval_inj : Function.Injective
+      (Subtype.val : {y : β // 0 < ∑ x, P_XY.real {(x, y)}} → β) := Subtype.val_injective
+  have hval_meas : Measurable
+      (Subtype.val : {y : β // 0 < ∑ x, P_XY.real {(x, y)}} → β) := measurable_subtype_coe
+  have hgj_meas : Measurable (fun p : Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}} ↦
+      (p.1, (p.2 : β))) := measurable_fst.prodMk (hval_meas.comp measurable_snd)
+  have hgj_inj : Function.Injective (fun p : Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}} ↦
+      (p.1, (p.2 : β))) := by
+    intro a b hab
+    simp only [Prod.mk.injEq] at hab
+    exact Prod.ext hab.1 (hval_inj hab.2)
+  -- Per-atom `pmfLog` and `entropy` invariance under the coercion.
+  have hpmfYeq : ∀ y' : {y : β // 0 < ∑ x, P_XY.real {(x, y)}},
+      pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+            ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) ((y' : β))
+        = pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ')) (ChannelCoding.iidYs (α := Fin k)) y' := by
+    intro y'
+    simp only [pmfLog]
+    rw [wz_map_injective_real_singleton (rdAmbient (wzSideInfoMarginal P_XY κ'))
+        (ChannelCoding.iidYs (α := Fin k) 0) (ChannelCoding.measurable_iidYs 0)
+        Subtype.val hval_inj hval_meas y']
+  have hentYeq : entropy (rdAmbient (wzSideInfoMarginal P_XY κ'))
+      (fun ω ↦ ((ChannelCoding.iidYs (α := Fin k) 0 ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
+        = entropy (rdAmbient (wzSideInfoMarginal P_XY κ')) (ChannelCoding.iidYs (α := Fin k) 0) :=
+    wz_entropy_map_injective (rdAmbient (wzSideInfoMarginal P_XY κ'))
+      (ChannelCoding.iidYs (α := Fin k) 0) (ChannelCoding.measurable_iidYs 0)
+      Subtype.val hval_inj hval_meas
+  have hpmfJeq : ∀ p : Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}},
+      pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          (ChannelCoding.jointSequence ChannelCoding.iidXs
+            (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+              ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)))
+          (p.1, (p.2 : β))
+        = pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
+            (ChannelCoding.jointSequence ChannelCoding.iidXs (ChannelCoding.iidYs (α := Fin k))) p := by
+    intro p
+    simp only [pmfLog]
+    congr 2
+    exact wz_map_injective_real_singleton (rdAmbient (wzSideInfoMarginal P_XY κ'))
+        (ChannelCoding.jointSequence ChannelCoding.iidXs (ChannelCoding.iidYs (α := Fin k)) 0)
+        (ChannelCoding.measurable_jointSequence _ _ (fun i ↦ ChannelCoding.measurable_iidXs i)
+          (fun i ↦ ChannelCoding.measurable_iidYs i) 0)
+        (fun q : Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}} ↦ (q.1, (q.2 : β)))
+        hgj_inj hgj_meas p
+  have hentJeq : entropy (rdAmbient (wzSideInfoMarginal P_XY κ'))
+      (ChannelCoding.jointSequence ChannelCoding.iidXs
+        (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+          ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) 0)
+        = entropy (rdAmbient (wzSideInfoMarginal P_XY κ'))
+            (ChannelCoding.jointSequence ChannelCoding.iidXs (ChannelCoding.iidYs (α := Fin k)) 0) :=
+    wz_entropy_map_injective (rdAmbient (wzSideInfoMarginal P_XY κ'))
+      (ChannelCoding.jointSequence ChannelCoding.iidXs (ChannelCoding.iidYs (α := Fin k)) 0)
+      (ChannelCoding.measurable_jointSequence _ _ (fun i ↦ ChannelCoding.measurable_iidXs i)
+        (fun i ↦ ChannelCoding.measurable_iidYs i) 0)
+      (fun q : Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}} ↦ (q.1, (q.2 : β))) hgj_inj hgj_meas
+  -- Typical-set correspondence under the coercion.
+  have htypY : ∀ z : Fin n → {y : β // 0 < ∑ x, P_XY.real {(x, y)}},
+      ((fun i ↦ ((z i : β))) ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+            ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε)
+        ↔ (z ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+            (ChannelCoding.iidYs (α := Fin k)) n ε) := by
+    intro z
+    rw [mem_typicalSet_iff, mem_typicalSet_iff]
+    have hnum : (∑ i : Fin n, pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+            ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) ((z i : β)))
+        = ∑ i : Fin n, pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
+            (ChannelCoding.iidYs (α := Fin k)) (z i) :=
+      Finset.sum_congr rfl (fun i _ ↦ hpmfYeq (z i))
+    simp only [hnum, hentYeq]
+  have htypJ : ∀ z : Fin n → {y : β // 0 < ∑ x, P_XY.real {(x, y)}},
+      ((fun i ↦ (u i, ((z i : β)))) ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          (ChannelCoding.jointSequence ChannelCoding.iidXs
+            (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+              ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))) n ε)
+        ↔ ((fun i ↦ (u i, z i)) ∈ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+            (ChannelCoding.jointSequence ChannelCoding.iidXs (ChannelCoding.iidYs (α := Fin k))) n ε) := by
+    intro z
+    rw [mem_typicalSet_iff, mem_typicalSet_iff]
+    have hnum : (∑ i : Fin n, pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          (ChannelCoding.jointSequence ChannelCoding.iidXs
+            (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+              ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)))
+          (u i, ((z i : β))))
+        = ∑ i : Fin n, pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
+            (ChannelCoding.jointSequence ChannelCoding.iidXs (ChannelCoding.iidYs (α := Fin k)))
+            (u i, z i) :=
+      Finset.sum_congr rfl (fun i _ ↦ hpmfJeq (u i, z i))
+    simp only [hnum, hentJeq]
+  -- The target set is the `Y`-projection preimage of the fixed-`u` typical fibre.
+  have hΦS :
+      (fun (z : Fin n → {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) i ↦ ((z i : β))) ⁻¹'
+          {y : Fin n → β | (u, y) ∈ ChannelCoding.jointlyTypicalSet
+              (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs
+              (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε}
+        = {z : Fin n → {y : β // 0 < ∑ x, P_XY.real {(x, y)}} |
+            (u, z) ∈ ChannelCoding.jointlyTypicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+              ChannelCoding.iidXs (ChannelCoding.iidYs (α := Fin k)) n ε} := by
+    ext z
+    simp only [Set.mem_preimage, Set.mem_setOf_eq,
+      ChannelCoding.mem_jointlyTypicalSet_iff]
+    exact and_congr Iff.rfl (and_congr (htypY z) (htypJ z))
+  -- Entropy → `wzMutualInfoYU` exponent bridge.
+  have hbridge : wzMutualInfoYU (Fin k) q'
+      = entropy (rdAmbient (wzSideInfoMarginal P_XY κ')) (ChannelCoding.iidXs (α := Fin k) 0)
+        + entropy (rdAmbient (wzSideInfoMarginal P_XY κ')) (ChannelCoding.iidYs (α := Fin k) 0)
+        - entropy (rdAmbient (wzSideInfoMarginal P_XY κ'))
+            (ChannelCoding.jointSequence ChannelCoding.iidXs (ChannelCoding.iidYs (α := Fin k)) 0) := by
+    rw [wz_entropy_ambient_iidXs P_XY κ' hκ'pos hκ'sum,
+        wz_entropy_ambient_iidYs P_XY κ' hκ'pos hκ'sum,
+        wz_entropy_ambient_joint P_XY κ' hκ'pos hκ'sum]
+    show mutualInfoPmf (wzMarginalYU (Fin k) q') = _
+    rw [wz_mutualInfoPmf_wzMarginalYU_eq P_XY κ' hκ'pos hκ'sum q' hfact_eq]
+    rfl
+  -- Apply D2 on the side-information ambient over the subtype `β'`.
+  have hD2 := wz_covering_codeword_sideInfo_mass_le
+      (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs
+      (ChannelCoding.iidYs (α := Fin k)) ε hε_pos
+      (fun i ↦ ChannelCoding.measurable_iidXs i) (fun i ↦ ChannelCoding.measurable_iidYs i)
+      (rdAmbient_iIndepFun_iidXs _ hq) (rdAmbient_identDistrib_iidXs _ hq)
+      (rdAmbient_iIndepFun_iidYs _ hq) (rdAmbient_identDistrib_iidYs _ hq)
+      (fun x ↦ rdAmbient_iidXs_real_singleton_pos _ hq (wzSideInfoMarginal_pos P_XY κ' hκ'pos) x)
+      (fun y ↦ rdAmbient_iidYs_real_singleton_pos _ hq (wzSideInfoMarginal_pos P_XY κ' hκ'pos) y)
+      (fun p ↦ rdAmbient_jointSequence_real_singleton_pos _ hq
+        (wzSideInfoMarginal_pos P_XY κ' hκ'pos) p)
+      (wzMutualInfoYU (Fin k) q' - 3 * ε)
+      (le_of_eq (by rw [hbridge])) u
+  -- Measure reconciliation: the source `n`-fold `Y`-law is the `β`-image of the ambient's.
+  haveI : IsProbabilityMeasure ((ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})).map
+      Prod.snd) := Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+  haveI : IsProbabilityMeasure ((rdAmbient (wzSideInfoMarginal P_XY κ')).map
+      (ChannelCoding.iidYs (α := Fin k) 0)) :=
+    Measure.isProbabilityMeasure_map (ChannelCoding.measurable_iidYs 0).aemeasurable
+  haveI : IsProbabilityMeasure (((rdAmbient (wzSideInfoMarginal P_XY κ')).map
+      (ChannelCoding.iidYs (α := Fin k) 0)).map Subtype.val) :=
+    Measure.isProbabilityMeasure_map hval_meas.aemeasurable
+  have hmeaseq : (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))).map
+        (fun p (i : Fin n) ↦ (p i).2)
+      = ((rdAmbient (wzSideInfoMarginal P_XY κ')).map
+          (jointRV (ChannelCoding.iidYs (α := Fin k)) n)).map
+          (fun (z : Fin n → {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) i ↦ ((z i : β))) := by
+    rw [wz_ambient_jointRV_iidYs_eq_pi P_XY κ' hκ'pos hκ'sum n,
+        Measure.pi_map_pi (hμ := fun _ ↦ inferInstance) (fun _ ↦ hval_meas.aemeasurable),
+        Measure.pi_map_pi (hμ := fun _ ↦ inferInstance) (fun _ ↦ measurable_snd.aemeasurable)]
+    refine congrArg Measure.pi (funext (fun _ ↦ ?_))
+    exact wz_source_snd_eq_ambient_snd_map P_XY κ' hκ'pos hκ'sum
+  -- Assemble the mass-transport chain.
+  have hYproj_meas : Measurable (fun p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+      fun i ↦ (p i).2) :=
+    measurable_pi_lambda _ (fun i ↦ measurable_snd.comp (measurable_pi_apply i))
+  have hΦ_meas : Measurable (fun z : Fin n → {y : β // 0 < ∑ x, P_XY.real {(x, y)}} ↦
+      fun i ↦ ((z i : β))) :=
+    measurable_pi_lambda _ (fun i ↦ hval_meas.comp (measurable_pi_apply i))
+  have hjrv_meas : Measurable (jointRV (ChannelCoding.iidYs (α := Fin k)
+      (β := {y : β // 0 < ∑ x, P_XY.real {(x, y)}})) n) :=
+    measurable_jointRV _ (fun i ↦ ChannelCoding.measurable_iidYs i) n
+  rw [show { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+        (u, fun i ↦ (p i).2)
+          ∈ ChannelCoding.jointlyTypicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+              ChannelCoding.iidXs
+              (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                  ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε }
+      = (fun p (i : Fin n) ↦ (p i).2) ⁻¹' {y : Fin n → β | (u, y) ∈
+          ChannelCoding.jointlyTypicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+            ChannelCoding.iidXs
+            (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)) n ε} from rfl,
+      ← map_measureReal_apply hYproj_meas (Set.toFinite _).measurableSet,
+      hmeaseq,
+      map_measureReal_apply hΦ_meas (Set.toFinite _).measurableSet,
+      hΦS,
+      map_measureReal_apply hjrv_meas (Set.toFinite _).measurableSet]
+  exact hD2
+
+/-- **(Leg D, A3) Codebook-restricted confusion (E2) probability is squeezable.** For a
+covering codebook of size `M₁ ≲ exp(n·R₁)` and `n` beyond a threshold, at the shared
+conditional-typicality radius `ε` (an explicit input, pinned to the covering-acceptance mass
+precondition and used as the bin-decoder radius) there is a derandomized index binning `f`
+making the bin-decoder confusion probability so small that `distortionMax dα' · Pr[E2] ≤ δ/4`.
+Combines the binning-averaged confusion exponent (S5b `wz_codebook_confusion_expectation_le`,
+fed D2 `wz_covering_codeword_sideInfo_mass_le` + collision `wzIndexBinningMeasure_collision`,
+instantiated over the positive-`Y`-marginal subtype `β'`), the binning derandomization, and
+the exponent squeeze (`hε_conf : R₁ − I(Y;U) + 3·ε < R`), with the source ↔ side-info-ambient
+identification.
+
+The covering codebook size upper bound `(M₁ : ℝ) ≤ exp(n·R₁) + 1` is a genuine precondition:
+the confusion count scales with the number of codewords, so the squeeze needs `M₁` capped near
+`⌈exp(n·R₁)⌉` (the size the covering theorem actually produces), not merely bounded below.
+
+Independent honesty audit 2026-07-11 (leg-0): checks 1-3 PASS (non-circular; non-bundled —
+the E2 probability is the CONCLUSION, not a hypothesis; the `(M₁ : ℝ) ≤ exp(n·R₁) + 1`
+precondition is a GENUINE size precondition, `hsplit` is the rate gap,
+`hκ'pos`/`hκ'sum`/`hfact_eq` are regularity). But the check-4 (sufficiency) note "confusion
+mass `M₁ · exp(−n·I_YU) / codebookSize R n → 0`" is **OVERTURNED** (independent adjudication
+2026-07-12): it is FALSE-AS-FRAMED on the covering-ACCEPTANCE axis.
+
+**OVERTURN (check-4 false negative, false-statement).** G2
+(`wz_expectedBlockDistortion_le_ideal_add_E2`, sorry-free) fixes `E2 = { p |
+wzBinTypicalDecoder … (f(enc x), y) ≠ c₁.decoder (c₁.encoder x) }`, i.e. the FULL "bin decoder
+fails to recover the true covering word" event. By `wzBinTypicalDecoder` (fallback to
+`Classical.arbitrary` unless the true word is jointly typical with `y` AND unique in its bin)
+and `wzBinTypicalDecoder_eq_of_unique` (recovery needs `htrue`: true word jointly typical), E2
+decomposes as `E2 ⊆ E2b {some other bin member typical, confusion}  ∪  C2 {true word NOT
+jointly typical, covering-acceptance failure}`. The overturned sufficiency note bounded only
+the E2b sub-exponent (via S5b+D2, `M₁·exp(−n·I_YU)/codebookSize → 0`) and mistook it for all of
+E2 — it silently dropped C2. C2 is UNCONTROLLED here: the ONLY hypothesis on `c₁` is the size
+cap `hM_ub`; there is NO covering-acceptance / typicality-mass lower bound (no `hmass`-style
+hyp as in S5a `wz_covering_failure_prob_le`, no random-codebook hyp). `LossyCode`
+(`RateDistortion/Achievability.lean:81`) is a bare structure (encoder/decoder only, no
+goodness constraint), so an adversarial size-capped `c₁` whose codewords are never jointly
+typical with the realized `y` (or all share one empirical type) is a valid witness of the
+`∀ c₁` — and for it, for EVERY prover choice `(ε, f)`: `ε` small ⇒ C2 always (acceptance
+fails) ⇒ fallback ⇒ Pr[E2]≈1; `ε` large ⇒ many typical members per bin (`M₁ ≫ codebookSize
+R n`) ⇒ uniqueness fails ⇒ fallback ⇒ Pr[E2]≈1. For generic `d` (`distortionMax dα' ≥ 1`) and
+small `δ`, `distortionMax dα' · Pr[E2] ≈ distortionMax dα' > δ/4`, refuting the conclusion. The
+`∀ c₁` does not even require the hcov₁ distortion bound, so distortion-goodness vs
+typicality-acceptance need not be shown to decouple (they do — `d'` constrains the (X,U)
+reconstruction, joint typicality is a (U,Y) empirical-type property).
+
+Why the three prior audits missed C2: the 2026-07-11 sufficiency note and the Leg C.6 4th-axis
+check ("no 3rd under-hyp axis beyond M") both treated A3's `distortionMax·Pr[E2] ≤ δ/4` as an
+ATOM (a settled sub-result of S5b/D2) and did not read inside E2; the acceptance axis (C2)
+lives strictly inside A3's conclusion and is a distinct under-hyp axis from the M-axis and
+distortion-failure E1 (E1, distortion `{ideal>P}`, was correctly dropped by G2; C2, typicality
+acceptance, was conflated with it and its bound S5a dead-judged).
+
+Pinned-ε rework applied 2026-07-12 (Leg E): the free-`∃ε`/`dα'`-scaling defect of the prior
+first move is fixed at the signature level. (1) The covering-acceptance mass is now PINNED at a
+single explicit radius `ε`, supplied as an input binder (not existentially quantified inside a
+precondition). The huge-`ε` regime that makes `wzCoveringAcceptFailSet` vacuously empty is
+excluded by `hε_conf : R₁ − I(Y;U) + 3·ε < R` — a rate inequality (same species as the RD rate
+condition / `hM_ub` / `hsplit`), NOT a claim that the conclusion follows without the AEP body.
+`ε` is chosen in D3 from the rate gap `gap = R − (R₁ − I(Y;U)) > 0` (`ε := gap/6`, so
+`3·ε = gap/2 < gap`) and threaded to BOTH the acceptance precondition and the decoder radius.
+(2) The `dα'`-vs-`d` scaling axis is closed by the definitional link `hd'_link : ∀ x' g,
+dα' x' g = d x'.1 g`, discharged by `rfl` at D3's call site (where `dα' := fun x' g ↦ d x'.1 g`;
+Leg-C.5-style reconciliation). The C2 (covering-acceptance) mass ≤ `δ/2/(8·(distortionMax d+1))`
+is a precondition-exposure of the covering code's own S5a/gateway-2 property (threaded from the
+strengthened covering family `hcov₁`), same kind as `hM_ub`; it is NOT the analytic core. The
+analytic bodies remain `sorry`: (a) the covering-acceptance mass bound (S5a/gateway-2 Fubini
+bridge, in the covering atom `wz_coveringFamily_of_testChannel`), and (b) the E2b confusion
+exponent → 0 (S5b/D2) union-bounded with the pinned C2 here — both `@residual(plan:wz-binning-covering)`.
+
+Degenerate-binder check (each free binder's degenerate extreme is blocked by an unsatisfiable
+hypothesis, not a hidden vacuity): `ε` huge ⇒ `hε_conf` false; `dα' ≫ d` (e.g. `dα' ≡ 5`,
+`d ≡ 0`) ⇒ `hd'_link` false; `M₁` inflated ⇒ `hM_ub` false; the mass is pinned at the single
+input `ε` (no residual `∃ ε` anywhere in A3 or its consumed `hcov₁`).
+
+Body filled 2026-07-12 (Leg E-A3): the confusion-probability architecture is now GENUINE
+and the body carries NO literal `sorry`. It proves `{decoder ≠ true covering word} ⊆ C2 ∪ E2b`
+(`wzBinTypicalDecoder_eq_of_unique` contrapositive), bounds C2 by the pinned `hcov_accept`
+premise, chooses the binning `f` by a single derandomization (`exists_le_integral` over
+`wzIndexBinningMeasure` + the abstract-`jts`-generalized S5b
+`wz_codebook_confusion_expectation_le`), and squeezes the confusion exponent to `0`
+(`wz_tendsto_exp_mul_codebookSize_inv`; the degenerate `M₁ ≤ 1` covering has an empty
+confusion event, handled by `Subsingleton (Fin M₁)`), then scales by
+`distortionMax dα' ≤ distortionMax d` (`hd'_link`). The SOLE remaining residual is the named
+sub-lemma `wz_source_codeword_sideInfo_mass_le` (the per-covering-codeword AEP mass bound —
+`wz_covering_codeword_sideInfo_mass_le` (D2) transported from the side-information ambient to
+the source product measure by side-information-marginal agreement + the entropy→pmf MI bridge),
+which A3 consumes to supply S5b's `hmass`. So A3 is TYPE-CHECK DONE with its residual isolated
+(and transitively inherited) into that mass-bound lemma, exactly like the covering-atom C2 leg.
+
+Independent honesty audit 2026-07-12 (Leg E pinned-ε rework): PASS at the signature level;
+the pinned-ε signature is honest and the C2 (4th) + dα'-d (5th) under-hyp axes are closed.
+The prior first-move DEFECT (free-`∃ε` vacuity + dα'-d scaling) is genuinely resolved.
+Degenerate-binder table verified (each extreme blocked by an UNSATISFIABLE hyp, not hidden
+vacuity): (i) `ε` huge ⇒ `hε_conf : R₁ − I(Y;U) + 3ε < R` false (LHS → ∞), forcing
+`ε < gap/3`; (ii) `dα' ≫ d` (e.g. `dα'≡5`, `d≡0`) ⇒ `hd'_link : ∀ x' g, dα' x' g = d x'.1 g`
+false — and since `hd'_link` forces `dα' = d∘(·.1)`, `distortionMax dα' ≤ distortionMax d`,
+killing the r5 5th-axis counterexample; (iii) `M₁` inflated ⇒ `hM_ub` false; (iv) the
+acceptance mass is PINNED at the single input `ε` with NO residual `∃ ε` (grep-confirmed: the
+only `∃ ε` in the file is prose). `wzCoveringAcceptFailSet` is the complement of the
+strict-`< ε` `jointlyTypicalSet` on a finite full-support space, so its mass is monotone
+DECREASING in `ε` — the pin is load-bearing (not trivially satisfiable at a goldilocks `ε`).
+Non-bundled: `hε_conf` (static rate inequality) / `hd'_link` (definitional) / the pinned
+`hcov_accept` (precondition-exposure of the covering code's S5a/gateway-2 property, threaded
+from `hcov₁`) are the same species as `hM_ub`/`hd'_eq`; `hε_conf` alone does NOT imply the
+conclusion — the C2 acceptance decay (covering-atom body) and the E2b confusion exponent → 0
+(S5b/D2) remain genuine `sorry`-body analytic work. `@residual(plan:wz-binning-covering)`
+classification correct (in-project constructive fix; plan slug present). Caller (D3)
+discharges: `hε_conf`/`hε_pos` by `linarith` (ε := gap/6 ⇒ 3ε = gap/2 < gap), `hd'_link` by
+`rfl` (dα' := fun x' g ↦ d x'.1 g), `hcov_accept` from the strengthened `hcov₁` at the same ε.
+
+Independent honesty audit 2026-07-12 (commit `d1f2445a`, post-fill body genuineness): PASS.
+The signature is confirmed FROZEN (byte-identical to the parent commit — only the body was
+filled). The now-`sorry`-free body is a GENUINE proof, not a circular `:= h` / `:True` slot /
+degenerate abuse: it proves the set inclusion `{decoder ≠ true word} ⊆ C2 ∪ E2b` (`hFAIL_incl`
+via the `wzBinTypicalDecoder_eq_of_unique` contrapositive), bounds C2 by the `hcov_accept`
+premise (`hC2`), bounds E2b by a single derandomization (`MeasureTheory.exists_le_integral`
+over `wzIndexBinningMeasure`) fed the abstract-`jts` S5b `wz_codebook_confusion_expectation_le`
+whose `hmass` is the transported D2 mass lemma `wz_source_codeword_sideInfo_mass_le` (`hE2b`,
+with the degenerate `M₁ ≤ 1` empty-confusion case handled by `Subsingleton (Fin M₁)`), then
+combines by measure subadditivity and squeezes to `δ/4` (`distortionMax dα' ≤ distortionMax d`
+via `hd'_link`). The body carries NO literal `sorry`; the SOLE residual is transitively
+inherited from the called `wz_source_codeword_sideInfo_mass_le` (independently audited PASS as
+an honest per-codeword mass atom, not laundering), so tier-2 `@residual(plan:wz-binning-covering)`
+is correct (NOT `@audit:ok` — transitive sorry remains).
+@audit:closed-by-successor(wz-binning-covering)
+@residual(plan:wz-binning-covering) -/
+lemma wz_exists_binning_E2_bound
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
+    (d : DistortionFn α γ) (R : ℝ) {k : ℕ} [Nonempty (Fin k)]
+    (κ' : α → Fin k → ℝ) (hκ'pos : ∀ x u, 0 < κ' x u) (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (q' : α × β × Fin k → ℝ)
+    (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
+    (R₁ : ℝ) (ε : ℝ) (hε_pos : 0 < ε)
+    (hε_conf : R₁ - wzMutualInfoYU (Fin k) q' + 3 * ε < R)
+    (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (dα' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} γ)
+    (hd'_link : ∀ x' g, dα' x' g = d x'.1 g)
+    (δ : ℝ) (hδ : 0 < δ) :
+    ∃ N_E2 : ℕ, ∀ n : ℕ, N_E2 ≤ n →
+      ∀ (M₁ : ℕ) (c₁ : LossyCode M₁ n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
+        (M₁ : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 →
+        (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+              P_XY.real {(p.1.1, p.2)}))).real
+          (wzCoveringAcceptFailSet P_XY κ' c₁ ε)
+          ≤ δ / 2 / (8 * (distortionMax d + 1)) →
+        ∃ f : Fin M₁ → Fin (codebookSize R n),
+          distortionMax dα' *
+            (Measure.pi (fun _ : Fin n ↦
+                ChannelCoding.pmfToMeasure (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                    P_XY.real {(p.1.1, p.2)}))).real
+              { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+                  wzBinTypicalDecoder (rdAmbient (wzSideInfoMarginal P_XY κ'))
+                      ChannelCoding.iidXs
+                      (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                          ((ChannelCoding.iidYs i ω :
+                              {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
+                      ε c₁ f
+                      (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+                    ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) }
+            ≤ δ / 4 := by
+  classical
+  -- The per-codeword AEP exponent supplied by D2 (transported to the source measure).
+  set IYU : ℝ := wzMutualInfoYU (Fin k) q' - 3 * ε with hIYU_def
+  -- Confusion decay (term A): `2·exp(m·(R₁−IYU))·(codebookSize R m)⁻¹ → 0`, since
+  -- `R₁ − IYU = R₁ − I(Y;U) + 3ε < R` (`hε_conf`).  The degenerate `M₁ ≤ 1` covering (empty
+  -- confusion) is handled separately in the body, so only this single-exponential term is needed.
+  obtain ⟨N_E2, hN_E2⟩ : ∃ N : ℕ, ∀ m : ℕ, N ≤ m →
+      2 * Real.exp ((m : ℝ) * (R₁ - IYU)) * ((codebookSize R m : ℝ))⁻¹
+        ≤ δ / 2 / (8 * (distortionMax d + 1)) := by
+    have hdd : (0 : ℝ) ≤ distortionMax d := distortionMax_nonneg d
+    have hc : R₁ - IYU < R := by rw [hIYU_def]; linarith [hε_conf]
+    have hL := wz_tendsto_exp_mul_codebookSize_inv hc
+    have h2 : Filter.Tendsto
+        (fun m : ℕ ↦ 2 * (Real.exp ((m : ℝ) * (R₁ - IYU)) * ((codebookSize R m : ℝ))⁻¹))
+        Filter.atTop (nhds 0) := by
+      have := hL.const_mul (2 : ℝ); simpa using this
+    have htol : 0 < δ / 2 / (8 * (distortionMax d + 1)) :=
+      div_pos (div_pos hδ (by norm_num)) (by positivity)
+    rw [Metric.tendsto_atTop] at h2
+    obtain ⟨N, hN⟩ := h2 (δ / 2 / (8 * (distortionMax d + 1))) htol
+    refine ⟨N, fun m hm ↦ ?_⟩
+    have hd := hN m hm
+    rw [Real.dist_eq, sub_zero,
+      abs_of_nonneg (by positivity : (0 : ℝ) ≤ 2 * (Real.exp ((m : ℝ) * (R₁ - IYU))
+        * ((codebookSize R m : ℝ))⁻¹))] at hd
+    rw [mul_assoc]
+    exact le_of_lt hd
+  refine ⟨N_E2, fun n hn M₁ c₁ hM_ub hcov_accept ↦ ?_⟩
+  -- Fixed-`n` abbreviations.
+  haveI hQ_prob : IsProbabilityMeasure
+      (ChannelCoding.pmfToMeasure
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
+  set SRC : Measure (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
+    Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
+    with hSRC_def
+  set AMB : Measure (ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) :=
+    rdAmbient (wzSideInfoMarginal P_XY κ') with hAMB_def
+  set iidYs' : ℕ → (ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) → β :=
+    fun i ω ↦ ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β)
+    with hiidYs'_def
+  set jts : Set ((Fin n → Fin k) × (Fin n → β)) :=
+    ChannelCoding.jointlyTypicalSet AMB ChannelCoding.iidXs iidYs' n ε with hjts_def
+  have hjts_meas : MeasurableSet jts :=
+    ChannelCoding.measurableSet_jointlyTypicalSet AMB ChannelCoding.iidXs iidYs' n ε
+  -- The covering index of the source block, and the side-information block RV.
+  set trueIdx : (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) → Fin M₁ :=
+    fun p ↦ c₁.encoder (fun j ↦ (p j).1) with htrueIdx_def
+  set Ys : ℕ → (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) → β :=
+    fun i p ↦ if h : i < n then (p ⟨i, h⟩).2 else Classical.arbitrary β with hYs_def
+  have hjointRV : ∀ p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β,
+      jointRV Ys n p = fun i ↦ (p i).2 := by
+    intro p; funext i
+    simp only [jointRV, hYs_def, i.isLt, dif_pos]
+  -- STEP A (derandomize + S5b): a good binning `f` with confusion mass ≤ the count/bin ratio.
+  haveI hSRC_prob : IsProbabilityMeasure SRC := by rw [hSRC_def]; infer_instance
+  haveI hcs_ne : NeZero (codebookSize R n) := ⟨(codebookSize_pos R n).ne'⟩
+  have hYs_meas : ∀ i, Measurable (Ys i) := fun i ↦ measurable_of_finite _
+  have htrueIdx_meas : Measurable trueIdx := measurable_of_finite _
+  -- Per-covering-codeword AEP mass (D2 transported to the source measure).
+  have hmass : ∀ m' : Fin M₁,
+      SRC.real {p | (c₁.decoder m', jointRV Ys n p) ∈ jts}
+        ≤ Real.exp (-(n : ℝ) * IYU) := by
+    intro m'
+    have hset : {p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+          (c₁.decoder m', jointRV Ys n p) ∈ jts}
+        = {p | (c₁.decoder m', fun i ↦ (p i).2) ∈ jts} := by
+      ext p; simp only [Set.mem_setOf_eq, hjointRV]
+    rw [hset, hIYU_def]
+    exact wz_source_codeword_sideInfo_mass_le P_XY κ' hκ'pos hκ'sum q' hfact_eq
+      ε hε_pos n (c₁.decoder m')
+  -- STEP A (derandomize + S5b): a good binning `f` with confusion mass ≤ the count/bin ratio.
+  obtain ⟨f, hf⟩ : ∃ f : Fin M₁ → Fin (codebookSize R n),
+      SRC.real {p | ∃ m' : Fin M₁, m' ≠ trueIdx p ∧ f m' = f (trueIdx p)
+          ∧ (c₁.decoder m', jointRV Ys n p) ∈ jts}
+        ≤ (M₁ : ℝ) * Real.exp (-(n : ℝ) * IYU) * ((codebookSize R n : ℝ))⁻¹ := by
+    set binMeas := wzIndexBinningMeasure M₁ (codebookSize R n) with hbin_def
+    have hG_int : Integrable
+        (fun g : Fin M₁ → Fin (codebookSize R n) ↦
+          SRC.real {p | ∃ m' : Fin M₁, m' ≠ trueIdx p ∧ g m' = g (trueIdx p)
+            ∧ (c₁.decoder m', jointRV Ys n p) ∈ jts}) binMeas :=
+      Integrable.of_finite
+    obtain ⟨f, hf_le⟩ := MeasureTheory.exists_le_integral hG_int
+    refine ⟨f, le_trans hf_le ?_⟩
+    have hcoll : ∀ m' m : Fin M₁, m' ≠ m →
+        binMeas.real {g | g m' = g m} = ((codebookSize R n : ℝ))⁻¹ :=
+      fun m' m h ↦ wzIndexBinningMeasure_collision h
+    exact wz_codebook_confusion_expectation_le SRC Ys c₁ trueIdx
+      hYs_meas htrueIdx_meas binMeas jts hjts_meas IYU hmass hcoll
+  refine ⟨f, ?_⟩
+  -- STEP B (set inclusion): the decoder recovers the true word off `C2 ∪ E2b`.
+  have hFAIL_incl :
+      { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+          wzBinTypicalDecoder AMB ChannelCoding.iidXs iidYs' ε c₁ f
+              (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+            ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) }
+        ⊆ wzCoveringAcceptFailSet P_XY κ' c₁ ε
+          ∪ {p | ∃ m' : Fin M₁, m' ≠ trueIdx p ∧ f m' = f (trueIdx p)
+              ∧ (c₁.decoder m', jointRV Ys n p) ∈ jts} := by
+    intro p hp
+    rw [Set.mem_union]
+    by_contra hpc
+    push_neg at hpc
+    obtain ⟨hpC2, hpE2b⟩ := hpc
+    apply hp
+    have htrue : (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2) ∈ jts := by
+      by_contra hcon
+      exact hpC2 hcon
+    have hunique : ∀ u : Fin n → Fin k,
+        (∃ m' : Fin M₁, f m' = f (c₁.encoder (fun j ↦ (p j).1)) ∧ c₁.decoder m' = u) →
+        (u, fun i ↦ (p i).2) ∈ jts →
+        u = c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) := by
+      rintro u ⟨m', hfm', hdec⟩ htyp
+      by_contra hne
+      refine hpE2b ⟨m', ?_, hfm', ?_⟩
+      · intro hm'eq
+        exact hne (by rw [← hdec, hm'eq])
+      · rw [hdec, hjointRV]; exact htyp
+    have hrec := wzBinTypicalDecoder_eq_of_unique AMB ChannelCoding.iidXs iidYs' ε c₁ f
+      (m₁ := c₁.encoder (fun j ↦ (p j).1)) (y := fun i ↦ (p i).2)
+      (by rw [← hjointRV] at htrue ⊢; exact htrue) ?_
+    · exact hrec
+    · intro u hex htyp
+      exact hunique u hex htyp
+  -- STEP C (measure subadditivity + hypotheses + threshold).
+  have hmeas_le :
+      SRC.real
+        { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+            wzBinTypicalDecoder AMB ChannelCoding.iidXs iidYs' ε c₁ f
+                (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+              ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) }
+        ≤ SRC.real (wzCoveringAcceptFailSet P_XY κ' c₁ ε)
+          + SRC.real {p | ∃ m' : Fin M₁, m' ≠ trueIdx p ∧ f m' = f (trueIdx p)
+              ∧ (c₁.decoder m', jointRV Ys n p) ∈ jts} := by
+    refine le_trans (measureReal_mono hFAIL_incl (by
+      exact measure_union_ne_top (measure_ne_top _ _) (measure_ne_top _ _))) ?_
+    exact measureReal_union_le _ _
+  -- STEP D (arithmetic).  `distortionMax dα' ≤ distortionMax d`, and each half ≤ `δ/16`.
+  have hdMax_le : distortionMax dα' ≤ distortionMax d := by
+    unfold distortionMax
+    refine Finset.sup'_le _ _ (fun q _ ↦ ?_)
+    rw [hd'_link]
+    exact Finset.le_sup' (f := fun ab : α × γ ↦ ((d ab.1 ab.2 : NNReal) : ℝ))
+      (Finset.mem_univ (q.1.1, q.2))
+  have hdMax_nn : 0 ≤ distortionMax dα' := distortionMax_nonneg dα'
+  have hd_nn : 0 ≤ distortionMax d := distortionMax_nonneg d
+  have hC2 : SRC.real (wzCoveringAcceptFailSet P_XY κ' c₁ ε)
+      ≤ δ / 2 / (8 * (distortionMax d + 1)) := hcov_accept
+  have hE2b : SRC.real {p | ∃ m' : Fin M₁, m' ≠ trueIdx p ∧ f m' = f (trueIdx p)
+        ∧ (c₁.decoder m', jointRV Ys n p) ∈ jts}
+      ≤ δ / 2 / (8 * (distortionMax d + 1)) := by
+    by_cases hM1 : 2 ≤ M₁
+    · -- `M₁ ≥ 2` ⇒ `exp(n·R₁) ≥ 1`, so `M₁ ≤ 2·exp(n·R₁)`; term-A decay finishes.
+      have hM2 : (2 : ℝ) ≤ (M₁ : ℝ) := by exact_mod_cast hM1
+      have hexp1 : (1 : ℝ) ≤ Real.exp ((n : ℝ) * R₁) := by linarith [hM_ub, hM2]
+      have hM1bound : (M₁ : ℝ) ≤ 2 * Real.exp ((n : ℝ) * R₁) := by linarith [hM_ub, hexp1]
+      refine le_trans hf (le_trans ?_ (hN_E2 n hn))
+      calc (M₁ : ℝ) * Real.exp (-(n : ℝ) * IYU) * ((codebookSize R n : ℝ))⁻¹
+          ≤ (2 * Real.exp ((n : ℝ) * R₁)) * Real.exp (-(n : ℝ) * IYU)
+              * ((codebookSize R n : ℝ))⁻¹ :=
+            mul_le_mul_of_nonneg_right
+              (mul_le_mul_of_nonneg_right hM1bound (Real.exp_nonneg _)) (by positivity)
+        _ = 2 * Real.exp ((n : ℝ) * (R₁ - IYU)) * ((codebookSize R n : ℝ))⁻¹ := by
+            rw [mul_assoc 2, ← Real.exp_add,
+              show (n : ℝ) * R₁ + -(n : ℝ) * IYU = (n : ℝ) * (R₁ - IYU) from by ring]
+    · -- `M₁ ≤ 1` ⇒ the confusion event is empty.
+      push_neg at hM1
+      haveI hsub : Subsingleton (Fin M₁) := by
+        rw [Fin.subsingleton_iff_le_one]; omega
+      have hempty : {p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+          ∃ m' : Fin M₁, m' ≠ trueIdx p ∧ f m' = f (trueIdx p)
+            ∧ (c₁.decoder m', jointRV Ys n p) ∈ jts} = ∅ := by
+        ext p
+        simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_exists]
+        rintro m' ⟨hne, -, -⟩
+        exact hne (Subsingleton.elim m' (trueIdx p))
+      rw [hempty, measureReal_empty]
+      exact le_of_lt (div_pos (div_pos hδ (by norm_num)) (by positivity))
+  have hden_pos : 0 < 8 * (distortionMax d + 1) := by positivity
+  calc distortionMax dα' *
+        SRC.real
+          { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+              wzBinTypicalDecoder AMB ChannelCoding.iidXs iidYs' ε c₁ f
+                  (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+                ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) }
+      ≤ distortionMax dα' *
+          (δ / 2 / (8 * (distortionMax d + 1)) + δ / 2 / (8 * (distortionMax d + 1))) :=
+        mul_le_mul_of_nonneg_left (le_trans hmeas_le (add_le_add hC2 hE2b)) hdMax_nn
+    _ ≤ distortionMax d *
+          (δ / 2 / (8 * (distortionMax d + 1)) + δ / 2 / (8 * (distortionMax d + 1))) :=
+        mul_le_mul_of_nonneg_right hdMax_le (by positivity)
+    _ ≤ δ / 4 := by
+        have hXne : (8 * (distortionMax d + 1)) ≠ 0 := ne_of_gt hden_pos
+        have hkey : distortionMax d * (δ / 2 / (8 * (distortionMax d + 1))
+              + δ / 2 / (8 * (distortionMax d + 1)))
+            = distortionMax d * δ / (8 * (distortionMax d + 1)) := by
+          field_simp
+          ring
+        rw [hkey, div_le_iff₀ hden_pos]
+        nlinarith [mul_nonneg hd_nn hδ.le, hδ.le]
+
+/-- **(D3) Per-`n` Wyner–Ziv code family at a fixed covering rate (Steps 2–7).** Given
+the Step 1–2 covering data together with an already-chosen covering rate `R₁` (strictly
+above `I(X;U)`, so that `hcov₁` — the covering `LossyCode` family at rate `R₁` — is
+available) and the net-rate gap `hsplit : R₁ − I(Y;U) < R`, assemble the per-`n`
+Wyner–Ziv code family at the operational rate `R`: bin the covering index down to
+`codebookSize R n` messages (`wzIndexBinningMeasure`), decode by the bin
+conditional-typicality search (S3 `wzCodeOfCoveringBinning` / S4 `wzBinTypicalDecoder`),
+bound the covering-failure (S5a `wz_covering_failure_prob_le`, fed the mass lower bound
+via gateway 2 `wz_covering_sideInfo_mass_ge`) and the codebook-restricted
+decoder-confusion (S5b `wz_codebook_confusion_expectation_le`, fed the per-codeword mass
+upper bound via D2 `wz_covering_codeword_sideInfo_mass_le` and the collision
+`wzIndexBinningMeasure_collision` (B)) error events, extract a good deterministic
+codebook + binning by double derandomization
+(`exists_codebook_low_avg` / `exists_pair_le_of_binning_integral_le`), squeeze the
+residual distortion excess to `0` (`source_avg_distortion_le_simpler`,
+`ceil_exp_mul_exp_neg_tendsto_atTop`, `wz_tendsto_exp_mul_codebookSize_inv`), and extend
+the covering code `α' → α` (S7 `wzLiftSupportCode` +
+`wz_expectedBlockDistortion_source_agree`).
+
+The rate split is separated out: this lemma pins the covering rate `R₁` and the confusion
+exponent `I(Y;U)` explicitly, and consumes the covering family only at `R₁` (`hcov₁`);
+the choice of the intermediate covering rate `R₁ ∈ (I(X;U), …)` is the caller's glue
+(`wz_perDelta_covering_binning_eventual`, via the rate identity D1). No error-probability
+or decoder-correctness claim is a hypothesis: `hcov₁` is the separately-established
+rate-distortion covering `LossyCode` family (not the binned Wyner–Ziv code), and the
+binning rate reduction `I(X;U) → I(X;U) − I(Y;U)` together with the confusion exponent is
+the residual body content. `hobj'`/`hsplit`/`hfeas` are objective/feasibility
+preconditions on the test channel; positivity and simplex membership are regularity.
+
+Independent honesty audit 2026-07-06: honest residual, non-bundled. The sufficiency
+claim (4) below was OVERTURNED (leg-20, 2026-07-06) as false-as-framed and then honest-ified
+by the δ-split fix (Leg 0, 2026-07-11); see (4). (1)-(3) still hold. (1) Non-circular: no
+hypothesis has the conclusion's type. (2) Non-bundled (load-bearing test): `hcov₁` is the
+rate-distortion *covering* `LossyCode M n α' (Fin k)` family at covering rate `R₁`
+(≈ `I(X;U)`), NOT the binned `WynerZivCode (codebookSize R n)` at operational rate `R` —
+granting it hands the covering code only; the index binning (`M → ⌈exp(n·R)⌉` bins via
+`wzIndexBinningMeasure`), the bin conditional-typicality decoder (S4), and the confusion
+exponent (S5b) remain genuine body work. `hobj'`/`hsplit`/`hfeas` are rate/feasibility
+preconditions, not the operational conclusion; positivity, `hκ'sum`, simplex membership are
+regularity. (3) Non-degenerate: same `∃ c` inside `∀ n` shape as (D) — the `n < N` branch
+is benignly vacuous while the infinitely many `n ≥ N` require genuine codes. (4)
+Sufficiency — honest-as-framed since the δ-split fix (Leg 0, 2026-07-11). The earlier
+signature (exact `≤ D+δ` conclusion with `hfeas`/`hcov₁` *also* budgeted at `D+δ`) was
+FALSE-AS-FRAMED (leg-20 OVERTURN, mechanically confirmed): the WZ distortion decomposes
+(RD precedent `source_avg_distortion_le_simpler`) as good-event proxy +
+`distortionMax d · (P[E1]+P[E2])`, so spending the WHOLE `D+δ` budget on the proxy left no
+room for the strictly-positive finite-`n` error term (degenerate counterexample: proxy
+`= D+δ`, `distortionMax d = D+δ+η`, generic positive `P[error]` ⇒ WZ distortion `> D+δ`
+∀n). δ-split FIX: `hfeas` and `hcov₁`'s target are tightened to `D + δ/2`, reserving `δ/2`
+for the WZ errors (mirrors the RD sister `rate_distortion_achievability`'s `h_slack`). This
+is a PRECONDITION tightening, NOT bundling: the covering atom
+`wz_covering_lossyCode_exists` accepts any target `≤ D` and returns `≤ target + ε'`, so
+`D + δ/2` is genuinely achievable; the reserved `δ/2` is absorbed by the error exponents
+(S5a/S5b/D2/(B) → 0), which is real analytic work (Leg C), not encoded into a hypothesis.
+The conclusion `≤ D+δ` is unchanged and the body stays `sorry`.
+
+**Reconciliation now threaded (Leg C.5, 2026-07-11).** The distinct
+under-hypothesization axis the Leg-0 audit missed is now closed at the signature level.
+Previously `d'` (covering proxy `DistortionFn α' (Fin k)`) and `qf` (test channel +
+reconstruction `Fin k × β → γ`) arrived as OPAQUE, mutually-unrelated parameters — no
+hypothesis tied `d'` to the real distortion `d` via `qf.2` (degenerate counterexample:
+`d' := 0` makes `hfeas`/`hcov₁` trivially hold while the WZ code's real distortion under
+`d ∘ qf.2` is unconstrained, so `≤ D+δ` would fail). Two non-load-bearing preconditions
+(same kind as `hfact_eq`/`hqStar_eq`) close that gap: `hd'_eq` pins `d'` to the
+`Y`-conditional expectation of `d ∘ qf.2` (exactly `wz_coveringDistortion_reconcile`,
+L872) and `hqf` supplies the test channel's `WynerZivFactorizableConstraint` membership.
+Both are discharged by construction in `wz_coveringFamily_of_testChannel` (L957): `hd'_eq`
+by `rfl` (the returned `d'` witness IS that expression) and `hqf` = the original input.
+The distortion-decomposition bridge (Leg C `wz_covering_binning_distortion_decomp`) is
+built standalone and NOT on top of this — the signature is now honest and the `sorry` is
+honestly closeable as-framed.
+
+Independent honesty audit 2026-07-11 (Leg C.5, reconciliation axis): PASS. Every
+distortion-relevant parameter is load-bearing (no surviving degenerate counterexample):
+`hd'_eq` pins `d'` to `𝔼_{Y|X}[d ∘ qf.2]` — the `d' := 0` counterexample is killed since
+`d' = 0` now forces `d ∘ qf.2 = 0` on the support (`d ≥ 0`, weighted `toNNReal`), so the
+real WZ distortion is genuinely 0; `hqStar_eq`+`hκ'sum` pin `qStar`'s X-marginal to `P_X`
+(source-consistency, no third gap); `hfeas`+reconcile (`f := qf.2`) equate the covering
+budget under `d'` with `wzExpectedDistortion d q' qf.2`, connecting the proxy budget to the
+real block distortion (over `P_XY^n`) via `qf.2`, the SAME reconstruction that
+`wzCodeOfCoveringBinning`/the Leg-C decomposition bridge use. `hqf` is a legitimate
+factorizability/feasibility precondition (redundant-but-honestly-discharged for the
+distortion axis, supplies the Markov `U-X-Y` structure), NOT load-bearing on the operational
+conclusion. Both new hyps discharged by construction at the caller
+(`wz_coveringFamily_of_testChannel`, L961: `hd'_eq` by `rfl` since the returned `d'` witness
+IS that expression, `hqf` = the pre-`rw` input copy `hqf₀`), and threaded — not dropped or
+re-proven — through D/S6/`wz_perDelta_codes_exist`. Caller sorryAx-free (`#print axioms` =
+`[propext, Classical.choice, Quot.sound]`); D3 carries only transitive `sorryAx` from its own
+body. (The Leg-C.5 audit's "no third axis" conclusion is OVERTURNED — see the M-axis finding
+below.)
+Classification `plan` correct (in-project, not a Mathlib wall).
+
+M-axis under-hypothesization (Leg D finding) resolved by Leg C.6: `hcov₁` now exposes, in
+addition to the covering-size lower bound `⌈exp(n·R₁)⌉ ≤ M`, the matching upper bound
+`(M : ℝ) ≤ exp(n·R₁) + 1`. This is not a hypothesis carrying the proof's core — it is the
+size the rate-distortion covering theorem actually produces (`M = ⌈exp(n·R₁)⌉`,
+`Nat.ceil_lt_add_one`), a precondition tightening (Leg-0/Leg-C.5-style) re-exposed from the
+covering construction and threaded through D/S6/`wz_perDelta_codes_exist`, discharged by
+construction at `wz_coveringFamily_of_testChannel`. It closes the former inflated-`M`
+counterexample (redundant covering codewords satisfying `hcov₁` while driving `Pr[E2] → 1`):
+the E2 squeeze (A3 `wz_exists_binning_E2_bound`) needs `M` bounded ABOVE, now supplied by the
+covering family together with the codebook `c₁`. The D3 signature is therefore honest in the
+M-direction (TRUE-as-framed); the headline signature
+(`wz_goodCode_exists_of_testChannel` / `wyner_ziv_achievability`) is untouched (parent #9 crux
+invariant). The remaining residual is transitive from the still-open A2
+(`wz_ideal_expectation_eq_covering`) / A3 (`wz_exists_binning_E2_bound`) sub-lemmas.
+
+Independent honesty audit 2026-07-11 (Leg C.6, M-axis): PASS, tier-2 `@residual` retained
+(A2/A3 open, so NOT `@audit:ok`). Confirmed: the M-axis `hM_ub` `sorry` is genuinely removed —
+D3's own body is now `sorry`-free (only A2/A3 emit `sorry` warnings), and the threaded upper
+bound is the genuine ceiling size the RD covering theorem produces (`witness_form_strong`'s
+`Mn = ⌈exp(n·R)⌉` + `Nat.ceil_lt_add_one`, machine-verified `sorry`-free), a non-load-bearing
+precondition tightening. Fourth-axis sufficiency check (M was the 4th under-hyp axis): the
+conclusion's driving quantities are all now constrained — covering distortion `≤ (D+δ/2)+δ/4`
+(hcov₁+A2), `distortionMax·Pr[E2] ≤ δ/4` (A3, now fed the M cap), `M` bounded BOTH sides,
+bins `= codebookSize R n` fixed by `(R,n)`, `I(Y;U)` fixed by `q'` via `hfact_eq`, `hsplit`
+present; the inflated-`M` counterexample is closed and no residual degenerate substitution
+(δ→0 barred by `hδ`, M-boundary capped, generic `d`) refutes the framed statement.
+@residual(plan:wz-binning-covering) -/
+lemma wz_perN_covering_binning_code
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (R D : ℝ)
+    (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (δ : ℝ) (hδ : 0 < δ)
+    (q' : α × β × Fin k → ℝ) (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
+    (R₁ : ℝ)
+    (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
+    (hκ'pos : ∀ x u, 0 < κ' x u)
+    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (hobj' : wzMutualInfoXU (Fin k) q' - wzMutualInfoYU (Fin k) q' < R)
+    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    (hqStar_pos : ∀ p, 0 < qStar p)
+    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    (hfeas : expectedDistortionPmf d' qStar ≤ D + δ / 2)
+    (hd'_eq : ∀ x' u, d' x' u = Real.toNNReal (∑ y : β,
+        (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
+    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
+            (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
+    (hsplit : R₁ - wzMutualInfoYU (Fin k) q' < R)
+    (hcov₁ : ∀ ε' : ℝ, 0 < ε' → ∀ ε : ℝ, 0 < ε →
+        ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
+          Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
+          (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 ∧
+          ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
+            c.expectedBlockDistortion
+                ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
+              ≤ (D + δ / 2) + ε'
+            ∧ (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+                  (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                    P_XY.real {(p.1.1, p.2)}))).real
+                (wzCoveringAcceptFailSet P_XY κ' c ε)
+                ≤ δ / 2 / (8 * (distortionMax d + 1))) :
+    ∃ N : ℕ, ∀ n : ℕ, ∃ c : WynerZivCode (codebookSize R n) n α β γ,
+      N ≤ n → c.expectedBlockDistortion P_XY d ≤ D + δ := by
+  classical
+  -- The auxiliary covering alphabet is nonempty (the row-stochastic kernel of the
+  -- factorisable test channel forces `k > 0`).
+  haveI hkne : Nonempty (Fin k) := wz_nonempty_of_factorizable hqf.1
+  -- Reduce the `∃ N, ∀ n, ∃ c, N ≤ n → …` conclusion to the per-`n` (for `n ≥ N`)
+  -- code-existence claim; the `n < N` branch is discharged by an arbitrary inhabitant of
+  -- `WynerZivCode` (available since `[Nonempty γ]` and `codebookSize R n > 0`).
+  suffices hfam : ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
+      ∃ c : WynerZivCode (codebookSize R n) n α β γ,
+        c.expectedBlockDistortion P_XY d ≤ D + δ by
+    obtain ⟨N, hN⟩ := hfam
+    refine ⟨N, fun n => ?_⟩
+    by_cases hn : N ≤ n
+    · obtain ⟨c, hc⟩ := hN n hn
+      exact ⟨c, fun _ => hc⟩
+    · exact ⟨{ encoder := fun _ => ⟨0, codebookSize_pos R n⟩,
+                decoder := fun _ _ => Classical.arbitrary γ },
+             fun hle => absurd hle hn⟩
+  -- ═══════════════════════════════════════════════════════════════════════════
+  -- Analytic core (Legs A–D). Six-step assembly; STEP 1 (covering-side derandomize) and
+  -- STEP 6 outer packaging (the `wzLiftSupportCode` factorization) are genuine glue below;
+  -- STEPS 1'–5 + inner Step 6 remain a `sorry` tagged `@residual(plan:wz-binning-covering)`.
+  -- ═══════════════════════════════════════════════════════════════════════════
+  -- The source-support subtype `α'` is nonempty (its `stdSimplex` pmf `qStar` has total
+  -- mass `1 ≠ 0`), so it has an inhabitant `x₀` for the `α' → α` support lift and the
+  -- `Nonempty α'` instance the E2-squeeze adapter (A3) needs.
+  haveI hne_prod :
+      Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) :=
+    Finset.univ_nonempty_iff.mp
+      (Finset.nonempty_of_sum_ne_zero (by rw [hqStar_mem.2]; exact one_ne_zero))
+  haveI hneα' : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} :=
+    hne_prod.map Prod.fst
+  -- STEP 1 (derandomize, covering side — genuine).  Feed `hcov₁` at slack `ε' := δ/4` to
+  -- obtain the covering threshold `N_cov` and, for every `n ≥ N_cov`, the covering codebook
+  -- `c₁ : LossyCode M n α' (Fin k)` whose covering distortion — over the i.i.d. covering
+  -- ambient `(rdAmbient qStar).map (iidXs 0)`, w.r.t. the proxy `d'` — is `≤ (D+δ/2)+δ/4`,
+  -- with codebook size `M ≥ ⌈exp(n·R₁)⌉`.
+  -- Choose the shared conditional-typicality radius `ε` from the rate gap `hsplit`.  The
+  -- covering-acceptance mass (C2) and the decoder-confusion (E2b) are bound at the SAME
+  -- radius `ε`; the huge-`ε` regime that makes `wzCoveringAcceptFailSet` vacuously empty is
+  -- excluded by `hε_conf : R₁ − I(Y;U) + 3·ε < R` (`3·ε = gap/2 < gap`).
+  set ε : ℝ := (R - (R₁ - wzMutualInfoYU (Fin k) q')) / 6 with hε_def
+  have hε_pos : 0 < ε := by rw [hε_def]; linarith [hsplit]
+  have hε_conf : R₁ - wzMutualInfoYU (Fin k) q' + 3 * ε < R := by rw [hε_def]; linarith [hsplit]
+  obtain ⟨N_cov, hN_cov⟩ := hcov₁ (δ / 4) (div_pos hδ (by norm_num)) ε hε_pos
+  -- STEP 4 / 1' (binning-side derandomize + E2 squeeze, Leg D A3).  Obtain the confusion
+  -- threshold `N_E2`: beyond it, for a covering codebook of size `M ≲ exp(n·R₁)`, a good
+  -- binning `f` (radius `ε`) makes `distortionMax dα' · Pr[E2] ≤ δ/4`.
+  obtain ⟨N_E2, hN_E2⟩ :=
+    wz_exists_binning_E2_bound P_XY d R κ' hκ'pos hκ'sum q' hfact_eq R₁ ε hε_pos hε_conf qf
+      (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g) (fun _ _ => rfl) δ hδ
+  refine ⟨max N_cov N_E2, fun n hn => ?_⟩
+  obtain ⟨M, hM_ge, hM_ub, c₁, hc₁_dist, hAccept⟩ := hN_cov n (le_trans (le_max_left _ _) hn)
+  have x₀ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := Classical.arbitrary _
+  -- ═══════════════════════════════════════════════════════════════════════════
+  -- STEP 6 (outer packaging — genuine).  The Wyner–Ziv code is the `α' → α` support lift
+  -- (`wzLiftSupportCode`) of a support-restricted code `codeSupp` over the source-support
+  -- subtype `α'`.  This factors the α-side conclusion through the α'-side construction; the
+  -- remaining source-measure transport / proxy reconciliation (the *inner* half of Step 6)
+  -- lives inside the `codeSupp` existential below.
+  -- ═══════════════════════════════════════════════════════════════════════════
+  suffices hsupp : ∃ codeSupp : WynerZivCode (codebookSize R n) n
+      {x : α // 0 < ∑ y, P_XY.real {(x, y)}} β γ,
+      (wzLiftSupportCode P_XY x₀ codeSupp).expectedBlockDistortion P_XY d ≤ D + δ by
+    obtain ⟨codeSupp, hcodeSupp⟩ := hsupp
+    exact ⟨wzLiftSupportCode P_XY x₀ codeSupp, hcodeSupp⟩
+  -- ═══════════════════════════════════════════════════════════════════════════
+  -- STEPS 1'–5 + inner Step 6 (E2-only assembly via the Leg D adapters G2/A1/A2/A3):
+  --   A3 (`hN_E2`) → binning `f` + radius `ε` with `distortionMax dα' · Pr[E2] ≤ δ/4`;
+  --   A1 (`wz_lift_expectedBlockDistortion_eq`)  : lift identity `P_XY,d ↦ Q_XY,dα'`;
+  --   G2 (`wz_expectedBlockDistortion_le_ideal_add_E2`) : actual ≤ ideal + dMax·Pr[E2];
+  --   A2 (`wz_ideal_expectation_eq_covering`) : ideal = covering distortion ≤ (D+δ/2)+δ/4.
+  -- Arithmetic: ((D+δ/2)+δ/4) + δ/4 = D+δ.
+  -- ═══════════════════════════════════════════════════════════════════════════
+  -- Covering codebook size cap (M-direction).  The confusion count scales with the number
+  -- of covering codewords, so A3 needs `M ≲ exp(n·R₁)`.  The matching upper bound
+  -- `(M : ℝ) ≤ exp(n·R₁) + 1` is the size the covering theorem actually produces (`M =
+  -- ⌈exp(n·R₁)⌉`, `Nat.ceil_lt_add_one`); it is threaded through `hcov₁` (Leg C.6), so
+  -- `hM_ub` is now supplied by the covering family together with the codebook `c₁`.
+  obtain ⟨f, hE2⟩ := hN_E2 n (le_trans (le_max_right _ _) hn) M c₁ hM_ub hAccept
+  -- The co-restricted source measure `Q_XY` is a probability measure.
+  haveI hQ_prob : IsProbabilityMeasure
+      (ChannelCoding.pmfToMeasure
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
+  -- Assemble the support-restricted covering + binning code and bound its distortion.
+  refine ⟨wzCodeOfCoveringBinning c₁ f qf.2
+      (wzBinTypicalDecoder (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs
+        (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+            ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
+        ε c₁ f), ?_⟩
+  rw [wz_lift_expectedBlockDistortion_eq P_XY d x₀ _]
+  calc (wzCodeOfCoveringBinning c₁ f qf.2
+          (wzBinTypicalDecoder (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs
+            (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
+            ε c₁ f)).expectedBlockDistortion
+          (ChannelCoding.pmfToMeasure
+            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
+          (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g)
+      ≤ (∫ p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β,
+            blockDistortion (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g) n
+              (fun i ↦ (p i).1)
+              (fun i ↦ qf.2 (c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) i, (p i).2))
+          ∂(Measure.pi (fun _ : Fin n ↦
+              ChannelCoding.pmfToMeasure
+                (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                  P_XY.real {(p.1.1, p.2)}))))
+        + distortionMax (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g)
+          * (Measure.pi (fun _ : Fin n ↦
+                ChannelCoding.pmfToMeasure
+                  (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                    P_XY.real {(p.1.1, p.2)}))).real
+              { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+                  wzBinTypicalDecoder (rdAmbient (wzSideInfoMarginal P_XY κ'))
+                      ChannelCoding.iidXs
+                      (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                          ((ChannelCoding.iidYs i ω :
+                              {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
+                      ε c₁ f
+                      (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+                    ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) } :=
+        wz_expectedBlockDistortion_le_ideal_add_E2 (rdAmbient (wzSideInfoMarginal P_XY κ'))
+          ChannelCoding.iidXs
+          (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+              ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
+          ε c₁ f qf.2 (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g)
+          (ChannelCoding.pmfToMeasure
+            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
+    _ = c₁.expectedBlockDistortion ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
+          + distortionMax (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) g ↦ d x'.1 g)
+            * (Measure.pi (fun _ : Fin n ↦
+                  ChannelCoding.pmfToMeasure
+                    (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                      P_XY.real {(p.1.1, p.2)}))).real
+                { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
+                    wzBinTypicalDecoder (rdAmbient (wzSideInfoMarginal P_XY κ'))
+                        ChannelCoding.iidXs
+                        (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                            ((ChannelCoding.iidYs i ω :
+                                {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))
+                        ε c₁ f
+                        (f (c₁.encoder (fun j ↦ (p j).1)), fun i ↦ (p i).2)
+                      ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) } := by
+        rw [wz_ideal_expectation_eq_covering P_XY d κ' hκ'sum qStar hqStar_eq hqStar_mem d' qf
+          hd'_eq c₁]
+    _ ≤ ((D + δ / 2) + δ / 4) + δ / 4 := by linarith [hc₁_dist, hE2]
+    _ = D + δ := by ring
+
+/-- **(D) Per-slack per-`n` good deterministic Wyner–Ziv code (Steps 3–6).** Consuming
+the same Step 1–2 covering data as the capstone `wz_perDelta_covering_binning` (S6),
+produce for every block length `n` a Wyner–Ziv code at the operational rate `R`
+(`codebookSize R n` messages), together with a single threshold `N` beyond which the
+code's expected block distortion is within `D + δ`.
+
+Decomposition (leg-19): this lemma's body is now the sorry-free **rate-split glue**.
+Step 1 uses the rate identity `wz_mutualInfo_restriction_eq` (D1, closed sorry-free) to
+pick an intermediate covering rate `R₁ ∈ (I(X;U), …)` with `R₁ − I(Y;U) < R`, feeds the
+covering family `hcov` at `R₁`, and hands the whole per-`n` construction (Steps 2–7) to
+the giant `wz_perN_covering_binning_code` (D3). D3 bins the covering index to
+`codebookSize R n` messages (`wzIndexBinningMeasure`), decodes by the bin
+conditional-typicality search (`wzBinTypicalDecoder`, S4) reconstructing `γ^n` via
+`wzCodeOfCoveringBinning` (S3), bounds the covering-failure (S5a
+`wz_covering_failure_prob_le`) and codebook-restricted decoder-confusion (S5b
+`wz_codebook_confusion_expectation_le`, whose per-codeword mass upper bound is the AEP
+crux `wz_covering_codeword_sideInfo_mass_le`, D2) error events, derandomizes
+(`exists_codebook_low_avg` / `exists_pair_le_of_binning_integral_le`), squeezes the
+distortion to `D + δ` (`source_avg_distortion_le_simpler`,
+`ceil_exp_mul_exp_neg_tendsto_atTop`), and extends the source `α' → α` (`wzLiftSupportCode`
+S7 + the sorry-free `wz_expectedBlockDistortion_source_agree`).
+
+The capstone `wz_perDelta_covering_binning` (S6) is the pure `Filter.atTop`/choice glue
+over this lemma. The hypotheses are the identical genuine Step 1–2 covering data /
+regularity as S6 (no error-probability or decoder-correctness claim is a hypothesis).
+
+Independent honesty audit 2026-07-06 (pre-decomposition): honest residual, non-bundled.
+The 13 covering-data hypotheses (`q'`/`κ'`/`qStar`/`d'` witnesses + `hfact_eq`/`hκ'pos`/
+`hκ'sum`/`hobj'`/`hqStar_eq`/`hqStar_pos`/`hqStar_mem`/`hfeas`/`hcov`) are identical to
+S6's modulo the conclusion shape and pass the joint core-reconstruction test: granting all
+13 hands you a feasible test channel plus a *covering* `LossyCode` family at the covering
+rate `R₁`, but NOT the WZ binned code at the operational rate `R` — the index binning (to
+`codebookSize R n` messages), the bin conditional-typicality decoder, and the
+confusion-error exponent remain genuine work, now in the (stubbed) bodies of D2/D3 that
+this glue consumes. `hobj'` is the rate objective and `hfeas` the distortion
+feasibility (preconditions on the test channel, not the operational conclusion); `hcov` is
+the separately-established rate-distortion covering result, not a restatement of this
+lemma's WZ claim (the binning rate reduction `I(X;U) → I(X;U)−I(Y;U)` is the sorry content
+of D3). The residual is now transitive (D1 closed sorry-free; the `sorryAx` is inherited
+from D2/D3 via the sorry-free glue).
+Conclusion shape `∃ N, ∀ n, ∃ c, N ≤ n → dist ≤ D + δ` is non-degenerate: `∃ c` sits inside
+`∀ n` (per-block-length code) and the `n < N` branch is benignly vacuous (`WynerZivCode` is
+inhabited via `[Nonempty γ]` + `codebookSize_pos`), so the claim is NOT trivially true — for
+the infinitely many `n ≥ N` a genuinely good code is required (no large-`N` escape).
+Classification `plan:wyner-ziv-main-plan` correct.
+
+Body glue re-audited 2026-07-06 (body changed this leg: `sorry` → rate-split glue). The
+glue does genuine rate-split work, not a rename/reshape of D3: it (a) uses D1
+(`wz_mutualInfo_restriction_eq`) to identify the covering premise `mutualInfoPmf qStar`
+with `I(X;U)`, (b) *constructs* an intermediate covering rate
+`R₁ = I(X;U) + (R − (I(X;U) − I(Y;U)))/2` and proves both `mutualInfoPmf qStar < R₁` and
+`hsplit : R₁ − I(Y;U) < R` by `linarith [hobj']`, then (c) specialises `hcov` to `R₁` and
+hands off to D3 (`wz_perN_covering_binning_code`), which takes `R₁`/`hsplit`/`hcov₁` as
+GIVEN. The `R₁` existence + rate arithmetic is real work done here. Signature (binders +
+conclusion) unchanged from before the commit (verified by diff). `#print axioms` =
+`[propext, sorryAx, Classical.choice, Quot.sound]` (transitive `sorryAx` from the stubbed
+D2/D3), so tier-2 `@residual`, NOT `@audit:ok`. The only remaining `sorry` in the whole
+chain is D3, so the transitive residual is repointed to D3's closure vehicle (the child
+plan `wz-binning-covering`, the SoT established by the Leg-0 δ-split).
+@residual(plan:wz-binning-covering) -/
+lemma wz_perDelta_covering_binning_eventual
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (R D : ℝ)
+    (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (δ : ℝ) (hδ : 0 < δ)
+    (q' : α × β × Fin k → ℝ) (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
+    (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
+    (hκ'pos : ∀ x u, 0 < κ' x u)
+    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (hobj' : wzMutualInfoXU (Fin k) q' - wzMutualInfoYU (Fin k) q' < R)
+    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    (hqStar_pos : ∀ p, 0 < qStar p)
+    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    (hfeas : expectedDistortionPmf d' qStar ≤ D + δ / 2)
+    (hd'_eq : ∀ x' u, d' x' u = Real.toNNReal (∑ y : β,
+        (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
+    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
+            (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
+    (hcov : ∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' → ∀ ε : ℝ, 0 < ε →
+        ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
+          Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
+          (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 ∧
+          ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
+            c.expectedBlockDistortion
+                ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
+              ≤ (D + δ / 2) + ε'
+            ∧ (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+                  (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                    P_XY.real {(p.1.1, p.2)}))).real
+                (wzCoveringAcceptFailSet P_XY κ' c ε)
+                ≤ δ / 2 / (8 * (distortionMax d + 1))) :
+    ∃ N : ℕ, ∀ n : ℕ, ∃ c : WynerZivCode (codebookSize R n) n α β γ,
+      N ≤ n → c.expectedBlockDistortion P_XY d ≤ D + δ := by
+  -- Step 1 (rate split): the covering rate identity D1 lets the covering family `hcov`
+  -- be fed at a covering rate `R₁` strictly above `I(X;U) = mutualInfoPmf qStar`, chosen
+  -- so the net rate `R₁ − I(Y;U)` still lies below `R` (the Wyner–Ziv objective `hobj'`).
+  -- The per-`n` construction (Steps 2–7) is then the giant `wz_perN_covering_binning_code`.
+  have hid : mutualInfoPmf qStar = wzMutualInfoXU (Fin k) q' :=
+    wz_mutualInfo_restriction_eq P_XY k q' κ' qStar hfact_eq hκ'sum hqStar_eq
+  obtain ⟨R₁, hR₁_lb, hsplit⟩ :
+      ∃ R₁ : ℝ, mutualInfoPmf qStar < R₁
+        ∧ R₁ - wzMutualInfoYU (Fin k) q' < R := by
+    refine ⟨wzMutualInfoXU (Fin k) q'
+        + (R - (wzMutualInfoXU (Fin k) q' - wzMutualInfoYU (Fin k) q')) / 2, ?_, ?_⟩
+    · rw [hid]; linarith [hobj']
+    · linarith [hobj']
+  exact wz_perN_covering_binning_code P_XY d R D k qf δ hδ q' κ' qStar d'
+    R₁ hfact_eq hκ'pos hκ'sum hobj' hqStar_eq hqStar_pos hqStar_mem hfeas hd'_eq hqf hsplit
+    (fun ε' hε' => hcov R₁ hR₁_lb ε' hε')
+
+/-- **(S6) Covering + binning capstone (Steps 3–7).** Consuming the Step 1–2 covering
+data (the full-support factorisable joint `q'` with kernel `κ'`, the restricted
+covering joint `qStar`, the covering proxy distortion `d'`, the covering feasibility
+`hfeas`, and the covering `LossyCode` family `hcov`), assemble the per-slack Wyner–Ziv
+code family at the operational rate `R`: bin the covering index down to
+`codebookSize R n` messages, decode by the bin conditional-typicality search (S3/S4),
+bound the covering-failure (S5a) and codebook-restricted decoder-confusion (S5b) error
+events, extract a good deterministic codebook + binning by double derandomization
+(`exists_codebook_low_avg` / `exists_pair_le_of_binning_integral_le`), squeeze the
+residual distortion excess to `0` (`source_avg_distortion_le_simpler`,
+`ceil_exp_mul_exp_neg_tendsto_atTop`), and extend the covering code `α' → α`
+(`wzLiftSupportCode` + `wz_expectedBlockDistortion_source_agree`).
+
+All hypotheses are genuine covering data / regularity produced by Steps 1–2 — the
+covering `LossyCode` family, the distortion feasibility, positivity and simplex
+membership. No error-probability or decoder-correctness claim is a hypothesis (those
+are derived in the body via S5a/S5b). The body is now the pure `Filter.atTop`/choice
+glue over `wz_perDelta_covering_binning_eventual` (D), which carries all the covering +
+binning content; S6 itself is `sorry`-free and its residual is transitive (inherited
+from (D)).
+
+Independent honesty audit 2026-07-06: honest residual — signature PASSES the
+core-reconstruction test. Granting the 13 hypotheses (`q'`/`κ'`/`qStar`/`d'` witnesses +
+factorisation/positivity/simplex/feasibility, and `hcov` = the Step 1–2 covering
+`LossyCode` family) does NOT hand you the binned WZ-code achievability: the binning, the
+bin-decoder, and the confusion-error exponent remain genuine proof work — now in the
+body of `wz_perDelta_covering_binning_eventual` (D), which S6 consumes as sorry-free
+glue — none is smuggled into a hypothesis. `hobj'` is the rate objective (precondition,
+not the conclusion); `hcov` is the separately-established rate-distortion covering result,
+not a bundling of S6's own claim. Classification `plan` (in-project binning composition,
+not a Mathlib gap) is correct.
+
+Body glue re-audited 2026-07-06 (body changed this leg): `obtain … := …_eventual …;
+choose c hc using hN; exact ⟨c, Filter.eventually_atTop.2 ⟨N, fun n hn => hc n hn⟩⟩`
+genuinely derives S6's `∃ c, ∀ᶠ n, …` from (D)'s `∃ N, ∀ n, ∃ c, N ≤ n → …` — `choose`
+extracts the per-`n` codes into the sequence, `eventually_atTop` packages the threshold
+`N`, no hidden `sorry`, no weakening. The decl still carries a *transitive* residual
+(`#print axioms` = `[propext, sorryAx, Classical.choice, Quot.sound]`, the `sorryAx`
+inherited from the stubbed (D)), so it remains tier-2 `@residual`, NOT `@audit:ok`. The
+sole remaining `sorry` is D3, so the transitive residual points at D3's closure vehicle.
+@residual(plan:wz-binning-covering) -/
+lemma wz_perDelta_covering_binning
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (R D : ℝ)
+    (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (δ : ℝ) (hδ : 0 < δ)
+    (q' : α × β × Fin k → ℝ) (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
+    (hfact_eq : ∀ x y u, q' (x, y, u) = κ' x u * P_XY.real {(x, y)})
+    (hκ'pos : ∀ x u, 0 < κ' x u)
+    (hκ'sum : ∀ x, ∑ u, κ' x u = 1)
+    (hobj' : wzMutualInfoXU (Fin k) q' - wzMutualInfoYU (Fin k) q' < R)
+    (hqStar_eq : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    (hqStar_pos : ∀ p, 0 < qStar p)
+    (hqStar_mem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    (hfeas : expectedDistortionPmf d' qStar ≤ D + δ / 2)
+    (hd'_eq : ∀ x' u, d' x' u = Real.toNNReal (∑ y : β,
+        (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
+          * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
+    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
+            (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
+    (hcov : ∀ R₁ : ℝ, mutualInfoPmf qStar < R₁ → ∀ ε' : ℝ, 0 < ε' → ∀ ε : ℝ, 0 < ε →
+        ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ M : ℕ,
+          Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M ∧
+          (M : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 ∧
+          ∃ c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k),
+            c.expectedBlockDistortion
+                ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
+              ≤ (D + δ / 2) + ε'
+            ∧ (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+                  (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+                    P_XY.real {(p.1.1, p.2)}))).real
+                (wzCoveringAcceptFailSet P_XY κ' c ε)
+                ≤ δ / 2 / (8 * (distortionMax d + 1))) :
+    ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
+      ∀ᶠ n in Filter.atTop, (c n).expectedBlockDistortion P_XY d ≤ D + δ := by
+  -- Steps 3–7 are the covering + binning core `wz_perDelta_covering_binning_eventual`
+  -- (D), which produces, for every `n`, a code together with a single threshold `N`
+  -- beyond which the distortion is within `D + δ`. S6 is the pure choice + `atTop`
+  -- glue: assemble the per-`n` codes into a sequence and read off the eventual bound.
+  obtain ⟨N, hN⟩ := wz_perDelta_covering_binning_eventual P_XY d R D k qf δ hδ
+    q' κ' qStar d' hfact_eq hκ'pos hκ'sum hobj' hqStar_eq hqStar_pos hqStar_mem hfeas
+    hd'_eq hqf hcov
+  choose c hc using hN
+  exact ⟨c, Filter.eventually_atTop.2 ⟨N, fun n hn => hc n hn⟩⟩
+
+/-- **(BD) Per-slack Wyner–Ziv code family.** From a feasible factorisable test
+channel `qf` (auxiliary `Fin k`, distortion `≤ D`, Wyner–Ziv objective `< R`), for
+every slack `δ > 0` there is a sequence of Wyner–Ziv block codes at the operational
+rate `R` (`codebookSize R n` messages) whose expected block distortion is eventually
+within `D + δ`.
+
+This is the heavy covering+binning assembly for a fixed slack: internally it
+perturbs `qf` to full support (`wz_fullKernelSupport_perturbation`), restricts the
+covering source to `α' := {x // 0 < P_X x}` and supplies the covering joint
+(`wz_restrictedCoveringJoint_pos` → `wz_covering_lossyCode_exists`), extends back to
+`α`, bins the covering index and decodes by a bin conditional-typicality search.
+
+The body is a reduction: Steps 1–2 (`wz_coveringFamily_of_testChannel`) supply the
+covering data, and the capstone `wz_perDelta_covering_binning` (S6) consumes it to
+build the code family (Steps 3–7: binning + decoder `wzCodeOfCoveringBinning` /
+`wzBinTypicalDecoder`, the error exponents `wz_covering_failure_prob_le` /
+`wz_codebook_confusion_expectation_le`, derandomize, squeeze, and the source
+extension `wzLiftSupportCode`). The preconditions are feasibility/objective only
+(`hqf`/`hobj`); the residual `sorry` lives in the S5/S6 sub-lemmas, not here.
+
+Independent honesty audit 2026-07-06: genuine reduction — the body has no `sorry` of its
+own; it `obtain`s the covering data from `wz_coveringFamily_of_testChannel` (Steps 1–2) and
+`exact`s the S6 capstone `wz_perDelta_covering_binning`. Not an opaque re-sorry, not
+bundling: `hqf`/`hobj` are feasibility/objective preconditions and the transitive residual
+lives in S6 (and, once wired, S5a/S5b). Honest residual (inherited). The sole remaining
+`sorry` is D3, so the transitive residual points at D3's closure vehicle.
+@residual(plan:wz-binning-covering) -/
+private lemma wz_perDelta_codes_exist
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (R D : ℝ)
+    (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
+            (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
+    (hobj : wzMutualInfoXU (Fin k) qf.1 - wzMutualInfoYU (Fin k) qf.1 < R) :
+    ∀ δ : ℝ, 0 < δ → ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
+      ∀ᶠ n in Filter.atTop, (c n).expectedBlockDistortion P_XY d ≤ D + δ := by
+  intro δ hδ
+  -- Steps 1–2 (covering-distortion reconciliation + covering LossyCode family):
+  -- perturb `qf` to full support, restrict to the source support `α'`, and produce
+  -- the covering LossyCode family at any rate `R₁ > mutualInfoPmf qStar`, with the
+  -- covering proxy `d'` reconciled against the Wyner–Ziv distortion (feasibility
+  -- `expectedDistortionPmf d' qStar ≤ D + δ`).
+  -- Call the covering family at the tightened slack `δ/2`, reserving the remaining `δ/2`
+  -- for the Wyner–Ziv error terms (S5a/S5b/D2/(B) exponents). `wz_coveringFamily_of_testChannel`
+  -- is `δ`-generic, so it returns `hfeas ≤ D + δ/2` and covering target `≤ (D + δ/2) + ε'`,
+  -- exactly what the tightened capstone `wz_perDelta_covering_binning` (S6) consumes.
+  obtain ⟨q', κ', qStar, d', hfact_eq, hκ'pos, hκ'sum, hobj', hqStar_eq,
+      hqStar_pos, hqStar_mem, hfeas, hd'_eq, hqf', hcov⟩ :=
+    wz_coveringFamily_of_testChannel P_XY d R D k qf hqf hobj (δ / 2) (half_pos hδ)
+  -- Steps 3–7 (binning / decoder / error exponents / derandomize / squeeze / source
+  -- extension) are packaged in the capstone `wz_perDelta_covering_binning` (S6),
+  -- which consumes the covering data obtained above:
+  --   3. binning: hash the covering index to `codebookSize R n` messages; the rate
+  --      split `R₁ = I(X;U)`, net `R = I(X;U) − I(Y;U)`, against `hobj'`.
+  --   4. decoder: bin conditional-typicality search (`wzBinTypicalDecoder`, S4),
+  --      reconstruct `γ^n` letterwise via `qf.2` (`wzCodeOfCoveringBinning`, S3).
+  --   5. error exponents: E1 covering failure (`wz_covering_failure_prob_le`, S5a);
+  --      E2 codebook-restricted decoder confusion
+  --      (`wz_codebook_confusion_expectation_le`, S5b, the crux).
+  --   6. good deterministic codebook + binning by double derandomization.
+  --   7. squeeze + source extension `α' → α` (`wzLiftSupportCode`, S7 /
+  --      `wz_expectedBlockDistortion_source_agree`).
+  exact wz_perDelta_covering_binning P_XY d R D k qf δ hδ q' κ' qStar d'
+    hfact_eq hκ'pos hκ'sum hobj' hqStar_eq hqStar_pos hqStar_mem hfeas hd'_eq hqf' hcov
+
+/-- **(E) Slack diagonalization.** A family of Wyner–Ziv code sequences, one per
+slack `δ > 0`, each eventually within `D + δ`, diagonalises to a single Wyner–Ziv
+code sequence that is eventually within `D + ε` for *every* `ε > 0`.
+
+This is a general diagonalization over the slack parameter: choosing `δ_m =
+1/(m+1)`, extracting a per-`m` code sequence `C m` with an eventual threshold
+`N m`, dominating those thresholds by a diverging schedule `Ñ m ≥ max(N₀ … N_m, m)`,
+and diagonalising by `c n := C (idx n) n` where `idx n = Nat.findGreatest (Ñ · ≤ n)
+n` selects the largest admissible slack level. Since `idx n → ∞` (as `Ñ` diverges),
+the diagonal sequence's eventual bound reaches every `ε`. The hypothesis is the
+per-slack achievability family (the output of the covering+binning assembly
+`wz_perDelta_codes_exist`); the diagonalization argument is the (sorry-free) body. -/
+private lemma wz_diagonalize_slack
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (R D : ℝ)
+    (hfam : ∀ δ : ℝ, 0 < δ → ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
+      ∀ᶠ n in Filter.atTop, (c n).expectedBlockDistortion P_XY d ≤ D + δ) :
+    ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
+      ∀ ε : ℝ, 0 < ε → ∀ᶠ n in Filter.atTop,
+        (c n).expectedBlockDistortion P_XY d ≤ D + ε := by
+  -- Extract a per-slack code sequence `C m` for the slack `δ_m = 1/(m+1)`,
+  -- together with an eventual threshold `N m` beyond which its distortion is
+  -- within `D + 1/(m+1)`.
+  have hδpos : ∀ m : ℕ, (0 : ℝ) < 1 / (m + 1) := fun m => by positivity
+  choose C hC using fun m : ℕ => hfam (1 / (m + 1)) (hδpos m)
+  choose N hN using fun m => Filter.eventually_atTop.mp (hC m)
+  -- A monotone-in-effect threshold schedule dominating every `N m` and diverging:
+  -- `Ñ m ≥ N m` (so `hN` applies) and `Ñ m ≥ m` (so `Ñ m → ∞`).
+  set Ñ : ℕ → ℕ := fun m => (Finset.range (m + 1)).sup N + m with hÑdef
+  have hÑ_ge_N : ∀ m, N m ≤ Ñ m := fun m =>
+    le_trans (Finset.le_sup (Finset.self_mem_range_succ m)) (Nat.le_add_right _ _)
+  have hÑ_ge_self : ∀ m, m ≤ Ñ m := fun m => Nat.le_add_left _ _
+  -- Diagonal code `c n := C (idx n) n`, where `idx n` is the largest `j ≤ n` with
+  -- `Ñ j ≤ n`; the diagonal is well-typed since `C (idx n) n : WynerZivCode …`.
+  refine ⟨fun n => C (Nat.findGreatest (fun j => Ñ j ≤ n) n) n, ?_⟩
+  intro ε hε
+  -- Pick `m` with `1/(m+1) < ε` (Archimedean), and show the eventual bound holds
+  -- from `n ≥ Ñ m` onward.
+  obtain ⟨m, hm⟩ := exists_nat_one_div_lt hε
+  rw [Filter.eventually_atTop]
+  refine ⟨Ñ m, fun n hn => ?_⟩
+  show (C (Nat.findGreatest (fun j => Ñ j ≤ n) n) n).expectedBlockDistortion P_XY d ≤ D + ε
+  -- `hn : Ñ m ≤ n` witnesses `P m` for `P j := Ñ j ≤ n`; also `m ≤ n`.
+  have hmn : m ≤ n := le_trans (hÑ_ge_self m) hn
+  -- The selected index is `≥ m` and satisfies its own threshold `Ñ (idx n) ≤ n`.
+  have hjge : m ≤ Nat.findGreatest (fun j => Ñ j ≤ n) n := Nat.le_findGreatest hmn hn
+  have hjspec : Ñ (Nat.findGreatest (fun j => Ñ j ≤ n) n) ≤ n :=
+    Nat.findGreatest_spec (P := fun j => Ñ j ≤ n) hmn hn
+  have hNle : N (Nat.findGreatest (fun j => Ñ j ≤ n) n) ≤ n :=
+    le_trans (hÑ_ge_N _) hjspec
+  -- Apply the per-slack eventual bound at the selected index.
+  have hdist := hN (Nat.findGreatest (fun j => Ñ j ≤ n) n) n hNle
+  -- `1/(idx n + 1) ≤ 1/(m+1) < ε` since `idx n ≥ m`.
+  have hmono : (1 : ℝ) / ((Nat.findGreatest (fun j => Ñ j ≤ n) n : ℝ) + 1) ≤ 1 / ((m : ℝ) + 1) := by
+    apply one_div_le_one_div_of_le
+    · positivity
+    · have : (m : ℝ) ≤ (Nat.findGreatest (fun j => Ñ j ≤ n) n : ℝ) := by exact_mod_cast hjge
+      linarith
+  linarith [hdist, hmono, hm]
+
+/-- **Covering + binning construction (Steps 1–5, the hard leg).** From a
+feasible factorisable test channel `qf` at auxiliary alphabet `Fin k` whose
+Wyner–Ziv objective `I(X;U) − I(Y;U)` is strictly below `R`, build a sequence of
+Wyner–Ziv block codes at the operational message rate `R` (`codebookSize R n =
+⌈exp(n R)⌉` messages) whose expected block distortion is eventually within
+`D + ε` for every `ε > 0`.
+
+The construction is the two-layer hybrid: rate-distortion covering `X → U`
+(`jointTypicalLossyEncoder` over the codebook alphabet `U = Fin k`) fused with
+Slepian–Wolf binning of the covering index (`binningMeasure`), decoded by a
+conditional-typicality slice search (`conditionalTypicalSlice`). The three error
+exponents — covering failure (E1, `encoder_failure_prob_le_exp_neg_M_avg`),
+decoder confusion (E2, `wz_sideInfo_decoder_confusion_expectation_le`) and
+covering acceptance (E3, `wz_covering_sideInfo_mass_ge`) — are threaded through
+the rate split `R = I(X;U) − I(Y;U)`, with a good deterministic codebook
+extracted by the pigeonhole averaging `exists_codebook_low_avg` and the residual
+distortion excess squeezed to `0` by `ceil_exp_mul_exp_neg_tendsto_atTop`.
+
+The test channel `qf` is a feasibility/regularity hypothesis (a single-letter
+pmf feasible at `D`, objective below `R`), NOT the load-bearing covering+binning
+core; the whole construction stays in the `sorry` body.
+
+**Full-support (source-support) note — the leg-14 stall map.** The covering half
+`rate_distortion_achievability` (`AchievabilityStrongTypicality.lean:184`) demands
+`hqStar_pos : ∀ p, 0 < qStar p` on the `(X,U)` joint `qStar = wzMarginalXU (Fin k)
+qf.1`. This is **not** obtainable by kernel perturbation alone: factorisability
+forces `qStar (x,u) = κ(x,u) · P_X(x)` (with `P_X(x) = ∑_y P_XY(x,y)`), which
+vanishes at every zero atom of `P_X` regardless of `κ`. So of the options
+(a) covering tolerates support-only positivity, (b) restrict the source alphabet
+to `supp(P_X)` upstream, (c) genuine obstruction, the resolution is **(b)**: the
+RD covering theorem hard-requires positivity over its *whole* alphabet, so the
+construction must instantiate its source alphabet `α` with the subtype
+`{x // 0 < P_X x}` (the block distortion is measured under `Measure.pi P_X`, which
+gives zero mass to sequences hitting a zero atom, so restricting to `supp(P_X)` is
+WLOG). The leaf lemma `wz_fullKernelSupport_perturbation` supplies the *kernel*
+full support `0 < κ' x u` (hence full `(X,U)`-joint support on `supp(P_X)` and the
+objective/distortion slack); the remaining move is the support-subtype transport,
+deferred to the construction sub-lemmas.
+
+The body is now a `sorry`-free reduction: `wz_perDelta_codes_exist` builds, for each
+slack `δ > 0`, a code sequence eventually within `D + δ` (the covering + binning
+assembly), and `wz_diagonalize_slack` (now proved sorry-free) diagonalises those into
+a single sequence within `D + ε` for every `ε`. The residual `sorry +
+@residual(plan:wz-binning-covering)` lives in `wz_perDelta_codes_exist` (and the
+covering / source-support atoms it consumes, `wz_covering_lossyCode_exists` /
+`wz_expectedBlockDistortion_source_agree`), not here. -/
+private lemma wz_goodCode_exists_of_testChannel
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (R D : ℝ)
+    (k : ℕ) (qf : (α × β × Fin k → ℝ) × (Fin k × β → γ))
+    (hqf : qf ∈ WynerZivFactorizableConstraint (Fin k)
+            (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D)
+    (hobj : wzMutualInfoXU (Fin k) qf.1 - wzMutualInfoYU (Fin k) qf.1 < R) :
+    ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
+      ∀ ε : ℝ, 0 < ε → ∀ᶠ n in Filter.atTop,
+        (c n).expectedBlockDistortion P_XY d ≤ D + ε :=
+  wz_diagonalize_slack P_XY d R D
+    (wz_perDelta_codes_exist P_XY d R D k qf hqf hobj)
+
+/-- Existence of a Wyner–Ziv code sequence (at the operational message rate `R`)
+whose expected block distortion is eventually within `D + ε`.
+
+The body is now a genuine reduction (sorry-free itself): `wz_testChannel_of_rate_lt`
+extracts a feasible factorisable test channel below `R` from the feasibility guard
+`h_ne` and `h_rate`, and `wz_goodCode_exists_of_testChannel` builds the code
+sequence from it. `sorryAx` enters only via that construction lemma, whose covering
++ binning body is the remaining plumbing.
+
+The feasibility precondition `h_ne` (the rate-distortion value set is nonempty at
+`D`) makes the signature well-posed: it rules out the infeasible regime `D` below
+the min achievable distortion (e.g. any `D < 0` for a `NNReal` distortion), where
+`wzRateValueSet` is empty and `wynerZivRate = sInf ∅ = 0` would otherwise let
+`h_rate : 0 < R` coexist with a FALSE existence claim. `h_ne` is a
+regularity/feasibility precondition, NOT the load-bearing covering+binning core
+(which stays in the construction lemma's `sorry` body); the converse side already
+threads exactly this guard (`wynerZivRate_antitone`, `Converse.lean:2602`).
+@residual(plan:wyner-ziv-main-plan) -/
+theorem wyner_ziv_achievability_codes
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (d : DistortionFn α γ) (R D : ℝ)
+    (h_ne : (wzRateValueSet (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D).Nonempty)
+    (h_rate : wynerZivRate (fun p ↦ P_XY.real {p}) (fun a b ↦ (d a b : ℝ)) D < R) :
+    ∃ c : ∀ n, WynerZivCode (codebookSize R n) n α β γ,
+      ∀ ε : ℝ, 0 < ε → ∀ᶠ n in Filter.atTop,
+        (c n).expectedBlockDistortion P_XY d ≤ D + ε := by
+  obtain ⟨k, qf, hqf, hobj⟩ := wz_testChannel_of_rate_lt P_XY d R D h_ne h_rate
+  exact wz_goodCode_exists_of_testChannel P_XY d R D k qf hqf hobj
+
 
 /-! ## Operational achievability headline -/
 
