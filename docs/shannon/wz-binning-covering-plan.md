@@ -95,9 +95,13 @@ E2-only 分解 (G2) は維持。`E2 = E2b(confusion, S5b) ∪ C2(acceptance, Mar
 - **案 E (reject)**: `wzBinTypicalDecoder` を distortion-based decoder に置換 → sorry-free G2 + S3/S4 chain を破棄し、C2 が distortion tail で再出。net で悪化。
 - **禁止 C**: acceptance を construction 無しの opaque hyp で A3 に仮定 = load-bearing hypothesis bundling (tier-5)。
 
-### Leg F — C2 covering-acceptance の残核 = `wz_covering_markov_concentration` (mainline、active)
+### Leg F — C2 covering-acceptance の残核 = Markov-core (mainline、active)
+
+> **Sub-plan**: [`wz-markov-core-plan.md`](wz-markov-core-plan.md) — conditional-AEP atom 分解 (mean-identity / finite Fubini / conditional Chebyshev / 組立)。
 
 **proof-log**: yes (from-scratch concentration、再開根拠に必須)
+
+**残 isolated sorry (code SoT、名は都度 `sig_view --sorry`)**: `wz_covering_jointBand_markov_core` (L5246、covering-success ∩ (x,y)-typical ∩ (u,y)-atypical ≤ tol/8)。outer `wz_covering_jointBand_concentration` (L5302) は (x,y)-AEP part-1 + core で **proved** (consume L5462)。以下 L0-L5 記述の「L4 = hard kernel」がこの core に相当。
 
 **現状**: A3/E2b 側 CLOSED (A3 body genuine + Leg E-mass sorry-free `@audit:ok`)。C2 covering-acceptance の leaf `wz_covering_chosenWord_sideInfo_typical` は **r9 で genuine outer decomposition に再構成済 (sorry-free、`9ecffb41`)**: body = `AcceptFail ⊆ CoveringFail ∪ (covering-success ∩ AcceptFail)` を `measureReal_union_le` で閉じ、残核を isolated inner lemma `wz_covering_markov_concentration` (r9 新規、`sorry`+`@residual(plan:wz-binning-covering)`、Markov-concentration kernel) に factor。残 literal sorry 2 = inner + covering atom `wz_coveringFamily_of_testChannel` (leaf 未配線ゆえ自身の sorry)。位置 (leaf/inner/atom の line) は `scripts/sig_view.ts --sorry` で都度。
 
@@ -117,7 +121,7 @@ covering atom `wz_coveringFamily_of_testChannel` は 3 者を **存在量化の 
 - **L1** Band-U deterministic (~60行、easy-med): `{covering-success} ⊆ {u ∈ typicalSet …}`、mass-0、N 不要。
 - **L2** y-projection (~40行、easy-med): `SRC.map (snd) = Measure.pi (per-coord snd law)` を Mathlib `Measure.pi_map_pi` で、per-coord law `∑ₓ P_XY{(x,y)} = P_Y`。
 - **L3** Band-Y iid AEP (~80-120行、med): `∃N_Y, ∀ n≥N_Y, SRC.real{y_seq ∉ typicalSet …} ≤ tol/4`、ℕ-process への transport は `typicalSet_prob_ge_of_rate` (Rate.lean:220)、c 非依存。
-- **L4** Band-Joint = **THE HARD KERNEL** (`sorry`+`@residual(plan:wz-binning-covering)`、~150-300行、`plan` not wall): `∃N_J, ∀ n≥N_J, ∀ M c, SRC.real({covering-success} ∩ {(u,y)-block ∉ typicalSet …}) ≤ tol/4`。**hκ'_pos/hκ'_sum/hqStar を threading 必須**。u は x-block 全体の関数 ⟹ `(u_i,y_i)` は iid でも独立でもない ⟹ plain `aep_chebyshev_bound` 不適 = conditional (method-of-types) concentration。テンプレ `conditionalStronglyTypicalSlice_mass_ge` (Mass.lean:1274) は wrong-measure/wrong-direction/wrong-typicality ⟹ drop-in 不可、~150-300行 self-build。disintegration bridge は回避可 (SRC は既に iid joint-pair `Measure.pi`)。
+- **L4** Band-Joint = **THE HARD KERNEL** (`sorry`+`@residual(plan:wz-binning-covering)`、~150-300行、`plan` not wall): `∃N_J, ∀ n≥N_J, ∀ M c, SRC.real({covering-success} ∩ {(u,y)-block ∉ typicalSet …}) ≤ tol/4`。**hκ'_pos/hκ'_sum/hqStar を threading 必須**。u は x-block 全体の関数 ⟹ `(u_i,y_i)` は iid でも独立でもない ⟹ plain `aep_chebyshev_bound` 不適 = conditional (method-of-types) concentration。テンプレ `conditionalStronglyTypicalSlice_mass_ge` (Mass.lean:1274) は wrong-measure/wrong-direction/wrong-typicality ⟹ drop-in 不可。**disintegration bridge (general `condDistrib` on `Measure.pi`) は不要だが理由は「回避」でなく off-path** (child SoT で訂正): SRC = `Measure.pi (pmfToMeasure Src)` ゆえ x-block factor-out は `Measure.pi_pi` + `pmfToMeasure` atomicity の**有限 Fubini**、実装者の condDistrib 0-hit は general machinery 側で正しいが critical path 外。真の bulk は conditional Chebyshev (`IndepFun.variance_sum`、**IdentDistrib 不要**)。→ 詳細/atom 分解 (mean-identity warm-up → finite Fubini → conditional Chebyshev → 組立) は子 [`wz-markov-core-plan.md`](wz-markov-core-plan.md)。
 - **L5** assembly (~40行、easy): `N := max N_Y N_J`、`mem_jointlyTypicalSet_iff` + De Morgan、`measureReal_union_le` で 0 + tol/4 + tol/4 = tol/2。
 
 **verdict (advisor 2026-07-12)**: **few-sessions closable、NOT a wall**。L4 が唯一の real difficulty、L0-L3+L5 は now provable、L4 sorry で即 type-check-done。
