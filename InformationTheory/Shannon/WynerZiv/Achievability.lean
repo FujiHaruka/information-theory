@@ -2547,8 +2547,15 @@ has the uniform sup-bound `|ψ i y| ≤ B = ∑_q |log wsm(q)|` (coerced-joint-l
 `wz_entropy_map_injective`; the mean-pin `wz_wsm_negLog_mean_pin_of_stronglyTypical` plus the radius
 separation `C·ε_cov < ε/2` pin the conditional mean; and the Atom-B engine
 `wz_pi_nonuniform_concentration_tendsto` (δ = ε/2, tol/8) bounds the deviation set, into which the
-`(U,Y)`-atypical band injects by the strict triangle inequality. No `@residual` remains — proof done,
-pending independent re-audit. -/
+`(U,Y)`-atypical band injects by the strict triangle inequality. No `@residual` remains — proof done.
+
+Independent honesty audit 2026-07-13 (Atom H, Markov-core chain kernel): PASS — `@audit:ok`. Genuine
+conditional-AEP concentration (sup-bound B1 + conditional-mean B2 + radius-separated mean-pin `< ε/2`
++ Atom-B Chebyshev engine + triangle inequality); body sorry-free, no `:= h`/`:True`/degenerate slot.
+The `hκ'_pos`/`hκ'_sum`/`hqStar` hyps are full-support / proper-pmf / qStar–κ' definitional-consistency
+preconditions (used to place `qStar ∈ stdSimplex` and identify the conditional mean), NOT the
+concentration conclusion — not load-bearing. `#print axioms` = `[propext, Classical.choice, Quot.sound]`
+(sorryAx-free). -/
 private lemma wz_covering_uyBand_condSlice_le
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} (κ' : α → Fin k → ℝ)
@@ -2848,7 +2855,7 @@ that class and makes the statement TRUE-as-framed. The weak conjunct at `ε` is 
 stays a genuine `sorry`: the from-scratch correlated-joint conditional-AEP concentration (recipe:
 `wz_srcBlock_condMeasure_split` finite-Fubini split → `wz_wsm_negLog_mean_pin_of_stronglyTypical`
 mean pin at radius `ε_cov` → `wz_pi_nonuniform_concentration_tendsto` conditional Chebyshev with
-deviation `δ = ε/2`), classified `@residual(plan:wz-binning-covering)`, NOT a Mathlib wall.
+deviation `δ = ε/2`), then classified under the plan slug wz-binning-covering, NOT a Mathlib wall.
 
 INDEPENDENT AUDIT 2026-07-12d (reframe commit `d8954711`, honesty-auditor): PASS, tier-2 HONEST —
 the defect-tag removal is JUSTIFIED. The radius separation `ε_cov = ε/(2(1 + C))` closes the `O(ε)`
@@ -2889,7 +2896,18 @@ CLOSURE 2026-07-12 (kernel closed `e4490dbb`): this wrapper and the entire Marko
 (`#print axioms` = `[propext, Classical.choice, Quot.sound]`). The covering atom
 `wz_coveringFamily_of_testChannel` (Atom G) was subsequently closed sorry-free as well
 (Atom H closure gate, `@audit:ok`), making the headline `wyner_ziv_achievability`
-sorryAx-free. -/
+sorryAx-free.
+
+Independent honesty audit 2026-07-13 (Atom H, Markov-core chain core): PASS — `@audit:ok`. Genuine
+reduction: obtains the kernel `wz_covering_uyBand_condSlice_le`, applies the Atom-A finite-Fubini
+split `wz_srcBlock_condMeasure_split`, normalises the total `x`-block mass to `1`, and dispatches the
+good/bad `xb` dichotomy (bad `xb`: `wzCoveringSuccessStrong` strong-conjunct failure empties the
+slice; good `xb`: consumes the kernel bound). Body sorry-free, no `:= h`/`:True`/degenerate slot. The
+threaded `hκ'_pos`/`hκ'_sum`/`hqStar` are preconditions passed to the kernel, NOT the conclusion — not
+load-bearing. The strong-Ecov radius separation `ε_cov = ε/(2(1+C))` documented above closes the
+former label-swap false-as-framed class at the CLASS level; a sorry-free, sorryAx-free proof
+machine-confirms the implication is TRUE-as-framed. `#print axioms` = `[propext, Classical.choice,
+Quot.sound]` (sorryAx-free). -/
 private lemma wz_covering_jointBand_markov_core
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} (κ' : α → Fin k → ℝ)
@@ -3022,7 +3040,13 @@ counterexample via the strong per-symbol type pin (see the core lemma
 `wz_covering_jointBand_markov_core`). This outer reduction (case split + union bound) now consumes the
 TRUE-as-framed core bound, so {covering-success ∩ Euy} ≤ tol/4 is true-as-framed. The reduction body
 is sorry-free, and the core `wz_covering_jointBand_markov_core` was subsequently closed sorry-free
-(`e4490dbb`), so this lemma carries no residual. -/
+(`e4490dbb`), so this lemma carries no residual.
+
+Independent honesty audit 2026-07-13 (Atom H, Markov-core chain outer): PASS — `@audit:ok`. Genuine
+reduction: obtains `wz_covering_xyBand_aep` (part-1) and the core `wz_covering_jointBand_markov_core`
+(part-2), splits `Ecov ∩ Euy ⊆ Exytypᶜ ∪ (Ecov ∩ Exytyp ∩ Euy)` and union-bounds. Body sorry-free,
+no `:= h`/`:True`/degenerate slot; the threaded regularity hyps are passed to the core, not the
+conclusion. `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free). -/
 private lemma wz_covering_jointBand_concentration
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} (κ' : α → Fin k → ℝ)
@@ -3176,7 +3200,14 @@ conjunct keeps the `Ecov ∩ Euf = ∅` step (`wz_covering_success_subset_uTypic
 union bound over the three acceptance bands) now consumes the TRUE-as-framed outer/core bounds, so
 {covering-success ∩ acceptance-failure} ≤ tol/2 is true-as-framed. The reduction body is sorry-free,
 and the core `wz_covering_jointBand_markov_core` was subsequently closed sorry-free (`e4490dbb`), so
-this lemma carries no residual. -/
+this lemma carries no residual.
+
+Independent honesty audit 2026-07-13 (Atom H, Markov-core chain inner): PASS — `@audit:ok`. Genuine
+reduction: obtains `wz_covering_yBand_aep` and the outer `wz_covering_jointBand_concentration`,
+De-Morgan-splits `Ecov ∩ acceptFail ⊆ (Ecov ∩ Euf) ∪ Eyf ∪ (Ecov ∩ Ejf)`, uses `Ecov ∩ Euf = ∅`
+(via `wz_covering_success_subset_uTypical`) and union-bounds. Body sorry-free, no
+`:= h`/`:True`/degenerate slot; threaded regularity hyps passed downstream, not the conclusion.
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free). -/
 private lemma wz_covering_markov_concentration
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} (κ' : α → Fin k → ℝ)
@@ -3292,7 +3323,8 @@ it survives only at the degenerate `I(U;Y)=0` — so the implementer's override 
 form is justified. Class `plan` correct: the concentration ingredient
 `conditionalStronglyTypicalSlice_mass_ge` (`ConditionalMethodOfTypes/Mass.lean:1274`, a
 lower/independent bound) exists in-project; the correlated-joint Markov-lemma assembly is
-unbuilt in-project, not a Mathlib gap. NOT `@audit:ok` — the `sorry` remains.
+unbuilt in-project, not a Mathlib gap. [At that time the `sorry` still remained — see the final
+2026-07-13 audit note below for the current sorry-free verdict.]
 
 SUSPECTED UNDER-HYPOTHESIS (flagged 2026-07-12, implementation of the Markov-lemma leg —
 supersedes the "Sufficiency confirmed" claim above, pending orchestrator re-audit): `qStar` and
@@ -3358,7 +3390,17 @@ The reduction (acceptance-failure ⊆ covering-failure ∪ (covering-success ∩
 bound) body is sorry-free, and the core `wz_covering_jointBand_markov_core` was subsequently closed
 sorry-free (`e4490dbb`), so this lemma carries no residual. The strengthened premise is discharged
 w.h.p. by the covering atom `wz_coveringFamily_of_testChannel` supplying strong covering-success
-(Atom G, closed sorry-free). -/
+(Atom G, closed sorry-free).
+
+Independent honesty audit 2026-07-13 (Atom H, Markov-core chain leaf): PASS — `@audit:ok`. Genuine
+reduction: obtains the inner `wz_covering_markov_concentration`, splits acceptance-failure ⊆
+`wzCoveringSuccessStrongᶜ ∪ (wzCoveringSuccessStrong ∩ acceptance-failure)`, bounds the first part by
+the covering-success premise `hprem` and the second by the inner bound, union-bounds to `≤ tol`. Body
+sorry-free, no `:= h`/`:True`/degenerate slot. The covering-success premise `hprem` is a genuine
+precondition on the constructed code (covering-failure mass ≤ tol/2, discharged by Atom G) about a
+DIFFERENT event (`x`–`u` covering slice) than the conclusion (`u`–`y` acceptance slice); granting it
+does NOT hand over the acceptance bound (that stays in the inner Markov concentration) — not
+load-bearing. `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free). -/
 private lemma wz_covering_chosenWord_sideInfo_typical
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} (κ' : α → Fin k → ℝ)
