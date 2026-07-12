@@ -1022,12 +1022,25 @@ This is the analytic core isolated from `wz_covering_chosenWord_sideInfo_typical
 splits the acceptance-failure event along covering success/failure, sends the covering-failure part
 to the supplied premise (`≤ tol/2`), and reduces the acceptance-failure-on-covering-success part to
 this concentration bound. Unconditional in the covering premise: the intersection with the
-covering-success set makes the statement self-contained. TRUE-as-framed: on covering success and
-source typicality the Markov lemma forces `(u, y)` jointly typical, so this event is contained in the
-source-atypicality ∪ Markov-concentration-failure set, whose mass → 0 as `n → ∞` at every fixed `ε`.
+covering-success set makes the statement self-contained.
 
-Its body is the correlated-joint conditional-typicality concentration (the Markov lemma), a
-from-scratch assembly absent from Mathlib and the codebase — `plan`, not a Mathlib wall.
+CAVEAT (suspected under-hypothesis — flagged 2026-07-12, pending orchestrator re-audit): the
+Markov-concentration truth REQUIRES `qStar` to be the `κ'`-consistent covering joint
+`qStar (x', u) = κ' x'.1 u · (∑ y, P_XY{(x'.1, y)})` with `κ'` full-support
+(`0 < κ' x u`, `∑ u κ' x u = 1`) — exactly the relations the covering atom
+`wz_coveringFamily_of_testChannel` exports at its output but which the current signature (shared
+with the outer leaf) does NOT thread (`qStar`, `κ'` are free, unrelated params). Without them the
+statement is false-as-framed: for a constant-word code `c ≡ u₀` and the free choice
+`qStar := P_X ⊗ δ_{u₀}`, covering-success has mass → 1 (premise holds) yet, for generic `κ'` with
+`−log P_U(u₀) ≠ H(P_U)`, `u₀` is not `P_U`-typical so acceptance fails on the whole space
+(mass → 1 > tol/2). The consistency relation kills this counterexample (it forces `qStar`'s
+`U`-marginal `= P_U`, so a mismatched-`U`-marginal code fails covering-success). The fix is a
+precondition-exposure (add the `qStar`–`κ'` consistency + full-support hypotheses, discharged by the
+covering atom's construction), NOT bundling the acceptance conclusion.
+
+Its body — the correlated-joint conditional-typicality concentration (the Markov lemma), given the
+consistency hypotheses — is a from-scratch assembly absent from Mathlib and the codebase (`plan`,
+not a Mathlib wall). Left `sorry` pending the signature fix above.
 @residual(plan:wz-binning-covering) -/
 private lemma wz_covering_markov_concentration
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -1077,6 +1090,23 @@ form is justified. Class `plan` correct: the concentration ingredient
 `conditionalStronglyTypicalSlice_mass_ge` (`ConditionalMethodOfTypes/Mass.lean:1274`, a
 lower/independent bound) exists in-project; the correlated-joint Markov-lemma assembly is
 unbuilt in-project, not a Mathlib gap. NOT `@audit:ok` — the `sorry` remains.
+
+SUSPECTED UNDER-HYPOTHESIS (flagged 2026-07-12, implementation of the Markov-lemma leg —
+supersedes the "Sufficiency confirmed" claim above, pending orchestrator re-audit): `qStar` and
+`κ'` are FREE, unrelated parameters here, but the acceptance conclusion is FALSE-as-framed without
+the covering-joint consistency relation `qStar (x', u) = κ' x'.1 u · (∑ y, P_XY{(x'.1, y)})` and the
+full-support facts `0 < κ' x u`, `∑ u κ' x u = 1` — exactly the relations the covering atom
+`wz_coveringFamily_of_testChannel` exports at its output (L1218-1224) but does NOT thread into this
+leaf. Counterexample: a constant-word code `c ≡ u₀` with the free choice `qStar := P_X ⊗ δ_{u₀}`
+satisfies the covering-success premise (covering-typicality mass → 1) yet, for generic `κ'` with
+`−log P_U(u₀) ≠ H(P_U)` (`P_U := ∑ₓ κ'(x,·)·P_X(x)`), `u₀` is not `P_U`-typical so acceptance fails
+on the whole space (mass → 1 > tol). The consistency relation kills the counterexample (`qStar`'s
+`U`-marginal `= P_U`, so a mismatched code fails covering-success). The degenerate-boundary check
+above only varied the measure coupling (independent vs coupled), not the code/`qStar` adversarially,
+so it missed this axis. FIX = precondition-exposure (thread the `qStar`–`κ'` consistency +
+full-support hypotheses into this leaf and `wz_covering_markov_concentration`, discharged by the
+covering atom's construction; ripple to the single consumer `wz_coveringFamily_of_testChannel`);
+this is a signature change reserved for the orchestrator/planner, NOT acceptance-conclusion bundling.
 @residual(plan:wz-binning-covering) -/
 private lemma wz_covering_chosenWord_sideInfo_typical
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
