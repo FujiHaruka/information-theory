@@ -997,6 +997,27 @@ jointly typical, at radius `ε`, with the side information) is at most `tol`. Th
 half `C2` of the Wyner–Ziv error `E2` (`C2 ⊆ E2`), isolated from `wz_coveringFamily_of_testChannel`
 to be self-built by the Markov lemma (a correlated-joint conditional-typicality concentration
 bound absent from Mathlib and the codebase — `plan`, not a Mathlib wall).
+
+Independent honesty audit 2026-07-12 (Leg F leaf, commit `5d3ecd81`): PASS, tier-2
+`@residual`. Non-circular (the premise is the `x`–`u` covering slice in ambient
+`rdAmbient qStar`, the conclusion the `u`–`y` acceptance slice in a different ambient —
+the Markov bridge is genuinely open, body is `sorry`, not `:= h`). Non-bundled: the
+covering-typicality-success premise is a genuine regularity precondition on the constructed
+code (S5a-suppliable, a property of the covering `LossyCode`), NOT the acceptance conclusion;
+granting it does not hand over the `u`–`y` typicality — the Markov concentration
+(covering-`x` typicality + source `(x,y)` typicality ⟹ `(u,y)` typicality) remains the sole
+residual. Sufficiency confirmed by degenerate-boundary refutation: the coupled
+correlated-joint-source form is TRUE-as-framed because `u = c.decoder (c.encoder x)` is a
+function of the source, so under `Measure.pi (pmfToMeasure P_XY{(x'.1,y)})` the empirical
+`(u,y)` law → `wzSideInfoMarginal` (acceptance-failure mass → 0) at every fixed `ε` and even
+at `I(U;Y)>0`. The proof-pivot-advisor's rejected FIXED-word/INDEPENDENT-product shape
+(`Measure.pi (μ.map (Ys 0))`) is FALSE-as-framed at `I(U;Y)>0` (independent empirical
+`(u,y)` → `P_U × P_Y ≠ wzSideInfoMarginal`, acceptance-failure mass → 1, violating `≤ tol`);
+it survives only at the degenerate `I(U;Y)=0` — so the implementer's override to the coupled
+form is justified. Class `plan` correct: the concentration ingredient
+`conditionalStronglyTypicalSlice_mass_ge` (`ConditionalMethodOfTypes/Mass.lean:1274`, a
+lower/independent bound) exists in-project; the correlated-joint Markov-lemma assembly is
+unbuilt in-project, not a Mathlib gap. NOT `@audit:ok` — the `sorry` remains.
 @residual(plan:wz-binning-covering) -/
 private lemma wz_covering_chosenWord_sideInfo_typical
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
