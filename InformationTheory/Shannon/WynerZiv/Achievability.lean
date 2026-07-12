@@ -1230,16 +1230,19 @@ private lemma wz_coveringFamily_of_testChannel
     (fun _ _ => rfl), hqf₀, ?_⟩
   -- The covering `LossyCode` family must now be good for BOTH the covering distortion
   -- (component atom `wz_covering_lossyCode_exists`, a distortion-only derandomize via
-  -- `rate_distortion_achievability`) AND the covering-acceptance failure C2 (gateway-2
-  -- `wz_covering_sideInfo_mass_ge` + S5a `wz_covering_failure_prob_le`). Since
-  -- `rate_distortion_achievability` derandomizes for distortion only, its output code is not
-  -- automatically acceptance-good; the TRUE-as-framed conclusion is that a *jointly*
-  -- derandomized code (good for both functionals) exists — the S5a `(1-p)^M₁` →
-  -- `codebookMeasure`-average `Fubini`/`Measure.pi`-product bridge over both failure
-  -- functionals. Deferring the whole joint existential (rather than committing to the
-  -- distortion-only witness and sorry-ing an acceptance claim that need not hold of *that*
-  -- code) keeps the residual honest. Closed by the A3-fill leg, which reuses
-  -- `wz_covering_lossyCode_exists` as the distortion component of the joint construction.
+  -- `rate_distortion_achievability`) AND the covering-acceptance failure C2. The
+  -- acceptance bound is supplied by the strong-`Ecov` Markov-core leaf
+  -- `wz_covering_chosenWord_sideInfo_typical` (file tail): given a code whose covering-success
+  -- mass complement `SRC.real (wzCoveringSuccessStrong …)ᶜ` is `≤ tol/2`, the leaf gives
+  -- `SRC.real (wzCoveringAcceptFailSet …) ≤ tol`. The remaining Atom-G work is the JOINT
+  -- (distortion + covering-success) derandomize: a single code good for distortion AND
+  -- covering-success. The covering-success side rests on the now-staged strong-typical
+  -- per-codeword mass lower bound `wz_covering_strongTypical_indep_mass_ge` (gateway-atom-first,
+  -- sorryAx-free; the WZ instance of `jointStronglyTypicalSet_indep_prob_ge`), fed through a
+  -- strong analog of the covering-failure decay `wz_covering_failure_prob_le` +
+  -- `exists_codebook_low_avg`. Consuming the tail leaf here additionally needs a physical
+  -- reorder (the leaf and its chain currently follow this atom); both are plumbing, not a
+  -- Mathlib wall (gateway confirmed). Kept an honest `sorry` pending that wiring.
   -- @residual(plan:wz-binning-covering)
   sorry
 
@@ -5706,6 +5709,59 @@ private lemma wz_pi_nonuniform_concentration_tendsto
       _ ≤ ((n : ℝ) * B ^ 2) / ((n : ℝ) ^ 2 * δ ^ 2) := hstep1
       _ = B ^ 2 / ((n : ℝ) * δ ^ 2) := hstep2
       _ ≤ tol := hstep3
+
+open ChannelCoding in
+/-- **(Atom G gateway) Strong-typical per-codeword covering-mass lower bound (WZ instance).**
+The independent-product mass of the strong joint-typical set under the covering ambient
+`rdAmbient qStar` — the probability that an independently drawn covering word `U^n` is strongly
+jointly typical with the source block `X^n` at radius `ε` — is bounded below by the standard
+random-coding exponent `(1 − η)·exp(n·((H(Z) − H(X) − H(Y)) − slack))`. This is the WZ
+instantiation of `jointStronglyTypicalSet_indep_prob_ge`, discharging its independence /
+ident-distribution / full-support / marginal-matching premises from the Leg-A ambient-regularity
+lemmas of `rdAmbient qStar` (full support of `qStar` gives `hposX/Y/Z`). It is the covering-success
+lower bound feeding the joint (distortion + covering-success) derandomize of the covering atom
+`wz_coveringFamily_of_testChannel` (Atom G). Proved (sorryAx-free) by direct instantiation; the
+remaining Atom-G work (covering-failure derandomize + reorder + wiring) consumes it. -/
+private lemma wz_covering_strongTypical_indep_mass_ge
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} [Nonempty (Fin k)]
+    [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hpos : ∀ p, 0 < qStar p)
+    (hmem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    {ε δ η : ℝ} (hε : 0 < ε) (hδ : 0 < δ) (hη : 0 < η) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
+      (1 - η) * Real.exp ((n : ℝ) *
+        ((entropy (rdAmbient qStar)
+              (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs 0)
+            - entropy (rdAmbient qStar) (ChannelCoding.iidXs 0)
+            - entropy (rdAmbient qStar) (ChannelCoding.iidYs 0))
+          - (((Fintype.card (Fin k) : ℝ) * ε
+                * logSumAbs (rdAmbient qStar) ChannelCoding.iidXs
+              + (Fintype.card {x : α // 0 < ∑ y, P_XY.real {(x, y)}} : ℝ) * ε
+                * logSumAbs (rdAmbient qStar) ChannelCoding.iidYs
+              + ε * logSumAbs (rdAmbient qStar)
+                  (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs))
+              + 3 * δ)))
+        ≤ (((rdAmbient qStar).map (jointRV ChannelCoding.iidXs n)).prod
+              ((rdAmbient qStar).map (jointRV ChannelCoding.iidYs n))).real
+            (jointStronglyTypicalSet (rdAmbient qStar)
+              ChannelCoding.iidXs ChannelCoding.iidYs n ε) := by
+  haveI : IsProbabilityMeasure (rdAmbient qStar) := rdAmbient_isProbabilityMeasure qStar hmem
+  exact jointStronglyTypicalSet_indep_prob_ge (rdAmbient qStar)
+    ChannelCoding.iidXs ChannelCoding.iidYs
+    (fun i ↦ ChannelCoding.measurable_iidXs i) (fun i ↦ ChannelCoding.measurable_iidYs i)
+    (rdAmbient_iIndepFun_iidXs qStar hmem) (rdAmbient_identDistrib_iidXs qStar hmem)
+    (rdAmbient_iIndepFun_iidYs qStar hmem) (rdAmbient_identDistrib_iidYs qStar hmem)
+    (rdAmbient_iIndepFun_jointSequence qStar hmem)
+    (rdAmbient_pairwise_indep_jointSequence qStar hmem)
+    (rdAmbient_identDistrib_jointSequence qStar hmem)
+    (rdAmbient_iidXs_real_singleton_pos qStar hmem hpos)
+    (rdAmbient_iidYs_real_singleton_pos qStar hmem hpos)
+    (rdAmbient_jointSequence_real_singleton_pos qStar hmem hpos)
+    (rdAmbient_map_fst_jointSequence qStar hmem)
+    (rdAmbient_map_snd_jointSequence qStar hmem)
+    hε hδ hη
 
 /-- **(Strong covering radius, Proposal A.)** The radius `ε_cov = ε / (2·(1 + C))` at which the
 covering word is required to be strongly `(x, U)`-typical, where `C = ∑_{x,u} |g(x, u)|` is the
