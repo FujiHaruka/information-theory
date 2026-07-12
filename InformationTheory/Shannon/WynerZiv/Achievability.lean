@@ -3916,7 +3916,172 @@ private lemma wz_covering_lossyCode_joint_exists
     have := hN₀ n hn_N0
     rw [Real.dist_eq, sub_zero, abs_of_nonneg (by positivity : (0:ℝ) ≤ 2 * upper n)] at this
     exact this
-  sorry
+  haveI hPXprob : IsProbabilityMeasure (P_X n) := by rw [hP_X_def]; infer_instance
+  -- No-match codebook mass bound (Step B) reshaped for `weightedSum`.
+  have h_typical : ∀ x ∈ {x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
+        x ∈ stronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs n ε_X},
+      (Measure.pi (fun _ : Fin (Mn n) ↦
+          Measure.pi (fun _ : Fin n ↦ (rdAmbient qStar).map (ChannelCoding.iidYs 0)))).real
+        { c : Fin (Mn n) → (Fin n → Fin k) |
+            ¬ ∃ m, (x, c m) ∈ jointStronglyTypicalSet (rdAmbient qStar)
+                ChannelCoding.iidXs ChannelCoding.iidYs n ε_join }
+        ≤ Real.exp (-((Mn n : ℝ) * target n)) := by
+    intro x hxTX
+    have h_step := hN_B n hn_NB (Mn n) x hxTX
+    have h_set_eq : { c : Fin (Mn n) → (Fin n → Fin k) |
+          ¬ ∃ m, (x, c m) ∈ jointStronglyTypicalSet (rdAmbient qStar)
+              ChannelCoding.iidXs ChannelCoding.iidYs n ε_join }
+        = { c : Fin (Mn n) → (Fin n → Fin k) |
+            ∀ m, (x, c m) ∉ jointStronglyTypicalSet (rdAmbient qStar)
+                ChannelCoding.iidXs ChannelCoding.iidYs n ε_join } := by
+      ext c; simp [not_exists]
+    rw [h_set_eq, show -((Mn n : ℝ) * target n) = -(Mn n : ℝ) * target n from by ring, htarget_def]
+    exact h_step
+  -- Distortion-failure codebook average ≤ upper.
+  have h_dist_bound : ∑ c : Codebook (Mn n) n (Fin k),
+      (codebookMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) (Mn n) n).real {c}
+        * (P_X n).real {x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
+            (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar) ChannelCoding.iidXs
+                  ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+              ∉ distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
+                  d' n ε_dist δ_typ}
+      ≤ upper n := by
+    rw [hupper_def]
+    exact weightedSum_encoderFailure_le_notTypical_add_bound (P_X n)
+      (Measure.pi (fun _ : Fin n ↦ (rdAmbient qStar).map (ChannelCoding.iidYs 0)))
+      {x | x ∈ stronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs n ε_X}
+      (distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
+        d' n ε_dist δ_typ)
+      (jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs n ε_join)
+      (fun c ↦ jointStronglyTypicalLossyEncoder (rdAmbient qStar) ChannelCoding.iidXs
+        ChannelCoding.iidYs (hMn_pos n) ε_join c)
+      (Real.exp (-((Mn n : ℝ) * target n))) (Real.exp_pos _).le
+      (fun _ ↦ (Set.toFinite _).measurableSet) (Set.toFinite _).measurableSet
+      (fun x _ y hy ↦ wz_jointStronglyTypical_mem_distortionTypical qStar hmem d' hej_pos.le
+        hbX hbY hbJ h_distslack hn_pos x y hy)
+      (fun c x hex ↦ jointStronglyTypicalLossyEncoder_spec_of_exists (rdAmbient qStar)
+        ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x hex)
+      h_typical
+  -- Covering-failure codebook average ≤ upper.
+  have h_cov_bound : ∑ c : Codebook (Mn n) n (Fin k),
+      (codebookMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) (Mn n) n).real {c}
+        * (P_X n).real {x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
+            (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar) ChannelCoding.iidXs
+                  ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+              ∉ jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs
+                  ChannelCoding.iidYs n ε_join}
+      ≤ upper n := by
+    rw [hupper_def]
+    exact weightedSum_encoderFailure_le_notTypical_add_bound (P_X n)
+      (Measure.pi (fun _ : Fin n ↦ (rdAmbient qStar).map (ChannelCoding.iidYs 0)))
+      {x | x ∈ stronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs n ε_X}
+      (jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs n ε_join)
+      (jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs n ε_join)
+      (fun c ↦ jointStronglyTypicalLossyEncoder (rdAmbient qStar) ChannelCoding.iidXs
+        ChannelCoding.iidYs (hMn_pos n) ε_join c)
+      (Real.exp (-((Mn n : ℝ) * target n))) (Real.exp_pos _).le
+      (fun _ ↦ (Set.toFinite _).measurableSet) (Set.toFinite _).measurableSet
+      (fun x _ y hy ↦ hy)
+      (fun c x hex ↦ jointStronglyTypicalLossyEncoder_spec_of_exists (rdAmbient qStar)
+        ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x hex)
+      h_typical
+  -- Joint average ≤ 2·upper, then pigeonhole.
+  have h_avg : ∑ c : Codebook (Mn n) n (Fin k),
+      (codebookMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) (Mn n) n).real {c}
+        * ((P_X n).real {x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
+              (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar) ChannelCoding.iidXs
+                    ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+                ∉ distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
+                    d' n ε_dist δ_typ}
+            + (P_X n).real {x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
+              (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar) ChannelCoding.iidXs
+                    ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+                ∉ jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs
+                    ChannelCoding.iidYs n ε_join})
+      ≤ 2 * upper n := by
+    have hsplit : ∑ c : Codebook (Mn n) n (Fin k),
+        (codebookMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) (Mn n) n).real {c}
+          * ((P_X n).real {x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
+                ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+                ∉ distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
+                    d' n ε_dist δ_typ}
+              + (P_X n).real {x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
+                ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+                ∉ jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs
+                    ChannelCoding.iidYs n ε_join})
+        = (∑ c : Codebook (Mn n) n (Fin k),
+            (codebookMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) (Mn n) n).real {c}
+              * (P_X n).real {x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
+                  ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+                  ∉ distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
+                      d' n ε_dist δ_typ})
+          + (∑ c : Codebook (Mn n) n (Fin k),
+            (codebookMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) (Mn n) n).real {c}
+              * (P_X n).real {x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
+                  ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+                  ∉ jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs
+                      ChannelCoding.iidYs n ε_join}) := by
+      rw [← Finset.sum_add_distrib]
+      refine Finset.sum_congr rfl (fun c _ ↦ ?_); ring
+    rw [hsplit]; linarith only [h_dist_bound, h_cov_bound]
+  obtain ⟨c₀, hc₀⟩ := exists_codebook_low_avg ((rdAmbient qStar).map (ChannelCoding.iidYs 0))
+    (fun c : Codebook (Mn n) n (Fin k) ↦
+      (P_X n).real {x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
+            ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+          ∉ distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
+              d' n ε_dist δ_typ}
+        + (P_X n).real {x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
+            ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+          ∉ jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs
+              ChannelCoding.iidYs n ε_join})
+    h_avg
+  -- Abstract the two failure functionals for the chosen codebook (keeps `linarith` cheap).
+  set df0 : ℝ := (P_X n).real {x | (x, c₀ (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
+      ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c₀ x))
+    ∉ distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
+        d' n ε_dist δ_typ} with hdf0_def
+  set cf0 : ℝ := (P_X n).real {x | (x, c₀ (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
+      ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c₀ x))
+    ∉ jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs
+        ChannelCoding.iidYs n ε_join} with hcf0_def
+  -- `hc₀ : df0 + cf0 ≤ 2 * upper n`.
+  have hdf_nn : (0:ℝ) ≤ df0 := hdf0_def ▸ measureReal_nonneg
+  have hcf_nn : (0:ℝ) ≤ cf0 := hcf0_def ▸ measureReal_nonneg
+  have h_distfail : df0 ≤ ε' / (2 * (dMax + 1)) := by
+    have hlt : 2 * upper n < ε' / (2 * (dMax + 1)) :=
+      lt_of_lt_of_le h2upper_lt (by rw [hthr_def]; exact min_le_left _ _)
+    linarith only [hc₀, hcf_nn, hlt]
+  have h_covfail : cf0 ≤ tol := by
+    have hlt : 2 * upper n < tol :=
+      lt_of_lt_of_le h2upper_lt (by rw [hthr_def]; exact min_le_right _ _)
+    linarith only [hc₀, hdf_nn, hlt]
+  -- Assemble the joint-good code.
+  have hMn_ub : (Mn n : ℝ) ≤ Real.exp ((n : ℝ) * R₁) + 1 := by
+    rw [hMn_def]; exact (Nat.ceil_lt_add_one (Real.exp_pos _).le).le
+  refine ⟨Mn n, le_refl _, hMn_ub,
+    lossyCodeOfCodebookStrong (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
+      (hMn_pos n) ε_join c₀, ?_, ?_⟩
+  · -- Block distortion ≤ Dδ + ε'.
+    have h2 : dMax * df0 ≤ ε' / 2 := by
+      have hdp : (0:ℝ) < 2 * (dMax + 1) := by positivity
+      have hkey := (le_div_iff₀ hdp).mp h_distfail
+      nlinarith only [hkey, hdMax_nn, hdf_nn, hε'.le]
+    have h_src := source_avg_distortion_le_simpler_generic (rdAmbient qStar) ChannelCoding.iidXs
+      ChannelCoding.iidYs d' ε_dist hdtyp_nn c₀
+      (jointStronglyTypicalLossyEncoder (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
+        (hMn_pos n) ε_join c₀) (P_X n)
+    rw [expectedJointDistortion_rdAmbient qStar hmem d', ← hdf0_def, ← hdMax_def] at h_src
+    calc (lossyCodeOfCodebookStrong (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
+            (hMn_pos n) ε_join c₀).expectedBlockDistortion
+            ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) d'
+        ≤ (expectedDistortionPmf d' qStar + δ_typ) + dMax * df0 := h_src
+      _ ≤ Dδ + ε' := by linarith only [h_slack, h2]
+  · -- Covering-success complement ≤ tol.
+    have hbridge := wz_coveringSuccessStrong_compl_measureReal_le P_XY κ' qStar hmem hκ'sum
+      hqStar_eq hn_pos
+      (lossyCodeOfCodebookStrong (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
+        (hMn_pos n) ε_join c₀) hej_pos.le hej_le_cov hradX hradY hradJ
+    exact le_trans hbridge h_covfail
 
 open ChannelCoding in
 /-- **(Steps 1–2) Covering LossyCode family from a feasible test channel.**
