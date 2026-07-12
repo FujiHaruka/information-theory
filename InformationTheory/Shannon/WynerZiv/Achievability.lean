@@ -6170,8 +6170,8 @@ BUILD 2026-07-12e: this wrapper is now `sorry`-free. Its body discharges the out
 genuinely — Atom-A finite-Fubini split (`wz_srcBlock_condMeasure_split`), the total `x`-block mass
 `∑ xb ∏ P_X = 1` (`Fintype.prod_sum` + source-pmf normalisation), and the good/bad `x`-block
 dichotomy (bad `xb`: covering-success fails so the slice is empty; good `xb`: consumes the isolated
-conditional-AEP kernel). The SOLE remaining residual is the from-scratch conditional-AEP kernel
-`wz_covering_uyBand_condSlice_le` (`sorry`, `@residual(plan:wz-binning-covering)`): for a
+conditional-AEP kernel). The analytic core is the from-scratch conditional-AEP kernel
+`wz_covering_uyBand_condSlice_le` (now CLOSED sorry-free, `e4490dbb`): for a
 strong-covering `x`-block the conditional side-info mass of the `(U,Y)`-atypical slice is `≤ tol/8`
 (mean-pin `< ε/2` + conditional Chebyshev `δ = ε/2`).
 
@@ -6183,9 +6183,13 @@ via the sorry-free Atom-A Fubini split `wz_srcBlock_condMeasure_split`; (b) norm
 mass to `1` (`Fintype.prod_sum` + `wz_QXY_mem_stdSimplex`); (c) real good/bad dichotomy — good `xb`
 (strongly typical) `measureReal_mono`-includes into the kernel's `(U,Y)`-atypical slice and consumes
 `hN … xb hgood`, bad `xb` yields an EMPTY slice from `wzCoveringSuccessStrong`'s strong-conjunct
-failure (`hgood hyb.1.1.1`); (d) weighted-sums `∑ (∏P_X)·(≤tol/8) ≤ 1·tol/8`. NOT `@audit:ok`
-(transitive `sorry` remains in the kernel), correctly tier-2 `@residual(plan:wz-binning-covering)`.
-@residual(plan:wz-binning-covering) -/
+failure (`hgood hyb.1.1.1`); (d) weighted-sums `∑ (∏P_X)·(≤tol/8) ≤ 1·tol/8`.
+
+CLOSURE 2026-07-12 (kernel closed `e4490dbb`): this wrapper and the entire Markov-core chain
+(kernel/outer/inner/leaf) are now machine-verified sorryAx-free
+(`#print axioms` = `[propext, Classical.choice, Quot.sound]`); the residual tag is dropped. The sole
+open `sorry` reaching `wyner_ziv_achievability` is now the Atom-G covering atom
+`wz_coveringFamily_of_testChannel`. A final closure audit (Atom H) will stamp `@audit:ok`. -/
 private lemma wz_covering_jointBand_markov_core
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} (κ' : α → Fin k → ℝ)
