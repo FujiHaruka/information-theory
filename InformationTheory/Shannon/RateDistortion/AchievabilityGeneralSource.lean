@@ -405,7 +405,9 @@ Removes the full-support precondition from
 `rate_distortion_achievability_operational`: for any source `P_X ∈ stdSimplex`
 with a feasible constraint set and any rate `R > R(D)`, for every `ε > 0` there
 is a block length `N` such that every `n ≥ N` admits a rate-`R` lossy code whose
-expected block distortion is at most `D + ε`. -/
+expected block distortion is at most `D + ε`.
+
+@audit:ok -/
 @[entry_point]
 theorem rate_distortion_achievability_operational_general
     (P_X : α → ℝ) (hP_pmf : P_X ∈ stdSimplex ℝ α)
