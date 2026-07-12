@@ -2,14 +2,14 @@
 
 > **Parent**: [`wz-binning-covering-plan.md`](wz-binning-covering-plan.md) §Leg F
 
-> **STATUS 2026-07-12 (Leg 13) — Markov-core 全体 CLOSED (machine-verified sorryAx-free)、残 = Atom G のみ**:
-> Atom E+F coupled (`d8954711`) で Ecov を strong-at-ε_cov ∩ weak-at-ε に強化 (radius separation
-> `ε_cov=ε/(2(1+C))`、判断ログ #4、監査 SOUND、`@audit:defect` 4 件除去) → core wrapper sorry-free
-> (`b489d51f`) → **conditional-AEP kernel `wz_covering_uyBand_condSlice_le` genuine 閉** (`e4490dbb`)。
-> **Markov-core chain (kernel/wrapper/outer/inner/leaf + helper `wz_sum_eq_typeCount_mul`) が独立 `#print axioms`
-> で `[propext,Classical.choice,Quot.sound]` = sorryAx-free 確認済**。**headline `wyner_ziv_achievability` に残る
-> 唯一の sorry = Atom G covering atom `wz_coveringFamily_of_testChannel` (~L1154)**。両閉じで headline sorryAx-free。
-> #9 crux 維持 (仮説追加なし)。converse (P2) 無影響。詳細 → 下 §Approach + §判断ログ #3/#4 + §Atom G/H。
+> **STATUS 2026-07-13 (Leg 15) — WZ achievability FULLY CLOSED — 本サブ計画 DONE**:
+> Markov-core chain (kernel/core/outer/inner/leaf + helper) を strong-Ecov build で全閉 (radius separation
+> `ε_cov=ε/(2(1+C))`、判断ログ #4、`@audit:defect` 4 件除去、Leg 13) → **Atom G** covering atom
+> `wz_coveringFamily_of_testChannel` を joint-derandomize で閉 (`3a31e08c`+`9f5c7afc`、r14、署名不変) →
+> **headline `wyner_ziv_achievability` sorryAx-free** (`#print axioms` = `[propext,Classical.choice,Quot.sound]`、
+> 独立監査 PASS) → **Atom H** docs/wiring closure (`173ccf67`+`3248bbc3`、r15): root import 登録 +
+> Markov-core chain 5 decl 独立監査 PASS → `@audit:ok` + stale `@residual` 一掃 + README Ch.15。
+> #9 crux 維持 (仮説追加なし)。converse (P2) 無影響。全 Phase DONE。詳細 → 下 §Approach + §判断ログ #3/#4。
 
 ## Context
 
@@ -36,8 +36,8 @@ cluster が sound 化する。∴ 残作業 = `Ecov` を weak `jointlyTypicalSet
 - [x] **Atom E — 核 rewrite** `wz_covering_jointBand_markov_core` (`d8954711`/`b489d51f`/`4449e61f`): statement reframe (Ecov strong 化 + radius separation `ε_cov=ε/(2(1+C))`) 監査 SOUND・`@audit:defect` 除去、**wrapper sorry-free** (Atom A split + good/bad dichotomy + `∑∏P_X=1` 吸収 + weighted sum)。analytic 中核は kernel に isolate ↓ ✅
 - [x] **Atom E-kernel — conditional-AEP kernel** `wz_covering_uyBand_condSlice_le` (`e4490dbb`): from-scratch correlated conditional AEP を genuine に閉じた (B1 sup-bound→B2 mean=M→B3 entropy→mean-pin→Atom B δ=ε/2)。新 helper `wz_sum_eq_typeCount_mul` (method-of-types reindexing) 抽出。**Markov-core chain 全体 (kernel/wrapper/outer/inner/leaf + helper) が machine-verified sorryAx-free** (`#print axioms` = `[propext,Classical.choice,Quot.sound]`、独立確認)。wrapper stale `@residual` 除去。**残 sorry = Atom G の covering atom のみ** ✅
 - [x] **Atom F — chain 伝播** outer/inner/leaf の `Ecov` を同時 strong 化 + reduction 再証明 (`d8954711`)、sorry-free reduction・`@audit:defect` 3 件除去・独立監査 PASS ✅
-- [~] **Atom G — covering atom 配線** (`239be104`): **gateway-atom STAGED** — 下界 `wz_covering_strongTypical_indep_mass_ge` (~L5725、sorryAx-free) で主リスク retired、reopening は `plan`-class plumbing 確定。**残 = (1) reorder/hoist (chain L4838-6723 を covering atom L1154 前へ、現在 dead code) + (2) joint-derandomize (covering-failure decay 同一 code + distortion 結合)**。両方 confirmed plumbing、Leg 14 mainline (下 §Atom G) 🚧
-- [ ] **Atom H — PV + closure** `#print axioms wyner_ziv_achievability` sorryAx-free 確認 + README + plan closure 同期 📋
+- [x] **Atom G — covering atom 配線 CLOSED** (`3a31e08c`+`9f5c7afc`、r14): covering atom `wz_coveringFamily_of_testChannel` の最後の sorry を joint-derandomize で閉、chain hoist (covering atom 前へ純移動) + radius bridge `wz_jointStrongly_mem_coveringSuccessJoint`、署名不変。**headline `wyner_ziv_achievability` sorryAx-free** (`#print axioms` = `[propext,Classical.choice,Quot.sound]`)、独立監査 PASS (covering atom + 4 closure helpers `@audit:ok`) ✅
+- [x] **Atom H — PV + closure DONE** (`173ccf67`+`3248bbc3`、r15): `#print axioms wyner_ziv_achievability` sorryAx-free 機械再確認 + root import 登録 (`InformationTheory.lean`) + Markov-core chain 5 decl (kernel/core/outer/inner/leaf) 独立監査 PASS → `@audit:ok` + stale `@residual` 一掃 + README Ch.15 (achievability+converse) + 4 段 plan closure。**WZ achievability FULLY CLOSED** ✅
 
 ## ゴール / Approach
 

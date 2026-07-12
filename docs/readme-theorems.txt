@@ -82,6 +82,8 @@ arithmeticCode_expected_length_bounds
 
 @ 15 | Distributed source coding
 slepian_wolf_full_rate_region_achievability
+wyner_ziv_achievability | Wyner–Ziv lossy source coding with decoder side information, achievability (Cover–Thomas Thm 15.9.1)
+wyner_ziv_converse | Wyner–Ziv single-letter rate characterization, converse (Cover–Thomas Thm 15.9.1)
 mac_converse | MAC capacity-region outer bound (per-letter conditional MI sum form)
 mac_achievability | MAC achievability (corner-point form)
 mac_capacity_region_reconciliation | MAC reconciliation: achievability corner informations = converse conditional/joint MI on the same single-letter law
