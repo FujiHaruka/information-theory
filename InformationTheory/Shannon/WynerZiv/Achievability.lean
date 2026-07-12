@@ -5207,6 +5207,68 @@ private lemma wz_covering_xyBand_aep
     rfl
   linarith [hAEP, hbr]
 
+/-- **(Atom C — mean identity, warm-up)** The `κ'`-marginal-weighted mean of `-log wsm`
+equals the `wsm`-entropy. Division-free form: the weight of each `(x, u, ys)` is
+`κ'(x, u) · P_XY{(x, ys)}` (no conditional `P(y|x)` division), so no degenerate-`x`
+handling is needed. Reindexing the `x`-sum inward collapses `∑ₓ κ'(x,u)·P_XY{(x,ys)}`
+to `wsm(u, ys)`, matching the entropy shape `∑ p, negMulLog (wsm p)` used by
+`wz_entropy_ambient_joint`. -/
+private lemma wz_wsm_negLog_mean_eq_entropy
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ) :
+    ∑ x, ∑ u, ∑ ys : {y : β // 0 < ∑ x', P_XY.real {(x', y)}},
+        κ' x u * P_XY.real {(x, ys.1)}
+          * (- Real.log (wzSideInfoMarginal P_XY κ' (u, ys)))
+      = ∑ p, Real.negMulLog (wzSideInfoMarginal P_XY κ' p) := by
+  classical
+  rw [Fintype.sum_prod_type]
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun u _ => ?_
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun ys _ => ?_
+  have hw : (∑ x, κ' x u * P_XY.real {(x, ys.1)})
+      = wzSideInfoMarginal P_XY κ' (u, ys) := rfl
+  rw [← Finset.sum_mul, hw]
+  simp only [Real.negMulLog_def]
+  ring
+
+/-- **(Atom C — conditional-mean reading)** The conditional mean of `-log wsm(u, y)` under
+the covering law `P_X(x) · κ'(u ∣ x) · P(y ∣ x)` equals the `wsm`-entropy
+`∑ p, negMulLog (wsm p)`. Here `P_X(x) = ∑_y P_XY{(x, y)}` and `P(y ∣ x) =
+P_XY{(x, y)} / P_X(x)`; the outer `P_X(x)` factor cancels the conditional denominator
+(and kills the term for degenerate `x` with `P_X(x) = 0`). Derived from
+`wz_wsm_negLog_mean_eq_entropy`. -/
+private lemma wz_wsm_negLog_condMean_eq_entropy
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ) :
+    ∑ x, ∑ u, (∑ y, P_XY.real {(x, y)}) * κ' x u
+        * (∑ ys : {y : β // 0 < ∑ x', P_XY.real {(x', y)}},
+            (P_XY.real {(x, ys.1)} / (∑ y, P_XY.real {(x, y)}))
+              * (- Real.log (wzSideInfoMarginal P_XY κ' (u, ys))))
+      = ∑ p, Real.negMulLog (wzSideInfoMarginal P_XY κ' p) := by
+  classical
+  rw [← wz_wsm_negLog_mean_eq_entropy P_XY κ']
+  refine Finset.sum_congr rfl fun x _ => ?_
+  refine Finset.sum_congr rfl fun u _ => ?_
+  rw [Finset.mul_sum]
+  refine Finset.sum_congr rfl fun ys _ => ?_
+  by_cases hS : (∑ y, P_XY.real {(x, y)}) = 0
+  · have hP : P_XY.real {(x, ys.1)} = 0 :=
+      (Finset.sum_eq_zero_iff_of_nonneg (fun y _ => measureReal_nonneg)).mp hS ys.1
+        (Finset.mem_univ _)
+    rw [hS, hP]; ring
+  · have hcancel : (∑ y, P_XY.real {(x, y)})
+        * (P_XY.real {(x, ys.1)} / (∑ y, P_XY.real {(x, y)})) = P_XY.real {(x, ys.1)} := by
+      field_simp
+    calc (∑ y, P_XY.real {(x, y)}) * κ' x u
+            * (P_XY.real {(x, ys.1)} / (∑ y, P_XY.real {(x, y)})
+              * (- Real.log (wzSideInfoMarginal P_XY κ' (u, ys))))
+          = κ' x u * ((∑ y, P_XY.real {(x, y)})
+              * (P_XY.real {(x, ys.1)} / (∑ y, P_XY.real {(x, y)})))
+              * (- Real.log (wzSideInfoMarginal P_XY κ' (u, ys))) := by ring
+        _ = κ' x u * P_XY.real {(x, ys.1)}
+              * (- Real.log (wzSideInfoMarginal P_XY κ' (u, ys))) := by rw [hcancel]
+
 open ChannelCoding in
 /-- **(L4 part 2 — THE MARKOV CORE) Correlated-joint conditional-typicality concentration.**
 For `n` large the source-measure mass of {covering-success ∧ `(x,y)`-block jointly typical ∧
