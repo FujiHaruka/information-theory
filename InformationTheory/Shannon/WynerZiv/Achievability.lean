@@ -2349,6 +2349,51 @@ lemma rdAmbient_map_snd_jointSequence (q : A × B → ℝ) (hq : q ∈ stdSimple
       = (rdAmbient q).map (ChannelCoding.iidYs (α := A) (β := B) 0) := by
   rw [rdAmbient_map_jointSequence q hq, rdAmbient_map_iidYs q hq]
 
+/-- The `n`-fold pair-sequence law of `rdAmbient q` is the product of the pmf `q`: the joint
+`(X, Y)`-sequence `jointRV (jointSequence iidXs iidYs) n` pushes `rdAmbient q` to
+`Measure.pi (pmfToMeasure q)`. The iid-to-product identity for the pair sequence (the
+`jointSequence` analogue of `wz_ambient_jointRV_iidYs_eq_pi`). -/
+lemma rdAmbient_map_jointRV_jointSequence_eq_pi
+    (q : A × B → ℝ) (hq : q ∈ stdSimplex ℝ (A × B)) (n : ℕ) :
+    (rdAmbient q).map
+        (jointRV (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs) n)
+      = Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure (α := A × B) q) := by
+  haveI : IsProbabilityMeasure (rdAmbient q) := rdAmbient_isProbabilityMeasure q hq
+  have hindep_full :
+      iIndepFun
+        (fun i : ℕ ↦ ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs i)
+        (rdAmbient q) := rdAmbient_iIndepFun_jointSequence q hq
+  have hident : ∀ i : ℕ, IdentDistrib
+      (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs i)
+      (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs 0)
+      (rdAmbient q) (rdAmbient q) := rdAmbient_identDistrib_jointSequence q hq
+  have hindep_fin :
+      iIndepFun
+        (fun i : Fin n ↦ ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs i.val)
+        (rdAmbient q) := hindep_full.precomp Fin.val_injective
+  have hmap_eq : ∀ i : Fin n, (rdAmbient q).map
+      (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs i.val)
+        = (rdAmbient q).map
+            (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs 0) :=
+    fun i ↦ (hident i.val).map_eq
+  have hpi := (iIndepFun_iff_map_fun_eq_pi_map
+      (μ := rdAmbient q)
+      (fun i : Fin n ↦ (ChannelCoding.measurable_jointSequence _ _
+        (fun i ↦ ChannelCoding.measurable_iidXs i)
+        (fun i ↦ ChannelCoding.measurable_iidYs i) i.val).aemeasurable)).mp hindep_fin
+  calc (rdAmbient q).map
+          (jointRV (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs) n)
+      = (rdAmbient q).map
+          (fun ω i ↦
+            ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs i.val ω) := rfl
+    _ = Measure.pi (fun i : Fin n ↦ (rdAmbient q).map
+          (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs i.val)) := hpi
+    _ = Measure.pi (fun _ : Fin n ↦ (rdAmbient q).map
+          (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs 0)) := by
+        congr 1; funext i; exact hmap_eq i
+    _ = Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure (α := A × B) q) := by
+        congr 1; funext i; exact rdAmbient_map_jointSequence q hq
+
 end LegAAmbientRegularity
 
 /-! ### Leg B — `α' → α` source-measure change of variables
@@ -5096,6 +5141,118 @@ private lemma wz_covering_yBand_aep
   linarith [hAEP, hbridge]
 
 open ChannelCoding in
+/-- **(L4 part 1) `(X,Y)`-pair AEP under the source product measure.** For `n` large the
+source-measure mass of the `(X,Y)`-joint-atypical set — the block `(x_i,y_i) = p_i` is not
+typical in the `(X,Y)`-joint ambient `rdAmbient Src` (`Src(x',y) = P_XY{(x'.1,y)}`, the SRC
+per-coordinate law) — is at most `tol/8`. The `(x_i,y_i)` pairs are iid `~ Src` under SRC, so
+this is a direct AEP (`typicalSet_prob_ge_of_rate`) transported by
+`rdAmbient_map_jointRV_jointSequence_eq_pi`. Independent of the code `c`. -/
+private lemma wz_covering_xyBand_aep
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    (ε : ℝ) (hε : 0 < ε) (tol : ℝ) (htol : 0 < tol) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
+      (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+          (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))).real
+        (typicalSet
+          (rdAmbient (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
+          (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs) n ε)ᶜ
+        ≤ tol / 8 := by
+  classical
+  have hq_Src := wz_QXY_mem_stdSimplex P_XY
+  haveI hne_α' : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := by
+    have hne : Nonempty ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
+      Finset.univ_nonempty_iff.mp
+        (Finset.nonempty_of_sum_ne_zero (by rw [hq_Src.2]; exact one_ne_zero))
+    exact hne.map Prod.fst
+  haveI : IsProbabilityMeasure (rdAmbient
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
+    rdAmbient_isProbabilityMeasure _ hq_Src
+  obtain ⟨N, hN⟩ := typicalSet_prob_ge_of_rate
+    (rdAmbient (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
+    (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs)
+    (fun i ↦ ChannelCoding.measurable_jointSequence _ _
+      (fun i ↦ ChannelCoding.measurable_iidXs i) (fun i ↦ ChannelCoding.measurable_iidYs i) i)
+    (fun i j hij ↦ (rdAmbient_iIndepFun_jointSequence _ hq_Src).indepFun hij)
+    (rdAmbient_identDistrib_jointSequence _ hq_Src) hε (η := tol / 8) (by linarith)
+  refine ⟨N, fun n hn ↦ ?_⟩
+  have hAEP := hN n hn
+  have hjrv_meas : Measurable (jointRV
+      (ChannelCoding.jointSequence (α := {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (β := β)
+        ChannelCoding.iidXs ChannelCoding.iidYs) n) :=
+    measurable_jointRV _ (fun i ↦ ChannelCoding.measurable_jointSequence _ _
+      (fun i ↦ ChannelCoding.measurable_iidXs i) (fun i ↦ ChannelCoding.measurable_iidYs i) i) n
+  have huniv : (rdAmbient
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})).real
+      Set.univ = 1 := by rw [measureReal_def, measure_univ, ENNReal.toReal_one]
+  rw [show (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+          (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})))
+        = (rdAmbient (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})).map
+            (jointRV (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs) n)
+      from (rdAmbient_map_jointRV_jointSequence_eq_pi _ hq_Src n).symm,
+      map_measureReal_apply hjrv_meas (measurableSet_typicalSet _ _ _ _).compl,
+      Set.preimage_compl,
+      measureReal_compl (hjrv_meas (measurableSet_typicalSet _ _ _ _)), huniv]
+  have hbr : (rdAmbient
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})).real
+        (jointRV (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs) n ⁻¹'
+          typicalSet (rdAmbient
+            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
+            (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs) n ε)
+      = ((rdAmbient
+          (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
+          {ω | jointRV (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs) n ω
+            ∈ typicalSet (rdAmbient
+                (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
+                (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs) n ε}).toReal :=
+    rfl
+  linarith [hAEP, hbr]
+
+open ChannelCoding in
+/-- **(L4 part 2 — THE MARKOV CORE) Correlated-joint conditional-typicality concentration.**
+For `n` large the source-measure mass of {covering-success ∧ `(x,y)`-block jointly typical ∧
+`(u,y)`-block jointly `(U,Y)`-atypical} is at most `tol/8`. This is the Markov lemma `U—X—Y`:
+under SRC the pairs `(x_i,y_i)` are iid `~ P_XY` and `u = c.decoder(c.encoder x)` is a
+deterministic function of the whole `x`-block, so `Y ⊥ U ∣ X`; given `(x,u)` typical (covering
+success, empirical conditional `≈ κ'(·∣x)`) AND `(x,y)` typical, the empirical `(u,y)`-entropy
+concentrates around `H(wzSideInfoMarginal)` (the consistent `(U,Y)`-marginal pinned by
+`hqStar`/`hκ'_sum`), so `(u,y)`-atypicality has vanishing mass. Because `wzSideInfoMarginal(u,y)
+= ∑ₓ κ'(x,u)·P_XY(x,y)` is a sum over `x`, the empirical `(u,y)`-entropy is NOT a linear
+combination of the `(x,u)`- and `(x,y)`-empirical entropies, so this is genuinely probabilistic
+(a conditional AEP), NOT a deterministic set-inclusion — the correlated-joint concentration is a
+from-scratch in-project assembly, absent from Mathlib and the codebase (`plan`, not a Mathlib
+wall). The consistency + full-support hyps (`hκ'_pos`, `hκ'_sum`, `hqStar`) are mandatory (pin
+qStar's `U`-marginal `= P_U =` wzSideInfoMarginal's `U`-marginal; without them a constant-word
+counterexample makes the statement false-as-framed). Left `sorry` — the residual Markov kernel.
+@residual(plan:wz-binning-covering) -/
+private lemma wz_covering_jointBand_markov_core
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (ε : ℝ) (hε : 0 < ε) (tol : ℝ) (htol : 0 < tol)
+    (hκ'_pos : ∀ x u, 0 < κ' x u)
+    (hκ'_sum : ∀ x, ∑ u, κ' x u = 1)
+    (hqStar : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (M : ℕ)
+        (c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
+        (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+            (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
+              P_XY.real {(p.1.1, p.2)}))).real
+          (({ p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
+              ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
+                  ChannelCoding.iidXs ChannelCoding.iidYs n ε }
+            ∩ typicalSet (rdAmbient
+                (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
+                (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs) n ε)
+            ∩ { p | (fun i ↦ (c.decoder (c.encoder (fun j ↦ (p j).1)) i, (p i).2))
+                ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+                    (ChannelCoding.jointSequence ChannelCoding.iidXs
+                      (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                        ((ChannelCoding.iidYs i ω :
+                            {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))) n ε })
+          ≤ tol / 8 := by
+  sorry
+
+open ChannelCoding in
 /-- **(L4 — THE HARD KERNEL) Joint `(U,Y)`-band concentration.** For `n` large the
 source-measure mass of the event {covering-success ∧ the chosen word `U` and the side
 information `Y` are jointly `(U,Y)`-atypical} is at most `tol/4`. This is the correlated-joint
@@ -5146,7 +5303,49 @@ private lemma wz_covering_jointBand_concentration
                         ((ChannelCoding.iidYs i ω :
                             {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))) n ε })
           ≤ tol / 4 := by
-  sorry
+  classical
+  obtain ⟨N1, hN1⟩ := wz_covering_xyBand_aep P_XY ε hε tol htol
+  obtain ⟨N2, hN2⟩ :=
+    wz_covering_jointBand_markov_core P_XY κ' qStar ε hε tol htol hκ'_pos hκ'_sum hqStar
+  refine ⟨max N1 N2, fun n hn M c ↦ ?_⟩
+  have hn1 : N1 ≤ n := (le_max_left _ _).trans hn
+  have hn2 : N2 ≤ n := (le_max_right _ _).trans hn
+  have hxy := hN1 n hn1
+  have hmk := hN2 n hn2 M c
+  haveI hQ_prob : IsProbabilityMeasure (ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})) :=
+    ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
+  set SRC : Measure (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
+    Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
+    with hSRC_def
+  haveI hSRC_prob : IsProbabilityMeasure SRC := by rw [hSRC_def]; infer_instance
+  set Ecov : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
+    { p | (fun j ↦ (p j).1, c.decoder (c.encoder (fun j ↦ (p j).1)))
+        ∈ ChannelCoding.jointlyTypicalSet (rdAmbient qStar)
+            ChannelCoding.iidXs ChannelCoding.iidYs n ε } with hEcov_def
+  set Exytyp : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
+    typicalSet (rdAmbient
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))
+      (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs) n ε with hExytyp_def
+  set Euy : Set (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) :=
+    { p | (fun i ↦ (c.decoder (c.encoder (fun j ↦ (p j).1)) i, (p i).2))
+        ∉ typicalSet (rdAmbient (wzSideInfoMarginal P_XY κ'))
+            (ChannelCoding.jointSequence ChannelCoding.iidXs
+              (fun (i : ℕ) (ω : ℕ → Fin k × {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) ↦
+                ((ChannelCoding.iidYs i ω : {y : β // 0 < ∑ x, P_XY.real {(x, y)}}) : β))) n ε }
+    with hEuy_def
+  -- Case split on the (X,Y)-joint typicality: atypical ↦ part-1, typical ↦ part-2 (Markov core).
+  have hincl : Ecov ∩ Euy ⊆ Exytypᶜ ∪ (Ecov ∩ Exytyp ∩ Euy) := by
+    rintro p ⟨hcov, huy⟩
+    by_cases hxt : p ∈ Exytyp
+    · exact Or.inr ⟨⟨hcov, hxt⟩, huy⟩
+    · exact Or.inl hxt
+  have hunion : SRC.real (Exytypᶜ ∪ (Ecov ∩ Exytyp ∩ Euy))
+      ≤ SRC.real Exytypᶜ + SRC.real (Ecov ∩ Exytyp ∩ Euy) := measureReal_union_le _ _
+  have hmono : SRC.real (Ecov ∩ Euy) ≤ SRC.real (Exytypᶜ ∪ (Ecov ∩ Exytyp ∩ Euy)) :=
+    measureReal_mono hincl (measure_ne_top _ _)
+  linarith [hxy, hmk, hunion, hmono]
 
 /-! ## Gateway atom 3 (Leg F) — covering chosen-word side-information acceptance (Markov lemma)
 
