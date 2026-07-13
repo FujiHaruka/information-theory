@@ -4,6 +4,7 @@ import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.Periodic
 import Mathlib.MeasureTheory.Function.L2Space
 import InformationTheory.Shannon.NormalizedSinc
+import InformationTheory.Meta.EntryPoint
 
 /-!
 # Whittaker–Shannon sampling theorem (Fourier-series route, Cover–Thomas Ch. 9.6)
@@ -142,6 +143,7 @@ theorem fourierCoeff_eq_wsSignal (F : Lp ℂ 2 (AddCircle.haarAddCircle (T := 1)
 not assumed among the inputs; `#print axioms` = `[propext, Classical.choice, Quot.sound]`
 (sorryAx-free). Genuinely captures the sampling theorem (`wsSignal F t = ⟪wsExp t, F⟫` is the
 inverse-Fourier reconstruction, `F` ranges over the band-limited spectra). -/
+@[entry_point]
 theorem whittaker_shannon_hasSum
     (F : Lp ℂ 2 (AddCircle.haarAddCircle (T := 1))) (t : ℝ) :
     HasSum (fun n : ℤ => wsSignal F n • (sincN (t - n) : ℂ)) (wsSignal F t) := by
@@ -155,12 +157,87 @@ theorem whittaker_shannon_hasSum
   simp only [Int.cast_neg, sub_neg_eq_add]
   exact h2
 
-/-- **Whittaker–Shannon**, real-line band-limited textbook wrapper (stretch, statement (i)). -/
+/-- Boxcar form of the reconstruction pairing: for any circle-L² element `G` that agrees a.e.
+with the periodization of a real-line function `g`, the pairing `wsSignal G w` is the boxcar
+integral of `e^{2πiwξ} · g ξ` over the fundamental interval. -/
+private lemma wsSignal_eq_boxcar (G : Lp ℂ 2 (AddCircle.haarAddCircle (T := 1))) (g : ℝ → ℂ)
+    (hG : ⇑G =ᵐ[AddCircle.haarAddCircle (T := 1)] AddCircle.liftIoc 1 (-(1 / 2)) g) (w : ℝ) :
+    wsSignal G w = ∫ ξ in (-(1 / 2))..(1 / 2),
+      Complex.exp ((2 * π * w * ξ : ℝ) * Complex.I) * g ξ := by
+  have hws : ⇑(wsExp w) =ᵐ[AddCircle.haarAddCircle (T := 1)]
+      AddCircle.liftIoc 1 (-(1 / 2)) (wsExpFun w) := MemLp.coeFn_toLp _
+  have hcong : (fun ξ : AddCircle (1 : ℝ) => ⟪(wsExp w) ξ, G ξ⟫)
+      =ᵐ[AddCircle.haarAddCircle (T := 1)] fun ξ =>
+        conj (AddCircle.liftIoc 1 (-(1 / 2)) (wsExpFun w) ξ)
+          * AddCircle.liftIoc 1 (-(1 / 2)) g ξ := by
+    filter_upwards [hws, hG] with ξ h1 h2
+    rw [h1, h2, RCLike.inner_apply']
+  rw [wsSignal, MeasureTheory.L2.inner_def, integral_congr_ae hcong,
+    AddCircle.integral_haarAddCircle, inv_one, one_smul,
+    ← AddCircle.intervalIntegral_preimage 1 (-(1 / 2)),
+    show (-(1 / 2 : ℝ) + 1) = 1 / 2 by norm_num]
+  apply intervalIntegral.integral_congr_ae
+  refine Filter.Eventually.of_forall (fun a ha => ?_)
+  rw [Set.uIoc_of_le (by norm_num : (-(1 / 2 : ℝ)) ≤ 1 / 2)] at ha
+  have hmem : a ∈ Set.Ioc (-(1 / 2 : ℝ)) (-(1 / 2) + 1) := ⟨ha.1, by linarith [ha.2]⟩
+  simp only [AddCircle.liftIoc_coe_apply hmem]
+  congr 1
+  simp only [wsExpFun]
+  rw [← Complex.exp_conj]
+  congr 1
+  simp only [map_mul, Complex.conj_ofReal, Complex.conj_I]
+  push_cast
+  ring
+
+/-- Boxcar form of a band-limited function: Fourier inversion plus the support hypothesis
+recovers `f w` as the same boxcar integral of `e^{2πiwξ} · 𝓕 f ξ`. -/
+private lemma fourier_eq_boxcar (f : ℝ → ℂ) (hcont : Continuous f) (hf : Integrable f)
+    (hFf : Integrable (𝓕 f))
+    (hband : ∀ ξ : ℝ, ξ ∉ Set.Icc (-(1 / 2) : ℝ) (1 / 2) → 𝓕 f ξ = 0) (w : ℝ) :
+    f w = ∫ ξ in (-(1 / 2))..(1 / 2),
+      Complex.exp ((2 * π * w * ξ : ℝ) * Complex.I) * 𝓕 f ξ := by
+  have hinv : 𝓕⁻ (𝓕 f) = f := Continuous.fourierInv_fourier_eq hcont hf hFf
+  rw [show f w = 𝓕⁻ (𝓕 f) w from (congrFun hinv w).symm, Real.fourierInv_eq']
+  have hzero : ∀ v : ℝ, v ∉ Set.Icc (-(1 / 2) : ℝ) (1 / 2) →
+      Complex.exp ((↑(2 * π * inner ℝ v w) * Complex.I)) • 𝓕 f v = 0 := by
+    intro v hv
+    rw [hband v hv, smul_zero]
+  rw [← MeasureTheory.setIntegral_eq_integral_of_forall_compl_eq_zero hzero,
+    MeasureTheory.integral_Icc_eq_integral_Ioc,
+    ← intervalIntegral.integral_of_le (by norm_num : (-(1 / 2 : ℝ)) ≤ 1 / 2)]
+  refine intervalIntegral.integral_congr (fun ξ _ => ?_)
+  simp only [smul_eq_mul, Real.inner_apply]
+  rw [show (2 * π * (ξ * w) : ℝ) = 2 * π * w * ξ from by ring]
+
+/-- **Whittaker–Shannon**, real-line band-limited textbook wrapper (statement (i)).
+
+Reduces to `whittaker_shannon_hasSum` by taking `F` to be `𝓕 f` restricted to the fundamental
+interval as a circle-L² element; Fourier inversion (`Continuous.fourierInv_fourier_eq`) plus the
+band-limited support hypothesis give `wsSignal F w = f w` for every real `w`. -/
+@[entry_point]
 theorem whittaker_shannon_bandlimited
     (f : ℝ → ℂ) (hcont : Continuous f) (hf : Integrable f) (hFf : Integrable (𝓕 f))
     (hband : ∀ ξ : ℝ, ξ ∉ Set.Icc (-(1 / 2) : ℝ) (1 / 2) → 𝓕 f ξ = 0) (t : ℝ) :
     HasSum (fun n : ℤ => f n • (sincN (t - n) : ℂ)) (f t) := by
-  -- @residual(plan:whittaker-shannon)
-  sorry
+  have hcontFf : Continuous (𝓕 f) :=
+    VectorFourier.fourierIntegral_continuous Real.continuous_fourierChar
+      (innerSL ℝ).continuous₂ hf
+  obtain ⟨C, hC⟩ :=
+    (isCompact_Icc (a := -(1 / 2 : ℝ)) (b := 1 / 2)).exists_bound_of_continuousOn
+      hcontFf.continuousOn
+  have hmemLp : MemLp (𝓕 f) 2 (volume.restrict (Set.Ioc (-(1 / 2) : ℝ) (-(1 / 2) + 1))) := by
+    haveI : IsFiniteMeasure (volume.restrict (Set.Ioc (-(1 / 2) : ℝ) (-(1 / 2) + 1))) :=
+      ⟨by rw [Measure.restrict_apply_univ]; exact measure_Ioc_lt_top⟩
+    refine MemLp.of_bound hcontFf.aestronglyMeasurable C ?_
+    filter_upwards [ae_restrict_mem measurableSet_Ioc] with x hx
+    exact hC x ⟨le_of_lt hx.1, by linarith [hx.2]⟩
+  set F : Lp ℂ 2 (AddCircle.haarAddCircle (T := 1)) :=
+    (hmemLp.memLp_liftIoc.haarAddCircle).toLp with hFdef
+  have hF : ⇑F =ᵐ[AddCircle.haarAddCircle (T := 1)]
+      AddCircle.liftIoc 1 (-(1 / 2)) (𝓕 f) := MemLp.coeFn_toLp _
+  have key : ∀ w : ℝ, wsSignal F w = f w := by
+    intro w
+    rw [wsSignal_eq_boxcar F (𝓕 f) hF w, ← fourier_eq_boxcar f hcont hf hFf hband w]
+  simpa only [key] using whittaker_shannon_hasSum F t
 
 end InformationTheory.Shannon.WhittakerShannon
