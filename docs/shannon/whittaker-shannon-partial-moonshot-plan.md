@@ -4,6 +4,25 @@
 **Target file**: `InformationTheory/Shannon/WhittakerShannonPartial.lean`
 **Companion**: `InformationTheory/Shannon/ShannonHartley.lean` (327 行, L-SH1+L-SH2+L-SH3 pass-through, signature freeze)
 
+> **STALE-CLAIM CORRECTION (2026-07-13) — the WS *sampling theorem* wall is overturned.**
+> The "Approach" / "Mathlib gap" sections below price Whittaker–Shannon as a ~600-line / "≈1 year"
+> wall and assert Poisson summation and Plancherel/`𝓕(sinc)` are "far from Mathlib". A fresh
+> Mathlib inventory ([`whittaker-shannon-inventory.md`](whittaker-shannon-inventory.md)) overturns
+> this **for the Fourier-series route**:
+> - **Poisson summation IS in Mathlib** — `Real.tsum_eq_tsum_fourier` + `…_of_rpow_decay` +
+>   `SchwartzMap.tsum_eq_tsum_fourier` (`Mathlib/Analysis/Fourier/PoissonSummation.lean`). The gap
+>   section's "#3 `PoissonSummation` placeholder does not exist" is wrong.
+> - **Plancherel on `Lp 2` IS in Mathlib** — `MeasureTheory.Lp.fourierTransformₗᵢ` (L²-Fourier
+>   transform as an isometric equiv) + `Lp.norm_fourier_eq` / `Lp.inner_fourier_eq`
+>   (`Mathlib/Analysis/Fourier/LpSpace.lean`).
+> - The WS **sampling theorem** is being attacked via the **Fourier-series route**, which bypasses
+>   the `𝓕(sinc)` + shifted-sinc-orthogonality *direct* route that the ~600-line estimate priced
+>   (L-WS-B / L-WS-C are off the critical path). ~85% of the API ships verbatim; ~130 lines of
+>   bridge remain. **Child (active) plan**: [`whittaker-shannon-plan.md`](whittaker-shannon-plan.md).
+> - Still genuinely out of scope: the **operational** `IsTwoWDegreesOfFreedom` capacity identity
+>   (needs a continuous-time channel + continuous-time AEP, neither defined in-project). Only that
+>   part remains a disclosed residual once the sampling theorem lands.
+
 > 実態整合 (2026-05-20): DONE (L-WS-A scope) + FLAW-VACUOUS → **RESOLVED (2026-05-20)**。
 > `InformationTheory/Shannon/WhittakerShannonPartial.lean` は **sinc 基本性質群** (`sincN_int_eq_kronecker` L140,
 > `whittaker_shannon_sample_collapse` L165, `whittaker_shannon_collapsed_value` L235) を実証明で publish 済 (0 sorry) —
