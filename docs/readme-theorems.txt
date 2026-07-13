@@ -59,6 +59,8 @@ jointDifferentialEntropyPi_le_sum
 @ 9 | Gaussian channel
 awgn_capacity_closed_form_genuine
 parallel_gaussian_capacity_formula_minimal | water-filling
+whittaker_shannon_bandlimited | Whittaker–Shannon sampling theorem (band-limited signal from its Nyquist-rate samples)
+whittaker_shannon_hasSum | cardinal series, L² spectrum form
 
 @ 10 | Rate–distortion
 rate_distortion_achievability

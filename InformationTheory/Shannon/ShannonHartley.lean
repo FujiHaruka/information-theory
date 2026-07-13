@@ -24,9 +24,13 @@ power constraint `E[X(t)²] ≤ P`, the capacity is
 
 ## Implementation notes
 
-The Nyquist sampling equivalence requires the Whittaker-Shannon sampling
-theorem and continuous-time AEP, neither of which is in Mathlib. These are taken as
-explicit hypothesis predicates; `shannon_hartley_formula` performs only the residual
+The Whittaker-Shannon sampling theorem itself is now PROVED sorryAx-free (Fourier-series
+route) in `InformationTheory.Shannon.WhittakerShannon`
+(`whittaker_shannon_hasSum` / `whittaker_shannon_bandlimited`), so it is no longer a Mathlib
+wall. The residual carried by `IsTwoWDegreesOfFreedom` is therefore narrowed to only the
+*operational* continuous-time channel-coding / AEP reduction — a continuous-time channel model
+plus continuous-time AEP, neither of which the project models. That remaining reduction is taken
+as an explicit hypothesis predicate; `shannon_hartley_formula` performs only the residual
 algebra `2W · perSample = W · log(1 + P/(N₀·W))`.
 
 ## References
@@ -59,10 +63,13 @@ noncomputable def perSampleAwgnCapacity (W N₀ P : ℝ) : ℝ :=
 
 /-! ## §B — Bandlimited-channel hypothesis predicates.
 
-The three predicates below are open residuals (Mathlib walls): the first two carry only
-positivity, and `IsTwoWDegreesOfFreedom` states the `2W` degrees-of-freedom identity
-whose proof requires the Whittaker-Shannon sampling theorem + continuous-time AEP.
-They are consumed as explicit hypotheses by `shannon_hartley_formula`. -/
+The three predicates below are open residuals: the first two carry only
+positivity, and `IsTwoWDegreesOfFreedom` states the `2W` degrees-of-freedom identity.
+The Whittaker-Shannon sampling theorem underlying that identity is now PROVED sorryAx-free
+in `InformationTheory.Shannon.WhittakerShannon`, so the only remaining gap is the
+*operational* continuous-time channel-coding / AEP reduction (a continuous-time channel model
+plus continuous-time AEP, not modeled in the project). They are consumed as explicit
+hypotheses by `shannon_hartley_formula`. -/
 
 /-- Bandlimited-sampling hypothesis: positivity carrier `0 < W ∧ 0 < N₀ ∧ 0 ≤ P`.
 
@@ -79,8 +86,11 @@ def IsBandlimitedKernel (W : ℝ) : Prop := 0 < W
 
 /-- The `2W` degrees-of-freedom per second identity `C = 2W · perSampleAwgnCapacity`.
 
-Requires Whittaker-Shannon sampling theorem + continuous AEP (not in Mathlib);
-taken as the caller's hypothesis.
+The Whittaker-Shannon sampling theorem underlying the `2W`-DOF count is now PROVED sorryAx-free
+(`InformationTheory.Shannon.WhittakerShannon.whittaker_shannon_hasSum` /
+`whittaker_shannon_bandlimited`), so the residual here is narrowed to the *operational*
+continuous-time channel-coding / AEP reduction (a continuous-time channel model + continuous-time
+AEP, not modeled in the project); taken as the caller's hypothesis.
 
 `@audit:retract-candidate(load-bearing-predicate)` -/
 def IsTwoWDegreesOfFreedom (W N₀ P C : ℝ) : Prop :=
@@ -106,8 +116,10 @@ theorem twoW_perSample_eq_shannonHartley
 The hypothesis `h_two_w : IsTwoWDegreesOfFreedom W N₀ P C` carries the `2W`
 degrees-of-freedom identity `C = 2W · perSampleAwgnCapacity W N₀ P`; this theorem
 only performs the residual algebra `2W · perSample = W · log(1 + P/(N₀·W))`.
-Closing the `2W` degrees-of-freedom identity requires the Whittaker-Shannon
-sampling theorem + continuous AEP (not in Mathlib).
+The Whittaker-Shannon sampling theorem underlying the `2W`-DOF count is now PROVED sorryAx-free
+(`InformationTheory.Shannon.WhittakerShannon.whittaker_shannon_hasSum` /
+`whittaker_shannon_bandlimited`); the only remaining gap in closing the identity is the
+*operational* continuous-time channel-coding / AEP reduction (not modeled in the project).
 
 `@audit:retract-candidate(load-bearing-predicate)`
 `@residual(plan:whittaker-shannon-partial-moonshot-plan)`
