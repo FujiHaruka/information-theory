@@ -10,9 +10,12 @@
 > cardinal series, `@audit:ok`) + `whittaker_shannon_bandlimited` (real-line band-limited textbook
 > form), both `@[entry_point]`, `#print axioms` = `[propext, Classical.choice, Quot.sound]`. Child
 > plan [`whittaker-shannon-plan.md`](whittaker-shannon-plan.md) is CLOSED. The **only** residual now
-> carried by `IsTwoWDegreesOfFreedom` in `ShannonHartley.lean` is the *operational* continuous-time
-> channel-coding / AEP reduction (a continuous-time channel model + continuous-time AEP, neither
-> modeled in-project) — honestly disclosed, load-bearing, unchanged by this closure.
+> carried by `IsTwoWDegreesOfFreedom` in `ShannonHartley.lean` is a *single* genuine wall — the
+> time-bandwidth **degrees-of-freedom-per-second** count (prolate-spheroidal /
+> Landau-Pollak-Slepian eigenvalue concentration, `@residual(wall:nyquist-2w-dof)`, Mathlib
+> `Found 0`). The surrounding continuous-time channel model, continuous-time AEP, and band-limited
+> noise measure are all in-project definable and are *not* the wall — honestly disclosed,
+> load-bearing, unchanged by this closure.
 >
 > **STALE-CLAIM CORRECTION (2026-07-13) — the WS *sampling theorem* wall is overturned.**
 > The "Approach" / "Mathlib gap" sections below price Whittaker–Shannon as a ~600-line / "≈1 year"
@@ -29,9 +32,11 @@
 >   the `𝓕(sinc)` + shifted-sinc-orthogonality *direct* route that the ~600-line estimate priced
 >   (L-WS-B / L-WS-C are off the critical path). ~85% of the API ships verbatim; ~130 lines of
 >   bridge remain. **Child (active) plan**: [`whittaker-shannon-plan.md`](whittaker-shannon-plan.md).
-> - Still genuinely out of scope: the **operational** `IsTwoWDegreesOfFreedom` capacity identity
->   (needs a continuous-time channel + continuous-time AEP, neither defined in-project). Only that
->   part remains a disclosed residual once the sampling theorem lands.
+> - Still genuinely out of scope: the **operational** `IsTwoWDegreesOfFreedom` capacity identity,
+>   whose single genuine wall is the time-bandwidth **DOF-per-second** count (prolate-spheroidal /
+>   Landau-Pollak-Slepian, `@residual(wall:nyquist-2w-dof)`). The continuous-time channel,
+>   continuous-time AEP, and band-limited noise measure around it are in-project definable, not the
+>   wall. Only that DOF-per-second part remains a disclosed residual once the sampling theorem lands.
 
 > 実態整合 (2026-05-20): DONE (L-WS-A scope) + FLAW-VACUOUS → **RESOLVED (2026-05-20)**。
 > `InformationTheory/Shannon/WhittakerShannonPartial.lean` は **sinc 基本性質群** (`sincN_int_eq_kronecker` L140,

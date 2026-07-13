@@ -22,7 +22,7 @@ Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理
 
 **残る真の scope-out (章内)**:
 
-- **Ch.9 Shannon-Hartley operational capacity (continuous-time AEP)**: Whittaker-Shannon **sampling theorem itself は 2026-07-14 に proof done** (`whittaker_shannon_hasSum` + `whittaker_shannon_bandlimited`、2 headline とも sorryAx-free、監査 PASS、Fourier 級数ルート)。残る scope-out は operational な `IsTwoWDegreesOfFreedom` 容量恒等式のみ = 連続時間チャネルモデル + 連続時間 AEP (project 未モデル)。load-bearing predicate で honest 開示継続 (`@residual(plan:whittaker-shannon-partial-moonshot-plan) @audit:retract-candidate`)。
+- **Ch.9 Shannon-Hartley operational capacity (prolate DOF-per-second)**: Whittaker-Shannon **sampling theorem itself は 2026-07-14 に proof done** (`whittaker_shannon_hasSum` + `whittaker_shannon_bandlimited`、2 headline とも sorryAx-free、監査 PASS、Fourier 級数ルート)。残る scope-out は operational な `IsTwoWDegreesOfFreedom` 容量恒等式の真核 1 点のみ = 時間帯域幅 DOF-per-second カウント (prolate-spheroidal / Landau-Pollak-Slepian、Mathlib 不在)。周辺 (連続時間チャネル / AEP / noise 測度) は定義可能で壁でない。load-bearing predicate で honest 開示継続 (`@residual(wall:nyquist-2w-dof) @audit:retract-candidate`)。
 
 **当初 scope-out だが genuine closure して復帰済 (Ch.10)**:
 
@@ -73,7 +73,7 @@ Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理
 **proof 層はほぼ全 closure 済**。scope 内で残るのは:
 
 - **教科書原稿 (層 3)**: genuine ✅ 章を prose 化する作業が主フロンティア (下記「次の一手」)。
-- **真の壁 (scope-out 確定・honest 開示)**: Ch.9 operational 容量の連続時間 AEP 部のみ (`IsTwoWDegreesOfFreedom` load-bearing、`@residual(plan:whittaker-shannon-partial-moonshot-plan)`)。標本化定理そのものは 2026-07-14 に proof done (`whittaker_shannon_hasSum` + `whittaker_shannon_bandlimited` sorryAx-free)。
+- **真の壁 (scope-out 確定・honest 開示)**: Ch.9 operational 容量の時間帯域幅 DOF-per-second カウント (prolate-spheroidal / Landau-Pollak-Slepian、Mathlib 不在) 1 点のみ (`IsTwoWDegreesOfFreedom` load-bearing、`@residual(wall:nyquist-2w-dof)`)。周辺の連続時間チャネル / AEP / noise 測度は定義可能で壁でない。標本化定理そのものは 2026-07-14 に proof done (`whittaker_shannon_hasSum` + `whittaker_shannon_bandlimited` sorryAx-free)。
 - ~~壁ではない frontier (regularity 緩和): Ch.10 完全一般 source 版~~ **CLOSED (2026-07-13)**: `rate_distortion_achievability_operational_general` (`@[entry_point]`, sorryAx-free, `@audit:ok`)。full-support 前提 (`hP_supp`) を台 subtype 制限 + code lift で除去、新 load-bearing hyp なし。詳細 → `rate-distortion-achievability-general-source-plan.md`。
 
 legacy migration は完了済 (active な `@audit:suspect/staged/defer` タグ 0 件、`@audit:closed-by-successor` project-wide 0 件、circular `:= h` defect 0 件)。
