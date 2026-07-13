@@ -243,7 +243,6 @@ import InformationTheory.Shannon.EPI.Stam.Standalone
 import InformationTheory.Shannon.FisherInfo.DeBruijnHeatFlow
 import InformationTheory.Shannon.FisherInfo.DeBruijnStandalone
 import InformationTheory.Shannon.LZ78.ConverseAsymptotic
-import InformationTheory.Shannon.Hoeffding.InteriorMinimizer
 import InformationTheory.Shannon.GeneralDMC.Extension
 import InformationTheory.Shannon.AWGN.BindConvolution
 import InformationTheory.Shannon.EPI.Stam.ConditionalCauchySchwarz

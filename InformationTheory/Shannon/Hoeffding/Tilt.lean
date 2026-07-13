@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.Hoeffding.InteriorMinimizer
+import InformationTheory.Shannon.Hoeffding.BoundaryMinimizer
 import InformationTheory.Meta.EntryPoint
 
 /-!
@@ -59,7 +59,6 @@ open InformationTheory.Shannon.CsiszarProjection
 open InformationTheory.Shannon InformationTheory.Shannon.HoeffdingTradeoff
 open InformationTheory.Shannon.HoeffdingSandwich
 open InformationTheory.Shannon.HoeffdingBoundaryMinimizer
-open InformationTheory.Shannon.HoeffdingInteriorMinimizer
 open scoped BigOperators Topology
 
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]

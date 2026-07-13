@@ -2,7 +2,6 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.Hoeffding.Tradeoff
 import InformationTheory.Shannon.Hoeffding.Sandwich
 import InformationTheory.Shannon.Hoeffding.BoundaryMinimizer
-import InformationTheory.Shannon.Hoeffding.InteriorMinimizer
 import InformationTheory.Shannon.Hoeffding.Tilt
 import InformationTheory.Shannon.Hoeffding.MinimizerAttainment
 import InformationTheory.Shannon.Chernoff.Basic

@@ -76,7 +76,6 @@ open Set Real InformationTheory Filter
 open InformationTheory.Shannon.Chernoff
 open InformationTheory.Shannon.CsiszarProjection
 open InformationTheory.Shannon InformationTheory.Shannon.HoeffdingTradeoff
-open InformationTheory.Shannon.HoeffdingInteriorMinimizer
 open InformationTheory.Shannon.HoeffdingTilt
 open scoped BigOperators Topology
 
