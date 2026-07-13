@@ -4,6 +4,16 @@
 **Target file**: `InformationTheory/Shannon/WhittakerShannonPartial.lean`
 **Companion**: `InformationTheory/Shannon/ShannonHartley.lean` (327 行, L-SH1+L-SH2+L-SH3 pass-through, signature freeze)
 
+> **CLOSED (2026-07-14) — the WS *sampling theorem* is now PROVED.**
+> The sampling theorem landed sorryAx-free via the Fourier-series route:
+> `InformationTheory.Shannon.WhittakerShannon.whittaker_shannon_hasSum` (unconditional L²-spectrum
+> cardinal series, `@audit:ok`) + `whittaker_shannon_bandlimited` (real-line band-limited textbook
+> form), both `@[entry_point]`, `#print axioms` = `[propext, Classical.choice, Quot.sound]`. Child
+> plan [`whittaker-shannon-plan.md`](whittaker-shannon-plan.md) is CLOSED. The **only** residual now
+> carried by `IsTwoWDegreesOfFreedom` in `ShannonHartley.lean` is the *operational* continuous-time
+> channel-coding / AEP reduction (a continuous-time channel model + continuous-time AEP, neither
+> modeled in-project) — honestly disclosed, load-bearing, unchanged by this closure.
+>
 > **STALE-CLAIM CORRECTION (2026-07-13) — the WS *sampling theorem* wall is overturned.**
 > The "Approach" / "Mathlib gap" sections below price Whittaker–Shannon as a ~600-line / "≈1 year"
 > wall and assert Poisson summation and Plancherel/`𝓕(sinc)` are "far from Mathlib". A fresh

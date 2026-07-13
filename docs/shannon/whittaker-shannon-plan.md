@@ -2,7 +2,11 @@
 
 > **Parent**: [`whittaker-shannon-partial-moonshot-plan.md`](whittaker-shannon-partial-moonshot-plan.md) §撤退ライン (L-WS-B/L-WS-C overturn)
 
-**Status**: planned (2026-07-13)
+**Status**: **CLOSED (2026-07-14)** — both statements proved sorryAx-free (`#print axioms` =
+`[propext, Classical.choice, Quot.sound]`), independent honesty audit PASS (`@audit:ok`) on the
+primary `whittaker_shannon_hasSum`, and the real-line wrapper `whittaker_shannon_bandlimited`
+landed too (both `@[entry_point]`). Commits: `9c1b96eb` (core sorryAx-free), `6b204f03`
+(`@audit:ok`), `c815d4c4` (wrapper proof-done).
 **Target file**: `InformationTheory/Shannon/WhittakerShannon.lean` (new)
 **Inventory (technical spec, do not duplicate)**: [`whittaker-shannon-inventory.md`](whittaker-shannon-inventory.md)
 **Reuses**: `InformationTheory/Shannon/NormalizedSinc.lean` (`sincN` + 13 decls, 0 sorry)
@@ -61,10 +65,10 @@ equality nor an `‖·‖→0` limit) — no reshaping bridge needed.
 ## 進捗
 
 - [x] M0 — Mathlib API inventory ✅ → [`whittaker-shannon-inventory.md`](whittaker-shannon-inventory.md)
-- [ ] Phase 1 — skeleton (5 decls + `sorry`, type-checks) 📋
-- [ ] Phase 2 — `wsExp` + the two bridges (decls 1–3) 📋
-- [ ] Phase 3 — headline assembly `whittaker_shannon_hasSum` (the honest core) 📋
-- [ ] Phase 4 — (stretch) textbook wrapper `whittaker_shannon_bandlimited` (statement (i)) 📋
+- [x] Phase 1 — skeleton (5 decls + `sorry`, type-checks) ✅
+- [x] Phase 2 — `wsExp` + the two bridges (decls 1–3) ✅
+- [x] Phase 3 — headline assembly `whittaker_shannon_hasSum` (the honest core) ✅ sorryAx-free + `@audit:ok`
+- [x] Phase 4 — (stretch) textbook wrapper `whittaker_shannon_bandlimited` (statement (i)) ✅ sorryAx-free, `@[entry_point]`
 
 ## Decomposition table
 
@@ -133,15 +137,16 @@ The residual slug for this work is **`@residual(plan:whittaker-shannon)`**, and 
 Every `sorry` written under this plan carries that tag; a new independent honesty audit is
 launched when the first such `sorry` is committed (orchestrator-mandatory).
 
-## Definition of Done
+## Definition of Done — ✅ MET (2026-07-14)
 
-- **proof-done (this attack's completion):** `whittaker_shannon_hasSum` (statement (ii)) is
+- **proof-done (this attack's completion):** ✅ `whittaker_shannon_hasSum` (statement (ii)) is
   `sorry`-free and `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free),
   passed by an independent honesty audit (`@audit:ok`).
-- **stretch:** the textbook wrapper `whittaker_shannon_bandlimited` (statement (i)) also sorryAx-free
-  + audited.
+- **stretch:** ✅ the textbook wrapper `whittaker_shannon_bandlimited` (statement (i)) also
+  sorryAx-free + `@[entry_point]`.
 - **not in scope:** the operational `IsTwoWDegreesOfFreedom` capacity identity (see Scope line) —
-  remains a disclosed residual; this plan does not close it.
+  remains a disclosed residual in `ShannonHartley.lean` (continuous-time channel + AEP, not
+  modeled in-project); this plan did not close it, and its disclosure was narrowed accordingly.
 
 ## 判断ログ
 
