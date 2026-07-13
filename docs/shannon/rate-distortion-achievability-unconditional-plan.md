@@ -4,7 +4,7 @@
 
 **Status**: CLOSED ✅ — Piece B/C/A + Wrapper `rate_distortion_achievability_operational` (`@[entry_point]`) genuine sorryAx-free、独立 honesty 監査 `@audit:ok` (全仮説 regularity/operational、load-bearing ゼロ)。roadmap Ch.10 / README 反映済。
 
-> **後続 (子)**: full-support 前提 `hP_supp` を落とす完全一般 source 版 → [`rate-distortion-achievability-general-source-plan.md`](rate-distortion-achievability-general-source-plan.md) (着手中、台 subtype 制限)。
+> **後続 (子)**: full-support 前提 `hP_supp` を落とす完全一般 source 版 → [`rate-distortion-achievability-general-source-plan.md`](rate-distortion-achievability-general-source-plan.md) **CLOSED ✅ (2026-07-13)** — `rate_distortion_achievability_operational_general` genuine sorryAx-free / `@audit:ok`、台 subtype 制限 + code lift。
 
 ## 要点 (≤5 行)
 - 既存 headline `rate_distortion_achievability` (`AchievabilityStrongTypicality.lean:185`, `@entry_point`, 0 sorry) は honest pass-through 仮説付き。本 plan はそれらを discharge して **クリーンな operational 文**「`R > R(D)` なら大 n で `distortion ≤ D+ε` の lossy code が存在」を publish する。
