@@ -174,6 +174,7 @@ import InformationTheory.Shannon.EntropyPower.Inequality
 import InformationTheory.Shannon.EPI.Plumbing
 import InformationTheory.Shannon.ShannonHartley
 import InformationTheory.Shannon.NormalizedSinc
+import InformationTheory.Shannon.WhittakerShannon
 import InformationTheory.Shannon.WynerZiv.Basic
 import InformationTheory.Shannon.WynerZiv.RateMonotonicity
 import InformationTheory.Shannon.Stationary.Basic
