@@ -176,6 +176,7 @@ import InformationTheory.Shannon.ShannonHartley
 import InformationTheory.Shannon.ShannonHartleyOperational
 import InformationTheory.Shannon.NormalizedSinc
 import InformationTheory.Shannon.WhittakerShannon
+import InformationTheory.Shannon.ShannonHartleyAchievability
 import InformationTheory.Shannon.WynerZiv.Basic
 import InformationTheory.Shannon.WynerZiv.RateMonotonicity
 import InformationTheory.Shannon.Stationary.Basic
