@@ -160,7 +160,15 @@ implementation notes); its proof is the single genuine Mathlib wall — the time
 degrees-of-freedom-per-second count (prolate-spheroidal / Landau-Pollak-Slepian eigenvalue
 concentration of the time-and-band limiting operator), absent from Mathlib.
 
-`@residual(wall:nyquist-2w-dof)` -/
+`@residual(wall:nyquist-2w-dof)`
+
+Independent honesty audit 2026-07-14: honest tier-2 residual (keep the `sorry`). The
+statement is true-as-framed and non-circular — the `√(T/n)` tight-frame normalization
+keeps the sampling Gram operator `≈ I` at every oversampling factor, so the operational
+capacity is `n`-independent rather than driven to `∞`, and the per-sample `N₀/2` noise
+gives per-DOF SNR `P/(N₀·W)`, reducing to Shannon-Hartley exactly. Hypotheses
+`hW`/`hN₀`/`hP` are regularity-only (not load-bearing), and the wall is genuinely
+Mathlib-absent (loogle `unknown identifier` for `prolate`/`Slepian`). -/
 @[entry_point]
 theorem contAwgn_eq_shannonHartley
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
