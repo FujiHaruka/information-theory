@@ -173,6 +173,7 @@ import InformationTheory.Shannon.EPI.Unconditional.MixedCase
 import InformationTheory.Shannon.EntropyPower.Inequality
 import InformationTheory.Shannon.EPI.Plumbing
 import InformationTheory.Shannon.ShannonHartley
+import InformationTheory.Shannon.ShannonHartleyOperational
 import InformationTheory.Shannon.NormalizedSinc
 import InformationTheory.Shannon.WhittakerShannon
 import InformationTheory.Shannon.WynerZiv.Basic
