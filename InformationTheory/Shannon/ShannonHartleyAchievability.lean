@@ -94,7 +94,8 @@ theorem synthSignal_sample (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) 
   simp
 
 /-- The `√(T/n)`-normalized samples of the synthesized signal recover `√(T/n)·a`. -/
-theorem sampledSignal_synthSignal (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) (hn : 0 < n) :
+theorem sampledSignal_synthSignal (T : ℝ) (n : ℕ) (a : Fin n → ℝ)
+    (hT : 0 < T) (hn : 0 < n) :
     sampledSignal (synthSignal T n a) T n = fun j => Real.sqrt (T / (n : ℝ)) * a j := by
   funext j
   rw [sampledSignal, synthSignal_sample T n a hT hn j]
@@ -121,13 +122,22 @@ in `[-1/(2Δ), 1/(2Δ)] = [-n/(2T), n/(2T)]`, and `n/(2T) ≤ W`. -/
 theorem synthSignal_bandlimited (T W : ℝ) (n : ℕ) (a : Fin n → ℝ)
     (hT : 0 < T) (hn : 0 < n) (hnW : (n : ℝ) ≤ 2 * W * T) :
     IsBandlimited (synthSignal T n a) W := by
+  -- Missing: the L² Fourier transform of `sincN(·/Δ)` equals a boxcar supported in
+  -- `[-1/(2Δ), 1/(2Δ)]`. Mathlib has no FT-of-sinc-equals-boxcar lemma, and `𝓕` in
+  -- `IsBandlimited` is the L¹ `Real.fourierIntegral` while `synthSignal ∉ L¹` (a finite
+  -- sinc combination decays like `1/t`; `Real.integrable_sinc` needs `[IsFiniteMeasure]`).
+  -- A genuine (non-junk) proof needs `Lp.fourierTransformₗᵢ` + the sinc↔boxcar identity.
   sorry -- @residual(plan:shannon-hartley-op-phase3)
 
 /-! ## §D — (iii) Parseval energy -/
 
 /-- The squared synthesis is integrable on the whole line (it lies in `L²`). -/
-theorem synthSignal_sq_integrable (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) (hn : 0 < n) :
+theorem synthSignal_sq_integrable (T : ℝ) (n : ℕ) (a : Fin n → ℝ)
+    (hT : 0 < T) (hn : 0 < n) :
     Integrable (fun t => (synthSignal T n a t) ^ 2) := by
+  -- `synthSignal ∈ L²` (its square is integrable), from the L² membership of each shifted
+  -- `sincN(·/Δ)`. Needs the sinc L² framework (Mathlib's `Real.integrable_sinc` is finite-
+  -- measure only; `∫ sinc² = π` is absent from Mathlib — loogle Found 0).
   sorry -- @residual(plan:shannon-hartley-op-phase3)
 
 /-- **(iii)** Parseval / sinc self-reproducing energy identity: the whole-line energy of the
@@ -135,13 +145,22 @@ synthesis equals `Δ · ∑ᵢ (a i)²` with `Δ = T/n`. Follows from the sinc o
 `∫ sincN((t-iΔ)/Δ)·sincN((t-jΔ)/Δ) dt = Δ·δᵢⱼ`. -/
 theorem synthSignal_energy (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) (hn : 0 < n) :
     (∫ t, (synthSignal T n a t) ^ 2) = (T / (n : ℝ)) * ∑ i : Fin n, (a i) ^ 2 := by
+  -- Missing: sinc L² self-reproducing orthogonality
+  -- `∫ sincN((t-iΔ)/Δ)·sincN((t-jΔ)/Δ) dt = Δ·δᵢⱼ`. Absent from Mathlib (needs the
+  -- sinc↔boxcar L² Fourier identity + Plancherel `Lp.inner_fourier_eq`); the in-project
+  -- `WhittakerShannon` deliberately routed through the circle to avoid exactly this.
   sorry -- @residual(plan:shannon-hartley-op-phase3)
 
 /-- In-window energy is bounded by the whole-line energy (the integrand is `≥ 0`), giving the
-`ContAwgnCode.encoder_power` obligation directly. -/
-theorem synthSignal_window_energy_le (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) (hn : 0 < n) :
-    (∫ t in Set.Icc (0 : ℝ) T, (synthSignal T n a t) ^ 2) ≤ (T / (n : ℝ)) * ∑ i : Fin n, (a i) ^ 2 := by
-  sorry -- @residual(plan:shannon-hartley-op-phase3)
+`ContAwgnCode.encoder_power` obligation directly. This reduction is genuine; it transitively
+carries the residuals of `synthSignal_energy` (iii) and `synthSignal_sq_integrable`. -/
+theorem synthSignal_window_energy_le (T : ℝ) (n : ℕ) (a : Fin n → ℝ)
+    (hT : 0 < T) (hn : 0 < n) :
+    (∫ t in Set.Icc (0 : ℝ) T, (synthSignal T n a t) ^ 2)
+      ≤ (T / (n : ℝ)) * ∑ i : Fin n, (a i) ^ 2 := by
+  rw [← synthSignal_energy T n a hT hn]
+  exact setIntegral_le_integral (synthSignal_sq_integrable T n a hT hn)
+    (Filter.Eventually.of_forall (fun t => sq_nonneg _))
 
 /-! ## §E — crude-converse boundedness (deferred to a follow-up dispatch) -/
 
