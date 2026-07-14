@@ -14,10 +14,16 @@
 //   deno run -A scripts/gen_readme_table.ts --write    # README のマーカー間に表を再生成
 //   deno run -A scripts/gen_readme_table.ts --hook     # pre-commit 用: WARN のみ, 常に exit 0
 //
-// 誠実性 (README は "no sorry, no axioms beyond propext/Classical.choice/Quot.sound" と公称):
-//   InformationTheory 全体で 実 sorry=0 かつ 独自 axiom=0 を確認する。Mathlib は sorry-free
-//   なので、この 2 つが成り立つ限り列挙定理は構造的に sorryAx に依存しえず標準 3 公理のみ。
-//   per-theorem の #print axioms (lake 必要) は belt-and-suspenders で別 (scripts/ReadmeAxioms.lean)。
+// 誠実性 (README の 2 主張を別々に検証):
+//   (1) listed 定理はすべて complete: 定理表に載る定理が属するファイルは strict 0-sorry。
+//       listed 定理ファイルに実 sorry があれば documented であっても fail。
+//   (2) ライブラリ全体は documented Mathlib 壁のみ許容: 実 sorry は必ず `@residual(wall:<slug>)`
+//       タグを伴う (プロジェクト規約 = pre-commit hook が強制)。タグ無しの実 sorry は fail、
+//       タグ付き (かつ listed でない) 壁は許容し info 報告。独自 axiom=0 は従来どおり必須。
+//   Mathlib は sorry-free なので、listed 定理ファイルが 0-sorry である限り列挙定理は構造的に
+//   sorryAx に依存しえず標準 3 公理のみ。per-theorem の #print axioms (lake 必要) は
+//   belt-and-suspenders で別 (scripts/ReadmeAxioms.lean)。「実 sorry」は stripComments 後に
+//   残る sorry トークン (散文の "sorry-free" 等は除外)、壁タグ検出は strip 前の生テキスト。
 
 const MANIFEST = "docs/readme-theorems.txt";
 const README = "README.md";
@@ -93,10 +99,15 @@ const DECL_RE =
   /^[ \t]*(?:@\[[^\]]*\][ \t]*)*(?:(?:noncomputable|private|protected|scoped|local|partial|unsafe|mutual)[ \t]+)*(?:theorem|lemma|def|abbrev|structure|inductive|class|instance|opaque)[ \t]+(?:@\[[^\]]*\][ \t]*)*([\p{L}_][\p{L}\p{N}_'!?.]*)/gmu;
 const SORRY_RE = /\bsorry\b/g;
 const AXIOM_RE = /^[ \t]*axiom[ \t]/gm;
+// A documented Mathlib wall carries a `@residual(wall:<slug>)` tag (project convention,
+// enforced by the pre-commit hook). The tag lives in a comment, so it is detected on the
+// RAW text, before stripComments. Everything else with a real sorry is undocumented → fail.
+const WALL_TAG = "@residual(wall:";
 
 type Index = {
   decls: Map<string, string[]>; // name -> repo-relative file paths
-  sorryFiles: string[];
+  documentedWallFiles: string[]; // real sorry + a `@residual(wall:` tag → tolerated
+  undocumentedSorryFiles: string[]; // real sorry, no wall tag → always fail
   axiomFiles: string[];
 };
 
@@ -110,22 +121,44 @@ async function* walkLean(dir: string): AsyncGenerator<string> {
 
 async function buildIndex(): Promise<Index> {
   const decls = new Map<string, string[]>();
-  const sorryFiles: string[] = [];
+  const documentedWallFiles: string[] = [];
+  const undocumentedSorryFiles: string[] = [];
   const axiomFiles: string[] = [];
   for await (const path of walkLean(CODE_ROOT)) {
-    const code = stripComments(await Deno.readTextFile(path));
+    const raw = await Deno.readTextFile(path);
+    const code = stripComments(raw);
     for (const m of code.matchAll(DECL_RE)) {
       const name = m[1];
       const arr = decls.get(name);
       if (arr) { if (!arr.includes(path)) arr.push(path); }
       else decls.set(name, [path]);
     }
-    if (SORRY_RE.test(code)) sorryFiles.push(path);
+    if (SORRY_RE.test(code)) {
+      // A real sorry (survives stripComments). Documented iff the raw text carries a
+      // `@residual(wall:` tag (which lives in a comment, hence checked on raw, not code).
+      if (raw.includes(WALL_TAG)) documentedWallFiles.push(path);
+      else undocumentedSorryFiles.push(path);
+    }
     SORRY_RE.lastIndex = 0;
     if (AXIOM_RE.test(code)) axiomFiles.push(path);
     AXIOM_RE.lastIndex = 0;
   }
-  return { decls, sorryFiles, axiomFiles };
+  return { decls, documentedWallFiles, undocumentedSorryFiles, axiomFiles };
+}
+
+// The set of files that a README-listed theorem resolves to. Every listed result must be
+// complete, so a real sorry in one of these files is a hard fail even when documented.
+// Path selection mirrors renderTable (single site → it; ambiguous → sites[0]; none → skip).
+function listedTheoremFiles(chapters: Chapter[], idx: Index): Set<string> {
+  const files = new Set<string>();
+  for (const ch of chapters) {
+    for (const r of ch.results) {
+      let sites = idx.decls.get(r.name) ?? [];
+      if (r.pathHint) sites = sites.filter((p) => p.includes(r.pathHint!));
+      if (sites.length >= 1) files.add(sites[0]);
+    }
+  }
+  return files;
 }
 
 // ── render ───────────────────────────────────────────────────────────────────
@@ -186,9 +219,26 @@ const idx = await buildIndex();
 const errs: string[] = [];
 const table = renderTable(chapters, idx, errs);
 
-if (idx.sorryFiles.length > 0) {
-  errs.push(`honesty: ${idx.sorryFiles.length} file(s) contain a real 'sorry' — README claims none: ${idx.sorryFiles.join(", ")}`);
+// honesty — the README publishes two distinct claims, checked separately:
+//   (1) every *listed* result is complete: no sorry in a listed-theorem file, ever;
+//   (2) the library as a whole carries only *documented* Mathlib walls: any real sorry
+//       must sit under a `@residual(wall:<slug>)` tag (undocumented sorry → fail).
+const listedFiles = listedTheoremFiles(chapters, idx);
+
+// (a) any real sorry without a wall tag → fail.
+if (idx.undocumentedSorryFiles.length > 0) {
+  errs.push(`honesty: ${idx.undocumentedSorryFiles.length} file(s) contain a real 'sorry' with no @residual(wall:…) tag: ${idx.undocumentedSorryFiles.join(", ")}`);
 }
+// (b) any real sorry (documented or not) inside a README-listed result's file → fail:
+//     "every result listed below is complete" must stay true.
+const listedWithSorry = [...idx.documentedWallFiles, ...idx.undocumentedSorryFiles]
+  .filter((p) => listedFiles.has(p));
+if (listedWithSorry.length > 0) {
+  errs.push(`honesty: ${listedWithSorry.length} README-listed result file(s) contain a real 'sorry' — every listed result must be complete: ${listedWithSorry.join(", ")}`);
+}
+// (c) documented walls outside any listed file are tolerated (reported as info below).
+const infoWallFiles = idx.documentedWallFiles.filter((p) => !listedFiles.has(p));
+
 if (idx.axiomFiles.length > 0) {
   errs.push(`honesty: ${idx.axiomFiles.length} file(s) declare a custom 'axiom' — README claims none: ${idx.axiomFiles.join(", ")}`);
 }
@@ -216,8 +266,13 @@ if (stale && !errs.some((e) => e.startsWith("Ch."))) {
   errs.push("README table is out of date with the manifest/code — run: deno run -A scripts/gen_readme_table.ts --write");
 }
 
+if (infoWallFiles.length > 0) {
+  console.log(`ℹ ${infoWallFiles.length} documented wall(s) (real 'sorry' + @residual(wall:…), not among listed results): ${infoWallFiles.join(", ")}`);
+}
+
 if (errs.length === 0) {
-  console.log(`✓ README table in sync — ${chapters.length} chapters, ${chapters.reduce((a, c) => a + c.results.length, 0)} theorems, all resolved, 0 sorry, 0 custom axiom.`);
+  const walls = infoWallFiles.length;
+  console.log(`✓ README table in sync — ${chapters.length} chapters, ${chapters.reduce((a, c) => a + c.results.length, 0)} theorems, all resolved, 0 undocumented sorry, ${walls} documented wall(s), 0 custom axiom.`);
   Deno.exit(0);
 }
 
