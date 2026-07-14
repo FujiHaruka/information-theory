@@ -19,6 +19,12 @@ as `contAwgn_eq_shannonHartley`. The proof is the single genuine Mathlib wall
 time-bandwidth degrees-of-freedom count), so the theorem is published with a `sorry`
 body while its statement is a true, non-degenerate proposition.
 
+NOTE (honesty audit 2026-07-15): the claim "true, non-degenerate proposition" above is
+OVERTURNED — see the `@audit:defect` stamps on `IsBandlimited` and
+`contAwgn_eq_shannonHartley`. The statement is currently FALSE for `P > 0`
+(degenerate `IsBandlimited` + pointwise `sampledSignal` on an a.e.-class `encoder`), so the
+`sorry` is unprovable-as-framed rather than wall-blocked. Awaiting the owner def-fix.
+
 ## Main definitions
 
 * `IsBandlimited f W` — the (complexified) Fourier transform of `f : ℝ → ℝ` vanishes
@@ -75,7 +81,17 @@ open scoped ENNReal NNReal Topology FourierTransform
 
 /-- A real signal `f : ℝ → ℝ` is band-limited to `[-W, W]` if the Fourier transform of its
 complexification vanishes outside `[-W, W]`. The complexification is needed because the
-Fourier transform `𝓕` is complex-valued. -/
+Fourier transform `𝓕` is complex-valued.
+
+@audit:defect(degenerate) — Independent honesty audit 2026-07-15. `𝓕` is the L¹
+`Real.fourierIntegral` (a Bochner integral). For every non-L¹ `f` (which includes EVERY genuine
+band-limited L² signal — e.g. any finite sinc combination, and `synthSignal` itself) the Fourier
+integrand `v ↦ 𝐞(-vξ)·(f v)` has the same |·| as `f`, hence is non-integrable, so `integral_undef`
+gives `𝓕 (f : ℂ) ξ = 0` for ALL ξ. The predicate is therefore satisfied vacuously (junk-0) and
+does not constrain band-limitedness — it fails to separate genuine band-limited functions from
+pathological ones. Fix: redefine via the L² Fourier transform's spectral support
+(`Lp.fourierTransformₗᵢ`, support ⊆ `[-W,W]`), not the L¹ integral.
+@audit:closed-by-successor(shannon-hartley-operational-moonshot-plan) -/
 def IsBandlimited (f : ℝ → ℝ) (W : ℝ) : Prop :=
   ∀ ξ : ℝ, W < |ξ| → 𝓕 (fun t : ℝ => (f t : ℂ)) ξ = 0
 
@@ -162,13 +178,37 @@ concentration of the time-and-band limiting operator), absent from Mathlib.
 
 `@residual(wall:nyquist-2w-dof)`
 
-Independent honesty audit 2026-07-14: honest tier-2 residual (keep the `sorry`). The
-statement is true-as-framed and non-circular — the `√(T/n)` tight-frame normalization
-keeps the sampling Gram operator `≈ I` at every oversampling factor, so the operational
-capacity is `n`-independent rather than driven to `∞`, and the per-sample `N₀/2` noise
-gives per-DOF SNR `P/(N₀·W)`, reducing to Shannon-Hartley exactly. Hypotheses
-`hW`/`hN₀`/`hP` are regularity-only (not load-bearing), and the wall is genuinely
-Mathlib-absent (loogle `unknown identifier` for `prolate`/`Slepian`). -/
+@audit:defect(false-statement) — Independent honesty audit 2026-07-15 OVERTURNS the 2026-07-14
+tier-2 stamp below. Under the current definitions the statement is FALSE for `P > 0` (so
+`wall:nyquist-2w-dof` is a `mathlib_wall_misuse`: the `sorry` is unprovable-as-framed, not merely
+Mathlib-blocked). Two independent roots, each sufficient:
+(1) `IsBandlimited` is degenerate (see its docstring): the L¹ `𝓕` makes `encoder_bandlimited`
+    vacuous for the pathological codewords used below.
+(2) `sampledSignal (encoder m) T n i = √(T/n)·(encoder m)(node_i)` reads POINTWISE values, while
+    `encoder_power` (`∫_{[0,T]} f² ≤ T·P`) and `IsBandlimited`/`𝓕` see only the a.e. class. A
+    codeword equal to `0` a.e. but with an arbitrarily large value at a single node satisfies
+    every `ContAwgnCode` field (`∫_{[0,T]} f² = 0 ≤ T·P`, and `𝓕 = 𝓕 0 = 0` so it is even
+    GENUINELY band-limited) yet gives an unbounded sample value. `encoder` has no continuity/
+    L²-membership field, so this gap survives even a fixed `IsBandlimited`.
+Either way the message set `{M | ∃ code, avgError ≤ ε}` is unbounded, so
+`contAwgnMaxMessages = Nat.sSup (unbounded ℕ-set) = 0`, `contAwgnRate = limsup(log 0 / T) = 0`
+(`Real.log 0 = 0`), `contAwgnOperationalCapacity = 0`, but `bandlimitedAwgnCapacity W N₀ P
+= W·log(1+P/(N₀·W)) > 0` for `P > 0`. Fix (owner task): (a) L²-Fourier-support `IsBandlimited`;
+(b) add an L²-membership/continuity field to `ContAwgnCode.encoder` so the pointwise samples are
+the canonical Paley-Wiener representative (`|f(t)| ≤ √(2W)·‖f‖₂`), reinstating the finite
+per-sample power the 2026-07-14 argument silently assumed via Parseval.
+@audit:closed-by-successor(shannon-hartley-operational-moonshot-plan)
+
+OVERTURNED 2026-07-15 (see @audit:defect above) — Independent honesty audit 2026-07-14: honest
+tier-2 residual (keep the `sorry`). The statement is true-as-framed and non-circular — the
+`√(T/n)` tight-frame normalization keeps the sampling Gram operator `≈ I` at every oversampling
+factor, so the operational capacity is `n`-independent rather than driven to `∞`, and the
+per-sample `N₀/2` noise gives per-DOF SNR `P/(N₀·W)`, reducing to Shannon-Hartley exactly.
+Hypotheses `hW`/`hN₀`/`hP` are regularity-only (not load-bearing), and the wall is genuinely
+Mathlib-absent (loogle `unknown identifier` for `prolate`/`Slepian`). [OVERTURNED: this reasoning
+silently assumed Parseval `∑ᵢ (sample)² = ∫ f²`, which holds only for a genuine band-limited
+CONTINUOUS representative — exactly what the degenerate `IsBandlimited` + pointwise `sampledSignal`
+fail to deliver.] -/
 @[entry_point]
 theorem contAwgn_eq_shannonHartley
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
